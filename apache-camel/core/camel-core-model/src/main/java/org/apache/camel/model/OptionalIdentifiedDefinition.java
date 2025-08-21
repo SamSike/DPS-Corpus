@@ -19,6 +19,7 @@ package org.apache.camel.model;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 import jakarta.xml.bind.annotation.XmlType;
 
@@ -34,28 +35,16 @@ import org.apache.camel.spi.NodeIdFactory;
  */
 @XmlType(name = "optionalIdentifiedDefinition")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-// must use XmlAccessType.PROPERTY which is required by camel-spring for its namespace parsers
+// must use XmlAccessType.PROPERTY which is required by camel-spring / camel-blueprint for their namespace parsers
 public abstract class OptionalIdentifiedDefinition<T extends OptionalIdentifiedDefinition<T>>
         implements NamedNode, IdAware, CamelContextAware {
 
     private CamelContext camelContext;
     private String id;
     private Boolean customId;
-    private String description;
+    private DescriptionDefinition description;
     private int lineNumber = -1;
     private String location;
-
-    protected OptionalIdentifiedDefinition() {
-    }
-
-    protected OptionalIdentifiedDefinition(OptionalIdentifiedDefinition<?> source) {
-        this.camelContext = source.camelContext;
-        this.id = source.id;
-        this.customId = source.customId;
-        this.description = source.description;
-        this.lineNumber = source.lineNumber;
-        this.location = source.location;
-    }
 
     @Override
     public CamelContext getCamelContext() {
@@ -73,21 +62,6 @@ public abstract class OptionalIdentifiedDefinition<T extends OptionalIdentifiedD
         return id;
     }
 
-    @Override
-    public String getNodePrefixId() {
-        // prefix is only for nodes in the route (not the route id)
-        String prefix = null;
-        boolean iAmRoute = this instanceof RouteDefinition;
-        boolean allowPrefix = !iAmRoute;
-        if (allowPrefix) {
-            RouteDefinition route = ProcessorDefinitionHelper.getRoute(this);
-            if (route != null) {
-                prefix = route.getNodePrefixId();
-            }
-        }
-        return prefix;
-    }
-
     /**
      * Sets the id of this node
      */
@@ -95,7 +69,7 @@ public abstract class OptionalIdentifiedDefinition<T extends OptionalIdentifiedD
     @Metadata(description = "The id of this node")
     public void setId(String id) {
         this.id = id;
-        customId = id != null ? true : null;
+        customId = true;
     }
 
     @Override
@@ -104,7 +78,7 @@ public abstract class OptionalIdentifiedDefinition<T extends OptionalIdentifiedD
         customId = null;
     }
 
-    public String getDescription() {
+    public DescriptionDefinition getDescription() {
         return description;
     }
 
@@ -113,9 +87,9 @@ public abstract class OptionalIdentifiedDefinition<T extends OptionalIdentifiedD
      *
      * @param description sets the text description, use null to not set a text
      */
-    @XmlAttribute
+    @XmlElement
     @Metadata(description = "The description for this node")
-    public void setDescription(String description) {
+    public void setDescription(DescriptionDefinition description) {
         this.description = description;
     }
 
@@ -152,12 +126,46 @@ public abstract class OptionalIdentifiedDefinition<T extends OptionalIdentifiedD
     /**
      * Sets the description of this node
      *
-     * @param  description sets the text description, use null to not set a text
-     * @return             the builder
+     * @param  text sets the text description, use null to not set a text
+     * @return      the builder
      */
     @SuppressWarnings("unchecked")
-    public T description(String description) {
-        this.description = description;
+    public T description(String text) {
+        if (text != null) {
+            if (description == null) {
+                description = new DescriptionDefinition();
+            }
+            description.setText(text);
+        }
+        return (T) this;
+    }
+
+    /**
+     * Sets the description of this node
+     *
+     * @param  id   sets the id, use null to not set an id
+     * @param  text sets the text description, use null to not set a text
+     * @param  lang sets the language for the description, use null to not set a language
+     * @return      the builder
+     */
+    @SuppressWarnings("unchecked")
+    @Deprecated
+    public T description(String id, String text, String lang) {
+        if (id != null) {
+            setId(id);
+        }
+        if (text != null) {
+            if (description == null) {
+                description = new DescriptionDefinition();
+            }
+            description.setText(text);
+        }
+        if (lang != null) {
+            if (description == null) {
+                description = new DescriptionDefinition();
+            }
+            description.setLang(lang);
+        }
         return (T) this;
     }
 
@@ -180,20 +188,26 @@ public abstract class OptionalIdentifiedDefinition<T extends OptionalIdentifiedD
      * Gets the node id, creating one if not already set.
      */
     public String idOrCreate(NodeIdFactory factory) {
+        // prefix is only for nodes in the route (not the route id)
+        String prefix = null;
+        boolean iAmRoute = this instanceof RouteDefinition;
+        boolean allowPrefix = !iAmRoute && this instanceof ProcessorDefinition;
+        if (allowPrefix) {
+            RouteDefinition route = ProcessorDefinitionHelper.getRoute(this);
+            if (route != null) {
+                prefix = route.getNodePrefixId();
+            }
+        }
         if (id == null) {
             setGeneratedId(factory.createId(this));
         }
 
-        // return with prefix if configured
-        boolean iAmRoute = this instanceof RouteDefinition;
-        boolean allowPrefix = !iAmRoute;
-        if (allowPrefix) {
-            String prefix = getNodePrefixId();
-            if (prefix != null) {
-                return prefix + id;
-            }
+        // return with prefix
+        if (prefix != null) {
+            return prefix + id;
+        } else {
+            return id;
         }
-        return id;
     }
 
     public Boolean getCustomId() {
@@ -220,7 +234,7 @@ public abstract class OptionalIdentifiedDefinition<T extends OptionalIdentifiedD
      */
     @Override
     public String getDescriptionText() {
-        return description;
+        return (description != null) ? description.getText() : null;
     }
 
     // Implementation methods

@@ -39,7 +39,7 @@ public class InterceptFromUriWildcardHeaderUriTest extends ContextTestSupport {
     @Test
     public void testInterceptFoo() throws Exception {
         getMockEndpoint("mock:intercept").expectedMessageCount(1);
-        getMockEndpoint("mock:intercept").expectedPropertyReceived(Exchange.INTERCEPTED_ENDPOINT, "seda://foo");
+        getMockEndpoint("mock:intercept").expectedHeaderReceived(Exchange.INTERCEPTED_ENDPOINT, "seda://foo");
         getMockEndpoint("mock:result").expectedMessageCount(1);
 
         template.sendBody("seda:foo", "Hello World");
@@ -50,7 +50,7 @@ public class InterceptFromUriWildcardHeaderUriTest extends ContextTestSupport {
     @Test
     public void testInterceptBar() throws Exception {
         getMockEndpoint("mock:intercept").expectedMessageCount(1);
-        getMockEndpoint("mock:intercept").expectedPropertyReceived(Exchange.INTERCEPTED_ENDPOINT, "seda://bar");
+        getMockEndpoint("mock:intercept").expectedHeaderReceived(Exchange.INTERCEPTED_ENDPOINT, "seda://bar");
         getMockEndpoint("mock:result").expectedMessageCount(1);
 
         template.sendBody("seda:bar", "Hello World");
@@ -59,9 +59,9 @@ public class InterceptFromUriWildcardHeaderUriTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 interceptFrom("seda*").to("mock:intercept");
 
                 from("direct:start").to("mock:result");

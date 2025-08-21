@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -126,8 +126,8 @@ final class ResultsImpl extends AbstractList<Result<Record>> implements Results 
         if (this == obj)
             return true;
 
-        if (obj instanceof ResultsImpl r)
-            return resultsOrRows.equals(r.resultsOrRows);
+        if (obj instanceof ResultsImpl)
+            return resultsOrRows.equals(((ResultsImpl) obj).resultsOrRows);
 
         return false;
     }
@@ -185,7 +185,7 @@ final class ResultsImpl extends AbstractList<Result<Record>> implements Results 
         return translated;
     }
 
-    static final record ResultOrRowsImpl(Result<Record> result, int rows, DataAccessException exception) implements ResultOrRows {
+    static final /* record */ class ResultOrRowsImpl implements ResultOrRows { private final Result<Record> result; private final int rows; private final DataAccessException exception; public ResultOrRowsImpl(Result<Record> result, int rows, DataAccessException exception) { this.result = result; this.rows = rows; this.exception = exception; } public Result<Record> result() { return result; } public int rows() { return rows; } public DataAccessException exception() { return exception; } @Override public boolean equals(Object o) { if (!(o instanceof ResultOrRowsImpl)) return false; ResultOrRowsImpl other = (ResultOrRowsImpl) o; if (!java.util.Objects.equals(this.result, other.result)) return false; if (!java.util.Objects.equals(this.rows, other.rows)) return false; if (!java.util.Objects.equals(this.exception, other.exception)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.result, this.rows, this.exception); }
         ResultOrRowsImpl(Result<Record> result) {
             this(result, result != null ? result.size() : 0, null);
         }

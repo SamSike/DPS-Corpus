@@ -35,8 +35,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class DefaultUndertowHttpBindingTest {
 
-    @Timeout(10)
     @Test
+    @Timeout(1)
     public void readEntireDelayedPayload() throws Exception {
         String[] delayedPayloads = new String[] {
                 "",
@@ -51,8 +51,7 @@ public class DefaultUndertowHttpBindingTest {
         checkResult(result, delayedPayloads);
     }
 
-    @Timeout(10)
-    @Test
+    @Timeout(1)
     public void readEntireMultiDelayedPayload() throws Exception {
         String[] delayedPayloads = new String[] {
                 "",
@@ -72,8 +71,7 @@ public class DefaultUndertowHttpBindingTest {
         assertEquals(Stream.of(delayedPayloads).collect(Collectors.joining()), result);
     }
 
-    @Timeout(10)
-    @Test
+    @Timeout(1)
     public void readEntireMultiDelayedWithPausePayload() throws Exception {
         String[] delayedPayloads = new String[] {
                 "",

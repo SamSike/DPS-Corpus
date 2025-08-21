@@ -30,7 +30,7 @@ import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.fail;
 
 public class CamelContextReloadStrategyTest extends CamelTestSupport {
 
@@ -82,7 +82,7 @@ public class CamelContextReloadStrategyTest extends CamelTestSupport {
             @Override
             public void configure() throws Exception {
                 from("direct:start")
-                        .to(seda("{{cheese}}").advanced().failIfNoConsumers(property("myfail")));
+                        .to(seda("{{cheese}}").failIfNoConsumers(property("myfail")));
 
                 from(seda("foo1")).to("mock:result");
             }

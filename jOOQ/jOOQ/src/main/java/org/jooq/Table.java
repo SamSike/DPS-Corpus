@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,16 +43,12 @@ package org.jooq;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
-// ...
 // ...
 import static org.jooq.SQLDialect.H2;
 // ...
@@ -67,7 +63,6 @@ import static org.jooq.SQLDialect.MYSQL;
 // ...
 // ...
 // ...
-// ...
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
@@ -78,8 +73,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-// ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
@@ -92,13 +85,9 @@ import java.util.function.Function;
 import org.jooq.TableOptions.TableType;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
-import org.jooq.impl.QOM;
-import org.jooq.impl.QOM.JoinHint;
-import org.jooq.impl.QOM.TableAlias;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 
 /**
  * A table.
@@ -122,14 +111,14 @@ import org.jetbrains.annotations.Nullable;
  * <p>
  * <strong>Example:</strong>
  * <p>
- * <pre><code>
+ * <code><pre>
  * // Assuming import static org.jooq.impl.DSL.*;
  *
  * using(configuration)
  *    .select(ACTOR.FIRST_NAME, ACTOR.LAST_NAME)
  *    .from(ACTOR) // Table reference
  *    .fetch();
- * </code></pre>
+ * </pre></code>
  * <p>
  * Instances can be created using {@link DSL#table(Name)} and overloads.
  * <p>
@@ -141,7 +130,7 @@ import org.jetbrains.annotations.Nullable;
  * query's <code>GROUP BY</code> clause.</li>
  * <li>A {@link SelectField} is an expression that is used in a {@link Select}
  * query's <code>SELECT</code> clause, or in a DML query's
- * <code>RETURNING</code> clause, such as <code>INSERT … RETURNING</code>.</li>
+ * <code>RETURNING</code> clause, such as <code>INSERT .. RETURNING</code>.</li>
  * </ul>
  * <p>
  * Other types of {@link Table} cannot be used this way, even if the type system
@@ -150,7 +139,7 @@ import org.jetbrains.annotations.Nullable;
  * @param <R> The record type associated with this table
  * @author Lukas Eder
  */
-public interface Table<R extends Record>
+public /* non-sealed */ interface Table<R extends Record>
 extends
     TableLike<R>,
     RecordQualifier<R>,
@@ -217,7 +206,7 @@ extends
      * locking is performed in a single <code>UPDATE</code> or
      * <code>DELETE</code> statement if tables provide a "version" or
      * "timestamp" field, or in two steps using an additional
-     * <code>SELECT … FOR UPDATE</code> statement otherwise.
+     * <code>SELECT .. FOR UPDATE</code> statement otherwise.
      * <p>
      * This method is overridden in generated subclasses if their corresponding
      * tables have been configured accordingly. A table may have both a
@@ -243,7 +232,7 @@ extends
      * locking is performed in a single <code>UPDATE</code> or
      * <code>DELETE</code> statement if tables provide a "version" or
      * "timestamp" field, or in two steps using an additional
-     * <code>SELECT … FOR UPDATE</code> statement otherwise.
+     * <code>SELECT .. FOR UPDATE</code> statement otherwise.
      * <p>
      * This method is overridden in generated subclasses if their corresponding
      * tables have been configured accordingly. A table may have both a
@@ -362,14 +351,6 @@ extends
 
 
 
-
-
-
-
-
-
-
-
     // -------------------------------------------------------------------------
     // XXX: Expressions based on this table
     // -------------------------------------------------------------------------
@@ -398,29 +379,6 @@ extends
     /**
      * Create an alias for this table.
      * <p>
-     * This method works both to alias the table as well as alias the table in
-     * its {@link SelectField} form via the {@link SelectField#as(String)}
-     * override. In order to alias only the projected table expression, use
-     * {@link DSL#field(SelectField)} to wrap this table into a {@link Field}
-     * first.
-     * <p>
-     * A table alias renders itself differently, depending on
-     * {@link Context#declareTables()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The table alias renders its aliased expression
-     * (<code>this</code>) along with the <code>AS alias</code> clause. This
-     * typically happens in <code>FROM</code> and <code>INTO</code>
-     * clauses.</li>
-     * <li>Reference: The table alias renders its alias identifier. This happens
-     * everywhere else.</li>
-     * </ul>
-     * <p>
-     * <strong>There is no rendering mode that reproduces the aliased expression
-     * as there is no way to formally decide when that mode would be more
-     * appropriate than the referencing of the alias!</strong> If the aliased
-     * expression is the preferred output, it can be extracted from the
-     * {@link QOM} API via {@link TableAlias#$aliased()}.
-     * <p>
      * Note that the case-sensitivity of the returned table depends on
      * {@link Settings#getRenderQuotedNames()}. By default, table aliases are
      * quoted, and thus case-sensitive in many SQL dialects!
@@ -436,13 +394,17 @@ extends
     /**
      * Create an alias for this table and its fields.
      * <p>
+     * Note that the case-sensitivity of the returned table and columns depends
+     * on {@link Settings#getRenderQuotedNames()}. By default, table aliases are
+     * quoted, and thus case-sensitive in many SQL dialects!
+     * <p>
      * <h5>Derived column lists for table references</h5>
      * <p>
      * Note, not all databases support derived column lists for their table
      * aliases. On the other hand, some databases do support derived column
      * lists, but only for derived tables. jOOQ will try to turn table
      * references into derived tables to make this syntax work. In other words,
-     * the following statements are equivalent: <pre><code>
+     * the following statements are equivalent: <code><pre>
      * -- Using derived column lists to rename columns (e.g. Postgres)
      * SELECT t.a, t.b
      * FROM my_table t(a, b)
@@ -452,13 +414,13 @@ extends
      * FROM (
      *   SELECT * FROM my_table
      * ) t(a, b)
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <h5>Derived column lists for derived tables</h5>
      * <p>
      * Other databases may not support derived column lists at all, but they do
      * support common table expressions. The following statements are
-     * equivalent: <pre><code>
+     * equivalent: <code><pre>
      * -- Using derived column lists to rename columns (e.g. Postgres)
      * SELECT t.a, t.b
      * FROM (
@@ -472,28 +434,7 @@ extends
      *   UNION ALL
      *   SELECT 1, 2 FROM DUAL
      * ) t
-     * </code></pre>
-     * <p>
-     * A table alias renders itself differently, depending on
-     * {@link Context#declareTables()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The table alias renders its aliased expression
-     * (<code>this</code>) along with the <code>AS alias</code> clause. This
-     * typically happens in <code>FROM</code> and <code>INTO</code>
-     * clauses.</li>
-     * <li>Reference: The table alias renders its alias identifier. This happens
-     * everywhere else.</li>
-     * </ul>
-     * <p>
-     * <strong>There is no rendering mode that reproduces the aliased expression
-     * as there is no way to formally decide when that mode would be more
-     * appropriate than the referencing of the alias!</strong> If the aliased
-     * expression is the preferred output, it can be extracted from the
-     * {@link QOM} API via {@link TableAlias#$aliased()}.
-     * <p>
-     * Note that the case-sensitivity of the returned table and columns depends
-     * on {@link Settings#getRenderQuotedNames()}. By default, table aliases are
-     * quoted, and thus case-sensitive in many SQL dialects!
+     * </pre></code>
      *
      * @param alias The alias name
      * @param fieldAliases The field aliases. Excess aliases are ignored,
@@ -508,13 +449,17 @@ extends
     /**
      * Create an alias for this table and its fields.
      * <p>
+     * Note that the case-sensitivity of the returned table and columns depends
+     * on {@link Settings#getRenderQuotedNames()}. By default, table aliases are
+     * quoted, and thus case-sensitive in many SQL dialects!
+     * <p>
      * <h5>Derived column lists for table references</h5>
      * <p>
      * Note, not all databases support derived column lists for their table
      * aliases. On the other hand, some databases do support derived column
      * lists, but only for derived tables. jOOQ will try to turn table
      * references into derived tables to make this syntax work. In other words,
-     * the following statements are equivalent: <pre><code>
+     * the following statements are equivalent: <code><pre>
      * -- Using derived column lists to rename columns (e.g. Postgres)
      * SELECT t.a, t.b
      * FROM my_table t(a, b)
@@ -524,13 +469,13 @@ extends
      * FROM (
      *   SELECT * FROM my_table
      * ) t(a, b)
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <h5>Derived column lists for derived tables</h5>
      * <p>
      * Other databases may not support derived column lists at all, but they do
      * support common table expressions. The following statements are
-     * equivalent: <pre><code>
+     * equivalent: <code><pre>
      * -- Using derived column lists to rename columns (e.g. Postgres)
      * SELECT t.a, t.b
      * FROM (
@@ -544,28 +489,7 @@ extends
      *   UNION ALL
      *   SELECT 1, 2 FROM DUAL
      * ) t
-     * </code></pre>
-     * <p>
-     * A table alias renders itself differently, depending on
-     * {@link Context#declareTables()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The table alias renders its aliased expression
-     * (<code>this</code>) along with the <code>AS alias</code> clause. This
-     * typically happens in <code>FROM</code> and <code>INTO</code>
-     * clauses.</li>
-     * <li>Reference: The table alias renders its alias identifier. This happens
-     * everywhere else.</li>
-     * </ul>
-     * <p>
-     * <strong>There is no rendering mode that reproduces the aliased expression
-     * as there is no way to formally decide when that mode would be more
-     * appropriate than the referencing of the alias!</strong> If the aliased
-     * expression is the preferred output, it can be extracted from the
-     * {@link QOM} API via {@link TableAlias#$aliased()}.
-     * <p>
-     * Note that the case-sensitivity of the returned table and columns depends
-     * on {@link Settings#getRenderQuotedNames()}. By default, table aliases are
-     * quoted, and thus case-sensitive in many SQL dialects!
+     * </pre></code>
      *
      * @param alias The alias name
      * @param fieldAliases The field aliases. Excess aliases are ignored,
@@ -584,9 +508,9 @@ extends
      * are provided by a function. This is useful, for instance, to prefix all
      * columns with a common prefix:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * MY_TABLE.as("t1", f -&gt;"prefix_" + f.getName());
-     * </code></pre>
+     * </pre></code>
      *
      * @param alias The alias name
      * @param aliasFunction The function providing field aliases.
@@ -609,9 +533,9 @@ extends
      * are provided by a function. This is useful, for instance, to prefix all
      * columns with a common prefix:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * MY_TABLE.as("t1", (f, i) -&gt;"column" + i);
-     * </code></pre>
+     * </pre></code>
      *
      * @param alias The alias name
      * @param aliasFunction The function providing field aliases.
@@ -630,35 +554,15 @@ extends
     /**
      * Create an alias for this table.
      * <p>
-     * This method works both to alias the table as well as alias the table in
-     * its {@link SelectField} form via the {@link SelectField#as(String)}
-     * override. In order to alias only the projected table expression, use
-     * {@link DSL#field(SelectField)} to wrap this table into a {@link Field}
-     * <p>
-     * A table alias renders itself differently, depending on
-     * {@link Context#declareTables()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The table alias renders its aliased expression
-     * (<code>this</code>) along with the <code>AS alias</code> clause. This
-     * typically happens in <code>FROM</code> and <code>INTO</code>
-     * clauses.</li>
-     * <li>Reference: The table alias renders its alias identifier. This happens
-     * everywhere else.</li>
-     * </ul>
-     * <p>
-     * <strong>There is no rendering mode that reproduces the aliased expression
-     * as there is no way to formally decide when that mode would be more
-     * appropriate than the referencing of the alias!</strong> If the aliased
-     * expression is the preferred output, it can be extracted from the
-     * {@link QOM} API via {@link TableAlias#$aliased()}.
-     * <p>
      * Note that the case-sensitivity of the returned table depends on
      * {@link Settings#getRenderQuotedNames()} and the {@link Name}. By default,
      * table aliases are quoted, and thus case-sensitive in many SQL dialects -
      * use {@link DSL#unquotedName(String...)} for case-insensitive aliases.
+     * <p>
+     * If the argument {@link Name#getName()} is qualified, then the
+     * {@link Name#last()} part will be used.
      *
-     * @param alias The alias name. If {@link Name#getName()} is qualified, then
-     *            the {@link Name#last()} part will be used.
+     * @param alias The alias name
      * @return The table alias
      */
     @Override
@@ -669,16 +573,21 @@ extends
     /**
      * Create an alias for this table and its fields.
      * <p>
+     * Note that the case-sensitivity of the returned table depends on
+     * {@link Settings#getRenderQuotedNames()} and the {@link Name}. By default,
+     * table aliases are quoted, and thus case-sensitive in many SQL dialects -
+     * use {@link DSL#unquotedName(String...)} for case-insensitive aliases.
+     * <p>
+     * If the argument {@link Name#getName()} is qualified, then the
+     * {@link Name#last()} part will be used.
+     * <p>
      * <h5>Derived column lists for table references</h5>
      * <p>
      * Note, not all databases support derived column lists for their table
      * aliases. On the other hand, some databases do support derived column
      * lists, but only for derived tables. jOOQ will try to turn table
      * references into derived tables to make this syntax work. In other words,
-     * the following statements are equivalent:
-     *
-     * <pre>
-     * <code>
+     * the following statements are equivalent: <code><pre>
      * -- Using derived column lists to rename columns (e.g. Postgres)
      * SELECT t.a, t.b
      * FROM my_table t(a, b)
@@ -688,17 +597,13 @@ extends
      * FROM (
      *   SELECT * FROM my_table
      * ) t(a, b)
-     * </code>
-     * </pre>
+     * </pre></code>
      * <p>
      * <h5>Derived column lists for derived tables</h5>
      * <p>
      * Other databases may not support derived column lists at all, but they do
      * support common table expressions. The following statements are
-     * equivalent:
-     *
-     * <pre>
-     * <code>
+     * equivalent: <code><pre>
      * -- Using derived column lists to rename columns (e.g. Postgres)
      * SELECT t.a, t.b
      * FROM (
@@ -712,37 +617,12 @@ extends
      *   UNION ALL
      *   SELECT 1, 2 FROM DUAL
      * ) t
-     * </code>
-     * </pre>
-     * <p>
-     * A table alias renders itself differently, depending on
-     * {@link Context#declareTables()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The table alias renders its aliased expression
-     * (<code>this</code>) along with the <code>AS alias</code> clause. This
-     * typically happens in <code>FROM</code> and <code>INTO</code>
-     * clauses.</li>
-     * <li>Reference: The table alias renders its alias identifier. This happens
-     * everywhere else.</li>
-     * </ul>
-     * <p>
-     * <strong>There is no rendering mode that reproduces the aliased expression
-     * as there is no way to formally decide when that mode would be more
-     * appropriate than the referencing of the alias!</strong> If the aliased
-     * expression is the preferred output, it can be extracted from the
-     * {@link QOM} API via {@link TableAlias#$aliased()}.
-     * <p>
-     * Note that the case-sensitivity of the returned table depends on
-     * {@link Settings#getRenderQuotedNames()} and the {@link Name}. By default,
-     * table aliases are quoted, and thus case-sensitive in many SQL dialects -
-     * use {@link DSL#unquotedName(String...)} for case-insensitive aliases.
+     * </pre></code>
      *
-     * @param alias The alias name. If {@link Name#getName()} is qualified, then
-     *            the {@link Name#last()} part will be used.
-     * @param fieldAliases The field aliases. If {@link Name#getName()} is
-     *            qualified, then the {@link Name#last()} part will be used.
-     *            Excess aliases are ignored, missing aliases will be
-     *            substituted by this table's field names.
+     * @param alias The alias name
+     * @param fieldAliases The field aliases. Excess aliases are ignored,
+     *            missing aliases will be substituted by this table's field
+     *            names.
      * @return The table alias
      */
     @NotNull
@@ -752,16 +632,21 @@ extends
     /**
      * Create an alias for this table and its fields.
      * <p>
+     * Note that the case-sensitivity of the returned table depends on
+     * {@link Settings#getRenderQuotedNames()} and the {@link Name}. By default,
+     * table aliases are quoted, and thus case-sensitive in many SQL dialects -
+     * use {@link DSL#unquotedName(String...)} for case-insensitive aliases.
+     * <p>
+     * If the argument {@link Name#getName()} is qualified, then the
+     * {@link Name#last()} part will be used.
+     * <p>
      * <h5>Derived column lists for table references</h5>
      * <p>
      * Note, not all databases support derived column lists for their table
      * aliases. On the other hand, some databases do support derived column
      * lists, but only for derived tables. jOOQ will try to turn table
      * references into derived tables to make this syntax work. In other words,
-     * the following statements are equivalent:
-     *
-     * <pre>
-     * <code>
+     * the following statements are equivalent: <code><pre>
      * -- Using derived column lists to rename columns (e.g. Postgres)
      * SELECT t.a, t.b
      * FROM my_table t(a, b)
@@ -771,17 +656,13 @@ extends
      * FROM (
      *   SELECT * FROM my_table
      * ) t(a, b)
-     * </code>
-     * </pre>
+     * </pre></code>
      * <p>
      * <h5>Derived column lists for derived tables</h5>
      * <p>
      * Other databases may not support derived column lists at all, but they do
      * support common table expressions. The following statements are
-     * equivalent:
-     *
-     * <pre>
-     * <code>
+     * equivalent: <code><pre>
      * -- Using derived column lists to rename columns (e.g. Postgres)
      * SELECT t.a, t.b
      * FROM (
@@ -795,37 +676,12 @@ extends
      *   UNION ALL
      *   SELECT 1, 2 FROM DUAL
      * ) t
-     * </code>
-     * </pre>
-     * <p>
-     * A table alias renders itself differently, depending on
-     * {@link Context#declareTables()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The table alias renders its aliased expression
-     * (<code>this</code>) along with the <code>AS alias</code> clause. This
-     * typically happens in <code>FROM</code> and <code>INTO</code>
-     * clauses.</li>
-     * <li>Reference: The table alias renders its alias identifier. This happens
-     * everywhere else.</li>
-     * </ul>
-     * <p>
-     * <strong>There is no rendering mode that reproduces the aliased expression
-     * as there is no way to formally decide when that mode would be more
-     * appropriate than the referencing of the alias!</strong> If the aliased
-     * expression is the preferred output, it can be extracted from the
-     * {@link QOM} API via {@link TableAlias#$aliased()}.
-     * <p>
-     * Note that the case-sensitivity of the returned table depends on
-     * {@link Settings#getRenderQuotedNames()} and the {@link Name}. By default,
-     * table aliases are quoted, and thus case-sensitive in many SQL dialects -
-     * use {@link DSL#unquotedName(String...)} for case-insensitive aliases.
+     * </pre></code>
      *
-     * @param alias The alias name. If {@link Name#getName()} is qualified, then
-     *            the {@link Name#last()} part will be used.
-     * @param fieldAliases The field aliases. If {@link Name#getName()} is
-     *            qualified, then the {@link Name#last()} part will be used.
-     *            Excess aliases are ignored, missing aliases will be
-     *            substituted by this table's field names.
+     * @param alias The alias name
+     * @param fieldAliases The field aliases. Excess aliases are ignored,
+     *            missing aliases will be substituted by this table's field
+     *            names.
      * @return The table alias
      */
     @NotNull
@@ -839,12 +695,11 @@ extends
      * are provided by a function. This is useful, for instance, to prefix all
      * columns with a common prefix:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * MY_TABLE.as("t1", f -&gt;"prefix_" + f.getName());
-     * </code></pre>
+     * </pre></code>
      *
-     * @param alias The alias name. If {@link Name#getName()} is qualified, then
-     *            the {@link Name#last()} part will be used.
+     * @param alias The alias name
      * @param aliasFunction The function providing field aliases.
      * @return The table alias
      * @deprecated - 3.14.0 - [#10156] - These methods will be removed without
@@ -865,9 +720,9 @@ extends
      * are provided by a function. This is useful, for instance, to prefix all
      * columns with a common prefix:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * MY_TABLE.as("t1", (f, i) -&gt;"column" + i);
-     * </code></pre>
+     * </pre></code>
      *
      * @param alias The alias name
      * @param aliasFunction The function providing field aliases.
@@ -885,23 +740,6 @@ extends
 
     /**
      * Create an alias for this table based on another table's name.
-     * <p>
-     * A table alias renders itself differently, depending on
-     * {@link Context#declareTables()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The table alias renders its aliased expression
-     * (<code>this</code>) along with the <code>AS alias</code> clause. This
-     * typically happens in <code>FROM</code> and <code>INTO</code>
-     * clauses.</li>
-     * <li>Reference: The table alias renders its alias identifier. This happens
-     * everywhere else.</li>
-     * </ul>
-     * <p>
-     * <strong>There is no rendering mode that reproduces the aliased expression
-     * as there is no way to formally decide when that mode would be more
-     * appropriate than the referencing of the alias!</strong> If the aliased
-     * expression is the preferred output, it can be extracted from the
-     * {@link QOM} API via {@link TableAlias#$aliased()}.
      *
      * @param otherTable The other table whose name this table is aliased with.
      * @return The table alias.
@@ -912,23 +750,6 @@ extends
 
     /**
      * Create an alias for this table based on another table's name.
-     * <p>
-     * A table alias renders itself differently, depending on
-     * {@link Context#declareTables()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The table alias renders its aliased expression
-     * (<code>this</code>) along with the <code>AS alias</code> clause. This
-     * typically happens in <code>FROM</code> and <code>INTO</code>
-     * clauses.</li>
-     * <li>Reference: The table alias renders its alias identifier. This happens
-     * everywhere else.</li>
-     * </ul>
-     * <p>
-     * <strong>There is no rendering mode that reproduces the aliased expression
-     * as there is no way to formally decide when that mode would be more
-     * appropriate than the referencing of the alias!</strong> If the aliased
-     * expression is the preferred output, it can be extracted from the
-     * {@link QOM} API via {@link TableAlias#$aliased()}.
      *
      * @param otherTable The other table whose name this table is aliased with.
      * @param otherFields The other fields whose field name this table's fields
@@ -941,23 +762,6 @@ extends
 
     /**
      * Create an alias for this table based on another table's name.
-     * <p>
-     * A table alias renders itself differently, depending on
-     * {@link Context#declareTables()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The table alias renders its aliased expression
-     * (<code>this</code>) along with the <code>AS alias</code> clause. This
-     * typically happens in <code>FROM</code> and <code>INTO</code>
-     * clauses.</li>
-     * <li>Reference: The table alias renders its alias identifier. This happens
-     * everywhere else.</li>
-     * </ul>
-     * <p>
-     * <strong>There is no rendering mode that reproduces the aliased expression
-     * as there is no way to formally decide when that mode would be more
-     * appropriate than the referencing of the alias!</strong> If the aliased
-     * expression is the preferred output, it can be extracted from the
-     * {@link QOM} API via {@link TableAlias#$aliased()}.
      *
      * @param otherTable The other table whose name this table is aliased with.
      * @param otherFields The other fields whose field name this table's fields
@@ -975,9 +779,9 @@ extends
      * are provided by a function. This is useful, for instance, to prefix all
      * columns with a common prefix:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * MY_TABLE.as(MY_OTHER_TABLE, f -&gt;MY_OTHER_TABLE.field(f));
-     * </code></pre>
+     * </pre></code>
      *
      * @param otherTable The other table whose name is used as alias name
      * @param aliasFunction The function providing field aliases.
@@ -1000,9 +804,9 @@ extends
      * are provided by a function. This is useful, for instance, to prefix all
      * columns with a common prefix:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * MY_TABLE.as("t1", (f, i) -&gt;"column" + i);
-     * </code></pre>
+     * </pre></code>
      *
      * @param otherTable The other table whose name is used as alias name
      * @param aliasFunction The function providing field aliases.
@@ -1188,7 +992,7 @@ extends
     // -------------------------------------------------------------------------
 
     /**
-     * Join a table to this table using a {@link JoinType}.
+     * Join a table to this table using a {@link JoinType}
      * <p>
      * Depending on the <code>JoinType</code>, a subsequent
      * {@link TableOnStep#on(Condition)} or
@@ -1201,22 +1005,6 @@ extends
     TableOptionalOnStep<Record> join(TableLike<?> table, JoinType type);
 
     /**
-     * Join a table to this table using a {@link JoinType} and {@link JoinHint}.
-     * <p>
-     * Depending on the <code>JoinType</code>, a subsequent
-     * {@link TableOnStep#on(Condition)} or {@link TableOnStep#using(Field...)}
-     * clause is required. If it is required but omitted, a
-     * {@link DSL#trueCondition()}, i.e. <code>1 = 1</code> condition will be
-     * rendered.
-     * <p>
-     * {@link JoinHint} are a commercial only feature and are ignored in the
-     * jOOQ Open Source Edition.
-     */
-    @NotNull
-    @Support
-    TableOptionalOnStep<Record> join(TableLike<?> table, JoinType type, JoinHint hint);
-
-    /**
      * <code>INNER JOIN</code> a table to this table.
      * <p>
      * A synonym for {@link #innerJoin(TableLike)}.
@@ -1226,90 +1014,6 @@ extends
     @NotNull
     @Support
     TableOnStep<Record> join(TableLike<?> table);
-
-    /**
-     * <code>INNER JOIN</code> a path to this table.
-     * <p>
-     * A synonym for {@link #innerJoin(Path)}.
-     */
-    @NotNull
-    @Support
-    TableOptionalOnStep<Record> join(Path<?> path);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * <code>INNER JOIN</code> a table to this table.
@@ -1408,71 +1112,6 @@ extends
     @NotNull
     @Support
     TableOnStep<Record> innerJoin(TableLike<?> table);
-
-    /**
-     * <code>INNER JOIN</code> a path to this table.
-     */
-    @NotNull
-    @Support
-    TableOptionalOnStep<Record> innerJoin(Path<?> path);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * <code>INNER JOIN</code> a table to this table.
@@ -1581,99 +1220,6 @@ extends
     TablePartitionByStep<Record> leftJoin(TableLike<?> table);
 
     /**
-     * <code>LEFT OUTER JOIN</code> a path to this table.
-     * <p>
-     * A synonym for {@link #leftOuterJoin(Path)}.
-     *
-     * @see #leftOuterJoin(Path)
-     */
-    @NotNull
-    @Support
-    TableOptionalOnStep<Record> leftJoin(Path<?> path);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
      * <code>LEFT OUTER JOIN</code> a table to this table.
      * <p>
      * A synonym for {@link #leftOuterJoin(String)}.
@@ -1771,71 +1317,6 @@ extends
     TablePartitionByStep<Record> leftOuterJoin(TableLike<?> table);
 
     /**
-     * <code>LEFT OUTER JOIN</code> a path to this table.
-     */
-    @NotNull
-    @Support
-    TableOptionalOnStep<Record> leftOuterJoin(Path<?> path);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
      * <code>LEFT OUTER JOIN</code> a table to this table.
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
@@ -1915,110 +1396,21 @@ extends
      * <code>RIGHT OUTER JOIN</code> a table to this table.
      * <p>
      * A synonym for {@link #rightOuterJoin(TableLike)}.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it.
      *
      * @see #rightOuterJoin(TableLike)
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     TablePartitionByStep<Record> rightJoin(TableLike<?> table);
-
-    /**
-     * <code>RIGHT OUTER JOIN</code> a path to this table.
-     * <p>
-     * A synonym for {@link #rightOuterJoin(Path)}.
-     *
-     * @see #rightOuterJoin(Path)
-     */
-    @NotNull
-    @Support
-    TableOptionalOnStep<Record> rightJoin(Path<?> path);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * <code>RIGHT OUTER JOIN</code> a table to this table.
      * <p>
      * A synonym for {@link #rightOuterJoin(String)}.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it.
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2030,7 +1422,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     TablePartitionByStep<Record> rightJoin(SQL sql);
 
@@ -2038,6 +1430,8 @@ extends
      * <code>RIGHT OUTER JOIN</code> a table to this table.
      * <p>
      * A synonym for {@link #rightOuterJoin(String)}.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it.
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2049,7 +1443,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     TablePartitionByStep<Record> rightJoin(String sql);
 
@@ -2057,6 +1451,8 @@ extends
      * <code>RIGHT OUTER JOIN</code> a table to this table.
      * <p>
      * A synonym for {@link #rightOuterJoin(String, Object...)}.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it.
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2069,7 +1465,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     TablePartitionByStep<Record> rightJoin(String sql, Object... bindings);
 
@@ -2077,6 +1473,8 @@ extends
      * <code>RIGHT OUTER JOIN</code> a table to this table.
      * <p>
      * A synonym for {@link #rightOuterJoin(String, QueryPart...)}.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2089,7 +1487,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     TablePartitionByStep<Record> rightJoin(String sql, QueryPart... parts);
 
@@ -2097,88 +1495,29 @@ extends
      * <code>RIGHT OUTER JOIN</code> a table to this table.
      * <p>
      * A synonym for {@link #rightOuterJoin(Name)}.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      *
      * @see DSL#table(Name)
      * @see #rightOuterJoin(Name)
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     TablePartitionByStep<Record> rightJoin(Name name);
 
     /**
      * <code>RIGHT OUTER JOIN</code> a table to this table.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     TablePartitionByStep<Record> rightOuterJoin(TableLike<?> table);
 
     /**
-     * <code>RIGHT OUTER JOIN</code> a path to this table.
-     */
-    @NotNull
-    @Support
-    TableOptionalOnStep<Record> rightOuterJoin(Path<?> path);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
      * <code>RIGHT OUTER JOIN</code> a table to this table.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2189,12 +1528,14 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     TablePartitionByStep<Record> rightOuterJoin(SQL sql);
 
     /**
      * <code>RIGHT OUTER JOIN</code> a table to this table.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2205,12 +1546,14 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     TablePartitionByStep<Record> rightOuterJoin(String sql);
 
     /**
      * <code>RIGHT OUTER JOIN</code> a table to this table.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2222,12 +1565,14 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     TablePartitionByStep<Record> rightOuterJoin(String sql, Object... bindings);
 
     /**
      * <code>RIGHT OUTER JOIN</code> a table to this table.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2239,17 +1584,19 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     TablePartitionByStep<Record> rightOuterJoin(String sql, QueryPart... parts);
 
     /**
      * <code>RIGHT OUTER JOIN</code> a table to this table.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      *
      * @see DSL#table(Name)
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     TablePartitionByStep<Record> rightOuterJoin(Name name);
 
     /**
@@ -2258,87 +1605,8 @@ extends
      * A synonym for {@link #fullOuterJoin(TableLike)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    TablePartitionByStep<Record> fullJoin(TableLike<?> table);
-
-    /**
-     * <code>FULL OUTER JOIN</code> a path to this table.
-     * <p>
-     * A synonym for {@link #fullOuterJoin(Path)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    TableOptionalOnStep<Record> fullJoin(Path<?> path);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
+    TableOnStep<Record> fullJoin(TableLike<?> table);
 
     /**
      * <code>FULL OUTER JOIN</code> a table to this table.
@@ -2351,9 +1619,9 @@ extends
      * escape literals when concatenated into SQL clauses!
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
-    TablePartitionByStep<Record> fullJoin(SQL sql);
+    TableOnStep<Record> fullJoin(SQL sql);
 
     /**
      * <code>FULL OUTER JOIN</code> a table to this table.
@@ -2366,9 +1634,9 @@ extends
      * escape literals when concatenated into SQL clauses!
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
-    TablePartitionByStep<Record> fullJoin(String sql);
+    TableOnStep<Record> fullJoin(String sql);
 
     /**
      * <code>FULL OUTER JOIN</code> a table to this table.
@@ -2381,9 +1649,9 @@ extends
      * escape literals when concatenated into SQL clauses!
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
-    TablePartitionByStep<Record> fullJoin(String sql, Object... bindings);
+    TableOnStep<Record> fullJoin(String sql, Object... bindings);
 
     /**
      * <code>FULL OUTER JOIN</code> a table to this table.
@@ -2396,9 +1664,9 @@ extends
      * escape literals when concatenated into SQL clauses!
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
-    TablePartitionByStep<Record> fullJoin(String sql, QueryPart... parts);
+    TableOnStep<Record> fullJoin(String sql, QueryPart... parts);
 
     /**
      * <code>FULL OUTER JOIN</code> a table to this table.
@@ -2406,83 +1674,22 @@ extends
      * A synonym for {@link #fullOuterJoin(Name)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    TablePartitionByStep<Record> fullJoin(Name name);
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
+    TableOnStep<Record> fullJoin(Name name);
 
     /**
      * <code>FULL OUTER JOIN</code> a table to this table.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    TablePartitionByStep<Record> fullOuterJoin(TableLike<?> table);
-
-    /**
-     * <code>FULL OUTER JOIN</code> a path to this table.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    TableOptionalOnStep<Record> fullOuterJoin(Path<?> path);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
+    TableOnStep<Record> fullOuterJoin(TableLike<?> table);
 
     /**
      * <code>FULL OUTER JOIN</code> a table to this table.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2493,12 +1700,14 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
-    TablePartitionByStep<Record> fullOuterJoin(SQL sql);
+    TableOnStep<Record> fullOuterJoin(SQL sql);
 
     /**
      * <code>FULL OUTER JOIN</code> a table to this table.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2509,12 +1718,14 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
-    TablePartitionByStep<Record> fullOuterJoin(String sql);
+    TableOnStep<Record> fullOuterJoin(String sql);
 
     /**
      * <code>FULL OUTER JOIN</code> a table to this table.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2526,12 +1737,14 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
-    TablePartitionByStep<Record> fullOuterJoin(String sql, Object... bindings);
+    TableOnStep<Record> fullOuterJoin(String sql, Object... bindings);
 
     /**
      * <code>FULL OUTER JOIN</code> a table to this table.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2543,31 +1756,33 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
-    TablePartitionByStep<Record> fullOuterJoin(String sql, QueryPart... parts);
+    TableOnStep<Record> fullOuterJoin(String sql, QueryPart... parts);
 
     /**
      * <code>FULL OUTER JOIN</code> a table to this table.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      *
      * @see DSL#table(Name)
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    TablePartitionByStep<Record> fullOuterJoin(Name name);
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
+    TableOnStep<Record> fullOuterJoin(Name name);
 
     /**
      * <code>CROSS JOIN</code> a table to this table.
      * <p>
      * If this syntax is unavailable, it is emulated with a regular
      * <code>INNER JOIN</code>. The following two constructs are equivalent:
-     * <pre><code>
+     * <code><pre>
      * A cross join B
      * A join B on 1 = 1
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support
     Table<Record> crossJoin(TableLike<?> table);
 
     /**
@@ -2575,10 +1790,10 @@ extends
      * <p>
      * If this syntax is unavailable, it is emulated with a regular
      * <code>INNER JOIN</code>. The following two constructs are equivalent:
-     * <pre><code>
+     * <code><pre>
      * A cross join B
      * A join B on 1 = 1
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2589,7 +1804,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support
     @PlainSQL
     Table<Record> crossJoin(SQL sql);
 
@@ -2598,10 +1813,10 @@ extends
      * <p>
      * If this syntax is unavailable, it is emulated with a regular
      * <code>INNER JOIN</code>. The following two constructs are equivalent:
-     * <pre><code>
+     * <code><pre>
      * A cross join B
      * A join B on 1 = 1
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2612,7 +1827,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support
     @PlainSQL
     Table<Record> crossJoin(String sql);
 
@@ -2621,10 +1836,10 @@ extends
      * <p>
      * If this syntax is unavailable, it is emulated with a regular
      * <code>INNER JOIN</code>. The following two constructs are equivalent:
-     * <pre><code>
+     * <code><pre>
      * A cross join B
      * A join B on 1 = 1
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2636,7 +1851,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support
     @PlainSQL
     Table<Record> crossJoin(String sql, Object... bindings);
 
@@ -2645,10 +1860,10 @@ extends
      * <p>
      * If this syntax is unavailable, it is emulated with a regular
      * <code>INNER JOIN</code>. The following two constructs are equivalent:
-     * <pre><code>
+     * <code><pre>
      * A cross join B
      * A join B on 1 = 1
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2660,7 +1875,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support
     @PlainSQL
     Table<Record> crossJoin(String sql, QueryPart... parts);
 
@@ -2669,15 +1884,15 @@ extends
      * <p>
      * If this syntax is unavailable, it is emulated with a regular
      * <code>INNER JOIN</code>. The following two constructs are equivalent:
-     * <pre><code>
+     * <code><pre>
      * A cross join B
      * A join B on 1 = 1
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#table(Name)
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support
     Table<Record> crossJoin(Name name);
 
     /**
@@ -2888,7 +2103,7 @@ extends
      * this behaviour using the information provided in this query.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     Table<Record> naturalRightOuterJoin(TableLike<?> table);
 
     /**
@@ -2906,7 +2121,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> naturalRightOuterJoin(SQL sql);
 
@@ -2925,7 +2140,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> naturalRightOuterJoin(String sql);
 
@@ -2945,7 +2160,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> naturalRightOuterJoin(String sql, Object... bindings);
 
@@ -2965,7 +2180,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> naturalRightOuterJoin(String sql, QueryPart... parts);
 
@@ -2978,7 +2193,7 @@ extends
      * @see DSL#table(Name)
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     Table<Record> naturalRightOuterJoin(Name name);
 
     /**
@@ -2988,7 +2203,7 @@ extends
      * this behaviour using the information provided in this query.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     Table<Record> naturalFullOuterJoin(TableLike<?> table);
 
     /**
@@ -3006,7 +2221,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> naturalFullOuterJoin(SQL sql);
 
@@ -3025,7 +2240,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> naturalFullOuterJoin(String sql);
 
@@ -3045,7 +2260,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> naturalFullOuterJoin(String sql, Object... bindings);
 
@@ -3065,7 +2280,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> naturalFullOuterJoin(String sql, QueryPart... parts);
 
@@ -3078,7 +2293,7 @@ extends
      * @see DSL#table(Name)
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     Table<Record> naturalFullOuterJoin(Name name);
 
     // -------------------------------------------------------------------------
@@ -3089,7 +2304,7 @@ extends
      * <code>CROSS APPLY</code> a table to this table.
      */
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     Table<Record> crossApply(TableLike<?> table);
 
     /**
@@ -3104,7 +2319,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> crossApply(SQL sql);
 
@@ -3120,7 +2335,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> crossApply(String sql);
 
@@ -3137,7 +2352,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> crossApply(String sql, Object... bindings);
 
@@ -3154,7 +2369,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> crossApply(String sql, QueryPart... parts);
 
@@ -3164,14 +2379,14 @@ extends
      * @see DSL#table(Name)
      */
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     Table<Record> crossApply(Name name);
 
     /**
      * <code>OUTER APPLY</code> a table to this table.
      */
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     Table<Record> outerApply(TableLike<?> table);
 
     /**
@@ -3186,7 +2401,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> outerApply(SQL sql);
 
@@ -3202,7 +2417,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> outerApply(String sql);
 
@@ -3219,7 +2434,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> outerApply(String sql, Object... bindings);
 
@@ -3236,7 +2451,7 @@ extends
      * @see SQL
      */
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     Table<Record> outerApply(String sql, QueryPart... parts);
 
@@ -3246,7 +2461,7 @@ extends
      * @see DSL#table(Name)
      */
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     Table<Record> outerApply(Name name);
 
     /**
@@ -3255,13 +2470,6 @@ extends
     @NotNull
     @Support({ MARIADB, MYSQL })
     TableOnStep<Record> straightJoin(TableLike<?> table);
-
-    /**
-     * <code>STRAIGHT_JOIN</code> a path to this table.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL })
-    TableOptionalOnStep<Record> straightJoin(Path<?> path);
 
     /**
      * <code>STRAIGHT_JOIN</code> a table to this table.
@@ -3386,7 +2594,7 @@ extends
      * can be used as a replacement for a primary key in some situations -
      * especially within a query, e.g. to self-join a table:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * -- Emulating this MySQL statement...
      * DELETE FROM x ORDER BY x.y LIMIT 1
      *
@@ -3395,7 +2603,7 @@ extends
      * WHERE x.rowid IN (
      *   SELECT x.rowid FROM x ORDER BY x.a LIMIT 1
      * )
-     * </code></pre>
+     * </pre></code>
      * <p>
      * It is <em>not</em> recommended to use <code>rowid</code> values in client
      * applications as actual row identifiers as the database system may move a
@@ -3405,72 +2613,6 @@ extends
     @NotNull
     @Support({ H2, POSTGRES, SQLITE })
     Field<RowId> rowid();
-
-    /**
-     * The <code>TABLESAMPLE</code> operator.
-     * <p>
-     * Get a <code>TABLESAMPLE</code> expression for this table using the default sample
-     * method.
-     *
-     * @param size is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, POSTGRES, TRINO })
-    TableSampleRowsStep<R> tablesample(Number size);
-
-    /**
-     * The <code>TABLESAMPLE</code> operator.
-     * <p>
-     * Get a <code>TABLESAMPLE</code> expression for this table using the default sample
-     * method.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, POSTGRES, TRINO })
-    TableSampleRowsStep<R> tablesample(Field<? extends Number> size);
-
-    /**
-     * The <code>TABLESAMPLE_BERNOULLI</code> operator.
-     * <p>
-     * Get a <code>TABLESAMPLE</code> expression for this table using the <code>BERNOULLI</code>
-     * sample method.
-     *
-     * @param size is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, POSTGRES, TRINO })
-    TableSampleRowsStep<R> tablesampleBernoulli(Number size);
-
-    /**
-     * The <code>TABLESAMPLE_BERNOULLI</code> operator.
-     * <p>
-     * Get a <code>TABLESAMPLE</code> expression for this table using the <code>BERNOULLI</code>
-     * sample method.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, POSTGRES, TRINO })
-    TableSampleRowsStep<R> tablesampleBernoulli(Field<? extends Number> size);
-
-    /**
-     * The <code>TABLESAMPLE_SYSTEM</code> operator.
-     * <p>
-     * Get a <code>TABLESAMPLE</code> expression for this table using the <code>SYSTEM</code>
-     * sample method.
-     *
-     * @param size is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, POSTGRES, TRINO })
-    TableSampleRowsStep<R> tablesampleSystem(Number size);
-
-    /**
-     * The <code>TABLESAMPLE_SYSTEM</code> operator.
-     * <p>
-     * Get a <code>TABLESAMPLE</code> expression for this table using the <code>SYSTEM</code>
-     * sample method.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, POSTGRES, TRINO })
-    TableSampleRowsStep<R> tablesampleSystem(Field<? extends Number> size);
 
 
 
@@ -3492,17 +2634,17 @@ extends
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * create.select()
      *       .from(BOOK.as("b").useIndex("MY_INDEX")
      *       .fetch();
-     * </code></pre>
+     * </pre></code>
      *
      * @see <a
      *      href="http://dev.mysql.com/doc/refman/5.7/en/index-hints.html">http://dev.mysql.com/doc/refman/5.7/en/index-hints.html</a>
      */
     @NotNull
-    @Support({ H2, MARIADB, MYSQL })
+    @Support({ MARIADB, MYSQL })
     Table<R> useIndex(String... indexes);
 
     /**
@@ -3510,11 +2652,11 @@ extends
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * create.select()
      *       .from(BOOK.as("b").useIndexForJoin("MY_INDEX")
      *       .fetch();
-     * </code></pre>
+     * </pre></code>
      *
      * @see <a
      *      href="http://dev.mysql.com/doc/refman/5.7/en/index-hints.html">http://dev.mysql.com/doc/refman/5.7/en/index-hints.html</a>
@@ -3528,11 +2670,11 @@ extends
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * create.select()
      *       .from(BOOK.as("b").useIndexForOrderBy("MY_INDEX")
      *       .fetch();
-     * </code></pre>
+     * </pre></code>
      *
      * @see <a
      *      href="http://dev.mysql.com/doc/refman/5.7/en/index-hints.html">http://dev.mysql.com/doc/refman/5.7/en/index-hints.html</a>
@@ -3546,11 +2688,11 @@ extends
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * create.select()
      *       .from(BOOK.as("b").useIndexForGroupBy("MY_INDEX")
      *       .fetch();
-     * </code></pre>
+     * </pre></code>
      *
      * @see <a
      *      href="http://dev.mysql.com/doc/refman/5.7/en/index-hints.html">http://dev.mysql.com/doc/refman/5.7/en/index-hints.html</a>
@@ -3564,11 +2706,11 @@ extends
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * create.select()
      *       .from(BOOK.as("b").useIndex("MY_INDEX")
      *       .fetch();
-     * </code></pre>
+     * </pre></code>
      *
      * @see <a
      *      href="http://dev.mysql.com/doc/refman/5.7/en/index-hints.html">http://dev.mysql.com/doc/refman/5.7/en/index-hints.html</a>
@@ -3582,11 +2724,11 @@ extends
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * create.select()
      *       .from(BOOK.as("b").useIndexForJoin("MY_INDEX")
      *       .fetch();
-     * </code></pre>
+     * </pre></code>
      *
      * @see <a
      *      href="http://dev.mysql.com/doc/refman/5.7/en/index-hints.html">http://dev.mysql.com/doc/refman/5.7/en/index-hints.html</a>
@@ -3600,11 +2742,11 @@ extends
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * create.select()
      *       .from(BOOK.as("b").useIndexForOrderBy("MY_INDEX")
      *       .fetch();
-     * </code></pre>
+     * </pre></code>
      *
      * @see <a
      *      href="http://dev.mysql.com/doc/refman/5.7/en/index-hints.html">http://dev.mysql.com/doc/refman/5.7/en/index-hints.html</a>
@@ -3618,11 +2760,11 @@ extends
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * create.select()
      *       .from(BOOK.as("b").useIndexForGroupBy("MY_INDEX")
      *       .fetch();
-     * </code></pre>
+     * </pre></code>
      *
      * @see <a
      *      href="http://dev.mysql.com/doc/refman/5.7/en/index-hints.html">http://dev.mysql.com/doc/refman/5.7/en/index-hints.html</a>
@@ -3636,11 +2778,11 @@ extends
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * create.select()
      *       .from(BOOK.as("b").useIndex("MY_INDEX")
      *       .fetch();
-     * </code></pre>
+     * </pre></code>
      *
      * @see <a
      *      href="http://dev.mysql.com/doc/refman/5.7/en/index-hints.html">http://dev.mysql.com/doc/refman/5.7/en/index-hints.html</a>
@@ -3654,11 +2796,11 @@ extends
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * create.select()
      *       .from(BOOK.as("b").useIndexForJoin("MY_INDEX")
      *       .fetch();
-     * </code></pre>
+     * </pre></code>
      *
      * @see <a
      *      href="http://dev.mysql.com/doc/refman/5.7/en/index-hints.html">http://dev.mysql.com/doc/refman/5.7/en/index-hints.html</a>
@@ -3672,11 +2814,11 @@ extends
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * create.select()
      *       .from(BOOK.as("b").useIndexForOrderBy("MY_INDEX")
      *       .fetch();
-     * </code></pre>
+     * </pre></code>
      *
      * @see <a
      *      href="http://dev.mysql.com/doc/refman/5.7/en/index-hints.html">http://dev.mysql.com/doc/refman/5.7/en/index-hints.html</a>
@@ -3690,11 +2832,11 @@ extends
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * create.select()
      *       .from(BOOK.as("b").useIndexForGroupBy("MY_INDEX")
      *       .fetch();
-     * </code></pre>
+     * </pre></code>
      *
      * @see <a
      *      href="http://dev.mysql.com/doc/refman/5.7/en/index-hints.html">http://dev.mysql.com/doc/refman/5.7/en/index-hints.html</a>
@@ -3875,78 +3017,27 @@ extends
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * Add the <code>WITH ORDINALITY</code> clause.
-     * <p>
-     * This clause can be emulated using derived tables and calculations of
-     * {@link DSL#rowNumber()} or {@link DSL#rownum()}, where supported. The
-     * ordering stability of such a derived table is at the mercy of the
-     * optimiser implementation, and may break "unexpectedly," derived table
-     * ordering isn't required to be stable in most RDBMS. So, unless the
-     * ordinality can be assigned without any ambiguity (e.g. through native
-     * support or because the emulation is entirely implemented in jOOQ, client
-     * side), it is better not to rely on deterministic ordinalities, other than
-     * the fact that all numbers from <code>1</code> to <code>N</code> will be
-     * assigned uniquely.
-     */
-    @NotNull
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    Table<Record> withOrdinality();
-
     /**
      * Create a new <code>TABLE</code> reference from this table, applying
      * relational division.
      * <p>
      * Relational division is the inverse of a cross join operation. The
      * following is an approximate definition of a relational division:
-     * <pre><code>
+     * <code><pre>
      * Assume the following cross join / cartesian product
      * C = A × B
      *
      * Then it can be said that
      * A = C ÷ B
      * B = C ÷ A
-     * </code></pre>
+     * </pre></code>
      * <p>
      * With jOOQ, you can simplify using relational divisions by using the
-     * following syntax: <pre><code>
+     * following syntax: <code><pre>
      * C.divideBy(B).on(C.ID.equal(B.C_ID)).returning(C.TEXT)
-     * </code></pre>
+     * </pre></code>
      * <p>
-     * The above roughly translates to <pre><code>
+     * The above roughly translates to <code><pre>
      * SELECT DISTINCT C.TEXT FROM C "c1"
      * WHERE NOT EXISTS (
      *   SELECT 1 FROM B
@@ -3956,13 +3047,13 @@ extends
      *     AND "c2".ID = B.C_ID
      *   )
      * )
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Or in plain text: Find those TEXT values in C whose ID's correspond to
      * all ID's in B. Note that from the above SQL statement, it is immediately
      * clear that proper indexing is of the essence. Be sure to have indexes on
-     * all columns referenced from the <code>on(…)</code> and
-     * <code>returning(…)</code> clauses.
+     * all columns referenced from the <code>on(...)</code> and
+     * <code>returning(...)</code> clauses.
      * <p>
      * For more information about relational division and some nice, real-life
      * examples, see
@@ -3979,7 +3070,7 @@ extends
      * This has been observed to work with all dialects
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     DivideByOnStep divideBy(Table<?> divisor);
 
     /**
@@ -3987,7 +3078,7 @@ extends
      * equivalent <code>EXISTS</code> predicate.
      * <p>
      * The following two SQL snippets are semantically equivalent:
-     * <pre><code>
+     * <code><pre>
      * -- Using LEFT SEMI JOIN
      * FROM A
      *     LEFT SEMI JOIN B
@@ -3998,7 +3089,7 @@ extends
      * WHERE EXISTS (
      *     SELECT 1 FROM B WHERE A.ID = B.ID
      * )
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Notice that according to
      * <a href="https://en.wikipedia.org/wiki/Relational_algebra">Relational
@@ -4012,40 +3103,11 @@ extends
     TableOnStep<R> leftSemiJoin(TableLike<?> table);
 
     /**
-     * A synthetic <code>LEFT SEMI JOIN</code> clause that translates to an
-     * equivalent <code>EXISTS</code> predicate.
-     * <p>
-     * The following two SQL snippets are semantically equivalent:
-     * <pre><code>
-     * -- Using LEFT SEMI JOIN
-     * FROM A
-     *     LEFT SEMI JOIN B
-     *         ON A.ID = B.ID
-     *
-     * -- Using WHERE EXISTS
-     * FROM A
-     * WHERE EXISTS (
-     *     SELECT 1 FROM B WHERE A.ID = B.ID
-     * )
-     * </code></pre>
-     * <p>
-     * Notice that according to
-     * <a href="https://en.wikipedia.org/wiki/Relational_algebra">Relational
-     * algebra's</a> understanding of left semi join, the right hand side of the
-     * left semi join operator is not projected, i.e. it cannot be accessed from
-     * <code>WHERE</code> or <code>SELECT</code> or any other clause than
-     * <code>ON</code>.
-     */
-    @NotNull
-    @Support
-    TableOptionalOnStep<R> leftSemiJoin(Path<?> path);
-
-    /**
      * A synthetic <code>LEFT ANTI JOIN</code> clause that translates to an
      * equivalent <code>NOT EXISTS</code> predicate.
      * <p>
      * The following two SQL snippets are semantically equivalent:
-     * <pre><code>
+     * <code><pre>
      * -- Using LEFT ANTI JOIN
      * FROM A
      *     LEFT ANTI JOIN B
@@ -4056,7 +3118,7 @@ extends
      * WHERE NOT EXISTS (
      *     SELECT 1 FROM B WHERE A.ID = B.ID
      * )
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Notice that according to
      * <a href="https://en.wikipedia.org/wiki/Relational_algebra">Relational
@@ -4068,35 +3130,6 @@ extends
     @NotNull
     @Support
     TableOnStep<R> leftAntiJoin(TableLike<?> table);
-
-    /**
-     * A synthetic <code>LEFT ANTI JOIN</code> clause that translates to an
-     * equivalent <code>NOT EXISTS</code> predicate.
-     * <p>
-     * The following two SQL snippets are semantically equivalent:
-     * <pre><code>
-     * -- Using LEFT ANTI JOIN
-     * FROM A
-     *     LEFT ANTI JOIN B
-     *         ON A.ID = B.ID
-     *
-     * -- Using WHERE NOT EXISTS
-     * FROM A
-     * WHERE NOT EXISTS (
-     *     SELECT 1 FROM B WHERE A.ID = B.ID
-     * )
-     * </code></pre>
-     * <p>
-     * Notice that according to
-     * <a href="https://en.wikipedia.org/wiki/Relational_algebra">Relational
-     * algebra's</a> understanding of left anti join, the right hand side of the
-     * left anti join operator is not projected, i.e. it cannot be accessed from
-     * <code>WHERE</code> or <code>SELECT</code> or any other clause than
-     * <code>ON</code>.
-     */
-    @NotNull
-    @Support
-    TableOptionalOnStep<R> leftAntiJoin(Path<?> path);
 
 
 
@@ -4222,13 +3255,13 @@ extends
      * <p>
      * This method can be used in its method reference form conveniently on a
      * generated table, for instance, when mapping records in a stream:
-     * <pre><code>
+     * <code><pre>
      * DSL.using(configuration)
      *    .fetch("select * from t")
      *    .stream()
      *    .map(MY_TABLE::into)
      *    .forEach(System.out::println);
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     R from(Record record);

@@ -48,20 +48,6 @@ public class ThrowExceptionDefinition extends NoOutputDefinition<ThrowExceptionD
     public ThrowExceptionDefinition() {
     }
 
-    protected ThrowExceptionDefinition(ThrowExceptionDefinition source) {
-        super(source);
-        this.exception = source.exception;
-        this.exceptionClass = source.exceptionClass;
-        this.message = source.message;
-        this.exceptionType = source.exceptionType;
-        this.ref = source.ref;
-    }
-
-    @Override
-    public ThrowExceptionDefinition copyDefinition() {
-        return new ThrowExceptionDefinition(this);
-    }
-
     @Override
     public String toString() {
         return "ThrowException[" + description() + "]";

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,9 @@ import jakarta.websocket.CloseReason;
 import jakarta.websocket.CloseReason.CloseCodes;
 import jakarta.websocket.Extension;
 import jakarta.websocket.Session;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.socket.BinaryMessage;
@@ -53,19 +53,25 @@ public class StandardWebSocketSession extends AbstractWebSocketSession<Session> 
 
 	private final String id;
 
-	private @Nullable URI uri;
+	@Nullable
+	private URI uri;
 
 	private final HttpHeaders handshakeHeaders;
 
-	private @Nullable String acceptedProtocol;
+	@Nullable
+	private String acceptedProtocol;
 
-	private @Nullable List<WebSocketExtension> extensions;
+	@Nullable
+	private List<WebSocketExtension> extensions;
 
-	private @Nullable Principal user;
+	@Nullable
+	private Principal user;
 
-	private final @Nullable InetSocketAddress localAddress;
+	@Nullable
+	private final InetSocketAddress localAddress;
 
-	private final @Nullable InetSocketAddress remoteAddress;
+	@Nullable
+	private final InetSocketAddress remoteAddress;
 
 
 	/**
@@ -89,7 +95,7 @@ public class StandardWebSocketSession extends AbstractWebSocketSession<Session> 
 	 * @param localAddress the address on which the request was received
 	 * @param remoteAddress the address of the remote client
 	 * @param user the user associated with the session; if {@code null} we'll
-	 * fall back on the user available in the underlying WebSocket session
+	 * fallback on the user available in the underlying WebSocket session
 	 */
 	public StandardWebSocketSession(@Nullable HttpHeaders headers, @Nullable Map<String, Object> attributes,
 			@Nullable InetSocketAddress localAddress, @Nullable InetSocketAddress remoteAddress,
@@ -111,7 +117,8 @@ public class StandardWebSocketSession extends AbstractWebSocketSession<Session> 
 	}
 
 	@Override
-	public @Nullable URI getUri() {
+	@Nullable
+	public URI getUri() {
 		checkNativeSessionInitialized();
 		return this.uri;
 	}
@@ -122,7 +129,7 @@ public class StandardWebSocketSession extends AbstractWebSocketSession<Session> 
 	}
 
 	@Override
-	public @Nullable String getAcceptedProtocol() {
+	public String getAcceptedProtocol() {
 		checkNativeSessionInitialized();
 		return this.acceptedProtocol;
 	}
@@ -134,17 +141,19 @@ public class StandardWebSocketSession extends AbstractWebSocketSession<Session> 
 	}
 
 	@Override
-	public @Nullable Principal getPrincipal() {
+	public Principal getPrincipal() {
 		return this.user;
 	}
 
 	@Override
-	public @Nullable InetSocketAddress getLocalAddress() {
+	@Nullable
+	public InetSocketAddress getLocalAddress() {
 		return this.localAddress;
 	}
 
 	@Override
-	public @Nullable InetSocketAddress getRemoteAddress() {
+	@Nullable
+	public InetSocketAddress getRemoteAddress() {
 		return this.remoteAddress;
 	}
 

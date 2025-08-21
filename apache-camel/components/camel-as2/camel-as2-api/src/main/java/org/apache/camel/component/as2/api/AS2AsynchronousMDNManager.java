@@ -19,34 +19,31 @@ package org.apache.camel.component.as2.api;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 
-import org.apache.camel.component.as2.api.entity.MultipartMimeEntity;
+import org.apache.camel.component.as2.api.entity.DispositionNotificationMultipartReportEntity;
 import org.apache.camel.component.as2.api.protocol.RequestAsynchronousMDN;
-import org.apache.camel.component.as2.api.util.AS2HeaderUtils;
 import org.apache.camel.component.as2.api.util.EntityUtils;
-import org.apache.camel.util.ObjectHelper;
-import org.apache.hc.client5.http.impl.io.ManagedHttpClientConnectionFactory;
-import org.apache.hc.client5.http.io.ManagedHttpClientConnection;
-import org.apache.hc.core5.http.ClassicHttpRequest;
-import org.apache.hc.core5.http.ClassicHttpResponse;
-import org.apache.hc.core5.http.HttpException;
-import org.apache.hc.core5.http.HttpResponse;
-import org.apache.hc.core5.http.config.Http1Config;
-import org.apache.hc.core5.http.impl.io.HttpRequestExecutor;
-import org.apache.hc.core5.http.io.HttpClientConnection;
-import org.apache.hc.core5.http.io.HttpConnectionFactory;
-import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
-import org.apache.hc.core5.http.protocol.HttpCoreContext;
-import org.apache.hc.core5.http.protocol.HttpProcessor;
-import org.apache.hc.core5.http.protocol.HttpProcessorBuilder;
-import org.apache.hc.core5.http.protocol.RequestConnControl;
-import org.apache.hc.core5.http.protocol.RequestContent;
-import org.apache.hc.core5.http.protocol.RequestDate;
-import org.apache.hc.core5.http.protocol.RequestExpectContinue;
-import org.apache.hc.core5.http.protocol.RequestTargetHost;
-import org.apache.hc.core5.http.protocol.RequestUserAgent;
+import org.apache.http.HttpException;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.DefaultBHttpClientConnection;
+import org.apache.http.message.BasicHttpEntityEnclosingRequest;
+import org.apache.http.protocol.HttpCoreContext;
+import org.apache.http.protocol.HttpProcessor;
+import org.apache.http.protocol.HttpProcessorBuilder;
+import org.apache.http.protocol.HttpRequestExecutor;
+import org.apache.http.protocol.RequestConnControl;
+import org.apache.http.protocol.RequestContent;
+import org.apache.http.protocol.RequestDate;
+import org.apache.http.protocol.RequestExpectContinue;
+import org.apache.http.protocol.RequestTargetHost;
+import org.apache.http.protocol.RequestUserAgent;
+import org.apache.http.util.Args;
 
 public class AS2AsynchronousMDNManager {
 
@@ -90,61 +87,60 @@ public class AS2AsynchronousMDNManager {
     private Certificate[] signingCertificateChain;
     @SuppressWarnings("unused")
     private PrivateKey signingPrivateKey;
-    private String userName;
-    private String password;
-    private String accessToken;
 
     public AS2AsynchronousMDNManager(String as2Version,
                                      String userAgent,
                                      String senderFQDN,
                                      Certificate[] signingCertificateChain,
-                                     PrivateKey signingPrivateKey,
-                                     String userName,
-                                     String password,
-                                     String accessToken) {
+                                     PrivateKey signingPrivateKey) {
         this.signingCertificateChain = signingCertificateChain;
         this.signingPrivateKey = signingPrivateKey;
-        this.userName = userName;
-        this.password = password;
-        this.accessToken = accessToken;
 
         // Build Processor
         httpProcessor = HttpProcessorBuilder.create().add(new RequestAsynchronousMDN(as2Version, senderFQDN))
                 .add(new RequestTargetHost()).add(new RequestUserAgent(userAgent)).add(new RequestDate())
-                .add(new RequestContent(true)).add(new RequestConnControl()).add(new RequestExpectContinue())
+                .add(new RequestContent(true)).add(new RequestConnControl()).add(new RequestExpectContinue(true))
                 .build();
     }
 
-    // Sends the signed or unsigned AS2-MDN to the URI requested by the sender of the AS2 message.
     public HttpCoreContext send(
-            MultipartMimeEntity multipartMimeEntity,
-            String contentType,
+            DispositionNotificationMultipartReportEntity mdn,
             String recipientDeliveryAddress)
             throws HttpException {
-        ObjectHelper.notNull(multipartMimeEntity, "multipartMimeEntity");
-        ObjectHelper.notNull(contentType, "contentType");
-        ObjectHelper.notNull(recipientDeliveryAddress, "recipientDeliveryAddress");
+        Args.notNull(mdn, "mdn");
+        Args.notNull(recipientDeliveryAddress, "recipientDeliveryAddress");
 
-        URI uri = URI.create(recipientDeliveryAddress);
+        URI uri = null;
+        try {
+            URIBuilder uriBuilder = new URIBuilder(recipientDeliveryAddress);
+            uri = uriBuilder.build();
+
+        } catch (URISyntaxException e) {
+            throw new HttpException("Invalid recipient delivery address URL", e);
+        }
+
+        String requestUri = buildRequestURI(uri);
 
         int buffSize = 8 * 1024;
 
-        Http1Config h1Config = Http1Config.custom().setBufferSize(buffSize).build();
-        HttpConnectionFactory<ManagedHttpClientConnection> connFactory
-                = ManagedHttpClientConnectionFactory.builder().http1Config(h1Config).build();
+        try (DefaultBHttpClientConnection httpConnection = new DefaultBHttpClientConnection(buffSize)) {
 
-        try (HttpClientConnection httpConnection = connFactory.createConnection(new Socket(uri.getHost(), uri.getPort()))) {
+            HttpHost targetHost = new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme());
+
+            // Create socket and bind to connection;
+            Socket socket = new Socket(targetHost.getHostName(), targetHost.getPort());
+            httpConnection.bind(socket);
 
             // Add Context attributes
             HttpCoreContext httpContext = HttpCoreContext.create();
+            httpContext.setTargetHost(targetHost);
             httpContext.setAttribute(RECIPIENT_ADDRESS, recipientDeliveryAddress);
 
-            ClassicHttpRequest request = new BasicClassicHttpRequest("POST", uri);
-            request.setHeader(AS2Header.CONTENT_TYPE, contentType);
-            AS2HeaderUtils.addAuthorizationHeader(request, userName, password, accessToken);
+            BasicHttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", requestUri);
+            request.setHeader(AS2Header.CONTENT_TYPE, mdn.getMainMessageContentType());
             httpContext.setAttribute(HttpCoreContext.HTTP_REQUEST, request);
-            multipartMimeEntity.setMainBody(true);
-            EntityUtils.setMessageEntity(request, multipartMimeEntity);
+            mdn.setMainBody(true);
+            EntityUtils.setMessageEntity(request, mdn);
 
             HttpResponse response;
             try {
@@ -161,16 +157,31 @@ public class AS2AsynchronousMDNManager {
         }
     }
 
-    private HttpResponse send(HttpClientConnection httpConnection, ClassicHttpRequest request, HttpCoreContext httpContext)
+    private HttpResponse send(DefaultBHttpClientConnection httpConnection, HttpRequest request, HttpCoreContext httpContext)
             throws HttpException, IOException {
 
         // Execute Request
-        HttpRequestExecutor httpExecutor = new HttpRequestExecutor();
-        httpExecutor.preProcess(request, httpProcessor, httpContext);
-        ClassicHttpResponse response = httpExecutor.execute(request, httpConnection, httpContext);
-        httpExecutor.postProcess(response, httpProcessor, httpContext);
+        HttpRequestExecutor httpexecutor = new HttpRequestExecutor();
+        httpexecutor.preProcess(request, httpProcessor, httpContext);
+        HttpResponse response = httpexecutor.execute(request, httpConnection, httpContext);
+        httpexecutor.postProcess(response, httpProcessor, httpContext);
 
         return response;
     }
 
+    private String buildRequestURI(URI uri) {
+        StringBuilder sb = new StringBuilder();
+        if (uri.getPath() != null) {
+            sb.append(uri.getPath());
+        }
+        if (uri.getQuery() != null) {
+            sb.append('?');
+            sb.append(uri.getQuery());
+        }
+        if (uri.getFragment() != null) {
+            sb.append('#');
+            sb.append(uri.getFragment());
+        }
+        return sb.toString();
+    }
 }

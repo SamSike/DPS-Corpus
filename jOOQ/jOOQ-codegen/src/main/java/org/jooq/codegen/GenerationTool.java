@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,11 +40,8 @@ package org.jooq.codegen;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Comparator.comparing;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toList;
 import static org.jooq.SQLDialect.HSQLDB;
 import static org.jooq.impl.DSL.selectOne;
-import static org.jooq.meta.Logging.log;
 import static org.jooq.tools.StringUtils.defaultIfBlank;
 import static org.jooq.tools.StringUtils.defaultIfNull;
 import static org.jooq.tools.StringUtils.defaultString;
@@ -67,18 +64,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 import javax.sql.DataSource;
 
 import org.jooq.Constants;
 import org.jooq.DSLContext;
 import org.jooq.Log.Level;
-import org.jooq.Source;
 import org.jooq.impl.DSL;
 import org.jooq.meta.CatalogVersionProvider;
+import org.jooq.meta.ClassUtils;
 import org.jooq.meta.Database;
 import org.jooq.meta.Databases;
 import org.jooq.meta.Definition;
@@ -95,12 +89,9 @@ import org.jooq.meta.jaxb.SchemaMappingType;
 import org.jooq.meta.jaxb.Strategy;
 import org.jooq.meta.jaxb.Target;
 // ...
-import org.jooq.tools.ClassUtils;
 import org.jooq.tools.JooqLogger;
 import org.jooq.tools.StringUtils;
 import org.jooq.tools.jdbc.JDBCUtils;
-import org.jooq.tools.reflect.CompileOptions;
-import org.jooq.tools.reflect.Reflect;
 import org.jooq.util.jaxb.tools.MiniJAXB;
 
 
@@ -245,14 +236,30 @@ public class GenerationTool {
     }
 
     public void run(Configuration configuration) throws Exception {
-        org.jooq.meta.Logging.run(configuration.getOnError(), () -> run0(configuration));
+        try {
+            run0(configuration);
+        }
+        catch (Exception e) {
+            OnError onError = configuration.getOnError();
+            if (onError == null) {
+                onError = OnError.FAIL;
+            }
+            switch (onError) {
+                case SILENT:
+                    break;
+                case LOG:
+                    log.warn("Code generation failed", e);
+                    break;
+                case FAIL:
+                    throw e;
+            }
+        }
     }
 
     @SuppressWarnings({ "unchecked", "unused" })
     private void run0(Configuration configuration) throws Exception {
         // Trigger logging of jOOQ logo eagerly already here
         selectOne().toString();
-        boolean propertyOverride = "true".equalsIgnoreCase(System.getProperty("jooq.codegen.propertyOverride"));
 
         if (configuration.getLogging() != null) {
             setGlobalLoggingThreshold(configuration);
@@ -320,29 +327,44 @@ public class GenerationTool {
                     setConnection(dataSource.getConnection());
                 }
                 else {
-                    j = defaultIfNull(j, new Jdbc());
+                    String url = System.getProperty("jooq.codegen.jdbc.url");
 
-                    set(j, propertyOverride, o -> null, "jooq.codegen.jdbc.driver", Jdbc::getDriver, Jdbc::setDriver);
-                    set(j, propertyOverride, Jdbc::getUrlProperty, "jooq.codegen.jdbc.url", Jdbc::getUrl, Jdbc::setUrl);
-                    set(j, propertyOverride, o -> null, "jooq.codegen.jdbc.user", Jdbc::getUser, Jdbc::setUser);
-                    set(j, propertyOverride, o -> null, "jooq.codegen.jdbc.username", Jdbc::getUsername, Jdbc::setUsername);
-                    set(j, propertyOverride, o -> null, "jooq.codegen.jdbc.password", Jdbc::getPassword, Jdbc::setPassword);
-                    set(j, propertyOverride, o -> null, "jooq.codegen.jdbc.autoCommit", Jdbc::isAutoCommit, Jdbc::setAutoCommit, Boolean::valueOf);
-                    set(j, propertyOverride, o -> null, "jooq.codegen.jdbc.initScript", Jdbc::getInitScript, Jdbc::setInitScript);
-                    set(j, propertyOverride, o -> null, "jooq.codegen.jdbc.initSeparator", Jdbc::getInitSeparator, Jdbc::setInitSeparator);
+                    if (url != null) {
+                        j = defaultIfNull(j, new Jdbc());
+
+                        if (j.getDriver() == null)
+                            j.setDriver(System.getProperty("jooq.codegen.jdbc.driver"));
+                        if (j.getUrl() == null)
+                            j.setUrl(url);
+                        if (j.getUser() == null)
+                            j.setUser(System.getProperty("jooq.codegen.jdbc.user"));
+                        if (j.getUsername() == null)
+                            j.setUsername(System.getProperty("jooq.codegen.jdbc.username"));
+                        if (j.getPassword() == null)
+                            j.setPassword(System.getProperty("jooq.codegen.jdbc.password"));
+
+                        if (j.isAutoCommit() == null) {
+                            String a = System.getProperty("jooq.codegen.jdbc.autoCommit");
+
+                            if (a != null)
+                                j.setAutoCommit(Boolean.valueOf(a));
+                        }
+
+                        if (j.getInitScript() == null)
+                            j.setInitScript(System.getProperty("jooq.codegen.jdbc.initScript"));
+                        if (j.getInitSeparator() == null)
+                            j.setInitSeparator(System.getProperty("jooq.codegen.jdbc.initSeparator"));
+                    }
 
                     if (j != null && !StringUtils.isBlank(j.getUrl())) {
                         try {
                             Class<? extends Driver> driver = (Class<? extends Driver>) loadClass(driverClass(j));
 
                             Properties properties = properties(j.getProperties());
-                            String u = defaultString(defaultString(j.getUser(), j.getUsername()));
-                            String p = defaultString(j.getPassword());
-
-                            if (!properties.containsKey("user") && !u.isEmpty())
-                                properties.put("user", u);
-                            if (!properties.containsKey("password") && !p.isEmpty())
-                                properties.put("password", p);
+                            if (!properties.containsKey("user"))
+                                properties.put("user", defaultString(defaultString(j.getUser(), j.getUsername())));
+                            if (!properties.containsKey("password"))
+                                properties.put("password", defaultString(j.getPassword()));
 
                             Connection c = driver.newInstance().connect(defaultString(j.getUrl()), properties);
 
@@ -352,13 +374,8 @@ public class GenerationTool {
 
                             setConnection(c);
 
-                            // [#16823] TODO: Move execution logic into the core library
                             if (j.getInitScript() != null)
-                                for (String sql : Source
-                                    .resolve(j.getInitScript())
-                                    .readString()
-                                    .split(defaultIfBlank(j.getInitSeparator(), ";"))
-                                )
+                                for (String sql : j.getInitScript().split(defaultIfBlank(j.getInitSeparator(), ";")))
                                     if (!StringUtils.isBlank(sql))
                                         ctx.execute(sql);
                         }
@@ -382,13 +399,9 @@ public class GenerationTool {
 
             // Initialise generator
             // --------------------
-            Class<Generator> generatorClass = (Class<Generator>) (
-                  !isBlank(g.getJava())
-                ? compile(g.getName(), g.getJava(), Generator.class)
-                : !isBlank(g.getName())
+            Class<Generator> generatorClass = (Class<Generator>) (!isBlank(g.getName())
                 ? loadClass(trim(g.getName()))
-                : JavaGenerator.class
-            );
+                : JavaGenerator.class);
             Generator generator = generatorClass.newInstance();
 
             GeneratorStrategy strategy;
@@ -402,51 +415,30 @@ public class GenerationTool {
                     // [#7416] Depending on who is unmarshalling the Configuration (Maven / JAXB),
                     //         the XSD's default value might apply, which we can safely ignore.
                     if (!DefaultGeneratorStrategy.class.getName().equals(g.getStrategy().getName()))
-                        log(configuration.getOnMisconfiguration(),
-                            () -> "Matchers take precedence over custom strategy. Strategy ignored: " + g.getStrategy().getName());
+                        log.warn("WARNING: Matchers take precedence over custom strategy. Strategy ignored: " +
+                            g.getStrategy().getName());
 
                     g.getStrategy().setName(null);
                 }
             }
             else {
-                Class<GeneratorStrategy> strategyClass = (Class<GeneratorStrategy>) (
-                      !isBlank(g.getStrategy().getJava())
-                    ? compile(g.getStrategy().getName(), g.getStrategy().getJava(), GeneratorStrategy.class)
-                    : !isBlank(g.getStrategy().getName())
+                Class<GeneratorStrategy> strategyClass = (Class<GeneratorStrategy>) (!isBlank(g.getStrategy().getName())
                     ? loadClass(trim(g.getStrategy().getName()))
-                    : DefaultGeneratorStrategy.class
-                );
-
+                    : DefaultGeneratorStrategy.class);
                 strategy = strategyClass.newInstance();
             }
 
             generator.setStrategy(strategy);
 
-            Class<? extends Database> databaseClass =
-                  !isBlank(d.getJava())
-                ? compile(databaseName, d.getJava(), Database.class)
-                : !isBlank(databaseName)
+            Class<? extends Database> databaseClass = !isBlank(databaseName)
                 ? (Class<? extends Database>) loadClass(databaseName)
                 : connection != null
                 ? databaseClass(connection)
                 : databaseClass(j);
-
             database = databaseClass.newInstance();
-
-
-
-
-
-
-
             database.setBasedir(configuration.getBasedir());
             database.setProperties(properties(d.getProperties()));
             database.setOnError(configuration.getOnError());
-            database.setOnDeprecated(configuration.getOnDeprecated());
-            database.setOnExperimental(configuration.getOnExperimental());
-            database.setOnMisconfiguration(configuration.getOnMisconfiguration());
-            database.setOnMetadataProblem(configuration.getOnMetadataProblem());
-            database.setOnPerformanceProblem(configuration.getOnPerformanceProblem());
 
             List<CatalogMappingType> catalogs = d.getCatalogs();
             List<SchemaMappingType> schemata = d.getSchemata();
@@ -457,8 +449,7 @@ public class GenerationTool {
             // For convenience, the catalog configuration can be set also directly in the <database/> element
             if (catalogsEmpty) {
                 if (isBlank(d.getInputCatalog()) && !isBlank(d.getOutputCatalog()))
-                    log(configuration.getOnMisconfiguration(),
-                        () -> "/configuration/generator/database/outputCatalog must be paired with /configuration/generator/database/inputCatalog");
+                    log.warn("WARNING: /configuration/generator/database/outputCatalog must be paired with /configuration/generator/database/inputCatalog");
 
                 CatalogMappingType catalog = new CatalogMappingType();
                 catalog.setInputCatalog(trim(d.getInputCatalog()));
@@ -473,8 +464,7 @@ public class GenerationTool {
                 // in the <database/> element
                 if (schemataEmpty) {
                     if (isBlank(d.getInputSchema()) && !isBlank(d.getOutputSchema()))
-                        log(configuration.getOnMisconfiguration(),
-                            () -> "/configuration/generator/database/outputSchema must be paired with /configuration/generator/database/inputSchema");
+                        log.warn("WARNING: /configuration/generator/database/outputSchema must be paired with /configuration/generator/database/inputSchema");
 
                     SchemaMappingType schema = new SchemaMappingType();
                     schema.setInputSchema(trim(d.getInputSchema()));
@@ -489,40 +479,27 @@ public class GenerationTool {
                     catalog.getSchemata().addAll(schemata);
 
                     if (!isBlank(d.getInputSchema()))
-                        log(configuration.getOnMisconfiguration(),
-                            () -> "Cannot combine configuration properties /configuration/generator/database/inputSchema and /configuration/generator/database/schemata");
-
+                        log.warn("WARNING: Cannot combine configuration properties /configuration/generator/database/inputSchema and /configuration/generator/database/schemata");
                     if (!isBlank(d.getOutputSchema()))
-                        log(configuration.getOnMisconfiguration(),
-                            () -> "Cannot combine configuration properties /configuration/generator/database/outputSchema and /configuration/generator/database/schemata");
+                        log.warn("WARNING: Cannot combine configuration properties /configuration/generator/database/outputSchema and /configuration/generator/database/schemata");
                 }
             }
             else {
                 if (!isBlank(d.getInputCatalog()))
-                    log(configuration.getOnMisconfiguration(),
-                        () -> "Cannot combine configuration properties /configuration/generator/database/inputCatalog and /configuration/generator/database/catalogs");
-
+                    log.warn("WARNING: Cannot combine configuration properties /configuration/generator/database/inputCatalog and /configuration/generator/database/catalogs");
                 if (!isBlank(d.getOutputCatalog()))
-                    log(configuration.getOnMisconfiguration(),
-                        () -> "Cannot combine configuration properties /configuration/generator/database/outputCatalog and /configuration/generator/database/catalogs");
-
+                    log.warn("WARNING: Cannot combine configuration properties /configuration/generator/database/outputCatalog and /configuration/generator/database/catalogs");
                 if (!isBlank(d.getInputSchema()))
-                    log(configuration.getOnMisconfiguration(),
-                        () -> "Cannot combine configuration properties /configuration/generator/database/inputSchema and /configuration/generator/database/catalogs");
-
+                    log.warn("WARNING: Cannot combine configuration properties /configuration/generator/database/inputSchema and /configuration/generator/database/catalogs");
                 if (!isBlank(d.getOutputSchema()))
-                    log(configuration.getOnMisconfiguration(),
-                        () -> "Cannot combine configuration properties /configuration/generator/database/outputSchema and /configuration/generator/database/catalogs");
-
+                    log.warn("WARNING: Cannot combine configuration properties /configuration/generator/database/outputSchema and /configuration/generator/database/catalogs");
                 if (!schemataEmpty)
-                    log(configuration.getOnMisconfiguration(),
-                        () -> "Cannot combine configuration properties /configuration/generator/database/catalogs and /configuration/generator/database/schemata");
+                    log.warn("WARNING: Cannot combine configuration properties /configuration/generator/database/catalogs and /configuration/generator/database/schemata");
             }
 
             for (CatalogMappingType catalog : catalogs) {
                 if ("".equals(catalog.getOutputCatalog()))
-                    log(configuration.getOnMisconfiguration(),
-                        () -> "Empty <outputCatalog/> should not be used to model default outputCatalogs. Use <outputCatalogToDefault>true</outputCatalogToDefault>, instead. See also: https://github.com/jOOQ/jOOQ/issues/3018");
+                    log.warn("WARNING: Empty <outputCatalog/> should not be used to model default outputCatalogs. Use <outputCatalogToDefault>true</outputCatalogToDefault>, instead. See also: https://github.com/jOOQ/jOOQ/issues/3018");
 
                 // [#3018] If users want the output catalog to be "" then, ignore the actual <outputCatalog/> configuration
                 if (TRUE.equals(catalog.isOutputCatalogToDefault()))
@@ -538,8 +515,7 @@ public class GenerationTool {
                 for (SchemaMappingType schema : catalog.getSchemata()) {
                     if (catalogsEmpty && schemataEmpty && isBlank(schema.getInputSchema())) {
                         if (!isBlank(j.getSchema()))
-                            log(configuration.getOnDeprecated(),
-                                () -> "The configuration property jdbc.Schema is deprecated and will be removed in the future. Use /configuration/generator/database/inputSchema instead");
+                            log.warn("WARNING: The configuration property jdbc.Schema is deprecated and will be removed in the future. Use /configuration/generator/database/inputSchema instead");
 
                         schema.setInputSchema(trim(j.getSchema()));
                     }
@@ -548,8 +524,7 @@ public class GenerationTool {
                     // the outputSchema should be the default schema. This is a bit too clever, and doesn't
                     // work when Maven parses the XML configurations.
                     if ("".equals(schema.getOutputSchema()))
-                        log(configuration.getOnMisconfiguration(),
-                            () -> "Empty <outputSchema/> should not be used to model default outputSchemas. Use <outputSchemaToDefault>true</outputSchemaToDefault>, instead. See also: https://github.com/jOOQ/jOOQ/issues/3018");
+                        log.warn("WARNING: Empty <outputSchema/> should not be used to model default outputSchemas. Use <outputSchemaToDefault>true</outputSchemaToDefault>, instead. See also: https://github.com/jOOQ/jOOQ/issues/3018");
 
                     // [#3018] If users want the output schema to be "" then, ignore the actual <outputSchema/> configuration
                     if (TRUE.equals(schema.isOutputSchemaToDefault()))
@@ -578,14 +553,8 @@ public class GenerationTool {
             database.setConnection(connection);
             database.setConfiguredCatalogs(catalogs);
             database.setConfiguredSchemata(schemata);
-
-            if (!isBlank(d.getIncludes()))
-                database.setIncludes(new String[] { d.getIncludes() });
-            if (!isBlank(d.getExcludes()))
-                database.setExcludes(new String[] { d.getExcludes() });
-
-            database.setIncludeSql(d.getIncludeSql());
-            database.setExcludeSql(d.getExcludeSql());
+            database.setIncludes(new String[] { defaultString(d.getIncludes()) });
+            database.setExcludes(new String[] { defaultString(d.getExcludes()) });
 
             // [#10763] Currently, the javaTimeTypes flag needs to be set before
             //          the forcedTypesForBuiltinDataTypeExtensions flag.
@@ -615,19 +584,13 @@ public class GenerationTool {
             database.setIncludeSystemSequences(TRUE.equals(d.isIncludeSystemSequences()));
             database.setIncludeSystemUDTs(TRUE.equals(d.isIncludeSystemUDTs()));
             database.setIncludeInvisibleColumns(!FALSE.equals(d.isIncludeInvisibleColumns()));
-            database.setInvisibleColumnsAsHidden(!FALSE.equals(d.isInvisibleColumnsAsHidden()));
             database.setIncludePrimaryKeys(!FALSE.equals(d.isIncludePrimaryKeys()));
             database.setIncludeRoutines(!FALSE.equals(d.isIncludeRoutines()));
             database.setIncludeDomains(!FALSE.equals(d.isIncludeDomains()));
-
-
-
-
             database.setIncludeSequences(!FALSE.equals(d.isIncludeSequences()));
             database.setIncludeTables(!FALSE.equals(d.isIncludeTables()));
             database.setIncludeEmbeddables(!FALSE.equals(d.isIncludeEmbeddables()));
             database.setIncludeTriggerRoutines(TRUE.equals(d.isIncludeTriggerRoutines()));
-            database.setIncludeXMLSchemaCollections(!FALSE.equals(d.isIncludeXMLSchemaCollections()));
             database.setIncludeUDTs(!FALSE.equals(d.isIncludeUDTs()));
             database.setIncludeUniqueKeys(!FALSE.equals(d.isIncludeUniqueKeys()));
             database.setForceIntegerTypesOnZeroScaleDecimals(!FALSE.equals(d.isForceIntegerTypesOnZeroScaleDecimals()));
@@ -640,7 +603,6 @@ public class GenerationTool {
             database.setConfiguredEnumTypes(d.getEnumTypes());
             database.setConfiguredForcedTypes(d.getForcedTypes());
             database.setForcedTypesForBuiltinDataTypeExtensions(d.isForcedTypesForBuiltinDataTypeExtensions());
-            database.setForcedTypesForXMLSchemaCollections(d.isForcedTypesForXMLSchemaCollections());
             database.setConfiguredEmbeddables(d.getEmbeddables());
             database.setConfiguredComments(d.getComments());
             database.setConfiguredSyntheticObjects(d.getSyntheticObjects());
@@ -656,8 +618,8 @@ public class GenerationTool {
             if (d.getRegexFlags() != null) {
                 database.setRegexFlags(d.getRegexFlags());
 
-                if (strategy instanceof MatcherStrategy s)
-                    s.getPatterns().setRegexFlags(d.getRegexFlags());
+                if (strategy instanceof MatcherStrategy)
+                    ((MatcherStrategy) strategy).getPatterns().setRegexFlags(d.getRegexFlags());
             }
 
             database.setRegexMatchesPartialQualification(!FALSE.equals(d.isRegexMatchesPartialQualification()));
@@ -712,19 +674,15 @@ public class GenerationTool {
                 if (Comparator.class.isAssignableFrom(orderProvider))
                     database.setOrderProvider((Comparator<Definition>) orderProvider.newInstance());
                 else
-                    log(configuration.getOnMisconfiguration(),
-                        () -> "Order provider must be of type java.util.Comparator: " + orderProvider);
+                    log.warn("Order provider must be of type java.util.Comparator: " + orderProvider);
             }
 
             if (d.getEnumTypes().size() > 0)
-                log(configuration.getOnDeprecated(),
-                    () -> "The configuration property /configuration/generator/database/enumTypes is experimental and deprecated and will be removed in the future.");
+                log.warn("DEPRECATED", "The configuration property /configuration/generator/database/enumTypes is experimental and deprecated and will be removed in the future.");
             if (Boolean.TRUE.equals(d.isDateAsTimestamp()))
-                log(configuration.getOnDeprecated(),
-                    () -> "The configuration property /configuration/generator/database/dateAsTimestamp is deprecated as it is superseded by custom bindings and converters. It will thus be removed in the future. More information here: https://www.jooq.org/doc/latest/manual/reference/reference-data-types/data-types-oracle-date/");
+                log.warn("DEPRECATED", "The configuration property /configuration/generator/database/dateAsTimestamp is deprecated as it is superseded by custom bindings and converters. It will thus be removed in the future.");
             if (Boolean.TRUE.equals(d.isIgnoreProcedureReturnValues()))
-                log(configuration.getOnDeprecated(),
-                    () -> "The <ignoreProcedureReturnValues/> flag is deprecated and used for backwards-compatibility only. It will be removed in the future.");
+                log.warn("DEPRECATED", "The <ignoreProcedureReturnValues/> flag is deprecated and used for backwards-compatibility only. It will be removed in the future.");
 
             if (isBlank(g.getTarget().getPackageName()))
                 g.getTarget().setPackageName(DEFAULT_TARGET_PACKAGENAME);
@@ -733,10 +691,14 @@ public class GenerationTool {
             if (isBlank(g.getTarget().getEncoding()))
                 g.getTarget().setEncoding(DEFAULT_TARGET_ENCODING);
 
-            set(g.getTarget(), propertyOverride, o -> null, "jooq.codegen.target.packageName", Target::getPackageName, Target::setPackageName, identity(), DEFAULT_TARGET_PACKAGENAME::equals);
-            set(g.getTarget(), propertyOverride, o -> null, "jooq.codegen.target.directory", Target::getDirectory, Target::setDirectory, identity(), DEFAULT_TARGET_DIRECTORY::equals);
-            set(g.getTarget(), propertyOverride, o -> null, "jooq.codegen.target.encoding", Target::getEncoding, Target::setEncoding, identity(), DEFAULT_TARGET_ENCODING::equals);
-            set(g.getTarget(), propertyOverride, o -> null, "jooq.codegen.target.locale", Target::getLocale, Target::setLocale);
+            if (DEFAULT_TARGET_PACKAGENAME.equals(g.getTarget().getPackageName()) && System.getProperty("jooq.codegen.target.packageName") != null)
+                g.getTarget().setPackageName(System.getProperty("jooq.codegen.target.packageName"));
+            if (DEFAULT_TARGET_DIRECTORY.equals(g.getTarget().getDirectory()) && System.getProperty("jooq.codegen.target.directory") != null)
+                g.getTarget().setDirectory(System.getProperty("jooq.codegen.target.directory"));
+            if (DEFAULT_TARGET_ENCODING.equals(g.getTarget().getEncoding()) && System.getProperty("jooq.codegen.target.encoding") != null)
+                g.getTarget().setEncoding(System.getProperty("jooq.codegen.target.encoding"));
+            if (isBlank(g.getTarget().getLocale()) && System.getProperty("jooq.codegen.target.locale") != null)
+                g.getTarget().setLocale(System.getProperty("jooq.codegen.target.locale"));
 
             // [#2887] [#9727] Patch relative paths to take plugin execution basedir into account
             if (!new File(g.getTarget().getDirectory()).isAbsolute())
@@ -754,22 +716,20 @@ public class GenerationTool {
                 generator.setGenerateIndexes(g.getGenerate().isIndexes());
             if (g.getGenerate().isRelations() != null)
                 generator.setGenerateRelations(g.getGenerate().isRelations());
-            if (g.getGenerate().isUdtPaths() != null)
-                generator.setGenerateUDTPaths(g.getGenerate().isUdtPaths());
-            if (g.getGenerate().isUdtConstructors() != null)
-                generator.setGenerateUDTConstructors(g.getGenerate().isUdtConstructors());
             if (g.getGenerate().isImplicitJoinPathsToOne() != null)
                 generator.setGenerateImplicitJoinPathsToOne(g.getGenerate().isImplicitJoinPathsToOne());
-            if (g.getGenerate().isImplicitJoinPathsToMany() != null)
-                generator.setGenerateImplicitJoinPathsToMany(g.getGenerate().isImplicitJoinPathsToMany());
-            if (g.getGenerate().isImplicitJoinPathsManyToMany() != null)
-                generator.setGenerateImplicitJoinPathsManyToMany(g.getGenerate().isImplicitJoinPathsManyToMany());
-            if (g.getGenerate().isImplicitJoinPathTableSubtypes() != null)
-                generator.setGenerateImplicitJoinPathTableSubtypes(g.getGenerate().isImplicitJoinPathTableSubtypes());
-            if (g.getGenerate().isImplicitJoinPathUnusedConstructors() != null)
-                generator.setGenerateImplicitJoinPathUnusedConstructors(g.getGenerate().isImplicitJoinPathUnusedConstructors());
             if (g.getGenerate().isImplicitJoinPathsAsKotlinProperties() != null)
                 generator.setGenerateImplicitJoinPathsAsKotlinProperties(g.getGenerate().isImplicitJoinPathsAsKotlinProperties());
+            if (g.getGenerate().isExistsConvenienceOneToMany() != null)
+                generator.setGenerateExistsConvenienceOneToMany(g.getGenerate().isExistsConvenienceOneToMany());
+            if (g.getGenerate().isExistsConvenienceManyToMany() != null)
+                generator.setGenerateExistsConvenienceManyToMany(g.getGenerate().isExistsConvenienceManyToMany());
+            if (g.getGenerate().isRowConvenienceToOne() != null)
+                generator.setGenerateRowConvenienceToOne(g.getGenerate().isRowConvenienceToOne());
+            if (g.getGenerate().isMultisetConvenienceOneToMany() != null)
+                generator.setGenerateMultisetConvenienceOneToMany(g.getGenerate().isMultisetConvenienceOneToMany());
+            if (g.getGenerate().isMultisetConvenienceManyToMany() != null)
+                generator.setGenerateMultisetConvenienceManyToMany(g.getGenerate().isMultisetConvenienceManyToMany());
             if (g.getGenerate().isDeprecated() != null)
                 generator.setGenerateDeprecated(g.getGenerate().isDeprecated());
             if (g.getGenerate().isDeprecationOnUnknownTypes() != null)
@@ -784,16 +744,12 @@ public class GenerationTool {
                 generator.setGenerateGeneratedAnnotationType(g.getGenerate().getGeneratedAnnotationType());
             if (g.getGenerate().isGeneratedAnnotationDate() != null)
                 generator.setGenerateGeneratedAnnotationDate(g.getGenerate().isGeneratedAnnotationDate());
-            if (g.getGenerate().isGeneratedAnnotationJooqVersion() != null)
-                generator.setGenerateGeneratedAnnotationJooqVersion(g.getGenerate().isGeneratedAnnotationJooqVersion());
             if (g.getGenerate().isNonnullAnnotation() != null)
                 generator.setGenerateNonnullAnnotation(g.getGenerate().isNonnullAnnotation());
             if (g.getGenerate().getNonnullAnnotationType() != null)
                 generator.setGeneratedNonnullAnnotationType(g.getGenerate().getNonnullAnnotationType());
             if (g.getGenerate().isNullableAnnotation() != null)
                 generator.setGenerateNullableAnnotation(g.getGenerate().isNullableAnnotation());
-            if (g.getGenerate().isNullableAnnotationOnWriteOnlyNullableTypes() != null)
-                generator.setGenerateNullableAnnotationOnWriteOnlyNullableTypes(g.getGenerate().isNullableAnnotationOnWriteOnlyNullableTypes());
             if (g.getGenerate().getNullableAnnotationType() != null)
                 generator.setGeneratedNullableAnnotationType(g.getGenerate().getNullableAnnotationType());
             if (g.getGenerate().isConstructorPropertiesAnnotation() != null)
@@ -804,12 +760,6 @@ public class GenerationTool {
                 generator.setGenerateConstructorPropertiesAnnotationOnRecords(g.getGenerate().isConstructorPropertiesAnnotationOnRecords());
             if (g.getGenerate().isRoutines() != null)
                 generator.setGenerateRoutines(g.getGenerate().isRoutines());
-
-
-
-
-
-
             if (g.getGenerate().isSequences() != null)
                 generator.setGenerateSequences(g.getGenerate().isSequences());
             if (g.getGenerate().isSequenceFlags() != null)
@@ -822,27 +772,12 @@ public class GenerationTool {
                 generator.setGenerateEmbeddables(g.getGenerate().isEmbeddables());
             if (g.getGenerate().isRecords() != null)
                 generator.setGenerateRecords(g.getGenerate().isRecords());
-            if (g.getGenerate().getRecordsIncludes() != null)
-                generator.setGenerateRecordsIncludes(g.getGenerate().getRecordsIncludes());
-            if (g.getGenerate().getRecordsExcludes() != null)
-                generator.setGenerateRecordsExcludes(g.getGenerate().getRecordsExcludes());
             if (g.getGenerate().isRecordsImplementingRecordN() != null)
                 generator.setGenerateRecordsImplementingRecordN(g.getGenerate().isRecordsImplementingRecordN());
-            if (g.getGenerate().isEnumsAsScalaSealedTraits() != null) {
+            if (g.getGenerate().isEnumsAsScalaSealedTraits() != null)
                 generator.setGenerateEnumsAsScalaSealedTraits(g.getGenerate().isEnumsAsScalaSealedTraits());
-
-                log(configuration.getOnDeprecated(),
-                    () -> "The <generateEnumsAsScalaSealedTraits/> flag is deprecated and will be removed in the future."
-                );
-            }
-            if (g.getGenerate().isEnumsAsScalaEnums() != null)
-                generator.setGenerateEnumsAsScalaEnums(g.getGenerate().isEnumsAsScalaEnums());
             if (g.getGenerate().isPojos() != null)
                 generator.setGeneratePojos(g.getGenerate().isPojos());
-            if (g.getGenerate().getPojosIncludes() != null)
-                generator.setGeneratePojosIncludes(g.getGenerate().getPojosIncludes());
-            if (g.getGenerate().getPojosExcludes() != null)
-                generator.setGeneratePojosExcludes(g.getGenerate().getPojosExcludes());
             if (g.getGenerate().isPojosAsJavaRecordClasses() != null)
                 generator.setGeneratePojosAsJavaRecordClasses(g.getGenerate().isPojosAsJavaRecordClasses());
             if (g.getGenerate().isPojosAsScalaCaseClasses() != null)
@@ -853,10 +788,6 @@ public class GenerationTool {
                 generator.setGenerateImmutablePojos(g.getGenerate().isImmutablePojos());
             if (g.getGenerate().isSerializablePojos() != null)
                 generator.setGenerateSerializablePojos(g.getGenerate().isSerializablePojos());
-
-
-
-
             if (g.getGenerate().isInterfaces() != null)
                 generator.setGenerateInterfaces(g.getGenerate().isInterfaces());
             if (g.getGenerate().isImmutableInterfaces() != null)
@@ -865,10 +796,6 @@ public class GenerationTool {
                 generator.setGenerateSerializableInterfaces(g.getGenerate().isSerializableInterfaces());
             if (g.getGenerate().isDaos() != null)
                 generator.setGenerateDaos(g.getGenerate().isDaos());
-            if (g.getGenerate().getDaosIncludes() != null)
-                generator.setGenerateDaosIncludes(g.getGenerate().getDaosIncludes());
-            if (g.getGenerate().getDaosExcludes() != null)
-                generator.setGenerateDaosExcludes(g.getGenerate().getDaosExcludes());
             if (g.getGenerate().isJooqVersionReference() != null)
                 generator.setGenerateJooqVersionReference(g.getGenerate().isJooqVersionReference());
             if (g.getGenerate().isJpaAnnotations() != null)
@@ -883,16 +810,6 @@ public class GenerationTool {
                 generator.setGenerateSpringDao(g.getGenerate().isSpringDao());
             if (g.getGenerate().isKotlinSetterJvmNameAnnotationsOnIsPrefix() != null)
                 generator.setGenerateKotlinSetterJvmNameAnnotationsOnIsPrefix(g.getGenerate().isKotlinSetterJvmNameAnnotationsOnIsPrefix());
-            if (g.getGenerate().isKotlinNotNullPojoAttributes() != null)
-                generator.setGenerateKotlinNotNullPojoAttributes(g.getGenerate().isKotlinNotNullPojoAttributes());
-            if (g.getGenerate().isKotlinNotNullRecordAttributes() != null)
-                generator.setGenerateKotlinNotNullRecordAttributes(g.getGenerate().isKotlinNotNullRecordAttributes());
-            if (g.getGenerate().isKotlinNotNullInterfaceAttributes() != null)
-                generator.setGenerateKotlinNotNullInterfaceAttributes(g.getGenerate().isKotlinNotNullInterfaceAttributes());
-            if (g.getGenerate().isKotlinDefaultedNullablePojoAttributes() != null)
-                generator.setGenerateKotlinDefaultedNullablePojoAttributes(g.getGenerate().isKotlinDefaultedNullablePojoAttributes());
-            if (g.getGenerate().isKotlinDefaultedNullableRecordAttributes() != null)
-                generator.setGenerateKotlinDefaultedNullableRecordAttributes(g.getGenerate().isKotlinDefaultedNullableRecordAttributes());
             if (g.getGenerate().getGeneratedSerialVersionUID() != null)
                 generator.setGenerateGeneratedSerialVersionUID(g.getGenerate().getGeneratedSerialVersionUID());
             if (g.getGenerate().getMaxMembersPerInitialiser() != null)
@@ -903,20 +820,12 @@ public class GenerationTool {
                 generator.setGenerateLinks(g.getGenerate().isLinks());
             if (g.getGenerate().isKeys() != null)
                 generator.setGenerateKeys(g.getGenerate().isKeys());
-            if (g.getGenerate().isGlobalObjectNames() != null)
-                generator.setGenerateGlobalObjectNames(g.getGenerate().isGlobalObjectNames());
             if (g.getGenerate().isGlobalObjectReferences() != null)
                 generator.setGenerateGlobalObjectReferences(g.getGenerate().isGlobalObjectReferences());
             if (g.getGenerate().isGlobalCatalogReferences() != null)
                 generator.setGenerateGlobalCatalogReferences(g.getGenerate().isGlobalCatalogReferences());
             if (g.getGenerate().isGlobalDomainReferences() != null)
                 generator.setGenerateGlobalDomainReferences(g.getGenerate().isGlobalDomainReferences());
-
-
-
-
-
-
             if (g.getGenerate().isGlobalSchemaReferences() != null)
                 generator.setGenerateGlobalSchemaReferences(g.getGenerate().isGlobalSchemaReferences());
             if (g.getGenerate().isGlobalRoutineReferences() != null)
@@ -935,10 +844,6 @@ public class GenerationTool {
                 generator.setGenerateGlobalKeyReferences(g.getGenerate().isGlobalKeyReferences());
             if (g.getGenerate().isGlobalIndexReferences() != null)
                 generator.setGenerateGlobalIndexReferences(g.getGenerate().isGlobalIndexReferences());
-            if (g.getGenerate().isDefaultCatalog() != null)
-                generator.setGenerateDefaultCatalog(g.getGenerate().isDefaultCatalog());
-            if (g.getGenerate().isDefaultSchema() != null)
-                generator.setGenerateDefaultSchema(g.getGenerate().isDefaultSchema());
             if (g.getGenerate().isJavadoc() != null)
                 generator.setGenerateJavadoc(g.getGenerate().isJavadoc());
             if (g.getGenerate().isComments() != null)
@@ -965,8 +870,6 @@ public class GenerationTool {
                 generator.setGenerateCommentsOnSchemas(g.getGenerate().isCommentsOnSchemas());
             if (g.getGenerate().isCommentsOnSequences() != null)
                 generator.setGenerateCommentsOnSequences(g.getGenerate().isCommentsOnSequences());
-            if (g.getGenerate().isCommentsOnDomains() != null)
-                generator.setGenerateCommentsOnDomains(g.getGenerate().isCommentsOnDomains());
             if (g.getGenerate().isCommentsOnTables() != null)
                 generator.setGenerateCommentsOnTables(g.getGenerate().isCommentsOnTables());
             if (g.getGenerate().isCommentsOnEmbeddables() != null)
@@ -987,12 +890,6 @@ public class GenerationTool {
                 generator.setGenerateVarargsSetters(g.getGenerate().isVarargSetters());
             if (g.getGenerate().isPojosEqualsAndHashCode() != null)
                 generator.setGeneratePojosEqualsAndHashCode(g.getGenerate().isPojosEqualsAndHashCode());
-            if (g.getGenerate().isPojosEqualsAndHashCodeIncludePrimaryKeyOnly() != null)
-                generator.setGeneratePojosEqualsAndHashCodePrimaryKeyOnly(g.getGenerate().isPojosEqualsAndHashCodeIncludePrimaryKeyOnly());
-            if (g.getGenerate().getPojosEqualsAndHashCodeColumnIncludeExpression() != null)
-                generator.setGeneratePojosEqualsAndHashCodeColumnIncludeExpression(g.getGenerate().getPojosEqualsAndHashCodeColumnIncludeExpression());
-            if (g.getGenerate().getPojosEqualsAndHashCodeColumnExcludeExpression() != null)
-                generator.setGeneratePojosEqualsAndHashCodeColumnExcludeExpression(g.getGenerate().getPojosEqualsAndHashCodeColumnExcludeExpression());
             if (g.getGenerate().isPojosToString() != null)
                 generator.setGeneratePojosToString(g.getGenerate().isPojosToString());
             if (g.getGenerate().getFullyQualifiedTypes() != null)
@@ -1007,8 +904,6 @@ public class GenerationTool {
                 generator.setGenerateJsonTypes(g.getGenerate().isJsonTypes());
             if (g.getGenerate().isIntervalTypes() != null)
                 generator.setGenerateIntervalTypes(g.getGenerate().isIntervalTypes());
-            if (g.getGenerate().isDecfloatTypes() != null)
-                generator.setGenerateDecfloatTypes(g.getGenerate().isDecfloatTypes());
             if (g.getGenerate().isEmptyCatalogs() != null)
                 generator.setGenerateEmptyCatalogs(g.getGenerate().isEmptyCatalogs());
             if (g.getGenerate().isEmptySchemas() != null)
@@ -1021,28 +916,23 @@ public class GenerationTool {
                 generator.setGeneratePrintMarginForBlockComment(g.getGenerate().getPrintMarginForBlockComment());
             if (g.getGenerate().getTextBlocks() != null)
                 generator.setGenerateTextBlocks(g.getGenerate().getTextBlocks());
-            if (g.getGenerate().isWhereMethodOverrides() != null)
-                generator.setGenerateWhereMethodOverrides(g.getGenerate().isWhereMethodOverrides());
-            if (g.getGenerate().isRenameMethodOverrides() != null)
-                generator.setGenerateRenameMethodOverrides(g.getGenerate().isRenameMethodOverrides());
-            if (g.getGenerate().isAsMethodOverrides() != null)
-                generator.setGenerateAsMethodOverrides(g.getGenerate().isAsMethodOverrides());
 
 
             if (!isBlank(d.getSchemaVersionProvider()))
                 generator.setUseSchemaVersionProvider(true);
             if (!isBlank(d.getCatalogVersionProvider()))
                 generator.setUseCatalogVersionProvider(true);
-            if (d.isTableValuedFunctionsAsTables() != null)
-                generator.setGenerateTableValuedFunctionsAsTables(d.isTableValuedFunctionsAsTables());
-            if (d.isTableValuedFunctionsAsRoutines() != null)
-                generator.setGenerateTableValuedFunctionsAsRoutines(d.isTableValuedFunctionsAsRoutines());
-            if (d.isTableValuedFunctions() != null) {
-                log(configuration.getOnDeprecated(),
-                    () -> "The configuration property /configuration/generator/database/tableValuedFunctions is deprecated and will be removed in the future. Use tableValuedFunctionsAsRoutines and/or tableValuedFunctionsAsTables, instead");
+            if (d.isTableValuedFunctions() != null)
+                generator.setGenerateTableValuedFunctions(d.isTableValuedFunctions());
+            else {
+                generator.setGenerateTableValuedFunctions(true);
 
-                generator.setGenerateTableValuedFunctionsAsTables(d.isTableValuedFunctions());
-                generator.setGenerateTableValuedFunctionsAsRoutines(!d.isTableValuedFunctions());
+
+
+
+
+
+
             }
 
             // Generator properties that should in fact be strategy properties
@@ -1050,23 +940,23 @@ public class GenerationTool {
             strategy.setJavaBeansGettersAndSetters(generator.generateJavaBeansGettersAndSetters());
             strategy.setUseTableNameForUnambiguousFKs(generator.generateUseTableNameForUnambiguousFKs());
 
-            verifyVersions(configuration);
+            verifyVersions();
             generator.generate(database);
 
             if (configuration.getOnUnused() != OnError.SILENT) {
                 boolean anyUnused = false;
 
-                anyUnused = anyUnused | logUnused("forced type", "forced types", database.getUnusedForcedTypes().stream().filter(e -> !TRUE.equals(e.isIgnoreUnused())).collect(toList()));
-                anyUnused = anyUnused | logUnused("embeddable", "embeddables", database.getUnusedEmbeddables().stream().filter(e -> !TRUE.equals(e.isIgnoreUnused())).collect(toList()));
-                anyUnused = anyUnused | logUnused("comment", "comments", database.getUnusedComments().stream().filter(e -> !TRUE.equals(e.isIgnoreUnused())).collect(toList()));
-                anyUnused = anyUnused | logUnused("synthetic column", "synthetic columns", database.getUnusedSyntheticColumns().stream().filter(e -> !TRUE.equals(e.isIgnoreUnused())).collect(toList()));
-                anyUnused = anyUnused | logUnused("synthetic readonly column", "synthetic readonly columns", database.getUnusedSyntheticReadonlyColumns().stream().filter(e -> !TRUE.equals(e.isIgnoreUnused())).collect(toList()));
-                anyUnused = anyUnused | logUnused("synthetic readonly rowid", "synthetic readonly rowids", database.getUnusedSyntheticReadonlyRowids().stream().filter(e -> !TRUE.equals(e.isIgnoreUnused())).collect(toList()));
-                anyUnused = anyUnused | logUnused("synthetic identity", "synthetic identities", database.getUnusedSyntheticIdentities().stream().filter(e -> !TRUE.equals(e.isIgnoreUnused())).collect(toList()));
-                anyUnused = anyUnused | logUnused("synthetic primary key", "synthetic primary keys", database.getUnusedSyntheticPrimaryKeys().stream().filter(e -> !TRUE.equals(e.isIgnoreUnused())).collect(toList()));
-                anyUnused = anyUnused | logUnused("synthetic unique key", "synthetic unique keys", database.getUnusedSyntheticUniqueKeys().stream().filter(e -> !TRUE.equals(e.isIgnoreUnused())).collect(toList()));
-                anyUnused = anyUnused | logUnused("synthetic foreign key", "synthetic foreign keys", database.getUnusedSyntheticForeignKeys().stream().filter(e -> !TRUE.equals(e.isIgnoreUnused())).collect(toList()));
-                anyUnused = anyUnused | logUnused("synthetic view", "synthetic views", database.getUnusedSyntheticViews().stream().filter(e -> !TRUE.equals(e.isIgnoreUnused())).collect(toList()));
+                anyUnused = anyUnused | logUnused("forced type", "forced types", database.getUnusedForcedTypes());
+                anyUnused = anyUnused | logUnused("embeddable", "embeddables", database.getUnusedEmbeddables());
+                anyUnused = anyUnused | logUnused("comment", "comments", database.getUnusedComments());
+                anyUnused = anyUnused | logUnused("synthetic column", "synthetic columns", database.getUnusedSyntheticColumns());
+                anyUnused = anyUnused | logUnused("synthetic readonly column", "synthetic readonly columns", database.getUnusedSyntheticReadonlyColumns());
+                anyUnused = anyUnused | logUnused("synthetic readonly rowid", "synthetic readonly rowids", database.getUnusedSyntheticReadonlyRowids());
+                anyUnused = anyUnused | logUnused("synthetic identity", "synthetic identities", database.getUnusedSyntheticIdentities());
+                anyUnused = anyUnused | logUnused("synthetic primary key", "synthetic primary keys", database.getUnusedSyntheticPrimaryKeys());
+                anyUnused = anyUnused | logUnused("synthetic unique key", "synthetic unique keys", database.getUnusedSyntheticUniqueKeys());
+                anyUnused = anyUnused | logUnused("synthetic foreign key", "synthetic foreign keys", database.getUnusedSyntheticForeignKeys());
+                anyUnused = anyUnused | logUnused("synthetic view", "synthetic views", database.getUnusedSyntheticViews());
 
                 if (anyUnused && configuration.getOnUnused() == OnError.FAIL)
                     throw new GeneratorException("Unused configuration elements encountered");
@@ -1098,72 +988,7 @@ public class GenerationTool {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> Class<T> compile(String name, String java, Class<T> type) {
-        if (isBlank(name))
-            throw new GeneratorException("Type " + type.getName() + " must have explicit name configured: " + java);
-
-        Class<?> result = Reflect.compile(name, java,
-            new CompileOptions().classLoader(Thread.currentThread().getContextClassLoader())
-        ).type();
-
-        if (type.isAssignableFrom(result))
-            return (Class<T>) result;
-        else
-            throw new GeneratorException("Type " + name + " must implement " + type.getName());
-    }
-
-    private <O> void set(
-        O configurationObject,
-        boolean override,
-        Function<? super O, ? extends String> property,
-        String defaultProperty,
-        Function<? super O, ? extends String> get,
-        BiConsumer<? super O, ? super String> set
-    ) {
-        set(configurationObject, override, property, defaultProperty, get, set, Function.identity());
-    }
-
-    private <O, T> void set(
-        O configurationObject,
-        boolean override,
-        Function<? super O, ? extends String> property,
-        String defaultProperty,
-        Function<? super O, ? extends T> get,
-        BiConsumer<? super O, ? super T> set,
-        Function<? super String, ? extends T> convert
-    ) {
-        set(configurationObject, override, property, defaultProperty, get, set, convert, t -> t == null);
-    }
-
-    private <O, T> void set(
-        O configurationObject,
-        boolean override,
-        Function<? super O, ? extends String> propertyGetter,
-        String defaultProperty,
-        Function<? super O, ? extends T> get,
-        BiConsumer<? super O, ? super T> set,
-        Function<? super String, ? extends T> convert,
-        Predicate<? super T> checkDefault
-    ) {
-        String property = propertyGetter.apply(configurationObject);
-        String p = null;
-
-        if (property != null) {
-            p = System.getProperty(property);
-
-            if (p != null)
-                override = true;
-        }
-
-        if (p == null)
-            p = System.getProperty(defaultProperty);
-
-        if (p != null && (override || checkDefault.test(get.apply(configurationObject))))
-            set.accept(configurationObject, convert.apply(p));
-    }
-
-    private void verifyVersions(Configuration configuration) {
+    private void verifyVersions() {
 
         // [#12488] Check if all of jOOQ, jOOQ-meta, jOOQ-codegen are using the same versions and editions
         try {
@@ -1176,36 +1001,27 @@ public class GenerationTool {
             Arrays.sort(f3, comparing(Field::getName));
 
             if (f1.length != f2.length)
-                log(configuration.getOnMisconfiguration(),
-                    () -> "org.jooq.Constants and org.jooq.meta.Constants contents mismatch. Check if you're using the same versions for org.jooq and org.jooq.meta");
+                log.warn("Version check", "org.jooq.Constants and org.jooq.meta.Constants contents mismatch. Check if you're using the same versions for org.jooq and org.jooq.meta");
             if (f1.length != f3.length)
-                log(configuration.getOnMisconfiguration(),
-                    () -> "org.jooq.Constants and org.jooq.codegen.Constants contents mismatch. Check if you're using the same versions for org.jooq and org.jooq.meta");
+                log.warn("Version check", "org.jooq.Constants and org.jooq.codegen.Constants contents mismatch. Check if you're using the same versions for org.jooq and org.jooq.meta");
 
             String v1 = org.jooq.Constants.FULL_VERSION;
             String v2 = org.jooq.meta.Constants.FULL_VERSION;
             String v3 = org.jooq.codegen.Constants.FULL_VERSION;
 
             for (int i = 0; i < f1.length && i < f2.length && i < f3.length; i++) {
-                int i0 = i;
-
                 Object c1 = f1[i].get(org.jooq.Constants.class);
                 Object c2 = f2[i].get(org.jooq.meta.Constants.class);
                 Object c3 = f3[i].get(org.jooq.codegen.Constants.class);
 
                 if (!Objects.equals(c1, c2))
-                    log(configuration.getOnMisconfiguration(),
-                        () -> "org.jooq.Constants." + f1[i0].getName() + " contents mismatch: " + c1 + " vs " + c2 + ". Check if you're using the same versions for org.jooq (" + v1 + ") and org.jooq.meta (" + v2 + ")");
+                    log.warn("Version check", "org.jooq.Constants." + f1[i].getName() + " contents mismatch: " + c1 + " vs " + c2 + ". Check if you're using the same versions for org.jooq (" + v1 + ") and org.jooq.meta (" + v2 + ")");
                 if (!Objects.equals(c1, c3))
-                    log(configuration.getOnMisconfiguration(),
-                        () -> "org.jooq.Constants." + f1[i0].getName() + " contents mismatch: " + c1 + " vs " + c3 + ". Check if you're using the same versions for org.jooq (" + v1 + ") and org.jooq.codegen (" + v3 + ")");
+                    log.warn("Version check", "org.jooq.Constants." + f1[i].getName() + " contents mismatch: " + c1 + " vs " + c3 + ". Check if you're using the same versions for org.jooq (" + v1 + ") and org.jooq.codegen (" + v3 + ")");
             }
         }
         catch (Throwable e) {
-            log(configuration.getOnMisconfiguration(),
-                () -> "Something went wrong when comparing versions of org.jooq, org.jooq.meta, and org.jooq.codegen",
-                e
-            );
+            log.warn("Version check", "Something went wrong when comparing versions of org.jooq, org.jooq.meta, and org.jooq.codegen", e);
         }
     }
 
@@ -1219,8 +1035,7 @@ public class GenerationTool {
                 + "- regular expressions depending on whitespace (Pattern.COMMENTS is turned on!)\n"
                 + "- missing or inadequate object qualification\n"
                 + "- the object to which the configuration was applied in the past has been dropped\n"
-                + "Try turning on DEBUG logging (-X in Maven, --debug in Gradle, and <logging/> in jOOQ) to get additional info about the schema\n"
-                + "To turn off individual warnings, specify <ignoreUnused>true</ignoreUnused> on the relevant object(s)."
+                + "Try turning on DEBUG logging (-X in Maven, and <logging/> in jOOQ) to get additional info about the schema"
             );
 
             for (Object o : list)
@@ -1358,21 +1173,9 @@ public class GenerationTool {
             // [#2801] [#4620]
             else if (className.startsWith("org.jooq.meta.") && className.endsWith("Database")) {
                 log.warn("Type not found", message =
-                      """
-                      Your configured database type was not found: {className}. This can have several reasons:
-                      - You want to use a commercial jOOQ Edition, but you pulled the Open Source Edition from Maven Central. Maven groupIds are:
-                        - org.jooq                for the Open Source Edition
-                        - org.jooq.pro            for commercial editions with Java 21 support,
-                        - org.jooq.pro-java-17    for commercial editions with Java 17 support,
-                        - org.jooq.pro-java-11    for commercial editions with Java 11 support,
-                        - org.jooq.pro-java-8     for commercial editions with Java 8 support,
-                        - org.jooq.trial          for the free trial edition with Java 21 support,
-                        - org.jooq.trial-java-17  for the free trial edition with Java 17 support,
-                        - org.jooq.trial-java-11  for the free trial edition with Java 11 support,
-                        - org.jooq.trial-java-8   for the free trial edition with Java 8 support
-                      - You have mis-typed your class name.
-                      """.replace("{className}", className)
-                );
+                      "Your configured database type was not found: " + className + ". This can have several reasons:\n"
+                    + "- You want to use a commercial jOOQ Edition, but you pulled the Open Source Edition from Maven Central.\n"
+                    + "- You have mis-typed your class name.");
             }
 
             if (message == null)

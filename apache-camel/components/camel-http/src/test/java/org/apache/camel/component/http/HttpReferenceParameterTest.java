@@ -20,9 +20,10 @@ import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.http.common.DefaultHttpBinding;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.apache.hc.core5.http.protocol.BasicHttpContext;
-import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -50,18 +51,12 @@ public class HttpReferenceParameterTest extends CamelTestSupport {
     private HttpContext testHttpContext;
 
     @Override
-    public final void doPreSetup() throws Exception {
-        super.doPreSetup();
-
+    @BeforeEach
+    public void setUp() throws Exception {
         this.testBinding = new TestHttpBinding();
         this.testConfigurer = new TestClientConfigurer();
         this.testHttpContext = new BasicHttpContext();
-    }
-
-    @Override
-    protected final void doPostSetup() throws Exception {
-        super.doPostSetup();
-
+        super.setUp();
         this.endpoint1 = context.getEndpoint(TEST_URI_1, HttpEndpoint.class);
         this.endpoint2 = context.getEndpoint(TEST_URI_2, HttpEndpoint.class);
     }
@@ -85,7 +80,7 @@ public class HttpReferenceParameterTest extends CamelTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             public void configure() {
                 from("direct:start1").to(TEST_URI_1);

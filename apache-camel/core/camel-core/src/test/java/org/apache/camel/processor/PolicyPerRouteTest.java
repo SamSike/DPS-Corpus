@@ -51,17 +51,17 @@ public class PolicyPerRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("foo", new MyPolicy("foo"));
         return jndi;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start")
                         // wraps the entire route in the same policy

@@ -36,6 +36,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -98,7 +99,9 @@ public class NettyRedeliveryTest extends CamelTestSupport {
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
+        super.tearDown();
         alive = false;
         listener.shutdown();
     }
@@ -134,10 +137,9 @@ public class NettyRedeliveryTest extends CamelTestSupport {
     @Override
     protected CamelContext createCamelContext() throws Exception {
         // Override the error handler executor service such that we can track the tasks created
-        CamelContext context = new DefaultCamelContext() {
-
+        CamelContext context = new DefaultCamelContext(createCamelRegistry()) {
             @Override
-            protected ScheduledExecutorService createErrorHandlerExecutorService() {
+            public ScheduledExecutorService getErrorHandlerExecutorService() {
                 return getScheduledExecutorService();
             }
         };
@@ -207,7 +209,7 @@ public class NettyRedeliveryTest extends CamelTestSupport {
             try {
                 Thread.sleep(10);
                 socket.close();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 throw new RuntimeException(e);
             } finally {
                 try {

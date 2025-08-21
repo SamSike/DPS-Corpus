@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,11 +41,11 @@ import static org.springframework.http.MediaType.IMAGE_PNG;
 import static org.springframework.http.MediaType.TEXT_PLAIN;
 
 /**
- * Tests for {@link HandlerResultHandlerSupport}.
+ * Unit tests for {@link HandlerResultHandlerSupport}.
  *
  * @author Rossen Stoyanchev
  */
-class HandlerResultHandlerTests {
+public class HandlerResultHandlerTests {
 
 	private final TestResultHandler resultHandler = new TestResultHandler();
 

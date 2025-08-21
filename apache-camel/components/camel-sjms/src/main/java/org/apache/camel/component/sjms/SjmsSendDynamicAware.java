@@ -90,7 +90,7 @@ public class SjmsSendDynamicAware extends ServiceSupport implements SendDynamicA
         final String destinationName = parseDestinationName(entry.getUri());
         return new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getMessage().setHeader(SjmsConstants.JMS_DESTINATION_NAME, destinationName);
             }
         };
@@ -105,10 +105,12 @@ public class SjmsSendDynamicAware extends ServiceSupport implements SendDynamicA
     private String parseDestinationName(String uri) {
         // strip query
         uri = uri.replaceFirst(scheme + "://", ":");
-        uri = StringHelper.before(uri, "?", uri);
-
+        int pos = uri.indexOf('?');
+        if (pos != -1) {
+            uri = uri.substring(0, pos);
+        }
         // destination name is after last colon
-        int pos = uri.lastIndexOf(':');
+        pos = uri.lastIndexOf(':');
         if (pos != -1) {
             return uri.substring(pos + 1);
         } else {

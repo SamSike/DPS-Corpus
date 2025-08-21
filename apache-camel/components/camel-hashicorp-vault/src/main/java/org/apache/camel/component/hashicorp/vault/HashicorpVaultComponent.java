@@ -41,7 +41,8 @@ public class HashicorpVaultComponent extends DefaultComponent {
 
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        if (remaining == null || remaining.isBlank()) {
+
+        if (remaining == null || remaining.trim().length() == 0) {
             throw new IllegalArgumentException("A vault name must be specified.");
         }
 

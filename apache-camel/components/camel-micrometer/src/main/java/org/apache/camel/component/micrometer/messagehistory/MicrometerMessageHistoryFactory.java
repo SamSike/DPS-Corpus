@@ -35,9 +35,8 @@ import org.apache.camel.spi.MessageHistoryFactory;
 import org.apache.camel.support.PatternHelper;
 import org.apache.camel.support.service.ServiceSupport;
 
-import static org.apache.camel.component.micrometer.MicrometerConstants.KIND;
-import static org.apache.camel.component.micrometer.MicrometerConstants.KIND_HISTORY;
 import static org.apache.camel.component.micrometer.MicrometerConstants.METRICS_REGISTRY_NAME;
+import static org.apache.camel.component.micrometer.MicrometerConstants.SERVICE_NAME;
 
 /**
  * A factory to setup and use {@link MicrometerMessageHistory} as message history implementation.
@@ -50,7 +49,6 @@ public class MicrometerMessageHistoryFactory extends ServiceSupport
     private boolean copyMessage;
     private String nodePattern;
     private boolean prettyPrint = true;
-    private boolean skipCamelInfo = false;
     private TimeUnit durationUnit = TimeUnit.MILLISECONDS;
     private MicrometerMessageHistoryNamingStrategy namingStrategy = MicrometerMessageHistoryNamingStrategy.DEFAULT;
 
@@ -86,17 +84,6 @@ public class MicrometerMessageHistoryFactory extends ServiceSupport
      */
     public void setPrettyPrint(boolean prettyPrint) {
         this.prettyPrint = prettyPrint;
-    }
-
-    public boolean isSkipCamelInfo() {
-        return skipCamelInfo;
-    }
-
-    /**
-     * Skip the evaluation of "app.info" metric which contains runtime provider information (default, `false`).
-     */
-    public void setSkipCamelInfo(boolean skipCamelInfo) {
-        this.skipCamelInfo = skipCamelInfo;
     }
 
     public TimeUnit getDurationUnit() {
@@ -142,7 +129,7 @@ public class MicrometerMessageHistoryFactory extends ServiceSupport
     }
 
     @Override
-    public MessageHistory newMessageHistory(String routeId, NamedNode namedNode, Exchange exchange) {
+    public MessageHistory newMessageHistory(String routeId, NamedNode namedNode, long timestamp, Exchange exchange) {
         if (nodePattern != null) {
             String name = namedNode.getShortName();
             String[] parts = nodePattern.split(",");
@@ -161,7 +148,7 @@ public class MicrometerMessageHistoryFactory extends ServiceSupport
 
         Route route = camelContext.getRoute(routeId);
         if (route != null) {
-            return new MicrometerMessageHistory(getMeterRegistry(), route, namedNode, getNamingStrategy(), msg);
+            return new MicrometerMessageHistory(getMeterRegistry(), route, namedNode, getNamingStrategy(), timestamp, msg);
         } else {
             return null;
         }
@@ -178,11 +165,11 @@ public class MicrometerMessageHistoryFactory extends ServiceSupport
                     = camelContext.hasService(MicrometerMessageHistoryService.class);
             if (messageHistoryService == null) {
                 messageHistoryService = new MicrometerMessageHistoryService();
-                messageHistoryService.setPrettyPrint(isPrettyPrint());
                 messageHistoryService.setMeterRegistry(getMeterRegistry());
                 messageHistoryService.setPrettyPrint(isPrettyPrint());
                 messageHistoryService.setDurationUnit(getDurationUnit());
-                messageHistoryService.setMatchingTags(Tags.of(KIND, KIND_HISTORY));
+                messageHistoryService
+                        .setMatchingTags(Tags.of(SERVICE_NAME, MicrometerMessageHistoryService.class.getSimpleName()));
                 camelContext.addService(messageHistoryService);
             }
         } catch (Exception e) {

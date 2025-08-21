@@ -28,7 +28,7 @@ import org.apache.camel.spi.NodeIdFactory;
  */
 public class DefaultNodeIdFactory implements NodeIdFactory {
 
-    protected static final Map<String, AtomicInteger> NODE_COUNTERS = new ConcurrentHashMap<>();
+    protected static Map<String, AtomicInteger> nodeCounters = new ConcurrentHashMap<>();
 
     @Override
     public String createId(NamedNode definition) {
@@ -40,7 +40,7 @@ public class DefaultNodeIdFactory implements NodeIdFactory {
      * Returns the counter for the given node key, lazily creating one if necessary
      */
     protected static AtomicInteger getNodeCounter(String key) {
-        return NODE_COUNTERS.computeIfAbsent(key, k -> new AtomicInteger());
+        return nodeCounters.computeIfAbsent(key, k -> new AtomicInteger());
     }
 
     /**
@@ -48,7 +48,7 @@ public class DefaultNodeIdFactory implements NodeIdFactory {
      * accidentally)
      */
     protected static void resetAllCounters() {
-        for (AtomicInteger counter : NODE_COUNTERS.values()) {
+        for (AtomicInteger counter : nodeCounters.values()) {
             counter.set(0);
         }
     }

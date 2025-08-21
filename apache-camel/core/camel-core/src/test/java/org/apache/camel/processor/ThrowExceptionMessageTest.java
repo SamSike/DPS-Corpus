@@ -43,10 +43,10 @@ public class ThrowExceptionMessageTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("mock:start").throwException(IllegalArgumentException.class, "Darn ${body} is invalid")
                         .to("mock:result");
             }

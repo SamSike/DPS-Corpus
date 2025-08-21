@@ -16,7 +16,6 @@
  */
 package org.apache.camel.util;
 
-import java.io.Serial;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -31,7 +30,7 @@ import java.util.TreeMap;
  */
 public class CaseInsensitiveMap extends TreeMap<String, Object> {
 
-    private static final @Serial long serialVersionUID = -8538318195477618308L;
+    private static final long serialVersionUID = -8538318195477618308L;
 
     public CaseInsensitiveMap() {
         super(String.CASE_INSENSITIVE_ORDER);

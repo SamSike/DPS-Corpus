@@ -46,12 +46,12 @@ public class FileMarkerFileRecursiveDeleteOldLockFilesTest extends ContextTestSu
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?initialDelay=0&delay=10&recursive=true&sortBy=file:name")).routeId("foo")
-                        .autoStartup(false).convertBodyTo(String.class)
+                        .noAutoStartup().convertBodyTo(String.class)
                         .to("mock:result");
             }
         };

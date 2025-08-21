@@ -34,7 +34,7 @@ public class CatchReifier extends ProcessorReifier<CatchDefinition> {
     }
 
     @Override
-    public Processor createProcessor() throws Exception {
+    public CatchProcessor createProcessor() throws Exception {
         // create and load exceptions if not done
         if (definition.getExceptionClasses() == null) {
             definition.setExceptionClasses(createExceptionClasses());
@@ -55,17 +55,10 @@ public class CatchReifier extends ProcessorReifier<CatchDefinition> {
 
         Predicate when = null;
         if (definition.getOnWhen() != null) {
-            definition.preCreateProcessor();
             when = createPredicate(definition.getOnWhen().getExpression());
         }
 
-        CatchProcessor processor
-                = new CatchProcessor(getCamelContext(), definition.getExceptionClasses(), childProcessor, when);
-        // inject id
-        String id = getId(definition);
-        processor.setId(id);
-        processor.setRouteId(route.getRouteId());
-        return wrapProcessor(processor);
+        return new CatchProcessor(definition.getExceptionClasses(), childProcessor, when);
     }
 
     protected List<Class<? extends Throwable>> createExceptionClasses() throws ClassNotFoundException {

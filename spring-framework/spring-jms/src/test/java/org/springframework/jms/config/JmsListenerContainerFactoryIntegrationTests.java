@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ import static org.mockito.Mockito.mock;
 /**
  * @author Stephane Nicoll
  */
-class JmsListenerContainerFactoryIntegrationTests {
+public class JmsListenerContainerFactoryIntegrationTests {
 
 	private final DefaultJmsListenerContainerFactory containerFactory = new DefaultJmsListenerContainerFactory();
 
@@ -59,19 +59,19 @@ class JmsListenerContainerFactoryIntegrationTests {
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		initializeFactory(factory);
 	}
 
 
 	@Test
-	void messageConverterUsedIfSet() throws JMSException {
+	public void messageConverterUsedIfSet() throws JMSException {
 		this.containerFactory.setMessageConverter(new UpperCaseMessageConverter());
 		testMessageConverterIsUsed();
 	}
 
 	@Test
-	void messagingMessageConverterCanBeUsed() throws JMSException {
+	public void messagingMessageConverterCanBeUsed() throws JMSException {
 		MessagingMessageConverter converter = new MessagingMessageConverter();
 		converter.setPayloadConverter(new UpperCaseMessageConverter());
 		this.containerFactory.setMessageConverter(converter);
@@ -89,7 +89,7 @@ class JmsListenerContainerFactoryIntegrationTests {
 	}
 
 	@Test
-	void parameterAnnotationWithJdkProxy() throws JMSException {
+	public void parameterAnnotationWithJdkProxy() throws JMSException {
 		ProxyFactory pf = new ProxyFactory(sample);
 		listener = (JmsEndpointSampleInterface) pf.getProxy();
 
@@ -105,7 +105,7 @@ class JmsListenerContainerFactoryIntegrationTests {
 	}
 
 	@Test
-	void parameterAnnotationWithCglibProxy() throws JMSException {
+	public void parameterAnnotationWithCglibProxy() throws JMSException {
 		ProxyFactory pf = new ProxyFactory(sample);
 		pf.setProxyTargetClass(true);
 		listener = (JmsEndpointSampleBean) pf.getProxy();
@@ -127,7 +127,7 @@ class JmsListenerContainerFactoryIntegrationTests {
 		DefaultMessageListenerContainer messageListenerContainer = containerFactory.createListenerContainer(endpoint);
 		Object listener = messageListenerContainer.getMessageListener();
 		if (listener instanceof SessionAwareMessageListener) {
-			((SessionAwareMessageListener<Message>) listener).onMessage(message, mock());
+			((SessionAwareMessageListener<Message>) listener).onMessage(message, mock(Session.class));
 		}
 		else {
 			((MessageListener) listener).onMessage(message);
@@ -178,7 +178,7 @@ class JmsListenerContainerFactoryIntegrationTests {
 	private static class UpperCaseMessageConverter implements MessageConverter {
 
 		@Override
-		public Message toMessage(Object object, Session session) throws MessageConversionException {
+		public Message toMessage(Object object, Session session) throws JMSException, MessageConversionException {
 			return new StubTextMessage(object.toString().toUpperCase());
 		}
 

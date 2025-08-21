@@ -7,8 +7,8 @@ package org.jooq.meta.postgres.pg_catalog.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.ForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -17,7 +17,6 @@ import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
-import org.jooq.impl.DefaultDataType;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 import org.jooq.meta.postgres.pg_catalog.Keys;
@@ -69,14 +68,14 @@ public class PgAttrdef extends TableImpl<Record> {
      * configuration.
      */
     @Deprecated
-    public final TableField<Record, Object> ADBIN = createField(DSL.name("adbin"), DefaultDataType.getDefaultDataType("\"pg_catalog\".\"pg_node_tree\"").nullable(false), this, "");
+    public final TableField<Record, Object> ADBIN = createField(DSL.name("adbin"), org.jooq.impl.DefaultDataType.getDefaultDataType("\"pg_catalog\".\"pg_node_tree\"").nullable(false), this, "");
 
     private PgAttrdef(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private PgAttrdef(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private PgAttrdef(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -98,6 +97,10 @@ public class PgAttrdef extends TableImpl<Record> {
      */
     public PgAttrdef() {
         this(DSL.name("pg_attrdef"), null);
+    }
+
+    public <O extends Record> PgAttrdef(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, PG_ATTRDEF);
     }
 
     @Override
@@ -125,8 +128,19 @@ public class PgAttrdef extends TableImpl<Record> {
         return new PgAttrdef(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public PgAttrdef as(Table<?> alias) {
-        return new PgAttrdef(alias.getQualifiedName(), this);
+    public PgAttrdef rename(String name) {
+        return new PgAttrdef(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public PgAttrdef rename(Name name) {
+        return new PgAttrdef(name, null);
     }
 }

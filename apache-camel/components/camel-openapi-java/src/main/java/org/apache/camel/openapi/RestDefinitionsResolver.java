@@ -30,4 +30,6 @@ public interface RestDefinitionsResolver {
 
     List<RestDefinition> getRestDefinitions(CamelContext camelContext, String camelId) throws Exception;
 
+    List<String> findCamelContexts() throws Exception;
+
 }

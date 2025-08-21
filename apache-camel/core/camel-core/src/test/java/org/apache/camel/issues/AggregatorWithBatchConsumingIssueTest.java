@@ -23,9 +23,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.processor.BodyInAggregatingStrategy;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
-@DisabledIfSystemProperty(named = "ci.env.name", matches = ".*", disabledReason = "Flaky on Github CI")
 public class AggregatorWithBatchConsumingIssueTest extends ContextTestSupport {
 
     @Test
@@ -47,7 +45,7 @@ public class AggregatorWithBatchConsumingIssueTest extends ContextTestSupport {
 
     private void sendMessage(final int index) {
         template.send("direct:start", new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody(index);
                 exchange.getIn().setHeader("aggregateGroup", "group1");
 
@@ -60,10 +58,10 @@ public class AggregatorWithBatchConsumingIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(header("aggregateGroup"), new BodyInAggregatingStrategy())
                         .completionFromBatchConsumer().to("log:aggregated").to("mock:result");
             }

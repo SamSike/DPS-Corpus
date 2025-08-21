@@ -26,6 +26,8 @@ import org.apache.camel.Consumer;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangeTimedOutException;
+import org.apache.camel.ExtendedCamelContext;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.IsSingleton;
 import org.apache.camel.PollingConsumerPollingStrategy;
 import org.apache.camel.PooledExchange;
@@ -133,8 +135,7 @@ public class EventDrivenPollingConsumer extends PollingConsumerSupport implement
 
         while (isRunAllowed()) {
             // synchronizing the ordering of beforePoll, poll and afterPoll as an atomic activity
-            lock.lock();
-            try {
+            synchronized (this) {
                 try {
                     beforePoll(0);
                     // take will block waiting for message
@@ -144,8 +145,6 @@ public class EventDrivenPollingConsumer extends PollingConsumerSupport implement
                 } finally {
                     afterPoll();
                 }
-            } finally {
-                lock.unlock();
             }
         }
         LOG.trace("Consumer is not running, so returning null");
@@ -160,8 +159,7 @@ public class EventDrivenPollingConsumer extends PollingConsumerSupport implement
         }
 
         // synchronizing the ordering of beforePoll, poll and afterPoll as an atomic activity
-        lock.lock();
-        try {
+        synchronized (this) {
             try {
                 // use the timeout value returned from beforePoll
                 timeout = beforePoll(timeout);
@@ -172,8 +170,6 @@ public class EventDrivenPollingConsumer extends PollingConsumerSupport implement
             } finally {
                 afterPoll();
             }
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -199,7 +195,7 @@ public class EventDrivenPollingConsumer extends PollingConsumerSupport implement
                     }
                 }
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                // ignore
                 LOG.debug("Put interrupted, are we stopping? {}", isStopping() || isStopped());
             }
         } else {
@@ -215,8 +211,9 @@ public class EventDrivenPollingConsumer extends PollingConsumerSupport implement
         Exchange copy = ExchangeHelper.createCorrelatedCopy(exchange, handover, true);
 
         // we want the copy to have an uow
-        UnitOfWork uow = PluginHelper.getUnitOfWorkFactory(getEndpoint().getCamelContext()).createUnitOfWork(copy);
-        copy.getExchangeExtension().setUnitOfWork(uow);
+        UnitOfWork uow = getEndpoint().getCamelContext().adapt(ExtendedCamelContext.class).getUnitOfWorkFactory()
+                .createUnitOfWork(copy);
+        copy.adapt(ExtendedExchange.class).setUnitOfWork(uow);
 
         return copy;
     }
@@ -234,12 +231,12 @@ public class EventDrivenPollingConsumer extends PollingConsumerSupport implement
     }
 
     protected void handleInterruptedException(InterruptedException e) {
-        Thread.currentThread().interrupt();
         getInterruptedExceptionHandler().handleException(e);
     }
 
     protected long beforePoll(long timeout) {
-        if (consumer instanceof PollingConsumerPollingStrategy strategy) {
+        if (consumer instanceof PollingConsumerPollingStrategy) {
+            PollingConsumerPollingStrategy strategy = (PollingConsumerPollingStrategy) consumer;
             try {
                 timeout = strategy.beforePoll(timeout);
             } catch (Exception e) {
@@ -250,7 +247,8 @@ public class EventDrivenPollingConsumer extends PollingConsumerSupport implement
     }
 
     protected void afterPoll() {
-        if (consumer instanceof PollingConsumerPollingStrategy strategy) {
+        if (consumer instanceof PollingConsumerPollingStrategy) {
+            PollingConsumerPollingStrategy strategy = (PollingConsumerPollingStrategy) consumer;
             try {
                 strategy.afterPoll();
             } catch (Exception e) {
@@ -283,7 +281,8 @@ public class EventDrivenPollingConsumer extends PollingConsumerSupport implement
     @Override
     protected void doStart() throws Exception {
         // if the consumer has a polling strategy then invoke that
-        if (consumer instanceof PollingConsumerPollingStrategy strategy) {
+        if (consumer instanceof PollingConsumerPollingStrategy) {
+            PollingConsumerPollingStrategy strategy = (PollingConsumerPollingStrategy) consumer;
             strategy.onInit();
         } else {
             ServiceHelper.startService(consumer);

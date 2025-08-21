@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,7 +51,6 @@ import org.jooq.CharsetProvider;
 import org.jooq.CommitProvider;
 import org.jooq.Configuration;
 import org.jooq.ConnectionProvider;
-import org.jooq.ConstructorPropertiesProvider;
 import org.jooq.ConverterProvider;
 import org.jooq.DSLContext;
 import org.jooq.DiagnosticsListenerProvider;
@@ -62,14 +61,12 @@ import org.jooq.MetaProvider;
 import org.jooq.MigrationListenerProvider;
 // ...
 // ...
-// ...
 import org.jooq.RecordListenerProvider;
 import org.jooq.RecordMapper;
 import org.jooq.RecordMapperProvider;
 import org.jooq.RecordUnmapper;
 import org.jooq.RecordUnmapperProvider;
 import org.jooq.SQLDialect;
-import org.jooq.SubscriberProvider;
 import org.jooq.TransactionListenerProvider;
 import org.jooq.TransactionProvider;
 // ...
@@ -78,10 +75,7 @@ import org.jooq.UnwrapperProvider;
 import org.jooq.VisitListenerProvider;
 import org.jooq.conf.Settings;
 import org.jooq.impl.AbstractConfiguration;
-import org.jooq.impl.AnnotatedPojoMemberProvider;
 import org.jooq.impl.DefaultDSLContext;
-
-import org.jetbrains.annotations.NotNull;
 
 import io.r2dbc.spi.ConnectionFactory;
 
@@ -175,16 +169,6 @@ public class MockConfiguration extends AbstractConfiguration {
     }
 
     @Override
-    public AnnotatedPojoMemberProvider annotatedPojoMemberProvider() {
-        return delegate.annotatedPojoMemberProvider();
-    }
-
-    @Override
-    public ConstructorPropertiesProvider constructorPropertiesProvider() {
-        return delegate.constructorPropertiesProvider();
-    }
-
-    @Override
     public RecordMapperProvider recordMapperProvider() {
         return delegate.recordMapperProvider();
     }
@@ -244,11 +228,6 @@ public class MockConfiguration extends AbstractConfiguration {
 
 
 
-
-
-
-
-
     @Override
     public UnwrapperProvider unwrapperProvider() {
         return delegate.unwrapperProvider();
@@ -267,11 +246,6 @@ public class MockConfiguration extends AbstractConfiguration {
     @Override
     public FormattingProvider formattingProvider() {
         return delegate.formattingProvider();
-    }
-
-    @Override
-    public SubscriberProvider<?> subscriberProvider() {
-        return delegate.subscriberProvider();
     }
 
     @Override
@@ -361,17 +335,6 @@ public class MockConfiguration extends AbstractConfiguration {
     }
 
     @Override
-    public Configuration set(AnnotatedPojoMemberProvider newAnnotatedPojoMemberProvider) {
-        delegate.set(newAnnotatedPojoMemberProvider);
-        return this;
-    }
-    @Override
-    public Configuration set(ConstructorPropertiesProvider newConstructorPropertiesProvider) {
-        delegate.set(newConstructorPropertiesProvider);
-        return this;
-    }
-
-    @Override
     public Configuration set(RecordMapper<?, ?> newRecordMapper) {
         delegate.set(newRecordMapper);
         return this;
@@ -454,12 +417,6 @@ public class MockConfiguration extends AbstractConfiguration {
 
 
 
-
-
-
-
-
-
     @Override
     public Configuration set(Unwrapper newUnwrapper) {
         delegate.set(newUnwrapper);
@@ -487,12 +444,6 @@ public class MockConfiguration extends AbstractConfiguration {
     @Override
     public Configuration set(FormattingProvider newFormattingProvider) {
         delegate.set(newFormattingProvider);
-        return this;
-    }
-
-    @Override
-    public Configuration set(SubscriberProvider<?> newSubscriberProvider) {
-        delegate.set(newSubscriberProvider);
         return this;
     }
 
@@ -569,16 +520,6 @@ public class MockConfiguration extends AbstractConfiguration {
     }
 
     @Override
-    public Configuration derive(AnnotatedPojoMemberProvider newAnnotatedPojoMemberProvider) {
-        return new MockConfiguration(delegate.derive(newAnnotatedPojoMemberProvider), provider);
-    }
-
-    @Override
-    public Configuration derive(ConstructorPropertiesProvider newConstructorPropertiesProvider) {
-        return new MockConfiguration(delegate.derive(newConstructorPropertiesProvider), provider);
-    }
-
-    @Override
     public Configuration derive(RecordMapper<?, ?> newRecordMapper) {
         return new MockConfiguration(delegate.derive(newRecordMapper), provider);
     }
@@ -650,12 +591,6 @@ public class MockConfiguration extends AbstractConfiguration {
 
 
 
-
-
-
-
-
-
     @Override
     public Configuration derive(Unwrapper newUnwrapper) {
         return new MockConfiguration(delegate.derive(newUnwrapper), provider);
@@ -679,11 +614,6 @@ public class MockConfiguration extends AbstractConfiguration {
     @Override
     public Configuration derive(FormattingProvider newFormattingProvider) {
         return new MockConfiguration(delegate.derive(newFormattingProvider), provider);
-    }
-
-    @Override
-    public Configuration derive(SubscriberProvider<?> newSubscriberProvider) {
-        return new MockConfiguration(delegate.derive(newSubscriberProvider), provider);
     }
 
     @Override

@@ -9,7 +9,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   https://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -32,11 +32,7 @@ import java.util.Map;
  * java.util.Map interface.
  *
  * @author FangYidong&lt;fangyidong@yahoo.com.cn&gt;
- * @deprecated - 3.21.0 - [#18329] - This shaded third party dependency will be
- *             removed without replacement. Please use any other JSON parser,
- *             instead - e.g. Jackson.
  */
-@Deprecated(forRemoval = true)
 @SuppressWarnings({ "serial", "rawtypes", "unchecked" })
 public class JSONObject extends HashMap{
 

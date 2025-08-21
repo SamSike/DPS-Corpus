@@ -43,18 +43,18 @@ public class ThreadsRequestReplyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setTracing(true);
 
                 from("direct:start").to("log:before").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         beforeThreadName = Thread.currentThread().getName();
                     }
                 }).threads(5).process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         afterThreadName = Thread.currentThread().getName();
                     }
                 }).to("log:after").to("mock:result").transform(constant("Bye World"));

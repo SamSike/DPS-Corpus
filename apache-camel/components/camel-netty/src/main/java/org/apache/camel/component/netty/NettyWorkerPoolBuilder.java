@@ -17,10 +17,7 @@
 package org.apache.camel.component.netty;
 
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.kqueue.KQueue;
-import io.netty.channel.kqueue.KQueueEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.apache.camel.util.concurrent.CamelThreadFactory;
 
@@ -77,14 +74,7 @@ public final class NettyWorkerPoolBuilder {
      */
     public EventLoopGroup build() {
         if (nativeTransport) {
-            if (KQueue.isAvailable()) {
-                workerPool = new KQueueEventLoopGroup(workerCount, new CamelThreadFactory(pattern, name, false));
-            } else if (Epoll.isAvailable()) {
-                workerPool = new EpollEventLoopGroup(workerCount, new CamelThreadFactory(pattern, name, false));
-            } else {
-                throw new IllegalStateException(
-                        "Unable to use native transport - both Epoll and KQueue are not available");
-            }
+            workerPool = new EpollEventLoopGroup(workerCount, new CamelThreadFactory(pattern, name, false));
         } else {
             workerPool = new NioEventLoopGroup(workerCount, new CamelThreadFactory(pattern, name, false));
         }

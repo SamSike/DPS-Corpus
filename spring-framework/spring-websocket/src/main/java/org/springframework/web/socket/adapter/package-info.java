@@ -1,7 +1,9 @@
 /**
  * Classes adapting Spring's WebSocket API to and from WebSocket providers.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.socket.adapter;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

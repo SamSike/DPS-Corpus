@@ -39,10 +39,10 @@ public class FileMoveErrorOnExceptionNotHandledTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?moveFailed=error&initialDelay=0&delay=10"))
                         .onException(IllegalArgumentException.class).to("mock:damn").end().to("mock:before")
                         .throwException(new IllegalArgumentException("Damn")).to("mock:after");

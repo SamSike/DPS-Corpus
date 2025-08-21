@@ -33,7 +33,7 @@ public class InterceptSendToIssueTest extends ContextTestSupport {
     public void testInterceptSendTo() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:foo");
         mock.expectedMessageCount(1);
-        mock.expectedPropertyReceived(Exchange.INTERCEPTED_ENDPOINT, "direct://foo");
+        mock.expectedHeaderReceived(Exchange.INTERCEPTED_ENDPOINT, "direct://foo");
 
         template.sendBody("direct:start", "Hello World");
 
@@ -44,10 +44,10 @@ public class InterceptSendToIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 interceptSendToEndpoint("direct:foo").to("mock:foo");
 
                 from("direct:start").setHeader(Exchange.FILE_NAME, constant("hello.txt")).to("direct:foo");

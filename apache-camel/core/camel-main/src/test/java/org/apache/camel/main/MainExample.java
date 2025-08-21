@@ -25,6 +25,8 @@ import org.apache.camel.builder.RouteBuilder;
 // START SNIPPET: e1
 public class MainExample {
 
+    private Main main;
+
     public static void main(String[] args) throws Exception {
         MainExample example = new MainExample();
         example.boot();
@@ -32,7 +34,7 @@ public class MainExample {
 
     public void boot() throws Exception {
         // create a Main instance
-        Main main = new Main();
+        main = new Main();
         // bind MyBean into the registry
         main.bind("foo", new MyBean());
         // add routes
@@ -50,10 +52,10 @@ public class MainExample {
 
     private static class MyRouteBuilder extends RouteBuilder {
         @Override
-        public void configure() {
+        public void configure() throws Exception {
             from("timer:foo?delay={{millisecs}}")
                     .process(new Processor() {
-                        public void process(Exchange exchange) {
+                        public void process(Exchange exchange) throws Exception {
                             System.out.println("Invoked timer at " + new Date());
                         }
                     })

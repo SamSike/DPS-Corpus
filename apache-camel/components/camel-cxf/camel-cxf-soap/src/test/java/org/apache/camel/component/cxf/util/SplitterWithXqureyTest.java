@@ -52,7 +52,7 @@ public class SplitterWithXqureyTest extends CamelTestSupport {
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
-                // split the message with namespaces defined
+                // split the message with namespaces defined 
                 Namespaces namespaces = new Namespaces("one", "http://camel.apache.org/schema/one");
                 from("direct:endpoint").split().xpath("//one:other", namespaces).to("mock:result");
 
@@ -80,7 +80,7 @@ public class SplitterWithXqureyTest extends CamelTestSupport {
         for (Exchange exchange : result.getExchanges()) {
             Element element = (Element) exchange.getIn().getBody();
             String message = CxfUtilsTestHelper.elementToString(element);
-            LOG.info("The splited message is {}", message);
+            LOG.info("The splited message is " + message);
             assertEquals(0, message.indexOf("<other"), "The splitted message should start with <other");
             assertEquals(verifyStrings[i], message, "Get a wrong message");
             i++;

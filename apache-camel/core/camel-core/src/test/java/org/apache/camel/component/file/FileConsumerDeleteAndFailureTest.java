@@ -39,15 +39,15 @@ public class FileConsumerDeleteAndFailureTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(IllegalArgumentException.class).handled(true).useOriginalMessage()
                         .to(fileUri("error"));
                 from(fileUri("?delete=true&initialDelay=0&delay=10")).setBody(simple("${body} IS processed!"))
                         .process(new Processor() {
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 String body = exchange.getIn().getBody(String.class);
                                 if (body != null && body.startsWith("Kaboom")) {
                                     throw new IllegalArgumentException("Forced");

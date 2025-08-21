@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 import jakarta.servlet.http.Cookie;
-import org.jspecify.annotations.Nullable;
 
-import org.springframework.core.style.ToStringCreator;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -31,30 +30,21 @@ import org.springframework.util.StringUtils;
  * Extension of {@code Cookie} with extra attributes, as defined in
  * <a href="https://tools.ietf.org/html/rfc6265">RFC 6265</a>.
  *
- * <p>As of Spring 6.0, this set of mocks is designed on a Servlet 6.0 baseline.
- *
  * @author Vedran Pavic
  * @author Juergen Hoeller
  * @author Sam Brannen
  * @since 5.1
  */
-@SuppressWarnings("removal")
 public class MockCookie extends Cookie {
 
 	private static final long serialVersionUID = 4312531139502726325L;
 
-	private static final String PATH = "Path";
-	private static final String DOMAIN = "Domain";
-	private static final String COMMENT = "Comment";
-	private static final String SECURE = "Secure";
-	private static final String HTTP_ONLY = "HttpOnly";
-	private static final String PARTITIONED = "Partitioned";
-	private static final String SAME_SITE = "SameSite";
-	private static final String MAX_AGE = "Max-Age";
-	private static final String EXPIRES = "Expires";
 
+	@Nullable
+	private ZonedDateTime expires;
 
-	private @Nullable ZonedDateTime expires;
+	@Nullable
+	private String sameSite;
 
 
 	/**
@@ -72,15 +62,16 @@ public class MockCookie extends Cookie {
 	 * @since 5.1.11
 	 */
 	public void setExpires(@Nullable ZonedDateTime expires) {
-		setAttribute(EXPIRES, (expires != null ? expires.format(DateTimeFormatter.RFC_1123_DATE_TIME) : null));
+		this.expires = expires;
 	}
 
 	/**
 	 * Get the "Expires" attribute for this cookie.
-	 * @return the "Expires" attribute for this cookie, or {@code null} if not set
 	 * @since 5.1.11
+	 * @return the "Expires" attribute for this cookie, or {@code null} if not set
 	 */
-	public @Nullable ZonedDateTime getExpires() {
+	@Nullable
+	public ZonedDateTime getExpires() {
 		return this.expires;
 	}
 
@@ -92,39 +83,18 @@ public class MockCookie extends Cookie {
 	 * @see <a href="https://tools.ietf.org/html/draft-ietf-httpbis-rfc6265bis#section-4.1.2.7">RFC6265 bis</a>
 	 */
 	public void setSameSite(@Nullable String sameSite) {
-		setAttribute(SAME_SITE, sameSite);
+		this.sameSite = sameSite;
 	}
 
 	/**
 	 * Get the "SameSite" attribute for this cookie.
 	 * @return the "SameSite" attribute for this cookie, or {@code null} if not set
 	 */
-	public @Nullable String getSameSite() {
-		return getAttribute(SAME_SITE);
+	@Nullable
+	public String getSameSite() {
+		return this.sameSite;
 	}
 
-	/**
-	 * Set the "Partitioned" attribute for this cookie.
-	 * @since 6.2
-	 * @see <a href="https://datatracker.ietf.org/doc/html/draft-cutler-httpbis-partitioned-cookies#section-2.1">The Partitioned attribute spec</a>
-	 */
-	public void setPartitioned(boolean partitioned) {
-		if (partitioned) {
-			setAttribute(PARTITIONED, "");
-		}
-		else {
-			setAttribute(PARTITIONED, null);
-		}
-	}
-
-	/**
-	 * Return whether the "Partitioned" attribute is set for this cookie.
-	 * @since 6.2
-	 * @see <a href="https://datatracker.ietf.org/doc/html/draft-cutler-httpbis-partitioned-cookies#section-2.1">The Partitioned attribute spec</a>
-	 */
-	public boolean isPartitioned() {
-		return getAttribute(PARTITIONED) != null;
-	}
 
 	/**
 	 * Factory method that parses the value of the supplied "Set-Cookie" header.
@@ -144,13 +114,13 @@ public class MockCookie extends Cookie {
 
 		MockCookie cookie = new MockCookie(name, value);
 		for (String attribute : attributes) {
-			if (StringUtils.startsWithIgnoreCase(attribute, DOMAIN)) {
+			if (StringUtils.startsWithIgnoreCase(attribute, "Domain")) {
 				cookie.setDomain(extractAttributeValue(attribute, setCookieHeader));
 			}
-			else if (StringUtils.startsWithIgnoreCase(attribute, MAX_AGE)) {
+			else if (StringUtils.startsWithIgnoreCase(attribute, "Max-Age")) {
 				cookie.setMaxAge(Integer.parseInt(extractAttributeValue(attribute, setCookieHeader)));
 			}
-			else if (StringUtils.startsWithIgnoreCase(attribute, EXPIRES)) {
+			else if (StringUtils.startsWithIgnoreCase(attribute, "Expires")) {
 				try {
 					cookie.setExpires(ZonedDateTime.parse(extractAttributeValue(attribute, setCookieHeader),
 							DateTimeFormatter.RFC_1123_DATE_TIME));
@@ -159,24 +129,17 @@ public class MockCookie extends Cookie {
 					// ignore invalid date formats
 				}
 			}
-			else if (StringUtils.startsWithIgnoreCase(attribute, PATH)) {
+			else if (StringUtils.startsWithIgnoreCase(attribute, "Path")) {
 				cookie.setPath(extractAttributeValue(attribute, setCookieHeader));
 			}
-			else if (StringUtils.startsWithIgnoreCase(attribute, SECURE)) {
+			else if (StringUtils.startsWithIgnoreCase(attribute, "Secure")) {
 				cookie.setSecure(true);
 			}
-			else if (StringUtils.startsWithIgnoreCase(attribute, HTTP_ONLY)) {
+			else if (StringUtils.startsWithIgnoreCase(attribute, "HttpOnly")) {
 				cookie.setHttpOnly(true);
 			}
-			else if (StringUtils.startsWithIgnoreCase(attribute, SAME_SITE)) {
+			else if (StringUtils.startsWithIgnoreCase(attribute, "SameSite")) {
 				cookie.setSameSite(extractAttributeValue(attribute, setCookieHeader));
-			}
-			else if (StringUtils.startsWithIgnoreCase(attribute, COMMENT)) {
-				cookie.setComment(extractAttributeValue(attribute, setCookieHeader));
-			}
-			else if (!attribute.isEmpty()) {
-				String[] nameAndValue = extractOptionalAttributeNameAndValue(attribute, setCookieHeader);
-				cookie.setAttribute(nameAndValue[0], nameAndValue[1]);
 			}
 		}
 		return cookie;
@@ -187,37 +150,6 @@ public class MockCookie extends Cookie {
 		Assert.isTrue(nameAndValue.length == 2,
 				() -> "No value in attribute '" + nameAndValue[0] + "' for Set-Cookie header '" + header + "'");
 		return nameAndValue[1];
-	}
-
-	private static String[] extractOptionalAttributeNameAndValue(String attribute, String header) {
-		String[] nameAndValue = attribute.split("=");
-		return (nameAndValue.length == 2 ? nameAndValue : new String[] {attribute, ""});
-	}
-
-	@Override
-	public void setAttribute(String name, @Nullable String value) {
-		if (EXPIRES.equalsIgnoreCase(name)) {
-			this.expires = (value != null ? ZonedDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME) : null);
-		}
-		super.setAttribute(name, value);
-	}
-
-	@Override
-	public String toString() {
-		return new ToStringCreator(this)
-				.append("name", getName())
-				.append("value", getValue())
-				.append(PATH, getPath())
-				.append(DOMAIN, getDomain())
-				.append("Version", getVersion())
-				.append(COMMENT, getComment())
-				.append(SECURE, getSecure())
-				.append(HTTP_ONLY, isHttpOnly())
-				.append(PARTITIONED, isPartitioned())
-				.append(SAME_SITE, getSameSite())
-				.append(MAX_AGE, getMaxAge())
-				.append(EXPIRES, getAttribute(EXPIRES))
-				.toString();
 	}
 
 }

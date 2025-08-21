@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,8 @@ package org.springframework.jndi;
 
 import javax.naming.NamingException;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -33,7 +32,7 @@ import org.springframework.util.StringUtils;
  * accessing a locally mapped (Environmental Naming Context) resource. If it
  * doesn't, the "java:comp/env/" prefix will be prepended if the "resourceRef"
  * property is true (the default is <strong>false</strong>) and no other scheme
- * (for example, "java:") is given.
+ * (e.g. "java:") is given.
  *
  * <p>Subclasses may invoke the {@link #lookup()} method whenever it is appropriate.
  * Some classes might do this on initialization, while others might do it
@@ -50,9 +49,11 @@ import org.springframework.util.StringUtils;
  */
 public abstract class JndiObjectLocator extends JndiLocatorSupport implements InitializingBean {
 
-	private @Nullable String jndiName;
+	@Nullable
+	private String jndiName;
 
-	private @Nullable Class<?> expectedType;
+	@Nullable
+	private Class<?> expectedType;
 
 
 	/**
@@ -68,7 +69,8 @@ public abstract class JndiObjectLocator extends JndiLocatorSupport implements In
 	/**
 	 * Return the JNDI name to look up.
 	 */
-	public @Nullable String getJndiName() {
+	@Nullable
+	public String getJndiName() {
 		return this.jndiName;
 	}
 
@@ -84,7 +86,8 @@ public abstract class JndiObjectLocator extends JndiLocatorSupport implements In
 	 * Return the type that the located JNDI object is supposed
 	 * to be assignable to, if any.
 	 */
-	public @Nullable Class<?> getExpectedType() {
+	@Nullable
+	public Class<?> getExpectedType() {
 		return this.expectedType;
 	}
 

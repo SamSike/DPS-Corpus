@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DataSetConsumerTest extends ContextTestSupport {
 
-    protected final SimpleDataSet dataSet = new SimpleDataSet(5);
+    protected SimpleDataSet dataSet = new SimpleDataSet(5);
 
     final String dataSetName = "foo";
     final String dataSetUri = "dataset://" + dataSetName + "?initialDelay=0";
@@ -37,8 +37,8 @@ public class DataSetConsumerTest extends ContextTestSupport {
     final String resultUri = "mock://result";
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("foo", dataSet);
         return answer;
     }
@@ -51,7 +51,7 @@ public class DataSetConsumerTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(dataSetUri).to(resultUri);
             }
         });
@@ -75,7 +75,7 @@ public class DataSetConsumerTest extends ContextTestSupport {
     public void testConsumerWithProducer() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(dataSetUri).to(dataSetUri).to(resultUri);
             }
         });
@@ -96,7 +96,7 @@ public class DataSetConsumerTest extends ContextTestSupport {
     public void testWithDataSetIndexUriParameterUnset() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(dataSetUri).to(resultUri);
             }
         });
@@ -115,7 +115,7 @@ public class DataSetConsumerTest extends ContextTestSupport {
     public void testWithDataSetIndexUriParameterSetToOff() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(dataSetUriWithDataSetIndexSetToOff).to(resultUri);
             }
         });
@@ -133,7 +133,7 @@ public class DataSetConsumerTest extends ContextTestSupport {
     public void testWithDataSetIndexUriParameterSetToLenient() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(dataSetUriWithDataSetIndexSetToLenient).to(resultUri);
             }
         });
@@ -152,7 +152,7 @@ public class DataSetConsumerTest extends ContextTestSupport {
     public void testWithDataSetIndexUriParameterSetToStrict() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(dataSetUriWithDataSetIndexSetToStrict).to(resultUri);
             }
         });

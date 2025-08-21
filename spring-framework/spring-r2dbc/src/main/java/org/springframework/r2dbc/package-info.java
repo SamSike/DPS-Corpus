@@ -13,7 +13,9 @@
  * dependencies into application code.
  * </ul>
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.r2dbc;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

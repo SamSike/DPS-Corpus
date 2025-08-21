@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,8 @@ import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeanUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -55,7 +54,8 @@ import org.springframework.util.Assert;
  */
 public class SimpleDriverDataSource extends AbstractDriverBasedDataSource {
 
-	private @Nullable Driver driver;
+	@Nullable
+	private Driver driver;
 
 
 	/**
@@ -127,7 +127,8 @@ public class SimpleDriverDataSource extends AbstractDriverBasedDataSource {
 	/**
 	 * Return the JDBC Driver instance to use.
 	 */
-	public @Nullable Driver getDriver() {
+	@Nullable
+	public Driver getDriver() {
 		return this.driver;
 	}
 
@@ -135,8 +136,8 @@ public class SimpleDriverDataSource extends AbstractDriverBasedDataSource {
 	@Override
 	protected Connection getConnectionFromDriver(Properties props) throws SQLException {
 		Driver driver = getDriver();
-		Assert.state(driver != null, "Driver has not been set");
 		String url = getUrl();
+		Assert.notNull(driver, "Driver must not be null");
 		if (logger.isDebugEnabled()) {
 			logger.debug("Creating new JDBC Driver Connection to [" + url + "]");
 		}

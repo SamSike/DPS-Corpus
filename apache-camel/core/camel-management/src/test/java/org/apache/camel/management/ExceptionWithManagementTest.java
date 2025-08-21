@@ -50,9 +50,9 @@ public class ExceptionWithManagementTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:error").redeliveryDelay(0).maximumRedeliveries(3));
 
                 onException(IllegalArgumentException.class).redeliveryDelay(0).maximumRedeliveries(1).to("mock:error");

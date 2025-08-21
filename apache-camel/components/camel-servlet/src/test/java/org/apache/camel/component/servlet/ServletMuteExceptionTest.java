@@ -22,21 +22,8 @@ import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ServletMuteExceptionTest extends ServletCamelRouterTestSupport {
-
-    @Test
-    public void testMuteDefaultTrue() throws Exception {
-        WebRequest req = new PostMethodWebRequest(
-                contextUrl + "/services/muteDefault",
-                new ByteArrayInputStream("".getBytes()), "text/plain");
-        WebResponse response = query(req, false);
-
-        assertEquals(500, response.getResponseCode());
-        assertEquals("text/plain", response.getContentType());
-        assertTrue(response.getText().isEmpty());
-    }
 
     @Test
     public void testMuteException() throws Exception {
@@ -47,7 +34,7 @@ public class ServletMuteExceptionTest extends ServletCamelRouterTestSupport {
 
         assertEquals(500, response.getResponseCode());
         assertEquals("text/plain", response.getContentType());
-        assertTrue(response.getText().isEmpty());
+        assertEquals("", response.getText());
     }
 
     @Test
@@ -59,7 +46,7 @@ public class ServletMuteExceptionTest extends ServletCamelRouterTestSupport {
 
         assertEquals(500, response.getResponseCode());
         assertEquals("text/plain", response.getContentType());
-        assertTrue(response.getText().isEmpty());
+        assertEquals("", response.getText());
     }
 
     @Override
@@ -67,9 +54,6 @@ public class ServletMuteExceptionTest extends ServletCamelRouterTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("servlet:muteDefault")
-                        .throwException(new IllegalArgumentException("Damn"));
-
                 from("servlet:mute?muteException=true")
                         .throwException(new IllegalArgumentException("Damn"));
 

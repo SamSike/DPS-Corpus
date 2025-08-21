@@ -34,7 +34,7 @@ public class UploadMedia {
         this.contentType = Objects.requireNonNull(contentType);
 
         if (!file.exists()) {
-            throw new RuntimeCamelException("The file provided does not exist");
+            throw new RuntimeCamelException("The file provided does not exists");
         }
     }
 

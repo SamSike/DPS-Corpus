@@ -18,7 +18,6 @@ package org.apache.camel.saga;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,7 +31,6 @@ import java.util.function.Function;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
-import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.Expression;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.util.ObjectHelper;
@@ -40,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An in-memory implementation of a saga coordinator.
+ * A in-memory implementation of a saga coordinator.
  */
 public class InMemorySagaCoordinator implements CamelSagaCoordinator {
 
@@ -54,12 +52,12 @@ public class InMemorySagaCoordinator implements CamelSagaCoordinator {
 
     private static final Logger LOG = LoggerFactory.getLogger(InMemorySagaCoordinator.class);
 
-    private final CamelContext camelContext;
-    private final InMemorySagaService sagaService;
-    private final String sagaId;
-    private final List<CamelSagaStep> steps;
-    private final Map<CamelSagaStep, Map<String, Object>> optionValues;
-    private final AtomicReference<Status> currentStatus;
+    private CamelContext camelContext;
+    private InMemorySagaService sagaService;
+    private String sagaId;
+    private List<CamelSagaStep> steps;
+    private Map<CamelSagaStep, Map<String, Object>> optionValues;
+    private AtomicReference<Status> currentStatus;
 
     public InMemorySagaCoordinator(CamelContext camelContext, InMemorySagaService sagaService, String sagaId) {
         this.camelContext = ObjectHelper.notNull(camelContext, "camelContext");
@@ -77,31 +75,19 @@ public class InMemorySagaCoordinator implements CamelSagaCoordinator {
 
     @Override
     public CompletableFuture<Void> beginStep(Exchange exchange, CamelSagaStep step) {
-        Status status = currentStatus.get();
-        if (status != Status.RUNNING) {
-            CompletableFuture<Void> res = new CompletableFuture<>();
-            res.completeExceptionally(new IllegalStateException("Cannot begin: status is " + status));
-            return res;
-        }
-
         this.steps.add(step);
 
         if (!step.getOptions().isEmpty()) {
             optionValues.putIfAbsent(step, new ConcurrentHashMap<>());
-            Map<String, Object> values = optionValues.computeIfAbsent(step, k -> new HashMap<>());
+            Map<String, Object> values = optionValues.get(step);
             for (String option : step.getOptions().keySet()) {
                 Expression expression = step.getOptions().get(option);
-                if (expression != null) {
-                    try {
-                        Object value = expression.evaluate(exchange, Object.class);
-                        if (value != null) {
-                            values.put(option, value);
-                        }
-                    } catch (Exception ex) {
-                        return CompletableFuture.supplyAsync(() -> {
-                            throw new RuntimeCamelException("Cannot evaluate saga option '" + option + "'", ex);
-                        });
-                    }
+                try {
+                    values.put(option, expression.evaluate(exchange, Object.class));
+                } catch (Exception ex) {
+                    return CompletableFuture.supplyAsync(() -> {
+                        throw new RuntimeCamelException("Cannot evaluate saga option '" + option + "'", ex);
+                    });
                 }
             }
         }
@@ -110,7 +96,7 @@ public class InMemorySagaCoordinator implements CamelSagaCoordinator {
             sagaService.getExecutorService().schedule(() -> {
                 boolean doAction = currentStatus.compareAndSet(Status.RUNNING, Status.COMPENSATING);
                 if (doAction) {
-                    doCompensate(exchange);
+                    doCompensate();
                 }
             }, step.getTimeoutInMilliseconds().get(), TimeUnit.MILLISECONDS);
         }
@@ -119,11 +105,11 @@ public class InMemorySagaCoordinator implements CamelSagaCoordinator {
     }
 
     @Override
-    public CompletableFuture<Void> compensate(Exchange exchange) {
+    public CompletableFuture<Void> compensate() {
         boolean doAction = currentStatus.compareAndSet(Status.RUNNING, Status.COMPENSATING);
 
         if (doAction) {
-            doCompensate(exchange);
+            doCompensate();
         } else {
             Status status = currentStatus.get();
             if (status != Status.COMPENSATING && status != Status.COMPENSATED) {
@@ -137,11 +123,11 @@ public class InMemorySagaCoordinator implements CamelSagaCoordinator {
     }
 
     @Override
-    public CompletableFuture<Void> complete(Exchange exchange) {
+    public CompletableFuture<Void> complete() {
         boolean doAction = currentStatus.compareAndSet(Status.RUNNING, Status.COMPLETING);
 
         if (doAction) {
-            doComplete(exchange);
+            doComplete();
         } else {
             Status status = currentStatus.get();
             if (status != Status.COMPLETING && status != Status.COMPLETED) {
@@ -154,16 +140,16 @@ public class InMemorySagaCoordinator implements CamelSagaCoordinator {
         return CompletableFuture.completedFuture(null);
     }
 
-    public CompletableFuture<Boolean> doCompensate(final Exchange exchange) {
-        return doFinalize(exchange, CamelSagaStep::getCompensation, "compensation")
+    public CompletableFuture<Boolean> doCompensate() {
+        return doFinalize(CamelSagaStep::getCompensation, "compensation")
                 .thenApply(res -> {
                     currentStatus.set(Status.COMPENSATED);
                     return res;
                 });
     }
 
-    public CompletableFuture<Boolean> doComplete(final Exchange exchange) {
-        return doFinalize(exchange, CamelSagaStep::getCompletion, "completion")
+    public CompletableFuture<Boolean> doComplete() {
+        return doFinalize(CamelSagaStep::getCompletion, "completion")
                 .thenApply(res -> {
                     currentStatus.set(Status.COMPLETED);
                     return res;
@@ -171,15 +157,13 @@ public class InMemorySagaCoordinator implements CamelSagaCoordinator {
     }
 
     public CompletableFuture<Boolean> doFinalize(
-            final Exchange exchange,
             Function<CamelSagaStep, Optional<Endpoint>> endpointExtractor, String description) {
         CompletableFuture<Boolean> result = CompletableFuture.completedFuture(true);
         for (CamelSagaStep step : reversed(steps)) {
             Optional<Endpoint> endpoint = endpointExtractor.apply(step);
             if (endpoint.isPresent()) {
                 result = result.thenCompose(
-                        prevResult -> doFinalize(exchange, endpoint.get(), step, 0, description)
-                                .thenApply(res -> prevResult && res));
+                        prevResult -> doFinalize(endpoint.get(), step, 0, description).thenApply(res -> prevResult && res));
             }
         }
         return result.whenComplete((done, ex) -> {
@@ -191,12 +175,11 @@ public class InMemorySagaCoordinator implements CamelSagaCoordinator {
         });
     }
 
-    private CompletableFuture<Boolean> doFinalize(
-            Exchange exchange, Endpoint endpoint, CamelSagaStep step, int doneAttempts, String description) {
-        Exchange target = createExchange(exchange, endpoint, step);
+    private CompletableFuture<Boolean> doFinalize(Endpoint endpoint, CamelSagaStep step, int doneAttempts, String description) {
+        Exchange exchange = createExchange(endpoint, step);
 
         return CompletableFuture.supplyAsync(() -> {
-            Exchange res = camelContext.createFluentProducerTemplate().to(endpoint).withExchange(target).send();
+            Exchange res = camelContext.createFluentProducerTemplate().to(endpoint).withExchange(exchange).send();
             Exception ex = res.getException();
             if (ex != null) {
                 throw new RuntimeCamelException(res.getException());
@@ -215,7 +198,7 @@ public class InMemorySagaCoordinator implements CamelSagaCoordinator {
             } else {
                 CompletableFuture<Boolean> future = new CompletableFuture<>();
                 sagaService.getExecutorService().schedule(() -> {
-                    doFinalize(target, endpoint, step, currentAttempt, description).whenComplete((res, ex) -> {
+                    doFinalize(endpoint, step, currentAttempt, description).whenComplete((res, ex) -> {
                         if (ex != null) {
                             future.completeExceptionally(ex);
                         } else {
@@ -228,23 +211,17 @@ public class InMemorySagaCoordinator implements CamelSagaCoordinator {
         });
     }
 
-    private Exchange createExchange(Exchange parent, Endpoint endpoint, CamelSagaStep step) {
-        Exchange answer = endpoint.createExchange();
-        answer.getMessage().setHeader(Exchange.SAGA_LONG_RUNNING_ACTION, getId());
-
-        // preserve span from parent, so we can link this new exchange to the parent span for distributed tracing
-        Object span = parent != null ? parent.getProperty(ExchangePropertyKey.OTEL_ACTIVE_SPAN) : null;
-        if (span != null) {
-            answer.setProperty(ExchangePropertyKey.OTEL_ACTIVE_SPAN, span);
-        }
+    private Exchange createExchange(Endpoint endpoint, CamelSagaStep step) {
+        Exchange exchange = endpoint.createExchange();
+        exchange.getIn().setHeader(Exchange.SAGA_LONG_RUNNING_ACTION, getId());
 
         Map<String, Object> values = optionValues.get(step);
         if (values != null) {
             for (Map.Entry<String, Object> entry : values.entrySet()) {
-                answer.getMessage().setHeader(entry.getKey(), entry.getValue());
+                exchange.getIn().setHeader(entry.getKey(), entry.getValue());
             }
         }
-        return answer;
+        return exchange;
     }
 
     private <T> List<T> reversed(List<T> list) {

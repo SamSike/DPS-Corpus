@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,8 @@ import java.beans.PropertyEditor;
 import java.util.List;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.PropertyEditorRegistry;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -114,7 +113,7 @@ public class BindException extends Exception implements BindingResult {
 	}
 
 	@Override
-	public void reject(String errorCode, Object @Nullable [] errorArgs, @Nullable String defaultMessage) {
+	public void reject(String errorCode, @Nullable Object[] errorArgs, @Nullable String defaultMessage) {
 		this.bindingResult.reject(errorCode, errorArgs, defaultMessage);
 	}
 
@@ -129,9 +128,7 @@ public class BindException extends Exception implements BindingResult {
 	}
 
 	@Override
-	public void rejectValue(@Nullable String field, String errorCode,
-			Object @Nullable [] errorArgs, @Nullable String defaultMessage) {
-
+	public void rejectValue(@Nullable String field, String errorCode, @Nullable Object[] errorArgs, @Nullable String defaultMessage) {
 		this.bindingResult.rejectValue(field, errorCode, errorArgs, defaultMessage);
 	}
 
@@ -172,7 +169,8 @@ public class BindException extends Exception implements BindingResult {
 	}
 
 	@Override
-	public @Nullable ObjectError getGlobalError() {
+	@Nullable
+	public ObjectError getGlobalError() {
 		return this.bindingResult.getGlobalError();
 	}
 
@@ -192,7 +190,8 @@ public class BindException extends Exception implements BindingResult {
 	}
 
 	@Override
-	public @Nullable FieldError getFieldError() {
+	@Nullable
+	public FieldError getFieldError() {
 		return this.bindingResult.getFieldError();
 	}
 
@@ -212,22 +211,26 @@ public class BindException extends Exception implements BindingResult {
 	}
 
 	@Override
-	public @Nullable FieldError getFieldError(String field) {
+	@Nullable
+	public FieldError getFieldError(String field) {
 		return this.bindingResult.getFieldError(field);
 	}
 
 	@Override
-	public @Nullable Object getFieldValue(String field) {
+	@Nullable
+	public Object getFieldValue(String field) {
 		return this.bindingResult.getFieldValue(field);
 	}
 
 	@Override
-	public @Nullable Class<?> getFieldType(String field) {
+	@Nullable
+	public Class<?> getFieldType(String field) {
 		return this.bindingResult.getFieldType(field);
 	}
 
 	@Override
-	public @Nullable Object getTarget() {
+	@Nullable
+	public Object getTarget() {
 		return this.bindingResult.getTarget();
 	}
 
@@ -237,18 +240,21 @@ public class BindException extends Exception implements BindingResult {
 	}
 
 	@Override
-	public @Nullable Object getRawFieldValue(String field) {
+	@Nullable
+	public Object getRawFieldValue(String field) {
 		return this.bindingResult.getRawFieldValue(field);
 	}
 
 	@Override
 	@SuppressWarnings("rawtypes")
-	public @Nullable PropertyEditor findEditor(@Nullable String field, @Nullable Class valueType) {
+	@Nullable
+	public PropertyEditor findEditor(@Nullable String field, @Nullable Class valueType) {
 		return this.bindingResult.findEditor(field, valueType);
 	}
 
 	@Override
-	public @Nullable PropertyEditorRegistry getPropertyEditorRegistry() {
+	@Nullable
+	public PropertyEditorRegistry getPropertyEditorRegistry() {
 		return this.bindingResult.getPropertyEditorRegistry();
 	}
 

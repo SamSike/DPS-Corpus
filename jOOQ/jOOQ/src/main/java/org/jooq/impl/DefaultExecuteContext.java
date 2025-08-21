@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,12 +37,8 @@
  */
 package org.jooq.impl;
 
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
-// ...
 import static org.jooq.conf.SettingsTools.renderLocale;
 import static org.jooq.impl.Tools.EMPTY_INT;
-import static org.jooq.impl.Tools.EMPTY_PARAM;
 import static org.jooq.impl.Tools.EMPTY_QUERY;
 import static org.jooq.impl.Tools.EMPTY_STRING;
 
@@ -61,24 +57,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.jooq.Configuration;
 import org.jooq.ConnectionProvider;
 import org.jooq.Constants;
-import org.jooq.ConverterContext;
 import org.jooq.DDLQuery;
 import org.jooq.DSLContext;
 import org.jooq.Delete;
 import org.jooq.ExecuteContext;
-import org.jooq.ExecuteListener;
 import org.jooq.ExecuteType;
 import org.jooq.Insert;
 import org.jooq.Merge;
-import org.jooq.Param;
-// ...
-// ...
 import org.jooq.Query;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -87,11 +76,9 @@ import org.jooq.Routine;
 import org.jooq.SQLDialect;
 import org.jooq.Scope;
 import org.jooq.Update;
-import org.jooq.conf.DiagnosticsConnection;
 import org.jooq.conf.Settings;
 import org.jooq.tools.JooqLogger;
 import org.jooq.tools.jdbc.JDBCUtils;
-import org.jooq.tools.reflect.Reflect;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -104,38 +91,25 @@ import org.jetbrains.annotations.NotNull;
  */
 class DefaultExecuteContext implements ExecuteContext {
 
-    private static final JooqLogger                       log               = JooqLogger.getLogger(DefaultExecuteContext.class);
-    private static final JooqLogger                       logVersionSupport = JooqLogger.getLogger(DefaultExecuteContext.class, "logVersionSupport", 1);
-    private static final JooqLogger                       logDefaultDialect = JooqLogger.getLogger(DefaultExecuteContext.class, "logDefaultDialect", 1);
+    private static final JooqLogger                       log       = JooqLogger.getLogger(DefaultExecuteContext.class);
 
     // Persistent attributes (repeatable)
-    private final ConverterContext                        converterContext;
     private final Instant                                 creationTime;
     private final Configuration                           originalConfiguration;
     private final Configuration                           derivedConfiguration;
     private final Map<Object, Object>                     data;
-
-
-
-
-
-
-
-
-    private Query                                         query;
+    private final Query                                   query;
     private final Routine<?>                              routine;
     private String                                        sql;
-    private Param<?>[]                                    params;
-    private int                                           skipUpdateCounts;
 
-    private final BatchMode                               batchMode;
-    private Query[]                                       batchQueries;
-    private String[]                                      batchSQL;
-    private int[]                                         batchRows;
+    private final boolean                                 batch;
+    private final Query[]                                 batchQueries;
+    private final String[]                                batchSQL;
+    private final int[]                                   batchRows;
 
     ConnectionProvider                                    connectionProvider;
     private Connection                                    connection;
-    private Connection                                    wrappedConnection;
+    private SettingsEnabledConnection                     wrappedConnection;
     private PreparedStatement                             statement;
     private int                                           statementExecutionCount;
     private ResultSet                                     resultSet;
@@ -334,77 +308,63 @@ class DefaultExecuteContext implements ExecuteContext {
     // ------------------------------------------------------------------------
 
     DefaultExecuteContext(Configuration configuration) {
-        this(configuration, BatchMode.NONE, null, null, null);
+        this(configuration, null, null, null);
     }
 
-    DefaultExecuteContext(Configuration configuration, BatchMode batchMode, Query[] batchQueries) {
-        this(configuration, batchMode, null, batchQueries, null);
+    DefaultExecuteContext(Configuration configuration, Query[] batchQueries) {
+        this(configuration, null, batchQueries, null);
     }
 
     DefaultExecuteContext(Configuration configuration, Query query) {
-        this(configuration, BatchMode.NONE, query, null, null);
+        this(configuration, query, null, null);
     }
 
     DefaultExecuteContext(Configuration configuration, Routine<?> routine) {
-        this(configuration, BatchMode.NONE, null, null, routine);
+        this(configuration, null, null, routine);
     }
 
-    private DefaultExecuteContext(Configuration configuration, BatchMode batchMode, Query query, Query[] batchQueries, Routine<?> routine) {
+    private DefaultExecuteContext(Configuration configuration, Query query, Query[] batchQueries, Routine<?> routine) {
 
         // [#4277] The ExecuteContext's Configuration will always return the same Connection,
         //         e.g. when running statements from sub-ExecuteContexts
         // [#7569] The original configuration is attached to Record and Result instances
         this.creationTime = configuration.clock().instant();
         this.connectionProvider = configuration.connectionProvider();
-        this.originalConfiguration = initCaches(configuration);
+        this.originalConfiguration = configuration;
         this.derivedConfiguration = configuration.derive(new ExecuteContextConnectionProvider());
         this.data = new DataMap();
-        this.batchMode = batchMode;
         this.query = query;
         this.routine = routine;
 
+        if (routine != null) {
+            this.batch = false;
+            this.batchQueries = null;
+            this.batchRows = null;
+            this.batchSQL = null;
+        }
+        else if (batchQueries != null) {
+            this.batch = true;
+            this.batchQueries = batchQueries;
+            this.batchRows = new int[batchQueries.length];
+            this.batchSQL = new String[batchQueries.length];
 
-
-
-
-        this.converterContext = new DefaultConverterContext(derivedConfiguration, data);
-
-        batchQueries0(batchQueries);
-        clean();
-    }
-
-    /**
-     * [#18078] Some caches may have to be initialised in the global
-     * configuration, prior to creating the per-execution derived configuration.
-     */
-    private static Configuration initCaches(Configuration configuration) {
-        if (configuration.settings().getDiagnosticsConnection() == DiagnosticsConnection.ON) {
-            if (!FALSE.equals(configuration.settings().isDiagnosticsDuplicateStatements()))
-                org.jooq.impl.DiagnosticsConnection.duplicateSql0(configuration);
-
-            if (!FALSE.equals(configuration.settings().isDiagnosticsRepeatedStatements()))
-                org.jooq.impl.DiagnosticsConnection.repeatedSql0(configuration);
-
-            if (!FALSE.equals(configuration.settings().isDiagnosticsConsecutiveAggregation()))
-                org.jooq.impl.DiagnosticsConnection.consecutiveAgg0(configuration);
+            Arrays.fill(this.batchRows, -1);
+        }
+        else if (query == null) {
+            this.batch = false;
+            this.batchQueries = null;
+            this.batchRows = null;
+            this.batchSQL = null;
+        }
+        else {
+            this.batch = false;
+            this.batchQueries = null;
+            this.batchRows = null;
+            this.batchSQL = null;
         }
 
-        return configuration;
+        clean();
     }
-
-    @Override
-    public final ConverterContext converterContext() {
-        return converterContext;
-    }
-
-
-
-
-
-
-
-
-
 
     @Override
     public final Instant creationTime() {
@@ -435,7 +395,7 @@ class DefaultExecuteContext implements ExecuteContext {
         }
 
         // This can only be a BatchSingle or BatchMultiple execution
-        else if (batchMode != BatchMode.NONE) {
+        else if (batch) {
             return ExecuteType.BATCH;
         }
 
@@ -496,71 +456,11 @@ class DefaultExecuteContext implements ExecuteContext {
         return query;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
-    public final BatchMode batchMode() {
-        return batchMode;
-    }
-
     @Override
     public final Query[] batchQueries() {
-        return batchMode != BatchMode.NONE
-             ? batchQueries
-             : query() != null
-             ? new Query[] { query() }
-             : EMPTY_QUERY;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private final void batchQueries0(Query... newQueries) {
-        if (newQueries != null) {
-            this.batchQueries = newQueries.clone();
-            this.batchSQL = new String[newQueries.length];
-            this.batchRows = new int[newQueries.length];
-
-            Arrays.fill(this.batchRows, -1);
-        }
-        else {
-            this.batchQueries = null;
-            this.batchSQL = null;
-            this.batchRows = null;
-        }
+        return batch         ? batchQueries
+             : query != null ? new Query[] { query }
+             :                 EMPTY_QUERY;
     }
 
     @Override
@@ -583,34 +483,10 @@ class DefaultExecuteContext implements ExecuteContext {
     }
 
     @Override
-    public void params(Param<?>[] p) {
-        this.params = p;
-    }
-
-    @Override
-    public final Param<?>[] params() {
-        return params != null
-            ? params
-            : EMPTY_PARAM;
-    }
-
-    @Override
-    public final int skipUpdateCounts() {
-        return this.skipUpdateCounts;
-    }
-
-    @Override
-    public void skipUpdateCounts(int skip) {
-        this.skipUpdateCounts = skip;
-    }
-
-    @Override
     public final String[] batchSQL() {
-        return batchMode != BatchMode.NONE
-             ? batchSQL
-             : routine != null || query() != null
-             ? new String[] { sql }
-             : EMPTY_STRING;
+        return batch                            ? batchSQL
+             : routine != null || query != null ? new String[] { sql }
+             :                                    EMPTY_STRING;
     }
 
     @Override
@@ -656,17 +532,17 @@ class DefaultExecuteContext implements ExecuteContext {
 
     @Override
     public final Settings settings() {
-        return configuration().settings();
+        return Tools.settings(configuration());
     }
 
     @Override
     public final SQLDialect dialect() {
-        return configuration().dialect();
+        return Tools.configuration(configuration()).dialect();
     }
 
     @Override
     public final SQLDialect family() {
-        return configuration().family();
+        return dialect().family();
     }
 
     @Override
@@ -695,70 +571,14 @@ class DefaultExecuteContext implements ExecuteContext {
      */
     final void connection(ConnectionProvider provider, Connection c) {
         if (c != null) {
-
-            // [#11355] Check configured dialect version vs. JDBC Connection server version.
-            if (dialect().isVersioned() && logVersionSupport.isWarnEnabled()) {
-                String productVersion = null;
-
-                try {
-                    int majorVersion = c.getMetaData().getDatabaseMajorVersion();
-                    int minorVersion = c.getMetaData().getDatabaseMinorVersion();
-                    productVersion = c.getMetaData().getDatabaseProductVersion();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    logVersionSupport(majorVersion, minorVersion, productVersion);
-                }
-
-                // [#14833] There are various reasons why the version can't be read, which we can ignore
-                catch (SQLException e) {
-                    logVersionSupport.info("Version", "Database version cannot be read: " + e.getMessage());
-                }
-
-                // [#14791] Could also be NumberFormatException when reading non-standard version numbers
-                catch (Exception e) {
-                    logVersionSupport.info("Version", "Cannot obtain database version for " + dialect() + ": " + productVersion + ". (" + e.getClass() + ": " + e.getMessage() + "). Please consider reporting this here: https://jooq.org/bug");
-                }
-            }
-
             LOCAL_CONNECTION.set(c);
             connection = c;
-            wrappedConnection = wrap(provider, c);
+            wrappedConnection = wrapConnection(provider, c);
         }
     }
 
-    private final void logVersionSupport(int majorVersion, int minorVersion, String productVersion) {
-        if (!dialect().supportsDatabaseVersion(majorVersion, minorVersion, productVersion))
-            logVersionSupport.warn("Version mismatch", "Database version is older than what dialect " + dialect() + " supports: " + productVersion + ". Consider https://www.jooq.org/download/support-matrix to see what jOOQ version and edition supports which RDBMS versions.");
-        else
-            logVersionSupport.info("Version", "Database version is supported by dialect " + dialect() + ": " + productVersion);
-    }
-
-    private final Connection wrap(ConnectionProvider provider, Connection c) {
-        return wrap0(new SettingsEnabledConnection(new ProviderEnabledConnection(provider, c), derivedConfiguration.settings(), this));
-    }
-
-    private final Connection wrap0(Connection c) {
-        if (derivedConfiguration.settings().getDiagnosticsConnection() == DiagnosticsConnection.ON)
-            return new org.jooq.impl.DiagnosticsConnection(derivedConfiguration, c);
-        else
-            return c;
+    private final SettingsEnabledConnection wrapConnection(ConnectionProvider provider, Connection c) {
+        return new SettingsEnabledConnection(new ProviderEnabledConnection(provider, c), derivedConfiguration.settings(), this);
     }
 
     final void incrementStatementExecutionCount() {
@@ -801,11 +621,9 @@ class DefaultExecuteContext implements ExecuteContext {
 
     @Override
     public final int[] batchRows() {
-        return batchMode != BatchMode.NONE
-             ? batchRows
-             : routine != null || query() != null
-             ? new int[] { rows }
-             : EMPTY_INT;
+        return batch                            ? batchRows
+             : routine != null || query != null ? new int[] { rows }
+             :                                    EMPTY_INT;
     }
 
     @Override
@@ -830,7 +648,7 @@ class DefaultExecuteContext implements ExecuteContext {
 
     @Override
     public final void exception(RuntimeException e) {
-        this.exception = Tools.translate(this, sql(), e);
+        this.exception = Tools.translate(sql(), e);
 
         if (Boolean.TRUE.equals(settings().isDebugInfoOnStackTrace())) {
 
@@ -857,24 +675,7 @@ class DefaultExecuteContext implements ExecuteContext {
     @Override
     public final void sqlException(SQLException e) {
         this.sqlException = e;
-        exception(Tools.translate(this, sql(), e));
-
-        if (family() == SQLDialect.DEFAULT && logDefaultDialect.isWarnEnabled())
-            logDefaultDialect.warn("Unsupported dialect",
-                """
-                An exception was thrown when executing a query with unsupported dialect: SQLDialect.DEFAULT.
-
-                This is usually due to one of 2 reasons:
-                - The dialect was configured by accident (e.g. through a wrong Spring Boot configuration).
-                  In this case, the solution is to configure the correct dialect, e.g. SQLDialect.POSTGRES
-                - SQLDialect.DEFAULT is used as a "close enough" approximation of an unsupported dialect.
-                  Please beware that SQLDialect.DEFAULT is used mainly for DEBUG logging SQL strings, e.g.
-                  when calling Query.toString(). It does not guarantee stability of generated SQL, i.e.
-                  future versions of jOOQ may produce different SQL strings, which may break assumptions
-                  about your unsupported dialect.
-                  Please visit https://github.com/jOOQ/jOOQ/discussions/14059 for new dialect support.
-                """
-            );
+        exception(Tools.translate(sql(), e));
     }
 
     @Override
@@ -909,29 +710,10 @@ class DefaultExecuteContext implements ExecuteContext {
             if (connection == null)
                 DefaultExecuteContext.this.connection();
 
-            return wrap(this, connection);
+            return wrapConnection(this, connection);
         }
 
         @Override
         public final void release(Connection c) {}
-    }
-
-
-    final void transformQueries(ExecuteListener listener) {
-
-
-
-
-        if (TRUE.equals(settings().isTransformPatterns()) && configuration().requireCommercial(() -> "SQL transformations are a commercial only feature. Please consider upgrading to the jOOQ Professional Edition or jOOQ Enterprise Edition.")) {
-
-
-
-
-        }
-
-
-
-
-
     }
 }

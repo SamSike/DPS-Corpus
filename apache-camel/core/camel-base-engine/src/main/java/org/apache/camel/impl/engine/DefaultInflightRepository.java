@@ -22,12 +22,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.LongAdder;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.MessageHistory;
 import org.apache.camel.spi.InflightRepository;
 import org.apache.camel.support.ExchangeHelper;
@@ -42,14 +43,14 @@ public class DefaultInflightRepository extends ServiceSupport implements Infligh
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultInflightRepository.class);
 
-    private final LongAdder size = new LongAdder();
+    private final AtomicInteger size = new AtomicInteger();
     private final ConcurrentMap<String, Exchange> inflight = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, LongAdder> routeCount = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, AtomicInteger> routeCount = new ConcurrentHashMap<>();
     private boolean inflightExchangeEnabled;
 
     @Override
     public void add(Exchange exchange) {
-        size.increment();
+        size.incrementAndGet();
 
         if (inflightExchangeEnabled) {
             inflight.put(exchange.getExchangeId(), exchange);
@@ -58,7 +59,7 @@ public class DefaultInflightRepository extends ServiceSupport implements Infligh
 
     @Override
     public void remove(Exchange exchange) {
-        size.decrement();
+        size.decrementAndGet();
 
         if (inflightExchangeEnabled) {
             inflight.remove(exchange.getExchangeId());
@@ -67,28 +68,28 @@ public class DefaultInflightRepository extends ServiceSupport implements Infligh
 
     @Override
     public void add(Exchange exchange, String routeId) {
-        LongAdder existing = routeCount.get(routeId);
+        AtomicInteger existing = routeCount.get(routeId);
         if (existing != null) {
-            existing.increment();
+            existing.incrementAndGet();
         }
     }
 
     @Override
     public void remove(Exchange exchange, String routeId) {
-        LongAdder existing = routeCount.get(routeId);
+        AtomicInteger existing = routeCount.get(routeId);
         if (existing != null) {
-            existing.decrement();
+            existing.decrementAndGet();
         }
     }
 
     @Override
     public int size() {
-        return size.intValue();
+        return size.get();
     }
 
     @Override
     public void addRoute(String routeId) {
-        routeCount.putIfAbsent(routeId, new LongAdder());
+        routeCount.putIfAbsent(routeId, new AtomicInteger());
     }
 
     @Override
@@ -98,8 +99,8 @@ public class DefaultInflightRepository extends ServiceSupport implements Infligh
 
     @Override
     public int size(String routeId) {
-        LongAdder existing = routeCount.get(routeId);
-        return existing != null ? existing.intValue() : 0;
+        AtomicInteger existing = routeCount.get(routeId);
+        return existing != null ? existing.get() : 0;
     }
 
     @Override
@@ -160,7 +161,8 @@ public class DefaultInflightRepository extends ServiceSupport implements Infligh
             values = values.limit(limit);
         }
 
-        return values.map(InflightExchangeEntry::new).collect(Collectors.toUnmodifiableList());
+        List<InflightExchange> answer = values.map(InflightExchangeEntry::new).collect(Collectors.toList());
+        return Collections.unmodifiableCollection(answer);
     }
 
     @Override
@@ -207,7 +209,7 @@ public class DefaultInflightRepository extends ServiceSupport implements Infligh
     }
 
     private static long getExchangeDuration(Exchange exchange) {
-        return exchange.getClock().elapsed();
+        return System.currentTimeMillis() - exchange.getCreated();
     }
 
     private static final class InflightExchangeEntry implements InflightExchange {
@@ -241,9 +243,9 @@ public class DefaultInflightRepository extends ServiceSupport implements Infligh
             MessageHistory history = list.get(list.size() - 1);
             if (history != null) {
                 long elapsed = history.getElapsed();
-                if (elapsed == 0) {
+                if (elapsed == 0 && history.getTime() > 0) {
                     // still in progress, so lets compute it via the start time
-                    elapsed = history.getElapsedSinceCreated();
+                    elapsed = System.currentTimeMillis() - history.getTime();
                 }
                 return elapsed;
             } else {
@@ -252,8 +254,9 @@ public class DefaultInflightRepository extends ServiceSupport implements Infligh
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public String getNodeId() {
-            return exchange.getExchangeExtension().getHistoryNodeId();
+            return exchange.adapt(ExtendedExchange.class).getHistoryNodeId();
         }
 
         @Override
@@ -262,14 +265,7 @@ public class DefaultInflightRepository extends ServiceSupport implements Infligh
         }
 
         @Override
-        public boolean isFromRemoteEndpoint() {
-            if (exchange.getFromEndpoint() != null) {
-                return exchange.getFromEndpoint().isRemote();
-            }
-            return false;
-        }
-
-        @Override
+        @SuppressWarnings("unchecked")
         public String getAtRouteId() {
             return ExchangeHelper.getAtRouteId(exchange);
         }

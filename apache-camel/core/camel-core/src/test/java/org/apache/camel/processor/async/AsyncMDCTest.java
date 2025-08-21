@@ -58,10 +58,10 @@ public class AsyncMDCTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // enable MDC
                 context.setUseMDCLogging(true);
                 // enable breadcrumb
@@ -70,7 +70,7 @@ public class AsyncMDCTest extends ContextTestSupport {
                 context.addComponent("async", new MyAsyncComponent());
 
                 from("direct:a").routeId("route-a").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         assertEquals("route-a", MDC.get(MDC_ROUTE_ID));
                         assertEquals(exchange.getExchangeId(), MDC.get(MDC_EXCHANGE_ID));
                         assertEquals(exchange.getContext().getName(), MDC.get(MDC_CAMEL_CONTEXT_ID));
@@ -80,7 +80,7 @@ public class AsyncMDCTest extends ContextTestSupport {
                 }).to("log:before").to("async:bye:camel").to("log:after").to("direct:b");
 
                 from("direct:b").routeId("route-b").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         assertEquals("route-b", MDC.get(MDC_ROUTE_ID));
                         assertEquals(exchange.getExchangeId(), MDC.get(MDC_EXCHANGE_ID));
                     }

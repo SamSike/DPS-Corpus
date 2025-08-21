@@ -43,10 +43,10 @@ public class BigRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 RouteDefinition route = from("direct:start");
 
                 for (int i = 0; i < 1000; i++) {

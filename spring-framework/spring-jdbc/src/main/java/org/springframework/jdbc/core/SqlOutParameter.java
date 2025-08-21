@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.springframework.jdbc.core;
 
 import java.sql.ResultSet;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Subclass of {@link SqlParameter} to represent an output parameter.
@@ -34,7 +34,8 @@ import org.jspecify.annotations.Nullable;
  */
 public class SqlOutParameter extends ResultSetSupportingSqlParameter {
 
-	private @Nullable SqlReturnType sqlReturnType;
+	@Nullable
+	private SqlReturnType sqlReturnType;
 
 
 	/**
@@ -113,7 +114,8 @@ public class SqlOutParameter extends ResultSetSupportingSqlParameter {
 	/**
 	 * Return the custom return type, if any.
 	 */
-	public @Nullable SqlReturnType getSqlReturnType() {
+	@Nullable
+	public SqlReturnType getSqlReturnType() {
 		return this.sqlReturnType;
 	}
 

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,7 +42,6 @@ package org.jooq;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
@@ -63,7 +62,6 @@ import static org.jooq.SQLDialect.YUGABYTEDB;
 import java.sql.Statement;
 import java.util.Collection;
 
-import org.jooq.conf.RecordDirtyTracking;
 import org.jooq.conf.Settings;
 import org.jooq.exception.DataAccessException;
 import org.jooq.exception.DataChangedException;
@@ -95,7 +93,7 @@ import org.jetbrains.annotations.Nullable;
  * <li>{@link #store()} : Storing the record to the database. This executes
  * either an <code>INSERT</code> or an <code>UPDATE</code> statement</li>
  * <li>{@link #merge()} : Merging a record to the database. This executes an
- * <code>INSERT … ON DUPLICATE KEY UPDATE</code> statement.</li>
+ * <code>INSERT .. ON DUPLICATE KEY UPDATE</code> statement.</li>
  * </ul>
  * <p>
  * <code>UpdatableRecords</code> are {@link Attachable}, which means that they
@@ -134,14 +132,14 @@ public interface UpdatableRecord<R extends UpdatableRecord<R>> extends TableReco
      * <li>If this record was created by client code, an <code>INSERT</code>
      * statement is executed</li>
      * <li>If this record was loaded by jOOQ and the primary key value was
-     * touched, an <code>INSERT</code> statement is executed (unless
+     * changed, an <code>INSERT</code> statement is executed (unless
      * {@link Settings#isUpdatablePrimaryKeys()} is set). jOOQ expects that
      * primary key values will never change due to the principle of
      * normalisation in RDBMS. So if client code changes primary key values,
      * this is interpreted by jOOQ as client code wanting to duplicate this
      * record.</li>
      * <li>If this record was loaded by jOOQ, and the primary key value was not
-     * touched, an <code>UPDATE</code> statement is executed.</li>
+     * changed, an <code>UPDATE</code> statement is executed.</li>
      * </ul>
      * <p>
      * In either statement type, only those fields are inserted/updated, which
@@ -202,7 +200,7 @@ public interface UpdatableRecord<R extends UpdatableRecord<R>> extends TableReco
      * <p>
      * In order to compare this record with the latest state, the database
      * record will be locked pessimistically using a
-     * <code>SELECT … FOR UPDATE</code> statement. Not all databases support
+     * <code>SELECT .. FOR UPDATE</code> statement. Not all databases support
      * the <code>FOR UPDATE</code> clause natively. Namely, the following
      * databases will show slightly different behaviour:
      * <ul>
@@ -220,52 +218,28 @@ public interface UpdatableRecord<R extends UpdatableRecord<R>> extends TableReco
      * <p>
      * Possible statements are
      * <ul>
-     * <li>
-     *
-     * <pre>
-     * <code>
+     * <li><code><pre>
      * INSERT INTO [table] ([modified fields, including keys])
-     * VALUES ([modified values, including keys])</code>
-     * </pre>
-     *
-     * </li>
-     * <li>
-     *
-     * <pre>
-     * <code>
+     * VALUES ([modified values, including keys])</pre></code></li>
+     * <li><code><pre>
      * UPDATE [table]
      * SET [modified fields = modified values, excluding keys]
      * WHERE [key fields = key values]
-     * AND [version/timestamp fields = version/timestamp values]</code>
-     * </pre>
-     *
-     * </li>
+     * AND [version/timestamp fields = version/timestamp values]</pre></code></li>
      * </ul>
      * <p>
      * <h3>Statement execution enforcement</h3>
      * <p>
      * If you want to control statement re-execution, regardless if the values
-     * in this record were {@link #modified()}, you can explicitly set the
-     * touched flags for all values with {@link #touched(boolean)} or for single
-     * values with {@link #touched(Field, boolean)}, prior to storing, if
-     * {@link Settings#getRecordDirtyTracking()} is set to
-     * {@link RecordDirtyTracking#TOUCHED}. Consider also setting the flags
-     * {@link Settings#getUpdateUnchangedRecords()} and/or
+     * in this record were changed, you can explicitly set the changed flags for
+     * all values with {@link #changed(boolean)} or for single values with
+     * {@link #changed(Field, boolean)}, prior to storing. Consider also setting
+     * the flags {@link Settings#getUpdateUnchangedRecords()} and/or
      * {@link Settings#isInsertUnchangedRecords()} appropriately to control if
      * the record should be "touched" without any changes (<code>UPDATE</code>)
      * or inserted with default values (<code>INSERT</code>).
      * <p>
      * This is the same as calling <code>record.store(record.fields())</code>
-     * <h5>Effects on this record</h5>
-     * <p>
-     * After a successful {@link #store()} operation, this record will have:
-     * <ul>
-     * <li>Its {@link #valuesRow()} unchanged</li>
-     * <li>Its {@link #original()} values set to the same values as
-     * {@link #valuesRow()}.</li>
-     * <li>Its {@link #touched()} flags set to <code>false</code></li>
-     * <li>Its {@link #modified()} flags set to <code>false</code></li>
-     * </ul>
      *
      * @return <code>1</code> if the record was stored to the database. <code>0
      *         </code> if storing was not necessary.
@@ -316,22 +290,11 @@ public interface UpdatableRecord<R extends UpdatableRecord<R>> extends TableReco
      * statement (or no statement) will always be executed.
      * <p>
      * If you want to enforce re-insertion this record's values, regardless if
-     * the values in this record were touched, you can explicitly set the
-     * touched flags for all values with {@link #touched(boolean)} or for single
-     * values with {@link #touched(Field, boolean)}, prior to insertion, if
-     * {@link Settings#getRecordDirtyTracking()} is set to
-     * {@link RecordDirtyTracking#TOUCHED}
+     * the values in this record were changed, you can explicitly set the
+     * changed flags for all values with {@link #changed(boolean)} or for single
+     * values with {@link #changed(Field, boolean)}, prior to insertion.
      * <p>
      * This is the same as calling <code>record.insert(record.fields())</code>
-     * <h5>Effects on this record</h5>
-     * <p>
-     * After a successful {@link #insert()} operation, this record will have:
-     * <ul>
-     * <li>Its {@link #valuesRow()} unchanged</li>
-     * <li>Its {@link #original()} values set to the same values as {@link #valuesRow()}.</li>
-     * <li>Its {@link #touched()} flags set to <code>false</code></li>
-     * <li>Its {@link #modified()} flags set to <code>false</code></li>
-     * </ul>
      *
      * @return <code>1</code> if the record was stored to the database. <code>0
      *         </code> if storing was not necessary and
@@ -377,24 +340,12 @@ public interface UpdatableRecord<R extends UpdatableRecord<R>> extends TableReco
      * statement (or no statement) will always be executed.
      * <p>
      * If you want to enforce statement execution, regardless if the values in
-     * this record were {@link #modified()}, you can explicitly set the touched
-     * flags for all values with {@link #touched(boolean)} or for single values
-     * with {@link #touched(Field, boolean)}, prior to updating, if
-     * {@link Settings#getRecordDirtyTracking()} is set to
-     * {@link RecordDirtyTracking#TOUCHED}, or alternatively, use
-     * {@link Settings#getUpdateUnchangedRecords()}.
+     * this record were changed, you can explicitly set the changed flags for
+     * all values with {@link #changed(boolean)} or for single values with
+     * {@link #changed(Field, boolean)}, prior to updating, or alternatively,
+     * use {@link Settings#getUpdateUnchangedRecords()}.
      * <p>
      * This is the same as calling <code>record.update(record.fields())</code>
-     * <h5>Effects on this record</h5>
-     * <p>
-     * After a successful {@link #update()} operation, this record will have:
-     * <ul>
-     * <li>Its {@link #valuesRow()} unchanged</li>
-     * <li>Its {@link #original()} values set to the same values as
-     * {@link #valuesRow()}.</li>
-     * <li>Its {@link #touched()} flags set to <code>false</code></li>
-     * <li>Its {@link #modified()} flags set to <code>false</code></li>
-     * </ul>
      *
      * @return <code>1</code> if the record was stored to the database. <code>0
      *         </code> if storing was not necessary.
@@ -441,7 +392,7 @@ public interface UpdatableRecord<R extends UpdatableRecord<R>> extends TableReco
      * Unlike {@link #store()}, the statement produced by this operation does
      * not depend on whether the record has been previously fetched from the
      * database or created afresh. It implements the semantics of an
-     * <code>INSERT … ON DUPLICATE KEY UPDATE</code> statement, which will
+     * <code>INSERT .. ON DUPLICATE KEY UPDATE</code> statement, which will
      * update the row regardless of which (unique) key value is already present.
      * See {@link InsertOnDuplicateStep#onDuplicateKeyUpdate()}.
      * <p>
@@ -450,23 +401,11 @@ public interface UpdatableRecord<R extends UpdatableRecord<R>> extends TableReco
      * on whether the lock values are present already in the record.
      * <p>
      * If you want to enforce statement execution, regardless if the values in
-     * this record were {@link #modified()}, you can explicitly set the touched
-     * flags for all values with {@link #touched(boolean)} or for single values
-     * with {@link #touched(Field, boolean)}, prior to merging, if
-     * {@link Settings#getRecordDirtyTracking()} is set to
-     * {@link RecordDirtyTracking#TOUCHED}.
+     * this record were changed, you can explicitly set the changed flags for
+     * all values with {@link #changed(boolean)} or for single values with
+     * {@link #changed(Field, boolean)}, prior to insertion.
      * <p>
      * This is the same as calling <code>record.merge(record.fields())</code>
-     * <h5>Effects on this record</h5>
-     * <p>
-     * After a successful {@link #merge()} operation, this record will have:
-     * <ul>
-     * <li>Its {@link #valuesRow()} unchanged</li>
-     * <li>Its {@link #original()} values set to the same values as
-     * {@link #valuesRow()}.</li>
-     * <li>Its {@link #touched()} flags set to <code>false</code></li>
-     * <li>Its {@link #modified()} flags set to <code>false</code></li>
-     * </ul>
      *
      * @return <code>1</code> if the record was merged to the database. <code>0
      *         </code> if merging was not necessary.
@@ -525,7 +464,7 @@ public interface UpdatableRecord<R extends UpdatableRecord<R>> extends TableReco
      * <p>
      * In order to compare this record with the latest state, the database
      * record will be locked pessimistically using a
-     * <code>SELECT … FOR UPDATE</code> statement. Not all databases support
+     * <code>SELECT .. FOR UPDATE</code> statement. Not all databases support
      * the <code>FOR UPDATE</code> clause natively. Namely, the following
      * databases will show slightly different behaviour:
      * <ul>
@@ -538,25 +477,12 @@ public interface UpdatableRecord<R extends UpdatableRecord<R>> extends TableReco
      * <p>
      * See {@link SelectQuery#setForUpdate(boolean)} for more details</li>
      * </ul>
-     * <h5>Effects on this record</h5>
-     * <p>
-     * After a successful {@link #delete()} operation, this record will have:
-     * <ul>
-     * <li>Its {@link #valuesRow()} unchanged</li>
-     * <li>Its {@link #original()} values reset to <code>null</code></li>
-     * <li>Its {@link #touched()} flags set to <code>true</code></li>
-     * <li>Its {@link #modified()} flags set to <code>true</code></li>
-     * </ul>
      * <h5>Statement examples</h5>
      * <p>
-     * The executed statement is
-     *
-     * <pre>
-     * <code>
+     * The executed statement is <code><pre>
      * DELETE FROM [table]
      * WHERE [key fields = key values]
-     * AND [version/timestamp fields = version/timestamp values]</code>
-     * </pre>
+     * AND [version/timestamp fields = version/timestamp values]</pre></code>
      * <p>
      * This is in fact the same as calling
      * <code>delete(getTable().getPrimaryKey().getFieldsArray())</code>
@@ -578,8 +504,7 @@ public interface UpdatableRecord<R extends UpdatableRecord<R>> extends TableReco
      * <li>{@link #valuesRow()} will have been restored to the respective values
      * from the database</li>
      * <li>{@link #original()} will match this record</li>
-     * <li>{@link #touched()} will be <code>false</code></li>
-     * <li>{@link #modified()} will be <code>false</code></li>
+     * <li>{@link #changed()} will be <code>false</code></li>
      * </ul>
      * <p>
      * Refreshing can trigger any of the following actions:
@@ -607,8 +532,7 @@ public interface UpdatableRecord<R extends UpdatableRecord<R>> extends TableReco
      * <li>{@link #valuesRow()} will have been restored to the respective values
      * from the database</li>
      * <li>{@link #original()} will match this record</li>
-     * <li>{@link #touched()} will be <code>false</code></li>
-     * <li>{@link #modified()} will be <code>false</code></li>
+     * <li>{@link #changed()} will be <code>false</code></li>
      * </ul>
      * <p>
      * Refreshing can trigger any of the following actions:
@@ -636,8 +560,7 @@ public interface UpdatableRecord<R extends UpdatableRecord<R>> extends TableReco
      * <li>{@link #valuesRow()} will have been restored to the respective values
      * from the database</li>
      * <li>{@link #original()} will match this record</li>
-     * <li>{@link #touched()} will be <code>false</code></li>
-     * <li>{@link #modified()} will be <code>false</code></li>
+     * <li>{@link #changed()} will be <code>false</code></li>
      * </ul>
      * <p>
      * Refreshing can trigger any of the following actions:
@@ -661,15 +584,6 @@ public interface UpdatableRecord<R extends UpdatableRecord<R>> extends TableReco
      * Duplicate this record (in memory) and reset all fields from the primary
      * key or main unique key, such that a subsequent call to {@link #store()}
      * will result in an <code>INSERT</code> statement.
-     * <h5>Effects on this record</h5>
-     * <p>
-     * After a {@link #copy()} operation, the resulting record will have:
-     * <ul>
-     * <li>Its {@link #valuesRow()} just like the source record</li>
-     * <li>Its {@link #original()} values set <code>null</code>.</li>
-     * <li>Its {@link #touched()} flags set to <code>true</code></li>
-     * <li>Its {@link #modified()} flags set to <code>false</code></li>
-     * </ul>
      *
      * @return A new record, distinct from <code>this</code> record.
      */

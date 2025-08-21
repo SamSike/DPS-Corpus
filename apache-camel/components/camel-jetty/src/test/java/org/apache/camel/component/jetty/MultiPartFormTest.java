@@ -25,12 +25,11 @@ import org.apache.camel.Processor;
 import org.apache.camel.attachment.AttachmentMessage;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.util.IOHelper;
-import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.HttpEntity;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,21 +46,20 @@ public class MultiPartFormTest extends BaseJettyTest {
 
     @Test
     public void testSendMultiPartForm() throws Exception {
+        org.apache.http.client.HttpClient client = HttpClientBuilder.create().build();
         HttpPost post = new HttpPost("http://localhost:" + getPort() + "/test");
         post.setEntity(createMultipartRequestEntity());
-        try (CloseableHttpClient client = HttpClients.createDefault();
-             CloseableHttpResponse response = client.execute(post)) {
-            int status = response.getCode();
+        HttpResponse response = client.execute(post);
+        int status = response.getStatusLine().getStatusCode();
 
-            assertEquals(200, status, "Get a wrong response status");
-            String result = IOHelper.loadText(response.getEntity().getContent()).trim();
+        assertEquals(200, status, "Get a wrong response status");
+        String result = IOHelper.loadText(response.getEntity().getContent()).trim();
 
-            assertEquals("A binary file of some kind", result, "Get a wrong result");
-        }
+        assertEquals("A binary file of some kind", result, "Get a wrong result");
     }
 
     @Test
-    public void testSendMultiPartFormFromCamelHttpComponnent() {
+    public void testSendMultiPartFormFromCamelHttpComponnent() throws Exception {
         String result
                 = template.requestBody("http://localhost:" + getPort() + "/test", createMultipartRequestEntity(), String.class);
         assertEquals("A binary file of some kind", result, "Get a wrong result");
@@ -98,7 +96,7 @@ public class MultiPartFormTest extends BaseJettyTest {
                         // "text/plain", data.getContentType());
                         assertEquals("log4j2.properties", data.getName(), "Got the wrong name");
 
-                        assertTrue(data.getDataSource().getInputStream().read() != -1,
+                        assertTrue(data.getDataSource().getInputStream().available() > 0,
                                 "We should get the data from the DataHandle");
 
                         // The other form date can be get from the message

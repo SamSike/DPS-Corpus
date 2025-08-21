@@ -38,6 +38,8 @@ public class KMS2Component extends DefaultComponent {
 
     public KMS2Component(CamelContext context) {
         super(context);
+
+        registerExtension(new KMS2ComponentVerifierExtension());
     }
 
     @Override
@@ -46,12 +48,10 @@ public class KMS2Component extends DefaultComponent {
 
         KMS2Endpoint endpoint = new KMS2Endpoint(uri, this, configuration);
         setProperties(endpoint, parameters);
-        if (Boolean.FALSE.equals(configuration.isUseDefaultCredentialsProvider())
-                && Boolean.FALSE.equals(configuration.isUseProfileCredentialsProvider())
-                && Boolean.FALSE.equals(configuration.isUseSessionCredentials()) && configuration.getKmsClient() == null
+        if (Boolean.FALSE.equals(configuration.isUseDefaultCredentialsProvider()) && configuration.getKmsClient() == null
                 && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
             throw new IllegalArgumentException(
-                    "useDefaultCredentialsProvider is set to false, useProfileCredentialsProvider is set to false, useSessionCredentials is set to false, Amazon kms client or accessKey and secretKey must be specified");
+                    "useDefaultCredentialsProvider is set to false, Amazon kms client or accessKey and secretKey must be specified");
         }
 
         return endpoint;

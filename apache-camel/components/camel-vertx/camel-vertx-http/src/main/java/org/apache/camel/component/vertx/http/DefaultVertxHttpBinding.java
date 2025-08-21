@@ -54,7 +54,7 @@ public class DefaultVertxHttpBinding implements VertxHttpBinding {
         Message message = exchange.getMessage();
 
         // Resolve query string from the HTTP_QUERY header or default to those provided on the endpoint HTTP URI
-        String queryString = VertxHttpHelper.resolveQueryString(exchange, endpoint);
+        String queryString = VertxHttpHelper.resolveQueryString(exchange);
         Map<String, Object> queryParams = null;
         if (ObjectHelper.isEmpty(queryString)) {
             // use default query string from endpoint configuration
@@ -109,7 +109,7 @@ public class DefaultVertxHttpBinding implements VertxHttpBinding {
             request.bearerTokenAuthentication(configuration.getBearerToken());
         }
 
-        populateRequestHeaders(endpoint, exchange, request, configuration.getHeaderFilterStrategy());
+        populateRequestHeaders(exchange, request, configuration.getHeaderFilterStrategy());
 
         if (configuration.getTimeout() > -1) {
             request.timeout(configuration.getTimeout());
@@ -119,15 +119,14 @@ public class DefaultVertxHttpBinding implements VertxHttpBinding {
     }
 
     @Override
-    public void populateRequestHeaders(
-            VertxHttpEndpoint endpoint, Exchange exchange, HttpRequest<Buffer> request, HeaderFilterStrategy strategy) {
+    public void populateRequestHeaders(Exchange exchange, HttpRequest<Buffer> request, HeaderFilterStrategy strategy) {
         // optimize to use add on MultiMap as putHeader on request does a remove/add
         MultiMap headers = request.headers();
 
         // Ensure the Content-Type header is always added if the corresponding exchange header is present
         String contentType = ExchangeHelper.getContentType(exchange);
         if (ObjectHelper.isNotEmpty(contentType)) {
-            headers.set(VertxHttpConstants.CONTENT_TYPE, contentType);
+            headers.add(VertxHttpConstants.CONTENT_TYPE, contentType);
         }
 
         // Transfer exchange headers to the HTTP request while applying the filter strategy
@@ -136,15 +135,9 @@ public class DefaultVertxHttpBinding implements VertxHttpBinding {
             for (Map.Entry<String, Object> entry : exchange.getMessage().getHeaders().entrySet()) {
                 String key = entry.getKey();
                 Object headerValue = entry.getValue();
-
-                if (endpoint.getConfiguration().isBridgeEndpoint() && request.queryParams().contains(key)) {
-                    // Avoid duplicating headers when bridgeEndpoint and query params contains the same header keys
-                    continue;
-                }
-
                 if (!strategy.applyFilterToCamelHeaders(key, headerValue, exchange)) {
                     String str = tc.convertTo(String.class, headerValue);
-                    headers.set(key, str);
+                    headers.add(key, str);
                 }
             }
         }
@@ -153,11 +146,9 @@ public class DefaultVertxHttpBinding implements VertxHttpBinding {
     @Override
     public void handleResponse(VertxHttpEndpoint endpoint, Exchange exchange, AsyncResult<HttpResponse<Buffer>> response)
             throws Exception {
-
-        Message message = exchange.getMessage();
-
         HttpResponse<Buffer> result = response.result();
         if (response.succeeded()) {
+            Message message = exchange.getMessage();
             VertxHttpConfiguration configuration = endpoint.getConfiguration();
             boolean ok = endpoint.isStatusCodeOk(result.statusCode());
             if (!configuration.isThrowExceptionOnFailure() || configuration.isThrowExceptionOnFailure() && ok) {
@@ -178,34 +169,24 @@ public class DefaultVertxHttpBinding implements VertxHttpBinding {
         message.setHeader(VertxHttpConstants.HTTP_RESPONSE_TEXT, response.statusMessage());
 
         MultiMap headers = response.headers();
-        if (headers != null && !headers.isEmpty()) {
+        headers.forEach(new Consumer<Map.Entry<String, String>>() {
+            boolean found;
 
-            // avoid duplicate headers by keeping copy of old headers
-            Map<String, Object> copy = new HashMap<>(exchange.getMessage().getHeaders());
-            exchange.getMessage().getHeaders().clear();
-
-            headers.forEach(new Consumer<Map.Entry<String, String>>() {
-                boolean found;
-
-                @Override
-                public void accept(Map.Entry<String, String> entry) {
-                    String name = entry.getKey();
-                    String value = entry.getValue();
-                    if (!found && name.equalsIgnoreCase("content-type")) {
-                        found = true;
-                        name = VertxHttpConstants.CONTENT_TYPE;
-                        exchange.setProperty(ExchangePropertyKey.CHARSET_NAME, IOHelper.getCharsetNameFromContentType(value));
-                    }
-                    Object extracted = HttpHelper.extractHttpParameterValue(value);
-                    if (strategy != null && !strategy.applyFilterToExternalHeaders(name, extracted, exchange)) {
-                        HttpHelper.appendHeader(message.getHeaders(), name, extracted);
-                    }
+            @Override
+            public void accept(Map.Entry<String, String> entry) {
+                String name = entry.getKey();
+                String value = entry.getValue();
+                if (!found && name.equalsIgnoreCase("content-type")) {
+                    found = true;
+                    name = VertxHttpConstants.CONTENT_TYPE;
+                    exchange.setProperty(ExchangePropertyKey.CHARSET_NAME, IOHelper.getCharsetNameFromContentType(value));
                 }
-            });
-
-            // and only add back old headers if they are not in the HTTP response
-            copy.forEach((k, v) -> exchange.getMessage().getHeaders().putIfAbsent(k, v));
-        }
+                Object extracted = HttpHelper.extractHttpParameterValue(value);
+                if (strategy != null && !strategy.applyFilterToExternalHeaders(name, extracted, exchange)) {
+                    HttpHelper.appendHeader(message.getHeaders(), name, extracted);
+                }
+            }
+        });
     }
 
     @Override

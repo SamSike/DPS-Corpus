@@ -33,7 +33,7 @@ public class JdbcAggregateLoadTest extends AbstractJdbcAggregationTestSupport {
         mock.expectedMinimumMessageCount(1);
         mock.setResultWaitTime(50 * 1000);
 
-        LOG.info("Starting to send {} messages.", SIZE);
+        LOG.info("Staring to send " + SIZE + " messages.");
 
         for (int i = 0; i < SIZE; i++) {
             final int value = 1;
@@ -42,7 +42,7 @@ public class JdbcAggregateLoadTest extends AbstractJdbcAggregationTestSupport {
             template.sendBodyAndHeader("seda:start?size=" + SIZE, value, "id", "" + id);
         }
 
-        LOG.info("Sending all {} message done. Now waiting for aggregation to complete.", SIZE);
+        LOG.info("Sending all " + SIZE + " message done. Now waiting for aggregation to complete.");
 
         MockEndpoint.assertIsSatisfied(context);
     }
@@ -52,8 +52,6 @@ public class JdbcAggregateLoadTest extends AbstractJdbcAggregationTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() {
-                configureJdbcAggregationRepository();
-
                 from("seda:start?size=" + SIZE)
                         .to("log:input?groupSize=500")
                         .aggregate(header("id"), new MyAggregationStrategy())

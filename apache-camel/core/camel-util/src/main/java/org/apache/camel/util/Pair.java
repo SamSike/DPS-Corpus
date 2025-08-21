@@ -23,8 +23,8 @@ import java.util.Objects;
  */
 public class Pair<T> {
 
-    private final T left;
-    private final T right;
+    private T left;
+    private T right;
 
     public Pair(T left, T right) {
         this.left = left;

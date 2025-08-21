@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import javax.xml.stream.Location;
 import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.Comment;
@@ -31,12 +30,12 @@ import javax.xml.stream.events.ProcessingInstruction;
 import javax.xml.stream.events.StartDocument;
 import javax.xml.stream.events.XMLEvent;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Implementation of the {@link javax.xml.stream.XMLStreamReader} interface that wraps a
  * {@link XMLEventReader}. Useful because the StAX {@link javax.xml.stream.XMLInputFactory}
- * allows one to create an event reader from a stream reader, but not vice-versa.
+ * allows one to create a event reader from a stream reader, but not vice-versa.
  *
  * @author Arjen Poutsma
  * @since 3.0
@@ -79,7 +78,8 @@ class XMLEventStreamReader extends AbstractXMLStreamReader {
 	}
 
 	@Override
-	public @Nullable String getVersion() {
+	@Nullable
+	public String getVersion() {
 		if (this.event.isStartDocument()) {
 			return ((StartDocument) this.event).getVersion();
 		}
@@ -114,12 +114,14 @@ class XMLEventStreamReader extends AbstractXMLStreamReader {
 	}
 
 	@Override
-	public @Nullable String getEncoding() {
+	@Nullable
+	public String getEncoding() {
 		return null;
 	}
 
 	@Override
-	public @Nullable String getCharacterEncodingScheme() {
+	@Nullable
+	public String getCharacterEncodingScheme() {
 		return null;
 	}
 
@@ -153,7 +155,7 @@ class XMLEventStreamReader extends AbstractXMLStreamReader {
 		if (this.event.isCharacters()) {
 			return this.event.asCharacters().getData();
 		}
-		else if (this.event.getEventType() == XMLStreamConstants.COMMENT) {
+		else if (this.event.getEventType() == XMLEvent.COMMENT) {
 			return ((Comment) this.event).getText();
 		}
 		else {

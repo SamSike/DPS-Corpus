@@ -57,16 +57,12 @@ public class MulticastDefinition extends OutputDefinition<MulticastDefinition>
     @XmlAttribute
     @Metadata(label = "advanced", javaType = "java.lang.Boolean")
     private String aggregationStrategyMethodAllowNull;
-    @Deprecated(since = "4.7.0")
     @XmlAttribute
     @Metadata(label = "advanced", javaType = "java.lang.Boolean")
     private String parallelAggregate;
     @XmlAttribute
     @Metadata(javaType = "java.lang.Boolean")
     private String parallelProcessing;
-    @XmlAttribute
-    @Metadata(javaType = "java.lang.Boolean")
-    private String synchronous;
     @XmlAttribute
     @Metadata(javaType = "java.lang.Boolean")
     private String streaming;
@@ -87,30 +83,6 @@ public class MulticastDefinition extends OutputDefinition<MulticastDefinition>
     private String shareUnitOfWork;
 
     public MulticastDefinition() {
-    }
-
-    protected MulticastDefinition(MulticastDefinition source) {
-        super(source);
-        this.executorServiceBean = source.executorServiceBean;
-        this.aggregationStrategyBean = source.aggregationStrategyBean;
-        this.onPrepareProcessor = source.onPrepareProcessor;
-        this.aggregationStrategy = source.aggregationStrategy;
-        this.aggregationStrategyMethodName = source.aggregationStrategyMethodName;
-        this.aggregationStrategyMethodAllowNull = source.aggregationStrategyMethodAllowNull;
-        this.parallelAggregate = source.parallelAggregate;
-        this.parallelProcessing = source.parallelProcessing;
-        this.synchronous = source.synchronous;
-        this.streaming = source.streaming;
-        this.stopOnException = source.stopOnException;
-        this.timeout = source.timeout;
-        this.executorService = source.executorService;
-        this.onPrepare = source.onPrepare;
-        this.shareUnitOfWork = source.shareUnitOfWork;
-    }
-
-    @Override
-    public MulticastDefinition copyDefinition() {
-        return new MulticastDefinition(this);
     }
 
     @Override
@@ -204,15 +176,6 @@ public class MulticastDefinition extends OutputDefinition<MulticastDefinition>
      * until all messages has been fully processed, before it continues. Its only the sending and processing the replies
      * from the multicasts which happens concurrently.
      *
-     * When parallel processing is enabled, then the Camel routing engin will continue processing using last used thread
-     * from the parallel thread pool. However, if you want to use the original thread that called the multicast, then
-     * make sure to enable the synchronous option as well.
-     *
-     * In parallel processing mode, you may want to also synchronous = true to force this EIP to process the sub-tasks
-     * using the upper bounds of the thread-pool. If using synchronous = false then Camel will allow its reactive
-     * routing engine to use as many threads as possible, which may be available due to sub-tasks using other
-     * thread-pools such as CompletableFuture.runAsync or others.
-     *
      * @return the builder
      */
     public MulticastDefinition parallelProcessing() {
@@ -225,36 +188,6 @@ public class MulticastDefinition extends OutputDefinition<MulticastDefinition>
      * until all messages has been fully processed, before it continues. Its only the sending and processing the replies
      * from the multicasts which happens concurrently.
      *
-     * When parallel processing is enabled, then the Camel routing engin will continue processing using last used thread
-     * from the parallel thread pool. However, if you want to use the original thread that called the multicast, then
-     * make sure to enable the synchronous option as well.
-     *
-     * In parallel processing mode, you may want to also synchronous = true to force this EIP to process the sub-tasks
-     * using the upper bounds of the thread-pool. If using synchronous = false then Camel will allow its reactive
-     * routing engine to use as many threads as possible, which may be available due to sub-tasks using other
-     * thread-pools such as CompletableFuture.runAsync or others.
-     *
-     * @return the builder
-     */
-    public MulticastDefinition parallelProcessing(String parallelProcessing) {
-        setParallelProcessing(parallelProcessing);
-        return this;
-    }
-
-    /**
-     * If enabled then sending messages to the multicasts occurs concurrently. Note the caller thread will still wait
-     * until all messages has been fully processed, before it continues. Its only the sending and processing the replies
-     * from the multicasts which happens concurrently.
-     *
-     * When parallel processing is enabled, then the Camel routing engin will continue processing using last used thread
-     * from the parallel thread pool. However, if you want to use the original thread that called the multicast, then
-     * make sure to enable the synchronous option as well.
-     *
-     * In parallel processing mode, you may want to also synchronous = true to force this EIP to process the sub-tasks
-     * using the upper bounds of the thread-pool. If using synchronous = false then Camel will allow its reactive
-     * routing engine to use as many threads as possible, which may be available due to sub-tasks using other
-     * thread-pools such as CompletableFuture.runAsync or others.
-     *
      * @return the builder
      */
     public MulticastDefinition parallelProcessing(boolean parallelProcessing) {
@@ -263,37 +196,6 @@ public class MulticastDefinition extends OutputDefinition<MulticastDefinition>
     }
 
     /**
-     * Sets whether synchronous processing should be strictly used. When enabled then the same thread is used to
-     * continue routing after the multicast is complete, even if parallel processing is enabled.
-     *
-     * @return the builder
-     */
-    public MulticastDefinition synchronous() {
-        return synchronous(true);
-    }
-
-    /**
-     * Sets whether synchronous processing should be strictly used. When enabled then the same thread is used to
-     * continue routing after the multicast is complete, even if parallel processing is enabled.
-     *
-     * @return the builder
-     */
-    public MulticastDefinition synchronous(boolean synchronous) {
-        return synchronous(Boolean.toString(synchronous));
-    }
-
-    /**
-     * Sets whether synchronous processing should be strictly used. When enabled then the same thread is used to
-     * continue routing after the multicast is complete, even if parallel processing is enabled.
-     *
-     * @return the builder
-     */
-    public MulticastDefinition synchronous(String synchronous) {
-        setSynchronous(synchronous);
-        return this;
-    }
-
-    /**
      * If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would
      * require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false
      * meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to
@@ -301,37 +203,8 @@ public class MulticastDefinition extends OutputDefinition<MulticastDefinition>
      *
      * @return the builder
      */
-    @Deprecated(since = "4.7.0")
     public MulticastDefinition parallelAggregate() {
         setParallelAggregate(Boolean.toString(true));
-        return this;
-    }
-
-    /**
-     * If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would
-     * require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false
-     * meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to
-     * archive higher performance when the AggregationStrategy is implemented as thread-safe.
-     *
-     * @return the builder
-     */
-    @Deprecated(since = "4.7.0")
-    public MulticastDefinition parallelAggregate(boolean parallelAggregate) {
-        setParallelAggregate(Boolean.toString(parallelAggregate));
-        return this;
-    }
-
-    /**
-     * If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would
-     * require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false
-     * meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to
-     * archive higher performance when the AggregationStrategy is implemented as thread-safe.
-     *
-     * @return the builder
-     */
-    @Deprecated(since = "4.7.0")
-    public MulticastDefinition parallelAggregate(String parallelAggregate) {
-        setParallelAggregate(parallelAggregate);
         return this;
     }
 
@@ -500,14 +373,6 @@ public class MulticastDefinition extends OutputDefinition<MulticastDefinition>
         this.parallelProcessing = parallelProcessing;
     }
 
-    public String getSynchronous() {
-        return synchronous;
-    }
-
-    public void setSynchronous(String synchronous) {
-        this.synchronous = synchronous;
-    }
-
     public String getStreaming() {
         return streaming;
     }
@@ -598,12 +463,10 @@ public class MulticastDefinition extends OutputDefinition<MulticastDefinition>
         this.shareUnitOfWork = shareUnitOfWork;
     }
 
-    @Deprecated(since = "4.7.0")
     public String getParallelAggregate() {
         return parallelAggregate;
     }
 
-    @Deprecated(since = "4.7.0")
     public void setParallelAggregate(String parallelAggregate) {
         this.parallelAggregate = parallelAggregate;
     }

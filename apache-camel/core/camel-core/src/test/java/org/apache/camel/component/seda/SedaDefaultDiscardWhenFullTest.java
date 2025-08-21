@@ -16,12 +16,9 @@
  */
 package org.apache.camel.component.seda;
 
-import java.time.Duration;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 public class SedaDefaultDiscardWhenFullTest extends ContextTestSupport {
@@ -40,8 +37,10 @@ public class SedaDefaultDiscardWhenFullTest extends ContextTestSupport {
         // start route
         context.getRouteController().startRoute("foo");
 
-        // wait until at least 1 message has been consumed
-        Awaitility.await().atMost(Duration.ofSeconds(10)).until(() -> mock.getReceivedCounter() >= 1);
+        // wait until  at least 1 message has been consumed
+        while (mock.getReceivedCounter() < 1) {
+            Thread.sleep(100);
+        }
 
         // and now there is room for me
         template.sendBody("seda:foo", "Camel World");
@@ -50,15 +49,15 @@ public class SedaDefaultDiscardWhenFullTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 SedaComponent seda = context.getComponent("seda", SedaComponent.class);
                 seda.setDefaultDiscardWhenFull(true);
                 seda.setQueueSize(2);
 
-                from("seda:foo").routeId("foo").autoStartup(false)
+                from("seda:foo").routeId("foo").noAutoStartup()
                         .to("mock:result");
             }
         };

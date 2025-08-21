@@ -120,6 +120,9 @@ public class ConnectionTest extends CamelTestSupport {
 
     @Test
     public void testCommand1() throws InterruptedException {
+
+        Thread.sleep(1_000);
+
         this.producerClient1.sendBody(true);
 
         // expect - count

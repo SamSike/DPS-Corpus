@@ -24,7 +24,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests new converters added to XmlConverters to make Camel intelligent when needing to convert a NodeList of length 1
@@ -39,7 +39,7 @@ public class XPathLanguageSingleNodeListTest extends ContextTestSupport {
     /**
      * A single node XPath selection that internally returns a DTMNodeList of length 1 can now be automatically
      * converted to a Document/Node.
-     *
+     * 
      * @throws Exception
      */
     @Test
@@ -56,7 +56,7 @@ public class XPathLanguageSingleNodeListTest extends ContextTestSupport {
 
     /**
      * Regression test to ensure that a NodeList of length > 1 is not processed by the new converters.
-     *
+     * 
      * @throws Exception
      */
     @Test
@@ -66,21 +66,22 @@ public class XPathLanguageSingleNodeListTest extends ContextTestSupport {
         getMockEndpoint("mock:notfound").expectedMessageCount(0);
         getMockEndpoint("mock:notfound").setResultWaitTime(500);
 
-        CamelExecutionException ex = assertThrows(CamelExecutionException.class,
-                () -> template.requestBody("direct:doTest", XML_INPUT_MULTIPLE, String.class),
-                "NoTypeConversionAvailableException expected");
-
-        assertEquals(RuntimeCamelException.class, ex.getCause().getClass());
-        assertEquals(NoTypeConversionAvailableException.class, ex.getCause().getCause().getClass());
+        try {
+            template.requestBody("direct:doTest", XML_INPUT_MULTIPLE, String.class);
+            fail("NoTypeConversionAvailableException expected");
+        } catch (CamelExecutionException ex) {
+            assertEquals(RuntimeCamelException.class, ex.getCause().getClass());
+            assertEquals(NoTypeConversionAvailableException.class, ex.getCause().getCause().getClass());
+        }
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:doTest").transform().xpath("/root/name").choice().when().xpath("/name").to("mock:found")
                         .otherwise().to("mock:notfound");
             }

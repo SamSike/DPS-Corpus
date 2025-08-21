@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class InflightRepositoryRouteTest extends ContextTestSupport {
 
     @Test
-    public void testInflight() {
+    public void testInflight() throws Exception {
         context.setInflightRepository(new MyInflightRepo());
 
         assertEquals(0, context.getInflightRepository().size());
@@ -39,10 +39,10 @@ public class InflightRepositoryRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo").to("mock:result");
             }
         };

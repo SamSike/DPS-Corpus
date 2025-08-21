@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class NoErrorHandlerTest extends ContextTestSupport {
 
     private static int counter;
+    private static boolean jmx = true;
 
     @Override
     @BeforeEach
@@ -37,7 +38,7 @@ public class NoErrorHandlerTest extends ContextTestSupport {
 
     @Override
     protected boolean useJmx() {
-        return true;
+        return jmx;
     }
 
     @Test
@@ -72,10 +73,10 @@ public class NoErrorHandlerTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(noErrorHandler());
 
                 from("direct:start").process(exchange -> {

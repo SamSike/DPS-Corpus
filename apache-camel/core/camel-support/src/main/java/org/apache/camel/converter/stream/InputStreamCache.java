@@ -25,10 +25,6 @@ import org.apache.camel.StreamCache;
 
 /**
  * A {@link StreamCache} for caching using an in-memory byte array.
- * <p/>
- * <b>Important:</b> All the classes from the Camel release that implements {@link StreamCache} is NOT intended for end
- * users to create as instances, but they are part of Camels
- * <a href="https://camel.apache.org/manual/stream-caching.html">stream-caching</a> functionality.
  */
 public final class InputStreamCache extends ByteArrayInputStream implements StreamCache {
 
@@ -59,9 +55,5 @@ public final class InputStreamCache extends ByteArrayInputStream implements Stre
     @Override
     public long length() {
         return count;
-    }
-
-    public long position() {
-        return available() - count;
     }
 }

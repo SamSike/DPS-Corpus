@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,13 +51,13 @@ import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
  * @author Juergen Hoeller
  * @author Chris Beams
  */
-class ClassPathBeanDefinitionScannerTests {
+public class ClassPathBeanDefinitionScannerTests {
 
 	private static final String BASE_PACKAGE = "example.scannable";
 
 
 	@Test
-	void testSimpleScanWithDefaultFiltersAndPostProcessors() {
+	public void testSimpleScanWithDefaultFiltersAndPostProcessors() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
 		int beanCount = scanner.scan(BASE_PACKAGE);
@@ -83,7 +83,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testSimpleScanWithDefaultFiltersAndPrimaryLazyBean() {
+	public void testSimpleScanWithDefaultFiltersAndPrimaryLazyBean() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
 		scanner.scan(BASE_PACKAGE);
@@ -105,7 +105,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testDoubleScan() {
+	public void testDoubleScan() {
 		GenericApplicationContext context = new GenericApplicationContext();
 
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
@@ -130,7 +130,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testWithIndex() {
+	public void testWithIndex() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		context.setClassLoader(CandidateComponentsTestClassLoader.index(
 				ClassPathScanningCandidateComponentProviderTests.class.getClassLoader(),
@@ -149,7 +149,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testDoubleScanWithIndex() {
+	public void testDoubleScanWithIndex() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		context.setClassLoader(CandidateComponentsTestClassLoader.index(
 				ClassPathScanningCandidateComponentProviderTests.class.getClassLoader(),
@@ -177,7 +177,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testSimpleScanWithDefaultFiltersAndNoPostProcessors() {
+	public void testSimpleScanWithDefaultFiltersAndNoPostProcessors() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
 		scanner.setIncludeAnnotationConfig(false);
@@ -192,56 +192,29 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testSimpleScanWithDefaultFiltersAndOverridingBean() {
+	public void testSimpleScanWithDefaultFiltersAndOverridingBean() {
 		GenericApplicationContext context = new GenericApplicationContext();
-		context.setAllowBeanDefinitionOverriding(true);
 		context.registerBeanDefinition("stubFooDao", new RootBeanDefinition(TestBean.class));
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
 		scanner.setIncludeAnnotationConfig(false);
-
 		// should not fail!
 		scanner.scan(BASE_PACKAGE);
 	}
 
 	@Test
-	void testSimpleScanWithDefaultFiltersAndOverridingBeanNotAllowed() {
-		GenericApplicationContext context = new GenericApplicationContext();
-		context.getDefaultListableBeanFactory().setAllowBeanDefinitionOverriding(false);
-		context.registerBeanDefinition("stubFooDao", new RootBeanDefinition(TestBean.class));
-		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
-		scanner.setIncludeAnnotationConfig(false);
-
-		assertThatIllegalStateException().isThrownBy(() -> scanner.scan(BASE_PACKAGE))
-				.withMessageContaining("stubFooDao")
-				.withMessageContaining(StubFooDao.class.getName());
-	}
-
-	@Test
-	void testSimpleScanWithDefaultFiltersAndOverridingBeanAcceptedForSameBeanClass() {
-		GenericApplicationContext context = new GenericApplicationContext();
-		context.getDefaultListableBeanFactory().setAllowBeanDefinitionOverriding(false);
-		context.registerBeanDefinition("stubFooDao", new RootBeanDefinition(StubFooDao.class));
-		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
-		scanner.setIncludeAnnotationConfig(false);
-
-		// should not fail!
-		scanner.scan(BASE_PACKAGE);
-	}
-
-	@Test
-	void testSimpleScanWithDefaultFiltersAndDefaultBeanNameClash() {
+	public void testSimpleScanWithDefaultFiltersAndDefaultBeanNameClash() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
 		scanner.setIncludeAnnotationConfig(false);
 		scanner.scan("org.springframework.context.annotation3");
-
-		assertThatIllegalStateException().isThrownBy(() -> scanner.scan(BASE_PACKAGE))
-				.withMessageContaining("stubFooDao")
-				.withMessageContaining(StubFooDao.class.getName());
+		assertThatIllegalStateException().isThrownBy(() ->
+				scanner.scan(BASE_PACKAGE))
+			.withMessageContaining("stubFooDao")
+			.withMessageContaining(StubFooDao.class.getName());
 	}
 
 	@Test
-	void testSimpleScanWithDefaultFiltersAndOverriddenEqualNamedBean() {
+	public void testSimpleScanWithDefaultFiltersAndOverriddenEqualNamedBean() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		context.registerBeanDefinition("myNamedDao", new RootBeanDefinition(NamedStubDao.class));
 		int initialBeanCount = context.getBeanDefinitionCount();
@@ -259,7 +232,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testSimpleScanWithDefaultFiltersAndOverriddenCompatibleNamedBean() {
+	public void testSimpleScanWithDefaultFiltersAndOverriddenCompatibleNamedBean() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		RootBeanDefinition bd = new RootBeanDefinition(NamedStubDao.class);
 		bd.setScope(BeanDefinition.SCOPE_PROTOTYPE);
@@ -279,7 +252,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testSimpleScanWithDefaultFiltersAndSameBeanTwice() {
+	public void testSimpleScanWithDefaultFiltersAndSameBeanTwice() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
 		scanner.setIncludeAnnotationConfig(false);
@@ -289,20 +262,20 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testSimpleScanWithDefaultFiltersAndSpecifiedBeanNameClash() {
+	public void testSimpleScanWithDefaultFiltersAndSpecifiedBeanNameClash() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
 		scanner.setIncludeAnnotationConfig(false);
 		scanner.scan("org.springframework.context.annotation2");
-
-		assertThatIllegalStateException().isThrownBy(() -> scanner.scan(BASE_PACKAGE))
-				.withMessageContaining("myNamedDao")
-				.withMessageContaining(NamedStubDao.class.getName())
-				.withMessageContaining(NamedStubDao2.class.getName());
+		assertThatIllegalStateException().isThrownBy(() ->
+				scanner.scan(BASE_PACKAGE))
+			.withMessageContaining("myNamedDao")
+			.withMessageContaining(NamedStubDao.class.getName())
+			.withMessageContaining(NamedStubDao2.class.getName());
 	}
 
 	@Test
-	void testCustomIncludeFilterWithoutDefaultsButIncludingPostProcessors() {
+	public void testCustomIncludeFilterWithoutDefaultsButIncludingPostProcessors() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context, false);
 		scanner.addIncludeFilter(new AnnotationTypeFilter(CustomComponent.class));
@@ -317,7 +290,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testCustomIncludeFilterWithoutDefaultsAndNoPostProcessors() {
+	public void testCustomIncludeFilterWithoutDefaultsAndNoPostProcessors() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context, false);
 		scanner.addIncludeFilter(new AnnotationTypeFilter(CustomComponent.class));
@@ -337,7 +310,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testCustomIncludeFilterAndDefaults() {
+	public void testCustomIncludeFilterAndDefaults() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context, true);
 		scanner.addIncludeFilter(new AnnotationTypeFilter(CustomComponent.class));
@@ -357,7 +330,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testCustomAnnotationExcludeFilterAndDefaults() {
+	public void testCustomAnnotationExcludeFilterAndDefaults() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context, true);
 		scanner.addExcludeFilter(new AnnotationTypeFilter(Aspect.class));
@@ -375,7 +348,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testCustomAssignableTypeExcludeFilterAndDefaults() {
+	public void testCustomAssignableTypeExcludeFilterAndDefaults() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context, true);
 		scanner.addExcludeFilter(new AssignableTypeFilter(FooService.class));
@@ -394,7 +367,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testCustomAssignableTypeExcludeFilterAndDefaultsWithoutPostProcessors() {
+	public void testCustomAssignableTypeExcludeFilterAndDefaultsWithoutPostProcessors() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context, true);
 		scanner.setIncludeAnnotationConfig(false);
@@ -412,7 +385,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testMultipleCustomExcludeFiltersAndDefaults() {
+	public void testMultipleCustomExcludeFiltersAndDefaults() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context, true);
 		scanner.addExcludeFilter(new AssignableTypeFilter(FooService.class));
@@ -432,7 +405,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testCustomBeanNameGenerator() {
+	public void testCustomBeanNameGenerator() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
 		scanner.setBeanNameGenerator(new TestBeanNameGenerator());
@@ -452,7 +425,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testMultipleBasePackagesWithDefaultsOnly() {
+	public void testMultipleBasePackagesWithDefaultsOnly() {
 		GenericApplicationContext singlePackageContext = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner singlePackageScanner = new ClassPathBeanDefinitionScanner(singlePackageContext);
 		GenericApplicationContext multiPackageContext = new GenericApplicationContext();
@@ -464,7 +437,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testMultipleScanCalls() {
+	public void testMultipleScanCalls() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
 		int initialBeanCount = context.getBeanDefinitionCount();
@@ -476,7 +449,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testBeanAutowiredWithAnnotationConfigEnabled() {
+	public void testBeanAutowiredWithAnnotationConfigEnabled() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		context.registerBeanDefinition("myBf", new RootBeanDefinition(StaticListableBeanFactory.class));
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
@@ -492,18 +465,21 @@ class ClassPathBeanDefinitionScannerTests {
 		assertThat(fooService.foo(123)).isEqualTo("bar");
 		assertThat(fooService.lookupFoo(123)).isEqualTo("bar");
 		assertThat(fooService.beanFactory).isSameAs(context.getDefaultListableBeanFactory());
-		assertThat(fooService.listableBeanFactory).containsExactly(context.getDefaultListableBeanFactory(), myBf);
+		assertThat(fooService.listableBeanFactory.size()).isEqualTo(2);
+		assertThat(fooService.listableBeanFactory.get(0)).isSameAs(context.getDefaultListableBeanFactory());
+		assertThat(fooService.listableBeanFactory.get(1)).isSameAs(myBf);
 		assertThat(fooService.resourceLoader).isSameAs(context);
 		assertThat(fooService.resourcePatternResolver).isSameAs(context);
 		assertThat(fooService.eventPublisher).isSameAs(context);
 		assertThat(fooService.messageSource).isSameAs(ms);
 		assertThat(fooService.context).isSameAs(context);
-		assertThat(fooService.configurableContext).containsExactly(context);
+		assertThat(fooService.configurableContext.length).isEqualTo(1);
+		assertThat(fooService.configurableContext[0]).isSameAs(context);
 		assertThat(fooService.genericContext).isSameAs(context);
 	}
 
 	@Test
-	void testBeanNotAutowiredWithAnnotationConfigDisabled() {
+	public void testBeanNotAutowiredWithAnnotationConfigDisabled() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
 		scanner.setIncludeAnnotationConfig(false);
@@ -522,7 +498,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testAutowireCandidatePatternMatches() {
+	public void testAutowireCandidatePatternMatches() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
 		scanner.setIncludeAnnotationConfig(true);
@@ -537,7 +513,7 @@ class ClassPathBeanDefinitionScannerTests {
 	}
 
 	@Test
-	void testAutowireCandidatePatternDoesNotMatch() {
+	public void testAutowireCandidatePatternDoesNotMatch() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
 		scanner.setIncludeAnnotationConfig(true);

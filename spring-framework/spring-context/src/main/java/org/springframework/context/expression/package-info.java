@@ -1,7 +1,9 @@
 /**
  * Expression parsing support within a Spring application context.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.context.expression;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

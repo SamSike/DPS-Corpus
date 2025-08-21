@@ -44,7 +44,6 @@ import org.apache.camel.component.sjms.jms.Jms11ObjectFactory;
 import org.apache.camel.component.sjms.jms.JmsBinding;
 import org.apache.camel.component.sjms.jms.JmsKeyFormatStrategy;
 import org.apache.camel.component.sjms.jms.JmsMessageHelper;
-import org.apache.camel.component.sjms.jms.JmsMessageType;
 import org.apache.camel.component.sjms.jms.JmsObjectFactory;
 import org.apache.camel.component.sjms.jms.MessageCreatedStrategy;
 import org.apache.camel.component.sjms.jms.SessionAcknowledgementType;
@@ -61,7 +60,7 @@ import org.apache.camel.util.StringHelper;
 /**
  * Send and receive messages to/from a JMS Queue or Topic using plain JMS 1.x API.
  *
- * This component uses plain JMS API, whereas the jms component uses Spring JMS.
+ * This component uses plain JMS API where as the jms component uses Spring JMS.
  */
 @UriEndpoint(firstVersion = "2.11.0", scheme = "sjms", title = "Simple JMS", syntax = "sjms:destinationType:destinationName",
              category = { Category.MESSAGING }, headersClass = SjmsConstants.class)
@@ -187,7 +186,7 @@ public class SjmsEndpoint extends DefaultEndpoint
     private boolean testConnectionOnStartup;
     @UriParam(label = "advanced",
               description = "Whether to startup the consumer message listener asynchronously, when starting a route."
-                            + " For example if a JmsConsumer cannot get a connection to a remote JMS broker, then it may block while retrying and/or fail over."
+                            + " For example if a JmsConsumer cannot get a connection to a remote JMS broker, then it may block while retrying and/or failover."
                             + " This will cause Camel to block while starting routes. By setting this option to true, you will let routes startup, while the JmsConsumer connects to the JMS broker"
                             + " using a dedicated thread in asynchronous mode. If this option is used, then beware that if the connection could not be established, then an exception is logged at WARN level,"
                             + " and the consumer will not be able to receive messages; You can then restart the route to retry.")
@@ -209,11 +208,6 @@ public class SjmsEndpoint extends DefaultEndpoint
               description = "Specifies whether Camel should auto map the received JMS message to a suited payload type, such as jakarta.jms.TextMessage to a String etc."
                             + " See section about how mapping works below for more details.")
     private boolean mapJmsMessage = true;
-    @UriParam(label = "advanced", enums = "Bytes,Map,Object,Stream,Text",
-              description = "Allows you to force the use of a specific jakarta.jms.Message implementation for sending JMS messages."
-                            + " Possible values are: Bytes, Map, Object, Stream, Text."
-                            + " By default, Camel would determine which JMS message type to use from the In body type. This option allows you to specify it.")
-    private JmsMessageType jmsMessageType;
     @UriParam(label = "advanced",
               description = "To use a custom DestinationCreationStrategy.")
     private DestinationCreationStrategy destinationCreationStrategy = new DefaultDestinationCreationStrategy();
@@ -292,15 +286,6 @@ public class SjmsEndpoint extends DefaultEndpoint
         if (headerFilterStrategy == null) {
             headerFilterStrategy = new SjmsHeaderFilterStrategy(includeAllJMSXProperties);
         }
-    }
-
-    /**
-     * Should get overridden by implementations which support BlobMessages
-     *
-     * @return false
-     */
-    protected boolean supportBlobMessage() {
-        return false;
     }
 
     /**
@@ -435,7 +420,7 @@ public class SjmsEndpoint extends DefaultEndpoint
     /**
      * When one of the QoS properties are configured such as {@link #setDeliveryPersistent(boolean)},
      * {@link #setPriority(int)} or {@link #setTimeToLive(long)} then we should auto default the setting of
-     * {@link #setExplicitQosEnabled(Boolean)} if it has not been configured yet
+     * {@link #setExplicitQosEnabled(Boolean)} if its not been configured yet
      */
     protected void configuredQoS() {
         if (explicitQosEnabled == null) {
@@ -464,7 +449,7 @@ public class SjmsEndpoint extends DefaultEndpoint
     protected JmsBinding createBinding() {
         return new JmsBinding(
                 isMapJmsMessage(), isAllowNullBody(), getHeaderFilterStrategy(), getJmsKeyFormatStrategy(),
-                getMessageCreatedStrategy(), getJmsMessageType());
+                getMessageCreatedStrategy());
     }
 
     public void setBinding(JmsBinding binding) {
@@ -827,21 +812,5 @@ public class SjmsEndpoint extends DefaultEndpoint
 
     public void setSynchronous(boolean synchronous) {
         this.synchronous = synchronous;
-    }
-
-    public JmsMessageType getJmsMessageType() {
-        return jmsMessageType;
-    }
-
-    /**
-     * Allows you to force the use of a specific jakarta.jms.Message implementation for sending JMS messages. Possible
-     * values are: Bytes, Map, Object, Stream, Text. By default, Camel would determine which JMS message type to use
-     * from the In body type. This option allows you to specify it.
-     */
-    public void setJmsMessageType(JmsMessageType jmsMessageType) {
-        if (jmsMessageType == JmsMessageType.Blob && !supportBlobMessage()) {
-            throw new IllegalArgumentException("BlobMessage is not supported by this implementation");
-        }
-        this.jmsMessageType = jmsMessageType;
     }
 }

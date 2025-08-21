@@ -25,7 +25,6 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.component.snakeyaml.model.TestPojo;
 import org.yaml.snakeyaml.nodes.Tag;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -80,11 +79,11 @@ public final class SnakeYAMLTestHelper {
         mock.message(0).body().isEqualTo(body);
 
         ProducerTemplate template = context.createProducerTemplate();
-        String result = assertDoesNotThrow(() -> template.requestBody(directIn, body, String.class));
+        String result = template.requestBody(directIn, body, String.class);
         assertNotNull(result);
         assertEquals(expected, result.trim());
 
-        assertDoesNotThrow(() -> template.sendBody(directBack, result));
+        template.sendBody(directBack, result);
 
         mock.assertIsSatisfied();
     }

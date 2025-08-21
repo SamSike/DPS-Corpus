@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,7 @@ package org.springframework.mail;
 import java.io.Serializable;
 import java.util.Date;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -45,21 +44,29 @@ import org.springframework.util.StringUtils;
 @SuppressWarnings("serial")
 public class SimpleMailMessage implements MailMessage, Serializable {
 
-	private @Nullable String from;
+	@Nullable
+	private String from;
 
-	private @Nullable String replyTo;
+	@Nullable
+	private String replyTo;
 
-	private String @Nullable [] to;
+	@Nullable
+	private String[] to;
 
-	private String @Nullable [] cc;
+	@Nullable
+	private String[] cc;
 
-	private String @Nullable [] bcc;
+	@Nullable
+	private String[] bcc;
 
-	private @Nullable Date sentDate;
+	@Nullable
+	private Date sentDate;
 
-	private @Nullable String subject;
+	@Nullable
+	private String subject;
 
-	private @Nullable String text;
+	@Nullable
+	private String text;
 
 
 	/**
@@ -86,25 +93,27 @@ public class SimpleMailMessage implements MailMessage, Serializable {
 
 
 	@Override
-	public void setFrom(@Nullable String from) {
+	public void setFrom(String from) {
 		this.from = from;
 	}
 
-	public @Nullable String getFrom() {
+	@Nullable
+	public String getFrom() {
 		return this.from;
 	}
 
 	@Override
-	public void setReplyTo(@Nullable String replyTo) {
+	public void setReplyTo(String replyTo) {
 		this.replyTo = replyTo;
 	}
 
-	public @Nullable String getReplyTo() {
+	@Nullable
+	public String getReplyTo() {
 		return this.replyTo;
 	}
 
 	@Override
-	public void setTo(@Nullable String to) {
+	public void setTo(String to) {
 		this.to = new String[] {to};
 	}
 
@@ -113,62 +122,68 @@ public class SimpleMailMessage implements MailMessage, Serializable {
 		this.to = to;
 	}
 
-	public String @Nullable [] getTo() {
+	@Nullable
+	public String[] getTo() {
 		return this.to;
 	}
 
 	@Override
-	public void setCc(@Nullable String cc) {
+	public void setCc(String cc) {
 		this.cc = new String[] {cc};
 	}
 
 	@Override
-	public void setCc(String @Nullable ... cc) {
+	public void setCc(String... cc) {
 		this.cc = cc;
 	}
 
-	public String @Nullable [] getCc() {
+	@Nullable
+	public String[] getCc() {
 		return this.cc;
 	}
 
 	@Override
-	public void setBcc(@Nullable String bcc) {
+	public void setBcc(String bcc) {
 		this.bcc = new String[] {bcc};
 	}
 
 	@Override
-	public void setBcc(String @Nullable ... bcc) {
+	public void setBcc(String... bcc) {
 		this.bcc = bcc;
 	}
 
-	public String @Nullable [] getBcc() {
+	@Nullable
+	public String[] getBcc() {
 		return this.bcc;
 	}
 
 	@Override
-	public void setSentDate(@Nullable Date sentDate) {
+	public void setSentDate(Date sentDate) {
 		this.sentDate = sentDate;
 	}
 
-	public @Nullable Date getSentDate() {
+	@Nullable
+	public Date getSentDate() {
 		return this.sentDate;
 	}
 
 	@Override
-	public void setSubject(@Nullable String subject) {
+	public void setSubject(String subject) {
 		this.subject = subject;
 	}
 
-	public @Nullable String getSubject() {
+	@Nullable
+	public String getSubject() {
 		return this.subject;
 	}
 
 	@Override
-	public void setText(@Nullable String text) {
+	public void setText(String text) {
 		this.text = text;
 	}
 
-	public @Nullable String getText() {
+	@Nullable
+	public String getText() {
 		return this.text;
 	}
 
@@ -208,21 +223,33 @@ public class SimpleMailMessage implements MailMessage, Serializable {
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof SimpleMailMessage that &&
-				ObjectUtils.nullSafeEquals(this.from, that.from) &&
-				ObjectUtils.nullSafeEquals(this.replyTo, that.replyTo) &&
-				ObjectUtils.nullSafeEquals(this.to, that.to) &&
-				ObjectUtils.nullSafeEquals(this.cc, that.cc) &&
-				ObjectUtils.nullSafeEquals(this.bcc, that.bcc) &&
-				ObjectUtils.nullSafeEquals(this.sentDate, that.sentDate) &&
-				ObjectUtils.nullSafeEquals(this.subject, that.subject) &&
-				ObjectUtils.nullSafeEquals(this.text, that.text)));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof SimpleMailMessage)) {
+			return false;
+		}
+		SimpleMailMessage otherMessage = (SimpleMailMessage) other;
+		return (ObjectUtils.nullSafeEquals(this.from, otherMessage.from) &&
+				ObjectUtils.nullSafeEquals(this.replyTo, otherMessage.replyTo) &&
+				ObjectUtils.nullSafeEquals(this.to, otherMessage.to) &&
+				ObjectUtils.nullSafeEquals(this.cc, otherMessage.cc) &&
+				ObjectUtils.nullSafeEquals(this.bcc, otherMessage.bcc) &&
+				ObjectUtils.nullSafeEquals(this.sentDate, otherMessage.sentDate) &&
+				ObjectUtils.nullSafeEquals(this.subject, otherMessage.subject) &&
+				ObjectUtils.nullSafeEquals(this.text, otherMessage.text));
 	}
 
 	@Override
 	public int hashCode() {
-		return ObjectUtils.nullSafeHash(this.from, this.replyTo, this.to, this.cc,
-				this.bcc, this.sentDate, this.subject);
+		int hashCode = ObjectUtils.nullSafeHashCode(this.from);
+		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(this.replyTo);
+		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(this.to);
+		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(this.cc);
+		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(this.bcc);
+		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(this.sentDate);
+		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(this.subject);
+		return hashCode;
 	}
 
 	@Override
@@ -240,7 +267,8 @@ public class SimpleMailMessage implements MailMessage, Serializable {
 	}
 
 
-	private static String @Nullable [] copyOrNull(String @Nullable [] state) {
+	@Nullable
+	private static String[] copyOrNull(@Nullable String[] state) {
 		if (state == null) {
 			return null;
 		}

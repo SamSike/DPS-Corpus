@@ -45,10 +45,10 @@ public class SimpleMessageHistoryNotDetailedTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // turn on message history
                 context.setMessageHistory(true);
 

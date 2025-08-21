@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,18 +43,15 @@ import static org.eclipse.jgit.diff.DiffEntry.ChangeType.DELETE;
 import static org.eclipse.jgit.diff.DiffEntry.ChangeType.RENAME;
 import static org.jooq.ContentType.INCREMENT;
 import static org.jooq.ContentType.SCHEMA;
-import static org.jooq.ContentType.SCRIPT;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.Deque;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.jooq.Commit;
@@ -65,9 +62,8 @@ import org.jooq.ContentType;
 import org.jooq.DSLContext;
 import org.jooq.File;
 import org.jooq.FilePattern;
-import org.jooq.Migrations;
+import org.jooq.impl.Migrations;
 import org.jooq.tools.JooqLogger;
-import org.jooq.tools.StringUtils;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
@@ -78,12 +74,8 @@ import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.ObjectReader;
-import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevObject;
-import org.eclipse.jgit.revwalk.RevTag;
-import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
@@ -97,49 +89,26 @@ public final class GitCommitProvider implements CommitProvider {
     private static final JooqLogger log = JooqLogger.getLogger(GitCommitProvider.class);
 
     private final DSLContext        dsl;
-    private final Migrations        migrations;
     private final GitConfiguration  git;
     private final FilePattern       incrementFilePattern;
-    private final FilePattern       scriptFilePattern;
     private final FilePattern       schemaFilePattern;
-
-    public GitCommitProvider(Configuration configuration) {
-        this(configuration, new GitConfiguration());
-    }
 
     public GitCommitProvider(Configuration configuration, GitConfiguration git) {
         this.dsl = configuration.dsl();
-        this.migrations = dsl.migrations();
         this.git = git;
-        this.incrementFilePattern = new FilePattern().pattern(combine(git.basedir(), git.incrementFilePattern()));
-        this.scriptFilePattern = new FilePattern().pattern(combine(git.basedir(), git.scriptFilePattern()));
-        this.schemaFilePattern = new FilePattern().pattern(combine(git.basedir(), git.schemaFilePattern()));
-    }
-
-    private static final String combine(String basedir, String pattern) {
-        if (StringUtils.isEmpty(basedir))
-            return pattern;
-        else if (basedir.endsWith("/"))
-            return basedir + pattern;
-        else
-            return basedir + "/" + pattern;
+        this.incrementFilePattern = new FilePattern().pattern(git.incrementFilePattern());
+        this.schemaFilePattern = new FilePattern().pattern(git.schemaFilePattern());
     }
 
     @Override
     public final Commits provide() {
-        Commits commits = migrations.commits();
+        Commits commits = Migrations.commits(dsl.configuration());
 
         try (
             Git g = Git.open(git.repository());
-            Repository r = g.getRepository();
-            ObjectReader reader = r.newObjectReader();
-            RevWalk walk = new RevWalk(reader)
+            Repository r = g.getRepository()
         ) {
-            // Prevent a "close() called when useCnt is already zero" warning
-            r.incrementOpen();
-
-            Deque<RevCommit> revCommits = new ArrayDeque<>();
-            Map<String, List<Tag>> tags = new HashMap<>();
+            List<RevCommit> revCommits = new ArrayList<>();
             RevCommit last = null;
 
             try {
@@ -154,39 +123,21 @@ public final class GitCommitProvider implements CommitProvider {
                 log.debug("No HEAD exists");
             }
 
-            for (Ref ref : g.tagList().call()) {
-                RevObject any = walk.parseAny(ref.getObjectId());
-
-                // Annotated vs lightweight tags: https://stackoverflow.com/a/29897735/521799
-                if (any instanceof RevTag tag) {
-                    tags.computeIfAbsent(tag.getObject().getName(), id -> new ArrayList<>()).add(new Tag(
-                        tag.getTagName(),
-                        tag.getFullMessage()
-                    ));
-                }
-                else if (any instanceof RevCommit commit) {
-                    tags.computeIfAbsent(commit.getName(), id -> new ArrayList<>()).add(new Tag(
-                        Repository.shortenRefName(r.getRefDatabase().peel(ref).getName()),
-                        null
-                    ));
-                }
-            }
-
-            Commit root = commits.root();
+            // The commits seem to come in reverse order from jgit.
+            Collections.reverse(revCommits);
+            Commit init = commits.root();
 
             // TODO: This algorithm is quadradic in the worst case. Can we find a better one?
             // TODO: We collect all the commits from git, when we could ignore the empty ones
             while (!revCommits.isEmpty()) {
-
-                // The commits seem to come in reverse order from jgit.
-                Iterator<RevCommit> it = revCommits.descendingIterator();
+                Iterator<RevCommit> it = revCommits.iterator();
 
                 commitLoop:
                 while (it.hasNext()) {
                     RevCommit revCommit = it.next();
 
                     if (revCommit.getParents() == null || revCommit.getParents().length == 0) {
-                        commits.add(tag(tags, root.commit(revCommit.getName(), revCommit.getFullMessage(), revCommit.getAuthorIdent().getName(), editFiles(r, revCommit))));
+                        commits.add(init.commit(revCommit.getName(), revCommit.getFullMessage(), editFiles(r, revCommit)));
                         it.remove();
                     }
                     else {
@@ -201,9 +152,9 @@ public final class GitCommitProvider implements CommitProvider {
                                 continue commitLoop;
 
                         if (parents.length == 1)
-                            commits.add(tag(tags, parents[0].commit(revCommit.getName(), revCommit.getFullMessage(), revCommit.getAuthorIdent().getName(), editFiles(r, revCommit))));
+                            commits.add(parents[0].commit(revCommit.getName(), revCommit.getFullMessage(), editFiles(r, revCommit)));
                         else if (parents.length == 2)
-                            commits.add(tag(tags, parents[0].merge(revCommit.getName(), revCommit.getFullMessage(), revCommit.getAuthorIdent().getName(), parents[1], editFiles(r, revCommit))));
+                            commits.add(parents[0].merge(revCommit.getName(), revCommit.getFullMessage(), parents[1], editFiles(r, revCommit)));
                         else
                             throw new UnsupportedOperationException("Merging more than two parents not yet supported");
 
@@ -213,14 +164,8 @@ public final class GitCommitProvider implements CommitProvider {
             }
 
             Status status = g.status().call();
-            if (status.hasUncommittedChanges() || !status.getUntracked().isEmpty()) {
-                Commit c1 = last != null ? commits.get(last.getName()) : root;
-                Commit c2 = commit(c1, status);
-
-                // If we have a diff in git, but the commit is empty.
-                if (c2 != c1)
-                    commits.add(c2);
-            }
+            if (status.hasUncommittedChanges() || !status.getUntracked().isEmpty())
+                commits.add(commit(last != null ? commits.get(last.getName()) : init, status));
         }
         catch (Exception e) {
             throw new GitException("Error while providing git versions", e);
@@ -229,43 +174,19 @@ public final class GitCommitProvider implements CommitProvider {
         return commits;
     }
 
-    private static final record Tag(String name, String message) {}
-
-    private static final Commit tag(Map<String, List<Tag>> tags, Commit commit) {
-        Commit result = commit;
-        List<Tag> list = tags.get(commit.id());
-
-        if (list != null)
-            for (Tag tag : list)
-                result = result.tag(tag.name(), tag.message());
-
-        return result;
-    }
-
     private static final Comparator<RevCommit> COMMIT_COMPARATOR = (o1, o2) -> o1.getCommitTime() - o2.getCommitTime();
 
     private final Commit commit(Commit commit, Status status) {
-        List<File> uncommitted = new ArrayList<>();
-        List<File> untracked = new ArrayList<>();
+        List<File> files = new ArrayList<>();
 
-        add(uncommitted, status.getAdded());
-        add(uncommitted, status.getChanged());
-        del(uncommitted, status.getRemoved());
+        add(files, status.getAdded());
+        add(files, status.getChanged());
+        add(files, status.getModified());
+        add(files, status.getUntracked());
+        del(files, status.getMissing());
+        del(files, status.getRemoved());
 
-        String message = null;
-
-        // [#9506] TODO: It should be possible to migrate to uncommitted changes in dev mode.
-        if (!uncommitted.isEmpty())
-            commit = commit.commit(message = "uncommitted", message, uncommitted).valid(false);
-
-        add(untracked, status.getModified());
-        add(untracked, status.getUntracked());
-        del(untracked, status.getMissing());
-
-        if (!untracked.isEmpty())
-            commit = commit.commit(message = message == null ? "untracked" : "uncommitted-and-untracked", message, untracked).valid(false);
-
-        return commit;
+        return commit.commit("uncommitted", "uncommitted", files);
     }
 
     private void add(List<File> files, Set<String> paths) {
@@ -277,18 +198,18 @@ public final class GitCommitProvider implements CommitProvider {
         }
     }
 
-    private final void del(List<File> files, Set<String> paths) {
+    private void del(List<File> files, Set<String> paths) {
         for (String path : paths) {
             ContentType contentType = contentType(path);
 
             if (contentType != null)
-                files.add(migrations.file(path, null, contentType));
+                files.add(Migrations.file(path, null, contentType));
         }
     }
 
-    private final File read(String path, ContentType contentType) {
+    private File read(String path, ContentType contentType) {
         try {
-            return migrations.file(
+            return Migrations.file(
                 path,
                 new String(java.nio.file.Files.readAllBytes(new java.io.File(git.repository(), path).toPath())),
                 contentType
@@ -331,16 +252,16 @@ public final class GitCommitProvider implements CommitProvider {
                     case ADD:
                     case MODIFY:
                     case COPY:
-                        files.add(migrations.file(newPath, read(repository, revCommit, newPath), newType));
+                        files.add(Migrations.file(newPath, read(repository, revCommit, newPath), newType));
                         break;
 
                     case RENAME:
-                        files.add(migrations.file(oldPath, null, oldType));
-                        files.add(migrations.file(newPath, read(repository, revCommit, newPath), newType));
+                        files.add(Migrations.file(oldPath, null, oldType));
+                        files.add(Migrations.file(newPath, read(repository, revCommit, newPath), newType));
                         break;
 
                     case DELETE:
-                        files.add(migrations.file(oldPath, null, oldType));
+                        files.add(Migrations.file(oldPath, null, oldType));
                         break;
 
                     default:
@@ -354,7 +275,6 @@ public final class GitCommitProvider implements CommitProvider {
 
     private final ContentType contentType(String path) {
         return incrementFilePattern.matches(path) ? INCREMENT :
-               scriptFilePattern.matches(path) ? SCRIPT :
                schemaFilePattern.matches(path) ? SCHEMA :
                null;
     }
@@ -367,32 +287,22 @@ public final class GitCommitProvider implements CommitProvider {
         treeWalk.setRecursive(false);
 
         while (treeWalk.next()) {
-            String path = treeWalk.getPathString();
-
-            if (treeWalk.isSubtree() && include(path)) {
+            if (treeWalk.isSubtree()) {
                 treeWalk.enterSubtree();
             }
             else {
-                ContentType contentType = contentType(path);
+                ContentType contentType = contentType(treeWalk.getPathString());
 
-                if (contentType != null) {
-                    files.add(migrations.file(
-                        path,
-                        read(repository, revCommit, path),
+                if (contentType != null)
+                    files.add(Migrations.file(
+                        treeWalk.getPathString(),
+                        read(repository, revCommit, treeWalk.getPathString()),
                         contentType
                     ));
-                }
             }
         }
 
         return files;
-    }
-
-    private final boolean include(String path) {
-
-        // [#9506] TODO: resolve . and ..
-        return git.basedir().startsWith(path)
-            || path.startsWith(git.basedir());
     }
 
     private final String read(Repository repository, RevCommit commit, String path) throws IOException {

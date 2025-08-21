@@ -19,6 +19,7 @@ package org.apache.camel.test.junit5.params;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,7 +33,6 @@ import org.junit.jupiter.api.extension.TestTemplateInvocationContext;
 import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
 import org.junit.jupiter.params.converter.DefaultArgumentConverter;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.platform.commons.util.ClassLoaderUtils;
 import org.junit.platform.commons.util.CollectionUtils;
 import org.junit.platform.commons.util.ReflectionUtils;
 
@@ -74,7 +74,7 @@ public class ParameterizedExtension implements TestTemplateInvocationContextProv
                 .filter(m -> Modifier.isStatic(m.getModifiers()))
                 .filter(m -> m.getAnnotation(Parameters.class) != null)
                 .collect(Collectors.toList());
-        if (parameters.isEmpty()) {
+        if (parameters.isEmpty() && testClass != null) {
             return getParametersMethods(testClass.getSuperclass());
         } else {
             return parameters;
@@ -83,8 +83,8 @@ public class ParameterizedExtension implements TestTemplateInvocationContextProv
 
     private static Arguments toArguments(Object item) {
         // Nothing to do except cast.
-        if (item instanceof Arguments arguments) {
-            return arguments;
+        if (item instanceof Arguments) {
+            return (Arguments) item;
         }
         // Pass all multidimensional arrays "as is", in contrast to Object[].
         // See https://github.com/junit-team/junit5/issues/1665
@@ -116,7 +116,7 @@ public class ParameterizedExtension implements TestTemplateInvocationContextProv
 
         @Override
         public java.util.List<Extension> getAdditionalExtensions() {
-            return List.of(
+            return Arrays.asList(
                     (TestInstancePostProcessor) this::postProcessTestInstance);
         }
 
@@ -127,20 +127,16 @@ public class ParameterizedExtension implements TestTemplateInvocationContextProv
                     .flatMap(Stream::of)
                     .filter(f -> isAnnotated(f, Parameter.class))
                     .sorted(Comparator.comparing(f -> (Integer) f.getAnnotation(Parameter.class).value()))
-                    .toList();
+                    .collect(Collectors.toList());
             if (params.length != fields.size()) {
                 throw new TestInstantiationException(
                         "Expected " + fields.size() + " parameters bug got " + params.length + " when instantiating "
                                                      + clazz.getName());
             }
-            if (!fields.isEmpty()) {
-                ClassLoader classLoader = ClassLoaderUtils.getClassLoader(context.getExecutionMode().getDeclaringClass());
-                DefaultArgumentConverter converter = new DefaultArgumentConverter(context);
-                for (int i = 0; i < fields.size(); i++) {
-                    Field f = fields.get(i);
-                    f.setAccessible(true);
-                    f.set(testInstance, converter.convert(params[i], f.getType(), classLoader));
-                }
+            for (int i = 0; i < fields.size(); i++) {
+                Field f = fields.get(i);
+                f.setAccessible(true);
+                f.set(testInstance, DefaultArgumentConverter.INSTANCE.convert(params[i], f.getType()));
             }
         }
 

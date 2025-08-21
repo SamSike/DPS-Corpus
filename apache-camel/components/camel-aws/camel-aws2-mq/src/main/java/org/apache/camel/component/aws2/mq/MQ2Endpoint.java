@@ -22,7 +22,6 @@ import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.component.aws2.mq.client.MQ2ClientFactory;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.ScheduledPollEndpoint;
@@ -30,11 +29,11 @@ import org.apache.camel.util.ObjectHelper;
 import software.amazon.awssdk.services.mq.MqClient;
 
 /**
- * Send messages to AWS MQ.
+ * Manage AWS MQ instances using AWS SDK version 2.x.
  */
 @UriEndpoint(firstVersion = "3.1.0", scheme = "aws2-mq", title = "AWS MQ", syntax = "aws2-mq:label", producerOnly = true,
              category = { Category.CLOUD, Category.MESSAGING }, headersClass = MQ2Constants.class)
-public class MQ2Endpoint extends ScheduledPollEndpoint implements EndpointServiceLocation {
+public class MQ2Endpoint extends ScheduledPollEndpoint {
 
     private MqClient mqClient;
 
@@ -44,11 +43,6 @@ public class MQ2Endpoint extends ScheduledPollEndpoint implements EndpointServic
     public MQ2Endpoint(String uri, Component component, MQ2Configuration configuration) {
         super(uri, component);
         this.configuration = configuration;
-    }
-
-    @Override
-    public MQ2Component getComponent() {
-        return (MQ2Component) super.getComponent();
     }
 
     @Override
@@ -86,22 +80,5 @@ public class MQ2Endpoint extends ScheduledPollEndpoint implements EndpointServic
 
     public MqClient getAmazonMqClient() {
         return mqClient;
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (!configuration.isOverrideEndpoint()) {
-            if (ObjectHelper.isNotEmpty(configuration.getRegion())) {
-                return configuration.getRegion();
-            }
-        } else if (ObjectHelper.isNotEmpty(configuration.getUriEndpointOverride())) {
-            return configuration.getUriEndpointOverride();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "mq";
     }
 }

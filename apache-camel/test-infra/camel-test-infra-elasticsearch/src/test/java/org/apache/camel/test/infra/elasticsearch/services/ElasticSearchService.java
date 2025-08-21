@@ -17,9 +17,38 @@
 
 package org.apache.camel.test.infra.elasticsearch.services;
 
-import org.apache.camel.test.infra.common.services.ContainerTestService;
 import org.apache.camel.test.infra.common.services.TestService;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-public interface ElasticSearchService extends TestService, ContainerTestService, ElasticSearchInfraService {
+public interface ElasticSearchService extends BeforeAllCallback, AfterAllCallback, TestService {
 
+    int getPort();
+
+    String getElasticSearchHost();
+
+    default String getHttpHostAddress() {
+        return String.format("%s:%d", getElasticSearchHost(), getPort());
+    }
+
+    /**
+     * Perform any initialization necessary
+     */
+    void initialize();
+
+    /**
+     * Shuts down the service after the test has completed
+     */
+    void shutdown();
+
+    @Override
+    default void beforeAll(ExtensionContext extensionContext) throws Exception {
+        initialize();
+    }
+
+    @Override
+    default void afterAll(ExtensionContext extensionContext) throws Exception {
+        shutdown();
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobDetail;
@@ -37,6 +36,7 @@ import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.support.ArgumentConvertingMethodInvoker;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.MethodInvoker;
@@ -78,21 +78,27 @@ import org.springframework.util.MethodInvoker;
 public class MethodInvokingJobDetailFactoryBean extends ArgumentConvertingMethodInvoker
 		implements FactoryBean<JobDetail>, BeanNameAware, BeanClassLoaderAware, BeanFactoryAware, InitializingBean {
 
-	private @Nullable String name;
+	@Nullable
+	private String name;
 
 	private String group = Scheduler.DEFAULT_GROUP;
 
 	private boolean concurrent = true;
 
-	private @Nullable String targetBeanName;
+	@Nullable
+	private String targetBeanName;
 
-	private @Nullable String beanName;
+	@Nullable
+	private String beanName;
 
-	private @Nullable ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
+	@Nullable
+	private ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
 
-	private @Nullable BeanFactory beanFactory;
+	@Nullable
+	private BeanFactory beanFactory;
 
-	private @Nullable JobDetail jobDetail;
+	@Nullable
+	private JobDetail jobDetail;
 
 
 	/**
@@ -113,7 +119,7 @@ public class MethodInvokingJobDetailFactoryBean extends ArgumentConvertingMethod
 	}
 
 	/**
-	 * Specify whether multiple jobs should be run in a concurrent fashion.
+	 * Specify whether or not multiple jobs should be run in a concurrent fashion.
 	 * The behavior when one does not want concurrent jobs to be executed is
 	 * realized through adding the {@code @PersistJobDataAfterExecution} and
 	 * {@code @DisallowConcurrentExecution} markers.
@@ -193,7 +199,7 @@ public class MethodInvokingJobDetailFactoryBean extends ArgumentConvertingMethod
 	 * Overridden to support the {@link #setTargetBeanName "targetBeanName"} feature.
 	 */
 	@Override
-	public @Nullable Class<?> getTargetClass() {
+	public Class<?> getTargetClass() {
 		Class<?> targetClass = super.getTargetClass();
 		if (targetClass == null && this.targetBeanName != null) {
 			Assert.state(this.beanFactory != null, "BeanFactory must be set when using 'targetBeanName'");
@@ -206,7 +212,7 @@ public class MethodInvokingJobDetailFactoryBean extends ArgumentConvertingMethod
 	 * Overridden to support the {@link #setTargetBeanName "targetBeanName"} feature.
 	 */
 	@Override
-	public @Nullable Object getTargetObject() {
+	public Object getTargetObject() {
 		Object targetObject = super.getTargetObject();
 		if (targetObject == null && this.targetBeanName != null) {
 			Assert.state(this.beanFactory != null, "BeanFactory must be set when using 'targetBeanName'");
@@ -217,7 +223,8 @@ public class MethodInvokingJobDetailFactoryBean extends ArgumentConvertingMethod
 
 
 	@Override
-	public @Nullable JobDetail getObject() {
+	@Nullable
+	public JobDetail getObject() {
 		return this.jobDetail;
 	}
 
@@ -240,7 +247,8 @@ public class MethodInvokingJobDetailFactoryBean extends ArgumentConvertingMethod
 
 		protected static final Log logger = LogFactory.getLog(MethodInvokingJob.class);
 
-		private @Nullable MethodInvoker methodInvoker;
+		@Nullable
+		private MethodInvoker methodInvoker;
 
 		/**
 		 * Set the MethodInvoker to use.
@@ -259,9 +267,9 @@ public class MethodInvokingJobDetailFactoryBean extends ArgumentConvertingMethod
 				context.setResult(this.methodInvoker.invoke());
 			}
 			catch (InvocationTargetException ex) {
-				if (ex.getTargetException() instanceof JobExecutionException jobExecutionException) {
+				if (ex.getTargetException() instanceof JobExecutionException) {
 					// -> JobExecutionException, to be logged at info level by Quartz
-					throw jobExecutionException;
+					throw (JobExecutionException) ex.getTargetException();
 				}
 				else {
 					// -> "unhandled exception", to be logged at error level by Quartz
@@ -278,7 +286,7 @@ public class MethodInvokingJobDetailFactoryBean extends ArgumentConvertingMethod
 
 	/**
 	 * Extension of the MethodInvokingJob, implementing the StatefulJob interface.
-	 * Quartz checks whether jobs are stateful and if so,
+	 * Quartz checks whether or not jobs are stateful and if so,
 	 * won't let jobs interfere with each other.
 	 */
 	@PersistJobDataAfterExecution

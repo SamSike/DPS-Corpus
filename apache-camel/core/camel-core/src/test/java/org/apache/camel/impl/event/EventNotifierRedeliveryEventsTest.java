@@ -25,6 +25,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.support.EventNotifierSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,7 +33,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EventNotifierRedeliveryEventsTest extends ContextTestSupport {
 
-    private final List<CamelEvent> events = new ArrayList<>();
+    private static List<CamelEvent> events = new ArrayList<>();
+
+    @Override
+    @BeforeEach
+    public void setUp() throws Exception {
+        events.clear();
+        super.setUp();
+    }
 
     @Override
     public boolean isUseRouteBuilder() {
@@ -41,14 +49,14 @@ public class EventNotifierRedeliveryEventsTest extends ContextTestSupport {
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        DefaultCamelContext context = new DefaultCamelContext(createCamelRegistry());
+        DefaultCamelContext context = new DefaultCamelContext(createRegistry());
         context.getManagementStrategy().addEventNotifier(new EventNotifierSupport() {
-            public void notify(CamelEvent event) {
+            public void notify(CamelEvent event) throws Exception {
                 events.add(event);
             }
 
             @Override
-            protected void doBuild() {
+            protected void doBuild() throws Exception {
                 setIgnoreCamelContextEvents(true);
                 setIgnoreRouteEvents(true);
                 setIgnoreServiceEvents(true);
@@ -62,7 +70,7 @@ public class EventNotifierRedeliveryEventsTest extends ContextTestSupport {
     public void testExchangeRedeliverySync() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead").maximumRedeliveries(4).redeliveryDelay(0));
 
                 from("direct:start").throwException(new IllegalArgumentException("Damn"));
@@ -99,7 +107,7 @@ public class EventNotifierRedeliveryEventsTest extends ContextTestSupport {
     public void testExchangeRedeliveryAsync() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(
                         deadLetterChannel("mock:dead").maximumRedeliveries(4).asyncDelayedRedelivery().redeliveryDelay(10));
 

@@ -22,6 +22,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.cxf.common.CXFTestSupport;
 import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
 import org.apache.camel.util.IOHelper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -36,7 +37,7 @@ public class CxfPayloadProducerNamespaceOnEnvelopeTest extends CamelSpringTestSu
      * within the payload. This can cause issues with some type conversions in
      * PAYLOAD mode, as the Camel-CXF endpoint will return some kind of window
      * within the StAX parsing (and the namespace definitions are outside).
-     *
+     * 
      * If some CXF implementation bean is used as the service the namespaces
      * will be defined within the payload (and everything works fine).
      */
@@ -54,8 +55,10 @@ public class CxfPayloadProducerNamespaceOnEnvelopeTest extends CamelSpringTestSu
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
         IOHelper.close(applicationContext);
+        super.tearDown();
     }
 
     @Override

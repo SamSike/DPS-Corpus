@@ -84,7 +84,7 @@ public class ReplayExtensionTest {
         final ReplayExtension replayExtension = new ReplayExtension();
         replayExtension.rcvMeta(null, createHandshakeMessage(true));
 
-        replayExtension.setReplayIdIfAbsent(pushTopicMessage.getChannel(), 123L);
+        replayExtension.addChannelReplayId(pushTopicMessage.getChannel(), 123L);
 
         replayExtension.rcv(null, pushTopicMessage);
 
@@ -100,7 +100,7 @@ public class ReplayExtensionTest {
         final ReplayExtension replayExtension = new ReplayExtension();
         replayExtension.rcvMeta(null, createHandshakeMessage(true));
 
-        replayExtension.setReplayIdIfAbsent(pushTopicMessage.getChannel(), 123L);
+        replayExtension.addChannelReplayId(pushTopicMessage.getChannel(), 123L);
 
         replayExtension.rcv(null, pushTopicMessage);
 

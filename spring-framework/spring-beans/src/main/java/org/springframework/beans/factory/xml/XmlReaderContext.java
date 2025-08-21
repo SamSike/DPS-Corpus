@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.beans.factory.xml;
 
 import java.io.StringReader;
 
-import org.jspecify.annotations.Nullable;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -32,6 +31,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.lang.Nullable;
 
 /**
  * Extension of {@link org.springframework.beans.factory.parsing.ReaderContext},
@@ -91,7 +91,8 @@ public class XmlReaderContext extends ReaderContext {
 	 * @see XmlBeanDefinitionReader#setResourceLoader
 	 * @see ResourceLoader#getClassLoader()
 	 */
-	public final @Nullable ResourceLoader getResourceLoader() {
+	@Nullable
+	public final ResourceLoader getResourceLoader() {
 		return this.reader.getResourceLoader();
 	}
 
@@ -101,7 +102,8 @@ public class XmlReaderContext extends ReaderContext {
 	 * as an indication to lazily resolve bean classes.
 	 * @see XmlBeanDefinitionReader#setBeanClassLoader
 	 */
-	public final @Nullable ClassLoader getBeanClassLoader() {
+	@Nullable
+	public final ClassLoader getBeanClassLoader() {
 		return this.reader.getBeanClassLoader();
 	}
 

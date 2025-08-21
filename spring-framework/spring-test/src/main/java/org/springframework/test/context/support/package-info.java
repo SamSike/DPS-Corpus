@@ -1,7 +1,9 @@
 /**
  * Support classes for the <em>Spring TestContext Framework</em>.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.test.context.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

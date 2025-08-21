@@ -45,21 +45,21 @@ public class AsyncEndpointFailureProcessorTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.addComponent("async", new MyAsyncComponent());
 
                 // the onException can be asynchronous as well so we have to
                 // test for that
                 onException(IllegalArgumentException.class).handled(true).to("mock:before").to("log:before")
                         .process(new Processor() {
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 beforeThreadName = Thread.currentThread().getName();
                             }
                         }).to("async:MyFailureHandler").process(new Processor() {
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 afterThreadName = Thread.currentThread().getName();
                             }
                         }).to("log:after").to("mock:after").transform(constant("Bye Camel"));

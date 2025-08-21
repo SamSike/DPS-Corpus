@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -107,18 +104,7 @@ implements
             case HSQLDB:
                 return true;
 
-
-
-
-
-
-            case CLICKHOUSE:
-                return true;
-
             case FIREBIRD:
-                return true;
-
-            case TRINO:
                 return true;
 
 
@@ -150,22 +136,8 @@ implements
                 ctx.visit(function(N_BITOR, getDataType(), arg1, arg2));
                 break;
 
-
-
-
-
-
-
-            case CLICKHOUSE:
-                ctx.visit(function(N_bitOr, getDataType(), arg1, arg2));
-                break;
-
             case FIREBIRD:
                 ctx.visit(function(N_BIN_OR, getDataType(), arg1, arg2));
-                break;
-
-            case TRINO:
-                ctx.visit(function(N_BITWISE_OR, getDataType(), arg1, arg2));
                 break;
 
 
@@ -176,12 +148,11 @@ implements
 
             default:
                 ctx.sql('(');
-                Expression.acceptAssociative(
+                Expression.<Field<T>, BitOr<T>>acceptAssociative(
                     ctx,
                     this,
-                    Operators.OP_VERBAR,
-                    c -> c.sql(' '),
-                    Expression.Associativity.BOTH
+                    q -> new Expression.Expr<>(q.arg1, Operators.OP_VERBAR, q.arg2),
+                    c -> c.sql(' ')
                 );
                 ctx.sql(')');
                 break;
@@ -232,7 +203,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.BitOr<?> o) {
+        if (that instanceof QOM.BitOr) { QOM.BitOr<?> o = (QOM.BitOr<?>) that;
             return
                 StringUtils.equals($arg1(), o.$arg1()) &&
                 StringUtils.equals($arg2(), o.$arg2())

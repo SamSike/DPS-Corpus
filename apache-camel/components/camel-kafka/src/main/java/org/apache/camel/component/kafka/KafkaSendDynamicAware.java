@@ -104,10 +104,12 @@ public class KafkaSendDynamicAware extends ServiceSupport implements SendDynamic
 
     private String parseTopicName(String uri) {
         // strip query
-        uri = StringHelper.before(uri, "?", uri);
-
+        int pos = uri.indexOf('?');
+        if (pos != -1) {
+            uri = uri.substring(0, pos);
+        }
         // topic name is after first colon
-        int pos = uri.indexOf(':');
+        pos = uri.indexOf(':');
         if (pos != -1) {
             uri = uri.substring(pos + 1);
         } else {

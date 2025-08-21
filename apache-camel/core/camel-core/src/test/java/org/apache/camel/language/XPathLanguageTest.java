@@ -21,24 +21,14 @@ import org.apache.camel.model.language.XPathExpression;
 /**
  * Ensures that the "xpath" language is compliant with the single input expectations.
  */
-class XPathLanguageTest extends AbstractSingleInputTypedLanguageTest<XPathExpression.Builder, XPathExpression> {
+class XPathLanguageTest extends AbstractSingleInputLanguageTest<XPathExpression.Builder, XPathExpression> {
 
     XPathLanguageTest() {
-        super("/foo/text()", factory -> factory.xpath().resultType(Integer.class));
+        super("/foo/text()", factory -> factory.xpath().resultType(String.class));
     }
 
     @Override
-    protected Object defaultContentToSend() {
-        return "<foo>1</foo>";
-    }
-
-    @Override
-    protected TestContext testWithTypeContext() {
-        return new TestContext(defaultContentToSend(), 1, Integer.class);
-    }
-
-    @Override
-    protected TestContext testWithoutTypeContext() {
-        return new TestContext(defaultContentToSend(), 1, Integer.class);
+    protected TestContext testContext() {
+        return new TestContext("<foo>1</foo>", "1", String.class);
     }
 }

@@ -34,7 +34,7 @@ public class SchedulerConsumerHealthCheckTest {
         CamelContext context = new DefaultCamelContext();
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("scheduler:foo?initialDelay=5000").id(TEST_ROUTE_ID).log("Message");
             }
         });

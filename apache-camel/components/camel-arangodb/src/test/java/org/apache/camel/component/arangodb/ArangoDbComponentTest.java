@@ -16,31 +16,16 @@
  */
 package org.apache.camel.component.arangodb;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.apache.camel.test.infra.core.api.CamelTestSupportHelper;
-import org.junit.jupiter.api.BeforeEach;
+import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class ArangoDbComponentTest implements CamelTestSupportHelper {
-
-    @RegisterExtension
-    public static final CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
-
-    protected CamelContext context;
-
-    @BeforeEach
-    void beforeEach() {
-        this.context = camelContextExtension.getContext();
-    }
+public class ArangoDbComponentTest extends CamelTestSupport {
 
     @Test
-    void createEndpointWithMinimalConfiguration() throws Exception {
+    public void createEndpointWithMinimalConfiguration() throws Exception {
         ArangoDbComponent component = context.getComponent("arangodb", ArangoDbComponent.class);
         ArangoDbEndpoint endpoint = (ArangoDbEndpoint) component
                 .createEndpoint("arangodb:testDb?documentCollection=myCollection");
@@ -53,10 +38,5 @@ class ArangoDbComponentTest implements CamelTestSupportHelper {
         ArangoDbComponent component = context.getComponent("arangodb", ArangoDbComponent.class);
         assertThrows(IllegalArgumentException.class, () -> component
                 .createEndpoint("arangodb?documentCollection=myCollection"));
-    }
-
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
     }
 }

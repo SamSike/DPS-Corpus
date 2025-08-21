@@ -20,10 +20,10 @@ import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Route;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
@@ -31,13 +31,12 @@ import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.annotations.DevConsole;
 import org.apache.camel.support.LoggerHelper;
 import org.apache.camel.support.PatternHelper;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.console.AbstractDevConsole;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.StringHelper;
 import org.apache.camel.util.json.JsonObject;
 
-@DevConsole(name = "source", description = "Dump route source code")
+@DevConsole("source")
 public class SourceDevConsole extends AbstractDevConsole {
 
     /**
@@ -51,7 +50,7 @@ public class SourceDevConsole extends AbstractDevConsole {
     public static final String LIMIT = "limit";
 
     public SourceDevConsole() {
-        super("camel", "source", "Source", "Dump route source code");
+        super("camel", "source", "Source", "Display route source code");
     }
 
     @Override
@@ -63,9 +62,10 @@ public class SourceDevConsole extends AbstractDevConsole {
                 loc = LoggerHelper.stripSourceLocationLineNumber(loc);
                 StringBuilder code = new StringBuilder();
                 try {
-                    Resource resource = PluginHelper.getResourceLoader(getCamelContext()).resolveResource(loc);
+                    Resource resource = getCamelContext().adapt(ExtendedCamelContext.class).getResourceLoader()
+                            .resolveResource(loc);
                     if (resource != null) {
-                        if (!sb.isEmpty()) {
+                        if (sb.length() > 0) {
                             sb.append("\n");
                         }
 
@@ -88,10 +88,8 @@ public class SourceDevConsole extends AbstractDevConsole {
                 if (mrb.getSourceLocation() != null) {
                     sb.append(String.format("\n    Source: %s", mrb.getSourceLocation()));
                 }
-                if (!code.isEmpty()) {
-                    sb.append("\n");
+                if (code.length() > 0) {
                     sb.append(code);
-                    sb.append("\n\n");
                 }
             }
             sb.append("\n");
@@ -135,13 +133,12 @@ public class SourceDevConsole extends AbstractDevConsole {
         String limit = (String) options.get(LIMIT);
         final int max = limit == null ? Integer.MAX_VALUE : Integer.parseInt(limit);
 
-        ManagedCamelContext mcc = getCamelContext().getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
+        ManagedCamelContext mcc = getCamelContext().getExtension(ManagedCamelContext.class);
         if (mcc != null) {
             List<Route> routes = getCamelContext().getRoutes();
             routes.sort((o1, o2) -> o1.getRouteId().compareToIgnoreCase(o2.getRouteId()));
             routes.stream()
                     .map(route -> mcc.getManagedRoute(route.getRouteId()))
-                    .filter(Objects::nonNull)
                     .filter(r -> accept(r, filter))
                     .filter(r -> accept(r, subPath))
                     .sorted(SourceDevConsole::sort)
@@ -155,11 +152,9 @@ public class SourceDevConsole extends AbstractDevConsole {
             return true;
         }
 
-        String onlyName = LoggerHelper.sourceNameOnly(mrb.getSourceLocation());
         return PatternHelper.matchPattern(mrb.getRouteId(), filter)
                 || PatternHelper.matchPattern(mrb.getEndpointUri(), filter)
-                || PatternHelper.matchPattern(mrb.getSourceLocationShort(), filter)
-                || PatternHelper.matchPattern(onlyName, filter);
+                || PatternHelper.matchPattern(mrb.getSourceLocationShort(), filter);
     }
 
     private static int sort(ManagedRouteMBean o1, ManagedRouteMBean o2) {

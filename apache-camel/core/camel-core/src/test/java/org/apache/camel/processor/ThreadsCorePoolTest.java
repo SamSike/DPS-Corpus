@@ -57,33 +57,33 @@ public class ThreadsCorePoolTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setTracing(true);
 
                 from("direct:start").to("log:before").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         beforeThreadName = Thread.currentThread().getName();
                     }
                 })
                         // will use a a custom thread pool with 5 in core and 5 as
                         // max
                         .threads(5).process(new Processor() {
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 afterThreadName = Thread.currentThread().getName();
                             }
                         }).to("log:after").to("mock:result");
 
                 from("direct:foo").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         beforeThreadName = Thread.currentThread().getName();
                     }
                 })
                         // using the builder style
                         .threads().poolSize(5).process(new Processor() {
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 afterThreadName = Thread.currentThread().getName();
                             }
                         }).to("mock:result");

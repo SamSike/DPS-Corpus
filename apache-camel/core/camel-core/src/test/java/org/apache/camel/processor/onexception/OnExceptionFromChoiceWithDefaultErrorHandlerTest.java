@@ -24,10 +24,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class OnExceptionFromChoiceWithDefaultErrorHandlerTest extends OnExceptionFromChoiceTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(MyTechnicalException.class).handled(true).to("mock:tech");
                 onException(MyFunctionalException.class).handled(true).to("mock:func");
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,10 @@ package org.springframework.validation;
 
 import java.io.Serializable;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.ConfigurablePropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
+import org.springframework.lang.Nullable;
 
 /**
  * Default implementation of the {@link Errors} and {@link BindingResult}
@@ -44,17 +43,19 @@ import org.springframework.beans.PropertyAccessorFactory;
 @SuppressWarnings("serial")
 public class BeanPropertyBindingResult extends AbstractPropertyBindingResult implements Serializable {
 
-	private final @Nullable Object target;
+	@Nullable
+	private final Object target;
 
 	private final boolean autoGrowNestedPaths;
 
 	private final int autoGrowCollectionLimit;
 
-	private transient @Nullable BeanWrapper beanWrapper;
+	@Nullable
+	private transient BeanWrapper beanWrapper;
 
 
 	/**
-	 * Create a new {@code BeanPropertyBindingResult} for the given target.
+	 * Creates a new instance of the {@link BeanPropertyBindingResult} class.
 	 * @param target the target bean to bind onto
 	 * @param objectName the name of the target object
 	 */
@@ -63,7 +64,7 @@ public class BeanPropertyBindingResult extends AbstractPropertyBindingResult imp
 	}
 
 	/**
-	 * Create a new {@code BeanPropertyBindingResult} for the given target.
+	 * Creates a new instance of the {@link BeanPropertyBindingResult} class.
 	 * @param target the target bean to bind onto
 	 * @param objectName the name of the target object
 	 * @param autoGrowNestedPaths whether to "auto-grow" a nested path that contains a null value
@@ -80,7 +81,8 @@ public class BeanPropertyBindingResult extends AbstractPropertyBindingResult imp
 
 
 	@Override
-	public final @Nullable Object getTarget() {
+	@Nullable
+	public final Object getTarget() {
 		return this.target;
 	}
 

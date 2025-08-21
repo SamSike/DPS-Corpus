@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package org.springframework.aop.target;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeansException;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link org.springframework.aop.TargetSource} that lazily accesses a
@@ -61,10 +60,12 @@ import org.springframework.beans.BeansException;
 @SuppressWarnings("serial")
 public class LazyInitTargetSource extends AbstractBeanFactoryBasedTargetSource {
 
-	private @Nullable Object target;
+	@Nullable
+	private Object target;
 
 
 	@Override
+	@Nullable
 	public synchronized Object getTarget() throws BeansException {
 		if (this.target == null) {
 			this.target = getBeanFactory().getBean(getTargetBeanName());

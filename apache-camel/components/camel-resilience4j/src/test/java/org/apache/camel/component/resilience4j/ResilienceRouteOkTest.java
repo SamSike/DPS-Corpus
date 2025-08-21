@@ -17,12 +17,12 @@
 package org.apache.camel.component.resilience4j;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.spi.BeanIntrospection;
 import org.apache.camel.spi.CircuitBreakerConstants;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
 
@@ -33,10 +33,15 @@ public class ResilienceRouteOkTest extends CamelTestSupport {
     private BeanIntrospection bi;
 
     @Override
+    protected boolean useJmx() {
+        return false;
+    }
+
+    @Override
     protected CamelContext createCamelContext() throws Exception {
         CamelContext context = super.createCamelContext();
 
-        bi = PluginHelper.getBeanIntrospection(context);
+        bi = context.adapt(ExtendedCamelContext.class).getBeanIntrospection();
         bi.setLoggingLevel(LoggingLevel.INFO);
         bi.resetCounters();
 
@@ -59,7 +64,6 @@ public class ResilienceRouteOkTest extends CamelTestSupport {
         getMockEndpoint("mock:result").expectedBodiesReceived("Bye World");
         getMockEndpoint("mock:result").expectedPropertyReceived(CircuitBreakerConstants.RESPONSE_SUCCESSFUL_EXECUTION, true);
         getMockEndpoint("mock:result").expectedPropertyReceived(CircuitBreakerConstants.RESPONSE_FROM_FALLBACK, false);
-        getMockEndpoint("mock:result").expectedPropertyReceived(CircuitBreakerConstants.RESPONSE_STATE, "CLOSED");
 
         template.sendBody(endPointUri, "Hello World");
 

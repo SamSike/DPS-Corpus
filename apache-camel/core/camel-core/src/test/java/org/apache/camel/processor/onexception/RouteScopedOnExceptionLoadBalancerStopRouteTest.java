@@ -21,10 +21,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class RouteScopedOnExceptionLoadBalancerStopRouteTest extends ContextScopedOnExceptionLoadBalancerStopRouteTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").onException(Exception.class).handled(true).loadBalance().roundRobin()
                         .to("seda:error", "seda:error2").end().to("mock:exception").end()
                         // route starts here

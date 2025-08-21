@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,21 +40,22 @@ package org.jooq.impl;
 import static org.jooq.Clause.CONDITION;
 import static org.jooq.Operator.AND;
 import static org.jooq.Operator.OR;
-import static org.jooq.Operator.XOR;
 import static org.jooq.impl.DSL.condition;
 import static org.jooq.impl.DSL.exists;
-import static org.jooq.impl.DSL.inline;
-import static org.jooq.impl.DSL.not;
 import static org.jooq.impl.DSL.notExists;
-import static org.jooq.impl.Names.N_CONDITION;
+
+import java.util.function.BiFunction;
 
 import org.jooq.Clause;
 import org.jooq.Condition;
 import org.jooq.Context;
 import org.jooq.Field;
+import org.jooq.Name;
 import org.jooq.QueryPart;
 import org.jooq.SQL;
 import org.jooq.Select;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Lukas Eder
@@ -64,7 +65,16 @@ abstract class AbstractCondition extends AbstractField<Boolean> implements Condi
     private static final Clause[] CLAUSES = { CONDITION };
 
     AbstractCondition() {
-        super(N_CONDITION, SQLDataType.BOOLEAN);
+        super(DSL.name("condition"), SQLDataType.BOOLEAN);
+    }
+
+    /**
+     * [#10179] Subclasses may override this method to indicate that the
+     * condition may produce <code>TRUE</code>, <code>FALSE</code>, or
+     * <code>NULL</code>.
+     */
+    boolean isNullable() {
+        return true;
     }
 
     @Override
@@ -84,11 +94,6 @@ abstract class AbstractCondition extends AbstractField<Boolean> implements Condi
     @Override
     public final Condition or(Field<Boolean> other) {
         return or(condition(other));
-    }
-
-    @Override
-    public final Condition xor(Field<Boolean> other) {
-        return xor(condition(other));
     }
 
     @Override
@@ -132,26 +137,6 @@ abstract class AbstractCondition extends AbstractField<Boolean> implements Condi
     }
 
     @Override
-    public final Condition xor(SQL sql) {
-        return xor(condition(sql));
-    }
-
-    @Override
-    public final Condition xor(String sql) {
-        return xor(condition(sql));
-    }
-
-    @Override
-    public final Condition xor(String sql, Object... bindings) {
-        return xor(condition(sql, bindings));
-    }
-
-    @Override
-    public final Condition xor(String sql, QueryPart... parts) {
-        return xor(condition(sql, parts));
-    }
-
-    @Override
     public final Condition andNot(Condition other) {
         return and(other.not());
     }
@@ -172,16 +157,6 @@ abstract class AbstractCondition extends AbstractField<Boolean> implements Condi
     }
 
     @Override
-    public final Condition xorNot(Condition other) {
-        return xor(other.not());
-    }
-
-    @Override
-    public final Condition xorNot(Field<Boolean> other) {
-        return xorNot(condition(other));
-    }
-
-    @Override
     public final Condition andExists(Select<?> select) {
         return and(exists(select));
     }
@@ -199,16 +174,6 @@ abstract class AbstractCondition extends AbstractField<Boolean> implements Condi
     @Override
     public final Condition orNotExists(Select<?> select) {
         return or(notExists(select));
-    }
-
-    @Override
-    public final Condition xorExists(Select<?> select) {
-        return xor(exists(select));
-    }
-
-    @Override
-    public final Condition xorNotExists(Select<?> select) {
-        return xor(notExists(select));
     }
 
 
@@ -232,27 +197,5 @@ abstract class AbstractCondition extends AbstractField<Boolean> implements Condi
         return DSL.condition(OR, this, arg2);
     }
 
-    @Override
-    public final Condition xor(Condition arg2) {
-        return DSL.condition(XOR, this, arg2);
-    }
 
-
-
-    // -------------------------------------------------------------------------
-    // XXX: Utilities
-    // -------------------------------------------------------------------------
-
-    static final void acceptCase(Context<?> ctx, Condition condition) {
-
-        // [#10179] Avoid 3VL when not necessary
-        if (condition instanceof AbstractCondition && !((AbstractCondition) condition).isNullable())
-            ctx.visit(DSL.when(condition, inline(true))
-                         .else_(inline(false)));
-
-        // [#3206] Implement 3VL if necessary or unknown
-        else
-            ctx.visit(DSL.when(condition, inline(true))
-                         .when(DSL.not(condition), inline(false)));
-    }
 }

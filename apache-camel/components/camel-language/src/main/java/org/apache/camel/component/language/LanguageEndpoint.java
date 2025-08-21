@@ -18,8 +18,8 @@ package org.apache.camel.component.language;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 import org.apache.camel.Category;
 import org.apache.camel.Component;
@@ -47,46 +47,42 @@ import org.apache.camel.util.IOHelper;
  * defined as well.
  */
 @UriEndpoint(firstVersion = "2.5.0", scheme = "language", title = "Language", syntax = "language:languageName:resourceUri",
-             remote = false, producerOnly = true, category = { Category.CORE, Category.SCRIPT },
-             headersClass = LanguageConstants.class)
+             producerOnly = true, category = { Category.CORE, Category.SCRIPT }, headersClass = LanguageConstants.class)
 public class LanguageEndpoint extends ResourceEndpoint {
-
     private Language language;
     private Expression expression;
     private boolean contentResolvedFromResource;
-
-    @UriPath(enums = "bean,constant,csimple,datasonnet,exchangeProperty,file,groovy,header,hl7terser,java,joor,jq,js,jsonpath"
-                     + ",mvel,ognl,python,ref,simple,spel,tokenize,variable,wasm,xpath,xquery,xtokenize")
+    @UriPath(enums = "bean,constant,csimple,datasonnet,exchangeProperty,file,groovy,header,hl7terser,joor,jq,jsonpath"
+                     + ",mvel,ognl,ref,simple,spel,sql,tokenize,xpath,xquery,xtokenize")
     @Metadata(required = true)
     private String languageName;
     // resourceUri is optional in the language endpoint
     @UriPath(description = "Path to the resource, or a reference to lookup a bean in the Registry to use as the resource")
-    @Metadata(supportFileReference = true)
+    @Metadata(required = false)
     private String resourceUri;
     @UriParam
     private String script;
     @UriParam(defaultValue = "true")
     private boolean transform = true;
-    @UriParam(label = "advanced")
-    private boolean binary;
-    @UriParam(label = "advanced")
-    private boolean cacheScript;
-    @UriParam(defaultValue = "false")
-    private boolean allowTemplateFromHeader;
     @UriParam
-    private String resultType;
-    private volatile Class<?> resultTypeClass;
+    private boolean binary;
+    @UriParam
+    private boolean cacheScript;
+    @UriParam(defaultValue = "true", description = "Sets whether to use resource content cache or not")
+    private boolean contentCache;
+
+    public LanguageEndpoint() {
+        // enable cache by default
+        setContentCache(true);
+    }
 
     public LanguageEndpoint(String endpointUri, Component component, Language language, Expression expression,
                             String resourceUri) {
         super(endpointUri, component, resourceUri);
         this.language = language;
         this.expression = expression;
-    }
-
-    @Override
-    public boolean isRemote() {
-        return false;
+        // enable cache by default
+        setContentCache(true);
     }
 
     @Override
@@ -94,19 +90,13 @@ public class LanguageEndpoint extends ResourceEndpoint {
         if (language == null && languageName != null) {
             language = getCamelContext().resolveLanguage(languageName);
         }
-        if (resultTypeClass == null && resultType != null) {
-            resultTypeClass = getCamelContext().getClassResolver().resolveMandatoryClass(resultType);
-        }
         if (cacheScript && expression == null && script != null) {
             boolean external = script.startsWith("file:") || script.startsWith("http:");
             if (!external) {
                 // we can pre optimize this as the script can be loaded from classpath or registry etc
                 script = resolveScript(script);
-                expression = language.createExpression(script, new Object[] { resultTypeClass });
+                expression = language.createExpression(script);
             }
-        }
-        if (expression != null) {
-            expression.init(getCamelContext());
         }
     }
 
@@ -114,8 +104,7 @@ public class LanguageEndpoint extends ResourceEndpoint {
     public Producer createProducer() throws Exception {
         if (cacheScript && expression == null && script != null) {
             script = resolveScript(script);
-            expression = language.createExpression(script, new Object[] { resultTypeClass });
-            expression.init(getCamelContext());
+            expression = language.createExpression(script);
         }
 
         return new LanguageProducer(this);
@@ -152,7 +141,11 @@ public class LanguageEndpoint extends ResourceEndpoint {
     @Override
     protected String createEndpointUri() {
         String s = script;
-        s = URLEncoder.encode(s, StandardCharsets.UTF_8);
+        try {
+            s = URLEncoder.encode(s, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            // ignore
+        }
         return languageName + ":" + s;
     }
 
@@ -259,31 +252,6 @@ public class LanguageEndpoint extends ResourceEndpoint {
      */
     public void setCacheScript(boolean cacheScript) {
         this.cacheScript = cacheScript;
-    }
-
-    public boolean isAllowTemplateFromHeader() {
-        return allowTemplateFromHeader;
-    }
-
-    /**
-     * Whether to allow to use resource template from header or not (default false).
-     *
-     * Enabling this allows to specify dynamic templates via message header. However this can be seen as a potential
-     * security vulnerability if the header is coming from a malicious user, so use this with care.
-     */
-    public void setAllowTemplateFromHeader(boolean allowTemplateFromHeader) {
-        this.allowTemplateFromHeader = allowTemplateFromHeader;
-    }
-
-    public String getResultType() {
-        return resultType;
-    }
-
-    /**
-     * Sets the class of the result type (type from output)
-     */
-    public void setResultType(String resultType) {
-        this.resultType = resultType;
     }
 
     @Override

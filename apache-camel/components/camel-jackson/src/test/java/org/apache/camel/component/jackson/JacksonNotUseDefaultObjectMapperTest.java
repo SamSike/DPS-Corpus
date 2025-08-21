@@ -24,6 +24,7 @@ import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -37,8 +38,10 @@ public class JacksonNotUseDefaultObjectMapperTest extends CamelTestSupport {
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public void doPreSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
         df.setUseDefaultObjectMapper(false);
+        super.setUp();
     }
 
     @Test

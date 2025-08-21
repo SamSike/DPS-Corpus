@@ -218,6 +218,7 @@ public class CaffeineCacheProducerTest extends CaffeineCacheTestSupport {
     void testCacheAsMap() throws Exception {
         final Cache<Object, Object> cache = getTestCache();
         final Map<String, String> map = generateRandomMapOfString(3);
+        final Set<String> keys = map.keySet();
 
         cache.putAll(map);
 
@@ -232,9 +233,9 @@ public class CaffeineCacheProducerTest extends CaffeineCacheTestSupport {
         MockEndpoint.assertIsSatisfied(context);
 
         final Map<String, String> elements = exchange.getMessage().getBody(Map.class);
-        map.forEach((k, s) -> {
+        keys.forEach(k -> {
             assertTrue(elements.containsKey(k));
-            assertEquals(s, elements.get(k));
+            assertEquals(map.get(k), elements.get(k));
         });
     }
 

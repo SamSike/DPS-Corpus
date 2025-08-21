@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,12 +39,9 @@ package org.jooq;
 
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 // ...
@@ -60,12 +57,10 @@ import static org.jooq.SQLDialect.MYSQL;
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
-// ...
 import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
@@ -75,8 +70,6 @@ import java.util.function.Function;
 import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
-import org.jooq.impl.QOM;
-import org.jooq.impl.QOM.TableAlias;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -91,7 +84,7 @@ import org.jetbrains.annotations.Nullable;
  * <p>
  * <strong>Example:</strong>
  * <p>
- * <pre><code>
+ * <code><pre>
  * // Assuming import static org.jooq.impl.DSL.*;
  *
  * using(configuration)
@@ -100,7 +93,7 @@ import org.jetbrains.annotations.Nullable;
  *         field(name("LAST_NAME"), SQLDataType.VARCHAR))
  *    .from(table(name("ACTOR")))
  *    .fetch();
- * </code></pre>
+ * </pre></code>
  * <p>
  * Instances can be created using {@link DSL#name(String)} and overloads.
  *
@@ -244,21 +237,11 @@ public interface Name extends QueryPart, Comparable<Name> {
 
     /**
      * Create an empty {@link WindowDefinition} from this name.
-     * <p>
-     * A window definition renders itself differently, depending on
-     * {@link Context#declareWindows()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The window definition renders its window name
-     * (<code>this</code>) along with the <code>AS (window specification)</code>
-     * clause. This typically happens in <code>WINDOW</code> clauses.</li>
-     * <li>Reference: The window definition renders its alias identifier. This
-     * happens everywhere else.</li>
-     * </ul>
      *
      * @see #as(WindowSpecification)
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WindowDefinition as();
 
     /**
@@ -271,19 +254,9 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <li>referenced from the <code>OVER</code> clause (see
      * {@link AggregateFunction#over(WindowDefinition)}</li>
      * </ul>
-     * <p>
-     * A window definition renders itself differently, depending on
-     * {@link Context#declareWindows()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The window definition renders its window name
-     * (<code>this</code>) along with the <code>AS (window specification)</code>
-     * clause. This typically happens in <code>WINDOW</code> clauses.</li>
-     * <li>Reference: The window definition renders its alias identifier. This
-     * happens everywhere else.</li>
-     * </ul>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WindowDefinition as(WindowSpecification window);
 
     /**
@@ -292,19 +265,9 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <p>
      * Column names are implicitly inherited from the <code>SELECT</code>
      * statement.
-     * <p>
-     * A common table expression renders itself differently, depending on
-     * {@link Context#declareCTE()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The common table expression renders its CTE name
-     * (<code>this</code>) along with the <code>AS (query)</code> clause. This
-     * typically happens in <code>WITH</code> clauses.</li>
-     * <li>Reference: The common table expression renders its alias identifier.
-     * This happens everywhere else.</li>
-     * </ul>
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <R extends Record> CommonTableExpression<R> as(ResultQuery<R> query);
 
     /**
@@ -317,19 +280,9 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <p>
      * Column names are implicitly inherited from the <code>SELECT</code>
      * statement.
-     * <p>
-     * A common table expression renders itself differently, depending on
-     * {@link Context#declareCTE()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The common table expression renders its CTE name
-     * (<code>this</code>) along with the <code>AS (query)</code> clause. This
-     * typically happens in <code>WITH</code> clauses.</li>
-     * <li>Reference: The common table expression renders its alias identifier.
-     * This happens everywhere else.</li>
-     * </ul>
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <R extends Record> CommonTableExpression<R> asMaterialized(ResultQuery<R> query);
 
     /**
@@ -342,19 +295,9 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <p>
      * Column names are implicitly inherited from the <code>SELECT</code>
      * statement.
-     * <p>
-     * A common table expression renders itself differently, depending on
-     * {@link Context#declareCTE()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The common table expression renders its CTE name
-     * (<code>this</code>) along with the <code>AS (query)</code> clause. This
-     * typically happens in <code>WITH</code> clauses.</li>
-     * <li>Reference: The common table expression renders its alias identifier.
-     * This happens everywhere else.</li>
-     * </ul>
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <R extends Record> CommonTableExpression<R> asNotMaterialized(ResultQuery<R> query);
 
     /**
@@ -366,7 +309,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList fields(String... fieldNames);
 
     /**
@@ -378,7 +321,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList fields(Name... fieldNames);
 
     /**
@@ -401,7 +344,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList fields(Function<? super Field<?>, ? extends String> fieldNameFunction);
 
     /**
@@ -424,7 +367,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList fields(BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction);
 
 
@@ -438,7 +381,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList1 fields(String fieldName1);
 
     /**
@@ -450,7 +393,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList2 fields(String fieldName1, String fieldName2);
 
     /**
@@ -462,7 +405,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList3 fields(String fieldName1, String fieldName2, String fieldName3);
 
     /**
@@ -474,7 +417,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList4 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4);
 
     /**
@@ -486,7 +429,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList5 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5);
 
     /**
@@ -498,7 +441,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList6 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6);
 
     /**
@@ -510,7 +453,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList7 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7);
 
     /**
@@ -522,7 +465,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList8 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8);
 
     /**
@@ -534,7 +477,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList9 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8, String fieldName9);
 
     /**
@@ -546,7 +489,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList10 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8, String fieldName9, String fieldName10);
 
     /**
@@ -558,7 +501,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList11 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8, String fieldName9, String fieldName10, String fieldName11);
 
     /**
@@ -570,7 +513,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList12 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8, String fieldName9, String fieldName10, String fieldName11, String fieldName12);
 
     /**
@@ -582,7 +525,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList13 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8, String fieldName9, String fieldName10, String fieldName11, String fieldName12, String fieldName13);
 
     /**
@@ -594,7 +537,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList14 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8, String fieldName9, String fieldName10, String fieldName11, String fieldName12, String fieldName13, String fieldName14);
 
     /**
@@ -606,7 +549,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList15 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8, String fieldName9, String fieldName10, String fieldName11, String fieldName12, String fieldName13, String fieldName14, String fieldName15);
 
     /**
@@ -618,7 +561,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList16 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8, String fieldName9, String fieldName10, String fieldName11, String fieldName12, String fieldName13, String fieldName14, String fieldName15, String fieldName16);
 
     /**
@@ -630,7 +573,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList17 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8, String fieldName9, String fieldName10, String fieldName11, String fieldName12, String fieldName13, String fieldName14, String fieldName15, String fieldName16, String fieldName17);
 
     /**
@@ -642,7 +585,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList18 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8, String fieldName9, String fieldName10, String fieldName11, String fieldName12, String fieldName13, String fieldName14, String fieldName15, String fieldName16, String fieldName17, String fieldName18);
 
     /**
@@ -654,7 +597,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList19 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8, String fieldName9, String fieldName10, String fieldName11, String fieldName12, String fieldName13, String fieldName14, String fieldName15, String fieldName16, String fieldName17, String fieldName18, String fieldName19);
 
     /**
@@ -666,7 +609,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList20 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8, String fieldName9, String fieldName10, String fieldName11, String fieldName12, String fieldName13, String fieldName14, String fieldName15, String fieldName16, String fieldName17, String fieldName18, String fieldName19, String fieldName20);
 
     /**
@@ -678,7 +621,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList21 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8, String fieldName9, String fieldName10, String fieldName11, String fieldName12, String fieldName13, String fieldName14, String fieldName15, String fieldName16, String fieldName17, String fieldName18, String fieldName19, String fieldName20, String fieldName21);
 
     /**
@@ -690,7 +633,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList22 fields(String fieldName1, String fieldName2, String fieldName3, String fieldName4, String fieldName5, String fieldName6, String fieldName7, String fieldName8, String fieldName9, String fieldName10, String fieldName11, String fieldName12, String fieldName13, String fieldName14, String fieldName15, String fieldName16, String fieldName17, String fieldName18, String fieldName19, String fieldName20, String fieldName21, String fieldName22);
 
     /**
@@ -702,7 +645,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList1 fields(Name fieldName1);
 
     /**
@@ -714,7 +657,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList2 fields(Name fieldName1, Name fieldName2);
 
     /**
@@ -726,7 +669,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList3 fields(Name fieldName1, Name fieldName2, Name fieldName3);
 
     /**
@@ -738,7 +681,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList4 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4);
 
     /**
@@ -750,7 +693,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList5 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5);
 
     /**
@@ -762,7 +705,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList6 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6);
 
     /**
@@ -774,7 +717,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList7 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7);
 
     /**
@@ -786,7 +729,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList8 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8);
 
     /**
@@ -798,7 +741,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList9 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8, Name fieldName9);
 
     /**
@@ -810,7 +753,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList10 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8, Name fieldName9, Name fieldName10);
 
     /**
@@ -822,7 +765,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList11 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8, Name fieldName9, Name fieldName10, Name fieldName11);
 
     /**
@@ -834,7 +777,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList12 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8, Name fieldName9, Name fieldName10, Name fieldName11, Name fieldName12);
 
     /**
@@ -846,7 +789,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList13 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8, Name fieldName9, Name fieldName10, Name fieldName11, Name fieldName12, Name fieldName13);
 
     /**
@@ -858,7 +801,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList14 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8, Name fieldName9, Name fieldName10, Name fieldName11, Name fieldName12, Name fieldName13, Name fieldName14);
 
     /**
@@ -870,7 +813,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList15 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8, Name fieldName9, Name fieldName10, Name fieldName11, Name fieldName12, Name fieldName13, Name fieldName14, Name fieldName15);
 
     /**
@@ -882,7 +825,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList16 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8, Name fieldName9, Name fieldName10, Name fieldName11, Name fieldName12, Name fieldName13, Name fieldName14, Name fieldName15, Name fieldName16);
 
     /**
@@ -894,7 +837,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList17 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8, Name fieldName9, Name fieldName10, Name fieldName11, Name fieldName12, Name fieldName13, Name fieldName14, Name fieldName15, Name fieldName16, Name fieldName17);
 
     /**
@@ -906,7 +849,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList18 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8, Name fieldName9, Name fieldName10, Name fieldName11, Name fieldName12, Name fieldName13, Name fieldName14, Name fieldName15, Name fieldName16, Name fieldName17, Name fieldName18);
 
     /**
@@ -918,7 +861,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList19 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8, Name fieldName9, Name fieldName10, Name fieldName11, Name fieldName12, Name fieldName13, Name fieldName14, Name fieldName15, Name fieldName16, Name fieldName17, Name fieldName18, Name fieldName19);
 
     /**
@@ -930,7 +873,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList20 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8, Name fieldName9, Name fieldName10, Name fieldName11, Name fieldName12, Name fieldName13, Name fieldName14, Name fieldName15, Name fieldName16, Name fieldName17, Name fieldName18, Name fieldName19, Name fieldName20);
 
     /**
@@ -942,7 +885,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList21 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8, Name fieldName9, Name fieldName10, Name fieldName11, Name fieldName12, Name fieldName13, Name fieldName14, Name fieldName15, Name fieldName16, Name fieldName17, Name fieldName18, Name fieldName19, Name fieldName20, Name fieldName21);
 
     /**
@@ -954,7 +897,7 @@ public interface Name extends QueryPart, Comparable<Name> {
      * <code>WITH</code> clauses.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DerivedColumnList22 fields(Name fieldName1, Name fieldName2, Name fieldName3, Name fieldName4, Name fieldName5, Name fieldName6, Name fieldName7, Name fieldName8, Name fieldName9, Name fieldName10, Name fieldName11, Name fieldName12, Name fieldName13, Name fieldName14, Name fieldName15, Name fieldName16, Name fieldName17, Name fieldName18, Name fieldName19, Name fieldName20, Name fieldName21, Name fieldName22);
 
 

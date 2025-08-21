@@ -51,7 +51,7 @@ public class PropertyBindingSupportFlattenTest extends ContextTestSupport {
     }
 
     @Test
-    public void testProperties() {
+    public void testProperties() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> map = mapOf(
@@ -77,7 +77,7 @@ public class PropertyBindingSupportFlattenTest extends ContextTestSupport {
     }
 
     @Test
-    public void testProperty() {
+    public void testProperty() throws Exception {
         PropertiesComponent pc = context.getPropertiesComponent();
         Properties prop = new Properties();
         prop.setProperty("customerName", "James");
@@ -118,7 +118,7 @@ public class PropertyBindingSupportFlattenTest extends ContextTestSupport {
     }
 
     @Test
-    public void testWithFluentBuilder() {
+    public void testWithFluentBuilder() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> map = mapOf(
@@ -147,7 +147,7 @@ public class PropertyBindingSupportFlattenTest extends ContextTestSupport {
     }
 
     @Test
-    public void testPropertiesNoReflection() {
+    public void testPropertiesNoReflection() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> map = mapOf(
@@ -165,7 +165,7 @@ public class PropertyBindingSupportFlattenTest extends ContextTestSupport {
     }
 
     @Test
-    public void testPropertiesIgnoreCase() {
+    public void testPropertiesIgnoreCase() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> map = mapOf(
@@ -191,7 +191,7 @@ public class PropertyBindingSupportFlattenTest extends ContextTestSupport {
     }
 
     @Test
-    public void testPropertiesDash() {
+    public void testPropertiesDash() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> map = mapOf(
@@ -217,7 +217,7 @@ public class PropertyBindingSupportFlattenTest extends ContextTestSupport {
     }
 
     @Test
-    public void testBindPropertiesWithOptionPrefix() {
+    public void testBindPropertiesWithOptionPrefix() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> map = mapOf(
@@ -248,7 +248,7 @@ public class PropertyBindingSupportFlattenTest extends ContextTestSupport {
     }
 
     @Test
-    public void testPropertiesOptionalKey() {
+    public void testPropertiesOptionalKey() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> map = mapOf(

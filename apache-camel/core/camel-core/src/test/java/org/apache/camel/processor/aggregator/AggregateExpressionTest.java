@@ -41,10 +41,10 @@ public class AggregateExpressionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start").aggregate(body(), new BodyInAggregatingStrategy()).completionFromBatchConsumer()
                         .to("mock:result");

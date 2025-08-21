@@ -47,8 +47,8 @@ public class ManagedThreads extends ManagedProcessor implements ManagedThreadsMB
 
     @Override
     public String getRejectedPolicy() {
-        if (processor.getExecutorService() instanceof ThreadPoolExecutor threadPoolExecutor) {
-            return threadPoolExecutor.getRejectedExecutionHandler().toString();
+        if (processor.getExecutorService() instanceof ThreadPoolExecutor) {
+            return ((ThreadPoolExecutor) processor.getExecutorService()).getRejectedExecutionHandler().toString();
         } else {
             return null;
         }
@@ -56,8 +56,8 @@ public class ManagedThreads extends ManagedProcessor implements ManagedThreadsMB
 
     @Override
     public int getCorePoolSize() {
-        if (processor.getExecutorService() instanceof ThreadPoolExecutor threadPoolExecutor) {
-            return threadPoolExecutor.getCorePoolSize();
+        if (processor.getExecutorService() instanceof ThreadPoolExecutor) {
+            return ((ThreadPoolExecutor) processor.getExecutorService()).getCorePoolSize();
         } else {
             return 0;
         }
@@ -65,8 +65,8 @@ public class ManagedThreads extends ManagedProcessor implements ManagedThreadsMB
 
     @Override
     public int getPoolSize() {
-        if (processor.getExecutorService() instanceof ThreadPoolExecutor threadPoolExecutor) {
-            return threadPoolExecutor.getPoolSize();
+        if (processor.getExecutorService() instanceof ThreadPoolExecutor) {
+            return ((ThreadPoolExecutor) processor.getExecutorService()).getPoolSize();
         } else {
             return 0;
         }
@@ -74,8 +74,8 @@ public class ManagedThreads extends ManagedProcessor implements ManagedThreadsMB
 
     @Override
     public int getMaximumPoolSize() {
-        if (processor.getExecutorService() instanceof ThreadPoolExecutor threadPoolExecutor) {
-            return threadPoolExecutor.getMaximumPoolSize();
+        if (processor.getExecutorService() instanceof ThreadPoolExecutor) {
+            return ((ThreadPoolExecutor) processor.getExecutorService()).getMaximumPoolSize();
         } else {
             return 0;
         }
@@ -83,8 +83,8 @@ public class ManagedThreads extends ManagedProcessor implements ManagedThreadsMB
 
     @Override
     public int getLargestPoolSize() {
-        if (processor.getExecutorService() instanceof ThreadPoolExecutor threadPoolExecutor) {
-            return threadPoolExecutor.getLargestPoolSize();
+        if (processor.getExecutorService() instanceof ThreadPoolExecutor) {
+            return ((ThreadPoolExecutor) processor.getExecutorService()).getLargestPoolSize();
         } else {
             return 0;
         }
@@ -92,8 +92,8 @@ public class ManagedThreads extends ManagedProcessor implements ManagedThreadsMB
 
     @Override
     public int getActiveCount() {
-        if (processor.getExecutorService() instanceof ThreadPoolExecutor threadPoolExecutor) {
-            return threadPoolExecutor.getActiveCount();
+        if (processor.getExecutorService() instanceof ThreadPoolExecutor) {
+            return ((ThreadPoolExecutor) processor.getExecutorService()).getActiveCount();
         } else {
             return 0;
         }
@@ -101,8 +101,8 @@ public class ManagedThreads extends ManagedProcessor implements ManagedThreadsMB
 
     @Override
     public long getTaskCount() {
-        if (processor.getExecutorService() instanceof ThreadPoolExecutor threadPoolExecutor) {
-            return threadPoolExecutor.getTaskCount();
+        if (processor.getExecutorService() instanceof ThreadPoolExecutor) {
+            return ((ThreadPoolExecutor) processor.getExecutorService()).getTaskCount();
         } else {
             return 0;
         }
@@ -110,8 +110,8 @@ public class ManagedThreads extends ManagedProcessor implements ManagedThreadsMB
 
     @Override
     public long getCompletedTaskCount() {
-        if (processor.getExecutorService() instanceof ThreadPoolExecutor threadPoolExecutor) {
-            return threadPoolExecutor.getCompletedTaskCount();
+        if (processor.getExecutorService() instanceof ThreadPoolExecutor) {
+            return ((ThreadPoolExecutor) processor.getExecutorService()).getCompletedTaskCount();
         } else {
             return 0;
         }
@@ -119,8 +119,8 @@ public class ManagedThreads extends ManagedProcessor implements ManagedThreadsMB
 
     @Override
     public long getTaskQueueSize() {
-        if (processor.getExecutorService() instanceof ThreadPoolExecutor threadPoolExecutor) {
-            BlockingQueue<Runnable> queue = threadPoolExecutor.getQueue();
+        if (processor.getExecutorService() instanceof ThreadPoolExecutor) {
+            BlockingQueue queue = ((ThreadPoolExecutor) processor.getExecutorService()).getQueue();
             return queue != null ? queue.size() : 0;
         } else {
             return 0;
@@ -129,8 +129,8 @@ public class ManagedThreads extends ManagedProcessor implements ManagedThreadsMB
 
     @Override
     public long getKeepAliveTime() {
-        if (processor.getExecutorService() instanceof ThreadPoolExecutor threadPoolExecutor) {
-            return threadPoolExecutor.getKeepAliveTime(TimeUnit.SECONDS);
+        if (processor.getExecutorService() instanceof ThreadPoolExecutor) {
+            return ((ThreadPoolExecutor) processor.getExecutorService()).getKeepAliveTime(TimeUnit.SECONDS);
         } else {
             return 0;
         }
@@ -138,8 +138,8 @@ public class ManagedThreads extends ManagedProcessor implements ManagedThreadsMB
 
     @Override
     public boolean isAllowCoreThreadTimeout() {
-        if (processor.getExecutorService() instanceof ThreadPoolExecutor threadPoolExecutor) {
-            return threadPoolExecutor.allowsCoreThreadTimeOut();
+        if (processor.getExecutorService() instanceof ThreadPoolExecutor) {
+            return ((ThreadPoolExecutor) processor.getExecutorService()).allowsCoreThreadTimeOut();
         } else {
             return false;
         }

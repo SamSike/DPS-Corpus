@@ -51,10 +51,10 @@ public class SplitterStopOnExceptionAndContinueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                     .doTry()
                         // split and stop if failing during splitting
@@ -73,7 +73,7 @@ public class SplitterStopOnExceptionAndContinueTest extends ContextTestSupport {
     public static class MyProcessor implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             String body = exchange.getIn().getBody(String.class);
             if ("Kaboom".equals(body)) {
                 throw new IllegalArgumentException("Forced");

@@ -57,7 +57,7 @@ public class FilesConsumerIT extends AbstractGoogleDriveTestSupport {
     }
 
     private boolean fileInList(String fileId, FileList fileList) {
-        for (File f : fileList.getFiles()) {
+        for (File f : fileList.getItems()) {
             if (f.getId().equals(fileId)) {
                 return true;
             }

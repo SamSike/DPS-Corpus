@@ -32,8 +32,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ExtendedStartupListener;
@@ -50,11 +49,8 @@ import org.apache.camel.spi.RouteError;
 import org.apache.camel.spi.RoutePolicy;
 import org.apache.camel.spi.RoutePolicyFactory;
 import org.apache.camel.spi.SupervisingRouteController;
-import org.apache.camel.support.EventHelper;
 import org.apache.camel.support.PatternHelper;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.RoutePolicySupport;
-import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.URISupport;
 import org.apache.camel.util.backoff.BackOff;
@@ -73,15 +69,13 @@ import org.slf4j.LoggerFactory;
 public class DefaultSupervisingRouteController extends DefaultRouteController implements SupervisingRouteController {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultSupervisingRouteController.class);
-    private final Lock lock;
+    private final Object lock;
     private final AtomicBoolean contextStarted;
     private final AtomicInteger routeCount;
     private final Set<RouteHolder> routes;
     private final Set<String> nonSupervisedRoutes;
     private final RouteManager routeManager;
     private volatile CamelContextStartupListener listener;
-    private volatile boolean startingRoutes = true; // state during starting routes on bootstrap
-    private volatile boolean reloadingRoutes;
     private volatile BackOffTimer timer;
     private volatile ScheduledExecutorService executorService;
     private volatile BackOff backOff;
@@ -94,27 +88,15 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
     private long backOffMaxElapsedTime;
     private long backOffMaxAttempts;
     private double backOffMultiplier = 1.0d;
-    private boolean unhealthyOnExhausted = true;
-    private boolean unhealthyOnRestarting = true;
+    private boolean unhealthyOnExhausted;
 
     public DefaultSupervisingRouteController() {
-        this.lock = new ReentrantLock();
+        this.lock = new Object();
         this.contextStarted = new AtomicBoolean();
         this.routeCount = new AtomicInteger();
         this.routes = new TreeSet<>();
         this.nonSupervisedRoutes = new HashSet<>();
         this.routeManager = new RouteManager();
-    }
-
-    @Override
-    public void startRoutes(boolean reloaded) {
-        reloadingRoutes = reloaded;
-        try {
-            startNonSupervisedRoutes();
-            startSupervisedRoutes();
-        } finally {
-            reloadingRoutes = false;
-        }
     }
 
     // *********************************
@@ -201,14 +183,6 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
         this.unhealthyOnExhausted = unhealthyOnExhausted;
     }
 
-    public boolean isUnhealthyOnRestarting() {
-        return unhealthyOnRestarting;
-    }
-
-    public void setUnhealthyOnRestarting(boolean unhealthyOnRestarting) {
-        this.unhealthyOnRestarting = unhealthyOnRestarting;
-    }
-
     protected BackOff getBackOff(String id) {
         // currently all routes use the same backoff
         return backOff;
@@ -233,8 +207,14 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
 
     @Override
     protected void doStart() throws Exception {
-        CamelContext context = getCamelContext();
+        this.backOff = new BackOff(
+                Duration.ofMillis(backOffDelay),
+                backOffMaxDelay > 0 ? Duration.ofMillis(backOffMaxDelay) : null,
+                backOffMaxElapsedTime > 0 ? Duration.ofMillis(backOffMaxElapsedTime) : null,
+                backOffMaxAttempts > 0 ? backOffMaxAttempts : Long.MAX_VALUE,
+                backOffMultiplier);
 
+        CamelContext context = getCamelContext();
         if (threadPoolSize == 1) {
             executorService
                     = context.getExecutorServiceManager().newSingleThreadScheduledExecutor(this, "SupervisingRouteController");
@@ -242,52 +222,21 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
             executorService = context.getExecutorServiceManager().newScheduledThreadPool(this, "SupervisingRouteController",
                     threadPoolSize);
         }
-        backOff = new BackOff(
-                Duration.ofMillis(backOffDelay),
-                backOffMaxDelay > 0 ? Duration.ofMillis(backOffMaxDelay) : null,
-                backOffMaxElapsedTime > 0 ? Duration.ofMillis(backOffMaxElapsedTime) : null,
-                backOffMaxAttempts > 0 ? backOffMaxAttempts : Long.MAX_VALUE,
-                backOffMultiplier, false);
-
-        timer = PluginHelper.getBackOffTimerFactory(context.getCamelContextExtension())
-                .newBackOffTimer("SupervisingRouteController", executorService);
-        ServiceHelper.startService(timer);
+        timer = new BackOffTimer(executorService);
     }
 
     @Override
     protected void doStop() throws Exception {
-        if (getCamelContext() != null) {
+        if (getCamelContext() != null && executorService != null) {
             getCamelContext().getExecutorServiceManager().shutdown(executorService);
+            executorService = null;
+            timer = null;
         }
-        executorService = null;
-        ServiceHelper.stopService(timer);
     }
 
     // *********************************
     // Route management
     // *********************************
-
-    @Override
-    public boolean hasUnhealthyRoutes() {
-        boolean answer = startingRoutes;
-
-        // if we have started the routes first time, but some failed and are scheduled for restart
-        // then we may report as still starting routes if we should be unhealthy on restarting
-        if (!answer && isUnhealthyOnRestarting()) {
-            // mark as still starting routes if we have routes to restart
-            answer = !routeManager.routes.isEmpty();
-        }
-        if (!answer && isUnhealthyOnExhausted()) {
-            // mark as still starting routes if we have exhausted routes that should be unhealthy
-            answer = !routeManager.exhausted.isEmpty();
-        }
-        return answer;
-    }
-
-    @Override
-    public boolean isStartingRoutes() {
-        return startingRoutes;
-    }
 
     @Override
     public void startRoute(String routeId) throws Exception {
@@ -400,21 +349,21 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
     public Collection<Route> getControlledRoutes() {
         return routes.stream()
                 .map(RouteHolder::get)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override
     public Collection<Route> getRestartingRoutes() {
         return routeManager.routes.keySet().stream()
                 .map(RouteHolder::get)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override
     public Collection<Route> getExhaustedRoutes() {
         return routeManager.exhausted.keySet().stream()
                 .map(RouteHolder::get)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -438,8 +387,7 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
 
     private void doStopRoute(RouteHolder route, boolean checker, ThrowingConsumer<RouteHolder, Exception> consumer)
             throws Exception {
-        lock.lock();
-        try {
+        synchronized (lock) {
             if (checker) {
                 // remove it from checked routes so the route don't get started
                 // by the routes manager task as a manual operation on the routes
@@ -453,15 +401,12 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
             route.get().setRouteController(null);
 
             consumer.accept(route);
-        } finally {
-            lock.unlock();
         }
     }
 
     private void doStartRoute(RouteHolder route, boolean checker, ThrowingConsumer<RouteHolder, Exception> consumer)
             throws Exception {
-        lock.lock();
-        try {
+        synchronized (lock) {
             // If a manual start is triggered, then the controller should take
             // care that the route is started
             route.get().setRouteController(this);
@@ -476,8 +421,6 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
                 consumer.accept(route);
             } catch (Exception e) {
                 if (checker) {
-                    // first attempt is (starting and not restarting)
-                    EventHelper.notifyRouteRestartingFailure(getCamelContext(), route.get(), 0, e, false);
                     // if start fails the route is moved to controller supervision
                     // so its get (eventually) restarted
                     routeManager.start(route);
@@ -485,27 +428,22 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
 
                 throw e;
             }
-        } finally {
-            lock.unlock();
         }
     }
 
-    private void startNonSupervisedRoutes() {
+    private void startNonSupervisedRoutes() throws Exception {
         if (!isRunAllowed()) {
             return;
         }
 
         final List<String> routeList;
 
-        lock.lock();
-        try {
+        synchronized (lock) {
             routeList = routes.stream()
                     .filter(r -> r.getStatus() == ServiceStatus.Stopped)
                     .filter(r -> !isSupervised(r.route))
                     .map(RouteHolder::getId)
-                    .toList();
-        } finally {
-            lock.unlock();
+                    .collect(Collectors.toList());
         }
 
         for (String route : routeList) {
@@ -520,29 +458,18 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
     }
 
     private void startSupervisedRoutes() {
-        try {
-            doStartSupervisedRoutes();
-        } finally {
-            startingRoutes = false;
-        }
-    }
-
-    private void doStartSupervisedRoutes() {
         if (!isRunAllowed()) {
             return;
         }
 
         final List<String> routeList;
 
-        lock.lock();
-        try {
+        synchronized (lock) {
             routeList = routes.stream()
                     .filter(r -> r.getStatus() == ServiceStatus.Stopped)
                     .filter(r -> isSupervised(r.route))
                     .map(RouteHolder::getId)
-                    .toList();
-        } finally {
-            lock.unlock();
+                    .collect(Collectors.toList());
         }
 
         LOG.debug("Starting {} supervised routes", routeList.size());
@@ -554,10 +481,9 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
             }
         }
 
-        // reloading routes has its own summary
-        if (!reloadingRoutes && getCamelContext().getStartupSummaryLevel() != StartupSummaryLevel.Off
+        if (getCamelContext().getStartupSummaryLevel() != StartupSummaryLevel.Off
                 && getCamelContext().getStartupSummaryLevel() != StartupSummaryLevel.Oneline) {
-            // log after first round of attempts (some routes may be scheduled for restart)
+            // log after first round of attempts
             logRouteStartupSummary();
         }
     }
@@ -670,17 +596,8 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
                         BackOffTimer.Task task = timer.schedule(backOff, context -> {
                             final BackOffTimer.Task state = getBackOffContext(r.getId()).orElse(null);
                             long attempt = state != null ? state.getCurrentAttempts() : 0;
-
-                            if (!getCamelContext().isRunAllowed()) {
-                                // Camel is shutting down so do not attempt to start route
-                                logger.info("Restarting route: {} attempt: {} is cancelled due CamelContext is shutting down",
-                                        r.getId(), attempt);
-                                return true;
-                            }
-
                             try {
                                 logger.info("Restarting route: {} attempt: {}", r.getId(), attempt);
-                                EventHelper.notifyRouteRestarting(getCamelContext(), r.get(), attempt);
                                 doStartRoute(r, false, rx -> DefaultSupervisingRouteController.super.startRoute(rx.getId()));
                                 logger.info("Route: {} started after {} attempts", r.getId(), attempt);
                                 return false;
@@ -689,8 +606,7 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
                                 String cause = e.getClass().getName() + ": " + e.getMessage();
                                 logger.info("Failed restarting route: {} attempt: {} due: {} (stacktrace in debug log level)",
                                         r.getId(), attempt, cause);
-                                logger.debug("    Error restarting route caused by: {}", e.getMessage(), e);
-                                EventHelper.notifyRouteRestartingFailure(getCamelContext(), r.get(), attempt, e, false);
+                                logger.debug("    Error restarting route caused by: " + e.getMessage(), e);
                                 return true;
                             }
                         });
@@ -701,36 +617,30 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
                                 // or that back-off retry is exhausted thus if the
                                 // route is not started it is moved out of the
                                 // supervisor control.
-                                lock.lock();
-                                try {
+
+                                synchronized (lock) {
                                     final ServiceStatus status = route.getStatus();
                                     final boolean stopped = status.isStopped() || status.isStopping();
 
                                     if (backOffTask != null && backOffTask.getStatus() == BackOffTimer.Task.Status.Exhausted
                                             && stopped) {
-                                        long attempts = backOffTask.getCurrentAttempts() - 1;
                                         LOG.warn(
                                                 "Restarting route: {} is exhausted after {} attempts. No more attempts will be made"
                                                  + " and the route is no longer supervised by this route controller and remains as stopped.",
-                                                route.getId(), attempts);
+                                                route.getId(), backOffTask.getCurrentAttempts() - 1);
                                         r.get().setRouteController(null);
                                         // remember exhausted routes
                                         routeManager.exhausted.put(r, task);
 
-                                        // store as last error on route as it was exhausted
-                                        Throwable t = getRestartException(route.getId());
-                                        EventHelper.notifyRouteRestartingFailure(getCamelContext(), r.get(), attempts, t, true);
-
                                         if (unhealthyOnExhausted) {
                                             // store as last error on route as it was exhausted
+                                            Throwable t = getRestartException(route.getId());
                                             if (t != null) {
                                                 DefaultRouteError.set(getCamelContext(), r.getId(), RouteError.Phase.START, t,
                                                         true);
                                             }
                                         }
                                     }
-                                } finally {
-                                    lock.unlock();
                                 }
                             }
 
@@ -916,7 +826,6 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
             if (routes.add(holder)) {
                 holder.get().setRouteController(DefaultSupervisingRouteController.this);
                 holder.get().setAutoStartup(false);
-                holder.get().getProperties().put(Route.SUPERVISED, true); // mark route as being supervised
 
                 if (contextStarted.get()) {
                     LOG.debug("Context is already started: attempt to start route {}", route.getId());
@@ -936,12 +845,9 @@ public class DefaultSupervisingRouteController extends DefaultRouteController im
 
         @Override
         public void onRemove(Route route) {
-            lock.lock();
-            try {
+            synchronized (lock) {
                 routes.removeIf(
                         r -> ObjectHelper.equal(r.get(), route) || ObjectHelper.equal(r.getId(), route.getId()));
-            } finally {
-                lock.unlock();
             }
         }
 

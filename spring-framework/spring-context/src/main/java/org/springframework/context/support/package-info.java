@@ -3,7 +3,9 @@
  * such as abstract base classes for ApplicationContext
  * implementations and a MessageSource implementation.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.context.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

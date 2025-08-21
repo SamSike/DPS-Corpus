@@ -36,11 +36,10 @@ public abstract class WebsocketCamelRouterTestSupport extends CamelTestSupport {
                 .emptyTemplate()
                 .withPort(PORT)
                 .withContextPath(JettyConfiguration.ROOT_CONTEXT_PATH)
-                .withWebSocketConfiguration()
-                .addServletConfiguration(new JettyConfiguration.WebSocketContextHandlerConfiguration.ServletConfiguration<>(
+                .withServletConfiguration()
+                .addServletConfiguration(new JettyConfiguration.ServletHandlerConfiguration.ServletConfiguration<>(
                         new CamelWebSocketServlet(),
-                        JettyConfiguration.WebSocketContextHandlerConfiguration.ServletConfiguration.ROOT_PATH_SPEC,
-                        "CamelWsServlet"))
+                        JettyConfiguration.ServletHandlerConfiguration.ServletConfiguration.ROOT_PATH_SPEC, "CamelWsServlet"))
                 .build()
                 .build();
 

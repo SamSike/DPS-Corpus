@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,14 +37,11 @@
  */
 package org.jooq.impl;
 
-// ...
 import static org.jooq.impl.DSL.function;
-import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.Names.N_GREATEST;
 import static org.jooq.impl.Names.N_MAX;
 import static org.jooq.impl.Names.N_MAXVALUE;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
-import static org.jooq.impl.Tools.nullSafeDataType;
 
 import org.jooq.Context;
 import org.jooq.DataType;
@@ -57,41 +54,28 @@ import org.jooq.impl.QOM.UnmodifiableList;
  */
 final class Greatest<T> extends AbstractField<T> implements QOM.Greatest<T> {
 
-    private final QueryPartListView<Field<T>> args;
+    private final QueryPartListView<? extends Field<?>> args;
 
-    @SuppressWarnings({ "unchecked" })
     Greatest(Field<?>... args) {
-        this(args, (DataType<T>) nullSafeDataType(args));
+        super(N_GREATEST, (DataType<T>) Tools.nullSafeDataType(args[0]));
+
+        this.args = QueryPartListView.wrap(args);
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    Greatest(Field<?>[] args, DataType<T> type) {
-        super(N_GREATEST, type);
-
-        this.args = (QueryPartListView) QueryPartListView.wrap(args);
-    }
-
+    @SuppressWarnings("unchecked")
     @Override
     public final void accept(Context<?> ctx) {
-        if (args.isEmpty()) {
-            ctx.visit(inline(null, getDataType()));
-            return;
-        }
-        else if (args.size() == 1) {
+
+        // In any dialect, a single argument is always the greatest
+        if (args.size() == 1) {
             ctx.visit(args.get(0));
             return;
         }
 
         switch (ctx.family()) {
-
-
-
-
-
-
-
-
-
+            // This implementation has O(2^n) complexity. Better implementations
+            // are very welcome
+            // [#1049] TODO Fix this!
 
 
 
@@ -100,20 +84,34 @@ final class Greatest<T> extends AbstractField<T> implements QOM.Greatest<T> {
 
 
             case DERBY: {
-                GreatestLeast.acceptCaseEmulation(ctx, args, DSL::greatest, Field::gt);
+                Field<T> first = (Field<T>) args.get(0);
+                Field<T> other = (Field<T>) args.get(1);
+
+                if (args.size() > 2) {
+                    Field<?>[] remaining = args.subList(2, args.size()).toArray(Tools.EMPTY_FIELD);
+
+                    ctx.visit(DSL
+                       .when(first.gt(other), DSL.greatest(first, remaining))
+                       .otherwise(DSL.greatest(other, remaining)));
+                }
+                else
+                    ctx.visit(DSL
+                       .when(first.gt(other), first)
+                       .otherwise(other));
+
                 return;
             }
 
             case FIREBIRD:
-                ctx.visit(function(N_MAXVALUE, getDataType(), args));
+                ctx.visit(function(N_MAXVALUE, getDataType(), args.toArray(EMPTY_FIELD)));
                 return;
 
             case SQLITE:
-                ctx.visit(function(N_MAX, getDataType(), args));
+                ctx.visit(function(N_MAX, getDataType(), args.toArray(EMPTY_FIELD)));
                 return;
 
             default:
-                ctx.visit(function(N_GREATEST, getDataType(), args));
+                ctx.visit(function(N_GREATEST, getDataType(), args.toArray(EMPTY_FIELD)));
                 return;
         }
     }
@@ -128,9 +126,7 @@ final class Greatest<T> extends AbstractField<T> implements QOM.Greatest<T> {
     }
 
     @Override
-    public final Function1<? super UnmodifiableList<? extends Field<T>>, ? extends QOM.Greatest<T>> $constructor() {
-        return a -> a.isEmpty()
-            ? new Greatest<>(EMPTY_FIELD, getDataType())
-            : new Greatest<>(a.toArray(EMPTY_FIELD));
+    public final Function1<? super UnmodifiableList<? extends Field<T>>, ? extends Field<T>> $constructor() {
+        return a -> new Greatest<>(a.toArray(EMPTY_FIELD));
     }
 }

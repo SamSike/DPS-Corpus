@@ -73,7 +73,7 @@ public class RecipientListExchangePropertyAggregationStrategyTest extends Contex
 
     private static class MyAggregationStrategy implements AggregationStrategy {
 
-        private final List<String> uris = new ArrayList<>();
+        private List<String> uris = new ArrayList<>();
 
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {

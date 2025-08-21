@@ -24,41 +24,47 @@ import java.util.Map;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.http.handler.BasicValidationHandler;
 import org.apache.camel.component.http.handler.HeaderValidationHandler;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.ContentType.IMAGE_JPEG;
 import static org.apache.camel.component.http.HttpMethods.POST;
-import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.http.entity.ContentType.IMAGE_JPEG;
 
 public class HttpBodyTest extends BaseHttpTest {
     private String protocolString = "http://";
     // default content encoding of the local test server
-    private final String charset = "ISO-8859-1";
+    private String charset = "ISO-8859-1";
     private HttpServer localServer;
     private String endpointUrl;
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
+    public void setUp() throws Exception {
         Map<String, String> expectedHeaders = new HashMap<>();
         expectedHeaders.put(CONTENT_TYPE, IMAGE_JPEG.getMimeType());
 
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext())
-                .register("/post", new BasicValidationHandler(POST.name(), null, getBody(), getExpectedContent()))
-                .register("/post1",
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext())
+                .registerHandler("/post", new BasicValidationHandler(POST.name(), null, getBody(), getExpectedContent()))
+                .registerHandler("/post1",
                         new HeaderValidationHandler(POST.name(), null, null, getExpectedContent(), expectedHeaders))
                 .create();
         localServer.start();
 
-        endpointUrl = getProtocolString() + "localhost:" + localServer.getLocalPort();
+        endpointUrl = getProtocolString() + localServer.getInetAddress().getHostName() + ":" + localServer.getLocalPort();
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() throws Exception {
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (localServer != null) {
             localServer.stop();
@@ -74,7 +80,7 @@ public class HttpBodyTest extends BaseHttpTest {
     }
 
     @Test
-    public void httpPostWithStringBody() {
+    public void httpPostWithStringBody() throws Exception {
         Exchange exchange = template.request(endpointUrl + "/post", exchange1 -> {
             // without this property, camel use the os default encoding
             // to create the byte array for the StringRequestEntity
@@ -86,7 +92,7 @@ public class HttpBodyTest extends BaseHttpTest {
     }
 
     @Test
-    public void httpPostWithByteArrayBody() {
+    public void httpPostWithByteArrayBody() throws Exception {
         Exchange exchange
                 = template.request(endpointUrl + "/post", exchange1 -> exchange1.getIn().setBody(getBody().getBytes(charset)));
 
@@ -94,7 +100,7 @@ public class HttpBodyTest extends BaseHttpTest {
     }
 
     @Test
-    public void httpPostWithInputStreamBody() {
+    public void httpPostWithInputStreamBody() throws Exception {
         Exchange exchange = template.request(endpointUrl + "/post",
                 exchange1 -> exchange1.getIn().setBody(new ByteArrayInputStream(getBody().getBytes(charset))));
 
@@ -102,7 +108,7 @@ public class HttpBodyTest extends BaseHttpTest {
     }
 
     @Test
-    public void httpPostWithImage() {
+    public void httpPostWithImage() throws Exception {
 
         Exchange exchange = template.send(endpointUrl + "/post1", exchange1 -> {
             exchange1.getIn().setBody(new File("src/test/data/logo.jpeg"));

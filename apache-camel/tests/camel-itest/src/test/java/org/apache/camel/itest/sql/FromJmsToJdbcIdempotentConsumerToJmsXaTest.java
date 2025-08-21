@@ -19,10 +19,9 @@ package org.apache.camel.itest.sql;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import org.apache.camel.itest.utils.extensions.JmsServiceExtension;
+import org.apache.camel.itest.ITestSupport;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -35,17 +34,20 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 public class FromJmsToJdbcIdempotentConsumerToJmsXaTest extends FromJmsToJdbcIdempotentConsumerToJmsTest {
 
-    @RegisterExtension
-    public static JmsServiceExtension jmsServiceExtension = JmsServiceExtension.createExtension();
-
+    @Override
     @BeforeEach
-    public void cleanupDirectories() {
+    public void setUp() throws Exception {
         deleteDirectory("target/testdb");
+
+        super.setUp();
     }
 
+    @Override
     @AfterEach
-    public void shutdownDatabase() {
-        // shutdown the embedded Derby database so that the next test becomes a clean initial state
+    public void tearDown() throws Exception {
+        super.tearDown();
+
+        // shutdown the embedded Derby database so that the next test becomes a clean initial state 
         try {
             DriverManager.getConnection("jdbc:derby:target/testdb;shutdown=true");
             fail("Should have thrown exception");
@@ -62,6 +64,7 @@ public class FromJmsToJdbcIdempotentConsumerToJmsXaTest extends FromJmsToJdbcIde
 
     @Override
     protected AbstractApplicationContext createApplicationContext() {
+        ITestSupport.getPort1();
         return new ClassPathXmlApplicationContext("org/apache/camel/itest/sql/FromJmsToJdbcIdempotentConsumerToJmsXaTest.xml");
     }
 }

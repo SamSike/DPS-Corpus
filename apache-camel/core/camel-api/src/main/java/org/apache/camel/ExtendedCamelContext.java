@@ -19,34 +19,68 @@ package org.apache.camel;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.camel.catalog.RuntimeCamelCatalog;
+import org.apache.camel.console.DevConsoleResolver;
+import org.apache.camel.health.HealthCheckResolver;
+import org.apache.camel.spi.AnnotationBasedProcessorFactory;
+import org.apache.camel.spi.AsyncProcessorAwaitManager;
+import org.apache.camel.spi.BeanIntrospection;
+import org.apache.camel.spi.BeanProcessorFactory;
+import org.apache.camel.spi.BeanProxyFactory;
 import org.apache.camel.spi.BootstrapCloseable;
-import org.apache.camel.spi.EndpointServiceRegistry;
+import org.apache.camel.spi.CamelBeanPostProcessor;
+import org.apache.camel.spi.CamelDependencyInjectionAnnotationFactory;
+import org.apache.camel.spi.CliConnectorFactory;
+import org.apache.camel.spi.ComponentNameResolver;
+import org.apache.camel.spi.ComponentResolver;
+import org.apache.camel.spi.ConfigurerResolver;
+import org.apache.camel.spi.DataFormatResolver;
+import org.apache.camel.spi.DeferServiceFactory;
 import org.apache.camel.spi.EndpointStrategy;
 import org.apache.camel.spi.EndpointUriFactory;
 import org.apache.camel.spi.ExchangeFactory;
 import org.apache.camel.spi.ExchangeFactoryManager;
 import org.apache.camel.spi.FactoryFinder;
+import org.apache.camel.spi.FactoryFinderResolver;
 import org.apache.camel.spi.HeadersMapFactory;
+import org.apache.camel.spi.InterceptEndpointFactory;
 import org.apache.camel.spi.InterceptStrategy;
+import org.apache.camel.spi.InternalProcessorFactory;
+import org.apache.camel.spi.LanguageResolver;
 import org.apache.camel.spi.LifecycleStrategy;
 import org.apache.camel.spi.LogListener;
 import org.apache.camel.spi.ManagementMBeanAssembler;
+import org.apache.camel.spi.ModelJAXBContextFactory;
+import org.apache.camel.spi.ModelToXMLDumper;
+import org.apache.camel.spi.ModelineFactory;
+import org.apache.camel.spi.NodeIdFactory;
 import org.apache.camel.spi.NormalizedEndpointUri;
+import org.apache.camel.spi.PackageScanClassResolver;
+import org.apache.camel.spi.PackageScanResourceResolver;
+import org.apache.camel.spi.PeriodTaskResolver;
+import org.apache.camel.spi.PeriodTaskScheduler;
 import org.apache.camel.spi.ProcessorExchangeFactory;
+import org.apache.camel.spi.ProcessorFactory;
 import org.apache.camel.spi.ReactiveExecutor;
 import org.apache.camel.spi.Registry;
+import org.apache.camel.spi.ResourceLoader;
+import org.apache.camel.spi.RestBindingJaxbDataFormatFactory;
 import org.apache.camel.spi.RouteController;
+import org.apache.camel.spi.RouteFactory;
 import org.apache.camel.spi.RouteStartupOrder;
+import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.spi.StartupStepRecorder;
+import org.apache.camel.spi.UnitOfWorkFactory;
+import org.apache.camel.spi.UriFactoryResolver;
+import org.apache.camel.spi.XMLRoutesDefinitionLoader;
 
 /**
  * Extended {@link CamelContext} which contains the methods and APIs that are not primary intended for Camel end users
  * but for SPI, custom components, or more advanced used-cases with Camel.
  */
-public interface ExtendedCamelContext {
+public interface ExtendedCamelContext extends CamelContext {
 
     /**
      * Sets the name (id) of this context.
@@ -58,30 +92,10 @@ public interface ExtendedCamelContext {
      */
     void setName(String name);
 
-    default String getName() {
-        return null;
-    }
-
     /**
      * Sets the description of this Camel application.
      */
     void setDescription(String description);
-
-    default String getDescription() {
-        return null;
-    }
-
-    /**
-     * Sets the profile Camel should run as (dev,test,prod).
-     */
-    void setProfile(String profile);
-
-    /**
-     * The profile Camel should run as (dev,test,prod). Returns null if no profile has been set.
-     */
-    default String getProfile() {
-        return null;
-    }
 
     /**
      * Sets the registry Camel should use for looking up beans by name or type.
@@ -92,17 +106,6 @@ public interface ExtendedCamelContext {
      * @param registry the registry such as DefaultRegistry or
      */
     void setRegistry(Registry registry);
-
-    /**
-     * Sets the assembler to assemble a {@link javax.management.modelmbean.RequiredModelMBean}
-     *
-     * @param managementMBeanAssembler the assembler to use
-     */
-    void setManagementMBeanAssembler(ManagementMBeanAssembler managementMBeanAssembler);
-
-    default Registry getRegistry() {
-        return null;
-    }
 
     /**
      * Method to signal to {@link CamelContext} that the process to initialize setup routes is in progress.
@@ -118,49 +121,13 @@ public interface ExtendedCamelContext {
      * This can be useful to know by {@link LifecycleStrategy} or the likes, in case they need to react differently.
      * <p/>
      * As the startup procedure of {@link CamelContext} is slightly different when using plain Java versus
-     * camel-spring-xml, then we need to know when spring is setting up the routes, which can happen after the
-     * {@link CamelContext} itself is in started state.
+     * camel-spring-xml or camel-blueprint, then we need to know when spring/blueprint are setting up the routes, which
+     * can happen after the {@link CamelContext} itself is in started state, due the asynchronous event nature of
+     * especially blueprint.
      *
      * @return <tt>true</tt> if current thread is setting up route(s), or <tt>false</tt> if not.
-     * @see    #setupRoutes(boolean)
      */
     boolean isSetupRoutes();
-
-    /**
-     * Method to signal to {@link CamelContext} that the process to create routes is in progress.
-     *
-     * @param routeId the current id of the route being created
-     * @see           #getCreateRoute()
-     */
-    void createRoute(String routeId);
-
-    /**
-     * Indicates whether current thread is creating a route as part of starting Camel.
-     * <p/>
-     * This can be useful to know by {@link LifecycleStrategy} or the likes, in case they need to react differently.
-     *
-     * @return the route id currently being created/started, or <tt>null</tt> if not.
-     * @see    #createRoute(String)
-     */
-    String getCreateRoute();
-
-    /**
-     * Method to signal to {@link CamelContext} that creation of a given processor is in progress.
-     *
-     * @param processorId the current id of the processor being created
-     * @see               #getCreateProcessor()
-     */
-    void createProcessor(String processorId);
-
-    /**
-     * Indicates whether current thread is creating a processor as part of starting Camel.
-     * <p/>
-     * This can be useful to know by {@link LifecycleStrategy} or the likes, in case they need to react differently.
-     *
-     * @return the current id of the processor being created
-     * @see    #createProcessor(String)
-     */
-    String getCreateProcessor();
 
     /**
      * Registers a {@link org.apache.camel.spi.EndpointStrategy callback} to allow you to do custom logic when an
@@ -183,7 +150,7 @@ public interface ExtendedCamelContext {
      * @param  uri the URI of the endpoint
      * @return     the endpoint
      *
-     * @see        CamelContext#getEndpoint(String)
+     * @see        #getEndpoint(String)
      */
     Endpoint getPrototypeEndpoint(String uri);
 
@@ -198,7 +165,7 @@ public interface ExtendedCamelContext {
      * @param  uri the URI of the endpoint
      * @return     the endpoint
      *
-     * @see        CamelContext#getEndpoint(String)
+     * @see        #getEndpoint(String)
      */
     Endpoint getPrototypeEndpoint(NormalizedEndpointUri uri);
 
@@ -294,6 +261,28 @@ public interface ExtendedCamelContext {
     void setProcessorExchangeFactory(ProcessorExchangeFactory processorExchangeFactory);
 
     /**
+     * Returns the bean post processor used to do any bean customization.
+     *
+     * @return the bean post processor.
+     */
+    CamelBeanPostProcessor getBeanPostProcessor();
+
+    /**
+     * Sets a custom bean post processor to use.
+     */
+    void setBeanPostProcessor(CamelBeanPostProcessor beanPostProcessor);
+
+    /**
+     * Returns the annotation dependency injection factory.
+     */
+    CamelDependencyInjectionAnnotationFactory getDependencyInjectionAnnotationFactory();
+
+    /**
+     * Sets a custom annotation dependency injection factory.
+     */
+    void setDependencyInjectionAnnotationFactory(CamelDependencyInjectionAnnotationFactory factory);
+
+    /**
      * Returns the management mbean assembler
      *
      * @return the mbean assembler
@@ -315,17 +304,126 @@ public interface ExtendedCamelContext {
     void setErrorHandlerFactory(ErrorHandlerFactory errorHandlerFactory);
 
     /**
+     * Gets the node id factory
+     *
+     * @return the node id factory
+     */
+    NodeIdFactory getNodeIdFactory();
+
+    /**
+     * Uses a custom node id factory when generating auto assigned ids to the nodes in the route definitions
+     *
+     * @param factory custom factory to use
+     */
+    void setNodeIdFactory(NodeIdFactory factory);
+
+    /**
+     * Gets the {@link ComponentResolver} to use.
+     */
+    ComponentResolver getComponentResolver();
+
+    /**
+     * Sets a custom {@link ComponentResolver} to use.
+     */
+    void setComponentResolver(ComponentResolver componentResolver);
+
+    /**
+     * Gets the {@link ComponentNameResolver} to use.
+     */
+    ComponentNameResolver getComponentNameResolver();
+
+    /**
+     * Sets a custom {@link ComponentNameResolver} to use.
+     */
+    void setComponentNameResolver(ComponentNameResolver componentNameResolver);
+
+    /**
+     * Gets the {@link LanguageResolver} to use.
+     */
+    LanguageResolver getLanguageResolver();
+
+    /**
+     * Sets a custom {@link LanguageResolver} to use.
+     */
+    void setLanguageResolver(LanguageResolver languageResolver);
+
+    /**
+     * Gets the current data format resolver
+     *
+     * @return the resolver
+     */
+    DataFormatResolver getDataFormatResolver();
+
+    /**
+     * Sets a custom data format resolver
+     *
+     * @param dataFormatResolver the resolver
+     */
+    void setDataFormatResolver(DataFormatResolver dataFormatResolver);
+
+    /**
+     * Gets the current health check resolver
+     *
+     * @return the resolver
+     */
+    HealthCheckResolver getHealthCheckResolver();
+
+    /**
+     * Sets a custom health check resolver
+     *
+     * @param healthCheckResolver the resolver
+     */
+    void setHealthCheckResolver(HealthCheckResolver healthCheckResolver);
+
+    /**
+     * Gets the current dev console resolver
+     *
+     * @return the resolver
+     */
+    DevConsoleResolver getDevConsoleResolver();
+
+    /**
+     * Sets a custom dev console resolver
+     *
+     * @param devConsoleResolver the resolver
+     */
+    void setDevConsoleResolver(DevConsoleResolver devConsoleResolver);
+
+    /**
+     * Returns the package scanning class resolver
+     *
+     * @return the resolver
+     */
+    PackageScanClassResolver getPackageScanClassResolver();
+
+    /**
+     * Sets the package scanning class resolver to use
+     *
+     * @param resolver the resolver
+     */
+    void setPackageScanClassResolver(PackageScanClassResolver resolver);
+
+    /**
+     * Returns the package scanning resource resolver
+     *
+     * @return the resolver
+     */
+    PackageScanResourceResolver getPackageScanResourceResolver();
+
+    /**
+     * Sets the package scanning resource resolver to use
+     *
+     * @param resolver the resolver
+     */
+    void setPackageScanResourceResolver(PackageScanResourceResolver resolver);
+
+    /**
      * Gets the default FactoryFinder which will be used for the loading the factory class from META-INF
      *
      * @return the default factory finder
      * @see    #getBootstrapFactoryFinder()
      */
     FactoryFinder getDefaultFactoryFinder();
-
-    /**
-     * Sets the default FactoryFinder which will be used for the loading the factory class from META-INF
-     */
-    void setDefaultFactoryFinder(FactoryFinder factoryFinder);
 
     /**
      * Gets the bootstrap FactoryFinder which will be used for the loading the factory class from META-INF. This
@@ -355,12 +453,153 @@ public interface ExtendedCamelContext {
     FactoryFinder getBootstrapFactoryFinder(String path);
 
     /**
+     * Gets the bootstrap {@link ConfigurerResolver} to use. This bootstrap resolver is only intended to be used during
+     * bootstrap (starting) CamelContext.
+     */
+    ConfigurerResolver getBootstrapConfigurerResolver();
+
+    /**
+     * sets the bootstrap {@link ConfigurerResolver} to use. This bootstrap resolver is only intended to be used during
+     * bootstrap (starting) CamelContext.
+     */
+    void setBootstrapConfigurerResolver(ConfigurerResolver configurerResolver);
+
+    /**
      * Gets the FactoryFinder which will be used for the loading the factory class from META-INF in the given path
      *
      * @param  path the META-INF path
      * @return      the factory finder
      */
     FactoryFinder getFactoryFinder(String path);
+
+    /**
+     * Gets the factory finder resolver to use
+     *
+     * @return the factory finder resolver
+     */
+    FactoryFinderResolver getFactoryFinderResolver();
+
+    /**
+     * Sets the factory finder resolver to use.
+     *
+     * @param resolver the factory finder resolver
+     */
+    void setFactoryFinderResolver(FactoryFinderResolver resolver);
+
+    /**
+     * Gets the current {@link org.apache.camel.spi.ProcessorFactory}
+     *
+     * @return the factory, can be <tt>null</tt> if no custom factory has been set
+     */
+    ProcessorFactory getProcessorFactory();
+
+    /**
+     * Sets a custom {@link org.apache.camel.spi.ProcessorFactory}
+     *
+     * @param processorFactory the custom factory
+     */
+    void setProcessorFactory(ProcessorFactory processorFactory);
+
+    /**
+     * Gets the current {@link org.apache.camel.spi.InternalProcessorFactory}
+     *
+     * @return the factory
+     */
+    InternalProcessorFactory getInternalProcessorFactory();
+
+    /**
+     * Sets a custom {@link org.apache.camel.spi.InternalProcessorFactory}
+     *
+     * @param internalProcessorFactory the custom factory
+     */
+    void setInternalProcessorFactory(InternalProcessorFactory internalProcessorFactory);
+
+    /**
+     * Gets the current {@link org.apache.camel.spi.InterceptEndpointFactory}
+     *
+     * @return the factory
+     */
+    InterceptEndpointFactory getInterceptEndpointFactory();
+
+    /**
+     * Sets a custom {@link org.apache.camel.spi.InterceptEndpointFactory}
+     *
+     * @param interceptEndpointFactory the custom factory
+     */
+    void setInterceptEndpointFactory(InterceptEndpointFactory interceptEndpointFactory);
+
+    /**
+     * Gets the current {@link org.apache.camel.spi.RouteFactory}
+     *
+     * @return the factory
+     */
+    RouteFactory getRouteFactory();
+
+    /**
+     * Sets a custom {@link org.apache.camel.spi.RouteFactory}
+     *
+     * @param routeFactory the custom factory
+     */
+    void setRouteFactory(RouteFactory routeFactory);
+
+    /**
+     * Returns the JAXB Context factory used to create Models.
+     *
+     * @return the JAXB Context factory used to create Models.
+     */
+    ModelJAXBContextFactory getModelJAXBContextFactory();
+
+    /**
+     * Sets a custom JAXB Context factory to be used
+     *
+     * @param modelJAXBContextFactory a JAXB Context factory
+     */
+    void setModelJAXBContextFactory(ModelJAXBContextFactory modelJAXBContextFactory);
+
+    /**
+     * Gets the {@link DeferServiceFactory} to use.
+     */
+    DeferServiceFactory getDeferServiceFactory();
+
+    /**
+     * Sets a custom {@link DeferServiceFactory} to use.
+     */
+    void setDeferServiceFactory(DeferServiceFactory deferServiceFactory);
+
+    /**
+     * Gets the {@link UnitOfWorkFactory} to use.
+     */
+    UnitOfWorkFactory getUnitOfWorkFactory();
+
+    /**
+     * Sets a custom {@link UnitOfWorkFactory} to use.
+     */
+    void setUnitOfWorkFactory(UnitOfWorkFactory unitOfWorkFactory);
+
+    /**
+     * Gets the {@link AnnotationBasedProcessorFactory} to use.
+     */
+    AnnotationBasedProcessorFactory getAnnotationBasedProcessorFactory();
+
+    /**
+     * Sets a custom {@link AnnotationBasedProcessorFactory} to use.
+     */
+    void setAnnotationBasedProcessorFactory(AnnotationBasedProcessorFactory annotationBasedProcessorFactory);
+
+    /**
+     * Gets the {@link BeanProxyFactory} to use.
+     */
+    BeanProxyFactory getBeanProxyFactory();
+
+    /**
+     * Gets the {@link BeanProcessorFactory} to use.
+     */
+    BeanProcessorFactory getBeanProcessorFactory();
+
+    /**
+     * Gets the default shared thread pool for error handlers which leverages this for asynchronous redelivery tasks.
+     */
+    ScheduledExecutorService getErrorHandlerExecutorService();
 
     /**
      * Adds the given interceptor strategy
@@ -394,6 +633,30 @@ public interface ExtendedCamelContext {
     void addLogListener(LogListener listener);
 
     /**
+     * Gets the {@link org.apache.camel.AsyncProcessor} await manager.
+     *
+     * @return the manager
+     */
+    AsyncProcessorAwaitManager getAsyncProcessorAwaitManager();
+
+    /**
+     * Sets a custom {@link org.apache.camel.AsyncProcessor} await manager.
+     *
+     * @param manager the manager
+     */
+    void setAsyncProcessorAwaitManager(AsyncProcessorAwaitManager manager);
+
+    /**
+     * Gets the {@link BeanIntrospection}
+     */
+    BeanIntrospection getBeanIntrospection();
+
+    /**
+     * Sets a custom {@link BeanIntrospection}.
+     */
+    void setBeanIntrospection(BeanIntrospection beanIntrospection);
+
+    /**
      * Gets the {@link HeadersMapFactory} to use.
      */
     HeadersMapFactory getHeadersMapFactory();
@@ -414,16 +677,6 @@ public interface ExtendedCamelContext {
     void setReactiveExecutor(ReactiveExecutor reactiveExecutor);
 
     /**
-     * Gets the {@link EndpointServiceRegistry} to use.
-     */
-    EndpointServiceRegistry getEndpointServiceRegistry();
-
-    /**
-     * Sets a custom {@link EndpointServiceRegistry} to be used.
-     */
-    void setEndpointServiceRegistry(EndpointServiceRegistry endpointServiceRegistry);
-
-    /**
      * Whether exchange event notification is applicable (possible). This API is used internally in Camel as
      * optimization.
      *
@@ -441,6 +694,89 @@ public interface ExtendedCamelContext {
     void setEventNotificationApplicable(boolean eventNotificationApplicable);
 
     /**
+     * Gets the {@link XMLRoutesDefinitionLoader} to be used.
+     *
+     * @deprecated use {@link #getRoutesLoader()}
+     */
+    @Deprecated
+    XMLRoutesDefinitionLoader getXMLRoutesDefinitionLoader();
+
+    /**
+     * Sets a custom {@link XMLRoutesDefinitionLoader} to be used.
+     */
+    void setXMLRoutesDefinitionLoader(XMLRoutesDefinitionLoader xmlRoutesDefinitionLoader);
+
+    /**
+     * Gets the {@link RoutesLoader} to be used.
+     */
+    RoutesLoader getRoutesLoader();
+
+    /**
+     * Sets a custom {@link RoutesLoader} to be used.
+     */
+    void setRoutesLoader(RoutesLoader routesLoader);
+
+    /**
+     * Gets the {@link ResourceLoader} to be used.
+     */
+    ResourceLoader getResourceLoader();
+
+    /**
+     * Sets a custom {@link ResourceLoader} to be used.
+     */
+    void setResourceLoader(ResourceLoader resourceLoader);
+
+    /**
+     * Gets the {@link ModelToXMLDumper} to be used.
+     */
+    ModelToXMLDumper getModelToXMLDumper();
+
+    /**
+     * Sets a custom {@link ModelToXMLDumper} to be used.
+     */
+    void setModelToXMLDumper(ModelToXMLDumper modelToXMLDumper);
+
+    /**
+     * Gets the {@link RestBindingJaxbDataFormatFactory} to be used.
+     */
+    RestBindingJaxbDataFormatFactory getRestBindingJaxbDataFormatFactory();
+
+    /**
+     * Sets a custom {@link RestBindingJaxbDataFormatFactory} to be used.
+     */
+    void setRestBindingJaxbDataFormatFactory(RestBindingJaxbDataFormatFactory restBindingJaxbDataFormatFactory);
+
+    /**
+     * Gets the {@link RuntimeCamelCatalog} if available on the classpath.
+     */
+    RuntimeCamelCatalog getRuntimeCamelCatalog();
+
+    /**
+     * Sets the {@link RuntimeCamelCatalog} to use.
+     */
+    void setRuntimeCamelCatalog(RuntimeCamelCatalog runtimeCamelCatalog);
+
+    /**
+     * Gets the {@link ConfigurerResolver} to use.
+     */
+    ConfigurerResolver getConfigurerResolver();
+
+    /**
+     * Sets the {@link ConfigurerResolver} to use.
+     */
+    void setConfigurerResolver(ConfigurerResolver configurerResolver);
+
+    /**
+     * Gets the {@link UriFactoryResolver} to use.
+     */
+    UriFactoryResolver getUriFactoryResolver();
+
+    /**
+     * Sets the {@link UriFactoryResolver} to use.
+     */
+    void setUriFactoryResolver(UriFactoryResolver uriFactoryResolver);
+
+    /**
      * Internal {@link RouteController} that are only used internally by Camel to perform basic route operations. Do not
      * use this as end user.
      */
@@ -452,14 +788,6 @@ public interface ExtendedCamelContext {
     EndpointUriFactory getEndpointUriFactory(String scheme);
 
     /**
-     * Gets the {@link RuntimeCamelCatalog} if available on the classpath.
-     */
-    @Deprecated(since = "4.0.0")
-    default RuntimeCamelCatalog getRuntimeCamelCatalog() {
-        return getContextPlugin(RuntimeCamelCatalog.class);
-    }
-
-    /**
      * Gets the {@link StartupStepRecorder} to use.
      */
     StartupStepRecorder getStartupStepRecorder();
@@ -468,6 +796,16 @@ public interface ExtendedCamelContext {
      * Sets the {@link StartupStepRecorder} to use.
      */
     void setStartupStepRecorder(StartupStepRecorder startupStepRecorder);
+
+    /**
+     * Gets the {@link CliConnectorFactory} (optional).
+     */
+    CliConnectorFactory getCliConnectorFactory();
+
+    /**
+     * Sets the {@link CliConnectorFactory} to use.
+     */
+    void setCliConnectorFactory(CliConnectorFactory cliConnectorFactory);
 
     /**
      * Internal API for adding routes. Do not use this as end user.
@@ -483,6 +821,25 @@ public interface ExtendedCamelContext {
      * Internal API for creating error handler. Do not use this as end user.
      */
     Processor createErrorHandler(Route route, Processor processor) throws Exception;
+
+    /**
+     * Whether to run in lightweight mode which triggers some optimizations and memory reduction. Danger this causes
+     * Camel to be less dynamic such as adding new route after Camel is started would not be possible.
+     */
+    boolean isLightweight();
+
+    /**
+     * Whether to run in lightweight mode which triggers some optimizations and memory reduction. Danger this causes
+     * Camel to be less dynamic such as adding new route after Camel is started would not be possible.
+     */
+    void setLightweight(boolean lightweight);
+
+    /**
+     * Danger!!! This will dispose the route model from the {@link CamelContext} which is used for lightweight mode.
+     * This means afterwards no new routes can be dynamically added. Any operations on the
+     * org.apache.camel.model.ModelCamelContext will return null or be a noop operation.
+     */
+    void disposeModel();
 
     /**
      * Used during unit-testing where it is possible to specify a set of routes to exclude from discovery
@@ -504,22 +861,30 @@ public interface ExtendedCamelContext {
     String resolvePropertyPlaceholders(String text, boolean keepUnresolvedOptional);
 
     /**
-     * Package name to use as base (offset) for classpath scanning of RouteBuilder,
-     * {@link org.apache.camel.TypeConverter}, {@link CamelConfiguration} classes, and also classes annotated with
-     * {@link org.apache.camel.Converter}, or {@link org.apache.camel.BindToRegistry}.
+     * Package name to use as base (offset) for classpath scanning of custom {@link CamelConfiguration},
+     * {@link Configuration}, and {@link TypeConverter}.
      *
-     * @return the base package name (can be null if not configured)
+     * @return the base package name (can bre null if not configured)
      */
     String getBasePackageScan();
 
     /**
-     * Package name to use as base (offset) for classpath scanning of RouteBuilder,
-     * {@link org.apache.camel.TypeConverter}, {@link CamelConfiguration} classes, and also classes annotated with
-     * {@link org.apache.camel.Converter}, or {@link org.apache.camel.BindToRegistry}.
+     * Package name to use as base (offset) for classpath scanning of custom {@link CamelConfiguration},
+     * {@link Configuration}, and {@link TypeConverter}.
      *
      * @param basePackageScan the base package name
      */
     void setBasePackageScan(String basePackageScan);
+
+    /**
+     * Gets the {@link ModelineFactory}.
+     */
+    ModelineFactory getModelineFactory();
+
+    /**
+     * Sets a custom {@link ModelineFactory}.
+     */
+    void setModelineFactory(ModelineFactory modelineFactory);
 
     /**
      * The {@link CamelContext} have additional phases that are not defined in {@link ServiceStatus} and this method
@@ -528,34 +893,23 @@ public interface ExtendedCamelContext {
     byte getStatusPhase();
 
     /**
-     * Gets a plugin of the given type.
-     *
-     * @param  type the type of the extension
-     * @return      the extension, or <tt>null</tt> if no extension has been installed.
+     * Gets the period task scheduler
      */
-    <T> T getContextPlugin(Class<T> type);
+    PeriodTaskScheduler getPeriodTaskScheduler();
 
     /**
-     * Whether a plugin of the given type is already in use
-     *
-     * @param  type the type of the extension
-     * @return      true if already in use, false otherwise
+     * To use a custom period task scheduler
      */
-    boolean isContextPluginInUse(Class<?> type);
+    void setPeriodTaskScheduler(PeriodTaskScheduler periodTaskScheduler);
 
     /**
-     * Allows installation of custom plugins to the Camel context.
-     *
-     * @param type   the type of the extension
-     * @param module the instance of the extension
+     * Gets the period task resolver
      */
-    <T> void addContextPlugin(Class<T> type, T module);
+    PeriodTaskResolver getPeriodTaskResolver();
 
     /**
-     * Allows lazy installation of custom plugins to the Camel context.
-     *
-     * @param type   the type of the extension
-     * @param module the instance of the extension
+     * To use a custom period task resolver
      */
-    <T> void lazyAddContextPlugin(Class<T> type, Supplier<T> module);
+    void setPeriodTaskResolver(PeriodTaskResolver periodTaskResolver);
+
 }

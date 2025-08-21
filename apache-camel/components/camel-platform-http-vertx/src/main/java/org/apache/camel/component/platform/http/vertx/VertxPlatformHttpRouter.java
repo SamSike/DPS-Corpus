@@ -35,18 +35,16 @@ import org.apache.camel.support.CamelContextHelper;
 public class VertxPlatformHttpRouter implements Router {
     public static final String PLATFORM_HTTP_ROUTER_NAME = PlatformHttpConstants.PLATFORM_HTTP_COMPONENT_NAME + "-router";
 
-    private final String name;
     private final VertxPlatformHttpServer server;
     private final Vertx vertx;
     private final Router delegate;
     private AllowForwardHeaders allowForward;
 
-    public VertxPlatformHttpRouter(VertxPlatformHttpServer server, Vertx vertx, Router delegate, String name) {
+    public VertxPlatformHttpRouter(VertxPlatformHttpServer server, Vertx vertx, Router delegate) {
         this.server = server;
         this.vertx = vertx;
         this.delegate = delegate;
         this.allowForward = AllowForwardHeaders.NONE;
-        this.name = name;
     }
 
     public Vertx vertx() {
@@ -55,10 +53,6 @@ public class VertxPlatformHttpRouter implements Router {
 
     public VertxPlatformHttpServer getServer() {
         return server;
-    }
-
-    public String getName() {
-        return this.name;
     }
 
     @Override
@@ -292,27 +286,10 @@ public class VertxPlatformHttpRouter implements Router {
     //
     // **********************
 
-    public static VertxPlatformHttpRouter lookup(CamelContext camelContext, String routerName) {
+    public static VertxPlatformHttpRouter lookup(CamelContext camelContext) {
         return CamelContextHelper.mandatoryLookup(
                 camelContext,
-                routerName,
+                VertxPlatformHttpRouter.PLATFORM_HTTP_ROUTER_NAME,
                 VertxPlatformHttpRouter.class);
     }
-
-    @Deprecated
-    /**
-     * Default router lookup method. Used for backward compatibility only. You should instead use @lookup(CamelContext,
-     * String)
-     *
-     * @param  camelContext
-     * @return              the default port router
-     */
-    public static VertxPlatformHttpRouter lookup(CamelContext camelContext) {
-        return lookup(camelContext, getRouterNameFromPort(VertxPlatformHttpServerConfiguration.DEFAULT_BIND_PORT));
-    }
-
-    public static String getRouterNameFromPort(int port) {
-        return VertxPlatformHttpRouter.PLATFORM_HTTP_ROUTER_NAME + "-" + port;
-    }
-
 }

@@ -1,7 +1,9 @@
 /**
  * Defines the Spring JDBC configuration namespace.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jdbc.config;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

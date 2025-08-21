@@ -17,7 +17,6 @@
 package org.apache.camel.component.chunk;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -34,8 +33,6 @@ import org.apache.camel.component.ResourceEndpoint;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.ExchangeHelper;
-import org.apache.camel.support.ResourceHelper;
-import org.apache.camel.util.IOHelper;
 import org.apache.commons.io.IOUtils;
 
 import static org.apache.camel.component.chunk.ChunkConstants.CHUNK_ENDPOINT_URI_PREFIX;
@@ -47,7 +44,7 @@ import static org.apache.camel.component.chunk.ChunkConstants.CHUNK_TEMPLATE;
  * Transform messages using Chunk templating engine.
  */
 @UriEndpoint(firstVersion = "2.15.0", scheme = "chunk", title = "Chunk", syntax = "chunk:resourceUri", producerOnly = true,
-             remote = false, category = { Category.TRANSFORMATION }, headersClass = ChunkConstants.class)
+             category = { Category.TRANSFORMATION }, headersClass = ChunkConstants.class)
 public class ChunkEndpoint extends ResourceEndpoint {
 
     private Theme theme;
@@ -55,14 +52,19 @@ public class ChunkEndpoint extends ResourceEndpoint {
 
     @UriParam(defaultValue = "false")
     private boolean allowTemplateFromHeader;
+
     @UriParam(description = "Define the encoding of the body")
     private String encoding;
+
     @UriParam(description = "Define the themes folder to scan")
     private String themeFolder;
+
     @UriParam(description = "Define the themes subfolder to scan")
     private String themeSubfolder;
+
     @UriParam(description = "Define the theme layer to elaborate")
     private String themeLayer;
+
     @UriParam(description = "Define the file extension of the template")
     private String extension;
 
@@ -71,11 +73,6 @@ public class ChunkEndpoint extends ResourceEndpoint {
 
     public ChunkEndpoint(String endpointUri, Component component, String resourceUri) {
         super(endpointUri, component, resourceUri);
-    }
-
-    @Override
-    public boolean isRemote() {
-        return false;
     }
 
     @Override
@@ -166,13 +163,7 @@ public class ChunkEndpoint extends ResourceEndpoint {
 
     private Chunk getOrCreateChunk(Theme theme, boolean fromTemplate) throws IOException {
         if (chunk == null) {
-            if (ResourceHelper.hasScheme(getResourceUri())) {
-                InputStream is = getResourceAsInputStream();
-                String text = IOHelper.loadText(is);
-                chunk = createChunk(new StringReader(text), theme, true);
-            } else {
-                chunk = createChunk(new StringReader(getResourceUriExtended()), theme, fromTemplate);
-            }
+            chunk = createChunk(new StringReader(getResourceUriExtended()), theme, fromTemplate);
         }
         return chunk;
     }
@@ -277,5 +268,12 @@ public class ChunkEndpoint extends ResourceEndpoint {
         if (theme == null) {
             theme = getOrCreateTheme();
         }
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        super.doStop();
+
+        // noop
     }
 }

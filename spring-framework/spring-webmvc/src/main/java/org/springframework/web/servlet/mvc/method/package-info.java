@@ -2,7 +2,9 @@
  * Servlet-based infrastructure for handler method processing,
  * building on the {@code org.springframework.web.method} package.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.servlet.mvc.method;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

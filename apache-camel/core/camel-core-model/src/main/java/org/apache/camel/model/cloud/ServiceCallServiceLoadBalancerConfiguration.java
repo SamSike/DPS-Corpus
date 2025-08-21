@@ -24,6 +24,7 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NoFactoryAvailableException;
 import org.apache.camel.cloud.ServiceLoadBalancer;
 import org.apache.camel.cloud.ServiceLoadBalancerFactory;
@@ -38,7 +39,7 @@ import org.apache.camel.util.ObjectHelper;
 @XmlRootElement(name = "loadBalancerConfiguration")
 @XmlAccessorType(XmlAccessType.FIELD)
 @Configurer
-@Deprecated(since = "3.19.0")
+@Deprecated
 public class ServiceCallServiceLoadBalancerConfiguration extends ServiceCallConfiguration
         implements ServiceLoadBalancerFactory {
     @XmlTransient
@@ -99,31 +100,33 @@ public class ServiceCallServiceLoadBalancerConfiguration extends ServiceCallConf
             Class<?> type;
             try {
                 // Then use Service factory.
-                type = camelContext.getCamelContextExtension()
-                        .getFactoryFinder(ServiceCallDefinitionConstants.RESOURCE_PATH).findClass(factoryKey).orElseThrow();
+                type = camelContext.adapt(ExtendedCamelContext.class)
+                        .getFactoryFinder(ServiceCallDefinitionConstants.RESOURCE_PATH).findClass(factoryKey).orElse(null);
             } catch (Exception e) {
                 throw new NoFactoryAvailableException(ServiceCallDefinitionConstants.RESOURCE_PATH + factoryKey, e);
             }
 
-            if (ServiceLoadBalancerFactory.class.isAssignableFrom(type)) {
-                factory = (ServiceLoadBalancerFactory) camelContext.getInjector().newInstance(type, false);
-            } else {
-                throw new IllegalArgumentException(
-                        "Resolving LoadBalancer: " + factoryKey
-                                                   + " detected type conflict: Not a LoadBalancerFactory implementation. Found: "
-                                                   + type.getName());
+            if (type != null) {
+                if (ServiceLoadBalancerFactory.class.isAssignableFrom(type)) {
+                    factory = (ServiceLoadBalancerFactory) camelContext.getInjector().newInstance(type, false);
+                } else {
+                    throw new IllegalArgumentException(
+                            "Resolving LoadBalancer: " + factoryKey
+                                                       + " detected type conflict: Not a LoadBalancerFactory implementation. Found: "
+                                                       + type.getName());
+                }
             }
 
             try {
                 Map<String, Object> parameters = getConfiguredOptions(camelContext, this);
 
                 parameters.replaceAll((k, v) -> {
-                    if (v instanceof String str) {
+                    if (v instanceof String) {
                         try {
-                            v = camelContext.resolvePropertyPlaceholders(str);
+                            v = camelContext.resolvePropertyPlaceholders((String) v);
                         } catch (Exception e) {
                             throw new IllegalArgumentException(
-                                    String.format("Exception while resolving %s (%s)", k, v), e);
+                                    String.format("Exception while resolving %s (%s)", k, v.toString()), e);
                         }
                     }
 

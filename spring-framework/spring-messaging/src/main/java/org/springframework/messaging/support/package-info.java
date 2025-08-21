@@ -4,7 +4,9 @@
  * message headers, as well as various {@link org.springframework.messaging.MessageChannel}
  * implementations and channel interceptor support.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.messaging.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

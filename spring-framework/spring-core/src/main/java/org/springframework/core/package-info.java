@@ -2,7 +2,9 @@
  * Provides basic classes for exception handling and version detection,
  * and other core helpers that are not specific to any part of the framework.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.core;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -26,8 +26,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-
 import org.apache.camel.tooling.util.Strings;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -36,7 +34,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.codehaus.plexus.build.BuildContext;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 import static org.apache.camel.tooling.util.PackageHelper.findCamelDirectory;
 import static org.apache.camel.tooling.util.PackageHelper.loadText;
@@ -61,43 +59,43 @@ public class PrepareComponentMojo extends AbstractGeneratorMojo {
     protected File baseDir;
 
     /**
-     * The output directory for generated configurer java classes
+     * The output directory for generated components file
      */
     @Parameter(defaultValue = "${project.basedir}/src/generated/java")
     protected File configurerSourceOutDir;
 
     /**
-     * The output directory for generated configurer resources
+     * The output directory for generated components file
      */
     @Parameter(defaultValue = "${project.basedir}/src/generated/resources")
     protected File configurerResourceOutDir;
 
     /**
-     * The output directory for generated component resources
+     * The output directory for generated components file
      */
     @Parameter(defaultValue = "${project.basedir}/src/generated/resources")
     protected File componentOutDir;
 
     /**
-     * The output directory for generated dataformats resources
+     * The output directory for generated dataformats file
      */
     @Parameter(defaultValue = "${project.basedir}/src/generated/resources")
     protected File dataFormatOutDir;
 
     /**
-     * The output directory for generated language resources
+     * The output directory for generated languages file
      */
     @Parameter(defaultValue = "${project.basedir}/src/generated/resources")
     protected File languageOutDir;
 
     /**
-     * The output directory for other generated resources
+     * The output directory for generated others file
      */
     @Parameter(defaultValue = "${project.basedir}/src/generated/resources")
     protected File otherOutDir;
 
     /**
-     * The output directory for generated schema resources
+     * The output directory for generated schema file
      */
     @Parameter(defaultValue = "${project.basedir}/src/generated/resources")
     protected File schemaOutDir;
@@ -111,13 +109,9 @@ public class PrepareComponentMojo extends AbstractGeneratorMojo {
     @Parameter(defaultValue = "${camel-prepare-component}")
     protected boolean prepareComponent;
 
-    @Inject
-    public PrepareComponentMojo(MavenProjectHelper projectHelper, BuildContext buildContext) {
-        super(projectHelper, buildContext);
-    }
-
     @Override
-    public void execute(MavenProject project) throws MojoFailureException, MojoExecutionException {
+    public void execute(MavenProject project, MavenProjectHelper projectHelper, BuildContext buildContext)
+            throws MojoFailureException, MojoExecutionException {
         configurerSourceOutDir = new File(project.getBasedir(), "src/generated/java");
         configurerResourceOutDir = componentOutDir
                 = dataFormatOutDir = languageOutDir
@@ -125,7 +119,7 @@ public class PrepareComponentMojo extends AbstractGeneratorMojo {
                                 = new File(project.getBasedir(), "src/generated/resources");
         buildDir = new File(project.getBuild().getDirectory());
         prepareComponent = Boolean.parseBoolean(project.getProperties().getProperty("camel-prepare-component", "false"));
-        super.execute(project);
+        super.execute(project, projectHelper, buildContext);
     }
 
     /**
@@ -246,7 +240,7 @@ public class PrepareComponentMojo extends AbstractGeneratorMojo {
                                       + "\n" + s + "\n"
                                       + "        " + endDependenciesMarker + after;
 
-            updateResource(root, "pom.xml", updatedPom);
+            updateResource(buildContext, pomFile, updatedPom);
         } catch (IOException e) {
             throw new MojoExecutionException("Error reading file " + pomFile + " Reason: " + e, e);
         }
@@ -293,7 +287,7 @@ public class PrepareComponentMojo extends AbstractGeneratorMojo {
                                       + "\n" + s + "\n"
                                       + "    " + endDependenciesMarker + after;
 
-            updateResource(root, "pom.xml", updatedPom);
+            updateResource(buildContext, pomFile, updatedPom);
         } catch (IOException e) {
             throw new MojoExecutionException("Error reading file " + pomFile + " Reason: " + e, e);
         }
@@ -345,7 +339,7 @@ public class PrepareComponentMojo extends AbstractGeneratorMojo {
         }
 
         public String asString(String pad) {
-            StringBuilder sb = new StringBuilder(256);
+            StringBuilder sb = new StringBuilder();
             sb.append(pad).append("<dependency>\n");
             sb.append(pad).append("    <groupId>").append(groupId).append("</groupId>\n");
             sb.append(pad).append("    <artifactId>").append(artifactId).append("</artifactId>\n");

@@ -17,7 +17,6 @@
 package org.apache.camel.component.file;
 
 import org.apache.camel.Consumer;
-import org.apache.camel.DynamicPollingConsumer;
 import org.apache.camel.Exchange;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.spi.PollingConsumerPollStrategy;
@@ -27,7 +26,7 @@ import org.apache.camel.util.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GenericFilePollingConsumer extends EventDrivenPollingConsumer implements DynamicPollingConsumer {
+public class GenericFilePollingConsumer extends EventDrivenPollingConsumer {
 
     private static final Logger LOG = LoggerFactory.getLogger(GenericFilePollingConsumer.class);
     private final long delay;
@@ -38,20 +37,17 @@ public class GenericFilePollingConsumer extends EventDrivenPollingConsumer imple
     }
 
     @Override
-    public GenericFileEndpoint getEndpoint() {
-        return (GenericFileEndpoint) super.getEndpoint();
-    }
-
-    @Override
     protected Consumer createConsumer() throws Exception {
         // lets add ourselves as a consumer
         GenericFileConsumer consumer = (GenericFileConsumer) super.createConsumer();
         // do not start scheduler as we poll manually
         consumer.setStartScheduler(false);
-        // when using polling consumer we poll only 1 file per poll so we can limit
+        // when using polling consumer we poll only 1 file per poll so we can
+        // limit
         consumer.setMaxMessagesPerPoll(1);
-        // respect the eager limit (true is faster but does not respect when need to sort all files first)
-        consumer.setEagerLimitMaxMessagesPerPoll(getEndpoint().isEagerMaxMessagesPerPoll());
+        // however do not limit eager as we may sort the files and thus need to
+        // do a full scan so we can sort afterwards
+        consumer.setEagerLimitMaxMessagesPerPoll(false);
         // we only want to poll once so disconnect by default
         return consumer;
     }
@@ -64,16 +60,26 @@ public class GenericFilePollingConsumer extends EventDrivenPollingConsumer imple
     }
 
     @Override
+    protected void doStop() throws Exception {
+        super.doStop();
+    }
+
+    @Override
+    protected void doShutdown() throws Exception {
+        super.doShutdown();
+    }
+
+    @Override
     protected GenericFileConsumer getConsumer() {
         return (GenericFileConsumer) super.getConsumer();
     }
 
     @Override
-    public Exchange receiveNoWait(Exchange exchange) {
+    public Exchange receiveNoWait() {
         if (LOG.isTraceEnabled()) {
             LOG.trace("receiveNoWait polling file: {}", getConsumer().getEndpoint());
         }
-        int polled = doReceive(exchange, 0);
+        int polled = doReceive(0);
         if (polled > 0) {
             return super.receive(0);
         } else {
@@ -82,11 +88,11 @@ public class GenericFilePollingConsumer extends EventDrivenPollingConsumer imple
     }
 
     @Override
-    public Exchange receive(Exchange exchange) {
+    public Exchange receive() {
         if (LOG.isTraceEnabled()) {
             LOG.trace("receive polling file: {}", getConsumer().getEndpoint());
         }
-        int polled = doReceive(exchange, Long.MAX_VALUE);
+        int polled = doReceive(Long.MAX_VALUE);
         if (polled > 0) {
             return super.receive();
         } else {
@@ -95,11 +101,11 @@ public class GenericFilePollingConsumer extends EventDrivenPollingConsumer imple
     }
 
     @Override
-    public Exchange receive(Exchange exchange, long timeout) {
+    public Exchange receive(long timeout) {
         if (LOG.isTraceEnabled()) {
             LOG.trace("receive({}) polling file: {}", timeout, getConsumer().getEndpoint());
         }
-        int polled = doReceive(exchange, timeout);
+        int polled = doReceive(timeout);
         if (polled > 0) {
             return super.receive(timeout);
         } else {
@@ -107,22 +113,7 @@ public class GenericFilePollingConsumer extends EventDrivenPollingConsumer imple
         }
     }
 
-    @Override
-    public Exchange receiveNoWait() {
-        return receiveNoWait(null);
-    }
-
-    @Override
-    public Exchange receive() {
-        return receive(null);
-    }
-
-    @Override
-    public Exchange receive(long timeout) {
-        return receive(null, timeout);
-    }
-
-    protected int doReceive(Exchange exchange, long timeout) {
+    protected int doReceive(long timeout) {
         int retryCounter = -1;
         boolean done = false;
         Throwable cause = null;
@@ -149,7 +140,7 @@ public class GenericFilePollingConsumer extends EventDrivenPollingConsumer imple
                     boolean begin = pollStrategy.begin(getConsumer(), getEndpoint());
                     if (begin) {
                         retryCounter++;
-                        polledMessages = getConsumer().poll(exchange);
+                        polledMessages = getConsumer().poll();
                         LOG.trace("Polled {} messages", polledMessages);
 
                         if (polledMessages == 0 && sendEmptyMessageWhenIdle) {
@@ -184,6 +175,9 @@ public class GenericFilePollingConsumer extends EventDrivenPollingConsumer imple
                     cause = t;
                     done = true;
                 }
+            } catch (Throwable t) {
+                cause = t;
+                done = true;
             }
 
             if (!done && timeout > 0) {
@@ -195,7 +189,7 @@ public class GenericFilePollingConsumer extends EventDrivenPollingConsumer imple
                         // sleep for next pool
                         sleep(min);
                     } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
+                        // ignore
                     }
                 } else {
                     // timeout hit

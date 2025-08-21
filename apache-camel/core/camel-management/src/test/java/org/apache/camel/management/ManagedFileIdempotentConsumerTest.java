@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisabledOnOs(OS.AIX)
 public class ManagedFileIdempotentConsumerTest extends ManagementTestSupport {
 
+    private File store = testFile("idempotentfilestore.dat").toFile();
     private IdempotentRepository repo;
 
     @Test
@@ -118,7 +119,6 @@ public class ManagedFileIdempotentConsumerTest extends ManagementTestSupport {
 
     @Override
     protected RouteBuilder createRouteBuilder() {
-        File store = testFile("idempotentfilestore.dat").toFile();
         return new RouteBuilder() {
             public void configure() {
                 repo = FileIdempotentRepository.fileIdempotentRepository(store);

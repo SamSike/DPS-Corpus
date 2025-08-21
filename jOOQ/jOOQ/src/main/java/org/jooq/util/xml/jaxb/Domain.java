@@ -30,7 +30,6 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
  *         &lt;element name="numeric_precision" type="{http://www.w3.org/2001/XMLSchema}int" minOccurs="0"/&gt;
  *         &lt;element name="numeric_scale" type="{http://www.w3.org/2001/XMLSchema}int" minOccurs="0"/&gt;
  *         &lt;element name="domain_default" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
- *         &lt;element name="comment" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *       &lt;/all&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -49,7 +48,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class Domain implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32100L;
+    private final static long serialVersionUID = 31600L;
     @XmlElement(name = "domain_catalog")
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String domainCatalog;
@@ -71,8 +70,6 @@ public class Domain implements Serializable, XMLAppendable
     @XmlElement(name = "domain_default")
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String domainDefault;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String comment;
 
     public String getDomainCatalog() {
         return domainCatalog;
@@ -138,14 +135,6 @@ public class Domain implements Serializable, XMLAppendable
         this.domainDefault = value;
     }
 
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String value) {
-        this.comment = value;
-    }
-
     public Domain withDomainCatalog(String value) {
         setDomainCatalog(value);
         return this;
@@ -186,11 +175,6 @@ public class Domain implements Serializable, XMLAppendable
         return this;
     }
 
-    public Domain withComment(String value) {
-        setComment(value);
-        return this;
-    }
-
     @Override
     public final void appendTo(XMLBuilder builder) {
         builder.append("domain_catalog", domainCatalog);
@@ -201,7 +185,6 @@ public class Domain implements Serializable, XMLAppendable
         builder.append("numeric_precision", numericPrecision);
         builder.append("numeric_scale", numericScale);
         builder.append("domain_default", domainDefault);
-        builder.append("comment", comment);
     }
 
     @Override
@@ -295,15 +278,6 @@ public class Domain implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (comment == null) {
-            if (other.comment!= null) {
-                return false;
-            }
-        } else {
-            if (!comment.equals(other.comment)) {
-                return false;
-            }
-        }
         return true;
     }
 
@@ -319,7 +293,6 @@ public class Domain implements Serializable, XMLAppendable
         result = ((prime*result)+((numericPrecision == null)? 0 :numericPrecision.hashCode()));
         result = ((prime*result)+((numericScale == null)? 0 :numericScale.hashCode()));
         result = ((prime*result)+((domainDefault == null)? 0 :domainDefault.hashCode()));
-        result = ((prime*result)+((comment == null)? 0 :comment.hashCode()));
         return result;
     }
 

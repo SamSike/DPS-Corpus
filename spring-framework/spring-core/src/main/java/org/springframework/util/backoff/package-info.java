@@ -1,7 +1,9 @@
 /**
  * A generic back-off abstraction.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.util.backoff;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

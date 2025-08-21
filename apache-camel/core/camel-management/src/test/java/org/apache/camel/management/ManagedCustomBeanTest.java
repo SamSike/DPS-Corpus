@@ -61,10 +61,10 @@ public class ManagedCustomBeanTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo")
                         .bean(new MyCustomBean()).id("custom")
                         .to("mock:result");
@@ -87,7 +87,7 @@ public class ManagedCustomBeanTest extends ManagementTestSupport {
             this.foo = foo;
         }
 
-        public String doSomething(String body, @Headers Map<Object, Object> headers) {
+        public String doSomething(String body, @Headers Map<Object, Object> headers) throws Exception {
             headers.put("foo", foo);
             return "Hello " + body;
         }

@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class RestPathMatchingTest {
 
-    private final RestContextPathMatcher matcher = new RestContextPathMatcher("", "", null, true);
+    private RestContextPathMatcher matcher = new RestContextPathMatcher("", "", null, true);
 
     @Test
     public void testRestPathMatcher() {

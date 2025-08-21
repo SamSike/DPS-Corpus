@@ -20,15 +20,18 @@ import org.apache.camel.test.AvailablePortFinder;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.camel.util.FileUtil;
 import org.eclipse.californium.core.CoapClient;
-import org.eclipse.californium.elements.config.Configuration;
+import org.eclipse.californium.core.network.config.NetworkConfig;
+import org.junit.jupiter.api.BeforeEach;
 
 public class CoAPTestSupport extends CamelTestSupport {
 
     protected static final int PORT = AvailablePortFinder.getNextAvailable();
 
     @Override
-    public void doPostSetup() {
-        Configuration.createStandardWithoutFile();
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
+        NetworkConfig.createStandardWithoutFile();
     }
 
     protected CoapClient createClient(String path) {

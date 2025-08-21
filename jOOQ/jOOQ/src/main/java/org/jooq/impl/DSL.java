@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,24 +40,19 @@ package org.jooq.impl;
 import static java.util.Arrays.asList;
 import static org.jooq.Operator.AND;
 import static org.jooq.Operator.OR;
-import static org.jooq.Operator.XOR;
 // ...
 // ...
 // ...
 // ...
 // ...
-// ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 // ...
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
 // ...
-// ...
 import static org.jooq.SQLDialect.DEFAULT;
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 // ...
@@ -75,8 +70,6 @@ import static org.jooq.SQLDialect.MARIADB;
 // ...
 // ...
 import static org.jooq.SQLDialect.MYSQL;
-// ...
-// ...
 // ...
 // ...
 // ...
@@ -104,15 +97,11 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
-// ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
-// ...
 import static org.jooq.conf.ParamType.INLINED;
 import static org.jooq.impl.Names.N_COUNT;
 import static org.jooq.impl.Names.N_CUME_DIST;
 import static org.jooq.impl.Names.N_DENSE_RANK;
-import static org.jooq.impl.Names.N_E;
 import static org.jooq.impl.Names.N_IF;
 import static org.jooq.impl.Names.N_IIF;
 import static org.jooq.impl.Names.N_PERCENTILE_CONT;
@@ -123,27 +112,20 @@ import static org.jooq.impl.Names.N_SYSTEM_TIME;
 import static org.jooq.impl.Names.N_VALUE;
 import static org.jooq.impl.SQLDataType.BOOLEAN;
 import static org.jooq.impl.SQLDataType.DATE;
-import static org.jooq.impl.SQLDataType.INTEGER;
 import static org.jooq.impl.SQLDataType.JSON;
 import static org.jooq.impl.SQLDataType.JSONB;
 import static org.jooq.impl.SQLDataType.TIME;
 import static org.jooq.impl.SQLDataType.TIMESTAMP;
-import static org.jooq.impl.Tools.CTX;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
 import static org.jooq.impl.Tools.combine;
 import static org.jooq.impl.Tools.configuration;
-import static org.jooq.impl.Tools.getRecordQualifier;
-import static org.jooq.impl.Tools.isEmpty;
 import static org.jooq.impl.Tools.map;
-import static org.jooq.impl.Tools.mostSpecificArray;
-import static org.jooq.tools.StringUtils.defaultString;
 import static org.jooq.tools.StringUtils.isEmpty;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.Date;
-import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Time;
@@ -171,7 +153,6 @@ import org.jooq.ArrayAggOrderByStep;
 // ...
 // ...
 import org.jooq.Asterisk;
-import org.jooq.Binding;
 import org.jooq.Block;
 import org.jooq.Case;
 import org.jooq.CaseConditionStep;
@@ -211,9 +192,7 @@ import org.jooq.ConstraintForeignKeyReferencesStep8;
 import org.jooq.ConstraintForeignKeyReferencesStep9;
 import org.jooq.ConstraintForeignKeyReferencesStepN;
 import org.jooq.ConstraintTypeStep;
-import org.jooq.Context;
 // ...
-import org.jooq.Converter;
 import org.jooq.CreateTypeStep;
 import org.jooq.CreateViewAsStep;
 import org.jooq.DSLContext;
@@ -230,7 +209,6 @@ import org.jooq.False;
 import org.jooq.Field;
 import org.jooq.FieldOrRow;
 // ...
-import org.jooq.Function1;
 import org.jooq.Geography;
 import org.jooq.Geometry;
 import org.jooq.GroupConcatOrderByStep;
@@ -277,7 +255,6 @@ import org.jooq.JSONTableColumnsFirstStep;
 import org.jooq.JSONValueOnStep;
 import org.jooq.Keyword;
 // ...
-import org.jooq.Lambda1;
 // ...
 // ...
 import org.jooq.Merge;
@@ -309,7 +286,6 @@ import org.jooq.Name;
 import org.jooq.Name.Quoted;
 import org.jooq.Null;
 import org.jooq.Operator;
-import org.jooq.OptionallyOrderedAggregateFunction;
 import org.jooq.OrderField;
 import org.jooq.OrderedAggregateFunction;
 import org.jooq.OrderedAggregateFunctionOfDeferredType;
@@ -397,12 +373,9 @@ import org.jooq.Spatial;
 import org.jooq.Statement;
 import org.jooq.Stringly;
 import org.jooq.Support;
-// ...
 import org.jooq.Table;
 import org.jooq.TableLike;
-// ...
 import org.jooq.True;
-import org.jooq.Type;
 import org.jooq.Update;
 import org.jooq.UpdateSetFirstStep;
 import org.jooq.User;
@@ -451,9 +424,7 @@ import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
 import org.jooq.exception.SQLDialectNotSupportedException;
 import org.jooq.impl.QOM.DocumentOrContent;
-import org.jooq.impl.QOM.Quantifier;
 import org.jooq.impl.QOM.ResultOption;
-import org.jooq.tools.ClassUtils;
 import org.jooq.tools.StringUtils;
 import org.jooq.tools.jdbc.JDBCUtils;
 import org.jooq.types.DayToSecond;
@@ -464,7 +435,6 @@ import org.jooq.types.UShort;
 
 import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.ApiStatus.Obsolete;
 
 import io.r2dbc.spi.ConnectionFactory;
 
@@ -478,22 +448,22 @@ import io.r2dbc.spi.ConnectionFactory;
  * objects. For example, to create a {@link Field} representing a constant
  * value, you can write:
  * <p>
- * <pre><code>
+ * <code><pre>
  * Field&lt;String&gt; field = DSL.val("Hello World")
- * </code></pre>
+ * </pre></code>
  * <p>
  * Another example is the <code>EXISTS</code> clause, which you can apply to any
  * <code>SELECT</code> to form a {@link Condition}:
  * <p>
- * <pre><code>
+ * <code><pre>
  * Condition condition = DSL.exists(DSL.select(...));
- * </code></pre>
+ * </pre></code>
  * <p>
  * <h5>DSL and static imports</h5>
  * <p>
  * For increased fluency and readability of your jOOQ client code, it is
  * recommended that you static import all methods from the <code>DSL</code>. For
- * example: <pre><code>
+ * example: <code><pre>
  * import static org.jooq.impl.DSL.*;
  *
  * public class Main {
@@ -502,17 +472,17 @@ import io.r2dbc.spi.ConnectionFactory;
  *     // DSL.val ^^^           ^^^^^^ DSL.inline
  *   }
  * }
- * </code></pre>
+ * </pre></code>
  * <p>
  * In order to use the "contextual DSL", call one of the various overloaded
  * {@link #using(Configuration)} methods:
  * <p>
- * <pre><code>
+ * <code><pre>
  * // Create and immediately execute a SELECT statement:
  * DSL.using(connection, dialect)
  *    .selectOne()
  *    .fetch();
- * </code></pre>
+ * </pre></code>
  *
  * @see DSLContext
  * @author Lukas Eder
@@ -559,13 +529,13 @@ public class DSL {
      * {@link CloseableDSLContext#close()} on the resulting {@link DSLContext}.
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * // Auto-closing DSLContext instance to free resources
      * try (CloseableDSLContext ctx = DSL.using("jdbc:h2:~/test")) {
      *
      *     // ...
      * }
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Both acquisition and release of JDBC and R2DBC connection URLs are
      * blocking.
@@ -579,7 +549,7 @@ public class DSL {
     public static CloseableDSLContext using(String url) {
         if (url.startsWith("r2dbc")) {
             io.r2dbc.spi.Connection connection = R2DBC.getConnection(url);
-            return new DefaultCloseableDSLContext(new DefaultConnectionFactory(null, connection, true, false), JDBCUtils.dialect(connection));
+            return new DefaultCloseableDSLContext(new DefaultConnectionFactory(connection, true, false), JDBCUtils.dialect(connection));
         }
         else {
             try {
@@ -587,7 +557,7 @@ public class DSL {
                 return new DefaultCloseableDSLContext(new DefaultCloseableConnectionProvider(connection), JDBCUtils.dialect(connection));
             }
             catch (SQLException e) {
-                throw Tools.translate(CTX.get(), "Error when initialising Connection", e);
+                throw Tools.translate("Error when initialising Connection", e);
             }
         }
     }
@@ -599,13 +569,13 @@ public class DSL {
      * {@link CloseableDSLContext#close()} on the resulting {@link DSLContext}.
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * // Auto-closing DSLContext instance to free resources
      * try (CloseableDSLContext ctx = DSL.using("jdbc:h2:~/test", "sa", "")) {
      *
      *     // ...
      * }
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Both acquisition and release of JDBC and R2DBC connection URLs are
      * blocking.
@@ -621,7 +591,7 @@ public class DSL {
     public static CloseableDSLContext using(String url, String username, String password) {
         if (url.startsWith("r2dbc")) {
             io.r2dbc.spi.Connection connection = R2DBC.getConnection(url, username, password);
-            return new DefaultCloseableDSLContext(new DefaultConnectionFactory(null, connection, true, false), JDBCUtils.dialect(connection));
+            return new DefaultCloseableDSLContext(new DefaultConnectionFactory(connection, true, false), JDBCUtils.dialect(connection));
         }
         else {
             try {
@@ -629,25 +599,7 @@ public class DSL {
                 return new DefaultCloseableDSLContext(new DefaultCloseableConnectionProvider(connection), JDBCUtils.dialect(connection));
             }
             catch (SQLException e) {
-                String driver = JDBCUtils.driver(url);
-                Exception cause = e;
-
-                if (!Driver.class.getName().equals(driver)) {
-                    try {
-                        Driver d = (Driver) ClassUtils.loadClass(driver).getConstructor().newInstance();
-                        Properties properties = new Properties();
-                        properties.put("user", defaultString(username));
-                        properties.put("password", defaultString(password));
-                        Connection connection = d.connect(url, properties);
-                        return new DefaultCloseableDSLContext(new DefaultCloseableConnectionProvider(connection), JDBCUtils.dialect(connection));
-                    }
-                    catch (Exception e2) {
-                        e2.addSuppressed(e);
-                        cause = e2;
-                    }
-                }
-
-                throw Tools.translate(CTX.get(), "Error when initialising Connection", cause);
+                throw Tools.translate("Error when initialising Connection", e);
             }
         }
     }
@@ -659,13 +611,13 @@ public class DSL {
      * {@link CloseableDSLContext#close()} on the resulting {@link DSLContext}.
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * // Auto-closing DSLContext instance to free resources
      * try (CloseableDSLContext ctx = DSL.using("jdbc:h2:~/test", properties)) {
      *
      *     // ...
      * }
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Both acquisition and release of JDBC and R2DBC connection URLs are
      * blocking.
@@ -680,7 +632,7 @@ public class DSL {
     public static CloseableDSLContext using(String url, Properties properties) {
         if (url.startsWith("r2dbc")) {
             io.r2dbc.spi.Connection connection = R2DBC.getConnection(url, properties);
-            return new DefaultCloseableDSLContext(new DefaultConnectionFactory(null, connection, true, false), JDBCUtils.dialect(connection));
+            return new DefaultCloseableDSLContext(new DefaultConnectionFactory(connection, true, false), JDBCUtils.dialect(connection));
         }
         else {
             try {
@@ -688,7 +640,7 @@ public class DSL {
                 return new DefaultCloseableDSLContext(new DefaultCloseableConnectionProvider(connection), JDBCUtils.dialect(connection));
             }
             catch (SQLException e) {
-                throw Tools.translate(CTX.get(), "Error when initialising Connection", e);
+                throw Tools.translate("Error when initialising Connection", e);
             }
         }
     }
@@ -895,7 +847,7 @@ public class DSL {
      */
     @NotNull
     public static DSLContext using(io.r2dbc.spi.Connection connection) {
-        return new DefaultDSLContext(new DefaultConnectionFactory(null, connection), JDBCUtils.dialect(connection));
+        return new DefaultDSLContext(new DefaultConnectionFactory(connection), JDBCUtils.dialect(connection));
     }
 
     /**
@@ -907,7 +859,7 @@ public class DSL {
      */
     @NotNull
     public static DSLContext using(io.r2dbc.spi.Connection connection, SQLDialect dialect) {
-        return new DefaultDSLContext(new DefaultConnectionFactory(null, connection), dialect);
+        return new DefaultDSLContext(new DefaultConnectionFactory(connection), dialect);
     }
 
     /**
@@ -921,7 +873,7 @@ public class DSL {
      */
     @NotNull
     public static DSLContext using(io.r2dbc.spi.Connection connection, SQLDialect dialect, Settings settings) {
-        return new DefaultDSLContext(new DefaultConnectionFactory(null, connection), dialect, settings);
+        return new DefaultDSLContext(new DefaultConnectionFactory(connection), dialect, settings);
     }
 
     /**
@@ -952,7 +904,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep with(String alias) {
         return new WithImpl(null, false).with(alias);
     }
@@ -971,7 +923,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep with(String alias, String... fieldAliases) {
         return new WithImpl(null, false).with(alias, fieldAliases);
     }
@@ -990,7 +942,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep with(String alias, Collection<String> fieldAliases) {
         return new WithImpl(null, false).with(alias, fieldAliases);
     }
@@ -1009,7 +961,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep with(Name alias) {
         return new WithImpl(null, false).with(alias);
     }
@@ -1028,7 +980,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep with(Name alias, Name... fieldAliases) {
         return new WithImpl(null, false).with(alias, fieldAliases);
     }
@@ -1047,7 +999,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep with(Name alias, Collection<? extends Name> fieldAliases) {
         return new WithImpl(null, false).with(alias, fieldAliases);
     }
@@ -1076,7 +1028,7 @@ public class DSL {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep with(String alias, Function<? super Field<?>, ? extends String> fieldNameFunction) {
         return new WithImpl(null, false).with(alias, fieldNameFunction);
     }
@@ -1097,7 +1049,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep1 with(String alias, String fieldAlias1) {
         return new WithImpl(null, false).with(alias, fieldAlias1);
     }
@@ -1116,7 +1068,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep2 with(String alias, String fieldAlias1, String fieldAlias2) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2);
     }
@@ -1135,7 +1087,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep3 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3);
     }
@@ -1154,7 +1106,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep4 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4);
     }
@@ -1173,7 +1125,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep5 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5);
     }
@@ -1192,7 +1144,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep6 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6);
     }
@@ -1211,7 +1163,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep7 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7);
     }
@@ -1230,7 +1182,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep8 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8);
     }
@@ -1249,7 +1201,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep9 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9);
     }
@@ -1268,7 +1220,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep10 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10);
     }
@@ -1287,7 +1239,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep11 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11);
     }
@@ -1306,7 +1258,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep12 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12);
     }
@@ -1325,7 +1277,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep13 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13);
     }
@@ -1344,7 +1296,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep14 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14);
     }
@@ -1363,7 +1315,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep15 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15);
     }
@@ -1382,7 +1334,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep16 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16);
     }
@@ -1401,7 +1353,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep17 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17);
     }
@@ -1420,7 +1372,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep18 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18);
     }
@@ -1439,7 +1391,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep19 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19);
     }
@@ -1458,7 +1410,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep20 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19, fieldAlias20);
     }
@@ -1477,7 +1429,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep21 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20, String fieldAlias21) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19, fieldAlias20, fieldAlias21);
     }
@@ -1496,7 +1448,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep22 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20, String fieldAlias21, String fieldAlias22) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19, fieldAlias20, fieldAlias21, fieldAlias22);
     }
@@ -1515,7 +1467,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep1 with(Name alias, Name fieldAlias1) {
         return new WithImpl(null, false).with(alias, fieldAlias1);
     }
@@ -1534,7 +1486,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep2 with(Name alias, Name fieldAlias1, Name fieldAlias2) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2);
     }
@@ -1553,7 +1505,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep3 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3);
     }
@@ -1572,7 +1524,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep4 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4);
     }
@@ -1591,7 +1543,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep5 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5);
     }
@@ -1610,7 +1562,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep6 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6);
     }
@@ -1629,7 +1581,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep7 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7);
     }
@@ -1648,7 +1600,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep8 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8);
     }
@@ -1667,7 +1619,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep9 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9);
     }
@@ -1686,7 +1638,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep10 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10);
     }
@@ -1705,7 +1657,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep11 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11);
     }
@@ -1724,7 +1676,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep12 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12);
     }
@@ -1743,7 +1695,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep13 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13);
     }
@@ -1762,7 +1714,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep14 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14);
     }
@@ -1781,7 +1733,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep15 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15);
     }
@@ -1800,7 +1752,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep16 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16);
     }
@@ -1819,7 +1771,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep17 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17);
     }
@@ -1838,7 +1790,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep18 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18);
     }
@@ -1857,7 +1809,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep19 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19);
     }
@@ -1876,7 +1828,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep20 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19, fieldAlias20);
     }
@@ -1895,7 +1847,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep21 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20, Name fieldAlias21) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19, fieldAlias20, fieldAlias21);
     }
@@ -1914,7 +1866,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep22 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20, Name fieldAlias21, Name fieldAlias22) {
         return new WithImpl(null, false).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19, fieldAlias20, fieldAlias21, fieldAlias22);
     }
@@ -1932,7 +1884,7 @@ public class DSL {
      * <li>{@link #name(String...)}</li>
      * <li>{@link Name#fields(String...)}</li>
      * <li>
-     * {@link DerivedColumnList#as(ResultQuery)}</li>
+     * {@link DerivedColumnList#as(Select)}</li>
      * </ul>
      * <p>
      * The <code>RECURSIVE</code> keyword may be optional or unsupported in some
@@ -1943,7 +1895,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithStep with(CommonTableExpression<?>... tables) {
         return new WithImpl(null, false).with(tables);
     }
@@ -1959,7 +1911,7 @@ public class DSL {
      * <li>{@link #name(String...)}</li>
      * <li>{@link Name#fields(String...)}</li>
      * <li>
-     * {@link DerivedColumnList#as(ResultQuery)}</li>
+     * {@link DerivedColumnList#as(Select)}</li>
      * </ul>
      * <p>
      * The <code>RECURSIVE</code> keyword may be optional or unsupported in some
@@ -1970,7 +1922,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithStep with(Collection<? extends CommonTableExpression<?>> tables) {
         return new WithImpl(null, false).with(tables);
     }
@@ -1992,7 +1944,7 @@ public class DSL {
      * <code>RECURSIVE</code> common table expression lists.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep withRecursive(String alias) {
         return new WithImpl(null, true).with(alias);
     }
@@ -2014,7 +1966,7 @@ public class DSL {
      * <code>RECURSIVE</code> common table expression lists.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep withRecursive(String alias, String... fieldAliases) {
         return new WithImpl(null, true).with(alias, fieldAliases);
     }
@@ -2036,7 +1988,7 @@ public class DSL {
      * <code>RECURSIVE</code> common table expression lists.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep withRecursive(String alias, Collection<String> fieldAliases) {
         return new WithImpl(null, true).with(alias, fieldAliases);
     }
@@ -2058,7 +2010,7 @@ public class DSL {
      * <code>RECURSIVE</code> common table expression lists.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep withRecursive(Name alias) {
         return new WithImpl(null, true).with(alias);
     }
@@ -2077,7 +2029,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep withRecursive(Name alias, Name... fieldAliases) {
         return new WithImpl(null, true).with(alias, fieldAliases);
     }
@@ -2096,7 +2048,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep withRecursive(Name alias, Collection<? extends Name> fieldAliases) {
         return new WithImpl(null, true).with(alias, fieldAliases);
     }
@@ -2129,7 +2081,7 @@ public class DSL {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep withRecursive(String alias, Function<? super Field<?>, ? extends String> fieldNameFunction) {
         return new WithImpl(null, true).with(alias, fieldNameFunction);
     }
@@ -2150,7 +2102,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep1 withRecursive(String alias, String fieldAlias1) {
         return new WithImpl(null, true).with(alias, fieldAlias1);
     }
@@ -2169,7 +2121,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep2 withRecursive(String alias, String fieldAlias1, String fieldAlias2) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2);
     }
@@ -2188,7 +2140,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep3 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3);
     }
@@ -2207,7 +2159,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep4 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4);
     }
@@ -2226,7 +2178,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep5 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5);
     }
@@ -2245,7 +2197,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep6 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6);
     }
@@ -2264,7 +2216,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep7 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7);
     }
@@ -2283,7 +2235,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep8 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8);
     }
@@ -2302,7 +2254,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep9 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9);
     }
@@ -2321,7 +2273,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep10 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10);
     }
@@ -2340,7 +2292,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep11 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11);
     }
@@ -2359,7 +2311,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep12 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12);
     }
@@ -2378,7 +2330,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep13 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13);
     }
@@ -2397,7 +2349,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep14 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14);
     }
@@ -2416,7 +2368,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep15 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15);
     }
@@ -2435,7 +2387,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep16 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16);
     }
@@ -2454,7 +2406,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep17 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17);
     }
@@ -2473,7 +2425,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep18 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18);
     }
@@ -2492,7 +2444,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep19 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19);
     }
@@ -2511,7 +2463,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep20 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19, fieldAlias20);
     }
@@ -2530,7 +2482,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep21 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20, String fieldAlias21) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19, fieldAlias20, fieldAlias21);
     }
@@ -2549,7 +2501,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep22 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20, String fieldAlias21, String fieldAlias22) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19, fieldAlias20, fieldAlias21, fieldAlias22);
     }
@@ -2568,7 +2520,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep1 withRecursive(Name alias, Name fieldAlias1) {
         return new WithImpl(null, true).with(alias, fieldAlias1);
     }
@@ -2587,7 +2539,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep2 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2);
     }
@@ -2606,7 +2558,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep3 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3);
     }
@@ -2625,7 +2577,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep4 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4);
     }
@@ -2644,7 +2596,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep5 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5);
     }
@@ -2663,7 +2615,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep6 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6);
     }
@@ -2682,7 +2634,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep7 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7);
     }
@@ -2701,7 +2653,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep8 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8);
     }
@@ -2720,7 +2672,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep9 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9);
     }
@@ -2739,7 +2691,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep10 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10);
     }
@@ -2758,7 +2710,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep11 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11);
     }
@@ -2777,7 +2729,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep12 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12);
     }
@@ -2796,7 +2748,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep13 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13);
     }
@@ -2815,7 +2767,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep14 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14);
     }
@@ -2834,7 +2786,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep15 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15);
     }
@@ -2853,7 +2805,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep16 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16);
     }
@@ -2872,7 +2824,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep17 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17);
     }
@@ -2891,7 +2843,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep18 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18);
     }
@@ -2910,7 +2862,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep19 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19);
     }
@@ -2929,7 +2881,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep20 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19, fieldAlias20);
     }
@@ -2948,7 +2900,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep21 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20, Name fieldAlias21) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19, fieldAlias20, fieldAlias21);
     }
@@ -2967,7 +2919,7 @@ public class DSL {
      * recursive CTE.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithAsStep22 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20, Name fieldAlias21, Name fieldAlias22) {
         return new WithImpl(null, true).with(alias, fieldAlias1, fieldAlias2, fieldAlias3, fieldAlias4, fieldAlias5, fieldAlias6, fieldAlias7, fieldAlias8, fieldAlias9, fieldAlias10, fieldAlias11, fieldAlias12, fieldAlias13, fieldAlias14, fieldAlias15, fieldAlias16, fieldAlias17, fieldAlias18, fieldAlias19, fieldAlias20, fieldAlias21, fieldAlias22);
     }
@@ -2985,7 +2937,7 @@ public class DSL {
      * <li>{@link #name(String...)}</li>
      * <li>{@link Name#fields(String...)}</li>
      * <li>
-     * {@link DerivedColumnList#as(ResultQuery)}</li>
+     * {@link DerivedColumnList#as(Select)}</li>
      * </ul>
      * <p>
      * The <code>RECURSIVE</code> keyword may be optional or unsupported in some
@@ -2999,7 +2951,7 @@ public class DSL {
      * <code>RECURSIVE</code> common table expression lists.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithStep withRecursive(CommonTableExpression<?>... tables) {
         return new WithImpl(null, true).with(tables);
     }
@@ -3015,7 +2967,7 @@ public class DSL {
      * <li>{@link #name(String...)}</li>
      * <li>{@link Name#fields(String...)}</li>
      * <li>
-     * {@link DerivedColumnList#as(ResultQuery)}</li>
+     * {@link DerivedColumnList#as(Select)}</li>
      * </ul>
      * <p>
      * The <code>RECURSIVE</code> keyword may be optional or unsupported in some
@@ -3029,7 +2981,7 @@ public class DSL {
      * <code>RECURSIVE</code> common table expression lists.
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WithStep withRecursive(Collection<? extends CommonTableExpression<?>> tables) {
         return new WithImpl(null, true).with(tables);
     }
@@ -3054,9 +3006,9 @@ public class DSL {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT table.col1, table.col2 FROM table
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -3080,9 +3032,9 @@ public class DSL {
      * </ul>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#table(Name)
      */
@@ -3108,9 +3060,9 @@ public class DSL {
      * </ul>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -3143,9 +3095,9 @@ public class DSL {
      * </ul>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -3179,9 +3131,9 @@ public class DSL {
      * </ul>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -3215,9 +3167,9 @@ public class DSL {
      * </ul>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -3247,7 +3199,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3257,12 +3209,12 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note that passing an empty collection conveniently produces
      * <code>SELECT *</code> semantics, i.e. it:
      * <ul>
-     * <li>Renders <code>SELECT tab1.col1, tab1.col2, …, tabN.colN</code> if
+     * <li>Renders <code>SELECT tab1.col1, tab1.col2, ..., tabN.colN</code> if
      * all columns are known</li>
      * <li>Renders <code>SELECT *</code> if not all columns are known, e.g. when
      * using plain SQL</li>
@@ -3288,7 +3240,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3298,12 +3250,12 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note that passing an empty collection conveniently produces
      * <code>SELECT *</code> semantics, i.e. it:
      * <ul>
-     * <li>Renders <code>SELECT tab1.col1, tab1.col2, …, tabN.colN</code> if
+     * <li>Renders <code>SELECT tab1.col1, tab1.col2, ..., tabN.colN</code> if
      * all columns are known</li>
      * <li>Renders <code>SELECT *</code> if not all columns are known, e.g. when
      * using plain SQL</li>
@@ -3336,7 +3288,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3346,7 +3298,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3374,7 +3326,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3384,7 +3336,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3412,7 +3364,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3422,7 +3374,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3450,7 +3402,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3460,7 +3412,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3488,7 +3440,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3498,7 +3450,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3526,7 +3478,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3536,7 +3488,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3564,7 +3516,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3574,7 +3526,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3602,7 +3554,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3612,7 +3564,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3640,7 +3592,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3650,7 +3602,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3678,7 +3630,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3688,7 +3640,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3716,7 +3668,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3726,7 +3678,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3754,7 +3706,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3764,7 +3716,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3792,7 +3744,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3802,7 +3754,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3830,7 +3782,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3840,7 +3792,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3868,7 +3820,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3878,7 +3830,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3906,7 +3858,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3916,7 +3868,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3944,7 +3896,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3954,7 +3906,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -3982,7 +3934,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -3992,7 +3944,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -4020,7 +3972,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4030,7 +3982,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -4058,7 +4010,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4068,7 +4020,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -4096,7 +4048,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4106,7 +4058,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -4134,7 +4086,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4144,7 +4096,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#select(SelectFieldOrAsterisk...)
      * @see #select(SelectFieldOrAsterisk...)
@@ -4169,7 +4121,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4179,12 +4131,12 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note that passing an empty collection conveniently produces
      * <code>SELECT DISTINCT *</code> semantics, i.e. it:
      * <ul>
-     * <li>Renders <code>SELECT DISTINCT tab1.col1, tab1.col2, …, tabN.colN</code> if
+     * <li>Renders <code>SELECT DISTINCT tab1.col1, tab1.col2, ..., tabN.colN</code> if
      * all columns are known</li>
      * <li>Renders <code>SELECT DISTINCT *</code> if not all columns are known, e.g. when
      * using plain SQL</li>
@@ -4210,7 +4162,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4220,12 +4172,12 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note that passing an empty collection conveniently produces
      * <code>SELECT DISTINCT *</code> semantics, i.e. it:
      * <ul>
-     * <li>Renders <code>SELECT DISTINCT tab1.col1, tab1.col2, …, tabN.colN</code> if
+     * <li>Renders <code>SELECT DISTINCT tab1.col1, tab1.col2, ..., tabN.colN</code> if
      * all columns are known</li>
      * <li>Renders <code>SELECT DISTINCT *</code> if not all columns are known, e.g. when
      * using plain SQL</li>
@@ -4258,7 +4210,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4268,7 +4220,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4296,7 +4248,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4306,7 +4258,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4334,7 +4286,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4344,7 +4296,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4372,7 +4324,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4382,7 +4334,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4410,7 +4362,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4420,7 +4372,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4448,7 +4400,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4458,7 +4410,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4486,7 +4438,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4496,7 +4448,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4524,7 +4476,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4534,7 +4486,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4562,7 +4514,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4572,7 +4524,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4600,7 +4552,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4610,7 +4562,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4638,7 +4590,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4648,7 +4600,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4676,7 +4628,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4686,7 +4638,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4714,7 +4666,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4724,7 +4676,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4752,7 +4704,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4762,7 +4714,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4790,7 +4742,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4800,7 +4752,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4828,7 +4780,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4838,7 +4790,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4866,7 +4818,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4876,7 +4828,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4904,7 +4856,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4914,7 +4866,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4942,7 +4894,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4952,7 +4904,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -4980,7 +4932,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -4990,7 +4942,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -5018,7 +4970,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5028,7 +4980,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -5056,7 +5008,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5066,7 +5018,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -5092,7 +5044,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5102,7 +5054,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#zero()
      * @see DSLContext#selectZero()
@@ -5126,7 +5078,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5136,7 +5088,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#one()
      * @see DSLContext#selectOne()
@@ -5159,7 +5111,7 @@ public class DSL {
      * {@link Select#attach(org.jooq.Configuration)}</li>
      * </ul>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5169,7 +5121,7 @@ public class DSL {
      *  .join(table2).on(field1.equal(field2))
      *  .where(field1.greaterThan(100))
      *  .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#count()
      * @see DSLContext#selectCount()
@@ -5190,7 +5142,7 @@ public class DSL {
      * This type of insert may feel more convenient to some users, as it uses
      * the <code>UPDATE</code> statement's <code>SET a = b</code> syntax.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5204,7 +5156,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table)
      */
@@ -5223,7 +5175,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5234,7 +5186,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field)
      */
@@ -5251,7 +5203,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5262,7 +5214,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field)
      */
@@ -5279,7 +5231,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5290,7 +5242,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field)
      */
@@ -5307,7 +5259,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5318,7 +5270,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field)
      */
@@ -5335,7 +5287,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5346,7 +5298,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field)
      */
@@ -5363,7 +5315,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5374,7 +5326,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field)
      */
@@ -5391,7 +5343,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5402,7 +5354,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5419,7 +5371,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5430,7 +5382,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5447,7 +5399,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5458,7 +5410,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5475,7 +5427,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5486,7 +5438,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5503,7 +5455,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5514,7 +5466,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5531,7 +5483,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5542,7 +5494,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5559,7 +5511,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5570,7 +5522,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5587,7 +5539,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5598,7 +5550,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5615,7 +5567,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5626,7 +5578,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5643,7 +5595,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5654,7 +5606,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5671,7 +5623,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5682,7 +5634,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5699,7 +5651,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5710,7 +5662,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5727,7 +5679,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5738,7 +5690,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5755,7 +5707,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5766,7 +5718,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5783,7 +5735,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5794,7 +5746,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5811,7 +5763,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5822,7 +5774,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
@@ -5841,7 +5793,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5852,7 +5804,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Field...)
      */
@@ -5869,7 +5821,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>INSERT</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5880,7 +5832,7 @@ public class DSL {
      *   .onDuplicateKeyUpdate()
      *   .set(field1, value1)
      *   .set(field2, value2)
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSLContext#insertInto(Table, Collection)
      */
@@ -5897,7 +5849,7 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>UPDATE</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5906,16 +5858,16 @@ public class DSL {
      *   .set(field1, value1)
      *   .set(field2, value2)
      *   .where(field1.greaterThan(100))
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note that some databases support table expressions more complex than
      * simple table references. In MySQL, for instance, you can write
-     * <pre><code>
+     * <code><pre>
      * update(t1.join(t2).on(t1.id.eq(t2.id)))
      *   .set(t1.value, value1)
      *   .set(t2.value, value2)
      *   .where(t1.id.eq(10))
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -5976,7 +5928,7 @@ public class DSL {
      * </tr>
      * </table>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
@@ -5989,7 +5941,11 @@ public class DSL {
      *   .set(field2, value2)
      *   .whenNotMatchedThenInsert(field1, field2)
      *   .values(value1, value2)
-     * </code></pre>
+     * </pre></code>
+     * <p>
+     * Note: Using this method, you can also create an H2-specific MERGE
+     * statement without field specification. See also
+     * {@link #mergeInto(Table, Field...)}
      *
      * @see DSLContext#mergeInto(Table)
      */
@@ -6369,14 +6325,14 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * <code>DELETE</code> statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * import static org.jooq.impl.DSL.*;
      *
      * // [...]
      *
      * deleteFrom(table)
      *   .where(field1.greaterThan(100))
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Some but not all databases support aliased tables in delete statements.
      *
@@ -7153,7 +7109,7 @@ public class DSL {
      * Create an unnamed (system named) <code>CHECK</code> constraint.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static ConstraintEnforcementStep check(Condition condition) {
         return constraint().check(condition);
     }
@@ -7178,7 +7134,7 @@ public class DSL {
      * @see DSLContext#alterDatabase(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, POSTGRES, YUGABYTEDB })
+    @Support({ POSTGRES, YUGABYTEDB })
     public static org.jooq.AlterDatabaseStep alterDatabase(@Stringly.Name String database) {
         return dsl().alterDatabase(database);
     }
@@ -7193,7 +7149,7 @@ public class DSL {
      * @see DSLContext#alterDatabase(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, POSTGRES, YUGABYTEDB })
+    @Support({ POSTGRES, YUGABYTEDB })
     public static org.jooq.AlterDatabaseStep alterDatabase(Name database) {
         return dsl().alterDatabase(database);
     }
@@ -7208,7 +7164,7 @@ public class DSL {
      * @see DSLContext#alterDatabase(Catalog)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, POSTGRES, YUGABYTEDB })
+    @Support({ POSTGRES, YUGABYTEDB })
     public static org.jooq.AlterDatabaseStep alterDatabase(Catalog database) {
         return dsl().alterDatabase(database);
     }
@@ -7403,7 +7359,7 @@ public class DSL {
      * @see DSLContext#alterIndexIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ H2, MARIADB, MYSQL, POSTGRES })
+    @Support({ H2, POSTGRES })
     public static org.jooq.AlterIndexOnStep alterIndexIfExists(@Stringly.Name String index) {
         return dsl().alterIndexIfExists(index);
     }
@@ -7418,7 +7374,7 @@ public class DSL {
      * @see DSLContext#alterIndexIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ H2, MARIADB, MYSQL, POSTGRES })
+    @Support({ H2, POSTGRES })
     public static org.jooq.AlterIndexOnStep alterIndexIfExists(Name index) {
         return dsl().alterIndexIfExists(index);
     }
@@ -7433,7 +7389,7 @@ public class DSL {
      * @see DSLContext#alterIndexIfExists(Index)
      */
     @NotNull @CheckReturnValue
-    @Support({ H2, MARIADB, MYSQL, POSTGRES })
+    @Support({ H2, POSTGRES })
     public static org.jooq.AlterIndexOnStep alterIndexIfExists(Index index) {
         return dsl().alterIndexIfExists(index);
     }
@@ -7448,7 +7404,7 @@ public class DSL {
      * @see DSLContext#alterSchema(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, H2, HSQLDB, POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static org.jooq.AlterSchemaStep alterSchema(@Stringly.Name String schema) {
         return dsl().alterSchema(schema);
     }
@@ -7463,7 +7419,7 @@ public class DSL {
      * @see DSLContext#alterSchema(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, H2, HSQLDB, POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static org.jooq.AlterSchemaStep alterSchema(Name schema) {
         return dsl().alterSchema(schema);
     }
@@ -7478,7 +7434,7 @@ public class DSL {
      * @see DSLContext#alterSchema(Schema)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, H2, HSQLDB, POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static org.jooq.AlterSchemaStep alterSchema(Schema schema) {
         return dsl().alterSchema(schema);
     }
@@ -7649,66 +7605,6 @@ public class DSL {
     }
 
     /**
-     * The <code>ALTER TYPE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#alterType(Type)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    public static org.jooq.AlterTypeStep alterType(Type<?> type) {
-        return dsl().alterType(type);
-    }
-
-    /**
-     * The <code>ALTER TYPE IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#alterTypeIfExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    public static org.jooq.AlterTypeStep alterTypeIfExists(@Stringly.Name String type) {
-        return dsl().alterTypeIfExists(type);
-    }
-
-    /**
-     * The <code>ALTER TYPE IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#alterTypeIfExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    public static org.jooq.AlterTypeStep alterTypeIfExists(Name type) {
-        return dsl().alterTypeIfExists(type);
-    }
-
-    /**
-     * The <code>ALTER TYPE IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#alterTypeIfExists(Type)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    public static org.jooq.AlterTypeStep alterTypeIfExists(Type<?> type) {
-        return dsl().alterTypeIfExists(type);
-    }
-
-    /**
      * The <code>ALTER VIEW</code> statement.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
@@ -7718,7 +7614,7 @@ public class DSL {
      * @see DSLContext#alterView(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static org.jooq.AlterViewStep alterView(@Stringly.Name String view) {
         return dsl().alterView(view);
     }
@@ -7733,7 +7629,7 @@ public class DSL {
      * @see DSLContext#alterView(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static org.jooq.AlterViewStep alterView(Name view) {
         return dsl().alterView(view);
     }
@@ -7748,7 +7644,7 @@ public class DSL {
      * @see DSLContext#alterView(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static org.jooq.AlterViewStep alterView(Table<?> view) {
         return dsl().alterView(view);
     }
@@ -7763,7 +7659,7 @@ public class DSL {
      * @see DSLContext#alterViewIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, POSTGRES, YUGABYTEDB })
     public static org.jooq.AlterViewStep alterViewIfExists(@Stringly.Name String view) {
         return dsl().alterViewIfExists(view);
     }
@@ -7778,7 +7674,7 @@ public class DSL {
      * @see DSLContext#alterViewIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, POSTGRES, YUGABYTEDB })
     public static org.jooq.AlterViewStep alterViewIfExists(Name view) {
         return dsl().alterViewIfExists(view);
     }
@@ -7793,129 +7689,9 @@ public class DSL {
      * @see DSLContext#alterViewIfExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, POSTGRES, YUGABYTEDB })
     public static org.jooq.AlterViewStep alterViewIfExists(Table<?> view) {
         return dsl().alterViewIfExists(view);
-    }
-
-    /**
-     * The <code>ALTER MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#alterMaterializedView(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.AlterViewStep alterMaterializedView(@Stringly.Name String view) {
-        return dsl().alterMaterializedView(view);
-    }
-
-    /**
-     * The <code>ALTER MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#alterMaterializedView(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.AlterViewStep alterMaterializedView(Name view) {
-        return dsl().alterMaterializedView(view);
-    }
-
-    /**
-     * The <code>ALTER MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#alterMaterializedView(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.AlterViewStep alterMaterializedView(Table<?> view) {
-        return dsl().alterMaterializedView(view);
-    }
-
-    /**
-     * The <code>ALTER MATERIALIZED VIEW IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#alterMaterializedViewIfExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.AlterViewStep alterMaterializedViewIfExists(@Stringly.Name String view) {
-        return dsl().alterMaterializedViewIfExists(view);
-    }
-
-    /**
-     * The <code>ALTER MATERIALIZED VIEW IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#alterMaterializedViewIfExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.AlterViewStep alterMaterializedViewIfExists(Name view) {
-        return dsl().alterMaterializedViewIfExists(view);
-    }
-
-    /**
-     * The <code>ALTER MATERIALIZED VIEW IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#alterMaterializedViewIfExists(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.AlterViewStep alterMaterializedViewIfExists(Table<?> view) {
-        return dsl().alterMaterializedViewIfExists(view);
-    }
-
-    /**
-     * The <code>ALTER VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#alterView(Table, Field...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    public static org.jooq.AlterViewStep alterView(Table<?> view, Field<?>... fields) {
-        return dsl().alterView(view, fields);
-    }
-
-    /**
-     * The <code>ALTER VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#alterView(Table, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    public static org.jooq.AlterViewStep alterView(Table<?> view, Collection<? extends Field<?>> fields) {
-        return dsl().alterView(view, fields);
     }
 
     /**
@@ -7928,7 +7704,7 @@ public class DSL {
      * @see DSLContext#commentOnTable(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CommentOnIsStep commentOnTable(@Stringly.Name String table) {
         return dsl().commentOnTable(table);
     }
@@ -7943,7 +7719,7 @@ public class DSL {
      * @see DSLContext#commentOnTable(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CommentOnIsStep commentOnTable(Name table) {
         return dsl().commentOnTable(table);
     }
@@ -7958,7 +7734,7 @@ public class DSL {
      * @see DSLContext#commentOnTable(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CommentOnIsStep commentOnTable(Table<?> table) {
         return dsl().commentOnTable(table);
     }
@@ -7973,7 +7749,7 @@ public class DSL {
      * @see DSLContext#commentOnView(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static org.jooq.CommentOnIsStep commentOnView(@Stringly.Name String view) {
         return dsl().commentOnView(view);
     }
@@ -7988,7 +7764,7 @@ public class DSL {
      * @see DSLContext#commentOnView(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static org.jooq.CommentOnIsStep commentOnView(Name view) {
         return dsl().commentOnView(view);
     }
@@ -8003,54 +7779,9 @@ public class DSL {
      * @see DSLContext#commentOnView(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static org.jooq.CommentOnIsStep commentOnView(Table<?> view) {
         return dsl().commentOnView(view);
-    }
-
-    /**
-     * The <code>COMMENT ON MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#commentOnMaterializedView(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CommentOnIsStep commentOnMaterializedView(@Stringly.Name String view) {
-        return dsl().commentOnMaterializedView(view);
-    }
-
-    /**
-     * The <code>COMMENT ON MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#commentOnMaterializedView(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CommentOnIsStep commentOnMaterializedView(Name view) {
-        return dsl().commentOnMaterializedView(view);
-    }
-
-    /**
-     * The <code>COMMENT ON MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#commentOnMaterializedView(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CommentOnIsStep commentOnMaterializedView(Table<?> view) {
-        return dsl().commentOnMaterializedView(view);
     }
 
     /**
@@ -8063,7 +7794,7 @@ public class DSL {
      * @see DSLContext#commentOnColumn(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     public static org.jooq.CommentOnIsStep commentOnColumn(@Stringly.Name String field) {
         return dsl().commentOnColumn(field);
     }
@@ -8078,7 +7809,7 @@ public class DSL {
      * @see DSLContext#commentOnColumn(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     public static org.jooq.CommentOnIsStep commentOnColumn(Name field) {
         return dsl().commentOnColumn(field);
     }
@@ -8093,78 +7824,10 @@ public class DSL {
      * @see DSLContext#commentOnColumn(Field)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     public static org.jooq.CommentOnIsStep commentOnColumn(Field<?> field) {
         return dsl().commentOnColumn(field);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * The <code>CREATE DATABASE</code> statement.
@@ -8176,7 +7839,7 @@ public class DSL {
      * @see DSLContext#createDatabase(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateDatabaseFinalStep createDatabase(@Stringly.Name String database) {
         return dsl().createDatabase(database);
     }
@@ -8191,7 +7854,7 @@ public class DSL {
      * @see DSLContext#createDatabase(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateDatabaseFinalStep createDatabase(Name database) {
         return dsl().createDatabase(database);
     }
@@ -8206,7 +7869,7 @@ public class DSL {
      * @see DSLContext#createDatabase(Catalog)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateDatabaseFinalStep createDatabase(Catalog database) {
         return dsl().createDatabase(database);
     }
@@ -8221,7 +7884,7 @@ public class DSL {
      * @see DSLContext#createDatabaseIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, YUGABYTEDB })
     public static org.jooq.CreateDatabaseFinalStep createDatabaseIfNotExists(@Stringly.Name String database) {
         return dsl().createDatabaseIfNotExists(database);
     }
@@ -8236,7 +7899,7 @@ public class DSL {
      * @see DSLContext#createDatabaseIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, YUGABYTEDB })
     public static org.jooq.CreateDatabaseFinalStep createDatabaseIfNotExists(Name database) {
         return dsl().createDatabaseIfNotExists(database);
     }
@@ -8251,7 +7914,7 @@ public class DSL {
      * @see DSLContext#createDatabaseIfNotExists(Catalog)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, YUGABYTEDB })
     public static org.jooq.CreateDatabaseFinalStep createDatabaseIfNotExists(Catalog database) {
         return dsl().createDatabaseIfNotExists(database);
     }
@@ -8424,7 +8087,7 @@ public class DSL {
      * @see DSLContext#createIndex(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static org.jooq.CreateIndexStep createIndex(@Stringly.Name String index) {
         return dsl().createIndex(index);
     }
@@ -8439,7 +8102,7 @@ public class DSL {
      * @see DSLContext#createIndex(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static org.jooq.CreateIndexStep createIndex(Name index) {
         return dsl().createIndex(index);
     }
@@ -8454,7 +8117,7 @@ public class DSL {
      * @see DSLContext#createIndex(Index)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static org.jooq.CreateIndexStep createIndex(Index index) {
         return dsl().createIndex(index);
     }
@@ -8469,7 +8132,7 @@ public class DSL {
      * @see DSLContext#createIndex()
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static org.jooq.CreateIndexStep createIndex() {
         return dsl().createIndex();
     }
@@ -8484,7 +8147,7 @@ public class DSL {
      * @see DSLContext#createIndexIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateIndexStep createIndexIfNotExists(@Stringly.Name String index) {
         return dsl().createIndexIfNotExists(index);
     }
@@ -8499,7 +8162,7 @@ public class DSL {
      * @see DSLContext#createIndexIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateIndexStep createIndexIfNotExists(Name index) {
         return dsl().createIndexIfNotExists(index);
     }
@@ -8514,7 +8177,7 @@ public class DSL {
      * @see DSLContext#createIndexIfNotExists(Index)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateIndexStep createIndexIfNotExists(Index index) {
         return dsl().createIndexIfNotExists(index);
     }
@@ -8529,7 +8192,7 @@ public class DSL {
      * @see DSLContext#createIndexIfNotExists()
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateIndexStep createIndexIfNotExists() {
         return dsl().createIndexIfNotExists();
     }
@@ -8544,7 +8207,7 @@ public class DSL {
      * @see DSLContext#createUniqueIndex(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateIndexStep createUniqueIndex(@Stringly.Name String index) {
         return dsl().createUniqueIndex(index);
     }
@@ -8559,7 +8222,7 @@ public class DSL {
      * @see DSLContext#createUniqueIndex(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateIndexStep createUniqueIndex(Name index) {
         return dsl().createUniqueIndex(index);
     }
@@ -8574,7 +8237,7 @@ public class DSL {
      * @see DSLContext#createUniqueIndex(Index)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateIndexStep createUniqueIndex(Index index) {
         return dsl().createUniqueIndex(index);
     }
@@ -8589,7 +8252,7 @@ public class DSL {
      * @see DSLContext#createUniqueIndex()
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateIndexStep createUniqueIndex() {
         return dsl().createUniqueIndex();
     }
@@ -8604,7 +8267,7 @@ public class DSL {
      * @see DSLContext#createUniqueIndexIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateIndexStep createUniqueIndexIfNotExists(@Stringly.Name String index) {
         return dsl().createUniqueIndexIfNotExists(index);
     }
@@ -8619,7 +8282,7 @@ public class DSL {
      * @see DSLContext#createUniqueIndexIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateIndexStep createUniqueIndexIfNotExists(Name index) {
         return dsl().createUniqueIndexIfNotExists(index);
     }
@@ -8634,7 +8297,7 @@ public class DSL {
      * @see DSLContext#createUniqueIndexIfNotExists(Index)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateIndexStep createUniqueIndexIfNotExists(Index index) {
         return dsl().createUniqueIndexIfNotExists(index);
     }
@@ -8649,7 +8312,7 @@ public class DSL {
      * @see DSLContext#createUniqueIndexIfNotExists()
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateIndexStep createUniqueIndexIfNotExists() {
         return dsl().createUniqueIndexIfNotExists();
     }
@@ -8777,7 +8440,7 @@ public class DSL {
      * @see DSLContext#createTableIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createTableIfNotExists(@Stringly.Name String table) {
         return dsl().createTableIfNotExists(table);
     }
@@ -8792,7 +8455,7 @@ public class DSL {
      * @see DSLContext#createTableIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createTableIfNotExists(Name table) {
         return dsl().createTableIfNotExists(table);
     }
@@ -8807,16 +8470,13 @@ public class DSL {
      * @see DSLContext#createTableIfNotExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createTableIfNotExists(Table<?> table) {
         return dsl().createTableIfNotExists(table);
     }
 
     /**
      * The <code>CREATE TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -8825,16 +8485,13 @@ public class DSL {
      * @see DSLContext#createTemporaryTable(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createTemporaryTable(@Stringly.Name String table) {
         return dsl().createTemporaryTable(table);
     }
 
     /**
      * The <code>CREATE TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -8843,16 +8500,13 @@ public class DSL {
      * @see DSLContext#createTemporaryTable(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createTemporaryTable(Name table) {
         return dsl().createTemporaryTable(table);
     }
 
     /**
      * The <code>CREATE TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -8861,16 +8515,13 @@ public class DSL {
      * @see DSLContext#createTemporaryTable(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createTemporaryTable(Table<?> table) {
         return dsl().createTemporaryTable(table);
     }
 
     /**
      * The <code>CREATE TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -8879,16 +8530,13 @@ public class DSL {
      * @see DSLContext#createTemporaryTableIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createTemporaryTableIfNotExists(@Stringly.Name String table) {
         return dsl().createTemporaryTableIfNotExists(table);
     }
 
     /**
      * The <code>CREATE TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -8897,16 +8545,13 @@ public class DSL {
      * @see DSLContext#createTemporaryTableIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createTemporaryTableIfNotExists(Name table) {
         return dsl().createTemporaryTableIfNotExists(table);
     }
 
     /**
      * The <code>CREATE TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -8915,124 +8560,13 @@ public class DSL {
      * @see DSLContext#createTemporaryTableIfNotExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createTemporaryTableIfNotExists(Table<?> table) {
         return dsl().createTemporaryTableIfNotExists(table);
     }
 
     /**
-     * The <code>CREATE LOCAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>LOCAL TEMPORARY</code> table, i.e. a table whose meta data
-     * and data are both local to a session or transaction.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createLocalTemporaryTable(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    public static org.jooq.CreateTableElementListStep createLocalTemporaryTable(@Stringly.Name String table) {
-        return dsl().createLocalTemporaryTable(table);
-    }
-
-    /**
-     * The <code>CREATE LOCAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>LOCAL TEMPORARY</code> table, i.e. a table whose meta data
-     * and data are both local to a session or transaction.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createLocalTemporaryTable(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    public static org.jooq.CreateTableElementListStep createLocalTemporaryTable(Name table) {
-        return dsl().createLocalTemporaryTable(table);
-    }
-
-    /**
-     * The <code>CREATE LOCAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>LOCAL TEMPORARY</code> table, i.e. a table whose meta data
-     * and data are both local to a session or transaction.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createLocalTemporaryTable(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    public static org.jooq.CreateTableElementListStep createLocalTemporaryTable(Table<?> table) {
-        return dsl().createLocalTemporaryTable(table);
-    }
-
-    /**
-     * The <code>CREATE LOCAL TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>LOCAL TEMPORARY</code> table, i.e. a table whose meta data
-     * and data are both local to a session or transaction.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createLocalTemporaryTableIfNotExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    public static org.jooq.CreateTableElementListStep createLocalTemporaryTableIfNotExists(@Stringly.Name String table) {
-        return dsl().createLocalTemporaryTableIfNotExists(table);
-    }
-
-    /**
-     * The <code>CREATE LOCAL TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>LOCAL TEMPORARY</code> table, i.e. a table whose meta data
-     * and data are both local to a session or transaction.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createLocalTemporaryTableIfNotExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    public static org.jooq.CreateTableElementListStep createLocalTemporaryTableIfNotExists(Name table) {
-        return dsl().createLocalTemporaryTableIfNotExists(table);
-    }
-
-    /**
-     * The <code>CREATE LOCAL TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>LOCAL TEMPORARY</code> table, i.e. a table whose meta data
-     * and data are both local to a session or transaction.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createLocalTemporaryTableIfNotExists(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    public static org.jooq.CreateTableElementListStep createLocalTemporaryTableIfNotExists(Table<?> table) {
-        return dsl().createLocalTemporaryTableIfNotExists(table);
-    }
-
-    /**
      * The <code>CREATE GLOBAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code> table, i.e. a table whose meta data
-     * but not data is shared among sessions and transactions.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -9041,16 +8575,13 @@ public class DSL {
      * @see DSLContext#createGlobalTemporaryTable(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createGlobalTemporaryTable(@Stringly.Name String table) {
         return dsl().createGlobalTemporaryTable(table);
     }
 
     /**
      * The <code>CREATE GLOBAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code> table, i.e. a table whose meta data
-     * but not data is shared among sessions and transactions.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -9059,16 +8590,13 @@ public class DSL {
      * @see DSLContext#createGlobalTemporaryTable(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createGlobalTemporaryTable(Name table) {
         return dsl().createGlobalTemporaryTable(table);
     }
 
     /**
      * The <code>CREATE GLOBAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code> table, i.e. a table whose meta data
-     * but not data is shared among sessions and transactions.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -9077,16 +8605,13 @@ public class DSL {
      * @see DSLContext#createGlobalTemporaryTable(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createGlobalTemporaryTable(Table<?> table) {
         return dsl().createGlobalTemporaryTable(table);
     }
 
     /**
      * The <code>CREATE GLOBAL TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code> table, i.e. a table whose meta data
-     * but not data is shared among sessions and transactions.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -9095,16 +8620,13 @@ public class DSL {
      * @see DSLContext#createGlobalTemporaryTableIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createGlobalTemporaryTableIfNotExists(@Stringly.Name String table) {
         return dsl().createGlobalTemporaryTableIfNotExists(table);
     }
 
     /**
      * The <code>CREATE GLOBAL TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code> table, i.e. a table whose meta data
-     * but not data is shared among sessions and transactions.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -9113,16 +8635,13 @@ public class DSL {
      * @see DSLContext#createGlobalTemporaryTableIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createGlobalTemporaryTableIfNotExists(Name table) {
         return dsl().createGlobalTemporaryTableIfNotExists(table);
     }
 
     /**
      * The <code>CREATE GLOBAL TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code> table, i.e. a table whose meta data
-     * but not data is shared among sessions and transactions.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -9131,740 +8650,78 @@ public class DSL {
      * @see DSLContext#createGlobalTemporaryTableIfNotExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.CreateTableElementListStep createGlobalTemporaryTableIfNotExists(Table<?> table) {
         return dsl().createGlobalTemporaryTableIfNotExists(table);
     }
 
-    /**
-     * The <code>CREATE VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createView(String, String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createView(@Stringly.Name String view, @Stringly.Name String... fields) {
-        return dsl().createView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createView(Name, Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createView(Name view, Name... fields) {
-        return dsl().createView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createView(Table, Field...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createView(Table<?> view, Field<?>... fields) {
-        return dsl().createView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createView(String, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createView(@Stringly.Name String view, Collection<? extends String> fields) {
-        return dsl().createView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createView(Name, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createView(Name view, Collection<? extends Name> fields) {
-        return dsl().createView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createView(Table, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createView(Table<?> view, Collection<? extends Field<?>> fields) {
-        return dsl().createView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE VIEW IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createViewIfNotExists(String, String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createViewIfNotExists(@Stringly.Name String view, @Stringly.Name String... fields) {
-        return dsl().createViewIfNotExists(view, fields);
-    }
-
-    /**
-     * The <code>CREATE VIEW IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createViewIfNotExists(Name, Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createViewIfNotExists(Name view, Name... fields) {
-        return dsl().createViewIfNotExists(view, fields);
-    }
-
-    /**
-     * The <code>CREATE VIEW IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createViewIfNotExists(Table, Field...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, Field<?>... fields) {
-        return dsl().createViewIfNotExists(view, fields);
-    }
-
-    /**
-     * The <code>CREATE VIEW IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createViewIfNotExists(String, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createViewIfNotExists(@Stringly.Name String view, Collection<? extends String> fields) {
-        return dsl().createViewIfNotExists(view, fields);
-    }
-
-    /**
-     * The <code>CREATE VIEW IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createViewIfNotExists(Name, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createViewIfNotExists(Name view, Collection<? extends Name> fields) {
-        return dsl().createViewIfNotExists(view, fields);
-    }
-
-    /**
-     * The <code>CREATE VIEW IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createViewIfNotExists(Table, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, Collection<? extends Field<?>> fields) {
-        return dsl().createViewIfNotExists(view, fields);
-    }
-
-    /**
-     * The <code>CREATE OR REPLACE VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createOrReplaceView(String, String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createOrReplaceView(@Stringly.Name String view, @Stringly.Name String... fields) {
-        return dsl().createOrReplaceView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE OR REPLACE VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createOrReplaceView(Name, Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createOrReplaceView(Name view, Name... fields) {
-        return dsl().createOrReplaceView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE OR REPLACE VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createOrReplaceView(Table, Field...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createOrReplaceView(Table<?> view, Field<?>... fields) {
-        return dsl().createOrReplaceView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE OR REPLACE VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createOrReplaceView(String, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createOrReplaceView(@Stringly.Name String view, Collection<? extends String> fields) {
-        return dsl().createOrReplaceView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE OR REPLACE VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createOrReplaceView(Name, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createOrReplaceView(Name view, Collection<? extends Name> fields) {
-        return dsl().createOrReplaceView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE OR REPLACE VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createOrReplaceView(Table, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createOrReplaceView(Table<?> view, Collection<? extends Field<?>> fields) {
-        return dsl().createOrReplaceView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createMaterializedView(String, String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createMaterializedView(@Stringly.Name String view, @Stringly.Name String... fields) {
-        return dsl().createMaterializedView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createMaterializedView(Name, Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createMaterializedView(Name view, Name... fields) {
-        return dsl().createMaterializedView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createMaterializedView(Table, Field...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createMaterializedView(Table<?> view, Field<?>... fields) {
-        return dsl().createMaterializedView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createMaterializedView(String, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createMaterializedView(@Stringly.Name String view, Collection<? extends String> fields) {
-        return dsl().createMaterializedView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createMaterializedView(Name, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createMaterializedView(Name view, Collection<? extends Name> fields) {
-        return dsl().createMaterializedView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createMaterializedView(Table, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createMaterializedView(Table<?> view, Collection<? extends Field<?>> fields) {
-        return dsl().createMaterializedView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createMaterializedViewIfNotExists(String, String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createMaterializedViewIfNotExists(@Stringly.Name String view, @Stringly.Name String... fields) {
-        return dsl().createMaterializedViewIfNotExists(view, fields);
-    }
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createMaterializedViewIfNotExists(Name, Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createMaterializedViewIfNotExists(Name view, Name... fields) {
-        return dsl().createMaterializedViewIfNotExists(view, fields);
-    }
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createMaterializedViewIfNotExists(Table, Field...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createMaterializedViewIfNotExists(Table<?> view, Field<?>... fields) {
-        return dsl().createMaterializedViewIfNotExists(view, fields);
-    }
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createMaterializedViewIfNotExists(String, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createMaterializedViewIfNotExists(@Stringly.Name String view, Collection<? extends String> fields) {
-        return dsl().createMaterializedViewIfNotExists(view, fields);
-    }
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createMaterializedViewIfNotExists(Name, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createMaterializedViewIfNotExists(Name view, Collection<? extends Name> fields) {
-        return dsl().createMaterializedViewIfNotExists(view, fields);
-    }
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createMaterializedViewIfNotExists(Table, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateViewAsStep<Record> createMaterializedViewIfNotExists(Table<?> view, Collection<? extends Field<?>> fields) {
-        return dsl().createMaterializedViewIfNotExists(view, fields);
-    }
-
-    /**
-     * The <code>CREATE OR REPLACE MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createOrReplaceMaterializedView(String, String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    public static org.jooq.CreateViewAsStep<Record> createOrReplaceMaterializedView(@Stringly.Name String view, @Stringly.Name String... fields) {
-        return dsl().createOrReplaceMaterializedView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE OR REPLACE MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createOrReplaceMaterializedView(Name, Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    public static org.jooq.CreateViewAsStep<Record> createOrReplaceMaterializedView(Name view, Name... fields) {
-        return dsl().createOrReplaceMaterializedView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE OR REPLACE MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createOrReplaceMaterializedView(Table, Field...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    public static org.jooq.CreateViewAsStep<Record> createOrReplaceMaterializedView(Table<?> view, Field<?>... fields) {
-        return dsl().createOrReplaceMaterializedView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE OR REPLACE MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createOrReplaceMaterializedView(String, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    public static org.jooq.CreateViewAsStep<Record> createOrReplaceMaterializedView(@Stringly.Name String view, Collection<? extends String> fields) {
-        return dsl().createOrReplaceMaterializedView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE OR REPLACE MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createOrReplaceMaterializedView(Name, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    public static org.jooq.CreateViewAsStep<Record> createOrReplaceMaterializedView(Name view, Collection<? extends Name> fields) {
-        return dsl().createOrReplaceMaterializedView(view, fields);
-    }
-
-    /**
-     * The <code>CREATE OR REPLACE MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createOrReplaceMaterializedView(Table, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    public static org.jooq.CreateViewAsStep<Record> createOrReplaceMaterializedView(Table<?> view, Collection<? extends Field<?>> fields) {
-        return dsl().createOrReplaceMaterializedView(view, fields);
-    }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * The <code>CREATE TYPE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createType(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateTypeStep createType(@Stringly.Name String type) {
-        return dsl().createType(type);
-    }
-
-    /**
-     * The <code>CREATE TYPE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createType(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateTypeStep createType(Name type) {
-        return dsl().createType(type);
-    }
-
-    /**
-     * The <code>CREATE TYPE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createType(Type)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateTypeStep createType(Type<?> type) {
-        return dsl().createType(type);
-    }
-
-    /**
-     * The <code>CREATE TYPE IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createTypeIfNotExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateTypeStep createTypeIfNotExists(@Stringly.Name String type) {
-        return dsl().createTypeIfNotExists(type);
-    }
-
-    /**
-     * The <code>CREATE TYPE IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createTypeIfNotExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateTypeStep createTypeIfNotExists(Name type) {
-        return dsl().createTypeIfNotExists(type);
-    }
-
-    /**
-     * The <code>CREATE TYPE IF NOT EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#createTypeIfNotExists(Type)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateTypeStep createTypeIfNotExists(Type<?> type) {
-        return dsl().createTypeIfNotExists(type);
-    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * The <code>CREATE SCHEMA</code> statement.
@@ -9876,7 +8733,7 @@ public class DSL {
      * @see DSLContext#createSchema(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateSchemaFinalStep createSchema(@Stringly.Name String schema) {
         return dsl().createSchema(schema);
     }
@@ -9891,7 +8748,7 @@ public class DSL {
      * @see DSLContext#createSchema(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateSchemaFinalStep createSchema(Name schema) {
         return dsl().createSchema(schema);
     }
@@ -9906,7 +8763,7 @@ public class DSL {
      * @see DSLContext#createSchema(Schema)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateSchemaFinalStep createSchema(Schema schema) {
         return dsl().createSchema(schema);
     }
@@ -9921,7 +8778,7 @@ public class DSL {
      * @see DSLContext#createSchemaIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateSchemaFinalStep createSchemaIfNotExists(@Stringly.Name String schema) {
         return dsl().createSchemaIfNotExists(schema);
     }
@@ -9936,7 +8793,7 @@ public class DSL {
      * @see DSLContext#createSchemaIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateSchemaFinalStep createSchemaIfNotExists(Name schema) {
         return dsl().createSchemaIfNotExists(schema);
     }
@@ -9951,7 +8808,7 @@ public class DSL {
      * @see DSLContext#createSchemaIfNotExists(Schema)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.CreateSchemaFinalStep createSchemaIfNotExists(Schema schema) {
         return dsl().createSchemaIfNotExists(schema);
     }
@@ -9966,8 +8823,8 @@ public class DSL {
      * @see DSLContext#createSequence(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateSequenceAsStep<Number> createSequence(@Stringly.Name String sequence) {
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    public static org.jooq.CreateSequenceFlagsStep createSequence(@Stringly.Name String sequence) {
         return dsl().createSequence(sequence);
     }
 
@@ -9981,8 +8838,8 @@ public class DSL {
      * @see DSLContext#createSequence(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateSequenceAsStep<Number> createSequence(Name sequence) {
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    public static org.jooq.CreateSequenceFlagsStep createSequence(Name sequence) {
         return dsl().createSequence(sequence);
     }
 
@@ -9996,8 +8853,8 @@ public class DSL {
      * @see DSLContext#createSequence(Sequence)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateSequenceAsStep<Number> createSequence(Sequence<?> sequence) {
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    public static org.jooq.CreateSequenceFlagsStep createSequence(Sequence<?> sequence) {
         return dsl().createSequence(sequence);
     }
 
@@ -10011,8 +8868,8 @@ public class DSL {
      * @see DSLContext#createSequenceIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateSequenceAsStep<Number> createSequenceIfNotExists(@Stringly.Name String sequence) {
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    public static org.jooq.CreateSequenceFlagsStep createSequenceIfNotExists(@Stringly.Name String sequence) {
         return dsl().createSequenceIfNotExists(sequence);
     }
 
@@ -10026,8 +8883,8 @@ public class DSL {
      * @see DSLContext#createSequenceIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateSequenceAsStep<Number> createSequenceIfNotExists(Name sequence) {
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    public static org.jooq.CreateSequenceFlagsStep createSequenceIfNotExists(Name sequence) {
         return dsl().createSequenceIfNotExists(sequence);
     }
 
@@ -10041,206 +8898,10 @@ public class DSL {
      * @see DSLContext#createSequenceIfNotExists(Sequence)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
-    public static org.jooq.CreateSequenceAsStep<Number> createSequenceIfNotExists(Sequence<?> sequence) {
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    public static org.jooq.CreateSequenceFlagsStep createSequenceIfNotExists(Sequence<?> sequence) {
         return dsl().createSequenceIfNotExists(sequence);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * The <code>DROP DATABASE</code> statement.
@@ -10252,7 +8913,7 @@ public class DSL {
      * @see DSLContext#dropDatabase(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropDatabaseFinalStep dropDatabase(@Stringly.Name String database) {
         return dsl().dropDatabase(database);
     }
@@ -10267,7 +8928,7 @@ public class DSL {
      * @see DSLContext#dropDatabase(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropDatabaseFinalStep dropDatabase(Name database) {
         return dsl().dropDatabase(database);
     }
@@ -10282,7 +8943,7 @@ public class DSL {
      * @see DSLContext#dropDatabase(Catalog)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropDatabaseFinalStep dropDatabase(Catalog database) {
         return dsl().dropDatabase(database);
     }
@@ -10297,7 +8958,7 @@ public class DSL {
      * @see DSLContext#dropDatabaseIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropDatabaseFinalStep dropDatabaseIfExists(@Stringly.Name String database) {
         return dsl().dropDatabaseIfExists(database);
     }
@@ -10312,7 +8973,7 @@ public class DSL {
      * @see DSLContext#dropDatabaseIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropDatabaseFinalStep dropDatabaseIfExists(Name database) {
         return dsl().dropDatabaseIfExists(database);
     }
@@ -10327,7 +8988,7 @@ public class DSL {
      * @see DSLContext#dropDatabaseIfExists(Catalog)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropDatabaseFinalStep dropDatabaseIfExists(Catalog database) {
         return dsl().dropDatabaseIfExists(database);
     }
@@ -10500,7 +9161,7 @@ public class DSL {
      * @see DSLContext#dropIndex(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static org.jooq.DropIndexOnStep dropIndex(@Stringly.Name String index) {
         return dsl().dropIndex(index);
     }
@@ -10515,7 +9176,7 @@ public class DSL {
      * @see DSLContext#dropIndex(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static org.jooq.DropIndexOnStep dropIndex(Name index) {
         return dsl().dropIndex(index);
     }
@@ -10530,7 +9191,7 @@ public class DSL {
      * @see DSLContext#dropIndex(Index)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static org.jooq.DropIndexOnStep dropIndex(Index index) {
         return dsl().dropIndex(index);
     }
@@ -10545,7 +9206,7 @@ public class DSL {
      * @see DSLContext#dropIndexIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.DropIndexOnStep dropIndexIfExists(@Stringly.Name String index) {
         return dsl().dropIndexIfExists(index);
     }
@@ -10560,7 +9221,7 @@ public class DSL {
      * @see DSLContext#dropIndexIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.DropIndexOnStep dropIndexIfExists(Name index) {
         return dsl().dropIndexIfExists(index);
     }
@@ -10575,7 +9236,7 @@ public class DSL {
      * @see DSLContext#dropIndexIfExists(Index)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.DropIndexOnStep dropIndexIfExists(Index index) {
         return dsl().dropIndexIfExists(index);
     }
@@ -10658,7 +9319,7 @@ public class DSL {
      * @see DSLContext#dropSchema(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropSchemaStep dropSchema(@Stringly.Name String schema) {
         return dsl().dropSchema(schema);
     }
@@ -10673,7 +9334,7 @@ public class DSL {
      * @see DSLContext#dropSchema(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropSchemaStep dropSchema(Name schema) {
         return dsl().dropSchema(schema);
     }
@@ -10688,7 +9349,7 @@ public class DSL {
      * @see DSLContext#dropSchema(Schema)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropSchemaStep dropSchema(Schema schema) {
         return dsl().dropSchema(schema);
     }
@@ -10703,7 +9364,7 @@ public class DSL {
      * @see DSLContext#dropSchemaIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropSchemaStep dropSchemaIfExists(@Stringly.Name String schema) {
         return dsl().dropSchemaIfExists(schema);
     }
@@ -10718,7 +9379,7 @@ public class DSL {
      * @see DSLContext#dropSchemaIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropSchemaStep dropSchemaIfExists(Name schema) {
         return dsl().dropSchemaIfExists(schema);
     }
@@ -10733,7 +9394,7 @@ public class DSL {
      * @see DSLContext#dropSchemaIfExists(Schema)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropSchemaStep dropSchemaIfExists(Schema schema) {
         return dsl().dropSchemaIfExists(schema);
     }
@@ -10748,7 +9409,7 @@ public class DSL {
      * @see DSLContext#dropSequence(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropSequenceFinalStep dropSequence(@Stringly.Name String sequence) {
         return dsl().dropSequence(sequence);
     }
@@ -10763,7 +9424,7 @@ public class DSL {
      * @see DSLContext#dropSequence(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropSequenceFinalStep dropSequence(Name sequence) {
         return dsl().dropSequence(sequence);
     }
@@ -10778,7 +9439,7 @@ public class DSL {
      * @see DSLContext#dropSequence(Sequence)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropSequenceFinalStep dropSequence(Sequence<?> sequence) {
         return dsl().dropSequence(sequence);
     }
@@ -10793,7 +9454,7 @@ public class DSL {
      * @see DSLContext#dropSequenceIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropSequenceFinalStep dropSequenceIfExists(@Stringly.Name String sequence) {
         return dsl().dropSequenceIfExists(sequence);
     }
@@ -10808,7 +9469,7 @@ public class DSL {
      * @see DSLContext#dropSequenceIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropSequenceFinalStep dropSequenceIfExists(Name sequence) {
         return dsl().dropSequenceIfExists(sequence);
     }
@@ -10823,206 +9484,10 @@ public class DSL {
      * @see DSLContext#dropSequenceIfExists(Sequence)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropSequenceFinalStep dropSequenceIfExists(Sequence<?> sequence) {
         return dsl().dropSequenceIfExists(sequence);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * The <code>DROP TABLE</code> statement.
@@ -11079,7 +9544,7 @@ public class DSL {
      * @see DSLContext#dropTableIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.DropTableStep dropTableIfExists(@Stringly.Name String table) {
         return dsl().dropTableIfExists(table);
     }
@@ -11094,7 +9559,7 @@ public class DSL {
      * @see DSLContext#dropTableIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.DropTableStep dropTableIfExists(Name table) {
         return dsl().dropTableIfExists(table);
     }
@@ -11109,16 +9574,13 @@ public class DSL {
      * @see DSLContext#dropTableIfExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static org.jooq.DropTableStep dropTableIfExists(Table<?> table) {
         return dsl().dropTableIfExists(table);
     }
 
     /**
      * The <code>DROP TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -11127,16 +9589,13 @@ public class DSL {
      * @see DSLContext#dropTemporaryTable(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropTableStep dropTemporaryTable(@Stringly.Name String table) {
         return dsl().dropTemporaryTable(table);
     }
 
     /**
      * The <code>DROP TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -11145,16 +9604,13 @@ public class DSL {
      * @see DSLContext#dropTemporaryTable(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropTableStep dropTemporaryTable(Name table) {
         return dsl().dropTemporaryTable(table);
     }
 
     /**
      * The <code>DROP TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -11163,16 +9619,13 @@ public class DSL {
      * @see DSLContext#dropTemporaryTable(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropTableStep dropTemporaryTable(Table<?> table) {
         return dsl().dropTemporaryTable(table);
     }
 
     /**
      * The <code>DROP TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -11181,16 +9634,13 @@ public class DSL {
      * @see DSLContext#dropTemporaryTableIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropTableStep dropTemporaryTableIfExists(@Stringly.Name String table) {
         return dsl().dropTemporaryTableIfExists(table);
     }
 
     /**
      * The <code>DROP TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -11199,16 +9649,13 @@ public class DSL {
      * @see DSLContext#dropTemporaryTableIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropTableStep dropTemporaryTableIfExists(Name table) {
         return dsl().dropTemporaryTableIfExists(table);
     }
 
     /**
      * The <code>DROP TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
      * creates an unattached, and thus not directly renderable or executable
@@ -11217,214 +9664,15 @@ public class DSL {
      * @see DSLContext#dropTemporaryTableIfExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.DropTableStep dropTemporaryTableIfExists(Table<?> table) {
         return dsl().dropTemporaryTableIfExists(table);
     }
 
-    /**
-     * The <code>DROP LOCAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>LOCAL TEMPORARY</code> table.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropLocalTemporaryTable(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    public static org.jooq.DropTableStep dropLocalTemporaryTable(@Stringly.Name String table) {
-        return dsl().dropLocalTemporaryTable(table);
-    }
-
-    /**
-     * The <code>DROP LOCAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>LOCAL TEMPORARY</code> table.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropLocalTemporaryTable(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    public static org.jooq.DropTableStep dropLocalTemporaryTable(Name table) {
-        return dsl().dropLocalTemporaryTable(table);
-    }
-
-    /**
-     * The <code>DROP LOCAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>LOCAL TEMPORARY</code> table.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropLocalTemporaryTable(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    public static org.jooq.DropTableStep dropLocalTemporaryTable(Table<?> table) {
-        return dsl().dropLocalTemporaryTable(table);
-    }
-
-    /**
-     * The <code>DROP LOCAL TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>LOCAL TEMPORARY</code> table.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropLocalTemporaryTableIfExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    public static org.jooq.DropTableStep dropLocalTemporaryTableIfExists(@Stringly.Name String table) {
-        return dsl().dropLocalTemporaryTableIfExists(table);
-    }
-
-    /**
-     * The <code>DROP LOCAL TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>LOCAL TEMPORARY</code> table.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropLocalTemporaryTableIfExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    public static org.jooq.DropTableStep dropLocalTemporaryTableIfExists(Name table) {
-        return dsl().dropLocalTemporaryTableIfExists(table);
-    }
-
-    /**
-     * The <code>DROP LOCAL TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>LOCAL TEMPORARY</code> table.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropLocalTemporaryTableIfExists(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    public static org.jooq.DropTableStep dropLocalTemporaryTableIfExists(Table<?> table) {
-        return dsl().dropLocalTemporaryTableIfExists(table);
-    }
-
-    /**
-     * The <code>DROP GLOBAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code> table.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropGlobalTemporaryTable(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
-    public static org.jooq.DropTableStep dropGlobalTemporaryTable(@Stringly.Name String table) {
-        return dsl().dropGlobalTemporaryTable(table);
-    }
-
-    /**
-     * The <code>DROP GLOBAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code> table.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropGlobalTemporaryTable(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
-    public static org.jooq.DropTableStep dropGlobalTemporaryTable(Name table) {
-        return dsl().dropGlobalTemporaryTable(table);
-    }
 
-    /**
-     * The <code>DROP GLOBAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code> table.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropGlobalTemporaryTable(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
-    public static org.jooq.DropTableStep dropGlobalTemporaryTable(Table<?> table) {
-        return dsl().dropGlobalTemporaryTable(table);
-    }
 
-    /**
-     * The <code>DROP GLOBAL TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code> table.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropGlobalTemporaryTableIfExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
-    public static org.jooq.DropTableStep dropGlobalTemporaryTableIfExists(@Stringly.Name String table) {
-        return dsl().dropGlobalTemporaryTableIfExists(table);
-    }
 
-    /**
-     * The <code>DROP GLOBAL TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code> table.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropGlobalTemporaryTableIfExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
-    public static org.jooq.DropTableStep dropGlobalTemporaryTableIfExists(Name table) {
-        return dsl().dropGlobalTemporaryTableIfExists(table);
-    }
 
-    /**
-     * The <code>DROP GLOBAL TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code> table.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropGlobalTemporaryTableIfExists(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
-    public static org.jooq.DropTableStep dropGlobalTemporaryTableIfExists(Table<?> table) {
-        return dsl().dropGlobalTemporaryTableIfExists(table);
-    }
 
 
 
@@ -11488,253 +9736,6 @@ public class DSL {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * The <code>DROP TYPE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropType(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropTypeStep dropType(@Stringly.Name String types) {
-        return dsl().dropType(types);
-    }
-
-    /**
-     * The <code>DROP TYPE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropType(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropTypeStep dropType(Name types) {
-        return dsl().dropType(types);
-    }
-
-    /**
-     * The <code>DROP TYPE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropType(Type)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropTypeStep dropType(Type<?> types) {
-        return dsl().dropType(types);
-    }
-
-    /**
-     * The <code>DROP TYPE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropType(String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropTypeStep dropType(@Stringly.Name String... types) {
-        return dsl().dropType(types);
-    }
-
-    /**
-     * The <code>DROP TYPE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropType(Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropTypeStep dropType(Name... types) {
-        return dsl().dropType(types);
-    }
-
-    /**
-     * The <code>DROP TYPE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropType(Type...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropTypeStep dropType(Type<?>... types) {
-        return dsl().dropType(types);
-    }
-
-    /**
-     * The <code>DROP TYPE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropType(Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropTypeStep dropType(Collection<? extends Type<?>> types) {
-        return dsl().dropType(types);
-    }
-
-    /**
-     * The <code>DROP TYPE IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropTypeIfExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropTypeStep dropTypeIfExists(@Stringly.Name String types) {
-        return dsl().dropTypeIfExists(types);
-    }
-
-    /**
-     * The <code>DROP TYPE IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropTypeIfExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropTypeStep dropTypeIfExists(Name types) {
-        return dsl().dropTypeIfExists(types);
-    }
-
-    /**
-     * The <code>DROP TYPE IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropTypeIfExists(Type)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropTypeStep dropTypeIfExists(Type<?> types) {
-        return dsl().dropTypeIfExists(types);
-    }
-
-    /**
-     * The <code>DROP TYPE IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropTypeIfExists(String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropTypeStep dropTypeIfExists(@Stringly.Name String... types) {
-        return dsl().dropTypeIfExists(types);
-    }
-
-    /**
-     * The <code>DROP TYPE IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropTypeIfExists(Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropTypeStep dropTypeIfExists(Name... types) {
-        return dsl().dropTypeIfExists(types);
-    }
-
-    /**
-     * The <code>DROP TYPE IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropTypeIfExists(Type...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropTypeStep dropTypeIfExists(Type<?>... types) {
-        return dsl().dropTypeIfExists(types);
-    }
-
-    /**
-     * The <code>DROP TYPE IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropTypeIfExists(Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropTypeStep dropTypeIfExists(Collection<? extends Type<?>> types) {
-        return dsl().dropTypeIfExists(types);
-    }
 
     /**
      * The <code>DROP VIEW</code> statement.
@@ -11746,8 +9747,8 @@ public class DSL {
      * @see DSLContext#dropView(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static org.jooq.DropViewStep dropView(@Stringly.Name String view) {
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static org.jooq.DropViewFinalStep dropView(@Stringly.Name String view) {
         return dsl().dropView(view);
     }
 
@@ -11761,8 +9762,8 @@ public class DSL {
      * @see DSLContext#dropView(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static org.jooq.DropViewStep dropView(Name view) {
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static org.jooq.DropViewFinalStep dropView(Name view) {
         return dsl().dropView(view);
     }
 
@@ -11776,8 +9777,8 @@ public class DSL {
      * @see DSLContext#dropView(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static org.jooq.DropViewStep dropView(Table<?> view) {
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static org.jooq.DropViewFinalStep dropView(Table<?> view) {
         return dsl().dropView(view);
     }
 
@@ -11791,8 +9792,8 @@ public class DSL {
      * @see DSLContext#dropViewIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static org.jooq.DropViewStep dropViewIfExists(@Stringly.Name String view) {
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static org.jooq.DropViewFinalStep dropViewIfExists(@Stringly.Name String view) {
         return dsl().dropViewIfExists(view);
     }
 
@@ -11806,8 +9807,8 @@ public class DSL {
      * @see DSLContext#dropViewIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static org.jooq.DropViewStep dropViewIfExists(Name view) {
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static org.jooq.DropViewFinalStep dropViewIfExists(Name view) {
         return dsl().dropViewIfExists(view);
     }
 
@@ -11821,99 +9822,9 @@ public class DSL {
      * @see DSLContext#dropViewIfExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static org.jooq.DropViewStep dropViewIfExists(Table<?> view) {
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static org.jooq.DropViewFinalStep dropViewIfExists(Table<?> view) {
         return dsl().dropViewIfExists(view);
-    }
-
-    /**
-     * The <code>DROP MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropMaterializedView(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropViewStep dropMaterializedView(@Stringly.Name String view) {
-        return dsl().dropMaterializedView(view);
-    }
-
-    /**
-     * The <code>DROP MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropMaterializedView(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropViewStep dropMaterializedView(Name view) {
-        return dsl().dropMaterializedView(view);
-    }
-
-    /**
-     * The <code>DROP MATERIALIZED VIEW</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropMaterializedView(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropViewStep dropMaterializedView(Table<?> view) {
-        return dsl().dropMaterializedView(view);
-    }
-
-    /**
-     * The <code>DROP MATERIALIZED VIEW IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropMaterializedViewIfExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropViewStep dropMaterializedViewIfExists(@Stringly.Name String view) {
-        return dsl().dropMaterializedViewIfExists(view);
-    }
-
-    /**
-     * The <code>DROP MATERIALIZED VIEW IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropMaterializedViewIfExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropViewStep dropMaterializedViewIfExists(Name view) {
-        return dsl().dropMaterializedViewIfExists(view);
-    }
-
-    /**
-     * The <code>DROP MATERIALIZED VIEW IF EXISTS</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#dropMaterializedViewIfExists(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.DropViewStep dropMaterializedViewIfExists(Table<?> view) {
-        return dsl().dropMaterializedViewIfExists(view);
     }
 
     /**
@@ -12060,46 +9971,12 @@ public class DSL {
      * creates an unattached, and thus not directly renderable or executable
      * statement. It can be used as a subquery or nested in procedural logic.
      *
-     * @see DSLContext#set(String, Param)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    public static org.jooq.RowCountQuery set(@Stringly.Name String name, Param<?> value) {
-        return dsl().set(name, value);
-    }
-
-    /**
-     * The <code>SET</code> statement.
-     * <p>
-     * Set a vendor specific session configuration to a new value.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
      * @see DSLContext#set(Name, Param)
      */
     @NotNull @CheckReturnValue
-    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.RowCountQuery set(Name name, Param<?> value) {
         return dsl().set(name, value);
-    }
-
-    /**
-     * The <code>SET LOCAL</code> statement.
-     * <p>
-     * Set a vendor specific transaction-local configuration to a new value.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#setLocal(String, Param)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static org.jooq.RowCountQuery setLocal(@Stringly.Name String name, Param<?> value) {
-        return dsl().setLocal(name, value);
     }
 
     /**
@@ -12131,7 +10008,7 @@ public class DSL {
      * @see DSLContext#setCatalog(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL })
+    @Support({ MARIADB, MYSQL })
     public static org.jooq.RowCountQuery setCatalog(@Stringly.Name String catalog) {
         return dsl().setCatalog(catalog);
     }
@@ -12148,7 +10025,7 @@ public class DSL {
      * @see DSLContext#setCatalog(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL })
+    @Support({ MARIADB, MYSQL })
     public static org.jooq.RowCountQuery setCatalog(Name catalog) {
         return dsl().setCatalog(catalog);
     }
@@ -12165,7 +10042,7 @@ public class DSL {
      * @see DSLContext#setCatalog(Catalog)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL })
+    @Support({ MARIADB, MYSQL })
     public static org.jooq.RowCountQuery setCatalog(Catalog catalog) {
         return dsl().setCatalog(catalog);
     }
@@ -12182,7 +10059,7 @@ public class DSL {
      * @see DSLContext#setSchema(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.RowCountQuery setSchema(@Stringly.Name String schema) {
         return dsl().setSchema(schema);
     }
@@ -12199,7 +10076,7 @@ public class DSL {
      * @see DSLContext#setSchema(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.RowCountQuery setSchema(Name schema) {
         return dsl().setSchema(schema);
     }
@@ -12216,7 +10093,7 @@ public class DSL {
      * @see DSLContext#setSchema(Schema)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static org.jooq.RowCountQuery setSchema(Schema schema) {
         return dsl().setSchema(schema);
     }
@@ -12267,66 +10144,6 @@ public class DSL {
     }
 
     /**
-     * The <code>TRUNCATE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#truncate(String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    public static org.jooq.TruncateIdentityStep<Record> truncate(@Stringly.Name String... table) {
-        return dsl().truncate(table);
-    }
-
-    /**
-     * The <code>TRUNCATE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#truncate(Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    public static org.jooq.TruncateIdentityStep<Record> truncate(Name... table) {
-        return dsl().truncate(table);
-    }
-
-    /**
-     * The <code>TRUNCATE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#truncate(Table...)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    public static org.jooq.TruncateIdentityStep<Record> truncate(Table<?>... table) {
-        return dsl().truncate(table);
-    }
-
-    /**
-     * The <code>TRUNCATE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#truncate(Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    public static org.jooq.TruncateIdentityStep<Record> truncate(Collection<? extends Table<?>> table) {
-        return dsl().truncate(table);
-    }
-
-    /**
      * The <code>TRUNCATE TABLE</code> statement.
      * <p>
      * Unlike statement construction methods in the {@link DSLContext} API, this
@@ -12371,65 +10188,7 @@ public class DSL {
         return dsl().truncateTable(table);
     }
 
-    /**
-     * The <code>TRUNCATE TABLE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#truncateTable(String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    public static org.jooq.TruncateIdentityStep<Record> truncateTable(@Stringly.Name String... table) {
-        return dsl().truncateTable(table);
-    }
 
-    /**
-     * The <code>TRUNCATE TABLE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#truncateTable(Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    public static org.jooq.TruncateIdentityStep<Record> truncateTable(Name... table) {
-        return dsl().truncateTable(table);
-    }
-
-    /**
-     * The <code>TRUNCATE TABLE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#truncateTable(Table...)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    public static org.jooq.TruncateIdentityStep<Record> truncateTable(Table<?>... table) {
-        return dsl().truncateTable(table);
-    }
-
-    /**
-     * The <code>TRUNCATE TABLE</code> statement.
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#truncateTable(Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    public static org.jooq.TruncateIdentityStep<Record> truncateTable(Collection<? extends Table<?>> table) {
-        return dsl().truncateTable(table);
-    }
 
 
 
@@ -12476,125 +10235,37 @@ public class DSL {
 
 
     /**
-     * The <code>START TRANSACTION</code> statement.
-     * <p>
-     * Start a transaction
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
+     * Create a new DSL <code>CREATE VIEW</code> statement.
      *
-     * @see DSLContext#startTransaction()
+     * @see DSLContext#createView(String, String...)
      */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static org.jooq.RowCountQuery startTransaction() {
-        return dsl().startTransaction();
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static CreateViewAsStep createView(String view, String... fields) {
+        return dsl().createView(view, fields);
     }
 
     /**
-     * The <code>SAVEPOINT</code> statement.
-     * <p>
-     * Specify a savepoint
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
+     * Create a new DSL <code>CREATE VIEW</code> statement.
      *
-     * @see DSLContext#savepoint(String)
+     * @see DSLContext#createView(Name, Name...)
      */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static org.jooq.RowCountQuery savepoint(@Stringly.Name String name) {
-        return dsl().savepoint(name);
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static CreateViewAsStep createView(Name view, Name... fields) {
+        return dsl().createView(view, fields);
     }
 
     /**
-     * The <code>SAVEPOINT</code> statement.
-     * <p>
-     * Specify a savepoint
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
+     * Create a new DSL <code>CREATE VIEW</code> statement.
      *
-     * @see DSLContext#savepoint(Name)
+     * @see DSLContext#createView(Table, Field...)
      */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static org.jooq.RowCountQuery savepoint(Name name) {
-        return dsl().savepoint(name);
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static CreateViewAsStep createView(Table<?> view, Field<?>... fields) {
+        return dsl().createView(view, fields);
     }
-
-    /**
-     * The <code>RELEASE SAVEPOINT</code> statement.
-     * <p>
-     * Release a savepoint
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#releaseSavepoint(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static org.jooq.RowCountQuery releaseSavepoint(@Stringly.Name String name) {
-        return dsl().releaseSavepoint(name);
-    }
-
-    /**
-     * The <code>RELEASE SAVEPOINT</code> statement.
-     * <p>
-     * Release a savepoint
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#releaseSavepoint(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static org.jooq.RowCountQuery releaseSavepoint(Name name) {
-        return dsl().releaseSavepoint(name);
-    }
-
-    /**
-     * The <code>COMMIT</code> statement.
-     * <p>
-     * Commit a transaction
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#commit()
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static org.jooq.RowCountQuery commit() {
-        return dsl().commit();
-    }
-
-    /**
-     * The <code>ROLLBACK</code> statement.
-     * <p>
-     * Rollback a transaction
-     * <p>
-     * Unlike statement construction methods in the {@link DSLContext} API, this
-     * creates an unattached, and thus not directly renderable or executable
-     * statement. It can be used as a subquery or nested in procedural logic.
-     *
-     * @see DSLContext#rollback()
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static org.jooq.RollbackToSavepointStep rollback() {
-        return dsl().rollback();
-    }
-
-
 
     /**
      * Create a new DSL <code>CREATE VIEW</code> statement.
@@ -12612,8 +10283,8 @@ public class DSL {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static CreateViewAsStep<Record> createView(String view, Function<? super Field<?>, ? extends String> fieldNameFunction) {
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static CreateViewAsStep createView(String view, Function<? super Field<?>, ? extends String> fieldNameFunction) {
         return dsl().createView(view, fieldNameFunction);
     }
 
@@ -12633,8 +10304,8 @@ public class DSL {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static CreateViewAsStep<Record> createView(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction) {
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static CreateViewAsStep createView(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction) {
         return dsl().createView(view, fieldNameFunction);
     }
 
@@ -12654,9 +10325,42 @@ public class DSL {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static CreateViewAsStep<Record> createView(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction) {
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static CreateViewAsStep createView(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction) {
         return dsl().createView(view, fieldNameFunction);
+    }
+
+    /**
+     * Create a new DSL <code>CREATE OR REPLACE VIEW</code> statement.
+     *
+     * @see DSLContext#createOrReplaceView(String, String...)
+     */
+    @NotNull
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    public static CreateViewAsStep createOrReplaceView(String view, String... fields) {
+        return dsl().createOrReplaceView(view, fields);
+    }
+
+    /**
+     * Create a new DSL <code>CREATE OR REPLACE VIEW</code> statement.
+     *
+     * @see DSLContext#createOrReplaceView(Name, Name...)
+     */
+    @NotNull
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    public static CreateViewAsStep createOrReplaceView(Name view, Name... fields) {
+        return dsl().createOrReplaceView(view, fields);
+    }
+
+    /**
+     * Create a new DSL <code>CREATE OR REPLACE VIEW</code> statement.
+     *
+     * @see DSLContext#createOrReplaceView(Table, Field...)
+     */
+    @NotNull
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    public static CreateViewAsStep createOrReplaceView(Table<?> view, Field<?>... fields) {
+        return dsl().createOrReplaceView(view, fields);
     }
 
     /**
@@ -12675,8 +10379,8 @@ public class DSL {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    public static CreateViewAsStep<Record> createOrReplaceView(String view, Function<? super Field<?>, ? extends String> fieldNameFunction) {
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    public static CreateViewAsStep createOrReplaceView(String view, Function<? super Field<?>, ? extends String> fieldNameFunction) {
         return dsl().createOrReplaceView(view, fieldNameFunction);
     }
 
@@ -12696,8 +10400,8 @@ public class DSL {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    public static CreateViewAsStep<Record> createOrReplaceView(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction) {
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    public static CreateViewAsStep createOrReplaceView(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction) {
         return dsl().createOrReplaceView(view, fieldNameFunction);
     }
 
@@ -12717,9 +10421,42 @@ public class DSL {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    public static CreateViewAsStep<Record> createOrReplaceView(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction) {
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    public static CreateViewAsStep createOrReplaceView(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction) {
         return dsl().createOrReplaceView(view, fieldNameFunction);
+    }
+
+    /**
+     * Create a new DSL <code>CREATE VIEW IF NOT EXISTS</code> statement.
+     *
+     * @see DSLContext#createViewIfNotExists(String, String...)
+     */
+    @NotNull
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static CreateViewAsStep createViewIfNotExists(String view, String... fields) {
+        return dsl().createViewIfNotExists(view, fields);
+    }
+
+    /**
+     * Create a new DSL <code>CREATE VIEW IF NOT EXISTS</code> statement.
+     *
+     * @see DSLContext#createViewIfNotExists(Name, Name...)
+     */
+    @NotNull
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static CreateViewAsStep createViewIfNotExists(Name view, Name... fields) {
+        return dsl().createViewIfNotExists(view, fields);
+    }
+
+    /**
+     * Create a new DSL <code>CREATE VIEW IF NOT EXISTS</code> statement.
+     *
+     * @see DSLContext#createViewIfNotExists(Table, Field...)
+     */
+    @NotNull
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static CreateViewAsStep createViewIfNotExists(Table<?> view, Field<?>... fields) {
+        return dsl().createViewIfNotExists(view, fields);
     }
 
     /**
@@ -12738,8 +10475,8 @@ public class DSL {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static CreateViewAsStep<Record> createViewIfNotExists(String view, Function<? super Field<?>, ? extends String> fieldNameFunction) {
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static CreateViewAsStep createViewIfNotExists(String view, Function<? super Field<?>, ? extends String> fieldNameFunction) {
         return dsl().createViewIfNotExists(view, fieldNameFunction);
     }
 
@@ -12759,8 +10496,8 @@ public class DSL {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static CreateViewAsStep<Record> createViewIfNotExists(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction) {
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static CreateViewAsStep createViewIfNotExists(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction) {
         return dsl().createViewIfNotExists(view, fieldNameFunction);
     }
 
@@ -12780,9 +10517,141 @@ public class DSL {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction) {
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static CreateViewAsStep createViewIfNotExists(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction) {
         return dsl().createViewIfNotExists(view, fieldNameFunction);
+    }
+
+    /**
+     * Create a new DSL <code>CREATE TYPE</code> statement.
+     *
+     * @see DSLContext#createType(String)
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static CreateTypeStep createType(String type) {
+        return dsl().createType(type);
+    }
+
+    /**
+     * Create a new DSL <code>CREATE TYPE</code> statement.
+     *
+     * @see DSLContext#createType(Name)
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static CreateTypeStep createType(Name type) {
+        return dsl().createType(type);
+    }
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropType(String)
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static DropTypeStep dropType(String type) {
+        return dsl().dropType(type);
+    }
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropType(Name)
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static DropTypeStep dropType(Name type) {
+        return dsl().dropType(type);
+    }
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropType(String...)
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static DropTypeStep dropType(String... type) {
+        return dsl().dropType(type);
+    }
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropType(Name...)
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static DropTypeStep dropType(Name... type) {
+        return dsl().dropType(type);
+    }
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropType(Collection)
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static DropTypeStep dropType(Collection<?> type) {
+        return dsl().dropType(type);
+    }
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropTypeIfExists(String)
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static DropTypeStep dropTypeIfExists(String type) {
+        return dsl().dropTypeIfExists(type);
+    }
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropTypeIfExists(Name)
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static DropTypeStep dropTypeIfExists(Name type) {
+        return dsl().dropTypeIfExists(type);
+    }
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropTypeIfExists(String...)
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static DropTypeStep dropTypeIfExists(String... type) {
+        return dsl().dropTypeIfExists(type);
+    }
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropTypeIfExists(Name...)
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static DropTypeStep dropTypeIfExists(Name... type) {
+        return dsl().dropTypeIfExists(type);
+    }
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropTypeIfExists(Collection)
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static DropTypeStep dropTypeIfExists(Collection<?> type) {
+        return dsl().dropTypeIfExists(type);
     }
 
     /**
@@ -12824,7 +10693,7 @@ public class DSL {
      * @see DSLContext#alterTableIfExists(String)
      */
     @NotNull
-    @Support({ DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     public static AlterTableStep alterTableIfExists(String table) {
         return dsl().alterTableIfExists(table);
     }
@@ -12835,7 +10704,7 @@ public class DSL {
      * @see DSLContext#alterTableIfExists(Name)
      */
     @NotNull
-    @Support({ DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     public static AlterTableStep alterTableIfExists(Name table) {
         return dsl().alterTableIfExists(table);
     }
@@ -12846,7 +10715,7 @@ public class DSL {
      * @see DSLContext#alterTableIfExists(Table)
      */
     @NotNull
-    @Support({ DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     public static AlterTableStep alterTableIfExists(Table<?> table) {
         return dsl().alterTableIfExists(table);
     }
@@ -12868,7 +10737,7 @@ public class DSL {
      * @see Field#like(QuantifiedSelect)
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static <R extends Record> QuantifiedSelect<R> all(Select<R> select) {
         return new QuantifiedSelectImpl<>(Quantifier.ALL, select);
     }
@@ -12889,9 +10758,9 @@ public class DSL {
      * @see Field#like(QuantifiedSelect)
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static <T> QuantifiedSelect<Record1<T>> all(T... array) {
-        return array instanceof Field[] ? all((Field<T>[]) array) : new QuantifiedArray<>(Quantifier.ALL, val(array));
+        return array instanceof Field[] ? all((Field<T>[]) array) : new QuantifiedSelectImpl<>(Quantifier.ALL, val(array));
     }
 
     /**
@@ -12910,9 +10779,9 @@ public class DSL {
      * @see Field#like(QuantifiedSelect)
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static <T> QuantifiedSelect<Record1<T>> all(Field<T[]> array) {
-        return new QuantifiedArray<>(Quantifier.ALL, array);
+        return new QuantifiedSelectImpl<>(Quantifier.ALL, array);
     }
 
     /**
@@ -12934,7 +10803,7 @@ public class DSL {
     @Support
     @SafeVarargs
     public static <T> QuantifiedSelect<Record1<T>> all(Field<T>... fields) {
-        return new QuantifiedArray<>(Quantifier.ALL, new Array<>(asList(fields)));
+        return new QuantifiedSelectImpl<>(Quantifier.ALL, fields);
     }
 
     /**
@@ -12950,7 +10819,7 @@ public class DSL {
      * @see Field#like(QuantifiedSelect)
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static <R extends Record> QuantifiedSelect<R> any(Select<R> select) {
         return new QuantifiedSelectImpl<>(Quantifier.ANY, select);
     }
@@ -12971,9 +10840,9 @@ public class DSL {
      * @see Field#like(QuantifiedSelect)
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static <T> QuantifiedSelect<Record1<T>> any(T... array) {
-        return array instanceof Field[] ? any((Field<T>[]) array) : new QuantifiedArray<>(Quantifier.ANY, val(array));
+        return array instanceof Field[] ? any((Field<T>[]) array) : new QuantifiedSelectImpl<>(Quantifier.ANY, val(array));
     }
 
     /**
@@ -12992,9 +10861,9 @@ public class DSL {
      * @see Field#like(QuantifiedSelect)
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static <T> QuantifiedSelect<Record1<T>> any(Field<T[]> array) {
-        return new QuantifiedArray<>(Quantifier.ANY, array);
+        return new QuantifiedSelectImpl<>(Quantifier.ANY, array);
     }
 
     /**
@@ -13016,7 +10885,7 @@ public class DSL {
     @Support
     @SafeVarargs
     public static <T> QuantifiedSelect<Record1<T>> any(Field<T>... fields) {
-        return new QuantifiedArray<>(Quantifier.ANY, new Array<>(asList(fields)));
+        return new QuantifiedSelectImpl<>(Quantifier.ANY, fields);
     }
 
     // -------------------------------------------------------------------------
@@ -13027,7 +10896,7 @@ public class DSL {
      * Create a collation by its unqualified name.
      */
     @NotNull
-    @Support({ HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     public static Collation collation(String collation) {
         return collation(name(collation));
     }
@@ -13036,7 +10905,7 @@ public class DSL {
      * Create a collation by its qualified name.
      */
     @NotNull
-    @Support({ HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     public static Collation collation(Name collation) {
         return new CollationImpl(collation);
     }
@@ -13133,7 +11002,7 @@ public class DSL {
      * {@link Delete} statement was applied.
      */
     @NotNull
-    @Support({ FIREBIRD, H2, MARIADB, POSTGRES })
+    @Support({ H2 })
     public static <R extends Record> Table<R> oldTable(Update<R> query) {
         return new DataChangeDeltaTable<>(ResultOption.OLD, query);
     }
@@ -13144,7 +11013,7 @@ public class DSL {
      * {@link Delete} statement was applied.
      */
     @NotNull
-    @Support({ FIREBIRD, H2, MARIADB, POSTGRES })
+    @Support({ H2, POSTGRES })
     public static <R extends Record> Table<R> oldTable(Delete<R> query) {
         return new DataChangeDeltaTable<>(ResultOption.OLD, query);
     }
@@ -13213,7 +11082,7 @@ public class DSL {
      * version of the modified data.
      */
     @NotNull
-    @Support({ FIREBIRD, H2, MARIADB, POSTGRES })
+    @Support({ H2, POSTGRES })
     public static <R extends Record> Table<R> finalTable(Insert<R> query) {
         return new DataChangeDeltaTable<>(ResultOption.FINAL, query);
     }
@@ -13229,7 +11098,7 @@ public class DSL {
      * version of the modified data.
      */
     @NotNull
-    @Support({ FIREBIRD, H2, MARIADB, POSTGRES })
+    @Support({ H2, POSTGRES })
     public static <R extends Record> Table<R> finalTable(Update<R> query) {
         return new DataChangeDeltaTable<>(ResultOption.FINAL, query);
     }
@@ -13315,7 +11184,7 @@ public class DSL {
     @NotNull
     @Support
     public static Table<?> table(Collection<?> list) {
-        return unnest(list);
+        return table(list.toArray());
     }
 
     /**
@@ -13326,7 +11195,7 @@ public class DSL {
     @NotNull
     @Support
     public static Table<?> table(Object[] array) {
-        return unnest(array);
+        return unnest0(val(array));
     }
 
 
@@ -13349,9 +11218,9 @@ public class DSL {
      * @see #unnest(Field)
      */
     @NotNull
-    @Support({ DUCKDB, H2, HSQLDB, POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static Table<?> table(Field<?> cursor) {
-        return unnest(cursor);
+        return unnest0(cursor);
     }
 
     /**
@@ -13387,14 +11256,7 @@ public class DSL {
     @NotNull
     @Support
     public static Table<?> unnest(Object[] array) {
-        boolean notEmpty = !isEmpty(array);
-
-        if (notEmpty && array[0] instanceof Field)
-            return new ArrayOfValues(Tools.fieldsArray(array));
-        else if (notEmpty && array.getClass() == Object[].class)
-            return unnest0(val(mostSpecificArray(array)));
-        else
-            return unnest0(val(array));
+        return unnest0(val(array));
     }
 
 
@@ -13434,7 +11296,7 @@ public class DSL {
      * emulated using several <code>UNION ALL</code> connected subqueries.
      */
     @NotNull
-    @Support({ DUCKDB, H2, HSQLDB, POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     public static Table<?> unnest(Field<?> cursor) {
         return unnest0(cursor);
     }
@@ -13445,7 +11307,7 @@ public class DSL {
 
         // The field is an actual CURSOR or REF CURSOR returned from a stored
         // procedure or from a NESTED TABLE
-        else if (cursor.getDataType().getFromType() == Result.class)
+        else if (cursor.getType() == Result.class)
             return new FunctionTable<Record>(cursor);
 
 
@@ -13459,8 +11321,7 @@ public class DSL {
 
 
         // The field is a regular array
-        else if (cursor.getDataType().getFromType().isArray()
-              && cursor.getDataType().getFromType() != byte[].class)
+        else if (cursor.getType().isArray() && cursor.getType() != byte[].class)
             return new ArrayTable(cursor);
 
         // The field has any other type. Try to make it an array
@@ -13479,13 +11340,13 @@ public class DSL {
      * generated SQL. You may still wish to explicitly use a <code>DUAL</code>
      * construct in jOOQ code for various reasons. This <code>DUAL</code> table
      * will always contain a single record with a single varchar(1) value:
-     * <pre><code>
+     * <code><pre>
      * +-------+
      * | DUMMY |
      * +-------+
      * | X     |
      * +-------+
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -13499,16 +11360,16 @@ public class DSL {
      * <p>
      * This function is inspired by PostgreSQL's
      * <code>GENERATE_SERIES(from, to)</code> function. Other SQL dialects may
-     * be capable of emulating this behaviour, e.g. Oracle: <pre><code>
+     * be capable of emulating this behaviour, e.g. Oracle: <code><pre>
      * -- PostgreSQL
      * SELECT * FROM GENERATE_SERIES(a, b)
      *
      * -- Oracle
      * SELECT * FROM (SELECT a + LEVEL - 1 FROM DUAL CONNECT BY a + LEVEL - 1 &lt;= b)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Table<Record1<Integer>> generateSeries(int from, int to) {
         return generateSeries(val(from), val(to));
     }
@@ -13519,16 +11380,16 @@ public class DSL {
      * <p>
      * This function is inspired by PostgreSQL's
      * <code>GENERATE_SERIES(from, to)</code> function. Other SQL dialects may
-     * be capable of emulating this behaviour, e.g. Oracle: <pre><code>
+     * be capable of emulating this behaviour, e.g. Oracle: <code><pre>
      * -- PostgreSQL
      * SELECT * FROM GENERATE_SERIES(a, b)
      *
      * -- Oracle
      * SELECT * FROM (SELECT a + LEVEL - 1 FROM DUAL CONNECT BY a + LEVEL - 1 &lt;= b)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Table<Record1<Integer>> generateSeries(int from, Field<Integer> to) {
         return generateSeries(val(from), Tools.nullSafe(to));
     }
@@ -13539,16 +11400,16 @@ public class DSL {
      * <p>
      * This function is inspired by PostgreSQL's
      * <code>GENERATE_SERIES(from, to)</code> function. Other SQL dialects may
-     * be capable of emulating this behaviour, e.g. Oracle: <pre><code>
+     * be capable of emulating this behaviour, e.g. Oracle: <code><pre>
      * -- PostgreSQL
      * SELECT * FROM GENERATE_SERIES(a, b)
      *
      * -- Oracle
      * SELECT * FROM (SELECT a + LEVEL - 1 FROM DUAL CONNECT BY a + LEVEL - 1 &lt;= b)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Table<Record1<Integer>> generateSeries(Field<Integer> from, int to) {
         return new GenerateSeries(Tools.nullSafe(from), val(to));
     }
@@ -13559,16 +11420,16 @@ public class DSL {
      * <p>
      * This function is inspired by PostgreSQL's
      * <code>GENERATE_SERIES(from, to)</code> function. Other SQL dialects may
-     * be capable of emulating this behaviour, e.g. Oracle: <pre><code>
+     * be capable of emulating this behaviour, e.g. Oracle: <code><pre>
      * -- PostgreSQL
      * SELECT * FROM GENERATE_SERIES(a, b)
      *
      * -- Oracle
      * SELECT * FROM (SELECT a + LEVEL - 1 FROM DUAL CONNECT BY a + LEVEL - 1 &lt;= b)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Table<Record1<Integer>> generateSeries(Field<Integer> from, Field<Integer> to) {
         return new GenerateSeries(Tools.nullSafe(from), Tools.nullSafe(to));
     }
@@ -13579,16 +11440,16 @@ public class DSL {
      * <p>
      * This function is inspired by PostgreSQL's
      * <code>GENERATE_SERIES(from, to, step)</code> function. Other SQL dialects
-     * may be capable of emulating this behaviour, e.g. Oracle: <pre><code>
+     * may be capable of emulating this behaviour, e.g. Oracle: <code><pre>
      * -- PostgreSQL
      * SELECT * FROM GENERATE_SERIES(a, b, c)
      *
      * -- Oracle
      * SELECT * FROM (SELECT a + LEVEL * c- 1 FROM DUAL CONNECT BY a + LEVEL * c - 1 &lt;= b)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Table<Record1<Integer>> generateSeries(int from, int to, int step) {
         return generateSeries(val(from), val(to), val(step));
     }
@@ -13599,16 +11460,16 @@ public class DSL {
      * <p>
      * This function is inspired by PostgreSQL's
      * <code>GENERATE_SERIES(from, to, step)</code> function. Other SQL dialects may
-     * be capable of emulating this behaviour, e.g. Oracle: <pre><code>
+     * be capable of emulating this behaviour, e.g. Oracle: <code><pre>
      * -- PostgreSQL
      * SELECT * FROM GENERATE_SERIES(a, b, c)
      *
      * -- Oracle
      * SELECT * FROM (SELECT a + LEVEL * c - 1 FROM DUAL CONNECT BY a + LEVEL * c - 1 &lt;= b)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Table<Record1<Integer>> generateSeries(int from, Field<Integer> to, int step) {
         return generateSeries(val(from), Tools.nullSafe(to), val(step));
     }
@@ -13619,16 +11480,16 @@ public class DSL {
      * <p>
      * This function is inspired by PostgreSQL's
      * <code>GENERATE_SERIES(from, to, step)</code> function. Other SQL dialects may
-     * be capable of emulating this behaviour, e.g. Oracle: <pre><code>
+     * be capable of emulating this behaviour, e.g. Oracle: <code><pre>
      * -- PostgreSQL
      * SELECT * FROM GENERATE_SERIES(a, b, c)
      *
      * -- Oracle
      * SELECT * FROM (SELECT a + LEVEL * c - 1 FROM DUAL CONNECT BY a + LEVEL * c - 1 &lt;= b)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Table<Record1<Integer>> generateSeries(Field<Integer> from, int to, int step) {
         return new GenerateSeries(Tools.nullSafe(from), val(to), val(step));
     }
@@ -13639,16 +11500,16 @@ public class DSL {
      * <p>
      * This function is inspired by PostgreSQL's
      * <code>GENERATE_SERIES(from, to, step)</code> function. Other SQL dialects may
-     * be capable of emulating this behaviour, e.g. Oracle: <pre><code>
+     * be capable of emulating this behaviour, e.g. Oracle: <code><pre>
      * -- PostgreSQL
      * SELECT * FROM GENERATE_SERIES(a, b, c)
      *
      * -- Oracle
      * SELECT * FROM (SELECT a + LEVEL * c - 1 FROM DUAL CONNECT BY a + LEVEL * c - 1 &lt;= b)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Table<Record1<Integer>> generateSeries(Field<Integer> from, Field<Integer> to, int step) {
         return new GenerateSeries(Tools.nullSafe(from), Tools.nullSafe(to), val(step));
     }
@@ -13659,16 +11520,16 @@ public class DSL {
      * <p>
      * This function is inspired by PostgreSQL's
      * <code>GENERATE_SERIES(from, to, step)</code> function. Other SQL dialects
-     * may be capable of emulating this behaviour, e.g. Oracle: <pre><code>
+     * may be capable of emulating this behaviour, e.g. Oracle: <code><pre>
      * -- PostgreSQL
      * SELECT * FROM GENERATE_SERIES(a, b, c)
      *
      * -- Oracle
      * SELECT * FROM (SELECT a + LEVEL * c- 1 FROM DUAL CONNECT BY a + LEVEL * c - 1 &lt;= b)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Table<Record1<Integer>> generateSeries(int from, int to, Field<Integer> step) {
         return generateSeries(val(from), val(to), Tools.nullSafe(step));
     }
@@ -13679,16 +11540,16 @@ public class DSL {
      * <p>
      * This function is inspired by PostgreSQL's
      * <code>GENERATE_SERIES(from, to, step)</code> function. Other SQL dialects may
-     * be capable of emulating this behaviour, e.g. Oracle: <pre><code>
+     * be capable of emulating this behaviour, e.g. Oracle: <code><pre>
      * -- PostgreSQL
      * SELECT * FROM GENERATE_SERIES(a, b, c)
      *
      * -- Oracle
      * SELECT * FROM (SELECT a + LEVEL * c - 1 FROM DUAL CONNECT BY a + LEVEL * c - 1 &lt;= b)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Table<Record1<Integer>> generateSeries(int from, Field<Integer> to, Field<Integer> step) {
         return generateSeries(val(from), Tools.nullSafe(to), Tools.nullSafe(step));
     }
@@ -13699,16 +11560,16 @@ public class DSL {
      * <p>
      * This function is inspired by PostgreSQL's
      * <code>GENERATE_SERIES(from, to, step)</code> function. Other SQL dialects may
-     * be capable of emulating this behaviour, e.g. Oracle: <pre><code>
+     * be capable of emulating this behaviour, e.g. Oracle: <code><pre>
      * -- PostgreSQL
      * SELECT * FROM GENERATE_SERIES(a, b, c)
      *
      * -- Oracle
      * SELECT * FROM (SELECT a + LEVEL * c - 1 FROM DUAL CONNECT BY a + LEVEL * c - 1 &lt;= b)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Table<Record1<Integer>> generateSeries(Field<Integer> from, int to, Field<Integer> step) {
         return new GenerateSeries(Tools.nullSafe(from), val(to), Tools.nullSafe(step));
     }
@@ -13719,16 +11580,16 @@ public class DSL {
      * <p>
      * This function is inspired by PostgreSQL's
      * <code>GENERATE_SERIES(from, to, step)</code> function. Other SQL dialects may
-     * be capable of emulating this behaviour, e.g. Oracle: <pre><code>
+     * be capable of emulating this behaviour, e.g. Oracle: <code><pre>
      * -- PostgreSQL
      * SELECT * FROM GENERATE_SERIES(a, b, c)
      *
      * -- Oracle
      * SELECT * FROM (SELECT a + LEVEL * c - 1 FROM DUAL CONNECT BY a + LEVEL * c - 1 &lt;= b)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Table<Record1<Integer>> generateSeries(Field<Integer> from, Field<Integer> to, Field<Integer> step) {
         return new GenerateSeries(Tools.nullSafe(from), Tools.nullSafe(to), Tools.nullSafe(step));
     }
@@ -13737,33 +11598,26 @@ public class DSL {
      * Create a <code>LATERAL</code> joined table.
      * <p>
      * Example:
-     * <pre><code>
+     * <code><pre>
      * SELECT *
      * FROM employees e,
      *      LATERAL(SELECT * FROM departments d
      *              WHERE e.department_id = d.department_id);
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ FIREBIRD, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, MYSQL, POSTGRES, YUGABYTEDB })
     public static <R extends Record> Table<R> lateral(TableLike<R> table) {
-
-        // [#14988] LATERAL (table reference) isn't supported in any dialect
-        //          and it's also superfluous, so we'll just omit it to make
-        //          sure things like APPLY table reference are emulated correctly
-        if (table instanceof TableImpl || table instanceof JoinTable)
-            return (Table<R>) table;
-        else
-            return new Lateral<>(table.asTable());
+        return new Lateral<>(table.asTable());
     }
 
     /**
-     * Create a <code>ROWS FROM (tables…)</code> expression.
+     * Create a <code>ROWS FROM (tables...)</code> expression.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * SELECT *
      * FROM ROWS FROM (function1('a', 'b'), function2('c', 'd'));
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This allows for full outer joining several table-valued functions on the
      * row number of each function's produced rows.
@@ -13786,13 +11640,13 @@ public class DSL {
      * {@link Settings#getRenderKeywordCase()}. It can be embedded in other
      * plain SQL <code>QueryParts</code> as shown in this example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Condition c = condition("{0} {1} {2} {3} {4}",
      *     value1, keyword("between")
      *     value2, keyword("and")
      *     value3
      * );
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -13816,13 +11670,13 @@ public class DSL {
      * <li> {@link #field(Name, DataType)}</li>
      * </ul>
      * <p>
-     * An example: <pre><code>
+     * An example: <code><pre>
      * // This unqualified name here
      * name("book");
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [book].[title]
-     * </code></pre>
+     * </pre></code>
      *
      * @param unqualifiedName The SQL identifier's unqualified name
      * @return A {@link QueryPart} that will render the SQL identifier
@@ -13845,13 +11699,13 @@ public class DSL {
      * <li> {@link #field(Name, DataType)}</li>
      * </ul>
      * <p>
-     * An example: <pre><code>
+     * An example: <code><pre>
      * // This qualified name here
      * name("book", "title");
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [book].[title]
-     * </code></pre>
+     * </pre></code>
      *
      * @param qualifiedName The SQL identifier's qualified name parts
      * @return A {@link QueryPart} that will render the SQL identifier
@@ -13859,15 +11713,10 @@ public class DSL {
     @NotNull
     @Support
     public static Name name(String... qualifiedName) {
-        if (Tools.isEmpty(qualifiedName))
-            return new UnqualifiedName(null);
-
-        Name result = new UnqualifiedName(qualifiedName[0]);
-
-        for (int i = 1; i < qualifiedName.length; i++)
-            result = result.append(new UnqualifiedName(qualifiedName[i]));
-
-        return result;
+        if (qualifiedName == null || qualifiedName.length != 1)
+            return new QualifiedName(qualifiedName);
+        else
+            return new UnqualifiedName(qualifiedName[0]);
     }
 
     /**
@@ -13886,13 +11735,13 @@ public class DSL {
      * <li>{@link #field(Name, DataType)}</li>
      * </ul>
      * <p>
-     * An example: <pre><code>
+     * An example: <code><pre>
      * // This qualified name here
      * name(quotedName("book"), unquotedName("title"));
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [book].title
-     * </code></pre>
+     * </pre></code>
      *
      * @param nameParts The SQL identifier's qualified name parts
      * @return A {@link QueryPart} that will render the SQL identifier
@@ -13900,15 +11749,7 @@ public class DSL {
     @NotNull
     @Support
     public static Name name(Name... nameParts) {
-        if (Tools.isEmpty(nameParts))
-            return new UnqualifiedName(null);
-
-        Name result = nameParts[0] != null ? nameParts[0] : new UnqualifiedName(null);
-
-        for (int i = 1; i < nameParts.length; i++)
-            result = result.append(nameParts[i]);
-
-        return result;
+        return new QualifiedName(nameParts);
     }
 
     /**
@@ -13923,13 +11764,13 @@ public class DSL {
      * <li> {@link #field(Name, DataType)}</li>
      * </ul>
      * <p>
-     * An example: <pre><code>
+     * An example: <code><pre>
      * // This qualified name here
      * name("book", "title");
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [book].[title]
-     * </code></pre>
+     * </pre></code>
      *
      * @param qualifiedName The SQL identifier's qualified name parts
      * @return A {@link QueryPart} that will render the SQL identifier
@@ -13973,15 +11814,10 @@ public class DSL {
     @NotNull
     @Support
     public static Name quotedName(String... qualifiedName) {
-        if (Tools.isEmpty(qualifiedName))
-            return new UnqualifiedName(null);
-
-        Name result = new UnqualifiedName(qualifiedName[0], Quoted.QUOTED);
-
-        for (int i = 1; i < qualifiedName.length; i++)
-            result = result.append(new UnqualifiedName(qualifiedName[i], Quoted.QUOTED));
-
-        return result;
+        if (qualifiedName == null || qualifiedName.length != 1)
+            return new QualifiedName(qualifiedName, Quoted.QUOTED);
+        else
+            return new UnqualifiedName(qualifiedName[0], Quoted.QUOTED);
     }
 
     /**
@@ -14033,15 +11869,10 @@ public class DSL {
     @NotNull
     @Support
     public static Name unquotedName(String... qualifiedName) {
-        if (Tools.isEmpty(qualifiedName))
-            return new UnqualifiedName(null);
-
-        Name result = new UnqualifiedName(qualifiedName[0], Quoted.UNQUOTED);
-
-        for (int i = 1; i < qualifiedName.length; i++)
-            result = result.append(new UnqualifiedName(qualifiedName[i], Quoted.UNQUOTED));
-
-        return result;
+        if (qualifiedName == null || qualifiedName.length != 1)
+            return new QualifiedName(qualifiedName, Quoted.UNQUOTED);
+        else
+            return new UnqualifiedName(qualifiedName[0], Quoted.UNQUOTED);
     }
 
     /**
@@ -14092,15 +11923,10 @@ public class DSL {
     @NotNull
     @Support
     public static Name systemName(String... qualifiedName) {
-        if (Tools.isEmpty(qualifiedName))
-            return new UnqualifiedName(null);
-
-        Name result = new UnqualifiedName(qualifiedName[0], Quoted.SYSTEM);
-
-        for (int i = 1; i < qualifiedName.length; i++)
-            result = result.append(new UnqualifiedName(qualifiedName[i], Quoted.SYSTEM));
-
-        return result;
+        if (qualifiedName == null || qualifiedName.length != 1)
+            return new QualifiedName(qualifiedName, Quoted.SYSTEM);
+        else
+            return new UnqualifiedName(qualifiedName[0], Quoted.SYSTEM);
     }
 
     /**
@@ -14162,7 +11988,7 @@ public class DSL {
      * @see #default_()
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static Field<Object> defaultValue() {
         return default_();
     }
@@ -14172,18 +11998,11 @@ public class DSL {
      * <code>UPDATE</code>, or <code>MERGE</code> statements.
      * <p>
      * This is an alias for {@link #default_(Class)}.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only {@link Class}
-     * references of types supported by jOOQ internally, i.e. types from
-     * {@link SQLDataType}. If you're using any custom data types by means of a
-     * {@link Converter} or {@link Binding}, it's better to pass that converted
-     * {@link DataType} reference explicitly to
-     * {@link #defaultValue(DataType)}.
      *
      * @see #default_(Class)
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static <T> Field<T> defaultValue(Class<T> type) {
         return default_(type);
     }
@@ -14197,7 +12016,7 @@ public class DSL {
      * @see #default_(DataType)
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static <T> Field<T> defaultValue(DataType<T> type) {
         return default_(type);
     }
@@ -14211,7 +12030,7 @@ public class DSL {
      * @see #default_(Field)
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static <T> Field<T> defaultValue(Field<T> field) {
         return default_(field);
     }
@@ -14226,7 +12045,7 @@ public class DSL {
      * {@link #defaultValue(Class)} or {@link #defaultValue(DataType)} instead.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static Field<Object> default_() {
         return default_(Object.class);
     }
@@ -14234,16 +12053,9 @@ public class DSL {
     /**
      * Create a <code>DEFAULT</code> keyword for use with <code>INSERT</code>,
      * <code>UPDATE</code>, or <code>MERGE</code> statements.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #default_(DataType)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static <T> Field<T> default_(Class<T> type) {
         return default_(getDataType(type));
     }
@@ -14253,7 +12065,7 @@ public class DSL {
      * <code>UPDATE</code>, or <code>MERGE</code> statements.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static <T> Field<T> default_(DataType<T> type) {
         return new Default<T>(type);
     }
@@ -14263,29 +12075,9 @@ public class DSL {
      * <code>UPDATE</code>, or <code>MERGE</code> statements.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static <T> Field<T> default_(Field<T> field) {
         return default_(field.getDataType());
-    }
-
-    /**
-     * Return a {@link Table} that behaves like no table being present.
-     * <p>
-     * When creating dynamic SQL queries using expressions, it is often useful
-     * to be able to decide dynamically whether a clause is being added to a
-     * query or not. In case that clause accepts tables, the {@link #noTable()}
-     * can be used to avoid creating a <code>FROM</code> clause or a join
-     * operation.
-     * <p>
-     * <b>NOTE [#16918]</b> that this {@link Table} is meant to be used with the
-     * {@link DSL} API only, not with the {@link QOM} API, which cannot offer
-     * any no-op operations. The behaviour when used with the {@link QOM} API is
-     * undefined.
-     */
-    @NotNull
-    @Support
-    public static Table<?> noTable() {
-        return NoTable.INSTANCE;
     }
 
     /**
@@ -14305,17 +12097,12 @@ public class DSL {
      * It can also be useful for other, similar clauses, e.g. when passing
      * optional expressions to window function clauses, such as:
      * <ul>
-     * <li>{@link DSL#partitionBy(GroupField...)}</li>
-     * <li>{@link DSL#orderBy(OrderField...)}</li>
+     * <li>{@link DSL#partitionBy(Field...)}</li>
+     * <li>{@link DSL#orderBy(Field...)}</li>
      * </ul>
      * In clauses that project fields to a given {@link Record} type, the
      * {@link #noField()} simply projects <code>NULL</code> and cannot be used
      * to avoid the clause.
-     * <p>
-     * <b>NOTE [#16918]</b> that this {@link Field} is meant to be used with the
-     * {@link DSL} API only, not with the {@link QOM} API, which cannot offer
-     * any no-op operations. The behaviour when used with the {@link QOM} API is
-     * undefined.
      */
     @NotNull
     @Support
@@ -14340,23 +12127,12 @@ public class DSL {
      * It can also be useful for other, similar clauses, e.g. when passing
      * optional expressions to window function clauses, such as:
      * <ul>
-     * <li>{@link DSL#partitionBy(GroupField...)}</li>
-     * <li>{@link DSL#orderBy(OrderField...)}</li>
+     * <li>{@link DSL#partitionBy(Field...)}</li>
+     * <li>{@link DSL#orderBy(Field...)}</li>
      * </ul>
      * In clauses that project fields to a given {@link Record} type, the
      * {@link #noField()} simply projects <code>NULL</code> and cannot be used
      * to avoid the clause.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only {@link Class} references
-     * of types supported by jOOQ internally, i.e. types from
-     * {@link SQLDataType}. If you're using any custom data types by means of a
-     * {@link Converter} or {@link Binding}, it's better to pass that converted
-     * {@link DataType} reference explicitly to {@link #noField(DataType)}.
-     * <p>
-     * <b>NOTE [#16918]</b> that this {@link Field} is meant to be used with the
-     * {@link DSL} API only, not with the {@link QOM} API, which cannot offer
-     * any no-op operations. The behaviour when used with the {@link QOM} API is
-     * undefined.
      *
      * @param type A class to derive the {@link Field#getDataType()} from.
      */
@@ -14383,17 +12159,12 @@ public class DSL {
      * It can also be useful for other, similar clauses, e.g. when passing
      * optional expressions to window function clauses, such as:
      * <ul>
-     * <li>{@link DSL#partitionBy(GroupField...)}</li>
-     * <li>{@link DSL#orderBy(OrderField...)}</li>
+     * <li>{@link DSL#partitionBy(Field...)}</li>
+     * <li>{@link DSL#orderBy(Field...)}</li>
      * </ul>
      * In clauses that project fields to a given {@link Record} type, the
      * {@link #noField()} simply projects <code>NULL</code> and cannot be used
      * to avoid the clause.
-     * <p>
-     * <b>NOTE [#16918]</b> that this {@link Field} is meant to be used with the
-     * {@link DSL} API only, not with the {@link QOM} API, which cannot offer
-     * any no-op operations. The behaviour when used with the {@link QOM} API is
-     * undefined.
      *
      * @param type A type to derive the {@link Field#getDataType()} from.
      */
@@ -14420,17 +12191,12 @@ public class DSL {
      * It can also be useful for other, similar clauses, e.g. when passing
      * optional expressions to window function clauses, such as:
      * <ul>
-     * <li>{@link DSL#partitionBy(GroupField...)}</li>
-     * <li>{@link DSL#orderBy(OrderField...)}</li>
+     * <li>{@link DSL#partitionBy(Field...)}</li>
+     * <li>{@link DSL#orderBy(Field...)}</li>
      * </ul>
      * In clauses that project fields to a given {@link Record} type, the
      * {@link #noField()} simply projects <code>NULL</code> and cannot be used
      * to avoid the clause.
-     * <p>
-     * <b>NOTE [#16918]</b> that this {@link Field} is meant to be used with the
-     * {@link DSL} API only, not with the {@link QOM} API, which cannot offer
-     * any no-op operations. The behaviour when used with the {@link QOM} API is
-     * undefined.
      *
      * @param type A field to derive the {@link Field#getDataType()} from.
      */
@@ -14445,13 +12211,13 @@ public class DSL {
      * <p>
      * This constructs a catalog reference given the catalog's qualified name.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * // This catalog...
      * catalog(name("MY_CATALOG"));
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [MY_CATALOG]
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -14464,13 +12230,13 @@ public class DSL {
      * <p>
      * This constructs a catalog reference given the catalog's qualified name.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * // This catalog...
      * catalog(name("MY_CATALOG"));
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [MY_CATALOG]
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -14483,13 +12249,13 @@ public class DSL {
      * <p>
      * This constructs a schema reference given the schema's qualified name.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * // This schema...
      * schema(name("MY_CATALOG", "MY_SCHEMA"));
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [MY_CATALOG].[MY_SCHEMA]
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -14502,13 +12268,13 @@ public class DSL {
      * <p>
      * This constructs a schema reference given the schema's qualified name.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * // This schema...
      * schema(name("MY_CATALOG", "MY_SCHEMA"));
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [MY_CATALOG].[MY_SCHEMA]
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -14521,16 +12287,16 @@ public class DSL {
      * <p>
      * This constructs a sequence reference given the sequence's qualified name.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * // This sequence...
      * sequence(name("MY_SCHEMA", "MY_SEQUENCE"));
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [MY_SCHEMA].[MY_SEQUENCE]
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     public static Sequence<BigInteger> sequence(Name name) {
         return sequence(name, BigInteger.class);
     }
@@ -14540,31 +12306,20 @@ public class DSL {
      * <p>
      * This constructs a sequence reference given the sequence's qualified name.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * // This sequence...
      * sequence(name("MY_SCHEMA", "MY_SEQUENCE"));
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [MY_SCHEMA].[MY_SEQUENCE]
-     * </code>
-     * </pre>
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only {@link Class}
-     * references of types supported by jOOQ internally, i.e. types from
-     * {@link SQLDataType}. If you're using any custom data types by means of a
-     * {@link Converter} or {@link Binding}, it's better to pass that converted
-     * {@link DataType} reference explicitly to
-     * {@link #sequence(Name, DataType)}.
+     * </pre></code>
      *
      * @param name The sequence name
      * @param type The sequence type (a type that is supported by
      *            {@link SQLDataType})
      */
     @NotNull
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     public static <T extends Number> Sequence<T> sequence(Name name, Class<T> type) {
         return sequence(name, getDataType(type));
     }
@@ -14574,92 +12329,22 @@ public class DSL {
      * <p>
      * This constructs a sequence reference given the sequence's qualified name.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * // This sequence...
      * sequence(name("MY_SCHEMA", "MY_SEQUENCE"));
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [MY_SCHEMA].[MY_SEQUENCE]
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     public static <T extends Number> Sequence<T> sequence(Name name, DataType<T> type) {
         return new SequenceImpl<>(
             name.unqualifiedName(),
             name.qualified() ? schema(name.qualifier()) : null,
-            CommentImpl.NO_COMMENT,
-            type
-        );
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * Create a qualified type, given its type name.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static Type<?> type(@Stringly.Name String name) {
-        return type(name(name));
-    }
-
-    /**
-     * Create a qualified type, given its type name.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static Type<?> type(Name name) {
-        return type(name, SQLDataType.OTHER);
-    }
-
-    /**
-     * Create a qualified type, given its type name.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static <T> Type<T> type(@Stringly.Name String name, DataType<T> type) {
-        return type(name(name), type);
-    }
-
-    /**
-     * Create a qualified type, given its type name.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    public static <T> Type<T> type(Name name, DataType<T> type) {
-        return new TypeImpl<>(
-            name.qualified() ? schema(name.qualifier()) : null,
-            name.unqualifiedName(),
-            CommentImpl.NO_COMMENT,
-            type
+            type,
+            false
         );
     }
 
@@ -14668,13 +12353,13 @@ public class DSL {
      * <p>
      * This constructs a table reference given the table's qualified name. jOOQ
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * // This table...
      * tableByName("MY_SCHEMA", "MY_TABLE");
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [MY_SCHEMA].[MY_TABLE]
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The returned table does not know its field references, i.e.
      * {@link Table#fields()} returns an empty array.
@@ -14690,13 +12375,13 @@ public class DSL {
      * <p>
      * This constructs a table reference given the table's qualified name. jOOQ
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * // This table...
      * tableByName("MY_SCHEMA", "MY_TABLE");
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [MY_SCHEMA].[MY_TABLE]
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The returned table does not know its field references, i.e.
      * {@link Table#fields()} returns an empty array.
@@ -14712,46 +12397,22 @@ public class DSL {
      * <p>
      * This constructs a field reference given the field's qualified name. jOOQ
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * // This field...
      * field(name("MY_SCHEMA", "MY_TABLE", "MY_FIELD"));
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [MY_SCHEMA].[MY_TABLE].[MY_FIELD]
-     * </code>
-     * </pre>
+     * </pre></code>
      * <p>
-     * Another example:
-     *
-     * <pre>
-     * <code>
+     * Another example: <code><pre>
      * create.select(field("length({1})", Integer.class, field(name("TITLE"))))
      *       .from(table(name("T_BOOK")))
      *       .fetch();
      *
      * // ... will execute this SQL on SQL Server:
      * select length([TITLE]) from [T_BOOK]
-     * </code>
-     * </pre>
-     * <p>
-     * <b>NOTE</b>: A lot of things work less well in jOOQ if no
-     * {@link DataType} information is attached to a {@link Field} expression,
-     * including:
-     * <ul>
-     * <li>Some drivers may find it hard to bind <code>NULL</code> values.</li>
-     * <li>Some RDBMS may find it hard to infer a type from an expression
-     * alone.</li>
-     * <li>User defined types may not be supported.</li>
-     * <li>You don't get compile time type safety.</li>
-     * </ul>
-     * It is usually better to use {@link DSL#field(Name, DataType)}, instead,
-     * or even better, use code generation where possible: <a href=
-     * "https://blog.jooq.org/why-you-should-use-jooq-with-code-generation/">https://blog.jooq.org/why-you-should-use-jooq-with-code-generation/</a>,
-     * in case of which {@link DataType} information is attached to all
-     * {@link Field} expressions automatically.
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -14764,37 +12425,22 @@ public class DSL {
      * <p>
      * This constructs a field reference given the field's qualified name. jOOQ
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * // This field...
      * field(name("MY_SCHEMA", "MY_TABLE", "MY_FIELD"));
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [MY_SCHEMA].[MY_TABLE].[MY_FIELD]
-     * </code>
-     * </pre>
+     * </pre></code>
      * <p>
-     * Another example:
-     *
-     * <pre>
-     * <code>
+     * Another example: <code><pre>
      * create.select(field("length({1})", Integer.class, field(name("TITLE"))))
      *       .from(table(name("T_BOOK")))
      *       .fetch();
      *
      * // ... will execute this SQL on SQL Server:
      * select length([TITLE]) from [T_BOOK]
-     * </code>
-     * </pre>
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only {@link Class}
-     * references of types supported by jOOQ internally, i.e. types from
-     * {@link SQLDataType}. If you're using any custom data types by means of a
-     * {@link Converter} or {@link Binding}, it's better to pass that converted
-     * {@link DataType} reference explicitly to
-     * {@link #field(Name, DataType)}.
+     * </pre></code>
      *
      * @param name The field name
      * @param type The field type (a type that is supported by
@@ -14811,22 +12457,22 @@ public class DSL {
      * <p>
      * This constructs a field reference given the field's qualified name. jOOQ
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * // This field...
      * field(name("MY_SCHEMA", "MY_TABLE", "MY_FIELD"));
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [MY_SCHEMA].[MY_TABLE].[MY_FIELD]
-     * </code></pre>
+     * </pre></code>
      * <p>
-     * Another example: <pre><code>
+     * Another example: <code><pre>
      * create.select(field("length({1})", Integer.class, field(name("TITLE"))))
      *       .from(table(name("T_BOOK")))
      *       .fetch();
      *
      * // ... will execute this SQL on SQL Server:
      * select length([TITLE]) from [T_BOOK]
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -14839,22 +12485,22 @@ public class DSL {
      * <p>
      * This constructs a field reference given the field's qualified name. jOOQ
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * // This field...
      * field(name("MY_SCHEMA", "MY_TABLE", "MY_FIELD"));
      *
      * // ... will render this SQL by default, using the SQL Server dialect
      * [MY_SCHEMA].[MY_TABLE].[MY_FIELD]
-     * </code></pre>
+     * </pre></code>
      * <p>
-     * Another example: <pre><code>
+     * Another example: <code><pre>
      * create.select(field("length({1})", Integer.class, field(name("TITLE"))))
      *       .from(table(name("T_BOOK")))
      *       .fetch();
      *
      * // ... will execute this SQL on SQL Server:
      * select length([TITLE]) from [T_BOOK]
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -14939,79 +12585,12 @@ public class DSL {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // -------------------------------------------------------------------------
-    // XXX: Lambda constructors
-    // -------------------------------------------------------------------------
-
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    @NotNull
-    static <T1, QR extends QueryPart> Lambda1<Field<T1>, QR> lambda(T1[] field, org.jooq.Function1<? super Field<T1>, ? extends QR> function) {
-        return lambda(Tools.field(field), function);
-    }
-
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    @NotNull
-    static <T1, QR extends QueryPart> Lambda1<Field<T1>, QR> lambda(Field<T1[]> field, org.jooq.Function1<? super Field<T1>, ? extends QR> function) {
-        Field<T1> e = (Field<T1>) DSL.field(N_E, field.getDataType().getArrayBaseDataType());
-        return lambda(e, function.apply(e));
-    }
-
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    @NotNull
-    public static <Q1 extends QueryPart, QR extends QueryPart> Lambda1<Q1, QR> lambda(Q1 arg1, QR result) {
-        return new org.jooq.impl.LambdaImpl1<>(arg1, result);
-    }
-
     // -------------------------------------------------------------------------
     // XXX: Routine parameter constructors
     // -------------------------------------------------------------------------
 
     /**
      * Create an <code>IN</code> parameter.
-     * <p>
-     * A parameter renders itself differently, depending on
-     * {@link Context#declareParameters()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The paramet renders its {@link Parameter#getParamMode()}
-     * along with the parameter name and data type. This typically happens in
-     * <code>CREATE PROCEDURE</code> or <code>CREATE FUNCTION</code>
-     * clauses.</li>
-     * <li>Reference: The parameter renders its identifier. This happens
-     * everywhere else.</li>
-     * </ul>
      */
     @NotNull
     @Support
@@ -15021,17 +12600,6 @@ public class DSL {
 
     /**
      * Create an <code>IN</code> parameter.
-     * <p>
-     * A parameter renders itself differently, depending on
-     * {@link Context#declareParameters()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The paramet renders its {@link Parameter#getParamMode()}
-     * along with the parameter name and data type. This typically happens in
-     * <code>CREATE PROCEDURE</code> or <code>CREATE FUNCTION</code>
-     * clauses.</li>
-     * <li>Reference: The parameter renders its identifier. This happens
-     * everywhere else.</li>
-     * </ul>
      */
     @NotNull
     @Support
@@ -15041,17 +12609,6 @@ public class DSL {
 
     /**
      * Create an <code>IN OUT</code> parameter.
-     * <p>
-     * A parameter renders itself differently, depending on
-     * {@link Context#declareParameters()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The paramet renders its {@link Parameter#getParamMode()}
-     * along with the parameter name and data type. This typically happens in
-     * <code>CREATE PROCEDURE</code> or <code>CREATE FUNCTION</code>
-     * clauses.</li>
-     * <li>Reference: The parameter renders its identifier. This happens
-     * everywhere else.</li>
-     * </ul>
      */
     @NotNull
     @Support
@@ -15061,17 +12618,6 @@ public class DSL {
 
     /**
      * Create an <code>IN OUT</code> parameter.
-     * <p>
-     * A parameter renders itself differently, depending on
-     * {@link Context#declareParameters()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The paramet renders its {@link Parameter#getParamMode()}
-     * along with the parameter name and data type. This typically happens in
-     * <code>CREATE PROCEDURE</code> or <code>CREATE FUNCTION</code>
-     * clauses.</li>
-     * <li>Reference: The parameter renders its identifier. This happens
-     * everywhere else.</li>
-     * </ul>
      */
     @NotNull
     @Support
@@ -15081,17 +12627,6 @@ public class DSL {
 
     /**
      * Create an <code>OUT</code> parameter.
-     * <p>
-     * A parameter renders itself differently, depending on
-     * {@link Context#declareParameters()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The paramet renders its {@link Parameter#getParamMode()}
-     * along with the parameter name and data type. This typically happens in
-     * <code>CREATE PROCEDURE</code> or <code>CREATE FUNCTION</code>
-     * clauses.</li>
-     * <li>Reference: The parameter renders its identifier. This happens
-     * everywhere else.</li>
-     * </ul>
      */
     @NotNull
     @Support
@@ -15101,17 +12636,6 @@ public class DSL {
 
     /**
      * Create an <code>OUT</code> parameter.
-     * <p>
-     * A parameter renders itself differently, depending on
-     * {@link Context#declareParameters()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The paramet renders its {@link Parameter#getParamMode()}
-     * along with the parameter name and data type. This typically happens in
-     * <code>CREATE PROCEDURE</code> or <code>CREATE FUNCTION</code>
-     * clauses.</li>
-     * <li>Reference: The parameter renders its identifier. This happens
-     * everywhere else.</li>
-     * </ul>
      */
     @NotNull
     @Support
@@ -15151,7 +12675,7 @@ public class DSL {
      * @see DSLContext#begin(Statement...)
      */
     @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static Block begin(Statement... statements) {
         return begin(Arrays.asList(statements));
     }
@@ -15162,7 +12686,7 @@ public class DSL {
      * @see DSLContext#begin(Collection)
      */
     @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static Block begin(Collection<? extends Statement> statements) {
         return DSL.using(new DefaultConfiguration()).begin(statements);
     }
@@ -15667,32 +13191,6 @@ public class DSL {
      * contain user-defined plain SQL, because sometimes it is easier to express
      * things directly in SQL.
      * <p>
-     * Unlike other ways to create plain SQL templates, this only contains raw
-     * String content, without any templating capabilities or bind values.
-     * <p>
-     * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
-     * guarantee syntax integrity. You may also create the possibility of
-     * malicious SQL injection. Be sure to properly use bind variables and/or
-     * escape literals when concatenated into SQL clauses!
-     *
-     * @param sql The SQL
-     * @return A query part wrapping the plain SQL
-     * @see SQL
-     */
-    @NotNull
-    @Support
-    @PlainSQL
-    public static SQL raw(String sql) {
-        return new SQLImpl(sql, true);
-    }
-
-    /**
-     * A custom SQL clause that can render arbitrary expressions.
-     * <p>
-     * A plain SQL <code>QueryPart</code> is a <code>QueryPart</code> that can
-     * contain user-defined plain SQL, because sometimes it is easier to express
-     * things directly in SQL.
-     * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
      * malicious SQL injection. Be sure to properly use bind variables and/or
@@ -15719,13 +13217,13 @@ public class DSL {
      * This overload takes a set of {@link QueryPart} arguments which are
      * replaced into the SQL string template at the appropriate index. Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * // Argument QueryParts are replaced into the SQL string at the appropriate index
      * sql("select {0}, {1} from {2}", TABLE.COL1, TABLE.COL2, TABLE);
      *
      * // Bind variables are supported as well, for backwards compatibility
      * sql("select col1, col2 from table where col1 = ?", val(1));
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -15758,9 +13256,9 @@ public class DSL {
      * This overload takes a set of bind value arguments which are replaced our
      * bound into the SQL string template at the appropriate index. Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * sql("select col1, col2 from table where col1 = ?", 1);
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -15776,7 +13274,7 @@ public class DSL {
     @Support
     @PlainSQL
     public static SQL sql(String sql, Object... bindings) {
-        return new SQLImpl(sql, false, bindings);
+        return new SQLImpl(sql, bindings);
     }
 
     // -------------------------------------------------------------------------
@@ -15789,8 +13287,8 @@ public class DSL {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
-     * String sql = "SET SCHEMA 'abc'";</code></pre>
+     * <code><pre>
+     * String sql = "SET SCHEMA 'abc'";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -15814,8 +13312,8 @@ public class DSL {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
-     * String sql = "SET SCHEMA 'abc'";</code></pre>
+     * <code><pre>
+     * String sql = "SET SCHEMA 'abc'";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -15839,8 +13337,8 @@ public class DSL {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
-     * String sql = "SET SCHEMA 'abc'";</code></pre>
+     * <code><pre>
+     * String sql = "SET SCHEMA 'abc'";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -15866,13 +13364,13 @@ public class DSL {
      * Unlike {@link #query(String, Object...)}, the SQL passed to this method
      * should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * query("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will render this SQL by default, using Oracle SQL dialect
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -15917,12 +13415,12 @@ public class DSL {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -15962,12 +13460,12 @@ public class DSL {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -16008,12 +13506,12 @@ public class DSL {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -16039,13 +13537,13 @@ public class DSL {
      * Unlike {@link #resultQuery(String, Object...)}, the SQL passed to this
      * method should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * resultQuery("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will render this SQL by default, using Oracle SQL dialect
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -16077,9 +13575,9 @@ public class DSL {
      * <p>
      * Example
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String sql = "(SELECT * FROM USER_TABLES WHERE OWNER = 'MY_SCHEMA')";
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The returned table does not know its field references, i.e.
      * {@link Table#fields()} returns an empty array.
@@ -16109,9 +13607,9 @@ public class DSL {
      * <p>
      * Example
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String sql = "(SELECT * FROM USER_TABLES WHERE OWNER = 'MY_SCHEMA')";
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The returned table does not know its field references, i.e.
      * {@link Table#fields()} returns an empty array.
@@ -16143,10 +13641,10 @@ public class DSL {
      * <p>
      * Example
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String sql = "(SELECT * FROM USER_TABLES WHERE OWNER = ?)";
      * Object[] bindings = new Object[] { "MY_SCHEMA" };
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The returned table does not know its field references, i.e.
      * {@link Table#fields()} returns an empty array.
@@ -16177,10 +13675,10 @@ public class DSL {
      * <p>
      * Example
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String sql = "(SELECT * FROM USER_TABLES WHERE {0})";
      * QueryPart[] parts = new QueryPart[] { USER_TABLES.OWNER.equal("MY_SCHEMA") };
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The returned table does not know its field references, i.e.
      * {@link Table#fields()} returns an empty array.
@@ -16206,42 +13704,75 @@ public class DSL {
     }
 
     /**
-     * [#18030] This method has been removed from public API in jOOQ 3.21. Do
-     * not reuse (or re-declare).
+     * Create a "plain SQL" sequence.
+     * <p>
+     * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
+     * guarantee syntax integrity. You may also create the possibility of
+     * malicious SQL injection. Be sure to properly use bind variables and/or
+     * escape literals when concatenated into SQL clauses!
+     *
+     * @param sql The SQL
+     * @return A field wrapping the plain SQL
+     * @see SQL
+     * @deprecated - 3.10 - [#6162] - Use {@link #sequence(Name)} instead.
      */
-    @Deprecated
-    private static Sequence<BigInteger> sequence(String sql) {
-        return null;
+    @Deprecated(forRemoval = true, since = "3.10")
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
+    @PlainSQL
+    public static Sequence<BigInteger> sequence(String sql) {
+        return sequence(sql, BigInteger.class);
     }
 
     /**
-     * [#18030] This method has been removed from public API in jOOQ 3.21. Do
-     * not reuse (or re-declare).
+     * Create a "plain SQL" sequence.
+     * <p>
+     * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
+     * guarantee syntax integrity. You may also create the possibility of
+     * malicious SQL injection. Be sure to properly use bind variables and/or
+     * escape literals when concatenated into SQL clauses!
+     *
+     * @param sql The sequence name
+     * @param type The sequence type (a type that is supported by
+     *            {@link SQLDataType})
+     * @return A field wrapping the plain SQL
+     * @see SQL
+     * @deprecated - 3.10 - [#6162] - Use {@link #sequence(Name, Class)} instead.
      */
-    @Deprecated
-    private static <T extends Number> Sequence<T> sequence(String sql, Class<T> type) {
-        return null;
+    @Deprecated(forRemoval = true, since = "3.10")
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
+    @PlainSQL
+    public static <T extends Number> Sequence<T> sequence(String sql, Class<T> type) {
+        return sequence(sql, getDataType(type));
     }
 
     /**
-     * [#18030] This method has been removed from public API in jOOQ 3.21. Do
-     * not reuse (or re-declare).
+     * Create a "plain SQL" sequence.
+     * <p>
+     * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
+     * guarantee syntax integrity. You may also create the possibility of
+     * malicious SQL injection. Be sure to properly use bind variables and/or
+     * escape literals when concatenated into SQL clauses!
+     *
+     * @param sql The SQL
+     * @param type The field type
+     * @return A field wrapping the plain SQL
+     * @see SQL
+     * @deprecated - 3.10 - [#6162] - Use {@link #sequence(Name, DataType)}
+     *             instead.
      */
-    @Deprecated
-    private static <T extends Number> Sequence<T> sequence(String sql, DataType<T> type) {
-        return null;
+    @Deprecated(forRemoval = true, since = "3.10")
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
+    @PlainSQL
+    public static <T extends Number> Sequence<T> sequence(String sql, DataType<T> type) {
+        return new SequenceImpl<>(sql, null, type, true);
     }
 
     /**
      * Create the <code>VALUE</code> pseudo field for usage with
      * <code>DOMAIN</code> specifications.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only {@link Class}
-     * references of types supported by jOOQ internally, i.e. types from
-     * {@link SQLDataType}. If you're using any custom data types by means of a
-     * {@link Converter} or {@link Binding}, it's better to pass that converted
-     * {@link DataType} reference explicitly to
-     * {@link #value(DataType)}.
      */
     @NotNull
     @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
@@ -16256,7 +13787,7 @@ public class DSL {
     @NotNull
     @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static <T> Field<T> value(DataType<T> type) {
-        return field(N_VALUE, type);
+        return field("{0}", type, N_VALUE);
     }
 
     /**
@@ -16274,96 +13805,26 @@ public class DSL {
     @NotNull
     @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static Domain<?> domain(Name name) {
-        return domain(name, SQLDataType.OTHER);
-    }
-
-    /**
-     * Create a <code>DOMAIN</code> reference.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only {@link Class}
-     * references of types supported by jOOQ internally, i.e. types from
-     * {@link SQLDataType}. If you're using any custom data types by means of a
-     * {@link Converter} or {@link Binding}, it's better to pass that converted
-     * {@link DataType} reference explicitly to
-     * {@link #domain(String, DataType)}.
-     */
-    @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
-    public static <T> Domain<T> domain(String name, Class<T> type) {
-        return domain(name(name), getDataType(type));
-    }
-
-    /**
-     * Create a <code>DOMAIN</code> reference.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only {@link Class}
-     * references of types supported by jOOQ internally, i.e. types from
-     * {@link SQLDataType}. If you're using any custom data types by means of a
-     * {@link Converter} or {@link Binding}, it's better to pass that converted
-     * {@link DataType} reference explicitly to
-     * {@link #domain(Name, DataType)}.
-     */
-    @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
-    public static <T> Domain<T> domain(Name name, Class<T> type) {
-        return domain(name, getDataType(type));
-    }
-
-    /**
-     * Create a <code>DOMAIN</code> reference.
-     */
-    @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
-    public static <T> Domain<T> domain(String name, DataType<T> type) {
-        return domain(name(name), type);
-    }
-
-    /**
-     * Create a <code>DOMAIN</code> reference.
-     */
-    @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
-    public static <T> Domain<T> domain(Name name, DataType<T> type) {
         return new DomainImpl<>(
             name.qualified() ? schema(name.qualifier()) : null,
             name.unqualifiedName(),
-            CommentImpl.NO_COMMENT,
-            new DefaultDataType<>(null, type.getSQLDataType(), name)
+            new DefaultDataType<>(null, Object.class, name)
         );
     }
 
     /**
      * Create a "plain SQL" field.
      * <p>
-     * A plain SQL field is a field that can contain user-defined plain SQL,
+     * A PlainSQLField is a field that can contain user-defined plain SQL,
      * because sometimes it is easier to express things directly in SQL, for
      * instance complex proprietary functions. There must not be any binding
      * variables contained in the SQL.
      * <p>
      * Example:
      * <p>
-     *
-     * <pre>
-     * <code>
+     * <code><pre>
      * String sql = "DECODE(MY_FIELD, 1, 100, 200)";
-     * </code>
-     * </pre>
-     * <p>
-     * <b>NOTE</b>: A lot of things work less well in jOOQ if no
-     * {@link DataType} information is attached to a {@link Field} expression,
-     * including:
-     * <ul>
-     * <li>Some drivers may find it hard to bind <code>NULL</code> values.</li>
-     * <li>Some RDBMS may find it hard to infer a type from an expression
-     * alone.</li>
-     * <li>User defined types may not be supported.</li>
-     * <li>You don't get compile time type safety.</li>
-     * </ul>
-     * It is usually better to use {@link DSL#field(SQL, DataType)}, instead, or
-     * even better, use code generation where possible: <a href=
-     * "https://blog.jooq.org/why-you-should-use-jooq-with-code-generation/">https://blog.jooq.org/why-you-should-use-jooq-with-code-generation/</a>,
-     * in case of which {@link DataType} information is attached to all
-     * {@link Field} expressions automatically.
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -16384,35 +13845,16 @@ public class DSL {
     /**
      * Create a "plain SQL" field.
      * <p>
-     * A plain SQL field is a field that can contain user-defined plain SQL,
+     * A PlainSQLField is a field that can contain user-defined plain SQL,
      * because sometimes it is easier to express things directly in SQL, for
      * instance complex proprietary functions. There must not be any binding
      * variables contained in the SQL.
      * <p>
      * Example:
      * <p>
-     *
-     * <pre>
-     * <code>
+     * <code><pre>
      * String sql = "DECODE(MY_FIELD, 1, 100, 200)";
-     * </code>
-     * </pre>
-     * <p>
-     * <b>NOTE</b>: A lot of things work less well in jOOQ if no
-     * {@link DataType} information is attached to a {@link Field} expression,
-     * including:
-     * <ul>
-     * <li>Some drivers may find it hard to bind <code>NULL</code> values.</li>
-     * <li>Some RDBMS may find it hard to infer a type from an expression
-     * alone.</li>
-     * <li>User defined types may not be supported.</li>
-     * <li>You don't get compile time type safety.</li>
-     * </ul>
-     * It is usually better to use {@link DSL#field(String, DataType)}, instead,
-     * or even better, use code generation where possible: <a href=
-     * "https://blog.jooq.org/why-you-should-use-jooq-with-code-generation/">https://blog.jooq.org/why-you-should-use-jooq-with-code-generation/</a>,
-     * in case of which {@link DataType} information is attached to all
-     * {@link Field} expressions automatically.
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -16433,35 +13875,16 @@ public class DSL {
     /**
      * Create a "plain SQL" field.
      * <p>
-     * A plain SQL field is a field that can contain user-defined plain SQL,
+     * A PlainSQLField is a field that can contain user-defined plain SQL,
      * because sometimes it is easier to express things directly in SQL, for
      * instance complex proprietary functions. There must be as many binding
      * variables contained in the SQL, as passed in the bindings parameter
      * <p>
      * Example:
      * <p>
-     *
-     * <pre>
-     * <code>
+     * <code><pre>
      * String sql = "DECODE(MY_FIELD, ?, ?, ?)";
-     * Object[] bindings = new Object[] { 1, 100, 200 };</code>
-     * </pre>
-     * <p>
-     * <b>NOTE</b>: A lot of things work less well in jOOQ if no
-     * {@link DataType} information is attached to a {@link Field} expression,
-     * including:
-     * <ul>
-     * <li>Some drivers may find it hard to bind <code>NULL</code> values.</li>
-     * <li>Some RDBMS may find it hard to infer a type from an expression
-     * alone.</li>
-     * <li>User defined types may not be supported.</li>
-     * <li>You don't get compile time type safety.</li>
-     * </ul>
-     * It is usually better to use {@link DSL#field(String, DataType, Object...)}, instead,
-     * or even better, use code generation where possible: <a href=
-     * "https://blog.jooq.org/why-you-should-use-jooq-with-code-generation/">https://blog.jooq.org/why-you-should-use-jooq-with-code-generation/</a>,
-     * in case of which {@link DataType} information is attached to all
-     * {@link Field} expressions automatically.
+     * Object[] bindings = new Object[] { 1, 100, 200 };</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -16484,31 +13907,21 @@ public class DSL {
     /**
      * Create a "plain SQL" field.
      * <p>
-     * A plain SQL field is a field that can contain user-defined plain SQL,
+     * A PlainSQLField is a field that can contain user-defined plain SQL,
      * because sometimes it is easier to express things directly in SQL, for
      * instance complex proprietary functions. There must not be any binding
      * variables contained in the SQL.
      * <p>
      * Example:
      * <p>
-     *
-     * <pre>
-     * <code>
+     * <code><pre>
      * String sql = "DECODE(MY_FIELD, 1, 100, 200)";
-     * </code>
-     * </pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
      * malicious SQL injection. Be sure to properly use bind variables and/or
      * escape literals when concatenated into SQL clauses!
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only {@link Class}
-     * references of types supported by jOOQ internally, i.e. types from
-     * {@link SQLDataType}. If you're using any custom data types by means of a
-     * {@link Converter} or {@link Binding}, it's better to pass that converted
-     * {@link DataType} reference explicitly to
-     * {@link #field(SQL, DataType)}.
      *
      * @param sql The SQL
      * @param type The field type (a type that is supported by
@@ -16526,31 +13939,21 @@ public class DSL {
     /**
      * Create a "plain SQL" field.
      * <p>
-     * A plain SQL field is a field that can contain user-defined plain SQL,
+     * A PlainSQLField is a field that can contain user-defined plain SQL,
      * because sometimes it is easier to express things directly in SQL, for
      * instance complex proprietary functions. There must not be any binding
      * variables contained in the SQL.
      * <p>
      * Example:
      * <p>
-     *
-     * <pre>
-     * <code>
+     * <code><pre>
      * String sql = "DECODE(MY_FIELD, 1, 100, 200)";
-     * </code>
-     * </pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
      * malicious SQL injection. Be sure to properly use bind variables and/or
      * escape literals when concatenated into SQL clauses!
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #field(String, DataType)}.
      *
      * @param sql The SQL
      * @param type The field type (a type that is supported by
@@ -16568,28 +13971,21 @@ public class DSL {
     /**
      * Create a "plain SQL" field.
      * <p>
-     * A plain SQL field is a field that can contain user-defined plain SQL,
+     * A PlainSQLField is a field that can contain user-defined plain SQL,
      * because sometimes it is easier to express things directly in SQL, for
      * instance complex proprietary functions. There must be as many binding
      * variables contained in the SQL, as passed in the bindings parameter
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String sql = "DECODE(MY_FIELD, ?, ?, ?)";
-     * Object[] bindings = new Object[] { 1, 100, 200 };</code></pre>
+     * Object[] bindings = new Object[] { 1, 100, 200 };</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
      * malicious SQL injection. Be sure to properly use bind variables and/or
      * escape literals when concatenated into SQL clauses!
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #field(String, DataType, Object...)}.
      *
      * @param sql The SQL
      * @param type The field type (a type that is supported by
@@ -16609,16 +14005,16 @@ public class DSL {
     /**
      * Create a "plain SQL" field.
      * <p>
-     * A plain SQL field is a field that can contain user-defined plain SQL,
+     * A PlainSQLField is a field that can contain user-defined plain SQL,
      * because sometimes it is easier to express things directly in SQL, for
      * instance complex proprietary functions. There must not be any binding
      * variables contained in the SQL.
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String sql = "DECODE(MY_FIELD, 1, 100, 200)";
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -16640,16 +14036,16 @@ public class DSL {
     /**
      * Create a "plain SQL" field.
      * <p>
-     * A plain SQL field is a field that can contain user-defined plain SQL,
+     * A PlainSQLField is a field that can contain user-defined plain SQL,
      * because sometimes it is easier to express things directly in SQL, for
      * instance complex proprietary functions. There must not be any binding
      * variables contained in the SQL.
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String sql = "DECODE(MY_FIELD, 1, 100, 200)";
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -16671,16 +14067,16 @@ public class DSL {
     /**
      * Create a "plain SQL" field.
      * <p>
-     * A plain SQL field is a field that can contain user-defined plain SQL,
+     * A PlainSQLField is a field that can contain user-defined plain SQL,
      * because sometimes it is easier to express things directly in SQL, for
      * instance complex proprietary functions. There must be as many binding
      * variables contained in the SQL, as passed in the bindings parameter
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String sql = "DECODE(MY_FIELD, ?, ?, ?)";
-     * Object[] bindings = new Object[] { 1, 100, 200 };</code></pre>
+     * Object[] bindings = new Object[] { 1, 100, 200 };</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -16707,16 +14103,16 @@ public class DSL {
      * This is useful for constructing more complex SQL syntax elements wherever
      * <code>Field</code> types are expected. An example for this is MySQL's
      * <code>GROUP_CONCAT</code> aggregate function, which has MySQL-specific
-     * keywords that are hard to reflect in jOOQ's DSL: <pre><code>
+     * keywords that are hard to reflect in jOOQ's DSL: <code><pre>
      * GROUP_CONCAT([DISTINCT] expr [,expr ...]
      *       [ORDER BY {unsigned_integer | col_name | expr}
      *           [ASC | DESC] [,col_name ...]]
      *       [SEPARATOR str_val])
-     *       </code></pre>
+     *       </pre></code>
      * <p>
-     * The above MySQL function can be expressed as such: <pre><code>
+     * The above MySQL function can be expressed as such: <code><pre>
      * field("GROUP_CONCAT(DISTINCT {0} ORDER BY {1} ASC SEPARATOR '-')", expr1, expr2);
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -16745,40 +14141,16 @@ public class DSL {
      * This is useful for constructing more complex SQL syntax elements wherever
      * <code>Field</code> types are expected. An example for this is MySQL's
      * <code>GROUP_CONCAT</code> aggregate function, which has MySQL-specific
-     * keywords that are hard to reflect in jOOQ's DSL:
-     *
-     * <pre>
-     * <code>
+     * keywords that are hard to reflect in jOOQ's DSL: <code><pre>
      * GROUP_CONCAT([DISTINCT] expr [,expr ...]
      *       [ORDER BY {unsigned_integer | col_name | expr}
      *           [ASC | DESC] [,col_name ...]]
      *       [SEPARATOR str_val])
-     *       </code>
-     * </pre>
+     *       </pre></code>
      * <p>
-     * The above MySQL function can be expressed as such:
-     *
-     * <pre>
-     * <code>
+     * The above MySQL function can be expressed as such: <code><pre>
      * field("GROUP_CONCAT(DISTINCT {0} ORDER BY {1} ASC SEPARATOR '-')", expr1, expr2);
-     * </code>
-     * </pre>
-     * <p>
-     * <b>NOTE</b>: A lot of things work less well in jOOQ if no
-     * {@link DataType} information is attached to a {@link Field} expression,
-     * including:
-     * <ul>
-     * <li>Some drivers may find it hard to bind <code>NULL</code> values.</li>
-     * <li>Some RDBMS may find it hard to infer a type from an expression
-     * alone.</li>
-     * <li>User defined types may not be supported.</li>
-     * <li>You don't get compile time type safety.</li>
-     * </ul>
-     * It is usually better to use {@link DSL#field(String, DataType, QueryPart...)}, instead,
-     * or even better, use code generation where possible: <a href=
-     * "https://blog.jooq.org/why-you-should-use-jooq-with-code-generation/">https://blog.jooq.org/why-you-should-use-jooq-with-code-generation/</a>,
-     * in case of which {@link DataType} information is attached to all
-     * {@link Field} expressions automatically.
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -16807,29 +14179,22 @@ public class DSL {
      * This is useful for constructing more complex SQL syntax elements wherever
      * <code>Field</code> types are expected. An example for this is MySQL's
      * <code>GROUP_CONCAT</code> aggregate function, which has MySQL-specific
-     * keywords that are hard to reflect in jOOQ's DSL: <pre><code>
+     * keywords that are hard to reflect in jOOQ's DSL: <code><pre>
      * GROUP_CONCAT([DISTINCT] expr [,expr ...]
      *       [ORDER BY {unsigned_integer | col_name | expr}
      *           [ASC | DESC] [,col_name ...]]
      *       [SEPARATOR str_val])
-     *       </code></pre>
+     *       </pre></code>
      * <p>
-     * The above MySQL function can be expressed as such: <pre><code>
+     * The above MySQL function can be expressed as such: <code><pre>
      * field("GROUP_CONCAT(DISTINCT {0} ORDER BY {1} ASC SEPARATOR '-')", expr1, expr2);
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
      * malicious SQL injection. Be sure to properly use bind variables and/or
      * escape literals when concatenated into SQL clauses! One way to escape
      * literals is to use {@link #name(String...)} and similar methods
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #field(String, DataType, QueryPart...)}.
      *
      * @param sql The SQL clause, containing {numbered placeholders} where query
      *            parts can be injected
@@ -16856,13 +14221,6 @@ public class DSL {
      * guarantee syntax integrity. You may also create the possibility of
      * malicious SQL injection. Be sure to properly use bind variables and/or
      * escape literals when concatenated into SQL clauses!
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #function(String, DataType, Field...)}.
      *
      * @param name The function name (without parentheses)
      * @param type The function return type (a type that is supported by
@@ -16874,7 +14232,7 @@ public class DSL {
     @Support
     @PlainSQL
     public static <T> Field<T> function(String name, Class<T> type, Field<?>... arguments) {
-        return function(name, type, asList(arguments));
+        return function(name, getDataType(type), Tools.nullSafe(arguments));
     }
 
     /**
@@ -16895,19 +14253,12 @@ public class DSL {
     @Support
     @PlainSQL
     public static <T> Field<T> function(String name, DataType<T> type, Field<?>... arguments) {
-        return function(name, type, asList(arguments));
+        return new org.jooq.impl.Function<>(name, type, Tools.nullSafe(arguments));
     }
 
     /**
      * <code>function()</code> can be used to access native or user-defined
      * functions that are not yet or insufficiently supported by jOOQ.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #function(Name, DataType, Field...)}.
      *
      * @param name The function name (possibly qualified)
      * @param type The function return type (a type that is supported by
@@ -16917,7 +14268,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T> Field<T> function(Name name, Class<T> type, Field<?>... arguments) {
-        return function(name, type, asList(arguments));
+        return function(name, getDataType(type), Tools.nullSafe(arguments));
     }
 
     /**
@@ -16931,92 +14282,6 @@ public class DSL {
     @NotNull
     @Support
     public static <T> Field<T> function(Name name, DataType<T> type, Field<?>... arguments) {
-        return function(name, type, asList(arguments));
-    }
-
-    /**
-     * <code>function()</code> can be used to access native or user-defined
-     * functions that are not yet or insufficiently supported by jOOQ.
-     * <p>
-     * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
-     * guarantee syntax integrity. You may also create the possibility of
-     * malicious SQL injection. Be sure to properly use bind variables and/or
-     * escape literals when concatenated into SQL clauses!
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #function(String, DataType, Field...)}.
-     *
-     * @param name The function name (without parentheses)
-     * @param type The function return type (a type that is supported by
-     *            {@link SQLDataType})
-     * @param arguments The function arguments
-     * @see SQL
-     */
-    @NotNull
-    @Support
-    @PlainSQL
-    public static <T> Field<T> function(String name, Class<T> type, Collection<? extends Field<?>> arguments) {
-        return function(name, getDataType(type), Tools.nullSafe(arguments));
-    }
-
-    /**
-     * <code>function()</code> can be used to access native or user-defined
-     * functions that are not yet or insufficiently supported by jOOQ.
-     * <p>
-     * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
-     * guarantee syntax integrity. You may also create the possibility of
-     * malicious SQL injection. Be sure to properly use bind variables and/or
-     * escape literals when concatenated into SQL clauses!
-     *
-     * @param name The function name (without parentheses)
-     * @param type The function return type
-     * @param arguments The function arguments
-     * @see SQL
-     */
-    @NotNull
-    @Support
-    @PlainSQL
-    public static <T> Field<T> function(String name, DataType<T> type, Collection<? extends Field<?>> arguments) {
-        return new org.jooq.impl.Function<>(name, type, Tools.nullSafe(arguments));
-    }
-
-    /**
-     * <code>function()</code> can be used to access native or user-defined
-     * functions that are not yet or insufficiently supported by jOOQ.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #function(Name, DataType, Field...)}.
-     *
-     * @param name The function name (possibly qualified)
-     * @param type The function return type (a type that is supported by
-     *            {@link SQLDataType})
-     * @param arguments The function arguments
-     */
-    @NotNull
-    @Support
-    public static <T> Field<T> function(Name name, Class<T> type, Collection<? extends Field<?>> arguments) {
-        return function(name, getDataType(type), Tools.nullSafe(arguments));
-    }
-
-    /**
-     * <code>function()</code> can be used to access native or user-defined
-     * functions that are not yet or insufficiently supported by jOOQ.
-     *
-     * @param name The function name (possibly qualified)
-     * @param type The function return type
-     * @param arguments The function arguments
-     */
-    @NotNull
-    @Support
-    public static <T> Field<T> function(Name name, DataType<T> type, Collection<? extends Field<?>> arguments) {
         return new org.jooq.impl.Function<>(name, type, Tools.nullSafe(arguments));
     }
 
@@ -17042,13 +14307,6 @@ public class DSL {
      * guarantee syntax integrity. You may also create the possibility of
      * malicious SQL injection. Be sure to properly use bind variables and/or
      * escape literals when concatenated into SQL clauses!
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #aggregate(String, DataType, Field...)}.
      *
      * @param name The aggregate function name (possibly qualified)
      * @param type The aggregate function return type (a type that is supported
@@ -17088,13 +14346,6 @@ public class DSL {
     /**
      * <code>aggregate()</code> can be used to access native or user-defined
      * aggregate functions that are not yet or insufficiently supported by jOOQ.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #aggregate(Name, DataType, Field...)}.
      *
      * @param name The aggregate function name (possibly qualified)
      * @param type The aggregate function return type (a type that is supported
@@ -17131,13 +14382,6 @@ public class DSL {
      * guarantee syntax integrity. You may also create the possibility of
      * malicious SQL injection. Be sure to properly use bind variables and/or
      * escape literals when concatenated into SQL clauses!
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #aggregateDistinct(String, DataType, Field...)}.
      *
      * @param name The aggregate function name (possibly qualified)
      * @param type The aggregate function return type (a type that is supported
@@ -17178,13 +14422,6 @@ public class DSL {
      * <code>aggregateDistinct()</code> can be used to access native or
      * user-defined aggregate functions that are not yet or insufficiently
      * supported by jOOQ.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #aggregateDistinct(Name, DataType, Field...)}.
      *
      * @param name The aggregate function name (possibly qualified)
      * @param type The aggregate function return type (a type that is supported
@@ -17219,8 +14456,8 @@ public class DSL {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
-     * String sql = "(X = 1 and Y = 2)";</code></pre>
+     * <code><pre>
+     * String sql = "(X = 1 and Y = 2)";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -17245,8 +14482,8 @@ public class DSL {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
-     * String sql = "(X = 1 and Y = 2)";</code></pre>
+     * <code><pre>
+     * String sql = "(X = 1 and Y = 2)";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -17272,9 +14509,9 @@ public class DSL {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String sql = "(X = ? and Y = ?)";
-     * Object[] bindings = new Object[] { 1, 2 };</code></pre>
+     * Object[] bindings = new Object[] { 1, 2 };</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -17301,11 +14538,11 @@ public class DSL {
      * <code>Condition</code> types are expected. An example for this are
      * Postgres's various operators, some of which are missing in the jOOQ API.
      * For instance, the "overlap" operator for arrays:
-     * <pre><code>ARRAY[1,4,3] &amp;&amp; ARRAY[2,1]</code></pre>
+     * <code><pre>ARRAY[1,4,3] &amp;&amp; ARRAY[2,1]</pre></code>
      * <p>
-     * The above Postgres operator can be expressed as such: <pre><code>
+     * The above Postgres operator can be expressed as such: <code><pre>
      * condition("{0} &amp;&amp; {1}", array1, array2);
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -17334,9 +14571,9 @@ public class DSL {
      * as predicates or as columns interchangeably. This extends to any type
      * of field, including functions. A Postgres example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * select 1 where texteq('a', 'a');
-     * </code></pre>
+     * </pre></code>
      *
      * @param value The boolean expression.
      * @return A condition wrapping the boolean expression
@@ -17352,9 +14589,9 @@ public class DSL {
      * <p>
      * The result is a condition generated from keys and values of the argument <code>map</code>, such that:
      *
-     * <pre><code>
+     * <code><pre>
      * key1 = value1 AND key2 = value2 AND ... AND keyN = valueN
-     * </code></pre>
+     * </pre></code>
      *
      * @param map A map containing keys and values to form predicates.
      * @return A condition comparing keys with values.
@@ -17396,29 +14633,24 @@ public class DSL {
      * This is useful as an "identity" condition for reduction operations, for
      * both <code>AND</code> and <code>OR</code> reductions, e.g.
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Condition combined =
      * Stream.of(cond1, cond2, cond3)
      *       .reduce(noCondition(), Condition::and);
-     * </code></pre>
+     * </pre></code>
      * <p>
      * When this condition is passed to SQL clauses, such as the
      * <code>WHERE</code> clause, the entire clause is omitted:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * selectFrom(T).where(noCondition())
-     * </code></pre>
+     * </pre></code>
      * <p>
      * ... will produce
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM t
-     * </code></pre>
-     * <p>
-     * <b>NOTE [#16918]</b> that this {@link Condition} is meant to be used with the
-     * {@link DSL} API only, not with the {@link QOM} API, which cannot offer
-     * any no-op operations. The behaviour when used with the {@link QOM} API is
-     * undefined.
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -17518,36 +14750,6 @@ public class DSL {
 
     /**
      * Return a <code>Condition</code> that connects all argument
-     * <code>conditions</code> with {@link Operator#XOR}.
-     */
-    @NotNull
-    @Support
-    public static Condition xor(Condition left, Condition right) {
-        return condition(XOR, left, right);
-    }
-
-    /**
-     * Return a <code>Condition</code> that connects all argument
-     * <code>conditions</code> with {@link Operator#XOR}.
-     */
-    @NotNull
-    @Support
-    public static Condition xor(Condition... conditions) {
-        return condition(XOR, conditions);
-    }
-
-    /**
-     * Return a <code>Condition</code> that connects all argument
-     * <code>conditions</code> with {@link Operator#XOR}.
-     */
-    @NotNull
-    @Support
-    public static Condition xor(Collection<? extends Condition> conditions) {
-        return condition(XOR, conditions);
-    }
-
-    /**
-     * Return a <code>Condition</code> that connects all argument
      * <code>conditions</code> with <code>Operator</code>.
      */
     @NotNull
@@ -17559,8 +14761,6 @@ public class DSL {
             return left;
         else if (operator == AND)
             return new And(left, right);
-        else if (operator == XOR)
-            return new Xor(left, right);
         else
             return new Or(left, right);
     }
@@ -17607,7 +14807,7 @@ public class DSL {
     // -------------------------------------------------------------------------
 
     /**
-     * Get the MySQL <code>FIELD(expr, expr1, expr2, …)</code> function.
+     * Get the MySQL <code>FIELD(expr, expr1, expr2, ...)</code> function.
      */
     @NotNull
     @Support
@@ -17617,7 +14817,7 @@ public class DSL {
     }
 
     /**
-     * Get the MySQL <code>FIELD(expr, expr1, expr2, …)</code> function.
+     * Get the MySQL <code>FIELD(expr, expr1, expr2, ...)</code> function.
      */
     @NotNull
     @Support
@@ -17632,12 +14832,12 @@ public class DSL {
     @NotNull
     @Support
     public static <T> Field<T> field(SelectField<T> field) {
-        return field instanceof Field<T> f
-             ? f
-             : field instanceof AbstractRow<?> r
-             ? (Field<T>) r.rf()
-             : field instanceof AbstractTable<?> t
-             ? (Field<T>) t.tf()
+        return field instanceof Field
+             ? (Field<T>) field
+             : field instanceof AbstractRow
+             ? (Field<T>) ((AbstractRow<?>) field).rf()
+             : field instanceof AbstractTable
+             ? (Field<T>) ((AbstractTable<?>) field).tf()
              : field("{0}", field.getDataType(), field);
     }
 
@@ -17882,7 +15082,7 @@ public class DSL {
     @Support
     public static <T> Field<T> field(Select<? extends Record1<T>> select) {
         if (select == null)
-            return (Field) inline((Object) null);
+            return (Field) NULL();
         else
             return select.asField();
     }
@@ -17940,12 +15140,12 @@ public class DSL {
     /**
      * Initialise a {@link Case} statement.
      * <p>
-     * This API can be used to create expressions of the type <pre><code>
+     * This API can be used to create expressions of the type <code><pre>
      * CASE value WHEN 1 THEN 'one'
      *            WHEN 2 THEN 'two'
      *            ELSE        'three'
      * END
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Choose is used as a method name to avoid name clashes with Java's
      * reserved literal "case".
@@ -17961,12 +15161,12 @@ public class DSL {
     /**
      * Initialise a {@link Case} statement.
      * <p>
-     * This API can be used to create expressions of the type <pre><code>
+     * This API can be used to create expressions of the type <code><pre>
      * CASE value WHEN 1 THEN 'one'
      *            WHEN 2 THEN 'two'
      *            ELSE        'three'
      * END
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Choose is used as a method name to avoid name clashes with Java's
      * reserved literal "case".
@@ -18031,12 +15231,12 @@ public class DSL {
     /**
      * Initialise a {@link Case} statement.
      * <p>
-     * This API can be used to create expressions of the type <pre><code>
+     * This API can be used to create expressions of the type <code><pre>
      * CASE value WHEN 1 THEN 'one'
      *            WHEN 2 THEN 'two'
      *            ELSE        'three'
      * END
-     * </code></pre>
+     * </pre></code>
      *
      * @see Case
      */
@@ -18049,12 +15249,12 @@ public class DSL {
     /**
      * Initialise a {@link Case} statement.
      * <p>
-     * This API can be used to create expressions of the type <pre><code>
+     * This API can be used to create expressions of the type <code><pre>
      * CASE value WHEN 1 THEN 'one'
      *            WHEN 2 THEN 'two'
      *            ELSE        'three'
      * END
-     * </code></pre>
+     * </pre></code>
      *
      * @see Case
      */
@@ -18067,12 +15267,12 @@ public class DSL {
     /**
      * Initialise a {@link Case} statement.
      * <p>
-     * This API can be used to create expressions of the type <pre><code>
+     * This API can be used to create expressions of the type <code><pre>
      * CASE WHEN x &lt; 1  THEN 'one'
      *      WHEN x &gt;= 2 THEN 'two'
      *      ELSE            'three'
      * END
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -18083,12 +15283,12 @@ public class DSL {
     /**
      * Initialise a {@link Case} statement.
      * <p>
-     * This API can be used to create expressions of the type <pre><code>
+     * This API can be used to create expressions of the type <code><pre>
      * CASE WHEN x &lt; 1  THEN 'one'
      *      WHEN x &gt;= 2 THEN 'two'
      *      ELSE            'three'
      * END
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -18099,12 +15299,12 @@ public class DSL {
     /**
      * Initialise a {@link Case} statement.
      * <p>
-     * This API can be used to create expressions of the type <pre><code>
+     * This API can be used to create expressions of the type <code><pre>
      * CASE WHEN x &lt; 1  THEN 'one'
      *      WHEN x &gt;= 2 THEN 'two'
      *      ELSE            'three'
      * END
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -18115,12 +15315,12 @@ public class DSL {
     /**
      * Initialise a {@link Case} statement.
      * <p>
-     * This API can be used to create expressions of the type <pre><code>
+     * This API can be used to create expressions of the type <code><pre>
      * CASE WHEN x &lt; 1  THEN 'one'
      *      WHEN x &gt;= 2 THEN 'two'
      *      ELSE            'three'
      * END
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -18131,12 +15331,12 @@ public class DSL {
     /**
      * Initialise a {@link Case} statement.
      * <p>
-     * This API can be used to create expressions of the type <pre><code>
+     * This API can be used to create expressions of the type <code><pre>
      * CASE WHEN x &lt; 1  THEN 'one'
      *      WHEN x &gt;= 2 THEN 'two'
      *      ELSE            'three'
      * END
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -18147,12 +15347,12 @@ public class DSL {
     /**
      * Initialise a {@link Case} statement.
      * <p>
-     * This API can be used to create expressions of the type <pre><code>
+     * This API can be used to create expressions of the type <code><pre>
      * CASE WHEN x &lt; 1  THEN 'one'
      *      WHEN x &gt;= 2 THEN 'two'
      *      ELSE            'three'
      * END
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
@@ -18176,7 +15376,7 @@ public class DSL {
 
     /**
      * Gets the Oracle-style
-     * <code>DECODE(expression, search, result[, search , result]… [, default])</code>
+     * <code>DECODE(expression, search, result[, search , result]... [, default])</code>
      * function.
      *
      * @see #decode(Field, Field, Field, Field[])
@@ -18189,7 +15389,7 @@ public class DSL {
 
     /**
      * Gets the Oracle-style
-     * <code>DECODE(expression, search, result[, search , result]… [, default])</code>
+     * <code>DECODE(expression, search, result[, search , result]... [, default])</code>
      * function.
      *
      * @see #decode(Field, Field, Field, Field[])
@@ -18202,7 +15402,7 @@ public class DSL {
 
     /**
      * Gets the Oracle-style
-     * <code>DECODE(expression, search, result[, search , result]… [, default])</code>
+     * <code>DECODE(expression, search, result[, search , result]... [, default])</code>
      * function.
      *
      * @see #decode(Field, Field, Field, Field[])
@@ -18215,7 +15415,7 @@ public class DSL {
 
     /**
      * Gets the Oracle-style
-     * <code>DECODE(expression, search, result[, search , result]… [, default])</code>
+     * <code>DECODE(expression, search, result[, search , result]... [, default])</code>
      * function.
      * <p>
      * Returns the dialect's equivalent to DECODE:
@@ -18225,12 +15425,12 @@ public class DSL {
      * </li>
      * </ul>
      * <p>
-     * Other dialects: <pre><code>
+     * Other dialects: <code><pre>
      * CASE WHEN [this IS NOT DISTINCT FROM search] THEN [result],
      *     [WHEN more...                            THEN more...]
      *     [ELSE more...]
      * END
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note the use of the <code>DISTINCT</code> predicate to produce the same,
      * conveniently <code>NULL</code>-agnostic behaviour as Oracle.
@@ -18251,37 +15451,6 @@ public class DSL {
 
     /**
      * Coerce this field to the type of another field.
-     * <p>
-     * Unlike with {@link DSL#cast(Object, Field)}, coercing doesn't affect the
-     * way the database sees a <code>Field</code>'s type. This is how coercing
-     * affects your SQL:
-     * <p>
-     * <h3>Bind values</h3>
-     *
-     * <pre>
-     * <code>
-     * // This binds an int value to a JDBC PreparedStatement,
-     * // where a String is expected
-     * DSL.val(1).coerce(VARCHAR);
-     *
-     * // This binds an int value to a JDBC PreparedStatement
-     * // and casts it to VARCHAR in SQL
-     * DSL.val(1).cast(VARCHAR);
-     * </code>
-     * </pre>
-     *
-     * <h3>Other Field types</h3>
-     *
-     * <pre>
-     * <code>
-     * // This fetches a String value for the BOOK.ID field from JDBC
-     * BOOK.ID.coerce(VARCHAR);
-     *
-     * // This fetches a String value for the BOOK.ID field from JDBC
-     * // after casting it to VARCHAR in the database
-     * BOOK.ID.cast(VARCHAR);
-     * </code>
-     * </pre>
      *
      * @see #coerce(Field, Field)
      */
@@ -18293,44 +15462,6 @@ public class DSL {
 
     /**
      * Coerce this field to another type.
-     * <p>
-     * Unlike with {@link DSL#cast(Object, Class)}, coercing doesn't affect the
-     * way the database sees a <code>Field</code>'s type. This is how coercing
-     * affects your SQL:
-     * <p>
-     * <h3>Bind values</h3>
-     *
-     * <pre>
-     * <code>
-     * // This binds an int value to a JDBC PreparedStatement,
-     * // where a String is expected
-     * DSL.val(1).coerce(VARCHAR);
-     *
-     * // This binds an int value to a JDBC PreparedStatement
-     * // and casts it to VARCHAR in SQL
-     * DSL.val(1).cast(VARCHAR);
-     * </code>
-     * </pre>
-     *
-     * <h3>Other Field types</h3>
-     *
-     * <pre>
-     * <code>
-     * // This fetches a String value for the BOOK.ID field from JDBC
-     * BOOK.ID.coerce(VARCHAR);
-     *
-     * // This fetches a String value for the BOOK.ID field from JDBC
-     * // after casting it to VARCHAR in the database
-     * BOOK.ID.cast(VARCHAR);
-     * </code>
-     * </pre>
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #coerce(Object, DataType)}.
      *
      * @param value The value to be coerced
      * @param as The field type (a type that is supported by
@@ -18345,37 +15476,6 @@ public class DSL {
 
     /**
      * Coerce a field to another type.
-     * <p>
-     * Unlike with {@link DSL#cast(Object, DataType)}, coercing doesn't affect the
-     * way the database sees a <code>Field</code>'s type. This is how coercing
-     * affects your SQL:
-     * <p>
-     * <h3>Bind values</h3>
-     *
-     * <pre>
-     * <code>
-     * // This binds an int value to a JDBC PreparedStatement,
-     * // where a String is expected
-     * DSL.val(1).coerce(VARCHAR);
-     *
-     * // This binds an int value to a JDBC PreparedStatement
-     * // and casts it to VARCHAR in SQL
-     * DSL.val(1).cast(VARCHAR);
-     * </code>
-     * </pre>
-     *
-     * <h3>Other Field types</h3>
-     *
-     * <pre>
-     * <code>
-     * // This fetches a String value for the BOOK.ID field from JDBC
-     * BOOK.ID.coerce(VARCHAR);
-     *
-     * // This fetches a String value for the BOOK.ID field from JDBC
-     * // after casting it to VARCHAR in the database
-     * BOOK.ID.cast(VARCHAR);
-     * </code>
-     * </pre>
      *
      * @see #coerce(Field, DataType)
      */
@@ -18388,36 +15488,24 @@ public class DSL {
     /**
      * Coerce this field to the type of another field.
      * <p>
-     * Unlike with {@link DSL#cast(Field, Field)}, coercing doesn't affect the
-     * way the database sees a <code>Field</code>'s type. This is how coercing
-     * affects your SQL:
-     * <p>
-     * <h3>Bind values</h3>
-     *
-     * <pre>
-     * <code>
-     * // This binds an int value to a JDBC PreparedStatement,
-     * // where a String is expected
-     * DSL.val(1).coerce(VARCHAR);
+     * Unlike with casting, coercing doesn't affect the way the database sees a
+     * <code>Field</code>'s type. This is how coercing affects your SQL:
+     * <h3>Bind values</h3> <code><pre>
+     * // This binds an int value to a JDBC PreparedStatement
+     * DSL.val(1).coerce(String.class);
      *
      * // This binds an int value to a JDBC PreparedStatement
      * // and casts it to VARCHAR in SQL
-     * DSL.val(1).cast(VARCHAR);
-     * </code>
-     * </pre>
-     *
-     * <h3>Other Field types</h3>
-     *
-     * <pre>
-     * <code>
+     * DSL.val(1).cast(String.class);
+     * </pre></code>
+     * <h3>Other Field types</h3> <code><pre>
      * // This fetches a String value for the BOOK.ID field from JDBC
-     * BOOK.ID.coerce(VARCHAR);
+     * BOOK.ID.coerce(String.class);
      *
      * // This fetches a String value for the BOOK.ID field from JDBC
      * // after casting it to VARCHAR in the database
-     * BOOK.ID.cast(VARCHAR);
-     * </code>
-     * </pre>
+     * BOOK.ID.cast(String.class);
+     * </pre></code>
      *
      * @param <T> The generic type of the coerced field
      * @param field The field to be coerced
@@ -18435,43 +15523,24 @@ public class DSL {
     /**
      * Coerce this field to another type.
      * <p>
-     * Unlike with {@link DSL#cast(Field, Class)}, coercing doesn't affect the
-     * way the database sees a <code>Field</code>'s type. This is how coercing
-     * affects your SQL:
-     * <p>
-     * <h3>Bind values</h3>
-     *
-     * <pre>
-     * <code>
-     * // This binds an int value to a JDBC PreparedStatement,
-     * // where a String is expected
-     * DSL.val(1).coerce(VARCHAR);
+     * Unlike with casting, coercing doesn't affect the way the database sees a
+     * <code>Field</code>'s type. This is how coercing affects your SQL:
+     * <h3>Bind values</h3> <code><pre>
+     * // This binds an int value to a JDBC PreparedStatement
+     * DSL.val(1).coerce(String.class);
      *
      * // This binds an int value to a JDBC PreparedStatement
      * // and casts it to VARCHAR in SQL
-     * DSL.val(1).cast(VARCHAR);
-     * </code>
-     * </pre>
-     *
-     * <h3>Other Field types</h3>
-     *
-     * <pre>
-     * <code>
+     * DSL.val(1).cast(String.class);
+     * </pre></code>
+     * <h3>Other Field types</h3> <code><pre>
      * // This fetches a String value for the BOOK.ID field from JDBC
-     * BOOK.ID.coerce(VARCHAR);
+     * BOOK.ID.coerce(String.class);
      *
      * // This fetches a String value for the BOOK.ID field from JDBC
      * // after casting it to VARCHAR in the database
-     * BOOK.ID.cast(VARCHAR);
-     * </code>
-     * </pre>
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #coerce(Field, DataType)}.
+     * BOOK.ID.cast(String.class);
+     * </pre></code>
      *
      * @param <T> The generic type of the coerced field
      * @param value The value to be coerced
@@ -18490,36 +15559,24 @@ public class DSL {
     /**
      * Coerce a field to another type.
      * <p>
-     * Unlike with {@link DSL#cast(Field, DataType)}, coercing doesn't affect the
-     * way the database sees a <code>Field</code>'s type. This is how coercing
-     * affects your SQL:
-     * <p>
-     * <h3>Bind values</h3>
-     *
-     * <pre>
-     * <code>
-     * // This binds an int value to a JDBC PreparedStatement,
-     * // where a String is expected
-     * DSL.val(1).coerce(VARCHAR);
+     * Unlike with casting, coercing doesn't affect the way the database sees a
+     * <code>Field</code>'s type. This is how coercing affects your SQL:
+     * <h3>Bind values</h3> <code><pre>
+     * // This binds an int value to a JDBC PreparedStatement
+     * DSL.val(1).coerce(String.class);
      *
      * // This binds an int value to a JDBC PreparedStatement
      * // and casts it to VARCHAR in SQL
-     * DSL.val(1).cast(VARCHAR);
-     * </code>
-     * </pre>
-     *
-     * <h3>Other Field types</h3>
-     *
-     * <pre>
-     * <code>
+     * DSL.val(1).cast(String.class);
+     * </pre></code>
+     * <h3>Other Field types</h3> <code><pre>
      * // This fetches a String value for the BOOK.ID field from JDBC
-     * BOOK.ID.coerce(VARCHAR);
+     * BOOK.ID.coerce(String.class);
      *
      * // This fetches a String value for the BOOK.ID field from JDBC
      * // after casting it to VARCHAR in the database
-     * BOOK.ID.cast(VARCHAR);
-     * </code>
-     * </pre>
+     * BOOK.ID.cast(String.class);
+     * </pre></code>
      *
      * @param <T> The generic type of the coerced field
      * @param field The field to be coerced
@@ -18574,11 +15631,6 @@ public class DSL {
 
     /**
      * Cast a value to the type of another field.
-     * <p>
-     * Casting converts expressions between data types directly in SQL using SQL
-     * <code>CAST</code> expressions or similar. If you want to convert data
-     * types only in jOOQ without any effect on generated SQL, you can use
-     * {@link DSL#coerce(Object, Field)} instead.
      *
      * @param <T> The generic type of the cast field
      * @param value The value to cast
@@ -18593,11 +15645,6 @@ public class DSL {
 
     /**
      * Cast a field to the type of another field.
-     * <p>
-     * Casting converts expressions between data types directly in SQL using SQL
-     * <code>CAST</code> expressions or similar. If you want to convert data
-     * types only in jOOQ without any effect on generated SQL, you can use
-     * {@link DSL#coerce(Field, Field)} instead.
      *
      * @param <T> The generic type of the cast field
      * @param field The field to cast
@@ -18620,23 +15667,11 @@ public class DSL {
     @NotNull
     @Support
     public static <T> Field<T> castNull(Field<T> as) {
-        return inline((Object) null).cast(as);
+        return NULL().cast(as);
     }
 
     /**
      * Cast a value to another type.
-     * <p>
-     * Casting converts expressions between data types directly in SQL using SQL
-     * <code>CAST</code> expressions or similar. If you want to convert data
-     * types only in jOOQ without any effect on generated SQL, you can use
-     * {@link DSL#coerce(Object, Class)} instead.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #cast(Object, DataType)}.
      *
      * @param <T> The generic type of the cast field
      * @param value The value to cast
@@ -18652,18 +15687,6 @@ public class DSL {
 
     /**
      * Cast a field to another type.
-     * <p>
-     * Casting converts expressions between data types directly in SQL using SQL
-     * <code>CAST</code> expressions or similar. If you want to convert data
-     * types only in jOOQ without any effect on generated SQL, you can use
-     * {@link DSL#coerce(Field, Class)} instead.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #cast(Field, DataType)}.
      *
      * @param <T> The generic type of the cast field
      * @param field The field to cast
@@ -18687,16 +15710,11 @@ public class DSL {
     @NotNull
     @Support
     public static <T> Field<T> castNull(DataType<T> type) {
-        return inline((Object) null).cast(type);
+        return NULL().cast(type);
     }
 
     /**
      * Cast a value to another type.
-     * <p>
-     * Casting converts expressions between data types directly in SQL using SQL
-     * <code>CAST</code> expressions or similar. If you want to convert data
-     * types only in jOOQ without any effect on generated SQL, you can use
-     * {@link DSL#coerce(Object, DataType)} instead.
      *
      * @param <T> The generic type of the cast field
      * @param value The value to cast
@@ -18711,11 +15729,6 @@ public class DSL {
 
     /**
      * Cast a field to another type.
-     * <p>
-     * Casting converts expressions between data types directly in SQL using SQL
-     * <code>CAST</code> expressions or similar. If you want to convert data
-     * types only in jOOQ without any effect on generated SQL, you can use
-     * {@link DSL#coerce(Field, DataType)} instead.
      *
      * @param <T> The generic type of the cast field
      * @param field The value to cast
@@ -18730,13 +15743,6 @@ public class DSL {
 
     /**
      * Cast null to a type.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #castNull(DataType)}.
      *
      * @param <T> The generic type of the cast field
      * @param type The type that is used for the cast
@@ -18745,11 +15751,11 @@ public class DSL {
     @NotNull
     @Support
     public static <T> Field<T> castNull(Class<T> type) {
-        return inline((Object) null).cast(type);
+        return NULL().cast(type);
     }
 
     /**
-     * The <code>COALESCE(value1, value2, … , value n)</code> function.
+     * The <code>COALESCE(value1, value2, ... , value n)</code> function.
      *
      * @see #coalesce(Field, Field...)
      */
@@ -18771,7 +15777,7 @@ public class DSL {
     }
 
     /**
-     * The <code>COALESCE(field1, field2, … , field n)</code> function.
+     * The <code>COALESCE(field1, field2, ... , field n)</code> function.
      */
     @NotNull
     @Support
@@ -18887,12 +15893,7 @@ public class DSL {
     // Java 8 is stricter than Java 7 with respect to generics and overload
     // resolution (http://stackoverflow.com/q/5361513/521799)
     static <T> Field<T> iif0(Name name, Condition condition, Field<T> ifTrue, Field<T> ifFalse) {
-        return new Iif<>(
-            name,
-            condition,
-            Tools.nullSafe(ifTrue, ifFalse.getDataType()),
-            Tools.nullSafe(ifFalse, ifTrue.getDataType())
-        );
+        return new Iif<>(name, condition, Tools.nullSafe(ifTrue), Tools.nullSafe(ifFalse));
     }
 
 
@@ -18980,7 +15981,7 @@ public class DSL {
     /**
      * The <code>ABS</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19000,10 +16001,10 @@ public class DSL {
     /**
      * The <code>ACOS</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static Field<BigDecimal> acos(Number value) {
         return new Acos(Tools.field(value));
     }
@@ -19012,7 +16013,7 @@ public class DSL {
      * The <code>ACOS</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static Field<BigDecimal> acos(Field<? extends Number> value) {
         return new Acos(value);
     }
@@ -19020,7 +16021,7 @@ public class DSL {
     /**
      * The <code>ACOSH</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19040,7 +16041,7 @@ public class DSL {
     /**
      * The <code>ACOTH</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19060,10 +16061,10 @@ public class DSL {
     /**
      * The <code>ASIN</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static Field<BigDecimal> asin(Number value) {
         return new Asin(Tools.field(value));
     }
@@ -19072,7 +16073,7 @@ public class DSL {
      * The <code>ASIN</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static Field<BigDecimal> asin(Field<? extends Number> value) {
         return new Asin(value);
     }
@@ -19080,7 +16081,7 @@ public class DSL {
     /**
      * The <code>ASINH</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19100,10 +16101,10 @@ public class DSL {
     /**
      * The <code>ATAN</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static Field<BigDecimal> atan(Number value) {
         return new Atan(Tools.field(value));
     }
@@ -19112,7 +16113,7 @@ public class DSL {
      * The <code>ATAN</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static Field<BigDecimal> atan(Field<? extends Number> value) {
         return new Atan(value);
     }
@@ -19120,11 +16121,11 @@ public class DSL {
     /**
      * The <code>ATAN2</code> function.
      *
-     * @param x is wrapped as {@link DSL#val(Object)}.
-     * @param y is wrapped as {@link DSL#val(Object)}.
+     * @param x is wrapped as {@link #val(Object)}.
+     * @param y is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static Field<BigDecimal> atan2(Number x, Number y) {
         return new Atan2(Tools.field(x), Tools.field(y));
     }
@@ -19132,10 +16133,10 @@ public class DSL {
     /**
      * The <code>ATAN2</code> function.
      *
-     * @param x is wrapped as {@link DSL#val(Object)}.
+     * @param x is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static Field<BigDecimal> atan2(Number x, Field<? extends Number> y) {
         return new Atan2(Tools.field(x), y);
     }
@@ -19143,10 +16144,10 @@ public class DSL {
     /**
      * The <code>ATAN2</code> function.
      *
-     * @param y is wrapped as {@link DSL#val(Object)}.
+     * @param y is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static Field<BigDecimal> atan2(Field<? extends Number> x, Number y) {
         return new Atan2(x, Tools.field(y));
     }
@@ -19155,7 +16156,7 @@ public class DSL {
      * The <code>ATAN2</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static Field<BigDecimal> atan2(Field<? extends Number> x, Field<? extends Number> y) {
         return new Atan2(x, y);
     }
@@ -19163,7 +16164,7 @@ public class DSL {
     /**
      * The <code>ATANH</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19183,11 +16184,11 @@ public class DSL {
     /**
      * The <code>BIT_AND</code> function.
      *
-     * @param arg1 is wrapped as {@link DSL#val(Object)}.
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg1 is wrapped as {@link #val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitAnd(T arg1, T arg2) {
         return new BitAnd<>(Tools.field(arg1), Tools.field(arg2));
     }
@@ -19195,10 +16196,10 @@ public class DSL {
     /**
      * The <code>BIT_AND</code> function.
      *
-     * @param arg1 is wrapped as {@link DSL#val(Object)}.
+     * @param arg1 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitAnd(T arg1, Field<T> arg2) {
         return new BitAnd<>(Tools.field(arg1), arg2);
     }
@@ -19206,10 +16207,10 @@ public class DSL {
     /**
      * The <code>BIT_AND</code> function.
      *
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitAnd(Field<T> arg1, T arg2) {
         return new BitAnd<>(arg1, Tools.field(arg2, arg1));
     }
@@ -19218,7 +16219,7 @@ public class DSL {
      * The <code>BIT_AND</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitAnd(Field<T> arg1, Field<T> arg2) {
         return new BitAnd<>(arg1, arg2);
     }
@@ -19228,10 +16229,10 @@ public class DSL {
      * <p>
      * Count the number of bits set in a number
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<Integer> bitCount(Number value) {
         return new BitCount(Tools.field(value));
     }
@@ -19242,39 +16243,19 @@ public class DSL {
      * Count the number of bits set in a number
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<Integer> bitCount(Field<? extends Number> value) {
         return new BitCount(value);
     }
 
     /**
-     * The <code>BIT_GET</code> function.
-     *
-     * @param bit is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T extends Number> Field<T> bitGet(Field<T> value, int bit) {
-        return new BitGet<>(value, Tools.field(bit));
-    }
-
-    /**
-     * The <code>BIT_GET</code> function.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T extends Number> Field<T> bitGet(Field<T> value, Field<? extends Number> bit) {
-        return new BitGet<>(value, bit);
-    }
-
-    /**
      * The <code>BIT_NAND</code> function.
      *
-     * @param arg1 is wrapped as {@link DSL#val(Object)}.
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg1 is wrapped as {@link #val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitNand(T arg1, T arg2) {
         return new BitNand<>(Tools.field(arg1), Tools.field(arg2));
     }
@@ -19282,10 +16263,10 @@ public class DSL {
     /**
      * The <code>BIT_NAND</code> function.
      *
-     * @param arg1 is wrapped as {@link DSL#val(Object)}.
+     * @param arg1 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitNand(T arg1, Field<T> arg2) {
         return new BitNand<>(Tools.field(arg1), arg2);
     }
@@ -19293,10 +16274,10 @@ public class DSL {
     /**
      * The <code>BIT_NAND</code> function.
      *
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitNand(Field<T> arg1, T arg2) {
         return new BitNand<>(arg1, Tools.field(arg2, arg1));
     }
@@ -19305,7 +16286,7 @@ public class DSL {
      * The <code>BIT_NAND</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitNand(Field<T> arg1, Field<T> arg2) {
         return new BitNand<>(arg1, arg2);
     }
@@ -19313,11 +16294,11 @@ public class DSL {
     /**
      * The <code>BIT_NOR</code> function.
      *
-     * @param arg1 is wrapped as {@link DSL#val(Object)}.
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg1 is wrapped as {@link #val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitNor(T arg1, T arg2) {
         return new BitNor<>(Tools.field(arg1), Tools.field(arg2));
     }
@@ -19325,10 +16306,10 @@ public class DSL {
     /**
      * The <code>BIT_NOR</code> function.
      *
-     * @param arg1 is wrapped as {@link DSL#val(Object)}.
+     * @param arg1 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitNor(T arg1, Field<T> arg2) {
         return new BitNor<>(Tools.field(arg1), arg2);
     }
@@ -19336,10 +16317,10 @@ public class DSL {
     /**
      * The <code>BIT_NOR</code> function.
      *
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitNor(Field<T> arg1, T arg2) {
         return new BitNor<>(arg1, Tools.field(arg2, arg1));
     }
@@ -19348,7 +16329,7 @@ public class DSL {
      * The <code>BIT_NOR</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitNor(Field<T> arg1, Field<T> arg2) {
         return new BitNor<>(arg1, arg2);
     }
@@ -19356,10 +16337,10 @@ public class DSL {
     /**
      * The <code>BIT_NOT</code> function.
      *
-     * @param arg1 is wrapped as {@link DSL#val(Object)}.
+     * @param arg1 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitNot(T arg1) {
         return new BitNot<>(Tools.field(arg1));
     }
@@ -19368,7 +16349,7 @@ public class DSL {
      * The <code>BIT_NOT</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitNot(Field<T> arg1) {
         return new BitNot<>(arg1);
     }
@@ -19376,11 +16357,11 @@ public class DSL {
     /**
      * The <code>BIT_OR</code> function.
      *
-     * @param arg1 is wrapped as {@link DSL#val(Object)}.
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg1 is wrapped as {@link #val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitOr(T arg1, T arg2) {
         return new BitOr<>(Tools.field(arg1), Tools.field(arg2));
     }
@@ -19388,10 +16369,10 @@ public class DSL {
     /**
      * The <code>BIT_OR</code> function.
      *
-     * @param arg1 is wrapped as {@link DSL#val(Object)}.
+     * @param arg1 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitOr(T arg1, Field<T> arg2) {
         return new BitOr<>(Tools.field(arg1), arg2);
     }
@@ -19399,10 +16380,10 @@ public class DSL {
     /**
      * The <code>BIT_OR</code> function.
      *
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitOr(Field<T> arg1, T arg2) {
         return new BitOr<>(arg1, Tools.field(arg2, arg1));
     }
@@ -19411,82 +16392,19 @@ public class DSL {
      * The <code>BIT_OR</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitOr(Field<T> arg1, Field<T> arg2) {
         return new BitOr<>(arg1, arg2);
     }
 
     /**
-     * The <code>BIT_SET</code> function.
-     *
-     * @param bit is wrapped as {@link DSL#val(Object)}.
-     * @param newValue is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T extends Number> Field<T> bitSet(Field<T> value, int bit, T newValue) {
-        return new BitSet<>(value, Tools.field(bit), Tools.field(newValue, value));
-    }
-
-    /**
-     * The <code>BIT_SET</code> function.
-     *
-     * @param bit is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T extends Number> Field<T> bitSet(Field<T> value, int bit, Field<T> newValue) {
-        return new BitSet<>(value, Tools.field(bit), newValue);
-    }
-
-    /**
-     * The <code>BIT_SET</code> function.
-     *
-     * @param newValue is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T extends Number> Field<T> bitSet(Field<T> value, Field<? extends Number> bit, T newValue) {
-        return new BitSet<>(value, bit, Tools.field(newValue, value));
-    }
-
-    /**
-     * The <code>BIT_SET</code> function.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T extends Number> Field<T> bitSet(Field<T> value, Field<? extends Number> bit, Field<T> newValue) {
-        return new BitSet<>(value, bit, newValue);
-    }
-
-    /**
-     * The <code>BIT_SET</code> function.
-     *
-     * @param bit is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T extends Number> Field<T> bitSet(Field<T> value, int bit) {
-        return new BitSet<>(value, Tools.field(bit));
-    }
-
-    /**
-     * The <code>BIT_SET</code> function.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T extends Number> Field<T> bitSet(Field<T> value, Field<? extends Number> bit) {
-        return new BitSet<>(value, bit);
-    }
-
-    /**
      * The <code>BIT_XNOR</code> function.
      *
-     * @param arg1 is wrapped as {@link DSL#val(Object)}.
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg1 is wrapped as {@link #val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitXNor(T arg1, T arg2) {
         return new BitXNor<>(Tools.field(arg1), Tools.field(arg2));
     }
@@ -19494,10 +16412,10 @@ public class DSL {
     /**
      * The <code>BIT_XNOR</code> function.
      *
-     * @param arg1 is wrapped as {@link DSL#val(Object)}.
+     * @param arg1 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitXNor(T arg1, Field<T> arg2) {
         return new BitXNor<>(Tools.field(arg1), arg2);
     }
@@ -19505,10 +16423,10 @@ public class DSL {
     /**
      * The <code>BIT_XNOR</code> function.
      *
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitXNor(Field<T> arg1, T arg2) {
         return new BitXNor<>(arg1, Tools.field(arg2, arg1));
     }
@@ -19517,7 +16435,7 @@ public class DSL {
      * The <code>BIT_XNOR</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitXNor(Field<T> arg1, Field<T> arg2) {
         return new BitXNor<>(arg1, arg2);
     }
@@ -19525,11 +16443,11 @@ public class DSL {
     /**
      * The <code>BIT_XOR</code> function.
      *
-     * @param arg1 is wrapped as {@link DSL#val(Object)}.
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg1 is wrapped as {@link #val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitXor(T arg1, T arg2) {
         return new BitXor<>(Tools.field(arg1), Tools.field(arg2));
     }
@@ -19537,10 +16455,10 @@ public class DSL {
     /**
      * The <code>BIT_XOR</code> function.
      *
-     * @param arg1 is wrapped as {@link DSL#val(Object)}.
+     * @param arg1 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitXor(T arg1, Field<T> arg2) {
         return new BitXor<>(Tools.field(arg1), arg2);
     }
@@ -19548,10 +16466,10 @@ public class DSL {
     /**
      * The <code>BIT_XOR</code> function.
      *
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitXor(Field<T> arg1, T arg2) {
         return new BitXor<>(arg1, Tools.field(arg2, arg1));
     }
@@ -19560,29 +16478,9 @@ public class DSL {
      * The <code>BIT_XOR</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> bitXor(Field<T> arg1, Field<T> arg2) {
         return new BitXor<>(arg1, arg2);
-    }
-
-    /**
-     * The <code>CBRT</code> function.
-     *
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support
-    public static Field<BigDecimal> cbrt(Number value) {
-        return new Cbrt(Tools.field(value));
-    }
-
-    /**
-     * The <code>CBRT</code> function.
-     */
-    @NotNull
-    @Support
-    public static Field<BigDecimal> cbrt(Field<? extends Number> value) {
-        return new Cbrt(value);
     }
 
     /**
@@ -19590,7 +16488,7 @@ public class DSL {
      * <p>
      * Get the smallest integer value equal or greater to a value.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19612,7 +16510,7 @@ public class DSL {
     /**
      * The <code>COS</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19632,7 +16530,7 @@ public class DSL {
     /**
      * The <code>COSH</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19652,7 +16550,7 @@ public class DSL {
     /**
      * The <code>COT</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19672,7 +16570,7 @@ public class DSL {
     /**
      * The <code>COTH</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19729,7 +16627,7 @@ public class DSL {
     /**
      * The <code>EXP</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19751,7 +16649,7 @@ public class DSL {
      * <p>
      * Get the biggest integer value equal or less than a value.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19775,7 +16673,7 @@ public class DSL {
      * <p>
      * Get the natural logarithm of a value.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19799,8 +16697,8 @@ public class DSL {
      * <p>
      * Get the logarithm of a value for a base.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     * @param base is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
+     * @param base is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19813,7 +16711,7 @@ public class DSL {
      * <p>
      * Get the logarithm of a value for a base.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19826,7 +16724,7 @@ public class DSL {
      * <p>
      * Get the logarithm of a value for a base.
      *
-     * @param base is wrapped as {@link DSL#val(Object)}.
+     * @param base is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19850,7 +16748,7 @@ public class DSL {
      * <p>
      * Get the logarithm of a value for base 10.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19883,8 +16781,8 @@ public class DSL {
     /**
      * The <code>POWER</code> function.
      *
-     * @param base is wrapped as {@link DSL#val(Object)}.
-     * @param exponent is wrapped as {@link DSL#val(Object)}.
+     * @param base is wrapped as {@link #val(Object)}.
+     * @param exponent is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19895,7 +16793,7 @@ public class DSL {
     /**
      * The <code>POWER</code> function.
      *
-     * @param base is wrapped as {@link DSL#val(Object)}.
+     * @param base is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19906,7 +16804,7 @@ public class DSL {
     /**
      * The <code>POWER</code> function.
      *
-     * @param exponent is wrapped as {@link DSL#val(Object)}.
+     * @param exponent is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -19958,49 +16856,6 @@ public class DSL {
     @Support
     public static Field<BigDecimal> rand() {
         return new Rand();
-    }
-
-    /**
-     * The <code>ROOT</code> function.
-     *
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     * @param degree is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support
-    public static Field<BigDecimal> root(Number value, Number degree) {
-        return new Root(Tools.field(value), Tools.field(degree));
-    }
-
-    /**
-     * The <code>ROOT</code> function.
-     *
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support
-    public static Field<BigDecimal> root(Number value, Field<? extends Number> degree) {
-        return new Root(Tools.field(value), degree);
-    }
-
-    /**
-     * The <code>ROOT</code> function.
-     *
-     * @param degree is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support
-    public static Field<BigDecimal> root(Field<? extends Number> value, Number degree) {
-        return new Root(value, Tools.field(degree));
-    }
-
-    /**
-     * The <code>ROOT</code> function.
-     */
-    @NotNull
-    @Support
-    public static Field<BigDecimal> root(Field<? extends Number> value, Field<? extends Number> degree) {
-        return new Root(value, degree);
     }
 
     /**
@@ -20094,7 +16949,7 @@ public class DSL {
      * @param count The number of bits to shift.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> shl(T value, Number count) {
         return new Shl<>(Tools.field(value), Tools.field(count));
     }
@@ -20108,7 +16963,7 @@ public class DSL {
      * @param count The number of bits to shift.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> shl(T value, Field<? extends Number> count) {
         return new Shl<>(Tools.field(value), count);
     }
@@ -20122,7 +16977,7 @@ public class DSL {
      * @param count The number of bits to shift.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> shl(Field<T> value, Number count) {
         return new Shl<>(value, Tools.field(count));
     }
@@ -20136,7 +16991,7 @@ public class DSL {
      * @param count The number of bits to shift.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> shl(Field<T> value, Field<? extends Number> count) {
         return new Shl<>(value, count);
     }
@@ -20150,7 +17005,7 @@ public class DSL {
      * @param count The number of bits to shift.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> shr(T value, Number count) {
         return new Shr<>(Tools.field(value), Tools.field(count));
     }
@@ -20164,7 +17019,7 @@ public class DSL {
      * @param count The number of bits to shift.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> shr(T value, Field<? extends Number> count) {
         return new Shr<>(Tools.field(value), count);
     }
@@ -20178,7 +17033,7 @@ public class DSL {
      * @param count The number of bits to shift.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> shr(Field<T> value, Number count) {
         return new Shr<>(value, Tools.field(count));
     }
@@ -20192,7 +17047,7 @@ public class DSL {
      * @param count The number of bits to shift.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> shr(Field<T> value, Field<? extends Number> count) {
         return new Shr<>(value, count);
     }
@@ -20202,7 +17057,7 @@ public class DSL {
      * <p>
      * Get the sign of a number and return it as any of +1, 0, -1.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -20224,7 +17079,7 @@ public class DSL {
     /**
      * The <code>SIN</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -20244,7 +17099,7 @@ public class DSL {
     /**
      * The <code>SINH</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -20264,7 +17119,7 @@ public class DSL {
     /**
      * The <code>SQRT</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -20284,7 +17139,7 @@ public class DSL {
     /**
      * The <code>SQUARE</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -20304,7 +17159,7 @@ public class DSL {
     /**
      * The <code>TAN</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -20324,7 +17179,7 @@ public class DSL {
     /**
      * The <code>TANH</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -20361,7 +17216,7 @@ public class DSL {
      * @param decimals The decimals to truncate to.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> trunc(T value, int decimals) {
         return new Trunc<>(Tools.field(value), Tools.field(decimals));
     }
@@ -20375,7 +17230,7 @@ public class DSL {
      * @param decimals The decimals to truncate to.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> trunc(T value, Field<Integer> decimals) {
         return new Trunc<>(Tools.field(value), decimals);
     }
@@ -20389,7 +17244,7 @@ public class DSL {
      * @param decimals The decimals to truncate to.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> trunc(Field<T> value, int decimals) {
         return new Trunc<>(value, Tools.field(decimals));
     }
@@ -20403,7 +17258,7 @@ public class DSL {
      * @param decimals The decimals to truncate to.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> Field<T> trunc(Field<T> value, Field<Integer> decimals) {
         return new Trunc<>(value, decimals);
     }
@@ -20449,10 +17304,10 @@ public class DSL {
      * <p>
      * The ASCII value of a character.
      *
-     * @param string is wrapped as {@link DSL#val(Object)}.
+     * @param string is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static Field<Integer> ascii(@Stringly.Param String string) {
         return new Ascii(Tools.field(string));
     }
@@ -20463,7 +17318,7 @@ public class DSL {
      * The ASCII value of a character.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static Field<Integer> ascii(Field<String> string) {
         return new Ascii(string);
     }
@@ -20473,7 +17328,7 @@ public class DSL {
      * <p>
      * The length of a string in bits.
      *
-     * @param string is wrapped as {@link DSL#val(Object)}.
+     * @param string is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -20497,7 +17352,7 @@ public class DSL {
      * <p>
      * The length of a string in characters.
      *
-     * @param string is wrapped as {@link DSL#val(Object)}.
+     * @param string is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -20519,10 +17374,10 @@ public class DSL {
     /**
      * The <code>CHR</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> chr(Number value) {
         return new Chr(Tools.field(value));
     }
@@ -20531,7 +17386,7 @@ public class DSL {
      * The <code>CHR</code> function.
      */
     @NotNull
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> chr(Field<? extends Number> value) {
         return new Chr(value);
     }
@@ -20539,10 +17394,10 @@ public class DSL {
     /**
      * The <code>DIGITS</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support
     public static Field<String> digits(Number value) {
         return new Digits(Tools.field(value));
     }
@@ -20551,7 +17406,7 @@ public class DSL {
      * The <code>DIGITS</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support
     public static Field<String> digits(Field<? extends Number> value) {
         return new Digits(value);
     }
@@ -20617,7 +17472,7 @@ public class DSL {
      * <p>
      * The length of a string in characters.
      *
-     * @param string is wrapped as {@link DSL#val(Object)}.
+     * @param string is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -20641,7 +17496,7 @@ public class DSL {
      * <p>
      * Turn a string into lower case.
      *
-     * @param string is wrapped as {@link DSL#val(Object)}.
+     * @param string is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -20670,7 +17525,7 @@ public class DSL {
      * @param character The padding character, if different from whitespace
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> lpad(Field<String> string, int length, @Stringly.Param String character) {
         return new Lpad(string, Tools.field(length), Tools.field(character));
     }
@@ -20685,7 +17540,7 @@ public class DSL {
      * @param character The padding character, if different from whitespace
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> lpad(Field<String> string, int length, Field<String> character) {
         return new Lpad(string, Tools.field(length), character);
     }
@@ -20700,7 +17555,7 @@ public class DSL {
      * @param character The padding character, if different from whitespace
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> lpad(Field<String> string, Field<? extends Number> length, @Stringly.Param String character) {
         return new Lpad(string, length, Tools.field(character));
     }
@@ -20715,7 +17570,7 @@ public class DSL {
      * @param character The padding character, if different from whitespace
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> lpad(Field<String> string, Field<? extends Number> length, Field<String> character) {
         return new Lpad(string, length, character);
     }
@@ -20729,7 +17584,7 @@ public class DSL {
      * @param length The maximum length to pad the string to.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> lpad(Field<String> string, int length) {
         return new Lpad(string, Tools.field(length));
     }
@@ -20743,7 +17598,7 @@ public class DSL {
      * @param length The maximum length to pad the string to.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> lpad(Field<String> string, Field<? extends Number> length) {
         return new Lpad(string, length);
     }
@@ -20751,13 +17606,13 @@ public class DSL {
     /**
      * The <code>LTRIM</code> function.
      * <p>
-     * Trim characters (whitespace as default) from the left side of a string.
+     * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
-     * @param characters The characters to be removed.
+     * @param characters The characters to be trimmed.
      */
     @NotNull
-    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> ltrim(@Stringly.Param String string, @Stringly.Param String characters) {
         return new Ltrim(Tools.field(string), Tools.field(characters));
     }
@@ -20765,13 +17620,13 @@ public class DSL {
     /**
      * The <code>LTRIM</code> function.
      * <p>
-     * Trim characters (whitespace as default) from the left side of a string.
+     * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
-     * @param characters The characters to be removed.
+     * @param characters The characters to be trimmed.
      */
     @NotNull
-    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> ltrim(@Stringly.Param String string, Field<String> characters) {
         return new Ltrim(Tools.field(string), characters);
     }
@@ -20779,13 +17634,13 @@ public class DSL {
     /**
      * The <code>LTRIM</code> function.
      * <p>
-     * Trim characters (whitespace as default) from the left side of a string.
+     * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
-     * @param characters The characters to be removed.
+     * @param characters The characters to be trimmed.
      */
     @NotNull
-    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> ltrim(Field<String> string, @Stringly.Param String characters) {
         return new Ltrim(string, Tools.field(characters));
     }
@@ -20793,13 +17648,13 @@ public class DSL {
     /**
      * The <code>LTRIM</code> function.
      * <p>
-     * Trim characters (whitespace as default) from the left side of a string.
+     * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
-     * @param characters The characters to be removed.
+     * @param characters The characters to be trimmed.
      */
     @NotNull
-    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> ltrim(Field<String> string, Field<String> characters) {
         return new Ltrim(string, characters);
     }
@@ -20807,7 +17662,7 @@ public class DSL {
     /**
      * The <code>LTRIM</code> function.
      * <p>
-     * Trim characters (whitespace as default) from the left side of a string.
+     * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
      */
@@ -20820,7 +17675,7 @@ public class DSL {
     /**
      * The <code>LTRIM</code> function.
      * <p>
-     * Trim characters (whitespace as default) from the left side of a string.
+     * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
      */
@@ -20835,10 +17690,10 @@ public class DSL {
      * <p>
      * Calculate an MD5 hash from a string.
      *
-     * @param string is wrapped as {@link DSL#val(Object)}.
+     * @param string is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static Field<String> md5(@Stringly.Param String string) {
         return new Md5(Tools.field(string));
     }
@@ -20849,7 +17704,7 @@ public class DSL {
      * Calculate an MD5 hash from a string.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static Field<String> md5(Field<String> string) {
         return new Md5(string);
     }
@@ -20947,7 +17802,7 @@ public class DSL {
      * <p>
      * The length of a string in octets.
      *
-     * @param string is wrapped as {@link DSL#val(Object)}.
+     * @param string is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -21213,7 +18068,7 @@ public class DSL {
      * @param count The number of times to repeat the string.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> repeat(@Stringly.Param String string, int count) {
         return new Repeat(Tools.field(string), Tools.field(count));
     }
@@ -21227,7 +18082,7 @@ public class DSL {
      * @param count The number of times to repeat the string.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> repeat(@Stringly.Param String string, Field<? extends Number> count) {
         return new Repeat(Tools.field(string), count);
     }
@@ -21241,7 +18096,7 @@ public class DSL {
      * @param count The number of times to repeat the string.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> repeat(Field<String> string, int count) {
         return new Repeat(string, Tools.field(count));
     }
@@ -21255,7 +18110,7 @@ public class DSL {
      * @param count The number of times to repeat the string.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> repeat(Field<String> string, Field<? extends Number> count) {
         return new Repeat(string, count);
     }
@@ -21270,7 +18125,7 @@ public class DSL {
      * @param replace The replacement for each substring, if not empty.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> replace(Field<String> string, @Stringly.Param String search, @Stringly.Param String replace) {
         return new Replace(string, Tools.field(search), Tools.field(replace));
     }
@@ -21285,7 +18140,7 @@ public class DSL {
      * @param replace The replacement for each substring, if not empty.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> replace(Field<String> string, @Stringly.Param String search, Field<String> replace) {
         return new Replace(string, Tools.field(search), replace);
     }
@@ -21300,7 +18155,7 @@ public class DSL {
      * @param replace The replacement for each substring, if not empty.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> replace(Field<String> string, Field<String> search, @Stringly.Param String replace) {
         return new Replace(string, search, Tools.field(replace));
     }
@@ -21315,7 +18170,7 @@ public class DSL {
      * @param replace The replacement for each substring, if not empty.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> replace(Field<String> string, Field<String> search, Field<String> replace) {
         return new Replace(string, search, replace);
     }
@@ -21329,7 +18184,7 @@ public class DSL {
      * @param search The substring to search for.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> replace(Field<String> string, @Stringly.Param String search) {
         return new Replace(string, Tools.field(search));
     }
@@ -21343,7 +18198,7 @@ public class DSL {
      * @param search The substring to search for.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> replace(Field<String> string, Field<String> search) {
         return new Replace(string, search);
     }
@@ -21353,10 +18208,10 @@ public class DSL {
      * <p>
      * Reverse a string.
      *
-     * @param string is wrapped as {@link DSL#val(Object)}.
+     * @param string is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static Field<String> reverse(@Stringly.Param String string) {
         return new Reverse(Tools.field(string));
     }
@@ -21367,7 +18222,7 @@ public class DSL {
      * Reverse a string.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static Field<String> reverse(Field<String> string) {
         return new Reverse(string);
     }
@@ -21438,7 +18293,7 @@ public class DSL {
      * @param character The padding character, if different from whitespace
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> rpad(Field<String> string, int length, @Stringly.Param String character) {
         return new Rpad(string, Tools.field(length), Tools.field(character));
     }
@@ -21453,7 +18308,7 @@ public class DSL {
      * @param character The padding character, if different from whitespace
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> rpad(Field<String> string, int length, Field<String> character) {
         return new Rpad(string, Tools.field(length), character);
     }
@@ -21468,7 +18323,7 @@ public class DSL {
      * @param character The padding character, if different from whitespace
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> rpad(Field<String> string, Field<? extends Number> length, @Stringly.Param String character) {
         return new Rpad(string, length, Tools.field(character));
     }
@@ -21483,7 +18338,7 @@ public class DSL {
      * @param character The padding character, if different from whitespace
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> rpad(Field<String> string, Field<? extends Number> length, Field<String> character) {
         return new Rpad(string, length, character);
     }
@@ -21497,7 +18352,7 @@ public class DSL {
      * @param length The maximum length to pad the string to.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> rpad(Field<String> string, int length) {
         return new Rpad(string, Tools.field(length));
     }
@@ -21511,7 +18366,7 @@ public class DSL {
      * @param length The maximum length to pad the string to.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> rpad(Field<String> string, Field<? extends Number> length) {
         return new Rpad(string, length);
     }
@@ -21519,13 +18374,13 @@ public class DSL {
     /**
      * The <code>RTRIM</code> function.
      * <p>
-     * Trim characters (whitespace as default) from the right side of a string.
+     * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
-     * @param characters The characters to be removed.
+     * @param characters The characters to be trimmed.
      */
     @NotNull
-    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     public static Field<String> rtrim(@Stringly.Param String string, @Stringly.Param String characters) {
         return new Rtrim(Tools.field(string), Tools.field(characters));
     }
@@ -21533,13 +18388,13 @@ public class DSL {
     /**
      * The <code>RTRIM</code> function.
      * <p>
-     * Trim characters (whitespace as default) from the right side of a string.
+     * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
-     * @param characters The characters to be removed.
+     * @param characters The characters to be trimmed.
      */
     @NotNull
-    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     public static Field<String> rtrim(@Stringly.Param String string, Field<String> characters) {
         return new Rtrim(Tools.field(string), characters);
     }
@@ -21547,13 +18402,13 @@ public class DSL {
     /**
      * The <code>RTRIM</code> function.
      * <p>
-     * Trim characters (whitespace as default) from the right side of a string.
+     * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
-     * @param characters The characters to be removed.
+     * @param characters The characters to be trimmed.
      */
     @NotNull
-    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     public static Field<String> rtrim(Field<String> string, @Stringly.Param String characters) {
         return new Rtrim(string, Tools.field(characters));
     }
@@ -21561,13 +18416,13 @@ public class DSL {
     /**
      * The <code>RTRIM</code> function.
      * <p>
-     * Trim characters (whitespace as default) from the right side of a string.
+     * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
-     * @param characters The characters to be removed.
+     * @param characters The characters to be trimmed.
      */
     @NotNull
-    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     public static Field<String> rtrim(Field<String> string, Field<String> characters) {
         return new Rtrim(string, characters);
     }
@@ -21575,7 +18430,7 @@ public class DSL {
     /**
      * The <code>RTRIM</code> function.
      * <p>
-     * Trim characters (whitespace as default) from the right side of a string.
+     * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
      */
@@ -21588,7 +18443,7 @@ public class DSL {
     /**
      * The <code>RTRIM</code> function.
      * <p>
-     * Trim characters (whitespace as default) from the right side of a string.
+     * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
      */
@@ -21606,7 +18461,7 @@ public class DSL {
      * @param count The number of spaces to produce.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> space(Number count) {
         return new Space(Tools.field(count));
     }
@@ -21619,7 +18474,7 @@ public class DSL {
      * @param count The number of spaces to produce.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> space(Field<? extends Number> count) {
         return new Space(count);
     }
@@ -21634,7 +18489,7 @@ public class DSL {
      * @param n The token number (1-based).
      */
     @NotNull
-    @Support({ DUCKDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static Field<String> splitPart(Field<String> string, @Stringly.Param String delimiter, Number n) {
         return new SplitPart(string, Tools.field(delimiter), Tools.field(n));
     }
@@ -21649,7 +18504,7 @@ public class DSL {
      * @param n The token number (1-based).
      */
     @NotNull
-    @Support({ DUCKDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static Field<String> splitPart(Field<String> string, @Stringly.Param String delimiter, Field<? extends Number> n) {
         return new SplitPart(string, Tools.field(delimiter), n);
     }
@@ -21664,7 +18519,7 @@ public class DSL {
      * @param n The token number (1-based).
      */
     @NotNull
-    @Support({ DUCKDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static Field<String> splitPart(Field<String> string, Field<String> delimiter, Number n) {
         return new SplitPart(string, delimiter, Tools.field(n));
     }
@@ -21679,7 +18534,7 @@ public class DSL {
      * @param n The token number (1-based).
      */
     @NotNull
-    @Support({ DUCKDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static Field<String> splitPart(Field<String> string, Field<String> delimiter, Field<? extends Number> n) {
         return new SplitPart(string, delimiter, n);
     }
@@ -21782,7 +18637,7 @@ public class DSL {
      * @param n The number of occurrences of the delimiter.
      */
     @NotNull
-    @Support({ CLICKHOUSE, MARIADB, MYSQL })
+    @Support({ MARIADB, MYSQL })
     public static Field<String> substringIndex(Field<String> string, @Stringly.Param String delimiter, int n) {
         return new SubstringIndex(string, Tools.field(delimiter), Tools.field(n));
     }
@@ -21797,7 +18652,7 @@ public class DSL {
      * @param n The number of occurrences of the delimiter.
      */
     @NotNull
-    @Support({ CLICKHOUSE, MARIADB, MYSQL })
+    @Support({ MARIADB, MYSQL })
     public static Field<String> substringIndex(Field<String> string, @Stringly.Param String delimiter, Field<? extends Number> n) {
         return new SubstringIndex(string, Tools.field(delimiter), n);
     }
@@ -21812,7 +18667,7 @@ public class DSL {
      * @param n The number of occurrences of the delimiter.
      */
     @NotNull
-    @Support({ CLICKHOUSE, MARIADB, MYSQL })
+    @Support({ MARIADB, MYSQL })
     public static Field<String> substringIndex(Field<String> string, Field<String> delimiter, int n) {
         return new SubstringIndex(string, delimiter, Tools.field(n));
     }
@@ -21827,7 +18682,7 @@ public class DSL {
      * @param n The number of occurrences of the delimiter.
      */
     @NotNull
-    @Support({ CLICKHOUSE, MARIADB, MYSQL })
+    @Support({ MARIADB, MYSQL })
     public static Field<String> substringIndex(Field<String> string, Field<String> delimiter, Field<? extends Number> n) {
         return new SubstringIndex(string, delimiter, n);
     }
@@ -21975,10 +18830,10 @@ public class DSL {
      * <p>
      * Format a number to its hex value.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> toHex(Number value) {
         return new ToHex(Tools.field(value));
     }
@@ -21989,7 +18844,7 @@ public class DSL {
      * Format a number to its hex value.
      */
     @NotNull
-    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> toHex(Field<? extends Number> value) {
         return new ToHex(value);
     }
@@ -22060,7 +18915,7 @@ public class DSL {
      * @param to The set of target characters, matched with source characters by position.
      */
     @NotNull
-    @Support({ CLICKHOUSE, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static Field<String> translate(Field<String> string, @Stringly.Param String from, @Stringly.Param String to) {
         return new Translate(string, Tools.field(from), Tools.field(to));
     }
@@ -22075,7 +18930,7 @@ public class DSL {
      * @param to The set of target characters, matched with source characters by position.
      */
     @NotNull
-    @Support({ CLICKHOUSE, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static Field<String> translate(Field<String> string, @Stringly.Param String from, Field<String> to) {
         return new Translate(string, Tools.field(from), to);
     }
@@ -22090,7 +18945,7 @@ public class DSL {
      * @param to The set of target characters, matched with source characters by position.
      */
     @NotNull
-    @Support({ CLICKHOUSE, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static Field<String> translate(Field<String> string, Field<String> from, @Stringly.Param String to) {
         return new Translate(string, from, Tools.field(to));
     }
@@ -22105,7 +18960,7 @@ public class DSL {
      * @param to The set of target characters, matched with source characters by position.
      */
     @NotNull
-    @Support({ CLICKHOUSE, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static Field<String> translate(Field<String> string, Field<String> from, Field<String> to) {
         return new Translate(string, from, to);
     }
@@ -22116,7 +18971,7 @@ public class DSL {
      * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
-     * @param characters The characters to be removed.
+     * @param characters The characters to be trimmed.
      */
     @NotNull
     @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
@@ -22130,7 +18985,7 @@ public class DSL {
      * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
-     * @param characters The characters to be removed.
+     * @param characters The characters to be trimmed.
      */
     @NotNull
     @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
@@ -22144,7 +18999,7 @@ public class DSL {
      * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
-     * @param characters The characters to be removed.
+     * @param characters The characters to be trimmed.
      */
     @NotNull
     @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
@@ -22158,7 +19013,7 @@ public class DSL {
      * Trim characters (whitespace as default) from both sides of a string.
      *
      * @param string The string to be trimmed.
-     * @param characters The characters to be removed.
+     * @param characters The characters to be trimmed.
      */
     @NotNull
     @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
@@ -22197,7 +19052,7 @@ public class DSL {
      * <p>
      * Turn a string into upper case.
      *
-     * @param string is wrapped as {@link DSL#val(Object)}.
+     * @param string is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -22216,711 +19071,15 @@ public class DSL {
         return new Upper(string);
     }
 
-    // -------------------------------------------------------------------------
-    // UUID functions
-    // -------------------------------------------------------------------------
-
     /**
      * The <code>UUID</code> function.
      * <p>
      * Generate a random UUID.
      */
     @NotNull
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE })
     public static Field<UUID> uuid() {
         return new Uuid();
-    }
-
-    /**
-     * The <code>BIN_TO_UUID</code> function.
-     * <p>
-     * Convert a {@link SQLDataType#BINARY} representation of a UUID to a {@link SQLDataType#UUID}
-     * representation.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, MYSQL, POSTGRES, YUGABYTEDB })
-    public static Field<UUID> binToUuid(byte[] bytes) {
-        return new BinToUuid(Tools.field(bytes));
-    }
-
-    /**
-     * The <code>BIN_TO_UUID</code> function.
-     * <p>
-     * Convert a {@link SQLDataType#BINARY} representation of a UUID to a {@link SQLDataType#UUID}
-     * representation.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, MYSQL, POSTGRES, YUGABYTEDB })
-    public static Field<UUID> binToUuid(Field<byte[]> bytes) {
-        return new BinToUuid(bytes);
-    }
-
-    /**
-     * The <code>UUID_TO_BIN</code> function.
-     * <p>
-     * Convert a {@link SQLDataType#BINARY} representation of a UUID to a {@link SQLDataType#UUID}
-     * representation.
-     *
-     * @param uuid is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, MYSQL, POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> uuidToBin(UUID uuid) {
-        return new UuidToBin(Tools.field(uuid));
-    }
-
-    /**
-     * The <code>UUID_TO_BIN</code> function.
-     * <p>
-     * Convert a {@link SQLDataType#BINARY} representation of a UUID to a {@link SQLDataType#UUID}
-     * representation.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, MYSQL, POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> uuidToBin(Field<UUID> uuid) {
-        return new UuidToBin(uuid);
-    }
-
-    // -------------------------------------------------------------------------
-    // Binary functions
-    // -------------------------------------------------------------------------
-
-    /**
-     * The <code>BINARY_BIT_LENGTH</code> function.
-     * <p>
-     * The length of a binary string in bits.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryBitLength(byte[] bytes) {
-        return new BinaryBitLength(Tools.field(bytes));
-    }
-
-    /**
-     * The <code>BINARY_BIT_LENGTH</code> function.
-     * <p>
-     * The length of a binary string in bits.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryBitLength(Field<byte[]> bytes) {
-        return new BinaryBitLength(bytes);
-    }
-
-    /**
-     * The <code>BINARY_CONCAT</code> function.
-     * <p>
-     * The concatenation of binary strings.
-     *
-     * @param bytes1 The first binary string.
-     * @param bytes2 The second binary string.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryConcat(byte[] bytes1, byte[] bytes2) {
-        return new BinaryConcat(Tools.field(bytes1), Tools.field(bytes2));
-    }
-
-    /**
-     * The <code>BINARY_CONCAT</code> function.
-     * <p>
-     * The concatenation of binary strings.
-     *
-     * @param bytes1 The first binary string.
-     * @param bytes2 The second binary string.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryConcat(byte[] bytes1, Field<byte[]> bytes2) {
-        return new BinaryConcat(Tools.field(bytes1), bytes2);
-    }
-
-    /**
-     * The <code>BINARY_CONCAT</code> function.
-     * <p>
-     * The concatenation of binary strings.
-     *
-     * @param bytes1 The first binary string.
-     * @param bytes2 The second binary string.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryConcat(Field<byte[]> bytes1, byte[] bytes2) {
-        return new BinaryConcat(bytes1, Tools.field(bytes2));
-    }
-
-    /**
-     * The <code>BINARY_CONCAT</code> function.
-     * <p>
-     * The concatenation of binary strings.
-     *
-     * @param bytes1 The first binary string.
-     * @param bytes2 The second binary string.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryConcat(Field<byte[]> bytes1, Field<byte[]> bytes2) {
-        return new BinaryConcat(bytes1, bytes2);
-    }
-
-    /**
-     * The <code>BINARY_LENGTH</code> function.
-     * <p>
-     * The length of a binary string in bytes.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryLength(byte[] bytes) {
-        return new BinaryLength(Tools.field(bytes));
-    }
-
-    /**
-     * The <code>BINARY_LENGTH</code> function.
-     * <p>
-     * The length of a binary string in bytes.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryLength(Field<byte[]> bytes) {
-        return new BinaryLength(bytes);
-    }
-
-    /**
-     * The <code>BINARY_LTRIM</code> function.
-     * <p>
-     * Trim bytes from the left side of a binary string.
-     *
-     * @param bytes The binary string to be trimmed.
-     * @param characters The binary characters to be removed.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryLtrim(byte[] bytes, byte[] characters) {
-        return new BinaryLtrim(Tools.field(bytes), Tools.field(characters));
-    }
-
-    /**
-     * The <code>BINARY_LTRIM</code> function.
-     * <p>
-     * Trim bytes from the left side of a binary string.
-     *
-     * @param bytes The binary string to be trimmed.
-     * @param characters The binary characters to be removed.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryLtrim(byte[] bytes, Field<byte[]> characters) {
-        return new BinaryLtrim(Tools.field(bytes), characters);
-    }
-
-    /**
-     * The <code>BINARY_LTRIM</code> function.
-     * <p>
-     * Trim bytes from the left side of a binary string.
-     *
-     * @param bytes The binary string to be trimmed.
-     * @param characters The binary characters to be removed.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryLtrim(Field<byte[]> bytes, byte[] characters) {
-        return new BinaryLtrim(bytes, Tools.field(characters));
-    }
-
-    /**
-     * The <code>BINARY_LTRIM</code> function.
-     * <p>
-     * Trim bytes from the left side of a binary string.
-     *
-     * @param bytes The binary string to be trimmed.
-     * @param characters The binary characters to be removed.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryLtrim(Field<byte[]> bytes, Field<byte[]> characters) {
-        return new BinaryLtrim(bytes, characters);
-    }
-
-    /**
-     * The <code>BINARY_MD5</code> function.
-     * <p>
-     * Calculate an MD5 hash from a binary string.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryMd5(byte[] bytes) {
-        return new BinaryMd5(Tools.field(bytes));
-    }
-
-    /**
-     * The <code>BINARY_MD5</code> function.
-     * <p>
-     * Calculate an MD5 hash from a binary string.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryMd5(Field<byte[]> bytes) {
-        return new BinaryMd5(bytes);
-    }
-
-    /**
-     * The <code>BINARY_OCTET_LENGTH</code> function.
-     * <p>
-     * The length of a binary string in octets.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryOctetLength(byte[] bytes) {
-        return new BinaryOctetLength(Tools.field(bytes));
-    }
-
-    /**
-     * The <code>BINARY_OCTET_LENGTH</code> function.
-     * <p>
-     * The length of a binary string in octets.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryOctetLength(Field<byte[]> bytes) {
-        return new BinaryOctetLength(bytes);
-    }
-
-    /**
-     * The <code>BINARY_OVERLAY</code> function.
-     * <p>
-     * Place a binary string on top of another binary string, replacing the original contents.
-     *
-     * @param in The original binary string on top of which the overlay is placed.
-     * @param placing The binary string that is being placed on top of the other binary string.
-     * @param startIndex The start index (1-based) starting from where the overlay is placed.
-     * @param length The length in the original string that will be replaced, if different from the overlay length.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryOverlay(Field<byte[]> in, byte[] placing, Number startIndex, Number length) {
-        return new BinaryOverlay(in, Tools.field(placing), Tools.field(startIndex), Tools.field(length));
-    }
-
-    /**
-     * The <code>BINARY_OVERLAY</code> function.
-     * <p>
-     * Place a binary string on top of another binary string, replacing the original contents.
-     *
-     * @param in The original binary string on top of which the overlay is placed.
-     * @param placing The binary string that is being placed on top of the other binary string.
-     * @param startIndex The start index (1-based) starting from where the overlay is placed.
-     * @param length The length in the original string that will be replaced, if different from the overlay length.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryOverlay(Field<byte[]> in, Field<byte[]> placing, Field<? extends Number> startIndex, Field<? extends Number> length) {
-        return new BinaryOverlay(in, placing, startIndex, length);
-    }
-
-    /**
-     * The <code>BINARY_OVERLAY</code> function.
-     * <p>
-     * Place a binary string on top of another binary string, replacing the original contents.
-     *
-     * @param in The original binary string on top of which the overlay is placed.
-     * @param placing The binary string that is being placed on top of the other binary string.
-     * @param startIndex The start index (1-based) starting from where the overlay is placed.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryOverlay(Field<byte[]> in, byte[] placing, Number startIndex) {
-        return new BinaryOverlay(in, Tools.field(placing), Tools.field(startIndex));
-    }
-
-    /**
-     * The <code>BINARY_OVERLAY</code> function.
-     * <p>
-     * Place a binary string on top of another binary string, replacing the original contents.
-     *
-     * @param in The original binary string on top of which the overlay is placed.
-     * @param placing The binary string that is being placed on top of the other binary string.
-     * @param startIndex The start index (1-based) starting from where the overlay is placed.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryOverlay(Field<byte[]> in, Field<byte[]> placing, Field<? extends Number> startIndex) {
-        return new BinaryOverlay(in, placing, startIndex);
-    }
-
-    /**
-     * The <code>BINARY_POSITION</code> function.
-     * <p>
-     * Search the position (1-based) of a substring in another string.
-     *
-     * @param in The string in which to search the substring.
-     * @param search The substring to search for.
-     * @param startIndex The start index (1-based) from which to start looking for the substring.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryPosition(byte[] in, byte[] search, int startIndex) {
-        return new BinaryPosition(Tools.field(in), Tools.field(search), Tools.field(startIndex));
-    }
-
-    /**
-     * The <code>BINARY_POSITION</code> function.
-     * <p>
-     * Search the position (1-based) of a substring in another string.
-     *
-     * @param in The string in which to search the substring.
-     * @param search The substring to search for.
-     * @param startIndex The start index (1-based) from which to start looking for the substring.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryPosition(byte[] in, byte[] search, Field<? extends Number> startIndex) {
-        return new BinaryPosition(Tools.field(in), Tools.field(search), startIndex);
-    }
-
-    /**
-     * The <code>BINARY_POSITION</code> function.
-     * <p>
-     * Search the position (1-based) of a substring in another string.
-     *
-     * @param in The string in which to search the substring.
-     * @param search The substring to search for.
-     * @param startIndex The start index (1-based) from which to start looking for the substring.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryPosition(byte[] in, Field<byte[]> search, int startIndex) {
-        return new BinaryPosition(Tools.field(in), search, Tools.field(startIndex));
-    }
-
-    /**
-     * The <code>BINARY_POSITION</code> function.
-     * <p>
-     * Search the position (1-based) of a substring in another string.
-     *
-     * @param in The string in which to search the substring.
-     * @param search The substring to search for.
-     * @param startIndex The start index (1-based) from which to start looking for the substring.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryPosition(byte[] in, Field<byte[]> search, Field<? extends Number> startIndex) {
-        return new BinaryPosition(Tools.field(in), search, startIndex);
-    }
-
-    /**
-     * The <code>BINARY_POSITION</code> function.
-     * <p>
-     * Search the position (1-based) of a substring in another string.
-     *
-     * @param in The string in which to search the substring.
-     * @param search The substring to search for.
-     * @param startIndex The start index (1-based) from which to start looking for the substring.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryPosition(Field<byte[]> in, byte[] search, int startIndex) {
-        return new BinaryPosition(in, Tools.field(search), Tools.field(startIndex));
-    }
-
-    /**
-     * The <code>BINARY_POSITION</code> function.
-     * <p>
-     * Search the position (1-based) of a substring in another string.
-     *
-     * @param in The string in which to search the substring.
-     * @param search The substring to search for.
-     * @param startIndex The start index (1-based) from which to start looking for the substring.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryPosition(Field<byte[]> in, byte[] search, Field<? extends Number> startIndex) {
-        return new BinaryPosition(in, Tools.field(search), startIndex);
-    }
-
-    /**
-     * The <code>BINARY_POSITION</code> function.
-     * <p>
-     * Search the position (1-based) of a substring in another string.
-     *
-     * @param in The string in which to search the substring.
-     * @param search The substring to search for.
-     * @param startIndex The start index (1-based) from which to start looking for the substring.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryPosition(Field<byte[]> in, Field<byte[]> search, int startIndex) {
-        return new BinaryPosition(in, search, Tools.field(startIndex));
-    }
-
-    /**
-     * The <code>BINARY_POSITION</code> function.
-     * <p>
-     * Search the position (1-based) of a substring in another string.
-     *
-     * @param in The string in which to search the substring.
-     * @param search The substring to search for.
-     * @param startIndex The start index (1-based) from which to start looking for the substring.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryPosition(Field<byte[]> in, Field<byte[]> search, Field<? extends Number> startIndex) {
-        return new BinaryPosition(in, search, startIndex);
-    }
-
-    /**
-     * The <code>BINARY_POSITION</code> function.
-     * <p>
-     * Search the position (1-based) of a substring in another string.
-     *
-     * @param in The string in which to search the substring.
-     * @param search The substring to search for.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryPosition(byte[] in, byte[] search) {
-        return new BinaryPosition(Tools.field(in), Tools.field(search));
-    }
-
-    /**
-     * The <code>BINARY_POSITION</code> function.
-     * <p>
-     * Search the position (1-based) of a substring in another string.
-     *
-     * @param in The string in which to search the substring.
-     * @param search The substring to search for.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryPosition(byte[] in, Field<byte[]> search) {
-        return new BinaryPosition(Tools.field(in), search);
-    }
-
-    /**
-     * The <code>BINARY_POSITION</code> function.
-     * <p>
-     * Search the position (1-based) of a substring in another string.
-     *
-     * @param in The string in which to search the substring.
-     * @param search The substring to search for.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryPosition(Field<byte[]> in, byte[] search) {
-        return new BinaryPosition(in, Tools.field(search));
-    }
-
-    /**
-     * The <code>BINARY_POSITION</code> function.
-     * <p>
-     * Search the position (1-based) of a substring in another string.
-     *
-     * @param in The string in which to search the substring.
-     * @param search The substring to search for.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<Integer> binaryPosition(Field<byte[]> in, Field<byte[]> search) {
-        return new BinaryPosition(in, search);
-    }
-
-    /**
-     * The <code>BINARY_RTRIM</code> function.
-     * <p>
-     * Trim bytes from the right side of a binary string.
-     *
-     * @param bytes The binary string to be trimmed.
-     * @param characters The characters to be removed.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryRtrim(byte[] bytes, byte[] characters) {
-        return new BinaryRtrim(Tools.field(bytes), Tools.field(characters));
-    }
-
-    /**
-     * The <code>BINARY_RTRIM</code> function.
-     * <p>
-     * Trim bytes from the right side of a binary string.
-     *
-     * @param bytes The binary string to be trimmed.
-     * @param characters The characters to be removed.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryRtrim(byte[] bytes, Field<byte[]> characters) {
-        return new BinaryRtrim(Tools.field(bytes), characters);
-    }
-
-    /**
-     * The <code>BINARY_RTRIM</code> function.
-     * <p>
-     * Trim bytes from the right side of a binary string.
-     *
-     * @param bytes The binary string to be trimmed.
-     * @param characters The characters to be removed.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryRtrim(Field<byte[]> bytes, byte[] characters) {
-        return new BinaryRtrim(bytes, Tools.field(characters));
-    }
-
-    /**
-     * The <code>BINARY_RTRIM</code> function.
-     * <p>
-     * Trim bytes from the right side of a binary string.
-     *
-     * @param bytes The binary string to be trimmed.
-     * @param characters The characters to be removed.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryRtrim(Field<byte[]> bytes, Field<byte[]> characters) {
-        return new BinaryRtrim(bytes, characters);
-    }
-
-    /**
-     * The <code>BINARY_SUBSTRING</code> function.
-     * <p>
-     * Get a substring of a binary string, from a given position.
-     *
-     * @param string The binary string from which to get the substring.
-     * @param startingPosition The position (1-based) from which to get the substring.
-     * @param length The maximum length of the substring.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binarySubstring(Field<byte[]> string, int startingPosition, int length) {
-        return new BinarySubstring(string, Tools.field(startingPosition), Tools.field(length));
-    }
-
-    /**
-     * The <code>BINARY_SUBSTRING</code> function.
-     * <p>
-     * Get a substring of a binary string, from a given position.
-     *
-     * @param string The binary string from which to get the substring.
-     * @param startingPosition The position (1-based) from which to get the substring.
-     * @param length The maximum length of the substring.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binarySubstring(Field<byte[]> string, int startingPosition, Field<? extends Number> length) {
-        return new BinarySubstring(string, Tools.field(startingPosition), length);
-    }
-
-    /**
-     * The <code>BINARY_SUBSTRING</code> function.
-     * <p>
-     * Get a substring of a binary string, from a given position.
-     *
-     * @param string The binary string from which to get the substring.
-     * @param startingPosition The position (1-based) from which to get the substring.
-     * @param length The maximum length of the substring.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binarySubstring(Field<byte[]> string, Field<? extends Number> startingPosition, int length) {
-        return new BinarySubstring(string, startingPosition, Tools.field(length));
-    }
-
-    /**
-     * The <code>BINARY_SUBSTRING</code> function.
-     * <p>
-     * Get a substring of a binary string, from a given position.
-     *
-     * @param string The binary string from which to get the substring.
-     * @param startingPosition The position (1-based) from which to get the substring.
-     * @param length The maximum length of the substring.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binarySubstring(Field<byte[]> string, Field<? extends Number> startingPosition, Field<? extends Number> length) {
-        return new BinarySubstring(string, startingPosition, length);
-    }
-
-    /**
-     * The <code>BINARY_SUBSTRING</code> function.
-     * <p>
-     * Get a substring of a binary string, from a given position.
-     *
-     * @param string The binary string from which to get the substring.
-     * @param startingPosition The position (1-based) from which to get the substring.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binarySubstring(Field<byte[]> string, int startingPosition) {
-        return new BinarySubstring(string, Tools.field(startingPosition));
-    }
-
-    /**
-     * The <code>BINARY_SUBSTRING</code> function.
-     * <p>
-     * Get a substring of a binary string, from a given position.
-     *
-     * @param string The binary string from which to get the substring.
-     * @param startingPosition The position (1-based) from which to get the substring.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binarySubstring(Field<byte[]> string, Field<? extends Number> startingPosition) {
-        return new BinarySubstring(string, startingPosition);
-    }
-
-    /**
-     * The <code>BINARY_TRIM</code> function.
-     * <p>
-     * Trim characters from both sides of a string.
-     *
-     * @param bytes The binary string to be trimmed.
-     * @param characters The characters to be removed.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryTrim(byte[] bytes, byte[] characters) {
-        return new BinaryTrim(Tools.field(bytes), Tools.field(characters));
-    }
-
-    /**
-     * The <code>BINARY_TRIM</code> function.
-     * <p>
-     * Trim characters from both sides of a string.
-     *
-     * @param bytes The binary string to be trimmed.
-     * @param characters The characters to be removed.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryTrim(byte[] bytes, Field<byte[]> characters) {
-        return new BinaryTrim(Tools.field(bytes), characters);
-    }
-
-    /**
-     * The <code>BINARY_TRIM</code> function.
-     * <p>
-     * Trim characters from both sides of a string.
-     *
-     * @param bytes The binary string to be trimmed.
-     * @param characters The characters to be removed.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryTrim(Field<byte[]> bytes, byte[] characters) {
-        return new BinaryTrim(bytes, Tools.field(characters));
-    }
-
-    /**
-     * The <code>BINARY_TRIM</code> function.
-     * <p>
-     * Trim characters from both sides of a string.
-     *
-     * @param bytes The binary string to be trimmed.
-     * @param characters The characters to be removed.
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<byte[]> binaryTrim(Field<byte[]> bytes, Field<byte[]> characters) {
-        return new BinaryTrim(bytes, characters);
     }
 
     // -------------------------------------------------------------------------
@@ -23401,7 +19560,7 @@ public class DSL {
      * Calculate the cardinality of an array field.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static Field<Integer> cardinality(Field<? extends Object[]> array) {
         return new Cardinality(array);
     }
@@ -23411,10 +19570,10 @@ public class DSL {
      * <p>
      * Get an array element at a given index (1 based).
      *
-     * @param index is wrapped as {@link DSL#val(Object)}.
+     * @param index is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static <T> Field<T> arrayGet(Field<T[]> array, int index) {
         return new ArrayGet<>(array, Tools.field(index));
     }
@@ -23425,715 +19584,9 @@ public class DSL {
      * Get an array element at a given index (1 based).
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static <T> Field<T> arrayGet(Field<T[]> array, Field<Integer> index) {
         return new ArrayGet<>(array, index);
-    }
-
-    /**
-     * The <code>ARRAY_CONCAT</code> function.
-     * <p>
-     * Concatenate two arrays.
-     *
-     * @param array1 The first array.
-     * @param array2 The second array.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayConcat(T[] array1, T[] array2) {
-        return new ArrayConcat<>(Tools.field(array1), Tools.field(array2));
-    }
-
-    /**
-     * The <code>ARRAY_CONCAT</code> function.
-     * <p>
-     * Concatenate two arrays.
-     *
-     * @param array1 The first array.
-     * @param array2 The second array.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayConcat(T[] array1, Field<T[]> array2) {
-        return new ArrayConcat<>(Tools.field(array1), array2);
-    }
-
-    /**
-     * The <code>ARRAY_CONCAT</code> function.
-     * <p>
-     * Concatenate two arrays.
-     *
-     * @param array1 The first array.
-     * @param array2 The second array.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayConcat(Field<T[]> array1, T[] array2) {
-        return new ArrayConcat<>(array1, Tools.field(array2, array1));
-    }
-
-    /**
-     * The <code>ARRAY_CONCAT</code> function.
-     * <p>
-     * Concatenate two arrays.
-     *
-     * @param array1 The first array.
-     * @param array2 The second array.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayConcat(Field<T[]> array1, Field<T[]> array2) {
-        return new ArrayConcat<>(array1, array2);
-    }
-
-    /**
-     * The <code>ARRAY_APPEND</code> function.
-     * <p>
-     * Append an element to an array.
-     *
-     * @param array The array to which to append an element.
-     * @param append The element to append to the array.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayAppend(T[] array, T append) {
-        return new ArrayAppend<>(Tools.field(array), Tools.field(append));
-    }
-
-    /**
-     * The <code>ARRAY_APPEND</code> function.
-     * <p>
-     * Append an element to an array.
-     *
-     * @param array The array to which to append an element.
-     * @param append The element to append to the array.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayAppend(T[] array, Field<T> append) {
-        return new ArrayAppend<>(Tools.field(array), append);
-    }
-
-    /**
-     * The <code>ARRAY_APPEND</code> function.
-     * <p>
-     * Append an element to an array.
-     *
-     * @param array The array to which to append an element.
-     * @param append The element to append to the array.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayAppend(Field<T[]> array, T append) {
-        return new ArrayAppend<>(array, Tools.field(append));
-    }
-
-    /**
-     * The <code>ARRAY_APPEND</code> function.
-     * <p>
-     * Append an element to an array.
-     *
-     * @param array The array to which to append an element.
-     * @param append The element to append to the array.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayAppend(Field<T[]> array, Field<T> append) {
-        return new ArrayAppend<>(array, append);
-    }
-
-    /**
-     * The <code>ARRAY_PREPEND</code> function.
-     * <p>
-     * Prepend an element to an array.
-     *
-     * @param prepend The element to prepend to the array.
-     * @param array The array to which to prepend an element.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayPrepend(T prepend, T[] array) {
-        return new ArrayPrepend<>(Tools.field(prepend), Tools.field(array));
-    }
-
-    /**
-     * The <code>ARRAY_PREPEND</code> function.
-     * <p>
-     * Prepend an element to an array.
-     *
-     * @param prepend The element to prepend to the array.
-     * @param array The array to which to prepend an element.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayPrepend(T prepend, Field<T[]> array) {
-        return new ArrayPrepend<>(Tools.field(prepend), array);
-    }
-
-    /**
-     * The <code>ARRAY_PREPEND</code> function.
-     * <p>
-     * Prepend an element to an array.
-     *
-     * @param prepend The element to prepend to the array.
-     * @param array The array to which to prepend an element.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayPrepend(Field<T> prepend, T[] array) {
-        return new ArrayPrepend<>(prepend, Tools.field(array));
-    }
-
-    /**
-     * The <code>ARRAY_PREPEND</code> function.
-     * <p>
-     * Prepend an element to an array.
-     *
-     * @param prepend The element to prepend to the array.
-     * @param array The array to which to prepend an element.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayPrepend(Field<T> prepend, Field<T[]> array) {
-        return new ArrayPrepend<>(prepend, array);
-    }
-
-    /**
-     * The <code>ARRAY_OVERLAP</code> function.
-     * <p>
-     * Check if 2 arrays overlap.
-     *
-     * @param array1 The first array.
-     * @param array2 The second array.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayOverlap(T[] array1, T[] array2) {
-        return new ArrayOverlap<>(Tools.field(array1), Tools.field(array2));
-    }
-
-    /**
-     * The <code>ARRAY_OVERLAP</code> function.
-     * <p>
-     * Check if 2 arrays overlap.
-     *
-     * @param array1 The first array.
-     * @param array2 The second array.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayOverlap(T[] array1, Field<T[]> array2) {
-        return new ArrayOverlap<>(Tools.field(array1), array2);
-    }
-
-    /**
-     * The <code>ARRAY_OVERLAP</code> function.
-     * <p>
-     * Check if 2 arrays overlap.
-     *
-     * @param array1 The first array.
-     * @param array2 The second array.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayOverlap(Field<T[]> array1, T[] array2) {
-        return new ArrayOverlap<>(array1, Tools.field(array2, array1));
-    }
-
-    /**
-     * The <code>ARRAY_OVERLAP</code> function.
-     * <p>
-     * Check if 2 arrays overlap.
-     *
-     * @param array1 The first array.
-     * @param array2 The second array.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayOverlap(Field<T[]> array1, Field<T[]> array2) {
-        return new ArrayOverlap<>(array1, array2);
-    }
-
-    /**
-     * The <code>ARRAY_REMOVE</code> function.
-     * <p>
-     * Remove an element from an array.
-     *
-     * @param array The array whose elements are to be removed.
-     * @param remove The array element that should be removed.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayRemove(T[] array, T remove) {
-        return new ArrayRemove<>(Tools.field(array), Tools.field(remove));
-    }
-
-    /**
-     * The <code>ARRAY_REMOVE</code> function.
-     * <p>
-     * Remove an element from an array.
-     *
-     * @param array The array whose elements are to be removed.
-     * @param remove The array element that should be removed.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayRemove(T[] array, Field<T> remove) {
-        return new ArrayRemove<>(Tools.field(array), remove);
-    }
-
-    /**
-     * The <code>ARRAY_REMOVE</code> function.
-     * <p>
-     * Remove an element from an array.
-     *
-     * @param array The array whose elements are to be removed.
-     * @param remove The array element that should be removed.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayRemove(Field<T[]> array, T remove) {
-        return new ArrayRemove<>(array, Tools.field(remove));
-    }
-
-    /**
-     * The <code>ARRAY_REMOVE</code> function.
-     * <p>
-     * Remove an element from an array.
-     *
-     * @param array The array whose elements are to be removed.
-     * @param remove The array element that should be removed.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayRemove(Field<T[]> array, Field<T> remove) {
-        return new ArrayRemove<>(array, remove);
-    }
-
-    /**
-     * The <code>ARRAY_REPLACE</code> function.
-     * <p>
-     * Replace an element in an array.
-     *
-     * @param array The array whose elements are to be replaced.
-     * @param search The expression to search for in the array.
-     * @param replace The value to replace a value by.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayReplace(T[] array, T search, T replace) {
-        return new ArrayReplace<>(Tools.field(array), Tools.field(search), Tools.field(replace));
-    }
-
-    /**
-     * The <code>ARRAY_REPLACE</code> function.
-     * <p>
-     * Replace an element in an array.
-     *
-     * @param array The array whose elements are to be replaced.
-     * @param search The expression to search for in the array.
-     * @param replace The value to replace a value by.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayReplace(Field<T[]> array, Field<T> search, Field<T> replace) {
-        return new ArrayReplace<>(array, search, replace);
-    }
-
-    /**
-     * The <code>ARRAY_TO_STRING</code> function.
-     * <p>
-     * Join array elements into a string.
-     *
-     * @param array The array whose elements are joined
-     * @param delimiter The delimiter to place between elements
-     * @param nullString The NULL encoding
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<String> arrayToString(Object[] array, @Stringly.Param String delimiter, @Stringly.Param String nullString) {
-        return new ArrayToString<>(Tools.field(array), Tools.field(delimiter), Tools.field(nullString));
-    }
-
-    /**
-     * The <code>ARRAY_TO_STRING</code> function.
-     * <p>
-     * Join array elements into a string.
-     *
-     * @param array The array whose elements are joined
-     * @param delimiter The delimiter to place between elements
-     * @param nullString The NULL encoding
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<String> arrayToString(Field<? extends Object[]> array, Field<String> delimiter, Field<String> nullString) {
-        return new ArrayToString<>(array, delimiter, nullString);
-    }
-
-    /**
-     * The <code>ARRAY_TO_STRING</code> function.
-     * <p>
-     * Join array elements into a string.
-     *
-     * @param array The array whose elements are joined
-     * @param delimiter The delimiter to place between elements
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<String> arrayToString(Object[] array, @Stringly.Param String delimiter) {
-        return new ArrayToString<>(Tools.field(array), Tools.field(delimiter));
-    }
-
-    /**
-     * The <code>ARRAY_TO_STRING</code> function.
-     * <p>
-     * Join array elements into a string.
-     *
-     * @param array The array whose elements are joined
-     * @param delimiter The delimiter to place between elements
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<String> arrayToString(Field<? extends Object[]> array, Field<String> delimiter) {
-        return new ArrayToString<>(array, delimiter);
-    }
-
-    /**
-     * The <code>ARRAY_FILTER</code> function.
-     * <p>
-     * Filter elements out of an array.
-     *
-     * @param array The array whose elements are filtered.
-     * @param predicate A predicate defining which elements to keep in the array.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayFilter(T[] array, Function1<? super Field<T>, ? extends Condition> predicate) {
-        return new ArrayFilter<>(Tools.field(array), DSL.lambda(array, predicate));
-    }
-
-    /**
-     * The <code>ARRAY_FILTER</code> function.
-     * <p>
-     * Filter elements out of an array.
-     *
-     * @param array The array whose elements are filtered.
-     * @param predicate A predicate defining which elements to keep in the array.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayFilter(T[] array, Lambda1<Field<T>, Condition> predicate) {
-        return new ArrayFilter<>(Tools.field(array), predicate);
-    }
-
-    /**
-     * The <code>ARRAY_FILTER</code> function.
-     * <p>
-     * Filter elements out of an array.
-     *
-     * @param array The array whose elements are filtered.
-     * @param predicate A predicate defining which elements to keep in the array.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayFilter(Field<T[]> array, Function1<? super Field<T>, ? extends Condition> predicate) {
-        return new ArrayFilter<>(array, DSL.lambda(array, predicate));
-    }
-
-    /**
-     * The <code>ARRAY_FILTER</code> function.
-     * <p>
-     * Filter elements out of an array.
-     *
-     * @param array The array whose elements are filtered.
-     * @param predicate A predicate defining which elements to keep in the array.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Field<T[]> arrayFilter(Field<T[]> array, Lambda1<Field<T>, Condition> predicate) {
-        return new ArrayFilter<>(array, predicate);
-    }
-
-    /**
-     * The <code>ARRAY_MAP</code> function.
-     * <p>
-     * Map elements of an array.
-     *
-     * @param array The array whose elements are mapped.
-     * @param mapper The function that defines the mapping between source elements and result elements.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T, U> Field<U[]> arrayMap(T[] array, Function1<? super Field<T>, ? extends Field<U>> mapper) {
-        return new ArrayMap<>(Tools.field(array), DSL.lambda(array, mapper));
-    }
-
-    /**
-     * The <code>ARRAY_MAP</code> function.
-     * <p>
-     * Map elements of an array.
-     *
-     * @param array The array whose elements are mapped.
-     * @param mapper The function that defines the mapping between source elements and result elements.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T, U> Field<U[]> arrayMap(T[] array, Lambda1<Field<T>, Field<U>> mapper) {
-        return new ArrayMap<>(Tools.field(array), mapper);
-    }
-
-    /**
-     * The <code>ARRAY_MAP</code> function.
-     * <p>
-     * Map elements of an array.
-     *
-     * @param array The array whose elements are mapped.
-     * @param mapper The function that defines the mapping between source elements and result elements.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T, U> Field<U[]> arrayMap(Field<T[]> array, Function1<? super Field<T>, ? extends Field<U>> mapper) {
-        return new ArrayMap<>(array, DSL.lambda(array, mapper));
-    }
-
-    /**
-     * The <code>ARRAY_MAP</code> function.
-     * <p>
-     * Map elements of an array.
-     *
-     * @param array The array whose elements are mapped.
-     * @param mapper The function that defines the mapping between source elements and result elements.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T, U> Field<U[]> arrayMap(Field<T[]> array, Lambda1<Field<T>, Field<U>> mapper) {
-        return new ArrayMap<>(array, mapper);
-    }
-
-    /**
-     * The <code>ARRAY_ALL_MATCH</code> function.
-     * <p>
-     * Check if all elements of an array match a given predicate.
-     *
-     * @param array The array to be checked.
-     * @param predicate The predicate that must be true for all array elements.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayAllMatch(T[] array, Function1<? super Field<T>, ? extends Condition> predicate) {
-        return new ArrayAllMatch<>(Tools.field(array), DSL.lambda(array, predicate));
-    }
-
-    /**
-     * The <code>ARRAY_ALL_MATCH</code> function.
-     * <p>
-     * Check if all elements of an array match a given predicate.
-     *
-     * @param array The array to be checked.
-     * @param predicate The predicate that must be true for all array elements.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayAllMatch(T[] array, Lambda1<Field<T>, Condition> predicate) {
-        return new ArrayAllMatch<>(Tools.field(array), predicate);
-    }
-
-    /**
-     * The <code>ARRAY_ALL_MATCH</code> function.
-     * <p>
-     * Check if all elements of an array match a given predicate.
-     *
-     * @param array The array to be checked.
-     * @param predicate The predicate that must be true for all array elements.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayAllMatch(Field<T[]> array, Function1<? super Field<T>, ? extends Condition> predicate) {
-        return new ArrayAllMatch<>(array, DSL.lambda(array, predicate));
-    }
-
-    /**
-     * The <code>ARRAY_ALL_MATCH</code> function.
-     * <p>
-     * Check if all elements of an array match a given predicate.
-     *
-     * @param array The array to be checked.
-     * @param predicate The predicate that must be true for all array elements.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayAllMatch(Field<T[]> array, Lambda1<Field<T>, Condition> predicate) {
-        return new ArrayAllMatch<>(array, predicate);
-    }
-
-    /**
-     * The <code>ARRAY_ANY_MATCH</code> function.
-     * <p>
-     * Check if any elements of an array match a given predicate.
-     *
-     * @param array The array to be checked.
-     * @param predicate The predicate that must be true for at least 1 array element
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayAnyMatch(T[] array, Function1<? super Field<T>, ? extends Condition> predicate) {
-        return new ArrayAnyMatch<>(Tools.field(array), DSL.lambda(array, predicate));
-    }
-
-    /**
-     * The <code>ARRAY_ANY_MATCH</code> function.
-     * <p>
-     * Check if any elements of an array match a given predicate.
-     *
-     * @param array The array to be checked.
-     * @param predicate The predicate that must be true for at least 1 array element
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayAnyMatch(T[] array, Lambda1<Field<T>, Condition> predicate) {
-        return new ArrayAnyMatch<>(Tools.field(array), predicate);
-    }
-
-    /**
-     * The <code>ARRAY_ANY_MATCH</code> function.
-     * <p>
-     * Check if any elements of an array match a given predicate.
-     *
-     * @param array The array to be checked.
-     * @param predicate The predicate that must be true for at least 1 array element
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayAnyMatch(Field<T[]> array, Function1<? super Field<T>, ? extends Condition> predicate) {
-        return new ArrayAnyMatch<>(array, DSL.lambda(array, predicate));
-    }
-
-    /**
-     * The <code>ARRAY_ANY_MATCH</code> function.
-     * <p>
-     * Check if any elements of an array match a given predicate.
-     *
-     * @param array The array to be checked.
-     * @param predicate The predicate that must be true for at least 1 array element
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayAnyMatch(Field<T[]> array, Lambda1<Field<T>, Condition> predicate) {
-        return new ArrayAnyMatch<>(array, predicate);
-    }
-
-    /**
-     * The <code>ARRAY_NONE_MATCH</code> function.
-     * <p>
-     * Check if none of the elements of an array match a given predicate.
-     *
-     * @param array The array to be checked.
-     * @param predicate The predicate that must be false for all elements.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayNoneMatch(T[] array, Function1<? super Field<T>, ? extends Condition> predicate) {
-        return new ArrayNoneMatch<>(Tools.field(array), DSL.lambda(array, predicate));
-    }
-
-    /**
-     * The <code>ARRAY_NONE_MATCH</code> function.
-     * <p>
-     * Check if none of the elements of an array match a given predicate.
-     *
-     * @param array The array to be checked.
-     * @param predicate The predicate that must be false for all elements.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayNoneMatch(T[] array, Lambda1<Field<T>, Condition> predicate) {
-        return new ArrayNoneMatch<>(Tools.field(array), predicate);
-    }
-
-    /**
-     * The <code>ARRAY_NONE_MATCH</code> function.
-     * <p>
-     * Check if none of the elements of an array match a given predicate.
-     *
-     * @param array The array to be checked.
-     * @param predicate The predicate that must be false for all elements.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayNoneMatch(Field<T[]> array, Function1<? super Field<T>, ? extends Condition> predicate) {
-        return new ArrayNoneMatch<>(array, DSL.lambda(array, predicate));
-    }
-
-    /**
-     * The <code>ARRAY_NONE_MATCH</code> function.
-     * <p>
-     * Check if none of the elements of an array match a given predicate.
-     *
-     * @param array The array to be checked.
-     * @param predicate The predicate that must be false for all elements.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> Condition arrayNoneMatch(Field<T[]> array, Lambda1<Field<T>, Condition> predicate) {
-        return new ArrayNoneMatch<>(array, predicate);
-    }
-
-    /**
-     * The <code>STRING_TO_ARRAY</code> function.
-     * <p>
-     * Split a string into array elements.
-     *
-     * @param string The string to split
-     * @param delimiter The delimiter to parse between elements
-     * @param nullString The NULL encoding
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<String[]> stringToArray(@Stringly.Param String string, @Stringly.Param String delimiter, @Stringly.Param String nullString) {
-        return new StringToArray(Tools.field(string), Tools.field(delimiter), Tools.field(nullString));
-    }
-
-    /**
-     * The <code>STRING_TO_ARRAY</code> function.
-     * <p>
-     * Split a string into array elements.
-     *
-     * @param string The string to split
-     * @param delimiter The delimiter to parse between elements
-     * @param nullString The NULL encoding
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<String[]> stringToArray(Field<String> string, Field<String> delimiter, Field<String> nullString) {
-        return new StringToArray(string, delimiter, nullString);
-    }
-
-    /**
-     * The <code>STRING_TO_ARRAY</code> function.
-     * <p>
-     * Split a string into array elements.
-     *
-     * @param string The string to split
-     * @param delimiter The delimiter to parse between elements
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<String[]> stringToArray(@Stringly.Param String string, @Stringly.Param String delimiter) {
-        return new StringToArray(Tools.field(string), Tools.field(delimiter));
-    }
-
-    /**
-     * The <code>STRING_TO_ARRAY</code> function.
-     * <p>
-     * Split a string into array elements.
-     *
-     * @param string The string to split
-     * @param delimiter The delimiter to parse between elements
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    public static Field<String[]> stringToArray(Field<String> string, Field<String> delimiter) {
-        return new StringToArray(string, delimiter);
     }
 
     // -------------------------------------------------------------------------
@@ -24356,63 +19809,33 @@ public class DSL {
         return new Nullif<>(value, other);
     }
 
-    /**
-     * The <code>TRY_CAST</code> function.
-     *
-     * @param value The value to be cast to a data type
-     * @param dataType The data type to try to cast the value to
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, TRINO })
-    public static <T> Field<T> tryCast(Object value, DataType<T> dataType) {
-        return new TryCast<>(Tools.field(value), dataType);
-    }
-
-    /**
-     * The <code>TRY_CAST</code> function.
-     *
-     * @param value The value to be cast to a data type
-     * @param dataType The data type to try to cast the value to
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, TRINO })
-    public static <T> Field<T> tryCast(Field<?> value, DataType<T> dataType) {
-        return new TryCast<>(value, dataType);
-    }
-
     // -------------------------------------------------------------------------
     // System functions
     // -------------------------------------------------------------------------
 
     /**
      * The <code>CURRENT_CATALOG</code> function.
-     * <p>
-     * The CURRENT_CATALOG of the current session
      */
     @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> currentCatalog() {
         return new CurrentCatalog();
     }
 
     /**
      * The <code>CURRENT_SCHEMA</code> function.
-     * <p>
-     * The CURRENT_SCHEMA of the current session
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static Field<String> currentSchema() {
         return new CurrentSchema();
     }
 
     /**
      * The <code>CURRENT_USER</code> function.
-     * <p>
-     * The CURRENT_USER of the current session with the database
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     public static Field<String> currentUser() {
         return new CurrentUser();
     }
@@ -24521,7 +19944,7 @@ public class DSL {
     /**
      * The <code>XMLCOMMENT</code> function.
      *
-     * @param comment is wrapped as {@link DSL#val(Object)}.
+     * @param comment is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support({ POSTGRES })
@@ -24627,7 +20050,7 @@ public class DSL {
     /**
      * The <code>XMLSERIALIZE</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support({ POSTGRES })
@@ -24647,7 +20070,7 @@ public class DSL {
     /**
      * The <code>XMLSERIALIZE_CONTENT</code> function.
      *
-     * @param value is wrapped as {@link DSL#val(Object)}.
+     * @param value is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support({ POSTGRES })
@@ -24672,7 +20095,7 @@ public class DSL {
      * The <code>JSON_ARRAY</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONArrayNullStep<JSON> jsonArray(Field<?>... fields) {
         return new JSONArray(SQLDataType.JSON, Arrays.asList(fields));
     }
@@ -24681,7 +20104,7 @@ public class DSL {
      * The <code>JSON_ARRAY</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONArrayNullStep<JSON> jsonArray(Collection<? extends Field<?>> fields) {
         return new JSONArray(SQLDataType.JSON, new QueryPartList<>(fields));
     }
@@ -24690,7 +20113,7 @@ public class DSL {
      * The <code>JSONB_ARRAY</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONArrayNullStep<JSONB> jsonbArray(Field<?>... fields) {
         return new JSONArray(SQLDataType.JSONB, Arrays.asList(fields));
     }
@@ -24699,7 +20122,7 @@ public class DSL {
      * The <code>JSONB_ARRAY</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONArrayNullStep<JSONB> jsonbArray(Collection<? extends Field<?>> fields) {
         return new JSONArray(SQLDataType.JSONB, new QueryPartList<>(fields));
     }
@@ -24708,7 +20131,16 @@ public class DSL {
      * The <code>JSON_OBJECT</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static JSONObjectNullStep<JSON> jsonObject(Field<?>... entries) {
+        return new JSONObject(SQLDataType.JSON, Tools.jsonEntries(entries));
+    }
+
+    /**
+     * The <code>JSON_OBJECT</code> function.
+     */
+    @NotNull
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectNullStep<JSON> jsonObject(JSONEntry<?>... entries) {
         return new JSONObject(SQLDataType.JSON, Arrays.asList(entries));
     }
@@ -24717,7 +20149,7 @@ public class DSL {
      * The <code>JSON_OBJECT</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectNullStep<JSON> jsonObject(Collection<? extends JSONEntry<?>> entries) {
         return new JSONObject(SQLDataType.JSON, new QueryPartList<>(entries));
     }
@@ -24726,7 +20158,16 @@ public class DSL {
      * The <code>JSONB_OBJECT</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static JSONObjectNullStep<JSONB> jsonbObject(Field<?>... entries) {
+        return new JSONObject(SQLDataType.JSONB, Tools.jsonEntries(entries));
+    }
+
+    /**
+     * The <code>JSONB_OBJECT</code> function.
+     */
+    @NotNull
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectNullStep<JSONB> jsonbObject(JSONEntry<?>... entries) {
         return new JSONObject(SQLDataType.JSONB, Arrays.asList(entries));
     }
@@ -24735,1023 +20176,9 @@ public class DSL {
      * The <code>JSONB_OBJECT</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectNullStep<JSONB> jsonbObject(Collection<? extends JSONEntry<?>> entries) {
         return new JSONObject(SQLDataType.JSONB, new QueryPartList<>(entries));
-    }
-
-    /**
-     * The <code>JSON_GET_ELEMENT</code> function.
-     * <p>
-     * Access an array element from a JSON array expression.
-     *
-     * @param field The JSON document
-     * @param index The 0-based JSON array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSON> jsonGetElement(JSON field, int index) {
-        return new JSONGetElement(Tools.field(field), Tools.field(index));
-    }
-
-    /**
-     * The <code>JSON_GET_ELEMENT</code> function.
-     * <p>
-     * Access an array element from a JSON array expression.
-     *
-     * @param field The JSON document
-     * @param index The 0-based JSON array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSON> jsonGetElement(JSON field, Field<Integer> index) {
-        return new JSONGetElement(Tools.field(field), index);
-    }
-
-    /**
-     * The <code>JSON_GET_ELEMENT</code> function.
-     * <p>
-     * Access an array element from a JSON array expression.
-     *
-     * @param field The JSON document
-     * @param index The 0-based JSON array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSON> jsonGetElement(Field<JSON> field, int index) {
-        return new JSONGetElement(field, Tools.field(index));
-    }
-
-    /**
-     * The <code>JSON_GET_ELEMENT</code> function.
-     * <p>
-     * Access an array element from a JSON array expression.
-     *
-     * @param field The JSON document
-     * @param index The 0-based JSON array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSON> jsonGetElement(Field<JSON> field, Field<Integer> index) {
-        return new JSONGetElement(field, index);
-    }
-
-    /**
-     * The <code>JSONB_GET_ELEMENT</code> function.
-     * <p>
-     * Access an array element from a JSONB array expression.
-     *
-     * @param field The JSONB document
-     * @param index The 0-based JSONB array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSONB> jsonbGetElement(JSONB field, int index) {
-        return new JSONBGetElement(Tools.field(field), Tools.field(index));
-    }
-
-    /**
-     * The <code>JSONB_GET_ELEMENT</code> function.
-     * <p>
-     * Access an array element from a JSONB array expression.
-     *
-     * @param field The JSONB document
-     * @param index The 0-based JSONB array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSONB> jsonbGetElement(JSONB field, Field<Integer> index) {
-        return new JSONBGetElement(Tools.field(field), index);
-    }
-
-    /**
-     * The <code>JSONB_GET_ELEMENT</code> function.
-     * <p>
-     * Access an array element from a JSONB array expression.
-     *
-     * @param field The JSONB document
-     * @param index The 0-based JSONB array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSONB> jsonbGetElement(Field<JSONB> field, int index) {
-        return new JSONBGetElement(field, Tools.field(index));
-    }
-
-    /**
-     * The <code>JSONB_GET_ELEMENT</code> function.
-     * <p>
-     * Access an array element from a JSONB array expression.
-     *
-     * @param field The JSONB document
-     * @param index The 0-based JSONB array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSONB> jsonbGetElement(Field<JSONB> field, Field<Integer> index) {
-        return new JSONBGetElement(field, index);
-    }
-
-    /**
-     * The <code>JSON_GET_ELEMENT_AS_TEXT</code> function.
-     * <p>
-     * Access an array element from a JSON array expression and return it as a string.
-     *
-     * @param field The JSON document
-     * @param index The 0-based JSON array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonGetElementAsText(JSON field, int index) {
-        return new JSONGetElementAsText(Tools.field(field), Tools.field(index));
-    }
-
-    /**
-     * The <code>JSON_GET_ELEMENT_AS_TEXT</code> function.
-     * <p>
-     * Access an array element from a JSON array expression and return it as a string.
-     *
-     * @param field The JSON document
-     * @param index The 0-based JSON array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonGetElementAsText(JSON field, Field<Integer> index) {
-        return new JSONGetElementAsText(Tools.field(field), index);
-    }
-
-    /**
-     * The <code>JSON_GET_ELEMENT_AS_TEXT</code> function.
-     * <p>
-     * Access an array element from a JSON array expression and return it as a string.
-     *
-     * @param field The JSON document
-     * @param index The 0-based JSON array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonGetElementAsText(Field<JSON> field, int index) {
-        return new JSONGetElementAsText(field, Tools.field(index));
-    }
-
-    /**
-     * The <code>JSON_GET_ELEMENT_AS_TEXT</code> function.
-     * <p>
-     * Access an array element from a JSON array expression and return it as a string.
-     *
-     * @param field The JSON document
-     * @param index The 0-based JSON array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonGetElementAsText(Field<JSON> field, Field<Integer> index) {
-        return new JSONGetElementAsText(field, index);
-    }
-
-    /**
-     * The <code>JSONB_GET_ELEMENT_AS_TEXT</code> function.
-     * <p>
-     * Access an array element from a JSONB array expression and return it as a string.
-     *
-     * @param field The JSONB document
-     * @param index The 0-based JSONB array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonbGetElementAsText(JSONB field, int index) {
-        return new JSONBGetElementAsText(Tools.field(field), Tools.field(index));
-    }
-
-    /**
-     * The <code>JSONB_GET_ELEMENT_AS_TEXT</code> function.
-     * <p>
-     * Access an array element from a JSONB array expression and return it as a string.
-     *
-     * @param field The JSONB document
-     * @param index The 0-based JSONB array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonbGetElementAsText(JSONB field, Field<Integer> index) {
-        return new JSONBGetElementAsText(Tools.field(field), index);
-    }
-
-    /**
-     * The <code>JSONB_GET_ELEMENT_AS_TEXT</code> function.
-     * <p>
-     * Access an array element from a JSONB array expression and return it as a string.
-     *
-     * @param field The JSONB document
-     * @param index The 0-based JSONB array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonbGetElementAsText(Field<JSONB> field, int index) {
-        return new JSONBGetElementAsText(field, Tools.field(index));
-    }
-
-    /**
-     * The <code>JSONB_GET_ELEMENT_AS_TEXT</code> function.
-     * <p>
-     * Access an array element from a JSONB array expression and return it as a string.
-     *
-     * @param field The JSONB document
-     * @param index The 0-based JSONB array index
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonbGetElementAsText(Field<JSONB> field, Field<Integer> index) {
-        return new JSONBGetElementAsText(field, index);
-    }
-
-    /**
-     * The <code>JSON_GET_ATTRIBUTE</code> function.
-     * <p>
-     * Access an object attribute value from a JSON object expression.
-     *
-     * @param field The JSON document
-     * @param attribute The JSON object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSON> jsonGetAttribute(JSON field, @Stringly.Param String attribute) {
-        return new JSONGetAttribute(Tools.field(field), Tools.field(attribute));
-    }
-
-    /**
-     * The <code>JSON_GET_ATTRIBUTE</code> function.
-     * <p>
-     * Access an object attribute value from a JSON object expression.
-     *
-     * @param field The JSON document
-     * @param attribute The JSON object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSON> jsonGetAttribute(JSON field, Field<String> attribute) {
-        return new JSONGetAttribute(Tools.field(field), attribute);
-    }
-
-    /**
-     * The <code>JSON_GET_ATTRIBUTE</code> function.
-     * <p>
-     * Access an object attribute value from a JSON object expression.
-     *
-     * @param field The JSON document
-     * @param attribute The JSON object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSON> jsonGetAttribute(Field<JSON> field, @Stringly.Param String attribute) {
-        return new JSONGetAttribute(field, Tools.field(attribute));
-    }
-
-    /**
-     * The <code>JSON_GET_ATTRIBUTE</code> function.
-     * <p>
-     * Access an object attribute value from a JSON object expression.
-     *
-     * @param field The JSON document
-     * @param attribute The JSON object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSON> jsonGetAttribute(Field<JSON> field, Field<String> attribute) {
-        return new JSONGetAttribute(field, attribute);
-    }
-
-    /**
-     * The <code>JSONB_GET_ATTRIBUTE</code> function.
-     * <p>
-     * Access an object attribute value from a JSONB object expression.
-     *
-     * @param field The JSONB document
-     * @param attribute The JSONB object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSONB> jsonbGetAttribute(JSONB field, @Stringly.Param String attribute) {
-        return new JSONBGetAttribute(Tools.field(field), Tools.field(attribute));
-    }
-
-    /**
-     * The <code>JSONB_GET_ATTRIBUTE</code> function.
-     * <p>
-     * Access an object attribute value from a JSONB object expression.
-     *
-     * @param field The JSONB document
-     * @param attribute The JSONB object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSONB> jsonbGetAttribute(JSONB field, Field<String> attribute) {
-        return new JSONBGetAttribute(Tools.field(field), attribute);
-    }
-
-    /**
-     * The <code>JSONB_GET_ATTRIBUTE</code> function.
-     * <p>
-     * Access an object attribute value from a JSONB object expression.
-     *
-     * @param field The JSONB document
-     * @param attribute The JSONB object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSONB> jsonbGetAttribute(Field<JSONB> field, @Stringly.Param String attribute) {
-        return new JSONBGetAttribute(field, Tools.field(attribute));
-    }
-
-    /**
-     * The <code>JSONB_GET_ATTRIBUTE</code> function.
-     * <p>
-     * Access an object attribute value from a JSONB object expression.
-     *
-     * @param field The JSONB document
-     * @param attribute The JSONB object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSONB> jsonbGetAttribute(Field<JSONB> field, Field<String> attribute) {
-        return new JSONBGetAttribute(field, attribute);
-    }
-
-    /**
-     * The <code>JSON_GET_ATTRIBUTE_AS_TEXT</code> function.
-     * <p>
-     * Access an object attribute value from a JSON object expression and return it as string.
-     *
-     * @param field The JSON document
-     * @param attribute The JSON object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonGetAttributeAsText(JSON field, @Stringly.Param String attribute) {
-        return new JSONGetAttributeAsText(Tools.field(field), Tools.field(attribute));
-    }
-
-    /**
-     * The <code>JSON_GET_ATTRIBUTE_AS_TEXT</code> function.
-     * <p>
-     * Access an object attribute value from a JSON object expression and return it as string.
-     *
-     * @param field The JSON document
-     * @param attribute The JSON object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonGetAttributeAsText(JSON field, Field<String> attribute) {
-        return new JSONGetAttributeAsText(Tools.field(field), attribute);
-    }
-
-    /**
-     * The <code>JSON_GET_ATTRIBUTE_AS_TEXT</code> function.
-     * <p>
-     * Access an object attribute value from a JSON object expression and return it as string.
-     *
-     * @param field The JSON document
-     * @param attribute The JSON object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonGetAttributeAsText(Field<JSON> field, @Stringly.Param String attribute) {
-        return new JSONGetAttributeAsText(field, Tools.field(attribute));
-    }
-
-    /**
-     * The <code>JSON_GET_ATTRIBUTE_AS_TEXT</code> function.
-     * <p>
-     * Access an object attribute value from a JSON object expression and return it as string.
-     *
-     * @param field The JSON document
-     * @param attribute The JSON object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonGetAttributeAsText(Field<JSON> field, Field<String> attribute) {
-        return new JSONGetAttributeAsText(field, attribute);
-    }
-
-    /**
-     * The <code>JSONB_GET_ATTRIBUTE_AS_TEXT</code> function.
-     * <p>
-     * Access an object attribute value from a JSONB object expression and return it as
-     * string.
-     *
-     * @param field The JSONB document
-     * @param attribute The JSONB object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonbGetAttributeAsText(JSONB field, @Stringly.Param String attribute) {
-        return new JSONBGetAttributeAsText(Tools.field(field), Tools.field(attribute));
-    }
-
-    /**
-     * The <code>JSONB_GET_ATTRIBUTE_AS_TEXT</code> function.
-     * <p>
-     * Access an object attribute value from a JSONB object expression and return it as
-     * string.
-     *
-     * @param field The JSONB document
-     * @param attribute The JSONB object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonbGetAttributeAsText(JSONB field, Field<String> attribute) {
-        return new JSONBGetAttributeAsText(Tools.field(field), attribute);
-    }
-
-    /**
-     * The <code>JSONB_GET_ATTRIBUTE_AS_TEXT</code> function.
-     * <p>
-     * Access an object attribute value from a JSONB object expression and return it as
-     * string.
-     *
-     * @param field The JSONB document
-     * @param attribute The JSONB object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonbGetAttributeAsText(Field<JSONB> field, @Stringly.Param String attribute) {
-        return new JSONBGetAttributeAsText(field, Tools.field(attribute));
-    }
-
-    /**
-     * The <code>JSONB_GET_ATTRIBUTE_AS_TEXT</code> function.
-     * <p>
-     * Access an object attribute value from a JSONB object expression and return it as
-     * string.
-     *
-     * @param field The JSONB document
-     * @param attribute The JSONB object attribute name
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<String> jsonbGetAttributeAsText(Field<JSONB> field, Field<String> attribute) {
-        return new JSONBGetAttributeAsText(field, attribute);
-    }
-
-    /**
-     * The <code>JSON_ARRAY_LENGTH</code> function.
-     * <p>
-     * Calculate the length of a JSON array.
-     *
-     * @param field is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<Integer> jsonArrayLength(JSON field) {
-        return new JSONArrayLength(Tools.field(field));
-    }
-
-    /**
-     * The <code>JSON_ARRAY_LENGTH</code> function.
-     * <p>
-     * Calculate the length of a JSON array.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<Integer> jsonArrayLength(Field<JSON> field) {
-        return new JSONArrayLength(field);
-    }
-
-    /**
-     * The <code>JSONB_ARRAY_LENGTH</code> function.
-     * <p>
-     * Calculate the length of a JSONB array.
-     *
-     * @param field is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<Integer> jsonbArrayLength(JSONB field) {
-        return new JSONBArrayLength(Tools.field(field));
-    }
-
-    /**
-     * The <code>JSONB_ARRAY_LENGTH</code> function.
-     * <p>
-     * Calculate the length of a JSONB array.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static Field<Integer> jsonbArrayLength(Field<JSONB> field) {
-        return new JSONBArrayLength(field);
-    }
-
-    /**
-     * The <code>JSON_KEY_EXISTS</code> function.
-     * <p>
-     * Check if a key exists in a JSON object
-     *
-     * @param json The JSON object
-     * @param key The key in the JSON object
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Condition jsonKeyExists(JSON json, @Stringly.Param String key) {
-        return new JSONKeyExists(Tools.field(json), Tools.field(key));
-    }
-
-    /**
-     * The <code>JSON_KEY_EXISTS</code> function.
-     * <p>
-     * Check if a key exists in a JSON object
-     *
-     * @param json The JSON object
-     * @param key The key in the JSON object
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Condition jsonKeyExists(JSON json, Field<String> key) {
-        return new JSONKeyExists(Tools.field(json), key);
-    }
-
-    /**
-     * The <code>JSON_KEY_EXISTS</code> function.
-     * <p>
-     * Check if a key exists in a JSON object
-     *
-     * @param json The JSON object
-     * @param key The key in the JSON object
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Condition jsonKeyExists(Field<JSON> json, @Stringly.Param String key) {
-        return new JSONKeyExists(json, Tools.field(key));
-    }
-
-    /**
-     * The <code>JSON_KEY_EXISTS</code> function.
-     * <p>
-     * Check if a key exists in a JSON object
-     *
-     * @param json The JSON object
-     * @param key The key in the JSON object
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Condition jsonKeyExists(Field<JSON> json, Field<String> key) {
-        return new JSONKeyExists(json, key);
-    }
-
-    /**
-     * The <code>JSONB_KEY_EXISTS</code> function.
-     * <p>
-     * Check if a key exists in a JSONB object
-     *
-     * @param json The JSONB object
-     * @param key The key in the JSONB object
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Condition jsonbKeyExists(JSONB json, @Stringly.Param String key) {
-        return new JSONBKeyExists(Tools.field(json), Tools.field(key));
-    }
-
-    /**
-     * The <code>JSONB_KEY_EXISTS</code> function.
-     * <p>
-     * Check if a key exists in a JSONB object
-     *
-     * @param json The JSONB object
-     * @param key The key in the JSONB object
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Condition jsonbKeyExists(JSONB json, Field<String> key) {
-        return new JSONBKeyExists(Tools.field(json), key);
-    }
-
-    /**
-     * The <code>JSONB_KEY_EXISTS</code> function.
-     * <p>
-     * Check if a key exists in a JSONB object
-     *
-     * @param json The JSONB object
-     * @param key The key in the JSONB object
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Condition jsonbKeyExists(Field<JSONB> json, @Stringly.Param String key) {
-        return new JSONBKeyExists(json, Tools.field(key));
-    }
-
-    /**
-     * The <code>JSONB_KEY_EXISTS</code> function.
-     * <p>
-     * Check if a key exists in a JSONB object
-     *
-     * @param json The JSONB object
-     * @param key The key in the JSONB object
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Condition jsonbKeyExists(Field<JSONB> json, Field<String> key) {
-        return new JSONBKeyExists(json, key);
-    }
-
-    /**
-     * The <code>JSON_KEYS</code> function.
-     * <p>
-     * Retrieve all keys from a JSON object as an array of strings.
-     *
-     * @param field is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSON> jsonKeys(JSON field) {
-        return new JSONKeys(Tools.field(field));
-    }
-
-    /**
-     * The <code>JSON_KEYS</code> function.
-     * <p>
-     * Retrieve all keys from a JSON object as an array of strings.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSON> jsonKeys(Field<JSON> field) {
-        return new JSONKeys(field);
-    }
-
-    /**
-     * The <code>JSONB_KEYS</code> function.
-     * <p>
-     * Retrieve all keys from a JSONB object as an array of strings.
-     *
-     * @param field is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSONB> jsonbKeys(JSONB field) {
-        return new JSONBKeys(Tools.field(field));
-    }
-
-    /**
-     * The <code>JSONB_KEYS</code> function.
-     * <p>
-     * Retrieve all keys from a JSONB object as an array of strings.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static Field<JSONB> jsonbKeys(Field<JSONB> field) {
-        return new JSONBKeys(field);
-    }
-
-    /**
-     * The <code>JSON_SET</code> function.
-     * <p>
-     * Add or replace a JSON value to a JSON field at a given path.
-     *
-     * @param path is wrapped as {@link DSL#val(Object)}.
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSON> jsonSet(Field<JSON> field, @Stringly.Param String path, Object value) {
-        return new JSONSet(field, Tools.field(path), Tools.field(value));
-    }
-
-    /**
-     * The <code>JSON_SET</code> function.
-     * <p>
-     * Add or replace a JSON value to a JSON field at a given path.
-     *
-     * @param path is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSON> jsonSet(Field<JSON> field, @Stringly.Param String path, Field<?> value) {
-        return new JSONSet(field, Tools.field(path), value);
-    }
-
-    /**
-     * The <code>JSON_SET</code> function.
-     * <p>
-     * Add or replace a JSON value to a JSON field at a given path.
-     *
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSON> jsonSet(Field<JSON> field, Field<String> path, Object value) {
-        return new JSONSet(field, path, Tools.field(value));
-    }
-
-    /**
-     * The <code>JSON_SET</code> function.
-     * <p>
-     * Add or replace a JSON value to a JSON field at a given path.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSON> jsonSet(Field<JSON> field, Field<String> path, Field<?> value) {
-        return new JSONSet(field, path, value);
-    }
-
-    /**
-     * The <code>JSONB_SET</code> function.
-     * <p>
-     * Add or replace a JSONB value to a JSONB field at a given path.
-     *
-     * @param path is wrapped as {@link DSL#val(Object)}.
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSONB> jsonbSet(Field<JSONB> field, @Stringly.Param String path, Object value) {
-        return new JSONBSet(field, Tools.field(path), Tools.field(value));
-    }
-
-    /**
-     * The <code>JSONB_SET</code> function.
-     * <p>
-     * Add or replace a JSONB value to a JSONB field at a given path.
-     *
-     * @param path is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSONB> jsonbSet(Field<JSONB> field, @Stringly.Param String path, Field<?> value) {
-        return new JSONBSet(field, Tools.field(path), value);
-    }
-
-    /**
-     * The <code>JSONB_SET</code> function.
-     * <p>
-     * Add or replace a JSONB value to a JSONB field at a given path.
-     *
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSONB> jsonbSet(Field<JSONB> field, Field<String> path, Object value) {
-        return new JSONBSet(field, path, Tools.field(value));
-    }
-
-    /**
-     * The <code>JSONB_SET</code> function.
-     * <p>
-     * Add or replace a JSONB value to a JSONB field at a given path.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSONB> jsonbSet(Field<JSONB> field, Field<String> path, Field<?> value) {
-        return new JSONBSet(field, path, value);
-    }
-
-    /**
-     * The <code>JSON_INSERT</code> function.
-     * <p>
-     * Add (but not replace) a JSON value to a JSON field at a given path.
-     *
-     * @param path is wrapped as {@link DSL#val(Object)}.
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSON> jsonInsert(Field<JSON> field, @Stringly.Param String path, Object value) {
-        return new JSONInsert(field, Tools.field(path), Tools.field(value));
-    }
-
-    /**
-     * The <code>JSON_INSERT</code> function.
-     * <p>
-     * Add (but not replace) a JSON value to a JSON field at a given path.
-     *
-     * @param path is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSON> jsonInsert(Field<JSON> field, @Stringly.Param String path, Field<?> value) {
-        return new JSONInsert(field, Tools.field(path), value);
-    }
-
-    /**
-     * The <code>JSON_INSERT</code> function.
-     * <p>
-     * Add (but not replace) a JSON value to a JSON field at a given path.
-     *
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSON> jsonInsert(Field<JSON> field, Field<String> path, Object value) {
-        return new JSONInsert(field, path, Tools.field(value));
-    }
-
-    /**
-     * The <code>JSON_INSERT</code> function.
-     * <p>
-     * Add (but not replace) a JSON value to a JSON field at a given path.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSON> jsonInsert(Field<JSON> field, Field<String> path, Field<?> value) {
-        return new JSONInsert(field, path, value);
-    }
-
-    /**
-     * The <code>JSONB_INSERT</code> function.
-     * <p>
-     * Add (but not replace) a JSON value to a JSON field at a given path.
-     *
-     * @param path is wrapped as {@link DSL#val(Object)}.
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSONB> jsonbInsert(Field<JSONB> field, @Stringly.Param String path, Object value) {
-        return new JSONBInsert(field, Tools.field(path), Tools.field(value));
-    }
-
-    /**
-     * The <code>JSONB_INSERT</code> function.
-     * <p>
-     * Add (but not replace) a JSON value to a JSON field at a given path.
-     *
-     * @param path is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSONB> jsonbInsert(Field<JSONB> field, @Stringly.Param String path, Field<?> value) {
-        return new JSONBInsert(field, Tools.field(path), value);
-    }
-
-    /**
-     * The <code>JSONB_INSERT</code> function.
-     * <p>
-     * Add (but not replace) a JSON value to a JSON field at a given path.
-     *
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSONB> jsonbInsert(Field<JSONB> field, Field<String> path, Object value) {
-        return new JSONBInsert(field, path, Tools.field(value));
-    }
-
-    /**
-     * The <code>JSONB_INSERT</code> function.
-     * <p>
-     * Add (but not replace) a JSON value to a JSON field at a given path.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSONB> jsonbInsert(Field<JSONB> field, Field<String> path, Field<?> value) {
-        return new JSONBInsert(field, path, value);
-    }
-
-    /**
-     * The <code>JSON_REPLACE</code> function.
-     * <p>
-     * Replace (but not add) a JSON value to a JSON field at a given path.
-     *
-     * @param path is wrapped as {@link DSL#val(Object)}.
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSON> jsonReplace(Field<JSON> field, @Stringly.Param String path, Object value) {
-        return new JSONReplace(field, Tools.field(path), Tools.field(value));
-    }
-
-    /**
-     * The <code>JSON_REPLACE</code> function.
-     * <p>
-     * Replace (but not add) a JSON value to a JSON field at a given path.
-     *
-     * @param path is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSON> jsonReplace(Field<JSON> field, @Stringly.Param String path, Field<?> value) {
-        return new JSONReplace(field, Tools.field(path), value);
-    }
-
-    /**
-     * The <code>JSON_REPLACE</code> function.
-     * <p>
-     * Replace (but not add) a JSON value to a JSON field at a given path.
-     *
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSON> jsonReplace(Field<JSON> field, Field<String> path, Object value) {
-        return new JSONReplace(field, path, Tools.field(value));
-    }
-
-    /**
-     * The <code>JSON_REPLACE</code> function.
-     * <p>
-     * Replace (but not add) a JSON value to a JSON field at a given path.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSON> jsonReplace(Field<JSON> field, Field<String> path, Field<?> value) {
-        return new JSONReplace(field, path, value);
-    }
-
-    /**
-     * The <code>JSONB_REPLACE</code> function.
-     * <p>
-     * Replace (but not add) a JSONB value to a JSONB field at a given path.
-     *
-     * @param path is wrapped as {@link DSL#val(Object)}.
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSONB> jsonbReplace(Field<JSONB> field, @Stringly.Param String path, Object value) {
-        return new JSONBReplace(field, Tools.field(path), Tools.field(value));
-    }
-
-    /**
-     * The <code>JSONB_REPLACE</code> function.
-     * <p>
-     * Replace (but not add) a JSONB value to a JSONB field at a given path.
-     *
-     * @param path is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSONB> jsonbReplace(Field<JSONB> field, @Stringly.Param String path, Field<?> value) {
-        return new JSONBReplace(field, Tools.field(path), value);
-    }
-
-    /**
-     * The <code>JSONB_REPLACE</code> function.
-     * <p>
-     * Replace (but not add) a JSONB value to a JSONB field at a given path.
-     *
-     * @param value is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSONB> jsonbReplace(Field<JSONB> field, Field<String> path, Object value) {
-        return new JSONBReplace(field, path, Tools.field(value));
-    }
-
-    /**
-     * The <code>JSONB_REPLACE</code> function.
-     * <p>
-     * Replace (but not add) a JSONB value to a JSONB field at a given path.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSONB> jsonbReplace(Field<JSONB> field, Field<String> path, Field<?> value) {
-        return new JSONBReplace(field, path, value);
-    }
-
-    /**
-     * The <code>JSON_REMOVE</code> function.
-     * <p>
-     * Remove a JSON value from a JSON field at a given path.
-     *
-     * @param path is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSON> jsonRemove(Field<JSON> field, @Stringly.Param String path) {
-        return new JSONRemove(field, Tools.field(path));
-    }
-
-    /**
-     * The <code>JSON_REMOVE</code> function.
-     * <p>
-     * Remove a JSON value from a JSON field at a given path.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSON> jsonRemove(Field<JSON> field, Field<String> path) {
-        return new JSONRemove(field, path);
-    }
-
-    /**
-     * The <code>JSONB_REMOVE</code> function.
-     * <p>
-     * Remove a JSONB value from a JSONB field at a given path.
-     *
-     * @param path is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSONB> jsonbRemove(Field<JSONB> field, @Stringly.Param String path) {
-        return new JSONBRemove(field, Tools.field(path));
-    }
-
-    /**
-     * The <code>JSONB_REMOVE</code> function.
-     * <p>
-     * Remove a JSONB value from a JSONB field at a given path.
-     */
-    @NotNull
-    @Support({ MARIADB, MYSQL, SQLITE })
-    public static Field<JSONB> jsonbRemove(Field<JSONB> field, Field<String> path) {
-        return new JSONBRemove(field, path);
     }
 
 
@@ -25804,7 +20231,7 @@ public class DSL {
     @NotNull
     @Support
     public static Field<Boolean> field(Condition condition) {
-        return condition instanceof NoCondition ? noField(BOOLEAN) : condition instanceof FieldCondition f ? f.field : new ConditionAsField(condition);
+        return condition instanceof NoCondition ? noField(BOOLEAN) : condition instanceof FieldCondition ? ((FieldCondition) condition).field : new ConditionAsField(condition);
     }
 
     /**
@@ -25816,14 +20243,14 @@ public class DSL {
      * as predicates or as columns interchangeably. This extends to any type
      * of field, including functions. A Postgres example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * select 1 where texteq('a', 'a');
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support
     public static Condition condition(Field<Boolean> field) {
-        return field instanceof Condition ? (Condition) field : field instanceof NoField ? noCondition() : field instanceof ConditionAsField c ? c.condition : new FieldCondition(field);
+        return field instanceof Condition ? (Condition) field : field instanceof NoField ? noCondition() : field instanceof ConditionAsField ? ((ConditionAsField) field).condition : new FieldCondition(field);
     }
 
     // -------------------------------------------------------------------------
@@ -25865,7 +20292,7 @@ public class DSL {
      * Calculate the bitwise <code>AND</code> aggregate value.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> AggregateFunction<T> bitAndAgg(Field<T> value) {
         return new BitAndAgg<>(value);
     }
@@ -25876,7 +20303,7 @@ public class DSL {
      * Calculate the bitwise <code>OR</code> aggregate value.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> AggregateFunction<T> bitOrAgg(Field<T> value) {
         return new BitOrAgg<>(value);
     }
@@ -25887,7 +20314,7 @@ public class DSL {
      * Calculate the bitwise <code>XOR</code> aggregate value.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> AggregateFunction<T> bitXorAgg(Field<T> value) {
         return new BitXorAgg<>(value);
     }
@@ -25898,7 +20325,7 @@ public class DSL {
      * Calculate the bitwise <code>NAND</code> aggregate value.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> AggregateFunction<T> bitNandAgg(Field<T> value) {
         return new BitNandAgg<>(value);
     }
@@ -25909,7 +20336,7 @@ public class DSL {
      * Calculate the bitwise <code>NOR</code> aggregate value.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> AggregateFunction<T> bitNorAgg(Field<T> value) {
         return new BitNorAgg<>(value);
     }
@@ -25920,7 +20347,7 @@ public class DSL {
      * Calculate the bitwise <code>XNOR</code> aggregate value.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T extends Number> AggregateFunction<T> bitXNorAgg(Field<T> value) {
         return new BitXNorAgg<>(value);
     }
@@ -25965,12 +20392,12 @@ public class DSL {
      * The <code>CORR</code> function.
      * <p>
      * Calculate the correlation coefficient. This standard SQL function may be supported
-     * natively, or emulated using {@link DSL#covarPop(Field, Field)} and {@link DSL#stddevPop(Field)}.
+     * natively, or emulated using {@link #covarPop(Field, Field)} and {@link #stddevPop(Field)}.
      * If an emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static AggregateFunction<BigDecimal> corr(Field<? extends Number> y, Field<? extends Number> x) {
         return new Corr(y, x);
     }
@@ -25997,7 +20424,7 @@ public class DSL {
      * The <code>COVAR_SAMP</code> function.
      * <p>
      * Calculate the sample covariance. This standard SQL function may be supported natively,
-     * or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}. If an emulation
+     * or emulated using {@link #sum(Field)} and {@link #count(Field)}. If an emulation
      * is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
@@ -26011,8 +20438,8 @@ public class DSL {
      * The <code>COVAR_POP</code> function.
      * <p>
      * Calculate the population covariance. This standard SQL function may be supported
-     * natively, or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}.
-     * If an emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
+     * natively, or emulated using {@link #sum(Field)} and {@link #count(Field)}. If an
+     * emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
     @NotNull
@@ -26058,24 +20485,10 @@ public class DSL {
     }
 
     /**
-     * The <code>MAX_BY</code> function.
-     * <p>
-     * Evaluate <code>value</code> at the row having the maximum value for <code>by</code>.
-     *
-     * @param value The returned value.
-     * @param by The expression to use to evaluate the maximum.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> OptionallyOrderedAggregateFunction<T> maxBy(Field<T> value, Field<?> by) {
-        return new MaxBy<>(value, by);
-    }
-
-    /**
      * The <code>MEDIAN</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     public static AggregateFunction<BigDecimal> median(Field<? extends Number> field) {
         return new Median(field);
     }
@@ -26099,20 +20512,6 @@ public class DSL {
     }
 
     /**
-     * The <code>MIN_BY</code> function.
-     * <p>
-     * Evaluate <code>value</code> at the row having the minimum value for <code>by</code>.
-     *
-     * @param value The returned value.
-     * @param by The expression to use to evaluate the minimum
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    public static <T> OptionallyOrderedAggregateFunction<T> minBy(Field<T> value, Field<?> by) {
-        return new MinBy<>(value, by);
-    }
-
-    /**
      * The <code>PRODUCT</code> function.
      * <p>
      * Get the sum over a numeric field: product(distinct field).
@@ -26125,10 +20524,10 @@ public class DSL {
      * integer multiplication.
      * <p>
      * More information here: <a href=
-     * "https://blog.jooq.org/how-to-write-a-multiplication-aggregate-function-in-sql">https://blog.jooq.org/how-to-write-a-multiplication-aggregate-function-in-sql</a>.
+     * "https://blog.jooq.org/2018/09/21/how-to-write-a-multiplication-aggregate-function-in-sql">https://blog.jooq.org/2018/09/21/how-to-write-a-multiplication-aggregate-function-in-sql</a>.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static AggregateFunction<BigDecimal> product(Field<? extends Number> field) {
         return new Product(field, false);
     }
@@ -26146,155 +20545,19 @@ public class DSL {
      * integer multiplication.
      * <p>
      * More information here: <a href=
-     * "https://blog.jooq.org/how-to-write-a-multiplication-aggregate-function-in-sql">https://blog.jooq.org/how-to-write-a-multiplication-aggregate-function-in-sql</a>.
+     * "https://blog.jooq.org/2018/09/21/how-to-write-a-multiplication-aggregate-function-in-sql">https://blog.jooq.org/2018/09/21/how-to-write-a-multiplication-aggregate-function-in-sql</a>.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static AggregateFunction<BigDecimal> productDistinct(Field<? extends Number> field) {
         return new Product(field, true);
-    }
-
-    /**
-     * The <code>RANK</code> function.
-     * <p>
-     * The <code>RANK</code> hypothetical set aggregate function.
-     */
-    @NotNull
-    @Support({ H2, POSTGRES, YUGABYTEDB })
-    public static OrderedAggregateFunction<Integer> rank(Field<?>... fields) {
-        return new RankAgg(Arrays.asList(fields));
-    }
-
-    /**
-     * The <code>RANK</code> function.
-     * <p>
-     * The <code>RANK</code> hypothetical set aggregate function.
-     */
-    @NotNull
-    @Support({ H2, POSTGRES, YUGABYTEDB })
-    public static OrderedAggregateFunction<Integer> rank(Collection<? extends Field<?>> fields) {
-        return new RankAgg(new QueryPartList<>(fields));
-    }
-
-    /**
-     * The <code>DENSE_RANK</code> function.
-     * <p>
-     * The <code>DENSE_RANK</code> hypothetical set aggregate function.
-     */
-    @NotNull
-    @Support({ H2, POSTGRES, YUGABYTEDB })
-    public static OrderedAggregateFunction<Integer> denseRank(Field<?>... fields) {
-        return new DenseRankAgg(Arrays.asList(fields));
-    }
-
-    /**
-     * The <code>DENSE_RANK</code> function.
-     * <p>
-     * The <code>DENSE_RANK</code> hypothetical set aggregate function.
-     */
-    @NotNull
-    @Support({ H2, POSTGRES, YUGABYTEDB })
-    public static OrderedAggregateFunction<Integer> denseRank(Collection<? extends Field<?>> fields) {
-        return new DenseRankAgg(new QueryPartList<>(fields));
-    }
-
-    /**
-     * The <code>PERCENT_RANK</code> function.
-     * <p>
-     * The <code>PERCENT_RANK</code> hypothetical set aggregate function.
-     */
-    @NotNull
-    @Support({ H2, POSTGRES, YUGABYTEDB })
-    public static OrderedAggregateFunction<BigDecimal> percentRank(Field<?>... fields) {
-        return new PercentRankAgg(Arrays.asList(fields));
-    }
-
-    /**
-     * The <code>PERCENT_RANK</code> function.
-     * <p>
-     * The <code>PERCENT_RANK</code> hypothetical set aggregate function.
-     */
-    @NotNull
-    @Support({ H2, POSTGRES, YUGABYTEDB })
-    public static OrderedAggregateFunction<BigDecimal> percentRank(Collection<? extends Field<?>> fields) {
-        return new PercentRankAgg(new QueryPartList<>(fields));
-    }
-
-    /**
-     * The <code>CUME_DIST</code> function.
-     * <p>
-     * The <code>CUME_DIST</code> hypothetical set aggregate function.
-     */
-    @NotNull
-    @Support({ H2, POSTGRES, YUGABYTEDB })
-    public static OrderedAggregateFunction<BigDecimal> cumeDist(Field<?>... fields) {
-        return new CumeDistAgg(Arrays.asList(fields));
-    }
-
-    /**
-     * The <code>CUME_DIST</code> function.
-     * <p>
-     * The <code>CUME_DIST</code> hypothetical set aggregate function.
-     */
-    @NotNull
-    @Support({ H2, POSTGRES, YUGABYTEDB })
-    public static OrderedAggregateFunction<BigDecimal> cumeDist(Collection<? extends Field<?>> fields) {
-        return new CumeDistAgg(new QueryPartList<>(fields));
-    }
-
-    /**
-     * The <code>PERCENTILE_CONT</code> function.
-     * <p>
-     * Calculate the <code>PERCENTILE_CONT</code> inverse distribution aggregate function.
-     *
-     * @param percentile is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, POSTGRES, YUGABYTEDB })
-    public static OrderedAggregateFunction<BigDecimal> percentileCont(Number percentile) {
-        return new PercentileCont(Tools.field(percentile));
-    }
-
-    /**
-     * The <code>PERCENTILE_CONT</code> function.
-     * <p>
-     * Calculate the <code>PERCENTILE_CONT</code> inverse distribution aggregate function.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, POSTGRES, YUGABYTEDB })
-    public static OrderedAggregateFunction<BigDecimal> percentileCont(Field<? extends Number> percentile) {
-        return new PercentileCont(percentile);
-    }
-
-    /**
-     * The <code>PERCENTILE_DISC</code> function.
-     * <p>
-     * Calculate the <code>PERCENTILE_DISC</code> inverse distribution aggregate function.
-     *
-     * @param percentile is wrapped as {@link DSL#val(Object)}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, POSTGRES, YUGABYTEDB })
-    public static OrderedAggregateFunction<BigDecimal> percentileDisc(Number percentile) {
-        return new PercentileDisc(Tools.field(percentile));
-    }
-
-    /**
-     * The <code>PERCENTILE_DISC</code> function.
-     * <p>
-     * Calculate the <code>PERCENTILE_DISC</code> inverse distribution aggregate function.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, POSTGRES, YUGABYTEDB })
-    public static OrderedAggregateFunction<BigDecimal> percentileDisc(Field<? extends Number> percentile) {
-        return new PercentileDisc(percentile);
     }
 
     /**
      * The <code>REGR_AVGX</code> function.
      * <p>
      * Calculate the average of the independent values (x). This standard SQL function may
-     * be supported natively, or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}.
+     * be supported natively, or emulated using {@link #sum(Field)} and {@link #count(Field)}.
      * If an emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
@@ -26308,7 +20571,7 @@ public class DSL {
      * The <code>REGR_AVGY</code> function.
      * <p>
      * Calculate the average of the dependent values (y). This standard SQL function may
-     * be supported natively, or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}.
+     * be supported natively, or emulated using {@link #sum(Field)} and {@link #count(Field)}.
      * If an emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
@@ -26322,7 +20585,7 @@ public class DSL {
      * The <code>REGR_COUNT</code> function.
      * <p>
      * Calculate the number of non-<code>NULL</code> pairs. This standard SQL function may
-     * be supported natively, or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}.
+     * be supported natively, or emulated using {@link #sum(Field)} and {@link #count(Field)}.
      * If an emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
@@ -26336,7 +20599,7 @@ public class DSL {
      * The <code>REGR_INTERCEPT</code> function.
      * <p>
      * Calculate the y intercept of the regression line. This standard SQL function may
-     * be supported natively, or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}.
+     * be supported natively, or emulated using {@link #sum(Field)} and {@link #count(Field)}.
      * If an emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
@@ -26350,12 +20613,12 @@ public class DSL {
      * The <code>REGR_R2</code> function.
      * <p>
      * Calculate the coefficient of determination. This standard SQL function may be supported
-     * natively, or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}.
-     * If an emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
+     * natively, or emulated using {@link #sum(Field)} and {@link #count(Field)}. If an
+     * emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static AggregateFunction<BigDecimal> regrR2(Field<? extends Number> y, Field<? extends Number> x) {
         return new RegrR2(y, x);
     }
@@ -26364,8 +20627,8 @@ public class DSL {
      * The <code>REGR_SLOPE</code> function.
      * <p>
      * Calculate the slope of the regression line. This standard SQL function may be supported
-     * natively, or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}.
-     * If an emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
+     * natively, or emulated using {@link #sum(Field)} and {@link #count(Field)}. If an
+     * emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
     @NotNull
@@ -26378,7 +20641,7 @@ public class DSL {
      * The <code>REGR_SXX</code> function.
      * <p>
      * Calculate the <code>REGR_SXX</code> auxiliary function. This standard SQL function
-     * may be supported natively, or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}.
+     * may be supported natively, or emulated using {@link #sum(Field)} and {@link #count(Field)}.
      * If an emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
@@ -26392,7 +20655,7 @@ public class DSL {
      * The <code>REGR_SXY</code> function.
      * <p>
      * Calculate the <code>REGR_SXY</code> auxiliary function. This standard SQL function
-     * may be supported natively, or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}.
+     * may be supported natively, or emulated using {@link #sum(Field)} and {@link #count(Field)}.
      * If an emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
@@ -26406,7 +20669,7 @@ public class DSL {
      * The <code>REGR_SYY</code> function.
      * <p>
      * Calculate the <code>REGR_SYY</code> auxiliary function. This standard SQL function
-     * may be supported natively, or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}.
+     * may be supported natively, or emulated using {@link #sum(Field)} and {@link #count(Field)}.
      * If an emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
@@ -26420,12 +20683,12 @@ public class DSL {
      * The <code>STDDEV_POP</code> function.
      * <p>
      * Calculate the population standard deviation. This standard SQL function may be supported
-     * natively, or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}.
-     * If an emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
+     * natively, or emulated using {@link #sum(Field)} and {@link #count(Field)}. If an
+     * emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static AggregateFunction<BigDecimal> stddevPop(Field<? extends Number> field) {
         return new StddevPop(field);
     }
@@ -26434,12 +20697,12 @@ public class DSL {
      * The <code>STDDEV_SAMP</code> function.
      * <p>
      * Calculate the sample standard deviation. This standard SQL function may be supported
-     * natively, or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}.
-     * If an emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
+     * natively, or emulated using {@link #sum(Field)} and {@link #count(Field)}. If an
+     * emulation is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static AggregateFunction<BigDecimal> stddevSamp(Field<? extends Number> field) {
         return new StddevSamp(field);
     }
@@ -26466,7 +20729,7 @@ public class DSL {
      * The <code>VAR_POP</code> function.
      * <p>
      * Calculate the population variance. This standard SQL function may be supported natively,
-     * or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}. If an emulation
+     * or emulated using {@link #sum(Field)} and {@link #count(Field)}. If an emulation
      * is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
@@ -26480,509 +20743,15 @@ public class DSL {
      * The <code>VAR_SAMP</code> function.
      * <p>
      * Calculate the sample variance. This standard SQL function may be supported natively,
-     * or emulated using {@link DSL#sum(Field)} and {@link DSL#count(Field)}. If an emulation
+     * or emulated using {@link #sum(Field)} and {@link #count(Field)}. If an emulation
      * is applied, beware of the risk of "<a href="https://en.wikipedia.org/wiki/Catastrophic_cancellation">Catastrophic
      * cancellation</a>" in case the calculations are performed using floating point arithmetic.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static AggregateFunction<BigDecimal> varSamp(Field<? extends Number> field) {
         return new VarSamp(field);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -28624,7 +22393,7 @@ public class DSL {
      * Get the <code>REGEXP_REPLACE_ALL</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static Field<String> regexpReplaceAll(Field<String> field, String pattern, String replacement) {
         return regexpReplaceAll(field, Tools.field(pattern), Tools.field(replacement));
     }
@@ -28633,25 +22402,25 @@ public class DSL {
      * Get the <code>REGEXP_REPLACE_ALL</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     public static Field<String> regexpReplaceAll(Field<String> field, Field<String> pattern, Field<String> replacement) {
         return new RegexpReplace(field, Tools.nullSafe(pattern), Tools.nullSafe(replacement), true);
     }
 
     /**
-     * Get the <code>REGEXP_REPLACE_FIRST</code> function.
+     * Get the <code>REGEXP_REPLACE_ALL</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MYSQL, POSTGRES, YUGABYTEDB })
     public static Field<String> regexpReplaceFirst(Field<String> field, String pattern, String replacement) {
         return regexpReplaceFirst(field, Tools.field(pattern), Tools.field(replacement));
     }
 
     /**
-     * Get the <code>REGEXP_REPLACE_FIRST</code> function.
+     * Get the <code>REGEXP_REPLACE_ALL</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MYSQL, POSTGRES, YUGABYTEDB })
     public static Field<String> regexpReplaceFirst(Field<String> field, Field<String> pattern, Field<String> replacement) {
         return new RegexpReplace(field, Tools.nullSafe(pattern), Tools.nullSafe(replacement), false);
     }
@@ -28710,8 +22479,8 @@ public class DSL {
     /**
      * Get the concat(field[, field, ...]) function.
      * <p>
-     * This creates <code>fields[0] || fields[1] || …</code> as an
-     * expression, or <code>concat(fields[0], fields[1], …)</code>,
+     * This creates <code>fields[0] || fields[1] || ...</code> as an
+     * expression, or <code>concat(fields[0], fields[1], ...)</code>,
      * depending on the dialect.
      * <p>
      * If any of the given fields is not a {@link String} field, they are cast
@@ -30667,7 +24436,7 @@ public class DSL {
      * {@link Instant} (in UTC) as the input.
      */
     @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
+    @Support({ H2, HSQLDB, POSTGRES, SQLITE })
     public static Field<OffsetTime> offsetTime(String value) {
         return Tools.field(Convert.convert(value, OffsetTime.class));
     }
@@ -30682,7 +24451,7 @@ public class DSL {
      * {@link Instant} (in UTC) as the input.
      */
     @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
+    @Support({ H2, HSQLDB, POSTGRES, SQLITE })
     public static Field<OffsetTime> offsetTime(OffsetTime value) {
         return Tools.field(value);
     }
@@ -30697,7 +24466,7 @@ public class DSL {
      * {@link Instant} (in UTC) as the input.
      */
     @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
+    @Support({ H2, HSQLDB, POSTGRES, SQLITE })
     public static Field<OffsetTime> offsetTime(Field<OffsetTime> field) {
         return new DateOrTime<>(field, SQLDataType.OFFSETTIME);
     }
@@ -30712,7 +24481,7 @@ public class DSL {
      * {@link Instant} (in UTC) as the input.
      */
     @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
+    @Support({ H2, HSQLDB, POSTGRES, SQLITE })
     public static Field<OffsetDateTime> offsetDateTime(String value) {
         return Tools.field(Convert.convert(value, OffsetDateTime.class));
     }
@@ -30727,7 +24496,7 @@ public class DSL {
      * {@link Instant} (in UTC) as the input.
      */
     @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
+    @Support({ H2, HSQLDB, POSTGRES, SQLITE })
     public static Field<OffsetDateTime> offsetDateTime(OffsetDateTime value) {
         return Tools.field(value);
     }
@@ -30742,7 +24511,7 @@ public class DSL {
      * {@link Instant} (in UTC) as the input.
      */
     @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
+    @Support({ H2, HSQLDB, POSTGRES, SQLITE })
     public static Field<OffsetDateTime> offsetDateTime(Field<OffsetDateTime> field) {
         return new DateOrTime<>(field, SQLDataType.OFFSETDATETIME);
     }
@@ -30757,7 +24526,7 @@ public class DSL {
      * {@link Instant} (in UTC) as the input.
      */
     @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
+    @Support({ H2, HSQLDB, POSTGRES, SQLITE })
     public static Field<Instant> instant(String value) {
         return Tools.field(Convert.convert(value, Instant.class));
     }
@@ -30772,7 +24541,7 @@ public class DSL {
      * {@link Instant} (in UTC) as the input.
      */
     @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
+    @Support({ H2, HSQLDB, POSTGRES, SQLITE })
     public static Field<Instant> instant(Instant value) {
         return Tools.field(value);
     }
@@ -30787,7 +24556,7 @@ public class DSL {
      * {@link Instant} (in UTC) as the input.
      */
     @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
+    @Support({ H2, HSQLDB, POSTGRES, SQLITE })
     public static Field<Instant> instant(Field<Instant> field) {
         return new DateOrTime<>(field, SQLDataType.INSTANT);
     }
@@ -30918,7 +24687,7 @@ public class DSL {
      * @see #rollup(FieldOrRow...)
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, MARIADB, MYSQL, POSTGRES, TRINO })
+    @Support({ CUBRID, MARIADB, MYSQL, POSTGRES })
     public static GroupField rollup(Field<?>... fields) {
         return rollup((FieldOrRow[]) Tools.nullSafe(fields));
     }
@@ -30937,7 +24706,7 @@ public class DSL {
      * @return A field to be used in a <code>GROUP BY</code> clause
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, MARIADB, MYSQL, POSTGRES, TRINO })
+    @Support({ CUBRID, MARIADB, MYSQL, POSTGRES })
     public static GroupField rollup(FieldOrRow... fields) {
         return new Rollup(fields);
     }
@@ -30948,7 +24717,7 @@ public class DSL {
      * @see #cube(Field...)
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, POSTGRES, TRINO })
+    @Support({ POSTGRES })
     public static GroupField cube(Field<?>... fields) {
         return cube((FieldOrRow[]) Tools.nullSafe(fields));
     }
@@ -30967,7 +24736,7 @@ public class DSL {
      * @return A field to be used in a <code>GROUP BY</code> clause
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, POSTGRES, TRINO })
+    @Support({ POSTGRES })
     public static GroupField cube(FieldOrRow... fields) {
         return new Cube(fields);
     }
@@ -30987,7 +24756,7 @@ public class DSL {
      * @return A field to be used in a <code>GROUP BY</code> clause
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, POSTGRES, TRINO })
+    @Support({ POSTGRES })
     public static GroupField groupingSets(Field<?>... fields) {
         List<Field<?>>[] array = map(fields, f -> asList(f), List[]::new);
         return groupingSets(array);
@@ -31008,7 +24777,7 @@ public class DSL {
      * @return A field to be used in a <code>GROUP BY</code> clause
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, POSTGRES, TRINO })
+    @Support({ POSTGRES })
     public static GroupField groupingSets(Field<?>[]... fieldSets) {
         List<Field<?>>[] array = map(fieldSets, f -> asList(f), List[]::new);
         return groupingSets(array);
@@ -31029,7 +24798,7 @@ public class DSL {
      * @return A field to be used in a <code>GROUP BY</code> clause
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, POSTGRES, TRINO })
+    @Support({ POSTGRES })
     @SafeVarargs
     public static GroupField groupingSets(Collection<? extends Field<?>>... fieldSets) {
         return new GroupingSets(fieldSets);
@@ -31071,10 +24840,25 @@ public class DSL {
 
 
 
+
+
+
+
+
+
     /**
      * Create a GROUPING(field) aggregation field to be used along with
      * <code>CUBE</code>, <code>ROLLUP</code>, and <code>GROUPING SETS</code>
      * groupings.
+     * <p>
+     * This has been observed to work with the following databases:
+     * <ul>
+     * <li>DB2</li>
+     * <li>Oracle</li>
+     * <li>PostgreSQL 9.5</li>
+     * <li>SQL Server</li>
+     * <li>Sybase SQL Anywhere</li>
+     * </ul>
      *
      * @param field The function argument
      * @return The <code>GROUPING</code> aggregation field
@@ -31082,9 +24866,9 @@ public class DSL {
      * @see #rollup(Field...)
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MYSQL, POSTGRES, TRINO })
+    @Support({ POSTGRES })
     public static Field<Integer> grouping(Field<?> field) {
-        return function("grouping", INTEGER, field);
+        return function("grouping", Integer.class, field);
     }
 
     // ------------------------------------------------------------------------
@@ -31393,7 +25177,7 @@ public class DSL {
      * The JSON value extractor function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONValueOnStep<JSON> jsonValue(Field<JSON> json, String path) {
         return jsonValue(json, Tools.field(path));
     }
@@ -31402,7 +25186,7 @@ public class DSL {
      * The JSON value extractor function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONValueOnStep<JSON> jsonValue(Field<JSON> json, Field<String> path) {
         return new JSONValue<>(SQLDataType.JSON, json, path, null);
     }
@@ -31411,7 +25195,7 @@ public class DSL {
      * The JSON value extractor function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONValueOnStep<JSONB> jsonbValue(Field<JSONB> json, String path) {
         return jsonbValue(json, Tools.field(path));
     }
@@ -31420,7 +25204,7 @@ public class DSL {
      * The JSON value extractor function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONValueOnStep<JSONB> jsonbValue(Field<JSONB> json, Field<String> path) {
         return new JSONValue<>(SQLDataType.JSONB, json, path, null);
     }
@@ -31432,7 +25216,7 @@ public class DSL {
      * This is the same as calling {@link #jsonEntry(String, Field)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONEntryValueStep key(String key) {
         return key(Tools.field(key));
     }
@@ -31444,7 +25228,7 @@ public class DSL {
      * This is the same as calling {@link #jsonEntry(Field, Field)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONEntryValueStep key(Field<String> key) {
         return new JSONEntryImpl<>(key);
     }
@@ -31457,7 +25241,7 @@ public class DSL {
      * {@link Field#getName()} as a key.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> JSONEntry<T> jsonEntry(Field<T> value) {
         return jsonEntry(value.getName(), value);
     }
@@ -31467,7 +25251,7 @@ public class DSL {
      * {@link #jsonObject(JSONEntry...)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> JSONEntry<T> jsonEntry(String key, T value) {
         return jsonEntry(Tools.field(key), Tools.field(value));
     }
@@ -31477,7 +25261,7 @@ public class DSL {
      * {@link #jsonObject(JSONEntry...)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> JSONEntry<T> jsonEntry(String key, Field<T> value) {
         return jsonEntry(Tools.field(key), value);
     }
@@ -31487,7 +25271,7 @@ public class DSL {
      * {@link #jsonObject(JSONEntry...)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> JSONEntry<T> jsonEntry(String key, Select<? extends Record1<T>> value) {
         return jsonEntry(Tools.field(key), field(value));
     }
@@ -31497,7 +25281,7 @@ public class DSL {
      * {@link #jsonObject(JSONEntry...)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> JSONEntry<T> jsonEntry(Field<String> key, T value) {
         return jsonEntry(key, Tools.field(value));
     }
@@ -31507,7 +25291,7 @@ public class DSL {
      * {@link #jsonObject(JSONEntry...)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> JSONEntry<T> jsonEntry(Field<String> key, Field<T> value) {
         return new JSONEntryImpl<>(key, value);
     }
@@ -31517,7 +25301,7 @@ public class DSL {
      * {@link #jsonObject(JSONEntry...)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> JSONEntry<T> jsonEntry(Field<String> key, Select<? extends Record1<T>> value) {
         return jsonEntry(key, field(value));
     }
@@ -31526,7 +25310,7 @@ public class DSL {
      * The JSON object constructor.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectNullStep<JSON> jsonObject(String key, Field<?> value) {
         return jsonObject(jsonEntry(key, value));
     }
@@ -31535,7 +25319,7 @@ public class DSL {
      * The JSON object constructor.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectNullStep<JSON> jsonObject(Field<String> key, Field<?> value) {
         return jsonObject(jsonEntry(key, value));
     }
@@ -31544,77 +25328,16 @@ public class DSL {
      * The JSON object constructor.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectNullStep<JSON> jsonObject(Field<String> key, Select<? extends Record1<?>> value) {
         return jsonObject(jsonEntry(key, value));
     }
 
     /**
-     * The <code>JSON_OBJECT</code> function.
-     *
-     * @deprecated - [#15196] - 3.19.0 - The semantics of the {@link Field}
-     *             arguments in this method is inconsistent with that of other
-     *             overloads, such as {@link #jsonbObject(Field, Field)}, which
-     *             can lead to subtle bugs. Please refrain from using this
-     *             overload as it will be removed in the future. Use
-     *             {@link #jsonObject(JSONEntry...)} instead.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    @Deprecated(forRemoval = true, since = "3.19")
-    public static JSONObjectNullStep<JSON> jsonObject(Field<?>... entries) {
-        return new JSONObject(SQLDataType.JSON, Tools.jsonEntries(entries));
-    }
-
-    /**
      * The JSON object constructor.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static JSONObjectNullStep<JSONB> jsonbObject(String key, Field<?> value) {
-        return jsonbObject(jsonEntry(key, value));
-    }
-
-    /**
-     * The JSON object constructor.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static JSONObjectNullStep<JSONB> jsonbObject(Field<String> key, Field<?> value) {
-        return jsonbObject(jsonEntry(key, value));
-    }
-
-    /**
-     * The JSON object constructor.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static JSONObjectNullStep<JSONB> jsonbObject(Field<String> key, Select<? extends Record1<?>> value) {
-        return jsonbObject(jsonEntry(key, value));
-    }
-
-    /**
-     * The <code>JSONB_OBJECT</code> function.
-     *
-     * @deprecated - [#15196] - 3.19.0 - The semantics of the {@link Field}
-     *             arguments in this method is inconsistent with that of other
-     *             overloads, such as {@link #jsonbObject(Field, Field)}, which
-     *             can lead to subtle bugs. Please refrain from using this
-     *             overload as it will be removed in the future. Use
-     *             {@link #jsonObject(JSONEntry...)} instead.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    @Deprecated(forRemoval = true, since = "3.19")
-    public static JSONObjectNullStep<JSONB> jsonbObject(Field<?>... entries) {
-        return new JSONObject(SQLDataType.JSONB, Tools.jsonEntries(entries));
-    }
-
-    /**
-     * The JSON object constructor.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectNullStep<JSON> jsonObject() {
         return jsonObject(Tools.EMPTY_JSONENTRY);
     }
@@ -31623,7 +25346,7 @@ public class DSL {
      * The JSON object constructor.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectNullStep<JSONB> jsonbObject() {
         return jsonbObject(Tools.EMPTY_JSONENTRY);
     }
@@ -31632,36 +25355,18 @@ public class DSL {
      * The JSON array aggregate function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONArrayAggOrderByStep<JSON> jsonArrayAgg(Field<?> value) {
-        return new JSONArrayAgg<>(JSON, value, false);
+        return new JSONArrayAgg<>(JSON, value);
     }
 
     /**
      * The JSON array aggregate function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONArrayAggOrderByStep<JSONB> jsonbArrayAgg(Field<?> value) {
-        return new JSONArrayAgg<>(JSONB, value, false);
-    }
-
-    /**
-     * The JSON array aggregate function.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, SQLITE, TRINO })
-    public static JSONArrayAggOrderByStep<JSON> jsonArrayAggDistinct(Field<?> value) {
-        return new JSONArrayAgg<>(JSON, value, true);
-    }
-
-    /**
-     * The JSON array aggregate function.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static JSONArrayAggOrderByStep<JSONB> jsonbArrayAggDistinct(Field<?> value) {
-        return new JSONArrayAgg<>(JSONB, value, true);
+        return new JSONArrayAgg<>(JSONB, value);
     }
 
     /**
@@ -31671,7 +25376,7 @@ public class DSL {
      * {@link Field#getName()} as a key.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectAggNullStep<JSON> jsonObjectAgg(Field<?> value) {
         return jsonObjectAgg(jsonEntry(value));
     }
@@ -31680,7 +25385,7 @@ public class DSL {
      * The JSON object aggregate function.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectAggNullStep<JSON> jsonObjectAgg(String key, Field<?> value) {
         return jsonObjectAgg(Tools.field(key), value);
     }
@@ -31689,7 +25394,7 @@ public class DSL {
      * The JSON object aggregate function.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectAggNullStep<JSON> jsonObjectAgg(Field<String> key, Field<?> value) {
         return jsonObjectAgg(jsonEntry(key, value));
     }
@@ -31698,7 +25403,7 @@ public class DSL {
      * The JSON object aggregate function.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectAggNullStep<JSON> jsonObjectAgg(JSONEntry<?> entry) {
         return new JSONObjectAgg<>(JSON, entry);
     }
@@ -31710,7 +25415,7 @@ public class DSL {
      * {@link Field#getName()} as a key.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectAggNullStep<JSONB> jsonbObjectAgg(Field<?> field) {
         return jsonbObjectAgg(jsonEntry(field));
     }
@@ -31719,7 +25424,7 @@ public class DSL {
      * The JSONB object aggregate function.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectAggNullStep<JSONB> jsonbObjectAgg(String key, Field<?> value) {
         return jsonbObjectAgg(Tools.field(key), value);
     }
@@ -31728,7 +25433,7 @@ public class DSL {
      * The JSONB object aggregate function.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectAggNullStep<JSONB> jsonbObjectAgg(Field<String> key, Field<?> value) {
         return jsonbObjectAgg(jsonEntry(key, value));
     }
@@ -31737,7 +25442,7 @@ public class DSL {
      * The JSONB object aggregate function.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONObjectAggNullStep<JSONB> jsonbObjectAgg(JSONEntry<?> entry) {
         return new JSONObjectAgg<>(JSONB, entry);
     }
@@ -31746,7 +25451,7 @@ public class DSL {
      * The JSON exists predicate.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    @Support({ MARIADB, MYSQL, POSTGRES, SQLITE })
     public static JSONExistsOnStep jsonExists(Field<JSON> field, String path) {
         return jsonExists(field, Tools.field(path));
     }
@@ -31755,7 +25460,7 @@ public class DSL {
      * The JSON exists predicate.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONExistsOnStep jsonExists(Field<JSON> field, Field<String> path) {
         return new JSONExists(field, Tools.nullSafe(path));
     }
@@ -31764,7 +25469,7 @@ public class DSL {
      * The JSONB exists predicate.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONExistsOnStep jsonbExists(Field<JSONB> field, String path) {
         return jsonbExists(field, Tools.field(path));
     }
@@ -31773,7 +25478,7 @@ public class DSL {
      * The JSONB exists predicate.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static JSONExistsOnStep jsonbExists(Field<JSONB> field, Field<String> path) {
         return new JSONExists(field, Tools.nullSafe(path));
     }
@@ -31820,28 +25525,85 @@ public class DSL {
 
     /**
      * Create an array literal.
+     * <p>
+     * This translates to the following databases and syntaxes:
+     * <table>
+     * <tr>
+     * <th><code>SQLDialect</code></th>
+     * <th>Java</th>
+     * <th>SQL</th>
+     * </tr>
+     * <tr>
+     * <td>{@link SQLDialect#H2}</td>
+     * <td>array(1, 2)</td>
+     * <td>(1, 2)</td>
+     * </tr>
+     * <tr>
+     * <td>{@link SQLDialect#HSQLDB}, {@link SQLDialect#POSTGRES}</td>
+     * <td>array(1, 2)</td>
+     * <td>array[1, 2]</td>
+     * </tr>
+     * </table>
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> array(T... values) {
         return array(Tools.fields(values));
     }
 
     /**
      * Create an array literal.
+     * <p>
+     * This translates to the following databases and syntaxes:
+     * <table>
+     * <tr>
+     * <th><code>SQLDialect</code></th>
+     * <th>Java</th>
+     * <th>SQL</th>
+     * </tr>
+     * <tr>
+     * <td>{@link SQLDialect#H2}</td>
+     * <td>array(1, 2)</td>
+     * <td>(1, 2)</td>
+     * </tr>
+     * <tr>
+     * <td>{@link SQLDialect#HSQLDB}, {@link SQLDialect#POSTGRES}</td>
+     * <td>array(1, 2)</td>
+     * <td>array[1, 2]</td>
+     * </tr>
+     * </table>
      */
     @SafeVarargs
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> array(Field<T>... fields) {
         return array(Arrays.asList(fields));
     }
 
     /**
      * Create an array literal.
+     * <p>
+     * This translates to the following databases and syntaxes:
+     * <table>
+     * <tr>
+     * <th><code>SQLDialect</code></th>
+     * <th>Java</th>
+     * <th>SQL</th>
+     * </tr>
+     * <tr>
+     * <td>{@link SQLDialect#H2}</td>
+     * <td>array(1, 2)</td>
+     * <td>(1, 2)</td>
+     * </tr>
+     * <tr>
+     * <td>{@link SQLDialect#HSQLDB}, {@link SQLDialect#POSTGRES}</td>
+     * <td>array(1, 2)</td>
+     * <td>array[1, 2]</td>
+     * </tr>
+     * </table>
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> array(Collection<? extends Field<T>> fields) {
         return new Array<>(fields);
     }
@@ -31849,12 +25611,12 @@ public class DSL {
     /**
      * The PostgreSQL <code>array(select)</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * {1, 2, 3} = array(select 1 union select 2 union select 3)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
-    @Support({ DUCKDB, H2, HSQLDB, POSTGRES, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> array(Select<? extends Record1<T>> select) {
         return new ArrayQuery<>(select);
     }
@@ -31893,29 +25655,17 @@ public class DSL {
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
      * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
+     * <p>
      * An important limitation is that correlating <code>MULTISET</code>
-     * subqueries currently only fully works on dialects that support
-     * correlating derived tables. This excludes:
+     * subqueries currently only works on dialects that support correlating
+     * derived tables. This excludes:
      * <ul>
      * <li>{@link SQLDialect#DB2}</li>
      * <li>{@link SQLDialect#H2}</li>
      * <li>{@link SQLDialect#MARIADB}</li>
      * <li>{@link SQLDialect#MYSQL_5_7}</li>
-     * </ul>
-     * <p>
-     * On the above dialects, a simplified emulation is implemented, which does
-     * not support the following inside of <code>MULTISET</code>:
-     * <ul>
-     * <li><code>SELECT DISTINCT</code></li>
-     * <li>Aggregate functions</li>
-     * <li>Window functions</li>
-     * <li><code>GROUP BY</code></li>
-     * <li><code>HAVING</code></li>
-     * <li><code>WINDOW</code></li>
-     * <li><code>QUALIFY</code></li>
-     * <li><code>OFFSET</code></li>
-     * <li><code>LIMIT</code></li>
-     * <li><code>UNION</code> and other set operations</li>
      * </ul>
      * <p>
      * See also <a href=
@@ -31924,7 +25674,7 @@ public class DSL {
      * from this limitation.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <R extends Record> Field<Result<R>> multiset(TableLike<R> table) {
         return new Multiset<>(table);
     }
@@ -31939,7 +25689,7 @@ public class DSL {
     @NotNull
     @Support
     public static AggregateFunction<Integer> count() {
-        return new Count(false);
+        return count(DefaultAggregateFunction.ASTERISK);
     }
 
     /**
@@ -31948,7 +25698,7 @@ public class DSL {
     @NotNull
     @Support
     public static AggregateFunction<Integer> count(SelectFieldOrAsterisk field) {
-        return count(field instanceof Field<?> f ? f : field("{0}", field));
+        return new DefaultAggregateFunction<>(N_COUNT, SQLDataType.INTEGER, field("{0}", field));
     }
 
     /**
@@ -31968,9 +25718,9 @@ public class DSL {
      * Get the count(distinct field) function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static AggregateFunction<Integer> countDistinct(SelectFieldOrAsterisk field) {
-        return countDistinct(field instanceof Field<?> f ? f : field("{0}", field));
+        return new DefaultAggregateFunction<>(true, N_COUNT, SQLDataType.INTEGER, field("{0}", field));
     }
 
     /**
@@ -31981,7 +25731,7 @@ public class DSL {
      * {@link #count(Field)}, instead.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static AggregateFunction<Integer> countDistinct(Table<?> table) {
         return new CountTable(table, true);
     }
@@ -31996,7 +25746,7 @@ public class DSL {
      * <code>COUNT(DISTINCT(expr1, expr2))</code>.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
+    @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static AggregateFunction<Integer> countDistinct(Field<?>... fields) {
         fields = Tools.nullSafe(fields);
         return fields.length == 0 ? countDistinct(asterisk()) : new DefaultAggregateFunction<>(true, N_COUNT, SQLDataType.INTEGER, fields);
@@ -32006,7 +25756,7 @@ public class DSL {
      * Get the <code>array_agg()</code> aggregate function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static <T> ArrayAggOrderByStep<T[]> arrayAgg(Field<T> field) {
         return new ArrayAgg(false, Tools.nullSafe(field));
     }
@@ -32015,7 +25765,7 @@ public class DSL {
      * Get the <code>array_agg()</code> aggregate function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
     public static <T> ArrayAggOrderByStep<T[]> arrayAggDistinct(Field<T> field) {
         return new ArrayAgg(true, Tools.nullSafe(field));
     }
@@ -32055,10 +25805,14 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static ArrayAggOrderByStep<Result<Record>> multisetAgg(Collection<? extends SelectField<?>> fields) {
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static ArrayAggOrderByStep<Result<Record>> multisetAgg(Collection<? extends Field<?>> fields) {
         return new MultisetAgg<>(false, row(fields));
     }
 
@@ -32097,19 +25851,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static ArrayAggOrderByStep<Result<Record>> multisetAgg(SelectField<?>... fields) {
-        return new MultisetAgg<>(false, row(fields));
-    }
-
-    /**
-     * @see #multisetAgg(SelectField...)
-     */
-    @Obsolete
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static ArrayAggOrderByStep<Result<Record>> multisetAgg(Field<?>... fields) {
         return new MultisetAgg<>(false, row(fields));
     }
@@ -32142,6 +25890,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32149,9 +25899,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1> ArrayAggOrderByStep<Result<Record1<T1>>> multisetAgg(SelectField<T1> field1) {
         return new MultisetAgg<>(false, row(field1));
     }
@@ -32182,6 +25936,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32189,9 +25945,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2> ArrayAggOrderByStep<Result<Record2<T1, T2>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2) {
         return new MultisetAgg<>(false, row(field1, field2));
     }
@@ -32222,6 +25982,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32229,9 +25991,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3> ArrayAggOrderByStep<Result<Record3<T1, T2, T3>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3) {
         return new MultisetAgg<>(false, row(field1, field2, field3));
     }
@@ -32262,6 +26028,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32269,9 +26037,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4> ArrayAggOrderByStep<Result<Record4<T1, T2, T3, T4>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4));
     }
@@ -32302,6 +26074,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32309,9 +26083,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5> ArrayAggOrderByStep<Result<Record5<T1, T2, T3, T4, T5>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5));
     }
@@ -32342,6 +26120,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32349,9 +26129,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6> ArrayAggOrderByStep<Result<Record6<T1, T2, T3, T4, T5, T6>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6));
     }
@@ -32382,6 +26166,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32389,9 +26175,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7> ArrayAggOrderByStep<Result<Record7<T1, T2, T3, T4, T5, T6, T7>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7));
     }
@@ -32422,6 +26212,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32429,9 +26221,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8> ArrayAggOrderByStep<Result<Record8<T1, T2, T3, T4, T5, T6, T7, T8>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8));
     }
@@ -32462,6 +26258,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32469,9 +26267,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9> ArrayAggOrderByStep<Result<Record9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8, field9));
     }
@@ -32502,6 +26304,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32509,9 +26313,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> ArrayAggOrderByStep<Result<Record10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10));
     }
@@ -32542,6 +26350,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32549,9 +26359,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> ArrayAggOrderByStep<Result<Record11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11));
     }
@@ -32582,6 +26396,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32589,9 +26405,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> ArrayAggOrderByStep<Result<Record12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12));
     }
@@ -32622,6 +26442,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32629,9 +26451,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> ArrayAggOrderByStep<Result<Record13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13));
     }
@@ -32662,6 +26488,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32669,9 +26497,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> ArrayAggOrderByStep<Result<Record14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14));
     }
@@ -32702,6 +26534,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32709,9 +26543,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> ArrayAggOrderByStep<Result<Record15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15));
     }
@@ -32742,6 +26580,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32749,9 +26589,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> ArrayAggOrderByStep<Result<Record16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16));
     }
@@ -32782,6 +26626,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32789,9 +26635,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> ArrayAggOrderByStep<Result<Record17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17));
     }
@@ -32822,6 +26672,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32829,9 +26681,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> ArrayAggOrderByStep<Result<Record18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18));
     }
@@ -32862,6 +26718,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32869,9 +26727,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> ArrayAggOrderByStep<Result<Record19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19));
     }
@@ -32902,6 +26764,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32909,9 +26773,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> ArrayAggOrderByStep<Result<Record20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20));
     }
@@ -32942,6 +26810,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32949,9 +26819,13 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> ArrayAggOrderByStep<Result<Record21<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20, SelectField<T21> field21) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21));
     }
@@ -32982,6 +26856,8 @@ public class DSL {
      * compatible with {@link DSLContext#fetchFromXML(String)}. Future jOOQ
      * versions will make this format configurable according to
      * {@link XMLFormat.RecordFormat}.</li>
+     * <li>{@link NestedCollectionEmulation#NATIVE}: A few dialects have native
+     * support for MULTISET.</li>
      * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
      * the optimal encoding among the above depending on your dialect,
      * transparently.</li>
@@ -32989,894 +26865,16 @@ public class DSL {
      * <p>
      * The emulation to be chosen is governed by
      * {@link Settings#getEmulateMultiset()}.
+     * <p>
+     * <p>
+     * A set of known limitations can be found here: <a href=
+     * "https://github.com/jOOQ/jOOQ/issues/12021">https://github.com/jOOQ/jOOQ/issues/12021</a>.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> ArrayAggOrderByStep<Result<Record22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22>>> multisetAgg(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20, SelectField<T21> field21, SelectField<T22> field22) {
         return new MultisetAgg<>(false, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21, field22));
     }
-
-
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static ArrayAggOrderByStep<Result<Record>> multisetAggDistinct(Collection<? extends Field<?>> fields) {
-        return new MultisetAgg<>(true, row(fields));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    public static ArrayAggOrderByStep<Result<Record>> multisetAggDistinct(Field<?>... fields) {
-        return new MultisetAgg<>(true, row(fields));
-    }
-
-
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1> ArrayAggOrderByStep<Result<Record1<T1>>> multisetAggDistinct(SelectField<T1> field1) {
-        return new MultisetAgg<>(true, row(field1));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2> ArrayAggOrderByStep<Result<Record2<T1, T2>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2) {
-        return new MultisetAgg<>(true, row(field1, field2));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3> ArrayAggOrderByStep<Result<Record3<T1, T2, T3>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3) {
-        return new MultisetAgg<>(true, row(field1, field2, field3));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4> ArrayAggOrderByStep<Result<Record4<T1, T2, T3, T4>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5> ArrayAggOrderByStep<Result<Record5<T1, T2, T3, T4, T5>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6> ArrayAggOrderByStep<Result<Record6<T1, T2, T3, T4, T5, T6>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7> ArrayAggOrderByStep<Result<Record7<T1, T2, T3, T4, T5, T6, T7>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8> ArrayAggOrderByStep<Result<Record8<T1, T2, T3, T4, T5, T6, T7, T8>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9> ArrayAggOrderByStep<Result<Record9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8, field9));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> ArrayAggOrderByStep<Result<Record10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> ArrayAggOrderByStep<Result<Record11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> ArrayAggOrderByStep<Result<Record12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> ArrayAggOrderByStep<Result<Record13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> ArrayAggOrderByStep<Result<Record14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> ArrayAggOrderByStep<Result<Record15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> ArrayAggOrderByStep<Result<Record16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> ArrayAggOrderByStep<Result<Record17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> ArrayAggOrderByStep<Result<Record18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> ArrayAggOrderByStep<Result<Record19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> ArrayAggOrderByStep<Result<Record20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> ArrayAggOrderByStep<Result<Record21<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20, SelectField<T21> field21) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21));
-    }
-
-    /**
-     * Get the <code>MULTISET_AGG(DISTINCT)</code> aggregate function to nest group
-     * contents.
-     * <p>
-     * This synthetic, non-standard aggregate function works in a similar way as
-     * the standard SQL <code>ARRAY_AGG</code> aggregate function. It is
-     * emulated using mappings to any of:
-     * <p>
-     * <ul>
-     * <li>{@link NestedCollectionEmulation#JSON}: A MULTISET of ROW types works
-     * just like a {@link #jsonArrayAggDistinct(Field)} of
-     * {@link #jsonObject(Field...)}, or an application of
-     * {@link SelectForStep#forJSON()}. jOOQ produces a JSON encoding that is
-     * compatible with {@link DSLContext#fetchFromJSON(String)}. Future jOOQ
-     * versions will make this format configurable according to
-     * {@link JSONFormat.RecordFormat}.</li>
-     * <li>{@link NestedCollectionEmulation#JSONB}: Just like <code>JSON</code>,
-     * but we're using {@link #jsonbArrayAggDistinct(Field)} and
-     * {@link #jsonbObject(Field...)}, or {@link SelectForStep#forJSONB()}.</li>
-     * <li>{@link NestedCollectionEmulation#DEFAULT}: By default, jOOQ chooses
-     * the optimal encoding among the above depending on your dialect,
-     * transparently.</li>
-     * </ul>
-     * <p>
-     * Note that unlike <code>MULTISET_AGG</code>, this depends on whether the
-     * underlying emulation supports the <code>DISTINCT</code> clause.
-     * <p>
-     * The emulation to be chosen is governed by
-     * {@link Settings#getEmulateMultiset()}.
-     */
-    @NotNull
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> ArrayAggOrderByStep<Result<Record22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22>>> multisetAggDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20, SelectField<T21> field21, SelectField<T22> field22) {
-        return new MultisetAgg<>(true, row(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21, field22));
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -33948,195 +26946,55 @@ public class DSL {
      * The <code>mode(field)</code> aggregate function.
      */
     @NotNull
-    @Support({ DUCKDB, H2, POSTGRES })
+    @Support({ H2, POSTGRES })
     public static <T> AggregateFunction<T> mode(Field<T> field) {
         return new Mode(Tools.nullSafe(field));
     }
 
     /**
      * Get the aggregated concatenation for a field.
+     * <p>
+     * This is natively supported by {@link SQLDialect#ORACLE11G} upwards. It is
+     * emulated by the following dialects:
+     * <ul>
+     * <li> {@link SQLDialect#AURORA_MYSQL}: Using <code>GROUP_CONCAT</code></li>
+     * <li> {@link SQLDialect#DB2}: Using <code>XMLAGG()</code></li>
+     * <li> {@link SQLDialect#H2}: Using <code>GROUP_CONCAT()</code></li>
+     * <li> {@link SQLDialect#HSQLDB}: Using <code>GROUP_CONCAT()</code></li>
+     * <li> {@link SQLDialect#MYSQL}: Using <code>GROUP_CONCAT()</code></li>
+     * <li> {@link SQLDialect#POSTGRES}: Using <code>STRING_AGG()</code></li>
+     * <li> {@link SQLDialect#SYBASE}: Using <code>LIST()</code></li>
+     * </ul>
      *
      * @see #groupConcat(Field)
      */
     @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO })
+    @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static OrderedAggregateFunction<String> listAgg(Field<?> field) {
         return new ListAgg(false, Tools.nullSafe(field));
     }
 
     /**
      * Get the aggregated concatenation for a field.
+     * <p>
+     * This is natively supported by {@link SQLDialect#ORACLE11G} upwards. It is
+     * emulated by the following dialects:
+     * <ul>
+     * <li> {@link SQLDialect#AURORA_MYSQL}: Using <code>GROUP_CONCAT</code></li>
+     * <li> {@link SQLDialect#DB2}: Using <code>XMLAGG()</code></li>
+     * <li> {@link SQLDialect#H2}: Using <code>GROUP_CONCAT</code></li>
+     * <li> {@link SQLDialect#HSQLDB}: Using <code>GROUP_CONCAT</code></li>
+     * <li> {@link SQLDialect#MYSQL}: Using <code>GROUP_CONCAT</code></li>
+     * <li> {@link SQLDialect#POSTGRES}: Using <code>STRING_AGG()</code></li>
+     * <li> {@link SQLDialect#SYBASE}: Using <code>LIST()</code></li>
+     * </ul>
      *
      * @see #groupConcat(Field)
      */
     @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO })
+    @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static OrderedAggregateFunction<String> listAgg(Field<?> field, String separator) {
-        return listAgg(field, inline(separator));
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     *
-     * @see #groupConcat(Field)
-     */
-    @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO })
-    public static OrderedAggregateFunction<String> listAgg(Field<?> field, Field<String> separator) {
-        return new ListAgg(false, Tools.nullSafe(field), separator);
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     *
-     * @see #groupConcatDistinct(Field)
-     */
-    @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
-    public static OrderedAggregateFunction<String> listAggDistinct(Field<?> field) {
-        return new ListAgg(true, Tools.nullSafe(field));
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     *
-     * @see #groupConcatDistinct(Field)
-     */
-    @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
-    public static OrderedAggregateFunction<String> listAggDistinct(Field<?> field, String separator) {
-        return listAggDistinct(field, inline(separator));
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     *
-     * @see #groupConcatDistinct(Field)
-     */
-    @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
-    public static OrderedAggregateFunction<String> listAggDistinct(Field<?> field, Field<String> separator) {
-        return new ListAgg(true, Tools.nullSafe(field), separator);
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     */
-    @NotNull
-    @Support({ POSTGRES })
-    public static OrderedAggregateFunction<byte[]> binaryListAgg(Field<?> field) {
-        return new BinaryListAgg(false, Tools.nullSafe(field));
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     */
-    @NotNull
-    @Support({ POSTGRES })
-    public static OrderedAggregateFunction<byte[]> binaryListAgg(Field<?> field, byte[] separator) {
-        return binaryListAgg(field, inline(separator));
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     */
-    @NotNull
-    @Support({ POSTGRES })
-    public static OrderedAggregateFunction<byte[]> binaryListAgg(Field<?> field, Field<byte[]> separator) {
-        return new BinaryListAgg(false, Tools.nullSafe(field), separator);
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     */
-    @NotNull
-    @Support({ POSTGRES })
-    public static OrderedAggregateFunction<byte[]> binaryListAggDistinct(Field<?> field) {
-        return new BinaryListAgg(true, Tools.nullSafe(field));
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     */
-    @NotNull
-    @Support({ POSTGRES })
-    public static OrderedAggregateFunction<byte[]> binaryListAggDistinct(Field<?> field, byte[] separator) {
-        return binaryListAggDistinct(field, inline(separator));
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     */
-    @NotNull
-    @Support({ POSTGRES })
-    public static OrderedAggregateFunction<byte[]> binaryListAggDistinct(Field<?> field, Field<byte[]> separator) {
-        return new BinaryListAgg(true, Tools.nullSafe(field), separator);
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     *
-     * @see #groupConcat(Field)
-     */
-    @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO })
-    public static OrderedAggregateFunction<String> stringAgg(Field<?> field) {
-        return listAgg(field);
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     *
-     * @see #groupConcat(Field)
-     */
-    @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO })
-    public static OrderedAggregateFunction<String> stringAgg(Field<?> field, String separator) {
-        return listAgg(field, separator);
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     *
-     * @see #groupConcat(Field)
-     */
-    @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO })
-    public static OrderedAggregateFunction<String> stringAgg(Field<?> field, Field<String> separator) {
-        return listAgg(field, separator);
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     *
-     * @see #groupConcatDistinct(Field)
-     */
-    @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
-    public static OrderedAggregateFunction<String> stringAggDistinct(Field<?> field) {
-        return listAggDistinct(field);
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     *
-     * @see #groupConcatDistinct(Field)
-     */
-    @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
-    public static OrderedAggregateFunction<String> stringAggDistinct(Field<?> field, String separator) {
-        return listAggDistinct(field, separator);
-    }
-
-    /**
-     * Get the aggregated concatenation for a field.
-     *
-     * @see #groupConcatDistinct(Field)
-     */
-    @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
-    public static OrderedAggregateFunction<String> stringAggDistinct(Field<?> field, Field<String> separator) {
-        return listAggDistinct(field, separator);
+        return new ListAgg(false, Tools.nullSafe(field), inline(separator));
     }
 
     /**
@@ -34163,7 +27021,7 @@ public class DSL {
      * @see #listAgg(Field)
      */
     @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO })
+    @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     public static GroupConcatOrderByStep groupConcat(Field<?> field) {
         return new GroupConcat(Tools.nullSafe(field));
     }
@@ -34195,7 +27053,7 @@ public class DSL {
      */
     @Deprecated(forRemoval = true, since = "3.12")
     @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO })
+    @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
     public static AggregateFunction<String> groupConcat(Field<?> field, String separator) {
         return new GroupConcat(Tools.nullSafe(field)).separator(separator);
     }
@@ -34220,7 +27078,7 @@ public class DSL {
      * @see #listAgg(Field)
      */
     @NotNull
-    @Support({ CUBRID, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
+    @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     public static GroupConcatOrderByStep groupConcatDistinct(Field<?> field) {
         return new GroupConcat(Tools.nullSafe(field), true);
     }
@@ -34234,9 +27092,149 @@ public class DSL {
      * aggregate function.
      */
     @NotNull
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
+    @Support({ H2, POSTGRES, YUGABYTEDB })
     public static OrderedAggregateFunctionOfDeferredType mode() {
         return new ModeDeferred();
+    }
+
+    /**
+     * The <code>rank(expr) within group (order by [order clause])</code>
+     * ordered-set aggregate function.
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static OrderedAggregateFunction<Integer> rank(Field<?>... fields) {
+        return new DefaultAggregateFunction<>(N_RANK, SQLDataType.INTEGER, fields);
+    }
+
+    /**
+     * The <code>rank(expr) within group (order by [order clause])</code>
+     * ordered-set aggregate function.
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static OrderedAggregateFunction<Integer> rank(Collection<? extends Field<?>> fields) {
+        return new DefaultAggregateFunction<>(N_RANK, SQLDataType.INTEGER, fields.toArray(EMPTY_FIELD));
+    }
+
+    /**
+     * The <code>dense_rank(expr) within group (order by [order clause])</code>
+     * ordered-set aggregate function.
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static OrderedAggregateFunction<Integer> denseRank(Field<?>... fields) {
+        return new DefaultAggregateFunction<>(N_DENSE_RANK, SQLDataType.INTEGER, fields);
+    }
+
+    /**
+     * The <code>dense_rank(expr) within group (order by [order clause])</code>
+     * ordered-set aggregate function.
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static OrderedAggregateFunction<Integer> denseRank(Collection<? extends Field<?>> fields) {
+        return new DefaultAggregateFunction<>(N_DENSE_RANK, SQLDataType.INTEGER, fields.toArray(EMPTY_FIELD));
+    }
+
+    /**
+     * The <code>percent_rank(expr) within group (order by [order clause])</code>
+     * ordered-set aggregate function.
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static OrderedAggregateFunction<Integer> percentRank(Field<?>... fields) {
+        return new DefaultAggregateFunction<>(N_PERCENT_RANK, SQLDataType.INTEGER, fields);
+    }
+
+    /**
+     * The <code>percent_rank(expr) within group (order by [order clause])</code>
+     * ordered-set aggregate function.
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static OrderedAggregateFunction<Integer> percentRank(Collection<? extends Field<?>> fields) {
+        return new DefaultAggregateFunction<>(N_PERCENT_RANK, SQLDataType.INTEGER, fields.toArray(EMPTY_FIELD));
+    }
+
+    /**
+     * The <code>cume_dist(expr) within group (order by [order clause])</code>
+     * ordered-set aggregate function.
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static OrderedAggregateFunction<BigDecimal> cumeDist(Field<?>... fields) {
+        return new DefaultAggregateFunction<>(N_CUME_DIST, SQLDataType.NUMERIC, fields);
+    }
+
+    /**
+     * The <code>cume_dist(expr) within group (order by [order clause])</code>
+     * ordered-set aggregate function.
+     */
+    @NotNull
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    public static OrderedAggregateFunction<BigDecimal> cumeDist(Collection<? extends Field<?>> fields) {
+        return new DefaultAggregateFunction<>(N_CUME_DIST, SQLDataType.NUMERIC, fields.toArray(EMPTY_FIELD));
+    }
+
+    /**
+     * The
+     * <code>percentile_cont([number]) within group (order by [column])</code>
+     * function.
+     * <p>
+     * While most dialects support this as an aggregate function,
+     * {@link SQLDialect#BIGQUERY}, {@link SQLDialect#SQLSERVER}, and
+     * {@link SQLDialect#REDSHIFT} support only its window function variant.
+     */
+    @NotNull
+    @Support({ H2, MARIADB, POSTGRES, YUGABYTEDB })
+    public static OrderedAggregateFunction<BigDecimal> percentileCont(Number number) {
+        return percentileCont(val(number));
+    }
+
+    /**
+     * The
+     * <code>percentile_cont([number]) within group (order by [column])</code>
+     * function.
+     * <p>
+     * While most dialects support this as an aggregate function,
+     * {@link SQLDialect#BIGQUERY}, {@link SQLDialect#SQLSERVER}, and
+     * {@link SQLDialect#REDSHIFT} support only its window function variant.
+     */
+    @NotNull
+    @Support({ H2, MARIADB, POSTGRES, YUGABYTEDB })
+    public static OrderedAggregateFunction<BigDecimal> percentileCont(Field<? extends Number> field) {
+        return new DefaultAggregateFunction<>(N_PERCENTILE_CONT, SQLDataType.NUMERIC, Tools.nullSafe(field));
+    }
+
+    /**
+     * The
+     * <code>percentile_disc([number]) within group (order by [column])</code>
+     * function.
+     * <p>
+     * While most dialects support this as an aggregate function,
+     * {@link SQLDialect#BIGQUERY}, {@link SQLDialect#SQLSERVER}, and
+     * {@link SQLDialect#REDSHIFT} support only its window function variant.
+     */
+    @NotNull
+    @Support({ H2, MARIADB, POSTGRES, YUGABYTEDB })
+    public static OrderedAggregateFunction<BigDecimal> percentileDisc(Number number) {
+        return percentileDisc(val(number));
+    }
+
+    /**
+     * The
+     * <code>percentile_disc([number]) within group (order by [column])</code>
+     * function.
+     * <p>
+     * While most dialects support this as an aggregate function,
+     * {@link SQLDialect#BIGQUERY}, {@link SQLDialect#SQLSERVER}, and
+     * {@link SQLDialect#REDSHIFT} support only its window function variant.
+     */
+    @NotNull
+    @Support({ H2, MARIADB, POSTGRES, YUGABYTEDB })
+    public static OrderedAggregateFunction<BigDecimal> percentileDisc(Field<? extends Number> field) {
+        return new DefaultAggregateFunction<>(N_PERCENTILE_DISC, SQLDataType.NUMERIC, Tools.nullSafe(field));
     }
 
     // -------------------------------------------------------------------------
@@ -34247,8 +27245,8 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>PARTITION BY</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static WindowSpecificationOrderByStep partitionBy(GroupField... fields) {
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static WindowSpecificationOrderByStep partitionBy(Field<?>... fields) {
         return new WindowSpecificationImpl().partitionBy(fields);
     }
 
@@ -34256,8 +27254,8 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>PARTITION BY</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    public static WindowSpecificationOrderByStep partitionBy(Collection<? extends GroupField> fields) {
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    public static WindowSpecificationOrderByStep partitionBy(Collection<? extends Field<?>> fields) {
         return new WindowSpecificationImpl().partitionBy(fields);
     }
 
@@ -34265,7 +27263,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with an <code>ORDER BY</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsStep orderBy(Field<?>... fields) {
         return new WindowSpecificationImpl().orderBy(fields);
     }
@@ -34274,7 +27272,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with an <code>ORDER BY</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsStep orderBy(OrderField<?>... fields) {
         return new WindowSpecificationImpl().orderBy(fields);
     }
@@ -34283,7 +27281,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with an <code>ORDER BY</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsStep orderBy(Collection<? extends OrderField<?>> fields) {
         return new WindowSpecificationImpl().orderBy(fields);
     }
@@ -34292,7 +27290,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>ROWS</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep rowsUnboundedPreceding() {
         return new WindowSpecificationImpl().rowsUnboundedPreceding();
     }
@@ -34301,7 +27299,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>ROWS</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep rowsPreceding(int number) {
         return new WindowSpecificationImpl().rowsPreceding(number);
     }
@@ -34310,7 +27308,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>ROWS</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep rowsCurrentRow() {
         return new WindowSpecificationImpl().rowsCurrentRow();
     }
@@ -34319,7 +27317,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>ROWS</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep rowsUnboundedFollowing() {
         return new WindowSpecificationImpl().rowsUnboundedFollowing();
     }
@@ -34328,7 +27326,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>ROWS</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep rowsFollowing(int number) {
         return new WindowSpecificationImpl().rowsFollowing(number);
     }
@@ -34337,7 +27335,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>ROWS</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep rowsBetweenUnboundedPreceding() {
         return new WindowSpecificationImpl().rowsBetweenUnboundedPreceding();
     }
@@ -34346,7 +27344,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>ROWS</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep rowsBetweenPreceding(int number) {
         return new WindowSpecificationImpl().rowsBetweenPreceding(number);
     }
@@ -34355,7 +27353,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>ROWS</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep rowsBetweenCurrentRow() {
         return new WindowSpecificationImpl().rowsBetweenCurrentRow();
     }
@@ -34364,7 +27362,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>ROWS</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep rowsBetweenUnboundedFollowing() {
         return new WindowSpecificationImpl().rowsBetweenUnboundedFollowing();
     }
@@ -34373,7 +27371,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>ROWS</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep rowsBetweenFollowing(int number) {
         return new WindowSpecificationImpl().rowsBetweenFollowing(number);
     }
@@ -34382,7 +27380,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>RANGE</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep rangeUnboundedPreceding() {
         return new WindowSpecificationImpl().rangeUnboundedPreceding();
     }
@@ -34391,7 +27389,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>RANGE</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep rangePreceding(int number) {
         return new WindowSpecificationImpl().rangePreceding(number);
     }
@@ -34400,7 +27398,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>RANGE</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep rangeCurrentRow() {
         return new WindowSpecificationImpl().rangeCurrentRow();
     }
@@ -34409,7 +27407,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>RANGE</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep rangeUnboundedFollowing() {
         return new WindowSpecificationImpl().rangeUnboundedFollowing();
     }
@@ -34418,7 +27416,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>RANGE</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep rangeFollowing(int number) {
         return new WindowSpecificationImpl().rangeFollowing(number);
     }
@@ -34427,7 +27425,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>RANGE</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep rangeBetweenUnboundedPreceding() {
         return new WindowSpecificationImpl().rangeBetweenUnboundedPreceding();
     }
@@ -34436,7 +27434,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>RANGE</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep rangeBetweenPreceding(int number) {
         return new WindowSpecificationImpl().rangeBetweenPreceding(number);
     }
@@ -34445,7 +27443,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>RANGE</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep rangeBetweenCurrentRow() {
         return new WindowSpecificationImpl().rangeBetweenCurrentRow();
     }
@@ -34454,7 +27452,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>RANGE</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep rangeBetweenUnboundedFollowing() {
         return new WindowSpecificationImpl().rangeBetweenUnboundedFollowing();
     }
@@ -34463,7 +27461,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>RANGE</code> clause.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep rangeBetweenFollowing(int number) {
         return new WindowSpecificationImpl().rangeBetweenFollowing(number);
     }
@@ -34472,7 +27470,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>GROUPS</code> clause.
      */
     @NotNull
-    @Support({ H2, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep groupsUnboundedPreceding() {
         return new WindowSpecificationImpl().groupsUnboundedPreceding();
     }
@@ -34481,7 +27479,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>GROUPS</code> clause.
      */
     @NotNull
-    @Support({ H2, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep groupsPreceding(int number) {
         return new WindowSpecificationImpl().groupsPreceding(number);
     }
@@ -34490,7 +27488,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>GROUPS</code> clause.
      */
     @NotNull
-    @Support({ H2, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep groupsCurrentRow() {
         return new WindowSpecificationImpl().groupsCurrentRow();
     }
@@ -34499,7 +27497,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>GROUPS</code> clause.
      */
     @NotNull
-    @Support({ H2, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep groupsUnboundedFollowing() {
         return new WindowSpecificationImpl().groupsUnboundedFollowing();
     }
@@ -34508,7 +27506,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>GROUPS</code> clause.
      */
     @NotNull
-    @Support({ H2, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationExcludeStep groupsFollowing(int number) {
         return new WindowSpecificationImpl().groupsFollowing(number);
     }
@@ -34517,7 +27515,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>GROUPS</code> clause.
      */
     @NotNull
-    @Support({ H2, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep groupsBetweenUnboundedPreceding() {
         return new WindowSpecificationImpl().groupsBetweenUnboundedPreceding();
     }
@@ -34526,7 +27524,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>GROUPS</code> clause.
      */
     @NotNull
-    @Support({ H2, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep groupsBetweenPreceding(int number) {
         return new WindowSpecificationImpl().groupsBetweenPreceding(number);
     }
@@ -34535,7 +27533,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>GROUPS</code> clause.
      */
     @NotNull
-    @Support({ H2, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep groupsBetweenCurrentRow() {
         return new WindowSpecificationImpl().groupsBetweenCurrentRow();
     }
@@ -34544,7 +27542,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>GROUPS</code> clause.
      */
     @NotNull
-    @Support({ H2, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep groupsBetweenUnboundedFollowing() {
         return new WindowSpecificationImpl().groupsBetweenUnboundedFollowing();
     }
@@ -34553,7 +27551,7 @@ public class DSL {
      * Create a {@link WindowSpecification} with a <code>GROUPS</code> clause.
      */
     @NotNull
-    @Support({ H2, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ H2, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowSpecificationRowsAndStep groupsBetweenFollowing(int number) {
         return new WindowSpecificationImpl().groupsBetweenFollowing(number);
     }
@@ -34572,7 +27570,7 @@ public class DSL {
      * <code>ROWNUM()</code>
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowOverStep<Integer> rowNumber() {
         return new RowNumber();
     }
@@ -34581,7 +27579,7 @@ public class DSL {
      * The <code>rank() over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowOverStep<Integer> rank() {
         return new Rank();
     }
@@ -34590,16 +27588,16 @@ public class DSL {
      * The <code>dense_rank() over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowOverStep<Integer> denseRank() {
         return new DenseRank();
     }
 
     /**
-     * The <code>percent_rank() over ([analytic clause])</code> function.
+     * The <code>precent_rank() over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowOverStep<BigDecimal> percentRank() {
         return new PercentRank();
     }
@@ -34608,7 +27606,7 @@ public class DSL {
      * The <code>cume_dist() over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowOverStep<BigDecimal> cumeDist() {
         return new CumeDist();
     }
@@ -34617,7 +27615,7 @@ public class DSL {
      * The <code>ntile([number]) over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowOverStep<Integer> ntile(int number) {
         return new Ntile(inline(number));
     }
@@ -34626,7 +27624,7 @@ public class DSL {
      * The <code>ntile([number]) over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowOverStep<Integer> ntile(Field<Integer> number) {
         return new Ntile(number);
     }
@@ -34635,7 +27633,7 @@ public class DSL {
      * The <code>ratio_to_report([expression]) over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowOverStep<BigDecimal> ratioToReport(Number number) {
         return ratioToReport(Tools.field(number));
     }
@@ -34644,7 +27642,7 @@ public class DSL {
      * The <code>ratio_to_report([expression]) over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static WindowOverStep<BigDecimal> ratioToReport(Field<? extends Number> field) {
         return new RatioToReport(Tools.nullSafe(field));
     }
@@ -34653,7 +27651,7 @@ public class DSL {
      * The <code>first_value(field) over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> firstValue(Field<T> field) {
         return new FirstValue<>(Tools.nullSafe(field));
     }
@@ -34662,7 +27660,7 @@ public class DSL {
      * The <code>last_value(field) over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lastValue(Field<T> field) {
         return new LastValue<>(Tools.nullSafe(field));
     }
@@ -34671,7 +27669,7 @@ public class DSL {
      * The <code>nth_value(field) over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowFromFirstLastStep<T> nthValue(Field<T> field, int nth) {
         return nthValue(field, val(nth));
     }
@@ -34680,7 +27678,7 @@ public class DSL {
      * The <code>nth_value(field) over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowFromFirstLastStep<T> nthValue(Field<T> field, Field<Integer> nth) {
         return new NthValue<>(Tools.nullSafe(field), Tools.nullSafe(nth));
     }
@@ -34689,7 +27687,7 @@ public class DSL {
      * The <code>lead(field) over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lead(Field<T> field) {
         return new Lead<>(Tools.nullSafe(field), null, null);
     }
@@ -34698,7 +27696,7 @@ public class DSL {
      * The <code>lead(field, offset) over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lead(Field<T> field, int offset) {
         return lead(field, inline(offset));
     }
@@ -34707,7 +27705,7 @@ public class DSL {
      * The <code>lead(field, offset) over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lead(Field<T> field, Field<Integer> offset) {
         return new Lead<>(Tools.nullSafe(field), Tools.nullSafe(offset), null);
     }
@@ -34718,7 +27716,7 @@ public class DSL {
      * function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lead(Field<T> field, int offset, T defaultValue) {
         return lead(Tools.nullSafe(field), inline(offset), Tools.field(defaultValue, field));
     }
@@ -34729,7 +27727,7 @@ public class DSL {
      * function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lead(Field<T> field, int offset, Field<T> defaultValue) {
         return lead(field, inline(offset), defaultValue);
     }
@@ -34740,7 +27738,7 @@ public class DSL {
      * function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lead(Field<T> field, Field<Integer> offset, T defaultValue) {
         return lead(field, Tools.nullSafe(offset), Tools.field(defaultValue, field));
     }
@@ -34751,7 +27749,7 @@ public class DSL {
      * function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lead(Field<T> field, Field<Integer> offset, Field<T> defaultValue) {
         return new Lead<>(Tools.nullSafe(field), Tools.nullSafe(offset), Tools.nullSafe(defaultValue));
     }
@@ -34760,7 +27758,7 @@ public class DSL {
      * The <code>lag(field) over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lag(Field<T> field) {
         return new Lag<>(Tools.nullSafe(field), null, null);
     }
@@ -34769,7 +27767,7 @@ public class DSL {
      * The <code>lag(field, offset) over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lag(Field<T> field, int offset) {
         return lag(field, inline(offset));
     }
@@ -34778,7 +27776,7 @@ public class DSL {
      * The <code>lag(field, offset) over ([analytic clause])</code> function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lag(Field<T> field, Field<Integer> offset) {
         return new Lag<>(Tools.nullSafe(field), Tools.nullSafe(offset), null);
     }
@@ -34789,7 +27787,7 @@ public class DSL {
      * function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lag(Field<T> field, int offset, T defaultValue) {
         return lag(Tools.nullSafe(field), inline(offset), Tools.field(defaultValue, field));
     }
@@ -34800,7 +27798,7 @@ public class DSL {
      * function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lag(Field<T> field, int offset, Field<T> defaultValue) {
         return lag(field, inline(offset), defaultValue);
     }
@@ -34811,7 +27809,7 @@ public class DSL {
      * function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lag(Field<T> field, Field<Integer> offset, T defaultValue) {
         return lag(field, offset, Tools.field(defaultValue, field));
     }
@@ -34822,7 +27820,7 @@ public class DSL {
      * function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     public static <T> WindowIgnoreNullsStep<T> lag(Field<T> field, Field<Integer> offset, Field<T> defaultValue) {
         return new Lag<>(Tools.nullSafe(field), Tools.nullSafe(offset), Tools.nullSafe(defaultValue));
     }
@@ -34858,20 +27856,13 @@ public class DSL {
 
     /**
      * Create an unnamed parameter with a defined type and no initial value.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #param(DataType)}.
      *
      * @see #param(String, Object)
      */
     @NotNull
     @Support
     public static <T> Param<T> param(Class<T> type) {
-        return val0(null, DefaultDataType.getDataType(null, type), true, 0, null);
+        return param(DefaultDataType.getDataType(null, type));
     }
 
     /**
@@ -34882,7 +27873,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T> Param<T> param(DataType<T> type) {
-        return val0(null, type, false, 0, null);
+        return new Val<>(null, type);
     }
 
     /**
@@ -34924,13 +27915,6 @@ public class DSL {
 
     /**
      * Create a named parameter with a defined type and no initial value.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #param(String, DataType)}.
      *
      * @param name The parameter name
      * @param type The type that is used for the parameter (a type that is
@@ -34940,7 +27924,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T> Param<T> param(String name, Class<T> type) {
-        return val0(null, DefaultDataType.getDataType(null, type), true, 0, name);
+        return param(name, DefaultDataType.getDataType(null, type));
     }
 
     /**
@@ -34951,7 +27935,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T> Param<T> param(String name, DataType<T> type) {
-        return val0(null, type, false, 0, name);
+        return new Val<>(null, type, name);
     }
 
     /**
@@ -34986,19 +27970,12 @@ public class DSL {
     @NotNull
     @Support
     public static <T> Param<T> param(String name, T value) {
-        return val0(value, val(value).getDataType(), true, 0, name);
+        return new Val<>(value, Tools.field(value).getDataType(), name);
     }
 
     /**
      * A synonym for {@link #val(Object)} to be used in Scala and Groovy, where
      * <code>val</code> is a reserved keyword.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * instances of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #value(Object, DataType)}.
      *
      * @see #val(Object)
      */
@@ -35017,7 +27994,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Byte> value(byte value) {
-        return val(value);
+        return value((Object) value, SQLDataType.TINYINT);
     }
 
     /**
@@ -35029,7 +28006,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Byte> value(Byte value) {
-        return val(value);
+        return value((Object) value, SQLDataType.TINYINT);
     }
 
     /**
@@ -35041,7 +28018,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<UByte> value(UByte value) {
-        return val(value);
+        return value((Object) value, SQLDataType.TINYINTUNSIGNED);
     }
 
     /**
@@ -35053,7 +28030,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Short> value(short value) {
-        return val(value);
+        return value((Object) value, SQLDataType.SMALLINT);
     }
 
     /**
@@ -35065,7 +28042,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Short> value(Short value) {
-        return val(value);
+        return value((Object) value, SQLDataType.SMALLINT);
     }
 
     /**
@@ -35077,7 +28054,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<UShort> value(UShort value) {
-        return val(value);
+        return value((Object) value, SQLDataType.SMALLINTUNSIGNED);
     }
 
     /**
@@ -35089,7 +28066,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Integer> value(int value) {
-        return val(value);
+        return value((Object) value, SQLDataType.INTEGER);
     }
 
     /**
@@ -35101,7 +28078,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Integer> value(Integer value) {
-        return val(value);
+        return value((Object) value, SQLDataType.INTEGER);
     }
 
     /**
@@ -35113,7 +28090,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<UInteger> value(UInteger value) {
-        return val(value);
+        return value((Object) value, SQLDataType.INTEGERUNSIGNED);
     }
 
     /**
@@ -35125,7 +28102,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Long> value(long value) {
-        return val(value);
+        return value((Object) value, SQLDataType.BIGINT);
     }
 
     /**
@@ -35137,7 +28114,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Long> value(Long value) {
-        return val(value);
+        return value((Object) value, SQLDataType.BIGINT);
     }
 
     /**
@@ -35149,7 +28126,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<ULong> value(ULong value) {
-        return val(value);
+        return value((Object) value, SQLDataType.BIGINTUNSIGNED);
     }
 
     /**
@@ -35161,7 +28138,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Float> value(float value) {
-        return val(value);
+        return value((Object) value, SQLDataType.REAL);
     }
 
     /**
@@ -35173,7 +28150,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Float> value(Float value) {
-        return val(value);
+        return value((Object) value, SQLDataType.REAL);
     }
 
     /**
@@ -35185,7 +28162,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Double> value(double value) {
-        return val(value);
+        return value((Object) value, SQLDataType.DOUBLE);
     }
 
     /**
@@ -35197,7 +28174,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Double> value(Double value) {
-        return val(value);
+        return value((Object) value, SQLDataType.DOUBLE);
     }
 
     /**
@@ -35209,7 +28186,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Boolean> value(boolean value) {
-        return val(value);
+        return value((Object) value, SQLDataType.BOOLEAN);
     }
 
     /**
@@ -35221,7 +28198,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Boolean> value(Boolean value) {
-        return val(value);
+        return value((Object) value, SQLDataType.BOOLEAN);
     }
 
     /**
@@ -35233,7 +28210,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<BigDecimal> value(BigDecimal value) {
-        return val(value);
+        return value((Object) value, SQLDataType.DECIMAL);
     }
 
     /**
@@ -35245,7 +28222,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<BigInteger> value(BigInteger value) {
-        return val(value);
+        return value((Object) value, SQLDataType.DECIMAL_INTEGER);
     }
 
     /**
@@ -35257,7 +28234,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<byte[]> value(byte[] value) {
-        return val(value);
+        return value((Object) value, SQLDataType.VARBINARY);
     }
 
     /**
@@ -35269,7 +28246,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<String> value(String value) {
-        return val(value);
+        return value((Object) value, SQLDataType.VARCHAR);
     }
 
     /**
@@ -35281,7 +28258,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Date> value(Date value) {
-        return val(value);
+        return value((Object) value, SQLDataType.DATE);
     }
 
     /**
@@ -35293,7 +28270,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Time> value(Time value) {
-        return val(value);
+        return value((Object) value, SQLDataType.TIME);
     }
 
     /**
@@ -35305,7 +28282,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Timestamp> value(Timestamp value) {
-        return val(value);
+        return value((Object) value, SQLDataType.TIMESTAMP);
     }
 
     /**
@@ -35317,7 +28294,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<LocalDate> value(LocalDate value) {
-        return val(value);
+        return value((Object) value, SQLDataType.LOCALDATE);
     }
 
     /**
@@ -35329,7 +28306,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<LocalTime> value(LocalTime value) {
-        return val(value);
+        return value((Object) value, SQLDataType.LOCALTIME);
     }
 
     /**
@@ -35341,7 +28318,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<LocalDateTime> value(LocalDateTime value) {
-        return val(value);
+        return value((Object) value, SQLDataType.LOCALDATETIME);
     }
 
     /**
@@ -35353,7 +28330,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<OffsetTime> value(OffsetTime value) {
-        return val(value);
+        return value((Object) value, SQLDataType.OFFSETTIME);
     }
 
     /**
@@ -35365,7 +28342,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<OffsetDateTime> value(OffsetDateTime value) {
-        return val(value);
+        return value((Object) value, SQLDataType.OFFSETDATETIME);
     }
 
     /**
@@ -35377,7 +28354,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Instant> value(Instant value) {
-        return val(value);
+        return value((Object) value, SQLDataType.INSTANT);
     }
 
     /**
@@ -35389,7 +28366,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<UUID> value(UUID value) {
-        return val(value);
+        return value((Object) value, SQLDataType.UUID);
     }
 
     /**
@@ -35401,7 +28378,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<JSON> value(JSON value) {
-        return val(value);
+        return value((Object) value, SQLDataType.JSON);
     }
 
     /**
@@ -35413,7 +28390,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<JSONB> value(JSONB value) {
-        return val(value);
+        return value((Object) value, SQLDataType.JSONB);
     }
 
     /**
@@ -35425,7 +28402,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<XML> value(XML value) {
-        return val(value);
+        return value((Object) value, SQLDataType.XML);
     }
 
 
@@ -35459,13 +28436,6 @@ public class DSL {
     /**
      * A synonym for {@link #val(Object, Class)} to be used in Scala and Groovy,
      * where <code>val</code> is a reserved keyword.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #value(Object, DataType)}.
      *
      * @param value The bind value
      * @param type The type that is used for the bind value (a type that is
@@ -35554,13 +28524,6 @@ public class DSL {
      * <li><code>inline("abc'def")</code> renders <code>'abc''def'</code></li>
      * <li><code>field("abc'def")</code> renders <code>abc'def</code></li>
      * </ul>
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * instances of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #inline(Object, DataType)}.
      *
      * @see #val(Object)
      */
@@ -35591,7 +28554,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Byte> inline(byte value) {
-        return inline0((Object) value, SQLDataType.TINYINT, true);
+        return inline((Object) value, SQLDataType.TINYINT);
     }
 
     /**
@@ -35613,7 +28576,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Byte> inline(Byte value) {
-        return inline0((Object) value, SQLDataType.TINYINT, true);
+        return inline((Object) value, SQLDataType.TINYINT);
     }
 
     /**
@@ -35635,7 +28598,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<UByte> inline(UByte value) {
-        return inline0((Object) value, SQLDataType.TINYINTUNSIGNED, true);
+        return inline((Object) value, SQLDataType.TINYINTUNSIGNED);
     }
 
     /**
@@ -35657,7 +28620,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Short> inline(short value) {
-        return inline0((Object) value, SQLDataType.SMALLINT, true);
+        return inline((Object) value, SQLDataType.SMALLINT);
     }
 
     /**
@@ -35679,7 +28642,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Short> inline(Short value) {
-        return inline0((Object) value, SQLDataType.SMALLINT, true);
+        return inline((Object) value, SQLDataType.SMALLINT);
     }
 
     /**
@@ -35701,7 +28664,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<UShort> inline(UShort value) {
-        return inline0((Object) value, SQLDataType.SMALLINTUNSIGNED, true);
+        return inline((Object) value, SQLDataType.SMALLINTUNSIGNED);
     }
 
     /**
@@ -35723,7 +28686,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Integer> inline(int value) {
-        return inline0((Object) value, SQLDataType.INTEGER, true);
+        return inline((Object) value, SQLDataType.INTEGER);
     }
 
     /**
@@ -35745,7 +28708,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Integer> inline(Integer value) {
-        return inline0((Object) value, SQLDataType.INTEGER, true);
+        return inline((Object) value, SQLDataType.INTEGER);
     }
 
     /**
@@ -35767,7 +28730,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<UInteger> inline(UInteger value) {
-        return inline0((Object) value, SQLDataType.INTEGERUNSIGNED, true);
+        return inline((Object) value, SQLDataType.INTEGERUNSIGNED);
     }
 
     /**
@@ -35789,7 +28752,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Long> inline(long value) {
-        return inline0((Object) value, SQLDataType.BIGINT, true);
+        return inline((Object) value, SQLDataType.BIGINT);
     }
 
     /**
@@ -35811,7 +28774,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Long> inline(Long value) {
-        return inline0((Object) value, SQLDataType.BIGINT, true);
+        return inline((Object) value, SQLDataType.BIGINT);
     }
 
     /**
@@ -35833,7 +28796,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<ULong> inline(ULong value) {
-        return inline0((Object) value, SQLDataType.BIGINTUNSIGNED, true);
+        return inline((Object) value, SQLDataType.BIGINTUNSIGNED);
     }
 
     /**
@@ -35855,7 +28818,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Float> inline(float value) {
-        return inline0((Object) value, SQLDataType.REAL, true);
+        return inline((Object) value, SQLDataType.REAL);
     }
 
     /**
@@ -35877,7 +28840,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Float> inline(Float value) {
-        return inline0((Object) value, SQLDataType.REAL, true);
+        return inline((Object) value, SQLDataType.REAL);
     }
 
     /**
@@ -35899,7 +28862,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Double> inline(double value) {
-        return inline0((Object) value, SQLDataType.DOUBLE, true);
+        return inline((Object) value, SQLDataType.DOUBLE);
     }
 
     /**
@@ -35921,7 +28884,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Double> inline(Double value) {
-        return inline0((Object) value, SQLDataType.DOUBLE, true);
+        return inline((Object) value, SQLDataType.DOUBLE);
     }
 
     /**
@@ -35943,7 +28906,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Boolean> inline(boolean value) {
-        return inline0((Object) value, SQLDataType.BOOLEAN, true);
+        return inline((Object) value, SQLDataType.BOOLEAN);
     }
 
     /**
@@ -35965,7 +28928,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Boolean> inline(Boolean value) {
-        return inline0((Object) value, SQLDataType.BOOLEAN, true);
+        return inline((Object) value, SQLDataType.BOOLEAN);
     }
 
     /**
@@ -35987,7 +28950,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<BigDecimal> inline(BigDecimal value) {
-        return inline0((Object) value, SQLDataType.DECIMAL, true);
+        return inline((Object) value, SQLDataType.DECIMAL);
     }
 
     /**
@@ -36009,7 +28972,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<BigInteger> inline(BigInteger value) {
-        return inline0((Object) value, SQLDataType.DECIMAL_INTEGER, true);
+        return inline((Object) value, SQLDataType.DECIMAL_INTEGER);
     }
 
     /**
@@ -36031,7 +28994,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<byte[]> inline(byte[] value) {
-        return inline0((Object) value, SQLDataType.VARBINARY, true);
+        return inline((Object) value, SQLDataType.VARBINARY);
     }
 
     /**
@@ -36053,7 +29016,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<String> inline(String value) {
-        return inline0((Object) value, SQLDataType.VARCHAR, true);
+        return inline((Object) value, SQLDataType.VARCHAR);
     }
 
     /**
@@ -36075,7 +29038,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Date> inline(Date value) {
-        return inline0((Object) value, SQLDataType.DATE, true);
+        return inline((Object) value, SQLDataType.DATE);
     }
 
     /**
@@ -36097,7 +29060,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Time> inline(Time value) {
-        return inline0((Object) value, SQLDataType.TIME, true);
+        return inline((Object) value, SQLDataType.TIME);
     }
 
     /**
@@ -36119,7 +29082,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Timestamp> inline(Timestamp value) {
-        return inline0((Object) value, SQLDataType.TIMESTAMP, true);
+        return inline((Object) value, SQLDataType.TIMESTAMP);
     }
 
     /**
@@ -36141,7 +29104,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<LocalDate> inline(LocalDate value) {
-        return inline0((Object) value, SQLDataType.LOCALDATE, true);
+        return inline((Object) value, SQLDataType.LOCALDATE);
     }
 
     /**
@@ -36163,7 +29126,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<LocalTime> inline(LocalTime value) {
-        return inline0((Object) value, SQLDataType.LOCALTIME, true);
+        return inline((Object) value, SQLDataType.LOCALTIME);
     }
 
     /**
@@ -36185,7 +29148,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<LocalDateTime> inline(LocalDateTime value) {
-        return inline0((Object) value, SQLDataType.LOCALDATETIME, true);
+        return inline((Object) value, SQLDataType.LOCALDATETIME);
     }
 
     /**
@@ -36207,7 +29170,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<OffsetTime> inline(OffsetTime value) {
-        return inline0((Object) value, SQLDataType.OFFSETTIME, true);
+        return inline((Object) value, SQLDataType.OFFSETTIME);
     }
 
     /**
@@ -36229,7 +29192,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<OffsetDateTime> inline(OffsetDateTime value) {
-        return inline0((Object) value, SQLDataType.OFFSETDATETIME, true);
+        return inline((Object) value, SQLDataType.OFFSETDATETIME);
     }
 
     /**
@@ -36251,7 +29214,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Instant> inline(Instant value) {
-        return inline0((Object) value, SQLDataType.INSTANT, true);
+        return inline((Object) value, SQLDataType.INSTANT);
     }
 
     /**
@@ -36273,7 +29236,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<UUID> inline(UUID value) {
-        return inline0((Object) value, SQLDataType.UUID, true);
+        return inline((Object) value, SQLDataType.UUID);
     }
 
     /**
@@ -36295,7 +29258,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<JSON> inline(JSON value) {
-        return inline0((Object) value, SQLDataType.JSON, true);
+        return inline((Object) value, SQLDataType.JSON);
     }
 
     /**
@@ -36317,7 +29280,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<JSONB> inline(JSONB value) {
-        return inline0((Object) value, SQLDataType.JSONB, true);
+        return inline((Object) value, SQLDataType.JSONB);
     }
 
     /**
@@ -36339,7 +29302,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<XML> inline(XML value) {
-        return inline0((Object) value, SQLDataType.XML, true);
+        return inline((Object) value, SQLDataType.XML);
     }
 
 
@@ -36449,13 +29412,6 @@ public class DSL {
      * <li><code>inline("abc'def")</code> renders <code>'abc''def'</code></li>
      * <li><code>field("abc'def")</code> renders <code>abc'def</code></li>
      * </ul>
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #inline(Object, DataType)}.
      *
      * @param value The inline value
      * @param type The data type to enforce upon the value (a type that is
@@ -36511,11 +29467,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T> Param<T> inline(Object value, DataType<T> type) {
-        return inline0(value, type, false);
-    }
-
-    static <T> Param<T> inline0(Object value, DataType<T> type, boolean inferredDataType) {
-        AbstractParamX<T> val = (AbstractParamX<T>) val0(value, type, inferredDataType);
+        AbstractParamX<T> val = (AbstractParamX<T>) val(value, type);
         val.setInline0(true);
         return val;
     }
@@ -36539,13 +29491,6 @@ public class DSL {
      * If you need more type-safety, please use {@link #val(Object, DataType)}
      * instead, and provide the precise RDMBS-specific data type, that is
      * needed.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * instances of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #val(Object, DataType)}.
      *
      * @param <T> The generic value type
      * @param value The constant value
@@ -36554,13 +29499,8 @@ public class DSL {
     @NotNull
     @Support
     public static <T> Param<T> val(T value) {
-        return val0(value, true);
-    }
-
-    static <T> Param<T> val0(T value, boolean inferredDataType) {
         Class type = value == null ? Object.class : value.getClass();
-        DataType dataType = getDataType0(type);
-        return val0(value, dataType, inferredDataType);
+        return val(value, getDataType0(type));
     }
 
     /**
@@ -36571,7 +29511,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Byte> val(byte value) {
-        return val0((Object) value, SQLDataType.TINYINT, true);
+        return val((Object) value, SQLDataType.TINYINT);
     }
 
     /**
@@ -36582,7 +29522,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Byte> val(Byte value) {
-        return val0((Object) value, SQLDataType.TINYINT, true);
+        return val((Object) value, SQLDataType.TINYINT);
     }
 
     /**
@@ -36593,7 +29533,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<UByte> val(UByte value) {
-        return val0((Object) value, SQLDataType.TINYINTUNSIGNED, true);
+        return val((Object) value, SQLDataType.TINYINTUNSIGNED);
     }
 
     /**
@@ -36604,7 +29544,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Short> val(short value) {
-        return val0((Object) value, SQLDataType.SMALLINT, true);
+        return val((Object) value, SQLDataType.SMALLINT);
     }
 
     /**
@@ -36615,7 +29555,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Short> val(Short value) {
-        return val0((Object) value, SQLDataType.SMALLINT, true);
+        return val((Object) value, SQLDataType.SMALLINT);
     }
 
     /**
@@ -36626,7 +29566,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<UShort> val(UShort value) {
-        return val0((Object) value, SQLDataType.SMALLINTUNSIGNED, true);
+        return val((Object) value, SQLDataType.SMALLINTUNSIGNED);
     }
 
     /**
@@ -36637,7 +29577,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Integer> val(int value) {
-        return val0((Object) value, SQLDataType.INTEGER, true);
+        return val((Object) value, SQLDataType.INTEGER);
     }
 
     /**
@@ -36648,7 +29588,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Integer> val(Integer value) {
-        return val0((Object) value, SQLDataType.INTEGER, true);
+        return val((Object) value, SQLDataType.INTEGER);
     }
 
     /**
@@ -36659,7 +29599,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<UInteger> val(UInteger value) {
-        return val0((Object) value, SQLDataType.INTEGERUNSIGNED, true);
+        return val((Object) value, SQLDataType.INTEGERUNSIGNED);
     }
 
     /**
@@ -36670,7 +29610,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Long> val(long value) {
-        return val0((Object) value, SQLDataType.BIGINT, true);
+        return val((Object) value, SQLDataType.BIGINT);
     }
 
     /**
@@ -36681,7 +29621,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Long> val(Long value) {
-        return val0((Object) value, SQLDataType.BIGINT, true);
+        return val((Object) value, SQLDataType.BIGINT);
     }
 
     /**
@@ -36692,7 +29632,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<ULong> val(ULong value) {
-        return val0((Object) value, SQLDataType.BIGINTUNSIGNED, true);
+        return val((Object) value, SQLDataType.BIGINTUNSIGNED);
     }
 
     /**
@@ -36703,7 +29643,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Float> val(float value) {
-        return val0((Object) value, SQLDataType.REAL, true);
+        return val((Object) value, SQLDataType.REAL);
     }
 
     /**
@@ -36714,7 +29654,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Float> val(Float value) {
-        return val0((Object) value, SQLDataType.REAL, true);
+        return val((Object) value, SQLDataType.REAL);
     }
 
     /**
@@ -36725,7 +29665,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Double> val(double value) {
-        return val0((Object) value, SQLDataType.DOUBLE, true);
+        return val((Object) value, SQLDataType.DOUBLE);
     }
 
     /**
@@ -36736,7 +29676,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Double> val(Double value) {
-        return val0((Object) value, SQLDataType.DOUBLE, true);
+        return val((Object) value, SQLDataType.DOUBLE);
     }
 
     /**
@@ -36747,7 +29687,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Boolean> val(boolean value) {
-        return val0((Object) value, SQLDataType.BOOLEAN, true);
+        return val((Object) value, SQLDataType.BOOLEAN);
     }
 
     /**
@@ -36758,7 +29698,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Boolean> val(Boolean value) {
-        return val0((Object) value, SQLDataType.BOOLEAN, true);
+        return val((Object) value, SQLDataType.BOOLEAN);
     }
 
     /**
@@ -36769,7 +29709,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<BigDecimal> val(BigDecimal value) {
-        return val0((Object) value, SQLDataType.DECIMAL, true);
+        return val((Object) value, SQLDataType.DECIMAL);
     }
 
     /**
@@ -36780,7 +29720,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<BigInteger> val(BigInteger value) {
-        return val0((Object) value, SQLDataType.DECIMAL_INTEGER, true);
+        return val((Object) value, SQLDataType.DECIMAL_INTEGER);
     }
 
     /**
@@ -36791,7 +29731,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<byte[]> val(byte[] value) {
-        return val0((Object) value, SQLDataType.VARBINARY, true);
+        return val((Object) value, SQLDataType.VARBINARY);
     }
 
     /**
@@ -36802,7 +29742,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<String> val(String value) {
-        return val0((Object) value, SQLDataType.VARCHAR, true);
+        return val((Object) value, SQLDataType.VARCHAR);
     }
 
     /**
@@ -36813,7 +29753,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Date> val(Date value) {
-        return val0((Object) value, SQLDataType.DATE, true);
+        return val((Object) value, SQLDataType.DATE);
     }
 
     /**
@@ -36824,7 +29764,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Time> val(Time value) {
-        return val0((Object) value, SQLDataType.TIME, true);
+        return val((Object) value, SQLDataType.TIME);
     }
 
     /**
@@ -36835,7 +29775,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Timestamp> val(Timestamp value) {
-        return val0((Object) value, SQLDataType.TIMESTAMP, true);
+        return val((Object) value, SQLDataType.TIMESTAMP);
     }
 
     /**
@@ -36846,7 +29786,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<LocalDate> val(LocalDate value) {
-        return val0((Object) value, SQLDataType.LOCALDATE, true);
+        return val((Object) value, SQLDataType.LOCALDATE);
     }
 
     /**
@@ -36857,7 +29797,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<LocalTime> val(LocalTime value) {
-        return val0((Object) value, SQLDataType.LOCALTIME, true);
+        return val((Object) value, SQLDataType.LOCALTIME);
     }
 
     /**
@@ -36868,7 +29808,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<LocalDateTime> val(LocalDateTime value) {
-        return val0((Object) value, SQLDataType.LOCALDATETIME, true);
+        return val((Object) value, SQLDataType.LOCALDATETIME);
     }
 
     /**
@@ -36879,7 +29819,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<OffsetTime> val(OffsetTime value) {
-        return val0((Object) value, SQLDataType.OFFSETTIME, true);
+        return val((Object) value, SQLDataType.OFFSETTIME);
     }
 
     /**
@@ -36890,7 +29830,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<OffsetDateTime> val(OffsetDateTime value) {
-        return val0((Object) value, SQLDataType.OFFSETDATETIME, true);
+        return val((Object) value, SQLDataType.OFFSETDATETIME);
     }
 
     /**
@@ -36901,7 +29841,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<Instant> val(Instant value) {
-        return val0((Object) value, SQLDataType.INSTANT, true);
+        return val((Object) value, SQLDataType.INSTANT);
     }
 
     /**
@@ -36912,7 +29852,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<UUID> val(UUID value) {
-        return val0((Object) value, SQLDataType.UUID, true);
+        return val((Object) value, SQLDataType.UUID);
     }
 
     /**
@@ -36923,7 +29863,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<JSON> val(JSON value) {
-        return val0((Object) value, SQLDataType.JSON, true);
+        return val((Object) value, SQLDataType.JSON);
     }
 
     /**
@@ -36934,7 +29874,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<JSONB> val(JSONB value) {
-        return val0((Object) value, SQLDataType.JSONB, true);
+        return val((Object) value, SQLDataType.JSONB);
     }
 
     /**
@@ -36945,7 +29885,7 @@ public class DSL {
     @NotNull
     @Support
     public static Param<XML> val(XML value) {
-        return val0((Object) value, SQLDataType.XML, true);
+        return val((Object) value, SQLDataType.XML);
     }
 
 
@@ -36976,13 +29916,6 @@ public class DSL {
 
     /**
      * Get a bind value with an associated type, taken from a field.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #val(Object, DataType)}.
      *
      * @param <T> The generic value type
      * @param value The constant value
@@ -36994,7 +29927,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T> Param<T> val(Object value, Class<T> type) {
-        return val0(value, getDataType(type), true);
+        return val(value, getDataType(type));
     }
 
     /**
@@ -37028,37 +29961,20 @@ public class DSL {
     @NotNull
     @Support
     public static <T> Param<T> val(Object value, DataType<T> type) {
-        return val0(value, type, false);
-    }
-
-    private static <T> Param<T> val0(Object value, DataType<T> type, boolean inferredDataType) {
-        return val0(value, type, inferredDataType, 0, null);
-    }
-
-    static <T> Param<T> val0(Object value, DataType<T> type, boolean inferredDataType, int index, String paramName) {
 
         // Advanced data types have dedicated constant types
-        if (value instanceof QualifiedRecord<?> r)
-            return new QualifiedRecordConstant(r, r.getQualifier());
-        else if (value == null && QualifiedRecord.class.isAssignableFrom(type.getType()))
-            return new QualifiedRecordConstant(null, getRecordQualifier(type));
+        if (value instanceof QualifiedRecord)
+            return new QualifiedRecordConstant((QualifiedRecord<?>) value);
 
 
 
 
 
 
-
-
-
-
-        // [#14694] value can be a Param contained in a Row
-        else if (value instanceof Val<?> p)
-            return p.convertTo(type);
 
         // The default behaviour
         T converted = type.convert(value);
-        return new Val<>(converted, mostSpecific(converted, type), inferredDataType, index, paramName);
+        return new Val<>(converted, mostSpecific(converted, type));
     }
 
     /**
@@ -37921,7 +30837,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -37956,7 +30872,15 @@ public class DSL {
     @NotNull
     @Support
     static Table<Record> values0(Row... rows) {
-        return new Values<Record>(Values.assertNotEmpty(rows));
+        Values.assertNotEmpty(rows);
+        int size = rows[0].size();
+
+        String[] columns = new String[size];
+
+        for (int i = 0; i < size; i++)
+            columns[i] = "c" + (i + 1);
+
+        return new Values<Record>(rows).as("v", columns);
     }
 
 
@@ -37968,7 +30892,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -37993,7 +30917,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1> Table<Record1<T1>> values(Row1<T1>... rows) {
-        return new Values(rows);
+        return new Values<Record1<T1>>(rows).as("v", "c1");
     }
 
     /**
@@ -38003,7 +30927,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38028,7 +30952,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2> Table<Record2<T1, T2>> values(Row2<T1, T2>... rows) {
-        return new Values(rows);
+        return new Values<Record2<T1, T2>>(rows).as("v", "c1", "c2");
     }
 
     /**
@@ -38038,7 +30962,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38063,7 +30987,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3> Table<Record3<T1, T2, T3>> values(Row3<T1, T2, T3>... rows) {
-        return new Values(rows);
+        return new Values<Record3<T1, T2, T3>>(rows).as("v", "c1", "c2", "c3");
     }
 
     /**
@@ -38073,7 +30997,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38098,7 +31022,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4> Table<Record4<T1, T2, T3, T4>> values(Row4<T1, T2, T3, T4>... rows) {
-        return new Values(rows);
+        return new Values<Record4<T1, T2, T3, T4>>(rows).as("v", "c1", "c2", "c3", "c4");
     }
 
     /**
@@ -38108,7 +31032,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38133,7 +31057,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5> Table<Record5<T1, T2, T3, T4, T5>> values(Row5<T1, T2, T3, T4, T5>... rows) {
-        return new Values(rows);
+        return new Values<Record5<T1, T2, T3, T4, T5>>(rows).as("v", "c1", "c2", "c3", "c4", "c5");
     }
 
     /**
@@ -38143,7 +31067,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38168,7 +31092,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6> Table<Record6<T1, T2, T3, T4, T5, T6>> values(Row6<T1, T2, T3, T4, T5, T6>... rows) {
-        return new Values(rows);
+        return new Values<Record6<T1, T2, T3, T4, T5, T6>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6");
     }
 
     /**
@@ -38178,7 +31102,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38203,7 +31127,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7> Table<Record7<T1, T2, T3, T4, T5, T6, T7>> values(Row7<T1, T2, T3, T4, T5, T6, T7>... rows) {
-        return new Values(rows);
+        return new Values<Record7<T1, T2, T3, T4, T5, T6, T7>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7");
     }
 
     /**
@@ -38213,7 +31137,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38238,7 +31162,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8> Table<Record8<T1, T2, T3, T4, T5, T6, T7, T8>> values(Row8<T1, T2, T3, T4, T5, T6, T7, T8>... rows) {
-        return new Values(rows);
+        return new Values<Record8<T1, T2, T3, T4, T5, T6, T7, T8>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8");
     }
 
     /**
@@ -38248,7 +31172,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38273,7 +31197,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9> Table<Record9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> values(Row9<T1, T2, T3, T4, T5, T6, T7, T8, T9>... rows) {
-        return new Values(rows);
+        return new Values<Record9<T1, T2, T3, T4, T5, T6, T7, T8, T9>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9");
     }
 
     /**
@@ -38283,7 +31207,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38308,7 +31232,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> Table<Record10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>> values(Row10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>... rows) {
-        return new Values(rows);
+        return new Values<Record10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10");
     }
 
     /**
@@ -38318,7 +31242,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38343,7 +31267,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> Table<Record11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>> values(Row11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>... rows) {
-        return new Values(rows);
+        return new Values<Record11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11");
     }
 
     /**
@@ -38353,7 +31277,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38378,7 +31302,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> Table<Record12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>> values(Row12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>... rows) {
-        return new Values(rows);
+        return new Values<Record12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12");
     }
 
     /**
@@ -38388,7 +31312,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38413,7 +31337,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> Table<Record13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>> values(Row13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>... rows) {
-        return new Values(rows);
+        return new Values<Record13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13");
     }
 
     /**
@@ -38423,7 +31347,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38448,7 +31372,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> Table<Record14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>> values(Row14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>... rows) {
-        return new Values(rows);
+        return new Values<Record14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14");
     }
 
     /**
@@ -38458,7 +31382,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38483,7 +31407,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> Table<Record15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>> values(Row15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>... rows) {
-        return new Values(rows);
+        return new Values<Record15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14", "c15");
     }
 
     /**
@@ -38493,7 +31417,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38518,7 +31442,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> Table<Record16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>> values(Row16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>... rows) {
-        return new Values(rows);
+        return new Values<Record16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14", "c15", "c16");
     }
 
     /**
@@ -38528,7 +31452,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38553,7 +31477,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> Table<Record17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>> values(Row17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>... rows) {
-        return new Values(rows);
+        return new Values<Record17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14", "c15", "c16", "c17");
     }
 
     /**
@@ -38563,7 +31487,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38588,7 +31512,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> Table<Record18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>> values(Row18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>... rows) {
-        return new Values(rows);
+        return new Values<Record18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14", "c15", "c16", "c17", "c18");
     }
 
     /**
@@ -38598,7 +31522,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38623,7 +31547,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> Table<Record19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>> values(Row19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>... rows) {
-        return new Values(rows);
+        return new Values<Record19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14", "c15", "c16", "c17", "c18", "c19");
     }
 
     /**
@@ -38633,7 +31557,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38658,7 +31582,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> Table<Record20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>> values(Row20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>... rows) {
-        return new Values(rows);
+        return new Values<Record20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14", "c15", "c16", "c17", "c18", "c19", "c20");
     }
 
     /**
@@ -38668,7 +31592,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38693,7 +31617,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> Table<Record21<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>> values(Row21<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>... rows) {
-        return new Values(rows);
+        return new Values<Record21<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14", "c15", "c16", "c17", "c18", "c19", "c20", "c21");
     }
 
     /**
@@ -38703,7 +31627,7 @@ public class DSL {
      * databases to allow for constructing tables from constant values.
      * <p>
      * If a database doesn't support the <code>VALUES()</code> constructor, it
-     * can be emulated using <code>SELECT … UNION ALL …</code>. The following
+     * can be emulated using <code>SELECT .. UNION ALL ..</code>. The following
      * expressions are equivalent:
      * <p>
      * <pre><code>
@@ -38728,7 +31652,7 @@ public class DSL {
     @NotNull
     @Support
     public static <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> Table<Record22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22>> values(Row22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22>... rows) {
-        return new Values(rows);
+        return new Values<Record22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22>>(rows).as("v", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14", "c15", "c16", "c17", "c18", "c19", "c20", "c21", "c22");
     }
 
 
@@ -38736,6 +31660,34 @@ public class DSL {
     // -------------------------------------------------------------------------
     // XXX Literals
     // -------------------------------------------------------------------------
+
+    /**
+     * Get the null field.
+     */
+    static Field<?> NULL() {
+        return field("null");
+    }
+
+    /**
+     * Get the null field.
+     */
+    static <T> Field<T> NULL(Field<T> field) {
+        return NULL(field.getDataType());
+    }
+
+    /**
+     * Get the null field.
+     */
+    static <T> Field<T> NULL(DataType<T> type) {
+        return field("null", type);
+    }
+
+    /**
+     * Get the null field.
+     */
+    static <T> Field<T> NULL(Class<T> type) {
+        return field("null", type);
+    }
 
     /**
      * @deprecated - [#11092] - 3.15.0 - This method will be removed without
@@ -38813,14 +31765,14 @@ public class DSL {
     @NotNull
     @Support
     public static Asterisk asterisk() {
-        return AsteriskImpl.INSTANCE.get();
+        return AsteriskImpl.INSTANCE;
     }
 
     /**
      * A <code>0</code> literal.
      * <p>
      * This is useful for mathematical functions or for
-     * <code>EXISTS (SELECT 0 …)</code> or <code>PARTITION BY 0</code> clauses
+     * <code>EXISTS (SELECT 0 ...)</code> or <code>PARTITION BY 0</code> clauses
      * and similar constructs. The <code>0</code> literal will not generate a
      * bind variable.
      *
@@ -38836,7 +31788,7 @@ public class DSL {
      * A <code>1</code> literal.
      * <p>
      * This is useful for mathematical functions or for
-     * <code>EXISTS (SELECT 1 …)</code> or <code>PARTITION BY 1</code> clauses
+     * <code>EXISTS (SELECT 1 ...)</code> or <code>PARTITION BY 1</code> clauses
      * and similar constructs. The <code>1</code> literal will not generate a
      * bind variable.
      *
@@ -38869,13 +31821,6 @@ public class DSL {
     /**
      * Get the default data type for the {@link DSLContext}'s underlying
      * {@link SQLDialect} and a given Java type.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #param(DataType)}.
      *
      * @param <T> The generic type
      * @param type The Java type. This must be a type supported by
@@ -38906,10 +31851,8 @@ public class DSL {
     static <T> DataType<T> getDataType0(Class<T> type) {
         DataType t = DefaultDataType.getDataType(DEFAULT, type, (DataType) SQLDataType.OTHER);
 
-        if (t instanceof LegacyConvertedDataType l)
-            return new DataTypeProxy(l);
-        else if (t.isArray() && t.getArrayComponentDataType() != SQLDataType.OTHER)
-            return t;
+        if (t instanceof LegacyConvertedDataType)
+            return new DataTypeProxy((LegacyConvertedDataType) t);
         else if (t != SQLDataType.OTHER)
             return t;
         else

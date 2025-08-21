@@ -23,11 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
@@ -49,29 +45,21 @@ import org.apache.camel.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.camel.component.kamelet.Kamelet.BRIDGE_ERROR_HANDLER;
-import static org.apache.camel.component.kamelet.Kamelet.NO_ERROR_HANDLER;
 import static org.apache.camel.component.kamelet.Kamelet.PARAM_LOCATION;
 import static org.apache.camel.component.kamelet.Kamelet.PARAM_ROUTE_ID;
 import static org.apache.camel.component.kamelet.Kamelet.PARAM_TEMPLATE_ID;
-import static org.apache.camel.component.kamelet.Kamelet.PARAM_UUID;
 
 /**
  * Materialize route templates
  */
 @Component(Kamelet.SCHEME)
 public class KameletComponent extends DefaultComponent {
-
-    private static final Logger LOG = LoggerFactory.getLogger(KameletComponent.class);
-
-    private final ReentrantLock lock = new ReentrantLock();
+    private static final Logger LOGGER = LoggerFactory.getLogger(KameletComponent.class);
 
     private final LifecycleHandler lifecycleHandler = new LifecycleHandler();
 
     // active consumers
     private final Map<String, KameletConsumer> consumers = new HashMap<>();
-    private final Lock consumersLock = new ReentrantLock();
-    private final Condition consumersCondition = consumersLock.newCondition();
     // active kamelet EIPs
     private final Map<String, Processor> kameletEips = new ConcurrentHashMap<>();
 
@@ -88,8 +76,6 @@ public class KameletComponent extends DefaultComponent {
     private boolean block = true;
     @Metadata(label = "producer", defaultValue = "30000")
     private long timeout = 30000L;
-    @Metadata(label = "advanced")
-    private boolean noErrorHandler;
 
     @Metadata
     private Map<String, Properties> templateProperties;
@@ -116,14 +102,12 @@ public class KameletComponent extends DefaultComponent {
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         final String templateId = Kamelet.extractTemplateId(getCamelContext(), remaining, parameters);
-        final String uuid = Kamelet.extractUuid();
-        final String routeId = Kamelet.extractRouteId(getCamelContext(), remaining, parameters, uuid);
+        final String routeId = Kamelet.extractRouteId(getCamelContext(), remaining, parameters);
         final String loc = Kamelet.extractLocation(getCamelContext(), parameters);
 
         parameters.remove(PARAM_TEMPLATE_ID);
         parameters.remove(PARAM_ROUTE_ID);
         parameters.remove(PARAM_LOCATION);
-        parameters.remove(PARAM_UUID);
 
         // manually need to resolve raw parameters as input to the kamelet because
         // resolveRawParameterValues is false
@@ -157,7 +141,6 @@ public class KameletComponent extends DefaultComponent {
             endpoint = new KameletEndpoint(uri, this, templateId, routeId);
 
             // forward component properties
-            endpoint.setNoErrorHandler(noErrorHandler);
             endpoint.setBlock(block);
             endpoint.setTimeout(timeout);
             // endpoint specific location
@@ -174,14 +157,11 @@ public class KameletComponent extends DefaultComponent {
                     // since this is the real kamelet, then we need to hand it
                     // over to the tracker.
                     //
-                    String routeId = getCamelContext().getCamelContextExtension().getCreateRoute();
-                    String processorId = getCamelContext().getCamelContextExtension().getCreateProcessor();
-                    lifecycleHandler.track(this, routeId, processorId);
+                    lifecycleHandler.track(this);
                 }
             };
 
             // forward component properties
-            endpoint.setNoErrorHandler(noErrorHandler);
             endpoint.setBlock(block);
             endpoint.setTimeout(timeout);
             // endpoint specific location
@@ -230,15 +210,6 @@ public class KameletComponent extends DefaultComponent {
             }
 
             //
-            // Look for OS environment variables that match the Kamelet properties
-            // Environment variables are loaded in the following order:
-            //
-            //   CAMEL_KAMELET_" + templateId
-            //   CAMEL_KAMELET_" + templateId + "_" routeId
-            //
-            Kamelet.extractKameletEnvironmentVariables(kameletProperties, templateId, routeId);
-
-            //
             // Uri params have the highest precedence
             //
             kameletProperties.putAll(parameters);
@@ -248,9 +219,6 @@ public class KameletComponent extends DefaultComponent {
             //
             kameletProperties.put(PARAM_TEMPLATE_ID, templateId);
             kameletProperties.put(PARAM_ROUTE_ID, routeId);
-            kameletProperties.put(PARAM_UUID, uuid);
-            kameletProperties.put(NO_ERROR_HANDLER, endpoint.isNoErrorHandler());
-            kameletProperties.put(BRIDGE_ERROR_HANDLER, endpoint.isBridgeErrorHandler());
 
             // set kamelet specific properties
             endpoint.setKameletProperties(kameletProperties);
@@ -259,7 +227,7 @@ public class KameletComponent extends DefaultComponent {
             // Add a custom converter to convert a RouteTemplateDefinition to a RouteDefinition
             // and make sure consumer URIs are unique.
             //
-            ((ModelCamelContext) getCamelContext()).addRouteTemplateDefinitionConverter(
+            getCamelContext().adapt(ModelCamelContext.class).addRouteTemplateDefinitionConverter(
                     templateId,
                     Kamelet::templateToRoute);
         }
@@ -270,23 +238,6 @@ public class KameletComponent extends DefaultComponent {
     @Override
     protected boolean resolveRawParameterValues() {
         return false;
-    }
-
-    public boolean isNoErrorHandler() {
-        return noErrorHandler;
-    }
-
-    /**
-     * Whether kamelets should use error handling or not. By default, the Kamelet uses the same error handler as from
-     * the calling route. This means that if the calling route has error handling that performs retries, or routing to a
-     * dead letter channel, then the kamelet route will use this also.
-     * <p>
-     * This can be turned off by setting this option to true. If off then the kamelet route is not using error handling,
-     * and any exception thrown will for source kamelets be logged by the consumer, and the sink/action kamelets will
-     * fail processing.
-     */
-    public void setNoErrorHandler(boolean noErrorHandler) {
-        this.noErrorHandler = noErrorHandler;
     }
 
     public boolean isBlock() {
@@ -361,8 +312,7 @@ public class KameletComponent extends DefaultComponent {
     }
 
     public void addConsumer(String key, KameletConsumer consumer) {
-        consumersLock.lock();
-        try {
+        synchronized (consumers) {
             if (consumers.putIfAbsent(key, consumer) != null) {
                 throw new IllegalArgumentException(
                         "Cannot add a 2nd consumer to the same endpoint: " + key
@@ -370,27 +320,21 @@ public class KameletComponent extends DefaultComponent {
             }
             // state changed so inc counter
             stateCounter++;
-            consumersCondition.signalAll();
-        } finally {
-            consumersLock.unlock();
+            consumers.notifyAll();
         }
     }
 
     public void removeConsumer(String key, KameletConsumer consumer) {
-        consumersLock.lock();
-        try {
+        synchronized (consumers) {
             consumers.remove(key, consumer);
             // state changed so inc counter
             stateCounter++;
-            consumersCondition.signalAll();
-        } finally {
-            consumersLock.unlock();
+            consumers.notifyAll();
         }
     }
 
     protected KameletConsumer getConsumer(String key, boolean block, long timeout) throws InterruptedException {
-        consumersLock.lock();
-        try {
+        synchronized (consumers) {
             KameletConsumer answer = consumers.get(key);
             if (answer == null && block) {
                 StopWatch watch = new StopWatch();
@@ -403,12 +347,10 @@ public class KameletComponent extends DefaultComponent {
                     if (rem <= 0) {
                         break;
                     }
-                    consumersCondition.await(rem, TimeUnit.MILLISECONDS);
+                    consumers.wait(rem);
                 }
             }
             return answer;
-        } finally {
-            consumersLock.unlock();
         }
     }
 
@@ -442,11 +384,7 @@ public class KameletComponent extends DefaultComponent {
      * be used to create routes from templates.
      */
     private class LifecycleHandler extends LifecycleStrategySupport {
-
-        record Tuple(KameletEndpoint endpoint, String parentRouteId, String parentProcessorId) {
-        }
-
-        private final List<Tuple> endpoints;
+        private final List<KameletEndpoint> endpoints;
         private final AtomicBoolean initialized;
 
         public LifecycleHandler() {
@@ -454,36 +392,21 @@ public class KameletComponent extends DefaultComponent {
             this.initialized = new AtomicBoolean();
         }
 
-        public void createRouteForEndpoint(KameletEndpoint endpoint, String parentRouteId, String parentProcessorId)
-                throws Exception {
-            // creating dynamic routes from kamelets should not happen concurrently so we use locking
-            lock.lock();
-            try {
-                doCreateRouteForEndpoint(endpoint, parentRouteId, parentProcessorId);
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        protected void doCreateRouteForEndpoint(KameletEndpoint endpoint, String parentRouteId, String parentProcessorId)
-                throws Exception {
-
-            final ModelCamelContext context = (ModelCamelContext) getCamelContext();
+        public void createRouteForEndpoint(KameletEndpoint endpoint) throws Exception {
+            final ModelCamelContext context = getCamelContext().adapt(ModelCamelContext.class);
             final String templateId = endpoint.getTemplateId();
             final String routeId = endpoint.getRouteId();
             final String loc = endpoint.getLocation() != null ? endpoint.getLocation() : getLocation();
-            final String uuid = (String) endpoint.getKameletProperties().get(PARAM_UUID);
 
             if (context.getRouteTemplateDefinition(templateId) == null && loc != null) {
-                LOG.debug("Loading route template={} from {}", templateId, loc);
+                LOGGER.debug("Loading route template={} from {}", templateId, loc);
                 RouteTemplateHelper.loadRouteTemplateFromLocation(getCamelContext(), routeTemplateLoaderListener, templateId,
                         loc);
             }
 
-            LOG.debug("Creating route from template={} and id={}", templateId, routeId);
+            LOGGER.debug("Creating route from template={} and id={}", templateId, routeId);
             try {
-                String id = context.addRouteFromKamelet(routeId, templateId, uuid, parentRouteId, parentProcessorId,
-                        endpoint.getKameletProperties());
+                String id = context.addRouteFromTemplate(routeId, templateId, endpoint.getKameletProperties());
                 RouteDefinition def = context.getRouteDefinition(id);
 
                 // start the route if not already started
@@ -493,21 +416,21 @@ public class KameletComponent extends DefaultComponent {
                     context.startRouteDefinitions(Collections.singletonList(def));
                 }
 
-                LOG.debug("Route with id={} created from template={}", id, templateId);
+                LOGGER.debug("Route with id={} created from template={}", id, templateId);
             } catch (Exception e) {
-                throw new FailedToCreateKameletException(templateId, loc, e);
+                throw new KameletNotFoundException(templateId, loc, e);
             }
         }
 
         @Override
         public void onContextInitialized(CamelContext context) throws VetoCamelContextStartException {
             if (this.initialized.compareAndSet(false, true)) {
-                for (Tuple tuple : endpoints) {
+                for (KameletEndpoint endpoint : endpoints) {
                     try {
-                        createRouteForEndpoint(tuple.endpoint, tuple.parentRouteId, tuple.parentProcessorId);
+                        createRouteForEndpoint(endpoint);
                     } catch (Exception e) {
                         throw new VetoCamelContextStartException(
-                                "Failure creating route from template: " + tuple.endpoint.getTemplateId(), e, context);
+                                "Failure creating route from template: " + endpoint.getTemplateId(), e, context);
                     }
                 }
 
@@ -519,16 +442,16 @@ public class KameletComponent extends DefaultComponent {
             this.initialized.set(initialized);
         }
 
-        public void track(KameletEndpoint endpoint, String parentRouteId, String parentProcessorId) {
+        public void track(KameletEndpoint endpoint) {
             if (this.initialized.get()) {
                 try {
-                    createRouteForEndpoint(endpoint, parentRouteId, parentProcessorId);
+                    createRouteForEndpoint(endpoint);
                 } catch (Exception e) {
                     throw RuntimeCamelException.wrapRuntimeException(e);
                 }
             } else {
-                LOG.debug("Tracking route template={} and id={}", endpoint.getTemplateId(), endpoint.getRouteId());
-                this.endpoints.add(new Tuple(endpoint, parentRouteId, parentProcessorId));
+                LOGGER.debug("Tracking route template={} and id={}", endpoint.getTemplateId(), endpoint.getRouteId());
+                this.endpoints.add(endpoint);
             }
         }
     }

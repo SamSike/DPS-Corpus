@@ -20,13 +20,11 @@ import java.util.*;
 
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.tracing.ExtractAdapter;
 import org.apache.camel.tracing.InjectAdapter;
 import org.apache.camel.tracing.SpanAdapter;
 import org.apache.camel.tracing.SpanDecorator;
 import org.apache.camel.tracing.SpanKind;
-import org.apache.camel.tracing.TagConstants;
 import org.apache.camel.tracing.propagation.CamelHeadersExtractAdapter;
 import org.apache.camel.tracing.propagation.CamelHeadersInjectAdapter;
 import org.apache.camel.util.StringHelper;
@@ -45,18 +43,14 @@ public abstract class AbstractSpanDecorator implements SpanDecorator {
      * @return          The stripped value from the URI
      */
     public static String stripSchemeAndOptions(Endpoint endpoint) {
-        return stripSchemeAndOptions(endpoint.getEndpointUri());
-    }
-
-    public static String stripSchemeAndOptions(String endpointUri) {
-        int start = endpointUri.indexOf(':');
+        int start = endpoint.getEndpointUri().indexOf(':');
         start++;
         // Remove any leading '/'
-        while (endpointUri.length() > start && endpointUri.charAt(start) == '/') {
+        while (endpoint.getEndpointUri().charAt(start) == '/') {
             start++;
         }
-        int end = endpointUri.indexOf('?');
-        return end == -1 ? endpointUri.substring(start) : endpointUri.substring(start, end);
+        int end = endpoint.getEndpointUri().indexOf('?');
+        return end == -1 ? endpoint.getEndpointUri().substring(start) : endpoint.getEndpointUri().substring(start, end);
     }
 
     public static Map<String, String> toQueryParameters(String uri) {
@@ -76,15 +70,12 @@ public abstract class AbstractSpanDecorator implements SpanDecorator {
     }
 
     private static String getComponentName(Endpoint endpoint) {
-        String answer = endpoint.getComponent() != null ? endpoint.getComponent().getDefaultName() : null;
-        if (answer == null) {
-            return getSchemeName(endpoint);
+        String[] splitURI = StringHelper.splitOnCharacter(endpoint.getEndpointUri(), ":", 2);
+        if (splitURI.length > 0) {
+            return splitURI[0];
+        } else {
+            return null;
         }
-        return answer;
-    }
-
-    private static String getSchemeName(Endpoint endpoint) {
-        return StringHelper.before(endpoint.getEndpointUri(), ":");
     }
 
     @Override
@@ -94,60 +85,23 @@ public abstract class AbstractSpanDecorator implements SpanDecorator {
 
     @Override
     public String getOperationName(Exchange exchange, Endpoint endpoint) {
-        // OpenTracing aims to use low cardinality operation names. Ideally, a
-        // specific span decorator should be defined for all relevant Camel
-        // components that identify a meaningful operation name
+        // OpenTracing aims to use low cardinality operation names. Ideally a
+        // specific
+        // span decorator should be defined for all relevant Camel components
+        // that
+        // identify a meaningful operation name
         return getComponentName(endpoint);
     }
 
     @Override
     public void pre(SpanAdapter span, Exchange exchange, Endpoint endpoint) {
-        String name = getComponentName(endpoint);
-        span.setComponent(CAMEL_COMPONENT + name);
-        String scheme = getSchemeName(endpoint);
-        span.setTag(TagConstants.URL_SCHEME, scheme);
-
-        final String routeId;
-        if (exchange != null && (routeId = exchange.getFromRouteId()) != null) {
-            span.setTag(TagConstants.ROUTE_ID, routeId);
-        }
+        String scheme = getComponentName(endpoint);
+        span.setComponent(CAMEL_COMPONENT + scheme);
 
         // Including the endpoint URI provides access to any options that may
-        // have been provided, for subsequent analysis
-        String uri = endpoint.toString(); // toString will sanitize
-        span.setTag("camel.uri", uri);
-        span.setTag(TagConstants.URL_PATH, stripSchemeAndOptions(endpoint));
-        String query = URISupport.extractQuery(uri);
-        if (query != null) {
-            span.setTag(TagConstants.URL_QUERY, query);
-        }
-
-        // enrich with server location details
-        if (endpoint instanceof EndpointServiceLocation ela) {
-            String adr = ela.getServiceUrl();
-            if (adr != null) {
-                span.setTag(TagConstants.SERVER_ADDRESS, adr);
-            }
-            String ap = ela.getServiceProtocol();
-            if (ap != null) {
-                span.setTag(TagConstants.SERVER_PROTOCOL, ap);
-            }
-            Map<String, String> map = ela.getServiceMetadata();
-            if (map != null) {
-                String un = map.get("username");
-                if (un != null) {
-                    span.setTag(TagConstants.USER_NAME, un);
-                }
-                String id = map.get("clientId");
-                if (id != null) {
-                    span.setTag(TagConstants.USER_ID, id);
-                }
-                String region = map.get("region");
-                if (region != null) {
-                    span.setTag(TagConstants.SERVER_REGION, region);
-                }
-            }
-        }
+        // have been provided, for
+        // subsequent analysis
+        span.setTag("camel.uri", URISupport.sanitizeUri(endpoint.getEndpointUri()));
     }
 
     @Override
@@ -185,5 +139,4 @@ public abstract class AbstractSpanDecorator implements SpanDecorator {
         // no encoding supported per default
         return new CamelHeadersInjectAdapter(map);
     }
-
 }

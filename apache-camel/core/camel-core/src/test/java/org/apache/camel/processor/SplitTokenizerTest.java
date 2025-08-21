@@ -99,17 +99,16 @@ public class SplitTokenizerTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
 
                 from("direct:a").split().tokenize(",").to("mock:split");
 
-                var byHeader = expression().tokenize().token(",").source("header:myHeader").end();
-                from("direct:b").split(byHeader).to("mock:split");
+                from("direct:b").split().tokenize(",", "myHeader").to("mock:split");
 
-                from("direct:c").split().tokenize("(\\W+)\\s*", true).to("mock:split");
+                from("direct:c").split().tokenize("(\\W+)\\s*", null, true).to("mock:split");
 
                 from("direct:d").split().tokenizePair("[", "]", true).to("mock:split");
 

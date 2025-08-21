@@ -34,8 +34,9 @@ public final class PredicateAssertHelper {
         ObjectHelper.notNull(predicate, "predicate");
         ObjectHelper.notNull(exchange, "exchange");
 
-        if (predicate instanceof BinaryPredicate eval) {
+        if (predicate instanceof BinaryPredicate) {
             // with binary evaluations as we can get more detailed information
+            BinaryPredicate eval = (BinaryPredicate) predicate;
             String evalText = eval.matchesReturningFailureMessage(exchange);
             if (evalText != null) {
                 throw new AssertionError(text + predicate + " evaluated as: " + evalText + " on " + exchange);

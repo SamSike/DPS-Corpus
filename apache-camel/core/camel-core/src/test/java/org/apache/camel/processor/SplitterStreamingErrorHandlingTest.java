@@ -62,12 +62,12 @@ public class SplitterStreamingErrorHandlingTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").split(body().tokenize(",")).streaming().to("mock:a").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         String body = exchange.getIn().getBody(String.class);
                         if ("Kaboom".equals(body)) {
                             throw new IllegalArgumentException("Cannot do this");

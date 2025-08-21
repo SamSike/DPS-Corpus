@@ -18,11 +18,11 @@ package org.apache.camel.component.google.pubsub;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
@@ -39,23 +39,22 @@ import com.google.pubsub.v1.PullRequest;
 import com.google.pubsub.v1.PullResponse;
 import com.google.pubsub.v1.ReceivedMessage;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Processor;
-import org.apache.camel.component.google.pubsub.consumer.AcknowledgeCompletion;
 import org.apache.camel.component.google.pubsub.consumer.AcknowledgeSync;
 import org.apache.camel.component.google.pubsub.consumer.CamelMessageReceiver;
-import org.apache.camel.component.google.pubsub.consumer.GooglePubsubAcknowledge;
 import org.apache.camel.support.DefaultConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GooglePubsubConsumer extends DefaultConsumer {
 
-    private final Logger localLog;
+    private Logger localLog;
 
     private final GooglePubsubEndpoint endpoint;
     private final Processor processor;
     private ExecutorService executor;
-    private final List<Subscriber> subscribers;
+    private List<Subscriber> subscribers;
     private final Set<ApiFuture<PullResponse>> pendingSynchronousPullResponses;
 
     GooglePubsubConsumer(GooglePubsubEndpoint endpoint, Processor processor) {
@@ -63,7 +62,7 @@ public class GooglePubsubConsumer extends DefaultConsumer {
         this.endpoint = endpoint;
         this.processor = processor;
         this.subscribers = Collections.synchronizedList(new LinkedList<>());
-        this.pendingSynchronousPullResponses = ConcurrentHashMap.newKeySet();
+        this.pendingSynchronousPullResponses = Collections.synchronizedSet(new HashSet<>());
         String loggerId = endpoint.getLoggerId();
 
         if (Strings.isNullOrEmpty(loggerId)) {
@@ -76,7 +75,6 @@ public class GooglePubsubConsumer extends DefaultConsumer {
     @Override
     protected void doStart() throws Exception {
         super.doStart();
-
         localLog.info("Starting Google PubSub consumer for {}/{}", endpoint.getProjectId(), endpoint.getDestinationName());
         executor = endpoint.createExecutor();
         for (int i = 0; i < endpoint.getConcurrentConsumers(); i++) {
@@ -86,6 +84,7 @@ public class GooglePubsubConsumer extends DefaultConsumer {
 
     @Override
     protected void doStop() throws Exception {
+        super.doStop();
         localLog.info("Stopping Google PubSub consumer for {}/{}", endpoint.getProjectId(), endpoint.getDestinationName());
 
         synchronized (subscribers) {
@@ -105,19 +104,19 @@ public class GooglePubsubConsumer extends DefaultConsumer {
             }
         }
         executor = null;
-
-        super.doStop();
     }
 
     private void safeCancelSynchronousPullResponses() {
-        for (ApiFuture<PullResponse> pullResponseApiFuture : pendingSynchronousPullResponses) {
-            try {
-                pullResponseApiFuture.cancel(true);
-            } catch (Exception e) {
-                localLog.warn("Exception while cancelling pending synchronous pull response", e);
+        synchronized (pendingSynchronousPullResponses) {
+            for (ApiFuture<PullResponse> pullResponseApiFuture : pendingSynchronousPullResponses) {
+                try {
+                    pullResponseApiFuture.cancel(true);
+                } catch (Exception e) {
+                    localLog.warn("Exception while cancelling pending synchronous pull response", e);
+                }
             }
+            pendingSynchronousPullResponses.clear();
         }
-        pendingSynchronousPullResponses.clear();
     }
 
     private class SubscriberWrapper implements Runnable {
@@ -142,9 +141,6 @@ public class GooglePubsubConsumer extends DefaultConsumer {
                 }
 
                 localLog.debug("Exit run for subscription {}", subscriptionName);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                localLog.error("Failure getting messages from PubSub", e);
             } catch (Exception e) {
                 localLog.error("Failure getting messages from PubSub", e);
             }
@@ -190,18 +186,18 @@ public class GooglePubsubConsumer extends DefaultConsumer {
                         exchange.getIn().setHeader(GooglePubsubConstants.ACK_ID, message.getAckId());
                         exchange.getIn().setHeader(GooglePubsubConstants.MESSAGE_ID, pubsubMessage.getMessageId());
                         exchange.getIn().setHeader(GooglePubsubConstants.PUBLISH_TIME, pubsubMessage.getPublishTime());
-                        exchange.getIn().setHeader(GooglePubsubConstants.ATTRIBUTES, pubsubMessage.getAttributesMap());
 
-                        //existing subscriber can not be propagated, because it will be closed at the end of this block
-                        //subscriber will be created at the moment of use
-                        // (see  https://issues.apache.org/jira/browse/CAMEL-18447)
-                        GooglePubsubAcknowledge acknowledge = new AcknowledgeSync(
-                                () -> endpoint.getComponent().getSubscriberStub(endpoint), subscriptionName);
+                        if (null != pubsubMessage.getAttributesMap()) {
+                            exchange.getIn().setHeader(GooglePubsubConstants.ATTRIBUTES, pubsubMessage.getAttributesMap());
+                        }
 
                         if (endpoint.getAckMode() != GooglePubsubConstants.AckMode.NONE) {
-                            exchange.getExchangeExtension().addOnCompletion(new AcknowledgeCompletion(acknowledge));
-                        } else {
-                            exchange.getIn().setHeader(GooglePubsubConstants.GOOGLE_PUBSUB_ACKNOWLEDGE, acknowledge);
+                            //existing subscriber can not be propagated, because it will be closed at the end of this block
+                            //subscriber will be created at the moment of use
+                            // (see  https://issues.apache.org/jira/browse/CAMEL-18447)
+                            exchange.adapt(ExtendedExchange.class)
+                                    .addOnCompletion(new AcknowledgeSync(
+                                            () -> endpoint.getComponent().getSubscriberStub(endpoint), subscriptionName));
                         }
 
                         try {

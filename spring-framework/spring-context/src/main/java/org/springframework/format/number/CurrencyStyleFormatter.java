@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import java.text.ParseException;
 import java.util.Currency;
 import java.util.Locale;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * A BigDecimal formatter for number values in currency style.
@@ -43,11 +43,14 @@ public class CurrencyStyleFormatter extends AbstractNumberFormatter {
 
 	private int fractionDigits = 2;
 
-	private @Nullable RoundingMode roundingMode;
+	@Nullable
+	private RoundingMode roundingMode;
 
-	private @Nullable Currency currency;
+	@Nullable
+	private Currency currency;
 
-	private @Nullable String pattern;
+	@Nullable
+	private String pattern;
 
 
 	/**

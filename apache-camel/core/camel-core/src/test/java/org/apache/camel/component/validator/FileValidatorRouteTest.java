@@ -79,10 +79,10 @@ public class FileValidatorRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?noop=true")).doTry()
                         .to("validator:org/apache/camel/component/validator/schema.xsd").to("mock:valid")
                         .doCatch(ValidationException.class).to("mock:invalid").doFinally().to("mock:finally").end();

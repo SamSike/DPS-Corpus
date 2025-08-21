@@ -33,15 +33,15 @@ import org.junit.jupiter.api.Test;
  */
 public class RoutePerformanceTest extends ContextTestSupport {
 
-    private final int size = 250;
+    private int size = 250;
 
-    private final SimpleDataSet dataSet = new SimpleDataSet(size);
+    private SimpleDataSet dataSet = new SimpleDataSet(size);
 
-    private final String uri = "mock:results";
+    private String uri = "mock:results";
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("foo", dataSet);
         return answer;
     }
@@ -61,10 +61,10 @@ public class RoutePerformanceTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 Map<String, Object> headers = new HashMap<>();
                 headers.put("foo", 123);
                 dataSet.setDefaultHeaders(headers);

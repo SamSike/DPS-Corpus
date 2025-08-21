@@ -34,7 +34,7 @@ import org.apache.camel.support.component.ApiMethodParser;
 import org.apache.camel.support.component.ArgumentSubstitutionParser;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.StringHelper;
-import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang.ClassUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.velocity.VelocityContext;
@@ -88,7 +88,7 @@ public abstract class AbstractApiMethodGeneratorMojo extends AbstractApiMethodBa
         setCompileSourceRoots();
 
         // load proxy class and get enumeration file to generate
-        final Class<?> proxyType = getProxyType();
+        final Class proxyType = getProxyType();
 
         // parse pattern for excluded endpoint properties
         if (excludeConfigNames != null) {
@@ -99,7 +99,7 @@ public abstract class AbstractApiMethodGeneratorMojo extends AbstractApiMethodBa
         }
 
         // create parser
-        ApiMethodParser<?> parser = createAdapterParser(proxyType);
+        ApiMethodParser parser = createAdapterParser(proxyType);
 
         List<String> signatures = new ArrayList<>();
         Map<String, Map<String, String>> parameters = new HashMap<>();
@@ -115,24 +115,17 @@ public abstract class AbstractApiMethodGeneratorMojo extends AbstractApiMethodBa
                 method = StringHelper.after(method, " ");
             }
             if (method != null) {
-                var docs = new HashMap<String, String>();
-                if (model.getParameterDescriptions() != null && !model.getParameterDescriptions().isEmpty()) {
-                    docs.putAll(model.getParameterDescriptions());
-                }
-                if (model.getSetterDescriptions() != null && !model.getSetterDescriptions().isEmpty()) {
-                    docs.putAll(model.getSetterDescriptions());
-                }
-                parameters.put(method, docs);
+                parameters.put(method, model.getParameterDescriptions());
             }
             parser.getDescriptions().put(method, model.getMethodDescription());
             parser.addSignatureArguments(model.getSignature(), model.getParameterTypes());
-            parser.addSignatureProperties(model.getSignature(), model.getSetterTypes());
         }
         parser.setSignatures(signatures);
         parser.setParameters(parameters);
         parser.setClassLoader(getProjectClassLoader());
 
         // parse signatures
+        @SuppressWarnings("unchecked")
         final List<ApiMethodParser.ApiMethodModel> models = parser.parse();
 
         // generate enumeration from model
@@ -149,8 +142,9 @@ public abstract class AbstractApiMethodGeneratorMojo extends AbstractApiMethodBa
         }
     }
 
-    protected ApiMethodParser<?> createAdapterParser(Class<?> proxyType) {
-        return new ArgumentSubstitutionParser<>(proxyType, getArgumentSubstitutions());
+    @SuppressWarnings("unchecked")
+    protected ApiMethodParser createAdapterParser(Class proxyType) {
+        return new ArgumentSubstitutionParser(proxyType, getArgumentSubstitutions());
     }
 
     public abstract List<SignatureModel> getSignatureList() throws MojoExecutionException;
@@ -224,7 +218,7 @@ public abstract class AbstractApiMethodGeneratorMojo extends AbstractApiMethodBa
         // generate parameter names and types for configuration, sorted by parameter name
         Map<String, ApiMethodArg> parameters = new TreeMap<>();
         for (ApiMethodParser.ApiMethodModel model : models) {
-            for (ApiMethodArg argument : model.getArgumentsAndProperties()) {
+            for (ApiMethodArg argument : model.getArguments()) {
                 final String name = argument.getName();
                 final Class<?> type = argument.getType();
                 final String typeName = type.getCanonicalName();
@@ -242,7 +236,6 @@ public abstract class AbstractApiMethodGeneratorMojo extends AbstractApiMethodBa
                 final String name = option.getName();
                 final String argWithTypes = option.getType().replace(" ", "");
                 final int rawEnd = argWithTypes.indexOf('<');
-                final String includeMethods = option.getIncludeMethods();
                 String typeArgs = null;
                 Class<?> argType;
                 try {
@@ -258,18 +251,7 @@ public abstract class AbstractApiMethodGeneratorMojo extends AbstractApiMethodBa
                                     argWithTypes, name, e.getMessage()),
                             e);
                 }
-                ApiMethodArg arg = new ApiMethodArg(name, argType, typeArgs, argWithTypes, option.getDescription());
-                parameters.put(name, arg);
-                if (includeMethods != null) {
-                    for (String m : includeMethods.trim().split(",")) {
-                        // add as additional extra parameter for methods in the model that matches this name
-                        for (ApiMethodParser.ApiMethodModel model : models) {
-                            if (model.getMethod().getName().equals(m)) {
-                                model.getArguments().add(arg);
-                            }
-                        }
-                    }
-                }
+                parameters.put(name, new ApiMethodArg(name, argType, typeArgs, argWithTypes, option.getDescription()));
             }
         }
 
@@ -362,12 +344,10 @@ public abstract class AbstractApiMethodGeneratorMojo extends AbstractApiMethodBa
         // if the given argument does not belong to any method with the same argument name,
         // then it mean it should belong to all methods; this is typically extra options that has been declared in the
         // pom.xml file
-        boolean noneMatch = models.stream()
-                .noneMatch(m -> m.getArgumentsAndProperties().stream().noneMatch(a -> a.getName().equals(key)));
+        boolean noneMatch = models.stream().noneMatch(m -> m.getArguments().stream().noneMatch(a -> a.getName().equals(key)));
 
         models.forEach(p -> {
-            ApiMethodArg match
-                    = p.getArgumentsAndProperties().stream().filter(a -> a.getName().equals(key)).findFirst().orElse(null);
+            ApiMethodArg match = p.getArguments().stream().filter(a -> a.getName().equals(key)).findFirst().orElse(null);
             if (match != null && names.add(p.getName())) {
                 // favour desc from the matched argument list
                 String desc = match.getDescription();
@@ -519,17 +499,7 @@ public abstract class AbstractApiMethodGeneratorMojo extends AbstractApiMethodBa
                 }
             }
         }
-        return argument.isSetter();
-    }
-
-    public String argOrSetter(ApiMethodArg argument) {
-        return argument.isSetter() ? "setter" : "arg";
-    }
-
-    @SuppressWarnings("unused")
-    public boolean isDeprecatedParameter(ApiMethodArg argument) {
-        String desc = argument.getDescription();
-        return desc != null && desc.trim().startsWith("Deprecated:");
+        return false;
     }
 
     /*

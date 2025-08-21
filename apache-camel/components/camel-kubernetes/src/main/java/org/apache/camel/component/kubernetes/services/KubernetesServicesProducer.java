@@ -73,8 +73,8 @@ public class KubernetesServicesProducer extends DefaultProducer {
                 doCreateService(exchange);
                 break;
 
-            case KubernetesOperations.UPDATE_SERVICE_OPERATION:
-                doUpdateService(exchange);
+            case KubernetesOperations.REPLACE_SERVICE_OPERATION:
+                doReplaceService(exchange);
                 break;
 
             case KubernetesOperations.DELETE_SERVICE_OPERATION:
@@ -87,31 +87,34 @@ public class KubernetesServicesProducer extends DefaultProducer {
     }
 
     protected void doList(Exchange exchange) {
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
+        String namespaceName = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
         ServiceList servicesList;
-
-        if (ObjectHelper.isEmpty(namespace)) {
-            servicesList = getEndpoint().getKubernetesClient().services().inAnyNamespace().list();
+        if (!ObjectHelper.isEmpty(namespaceName)) {
+            servicesList = getEndpoint().getKubernetesClient().services().inNamespace(namespaceName).list();
         } else {
-            servicesList = getEndpoint().getKubernetesClient().services().inNamespace(namespace).list();
+            servicesList = getEndpoint().getKubernetesClient().services().inAnyNamespace().list();
         }
         prepareOutboundMessage(exchange, servicesList.getItems());
     }
 
     protected void doListServiceByLabels(Exchange exchange) {
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
         Map<String, String> labels = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_SERVICE_LABELS, Map.class);
+        String namespaceName = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
         ServiceList servicesList;
-
-        if (ObjectHelper.isEmpty(labels)) {
-            LOG.error("Listing Services by labels requires specifying labels");
-            throw new IllegalArgumentException("Listing Services by labels requires specifying labels");
-        }
-
-        if (ObjectHelper.isEmpty(namespace)) {
-            servicesList = getEndpoint().getKubernetesClient().services().inAnyNamespace().withLabels(labels).list();
+        if (!ObjectHelper.isEmpty(namespaceName)) {
+            servicesList = getEndpoint()
+                    .getKubernetesClient()
+                    .services()
+                    .inNamespace(namespaceName)
+                    .withLabels(labels)
+                    .list();
         } else {
-            servicesList = getEndpoint().getKubernetesClient().services().inNamespace(namespace).withLabels(labels).list();
+            servicesList = getEndpoint()
+                    .getKubernetesClient()
+                    .services()
+                    .inAnyNamespace()
+                    .withLabels(labels)
+                    .list();
         }
 
         prepareOutboundMessage(exchange, servicesList.getItems());
@@ -133,8 +136,8 @@ public class KubernetesServicesProducer extends DefaultProducer {
         prepareOutboundMessage(exchange, service);
     }
 
-    protected void doUpdateService(Exchange exchange) {
-        doCreateOrUpdateService(exchange, "Update", Resource::update);
+    protected void doReplaceService(Exchange exchange) {
+        doCreateOrUpdateService(exchange, "Replace", Resource::replace);
     }
 
     protected void doCreateService(Exchange exchange) {

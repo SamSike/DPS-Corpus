@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -85,7 +82,7 @@ implements
             allNotNull(INTEGER, array)
         );
 
-        this.array = nullSafeNotNull(array, OTHER.array());
+        this.array = nullSafeNotNull(array, OTHER.getArrayDataType());
     }
 
     // -------------------------------------------------------------------------
@@ -105,15 +102,6 @@ implements
 
 
 
-
-            case CLICKHOUSE:
-                ctx.visit(function(N_LENGTH, getDataType(), array));
-                break;
-
-
-            case DUCKDB:
-                ctx.visit(function(N_ARRAY_LENGTH, getDataType(), array));
-                break;
 
             default:
                 ctx.visit(function(N_CARDINALITY, getDataType(), array));
@@ -137,19 +125,39 @@ implements
     // -------------------------------------------------------------------------
 
     @Override
-    public final Field<? extends Object[]> $arg1() {
+    public final Field<? extends Object[]> $array() {
         return array;
     }
 
     @Override
-    public final QOM.Cardinality $arg1(Field<? extends Object[]> newValue) {
+    public final QOM.Cardinality $array(Field<? extends Object[]> newValue) {
         return $constructor().apply(newValue);
     }
 
-    @Override
     public final Function1<? super Field<? extends Object[]>, ? extends QOM.Cardinality> $constructor() {
         return (a1) -> new Cardinality(a1);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // -------------------------------------------------------------------------
     // XXX: The Object API
@@ -157,7 +165,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.Cardinality o) {
+        if (that instanceof QOM.Cardinality) { QOM.Cardinality o = (QOM.Cardinality) that;
             return
                 StringUtils.equals($array(), o.$array())
             ;

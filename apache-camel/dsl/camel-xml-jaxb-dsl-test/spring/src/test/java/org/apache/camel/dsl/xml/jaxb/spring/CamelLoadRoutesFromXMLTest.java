@@ -16,15 +16,18 @@
  */
 package org.apache.camel.dsl.xml.jaxb.spring;
 
+import java.io.InputStream;
+
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.spi.Resource;
+import org.apache.camel.model.RoutesDefinition;
 import org.apache.camel.spring.SpringCamelContext;
-import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.core.io.ClassPathResource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -41,8 +44,10 @@ public class CamelLoadRoutesFromXMLTest extends ContextTestSupport {
         assertTrue(camel.getStatus().isStarted());
 
         // load routes from xml file
-        Resource resource = PluginHelper.getResourceLoader(camel).resolveResource("org/apache/camel/spring/myRoutes.xml");
-        PluginHelper.getRoutesLoader(camel).loadRoutes(resource);
+        InputStream is = new ClassPathResource("org/apache/camel/spring/myRoutes.xml").getInputStream();
+        ExtendedCamelContext ecc = camel.adapt(ExtendedCamelContext.class);
+        RoutesDefinition routes = (RoutesDefinition) ecc.getXMLRoutesDefinitionLoader().loadRoutesDefinition(ecc, is);
+        camel.addRouteDefinitions(routes.getRoutes());
 
         assertEquals(2, camel.getRoutes().size());
 
@@ -64,7 +69,7 @@ public class CamelLoadRoutesFromXMLTest extends ContextTestSupport {
         MockEndpoint.assertIsSatisfied(foo, bar);
 
         // remove the routes
-        camel.removeAllRoutes();
+        camel.removeRouteDefinitions(routes.getRoutes());
 
         // they should be removed
         assertNull(camel.getRouteController().getRouteStatus("foo"));
@@ -77,8 +82,9 @@ public class CamelLoadRoutesFromXMLTest extends ContextTestSupport {
         //camel.getRouteController().removeRoute("bar");
 
         // load updated xml
-        resource = PluginHelper.getResourceLoader(camel).resolveResource("org/apache/camel/spring/myUpdatedRoutes.xml");
-        PluginHelper.getRoutesLoader(camel).loadRoutes(resource);
+        is = new ClassPathResource("org/apache/camel/spring/myUpdatedRoutes.xml").getInputStream();
+        routes = (RoutesDefinition) ecc.getXMLRoutesDefinitionLoader().loadRoutesDefinition(ecc, is);
+        camel.addRouteDefinitions(routes.getRoutes());
 
         assertEquals(2, camel.getRoutes().size());
 

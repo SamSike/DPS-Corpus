@@ -1,7 +1,9 @@
 /**
  * This package provides a facility for generic JCA message endpoint management.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jca.endpoint;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

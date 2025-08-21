@@ -35,23 +35,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EventNotifierExchangeSentTest extends ContextTestSupport {
 
-    protected final List<CamelEvent> events = new ArrayList<>();
+    protected List<CamelEvent> events = new ArrayList<>();
 
     @BeforeEach
-    public void clearEvents() {
+    public void clearEvents() throws Exception {
         events.clear();
     }
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        DefaultCamelContext context = new DefaultCamelContext(createCamelRegistry());
+        DefaultCamelContext context = new DefaultCamelContext(createRegistry());
         context.getManagementStrategy().addEventNotifier(new EventNotifierSupport() {
-            public void notify(CamelEvent event) {
+            public void notify(CamelEvent event) throws Exception {
                 events.add(event);
             }
 
             @Override
-            protected void doStart() {
+            protected void doStart() throws Exception {
                 // filter out unwanted events
                 setIgnoreCamelContextEvents(true);
                 setIgnoreServiceEvents(true);
@@ -157,12 +157,14 @@ public class EventNotifierExchangeSentTest extends ContextTestSupport {
         boolean found = false;
         boolean found2 = false;
         for (CamelEvent event : events) {
-            if (event instanceof ExchangeSendingEvent sending) {
+            if (event instanceof ExchangeSendingEvent) {
+                ExchangeSendingEvent sending = (ExchangeSendingEvent) event;
                 String uri = sending.getEndpoint().getEndpointUri();
                 if ("log://foo".equals(uri)) {
                     found = true;
                 }
-            } else if (event instanceof ExchangeSentEvent sent) {
+            } else if (event instanceof ExchangeSentEvent) {
+                ExchangeSentEvent sent = (ExchangeSentEvent) event;
                 String uri = sent.getEndpoint().getEndpointUri();
                 if ("log://foo".equals(uri)) {
                     found2 = true;
@@ -175,10 +177,10 @@ public class EventNotifierExchangeSentTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("log:foo").to("direct:bar").to("mock:result");
 
                 from("direct:bar").delay(500);

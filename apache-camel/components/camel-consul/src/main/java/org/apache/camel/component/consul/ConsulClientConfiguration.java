@@ -20,16 +20,19 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.time.Duration;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
+import com.orbitz.consul.Consul;
+import com.orbitz.consul.option.ConsistencyMode;
 import org.apache.camel.CamelContext;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.util.ObjectHelper;
-import org.kiwiproject.consul.Consul;
-import org.kiwiproject.consul.option.ConsistencyMode;
 
 @UriParams
 public abstract class ConsulClientConfiguration implements Cloneable {
@@ -40,11 +43,11 @@ public abstract class ConsulClientConfiguration implements Cloneable {
     @UriParam(label = "advanced")
     private String nearNode;
     @UriParam(label = "advanced")
-    private String nodeMeta;
+    private List<String> nodeMeta;
     @UriParam(label = "advanced", defaultValue = "DEFAULT", enums = "DEFAULT,STALE,CONSISTENT")
     private ConsistencyMode consistencyMode = ConsistencyMode.DEFAULT;
     @UriParam(javaType = "java.lang.String")
-    private String tags;
+    private Set<String> tags;
 
     @UriParam(label = "security")
     private SSLContextParameters sslContextParameters;
@@ -71,7 +74,7 @@ public abstract class ConsulClientConfiguration implements Cloneable {
     @UriParam(label = "consumer,watch", defaultValue = "false")
     private boolean recursive;
 
-    protected ConsulClientConfiguration() {
+    public ConsulClientConfiguration() {
     }
 
     public String getUrl() {
@@ -125,22 +128,14 @@ public abstract class ConsulClientConfiguration implements Cloneable {
         this.nearNode = nearNode;
     }
 
-    public String getNodeMeta() {
+    public List<String> getNodeMeta() {
         return nodeMeta;
     }
 
-    public Collection<String> getNodeMetasAsList() {
-        if (nodeMeta != null) {
-            return List.of(nodeMeta.split(","));
-        } else {
-            return null;
-        }
-    }
-
     /**
-     * The comma separated node meta-data to use for queries.
+     * The note meta-data to use for queries.
      */
-    public void setNodeMeta(String nodeMeta) {
+    public void setNodeMeta(List<String> nodeMeta) {
         this.nodeMeta = nodeMeta;
     }
 
@@ -155,23 +150,23 @@ public abstract class ConsulClientConfiguration implements Cloneable {
         this.consistencyMode = consistencyMode;
     }
 
-    public String getTags() {
+    public Set<String> getTags() {
         return tags;
-    }
-
-    public Collection<String> getTagAsSet() {
-        if (tags != null) {
-            return Set.of(tags.split(","));
-        } else {
-            return null;
-        }
     }
 
     /**
      * Set tags. You can separate multiple tags by comma.
      */
-    public void setTags(String tags) {
+    public void setTags(Set<String> tags) {
         this.tags = tags;
+    }
+
+    /**
+     * Set tags. You can separate multiple tags by comma.
+     */
+    public void setTags(String tagsAsString) {
+        this.tags = new HashSet<>();
+        Collections.addAll(tags, tagsAsString.split(","));
     }
 
     public SSLContextParameters getSslContextParameters() {

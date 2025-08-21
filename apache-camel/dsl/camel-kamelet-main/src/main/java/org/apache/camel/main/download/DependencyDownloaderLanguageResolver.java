@@ -22,7 +22,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.catalog.CamelCatalog;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.impl.engine.DefaultLanguageResolver;
-import org.apache.camel.main.stub.StubLanguage;
 import org.apache.camel.main.util.SuggestSimilarHelper;
 import org.apache.camel.spi.Language;
 import org.apache.camel.tooling.model.LanguageModel;
@@ -32,39 +31,26 @@ import org.apache.camel.tooling.model.LanguageModel;
  */
 public final class DependencyDownloaderLanguageResolver extends DefaultLanguageResolver {
 
-    private static final String ACCEPTED_STUB_NAMES
-            = "constant,exchangeProperty,header,ref,simple,variable";
-
     private final CamelCatalog catalog = new DefaultCamelCatalog();
+    private CamelContext camelContext;
     private final DependencyDownloader downloader;
-    private final String stubPattern;
-    private final boolean silent;
 
-    public DependencyDownloaderLanguageResolver(CamelContext camelContext, String stubPattern, boolean silent) {
+    public DependencyDownloaderLanguageResolver(CamelContext camelContext) {
+        this.camelContext = camelContext;
         this.downloader = camelContext.hasService(DependencyDownloader.class);
-        this.stubPattern = stubPattern;
-        this.silent = silent;
     }
 
     @Override
     public Language resolveLanguage(String name, CamelContext context) {
         LanguageModel model = catalog.languageModel(name);
         if (model != null) {
-            downloadLoader(model.getGroupId(), model.getArtifactId(), model.getVersion());
+            downloadLoader(model.getArtifactId(), model.getVersion());
             if ("csimple".equals(name)) {
                 // need to include joor compiler also
-                downloadLoader(model.getGroupId(), "camel-csimple-joor", model.getVersion());
+                downloadLoader("camel-csimple-joor", model.getVersion());
             }
         }
-
-        Language answer;
-        boolean accept = accept(name);
-        if (accept) {
-            answer = super.resolveLanguage(name, context);
-        } else {
-            answer = new StubLanguage();
-        }
-
+        Language answer = super.resolveLanguage(name, context);
         if (answer == null) {
             List<String> suggestion = SuggestSimilarHelper.didYouMean(catalog.findDataFormatNames(), name);
             if (suggestion != null && !suggestion.isEmpty()) {
@@ -75,19 +61,12 @@ public final class DependencyDownloaderLanguageResolver extends DefaultLanguageR
         return answer;
     }
 
-    private void downloadLoader(String groupId, String artifactId, String version) {
-        if (!downloader.alreadyOnClasspath(groupId, artifactId, version)) {
-            downloader.downloadDependency(groupId, artifactId, version);
+    private void downloadLoader(String artifactId, String version) {
+        if (!downloader.alreadyOnClasspath("org.apache.camel", artifactId,
+                version)) {
+            downloader.downloadDependency("org.apache.camel", artifactId,
+                    version);
         }
-    }
-
-    private boolean accept(String name) {
-        if (stubPattern == null) {
-            return true;
-        }
-
-        // we are stubbing but need to accept the following
-        return ACCEPTED_STUB_NAMES.contains(name);
     }
 
 }

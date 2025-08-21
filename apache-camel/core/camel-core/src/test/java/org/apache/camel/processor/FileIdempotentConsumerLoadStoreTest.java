@@ -35,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FileIdempotentConsumerLoadStoreTest extends ContextTestSupport {
 
+    private File store = testFile("idempotentfilestore.dat").toFile();
     private IdempotentRepository repo;
 
     @Test
@@ -78,7 +79,7 @@ public class FileIdempotentConsumerLoadStoreTest extends ContextTestSupport {
 
     @Override
     protected RouteBuilder createRouteBuilder() throws Exception {
-        File store = testFile("idempotentfilestore.dat").toFile();
+        testDirectory(true);
         try (FileOutputStream fos = new FileOutputStream(store)) {
             fos.write("4\n".getBytes());
         }

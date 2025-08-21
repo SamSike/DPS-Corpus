@@ -26,19 +26,27 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.support.EventNotifierSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class EventNotifierExchangeCompletedTest extends ContextTestSupport {
 
-    private final List<CamelEvent> events = new ArrayList<>();
+    private static List<CamelEvent> events = new ArrayList<>();
+
+    @Override
+    @BeforeEach
+    public void setUp() throws Exception {
+        events.clear();
+        super.setUp();
+    }
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        DefaultCamelContext context = new DefaultCamelContext(createCamelRegistry());
+        DefaultCamelContext context = new DefaultCamelContext(createRegistry());
         context.getManagementStrategy().addEventNotifier(new EventNotifierSupport() {
-            public void notify(CamelEvent event) {
+            public void notify(CamelEvent event) throws Exception {
                 events.add(event);
             }
 
@@ -70,7 +78,7 @@ public class EventNotifierExchangeCompletedTest extends ContextTestSupport {
         assertEquals("direct://start", event.getExchange().getFromEndpoint().getEndpointUri());
 
         // grab the created timestamp
-        long created = event.getExchange().getClock().getCreated();
+        long created = event.getExchange().getCreated();
         assertTrue(created > 0);
 
         // calculate elapsed time
@@ -78,14 +86,14 @@ public class EventNotifierExchangeCompletedTest extends ContextTestSupport {
         long elapsed = now.getTime() - created;
         assertTrue(elapsed > 400, "Should be > 400, was: " + elapsed);
 
-        log.info("Elapsed time in millis: {}", elapsed);
+        log.info("Elapsed time in millis: " + elapsed);
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("log:foo").to("direct:bar").to("mock:result");
 
                 from("direct:bar").delay(500).to("mock:bar");

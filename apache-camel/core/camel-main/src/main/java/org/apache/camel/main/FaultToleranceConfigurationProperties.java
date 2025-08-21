@@ -23,12 +23,12 @@ import org.apache.camel.spi.Metadata;
 /**
  * Global configuration for MicroProfile Fault Tolerance EIP circuit breaker.
  */
-@Configurer(extended = true)
+@Configurer(bootstrap = true, extended = true)
 public class FaultToleranceConfigurationProperties implements BootstrapCloseable {
 
     private MainConfigurationProperties parent;
 
-    private String typedGuard;
+    private String circuitBreaker;
     @Metadata(defaultValue = "5")
     private Long delay;
     @Metadata(defaultValue = "1")
@@ -43,13 +43,14 @@ public class FaultToleranceConfigurationProperties implements BootstrapCloseable
     private Long timeoutDuration;
     @Metadata(defaultValue = "10")
     private Integer timeoutPoolSize;
+    private String timeoutScheduledExecutorService;
     @Metadata(defaultValue = "false")
     private Boolean bulkheadEnabled;
     @Metadata(defaultValue = "10")
     private Integer bulkheadMaxConcurrentCalls;
     @Metadata(defaultValue = "10")
     private Integer bulkheadWaitingTaskQueue;
-    private String threadOffloadExecutorService;
+    private String bulkheadExecutorService;
 
     public FaultToleranceConfigurationProperties(MainConfigurationProperties parent) {
         this.parent = parent;
@@ -67,16 +68,16 @@ public class FaultToleranceConfigurationProperties implements BootstrapCloseable
     // getter and setters
     // --------------------------------------------------------------
 
-    public String getTypedGuard() {
-        return typedGuard;
+    public String getCircuitBreaker() {
+        return circuitBreaker;
     }
 
     /**
-     * Refers to an existing io.smallrye.faulttolerance.api.TypedGuard instance to lookup and use from the registry.
-     * When using this, then any other TypedGuard circuit breaker options are not in use.
+     * Refers to an existing io.smallrye.faulttolerance.core.circuit.breaker.CircuitBreaker instance to lookup and use
+     * from the registry. When using this, then any other circuit breaker options are not in use.
      */
-    public void setTypedGuard(String typedGuard) {
-        this.typedGuard = typedGuard;
+    public void setCircuitBreaker(String circuitBreaker) {
+        this.circuitBreaker = circuitBreaker;
     }
 
     public Long getDelay() {
@@ -159,6 +160,17 @@ public class FaultToleranceConfigurationProperties implements BootstrapCloseable
         this.timeoutPoolSize = timeoutPoolSize;
     }
 
+    public String getTimeoutScheduledExecutorService() {
+        return timeoutScheduledExecutorService;
+    }
+
+    /**
+     * References to a custom thread pool to use when timeout is enabled
+     */
+    public void setTimeoutScheduledExecutorService(String timeoutScheduledExecutorService) {
+        this.timeoutScheduledExecutorService = timeoutScheduledExecutorService;
+    }
+
     public Boolean getBulkheadEnabled() {
         return bulkheadEnabled;
     }
@@ -192,23 +204,23 @@ public class FaultToleranceConfigurationProperties implements BootstrapCloseable
         this.bulkheadWaitingTaskQueue = bulkheadWaitingTaskQueue;
     }
 
-    public String getThreadOffloadExecutorService() {
-        return threadOffloadExecutorService;
+    public String getBulkheadExecutorService() {
+        return bulkheadExecutorService;
     }
 
     /**
-     * References a custom thread pool to use when offloading a guarded action to another thread.
+     * References to a custom thread pool to use when bulkhead is enabled.
      */
-    public void setThreadOffloadExecutorService(String threadOffloadExecutorService) {
-        this.threadOffloadExecutorService = threadOffloadExecutorService;
+    public void setBulkheadExecutorService(String bulkheadExecutorService) {
+        this.bulkheadExecutorService = bulkheadExecutorService;
     }
 
     /**
-     * Refers to an existing io.smallrye.faulttolerance.api.TypedGuard instance to lookup and use from the registry.
-     * When using this, then any other TypedGuard circuit breaker options are not in use.
+     * Refers to an existing io.smallrye.faulttolerance.core.circuit.breaker.CircuitBreaker instance to lookup and use
+     * from the registry. When using this, then any other circuit breaker options are not in use.
      */
-    public FaultToleranceConfigurationProperties withTypedGuard(String typedGuard) {
-        this.typedGuard = typedGuard;
+    public FaultToleranceConfigurationProperties withCircuitBreakerRef(String circuitBreakerRef) {
+        this.circuitBreaker = circuitBreakerRef;
         return this;
     }
 
@@ -272,6 +284,15 @@ public class FaultToleranceConfigurationProperties implements BootstrapCloseable
     }
 
     /**
+     * References to a custom thread pool to use when timeout is enabled
+     */
+    public FaultToleranceConfigurationProperties withTimeoutScheduledExecutorServiceRef(
+            String timeoutScheduledExecutorServiceRef) {
+        this.timeoutScheduledExecutorService = timeoutScheduledExecutorServiceRef;
+        return this;
+    }
+
+    /**
      * Whether bulkhead is enabled or not on the circuit breaker. Default is false.
      */
     public FaultToleranceConfigurationProperties withBulkheadEnabled(Boolean bulkheadEnabled) {
@@ -296,10 +317,11 @@ public class FaultToleranceConfigurationProperties implements BootstrapCloseable
     }
 
     /**
-     * References a custom thread pool to use when offloading a guarded action to another thread.
+     * References to a custom thread pool to use when bulkhead is enabled.
      */
-    public FaultToleranceConfigurationProperties withThreadOffloadExecutorServiceRef(String threadOffloadExecutorServiceRef) {
-        this.threadOffloadExecutorService = threadOffloadExecutorServiceRef;
+    public FaultToleranceConfigurationProperties withBulkheadExecutorServiceRef(String bulkheadExecutorServiceRef) {
+        this.bulkheadExecutorService = bulkheadExecutorServiceRef;
         return this;
     }
+
 }

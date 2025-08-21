@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,6 +63,7 @@ public interface WebSocketHandlerRegistration {
 	 * that do not allow to check request origin (Iframe based transports) are
 	 * disabled. As a consequence, IE 6 to 9 are not supported when origins are
 	 * restricted.
+	 *
 	 * @since 4.1.2
 	 * @see #setAllowedOriginPatterns(String...)
 	 * @see <a href="https://tools.ietf.org/html/rfc6454">RFC 6454: The Web Origin Concept</a>

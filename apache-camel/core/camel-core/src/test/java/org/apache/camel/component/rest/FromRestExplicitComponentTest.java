@@ -23,10 +23,10 @@ import org.apache.camel.model.rest.RestParamType;
 public class FromRestExplicitComponentTest extends FromRestGetTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.getPropertiesComponent().addInitialProperty("mySpecialId", "scott");
 
                 // configure to use dummy-rest

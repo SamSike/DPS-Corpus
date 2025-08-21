@@ -18,7 +18,6 @@ package org.apache.camel.component.cxf;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 import org.w3c.dom.Document;
 
@@ -75,7 +74,7 @@ public class CxfDispatchMessageTest extends CxfDispatchTestSupport {
                 InputStream request
                         = encodeRequestInMessage(oneway ? MESSAGE_ONEWAY_TEMPLATE : MESSAGE_TEMPLATE, name, exchange);
                 exchange.getIn().setBody(request, InputStream.class);
-                // set the operation for oneway; otherwise use the default operation
+                // set the operation for oneway; otherwise use the default operation                
                 if (oneway) {
                     exchange.getIn().setHeader(CxfConstants.OPERATION_NAME, INVOKE_ONEWAY_NAME);
                 }
@@ -88,7 +87,7 @@ public class CxfDispatchMessageTest extends CxfDispatchTestSupport {
         String payloadstr = String.format(form, name);
         InputStream message = null;
         try {
-            message = new ByteArrayInputStream(payloadstr.getBytes(StandardCharsets.UTF_8));
+            message = new ByteArrayInputStream(payloadstr.getBytes("utf-8"));
         } catch (Exception e) {
             // ignore and let it fail
         }

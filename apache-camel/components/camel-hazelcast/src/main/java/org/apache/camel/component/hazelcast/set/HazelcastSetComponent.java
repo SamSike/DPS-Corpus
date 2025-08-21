@@ -38,7 +38,8 @@ public class HazelcastSetComponent extends HazelcastDefaultComponent {
     protected HazelcastDefaultEndpoint doCreateEndpoint(
             String uri, String remaining, Map<String, Object> parameters, HazelcastInstance hzInstance)
             throws Exception {
-        return new HazelcastSetEndpoint(hzInstance, uri, this, remaining);
+        HazelcastSetEndpoint answer = new HazelcastSetEndpoint(hzInstance, uri, this, remaining);
+        return answer;
     }
 
 }

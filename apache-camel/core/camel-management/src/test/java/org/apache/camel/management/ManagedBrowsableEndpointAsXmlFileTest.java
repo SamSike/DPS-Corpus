@@ -16,26 +16,21 @@
  */
 package org.apache.camel.management;
 
-import java.util.Iterator;
-import java.util.Set;
-
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
+import static org.apache.camel.management.DefaultManagementObjectNameStrategy.TYPE_ENDPOINT;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisabledOnOs(OS.AIX)
 public class ManagedBrowsableEndpointAsXmlFileTest extends ManagementTestSupport {
-
-    protected String domainName = DefaultManagementAgent.DEFAULT_DOMAIN;
 
     @Test
     public void testBrowseableEndpointAsXmlAllIncludeBody() throws Exception {
@@ -43,14 +38,7 @@ public class ManagedBrowsableEndpointAsXmlFileTest extends ManagementTestSupport
 
         MBeanServer mbeanServer = getMBeanServer();
 
-        ObjectName objName = new ObjectName(domainName + ":type=endpoints,*");
-        Set<ObjectName> s = mbeanServer.queryNames(objName, null);
-        Assertions.assertEquals(2, s.size());
-        Iterator<ObjectName> it = s.iterator();
-        ObjectName name = it.next();
-        if (!name.toString().contains("file")) {
-            name = it.next();
-        }
+        ObjectName name = getCamelObjectName(TYPE_ENDPOINT, "file://" + testDirectory());
 
         String out = (String) mbeanServer.invoke(name, "browseAllMessagesAsXml", new Object[] { true },
                 new String[] { "java.lang.Boolean" });
@@ -61,10 +49,10 @@ public class ManagedBrowsableEndpointAsXmlFileTest extends ManagementTestSupport
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setUseBreadcrumb(false);
 
                 from("direct:start").to(fileUri());

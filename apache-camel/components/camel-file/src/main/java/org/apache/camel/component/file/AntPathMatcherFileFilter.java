@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 public class AntPathMatcherFileFilter implements FileFilter {
     private static final Logger LOG = LoggerFactory.getLogger(AntPathMatcherFileFilter.class);
 
-    private final AntPathMatcher matcher = new AntPathMatcher();
+    private AntPathMatcher matcher = new AntPathMatcher();
     private String[] excludes;
     private String[] includes;
     private boolean caseSensitive = true;
@@ -96,7 +96,7 @@ public class AntPathMatcherFileFilter implements FileFilter {
      * Sets Whether or not pattern matching should be case sensitive
      * <p/>
      * Is by default turned on <tt>true</tt>.
-     *
+     * 
      * @param caseSensitive <tt>false</tt> to disable case sensitive pattern matching
      */
     public void setCaseSensitive(boolean caseSensitive) {

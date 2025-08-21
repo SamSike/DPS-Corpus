@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,26 +43,26 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Sam Brannen
  * @see RequestScopeTests
  */
-class SessionScopeTests {
+public class SessionScopeTests {
 
 	private final DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() throws Exception {
 		this.beanFactory.registerScope("session", new SessionScope());
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(this.beanFactory);
 		reader.loadBeanDefinitions(new ClassPathResource("sessionScopeTests.xml", getClass()));
 	}
 
 	@AfterEach
-	void resetRequestAttributes() {
+	public void resetRequestAttributes() {
 		RequestContextHolder.setRequestAttributes(null);
 	}
 
 
 	@Test
-	void getFromScope() {
+	public void getFromScope() throws Exception {
 		AtomicInteger count = new AtomicInteger();
 		MockHttpSession session = new MockHttpSession() {
 			@Override
@@ -79,19 +79,19 @@ class SessionScopeTests {
 		String name = "sessionScopedObject";
 		assertThat(session.getAttribute(name)).isNull();
 		TestBean bean = (TestBean) this.beanFactory.getBean(name);
-		assertThat(count.get()).isEqualTo(1);
+		assertThat(count.intValue()).isEqualTo(1);
 		assertThat(bean).isEqualTo(session.getAttribute(name));
 		assertThat(this.beanFactory.getBean(name)).isSameAs(bean);
-		assertThat(count.get()).isEqualTo(1);
+		assertThat(count.intValue()).isEqualTo(1);
 
 		// should re-propagate updated attribute
 		requestAttributes.requestCompleted();
 		assertThat(bean).isEqualTo(session.getAttribute(name));
-		assertThat(count.get()).isEqualTo(2);
+		assertThat(count.intValue()).isEqualTo(2);
 	}
 
 	@Test
-	void getFromScopeWithSingleAccess() {
+	public void getFromScopeWithSingleAccess() throws Exception {
 		AtomicInteger count = new AtomicInteger();
 		MockHttpSession session = new MockHttpSession() {
 			@Override
@@ -108,16 +108,16 @@ class SessionScopeTests {
 		String name = "sessionScopedObject";
 		assertThat(session.getAttribute(name)).isNull();
 		TestBean bean = (TestBean) this.beanFactory.getBean(name);
-		assertThat(count.get()).isEqualTo(1);
+		assertThat(count.intValue()).isEqualTo(1);
 
 		// should re-propagate updated attribute
 		requestAttributes.requestCompleted();
 		assertThat(bean).isEqualTo(session.getAttribute(name));
-		assertThat(count.get()).isEqualTo(2);
+		assertThat(count.intValue()).isEqualTo(2);
 	}
 
 	@Test
-	void destructionAtSessionTermination() {
+	public void destructionAtSessionTermination() throws Exception {
 		MockHttpSession session = new MockHttpSession();
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		request.setSession(session);
@@ -136,18 +136,18 @@ class SessionScopeTests {
 	}
 
 	@Test
-	void destructionWithSessionSerialization() throws Exception {
+	public void destructionWithSessionSerialization() throws Exception {
 		doTestDestructionWithSessionSerialization(false);
 	}
 
 	@Test
-	void destructionWithSessionSerializationAndBeanPostProcessor() throws Exception {
+	public void destructionWithSessionSerializationAndBeanPostProcessor() throws Exception {
 		this.beanFactory.addBeanPostProcessor(new CustomDestructionAwareBeanPostProcessor());
 		doTestDestructionWithSessionSerialization(false);
 	}
 
 	@Test
-	void destructionWithSessionSerializationAndSerializableBeanPostProcessor() throws Exception {
+	public void destructionWithSessionSerializationAndSerializableBeanPostProcessor() throws Exception {
 		this.beanFactory.addBeanPostProcessor(new CustomSerializableDestructionAwareBeanPostProcessor());
 		doTestDestructionWithSessionSerialization(true);
 	}
@@ -238,8 +238,8 @@ class SessionScopeTests {
 
 		@Override
 		public void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException {
-			if (bean instanceof BeanNameAware beanNameAware) {
-				beanNameAware.setBeanName(null);
+			if (bean instanceof BeanNameAware) {
+				((BeanNameAware) bean).setBeanName(null);
 			}
 		}
 

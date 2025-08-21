@@ -25,13 +25,13 @@ import org.apache.camel.component.google.mail.BatchGoogleMailClientFactory;
 import org.apache.camel.component.google.mail.GoogleMailClientFactory;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.support.HealthCheckComponent;
+import org.apache.camel.support.DefaultComponent;
 
 /**
  * Represents the component that manages {@link GoogleMailStreamEndpoint}.
  */
 @Component("google-mail-stream")
-public class GoogleMailStreamComponent extends HealthCheckComponent {
+public class GoogleMailStreamComponent extends DefaultComponent {
 
     @Metadata(label = "advanced")
     private Gmail client;
@@ -46,6 +46,7 @@ public class GoogleMailStreamComponent extends HealthCheckComponent {
 
     public GoogleMailStreamComponent(CamelContext context) {
         super(context);
+        registerExtension(new GoogleMailStreamComponentVerifierExtension());
         this.configuration = new GoogleMailStreamConfiguration();
     }
 
@@ -53,12 +54,12 @@ public class GoogleMailStreamComponent extends HealthCheckComponent {
         if (client == null) {
             if (googleMailConfiguration.getClientSecret() != null) {
                 client = getClientFactory().makeClient(googleMailConfiguration.getClientId(),
-                        googleMailConfiguration.getClientSecret(), googleMailConfiguration.getScopesAsList(),
+                        googleMailConfiguration.getClientSecret(), googleMailConfiguration.getScopes(),
                         googleMailConfiguration.getApplicationName(), googleMailConfiguration.getRefreshToken(),
                         googleMailConfiguration.getAccessToken());
             } else if (googleMailConfiguration.getServiceAccountKey() != null) {
                 client = getClientFactory().makeClient(getCamelContext(), googleMailConfiguration.getServiceAccountKey(),
-                        googleMailConfiguration.getScopesAsList(), googleMailConfiguration.getApplicationName(),
+                        googleMailConfiguration.getScopes(), googleMailConfiguration.getApplicationName(),
                         googleMailConfiguration.getDelegate());
             }
         }

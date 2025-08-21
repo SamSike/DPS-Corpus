@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -55,7 +55,6 @@ import java.sql.Statement;
 
 // ...
 import org.jooq.SQLDialect;
-import org.jooq.impl.QOM.ForeignKeyRule;
 import org.jooq.tools.JooqLogger;
 
 import org.jetbrains.annotations.NotNull;
@@ -195,9 +194,7 @@ public class JDBCUtils {
     private static SQLDialect dialectFromProductName(String product) {
         String p = product.toLowerCase().replace(" ", "");
 
-        if (p.contains("clickhouse"))
-            return CLICKHOUSE;
-        else if (p.contains("h2"))
+        if (p.contains("h2"))
             return H2;
         else if (p.contains("mariadb"))
             return MARIADB;
@@ -297,13 +294,7 @@ public class JDBCUtils {
 
 
 
-
-
-
-
     private static final SQLDialect postgresDialect(int majorVersion, int minorVersion) {
-
-
 
 
 
@@ -374,9 +365,6 @@ public class JDBCUtils {
 
 
 
-
-
-
         return MYSQL;
     }
 
@@ -396,19 +384,6 @@ public class JDBCUtils {
     }
 
     private static final SQLDialect h2Dialect(int majorVersion, int minorVersion, String productVersion) {
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -456,14 +431,10 @@ public class JDBCUtils {
 
 
 
-        else if (url.contains(":clickhouse:"))
-            return CLICKHOUSE;
         else if (url.contains(":cubrid:"))
             return CUBRID;
         else if (url.contains(":derby:"))
             return DERBY;
-        else if (url.contains(":duckdb:"))
-            return DUCKDB;
         else if (url.contains(":firebirdsql:"))
             return FIREBIRD;
         else if (url.contains(":h2:"))
@@ -483,15 +454,6 @@ public class JDBCUtils {
         else if (url.contains(":sqlite:")
               || url.contains(":sqldroid:"))
             return SQLITE;
-        else if (url.contains(":trino:"))
-            return TRINO;
-        else if (url.contains(":yugabytedb:"))
-            return YUGABYTEDB;
-
-
-
-
-
 
 
 
@@ -538,14 +500,10 @@ public class JDBCUtils {
     @NotNull
     public static final String driver(SQLDialect dialect) {
         switch (dialect.family()) {
-            case CLICKHOUSE:
-                return "com.clickhouse.jdbc.ClickHouseDriver";
             case CUBRID:
                 return "cubrid.jdbc.driver.CUBRIDDriver";
             case DERBY:
                 return "org.apache.derby.jdbc.ClientDriver";
-            case DUCKDB:
-                return "org.duckdb.DuckDBDriver";
             case FIREBIRD:
                 return "org.firebirdsql.jdbc.FBDriver";
             case H2:
@@ -562,12 +520,6 @@ public class JDBCUtils {
                 return "org.postgresql.Driver";
             case SQLITE:
                 return "org.sqlite.JDBC";
-            case YUGABYTEDB:
-                return "com.yugabyte.Driver";
-
-
-
-
 
 
 
@@ -929,27 +881,6 @@ public class JDBCUtils {
      */
     public static final Boolean wasNull(CallableStatement statement, Boolean value) throws SQLException {
         return (value == null || (!value && statement.wasNull())) ? null : value;
-    }
-
-    /**
-     * Translate the {@link DatabaseMetaData#importedKeyCascade} and various
-     * other flag valuse to the jOOQ {@link ForeignKeyRule} representation.
-     */
-    public static final ForeignKeyRule foreignKeyRule(int code) {
-        switch (code) {
-            case DatabaseMetaData.importedKeyCascade:
-                return ForeignKeyRule.CASCADE;
-            case DatabaseMetaData.importedKeyNoAction:
-                return ForeignKeyRule.NO_ACTION;
-            case DatabaseMetaData.importedKeyRestrict:
-                return ForeignKeyRule.RESTRICT;
-            case DatabaseMetaData.importedKeySetDefault:
-                return ForeignKeyRule.SET_DEFAULT;
-            case DatabaseMetaData.importedKeySetNull:
-                return ForeignKeyRule.SET_NULL;
-            default:
-                return null;
-        }
     }
 
     /**

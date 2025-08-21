@@ -63,8 +63,9 @@ public class SmppBinding {
      */
     public SmppCommand createSmppCommand(SMPPSession session, Exchange exchange) {
         SmppCommandType commandType = SmppCommandType.fromExchange(exchange);
+        SmppCommand command = commandType.createCommand(session, configuration);
 
-        return commandType.createCommand(session, configuration);
+        return command;
     }
 
     /**

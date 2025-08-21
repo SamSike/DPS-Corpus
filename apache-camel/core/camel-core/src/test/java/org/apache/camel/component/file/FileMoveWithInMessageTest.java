@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class FileMoveWithInMessageTest extends ContextTestSupport {
 
     @Test
-    public void testMove() {
+    public void testMove() throws Exception {
         String uri = fileUri();
         template.sendBodyAndHeader(uri, "Hello World1", Exchange.FILE_NAME, "hello1.txt");
         template.sendBodyAndHeader(uri, "Hello World2", Exchange.FILE_NAME, "hello2.txt");
@@ -50,10 +50,10 @@ public class FileMoveWithInMessageTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:triggerIn")
                         .pollEnrich(fileUri() + "?move=archive")
                         .pollEnrich(fileUri() + "?move=archive")
@@ -65,7 +65,7 @@ public class FileMoveWithInMessageTest extends ContextTestSupport {
     private static class TestProcessor implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             DefaultMessage msg = new DefaultMessage(exchange);
             msg.setBody(exchange.getIn().getBody());
             msg.setHeaders(exchange.getIn().getHeaders());

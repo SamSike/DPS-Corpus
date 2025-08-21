@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class CamelContextLogExhaustedMessageBodyTest extends ContextTestSupport {
 
     @Test
-    public void testLogExhaustedMessageHistoryWithMessageBody() {
+    public void testLogExhaustedMessageHistoryWithMessageBody() throws Exception {
         try {
             template.sendBody("direct:start", "Hello World");
             fail("should fail");
@@ -43,10 +43,10 @@ public class CamelContextLogExhaustedMessageBodyTest extends ContextTestSupport 
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").log("Incoming ${body}").throwException(new IllegalArgumentException("Forced"));
             }
         };

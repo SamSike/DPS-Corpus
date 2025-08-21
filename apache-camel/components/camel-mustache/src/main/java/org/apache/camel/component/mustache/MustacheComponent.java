@@ -36,32 +36,21 @@ import org.apache.camel.support.DefaultComponent;
 @Component("mustache")
 public class MustacheComponent extends DefaultComponent {
 
-    @Metadata(defaultValue = "true", description = "Sets whether to use resource content cache or not")
-    private boolean contentCache = true;
-    @Metadata
+    @Metadata(defaultValue = "false")
     private boolean allowTemplateFromHeader;
-    @Metadata
+    @Metadata(defaultValue = "false")
     private boolean allowContextMapAll;
-    @Metadata(label = "advanced", autowired = true)
-    private MustacheFactory mustacheFactory;
+
+    @Metadata(label = "advanced")
+    private MustacheFactory mustacheFactory = new DefaultMustacheFactory();
 
     public MustacheComponent() {
-    }
-
-    @Override
-    protected void doInit() throws Exception {
-        super.doInit();
-
-        if (mustacheFactory == null) {
-            mustacheFactory = new DefaultMustacheFactory();
-        }
     }
 
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         MustacheEndpoint endpoint = new MustacheEndpoint(uri, this, remaining);
         endpoint.setMustacheFactory(getMustacheFactory());
-        endpoint.setContentCache(contentCache);
         endpoint.setAllowTemplateFromHeader(allowTemplateFromHeader);
         endpoint.setAllowContextMapAll(allowContextMapAll);
         setProperties(endpoint, parameters);
@@ -77,17 +66,6 @@ public class MustacheComponent extends DefaultComponent {
      */
     public void setMustacheFactory(MustacheFactory mustacheFactory) {
         this.mustacheFactory = mustacheFactory;
-    }
-
-    public boolean isContentCache() {
-        return contentCache;
-    }
-
-    /**
-     * Sets whether to use resource content cache or not
-     */
-    public void setContentCache(boolean contentCache) {
-        this.contentCache = contentCache;
     }
 
     public boolean isAllowTemplateFromHeader() {

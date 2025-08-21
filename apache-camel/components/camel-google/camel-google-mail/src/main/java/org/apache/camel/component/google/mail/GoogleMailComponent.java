@@ -37,11 +37,13 @@ public class GoogleMailComponent
     private GoogleMailClientFactory clientFactory;
 
     public GoogleMailComponent() {
-        super(GoogleMailApiName.class, GoogleMailApiCollection.getCollection());
+        super(GoogleMailEndpoint.class, GoogleMailApiName.class, GoogleMailApiCollection.getCollection());
+        registerExtension(new GoogleMailComponentVerifierExtension());
     }
 
     public GoogleMailComponent(CamelContext context) {
-        super(context, GoogleMailApiName.class, GoogleMailApiCollection.getCollection());
+        super(context, GoogleMailEndpoint.class, GoogleMailApiName.class, GoogleMailApiCollection.getCollection());
+        registerExtension(new GoogleMailComponentVerifierExtension());
     }
 
     @Override
@@ -54,11 +56,11 @@ public class GoogleMailComponent
             if (config.getClientId() != null && !config.getClientId().isBlank()
                     && config.getClientSecret() != null && !config.getClientSecret().isBlank()) {
                 client = getClientFactory().makeClient(config.getClientId(),
-                        config.getClientSecret(), config.getScopesAsList(),
+                        config.getClientSecret(), config.getScopes(),
                         config.getApplicationName(), config.getRefreshToken(), config.getAccessToken());
             } else if (config.getServiceAccountKey() != null && !config.getServiceAccountKey().isBlank()) {
                 client = getClientFactory().makeClient(getCamelContext(), config.getServiceAccountKey(),
-                        config.getScopesAsList(), config.getApplicationName(), config.getDelegate());
+                        config.getScopes(), config.getApplicationName(), config.getDelegate());
             } else {
                 throw new IllegalArgumentException(
                         "(clientId and clientSecret) or serviceAccountKey are required to create Gmail client");

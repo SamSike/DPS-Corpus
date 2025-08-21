@@ -2,7 +2,9 @@
  * Support package for declarative messaging configuration,
  * with Java configuration and XML schema support.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jms.config;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

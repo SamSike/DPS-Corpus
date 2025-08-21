@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ package org.springframework.web.servlet.tags.form;
 import java.beans.PropertyEditor;
 
 import jakarta.servlet.jsp.JspException;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 
@@ -46,7 +46,8 @@ public abstract class AbstractFormTag extends HtmlEscapingAwareTag {
 	 * Evaluate the supplied value for the supplied attribute name.
 	 * <p>The default implementation simply returns the given value as-is.
 	 */
-	protected @Nullable Object evaluate(String attributeName, @Nullable Object value) throws JspException {
+	@Nullable
+	protected Object evaluate(String attributeName, @Nullable Object value) throws JspException {
 		return value;
 	}
 
@@ -91,8 +92,7 @@ public abstract class AbstractFormTag extends HtmlEscapingAwareTag {
 	 * as required. This version is <strong>not</strong> {@link PropertyEditor}-aware.
 	 */
 	protected String getDisplayString(@Nullable Object value) {
-		String displayString = ValueFormatter.getDisplayString(value, false);
-		return isHtmlEscape() ? htmlEscape(displayString) : displayString;
+		return ValueFormatter.getDisplayString(value, isHtmlEscape());
 	}
 
 	/**
@@ -102,8 +102,7 @@ public abstract class AbstractFormTag extends HtmlEscapingAwareTag {
 	 * to obtain the display value.
 	 */
 	protected String getDisplayString(@Nullable Object value, @Nullable PropertyEditor propertyEditor) {
-		String displayString = ValueFormatter.getDisplayString(value, propertyEditor, false);
-		return isHtmlEscape() ? htmlEscape(displayString) : displayString;
+		return ValueFormatter.getDisplayString(value, propertyEditor, isHtmlEscape());
 	}
 
 	/**
@@ -112,7 +111,7 @@ public abstract class AbstractFormTag extends HtmlEscapingAwareTag {
 	@Override
 	protected boolean isDefaultHtmlEscape() {
 		Boolean defaultHtmlEscape = getRequestContext().getDefaultHtmlEscape();
-		return (defaultHtmlEscape == null || defaultHtmlEscape);
+		return (defaultHtmlEscape == null || defaultHtmlEscape.booleanValue());
 	}
 
 

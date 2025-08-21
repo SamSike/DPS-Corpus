@@ -13,7 +13,6 @@ import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /*
@@ -41,14 +40,6 @@ interface ThrowingConsumer<T, E extends Throwable> {
 }
 
 /**
- * A checked exception throwing {@link BiConsumer}.
- */
-@FunctionalInterface
-interface ThrowingBiConsumer<T1, T2, E extends Throwable> {
-    void accept(T1 t1, T2 t2) throws E;
-}
-
-/**
  * A checked exception throwing {@link Supplier}.
  */
 @FunctionalInterface
@@ -70,22 +61,14 @@ interface ThrowingFunction<T, R, E extends Throwable> {
 @FunctionalInterface
 interface ThrowingPredicate<T, E extends Throwable> {
     boolean test(T t) throws E;
-
-    default ThrowingPredicate<T, E> negate() {
-        return t -> !test(t);
-    }
 }
 
 /**
- * A checked exception throwing {@link java.util.function.Predicate}.
+ * A checked exception throwing {@link Predicate}.
  */
 @FunctionalInterface
 interface ThrowingIntPredicate<T, E extends Throwable> {
     boolean test(T t, int i) throws E;
-
-    default ThrowingIntPredicate<T, E> negate() {
-        return (t, i) -> !test(t, i);
-    }
 }
 
 /**
@@ -147,12 +130,3 @@ interface ObjIntFunction<T, R> {
 interface ObjIntPredicate<T> {
     boolean test(T t, int i);
 }
-
-/**
- * A missing primitive type {@link Function} for ints resturning ints.
- */
-@FunctionalInterface
-interface IntToIntFunction {
-    int applyAsInt(int i);
-}
-

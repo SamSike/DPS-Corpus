@@ -51,7 +51,7 @@ public class ServiceInterfaceStrategy implements ElementNameStrategy {
 
     /**
      * Init with JAX-WS service interface
-     *
+     * 
      * @param serviceInterface
      * @param isClient         determines if marhalling looks at input or output of method
      */
@@ -149,7 +149,7 @@ public class ServiceInterfaceStrategy implements ElementNameStrategy {
         String soapAction = (webMethod != null) ? webMethod.action() : null;
         return new MethodInfo(
                 method.getName(), soapAction,
-                inInfos.toArray(new TypeInfo[0]), outInfo);
+                inInfos.toArray(new TypeInfo[inInfos.size()]), outInfo);
     }
 
     private void analyzeServiceInterface(Class<?> serviceInterface) {
@@ -170,10 +170,9 @@ public class ServiceInterfaceStrategy implements ElementNameStrategy {
                 }
                 inTypeNameToQName.put(ti.getTypeName(), ti.getElName());
             }
-            String soapAction = info.getSoapAction();
-            if (soapAction != null && !soapAction.isEmpty()) {
-                soapActionToMethodInfo.put(soapAction, info);
-                addExceptions(soapAction, method);
+            if (info.getSoapAction() != null && !"".equals(info.getSoapAction())) {
+                soapActionToMethodInfo.put(info.getSoapAction(), info);
+                addExceptions(info.getSoapAction(), method);
             } else {
                 addExceptions(null, method);
             }
@@ -199,7 +198,7 @@ public class ServiceInterfaceStrategy implements ElementNameStrategy {
     /**
      * Determine the QName of the method parameter of the method that matches either soapAction and type or if not
      * possible only the type
-     *
+     * 
      * @param  soapAction
      * @param  type
      * @return            matching QName throws RuntimeException if no matching QName was found

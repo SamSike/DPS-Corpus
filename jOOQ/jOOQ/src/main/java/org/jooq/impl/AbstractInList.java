@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,17 +39,20 @@
 package org.jooq.impl;
 
 import static java.lang.Boolean.TRUE;
+import static java.lang.Math.ceil;
+import static java.lang.Math.log;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.Math.pow;
+import static java.lang.Math.round;
 // ...
 // ...
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
@@ -62,7 +65,6 @@ import static org.jooq.SQLDialect.MARIADB;
 // ...
 import static org.jooq.SQLDialect.MYSQL;
 // ...
-// ...
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
@@ -70,21 +72,16 @@ import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.conf.ParamType.INDEXED;
-import static org.jooq.impl.DSL.array;
 import static org.jooq.impl.DSL.falseCondition;
-import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.row;
 import static org.jooq.impl.DSL.trueCondition;
 import static org.jooq.impl.Keywords.K_AND;
 import static org.jooq.impl.Keywords.K_IN;
-import static org.jooq.impl.Keywords.K_NOT;
 import static org.jooq.impl.Keywords.K_NOT_IN;
 import static org.jooq.impl.Keywords.K_OR;
-import static org.jooq.impl.Names.N_HAS;
 import static org.jooq.impl.QueryPartListView.wrap;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
 import static org.jooq.impl.Tools.anyMatch;
@@ -113,8 +110,9 @@ import org.jooq.impl.QOM.UnmodifiableList;
  */
 abstract class AbstractInList<T> extends AbstractCondition {
 
-    static final Set<SQLDialect>  REQUIRES_IN_LIMIT      = SQLDialect.supportedBy(DERBY, FIREBIRD);
-    static final Set<SQLDialect>  NO_SUPPORT_EMPTY_LISTS = SQLDialect.supportedBy(CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB);
+    static final int              IN_LIMIT               = 1000;
+    static final Set<SQLDialect>  REQUIRES_IN_LIMIT      = SQLDialect.supportedBy(FIREBIRD);
+    static final Set<SQLDialect>  NO_SUPPORT_EMPTY_LISTS = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB);
 
     final Field<T>                field;
     final QueryPartList<Field<T>> values;
@@ -126,19 +124,6 @@ abstract class AbstractInList<T> extends AbstractCondition {
     }
 
     abstract Function2<? super RowN, ? super RowN[], ? extends Condition> rowCondition();
-
-    private static final <T> int limit(Context<?> ctx, Field<T> field, QueryPartList<Field<T>> values) {
-        if (REQUIRES_IN_LIMIT.contains(ctx.dialect())) {
-
-
-
-
-
-            return 1000;
-        }
-
-        return Integer.MAX_VALUE;
-    }
 
     @Override
     public final void accept(Context<?> ctx) {
@@ -159,19 +144,8 @@ abstract class AbstractInList<T> extends AbstractCondition {
 
 
 
-
-        // [#7539] Work around https://github.com/ClickHouse/ClickHouse/issues/58242
-        else if (ctx.family() == CLICKHOUSE && anyMatch(values, v -> !(v instanceof Val)))
-            acceptClickHouse(ctx);
         else
             accept0(ctx);
-    }
-
-    private final void acceptClickHouse(Context<?> ctx) {
-        if (!(this instanceof InList))
-            ctx.visit(K_NOT).sql(' ');
-
-        ctx.visit(N_HAS).sql('(').visit(array(values)).sql(", ").visit(field).sql(')');
     }
 
     private final void accept0(Context<?> ctx) {
@@ -179,7 +153,6 @@ abstract class AbstractInList<T> extends AbstractCondition {
     }
 
     private static final <T> void accept1(Context<?> ctx, boolean in, Field<T> field, QueryPartList<Field<T>> values) {
-        int limit = limit(ctx, field, values);
 
 
 
@@ -200,62 +173,58 @@ abstract class AbstractInList<T> extends AbstractCondition {
             else
                 ctx.visit(trueCondition());
         }
+        else if (values.size() > IN_LIMIT) {
+            // [#798] Oracle and some other dialects can only hold 1000 values
+            // in an IN (...) clause
+            switch (ctx.family()) {
 
 
 
 
+                case FIREBIRD: {
+                    ctx.sqlIndentStart('(');
 
+                    for (int i = 0; i < values.size(); i += IN_LIMIT) {
+                        if (i > 0) {
 
+                            // [#1515] The connector depends on the IN / NOT IN
+                            // operator
+                            if (in)
+                                ctx.formatSeparator()
+                                   .visit(K_OR)
+                                   .sql(' ');
+                            else
+                                ctx.formatSeparator()
+                                   .visit(K_AND)
+                                   .sql(' ');
+                        }
 
+                        toSQLSubValues(ctx, field, in, padded(ctx, values.subList(i, Math.min(i + IN_LIMIT, values.size()))));
+                    }
 
-
-
-
-
-
-
-
-
-
-        // [#798] Oracle and some other dialects can only hold 1000 values
-        // in an IN (...) clause
-        else if (REQUIRES_IN_LIMIT.contains(ctx.dialect()) && values.size() > limit) {
-            ctx.sqlIndentStart('(');
-
-            for (int i = 0; i < values.size(); i += limit) {
-                if (i > 0) {
-
-                    // [#1515] The connector depends on the IN / NOT IN
-                    // operator
-                    if (in)
-                        ctx.formatSeparator()
-                           .visit(K_OR)
-                           .sql(' ');
-                    else
-                        ctx.formatSeparator()
-                           .visit(K_AND)
-                           .sql(' ');
+                    ctx.sqlIndentEnd(')');
+                    break;
                 }
 
-                toSQLSubValues(ctx, field, in, padded(ctx, values.subList(i, Math.min(i + limit, values.size())), limit));
+                // Most dialects can handle larger lists
+                default: {
+                    toSQLSubValues(ctx, field, in, values);
+                    break;
+                }
             }
-
-            ctx.sqlIndentEnd(')');
         }
-
-        // Most dialects can handle larger lists
         else
-            toSQLSubValues(ctx, field, in, padded(ctx, values, limit));
+            toSQLSubValues(ctx, field, in, padded(ctx, values));
     }
 
     static final RowN[] rows(List<? extends Field<?>> values) {
         return map(values, v -> row(embeddedFields(v)), RowN[]::new);
     }
 
-    static final <T> List<T> padded(Context<?> ctx, List<T> list, int limit) {
+    static final <T> List<T> padded(Context<?> ctx, List<T> list) {
         return ctx.paramType() == INDEXED && TRUE.equals(ctx.settings().isInListPadding())
             ? new PaddedList<>(list, REQUIRES_IN_LIMIT.contains(ctx.dialect())
-                ? limit
+                ? IN_LIMIT
                 : Integer.MAX_VALUE,
                   defaultIfNull(ctx.settings().getInListPadBase(), 2))
             : list;
@@ -300,24 +269,7 @@ abstract class AbstractInList<T> extends AbstractCondition {
 
             this.delegate = delegate;
             this.realSize = delegate.size();
-            this.padSize = Math.min(maxPadding, padSize(Math.min(maxPadding, realSize), b));
-        }
-
-        static final int padSize(int max, int b) {
-            int n, r = 1;
-
-            // [#18449] Use a loop instead of the previous, simpler log arithmetic to avoid floating point rounding issues:
-            //          Math.min(maxPadding, (int) Math.round(Math.pow(b, Math.ceil(Math.log(realSize) / Math.log(b)))));
-            //          We'll iterate at most 31 times for huge lists and base 2.
-            //          n > 0 is to handle the unlikely event of an overflow.
-            while ((n = r * b) < max && n > 0)
-                r = n;
-
-            return n < 0
-                 ? Integer.MAX_VALUE
-                 : r == max
-                 ? max
-                 : n;
+            this.padSize = Math.min(maxPadding, (int) Math.round(Math.pow(b, Math.ceil(Math.log(realSize) / Math.log(b)))));
         }
 
         @Override

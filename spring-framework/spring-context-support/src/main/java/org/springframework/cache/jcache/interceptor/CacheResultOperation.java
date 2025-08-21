@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,9 @@ package org.springframework.cache.jcache.interceptor;
 import javax.cache.annotation.CacheMethodDetails;
 import javax.cache.annotation.CacheResult;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.cache.interceptor.CacheResolver;
 import org.springframework.cache.interceptor.KeyGenerator;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ExceptionTypeFilter;
 import org.springframework.util.StringUtils;
 
@@ -37,9 +36,11 @@ class CacheResultOperation extends AbstractJCacheKeyOperation<CacheResult> {
 
 	private final ExceptionTypeFilter exceptionTypeFilter;
 
-	private final @Nullable CacheResolver exceptionCacheResolver;
+	@Nullable
+	private final CacheResolver exceptionCacheResolver;
 
-	private final @Nullable String exceptionCacheName;
+	@Nullable
+	private final String exceptionCacheName;
 
 
 	public CacheResultOperation(CacheMethodDetails<CacheResult> methodDetails, CacheResolver cacheResolver,
@@ -72,7 +73,8 @@ class CacheResultOperation extends AbstractJCacheKeyOperation<CacheResult> {
 	 * Return the {@link CacheResolver} instance to use to resolve the cache to
 	 * use for matching exceptions thrown by this operation.
 	 */
-	public @Nullable CacheResolver getExceptionCacheResolver() {
+	@Nullable
+	public CacheResolver getExceptionCacheResolver() {
 		return this.exceptionCacheResolver;
 	}
 
@@ -81,7 +83,8 @@ class CacheResultOperation extends AbstractJCacheKeyOperation<CacheResult> {
 	 * caching exceptions should be disabled.
 	 * @see javax.cache.annotation.CacheResult#exceptionCacheName()
 	 */
-	public @Nullable String getExceptionCacheName() {
+	@Nullable
+	public String getExceptionCacheName() {
 		return this.exceptionCacheName;
 	}
 

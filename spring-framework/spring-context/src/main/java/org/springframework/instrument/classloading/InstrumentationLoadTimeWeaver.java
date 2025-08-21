@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,8 @@ import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.instrument.InstrumentationSavingAgent;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -36,7 +35,7 @@ import org.springframework.util.ClassUtils;
  * follows where <code>spring-instrument-{version}.jar</code> is a JAR file
  * containing the {@link InstrumentationSavingAgent} class shipped with Spring
  * and where <code>{version}</code> is the release version of the Spring
- * Framework (for example, {@code 5.1.5.RELEASE}).
+ * Framework (e.g., {@code 5.1.5.RELEASE}).
  *
  * <p><code>-javaagent:path/to/spring-instrument-{version}.jar</code>
  *
@@ -57,9 +56,11 @@ public class InstrumentationLoadTimeWeaver implements LoadTimeWeaver {
 			InstrumentationLoadTimeWeaver.class.getClassLoader());
 
 
-	private final @Nullable ClassLoader classLoader;
+	@Nullable
+	private final ClassLoader classLoader;
 
-	private final @Nullable Instrumentation instrumentation;
+	@Nullable
+	private final Instrumentation instrumentation;
 
 	private final List<ClassFileTransformer> transformers = new ArrayList<>(4);
 
@@ -141,7 +142,8 @@ public class InstrumentationLoadTimeWeaver implements LoadTimeWeaver {
 	 * @return the Instrumentation instance, or {@code null} if none found
 	 * @see #isInstrumentationAvailable()
 	 */
-	private static @Nullable Instrumentation getInstrumentation() {
+	@Nullable
+	private static Instrumentation getInstrumentation() {
 		if (AGENT_CLASS_PRESENT) {
 			return InstrumentationAccessor.getInstrumentation();
 		}
@@ -169,7 +171,8 @@ public class InstrumentationLoadTimeWeaver implements LoadTimeWeaver {
 
 		private final ClassFileTransformer targetTransformer;
 
-		private final @Nullable ClassLoader targetClassLoader;
+		@Nullable
+		private final ClassLoader targetClassLoader;
 
 		public FilteringClassFileTransformer(
 				ClassFileTransformer targetTransformer, @Nullable ClassLoader targetClassLoader) {
@@ -179,7 +182,8 @@ public class InstrumentationLoadTimeWeaver implements LoadTimeWeaver {
 		}
 
 		@Override
-		public byte @Nullable [] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
+		@Nullable
+		public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
 				ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
 
 			if (this.targetClassLoader != loader) {

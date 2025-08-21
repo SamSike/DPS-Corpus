@@ -21,7 +21,7 @@ import java.util.Map;
 
 import io.debezium.config.Configuration;
 import io.debezium.config.Field;
-import io.debezium.embedded.async.AsyncEmbeddedEngine;
+import io.debezium.embedded.EmbeddedEngine;
 import io.debezium.engine.spi.OffsetCommitPolicy;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.component.debezium.DebeziumConstants;
@@ -101,7 +101,7 @@ public abstract class EmbeddedDebeziumConfiguration implements Cloneable {
                             + "`additionalProperties.`. E.g: `additionalProperties.transactional.id=12345&additionalProperties.schema.registry.url=http://localhost:8811/avro`")
     private Map<String, Object> additionalProperties = new HashMap<>();
 
-    protected EmbeddedDebeziumConfiguration() {
+    public EmbeddedDebeziumConfiguration() {
         ObjectHelper.notNull(configureConnectorClass(), "connectorClass");
         this.connectorClass = configureConnectorClass();
     }
@@ -119,7 +119,7 @@ public abstract class EmbeddedDebeziumConfiguration implements Cloneable {
     }
 
     /**
-     * Configure the Debezium connector class supported by Debezium
+     * Configure the Debezium connector class that is supported by Debezium
      *
      * @return {@link Class}
      */
@@ -163,19 +163,19 @@ public abstract class EmbeddedDebeziumConfiguration implements Cloneable {
     private Configuration createDebeziumEmbeddedEngineConfiguration() {
         final Configuration.Builder configBuilder = Configuration.create();
 
-        addPropertyIfNotNull(configBuilder, AsyncEmbeddedEngine.ENGINE_NAME, name);
-        addPropertyIfNotNull(configBuilder, AsyncEmbeddedEngine.CONNECTOR_CLASS, connectorClass.getName());
-        addPropertyIfNotNull(configBuilder, AsyncEmbeddedEngine.OFFSET_STORAGE, offsetStorage);
-        addPropertyIfNotNull(configBuilder, AsyncEmbeddedEngine.OFFSET_STORAGE_FILE_FILENAME,
+        addPropertyIfNotNull(configBuilder, EmbeddedEngine.ENGINE_NAME, name);
+        addPropertyIfNotNull(configBuilder, EmbeddedEngine.CONNECTOR_CLASS, connectorClass.getName());
+        addPropertyIfNotNull(configBuilder, EmbeddedEngine.OFFSET_STORAGE, offsetStorage);
+        addPropertyIfNotNull(configBuilder, EmbeddedEngine.OFFSET_STORAGE_FILE_FILENAME,
                 offsetStorageFileName);
-        addPropertyIfNotNull(configBuilder, AsyncEmbeddedEngine.OFFSET_STORAGE_KAFKA_TOPIC, offsetStorageTopic);
-        addPropertyIfNotNull(configBuilder, AsyncEmbeddedEngine.OFFSET_STORAGE_KAFKA_PARTITIONS,
+        addPropertyIfNotNull(configBuilder, EmbeddedEngine.OFFSET_STORAGE_KAFKA_TOPIC, offsetStorageTopic);
+        addPropertyIfNotNull(configBuilder, EmbeddedEngine.OFFSET_STORAGE_KAFKA_PARTITIONS,
                 offsetStoragePartitions);
-        addPropertyIfNotNull(configBuilder, AsyncEmbeddedEngine.OFFSET_STORAGE_KAFKA_REPLICATION_FACTOR,
+        addPropertyIfNotNull(configBuilder, EmbeddedEngine.OFFSET_STORAGE_KAFKA_REPLICATION_FACTOR,
                 offsetStorageReplicationFactor);
-        addPropertyIfNotNull(configBuilder, AsyncEmbeddedEngine.OFFSET_COMMIT_POLICY, offsetCommitPolicy);
-        addPropertyIfNotNull(configBuilder, AsyncEmbeddedEngine.OFFSET_FLUSH_INTERVAL_MS, offsetFlushIntervalMs);
-        addPropertyIfNotNull(configBuilder, AsyncEmbeddedEngine.OFFSET_COMMIT_TIMEOUT_MS, offsetCommitTimeoutMs);
+        addPropertyIfNotNull(configBuilder, EmbeddedEngine.OFFSET_COMMIT_POLICY, offsetCommitPolicy);
+        addPropertyIfNotNull(configBuilder, EmbeddedEngine.OFFSET_FLUSH_INTERVAL_MS, offsetFlushIntervalMs);
+        addPropertyIfNotNull(configBuilder, EmbeddedEngine.OFFSET_COMMIT_TIMEOUT_MS, offsetCommitTimeoutMs);
 
         if (internalKeyConverter != null && internalValueConverter != null) {
             configBuilder.with("internal.key.converter", internalKeyConverter);
@@ -391,8 +391,8 @@ public abstract class EmbeddedDebeziumConfiguration implements Cloneable {
 
     /**
      * Sets additional properties for debezium components in case they can't be set directly on the camel configurations
-     * (e.g: setting Kafka Connect properties needed by Debezium engine, for example, setting KafkaOffsetBackingStore),
-     * the properties have to be prefixed with `additionalProperties.`. E.g.:
+     * (e.g: setting Kafka Connect properties needed by Debezium engine, for example setting KafkaOffsetBackingStore),
+     * the properties have to be prefixed with `additionalProperties.`. E.g:
      * `additionalProperties.transactional.id=12345&additionalProperties.schema.registry.url=http://localhost:8811/avro`
      */
     public void setAdditionalProperties(Map<String, Object> additionalProperties) {

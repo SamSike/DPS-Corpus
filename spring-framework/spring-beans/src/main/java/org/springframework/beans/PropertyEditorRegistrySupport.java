@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import org.jspecify.annotations.Nullable;
 import org.xml.sax.InputSource;
 
 import org.springframework.beans.propertyeditors.ByteArrayPropertyEditor;
@@ -72,9 +71,11 @@ import org.springframework.beans.propertyeditors.URIEditor;
 import org.springframework.beans.propertyeditors.URLEditor;
 import org.springframework.beans.propertyeditors.UUIDEditor;
 import org.springframework.beans.propertyeditors.ZoneIdEditor;
+import org.springframework.core.SpringProperties;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourceArrayPropertyEditor;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -92,28 +93,39 @@ import org.springframework.util.ClassUtils;
  */
 public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 
-	private @Nullable ConversionService conversionService;
+	/**
+	 * Boolean flag controlled by a {@code spring.xml.ignore} system property that instructs Spring to
+	 * ignore XML, i.e. to not initialize the XML-related infrastructure.
+	 * <p>The default is "false".
+	 */
+	private static final boolean shouldIgnoreXml = SpringProperties.getFlag("spring.xml.ignore");
+
+
+	@Nullable
+	private ConversionService conversionService;
 
 	private boolean defaultEditorsActive = false;
 
 	private boolean configValueEditorsActive = false;
 
-	private @Nullable PropertyEditorRegistrar defaultEditorRegistrar;
-
-	@SuppressWarnings("NullAway.Init")
+	@Nullable
 	private Map<Class<?>, PropertyEditor> defaultEditors;
 
-	private @Nullable Map<Class<?>, PropertyEditor> overriddenDefaultEditors;
+	@Nullable
+	private Map<Class<?>, PropertyEditor> overriddenDefaultEditors;
 
-	private @Nullable Map<Class<?>, PropertyEditor> customEditors;
+	@Nullable
+	private Map<Class<?>, PropertyEditor> customEditors;
 
-	private @Nullable Map<String, CustomEditorHolder> customEditorsForPath;
+	@Nullable
+	private Map<String, CustomEditorHolder> customEditorsForPath;
 
-	private @Nullable Map<Class<?>, PropertyEditor> customEditorCache;
+	@Nullable
+	private Map<Class<?>, PropertyEditor> customEditorCache;
 
 
 	/**
-	 * Specify a {@link ConversionService} to use for converting
+	 * Specify a Spring 3.0 ConversionService to use for converting
 	 * property values, as an alternative to JavaBeans PropertyEditors.
 	 */
 	public void setConversionService(@Nullable ConversionService conversionService) {
@@ -123,7 +135,8 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 	/**
 	 * Return the associated ConversionService, if any.
 	 */
-	public @Nullable ConversionService getConversionService() {
+	@Nullable
+	public ConversionService getConversionService() {
 		return this.conversionService;
 	}
 
@@ -152,19 +165,6 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 	}
 
 	/**
-	 * Set a registrar for default editors, as a lazy way of overriding default editors.
-	 * <p>This is expected to be a collaborator with {@link PropertyEditorRegistrySupport},
-	 * downcasting the given {@link PropertyEditorRegistry} accordingly and calling
-	 * {@link #overrideDefaultEditor} for registering additional default editors on it.
-	 * @param registrar the registrar to call when default editors are actually needed
-	 * @since 6.2.3
-	 * @see #overrideDefaultEditor
-	 */
-	public void setDefaultEditorRegistrar(PropertyEditorRegistrar registrar) {
-		this.defaultEditorRegistrar = registrar;
-	}
-
-	/**
 	 * Override the default editor for the specified type with the given property editor.
 	 * <p>Note that this is different from registering a custom editor in that the editor
 	 * semantically still is a default editor. A ConversionService will override such a
@@ -187,12 +187,10 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 	 * @return the default editor, or {@code null} if none found
 	 * @see #registerDefaultEditors
 	 */
-	public @Nullable PropertyEditor getDefaultEditor(Class<?> requiredType) {
+	@Nullable
+	public PropertyEditor getDefaultEditor(Class<?> requiredType) {
 		if (!this.defaultEditorsActive) {
 			return null;
-		}
-		if (this.overriddenDefaultEditors == null && this.defaultEditorRegistrar != null) {
-			this.defaultEditorRegistrar.registerCustomEditors(this);
 		}
 		if (this.overriddenDefaultEditors != null) {
 			PropertyEditor editor = this.overriddenDefaultEditors.get(requiredType);
@@ -220,7 +218,9 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 		this.defaultEditors.put(Currency.class, new CurrencyEditor());
 		this.defaultEditors.put(File.class, new FileEditor());
 		this.defaultEditors.put(InputStream.class, new InputStreamEditor());
-		this.defaultEditors.put(InputSource.class, new InputSourceEditor());
+		if (!shouldIgnoreXml) {
+			this.defaultEditors.put(InputSource.class, new InputSourceEditor());
+		}
 		this.defaultEditors.put(Locale.class, new LocaleEditor());
 		this.defaultEditors.put(Path.class, new PathEditor());
 		this.defaultEditors.put(Pattern.class, new PatternEditor());
@@ -322,7 +322,8 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 	}
 
 	@Override
-	public @Nullable PropertyEditor findCustomEditor(@Nullable Class<?> requiredType, @Nullable String propertyPath) {
+	@Nullable
+	public PropertyEditor findCustomEditor(@Nullable Class<?> requiredType, @Nullable String propertyPath) {
 		Class<?> requiredTypeToUse = requiredType;
 		if (propertyPath != null) {
 			if (this.customEditorsForPath != null) {
@@ -381,7 +382,8 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 	 * @return the type of the property, or {@code null} if not determinable
 	 * @see BeanWrapper#getPropertyType(String)
 	 */
-	protected @Nullable Class<?> getPropertyType(String propertyPath) {
+	@Nullable
+	protected Class<?> getPropertyType(String propertyPath) {
 		return null;
 	}
 
@@ -391,7 +393,8 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 	 * @param requiredType the type to look for
 	 * @return the custom editor, or {@code null} if none specific for this property
 	 */
-	private @Nullable PropertyEditor getCustomEditor(String propertyName, @Nullable Class<?> requiredType) {
+	@Nullable
+	private PropertyEditor getCustomEditor(String propertyName, @Nullable Class<?> requiredType) {
 		CustomEditorHolder holder =
 				(this.customEditorsForPath != null ? this.customEditorsForPath.get(propertyName) : null);
 		return (holder != null ? holder.getPropertyEditor(requiredType) : null);
@@ -405,7 +408,8 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 	 * @return the custom editor, or {@code null} if none found for this type
 	 * @see java.beans.PropertyEditor#getAsText()
 	 */
-	private @Nullable PropertyEditor getCustomEditor(@Nullable Class<?> requiredType) {
+	@Nullable
+	private PropertyEditor getCustomEditor(@Nullable Class<?> requiredType) {
 		if (requiredType == null || this.customEditors == null) {
 			return null;
 		}
@@ -418,19 +422,16 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 			}
 			if (editor == null) {
 				// Find editor for superclass or interface.
-				for (Map.Entry<Class<?>, PropertyEditor> entry : this.customEditors.entrySet()) {
-					Class<?> key = entry.getKey();
+				for (Iterator<Class<?>> it = this.customEditors.keySet().iterator(); it.hasNext() && editor == null;) {
+					Class<?> key = it.next();
 					if (key.isAssignableFrom(requiredType)) {
-						editor = entry.getValue();
+						editor = this.customEditors.get(key);
 						// Cache editor for search type, to avoid the overhead
 						// of repeated assignable-from checks.
 						if (this.customEditorCache == null) {
 							this.customEditorCache = new HashMap<>();
 						}
 						this.customEditorCache.put(requiredType, editor);
-						if (editor != null) {
-							break;
-						}
 					}
 				}
 			}
@@ -444,7 +445,8 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 	 * @param propertyName the name of the property
 	 * @return the property type, or {@code null} if not determinable
 	 */
-	protected @Nullable Class<?> guessPropertyTypeFromEditors(String propertyName) {
+	@Nullable
+	protected Class<?> guessPropertyTypeFromEditors(String propertyName) {
 		if (this.customEditorsForPath != null) {
 			CustomEditorHolder editorHolder = this.customEditorsForPath.get(propertyName);
 			if (editorHolder == null) {
@@ -531,7 +533,8 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 
 		private final PropertyEditor propertyEditor;
 
-		private final @Nullable Class<?> registeredType;
+		@Nullable
+		private final Class<?> registeredType;
 
 		private CustomEditorHolder(PropertyEditor propertyEditor, @Nullable Class<?> registeredType) {
 			this.propertyEditor = propertyEditor;
@@ -542,11 +545,13 @@ public class PropertyEditorRegistrySupport implements PropertyEditorRegistry {
 			return this.propertyEditor;
 		}
 
-		private @Nullable Class<?> getRegisteredType() {
+		@Nullable
+		private Class<?> getRegisteredType() {
 			return this.registeredType;
 		}
 
-		private @Nullable PropertyEditor getPropertyEditor(@Nullable Class<?> requiredType) {
+		@Nullable
+		private PropertyEditor getPropertyEditor(@Nullable Class<?> requiredType) {
 			// Special case: If no required type specified, which usually only happens for
 			// Collection elements, or required type is not assignable to registered type,
 			// which usually only happens for generic properties of type Object -

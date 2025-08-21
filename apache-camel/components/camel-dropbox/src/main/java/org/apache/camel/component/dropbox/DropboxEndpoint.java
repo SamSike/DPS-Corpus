@@ -31,7 +31,6 @@ import org.apache.camel.component.dropbox.integration.producer.DropboxSearchProd
 import org.apache.camel.component.dropbox.util.DropboxConstants;
 import org.apache.camel.component.dropbox.util.DropboxException;
 import org.apache.camel.component.dropbox.util.DropboxOperation;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.DefaultEndpoint;
@@ -43,9 +42,9 @@ import org.slf4j.LoggerFactory;
  */
 @UriEndpoint(firstVersion = "2.14.0", scheme = "dropbox", title = "Dropbox", syntax = "dropbox:operation",
              category = { Category.CLOUD, Category.FILE, Category.API }, headersClass = DropboxConstants.class)
-public class DropboxEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
+public class DropboxEndpoint extends DefaultEndpoint {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DropboxEndpoint.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(DropboxEndpoint.class);
 
     @UriParam
     private DropboxConfiguration configuration;
@@ -58,23 +57,13 @@ public class DropboxEndpoint extends DefaultEndpoint implements EndpointServiceL
         this.configuration = configuration;
     }
 
-    @Override
-    public String getServiceUrl() {
-        return "api.dropboxapi.com";
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "rest";
-    }
-
     public DropboxConfiguration getConfiguration() {
         return configuration;
     }
 
     /**
      * Create one of the camel producer available based on the configuration
-     *
+     * 
      * @return           the camel producer
      * @throws Exception
      */
@@ -99,7 +88,7 @@ public class DropboxEndpoint extends DefaultEndpoint implements EndpointServiceL
 
     /**
      * Create one of the camel consumer available based on the configuration
-     *
+     * 
      * @param  processor the given processor
      * @return           the camel consumer
      * @throws Exception

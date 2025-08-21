@@ -38,11 +38,13 @@ public class GoogleSheetsComponent
     private GoogleSheetsClientFactory clientFactory;
 
     public GoogleSheetsComponent() {
-        super(GoogleSheetsApiName.class, GoogleSheetsApiCollection.getCollection());
+        super(GoogleSheetsEndpoint.class, GoogleSheetsApiName.class, GoogleSheetsApiCollection.getCollection());
+        registerExtension(new GoogleSheetsVerifierExtension("google-sheets"));
     }
 
     public GoogleSheetsComponent(CamelContext context) {
-        super(context, GoogleSheetsApiName.class, GoogleSheetsApiCollection.getCollection());
+        super(context, GoogleSheetsEndpoint.class, GoogleSheetsApiName.class, GoogleSheetsApiCollection.getCollection());
+        registerExtension(new GoogleSheetsVerifierExtension("google-sheets", context));
     }
 
     @Override
@@ -55,11 +57,11 @@ public class GoogleSheetsComponent
             if (config.getClientId() != null && !config.getClientId().isBlank()
                     && config.getClientSecret() != null && !config.getClientSecret().isBlank()) {
                 client = getClientFactory().makeClient(config.getClientId(),
-                        config.getClientSecret(), config.getScopesAsList(),
+                        config.getClientSecret(), config.getScopes(),
                         config.getApplicationName(), config.getRefreshToken(), config.getAccessToken());
             } else if (config.getServiceAccountKey() != null && !config.getServiceAccountKey().isBlank()) {
                 client = getClientFactory().makeClient(getCamelContext(), config.getServiceAccountKey(),
-                        config.getScopesAsList(), config.getApplicationName(), config.getDelegate());
+                        config.getScopes(), config.getApplicationName(), config.getDelegate());
             } else {
                 throw new IllegalArgumentException(
                         "(clientId and clientSecret) or serviceAccountKey are required to create Google Sheets client");

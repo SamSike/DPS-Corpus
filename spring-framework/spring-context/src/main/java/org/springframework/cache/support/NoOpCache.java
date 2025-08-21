@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,9 @@
 package org.springframework.cache.support;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.cache.Cache;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -61,17 +58,20 @@ public class NoOpCache implements Cache {
 	}
 
 	@Override
-	public @Nullable ValueWrapper get(Object key) {
+	@Nullable
+	public ValueWrapper get(Object key) {
 		return null;
 	}
 
 	@Override
-	public <T> @Nullable T get(Object key, @Nullable Class<T> type) {
+	@Nullable
+	public <T> T get(Object key, @Nullable Class<T> type) {
 		return null;
 	}
 
 	@Override
-	public <T> @Nullable T get(Object key, Callable<T> valueLoader) {
+	@Nullable
+	public <T> T get(Object key, Callable<T> valueLoader) {
 		try {
 			return valueLoader.call();
 		}
@@ -81,21 +81,12 @@ public class NoOpCache implements Cache {
 	}
 
 	@Override
-	public @Nullable CompletableFuture<?> retrieve(Object key) {
-		return null;
-	}
-
-	@Override
-	public <T> CompletableFuture<T> retrieve(Object key, Supplier<CompletableFuture<T>> valueLoader) {
-		return valueLoader.get();
-	}
-
-	@Override
 	public void put(Object key, @Nullable Object value) {
 	}
 
 	@Override
-	public @Nullable ValueWrapper putIfAbsent(Object key, @Nullable Object value) {
+	@Nullable
+	public ValueWrapper putIfAbsent(Object key, @Nullable Object value) {
 		return null;
 	}
 

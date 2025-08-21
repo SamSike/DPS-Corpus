@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RoutingSlipEventNotifierTest extends ContextTestSupport {
 
-    private final MyEventNotifier notifier = new MyEventNotifier();
+    private MyEventNotifier notifier = new MyEventNotifier();
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
@@ -68,7 +68,7 @@ public class RoutingSlipEventNotifierTest extends ContextTestSupport {
         private int sent;
 
         @Override
-        public void notify(CamelEvent event) {
+        public void notify(CamelEvent event) throws Exception {
             if (event instanceof ExchangeSendingEvent) {
                 log.info("Sending: {}", event);
                 sending++;

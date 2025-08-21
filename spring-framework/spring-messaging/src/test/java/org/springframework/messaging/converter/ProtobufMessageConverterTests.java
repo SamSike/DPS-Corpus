@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,12 @@
 
 package org.springframework.messaging.converter;
 
-import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 
+import com.google.protobuf.ExtensionRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.skyscreamer.jsonassert.JSONAssert;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
@@ -34,90 +35,113 @@ import static org.springframework.messaging.MessageHeaders.CONTENT_TYPE;
 import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON;
 
 /**
- * Tests for {@link ProtobufMessageConverter}.
+ * Test suite for {@link ProtobufMessageConverter}.
  *
  * @author Parviz Rozikov
- * @author Sam Brannen
  */
-class ProtobufMessageConverterTests {
+public class ProtobufMessageConverterTests {
 
-	private final ProtobufMessageConverter converter = new ProtobufMessageConverter();
+	private ProtobufMessageConverter converter;
 
-	private Msg testMsg = Msg.newBuilder().setFoo("Foo").setBlah(SecondMsg.newBuilder().setBlah(123).build()).build();
+	private ExtensionRegistry extensionRegistry;
 
-	private Message<byte[]> message = MessageBuilder.withPayload(this.testMsg.toByteArray())
-			.setHeader(CONTENT_TYPE, ProtobufMessageConverter.PROTOBUF).build();
+	private Msg testMsg;
 
-	private Message<byte[]> messageWithoutContentType = MessageBuilder.withPayload(this.testMsg.toByteArray()).build();
+	private Message<byte[]> message;
 
-	private final Message<byte[]> messageJson = MessageBuilder.withPayload("""
-			{
-				"foo": "Foo",
-				"blah": {
-					"blah": 123
-				}
-			}
-			""".getBytes(StandardCharsets.UTF_8))
-			.setHeader(CONTENT_TYPE, APPLICATION_JSON)
-			.build();
+	private Message<byte[]> messageWithoutContentType;
+
+	private Message<String> messageJson;
+
+
+	@BeforeEach
+	public void setup() {
+		this.extensionRegistry = mock(ExtensionRegistry.class);
+		this.converter = new ProtobufMessageConverter();
+		this.testMsg = Msg.newBuilder().setFoo("Foo").setBlah(SecondMsg.newBuilder().setBlah(123).build()).build();
+		this.message = MessageBuilder.withPayload(this.testMsg.toByteArray())
+				.setHeader(CONTENT_TYPE, ProtobufMessageConverter.PROTOBUF).build();
+		this.messageWithoutContentType = MessageBuilder.withPayload(this.testMsg.toByteArray()).build();
+		this.messageJson = MessageBuilder.withPayload(
+					"{\n" +
+					"  \"foo\": \"Foo\",\n" +
+					"  \"blah\": {\n" +
+					"    \"blah\": 123\n" +
+					"  }\n" +
+						"}")
+				.setHeader(CONTENT_TYPE, APPLICATION_JSON)
+				.build();
+	}
 
 
 	@Test
-	void extensionRegistryNull() {
+	public void extensionRegistryNull() {
 		ProtobufMessageConverter converter = new ProtobufMessageConverter(null);
 		assertThat(converter.extensionRegistry).isNotNull();
 	}
 
-	@Test
-	void defaultContentType() {
-		assertThat(converter.getDefaultContentType(testMsg)).isEqualTo(ProtobufMessageConverter.PROTOBUF);
-	}
 
 	@Test
-	void canConvertFrom() {
+	public void canConvertFrom() {
 		assertThat(converter.canConvertFrom(message, Msg.class)).isTrue();
 		assertThat(converter.canConvertFrom(messageWithoutContentType, Msg.class)).isTrue();
 		assertThat(converter.canConvertFrom(messageJson, Msg.class)).isTrue();
 	}
 
 	@Test
-	void canConvertTo() {
+	public void canConvertTo() {
 		assertThat(converter.canConvertTo(testMsg, message.getHeaders())).isTrue();
 		assertThat(converter.canConvertTo(testMsg, messageWithoutContentType.getHeaders())).isTrue();
 		assertThat(converter.canConvertTo(testMsg, messageJson.getHeaders())).isTrue();
 	}
 
+
 	@Test
-	void convertFrom() {
-		assertThat(converter.fromMessage(message, Msg.class)).isEqualTo(testMsg);
+	public void convertFrom() {
+		final Msg msg = (Msg) converter.fromMessage(message, Msg.class);
+		assertThat(msg).isEqualTo(testMsg);
 	}
 
 	@Test
-	void convertFromNoContentType(){
-		assertThat(converter.fromMessage(messageWithoutContentType, Msg.class)).isEqualTo(testMsg);
-	}
-
-	@Test
-	void convertTo() {
-		Message<?> message = converter.toMessage(testMsg, this.message.getHeaders());
+	public void convertTo() {
+		final Message<?> message = converter.toMessage(this.testMsg, this.message.getHeaders());
 		assertThat(message).isNotNull();
 		assertThat(message.getPayload()).isEqualTo(this.message.getPayload());
 	}
 
+
 	@Test
-	void jsonWithGoogleProtobuf() throws Exception {
-		ProtobufMessageConverter converter = new ProtobufMessageConverter(
+	public void convertFromNoContentType(){
+		Msg result = (Msg) converter.fromMessage(messageWithoutContentType, Msg.class);
+		assertThat(result).isEqualTo(testMsg);
+	}
+
+
+	@Test
+	public void defaultContentType() {
+		assertThat(converter.getDefaultContentType(testMsg)).isEqualTo(ProtobufMessageConverter.PROTOBUF);
+	}
+
+	@Test
+	public void testJsonWithGoogleProtobuf() {
+		this.converter = new ProtobufMessageConverter(
 				new ProtobufMessageConverter.ProtobufJavaUtilSupport(null, null),
-				mock());
+				extensionRegistry);
+
+		final Map<String, Object> headers = new HashMap<>();
+		headers.put(CONTENT_TYPE, APPLICATION_JSON);
 
 		//convertTo
-		Message<?> message = converter.toMessage(testMsg, new MessageHeaders(Map.of(CONTENT_TYPE, APPLICATION_JSON)));
+		final Message<?> message = this.converter.toMessage(this.testMsg, new MessageHeaders(headers));
 		assertThat(message).isNotNull();
 		assertThat(message.getHeaders().get(CONTENT_TYPE)).isEqualTo(APPLICATION_JSON);
-		JSONAssert.assertEquals(new String(messageJson.getPayload()), message.getPayload().toString(), true);
+		assertThat(((String) message.getPayload()).length() > 0).isTrue();
+		assertThat(((String) message.getPayload()).isEmpty()).as("Body is empty").isFalse();
+		assertThat(((String) message.getPayload())).isEqualTo(this.messageJson.getPayload());
 
 		//convertFrom
-		assertThat(converter.fromMessage(messageJson, Msg.class)).isEqualTo(testMsg);
+		final Msg msg = (Msg) converter.fromMessage(message, Msg.class);
+		assertThat(msg).isEqualTo(this.testMsg);
 	}
 
 }

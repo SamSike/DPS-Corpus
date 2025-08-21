@@ -28,6 +28,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.spring.junit5.CamelSpringTest;
 import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -83,14 +84,14 @@ public class CounterRouteTest extends CamelSpringTestSupport {
                         .to("mock:out");
 
                 from("direct:in-4")
-                        .to("micrometer:counter:D?increment=${body.length}&tags.a=${body.length}")
+                        .to("micrometer:counter:D?increment=${body.length}&tags=a=${body.length}")
                         .to("mock:out");
             }
         };
     }
 
-    @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() {
         endpoint.reset();
     }
 

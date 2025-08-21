@@ -28,7 +28,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class LambdaConverter implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String from;
@@ -83,7 +83,7 @@ public class LambdaConverter implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether to use {@link org.jooq.Converter#ofNullable(Class, Class, java.util.function.Function, java.util.function.Function)} or {@link org.jooq.Converter#of(Class, Class, java.util.function.Function, java.util.function.Function)}.
+     * Sets the value of the nullable property.
      * 
      * @param value
      *     allowed object is
@@ -112,10 +112,6 @@ public class LambdaConverter implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Whether to use {@link org.jooq.Converter#ofNullable(Class, Class, java.util.function.Function, java.util.function.Function)} or {@link org.jooq.Converter#of(Class, Class, java.util.function.Function, java.util.function.Function)}.
-     * 
-     */
     public LambdaConverter withNullable(Boolean value) {
         setNullable(value);
         return this;

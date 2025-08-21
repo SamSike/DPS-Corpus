@@ -40,7 +40,7 @@ public class HeaderFilterStrategyComponentTest {
         }
 
         @Override
-        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) {
+        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
             return null;
         }
     }
@@ -60,12 +60,12 @@ public class HeaderFilterStrategyComponentTest {
         }
 
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             return null;
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             return null;
         }
 

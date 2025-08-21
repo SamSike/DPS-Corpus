@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -44,21 +44,24 @@ import static org.jooq.impl.DSL.xmlserializeContent;
 import static org.jooq.impl.Multiset.NO_SUPPORT_JSONB_COMPARE;
 import static org.jooq.impl.Multiset.NO_SUPPORT_JSON_COMPARE;
 import static org.jooq.impl.Multiset.NO_SUPPORT_XML_COMPARE;
-import static org.jooq.impl.Multiset.arrayAggEmulation;
 import static org.jooq.impl.Multiset.jsonArrayaggEmulation;
 import static org.jooq.impl.Multiset.jsonbArrayaggEmulation;
 import static org.jooq.impl.Multiset.nResult;
 import static org.jooq.impl.Multiset.returningClob;
 import static org.jooq.impl.Multiset.xmlaggEmulation;
 import static org.jooq.impl.Names.N_MULTISET_AGG;
+import static org.jooq.impl.Names.N_RESULT;
 import static org.jooq.impl.SQLDataType.VARCHAR;
 import static org.jooq.impl.Tools.emulateMultiset;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_MULTISET_CONDITION;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_MULTISET_CONTENT;
 
-import org.jooq.ArrayAggOrderByStep;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
+
 import org.jooq.Context;
 import org.jooq.Field;
+import org.jooq.Function1;
 import org.jooq.JSON;
 import org.jooq.JSONArrayAggOrderByStep;
 import org.jooq.JSONB;
@@ -112,7 +115,7 @@ final class MultisetAgg<R extends Record> extends AbstractAggregateFunction<Resu
     private final void accept0(Context<?> ctx, boolean multisetCondition) {
         switch (emulateMultiset(ctx.configuration())) {
             case JSON: {
-                JSONArrayAggOrderByStep<JSON> order = jsonArrayaggEmulation(ctx, row, true, distinct);
+                JSONArrayAggOrderByStep<JSON> order = jsonArrayaggEmulation(ctx, row, true);
 
                 Field<?> f = multisetCondition
                     ? fo((AbstractAggregateFunction<?>) returningClob(ctx, order.orderBy(row.fields())))
@@ -127,7 +130,7 @@ final class MultisetAgg<R extends Record> extends AbstractAggregateFunction<Resu
             }
 
             case JSONB: {
-                JSONArrayAggOrderByStep<JSONB> order = jsonbArrayaggEmulation(ctx, row, true, distinct);
+                JSONArrayAggOrderByStep<JSONB> order = jsonbArrayaggEmulation(ctx, row, true);
 
                 Field<?> f = multisetCondition
                     ? fo((AbstractAggregateFunction<?>) returningClob(ctx, order.orderBy(row.fields())))
@@ -159,16 +162,14 @@ final class MultisetAgg<R extends Record> extends AbstractAggregateFunction<Resu
                 break;
             }
 
-            case NATIVE: {
-                ArrayAggOrderByStep<?> order = arrayAggEmulation(row, true);
-
-                ctx.visit(multisetCondition
-                    ? fo(order.orderBy(row.fields()))
-                    : ofo((AbstractAggregateFunction<?>) order)
-                );
-
+            case NATIVE:
+                ctx.visit(N_MULTISET_AGG).sql('(');
+                acceptArguments1(ctx, new QueryPartListView<>(arguments.get(0)));
+                acceptOrderBy(ctx);
+                ctx.sql(')');
+                acceptFilterClause(ctx);
+                acceptOverClause(ctx);
                 break;
-            }
         }
     }
 

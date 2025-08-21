@@ -27,12 +27,12 @@ import org.slf4j.LoggerFactory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BeanOgnMethodWithXPathInjectionTest extends ContextTestSupport {
-    private static final Logger LOG = LoggerFactory.getLogger(BeanOgnMethodWithXPathInjectionTest.class);
-    protected final MyBean myBean = new MyBean();
-    protected final MyOtherBean myOtherBean = new MyOtherBean(myBean);
+    private static final Logger LOG = LoggerFactory.getLogger(BeanRouteTest.class);
+    protected MyBean myBean = new MyBean();
+    protected MyOtherBean myOtherBean = new MyOtherBean(myBean);
 
     @Test
-    public void testSendMessage() {
+    public void testSendMessage() throws Exception {
         String expectedBody = "<env:Envelope xmlns:env='http://www.w3.org/2003/05/soap-envelope'><env:Body>"
                               + "<foo>bar</foo></env:Body></env:Envelope>";
 
@@ -44,7 +44,7 @@ public class BeanOgnMethodWithXPathInjectionTest extends ContextTestSupport {
     }
 
     @Test
-    public void testSendTwoMessages() {
+    public void testSendTwoMessages() throws Exception {
         // 1st message
         String expectedBody = "<env:Envelope xmlns:env='http://www.w3.org/2003/05/soap-envelope'><env:Body>"
                               + "<foo>bar</foo></env:Body></env:Envelope>";
@@ -67,8 +67,8 @@ public class BeanOgnMethodWithXPathInjectionTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("myBean", myBean);
         answer.bind("myOtherBean", myOtherBean);
         return answer;
@@ -109,7 +109,7 @@ public class BeanOgnMethodWithXPathInjectionTest extends ContextTestSupport {
         public String read(String body, @XPath("/soap:Envelope/soap:Body/foo/text()") String foo) {
             this.foo = foo;
             this.body = body;
-            LOG.info("read() method called on {}", this);
+            LOG.info("read() method called on " + this);
             return foo;
         }
     }

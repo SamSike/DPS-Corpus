@@ -27,16 +27,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SimpleProcessorTraceableTest extends ContextTestSupport {
 
     @Test
-    public void testProcess() {
+    public void testProcess() throws Exception {
         String out = template.requestBody("direct:start", "Hello World", String.class);
         assertEquals("Bye World", out);
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setTracing(true);
 
                 from("direct:start").process(new MyProcessor());
@@ -44,10 +44,10 @@ public class SimpleProcessorTraceableTest extends ContextTestSupport {
         };
     }
 
-    private static class MyProcessor implements Processor, org.apache.camel.Traceable {
+    private class MyProcessor implements Processor, org.apache.camel.Traceable {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             exchange.getMessage().setBody("Bye World");
         }
 

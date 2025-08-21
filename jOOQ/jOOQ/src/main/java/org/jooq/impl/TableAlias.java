@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,16 +38,15 @@
 
 package org.jooq.impl;
 
-import static org.jooq.impl.Tools.CONFIG;
-import static org.jooq.impl.Tools.removeGenerator;
-
 import java.util.List;
 import java.util.function.Predicate;
 
 import org.jooq.Clause;
 import org.jooq.Context;
+import org.jooq.DataType;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Generator;
 import org.jooq.Name;
 import org.jooq.QueryPart;
 import org.jooq.Record;
@@ -62,40 +61,27 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author Lukas Eder
  */
-final class TableAlias<R extends Record>
-extends
-    AbstractTable<R>
-implements
-    QOM.TableAlias<R>,
-    ScopeMappable,
-    ScopeNestable,
-    SimpleCheckQueryPart
-{
+final class TableAlias<R extends Record> extends AbstractTable<R> implements QOM.TableAlias<R> {
 
     final Alias<Table<R>>   alias;
     transient FieldsImpl<R> aliasedFields;
 
     TableAlias(Table<R> table, Name alias) {
-        this(table, alias, null, false);
+        this(table, alias, null, c -> false);
     }
 
-    TableAlias(Table<R> table, Name alias, boolean wrapInParentheses) {
+    TableAlias(Table<R> table, Name alias, Predicate<Context<?>> wrapInParentheses) {
         this(table, alias, null, wrapInParentheses);
     }
 
     TableAlias(Table<R> table, Name alias, Name[] fieldAliases) {
-        this(table, alias, fieldAliases, false);
+        this(table, alias, fieldAliases, c -> false);
     }
 
-    TableAlias(Table<R> table, Name alias, Name[] fieldAliases, boolean wrapInParentheses) {
+    TableAlias(Table<R> table, Name alias, Name[] fieldAliases, Predicate<Context<?>> wrapInParentheses) {
         super(table.getOptions(), alias, table.getSchema());
 
         this.alias = new Alias<>(table, this, alias, fieldAliases, wrapInParentheses);
-    }
-
-    @Override
-    public final boolean isSimple(Context<?> ctx) {
-        return !ctx.declareTables();
     }
 
     /**
@@ -103,21 +89,32 @@ implements
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private final FieldsImpl<R> initFieldAliases() {
-
-        // [#13418]
         List<Field<?>> result = Tools.map(this.alias.wrapped().fieldsRow().fields(), (f, i) -> new TableFieldImpl(
-              alias.hasFieldAliases() && alias.fieldAliases.length > i
+              alias.fieldAliases != null && alias.fieldAliases.length > i
             ? alias.fieldAliases[i]
-            : f.getUnqualifiedName(), removeGenerator(CONFIG.get(), f.getDataType()), this, f.getCommentPart(), f.getBinding()
+            : f.getUnqualifiedName(), removeGenerator(f.getDataType()), this, f.getCommentPart(), f.getBinding()
         ));
 
         return new FieldsImpl<>(result);
     }
 
+    static final <T> DataType<T> removeGenerator(DataType<T> dataType) {
+
+
+
+
+
+
+
+
+
+        return dataType;
+    }
+
     /**
      * Get the aliased table wrapped by this table.
      */
-    final Table<R> getAliasedTable() {
+    Table<R> getAliasedTable() {
         if (alias != null)
             return alias.wrapped();
 
@@ -151,26 +148,7 @@ implements
 
     @Override
     public final void accept(Context<?> ctx) {
-
-        // [#9814] [#12579] Derived tables and similar can't see the current scope
-        if (ctx.declareTables() && !(alias.wrapped instanceof TableImpl)) {
-
-            // [#9814] TODO: Implement LATERAL semantics (without it, lateral join paths will break!)
-            // [#9814] TODO: Once this is implemented, move the logic to Tools.visitSubquery() to be more generic
-            // [#9814] TOOD: Avoid this logic if unnecessary (e.g. RenderTable makes it necessary)
-            // List<Table<?>> tables = collect(ctx.currentScopeParts((Class<Table<?>>) (Class) Table.class));
-            //
-            // for (Table<?> t : tables)
-            //     ctx.scopeHide(t);
-            //
-            // ctx.visit(alias);
-            //
-            // for (Table<?> t : tables)
-            //     ctx.scopeShow(t);
-            ctx.scopeHide(this).visit(alias).scopeShow(this);
-        }
-        else
-            ctx.visit(alias);
+        ctx.visit(alias);
     }
 
     @Override // Avoid AbstractTable implementation
@@ -221,20 +199,9 @@ implements
     }
 
     @Override
-    public final Table<R> $aliased() {
-        return $table();
-    }
-
-    @Override
-    public final @NotNull Name $alias() {
+    public final Name $alias() {
         return getUnqualifiedName();
     }
-
-
-
-
-
-
 
 
 
@@ -256,22 +223,9 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (this == that)
-            return true;
-
-        if (that instanceof TableAlias<?> t)
-            return getUnqualifiedName().equals(t.getUnqualifiedName());
-
-        // [#14371] Unqualified TableImpls can be equal to TableAlias
-        if (that instanceof TableImpl<?> t) {
-            if (t.$alias() != null)
-                return getUnqualifiedName().equals(t.$alias());
-
-            // [#7172] [#10274] Cannot use getQualifiedName() yet here
-            else if (t.getSchema() == null)
-                return getUnqualifiedName().equals(t.getQualifiedName());
-        }
-
-        return super.equals(that);
+        if (that instanceof TableAlias)
+            return getUnqualifiedName().equals(((TableAlias<?>) that).getUnqualifiedName());
+        else
+            return super.equals(that);
     }
 }

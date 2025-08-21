@@ -47,7 +47,7 @@ public class FileConsumerSharedThreadPollTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
@@ -64,7 +64,7 @@ public class FileConsumerSharedThreadPollTest extends ContextTestSupport {
                 from("direct:shared").routeId("shared").convertBodyTo(String.class).log("Get ${file:name} using ${threadName}")
                         .process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 exchange.getIn().setHeader("threadName", Thread.currentThread().getName());
                             }
                         }).to("mock:result");

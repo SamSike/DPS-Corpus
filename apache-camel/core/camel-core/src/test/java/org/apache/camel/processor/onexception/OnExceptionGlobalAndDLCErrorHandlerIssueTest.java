@@ -47,10 +47,10 @@ public class OnExceptionGlobalAndDLCErrorHandlerIssueTest extends ContextTestSup
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead"));
 
                 onException(Exception.class).handled(true).to("mock:global");

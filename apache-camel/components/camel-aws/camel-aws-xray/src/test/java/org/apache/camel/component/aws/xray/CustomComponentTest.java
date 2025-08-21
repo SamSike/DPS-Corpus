@@ -95,7 +95,7 @@ public class CustomComponentTest extends CamelAwsXRayTestSupport {
 
     @Test
     public void testRoute() {
-        NotifyBuilder notify = new NotifyBuilder(context).whenDone(5).create();
+        NotifyBuilder notify = new NotifyBuilder(context).whenDone(7).create();
 
         template.requestBody(START, "Hello");
 

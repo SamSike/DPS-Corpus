@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -53,7 +53,7 @@ public final class Constants {
     /**
      * The latest jOOQ minor version.
      */
-    public static final String MINOR_VERSION  = "3.21";
+    public static final String MINOR_VERSION  = "3.17";
 
     /**
      * The latest jOOQ version.
@@ -61,7 +61,7 @@ public final class Constants {
      * This is the same as {@link #MINOR_VERSION}, but it may include patch
      * version suffixes.
      */
-    public static final String VERSION        = "3.21.0-SNAPSHOT";
+    public static final String VERSION        = "3.17.0-SNAPSHOT";
 
     /**
      * The latest jOOQ full version.
@@ -69,17 +69,12 @@ public final class Constants {
      * This is the same as {@link #VERSION}, but it may include release
      * candidate and other suffixes.
      */
-    public static final String FULL_VERSION   = "3.21.0-SNAPSHOT";
-
-    /**
-     * The build date of this version.
-     */
-    public static final String BUILD_DATE     = "0000-00-00 00:00:00";
+    public static final String FULL_VERSION   = "3.17.0-SNAPSHOT";
 
     /**
      * The current jooq-runtime XSD file name.
      */
-    public static final String XSD_RUNTIME    = "jooq-runtime-3.21.0.xsd";
+    public static final String XSD_RUNTIME    = "jooq-runtime-3.17.0.xsd";
 
     /**
      * The current jooq-runtime XML namespace.
@@ -109,7 +104,7 @@ public final class Constants {
     /**
      * The current jooq-meta XSD file name.
      */
-    public static final String XSD_META       = "jooq-meta-3.21.0.xsd";
+    public static final String XSD_META       = "jooq-meta-3.16.0.xsd";
 
     /**
      * The current jooq-meta XML namespace.
@@ -124,7 +119,7 @@ public final class Constants {
     /**
      * The current jooq-migrations XSD file name.
      */
-    public static final String XSD_MIGRATIONS = "jooq-migrations-3.19.0.xsd";
+    public static final String XSD_MIGRATIONS = "jooq-migrations-3.15.0.xsd";
 
     /**
      * The current jooq-migrations XML namespace.
@@ -139,7 +134,7 @@ public final class Constants {
     /**
      * The current jooq-codegen XSD file name.
      */
-    public static final String XSD_CODEGEN    = "jooq-codegen-3.21.0.xsd";
+    public static final String XSD_CODEGEN    = "jooq-codegen-3.17.0.xsd";
 
     /**
      * The current jooq-codegen XML namespace.
@@ -174,26 +169,6 @@ public final class Constants {
      * The minor release 3.17.
      */
     public static final String VERSION_3_17   = "3.17";
-
-    /**
-     * The minor release 3.18.
-     */
-    public static final String VERSION_3_18   = "3.18";
-
-    /**
-     * The minor release 3.19.
-     */
-    public static final String VERSION_3_19   = "3.19";
-
-    /**
-     * The minor release 3.20.
-     */
-    public static final String VERSION_3_20   = "3.20";
-
-    /**
-     * The minor release 3.21.
-     */
-    public static final String VERSION_3_21   = "3.21";
 
     /**
      * No further instances

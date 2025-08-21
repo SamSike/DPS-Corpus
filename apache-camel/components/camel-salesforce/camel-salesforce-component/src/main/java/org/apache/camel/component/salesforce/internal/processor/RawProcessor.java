@@ -19,7 +19,6 @@ package org.apache.camel.component.salesforce.internal.processor;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +33,7 @@ import org.apache.camel.component.salesforce.api.SalesforceException;
 import org.apache.camel.component.salesforce.internal.PayloadFormat;
 import org.apache.camel.component.salesforce.internal.client.RawClient;
 import org.apache.camel.support.service.ServiceHelper;
+import org.eclipse.jetty.util.StringUtil;
 
 public class RawProcessor extends AbstractSalesforceProcessor {
 
@@ -77,11 +77,6 @@ public class RawProcessor extends AbstractSalesforceProcessor {
                         path.append("&");
                     }
                     path.append(p).append("=");
-
-                    if (exchange.getIn().getHeader(p) == null) {
-                        throw new SalesforceException(
-                                String.format("Missing header with key: %s", p));
-                    }
                     path.append(urlEncode(exchange.getIn().getHeader(p).toString()));
                 }
             }
@@ -123,7 +118,7 @@ public class RawProcessor extends AbstractSalesforceProcessor {
     }
 
     private String urlEncode(String query) throws UnsupportedEncodingException {
-        String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
+        String encodedQuery = URLEncoder.encode(query, StringUtil.__UTF8);
         // URLEncoder likes to use '+' for spaces
         encodedQuery = encodedQuery.replace("+", "%20");
         return encodedQuery;

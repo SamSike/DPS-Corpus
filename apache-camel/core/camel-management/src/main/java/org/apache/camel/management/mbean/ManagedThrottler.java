@@ -21,16 +21,14 @@ import org.apache.camel.api.management.ManagedResource;
 import org.apache.camel.api.management.mbean.ManagedThrottlerMBean;
 import org.apache.camel.model.ProcessorDefinition;
 import org.apache.camel.processor.Throttler;
-import org.apache.camel.processor.TotalRequestsThrottler;
 
 import static org.apache.camel.builder.Builder.constant;
 
-@ManagedResource(description = "Managed Concurrent Requests Throttler")
+@ManagedResource(description = "Managed Throttler")
 public class ManagedThrottler extends ManagedProcessor implements ManagedThrottlerMBean {
     private final Throttler throttler;
 
-    public ManagedThrottler(CamelContext context, Throttler throttler,
-                            ProcessorDefinition<?> definition) {
+    public ManagedThrottler(CamelContext context, Throttler throttler, ProcessorDefinition<?> definition) {
         super(context, throttler, definition);
         this.throttler = throttler;
     }
@@ -40,34 +38,23 @@ public class ManagedThrottler extends ManagedProcessor implements ManagedThrottl
     }
 
     @Override
-    public long getMaximumRequests() {
-        return throttler.getCurrentMaximumRequests();
+    public long getMaximumRequestsPerPeriod() {
+        return throttler.getCurrentMaximumRequestsPerPeriod();
     }
 
     @Override
-    public void setMaximumRequests(long maximumConcurrentRequests) {
-        throttler.setMaximumRequestsExpression(constant(maximumConcurrentRequests));
+    public void setMaximumRequestsPerPeriod(long maximumRequestsPerPeriod) {
+        throttler.setMaximumRequestsPerPeriodExpression(constant(maximumRequestsPerPeriod));
     }
 
     @Override
     public long getTimePeriodMillis() {
-        if (throttler instanceof TotalRequestsThrottler t) {
-            return t.getTimePeriodMillis();
-        }
-
-        return 0;
+        return throttler.getTimePeriodMillis();
     }
 
     @Override
     public void setTimePeriodMillis(long timePeriodMillis) {
-        if (throttler instanceof TotalRequestsThrottler t) {
-            t.setTimePeriodMillis(timePeriodMillis);
-        }
-    }
-
-    @Override
-    public String getMode() {
-        return throttler.getMode();
+        throttler.setTimePeriodMillis(timePeriodMillis);
     }
 
     @Override

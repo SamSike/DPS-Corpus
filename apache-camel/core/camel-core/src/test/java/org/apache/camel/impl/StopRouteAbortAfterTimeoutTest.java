@@ -46,7 +46,7 @@ public class StopRouteAbortAfterTimeoutTest extends ContextTestSupport {
 
         // confirm that route is still running
         assertFalse(stopRouteResponse, "stopRoute response should be False");
-        assertTrue(context.getRouteController().getRouteStatus("start").isStarted(), "route should still be started");
+        assertEquals(true, context.getRouteController().getRouteStatus("start").isStarted(), "route should still be started");
 
         // send some more messages through the route
         for (int i = 5; i < 10; i++) {
@@ -71,7 +71,7 @@ public class StopRouteAbortAfterTimeoutTest extends ContextTestSupport {
 
         // the route should have been forced stopped
         assertTrue(stopRouteResponse, "stopRoute response should be True");
-        assertTrue(context.getRouteController().getRouteStatus("start").isStopped(), "route should be stopped");
+        assertEquals(true, context.getRouteController().getRouteStatus("start").isStopped(), "route should be stopped");
 
         int before = mockEP.getExchanges().size();
 
@@ -85,10 +85,10 @@ public class StopRouteAbortAfterTimeoutTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // shutdown this test faster
                 context.getShutdownStrategy().setTimeout(3);
 

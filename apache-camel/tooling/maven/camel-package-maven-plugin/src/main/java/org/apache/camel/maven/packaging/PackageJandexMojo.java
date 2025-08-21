@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -36,10 +34,10 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.codehaus.plexus.build.BuildContext;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexWriter;
 import org.jboss.jandex.Indexer;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 /**
  * Generate a Jandex index for classes compiled as part of the current project.
@@ -61,17 +59,13 @@ public class PackageJandexMojo extends AbstractGeneratorMojo {
     @Parameter(defaultValue = "${showStaleFiles}")
     private boolean showStaleFiles;
 
-    @Inject
-    public PackageJandexMojo(MavenProjectHelper projectHelper, BuildContext buildContext) {
-        super(projectHelper, buildContext);
-    }
-
     @Override
-    public void execute(MavenProject project) throws MojoFailureException, MojoExecutionException {
+    public void execute(MavenProject project, MavenProjectHelper projectHelper, BuildContext buildContext)
+            throws MojoFailureException, MojoExecutionException {
         classesDirectory = new File(project.getBuild().getOutputDirectory());
         index = new File(project.getBuild().getOutputDirectory(), "META-INF/jandex.idx");
         showStaleFiles = Boolean.parseBoolean(project.getProperties().getProperty("showStaleFiles", "false"));
-        super.execute(project);
+        super.execute(project, projectHelper, buildContext);
     }
 
     @Override
@@ -80,8 +74,8 @@ public class PackageJandexMojo extends AbstractGeneratorMojo {
             return;
         }
         try (Stream<Path> pathStream = Files.walk(classesDirectory.toPath())) {
-            final List<Path> inputs = pathStream.filter(f -> f.getFileName().toString().endsWith(".class"))
-                    .sorted().toList();
+            List<Path> inputs = pathStream.filter(f -> f.getFileName().toString().endsWith(".class"))
+                    .collect(Collectors.toList());
             if (index.exists()) {
                 if (isUpToDate(inputs)) {
                     return;
@@ -131,7 +125,7 @@ public class PackageJandexMojo extends AbstractGeneratorMojo {
         return true;
     }
 
-    private static long lastmod(Path p) {
+    private long lastmod(Path p) {
         try {
             return Files.getLastModifiedTime(p).toMillis();
         } catch (IOException e) {

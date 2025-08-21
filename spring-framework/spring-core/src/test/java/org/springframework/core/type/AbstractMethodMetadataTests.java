@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,30 +38,30 @@ import static org.assertj.core.api.Assertions.entry;
 public abstract class AbstractMethodMetadataTests {
 
 	@Test
-	void verifyEquals() {
+	public void verifyEquals() throws Exception {
 		MethodMetadata withMethod1 = getTagged(WithMethod.class);
 		MethodMetadata withMethod2 = getTagged(WithMethod.class);
 		MethodMetadata withMethodWithTwoArguments1 = getTagged(WithMethodWithTwoArguments.class);
 		MethodMetadata withMethodWithTwoArguments2 = getTagged(WithMethodWithTwoArguments.class);
 
-		assertThat(withMethod1).isNotEqualTo(null);
+		assertThat(withMethod1.equals(null)).isFalse();
 
-		assertThat(withMethod1).isEqualTo(withMethod1);
-		assertThat(withMethod2).isEqualTo(withMethod2);
-		assertThat(withMethod1).isEqualTo(withMethod2);
-		assertThat(withMethod2).isEqualTo(withMethod1);
+		assertThat(withMethod1.equals(withMethod1)).isTrue();
+		assertThat(withMethod2.equals(withMethod2)).isTrue();
+		assertThat(withMethod1.equals(withMethod2)).isTrue();
+		assertThat(withMethod2.equals(withMethod1)).isTrue();
 
-		assertThat(withMethodWithTwoArguments1).isEqualTo(withMethodWithTwoArguments1);
-		assertThat(withMethodWithTwoArguments2).isEqualTo(withMethodWithTwoArguments2);
-		assertThat(withMethodWithTwoArguments1).isEqualTo(withMethodWithTwoArguments2);
-		assertThat(withMethodWithTwoArguments2).isEqualTo(withMethodWithTwoArguments1);
+		assertThat(withMethodWithTwoArguments1.equals(withMethodWithTwoArguments1)).isTrue();
+		assertThat(withMethodWithTwoArguments2.equals(withMethodWithTwoArguments2)).isTrue();
+		assertThat(withMethodWithTwoArguments1.equals(withMethodWithTwoArguments2)).isTrue();
+		assertThat(withMethodWithTwoArguments2.equals(withMethodWithTwoArguments1)).isTrue();
 
-		assertThat(withMethod1).isNotEqualTo(withMethodWithTwoArguments1);
-		assertThat(withMethodWithTwoArguments1).isNotEqualTo(withMethod1);
+		assertThat(withMethod1.equals(withMethodWithTwoArguments1)).isFalse();
+		assertThat(withMethodWithTwoArguments1.equals(withMethod1)).isFalse();
 	}
 
 	@Test
-	void verifyHashCode() {
+	public void verifyHashCode() throws Exception {
 		MethodMetadata withMethod1 = getTagged(WithMethod.class);
 		MethodMetadata withMethod2 = getTagged(WithMethod.class);
 		MethodMetadata withMethodWithTwoArguments1 = getTagged(WithMethodWithTwoArguments.class);
@@ -74,7 +74,7 @@ public abstract class AbstractMethodMetadataTests {
 	}
 
 	@Test
-	void verifyToString() {
+	public void verifyToString() throws Exception {
 		assertThat(getTagged(WithMethod.class).toString())
 			.endsWith(WithMethod.class.getName() + ".test()");
 
@@ -86,66 +86,66 @@ public abstract class AbstractMethodMetadataTests {
 	}
 
 	@Test
-	void getMethodNameReturnsMethodName() {
+	public void getMethodNameReturnsMethodName() {
 		assertThat(getTagged(WithMethod.class).getMethodName()).isEqualTo("test");
 	}
 
 	@Test
-	void getDeclaringClassReturnsDeclaringClass() {
+	public void getDeclaringClassReturnsDeclaringClass() {
 		assertThat(getTagged(WithMethod.class).getDeclaringClassName()).isEqualTo(
 				WithMethod.class.getName());
 	}
 
 	@Test
-	void getReturnTypeReturnsReturnType() {
+	public void getReturnTypeReturnsReturnType() {
 		assertThat(getTagged(WithMethod.class).getReturnTypeName()).isEqualTo(
 				String.class.getName());
 	}
 
 	@Test
-	void isAbstractWhenAbstractReturnsTrue() {
+	public void isAbstractWhenAbstractReturnsTrue() {
 		assertThat(getTagged(WithAbstractMethod.class).isAbstract()).isTrue();
 	}
 
 	@Test
-	void isAbstractWhenNotAbstractReturnsFalse() {
+	public void isAbstractWhenNotAbstractReturnsFalse() {
 		assertThat(getTagged(WithMethod.class).isAbstract()).isFalse();
 	}
 
 	@Test
-	void isStatusWhenStaticReturnsTrue() {
+	public void isStatusWhenStaticReturnsTrue() {
 		assertThat(getTagged(WithStaticMethod.class).isStatic()).isTrue();
 	}
 
 	@Test
-	void isStaticWhenNotStaticReturnsFalse() {
+	public void isStaticWhenNotStaticReturnsFalse() {
 		assertThat(getTagged(WithMethod.class).isStatic()).isFalse();
 	}
 
 	@Test
-	void isFinalWhenFinalReturnsTrue() {
+	public void isFinalWhenFinalReturnsTrue() {
 		assertThat(getTagged(WithFinalMethod.class).isFinal()).isTrue();
 	}
 
 	@Test
-	void isFinalWhenNonFinalReturnsFalse() {
+	public void isFinalWhenNonFinalReturnsFalse() {
 		assertThat(getTagged(WithMethod.class).isFinal()).isFalse();
 	}
 
 	@Test
-	void isOverridableWhenOverridableReturnsTrue() {
+	public void isOverridableWhenOverridableReturnsTrue() {
 		assertThat(getTagged(WithMethod.class).isOverridable()).isTrue();
 	}
 
 	@Test
-	void isOverridableWhenNonOverridableReturnsFalse() {
+	public void isOverridableWhenNonOverridableReturnsFalse() {
 		assertThat(getTagged(WithStaticMethod.class).isOverridable()).isFalse();
 		assertThat(getTagged(WithFinalMethod.class).isOverridable()).isFalse();
 		assertThat(getTagged(WithPrivateMethod.class).isOverridable()).isFalse();
 	}
 
 	@Test
-	void getAnnotationsReturnsDirectAnnotations() {
+	public void getAnnotationsReturnsDirectAnnotations() {
 		MethodMetadata metadata = getTagged(WithDirectAnnotation.class);
 		assertThat(metadata.getAnnotations().stream().filter(
 				MergedAnnotation::isDirectlyPresent).map(
@@ -155,34 +155,35 @@ public abstract class AbstractMethodMetadataTests {
 	}
 
 	@Test
-	void isAnnotatedWhenMatchesDirectAnnotationReturnsTrue() {
+	public void isAnnotatedWhenMatchesDirectAnnotationReturnsTrue() {
 		assertThat(getTagged(WithDirectAnnotation.class).isAnnotated(
 				DirectAnnotation.class.getName())).isTrue();
 	}
 
 	@Test
-	void isAnnotatedWhenMatchesMetaAnnotationReturnsTrue() {
+	public void isAnnotatedWhenMatchesMetaAnnotationReturnsTrue() {
 		assertThat(getTagged(WithMetaAnnotation.class).isAnnotated(
 				DirectAnnotation.class.getName())).isTrue();
 	}
 
 	@Test
-	void isAnnotatedWhenDoesNotMatchDirectOrMetaAnnotationReturnsFalse() {
+	public void isAnnotatedWhenDoesNotMatchDirectOrMetaAnnotationReturnsFalse() {
 		assertThat(getTagged(WithMethod.class).isAnnotated(
 				DirectAnnotation.class.getName())).isFalse();
 	}
 
 	@Test
-	void getAnnotationAttributesReturnsAttributes() {
+	public void getAnnotationAttributesReturnsAttributes() {
 		assertThat(getTagged(WithAnnotationAttributes.class).getAnnotationAttributes(
 				AnnotationAttributes.class.getName())).containsOnly(entry("name", "test"),
 						entry("size", 1));
 	}
 
 	@Test
-	void getAllAnnotationAttributesReturnsAllAttributes() {
-		MultiValueMap<String, Object> attributes = getTagged(WithMetaAnnotationAttributes.class)
-				.getAllAnnotationAttributes(AnnotationAttributes.class.getName());
+	public void getAllAnnotationAttributesReturnsAllAttributes() {
+		MultiValueMap<String, Object> attributes = getTagged(
+				WithMetaAnnotationAttributes.class).getAllAnnotationAttributes(
+						AnnotationAttributes.class.getName());
 		assertThat(attributes).containsOnlyKeys("name", "size");
 		assertThat(attributes.get("name")).containsExactlyInAnyOrder("m1", "m2");
 		assertThat(attributes.get("size")).containsExactlyInAnyOrder(1, 2);
@@ -205,7 +206,8 @@ public abstract class AbstractMethodMetadataTests {
 	protected abstract AnnotationMetadata get(Class<?> source);
 
 	@Retention(RetentionPolicy.RUNTIME)
-	@interface Tag {
+	public static @interface Tag {
+
 	}
 
 	public static class WithMethod {
@@ -263,13 +265,13 @@ public abstract class AbstractMethodMetadataTests {
 	public static class WithPrivateMethod {
 
 		@Tag
-		private String test() {
+		private final String test() {
 			return "";
 		}
 
 	}
 
-	public abstract static class WithDirectAnnotation {
+	public static abstract class WithDirectAnnotation {
 
 		@Tag
 		@DirectAnnotation
@@ -277,7 +279,7 @@ public abstract class AbstractMethodMetadataTests {
 
 	}
 
-	public abstract static class WithMetaAnnotation {
+	public static abstract class WithMetaAnnotation {
 
 		@Tag
 		@MetaAnnotation
@@ -286,15 +288,17 @@ public abstract class AbstractMethodMetadataTests {
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
-	@interface DirectAnnotation {
+	public static @interface DirectAnnotation {
+
 	}
 
 	@DirectAnnotation
 	@Retention(RetentionPolicy.RUNTIME)
-	@interface MetaAnnotation {
+	public static @interface MetaAnnotation {
+
 	}
 
-	public abstract static class WithAnnotationAttributes {
+	public static abstract class WithAnnotationAttributes {
 
 		@Tag
 		@AnnotationAttributes(name = "test", size = 1)
@@ -302,7 +306,7 @@ public abstract class AbstractMethodMetadataTests {
 
 	}
 
-	public abstract static class WithMetaAnnotationAttributes {
+	public static abstract class WithMetaAnnotationAttributes {
 
 		@Tag
 		@MetaAnnotationAttributes1
@@ -313,16 +317,18 @@ public abstract class AbstractMethodMetadataTests {
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@AnnotationAttributes(name = "m1", size = 1)
-	@interface MetaAnnotationAttributes1 {
+	public static @interface MetaAnnotationAttributes1 {
+
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@AnnotationAttributes(name = "m2", size = 2)
-	@interface MetaAnnotationAttributes2 {
+	public static @interface MetaAnnotationAttributes2 {
+
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
-	@interface AnnotationAttributes {
+	public static @interface AnnotationAttributes {
 
 		String name();
 

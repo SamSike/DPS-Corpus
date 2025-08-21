@@ -22,6 +22,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.params.Test;
 import org.awaitility.Awaitility;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
@@ -31,8 +32,10 @@ import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
 public class LevelDBAggregateDiscardOnTimeoutTest extends LevelDBTestSupport {
 
     @Override
-    public void doPreSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
         deleteDirectory("target/data");
+        super.setUp();
     }
 
     @Test

@@ -18,8 +18,8 @@ package org.apache.camel.main;
 
 public class MyOrder {
 
-    private final String company;
-    private final MyAddress address;
+    private String company;
+    private MyAddress address;
 
     public MyOrder(String company, MyAddress address) {
         this.company = company;

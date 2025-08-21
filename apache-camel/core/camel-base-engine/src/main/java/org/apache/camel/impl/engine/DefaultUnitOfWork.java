@@ -23,24 +23,23 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 
 import org.apache.camel.AsyncCallback;
-import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedCamelContext;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Message;
 import org.apache.camel.PooledExchange;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
-import org.apache.camel.StreamCache;
 import org.apache.camel.spi.InflightRepository;
-import org.apache.camel.spi.StreamCachingStrategy;
 import org.apache.camel.spi.Synchronization;
 import org.apache.camel.spi.SynchronizationVetoable;
 import org.apache.camel.spi.UnitOfWork;
+import org.apache.camel.support.DefaultMessage;
 import org.apache.camel.support.EventHelper;
+import org.apache.camel.support.MessageSupport;
 import org.apache.camel.support.UnitOfWorkHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,14 +52,12 @@ public class DefaultUnitOfWork implements UnitOfWork {
 
     // instances used by MDCUnitOfWork
     final InflightRepository inflightRepository;
-    final StreamCachingStrategy streamCachingStrategy;
     final boolean allowUseOriginalMessage;
     final boolean useBreadcrumb;
 
-    private final CamelContext context;
+    private final ExtendedCamelContext context;
     private final Deque<Route> routes = new ArrayDeque<>(8);
-    private final Lock lock = new ReentrantLock();
-    private final Logger log;
+    private Logger log;
     private Exchange exchange;
     private List<Synchronization> synchronizations;
     private Message originalInMessage;
@@ -73,20 +70,18 @@ public class DefaultUnitOfWork implements UnitOfWork {
 
     protected DefaultUnitOfWork(Exchange exchange, Logger logger, InflightRepository inflightRepository,
                                 boolean allowUseOriginalMessage, boolean useBreadcrumb) {
-        this.allowUseOriginalMessage = allowUseOriginalMessage;
-        this.useBreadcrumb = useBreadcrumb;
-        this.context = exchange.getContext();
-        this.inflightRepository = inflightRepository;
-        this.streamCachingStrategy = exchange.getContext().getStreamCachingStrategy();
+        this(exchange, inflightRepository, allowUseOriginalMessage, useBreadcrumb);
         this.log = logger;
-
-        doOnPrepare(exchange);
     }
 
     public DefaultUnitOfWork(Exchange exchange, InflightRepository inflightRepository, boolean allowUseOriginalMessage,
                              boolean useBreadcrumb) {
-        this(exchange, LOG, inflightRepository, allowUseOriginalMessage, useBreadcrumb);
-
+        this.log = LOG;
+        this.allowUseOriginalMessage = allowUseOriginalMessage;
+        this.useBreadcrumb = useBreadcrumb;
+        this.context = (ExtendedCamelContext) exchange.getContext();
+        this.inflightRepository = inflightRepository;
+        doOnPrepare(exchange);
     }
 
     UnitOfWork newInstance(Exchange exchange) {
@@ -103,36 +98,22 @@ public class DefaultUnitOfWork implements UnitOfWork {
         }
     }
 
-    private boolean isStreamCacheInUse(Exchange exchange) {
-        boolean inUse = streamCachingStrategy.isEnabled();
-        if (inUse) {
-            // the original route (from route) may have disabled stream caching
-            String rid = exchange.getFromRouteId();
-            if (rid != null) {
-                Route route = exchange.getContext().getRoute(rid);
-                if (route != null) {
-                    inUse = route.isStreamCaching() != null && route.isStreamCaching();
-                }
-            }
-        }
-        return inUse;
-    }
-
     private void doOnPrepare(Exchange exchange) {
         // unit of work is reused, so setup for this exchange
         this.exchange = exchange;
 
         if (allowUseOriginalMessage) {
-            this.originalInMessage = exchange.getIn().copy();
-            if (isStreamCacheInUse(exchange)) {
-                // if the input body is streaming we need to cache it, so we can access the original input message (like stream caching advice does)
-                StreamCache cache
-                        = StreamCachingHelper.convertToStreamCache(streamCachingStrategy, exchange, this.originalInMessage);
-                if (cache != null) {
-                    this.originalInMessage.setBody(cache);
-                    // replace original incoming message with stream cache
-                    this.exchange.getIn().setBody(cache);
-                }
+            // special for JmsMessage as it can cause it to loose headers later.
+            if (exchange.getIn().getClass().getName().equals("org.apache.camel.component.jms.JmsMessage")) {
+                this.originalInMessage = new DefaultMessage(context);
+                this.originalInMessage.setBody(exchange.getIn().getBody());
+                this.originalInMessage.getHeaders().putAll(exchange.getIn().getHeaders());
+            } else {
+                this.originalInMessage = exchange.getIn().copy();
+            }
+            // must preserve exchange on the original in message
+            if (this.originalInMessage instanceof MessageSupport) {
+                ((MessageSupport) this.originalInMessage).setExchange(exchange);
             }
         }
 
@@ -148,10 +129,10 @@ public class DefaultUnitOfWork implements UnitOfWork {
         }
 
         // fire event
-        if (context.getCamelContextExtension().isEventNotificationApplicable()) {
+        if (context.isEventNotificationApplicable()) {
             try {
                 EventHelper.notifyExchangeCreated(context, exchange);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 // must catch exceptions to ensure the exchange is not failing due to notification event failed
                 log.warn("Exception occurred during event notification. This exception will be ignored.", e);
             }
@@ -187,39 +168,24 @@ public class DefaultUnitOfWork implements UnitOfWork {
     }
 
     @Override
-    public void addSynchronization(Synchronization synchronization) {
-        lock.lock();
-        try {
-            if (synchronizations == null) {
-                synchronizations = new ArrayList<>(8);
-            }
-            log.trace("Adding synchronization {}", synchronization);
-            synchronizations.add(synchronization);
-        } finally {
-            lock.unlock();
+    public synchronized void addSynchronization(Synchronization synchronization) {
+        if (synchronizations == null) {
+            synchronizations = new ArrayList<>(8);
+        }
+        log.trace("Adding synchronization {}", synchronization);
+        synchronizations.add(synchronization);
+    }
+
+    @Override
+    public synchronized void removeSynchronization(Synchronization synchronization) {
+        if (synchronizations != null) {
+            synchronizations.remove(synchronization);
         }
     }
 
     @Override
-    public void removeSynchronization(Synchronization synchronization) {
-        lock.lock();
-        try {
-            if (synchronizations != null) {
-                synchronizations.remove(synchronization);
-            }
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
-    public boolean containsSynchronization(Synchronization synchronization) {
-        lock.lock();
-        try {
-            return synchronizations != null && synchronizations.contains(synchronization);
-        } finally {
-            lock.unlock();
-        }
+    public synchronized boolean containsSynchronization(Synchronization synchronization) {
+        return synchronizations != null && synchronizations.contains(synchronization);
     }
 
     @Override
@@ -239,14 +205,14 @@ public class DefaultUnitOfWork implements UnitOfWork {
 
             boolean handover = true;
             SynchronizationVetoable veto = null;
-            if (synchronization instanceof SynchronizationVetoable v) {
-                veto = v;
+            if (synchronization instanceof SynchronizationVetoable) {
+                veto = (SynchronizationVetoable) synchronization;
                 handover = veto.allowHandover();
             }
 
             if (handover && (filter == null || filter.test(synchronization))) {
                 log.trace("Handover synchronization {} to: {}", synchronization, target);
-                target.getExchangeExtension().addOnCompletion(synchronization);
+                target.adapt(ExtendedExchange.class).addOnCompletion(synchronization);
                 // Allow the synchronization to do housekeeping before transfer
                 if (veto != null) {
                     veto.beforeHandover(target);
@@ -262,40 +228,42 @@ public class DefaultUnitOfWork implements UnitOfWork {
     @Override
     public void done(Exchange exchange) {
         if (log.isTraceEnabled()) {
-            log.trace("UnitOfWork done for ExchangeId: {}", exchange.getExchangeId());
+            log.trace("UnitOfWork done for ExchangeId: {} with {}", exchange.getExchangeId(), exchange);
         }
 
+        boolean failed = exchange.isFailed();
+
         // at first done the synchronizations
-        UnitOfWorkHelper.doneSynchronizations(exchange, synchronizations);
+        UnitOfWorkHelper.doneSynchronizations(exchange, synchronizations, log);
 
         // unregister from inflight registry, before signalling we are done
         inflightRepository.remove(exchange);
 
-        if (context.getCamelContextExtension().isEventNotificationApplicable()) {
+        if (context.isEventNotificationApplicable()) {
             // then fire event to signal the exchange is done
             try {
-                final boolean failed = exchange.isFailed();
                 if (failed) {
                     EventHelper.notifyExchangeFailed(exchange.getContext(), exchange);
                 } else {
                     EventHelper.notifyExchangeDone(exchange.getContext(), exchange);
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 // must catch exceptions to ensure synchronizations is also invoked
                 log.warn("Exception occurred during event notification. This exception will be ignored.", e);
             }
         }
 
         // the exchange is now done
-        if (exchange instanceof PooledExchange pooled) {
+        if (exchange instanceof PooledExchange) {
             // pooled exchange has its own done logic which will reset this uow for reuse
             // so do not call onDone
             try {
+                PooledExchange pooled = (PooledExchange) exchange;
                 // only trigger done if we should auto-release
                 if (pooled.isAutoRelease()) {
-                    pooled.done();
+                    ((PooledExchange) exchange).done();
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 // must catch exceptions to ensure synchronizations is also invoked
                 log.warn("Exception occurred during exchange done. This exception will be ignored.", e);
             }
@@ -307,7 +275,8 @@ public class DefaultUnitOfWork implements UnitOfWork {
     protected void onDone() {
         // MUST clear and set uow to null on exchange after done
         // in case the same exchange is manually reused by Camel end users (should happen seldom)
-        exchange.getExchangeExtension().setUnitOfWork(null);
+        ExtendedExchange ee = (ExtendedExchange) exchange;
+        ee.setUnitOfWork(null);
     }
 
     @Override
@@ -352,7 +321,7 @@ public class DefaultUnitOfWork implements UnitOfWork {
 
     @Override
     public void beginTransactedBy(Object key) {
-        exchange.getExchangeExtension().setTransacted(true);
+        exchange.adapt(ExtendedExchange.class).setTransacted(true);
         getTransactedBy().add(key);
     }
 
@@ -361,7 +330,7 @@ public class DefaultUnitOfWork implements UnitOfWork {
         getTransactedBy().remove(key);
         // we may still be transacted even if we end this section of transaction
         boolean transacted = isTransacted();
-        exchange.getExchangeExtension().setTransacted(transacted);
+        exchange.adapt(ExtendedExchange.class).setTransacted(transacted);
     }
 
     @Override
@@ -382,28 +351,6 @@ public class DefaultUnitOfWork implements UnitOfWork {
     @Override
     public int routeStackLevel() {
         return routes.size();
-    }
-
-    public int routeStackLevel(boolean includeRouteTemplate, boolean includeKamelet) {
-        if (includeKamelet && includeRouteTemplate) {
-            return routes.size();
-        }
-
-        int level = 0;
-        for (Route r : routes) {
-            if (r.isCreatedByKamelet()) {
-                if (includeKamelet) {
-                    level++;
-                }
-            } else if (r.isCreatedByRouteTemplate()) {
-                if (includeRouteTemplate) {
-                    level++;
-                }
-            } else {
-                level++;
-            }
-        }
-        return level;
     }
 
     @Override

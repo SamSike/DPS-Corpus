@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.test.junit5.TestSupport.createDirectory;
@@ -35,12 +36,15 @@ public class ScanStreamFileWithFilterTest extends CamelTestSupport {
     private File file;
 
     @Override
-    public void doPreSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
         deleteDirectory("target/stream");
         createDirectory("target/stream");
 
         file = new File("target/stream/scanstreamfile.txt");
         file.createNewFile();
+
+        super.setUp();
     }
 
     @Test

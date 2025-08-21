@@ -61,7 +61,6 @@ import org.slf4j.LoggerFactory;
  */
 public class AsyncDockerProducer extends DefaultAsyncProducer {
     private static final Logger LOG = LoggerFactory.getLogger(AsyncDockerProducer.class);
-    public static final String MISSING_CONTAINER_ID = "Container ID must be specified";
     private DockerConfiguration configuration;
     private DockerComponent component;
 
@@ -116,10 +115,8 @@ public class AsyncDockerProducer extends DefaultAsyncProducer {
                 default:
                     throw new DockerException("Invalid operation: " + operation);
             }
-        } catch (InterruptedException e) {
-            LOG.error("Interrupted while processing", e);
-            Thread.currentThread().interrupt();
-        } catch (DockerException e) {
+
+        } catch (DockerException | InterruptedException e) {
             LOG.error(e.getMessage(), e);
         }
 
@@ -352,7 +349,7 @@ public class AsyncDockerProducer extends DefaultAsyncProducer {
         String containerId
                 = DockerHelper.getProperty(DockerConstants.DOCKER_CONTAINER_ID, configuration, message, String.class);
 
-        ObjectHelper.notNull(containerId, MISSING_CONTAINER_ID);
+        ObjectHelper.notNull(containerId, "Container ID must be specified");
 
         AttachContainerCmd attachContainerCmd = client.attachContainerCmd(containerId);
 
@@ -401,7 +398,7 @@ public class AsyncDockerProducer extends DefaultAsyncProducer {
         String containerId
                 = DockerHelper.getProperty(DockerConstants.DOCKER_CONTAINER_ID, configuration, message, String.class);
 
-        ObjectHelper.notNull(containerId, MISSING_CONTAINER_ID);
+        ObjectHelper.notNull(containerId, "Container ID must be specified");
 
         LogContainerCmd logContainerCmd = client.logContainerCmd(containerId);
 
@@ -456,7 +453,7 @@ public class AsyncDockerProducer extends DefaultAsyncProducer {
         String containerId
                 = DockerHelper.getProperty(DockerConstants.DOCKER_CONTAINER_ID, configuration, message, String.class);
 
-        ObjectHelper.notNull(containerId, MISSING_CONTAINER_ID);
+        ObjectHelper.notNull(containerId, "Container ID must be specified");
 
         return client.waitContainerCmd(containerId);
     }

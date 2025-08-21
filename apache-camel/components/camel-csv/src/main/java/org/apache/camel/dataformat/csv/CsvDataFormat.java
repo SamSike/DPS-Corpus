@@ -92,12 +92,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
 
     @Override
     public Object unmarshal(Exchange exchange, InputStream inputStream) throws Exception {
-        return unmarshal(exchange, (Object) inputStream);
-    }
-
-    @Override
-    public Object unmarshal(Exchange exchange, Object body) throws Exception {
-        return unmarshaller.unmarshal(exchange, body);
+        return unmarshaller.unmarshal(exchange, inputStream);
     }
 
     @Override
@@ -269,7 +264,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether the comment markers are disabled.
+     * Indicates whether or not the comment markers are disabled.
      *
      * @return {@code true} if the comment markers are disabled, {@code false} otherwise
      */
@@ -278,7 +273,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Sets whether the comment markers are disabled.
+     * Sets whether or not the comment markers are disabled.
      *
      * @param  commentMarkerDisabled {@code true} if the comment markers are disabled, {@code false} otherwise
      * @return                       Current {@code CsvDataFormat}, fluent API
@@ -332,7 +327,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether the escaping is disabled.
+     * Indicates whether or not the escaping is disabled.
      *
      * @return {@code true} if the escaping is disabled, {@code false} otherwise
      */
@@ -341,7 +336,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Sets whether the escaping is disabled.
+     * Sets whether or not the escaping is disabled.
      *
      * @param  escapeDisabled {@code true} if the escaping is disabled, {@code false} otherwise
      * @return                Current {@code CsvDataFormat}, fluent API
@@ -374,7 +369,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether the headers are disabled.
+     * Indicates whether or not the headers are disabled.
      *
      * @return {@code true} if the headers are disabled, {@code false} otherwise
      */
@@ -383,7 +378,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Sets whether the headers are disabled.
+     * Sets whether or not the headers are disabled.
      *
      * @param  headerDisabled {@code true} if the headers are disabled, {@code false} otherwise
      * @return                Current {@code CsvDataFormat}, fluent API
@@ -397,7 +392,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     /**
      * Gets the header. Multiple values can be separated by comma.
      *
-     * If {@code null} then the default one of the format used. If empty, then it will be automatically handled.
+     * If {@code null} then the default one of the format used. If empty then it will be automatically handled.
      *
      * @return Header
      */
@@ -408,7 +403,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     /**
      * Gets the header. Multiple values can be separated by comma.
      *
-     * If {@code null} then the default one of the format used. If empty, then it will be automatically handled.
+     * If {@code null} then the default one of the format used. If empty then it will be automatically handled.
      *
      * @param  header Header
      * @return        Current {@code CsvDataFormat}, fluent API
@@ -429,18 +424,19 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether missing column names are allowed. If {@code null} then the default value of the format used.
+     * Indicates whether or not missing column names are allowed. If {@code null} then the default value of the format
+     * used.
      *
-     * @return whether missing column names are allowed
+     * @return Whether or not missing column names are allowed
      */
     public Boolean getAllowMissingColumnNames() {
         return allowMissingColumnNames;
     }
 
     /**
-     * Sets whether missing column names are allowed. If {@code null} then the default value of the format used.
+     * Sets whether or not missing column names are allowed. If {@code null} then the default value of the format used.
      *
-     * @param  allowMissingColumnNames whether missing column names are allowed
+     * @param  allowMissingColumnNames Whether or not missing column names are allowed
      * @return                         Current {@code CsvDataFormat}, fluent API
      * @see                            org.apache.commons.csv.CSVFormat#withAllowMissingColumnNames(boolean)
      */
@@ -450,18 +446,18 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether empty lines must be ignored. If {@code null} then the default value of the format used.
+     * Indicates whether or not empty lines must be ignored. If {@code null} then the default value of the format used.
      *
-     * @return whether empty lines must be ignored
+     * @return Whether or not empty lines must be ignored
      */
     public Boolean getIgnoreEmptyLines() {
         return ignoreEmptyLines;
     }
 
     /**
-     * Sets whether empty lines must be ignored. If {@code null} then the default value of the format used.
+     * Sets whether or not empty lines must be ignored. If {@code null} then the default value of the format used.
      *
-     * @param  ignoreEmptyLines whether empty lines must be ignored
+     * @param  ignoreEmptyLines Whether or not empty lines must be ignored
      * @return                  Current {@code CsvDataFormat}, fluent API
      * @see                     org.apache.commons.csv.CSVFormat#withIgnoreEmptyLines(boolean)
      */
@@ -471,18 +467,20 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether surrounding spaces must be ignored. If {@code null} then the default value of the format used.
+     * Indicates whether or not surrounding spaces must be ignored. If {@code null} then the default value of the format
+     * used.
      *
-     * @return whether surrounding spaces must be ignored
+     * @return Whether or not surrounding spaces must be ignored
      */
     public Boolean getIgnoreSurroundingSpaces() {
         return ignoreSurroundingSpaces;
     }
 
     /**
-     * Sets whether surrounding spaces must be ignored. If {@code null} then the default value of the format used.
+     * Sets whether or not surrounding spaces must be ignored. If {@code null} then the default value of the format
+     * used.
      *
-     * @param  ignoreSurroundingSpaces whether surrounding spaces must be ignored
+     * @param  ignoreSurroundingSpaces Whether or not surrounding spaces must be ignored
      * @return                         Current {@code CsvDataFormat}, fluent API
      * @see                            org.apache.commons.csv.CSVFormat#withIgnoreSurroundingSpaces(boolean)
      */
@@ -492,7 +490,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether the null string replacement is disabled.
+     * Indicates whether or not the null string replacement is disabled.
      *
      * @return {@code true} if the null string replacement is disabled, {@code false} otherwise
      */
@@ -501,7 +499,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Sets whether the null string replacement is disabled.
+     * Sets whether or not the null string replacement is disabled.
      *
      * @param  nullStringDisabled {@code true} if the null string replacement is disabled, {@code false} otherwise
      * @return                    Current {@code CsvDataFormat}, fluent API
@@ -534,7 +532,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether quotes are disabled.
+     * Indicates whether or not quotes are disabled.
      *
      * @return {@code true} if quotes are disabled, {@code false} otherwise
      */
@@ -543,7 +541,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Sets whether quotes are disabled
+     * Sets whether or not quotes are disabled
      *
      * @param  quoteDisabled {@code true} if quotes are disabled, {@code false} otherwise
      * @return               Current {@code CsvDataFormat}, fluent API
@@ -597,7 +595,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether the record separator is disabled.
+     * Indicates whether or not the record separator is disabled.
      *
      * @return {@code true} if the record separator disabled, {@code false} otherwise
      */
@@ -606,7 +604,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Sets whether the record separator is disabled.
+     * Sets whether or not the record separator is disabled.
      *
      * @param  recordSeparatorDisabled {@code true} if the record separator disabled, {@code false} otherwise
      * @return                         Current {@code CsvDataFormat}, fluent API
@@ -639,18 +637,19 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether header record must be skipped. If {@code null} then the default value of the format used.
+     * Indicates whether or not header record must be skipped. If {@code null} then the default value of the format
+     * used.
      *
-     * @return whether header record must be skipped
+     * @return Whether or not header record must be skipped
      */
     public Boolean getSkipHeaderRecord() {
         return skipHeaderRecord;
     }
 
     /**
-     * Sets whether header record must be skipped. If {@code null} then the default value of the format used.
+     * Sets whether or not header record must be skipped. If {@code null} then the default value of the format used.
      *
-     * @param  skipHeaderRecord whether header record must be skipped
+     * @param  skipHeaderRecord Whether or not header record must be skipped
      * @return                  Current {@code CsvDataFormat}, fluent API
      * @see                     org.apache.commons.csv.CSVFormat#withSkipHeaderRecord(boolean)
      */
@@ -660,7 +659,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether the unmarshalling should capture the header record.
+     * Indicates whether or not the unmarshalling should capture the header record.
      *
      * @return {@code true} for capture header record, {@code false} otherwise
      */
@@ -669,7 +668,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether the unmarshalling should capture the header record.
+     * Indicates whether or not the unmarshalling should capture the header record.
      *
      * @param  captureHeaderRecord {@code true} for capture header record, {@code false} otherwise
      * @return                     Current {@code CsvDataFormat}, fluent API
@@ -680,7 +679,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether the unmarshalling should lazily load the records.
+     * Indicates whether or not the unmarshalling should lazily load the records.
      *
      * @return {@code true} for lazy loading, {@code false} otherwise
      */
@@ -689,7 +688,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether the unmarshalling should lazily load the records.
+     * Indicates whether or not the unmarshalling should lazily load the records.
      *
      * @param  lazyLoad {@code true} for lazy loading, {@code false} otherwise
      * @return          Current {@code CsvDataFormat}, fluent API
@@ -700,7 +699,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether the unmarshalling should produce maps instead of lists.
+     * Indicates whether or not the unmarshalling should produce maps instead of lists.
      *
      * @return {@code true} for maps, {@code false} for lists
      */
@@ -709,7 +708,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Sets whether the unmarshalling should produce maps instead of lists.
+     * Sets whether or not the unmarshalling should produce maps instead of lists.
      *
      * @param  useMaps {@code true} for maps, {@code false} for lists
      * @return         Current {@code CsvDataFormat}, fluent API
@@ -720,7 +719,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether the unmarshalling should produce ordered maps instead of lists.
+     * Indicates whether or not the unmarshalling should produce ordered maps instead of lists.
      *
      * @return {@code true} for maps, {@code false} for lists
      */
@@ -729,7 +728,7 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Sets whether the unmarshalling should produce ordered maps instead of lists.
+     * Sets whether or not the unmarshalling should produce ordered maps instead of lists.
      *
      * @param  useOrderedMaps {@code true} for maps, {@code false} for lists
      * @return                Current {@code CsvDataFormat}, fluent API
@@ -763,12 +762,12 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
 
     //endregion
     /**
-     * Sets whether to trim leading and trailing blanks.
+     * Sets whether or not to trim leading and trailing blanks.
      * <p>
      * If {@code null} then the default value of the format used.
      * </p>
-     *
-     * @param  trim whether to trim leading and trailing blanks. <code>null</code> value allowed.
+     * 
+     * @param  trim whether or not to trim leading and trailing blanks. <code>null</code> value allowed.
      * @return      Current {@code CsvDataFormat}, fluent API.
      */
     public CsvDataFormat setTrim(Boolean trim) {
@@ -777,8 +776,8 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether to trim leading and trailing blanks.
-     *
+     * Indicates whether or not to trim leading and trailing blanks.
+     * 
      * @return {@link Boolean#TRUE} if leading and trailing blanks should be trimmed. {@link Boolean#FALSE} otherwise.
      *         Could return <code>null</code> if value has NOT been set.
      */
@@ -787,12 +786,13 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Sets whether to ignore case when accessing header names.
+     * Sets whether or not to ignore case when accessing header names.
      * <p>
      * If {@code null} then the default value of the format used.
      * </p>
-     *
-     * @param  ignoreHeaderCase whether to ignore case when accessing header names. <code>null</code> value allowed.
+     * 
+     * @param  ignoreHeaderCase whether or not to ignore case when accessing header names. <code>null</code> value
+     *                          allowed.
      * @return                  Current {@code CsvDataFormat}, fluent API.
      */
     public CsvDataFormat setIgnoreHeaderCase(Boolean ignoreHeaderCase) {
@@ -801,8 +801,8 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether to ignore case when accessing header names.
-     *
+     * Indicates whether or not to ignore case when accessing header names.
+     * 
      * @return {@link Boolean#TRUE} if case should be ignored when accessing header name. {@link Boolean#FALSE}
      *         otherwise. Could return <code>null</code> if value has NOT been set.
      */
@@ -811,12 +811,12 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Sets whether to add a trailing delimiter.
+     * Sets whether or not to add a trailing delimiter.
      * <p>
      * If {@code null} then the default value of the format used.
      * </p>
-     *
-     * @param  trailingDelimiter whether to add a trailing delimiter.
+     * 
+     * @param  trailingDelimiter whether or not to add a trailing delimiter.
      * @return                   Current {@code CsvDataFormat}, fluent API.
      */
     public CsvDataFormat setTrailingDelimiter(Boolean trailingDelimiter) {
@@ -825,8 +825,8 @@ public class CsvDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     /**
-     * Indicates whether to add a trailing delimiter.
-     *
+     * Indicates whether or not to add a trailing delimiter.
+     * 
      * @return {@link Boolean#TRUE} if a trailing delimiter should be added. {@link Boolean#FALSE} otherwise. Could
      *         return <code>null</code> if value has NOT been set.
      */

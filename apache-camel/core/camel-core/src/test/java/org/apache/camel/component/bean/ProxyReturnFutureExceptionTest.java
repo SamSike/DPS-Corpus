@@ -25,7 +25,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class ProxyReturnFutureExceptionTest extends ContextTestSupport {
 
@@ -37,20 +37,20 @@ public class ProxyReturnFutureExceptionTest extends ContextTestSupport {
         log.info("Got future");
 
         log.info("Waiting for future to be done ...");
-
-        ExecutionException e = assertThrows(ExecutionException.class,
-                () -> assertEquals("Four", future.get(5, TimeUnit.SECONDS)),
-                "Should have thrown exception");
-
-        IllegalArgumentException cause = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
-        assertEquals("Forced", cause.getMessage());
+        try {
+            assertEquals("Four", future.get(5, TimeUnit.SECONDS));
+            fail("Should have thrown exception");
+        } catch (ExecutionException e) {
+            IllegalArgumentException cause = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
+            assertEquals("Forced", cause.getMessage());
+        }
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:echo").delay(250).throwException(new IllegalArgumentException("Forced"));
             }
         };

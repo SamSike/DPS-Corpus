@@ -44,9 +44,9 @@ public class AggregateGroupedExchangeCompletionExpressionSizeTest extends Contex
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(constant(true)).completionSize(header("size")).eagerCheckCompletion()
                         .aggregationStrategy(groupedExchange()).to("mock:result");
             }

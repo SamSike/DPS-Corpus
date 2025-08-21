@@ -26,7 +26,7 @@ import org.apache.camel.support.console.AbstractDevConsole;
 import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.json.JsonObject;
 
-@DevConsole(name = "inflight", displayName = "Inflight Exchanges", description = "Display inflight exchanges")
+@DevConsole("inflight")
 public class InflightConsole extends AbstractDevConsole {
 
     /**
@@ -57,9 +57,8 @@ public class InflightConsole extends AbstractDevConsole {
         if (repo.isInflightBrowseEnabled()) {
             for (InflightRepository.InflightExchange ie : repo.browse(filter, max, false)) {
                 String age = TimeUtils.printDuration(ie.getDuration(), true);
-                sb.append(String.format("\n    %s (from: %s at: %s/%s remote: %b age: %s)",
-                        ie.getExchange().getExchangeId(), ie.getFromRouteId(), ie.getAtRouteId(), ie.getNodeId(),
-                        ie.isFromRemoteEndpoint(), age));
+                sb.append(String.format("\n    %s (from: %s at: %s/%s age: %s)",
+                        ie.getExchange().getExchangeId(), ie.getFromRouteId(), ie.getAtRouteId(), ie.getNodeId(), age));
             }
         }
 
@@ -83,7 +82,6 @@ public class InflightConsole extends AbstractDevConsole {
                 JsonObject props = new JsonObject();
                 props.put("exchangeId", ie.getExchange().getExchangeId());
                 props.put("fromRouteId", ie.getFromRouteId());
-                props.put("fromRemoteEndpoint", ie.isFromRemoteEndpoint());
                 props.put("atRouteId", ie.getAtRouteId());
                 props.put("nodeId", ie.getNodeId());
                 props.put("elapsed", ie.getElapsed());

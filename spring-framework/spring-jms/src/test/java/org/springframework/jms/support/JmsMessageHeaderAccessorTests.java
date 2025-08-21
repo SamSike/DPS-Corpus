@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,10 +32,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Stephane Nicoll
  */
-class JmsMessageHeaderAccessorTests {
+public class JmsMessageHeaderAccessorTests {
 
 	@Test
-	void validateJmsHeaders() throws JMSException {
+	public void validateJmsHeaders() throws JMSException {
 		Destination destination = new Destination() {};
 		Destination replyTo = new Destination() {};
 
@@ -64,7 +64,7 @@ class JmsMessageHeaderAccessorTests {
 		assertThat(headerAccessor.getMessageId()).isEqualTo("abcd-1234");
 		assertThat(headerAccessor.getPriority()).isEqualTo(Integer.valueOf(9));
 		assertThat(headerAccessor.getReplyTo()).isEqualTo(replyTo);
-		assertThat(headerAccessor.getRedelivered()).isTrue();
+		assertThat(headerAccessor.getRedelivered()).isEqualTo(true);
 		assertThat(headerAccessor.getType()).isEqualTo("type");
 		assertThat(headerAccessor.getTimestamp()).isEqualTo(4567);
 

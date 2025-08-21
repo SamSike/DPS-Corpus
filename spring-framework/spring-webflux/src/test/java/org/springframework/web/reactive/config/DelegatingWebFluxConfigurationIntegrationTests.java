@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,12 +40,12 @@ import static org.mockito.Mockito.mock;
  *
  * @author Stephane Nicoll
  */
-class DelegatingWebFluxConfigurationIntegrationTests {
+public class DelegatingWebFluxConfigurationIntegrationTests {
 
 	private AnnotationConfigApplicationContext context;
 
 	@AfterEach
-	void closeContext() {
+	public void closeContext() {
 		if (this.context != null) {
 			this.context.close();
 		}
@@ -80,7 +80,7 @@ class DelegatingWebFluxConfigurationIntegrationTests {
 
 	@Test
 	void requestMappingHandlerAdapterWithPrimaryUsesQualifiedReactiveAdapterRegistry() {
-		load(registerPrimaryBean("testReactiveAdapterRegistry", ReactiveAdapterRegistry.class, new ReactiveAdapterRegistry()));
+		load(registerPrimaryBean("testReactiveAdapterRegistry", ReactiveAdapterRegistry.class));
 		RequestMappingHandlerAdapter mappingHandlerAdapter = this.context.getBean(RequestMappingHandlerAdapter.class);
 		assertThat(mappingHandlerAdapter.getReactiveAdapterRegistry()).isSameAs(this.context.getBean("webFluxAdapterRegistry"));
 		assertThat(this.context.getBeansOfType(ReactiveAdapterRegistry.class)).containsOnlyKeys(
@@ -117,7 +117,7 @@ class DelegatingWebFluxConfigurationIntegrationTests {
 
 	@Test
 	void responseEntityResultHandlerWithPrimaryUsesQualifiedReactiveAdapterRegistry() {
-		load(registerPrimaryBean("testReactiveAdapterRegistry", ReactiveAdapterRegistry.class, new ReactiveAdapterRegistry()));
+		load(registerPrimaryBean("testReactiveAdapterRegistry", ReactiveAdapterRegistry.class));
 		ResponseEntityResultHandler responseEntityResultHandler = this.context.getBean(ResponseEntityResultHandler.class);
 		assertThat(responseEntityResultHandler.getAdapterRegistry()).isSameAs(this.context.getBean("webFluxAdapterRegistry"));
 		assertThat(this.context.getBeansOfType(ReactiveAdapterRegistry.class)).containsOnlyKeys(
@@ -143,7 +143,7 @@ class DelegatingWebFluxConfigurationIntegrationTests {
 
 	@Test
 	void responseBodyResultHandlerWithPrimaryUsesQualifiedReactiveAdapterRegistry() {
-		load(registerPrimaryBean("testReactiveAdapterRegistry", ReactiveAdapterRegistry.class, new ReactiveAdapterRegistry()));
+		load(registerPrimaryBean("testReactiveAdapterRegistry", ReactiveAdapterRegistry.class));
 		ResponseBodyResultHandler responseBodyResultHandler = this.context.getBean(ResponseBodyResultHandler.class);
 		assertThat(responseBodyResultHandler.getAdapterRegistry()).isSameAs(this.context.getBean("webFluxAdapterRegistry"));
 		assertThat(this.context.getBeansOfType(ReactiveAdapterRegistry.class)).containsOnlyKeys(
@@ -169,7 +169,7 @@ class DelegatingWebFluxConfigurationIntegrationTests {
 
 	@Test
 	void viewResolutionResultHandlerWithPrimaryUsesQualifiedReactiveAdapterRegistry() {
-		load(registerPrimaryBean("testReactiveAdapterRegistry", ReactiveAdapterRegistry.class, new ReactiveAdapterRegistry()));
+		load(registerPrimaryBean("testReactiveAdapterRegistry", ReactiveAdapterRegistry.class));
 		ViewResolutionResultHandler viewResolutionResultHandler = this.context.getBean(ViewResolutionResultHandler.class);
 		assertThat(viewResolutionResultHandler.getAdapterRegistry()).isSameAs(this.context.getBean("webFluxAdapterRegistry"));
 		assertThat(this.context.getBeansOfType(ReactiveAdapterRegistry.class)).containsOnlyKeys(
@@ -189,10 +189,6 @@ class DelegatingWebFluxConfigurationIntegrationTests {
 		return context -> context.registerBean(beanName, type, () -> mock(type), definition -> definition.setPrimary(true));
 	}
 
-	private <T> Consumer<AnnotationConfigApplicationContext> registerPrimaryBean(String beanName, Class<T> type, T instance) {
-		return context -> context.registerBean(beanName, type, () -> instance, definition -> definition.setPrimary(true));
-	}
-
 	private void load(Consumer<AnnotationConfigApplicationContext> context) {
 		AnnotationConfigApplicationContext testContext = new AnnotationConfigApplicationContext();
 		context.accept(testContext);
@@ -200,5 +196,4 @@ class DelegatingWebFluxConfigurationIntegrationTests {
 		testContext.refresh();
 		this.context = testContext;
 	}
-
 }

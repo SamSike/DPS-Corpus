@@ -45,15 +45,6 @@ public class KeyVaultConfigurationTest extends CamelTestSupport {
     }
 
     @Test
-    public void createEndpointWithMinimalIdentityConfiguration() throws Exception {
-        KeyVaultComponent component = context.getComponent("azure-key-vault", KeyVaultComponent.class);
-        KeyVaultEndpoint endpoint = (KeyVaultEndpoint) component
-                .createEndpoint("azure-key-valut://MyVault?credentialType=AZURE_IDENTITY");
-
-        assertNotNull(endpoint);
-    }
-
-    @Test
     public void createEndpointWithExplicitCredentials() throws Exception {
 
         KeyVaultComponent component = context.getComponent("azure-key-vault", KeyVaultComponent.class);

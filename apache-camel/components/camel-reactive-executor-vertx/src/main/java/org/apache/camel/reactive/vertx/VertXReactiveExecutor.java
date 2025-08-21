@@ -99,9 +99,10 @@ public class VertXReactiveExecutor extends ServiceSupport implements CamelContex
     public void scheduleSync(Runnable runnable) {
         LOG.trace("scheduleSync: {}", runnable);
         final Runnable task = runnable;
-        vertx.executeBlocking(() -> {
+        vertx.executeBlocking(future -> {
             task.run();
-            return null;
+            future.complete();
+        }, res -> {
         });
     }
 

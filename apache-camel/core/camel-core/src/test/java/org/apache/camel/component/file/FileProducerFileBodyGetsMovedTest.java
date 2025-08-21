@@ -38,8 +38,7 @@ public class FileProducerFileBodyGetsMovedTest extends ContextTestSupport {
         mock.expectedMessageCount(1);
         File temporaryFile = File.createTempFile("camel", "test");
 
-        template.requestBodyAndHeader("direct:in", temporaryFile, Exchange.FILE_LOCAL_WORK_PATH,
-                temporaryFile.getAbsolutePath());
+        template.requestBodyAndHeader("direct:in", temporaryFile, Exchange.FILE_LOCAL_WORK_PATH, temporaryFile);
 
         mock.assertIsSatisfied();
         assertFalse(temporaryFile.exists(), "Temporary body file should have been moved, not copied");
@@ -52,17 +51,18 @@ public class FileProducerFileBodyGetsMovedTest extends ContextTestSupport {
         mock.expectedMessageCount(1);
         File temporaryFile = File.createTempFile("camel", "test");
 
-        template.requestBodyAndHeader("direct:in", temporaryFile, Exchange.FILE_LOCAL_WORK_PATH,
-                temporaryFile.getAbsolutePath());
+        GenericFile<File> body = new GenericFile<>();
+        body.setFile(temporaryFile);
+        template.requestBodyAndHeader("direct:in", temporaryFile, Exchange.FILE_LOCAL_WORK_PATH, temporaryFile);
 
         mock.assertIsSatisfied();
         assertFalse(temporaryFile.exists(), "Temporary body file should have been moved, not copied");
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:in").to(fileUri("?fileName=testStoreFile")).to("mock:result");
             }
         };

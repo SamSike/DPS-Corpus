@@ -19,6 +19,7 @@ package org.apache.camel.component.pulsar;
 import org.apache.camel.component.pulsar.utils.AutoConfiguration;
 import org.apache.camel.component.pulsar.utils.consumers.SubscriptionType;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 
@@ -36,8 +37,10 @@ public class PulsarComponentTest extends CamelTestSupport {
     private AutoConfiguration autoConfiguration;
 
     @Override
-    public void doPreSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
         autoConfiguration = mock(AutoConfiguration.class);
+        super.setUp();
     }
 
     @Test

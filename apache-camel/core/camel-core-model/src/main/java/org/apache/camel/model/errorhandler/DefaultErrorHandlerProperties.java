@@ -25,9 +25,9 @@ import org.apache.camel.processor.errorhandler.RedeliveryPolicy;
 import org.apache.camel.spi.CamelLogger;
 
 /**
- * Legacy error handler for XML DSL in camel-spring-xml
+ * Legacy error handler for XML DSL in camel-spring-xml/camel-blueprint
  */
-@Deprecated(since = "3.17.0")
+@Deprecated
 public interface DefaultErrorHandlerProperties extends ErrorHandlerFactory {
 
     boolean hasLogger();

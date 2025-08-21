@@ -16,10 +16,8 @@
  */
 package org.apache.camel.component.google.pubsub;
 
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
-import com.google.api.gax.retrying.RetrySettings;
 import org.apache.camel.Category;
 import org.apache.camel.Component;
 import org.apache.camel.Consumer;
@@ -28,7 +26,10 @@ import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.component.google.pubsub.serializer.DefaultGooglePubsubSerializer;
 import org.apache.camel.component.google.pubsub.serializer.GooglePubsubSerializer;
-import org.apache.camel.spi.*;
+import org.apache.camel.spi.Metadata;
+import org.apache.camel.spi.UriEndpoint;
+import org.apache.camel.spi.UriParam;
+import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
@@ -42,58 +43,68 @@ import org.slf4j.LoggerFactory;
 @UriEndpoint(firstVersion = "2.19.0", scheme = "google-pubsub", title = "Google Pubsub",
              syntax = "google-pubsub:projectId:destinationName", category = { Category.CLOUD, Category.MESSAGING },
              headersClass = GooglePubsubConstants.class)
-public class GooglePubsubEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
+public class GooglePubsubEndpoint extends DefaultEndpoint {
 
     private Logger log;
 
     @UriPath(label = "common", description = "The Google Cloud PubSub Project Id")
     @Metadata(required = true)
     private String projectId;
+
     @UriPath(label = "common",
              description = "The Destination Name. For the consumer this will be the subscription name, while for the producer this will be the topic name.")
     @Metadata(required = true)
     private String destinationName;
-    @UriParam(label = "security",
+
+    @UriParam(label = "common", name = "authenticate",
               description = "Use Credentials when interacting with PubSub service (no authentication is required when using emulator).",
               defaultValue = "true")
     private boolean authenticate = true;
-    @UriParam(label = "security",
+
+    @UriParam(label = "common",
               description = "The Service account key that can be used as credentials for the PubSub publisher/subscriber. It can be loaded by default from "
                             + " classpath, but you can prefix with classpath:, file:, or http: to load the resource from different systems.")
     private String serviceAccountKey;
-    @Deprecated
-    @UriParam(label = "advanced", description = "To use a custom logger name")
+
+    @UriParam(name = "loggerId", description = "Logger ID to use when a match to the parent route required")
     private String loggerId;
-    @UriParam(label = "consumer,advanced", name = "concurrentConsumers",
+
+    @UriParam(label = "consumer", name = "concurrentConsumers",
               description = "The number of parallel streams consuming from the subscription",
               defaultValue = "1")
     private Integer concurrentConsumers = 1;
-    @UriParam(label = "consumer,advanced", name = "maxMessagesPerPoll",
+
+    @UriParam(label = "consumer", name = "maxMessagesPerPoll",
               description = "The max number of messages to receive from the server in a single API call", defaultValue = "1")
     private Integer maxMessagesPerPoll = 1;
-    @UriParam(label = "consumer,advanced", name = "synchronousPull", description = "Synchronously pull batches of messages",
+
+    @UriParam(label = "consumer", name = "synchronousPull", description = "Synchronously pull batches of messages",
               defaultValue = "false")
     private boolean synchronousPull;
+
     @UriParam(label = "consumer", defaultValue = "AUTO", enums = "AUTO,NONE",
               description = "AUTO = exchange gets ack'ed/nack'ed on completion. NONE = downstream process has to ack/nack explicitly")
     private GooglePubsubConstants.AckMode ackMode = GooglePubsubConstants.AckMode.AUTO;
-    @UriParam(label = "consumer,advanced", name = "maxAckExtensionPeriod",
+
+    @UriParam(label = "consumer", name = "maxAckExtensionPeriod",
               description = "Set the maximum period a message ack deadline will be extended. Value in seconds",
               defaultValue = "3600")
     private int maxAckExtensionPeriod = 3600;
-    @UriParam(label = "producer,advanced",
-              description = "Should message ordering be enabled")
+
+    @UriParam(defaultValue = "false",
+              description = "Should message ordering be enabled",
+              label = "producer,advanced")
     private boolean messageOrderingEnabled;
-    @UriParam(label = "producer,advanced",
-              description = "Pub/Sub endpoint to use. Required when using message ordering, and ensures that messages are received in order even when multiple publishers are used")
+
+    @UriParam(description = "Pub/Sub endpoint to use. Required when using message ordering, and ensures that messages are received in order even when multiple publishers are used",
+              label = "producer,advanced")
     private String pubsubEndpoint;
-    @UriParam(label = "producer,advanced",
-              description = "A custom GooglePubsubSerializer to use for serializing message payloads in the producer")
+
+    @UriParam(name = "serializer",
+              description = "A custom GooglePubsubSerializer to use for serializing message payloads in the producer",
+              label = "producer,advanced")
     @Metadata(autowired = true)
     private GooglePubsubSerializer serializer;
-    @UriParam(label = "producer,advanced",
-              description = "A custom RetrySettings to control how the publisher handles retry-able failures")
-    private RetrySettings retry;
 
     public GooglePubsubEndpoint(String uri, Component component) {
         super(uri, component);
@@ -243,40 +254,11 @@ public class GooglePubsubEndpoint extends DefaultEndpoint implements EndpointSer
         this.messageOrderingEnabled = messageOrderingEnabled;
     }
 
-    public RetrySettings getRetry() {
-        return retry;
-    }
-
-    public void setRetry(RetrySettings retry) {
-        this.retry = retry;
-    }
-
     public String getPubsubEndpoint() {
         return this.pubsubEndpoint;
     }
 
     public void setPubsubEndpoint(String pubsubEndpoint) {
         this.pubsubEndpoint = pubsubEndpoint;
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (ObjectHelper.isNotEmpty(getPubsubEndpoint())) {
-            return getServiceProtocol() + ":" + getPubsubEndpoint();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "pubsub";
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        if (getDestinationName() != null) {
-            return Map.of("destinationName", getDestinationName());
-        }
-        return null;
     }
 }

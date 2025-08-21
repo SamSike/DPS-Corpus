@@ -24,7 +24,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;all&gt;
- *         &lt;element name="commits" type="{http://www.jooq.org/xsd/jooq-migrations-3.20.0.xsd}CommitsType" minOccurs="0"/&gt;
+ *         &lt;element name="commits" type="{http://www.jooq.org/xsd/jooq-migrations-3.15.0.xsd}CommitsType" minOccurs="0"/&gt;
  *       &lt;/all&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -43,7 +43,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class MigrationsType implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32000L;
+    private final static long serialVersionUID = 31500L;
     @XmlElementWrapper(name = "commits")
     @XmlElement(name = "commit")
     protected List<CommitType> commits;
@@ -104,8 +104,8 @@ public class MigrationsType implements Serializable, XMLAppendable
             return false;
         }
         MigrationsType other = ((MigrationsType) that);
-        if ((commits == null)||commits.isEmpty()) {
-            if ((other.commits!= null)&&(!other.commits.isEmpty())) {
+        if (commits == null) {
+            if (other.commits!= null) {
                 return false;
             }
         } else {
@@ -120,7 +120,7 @@ public class MigrationsType implements Serializable, XMLAppendable
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = ((prime*result)+(((commits == null)||commits.isEmpty())? 0 :commits.hashCode()));
+        result = ((prime*result)+((commits == null)? 0 :commits.hashCode()));
         return result;
     }
 

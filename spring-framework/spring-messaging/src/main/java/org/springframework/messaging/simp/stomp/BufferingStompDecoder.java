@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,21 +22,22 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 /**
- * Uses {@link org.springframework.messaging.simp.stomp.StompDecoder} to decode
- * a {@link ByteBuffer} to one or more STOMP message. If the message is incomplete,
- * unused content is buffered and combined with the next input buffer, or if there
- * is not enough data still, continues to buffer.
+ * An extension of {@link org.springframework.messaging.simp.stomp.StompDecoder}
+ * that buffers content remaining in the input ByteBuffer after the parent
+ * class has read all (complete) STOMP frames from it. The remaining content
+ * represents an incomplete STOMP frame. When called repeatedly with additional
+ * data, the decode method returns one or more messages or, if there is not
+ * enough data still, continues to buffer.
  *
  * <p>A single instance of this decoder can be invoked repeatedly to read all
- * messages from a single stream (for example, WebSocket session) as long as decoding
+ * messages from a single stream (e.g. WebSocket session) as long as decoding
  * does not fail. If there is an exception, StompDecoder instance should not
  * be used any more as its internal state is not guaranteed to be consistent.
  * It is expected that the underlying session is closed at that point.
@@ -53,7 +54,8 @@ public class BufferingStompDecoder {
 
 	private final Queue<ByteBuffer> chunks = new LinkedBlockingQueue<>();
 
-	private volatile @Nullable Integer expectedContentLength;
+	@Nullable
+	private volatile Integer expectedContentLength;
 
 
 	/**
@@ -163,7 +165,8 @@ public class BufferingStompDecoder {
 	/**
 	 * Get the expected content length of the currently buffered, incomplete STOMP frame.
 	 */
-	public @Nullable Integer getExpectedContentLength() {
+	@Nullable
+	public Integer getExpectedContentLength() {
 		return this.expectedContentLength;
 	}
 

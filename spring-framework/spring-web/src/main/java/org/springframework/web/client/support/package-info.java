@@ -2,7 +2,9 @@
  * Classes supporting the {@code org.springframework.web.client} package.
  * Contains a base class for RestTemplate usage.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.client.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

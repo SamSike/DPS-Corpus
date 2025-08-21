@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -48,7 +48,8 @@ import org.jooq.CacheContext;
 import org.jooq.CacheProvider;
 
 /**
- * A default implementation a synchronized LRU cache where appropriate.
+ * A default implementation producing a {@link ConcurrentHashMap} in most cases,
+ * or a synchronized LRU cache where appropriate.
  *
  * @author Lukas Eder
  */
@@ -57,23 +58,14 @@ final class DefaultCacheProvider implements CacheProvider {
     @Override
     public Map<Object, Object> provide(CacheContext ctx) {
         switch (ctx.cacheType()) {
+
+            // TODO: Is there a better implementation than wrapping LinkedHashMap
+            // in synchronizedMap(), i.e. one that does not use a monitor?
             case CACHE_PARSING_CONNECTION:
-                return synchronizedMap(new LRUCache<>(defaultIfNull(ctx.settings().getCacheParsingConnectionLRUCacheSize(), 8192)));
-
-            case CACHE_RECORD_MAPPERS:
-                return synchronizedMap(new LRUCache<>(defaultIfNull(ctx.settings().getCacheRecordMappersLRUCacheSize(), 8192)));
-
-            case REFLECTION_CACHE_GET_ANNOTATED_GETTER:
-            case REFLECTION_CACHE_GET_ANNOTATED_MEMBERS:
-            case REFLECTION_CACHE_GET_ANNOTATED_SETTERS:
-            case REFLECTION_CACHE_GET_MATCHING_GETTER:
-            case REFLECTION_CACHE_GET_MATCHING_MEMBERS:
-            case REFLECTION_CACHE_GET_MATCHING_SETTERS:
-            case REFLECTION_CACHE_HAS_COLUMN_ANNOTATIONS:
-                return synchronizedMap(new LRUCache<>(defaultIfNull(ctx.settings().getReflectionCacheLRUCacheSize(), 32768)));
+                return synchronizedMap(new LRUCache<>(defaultIfNull(settings(ctx.configuration()).getCacheParsingConnectionLRUCacheSize(), 8912)));
 
             default:
-                return synchronizedMap(new LRUCache<>(8192));
+                return new ConcurrentHashMap<>();
         }
     }
 }

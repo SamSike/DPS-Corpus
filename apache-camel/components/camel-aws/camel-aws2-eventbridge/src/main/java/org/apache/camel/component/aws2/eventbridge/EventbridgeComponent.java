@@ -22,14 +22,13 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.support.HealthCheckComponent;
+import org.apache.camel.support.DefaultComponent;
 
 /**
  * For working with Amazon Eventbridge SDK v2.
  */
 @Component("aws2-eventbridge")
-public class EventbridgeComponent extends HealthCheckComponent {
-
+public class EventbridgeComponent extends DefaultComponent {
     @Metadata
     private EventbridgeConfiguration configuration = new EventbridgeConfiguration();
 
@@ -39,11 +38,13 @@ public class EventbridgeComponent extends HealthCheckComponent {
 
     public EventbridgeComponent(CamelContext context) {
         super(context);
+
+        registerExtension(new EventbridgeComponentVerifierExtension());
     }
 
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        if (remaining == null || remaining.isBlank()) {
+        if (remaining == null || remaining.trim().length() == 0) {
             throw new IllegalArgumentException("Event bus name must be specified.");
         }
         EventbridgeConfiguration configuration
@@ -52,12 +53,10 @@ public class EventbridgeComponent extends HealthCheckComponent {
         EventbridgeEndpoint endpoint = new EventbridgeEndpoint(uri, this, configuration);
         setProperties(endpoint, parameters);
         if (Boolean.FALSE.equals(configuration.isUseDefaultCredentialsProvider())
-                && Boolean.FALSE.equals(configuration.isUseProfileCredentialsProvider())
-                && Boolean.FALSE.equals(configuration.isUseSessionCredentials())
                 && configuration.getEventbridgeClient() == null
                 && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
             throw new IllegalArgumentException(
-                    "useDefaultCredentialsProvider is set to false, useProfileCredentialsProvider is set to false, useSessionCredentials is set to false, Amazon Eventbridge client or accessKey and secretKey must be specified");
+                    "useDefaultCredentialsProvider is set to false, Amazon Eventbridge client or accessKey and secretKey must be specified");
         }
 
         return endpoint;

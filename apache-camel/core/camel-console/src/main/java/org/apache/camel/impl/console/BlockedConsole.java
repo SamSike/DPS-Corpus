@@ -20,14 +20,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.AsyncProcessorAwaitManager;
 import org.apache.camel.spi.annotations.DevConsole;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.console.AbstractDevConsole;
 import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.json.JsonObject;
 
-@DevConsole(name = "blocked", displayName = "Blocked Exchanges", description = "Display blocked exchanges")
+@DevConsole("blocked")
 public class BlockedConsole extends AbstractDevConsole {
 
     public BlockedConsole() {
@@ -38,7 +38,7 @@ public class BlockedConsole extends AbstractDevConsole {
     protected String doCallText(Map<String, Object> options) {
         StringBuilder sb = new StringBuilder();
 
-        AsyncProcessorAwaitManager am = PluginHelper.getAsyncProcessorAwaitManager(getCamelContext());
+        AsyncProcessorAwaitManager am = getCamelContext().adapt(ExtendedCamelContext.class).getAsyncProcessorAwaitManager();
         sb.append(String.format("\n    Blocked: %s", am.size()));
         for (AsyncProcessorAwaitManager.AwaitThread at : am.browse()) {
             String age = TimeUtils.printDuration(at.getWaitDuration(), true);
@@ -53,7 +53,7 @@ public class BlockedConsole extends AbstractDevConsole {
     protected JsonObject doCallJson(Map<String, Object> options) {
         JsonObject root = new JsonObject();
 
-        AsyncProcessorAwaitManager am = PluginHelper.getAsyncProcessorAwaitManager(getCamelContext());
+        AsyncProcessorAwaitManager am = getCamelContext().adapt(ExtendedCamelContext.class).getAsyncProcessorAwaitManager();
         root.put("blocked", am.size());
 
         final List<JsonObject> list = new ArrayList<>();

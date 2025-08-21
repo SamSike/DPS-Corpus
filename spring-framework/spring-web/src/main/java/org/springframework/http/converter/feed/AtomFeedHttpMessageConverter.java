@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import org.springframework.http.MediaType;
  * that can read and write Atom feeds. Specifically, this converter can handle {@link Feed}
  * objects from the <a href="https://github.com/rometools/rome">ROME</a> project.
  *
- * <p><b>NOTE: As of Spring 4.1, this is based on the {@code com.rometools}
+ * <p>><b>NOTE: As of Spring 4.1, this is based on the {@code com.rometools}
  * variant of ROME, version 1.5. Please upgrade your build dependency.</b>
  *
  * <p>By default, this converter reads and writes the media type ({@code application/atom+xml}).

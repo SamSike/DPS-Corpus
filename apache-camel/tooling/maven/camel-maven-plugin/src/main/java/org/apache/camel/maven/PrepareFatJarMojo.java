@@ -29,11 +29,10 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-
-import javax.inject.Inject;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
@@ -46,6 +45,7 @@ import org.apache.maven.model.Exclusion;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -69,19 +69,13 @@ public class PrepareFatJarMojo extends AbstractMojo {
 
     @Parameter(property = "project", required = true, readonly = true)
     private MavenProject project;
-
     @Parameter(defaultValue = "${project.build.outputDirectory}")
     private File classesDirectory;
-
-    private final ArtifactFactory artifactFactory;
-
-    @Inject
-    public PrepareFatJarMojo(ArtifactFactory artifactFactory) {
-        this.artifactFactory = artifactFactory;
-    }
+    @Component
+    private ArtifactFactory artifactFactory;
 
     @Override
-    public void execute() throws MojoFailureException {
+    public void execute() throws MojoExecutionException, MojoFailureException {
         Collection<String> loaders = findTypeConverterLoaderClasses();
         if (loaders.isEmpty()) {
             return;
@@ -110,7 +104,7 @@ public class PrepareFatJarMojo extends AbstractMojo {
     private void writeFile(File file, String data) throws IOException {
         Path path = file.toPath();
         Files.createDirectories(path.getParent());
-        Files.writeString(path, data, StandardOpenOption.WRITE, StandardOpenOption.CREATE,
+        Files.write(path, data.getBytes(StandardCharsets.UTF_8), StandardOpenOption.WRITE, StandardOpenOption.CREATE,
                 StandardOpenOption.TRUNCATE_EXISTING);
     }
 
@@ -151,7 +145,7 @@ public class PrepareFatJarMojo extends AbstractMojo {
         }
     }
 
-    protected final ClassLoader getProjectClassLoader() throws MojoExecutionException {
+    protected final DynamicClassLoader getProjectClassLoader() throws MojoExecutionException {
         if (projectClassLoader == null) {
             List<URL> urls = new ArrayList<>();
             // need to include project compile dependencies (code similar to camel-maven-plugin)
@@ -226,7 +220,9 @@ public class PrepareFatJarMojo extends AbstractMojo {
     private Collection<Artifact> getAllDependencies() throws MojoExecutionException {
         List<Artifact> artifacts = new ArrayList<>();
 
-        for (Dependency dependency : project.getDependencies()) {
+        for (Iterator<?> dependencies = project.getDependencies().iterator(); dependencies.hasNext();) {
+            Dependency dependency = (Dependency) dependencies.next();
+
             String groupId = dependency.getGroupId();
             String artifactId = dependency.getArtifactId();
 

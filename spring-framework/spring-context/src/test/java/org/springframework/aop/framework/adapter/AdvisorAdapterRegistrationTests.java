@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,34 +40,33 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
  * @author Dmitriy Kopylenko
  * @author Chris Beams
  */
-class AdvisorAdapterRegistrationTests {
+public class AdvisorAdapterRegistrationTests {
 
 	@BeforeEach
 	@AfterEach
-	void resetGlobalAdvisorAdapterRegistry() {
+	public void resetGlobalAdvisorAdapterRegistry() {
 		GlobalAdvisorAdapterRegistry.reset();
 	}
 
 	@Test
-	void advisorAdapterRegistrationManagerNotPresentInContext() {
+	public void testAdvisorAdapterRegistrationManagerNotPresentInContext() {
 		ClassPathXmlApplicationContext ctx =
 			new ClassPathXmlApplicationContext(getClass().getSimpleName() + "-without-bpp.xml", getClass());
 		ITestBean tb = (ITestBean) ctx.getBean("testBean");
 		// just invoke any method to see if advice fired
-		assertThatExceptionOfType(UnknownAdviceTypeException.class).isThrownBy(tb::getName);
+		assertThatExceptionOfType(UnknownAdviceTypeException.class).isThrownBy(
+				tb::getName);
 		assertThat(getAdviceImpl(tb).getInvocationCounter()).isZero();
-		ctx.close();
 	}
 
 	@Test
-	void advisorAdapterRegistrationManagerPresentInContext() {
+	public void testAdvisorAdapterRegistrationManagerPresentInContext() {
 		ClassPathXmlApplicationContext ctx =
 			new ClassPathXmlApplicationContext(getClass().getSimpleName() + "-with-bpp.xml", getClass());
 		ITestBean tb = (ITestBean) ctx.getBean("testBean");
 		// just invoke any method to see if advice fired
 		tb.getName();
 		getAdviceImpl(tb).getInvocationCounter();
-		ctx.close();
 	}
 
 	private SimpleBeforeAdviceImpl getAdviceImpl(ITestBean tb) {
@@ -81,7 +80,7 @@ class AdvisorAdapterRegistrationTests {
 
 interface SimpleBeforeAdvice extends BeforeAdvice {
 
-	void before();
+	void before() throws Throwable;
 
 }
 
@@ -108,7 +107,7 @@ class SimpleBeforeAdviceImpl implements SimpleBeforeAdvice {
 	private int invocationCounter;
 
 	@Override
-	public void before() {
+	public void before() throws Throwable {
 		++invocationCounter;
 	}
 

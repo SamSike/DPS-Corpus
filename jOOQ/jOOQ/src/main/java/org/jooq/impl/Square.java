@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -115,11 +112,8 @@ implements
 
 
 
-
-            case CLICKHOUSE:
             case CUBRID:
             case DERBY:
-            case DUCKDB:
             case FIREBIRD:
             case H2:
             case HSQLDB:
@@ -127,7 +121,6 @@ implements
             case MARIADB:
             case MYSQL:
             case POSTGRES:
-            case TRINO:
             case YUGABYTEDB:
                 return false;
 
@@ -166,11 +159,8 @@ implements
 
 
 
-
-            case CLICKHOUSE:
             case CUBRID:
             case DERBY:
-            case DUCKDB:
             case FIREBIRD:
             case H2:
             case HSQLDB:
@@ -178,7 +168,6 @@ implements
             case MARIADB:
             case MYSQL:
             case POSTGRES:
-            case TRINO:
             case YUGABYTEDB: {
                 if (isSimple(ctx, value))
                     ctx.visit(imul(value, value));
@@ -209,19 +198,39 @@ implements
     // -------------------------------------------------------------------------
 
     @Override
-    public final Field<T> $arg1() {
+    public final Field<T> $value() {
         return value;
     }
 
     @Override
-    public final QOM.Square<T> $arg1(Field<T> newValue) {
+    public final QOM.Square<T> $value(Field<T> newValue) {
         return $constructor().apply(newValue);
     }
 
-    @Override
     public final Function1<? super Field<T>, ? extends QOM.Square<T>> $constructor() {
         return (a1) -> new Square<>(a1);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // -------------------------------------------------------------------------
     // XXX: The Object API
@@ -229,7 +238,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.Square<?> o) {
+        if (that instanceof QOM.Square) { QOM.Square<?> o = (QOM.Square<?>) that;
             return
                 StringUtils.equals($value(), o.$value())
             ;

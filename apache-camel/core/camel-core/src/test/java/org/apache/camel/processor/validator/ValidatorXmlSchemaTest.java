@@ -60,7 +60,7 @@ public class ValidatorXmlSchemaTest extends ContextTestSupport {
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 validator().type("xml").withUri("validator:org/apache/camel/impl/validate.xsd");
 
                 from("direct:in").inputTypeWithValidate("xml").to("mock:result");

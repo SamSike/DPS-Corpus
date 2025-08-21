@@ -23,24 +23,23 @@ import com.datastax.oss.driver.api.core.CqlSession;
  * and key (clustering key).
  */
 public class NamedCassandraIdempotentRepository extends CassandraIdempotentRepository {
-
     public NamedCassandraIdempotentRepository() {
-        setPkColumns("NAME,KEY");
+        setPKColumns("NAME", "KEY");
         setName("DEFAULT");
     }
 
     public NamedCassandraIdempotentRepository(CqlSession session, String name) {
         super(session);
-        setPkColumns("NAME,KEY");
+        setPKColumns("NAME", "KEY");
         setName(name);
     }
 
     public String getName() {
-        return getPrefixPKValues().split(",")[0];
+        return getPrefixPKValues()[0];
     }
 
     public final void setName(String name) {
-        setPrefixPKValues(name);
+        setPrefixPKValues(new String[] { name });
     }
 
 }

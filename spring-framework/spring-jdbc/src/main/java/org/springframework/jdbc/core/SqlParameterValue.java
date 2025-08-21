@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package org.springframework.jdbc.core;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Object to represent an SQL parameter value, including parameter meta-data
@@ -38,7 +38,8 @@ import org.jspecify.annotations.Nullable;
  */
 public class SqlParameterValue extends SqlParameter {
 
-	private final @Nullable Object value;
+	@Nullable
+	private final Object value;
 
 
 	/**
@@ -88,7 +89,8 @@ public class SqlParameterValue extends SqlParameter {
 	/**
 	 * Return the value object that this parameter value holds.
 	 */
-	public @Nullable Object getValue() {
+	@Nullable
+	public Object getValue() {
 		return this.value;
 	}
 

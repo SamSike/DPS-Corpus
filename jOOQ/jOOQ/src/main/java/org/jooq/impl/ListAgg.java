@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -45,7 +45,6 @@ import static java.lang.Boolean.FALSE;
 import static org.jooq.SQLDialect.CUBRID;
 // ...
 // ...
-import static org.jooq.SQLDialect.DUCKDB;
 import static org.jooq.SQLDialect.H2;
 // ...
 import static org.jooq.SQLDialect.HSQLDB;
@@ -63,8 +62,6 @@ import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.query;
 import static org.jooq.impl.DSL.sql;
-import static org.jooq.impl.DSL.xmlserializeContent;
-import static org.jooq.impl.DSL.xmlserializeDocument;
 import static org.jooq.impl.Keywords.K_DISTINCT;
 import static org.jooq.impl.Keywords.K_SEPARATOR;
 import static org.jooq.impl.Names.N_GROUP_CONCAT;
@@ -87,28 +84,19 @@ import org.jooq.Context;
 import org.jooq.Field;
 // ...
 import org.jooq.SQLDialect;
-import org.jooq.XML;
 import org.jooq.impl.QOM.UNotYetImplemented;
 
 /**
  * @author Lukas Eder
  */
-final class ListAgg
-extends
-    AbstractAggregateFunction<String>
-implements
-    UNotYetImplemented
-{
-
-    static final Set<SQLDialect> SET_GROUP_CONCAT_MAX_LEN     = SQLDialect.supportedBy(MARIADB, MYSQL);
-    static final Set<SQLDialect> SUPPORT_GROUP_CONCAT         = SQLDialect.supportedBy(CUBRID, H2, HSQLDB, MARIADB, MYSQL, SQLITE);
-    static final Set<SQLDialect> SUPPORT_STRING_AGG           = SQLDialect.supportedBy(DUCKDB, POSTGRES);
+final class ListAgg extends AbstractAggregateFunction<String> implements UNotYetImplemented {
+    private static final Set<SQLDialect> SET_GROUP_CONCAT_MAX_LEN     = SQLDialect.supportedBy(MARIADB, MYSQL);
+    private static final Set<SQLDialect> SUPPORT_GROUP_CONCAT         = SQLDialect.supportedBy(CUBRID, H2, HSQLDB, MARIADB, MYSQL, SQLITE);
+    private static final Set<SQLDialect> SUPPORT_STRING_AGG           = SQLDialect.supportedBy(POSTGRES);
 
 
 
 
-
-    static final Field<String>   DEFAULT_SEPARATOR            = DSL.inline(",");
 
     ListAgg(boolean distinct, Field<?> arg) {
         super(distinct, N_LISTAGG, VARCHAR, arg);
@@ -137,11 +125,6 @@ implements
                     query("{set} @@group_concat_max_len = 4294967295")
                 );
                 acceptGroupConcat(ctx);
-
-
-
-
-
                 appendSQL(ctx, query("{set} @@group_concat_max_len = @t"));
             }
             else
@@ -175,28 +158,8 @@ implements
     }
 
     @Override
-    final Field<?> applyMap(Context<?> ctx, Field<?> arg) {
-        switch (ctx.family()) {
-            case TRINO:
-                return arg.getDataType().isString() ? arg : arg.cast(VARCHAR);
-            default:
-                return arg;
-        }
-    }
-
-    @Override
-    final boolean applyFilterToArgument(Context<?> ctx, Field<?> arg, int i) {
+    boolean applyFilter(Field<?> arg, int i) {
         return i == 0;
-    }
-
-    @Override
-    boolean supportsFilter(Context<?> ctx) {
-        switch (ctx.family()) {
-            case TRINO:
-                return false;
-            default:
-                return super.supportsFilter(ctx);
-        }
     }
 
     /**
@@ -207,17 +170,12 @@ implements
         acceptArguments1(ctx, new QueryPartListView<>(arguments.get(0)));
         acceptOrderBy(ctx);
 
-        if (arguments.size() > 1) {
-            if (ctx.family() == SQLITE) {
-
-                // [#16666] SQLite's GROUP_CONCAT(DISTINCT ..) function doesn't support a second argument
-                if (!distinct || !DEFAULT_SEPARATOR.equals(arguments.get(1)))
-                    ctx.sql(", ").visit(arguments.get(1));
-            }
+        if (arguments.size() > 1)
+            if (ctx.family() == SQLITE)
+                ctx.sql(", ").visit(arguments.get(1));
             else
                 ctx.sql(' ').visit(K_SEPARATOR).sql(' ')
                    .visit(arguments.get(1));
-        }
 
         ctx.sql(')');
 
@@ -246,12 +204,12 @@ implements
         // The explicit cast is needed in Postgres
         QueryPartListView<Field<?>> args =  wrap(castIfNeeded((Field<?>) arguments.get(0), String.class));
         acceptArguments1(ctx, args);
-
+        
         if (arguments.size() > 1)
             ctx.sql(", ").visit(arguments.get(1));
         else
             ctx.sql(", ").visit(inline(""));
-
+            
 
 
 

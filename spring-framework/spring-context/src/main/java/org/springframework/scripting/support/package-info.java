@@ -3,7 +3,9 @@
  * Provides a ScriptFactoryPostProcessor for turning ScriptFactory
  * definitions into scripted objects.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.scripting.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

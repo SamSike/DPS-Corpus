@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,11 @@ package org.springframework.transaction.reactive;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
+import org.springframework.util.function.SingletonSupplier;
 
 /**
  * Mutable transaction context that encapsulates transactional synchronizations and
@@ -38,9 +41,12 @@ public class TransactionContext {
 
 	private final @Nullable TransactionContext parent;
 
+	private final SingletonSupplier<UUID> contextId = SingletonSupplier.of(UUID::randomUUID);
+
 	private final Map<Object, Object> resources = new LinkedHashMap<>();
 
-	private @Nullable Set<TransactionSynchronization> synchronizations;
+	@Nullable
+	private Set<TransactionSynchronization> synchronizations;
 
 	private volatile @Nullable String currentTransactionName;
 
@@ -60,8 +66,23 @@ public class TransactionContext {
 	}
 
 
-	public @Nullable TransactionContext getParent() {
+	@Nullable
+	public TransactionContext getParent() {
 		return this.parent;
+	}
+
+	@Deprecated
+	public String getName() {
+		String name = getCurrentTransactionName();
+		if (StringUtils.hasText(name)) {
+			return getContextId() + ": " + name;
+		}
+		return getContextId().toString();
+	}
+
+	@Deprecated
+	public UUID getContextId() {
+		return this.contextId.obtain();
 	}
 
 	public Map<Object, Object> getResources() {
@@ -72,7 +93,8 @@ public class TransactionContext {
 		this.synchronizations = synchronizations;
 	}
 
-	public @Nullable Set<TransactionSynchronization> getSynchronizations() {
+	@Nullable
+	public Set<TransactionSynchronization> getSynchronizations() {
 		return this.synchronizations;
 	}
 
@@ -80,7 +102,8 @@ public class TransactionContext {
 		this.currentTransactionName = currentTransactionName;
 	}
 
-	public @Nullable String getCurrentTransactionName() {
+	@Nullable
+	public String getCurrentTransactionName() {
 		return this.currentTransactionName;
 	}
 
@@ -96,7 +119,8 @@ public class TransactionContext {
 		this.currentTransactionIsolationLevel = currentTransactionIsolationLevel;
 	}
 
-	public @Nullable Integer getCurrentTransactionIsolationLevel() {
+	@Nullable
+	public Integer getCurrentTransactionIsolationLevel() {
 		return this.currentTransactionIsolationLevel;
 	}
 

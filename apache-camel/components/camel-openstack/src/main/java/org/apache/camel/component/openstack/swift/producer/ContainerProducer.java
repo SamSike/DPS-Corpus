@@ -149,7 +149,7 @@ public class ContainerProducer extends AbstractOpenstackProducer {
     private CreateUpdateContainerOptions messageToCreateUpdateOptions(Message message) {
         CreateUpdateContainerOptions options = message.getBody(CreateUpdateContainerOptions.class);
         if (options == null) {
-            Map<String, Object> headers = message.getHeaders();
+            Map headers = message.getHeaders();
             if (headers.containsKey(SwiftConstants.CONTAINER_METADATA_PREFIX)) {
                 options = getCreateUpdateOptions(options)
                         .metadata(message.getHeader(SwiftConstants.CONTAINER_METADATA_PREFIX, Map.class));

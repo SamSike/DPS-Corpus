@@ -26,15 +26,15 @@ import org.dizitart.no2.Document;
 public abstract class AbstractPayloadAwareOperation extends AbstractNitriteOperation {
     private Expression expression;
 
-    protected AbstractPayloadAwareOperation(Object body) {
+    public AbstractPayloadAwareOperation(Object body) {
         this.expression = ExpressionBuilder.constantExpression(body);
     }
 
-    protected AbstractPayloadAwareOperation(Expression expression) {
+    public AbstractPayloadAwareOperation(Expression expression) {
         this.expression = expression;
     }
 
-    protected AbstractPayloadAwareOperation() {
+    public AbstractPayloadAwareOperation() {
         this.expression = ExpressionBuilder.bodyExpression();
     }
 

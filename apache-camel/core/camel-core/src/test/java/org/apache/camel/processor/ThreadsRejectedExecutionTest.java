@@ -27,15 +27,10 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisabledOnOs(value = { OS.LINUX },
-              architectures = { "s390x" },
-              disabledReason = "This test does not run reliably multiple platforms (see CAMEL-21438)")
 public class ThreadsRejectedExecutionTest extends ContextTestSupport {
 
     @Override
@@ -47,7 +42,7 @@ public class ThreadsRejectedExecutionTest extends ContextTestSupport {
     public void testThreadsRejectedExecution() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // use a custom pool which rejects any new tasks while currently
                 // in progress
                 // this should force the ThreadsProcessor to run the tasks
@@ -74,7 +69,7 @@ public class ThreadsRejectedExecutionTest extends ContextTestSupport {
     public void testThreadsRejectedExecutionCallerNotRuns() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // use a custom pool which rejects any new tasks while currently
                 // in progress
                 // this should force the ThreadsProcessor to run the tasks
@@ -106,10 +101,62 @@ public class ThreadsRejectedExecutionTest extends ContextTestSupport {
     }
 
     @Test
+    public void testThreadsRejectedDiscard() throws Exception {
+        context.addRoutes(new RouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                from("seda:start").to("log:before").threads(1, 1).maxPoolSize(1).maxQueueSize(2)
+                        .rejectedPolicy(ThreadPoolRejectedPolicy.Discard).delay(100).to("log:after")
+                        .to("mock:result");
+            }
+        });
+        context.start();
+
+        NotifyBuilder notify = new NotifyBuilder(context).whenDone(10).create();
+
+        getMockEndpoint("mock:result").expectedMinimumMessageCount(2);
+        for (int i = 0; i < 10; i++) {
+            template.sendBody("seda:start", "Message " + i);
+        }
+        assertMockEndpointsSatisfied();
+
+        assertTrue(notify.matchesWaitTime());
+
+        int inflight = context.getInflightRepository().size();
+        assertEquals(0, inflight);
+    }
+
+    @Test
+    public void testThreadsRejectedDiscardOldest() throws Exception {
+        context.addRoutes(new RouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                from("seda:start").to("log:before").threads(1, 1).maxPoolSize(1).maxQueueSize(2)
+                        .rejectedPolicy(ThreadPoolRejectedPolicy.DiscardOldest).delay(100).to("log:after")
+                        .to("mock:result");
+            }
+        });
+        context.start();
+
+        NotifyBuilder notify = new NotifyBuilder(context).whenDone(10).create();
+
+        getMockEndpoint("mock:result").expectedMinimumMessageCount(2);
+        for (int i = 0; i < 10; i++) {
+            template.sendBody("seda:start", "Message " + i);
+        }
+        assertMockEndpointsSatisfied();
+
+        assertTrue(notify.matchesWaitTime());
+
+        int inflight = context.getInflightRepository().size();
+        assertEquals(0, inflight);
+    }
+
+    @Test
     public void testThreadsRejectedAbort() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:start").to("log:before").threads(1, 1).maxPoolSize(1).maxQueueSize(2)
                         .rejectedPolicy(ThreadPoolRejectedPolicy.Abort).delay(100).to("log:after")
                         .to("mock:result");
@@ -135,7 +182,7 @@ public class ThreadsRejectedExecutionTest extends ContextTestSupport {
     public void testThreadsRejectedCallerRuns() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:start").to("log:before").threads(1, 1).maxPoolSize(1).maxQueueSize(2)
                         .rejectedPolicy(ThreadPoolRejectedPolicy.CallerRuns).delay(100).to("log:after")
                         .to("mock:result");
@@ -161,7 +208,7 @@ public class ThreadsRejectedExecutionTest extends ContextTestSupport {
     public void testThreadsRejectedAbortNoRedelivery() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).redeliveryDelay(250).maximumRedeliveries(3).handled(true).to("mock:error");
 
                 from("seda:start").to("log:before").threads(1, 1).maxPoolSize(1).maxQueueSize(2)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.messaging.support;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 
@@ -40,7 +39,8 @@ public interface ChannelInterceptor {
 	 * If this method returns {@code null} then the actual
 	 * send invocation will not occur.
 	 */
-	default @Nullable Message<?> preSend(Message<?> message, MessageChannel channel) {
+	@Nullable
+	default Message<?> preSend(Message<?> message, MessageChannel channel) {
 		return message;
 	}
 
@@ -77,7 +77,8 @@ public interface ChannelInterceptor {
 	 * necessary; {@code null} aborts further interceptor invocations.
 	 * This only applies to PollableChannels.
 	 */
-	default @Nullable Message<?> postReceive(Message<?> message, MessageChannel channel) {
+	@Nullable
+	default Message<?> postReceive(Message<?> message, MessageChannel channel) {
 		return message;
 	}
 

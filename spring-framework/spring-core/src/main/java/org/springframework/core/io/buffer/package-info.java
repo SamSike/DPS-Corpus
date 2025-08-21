@@ -1,7 +1,9 @@
 /**
  * Generic abstraction for working with byte buffer implementations.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.core.io.buffer;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

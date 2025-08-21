@@ -2,7 +2,9 @@
  * Common, generic interfaces that define minimal boundary points
  * between Spring's web infrastructure and other framework modules.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -1,7 +1,9 @@
 /**
  * Formatters for {@code java.lang.Number} properties.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.format.number;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

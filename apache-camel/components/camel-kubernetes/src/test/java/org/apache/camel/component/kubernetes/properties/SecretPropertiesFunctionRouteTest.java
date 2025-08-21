@@ -16,10 +16,7 @@
  */
 package org.apache.camel.component.kubernetes.properties;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Base64;
 import java.util.Map;
 
@@ -58,8 +55,6 @@ public class SecretPropertiesFunctionRouteTest extends KubernetesTestSupport {
             public void configure() throws Exception {
                 from("direct:start")
                         .transform().simple("Connect with {{secret:mysecret/myuser}}:{{secret:mysecret/mypass}}");
-                from("direct:binary")
-                        .transform().simple("File saved to {{secret-binary:mysecret/binary.dat}}");
             }
         };
     }
@@ -76,16 +71,15 @@ public class SecretPropertiesFunctionRouteTest extends KubernetesTestSupport {
 
         Map<String, String> data
                 = Map.of("myuser", Base64.getEncoder().encodeToString("scott".getBytes(StandardCharsets.UTF_8)),
-                        "mypass", Base64.getEncoder().encodeToString("tiger".getBytes(StandardCharsets.UTF_8)),
-                        "binary.dat", Base64.getEncoder().encodeToString(readExampleBinaryFile()));
+                        "mypass", Base64.getEncoder().encodeToString("tiger".getBytes(StandardCharsets.UTF_8)));
         Secret sec = new SecretBuilder().editOrNewMetadata().withName("mysecret").endMetadata().withData(data).build();
-        this.sec = client.resource(sec).serverSideApply();
+        this.sec = client.resource(sec).createOrReplace();
 
         return context;
     }
 
     @Override
-    public void doPostTearDown() {
+    public void tearDown() throws Exception {
         if (client != null && sec != null) {
             try {
                 client.resource(sec).delete();
@@ -93,6 +87,8 @@ public class SecretPropertiesFunctionRouteTest extends KubernetesTestSupport {
                 // ignore
             }
         }
+
+        super.tearDown();
     }
 
     @Test
@@ -102,14 +98,4 @@ public class SecretPropertiesFunctionRouteTest extends KubernetesTestSupport {
         Assertions.assertEquals("Connect with scott:tiger", out);
     }
 
-    @Test
-    @Order(2)
-    public void binarySecretPropertiesFunction() throws IOException {
-        String out = template.requestBody("direct:binary", null, String.class);
-        Assertions.assertTrue(out.matches("File saved to .*binary.dat"));
-        Path filePath = Path.of(out.substring("File saved to ".length()));
-        Assertions.assertArrayEquals(readExampleBinaryFile(),
-                Files.readAllBytes(filePath));
-        Files.deleteIfExists(filePath);
-    }
 }

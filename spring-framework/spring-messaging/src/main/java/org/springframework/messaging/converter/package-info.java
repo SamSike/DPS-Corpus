@@ -1,7 +1,9 @@
 /**
  * Provides support for message conversion.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.messaging.converter;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

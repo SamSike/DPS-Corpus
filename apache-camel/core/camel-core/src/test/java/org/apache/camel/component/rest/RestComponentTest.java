@@ -28,11 +28,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RestComponentTest {
 
+    private CamelContext context;
+
     private RestComponent rest;
 
     @BeforeEach
     public void createSubjects() {
-        CamelContext context = new DefaultCamelContext();
+        context = new DefaultCamelContext();
         context.getRegistry().bind("host-ref", "http://localhost:8080");
 
         rest = new RestComponent();

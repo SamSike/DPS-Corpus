@@ -70,10 +70,10 @@ public class SimpleProcessorIdAwareTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo").choice().when(header("bar")).to("log:bar").id("bar").otherwise()
                         .to("mock:result").id("result").end().to("log:baz").id("baz");
             }

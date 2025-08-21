@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SedaFileIdempotentIssueTest extends ContextTestSupport {
 
     private final CountDownLatch latch = new CountDownLatch(1);
-    private final FileIdempotentRepository repository = new FileIdempotentRepository();
+    private FileIdempotentRepository repository = new FileIdempotentRepository();
 
     @Override
     @BeforeEach
@@ -54,8 +54,8 @@ public class SedaFileIdempotentIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
 
         repository.setFileStore(testFile("repo.txt").toFile());
         jndi.bind("repo", repository);
@@ -63,10 +63,10 @@ public class SedaFileIdempotentIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(RuntimeException.class).process(new ShutDown());
 
                 from(fileUri("inbox?idempotent=true&noop=true&idempotentRepository=#repo&initialDelay=0&delay=10"))
@@ -88,7 +88,7 @@ public class SedaFileIdempotentIssueTest extends ContextTestSupport {
     protected class ShutDown implements Processor {
 
         @Override
-        public void process(final Exchange exchange) {
+        public void process(final Exchange exchange) throws Exception {
             // shutdown route
             Thread thread = new Thread() {
                 @Override

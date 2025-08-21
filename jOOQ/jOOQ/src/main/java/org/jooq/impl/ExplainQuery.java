@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -158,11 +158,11 @@ final class ExplainQuery {
         return new ExplainImpl(rows, cost, result.format());
     }
 
-    private static final record ExplainImpl(double rows, double cost, String plan) implements Explain {
+    private static final /* record */ class ExplainImpl implements Explain { private final double rows; private final double cost; private final String plan; public ExplainImpl(double rows, double cost, String plan) { this.rows = rows; this.cost = cost; this.plan = plan; } public double rows() { return rows; } public double cost() { return cost; } public String plan() { return plan; } @Override public boolean equals(Object o) { if (!(o instanceof ExplainImpl)) return false; ExplainImpl other = (ExplainImpl) o; if (!java.util.Objects.equals(this.rows, other.rows)) return false; if (!java.util.Objects.equals(this.cost, other.cost)) return false; if (!java.util.Objects.equals(this.plan, other.plan)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.rows, this.cost, this.plan); }
 
         @Override
         public String toString() {
-            return String.format("Explain [cost=%.2f, rows=%.2f]\n\n", cost, rows) + plan;
+            return String.format("Explain [cost=%.2f, rows=%.2f]nn", cost, rows) + plan;
         }
     }
 }

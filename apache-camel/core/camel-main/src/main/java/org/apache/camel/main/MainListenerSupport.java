@@ -16,6 +16,8 @@
  */
 package org.apache.camel.main;
 
+import org.apache.camel.CamelContext;
+
 /**
  * A useful base class for {@link org.apache.camel.main.MainListener} implementations.
  */
@@ -33,6 +35,12 @@ public class MainListenerSupport implements MainListener {
 
     @Override
     public void afterConfigure(BaseMainSupport main) {
+        // noop
+    }
+
+    @Override
+    @Deprecated
+    public void configure(CamelContext context) {
         // noop
     }
 

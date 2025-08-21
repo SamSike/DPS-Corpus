@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,8 +41,6 @@ import java.util.function.Function;
 
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
-import org.jooq.impl.QOM;
-import org.jooq.impl.QOM.FieldAlias;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -54,7 +52,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author Lukas Eder
  */
-public interface SelectField<T> extends SelectFieldOrAsterisk, Named, Typed<T> {
+public /* non-sealed */ interface SelectField<T> extends SelectFieldOrAsterisk, Named, Typed<T> {
 
     // ------------------------------------------------------------------------
     // Aliasing
@@ -62,23 +60,6 @@ public interface SelectField<T> extends SelectFieldOrAsterisk, Named, Typed<T> {
 
     /**
      * Create an alias for this field.
-     * <p>
-     * A field alias renders itself differently, depending on
-     * {@link Context#declareFields()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The field alias renders its aliased expression
-     * (<code>this</code>) along with the <code>AS alias</code> clause. This
-     * typically happens in <code>SELECT</code> and <code>RETURNING</code>
-     * clauses.</li>
-     * <li>Reference: The field alias renders its alias identifier. This happens
-     * everywhere else.</li>
-     * </ul>
-     * <p>
-     * <strong>There is no rendering mode that reproduces the aliased expression
-     * as there is no way to formally decide when that mode would be more
-     * appropriate than the referencing of the alias!</strong> If the aliased
-     * expression is the preferred output, it can be extracted from the
-     * {@link QOM} API via {@link FieldAlias#$aliased()}.
      * <p>
      * Note that the case-sensitivity of the returned field depends on
      * {@link Settings#getRenderQuotedNames()}. By default, field aliases are
@@ -94,30 +75,15 @@ public interface SelectField<T> extends SelectFieldOrAsterisk, Named, Typed<T> {
     /**
      * Create an alias for this field.
      * <p>
-     * A field alias renders itself differently, depending on
-     * {@link Context#declareFields()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The field alias renders its aliased expression
-     * (<code>this</code>) along with the <code>AS alias</code> clause. This
-     * typically happens in <code>SELECT</code> and <code>RETURNING</code>
-     * clauses.</li>
-     * <li>Reference: The field alias renders its alias identifier. This happens
-     * everywhere else.</li>
-     * </ul>
-     * <p>
-     * <strong>There is no rendering mode that reproduces the aliased expression
-     * as there is no way to formally decide when that mode would be more
-     * appropriate than the referencing of the alias!</strong> If the aliased
-     * expression is the preferred output, it can be extracted from the
-     * {@link QOM} API via {@link FieldAlias#$aliased()}.
-     * <p>
      * Note that the case-sensitivity of the returned field depends on
      * {@link Settings#getRenderQuotedNames()} and the {@link Name}. By default,
      * field aliases are quoted, and thus case-sensitive in many SQL dialects -
      * use {@link DSL#unquotedName(String...)} for case-insensitive aliases.
+     * <p>
+     * If the argument {@link Name#getName()} is qualified, then the
+     * {@link Name#last()} part will be used.
      *
-     * @param alias The alias name. If {@link Name#getName()} is qualified, then
-     *            the {@link Name#last()} part will be used.
+     * @param alias The alias name
      * @return The field alias
      */
     @NotNull
@@ -126,23 +92,6 @@ public interface SelectField<T> extends SelectFieldOrAsterisk, Named, Typed<T> {
 
     /**
      * Create an alias for this field based on another field's name.
-     * <p>
-     * A field alias renders itself differently, depending on
-     * {@link Context#declareFields()}. There are two rendering modes:
-     * <ul>
-     * <li>Declaration: The field alias renders its aliased expression
-     * (<code>this</code>) along with the <code>AS alias</code> clause. This
-     * typically happens in <code>SELECT</code> and <code>RETURNING</code>
-     * clauses.</li>
-     * <li>Reference: The field alias renders its alias identifier. This happens
-     * everywhere else.</li>
-     * </ul>
-     * <p>
-     * <strong>There is no rendering mode that reproduces the aliased expression
-     * as there is no way to formally decide when that mode would be more
-     * appropriate than the referencing of the alias!</strong> If the aliased
-     * expression is the preferred output, it can be extracted from the
-     * {@link QOM} API via {@link FieldAlias#$aliased()}.
      *
      * @param otherField The other field whose name this field is aliased with.
      * @return The field alias.

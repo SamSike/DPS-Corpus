@@ -21,9 +21,11 @@ import java.util.Map;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http.handler.BasicValidationHandler;
-import org.apache.hc.client5.http.HttpHostConnectException;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.conn.HttpHostConnectException;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -37,18 +39,22 @@ public class HttpDefaultPortNumberTest extends BaseHttpTest {
 
     private HttpServer localServer;
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+    public void setUp() throws Exception {
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext())
-                .register("/search", new BasicValidationHandler(GET.name(), null, null, getExpectedContent())).create();
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext())
+                .registerHandler("/search", new BasicValidationHandler(GET.name(), null, null, getExpectedContent())).create();
         localServer.start();
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() throws Exception {
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (localServer != null) {
             localServer.stop();
@@ -61,9 +67,9 @@ public class HttpDefaultPortNumberTest extends BaseHttpTest {
             @Override
             public void configure() {
                 from("direct:start")
-                        .to("http://localhost/search");
+                        .to("http://" + localServer.getInetAddress().getHostName() + "/search");
                 from("direct:dummy")
-                        .to("http://localhost:" + localServer.getLocalPort()
+                        .to("http://" + localServer.getInetAddress().getHostName() + ":" + localServer.getLocalPort()
                             + "/search");
             }
         });
@@ -81,9 +87,9 @@ public class HttpDefaultPortNumberTest extends BaseHttpTest {
             @Override
             public void configure() {
                 from("direct:start")
-                        .to("http://localhost:80/search");
+                        .to("http://" + localServer.getInetAddress().getHostName() + ":80/search");
                 from("direct:dummy")
-                        .to("http://localhost:" + localServer.getLocalPort()
+                        .to("http://" + localServer.getInetAddress().getHostName() + ":" + localServer.getLocalPort()
                             + "/search");
             }
         });
@@ -101,9 +107,9 @@ public class HttpDefaultPortNumberTest extends BaseHttpTest {
             @Override
             public void configure() {
                 from("direct:start")
-                        .to("http://localhost/search");
+                        .to("http://" + localServer.getInetAddress().getHostName() + "/search");
                 from("direct:dummy")
-                        .to("http://localhost:" + localServer.getLocalPort()
+                        .to("http://" + localServer.getInetAddress().getHostName() + ":" + localServer.getLocalPort()
                             + "/search");
             }
         });
@@ -122,7 +128,7 @@ public class HttpDefaultPortNumberTest extends BaseHttpTest {
             @Override
             public void configure() {
                 from("direct:start")
-                        .to("http://localhost/search");
+                        .to("http://" + localServer.getInetAddress().getHostName() + "/search");
             }
         });
 
@@ -134,6 +140,11 @@ public class HttpDefaultPortNumberTest extends BaseHttpTest {
         assertRefused(exchange, ":80");
     }
 
+    @Override
+    public boolean isUseRouteBuilder() {
+        return true;
+    }
+
     private void assertRefused(Exchange exchange, String portExt) {
         Map<String, Object> headers = exchange.getMessage().getHeaders();
         //no http response:
@@ -141,6 +152,6 @@ public class HttpDefaultPortNumberTest extends BaseHttpTest {
         //and got an exception:
         assertIsInstanceOf(HttpHostConnectException.class, exchange.getException());
         //with message:
-        assertEquals("Connection to http://localhost" + portExt + " refused", exchange.getException().getMessage());
+        assertEquals("Connection to http://127.0.0.1" + portExt + " refused", exchange.getException().getMessage());
     }
 }

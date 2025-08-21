@@ -24,10 +24,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class OnExceptionSubRouteTest extends OnExceptionRouteTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 // default should errors go to mock:error
                 errorHandler(deadLetterChannel("mock:error"));

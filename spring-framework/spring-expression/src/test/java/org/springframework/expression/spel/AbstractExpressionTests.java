@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,14 +35,14 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
  */
 public abstract class AbstractExpressionTests {
 
-	protected static final boolean DEBUG = false;
+	private static final boolean DEBUG = false;
 
 	protected static final boolean SHOULD_BE_WRITABLE = true;
 
 	protected static final boolean SHOULD_NOT_BE_WRITABLE = false;
 
 
-	protected final SpelExpressionParser parser = new SpelExpressionParser();
+	protected final ExpressionParser parser = new SpelExpressionParser();
 
 	protected final StandardEvaluationContext context = TestScenarioCreator.getTestEvaluationContext();
 
@@ -127,7 +127,7 @@ public abstract class AbstractExpressionTests {
 			}
 			assertThat(expectedValue).as("Expression returned null value, but expected '" + expectedValue + "'").isNull();
 		}
-		Class<?> resultType = value.getClass();
+		Class<? extends Object> resultType = value.getClass();
 		if (expectedValue instanceof String) {
 			assertThat(AbstractExpressionTests.stringValueOf(value)).as("Did not get expected value for expression '" + expression + "'.").isEqualTo(expectedValue);
 		}
@@ -164,24 +164,6 @@ public abstract class AbstractExpressionTests {
 	 */
 	protected void evaluateAndCheckError(String expression, Class<?> expectedReturnType, SpelMessage expectedMessage,
 			Object... otherProperties) {
-
-		evaluateAndCheckError(this.parser, expression, expectedReturnType, expectedMessage, otherProperties);
-	}
-
-	/**
-	 * Evaluate the specified expression and ensure the expected message comes out.
-	 * The message may have inserts and they will be checked if otherProperties is specified.
-	 * The first entry in otherProperties should always be the position.
-	 * @param parser the expression parser to use
-	 * @param expression the expression to evaluate
-	 * @param expectedReturnType ask the expression return value to be of this type if possible
-	 * ({@code null} indicates don't ask for conversion)
-	 * @param expectedMessage the expected message
-	 * @param otherProperties the expected inserts within the message
-	 */
-	protected void evaluateAndCheckError(ExpressionParser parser, String expression, Class<?> expectedReturnType, SpelMessage expectedMessage,
-			Object... otherProperties) {
-
 		assertThatExceptionOfType(SpelEvaluationException.class).isThrownBy(() -> {
 			Expression expr = parser.parseExpression(expression);
 			assertThat(expr).as("expression").isNotNull();
@@ -195,7 +177,7 @@ public abstract class AbstractExpressionTests {
 			assertThat(ex.getMessageCode()).isEqualTo(expectedMessage);
 			if (!ObjectUtils.isEmpty(otherProperties)) {
 				// first one is expected position of the error within the string
-				int pos = (Integer) otherProperties[0];
+				int pos = ((Integer) otherProperties[0]).intValue();
 				assertThat(ex.getPosition()).as("position").isEqualTo(pos);
 				if (otherProperties.length > 1) {
 					// Check inserts match
@@ -220,15 +202,13 @@ public abstract class AbstractExpressionTests {
 	protected void parseAndCheckError(String expression, SpelMessage expectedMessage, Object... otherProperties) {
 		assertThatExceptionOfType(SpelParseException.class).isThrownBy(() -> {
 			Expression expr = parser.parseExpression(expression);
-			if (DEBUG) {
-				SpelUtilities.printAbstractSyntaxTree(System.out, expr);
-			}
+			SpelUtilities.printAbstractSyntaxTree(System.out, expr);
 		}).satisfies(ex -> {
 			assertThat(ex.getMessageCode()).isEqualTo(expectedMessage);
 			if (otherProperties != null && otherProperties.length != 0) {
 				// first one is expected position of the error within the string
-				int pos = (Integer) otherProperties[0];
-				assertThat(ex.getPosition()).as("reported position").isEqualTo(pos);
+				int pos = ((Integer) otherProperties[0]).intValue();
+				assertThat(pos).as("reported position").isEqualTo(pos);
 				if (otherProperties.length > 1) {
 					// Check inserts match
 					Object[] inserts = ex.getInserts();
@@ -258,9 +238,9 @@ public abstract class AbstractExpressionTests {
 		}
 		if (value.getClass().isArray()) {
 			StringBuilder sb = new StringBuilder();
-			if (value.getClass().componentType().isPrimitive()) {
-				Class<?> primitiveType = value.getClass().componentType();
-				if (primitiveType == int.class) {
+			if (value.getClass().getComponentType().isPrimitive()) {
+				Class<?> primitiveType = value.getClass().getComponentType();
+				if (primitiveType == Integer.TYPE) {
 					int[] l = (int[]) value;
 					sb.append("int[").append(l.length).append("]{");
 					for (int j = 0; j < l.length; j++) {
@@ -271,7 +251,7 @@ public abstract class AbstractExpressionTests {
 					}
 					sb.append('}');
 				}
-				else if (primitiveType == long.class) {
+				else if (primitiveType == Long.TYPE) {
 					long[] l = (long[]) value;
 					sb.append("long[").append(l.length).append("]{");
 					for (int j = 0; j < l.length; j++) {
@@ -287,10 +267,10 @@ public abstract class AbstractExpressionTests {
 							" in ExpressionTestCase.stringValueOf()");
 				}
 			}
-			else if (value.getClass().componentType().isArray()) {
+			else if (value.getClass().getComponentType().isArray()) {
 				List<Object> l = Arrays.asList((Object[]) value);
 				if (!isNested) {
-					sb.append(value.getClass().componentType().getName());
+					sb.append(value.getClass().getComponentType().getName());
 				}
 				sb.append('[').append(l.size()).append("]{");
 				int i = 0;
@@ -306,7 +286,7 @@ public abstract class AbstractExpressionTests {
 			else {
 				List<Object> l = Arrays.asList((Object[]) value);
 				if (!isNested) {
-					sb.append(value.getClass().componentType().getName());
+					sb.append(value.getClass().getComponentType().getName());
 				}
 				sb.append('[').append(l.size()).append("]{");
 				int i = 0;

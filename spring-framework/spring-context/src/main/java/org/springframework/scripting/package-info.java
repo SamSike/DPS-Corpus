@@ -1,7 +1,9 @@
 /**
  * Core interfaces for Spring's scripting support.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.scripting;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

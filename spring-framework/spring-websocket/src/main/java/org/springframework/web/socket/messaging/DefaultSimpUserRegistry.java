@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.SmartApplicationListener;
 import org.springframework.core.Ordered;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -44,7 +43,6 @@ import org.springframework.util.Assert;
  * track of connected users and their subscriptions.
  *
  * @author Rossen Stoyanchev
- * @author Sam Brannen
  * @since 4.2
  */
 public class DefaultSimpUserRegistry implements SimpUserRegistry, SmartApplicationListener {
@@ -107,8 +105,8 @@ public class DefaultSimpUserRegistry implements SimpUserRegistry, SmartApplicati
 				return;
 			}
 			String name = user.getName();
-			if (user instanceof DestinationUserNameProvider destinationUserNameProvider) {
-				name = destinationUserNameProvider.getDestinationUserName();
+			if (user instanceof DestinationUserNameProvider) {
+				name = ((DestinationUserNameProvider) user).getDestinationUserName();
 			}
 			synchronized (this.sessionLock) {
 				LocalSimpUser simpUser = this.users.get(name);
@@ -153,7 +151,8 @@ public class DefaultSimpUserRegistry implements SimpUserRegistry, SmartApplicati
 	// SimpUserRegistry methods
 
 	@Override
-	public @Nullable SimpUser getUser(String userName) {
+	@Nullable
+	public SimpUser getUser(String userName) {
 		return this.users.get(userName);
 	}
 
@@ -206,8 +205,9 @@ public class DefaultSimpUserRegistry implements SimpUserRegistry, SmartApplicati
 			return this.name;
 		}
 
+		@Nullable
 		@Override
-		public @Nullable Principal getPrincipal() {
+		public Principal getPrincipal() {
 			return this.user;
 		}
 
@@ -217,7 +217,8 @@ public class DefaultSimpUserRegistry implements SimpUserRegistry, SmartApplicati
 		}
 
 		@Override
-		public @Nullable SimpSession getSession(@Nullable String sessionId) {
+		@Nullable
+		public SimpSession getSession(@Nullable String sessionId) {
 			return (sessionId != null ? this.userSessions.get(sessionId) : null);
 		}
 
@@ -236,7 +237,8 @@ public class DefaultSimpUserRegistry implements SimpUserRegistry, SmartApplicati
 
 		@Override
 		public boolean equals(@Nullable Object other) {
-			return (this == other || (other instanceof SimpUser that && getName().equals(that.getName())));
+			return (this == other ||
+					(other instanceof SimpUser && getName().equals(((SimpUser) other).getName())));
 		}
 
 		@Override
@@ -291,7 +293,8 @@ public class DefaultSimpUserRegistry implements SimpUserRegistry, SmartApplicati
 
 		@Override
 		public boolean equals(@Nullable Object other) {
-			return (this == other || (other instanceof SimpSubscription that && getId().equals(that.getId())));
+			return (this == other ||
+					(other instanceof SimpSubscription && getId().equals(((SimpSubscription) other).getId())));
 		}
 
 		@Override
@@ -340,9 +343,15 @@ public class DefaultSimpUserRegistry implements SimpUserRegistry, SmartApplicati
 
 		@Override
 		public boolean equals(@Nullable Object other) {
-			return (this == other || (other instanceof SimpSubscription that &&
-					getId().equals(that.getId()) &&
-					getSession().getId().equals(that.getSession().getId())));
+			if (this == other) {
+				return true;
+			}
+			if (!(other instanceof SimpSubscription)) {
+				return false;
+			}
+			SimpSubscription otherSubscription = (SimpSubscription) other;
+			return (getId().equals(otherSubscription.getId()) &&
+					getSession().getId().equals(otherSubscription.getSession().getId()));
 		}
 
 		@Override

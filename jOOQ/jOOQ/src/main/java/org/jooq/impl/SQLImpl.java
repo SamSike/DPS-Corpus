@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,7 +37,6 @@
  */
 package org.jooq.impl;
 
-import static java.util.Objects.requireNonNull;
 import static org.jooq.Clause.TEMPLATE;
 import static org.jooq.impl.DSL.list;
 import static org.jooq.impl.Tools.renderAndBind;
@@ -54,30 +53,12 @@ import org.jooq.impl.QOM.UEmpty;
 final class SQLImpl extends AbstractQueryPart implements SQL, UEmpty {
 
     private static final Clause[] CLAUSES = { TEMPLATE };
-    final String                  sql;
-    final boolean                 isName;
-    final boolean                 raw;
-    final List<QueryPart>         substitutes;
+    private final String          sql;
+    private final List<QueryPart> substitutes;
 
-    SQLImpl(String sql, boolean raw, Object... input) {
-        this.sql = requireNonNull(sql);
-        this.raw = raw;
+    SQLImpl(String sql, Object... input) {
+        this.sql = sql;
         this.substitutes = Tools.queryParts(input);
-        this.isName = substitutes.isEmpty() && isName(sql);
-    }
-
-    static final boolean isName(String sql) {
-        int l = sql.length();
-
-        // [#14215] Good enough approximation of SQL identifiers
-        if (l == 0 || !Character.isJavaIdentifierStart(sql.charAt(0)))
-            return false;
-
-        for (int i = 1; i < l; i++)
-            if (!Character.isJavaIdentifierPart(sql.charAt(i)))
-                return false;
-
-        return true;
     }
 
     @Override
@@ -93,18 +74,8 @@ final class SQLImpl extends AbstractQueryPart implements SQL, UEmpty {
 
 
 
-
-
-
-
-
-
             default:
-                if (raw)
-                    ctx.sql(sql);
-                else
-                    renderAndBind(ctx, sql, substitutes);
-
+                renderAndBind(ctx, sql, substitutes);
                 break;
         }
     }

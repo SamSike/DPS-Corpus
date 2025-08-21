@@ -18,11 +18,14 @@ package org.apache.camel.component.file.remote.integration;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 /**
  * Unit test to verify remotefile sortby option.
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class FromFtpRemoteFileSortByIgnoreCaseExpressionIT extends FtpServerTestSupport {
 
     private String getFtpUrl() {
@@ -30,7 +33,9 @@ public class FromFtpRemoteFileSortByIgnoreCaseExpressionIT extends FtpServerTest
     }
 
     @Override
-    public void doPostSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
         prepareFtpServer();
     }
 
@@ -82,7 +87,7 @@ public class FromFtpRemoteFileSortByIgnoreCaseExpressionIT extends FtpServerTest
         MockEndpoint.assertIsSatisfied(context);
     }
 
-    void prepareFtpServer() {
+    private void prepareFtpServer() {
         // prepares the FTP Server by creating files on the server that we want
         // to unit
         // test that we can pool

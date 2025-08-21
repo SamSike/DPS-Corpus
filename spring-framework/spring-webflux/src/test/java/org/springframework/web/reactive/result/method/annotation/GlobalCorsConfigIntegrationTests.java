@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -135,10 +135,9 @@ class GlobalCorsConfigIntegrationTests extends AbstractRequestMappingIntegration
 		startServer(httpServer);
 
 		this.headers.add(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET");
-		ResponseEntity<String> entity = performOptions("/welcome", this.headers, String.class);
-		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(entity.getHeaders().getAccessControlAllowOrigin()).isNull();
-		assertThat(entity.getHeaders().getAccessControlAllowMethods()).isEmpty();
+		assertThatExceptionOfType(HttpClientErrorException.class).isThrownBy(() ->
+				performOptions("/welcome", this.headers, String.class))
+			.satisfies(ex -> assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN));
 	}
 
 	@ParameterizedHttpServerTest
@@ -163,7 +162,7 @@ class GlobalCorsConfigIntegrationTests extends AbstractRequestMappingIntegration
 		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
 		assertThat(entity.getHeaders().getAccessControlAllowOrigin()).isEqualTo("*");
 		assertThat(entity.getHeaders().getAccessControlAllowMethods()).containsExactly(HttpMethod.GET, HttpMethod.POST);
-		assertThat(entity.getHeaders().getAccessControlAllowCredentials()).isFalse();
+		assertThat(entity.getHeaders().getAccessControlAllowCredentials()).isEqualTo(false);
 		assertThat(entity.getHeaders().get(HttpHeaders.VARY))
 				.containsExactly(HttpHeaders.ORIGIN, HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD,
 						HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS);

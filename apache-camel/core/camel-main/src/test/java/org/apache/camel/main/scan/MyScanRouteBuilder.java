@@ -21,7 +21,7 @@ import org.apache.camel.builder.RouteBuilder;
 public class MyScanRouteBuilder extends RouteBuilder {
 
     @Override
-    public void configure() {
+    public void configure() throws Exception {
         from("direct:scan").to("mock:scan");
     }
 }

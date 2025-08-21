@@ -16,11 +16,12 @@
  */
 package org.apache.camel.component.huaweicloud.smn;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.camel.test.junit5.TestSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +39,13 @@ public class TestConfiguration {
             propertyMap = new HashMap<>();
             String propertyFileName = "testconfiguration.properties";
             try {
-                properties = TestSupport.loadExternalProperties(getClass().getClassLoader(), propertyFileName);
+                properties = new Properties();
+                InputStream inputStream = getClass().getClassLoader().getResourceAsStream(propertyFileName);
+                if (inputStream != null) {
+                    properties.load(inputStream);
+                } else {
+                    throw new FileNotFoundException("property file '" + propertyFileName + "' not found in the classpath");
+                }
 
                 for (String key : properties.stringPropertyNames()) {
                     propertyMap.put(key, properties.getProperty(key));

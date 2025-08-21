@@ -19,7 +19,7 @@ package org.apache.camel.component.debezium.configuration;
 import java.util.Collections;
 
 import io.debezium.config.Configuration;
-import io.debezium.embedded.async.AsyncEmbeddedEngine;
+import io.debezium.embedded.EmbeddedEngine;
 import org.apache.camel.component.debezium.DebeziumConstants;
 import org.junit.jupiter.api.Test;
 
@@ -38,14 +38,13 @@ public class EmbeddedDebeziumConfigurationTest {
 
         final Configuration dbzEmbeddedConfiguration = configuration.createDebeziumConfiguration();
 
-        assertEquals("test_config", dbzEmbeddedConfiguration.getString(AsyncEmbeddedEngine.ENGINE_NAME),
-                "Expect the same name");
+        assertEquals("test_config", dbzEmbeddedConfiguration.getString(EmbeddedEngine.ENGINE_NAME), "Expect the same name");
         assertEquals(2, dbzEmbeddedConfiguration
-                .getInteger(AsyncEmbeddedEngine.OFFSET_STORAGE_KAFKA_REPLICATION_FACTOR));
+                .getInteger(EmbeddedEngine.OFFSET_STORAGE_KAFKA_REPLICATION_FACTOR));
         assertEquals(DebeziumConstants.DEFAULT_OFFSET_STORAGE,
-                dbzEmbeddedConfiguration.getString(AsyncEmbeddedEngine.OFFSET_STORAGE));
+                dbzEmbeddedConfiguration.getString(EmbeddedEngine.OFFSET_STORAGE));
         assertEquals("test_field", configuration.getTestField());
-        assertEquals(Class.class.getName(), dbzEmbeddedConfiguration.getString(AsyncEmbeddedEngine.CONNECTOR_CLASS));
+        assertEquals(Class.class.getName(), dbzEmbeddedConfiguration.getString(EmbeddedEngine.CONNECTOR_CLASS));
     }
 
     @Test

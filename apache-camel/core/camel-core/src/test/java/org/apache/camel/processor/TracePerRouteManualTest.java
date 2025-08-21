@@ -36,10 +36,10 @@ public class TracePerRouteManualTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:a").tracing().streamCaching().to("mock:a");
 
                 from("direct:b").noTracing().to("mock:b");

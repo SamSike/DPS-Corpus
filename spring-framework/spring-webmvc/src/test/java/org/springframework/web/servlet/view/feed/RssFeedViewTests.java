@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,13 +37,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Arjen Poutsma
  */
-class RssFeedViewTests {
+public class RssFeedViewTests {
 
 	private final AbstractRssFeedView view = new MyRssFeedView();
 
 
 	@Test
-	void render() throws Exception {
+	public void render() throws Exception {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -75,7 +75,7 @@ class RssFeedViewTests {
 
 		@Override
 		protected List<Item> buildFeedItems(Map<String, Object> model,
-				HttpServletRequest request, HttpServletResponse response) {
+				HttpServletRequest request, HttpServletResponse response) throws Exception {
 
 			List<Item> items = new ArrayList<>();
 			for (String name : model.keySet()) {

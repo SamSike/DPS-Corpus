@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -193,28 +190,14 @@ implements
 
         Tools.toSQLDDLTypeDeclaration(ctx, dataType);
         if (default_ != null)
-            ctx.sql(' ').visit(K_DEFAULT).sql(' ').visit(default_);
+            ctx.formatSeparator().visit(K_DEFAULT).sql(' ').visit(default_);
 
-        if (!Tools.isEmpty(constraints)) {
-            if (ctx.family() == FIREBIRD) {
-                ctx.formatSeparator().visit(DSL.check(DSL.and(Tools.map(constraints, c -> ((QOM.Check) c).$condition()))));
-            }
-            else {
-                boolean indent = constraints.size() > 1;
-
-                if (indent)
-                    ctx.formatSeparator().formatIndentStart();
-
+        if (!Tools.isEmpty(constraints))
+            if (ctx.family() == FIREBIRD)
+                ctx.formatSeparator().visit(DSL.check(DSL.and(Tools.map(constraints, c -> ((ConstraintImpl) c).$check()))));
+            else
                 for (Constraint constraint : constraints)
-                    if (indent)
-                        ctx.formatSeparator().visit(constraint);
-                    else
-                        ctx.sql(' ').visit(constraint);
-
-                if (indent)
-                    ctx.formatIndentEnd();
-            }
-        }
+                    ctx.formatSeparator().visit(constraint);
     }
 
 
@@ -244,7 +227,7 @@ implements
     }
 
     @Override
-    public final QOM.UnmodifiableList<? extends Constraint> $constraints() {
+    public final UnmodifiableList<? extends Constraint> $constraints() {
         return QOM.unmodifiable(constraints);
     }
 

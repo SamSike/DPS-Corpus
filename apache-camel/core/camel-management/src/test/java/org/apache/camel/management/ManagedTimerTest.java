@@ -30,7 +30,6 @@ import org.junit.jupiter.api.condition.OS;
 
 import static org.apache.camel.management.DefaultManagementObjectNameStrategy.TYPE_ENDPOINT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisabledOnOs(OS.AIX)
 public class ManagedTimerTest extends ManagementTestSupport {
@@ -40,7 +39,7 @@ public class ManagedTimerTest extends ManagementTestSupport {
         MBeanServer mbeanServer = getMBeanServer();
 
         ObjectName name = getCamelObjectName(TYPE_ENDPOINT, "timer://foo\\?delay=5000&period=8000");
-        assertTrue(mbeanServer.isRegistered(name), "Should be registered");
+        assertEquals(true, mbeanServer.isRegistered(name), "Should be registered");
 
         Long period = (Long) mbeanServer.getAttribute(name, "Period");
         assertEquals(8000, period.longValue());
@@ -75,10 +74,10 @@ public class ManagedTimerTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("timer://foo?delay=5000&period=8000").to("mock:result");
             }
         };

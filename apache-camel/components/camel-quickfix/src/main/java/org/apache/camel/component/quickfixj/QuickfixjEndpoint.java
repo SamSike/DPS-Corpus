@@ -18,8 +18,6 @@ package org.apache.camel.component.quickfixj;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.camel.Category;
 import org.apache.camel.Component;
@@ -58,11 +56,10 @@ public class QuickfixjEndpoint extends DefaultEndpoint implements QuickfixjEvent
     private static final Logger LOG = LoggerFactory.getLogger(QuickfixjEndpoint.class);
 
     private final QuickfixjEngine engine;
-    private final Lock engineLock = new ReentrantLock();
     private final List<QuickfixjConsumer> consumers = new CopyOnWriteArrayList<>();
 
     @UriPath
-    @Metadata(required = true, supportFileReference = true)
+    @Metadata(required = true)
     private String configurationName;
     @UriParam
     private String sessionID;
@@ -206,7 +203,7 @@ public class QuickfixjEndpoint extends DefaultEndpoint implements QuickfixjEvent
     }
 
     private boolean isMatching(String s1, String s2) {
-        return s1.isEmpty() || s1.equals("*") || s1.equals(s2);
+        return s1.equals("") || s1.equals("*") || s1.equals(s2);
     }
 
     private boolean isWildcarded() {
@@ -232,14 +229,11 @@ public class QuickfixjEndpoint extends DefaultEndpoint implements QuickfixjEvent
      */
     public void ensureInitialized() throws Exception {
         if (!engine.isInitialized()) {
-            engineLock.lock();
-            try {
+            synchronized (engine) {
                 if (!engine.isInitialized()) {
                     engine.initializeEngine();
                     ServiceHelper.startService(engine);
                 }
-            } finally {
-                engineLock.unlock();
             }
         }
     }

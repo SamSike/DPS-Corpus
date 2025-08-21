@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.Conventions;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -47,7 +46,7 @@ public class ConcurrentModel extends ConcurrentHashMap<String, Object> implement
 	}
 
 	/**
-	 * Construct a new {@code ConcurrentModel} containing the supplied attribute
+	 * Construct a new {@code ModelMap} containing the supplied attribute
 	 * under the supplied name.
 	 * @see #addAttribute(String, Object)
 	 */
@@ -56,8 +55,8 @@ public class ConcurrentModel extends ConcurrentHashMap<String, Object> implement
 	}
 
 	/**
-	 * Construct a new {@code ConcurrentModel} containing the supplied attribute.
-	 * <p>Uses attribute name generation to generate the key for the supplied model
+	 * Construct a new {@code ModelMap} containing the supplied attribute.
+	 * Uses attribute name generation to generate the key for the supplied model
 	 * object.
 	 * @see #addAttribute(Object)
 	 */
@@ -67,7 +66,8 @@ public class ConcurrentModel extends ConcurrentHashMap<String, Object> implement
 
 
 	@Override
-	public @Nullable Object put(String key, @Nullable Object value) {
+	@Nullable
+	public Object put(String key, @Nullable Object value) {
 		if (value != null) {
 			return super.put(key, value);
 		}
@@ -108,7 +108,7 @@ public class ConcurrentModel extends ConcurrentHashMap<String, Object> implement
 	@Override
 	public ConcurrentModel addAttribute(Object attributeValue) {
 		Assert.notNull(attributeValue, "Model attribute value must not be null");
-		if (attributeValue instanceof Collection<?> collection && collection.isEmpty()) {
+		if (attributeValue instanceof Collection && ((Collection<?>) attributeValue).isEmpty()) {
 			return this;
 		}
 		return addAttribute(Conventions.getVariableName(attributeValue), attributeValue);
@@ -169,7 +169,8 @@ public class ConcurrentModel extends ConcurrentHashMap<String, Object> implement
 	}
 
 	@Override
-	public @Nullable Object getAttribute(String attributeName) {
+	@Nullable
+	public Object getAttribute(String attributeName) {
 		return get(attributeName);
 	}
 

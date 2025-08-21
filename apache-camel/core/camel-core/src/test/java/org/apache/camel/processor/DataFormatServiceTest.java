@@ -28,8 +28,8 @@ import org.apache.camel.spi.DataFormat;
 import org.apache.camel.support.service.ServiceSupport;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test that data format receives callback if its a service / CamelContextAware
@@ -40,7 +40,7 @@ public class DataFormatServiceTest extends ContextTestSupport {
 
     @Test
     public void testMarshal() throws Exception {
-        assertTrue(my.isStarted());
+        assertEquals(true, my.isStarted());
         assertSame(context, my.getCamelContext());
 
         getMockEndpoint("mock:a").expectedBodiesReceived("Hi Camel");
@@ -51,13 +51,13 @@ public class DataFormatServiceTest extends ContextTestSupport {
 
         context.stop();
 
-        assertTrue(my.isStopped());
+        assertEquals(true, my.isStopped());
         assertSame(context, my.getCamelContext());
     }
 
     @Test
     public void testUnmarshal() throws Exception {
-        assertTrue(my.isStarted());
+        assertEquals(true, my.isStarted());
         assertSame(context, my.getCamelContext());
 
         getMockEndpoint("mock:b").expectedBodiesReceived("Bye World");
@@ -68,15 +68,15 @@ public class DataFormatServiceTest extends ContextTestSupport {
 
         context.stop();
 
-        assertTrue(my.isStopped());
+        assertEquals(true, my.isStopped());
         assertSame(context, my.getCamelContext());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 // marshal using our custom data format. (my is an instance of
                 // MyDataFormat)
@@ -110,8 +110,18 @@ public class DataFormatServiceTest extends ContextTestSupport {
         }
 
         @Override
-        public Object unmarshal(Exchange exchange, InputStream stream) {
+        public Object unmarshal(Exchange exchange, InputStream stream) throws Exception {
             return "Bye World";
+        }
+
+        @Override
+        protected void doStart() throws Exception {
+            // noop
+        }
+
+        @Override
+        protected void doStop() throws Exception {
+            // noop
         }
     }
     // END SNIPPET: e2

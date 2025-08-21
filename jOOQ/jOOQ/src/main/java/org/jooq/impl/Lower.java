@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -134,19 +131,39 @@ implements
     // -------------------------------------------------------------------------
 
     @Override
-    public final Field<String> $arg1() {
+    public final Field<String> $string() {
         return string;
     }
 
     @Override
-    public final QOM.Lower $arg1(Field<String> newValue) {
+    public final QOM.Lower $string(Field<String> newValue) {
         return $constructor().apply(newValue);
     }
 
-    @Override
     public final Function1<? super Field<String>, ? extends QOM.Lower> $constructor() {
         return (a1) -> new Lower(a1);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // -------------------------------------------------------------------------
     // XXX: The Object API
@@ -154,7 +171,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.Lower o) {
+        if (that instanceof QOM.Lower) { QOM.Lower o = (QOM.Lower) that;
             return
                 StringUtils.equals($string(), o.$string())
             ;

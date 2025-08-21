@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,18 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.impl.QOM.JSONOnNull;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -138,11 +134,6 @@ implements
     // XXX: QueryPart API
     // -------------------------------------------------------------------------
 
-    @Override
-    final boolean isNullable() {
-        return false;
-    }
-
 
 
     @Override
@@ -200,146 +191,38 @@ implements
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            case CLICKHOUSE: {
-
-                // [#7539] ARRAY types can't mix data types, so use TUPLE for degrees > 1
-                if (fields.size() > 1)
-                    ctx.visit(function(N_toJSONString, getDataType(), function(N_TUPLE, OTHER, map(fields, e -> JSONEntryImpl.jsonCast(ctx, e), Field[]::new))));
-                else
-                    ctx.visit(function(N_toJSONString, getDataType(), array(fields)));
-
-                break;
-            }
-
-            case DUCKDB:
-            case TRINO: {
-                if (ctx.family() == DUCKDB && onNull != JSONOnNull.ABSENT_ON_NULL) {
-                    acceptStandard(ctx, mapped);
-                }
-
-                // [#11485] While JSON_OBJECT is supported in Trino, it seems there are a few show stopping bugs, including:
-                // https://github.com/trinodb/trino/issues/16522
-                // https://github.com/trinodb/trino/issues/16523
-                // https://github.com/trinodb/trino/issues/16525
-                else {
-                    ctx.visit(JSONObject.absentOnNullIf(
-                        () -> onNull == JSONOnNull.ABSENT_ON_NULL,
-                        e -> e,
-                        DSL.<JSON>array(map(fields, e -> JSONEntryImpl.jsonCast(ctx, e).cast(JSON)))
-                    ).cast(JSON));
-                }
-
-                break;
-            }
-
-            case MARIADB: {
-                if (onNull == JSONOnNull.ABSENT_ON_NULL) {
-                    Field<T> value = DSL.field(N_VALUE, getDataType());
-
-                    ctx.visit(
-                        DSL.coalesce(
-                            DSL.field(
-                            select(jsonArrayAgg(function(N_JSON_EXTRACT, getDataType(), value, inline("$"))))
-                            .from(jsonTable((Field<JSON>) $onNull(JSONOnNull.NULL_ON_NULL), inline("$[*]"))
-                                .column(value, SQLDataType.JSON).path("$").as(N_T))
-                            .where(value.ne((Field) inline("null")))
-
-                            // [#10113] Workaround for https://jira.mariadb.org/projects/MDEV/issues/MDEV-34284
-                            .and(rand().isNotNull())
-                        ),
-                        jsonArray()
-                    ));
-                }
-                else
-                    acceptStandard(ctx, mapped);
-
-                break;
-            }
-
-            case SQLITE: {
-                if (onNull == JSONOnNull.ABSENT_ON_NULL) {
-                    Field<String> key = DSL.field(N_KEY, VARCHAR);
-                    Field<T> value = DSL.field(N_VALUE, getDataType());
-
-                    ctx.visit(DSL.field(
-                        select(jsonArrayAgg(value).filterWhere(value.isNotNull().and(key.isNotNull())))
-                        .from("{0}({1})", N_JSON_TREE, $onNull(JSONOnNull.NULL_ON_NULL))
-                    ));
-                }
-                else
-                    acceptStandard(ctx, mapped);
-
-                break;
-            }
-
             default: {
-                acceptStandard(ctx, mapped);
+                JSONNull jsonNull;
+                JSONReturning jsonReturning = new JSONReturning(returning);
+
+                // Workaround for https://github.com/h2database/h2database/issues/2496
+                if (ctx.family() == H2 && fields.isEmpty())
+                    jsonNull = new JSONNull(JSONOnNull.NULL_ON_NULL);
+                else
+                    jsonNull = new JSONNull(onNull);
+
+                Field<T> jsonArray = CustomField.of(N_JSON_ARRAY, getDataType(), c ->
+                    c.visit(N_JSON_ARRAY).sql('(').visit(QueryPartListView.wrap(mapped, jsonNull, jsonReturning).separator("")).sql(')')
+                );
+
+                switch (ctx.family()) {
+
+
+
+
+
+
+
+
+
+
+
+                    default:
+                        ctx.visit(jsonArray);
+                        break;
+                }
                 break;
             }
-        }
-    }
-
-    private final void acceptStandard(Context<?> ctx, QueryPartCollectionView<Field<?>> mapped) {
-        JSONNull jsonNull;
-        JSONReturning jsonReturning;
-
-        // Workaround for https://github.com/h2database/h2database/issues/2496
-        if (fields.isEmpty() && ctx.family() == H2)
-            jsonNull = new JSONNull(JSONOnNull.NULL_ON_NULL);
-        else if (fields.isEmpty() && JSONNull.NO_SUPPORT_NULL_ON_EMPTY.contains(ctx.dialect()))
-            jsonNull = new JSONNull(null);
-        else
-            jsonNull = new JSONNull(onNull);
-
-
-
-
-
-
-
-        jsonReturning = new JSONReturning(returning);
-
-        Field<T> jsonArray = CustomField.of(N_JSON_ARRAY, getDataType(), c ->
-            c.visit(N_JSON_ARRAY).sql('(').visit(QueryPartListView.wrap(mapped, jsonNull, jsonReturning).separator("")).sql(')')
-        );
-
-        switch (ctx.family()) {
-
-
-
-
-
-
-
-
-
-
-
-            default:
-                ctx.visit(jsonArray);
-                break;
         }
     }
 
@@ -365,49 +248,74 @@ implements
     // -------------------------------------------------------------------------
 
     @Override
-    public final DataType<T> $arg1() {
+    public final DataType<T> $type() {
         return type;
     }
 
     @Override
-    public final QOM.UnmodifiableList<? extends Field<?>> $arg2() {
+    public final UnmodifiableList<? extends Field<?>> $fields() {
         return QOM.unmodifiable(fields);
     }
 
     @Override
-    public final JSONOnNull $arg3() {
+    public final JSONOnNull $onNull() {
         return onNull;
     }
 
     @Override
-    public final DataType<?> $arg4() {
+    public final DataType<?> $returning() {
         return returning;
     }
 
     @Override
-    public final QOM.JSONArray<T> $arg1(DataType<T> newValue) {
-        return $constructor().apply(newValue, $arg2(), $arg3(), $arg4());
+    public final QOM.JSONArray<T> $type(DataType<T> newValue) {
+        return $constructor().apply(newValue, $fields(), $onNull(), $returning());
     }
 
     @Override
-    public final QOM.JSONArray<T> $arg2(QOM.UnmodifiableList<? extends Field<?>> newValue) {
-        return $constructor().apply($arg1(), newValue, $arg3(), $arg4());
+    public final QOM.JSONArray<T> $fields(Collection<? extends Field<?>> newValue) {
+        return $constructor().apply($type(), newValue, $onNull(), $returning());
     }
 
     @Override
-    public final QOM.JSONArray<T> $arg3(JSONOnNull newValue) {
-        return $constructor().apply($arg1(), $arg2(), newValue, $arg4());
+    public final QOM.JSONArray<T> $onNull(JSONOnNull newValue) {
+        return $constructor().apply($type(), $fields(), newValue, $returning());
     }
 
     @Override
-    public final QOM.JSONArray<T> $arg4(DataType<?> newValue) {
-        return $constructor().apply($arg1(), $arg2(), $arg3(), newValue);
+    public final QOM.JSONArray<T> $returning(DataType<?> newValue) {
+        return $constructor().apply($type(), $fields(), $onNull(), newValue);
     }
 
-    @Override
     public final Function4<? super DataType<T>, ? super Collection<? extends Field<?>>, ? super JSONOnNull, ? super DataType<?>, ? extends QOM.JSONArray<T>> $constructor() {
         return (a1, a2, a3, a4) -> new JSONArray(a1, (Collection<? extends Field<?>>) a2, a3, a4);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // -------------------------------------------------------------------------
     // XXX: The Object API
@@ -415,7 +323,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.JSONArray<?> o) {
+        if (that instanceof QOM.JSONArray) { QOM.JSONArray<?> o = (QOM.JSONArray<?>) that;
             return
                 StringUtils.equals($type(), o.$type()) &&
                 StringUtils.equals($fields(), o.$fields()) &&

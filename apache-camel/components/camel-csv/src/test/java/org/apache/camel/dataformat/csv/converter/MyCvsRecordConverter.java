@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.camel.dataformat.csv.CsvRecordConverter;
-import org.apache.camel.util.ObjectHelper;
 import org.apache.commons.csv.CSVRecord;
 
 /**
@@ -34,12 +33,13 @@ public class MyCvsRecordConverter implements CsvRecordConverter<List<String>> {
     private final String[] record;
 
     public MyCvsRecordConverter(String... record) {
-        this.record = ObjectHelper.notNull(record, "Unspecified record");
+        assert record != null : "Unspecified record";
+        this.record = record;
     }
 
     @Override
     public List<String> convertRecord(CSVRecord record) {
-        ObjectHelper.notNull(record, "Unspecified record");
+        assert record != null : "Unspecified record";
         return Arrays.asList(this.record);
     }
 }

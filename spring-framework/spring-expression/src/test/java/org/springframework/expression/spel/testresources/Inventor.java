@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,20 +17,17 @@
 package org.springframework.expression.spel.testresources;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.util.ObjectUtils;
 
 ///CLOVER:OFF
 @SuppressWarnings("unused")
 public class Inventor {
-
 	private String name;
 	public String _name;
 	public String _name_;
@@ -109,7 +106,7 @@ public class Inventor {
 		return inventions;
 	}
 
-	public void setInventions(String... inventions) {
+	public void setInventions(String[] inventions) {
 		this.inventions = inventions;
 	}
 
@@ -119,23 +116,23 @@ public class Inventor {
 
 	public int throwException(int valueIn) throws Exception {
 		counter++;
-		switch (valueIn) {
-			case 1 -> throw new IllegalArgumentException("IllegalArgumentException for 1");
-			case 2 -> throw new RuntimeException("RuntimeException for 2");
-			case 4 -> throw new TestException();
+		if (valueIn==1) {
+			throw new IllegalArgumentException("IllegalArgumentException for 1");
+		}
+		if (valueIn==2) {
+			throw new RuntimeException("RuntimeException for 2");
+		}
+		if (valueIn==4) {
+			throw new TestException();
 		}
 		return valueIn;
 	}
 
 	@SuppressWarnings("serial")
-	public static class TestException extends Exception {}
+	static class TestException extends Exception {}
 
 	public String throwException(PlaceOfBirth pob) {
 		return pob.getCity();
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public String getName() {
@@ -193,43 +190,20 @@ public class Inventor {
 		return a + b + c;
 	}
 
-	public String aVarargsMethod(String... strings) {
-		return Arrays.toString(strings);
+	public int aVarargsMethod(String... strings) {
+		if (strings == null)
+			return 0;
+		return strings.length;
 	}
 
-	public String aVarargsMethod2(int i, String... strings) {
-		return i + "-" + Arrays.toString(strings);
+	public int aVarargsMethod2(int i, String... strings) {
+		if (strings == null)
+			return i;
+		return strings.length + i;
 	}
-
-	@SuppressWarnings("unchecked")
-	public String optionalVarargsMethod(Optional<String>... values) {
-		return Arrays.toString(values);
-	}
-
-	public String aVarargsMethod3(String str1, String... strings) {
-		if (ObjectUtils.isEmpty(strings)) {
-			return str1;
-		}
-		return str1 + "-" + String.join("-", strings);
-	}
-
-	public String formatObjectVarargs(String format, Object... args) {
-		return String.format(format, args);
-	}
-
-	public String formatPrimitiveVarargs(String format, int... nums) {
-		Object[] args = new Object[nums.length];
-		for (int i = 0; i < nums.length; i++) {
-			args[i] = nums[i];
-		}
-		return String.format(format, args);
-	}
-
 
 	public Inventor(String... strings) {
-		if (strings.length > 0) {
-			this.name = strings[0];
-		}
+
 	}
 
 	public boolean getSomeProperty() {

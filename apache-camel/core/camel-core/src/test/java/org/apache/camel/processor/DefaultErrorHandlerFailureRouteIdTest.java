@@ -37,7 +37,7 @@ public class DefaultErrorHandlerFailureRouteIdTest extends ContextTestSupport {
 
         Exchange out = template.send("direct:foo", new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("Hello World");
             }
         });
@@ -51,10 +51,10 @@ public class DefaultErrorHandlerFailureRouteIdTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").routeId("foo").to("mock:foo").to("direct:bar").to("mock:result");
 
                 from("direct:bar").routeId("bar").to("mock:bar").throwException(new IllegalArgumentException("Forced"));

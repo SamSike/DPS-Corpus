@@ -126,7 +126,6 @@ public class GenericFileRenameExclusiveReadLockStrategy<T> implements GenericFil
             Thread.sleep(checkInterval);
             return false;
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
             LOG.debug("Sleep interrupted while waiting for exclusive read lock, so breaking out");
             return true;
         }

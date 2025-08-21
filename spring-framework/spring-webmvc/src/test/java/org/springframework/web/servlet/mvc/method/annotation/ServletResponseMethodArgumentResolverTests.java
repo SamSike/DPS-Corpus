@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Arjen Poutsma
  */
-class ServletResponseMethodArgumentResolverTests {
+public class ServletResponseMethodArgumentResolverTests {
 
 	private ServletResponseMethodArgumentResolver resolver;
 
@@ -51,7 +51,7 @@ class ServletResponseMethodArgumentResolverTests {
 
 
 	@BeforeEach
-	void setup() throws Exception {
+	public void setup() throws Exception {
 		resolver = new ServletResponseMethodArgumentResolver();
 		mavContainer = new ModelAndViewContainer();
 		servletResponse = new MockHttpServletResponse();
@@ -62,7 +62,7 @@ class ServletResponseMethodArgumentResolverTests {
 
 
 	@Test
-	void servletResponse() throws Exception {
+	public void servletResponse() throws Exception {
 		MethodParameter servletResponseParameter = new MethodParameter(method, 0);
 		assertThat(resolver.supportsParameter(servletResponseParameter)).as("ServletResponse not supported").isTrue();
 
@@ -81,7 +81,7 @@ class ServletResponseMethodArgumentResolverTests {
 	}
 
 	@Test
-	void outputStream() throws Exception {
+	public void outputStream() throws Exception {
 		MethodParameter outputStreamParameter = new MethodParameter(method, 1);
 		assertThat(resolver.supportsParameter(outputStreamParameter)).as("OutputStream not supported").isTrue();
 
@@ -91,7 +91,7 @@ class ServletResponseMethodArgumentResolverTests {
 	}
 
 	@Test
-	void writer() throws Exception {
+	public void writer() throws Exception {
 		MethodParameter writerParameter = new MethodParameter(method, 2);
 		assertThat(resolver.supportsParameter(writerParameter)).as("Writer not supported").isTrue();
 

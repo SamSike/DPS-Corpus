@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,11 @@ package org.springframework.beans.support;
 import java.beans.PropertyEditor;
 import java.lang.reflect.Method;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.PropertyEditorRegistry;
 import org.springframework.beans.SimpleTypeConverter;
 import org.springframework.beans.TypeConverter;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.MethodInvoker;
 import org.springframework.util.ReflectionUtils;
@@ -42,7 +41,8 @@ import org.springframework.util.ReflectionUtils;
  */
 public class ArgumentConvertingMethodInvoker extends MethodInvoker {
 
-	private @Nullable TypeConverter typeConverter;
+	@Nullable
+	private TypeConverter typeConverter;
 
 	private boolean useDefaultConverter = true;
 
@@ -67,7 +67,8 @@ public class ArgumentConvertingMethodInvoker extends MethodInvoker {
 	 * (provided that the present TypeConverter actually implements the
 	 * PropertyEditorRegistry interface).
 	 */
-	public @Nullable TypeConverter getTypeConverter() {
+	@Nullable
+	public TypeConverter getTypeConverter() {
 		if (this.typeConverter == null && this.useDefaultConverter) {
 			this.typeConverter = getDefaultTypeConverter();
 		}
@@ -97,11 +98,11 @@ public class ArgumentConvertingMethodInvoker extends MethodInvoker {
 	 */
 	public void registerCustomEditor(Class<?> requiredType, PropertyEditor propertyEditor) {
 		TypeConverter converter = getTypeConverter();
-		if (!(converter instanceof PropertyEditorRegistry registry)) {
+		if (!(converter instanceof PropertyEditorRegistry)) {
 			throw new IllegalStateException(
 					"TypeConverter does not implement PropertyEditorRegistry interface: " + converter);
 		}
-		registry.registerCustomEditor(requiredType, propertyEditor);
+		((PropertyEditorRegistry) converter).registerCustomEditor(requiredType, propertyEditor);
 	}
 
 
@@ -110,7 +111,7 @@ public class ArgumentConvertingMethodInvoker extends MethodInvoker {
 	 * @see #doFindMatchingMethod
 	 */
 	@Override
-	protected @Nullable Method findMatchingMethod() {
+	protected Method findMatchingMethod() {
 		Method matchingMethod = super.findMatchingMethod();
 		// Second pass: look for method where arguments can be converted to parameter types.
 		if (matchingMethod == null) {
@@ -130,8 +131,8 @@ public class ArgumentConvertingMethodInvoker extends MethodInvoker {
 	 * @param arguments the argument values to match against method parameters
 	 * @return a matching method, or {@code null} if none
 	 */
-	@SuppressWarnings("NullAway") // Dataflow analysis limitation
-	protected @Nullable Method doFindMatchingMethod(@Nullable Object[] arguments) {
+	@Nullable
+	protected Method doFindMatchingMethod(Object[] arguments) {
 		TypeConverter converter = getTypeConverter();
 		if (converter != null) {
 			String targetMethod = getTargetMethod();
@@ -141,14 +142,14 @@ public class ArgumentConvertingMethodInvoker extends MethodInvoker {
 			Assert.state(targetClass != null, "No target class set");
 			Method[] candidates = ReflectionUtils.getAllDeclaredMethods(targetClass);
 			int minTypeDiffWeight = Integer.MAX_VALUE;
-			@Nullable Object[] argumentsToUse = null;
+			Object[] argumentsToUse = null;
 			for (Method candidate : candidates) {
 				if (candidate.getName().equals(targetMethod)) {
 					// Check if the inspected method has the correct number of parameters.
 					int parameterCount = candidate.getParameterCount();
 					if (parameterCount == argCount) {
 						Class<?>[] paramTypes = candidate.getParameterTypes();
-						@Nullable Object[] convertedArguments = new Object[argCount];
+						Object[] convertedArguments = new Object[argCount];
 						boolean match = true;
 						for (int j = 0; j < argCount && match; j++) {
 							// Verify that the supplied argument is assignable to the method parameter.

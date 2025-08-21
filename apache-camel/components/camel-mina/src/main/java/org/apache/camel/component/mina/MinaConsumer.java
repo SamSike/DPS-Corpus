@@ -95,12 +95,6 @@ public class MinaConsumer extends DefaultConsumer {
     }
 
     @Override
-    public boolean isHostedService() {
-        // we are hosted if not in client mode
-        return !configuration.isClientMode();
-    }
-
-    @Override
     protected void doStart() throws Exception {
         super.doStart();
         if (configuration.isClientMode() && configuration.getProtocol().equals("tcp")) {
@@ -192,7 +186,9 @@ public class MinaConsumer extends DefaultConsumer {
         setupNioSocketAcceptor(configuration, minaLogger, filters);
         if (configuration.getSslContextParameters() != null) {
             SslFilter filter = new SslFilter(
-                    configuration.getSslContextParameters().createSSLContext(getEndpoint().getCamelContext()));
+                    configuration.getSslContextParameters().createSSLContext(getEndpoint().getCamelContext()),
+                    configuration.isAutoStartTls());
+            filter.setUseClientMode(false);
             acceptor.getFilterChain().addFirst("sslFilter", filter);
         }
     }
@@ -234,7 +230,9 @@ public class MinaConsumer extends DefaultConsumer {
         appendIoFiltersToChain(filters, connector.getFilterChain());
         if (configuration.getSslContextParameters() != null) {
             SslFilter filter = new SslFilter(
-                    configuration.getSslContextParameters().createSSLContext(getEndpoint().getCamelContext()));
+                    configuration.getSslContextParameters().createSSLContext(getEndpoint().getCamelContext()),
+                    configuration.isAutoStartTls());
+            filter.setUseClientMode(true);
             connector.getFilterChain().addFirst("sslFilter", filter);
         }
         configureCodecFactory("MinaConsumer", connector, configuration);
@@ -269,10 +267,6 @@ public class MinaConsumer extends DefaultConsumer {
             }
         } else {
             ObjectSerializationCodecFactory codecFactory = new ObjectSerializationCodecFactory();
-            if (configuration.getObjectCodecPattern() != null) {
-                String[] arr = configuration.getObjectCodecPattern().split(",");
-                codecFactory.accept(arr);
-            }
             addCodecFactory(service, codecFactory);
             LOG.debug("{}: Using ObjectSerializationCodecFactory: {}", type, codecFactory);
         }

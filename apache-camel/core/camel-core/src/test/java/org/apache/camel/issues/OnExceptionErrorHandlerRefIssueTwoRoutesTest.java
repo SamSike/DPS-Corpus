@@ -50,17 +50,17 @@ public class OnExceptionErrorHandlerRefIssueTwoRoutesTest extends ContextTestSup
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myDLC", new DeadLetterChannelBuilder("mock:dead"));
         return jndi;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler("myDLC");
 
                 from("direct:foo").to("mock:foo").throwException(new IllegalArgumentException("Damn Foo"));

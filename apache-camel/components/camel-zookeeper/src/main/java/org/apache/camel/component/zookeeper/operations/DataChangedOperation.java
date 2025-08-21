@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.zookeeper.operations;
 
+import org.apache.zookeeper.AsyncCallback.DataCallback;
 import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
@@ -44,7 +45,9 @@ public class DataChangedOperation extends FutureEventDrivenOperation<byte[]> {
 
     @Override
     protected void installWatch() {
-        connection.getData(getNode(), this, (int rc, String path, Object ctx, byte[] data, Stat stat) -> {
+        connection.getData(getNode(), this, new DataCallback() {
+            public void processResult(int rc, String path, Object ctx, byte[] data, Stat stat) {
+            }
         }, null);
     }
 

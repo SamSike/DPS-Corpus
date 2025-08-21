@@ -37,11 +37,10 @@ import org.stringtemplate.v4.STGroup;
  */
 @UriEndpoint(firstVersion = "1.2.0", scheme = "string-template", title = "String Template",
              syntax = "string-template:resourceUri", producerOnly = true,
-             remote = false, category = { Category.TRANSFORMATION, Category.SCRIPT },
-             headersClass = StringTemplateConstants.class)
+             category = { Category.TRANSFORMATION, Category.SCRIPT }, headersClass = StringTemplateConstants.class)
 public class StringTemplateEndpoint extends ResourceEndpoint {
 
-    @UriParam
+    @UriParam(defaultValue = "false")
     private boolean allowTemplateFromHeader;
     @UriParam(defaultValue = "<")
     private char delimiterStart = STGroup.defaultGroup.delimiterStartChar;
@@ -53,11 +52,6 @@ public class StringTemplateEndpoint extends ResourceEndpoint {
 
     public StringTemplateEndpoint(String endpointUri, Component component, String resourceUri) {
         super(endpointUri, component, resourceUri);
-    }
-
-    @Override
-    public boolean isRemote() {
-        return false;
     }
 
     @Override
@@ -126,9 +120,8 @@ public class StringTemplateEndpoint extends ResourceEndpoint {
                 log.debug("{} set to {} creating new endpoint to handle exchange",
                         StringTemplateConstants.STRINGTEMPLATE_RESOURCE_URI,
                         newResourceUri);
-                try (StringTemplateEndpoint newEndpoint = findOrCreateEndpoint(getEndpointUri(), newResourceUri)) {
-                    newEndpoint.onExchange(exchange);
-                }
+                StringTemplateEndpoint newEndpoint = findOrCreateEndpoint(getEndpointUri(), newResourceUri);
+                newEndpoint.onExchange(exchange);
                 return;
             }
             variableMap = exchange.getIn().getHeader(StringTemplateConstants.STRINGTEMPLATE_VARIABLE_MAP, Map.class);

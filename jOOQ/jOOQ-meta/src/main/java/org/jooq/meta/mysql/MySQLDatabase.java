@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -45,65 +45,39 @@ import static org.jooq.Records.mapping;
 import static org.jooq.SQLDialect.MARIADB;
 import static org.jooq.SQLDialect.MYSQL;
 // ...
-// ...
-import static org.jooq.impl.DSL.case_;
-import static org.jooq.impl.DSL.cast;
-import static org.jooq.impl.DSL.coalesce;
-import static org.jooq.impl.DSL.count;
-import static org.jooq.impl.DSL.falseCondition;
-import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.inline;
-import static org.jooq.impl.DSL.length;
-import static org.jooq.impl.DSL.lower;
-import static org.jooq.impl.DSL.max;
-import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.noCondition;
-import static org.jooq.impl.DSL.regexpReplaceAll;
-import static org.jooq.impl.DSL.regexpReplaceFirst;
-import static org.jooq.impl.DSL.replace;
 import static org.jooq.impl.DSL.row;
 import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.table;
 import static org.jooq.impl.DSL.when;
-import static org.jooq.impl.SQLDataType.CHAR;
-import static org.jooq.impl.SQLDataType.CLOB;
 import static org.jooq.impl.SQLDataType.INTEGER;
-import static org.jooq.impl.SQLDataType.VARCHAR;
 import static org.jooq.meta.mysql.information_schema.Tables.CHECK_CONSTRAINTS;
 import static org.jooq.meta.mysql.information_schema.Tables.COLUMNS;
 import static org.jooq.meta.mysql.information_schema.Tables.KEY_COLUMN_USAGE;
-import static org.jooq.meta.mysql.information_schema.Tables.PARAMETERS;
 import static org.jooq.meta.mysql.information_schema.Tables.REFERENTIAL_CONSTRAINTS;
 import static org.jooq.meta.mysql.information_schema.Tables.ROUTINES;
 import static org.jooq.meta.mysql.information_schema.Tables.SCHEMATA;
 import static org.jooq.meta.mysql.information_schema.Tables.STATISTICS;
 import static org.jooq.meta.mysql.information_schema.Tables.TABLES;
 import static org.jooq.meta.mysql.information_schema.Tables.TABLE_CONSTRAINTS;
-import static org.jooq.meta.mysql.information_schema.Tables.TRIGGERS;
 import static org.jooq.meta.mysql.information_schema.Tables.VIEWS;
 import static org.jooq.meta.mysql.mysql.Tables.PROC;
-import static org.jooq.tools.StringUtils.defaultIfNull;
 
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.jooq.CommonTableExpression;
-import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
-import org.jooq.Internal;
 import org.jooq.Record;
 import org.jooq.Record12;
-import org.jooq.Record14;
-import org.jooq.Record4;
 import org.jooq.Record5;
 import org.jooq.Record6;
+import org.jooq.Records;
 import org.jooq.Result;
 import org.jooq.ResultQuery;
 import org.jooq.SQLDialect;
@@ -111,12 +85,7 @@ import org.jooq.SortOrder;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions.TableType;
-// ...
-// ...
-// ...
 import org.jooq.impl.DSL;
-import org.jooq.impl.QOM.ForeignKeyRule;
-import org.jooq.impl.QOM.GenerationOption;
 import org.jooq.meta.AbstractDatabase;
 import org.jooq.meta.AbstractIndexDefinition;
 import org.jooq.meta.ArrayDefinition;
@@ -126,7 +95,6 @@ import org.jooq.meta.DefaultCheckConstraintDefinition;
 import org.jooq.meta.DefaultEnumDefinition;
 import org.jooq.meta.DefaultIndexColumnDefinition;
 import org.jooq.meta.DefaultRelations;
-// ...
 import org.jooq.meta.DomainDefinition;
 import org.jooq.meta.EnumDefinition;
 import org.jooq.meta.IndexColumnDefinition;
@@ -137,24 +105,16 @@ import org.jooq.meta.RoutineDefinition;
 import org.jooq.meta.SchemaDefinition;
 import org.jooq.meta.SequenceDefinition;
 import org.jooq.meta.TableDefinition;
-// ...
 import org.jooq.meta.UDTDefinition;
-import org.jooq.meta.XMLSchemaCollectionDefinition;
 import org.jooq.meta.mariadb.MariaDBDatabase;
-import org.jooq.meta.mysql.information_schema.tables.Columns;
-import org.jooq.meta.mysql.information_schema.tables.Triggers;
 import org.jooq.meta.mysql.mysql.enums.ProcType;
 import org.jooq.tools.csv.CSVReader;
-
-import org.jetbrains.annotations.Nullable;
 
 /**
  * @author Lukas Eder
  */
 public class MySQLDatabase extends AbstractDatabase implements ResultQueryDatabase {
 
-    private Boolean is5_5;
-    private Boolean is5_7;
     private Boolean is8;
     private Boolean is8_0_16;
 
@@ -217,7 +177,6 @@ public class MySQLDatabase extends AbstractDatabase implements ResultQueryDataba
             final boolean unique = !index.get(STATISTICS.NON_UNIQUE, boolean.class);
 
             // [#6310] [#6620] Function-based indexes are not yet supported
-            // [#16237]        Alternatively, the column could be hidden or excluded
             for (Record column : columns)
                 if (table.getColumn(column.get(STATISTICS.COLUMN_NAME)) == null)
                     continue indexLoop;
@@ -301,40 +260,6 @@ public class MySQLDatabase extends AbstractDatabase implements ResultQueryDataba
         return is8_0_16;
     }
 
-    protected boolean is5_7() {
-
-        // [#14598] The information_schema.columns.GENERATION_EXPRESSION column was added in MySQL 5.7 only
-        if (is5_7 == null)
-            is5_7 = configuredDialectIsNotFamilyAndSupports(asList(MYSQL), () -> exists(COLUMNS.GENERATION_EXPRESSION))
-                 || configuredDialectIsNotFamilyAndSupports(asList(MARIADB), () -> exists(COLUMNS.GENERATION_EXPRESSION));
-
-        return is5_7;
-    }
-
-    protected boolean is5_5() {
-
-        // Check if this is a MySQL 5.5 or later database
-        if (is5_5 == null) {
-            try {
-                create().selectOne().from(PARAMETERS).limit(1).fetchOne();
-                is5_5 = true;
-            }
-            catch (Exception e) {
-                is5_5 = false;
-            }
-        }
-
-        return is5_5;
-    }
-
-    /**
-     * Subclasses can override this to implement a custom JSON field check in {@link MySQLTableDefinition}.
-     */
-    @Internal
-    protected Condition jsonCheck(Field<String> schemaName, Field<String> tableName, Field<String> fieldName) {
-        return falseCondition();
-    }
-
     @Override
     public ResultQuery<Record6<String, String, String, String, String, Integer>> primaryKeys(List<String> schemas) {
         return keys(schemas, true);
@@ -375,16 +300,13 @@ public class MySQLDatabase extends AbstractDatabase implements ResultQueryDataba
 
     @Override
     protected void loadForeignKeys(DefaultRelations relations) throws SQLException {
-        for (Record record : create()
-                .select(
+        for (Record record : create().select(
                     REFERENTIAL_CONSTRAINTS.CONSTRAINT_SCHEMA,
                     REFERENTIAL_CONSTRAINTS.CONSTRAINT_NAME,
                     REFERENTIAL_CONSTRAINTS.TABLE_NAME,
                     REFERENTIAL_CONSTRAINTS.REFERENCED_TABLE_NAME,
                     REFERENTIAL_CONSTRAINTS.UNIQUE_CONSTRAINT_NAME,
                     REFERENTIAL_CONSTRAINTS.UNIQUE_CONSTRAINT_SCHEMA,
-                    replace(REFERENTIAL_CONSTRAINTS.DELETE_RULE, inline(" "), inline("_")).as(REFERENTIAL_CONSTRAINTS.DELETE_RULE),
-                    replace(REFERENTIAL_CONSTRAINTS.UPDATE_RULE, inline(" "), inline("_")).as(REFERENTIAL_CONSTRAINTS.UPDATE_RULE),
                     KEY_COLUMN_USAGE.COLUMN_NAME)
                 .from(REFERENTIAL_CONSTRAINTS)
                 .join(KEY_COLUMN_USAGE)
@@ -396,7 +318,8 @@ public class MySQLDatabase extends AbstractDatabase implements ResultQueryDataba
                     KEY_COLUMN_USAGE.CONSTRAINT_SCHEMA.asc(),
                     KEY_COLUMN_USAGE.CONSTRAINT_NAME.asc(),
                     KEY_COLUMN_USAGE.ORDINAL_POSITION.asc())
-        ) {
+                .fetch()) {
+
             SchemaDefinition foreignKeySchema = getSchema(record.get(REFERENTIAL_CONSTRAINTS.CONSTRAINT_SCHEMA));
             SchemaDefinition uniqueKeySchema = getSchema(record.get(REFERENTIAL_CONSTRAINTS.UNIQUE_CONSTRAINT_SCHEMA));
 
@@ -409,19 +332,13 @@ public class MySQLDatabase extends AbstractDatabase implements ResultQueryDataba
             TableDefinition foreignKeyTable = getTable(foreignKeySchema, foreignKeyTableName);
             TableDefinition uniqueKeyTable = getTable(uniqueKeySchema, uniqueKeyTableName);
 
-            ForeignKeyRule deleteRule = record.get(REFERENTIAL_CONSTRAINTS.DELETE_RULE, ForeignKeyRule.class);
-            ForeignKeyRule updateRule = record.get(REFERENTIAL_CONSTRAINTS.UPDATE_RULE, ForeignKeyRule.class);
-
             if (foreignKeyTable != null)
                 relations.addForeignKey(
                     foreignKey,
                     foreignKeyTable,
                     foreignKeyTable.getColumn(foreignKeyColumn),
                     getKeyName(uniqueKeyTableName, uniqueKey),
-                    uniqueKeyTable,
-                    true,
-                    deleteRule,
-                    updateRule
+                    uniqueKeyTable
                 );
         }
     }
@@ -494,28 +411,6 @@ public class MySQLDatabase extends AbstractDatabase implements ResultQueryDataba
     }
 
     @Override
-    public ResultQuery<Record4<String, String, String, String>> sources(List<String> schemas) {
-        return create()
-            .select(
-                VIEWS.TABLE_CATALOG,
-                VIEWS.TABLE_SCHEMA,
-                VIEWS.TABLE_NAME,
-                when(lower(VIEWS.VIEW_DEFINITION).like(inline("create%")), VIEWS.VIEW_DEFINITION)
-                .else_(prependCreateView(VIEWS.TABLE_NAME, VIEWS.VIEW_DEFINITION, '`')).as(VIEWS.VIEW_DEFINITION))
-            .from(VIEWS)
-            .where(VIEWS.TABLE_SCHEMA.in(schemas))
-            .orderBy(
-                VIEWS.TABLE_SCHEMA,
-                VIEWS.TABLE_NAME)
-        ;
-    }
-
-    @Override
-    public ResultQuery<Record5<String, String, String, String, String>> comments(List<String> schemas) {
-        return null;
-    }
-
-    @Override
     public ResultQuery<Record12<String, String, String, String, Integer, Integer, Long, Long, BigDecimal, BigDecimal, Boolean, Long>> sequences(List<String> schemas) {
         return null;
     }
@@ -527,83 +422,21 @@ public class MySQLDatabase extends AbstractDatabase implements ResultQueryDataba
     }
 
     @Override
-    public ResultQuery<Record6<String, String, String, String, String, Integer>> enums(List<String> schemas) {
-
-        // Recursive query that works with MySQL 8+ only:
-        // https://stackoverflow.com/a/77057135/521799
-
-        Columns c = COLUMNS;
-
-        Field<String> e = field(name("e"), VARCHAR);
-        Field<String> l = field(name("l"), VARCHAR);
-        Field<Integer> p = field(name("p"), INTEGER);
-
-        CommonTableExpression<?> te = name("e").as(
-            select(
-                c.TABLE_SCHEMA,
-                c.TABLE_NAME,
-                c.COLUMN_NAME,
-                regexpReplaceAll(c.COLUMN_TYPE, inline("enum\\((.*)\\)"), inline("$1")).as(e))
-            .from(c)
-            .where(c.DATA_TYPE.eq(inline("enum")))
-        );
-
-        CommonTableExpression<?> tl = name("l").as(
-            select(
-                te.field(c.TABLE_SCHEMA),
-                te.field(c.TABLE_NAME),
-                te.field(c.COLUMN_NAME),
-                e, cast(inline(""), CHAR(32767)).as(l),
-                inline(0).as(p))
-            .from(te)
-            .unionAll(
-                select(
-                    te.field(c.TABLE_SCHEMA),
-                    te.field(c.TABLE_NAME),
-                    te.field(c.COLUMN_NAME),
-                    regexpReplaceFirst(e, inline("'.*?'(?:,|$)(.*)"), inline("$1")),
-                    replace(
-                        regexpReplaceFirst(e, inline("'(.*?)'(?:,|$).*"), inline("$1")),
-                        inline("''"), inline("'")
-                    ),
-                    p.plus(inline(1)))
-                .from(table(name("l")).as(te))
-                .where(length(e).gt(inline(0)))
-            )
-        );
-
-        return create()
-            .withRecursive(te, tl)
-            .select(
-                tl.field(c.TABLE_SCHEMA),
-                tl.field(c.TABLE_NAME),
-                tl.field(c.COLUMN_NAME),
-                inline(null, VARCHAR).as(c.DATA_TYPE),
-                tl.field(l),
-                tl.field(p))
-            .from(tl)
-            .where(p.gt(inline(0)))
-            .and(tl.field(c.TABLE_SCHEMA).in(schemas))
-            .orderBy(
-                tl.field(c.TABLE_SCHEMA),
-                tl.field(c.TABLE_NAME),
-                tl.field(c.COLUMN_NAME),
-                tl.field(p));
-    }
-
-    @Override
     protected List<TableDefinition> getTables0() throws SQLException {
         List<TableDefinition> result = new ArrayList<>();
 
         for (Record record : create().select(
                 TABLES.TABLE_SCHEMA,
                 TABLES.TABLE_NAME,
-
-                // [#17344] MySQL's INFORMATION_SCHEMA.TABLES.TABLE_COMMENT just adds a dummy 'VIEW' REMARK to all views, which we should ignore
-                when(TABLES.TABLE_TYPE.ne(inline("VIEW")), TABLES.TABLE_COMMENT).as(TABLES.TABLE_COMMENT),
+                TABLES.TABLE_COMMENT,
                 when(TABLES.TABLE_TYPE.eq(inline("VIEW")), inline(TableType.VIEW.name()))
-                    .else_(inline(TableType.TABLE.name())).as("table_type"))
+                    .else_(inline(TableType.TABLE.name())).as("table_type"),
+                when(VIEWS.VIEW_DEFINITION.lower().like(inline("create%")), VIEWS.VIEW_DEFINITION)
+                    .else_(inline("create view `").concat(TABLES.TABLE_NAME).concat("` as ").concat(VIEWS.VIEW_DEFINITION)).as(VIEWS.VIEW_DEFINITION))
             .from(TABLES)
+            .leftJoin(VIEWS)
+                .on(TABLES.TABLE_SCHEMA.eq(VIEWS.TABLE_SCHEMA))
+                .and(TABLES.TABLE_NAME.eq(VIEWS.TABLE_NAME))
             .where(TABLES.TABLE_SCHEMA.in(workaroundFor5213(getInputSchemata())))
 
             // [#9291] MariaDB treats sequences as tables
@@ -616,15 +449,16 @@ public class MySQLDatabase extends AbstractDatabase implements ResultQueryDataba
             String name = record.get(TABLES.TABLE_NAME);
             String comment = record.get(TABLES.TABLE_COMMENT);
             TableType tableType = record.get("table_type", TableType.class);
+            String source = record.get(VIEWS.VIEW_DEFINITION);
 
-            MySQLTableDefinition table = new MySQLTableDefinition(schema, name, comment, tableType, null);
+            MySQLTableDefinition table = new MySQLTableDefinition(schema, name, comment, tableType, source);
             result.add(table);
         }
 
         return result;
     }
 
-    static record ColumnRecord (String schema, String table, String column, String type, String comment) {}
+    static final /* record */ class ColumnRecord { private final String schema; private final String table; private final String column; private final String type; private final String comment; public ColumnRecord(String schema, String table, String column, String type, String comment) { this.schema = schema; this.table = table; this.column = column; this.type = type; this.comment = comment; } public String schema() { return schema; } public String table() { return table; } public String column() { return column; } public String type() { return type; } public String comment() { return comment; } @Override public boolean equals(Object o) { if (!(o instanceof ColumnRecord)) return false; ColumnRecord other = (ColumnRecord) o; if (!java.util.Objects.equals(this.schema, other.schema)) return false; if (!java.util.Objects.equals(this.table, other.table)) return false; if (!java.util.Objects.equals(this.column, other.column)) return false; if (!java.util.Objects.equals(this.type, other.type)) return false; if (!java.util.Objects.equals(this.comment, other.comment)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.schema, this.table, this.column, this.type, this.comment); } @Override public String toString() { return new StringBuilder("ColumnRecord[").append("schema=").append(this.schema).append(", table=").append(this.table).append(", column=").append(this.column).append(", type=").append(this.type).append(", comment=").append(this.comment).append("]").toString(); } }
 
     @Override
     protected List<EnumDefinition> getEnums0() throws SQLException {
@@ -658,19 +492,24 @@ public class MySQLDatabase extends AbstractDatabase implements ResultQueryDataba
                 ColumnDefinition columnDefinition = tableDefinition.getColumn(r.column);
 
                 if (columnDefinition != null) {
-                    DefaultEnumDefinition definition = new DefaultEnumDefinition(schema, name, r.comment, true);
 
-                    CSVReader reader = new CSVReader(
-                        new StringReader(r.type.replaceAll("(^enum\\()|(\\)$)", ""))
-                       ,','  // Separator
-                       ,'\'' // Quote character
-                       ,true // Strict quotes
-                    );
+                    // [#1137] Avoid generating enum classes for enum types that
+                    // are explicitly forced to another type
+                    if (getConfiguredForcedType(columnDefinition, columnDefinition.getType()) == null) {
+                        DefaultEnumDefinition definition = new DefaultEnumDefinition(schema, name, r.comment);
 
-                    for (String string : reader.next())
-                        definition.addLiteral(string);
+                        CSVReader reader = new CSVReader(
+                            new StringReader(r.type.replaceAll("(^enum\\()|(\\)$)", ""))
+                           ,','  // Separator
+                           ,'\'' // Quote character
+                           ,true // Strict quotes
+                        );
 
-                    result.add(definition);
+                        for (String string : reader.next())
+                            definition.addLiteral(string);
+
+                        result.add(definition);
+                    }
                 }
             }
         }
@@ -681,76 +520,6 @@ public class MySQLDatabase extends AbstractDatabase implements ResultQueryDataba
     @Override
     protected List<DomainDefinition> getDomains0() throws SQLException {
         List<DomainDefinition> result = new ArrayList<>();
-        return result;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
-    protected List<XMLSchemaCollectionDefinition> getXMLSchemaCollections0() throws SQLException {
-        List<XMLSchemaCollectionDefinition> result = new ArrayList<>();
         return result;
     }
 
@@ -781,9 +550,6 @@ public class MySQLDatabase extends AbstractDatabase implements ResultQueryDataba
                     ROUTINES.ROUTINE_TYPE.coerce(PROC.TYPE).as(ROUTINES.ROUTINE_TYPE))
                 .from(ROUTINES)
                 .where(ROUTINES.ROUTINE_SCHEMA.in(getInputSchemata()))
-
-                // [#9309] [#15319] Until we support MariaDB packages, we must exclude them here, explicitly
-                .and(ROUTINES.ROUTINE_TYPE.in(ProcType.FUNCTION.name(), ProcType.PROCEDURE.name()))
                 .orderBy(1, 2, 6)
                 .fetch()
 
@@ -796,9 +562,6 @@ public class MySQLDatabase extends AbstractDatabase implements ResultQueryDataba
                     PROC.TYPE.as(ROUTINES.ROUTINE_TYPE))
                 .from(PROC)
                 .where(PROC.DB.in(getInputSchemata()))
-
-                // [#9309] [#15319] Until we support MariaDB packages, we must exclude them here, explicitly
-                .and(PROC.TYPE.in(ProcType.FUNCTION, ProcType.PROCEDURE))
                 .orderBy(1, 2, 6)
                 .fetch();
 
@@ -839,12 +602,12 @@ public class MySQLDatabase extends AbstractDatabase implements ResultQueryDataba
 
     @Override
     protected boolean exists0(TableField<?, ?> field) {
-        return exists1(field, COLUMNS, COLUMNS.TABLE_SCHEMA, COLUMNS.TABLE_NAME, COLUMNS.COLUMN_NAME);
+        return exists1(field, COLUMNS.COLUMNS, COLUMNS.TABLE_SCHEMA, COLUMNS.TABLE_NAME, COLUMNS.COLUMN_NAME);
     }
 
     @Override
     protected boolean exists0(Table<?> table) {
-        return exists1(table, TABLES, TABLES.TABLE_SCHEMA, TABLES.TABLE_NAME);
+        return exists1(table, TABLES.TABLES, TABLES.TABLE_SCHEMA, TABLES.TABLE_NAME);
     }
 
     private List<Field<String>> workaroundFor5213(List<String> inputSchemata) {
@@ -860,12 +623,5 @@ public class MySQLDatabase extends AbstractDatabase implements ResultQueryDataba
             schemas.add(DSL.inline("ee7f6174-34f2-484b-8d81-20a4d9fc866d"));
 
         return schemas;
-    }
-
-    protected Field<String> generationExpression(Field<String> generationExpression) {
-        if (is5_7())
-            return generationExpression;
-        else
-            return inline(null, VARCHAR);
     }
 }

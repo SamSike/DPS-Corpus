@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.twilio;
 
-import com.twilio.type.Endpoint;
 import com.twilio.type.PhoneNumber;
 import com.twilio.type.Sip;
 import org.apache.camel.Converter;
@@ -29,7 +28,7 @@ public final class TwilioConverter {
     }
 
     @Converter
-    public static Endpoint toPhoneNumber(String value) {
+    public static PhoneNumber toPhoneNumber(String value) {
         return new PhoneNumber(value);
     }
 

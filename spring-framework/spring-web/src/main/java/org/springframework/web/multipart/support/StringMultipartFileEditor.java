@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,7 @@ package org.springframework.web.multipart.support;
 import java.beans.PropertyEditorSupport;
 import java.io.IOException;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -34,7 +33,8 @@ import org.springframework.web.multipart.MultipartFile;
  */
 public class StringMultipartFileEditor extends PropertyEditorSupport {
 
-	private final @Nullable String charsetName;
+	@Nullable
+	private final String charsetName;
 
 
 	/**
@@ -61,7 +61,8 @@ public class StringMultipartFileEditor extends PropertyEditorSupport {
 
 	@Override
 	public void setValue(Object value) {
-		if (value instanceof MultipartFile multipartFile) {
+		if (value instanceof MultipartFile) {
+			MultipartFile multipartFile = (MultipartFile) value;
 			try {
 				super.setValue(this.charsetName != null ?
 						new String(multipartFile.getBytes(), this.charsetName) :

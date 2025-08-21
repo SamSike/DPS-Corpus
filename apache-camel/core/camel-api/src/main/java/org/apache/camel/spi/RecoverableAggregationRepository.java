@@ -30,7 +30,7 @@ public interface RecoverableAggregationRepository extends AggregationRepository 
 
     /**
      * Scans the repository for {@link Exchange}s to be recovered
-     *
+     * 
      * @param  camelContext the current CamelContext
      * @return              the exchange ids for to be recovered
      */
@@ -48,11 +48,9 @@ public interface RecoverableAggregationRepository extends AggregationRepository 
     /**
      * Sets the interval between recovery scans
      *
-     * @param      interval the interval
-     * @param      timeUnit the time unit
-     * @deprecated          use setRecoveryInterval
+     * @param interval the interval
+     * @param timeUnit the time unit
      */
-    @Deprecated(since = "4.5.0")
     void setRecoveryInterval(long interval, TimeUnit timeUnit);
 
     /**
@@ -67,18 +65,7 @@ public interface RecoverableAggregationRepository extends AggregationRepository 
      *
      * @return the interval in millis
      */
-    long getRecoveryInterval();
-
-    /**
-     * Gets the interval between recovery scans in millis.
-     *
-     * @return     the interval in millis
-     * @deprecated use getRecoveryInterval
-     */
-    @Deprecated(since = "3.5.0")
-    default long getRecoveryIntervalInMillis() {
-        return getRecoveryInterval();
-    }
+    long getRecoveryIntervalInMillis();
 
     /**
      * Sets whether or not recovery is enabled

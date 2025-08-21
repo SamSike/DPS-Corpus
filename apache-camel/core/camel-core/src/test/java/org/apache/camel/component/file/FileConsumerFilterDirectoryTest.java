@@ -54,12 +54,12 @@ public class FileConsumerFilterDirectoryTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri(
                         "?initialDelay=0&delay=10&recursive=true&filterDirectory=${header.CamelFileNameOnly.length()} > 4"))
-                        .convertBodyTo(String.class).to("mock:result");
+                                .convertBodyTo(String.class).to("mock:result");
             }
         };
     }

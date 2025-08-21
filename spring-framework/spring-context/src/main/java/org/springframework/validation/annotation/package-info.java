@@ -1,11 +1,13 @@
 /**
  * Support classes for annotation-based constraint evaluation,
- * for example, using a JSR-303 Bean Validation provider.
+ * e.g. using a JSR-303 Bean Validation provider.
  *
  * <p>Provides an extended variant of JSR-303's {@code @Valid},
  * supporting the specification of validation groups.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.validation.annotation;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

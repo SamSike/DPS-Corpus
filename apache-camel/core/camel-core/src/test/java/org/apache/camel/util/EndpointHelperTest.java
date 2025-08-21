@@ -48,7 +48,7 @@ public class EndpointHelperTest extends ContextTestSupport {
         final List<String> bodies = new ArrayList<>();
         // uses 1 sec default timeout
         EndpointHelper.pollEndpoint(context.getEndpoint("seda:foo"), new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 bodies.add(exchange.getIn().getBody(String.class));
             }
         });
@@ -65,7 +65,7 @@ public class EndpointHelperTest extends ContextTestSupport {
 
         final List<String> bodies = new ArrayList<>();
         EndpointHelper.pollEndpoint(context.getEndpoint("seda:foo"), new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 bodies.add(exchange.getIn().getBody(String.class));
             }
         }, 10);
@@ -89,31 +89,31 @@ public class EndpointHelperTest extends ContextTestSupport {
     }
 
     @Test
-    public void testLookupEndpointRegistryId() {
+    public void testLookupEndpointRegistryId() throws Exception {
         assertEquals("foo", EndpointHelper.lookupEndpointRegistryId(foo));
         assertEquals("coolbar", EndpointHelper.lookupEndpointRegistryId(bar));
-        assertNull(EndpointHelper.lookupEndpointRegistryId(context.getEndpoint("mock:cheese")));
+        assertEquals(null, EndpointHelper.lookupEndpointRegistryId(context.getEndpoint("mock:cheese")));
     }
 
     @Test
-    public void testLookupEndpointRegistryIdUsingRef() {
+    public void testLookupEndpointRegistryIdUsingRef() throws Exception {
         foo = context.getEndpoint("ref:foo");
         bar = context.getEndpoint("ref:coolbar");
 
         assertEquals("foo", EndpointHelper.lookupEndpointRegistryId(foo));
         assertEquals("coolbar", EndpointHelper.lookupEndpointRegistryId(bar));
-        assertNull(EndpointHelper.lookupEndpointRegistryId(context.getEndpoint("mock:cheese")));
+        assertEquals(null, EndpointHelper.lookupEndpointRegistryId(context.getEndpoint("mock:cheese")));
     }
 
     @Test
-    public void testResolveReferenceParameter() {
+    public void testResolveReferenceParameter() throws Exception {
         Endpoint endpoint = EndpointHelper.resolveReferenceParameter(context, "coolbar", Endpoint.class);
         assertNotNull(endpoint);
         assertSame(bar, endpoint);
     }
 
     @Test
-    public void testResolveAndConvertReferenceParameter() {
+    public void testResolveAndConvertReferenceParameter() throws Exception {
         // The registry value is a java.lang.String
         Integer number = EndpointHelper.resolveReferenceParameter(context, "numbar", Integer.class);
         assertNotNull(number);
@@ -121,13 +121,13 @@ public class EndpointHelperTest extends ContextTestSupport {
     }
 
     @Test
-    public void testResolveAndConvertMissingReferenceParameter() {
+    public void testResolveAndConvertMissingReferenceParameter() throws Exception {
         Integer number = EndpointHelper.resolveReferenceParameter(context, "misbar", Integer.class, false);
         assertNull(number);
     }
 
     @Test
-    public void testMandatoryResolveAndConvertMissingReferenceParameter() {
+    public void testMandatoryResolveAndConvertMissingReferenceParameter() throws Exception {
         try {
             EndpointHelper.resolveReferenceParameter(context, "misbar", Integer.class, true);
             fail();
@@ -137,7 +137,7 @@ public class EndpointHelperTest extends ContextTestSupport {
     }
 
     @Test
-    public void testResolveParameter() {
+    public void testResolveParameter() throws Exception {
         Endpoint endpoint = EndpointHelper.resolveParameter(context, "#coolbar", Endpoint.class);
         assertNotNull(endpoint);
         assertSame(bar, endpoint);
@@ -184,7 +184,7 @@ public class EndpointHelperTest extends ContextTestSupport {
     }
 
     @Test
-    public void testResolveByType() {
+    public void testResolveByType() throws Exception {
         AuthorizationPolicy myPolicy = new AuthorizationPolicy() {
             @Override
             public void beforeWrap(Route route, NamedNode definition) {
@@ -206,7 +206,7 @@ public class EndpointHelperTest extends ContextTestSupport {
     }
 
     @Test
-    public void testResolveByTypeNoBean() {
+    public void testResolveByTypeNoBean() throws Exception {
         try {
             EndpointHelper.resolveReferenceParameter(context, "#type:org.apache.camel.spi.AuthorizationPolicy",
                     AuthorizationPolicy.class);
@@ -217,7 +217,7 @@ public class EndpointHelperTest extends ContextTestSupport {
     }
 
     @Test
-    public void testResolveByTypeTwo() {
+    public void testResolveByTypeTwo() throws Exception {
         AuthorizationPolicy myPolicy = new AuthorizationPolicy() {
             @Override
             public void beforeWrap(Route route, NamedNode definition) {
@@ -250,7 +250,7 @@ public class EndpointHelperTest extends ContextTestSupport {
                     AuthorizationPolicy.class);
             fail("Should throw exception");
         } catch (NoSuchBeanException e) {
-            // expected
+            assertTrue(e.getMessage().contains("Found 2 beans"));
         }
     }
 

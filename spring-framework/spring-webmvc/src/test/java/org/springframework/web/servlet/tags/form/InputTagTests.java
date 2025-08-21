@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
  * @author Rick Evans
  * @author Jeremy Grelle
  */
-class InputTagTests extends AbstractFormTagTests {
+public class InputTagTests extends AbstractFormTagTests {
 
 	private InputTag tag;
 
@@ -55,7 +55,7 @@ class InputTagTests extends AbstractFormTagTests {
 		// set up test data
 		this.rob = new TestBean();
 		this.rob.setName("Rob");
-		this.rob.setMyFloat(12.34f);
+		this.rob.setMyFloat(Float.valueOf(12.34f));
 
 		TestBean sally = new TestBean();
 		sally.setName("Sally");
@@ -70,7 +70,7 @@ class InputTagTests extends AbstractFormTagTests {
 
 
 	@Test
-	void simpleBind() throws Exception {
+	public void simpleBind() throws Exception {
 		this.tag.setPath("name");
 
 		assertThat(this.tag.doStartTag()).isEqualTo(Tag.SKIP_BODY);
@@ -84,7 +84,7 @@ class InputTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void simpleBindTagWithinForm() throws Exception {
+	public void simpleBindTagWithinForm() throws Exception {
 		BindTag bindTag = new BindTag();
 		bindTag.setPath("name");
 		bindTag.setPageContext(getPageContext());
@@ -95,29 +95,10 @@ class InputTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void simpleBindWithHtmlEscaping() throws Exception {
-		final String NAME = "Rob \"I Love Cafés\" Harrop";
-		final String HTML_ESCAPED_NAME = "Rob &quot;I Love Caf&eacute;s&quot; Harrop";
+	public void simpleBindWithHtmlEscaping() throws Exception {
+		final String NAME = "Rob \"I Love Mangos\" Harrop";
+		final String HTML_ESCAPED_NAME = "Rob &quot;I Love Mangos&quot; Harrop";
 
-		this.tag.setPath("name");
-		this.rob.setName(NAME);
-
-		assertThat(this.tag.doStartTag()).isEqualTo(Tag.SKIP_BODY);
-
-		String output = getOutput();
-		assertTagOpened(output);
-		assertTagClosed(output);
-
-		assertContainsAttribute(output, "type", getType());
-		assertValueAttribute(output, HTML_ESCAPED_NAME);
-	}
-
-	@Test
-	void simpleBindWithHtmlEscapingAndCharacterEncoding() throws Exception {
-		final String NAME = "Rob \"I Love Cafés\" Harrop";
-		final String HTML_ESCAPED_NAME = "Rob &quot;I Love Cafés&quot; Harrop";
-
-		getPageContext().getResponse().setCharacterEncoding("UTF-8");
 		this.tag.setPath("name");
 		this.rob.setName(NAME);
 
@@ -136,7 +117,7 @@ class InputTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void complexBind() throws Exception {
+	public void complexBind() throws Exception {
 		this.tag.setPath("spouse.name");
 
 		assertThat(this.tag.doStartTag()).isEqualTo(Tag.SKIP_BODY);
@@ -152,7 +133,7 @@ class InputTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withAllAttributes() throws Exception {
+	public void withAllAttributes() throws Exception {
 		String title = "aTitle";
 		String id = "123";
 		String size = "12";
@@ -258,7 +239,7 @@ class InputTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withNestedBind() throws Exception {
+	public void withNestedBind() throws Exception {
 		NestedPathTag nestedPathTag = new NestedPathTag();
 		nestedPathTag.setPath("spouse.");
 		nestedPathTag.setPageContext(getPageContext());
@@ -277,7 +258,7 @@ class InputTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withNestedBindTagWithinForm() throws Exception {
+	public void withNestedBindTagWithinForm() throws Exception {
 		NestedPathTag nestedPathTag = new NestedPathTag();
 		nestedPathTag.setPath("spouse.");
 		nestedPathTag.setPageContext(getPageContext());
@@ -293,7 +274,7 @@ class InputTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withErrors() throws Exception {
+	public void withErrors() throws Exception {
 		this.tag.setPath("name");
 		this.tag.setCssClass("good");
 		this.tag.setCssErrorClass("bad");
@@ -315,7 +296,7 @@ class InputTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void disabledFalse() throws Exception {
+	public void disabledFalse() throws Exception {
 		this.tag.setPath("name");
 		this.tag.setDisabled(false);
 		this.tag.doStartTag();
@@ -325,7 +306,7 @@ class InputTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withCustomBinder() throws Exception {
+	public void withCustomBinder() throws Exception {
 		this.tag.setPath("myFloat");
 
 		BeanPropertyBindingResult errors = new BeanPropertyBindingResult(this.rob, COMMAND_NAME);
@@ -342,8 +323,11 @@ class InputTagTests extends AbstractFormTagTests {
 		assertValueAttribute(output, "12.34f");
 	}
 
-	@Test // SPR-3127
-	void readOnlyAttributeRenderingWhenReadonlyIsTrue() throws Exception {
+	/**
+	 * See SPR-3127 (https://opensource.atlassian.com/projects/spring/browse/SPR-3127)
+	 */
+	@Test
+	public void readOnlyAttributeRenderingWhenReadonlyIsTrue() throws Exception {
 		this.tag.setPath("name");
 		this.tag.setReadonly(true);
 
@@ -359,7 +343,7 @@ class InputTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void dynamicTypeAttribute() throws JspException {
+	public void dynamicTypeAttribute() throws JspException {
 		this.tag.setPath("myFloat");
 		this.tag.setDynamicAttribute(null, "type", "number");
 
@@ -374,27 +358,28 @@ class InputTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void dynamicTypeRadioAttribute() {
+	public void dynamicTypeRadioAttribute() throws JspException {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				this.tag.setDynamicAttribute(null, "type", "radio"))
 			.withMessage("Attribute type=\"radio\" is not allowed");
 	}
 
 	@Test
-	void dynamicTypeCheckboxAttribute() {
+	public void dynamicTypeCheckboxAttribute() throws JspException {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				this.tag.setDynamicAttribute(null, "type", "checkbox"))
 			.withMessage("Attribute type=\"checkbox\" is not allowed");
 	}
 
 	protected final void assertTagClosed(String output) {
-		assertThat(output).as("Tag not closed properly").endsWith("/>");
+		assertThat(output.endsWith("/>")).as("Tag not closed properly").isTrue();
 	}
 
 	protected final void assertTagOpened(String output) {
-		assertThat(output).as("Tag not opened properly").startsWith("<input ");
+		assertThat(output.startsWith("<input ")).as("Tag not opened properly").isTrue();
 	}
 
+	@SuppressWarnings("serial")
 	protected InputTag createTag(final Writer writer) {
 		return new InputTag() {
 			@Override

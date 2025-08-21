@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,8 @@
 package org.springframework.web.testfixture.method;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,17 +28,18 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import org.aopalliance.intercept.MethodInterceptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.aop.target.EmptyTargetSource;
 import org.springframework.cglib.core.SpringNamingPolicy;
 import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.Factory;
-import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
-import org.springframework.core.DefaultParameterNameDiscoverer;
+import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.MethodIntrospector;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ParameterNameDiscoverer;
@@ -48,6 +47,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.annotation.SynthesizingMethodParameter;
+import org.springframework.lang.Nullable;
 import org.springframework.objenesis.ObjenesisException;
 import org.springframework.objenesis.SpringObjenesis;
 import org.springframework.util.Assert;
@@ -122,7 +122,6 @@ import static java.util.stream.Collectors.joining;
  * </pre>
  *
  * @author Rossen Stoyanchev
- * @author Juergen Hoeller
  * @since 5.0
  */
 public class ResolvableMethod {
@@ -131,7 +130,7 @@ public class ResolvableMethod {
 
 	private static final SpringObjenesis objenesis = new SpringObjenesis();
 
-	private static final ParameterNameDiscoverer nameDiscoverer = new DefaultParameterNameDiscoverer();
+	private static final ParameterNameDiscoverer nameDiscoverer = new LocalVariableTableParameterNameDiscoverer();
 
 	// Matches ValueConstants.DEFAULT_NONE (spring-web and spring-messaging)
 	private static final String DEFAULT_VALUE_NONE = "\n\t\t\n\t\t\n\uE000\uE001\uE002\n\t\t\t\t\n";
@@ -615,12 +614,19 @@ public class ResolvableMethod {
 	}
 
 
-	private static class MethodInvocationInterceptor implements MethodInterceptor, InvocationHandler {
+	private static class MethodInvocationInterceptor
+			implements org.springframework.cglib.proxy.MethodInterceptor, MethodInterceptor {
 
-		private @Nullable Method invokedMethod;
+		private Method invokedMethod;
+
+
+		Method getInvokedMethod() {
+			return this.invokedMethod;
+		}
 
 		@Override
-		public @Nullable Object intercept(Object object, Method method, Object @Nullable [] args, @Nullable MethodProxy proxy) {
+		@Nullable
+		public Object intercept(Object object, Method method, Object[] args, MethodProxy proxy) {
 			if (ReflectionUtils.isObjectMethod(method)) {
 				return ReflectionUtils.invokeMethod(method, object, args);
 			}
@@ -631,23 +637,21 @@ public class ResolvableMethod {
 		}
 
 		@Override
-		public @Nullable Object invoke(Object proxy, Method method, Object @Nullable [] args) {
-			return intercept(proxy, method, args, null);
-		}
-
-		@Nullable Method getInvokedMethod() {
-			return this.invokedMethod;
+		@Nullable
+		public Object invoke(org.aopalliance.intercept.MethodInvocation inv) throws Throwable {
+			return intercept(inv.getThis(), inv.getMethod(), inv.getArguments(), null);
 		}
 	}
-
 
 	@SuppressWarnings("unchecked")
 	private static <T> T initProxy(Class<?> type, MethodInvocationInterceptor interceptor) {
 		Assert.notNull(type, "'type' must not be null");
 		if (type.isInterface()) {
-			return (T) Proxy.newProxyInstance(type.getClassLoader(),
-					new Class<?>[] {type, Supplier.class},
-					interceptor);
+			ProxyFactory factory = new ProxyFactory(EmptyTargetSource.INSTANCE);
+			factory.addInterface(type);
+			factory.addInterface(Supplier.class);
+			factory.addAdvice(interceptor);
+			return (T) factory.getProxy();
 		}
 
 		else {
@@ -655,7 +659,6 @@ public class ResolvableMethod {
 			enhancer.setSuperclass(type);
 			enhancer.setInterfaces(new Class<?>[] {Supplier.class});
 			enhancer.setNamingPolicy(SpringNamingPolicy.INSTANCE);
-			enhancer.setAttemptLoad(true);
 			enhancer.setCallbackType(org.springframework.cglib.proxy.MethodInterceptor.class);
 
 			Class<?> proxyClass = enhancer.createClass();

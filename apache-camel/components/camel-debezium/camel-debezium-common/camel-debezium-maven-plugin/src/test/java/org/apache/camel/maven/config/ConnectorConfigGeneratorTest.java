@@ -27,7 +27,7 @@ import io.debezium.config.CommonConnectorConfig;
 import io.debezium.connector.mysql.MySqlConnector;
 import io.debezium.connector.mysql.MySqlConnectorConfig;
 import io.debezium.relational.RelationalDatabaseConnectorConfig;
-import io.debezium.storage.file.history.FileSchemaHistory;
+import io.debezium.relational.history.FileDatabaseHistory;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.connect.source.SourceConnector;
 import org.junit.jupiter.api.Test;
@@ -42,9 +42,9 @@ public class ConnectorConfigGeneratorTest {
     @Test
     void testIfCorrectlyGeneratedMySQLFile() {
         final Set<String> requiredFields = new HashSet<>(
-                Arrays.asList(MySqlConnectorConfig.PASSWORD.name(), RelationalDatabaseConnectorConfig.TOPIC_PREFIX.name()));
+                Arrays.asList(MySqlConnectorConfig.PASSWORD.name(), RelationalDatabaseConnectorConfig.SERVER_NAME.name()));
         final Map<String, Object> overrideFields = new HashMap<>();
-        overrideFields.put(MySqlConnectorConfig.SCHEMA_HISTORY.name(), FileSchemaHistory.class);
+        overrideFields.put(MySqlConnectorConfig.DATABASE_HISTORY.name(), FileDatabaseHistory.class);
         overrideFields.put(CommonConnectorConfig.TOMBSTONES_ON_DELETE.name(), false);
         overrideFields.put(MySqlConnectorConfig.SERVER_ID.name(), 1111);
 
@@ -70,14 +70,14 @@ public class ConnectorConfigGeneratorTest {
         Class<?> clazz = getClass();
 
         assertThrows(IllegalArgumentException.class,
-                () -> ConnectorConfigGenerator.create(connector, clazz, null, requiredFields, overridenDefaultValues));
+                () -> ConnectorConfigGenerator.create(connector, clazz, requiredFields, overridenDefaultValues));
     }
 
     private void testIfCorrectlyGeneratedFile(
             final SourceConnector connector, final Class<?> configClass, final Set<String> requiredFields,
             final Map<String, Object> overrideFields) {
         final ConnectorConfigGenerator connectorConfigGenerator
-                = ConnectorConfigGenerator.create(connector, configClass, null, requiredFields, overrideFields);
+                = ConnectorConfigGenerator.create(connector, configClass, requiredFields, overrideFields);
         final Map<String, ConnectorConfigField> connectorConfigFields = ConnectorConfigFieldsFactory
                 .createConnectorFieldsAsMap(connector.config(), configClass, requiredFields, overrideFields);
 

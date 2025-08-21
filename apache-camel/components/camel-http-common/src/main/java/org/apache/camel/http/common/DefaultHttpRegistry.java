@@ -16,13 +16,11 @@
  */
 package org.apache.camel.http.common;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import jakarta.servlet.Servlet;
 
@@ -32,9 +30,9 @@ import org.slf4j.LoggerFactory;
 public class DefaultHttpRegistry implements HttpRegistry {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultHttpRegistry.class);
 
-    private static final Map<String, HttpRegistry> registries = new ConcurrentHashMap<>();
+    private static Map<String, HttpRegistry> registries = new HashMap<>();
 
-    private final Lock lock = new ReentrantLock();
+    private final Object lock = new Object();
 
     private final Set<HttpConsumer> consumers;
     private final Set<HttpRegistryProvider> providers;
@@ -47,21 +45,20 @@ public class DefaultHttpRegistry implements HttpRegistry {
     /**
      * Lookup or create a new registry if none exists with the given name
      */
-    public static HttpRegistry getHttpRegistry(String name) {
+    public static synchronized HttpRegistry getHttpRegistry(String name) {
         return registries.computeIfAbsent(name, k -> new DefaultHttpRegistry());
     }
 
     /**
      * Removes the http registry with the given name
      */
-    public static void removeHttpRegistry(String name) {
+    public static synchronized void removeHttpRegistry(String name) {
         registries.remove(name);
     }
 
     @Override
     public void register(HttpConsumer consumer) {
-        lock.lock();
-        try {
+        synchronized (lock) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Registering consumer for path {} providers present: {}", consumer.getPath(), providers.size());
             }
@@ -69,15 +66,12 @@ public class DefaultHttpRegistry implements HttpRegistry {
             for (HttpRegistryProvider provider : providers) {
                 provider.connect(consumer);
             }
-        } finally {
-            lock.unlock();
         }
     }
 
     @Override
     public void unregister(HttpConsumer consumer) {
-        lock.lock();
-        try {
+        synchronized (lock) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Unregistering consumer for path {}", consumer.getPath());
             }
@@ -85,21 +79,19 @@ public class DefaultHttpRegistry implements HttpRegistry {
             for (HttpRegistryProvider provider : providers) {
                 provider.disconnect(consumer);
             }
-        } finally {
-            lock.unlock();
         }
     }
 
     @SuppressWarnings("rawtypes")
     public void register(CamelServlet provider, Map properties) {
-        provider.setServletName((String) properties.get("servlet-name"));
-        register(provider);
+        CamelServlet camelServlet = provider;
+        camelServlet.setServletName((String) properties.get("servlet-name"));
+        register(camelServlet);
     }
 
     @Override
     public void register(HttpRegistryProvider provider) {
-        lock.lock();
-        try {
+        synchronized (lock) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Registering CamelServlet with name {} consumers present: {}", provider.getServletName(),
                         consumers.size());
@@ -108,50 +100,39 @@ public class DefaultHttpRegistry implements HttpRegistry {
             for (HttpConsumer consumer : consumers) {
                 provider.connect(consumer);
             }
-        } finally {
-            lock.unlock();
         }
     }
 
     @Override
     public void unregister(HttpRegistryProvider provider) {
-        lock.lock();
-        try {
+        synchronized (lock) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Unregistering CamelServlet with name {}", provider.getServletName());
             }
             providers.remove(provider);
-        } finally {
-            lock.unlock();
         }
     }
 
     @Override
     public HttpRegistryProvider getCamelServlet(String servletName) {
-        lock.lock();
-        try {
+        synchronized (lock) {
             for (HttpRegistryProvider provider : providers) {
                 if (provider.getServletName().equals(servletName)) {
                     return provider;
                 }
             }
             return null;
-        } finally {
-            lock.unlock();
         }
     }
 
     public void setServlets(List<Servlet> servlets) {
-        lock.lock();
-        try {
+        synchronized (lock) {
             providers.clear();
             for (Servlet servlet : servlets) {
-                if (servlet instanceof HttpRegistryProvider httpRegistryProvider) {
-                    providers.add(httpRegistryProvider);
+                if (servlet instanceof HttpRegistryProvider) {
+                    providers.add((HttpRegistryProvider) servlet);
                 }
             }
-        } finally {
-            lock.unlock();
         }
     }
 

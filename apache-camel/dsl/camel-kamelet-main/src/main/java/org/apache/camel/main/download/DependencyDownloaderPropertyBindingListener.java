@@ -18,15 +18,16 @@ package org.apache.camel.main.download;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.support.PropertyBindingListener;
-import org.apache.camel.tooling.maven.MavenGav;
 
 public class DependencyDownloaderPropertyBindingListener implements PropertyBindingListener {
 
+    private final CamelContext camelContext;
     private final KnownDependenciesResolver knownDependenciesResolver;
     private final DependencyDownloader downloader;
 
     public DependencyDownloaderPropertyBindingListener(CamelContext camelContext,
                                                        KnownDependenciesResolver knownDependenciesResolver) {
+        this.camelContext = camelContext;
         this.knownDependenciesResolver = knownDependenciesResolver;
         this.downloader = camelContext.hasService(DependencyDownloader.class);
     }
@@ -36,10 +37,6 @@ public class DependencyDownloaderPropertyBindingListener implements PropertyBind
         if (value instanceof String) {
             String s = (String) value;
             MavenGav gav = knownDependenciesResolver.mavenGavForClass(s);
-            if (gav == null) {
-                String line = target.getClass().getName() + ":" + key + "=" + s;
-                gav = knownDependenciesResolver.mavenGavForClass(line);
-            }
             if (gav != null) {
                 if (!downloader.alreadyOnClasspath(gav.getGroupId(), gav.getArtifactId(),
                         gav.getVersion())) {

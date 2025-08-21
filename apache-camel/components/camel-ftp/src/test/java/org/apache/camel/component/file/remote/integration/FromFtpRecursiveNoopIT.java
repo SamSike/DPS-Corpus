@@ -19,6 +19,7 @@ package org.apache.camel.component.file.remote.integration;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class FromFtpRecursiveNoopIT extends FtpServerTestSupport {
@@ -29,7 +30,10 @@ public class FromFtpRecursiveNoopIT extends FtpServerTestSupport {
     }
 
     @Override
-    public void doPostSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
+
         template.sendBodyAndHeader(getFtpUrl(), "a", Exchange.FILE_NAME, "a.txt");
         template.sendBodyAndHeader(getFtpUrl(), "b", Exchange.FILE_NAME, "b.txt");
         template.sendBodyAndHeader(getFtpUrl(), "a2", Exchange.FILE_NAME, "foo/a.txt");

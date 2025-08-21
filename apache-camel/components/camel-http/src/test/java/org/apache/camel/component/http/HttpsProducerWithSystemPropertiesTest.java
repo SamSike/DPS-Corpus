@@ -27,20 +27,22 @@ import org.apache.camel.BindToRegistry;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.http.handler.BasicValidationHandler;
 import org.apache.camel.component.http.handler.HeaderValidationHandler;
-import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
-import org.apache.hc.core5.ssl.SSLContexts;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.ssl.SSLContexts;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.http.HttpMethods.GET;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * If SSLContext is created via system properties, is cached. Automatically created next sslContext (with different
- * system properties) contains values from the first creation. Therefore, it is not possible to create different test,
+ * If SSLContext is created via system properties, is is cached. Automatically created next sslContext (with different
+ * system properties) contains values from the first creation. Therefore it is not possible to create different test,
  * which uses systemProperties without forked JVM.
  */
 public class HttpsProducerWithSystemPropertiesTest extends BaseHttpTest {
@@ -66,7 +68,7 @@ public class HttpsProducerWithSystemPropertiesTest extends BaseHttpTest {
     }
 
     @AfterAll
-    public static void resetHttpAgentSystemProperty() {
+    public static void resetHttpAgentSystemProperty() throws Exception {
         if (defaultSystemHttpAgent != null) {
             System.setProperty("http.agent", String.valueOf(defaultSystemHttpAgent));
         } else {
@@ -78,8 +80,11 @@ public class HttpsProducerWithSystemPropertiesTest extends BaseHttpTest {
         System.clearProperty("javax.net.ssl.keyStore");
     }
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
+
         URL serverKeystoreUurl = HttpsServerTestSupport.class.getResource("/localhost.p12");
         URL serverTrustStoreUrl = HttpsServerTestSupport.class.getResource("/localhost.p12");
         SSLContext sslcontext = SSLContexts.custom()
@@ -90,21 +95,22 @@ public class HttpsProducerWithSystemPropertiesTest extends BaseHttpTest {
         Map<String, String> expectedHeaders = new HashMap<>();
         expectedHeaders.put("User-Agent", "myCoolCamelCaseAgent");
 
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(sslcontext)
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(sslcontext)
                 .setSslSetupHandler(socket -> socket.setNeedClientAuth(true))
-                .register("/mail/", new BasicValidationHandler(GET.name(), null, null, getExpectedContent()))
-                .register("/header/",
+                .registerHandler("/mail/", new BasicValidationHandler(GET.name(), null, null, getExpectedContent()))
+                .registerHandler("/header/",
                         new HeaderValidationHandler(GET.name(), null, null, getExpectedContent(), expectedHeaders))
                 .create();
         localServer.start();
 
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() throws Exception {
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (localServer != null) {
             localServer.stop();
@@ -112,9 +118,9 @@ public class HttpsProducerWithSystemPropertiesTest extends BaseHttpTest {
     }
 
     @Test
-    public void httpGetWithProxyFromSystemProperties() {
+    public void httpGetWithProxyFromSystemProperties() throws Exception {
 
-        String endpointUri = "https://localhost:" + localServer.getLocalPort()
+        String endpointUri = "https://" + localServer.getInetAddress().getHostName() + ":" + localServer.getLocalPort()
                              + "/header/?x509HostnameVerifier=x509HostnameVerifier&useSystemProperties=true";
         Exchange exchange = template.request(endpointUri, exchange1 -> {
         });
@@ -123,8 +129,8 @@ public class HttpsProducerWithSystemPropertiesTest extends BaseHttpTest {
     }
 
     @Test
-    public void testTwoWaySuccessfull() {
-        Exchange exchange = template.request("https://localhost:" + localServer.getLocalPort()
+    public void testTwoWaySuccessfull() throws Exception {
+        Exchange exchange = template.request("https://127.0.0.1:" + localServer.getLocalPort()
                                              + "/mail/?x509HostnameVerifier=x509HostnameVerifier&useSystemProperties=true",
                 exchange1 -> {
                 });
@@ -133,8 +139,8 @@ public class HttpsProducerWithSystemPropertiesTest extends BaseHttpTest {
     }
 
     @Test
-    public void testTwoWayFailure() {
-        Exchange exchange = template.request("https://localhost:" + localServer.getLocalPort()
+    public void testTwoWayFailure() throws Exception {
+        Exchange exchange = template.request("https://127.0.0.1:" + localServer.getLocalPort()
                                              + "/mail/?x509HostnameVerifier=x509HostnameVerifier",
                 exchange1 -> {
                 });

@@ -32,7 +32,7 @@ public class PendingExchangesTwoRouteShutdownGracefulTest extends ContextTestSup
 
     private static String foo = "";
     private static String bar = "";
-    private static final CountDownLatch latch = new CountDownLatch(2);
+    private static CountDownLatch latch = new CountDownLatch(2);
 
     @Test
     public void testShutdownGraceful() throws Exception {
@@ -63,19 +63,19 @@ public class PendingExchangesTwoRouteShutdownGracefulTest extends ContextTestSup
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo").to("mock:foo").delay(100).syncDelayed().process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         foo = foo + exchange.getIn().getBody(String.class);
                         latch.countDown();
                     }
                 });
 
                 from("seda:bar").to("mock:bar").delay(50).syncDelayed().process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         bar = bar + exchange.getIn().getBody(String.class);
                         latch.countDown();
                     }

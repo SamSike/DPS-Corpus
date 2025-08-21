@@ -24,6 +24,7 @@ import org.apache.camel.AsyncCallback;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NamedNode;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
@@ -72,10 +73,10 @@ public class PipelineStepWithEventTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").pipeline().id("step-a").to("mock:a").delay(constant(10)).end() // a
                         // bit
                         // ugly
@@ -100,7 +101,7 @@ public class PipelineStepWithEventTest extends ContextTestSupport {
     @Override
     protected CamelContext createCamelContext() throws Exception {
         CamelContext context = super.createCamelContext();
-        context.getCamelContextExtension().addInterceptStrategy(new MyInterceptStrategy());
+        context.adapt(ExtendedCamelContext.class).addInterceptStrategy(new MyInterceptStrategy());
         // register the event listener
         context.addService(listener);
         return context;
@@ -114,7 +115,7 @@ public class PipelineStepWithEventTest extends ContextTestSupport {
 
     }
 
-    private static class MyStepEventListener extends ServiceSupport implements StepEventListener {
+    private class MyStepEventListener extends ServiceSupport implements StepEventListener {
 
         private final List<EventObject> events = new ArrayList<>();
 
@@ -131,13 +132,24 @@ public class PipelineStepWithEventTest extends ContextTestSupport {
         public List<EventObject> getEvents() {
             return events;
         }
+
+        @Override
+        protected void doStart() throws Exception {
+            // noop
+        }
+
+        @Override
+        protected void doStop() throws Exception {
+            // noop
+        }
     }
 
-    private static class MyInterceptStrategy implements InterceptStrategy {
+    private class MyInterceptStrategy implements InterceptStrategy {
 
         @Override
         public Processor wrapProcessorInInterceptors(
-                CamelContext context, NamedNode definition, Processor target, Processor nextTarget) {
+                CamelContext context, NamedNode definition, Processor target, Processor nextTarget)
+                throws Exception {
             // grab the listener
             StepEventListener listener = context.hasService(StepEventListener.class);
 
@@ -150,7 +162,7 @@ public class PipelineStepWithEventTest extends ContextTestSupport {
         }
     }
 
-    private static class MyStepEventProcessor extends DelegateAsyncProcessor {
+    private class MyStepEventProcessor extends DelegateAsyncProcessor {
 
         private final StepEventListener listener;
         private final String id;
@@ -177,7 +189,7 @@ public class PipelineStepWithEventTest extends ContextTestSupport {
 
     }
 
-    private static class BeforeStepEvent extends AbstractExchangeEvent {
+    private class BeforeStepEvent extends AbstractExchangeEvent {
 
         private final String id;
 
@@ -196,7 +208,7 @@ public class PipelineStepWithEventTest extends ContextTestSupport {
         }
     }
 
-    private static class AfterStepEvent extends AbstractExchangeEvent {
+    private class AfterStepEvent extends AbstractExchangeEvent {
 
         private final String id;
         private final long timeTaken;

@@ -26,7 +26,6 @@ import org.apache.camel.spi.DataFormat;
 import org.apache.camel.spi.IdAware;
 import org.apache.camel.spi.RouteIdAware;
 import org.apache.camel.support.AsyncProcessorSupport;
-import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.builder.OutputStreamBuilder;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.ObjectHelper;
@@ -40,8 +39,6 @@ public class MarshalProcessor extends AsyncProcessorSupport implements Traceable
     private String routeId;
     private CamelContext camelContext;
     private final DataFormat dataFormat;
-    private String variableSend;
-    private String variableReceive;
 
     public MarshalProcessor(DataFormat dataFormat) {
         this.dataFormat = dataFormat;
@@ -56,11 +53,7 @@ public class MarshalProcessor extends AsyncProcessorSupport implements Traceable
         OutputStreamBuilder osb = OutputStreamBuilder.withExchange(exchange);
 
         Message in = exchange.getIn();
-        final Object originalBody = in.getBody();
-        Object body = originalBody;
-        if (variableSend != null) {
-            body = ExchangeHelper.getVariable(exchange, variableSend);
-        }
+        Object body = in.getBody();
 
         // lets setup the out message before we invoke the dataFormat
         // so that it can mutate it if necessary
@@ -69,14 +62,8 @@ public class MarshalProcessor extends AsyncProcessorSupport implements Traceable
 
         try {
             dataFormat.marshal(exchange, body, osb);
-            Object result = osb.build();
-            // result should be stored in variable instead of message body
-            if (variableReceive != null) {
-                ExchangeHelper.setVariable(exchange, variableReceive, result);
-            } else {
-                out.setBody(result);
-            }
-        } catch (Exception e) {
+            out.setBody(osb.build());
+        } catch (Throwable e) {
             // remove OUT message, as an exception occurred
             exchange.setOut(null);
             exchange.setException(e);
@@ -124,22 +111,6 @@ public class MarshalProcessor extends AsyncProcessorSupport implements Traceable
     @Override
     public void setCamelContext(CamelContext camelContext) {
         this.camelContext = camelContext;
-    }
-
-    public String getVariableSend() {
-        return variableSend;
-    }
-
-    public void setVariableSend(String variableSend) {
-        this.variableSend = variableSend;
-    }
-
-    public String getVariableReceive() {
-        return variableReceive;
-    }
-
-    public void setVariableReceive(String variableReceive) {
-        this.variableReceive = variableReceive;
     }
 
     @Override

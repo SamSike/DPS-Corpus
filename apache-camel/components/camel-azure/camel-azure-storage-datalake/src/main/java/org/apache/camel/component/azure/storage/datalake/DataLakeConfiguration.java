@@ -20,7 +20,6 @@ import java.nio.file.OpenOption;
 import java.time.Duration;
 import java.util.Set;
 
-import com.azure.core.credential.AzureSasCredential;
 import com.azure.identity.ClientSecretCredential;
 import com.azure.storage.common.StorageSharedKeyCredential;
 import com.azure.storage.file.datalake.DataLakeServiceClient;
@@ -37,30 +36,28 @@ public class DataLakeConfiguration implements Cloneable {
     private String accountName;
     @UriPath(description = "name of filesystem to be used")
     private String fileSystemName;
-    @UriParam(description = "shared key credential for azure data lake gen2")
-    @Metadata(autowired = true)
+    @UriParam(description = "shared key credential for azure datalake gen2")
     private StorageSharedKeyCredential sharedKeyCredential;
     @UriParam(description = "directory of the file to be handled in component")
     private String directoryName;
     @UriParam(description = "name of file to be handled in component")
     private String fileName;
-    @UriParam(label = "security", secret = true, description = "client secret credential for authentication")
-    @Metadata(autowired = true)
+    @UriParam(description = "client secret credential for authentication")
     private ClientSecretCredential clientSecretCredential;
-    @UriParam(description = "data lake service client for azure storage data lake")
+    @UriParam(description = "datalake service client for azure storage datalake")
     @Metadata(autowired = true)
     private DataLakeServiceClient serviceClient;
-    @UriParam(label = "security", secret = true, description = "account key for authentication")
+    @UriParam(description = "account key for authentication")
     private String accountKey;
     @UriParam(description = "client id for azure account")
     private String clientId;
-    @UriParam(label = "security", secret = true, description = "client secret for azure account")
+    @UriParam(description = "client secret for azure account")
     private String clientSecret;
     @UriParam(description = "tenant id for azure account")
     private String tenantId;
     @UriParam(description = "Timeout for operation")
     private Duration timeout;
-    @UriParam(description = "path in azure data lake for operations")
+    @UriParam(description = "path in azure datalake for operations")
     private String path = "/";
     @UriParam(description = "recursively include all paths")
     private Boolean recursive = false;
@@ -96,19 +93,10 @@ public class DataLakeConfiguration implements Cloneable {
     private String umask;
     @UriParam(description = "set open options for creating file")
     private Set<OpenOption> openOptions;
-    @UriParam(label = "security", secret = true, description = "SAS token signature")
-    private String sasSignature;
-    @UriParam(label = "security", secret = true, description = "SAS token credential")
-    @Metadata(autowired = true)
-    private AzureSasCredential sasCredential;
 
     @UriParam(label = "producer", enums = "listFileSystem, listFiles", defaultValue = "listFileSystem",
               description = "operation to be performed")
     private DataLakeOperationsDefinition operation = DataLakeOperationsDefinition.listFileSystem;
-
-    @UriParam(label = "common", enums = "CLIENT_SECRET,SHARED_KEY_CREDENTIAL,AZURE_IDENTITY,AZURE_SAS,SERVICE_CLIENT_INSTANCE",
-              defaultValue = "CLIENT_SECRET")
-    private CredentialType credentialType;
 
     public DataLakeOperationsDefinition getOperation() {
         return operation;
@@ -356,33 +344,6 @@ public class DataLakeConfiguration implements Cloneable {
 
     public void setOpenOptions(Set<OpenOption> openOptions) {
         this.openOptions = openOptions;
-    }
-
-    public String getSasSignature() {
-        return sasSignature;
-    }
-
-    public void setSasSignature(String sasSignature) {
-        this.sasSignature = sasSignature;
-    }
-
-    public AzureSasCredential getSasCredential() {
-        return sasCredential;
-    }
-
-    public void setSasCredential(AzureSasCredential sasCredential) {
-        this.sasCredential = sasCredential;
-    }
-
-    public CredentialType getCredentialType() {
-        return credentialType;
-    }
-
-    /**
-     * Determines the credential strategy to adopt
-     */
-    public void setCredentialType(CredentialType credentialType) {
-        this.credentialType = credentialType;
     }
 
     public DataLakeConfiguration copy() {

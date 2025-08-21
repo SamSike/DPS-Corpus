@@ -18,7 +18,6 @@ package org.apache.camel.component.netty;
 
 import java.io.File;
 import java.util.Map;
-import java.util.Objects;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.group.ChannelGroup;
@@ -34,130 +33,86 @@ public class NettyServerBootstrapConfiguration implements Cloneable {
 
     public static final String DEFAULT_ENABLED_PROTOCOLS = "TLSv1.2,TLSv1.3";
 
-    @UriPath(enums = "tcp,udp", description = "The protocol to use which can be tcp or udp")
+    @UriPath(enums = "tcp,udp")
     @Metadata(required = true)
     protected String protocol;
     @UriPath
-    @Metadata(required = true,
-              description = "The hostname. For the consumer the hostname is localhost or 0.0.0.0. For the producer the hostname is the remote host to connect to.")
+    @Metadata(required = true)
     protected String host;
     @UriPath
-    @Metadata(required = true, description = "The host port number")
+    @Metadata(required = true)
     protected int port;
-    @UriParam(label = "consumer,advanced", description = "Setting to choose Multicast over UDP")
+    @UriParam(label = "consumer")
     protected boolean broadcast;
-    @UriParam(label = "advanced", defaultValue = "65536",
-              description = "The TCP/UDP buffer sizes to be used during outbound communication. Size is bytes.")
+    @UriParam(label = "advanced", defaultValue = "65536")
     protected int sendBufferSize = 65536;
-    @UriParam(label = "advanced", defaultValue = "65536",
-              description = "The TCP/UDP buffer sizes to be used during inbound communication. Size is bytes.")
+    @UriParam(label = "advanced", defaultValue = "65536")
     protected int receiveBufferSize = 65536;
-    @UriParam(label = "advanced",
-              description = "Configures the buffer size predictor. See details at Jetty documentation and this mail thread.")
+    @UriParam(label = "advanced")
     protected int receiveBufferSizePredictor;
-    @UriParam(label = "consumer,advanced", defaultValue = "1",
-              description = "When netty works on nio mode, it uses default bossCount parameter from Netty, which is 1. User can use this option to override the default bossCount from Netty")
+    @UriParam(label = "consumer,advanced", defaultValue = "1")
     protected int bossCount = 1;
-    @UriParam(label = "advanced",
-              description = "When netty works on nio mode, it uses default workerCount parameter from Netty (which is cpu_core_threads x 2). User can use this option to override the default workerCount from Netty.")
+    @UriParam(label = "advanced")
     protected int workerCount;
-    @UriParam(defaultValue = "true", description = "Setting to ensure socket is not closed due to inactivity")
+    @UriParam(defaultValue = "true")
     protected boolean keepAlive = true;
-    @UriParam(defaultValue = "true", description = "Setting to improve TCP protocol performance")
+    @UriParam(defaultValue = "true")
     protected boolean tcpNoDelay = true;
-    @UriParam(defaultValue = "true", description = "Setting to facilitate socket multiplexing")
+    @UriParam(defaultValue = "true")
     protected boolean reuseAddress = true;
-    @UriParam(label = "producer", defaultValue = "10000",
-              description = "Time to wait for a socket connection to be available. Value is in milliseconds.")
+    @UriParam(label = "producer", defaultValue = "10000")
     protected int connectTimeout = 10000;
-    @UriParam(label = "consumer,advanced",
-              description = "Allows to configure a backlog for netty consumer (server). Note the backlog is just a best effort depending on"
-                            + " the OS. Setting this option to a value such as 200, 500 or 1000, tells the TCP stack how long the \"accept\" queue"
-                            + " can be If this option is not configured, then the backlog depends on OS setting.")
+    @UriParam(label = "consumer,advanced")
     protected int backlog;
-    @UriParam(label = "consumer,advanced", description = "To use a custom ServerInitializerFactory")
+    @UriParam(label = "consumer,advanced")
     protected ServerInitializerFactory serverInitializerFactory;
-    @UriParam(label = "consumer,advanced", description = "To use a custom NettyServerBootstrapFactory")
+    @UriParam(label = "consumer,advanced")
     protected NettyServerBootstrapFactory nettyServerBootstrapFactory;
-    @UriParam(label = "advanced", prefix = "option.", multiValue = true,
-              description = "Allows to configure additional netty options using option. as prefix."
-                            + " For example option.child.keepAlive=false. See the Netty documentation for possible options that can be used.")
+    @UriParam(label = "advanced", prefix = "option.", multiValue = true)
     protected Map<String, Object> options;
     // SSL options is also part of the server bootstrap as the server listener on port X is either plain or SSL
-    @UriParam(label = "security", description = "Setting to specify whether SSL encryption is applied to this endpoint")
+    @UriParam(label = "security")
     protected boolean ssl;
-    @UriParam(label = "security",
-              description = "When enabled and in SSL mode, then the Netty consumer will enrich the Camel Message with headers having"
-                            + " information about the client certificate such as subject name, issuer name, serial number, and the valid date range.")
+    @UriParam(label = "security")
     protected boolean sslClientCertHeaders;
-    @UriParam(label = "security", description = "Reference to a class that could be used to return an SSL Handler")
+    @UriParam(label = "security")
     protected SslHandler sslHandler;
-    @UriParam(label = "security", description = "To configure security using SSLContextParameters")
+    @UriParam(label = "security")
     protected SSLContextParameters sslContextParameters;
-    @UriParam(label = "consumer,security",
-              description = "Configures whether the server needs client authentication when using SSL.")
+    @UriParam(label = "consumer,security")
     protected boolean needClientAuth;
-    @Deprecated
-    @UriParam(label = "security", description = "Client side certificate keystore to be used for encryption")
+    @UriParam(label = "security")
     protected File keyStoreFile;
-    @Deprecated
-    @UriParam(label = "security", description = "Server side certificate keystore to be used for encryption")
+    @UriParam(label = "security")
     protected File trustStoreFile;
-    @UriParam(label = "security",
-              description = "Client side certificate keystore to be used for encryption. Is loaded by default from classpath, but you can"
-                            + " prefix with classpath:, file:, or http: to load the resource from different systems.")
-    @Metadata(supportFileReference = true)
+    @UriParam(label = "security")
     protected String keyStoreResource;
-    @UriParam(label = "security",
-              description = "Server side certificate keystore to be used for encryption. Is loaded by default from classpath, but you can"
-                            + " prefix with classpath:, file:, or http: to load the resource from different systems.")
-    @Metadata(supportFileReference = true)
+    @UriParam(label = "security")
     protected String trustStoreResource;
-    @UriParam(label = "security", description = "Keystore format to be used for payload encryption. Defaults to JKS if not set")
+    @UriParam(label = "security")
     protected String keyStoreFormat;
-    @UriParam(label = "security",
-              description = "Security provider to be used for payload encryption. Defaults to SunX509 if not set.")
+    @UriParam(label = "security")
     protected String securityProvider;
-    @UriParam(defaultValue = DEFAULT_ENABLED_PROTOCOLS, label = "security",
-              description = "Which protocols to enable when using SSL")
+    @UriParam(defaultValue = DEFAULT_ENABLED_PROTOCOLS, label = "security")
     protected String enabledProtocols = DEFAULT_ENABLED_PROTOCOLS;
-    @UriParam(label = "security", secret = true,
-              description = "Password setting to use in order to encrypt/decrypt payloads sent using SSH")
+    @UriParam(label = "security", secret = true)
     protected String passphrase;
-    @UriParam(label = "advanced",
-              description = "Whether to use native transport instead of NIO. Native transport takes advantage of the host operating system and"
-                            + " is only supported on some platforms. You need to add the netty JAR for the host operating system you are using."
-                            + " See more details at: http://netty.io/wiki/native-transports.html")
+    @UriParam(label = "advanced")
     protected boolean nativeTransport;
-    @UriParam(label = "consumer,advanced",
-              description = "Set the BossGroup which could be used for handling the new connection of the server side across the NettyEndpoint")
+    @UriParam(label = "consumer,advanced")
     protected EventLoopGroup bossGroup;
-    @UriParam(label = "advanced",
-              description = "To use a explicit EventLoopGroup as the boss thread pool. For example to share a thread pool with multiple"
-                            + " consumers or producers. By default each consumer or producer has their own worker pool with 2 x cpu count core threads.")
+    @UriParam(label = "advanced")
     protected EventLoopGroup workerGroup;
-    @UriParam(label = "advanced", description = "To use an explicit ChannelGroup.")
+    @UriParam(label = "advanced")
     protected ChannelGroup channelGroup;
-    @UriParam(label = "consumer,advanced",
-              description = "When using UDP then this option can be used to specify a network interface by its name, such as eth0 to join a multicast group.")
+    @UriParam(label = "consumer,advanced")
     protected String networkInterface;
-    @UriParam(label = "consumer", defaultValue = "true",
-              description = "Used only in clientMode in consumer, the consumer will attempt to reconnect on disconnection if this is enabled")
+    @UriParam(label = "consumer", defaultValue = "true")
     private boolean reconnect = true;
-    @UriParam(label = "consumer", defaultValue = "10000",
-              description = "Used if reconnect and clientMode is enabled. The interval in milli seconds to attempt reconnection")
+    @UriParam(label = "consumer", defaultValue = "10000")
     private int reconnectInterval = 10000;
-    @UriParam(label = "advanced",
-              description = "Path to unix domain socket to use instead of inet socket. Host and port parameters will not be used, however"
-                            + " required. It is ok to set dummy values for them. Must be used with nativeTransport=true and clientMode=false.")
-    private String unixDomainSocketPath;
-    @UriParam(label = "advanced", defaultValue = "100", description = "Shutdown await timeout in milliseconds")
-    private int shutdownTimeout = 100;
 
     public String getAddress() {
-        if (unixDomainSocketPath != null) {
-            return unixDomainSocketPath;
-        }
         return host + ":" + port;
     }
 
@@ -559,7 +514,7 @@ public class NettyServerBootstrapConfiguration implements Cloneable {
     }
 
     /**
-     * To use an explicit ChannelGroup.
+     * To use a explicit ChannelGroup.
      */
     public void setChannelGroup(ChannelGroup channelGroup) {
         this.channelGroup = channelGroup;
@@ -608,29 +563,6 @@ public class NettyServerBootstrapConfiguration implements Cloneable {
 
     public void setReconnectInterval(int reconnectInterval) {
         this.reconnectInterval = reconnectInterval;
-    }
-
-    public String getUnixDomainSocketPath() {
-        return unixDomainSocketPath;
-    }
-
-    /**
-     * Path to unix domain socket to use instead of inet socket. Host and port parameters will not be used, however
-     * required. It is ok to set dummy values for them. Must be used with nativeTransport=true and clientMode=false.
-     */
-    public void setUnixDomainSocketPath(String unixDomainSocketPath) {
-        this.unixDomainSocketPath = unixDomainSocketPath;
-    }
-
-    public int getShutdownTimeout() {
-        return shutdownTimeout;
-    }
-
-    /**
-     * Shutdown await timeout in milliseconds
-     */
-    public void setShutdownTimeout(int shutdownTimeout) {
-        this.shutdownTimeout = shutdownTimeout;
     }
 
     /**
@@ -715,8 +647,6 @@ public class NettyServerBootstrapConfiguration implements Cloneable {
             isCompatible = false;
         } else if (reconnectInterval != other.reconnectInterval) {
             isCompatible = false;
-        } else if (!Objects.equals(unixDomainSocketPath, other.unixDomainSocketPath)) {
-            isCompatible = false;
         }
 
         return isCompatible;
@@ -758,7 +688,6 @@ public class NettyServerBootstrapConfiguration implements Cloneable {
                + ", networkInterface='" + networkInterface + '\''
                + ", reconnect='" + reconnect + '\''
                + ", reconnectInterval='" + reconnectInterval + '\''
-               + ", unixDomainSocketPath='" + unixDomainSocketPath + '\''
                + '}';
     }
 }

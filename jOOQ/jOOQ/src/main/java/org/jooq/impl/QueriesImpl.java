@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -44,14 +44,15 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.jooq.Batch;
 import org.jooq.Block;
 import org.jooq.Configuration;
 import org.jooq.Context;
 import org.jooq.DSLContext;
+import org.jooq.Function1;
 import org.jooq.Queries;
 import org.jooq.Query;
 import org.jooq.QueryPart;
@@ -100,13 +101,13 @@ final class QueriesImpl extends AbstractAttachableQueryPart implements Queries {
     }
 
     @Override
-    public final Batch batch() {
-        return configurationOrDefault().dsl().batch(queries);
+    public final Iterator<Query> iterator() {
+        return queries.iterator();
     }
 
     @Override
-    public final Iterator<Query> iterator() {
-        return queries.iterator();
+    public final Stream<Query> stream() {
+        return queryStream();
     }
 
     @Override
@@ -125,8 +126,8 @@ final class QueriesImpl extends AbstractAttachableQueryPart implements Queries {
         DSLContext ctx = c.dsl();
 
         for (Query query : this)
-            if (query instanceof ResultQuery<?> q)
-                results.resultsOrRows.addAll(ctx.fetchMany(q).resultsOrRows());
+            if (query instanceof ResultQuery)
+                results.resultsOrRows.addAll(ctx.fetchMany((ResultQuery<?>) query).resultsOrRows());
             else
                 results.resultsOrRows.add(new ResultOrRowsImpl(ctx.execute(query)));
 
@@ -158,21 +159,18 @@ final class QueriesImpl extends AbstractAttachableQueryPart implements Queries {
             else if (separatorRequired)
                 ctx.formatSeparator();
 
-            Query q;
             if (i)
                 if (ctx.format())
-                    q = new IgnoreQuery(P_IGNORE_FORMATTED.matcher(((IgnoreQuery) query).sql).replaceFirst("$1"));
+                    query = new IgnoreQuery(P_IGNORE_FORMATTED.matcher(((IgnoreQuery) query).sql).replaceFirst("$1"));
                 else
-                    q = new IgnoreQuery(P_IGNORE_UNFORMATTED.matcher(((IgnoreQuery) query).sql).replaceFirst("$1"));
-            else
-                q = query;
+                    query = new IgnoreQuery(P_IGNORE_UNFORMATTED.matcher(((IgnoreQuery) query).sql).replaceFirst("$1"));
 
-            ctx.languageContext(ctx.languageContext(), query, c -> c.visit(q));
+            ctx.visit(query);
 
             if (!i)
-                BlockImpl.semicolonAfterStatement(ctx, q);
+                ctx.sql(';');
 
-            separatorRequired = !i || !((IgnoreQuery) q).sql.endsWith("\n");
+            separatorRequired = !i || !((IgnoreQuery) query).sql.endsWith("\n");
         }
     }
 

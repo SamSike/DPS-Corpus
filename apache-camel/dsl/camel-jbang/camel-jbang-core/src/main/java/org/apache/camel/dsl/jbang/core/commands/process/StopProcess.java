@@ -16,21 +16,23 @@
  */
 package org.apache.camel.dsl.jbang.core.commands.process;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
 import java.util.List;
 
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
-import org.apache.camel.dsl.jbang.core.common.CommandLineHelper;
-import org.apache.camel.dsl.jbang.core.common.PathUtils;
+import org.apache.camel.util.FileUtil;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
-@Command(name = "stop", description = "Shuts down running Camel integrations", sortOptions = false, showDefaultValues = true)
+@Command(name = "stop", description = "Shuts down a running Camel integration")
 public class StopProcess extends ProcessBaseCommand {
 
-    @CommandLine.Parameters(description = "Name or pid of running Camel integration(s)", arity = "0..1")
-    String name = "*";
+    @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
+    String name;
+
+    @CommandLine.Option(names = { "--all" },
+                        description = "To shutdown all running Camel integrations")
+    boolean all;
 
     @CommandLine.Option(names = { "--kill" },
                         description = "To force killing the process (SIGKILL)")
@@ -41,22 +43,26 @@ public class StopProcess extends ProcessBaseCommand {
     }
 
     @Override
-    public Integer doCall() throws Exception {
+    public Integer call() throws Exception {
+        if (!all && name == null) {
+            return 0;
+        } else if (all) {
+            name = "*";
+        }
 
         List<Long> pids = findPids(name);
 
         // stop by deleting the pid file
         for (Long pid : pids) {
-            Path pidFile = CommandLineHelper.getCamelDir().resolve(Long.toString(pid));
-            if (Files.exists(pidFile)) {
-                printer().println("Shutting down Camel integration (PID: " + pid + ")");
-                PathUtils.deleteFile(pidFile);
+            File dir = new File(System.getProperty("user.home"), ".camel");
+            File pidFile = new File(dir, "" + pid);
+            if (pidFile.exists()) {
+                System.out.println("Shutting down Camel integration (pid: " + pid + ")");
+                FileUtil.deleteFile(pidFile);
             }
-        }
-        for (Long pid : pids) {
             if (kill) {
                 ProcessHandle.of(pid).ifPresent(ph -> {
-                    printer().println("Killing Camel integration (PID: " + pid + ")");
+                    System.out.println("Killing Camel integration (pid: " + pid + ")");
                     ph.destroyForcibly();
                 });
             }

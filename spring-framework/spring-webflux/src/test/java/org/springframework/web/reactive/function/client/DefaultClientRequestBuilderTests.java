@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.springframework.web.reactive.function.client;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,16 +46,15 @@ import static org.springframework.http.HttpMethod.OPTIONS;
 import static org.springframework.http.HttpMethod.POST;
 
 /**
- * Tests for {@link DefaultClientRequestBuilder}.
- *
+ * Unit tests for {@link DefaultClientRequestBuilder}.
  * @author Arjen Poutsma
  */
-class DefaultClientRequestBuilderTests {
+public class DefaultClientRequestBuilderTests {
 
 	private static final URI DEFAULT_URL = URI.create("https://example.com");
 
 	@Test
-	void from() {
+	public void from() {
 		ClientRequest other = ClientRequest.create(GET, DEFAULT_URL)
 				.header("foo", "bar")
 				.cookie("baz", "qux")
@@ -70,9 +70,9 @@ class DefaultClientRequestBuilderTests {
 
 		assertThat(result.url()).isEqualTo(DEFAULT_URL);
 		assertThat(result.method()).isEqualTo(GET);
-		assertThat(result.headers().size()).isOne();
+		assertThat(result.headers().size()).isEqualTo(1);
 		assertThat(result.headers().getFirst("foo")).isEqualTo("baar");
-		assertThat(result.cookies()).hasSize(1);
+		assertThat(result.cookies().size()).isEqualTo(1);
 		assertThat(result.cookies().getFirst("baz")).isEqualTo("quux");
 		assertThat(result.httpRequest()).isNotNull();
 		assertThat(result.attributes().get("attributeKey")).isEqualTo("attributeValue");
@@ -80,7 +80,7 @@ class DefaultClientRequestBuilderTests {
 	}
 
 	@Test
-	void fromCopiesBody() {
+	public void fromCopiesBody() {
 		String body = "foo";
 		BodyInserter<String, ClientHttpRequest> inserter = (response, strategies) -> {
 			byte[] bodyBytes = body.getBytes(UTF_8);
@@ -94,7 +94,7 @@ class DefaultClientRequestBuilderTests {
 		List<HttpMessageWriter<?>> messageWriters = new ArrayList<>();
 		messageWriters.add(new EncoderHttpMessageWriter<>(CharSequenceEncoder.allMimeTypes()));
 
-		ExchangeStrategies strategies = mock();
+		ExchangeStrategies strategies = mock(ExchangeStrategies.class);
 		given(strategies.messageWriters()).willReturn(messageWriters);
 
 		MockClientHttpRequest request = new MockClientHttpRequest(POST, "/");
@@ -106,7 +106,7 @@ class DefaultClientRequestBuilderTests {
 	}
 
 	@Test
-	void method() {
+	public void method() {
 		ClientRequest.Builder builder = ClientRequest.create(DELETE, DEFAULT_URL);
 		assertThat(builder.build().method()).isEqualTo(DELETE);
 
@@ -115,9 +115,9 @@ class DefaultClientRequestBuilderTests {
 	}
 
 	@Test
-	void url() {
-		URI url1 = URI.create("https://example.com/foo");
-		URI url2 = URI.create("https://example.com/bar");
+	public void url() throws URISyntaxException {
+		URI url1 = new URI("https://example.com/foo");
+		URI url2 = new URI("https://example.com/bar");
 		ClientRequest.Builder builder = ClientRequest.create(DELETE, url1);
 		assertThat(builder.build().url()).isEqualTo(url1);
 
@@ -126,13 +126,13 @@ class DefaultClientRequestBuilderTests {
 	}
 
 	@Test
-	void cookie() {
+	public void cookie() {
 		ClientRequest result = ClientRequest.create(GET, DEFAULT_URL).cookie("foo", "bar").build();
 		assertThat(result.cookies().getFirst("foo")).isEqualTo("bar");
 	}
 
 	@Test
-	void build() {
+	public void build() {
 		ClientRequest result = ClientRequest.create(GET, DEFAULT_URL)
 				.header("MyKey", "MyValue")
 				.cookie("foo", "bar")
@@ -143,7 +143,7 @@ class DefaultClientRequestBuilderTests {
 				.build();
 
 		MockClientHttpRequest request = new MockClientHttpRequest(GET, "/");
-		ExchangeStrategies strategies = mock();
+		ExchangeStrategies strategies = mock(ExchangeStrategies.class);
 
 		result.writeTo(request, strategies).block();
 
@@ -155,7 +155,7 @@ class DefaultClientRequestBuilderTests {
 	}
 
 	@Test
-	void bodyInserter() {
+	public void bodyInserter() {
 		String body = "foo";
 		BodyInserter<String, ClientHttpRequest> inserter = (response, strategies) -> {
 			byte[] bodyBytes = body.getBytes(UTF_8);
@@ -169,7 +169,7 @@ class DefaultClientRequestBuilderTests {
 		List<HttpMessageWriter<?>> messageWriters = new ArrayList<>();
 		messageWriters.add(new EncoderHttpMessageWriter<>(CharSequenceEncoder.allMimeTypes()));
 
-		ExchangeStrategies strategies = mock();
+		ExchangeStrategies strategies = mock(ExchangeStrategies.class);
 		given(strategies.messageWriters()).willReturn(messageWriters);
 
 		MockClientHttpRequest request = new MockClientHttpRequest(GET, "/");
@@ -180,7 +180,7 @@ class DefaultClientRequestBuilderTests {
 	}
 
 	@Test
-	void bodyClass() {
+	public void bodyClass() {
 		String body = "foo";
 		Publisher<String> publisher = Mono.just(body);
 		ClientRequest result = ClientRequest.create(POST, DEFAULT_URL).body(publisher, String.class).build();
@@ -188,7 +188,7 @@ class DefaultClientRequestBuilderTests {
 		List<HttpMessageWriter<?>> messageWriters = new ArrayList<>();
 		messageWriters.add(new EncoderHttpMessageWriter<>(CharSequenceEncoder.allMimeTypes()));
 
-		ExchangeStrategies strategies = mock();
+		ExchangeStrategies strategies = mock(ExchangeStrategies.class);
 		given(strategies.messageWriters()).willReturn(messageWriters);
 
 		MockClientHttpRequest request = new MockClientHttpRequest(GET, "/");
@@ -199,16 +199,16 @@ class DefaultClientRequestBuilderTests {
 	}
 
 	@Test
-	void bodyParameterizedTypeReference() {
+	public void bodyParameterizedTypeReference() {
 		String body = "foo";
 		Publisher<String> publisher = Mono.just(body);
-		ParameterizedTypeReference<String> typeReference = new ParameterizedTypeReference<>() {};
+		ParameterizedTypeReference<String> typeReference = new ParameterizedTypeReference<String>() {};
 		ClientRequest result = ClientRequest.create(POST, DEFAULT_URL).body(publisher, typeReference).build();
 
 		List<HttpMessageWriter<?>> messageWriters = new ArrayList<>();
 		messageWriters.add(new EncoderHttpMessageWriter<>(CharSequenceEncoder.allMimeTypes()));
 
-		ExchangeStrategies strategies = mock();
+		ExchangeStrategies strategies = mock(ExchangeStrategies.class);
 		given(strategies.messageWriters()).willReturn(messageWriters);
 
 		MockClientHttpRequest request = new MockClientHttpRequest(GET, "/");

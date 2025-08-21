@@ -22,7 +22,6 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 
-import org.apache.camel.LoggingLevel;
 import org.apache.camel.resume.ResumeStrategy;
 import org.apache.camel.resume.ResumeStrategyConfiguration;
 import org.apache.camel.resume.ResumeStrategyConfigurationBuilder;
@@ -38,36 +37,21 @@ public class ResumableDefinition extends NoOutputDefinition<ResumableDefinition>
 
     @XmlTransient
     private ResumeStrategy resumeStrategyBean;
-    @XmlTransient
-    private ResumeStrategyConfiguration resumeStrategyConfiguration;
 
     @XmlAttribute(required = true)
     @Metadata(required = true, javaType = "org.apache.camel.resume.ResumeStrategy")
     private String resumeStrategy;
-    @XmlAttribute
+
     @Metadata(label = "advanced", javaType = "org.apache.camel.LoggingLevel", defaultValue = "ERROR",
               enums = "TRACE,DEBUG,INFO,WARN,ERROR,OFF")
     private String loggingLevel;
+
     @XmlAttribute
     @Metadata(label = "advanced", javaType = "java.lang.Boolean", defaultValue = "false")
     private String intermittent;
 
-    public ResumableDefinition() {
-    }
-
-    protected ResumableDefinition(ResumableDefinition source) {
-        super(source);
-        this.resumeStrategyBean = source.resumeStrategyBean;
-        this.resumeStrategyConfiguration = source.resumeStrategyConfiguration;
-        this.resumeStrategy = source.resumeStrategy;
-        this.loggingLevel = source.loggingLevel;
-        this.intermittent = source.intermittent;
-    }
-
-    @Override
-    public ResumableDefinition copyDefinition() {
-        return new ResumableDefinition(this);
-    }
+    @XmlTransient
+    private ResumeStrategyConfiguration resumeStrategyConfiguration;
 
     @Override
     public String getShortName() {
@@ -170,22 +154,7 @@ public class ResumableDefinition extends NoOutputDefinition<ResumableDefinition>
      */
     public ResumableDefinition intermittent(boolean intermittent) {
         setIntermittent(Boolean.toString(intermittent));
-        return this;
-    }
 
-    /**
-     * The logging level to use in case of failures.
-     */
-    public ResumableDefinition loggingLevel(String loggingLevel) {
-        setLoggingLevel(loggingLevel);
-        return this;
-    }
-
-    /**
-     * The logging level to use in case of failures.
-     */
-    public ResumableDefinition loggingLevel(LoggingLevel loggingLevel) {
-        setLoggingLevel(loggingLevel.name());
         return this;
     }
 }

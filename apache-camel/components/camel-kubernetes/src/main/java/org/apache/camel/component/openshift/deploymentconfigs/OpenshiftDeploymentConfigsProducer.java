@@ -78,8 +78,8 @@ public class OpenshiftDeploymentConfigsProducer extends DefaultProducer {
                 doCreateDeployment(exchange);
                 break;
 
-            case KubernetesOperations.UPDATE_DEPLOYMENT_CONFIG:
-                doUpdateDeployment(exchange);
+            case KubernetesOperations.REPLACE_DEPLOYMENT_CONFIG:
+                doReplaceDeployment(exchange);
                 break;
 
             case KubernetesOperations.SCALE_DEPLOYMENT_CONFIG:
@@ -139,8 +139,8 @@ public class OpenshiftDeploymentConfigsProducer extends DefaultProducer {
         prepareOutboundMessage(exchange, deploymentConfigDeleted);
     }
 
-    protected void doUpdateDeployment(Exchange exchange) {
-        doCreateOrUpdateDeployment(exchange, "Update", Resource::update);
+    protected void doReplaceDeployment(Exchange exchange) {
+        doCreateOrUpdateDeployment(exchange, "Replace", Resource::replace);
     }
 
     protected void doCreateDeployment(Exchange exchange) {
@@ -199,7 +199,7 @@ public class OpenshiftDeploymentConfigsProducer extends DefaultProducer {
         DeploymentConfig deploymentConfigScaled
                 = getEndpoint().getKubernetesClient().adapt(OpenShiftClient.class).deploymentConfigs()
                         .inNamespace(namespaceName)
-                        .withName(deploymentName).scale(replicasNumber);
+                        .withName(deploymentName).scale(replicasNumber, false);
 
         prepareOutboundMessage(exchange, deploymentConfigScaled.getStatus().getReplicas());
     }

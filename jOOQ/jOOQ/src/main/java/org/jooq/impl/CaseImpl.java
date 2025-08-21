@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -44,16 +44,14 @@ import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.Record1;
 import org.jooq.Select;
-import org.jooq.impl.QOM.UTransient;
 
 /**
- * A transient step in the construction of <code>CASE</code> statements.
- *
  * @author Lukas Eder
  */
-final class CaseImpl implements Case, UTransient {
+final class CaseImpl implements Case {
 
-    CaseImpl() {}
+    CaseImpl() {
+    }
 
     @Override
     public final <V> CaseValueStep<V> value(V value) {
@@ -62,7 +60,7 @@ final class CaseImpl implements Case, UTransient {
 
     @Override
     public final <V> CaseValueStep<V> value(Field<V> value) {
-        return new CaseSimpleValueStep<>(value);
+        return new CaseValueStepImpl<>(value);
     }
 
     @Override
@@ -72,7 +70,7 @@ final class CaseImpl implements Case, UTransient {
 
     @Override
     public final <T> CaseConditionStep<T> when(Condition condition, Field<T> result) {
-        return new CaseSearched<>(condition, result);
+        return new CaseConditionStepImpl<>(condition, result);
     }
 
     @Override

@@ -33,7 +33,8 @@ import org.apache.camel.Processor;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -43,20 +44,20 @@ import org.slf4j.LoggerFactory;
 
 import static org.apache.camel.component.jetty.BaseJettyTest.SSL_SYSPROPS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @ResourceLock(SSL_SYSPROPS)
 @DisabledOnOs(OS.WINDOWS)
-@Disabled("Flaky on CI test environments")
 public class HttpsAsyncRouteTest extends HttpsRouteTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpsAsyncRouteTest.class);
 
     @Override
-    public void doPostSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
         // ensure jsse clients can validate the self signed dummy localhost
         // cert,
         // use the server keystore as the trust store for these tests
@@ -67,8 +68,10 @@ public class HttpsAsyncRouteTest extends HttpsRouteTest {
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
         restoreSystemProperties();
+        super.tearDown();
     }
 
     @Override
@@ -79,9 +82,8 @@ public class HttpsAsyncRouteTest extends HttpsRouteTest {
 
     @Override
     protected void restoreSystemProperties() {
-        for (Map.Entry<Object, Object> entry : originalValues.entrySet()) {
-            Object key = entry.getKey();
-            Object value = entry.getValue();
+        for (Object key : originalValues.keySet()) {
+            Object value = originalValues.get(key);
             if (NULL_VALUE_MARKER.equals(value)) {
                 System.clearProperty((String) key);
             } else {
@@ -111,9 +113,9 @@ public class HttpsAsyncRouteTest extends HttpsRouteTest {
 
         Map<String, Object> headers = in.getHeaders();
 
-        LOG.info("Headers: {}", headers);
+        LOG.info("Headers: " + headers);
 
-        assertFalse(headers.isEmpty(), "Should be more than one header but was: " + headers);
+        assertTrue(headers.size() > 0, "Should be more than one header but was: " + headers);
     }
 
     @Override
@@ -138,7 +140,10 @@ public class HttpsAsyncRouteTest extends HttpsRouteTest {
         ssl.init(null, null, null);
         connection.setSSLSocketFactory(ssl.getSocketFactory());
         InputStream is = connection.getInputStream();
-        is.transferTo(os);
+        int c;
+        while ((c = is.read()) >= 0) {
+            os.write(c);
+        }
 
         String data = new String(os.toByteArray());
         assertEquals("<b>Hello World</b>", data);

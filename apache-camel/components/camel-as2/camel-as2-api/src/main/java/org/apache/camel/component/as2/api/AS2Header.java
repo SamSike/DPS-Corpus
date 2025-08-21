@@ -16,6 +16,8 @@
  */
 package org.apache.camel.component.as2.api;
 
+import org.apache.http.protocol.HTTP;
+
 public interface AS2Header {
 
     /**
@@ -53,39 +55,31 @@ public interface AS2Header {
     /**
      * Message Header Name for Target Host
      */
-    String TARGET_HOST = "Host";
+    String TARGET_HOST = HTTP.TARGET_HOST;
     /**
      * Message Header Name for User Agent
      */
-    String USER_AGENT = "User-Agent";
+    String USER_AGENT = HTTP.USER_AGENT;
     /**
      * Message Header Name for Server Name
      */
-    String SERVER = "Server";
+    String SERVER = HTTP.SERVER_HEADER;
     /**
      * Message Header Name for Date
      */
-    String DATE = "Date";
+    String DATE = HTTP.DATE_HEADER;
     /**
      * Message Header Name for Content Length
      */
-    String CONTENT_LENGTH = "Content-Length";
+    String CONTENT_LENGTH = HTTP.CONTENT_LEN;
     /**
      * Message Header Name for Connection
      */
-    String CONNECTION = "Connection";
+    String CONNECTION = HTTP.CONN_DIRECTIVE;
     /**
      * Message Header Name for Expect
      */
-    String EXPECT = "Expect";
-    /**
-     * Message Header Name for Close;
-     */
-    String CLOSE = "Close";
-    /**
-     * Message Header for Keep Alive;
-     */
-    String KEEP_ALIVE = "Keep-Alive";
+    String EXPECT = HTTP.EXPECT_DIRECTIVE;
     /**
      * Message Header name for Content Transfer Encoding
      */
@@ -118,9 +112,5 @@ public interface AS2Header {
      * Message Header name for Disposition Notification Options
      */
     String DISPOSITION_NOTIFICATION_OPTIONS = "Disposition-Notification-Options";
-    /**
-     * Message Header name for Authorization
-     */
-    String AUTHORIZATION = "Authorization";
 
 }

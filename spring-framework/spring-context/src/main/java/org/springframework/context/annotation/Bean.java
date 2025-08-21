@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.core.annotation.AliasFor;
 
@@ -135,9 +136,9 @@ import org.springframework.core.annotation.AliasFor;
  * <h3>{@code @Bean} <em>Lite</em> Mode</h3>
  *
  * <p>{@code @Bean} methods may also be declared within classes that are <em>not</em>
- * annotated with {@code @Configuration}. If a bean method is declared on a bean
- * that is <em>not</em> annotated with {@code @Configuration} it is processed in a
- * so-called <em>'lite'</em> mode.
+ * annotated with {@code @Configuration}. For example, bean methods may be declared
+ * in a {@code @Component} class or even in a <em>plain old class</em>. In such cases,
+ * a {@code @Bean} method will get processed in a so-called <em>'lite'</em> mode.
  *
  * <p>Bean methods in <em>lite</em> mode will be treated as plain <em>factory
  * methods</em> by the container (similar to {@code factory-method} declarations
@@ -239,40 +240,27 @@ public @interface Bean {
 	String[] name() default {};
 
 	/**
-	 * Is this bean a candidate for getting autowired into some other bean at all?
+	 * Are dependencies to be injected via convention-based autowiring by name or type?
+	 * <p>Note that this autowire mode is just about externally driven autowiring based
+	 * on bean property setter methods by convention, analogous to XML bean definitions.
+	 * <p>The default mode does allow for annotation-driven autowiring. "no" refers to
+	 * externally driven autowiring only, not affecting any autowiring demands that the
+	 * bean class itself expresses through annotations.
+	 * @see Autowire#BY_NAME
+	 * @see Autowire#BY_TYPE
+	 * @deprecated as of 5.1, since {@code @Bean} factory method argument resolution and
+	 * {@code @Autowired} processing supersede name/type-based bean property injection
+	 */
+	@Deprecated
+	Autowire autowire() default Autowire.NO;
+
+	/**
+	 * Is this bean a candidate for getting autowired into some other bean?
 	 * <p>Default is {@code true}; set this to {@code false} for internal delegates
 	 * that are not meant to get in the way of beans of the same type in other places.
 	 * @since 5.1
-	 * @see #defaultCandidate()
 	 */
 	boolean autowireCandidate() default true;
-
-	/**
-	 * Is this bean a candidate for getting autowired into some other bean based on
-	 * the plain type, without any further indications such as a qualifier match?
-	 * <p>Default is {@code true}; set this to {@code false} for restricted delegates
-	 * that are supposed to be injectable in certain areas but are not meant to get
-	 * in the way of beans of the same type in other places.
-	 * <p>This is a variation of {@link #autowireCandidate()} which does not disable
-	 * injection in general, just enforces an additional indication such as a qualifier.
-	 * @since 6.2
-	 * @see #autowireCandidate()
-	 */
-	boolean defaultCandidate() default true;
-
-	/**
-	 * The bootstrap mode for this bean: default is the main pre-instantiation thread
-	 * for non-lazy singleton beans and the caller thread for prototype beans.
-	 * <p>Set {@link Bootstrap#BACKGROUND} to allow for instantiating this bean on a
-	 * background thread. For a non-lazy singleton, a background pre-instantiation
-	 * thread can be used then, while still enforcing the completion at the end of
-	 * {@link org.springframework.context.ConfigurableApplicationContext#refresh()}.
-	 * For a lazy singleton, a background pre-instantiation thread can be used as well
-	 * - with completion allowed at a later point, enforcing it when actually accessed.
-	 * @since 6.2
-	 * @see Lazy
-	 */
-	Bootstrap bootstrap() default Bootstrap.DEFAULT;
 
 	/**
 	 * The optional name of a method to call on the bean instance during initialization.
@@ -300,7 +288,7 @@ public @interface Bean {
 	 * method (i.e., detection occurs reflectively against the bean instance itself at
 	 * creation time).
 	 * <p>To disable destroy method inference for a particular {@code @Bean}, specify an
-	 * empty string as the value, for example, {@code @Bean(destroyMethod="")}. Note that the
+	 * empty string as the value, e.g. {@code @Bean(destroyMethod="")}. Note that the
 	 * {@link org.springframework.beans.factory.DisposableBean} callback interface will
 	 * nevertheless get detected and the corresponding destroy method invoked: In other
 	 * words, {@code destroyMethod=""} only affects custom close/shutdown methods and
@@ -312,29 +300,5 @@ public @interface Bean {
 	 * @see org.springframework.context.ConfigurableApplicationContext#close()
 	 */
 	String destroyMethod() default AbstractBeanDefinition.INFER_METHOD;
-
-
-	/**
-	 * Local enumeration for the bootstrap mode.
-	 * @since 6.2
-	 * @see #bootstrap()
-	 */
-	enum Bootstrap {
-
-		/**
-		 * Constant to indicate the main pre-instantiation thread for non-lazy
-		 * singleton beans and the caller thread for prototype beans.
-		 */
-		DEFAULT,
-
-		/**
-		 * Allow for instantiating a bean on a background thread.
-		 * <p>For a non-lazy singleton, a background pre-instantiation thread
-		 * can be used while still enforcing the completion on context refresh.
-		 * For a lazy singleton, a background pre-instantiation thread can be used
-		 * with completion allowed at a later point (when actually accessed).
-		 */
-		BACKGROUND,
-	}
 
 }

@@ -38,7 +38,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisabledIfSystemProperty(named = "ci.env.name", matches = ".*", disabledReason = "Flaky on Github CI")
+@DisabledIfSystemProperty(named = "ci.env.name", matches = "github.com", disabledReason = "Flaky on Github CI")
 public class MllpTcpClientProducerConnectionErrorTest extends CamelTestSupport {
 
     @RegisterExtension
@@ -67,7 +67,7 @@ public class MllpTcpClientProducerConnectionErrorTest extends CamelTestSupport {
         DefaultCamelContext context = (DefaultCamelContext) super.createCamelContext();
 
         context.setUseMDCLogging(true);
-        context.getCamelContextExtension().setName(this.getClass().getSimpleName());
+        context.setName(this.getClass().getSimpleName());
 
         return context;
     }

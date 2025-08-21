@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -45,22 +45,11 @@ import org.jooq.Name;
 import org.jooq.QueryPart;
 // ...
 // ...
-import org.jooq.tools.StringUtils;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * @author Lukas Eder
  */
-final class Coerce<T>
-extends
-    AbstractField<T>
-implements
-    AutoAlias<Field<T>>,
-    NamedCheckField<T>,
-    QOM.Coerce<T>
-{
+final class Coerce<T> extends AbstractField<T> implements QOM.Coerce<T> {
 
     final AbstractField<?> field;
 
@@ -68,11 +57,6 @@ implements
         super(field.getQualifiedName(), type);
 
         this.field = (AbstractField<?>) Tools.uncoerce(field);
-    }
-
-    @Override
-    public final boolean hasName(Context<?> ctx) {
-        return Tools.hasName(ctx, field);
     }
 
     @Override
@@ -86,8 +70,8 @@ implements
     }
 
     @Override
-    final boolean isNullable() {
-        return field.isNullable();
+    boolean isPossiblyNullable() {
+        return field.isPossiblyNullable();
     }
 
     @Override
@@ -134,28 +118,9 @@ implements
         return field.generatesCast();
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public final Field<T> autoAlias(Context<?> ctx, Field<T> f) {
-        if (field instanceof AutoAlias)
-            return ((AutoAlias<Field<T>>) field).autoAlias(ctx, (Field<T>) field).coerce(getDataType());
-        else
-            return f;
-    }
-
     // -------------------------------------------------------------------------
     // XXX: Query Object Model
     // -------------------------------------------------------------------------
-
-    @Override
-    public final Field<?> $aliased() {
-        return field.$aliased().coerce(getDataType());
-    }
-
-    @Override
-    public final Name $alias() {
-        return field.$alias();
-    }
 
     @Override
     public final Field<?> $field() {
@@ -186,19 +151,4 @@ implements
 
 
 
-
-    // -------------------------------------------------------------------------
-    // XXX: The Object API
-    // -------------------------------------------------------------------------
-
-    @Override
-    public boolean equals(Object that) {
-        if (that instanceof Coerce<?> o) {
-            return
-                StringUtils.equals($field(), o.$field())
-            ;
-        }
-        else
-            return super.equals(that);
-    }
 }

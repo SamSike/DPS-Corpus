@@ -36,7 +36,7 @@ public class IronMQBatchConsumerTest extends CamelTestSupport {
         for (int counter = 0; counter <= 5; counter++) {
             Message message = new Message();
             message.setBody("{\"body\": \"Message " + counter + "\"}");
-            message.setId(Integer.toString(counter));
+            message.setId("" + counter);
             ((MockQueue) endpoint.getClient().queue("testqueue")).add(message);
         }
 

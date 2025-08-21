@@ -28,8 +28,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
  *       &lt;all&gt;
  *         &lt;element name="name" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="tables" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
- *         &lt;element name="fields" type="{http://www.jooq.org/xsd/jooq-codegen-3.21.0.xsd}SyntheticKeyFieldsType"/&gt;
- *         &lt;element name="ignoreUnused" type="{http://www.w3.org/2001/XMLSchema}boolean" minOccurs="0"/&gt;
+ *         &lt;element name="fields" type="{http://www.jooq.org/xsd/jooq-codegen-3.17.0.xsd}SyntheticKeyFieldsType"/&gt;
  *       &lt;/all&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -48,13 +47,11 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class SyntheticUniqueKeyType implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String name;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String tables;
-    @XmlElement(defaultValue = "false")
-    protected Boolean ignoreUnused = false;
     @XmlElementWrapper(name = "fields", required = true)
     @XmlElement(name = "field")
     protected List<String> fields;
@@ -91,30 +88,6 @@ public class SyntheticUniqueKeyType implements Serializable, XMLAppendable
         this.tables = value;
     }
 
-    /**
-     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isIgnoreUnused() {
-        return ignoreUnused;
-    }
-
-    /**
-     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setIgnoreUnused(Boolean value) {
-        this.ignoreUnused = value;
-    }
-
     public List<String> getFields() {
         if (fields == null) {
             fields = new ArrayList<String>();
@@ -144,15 +117,6 @@ public class SyntheticUniqueKeyType implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
-     * 
-     */
-    public SyntheticUniqueKeyType withIgnoreUnused(Boolean value) {
-        setIgnoreUnused(value);
-        return this;
-    }
-
     public SyntheticUniqueKeyType withFields(String... values) {
         if (values!= null) {
             for (String value: values) {
@@ -178,7 +142,6 @@ public class SyntheticUniqueKeyType implements Serializable, XMLAppendable
     public final void appendTo(XMLBuilder builder) {
         builder.append("name", name);
         builder.append("tables", tables);
-        builder.append("ignoreUnused", ignoreUnused);
         builder.append("fields", "field", fields);
     }
 
@@ -219,17 +182,8 @@ public class SyntheticUniqueKeyType implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (ignoreUnused == null) {
-            if (other.ignoreUnused!= null) {
-                return false;
-            }
-        } else {
-            if (!ignoreUnused.equals(other.ignoreUnused)) {
-                return false;
-            }
-        }
-        if ((fields == null)||fields.isEmpty()) {
-            if ((other.fields!= null)&&(!other.fields.isEmpty())) {
+        if (fields == null) {
+            if (other.fields!= null) {
                 return false;
             }
         } else {
@@ -246,8 +200,7 @@ public class SyntheticUniqueKeyType implements Serializable, XMLAppendable
         int result = 1;
         result = ((prime*result)+((name == null)? 0 :name.hashCode()));
         result = ((prime*result)+((tables == null)? 0 :tables.hashCode()));
-        result = ((prime*result)+((ignoreUnused == null)? 0 :ignoreUnused.hashCode()));
-        result = ((prime*result)+(((fields == null)||fields.isEmpty())? 0 :fields.hashCode()));
+        result = ((prime*result)+((fields == null)? 0 :fields.hashCode()));
         return result;
     }
 

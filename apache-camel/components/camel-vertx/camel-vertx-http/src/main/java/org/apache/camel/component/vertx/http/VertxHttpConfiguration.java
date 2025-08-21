@@ -36,8 +36,7 @@ public class VertxHttpConfiguration {
     @UriPath(name = "httpUri")
     @Metadata(required = true)
     private URI httpUri;
-    @UriParam(label = "producer",
-              enums = "OPTIONS,GET,HEAD,POST,PUT,DELETE,TRACE,CONNECT,PATCH,PROPFIND,PROPPATCH,MKCOL,COPY,MOVE,LOCK,UNLOCK,MKCALENDAR,VERSION_CONTROL,REPORT,CHECKIN,CHECKOUT,UNCHECKOUT,MKWORKSPACE,UPDATE,LABEL,MERGE,BASELINE_CONTROL,MKACTIVITY,ORDERPATCH,ACL,SEARCH")
+    @UriParam(label = "producer")
     private HttpMethod httpMethod;
     @UriParam(label = "producer", defaultValue = "-1")
     private long timeout = -1;
@@ -81,15 +80,6 @@ public class VertxHttpConfiguration {
     private String proxyPassword;
     @UriParam(label = "producer")
     private WebClientOptions webClientOptions;
-    @UriParam(label = "producer",
-              description = "Whether to force using multipart/form-data for easy file uploads. This is only to be used for uploading the message body as a single entity form-data. For uploading multiple entries then use io.vertx.ext.web.multipart.MultipartForm to build the form.")
-    private boolean multipartUpload;
-    @UriParam(label = "producer", defaultValue = "data",
-              description = "The name of the multipart/form-data when multipartUpload is enabled.")
-    private String multipartUploadName = "data";
-    @UriParam(label = "producer",
-              description = "If the option is true, the Exchange.HTTP_URI header will be ignored and the endpoint URI will be used for the HTTP request. You may also set option throwExceptionOnFailure to false to return the fault response back to the client.")
-    private boolean bridgeEndpoint;
 
     /**
      * The HTTP URI to connect to
@@ -107,13 +97,6 @@ public class VertxHttpConfiguration {
      */
     public void setHttpMethod(HttpMethod httpMethod) {
         this.httpMethod = httpMethod;
-    }
-
-    /**
-     * The HTTP method to use. The HttpMethod header cannot override this option if set
-     */
-    public void setHttpMethod(String httpMethod) {
-        this.httpMethod = HttpMethod.valueOf(httpMethod);
     }
 
     public HttpMethod getHttpMethod() {
@@ -363,29 +346,5 @@ public class VertxHttpConfiguration {
 
     public void setSslContextParameters(SSLContextParameters sslContextParameters) {
         this.sslContextParameters = sslContextParameters;
-    }
-
-    public boolean isMultipartUpload() {
-        return multipartUpload;
-    }
-
-    public void setMultipartUpload(boolean multipartUpload) {
-        this.multipartUpload = multipartUpload;
-    }
-
-    public String getMultipartUploadName() {
-        return multipartUploadName;
-    }
-
-    public void setMultipartUploadName(String multipartUploadName) {
-        this.multipartUploadName = multipartUploadName;
-    }
-
-    public boolean isBridgeEndpoint() {
-        return bridgeEndpoint;
-    }
-
-    public void setBridgeEndpoint(boolean bridgeEndpoint) {
-        this.bridgeEndpoint = bridgeEndpoint;
     }
 }

@@ -21,6 +21,8 @@ import java.io.File;
 import org.apache.camel.Exchange;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.test.junit5.params.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.slf4j.Logger;
@@ -37,7 +39,9 @@ public class LevelDBGetNotFoundTest extends LevelDBTestSupport {
     private Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
-    public void doPostSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
         deleteDirectory("target/data");
         File file = new File("target/data/leveldb.dat");
         levelDBFile = new LevelDBFile();
@@ -46,8 +50,10 @@ public class LevelDBGetNotFoundTest extends LevelDBTestSupport {
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
         levelDBFile.stop();
+        super.tearDown();
     }
 
     @Test
@@ -71,7 +77,7 @@ public class LevelDBGetNotFoundTest extends LevelDBTestSupport {
 
         Exchange exchange = new DefaultExchange(context);
         exchange.getIn().setBody("Hello World");
-        log.info("Created {}", exchange.getExchangeId());
+        log.info("Created " + exchange.getExchangeId());
 
         repo.add(context, exchange.getExchangeId(), exchange);
         Exchange out = repo.get(context, exchange.getExchangeId());
@@ -79,7 +85,7 @@ public class LevelDBGetNotFoundTest extends LevelDBTestSupport {
 
         Exchange exchange2 = new DefaultExchange(context);
         exchange2.getIn().setBody("Bye World");
-        log.info("Created {}", exchange2.getExchangeId());
+        log.info("Created " + exchange2.getExchangeId());
 
         Exchange out2 = repo.get(context, exchange2.getExchangeId());
         assertNull(out2, "Should not find exchange");

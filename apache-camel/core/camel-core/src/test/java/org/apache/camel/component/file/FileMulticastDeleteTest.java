@@ -40,10 +40,10 @@ public class FileMulticastDeleteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?delete=true&initialDelay=0&delay=10")).multicast(new UseLatestAggregationStrategy())
                         .shareUnitOfWork().to("direct:foo", "direct:bar")
                         .end().convertBodyTo(String.class).to("mock:result");
@@ -57,7 +57,7 @@ public class FileMulticastDeleteTest extends ContextTestSupport {
         };
     }
 
-    public static class MyFileAggregator implements AggregationStrategy {
+    public class MyFileAggregator implements AggregationStrategy {
 
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {

@@ -39,9 +39,11 @@ public class ZipAggregationStrategySplitTest extends CamelTestSupport {
     private static final int EXPECTED_NO_FILES = 3;
     private static final String TEST_DIR = "target/out_ZipAggregationStrategyTest";
 
+    @Override
     @BeforeEach
-    public void deleteTestDirs() {
+    public void setUp() throws Exception {
         deleteDirectory(TEST_DIR);
+        super.setUp();
     }
 
     @Test

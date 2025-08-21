@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisabledOnOs(OS.AIX)
 public class ManagedProducerRouteAddRemoveRegisterAlwaysTest extends ManagementTestSupport {
 
-    private static final int SERVICES = 17;
+    private static final int SERVICES = 14;
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
@@ -69,7 +69,7 @@ public class ManagedProducerRouteAddRemoveRegisterAlwaysTest extends ManagementT
         // add a 2nd route
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:bar").routeId("bar").recipientList(header("bar"));
             }
         });
@@ -107,10 +107,10 @@ public class ManagedProducerRouteAddRemoveRegisterAlwaysTest extends ManagementT
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo").to("log:foo").to("mock:result");
             }
         };

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ import static org.springframework.transaction.support.TransactionSynchronization
  * @since 2.5
  */
 @ContextConfiguration
-class ConcreteTransactionalTestNGSpringContextTests extends AbstractTransactionalTestNGSpringContextTests
+public class ConcreteTransactionalTestNGSpringContextTests extends AbstractTransactionalTestNGSpringContextTests
 		implements BeanNameAware, InitializingBean {
 
 	private static final String JANE = "jane";
@@ -150,7 +150,7 @@ class ConcreteTransactionalTestNGSpringContextTests extends AbstractTransactiona
 
 	@Test
 	@Transactional(propagation = Propagation.NOT_SUPPORTED)
-	void verifyBeanNameSet() {
+	public void verifyBeanNameSet() {
 		assertThatTransaction().isNotActive();
 		assertThat(this.beanName)
 			.as("The bean name of this test instance should have been set to the fully qualified class name due to BeanNameAware semantics.")
@@ -159,7 +159,7 @@ class ConcreteTransactionalTestNGSpringContextTests extends AbstractTransactiona
 
 	@Test
 	@Transactional(propagation = Propagation.NOT_SUPPORTED)
-	void verifyApplicationContextSet() {
+	public void verifyApplicationContextSet() {
 		assertThatTransaction().isNotActive();
 		assertThat(super.applicationContext)
 			.as("The application context should have been set due to ApplicationContextAware semantics.")
@@ -170,7 +170,7 @@ class ConcreteTransactionalTestNGSpringContextTests extends AbstractTransactiona
 
 	@Test
 	@Transactional(propagation = Propagation.NOT_SUPPORTED)
-	void verifyBeanInitialized() {
+	public void verifyBeanInitialized() {
 		assertThatTransaction().isNotActive();
 		assertThat(beanInitialized)
 			.as("This test instance should have been initialized due to InitializingBean semantics.")
@@ -179,7 +179,7 @@ class ConcreteTransactionalTestNGSpringContextTests extends AbstractTransactiona
 
 	@Test
 	@Transactional(propagation = Propagation.NOT_SUPPORTED)
-	void verifyAnnotationAutowiredFields() {
+	public void verifyAnnotationAutowiredFields() {
 		assertThatTransaction().isNotActive();
 		assertThat(nonrequiredLong).as("The nonrequiredLong field should NOT have been autowired.").isNull();
 		assertThat(pet).as("The pet field should have been autowired.").isNotNull();
@@ -188,7 +188,7 @@ class ConcreteTransactionalTestNGSpringContextTests extends AbstractTransactiona
 
 	@Test
 	@Transactional(propagation = Propagation.NOT_SUPPORTED)
-	void verifyAnnotationAutowiredMethods() {
+	public void verifyAnnotationAutowiredMethods() {
 		assertThatTransaction().isNotActive();
 		assertThat(employee).as("The setEmployee() method should have been autowired.").isNotNull();
 		assertThat(employee.getName()).as("employee's name.").isEqualTo("John Smith");
@@ -196,20 +196,20 @@ class ConcreteTransactionalTestNGSpringContextTests extends AbstractTransactiona
 
 	@Test
 	@Transactional(propagation = Propagation.NOT_SUPPORTED)
-	void verifyResourceAnnotationInjectedFields() {
+	public void verifyResourceAnnotationInjectedFields() {
 		assertThatTransaction().isNotActive();
 		assertThat(foo).as("The foo field should have been injected via @Resource.").isEqualTo("Foo");
 	}
 
 	@Test
 	@Transactional(propagation = Propagation.NOT_SUPPORTED)
-	void verifyResourceAnnotationInjectedMethods() {
+	public void verifyResourceAnnotationInjectedMethods() {
 		assertThatTransaction().isNotActive();
 		assertThat(bar).as("The setBar() method should have been injected via @Resource.").isEqualTo("Bar");
 	}
 
 	@Test
-	void modifyTestDataWithinTransaction() {
+	public void modifyTestDataWithinTransaction() {
 		assertThatTransaction().isActive();
 		assertAddPerson(JANE);
 		assertAddPerson(SUE);

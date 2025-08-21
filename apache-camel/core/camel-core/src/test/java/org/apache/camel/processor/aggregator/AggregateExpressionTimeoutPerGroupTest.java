@@ -55,10 +55,10 @@ public class AggregateExpressionTimeoutPerGroupTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start")
                         // aggregate all exchanges correlated by the id header.

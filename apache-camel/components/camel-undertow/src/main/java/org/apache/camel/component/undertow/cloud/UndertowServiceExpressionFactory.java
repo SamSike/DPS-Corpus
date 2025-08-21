@@ -24,7 +24,6 @@ import org.apache.camel.spi.annotations.CloudServiceFactory;
 
 @CloudServiceFactory("undertow-service-expression")
 @Configurer
-@Deprecated
 public class UndertowServiceExpressionFactory implements ServiceExpressionFactory {
     @Override
     public Expression newInstance(CamelContext camelContext) throws Exception {

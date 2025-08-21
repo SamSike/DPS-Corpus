@@ -31,18 +31,6 @@ import org.apache.camel.spi.Metadata;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class SpringTransactionErrorHandlerDefinition extends TransactionErrorHandlerDefinition {
 
-    public SpringTransactionErrorHandlerDefinition() {
-    }
-
-    public SpringTransactionErrorHandlerDefinition(SpringTransactionErrorHandlerDefinition source) {
-        super(source);
-    }
-
-    @Override
-    public SpringTransactionErrorHandlerDefinition copyDefinition() {
-        return new SpringTransactionErrorHandlerDefinition(this);
-    }
-
     @Override
     public ErrorHandlerFactory cloneBuilder() {
         TransactionErrorHandlerDefinition answer = new SpringTransactionErrorHandlerDefinition();

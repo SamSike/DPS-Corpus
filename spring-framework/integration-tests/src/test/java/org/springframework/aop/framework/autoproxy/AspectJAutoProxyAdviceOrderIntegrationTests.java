@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatException;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 /**
  * Integration tests for advice invocation order for advice configured via
@@ -65,7 +65,8 @@ class AspectJAutoProxyAdviceOrderIntegrationTests {
 			assertThat(aspect.invocations).containsExactly("around - start", "before", "after returning", "after", "around - end");
 
 			aspect.invocations.clear();
-			assertThatException().isThrownBy(() -> echo.echo(new Exception()));
+			assertThatExceptionOfType(Exception.class).isThrownBy(
+					() -> echo.echo(new Exception()));
 			assertThat(aspect.invocations).containsExactly("around - start", "before", "after throwing", "after", "around - end");
 		}
 	}
@@ -94,7 +95,8 @@ class AspectJAutoProxyAdviceOrderIntegrationTests {
 			assertThat(aspect.invocations).containsExactly("around - start", "before", "after returning", "after", "around - end");
 
 			aspect.invocations.clear();
-			assertThatException().isThrownBy(() -> echo.echo(new Exception()));
+			assertThatExceptionOfType(Exception.class).isThrownBy(
+					() -> echo.echo(new Exception()));
 			assertThat(aspect.invocations).containsExactly("around - start", "before", "after throwing", "after", "around - end");
 		}
 	}

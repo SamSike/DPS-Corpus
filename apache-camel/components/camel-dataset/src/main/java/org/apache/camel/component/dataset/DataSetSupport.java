@@ -32,10 +32,10 @@ public abstract class DataSetSupport implements DataSet {
     private long size = 10;
     private long reportCount = -1;
 
-    protected DataSetSupport() {
+    public DataSetSupport() {
     }
 
-    protected DataSetSupport(int size) {
+    public DataSetSupport(int size) {
         setSize(size);
     }
 

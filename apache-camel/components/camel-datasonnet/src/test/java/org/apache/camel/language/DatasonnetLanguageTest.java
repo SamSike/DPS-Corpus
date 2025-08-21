@@ -16,7 +16,6 @@
  */
 package org.apache.camel.language;
 
-import com.datasonnet.document.Document;
 import org.apache.camel.builder.LanguageBuilderFactory;
 import org.apache.camel.model.language.DatasonnetExpression;
 import org.junit.jupiter.api.Disabled;
@@ -24,33 +23,14 @@ import org.junit.jupiter.api.Disabled;
 /**
  * Ensures that the "datasonnet" language is compliant with the typed language expectations.
  */
-class DatasonnetLanguageTest extends AbstractSingleInputTypedLanguageTest<DatasonnetExpression.Builder, DatasonnetExpression> {
+class DatasonnetLanguageTest extends AbstractTypedLanguageTest<DatasonnetExpression.Builder, DatasonnetExpression> {
 
     DatasonnetLanguageTest() {
-        super("payload", LanguageBuilderFactory::datasonnet);
+        super("body", LanguageBuilderFactory::datasonnet);
     }
 
     @Disabled("In this case a DefaultDocument is received and this type has no equal method implemented")
     @Override
     void testExpressionOnly() {
-    }
-
-    @Override
-    protected TestContext testWithTypeContext() {
-        return new TestContext("2", 2, Integer.class);
-    }
-
-    @Override
-    protected TestContext testWithoutTypeContext() {
-        return new TestContext("2", "2", null);
-    }
-
-    @Override
-    protected void assertBodyReceived(Object expected, Object body) {
-        if (body instanceof Document<?> doc) {
-            // Document when no result type, so we need to unwrap the content
-            body = doc.getContent();
-        }
-        super.assertBodyReceived(expected, body);
     }
 }

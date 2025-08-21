@@ -22,18 +22,12 @@ import jakarta.jms.ConnectionFactory;
 import jakarta.jms.ObjectMessage;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.Exchange;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.support.ExchangeHelper;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.TransientCamelContextExtension;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.jms.core.JmsTemplate;
 
 import static org.apache.camel.test.junit5.TestSupport.assertIsInstanceOf;
@@ -41,13 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ConsumeJmsObjectMessageTest extends AbstractJMSTest {
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new TransientCamelContextExtension();
     protected JmsTemplate jmsTemplate;
-    protected CamelContext context;
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
     private MockEndpoint endpoint;
 
     @Test
@@ -93,8 +81,10 @@ public class ConsumeJmsObjectMessageTest extends AbstractJMSTest {
         assertEquals("Claus", user.getName());
     }
 
+    @Override
     @BeforeEach
     public void setUp() throws Exception {
+        super.setUp();
         endpoint = getMockEndpoint("mock:result");
     }
 
@@ -119,18 +109,6 @@ public class ConsumeJmsObjectMessageTest extends AbstractJMSTest {
                 from("direct:test").to("activemq:ConsumeJmsObjectMessageTest");
             }
         };
-    }
-
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        context = camelContextExtension.getContext();
-        template = camelContextExtension.getProducerTemplate();
-        consumer = camelContextExtension.getConsumerTemplate();
     }
 
     public static class MyUser implements Serializable {

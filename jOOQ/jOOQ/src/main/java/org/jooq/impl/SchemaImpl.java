@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -49,6 +49,8 @@ import static org.jooq.tools.StringUtils.defaultIfNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.jooq.Catalog;
@@ -57,16 +59,17 @@ import org.jooq.Comment;
 import org.jooq.Context;
 import org.jooq.Domain;
 import org.jooq.ForeignKey;
+import org.jooq.Function1;
 import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Schema;
 import org.jooq.Sequence;
-// ...
 import org.jooq.Table;
 // ...
 import org.jooq.UDT;
 import org.jooq.UniqueKey;
-import org.jooq.impl.QOM.UEmpty;
+import org.jooq.QueryPart;
+// ...
 import org.jooq.tools.StringUtils;
 
 /**
@@ -77,17 +80,10 @@ import org.jooq.tools.StringUtils;
  * @author Lukas Eder
  */
 @org.jooq.Internal
-public class SchemaImpl
-extends
-    AbstractNamed
-implements
-    Schema,
-    SimpleQueryPart,
-    UEmpty
-{
+public class SchemaImpl extends AbstractNamed implements Schema {
 
     private static final Clause[] CLAUSES        = { SCHEMA, SCHEMA_REFERENCE };
-    static final Lazy<Schema>     DEFAULT_SCHEMA = Lazy.of(() -> new SchemaImpl(""));
+    static final Schema           DEFAULT_SCHEMA = new SchemaImpl("");
 
     private Catalog               catalog;
 
@@ -215,30 +211,6 @@ implements
         return find(name, getDomains());
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @Override
     public final Sequence<?> getSequence(String name) {
         return find(name, getSequences());
@@ -325,30 +297,6 @@ implements
         return Collections.emptyList();
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * {@inheritDoc}
      * <p>
@@ -394,24 +342,28 @@ implements
         return getDomains().stream();
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @Override
     public final Stream<Sequence<?>> sequenceStream() {
         return getSequences().stream();
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // ------------------------------------------------------------------------
     // XXX: Object API
@@ -424,7 +376,7 @@ implements
 
         // [#2144] SchemaImpl equality can be decided without executing the
         // rather expensive implementation of AbstractQueryPart.equals()
-        if (that instanceof SchemaImpl other) {
+        if (that instanceof SchemaImpl) { SchemaImpl other = (SchemaImpl) that;
             return
 
                 // [#7172] [#10274] Cannot use getQualifiedName() yet here

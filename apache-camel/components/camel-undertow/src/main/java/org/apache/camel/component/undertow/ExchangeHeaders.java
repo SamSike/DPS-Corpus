@@ -39,7 +39,7 @@ public final class ExchangeHeaders {
     public static final HttpString BATCH_INDEX = new HttpString("CamelBatchIndex");
     public static final HttpString BATCH_SIZE = new HttpString("CamelBatchSize");
     public static final HttpString BATCH_COMPLETE = new HttpString("CamelBatchComplete");
-    @Deprecated
+    public static final HttpString BEAN_METHOD_NAME = new HttpString("CamelBeanMethodName");
     public static final HttpString BEAN_MULTI_PARAMETER_ARRAY = new HttpString("CamelBeanMultiParameterArray");
     public static final HttpString BINDING = new HttpString("CamelBinding");
     // do not prefix with Camel and use lower-case starting letter as its a shared key
@@ -98,6 +98,8 @@ public final class ExchangeHeaders {
     public static final HttpString HTTP_URI = new HttpString("CamelHttpUri");
     public static final HttpString HTTP_URL = new HttpString("CamelHttpUrl");
     public static final HttpString HTTP_CHUNKED = new HttpString("CamelHttpChunked");
+    public static final HttpString HTTP_SERVLET_REQUEST = new HttpString("CamelHttpServletRequest");
+    public static final HttpString HTTP_SERVLET_RESPONSE = new HttpString("CamelHttpServletResponse");
 
     public static final HttpString INTERCEPTED_ENDPOINT = new HttpString("CamelInterceptedEndpoint");
     public static final HttpString INTERCEPT_SEND_TO_ENDPOINT_WHEN_MATCHED
@@ -118,7 +120,6 @@ public final class ExchangeHeaders {
     public static final HttpString ON_COMPLETION = new HttpString("CamelOnCompletion");
     public static final HttpString OVERRULE_FILE_NAME = new HttpString("CamelOverruleFileName");
 
-    @Deprecated
     public static final HttpString PARENT_UNIT_OF_WORK = new HttpString("CamelParentUnitOfWork");
 
     public static final HttpString RECIPIENT_LIST_ENDPOINT = new HttpString("CamelRecipientListEndpoint");

@@ -18,6 +18,7 @@ package org.apache.camel.component.azure.storage.blob.operations;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.azure.core.util.Context;
 import com.azure.storage.blob.changefeed.BlobChangefeedClient;
@@ -51,13 +52,13 @@ public class BlobChangeFeedOperations {
     }
 
     private List<BlobChangefeedEvent> getEvents() {
-        return client.getEvents().stream().toList();
+        return client.getEvents().stream().collect(Collectors.toList());
     }
 
     private List<BlobChangefeedEvent> getEvents(
             final OffsetDateTime startTime, final OffsetDateTime endTime, final Context context) {
 
-        return client.getEvents(startTime, endTime, context).stream().toList();
+        return client.getEvents(startTime, endTime, context).stream().collect(Collectors.toList());
     }
 
 }

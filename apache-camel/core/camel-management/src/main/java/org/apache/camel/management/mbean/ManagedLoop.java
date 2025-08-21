@@ -50,9 +50,4 @@ public class ManagedLoop extends ManagedProcessor implements ManagedLoopMBean {
     public Boolean isCopy() {
         return processor.isCopy();
     }
-
-    @Override
-    public Boolean isBreakOnShutdown() {
-        return processor.isBreakOnShutdown();
-    }
 }

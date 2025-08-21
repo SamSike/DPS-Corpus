@@ -22,7 +22,6 @@ import org.apache.camel.Exchange;
 import org.apache.camel.PooledExchange;
 import org.apache.camel.spi.ExchangeFactory;
 import org.apache.camel.support.DefaultPooledExchange;
-import org.apache.camel.support.ResetableClock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +39,18 @@ public final class PooledExchangeFactory extends PrototypeExchangeFactory {
 
     public PooledExchangeFactory(Consumer consumer) {
         super(consumer);
+    }
+
+    @Override
+    protected void doBuild() throws Exception {
+        super.doBuild();
+        // force creating and load the class during build time so the JVM does not
+        // load the class on first exchange to be created
+        DefaultPooledExchange dummy = new DefaultPooledExchange(camelContext);
+        // force message init to load classes
+        dummy.getIn();
+        dummy.getIn().getHeaders();
+        LOG.trace("Warming up PooledExchangeFactory loaded class: {}", dummy.getClass().getName());
     }
 
     @Override
@@ -67,7 +78,8 @@ public final class PooledExchangeFactory extends PrototypeExchangeFactory {
         }
 
         // reset exchange for reuse
-        ((ResetableClock) exchange.getClock()).reset();
+        PooledExchange ee = (PooledExchange) exchange;
+        ee.reset(System.currentTimeMillis());
 
         return exchange;
     }
@@ -88,7 +100,8 @@ public final class PooledExchangeFactory extends PrototypeExchangeFactory {
         }
 
         // reset exchange for reuse
-        ((ResetableClock) exchange.getClock()).reset();
+        PooledExchange ee = (PooledExchange) exchange;
+        ee.reset(System.currentTimeMillis());
 
         return exchange;
     }
@@ -120,10 +133,10 @@ public final class PooledExchangeFactory extends PrototypeExchangeFactory {
         }
     }
 
-    private PooledExchange createPooledExchange(Endpoint fromEndpoint, boolean autoRelease) {
+    protected PooledExchange createPooledExchange(Endpoint fromEndpoint, boolean autoRelease) {
         PooledExchange answer;
         if (fromEndpoint != null) {
-            answer = DefaultPooledExchange.newFromEndpoint(fromEndpoint);
+            answer = new DefaultPooledExchange(fromEndpoint);
         } else {
             answer = new DefaultPooledExchange(camelContext);
         }

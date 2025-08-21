@@ -90,6 +90,34 @@ public class ManagedRouteDumpRouteAsXmlTest extends ManagementTestSupport {
         assertTrue(xml.contains("java.lang.Exception"));
     }
 
+    @Test
+    public void testDumpAsXmlResolvePlaceholderDelegateEndpoint() throws Exception {
+        MBeanServer mbeanServer = getMBeanServer();
+        ObjectName on = getRouteObjectName(mbeanServer);
+
+        MockEndpoint mock = getMockEndpoint("mock:result");
+        mock.expectedBodiesReceived("Hello World");
+
+        template.sendBody("direct:start", "Hello World");
+
+        assertMockEndpointsSatisfied();
+
+        // should be started
+        String routeId = (String) mbeanServer.getAttribute(on, "RouteId");
+        assertEquals("myRoute", routeId);
+
+        String xml = (String) mbeanServer.invoke(on, "dumpRouteAsXml", new Object[] { true, true },
+                new String[] { "boolean", "boolean" });
+        assertNotNull(xml);
+        log.info(xml);
+
+        assertTrue(xml.contains("route"));
+        assertTrue(xml.contains("myRoute"));
+        assertTrue(xml.contains("mock://bar"));
+        assertTrue(xml.contains("mock:result"));
+        assertTrue(xml.contains("java.lang.Exception"));
+    }
+
     static ObjectName getRouteObjectName(MBeanServer mbeanServer) throws Exception {
         Set<ObjectName> set = mbeanServer.queryNames(new ObjectName("*:type=routes,*"), null);
         assertEquals(1, set.size());
@@ -98,10 +126,10 @@ public class ManagedRouteDumpRouteAsXmlTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 Properties props = new Properties();
                 props.put("result", "mock:result");
                 context.getPropertiesComponent().setOverrideProperties(props);

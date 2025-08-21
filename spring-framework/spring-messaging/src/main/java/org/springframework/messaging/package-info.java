@@ -1,7 +1,9 @@
 /**
  * Support for working with messaging APIs and protocols.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.messaging;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

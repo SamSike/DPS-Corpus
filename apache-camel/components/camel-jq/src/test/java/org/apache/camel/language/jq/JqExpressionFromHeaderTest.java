@@ -17,7 +17,7 @@
 package org.apache.camel.language.jq;
 
 import com.fasterxml.jackson.databind.node.TextNode;
-import org.apache.camel.NoSuchHeaderException;
+import org.apache.camel.NoSuchHeaderOrPropertyException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
@@ -28,13 +28,11 @@ public class JqExpressionFromHeaderTest extends JqTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() {
-                var jq = expression().jq().expression(".foo").source("header:Content").end();
-
                 from("direct:start")
                         .doTry()
-                        .transform(jq)
+                        .transform().jq(".foo", "Content")
                         .to("mock:result")
-                        .doCatch(NoSuchHeaderException.class)
+                        .doCatch(NoSuchHeaderOrPropertyException.class)
                         .to("mock:fail");
 
             }
@@ -51,6 +49,23 @@ public class JqExpressionFromHeaderTest extends JqTestSupport {
         fluentTemplate.to("direct:start")
                 .withProcessor(e -> {
                     e.getMessage().setHeader("Content", node("foo", "bar"));
+                })
+                .send();
+
+        MockEndpoint.assertIsSatisfied(context);
+    }
+
+    @Test
+    public void testExpressionFromHeaderPriority() throws Exception {
+        getMockEndpoint("mock:result")
+                .expectedBodiesReceived(new TextNode("bar"));
+        getMockEndpoint("mock:fail")
+                .expectedMessageCount(0);
+
+        fluentTemplate.to("direct:start")
+                .withProcessor(e -> {
+                    e.getMessage().setHeader("Content", node("foo", "bar"));
+                    e.setProperty("Content", node("foo", "baz"));
                 })
                 .send();
 

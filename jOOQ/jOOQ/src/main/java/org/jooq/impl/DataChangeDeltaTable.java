@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,12 +41,8 @@ package org.jooq.impl;
 
 // ...
 // ...
-import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
-import static org.jooq.SQLDialect.MARIADB;
-// ...
 import static org.jooq.SQLDialect.POSTGRES;
-// ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.resultQuery;
@@ -68,7 +64,6 @@ import org.jooq.DMLQuery;
 import org.jooq.Delete;
 import org.jooq.Insert;
 import org.jooq.Name;
-// ...
 import org.jooq.QueryPart;
 import org.jooq.Record;
 // ...
@@ -87,19 +82,16 @@ final class DataChangeDeltaTable<R extends Record>
 extends
     AbstractTable<R>
 implements
-    AutoAlias<Table<R>>,
+    AutoAliasTable<R>,
     QOM.DataChangeDeltaTable<R>
 {
 
-    static final Set<SQLDialect> EMULATE_USING_CTE             = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
-    static final Set<SQLDialect> EMULATE_OLD_USING_RETURNING   = SQLDialect.supportedBy(FIREBIRD, MARIADB);
-    static final Set<SQLDialect> EMULATE_NEW_USING_RETURNING   = SQLDialect.supportedBy();
-    static final Set<SQLDialect> EMULATE_FINAL_USING_RETURNING = SQLDialect.supportedBy(FIREBIRD, MARIADB);
+    private final Set<SQLDialect> EMULATE_USING_CTE = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
 
-    final ResultOption           resultOption;
-    final DMLQuery<R>            query;
-    final Table<R>               table;
-    final Name                   alias;
+    private final ResultOption    resultOption;
+    private final DMLQuery<R>     query;
+    private final Table<R>        table;
+    private final Name            alias;
 
     DataChangeDeltaTable(ResultOption resultOption, DMLQuery<R> query) {
         this(resultOption, query, table(query));
@@ -122,8 +114,8 @@ implements
     private static final <R extends Record> Table<R> table(DMLQuery<R> query) {
         if (query instanceof Insert || query instanceof Update || query instanceof Delete)
             return (Table<R>) abstractDMLQuery(query).table();
-        else if (query instanceof MergeImpl m)
-            return m.table();
+        else if (query instanceof MergeImpl)
+            return ((MergeImpl) query).table();
         else
             throw new IllegalStateException("Unsupported query type: " + query);
     }
@@ -131,19 +123,6 @@ implements
     // -------------------------------------------------------------------------
     // XXX: QueryPart API
     // -------------------------------------------------------------------------
-
-    final boolean emulateUsingReturning(Context<?> ctx) {
-        switch (resultOption) {
-            case OLD:
-                return EMULATE_OLD_USING_RETURNING.contains(ctx.dialect());
-            case NEW:
-                return EMULATE_NEW_USING_RETURNING.contains(ctx.dialect());
-            case FINAL:
-                return EMULATE_FINAL_USING_RETURNING.contains(ctx.dialect());
-            default:
-                throw new IllegalStateException("Unsupported result option: " + resultOption);
-        }
-    }
 
     @Override
     public final void accept(Context<?> ctx) {
@@ -182,31 +161,24 @@ implements
         ctx.sql(' ').visit(K_TABLE)
            .sqlIndentStart(" (");
 
-
-
-
-
-
+        // [#12925] Workaround for https://github.com/h2database/h2database/issues/3398
+        if (requiresWorkaroundFor12925(ctx))
+            ctx.sql("/* [#12925] ").sql(UUID.randomUUID().toString()).sql(" */").formatSeparator();
 
         increment(ctx.data(), DATA_RENDERING_DATA_CHANGE_DELTA_TABLE, () -> ctx.visit(query).sqlIndentEnd(')'));
     }
 
+    private final boolean requiresWorkaroundFor12925(Context<?> ctx) {
+        if (ctx.family() == H2) {
+            if (query instanceof MergeImpl)
+                return true;
 
+            InsertQueryImpl<?> i = Tools.insertQueryImpl(query);
+            return i != null && (i.onDuplicateKeyIgnore || i.onDuplicateKeyUpdate);
+        }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return false;
+    }
 
     // -------------------------------------------------------------------------
     // XXX: Table API
@@ -223,8 +195,8 @@ implements
     }
 
     @Override
-    public final Table<R> autoAlias(Context<?> ctx, Table<R> t) {
-        return t.as(alias);
+    public final Table<R> autoAlias(Context<?> ctx) {
+        return as(alias);
     }
 
     @Override

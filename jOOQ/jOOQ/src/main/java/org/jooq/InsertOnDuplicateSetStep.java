@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,9 +42,7 @@ package org.jooq;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
@@ -56,7 +54,6 @@ import static org.jooq.SQLDialect.MARIADB;
 import static org.jooq.SQLDialect.MYSQL;
 // ...
 import static org.jooq.SQLDialect.POSTGRES;
-// ...
 // ...
 import static org.jooq.SQLDialect.SQLITE;
 // ...
@@ -73,7 +70,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * This type is used for the {@link Insert}'s DSL API.
  * <p>
- * Example: <pre><code>
+ * Example: <code><pre>
  * DSLContext create = DSL.using(configuration);
  *
  * create.insertInto(table, field1, field2)
@@ -83,7 +80,7 @@ import org.jetbrains.annotations.NotNull;
  *       .set(field1, value1)
  *       .set(field2, value2)
  *       .execute();
- * </code></pre>
+ * </pre></code>
  * <p>
  * <h3>Referencing <code>XYZ*Step</code> types directly from client code</h3>
  * <p>
@@ -110,47 +107,47 @@ public interface InsertOnDuplicateSetStep<R extends Record> {
     /**
      * Set values for <code>UPDATE</code> in the <code>INSERT</code> statement's
      * <code>ON DUPLICATE KEY UPDATE</code> or
-     * <code>ON CONFLICT … DO UPDATE</code> clause.
+     * <code>ON CONFLICT ... DO UPDATE</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T> InsertOnDuplicateSetMoreStep<R> set(Field<T> field, T value);
 
     /**
      * Set values for <code>UPDATE</code> in the <code>INSERT</code> statement's
      * <code>ON DUPLICATE KEY UPDATE</code> or
-     * <code>ON CONFLICT … DO UPDATE</code> clause.
+     * <code>ON CONFLICT ... DO UPDATE</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T> InsertOnDuplicateSetMoreStep<R> set(Field<T> field, Field<T> value);
 
     /**
      * Set values for <code>UPDATE</code> in the <code>INSERT</code> statement's
      * <code>ON DUPLICATE KEY UPDATE</code> or
-     * <code>ON CONFLICT … DO UPDATE</code> clause.
+     * <code>ON CONFLICT ... DO UPDATE</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T> InsertOnDuplicateSetMoreStep<R> set(Field<T> field, Select<? extends Record1<T>> value);
 
     /**
      * Set a <code>null</code> value for <code>UPDATE</code> in the
      * <code>INSERT</code> statement's <code>ON DUPLICATE KEY UPDATE</code> or
-     * <code>ON CONFLICT … DO UPDATE</code> clause.
+     * <code>ON CONFLICT ... DO UPDATE</code> clause.
      * <p>
      * This method is convenience for calling {@link #set(Field, Object)},
      * without the necessity of casting the Java <code>null</code> literal to
      * <code>(T)</code>.
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T> InsertOnDuplicateSetMoreStep<R> setNull(Field<T> field);
 
     /**
      * Set multiple values for <code>UPDATE</code> in the <code>INSERT</code>
      * statement's <code>ON DUPLICATE KEY UPDATE</code> or
-     * <code>ON CONFLICT … DO UPDATE</code> clause.
+     * <code>ON CONFLICT ... DO UPDATE</code> clause.
      * <p>
      * Keys can either be of type {@link String}, {@link Name}, or
      * {@link Field}.
@@ -160,13 +157,13 @@ public interface InsertOnDuplicateSetStep<R extends Record> {
      * corresponding field's type.
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     InsertOnDuplicateSetMoreStep<R> set(Map<?, ?> map);
 
     /**
      * Set multiple values for <code>UPDATE</code> in the <code>INSERT</code>
      * statement's <code>ON DUPLICATE KEY UPDATE</code> or
-     * <code>ON CONFLICT … DO UPDATE</code> clause.
+     * <code>ON CONFLICT ... DO UPDATE</code> clause.
      * <p>
      * This is the same as calling {@link #set(Map)} with the argument record
      * treated as a <code>Map&lt;Field&lt;?&gt;, Object&gt;</code>.
@@ -174,7 +171,7 @@ public interface InsertOnDuplicateSetStep<R extends Record> {
      * @see #set(Map)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     InsertOnDuplicateSetMoreStep<R> set(Record record);
 
     /**
@@ -182,38 +179,7 @@ public interface InsertOnDuplicateSetStep<R extends Record> {
      * {@link DSL#excluded(Field)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     InsertOnDuplicateSetMoreStep<R> setAllToExcluded();
-
-    /**
-     * Sets all non-key columns from the insert column list to
-     * {@link DSL#excluded(Field)}.
-     * <p>
-     * This excludes any {@link Table#getKeys()} columns.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    InsertOnDuplicateSetMoreStep<R> setNonKeyToExcluded();
-
-    /**
-     * Sets all non-primary key columns from the insert column list to
-     * {@link DSL#excluded(Field)}.
-     * <p>
-     * This excludes any {@link Table#getPrimaryKey()} columns.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    InsertOnDuplicateSetMoreStep<R> setNonPrimaryKeyToExcluded();
-
-    /**
-     * Sets all non-conflicting key columns from the insert column list to
-     * {@link DSL#excluded(Field)}.
-     * <p>
-     * This excludes any {@link InsertOnDuplicateStep#onConflict(Field...)}
-     * columns.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    InsertOnDuplicateSetMoreStep<R> setNonConflictingKeyToExcluded();
 
 }

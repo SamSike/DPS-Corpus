@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package org.aopalliance.intercept;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nonnull;
 
 /**
  * This interface represents an invocation in the program.
@@ -34,6 +34,7 @@ public interface Invocation extends Joinpoint {
 	 * array to change the arguments.
 	 * @return the argument of the invocation
 	 */
-	@Nullable Object[] getArguments();
+	@Nonnull
+	Object[] getArguments();
 
 }

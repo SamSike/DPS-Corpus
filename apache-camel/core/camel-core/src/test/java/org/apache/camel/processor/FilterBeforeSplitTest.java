@@ -60,10 +60,10 @@ public class FilterBeforeSplitTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 Predicate goodWord = body().contains("World");
 
                 from("direct:start").to("mock:before").filter(goodWord).to("mock:good").end()
@@ -73,7 +73,7 @@ public class FilterBeforeSplitTest extends ContextTestSupport {
         };
     }
 
-    protected static class MyAggregationStrategy implements AggregationStrategy {
+    protected class MyAggregationStrategy implements AggregationStrategy {
 
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {

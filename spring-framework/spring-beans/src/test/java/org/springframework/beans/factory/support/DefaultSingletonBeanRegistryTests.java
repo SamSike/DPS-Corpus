@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 package org.springframework.beans.factory.support;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.junit.jupiter.api.Test;
 
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.testfixture.beans.DerivedTestBean;
 import org.springframework.beans.testfixture.beans.TestBean;
 
@@ -30,43 +30,41 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Chris Beams
  * @since 04.07.2006
  */
-class DefaultSingletonBeanRegistryTests {
-
-	private final DefaultSingletonBeanRegistry beanRegistry = new DefaultSingletonBeanRegistry();
-
+public class DefaultSingletonBeanRegistryTests {
 
 	@Test
-	void singletons() {
-		AtomicBoolean tbFlag = new AtomicBoolean();
-		beanRegistry.addSingletonCallback("tb", instance -> tbFlag.set(true));
+	public void testSingletons() {
+		DefaultSingletonBeanRegistry beanRegistry = new DefaultSingletonBeanRegistry();
+
 		TestBean tb = new TestBean();
 		beanRegistry.registerSingleton("tb", tb);
 		assertThat(beanRegistry.getSingleton("tb")).isSameAs(tb);
-		assertThat(tbFlag.get()).isTrue();
 
-		AtomicBoolean tb2Flag = new AtomicBoolean();
-		beanRegistry.addSingletonCallback("tb2", instance -> tb2Flag.set(true));
-		TestBean tb2 = (TestBean) beanRegistry.getSingleton("tb2", TestBean::new);
-		assertThat(beanRegistry.getSingleton("tb2")).isSameAs(tb2);
-		assertThat(tb2Flag.get()).isTrue();
-
-		TestBean tb3 = (TestBean) beanRegistry.getSingleton("tb3", () -> {
-			TestBean newTb = new TestBean();
-			beanRegistry.registerSingleton("tb3", newTb);
-			return newTb;
+		TestBean tb2 = (TestBean) beanRegistry.getSingleton("tb2", new ObjectFactory<Object>() {
+			@Override
+			public Object getObject() throws BeansException {
+				return new TestBean();
+			}
 		});
-		assertThat(beanRegistry.getSingleton("tb3")).isSameAs(tb3);
+		assertThat(beanRegistry.getSingleton("tb2")).isSameAs(tb2);
 
-		assertThat(beanRegistry.getSingletonCount()).isEqualTo(3);
-		assertThat(beanRegistry.getSingletonNames()).containsExactly("tb", "tb2", "tb3");
+		assertThat(beanRegistry.getSingleton("tb")).isSameAs(tb);
+		assertThat(beanRegistry.getSingleton("tb2")).isSameAs(tb2);
+		assertThat(beanRegistry.getSingletonCount()).isEqualTo(2);
+		String[] names = beanRegistry.getSingletonNames();
+		assertThat(names.length).isEqualTo(2);
+		assertThat(names[0]).isEqualTo("tb");
+		assertThat(names[1]).isEqualTo("tb2");
 
 		beanRegistry.destroySingletons();
-		assertThat(beanRegistry.getSingletonCount()).isZero();
-		assertThat(beanRegistry.getSingletonNames()).isEmpty();
+		assertThat(beanRegistry.getSingletonCount()).isEqualTo(0);
+		assertThat(beanRegistry.getSingletonNames().length).isEqualTo(0);
 	}
 
 	@Test
-	void disposableBean() {
+	public void testDisposableBean() {
+		DefaultSingletonBeanRegistry beanRegistry = new DefaultSingletonBeanRegistry();
+
 		DerivedTestBean tb = new DerivedTestBean();
 		beanRegistry.registerSingleton("tb", tb);
 		beanRegistry.registerDisposableBean("tb", tb);
@@ -74,17 +72,21 @@ class DefaultSingletonBeanRegistryTests {
 
 		assertThat(beanRegistry.getSingleton("tb")).isSameAs(tb);
 		assertThat(beanRegistry.getSingletonCount()).isEqualTo(1);
-		assertThat(beanRegistry.getSingletonNames()).containsExactly("tb");
+		String[] names = beanRegistry.getSingletonNames();
+		assertThat(names.length).isEqualTo(1);
+		assertThat(names[0]).isEqualTo("tb");
 		assertThat(tb.wasDestroyed()).isFalse();
 
 		beanRegistry.destroySingletons();
-		assertThat(beanRegistry.getSingletonCount()).isZero();
-		assertThat(beanRegistry.getSingletonNames()).isEmpty();
+		assertThat(beanRegistry.getSingletonCount()).isEqualTo(0);
+		assertThat(beanRegistry.getSingletonNames().length).isEqualTo(0);
 		assertThat(tb.wasDestroyed()).isTrue();
 	}
 
 	@Test
-	void dependentRegistration() {
+	public void testDependentRegistration() {
+		DefaultSingletonBeanRegistry beanRegistry = new DefaultSingletonBeanRegistry();
+
 		beanRegistry.registerDependentBean("a", "b");
 		beanRegistry.registerDependentBean("b", "c");
 		beanRegistry.registerDependentBean("c", "b");

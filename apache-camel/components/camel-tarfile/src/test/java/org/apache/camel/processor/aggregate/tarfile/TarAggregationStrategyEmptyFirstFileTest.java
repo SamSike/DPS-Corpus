@@ -18,6 +18,7 @@ package org.apache.camel.processor.aggregate.tarfile;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Iterator;
@@ -39,30 +40,32 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class TarAggregationStrategyEmptyFirstFileTest extends CamelTestSupport {
+public class TarAggregationStrategyEmptyFirstFileTest extends CamelTestSupport {
 
+    @Override
     @BeforeEach
-    public void cleanOutputDirectory() {
+    public void setUp() throws Exception {
         TestSupport.deleteDirectory("target/out");
+        super.setUp();
     }
 
     @Test
-    void testNormal() throws Exception {
+    public void testNormal() throws Exception {
         doTest("A", "B", "C");
     }
 
     @Test
-    void testEmptyFirst() throws Exception {
+    public void testEmptyFirst() throws Exception {
         doTest("", "A");
     }
 
     @Test
-    void testEmptyOnly() throws Exception {
+    public void testEmptyOnly() throws Exception {
         doTest("");
     }
 
     @Test
-    void testEmptyMiddle() throws Exception {
+    public void testEmptyMiddle() throws Exception {
         doTest("Start", "", "", "End");
     }
 
@@ -119,13 +122,13 @@ class TarAggregationStrategyEmptyFirstFileTest extends CamelTestSupport {
         };
     }
 
-    private static Map<String, String> readTar(File file) throws IOException {
+    private static Map<String, String> readTar(File file) throws FileNotFoundException, IOException {
         Map<String, String> content = new TreeMap<>();
         TarArchiveInputStream tin = new TarArchiveInputStream(new FileInputStream(file));
         try {
-            for (TarArchiveEntry te = tin.getNextEntry();
+            for (TarArchiveEntry te = (TarArchiveEntry) tin.getNextEntry();
                  te != null;
-                 te = tin.getNextEntry()) {
+                 te = (TarArchiveEntry) tin.getNextEntry()) {
                 String c = IOUtils.toString(new InputStreamReader(tin));
                 content.put(te.getName(), c);
             }

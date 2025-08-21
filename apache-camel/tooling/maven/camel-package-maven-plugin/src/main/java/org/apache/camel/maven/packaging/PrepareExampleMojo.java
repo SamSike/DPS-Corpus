@@ -38,9 +38,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.MavenProjectHelper;
 import org.mvel2.templates.TemplateRuntime;
 
 /**
@@ -62,7 +64,13 @@ public class PrepareExampleMojo extends AbstractMojo {
     protected String filter = "camel-example";
 
     @Parameter(property = "filterMiddleFolder", required = false, readonly = true)
-    protected String filterMiddleFolder = "aws,azure,google,resume-api,vault";
+    protected String filterMiddleFolder = "aws,azure,vault";
+
+    /**
+     * Maven ProjectHelper.
+     */
+    @Component
+    private MavenProjectHelper projectHelper;
 
     /**
      * Execute goal.
@@ -80,7 +88,7 @@ public class PrepareExampleMojo extends AbstractMojo {
         List<String> middleFolders = Arrays.asList(filterMiddleFolder.split(","));
         String currentDir = Paths.get(".").normalize().toAbsolutePath().toString();
         if (startingFolder != null && !startingFolder.isEmpty()) {
-            // only run in the examples directory where the main readme.adoc file is located
+            // only run in examples directory where the main readme.adoc file is located
             if (!currentDir.endsWith("examples")) {
                 return;
             }
@@ -100,16 +108,15 @@ public class PrepareExampleMojo extends AbstractMojo {
                     if (!middleFolders.contains(file.getName())) {
                         File pom = new File(file, "pom.xml");
                         if (pom.exists()) {
-                            processExamples(models, file, pom, null);
+                            processExamples(models, file, pom);
                         }
                     } else {
                         File[] subFiles = file.listFiles();
-                        String middleFolder = file.getName();
                         for (File innerFile : subFiles) {
                             if (innerFile.isDirectory()) {
                                 File pom = new File(innerFile, "pom.xml");
                                 if (pom.exists()) {
-                                    processExamples(models, innerFile, pom, middleFolder);
+                                    processExamples(models, innerFile, pom);
                                 }
                             }
                         }
@@ -146,7 +153,7 @@ public class PrepareExampleMojo extends AbstractMojo {
         }
     }
 
-    private void processExamples(List<ExampleModel> models, File file, File pom, String middleFolder) throws IOException {
+    private void processExamples(List<ExampleModel> models, File file, File pom) throws IOException {
         String existing = FileUtils.readFileToString(pom, Charset.defaultCharset());
 
         ExampleModel model = new ExampleModel();
@@ -174,19 +181,15 @@ public class PrepareExampleMojo extends AbstractMojo {
         } else {
             model.setDeprecated("false");
         }
-        if (middleFolder != null) {
-            model.setMiddleFolder(middleFolder);
-        }
 
         // readme files is either readme.md or readme.adoc
         String[] readmes = new File(file, ".")
                 .list((folder, fileName) -> fileName.regionMatches(true, 0, "readme", 0, "readme".length()));
         if (readmes != null && readmes.length == 1) {
             model.setReadmeFileName(readmes[0]);
-            models.add(model);
         }
 
-        // Don't add if no readme found
+        models.add(model);
     }
 
     private String templateExamples(List<ExampleModel> models, long deprecated) throws MojoExecutionException {

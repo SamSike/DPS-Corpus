@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,9 @@ import jakarta.transaction.Transaction;
 import jakarta.transaction.TransactionManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.BeanNameAware;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.jta.SimpleTransactionFactory;
 import org.springframework.transaction.jta.TransactionFactory;
 import org.springframework.util.Assert;
@@ -51,13 +51,16 @@ public abstract class AbstractMessageEndpointFactory implements MessageEndpointF
 	/** Logger available to subclasses. */
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	private @Nullable TransactionFactory transactionFactory;
+	@Nullable
+	private TransactionFactory transactionFactory;
 
-	private @Nullable String transactionName;
+	@Nullable
+	private String transactionName;
 
 	private int transactionTimeout = -1;
 
-	private @Nullable String beanName;
+	@Nullable
+	private String beanName;
 
 
 	/**
@@ -74,11 +77,11 @@ public abstract class AbstractMessageEndpointFactory implements MessageEndpointF
 	 * @see #setTransactionTimeout
 	 */
 	public void setTransactionManager(Object transactionManager) {
-		if (transactionManager instanceof TransactionFactory factory) {
-			this.transactionFactory = factory;
+		if (transactionManager instanceof TransactionFactory) {
+			this.transactionFactory = (TransactionFactory) transactionManager;
 		}
-		else if (transactionManager instanceof TransactionManager manager) {
-			this.transactionFactory = new SimpleTransactionFactory(manager);
+		else if (transactionManager instanceof TransactionManager) {
+			this.transactionFactory = new SimpleTransactionFactory((TransactionManager) transactionManager);
 		}
 		else {
 			throw new IllegalArgumentException("Transaction manager [" + transactionManager +
@@ -138,16 +141,18 @@ public abstract class AbstractMessageEndpointFactory implements MessageEndpointF
 	 * @see #setBeanName
 	 */
 	@Override
-	public @Nullable String getActivationName() {
+	@Nullable
+	public String getActivationName() {
 		return this.beanName;
 	}
 
 	/**
 	 * Implementation of the JCA 1.7 {@code #getEndpointClass()} method,
-	 * returning {@code null} in order to indicate a synthetic endpoint type.
+	 * returning {@code} null in order to indicate a synthetic endpoint type.
 	 */
 	@Override
-	public @Nullable Class<?> getEndpointClass() {
+	@Nullable
+	public Class<?> getEndpointClass() {
 		return null;
 	}
 
@@ -201,11 +206,13 @@ public abstract class AbstractMessageEndpointFactory implements MessageEndpointF
 	 */
 	protected abstract class AbstractMessageEndpoint implements MessageEndpoint {
 
-		private @Nullable TransactionDelegate transactionDelegate;
+		@Nullable
+		private TransactionDelegate transactionDelegate;
 
 		private boolean beforeDeliveryCalled = false;
 
-		private @Nullable ClassLoader previousContextClassLoader;
+		@Nullable
+		private ClassLoader previousContextClassLoader;
 
 		/**
 		 * Initialize this endpoint's TransactionDelegate.
@@ -312,9 +319,11 @@ public abstract class AbstractMessageEndpointFactory implements MessageEndpointF
 	 */
 	private class TransactionDelegate {
 
-		private final @Nullable XAResource xaResource;
+		@Nullable
+		private final XAResource xaResource;
 
-		private @Nullable Transaction transaction;
+		@Nullable
+		private Transaction transaction;
 
 		private boolean rollbackOnly;
 

@@ -17,7 +17,6 @@
 package org.apache.camel.component.netty.http;
 
 import java.net.URL;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.net.ssl.SSLSession;
@@ -26,30 +25,37 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.component.netty.NettyConstants;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
+import static org.apache.camel.test.junit5.TestSupport.isJavaVendor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
-@DisabledIfSystemProperty(named = "java.vendor", matches = ".*ibm.*")
 public class NettyHttpSSLTest extends BaseNettyTest {
 
     private static final String NULL_VALUE_MARKER = CamelTestSupport.class.getCanonicalName();
 
-    protected final Properties originalValues = new Properties();
+    protected Properties originalValues = new Properties();
 
     @Override
-    public void doPreSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
         // ensure jsse clients can validate the self signed dummy localhost cert,
         // use the server keystore as the trust store for these tests
         URL trustStoreUrl = this.getClass().getClassLoader().getResource("jsse/localhost.p12");
         setSystemProp("javax.net.ssl.trustStore", trustStoreUrl.toURI().getPath());
         setSystemProp("javax.net.ssl.trustStorePassword", "changeit");
+
+        super.setUp();
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
         restoreSystemProperties();
+        super.tearDown();
     }
 
     protected void setSystemProp(String key, String value) {
@@ -58,9 +64,8 @@ public class NettyHttpSSLTest extends BaseNettyTest {
     }
 
     protected void restoreSystemProperties() {
-        for (Map.Entry<Object, Object> entry : originalValues.entrySet()) {
-            Object key = entry.getKey();
-            Object value = entry.getValue();
+        for (Object key : originalValues.keySet()) {
+            Object value = originalValues.get(key);
             if (NULL_VALUE_MARKER.equals(value)) {
                 System.clearProperty((String) key);
             } else {
@@ -76,6 +81,9 @@ public class NettyHttpSSLTest extends BaseNettyTest {
 
     @Test
     public void testSSLInOutWithNettyConsumer() throws Exception {
+        // ibm jdks dont have sun security algorithms
+        assumeFalse(isJavaVendor("ibm"));
+
         getMockEndpoint("mock:input").expectedBodiesReceived("Hello World");
 
         context.addRoutes(new RouteBuilder() {

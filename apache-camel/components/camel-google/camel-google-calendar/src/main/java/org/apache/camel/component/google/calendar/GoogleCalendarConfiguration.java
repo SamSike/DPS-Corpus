@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.google.calendar;
 
-import java.util.Collection;
 import java.util.List;
 
 import com.google.api.services.calendar.CalendarScopes;
@@ -41,7 +40,7 @@ public class GoogleCalendarConfiguration {
     @Metadata(required = true)
     private String methodName;
     @UriParam(defaultValue = CalendarScopes.CALENDAR)
-    private String scopes;
+    private List<String> scopes;
     @UriParam
     private String clientId;
     @UriParam
@@ -153,26 +152,15 @@ public class GoogleCalendarConfiguration {
         this.applicationName = applicationName;
     }
 
-    public String getScopes() {
+    public List<String> getScopes() {
         return scopes;
     }
 
-    public Collection<String> getScopesAsList() {
-        if (scopes != null) {
-            return List.of(scopes.split(","));
-        } else {
-            return null;
-        }
-    }
-
     /**
-     * Specifies the level of permissions you want a calendar application to have to a user account. See
-     * https://developers.google.com/identity/protocols/googlescopes for more info. Multiple scopes can be separated by
-     * comma.
-     *
-     * @see com.google.api.services.calendar.CalendarScopes
+     * Specifies the level of permissions you want a calendar application to have to a user account. You can separate
+     * multiple scopes by comma. See https://developers.google.com/google-apps/calendar/auth for more info.
      */
-    public void setScopes(String scopes) {
+    public void setScopes(List<String> scopes) {
         this.scopes = scopes;
     }
 

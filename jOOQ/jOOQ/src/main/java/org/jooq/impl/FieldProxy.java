@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,6 +37,9 @@
  */
 package org.jooq.impl;
 
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
+
 import org.jooq.Clause;
 import org.jooq.Context;
 import org.jooq.Field;
@@ -45,6 +48,7 @@ import org.jooq.Query;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.TableField;
+import org.jooq.QueryPart;
 import org.jooq.impl.QOM.UProxy;
 
 /**
@@ -54,15 +58,7 @@ import org.jooq.impl.QOM.UProxy;
  * @author Lukas Eder
  */
 @SuppressWarnings("unchecked")
-final class FieldProxy<T>
-extends
-    AbstractField<T>
-implements
-    TableField<Record, T>,
-    UProxy<Field<T>>,
-    NamedCheckField<T>,
-    ScopeMappable
-{
+final class FieldProxy<T> extends AbstractField<T> implements TableField<Record, T>, UProxy<Field<T>> {
 
     /**
      * The resolved field after a successful meta lookup.
@@ -95,11 +91,6 @@ implements
 
         this.delegate = delegate;
         this.position = position;
-    }
-
-    @Override
-    public final boolean hasName(Context<?> ctx) {
-        return Tools.hasName(ctx, delegate);
     }
 
     final int position() {

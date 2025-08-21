@@ -30,6 +30,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.spring.junit5.CamelSpringTest;
 import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -84,7 +85,7 @@ public class TimerRouteTest extends CamelSpringTestSupport {
                 from("direct:in-3")
                         .to("micrometer:timer:C?action=start")
                         .delay(DELAY)
-                        .to("micrometer:timer:C?action=stop&tags.a=${body}")
+                        .to("micrometer:timer:C?action=stop&tags=a=${body}")
                         .to("mock:out");
             }
         };
@@ -95,8 +96,8 @@ public class TimerRouteTest extends CamelSpringTestSupport {
         return new AnnotationConfigApplicationContext();
     }
 
-    @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() {
         endpoint.reset();
     }
 

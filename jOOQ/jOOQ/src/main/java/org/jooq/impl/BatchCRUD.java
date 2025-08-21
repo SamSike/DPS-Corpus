@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,12 +37,8 @@
  */
 package org.jooq.impl;
 
-import static java.lang.Boolean.TRUE;
 import static org.jooq.conf.SettingsTools.executeStaticStatements;
-import static org.jooq.impl.Tools.map;
 
-import java.math.BigInteger;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -52,15 +48,12 @@ import org.jooq.BatchBindStep;
 import org.jooq.Configuration;
 import org.jooq.ExecuteContext;
 import org.jooq.ExecuteListener;
-import org.jooq.Param;
 import org.jooq.Query;
 import org.jooq.TableRecord;
 import org.jooq.UpdatableRecord;
 import org.jooq.exception.ControlFlowSignal;
 import org.jooq.exception.DataAccessException;
 import org.jooq.tools.JooqLogger;
-
-import org.reactivestreams.Subscriber;
 
 /**
  * @author Lukas Eder
@@ -84,13 +77,6 @@ final class BatchCRUD extends AbstractBatch {
     }
 
     @Override
-    public void subscribe(Subscriber<? super Integer> s) {
-
-        // [#11700] TODO: Implement this
-        throw new UnsupportedOperationException("BatchCRUD operations are not yet supported in a reactive way. Use ordinary batch operations, instead, or avoid batching. See https://github.com/jOOQ/jOOQ/issues/14874");
-    }
-
-    @Override
     public final int[] execute() throws DataAccessException {
 
         // [#1180] Run batch queries with BatchMultiple, if no bind variables
@@ -109,19 +95,15 @@ final class BatchCRUD extends AbstractBatch {
             // [#1529] Avoid DEBUG logging of single INSERT / UPDATE statements
             .withExecuteLogging(false)
 
-            // [#3327] [#11509] [#14573] We can't return generated keys from batches (yet)
+            // [#3327] [#11509] We can't return generated keys from batches (yet)
             .withReturnAllOnUpdatableRecord(false)
-            .withReturnDefaultOnUpdatableRecord(false)
-            .withReturnComputedOnUpdatableRecord(false)
             .withReturnIdentityOnUpdatableRecord(false);
 
         return local;
     }
 
     private final int[] executePrepared() {
-        boolean optimisticLocking = TRUE.equals(configuration.settings().isExecuteWithOptimisticLocking());
-        Map<String, List<QueryCollectorSignal>> queries = new LinkedHashMap<>();
-        List<QueryCollectorSignal> signals = new ArrayList<>();
+        Map<String, List<Query>> queries = new LinkedHashMap<>();
         QueryCollector collector = new QueryCollector();
 
         // Add the QueryCollector to intercept query execution after rendering
@@ -133,17 +115,14 @@ final class BatchCRUD extends AbstractBatch {
             try {
                 records[i].attach(local);
                 executeAction(i);
-
-                if (optimisticLocking)
-                    signals.add(null);
             }
             catch (QueryCollectorSignal e) {
-                if (optimisticLocking)
-                    signals.add(e);
+                Query query = e.getQuery();
+                String sql = e.getSQL();
 
                 // Aggregate executable queries by identical SQL
-                if (e.getQuery().isExecutable())
-                    queries.computeIfAbsent(e.getSQL(), s -> new ArrayList<>()).add(e);
+                if (query.isExecutable())
+                    queries.computeIfAbsent(sql, s -> new ArrayList<>()).add(query);
             }
             finally {
                 records[i].attach(previous);
@@ -158,10 +137,10 @@ final class BatchCRUD extends AbstractBatch {
         // The order is preserved as much as possible
         List<Integer> result = new ArrayList<>();
         queries.forEach((k, v) -> {
-            BatchBindStep batch = dsl.batch(v.get(0).getQuery());
+            BatchBindStep batch = dsl.batch(v.get(0));
 
-            for (QueryCollectorSignal signal : v)
-                batch.bind(map(signal.getParams(), p -> p.getValue(), Object[]::new));
+            for (Query query : v)
+                batch.bind(query.getBindValues().toArray());
 
             int[] array = batch.execute();
             for (int i : array)
@@ -172,18 +151,12 @@ final class BatchCRUD extends AbstractBatch {
         for (int i = 0; i < result.size(); i++)
             array[i] = result.get(i);
 
-        // [#8283] Store back optimistic locking values to updated records
-        if (optimisticLocking)
-            updateRecordVersionsAndTimestamps(signals, array);
-
         updateChangedFlag();
         return array;
     }
 
     private final int[] executeStatic() {
-        boolean optimisticLocking = TRUE.equals(configuration.settings().isExecuteWithOptimisticLocking());
         List<Query> queries = new ArrayList<>();
-        List<QueryCollectorSignal> signals = new ArrayList<>();
         QueryCollector collector = new QueryCollector();
         Configuration local = deriveConfiguration(collector);
 
@@ -193,14 +166,8 @@ final class BatchCRUD extends AbstractBatch {
             try {
                 records[i].attach(local);
                 executeAction(i);
-
-                if (optimisticLocking)
-                    signals.add(null);
             }
             catch (QueryCollectorSignal e) {
-                if (optimisticLocking)
-                    signals.add(e);
-
                 Query query = e.getQuery();
 
                 if (query.isExecutable())
@@ -213,22 +180,8 @@ final class BatchCRUD extends AbstractBatch {
 
         // Resulting statements can be batch executed in their requested order
         int[] result = dsl.batch(queries).execute();
-
-        // [#8283] Store back optimistic locking values to updated records
-        if (optimisticLocking)
-            updateRecordVersionsAndTimestamps(signals, result);
-
         updateChangedFlag();
         return result;
-    }
-
-    private final void updateRecordVersionsAndTimestamps(List<QueryCollectorSignal> signals, int[] array) {
-        for (int i = 0; i < records.length && i < array.length; i++) {
-            QueryCollectorSignal signal = signals.get(i);
-
-            if (signal != null && array[i] > 0)
-                ((TableRecordImpl<?>) records[i]).setRecordVersionAndTimestamp(signal.version, signal.timestamp);
-        }
     }
 
     private final void executeAction(int i) {
@@ -256,12 +209,12 @@ final class BatchCRUD extends AbstractBatch {
         //    calls to store() will insert them again
         // 2. Stored records should be marked as unchanged
         for (TableRecord<?> record : records) {
-            record.touched(action == Action.DELETE);
+            record.changed(action == Action.DELETE);
 
             // [#3362] If new records (fetched = false) are batch-stored twice in a row, the second
             // batch-store needs to generate an UPDATE statement.
-            if (record instanceof AbstractRecord r)
-                r.fetched = action != Action.DELETE;
+            if (record instanceof AbstractRecord)
+                ((AbstractRecord) record).fetched = action != Action.DELETE;
         }
     }
 
@@ -307,7 +260,7 @@ final class BatchCRUD extends AbstractBatch {
 
         @Override
         public void renderEnd(ExecuteContext ctx) {
-            throw new QueryCollectorSignal(ctx.sql(), ctx.params(), ctx.query());
+            throw new QueryCollectorSignal(ctx.sql(), ctx.query());
         }
     }
 
@@ -317,25 +270,17 @@ final class BatchCRUD extends AbstractBatch {
      * This exception is used as a signal for jOOQ's internals to abort query
      * execution, and return generated SQL back to batch execution.
      */
-    static class QueryCollectorSignal extends ControlFlowSignal {
-        final String     sql;
-        final Param<?>[] params;
-        final Query      query;
-        BigInteger       version;
-        Timestamp        timestamp;
+    private static class QueryCollectorSignal extends ControlFlowSignal {
+        private final String      sql;
+        private final Query       query;
 
-        QueryCollectorSignal(String sql, Param<?>[] params, Query query) {
+        QueryCollectorSignal(String sql, Query query) {
             this.sql = sql;
-            this.params = params;
             this.query = query;
         }
 
         String getSQL() {
             return sql;
-        }
-
-        Param<?>[] getParams() {
-            return params;
         }
 
         Query getQuery() {

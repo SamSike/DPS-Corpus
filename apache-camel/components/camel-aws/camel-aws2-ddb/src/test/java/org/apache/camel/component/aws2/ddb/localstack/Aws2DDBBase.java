@@ -30,7 +30,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 public class Aws2DDBBase extends CamelTestSupport {
 
     @RegisterExtension
-    public static AWSService service = AWSServiceFactory.createSingletonDynamoDBService();
+    public static AWSService service = AWSServiceFactory.createDynamodbService();
 
     protected DynamoDbClient ddbClient;
 

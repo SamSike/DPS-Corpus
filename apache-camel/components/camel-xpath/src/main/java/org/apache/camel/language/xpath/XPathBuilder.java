@@ -26,8 +26,6 @@ import java.util.Properties;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
@@ -101,7 +99,6 @@ public class XPathBuilder extends ServiceSupport
     private static volatile XPathFactory defaultXPathFactory;
 
     private CamelContext camelContext;
-    private final Lock lock = new ReentrantLock();
     private final Queue<XPathExpression> pool = new ConcurrentLinkedQueue<>();
     private final Queue<XPathExpression> poolLogNamespaces = new ConcurrentLinkedQueue<>();
     private final String text;
@@ -130,7 +127,18 @@ public class XPathBuilder extends ServiceSupport
     private volatile XPathFunction outHeaderFunction;
     private volatile XPathFunction propertiesFunction;
     private volatile XPathFunction simpleFunction;
-    private volatile Expression source;
+    /**
+     * The name of the header we want to apply the XPath expression to, which when set will cause the xpath to be
+     * evaluated on the required header, otherwise it will be applied to the value of the property or the body
+     */
+    private volatile String headerName;
+    /**
+     * The name of the property we want to apply the XPath expression to, which when set will cause the xpath to be
+     * evaluated on the required property, otherwise it will be applied to the body
+     * <p>
+     * It has a lower precedent than the name of header if both are set.
+     */
+    private volatile String propertyName;
 
     /**
      * @param text The XPath expression
@@ -555,6 +563,22 @@ public class XPathBuilder extends ServiceSupport
         this.resultQName = resultQName;
     }
 
+    public String getHeaderName() {
+        return headerName;
+    }
+
+    public void setHeaderName(String headerName) {
+        this.headerName = headerName;
+    }
+
+    public String getPropertyName() {
+        return propertyName;
+    }
+
+    public void setPropertyName(String propertyName) {
+        this.propertyName = propertyName;
+    }
+
     public boolean isThreadSafety() {
         return threadSafety;
     }
@@ -746,7 +770,8 @@ public class XPathBuilder extends ServiceSupport
                         try {
                             // use the property placeholder resolver to lookup
                             // the property for us
-                            return exchange.get().getContext().resolvePropertyPlaceholders("{{" + propertyText + "}}");
+                            Object answer = exchange.get().getContext().resolvePropertyPlaceholders("{{" + propertyText + "}}");
+                            return answer;
                         } catch (Exception e) {
                             throw new XPathFunctionException(e);
                         }
@@ -784,7 +809,8 @@ public class XPathBuilder extends ServiceSupport
                         String exprText = exchange.get().getContext().getTypeConverter().convertTo(String.class, value);
                         Language simple = exchange.get().getContext().resolveLanguage("simple");
                         Expression exp = simple.createExpression(exprText);
-                        return exp.evaluate(exchange.get(), Object.class);
+                        Object answer = exp.evaluate(exchange.get(), Object.class);
+                        return answer;
                     }
                 }
                 return null;
@@ -794,14 +820,6 @@ public class XPathBuilder extends ServiceSupport
 
     public void setSimpleFunction(XPathFunction simpleFunction) {
         this.simpleFunction = simpleFunction;
-    }
-
-    public Expression getSource() {
-        return source;
-    }
-
-    public void setSource(Expression source) {
-        this.source = source;
     }
 
     @Override
@@ -1001,16 +1019,42 @@ public class XPathBuilder extends ServiceSupport
         // set exchange and variable resolver as thread locals for concurrency
         this.exchange.set(exchange);
 
-        Object payload = source != null ? source.evaluate(exchange, Object.class) : exchange.getMessage().getBody();
-        Object document;
+        // the underlying input stream, which we need to close to avoid locking
+        // files or other resources
         InputStream is = null;
-        if (isInputStreamNeededForObject(payload)) {
-            is = exchange.getContext().getTypeConverter().tryConvertTo(InputStream.class, exchange, payload);
-            document = getDocument(exchange, is);
-        } else {
-            document = getDocument(exchange, payload);
-        }
         try {
+            Object document;
+
+            // Check if we need to apply the XPath expression to a header
+            if (ObjectHelper.isNotEmpty(getHeaderName())) {
+                // only convert to input stream if really needed
+                if (isInputStreamNeeded(exchange, headerName)) {
+                    is = exchange.getIn().getHeader(headerName, InputStream.class);
+                    document = getDocument(exchange, is);
+                } else {
+                    Object headerObject = exchange.getIn().getHeader(getHeaderName());
+                    document = getDocument(exchange, headerObject);
+                }
+            } else if (ObjectHelper.isNotEmpty(getPropertyName())) {
+                // only convert to input stream if really needed
+                if (isInputStreamNeededForProperty(exchange, propertyName)) {
+                    is = exchange.getProperty(propertyName, InputStream.class);
+                    document = getDocument(exchange, is);
+                } else {
+                    Object headerObject = exchange.getProperty(propertyName);
+                    document = getDocument(exchange, headerObject);
+                }
+            } else {
+                // only convert to input stream if really needed
+                if (isInputStreamNeeded(exchange)) {
+                    is = exchange.getIn().getBody(InputStream.class);
+                    document = getDocument(exchange, is);
+                } else {
+                    Object body = exchange.getIn().getBody();
+                    document = getDocument(exchange, body);
+                }
+            }
+
             if (resultQName != null) {
                 if (document == null) {
                     document = new XMLConverterHelper().createDocument();
@@ -1037,11 +1081,22 @@ public class XPathBuilder extends ServiceSupport
             }
         } catch (ParserConfigurationException e) {
             String message = getText();
+            if (ObjectHelper.isNotEmpty(getHeaderName())) {
+                message = message + " with headerName " + getHeaderName();
+            } else if (ObjectHelper.isNotEmpty(getPropertyName())) {
+                message = message + " with propertyName " + getPropertyName();
+            }
             throw new RuntimeCamelException(message, e);
         } catch (XPathExpressionException e) {
             String message = getText();
+            if (ObjectHelper.isNotEmpty(getHeaderName())) {
+                message = message + " with headerName " + getHeaderName();
+            } else if (ObjectHelper.isNotEmpty(getPropertyName())) {
+                message = message + " with propertyName " + getPropertyName();
+            }
             throw new InvalidXPathException(message, e);
         } finally {
+            // IOHelper can handle if is is null
             IOHelper.close(is);
         }
 
@@ -1049,7 +1104,7 @@ public class XPathBuilder extends ServiceSupport
             try {
                 NodeList list = (NodeList) answer;
 
-                // when the result is NodeList and has 1 or more elements, then it is not thread-safe to use concurrently,
+                // when the result is NodeList and it has 1 or more elements then its not thread-safe to use concurrently
                 // and we need to clone each node and build a thread-safe list to be used instead
                 boolean threadSafetyNeeded = list.getLength() >= 1;
                 if (threadSafetyNeeded) {
@@ -1076,49 +1131,39 @@ public class XPathBuilder extends ServiceSupport
      * This implementation must be synchronized to ensure thread safety, as this XPathBuilder instance may not have been
      * started prior to being used.
      */
-    protected XPathExpression createXPathExpression()
+    protected synchronized XPathExpression createXPathExpression()
             throws XPathExpressionException {
-        lock.lock();
+        // ensure we are started
         try {
-            // ensure we are started
-            try {
-                start();
-            } catch (Exception e) {
-                throw new RuntimeExpressionException("Error starting XPathBuilder", e);
-            }
-
-            // XPathFactory is not thread safe
-            XPath xPath = getXPathFactory().newXPath();
-
-            if (!logNamespaces && LOG.isTraceEnabled()) {
-                LOG.trace("Creating new XPath expression in pool. Namespaces on XPath expression: {}", getNamespaceContext());
-            } else if (logNamespaces && LOG.isInfoEnabled()) {
-                LOG.info("Creating new XPath expression in pool. Namespaces on XPath expression: {}", getNamespaceContext());
-            }
-            xPath.setNamespaceContext(getNamespaceContext());
-            xPath.setXPathVariableResolver(getVariableResolver());
-
-            XPathFunctionResolver parentResolver = getFunctionResolver();
-            if (parentResolver == null) {
-                parentResolver = xPath.getXPathFunctionResolver();
-            }
-            xPath.setXPathFunctionResolver(createDefaultFunctionResolver(parentResolver));
-            return xPath.compile(text);
-        } finally {
-            lock.unlock();
+            start();
+        } catch (Exception e) {
+            throw new RuntimeExpressionException("Error starting XPathBuilder", e);
         }
+
+        // XPathFactory is not thread safe
+        XPath xPath = getXPathFactory().newXPath();
+
+        if (!logNamespaces && LOG.isTraceEnabled()) {
+            LOG.trace("Creating new XPath expression in pool. Namespaces on XPath expression: {}", getNamespaceContext());
+        } else if (logNamespaces && LOG.isInfoEnabled()) {
+            LOG.info("Creating new XPath expression in pool. Namespaces on XPath expression: {}", getNamespaceContext());
+        }
+        xPath.setNamespaceContext(getNamespaceContext());
+        xPath.setXPathVariableResolver(getVariableResolver());
+
+        XPathFunctionResolver parentResolver = getFunctionResolver();
+        if (parentResolver == null) {
+            parentResolver = xPath.getXPathFunctionResolver();
+        }
+        xPath.setXPathFunctionResolver(createDefaultFunctionResolver(parentResolver));
+        return xPath.compile(text);
     }
 
-    protected XPathExpression createTraceNamespaceExpression()
+    protected synchronized XPathExpression createTraceNamespaceExpression()
             throws XPathExpressionException {
-        lock.lock();
-        try {
-            // XPathFactory is not thread safe
-            XPath xPath = getXPathFactory().newXPath();
-            return xPath.compile(OBTAIN_ALL_NS_XPATH);
-        } finally {
-            lock.unlock();
-        }
+        // XPathFactory is not thread safe
+        XPath xPath = getXPathFactory().newXPath();
+        return xPath.compile(OBTAIN_ALL_NS_XPATH);
     }
 
     protected DefaultNamespaceContext createNamespaceContext(XPathFactory factory) {
@@ -1199,7 +1244,33 @@ public class XPathBuilder extends ServiceSupport
      */
     protected boolean isInputStreamNeeded(Exchange exchange) {
         Object body = exchange.getIn().getBody();
-        return isInputStreamNeededForObject(body);
+        return isInputStreamNeededForObject(exchange, body);
+    }
+
+    /**
+     * Checks whether we need an {@link InputStream} to access the message header.
+     * <p/>
+     * Depending on the content in the message header, we may not need to convert to {@link InputStream}.
+     *
+     * @param  exchange the current exchange
+     * @return          <tt>true</tt> to convert to {@link InputStream} beforehand converting afterwards.
+     */
+    protected boolean isInputStreamNeeded(Exchange exchange, String headerName) {
+        Object header = exchange.getIn().getHeader(headerName);
+        return isInputStreamNeededForObject(exchange, header);
+    }
+
+    /**
+     * Checks whether we need an {@link InputStream} to access the exchange property.
+     * <p/>
+     * Depending on the content in the exchange property, we may not need to convert to {@link InputStream}.
+     *
+     * @param  exchange the current exchange
+     * @return          <tt>true</tt> to convert to {@link InputStream} beforehand converting afterwards.
+     */
+    protected boolean isInputStreamNeededForProperty(Exchange exchange, String propertyName) {
+        Object property = exchange.getProperty(propertyName);
+        return isInputStreamNeededForObject(exchange, property);
     }
 
     /**
@@ -1207,10 +1278,10 @@ public class XPathBuilder extends ServiceSupport
      * <p/>
      * Depending on the content in the object, we may not need to convert to {@link InputStream}.
      *
-     * @param  obj the object
-     * @return     <tt>true</tt> to convert to {@link InputStream} beforehand converting afterwards.
+     * @param  exchange the current exchange
+     * @return          <tt>true</tt> to convert to {@link InputStream} beforehand converting afterwards.
      */
-    protected boolean isInputStreamNeededForObject(Object obj) {
+    protected boolean isInputStreamNeededForObject(Exchange exchange, Object obj) {
         if (obj == null) {
             return false;
         }
@@ -1320,53 +1391,46 @@ public class XPathBuilder extends ServiceSupport
         poolLogNamespaces.clear();
     }
 
-    protected XPathFactory createXPathFactory() throws XPathFactoryConfigurationException {
-        lock.lock();
-        try {
-            if (objectModelUri != null) {
-                String xpathFactoryClassName = factoryClassName;
-                if (objectModelUri.equals(SAXON_OBJECT_MODEL_URI)
-                        && (xpathFactoryClassName == null || SAXON_FACTORY_CLASS_NAME.equals(xpathFactoryClassName))) {
-                    // from Saxon 9.7 onwards you should favour to create the class
-                    // directly
-                    // https://www.saxonica.com/html/documentation/xpath-api/jaxp-xpath/factory.html
-                    try {
-                        if (camelContext != null) {
-                            Class<XPathFactory> clazz
-                                    = camelContext.getClassResolver().resolveClass(SAXON_FACTORY_CLASS_NAME,
-                                            XPathFactory.class);
-                            if (clazz != null) {
-                                LOG.debug("Creating Saxon XPathFactory using class: {})", clazz);
-                                xpathFactory = camelContext.getInjector().newInstance(clazz);
-                                LOG.info("Created Saxon XPathFactory: {}", xpathFactory);
-                            }
+    protected synchronized XPathFactory createXPathFactory() throws XPathFactoryConfigurationException {
+        if (objectModelUri != null) {
+            String xpathFactoryClassName = factoryClassName;
+            if (objectModelUri.equals(SAXON_OBJECT_MODEL_URI)
+                    && (xpathFactoryClassName == null || SAXON_FACTORY_CLASS_NAME.equals(xpathFactoryClassName))) {
+                // from Saxon 9.7 onwards you should favour to create the class
+                // directly
+                // https://www.saxonica.com/html/documentation/xpath-api/jaxp-xpath/factory.html
+                try {
+                    if (camelContext != null) {
+                        Class<XPathFactory> clazz
+                                = camelContext.getClassResolver().resolveClass(SAXON_FACTORY_CLASS_NAME, XPathFactory.class);
+                        if (clazz != null) {
+                            LOG.debug("Creating Saxon XPathFactory using class: {})", clazz);
+                            xpathFactory = camelContext.getInjector().newInstance(clazz);
+                            LOG.info("Created Saxon XPathFactory: {}", xpathFactory);
                         }
-                    } catch (Exception e) {
-                        LOG.warn("Attempted to create Saxon XPathFactory by creating a new instance of {}" +
-                                 " failed. Will fallback and create XPathFactory using JDK API. This exception is ignored (stacktrace in DEBUG logging level).",
-                                SAXON_FACTORY_CLASS_NAME);
-                        LOG.debug("Error creating Saxon XPathFactory. This exception is ignored.", e);
                     }
+                } catch (Exception e) {
+                    LOG.warn("Attempted to create Saxon XPathFactory by creating a new instance of " + SAXON_FACTORY_CLASS_NAME
+                             + " failed. Will fallback and create XPathFactory using JDK API. This exception is ignored (stacktrace in DEBUG logging level).");
+                    LOG.debug("Error creating Saxon XPathFactory. This exception is ignored.", e);
                 }
-
-                if (xpathFactory == null) {
-                    LOG.debug("Creating XPathFactory from objectModelUri: {}", objectModelUri);
-                    xpathFactory = ObjectHelper.isEmpty(xpathFactoryClassName)
-                            ? XPathFactory.newInstance(objectModelUri)
-                            : XPathFactory.newInstance(objectModelUri, xpathFactoryClassName, null);
-                    LOG.info("Created XPathFactory: {} from objectModelUri: {}", xpathFactory, objectModelUri);
-                }
-
-                return xpathFactory;
             }
 
-            if (defaultXPathFactory == null) {
-                defaultXPathFactory = createDefaultXPathFactory();
+            if (xpathFactory == null) {
+                LOG.debug("Creating XPathFactory from objectModelUri: {}", objectModelUri);
+                xpathFactory = ObjectHelper.isEmpty(xpathFactoryClassName)
+                        ? XPathFactory.newInstance(objectModelUri)
+                        : XPathFactory.newInstance(objectModelUri, xpathFactoryClassName, null);
+                LOG.info("Created XPathFactory: {} from objectModelUri: {}", xpathFactory, objectModelUri);
             }
-            return defaultXPathFactory;
-        } finally {
-            lock.unlock();
+
+            return xpathFactory;
         }
+
+        if (defaultXPathFactory == null) {
+            defaultXPathFactory = createDefaultXPathFactory();
+        }
+        return defaultXPathFactory;
     }
 
     protected static XPathFactory createDefaultXPathFactory() throws XPathFactoryConfigurationException {

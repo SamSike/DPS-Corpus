@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,13 +39,10 @@
 package org.jooq.meta.xml;
 
 import static java.lang.Boolean.FALSE;
-import static java.util.Arrays.asList;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.tools.StringUtils.defaultIfBlank;
 import static org.jooq.tools.StringUtils.defaultIfNull;
 import static org.jooq.tools.StringUtils.isBlank;
-import static org.jooq.tools.StringUtils.isEmpty;
-import static org.jooq.util.xml.XmlUtils.foreignKeyRule;
 import static org.jooq.util.xml.jaxb.TableConstraintType.PRIMARY_KEY;
 import static org.jooq.util.xml.jaxb.TableConstraintType.UNIQUE;
 
@@ -58,10 +55,9 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.EnumSet;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -85,9 +81,6 @@ import org.jooq.Name;
 import org.jooq.SQLDialect;
 import org.jooq.SortOrder;
 import org.jooq.TableOptions.TableType;
-// ...
-// ...
-// ...
 import org.jooq.exception.IOException;
 import org.jooq.impl.DSL;
 import org.jooq.meta.AbstractDatabase;
@@ -101,46 +94,32 @@ import org.jooq.meta.DefaultDataTypeDefinition;
 import org.jooq.meta.DefaultIndexColumnDefinition;
 import org.jooq.meta.DefaultRelations;
 import org.jooq.meta.DefaultSequenceDefinition;
-// ...
-// ...
 import org.jooq.meta.DomainDefinition;
 import org.jooq.meta.EnumDefinition;
 import org.jooq.meta.IndexColumnDefinition;
 import org.jooq.meta.IndexDefinition;
-import org.jooq.meta.Logging;
 import org.jooq.meta.PackageDefinition;
 import org.jooq.meta.RoutineDefinition;
 import org.jooq.meta.SchemaDefinition;
 import org.jooq.meta.SequenceDefinition;
-// ...
 import org.jooq.meta.TableDefinition;
-// ...
 import org.jooq.meta.UDTDefinition;
-import org.jooq.meta.XMLSchemaCollectionDefinition;
 import org.jooq.tools.JooqLogger;
 import org.jooq.tools.StringUtils;
 import org.jooq.tools.jdbc.JDBCUtils;
 import org.jooq.util.jaxb.tools.MiniJAXB;
-import org.jooq.util.xml.jaxb.Attribute;
 import org.jooq.util.xml.jaxb.CheckConstraint;
-import org.jooq.util.xml.jaxb.Column;
-import org.jooq.util.xml.jaxb.DirectSupertype;
 import org.jooq.util.xml.jaxb.Index;
 import org.jooq.util.xml.jaxb.IndexColumnUsage;
 import org.jooq.util.xml.jaxb.InformationSchema;
 import org.jooq.util.xml.jaxb.KeyColumnUsage;
-import org.jooq.util.xml.jaxb.Parameter;
 import org.jooq.util.xml.jaxb.ReferentialConstraint;
 import org.jooq.util.xml.jaxb.Routine;
 import org.jooq.util.xml.jaxb.Schema;
 import org.jooq.util.xml.jaxb.Sequence;
-import org.jooq.util.xml.jaxb.Synonym;
 import org.jooq.util.xml.jaxb.Table;
 import org.jooq.util.xml.jaxb.TableConstraint;
 import org.jooq.util.xml.jaxb.TableConstraintType;
-import org.jooq.util.xml.jaxb.Trigger;
-import org.jooq.util.xml.jaxb.TriggerActionOrientation;
-import org.jooq.util.xml.jaxb.UserDefinedType;
 import org.jooq.util.xml.jaxb.View;
 
 /**
@@ -150,14 +129,9 @@ import org.jooq.util.xml.jaxb.View;
  */
 public class XMLDatabase extends AbstractDatabase {
 
-    private static final JooqLogger  log = JooqLogger.getLogger(XMLDatabase.class);
+    private static final JooqLogger log        = JooqLogger.getLogger(XMLDatabase.class);
 
-    InformationSchema                info;
-    Map<Name, List<Column>>          columnsByTableName;
-    Map<Name, List<Parameter>>       parametersByRoutineName;
-    Map<Name, List<Attribute>>       attributesByUDTName;
-    Map<Name, UserDefinedType>       userDefinedTypeByUDTName;
-    Map<Name, List<UserDefinedType>> supertypesByUDTName;
+    InformationSchema               info;
 
     private InformationSchema info() {
         if (info == null) {
@@ -205,18 +179,10 @@ public class XMLDatabase extends AbstractDatabase {
                                             content = new String(content.getBytes("UTF-8"), encoding);
                                     }
                                     catch (XMLStreamException e1) {
-                                        Logging.log(
-                                            onMetadataProblem(),
-                                            () -> "Could not open XML Stream: " + e1.getMessage(),
-                                            e1
-                                        );
+                                        log.warn("Could not open XML Stream: " + e1.getMessage());
                                     }
                                     catch (UnsupportedEncodingException e2) {
-                                        Logging.log(
-                                            onMetadataProblem(),
-                                            () -> "Unsupported encoding: " + e2.getMessage(),
-                                            e2
-                                        );
+                                        log.warn("Unsupported encoding: " + e2.getMessage());
                                     }
                                 }
                                 else {
@@ -461,10 +427,7 @@ public class XMLDatabase extends AbstractDatabase {
                                     foreignKeyTable.getColumn(foreignKeyColumn),
                                     uniqueKey,
                                     uniqueKeyTable,
-                                    usage.getPositionInUniqueConstraint(),
-                                    !FALSE.equals(fktc.isEnforced()),
-                                    foreignKeyRule(fk.getDeleteRule()),
-                                    foreignKeyRule(fk.getUpdateRule())
+                                    !FALSE.equals(fktc.isEnforced())
                                 );
                         }
                     }
@@ -579,17 +542,15 @@ public class XMLDatabase extends AbstractDatabase {
                 TableType tableType;
 
                 switch (table.getTableType()) {
-                    case GLOBAL_TEMPORARY: tableType = TableType.GLOBAL_TEMPORARY; break;
-                    case LOCAL_TEMPORARY:  tableType = TableType.LOCAL_TEMPORARY; break;
+                    case GLOBAL_TEMPORARY: tableType = TableType.TEMPORARY; break;
                     case VIEW:             tableType = TableType.VIEW; break;
-                    case MATERIALIZED_VIEW:tableType = TableType.MATERIALIZED_VIEW; break;
                     case BASE_TABLE:
                     default:               tableType = TableType.TABLE; break;
                 }
 
                 String source = null;
 
-                if (tableType == TableType.VIEW || tableType == TableType.MATERIALIZED_VIEW) {
+                if (tableType == TableType.VIEW) {
 
                     viewLoop:
                     for (View view : info().getViews()) {
@@ -622,120 +583,9 @@ public class XMLDatabase extends AbstractDatabase {
         return result;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
-    protected List<XMLSchemaCollectionDefinition> getXMLSchemaCollections0() throws SQLException {
-        List<XMLSchemaCollectionDefinition> result = new ArrayList<>();
-        return result;
-    }
-
     @Override
     protected List<UDTDefinition> getUDTs0() {
         List<UDTDefinition> result = new ArrayList<>();
-
-        for (UserDefinedType udt : info().getUserDefinedTypes()) {
-            if (getInputSchemata().contains(udt.getUserDefinedTypeSchema())) {
-                SchemaDefinition schema = getSchema(udt.getUserDefinedTypeSchema());
-                List<UserDefinedType> supertypes = getSupertypesByUDTName(name(udt.getUserDefinedTypeCatalog(), udt.getUserDefinedTypeSchema(), udt.getUserDefinedTypeName()));
-
-                SchemaDefinition supertypeSchema = supertypes == null || supertypes.isEmpty()
-                    ? null
-                    : getSchema(supertypes.get(0).getUserDefinedTypeSchema());
-                String supertypeName = supertypes == null || supertypes.isEmpty()
-                    ? null
-                    : supertypes.get(0).getUserDefinedTypeName();
-
-                result.add(new XMLUDTDefinition(
-                    schema,
-                    info(),
-                    udt,
-                    udt.getComment(),
-                    supertypeSchema,
-                    supertypeName,
-                    !FALSE.equals(udt.isIsInstantiable())
-                ));
-            }
-        }
-
         return result;
     }
 
@@ -791,80 +641,5 @@ public class XMLDatabase extends AbstractDatabase {
 
     static long unbox(Long l) {
         return l == null ? 0L : l.longValue();
-    }
-
-    final List<Column> getColumnsByTableName(Name tableName) {
-        if (columnsByTableName == null) {
-            columnsByTableName = new LinkedHashMap<>();
-
-            for (Column column : info().getColumns()) {
-                columnsByTableName.computeIfAbsent(
-                    name(column.getTableCatalog(), column.getTableSchema(), column.getTableName()),
-                    n -> new ArrayList<>()
-                ).add(column);
-            }
-        }
-
-        return columnsByTableName.get(tableName);
-    }
-
-    final List<Attribute> getAttributesByUDTName(Name udtName) {
-        if (attributesByUDTName == null) {
-            attributesByUDTName = new LinkedHashMap<>();
-
-            for (Attribute attribute : info().getAttributes()) {
-                attributesByUDTName.computeIfAbsent(
-                    name(attribute.getUdtCatalog(), attribute.getUdtSchema(), attribute.getUdtName()),
-                    n -> new ArrayList<>()
-                ).add(attribute);
-            }
-        }
-
-        return attributesByUDTName.get(udtName);
-    }
-
-    final UserDefinedType getUserDefinedTypeByUDTName(Name udtName) {
-        if (userDefinedTypeByUDTName == null) {
-            userDefinedTypeByUDTName = new LinkedHashMap<>();
-
-            for (UserDefinedType udt : info().getUserDefinedTypes()) {
-                userDefinedTypeByUDTName.put(
-                    name(udt.getUserDefinedTypeCatalog(), udt.getUserDefinedTypeSchema(), udt.getUserDefinedTypeName()),
-                    udt
-                );
-            }
-        }
-
-        return userDefinedTypeByUDTName.get(udtName);
-    }
-
-    final List<UserDefinedType> getSupertypesByUDTName(Name udtName) {
-        if (supertypesByUDTName == null) {
-            supertypesByUDTName = new LinkedHashMap<>();
-
-            for (DirectSupertype supertype : info().getDirectSupertypes()) {
-                supertypesByUDTName.computeIfAbsent(
-                    name(supertype.getUdtCatalog(), supertype.getUdtSchema(), supertype.getUdtName()),
-                    n -> new ArrayList<>()
-                ).add(getUserDefinedTypeByUDTName(name(supertype.getSupertypeCatalog(), supertype.getSupertypeSchema(), supertype.getSupertypeName())));
-            }
-        }
-
-        return supertypesByUDTName.get(udtName);
-    }
-
-    final List<Parameter> getParametersByRoutineName(Name specificName) {
-        if (parametersByRoutineName == null) {
-            parametersByRoutineName = new LinkedHashMap<>();
-
-            for (Parameter parameter : info().getParameters()) {
-                parametersByRoutineName.computeIfAbsent(
-                    name(parameter.getSpecificCatalog(), parameter.getSpecificSchema(), parameter.getSpecificPackage(), parameter.getSpecificName()),
-                    n -> new ArrayList<>()
-                ).add(parameter);
-            }
-        }
-
-        return parametersByRoutineName.get(specificName);
     }
 }

@@ -17,10 +17,7 @@
 
 package org.apache.camel.test.infra.messaging.services;
 
-import java.util.function.Function;
-
 import org.apache.camel.test.infra.common.services.SimpleTestServiceBuilder;
-import org.testcontainers.containers.GenericContainer;
 
 public final class MessagingServiceFactory {
 
@@ -36,16 +33,5 @@ public final class MessagingServiceFactory {
         return builder()
                 .addRemoteMapping(MessagingRemoteService::new)
                 .build();
-    }
-
-    public static class MessagingRemoteService extends MessagingRemoteInfraService implements MessagingService {
-    }
-
-    public static class MessagingLocalContainerService<T extends GenericContainer<T>>
-            extends MessagingLocalContainerInfraService
-            implements MessagingService {
-        public MessagingLocalContainerService(GenericContainer container, Function endpointFunction) {
-            super(container, endpointFunction);
-        }
     }
 }

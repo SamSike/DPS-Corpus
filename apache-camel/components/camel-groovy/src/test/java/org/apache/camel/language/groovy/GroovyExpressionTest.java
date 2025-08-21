@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import static org.apache.camel.test.junit5.TestSupport.assertExpression;
 import static org.apache.camel.test.junit5.TestSupport.assertInMessageHeader;
 import static org.apache.camel.test.junit5.TestSupport.assertPredicate;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -41,58 +40,14 @@ public class GroovyExpressionTest {
         assertExpression(GroovyLanguage.groovy("exchange.in.headers['foo.bar']"), exchange, "cheese");
         assertExpression(GroovyLanguage.groovy("exchange.in.headers.name"), exchange, "James");
         assertExpression(GroovyLanguage.groovy("exchange.in.headers['doesNotExist']"), exchange, null);
-
-        assertExpression(GroovyLanguage.groovy("header['foo.bar']"), exchange, "cheese");
-        assertExpression(GroovyLanguage.groovy("header.name"), exchange, "James");
-        assertExpression(GroovyLanguage.groovy("header['doesNotExist']"), exchange, null);
-
-        assertExpression(GroovyLanguage.groovy("variable['cheese']"), exchange, "gauda");
-        assertExpression(GroovyLanguage.groovy("variable.cheese"), exchange, "gauda");
-        assertExpression(GroovyLanguage.groovy("variable['doesNotExist']"), exchange, null);
-        assertExpression(GroovyLanguage.groovy("variables['cheese']"), exchange, "gauda");
-        assertExpression(GroovyLanguage.groovy("variables.cheese"), exchange, "gauda");
-        assertExpression(GroovyLanguage.groovy("variables['doesNotExist']"), exchange, null);
     }
 
     @Test
     public void testPredicateEvaluation() {
         assertPredicate(GroovyLanguage.groovy("exchange.in.headers.name == 'James'"), exchange, true);
-        assertPredicate(GroovyLanguage.groovy("header.name == 'James'"), exchange, true);
         assertPredicate(GroovyLanguage.groovy("exchange.in.headers.name == 'Hiram'"), exchange, false);
-        assertPredicate(GroovyLanguage.groovy("header.name == 'Hiram'"), exchange, false);
 
         assertPredicate(GroovyLanguage.groovy("request.headers.name == 'James'"), exchange, true);
-        assertPredicate(GroovyLanguage.groovy("header.name == 'James'"), exchange, true);
-
-        assertPredicate(GroovyLanguage.groovy("variable.cheese == 'gauda'"), exchange, true);
-        assertPredicate(GroovyLanguage.groovy("variables.cheese == 'gauda'"), exchange, true);
-        assertPredicate(GroovyLanguage.groovy("variables['cheese'] == 'gauda'"), exchange, true);
-    }
-
-    @Test
-    public void testVariableHeaders() {
-        exchange.removeVariable("cheese");
-        exchange.setVariable("header:myKey.foo", "abc");
-        exchange.setVariable("header:myKey.bar", 123);
-        exchange.setVariable("myOtherKey", "Hello Again");
-
-        assertEquals("Hello Again", GroovyLanguage.groovy("variables['myOtherKey']").evaluate(exchange));
-        assertEquals("abc", GroovyLanguage.groovy("variables['header:myKey.foo']").evaluate(exchange));
-        assertEquals(123, GroovyLanguage.groovy("variables['header:myKey.bar']").evaluate(exchange));
-    }
-
-    @Test
-    public void testException() {
-        Exception e = new IllegalArgumentException("Forced");
-
-        exchange.setException(e);
-        assertExpression(GroovyLanguage.groovy("exception"), exchange, e);
-
-        exchange.setException(null);
-        assertExpression(GroovyLanguage.groovy("exception"), exchange, null);
-
-        exchange.setProperty(Exchange.EXCEPTION_CAUGHT, e);
-        assertExpression(GroovyLanguage.groovy("exception"), exchange, e);
     }
 
     @Test
@@ -108,7 +63,7 @@ public class GroovyExpressionTest {
             GroovyLanguage.groovy("exchange.doesNotExist").evaluate(exchange);
             fail("This test case should have thrown an exception!");
         } catch (Exception e) {
-            LOG.debug("Caught expected exception: {}", e.getMessage(), e);
+            LOG.debug("Caught expected exception: " + e, e);
             String message = e.getMessage();
             assertTrue(message.contains("doesNotExist"), "The message should include 'doesNotExist' but was: " + message);
         }
@@ -119,6 +74,5 @@ public class GroovyExpressionTest {
         exchange = new DefaultExchange(new DefaultCamelContext());
         exchange.getIn().setHeader("foo.bar", "cheese");
         exchange.getIn().setHeader("name", "James");
-        exchange.setVariable("cheese", "gauda");
     }
 }

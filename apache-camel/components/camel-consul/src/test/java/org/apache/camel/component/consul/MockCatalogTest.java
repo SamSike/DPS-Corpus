@@ -18,6 +18,8 @@ package org.apache.camel.component.consul;
 
 import java.util.List;
 
+import com.orbitz.consul.model.health.ImmutableNode;
+import com.orbitz.consul.model.health.Node;
 import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.AdviceWith;
 import org.apache.camel.builder.RouteBuilder;
@@ -26,8 +28,6 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.kiwiproject.consul.model.health.ImmutableNode;
-import org.kiwiproject.consul.model.health.Node;
 
 import static java.util.Collections.singletonList;
 import static org.apache.camel.builder.Builder.constant;

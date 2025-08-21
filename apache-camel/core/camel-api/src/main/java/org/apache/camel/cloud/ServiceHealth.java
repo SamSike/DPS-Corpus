@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-@Deprecated(since = "4.8.0")
 public interface ServiceHealth {
 
     /**
@@ -39,7 +38,7 @@ public interface ServiceHealth {
     }
 
     /**
-     * The health endpoint exposed by the service.
+     * The health enpoint exposed by the service.
      */
     default Optional<URI> getEndpoint() {
         return Optional.empty();

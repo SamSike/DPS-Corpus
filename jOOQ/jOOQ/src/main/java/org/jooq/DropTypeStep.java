@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,17 +37,15 @@
  */
 package org.jooq;
 
-import static org.jooq.SQLDialect.*;
-import static org.jooq.impl.DSL.*;
-
-import java.util.*;
-
-import org.jooq.impl.DSL;
-
 import org.jetbrains.annotations.*;
 
+// ...
+import static org.jooq.SQLDialect.H2;
+import static org.jooq.SQLDialect.POSTGRES;
+import static org.jooq.SQLDialect.YUGABYTEDB;
+
 /**
- * A step in the construction of the <code>DROP TYPE</code> statement.
+ * A {@link Query} that can drop types.
  * <p>
  * <h3>Referencing <code>XYZ*Step</code> types directly from client code</h3>
  * <p>
@@ -66,21 +64,22 @@ import org.jetbrains.annotations.*;
  * <li>They're less readable</li>
  * <li>They might have binary incompatible changes between minor releases</li>
  * </ul>
+ *
+ * @author Lukas Eder
  */
-@SuppressWarnings({ "unused" })
 public interface DropTypeStep extends DropTypeFinalStep {
 
     /**
      * Add the <code>CASCADE</code> clause to the <code>DROP TYPE</code> statement.
      */
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
+    @Support({ H2, POSTGRES, YUGABYTEDB })
     DropTypeFinalStep cascade();
 
     /**
      * Add the <code>RESTRICT</code> clause to the <code>DROP TYPE</code> statement.
      */
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
+    @Support({ H2, POSTGRES, YUGABYTEDB })
     DropTypeFinalStep restrict();
 }

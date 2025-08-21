@@ -17,7 +17,6 @@
 package org.apache.camel.management;
 
 import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.apache.camel.AggregationStrategy;
@@ -27,8 +26,6 @@ import org.apache.camel.api.management.mbean.ManagedAggregateProcessorMBean;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.processor.aggregate.AggregateController;
 import org.apache.camel.processor.aggregate.DefaultAggregateController;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.condition.DisabledOnOs;
@@ -37,24 +34,20 @@ import org.junit.jupiter.api.condition.OS;
 import static org.apache.camel.management.DefaultManagementObjectNameStrategy.TYPE_PROCESSOR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisabledIfSystemProperty(named = "ci.env.name", matches = ".*", disabledReason = "Flaky on Github CI")
+@DisabledIfSystemProperty(named = "ci.env.name", matches = "github.com", disabledReason = "Flaky on Github CI")
 @DisabledOnOs(OS.AIX)
 public class ManagedAggregateControllerTest extends ManagementTestSupport {
 
-    private final AggregateController controller = new DefaultAggregateController();
-    private MBeanServer mbeanServer;
-    private ObjectName on;
-
-    @BeforeEach
-    void setUpTest() throws MalformedObjectNameException {
-        mbeanServer = getMBeanServer();
-        on = getCamelObjectName(TYPE_PROCESSOR, "myAggregator");
-    }
+    private AggregateController controller = new DefaultAggregateController();
 
     @Test
     public void testForceCompletionOfAll() throws Exception {
-        Assumptions.assumeTrue(mbeanServer.isRegistered(on), "Should be registered for this test to run");
+        MBeanServer mbeanServer = getMBeanServer();
+
+        ObjectName on = getCamelObjectName(TYPE_PROCESSOR, "myAggregator");
+        assertTrue(mbeanServer.isRegistered(on));
 
         getMockEndpoint("mock:aggregated").expectedMessageCount(0);
 
@@ -108,7 +101,10 @@ public class ManagedAggregateControllerTest extends ManagementTestSupport {
 
     @Test
     public void testForceCompletionOfGroup() throws Exception {
-        Assumptions.assumeTrue(mbeanServer.isRegistered(on), "Should be registered for this test to run");
+        MBeanServer mbeanServer = getMBeanServer();
+
+        ObjectName on = getCamelObjectName(TYPE_PROCESSOR, "myAggregator");
+        assertTrue(mbeanServer.isRegistered(on));
 
         getMockEndpoint("mock:aggregated").expectedMessageCount(0);
 
@@ -163,7 +159,7 @@ public class ManagedAggregateControllerTest extends ManagementTestSupport {
         assertEquals(1, pending.intValue());
 
         // we can also use the client mbean
-        ManagedAggregateProcessorMBean client = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class)
+        ManagedAggregateProcessorMBean client = context.getExtension(ManagedCamelContext.class)
                 .getManagedProcessor("myAggregator", ManagedAggregateProcessorMBean.class);
         assertNotNull(client);
 
@@ -172,11 +168,11 @@ public class ManagedAggregateControllerTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
 
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .aggregate(header("id"), new MyAggregationStrategy()).aggregateController(controller).id("myAggregator")
                         .completionSize(10)

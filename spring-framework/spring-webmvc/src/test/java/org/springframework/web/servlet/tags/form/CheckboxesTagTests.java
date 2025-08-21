@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.web.servlet.tags.form;
 
 import java.beans.PropertyEditorSupport;
 import java.io.StringReader;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -28,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.servlet.jsp.JspException;
 import jakarta.servlet.jsp.tagext.Tag;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -62,6 +64,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	private TestBean bean;
 
 	@Override
+	@SuppressWarnings("serial")
 	protected void onSetUp() {
 		this.tag = new CheckboxesTag() {
 			@Override
@@ -73,7 +76,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withMultiValueArray() throws Exception {
+	public void withMultiValueArray() throws Exception {
 		this.tag.setPath("stringArray");
 		this.tag.setItems(new Object[] {"foo", "bar", "baz"});
 		int result = this.tag.doStartTag();
@@ -112,7 +115,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withMultiValueArrayAndDynamicAttributes() throws Exception {
+	public void withMultiValueArrayAndDynamicAttributes() throws Exception {
 		String dynamicAttribute1 = "attr1";
 		String dynamicAttribute2 = "attr2";
 
@@ -165,7 +168,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withMultiValueArrayWithDelimiter() throws Exception {
+	public void withMultiValueArrayWithDelimiter() throws Exception {
 		this.tag.setDelimiter("<br/>");
 		this.tag.setPath("stringArray");
 		this.tag.setItems(new Object[] {"foo", "bar", "baz"});
@@ -211,7 +214,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withMultiValueMap() throws Exception {
+	public void withMultiValueMap() throws Exception {
 		this.tag.setPath("stringArray");
 		Map m = new LinkedHashMap();
 		m.put("foo", "FOO");
@@ -255,7 +258,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withPetItemsMap() throws Exception {
+	public void withPetItemsMap() throws Exception {
 		this.tag.setPath("someSet");
 		Map m = new LinkedHashMap();
 		m.put(new ItemPet("PET1"), "PET1Label");
@@ -300,7 +303,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withMultiValueMapWithDelimiter() throws Exception {
+	public void withMultiValueMapWithDelimiter() throws Exception {
 		String delimiter = " | ";
 		this.tag.setDelimiter(delimiter);
 		this.tag.setPath("stringArray");
@@ -346,7 +349,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withMultiValueWithEditor() throws Exception {
+	public void withMultiValueWithEditor() throws Exception {
 		this.tag.setPath("stringArray");
 		this.tag.setItems(new Object[] {"   foo", "   bar", "   baz"});
 		BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(this.bean, COMMAND_NAME);
@@ -356,7 +359,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 
 		int result = this.tag.doStartTag();
 		assertThat(result).isEqualTo(Tag.SKIP_BODY);
-		assertThat(editor.allProcessedValues).hasSize(3);
+		assertThat(editor.allProcessedValues.size()).isEqualTo(3);
 
 		String output = getOutput();
 
@@ -389,7 +392,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withMultiValueWithReverseEditor() throws Exception {
+	public void withMultiValueWithReverseEditor() throws Exception {
 		this.tag.setPath("stringArray");
 		this.tag.setItems(new Object[] {"FOO", "BAR", "BAZ"});
 		BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(this.bean, COMMAND_NAME);
@@ -431,7 +434,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withMultiValueWithFormatter() throws Exception {
+	public void withMultiValueWithFormatter() throws Exception {
 		this.tag.setPath("stringArray");
 		this.tag.setItems(new Object[] {"   foo", "   bar", "   baz"});
 		BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(this.bean, COMMAND_NAME);
@@ -442,7 +445,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 				return object;
 			}
 			@Override
-			public String parse(String text, Locale locale) {
+			public String parse(String text, Locale locale) throws ParseException {
 				return text.trim();
 			}
 		});
@@ -483,7 +486,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void collectionOfPets() throws Exception {
+	public void collectionOfPets() throws Exception {
 		this.tag.setPath("pets");
 		List allPets = new ArrayList();
 		allPets.add(new ItemPet("Rudiger"));
@@ -551,7 +554,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	 * Test case where items toString() doesn't fit the item ID
 	 */
 	@Test
-	void collectionOfItemPets() throws Exception {
+	public void collectionOfItemPets() throws Exception {
 		this.tag.setPath("someSet");
 		List allPets = new ArrayList();
 		allPets.add(new ItemPet("PET1"));
@@ -600,7 +603,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void collectionOfPetsWithEditor() throws Exception {
+	public void collectionOfPetsWithEditor() throws Exception {
 		this.tag.setPath("pets");
 		List allPets = new ArrayList();
 		allPets.add(new ItemPet("Rudiger"));
@@ -670,14 +673,14 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void withNullValue() {
+	public void withNullValue() throws Exception {
 		this.tag.setPath("name");
 		assertThatIllegalArgumentException().as("null value binding to a non-boolean").isThrownBy(
 				this.tag::doStartTag);
 	}
 
 	@Test
-	void hiddenElementOmittedOnDisabled() throws Exception {
+	public void hiddenElementOmittedOnDisabled() throws Exception {
 		this.tag.setPath("stringArray");
 		this.tag.setItems(new Object[] {"foo", "bar", "baz"});
 		this.tag.setDisabled(true);
@@ -691,7 +694,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 		SAXReader reader = new SAXReader();
 		Document document = reader.read(new StringReader(output));
 		Element rootElement = document.getRootElement();
-		assertThat(rootElement.elements()).as("Both tag and hidden element rendered incorrectly").hasSize(3);
+		assertThat(rootElement.elements().size()).as("Both tag and hidden element rendered incorrectly").isEqualTo(3);
 		Element spanElement = document.getRootElement().elements().get(0);
 		Element checkboxElement = spanElement.elements().get(0);
 		assertThat(checkboxElement.getName()).isEqualTo("input");
@@ -703,7 +706,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void spanElementCustomizable() throws Exception {
+	public void spanElementCustomizable() throws Exception {
 		this.tag.setPath("stringArray");
 		this.tag.setItems(new Object[] {"foo", "bar", "baz"});
 		this.tag.setElement("element");
@@ -721,7 +724,7 @@ public class CheckboxesTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void dynamicTypeAttribute() {
+	public void dynamicTypeAttribute() throws JspException {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				this.tag.setDynamicAttribute(null, "type", "email"))
 			.withMessage("Attribute type=\"email\" is not allowed");

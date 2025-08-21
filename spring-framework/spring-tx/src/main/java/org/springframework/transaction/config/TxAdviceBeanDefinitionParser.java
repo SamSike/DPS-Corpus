@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -145,14 +145,14 @@ class TxAdviceBeanDefinitionParser extends AbstractSingleBeanDefinitionParser {
 	private void addRollbackRuleAttributesTo(List<RollbackRuleAttribute> rollbackRules, String rollbackForValue) {
 		String[] exceptionTypeNames = StringUtils.commaDelimitedListToStringArray(rollbackForValue);
 		for (String typeName : exceptionTypeNames) {
-			rollbackRules.add(new RollbackRuleAttribute(typeName.strip()));
+			rollbackRules.add(new RollbackRuleAttribute(StringUtils.trimWhitespace(typeName)));
 		}
 	}
 
 	private void addNoRollbackRuleAttributesTo(List<RollbackRuleAttribute> rollbackRules, String noRollbackForValue) {
 		String[] exceptionTypeNames = StringUtils.commaDelimitedListToStringArray(noRollbackForValue);
 		for (String typeName : exceptionTypeNames) {
-			rollbackRules.add(new NoRollbackRuleAttribute(typeName.strip()));
+			rollbackRules.add(new NoRollbackRuleAttribute(StringUtils.trimWhitespace(typeName)));
 		}
 	}
 

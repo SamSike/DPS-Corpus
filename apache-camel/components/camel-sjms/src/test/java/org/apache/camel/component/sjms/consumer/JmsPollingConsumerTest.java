@@ -16,7 +16,7 @@
  */
 package org.apache.camel.component.sjms.consumer;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -34,10 +34,9 @@ public class JmsPollingConsumerTest extends JmsTestSupport {
 
         // use another thread for polling consumer to demonstrate that we can wait before
         // the message is sent to the queue
-
-        CompletableFuture.runAsync(() -> {
-            String body = consumer.receiveBody("sjms:queue.start.JmsPollingConsumerTest", String.class);
-            template.sendBody("sjms:queue.foo.JmsPollingConsumerTest", body + " Claus");
+        Executors.newSingleThreadExecutor().execute(() -> {
+            String body = consumer.receiveBody("sjms:queue.start", String.class);
+            template.sendBody("sjms:queue.foo", body + " Claus");
         });
 
         // wait a little to demonstrate we can start poll before we have a msg on the queue
@@ -55,11 +54,11 @@ public class JmsPollingConsumerTest extends JmsTestSupport {
 
         // use another thread for polling consumer to demonstrate that we can wait before
         // the message is sent to the queue
-        CompletableFuture.runAsync(() -> {
-            String body = consumer.receiveBodyNoWait("sjms:queue.start.JmsPollingConsumerTest", String.class);
+        Executors.newSingleThreadExecutor().execute(() -> {
+            String body = consumer.receiveBodyNoWait("sjms:queue.start", String.class);
             assertNull(body, "Should be null");
 
-            template.sendBody("sjms:queue.foo.JmsPollingConsumerTest", "Hello Claus");
+            template.sendBody("sjms:queue.foo", "Hello Claus");
         });
 
         // wait a little to demonstrate we can start poll before we have a msg on the queue
@@ -68,9 +67,6 @@ public class JmsPollingConsumerTest extends JmsTestSupport {
         template.sendBody("direct:start", "Hello");
 
         MockEndpoint.assertIsSatisfied(context);
-
-        // Consume the message
-        consumer.receiveBody("sjms:queue.start.JmsPollingConsumerTest", String.class);
     }
 
     @Test
@@ -80,11 +76,11 @@ public class JmsPollingConsumerTest extends JmsTestSupport {
 
         // use another thread for polling consumer to demonstrate that we can wait before
         // the message is sent to the queue
-        CompletableFuture.runAsync(() -> {
-            String body = consumer.receiveBody("sjms:queue.start.JmsPollingConsumerTest", 100, String.class);
+        Executors.newSingleThreadExecutor().execute(() -> {
+            String body = consumer.receiveBody("sjms:queue.start", 100, String.class);
             assertNull(body, "Should be null");
 
-            template.sendBody("sjms:queue.foo.JmsPollingConsumerTest", "Hello Claus");
+            template.sendBody("sjms:queue.foo", "Hello Claus");
         });
 
         // wait a little to demonstrate we can start poll before we have a msg on the queue
@@ -93,9 +89,6 @@ public class JmsPollingConsumerTest extends JmsTestSupport {
         template.sendBody("direct:start", "Hello");
 
         MockEndpoint.assertIsSatisfied(context);
-
-        // Consume the message
-        consumer.receiveBody("sjms:queue.start.JmsPollingConsumerTest", String.class);
     }
 
     @Test
@@ -105,9 +98,9 @@ public class JmsPollingConsumerTest extends JmsTestSupport {
 
         // use another thread for polling consumer to demonstrate that we can wait before
         // the message is sent to the queue
-        CompletableFuture.runAsync(() -> {
-            String body = consumer.receiveBody("sjms:queue.start.JmsPollingConsumerTest", 3000, String.class);
-            template.sendBody("sjms:queue.foo.JmsPollingConsumerTest", body + " Claus");
+        Executors.newSingleThreadExecutor().execute(() -> {
+            String body = consumer.receiveBody("sjms:queue.start", 3000, String.class);
+            template.sendBody("sjms:queue.foo", body + " Claus");
         });
 
         // wait a little to demonstrate we can start poll before we have a msg on the queue
@@ -123,12 +116,11 @@ public class JmsPollingConsumerTest extends JmsTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() {
-                from("direct:start").log("Sending ${body} to queue.start.JmsPollingConsumerTest")
-                        .to("sjms:queue.start.JmsPollingConsumerTest");
+                from("direct:start").log("Sending ${body} to queue.start").to("sjms:queue.start");
 
-                from("sjms:queue.foo.JmsPollingConsumerTest").log("Received ${body} from queue.start.JmsPollingConsumerTest")
-                        .to("mock:result");
+                from("sjms:queue.foo").log("Received ${body} from queue.start").to("mock:result");
             }
         };
     }
+
 }

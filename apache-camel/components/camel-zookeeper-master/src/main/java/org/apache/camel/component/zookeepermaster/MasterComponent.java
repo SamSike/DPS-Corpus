@@ -77,7 +77,8 @@ public class MasterComponent extends ZookeeperComponentSupport {
         if (params != null && params.size() > 0) {
             childUri = childUri + "?" + uri.substring(uri.indexOf('?') + 1);
         }
-        return new MasterEndpoint(uri, this, name, childUri);
+        MasterEndpoint answer = new MasterEndpoint(uri, this, name, childUri);
+        return answer;
     }
 
     protected String getCamelClusterPath(String name) {

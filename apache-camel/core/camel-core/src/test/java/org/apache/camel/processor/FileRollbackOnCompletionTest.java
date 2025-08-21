@@ -62,7 +62,7 @@ public class FileRollbackOnCompletionTest extends ContextTestSupport {
 
     public static final class OrderService {
 
-        public String createMail(String order) {
+        public String createMail(String order) throws Exception {
             return "Order confirmed: " + order;
         }
 
@@ -108,10 +108,10 @@ public class FileRollbackOnCompletionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:confirm")
                         // use a route scoped onCompletion to be executed when the
                         // Exchange failed

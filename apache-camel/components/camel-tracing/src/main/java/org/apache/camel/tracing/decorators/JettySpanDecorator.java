@@ -25,7 +25,7 @@ public class JettySpanDecorator extends AbstractHttpSpanDecorator {
 
     @Override
     public String getComponentClassName() {
-        return "org.apache.camel.component.jetty12.JettyHttpComponent12";
+        return "org.apache.camel.component.jetty10.JettyHttpComponent10";
     }
 
 }

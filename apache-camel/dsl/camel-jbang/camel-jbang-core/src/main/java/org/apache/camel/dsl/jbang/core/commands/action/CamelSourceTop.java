@@ -16,26 +16,27 @@
  */
 package org.apache.camel.dsl.jbang.core.commands.action;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
-import org.apache.camel.dsl.jbang.core.common.PathUtils;
+import org.apache.camel.util.FileUtil;
+import org.apache.camel.util.IOHelper;
+import org.apache.camel.util.StopWatch;
 import org.apache.camel.util.json.JsonArray;
 import org.apache.camel.util.json.JsonObject;
 import org.apache.camel.util.json.Jsoner;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
-@Command(name = "source", description = "List top processors (source) in a running Camel integration", sortOptions = false,
-         showDefaultValues = true)
+@Command(name = "source", description = "List top processors (source) in a running Camel integration")
 public class CamelSourceTop extends ActionWatchCommand {
 
-    @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
-    String name = "*";
+    @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "1")
+    String name;
 
     @CommandLine.Option(names = { "--limit" },
                         description = "Filter processors by limiting to the given number of rows")
@@ -52,29 +53,29 @@ public class CamelSourceTop extends ActionWatchCommand {
     }
 
     @Override
-    public Integer doWatchCall() throws Exception {
+    public Integer doCall() throws Exception {
         List<Row> rows = new ArrayList<>();
 
         List<Long> pids = findPids(name);
         if (pids.isEmpty()) {
             return 0;
         } else if (pids.size() > 1) {
-            printer().println("Name or pid " + name + " matches " + pids.size()
-                              + " running Camel integrations. Specify a name or PID that matches exactly one.");
+            System.out.println("Name or pid " + name + " matches " + pids.size()
+                               + " running Camel integrations. Specify a name or PID that matches exactly one.");
             return 0;
         }
 
         this.pid = pids.get(0);
 
         // ensure output file is deleted before executing action
-        Path outputFile = getOutputFile(Long.toString(pid));
-        PathUtils.deleteFile(outputFile);
+        File outputFile = getOutputFile("" + pid);
+        FileUtil.deleteFile(outputFile);
 
         JsonObject root = new JsonObject();
         root.put("action", "top-processors");
-        Path f = getActionFile(Long.toString(pid));
+        File f = getActionFile("" + pid);
         try {
-            Files.writeString(f, root.toJson());
+            IOHelper.writeText(root.toJson(), f);
         } catch (Exception e) {
             // ignore
         }
@@ -132,50 +133,71 @@ public class CamelSourceTop extends ActionWatchCommand {
                 }
             }
         } else {
-            printer().println("Response from running Camel with PID " + pid + " not received within 5 seconds");
+            System.out.println("Response from running Camel with PID " + pid + " not received within 5 seconds");
             return 1;
         }
 
         // sort rows
         rows.sort(this::sortRow);
 
-        if (watch) {
-            clearScreen();
-        }
+        clearScreen();
         if (!rows.isEmpty()) {
             printSource(rows);
         }
 
         // delete output file after use
-        PathUtils.deleteFile(outputFile);
+        FileUtil.deleteFile(outputFile);
 
         return 0;
     }
 
     protected void printSource(List<Row> rows) {
         for (Row row : rows) {
-            printer().printf("Route: %s\tSource: %s Total: %s Mean: %s Max: %s Min: %s Last: %s%n", row.routeId, row.location,
+            System.out.printf("Route: %s\tSource: %s Total: %s Mean: %s Max: %s Min: %s Last: %s%n", row.routeId, row.location,
                     row.total, row.mean != null ? row.mean : "", row.max,
                     row.min, row.last != null ? row.last : "");
             for (int i = 0; i < row.code.size(); i++) {
                 Code code = row.code.get(i);
                 String c = Jsoner.unescape(code.code);
                 String arrow = code.match ? "-->" : "   ";
-                printer().printf("%4d: %s %s%n", code.line, arrow, c);
+                System.out.printf("%4d: %s %s%n", code.line, arrow, c);
             }
-            printer().println();
+            System.out.println();
         }
     }
 
-    protected JsonObject waitForOutputFile(Path outputFile) {
-        return getJsonObject(outputFile);
+    protected JsonObject waitForOutputFile(File outputFile) {
+        StopWatch watch = new StopWatch();
+        while (watch.taken() < 5000) {
+            try {
+                // give time for response to be ready
+                Thread.sleep(100);
+
+                if (outputFile.exists()) {
+                    FileInputStream fis = new FileInputStream(outputFile);
+                    String text = IOHelper.loadText(fis);
+                    IOHelper.close(fis);
+                    return (JsonObject) Jsoner.deserialize(text);
+                }
+
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        return null;
     }
 
     protected int sortRow(Row o1, Row o2) {
         // sort for highest mean value as we want the slowest in the top
         long m1 = o1.mean != null ? Long.parseLong(o1.mean) : 0;
         long m2 = o2.mean != null ? Long.parseLong(o2.mean) : 0;
-        return Long.compare(m2, m1);
+        if (m1 < m2) {
+            return 1;
+        } else if (m1 > m2) {
+            return -1;
+        } else {
+            return 0;
+        }
     }
 
     private static class Row {

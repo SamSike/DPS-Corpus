@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,10 +38,9 @@
 package org.jooq;
 
 import static org.jooq.impl.Internal.arrayType;
-import static org.jooq.tools.reflect.Reflect.wrapper;
 
-import org.jooq.impl.AbstractContextConverter;
-import org.jooq.impl.Internal;
+import org.jooq.impl.AbstractConverter;
+import org.jooq.tools.Convert;
 
 /**
  * A {@link Converter} that can convert arrays based on a delegate converter
@@ -49,38 +48,25 @@ import org.jooq.impl.Internal;
  *
  * @author Lukas Eder
  */
-final class ArrayConverter<T, U> extends AbstractContextConverter<T[], U[]> {
+final class ArrayConverter<T, U> extends AbstractConverter<T[], U[]> {
 
-    final ContextConverter<T, U> converter;
-    final ContextConverter<U, T> inverse;
+    final Converter<T, U> converter;
+    final Converter<U, T> inverse;
 
-    public ArrayConverter(ContextConverter<T, U> converter) {
-
-        // [#18059] Work with wrapper types, as we cannot represent Converter<int, U>,
-        //          so we shouldn't work with Converter<int[], U[]> either
-        super(arrayType(wrapper(converter.fromType())), arrayType(wrapper(converter.toType())));
+    public ArrayConverter(Converter<T, U> converter) {
+        super(arrayType(converter.fromType()), arrayType(converter.toType()));
 
         this.converter = converter;
         this.inverse = Converters.inverse(converter);
     }
 
     @Override
-    public final boolean fromSupported() {
-        return converter.fromSupported();
+    public final U[] from(T[] t) {
+        return Convert.convertArray(t, converter);
     }
 
     @Override
-    public final boolean toSupported() {
-        return converter.toSupported();
-    }
-
-    @Override
-    public final U[] from(T[] t, ConverterContext scope) {
-        return Internal.convertArray(t, converter);
-    }
-
-    @Override
-    public final T[] to(U[] t, ConverterContext scope) {
-        return Internal.convertArray(t, inverse);
+    public final T[] to(U[] t) {
+        return Convert.convertArray(t, inverse);
     }
 }

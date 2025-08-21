@@ -117,10 +117,10 @@ public class TryCatchRecipientListTest extends ContextTestSupport {
         assertMockEndpointsSatisfied();
     }
 
-    protected RouteBuilder createTryCatchToRouteBuilder() {
+    protected RouteBuilder createTryCatchToRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead"));
 
                 from("direct:start").doTry().to("direct:foo").doCatch(Exception.class).to("mock:catch").transform()
@@ -128,7 +128,7 @@ public class TryCatchRecipientListTest extends ContextTestSupport {
 
                 from("direct:foo").errorHandler(noErrorHandler()).to("mock:foo").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         throw new IllegalArgumentException("Forced");
                     }
                 });
@@ -136,10 +136,10 @@ public class TryCatchRecipientListTest extends ContextTestSupport {
         };
     }
 
-    protected RouteBuilder createTryCatchRecipientListRouteBuilder() {
+    protected RouteBuilder createTryCatchRecipientListRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead"));
 
                 from("direct:start").doTry().recipientList(constant("direct:foo")).end().doCatch(Exception.class)
@@ -148,7 +148,7 @@ public class TryCatchRecipientListTest extends ContextTestSupport {
 
                 from("direct:foo").errorHandler(noErrorHandler()).to("mock:foo").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         throw new IllegalArgumentException("Forced");
                     }
                 });
@@ -156,10 +156,10 @@ public class TryCatchRecipientListTest extends ContextTestSupport {
         };
     }
 
-    protected RouteBuilder createDualTryCatchRecipientListRouteBuilder() {
+    protected RouteBuilder createDualTryCatchRecipientListRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead"));
 
                 from("direct:start").doTry().recipientList(constant("direct:foo")).end().doCatch(Exception.class)
@@ -170,14 +170,14 @@ public class TryCatchRecipientListTest extends ContextTestSupport {
 
                 from("direct:foo").errorHandler(noErrorHandler()).to("mock:foo").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         throw new IllegalArgumentException("Forced");
                     }
                 });
 
                 from("direct:bar").errorHandler(noErrorHandler()).to("mock:bar").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         throw new IllegalArgumentException("Forced Again");
                     }
                 });
@@ -185,17 +185,17 @@ public class TryCatchRecipientListTest extends ContextTestSupport {
         };
     }
 
-    protected RouteBuilder createToRouteBuilder() {
+    protected RouteBuilder createToRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead"));
 
                 from("direct:start").to("direct:foo").to("mock:result");
 
                 from("direct:foo").errorHandler(noErrorHandler()).to("mock:foo").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         throw new IllegalArgumentException("Forced");
                     }
                 });
@@ -203,17 +203,17 @@ public class TryCatchRecipientListTest extends ContextTestSupport {
         };
     }
 
-    protected RouteBuilder createRecipientListRouteBuilder() {
+    protected RouteBuilder createRecipientListRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead"));
 
                 from("direct:start").recipientList(constant("direct:foo")).end().to("mock:result");
 
                 from("direct:foo").errorHandler(noErrorHandler()).to("mock:foo").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         throw new IllegalArgumentException("Forced");
                     }
                 });

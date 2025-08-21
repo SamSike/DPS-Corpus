@@ -37,9 +37,11 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.camel.util.IOHelper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -52,7 +54,9 @@ public class MimeMultipartDataFormatTest extends CamelTestSupport {
     private AttachmentMessage in;
 
     @Override
-    public void doPostSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
         exchange = new DefaultExchange(context);
         in = exchange.getIn(AttachmentMessage.class);
     }
@@ -512,8 +516,8 @@ public class MimeMultipartDataFormatTest extends CamelTestSupport {
     private void addAttachment(DataSource ds, String attFileName, Map<String, String> headers) {
         DefaultAttachment attachment = new DefaultAttachment(ds);
         if (headers != null) {
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
-                attachment.addHeader(entry.getKey(), entry.getValue());
+            for (String headerName : headers.keySet()) {
+                attachment.addHeader(headerName, headers.get(headerName));
             }
         }
         in.addAttachmentObject(attFileName, attachment);
@@ -528,8 +532,8 @@ public class MimeMultipartDataFormatTest extends CamelTestSupport {
         DataSource ds = new ByteArrayDataSource(attText, attContentType);
         DefaultAttachment attachment = new DefaultAttachment(ds);
         if (headers != null) {
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
-                attachment.addHeader(entry.getKey(), entry.getValue());
+            for (String headerName : headers.keySet()) {
+                attachment.addHeader(headerName, headers.get(headerName));
             }
         }
         in.addAttachmentObject(attFileName, attachment);

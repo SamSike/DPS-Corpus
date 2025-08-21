@@ -26,12 +26,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class PropertyTest extends LanguageTestSupport {
 
     @Test
-    public void testPropertyExpressions() {
+    public void testPropertyExpressions() throws Exception {
         assertExpression("quote", "Camel rocks");
     }
 
     @Test
-    public void testPredicates() {
+    public void testPredicates() throws Exception {
         assertPredicate("quote");
     }
 

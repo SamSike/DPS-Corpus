@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,14 @@
 
 package org.springframework.web.reactive.function.server;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.Test;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -36,6 +33,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
 import org.springframework.web.testfixture.http.server.reactive.MockServerHttpRequest;
 import org.springframework.web.testfixture.http.server.reactive.MockServerHttpResponse;
 import org.springframework.web.testfixture.server.MockServerWebExchange;
@@ -48,15 +46,15 @@ import static org.mockito.Mockito.mock;
  * @author Arjen Poutsma
  * @since 5.0
  */
-class RouterFunctionsTests {
+public class RouterFunctionsTests {
 
 	@Test
-	void routeMatch() {
+	public void routeMatch() {
 		HandlerFunction<ServerResponse> handlerFunction = request -> ServerResponse.ok().build();
 
 		MockServerHttpRequest mockRequest = MockServerHttpRequest.get("https://example.com").build();
 		ServerRequest request = new DefaultServerRequest(MockServerWebExchange.from(mockRequest), Collections.emptyList());
-		RequestPredicate requestPredicate = mock();
+		RequestPredicate requestPredicate = mock(RequestPredicate.class);
 		given(requestPredicate.test(request)).willReturn(true);
 
 		RouterFunction<ServerResponse>
@@ -72,12 +70,12 @@ class RouterFunctionsTests {
 	}
 
 	@Test
-	void routeNoMatch() {
+	public void routeNoMatch() {
 		HandlerFunction<ServerResponse> handlerFunction = request -> ServerResponse.ok().build();
 
 		MockServerHttpRequest mockRequest = MockServerHttpRequest.get("https://example.com").build();
 		ServerRequest request = new DefaultServerRequest(MockServerWebExchange.from(mockRequest), Collections.emptyList());
-		RequestPredicate requestPredicate = mock();
+		RequestPredicate requestPredicate = mock(RequestPredicate.class);
 		given(requestPredicate.test(request)).willReturn(false);
 
 		RouterFunction<ServerResponse> result = RouterFunctions.route(requestPredicate, handlerFunction);
@@ -90,13 +88,13 @@ class RouterFunctionsTests {
 	}
 
 	@Test
-	void nestMatch() {
+	public void nestMatch() {
 		HandlerFunction<ServerResponse> handlerFunction = request -> ServerResponse.ok().build();
 		RouterFunction<ServerResponse> routerFunction = request -> Mono.just(handlerFunction);
 
 		MockServerHttpRequest mockRequest = MockServerHttpRequest.get("https://example.com").build();
 		ServerRequest request = new DefaultServerRequest(MockServerWebExchange.from(mockRequest), Collections.emptyList());
-		RequestPredicate requestPredicate = mock();
+		RequestPredicate requestPredicate = mock(RequestPredicate.class);
 		given(requestPredicate.nest(request)).willReturn(Optional.of(request));
 
 		RouterFunction<ServerResponse> result = RouterFunctions.nest(requestPredicate, routerFunction);
@@ -110,13 +108,13 @@ class RouterFunctionsTests {
 	}
 
 	@Test
-	void nestNoMatch() {
+	public void nestNoMatch() {
 		HandlerFunction<ServerResponse> handlerFunction = request -> ServerResponse.ok().build();
 		RouterFunction<ServerResponse> routerFunction = request -> Mono.just(handlerFunction);
 
 		MockServerHttpRequest mockRequest = MockServerHttpRequest.get("https://example.com").build();
 		ServerRequest request = new DefaultServerRequest(MockServerWebExchange.from(mockRequest), Collections.emptyList());
-		RequestPredicate requestPredicate = mock();
+		RequestPredicate requestPredicate = mock(RequestPredicate.class);
 		given(requestPredicate.nest(request)).willReturn(Optional.empty());
 
 		RouterFunction<ServerResponse> result = RouterFunctions.nest(requestPredicate, routerFunction);
@@ -129,7 +127,7 @@ class RouterFunctionsTests {
 	}
 
 	@Test
-	void toHttpHandlerNormal() {
+	public void toHttpHandlerNormal() {
 		HandlerFunction<ServerResponse> handlerFunction = request -> ServerResponse.accepted().build();
 		RouterFunction<ServerResponse> routerFunction =
 				RouterFunctions.route(RequestPredicates.all(), handlerFunction);
@@ -144,7 +142,7 @@ class RouterFunctionsTests {
 	}
 
 	@Test
-	void toHttpHandlerHandlerThrowsException() {
+	public void toHttpHandlerHandlerThrowsException() {
 		HandlerFunction<ServerResponse> handlerFunction =
 				request -> {
 					throw new IllegalStateException();
@@ -162,7 +160,7 @@ class RouterFunctionsTests {
 	}
 
 	@Test
-	void toHttpHandlerHandlerReturnsException() {
+	public void toHttpHandlerHandlerReturnsException() {
 		HandlerFunction<ServerResponse> handlerFunction =
 				request -> Mono.error(new IllegalStateException());
 		RouterFunction<ServerResponse> routerFunction =
@@ -178,7 +176,7 @@ class RouterFunctionsTests {
 	}
 
 	@Test
-	void toHttpHandlerHandlerResponseStatusException() {
+	public void toHttpHandlerHandlerResponseStatusException() {
 		HandlerFunction<ServerResponse> handlerFunction =
 				request -> Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found"));
 		RouterFunction<ServerResponse> routerFunction =
@@ -194,34 +192,17 @@ class RouterFunctionsTests {
 	}
 
 	@Test
-	void toHttpHandlerRouteNotFoundReturnsResponseStatusException() {
-		HandlerFunction<ServerResponse> handlerFunction = request -> ServerResponse.accepted().build();
-		RouterFunction<ServerResponse> routerFunction =
-				RouterFunctions.route(RequestPredicates.GET("/path"), handlerFunction);
-
-		HandlerStrategies handlerStrategies = HandlerStrategies.empty().exceptionHandler((exchange, ex) -> {
-			exchange.getResponse().setStatusCode(HttpStatus.NOT_FOUND);
-			DataBuffer buffer = exchange.getResponse().bufferFactory().wrap("Custom response".getBytes(StandardCharsets.UTF_8));
-			return exchange.getResponse().writeWith(Flux.just(buffer));
-		}).build();
-		HttpHandler result = RouterFunctions.toHttpHandler(routerFunction, handlerStrategies);
-		assertThat(result).isNotNull();
-
-		MockServerHttpRequest httpRequest = MockServerHttpRequest.get("https://localhost").build();
-		MockServerHttpResponse httpResponse = new MockServerHttpResponse();
-		result.handle(httpRequest, httpResponse).block();
-		assertThat(httpResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-		assertThat(httpResponse.getBodyAsString().block()).isEqualTo("Custom response");
-	}
-
-	@Test
-	void toHttpHandlerHandlerReturnResponseStatusExceptionInResponseWriteTo() {
+	public void toHttpHandlerHandlerReturnResponseStatusExceptionInResponseWriteTo() {
 		HandlerFunction<ServerResponse> handlerFunction =
 				// Mono.<ServerResponse> is required for compilation in Eclipse
 				request -> Mono.just(new ServerResponse() {
 					@Override
 					public HttpStatus statusCode() {
 						return HttpStatus.OK;
+					}
+					@Override
+					public int rawStatusCode() {
+						return 200;
 					}
 					@Override
 					public HttpHeaders headers() {
@@ -249,13 +230,17 @@ class RouterFunctionsTests {
 	}
 
 	@Test
-	void toHttpHandlerHandlerThrowResponseStatusExceptionInResponseWriteTo() {
+	public void toHttpHandlerHandlerThrowResponseStatusExceptionInResponseWriteTo() {
 		HandlerFunction<ServerResponse> handlerFunction =
 				// Mono.<ServerResponse> is required for compilation in Eclipse
 				request -> Mono.just(new ServerResponse() {
 					@Override
 					public HttpStatus statusCode() {
 						return HttpStatus.OK;
+					}
+					@Override
+					public int rawStatusCode() {
+						return 200;
 					}
 					@Override
 					public HttpHeaders headers() {
@@ -283,12 +268,15 @@ class RouterFunctionsTests {
 	}
 
 	@Test
-	void toHttpHandlerWebFilter() {
+	public void toHttpHandlerWebFilter() {
 		AtomicBoolean filterInvoked = new AtomicBoolean();
 
-		WebFilter webFilter = (exchange, chain) -> {
-			filterInvoked.set(true);
-			return chain.filter(exchange);
+		WebFilter webFilter = new WebFilter() {
+			@Override
+			public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+				filterInvoked.set(true);
+				return chain.filter(exchange);
+			}
 		};
 
 		HandlerFunction<ServerResponse> handlerFunction = request -> ServerResponse.accepted().build();

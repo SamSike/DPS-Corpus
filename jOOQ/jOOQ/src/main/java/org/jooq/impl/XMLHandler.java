@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,8 +43,7 @@ import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DefaultDataType.getDataType;
 import static org.jooq.impl.SQLDataType.VARCHAR;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
-import static org.jooq.impl.Tools.allMatch;
-import static org.jooq.impl.Tools.converterContext;
+import static org.jooq.impl.Tools.anyMatch;
 import static org.jooq.impl.Tools.fields;
 import static org.jooq.impl.Tools.newRecord;
 import static org.jooq.impl.Tools.row0;
@@ -61,15 +60,11 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.jooq.ContextConverter;
-import org.jooq.Converter;
-import org.jooq.ConverterContext;
 import org.jooq.DSLContext;
 import org.jooq.DataType;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Result;
-import org.jooq.UDTRecord;
 import org.jooq.exception.DataAccessException;
 import org.jooq.tools.JooqLogger;
 
@@ -96,11 +91,9 @@ final class XMLHandler<R extends Record> extends DefaultHandler {
         boolean                  inFields;
         int                      inRecord;
         boolean                  inColumn;
-        boolean                  inElement;
         Result<R>                result;
         final List<Field<?>>     fields;
         final List<Object>       values;
-        List<Object>             elements;
         int                      column;
 
         @SuppressWarnings("unchecked")
@@ -113,21 +106,11 @@ final class XMLHandler<R extends Record> extends DefaultHandler {
         }
 
         final R into(R r) {
-            ConverterContext cc = null;
 
             // [#12134] Patch base64 encoded binary values
             for (int i = 0; i < fields.size(); i++) {
-                Object v;
-                try {
-                    v = values.get(i);
-                }
-                catch (Exception e) {
-                    throw e;
-                }
-                DataType<?> t = fields.get(i).getDataType();
-
-                if (v instanceof String s) {
-                    if (t.isBinary()) {
+                if (fields.get(i).getDataType().isBinary()) {
+                    if (values.get(i) instanceof String) { String s = (String) values.get(i);
 
 
 
@@ -136,21 +119,10 @@ final class XMLHandler<R extends Record> extends DefaultHandler {
                         values.set(i, Base64.getDecoder().decode(s));
                     }
                 }
-
-                // [#18190] For historic reasons, Record.from() will not apply Converter<T, T>, so any potential
-                //          Converter<String, String> should be applied eagerly, before loading data into the record.
-                if (v == null || v instanceof String) {
-                    if (t instanceof ConvertedDataType && t.getFromType() == String.class && t.getToType() == String.class) {
-                        values.set(i, ((ContextConverter<String, String>) t.getConverter()).from(
-                            (String) v,
-                            cc == null ? (cc = converterContext(ctx.configuration())) : cc
-                        ));
-                    }
-                }
             }
 
             r.from(values);
-            r.touched(false);
+            r.changed(false);
             return r;
         }
     }
@@ -252,9 +224,6 @@ final class XMLHandler<R extends Record> extends DefaultHandler {
                     throw new UnsupportedOperationException("Nested records not supported yet");
             }
         }
-        else if (s.inColumn && "element".equalsIgnoreCase(qName) && s.elements != null) {
-            s.inElement = true;
-        }
         else {
             if (s.result == null) {
                 String fieldName;
@@ -275,23 +244,16 @@ final class XMLHandler<R extends Record> extends DefaultHandler {
             DataType<?> t = s.fields.get(s.column).getDataType();
 
             // [#13181] String NULL and '' values cannot be distinguished without xsi:nil
-            if (t.isString() && !isNil(attributes))
-                s.values.add("");
-            else if (t.isArray() && !isNil(attributes))
-                s.elements = new ArrayList<>();
+            if (t.isString()
+                && !("true".equals(attributes.getValue("xsi:nil")))
 
-            // [#18726] UDTs can be NULL, unlike nested records, which currently cannot be NULL yet.
-            else if (!t.isMultiset() && !t.isRecord() || t.isUDTRecord())
+
+
+            )
+                s.values.add("");
+            else if (!t.isMultiset() && !t.isRecord())
                 s.values.add(null);
         }
-    }
-
-    private final boolean isNil(Attributes attributes) {
-        return "true".equals(attributes.getValue("xsi:nil"))
-
-
-
-        ;
     }
 
     @Override
@@ -316,14 +278,9 @@ final class XMLHandler<R extends Record> extends DefaultHandler {
             s.inRecord--;
 
             initResult();
-            s.result.add(newRecord(true, ctx.configuration(), s.recordType, s.row).operate(s::into));
+            s.result.add(newRecord(true, s.recordType, s.row, ctx.configuration()).operate(s::into));
             s.values.clear();
             s.column = 0;
-        }
-        else if (s.inColumn && "element".equalsIgnoreCase(qName) && s.elements != null) {
-            s.inElement = false;
-            s.elements.add(s.values.get(s.column));
-            s.values.remove(s.column);
         }
 
         else x: {
@@ -332,16 +289,8 @@ final class XMLHandler<R extends Record> extends DefaultHandler {
                 Field<?> f = peek.row.field(peek.column);
 
                 if ("record".equalsIgnoreCase(qName) && f.getDataType().isRecord()) {
-                    R r = newRecord(true, ctx.configuration(), s.recordType, s.row).operate(s::into);
-
-                    // [#18726] UDTs can be NULL, unlike nested records, which currently cannot be NULL yet.
-                    if (f.getDataType().isUDTRecord())
-                        peek.values.set(peek.values.size() - 1, r);
-                    else
-                        peek.values.add(r);
-
+                    peek.values.add(newRecord(true, s.recordType, s.row, ctx.configuration()).operate(s::into));
                     s = states.pop();
-                    s.inRecord--;
                     break x;
                 }
                 else if ("result".equalsIgnoreCase(qName) && f.getDataType().isMultiset()) {
@@ -350,10 +299,6 @@ final class XMLHandler<R extends Record> extends DefaultHandler {
                     s = states.pop();
                     break x;
                 }
-            }
-            else if (s.elements != null) {
-                s.values.add(s.elements);
-                s.elements = null;
             }
 
             s.inColumn = false;
@@ -380,24 +325,17 @@ final class XMLHandler<R extends Record> extends DefaultHandler {
         if (fields.size() <= 1)
             return false;
         else
-            return allMatch(fields, f -> "value".equalsIgnoreCase(f.getName()));
+            return !anyMatch(fields, f -> !"value".equalsIgnoreCase(f.getName()));
     }
 
     @Override
     public final void characters(char[] ch, int start, int length) throws SAXException {
-        DataType<?> t;
-
         if (s.inColumn
-            && !(t = s.fields.get(s.column).getDataType()).isRecord()
-            && !t.isMultiset()
-            && (!t.isArray() || s.inElement)
-        ) {
+                && !(s.fields.get(s.column).getDataType().isRecord())
+                && !(s.fields.get(s.column).getDataType().isMultiset())) {
             String value = new String(ch, start, length);
             Object old;
 
-            // [#13872] If we're reading an array (s.inElement), the element
-            //          content is still appended to s.values for now, until
-            //          "element" is finished
             if (s.values.size() == s.column)
                 s.values.add(value);
             else if ((old = s.values.get(s.column)) == null)

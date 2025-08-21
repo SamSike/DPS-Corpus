@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,10 +40,8 @@ package org.jooq.impl;
 import static org.jooq.impl.DSL.choose;
 import static org.jooq.impl.DSL.function;
 import static org.jooq.impl.DSL.inline;
-import static org.jooq.impl.DSL.when;
-import static org.jooq.impl.Names.*;
+import static org.jooq.impl.Names.N_CHOOSE;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
-import static org.jooq.impl.Tools.nullSafeDataType;
 
 import org.jooq.CaseValueStep;
 import org.jooq.CaseWhenStep;
@@ -62,23 +60,19 @@ final class Choose<T> extends AbstractField<T> implements QOM.Choose<T> {
     private Field<T>[]     values;
 
     Choose(Field<Integer> index, Field<T>[] values) {
-        this(index, values, nullSafeDataType(values));
-    }
-
-    Choose(Field<Integer> index, Field<T>[] values, DataType<T> type) {
-        super(N_CHOOSE, type);
+        super(N_CHOOSE, dataType(values));
 
         this.index = index;
         this.values = values;
     }
 
+    @SuppressWarnings("unchecked")
+    private static final <T> DataType<T> dataType(Field<T>[] values) {
+        return values == null || values.length == 0 ? (DataType<T>) SQLDataType.OTHER : values[0].getDataType();
+    }
+
     @Override
     public final void accept(Context<?> ctx) {
-        if (values.length == 0) {
-            ctx.visit(inline(null, getDataType()));
-            return;
-        }
-
         switch (ctx.family()) {
 
 
@@ -86,58 +80,17 @@ final class Choose<T> extends AbstractField<T> implements QOM.Choose<T> {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-            case CLICKHOUSE:
-            case CUBRID:
-            case DERBY:
-            case DUCKDB:
-            case FIREBIRD:
-            case H2:
-            case HSQLDB:
-            case IGNITE:
-            case POSTGRES:
-            case SQLITE:
-            case TRINO:
-            case YUGABYTEDB: {
+            default: {
                 CaseValueStep<Integer> s = choose(index);
                 CaseWhenStep<Integer, T> when = null;
 
-                for (int i = 0; i < values.length; i++)
+                for (int i = 0; i < values.length; i++) {
                     when = when == null
                         ? s.when(inline(i + 1), values[i])
                         : when.when(inline(i + 1), values[i]);
+                }
 
                 ctx.visit(when);
-                break;
-            }
-
-
-
-
-
-
-
-
-
-
-            case MARIADB:
-            case MYSQL: {
-                ctx.visit(function(N_ELT, getDataType(), Tools.combine(index, values)));
-                break;
-            }
-
-            default: {
-                ctx.visit(function(N_CHOOSE, getDataType(), Tools.combine(index, values)));
                 break;
             }
         }
@@ -157,11 +110,8 @@ final class Choose<T> extends AbstractField<T> implements QOM.Choose<T> {
         return QOM.unmodifiable(values);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public final Function2<? super Field<Integer>, ? super UnmodifiableList<? extends Field<T>>, ? extends QOM.Choose<T>> $constructor() {
-        return (i, v) -> v.isEmpty()
-            ? new Choose<T>(i, (Field<T>[]) EMPTY_FIELD, getDataType())
-            : new Choose<T>(i, (Field<T>[]) v.toArray(EMPTY_FIELD));
+    public final Function2<? super Field<Integer>, ? super UnmodifiableList<? extends Field<T>>, ? extends Field<T>> $constructor() {
+        return (i, v) -> new Choose<T>(i, (Field<T>[]) v.toArray(EMPTY_FIELD));
     }
 }

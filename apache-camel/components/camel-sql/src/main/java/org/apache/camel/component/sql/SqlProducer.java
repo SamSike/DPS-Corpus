@@ -17,7 +17,6 @@
 package org.apache.camel.component.sql;
 
 import java.sql.Connection;
-import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.support.DefaultProducer;
 import org.apache.camel.support.ResourceHelper;
 import org.slf4j.Logger;
@@ -52,14 +52,12 @@ public class SqlProducer extends DefaultProducer {
     private final boolean alwaysPopulateStatement;
     private final SqlPrepareStatementStrategy sqlPrepareStatementStrategy;
     private final boolean useMessageBodyForSql;
-    private final boolean manualCommit;
     private int parametersCount;
 
     public SqlProducer(SqlEndpoint endpoint, String query, JdbcTemplate jdbcTemplate,
                        SqlPrepareStatementStrategy sqlPrepareStatementStrategy,
                        boolean batch, boolean alwaysPopulateStatement, boolean useMessageBodyForSql) {
         super(endpoint);
-        this.manualCommit = endpoint.isBatchAutoCommitDisabled();
         this.jdbcTemplate = jdbcTemplate;
         this.sqlPrepareStatementStrategy = sqlPrepareStatementStrategy;
         this.query = query;
@@ -100,12 +98,7 @@ public class SqlProducer extends DefaultProducer {
             sql = exchange.getIn().getBody(String.class);
         } else {
             String queryHeader = exchange.getIn().getHeader(SqlConstants.SQL_QUERY, String.class);
-            if (queryHeader != null) {
-                String placeholder = getEndpoint().isUsePlaceholder() ? getEndpoint().getPlaceholder() : null;
-                sql = SqlHelper.resolvePlaceholders(queryHeader, placeholder);
-            } else {
-                sql = resolvedQuery;
-            }
+            sql = queryHeader != null ? queryHeader : resolvedQuery;
         }
         final String preparedQuery
                 = sqlPrepareStatementStrategy.prepareQuery(sql, getEndpoint().isAllowNamedParameters(), exchange);
@@ -156,38 +149,14 @@ public class SqlProducer extends DefaultProducer {
                 try {
                     populateStatement(ps, exchange, sql, preparedQuery);
                     boolean isResultSet = false;
-                    boolean restoreAutoCommit = true;
 
                     if (batch) {
-                        if (!exchange.isTransacted() && manualCommit) {
-                            // optimize batch by turning off auto-commit
-                            restoreAutoCommit = ps.getConnection().getAutoCommit();
-                            ps.getConnection().setAutoCommit(false);
+                        int[] updateCounts = ps.executeBatch();
+                        int total = 0;
+                        for (int count : updateCounts) {
+                            total += count;
                         }
-                        try {
-                            int[] updateCounts = ps.executeBatch();
-                            int total = 0;
-                            for (int count : updateCounts) {
-                                total += count;
-                            }
-                            exchange.getIn().setHeader(SqlConstants.SQL_UPDATE_COUNT, total);
-                            if (!exchange.isTransacted() && manualCommit) {
-                                // optimize batch by commit after done
-                                ps.getConnection().commit();
-                            }
-                        } catch (Exception e) {
-                            if (!exchange.isTransacted() && manualCommit) {
-                                // we failed so rollback
-                                ps.getConnection().rollback();
-                            }
-                            throw e;
-                        } finally {
-                            if (!exchange.isTransacted() && manualCommit && restoreAutoCommit) {
-                                // restore auto commit on connection as it may be used
-                                // in another kind of query (connection pooling)
-                                ps.getConnection().setAutoCommit(true);
-                            }
-                        }
+                        exchange.getIn().setHeader(SqlConstants.SQL_UPDATE_COUNT, total);
                     } else {
                         isResultSet = ps.execute();
                         if (isResultSet) {
@@ -262,7 +231,7 @@ public class SqlProducer extends DefaultProducer {
 
                 // we do not know the row count so we cannot set a ROW_COUNT header
                 // defer closing the iterator when the exchange is complete
-                exchange.getExchangeExtension().addOnCompletion(new ResultSetIteratorCompletion(iterator));
+                exchange.adapt(ExtendedExchange.class).addOnCompletion(new ResultSetIteratorCompletion(iterator));
             }
             return iterator;
         } catch (Exception e) {
@@ -276,17 +245,11 @@ public class SqlProducer extends DefaultProducer {
 
     private void populateStatement(PreparedStatement ps, Exchange exchange, String sql, String preparedQuery)
             throws SQLException {
-
-        if (getEndpoint().getFetchSize() > 0) {
-            ps.setFetchSize(getEndpoint().getFetchSize());
-        }
-
         int expected;
         if (parametersCount > 0) {
             expected = parametersCount;
         } else {
-            ParameterMetaData meta = ps.getParameterMetaData();
-            expected = meta != null ? meta.getParameterCount() : 0;
+            expected = ps.getParameterMetaData() != null ? ps.getParameterMetaData().getParameterCount() : 0;
         }
 
         // only populate if really needed

@@ -16,13 +16,9 @@
  */
 package org.apache.camel.impl;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.awaitility.Awaitility;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -49,16 +45,10 @@ public class DefaultCamelContextSuspendResumeRouteTest extends ContextTestSuppor
 
         context.suspend();
 
-        // even though we wait for the route to suspend, there is a race condition where the consumer
-        // may still process messages while it's being suspended due to asynchronous message handling.
-        // as a result, we need to wait a bit longer to ensure that the seda consumer is suspended before
-        // sending the next message.
-        Thread.sleep(1000L);
-
         // need to give seda consumer thread time to idle
-        Awaitility.await().atMost(200, TimeUnit.MILLISECONDS)
-                .pollDelay(100, TimeUnit.MILLISECONDS)
-                .untilAsserted(() -> Assertions.assertDoesNotThrow(() -> template.sendBody("seda:foo", "B")));
+        Thread.sleep(100);
+
+        template.sendBody("seda:foo", "B");
 
         mock.assertIsSatisfied(1000);
 
@@ -85,10 +75,10 @@ public class DefaultCamelContextSuspendResumeRouteTest extends ContextTestSuppor
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo").to("log:foo").to("mock:result");
             }
         };

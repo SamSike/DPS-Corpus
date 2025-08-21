@@ -9,7 +9,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   https://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -22,19 +22,13 @@ package org.jooq.tools.json;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.io.StringWriter;
 import java.io.Writer;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 /**
  * @author FangYidong&lt;fangyidong@yahoo.com.cn&gt;
- * @deprecated - 3.21.0 - [#18329] - This shaded third party dependency will be
- *             removed without replacement. Please use any other JSON parser,
- *             instead - e.g. Jackson.
  */
-@Deprecated(forRemoval = true)
 public class JSONValue {
 
     /**
@@ -49,28 +43,26 @@ public class JSONValue {
             return;
         }
 
-        if (value instanceof String s) {
+        if (value instanceof String) {
             out.write('\"');
-            out.write(escape(s));
+            out.write(escape((String) value));
             out.write('\"');
             return;
         }
 
-        if (value instanceof Double d) {
-            if (d.isInfinite() || d.isNaN())
+        if (value instanceof Double) {
+            if (((Double) value).isInfinite() || ((Double) value).isNaN())
                 out.write("null");
             else
                 out.write(value.toString());
-
             return;
         }
 
-        if (value instanceof Float f) {
-            if (f.isInfinite() || f.isNaN())
+        if (value instanceof Float) {
+            if (((Float) value).isInfinite() || ((Float) value).isNaN())
                 out.write("null");
             else
                 out.write(value.toString());
-
             return;
         }
 
@@ -84,18 +76,13 @@ public class JSONValue {
             return;
         }
 
-        if (value instanceof Map<?, ?> m) {
-            JSONObject.writeJSONString(m, out);
+        if (value instanceof Map) {
+            JSONObject.writeJSONString((Map<?, ?>) value, out);
             return;
         }
 
-        if (value instanceof List<?> l) {
-            JSONArray.writeJSONString(l, out);
-            return;
-        }
-
-        if (value instanceof Object[] a) {
-            JSONArray.writeJSONString(Arrays.asList(a), out);
+        if (value instanceof List) {
+            JSONArray.writeJSONString((List<?>) value, out);
             return;
         }
 
@@ -115,14 +102,41 @@ public class JSONValue {
      *         number.
      */
     public static String toJSONString(Object value) {
-        Writer w = new StringWriter();
+        if (value == null)
+            return "null";
 
-        try {
-            writeJSONString(value, w);
+        if (value instanceof String)
+            return "\"" + escape((String) value) + "\"";
+
+        if (value instanceof Double) {
+            if (((Double) value).isInfinite() || ((Double) value).isNaN())
+                return "null";
+            else
+                return value.toString();
         }
-        catch (IOException ignore) {}
 
-        return w.toString();
+        if (value instanceof Float) {
+            if (((Float) value).isInfinite() || ((Float) value).isNaN())
+                return "null";
+            else
+                return value.toString();
+        }
+
+        if (value instanceof Number)
+            return value.toString();
+
+        if (value instanceof Boolean)
+            return value.toString();
+
+        if (value instanceof Map)
+            return JSONObject.toJSONString((Map<?, ?>) value);
+
+        if (value instanceof List)
+            return JSONArray.toJSONString((List<?>) value);
+
+        // Patched original according to issue 27 of JSON-simple
+        // http://code.google.com/p/json-simple/issues/detail?id=27
+        return "\"" + escape(value.toString()) + "\"";
     }
 
     /**

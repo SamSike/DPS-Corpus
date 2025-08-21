@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,8 +61,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Sebastien Deleuze
  */
-@SuppressWarnings("removal")
-class SpringHandlerInstantiatorTests {
+public class SpringHandlerInstantiatorTests {
 
 	private SpringHandlerInstantiator instantiator;
 
@@ -70,7 +69,7 @@ class SpringHandlerInstantiatorTests {
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
 		AutowiredAnnotationBeanPostProcessor bpp = new AutowiredAnnotationBeanPostProcessor();
 		bpp.setBeanFactory(bf);
@@ -82,35 +81,35 @@ class SpringHandlerInstantiatorTests {
 
 
 	@Test
-	void autowiredSerializer() throws JsonProcessingException {
+	public void autowiredSerializer() throws JsonProcessingException {
 		User user = new User("bob");
 		String json = this.objectMapper.writeValueAsString(user);
 		assertThat(json).isEqualTo("{\"username\":\"BOB\"}");
 	}
 
 	@Test
-	void autowiredDeserializer() throws IOException {
+	public void autowiredDeserializer() throws IOException {
 		String json = "{\"username\":\"bob\"}";
 		User user = this.objectMapper.readValue(json, User.class);
 		assertThat(user.getUsername()).isEqualTo("BOB");
 	}
 
 	@Test
-	void autowiredKeyDeserializer() throws IOException {
+	public void autowiredKeyDeserializer() throws IOException {
 		String json = "{\"credentials\":{\"bob\":\"admin\"}}";
 		SecurityRegistry registry = this.objectMapper.readValue(json, SecurityRegistry.class);
-		assertThat(registry.getCredentials()).containsKey("BOB");
-		assertThat(registry.getCredentials()).doesNotContainKey("bob");
+		assertThat(registry.getCredentials().keySet().contains("BOB")).isTrue();
+		assertThat(registry.getCredentials().keySet().contains("bob")).isFalse();
 	}
 
 	@Test
-	void applicationContextAwareTypeResolverBuilder() throws JsonProcessingException {
+	public void applicationContextAwaretypeResolverBuilder() throws JsonProcessingException {
 		this.objectMapper.writeValueAsString(new Group());
 		assertThat(CustomTypeResolverBuilder.isAutowiredFiledInitialized).isTrue();
 	}
 
 	@Test
-	void applicationContextAwareTypeIdResolver() throws JsonProcessingException {
+	public void applicationContextAwareTypeIdResolver() throws JsonProcessingException {
 		this.objectMapper.writeValueAsString(new Group());
 		assertThat(CustomTypeIdResolver.isAutowiredFiledInitialized).isTrue();
 	}
@@ -122,7 +121,7 @@ class SpringHandlerInstantiatorTests {
 		private Capitalizer capitalizer;
 
 		@Override
-		public User deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
+		public User deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws  IOException {
 			ObjectCodec oc = jsonParser.getCodec();
 			JsonNode node = oc.readTree(jsonParser);
 			return new User(this.capitalizer.capitalize(node.get("username").asText()));
@@ -152,7 +151,7 @@ class SpringHandlerInstantiatorTests {
 		private Capitalizer capitalizer;
 
 		@Override
-		public Object deserializeKey(String key, DeserializationContext context) {
+		public Object deserializeKey(String key, DeserializationContext context) throws IOException {
 			return this.capitalizer.capitalize(key);
 		}
 	}

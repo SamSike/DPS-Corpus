@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.test.web.servlet.client;
 
 import java.io.StringWriter;
 import java.net.URI;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import jakarta.servlet.http.Cookie;
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
 import org.springframework.core.ResolvableType;
@@ -44,6 +41,7 @@ import org.springframework.http.client.reactive.ClientHttpResponse;
 import org.springframework.http.codec.multipart.DefaultPartHttpMessageReader;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.http.codec.multipart.Part;
+import org.springframework.lang.Nullable;
 import org.springframework.mock.http.client.reactive.MockClientHttpRequest;
 import org.springframework.mock.http.client.reactive.MockClientHttpResponse;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
@@ -54,11 +52,9 @@ import org.springframework.test.web.reactive.server.MockServerClientHttpResponse
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.RequestBuilder;
-import org.springframework.test.web.servlet.request.AbstractMockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -85,16 +81,9 @@ public class MockMvcHttpConnector implements ClientHttpConnector {
 
 	private final MockMvc mockMvc;
 
-	private final List<RequestPostProcessor> requestPostProcessors;
-
 
 	public MockMvcHttpConnector(MockMvc mockMvc) {
-		this(mockMvc, Collections.emptyList());
-	}
-
-	private MockMvcHttpConnector(MockMvc mockMvc, List<RequestPostProcessor> requestPostProcessors) {
 		this.mockMvc = mockMvc;
-		this.requestPostProcessors = new ArrayList<>(requestPostProcessors);
 	}
 
 
@@ -135,7 +124,7 @@ public class MockMvcHttpConnector implements ClientHttpConnector {
 		// Initialize the client request
 		requestCallback.apply(httpRequest).block(TIMEOUT);
 
-		AbstractMockHttpServletRequestBuilder<?> requestBuilder =
+		MockHttpServletRequestBuilder requestBuilder =
 				initRequestBuilder(httpMethod, uri, httpRequest, contentRef.get());
 
 		requestBuilder.headers(httpRequest.getHeaders());
@@ -145,13 +134,11 @@ public class MockMvcHttpConnector implements ClientHttpConnector {
 			}
 		}
 
-		this.requestPostProcessors.forEach(requestBuilder::with);
-
 		return requestBuilder;
 	}
 
-	private AbstractMockHttpServletRequestBuilder<?> initRequestBuilder(
-			HttpMethod httpMethod, URI uri, MockClientHttpRequest httpRequest, byte @Nullable [] bytes) {
+	private MockHttpServletRequestBuilder initRequestBuilder(
+			HttpMethod httpMethod, URI uri, MockClientHttpRequest httpRequest, @Nullable byte[] bytes) {
 
 		String contentType = httpRequest.getHeaders().getFirst(HttpHeaders.CONTENT_TYPE);
 		if (!StringUtils.startsWithIgnoreCase(contentType, "multipart/")) {
@@ -163,7 +150,7 @@ public class MockMvcHttpConnector implements ClientHttpConnector {
 		}
 
 		// Parse the multipart request in order to adapt to Servlet Part's
-		MockMultipartHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.multipart(httpMethod, uri);
+		MockMultipartHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.multipart(uri);
 
 		Assert.notNull(bytes, "No multipart content");
 		ReactiveHttpInputMessage inputMessage = MockServerHttpRequest.post(uri.toString())
@@ -179,8 +166,8 @@ public class MockMvcHttpConnector implements ClientHttpConnector {
 									DataBufferUtils.release(buffer);
 
 									// Adapt to jakarta.servlet.http.Part...
-									MockPart mockPart = (part instanceof FilePart filePart ?
-											new MockPart(part.name(), filePart.filename(), partBytes) :
+									MockPart mockPart = (part instanceof FilePart ?
+											new MockPart(part.name(), ((FilePart) part).filename(), partBytes) :
 											new MockPart(part.name(), partBytes));
 									mockPart.getHeaders().putAll(part.headers());
 									requestBuilder.part(mockPart);
@@ -209,8 +196,6 @@ public class MockMvcHttpConnector implements ClientHttpConnector {
 							.path(cookie.getPath())
 							.secure(cookie.getSecure())
 							.httpOnly(cookie.isHttpOnly())
-							.partitioned(cookie.getAttribute("Partitioned") != null)
-							.sameSite(cookie.getAttribute("samesite"))
 							.build();
 			clientResponse.getCookies().add(httpCookie.getName(), httpCookie);
 		}
@@ -218,15 +203,6 @@ public class MockMvcHttpConnector implements ClientHttpConnector {
 		DefaultDataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
 		clientResponse.setBody(Mono.just(dataBuffer));
 		return clientResponse;
-	}
-
-	/**
-	 * Create a new instance that applies the given {@link RequestPostProcessor}s
-	 * to performed requests.
-	 * @since 6.1
-	 */
-	public MockMvcHttpConnector with(List<RequestPostProcessor> postProcessors) {
-		return new MockMvcHttpConnector(this.mockMvc, postProcessors);
 	}
 
 
@@ -266,23 +242,27 @@ public class MockMvcHttpConnector implements ClientHttpConnector {
 			return this.mvcResult.getResponse();
 		}
 
+		@Nullable
 		@Override
-		public @Nullable Object getHandler() {
+		public Object getHandler() {
 			return this.mvcResult.getHandler();
 		}
 
+		@Nullable
 		@Override
-		public HandlerInterceptor @Nullable [] getInterceptors() {
+		public HandlerInterceptor[] getInterceptors() {
 			return this.mvcResult.getInterceptors();
 		}
 
+		@Nullable
 		@Override
-		public @Nullable ModelAndView getModelAndView() {
+		public ModelAndView getModelAndView() {
 			return this.mvcResult.getModelAndView();
 		}
 
+		@Nullable
 		@Override
-		public @Nullable Exception getResolvedException() {
+		public Exception getResolvedException() {
 			return this.mvcResult.getResolvedException();
 		}
 
@@ -292,12 +272,12 @@ public class MockMvcHttpConnector implements ClientHttpConnector {
 		}
 
 		@Override
-		public @Nullable Object getAsyncResult() {
+		public Object getAsyncResult() {
 			return this.mvcResult.getAsyncResult();
 		}
 
 		@Override
-		public @Nullable Object getAsyncResult(long timeToWait) {
+		public Object getAsyncResult(long timeToWait) {
 			return this.mvcResult.getAsyncResult(timeToWait);
 		}
 

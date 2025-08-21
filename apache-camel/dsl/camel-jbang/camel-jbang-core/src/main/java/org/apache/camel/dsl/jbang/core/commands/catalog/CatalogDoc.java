@@ -32,12 +32,8 @@ import org.apache.camel.catalog.CamelCatalog;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.dsl.jbang.core.commands.CamelCommand;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
-import org.apache.camel.dsl.jbang.core.common.CatalogLoader;
-import org.apache.camel.dsl.jbang.core.common.RuntimeCompletionCandidates;
-import org.apache.camel.dsl.jbang.core.common.RuntimeType;
-import org.apache.camel.dsl.jbang.core.common.RuntimeTypeConverter;
+import org.apache.camel.main.download.MavenGav;
 import org.apache.camel.main.util.SuggestSimilarHelper;
-import org.apache.camel.tooling.maven.MavenGav;
 import org.apache.camel.tooling.model.BaseOptionModel;
 import org.apache.camel.tooling.model.ComponentModel;
 import org.apache.camel.tooling.model.DataFormatModel;
@@ -47,42 +43,13 @@ import org.apache.camel.tooling.model.OtherModel;
 import org.apache.camel.util.StringHelper;
 import picocli.CommandLine;
 
-import static org.apache.camel.dsl.jbang.core.commands.catalog.CatalogBaseCommand.findComponentNames;
-
 @CommandLine.Command(name = "doc",
-                     description = "Shows documentation for kamelet, component, and other Camel resources", sortOptions = false,
-                     showDefaultValues = true)
+                     description = "Shows documentation for kamelet, component, and other Camel resources")
 public class CatalogDoc extends CamelCommand {
 
     @CommandLine.Parameters(description = "Name of kamelet, component, dataformat, or other Camel resource",
                             arity = "1")
     String name;
-
-    @CommandLine.Option(names = { "--camel-version" },
-                        description = "To use a different Camel version than the default version")
-    String camelVersion;
-
-    @CommandLine.Option(names = { "--runtime" },
-                        completionCandidates = RuntimeCompletionCandidates.class,
-                        converter = RuntimeTypeConverter.class,
-                        description = "Runtime (${COMPLETION-CANDIDATES})")
-    RuntimeType runtime;
-
-    @CommandLine.Option(names = { "--download" }, defaultValue = "true",
-                        description = "Whether to allow automatic downloading JAR dependencies (over the internet)")
-    boolean download = true;
-
-    @CommandLine.Option(names = { "--quarkus-version" }, description = "Quarkus Platform version",
-                        defaultValue = RuntimeType.QUARKUS_VERSION)
-    String quarkusVersion;
-
-    @CommandLine.Option(names = { "--quarkus-group-id" }, description = "Quarkus Platform Maven groupId",
-                        defaultValue = "io.quarkus.platform")
-    String quarkusGroupId = "io.quarkus.platform";
-
-    @CommandLine.Option(names = { "--repos" },
-                        description = "Additional maven repositories for download on-demand (Use commas to separate multiple repositories)")
-    String repos;
 
     @CommandLine.Option(names = { "--url" },
                         description = "Prints the link to the online documentation on the Camel website",
@@ -103,32 +70,17 @@ public class CatalogDoc extends CamelCommand {
     boolean headers;
 
     @CommandLine.Option(names = {
-            "--kamelets-version" }, description = "Apache Camel Kamelets version", defaultValue = "4.13.0")
+            "--kamelets-version" }, description = "Apache Camel Kamelets version", defaultValue = "3.20.0")
     String kameletsVersion;
 
-    CamelCatalog catalog;
+    final CamelCatalog catalog = new DefaultCamelCatalog(true);
 
     public CatalogDoc(CamelJBangMain main) {
         super(main);
     }
 
-    CamelCatalog loadCatalog() throws Exception {
-        if (RuntimeType.springBoot == runtime) {
-            return CatalogLoader.loadSpringBootCatalog(repos, camelVersion, download);
-        } else if (RuntimeType.quarkus == runtime) {
-            return CatalogLoader.loadQuarkusCatalog(repos, quarkusVersion, quarkusGroupId, download);
-        }
-        if (camelVersion == null) {
-            return new DefaultCamelCatalog(true);
-        } else {
-            return CatalogLoader.loadCatalog(repos, camelVersion, download);
-        }
-    }
-
     @Override
-    public Integer doCall() throws Exception {
-        this.catalog = loadCatalog();
-
+    public Integer call() throws Exception {
         String prefix = StringHelper.before(name, ":");
         if (prefix != null) {
             name = StringHelper.after(name, ":");
@@ -188,28 +140,31 @@ public class CatalogDoc extends CamelCommand {
                 suggestions = SuggestSimilarHelper.didYouMean(KameletCatalogHelper.findKameletNames(kameletsVersion), name);
             } else {
                 // assume its a component
-                suggestions = SuggestSimilarHelper.didYouMean(findComponentNames(catalog), name);
+                suggestions = SuggestSimilarHelper.didYouMean(catalog.findComponentNames(), name);
             }
-            if (!suggestions.isEmpty()) {
+            if (suggestions != null) {
                 String type = kamelet ? "kamelet" : "component";
-                printer().printf("Camel %s: %s not found. Did you mean? %s%n", type, name, String.join(", ", suggestions));
+                System.out.printf("Camel %s: %s not found. Did you mean? %s%n", type, name, String.join(", ", suggestions));
             } else {
-                printer().println("Camel resource: " + name + " not found");
+                System.out.println("Camel resource: " + name + " not found");
             }
         } else {
-            List<String> suggestions = switch (prefix) {
-                case "kamelet" ->
-                    SuggestSimilarHelper.didYouMean(KameletCatalogHelper.findKameletNames(kameletsVersion), name);
-                case "component" -> SuggestSimilarHelper.didYouMean(findComponentNames(catalog), name);
-                case "dataformat" -> SuggestSimilarHelper.didYouMean(catalog.findDataFormatNames(), name);
-                case "language" -> SuggestSimilarHelper.didYouMean(catalog.findLanguageNames(), name);
-                case "other" -> SuggestSimilarHelper.didYouMean(catalog.findOtherNames(), name);
-                default -> List.of();
-            };
-            if (!suggestions.isEmpty()) {
-                printer().printf("Camel %s: %s not found. Did you mean? %s%n", prefix, name, String.join(", ", suggestions));
+            List<String> suggestions = null;
+            if ("kamelet".equals(prefix)) {
+                suggestions = SuggestSimilarHelper.didYouMean(KameletCatalogHelper.findKameletNames(kameletsVersion), name);
+            } else if ("component".equals(prefix)) {
+                suggestions = SuggestSimilarHelper.didYouMean(catalog.findComponentNames(), name);
+            } else if ("dataformat".equals(prefix)) {
+                suggestions = SuggestSimilarHelper.didYouMean(catalog.findDataFormatNames(), name);
+            } else if ("language".equals(prefix)) {
+                suggestions = SuggestSimilarHelper.didYouMean(catalog.findLanguageNames(), name);
+            } else if ("other".equals(prefix)) {
+                suggestions = SuggestSimilarHelper.didYouMean(catalog.findOtherNames(), name);
+            }
+            if (suggestions != null) {
+                System.out.printf("Camel %s: %s not found. Did you mean? %s%n", prefix, name, String.join(", ", suggestions));
             } else {
-                printer().printf("Camel %s: %s not found.%n", prefix, name);
+                System.out.printf("Camel %s: %s not found.%n", prefix, name);
             }
         }
         return 1;
@@ -225,53 +180,50 @@ public class CatalogDoc extends CamelCommand {
         }
         if (url) {
             if (link != null) {
-                printer().println(link);
+                System.out.println(link);
             }
             return;
         }
 
-        printer().printf("Kamelet Name: %s%n", km.name);
-        printer().printf("Kamelet Type: %s%n", km.type);
-        printer().println("Support Level: " + km.supportLevel);
-        printer().println("");
-        printer().printf("%s%n", km.description);
-        printer().println("");
+        System.out.printf("Kamelet Name: %s%n", km.name);
+        System.out.printf("Kamelet Type: %s%n", km.type);
+        System.out.println("Support Level: " + km.supportLevel);
+        System.out.println("");
+        System.out.printf("%s%n", km.description);
+        System.out.println("");
         if (km.dependencies != null && !km.dependencies.isEmpty()) {
-            printer().println("");
+            System.out.println("");
             for (String dep : km.dependencies) {
                 MavenGav gav = MavenGav.parseGav(dep);
                 if ("camel-core".equals(gav.getArtifactId())) {
                     // camel-core is implied so skip
                     continue;
                 }
-                printer().println("    <dependency>");
-                printer().println("        <groupId>" + gav.getGroupId() + "</groupId>");
-                printer().println("        <artifactId>" + gav.getArtifactId() + "</artifactId>");
+                System.out.println("    <dependency>");
+                System.out.println("        <groupId>" + gav.getGroupId() + "</groupId>");
+                System.out.println("        <artifactId>" + gav.getArtifactId() + "</artifactId>");
                 String v = gav.getVersion();
                 if (v == null && "org.apache.camel".equals(gav.getGroupId())) {
                     v = catalog.getCatalogVersion();
                 }
                 if (v != null) {
-                    printer().println("        <version>" + v + "</version>");
+                    System.out.println("        <version>" + v + "</version>");
                 }
-                if (gav.getScope() != null) {
-                    printer().println("        <scope>" + gav.getScope() + "</scope>");
-                }
-                printer().println("    </dependency>");
+                System.out.println("    </dependency>");
             }
-            printer().println("");
+            System.out.println("");
         }
         if (km.properties != null && !km.properties.isEmpty()) {
             var filtered = filterKameletOptions(filter, km.properties.values());
             int total1 = km.properties.size();
             var total2 = filtered.size();
             if (total1 == total2) {
-                printer().printf("The %s kamelet supports (total: %s) options, which are listed below.%n%n", km.name, total1);
+                System.out.printf("The %s kamelet supports (total: %s) options, which are listed below.%n%n", km.name, total1);
             } else {
-                printer().printf("The %s kamelet supports (total: %s match-filter: %s) options, which are listed below.%n%n",
+                System.out.printf("The %s kamelet supports (total: %s match-filter: %s) options, which are listed below.%n%n",
                         km.name, total1, total2);
             }
-            printer().println(AsciiTable.getTable(AsciiTable.FANCY_ASCII, filtered, Arrays.asList(
+            System.out.println(AsciiTable.getTable(AsciiTable.FANCY_ASCII, filtered, Arrays.asList(
                     new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).minWidth(20)
                             .maxWidth(35, OverflowBehaviour.NEWLINE)
                             .with(r -> r.name),
@@ -283,12 +235,12 @@ public class CatalogDoc extends CamelCommand {
                             .with(r -> r.type),
                     new Column().header("EXAMPLE").dataAlign(HorizontalAlign.LEFT).maxWidth(40, OverflowBehaviour.NEWLINE)
                             .with(r -> r.example))));
-            printer().println("");
+            System.out.println("");
         }
 
         if (link != null) {
-            printer().println(link);
-            printer().println("");
+            System.out.println(link);
+            System.out.println("");
         }
     }
 
@@ -302,25 +254,25 @@ public class CatalogDoc extends CamelCommand {
         }
         if (url) {
             if (link != null) {
-                printer().println(link);
+                System.out.println(link);
             }
             return;
         }
 
-        printer().printf("Name: %s%n", "main");
-        printer().printf("Since: %s%n", "3.0");
-        printer().println("");
-        printer().printf("%s%n",
+        System.out.printf("Name: %s%n", "main");
+        System.out.printf("Since: %s%n", "3.0");
+        System.out.println("");
+        System.out.printf("%s%n",
                 "This module is used for running Camel standalone via a main class extended from camel-main.");
-        printer().println("");
-        printer().println("    <dependency>");
-        printer().println("        <groupId>" + "org.apache.camel" + "</groupId>");
-        printer().println("        <artifactId>" + "camel.main" + "</artifactId>");
-        printer().println("        <version>" + catalog.getCatalogVersion() + "</version>");
-        printer().println("    </dependency>");
-        printer().println("");
+        System.out.println("");
+        System.out.println("    <dependency>");
+        System.out.println("        <groupId>" + "org.apache.camel" + "</groupId>");
+        System.out.println("        <artifactId>" + "camel.main" + "</artifactId>");
+        System.out.println("        <version>" + catalog.getCatalogVersion() + "</version>");
+        System.out.println("    </dependency>");
+        System.out.println("");
 
-        printer().printf("%s%n%n%n",
+        System.out.printf("%s%n%n%n",
                 "When running Camel via camel-main you can configure Camel in the application.properties file");
 
         for (MainModel.MainGroupModel g : mm.getGroups()) {
@@ -330,11 +282,11 @@ public class CatalogDoc extends CamelCommand {
             var total2 = filtered.size();
             if (total2 > 0) {
                 if (total1 == total2) {
-                    printer().printf("%s (total: %s):%n", g.getDescription(), total1);
+                    System.out.printf("%s (total: %s):%n", g.getDescription(), total1);
                 } else {
-                    printer().printf("%s options (total: %s match-filter: %s):%n", g.getDescription(), total1, total2);
+                    System.out.printf("%s options (total: %s match-filter: %s):%n", g.getDescription(), total1, total2);
                 }
-                printer().println(AsciiTable.getTable(AsciiTable.FANCY_ASCII, filtered, Arrays.asList(
+                System.out.println(AsciiTable.getTable(AsciiTable.FANCY_ASCII, filtered, Arrays.asList(
                         new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).minWidth(20)
                                 .maxWidth(40, OverflowBehaviour.NEWLINE)
                                 .with(this::getName),
@@ -345,14 +297,14 @@ public class CatalogDoc extends CamelCommand {
                                 .with(r -> r.getShortDefaultValue(25)),
                         new Column().header("TYPE").dataAlign(HorizontalAlign.LEFT).maxWidth(25, OverflowBehaviour.NEWLINE)
                                 .with(BaseOptionModel::getShortJavaType))));
-                printer().println("");
-                printer().println("");
+                System.out.println("");
+                System.out.println("");
             }
         }
 
         if (link != null) {
-            printer().println(link);
-            printer().println("");
+            System.out.println(link);
+            System.out.println("");
         }
     }
 
@@ -366,43 +318,43 @@ public class CatalogDoc extends CamelCommand {
         }
         if (url) {
             if (link != null) {
-                printer().println(link);
+                System.out.println(link);
             }
             return;
         }
 
         if (cm.isDeprecated()) {
-            printer().printf("Component Name: %s (deprecated)%n", cm.getName());
+            System.out.printf("Component Name: %s (deprecated)%n", cm.getName());
         } else {
-            printer().printf("Component Name: %s%n", cm.getName());
+            System.out.printf("Component Name: %s%n", cm.getName());
         }
-        printer().printf("Since: %s%n", fixQuarkusSince(cm.getFirstVersionShort()));
-        printer().println("");
+        System.out.printf("Since: %s%n", cm.getFirstVersionShort());
+        System.out.println("");
         if (cm.isProducerOnly()) {
-            printer().println("Only producer is supported");
+            System.out.println("Only producer is supported");
         } else if (cm.isConsumerOnly()) {
-            printer().println("Only consumer is supported");
+            System.out.println("Only consumer is supported");
         } else {
-            printer().println("Both producer and consumer are supported");
+            System.out.println("Both producer and consumer are supported");
         }
 
-        printer().println("");
-        printer().printf("%s%n", cm.getDescription());
-        printer().println("");
-        printer().println("    <dependency>");
-        printer().println("        <groupId>" + cm.getGroupId() + "</groupId>");
-        printer().println("        <artifactId>" + cm.getArtifactId() + "</artifactId>");
-        printer().println("        <version>" + cm.getVersion() + "</version>");
-        printer().println("    </dependency>");
-        printer().println("");
-        printer().printf("The %s endpoint is configured using URI syntax:%n", cm.getName());
-        printer().println("");
-        printer().printf("    %s%n", cm.getSyntax());
-        printer().println("");
-        printer().println("with the following path and query parameters:");
-        printer().println("");
-        printer().printf("Path parameters (%s):%n", cm.getEndpointPathOptions().size());
-        printer().println(AsciiTable.getTable(AsciiTable.FANCY_ASCII, cm.getEndpointPathOptions(), Arrays.asList(
+        System.out.println("");
+        System.out.printf("%s%n", cm.getDescription());
+        System.out.println("");
+        System.out.println("    <dependency>");
+        System.out.println("        <groupId>" + cm.getGroupId() + "</groupId>");
+        System.out.println("        <artifactId>" + cm.getArtifactId() + "</artifactId>");
+        System.out.println("        <version>" + cm.getVersion() + "</version>");
+        System.out.println("    </dependency>");
+        System.out.println("");
+        System.out.printf("The %s endpoint is configured using URI syntax:%n", cm.getName());
+        System.out.println("");
+        System.out.printf("    %s%n", cm.getSyntax());
+        System.out.println("");
+        System.out.println("with the following path and query parameters:");
+        System.out.println("");
+        System.out.printf("Path parameters (%s):%n", cm.getEndpointPathOptions().size());
+        System.out.println(AsciiTable.getTable(AsciiTable.FANCY_ASCII, cm.getEndpointPathOptions(), Arrays.asList(
                 new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).minWidth(20).maxWidth(35, OverflowBehaviour.NEWLINE)
                         .with(this::getName),
                 new Column().header("DESCRIPTION").dataAlign(HorizontalAlign.LEFT).maxWidth(80, OverflowBehaviour.NEWLINE)
@@ -411,16 +363,16 @@ public class CatalogDoc extends CamelCommand {
                         .with(r -> r.getShortDefaultValue(25)),
                 new Column().header("TYPE").dataAlign(HorizontalAlign.LEFT).maxWidth(25, OverflowBehaviour.NEWLINE)
                         .with(BaseOptionModel::getShortJavaType))));
-        printer().println("");
+        System.out.println("");
         var filtered = filter(filter, cm.getEndpointParameterOptions());
         var total1 = cm.getEndpointParameterOptions().size();
         var total2 = filtered.size();
         if (total1 == total2) {
-            printer().printf("Query parameters (total: %s):%n", total1);
+            System.out.printf("Query parameters (total: %s):%n", total1);
         } else {
-            printer().printf("Query parameters (total: %s match-filter: %s):%n", total1, total2);
+            System.out.printf("Query parameters (total: %s match-filter: %s):%n", total1, total2);
         }
-        printer().println(AsciiTable.getTable(AsciiTable.FANCY_ASCII, filtered, Arrays.asList(
+        System.out.println(AsciiTable.getTable(AsciiTable.FANCY_ASCII, filtered, Arrays.asList(
                 new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).minWidth(20).maxWidth(35, OverflowBehaviour.NEWLINE)
                         .with(this::getName),
                 new Column().header("DESCRIPTION").dataAlign(HorizontalAlign.LEFT).maxWidth(80, OverflowBehaviour.NEWLINE)
@@ -429,12 +381,12 @@ public class CatalogDoc extends CamelCommand {
                         .with(r -> r.getShortDefaultValue(25)),
                 new Column().header("TYPE").dataAlign(HorizontalAlign.LEFT).maxWidth(25, OverflowBehaviour.NEWLINE)
                         .with(BaseOptionModel::getShortJavaType))));
-        printer().println("");
+        System.out.println("");
 
         if (headers && !cm.getEndpointHeaders().isEmpty()) {
-            printer().printf("The %s component supports (total: %s) message headers, which are listed below.%n%n",
+            System.out.printf("The %s component supports (total: %s) message headers, which are listed below.%n%n",
                     cm.getName(), cm.getEndpointHeaders().size());
-            printer().println(AsciiTable.getTable(AsciiTable.FANCY_ASCII, cm.getEndpointHeaders(), Arrays.asList(
+            System.out.println(AsciiTable.getTable(AsciiTable.FANCY_ASCII, cm.getEndpointHeaders(), Arrays.asList(
                     new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).minWidth(20)
                             .maxWidth(35, OverflowBehaviour.NEWLINE)
                             .with(this::getName),
@@ -444,12 +396,12 @@ public class CatalogDoc extends CamelCommand {
                             .with(r -> r.getShortDefaultValue(25)),
                     new Column().header("TYPE").dataAlign(HorizontalAlign.LEFT).maxWidth(25, OverflowBehaviour.NEWLINE)
                             .with(BaseOptionModel::getShortJavaType))));
-            printer().println("");
+            System.out.println("");
         }
 
         if (link != null) {
-            printer().println(link);
-            printer().println("");
+            System.out.println(link);
+            System.out.println("");
         }
     }
 
@@ -463,37 +415,37 @@ public class CatalogDoc extends CamelCommand {
         }
         if (url) {
             if (link != null) {
-                printer().println(link);
+                System.out.println(link);
             }
             return;
         }
 
         if (dm.isDeprecated()) {
-            printer().printf("Dataformat Name: %s (deprecated)%n", dm.getName());
+            System.out.printf("Dataformat Name: %s (deprecated)%n", dm.getName());
         } else {
-            printer().printf("Dataformat Name: %s%n", dm.getName());
+            System.out.printf("Dataformat Name: %s%n", dm.getName());
         }
-        printer().printf("Since: %s%n", fixQuarkusSince(dm.getFirstVersionShort()));
-        printer().println("");
-        printer().printf("%s%n", dm.getDescription());
-        printer().println("");
-        printer().println("    <dependency>");
-        printer().println("        <groupId>" + dm.getGroupId() + "</groupId>");
-        printer().println("        <artifactId>" + dm.getArtifactId() + "</artifactId>");
-        printer().println("        <version>" + dm.getVersion() + "</version>");
-        printer().println("    </dependency>");
-        printer().println("");
+        System.out.printf("Since: %s%n", dm.getFirstVersionShort());
+        System.out.println("");
+        System.out.printf("%s%n", dm.getDescription());
+        System.out.println("");
+        System.out.println("    <dependency>");
+        System.out.println("        <groupId>" + dm.getGroupId() + "</groupId>");
+        System.out.println("        <artifactId>" + dm.getArtifactId() + "</artifactId>");
+        System.out.println("        <version>" + dm.getVersion() + "</version>");
+        System.out.println("    </dependency>");
+        System.out.println("");
         var filtered = filter(filter, dm.getOptions());
         var total1 = dm.getOptions().size();
         var total2 = filtered.size();
         if (total1 == total2) {
-            printer().printf("The %s dataformat supports (total: %s) options, which are listed below.%n%n", dm.getName(),
+            System.out.printf("The %s dataformat supports (total: %s) options, which are listed below.%n%n", dm.getName(),
                     total1);
         } else {
-            printer().printf("The %s dataformat supports (total: %s match-filter: %s) options, which are listed below.%n%n",
+            System.out.printf("The %s dataformat supports (total: %s match-filter: %s) options, which are listed below.%n%n",
                     dm.getName(), total1, total2);
         }
-        printer().println(AsciiTable.getTable(AsciiTable.FANCY_ASCII, filtered, Arrays.asList(
+        System.out.println(AsciiTable.getTable(AsciiTable.FANCY_ASCII, filtered, Arrays.asList(
                 new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).minWidth(20).maxWidth(35, OverflowBehaviour.NEWLINE)
                         .with(this::getName),
                 new Column().header("DESCRIPTION").dataAlign(HorizontalAlign.LEFT).maxWidth(80, OverflowBehaviour.NEWLINE)
@@ -502,11 +454,11 @@ public class CatalogDoc extends CamelCommand {
                         .with(r -> r.getShortDefaultValue(25)),
                 new Column().header("TYPE").dataAlign(HorizontalAlign.LEFT).maxWidth(25, OverflowBehaviour.NEWLINE)
                         .with(BaseOptionModel::getShortJavaType))));
-        printer().println("");
+        System.out.println("");
 
         if (link != null) {
-            printer().println(link);
-            printer().println("");
+            System.out.println(link);
+            System.out.println("");
         }
     }
 
@@ -520,37 +472,37 @@ public class CatalogDoc extends CamelCommand {
         }
         if (url) {
             if (link != null) {
-                printer().println(link);
+                System.out.println(link);
             }
             return;
         }
 
         if (lm.isDeprecated()) {
-            printer().printf("Language Name: %s (deprecated)%n", lm.getName());
+            System.out.printf("Language Name: %s (deprecated)%n", lm.getName());
         } else {
-            printer().printf("Language Name: %s%n", lm.getName());
+            System.out.printf("Language Name: %s%n", lm.getName());
         }
-        printer().printf("Since: %s%n", fixQuarkusSince(lm.getFirstVersionShort()));
-        printer().println("");
-        printer().printf("%s%n", lm.getDescription());
-        printer().println("");
-        printer().println("    <dependency>");
-        printer().println("        <groupId>" + lm.getGroupId() + "</groupId>");
-        printer().println("        <artifactId>" + lm.getArtifactId() + "</artifactId>");
-        printer().println("        <version>" + lm.getVersion() + "</version>");
-        printer().println("    </dependency>");
-        printer().println("");
+        System.out.printf("Since: %s%n", lm.getFirstVersionShort());
+        System.out.println("");
+        System.out.printf("%s%n", lm.getDescription());
+        System.out.println("");
+        System.out.println("    <dependency>");
+        System.out.println("        <groupId>" + lm.getGroupId() + "</groupId>");
+        System.out.println("        <artifactId>" + lm.getArtifactId() + "</artifactId>");
+        System.out.println("        <version>" + lm.getVersion() + "</version>");
+        System.out.println("    </dependency>");
+        System.out.println("");
         var filtered = filter(filter, lm.getOptions());
         var total1 = lm.getOptions().size();
         var total2 = filtered.size();
         if (total1 == total2) {
-            printer().printf("The %s language supports (total: %s) options, which are listed below.%n%n", lm.getName(),
+            System.out.printf("The %s language supports (total: %s) options, which are listed below.%n%n", lm.getName(),
                     total1);
         } else {
-            printer().printf("The %s language supports (total: %s match-filter: %s) options, which are listed below.%n%n",
+            System.out.printf("The %s language supports (total: %s match-filter: %s) options, which are listed below.%n%n",
                     lm.getName(), total1, total2);
         }
-        printer().println(AsciiTable.getTable(AsciiTable.FANCY_ASCII, filtered, Arrays.asList(
+        System.out.println(AsciiTable.getTable(AsciiTable.FANCY_ASCII, filtered, Arrays.asList(
                 new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).minWidth(20).maxWidth(35, OverflowBehaviour.NEWLINE)
                         .with(this::getName),
                 new Column().header("DESCRIPTION").dataAlign(HorizontalAlign.LEFT).maxWidth(80, OverflowBehaviour.NEWLINE)
@@ -559,11 +511,11 @@ public class CatalogDoc extends CamelCommand {
                         .with(r -> r.getShortDefaultValue(25)),
                 new Column().header("TYPE").dataAlign(HorizontalAlign.LEFT).maxWidth(25, OverflowBehaviour.NEWLINE)
                         .with(BaseOptionModel::getShortJavaType))));
-        printer().println("");
+        System.out.println("");
 
         if (link != null) {
-            printer().println(link);
-            printer().println("");
+            System.out.println(link);
+            System.out.println("");
         }
     }
 
@@ -577,30 +529,30 @@ public class CatalogDoc extends CamelCommand {
         }
         if (url) {
             if (link != null) {
-                printer().println(link);
+                System.out.println(link);
             }
             return;
         }
 
         if (om.isDeprecated()) {
-            printer().printf("Miscellaneous Name: %s (deprecated)%n", om.getName());
+            System.out.printf("Miscellaneous Name: %s (deprecated)%n", om.getName());
         } else {
-            printer().printf("Miscellaneous Name: %s%n", om.getName());
+            System.out.printf("Miscellaneous Name: %s%n", om.getName());
         }
-        printer().printf("Since: %s%n", fixQuarkusSince(om.getFirstVersionShort()));
-        printer().println("");
-        printer().printf("%s%n", om.getDescription());
-        printer().println("");
-        printer().println("    <dependency>");
-        printer().println("        <groupId>" + om.getGroupId() + "</groupId>");
-        printer().println("        <artifactId>" + om.getArtifactId() + "</artifactId>");
-        printer().println("        <version>" + om.getVersion() + "</version>");
-        printer().println("    </dependency>");
-        printer().println("");
+        System.out.printf("Since: %s%n", om.getFirstVersionShort());
+        System.out.println("");
+        System.out.printf("%s%n", om.getDescription());
+        System.out.println("");
+        System.out.println("    <dependency>");
+        System.out.println("        <groupId>" + om.getGroupId() + "</groupId>");
+        System.out.println("        <artifactId>" + om.getArtifactId() + "</artifactId>");
+        System.out.println("        <version>" + om.getVersion() + "</version>");
+        System.out.println("    </dependency>");
+        System.out.println("");
 
         if (link != null) {
-            printer().println(link);
-            printer().println("");
+            System.out.println(link);
+            System.out.println("");
         }
     }
 
@@ -695,14 +647,6 @@ public class CatalogDoc extends CamelCommand {
                         || r.getDescription().toLowerCase(Locale.ROOT).contains(target)
                         || r.getShortGroup() != null && r.getShortGroup().toLowerCase(Locale.ROOT).contains(target))
                 .collect(Collectors.toList());
-    }
-
-    static String fixQuarkusSince(String since) {
-        // quarkus-catalog may have 0.1 and 0.0.1 versions that are really 1.0
-        if (since != null && since.startsWith("0")) {
-            return "1.0";
-        }
-        return since;
     }
 
 }

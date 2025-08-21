@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ResolvableType;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.HandlerMethod;
 import org.springframework.util.ObjectUtils;
@@ -79,7 +78,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 
 
 	/**
-	 * Set {@link HandlerMethodArgumentResolver HandlerMethodArgumentResolvers} to use for resolving method argument values.
+	 * Set {@link HandlerMethodArgumentResolver HandlerMethodArgumentResolvers} to use to use for resolving method argument values.
 	 */
 	public void setMessageMethodArgumentResolvers(HandlerMethodArgumentResolverComposite argumentResolvers) {
 		this.resolvers = argumentResolvers;
@@ -87,7 +86,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 
 	/**
 	 * Set the ParameterNameDiscoverer for resolving parameter names when needed
-	 * (for example, default request attribute name).
+	 * (e.g. default request attribute name).
 	 * <p>Default is a {@link org.springframework.core.DefaultParameterNameDiscoverer}.
 	 */
 	public void setParameterNameDiscoverer(ParameterNameDiscoverer parameterNameDiscoverer) {
@@ -111,8 +110,9 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	 * @see #getMethodArgumentValues
 	 * @see #doInvoke
 	 */
-	public @Nullable Object invoke(Message<?> message, @Nullable Object... providedArgs) throws Exception {
-		@Nullable Object[] args = getMethodArgumentValues(message, providedArgs);
+	@Nullable
+	public Object invoke(Message<?> message, Object... providedArgs) throws Exception {
+		Object[] args = getMethodArgumentValues(message, providedArgs);
 		if (logger.isTraceEnabled()) {
 			logger.trace("Arguments: " + Arrays.toString(args));
 		}
@@ -125,13 +125,13 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	 * <p>The resulting array will be passed into {@link #doInvoke}.
 	 * @since 5.1.2
 	 */
-	protected @Nullable Object[] getMethodArgumentValues(Message<?> message, @Nullable Object... providedArgs) throws Exception {
+	protected Object[] getMethodArgumentValues(Message<?> message, Object... providedArgs) throws Exception {
 		MethodParameter[] parameters = getMethodParameters();
 		if (ObjectUtils.isEmpty(parameters)) {
 			return EMPTY_ARGS;
 		}
 
-		@Nullable Object[] args = new Object[parameters.length];
+		Object[] args = new Object[parameters.length];
 		for (int i = 0; i < parameters.length; i++) {
 			MethodParameter parameter = parameters[i];
 			parameter.initParameterNameDiscovery(this.parameterNameDiscoverer);
@@ -163,27 +163,27 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	/**
 	 * Invoke the handler method with the given argument values.
 	 */
-	protected @Nullable Object doInvoke(@Nullable Object... args) throws Exception {
+	@Nullable
+	protected Object doInvoke(Object... args) throws Exception {
 		try {
 			return getBridgedMethod().invoke(getBean(), args);
 		}
 		catch (IllegalArgumentException ex) {
 			assertTargetBean(getBridgedMethod(), getBean(), args);
-			String text = (ex.getMessage() == null || ex.getCause() instanceof NullPointerException) ?
-					"Illegal argument": ex.getMessage();
+			String text = (ex.getMessage() != null ? ex.getMessage() : "Illegal argument");
 			throw new IllegalStateException(formatInvokeError(text, args), ex);
 		}
 		catch (InvocationTargetException ex) {
 			// Unwrap for HandlerExceptionResolvers ...
 			Throwable targetException = ex.getTargetException();
-			if (targetException instanceof RuntimeException runtimeException) {
-				throw runtimeException;
+			if (targetException instanceof RuntimeException) {
+				throw (RuntimeException) targetException;
 			}
-			else if (targetException instanceof Error error) {
-				throw error;
+			else if (targetException instanceof Error) {
+				throw (Error) targetException;
 			}
-			else if (targetException instanceof Exception exception) {
-				throw exception;
+			else if (targetException instanceof Exception) {
+				throw (Exception) targetException;
 			}
 			else {
 				throw new IllegalStateException(formatInvokeError("Invocation failure", args), targetException);
@@ -196,9 +196,10 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	}
 
 
-	private class AsyncResultMethodParameter extends AnnotatedMethodParameter {
+	private class AsyncResultMethodParameter extends HandlerMethodParameter {
 
-		private final @Nullable Object returnValue;
+		@Nullable
+		private final Object returnValue;
 
 		private final ResolvableType returnType;
 

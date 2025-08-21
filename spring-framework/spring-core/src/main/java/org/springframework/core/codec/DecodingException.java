@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.core.codec;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Indicates an issue with decoding the input stream with a focus on content
@@ -39,7 +38,7 @@ public class DecodingException extends CodecException {
 	 * Create a new DecodingException.
 	 * @param msg the detail message
 	 */
-	public DecodingException(@Nullable String msg) {
+	public DecodingException(String msg) {
 		super(msg);
 	}
 
@@ -48,7 +47,7 @@ public class DecodingException extends CodecException {
 	 * @param msg the detail message
 	 * @param cause root cause for the exception, if any
 	 */
-	public DecodingException(@Nullable String msg, @Nullable Throwable cause) {
+	public DecodingException(String msg, @Nullable Throwable cause) {
 		super(msg, cause);
 	}
 

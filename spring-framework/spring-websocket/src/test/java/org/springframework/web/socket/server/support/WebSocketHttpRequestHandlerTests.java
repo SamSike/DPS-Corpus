@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,22 +41,22 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 /**
- * Tests for {@link WebSocketHttpRequestHandler}.
+ * Unit tests for {@link WebSocketHttpRequestHandler}.
  *
  * @author Rossen Stoyanchev
  * @since 5.1.9
  */
-class WebSocketHttpRequestHandlerTests {
+public class WebSocketHttpRequestHandlerTests {
 
-	private final HandshakeHandler handshakeHandler = mock();
+	private final HandshakeHandler handshakeHandler = mock(HandshakeHandler.class);
 
-	private final WebSocketHttpRequestHandler requestHandler = new WebSocketHttpRequestHandler(mock(), this.handshakeHandler);
+	private final WebSocketHttpRequestHandler requestHandler = new WebSocketHttpRequestHandler(mock(WebSocketHandler.class), this.handshakeHandler);
 
 	private final MockHttpServletResponse response = new MockHttpServletResponse();
 
 
 	@Test
-	void success() throws ServletException, IOException {
+	public void success() throws ServletException, IOException {
 		TestInterceptor interceptor = new TestInterceptor(true);
 		this.requestHandler.setHandshakeInterceptors(Collections.singletonList(interceptor));
 		this.requestHandler.handleRequest(new MockHttpServletRequest(), this.response);
@@ -66,7 +66,7 @@ class WebSocketHttpRequestHandlerTests {
 	}
 
 	@Test
-	void failure() {
+	public void failure() {
 		TestInterceptor interceptor = new TestInterceptor(true);
 		this.requestHandler.setHandshakeInterceptors(Collections.singletonList(interceptor));
 
@@ -83,7 +83,7 @@ class WebSocketHttpRequestHandlerTests {
 	}
 
 	@Test // gh-23179
-	void handshakeNotAllowed() throws ServletException, IOException {
+	public void handshakeNotAllowed() throws ServletException, IOException {
 		TestInterceptor interceptor = new TestInterceptor(false);
 		this.requestHandler.setHandshakeInterceptors(Collections.singletonList(interceptor));
 

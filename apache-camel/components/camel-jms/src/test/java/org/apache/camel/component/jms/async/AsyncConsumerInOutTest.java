@@ -19,32 +19,19 @@ package org.apache.camel.component.jms.async;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.ExchangePattern;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jms.AbstractJMSTest;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.apache.camel.test.infra.core.annotations.ContextFixture;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 @Timeout(30)
 public class AsyncConsumerInOutTest extends AbstractJMSTest {
 
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
-    protected CamelContext context;
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
-
+    @BeforeEach
     void waitForConnections() {
         Awaitility.await().until(() -> context.getRoute("route-1").getUptimeMillis() > 200);
         Awaitility.await().until(() -> context.getRoute("route-2").getUptimeMillis() > 200);
@@ -69,9 +56,12 @@ public class AsyncConsumerInOutTest extends AbstractJMSTest {
         return "activemq";
     }
 
-    @ContextFixture
-    public void configureComponent(CamelContext context) {
-        context.addComponent("async", new MyAsyncComponent());
+    @Override
+    protected CamelContext createCamelContext() throws Exception {
+        CamelContext camelContext = super.createCamelContext();
+        camelContext.addComponent("async", new MyAsyncComponent());
+
+        return camelContext;
     }
 
     @Override
@@ -97,19 +87,5 @@ public class AsyncConsumerInOutTest extends AbstractJMSTest {
                         .transform(constant("Bye Camel"));
             }
         };
-    }
-
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        context = camelContextExtension.getContext();
-        template = camelContextExtension.getProducerTemplate();
-        consumer = camelContextExtension.getConsumerTemplate();
-
-        waitForConnections();
     }
 }

@@ -45,7 +45,7 @@ public class AdviceWithRoutePolicyTest extends ContextTestSupport {
         RouteDefinition route = context.getRouteDefinitions().get(0);
         AdviceWith.adviceWith(route, context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // remove the route policy so we can test without it
                 getOriginalRoute().setRoutePolicies(null);
             }
@@ -62,16 +62,16 @@ public class AdviceWithRoutePolicyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routePolicy(new MyRoutePolicy()).to("mock:foo").to("mock:bar");
             }
         };
     }
 
-    private static class MyRoutePolicy extends RoutePolicySupport {
+    private class MyRoutePolicy extends RoutePolicySupport {
 
         @Override
         public void onExchangeBegin(Route route, Exchange exchange) {

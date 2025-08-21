@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -156,7 +155,8 @@ final class MergedAnnotationsCollection implements MergedAnnotations {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <A extends Annotation> @Nullable MergedAnnotation<A> find(Object requiredType,
+	@Nullable
+	private <A extends Annotation> MergedAnnotation<A> find(Object requiredType,
 			@Nullable Predicate<? super MergedAnnotation<A>> predicate,
 			@Nullable MergedAnnotationSelector<A> selector) {
 
@@ -167,21 +167,19 @@ final class MergedAnnotationsCollection implements MergedAnnotations {
 		MergedAnnotation<A> result = null;
 		for (int i = 0; i < this.annotations.length; i++) {
 			MergedAnnotation<?> root = this.annotations[i];
-			if (root != null) {
-				AnnotationTypeMappings mappings = this.mappings[i];
-				for (int mappingIndex = 0; mappingIndex < mappings.size(); mappingIndex++) {
-					AnnotationTypeMapping mapping = mappings.get(mappingIndex);
-					if (!isMappingForType(mapping, requiredType)) {
-						continue;
+			AnnotationTypeMappings mappings = this.mappings[i];
+			for (int mappingIndex = 0; mappingIndex < mappings.size(); mappingIndex++) {
+				AnnotationTypeMapping mapping = mappings.get(mappingIndex);
+				if (!isMappingForType(mapping, requiredType)) {
+					continue;
+				}
+				MergedAnnotation<A> candidate = (mappingIndex == 0 ? (MergedAnnotation<A>) root :
+						TypeMappedAnnotation.createIfPossible(mapping, root, IntrospectionFailureLogger.INFO));
+				if (candidate != null && (predicate == null || predicate.test(candidate))) {
+					if (selector.isBestCandidate(candidate)) {
+						return candidate;
 					}
-					MergedAnnotation<A> candidate = (mappingIndex == 0 ? (MergedAnnotation<A>) root :
-							TypeMappedAnnotation.createIfPossible(mapping, root, IntrospectionFailureLogger.INFO));
-					if (candidate != null && (predicate == null || predicate.test(candidate))) {
-						if (selector.isBestCandidate(candidate)) {
-							return candidate;
-						}
-						result = (result != null ? selector.select(result, candidate) : candidate);
-					}
+					result = (result != null ? selector.select(result, candidate) : candidate);
 				}
 			}
 		}
@@ -222,7 +220,8 @@ final class MergedAnnotationsCollection implements MergedAnnotations {
 
 	private class AnnotationsSpliterator<A extends Annotation> implements Spliterator<MergedAnnotation<A>> {
 
-		private final @Nullable Object requiredType;
+		@Nullable
+		private Object requiredType;
 
 		private final int[] mappingCursors;
 
@@ -258,7 +257,8 @@ final class MergedAnnotationsCollection implements MergedAnnotations {
 			return false;
 		}
 
-		private @Nullable AnnotationTypeMapping getNextSuitableMapping(int annotationIndex) {
+		@Nullable
+		private AnnotationTypeMapping getNextSuitableMapping(int annotationIndex) {
 			AnnotationTypeMapping mapping;
 			do {
 				mapping = getMapping(annotationIndex, this.mappingCursors[annotationIndex]);
@@ -271,13 +271,15 @@ final class MergedAnnotationsCollection implements MergedAnnotations {
 			return null;
 		}
 
-		private @Nullable AnnotationTypeMapping getMapping(int annotationIndex, int mappingIndex) {
+		@Nullable
+		private AnnotationTypeMapping getMapping(int annotationIndex, int mappingIndex) {
 			AnnotationTypeMappings mappings = MergedAnnotationsCollection.this.mappings[annotationIndex];
 			return (mappingIndex < mappings.size() ? mappings.get(mappingIndex) : null);
 		}
 
+		@Nullable
 		@SuppressWarnings("unchecked")
-		private @Nullable MergedAnnotation<A> createMergedAnnotationIfPossible(int annotationIndex, int mappingIndex) {
+		private MergedAnnotation<A> createMergedAnnotationIfPossible(int annotationIndex, int mappingIndex) {
 			MergedAnnotation<?> root = annotations[annotationIndex];
 			if (mappingIndex == 0) {
 				return (MergedAnnotation<A>) root;
@@ -289,7 +291,8 @@ final class MergedAnnotationsCollection implements MergedAnnotations {
 		}
 
 		@Override
-		public @Nullable Spliterator<MergedAnnotation<A>> trySplit() {
+		@Nullable
+		public Spliterator<MergedAnnotation<A>> trySplit() {
 			return null;
 		}
 

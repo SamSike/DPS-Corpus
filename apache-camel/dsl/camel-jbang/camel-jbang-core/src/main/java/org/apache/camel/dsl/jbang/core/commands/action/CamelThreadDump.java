@@ -16,11 +16,10 @@
  */
 package org.apache.camel.dsl.jbang.core.commands.action;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import com.github.freva.asciitable.AsciiTable;
@@ -28,56 +27,29 @@ import com.github.freva.asciitable.Column;
 import com.github.freva.asciitable.HorizontalAlign;
 import com.github.freva.asciitable.OverflowBehaviour;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
-import org.apache.camel.dsl.jbang.core.common.PathUtils;
 import org.apache.camel.support.PatternHelper;
-import org.apache.camel.util.StringHelper;
+import org.apache.camel.util.FileUtil;
+import org.apache.camel.util.IOHelper;
+import org.apache.camel.util.StopWatch;
 import org.apache.camel.util.json.JsonArray;
 import org.apache.camel.util.json.JsonObject;
+import org.apache.camel.util.json.Jsoner;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
-@Command(name = "thread-dump", description = "List threads in a running Camel integration", sortOptions = false,
-         showDefaultValues = true)
+@Command(name = "thread-dump", description = "List threads in a running Camel integration")
 public class CamelThreadDump extends ActionWatchCommand {
 
-    public static class IdNameStateCompletionCandidates implements Iterable<String> {
+    @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "1")
+    String name;
 
-        public IdNameStateCompletionCandidates() {
-        }
-
-        @Override
-        public Iterator<String> iterator() {
-            return List.of("id", "name", "state").iterator();
-        }
-
-    }
-
-    public static class StateCompletionCandidates implements Iterable<String> {
-
-        public StateCompletionCandidates() {
-        }
-
-        @Override
-        public Iterator<String> iterator() {
-            return List.of("RUNNABLE", "BLOCKED", "WAITING", "TIMED_WAITING").iterator();
-        }
-
-    }
-
-    @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
-    String name = "*";
-
-    @CommandLine.Option(names = { "--sort" }, completionCandidates = IdNameStateCompletionCandidates.class,
+    @CommandLine.Option(names = { "--sort" },
                         description = "Sort by id, name or state", defaultValue = "id")
     String sort;
 
     @CommandLine.Option(names = { "--filter" },
-                        description = "Filter thread names/ids (use all to include all threads)", defaultValue = "Camel")
-    String[] filters;
-
-    @CommandLine.Option(names = { "--state" }, completionCandidates = StateCompletionCandidates.class,
-                        description = "To only show threads for a given state")
-    String state;
+                        description = "Filter thread names (use all to include all threads)", defaultValue = "Camel")
+    String filter;
 
     @CommandLine.Option(names = { "--trace" },
                         description = "Include stack-traces", defaultValue = "false")
@@ -94,15 +66,15 @@ public class CamelThreadDump extends ActionWatchCommand {
     }
 
     @Override
-    public Integer doWatchCall() throws Exception {
+    public Integer doCall() throws Exception {
         List<Row> rows = new ArrayList<>();
 
         List<Long> pids = findPids(name);
         if (pids.isEmpty()) {
             return 0;
         } else if (pids.size() > 1) {
-            printer().println("Name or pid " + name + " matches " + pids.size()
-                              + " running Camel integrations. Specify a name or PID that matches exactly one.");
+            System.out.println("Name or pid " + name + " matches " + pids.size()
+                               + " running Camel integrations. Specify a name or PID that matches exactly one.");
             return 0;
         }
 
@@ -114,14 +86,14 @@ public class CamelThreadDump extends ActionWatchCommand {
         this.pid = pids.get(0);
 
         // ensure output file is deleted before executing action
-        Path outputFile = getOutputFile(Long.toString(pid));
-        PathUtils.deleteFile(outputFile);
+        File outputFile = getOutputFile("" + pid);
+        FileUtil.deleteFile(outputFile);
 
         JsonObject root = new JsonObject();
         root.put("action", "thread-dump");
-        Path f = getActionFile(Long.toString(pid));
+        File f = getActionFile("" + pid);
         try {
-            Files.writeString(f, root.toJson());
+            IOHelper.writeText(root.toJson(), f);
         } catch (Exception e) {
             // ignore
         }
@@ -135,23 +107,15 @@ public class CamelThreadDump extends ActionWatchCommand {
                 Row row = new Row();
                 row.id = jt.getLong("id");
                 row.name = jt.getString("name");
-                row.state = jt.getString("state");
 
                 // filter
-                boolean match = false;
-                for (String filter : filters) {
-                    match |= "all".equalsIgnoreCase(filter) || filter.equals("" + row.id)
-                            || StringHelper.containsIgnoreCase(row.name, filter)
-                            || PatternHelper.matchPattern(row.name, filter);
-                }
-                // state
-                if (state != null) {
-                    match &= StringHelper.containsIgnoreCase(row.state, state);
-                }
+                boolean match
+                        = "all".equals(filter) || row.name.contains(filter) || PatternHelper.matchPattern(row.name, filter);
                 if (!match) {
                     continue;
                 }
 
+                row.state = jt.getString("state");
                 row.waited = jt.getLong("waitedCount");
                 row.waitedTime = jt.getLong("waitedTime");
                 row.blocked = jt.getLong("blockedCount");
@@ -161,20 +125,18 @@ public class CamelThreadDump extends ActionWatchCommand {
                 rows.add(row);
             }
         } else {
-            printer().println("Response from running Camel with PID " + pid + " not received within 5 seconds");
+            System.out.println("Response from running Camel with PID " + pid + " not received within 5 seconds");
             return 1;
         }
 
         // sort rows
         rows.sort(this::sortRow);
 
-        if (watch) {
-            clearScreen();
-        }
+        clearScreen();
         if (!rows.isEmpty()) {
             int total = jo.getInteger("threadCount");
             int peak = jo.getInteger("peakThreadCount");
-            printer().printf("PID: %s\tThreads: %d\tPeak: %d\t\tDisplay: %d/%d%n", pid, total, peak, rows.size(), total);
+            System.out.printf("PID: %s\tThreads: %d\tPeak: %d\t\tDisplay: %d/%d\n", pid, total, peak, rows.size(), total);
 
             if (depth == 1) {
                 singleTable(rows);
@@ -184,14 +146,14 @@ public class CamelThreadDump extends ActionWatchCommand {
         }
 
         // delete output file after use
-        PathUtils.deleteFile(outputFile);
+        FileUtil.deleteFile(outputFile);
 
         return 0;
     }
 
     protected void singleTable(List<Row> rows) {
-        printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
-                new Column().header("ID").headerAlign(HorizontalAlign.CENTER).with(r -> Long.toString(r.id)),
+        System.out.println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
+                new Column().header("ID").headerAlign(HorizontalAlign.CENTER).with(r -> "" + r.id),
                 new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).maxWidth(60, OverflowBehaviour.ELLIPSIS_RIGHT)
                         .with(r -> r.name),
                 new Column().header("STATE").headerAlign(HorizontalAlign.RIGHT).with(r -> r.state),
@@ -203,15 +165,15 @@ public class CamelThreadDump extends ActionWatchCommand {
 
     protected void tableAndStackTrace(List<Row> rows) {
         for (Row row : rows) {
-            printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, List.of(row), Arrays.asList(
-                    new Column().header("ID").headerAlign(HorizontalAlign.CENTER).with(r -> Long.toString(r.id)),
+            System.out.println(AsciiTable.getTable(AsciiTable.NO_BORDERS, List.of(row), Arrays.asList(
+                    new Column().header("ID").headerAlign(HorizontalAlign.CENTER).with(r -> "" + r.id),
                     new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).maxWidth(60, OverflowBehaviour.ELLIPSIS_RIGHT)
                             .with(r -> r.name),
                     new Column().header("STATE").headerAlign(HorizontalAlign.RIGHT).with(r -> r.state),
                     new Column().header("BLOCK").with(this::getBlocked),
                     new Column().header("WAIT").with(this::getWaited))));
             for (int i = 0; i < depth && i < row.stackTrace.size(); i++) {
-                printer().println("\t" + row.stackTrace.get(i));
+                System.out.println("\t" + row.stackTrace.get(i));
             }
         }
     }
@@ -235,15 +197,32 @@ public class CamelThreadDump extends ActionWatchCommand {
         }
     }
 
-    protected JsonObject waitForOutputFile(Path outputFile) {
-        return getJsonObject(outputFile);
+    protected JsonObject waitForOutputFile(File outputFile) {
+        StopWatch watch = new StopWatch();
+        while (watch.taken() < 5000) {
+            try {
+                // give time for response to be ready
+                Thread.sleep(100);
+
+                if (outputFile.exists()) {
+                    FileInputStream fis = new FileInputStream(outputFile);
+                    String text = IOHelper.loadText(fis);
+                    IOHelper.close(fis);
+                    return (JsonObject) Jsoner.deserialize(text);
+                }
+
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        return null;
     }
 
     private String getBlocked(Row r) {
         if (r.blockedTime > 0) {
             return r.blocked + "(" + r.blockedTime + "ms)";
         } else {
-            return Long.toString(r.blocked);
+            return "" + r.blocked;
         }
     }
 
@@ -251,7 +230,7 @@ public class CamelThreadDump extends ActionWatchCommand {
         if (r.waitedTime > 0) {
             return r.waited + "(" + r.waitedTime + "ms)";
         } else {
-            return Long.toString(r.waited);
+            return "" + r.waited;
         }
     }
 
@@ -259,7 +238,7 @@ public class CamelThreadDump extends ActionWatchCommand {
         if (r.stackTrace == null || r.stackTrace.isEmpty()) {
             return "";
         }
-        return r.stackTrace.get(0);
+        return "" + r.stackTrace.get(0);
     }
 
     private static class Row {

@@ -1,7 +1,9 @@
 /**
  * XML encoder and decoder support.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.http.codec.xml;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

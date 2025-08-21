@@ -23,31 +23,20 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.infra.artemis.services.ArtemisService;
 import org.apache.camel.test.infra.artemis.services.ArtemisServiceFactory;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class SjmsComponentRestartTest extends CamelTestSupport {
 
-    /*
-     * This one needs a custom lifecycle due to binding to registry via @BindToRegistry.
-     * The broker needs to be started earlier than usual.
-     */
-    public static ArtemisService service;
-
+    @RegisterExtension
+    public ArtemisService service = ArtemisServiceFactory.createSingletonVMService();
     @BindToRegistry("activemqCF")
     private ActiveMQConnectionFactory connectionFactory
             = new ActiveMQConnectionFactory(service.serviceAddress());
 
-    static {
-        service = ArtemisServiceFactory.createVMService();
-        service.initialize();
-    }
-
-    @AfterAll
-    public static void shutdownBroker() {
-        if (service != null) {
-            service.shutdown();
-        }
+    @Override
+    protected boolean useJmx() {
+        return false;
     }
 
     @Override
@@ -60,7 +49,7 @@ public class SjmsComponentRestartTest extends CamelTestSupport {
         RouteBuilder routeBuilder = new RouteBuilder(context) {
             @Override
             public void configure() {
-                from("sjms:queue:test.SjmsComponentRestartTest").to("mock:test");
+                from("sjms:queue:test").to("mock:test");
             }
         };
         context.addRoutes(routeBuilder);
@@ -68,7 +57,7 @@ public class SjmsComponentRestartTest extends CamelTestSupport {
         context.start();
 
         getMockEndpoint("mock:test").expectedMessageCount(1);
-        template.sendBody("sjms:queue:test.SjmsComponentRestartTest", "Hello World");
+        template.sendBody("sjms:queue:test", "Hello World");
         MockEndpoint.assertIsSatisfied(context);
 
         // restart
@@ -85,7 +74,7 @@ public class SjmsComponentRestartTest extends CamelTestSupport {
 
         // and re-create template
         template = context.createProducerTemplate();
-        template.sendBody("sjms:queue:test.SjmsComponentRestartTest", "Hello World");
+        template.sendBody("sjms:queue:test", "Hello World");
         MockEndpoint.assertIsSatisfied(context);
 
         context.stop();
@@ -96,7 +85,7 @@ public class SjmsComponentRestartTest extends CamelTestSupport {
         RouteBuilder routeBuilder = new RouteBuilder(context) {
             @Override
             public void configure() {
-                from("sjms:queue:test.SjmsComponentRestartTest").to("mock:test");
+                from("sjms:queue:test").to("mock:test");
             }
         };
         context.addRoutes(routeBuilder);
@@ -104,7 +93,7 @@ public class SjmsComponentRestartTest extends CamelTestSupport {
         context.start();
 
         getMockEndpoint("mock:test").expectedMessageCount(1);
-        template.sendBody("sjms:queue:test.SjmsComponentRestartTest", "Hello World");
+        template.sendBody("sjms:queue:test", "Hello World");
         MockEndpoint.assertIsSatisfied(context);
 
         // restart
@@ -115,7 +104,7 @@ public class SjmsComponentRestartTest extends CamelTestSupport {
 
         getMockEndpoint("mock:test").expectedMessageCount(1);
 
-        template.sendBody("sjms:queue:test.SjmsComponentRestartTest", "Hello World");
+        template.sendBody("sjms:queue:test", "Hello World");
         MockEndpoint.assertIsSatisfied(context);
 
         context.stop();

@@ -22,11 +22,9 @@ import java.util.Map;
 import jakarta.mail.Message;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mail.Mailbox.MailboxUser;
-import org.apache.camel.component.mail.Mailbox.Protocol;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.jvnet.mock_javamail.Mailbox;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -35,15 +33,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * Unit test for recipients (To, CC, BCC)
  */
 public class MailRecipientsTest extends CamelTestSupport {
-    private static final MailboxUser you = Mailbox.getOrCreateUser("youRecipients", "secret");
-    private static final MailboxUser camelRiders
-            = Mailbox.getOrCreateUser("camelRecipients@riders.org", "camelRecipients", "secret");
-    private static final MailboxUser easyRiders
-            = Mailbox.getOrCreateUser("easyRecipients@riders.org", "easyRecipients", "secret");
-    private static final MailboxUser me = Mailbox.getOrCreateUser("meRecipients@you.org", "meRecipients", "secret");
-    private static final MailboxUser someone
-            = Mailbox.getOrCreateUser("someoneRecipients@somewhere.org", "someoneRecipients", "secret");
-    private static final MailboxUser to = Mailbox.getOrCreateUser("toRecipients@somewhere.org", "toRecipients", "secret");
 
     @Test
     public void testMultiRecipients() throws Exception {
@@ -51,42 +40,37 @@ public class MailRecipientsTest extends CamelTestSupport {
 
         sendBody("direct:a", "Camel does really rock");
 
-        Mailbox inbox = camelRiders.getInbox();
+        Mailbox inbox = Mailbox.get("camel@riders.org");
         Message msg = inbox.get(0);
-        assertEquals(you.getEmail(), msg.getFrom()[0].toString());
-        assertEquals(camelRiders.getEmail(), msg.getRecipients(Message.RecipientType.TO)[0].toString());
-        assertEquals(easyRiders.getEmail(), msg.getRecipients(Message.RecipientType.TO)[1].toString());
-        assertEquals(me.getEmail(), msg.getRecipients(Message.RecipientType.CC)[0].toString());
+        assertEquals("you@apache.org", msg.getFrom()[0].toString());
+        assertEquals("camel@riders.org", msg.getRecipients(Message.RecipientType.TO)[0].toString());
+        assertEquals("easy@riders.org", msg.getRecipients(Message.RecipientType.TO)[1].toString());
+        assertEquals("me@you.org", msg.getRecipients(Message.RecipientType.CC)[0].toString());
+        assertEquals("someone@somewhere.org", msg.getRecipients(Message.RecipientType.BCC)[0].toString());
 
-        /* Bcc should be stripped by specs compliant SMTP servers */
-        Assertions.assertThat(msg.getRecipients(Message.RecipientType.BCC)).isNull();
-
-        inbox = easyRiders.getInbox();
+        inbox = Mailbox.get("easy@riders.org");
         msg = inbox.get(0);
-        assertEquals(you.getEmail(), msg.getFrom()[0].toString());
-        assertEquals(camelRiders.getEmail(), msg.getRecipients(Message.RecipientType.TO)[0].toString());
-        assertEquals(easyRiders.getEmail(), msg.getRecipients(Message.RecipientType.TO)[1].toString());
-        assertEquals(me.getEmail(), msg.getRecipients(Message.RecipientType.CC)[0].toString());
-        /* Bcc should be stripped by specs compliant SMTP servers */
-        Assertions.assertThat(msg.getRecipients(Message.RecipientType.BCC)).isNull();
+        assertEquals("you@apache.org", msg.getFrom()[0].toString());
+        assertEquals("camel@riders.org", msg.getRecipients(Message.RecipientType.TO)[0].toString());
+        assertEquals("easy@riders.org", msg.getRecipients(Message.RecipientType.TO)[1].toString());
+        assertEquals("me@you.org", msg.getRecipients(Message.RecipientType.CC)[0].toString());
+        assertEquals("someone@somewhere.org", msg.getRecipients(Message.RecipientType.BCC)[0].toString());
 
-        inbox = me.getInbox();
+        inbox = Mailbox.get("me@you.org");
         msg = inbox.get(0);
-        assertEquals(you.getEmail(), msg.getFrom()[0].toString());
-        assertEquals(camelRiders.getEmail(), msg.getRecipients(Message.RecipientType.TO)[0].toString());
-        assertEquals(easyRiders.getEmail(), msg.getRecipients(Message.RecipientType.TO)[1].toString());
-        assertEquals(me.getEmail(), msg.getRecipients(Message.RecipientType.CC)[0].toString());
-        /* Bcc should be stripped by specs compliant SMTP servers */
-        Assertions.assertThat(msg.getRecipients(Message.RecipientType.BCC)).isNull();
+        assertEquals("you@apache.org", msg.getFrom()[0].toString());
+        assertEquals("camel@riders.org", msg.getRecipients(Message.RecipientType.TO)[0].toString());
+        assertEquals("easy@riders.org", msg.getRecipients(Message.RecipientType.TO)[1].toString());
+        assertEquals("me@you.org", msg.getRecipients(Message.RecipientType.CC)[0].toString());
+        assertEquals("someone@somewhere.org", msg.getRecipients(Message.RecipientType.BCC)[0].toString());
 
-        inbox = someone.getInbox();
+        inbox = Mailbox.get("someone@somewhere.org");
         msg = inbox.get(0);
-        assertEquals(you.getEmail(), msg.getFrom()[0].toString());
-        assertEquals(camelRiders.getEmail(), msg.getRecipients(Message.RecipientType.TO)[0].toString());
-        assertEquals(easyRiders.getEmail(), msg.getRecipients(Message.RecipientType.TO)[1].toString());
-        assertEquals(me.getEmail(), msg.getRecipients(Message.RecipientType.CC)[0].toString());
-        /* Bcc should be stripped by specs compliant SMTP servers */
-        Assertions.assertThat(msg.getRecipients(Message.RecipientType.BCC)).isNull();
+        assertEquals("you@apache.org", msg.getFrom()[0].toString());
+        assertEquals("camel@riders.org", msg.getRecipients(Message.RecipientType.TO)[0].toString());
+        assertEquals("easy@riders.org", msg.getRecipients(Message.RecipientType.TO)[1].toString());
+        assertEquals("me@you.org", msg.getRecipients(Message.RecipientType.CC)[0].toString());
+        assertEquals("someone@somewhere.org", msg.getRecipients(Message.RecipientType.BCC)[0].toString());
     }
 
     @Test
@@ -95,16 +79,16 @@ public class MailRecipientsTest extends CamelTestSupport {
 
         // direct:b blocks all message headers
         Map<String, Object> headers = new HashMap<>();
-        headers.put("to", to.getEmail());
+        headers.put("to", "to@riders.org");
         headers.put("cc", "header@riders.org");
 
         template.sendBodyAndHeaders("direct:b", "Hello World", headers);
 
-        Mailbox box = camelRiders.getInbox();
+        Mailbox box = Mailbox.get("camel@riders.org");
         Message msg = box.get(0);
-        assertEquals(camelRiders.getEmail(), msg.getRecipients(Message.RecipientType.TO)[0].toString());
-        assertEquals(easyRiders.getEmail(), msg.getRecipients(Message.RecipientType.TO)[1].toString());
-        assertEquals(me.getEmail(), msg.getRecipients(Message.RecipientType.CC)[0].toString());
+        assertEquals("camel@riders.org", msg.getRecipients(Message.RecipientType.TO)[0].toString());
+        assertEquals("easy@riders.org", msg.getRecipients(Message.RecipientType.TO)[1].toString());
+        assertEquals("me@you.org", msg.getRecipients(Message.RecipientType.CC)[0].toString());
     }
 
     @Test
@@ -113,14 +97,14 @@ public class MailRecipientsTest extends CamelTestSupport {
 
         // direct:c blocks the "cc" message header - so only "to" will be used here
         Map<String, Object> headers = new HashMap<>();
-        headers.put("to", to.getEmail());
+        headers.put("to", "to@riders.org");
         headers.put("cc", "header@riders.org");
 
         template.sendBodyAndHeaders("direct:c", "Hello World", headers);
 
-        Mailbox box = to.getInbox();
+        Mailbox box = Mailbox.get("to@riders.org");
         Message msg = box.get(0);
-        assertEquals(to.getEmail(), msg.getRecipients(Message.RecipientType.TO)[0].toString());
+        assertEquals("to@riders.org", msg.getRecipients(Message.RecipientType.TO)[0].toString());
         assertNull(msg.getRecipients(Message.RecipientType.CC));
     }
 
@@ -134,11 +118,11 @@ public class MailRecipientsTest extends CamelTestSupport {
 
         template.sendBodyAndHeaders("direct:c", "Hello World", headers);
 
-        Mailbox box = camelRiders.getInbox();
+        Mailbox box = Mailbox.get("camel@riders.org");
         Message msg = box.get(0);
-        assertEquals(camelRiders.getEmail(), msg.getRecipients(Message.RecipientType.TO)[0].toString());
+        assertEquals("camel@riders.org", msg.getRecipients(Message.RecipientType.TO)[0].toString());
         assertEquals(1, msg.getRecipients(Message.RecipientType.CC).length);
-        assertEquals(me.getEmail(), msg.getRecipients(Message.RecipientType.CC)[0].toString());
+        assertEquals("me@you.org", msg.getRecipients(Message.RecipientType.CC)[0].toString());
     }
 
     @Override
@@ -150,14 +134,13 @@ public class MailRecipientsTest extends CamelTestSupport {
                 // to: camel@riders.org , easy@riders.org
                 // cc: me@you.org
                 // bcc: someone@somewhere.org
-                String recipients = "&to=" + camelRiders.getEmail() + "," + easyRiders.getEmail() + "&cc=" + me.getEmail()
-                                    + "&bcc=" + someone.getEmail();
+                String recipients = "&to=camel@riders.org,easy@riders.org&cc=me@you.org&bcc=someone@somewhere.org";
 
-                from("direct:a").to(you.uriPrefix(Protocol.smtp) + "&from=" + you.getEmail() + recipients);
+                from("direct:a").to("smtp://you@mymailserver.com?password=secret&from=you@apache.org" + recipients);
                 from("direct:b").removeHeaders("*")
-                        .to(you.uriPrefix(Protocol.smtp) + "&from=" + you.getEmail() + recipients);
+                        .to("smtp://you@mymailserver.com?password=secret&from=you@apache.org" + recipients);
                 from("direct:c").removeHeaders("cc")
-                        .to(you.uriPrefix(Protocol.smtp) + "&from=" + you.getEmail() + recipients);
+                        .to("smtp://you@mymailserver.com?password=secret&from=you@apache.org" + recipients);
                 // END SNIPPET: e1
             }
         };

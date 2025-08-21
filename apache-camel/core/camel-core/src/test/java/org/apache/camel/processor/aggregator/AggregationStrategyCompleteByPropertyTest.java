@@ -51,17 +51,17 @@ public class AggregationStrategyCompleteByPropertyTest extends ContextTestSuppor
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(header("id"), new MyCompletionStrategy()).completionTimeout(1000)
                         .to("mock:aggregated");
             }
         };
     }
 
-    private static final class MyCompletionStrategy implements AggregationStrategy {
+    private final class MyCompletionStrategy implements AggregationStrategy {
 
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {

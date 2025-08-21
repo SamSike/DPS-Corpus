@@ -34,10 +34,10 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class BeanValidatorOutputValidateTest extends ContextTestSupport {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 validator().type("toValidate").withBean("testValidator");
 
                 onException(ValidationException.class).handled(true).log("Invalid validation: ${exception.message}")
@@ -64,8 +64,8 @@ public class BeanValidatorOutputValidateTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry registry = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry registry = super.createRegistry();
 
         registry.bind("testValidator", new TestValidator());
 

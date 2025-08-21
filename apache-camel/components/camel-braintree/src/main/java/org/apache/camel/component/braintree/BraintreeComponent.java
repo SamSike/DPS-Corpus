@@ -16,8 +16,8 @@
  */
 package org.apache.camel.component.braintree;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.braintreegateway.BraintreeGateway;
 import org.apache.camel.CamelContext;
@@ -40,13 +40,13 @@ public class BraintreeComponent extends AbstractApiComponent<BraintreeApiName, B
     private final Map<String, BraintreeGateway> gateways;
 
     public BraintreeComponent() {
-        super(BraintreeApiName.class, BraintreeApiCollection.getCollection());
-        this.gateways = new ConcurrentHashMap<>();
+        super(BraintreeEndpoint.class, BraintreeApiName.class, BraintreeApiCollection.getCollection());
+        this.gateways = new HashMap<>();
     }
 
     public BraintreeComponent(CamelContext context) {
-        super(context, BraintreeApiName.class, BraintreeApiCollection.getCollection());
-        this.gateways = new ConcurrentHashMap<>();
+        super(context, BraintreeEndpoint.class, BraintreeApiName.class, BraintreeApiCollection.getCollection());
+        this.gateways = new HashMap<>();
     }
 
     @Override
@@ -63,12 +63,20 @@ public class BraintreeComponent extends AbstractApiComponent<BraintreeApiName, B
         return new BraintreeEndpoint(uri, this, apiName, methodName, endpointConfiguration);
     }
 
-    public BraintreeGateway getGateway(BraintreeConfiguration configuration) {
+    public synchronized BraintreeGateway getGateway(BraintreeConfiguration configuration) {
         BraintreeGateway gateway;
         if (configuration.getAccessToken() != null) {
-            gateway = gateways.computeIfAbsent(configuration.getAccessToken(), k -> configuration.newBraintreeGateway());
+            gateway = gateways.get(configuration.getAccessToken());
+            if (gateway == null) {
+                gateway = configuration.newBraintreeGateway();
+                gateways.put(configuration.getAccessToken(), gateway);
+            }
         } else {
-            gateway = gateways.computeIfAbsent(configuration.getMerchantId(), k -> configuration.newBraintreeGateway());
+            gateway = gateways.get(configuration.getMerchantId());
+            if (gateway == null) {
+                gateway = configuration.newBraintreeGateway();
+                gateways.put(configuration.getMerchantId(), gateway);
+            }
         }
         return gateway;
     }

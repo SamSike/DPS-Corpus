@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,11 +87,11 @@ public class ExceptionCollector {
 
 		if (this.exceptions.size() == 1) {
 			Throwable exception = this.exceptions.get(0);
-			if (exception instanceof Error error) {
-				throw error;
+			if (exception instanceof Error) {
+				throw (Error) exception;
 			}
-			if (exception instanceof Exception ex) {
-				throw ex;
+			if (exception instanceof Exception) {
+				throw (Exception) exception;
 			}
 			AssertionError assertionError = new AssertionError(exception.getMessage());
 			assertionError.initCause(exception);

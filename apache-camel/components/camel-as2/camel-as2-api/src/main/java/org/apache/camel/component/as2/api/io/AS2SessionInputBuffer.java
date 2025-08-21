@@ -23,28 +23,31 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 
-import org.apache.camel.util.ObjectHelper;
-import org.apache.hc.core5.http.impl.BasicHttpTransportMetrics;
-import org.apache.hc.core5.http.io.HttpTransportMetrics;
-import org.apache.hc.core5.http.io.SessionInputBuffer;
-import org.apache.hc.core5.util.Args;
-import org.apache.hc.core5.util.ByteArrayBuffer;
-import org.apache.hc.core5.util.CharArrayBuffer;
+import org.apache.http.MessageConstraintException;
+import org.apache.http.config.MessageConstraints;
+import org.apache.http.impl.io.HttpTransportMetricsImpl;
+import org.apache.http.io.BufferInfo;
+import org.apache.http.io.HttpTransportMetrics;
+import org.apache.http.io.SessionInputBuffer;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.util.Args;
+import org.apache.http.util.Asserts;
+import org.apache.http.util.ByteArrayBuffer;
+import org.apache.http.util.CharArrayBuffer;
 
 import static org.apache.camel.util.BufferCaster.cast;
 
-public class AS2SessionInputBuffer implements SessionInputBuffer {
+public class AS2SessionInputBuffer implements SessionInputBuffer, BufferInfo {
 
-    private static final int CR = 13; // <US-ASCII CR, carriage return (13)>
-    private static final int LF = 10; // <US-ASCII LF, linefeed (10)>
-
-    private final BasicHttpTransportMetrics metrics;
+    private final HttpTransportMetricsImpl metrics;
     private final byte[] buffer;
     private final ByteArrayBuffer linebuffer;
     private final int minChunkLimit;
+    private final MessageConstraints constraints;
 
     private CharsetDecoder decoder;
 
+    private InputStream instream;
     private int bufferpos;
     private int bufferlen;
     private CharBuffer cbuf;
@@ -52,20 +55,22 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
     private boolean lastLineReadEnrichedByCarriageReturn;
     private boolean lastLineReadTerminatedByLineFeed;
 
-    public AS2SessionInputBuffer(final BasicHttpTransportMetrics metrics,
+    public AS2SessionInputBuffer(final HttpTransportMetricsImpl metrics,
                                  final int buffersize,
-                                 final int minChunkLimit) {
-        this.metrics = ObjectHelper.notNull(metrics, "metrics");
+                                 final int minChunkLimit,
+                                 MessageConstraints constraints) {
+        this.metrics = Args.notNull(metrics, "metrics");
         Args.positive(buffersize, "buffersize");
         this.buffer = new byte[buffersize];
         this.bufferpos = 0;
         this.bufferlen = 0;
         this.minChunkLimit = minChunkLimit >= 0 ? minChunkLimit : 512;
+        this.constraints = constraints != null ? constraints : MessageConstraints.DEFAULT;
         this.linebuffer = new ByteArrayBuffer(buffersize);
     }
 
-    public AS2SessionInputBuffer(BasicHttpTransportMetrics metrics, int buffersize) {
-        this(metrics, buffersize, buffersize);
+    public AS2SessionInputBuffer(final HttpTransportMetricsImpl metrics, final int buffersize) {
+        this(metrics, buffersize, buffersize, null);
     }
 
     public CharsetDecoder getCharsetDecoder() {
@@ -74,6 +79,14 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
 
     public void setCharsetDecoder(CharsetDecoder chardecoder) {
         this.decoder = chardecoder;
+    }
+
+    public void bind(final InputStream instream) {
+        this.instream = instream;
+    }
+
+    public boolean isBound() {
+        return this.instream != null;
     }
 
     @Override
@@ -91,7 +104,7 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
         return capacity() - length();
     }
 
-    public int fillBuffer(InputStream inputStream) throws IOException {
+    public int fillBuffer() throws IOException {
         // compact the buffer if necessary
         if (this.bufferpos > 0) {
             final int len = this.bufferlen - this.bufferpos;
@@ -104,7 +117,7 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
         final int l;
         final int off = this.bufferlen;
         final int len = this.buffer.length - off;
-        l = inputStream.read(this.buffer, off, len);
+        l = streamRead(this.buffer, off, len);
         if (l == -1) {
             return -1;
         } else {
@@ -119,7 +132,7 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
     }
 
     @Override
-    public int read(byte[] b, int off, int len, InputStream inputStream) throws IOException {
+    public int read(byte[] b, int off, int len) throws IOException {
         if (b == null) {
             return 0;
         }
@@ -132,7 +145,7 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
         // If the remaining capacity is big enough, read directly from the
         // underlying input stream bypassing the buffer.
         if (len > this.minChunkLimit) {
-            final int read = inputStream.read(b, off, len);
+            final int read = streamRead(b, off, len);
             if (read > 0) {
                 this.metrics.incrementBytesTransferred(read);
             }
@@ -140,7 +153,7 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
         } else {
             // otherwise read to the buffer first
             while (!hasBufferedData()) {
-                final int noRead = fillBuffer(inputStream);
+                final int noRead = fillBuffer();
                 if (noRead == -1) {
                     return -1;
                 }
@@ -153,18 +166,18 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
     }
 
     @Override
-    public int read(byte[] b, InputStream inputStream) throws IOException {
+    public int read(byte[] b) throws IOException {
         if (b == null) {
             return 0;
         }
-        return inputStream.read(b, 0, b.length);
+        return read(b, 0, b.length);
     }
 
     @Override
-    public int read(InputStream inputStream) throws IOException {
+    public int read() throws IOException {
         int noRead;
         while (!hasBufferedData()) {
-            noRead = fillBuffer(inputStream);
+            noRead = fillBuffer();
             if (noRead == -1) {
                 return -1;
             }
@@ -173,8 +186,9 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
     }
 
     @Override
-    public int readLine(CharArrayBuffer charbuffer, InputStream inputStream) throws IOException {
-        ObjectHelper.notNull(charbuffer, "Char array buffer");
+    public int readLine(CharArrayBuffer charbuffer) throws IOException {
+        Args.notNull(charbuffer, "Char array buffer");
+        final int maxLineLen = this.constraints.getMaxLineLength();
         int noRead = 0;
         boolean retry = true;
         this.lastLineReadEnrichedByCarriageReturn = false;
@@ -183,13 +197,20 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
             // attempt to find end of line (LF)
             int pos = -1;
             for (int i = this.bufferpos; i < this.bufferlen; i++) {
-                if (this.buffer[i] == LF) {
+                if (this.buffer[i] == HTTP.LF) {
                     pos = i;
                     this.lastLineReadTerminatedByLineFeed = true;
-                    if (i > 0 && this.buffer[i - 1] == CR) {
+                    if (i > 0 && this.buffer[i - 1] == HTTP.CR) {
                         this.lastLineReadEnrichedByCarriageReturn = true;
                     }
                     break;
+                }
+            }
+
+            if (maxLineLen > 0) {
+                final int currentLen = this.linebuffer.length() + (pos > 0 ? pos : this.bufferlen) - this.bufferpos;
+                if (currentLen >= maxLineLen) {
+                    throw new MessageConstraintException("Maximum line length limit exceeded");
                 }
             }
 
@@ -206,7 +227,7 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
                 if (hasBufferedData()) {
                     addBytesToLinebuffer(pos);
                 }
-                noRead = fillBuffer(inputStream);
+                noRead = fillBuffer();
                 if (noRead == -1) {
                     // end of stream reached.
                     retry = false;
@@ -221,6 +242,17 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
         return lineFromLineBuffer(charbuffer);
     }
 
+    @Override
+    public String readLine() throws IOException {
+        final CharArrayBuffer charbuffer = new CharArrayBuffer(64);
+        final int l = readLine(charbuffer);
+        if (l != -1) {
+            return charbuffer.toString();
+        } else {
+            return null;
+        }
+    }
+
     public boolean isLastLineReadTerminatedByLineFeed() {
         return lastLineReadTerminatedByLineFeed;
     }
@@ -230,20 +262,30 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
     }
 
     @Override
+    public boolean isDataAvailable(int timeout) throws IOException {
+        return hasBufferedData();
+    }
+
+    @Override
     public HttpTransportMetrics getMetrics() {
         return this.metrics;
+    }
+
+    private int streamRead(final byte[] b, final int off, final int len) throws IOException {
+        Asserts.notNull(this.instream, "Input stream");
+        return this.instream.read(b, off, len);
     }
 
     private int lineFromLineBuffer(final CharArrayBuffer charbuffer) throws IOException {
         // discard LF if found
         int len = this.linebuffer.length();
         if (len > 0) {
-            if (this.linebuffer.byteAt(len - 1) == LF) {
+            if (this.linebuffer.byteAt(len - 1) == HTTP.LF) {
                 len--;
             }
             // discard CR if found
             if (len > 0) {
-                if (this.linebuffer.byteAt(len - 1) == CR) {
+                if (this.linebuffer.byteAt(len - 1) == HTTP.CR) {
                     len--;
                 }
             }
@@ -252,7 +294,7 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
         if (this.decoder == null) {
             charbuffer.append(this.linebuffer, 0, len);
         } else {
-            final ByteBuffer bbuf = ByteBuffer.wrap(linebuffer.toByteArray(), 0, len);
+            final ByteBuffer bbuf = ByteBuffer.wrap(this.linebuffer.buffer(), 0, len);
             len = appendDecoded(charbuffer, bbuf);
         }
         this.linebuffer.clear();
@@ -265,7 +307,7 @@ public class AS2SessionInputBuffer implements SessionInputBuffer {
         final int off = this.bufferpos;
         int len;
         this.bufferpos = pos + 1;
-        if (pos > off && this.buffer[pos - 1] == CR) {
+        if (pos > off && this.buffer[pos - 1] == HTTP.CR) {
             // skip CR if found
             pos--;
         }

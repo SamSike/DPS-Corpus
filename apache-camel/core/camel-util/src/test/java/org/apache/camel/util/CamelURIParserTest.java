@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class CamelURIParserTest {
 
     @Test
-    public void testParseUri() {
+    public void testParseUri() throws Exception {
         String[] out1 = CamelURIParser.parseUri("smtp://localhost?username=davsclaus&password=secret");
         assertEquals("smtp", out1[0]);
         assertEquals("localhost", out1[1]);
@@ -32,15 +32,15 @@ public class CamelURIParserTest {
     }
 
     @Test
-    public void testParseNoSlashUri() {
+    public void testParseNoSlashUri() throws Exception {
         String[] out1 = CamelURIParser.parseUri("direct:start");
         assertEquals("direct", out1[0]);
         assertEquals("start", out1[1]);
-        assertNull(out1[2]);
+        assertEquals(null, out1[2]);
     }
 
     @Test
-    public void testParseUriSlashAndQuery() {
+    public void testParseUriSlashAndQuery() throws Exception {
         String[] out1 = CamelURIParser.parseUri("file:/absolute?recursive=true");
         assertEquals("file", out1[0]);
         assertEquals("/absolute", out1[1]);
@@ -63,30 +63,30 @@ public class CamelURIParserTest {
     }
 
     @Test
-    public void testParseUriSlash() {
+    public void testParseUriSlash() throws Exception {
         String[] out1 = CamelURIParser.parseUri("file:/absolute");
         assertEquals("file", out1[0]);
         assertEquals("/absolute", out1[1]);
-        assertNull(out1[2]);
+        assertEquals(null, out1[2]);
 
         String[] out2 = CamelURIParser.parseUri("file:///absolute");
         assertEquals("file", out2[0]);
         assertEquals("/absolute", out2[1]);
-        assertNull(out2[2]);
+        assertEquals(null, out2[2]);
 
         String[] out3 = CamelURIParser.parseUri("file://relative");
         assertEquals("file", out3[0]);
         assertEquals("relative", out3[1]);
-        assertNull(out3[2]);
+        assertEquals(null, out3[2]);
 
         String[] out4 = CamelURIParser.parseUri("file:relative");
         assertEquals("file", out4[0]);
         assertEquals("relative", out4[1]);
-        assertNull(out4[2]);
+        assertEquals(null, out4[2]);
     }
 
     @Test
-    public void testParseInvalid() {
+    public void testParseInvalid() throws Exception {
         assertNull(CamelURIParser.parseUri("doesnotexists"));
         assertNull(CamelURIParser.parseUri("doesnotexists:"));
         assertNull(CamelURIParser.parseUri("doesnotexists/foo"));
@@ -94,37 +94,37 @@ public class CamelURIParserTest {
     }
 
     @Test
-    public void testParseNoPathButSlash() {
+    public void testParseNoPathButSlash() throws Exception {
         String[] out1 = CamelURIParser.parseUri("file:/");
         assertEquals("file", out1[0]);
         assertEquals("/", out1[1]);
-        assertNull(out1[2]);
+        assertEquals(null, out1[2]);
 
         String[] out2 = CamelURIParser.parseUri("file:///");
         assertEquals("file", out2[0]);
         assertEquals("/", out2[1]);
-        assertNull(out2[2]);
+        assertEquals(null, out2[2]);
     }
 
     @Test
-    public void testParseEmptyQuery() {
+    public void testParseEmptyQuery() throws Exception {
         String[] out1 = CamelURIParser.parseUri("file:relative");
         assertEquals("file", out1[0]);
         assertEquals("relative", out1[1]);
-        assertNull(out1[2]);
+        assertEquals(null, out1[2]);
 
         String[] out2 = CamelURIParser.parseUri("file:relative?");
         assertEquals("file", out2[0]);
         assertEquals("relative", out2[1]);
-        assertNull(out2[2]);
+        assertEquals(null, out2[2]);
     }
 
     @Test
-    public void testFastParse() {
+    public void testFastParse() throws Exception {
         String[] out1 = CamelURIParser.fastParseUri("file:relative");
         assertEquals("file", out1[0]);
         assertEquals("relative", out1[1]);
-        assertNull(out1[2]);
+        assertEquals(null, out1[2]);
 
         String[] out2 = CamelURIParser.fastParseUri("file://relative");
         assertEquals(CamelURIParser.URI_ALREADY_NORMALIZED, out2);

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,7 +37,7 @@
  */
 package org.jooq.impl;
 
-import static org.jooq.impl.DSL.raw;
+import static org.jooq.impl.DSL.sql;
 
 import org.jooq.SQL;
 
@@ -49,21 +49,20 @@ import org.jooq.SQL;
 final class Operators {
 
     // For a list of standardised HTML entity names, see https://dev.w3.org/html5/html-author/charref
-    static final SQL OP_AMP    = raw("&");
-    static final SQL OP_AST    = raw("*");
-    static final SQL OP_COMMAT = raw("@");
-    static final SQL OP_DOLLAR = raw("$");
-    static final SQL OP_EQUALS = raw("=");
-    static final SQL OP_EXCL   = raw("!");
-    static final SQL OP_GT     = raw(">");
-    static final SQL OP_HAT    = raw("^");
-    static final SQL OP_LT     = raw("<");
-    static final SQL OP_MINUS  = raw("-");
-    static final SQL OP_NUM    = raw("#");
-    static final SQL OP_PERCNT = raw("%");
-    static final SQL OP_PLUS   = raw("+");
-    static final SQL OP_QUEST  = raw("?");
-    static final SQL OP_SOL    = raw("/");
-    static final SQL OP_VERBAR = raw("|");
+    static final SQL OP_AMP    = sql("&");
+    static final SQL OP_AST    = sql("*");
+    static final SQL OP_COMMAT = sql("@");
+    static final SQL OP_DOLLAR = sql("$");
+    static final SQL OP_EQUALS = sql("=");
+    static final SQL OP_EXCL   = sql("!");
+    static final SQL OP_GT     = sql(">");
+    static final SQL OP_HAT    = sql("^");
+    static final SQL OP_LT     = sql("<");
+    static final SQL OP_NUM    = sql("#");
+    static final SQL OP_PERCNT = sql("%");
+    static final SQL OP_PLUS   = sql("+");
+    static final SQL OP_QUEST  = sql("?");
+    static final SQL OP_SOL    = sql("/");
+    static final SQL OP_VERBAR = sql("|");
 
 }

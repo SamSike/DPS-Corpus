@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.aop.config;
 
 import java.lang.reflect.Method;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.BeanFactory;
@@ -32,32 +33,37 @@ import static org.mockito.Mockito.verify;
  * @author Rick Evans
  * @author Chris Beams
  */
-class MethodLocatingFactoryBeanTests {
+public class MethodLocatingFactoryBeanTests {
 
 	private static final String BEAN_NAME = "string";
-	private MethodLocatingFactoryBean factory = new MethodLocatingFactoryBean();
-	private BeanFactory beanFactory = mock();
+	private MethodLocatingFactoryBean factory;
+	private BeanFactory beanFactory;
 
+	@BeforeEach
+	public void setUp() {
+		factory = new MethodLocatingFactoryBean();
+		beanFactory = mock(BeanFactory.class);
+	}
 
 	@Test
-	void testIsSingleton() {
+	public void testIsSingleton() {
 		assertThat(factory.isSingleton()).isTrue();
 	}
 
 	@Test
-	void testGetObjectType() {
+	public void testGetObjectType() {
 		assertThat(factory.getObjectType()).isEqualTo(Method.class);
 	}
 
 	@Test
-	void testWithNullTargetBeanName() {
+	public void testWithNullTargetBeanName() {
 		factory.setMethodName("toString()");
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				factory.setBeanFactory(beanFactory));
 	}
 
 	@Test
-	void testWithEmptyTargetBeanName() {
+	public void testWithEmptyTargetBeanName() {
 		factory.setTargetBeanName("");
 		factory.setMethodName("toString()");
 		assertThatIllegalArgumentException().isThrownBy(() ->
@@ -65,14 +71,14 @@ class MethodLocatingFactoryBeanTests {
 	}
 
 	@Test
-	void testWithNullTargetMethodName() {
+	public void testWithNullTargetMethodName() {
 		factory.setTargetBeanName(BEAN_NAME);
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				factory.setBeanFactory(beanFactory));
 	}
 
 	@Test
-	void testWithEmptyTargetMethodName() {
+	public void testWithEmptyTargetMethodName() {
 		factory.setTargetBeanName(BEAN_NAME);
 		factory.setMethodName("");
 		assertThatIllegalArgumentException().isThrownBy(() ->
@@ -80,7 +86,7 @@ class MethodLocatingFactoryBeanTests {
 	}
 
 	@Test
-	void testWhenTargetBeanClassCannotBeResolved() {
+	public void testWhenTargetBeanClassCannotBeResolved() {
 		factory.setTargetBeanName(BEAN_NAME);
 		factory.setMethodName("toString()");
 		assertThatIllegalArgumentException().isThrownBy(() ->
@@ -90,7 +96,7 @@ class MethodLocatingFactoryBeanTests {
 
 	@Test
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	void testSunnyDayPath() throws Exception {
+	public void testSunnyDayPath() throws Exception {
 		given(beanFactory.getType(BEAN_NAME)).willReturn((Class)String.class);
 		factory.setTargetBeanName(BEAN_NAME);
 		factory.setMethodName("toString()");
@@ -105,7 +111,7 @@ class MethodLocatingFactoryBeanTests {
 
 	@Test
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	void testWhereMethodCannotBeResolved() {
+	public void testWhereMethodCannotBeResolved() {
 		given(beanFactory.getType(BEAN_NAME)).willReturn((Class)String.class);
 		factory.setTargetBeanName(BEAN_NAME);
 		factory.setMethodName("loadOfOld()");

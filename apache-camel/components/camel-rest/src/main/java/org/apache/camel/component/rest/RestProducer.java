@@ -16,9 +16,9 @@
  */
 package org.apache.camel.component.rest;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -30,13 +30,14 @@ import org.apache.camel.AsyncProcessor;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedCamelContext;
+import org.apache.camel.Message;
 import org.apache.camel.Producer;
 import org.apache.camel.spi.DataFormat;
 import org.apache.camel.spi.PropertyConfigurer;
 import org.apache.camel.spi.RestConfiguration;
 import org.apache.camel.support.AsyncProcessorConverterHelper;
 import org.apache.camel.support.DefaultAsyncProducer;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.PropertyBindingSupport;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.FileUtil;
@@ -145,6 +146,7 @@ public class RestProducer extends DefaultAsyncProducer {
         String resolvedUriTemplate
                 = getEndpoint().getUriTemplate() != null ? getEndpoint().getUriTemplate() : getEndpoint().getPath();
 
+        Message inMessage = exchange.getIn();
         if (prepareUriTemplate) {
             if (resolvedUriTemplate.contains("{")) {
                 // resolve template and replace {key} with the values form the exchange
@@ -152,7 +154,7 @@ public class RestProducer extends DefaultAsyncProducer {
                 String[] arr = resolvedUriTemplate.split("\\/");
                 StringJoiner uriTemplateBuilder = new StringJoiner("/");
                 for (String a : arr) {
-                    String resolvedUriParam = resolvePlaceholders(a, exchange);
+                    String resolvedUriParam = resolveHeaderPlaceholders(a, inMessage);
 
                     // Backward compatibility: if one of the path params is fully resolved,
                     // then it is assumed that whole uri is resolved.
@@ -170,11 +172,11 @@ public class RestProducer extends DefaultAsyncProducer {
         }
 
         // resolve uri parameters
-        String query = createQueryParameters(getEndpoint().getQueryParameters(), exchange);
+        String query = createQueryParameters(getEndpoint().getQueryParameters(), inMessage);
 
         if (query != null) {
             // the query parameters for the rest call to be used
-            exchange.getMessage().setHeader(RestConstants.REST_HTTP_QUERY, query);
+            inMessage.setHeader(RestConstants.REST_HTTP_QUERY, query);
         }
 
         if (hasPath) {
@@ -191,14 +193,14 @@ public class RestProducer extends DefaultAsyncProducer {
                 overrideUri += "/" + resolvedUriTemplate;
             }
             // the http uri for the rest call to be used
-            exchange.getMessage().setHeader(RestConstants.REST_HTTP_URI, overrideUri);
+            inMessage.setHeader(RestConstants.REST_HTTP_URI, overrideUri);
 
             // when chaining RestConsumer with RestProducer, the
             // HTTP_PATH header will be present, we remove it here
             // as the REST_HTTP_URI contains the full URI for the
             // request and every other HTTP producer will concatenate
             // REST_HTTP_URI with HTTP_PATH resulting in incorrect URIs
-            exchange.getMessage().removeHeader(Exchange.HTTP_PATH);
+            inMessage.removeHeader(Exchange.HTTP_PATH);
         }
 
         // method
@@ -206,28 +208,28 @@ public class RestProducer extends DefaultAsyncProducer {
         if (method != null) {
             // the method should be in upper case
             String upper = method.toUpperCase(Locale.US);
-            exchange.getMessage().setHeader(RestConstants.HTTP_METHOD, upper);
+            inMessage.setHeader(RestConstants.HTTP_METHOD, upper);
         }
 
         final String produces = getEndpoint().getProduces();
-        if (isEmpty(exchange.getMessage().getHeader(RestConstants.CONTENT_TYPE)) && isNotEmpty(produces)) {
-            exchange.getMessage().setHeader(RestConstants.CONTENT_TYPE, produces);
+        if (isEmpty(inMessage.getHeader(RestConstants.CONTENT_TYPE)) && isNotEmpty(produces)) {
+            inMessage.setHeader(RestConstants.CONTENT_TYPE, produces);
         }
 
         final String consumes = getEndpoint().getConsumes();
-        if (isEmpty(exchange.getMessage().getHeader(RestConstants.ACCEPT)) && isNotEmpty(consumes)) {
-            exchange.getMessage().setHeader(RestConstants.ACCEPT, consumes);
+        if (isEmpty(inMessage.getHeader(RestConstants.ACCEPT)) && isNotEmpty(consumes)) {
+            inMessage.setHeader(RestConstants.ACCEPT, consumes);
         }
     }
 
     /**
-     * Replaces placeholders "{}" with message header or exchange variable values.
+     * Replaces placeholders "{}" with message header values.
      *
-     * @param  str      string with placeholders
-     * @param  exchange the exchange
-     * @return          filled string
+     * @param  str string with placeholders
+     * @param  msg message with headers
+     * @return     filled string
      */
-    private String resolvePlaceholders(String str, Exchange exchange) {
+    private String resolveHeaderPlaceholders(String str, Message msg) {
         int startIndex = -1;
         String res = str;
         while ((startIndex = res.indexOf('{', startIndex + 1)) >= 0) {
@@ -236,15 +238,12 @@ public class RestProducer extends DefaultAsyncProducer {
                 continue;
             }
             String key = res.substring(startIndex + 1, endIndex);
-            // try header first and then fallback to variable
-            String value = exchange.getMessage().getHeader(key, String.class);
-            if (value == null) {
-                value = exchange.getVariable(key, String.class);
-            }
-            if (value != null) {
-                res = res.substring(0, startIndex) + value + res.substring(endIndex + 1);
+            String headerValue = msg.getHeader(key, String.class);
+            if (headerValue != null) {
+                res = res.substring(0, startIndex) + headerValue + res.substring(endIndex + 1);
             }
         }
+
         return res;
     }
 
@@ -306,7 +305,7 @@ public class RestProducer extends DefaultAsyncProducer {
 
         if (json != null) {
             // lookup configurer
-            PropertyConfigurer configurer = PluginHelper.getConfigurerResolver(camelContext)
+            PropertyConfigurer configurer = camelContext.adapt(ExtendedCamelContext.class).getConfigurerResolver()
                     .resolvePropertyConfigurer(name + "-dataformat-configurer", camelContext);
             if (configurer == null) {
                 throw new IllegalStateException("Cannot find configurer for dataformat: " + name);
@@ -360,7 +359,7 @@ public class RestProducer extends DefaultAsyncProducer {
 
         if (jaxb != null) {
             // to setup JAXB we need to use camel-jaxb
-            PluginHelper.getRestBindingJaxbDataFormatFactory(camelContext)
+            camelContext.adapt(ExtendedCamelContext.class).getRestBindingJaxbDataFormatFactory()
                     .setupJaxb(camelContext, configuration, type, null, outType, null, jaxb, outJaxb);
         }
 
@@ -400,8 +399,8 @@ public class RestProducer extends DefaultAsyncProducer {
                 || key.startsWith("xml.out.");
     }
 
-    static String createQueryParameters(String query, Exchange exchange)
-            throws URISyntaxException {
+    static String createQueryParameters(String query, Message inMessage)
+            throws URISyntaxException, UnsupportedEncodingException {
         if (query != null) {
             final Map<String, Object> givenParams = URISupport.parseQuery(query);
             final Map<String, Object> params = new LinkedHashMap<>(givenParams.size());
@@ -410,7 +409,7 @@ public class RestProducer extends DefaultAsyncProducer {
                 if (v != null) {
                     String a = v.toString();
                     // decode the key as { may be decoded to %NN
-                    a = URLDecoder.decode(a, StandardCharsets.UTF_8);
+                    a = URLDecoder.decode(a, "UTF-8");
                     if (a.startsWith("{") && a.endsWith("}")) {
                         String key = a.substring(1, a.length() - 1);
                         boolean optional = false;
@@ -418,11 +417,7 @@ public class RestProducer extends DefaultAsyncProducer {
                             key = key.substring(0, key.length() - 1);
                             optional = true;
                         }
-                        // try header first and fallback to variable
-                        Object value = exchange.getMessage().getHeader(key);
-                        if (value == null) {
-                            value = exchange.getVariable(key);
-                        }
+                        Object value = inMessage.getHeader(key);
                         if (value != null) {
                             params.put(entry.getKey(), value);
                         } else if (!optional) {

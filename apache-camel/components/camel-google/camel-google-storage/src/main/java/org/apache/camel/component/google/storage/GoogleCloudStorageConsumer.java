@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import com.google.api.gax.paging.Page;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Bucket;
@@ -34,6 +33,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.Expression;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.RuntimeCamelException;
@@ -98,19 +98,9 @@ public class GoogleCloudStorageConsumer extends ScheduledBatchPollingConsumer {
         } else {
             LOG.trace("Queueing objects in bucket [{}]...", bucketName);
 
-            Page<Blob> page;
-            if (ObjectHelper.isEmpty(getConfiguration().getPrefix())) {
-                page = getStorageClient().list(bucketName);
-            } else {
-                Storage.BlobListOption option = Storage.BlobListOption.prefix(getConfiguration().getPrefix());
-                page = getStorageClient().list(bucketName, option);
-            }
-
-            // okay we have some response from Google so lets mark the consumer as ready
-            forceConsumerAsReady();
-
             List<Blob> bloblist = new LinkedList<>();
-            for (Blob blob : page.iterateAll()) {
+            for (Blob blob : getStorageClient().list(bucketName).iterateAll()) {
+
                 if (filter != null && !filter.isEmpty()) {
                     if (blob.getBlobId().getName().matches(filter)) {
                         bloblist.add(blob);
@@ -118,6 +108,7 @@ public class GoogleCloudStorageConsumer extends ScheduledBatchPollingConsumer {
                 } else {
                     bloblist.add(blob);
                 }
+
             }
 
             if (LOG.isTraceEnabled()) {
@@ -192,7 +183,7 @@ public class GoogleCloudStorageConsumer extends ScheduledBatchPollingConsumer {
             pendingExchanges = total - index - 1;
 
             // add on completion to handle after work when the exchange is done
-            exchange.getExchangeExtension().addOnCompletion(new Synchronization() {
+            exchange.adapt(ExtendedExchange.class).addOnCompletion(new Synchronization() {
                 public void onComplete(Exchange exchange) {
                     processCommit(exchange);
                 }

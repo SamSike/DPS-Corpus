@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,9 @@
 
 package org.springframework.test.context.web;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.platform.testkit.engine.EngineTestKit;
+import org.junit.Test;
 
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
+import static org.springframework.test.context.junit4.JUnitTestingUtils.runTestsAndAssertCounters;
 
 /**
  * Introduced to investigate claims in SPR-11145.
@@ -32,16 +28,11 @@ import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass
  * @author Sam Brannen
  * @since 4.0.2
  */
-@ExtendWith(SpringExtension.class)
-class ServletContextAwareBeanWacTests {
+public class ServletContextAwareBeanWacTests {
 
 	@Test
-	void ensureServletContextAwareBeanIsProcessedProperlyWhenExecutingJUnitManually() {
-		EngineTestKit.engine("junit-jupiter")
-				.selectors(selectClass(BasicAnnotationConfigWacTests.class))
-				.execute()
-				.testEvents()
-				.assertStatistics(stats -> stats.started(3).succeeded(3).failed(0));
+	public void ensureServletContextAwareBeanIsProcessedProperlyWhenExecutingJUnitManually() throws Exception {
+		runTestsAndAssertCounters(BasicAnnotationConfigWacTests.class, 3, 0, 3, 0, 0);
 	}
 
 }

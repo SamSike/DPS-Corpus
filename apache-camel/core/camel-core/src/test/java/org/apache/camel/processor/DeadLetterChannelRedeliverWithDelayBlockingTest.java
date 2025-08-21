@@ -75,14 +75,14 @@ public class DeadLetterChannelRedeliverWithDelayBlockingTest extends ContextTest
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead").redeliveryDelay(250).maximumRedeliveries(3).logStackTrace(false));
 
                 from("direct:start").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         String body = exchange.getIn().getBody(String.class);
                         if ("Message 1".equals(body) && counter++ < 2) {
                             throw new IllegalArgumentException("Damn");

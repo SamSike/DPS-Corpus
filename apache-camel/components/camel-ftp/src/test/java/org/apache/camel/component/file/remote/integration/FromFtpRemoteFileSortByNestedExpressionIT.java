@@ -18,6 +18,7 @@ package org.apache.camel.component.file.remote.integration;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -30,7 +31,9 @@ public class FromFtpRemoteFileSortByNestedExpressionIT extends FtpServerTestSupp
     }
 
     @Override
-    public void doPostSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
         prepareFtpServer();
     }
 

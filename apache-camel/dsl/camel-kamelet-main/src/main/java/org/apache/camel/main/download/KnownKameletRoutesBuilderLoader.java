@@ -19,11 +19,12 @@ package org.apache.camel.main.download;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dsl.yaml.KameletRoutesBuilderLoader;
 import org.apache.camel.main.util.SuggestSimilarHelper;
-import org.apache.camel.main.util.VersionHelper;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.support.ObjectHelper;
 import org.apache.camel.util.FileUtil;
@@ -31,11 +32,7 @@ import org.apache.camel.util.ReflectionHelper;
 
 public class KnownKameletRoutesBuilderLoader extends KameletRoutesBuilderLoader {
 
-    private String kameletsVersion;
-
-    public KnownKameletRoutesBuilderLoader(String kameletsVersion) {
-        this.kameletsVersion = kameletsVersion;
-    }
+    private static final String CP = System.getProperty("java.class.path");
 
     @Override
     public RouteBuilder doLoadRouteBuilder(Resource resource) throws Exception {
@@ -55,26 +52,28 @@ public class KnownKameletRoutesBuilderLoader extends KameletRoutesBuilderLoader 
 
     private List<String> findKameletNames() {
         // download kamelet catalog for the correct version
-        if (kameletsVersion == null || kameletsVersion.isBlank()) {
-            kameletsVersion = VersionHelper.extractKameletsVersion();
-        }
-
-        try {
-            // dynamic download kamelets-catalog that has the known names
-            MavenDependencyDownloader downloader = getCamelContext().hasService(MavenDependencyDownloader.class);
-            if (!downloader.alreadyOnClasspath("org.apache.camel.kamelets", "camel-kamelets-catalog", kameletsVersion)) {
-                downloader.downloadDependency("org.apache.camel.kamelets", "camel-kamelets-catalog", kameletsVersion);
+        Pattern pattern = Pattern.compile("camel-kamelets-(\\d+.\\d+.\\d+).jar", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(CP);
+        if (matcher.find() && matcher.groupCount() > 0) {
+            String version = matcher.group(1);
+            try {
+                // dynamic download kamelets-catalog that has the known names
+                MavenDependencyDownloader downloader = getCamelContext().hasService(MavenDependencyDownloader.class);
+                if (!downloader.alreadyOnClasspath("org.apache.camel.kamelets", "camel-kamelets-catalog", version)) {
+                    downloader.downloadDependency("org.apache.camel.kamelets", "camel-kamelets-catalog", version);
+                }
+                // create an instance of the catalog and invoke its getKameletsName method
+                Class<?> clazz = getCamelContext().getClassResolver()
+                        .resolveClass("org.apache.camel.kamelets.catalog.KameletsCatalog");
+                if (clazz != null) {
+                    Object catalog = getCamelContext().getInjector().newInstance(clazz);
+                    Method m = ReflectionHelper.findMethod(clazz, "getKameletsName");
+                    List<String> names = (List<String>) ObjectHelper.invokeMethod(m, catalog);
+                    return names;
+                }
+            } catch (Exception e) {
+                // ignore
             }
-            // create an instance of the catalog and invoke its getKameletsName method
-            Class<?> clazz = getCamelContext().getClassResolver()
-                    .resolveClass("org.apache.camel.kamelets.catalog.KameletsCatalog");
-            if (clazz != null) {
-                Object catalog = getCamelContext().getInjector().newInstance(clazz);
-                Method m = ReflectionHelper.findMethod(clazz, "getKameletsName");
-                return (List<String>) ObjectHelper.invokeMethod(m, catalog);
-            }
-        } catch (Exception e) {
-            // ignore
         }
 
         return Collections.emptyList();

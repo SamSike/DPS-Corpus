@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,9 @@ package org.springframework.messaging.handler.annotation.support;
 
 import java.lang.reflect.Type;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.MessageConversionException;
 import org.springframework.messaging.converter.MessageConverter;
@@ -44,7 +43,8 @@ import org.springframework.util.StringUtils;
  */
 public class MessageMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
-	private final @Nullable MessageConverter converter;
+	@Nullable
+	private final MessageConverter converter;
 
 
 	/**
@@ -99,7 +99,7 @@ public class MessageMethodArgumentResolver implements HandlerMethodArgumentResol
 	 * Resolve the target class to convert the payload to.
 	 * <p>By default this is the generic type declared in the {@code Message}
 	 * method parameter but that can be overridden to select a more specific
-	 * target type after also taking into account the "Content-Type", for example,
+	 * target type after also taking into account the "Content-Type", e.g.
 	 * return {@code String} if target type is {@code Object} and
 	 * {@code "Content-Type:text/**"}.
 	 * @param parameter the target method parameter
@@ -121,11 +121,11 @@ public class MessageMethodArgumentResolver implements HandlerMethodArgumentResol
 		if (payload == null) {
 			return true;
 		}
-		else if (payload instanceof byte[] bytes) {
-			return bytes.length == 0;
+		else if (payload instanceof byte[]) {
+			return ((byte[]) payload).length == 0;
 		}
-		else if (payload instanceof String text) {
-			return !StringUtils.hasText(text);
+		else if (payload instanceof String) {
+			return !StringUtils.hasText((String) payload);
 		}
 		else {
 			return false;
@@ -134,7 +134,8 @@ public class MessageMethodArgumentResolver implements HandlerMethodArgumentResol
 
 	private Object convertPayload(Message<?> message, MethodParameter parameter, Class<?> targetPayloadType) {
 		Object result = null;
-		if (this.converter instanceof SmartMessageConverter smartConverter) {
+		if (this.converter instanceof SmartMessageConverter) {
+			SmartMessageConverter smartConverter = (SmartMessageConverter) this.converter;
 			result = smartConverter.fromMessage(message, targetPayloadType, parameter);
 		}
 		else if (this.converter != null) {

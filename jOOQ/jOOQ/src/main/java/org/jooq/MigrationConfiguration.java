@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -57,7 +57,6 @@ public final class MigrationConfiguration {
     private final boolean dropTableCascade;
     private final boolean alterTableDropCascade;
     private final boolean createOrReplaceView;
-    private final boolean createOrReplaceMaterializedView;
     private final boolean respectColumnOrder;
 
     /**
@@ -65,7 +64,6 @@ public final class MigrationConfiguration {
      */
     public MigrationConfiguration() {
         this(
-            false,
             false,
             false,
             false,
@@ -83,7 +81,6 @@ public final class MigrationConfiguration {
         boolean dropTableCascade,
         boolean alterTableDropCascade,
         boolean createOrReplaceView,
-        boolean createOrReplaceMaterializedView,
         boolean respectColumnOrder
     ) {
         this.alterTableAddMultiple = alterTableAddMultiple;
@@ -92,7 +89,6 @@ public final class MigrationConfiguration {
         this.dropTableCascade = dropTableCascade;
         this.alterTableDropCascade = alterTableDropCascade;
         this.createOrReplaceView = createOrReplaceView;
-        this.createOrReplaceMaterializedView = createOrReplaceMaterializedView;
         this.respectColumnOrder = respectColumnOrder;
     }
 
@@ -116,7 +112,6 @@ public final class MigrationConfiguration {
             dropTableCascade,
             alterTableDropCascade,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
             respectColumnOrder
         );
     }
@@ -141,7 +136,6 @@ public final class MigrationConfiguration {
             dropTableCascade,
             alterTableDropCascade,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
             respectColumnOrder
         );
     }
@@ -166,7 +160,6 @@ public final class MigrationConfiguration {
             dropTableCascade,
             alterTableDropCascade,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
             respectColumnOrder
         );
     }
@@ -191,13 +184,12 @@ public final class MigrationConfiguration {
             newDropTableCascade,
             alterTableDropCascade,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
             respectColumnOrder
         );
     }
 
     /**
-     * Whether <code>ALTER TABLE … DROP</code> statements should have a
+     * Whether <code>ALTER TABLE .. DROP</code> statements should have a
      * <code>CASCADE [ CONSTRAINTS ]</code> clause where supported.
      */
     public final boolean alterTableDropCascade() {
@@ -205,7 +197,7 @@ public final class MigrationConfiguration {
     }
 
     /**
-     * Whether <code>ALTER TABLE … DROP</code> statements should have a
+     * Whether <code>ALTER TABLE .. DROP</code> statements should have a
      * <code>CASCADE [ CONSTRAINTS ]</code> clause where supported.
      */
     public final MigrationConfiguration alterTableDropCascade(boolean newAlterTableDropCascade) {
@@ -216,7 +208,6 @@ public final class MigrationConfiguration {
             dropTableCascade,
             newAlterTableDropCascade,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
             respectColumnOrder
         );
     }
@@ -239,30 +230,6 @@ public final class MigrationConfiguration {
             dropTableCascade,
             alterTableDropCascade,
             newCreateOrReplaceView,
-            createOrReplaceMaterializedView,
-            respectColumnOrder
-        );
-    }
-
-    /**
-     * Whether the materialized views should be (create-or-)replaced or dropped and re-created.
-     */
-    public final boolean createOrReplaceMaterializedView() {
-        return createOrReplaceMaterializedView;
-    }
-
-    /**
-     * Whether the materialized views should be (create-or-)replaced or dropped and re-created.
-     */
-    public final MigrationConfiguration createOrReplaceMaterializedView(boolean newCreateOrReplaceMaterializedView) {
-        return new MigrationConfiguration(
-            alterTableAddMultiple,
-            alterTableDropMultiple,
-            dropSchemaCascade,
-            dropTableCascade,
-            alterTableDropCascade,
-            createOrReplaceView,
-            newCreateOrReplaceMaterializedView,
             respectColumnOrder
         );
     }
@@ -285,7 +252,6 @@ public final class MigrationConfiguration {
             dropTableCascade,
             alterTableDropCascade,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
             newRespectColumnOrder
         );
     }

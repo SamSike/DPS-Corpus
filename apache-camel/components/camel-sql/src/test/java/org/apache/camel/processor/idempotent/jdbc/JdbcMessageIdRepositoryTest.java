@@ -28,6 +28,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -44,6 +45,7 @@ public class JdbcMessageIdRepositoryTest extends CamelSpringTestSupport {
     protected static final String PROCESSOR_NAME = "myProcessorName";
 
     protected JdbcTemplate jdbcTemplate;
+    protected DataSource dataSource;
 
     @EndpointInject("mock:result")
     protected MockEndpoint resultEndpoint;
@@ -52,8 +54,11 @@ public class JdbcMessageIdRepositoryTest extends CamelSpringTestSupport {
     protected MockEndpoint errorEndpoint;
 
     @Override
-    public void doPostSetup() {
-        DataSource dataSource = context.getRegistry().lookupByNameAndType("dataSource", DataSource.class);
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
+
+        dataSource = context.getRegistry().lookupByNameAndType("dataSource", DataSource.class);
         jdbcTemplate = new JdbcTemplate(dataSource);
         jdbcTemplate.afterPropertiesSet();
     }

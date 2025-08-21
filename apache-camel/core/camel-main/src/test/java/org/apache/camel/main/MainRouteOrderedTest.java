@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class MainRouteOrderedTest {
 
     @Test
-    public void testOrdered() {
+    public void testOrdered() throws Exception {
         Main main = new Main();
         main.configure().addRoutesBuilder(new BarRouteBuilder());
         main.configure().addRoutesBuilder(new FooRouteBuilder());
@@ -43,7 +43,7 @@ public class MainRouteOrderedTest {
 
     public static class FooRouteBuilder extends RouteBuilder {
         @Override
-        public void configure() {
+        public void configure() throws Exception {
             from("direct:foo").routeId("foo")
                     .to("mock:foo");
         }
@@ -56,7 +56,7 @@ public class MainRouteOrderedTest {
 
     public static class BarRouteBuilder extends RouteBuilder {
         @Override
-        public void configure() {
+        public void configure() throws Exception {
             from("direct:bar").routeId("bar")
                     .to("mock:bar");
         }

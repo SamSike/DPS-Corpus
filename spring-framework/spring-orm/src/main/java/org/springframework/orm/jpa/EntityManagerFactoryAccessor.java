@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,12 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
@@ -46,9 +46,11 @@ public abstract class EntityManagerFactoryAccessor implements BeanFactoryAware {
 	/** Logger available to subclasses. */
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	private @Nullable EntityManagerFactory entityManagerFactory;
+	@Nullable
+	private EntityManagerFactory entityManagerFactory;
 
-	private @Nullable String persistenceUnitName;
+	@Nullable
+	private String persistenceUnitName;
 
 	private final Map<String, Object> jpaPropertyMap = new HashMap<>();
 
@@ -67,7 +69,8 @@ public abstract class EntityManagerFactoryAccessor implements BeanFactoryAware {
 	 * Return the JPA EntityManagerFactory that should be used to create
 	 * EntityManagers.
 	 */
-	public @Nullable EntityManagerFactory getEntityManagerFactory() {
+	@Nullable
+	public EntityManagerFactory getEntityManagerFactory() {
 		return this.entityManagerFactory;
 	}
 
@@ -98,7 +101,8 @@ public abstract class EntityManagerFactoryAccessor implements BeanFactoryAware {
 	/**
 	 * Return the name of the persistence unit to access the EntityManagerFactory for, if any.
 	 */
-	public @Nullable String getPersistenceUnitName() {
+	@Nullable
+	public String getPersistenceUnitName() {
 		return this.persistenceUnitName;
 	}
 
@@ -126,9 +130,9 @@ public abstract class EntityManagerFactoryAccessor implements BeanFactoryAware {
 	}
 
 	/**
-	 * Allow {@code Map} access to the JPA properties to be passed to the persistence
+	 * Allow Map access to the JPA properties to be passed to the persistence
 	 * provider, with the option to add or override specific entries.
-	 * <p>Useful for specifying entries directly, for example via {@code jpaPropertyMap[myKey]}.
+	 * <p>Useful for specifying entries directly, for example via "jpaPropertyMap[myKey]".
 	 */
 	public Map<String, Object> getJpaPropertyMap() {
 		return this.jpaPropertyMap;
@@ -142,10 +146,11 @@ public abstract class EntityManagerFactoryAccessor implements BeanFactoryAware {
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
 		if (getEntityManagerFactory() == null) {
-			if (!(beanFactory instanceof ListableBeanFactory lbf)) {
+			if (!(beanFactory instanceof ListableBeanFactory)) {
 				throw new IllegalStateException("Cannot retrieve EntityManagerFactory by persistence unit name " +
 						"in a non-listable BeanFactory: " + beanFactory);
 			}
+			ListableBeanFactory lbf = (ListableBeanFactory) beanFactory;
 			setEntityManagerFactory(EntityManagerFactoryUtils.findEntityManagerFactory(lbf, getPersistenceUnitName()));
 		}
 	}
@@ -172,7 +177,8 @@ public abstract class EntityManagerFactoryAccessor implements BeanFactoryAware {
 	 * @see EntityManagerFactoryUtils#getTransactionalEntityManager(jakarta.persistence.EntityManagerFactory)
 	 * @see EntityManagerFactoryUtils#getTransactionalEntityManager(jakarta.persistence.EntityManagerFactory, java.util.Map)
 	 */
-	protected @Nullable EntityManager getTransactionalEntityManager() throws IllegalStateException{
+	@Nullable
+	protected EntityManager getTransactionalEntityManager() throws IllegalStateException{
 		EntityManagerFactory emf = obtainEntityManagerFactory();
 		return EntityManagerFactoryUtils.getTransactionalEntityManager(emf, getJpaPropertyMap());
 	}

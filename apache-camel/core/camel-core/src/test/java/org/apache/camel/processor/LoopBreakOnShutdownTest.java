@@ -22,6 +22,7 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.ShutdownRoute;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -45,6 +46,12 @@ class LoopBreakOnShutdownTest extends ContextTestSupport {
 
         int received = mock.getReceivedCounter();
         assertThat(received, is(lessThan(LOOP_COUNT)));
+    }
+
+    @Override
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
     }
 
     @Override

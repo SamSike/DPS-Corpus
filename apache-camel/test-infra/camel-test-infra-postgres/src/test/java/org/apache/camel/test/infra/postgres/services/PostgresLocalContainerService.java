@@ -16,18 +16,84 @@
  */
 package org.apache.camel.test.infra.postgres.services;
 
+import org.apache.camel.test.infra.common.services.ContainerService;
+import org.apache.camel.test.infra.postgres.common.PostgresProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-public class PostgresLocalContainerService extends PostgresLocalContainerInfraService implements PostgresService {
+public class PostgresLocalContainerService implements PostgresService, ContainerService<PostgreSQLContainer> {
+    public static final String DEFAULT_POSTGRES_CONTAINER = "postgres:13.0";
+    private static final Logger LOG = LoggerFactory.getLogger(PostgresLocalContainerService.class);
+    private final PostgreSQLContainer container;
+
     public PostgresLocalContainerService() {
-        super();
+        this(System.getProperty(PostgresProperties.POSTGRES_CONTAINER, DEFAULT_POSTGRES_CONTAINER));
     }
 
     public PostgresLocalContainerService(String imageName) {
-        super(imageName);
+        container = initContainer(imageName);
     }
 
     public PostgresLocalContainerService(PostgreSQLContainer container) {
-        super(container);
+        this.container = container;
+    }
+
+    protected PostgreSQLContainer initContainer(String imageName) {
+        return new PostgreSQLContainer(imageName);
+    }
+
+    @Override
+    public void registerProperties() {
+        System.setProperty(PostgresProperties.SERVICE_ADDRESS, getServiceAddress());
+        System.setProperty(PostgresProperties.HOST, host());
+        System.setProperty(PostgresProperties.PORT, String.valueOf(port()));
+        System.setProperty(PostgresProperties.USERNAME, container.getUsername());
+        System.setProperty(PostgresProperties.PASSWORD, container.getPassword());
+    }
+
+    @Override
+    public void initialize() {
+        LOG.info("Trying to start the Postgres container");
+        container.start();
+
+        registerProperties();
+        LOG.info("Postgres instance running at {}", getServiceAddress());
+    }
+
+    @Override
+    public void shutdown() {
+        LOG.info("Stopping the Postgres container");
+        container.stop();
+    }
+
+    @Override
+    public PostgreSQLContainer getContainer() {
+        return container;
+    }
+
+    @Override
+    public String host() {
+        return container.getHost();
+    }
+
+    @Override
+    public int port() {
+        return container.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT);
+    }
+
+    @Override
+    public String getServiceAddress() {
+        return String.format("%s:%d", host(), port());
+    }
+
+    @Override
+    public String userName() {
+        return container.getUsername();
+    }
+
+    @Override
+    public String password() {
+        return container.getPassword();
     }
 }

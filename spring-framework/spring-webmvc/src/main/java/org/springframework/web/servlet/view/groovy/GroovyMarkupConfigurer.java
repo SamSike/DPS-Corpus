@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,13 +26,13 @@ import java.util.Locale;
 import groovy.text.markup.MarkupTemplateEngine;
 import groovy.text.markup.TemplateConfiguration;
 import groovy.text.markup.TemplateResolver;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -80,7 +80,7 @@ import org.springframework.util.StringUtils;
  * @author Rossen Stoyanchev
  * @since 4.1
  * @see GroovyMarkupView
- * @see <a href="https://groovy-lang.org/templating.html#_the_markuptemplateengine">
+ * @see <a href="http://groovy-lang.org/templating.html#_the_markuptemplateengine">
  *     Groovy Markup Template engine documentation</a>
  */
 public class GroovyMarkupConfigurer extends TemplateConfiguration
@@ -88,9 +88,11 @@ public class GroovyMarkupConfigurer extends TemplateConfiguration
 
 	private String resourceLoaderPath = "classpath:";
 
-	private @Nullable MarkupTemplateEngine templateEngine;
+	@Nullable
+	private MarkupTemplateEngine templateEngine;
 
-	private @Nullable ApplicationContext applicationContext;
+	@Nullable
+	private ApplicationContext applicationContext;
 
 
 	/**
@@ -213,7 +215,8 @@ public class GroovyMarkupConfigurer extends TemplateConfiguration
 	 */
 	private class LocaleTemplateResolver implements TemplateResolver {
 
-		private @Nullable ClassLoader classLoader;
+		@Nullable
+		private ClassLoader classLoader;
 
 		@Override
 		public void configure(ClassLoader templateClassLoader, TemplateConfiguration configuration) {

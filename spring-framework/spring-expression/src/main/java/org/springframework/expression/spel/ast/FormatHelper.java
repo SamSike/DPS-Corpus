@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,15 +19,14 @@ package org.springframework.expression.spel.ast;
 import java.util.List;
 import java.util.StringJoiner;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 
 /**
- * Utility methods (formatters, etc) used during parsing and evaluation.
+ * Utility methods (formatters etc) used during parsing and evaluation.
  *
  * @author Andy Clement
- * @author Sam Brannen
  */
 abstract class FormatHelper {
 
@@ -35,15 +34,19 @@ abstract class FormatHelper {
 	 * Produce a readable representation for a given method name with specified arguments.
 	 * @param name the name of the method
 	 * @param argumentTypes the types of the arguments to the method
-	 * @return a nicely formatted representation &mdash; for example, {@code foo(java.lang.String,int)}
+	 * @return a nicely formatted representation, e.g. {@code foo(String,int)}
 	 */
-	static String formatMethodForMessage(String name, List<TypeDescriptor> argumentTypes) {
+	public static String formatMethodForMessage(String name, List<TypeDescriptor> argumentTypes) {
 		StringJoiner sj = new StringJoiner(",", "(", ")");
 		for (TypeDescriptor typeDescriptor : argumentTypes) {
-			String className = (typeDescriptor != null ? formatClassNameForMessage(typeDescriptor.getType()) : "null");
-			sj.add(className);
+			if (typeDescriptor != null) {
+				sj.add(formatClassNameForMessage(typeDescriptor.getType()));
+			}
+			else {
+				sj.add(formatClassNameForMessage(null));
+			}
 		}
-		return name + sj;
+		return name + sj.toString();
 	}
 
 	/**
@@ -51,9 +54,10 @@ abstract class FormatHelper {
 	 * <p>A String array will have the formatted name "java.lang.String[]".
 	 * @param clazz the Class whose name is to be formatted
 	 * @return a formatted String suitable for message inclusion
+	 * @see ClassUtils#getQualifiedName(Class)
 	 */
-	static String formatClassNameForMessage(@Nullable Class<?> clazz) {
-		return (clazz != null ? clazz.getTypeName() : "null");
+	public static String formatClassNameForMessage(@Nullable Class<?> clazz) {
+		return (clazz != null ? ClassUtils.getQualifiedName(clazz) : "null");
 	}
 
 }

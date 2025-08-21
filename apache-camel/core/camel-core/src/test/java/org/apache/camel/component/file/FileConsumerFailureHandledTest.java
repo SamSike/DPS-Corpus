@@ -43,7 +43,7 @@ public class FileConsumerFailureHandledTest extends ContextTestSupport {
         mock.expectedBodiesReceived("Hello Paris");
 
         template.sendBodyAndHeader(fileUri(), "Paris", Exchange.FILE_NAME, "paris.txt");
-        mock.assertIsSatisfied(2000);
+        mock.assertIsSatisfied();
 
         oneExchangeDone.matchesWaitTime();
 
@@ -57,7 +57,7 @@ public class FileConsumerFailureHandledTest extends ContextTestSupport {
         mock.expectedBodiesReceived("London");
 
         template.sendBodyAndHeader(fileUri(), "London", Exchange.FILE_NAME, "london.txt");
-        mock.assertIsSatisfied(2000);
+        mock.assertIsSatisfied();
 
         oneExchangeDone.matchesWaitTime();
 
@@ -72,7 +72,7 @@ public class FileConsumerFailureHandledTest extends ContextTestSupport {
         mock.expectedBodiesReceived("Dublin");
 
         template.sendBodyAndHeader(fileUri(), "Dublin", Exchange.FILE_NAME, "dublin.txt");
-        mock.assertIsSatisfied(2000);
+        mock.assertIsSatisfied();
 
         oneExchangeDone.matchesWaitTime();
 
@@ -87,7 +87,7 @@ public class FileConsumerFailureHandledTest extends ContextTestSupport {
         mock.expectedBodiesReceived("Madrid");
 
         template.sendBodyAndHeader(fileUri(), "Madrid", Exchange.FILE_NAME, "madrid.txt");
-        mock.assertIsSatisfied(2000);
+        mock.assertIsSatisfied();
 
         oneExchangeDone.matchesWaitTime();
 
@@ -95,7 +95,7 @@ public class FileConsumerFailureHandledTest extends ContextTestSupport {
         assertFiles("madrid.txt", true);
     }
 
-    private void assertFiles(String filename, boolean deleted) {
+    private void assertFiles(String filename, boolean deleted) throws InterruptedException {
         // file should be deleted as delete=true in parameter in the route below
         Path file = testFile(filename);
         assertEquals(deleted, !Files.exists(file), "File " + filename + " should be deleted: " + deleted);
@@ -107,9 +107,9 @@ public class FileConsumerFailureHandledTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 // make sure mock:error is the dead letter channel
                 // use no delay for fast unit testing
                 errorHandler(deadLetterChannel("mock:error").maximumRedeliveries(2).redeliveryDelay(0).logStackTrace(false));

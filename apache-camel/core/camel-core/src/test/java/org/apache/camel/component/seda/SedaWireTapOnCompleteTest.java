@@ -34,10 +34,10 @@ public class SedaWireTapOnCompleteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onCompletion().log("Done ${header.foo}").to("mock:done");
 
                 from("direct:start")

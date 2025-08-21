@@ -31,7 +31,7 @@ import org.apache.camel.spi.Metadata;
 @Metadata(firstVersion = "3.7.0", label = "language,transformation", title = "DataSonnet")
 @XmlRootElement(name = "datasonnet")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DatasonnetExpression extends SingleInputTypedExpressionDefinition {
+public class DatasonnetExpression extends TypedExpressionDefinition {
 
     @XmlAttribute(name = "bodyMediaType")
     private String bodyMediaType;
@@ -39,12 +39,6 @@ public class DatasonnetExpression extends SingleInputTypedExpressionDefinition {
     private String outputMediaType;
 
     public DatasonnetExpression() {
-    }
-
-    protected DatasonnetExpression(DatasonnetExpression source) {
-        super(source);
-        this.bodyMediaType = source.bodyMediaType;
-        this.outputMediaType = source.outputMediaType;
     }
 
     public DatasonnetExpression(String expression) {
@@ -59,11 +53,6 @@ public class DatasonnetExpression extends SingleInputTypedExpressionDefinition {
         super(builder);
         this.bodyMediaType = builder.bodyMediaType;
         this.outputMediaType = builder.outputMediaType;
-    }
-
-    @Override
-    public DatasonnetExpression copyDefinition() {
-        return new DatasonnetExpression(this);
     }
 
     @Override

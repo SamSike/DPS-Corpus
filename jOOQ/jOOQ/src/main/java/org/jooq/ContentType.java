@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,8 +37,6 @@
  */
 package org.jooq;
 
-import org.jetbrains.annotations.ApiStatus.Experimental;
-
 /**
  * The {@link File#type()}.
  * <p>
@@ -46,20 +44,10 @@ import org.jetbrains.annotations.ApiStatus.Experimental;
  * contained in {@link Commit#delta()} will be processed in the following order:
  * <p>
  * <ul>
- * <li>{@link #SNAPSHOT} (replacing all other contents of this {@link Commit} as
- * well as previous commits, if migrating from {@link Commit#root()})</li>
- * <li>{@link #INCREMENT}</li>
- * <li>{@link #SCRIPT}</li>
- * <li>{@link #SCHEMA}</li>
- * </ul>
- * <p>
- * When undoing a migration, the order is:
- * <ul>
- * <li>{@link #SCHEMA}</li>
- * <li>{@link #DECREMENT}</li>
+ * <li>{@link ContentType#INCREMENT}</li>
+ * <li>{@link ContentType#SCHEMA}</li>
  * </ul>
  */
-@Experimental
 public enum ContentType {
 
     /**
@@ -79,22 +67,9 @@ public enum ContentType {
      * similar statements, which are applied as increments in a migration using
      * {@link Meta#apply(Queries)}.
      * <p>
-     * Within the same {@link Commit}, increments are sorted according to their
-     * {@link File#path()}.
+     * Within the same {@link Commit}.
      */
     INCREMENT,
-
-    /**
-     * The file contains decrement information.
-     * <p>
-     * Decrements work like {@link #INCREMENT} typed files, but are applied only
-     * when downgrading to a previous version, decrements are sorted in reverse
-     * order according to their {@link File#path()}.
-     * <p>
-     * This API is part of a commercial only feature. To use this feature,
-     * please use the jOOQ Professional Edition or the jOOQ Enterprise Edition.
-     */
-    DECREMENT,
 
     /**
      * The file contains a script.
@@ -111,9 +86,6 @@ public enum ContentType {
      * <p>
      * In order to restore a database, or install a new one, we don't have to go
      * back any further than the snapshot.
-     * <p>
-     * This API is part of a commercial only feature. To use this feature,
-     * please use the jOOQ Professional Edition or the jOOQ Enterprise Edition.
      */
     SNAPSHOT,
 

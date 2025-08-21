@@ -16,21 +16,16 @@
  */
 package org.apache.camel.component.jackson;
 
-import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Dataformat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * Marshal POJOs to JSON and back using Jackson.
+ * Marshal POJOs to JSON and back using <a href="https://github.com/FasterXML/jackson">Jackson</a>
  */
 @Dataformat("jackson")
-@Metadata(excludeProperties = "library,permissions,dateFormatPattern")
+@Metadata(excludeProperties = "library,permissions,dropRootNode")
 public class JacksonDataFormat extends AbstractJacksonDataFormat {
-
-    private static final Logger LOG = LoggerFactory.getLogger(JacksonDataFormat.class);
 
     /**
      * Use the default Jackson {@link ObjectMapper} and {@link Object}
@@ -58,7 +53,7 @@ public class JacksonDataFormat extends AbstractJacksonDataFormat {
     }
 
     /**
-     * Use a custom Jackson mapper and an unmarshal type
+     * Use a custom Jackson mapper and and unmarshal type
      *
      * @param mapper        the custom mapper
      * @param unmarshalType the custom unmarshal type
@@ -85,13 +80,7 @@ public class JacksonDataFormat extends AbstractJacksonDataFormat {
 
     @Override
     protected ObjectMapper createNewObjectMapper() {
-        ObjectMapper om = new ObjectMapper();
-        int len = getMaxStringLength();
-        if (len > 0) {
-            LOG.debug("Creating ObjectMapper with maxStringLength: {}", len);
-            om.getFactory().setStreamReadConstraints(StreamReadConstraints.builder().maxStringLength(len).build());
-        }
-        return om;
+        return new ObjectMapper();
     }
 
     @Override

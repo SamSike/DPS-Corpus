@@ -17,8 +17,6 @@
 package org.apache.camel.support.console;
 
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
@@ -31,14 +29,14 @@ import org.apache.camel.support.service.ServiceSupport;
 public abstract class AbstractDevConsole extends ServiceSupport implements DevConsole, CamelContextAware {
 
     private CamelContext camelContext;
-    private final Lock lock;
+    private final Object lock;
     private final String group;
     private final String id;
     private final String displayName;
     private final String description;
 
     public AbstractDevConsole(String group, String id, String displayName, String description) {
-        this.lock = new ReentrantLock();
+        this.lock = new Object();
         this.group = group;
         this.id = id;
         this.displayName = displayName;
@@ -101,15 +99,12 @@ public abstract class AbstractDevConsole extends ServiceSupport implements DevCo
 
     @Override
     public Object call(MediaType mediaType, Map<String, Object> options) {
-        lock.lock();
-        try {
+        synchronized (lock) {
             if (mediaType == MediaType.JSON) {
                 return doCallJson(options);
             } else {
                 return doCallText(options);
             }
-        } finally {
-            lock.unlock();
         }
     }
 

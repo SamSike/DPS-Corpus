@@ -16,7 +16,6 @@
  */
 package org.apache.camel.language.groovy;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -25,18 +24,11 @@ import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
 import org.apache.camel.Exchange;
-import org.apache.camel.attachment.AttachmentMessage;
-import org.apache.camel.attachment.DefaultAttachmentMessage;
 import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.ExpressionSupport;
 import org.apache.camel.support.ObjectHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class GroovyExpression extends ExpressionSupport {
-
-    private static final Logger LOG = LoggerFactory.getLogger(GroovyExpression.class);
-
     private final String text;
 
     public GroovyExpression(String text) {
@@ -55,17 +47,15 @@ public class GroovyExpression extends ExpressionSupport {
 
     @Override
     public <T> T evaluate(Exchange exchange, Class<T> type) {
-        Map<String, Object> globalVariables = new HashMap<>();
-        Script script = instantiateScript(exchange, globalVariables);
-        script.setBinding(createBinding(exchange, globalVariables));
-
+        Script script = instantiateScript(exchange);
+        script.setBinding(createBinding(exchange));
         Object value = script.run();
 
         return exchange.getContext().getTypeConverter().convertTo(type, value);
     }
 
     @SuppressWarnings("unchecked")
-    protected Script instantiateScript(Exchange exchange, Map<String, Object> globalVariables) {
+    private Script instantiateScript(Exchange exchange) {
         // Get the script from the cache, or create a new instance
         GroovyLanguage language = (GroovyLanguage) exchange.getContext().resolveLanguage("groovy");
         Set<GroovyShellFactory> shellFactories = exchange.getContext().getRegistry().findByType(GroovyShellFactory.class);
@@ -74,33 +64,25 @@ public class GroovyExpression extends ExpressionSupport {
         if (shellFactories.size() == 1) {
             shellFactory = shellFactories.iterator().next();
             fileName = shellFactory.getFileName(exchange);
-            globalVariables.putAll(shellFactory.getVariables(exchange));
         }
         final String key = fileName != null ? fileName + text : text;
         Class<Script> scriptClass = language.getScriptFromCache(key);
         if (scriptClass == null) {
-            // prefer to use classloader from groovy script compiler, and if not fallback to app context
-            ClassLoader cl = exchange.getContext().getCamelContextExtension().getContextPlugin(GroovyScriptClassLoader.class);
+            ClassLoader cl = exchange.getContext().getApplicationContextClassLoader();
             GroovyShell shell = shellFactory != null ? shellFactory.createGroovyShell(exchange)
                     : cl != null ? new GroovyShell(cl) : new GroovyShell();
             scriptClass = fileName != null
                     ? shell.getClassLoader().parseClass(text, fileName) : shell.getClassLoader().parseClass(text);
             language.addScriptToCache(key, scriptClass);
         }
+
         // New instance of the script
         return ObjectHelper.newInstance(scriptClass, Script.class);
     }
 
-    protected Binding createBinding(Exchange exchange, Map<String, Object> globalVariables) {
-        Map<String, Object> map = new HashMap<>(globalVariables);
-        ExchangeHelper.populateVariableMap(exchange, map, true);
-        AttachmentMessage am = new DefaultAttachmentMessage(exchange.getMessage());
-        if (am.hasAttachments()) {
-            map.put("attachments", am.getAttachments());
-        } else {
-            map.put("attachments", Collections.EMPTY_MAP);
-        }
-        map.put("log", LOG);
-        return new Binding(map);
+    private Binding createBinding(Exchange exchange) {
+        Map<String, Object> variables = new HashMap<>();
+        ExchangeHelper.populateVariableMap(exchange, variables, true);
+        return new Binding(variables);
     }
 }

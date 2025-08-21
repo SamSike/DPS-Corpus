@@ -56,8 +56,8 @@ public class SplunkDataReader {
     private static final String SPLUNK_TIME_FORMAT = "%m/%d/%y %H:%M:%S:%3N";
 
     private transient Calendar lastSuccessfulReadTime;
-    private final SplunkEndpoint endpoint;
-    private final ConsumerType consumerType;
+    private SplunkEndpoint endpoint;
+    private ConsumerType consumerType;
 
     public SplunkDataReader(SplunkEndpoint endpoint, ConsumerType consumerType) {
         this.endpoint = endpoint;
@@ -241,7 +241,7 @@ public class SplunkDataReader {
                 .withMaxIterations(IterationBoundedBudget.UNLIMITED_ITERATIONS)
                 .withInterval(Duration.ofMillis(interval))
                 .build())
-                .build().run(endpoint.getCamelContext(), supplier);
+                .build().run(supplier);
     }
 
     private List<SplunkEvent> nonBlockingSearch(SplunkResultProcessor callback) throws Exception {

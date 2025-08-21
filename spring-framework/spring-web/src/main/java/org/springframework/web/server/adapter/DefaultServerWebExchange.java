@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,34 +19,29 @@ package org.springframework.web.server.adapter;
 import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import org.jspecify.annotations.Nullable;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.i18n.LocaleContext;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.codec.Hints;
-import org.springframework.http.ETag;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.HttpMessageReader;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.http.codec.multipart.Part;
-import org.springframework.http.server.reactive.AbstractServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
@@ -61,12 +56,11 @@ import org.springframework.web.server.session.WebSessionManager;
  * Default implementation of {@link ServerWebExchange}.
  *
  * @author Rossen Stoyanchev
- * @author Brian Clozel
  * @since 5.0
  */
 public class DefaultServerWebExchange implements ServerWebExchange {
 
-	private static final Set<HttpMethod> SAFE_METHODS = Set.of(HttpMethod.GET, HttpMethod.HEAD);
+	private static final List<HttpMethod> SAFE_METHODS = Arrays.asList(HttpMethod.GET, HttpMethod.HEAD);
 
 	private static final ResolvableType FORM_DATA_TYPE =
 			ResolvableType.forClassWithGenerics(MultiValueMap.class, String.class, String.class);
@@ -97,15 +91,15 @@ public class DefaultServerWebExchange implements ServerWebExchange {
 
 	private final Mono<MultiValueMap<String, Part>> multipartDataMono;
 
-	private volatile boolean multipartRead = false;
-
-	private final @Nullable ApplicationContext applicationContext;
+	@Nullable
+	private final ApplicationContext applicationContext;
 
 	private volatile boolean notModified;
 
 	private Function<String, String> urlTransformer = url -> url;
 
-	private @Nullable Object logId;
+	@Nullable
+	private Object logId;
 
 	private String logPrefix = "";
 
@@ -117,7 +111,7 @@ public class DefaultServerWebExchange implements ServerWebExchange {
 		this(request, response, sessionManager, codecConfigurer, localeContextResolver, null);
 	}
 
-	protected DefaultServerWebExchange(ServerHttpRequest request, ServerHttpResponse response,
+	DefaultServerWebExchange(ServerHttpRequest request, ServerHttpResponse response,
 			WebSessionManager sessionManager, ServerCodecConfigurer codecConfigurer,
 			LocaleContextResolver localeContextResolver, @Nullable ApplicationContext applicationContext) {
 
@@ -135,74 +129,52 @@ public class DefaultServerWebExchange implements ServerWebExchange {
 		this.sessionMono = sessionManager.getSession(this).cache();
 		this.localeContextResolver = localeContextResolver;
 		this.formDataMono = initFormData(request, codecConfigurer, getLogPrefix());
-		this.multipartDataMono = initMultipartData(codecConfigurer, getLogPrefix());
+		this.multipartDataMono = initMultipartData(request, codecConfigurer, getLogPrefix());
 		this.applicationContext = applicationContext;
-
-		if (request instanceof AbstractServerHttpRequest abstractServerHttpRequest) {
-			abstractServerHttpRequest.setAttributesSupplier(() -> this.attributes);
-		}
-	}
-
-	private static Mono<MultiValueMap<String, String>> initFormData(ServerHttpRequest request,
-			ServerCodecConfigurer configurer, String logPrefix) {
-
-		MediaType contentType = getContentType(request);
-		if (contentType == null || !contentType.isConcrete() || !contentType.isCompatibleWith(MediaType.APPLICATION_FORM_URLENCODED)) {
-			return EMPTY_FORM_DATA;
-		}
-
-		HttpMessageReader<MultiValueMap<String, String>> reader = getReader(configurer, contentType, FORM_DATA_TYPE);
-		if (reader == null) {
-			return Mono.error(new IllegalStateException("No HttpMessageReader for " + contentType));
-		}
-
-		return reader
-				.readMono(FORM_DATA_TYPE, request, Hints.from(Hints.LOG_PREFIX_HINT, logPrefix))
-				.switchIfEmpty(EMPTY_FORM_DATA)
-				.cache();
-	}
-
-	private Mono<MultiValueMap<String, Part>> initMultipartData(ServerCodecConfigurer configurer, String logPrefix) {
-
-		MediaType contentType = getContentType(this.request);
-		if (contentType == null || !contentType.isConcrete() || !contentType.getType().equalsIgnoreCase("multipart")) {
-			return EMPTY_MULTIPART_DATA;
-		}
-
-		HttpMessageReader<MultiValueMap<String, Part>> reader = getReader(configurer, contentType, MULTIPART_DATA_TYPE);
-		if (reader == null) {
-			return Mono.error(new IllegalStateException("No HttpMessageReader for " + contentType));
-		}
-
-		return reader
-				.readMono(MULTIPART_DATA_TYPE, this.request, Hints.from(Hints.LOG_PREFIX_HINT, logPrefix))
-				.doOnNext(ignored -> this.multipartRead = true)
-				.switchIfEmpty(EMPTY_MULTIPART_DATA)
-				.cache();
-	}
-
-	private static @Nullable MediaType getContentType(ServerHttpRequest request) {
-		MediaType contentType = null;
-		try {
-			contentType = request.getHeaders().getContentType();
-		}
-		catch (InvalidMediaTypeException ex) {
-			// ignore
-		}
-		return contentType;
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <E> @Nullable HttpMessageReader<E> getReader(
-			ServerCodecConfigurer configurer, MediaType contentType, ResolvableType targetType) {
+	private static Mono<MultiValueMap<String, String>> initFormData(ServerHttpRequest request,
+			ServerCodecConfigurer configurer, String logPrefix) {
 
-		HttpMessageReader<E> result = null;
-		for (HttpMessageReader<?> reader : configurer.getReaders()) {
-			if (reader.canRead(targetType, contentType)) {
-				result = (HttpMessageReader<E>) reader;
+		try {
+			MediaType contentType = request.getHeaders().getContentType();
+			if (MediaType.APPLICATION_FORM_URLENCODED.isCompatibleWith(contentType)) {
+				return ((HttpMessageReader<MultiValueMap<String, String>>) configurer.getReaders().stream()
+						.filter(reader -> reader.canRead(FORM_DATA_TYPE, MediaType.APPLICATION_FORM_URLENCODED))
+						.findFirst()
+						.orElseThrow(() -> new IllegalStateException("No form data HttpMessageReader.")))
+						.readMono(FORM_DATA_TYPE, request, Hints.from(Hints.LOG_PREFIX_HINT, logPrefix))
+						.switchIfEmpty(EMPTY_FORM_DATA)
+						.cache();
 			}
 		}
-		return result;
+		catch (InvalidMediaTypeException ex) {
+			// Ignore
+		}
+		return EMPTY_FORM_DATA;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Mono<MultiValueMap<String, Part>> initMultipartData(ServerHttpRequest request,
+			ServerCodecConfigurer configurer, String logPrefix) {
+
+		try {
+			MediaType contentType = request.getHeaders().getContentType();
+			if (MediaType.MULTIPART_FORM_DATA.isCompatibleWith(contentType)) {
+				return ((HttpMessageReader<MultiValueMap<String, Part>>) configurer.getReaders().stream()
+						.filter(reader -> reader.canRead(MULTIPART_DATA_TYPE, MediaType.MULTIPART_FORM_DATA))
+						.findFirst()
+						.orElseThrow(() -> new IllegalStateException("No multipart HttpMessageReader.")))
+						.readMono(MULTIPART_DATA_TYPE, request, Hints.from(Hints.LOG_PREFIX_HINT, logPrefix))
+						.switchIfEmpty(EMPTY_MULTIPART_DATA)
+						.cache();
+			}
+		}
+		catch (InvalidMediaTypeException ex) {
+			// Ignore
+		}
+		return EMPTY_MULTIPART_DATA;
 	}
 
 
@@ -250,31 +222,13 @@ public class DefaultServerWebExchange implements ServerWebExchange {
 	}
 
 	@Override
-	public Mono<Void> cleanupMultipart() {
-		return Mono.defer(() -> {
-			if (this.multipartRead) {
-				return Mono.usingWhen(getMultipartData().onErrorComplete().map(this::collectParts),
-						parts -> Mono.empty(),
-						parts -> Flux.fromIterable(parts).flatMap(part -> part.delete().onErrorComplete())
-				);
-			}
-			else {
-				return Mono.empty();
-			}
-		});
-	}
-
-	private List<Part> collectParts(MultiValueMap<String, Part> multipartData) {
-		return multipartData.values().stream().flatMap(List::stream).collect(Collectors.toList());
-	}
-
-	@Override
 	public LocaleContext getLocaleContext() {
 		return this.localeContextResolver.resolveLocaleContext(this);
 	}
 
 	@Override
-	public @Nullable ApplicationContext getApplicationContext() {
+	@Nullable
+	public ApplicationContext getApplicationContext() {
 		return this.applicationContext;
 	}
 
@@ -294,109 +248,44 @@ public class DefaultServerWebExchange implements ServerWebExchange {
 	}
 
 	@Override
-	public boolean checkNotModified(@Nullable String eTag, Instant lastModified) {
-		HttpStatusCode status = getResponse().getStatusCode();
+	public boolean checkNotModified(@Nullable String etag, Instant lastModified) {
+		HttpStatus status = getResponse().getStatusCode();
 		if (this.notModified || (status != null && !HttpStatus.OK.equals(status))) {
 			return this.notModified;
 		}
+
 		// Evaluate conditions in order of precedence.
-		// See https://datatracker.ietf.org/doc/html/rfc9110#section-13.2.2
-		// 1) If-Match
-		if (validateIfMatch(eTag)) {
-			updateResponseStateChanging(eTag, lastModified);
+		// See https://tools.ietf.org/html/rfc7232#section-6
+
+		if (validateIfUnmodifiedSince(lastModified)) {
+			if (this.notModified) {
+				getResponse().setStatusCode(HttpStatus.PRECONDITION_FAILED);
+			}
 			return this.notModified;
 		}
-		// 2) If-Unmodified-Since
-		else if (validateIfUnmodifiedSince(lastModified)) {
-			updateResponseStateChanging(eTag, lastModified);
-			return this.notModified;
-		}
-		// 3) If-None-Match
-		if (!validateIfNoneMatch(eTag)) {
-			// 4) If-Modified-Since
+
+		boolean validated = validateIfNoneMatch(etag);
+		if (!validated) {
 			validateIfModifiedSince(lastModified);
 		}
-		updateResponseIdempotent(eTag, lastModified);
-		return this.notModified;
-	}
 
-	private boolean validateIfMatch(@Nullable String eTag) {
-		try {
-			if (SAFE_METHODS.contains(getRequest().getMethod())) {
-				return false;
-			}
-			List<String> values = getRequestHeaders().getOrEmpty(HttpHeaders.IF_MATCH);
-			if (CollectionUtils.isEmpty(values)) {
-				return false;
-			}
-			this.notModified = matchRequestedETags(values, eTag, false);
-		}
-		catch (IllegalArgumentException ex) {
-			return false;
-		}
-		return true;
-	}
+		// Update response
 
-	private boolean matchRequestedETags(List<String> requestedETagValues, @Nullable String tag, boolean weakCompare) {
-		if (StringUtils.hasLength(tag)) {
-			ETag eTag = ETag.create(tag);
-			boolean isNotSafeMethod = !SAFE_METHODS.contains(getRequest().getMethod());
-			for (String eTagValue : requestedETagValues) {
-				for (ETag requestedETag : ETag.parse(eTagValue)) {
-					// only consider "lost updates" checks for unsafe HTTP methods
-					if (requestedETag.isWildcard() && isNotSafeMethod) {
-						return false;
-					}
-					if (requestedETag.compare(eTag, !weakCompare)) {
-						return false;
-					}
-				}
-			}
-		}
-		return true;
-	}
-
-	private void updateResponseStateChanging(@Nullable String eTag, Instant lastModified) {
+		boolean isHttpGetOrHead = SAFE_METHODS.contains(getRequest().getMethod());
 		if (this.notModified) {
-			getResponse().setStatusCode(HttpStatus.PRECONDITION_FAILED);
-		}
-		else {
-			addCachingResponseHeaders(eTag, lastModified);
-		}
-	}
-
-	private boolean validateIfNoneMatch(@Nullable String eTag) {
-		try {
-			if (CollectionUtils.isEmpty(getRequestHeaders().get(HttpHeaders.IF_NONE_MATCH))) {
-				return false;
-			}
-			List<String> values = getRequestHeaders().getOrEmpty(HttpHeaders.IF_NONE_MATCH);
-			this.notModified = !matchRequestedETags(values, eTag, true);
-		}
-		catch (IllegalArgumentException ex) {
-			return false;
-		}
-		return true;
-	}
-
-	private void updateResponseIdempotent(@Nullable String eTag, Instant lastModified) {
-		boolean isSafeMethod = SAFE_METHODS.contains(getRequest().getMethod());
-		if (this.notModified) {
-			getResponse().setStatusCode(isSafeMethod ?
+			getResponse().setStatusCode(isHttpGetOrHead ?
 					HttpStatus.NOT_MODIFIED : HttpStatus.PRECONDITION_FAILED);
 		}
-		addCachingResponseHeaders(eTag, lastModified);
-	}
-
-	private void addCachingResponseHeaders(@Nullable String tag, Instant lastModified) {
-		if (SAFE_METHODS.contains(getRequest().getMethod())) {
+		if (isHttpGetOrHead) {
 			if (lastModified.isAfter(Instant.EPOCH) && getResponseHeaders().getLastModified() == -1) {
 				getResponseHeaders().setLastModified(lastModified.toEpochMilli());
 			}
-			if (StringUtils.hasLength(tag) && getResponseHeaders().getETag() == null) {
-				getResponseHeaders().setETag(tag);
+			if (StringUtils.hasLength(etag) && getResponseHeaders().getETag() == null) {
+				getResponseHeaders().setETag(padEtagIfNecessary(etag));
 			}
 		}
+
+		return this.notModified;
 	}
 
 	private boolean validateIfUnmodifiedSince(Instant lastModified) {
@@ -407,20 +296,67 @@ public class DefaultServerWebExchange implements ServerWebExchange {
 		if (ifUnmodifiedSince == -1) {
 			return false;
 		}
+		// We will perform this validation...
 		Instant sinceInstant = Instant.ofEpochMilli(ifUnmodifiedSince);
 		this.notModified = sinceInstant.isBefore(lastModified.truncatedTo(ChronoUnit.SECONDS));
 		return true;
 	}
 
-	private void validateIfModifiedSince(Instant lastModified) {
+	private boolean validateIfNoneMatch(@Nullable String etag) {
+		if (!StringUtils.hasLength(etag)) {
+			return false;
+		}
+		List<String> ifNoneMatch;
+		try {
+			ifNoneMatch = getRequestHeaders().getIfNoneMatch();
+		}
+		catch (IllegalArgumentException ex) {
+			return false;
+		}
+		if (ifNoneMatch.isEmpty()) {
+			return false;
+		}
+		// We will perform this validation...
+		etag = padEtagIfNecessary(etag);
+		if (etag.startsWith("W/")) {
+			etag = etag.substring(2);
+		}
+		for (String clientEtag : ifNoneMatch) {
+			// Compare weak/strong ETags as per https://tools.ietf.org/html/rfc7232#section-2.3
+			if (StringUtils.hasLength(clientEtag)) {
+				if (clientEtag.startsWith("W/")) {
+					clientEtag = clientEtag.substring(2);
+				}
+				if (clientEtag.equals(etag)) {
+					this.notModified = true;
+					break;
+				}
+			}
+		}
+		return true;
+	}
+
+	private String padEtagIfNecessary(String etag) {
+		if (!StringUtils.hasLength(etag)) {
+			return etag;
+		}
+		if ((etag.startsWith("\"") || etag.startsWith("W/\"")) && etag.endsWith("\"")) {
+			return etag;
+		}
+		return "\"" + etag + "\"";
+	}
+
+	private boolean validateIfModifiedSince(Instant lastModified) {
 		if (lastModified.isBefore(Instant.EPOCH)) {
-			return;
+			return false;
 		}
 		long ifModifiedSince = getRequestHeaders().getIfModifiedSince();
-		if (ifModifiedSince != -1) {
-			// We will perform this validation...
-			this.notModified = ChronoUnit.SECONDS.between(lastModified, Instant.ofEpochMilli(ifModifiedSince)) >= 0;
+		if (ifModifiedSince == -1) {
+			return false;
 		}
+		// We will perform this validation...
+		this.notModified = ChronoUnit.SECONDS.between(lastModified, Instant.ofEpochMilli(ifModifiedSince)) >= 0;
+		return true;
 	}
 
 	@Override

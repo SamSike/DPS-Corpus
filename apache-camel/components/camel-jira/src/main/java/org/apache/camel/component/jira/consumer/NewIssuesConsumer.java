@@ -16,14 +16,14 @@
  */
 package org.apache.camel.component.jira.consumer;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.Collections;
+import java.util.List;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.component.jira.JiraEndpoint;
-import org.apache.camel.util.CastUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 public class NewIssuesConsumer extends AbstractJiraConsumer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(NewIssuesConsumer.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(NewIssuesConsumer.class);
 
     private final String jql;
     private long latestIssueId = -1;
@@ -57,28 +57,32 @@ public class NewIssuesConsumer extends AbstractJiraConsumer {
         // read the actual issues, the next poll outputs only the new issues added after the route start
         // grab only the top
         try {
-            Queue<Issue> issues = getIssues(jql, 1);
+            List<Issue> issues = getIssues(jql, 0, 1, 1);
+            // in case there aren't any issues...
             if (!issues.isEmpty()) {
-                // Issues returned are ordered descendant so this is the newest issue
-                return issues.peek().getId();
+                return issues.get(0).getId();
             }
         } catch (Exception e) {
             // ignore
         }
-        // in case there aren't any issues...
         return -1;
     }
 
     protected int doPoll() throws Exception {
         // it may happen the poll() is called while the route is doing the initial load,
         // this way we need to wait for the latestIssueId being associated to the last indexed issue id
-        Queue<Issue> newIssues = getNewIssues();
-        // In the end, we want only *new* issues oldest to newest. New issues returned are ordered descendant already.
-        processBatch(CastUtils.cast(newIssues));
+        List<Issue> newIssues = getNewIssues();
+        // In the end, we want only *new* issues oldest to newest.
+        for (int i = newIssues.size() - 1; i > -1; i--) {
+            Issue newIssue = newIssues.get(i);
+            Exchange e = createExchange(true);
+            e.getIn().setBody(newIssue);
+            getProcessor().process(e);
+        }
         return newIssues.size();
     }
 
-    private Queue<Issue> getNewIssues() {
+    private List<Issue> getNewIssues() {
         String jqlFilter;
         if (latestIssueId > -1) {
             // search only for issues created after the latest id
@@ -87,9 +91,9 @@ public class NewIssuesConsumer extends AbstractJiraConsumer {
             jqlFilter = jql;
         }
         // the last issue may be deleted, so to recover we re-find it and go from there
-        Queue<Issue> issues;
+        List<Issue> issues;
         try {
-            issues = getIssues(jqlFilter);
+            issues = getIssues(jqlFilter, 0, 50, getEndpoint().getMaxResults());
         } catch (RestClientException e) {
             if (e.getStatusCode().isPresent()) {
                 int code = e.getStatusCode().get();
@@ -100,7 +104,7 @@ public class NewIssuesConsumer extends AbstractJiraConsumer {
                                  + " Will recover by fetching last issue id from JIRA and try again on next poll",
                                 latestIssueId);
                         latestIssueId = findLatestIssueId();
-                        return new LinkedList<>();
+                        return Collections.emptyList();
                     }
                 }
             }
@@ -109,8 +113,8 @@ public class NewIssuesConsumer extends AbstractJiraConsumer {
 
         if (!issues.isEmpty()) {
             // remember last id we have processed
-            // issues are ordered descendant so save the first issue in the list as the newest
-            latestIssueId = issues.element().getId();
+            int last = issues.size() - 1;
+            latestIssueId = issues.get(last).getId();
         }
         return issues;
     }

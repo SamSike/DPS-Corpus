@@ -75,15 +75,15 @@ public class StopRouteFromRouteTest {
     // END SNIPPET: e1
 
     // START SNIPPET: e2
-    public RouteBuilder createMyRoutes() {
+    public RouteBuilder createMyRoutes() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("myRoute").to("mock:start").process(new Processor() {
                     Thread stop;
 
                     @Override
-                    public void process(final Exchange exchange) {
+                    public void process(final Exchange exchange) throws Exception {
                         // stop this route using a thread that will stop
                         // this route gracefully while we are still running
                         if (stop == null) {

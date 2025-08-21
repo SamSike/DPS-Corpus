@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,7 +40,6 @@ package org.jooq.codegen;
 import static org.jooq.impl.QOM.GenerationOption.STORED;
 import static org.jooq.impl.QOM.GenerationOption.VIRTUAL;
 import static org.jooq.tools.StringUtils.isBlank;
-import static org.jooq.util.xml.XmlUtils.foreignKeyRule;
 import static org.jooq.util.xml.jaxb.TableConstraintType.CHECK;
 import static org.jooq.util.xml.jaxb.TableConstraintType.FOREIGN_KEY;
 import static org.jooq.util.xml.jaxb.TableConstraintType.PRIMARY_KEY;
@@ -49,13 +48,8 @@ import static org.jooq.util.xml.jaxb.TableConstraintType.UNIQUE;
 import java.io.StringWriter;
 import java.math.BigInteger;
 import java.util.List;
-import java.util.function.BiConsumer;
 
-import org.jooq.Name;
 import org.jooq.SortOrder;
-// ...
-// ...
-import org.jooq.meta.AttributeDefinition;
 import org.jooq.meta.CatalogDefinition;
 import org.jooq.meta.CheckConstraintDefinition;
 import org.jooq.meta.ColumnDefinition;
@@ -69,20 +63,15 @@ import org.jooq.meta.ParameterDefinition;
 import org.jooq.meta.RoutineDefinition;
 import org.jooq.meta.SchemaDefinition;
 import org.jooq.meta.SequenceDefinition;
-// ...
 import org.jooq.meta.TableDefinition;
-// ...
-import org.jooq.meta.UDTDefinition;
 import org.jooq.meta.UniqueKeyDefinition;
 import org.jooq.tools.Convert;
 import org.jooq.tools.JooqLogger;
 import org.jooq.tools.StringUtils;
 import org.jooq.util.jaxb.tools.MiniJAXB;
-import org.jooq.util.xml.jaxb.Attribute;
 import org.jooq.util.xml.jaxb.Catalog;
 import org.jooq.util.xml.jaxb.CheckConstraint;
 import org.jooq.util.xml.jaxb.Column;
-import org.jooq.util.xml.jaxb.DirectSupertype;
 import org.jooq.util.xml.jaxb.Index;
 import org.jooq.util.xml.jaxb.IndexColumnUsage;
 import org.jooq.util.xml.jaxb.InformationSchema;
@@ -94,16 +83,9 @@ import org.jooq.util.xml.jaxb.Routine;
 import org.jooq.util.xml.jaxb.RoutineType;
 import org.jooq.util.xml.jaxb.Schema;
 import org.jooq.util.xml.jaxb.Sequence;
-import org.jooq.util.xml.jaxb.Synonym;
 import org.jooq.util.xml.jaxb.Table;
 import org.jooq.util.xml.jaxb.TableConstraint;
 import org.jooq.util.xml.jaxb.TableType;
-import org.jooq.util.xml.jaxb.Trigger;
-import org.jooq.util.xml.jaxb.TriggerActionOrientation;
-import org.jooq.util.xml.jaxb.TriggerActionTiming;
-import org.jooq.util.xml.jaxb.TriggerEventManipulation;
-import org.jooq.util.xml.jaxb.UserDefinedType;
-import org.jooq.util.xml.jaxb.UserDefinedTypeCategory;
 import org.jooq.util.xml.jaxb.View;
 
 /**
@@ -161,64 +143,6 @@ public class XMLGenerator extends AbstractGenerator {
 
                 is.getSchemata().add(schema);
 
-                for (UDTDefinition u : db.getUDTs(s)) {
-                    String udtName = u.getOutputName();
-
-                    UserDefinedType udt = new UserDefinedType();
-                    udt.setUserDefinedTypeCatalog(catalogName);
-                    udt.setUserDefinedTypeSchema(schemaName);
-                    udt.setUserDefinedTypeName(udtName);
-                    udt.setUserDefinedTypeCategory(UserDefinedTypeCategory.STRUCTURED);
-
-                    if (u.getSupertype() != null) {
-                        DirectSupertype sup = new DirectSupertype();
-
-                        sup.setUdtCatalog(catalogName);
-                        sup.setUdtSchema(schemaName);
-                        sup.setUdtName(udtName);
-                        sup.setSupertypeCatalog(u.getSupertype().getCatalog().getOutputName());
-                        sup.setSupertypeSchema(u.getSupertype().getSchema().getOutputName());
-                        sup.setSupertypeName(u.getSupertype().getOutputName());
-
-                        is.getDirectSupertypes().add(sup);
-                    }
-
-                    udt.setIsInstantiable(u.isInstantiable());
-
-                    if (generateCommentsOnUDTs())
-                        udt.setComment(u.getComment());
-
-                    is.getUserDefinedTypes().add(udt);
-
-                    for (AttributeDefinition a : u.getAttributes()) {
-                        String attributeName = a.getOutputName();
-                        DataTypeDefinition type = a.getType();
-
-                        Attribute attribute = new Attribute();
-                        attribute.setUdtCatalog(catalogName);
-                        attribute.setUdtSchema(schemaName);
-                        attribute.setUdtName(udtName);
-                        attribute.setAttributeName(attributeName);
-
-                        if (generateCommentsOnAttributes())
-                            attribute.setComment(a.getComment());
-
-                        attribute.setCharacterMaximumLength(type.getLength());
-                        attribute.setAttributeDefault(type.getDefaultValue());
-                        attribute.setDataType(type.getType());
-                        setUdtName(type,
-                            attribute,
-                            Attribute::setAttributeUdtCatalog,
-                            Attribute::setAttributeUdtSchema,
-                            Attribute::setAttributeUdtName);
-                        attribute.setNumericPrecision(type.getPrecision());
-                        attribute.setNumericScale(type.getScale());
-                        attribute.setOrdinalPosition(a.getPosition());
-
-                        is.getAttributes().add(attribute);
-                    }
-                }
-
                 for (TableDefinition t : s.getTables()) {
                     String tableName = t.getOutputName();
 
@@ -229,12 +153,8 @@ public class XMLGenerator extends AbstractGenerator {
                     table.setTableType(
                         t.isView()
                       ? TableType.VIEW
-                      : t.isMaterializedView()
-                      ? TableType.MATERIALIZED_VIEW
-                      : t.isGlobalTemporary()
+                      : t.isTemporary()
                       ? TableType.GLOBAL_TEMPORARY
-                      : t.isLocalTemporary()
-                      ? TableType.LOCAL_TEMPORARY
                       : TableType.BASE_TABLE
                     );
 
@@ -243,7 +163,7 @@ public class XMLGenerator extends AbstractGenerator {
 
                     is.getTables().add(table);
 
-                    if (t.isView() || t.isMaterializedView()) {
+                    if (t.isView()) {
                         View view = new View();
 
                         view.setTableCatalog(catalogName);
@@ -271,19 +191,12 @@ public class XMLGenerator extends AbstractGenerator {
                         column.setCharacterMaximumLength(type.getLength());
                         column.setColumnDefault(type.getDefaultValue());
                         column.setDataType(type.getType());
-                        setUdtName(type,
-                            column,
-                            Column::setUdtCatalog,
-                            Column::setUdtSchema,
-                            Column::setUdtName);
-
                         if (co.isIdentity())
                             column.setIdentityGeneration("YES");
                         column.setIsNullable(type.isNullable());
                         column.setNumericPrecision(type.getPrecision());
                         column.setNumericScale(type.getScale());
                         column.setOrdinalPosition(co.getPosition());
-                        column.setHidden(type.isHidden());
                         column.setReadonly(co.isReadonly());
 
                         if (type.isComputed()) {
@@ -401,8 +314,6 @@ public class XMLGenerator extends AbstractGenerator {
                     rc.setUniqueConstraintCatalog(referenced.getCatalog().getOutputName());
                     rc.setUniqueConstraintSchema(referenced.getSchema().getOutputName());
                     rc.setUniqueConstraintName(referenced.getOutputName());
-                    rc.setDeleteRule(foreignKeyRule(f.getDeleteRule()));
-                    rc.setUpdateRule(foreignKeyRule(f.getUpdateRule()));
 
                     is.getTableConstraints().add(tc);
                     is.getReferentialConstraints().add(rc);
@@ -487,48 +398,6 @@ public class XMLGenerator extends AbstractGenerator {
 
                 for (RoutineDefinition r : db.getRoutines(s))
                     exportRoutine(is, r, catalogName, schemaName);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             }
         }
 
@@ -564,11 +433,6 @@ public class XMLGenerator extends AbstractGenerator {
         else {
             routine.setRoutineType(RoutineType.FUNCTION);
             routine.setDataType(r.getReturnType().getType());
-            setUdtName(r.getReturnType(),
-                routine,
-                Routine::setUdtCatalog,
-                Routine::setUdtSchema,
-                Routine::setUdtName);
             routine.setCharacterMaximumLength(r.getReturnType().getLength());
             routine.setNumericPrecision(r.getReturnType().getPrecision());
             routine.setNumericScale(r.getReturnType().getScale());
@@ -605,42 +469,12 @@ public class XMLGenerator extends AbstractGenerator {
                     parameter.setParameterMode(ParameterMode.OUT);
 
                 parameter.setDataType(p.getType().getType());
-                setUdtName(p.getType(),
-                    parameter,
-                    Parameter::setUdtCatalog,
-                    Parameter::setUdtSchema,
-                    Parameter::setUdtName);
                 parameter.setCharacterMaximumLength(p.getType().getLength());
                 parameter.setNumericPrecision(p.getType().getPrecision());
                 parameter.setNumericScale(p.getType().getScale());
                 parameter.setParameterDefault(p.getType().getDefaultValue());
 
                 is.getParameters().add(parameter);
-            }
-        }
-    }
-
-    private <T> void setUdtName(
-        DataTypeDefinition type,
-        T object,
-        BiConsumer<T, String> udtCatalog,
-        BiConsumer<T, String> udtSchema,
-        BiConsumer<T, String> udtName
-    ) {
-        if (type.isUDT()) {
-            Name name = type.getQualifiedUserType();
-
-            if (name != null) {
-                udtName.accept(object, name.last());
-
-                Name us = name.qualifier();
-                if (us != null) {
-                    udtSchema.accept(object, us.last());
-
-                    Name uc = us.qualifier();
-                    if (uc != null)
-                        udtCatalog.accept(object, uc.last());
-                }
             }
         }
     }

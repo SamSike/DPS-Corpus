@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -54,14 +54,14 @@ import org.jetbrains.annotations.NotNull;
  * <code>WITH</code> clause and with {@link CommonTableExpression}s.
  * <p>
  * Example:
- * <pre><code>
+ * <code><pre>
  * DSL.with("table", "col1", "col2")
  *    .as(
  *        select(one(), two())
  *    )
  *    .select()
  *    .from("table")
- * </code></pre>
+ * </pre></code>
  * <p>
  * <h3>Referencing <code>XYZ*Step</code> types directly from client code</h3>
  * <p>
@@ -93,42 +93,42 @@ public interface WithStep extends QueryPart {
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(String alias);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(String alias, String... fieldAliases);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(String alias, Collection<String> fieldAliases);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(Name alias);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(Name alias, Name... fieldAliases);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(Name alias, Collection<? extends Name> fieldAliases);
 
     /**
@@ -146,7 +146,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(String alias, Function<? super Field<?>, ? extends String> fieldNameFunction);
 
     /**
@@ -164,7 +164,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(String alias, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction);
 
 
@@ -173,308 +173,308 @@ public interface WithStep extends QueryPart {
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep1 with(String alias, String fieldAlias1);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep2 with(String alias, String fieldAlias1, String fieldAlias2);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep3 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep4 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep5 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep6 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep7 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep8 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep9 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep10 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep11 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep12 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep13 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep14 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep15 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep16 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep17 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep18 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep19 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep20 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep21 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20, String fieldAlias21);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep22 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20, String fieldAlias21, String fieldAlias22);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep1 with(Name alias, Name fieldAlias1);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep2 with(Name alias, Name fieldAlias1, Name fieldAlias2);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep3 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep4 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep5 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep6 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep7 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep8 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep9 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep10 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep11 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep12 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep13 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep14 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep15 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep16 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep17 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep18 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep19 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep20 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep21 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20, Name fieldAlias21);
 
     /**
      * Add another common table expression to the <code>WITH</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep22 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20, Name fieldAlias21, Name fieldAlias22);
 
 
@@ -487,11 +487,11 @@ public interface WithStep extends QueryPart {
      * <li>{@link DSL#name(String...)}</li>
      * <li>{@link Name#fields(String...)}</li>
      * <li>
-     * {@link DerivedColumnList#as(ResultQuery)}</li>
+     * {@link DerivedColumnList#as(Select)}</li>
      * </ul>
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithStep with(CommonTableExpression<?>... tables);
 
     /**
@@ -502,11 +502,11 @@ public interface WithStep extends QueryPart {
      * <li>{@link DSL#name(String...)}</li>
      * <li>{@link Name#fields(String...)}</li>
      * <li>
-     * {@link DerivedColumnList#as(ResultQuery)}</li>
+     * {@link DerivedColumnList#as(Select)}</li>
      * </ul>
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithStep with(Collection<? extends CommonTableExpression<?>> tables);
 
     // -------------------------------------------------------------------------
@@ -524,12 +524,12 @@ public interface WithStep extends QueryPart {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT table.col1, table.col2 FROM table
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <R extends Record> SelectWhereStep<R> selectFrom(TableLike<R> table);
 
     /**
@@ -540,14 +540,14 @@ public interface WithStep extends QueryPart {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#table(Name)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     SelectWhereStep<Record> selectFrom(Name table);
 
     /**
@@ -558,9 +558,9 @@ public interface WithStep extends QueryPart {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -571,7 +571,7 @@ public interface WithStep extends QueryPart {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     @PlainSQL
     SelectWhereStep<Record> selectFrom(SQL sql);
 
@@ -583,9 +583,9 @@ public interface WithStep extends QueryPart {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -597,7 +597,7 @@ public interface WithStep extends QueryPart {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     @PlainSQL
     SelectWhereStep<Record> selectFrom(String sql);
 
@@ -609,9 +609,9 @@ public interface WithStep extends QueryPart {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -623,7 +623,7 @@ public interface WithStep extends QueryPart {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     @PlainSQL
     SelectWhereStep<Record> selectFrom(String sql, Object... bindings);
 
@@ -635,9 +635,9 @@ public interface WithStep extends QueryPart {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -649,7 +649,7 @@ public interface WithStep extends QueryPart {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     @PlainSQL
     SelectWhereStep<Record> selectFrom(String sql, QueryPart... parts);
 
@@ -662,7 +662,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(Collection)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.select(fields)
@@ -670,12 +670,12 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#select(Collection)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     SelectSelectStep<Record> select(Collection<? extends SelectFieldOrAsterisk> fields);
 
     /**
@@ -687,7 +687,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectFieldOrAsterisk...)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.select(field1, field2)
@@ -696,12 +696,12 @@ public interface WithStep extends QueryPart {
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#select(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     SelectSelectStep<Record> select(SelectFieldOrAsterisk... fields);
 
 
@@ -720,7 +720,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1).as(subselect))
      *       .select(field1)
@@ -728,13 +728,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1> SelectSelectStep<Record1<T1>> select(SelectField<T1> field1);
 
     /**
@@ -751,7 +751,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1, field2).as(subselect))
      *       .select(field1, field2)
@@ -759,13 +759,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2> SelectSelectStep<Record2<T1, T2>> select(SelectField<T1> field1, SelectField<T2> field2);
 
     /**
@@ -782,7 +782,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1, field2, field3).as(subselect))
      *       .select(field1, field2, field3)
@@ -790,13 +790,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3> SelectSelectStep<Record3<T1, T2, T3>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3);
 
     /**
@@ -813,7 +813,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1, field2, field3, field4).as(subselect))
      *       .select(field1, field2, field3, field4)
@@ -821,13 +821,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4> SelectSelectStep<Record4<T1, T2, T3, T4>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4);
 
     /**
@@ -844,7 +844,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1, field2, field3, field4, field5).as(subselect))
      *       .select(field1, field2, field3, field4, field5)
@@ -852,13 +852,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5> SelectSelectStep<Record5<T1, T2, T3, T4, T5>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5);
 
     /**
@@ -875,7 +875,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f5, f6).as(subselect))
      *       .select(field1, field2, field3, .., field5, field6)
@@ -883,13 +883,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6> SelectSelectStep<Record6<T1, T2, T3, T4, T5, T6>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6);
 
     /**
@@ -906,7 +906,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f6, f7).as(subselect))
      *       .select(field1, field2, field3, .., field6, field7)
@@ -914,13 +914,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7> SelectSelectStep<Record7<T1, T2, T3, T4, T5, T6, T7>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7);
 
     /**
@@ -937,7 +937,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f7, f8).as(subselect))
      *       .select(field1, field2, field3, .., field7, field8)
@@ -945,13 +945,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8> SelectSelectStep<Record8<T1, T2, T3, T4, T5, T6, T7, T8>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8);
 
     /**
@@ -968,7 +968,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f8, f9).as(subselect))
      *       .select(field1, field2, field3, .., field8, field9)
@@ -976,13 +976,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9> SelectSelectStep<Record9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9);
 
     /**
@@ -999,7 +999,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f9, f10).as(subselect))
      *       .select(field1, field2, field3, .., field9, field10)
@@ -1007,13 +1007,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> SelectSelectStep<Record10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10);
 
     /**
@@ -1030,7 +1030,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f10, f11).as(subselect))
      *       .select(field1, field2, field3, .., field10, field11)
@@ -1038,13 +1038,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> SelectSelectStep<Record11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11);
 
     /**
@@ -1061,7 +1061,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f11, f12).as(subselect))
      *       .select(field1, field2, field3, .., field11, field12)
@@ -1069,13 +1069,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> SelectSelectStep<Record12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12);
 
     /**
@@ -1092,7 +1092,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f12, f13).as(subselect))
      *       .select(field1, field2, field3, .., field12, field13)
@@ -1100,13 +1100,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> SelectSelectStep<Record13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13);
 
     /**
@@ -1123,7 +1123,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f13, f14).as(subselect))
      *       .select(field1, field2, field3, .., field13, field14)
@@ -1131,13 +1131,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> SelectSelectStep<Record14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14);
 
     /**
@@ -1154,7 +1154,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f14, f15).as(subselect))
      *       .select(field1, field2, field3, .., field14, field15)
@@ -1162,13 +1162,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> SelectSelectStep<Record15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15);
 
     /**
@@ -1185,7 +1185,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f15, f16).as(subselect))
      *       .select(field1, field2, field3, .., field15, field16)
@@ -1193,13 +1193,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> SelectSelectStep<Record16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16);
 
     /**
@@ -1216,7 +1216,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f16, f17).as(subselect))
      *       .select(field1, field2, field3, .., field16, field17)
@@ -1224,13 +1224,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> SelectSelectStep<Record17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17);
 
     /**
@@ -1247,7 +1247,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f17, f18).as(subselect))
      *       .select(field1, field2, field3, .., field17, field18)
@@ -1255,13 +1255,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> SelectSelectStep<Record18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18);
 
     /**
@@ -1278,7 +1278,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f18, f19).as(subselect))
      *       .select(field1, field2, field3, .., field18, field19)
@@ -1286,13 +1286,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> SelectSelectStep<Record19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19);
 
     /**
@@ -1309,7 +1309,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f19, f20).as(subselect))
      *       .select(field1, field2, field3, .., field19, field20)
@@ -1317,13 +1317,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> SelectSelectStep<Record20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20);
 
     /**
@@ -1340,7 +1340,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f20, f21).as(subselect))
      *       .select(field1, field2, field3, .., field20, field21)
@@ -1348,13 +1348,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> SelectSelectStep<Record21<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20, SelectField<T21> field21);
 
     /**
@@ -1371,7 +1371,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f21, f22).as(subselect))
      *       .select(field1, field2, field3, .., field21, field22)
@@ -1379,13 +1379,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> SelectSelectStep<Record22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22>> select(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20, SelectField<T21> field21, SelectField<T22> field22);
 
 
@@ -1399,7 +1399,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(Collection)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.selectDistinct(fields)
@@ -1407,12 +1407,12 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(Collection)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     SelectSelectStep<Record> selectDistinct(Collection<? extends SelectFieldOrAsterisk> fields);
 
     /**
@@ -1424,7 +1424,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectFieldOrAsterisk...)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.selectDistinct(field1, field2)
@@ -1432,12 +1432,12 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     SelectSelectStep<Record> selectDistinct(SelectFieldOrAsterisk... fields);
 
 
@@ -1456,7 +1456,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1).as(subselect))
      *       .selectDistinct(field1)
@@ -1464,13 +1464,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1> SelectSelectStep<Record1<T1>> selectDistinct(SelectField<T1> field1);
 
     /**
@@ -1487,7 +1487,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1, field2).as(subselect))
      *       .selectDistinct(field1, field2)
@@ -1495,13 +1495,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2> SelectSelectStep<Record2<T1, T2>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2);
 
     /**
@@ -1518,7 +1518,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1, field2, field3).as(subselect))
      *       .selectDistinct(field1, field2, field3)
@@ -1526,13 +1526,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3> SelectSelectStep<Record3<T1, T2, T3>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3);
 
     /**
@@ -1549,7 +1549,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1, field2, field3, field4).as(subselect))
      *       .selectDistinct(field1, field2, field3, field4)
@@ -1557,13 +1557,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4> SelectSelectStep<Record4<T1, T2, T3, T4>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4);
 
     /**
@@ -1580,7 +1580,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1, field2, field3, field4, field5).as(subselect))
      *       .selectDistinct(field1, field2, field3, field4, field5)
@@ -1588,13 +1588,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5> SelectSelectStep<Record5<T1, T2, T3, T4, T5>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5);
 
     /**
@@ -1611,7 +1611,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f5, f6).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field5, field6)
@@ -1619,13 +1619,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6> SelectSelectStep<Record6<T1, T2, T3, T4, T5, T6>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6);
 
     /**
@@ -1642,7 +1642,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f6, f7).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field6, field7)
@@ -1650,13 +1650,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7> SelectSelectStep<Record7<T1, T2, T3, T4, T5, T6, T7>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7);
 
     /**
@@ -1673,7 +1673,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f7, f8).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field7, field8)
@@ -1681,13 +1681,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8> SelectSelectStep<Record8<T1, T2, T3, T4, T5, T6, T7, T8>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8);
 
     /**
@@ -1704,7 +1704,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f8, f9).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field8, field9)
@@ -1712,13 +1712,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9> SelectSelectStep<Record9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9);
 
     /**
@@ -1735,7 +1735,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f9, f10).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field9, field10)
@@ -1743,13 +1743,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> SelectSelectStep<Record10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10);
 
     /**
@@ -1766,7 +1766,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f10, f11).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field10, field11)
@@ -1774,13 +1774,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> SelectSelectStep<Record11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11);
 
     /**
@@ -1797,7 +1797,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f11, f12).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field11, field12)
@@ -1805,13 +1805,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> SelectSelectStep<Record12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12);
 
     /**
@@ -1828,7 +1828,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f12, f13).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field12, field13)
@@ -1836,13 +1836,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> SelectSelectStep<Record13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13);
 
     /**
@@ -1859,7 +1859,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f13, f14).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field13, field14)
@@ -1867,13 +1867,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> SelectSelectStep<Record14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14);
 
     /**
@@ -1890,7 +1890,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f14, f15).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field14, field15)
@@ -1898,13 +1898,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> SelectSelectStep<Record15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15);
 
     /**
@@ -1921,7 +1921,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f15, f16).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field15, field16)
@@ -1929,13 +1929,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> SelectSelectStep<Record16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16);
 
     /**
@@ -1952,7 +1952,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f16, f17).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field16, field17)
@@ -1960,13 +1960,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> SelectSelectStep<Record17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17);
 
     /**
@@ -1983,7 +1983,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f17, f18).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field17, field18)
@@ -1991,13 +1991,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> SelectSelectStep<Record18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18);
 
     /**
@@ -2014,7 +2014,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f18, f19).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field18, field19)
@@ -2022,13 +2022,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> SelectSelectStep<Record19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19);
 
     /**
@@ -2045,7 +2045,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f19, f20).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field19, field20)
@@ -2053,13 +2053,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> SelectSelectStep<Record20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20);
 
     /**
@@ -2076,7 +2076,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f20, f21).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field20, field21)
@@ -2084,13 +2084,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> SelectSelectStep<Record21<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20, SelectField<T21> field21);
 
     /**
@@ -2107,7 +2107,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f21, f22).as(subselect))
      *       .selectDistinct(field1, field2, field3, .., field21, field22)
@@ -2115,13 +2115,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> SelectSelectStep<Record22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22>> selectDistinct(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20, SelectField<T21> field21, SelectField<T22> field22);
 
 
@@ -2135,7 +2135,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectZero()} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.selectZero()
@@ -2143,13 +2143,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#zero()
      * @see DSL#selectZero()
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     SelectSelectStep<Record1<Integer>> selectZero();
 
     /**
@@ -2161,7 +2161,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectOne()} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.selectOne()
@@ -2169,13 +2169,13 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#one()
      * @see DSL#selectOne()
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     SelectSelectStep<Record1<Integer>> selectOne();
 
     /**
@@ -2187,7 +2187,7 @@ public interface WithStep extends QueryPart {
      * create a subselect), consider using the static
      * {@link DSL#selectCount()} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.selectCount()
@@ -2195,12 +2195,12 @@ public interface WithStep extends QueryPart {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectCount()
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     SelectSelectStep<Record1<Integer>> selectCount();
 
     /**
@@ -2209,7 +2209,7 @@ public interface WithStep extends QueryPart {
      * This type of insert may feel more convenient to some users, as it uses
      * the <code>UPDATE</code> statement's <code>SET a = b</code> syntax.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.insertInto(table)
@@ -2222,7 +2222,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2233,7 +2233,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1).as(subselect))
      *       .insertInto(table, field1)
@@ -2243,7 +2243,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2252,7 +2252,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1, field2).as(subselect))
      *       .insertInto(table, field1, field2)
@@ -2262,7 +2262,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2271,7 +2271,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1, field2, field3).as(subselect))
      *       .insertInto(table, field1, field2, field3)
@@ -2281,7 +2281,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2290,7 +2290,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1, field2, field3, field4).as(subselect))
      *       .insertInto(table, field1, field2, field3, field4)
@@ -2300,7 +2300,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2309,7 +2309,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(field1, field2, field3, field4, field5).as(subselect))
      *       .insertInto(table, field1, field2, field3, field4, field5)
@@ -2319,7 +2319,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2328,7 +2328,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f5, f6).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field5, field6)
@@ -2338,7 +2338,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2347,7 +2347,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f6, f7).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field6, field7)
@@ -2357,7 +2357,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2366,7 +2366,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f7, f8).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field7, field8)
@@ -2376,7 +2376,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2385,7 +2385,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f8, f9).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field8, field9)
@@ -2395,7 +2395,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2404,7 +2404,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f9, f10).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field9, field10)
@@ -2414,7 +2414,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2423,7 +2423,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f10, f11).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field10, field11)
@@ -2433,7 +2433,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2442,7 +2442,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f11, f12).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field11, field12)
@@ -2452,7 +2452,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2461,7 +2461,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f12, f13).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field12, field13)
@@ -2471,7 +2471,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2480,7 +2480,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f13, f14).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field13, field14)
@@ -2490,7 +2490,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2499,7 +2499,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f14, f15).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field14, field15)
@@ -2509,7 +2509,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2518,7 +2518,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f15, f16).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field15, field16)
@@ -2528,7 +2528,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2537,7 +2537,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f16, f17).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field16, field17)
@@ -2547,7 +2547,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2556,7 +2556,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f17, f18).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field17, field18)
@@ -2566,7 +2566,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2575,7 +2575,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f18, f19).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field18, field19)
@@ -2585,7 +2585,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2594,7 +2594,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f19, f20).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field19, field20)
@@ -2604,7 +2604,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2613,7 +2613,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f20, f21).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field20, field21)
@@ -2623,7 +2623,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2632,7 +2632,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .with(name("t").fields(f1, f2, f3, .., f21, f22).as(subselect))
      *       .insertInto(table, field1, field2, field3, .., field21, field22)
@@ -2642,7 +2642,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2653,7 +2653,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.insertInto(table, field1, field2)
@@ -2663,7 +2663,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2672,7 +2672,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.insertInto(table, field1, field2)
@@ -2682,7 +2682,7 @@ public interface WithStep extends QueryPart {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2691,7 +2691,7 @@ public interface WithStep extends QueryPart {
     /**
      * Create a new DSL update statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.update(table)
@@ -2699,17 +2699,17 @@ public interface WithStep extends QueryPart {
      *       .set(field2, value2)
      *       .where(field1.greaterThan(100))
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note that some databases support table expressions more complex than
      * simple table references. In MySQL, for instance, you can write
-     * <pre><code>
+     * <code><pre>
      * create.update(t1.join(t2).on(t1.id.eq(t2.id)))
      *       .set(t1.value, value1)
      *       .set(t2.value, value2)
      *       .where(t1.id.eq(10))
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support({ POSTGRES, SQLITE, YUGABYTEDB })
@@ -2764,7 +2764,7 @@ public interface WithStep extends QueryPart {
      * </tr>
      * </table>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.mergeInto(table)
@@ -2776,10 +2776,14 @@ public interface WithStep extends QueryPart {
      *       .whenNotMatchedThenInsert(field1, field2)
      *       .values(value1, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
+     * <p>
+     * Note: Using this method, you can also create an H2-specific MERGE
+     * statement without field specification. See also
+     * {@link #mergeInto(Table, Field...)}
      */
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record> MergeUsingStep<R> mergeInto(Table<R> table);
 
 
@@ -2807,7 +2811,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1> MergeKeyStep1<R, T1> mergeInto(Table<R> table, Field<T1> field1);
 
     /**
@@ -2833,7 +2837,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2> MergeKeyStep2<R, T1, T2> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2);
 
     /**
@@ -2859,7 +2863,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3> MergeKeyStep3<R, T1, T2, T3> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3);
 
     /**
@@ -2885,7 +2889,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4> MergeKeyStep4<R, T1, T2, T3, T4> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4);
 
     /**
@@ -2911,7 +2915,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5> MergeKeyStep5<R, T1, T2, T3, T4, T5> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5);
 
     /**
@@ -2937,7 +2941,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6> MergeKeyStep6<R, T1, T2, T3, T4, T5, T6> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6);
 
     /**
@@ -2963,7 +2967,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7> MergeKeyStep7<R, T1, T2, T3, T4, T5, T6, T7> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7);
 
     /**
@@ -2989,7 +2993,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8> MergeKeyStep8<R, T1, T2, T3, T4, T5, T6, T7, T8> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8);
 
     /**
@@ -3015,7 +3019,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9> MergeKeyStep9<R, T1, T2, T3, T4, T5, T6, T7, T8, T9> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9);
 
     /**
@@ -3041,7 +3045,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> MergeKeyStep10<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10);
 
     /**
@@ -3067,7 +3071,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> MergeKeyStep11<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11);
 
     /**
@@ -3093,7 +3097,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> MergeKeyStep12<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12);
 
     /**
@@ -3119,7 +3123,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> MergeKeyStep13<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13);
 
     /**
@@ -3145,7 +3149,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> MergeKeyStep14<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14);
 
     /**
@@ -3171,7 +3175,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> MergeKeyStep15<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15);
 
     /**
@@ -3197,7 +3201,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> MergeKeyStep16<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16);
 
     /**
@@ -3223,7 +3227,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> MergeKeyStep17<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17);
 
     /**
@@ -3249,7 +3253,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> MergeKeyStep18<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18);
 
     /**
@@ -3275,7 +3279,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> MergeKeyStep19<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18, Field<T19> field19);
 
     /**
@@ -3301,7 +3305,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> MergeKeyStep20<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18, Field<T19> field19, Field<T20> field20);
 
     /**
@@ -3327,7 +3331,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> MergeKeyStep21<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18, Field<T19> field19, Field<T20> field20, Field<T21> field21);
 
     /**
@@ -3353,7 +3357,7 @@ public interface WithStep extends QueryPart {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> MergeKeyStep22<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18, Field<T19> field19, Field<T20> field20, Field<T21> field21, Field<T22> field22);
 
 
@@ -3379,7 +3383,7 @@ public interface WithStep extends QueryPart {
      * </table>
      */
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record> MergeKeyStepN<R> mergeInto(Table<R> table, Field<?>... fields);
 
     /**
@@ -3388,19 +3392,19 @@ public interface WithStep extends QueryPart {
      * @see #mergeInto(Table, Field...)
      */
     @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES })
+    @Support({ H2 })
     <R extends Record> MergeKeyStepN<R> mergeInto(Table<R> table, Collection<? extends Field<?>> fields);
 
     /**
      * Create a new DSL delete statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.delete(table)
      *       .where(field1.greaterThan(100))
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Some but not all databases support aliased tables in delete statements.
      */

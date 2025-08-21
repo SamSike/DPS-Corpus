@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -46,13 +46,9 @@ import static org.jooq.Clause.CONDITION_NOT_BETWEEN_SYMMETRIC;
 // ...
 // ...
 // ...
-// ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
 // ...
@@ -70,7 +66,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.impl.DSL.row;
 import static org.jooq.impl.DSL.val;
@@ -83,18 +78,20 @@ import static org.jooq.impl.Tools.nullSafe;
 import static org.jooq.impl.Tools.nullableIf;
 
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.jooq.BetweenAndStep;
 import org.jooq.Clause;
 import org.jooq.Condition;
 import org.jooq.Context;
 import org.jooq.Field;
+import org.jooq.Function1;
 import org.jooq.Function3;
-import org.jooq.QueryPart;
-// ...
 import org.jooq.RowN;
 import org.jooq.SQLDialect;
 import org.jooq.impl.QOM.Between;
+import org.jooq.QueryPart;
+// ...
 
 /**
  * @author Lukas Eder
@@ -105,7 +102,7 @@ final class BetweenCondition<T> extends AbstractCondition implements BetweenAndS
     private static final Clause[]        CLAUSES_BETWEEN_SYMMETRIC     = { CONDITION, CONDITION_BETWEEN_SYMMETRIC };
     private static final Clause[]        CLAUSES_NOT_BETWEEN           = { CONDITION, CONDITION_NOT_BETWEEN };
     private static final Clause[]        CLAUSES_NOT_BETWEEN_SYMMETRIC = { CONDITION, CONDITION_NOT_BETWEEN_SYMMETRIC };
-    private static final Set<SQLDialect> NO_SUPPORT_SYMMETRIC          = SQLDialect.supportedBy(CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, SQLITE, TRINO);
+    private static final Set<SQLDialect> NO_SUPPORT_SYMMETRIC          = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, SQLITE);
 
     private final boolean                symmetric;
     private final boolean                not;
@@ -191,10 +188,9 @@ final class BetweenCondition<T> extends AbstractCondition implements BetweenAndS
     // XXX: Query Object Model
     // -------------------------------------------------------------------------
 
-    @SuppressWarnings("unchecked")
     @Override
-    public final Function3<? super Field<T>, ? super Field<T>, ? super Field<T>, ? extends QOM.Between<T>> $constructor() {
-        return (f, min, max) -> (QOM.Between<T>) new BetweenCondition<>(f, min, not, symmetric).and(max);
+    public final Function3<? super Field<T>, ? super Field<T>, ? super Field<T>, ? extends Condition> $constructor() {
+        return (f, min, max) -> new BetweenCondition<>(f, min, not, symmetric).and(max);
     }
 
     @Override
@@ -215,12 +211,6 @@ final class BetweenCondition<T> extends AbstractCondition implements BetweenAndS
     @Override
     public final boolean $symmetric() {
         return symmetric;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public final Between<T> $symmetric(boolean s) {
-        return (Between<T>) new BetweenCondition<T>($arg1(), $arg2(), not, s).and($arg3());
     }
 
 

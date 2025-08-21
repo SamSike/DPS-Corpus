@@ -24,6 +24,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 @JacksonXmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class User implements Serializable {
@@ -205,7 +207,8 @@ public class User implements Serializable {
 
     @Override
     public String toString() {
-        return "User{" + id + ", " + username + ", " + email + ", " + name + "}";
+        return toStringHelper(this).addValue(this.id).addValue(this.username).addValue(this.email).addValue(this.name)
+                .toString();
     }
 
 }

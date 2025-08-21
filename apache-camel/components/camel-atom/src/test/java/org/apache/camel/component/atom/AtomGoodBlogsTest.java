@@ -16,7 +16,7 @@
  */
 package org.apache.camel.component.atom;
 
-import com.apptasticsoftware.rssreader.Item;
+import org.apache.abdera.model.Entry;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
@@ -60,7 +60,7 @@ public class AtomGoodBlogsTest {
         return new RouteBuilder() {
             public void configure() {
                 // We pool the atom feeds from the source for further processing in the seda queue
-                // we set the delay to 1 second for each pool as this is a unit test also, and we can
+                // we set the delay to 1 second for each pool as this is a unit test also and we can
                 // not wait the default poll interval of 60 seconds.
                 // Using splitEntries=true will during polling only fetch one Atom Entry at any given time.
                 // As the feed.atom file contains 7 entries, using this will require 7 polls to fetch the entire
@@ -108,17 +108,18 @@ public class AtomGoodBlogsTest {
     /**
      * Services for blogs
      */
-    public static class BlogService {
+    public class BlogService {
 
         /**
          * Tests the blogs if its a good blog entry or not
          */
         public boolean isGoodBlog(Exchange exchange) {
-            Item entry = exchange.getIn().getBody(Item.class);
-            String title = entry.getTitle().get();
+            Entry entry = exchange.getIn().getBody(Entry.class);
+            String title = entry.getTitle();
 
             // We like blogs about Camel
-            return title.toLowerCase().contains("camel");
+            boolean good = title.toLowerCase().contains("camel");
+            return good;
         }
 
     }

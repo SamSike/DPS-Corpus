@@ -63,10 +63,19 @@ public class SharedQueueMessageListenerContainer extends DefaultJmsMessageListen
         setCacheLevel(DefaultMessageListenerContainer.CACHE_SESSION);
     }
 
-    // override this method and return the appropriate selector
     @Override
     public String getMessageSelector() {
-        return JmsReplyHelper.getMessageSelector(fixedMessageSelector, creator);
+        // override this method and return the appropriate selector
+        String id = null;
+        if (fixedMessageSelector != null) {
+            id = fixedMessageSelector;
+        } else if (creator != null) {
+            id = creator.get();
+        }
+        if (logger.isTraceEnabled()) {
+            logger.trace("Using MessageSelector[" + id + "]");
+        }
+        return id;
     }
 
 }

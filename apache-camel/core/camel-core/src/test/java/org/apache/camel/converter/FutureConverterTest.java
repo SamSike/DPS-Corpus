@@ -25,13 +25,9 @@ import org.apache.camel.NoTypeConversionAvailableException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.support.DefaultExchange;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Isolated;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
-@Isolated
 public class FutureConverterTest extends ContextTestSupport {
 
     @Test
@@ -60,17 +56,20 @@ public class FutureConverterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testConvertMandatoryFutureWithExchangeFailed() {
+    public void testConvertMandatoryFutureWithExchangeFailed() throws Exception {
         Exchange exchange = new DefaultExchange(context);
         Future<?> future = template.asyncRequestBody("direct:foo", "Hello World");
 
-        assertThrows(NoTypeConversionAvailableException.class,
-                () -> context.getTypeConverter().mandatoryConvertTo(Timestamp.class, exchange, future),
-                "Should have thrown an exception");
+        try {
+            context.getTypeConverter().mandatoryConvertTo(Timestamp.class, exchange, future);
+            fail("Should have thrown an exception");
+        } catch (NoTypeConversionAvailableException e) {
+            // expected
+        }
     }
 
     @Test
-    public void testConvertFutureWithExchangeFailed() {
+    public void testConvertFutureWithExchangeFailed() throws Exception {
         Exchange exchange = new DefaultExchange(context);
         Future<?> future = template.asyncRequestBody("direct:foo", "Hello World");
 
@@ -105,10 +104,10 @@ public class FutureConverterTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").delay(10).transform(constant("Bye World"));
             }
         };

@@ -17,9 +17,9 @@
 package org.apache.camel.builder;
 
 /**
- * Legacy error handler for XML DSL in camel-spring-xml
+ * Legacy error handler for XML DSL in camel-spring-xml/camel-blueprint
  */
-@Deprecated(since = "3.17.0")
+@Deprecated
 public abstract class LegacyErrorHandlerBuilderSupport implements LegacyErrorHandlerBuilder {
 
     @Override

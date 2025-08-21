@@ -21,15 +21,14 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
-import java.security.cert.Certificate;
 
 import org.apache.camel.component.as2.api.AS2Header;
 import org.apache.camel.component.as2.api.AS2MicAlgorithm;
 import org.apache.camel.component.as2.api.entity.DispositionNotificationOptions;
 import org.apache.camel.component.as2.api.entity.DispositionNotificationOptionsParser;
-import org.apache.hc.core5.http.ClassicHttpRequest;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.HttpException;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +79,7 @@ public final class MicUtils {
     }
 
     public static ReceivedContentMic createReceivedContentMic(
-            ClassicHttpRequest request, Certificate[] validateSigningCertificateChain, PrivateKey decryptingPrivateKey)
+            HttpEntityEnclosingRequest request, PrivateKey decryptingPrivateKey)
             throws HttpException {
 
         String dispositionNotificationOptionsString
@@ -98,8 +97,7 @@ public final class MicUtils {
             return null;
         }
 
-        HttpEntity entity = HttpMessageUtils.extractEdiPayload(request,
-                new HttpMessageUtils.DecrpytingAndSigningInfo(validateSigningCertificateChain, decryptingPrivateKey));
+        HttpEntity entity = HttpMessageUtils.extractEdiPayload(request, decryptingPrivateKey);
 
         byte[] content = EntityUtils.getContent(entity);
 

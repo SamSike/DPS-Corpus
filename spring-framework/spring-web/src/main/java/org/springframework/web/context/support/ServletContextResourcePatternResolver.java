@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,7 +80,8 @@ public class ServletContextResourcePatternResolver extends PathMatchingResourceP
 	protected Set<Resource> doFindPathMatchingFileResources(Resource rootDirResource, String subPattern)
 			throws IOException {
 
-		if (rootDirResource instanceof ServletContextResource scResource) {
+		if (rootDirResource instanceof ServletContextResource) {
+			ServletContextResource scResource = (ServletContextResource) rootDirResource;
 			ServletContext sc = scResource.getServletContext();
 			String fullPattern = scResource.getPath() + subPattern;
 			Set<Resource> result = new LinkedHashSet<>(8);
@@ -97,14 +98,13 @@ public class ServletContextResourcePatternResolver extends PathMatchingResourceP
 	 * adding them to the given result set.
 	 * @param servletContext the ServletContext to work on
 	 * @param fullPattern the pattern to match against,
-	 * with prepended root directory path
+	 * with preprended root directory path
 	 * @param dir the current directory
 	 * @param result the Set of matching Resources to add to
 	 * @throws IOException if directory contents could not be retrieved
 	 * @see ServletContextResource
 	 * @see jakarta.servlet.ServletContext#getResourcePaths
 	 */
-	@SuppressWarnings("NullAway") // Dataflow analysis limitation
 	protected void doRetrieveMatchingServletContextResources(
 			ServletContext servletContext, String fullPattern, String dir, Set<Resource> result)
 			throws IOException {

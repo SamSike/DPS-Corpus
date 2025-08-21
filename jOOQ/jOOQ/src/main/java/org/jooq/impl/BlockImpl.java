@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,7 +41,6 @@ package org.jooq.impl;
 // ...
 // ...
 // ...
-// ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
 // ...
@@ -53,8 +52,6 @@ import static org.jooq.SQLDialect.MYSQL;
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
-// ...
-import static org.jooq.SQLDialect.TRINO;
 import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.conf.ParamType.INLINED;
 // ...
@@ -69,7 +66,6 @@ import static org.jooq.impl.Keywords.K_CREATE;
 import static org.jooq.impl.Keywords.K_DO;
 import static org.jooq.impl.Keywords.K_DROP;
 import static org.jooq.impl.Keywords.K_END;
-import static org.jooq.impl.Keywords.K_EXECUTE;
 import static org.jooq.impl.Keywords.K_EXECUTE_BLOCK;
 import static org.jooq.impl.Keywords.K_EXECUTE_IMMEDIATE;
 import static org.jooq.impl.Keywords.K_EXECUTE_STATEMENT;
@@ -77,9 +73,7 @@ import static org.jooq.impl.Keywords.K_IF;
 import static org.jooq.impl.Keywords.K_NOT;
 import static org.jooq.impl.Keywords.K_THEN;
 import static org.jooq.impl.Keywords.K_TRUE;
-import static org.jooq.impl.Tools.collect;
 import static org.jooq.impl.Tools.decrement;
-import static org.jooq.impl.Tools.filter;
 import static org.jooq.impl.Tools.increment;
 import static org.jooq.impl.Tools.toplevel;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_FORCE_STATIC_STATEMENT;
@@ -90,12 +84,15 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.jooq.Block;
 import org.jooq.Configuration;
 import org.jooq.Context;
 import org.jooq.DDLQuery;
+import org.jooq.Function1;
 import org.jooq.Keyword;
 import org.jooq.LanguageContext;
 import org.jooq.Name;
@@ -104,7 +101,6 @@ import org.jooq.Query;
 import org.jooq.QueryPart;
 // ...
 import org.jooq.SQLDialect;
-import org.jooq.SQLDialectCategory;
 import org.jooq.Statement;
 // ...
 // ...
@@ -117,15 +113,8 @@ import org.jooq.impl.Tools.ExtendedDataKey;
  * @author Lukas Eder
  */
 final class BlockImpl extends AbstractRowCountQuery implements Block {
-
-    private static final Set<SQLDialect>  SUPPORTS_NULL_STATEMENT            = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
-
-
-
-
-
-
-
+    private static final Set<SQLDialect>  REQUIRES_EXECUTE_IMMEDIATE_ON_DDL = SQLDialect.supportedBy(FIREBIRD);
+    private static final Set<SQLDialect>  SUPPORTS_NULL_STATEMENT           = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
 
 
 
@@ -147,8 +136,7 @@ final class BlockImpl extends AbstractRowCountQuery implements Block {
     BlockImpl(Configuration configuration, Collection<? extends Statement> statements, boolean alwaysWrapInBeginEnd) {
         super(configuration);
 
-        // [#14153] Remove NullStatement as it is UTransient
-        this.statements = collect(filter(statements, s -> !(s instanceof NullStatement)));
+        this.statements = statements;
         this.alwaysWrapInBeginEnd = alwaysWrapInBeginEnd;
     }
 
@@ -171,7 +159,6 @@ final class BlockImpl extends AbstractRowCountQuery implements Block {
                 decrement(ctx.data(), DATA_BLOCK_NESTING);
                 break;
             }
-
 
             case POSTGRES:
             case YUGABYTEDB: {
@@ -331,7 +318,7 @@ final class BlockImpl extends AbstractRowCountQuery implements Block {
             if (keyword != null)
                 ctx.visit(keyword).sql(' ');
 
-            ctx.sql('$').sql(ctx.settings().getRenderDollarQuotedStringToken()).sql('$')
+            ctx.sql("$$")
                .formatSeparator()
                .data(DATA_FORCE_STATIC_STATEMENT, true);
         }
@@ -340,7 +327,7 @@ final class BlockImpl extends AbstractRowCountQuery implements Block {
 
         if (decrement(ctx.data(), DATA_BLOCK_NESTING))
             ctx.formatSeparator()
-               .sql('$').sql(ctx.settings().getRenderDollarQuotedStringToken()).sql('$')
+               .sql("$$")
                .paramType(previous);
     }
 
@@ -359,14 +346,9 @@ final class BlockImpl extends AbstractRowCountQuery implements Block {
         if (wrapInBeginEnd) {
             boolean topLevel = ctx.scopeLevel() == -1;
             LanguageContext language = ctx.languageContext();
-            ParamType paramType = ctx.paramType();
 
             if (topLevel && language == LanguageContext.QUERY)
                 ctx.languageContext(LanguageContext.BLOCK);
-
-
-
-
 
 
 
@@ -404,11 +386,6 @@ final class BlockImpl extends AbstractRowCountQuery implements Block {
 
             if (topLevel && language == LanguageContext.QUERY)
                 ctx.languageContext(language);
-
-
-
-
-
         }
         else
             accept1(ctx);
@@ -428,92 +405,79 @@ final class BlockImpl extends AbstractRowCountQuery implements Block {
 
 
 
-
                 default:
                     break;
             }
         }
         else {
+            DefaultRenderContext r = ctx instanceof DefaultRenderContext
+                ? (DefaultRenderContext) ctx
+                : null;
 
             statementLoop:
             for (Statement s : statements) {
                 if (s instanceof NullStatement && !SUPPORTS_NULL_STATEMENT.contains(ctx.dialect()))
                     continue statementLoop;
 
-                if (s instanceof Query && !(s instanceof Block))
-                    ctx.languageContext(LanguageContext.QUERY, s, c -> accept2(c, s));
-                else
-                    accept2(ctx, s);
+                LanguageContext language = ctx.languageContext();
+                ctx.languageContextIf(LanguageContext.QUERY, s instanceof Query && !(s instanceof Block));
+
+                ctx.formatSeparator();
+                int position = r != null ? r.sql.length() : 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    ctx.visit(s);
+
+
+
+
+
+
+                // [#11374] [#11367] TODO Improve this clunky semi colon decision logic
+                if (position < (r != null ? r.sql.length() : 0))
+                    semicolonAfterStatement(ctx, s);
+
+                ctx.languageContext(language);
             }
         }
     }
 
-    private static final void accept2(Context<?> ctx, Statement s) {
-        ctx.formatSeparator();
-        int position = ctx instanceof DefaultRenderContext d ? d.sql.length() : 0;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            ctx.visit(s);
-
-
-
-
-
-
-        // [#11374] [#11367] TODO Improve this clunky semi colon decision logic
-        if (position < (ctx instanceof DefaultRenderContext d ? d.sql.length() : 0))
-            semicolonAfterStatement(ctx, s);
-    }
-
-    static final void semicolonAfterStatement(Context<?> ctx, Statement s) {
+    private static final void semicolonAfterStatement(Context<?> ctx, Statement s) {
         if (s instanceof Block)
             return;
 
@@ -522,37 +486,42 @@ final class BlockImpl extends AbstractRowCountQuery implements Block {
 
 
 
-        DefaultRenderContext r = ctx instanceof DefaultRenderContext d
-            ? d
-            : null;
 
-        // Statement s may have been generating a BlockImpl e.g. to emulate an
-        // indexed for loop as a sequence of statements. In that case, there might
-        // already be a semi colon as the last generated token
-        boolean fb = ctx.family() == FIREBIRD;
-        boolean h2 = ctx.family() == H2;
 
-        if (r == null
-                || r.sql.length() == 0
-                // [#11361] "BEGIN" is also a possible last token in case a declaration was moved to the top level
-                || (fb && r.sql.length() >= 3 && lastTokenIsNot(r.sql, ";") && lastTokenIsNot(r.sql, "end") && lastTokenIsNot(r.sql, "begin") && lastTokenIsNot(r.sql, "atomic"))
-                || (h2 && lastTokenIsNot(r.sql, ";") && lastTokenIsNot(r.sql, "}"))
-                || (!fb && !h2 && lastTokenIsNot(r.sql, ";")))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             ctx.sql(';');
     }
 
-    private static final boolean lastTokenIsNot(StringBuilder sql, String token) {
-        int whitespace = 0;
-        int length = sql.length();
 
-        for (int i; (i = length - whitespace - 1) >= 0 && Character.isWhitespace(sql.charAt(i)); whitespace++)
-            ;
 
-        if (length < whitespace + token.length())
-            return true;
-        else
-            return !sql.subSequence(length - whitespace - token.length(), length - whitespace).toString().equalsIgnoreCase(token);
-    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private static final void begin(Context<?> ctx, boolean topLevel) {
         if (ctx.family() == H2)
@@ -592,16 +561,6 @@ final class BlockImpl extends AbstractRowCountQuery implements Block {
             case H2:
             case FIREBIRD:
                 break;
-
-
-
-
-
-
-
-
-
-
 
 
 

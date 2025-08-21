@@ -6,7 +6,9 @@
  * {@link org.springframework.web.util.pattern.PathPattern org.springframework.web.util.pattern.PathPatterns} that can then be
  * used for matching purposes at request time.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.util.pattern;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

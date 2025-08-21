@@ -52,10 +52,10 @@ public class ReduceStacksNeededDuringRoutingSendProcessorTest extends ContextTes
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // context.setTracing(true);
                 MyEndpoint my = new MyEndpoint("myendpoint:foo", getContext());
 
@@ -77,12 +77,12 @@ public class ReduceStacksNeededDuringRoutingSendProcessorTest extends ContextTes
         }
 
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             return new MyProducer(this);
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             return null;
         }
 
@@ -104,7 +104,7 @@ public class ReduceStacksNeededDuringRoutingSendProcessorTest extends ContextTes
                 throw new IllegalArgumentException("Forced to dump stacktrace");
             } catch (Exception e) {
                 e.fillInStackTrace();
-                LOG.info("There are {} lines in the stacktrace", e.getStackTrace().length);
+                LOG.info("There are " + e.getStackTrace().length + " lines in the stacktrace");
                 LOG.error("Dump stacktrace to log", e);
             }
             callback.done(true);

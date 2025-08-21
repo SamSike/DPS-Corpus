@@ -17,13 +17,14 @@
 package org.apache.camel.component.azure.cosmosdb;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.azure.cosmos.CosmosAsyncClient;
 import com.azure.cosmos.CosmosClientBuilder;
-import org.apache.camel.test.junit5.TestSupport;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.function.Executable;
 
@@ -35,7 +36,15 @@ public final class CosmosDbTestUtils {
     }
 
     public static Properties loadAzurePropertiesFile() throws IOException {
-        return TestSupport.loadExternalProperties(CosmosDbTestUtils.class, "azure_key.properties");
+        final Properties properties = new Properties();
+        final String fileName = "azure_key.properties";
+
+        final InputStream inputStream
+                = Objects.requireNonNull(CosmosDbTestUtils.class.getClassLoader().getResourceAsStream(fileName));
+
+        properties.load(inputStream);
+
+        return properties;
     }
 
     public static Properties loadAzureAccessFromJvmEnv() throws Exception {

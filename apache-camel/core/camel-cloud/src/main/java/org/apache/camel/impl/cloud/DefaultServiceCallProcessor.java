@@ -24,6 +24,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.Expression;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.cloud.ServiceCallConstants;
@@ -33,17 +34,12 @@ import org.apache.camel.spi.Language;
 import org.apache.camel.spi.ProcessorFactory;
 import org.apache.camel.support.AsyncProcessorConverterHelper;
 import org.apache.camel.support.AsyncProcessorSupport;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.StringHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @deprecated since 4.7
- */
-@Deprecated(since = "4.7")
 public class DefaultServiceCallProcessor extends AsyncProcessorSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultServiceCallProcessor.class);
@@ -135,7 +131,7 @@ public class DefaultServiceCallProcessor extends AsyncProcessorSupport {
     @Override
     protected void doBuild() throws Exception {
         ObjectHelper.notNull(camelContext, "camel context");
-        processorFactory = PluginHelper.getProcessorFactory(camelContext);
+        processorFactory = camelContext.adapt(ExtendedCamelContext.class).getProcessorFactory();
     }
 
     @Override
@@ -196,7 +192,7 @@ public class DefaultServiceCallProcessor extends AsyncProcessorSupport {
         }
     }
 
-    private boolean execute(ServiceDefinition service, Exchange exchange, AsyncCallback callback) {
+    private boolean execute(ServiceDefinition service, Exchange exchange, AsyncCallback callback) throws Exception {
         final Message message = exchange.getIn();
         final String host = service.getHost();
         final int port = service.getPort();

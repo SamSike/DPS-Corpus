@@ -34,25 +34,27 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
-import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class AggregationStrategyWithFilenameHeaderTest extends CamelTestSupport {
+public class AggregationStrategyWithFilenameHeaderTest extends CamelTestSupport {
 
     private static final List<String> FILE_NAMES = Arrays.asList("foo", "bar");
 
     private TarAggregationStrategy tar = new TarAggregationStrategy(false, true);
 
+    @Override
     @BeforeEach
-    public void cleanOutputDirectories() {
+    public void setUp() throws Exception {
         tar.setParentDir("target/temp");
         deleteDirectory("target/temp");
         deleteDirectory("target/out");
+        super.setUp();
     }
 
     @Test
-    void testSplitter() throws Exception {
+    public void testSplitter() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:aggregateToTarEntry");
         mock.expectedMessageCount(1);
 
@@ -61,20 +63,20 @@ class AggregationStrategyWithFilenameHeaderTest extends CamelTestSupport {
         template.sendBodyAndHeader("bar", Exchange.FILE_NAME, FILE_NAMES.get(1));
         MockEndpoint.assertIsSatisfied(context);
 
-        await("Should be a file in target/out directory").until(() -> {
-            File[] files = new File("target/out").listFiles();
-            return files != null && files.length > 0;
-        });
+        Thread.sleep(500);
 
         File[] files = new File("target/out").listFiles();
+        assertNotNull(files);
+        assertTrue(files.length > 0, "Should be a file in target/out directory");
+
         File resultFile = files[0];
 
         final TarArchiveInputStream tis
-                = new ArchiveStreamFactory().createArchiveInputStream(ArchiveStreamFactory.TAR,
+                = (TarArchiveInputStream) new ArchiveStreamFactory().createArchiveInputStream(ArchiveStreamFactory.TAR,
                         new BufferedInputStream(new FileInputStream(resultFile)));
         try {
             int fileCount = 0;
-            for (TarArchiveEntry entry = tis.getNextEntry(); entry != null; entry = tis.getNextEntry()) {
+            for (TarArchiveEntry entry = tis.getNextTarEntry(); entry != null; entry = tis.getNextTarEntry()) {
                 fileCount++;
                 assertTrue(FILE_NAMES.contains(entry.getName()), "Tar entry file name should be on of: " + FILE_NAMES);
             }

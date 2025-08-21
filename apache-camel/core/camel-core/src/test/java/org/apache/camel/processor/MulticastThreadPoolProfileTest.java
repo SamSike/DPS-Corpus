@@ -25,10 +25,10 @@ import org.apache.camel.spi.ThreadPoolProfile;
 public class MulticastThreadPoolProfileTest extends MulticastParallelTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // register thread pool profile
                 ThreadPoolProfile profile
                         = new ThreadPoolProfileBuilder("myProfile").poolSize(5).maxPoolSize(10).maxQueueSize(20).build();

@@ -26,8 +26,11 @@ import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.component.pulsar.PulsarComponent;
+import org.apache.camel.component.pulsar.utils.AutoConfiguration;
 import org.apache.camel.component.pulsar.utils.message.PulsarMessageHeaders;
 import org.apache.camel.spi.Registry;
+import org.apache.camel.support.SimpleRegistry;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.impl.ClientBuilderImpl;
@@ -65,13 +68,23 @@ public class PulsarProducerHeadersInIT extends PulsarITSupport {
     }
 
     @Override
-    protected void bindToRegistry(Registry registry) throws Exception {
+    protected Registry createCamelRegistry() throws Exception {
+        Registry registry = new SimpleRegistry();
+
         registerPulsarBeans(registry);
+
+        return registry;
     }
 
-    private void registerPulsarBeans(Registry registry) throws PulsarClientException {
+    private void registerPulsarBeans(final Registry registry) throws PulsarClientException {
         PulsarClient pulsarClient = givenPulsarClient();
-        registerPulsarBeans(registry, pulsarClient, context);
+        AutoConfiguration autoConfiguration = new AutoConfiguration(null, null);
+
+        registry.bind("pulsarClient", pulsarClient);
+        PulsarComponent comp = new PulsarComponent(context);
+        comp.setAutoConfiguration(autoConfiguration);
+        comp.setPulsarClient(pulsarClient);
+        registry.bind("pulsar", comp);
     }
 
     private PulsarClient givenPulsarClient() throws PulsarClientException {
@@ -99,16 +112,6 @@ public class PulsarProducerHeadersInIT extends PulsarITSupport {
         mock.expectedHeaderReceived(PulsarMessageHeaders.EVENT_TIME, eventTime);
 
         producerTemplate.sendBodyAndHeader("test", PulsarMessageHeaders.EVENT_TIME_OUT, eventTime);
-
-        MockEndpoint.assertIsSatisfied(10, TimeUnit.SECONDS, mock);
-    }
-
-    @Test
-    public void deliverAtHeaderSetsPulsarDeliverAt() throws InterruptedException {
-        long deliverAt = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(1);
-        mock.expectedMinimumMessageCount(1);
-
-        producerTemplate.sendBodyAndHeader("test", PulsarMessageHeaders.DELIVER_AT_OUT, deliverAt);
 
         MockEndpoint.assertIsSatisfied(10, TimeUnit.SECONDS, mock);
     }

@@ -29,7 +29,7 @@ import org.apache.camel.spi.Metadata;
 /**
  * Encode and decode SWIFT MT messages.
  */
-@Metadata(firstVersion = "3.20.0", label = "dataformat,transformation,finance", title = "SWIFT MT")
+@Metadata(firstVersion = "3.20.0", label = "dataformat,transformation,swift", title = "SWIFT MT")
 @XmlRootElement(name = "swiftMt")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class SwiftMtDataFormat extends DataFormatDefinition {
@@ -42,11 +42,6 @@ public class SwiftMtDataFormat extends DataFormatDefinition {
         super("swiftMt");
     }
 
-    protected SwiftMtDataFormat(SwiftMtDataFormat source) {
-        super(source);
-        this.writeInJson = source.writeInJson;
-    }
-
     public SwiftMtDataFormat(String writeInJson) {
         this();
         this.writeInJson = writeInJson;
@@ -55,11 +50,6 @@ public class SwiftMtDataFormat extends DataFormatDefinition {
     private SwiftMtDataFormat(Builder builder) {
         this();
         this.writeInJson = builder.writeInJson;
-    }
-
-    @Override
-    public SwiftMtDataFormat copyDefinition() {
-        return new SwiftMtDataFormat(this);
     }
 
     public String getWriteInJson() {

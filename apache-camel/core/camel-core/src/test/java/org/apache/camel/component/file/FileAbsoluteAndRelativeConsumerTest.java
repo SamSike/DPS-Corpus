@@ -17,7 +17,6 @@
 package org.apache.camel.component.file;
 
 import java.io.File;
-import java.util.UUID;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
@@ -26,17 +25,16 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
 
 public class FileAbsoluteAndRelativeConsumerTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello." + UUID.randomUUID() + ".txt";
 
     @Test
     public void testRelative() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:relative");
         mock.expectedMessageCount(1);
 
-        mock.message(0).header(Exchange.FILE_NAME).isEqualTo("test" + File.separator + TEST_FILE_NAME);
-        mock.message(0).header(Exchange.FILE_NAME_ONLY).isEqualTo(TEST_FILE_NAME);
+        mock.message(0).header(Exchange.FILE_NAME).isEqualTo("test" + File.separator + "hello.txt");
+        mock.message(0).header(Exchange.FILE_NAME_ONLY).isEqualTo("hello.txt");
 
-        template.sendBodyAndHeader(fileUri("filerelative"), "Hello World", Exchange.FILE_NAME, "test/" + TEST_FILE_NAME);
+        template.sendBodyAndHeader(fileUri("filerelative"), "Hello World", Exchange.FILE_NAME, "test/hello.txt");
 
         assertMockEndpointsSatisfied();
     }
@@ -46,19 +44,19 @@ public class FileAbsoluteAndRelativeConsumerTest extends ContextTestSupport {
         MockEndpoint mock = getMockEndpoint("mock:absolute");
         mock.expectedMessageCount(1);
 
-        mock.message(0).header(Exchange.FILE_NAME).isEqualTo("test" + File.separator + TEST_FILE_NAME);
-        mock.message(0).header(Exchange.FILE_NAME_ONLY).isEqualTo(TEST_FILE_NAME);
+        mock.message(0).header(Exchange.FILE_NAME).isEqualTo("test" + File.separator + "hello.txt");
+        mock.message(0).header(Exchange.FILE_NAME_ONLY).isEqualTo("hello.txt");
 
-        template.sendBodyAndHeader(fileUri("fileabsolute"), "Hello World", Exchange.FILE_NAME, "test/" + TEST_FILE_NAME);
+        template.sendBodyAndHeader(fileUri("fileabsolute"), "Hello World", Exchange.FILE_NAME, "test/hello.txt");
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("filerelative?initialDelay=0&delay=10&recursive=true")).convertBodyTo(String.class)
                         .to("mock:relative");
 

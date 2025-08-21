@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,24 +41,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.reactive.BindingContext;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.ServerWebInputException;
-import org.springframework.web.server.UnsupportedMediaTypeStatusException;
 import org.springframework.web.testfixture.http.server.reactive.MockServerHttpRequest;
 import org.springframework.web.testfixture.method.ResolvableMethod;
 import org.springframework.web.testfixture.server.MockServerWebExchange;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.web.testfixture.method.MvcAnnotationPredicates.requestBody;
 
 /**
- * Tests for {@link RequestBodyMethodArgumentResolver}. When adding a test also
+ * Unit tests for {@link RequestBodyMethodArgumentResolver}. When adding a test also
  * consider whether the logic under test is in a parent class, then see:
  * {@link MessageReaderArgumentResolverTests}.
  *
  * @author Rossen Stoyanchev
  */
-class RequestBodyMethodArgumentResolverTests {
+public class RequestBodyMethodArgumentResolverTests {
 
 	private RequestBodyMethodArgumentResolver resolver;
 
@@ -66,7 +64,7 @@ class RequestBodyMethodArgumentResolverTests {
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		List<HttpMessageReader<?>> readers = new ArrayList<>();
 		readers.add(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes()));
 		this.resolver = new RequestBodyMethodArgumentResolver(readers, ReactiveAdapterRegistry.getSharedInstance());
@@ -74,7 +72,7 @@ class RequestBodyMethodArgumentResolverTests {
 
 
 	@Test
-	void supports() {
+	public void supports() {
 		MethodParameter param;
 
 		param = this.testMethod.annot(requestBody()).arg(Mono.class, String.class);
@@ -85,7 +83,7 @@ class RequestBodyMethodArgumentResolverTests {
 	}
 
 	@Test
-	void stringBody() {
+	public void stringBody() {
 		String body = "line1";
 		MethodParameter param = this.testMethod.annot(requestBody()).arg(String.class);
 		String value = resolveValue(param, body);
@@ -94,14 +92,14 @@ class RequestBodyMethodArgumentResolverTests {
 	}
 
 	@Test
-	void emptyBodyWithString() {
+	public void emptyBodyWithString() {
 		MethodParameter param = this.testMethod.annot(requestBody()).arg(String.class);
 		assertThatExceptionOfType(ServerWebInputException.class).isThrownBy(() ->
 				resolveValueWithEmptyBody(param));
 	}
 
 	@Test
-	void emptyBodyWithStringNotRequired() {
+	public void emptyBodyWithStringNotRequired() {
 		MethodParameter param = this.testMethod.annot(requestBody().notRequired()).arg(String.class);
 		String body = resolveValueWithEmptyBody(param);
 
@@ -149,7 +147,7 @@ class RequestBodyMethodArgumentResolverTests {
 	}
 
 	@Test
-	void emptyBodyWithSingle() {
+	public void emptyBodyWithSingle() {
 		MethodParameter param = this.testMethod.annot(requestBody()).arg(Single.class, String.class);
 		Single<String> single = resolveValueWithEmptyBody(param);
 		StepVerifier.create(single.toFlowable())
@@ -166,7 +164,7 @@ class RequestBodyMethodArgumentResolverTests {
 	}
 
 	@Test
-	void emptyBodyWithMaybe() {
+	public void emptyBodyWithMaybe() {
 		MethodParameter param = this.testMethod.annot(requestBody()).arg(Maybe.class, String.class);
 		Maybe<String> maybe = resolveValueWithEmptyBody(param);
 		StepVerifier.create(maybe.toFlowable())
@@ -183,7 +181,7 @@ class RequestBodyMethodArgumentResolverTests {
 	}
 
 	@Test
-	void emptyBodyWithObservable() {
+	public void emptyBodyWithObservable() {
 		MethodParameter param = this.testMethod.annot(requestBody()).arg(Observable.class, String.class);
 		Observable<String> observable = resolveValueWithEmptyBody(param);
 		StepVerifier.create(observable.toFlowable(BackpressureStrategy.BUFFER))
@@ -200,7 +198,7 @@ class RequestBodyMethodArgumentResolverTests {
 	}
 
 	@Test
-	void emptyBodyWithCompletableFuture() {
+	public void emptyBodyWithCompletableFuture() {
 		MethodParameter param = this.testMethod.annot(requestBody()).arg(CompletableFuture.class, String.class);
 		CompletableFuture<String> future = resolveValueWithEmptyBody(param);
 		future.whenComplete((text, ex) -> {
@@ -216,17 +214,6 @@ class RequestBodyMethodArgumentResolverTests {
 		});
 	}
 
-	@Test // gh-29565
-	public void invalidContentType() {
-		MethodParameter parameter = this.testMethod.annot(requestBody()).arg(String.class);
-
-		ServerWebExchange exchange = MockServerWebExchange.from(
-				MockServerHttpRequest.post("/path").header("Content-Type", "invalid").build());
-
-		assertThatThrownBy(() -> this.resolver.readBody(parameter, true, new BindingContext(), exchange))
-				.isInstanceOf(UnsupportedMediaTypeStatusException.class);
-	}
-
 	@SuppressWarnings("unchecked")
 	private <T> T resolveValue(MethodParameter param, String body) {
 		ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.post("/path").body(body));
@@ -234,8 +221,7 @@ class RequestBodyMethodArgumentResolverTests {
 		Object value = result.block(Duration.ofSeconds(5));
 
 		assertThat(value).isNotNull();
-		assertThat(param.getParameterType().isAssignableFrom(value.getClass()))
-				.as("Unexpected return value type: " + value).isTrue();
+		assertThat(param.getParameterType().isAssignableFrom(value.getClass())).as("Unexpected return value type: " + value).isTrue();
 
 		//no inspection unchecked
 		return (T) value;
@@ -248,8 +234,7 @@ class RequestBodyMethodArgumentResolverTests {
 		Object value = result.block(Duration.ofSeconds(5));
 
 		if (value != null) {
-			assertThat(param.getParameterType().isAssignableFrom(value.getClass()))
-					.as("Unexpected parameter type: " + value).isTrue();
+			assertThat(param.getParameterType().isAssignableFrom(value.getClass())).as("Unexpected parameter type: " + value).isTrue();
 		}
 
 		//no inspection unchecked

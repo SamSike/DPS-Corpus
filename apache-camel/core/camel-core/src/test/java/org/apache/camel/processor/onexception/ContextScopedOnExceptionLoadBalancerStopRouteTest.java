@@ -77,10 +77,8 @@ public class ContextScopedOnExceptionLoadBalancerStopRouteTest extends ContextTe
         template.sendBody("direct:start", "Kaboom");
         template.sendBody("direct:start", "World");
 
-        // give time for route to stop.
-        // this was originally 1 second, but the route does not always
-        // shut down that fast, so bumped it up for some cushion.
-        await().atMost(3, TimeUnit.SECONDS).untilAsserted(
+        // give time for route to stop
+        await().atMost(1, TimeUnit.SECONDS).untilAsserted(
                 () -> assertEquals(ServiceStatus.Stopped, context.getRouteController().getRouteStatus("errorRoute")));
 
         template.sendBody("direct:start", "Kaboom");
@@ -96,10 +94,10 @@ public class ContextScopedOnExceptionLoadBalancerStopRouteTest extends ContextTe
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).handled(true).loadBalance().roundRobin().to("seda:error", "seda:error2").end()
                         .to("mock:exception");
 

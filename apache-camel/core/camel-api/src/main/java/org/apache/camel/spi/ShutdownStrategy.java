@@ -38,7 +38,7 @@ import org.apache.camel.StaticService;
  * which we want to run to completion as well, otherwise they will get lost.
  * <p/>
  * Camel provides a default strategy which supports all that that can be used as inspiration for your own strategy.
- *
+ * 
  * @see org.apache.camel.spi.ShutdownAware
  * @see RouteController
  */
@@ -229,18 +229,8 @@ public interface ShutdownStrategy extends StaticService {
 
     /**
      * Whether a timeout has occurred during a shutdown.
-     *
-     * @deprecated use {@link #isTimeoutOccurred()}
      */
-    @Deprecated(since = "4.8.0")
     boolean hasTimeoutOccurred();
-
-    /**
-     * Whether a timeout has occurred during a shutdown.
-     */
-    default boolean isTimeoutOccurred() {
-        return hasTimeoutOccurred();
-    }
 
     /**
      * Gets the logging level used for logging shutdown activity (such as starting and stopping routes). The default

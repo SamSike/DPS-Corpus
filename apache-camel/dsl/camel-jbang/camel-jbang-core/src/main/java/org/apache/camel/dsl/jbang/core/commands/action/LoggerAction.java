@@ -16,8 +16,7 @@
  */
 package org.apache.camel.dsl.jbang.core.commands.action;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,26 +27,29 @@ import com.github.freva.asciitable.Column;
 import com.github.freva.asciitable.HorizontalAlign;
 import com.github.freva.asciitable.OverflowBehaviour;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
-import org.apache.camel.dsl.jbang.core.common.LoggingLevelCompletionCandidates;
-import org.apache.camel.dsl.jbang.core.common.PidNameAgeCompletionCandidates;
 import org.apache.camel.dsl.jbang.core.common.ProcessHelper;
+import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.json.JsonObject;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "logger",
-                     description = "List or change logging levels", sortOptions = false, showDefaultValues = true)
+                     description = "List or change logging levels")
 public class LoggerAction extends ActionBaseCommand {
 
-    @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
-    String name = "*";
-
-    @CommandLine.Option(names = { "--sort" }, completionCandidates = PidNameAgeCompletionCandidates.class,
+    @CommandLine.Option(names = { "--sort" },
                         description = "Sort by pid, name or age", defaultValue = "pid")
     String sort;
 
-    @CommandLine.Option(names = { "--logging-level" }, completionCandidates = LoggingLevelCompletionCandidates.class,
-                        description = "To change logging level (${COMPLETION-CANDIDATES})")
+    @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
+    String name;
+
+    @CommandLine.Option(names = { "--all" },
+                        description = "To select all running Camel integrations")
+    boolean all;
+
+    @CommandLine.Option(names = { "--level", "--logging-level" },
+                        description = "To change logging level")
     String loggingLevel;
 
     @CommandLine.Option(names = { "--logger" },
@@ -59,11 +61,13 @@ public class LoggerAction extends ActionBaseCommand {
     }
 
     @Override
-    public Integer doCall() throws Exception {
+    public Integer call() throws Exception {
         if (loggingLevel == null) {
             return callList();
         }
-        if (name == null) {
+        if (!all && name == null) {
+            return 0;
+        } else if (all) {
             name = "*";
         }
         return callChangeLoggingLevel();
@@ -75,11 +79,11 @@ public class LoggerAction extends ActionBaseCommand {
         for (long pid : pids) {
             JsonObject root = new JsonObject();
             root.put("action", "logger");
-            Path f = getActionFile(Long.toString(pid));
+            File f = getActionFile("" + pid);
             root.put("command", "set-logging-level");
             root.put("logger-name", logger);
             root.put("logging-level", loggingLevel);
-            Files.writeString(f, root.toJson());
+            IOHelper.writeText(root.toJson(), f);
         }
 
         return 0;
@@ -95,7 +99,7 @@ public class LoggerAction extends ActionBaseCommand {
                     JsonObject root = loadStatus(ph.pid());
                     if (root != null) {
                         Row row = new Row();
-                        row.pid = Long.toString(ph.pid());
+                        row.pid = "" + ph.pid();
                         row.uptime = extractSince(ph);
                         row.ago = TimeUtils.printSince(row.uptime);
                         JsonObject context = (JsonObject) root.get("context");
@@ -124,7 +128,7 @@ public class LoggerAction extends ActionBaseCommand {
         rows.sort(this::sortRow);
 
         if (!rows.isEmpty()) {
-            printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
+            System.out.println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
                     new Column().header("PID").headerAlign(HorizontalAlign.CENTER).with(r -> r.pid),
                     new Column().header("NAME").dataAlign(HorizontalAlign.LEFT)
                             .maxWidth(40, OverflowBehaviour.ELLIPSIS_RIGHT)

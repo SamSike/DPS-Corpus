@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,20 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.impl.QOM.TableScope;
-import org.jooq.impl.QOM.WithOrWithoutData;
-import org.jooq.impl.QOM.TableCommitAction;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -86,7 +80,7 @@ implements
 {
 
     final Table<?>                                  table;
-    final TableScope                                tableScope;
+    final boolean                                   temporary;
     final boolean                                   ifNotExists;
           QueryPartListView<? extends TableElement> tableElements;
           Select<?>                                 select;
@@ -98,13 +92,13 @@ implements
     CreateTableImpl(
         Configuration configuration,
         Table<?> table,
-        TableScope tableScope,
+        boolean temporary,
         boolean ifNotExists
     ) {
         this(
             configuration,
             table,
-            tableScope,
+            temporary,
             ifNotExists,
             null,
             null,
@@ -118,20 +112,7 @@ implements
     CreateTableImpl(
         Configuration configuration,
         Table<?> table,
-        boolean ifNotExists
-    ) {
-        this(
-            configuration,
-            table,
-            null,
-            ifNotExists
-        );
-    }
-
-    CreateTableImpl(
-        Configuration configuration,
-        Table<?> table,
-        TableScope tableScope,
+        boolean temporary,
         boolean ifNotExists,
         Collection<? extends TableElement> tableElements,
         Select<?> select,
@@ -143,7 +124,7 @@ implements
         super(configuration);
 
         this.table = table;
-        this.tableScope = tableScope;
+        this.temporary = temporary;
         this.ifNotExists = ifNotExists;
         this.tableElements = new QueryPartList<>(tableElements);
         this.select = select;
@@ -361,40 +342,40 @@ implements
 
 
 
-    static final Set<SQLDialect> NO_SUPPORT_IF_NOT_EXISTS           = SQLDialect.supportedUntil(DERBY, FIREBIRD);
-    static final Set<SQLDialect> NO_SUPPORT_WITH_DATA               = SQLDialect.supportedBy(DUCKDB, H2, MARIADB, MYSQL, SQLITE);
-    static final Set<SQLDialect> NO_SUPPORT_CTAS_COLUMN_NAMES       = SQLDialect.supportedBy(DUCKDB, H2);
-    static final Set<SQLDialect> EMULATE_INDEXES_IN_BLOCK           = SQLDialect.supportedBy(FIREBIRD, POSTGRES, YUGABYTEDB);
-    static final Set<SQLDialect> EMULATE_SOME_ENUM_TYPES_AS_CHECK   = SQLDialect.supportedBy(CUBRID, DERBY, DUCKDB, FIREBIRD, HSQLDB, POSTGRES, SQLITE, YUGABYTEDB);
-    static final Set<SQLDialect> EMULATE_STORED_ENUM_TYPES_AS_CHECK = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, HSQLDB, SQLITE);
-    static final Set<SQLDialect> REQUIRES_WITH_DATA                 = SQLDialect.supportedBy(HSQLDB);
-    static final Set<SQLDialect> WRAP_SELECT_IN_PARENS              = SQLDialect.supportedBy(HSQLDB);
-    static final Set<SQLDialect> NO_SUPPORT_LOCAL_TEMPORARY         = SQLDialect.supportedBy(FIREBIRD, POSTGRES);
-    static final Set<SQLDialect> NO_SUPPORT_GLOBAL_TEMPORARY        = SQLDialect.supportedBy(CLICKHOUSE, DUCKDB, MARIADB, MYSQL, YUGABYTEDB);
-    static final Set<SQLDialect> EMULATE_TABLE_COMMENT_IN_BLOCK     = SQLDialect.supportedBy(FIREBIRD, POSTGRES, YUGABYTEDB);
-    static final Set<SQLDialect> EMULATE_COLUMN_COMMENT_IN_BLOCK    = SQLDialect.supportedBy(FIREBIRD, POSTGRES, YUGABYTEDB);
-    static final Set<SQLDialect> REQUIRE_EXECUTE_IMMEDIATE          = SQLDialect.supportedBy(FIREBIRD);
-    static final Set<SQLDialect> NO_SUPPORT_NULLABLE_PRIMARY_KEY    = SQLDialect.supportedBy(CLICKHOUSE, MARIADB, MYSQL);
-    static final Set<SQLDialect> SUPPORT_NULLABLE_PRIMARY_KEY       = SQLDialect.supportedBy(SQLITE);
-    static final Set<SQLDialect> REQUIRE_NON_PK_COLUMNS             = SQLDialect.supportedBy(IGNITE);
-    static final Set<SQLDialect> CREATE_SEQUENCE_FOR_IDENTITY       = SQLDialect.supportedBy(DUCKDB);
+    private static final Set<SQLDialect> NO_SUPPORT_IF_NOT_EXISTS           = SQLDialect.supportedBy(DERBY, FIREBIRD);
+    private static final Set<SQLDialect> NO_SUPPORT_WITH_DATA               = SQLDialect.supportedBy(H2, MARIADB, MYSQL, SQLITE);
+    private static final Set<SQLDialect> NO_SUPPORT_CTAS_COLUMN_NAMES       = SQLDialect.supportedBy(H2);
+    private static final Set<SQLDialect> EMULATE_INDEXES_IN_BLOCK           = SQLDialect.supportedBy(FIREBIRD, POSTGRES, YUGABYTEDB);
+    private static final Set<SQLDialect> EMULATE_SOME_ENUM_TYPES_AS_CHECK   = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, HSQLDB, POSTGRES, SQLITE, YUGABYTEDB);
+    private static final Set<SQLDialect> EMULATE_STORED_ENUM_TYPES_AS_CHECK = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, HSQLDB, SQLITE);
+    private static final Set<SQLDialect> REQUIRES_WITH_DATA                 = SQLDialect.supportedBy(HSQLDB);
+    private static final Set<SQLDialect> WRAP_SELECT_IN_PARENS              = SQLDialect.supportedBy(HSQLDB);
+    private static final Set<SQLDialect> SUPPORT_TEMPORARY                  = SQLDialect.supportedBy(MARIADB, MYSQL, POSTGRES, YUGABYTEDB);
+    private static final Set<SQLDialect> EMULATE_COMMENT_IN_BLOCK           = SQLDialect.supportedBy(FIREBIRD, POSTGRES, YUGABYTEDB);
+    private static final Set<SQLDialect> REQUIRE_EXECUTE_IMMEDIATE          = SQLDialect.supportedBy(FIREBIRD);
+    private static final Set<SQLDialect> NO_SUPPORT_NULLABLE_PRIMARY_KEY    = SQLDialect.supportedBy(MARIADB, MYSQL);
+    private static final Set<SQLDialect> REQUIRE_NON_PK_COLUMNS             = SQLDialect.supportedBy(IGNITE);
 
 
 
 
 
-
-
-    final QOM.UnmodifiableList<? extends Field<?>> $columns() {
-        return QOM.unmodifiable(map(filter(tableElements, e -> e instanceof Field<?>), e -> (Field<?>) e));
+    final UnmodifiableList<? extends Field<?>> $columns() {
+        return QOM.unmodifiable(
+            tableElements.stream().filter(e -> e instanceof Field<?>).map(e -> (Field<?>) e).collect(Collectors.toList())
+        );
     }
 
-    final QOM.UnmodifiableList<? extends Constraint> $constraints() {
-        return QOM.unmodifiable(map(filter(tableElements, e -> e instanceof Constraint), e -> (Constraint) e));
+    final UnmodifiableList<? extends Constraint> $constraints() {
+        return QOM.unmodifiable(
+            tableElements.stream().filter(e -> e instanceof Constraint).map(e -> (Constraint) e).collect(Collectors.toList())
+        );
     }
 
-    final QOM.UnmodifiableList<? extends Index> $indexes() {
-        return QOM.unmodifiable(map(filter(tableElements, e -> e instanceof Index), e -> (Index) e));
+    final UnmodifiableList<? extends Index> $indexes() {
+        return QOM.unmodifiable(
+            tableElements.stream().filter(e -> e instanceof Index).map(e -> (Index) e).collect(Collectors.toList())
+        );
     }
 
     private final boolean supportsIfNotExists(Context<?> ctx) {
@@ -409,33 +390,30 @@ implements
             accept0(ctx);
     }
 
+    private static final void executeImmediateIf(boolean wrap, Context<?> ctx, Consumer<? super Context<?>> runnable) {
+        if (wrap) {
+            executeImmediate(ctx, runnable);
+        }
+        else {
+            runnable.accept(ctx);
+            ctx.sql(';');
+        }
+    }
+
     private final void accept0(Context<?> ctx) {
-        boolean btc = comment != null && EMULATE_TABLE_COMMENT_IN_BLOCK.contains(ctx.dialect());
-        boolean bcc = EMULATE_COLUMN_COMMENT_IN_BLOCK.contains(ctx.dialect()) && anyMatch($columns(), c -> !c.getComment().isEmpty());
+        boolean bc = comment != null && EMULATE_COMMENT_IN_BLOCK.contains(ctx.dialect());
         boolean bi = !$indexes().isEmpty() && EMULATE_INDEXES_IN_BLOCK.contains(ctx.dialect());
 
-        if (btc || bcc || bi) {
+        if (bc || bi) {
             begin(ctx, c1 -> {
                 executeImmediateIf(REQUIRE_EXECUTE_IMMEDIATE.contains(c1.dialect()), c1, c2 -> accept1(c2));
 
-                if (btc) {
+                if (bc) {
                     c1.formatSeparator();
 
                     executeImmediateIf(REQUIRE_EXECUTE_IMMEDIATE.contains(ctx.dialect()), c1,
                         c2 -> c2.visit(commentOnTable(table).is(comment))
                     );
-                }
-
-                if (bcc) {
-                    c1.formatSeparator();
-
-                    for (Field<?> c : $columns()) {
-                        if (!c.getComment().isEmpty()) {
-                            executeImmediateIf(REQUIRE_EXECUTE_IMMEDIATE.contains(ctx.dialect()), c1,
-                                c2 -> c2.visit(commentOnColumn(table.getQualifiedName().append(c.getUnqualifiedName())).is(c.getComment()))
-                            );
-                        }
-                    }
                 }
 
                 if (bi) {
@@ -459,11 +437,6 @@ implements
     private final void accept1(Context<?> ctx) {
         ctx.start(Clause.CREATE_TABLE);
 
-        if (CREATE_SEQUENCE_FOR_IDENTITY.contains(ctx.family())
-            && anyMatch(tableElements, e -> e instanceof Field && ((Field<?>) e).getDataType().identity())
-        )
-            prependSQL(ctx, createSequenceIfNotExists(identitySequence(table)));
-
         if (select != null) {
 
 
@@ -478,24 +451,9 @@ implements
         else {
             toSQLCreateTable(ctx);
             toSQLOnCommit(ctx);
-            toSQLTableClauses(ctx);
         }
 
-        ctx.end(Clause.CREATE_TABLE);
-    }
-
-    private final void toSQLTableClauses(Context<?> ctx) {
-        // [#7539] ClickHouse has a mandatory ENGINE clause. We default to the two most popular engines for now.
-        if (ctx.family() == CLICKHOUSE) {
-            ctx.formatSeparator().visit(K_ENGINE).sql(' ');
-
-            if (anyMatch(tableElements, e -> e instanceof QOM.PrimaryKey))
-                ctx.visit(unquotedName("MergeTree")).sql("()");
-            else
-                ctx.visit(unquotedName("Log")).sql("()");
-        }
-
-        if (comment != null && !EMULATE_TABLE_COMMENT_IN_BLOCK.contains(ctx.dialect())) {
+        if (comment != null && !EMULATE_COMMENT_IN_BLOCK.contains(ctx.dialect())) {
             ctx.formatSeparator()
                .visit(K_COMMENT).sql(' ');
 
@@ -514,23 +472,13 @@ implements
             ctx.formatSeparator()
                .visit(storage);
 
-
-
-
-
-
-
-
-
-
-
-
+        ctx.end(Clause.CREATE_TABLE);
     }
 
-    private final void toSQLCreateTable(Context<?> ctx) {
+    private void toSQLCreateTable(Context<?> ctx) {
         toSQLCreateTableName(ctx);
 
-        QOM.UnmodifiableList<? extends Field<?>> columns = $columns();
+        UnmodifiableList<? extends Field<?>> columns = $columns();
         if (!columns.isEmpty()
                 && (select == null || !NO_SUPPORT_CTAS_COLUMN_NAMES.contains(ctx.dialect()))) {
             ctx.sqlIndentStart(" (")
@@ -538,38 +486,30 @@ implements
 
             Field<?> identity = null;
             boolean qualify = ctx.qualify();
-            boolean first = true;
+            ctx.qualify(false);
 
-            columnLoop:
             for (int i = 0; i < columns.size(); i++) {
                 Field<?> field = columns.get(i);
                 DataType<?> type = columnType(ctx, field);
 
-                if (type.computedOnClientVirtual(ctx.configuration()))
-                    continue columnLoop;
-
                 if (identity == null && type.identity())
                     identity = field;
 
-                if (!first)
-                    ctx.sql(',').formatSeparator();
-
-                ctx.qualify(false);
-                ctx.visit(Tools.uncollate(field));
-                ctx.qualify(qualify);
+                ctx.visit(field);
 
                 if (select == null) {
                     ctx.sql(' ');
-                    Tools.toSQLDDLTypeDeclarationForAddition(ctx, table, type);
-                    acceptColumnComment(ctx, field);
+                    Tools.toSQLDDLTypeDeclarationForAddition(ctx, type);
                 }
 
-                first = false;
+                if (i < columns.size() - 1)
+                    ctx.sql(',').formatSeparator();
             }
 
             // [#10551] Ignite requires at least one non-PK column.
             toSQLDummyColumns(ctx);
 
+            ctx.qualify(qualify);
             ctx.end(Clause.CREATE_TABLE_COLUMNS)
                .start(Clause.CREATE_TABLE_CONSTRAINTS);
 
@@ -577,7 +517,7 @@ implements
 
                 // [#6841] SQLite has a weird requirement of the PRIMARY KEY keyword being on the column directly,
                 //         when there is an identity. Thus, we must not repeat the primary key specification here.
-                if (((AbstractConstraint) constraint).supported(ctx, table) && (ctx.family() != SQLITE || !matchingPrimaryKey(constraint, identity)))
+                if (((ConstraintImpl) constraint).supported(ctx) && (ctx.family() != SQLITE || !matchingPrimaryKey(constraint, identity)))
                     ctx.sql(',')
                        .formatSeparator()
                        .visit(constraint);
@@ -631,24 +571,19 @@ implements
         }
     }
 
-    static void acceptColumnComment(Context<?> ctx, Field<?> field) {
-        if (!field.getComment().isEmpty() && !EMULATE_COLUMN_COMMENT_IN_BLOCK.contains(ctx.dialect()))
-            ctx.sql(' ').visit(K_COMMENT).sql(' ').visit(inline(field.getComment()));
-    }
-
     private final void toSQLDummyColumns(Context<?> ctx) {
 
         // [#10551] [#11268] TODO: Make this behaviour configurable
         if (REQUIRE_NON_PK_COLUMNS.contains(ctx.dialect())) {
-            List<? extends Field<?>> primaryKeyColumns = primaryKeyColumns();
+            Field<?>[] primaryKeyColumns = primaryKeyColumns();
 
-            if (primaryKeyColumns != null && primaryKeyColumns.size() == $columns().size()) {
+            if (primaryKeyColumns != null && primaryKeyColumns.length == $columns().size()) {
                 ctx.sql(',').formatSeparator();
                 ctx.visit(DSL.field(name("dummy")));
 
                 if (select == null) {
                     ctx.sql(' ');
-                    Tools.toSQLDDLTypeDeclarationForAddition(ctx, table, INTEGER);
+                    Tools.toSQLDDLTypeDeclarationForAddition(ctx, INTEGER);
                 }
             }
         }
@@ -660,16 +595,16 @@ implements
         if (NO_SUPPORT_NULLABLE_PRIMARY_KEY.contains(ctx.dialect())
                 && type.nullability() == Nullability.DEFAULT
                 && isPrimaryKey(field))
-            type = type.notNull();
+            type = type.nullable(false);
 
         return type;
     }
 
-    private final List<? extends Field<?>> primaryKeyColumns() {
+    private final Field<?>[] primaryKeyColumns() {
         return Tools.findAny(
             $constraints(),
-            c -> c instanceof QOM.PrimaryKey,
-            c -> ((QOM.PrimaryKey) c).$fields()
+            c -> c instanceof ConstraintImpl && ((ConstraintImpl) c).$primaryKey() != null,
+            c -> ((ConstraintImpl) c).$primaryKey()
         );
     }
 
@@ -678,8 +613,8 @@ implements
     }
 
     private final boolean matchingPrimaryKey(Constraint constraint, Field<?> identity) {
-        if (constraint instanceof PrimaryKeyConstraintImpl c)
-            return c.matchingPrimaryKey(identity);
+        if (constraint instanceof ConstraintImpl)
+            return ((ConstraintImpl) constraint).matchingPrimaryKey(identity);
 
         return false;
     }
@@ -687,12 +622,6 @@ implements
     private final void acceptCreateTableAsSelect(Context<?> ctx) {
         toSQLCreateTable(ctx);
         toSQLOnCommit(ctx);
-
-
-
-
-
-
         ctx.formatSeparator()
            .visit(K_AS);
 
@@ -729,13 +658,7 @@ implements
         else if (REQUIRES_WITH_DATA.contains(ctx.dialect()))
             ctx.formatSeparator()
                .visit(K_WITH_DATA);
-
-
-
-
-        toSQLTableClauses(ctx);
     }
-
 
 
 
@@ -772,25 +695,16 @@ implements
 
 
     private final void toSQLCreateTableName(Context<?> ctx) {
-        ctx.start(Clause.CREATE_TABLE_NAME);
+        ctx.start(Clause.CREATE_TABLE_NAME)
+           .visit(K_CREATE)
+           .sql(' ');
 
-        switch (ctx.family()) {
+        if (temporary)
+            if (SUPPORT_TEMPORARY.contains(ctx.dialect()))
+                ctx.visit(K_TEMPORARY).sql(' ');
+            else
+                ctx.visit(K_GLOBAL_TEMPORARY).sql(' ');
 
-
-
-
-
-
-
-
-
-
-            default:
-                ctx.visit(K_CREATE).sql(' ');
-                break;
-        }
-
-        toSQLTableScope(ctx, tableScope);
         ctx.visit(K_TABLE)
            .sql(' ');
 
@@ -798,105 +712,12 @@ implements
             ctx.visit(K_IF_NOT_EXISTS)
                .sql(' ');
 
-        ctx.visit(tableName(ctx, tableScope, table))
+        ctx.visit(table)
            .end(Clause.CREATE_TABLE_NAME);
     }
 
-    static final Table<?> tableName(Context<?> ctx, TableScope tableScope, Table<?> table) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        return table;
-    }
-
-    private static final void toSQLTableScope(Context<?> ctx, TableScope tableScope) {
-        if (tableScope == null)
-            return;
-
-        switch (ctx.family()) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            case CLICKHOUSE:
-
-            case DUCKDB:
-            case MARIADB:
-            case MYSQL:
-
-
-            case YUGABYTEDB:
-                ctx.visit(K_TEMPORARY).sql(' ');
-                break;
-
-
-
-            case FIREBIRD:
-            case POSTGRES:
-
-                ctx.visit(K_GLOBAL).sql(' ').visit(K_TEMPORARY).sql(' ');
-                break;
-
-            default:
-                switch (tableScope) {
-                    case GLOBAL_TEMPORARY:
-                        ctx.visit(K_GLOBAL).sql(' ').visit(K_TEMPORARY).sql(' ');
-                        break;
-                    case LOCAL_TEMPORARY:
-                        ctx.visit(K_LOCAL).sql(' ').visit(K_TEMPORARY).sql(' ');
-                        break;
-                    case TEMPORARY:
-                        ctx.visit(K_TEMPORARY).sql(' ');
-                        break;
-                }
-
-                break;
-        }
-    }
-
     private final void toSQLOnCommit(Context<?> ctx) {
-        if (tableScope != null && onCommit != null) {
+        if (temporary && onCommit != null) {
             switch (onCommit) {
                 case DELETE_ROWS:   ctx.formatSeparator().visit(K_ON_COMMIT_DELETE_ROWS);   break;
                 case PRESERVE_ROWS: ctx.formatSeparator().visit(K_ON_COMMIT_PRESERVE_ROWS); break;
@@ -937,8 +758,8 @@ implements
     }
 
     @Override
-    public final TableScope $tableScope() {
-        return tableScope;
+    public final boolean $temporary() {
+        return temporary;
     }
 
     @Override
@@ -947,12 +768,7 @@ implements
     }
 
     @Override
-    public final boolean $temporary() {
-        return $tableScope() != null;
-    }
-
-    @Override
-    public final QOM.UnmodifiableList<? extends TableElement> $tableElements() {
+    public final UnmodifiableList<? extends TableElement> $tableElements() {
         return QOM.unmodifiable(tableElements);
     }
 
@@ -983,55 +799,50 @@ implements
 
     @Override
     public final QOM.CreateTable $table(Table<?> newValue) {
-        return $constructor().apply(newValue, $tableScope(), $ifNotExists(), $tableElements(), $select(), $withData(), $onCommit(), $comment(), $storage());
+        return $constructor().apply(newValue, $temporary(), $ifNotExists(), $tableElements(), $select(), $withData(), $onCommit(), $comment(), $storage());
     }
 
     @Override
-    public final QOM.CreateTable $tableScope(TableScope newValue) {
+    public final QOM.CreateTable $temporary(boolean newValue) {
         return $constructor().apply($table(), newValue, $ifNotExists(), $tableElements(), $select(), $withData(), $onCommit(), $comment(), $storage());
     }
 
     @Override
     public final QOM.CreateTable $ifNotExists(boolean newValue) {
-        return $constructor().apply($table(), $tableScope(), newValue, $tableElements(), $select(), $withData(), $onCommit(), $comment(), $storage());
+        return $constructor().apply($table(), $temporary(), newValue, $tableElements(), $select(), $withData(), $onCommit(), $comment(), $storage());
     }
 
     @Override
     public final QOM.CreateTable $tableElements(Collection<? extends TableElement> newValue) {
-        return $constructor().apply($table(), $tableScope(), $ifNotExists(), newValue, $select(), $withData(), $onCommit(), $comment(), $storage());
+        return $constructor().apply($table(), $temporary(), $ifNotExists(), newValue, $select(), $withData(), $onCommit(), $comment(), $storage());
     }
 
     @Override
     public final QOM.CreateTable $select(Select<?> newValue) {
-        return $constructor().apply($table(), $tableScope(), $ifNotExists(), $tableElements(), newValue, $withData(), $onCommit(), $comment(), $storage());
+        return $constructor().apply($table(), $temporary(), $ifNotExists(), $tableElements(), newValue, $withData(), $onCommit(), $comment(), $storage());
     }
 
     @Override
     public final QOM.CreateTable $withData(WithOrWithoutData newValue) {
-        return $constructor().apply($table(), $tableScope(), $ifNotExists(), $tableElements(), $select(), newValue, $onCommit(), $comment(), $storage());
+        return $constructor().apply($table(), $temporary(), $ifNotExists(), $tableElements(), $select(), newValue, $onCommit(), $comment(), $storage());
     }
 
     @Override
     public final QOM.CreateTable $onCommit(TableCommitAction newValue) {
-        return $constructor().apply($table(), $tableScope(), $ifNotExists(), $tableElements(), $select(), $withData(), newValue, $comment(), $storage());
+        return $constructor().apply($table(), $temporary(), $ifNotExists(), $tableElements(), $select(), $withData(), newValue, $comment(), $storage());
     }
 
     @Override
     public final QOM.CreateTable $comment(Comment newValue) {
-        return $constructor().apply($table(), $tableScope(), $ifNotExists(), $tableElements(), $select(), $withData(), $onCommit(), newValue, $storage());
+        return $constructor().apply($table(), $temporary(), $ifNotExists(), $tableElements(), $select(), $withData(), $onCommit(), newValue, $storage());
     }
 
     @Override
     public final QOM.CreateTable $storage(SQL newValue) {
-        return $constructor().apply($table(), $tableScope(), $ifNotExists(), $tableElements(), $select(), $withData(), $onCommit(), $comment(), newValue);
+        return $constructor().apply($table(), $temporary(), $ifNotExists(), $tableElements(), $select(), $withData(), $onCommit(), $comment(), newValue);
     }
 
-    @Override
-    public final QOM.CreateTable $temporary(boolean newValue) {
-        return $tableScope(newValue ? TableScope.TEMPORARY : null);
-    }
-
-    public final Function9<? super Table<?>, ? super TableScope, ? super Boolean, ? super Collection<? extends TableElement>, ? super Select<?>, ? super WithOrWithoutData, ? super TableCommitAction, ? super Comment, ? super SQL, ? extends QOM.CreateTable> $constructor() {
+    public final Function9<? super Table<?>, ? super Boolean, ? super Boolean, ? super Collection<? extends TableElement>, ? super Select<?>, ? super WithOrWithoutData, ? super TableCommitAction, ? super Comment, ? super SQL, ? extends QOM.CreateTable> $constructor() {
         return (a1, a2, a3, a4, a5, a6, a7, a8, a9) -> new CreateTableImpl(configuration(), a1, a2, a3, (Collection<? extends TableElement>) a4, a5, a6, a7, a8, a9);
     }
 

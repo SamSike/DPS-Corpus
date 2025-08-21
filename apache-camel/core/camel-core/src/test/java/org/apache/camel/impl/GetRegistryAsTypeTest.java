@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class GetRegistryAsTypeTest {
 
     @Test
-    public void testDefault() {
+    public void testDefault() throws Exception {
         CamelContext context = new DefaultCamelContext();
         context.start();
 
@@ -45,7 +45,7 @@ public class GetRegistryAsTypeTest {
     }
 
     @Test
-    public void testSimple() {
+    public void testSimple() throws Exception {
         CamelContext context = new DefaultCamelContext(new SimpleRegistry());
         context.start();
 

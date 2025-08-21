@@ -18,8 +18,8 @@ package org.apache.camel.util;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,20 +29,21 @@ public class DumpModelAsXmlPlaceholdersTest extends ContextTestSupport {
     @Test
     public void testDumpModelAsXml() throws Exception {
         assertEquals("Gouda", context.getRoutes().get(0).getId());
-        String xml = PluginHelper.getModelToXMLDumper(context).dumpModelAsXml(context, context.getRouteDefinition("Gouda"));
+        ExtendedCamelContext ecc = context.adapt(ExtendedCamelContext.class);
+        String xml = ecc.getModelToXMLDumper().dumpModelAsXml(context, context.getRouteDefinition("Gouda"));
         assertNotNull(xml);
         log.info(xml);
-        assertTrue(xml.contains("<route xmlns=\"http://camel.apache.org/schema/xml-io\" id=\"Gouda\">"));
-        assertTrue(xml.contains("uri=\"direct:start-{{cheese.type}}\""));
-        assertTrue(xml.contains("uri=\"direct:end-{{cheese.type}}\""));
+        assertTrue(xml.contains("<route xmlns=\"http://camel.apache.org/schema/spring\" customId=\"true\" id=\"Gouda\">"));
+        assertTrue(xml.contains("<from uri=\"direct:start-{{cheese.type}}\"/>"));
+        assertTrue(xml.contains("<to customId=\"true\" id=\"log\" uri=\"direct:end-{{cheese.type}}\"/>"));
     }
 
     @Override
 
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start-{{cheese.type}}").routeId("{{cheese.type}}").to("direct:end-{{cheese.type}}").id("log");
             }
         };

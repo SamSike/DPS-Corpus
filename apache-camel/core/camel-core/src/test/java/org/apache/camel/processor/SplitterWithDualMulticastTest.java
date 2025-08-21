@@ -53,10 +53,10 @@ public class SplitterWithDualMulticastTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").split(body().tokenize(",")).multicast().setHeader("foo", constant("ABC"))
                         .setHeader("bar", constant(123)).end()
                         .to("log:split?showHeaders=true", "mock:split").multicast().setHeader("bar", constant(456))

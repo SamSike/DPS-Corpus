@@ -164,7 +164,7 @@ public final class AggregationStrategyBeanAdapter extends ServiceSupport impleme
      * @param  method the method
      * @return        true if valid, false to skip the method
      */
-    private boolean isValidMethod(Method method) {
+    protected boolean isValidMethod(Method method) {
         // must not be in the excluded list
         for (Method excluded : EXCLUDED_METHODS) {
             if (method.equals(excluded)) {
@@ -177,9 +177,8 @@ public final class AggregationStrategyBeanAdapter extends ServiceSupport impleme
             return false;
         }
 
-        // must not be the groovy meta class and lookup methods
-        if (method.getName().equals("getMetaClass") || method.getName().equals("setMetaClass")
-                || method.getName().equals("$getLookup")) {
+        // must not be groovy meta class
+        if (method.getName().equals("getMetaClass") || method.getName().equals("setMetaClass")) {
             return false;
         }
         if (method.getDeclaringClass().getName().startsWith("groovy.lang")) {

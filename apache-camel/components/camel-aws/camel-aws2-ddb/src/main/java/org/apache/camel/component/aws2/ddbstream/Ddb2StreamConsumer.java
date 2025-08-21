@@ -25,10 +25,12 @@ import java.util.Queue;
 
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
-import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.Processor;
+import org.apache.camel.health.HealthCheckHelper;
+import org.apache.camel.health.WritableHealthCheckRepository;
 import org.apache.camel.support.ScheduledBatchPollingConsumer;
 import org.apache.camel.util.CastUtils;
+import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.dynamodb.model.ExpiredIteratorException;
@@ -43,6 +45,10 @@ public class Ddb2StreamConsumer extends ScheduledBatchPollingConsumer {
     private final ShardIteratorHandler shardIteratorHandler;
     private final Map<String, String> lastSeenSequenceNumbers = new HashMap<>();
 
+    private WritableHealthCheckRepository healthCheckRepository;
+
+    private Ddb2StreamConsumerHealthCheck consumerHealthCheck;
+
     public Ddb2StreamConsumer(Ddb2StreamEndpoint endpoint, Processor processor) {
         this(endpoint, processor, new ShardIteratorHandler(endpoint));
     }
@@ -55,12 +61,7 @@ public class Ddb2StreamConsumer extends ScheduledBatchPollingConsumer {
     @Override
     protected int poll() throws Exception {
         int processedExchangeCount = 0;
-
         Map<String, String> shardIterators = shardIteratorHandler.getShardIterators();
-
-        // okay we have some response from azure so lets mark the consumer as ready
-        forceConsumerAsReady();
-
         for (Entry<String, String> shardIteratorEntry : shardIterators.entrySet()) {
             int limitPerRecordsRequest = Math.max(1,
                     getEndpoint().getConfiguration().getMaxResultsPerRequest() / shardIterators.size());
@@ -84,8 +85,8 @@ public class Ddb2StreamConsumer extends ScheduledBatchPollingConsumer {
             }
             List<Record> records = result.records();
             Queue<Exchange> exchanges = new ArrayDeque<>();
-            for (Record polledRecord : records) {
-                exchanges.add(createExchange(polledRecord));
+            for (Record record : records) {
+                exchanges.add(createExchange(record));
             }
             processedExchangeCount += processBatch(CastUtils.cast(exchanges));
 
@@ -99,36 +100,36 @@ public class Ddb2StreamConsumer extends ScheduledBatchPollingConsumer {
 
     @Override
     public int processBatch(Queue<Object> exchanges) throws Exception {
-        int total = exchanges.size();
-        int answer = 0;
-
-        for (int index = 0; index < total && isBatchAllowed(); index++) {
-            // only loop if we are started (allowed to run)
-            // use poll to remove the head so it does not consume memory even
-            // after we have processed it
-            Exchange exchange = (Exchange) exchanges.poll();
-            // add current index and total as properties
-            exchange.setProperty(ExchangePropertyKey.BATCH_INDEX, index);
-            exchange.setProperty(ExchangePropertyKey.BATCH_SIZE, total);
-            exchange.setProperty(ExchangePropertyKey.BATCH_COMPLETE, index == total - 1);
-
-            // update pending number of exchanges
-            pendingExchanges = total - index - 1;
+        int processedExchanges = 0;
+        while (!exchanges.isEmpty()) {
+            final Exchange exchange = ObjectHelper.cast(Exchange.class, exchanges.poll());
 
             // use default consumer callback
             AsyncCallback cb = defaultConsumerCallback(exchange, true);
             getAsyncProcessor().process(exchange, cb);
-            answer++;
+            processedExchanges++;
         }
+        return processedExchanges;
+    }
 
-        return answer;
+    @Override
+    protected void doStart() throws Exception {
+        super.doStart();
+
+        healthCheckRepository = HealthCheckHelper.getHealthCheckRepository(
+                getEndpoint().getCamelContext(),
+                "components",
+                WritableHealthCheckRepository.class);
+
+        if (healthCheckRepository != null) {
+            consumerHealthCheck = new Ddb2StreamConsumerHealthCheck(this, getRouteId());
+            healthCheckRepository.addHealthCheck(consumerHealthCheck);
+        }
     }
 
     protected Exchange createExchange(Record record) {
         Exchange ex = createExchange(true);
-        ex.getMessage().setBody(record, Record.class);
-        ex.getMessage().setHeader(Ddb2StreamConstants.EVENT_SOURCE, record.eventSource());
-        ex.getMessage().setHeader(Ddb2StreamConstants.EVENT_ID, record.eventID());
+        ex.getIn().setBody(record, Record.class);
         return ex;
     }
 

@@ -24,7 +24,6 @@ import com.slack.api.SlackConfig;
 import com.slack.api.methods.SlackApiException;
 import com.slack.api.methods.response.chat.ChatPostMessageResponse;
 import com.slack.api.model.Message;
-import com.slack.api.util.http.SlackHttpClient;
 import com.slack.api.webhook.WebhookResponse;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.CamelExchangeException;
@@ -48,7 +47,7 @@ public class SlackProducer extends DefaultAsyncProducer {
     @Override
     protected void doStart() throws Exception {
         SlackConfig config = SlackHelper.createSlackConfig(slackEndpoint.getServerUrl());
-        SlackHttpClient client = new SlackHttpClient();
+        CustomSlackHttpClient client = new CustomSlackHttpClient();
         this.slack = Slack.getInstance(config, client);
         super.doStart();
     }

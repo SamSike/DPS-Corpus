@@ -21,7 +21,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class SplitShareUnitOfWorkOnExceptionHandledFalseIssueTest extends ContextTestSupport {
 
@@ -31,20 +31,22 @@ public class SplitShareUnitOfWorkOnExceptionHandledFalseIssueTest extends Contex
         getMockEndpoint("mock:b").expectedMessageCount(2);
         getMockEndpoint("mock:result").expectedMessageCount(0);
 
-        Exception e = assertThrows(Exception.class, () -> template.sendBody("direct:start", "Camel,Donkey"),
-                "Should throw exception");
-
-        IllegalArgumentException cause = assertIsInstanceOf(IllegalArgumentException.class, e.getCause().getCause());
-        assertEquals("Forced", cause.getMessage());
+        try {
+            template.sendBody("direct:start", "Camel,Donkey");
+            fail("Should throw exception");
+        } catch (Exception e) {
+            IllegalArgumentException cause = assertIsInstanceOf(IllegalArgumentException.class, e.getCause().getCause());
+            assertEquals("Forced", cause.getMessage());
+        }
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).handled(false).to("mock:a");
 
                 from("direct:start").split(body()).shareUnitOfWork().stopOnException().to("direct:b").end().to("mock:result");

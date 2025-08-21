@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,9 @@
 
 package org.springframework.beans.factory.config;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.FactoryBeanNotInitializedException;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link FactoryBean} which returns a value which is the result of a static or instance
@@ -57,24 +56,24 @@ import org.springframework.beans.factory.FactoryBeanNotInitializedException;
  * which uses this class to call a static factory method:
  *
  * <pre class="code">
- * &lt;bean id="myObject" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"&gt;
- *   &lt;property name="staticMethod" value="com.whatever.MyClassFactory.getInstance"/&gt;
- * &lt;/bean&gt;</pre>
+ * &lt;bean id="myObject" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+ *   &lt;property name="staticMethod" value="com.whatever.MyClassFactory.getInstance"/>
+ * &lt;/bean></pre>
  *
  * <p>An example of calling a static method then an instance method to get at a
  * Java system property. Somewhat verbose, but it works.
  *
  * <pre class="code">
- * &lt;bean id="sysProps" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"&gt;
- *   &lt;property name="targetClass" value="java.lang.System"/&gt;
- *   &lt;property name="targetMethod" value="getProperties"/&gt;
- * &lt;/bean&gt;
+ * &lt;bean id="sysProps" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+ *   &lt;property name="targetClass" value="java.lang.System"/>
+ *   &lt;property name="targetMethod" value="getProperties"/>
+ * &lt;/bean>
  *
- * &lt;bean id="javaVersion" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"&gt;
- *   &lt;property name="targetObject" ref="sysProps"/&gt;
- *   &lt;property name="targetMethod" value="getProperty"/&gt;
- *   &lt;property name="arguments" value="java.version"/&gt;
- * &lt;/bean&gt;</pre>
+ * &lt;bean id="javaVersion" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+ *   &lt;property name="targetObject" ref="sysProps"/>
+ *   &lt;property name="targetMethod" value="getProperty"/>
+ *   &lt;property name="arguments" value="java.version"/>
+ * &lt;/bean></pre>
  *
  * @author Colin Sampaleanu
  * @author Juergen Hoeller
@@ -89,7 +88,8 @@ public class MethodInvokingFactoryBean extends MethodInvokingBean implements Fac
 	private boolean initialized = false;
 
 	/** Method call result in the singleton case. */
-	private @Nullable Object singletonObject;
+	@Nullable
+	private Object singletonObject;
 
 
 	/**
@@ -116,7 +116,8 @@ public class MethodInvokingFactoryBean extends MethodInvokingBean implements Fac
 	 * specified method on the fly.
 	 */
 	@Override
-	public @Nullable Object getObject() throws Exception {
+	@Nullable
+	public Object getObject() throws Exception {
 		if (this.singleton) {
 			if (!this.initialized) {
 				throw new FactoryBeanNotInitializedException();
@@ -135,7 +136,7 @@ public class MethodInvokingFactoryBean extends MethodInvokingBean implements Fac
 	 * or {@code null} if not known in advance.
 	 */
 	@Override
-	public @Nullable Class<?> getObjectType() {
+	public Class<?> getObjectType() {
 		if (!isPrepared()) {
 			// Not fully initialized yet -> return null to indicate "not known yet".
 			return null;

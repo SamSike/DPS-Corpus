@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@
 package org.springframework.http.codec.protobuf;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.MimeType;
 
 /**
@@ -31,12 +31,11 @@ import org.springframework.util.MimeType;
  */
 public abstract class ProtobufCodecSupport {
 
-	static final MimeType[] MIME_TYPES = new MimeType[]{
-			new MimeType("application", "x-protobuf"),
-			new MimeType("application", "*+x-protobuf"),
-			new MimeType("application", "octet-stream"),
-			new MimeType("application", "vnd.google.protobuf")
-	};
+	static final List<MimeType> MIME_TYPES = Collections.unmodifiableList(
+			Arrays.asList(
+					new MimeType("application", "x-protobuf"),
+					new MimeType("application", "octet-stream"),
+					new MimeType("application", "vnd.google.protobuf")));
 
 	static final String DELIMITED_KEY = "delimited";
 
@@ -44,19 +43,11 @@ public abstract class ProtobufCodecSupport {
 
 
 	protected boolean supportsMimeType(@Nullable MimeType mimeType) {
-		if (mimeType == null) {
-			return true;
-		}
-		for (MimeType m : MIME_TYPES) {
-			if (m.isCompatibleWith(mimeType)) {
-				return true;
-			}
-		}
-		return false;
+		return (mimeType == null || MIME_TYPES.stream().anyMatch(m -> m.isCompatibleWith(mimeType)));
 	}
 
 	protected List<MimeType> getMimeTypes() {
-		return Arrays.asList(MIME_TYPES);
+		return MIME_TYPES;
 	}
 
 }

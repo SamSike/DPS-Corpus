@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import jakarta.resource.spi.XATerminator;
 import jakarta.resource.spi.work.WorkContext;
 import jakarta.resource.spi.work.WorkManager;
 import jakarta.transaction.TransactionSynchronizationRegistry;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -42,11 +42,14 @@ import org.springframework.util.Assert;
  */
 public class SimpleBootstrapContext implements BootstrapContext {
 
-	private final @Nullable WorkManager workManager;
+	@Nullable
+	private WorkManager workManager;
 
-	private @Nullable XATerminator xaTerminator;
+	@Nullable
+	private XATerminator xaTerminator;
 
-	private @Nullable TransactionSynchronizationRegistry transactionSynchronizationRegistry;
+	@Nullable
+	private TransactionSynchronizationRegistry transactionSynchronizationRegistry;
 
 
 	/**
@@ -93,7 +96,8 @@ public class SimpleBootstrapContext implements BootstrapContext {
 	}
 
 	@Override
-	public @Nullable XATerminator getXATerminator() {
+	@Nullable
+	public XATerminator getXATerminator() {
 		return this.xaTerminator;
 	}
 
@@ -108,7 +112,8 @@ public class SimpleBootstrapContext implements BootstrapContext {
 	}
 
 	@Override
-	public @Nullable TransactionSynchronizationRegistry getTransactionSynchronizationRegistry() {
+	@Nullable
+	public TransactionSynchronizationRegistry getTransactionSynchronizationRegistry() {
 		return this.transactionSynchronizationRegistry;
 	}
 

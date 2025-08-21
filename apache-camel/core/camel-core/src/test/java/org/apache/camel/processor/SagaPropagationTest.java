@@ -39,7 +39,7 @@ public class SagaPropagationTest extends ContextTestSupport {
     private List<String> sagaIds;
 
     @Test
-    public void testPropagationRequired() {
+    public void testPropagationRequired() throws Exception {
         context.createFluentProducerTemplate().to("direct:required").request();
 
         assertListSize(sagaIds, 3);
@@ -47,7 +47,7 @@ public class SagaPropagationTest extends ContextTestSupport {
     }
 
     @Test
-    public void testPropagationRequiresNew() {
+    public void testPropagationRequiresNew() throws Exception {
         context.createFluentProducerTemplate().to("direct:requiresNew").request();
 
         assertListSize(sagaIds, 3);
@@ -55,7 +55,7 @@ public class SagaPropagationTest extends ContextTestSupport {
     }
 
     @Test
-    public void testPropagationNotSupported() {
+    public void testPropagationNotSupported() throws Exception {
         context.createFluentProducerTemplate().to("direct:notSupported").request();
 
         assertListSize(sagaIds, 4);
@@ -63,15 +63,15 @@ public class SagaPropagationTest extends ContextTestSupport {
     }
 
     @Test
-    public void testPropagationSupports() {
+    public void testPropagationSupports() throws Exception {
         context.createFluentProducerTemplate().to("direct:supports").request();
 
         assertListSize(sagaIds, 2);
-        assertNonNullSagaIds(1);
+        assertNonNullSagaIds(2);
     }
 
     @Test
-    public void testPropagationMandatory() {
+    public void testPropagationMandatory() throws Exception {
         try {
             context.createFluentProducerTemplate().to("direct:mandatory").request();
             fail("Exception not thrown");
@@ -81,7 +81,7 @@ public class SagaPropagationTest extends ContextTestSupport {
     }
 
     @Test
-    public void testPropagationNever() {
+    public void testPropagationNever() throws Exception {
         try {
             context.createFluentProducerTemplate().to("direct:never").request();
             fail("Exception not thrown");
@@ -91,7 +91,7 @@ public class SagaPropagationTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
 
         this.sagaIds = new LinkedList<>();
 
@@ -164,7 +164,7 @@ public class SagaPropagationTest extends ContextTestSupport {
     }
 
     private void assertNonNullSagaIds(int num) {
-        List<String> nonNull = this.sagaIds.stream().filter(Objects::nonNull).toList();
+        List<String> nonNull = this.sagaIds.stream().filter(Objects::nonNull).collect(Collectors.toList());
         if (nonNull.size() != num) {
             fail("Expeced size " + num + ", actual " + nonNull.size());
         }

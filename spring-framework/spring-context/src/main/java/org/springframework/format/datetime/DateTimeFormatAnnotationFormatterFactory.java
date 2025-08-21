@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,9 @@ package org.springframework.format.datetime;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -37,10 +39,19 @@ import org.springframework.util.StringUtils;
  * @author Sam Brannen
  * @since 3.2
  */
-public class DateTimeFormatAnnotationFormatterFactory extends EmbeddedValueResolutionSupport
+public class DateTimeFormatAnnotationFormatterFactory  extends EmbeddedValueResolutionSupport
 		implements AnnotationFormatterFactory<DateTimeFormat> {
 
-	private static final Set<Class<?>> FIELD_TYPES = Set.of(Date.class, Calendar.class, Long.class);
+	private static final Set<Class<?>> FIELD_TYPES;
+
+	static {
+		Set<Class<?>> fieldTypes = new HashSet<>(4);
+		fieldTypes.add(Date.class);
+		fieldTypes.add(Calendar.class);
+		fieldTypes.add(Long.class);
+		FIELD_TYPES = Collections.unmodifiableSet(fieldTypes);
+	}
+
 
 	@Override
 	public Set<Class<?>> getFieldTypes() {

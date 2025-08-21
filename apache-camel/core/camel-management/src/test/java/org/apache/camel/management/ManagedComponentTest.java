@@ -118,7 +118,7 @@ public class ManagedComponentTest extends ManagementTestSupport {
         }
 
         @Override
-        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) {
+        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
             throw new UnsupportedOperationException();
         }
     }

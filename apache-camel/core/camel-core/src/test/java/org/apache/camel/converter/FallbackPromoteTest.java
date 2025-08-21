@@ -24,8 +24,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class FallbackPromoteTest extends ContextTestSupport {
 
+    @Override
+    protected boolean isLoadTypeConverters() {
+        return true;
+    }
+
     @Test
-    public void testFallbackPromote() {
+    public void testFallbackPromote() throws Exception {
         MyCoolBean cool = new MyCoolBean();
         cool.setCool("Camel rocks");
 

@@ -21,20 +21,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.EndpointRegistry;
-import org.apache.camel.spi.NormalizedEndpointUri;
 import org.apache.camel.support.LRUCacheFactory;
+import org.apache.camel.support.NormalizedUri;
 
 /**
  * A provisional (temporary) {@link EndpointRegistry} that is only used during startup of Apache Camel to make starting
  * Camel faster while {@link LRUCacheFactory} is warming up etc.
  */
-class ProvisionalEndpointRegistry extends HashMap<NormalizedEndpointUri, Endpoint>
-        implements EndpointRegistry {
+class ProvisionalEndpointRegistry extends HashMap<NormalizedUri, Endpoint> implements EndpointRegistry<NormalizedUri> {
 
     @Override
     public void start() {
@@ -103,32 +100,5 @@ class ProvisionalEndpointRegistry extends HashMap<NormalizedEndpointUri, Endpoin
             }
         }
         return Collections.unmodifiableCollection(answer);
-    }
-
-    @Override
-    public Map<String, Endpoint> getReadOnlyMap() {
-        if (isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        // we want to avoid any kind of locking in get/put methods
-        // as getReadOnlyValues is only seldom used, such as when camel-mock
-        // is asserting endpoints at end of testing
-        // so this code will then just retry in case of a concurrency update
-        Map<String, Endpoint> answer = new LinkedHashMap<>();
-        boolean done = false;
-        while (!done) {
-            try {
-                for (Entry<NormalizedEndpointUri, Endpoint> entry : entrySet()) {
-                    String k = entry.getKey().toString();
-                    answer.put(k, entry.getValue());
-                }
-                done = true;
-            } catch (ConcurrentModificationException e) {
-                answer.clear();
-                // try again
-            }
-        }
-        return Collections.unmodifiableMap(answer);
     }
 }

@@ -34,7 +34,7 @@ public class DeadLetterChannelPropagateCausedExceptionTest extends ContextTestSu
     public void testDLCPropagateCaused() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // goes directly to mock:dead but we want the caused exception
                 // propagated
                 errorHandler(deadLetterChannel("mock:dead"));
@@ -63,7 +63,7 @@ public class DeadLetterChannelPropagateCausedExceptionTest extends ContextTestSu
     public void testDLCPropagateCausedInRoute() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("direct:dead"));
 
                 // use a route as DLC to test the cause exception is still
@@ -94,7 +94,7 @@ public class DeadLetterChannelPropagateCausedExceptionTest extends ContextTestSu
     public void testDLCPropagateCausedUseOriginalMessage() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // goes directly to mock:dead but we want the caused exception
                 // propagated
                 errorHandler(deadLetterChannel("mock:dead").useOriginalMessage());
@@ -123,7 +123,7 @@ public class DeadLetterChannelPropagateCausedExceptionTest extends ContextTestSu
     public void testDLCPropagateCausedInRouteUseOriginalMessage() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("direct:dead").useOriginalMessage());
 
                 // use a route as DLC to test the cause exception is still
@@ -154,12 +154,12 @@ public class DeadLetterChannelPropagateCausedExceptionTest extends ContextTestSu
     public void testDLCPropagateCausedInSplitter() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead"));
 
                 from("direct:start").to("mock:a").split(body().tokenize(",")).stopOnException().process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         String body = exchange.getIn().getBody(String.class);
                         if ("Kaboom".equals(body)) {
                             throw new IllegalArgumentException("Damn");

@@ -31,7 +31,7 @@ import org.apache.camel.util.IOHelper;
 /**
  * Converter methods to convert from / to Vert.x JsonObject
  */
-@Converter(generateBulkLoader = true)
+@Converter(generateLoader = true)
 public final class VertxJsonObjectConverter {
 
     private VertxJsonObjectConverter() {

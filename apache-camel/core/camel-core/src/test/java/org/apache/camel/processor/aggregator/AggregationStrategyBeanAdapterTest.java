@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 
 public class AggregationStrategyBeanAdapterTest extends ContextTestSupport {
 
-    private final MyBodyAppender appender = new MyBodyAppender();
+    private MyBodyAppender appender = new MyBodyAppender();
 
     @Test
     public void testAggregate() throws Exception {
@@ -37,10 +37,10 @@ public class AggregationStrategyBeanAdapterTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(constant(true), AggregationStrategies.bean(appender, "append")).completionSize(3)
                         .to("mock:result");
             }

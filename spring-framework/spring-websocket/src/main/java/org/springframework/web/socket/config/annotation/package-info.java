@@ -1,7 +1,9 @@
 /**
  * Support for annotation-based WebSocket setup in configuration classes.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.socket.config.annotation;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

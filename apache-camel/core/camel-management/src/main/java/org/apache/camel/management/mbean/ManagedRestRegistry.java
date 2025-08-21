@@ -67,7 +67,6 @@ public class ManagedRestRegistry extends ManagedService implements ManagedRestRe
                 String method = entry.getMethod();
                 String consumes = entry.getConsumes();
                 String produces = entry.getProduces();
-                String kind = entry.isContractFirst() ? "contract-first" : "code-first";
                 String state = entry.getState();
                 String inType = entry.getInType();
                 String outType = entry.getOutType();
@@ -77,9 +76,9 @@ public class ManagedRestRegistry extends ManagedService implements ManagedRestRe
                         ct,
                         new String[] {
                                 "url", "baseUrl", "basePath", "uriTemplate", "method", "consumes", "produces", "inType",
-                                "outType", "kind", "state", "description" },
+                                "outType", "state", "description" },
                         new Object[] {
-                                url, baseUrl, basePath, uriTemplate, method, consumes, produces, inType, outType, kind, state,
+                                url, baseUrl, basePath, uriTemplate, method, consumes, produces, inType, outType, state,
                                 description });
                 answer.put(data);
             }

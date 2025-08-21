@@ -46,7 +46,7 @@ public class RequiredSagaProcessor extends SagaProcessor {
                         coordinatorFuture = CompletableFuture.completedFuture(existingCoordinator);
                         inheritedCoordinator = true;
                     } else {
-                        coordinatorFuture = sagaService.newSaga(exchange);
+                        coordinatorFuture = sagaService.newSaga();
                         inheritedCoordinator = false;
                     }
 

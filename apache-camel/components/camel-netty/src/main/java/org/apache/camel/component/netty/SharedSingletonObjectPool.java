@@ -16,8 +16,7 @@
  */
 package org.apache.camel.component.netty;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.NoSuchElementException;
 
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.PooledObject;
@@ -34,7 +33,6 @@ import org.slf4j.LoggerFactory;
 public class SharedSingletonObjectPool<T> implements ObjectPool<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(SharedSingletonObjectPool.class);
-    private final Lock lock = new ReentrantLock();
     private final PooledObjectFactory<T> factory;
     private volatile PooledObject<T> t;
 
@@ -43,33 +41,28 @@ public class SharedSingletonObjectPool<T> implements ObjectPool<T> {
     }
 
     @Override
-    public void addObject() throws Exception {
+    public void addObject() throws Exception, IllegalStateException, UnsupportedOperationException {
         // noop
     }
 
     @Override
-    public T borrowObject() throws Exception {
-        lock.lock();
-        try {
-            if (t != null) {
-                // ensure the object is validated before we borrow it
-                if (!factory.validateObject(t)) {
-                    invalidateObject(t.getObject());
-                    LOG.info("Recreating new connection as current connection is invalid: {}", t);
-                    t = null;
-                }
+    public synchronized T borrowObject() throws Exception, NoSuchElementException, IllegalStateException {
+        if (t != null) {
+            // ensure the object is validate before we borrow it
+            if (!factory.validateObject(t)) {
+                invalidateObject(t.getObject());
+                LOG.info("Recreating new connection as current connection is invalid: {}", t);
+                t = null;
             }
-            if (t == null) {
-                t = factory.makeObject();
-            }
-            return t.getObject();
-        } finally {
-            lock.unlock();
         }
+        if (t == null) {
+            t = factory.makeObject();
+        }
+        return t.getObject();
     }
 
     @Override
-    public void clear() throws Exception {
+    public void clear() throws Exception, UnsupportedOperationException {
         t = null;
     }
 

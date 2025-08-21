@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.camel.support.task;
 
 import java.util.function.Supplier;
@@ -24,11 +25,12 @@ import java.util.function.Supplier;
 public final class Tasks {
 
     private Tasks() {
+
     }
 
     /**
      * Creates a new background task builder
-     *
+     * 
      * @return an instance of a background task builder
      */
     public static BackgroundTask.BackgroundTaskBuilder backgroundTask() {
@@ -37,7 +39,7 @@ public final class Tasks {
 
     /**
      * Creates a new foreground task builder
-     *
+     * 
      * @return an instance of a foreground task builder
      */
     public static ForegroundTask.ForegroundTaskBuilder foregroundTask() {
@@ -46,7 +48,7 @@ public final class Tasks {
 
     /**
      * A generic builder for task builders
-     *
+     * 
      * @param  taskBuilderSupplier A supplier of tasks (usually a parameterless constructor in the form of Builder::new)
      * @param  <T>                 the type of tasks that the builder builds
      * @param  <Y>                 the type of the task builder to provide

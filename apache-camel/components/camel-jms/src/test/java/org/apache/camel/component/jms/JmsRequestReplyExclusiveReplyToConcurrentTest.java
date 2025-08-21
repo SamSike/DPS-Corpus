@@ -21,20 +21,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.ConsumerTemplate;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
 import org.apache.camel.util.StopWatch;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,19 +34,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Creates multiple threads
- */
-@Tags({ @Tag("not-parallel"), @Tag("spring") })
+@Isolated
 public class JmsRequestReplyExclusiveReplyToConcurrentTest extends AbstractJMSTest {
 
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
     private static final Logger LOG = LoggerFactory.getLogger(JmsRequestReplyExclusiveReplyToConcurrentTest.class);
-    protected CamelContext context;
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
 
     private final int size = 100;
     private final CountDownLatch latch = new CountDownLatch(size);
@@ -85,7 +68,7 @@ public class JmsRequestReplyExclusiveReplyToConcurrentTest extends AbstractJMSTe
         for (int i = 0; i < size; i++) {
             final Integer num = i;
             executor.submit(() -> {
-                String reply = template.requestBody("direct:start", Integer.toString(num), String.class);
+                String reply = template.requestBody("direct:start", "" + num, String.class);
                 LOG.info("Sent {} expecting reply 'Hello {}' got --> {}", num, num, reply);
                 assertNotNull(reply);
                 assertEquals("Hello " + num, reply);
@@ -95,7 +78,7 @@ public class JmsRequestReplyExclusiveReplyToConcurrentTest extends AbstractJMSTe
 
         LOG.info("Waiting to process {} messages...", size);
 
-        // if any of the assertions above fails then the latch will not get decremented
+        // if any of the assertions above fails then the latch will not get decremented 
         assertTrue(latch.await(20, TimeUnit.SECONDS), "All assertions outside the main thread above should have passed");
 
         long delta = watch.taken();
@@ -121,17 +104,5 @@ public class JmsRequestReplyExclusiveReplyToConcurrentTest extends AbstractJMSTe
                         .transform(body().prepend("Hello "));
             }
         };
-    }
-
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        context = camelContextExtension.getContext();
-        template = camelContextExtension.getProducerTemplate();
-        consumer = camelContextExtension.getConsumerTemplate();
     }
 }

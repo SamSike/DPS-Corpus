@@ -42,8 +42,8 @@ public class GenericType {
     }
 
     private final Class clazz;
-    private final GenericType[] parameters;
-    private final BoundType boundType;
+    private GenericType[] parameters;
+    private BoundType boundType;
 
     static {
         PRIMITIVE_CLASSES.put("int", int.class);
@@ -161,7 +161,7 @@ public class GenericType {
         if (parameters.length == 0 && boundType == BoundType.Extends && clazz == Object.class) {
             return "?";
         }
-        StringBuilder sb = new StringBuilder(128);
+        StringBuilder sb = new StringBuilder();
         if (boundType == BoundType.Extends) {
             sb.append("? extends ");
         } else if (boundType == BoundType.Super) {

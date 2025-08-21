@@ -41,10 +41,10 @@ public class RedeliverEntireRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(IllegalArgumentException.class).maximumRedeliveries(3).redeliveryDelay(0);
 
                 from("direct:start").to("mock:a")

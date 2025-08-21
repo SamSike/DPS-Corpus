@@ -25,18 +25,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BeanWithXPathInjectionUsingResultTypeTest extends ContextTestSupport {
 
-    protected final MyBean myBean = new MyBean();
+    protected MyBean myBean = new MyBean();
 
     @Test
-    public void testSendMessage() {
+    public void testSendMessage() throws Exception {
         template.sendBody("bean:myBean", "<a><b>12</b></a>");
         assertEquals("12", myBean.ab, "bean ab: " + myBean);
         assertEquals("a12", myBean.abText, "bean abText: " + myBean);
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
 
         answer.bind("myBean", myBean);
         return answer;

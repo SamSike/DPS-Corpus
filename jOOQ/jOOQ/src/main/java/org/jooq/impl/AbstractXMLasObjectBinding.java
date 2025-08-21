@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,6 +37,8 @@
  */
 package org.jooq.impl;
 
+import static java.beans.Introspector.decapitalize;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -54,9 +56,7 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import javax.xml.namespace.QName;
 
 import org.jooq.Converter;
-import org.jooq.ConverterContext;
 import org.jooq.XML;
-import org.jooq.tools.StringUtils;
 
 /**
  * A binding that binds JAXB-annotated {@link Object} types to {@link SQLXML}
@@ -80,21 +80,21 @@ public class AbstractXMLasObjectBinding<T> extends AbstractXMLBinding<T> {
         return converter;
     }
 
-    private static final class XMLasObjectConverter<T> extends AbstractContextConverter<XML, T> {
+    private static final class XMLasObjectConverter<T> implements Converter<XML, T> {
 
-        XmlRootElement        root;
-        transient JAXBContext ctx;
+        Class<T>                  type;
+        XmlRootElement            root;
+        transient JAXBContext     ctx;
 
         private XMLasObjectConverter(Class<T> type) {
-            super(XML.class, type);
-
+            this.type = type;
             this.root = type.getAnnotation(XmlRootElement.class);
             this.ctx = initCtx();
         }
 
         private final JAXBContext initCtx() {
             try {
-                return JAXBContext.newInstance(toType());
+                return JAXBContext.newInstance(type);
             }
             catch (JAXBException e) {
                 throw new DataBindingException(e);
@@ -102,15 +102,15 @@ public class AbstractXMLasObjectBinding<T> extends AbstractXMLBinding<T> {
         }
 
         @Override
-        public T from(XML t, ConverterContext scope) {
+        public T from(XML t) {
             if (t == null)
                 return null;
 
-            return JAXB.unmarshal(new StringReader("" + t), toType());
+            return JAXB.unmarshal(new StringReader("" + t), type);
         }
 
         @Override
-        public XML to(T u, ConverterContext scope) {
+        public XML to(T u) {
             if (u == null)
                 return null;
 
@@ -118,8 +118,9 @@ public class AbstractXMLasObjectBinding<T> extends AbstractXMLBinding<T> {
                 StringWriter s = new StringWriter();
 
                 Object o = u;
-                if (root == null)
-                    o = new JAXBElement<>(new QName(toLCNoAcronyms(toType().getSimpleName())), toType(), u);
+                if (root == null) {
+                    o = new JAXBElement<>(new QName(decapitalize(type.getSimpleName())), type, u);
+                }
 
                 Marshaller m = ctx.createMarshaller();
                 m.setProperty(Marshaller.JAXB_FRAGMENT, true);
@@ -131,15 +132,14 @@ public class AbstractXMLasObjectBinding<T> extends AbstractXMLBinding<T> {
             }
         }
 
-        private static final String toLCNoAcronyms(String s) {
-            if (StringUtils.isEmpty(s))
-                return s;
-            
-            // [#7585] See also java.beans.Introspector::decapitalize
-            else if (s.length() > 1 && Character.isUpperCase(s.charAt(0)) && Character.isUpperCase(s.charAt(1)))
-                return s;
-            else
-                return StringUtils.toLC(s);
+        @Override
+        public Class<XML> fromType() {
+            return XML.class;
+        }
+
+        @Override
+        public Class<T> toType() {
+            return type;
         }
 
         private void writeObject(ObjectOutputStream oos) throws IOException {

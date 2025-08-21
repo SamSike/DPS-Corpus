@@ -25,6 +25,7 @@ import org.apache.camel.component.salesforce.api.dto.SObjectDescription;
 import org.apache.camel.component.salesforce.api.dto.SObjectDescriptionUrls;
 import org.apache.camel.component.salesforce.api.dto.SObjectField;
 
+//CHECKSTYLE:OFF
 public class Merchandise__c extends AbstractDescribedSObjectBase {
 
     public Merchandise__c() {
@@ -146,3 +147,4 @@ public class Merchandise__c extends AbstractDescribedSObjectBase {
     }
 }
 
+//CHECKSTYLE:ON

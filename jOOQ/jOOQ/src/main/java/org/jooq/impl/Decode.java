@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,100 +37,57 @@
  */
 package org.jooq.impl;
 
-// ...
-// ...
-// ...
-// ...
-// ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
-// ...
-import static org.jooq.SQLDialect.CUBRID;
-import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
-import static org.jooq.SQLDialect.FIREBIRD;
-// ...
-import static org.jooq.SQLDialect.HSQLDB;
-// ...
-import static org.jooq.SQLDialect.MARIADB;
-// ...
-import static org.jooq.SQLDialect.MYSQL;
-import static org.jooq.SQLDialect.POSTGRES;
-// ...
-// ...
-// ...
-import static org.jooq.SQLDialect.SQLITE;
-// ...
-// ...
-import static org.jooq.SQLDialect.TRINO;
-import static org.jooq.SQLDialect.YUGABYTEDB;
+import static org.jooq.SQLDialect.*;
 import static org.jooq.impl.DSL.function;
 import static org.jooq.impl.Names.N_DECODE;
-import static org.jooq.impl.Names.N_DECODE_ORACLE;
 import static org.jooq.impl.Names.N_MAP;
-import static org.jooq.impl.Tools.EMPTY_FIELD;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
+import org.jooq.CaseConditionStep;
 import org.jooq.Context;
-import org.jooq.DataType;
 import org.jooq.Field;
 // ...
-import org.jooq.QueryPart;
-// ...
 import org.jooq.SQLDialect;
-// ...
+import org.jooq.impl.QOM.UNotYetImplemented;
 
 /**
  * @author Lukas Eder
  */
-final class Decode<V, T>
-extends
-    AbstractCaseSimple<V, T, Decode<V, T>>
-implements
-    QOM.Decode<V, T>
-{
-    private static final Set<SQLDialect> EMULATE_DECODE_ORACLE = SQLDialect.supportedBy(MARIADB);
-    private static final Set<SQLDialect> EMULATE_DISTINCT      = SQLDialect.supportedUntil(CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, HSQLDB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB);
+final class Decode<T, Z> extends AbstractField<Z> implements UNotYetImplemented {
+    private static final Set<SQLDialect> EMULATE_DISTINCT = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB);
 
 
 
 
+
+    private final Field<T>    field;
+    private final Field<T>    search;
+    private final Field<Z>    result;
+    private final Field<?>[]  more;
+
+    public Decode(Field<T> field, Field<T> search, Field<Z> result, Field<?>[] more) {
+        super(N_DECODE, result.getDataType());
+
+        this.field = field;
+        this.search = search;
+        this.result = result;
+        this.more = more;
+    }
 
     @SuppressWarnings("unchecked")
-    Decode(Field<V> field, Field<V> search, Field<T> result, Field<?>[] more) {
-        super(N_DECODE, field, result.getDataType());
-
-        when(search, result);
-        if (more.length > 1)
-            for (int i = 0; i + 1 < more.length; i += 2)
-                when((Field<V>) more[i], (Field<T>) more[i + 1]);
-
-        if (more.length % 2 != 0)
-            else_((Field<T>) more[more.length - 1]);
-    }
-
-    Decode(Field<V> field, DataType<T> type) {
-        super(N_DECODE, field, type);
-    }
-
-    // -------------------------------------------------------------------------
-    // XXX: QueryPart API
-    // -------------------------------------------------------------------------
-
     @Override
-    final void accept0(Context<?> ctx) {
+    public final void accept(Context<?> ctx) {
         if (EMULATE_DISTINCT.contains(ctx.dialect())) {
-            ctx.visit(Tools.derivedTableIf(ctx, when.size() > 1, value, f -> {
-                CaseSearched<T> c = new CaseSearched<>(getDataType());
-                when.forEach(t -> c.when(f.isNotDistinctFrom(t.$1()), t.$2()));
+            CaseConditionStep<Z> when = DSL.choose().when(field.isNotDistinctFrom(search), result);
 
-                if (else_ == null)
-                    return c;
-                else
-                    return c.else_(else_);
-            }));
+            for (int i = 0; i + 1 < more.length; i += 2)
+                when = when.when(field.isNotDistinctFrom((Field<T>) more[i]), (Field<Z>) more[i + 1]);
+
+            if (more.length % 2 == 0)
+                ctx.visit(when);
+            else
+                ctx.visit(when.otherwise((Field<Z>) more[more.length - 1]));
         }
 
 
@@ -138,47 +95,7 @@ implements
 
 
 
-        else if (EMULATE_DECODE_ORACLE.contains(ctx.dialect()))
-            ctx.visit(function(N_DECODE_ORACLE, getDataType(), args()));
         else
-            ctx.visit(function(N_DECODE, getDataType(), args()));
+            ctx.visit(function(N_DECODE, getDataType(), Tools.combine(field, search, result, more)));
     }
-
-    final Field<?>[] args() {
-        List<Field<?>> result = new ArrayList<>();
-
-        result.add(value);
-        when.forEach(t -> {
-            result.add(t.$1());
-            result.add(t.$2());
-        });
-
-        if (else_ != null)
-            result.add(else_);
-
-        return result.toArray(EMPTY_FIELD);
-    }
-
-    // -------------------------------------------------------------------------
-    // XXX: Query Object Model
-    // -------------------------------------------------------------------------
-
-    @Override
-    final Decode<V, T> construct(Field<V> v, DataType<T> t) {
-        return new Decode<>(v, t);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

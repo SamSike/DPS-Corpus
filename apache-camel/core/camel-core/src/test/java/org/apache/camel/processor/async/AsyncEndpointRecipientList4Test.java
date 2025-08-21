@@ -46,20 +46,20 @@ public class AsyncEndpointRecipientList4Test extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.addComponent("async", new MyAsyncComponent());
 
                 from("direct:start").to("mock:before").to("log:before").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         beforeThreadId = Thread.currentThread().getId();
                     }
                 }).recipientList(constant("async:hi:camel,async:hi:world,direct:foo"));
 
                 from("direct:foo").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         afterThreadId = Thread.currentThread().getId();
                         exchange.getMessage().setBody("Bye Camel");
                     }

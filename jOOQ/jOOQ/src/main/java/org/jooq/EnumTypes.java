@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,7 +40,6 @@ package org.jooq;
 import static java.util.Arrays.stream;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
-import static org.jooq.impl.Internal.enums;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,7 +55,7 @@ final class EnumTypes {
     // Avoid intersection type because of Eclipse compiler bug:
     // https://bugs.eclipse.org/bugs/show_bug.cgi?id=577466
     static <E extends /* Enum<E> & */ EnumType> E lookupLiteral(Class<E> enumType, String literal) {
-        return (E) LOOKUP.computeIfAbsent(enumType, t -> stream(enums(enumType)).collect(toMap(E::getLiteral, identity()))).get(literal);
+        return (E) LOOKUP.computeIfAbsent(enumType, t -> stream(enumType.getEnumConstants()).collect(toMap(E::getLiteral, identity()))).get(literal);
     }
 
     private EnumTypes() {}

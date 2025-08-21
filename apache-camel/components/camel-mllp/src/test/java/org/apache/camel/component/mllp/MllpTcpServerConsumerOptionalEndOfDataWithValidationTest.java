@@ -43,7 +43,7 @@ public class MllpTcpServerConsumerOptionalEndOfDataWithValidationTest
     public void testInvalidMessage() {
         expectedInvalidCount = 1;
 
-        assertDoesNotThrow(this::runInvalidMessage);
+        assertDoesNotThrow(() -> runInvalidMessage());
     }
 
     @Override
@@ -51,7 +51,7 @@ public class MllpTcpServerConsumerOptionalEndOfDataWithValidationTest
     public void testNthInvalidMessage() {
         expectedInvalidCount = 1;
 
-        assertDoesNotThrow(this::runNthInvalidMessage);
+        assertDoesNotThrow(() -> runNthInvalidMessage());
     }
 
     @Override
@@ -59,7 +59,7 @@ public class MllpTcpServerConsumerOptionalEndOfDataWithValidationTest
     public void testMessageContainingEmbeddedStartOfBlock() {
         expectedInvalidCount = 1;
 
-        assertDoesNotThrow(this::runMessageContainingEmbeddedStartOfBlock);
+        assertDoesNotThrow(() -> runMessageContainingEmbeddedStartOfBlock());
     }
 
     @Override
@@ -67,7 +67,7 @@ public class MllpTcpServerConsumerOptionalEndOfDataWithValidationTest
     public void testNthMessageContainingEmbeddedStartOfBlock() {
         expectedInvalidCount = 1;
 
-        assertDoesNotThrow(this::runNthMessageContainingEmbeddedStartOfBlock);
+        assertDoesNotThrow(() -> runNthMessageContainingEmbeddedStartOfBlock());
     }
 
     @Override
@@ -90,7 +90,7 @@ public class MllpTcpServerConsumerOptionalEndOfDataWithValidationTest
     public void testInvalidMessageContainingEmbeddedEndOfBlock() {
         expectedInvalidCount = 1;
 
-        assertDoesNotThrow(this::runInvalidMessageContainingEmbeddedEndOfBlock);
+        assertDoesNotThrow(() -> runInvalidMessageContainingEmbeddedEndOfBlock());
     }
 
     @Override
@@ -98,14 +98,14 @@ public class MllpTcpServerConsumerOptionalEndOfDataWithValidationTest
     public void testNthMessageContainingEmbeddedEndOfBlock() {
         expectedInvalidCount = 1;
 
-        assertDoesNotThrow(this::runNthMessageContainingEmbeddedEndOfBlock);
+        assertDoesNotThrow(() -> runNthMessageContainingEmbeddedEndOfBlock());
     }
 
     @Override
     @Test
     public void testMessageWithoutEndOfDataByte() {
-        expectedCompleteCount = 2;
+        expectedCompleteCount = 1;
 
-        assertDoesNotThrow(this::runMessageWithoutEndOfDataByte);
+        assertDoesNotThrow(() -> runMessageWithoutEndOfDataByte());
     }
 }

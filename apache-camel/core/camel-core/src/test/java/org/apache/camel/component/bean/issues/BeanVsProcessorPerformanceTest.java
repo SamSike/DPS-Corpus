@@ -32,18 +32,18 @@ public class BeanVsProcessorPerformanceTest extends ContextTestSupport {
     private final int size = 100000;
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myLittleBean", new MyLittleBean());
         return jndi;
     }
 
     @Test
-    public void testProcessor() {
+    public void testProcessor() throws Exception {
         StopWatch watch = new StopWatch();
 
         for (int i = 0; i < size; i++) {
-            Object out = template.requestBody("direct:a", Integer.toString(i));
+            Object out = template.requestBody("direct:a", "" + i);
             assertEquals("Bye " + i, out);
         }
 
@@ -51,11 +51,11 @@ public class BeanVsProcessorPerformanceTest extends ContextTestSupport {
     }
 
     @Test
-    public void testBean() {
+    public void testBean() throws Exception {
         StopWatch watch = new StopWatch();
 
         for (int i = 0; i < size; i++) {
-            Object out = template.requestBody("direct:b", Integer.toString(i));
+            Object out = template.requestBody("direct:b", "" + i);
             assertEquals("Bye " + i, out);
         }
 
@@ -63,10 +63,10 @@ public class BeanVsProcessorPerformanceTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:a").process(new MyLittleProcessor());
 
                 from("direct:b").bean("myLittleBean", "bye");

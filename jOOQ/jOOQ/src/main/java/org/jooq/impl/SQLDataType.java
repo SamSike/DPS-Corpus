@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,13 +42,10 @@ package org.jooq.impl;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
@@ -69,7 +66,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
@@ -86,26 +82,21 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
-import java.time.Year;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
 import org.jooq.Configuration;
 import org.jooq.DataType;
-import org.jooq.Decfloat;
 import org.jooq.Geography;
 import org.jooq.Geometry;
 import org.jooq.JSON;
 import org.jooq.JSONB;
+// ...
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.RowId;
 import org.jooq.SQLDialect;
-import org.jooq.SQLDialectCategory;
 import org.jooq.XML;
-import org.jooq.impl.SQLDataTypes.ClickHouseDataType;
-import org.jooq.impl.SQLDataTypes.DuckDBDataType;
-import org.jooq.impl.SQLDataTypes.TrinoDataType;
 import org.jooq.types.DayToSecond;
 import org.jooq.types.UByte;
 import org.jooq.types.UInteger;
@@ -619,14 +610,6 @@ public final class SQLDataType {
         return INSTANT.precision(precision);
     }
 
-    /**
-     * A {@link Types#SMALLINT} type that represents a year.
-     * <p>
-     * While JDBC does not support this type, some dialects do, specifically
-     * those of the {@link SQLDialectCategory#MYSQL} category.
-     */
-    public static final DataType<Year> YEAR = new BuiltInDataType<>(Year.class, "year");
-
     // -------------------------------------------------------------------------
     // Binary types
     // -------------------------------------------------------------------------
@@ -779,32 +762,6 @@ public final class SQLDataType {
      */
     public static final DataType<Geometry> GEOMETRY = new BuiltInDataType<>(Geometry.class, "geometry");
 
-    /**
-     * The {@link Decfloat} type.
-     * <p>
-     * This is not a JDBC standard. This type handles DECFLOAT types where they
-     * are supported.
-     * <p>
-     * If you want to opt out of code generation support for this type, you can
-     * specify <code>/configuration/generator/generate/decfloatTypes</code> to
-     * <code>false</code>.
-     */
-    public static final DataType<Decfloat> DECFLOAT = new BuiltInDataType<>(Decfloat.class, "decfloat(p)");
-
-    /**
-     * The {@link Decfloat} type.
-     * <p>
-     * This is not a JDBC standard. This type handles DECFLOAT types where they
-     * are supported.
-     * <p>
-     * If you want to opt out of code generation support for this type, you can
-     * specify <code>/configuration/generator/generate/decfloatTypes</code> to
-     * <code>false</code>.
-     */
-    public static final DataType<Decfloat> DECFLOAT(int precision) {
-        return DECFLOAT.precision(precision, 0);
-    }
-
     // -------------------------------------------------------------------------
     // Static initialisation of dialect-specific data types
     // -------------------------------------------------------------------------
@@ -876,20 +833,11 @@ public final class SQLDataType {
 
 
 
-
-
-
-            Class.forName(ClickHouseDataType.class.getName());
-            initJSR310Types(CLICKHOUSE);
-
             Class.forName(CUBRIDDataType.class.getName());
             initJSR310Types(CUBRID);
 
             Class.forName(DerbyDataType.class.getName());
             initJSR310Types(DERBY);
-
-            Class.forName(DuckDBDataType.class.getName());
-            initJSR310Types(DUCKDB);
 
             Class.forName(FirebirdDataType.class.getName());
             initJSR310Types(FIREBIRD);
@@ -914,9 +862,6 @@ public final class SQLDataType {
 
             Class.forName(SQLiteDataType.class.getName());
             initJSR310Types(SQLITE);
-
-            Class.forName(TrinoDataType.class.getName());
-            initJSR310Types(TRINO);
 
             Class.forName(YugabyteDBDataType.class.getName());
             initJSR310Types(YUGABYTEDB);

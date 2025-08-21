@@ -17,6 +17,7 @@
 package org.apache.camel.issues;
 
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.InterceptSendToMockEndpointStrategy;
 import org.junit.jupiter.api.Test;
@@ -39,13 +40,13 @@ public class ThreadsDoTryCatchInterceptSendToAllEndpointIssueTest extends Contex
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         // mock all endpoints
-        context.getCamelContextExtension().registerEndpointCallback(new InterceptSendToMockEndpointStrategy("*"));
+        context.adapt(ExtendedCamelContext.class).registerEndpointCallback(new InterceptSendToMockEndpointStrategy("*"));
 
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").threads().doTry().to("log:try").throwException(new IllegalArgumentException("Forced"))
                         .doCatch(Exception.class).to("log:catch").choice()
                         .when(body().contains("World")).to("log:world").stop().otherwise().to("log:other").stop().end().end();

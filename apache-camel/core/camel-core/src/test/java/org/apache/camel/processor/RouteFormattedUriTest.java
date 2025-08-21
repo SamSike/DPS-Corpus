@@ -23,9 +23,10 @@ import org.junit.jupiter.api.Test;
 
 public class RouteFormattedUriTest extends ContextTestSupport {
 
-    private final String name = "hello.txt";
-    private final String pattern = ".*txt$";
-    private final String result = "result";
+    private String path = testDirectory().toString();
+    private String name = "hello.txt";
+    private String pattern = ".*txt$";
+    private String result = "result";
 
     @Test
     public void testFormattedUri() throws Exception {
@@ -38,11 +39,10 @@ public class RouteFormattedUriTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
-        String path = testDirectory().toString();
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start").toF("file://%s?fileName=%s", path, name);
 

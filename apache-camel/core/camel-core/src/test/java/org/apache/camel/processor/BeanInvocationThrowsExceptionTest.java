@@ -52,16 +52,16 @@ public class BeanInvocationThrowsExceptionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:input").bean(new ExceptionBean());
             }
         };
     }
 
     public static class ExceptionBean {
-        public int doSomething(String request) {
+        public int doSomething(String request) throws Exception {
             if (request.equals("Hello London")) {
                 return 1;
             } else {

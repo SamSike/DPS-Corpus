@@ -16,15 +16,18 @@
  */
 package org.apache.camel.test.infra.common.services;
 
+import java.util.function.BiConsumer;
+
 import org.junit.jupiter.api.Assertions;
 
-public abstract class AbstractTestService extends AbstractService implements TestService {
+public abstract class AbstractTestService implements TestService {
 
     @Override
     public void initialize() {
         try {
-            super.initialize();
-        } catch (IllegalArgumentException e) {
+            setUp();
+            registerProperties();
+        } catch (Exception e) {
             Assertions.fail("Unable to initialize the service " + e.getMessage(), e);
         }
     }
@@ -32,9 +35,17 @@ public abstract class AbstractTestService extends AbstractService implements Tes
     @Override
     public void shutdown() {
         try {
-            super.shutdown();
-        } catch (IllegalArgumentException e) {
+            tearDown();
+        } catch (Exception e) {
             Assertions.fail("Unable to terminate the service " + e.getMessage(), e);
         }
     }
+
+    protected abstract void registerProperties(BiConsumer<String, String> store);
+
+    @Deprecated
+    protected abstract void setUp() throws Exception;
+
+    @Deprecated
+    protected abstract void tearDown() throws Exception;
 }

@@ -32,8 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class DefaultParameterMappingStrategyTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("foo", new MyFooBean());
         return jndi;
     }
@@ -56,7 +56,7 @@ public class DefaultParameterMappingStrategyTest extends ContextTestSupport {
     public void testException() throws Exception {
         getMockEndpoint("mock:result").expectedBodiesReceived("Exception");
         template.send("direct:c", new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("Hello");
                 exchange.setException(new IllegalArgumentException("Forced by unit test"));
             }
@@ -86,10 +86,10 @@ public class DefaultParameterMappingStrategyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:error").logStackTrace(false).disableRedelivery());
 
                 onException(Exception.class).handled(true).bean("foo", "withException").to("mock:result");

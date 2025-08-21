@@ -25,8 +25,8 @@ import org.junit.jupiter.api.Test;
 public class MethodCallByTypeRefExistingBeanTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("foo", new MyBean("Type Ref "));
         return jndi;
     }
@@ -43,10 +43,10 @@ public class MethodCallByTypeRefExistingBeanTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:a").transform().method(MyBean.class).to("mock:a");
 
                 from("direct:b").transform().method(MyBean.class).to("mock:b");

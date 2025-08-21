@@ -24,16 +24,20 @@ import com.azure.core.amqp.AmqpTransportType;
 import com.azure.core.amqp.ProxyOptions;
 import com.azure.core.credential.TokenCredential;
 import com.azure.core.util.ClientOptions;
-import com.azure.messaging.servicebus.ServiceBusProcessorClient;
-import com.azure.messaging.servicebus.ServiceBusSenderClient;
+import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
+import com.azure.messaging.servicebus.ServiceBusReceiverAsyncClient;
+import com.azure.messaging.servicebus.ServiceBusSenderAsyncClient;
 import com.azure.messaging.servicebus.ServiceBusTransactionContext;
 import com.azure.messaging.servicebus.models.ServiceBusReceiveMode;
 import com.azure.messaging.servicebus.models.SubQueue;
 import org.apache.camel.RuntimeCamelException;
-import org.apache.camel.spi.*;
+import org.apache.camel.spi.Metadata;
+import org.apache.camel.spi.UriParam;
+import org.apache.camel.spi.UriParams;
+import org.apache.camel.spi.UriPath;
 
 @UriParams
-public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyAware {
+public class ServiceBusConfiguration implements Cloneable {
 
     @UriPath
     private String topicOrQueueName;
@@ -44,7 +48,6 @@ public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyA
     private String connectionString;
     @UriParam(label = "security")
     private String fullyQualifiedNamespace;
-    @Metadata(autowired = true)
     @UriParam(label = "security", secret = true)
     private TokenCredential tokenCredential;
     @UriParam(label = "common")
@@ -55,16 +58,15 @@ public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyA
     private AmqpRetryOptions amqpRetryOptions;
     @UriParam(label = "common", defaultValue = "AMQP")
     private AmqpTransportType amqpTransportType = AmqpTransportType.AMQP;
-    @UriParam(label = "common",
-              description = "To use a custom HeaderFilterStrategy to filter Service Bus application properties to and from Camel message headers.")
-    private HeaderFilterStrategy headerFilterStrategy = new ServiceBusHeaderFilterStrategy();
+    @UriParam(label = "consumer", defaultValue = "receiveMessages")
+    private ServiceBusConsumerOperationDefinition consumerOperation = ServiceBusConsumerOperationDefinition.receiveMessages;
     @UriParam(label = "consumer")
     @Metadata(autowired = true)
-    private ServiceBusProcessorClient processorClient;
+    private ServiceBusReceiverAsyncClient receiverAsyncClient;
     @UriParam(label = "consumer")
     private String subscriptionName;
     @UriParam(label = "consumer")
-    private boolean enableDeadLettering;
+    private boolean disableAutoComplete;
     @UriParam(label = "consumer", defaultValue = "PEEK_LOCK")
     private ServiceBusReceiveMode serviceBusReceiveMode = ServiceBusReceiveMode.PEEK_LOCK;
     @UriParam(label = "consumer", defaultValue = "5m")
@@ -73,49 +75,17 @@ public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyA
     private int prefetchCount;
     @UriParam(label = "consumer")
     private SubQueue subQueue;
-    @UriParam(label = "consumer", defaultValue = "1")
-    private int maxConcurrentCalls = 1;
+    @UriParam(label = "consumer")
+    private Integer peekNumMaxMessages;
     @UriParam(label = "producer", defaultValue = "sendMessages")
     private ServiceBusProducerOperationDefinition producerOperation = ServiceBusProducerOperationDefinition.sendMessages;
     @UriParam(label = "producer")
     @Metadata(autowired = true)
-    private ServiceBusSenderClient senderClient;
+    private ServiceBusSenderAsyncClient senderAsyncClient;
     @UriParam(label = "producer")
     private ServiceBusTransactionContext serviceBusTransactionContext;
     @UriParam(label = "producer")
     private OffsetDateTime scheduledEnqueueTime;
-    @UriParam(label = "producer")
-    private boolean binary;
-    @UriParam(label = "security", enums = "AZURE_IDENTITY,CONNECTION_STRING,TOKEN_CREDENTIAL",
-              defaultValue = "CONNECTION_STRING")
-    private CredentialType credentialType;
-    // New fields for session support
-    @UriParam(label = "consumer", defaultValue = "false", description = "Enable session support")
-    private boolean sessionEnabled;
-    @UriParam(label = "producer", description = "Session ID for session-enabled queues or topics.")
-    private String sessionId;
-
-    /**
-     * Flag to enable sessions. Default is false. Used to create processor client for message consumer
-     */
-    public boolean isSessionEnabled() {
-        return sessionEnabled;
-    }
-
-    public void setSessionEnabled(boolean sessionEnabled) {
-        this.sessionEnabled = sessionEnabled;
-    }
-
-    /**
-     * SessionId for the message. To set this field, sessionEnabled should be set to true.
-     */
-    public String getSessionId() {
-        return sessionId;
-    }
-
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
-    }
 
     /**
      * Selected topic name or the queue name, that is depending on serviceBusType config. For example if
@@ -165,8 +135,9 @@ public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyA
     }
 
     /**
-     * Sets the ClientOptions to be sent from the client built from this builder, enabling customization of certain
-     * properties, as well as support the addition of custom header information.
+     * Sets the {@link ClientOptions} to be sent from the client built from this builder, enabling customization of
+     * certain properties, as well as support the addition of custom header information. Refer to the
+     * {@link ClientOptions} documentation for more information.
      */
     public ClientOptions getClientOptions() {
         return clientOptions;
@@ -177,8 +148,8 @@ public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyA
     }
 
     /**
-     * Sets the proxy configuration to use for ServiceBusSenderClient. When a proxy is configured, AMQP_WEB_SOCKETS must
-     * be used for the transport type.
+     * Sets the proxy configuration to use for {@link ServiceBusSenderAsyncClient}. When a proxy is configured,
+     * {@link AmqpTransportType#AMQP_WEB_SOCKETS} must be used for the transport type.
      */
     public ProxyOptions getProxyOptions() {
         return proxyOptions;
@@ -200,7 +171,8 @@ public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyA
     }
 
     /**
-     * Sets the transport type by which all the communication with Azure Service Bus occurs. Default value is AMQP.
+     * Sets the transport type by which all the communication with Azure Service Bus occurs. Default value is
+     * {@link AmqpTransportType#AMQP}.
      */
     public AmqpTransportType getAmqpTransportType() {
         return amqpTransportType;
@@ -211,37 +183,27 @@ public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyA
     }
 
     /**
-     * To use a custom HeaderFilterStrategy to filter headers (application properties) to and from the Camel message.
+     * Sets the receiverAsyncClient in order to consume messages by the consumer
      */
-    public HeaderFilterStrategy getHeaderFilterStrategy() {
-        return headerFilterStrategy;
+    public ServiceBusReceiverAsyncClient getReceiverAsyncClient() {
+        return receiverAsyncClient;
     }
 
-    public void setHeaderFilterStrategy(HeaderFilterStrategy headerFilterStrategy) {
-        this.headerFilterStrategy = headerFilterStrategy;
+    public void setReceiverAsyncClient(ServiceBusReceiverAsyncClient receiverAsyncClient) {
+        this.receiverAsyncClient = receiverAsyncClient;
     }
 
     /**
-     * Sets the processorClient in order to consume messages by the consumer
+     * Disables auto-complete and auto-abandon of received messages. By default, a successfully processed message is
+     * {@link ServiceBusReceiverAsyncClient#complete(ServiceBusReceivedMessage) completed}. If an error happens when the
+     * message is processed, it is {@link ServiceBusReceiverAsyncClient#abandon(ServiceBusReceivedMessage) abandoned}.
      */
-    public ServiceBusProcessorClient getProcessorClient() {
-        return processorClient;
+    public boolean isDisableAutoComplete() {
+        return disableAutoComplete;
     }
 
-    public void setProcessorClient(ServiceBusProcessorClient processorClient) {
-        this.processorClient = processorClient;
-    }
-
-    /**
-     * Enable application level deadlettering to the subscription deadletter subqueue if deadletter related headers are
-     * set.
-     */
-    public boolean isEnableDeadLettering() {
-        return enableDeadLettering;
-    }
-
-    public void setEnableDeadLettering(boolean enableDeadLettering) {
-        this.enableDeadLettering = enableDeadLettering;
+    public void setDisableAutoComplete(boolean disableAutoComplete) {
+        this.disableAutoComplete = disableAutoComplete;
     }
 
     /**
@@ -256,8 +218,9 @@ public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyA
     }
 
     /**
-     * Sets the amount of time to continue auto-renewing the lock. Setting ZERO disables auto-renewal. For ServiceBus
-     * receive mode (RECEIVE_AND_DELETE RECEIVE_AND_DELETE), auto-renewal is disabled.
+     * Sets the amount of time to continue auto-renewing the lock. Setting {@link Duration#ZERO} or {@code null}
+     * disables auto-renewal. For {@link ServiceBusReceiveMode#RECEIVE_AND_DELETE RECEIVE_AND_DELETE} mode, auto-renewal
+     * is disabled.
      */
     public Duration getMaxAutoLockRenewDuration() {
         return maxAutoLockRenewDuration;
@@ -268,12 +231,12 @@ public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyA
     }
 
     /**
-     * Sets the prefetch count of the receiver. For both PEEK_LOCK PEEK_LOCK and RECEIVE_AND_DELETE RECEIVE_AND_DELETE
-     * receive modes the default value is 1.
-     * <p>
+     * Sets the prefetch count of the receiver. For both {@link ServiceBusReceiveMode#PEEK_LOCK PEEK_LOCK} and
+     * {@link ServiceBusReceiveMode#RECEIVE_AND_DELETE RECEIVE_AND_DELETE} modes the default value is 1.
+     *
      * Prefetch speeds up the message flow by aiming to have a message readily available for local retrieval when and
-     * before the application asks for one using receive message. Setting a non-zero value will prefetch that number of
-     * messages. Setting the value to zero turns prefetch off.
+     * before the application asks for one using {@link ServiceBusReceiverAsyncClient#receiveMessages()}. Setting a
+     * non-zero value will prefetch that number of messages. Setting the value to zero turns prefetch off.
      */
     public int getPrefetchCount() {
         return prefetchCount;
@@ -284,7 +247,7 @@ public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyA
     }
 
     /**
-     * Sets the type of the SubQueue to connect to.
+     * Sets the type of the {@link SubQueue} to connect to.
      */
     public SubQueue getSubQueue() {
         return subQueue;
@@ -295,25 +258,14 @@ public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyA
     }
 
     /**
-     * Sets maximum number of concurrent calls
+     * Sets SenderAsyncClient to be used in the producer.
      */
-    public int getMaxConcurrentCalls() {
-        return maxConcurrentCalls;
+    public ServiceBusSenderAsyncClient getSenderAsyncClient() {
+        return senderAsyncClient;
     }
 
-    public void setMaxConcurrentCalls(int maxConcurrentCalls) {
-        this.maxConcurrentCalls = maxConcurrentCalls;
-    }
-
-    /**
-     * Sets senderClient to be used in the producer.
-     */
-    public ServiceBusSenderClient getSenderClient() {
-        return senderClient;
-    }
-
-    public void setSenderClient(ServiceBusSenderClient senderClient) {
-        this.senderClient = senderClient;
+    public void setSenderAsyncClient(ServiceBusSenderAsyncClient senderAsyncClient) {
+        this.senderAsyncClient = senderAsyncClient;
     }
 
     /**
@@ -328,7 +280,7 @@ public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyA
     }
 
     /**
-     * A TokenCredential for Azure AD authentication.
+     * A {@link TokenCredential} for Azure AD authentication, implemented in {@link com.azure.identity}
      */
     public TokenCredential getTokenCredential() {
         return tokenCredential;
@@ -336,6 +288,17 @@ public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyA
 
     public void setTokenCredential(TokenCredential tokenCredential) {
         this.tokenCredential = tokenCredential;
+    }
+
+    /**
+     * Sets the desired operation to be used in the consumer
+     */
+    public ServiceBusConsumerOperationDefinition getConsumerOperation() {
+        return consumerOperation;
+    }
+
+    public void setConsumerOperation(ServiceBusConsumerOperationDefinition consumerOperation) {
+        this.consumerOperation = consumerOperation;
     }
 
     /**
@@ -372,25 +335,14 @@ public class ServiceBusConfiguration implements Cloneable, HeaderFilterStrategyA
     }
 
     /**
-     * Set binary mode. If true, message body will be sent as byte[]. By default, it is false.
+     * Set the max number of messages to be peeked during the peek operation.
      */
-    public boolean isBinary() {
-        return binary;
+    public Integer getPeekNumMaxMessages() {
+        return peekNumMaxMessages;
     }
 
-    public void setBinary(boolean binary) {
-        this.binary = binary;
-    }
-
-    public CredentialType getCredentialType() {
-        return credentialType;
-    }
-
-    /**
-     * Determines the credential strategy to adopt
-     */
-    public void setCredentialType(CredentialType credentialType) {
-        this.credentialType = credentialType;
+    public void setPeekNumMaxMessages(Integer peekNumMaxMessages) {
+        this.peekNumMaxMessages = peekNumMaxMessages;
     }
 
     // *************************************************

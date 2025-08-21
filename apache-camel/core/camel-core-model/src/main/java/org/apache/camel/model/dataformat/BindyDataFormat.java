@@ -34,16 +34,17 @@ import org.apache.camel.spi.Metadata;
  */
 @Metadata(firstVersion = "2.0.0", label = "dataformat,transformation,csv", title = "Bindy")
 @XmlRootElement(name = "bindy")
-@XmlAccessorType(XmlAccessType.NONE)
+@XmlAccessorType(XmlAccessType.FIELD)
 public class BindyDataFormat extends DataFormatDefinition {
 
-    private Class<?> classType;
+    @XmlTransient
+    private Class<?> clazz;
 
     @XmlAttribute(required = true)
     @Metadata(required = true, javaType = "org.apache.camel.model.dataformat.BindyType", enums = "Csv,Fixed,KeyValue")
     private String type;
-    @XmlAttribute(name = "classType")
-    private String classTypeAsString;
+    @XmlAttribute
+    private String classType;
     @XmlAttribute
     @Metadata(javaType = "java.lang.Boolean", defaultValue = "false")
     private String allowEmptyStream;
@@ -58,29 +59,14 @@ public class BindyDataFormat extends DataFormatDefinition {
         super("bindy");
     }
 
-    protected BindyDataFormat(BindyDataFormat source) {
-        super(source);
-        this.classType = source.classType;
-        this.type = source.type;
-        this.classTypeAsString = source.classTypeAsString;
-        this.allowEmptyStream = source.allowEmptyStream;
-        this.unwrapSingleInstance = source.unwrapSingleInstance;
-        this.locale = source.locale;
-    }
-
     private BindyDataFormat(Builder builder) {
         this();
-        this.classType = builder.classType;
+        this.clazz = builder.clazz;
         this.type = builder.type;
-        this.classTypeAsString = builder.classTypeAsString;
+        this.classType = builder.classType;
         this.allowEmptyStream = builder.allowEmptyStream;
         this.unwrapSingleInstance = builder.unwrapSingleInstance;
         this.locale = builder.locale;
-    }
-
-    @Override
-    public BindyDataFormat copyDefinition() {
-        return new BindyDataFormat(this);
     }
 
     public String getType() {
@@ -95,14 +81,7 @@ public class BindyDataFormat extends DataFormatDefinition {
     }
 
     public String getClassTypeAsString() {
-        return classTypeAsString;
-    }
-
-    /**
-     * Name of model class to use.
-     */
-    public void setClassTypeAsString(String classType) {
-        this.classTypeAsString = classType;
+        return classType;
     }
 
     @Override
@@ -119,12 +98,26 @@ public class BindyDataFormat extends DataFormatDefinition {
     /**
      * Name of model class to use.
      */
-    public void setClassType(Class<?> classType) {
+    public void setClassTypeAsString(String classType) {
         this.classType = classType;
     }
 
+    /**
+     * Name of model class to use.
+     */
+    public void setClassType(String classType) {
+        setClassTypeAsString(classType);
+    }
+
+    /**
+     * Name of model class to use.
+     */
+    public void setClassType(Class<?> classType) {
+        this.clazz = classType;
+    }
+
     public Class<?> getClassType() {
-        return classType;
+        return clazz;
     }
 
     public String getLocale() {
@@ -190,12 +183,12 @@ public class BindyDataFormat extends DataFormatDefinition {
     }
 
     public BindyDataFormat classType(Class<?> classType) {
-        this.classType = classType;
+        this.clazz = classType;
         return this;
     }
 
     public BindyDataFormat classType(String classType) {
-        this.classTypeAsString = classType;
+        this.classType = classType;
         return this;
     }
 
@@ -233,9 +226,9 @@ public class BindyDataFormat extends DataFormatDefinition {
     @XmlTransient
     public static class Builder implements DataFormatBuilder<BindyDataFormat> {
 
-        private Class<?> classType;
+        private Class<?> clazz;
         private String type;
-        private String classTypeAsString;
+        private String classType;
         private String allowEmptyStream;
         private String unwrapSingleInstance;
         private String locale;
@@ -255,8 +248,8 @@ public class BindyDataFormat extends DataFormatDefinition {
         /**
          * Name of model class to use.
          */
-        public Builder classType(String classTypeAsString) {
-            this.classTypeAsString = classTypeAsString;
+        public Builder classType(String classType) {
+            this.classType = classType;
             return this;
         }
 
@@ -264,7 +257,7 @@ public class BindyDataFormat extends DataFormatDefinition {
          * Name of model class to use.
          */
         public Builder classType(Class<?> classType) {
-            this.classType = classType;
+            this.clazz = classType;
             return this;
         }
 

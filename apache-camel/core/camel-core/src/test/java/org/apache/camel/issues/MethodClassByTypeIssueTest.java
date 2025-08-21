@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
  */
 public class MethodClassByTypeIssueTest extends ContextTestSupport {
 
-    private final Object methodClass = MyTransformBean.class;
+    private Object methodClass = MyTransformBean.class;
 
     @Test
     public void testMethodClassByTypeAIssue() throws Exception {
@@ -46,10 +46,10 @@ public class MethodClassByTypeIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:a").transform().method(MyTransformBean.class, "transformMe").to("mock:a");
 
                 from("direct:b").transform().method(methodClass, "transformMe").to("mock:b");

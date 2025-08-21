@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 
 public class XPathSplitStreamTest extends ContextTestSupport {
 
-    private static final int size = 100;
+    private static int size = 100;
 
     @Override
     @BeforeEach
@@ -56,10 +56,10 @@ public class XPathSplitStreamTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 XPathBuilder personXPath = XPathBuilder.xpath("/persons/person").documentType(InputSource.class);
 
                 // START SNIPPET: e1

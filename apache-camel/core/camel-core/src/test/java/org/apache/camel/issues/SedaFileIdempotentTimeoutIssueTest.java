@@ -25,10 +25,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class SedaFileIdempotentTimeoutIssueTest extends SedaFileIdempotentIssueTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(RuntimeException.class).process(new ShutDown());
 
                 from(fileUri("inbox?idempotent=true&noop=true&idempotentRepository=#repo&initialDelay=0&delay=10"))

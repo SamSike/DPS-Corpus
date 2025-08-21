@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class MulticastParallelFailureEndpointTest extends ContextTestSupport {
 
@@ -46,7 +45,7 @@ public class MulticastParallelFailureEndpointTest extends ContextTestSupport {
 
         // try..catch block should clear handled exceptions
         assertNotNull(result);
-        assertNull(result.getProperty(Exchange.FAILURE_ENDPOINT));
+        assertEquals(null, result.getProperty(Exchange.FAILURE_ENDPOINT));
     }
 
     public Exchange runTest(String uri) throws Exception {
@@ -66,10 +65,10 @@ public class MulticastParallelFailureEndpointTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").doTry().to("direct:run").doCatch(IllegalArgumentException.class)
                         // ignore
                         .end().to("mock:result");

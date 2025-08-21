@@ -24,6 +24,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.component.thrift.ThriftConstants;
 import org.apache.camel.component.thrift.ThriftConsumer;
+import org.apache.camel.component.thrift.ThriftEndpoint;
 import org.apache.camel.component.thrift.ThriftUtils;
 import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
@@ -33,9 +34,11 @@ import org.apache.thrift.async.AsyncMethodCallback;
  * Thrift server methods invocation handler
  */
 public class ThriftMethodHandler implements MethodHandler {
+    private final ThriftEndpoint endpoint;
     private final ThriftConsumer consumer;
 
-    public ThriftMethodHandler(ThriftConsumer consumer) {
+    public ThriftMethodHandler(ThriftEndpoint endpoint, ThriftConsumer consumer) {
+        this.endpoint = endpoint;
         this.consumer = consumer;
     }
 

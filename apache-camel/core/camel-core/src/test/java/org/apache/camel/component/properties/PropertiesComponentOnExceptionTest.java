@@ -26,7 +26,7 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class PropertiesComponentOnExceptionTest extends ContextTestSupport {
 
@@ -37,18 +37,21 @@ public class PropertiesComponentOnExceptionTest extends ContextTestSupport {
         mock.message(0).header(Exchange.REDELIVERED).isEqualTo(true);
         mock.message(0).header(Exchange.REDELIVERY_COUNTER).isEqualTo(3);
 
-        assertThrows(Exception.class,
-                () -> template.sendBody("direct:start", "Hello World"),
-                "Should throw exception");
+        try {
+            template.sendBody("direct:start", "Hello World");
+            fail("Should throw exception");
+        } catch (Exception e) {
+            // expected
+        }
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).redeliveryDelay("{{delay}}").maximumRedeliveries("{{max}}").to("mock:dead");
 
                 from("direct:start").throwException(new IllegalAccessException("Damn"));
@@ -57,8 +60,8 @@ public class PropertiesComponentOnExceptionTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
 
         Properties cool = new Properties();
         cool.put("delay", "25");

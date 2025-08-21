@@ -3,7 +3,9 @@
  * Hooked into Spring's cache interception infrastructure via
  * {@link org.springframework.cache.interceptor.CacheOperationSource}.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.cache.annotation;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

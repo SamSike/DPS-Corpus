@@ -17,8 +17,6 @@
 package org.apache.camel.component.file;
 
 import java.io.File;
-import java.util.UUID;
-import java.util.concurrent.atomic.LongAdder;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
@@ -30,12 +28,12 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FileBeginFailureOneTimeTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello" + UUID.randomUUID() + ".txt";
-    private final MyStrategy myStrategy = new MyStrategy();
+
+    private MyStrategy myStrategy = new MyStrategy();
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myStrategy", myStrategy);
         return jndi;
     }
@@ -45,7 +43,7 @@ public class FileBeginFailureOneTimeTest extends ContextTestSupport {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(1);
 
-        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         assertMockEndpointsSatisfied();
 
@@ -53,10 +51,10 @@ public class FileBeginFailureOneTimeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?initialDelay=0&delay=10&processStrategy=#myStrategy")).convertBodyTo(String.class)
                         .to("mock:result");
             }
@@ -65,20 +63,22 @@ public class FileBeginFailureOneTimeTest extends ContextTestSupport {
 
     private static class MyStrategy implements GenericFileProcessStrategy<File> {
 
-        private final LongAdder invoked = new LongAdder();
+        private volatile int invoked;
 
         @Override
         public void prepareOnStartup(
-                GenericFileOperations<File> fileGenericFileOperations, GenericFileEndpoint<File> fileGenericFileEndpoint) { //noop
+                GenericFileOperations<File> fileGenericFileOperations, GenericFileEndpoint<File> fileGenericFileEndpoint)
+                throws Exception {
         }
 
         @Override
         public boolean begin(
                 GenericFileOperations<File> fileGenericFileOperations, GenericFileEndpoint<File> fileGenericFileEndpoint,
                 Exchange exchange,
-                GenericFile<File> fileGenericFile) {
-            invoked.increment();
-            if (invoked.intValue() <= 1) {
+                GenericFile<File> fileGenericFile)
+                throws Exception {
+            invoked++;
+            if (invoked <= 1) {
                 throw new IllegalArgumentException("Damn I cannot do this");
             }
             return true;
@@ -88,7 +88,8 @@ public class FileBeginFailureOneTimeTest extends ContextTestSupport {
         public void abort(
                 GenericFileOperations<File> fileGenericFileOperations, GenericFileEndpoint<File> fileGenericFileEndpoint,
                 Exchange exchange,
-                GenericFile<File> fileGenericFile) {
+                GenericFile<File> fileGenericFile)
+                throws Exception {
             // noop
         }
 
@@ -96,18 +97,20 @@ public class FileBeginFailureOneTimeTest extends ContextTestSupport {
         public void commit(
                 GenericFileOperations<File> fileGenericFileOperations, GenericFileEndpoint<File> fileGenericFileEndpoint,
                 Exchange exchange,
-                GenericFile<File> fileGenericFile) { // noop - has to implement interface, but nothing to do
+                GenericFile<File> fileGenericFile)
+                throws Exception {
         }
 
         @Override
         public void rollback(
                 GenericFileOperations<File> fileGenericFileOperations, GenericFileEndpoint<File> fileGenericFileEndpoint,
                 Exchange exchange,
-                GenericFile<File> fileGenericFile) { //noop - has to implement interface, but nothing to do
+                GenericFile<File> fileGenericFile)
+                throws Exception {
         }
 
         public int getInvoked() {
-            return invoked.intValue();
+            return invoked;
         }
     }
 

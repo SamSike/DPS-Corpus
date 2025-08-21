@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,25 +51,20 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.impl.QOM.IdentityRestartOption;
-import org.jooq.impl.QOM.Cascade;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
  * The <code>TRUNCATE</code> statement.
  */
-@SuppressWarnings({ "rawtypes", "unused" })
+@SuppressWarnings({ "rawtypes", "unchecked", "unused" })
 final class TruncateImpl<R extends Record>
 extends
     AbstractDDLQuery
@@ -81,13 +76,13 @@ implements
     org.jooq.Truncate<R>
 {
 
-    final QueryPartListView<? extends Table<?>> table;
-          IdentityRestartOption                 restartIdentity;
-          Cascade                               cascade;
+    final Table<R>              table;
+          IdentityRestartOption restartIdentity;
+          Cascade               cascade;
 
     TruncateImpl(
         Configuration configuration,
-        Collection<? extends Table<?>> table
+        Table<R> table
     ) {
         this(
             configuration,
@@ -99,13 +94,13 @@ implements
 
     TruncateImpl(
         Configuration configuration,
-        Collection<? extends Table<?>> table,
+        Table<R> table,
         IdentityRestartOption restartIdentity,
         Cascade cascade
     ) {
         super(configuration);
 
-        this.table = new QueryPartList<>(table);
+        this.table = table;
         this.restartIdentity = restartIdentity;
         this.cascade = cascade;
     }
@@ -157,51 +152,42 @@ implements
             case FIREBIRD:
             case IGNITE:
             case SQLITE: {
-
-                // [#2356] Only single table TRUNCATE can be emulated this way. By default
-                //         let the query fail in the database.
-                if (table.size() == 1)
-                    ctx.visit(delete(table.get(0)));
-                else
-                    accept0(ctx);
-
+                ctx.visit(delete(table));
                 break;
             }
 
-            default:
-                accept0(ctx);
+            // All other dialects do
+            default: {
+                ctx.start(Clause.TRUNCATE_TRUNCATE)
+                   .visit(K_TRUNCATE).sql(' ').visit(K_TABLE).sql(' ')
+                   .visit(table);
+
+
+
+
+
+
+                if (restartIdentity != null)
+                    ctx.formatSeparator()
+                       .visit(restartIdentity.keyword);
+
+                if (cascade != null)
+
+
+
+
+
+
+
+
+
+                        ctx.formatSeparator()
+                           .visit(cascade == Cascade.CASCADE ? K_CASCADE : K_RESTRICT);
+
+                ctx.end(Clause.TRUNCATE_TRUNCATE);
                 break;
+            }
         }
-    }
-
-    final void accept0(Context<?> ctx) {
-        ctx.start(Clause.TRUNCATE_TRUNCATE)
-           .visit(K_TRUNCATE).sql(' ').visit(K_TABLE).sql(' ')
-           .visit(table);
-
-
-
-
-
-
-        if (restartIdentity != null)
-            ctx.formatSeparator()
-               .visit(restartIdentity.keyword);
-
-        if (cascade != null)
-
-
-
-
-
-
-
-
-
-                ctx.formatSeparator()
-                   .visit(cascade == Cascade.CASCADE ? K_CASCADE : K_RESTRICT);
-
-        ctx.end(Clause.TRUNCATE_TRUNCATE);
     }
 
     @Override
@@ -216,8 +202,8 @@ implements
     // -------------------------------------------------------------------------
 
     @Override
-    public final QOM.UnmodifiableList<? extends Table<?>> $table() {
-        return QOM.unmodifiable(table);
+    public final Table<R> $table() {
+        return table;
     }
 
     @Override
@@ -231,7 +217,7 @@ implements
     }
 
     @Override
-    public final QOM.Truncate<R> $table(Collection<? extends Table<?>> newValue) {
+    public final QOM.Truncate<R> $table(Table<R> newValue) {
         return $constructor().apply(newValue, $restartIdentity(), $cascade());
     }
 
@@ -245,8 +231,8 @@ implements
         return $constructor().apply($table(), $restartIdentity(), newValue);
     }
 
-    public final Function3<? super Collection<? extends Table<?>>, ? super IdentityRestartOption, ? super Cascade, ? extends QOM.Truncate<R>> $constructor() {
-        return (a1, a2, a3) -> new TruncateImpl(configuration(), (Collection<? extends Table<?>>) a1, a2, a3);
+    public final Function3<? super Table<R>, ? super IdentityRestartOption, ? super Cascade, ? extends QOM.Truncate<R>> $constructor() {
+        return (a1, a2, a3) -> new TruncateImpl(configuration(), a1, a2, a3);
     }
 
 

@@ -185,8 +185,7 @@ public class PushTopicHelper {
         } catch (IOException e) {
             throw new CamelException(String.format("Un-marshaling error creating Topic %s: %s", topicName, e.getMessage()), e);
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new CamelException(String.format("Interrupted while creating Topic %s", topicName), e);
+            throw new CamelException(String.format("Un-marshaling error creating Topic %s: %s", topicName, e.getMessage()), e);
         } finally {
             if (callback.getResponse() != null) {
                 try {

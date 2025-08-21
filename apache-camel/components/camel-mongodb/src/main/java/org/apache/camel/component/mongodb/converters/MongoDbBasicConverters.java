@@ -72,11 +72,6 @@ public final class MongoDbBasicConverters {
     }
 
     @Converter
-    public static Bson fromStringToBson(String s) {
-        return Document.parse(s);
-    }
-
-    @Converter
     public static ObjectId fromStringToObjectId(String s) {
         return new ObjectId(s);
     }
@@ -99,11 +94,6 @@ public final class MongoDbBasicConverters {
         }
 
         return answer;
-    }
-
-    @Converter
-    public static Bson fromInputStreamToBson(InputStream is, Exchange exchange) throws Exception {
-        return fromInputStreamToDocument(is, exchange);
     }
 
     @Converter

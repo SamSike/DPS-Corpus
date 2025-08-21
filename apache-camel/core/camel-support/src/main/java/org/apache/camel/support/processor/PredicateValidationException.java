@@ -16,8 +16,6 @@
  */
 package org.apache.camel.support.processor;
 
-import java.io.Serial;
-
 import org.apache.camel.Exchange;
 import org.apache.camel.Predicate;
 import org.apache.camel.ValidationException;
@@ -27,7 +25,7 @@ import org.apache.camel.ValidationException;
  */
 public class PredicateValidationException extends ValidationException {
 
-    private static final @Serial long serialVersionUID = 5767438583860347105L;
+    private static final long serialVersionUID = 5767438583860347105L;
 
     private final Predicate predicate;
 
@@ -37,9 +35,7 @@ public class PredicateValidationException extends ValidationException {
     }
 
     protected static String buildMessage(Predicate predicate, Exchange exchange) {
-        StringBuilder builder = new StringBuilder(256);
-
-        builder.append("Validation failed for Predicate[");
+        StringBuilder builder = new StringBuilder("Validation failed for Predicate[");
         builder.append(predicate.toString());
         builder.append("]");
         return builder.toString();

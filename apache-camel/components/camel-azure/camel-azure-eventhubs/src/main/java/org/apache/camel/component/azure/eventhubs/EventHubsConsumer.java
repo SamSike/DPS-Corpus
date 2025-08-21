@@ -24,6 +24,7 @@ import com.azure.messaging.eventhubs.models.ErrorContext;
 import com.azure.messaging.eventhubs.models.EventContext;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.component.azure.eventhubs.client.EventHubsClientFactory;
@@ -126,7 +127,7 @@ public class EventHubsConsumer extends DefaultConsumer {
         final Exchange exchange = createAzureEventHubExchange(eventContext);
 
         // add exchange callback
-        exchange.getExchangeExtension().addOnCompletion(new Synchronization() {
+        exchange.adapt(ExtendedExchange.class).addOnCompletion(new Synchronization() {
             @Override
             public void onComplete(Exchange exchange) {
                 // we update the consumer offsets

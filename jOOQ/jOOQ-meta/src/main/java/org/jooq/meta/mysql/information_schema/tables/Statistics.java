@@ -4,8 +4,8 @@
 package org.jooq.meta.mysql.information_schema.tables;
 
 
-import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.ForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -25,7 +25,7 @@ import org.jooq.types.UInteger;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Statistics extends TableImpl<Record> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -277536801;
 
     /**
      * The reference instance of <code>information_schema.STATISTICS</code>
@@ -131,24 +131,22 @@ public class Statistics extends TableImpl<Record> {
     public final TableField<Record, String> EXPRESSION = createField(DSL.name("EXPRESSION"), SQLDataType.CLOB, this, "");
 
     private Statistics(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Statistics(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private Statistics(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
-     * Create an aliased <code>information_schema.STATISTICS</code> table
-     * reference
+     * Create an aliased <code>information_schema.STATISTICS</code> table reference
      */
     public Statistics(String alias) {
         this(DSL.name(alias), STATISTICS);
     }
 
     /**
-     * Create an aliased <code>information_schema.STATISTICS</code> table
-     * reference
+     * Create an aliased <code>information_schema.STATISTICS</code> table reference
      */
     public Statistics(Name alias) {
         this(alias, STATISTICS);
@@ -161,9 +159,13 @@ public class Statistics extends TableImpl<Record> {
         this(DSL.name("STATISTICS"), null);
     }
 
+    public <O extends Record> Statistics(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, STATISTICS);
+    }
+
     @Override
     public Schema getSchema() {
-        return aliased() ? null : InformationSchema.INFORMATION_SCHEMA;
+        return InformationSchema.INFORMATION_SCHEMA;
     }
 
     @Override
@@ -176,8 +178,19 @@ public class Statistics extends TableImpl<Record> {
         return new Statistics(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public Statistics as(Table<?> alias) {
-        return new Statistics(alias.getQualifiedName(), this);
+    public Statistics rename(String name) {
+        return new Statistics(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public Statistics rename(Name name) {
+        return new Statistics(name, null);
     }
 }

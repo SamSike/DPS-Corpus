@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,8 @@ package org.springframework.web.servlet.mvc.method.annotation;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.stream.Stream;
 
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
@@ -33,6 +30,7 @@ import org.springframework.aop.support.StaticMethodMatcherPointcut;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.WebDataBinder;
@@ -51,8 +49,6 @@ import org.springframework.web.testfixture.servlet.MockHttpServletRequest;
 import org.springframework.web.testfixture.servlet.MockHttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Named.named;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 /**
  * Test various scenarios for detecting method-level and method parameter annotations depending
@@ -64,38 +60,33 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
  */
 class HandlerMethodAnnotationDetectionTests {
 
-	static Stream<Arguments> handlerTypes() {
-		return Stream.of(
-				args(SimpleController.class, true), // CGLIB proxy
-				args(SimpleController.class, false),
+	static Object[][] handlerTypes() {
+		return new Object[][] {
+				{ SimpleController.class, true }, // CGLIB proxy
+				{ SimpleController.class, false },
 
-				args(AbstractClassController.class, true), // CGLIB proxy
-				args(AbstractClassController.class, false),
+				{ AbstractClassController.class, true }, // CGLIB proxy
+				{ AbstractClassController.class, false },
 
-				args(ParameterizedAbstractClassController.class, true), // CGLIB proxy
-				args(ParameterizedAbstractClassController.class, false),
+				{ ParameterizedAbstractClassController.class, true }, // CGLIB proxy
+				{ ParameterizedAbstractClassController.class, false },
 
-				args(ParameterizedSubclassOverridesDefaultMappings.class, true), // CGLIB proxy
-				args(ParameterizedSubclassOverridesDefaultMappings.class, false),
+				{ ParameterizedSubclassOverridesDefaultMappings.class, true }, // CGLIB proxy
+				{ ParameterizedSubclassOverridesDefaultMappings.class, false },
 
 				// TODO [SPR-9517] Enable ParameterizedSubclassDoesNotOverrideConcreteImplementationsFromGenericAbstractSuperclass test cases
-				// args(ParameterizedSubclassDoesNotOverrideConcreteImplementationsFromGenericAbstractSuperclass.class, true), // CGLIB proxy
-				// args(ParameterizedSubclassDoesNotOverrideConcreteImplementationsFromGenericAbstractSuperclass.class, false),
+				// { ParameterizedSubclassDoesNotOverrideConcreteImplementationsFromGenericAbstractSuperclass.class, true }, // CGLIB proxy
+				// { ParameterizedSubclassDoesNotOverrideConcreteImplementationsFromGenericAbstractSuperclass.class, false },
 
-				// args(InterfaceController.class, true), // JDK dynamic proxy (gh-22154: no longer supported))
-				args(InterfaceController.class, false),
+				{ InterfaceController.class, true }, // JDK dynamic proxy
+				{ InterfaceController.class, false },
 
-				args(ParameterizedInterfaceController.class, false), // no AOP
+				{ ParameterizedInterfaceController.class, false }, // no AOP
 
-				args(SupportClassController.class, true), // CGLIB proxy
-				args(SupportClassController.class, false)
-		);
+				{ SupportClassController.class, true }, // CGLIB proxy
+				{ SupportClassController.class, false }
+		};
 	}
-
-	private static Arguments args(Class<?> controllerType, boolean useAutoProxy) {
-		return arguments(named(controllerType.getSimpleName(), controllerType), useAutoProxy);
-	}
-
 
 	private RequestMappingHandlerMapping handlerMapping;
 
@@ -125,9 +116,9 @@ class HandlerMethodAnnotationDetectionTests {
 	}
 
 
-	@ParameterizedTest(name = "[{index}] controller = {0}, auto-proxy = {1}")
+	@ParameterizedTest(name = "[{index}] controller [{0}], auto-proxy [{1}]")
 	@MethodSource("handlerTypes")
-	void requestMappingMethod(Class<?> controllerType, boolean useAutoProxy) throws Exception {
+	void testRequestMappingMethod(Class<?> controllerType, boolean useAutoProxy) throws Exception {
 		setUp(controllerType, useAutoProxy);
 
 		String datePattern = "MM:dd:yyyy";
@@ -187,7 +178,7 @@ class HandlerMethodAnnotationDetectionTests {
 
 
 	@Controller
-	abstract static class MappingAbstractClass {
+	static abstract class MappingAbstractClass {
 
 		@InitBinder
 		public abstract void initBinder(WebDataBinder dataBinder, String pattern);
@@ -259,7 +250,6 @@ class HandlerMethodAnnotationDetectionTests {
 	 * <p>JDK Dynamic proxy: All annotations must be on the interface.
 	 * <p>Without AOP: Annotations can be on interface methods except parameter annotations.
 	 */
-	@Controller
 	static class InterfaceController implements MappingInterface {
 
 		@Override
@@ -286,7 +276,7 @@ class HandlerMethodAnnotationDetectionTests {
 
 
 	@Controller
-	abstract static class MappingGenericAbstractClass<A, B, C> {
+	static abstract class MappingGenericAbstractClass<A, B, C> {
 
 		@InitBinder
 		public abstract void initBinder(WebDataBinder dataBinder, A thePattern);
@@ -334,7 +324,7 @@ class HandlerMethodAnnotationDetectionTests {
 
 
 	@Controller
-	abstract static class MappedGenericAbstractClassWithConcreteImplementations<A, B, C> {
+	static abstract class MappedGenericAbstractClassWithConcreteImplementations<A, B, C> {
 
 		@InitBinder
 		public abstract void initBinder(WebDataBinder dataBinder, A thePattern);
@@ -378,7 +368,7 @@ class HandlerMethodAnnotationDetectionTests {
 
 
 	@Controller
-	abstract static class GenericAbstractClassDeclaresDefaultMappings<A, B, C> {
+	static abstract class GenericAbstractClassDeclaresDefaultMappings<A, B, C> {
 
 		@InitBinder
 		public abstract void initBinder(WebDataBinder dataBinder, A thePattern);
@@ -453,7 +443,6 @@ class HandlerMethodAnnotationDetectionTests {
 	 * <p>All annotations can be on interface except parameter annotations.
 	 * <p>Cannot be used as JDK dynamic proxy since parameterized interface does not contain type information.
 	 */
-	@Controller
 	static class ParameterizedInterfaceController implements MappingGenericInterface<String, Date, Date> {
 
 		@Override

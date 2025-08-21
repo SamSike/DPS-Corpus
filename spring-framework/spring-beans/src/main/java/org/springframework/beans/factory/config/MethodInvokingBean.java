@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,13 @@ package org.springframework.beans.factory.config;
 
 import java.lang.reflect.InvocationTargetException;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.TypeConverter;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.support.ArgumentConvertingMethodInvoker;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -48,17 +47,17 @@ import org.springframework.util.ClassUtils;
  * which uses this class to call a static initialization method:
  *
  * <pre class="code">
- * &lt;bean id="myObject" class="org.springframework.beans.factory.config.MethodInvokingBean"&gt;
- *   &lt;property name="staticMethod" value="com.whatever.MyClass.init"/&gt;
- * &lt;/bean&gt;</pre>
+ * &lt;bean id="myObject" class="org.springframework.beans.factory.config.MethodInvokingBean">
+ *   &lt;property name="staticMethod" value="com.whatever.MyClass.init"/>
+ * &lt;/bean></pre>
  *
  * <p>An example of calling an instance method to start some server bean:
  *
  * <pre class="code">
- * &lt;bean id="myStarter" class="org.springframework.beans.factory.config.MethodInvokingBean"&gt;
- *   &lt;property name="targetObject" ref="myServer"/&gt;
- *   &lt;property name="targetMethod" value="start"/&gt;
- * &lt;/bean&gt;</pre>
+ * &lt;bean id="myStarter" class="org.springframework.beans.factory.config.MethodInvokingBean">
+ *   &lt;property name="targetObject" ref="myServer"/>
+ *   &lt;property name="targetMethod" value="start"/>
+ * &lt;/bean></pre>
  *
  * @author Juergen Hoeller
  * @since 4.0.3
@@ -68,9 +67,11 @@ import org.springframework.util.ClassUtils;
 public class MethodInvokingBean extends ArgumentConvertingMethodInvoker
 		implements BeanClassLoaderAware, BeanFactoryAware, InitializingBean {
 
-	private @Nullable ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
+	@Nullable
+	private ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
 
-	private @Nullable ConfigurableBeanFactory beanFactory;
+	@Nullable
+	private ConfigurableBeanFactory beanFactory;
 
 
 	@Override
@@ -85,8 +86,8 @@ public class MethodInvokingBean extends ArgumentConvertingMethodInvoker
 
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) {
-		if (beanFactory instanceof ConfigurableBeanFactory cbf) {
-			this.beanFactory = cbf;
+		if (beanFactory instanceof ConfigurableBeanFactory) {
+			this.beanFactory = (ConfigurableBeanFactory) beanFactory;
 		}
 	}
 
@@ -116,16 +117,17 @@ public class MethodInvokingBean extends ArgumentConvertingMethodInvoker
 	 * Perform the invocation and convert InvocationTargetException
 	 * into the underlying target exception.
 	 */
-	protected @Nullable Object invokeWithTargetException() throws Exception {
+	@Nullable
+	protected Object invokeWithTargetException() throws Exception {
 		try {
 			return invoke();
 		}
 		catch (InvocationTargetException ex) {
-			if (ex.getTargetException() instanceof Exception exception) {
-				throw exception;
+			if (ex.getTargetException() instanceof Exception) {
+				throw (Exception) ex.getTargetException();
 			}
-			if (ex.getTargetException() instanceof Error error) {
-				throw error;
+			if (ex.getTargetException() instanceof Error) {
+				throw (Error) ex.getTargetException();
 			}
 			throw ex;
 		}

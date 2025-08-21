@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -135,18 +132,6 @@ implements
             case MARIADB:
             case MYSQL: {
                 ctx.visit(N_DATE_ADD).sql('(').visit(date).sql(", ").visit(K_INTERVAL).sql(' ').visit(interval).sql(' ').visit(standardKeyword()).sql(')');
-                break;
-            }
-
-            case DUCKDB: {
-                if (getDataType().isDate())
-                    ctx.visit(K_CAST).sql('(');
-
-                ctx.visit(N_DATE_ADD).sql('(').visit(date).sql(", ").visit(K_INTERVAL).sql(' ').visit(inline(1)).sql(' ').visit(standardKeyword()).sql(" * ").visit(interval).sql(')');
-
-                if (getDataType().isDate())
-                    ctx.sql(' ').visit(K_AS).sql(' ').visit(K_DATE).sql(')');
-
                 break;
             }
 
@@ -254,11 +239,6 @@ implements
                 }
 
                 ctx.visit(N_STRFTIME).sql("('%Y-%m-%d %H:%M:%f', ").visit(date).sql(", ").visit(interval.concat(inline(string))).sql(')');
-                break;
-            }
-
-            case TRINO: {
-                ctx.visit(N_DATE_ADD).sql('(').visit(inline(datePart.toString().toLowerCase())).sql(", ").visit(interval).sql(", ").visit(date).sql(')');
                 break;
             }
 
@@ -442,39 +422,62 @@ implements
     // -------------------------------------------------------------------------
 
     @Override
-    public final Field<T> $arg1() {
+    public final Field<T> $date() {
         return date;
     }
 
     @Override
-    public final Field<? extends Number> $arg2() {
+    public final Field<? extends Number> $interval() {
         return interval;
     }
 
     @Override
-    public final DatePart $arg3() {
+    public final DatePart $datePart() {
         return datePart;
     }
 
     @Override
-    public final QOM.DateAdd<T> $arg1(Field<T> newValue) {
-        return $constructor().apply(newValue, $arg2(), $arg3());
+    public final QOM.DateAdd<T> $date(Field<T> newValue) {
+        return $constructor().apply(newValue, $interval(), $datePart());
     }
 
     @Override
-    public final QOM.DateAdd<T> $arg2(Field<? extends Number> newValue) {
-        return $constructor().apply($arg1(), newValue, $arg3());
+    public final QOM.DateAdd<T> $interval(Field<? extends Number> newValue) {
+        return $constructor().apply($date(), newValue, $datePart());
     }
 
     @Override
-    public final QOM.DateAdd<T> $arg3(DatePart newValue) {
-        return $constructor().apply($arg1(), $arg2(), newValue);
+    public final QOM.DateAdd<T> $datePart(DatePart newValue) {
+        return $constructor().apply($date(), $interval(), newValue);
     }
 
-    @Override
     public final Function3<? super Field<T>, ? super Field<? extends Number>, ? super DatePart, ? extends QOM.DateAdd<T>> $constructor() {
         return (a1, a2, a3) -> new DateAdd<>(a1, a2, a3);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // -------------------------------------------------------------------------
     // XXX: The Object API
@@ -482,7 +485,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.DateAdd<?> o) {
+        if (that instanceof QOM.DateAdd) { QOM.DateAdd<?> o = (QOM.DateAdd<?>) that;
             return
                 StringUtils.equals($date(), o.$date()) &&
                 StringUtils.equals($interval(), o.$interval()) &&

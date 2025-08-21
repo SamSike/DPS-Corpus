@@ -29,9 +29,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Isolated
 public class CamelContextTrackerTest {
 
-    private static final class MyContextTracker extends CamelContextTracker {
+    private final class MyContextTracker extends CamelContextTracker {
 
-        private final List<String> names = new ArrayList<>();
+        private List<String> names = new ArrayList<>();
 
         @Override
         public void contextCreated(CamelContext camelContext) {
@@ -45,7 +45,7 @@ public class CamelContextTrackerTest {
     }
 
     @Test
-    public void testContainerSet() {
+    public void testContainerSet() throws Exception {
         MyContextTracker tracker = new MyContextTracker();
 
         CamelContext camel1 = new DefaultCamelContext();

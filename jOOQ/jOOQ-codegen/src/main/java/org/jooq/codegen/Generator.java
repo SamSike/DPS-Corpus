@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,17 +41,10 @@ package org.jooq.codegen;
 import java.io.Serializable;
 import java.util.Locale;
 
-import org.jooq.Condition;
 import org.jooq.Constants;
-import org.jooq.Decfloat;
-import org.jooq.Generated;
 import org.jooq.JSON;
 import org.jooq.JSONB;
-import org.jooq.Name;
-import org.jooq.Path;
-// ...
 import org.jooq.Spatial;
-import org.jooq.Table;
 import org.jooq.XML;
 import org.jooq.impl.DAOImpl;
 import org.jooq.meta.Database;
@@ -127,26 +120,6 @@ public interface Generator {
     void setGenerateRelations(boolean generateRelations);
 
     /**
-     * Whether to generate UDT path expressions on tables and UDTs.
-     */
-    boolean generateUDTPaths();
-
-    /**
-     * Whether to generate UDT path expressions on tables and UDTs.
-     */
-    void setGenerateUDTPaths(boolean generateUDTPaths);
-
-    /**
-     * Whether to generate UDT path expressions on tables and UDTs.
-     */
-    boolean generateUDTConstructors();
-
-    /**
-     * Whether to generate UDT constructor expressions on tables and UDTs.
-     */
-    void setGenerateUDTConstructors(boolean generateUDTConstructors);
-
-    /**
      * Whether implicit join path constructors on generated tables for outgoing
      * foreign key relationships (to-one relationships) should be generated.
      */
@@ -157,54 +130,6 @@ public interface Generator {
      * foreign key relationships (to-one relationships) should be generated.
      */
     void setGenerateImplicitJoinPathsToOne(boolean generateImplicitJoinPathsToOne);
-
-    /**
-     * Whether implicit join path constructors on generated tables for incoming
-     * foreign key relationships (to-many relationships) should be generated.
-     */
-    boolean generateImplicitJoinPathsToMany();
-
-    /**
-     * Whether implicit join path constructors on generated tables for incoming
-     * foreign key relationships (to-many relationships) should be generated.
-     */
-    void setGenerateImplicitJoinPathsToMany(boolean generateImplicitJoinPathsToMany);
-
-    /**
-     * Whether implicit join path constructors on generated tables for
-     * many-to-many relationships should be generated.
-     */
-    boolean generateImplicitJoinPathsManyToMany();
-
-    /**
-     * Whether implicit join path constructors on generated tables for
-     * many-to-many relationships should be generated.
-     */
-    void setGenerateImplicitJoinPathsManyToMany(boolean generateImplicitJoinPathsManyToMany);
-
-    /**
-     * Whether to generate implicit join path table subtypes implementing
-     * {@link Path} for increased JOIN convenience.
-     */
-    boolean generateImplicitJoinPathTableSubtypes();
-
-    /**
-     * Whether to generate implicit join path table subtypes implementing
-     * {@link Path} for increased JOIN convenience.
-     */
-    void setGenerateImplicitJoinPathTableSubtypes(boolean generateImplicitJoinPathTableSubtypes);
-
-    /**
-     * Whether implicit join path constructors should also be generated if there
-     * isn't any outgoing or incoming foreign key relationship.
-     */
-    boolean generateImplicitJoinPathUnusedConstructors();
-
-    /**
-     * Whether implicit join path constructors should also be generated if there
-     * isn't any outgoing or incoming foreign key relationship.
-     */
-    void setGenerateImplicitJoinPathUnusedConstructors(boolean generateImplicitJoinPathUnusedConstructors);
 
     /**
      * Whether implicit join path constructors should be offered as properties
@@ -219,41 +144,74 @@ public interface Generator {
     void setGenerateImplicitJoinPathsAsKotlinProperties(boolean generateImplicitJoinPathsAsKotlinProperties);
 
     /**
-     * @deprecated - 3.21.0 - [#17713] Use
-     *             {@link #generateTableValuedFunctionsAsRoutines()} or
-     *             {@link #generateTableValuedFunctionsAsTables()} instead.
+     * Whether <code>EXISTS</code> convenience syntax for one-to-many
+     * relationships should be generated.
      */
-    @Deprecated
+    boolean generateExistsConvenienceOneToMany();
+
+    /**
+     * Whether <code>EXISTS</code> convenience syntax for one-to-many
+     * relationships should be generated.
+     */
+    void setGenerateExistsConvenienceOneToMany(boolean generateExistsConvenienceOneToMany);
+
+    /**
+     * Whether <code>EXISTS</code> convenience syntax for many-to-many
+     * relationships should be generated.
+     */
+    boolean generateExistsConvenienceManyToMany();
+
+    /**
+     * Whether <code>EXISTS</code> convenience syntax for many-to-many
+     * relationships should be generated.
+     */
+    void setGenerateExistsConvenienceManyToMany(boolean generateExistsConvenienceManyToMany);
+
+    /**
+     * Whether <code>ROW</code> convenience syntax for to-one relationships
+     * should be generated.
+     */
+    boolean generateRowConvenienceToOne();
+
+    /**
+     * Whether <code>ROW</code> convenience syntax for to-one relationships
+     * should be generated.
+     */
+    void setGenerateRowConvenienceToOne(boolean generateRowConvenienceToOne);
+
+    /**
+     * Whether <code>MULTISET</code> convenience syntax for one-to-many
+     * relationships should be generated.
+     */
+    boolean generateMultisetConvenienceOneToMany();
+
+    /**
+     * Whether <code>MULTISET</code> convenience syntax for one-to-many
+     * relationships should be generated.
+     */
+    void setGenerateMultisetConvenienceOneToMany(boolean generateMultisetConvenienceOneToMany);
+
+    /**
+     * Whether <code>MULTISET</code> convenience syntax for many-to-many
+     * relationships should be generated.
+     */
+    boolean generateMultisetConvenienceManyToMany();
+
+    /**
+     * Whether <code>MULTISET</code> convenience syntax for many-to-many
+     * relationships should be generated.
+     */
+    void setGenerateMultisetConvenienceManyToMany(boolean generateMultisetConvenienceManyToMany);
+
+    /**
+     * Whether table-valued functions should be generated as tables.
+     */
     boolean generateTableValuedFunctions();
 
     /**
-     * @deprecated - 3.21.0 - [#17713] Use
-     *             {@link #setGenerateTableValuedFunctionsAsRoutines(boolean)}
-     *             or {@link #setGenerateTableValuedFunctionsAsTables(boolean)}
-     *             instead.
+     * Whether table-valued functions should be generated as tables.
      */
-    @Deprecated
     void setGenerateTableValuedFunctions(boolean generateTableValuedFunctions);
-
-    /**
-     * Whether table-valued functions should be generated as routines.
-     */
-    boolean generateTableValuedFunctionsAsRoutines();
-
-    /**
-     * Whether table-valued functions should be generated as routines.
-     */
-    void setGenerateTableValuedFunctionsAsRoutines(boolean generateTableValuedFunctionsAsRoutines);
-
-    /**
-     * Whether table-valued functions should be generated as tables.
-     */
-    boolean generateTableValuedFunctionsAsTables();
-
-    /**
-     * Whether table-valued functions should be generated as tables.
-     */
-    void setGenerateTableValuedFunctionsAsTables(boolean generateTableValuedFunctionsAsTables);
 
     /**
      * Whether instance fields should be generated (as opposed to static fields).
@@ -267,6 +225,12 @@ public interface Generator {
     void setGenerateInstanceFields(boolean generateInstanceFields);
 
     /**
+     * Whether the {@link javax.annotation.processing.Generated} annotation
+     * should be generated.
+     */
+    boolean generateGeneratedAnnotation();
+
+    /**
      * The {@link VisibilityModifier} that should be used in generated code.
      */
     void setGenerateVisibilityModifier(VisibilityModifier generateVisibilityModifier);
@@ -277,56 +241,34 @@ public interface Generator {
     VisibilityModifier generateVisibilityModifier();
 
     /**
-     * Whether a {@link Generated} annotation specified by
-     * {@link #generateGeneratedAnnotationType()} should be used in generated
-     * code.
-     */
-    boolean generateGeneratedAnnotation();
-
-    /**
-     * Whether a {@link Generated} annotation specified by
-     * {@link #generateGeneratedAnnotationType()} should be used in generated
-     * code.
+     * Whether the {@link javax.annotation.processing.Generated} annotation
+     * should be generated.
      */
     void setGenerateGeneratedAnnotation(boolean generateGeneratedAnnotation);
 
     /**
-     * The type of {@link Generated} annotation to be used in generated code.
+     * Whether the {@link javax.annotation.processing.Generated} annotation
+     * should be generated.
      */
     GeneratedAnnotationType generateGeneratedAnnotationType();
 
     /**
-     * The type of {@link Generated} annotation to be used in generated code.
+     * Whether the {@link javax.annotation.processing.Generated} annotation
+     * should be generated.
      */
     void setGenerateGeneratedAnnotationType(GeneratedAnnotationType generateGeneratedAnnotationType);
 
     /**
-     * Whether the {@link Generated} annotation specified by
-     * {@link #generateGeneratedAnnotationType()} should include the
-     * <code>date</code> attribute.
+     * Whether the {@link javax.annotation.processing.Generated} annotation
+     * should include the <code>date</code> attribute.
      */
     boolean generateGeneratedAnnotationDate();
 
     /**
-     * Whether the {@link Generated} annotation specified by
-     * {@link #generateGeneratedAnnotationType()} should include the
-     * <code>date</code> attribute.
+     * Whether the {@link javax.annotation.processing.Generated} annotation
+     * should include the <code>date</code> attribute.
      */
     void setGenerateGeneratedAnnotationDate(boolean generateGeneratedAnnotationDate);
-
-    /**
-     * Whether the {@link Generated} annotation specified by
-     * {@link #generateGeneratedAnnotationType()} should include the jOOQ
-     * version.
-     */
-    boolean generateGeneratedAnnotationJooqVersion();
-
-    /**
-     * Whether the {@link Generated} annotation specified by
-     * {@link #generateGeneratedAnnotationType()} should include the jOOQ
-     * version.
-     */
-    void setGenerateGeneratedAnnotationJooqVersion(boolean generateGeneratedAnnotationJooqVersion);
 
     /**
      * Whether Nonnull annotations should be generated.
@@ -373,26 +315,6 @@ public interface Generator {
      * can be made nullable using some SQL operation.
      */
     void setGenerateNullableAnnotation(boolean generateNullableAnnotation);
-
-    /**
-     * Whether Nullable annotations should be generated on write-only nullable
-     * types (e.g. defaulted, non-null).
-     * <p>
-     * Unlike {@link #generateNonnullAnnotation()}, nullability can be
-     * guaranteed as in SQL, and by consequence in jOOQ, every column expression
-     * can be made nullable using some SQL operation.
-     */
-    boolean generateNullableAnnotationOnWriteOnlyNullableTypes();
-
-    /**
-     * Whether Nullable annotations should be generated on write-only nullable
-     * types (e.g. defaulted, non-null).
-     * <p>
-     * Unlike {@link #generateNonnullAnnotation()}, nullability can be
-     * guaranteed as in SQL, and by consequence in jOOQ, every column expression
-     * can be made nullable using some SQL operation.
-     */
-    void setGenerateNullableAnnotationOnWriteOnlyNullableTypes(boolean generateNullableAnnotationOnWriteOnlyNullableTypes);
 
     /**
      * Which type of Nullable annotation should be generated.
@@ -450,30 +372,6 @@ public interface Generator {
      */
     void setGenerateRoutines(boolean generateRoutines);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * Whether Sequences should be generated.
      */
@@ -525,39 +423,9 @@ public interface Generator {
     void setGenerateEmbeddables(boolean generateEmbeddables);
 
     /**
-     * Whether TableRecords should be generated in addition to tables for a
-     * specific {@link Definition}.
-     */
-    boolean generateRecordsIncluded(Definition definition);
-
-    /**
      * Whether TableRecords should be generated in addition to tables
      */
     boolean generateRecords();
-
-    /**
-     * A regular expression matching all the object identifiers for which to
-     * generate records, by default, all of them.
-     */
-    void setGenerateRecordsIncludes(String generateRecordsIncludes);
-
-    /**
-     * A regular expression matching all the object identifiers for which to
-     * generate records, by default, all of them.
-     */
-    String generateRecordsIncludes();
-
-    /**
-     * A regular expression matching all the object identifiers for which not to
-     * generate records.
-     */
-    void setGenerateRecordsExcludes(String generateRecordsExcludes);
-
-    /**
-     * A regular expression matching all the object identifiers for which not to
-     * generate records.
-     */
-    String generateRecordsExcludes();
 
     /**
      * Whether TableRecords should be generated in addition to tables
@@ -595,58 +463,14 @@ public interface Generator {
     void setGenerateEnumsAsScalaSealedTraits(boolean generateEnumsAsScalaSealedTraits);
 
     /**
-     * Whether enums are generated as Scala 3 enums by the
-     * {@link ScalaGenerator}, if Scala 3 is supported.
-     */
-    @Deprecated
-    boolean generateEnumsAsScalaEnums();
-
-    /**
-     * Whether enums are generated as Scala 3 enums by the
-     * {@link ScalaGenerator}, if Scala 3 is supported.
-     */
-    @Deprecated
-    void setGenerateEnumsAsScalaEnums(boolean generateEnumsAsScalaEnums);
-
-    /**
-     * Whether POJOs should be generated in addition to tables for a
-     * specific {@link Definition}.
-     */
-    boolean generatePojosIncluded(Definition definition);
-
-    /**
-     * Whether POJOs should be generated in addition to records
+     * Whether POJO's should be generated in addition to records
      */
     boolean generatePojos();
 
     /**
-     * Whether POJOs should be generated in addition to records
+     * Whether POJO's should be generated in addition to records
      */
     void setGeneratePojos(boolean generatePojos);
-
-    /**
-     * A regular expression matching all the object identifiers for which to
-     * generate POJOs, by default, all of them.
-     */
-    String generatePojosIncludes();
-
-    /**
-     * A regular expression matching all the object identifiers for which to
-     * generate POJOs, by default, all of them.
-     */
-    void setGeneratePojosIncludes(String generatePojosIncludes);
-
-    /**
-     * A regular expression matching all the object identifiers for which not to
-     * generate POJOs.
-     */
-    String generatePojosExcludes();
-
-    /**
-     * A regular expression matching all the object identifiers for which not to
-     * generate POJOs.
-     */
-    void setGeneratePojosExcludes(String generatePojosExcludes);
 
     /**
      * Whether POJOs should be generated as Java records by the
@@ -704,24 +528,6 @@ public interface Generator {
      */
     void setGenerateSerializablePojos(boolean generateSerializablePojos);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * Whether interfaces should be generated to be implemented by records and
      * POJO's
@@ -755,44 +561,14 @@ public interface Generator {
     void setGenerateSerializableInterfaces(boolean generateSerializableInterfaces);
 
     /**
-     * Whether DAOs should be generated in addition to tables for a
-     * specific {@link Definition}.
-     */
-    boolean generateDaosIncluded(Definition definition);
-
-    /**
-     * Whether DAOs should be generated in addition to pojos
+     * Whether DAO's should be generated in addition to pojos
      */
     boolean generateDaos();
 
     /**
-     * Whether DAOs should be generated in addition to pojos
+     * Whether DAO's should be generated in addition to pojos
      */
     void setGenerateDaos(boolean generateDaos);
-
-    /**
-     * A regular expression matching all the object identifiers for which to
-     * generate DAOs, by default, all of them.
-     */
-    String generateDaosIncludes();
-
-    /**
-     * A regular expression matching all the object identifiers for which to
-     * generate DAOs, by default, all of them.
-     */
-    void setGenerateDaosIncludes(String generateDaosIncludes);
-
-    /**
-     * A regular expression matching all the object identifiers for which not to
-     * generate DAOs.
-     */
-    String generateDaosExcludes();
-
-    /**
-     * A regular expression matching all the object identifiers for which not to
-     * generate DAOs.
-     */
-    void setGenerateDaosExcludes(String generateDaosExcludes);
 
     /**
      * Whether generated objects should reference the runtime jOOQ version in
@@ -885,59 +661,6 @@ public interface Generator {
     void setGenerateKotlinSetterJvmNameAnnotationsOnIsPrefix(boolean generateKotlinSetterJvmNameAnnotationsOnIsPrefix);
 
     /**
-     * Generate non-nullable types on POJO attributes, where column is not null.
-     */
-    boolean generateKotlinNotNullPojoAttributes();
-
-    /**
-     * Generate non-nullable types on POJO attributes, where column is not null.
-     */
-    void setGenerateKotlinNotNullPojoAttributes(boolean generateKotlinNotNullPojoAttributes);
-
-    /**
-     * Generate non-nullable types on Record attributes, where column is not
-     * null.
-     */
-    boolean generateKotlinNotNullRecordAttributes();
-
-    /**
-     * Generate non-nullable types on Record attributes, where column is not
-     * null.
-     */
-    void setGenerateKotlinNotNullRecordAttributes(boolean generateKotlinNotNullRecordAttributes);
-
-    /**
-     * Generate non-nullable types on interface attributes, where column is not
-     * null.
-     */
-    boolean generateKotlinNotNullInterfaceAttributes();
-
-    /**
-     * Generate non-nullable types on interface attributes, where column is not null.
-     */
-    void setGenerateKotlinNotNullInterfaceAttributes(boolean generateKotlinNotNullInterfaceAttributes);
-
-    /**
-     * Generate defaulted nullable POJO attributes.
-     */
-    boolean generateKotlinDefaultedNullablePojoAttributes();
-
-    /**
-     * Generate defaulted nullable POJO attributes.
-     */
-    void setGenerateKotlinDefaultedNullablePojoAttributes(boolean generateKotlinDefaultedNullablePojoAttributes);
-
-    /**
-     * Generate defaulted nullable Record attributes.
-     */
-    boolean generateKotlinDefaultedNullableRecordAttributes();
-
-    /**
-     * Generate defaulted nullable Record attributes.
-     */
-    void setGenerateKotlinDefaultedNullableRecordAttributes(boolean generateKotlinDefaultedNullableRecordAttributes);
-
-    /**
      * The type of <code>serialVersionUID</code> that should be generated.
      */
     GeneratedSerialVersionUID generatedSerialVersionUID();
@@ -958,16 +681,6 @@ public interface Generator {
      * 64kb byte code per method limit in generated code.
      */
     void setMaxMembersPerInitialiser(int maxMembersPerInitialiser);
-
-    /**
-     * Whether global object names should be generated
-     */
-    boolean generateGlobalObjectNames();
-
-    /**
-     * Whether global object names should be generated
-     */
-    void setGenerateGlobalObjectNames(boolean generateGlobalObjectNames);
 
     /**
      * Whether global object references should be generated
@@ -1049,34 +762,6 @@ public interface Generator {
      */
     void setGenerateGlobalDomainReferences(boolean globalDomainReferences);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * Whether global queue references should be generated
      */
@@ -1116,26 +801,6 @@ public interface Generator {
      * Whether global index references should be generated
      */
     void setGenerateGlobalIndexReferences(boolean globalIndexReferences);
-
-    /**
-     * Whether default catalog instances should be generated
-     */
-    boolean generateDefaultCatalog();
-
-    /**
-     * Whether default catalog instances should be generated
-     */
-    void setGenerateDefaultCatalog(boolean defaultCatalog);
-
-    /**
-     * Whether default schema instances should be generated
-     */
-    boolean generateDefaultSchema();
-
-    /**
-     * Whether default schema instances should be generated
-     */
-    void setGenerateDefaultSchema(boolean defaultSchema);
 
     /**
      * Whether any Javadoc should be generated.
@@ -1266,16 +931,6 @@ public interface Generator {
      * Whether SQL comments on sequences should be generated as Javadoc.
      */
     void setGenerateCommentsOnSequences(boolean commentsOnSequences);
-
-    /**
-     * Whether SQL comments on domains should be generated as Javadoc.
-     */
-    boolean generateCommentsOnDomains();
-
-    /**
-     * Whether SQL comments on domains should be generated as Javadoc.
-     */
-    void setGenerateCommentsOnDomains(boolean commentsOnDomains);
 
     /**
      * Whether SQL comments on tables should be generated as Javadoc.
@@ -1448,42 +1103,6 @@ public interface Generator {
     void setGeneratePojosEqualsAndHashCode(boolean generatePojosEqualsAndHashCode);
 
     /**
-     * Whether the <code>equals()</code> and <code>hashCode()</code> methods be
-     * generated on POJOs should include primary key columns only.
-     */
-    boolean generatePojosEqualsAndHashCodePrimaryKeyOnly();
-
-    /**
-     * Whether the <code>equals()</code> and <code>hashCode()</code> methods be
-     * generated on POJOs should include primary key columns only.
-     */
-    void setGeneratePojosEqualsAndHashCodePrimaryKeyOnly(boolean generatePojosEqualsAndHashCodePrimaryKeyOnly);
-
-    /**
-     * A regular expression matching columns to include in <code>equals()</code>
-     * and <code>hashCode()</code> methods of generated POJOS.
-     */
-    String generatePojosEqualsAndHashCodeColumnIncludeExpression();
-
-    /**
-     * A regular expression matching columns to include in <code>equals()</code>
-     * and <code>hashCode()</code> methods of generated POJOS.
-     */
-    void setGeneratePojosEqualsAndHashCodeColumnIncludeExpression(String generatePojosEqualsAndHashCodeColumnIncludeExpression);
-
-    /**
-     * A regular expression matching columns to exclude in <code>equals()</code>
-     * and <code>hashCode()</code> methods of generated POJOS.
-     */
-    String generatePojosEqualsAndHashCodeColumnExcludeExpression();
-
-    /**
-     * A regular expression matching columns to exclude in <code>equals()</code>
-     * and <code>hashCode()</code> methods of generated POJOS.
-     */
-    void setGeneratePojosEqualsAndHashCodeColumnExcludeExpression(String generatePojosEqualsAndHashCodeColumnExcludeExpression);
-
-    /**
      * Whether a <code>toString()</code> method should be generated on POJOs
      */
     boolean generatePojosToString();
@@ -1584,19 +1203,7 @@ public interface Generator {
      * A flag indicating whether the {@link Interval} type support should be
      * enabled.
      */
-    void setGenerateIntervalTypes(boolean generateIntervalTypes);
-
-    /**
-     * A flag indicating whether the {@link Decfloat} type support should be
-     * enabled.
-     */
-    boolean generateDecfloatTypes();
-
-    /**
-     * A flag indicating whether the {@link Decfloat} type support should be
-     * enabled.
-     */
-    void setGenerateDecfloatTypes(boolean generateDecfloatTypes);
+    void setGenerateIntervalTypes(boolean generateJsonTypes);
 
     /**
      * Whether empty catalogs should still be generated.
@@ -1657,44 +1264,6 @@ public interface Generator {
      * Whether to generate String in text block format.
      */
     void setGenerateTextBlocks(GeneratedTextBlocks textBlocks);
-
-    /**
-     * Whether to generate overrides for {@link Table#where(Condition)} and
-     * related overloads.
-     */
-    boolean generateWhereMethodOverrides();
-
-    /**
-     * Whether to generate overrides for {@link Table#where(Condition)} and
-     * related overloads.
-     */
-    void setGenerateWhereMethodOverrides(boolean whereMethodOverrides);
-
-    /**
-     * Whether to generate overrides for {@link Table#rename(Name)} and related
-     * overloads (see <a href=
-     * "https://github.com/jOOQ/jOOQ/issues/13937">https://github.com/jOOQ/jOOQ/issues/13937</a>).
-     */
-    boolean generateRenameMethodOverrides();
-
-    /**
-     * Whether to generate overrides for {@link Table#rename(Name)} and related
-     * overloads (see <a href=
-     * "https://github.com/jOOQ/jOOQ/issues/13937">https://github.com/jOOQ/jOOQ/issues/13937</a>).
-     */
-    void setGenerateRenameMethodOverrides(boolean renameMethodOverrides);
-
-    /**
-     * Whether to generate overrides for {@link Table#as(Name)} and related
-     * overloads.
-     */
-    boolean generateAsMethodOverrides();
-
-    /**
-     * Whether to generate overrides for {@link Table#as(Name)} and related
-     * overloads.
-     */
-    void setGenerateAsMethodOverrides(boolean asMethodOverrides);
 
     /**
      * The target directory

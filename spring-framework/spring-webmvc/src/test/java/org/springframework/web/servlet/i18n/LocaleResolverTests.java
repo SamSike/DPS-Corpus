@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,30 +35,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 /**
- * Tests for various {@link LocaleResolver} implementations.
- *
  * @author Juergen Hoeller
  * @since 20.03.2003
  */
-class LocaleResolverTests {
+public class LocaleResolverTests {
 
 	@Test
-	void acceptHeaderLocaleResolver() {
+	public void testAcceptHeaderLocaleResolver() {
 		doTest(new AcceptHeaderLocaleResolver(), false);
 	}
 
 	@Test
-	void fixedLocaleResolver() {
+	public void testFixedLocaleResolver() {
 		doTest(new FixedLocaleResolver(Locale.UK), false);
 	}
 
 	@Test
-	void cookieLocaleResolver() {
+	public void testCookieLocaleResolver() {
 		doTest(new CookieLocaleResolver(), true);
 	}
 
 	@Test
-	void sessionLocaleResolver() {
+	public void testSessionLocaleResolver() {
 		doTest(new SessionLocaleResolver(), true);
 	}
 
@@ -85,7 +83,8 @@ class LocaleResolverTests {
 		}
 
 		// check LocaleContext
-		if (localeResolver instanceof LocaleContextResolver localeContextResolver) {
+		if (localeResolver instanceof LocaleContextResolver) {
+			LocaleContextResolver localeContextResolver = (LocaleContextResolver) localeResolver;
 			LocaleContext localeContext = localeContextResolver.resolveLocaleContext(request);
 			if (shouldSet) {
 				assertThat(localeContext.getLocale()).isEqualTo(Locale.GERMANY);
@@ -99,8 +98,6 @@ class LocaleResolverTests {
 
 			if (localeContextResolver instanceof AbstractLocaleContextResolver) {
 				((AbstractLocaleContextResolver) localeContextResolver).setDefaultTimeZone(TimeZone.getTimeZone("GMT+1"));
-				request.removeAttribute(CookieLocaleResolver.LOCALE_REQUEST_ATTRIBUTE_NAME);
-				localeContextResolver.resolveLocaleContext(request);
 				assertThat(TimeZone.getTimeZone("GMT+1")).isEqualTo(((TimeZoneAwareLocaleContext) localeContext).getTimeZone());
 			}
 
@@ -136,8 +133,6 @@ class LocaleResolverTests {
 
 				if (localeContextResolver instanceof AbstractLocaleContextResolver) {
 					((AbstractLocaleContextResolver) localeContextResolver).setDefaultLocale(Locale.GERMANY);
-					request.removeAttribute(CookieLocaleResolver.LOCALE_REQUEST_ATTRIBUTE_NAME);
-					localeContextResolver.resolveLocaleContext(request);
 					assertThat(localeContext.getLocale()).isEqualTo(Locale.GERMANY);
 				}
 			}

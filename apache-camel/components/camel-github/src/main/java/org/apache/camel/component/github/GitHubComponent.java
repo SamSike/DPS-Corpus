@@ -21,13 +21,13 @@ import java.util.Map;
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.support.HealthCheckComponent;
+import org.apache.camel.support.DefaultComponent;
 
 /**
  * Represents the component that manages {@link GitHubEndpoint}.
  */
 @Component("github")
-public class GitHubComponent extends HealthCheckComponent {
+public class GitHubComponent extends DefaultComponent {
 
     @Metadata(label = "security", secret = true)
     private String oauthToken;

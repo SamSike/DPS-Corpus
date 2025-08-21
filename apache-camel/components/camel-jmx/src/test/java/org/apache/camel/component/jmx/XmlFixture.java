@@ -26,8 +26,11 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.xmlunit.assertj3.XmlAssert;
+import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.builder.Input;
+import org.xmlunit.diff.Diff;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public final class XmlFixture {
 
@@ -43,10 +46,15 @@ public final class XmlFixture {
     }
 
     public static void assertXMLIgnorePrefix(String aMessage, Source aExpected, Source aActual) throws Exception {
-        XmlAssert.assertThat(aExpected).and(aActual)
-                .ignoreComments()
-                .ignoreWhitespace()
-                .areSimilar();
+        Diff diff = DiffBuilder.compare(aExpected).withTest(aActual)
+                .ignoreComments().ignoreWhitespace()
+                .checkForSimilar().build();
+        try {
+            assertFalse(diff.hasDifferences(), aMessage + ":\n" + diff.toString());
+        } catch (Throwable t) {
+            dump(aActual);
+            throw t;
+        }
     }
 
     public static void dump(Source aActual)

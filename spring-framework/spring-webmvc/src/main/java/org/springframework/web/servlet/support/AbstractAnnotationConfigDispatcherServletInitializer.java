@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.web.servlet.support;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
@@ -52,7 +51,8 @@ public abstract class AbstractAnnotationConfigDispatcherServletInitializer
 	 * Returns {@code null} if {@link #getRootConfigClasses()} returns {@code null}.
 	 */
 	@Override
-	protected @Nullable WebApplicationContext createRootApplicationContext() {
+	@Nullable
+	protected WebApplicationContext createRootApplicationContext() {
 		Class<?>[] configClasses = getRootConfigClasses();
 		if (!ObjectUtils.isEmpty(configClasses)) {
 			AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
@@ -85,7 +85,8 @@ public abstract class AbstractAnnotationConfigDispatcherServletInitializer
 	 * @return the configuration for the root application context, or {@code null}
 	 * if creation and registration of a root context is not desired
 	 */
-	protected abstract Class<?> @Nullable [] getRootConfigClasses();
+	@Nullable
+	protected abstract Class<?>[] getRootConfigClasses();
 
 	/**
 	 * Specify {@code @Configuration} and/or {@code @Component} classes for the
@@ -93,6 +94,7 @@ public abstract class AbstractAnnotationConfigDispatcherServletInitializer
 	 * @return the configuration for the Servlet application context, or
 	 * {@code null} if all configuration is specified through root config classes.
 	 */
-	protected abstract Class<?> @Nullable [] getServletConfigClasses();
+	@Nullable
+	protected abstract Class<?>[] getServletConfigClasses();
 
 }

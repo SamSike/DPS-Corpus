@@ -31,7 +31,6 @@ import java.util.Map;
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;
 import io.minio.GetObjectArgs;
-import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.ObjectWriteResponse;
@@ -46,7 +45,6 @@ import io.minio.errors.InternalException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
-import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import io.minio.messages.Item;
 import org.apache.camel.Endpoint;
@@ -109,12 +107,6 @@ public class MinioProducer extends DefaultProducer {
                     break;
                 case getPartialObject:
                     getPartialObject(minioClient, exchange);
-                    break;
-                case createDownloadLink:
-                    createPresignedUrl(minioClient, exchange, Method.GET);
-                    break;
-                case createUploadLink:
-                    createPresignedUrl(minioClient, exchange, Method.PUT);
                     break;
                 default:
                     throw new IllegalArgumentException("Unsupported operation");
@@ -403,35 +395,6 @@ public class MinioProducer extends DefaultProducer {
         }
     }
 
-    private void createPresignedUrl(MinioClient minioClient, Exchange exchange, Method method) throws Exception {
-        int expiry = 60 * 60;
-        Integer expirationInSeconds = exchange.getIn().getHeader(MinioConstants.PRESIGNED_URL_EXPIRATION_TIME, Integer.class);
-        Message message = getMessageForResponse(exchange);
-        if (expirationInSeconds != null) {
-            expiry = expirationInSeconds;
-        }
-        if (getConfiguration().isPojoRequest()) {
-            GetPresignedObjectUrlArgs.Builder payload
-                    = exchange.getIn().getMandatoryBody(GetPresignedObjectUrlArgs.Builder.class);
-            if (isNotEmpty(payload)) {
-                GetPresignedObjectUrlArgs args = payload.expiry(expiry).method(method).build();
-                String response = minioClient.getPresignedObjectUrl(args);
-                message.setBody(response);
-            }
-        } else {
-            final String bucketName = determineBucketName(exchange);
-            final String objectName = determineObjectName(exchange);
-            GetPresignedObjectUrlArgs args = GetPresignedObjectUrlArgs.builder()
-                    .bucket(bucketName)
-                    .object(objectName)
-                    .expiry(expiry)
-                    .method(method)
-                    .build();
-            String response = minioClient.getPresignedObjectUrl(args);
-            message.setBody(response);
-        }
-    }
-
     private MinioOperations determineOperation(Exchange exchange) {
         MinioOperations operation = exchange.getIn().getHeader(MinioConstants.MINIO_OPERATION, MinioOperations.class);
         if (isEmpty(operation)) {
@@ -485,7 +448,7 @@ public class MinioProducer extends DefaultProducer {
      * @throws IllegalArgumentException if the header could not be determined.
      */
     private String determineBucketName(final Exchange exchange) {
-        String bucketName = exchange.getIn().getHeader(MinioConstants.OVERRIDE_BUCKET_NAME, String.class);
+        String bucketName = exchange.getIn().getHeader(MinioConstants.BUCKET_NAME, String.class);
 
         if (isEmpty(bucketName)) {
             if (isNotEmpty(getConfiguration().getBucketName())) {

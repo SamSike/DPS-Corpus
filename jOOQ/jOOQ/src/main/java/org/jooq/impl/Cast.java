@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,26 +37,16 @@
  */
 package org.jooq.impl;
 
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.Keywords.K_AS;
 import static org.jooq.impl.Keywords.K_CAST;
-import static org.jooq.impl.Keywords.K_CONVERSION;
-import static org.jooq.impl.Keywords.K_DEFAULT;
-import static org.jooq.impl.Keywords.K_ERROR;
-import static org.jooq.impl.Keywords.K_NULL;
-import static org.jooq.impl.Keywords.K_ON;
 import static org.jooq.impl.Keywords.K_TRIM;
 import static org.jooq.impl.Names.N_CAST;
-import static org.jooq.impl.Names.N_SAFE_CAST;
-import static org.jooq.impl.Names.N_TO_BLOB;
 import static org.jooq.impl.Names.N_TO_CLOB;
 import static org.jooq.impl.Names.N_TO_DATE;
 import static org.jooq.impl.Names.N_TO_TIMESTAMP;
-import static org.jooq.impl.Names.N_TRY_CAST;
 import static org.jooq.impl.Names.N_XMLTYPE;
-import static org.jooq.impl.Names.N_accurateCastOrNull;
 import static org.jooq.impl.SQLDataType.BOOLEAN;
 import static org.jooq.impl.SQLDataType.CHAR;
 import static org.jooq.impl.SQLDataType.DECIMAL;
@@ -89,12 +79,8 @@ final class Cast<T> extends AbstractField<T> implements QOM.Cast<T> {
 
     private final Field<?> field;
 
-    Cast(Field<?> field, DataType<T> type) {
-        this(field, type, false);
-    }
-
-    Cast(Field<?> field, DataType<T> type, boolean retainNullability) {
-        super(N_CAST, retainNullability ? type : type.nullable(field.getDataType().nullable()));
+    public Cast(Field<?> field, DataType<T> type) {
+        super(N_CAST, type.nullable(field.getDataType().nullable()));
 
         this.field = field;
     }
@@ -323,38 +309,21 @@ final class Cast<T> extends AbstractField<T> implements QOM.Cast<T> {
 
 
 
-
-
-
-
-
-
-
-
-
-
     static class CastNative<T> extends AbstractQueryPart implements UTransient {
-        final QueryPart   expression;
-        final DataType<T> type;
-        final Keyword     typeAsKeyword;
-        final boolean     tryCast;
+        private final QueryPart   expression;
+        private final DataType<T> type;
+        private final Keyword     typeAsKeyword;
 
         CastNative(QueryPart expression, DataType<T> type) {
-            this(expression, type, false);
-        }
-
-        CastNative(QueryPart expression, DataType<T> type, boolean tryCast) {
             this.expression = expression;
             this.type = type;
             this.typeAsKeyword = null;
-            this.tryCast = tryCast;
         }
 
         CastNative(QueryPart expression, Keyword typeAsKeyword) {
             this.expression = expression;
             this.type = null;
             this.typeAsKeyword = typeAsKeyword;
-            this.tryCast = false;
         }
 
         @Override
@@ -371,8 +340,7 @@ final class Cast<T> extends AbstractField<T> implements QOM.Cast<T> {
 
                     else
                         c.sql(type.getCastTypeName(c.configuration()));
-                },
-                tryCast
+                }
             );
         }
     }
@@ -382,62 +350,20 @@ final class Cast<T> extends AbstractField<T> implements QOM.Cast<T> {
         ThrowingConsumer<? super Context<?>, E> expression,
         ThrowingConsumer<? super Context<?>, E> type
     ) throws E {
-        renderCast(ctx, expression, type, false);
-    }
-
-    static <E extends Throwable> void renderCast(
-        Context<?> ctx,
-        ThrowingConsumer<? super Context<?>, E> expression,
-        ThrowingConsumer<? super Context<?>, E> type,
-        boolean tryCast
-    ) throws E {
 
         // Avoid casting bind values inside an explicit cast...
         CastMode castMode = ctx.castMode();
 
-        if (tryCast) {
-            switch (ctx.family()) {
+        // Default rendering, if no special case has applied yet
+        ctx.visit(K_CAST).sql('(')
+           .castMode(CastMode.NEVER);
 
-
-
-
-
-
-
-
-
-
-                case CLICKHOUSE:
-                    ctx.visit(N_accurateCastOrNull);
-                    break;
-
-                default:
-                    ctx.visit(N_TRY_CAST);
-                    break;
-            }
-        }
-        else
-            ctx.visit(K_CAST);
-
-        ctx.sql('(').castMode(CastMode.NEVER);
         expression.accept(ctx);
-        ctx.castMode(castMode);
 
-        if (tryCast && ctx.family() == CLICKHOUSE)
-            ctx.sql(", '").stringLiteral(true);
-        else
-            ctx.sql(' ').visit(K_AS).sql(' ');
+        ctx.castMode(castMode)
+           .sql(' ').visit(K_AS).sql(' ');
 
         type.accept(ctx);
-
-        if (tryCast)
-            if (ctx.family() == CLICKHOUSE)
-                ctx.stringLiteral(false).sql('\'');
-
-
-
-
-
         ctx.sql(')');
     }
 

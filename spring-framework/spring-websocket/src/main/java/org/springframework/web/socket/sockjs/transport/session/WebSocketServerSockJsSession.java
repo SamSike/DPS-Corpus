@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.socket.CloseStatus;
@@ -49,7 +48,8 @@ import org.springframework.web.socket.sockjs.transport.SockJsServiceConfig;
  */
 public class WebSocketServerSockJsSession extends AbstractSockJsSession implements NativeWebSocketSession {
 
-	private @Nullable WebSocketSession webSocketSession;
+	@Nullable
+	private WebSocketSession webSocketSession;
 
 	private volatile boolean openFrameSent;
 
@@ -70,7 +70,8 @@ public class WebSocketServerSockJsSession extends AbstractSockJsSession implemen
 
 
 	@Override
-	public @Nullable URI getUri() {
+	@Nullable
+	public URI getUri() {
 		Assert.state(this.webSocketSession != null, "WebSocketSession not yet initialized");
 		return this.webSocketSession.getUri();
 	}
@@ -82,25 +83,25 @@ public class WebSocketServerSockJsSession extends AbstractSockJsSession implemen
 	}
 
 	@Override
-	public @Nullable Principal getPrincipal() {
+	public Principal getPrincipal() {
 		Assert.state(this.webSocketSession != null, "WebSocketSession not yet initialized");
 		return this.webSocketSession.getPrincipal();
 	}
 
 	@Override
-	public @Nullable InetSocketAddress getLocalAddress() {
+	public InetSocketAddress getLocalAddress() {
 		Assert.state(this.webSocketSession != null, "WebSocketSession not yet initialized");
 		return this.webSocketSession.getLocalAddress();
 	}
 
 	@Override
-	public @Nullable InetSocketAddress getRemoteAddress() {
+	public InetSocketAddress getRemoteAddress() {
 		Assert.state(this.webSocketSession != null, "WebSocketSession not yet initialized");
 		return this.webSocketSession.getRemoteAddress();
 	}
 
 	@Override
-	public @Nullable String getAcceptedProtocol() {
+	public String getAcceptedProtocol() {
 		Assert.state(this.webSocketSession != null, "WebSocketSession not yet initialized");
 		return this.webSocketSession.getAcceptedProtocol();
 	}
@@ -138,14 +139,15 @@ public class WebSocketServerSockJsSession extends AbstractSockJsSession implemen
 	@Override
 	public Object getNativeSession() {
 		Assert.state(this.webSocketSession != null, "WebSocketSession not yet initialized");
-		return (this.webSocketSession instanceof NativeWebSocketSession nativeWsSession ?
-				nativeWsSession.getNativeSession() : this.webSocketSession);
+		return (this.webSocketSession instanceof NativeWebSocketSession ?
+				((NativeWebSocketSession) this.webSocketSession).getNativeSession() : this.webSocketSession);
 	}
 
 	@Override
-	public <T> @Nullable T getNativeSession(@Nullable Class<T> requiredType) {
-		return (this.webSocketSession instanceof NativeWebSocketSession nativeWsSession ?
-				nativeWsSession.getNativeSession(requiredType) : null);
+	@Nullable
+	public <T> T getNativeSession(@Nullable Class<T> requiredType) {
+		return (this.webSocketSession instanceof NativeWebSocketSession ?
+				((NativeWebSocketSession) this.webSocketSession).getNativeSession(requiredType) : null);
 	}
 
 
@@ -157,7 +159,7 @@ public class WebSocketServerSockJsSession extends AbstractSockJsSession implemen
 				delegateConnectionEstablished();
 				this.webSocketSession.sendMessage(new TextMessage(SockJsFrame.openFrame().getContent()));
 
-				// Flush any messages cached in the meantime
+				// Flush any messages cached in the mean time
 				while (!this.initSessionCache.isEmpty()) {
 					writeFrame(SockJsFrame.messageFrame(getMessageCodec(), this.initSessionCache.poll()));
 				}

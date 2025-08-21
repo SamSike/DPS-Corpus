@@ -2,7 +2,9 @@
  * Provides supporting infrastructure to allow Spring-created MBeans
  * to send JMX notifications.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jmx.export.notification;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

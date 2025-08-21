@@ -31,8 +31,6 @@ import net.sf.saxon.dom.NodeOverNodeInfo;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.TreeInfo;
 import net.sf.saxon.trans.XPathException;
-import net.sf.saxon.tree.tiny.TinyDocumentImpl;
-import net.sf.saxon.tree.tiny.TinyElementImpl;
 import net.sf.saxon.type.Type;
 import org.apache.camel.Converter;
 import org.apache.camel.Exchange;
@@ -43,16 +41,6 @@ import org.apache.camel.spi.TypeConverterRegistry;
 public final class SaxonConverter {
 
     private SaxonConverter() {
-    }
-
-    @Converter
-    public static Document toDOMDocument(TinyElementImpl node) throws XPathException {
-        return toDOMDocument((NodeInfo) node);
-    }
-
-    @Converter
-    public static Document toDOMDocument(TinyDocumentImpl node) throws XPathException {
-        return toDOMDocument((NodeInfo) node);
     }
 
     @Converter
@@ -72,18 +60,8 @@ public final class SaxonConverter {
     }
 
     @Converter
-    public static Node toDOMNode(TinyDocumentImpl node) {
-        return toDOMNode((NodeInfo) node);
-    }
-
-    @Converter
     public static Node toDOMNode(NodeInfo node) {
         return NodeOverNodeInfo.wrap(node);
-    }
-
-    @Converter
-    public static DOMSource toDOMSourceFromNodeInfo(TinyDocumentImpl nodeInfo) {
-        return new DOMSource(toDOMNode(nodeInfo));
     }
 
     @Converter

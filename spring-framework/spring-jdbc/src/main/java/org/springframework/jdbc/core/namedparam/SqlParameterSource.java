@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package org.springframework.jdbc.core.namedparam;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.jdbc.support.JdbcUtils;
+import org.springframework.lang.Nullable;
 
 /**
  * Interface that defines common functionality for objects that can
@@ -64,7 +63,8 @@ public interface SqlParameterSource {
 	 * @return the value of the specified parameter
 	 * @throws IllegalArgumentException if there is no value for the requested parameter
 	 */
-	@Nullable Object getValue(String paramName) throws IllegalArgumentException;
+	@Nullable
+	Object getValue(String paramName) throws IllegalArgumentException;
 
 	/**
 	 * Determine the SQL type for the specified named parameter.
@@ -83,7 +83,8 @@ public interface SqlParameterSource {
 	 * @return the type name of the specified parameter,
 	 * or {@code null} if not known
 	 */
-	default @Nullable String getTypeName(String paramName) {
+	@Nullable
+	default String getTypeName(String paramName) {
 		return null;
 	}
 
@@ -96,7 +97,8 @@ public interface SqlParameterSource {
 	 * @since 5.0.3
 	 * @see SqlParameterSourceUtils#extractCaseInsensitiveParameterNames
 	 */
-	default String @Nullable [] getParameterNames() {
+	@Nullable
+	default String[] getParameterNames() {
 		return null;
 	}
 

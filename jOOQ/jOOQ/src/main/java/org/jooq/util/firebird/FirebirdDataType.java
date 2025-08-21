@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,14 +43,9 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.Year;
 import java.util.UUID;
 
 import org.jooq.DataType;
-import org.jooq.Decfloat;
 import org.jooq.JSON;
 import org.jooq.JSONB;
 import org.jooq.SQLDialect;
@@ -86,31 +81,27 @@ public class FirebirdDataType {
     // Default SQL data types and synonyms thereof
     // -------------------------------------------------------------------------
 
-    public static final DataType<Short>          SMALLINT              = new BuiltInDataType<>(FAMILY, SQLDataType.SMALLINT, "smallint");
-    public static final DataType<Integer>        INTEGER               = new BuiltInDataType<>(FAMILY, SQLDataType.INTEGER, "integer");
-    public static final DataType<Integer>        INT                   = new BuiltInDataType<>(FAMILY, SQLDataType.INTEGER, "int");
-    public static final DataType<Long>           BIGINT                = new BuiltInDataType<>(FAMILY, SQLDataType.BIGINT, "bigint");
-    public static final DataType<Long>           INT64                 = new BuiltInDataType<>(FAMILY, SQLDataType.BIGINT, "int64");
-    public static final DataType<Double>         DOUBLEPRECISION       = new BuiltInDataType<>(FAMILY, SQLDataType.DOUBLE, "double precision");
-    public static final DataType<Double>         DOUBLE                = new BuiltInDataType<>(FAMILY, SQLDataType.DOUBLE, "double");
-    public static final DataType<Double>         D_FLOAT               = new BuiltInDataType<>(FAMILY, SQLDataType.DOUBLE, "d_float");
-    public static final DataType<Float>          FLOAT                 = new BuiltInDataType<>(FAMILY, SQLDataType.REAL, "float");
-    public static final DataType<Boolean>        BOOLEAN               = new BuiltInDataType<>(FAMILY, SQLDataType.BOOLEAN, "boolean");
-    public static final DataType<BigDecimal>     DECIMAL               = new BuiltInDataType<>(FAMILY, SQLDataType.DECIMAL, "decimal");
-    public static final DataType<BigDecimal>     NUMERIC               = new BuiltInDataType<>(FAMILY, SQLDataType.NUMERIC, "numeric");
-    public static final DataType<String>         VARCHAR               = new BuiltInDataType<>(FAMILY, SQLDataType.VARCHAR, "varchar", "varchar(4000)");
-    public static final DataType<String>         CHARACTERVARYING      = new BuiltInDataType<>(FAMILY, SQLDataType.VARCHAR, "character varying", "varchar(4000)");
-    public static final DataType<String>         CHAR                  = new BuiltInDataType<>(FAMILY, SQLDataType.CHAR, "char");
-    public static final DataType<String>         CHARACTER             = new BuiltInDataType<>(FAMILY, SQLDataType.CHAR, "character");
-    public static final DataType<String>         CLOB                  = new BuiltInDataType<>(FAMILY, SQLDataType.CLOB, "blob sub_type text");
-    public static final DataType<Date>           DATE                  = new BuiltInDataType<>(FAMILY, SQLDataType.DATE, "date");
-    public static final DataType<Time>           TIME                  = new BuiltInDataType<>(FAMILY, SQLDataType.TIME, "time");
-    public static final DataType<Timestamp>      TIMESTAMP             = new BuiltInDataType<>(FAMILY, SQLDataType.TIMESTAMP, "timestamp");
-    public static final DataType<byte[]>         BLOB                  = new BuiltInDataType<>(FAMILY, SQLDataType.BLOB, "blob");
-    public static final DataType<Decfloat>       DECFLOAT              = new BuiltInDataType<>(FAMILY, SQLDataType.DECFLOAT, "decfloat");
-    public static final DataType<OffsetDateTime> TIMESTAMPWITHTIMEZONE = new BuiltInDataType<>(FAMILY, SQLDataType.TIMESTAMPWITHTIMEZONE, "timestamp with time zone");
-    public static final DataType<Instant>        INSTANT               = new BuiltInDataType<>(FAMILY, SQLDataType.INSTANT, "timestamp with time zone");
-    public static final DataType<OffsetTime>     TIMEWITHTIMEZONE      = new BuiltInDataType<>(FAMILY, SQLDataType.TIMEWITHTIMEZONE, "time with time zone");
+    public static final DataType<Short>       SMALLINT              = new BuiltInDataType<>(FAMILY, SQLDataType.SMALLINT, "smallint");
+    public static final DataType<Integer>     INTEGER               = new BuiltInDataType<>(FAMILY, SQLDataType.INTEGER, "integer");
+    public static final DataType<Integer>     INT                   = new BuiltInDataType<>(FAMILY, SQLDataType.INTEGER, "int");
+    public static final DataType<Long>        BIGINT                = new BuiltInDataType<>(FAMILY, SQLDataType.BIGINT, "bigint");
+    public static final DataType<Long>        INT64                 = new BuiltInDataType<>(FAMILY, SQLDataType.BIGINT, "int64");
+    public static final DataType<Double>      DOUBLEPRECISION       = new BuiltInDataType<>(FAMILY, SQLDataType.DOUBLE, "double precision");
+    public static final DataType<Double>      DOUBLE                = new BuiltInDataType<>(FAMILY, SQLDataType.DOUBLE, "double");
+    public static final DataType<Double>      D_FLOAT               = new BuiltInDataType<>(FAMILY, SQLDataType.DOUBLE, "d_float");
+    public static final DataType<Float>       FLOAT                 = new BuiltInDataType<>(FAMILY, SQLDataType.REAL, "float");
+    public static final DataType<Boolean>     BOOLEAN               = new BuiltInDataType<>(FAMILY, SQLDataType.BOOLEAN, "boolean");
+    public static final DataType<BigDecimal>  DECIMAL               = new BuiltInDataType<>(FAMILY, SQLDataType.DECIMAL, "decimal");
+    public static final DataType<BigDecimal>  NUMERIC               = new BuiltInDataType<>(FAMILY, SQLDataType.NUMERIC, "numeric");
+    public static final DataType<String>      VARCHAR               = new BuiltInDataType<>(FAMILY, SQLDataType.VARCHAR, "varchar", "varchar(4000)");
+    public static final DataType<String>      CHARACTERVARYING      = new BuiltInDataType<>(FAMILY, SQLDataType.VARCHAR, "character varying", "varchar(4000)");
+    public static final DataType<String>      CHAR                  = new BuiltInDataType<>(FAMILY, SQLDataType.CHAR, "char");
+    public static final DataType<String>      CHARACTER             = new BuiltInDataType<>(FAMILY, SQLDataType.CHAR, "character");
+    public static final DataType<String>      CLOB                  = new BuiltInDataType<>(FAMILY, SQLDataType.CLOB, "blob sub_type text");
+    public static final DataType<Date>        DATE                  = new BuiltInDataType<>(FAMILY, SQLDataType.DATE, "date");
+    public static final DataType<Time>        TIME                  = new BuiltInDataType<>(FAMILY, SQLDataType.TIME, "time");
+    public static final DataType<Timestamp>   TIMESTAMP             = new BuiltInDataType<>(FAMILY, SQLDataType.TIMESTAMP, "timestamp");
+    public static final DataType<byte[]>      BLOB                  = new BuiltInDataType<>(FAMILY, SQLDataType.BLOB, "blob");
 
     // TODO Below are HSQLDB data types. Fix this
 
@@ -130,7 +121,7 @@ public class FirebirdDataType {
     protected static final DataType<byte[]>   __LONGVARBINARY       = new BuiltInDataType<>(FAMILY, SQLDataType.LONGVARBINARY, "blob");
     protected static final DataType<String>   __LONGVARCHAR         = new BuiltInDataType<>(FAMILY, SQLDataType.LONGVARCHAR, "varchar", "varchar(4000)");
     protected static final DataType<String>   __NCHAR               = new BuiltInDataType<>(FAMILY, SQLDataType.NCHAR, "char");
-    protected static final DataType<String>   __NCLOB               = new BuiltInDataType<>(FAMILY, SQLDataType.NCLOB, "blob sub_type text");
+    protected static final DataType<String>   __NCLOB               = new BuiltInDataType<>(FAMILY, SQLDataType.NCLOB, "clob");
     protected static final DataType<String>   __NVARCHAR            = new BuiltInDataType<>(FAMILY, SQLDataType.NVARCHAR, "varchar", "varchar(4000)");
     protected static final DataType<Byte>     __TINYINT             = new BuiltInDataType<>(FAMILY, SQLDataType.TINYINT, "smallint");
     protected static final DataType<byte[]>   __VARBINARY           = new BuiltInDataType<>(FAMILY, SQLDataType.VARBINARY, "blob");
@@ -140,7 +131,6 @@ public class FirebirdDataType {
     protected static final DataType<ULong>    __BIGINTUNSIGNED      = new BuiltInDataType<>(FAMILY, SQLDataType.BIGINTUNSIGNED, "decimal", "varchar(20)"); // There are no large numbers in firebird...?
     protected static final DataType<JSON>     __JSON                = new BuiltInDataType<>(FAMILY, SQLDataType.JSON, "blob sub_type text");
     protected static final DataType<JSONB>    __JSONB               = new BuiltInDataType<>(FAMILY, SQLDataType.JSONB, "blob");
-    protected static final DataType<Year>     __YEAR                = new BuiltInDataType<>(FAMILY, SQLDataType.YEAR, "smallint");
 
     // -------------------------------------------------------------------------
     // Compatibility types for supported Java types

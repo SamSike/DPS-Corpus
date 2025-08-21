@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,12 +40,13 @@ package org.jooq.checker;
 import static java.util.Arrays.asList;
 import static org.checkerframework.javacutil.TreeUtils.elementFromDeclaration;
 import static org.checkerframework.javacutil.TreeUtils.elementFromUse;
+import static org.checkerframework.javacutil.TreeUtils.enclosingClass;
+import static org.checkerframework.javacutil.TreeUtils.enclosingMethod;
 
 import java.io.PrintWriter;
 import java.util.EnumSet;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -90,9 +91,6 @@ final class Tools {
 
                 EnumSet<SQLDialect> allowed = EnumSet.noneOf(SQLDialect.class);
                 EnumSet<SQLDialect> required = EnumSet.noneOf(SQLDialect.class);
-
-                defaults("org.jooq.checker.dialects.allow", allowed);
-                defaults("org.jooq.checker.dialects.require", required);
 
                 boolean evaluateRequire = true;
                 while (enclosing != null) {
@@ -159,14 +157,6 @@ final class Tools {
         return null;
     }
 
-    private static void defaults(String property, EnumSet<SQLDialect> set) {
-        Stream.of(System.getProperty(property, "").split(","))
-              .map(String::trim)
-              .filter(s -> !s.isEmpty())
-              .map(s -> SQLDialect.valueOf(s.toUpperCase()))
-              .forEach(set::add);
-    }
-
     static final <T> T checkPlainSQL(
         MethodInvocationTree node,
         Supplier<Element> enclosingSupplier,
@@ -210,31 +200,12 @@ final class Tools {
     }
 
     static Element enclosing(TreePath path) {
-
-        /*
-
-        MethodTree enclosingMethod = org.checkerframework.javacutil.TreeUtils.enclosingMethod(path);
-
-        */
-
-
-        MethodTree enclosingMethod = org.checkerframework.javacutil.TreePathUtil.enclosingMethod(path);
-
+        MethodTree enclosingMethod = enclosingMethod(path);
 
         if (enclosingMethod != null)
             return elementFromDeclaration(enclosingMethod);
 
-
-        /*
-
-        ClassTree enclosingClass = org.checkerframework.javacutil.TreeUtils.enclosingClass(path);
-
-        */
-
-
-        ClassTree enclosingClass = org.checkerframework.javacutil.TreePathUtil.enclosingClass(path);
-
-
+        ClassTree enclosingClass = enclosingClass(path);
         return elementFromDeclaration(enclosingClass);
     }
 

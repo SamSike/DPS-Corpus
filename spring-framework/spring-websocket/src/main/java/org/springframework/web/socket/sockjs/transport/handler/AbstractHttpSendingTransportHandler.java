@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.socket.WebSocketHandler;
@@ -80,7 +79,13 @@ public abstract class AbstractHttpSendingTransportHandler extends AbstractTransp
 			if (logger.isDebugEnabled()) {
 				logger.debug("Connection already closed (but not removed yet) for " + sockJsSession);
 			}
-			writeFrame(SockJsFrame.closeFrameGoAway(), request, response, sockJsSession);
+			SockJsFrame frame = SockJsFrame.closeFrameGoAway();
+			try {
+				response.getBody().write(frame.getContentBytes());
+			}
+			catch (IOException ex) {
+				throw new SockJsException("Failed to send " + frame, sockJsSession.getId(), ex);
+			}
 		}
 		else if (!sockJsSession.isActive()) {
 			if (logger.isTraceEnabled()) {
@@ -92,19 +97,13 @@ public abstract class AbstractHttpSendingTransportHandler extends AbstractTransp
 			if (logger.isDebugEnabled()) {
 				logger.debug("Another " + getTransportType() + " connection still open for " + sockJsSession);
 			}
-			writeFrame(SockJsFrame.closeFrameAnotherConnectionOpen(), request, response, sockJsSession);
-		}
-	}
-
-	private void writeFrame(SockJsFrame frame, ServerHttpRequest request, ServerHttpResponse response,
-			AbstractHttpSockJsSession sockJsSession) {
-
-		String formattedFrame = getFrameFormat(request).format(frame);
-		try {
-			response.getBody().write(formattedFrame.getBytes(SockJsFrame.CHARSET));
-		}
-		catch (IOException ex) {
-			throw new SockJsException("Failed to send " + formattedFrame, sockJsSession.getId(), ex);
+			String formattedFrame = getFrameFormat(request).format(SockJsFrame.closeFrameAnotherConnectionOpen());
+			try {
+				response.getBody().write(formattedFrame.getBytes(SockJsFrame.CHARSET));
+			}
+			catch (IOException ex) {
+				throw new SockJsException("Failed to send " + formattedFrame, sockJsSession.getId(), ex);
+			}
 		}
 	}
 
@@ -114,7 +113,8 @@ public abstract class AbstractHttpSendingTransportHandler extends AbstractTransp
 	protected abstract SockJsFrameFormat getFrameFormat(ServerHttpRequest request);
 
 
-	protected final @Nullable String getCallbackParam(ServerHttpRequest request) {
+	@Nullable
+	protected final String getCallbackParam(ServerHttpRequest request) {
 		String query = request.getURI().getQuery();
 		MultiValueMap<String, String> params = UriComponentsBuilder.newInstance().query(query).build().getQueryParams();
 		String value = params.getFirst("c");

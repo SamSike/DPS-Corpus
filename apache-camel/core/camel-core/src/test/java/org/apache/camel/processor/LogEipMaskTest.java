@@ -73,10 +73,10 @@ public class LogEipMaskTest {
         }
     }
 
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").routeId("foo").log("Got ${body}").to("mock:foo");
                 from("direct:noMask").routeId("noMask").logMask("false").log("Got ${body}").to("mock:noMask");
             }

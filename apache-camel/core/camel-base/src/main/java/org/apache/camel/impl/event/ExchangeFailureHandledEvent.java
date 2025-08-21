@@ -16,15 +16,14 @@
  */
 package org.apache.camel.impl.event;
 
-import java.io.Serial;
-
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Processor;
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.util.URISupport;
 
 public class ExchangeFailureHandledEvent extends AbstractExchangeEvent implements CamelEvent.ExchangeFailureHandledEvent {
-    private static final @Serial long serialVersionUID = -7554809462006009548L;
+    private static final long serialVersionUID = -7554809462006009548L;
 
     private final transient Processor failureHandler;
     private final boolean deadLetterChannel;
@@ -37,8 +36,8 @@ public class ExchangeFailureHandledEvent extends AbstractExchangeEvent implement
         this.failureHandler = failureHandler;
         this.deadLetterChannel = deadLetterChannel;
         this.deadLetterUri = deadLetterUri;
-        this.handled = source.getExchangeExtension().isErrorHandlerHandledSet()
-                && source.getExchangeExtension().isErrorHandlerHandled();
+        this.handled = source.adapt(ExtendedExchange.class).isErrorHandlerHandledSet()
+                && source.adapt(ExtendedExchange.class).isErrorHandlerHandled();
     }
 
     @Override
@@ -65,7 +64,7 @@ public class ExchangeFailureHandledEvent extends AbstractExchangeEvent implement
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         if (isDeadLetterChannel()) {
             String uri = URISupport.sanitizeUri(deadLetterUri);
             return getExchange().getExchangeId() + " exchange failed"

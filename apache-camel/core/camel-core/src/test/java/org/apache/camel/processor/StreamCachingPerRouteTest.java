@@ -63,10 +63,10 @@ public class StreamCachingPerRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setStreamCaching(true);
 
                 from("direct:a").to("mock:a");

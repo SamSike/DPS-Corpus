@@ -28,7 +28,7 @@ import static org.apache.camel.Exchange.HTTP_QUERY;
 public class NettyHttpHeaderFilterStrategyRemovalTest extends BaseNettyTest {
 
     @BindToRegistry("headerFilterStrategy")
-    final NettyHttpHeaderFilterStrategy headerFilterStrategy = new NettyHttpHeaderFilterStrategy();
+    NettyHttpHeaderFilterStrategy headerFilterStrategy = new NettyHttpHeaderFilterStrategy();
 
     @EndpointInject("mock:test")
     MockEndpoint mockEndpoint;

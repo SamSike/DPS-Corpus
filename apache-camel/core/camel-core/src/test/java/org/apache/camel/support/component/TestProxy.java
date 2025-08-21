@@ -22,11 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 class TestProxy {
-
-    public String byeMe(final String name) {
-        return "Bye " + name;
-    }
-
     public String sayHi() {
         return "Hello!";
     }
@@ -66,7 +61,7 @@ class TestProxy {
         for (int i = 0; i < times; i++) {
             result.add("Greetings " + name);
         }
-        return result.toArray(new String[0]);
+        return result.toArray(new String[result.size()]);
     }
 
     public Map<String, String> greetAll(Map<String, String> nameMap) {

@@ -26,11 +26,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ThreadsCoreAndMaxPoolInvalidTest extends ContextTestSupport {
 
     @Test
-    public void testInvalidSyntax() {
+    public void testInvalidSyntax() throws Exception {
         try {
             context.addRoutes(new RouteBuilder() {
                 @Override
-                public void configure() {
+                public void configure() throws Exception {
                     from("direct:start").threads(5, 2).to("mock:result");
                 }
             });

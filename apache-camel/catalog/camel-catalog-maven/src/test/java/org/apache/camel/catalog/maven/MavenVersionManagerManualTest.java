@@ -79,8 +79,6 @@ public class MavenVersionManagerManualTest {
     @Test
     public void testEndpointOptions218OrNewer() {
         CamelCatalog catalog = new DefaultCamelCatalog(false);
-        catalog.setVersionManager(new MavenVersionManager());
-        catalog.loadVersion("2.18.3");
 
         String json = catalog.componentJSonSchema("ahc");
         assertNotNull(json);
@@ -145,7 +143,7 @@ public class MavenVersionManagerManualTest {
         String current = manager.getLoadedVersion();
         assertNull(current);
 
-        // version 2.99 does not exist and cannot be loaded
+        // version 2.99 does not exists and cannot be loaded
         boolean loaded = manager.loadVersion("2.99");
         assertFalse(loaded);
     }

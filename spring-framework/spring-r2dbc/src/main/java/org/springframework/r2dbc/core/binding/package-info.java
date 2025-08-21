@@ -1,7 +1,9 @@
 /**
  * Classes providing an abstraction over SQL bind markers.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.r2dbc.core.binding;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

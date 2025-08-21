@@ -42,7 +42,7 @@ public class CamelSpringNamespace implements NamespaceContext {
     }
 
     @Override
-    public Iterator<String> getPrefixes(String namespaceURI) {
+    public Iterator getPrefixes(String namespaceURI) {
         throw new UnsupportedOperationException("Operation not supported");
     }
 }

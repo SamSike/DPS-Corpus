@@ -80,10 +80,10 @@ public class TokenXMLPairNamespaceSplitChildNamespaceTest extends ContextTestSup
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from(fileUri("pair?initialDelay=0&delay=10"))
                         // split the order child tags, and inherit namespaces from

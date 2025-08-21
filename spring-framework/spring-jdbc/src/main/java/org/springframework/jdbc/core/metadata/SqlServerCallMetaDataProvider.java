@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,13 @@ package org.springframework.jdbc.core.metadata;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * SQL Server specific implementation for the {@link CallMetaDataProvider} interface.
  * This class is intended for internal use by the Simple JDBC classes.
  *
  * @author Thomas Risberg
- * @author Juergen Hoeller
  * @since 2.5
  */
 public class SqlServerCallMetaDataProvider extends GenericCallMetaDataProvider {
@@ -42,7 +41,8 @@ public class SqlServerCallMetaDataProvider extends GenericCallMetaDataProvider {
 
 
 	@Override
-	public @Nullable String parameterNameToUse(@Nullable String parameterName) {
+	@Nullable
+	public String parameterNameToUse(@Nullable String parameterName) {
 		if (parameterName == null) {
 			return null;
 		}
@@ -52,11 +52,6 @@ public class SqlServerCallMetaDataProvider extends GenericCallMetaDataProvider {
 		else {
 			return super.parameterNameToUse(parameterName);
 		}
-	}
-
-	@Override
-	public String namedParameterBindingToUse(@Nullable String parameterName) {
-		return parameterName + " = ?";
 	}
 
 	@Override

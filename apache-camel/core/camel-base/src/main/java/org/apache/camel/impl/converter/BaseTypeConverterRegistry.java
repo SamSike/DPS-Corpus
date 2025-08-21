@@ -31,6 +31,7 @@ import java.util.Set;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NoFactoryAvailableException;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.TypeConverter;
@@ -38,7 +39,6 @@ import org.apache.camel.TypeConverterLoaderException;
 import org.apache.camel.spi.Injector;
 import org.apache.camel.spi.PackageScanClassResolver;
 import org.apache.camel.spi.TypeConverterLoader;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
@@ -64,10 +64,7 @@ public abstract class BaseTypeConverterRegistry extends CoreTypeConverterRegistr
     protected PackageScanClassResolver resolver;
     protected Injector injector;
 
-    public BaseTypeConverterRegistry(CamelContext camelContext, PackageScanClassResolver resolver, Injector injector,
-                                     boolean statisticsEnabled) {
-        super(statisticsEnabled);
-
+    public BaseTypeConverterRegistry(CamelContext camelContext, PackageScanClassResolver resolver, Injector injector) {
         this.camelContext = camelContext;
         this.injector = injector;
         this.resolver = resolver;
@@ -93,8 +90,8 @@ public abstract class BaseTypeConverterRegistry extends CoreTypeConverterRegistr
         try {
             // scan the class for @Converter and load them into this registry
             TypeConvertersLoader loader;
-            if (typeConverters instanceof Class tcs) {
-                loader = new TypeConvertersLoader(tcs);
+            if (typeConverters instanceof Class) {
+                loader = new TypeConvertersLoader((Class<?>) typeConverters);
             } else {
                 loader = new TypeConvertersLoader(typeConverters);
             }
@@ -150,7 +147,7 @@ public abstract class BaseTypeConverterRegistry extends CoreTypeConverterRegistr
             for (ClassLoader loader : getResolver().getClassLoaders()) {
                 try {
                     clazz = loader.loadClass(name);
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     // ignore
                 }
                 if (clazz != null) {
@@ -162,7 +159,8 @@ public abstract class BaseTypeConverterRegistry extends CoreTypeConverterRegistr
             }
             Object obj = getInjector().newInstance(clazz, false);
             CamelContextAware.trySetCamelContext(obj, getCamelContext());
-            if (obj instanceof TypeConverterLoader loader) {
+            if (obj instanceof TypeConverterLoader) {
+                TypeConverterLoader loader = (TypeConverterLoader) obj;
                 CamelContextAware.trySetCamelContext(loader, getCamelContext());
                 LOG.debug("TypeConverterLoader: {} loading converters", name);
                 loader.load(this);
@@ -201,7 +199,13 @@ public abstract class BaseTypeConverterRegistry extends CoreTypeConverterRegistr
 
     protected Collection<URL> getLoaderUrls(String basePath) throws IOException {
         List<URL> loaderResources = new ArrayList<>();
-        addResources(basePath, loaderResources);
+        for (ClassLoader classLoader : resolver.getClassLoaders()) {
+            Enumeration<URL> resources = classLoader.getResources(basePath);
+            while (resources.hasMoreElements()) {
+                URL url = resources.nextElement();
+                loaderResources.add(url);
+            }
+        }
         return loaderResources;
     }
 
@@ -248,18 +252,14 @@ public abstract class BaseTypeConverterRegistry extends CoreTypeConverterRegistr
 
     protected Collection<URL> getFallbackUrls() throws IOException {
         List<URL> loaderResources = new ArrayList<>();
-        addResources(META_INF_SERVICES_FALLBACK_TYPE_CONVERTER, loaderResources);
-        return loaderResources;
-    }
-
-    private void addResources(String metaInfServicesFallbackTypeConverter, List<URL> loaderResources) throws IOException {
         for (ClassLoader classLoader : resolver.getClassLoaders()) {
-            Enumeration<URL> resources = classLoader.getResources(metaInfServicesFallbackTypeConverter);
+            Enumeration<URL> resources = classLoader.getResources(META_INF_SERVICES_FALLBACK_TYPE_CONVERTER);
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
                 loaderResources.add(url);
             }
         }
+        return loaderResources;
     }
 
     protected void loadFallbackTypeConverters() throws IOException, ClassNotFoundException {
@@ -271,7 +271,8 @@ public abstract class BaseTypeConverterRegistry extends CoreTypeConverterRegistr
                     .filter(Objects::nonNull)
                     .findAny().orElseThrow(() -> new ClassNotFoundException(name));
             Object obj = getInjector().newInstance(clazz, false);
-            if (obj instanceof TypeConverter fb) {
+            if (obj instanceof TypeConverter) {
+                TypeConverter fb = (TypeConverter) obj;
                 LOG.debug("Adding loaded FallbackTypeConverter: {}", name);
                 addFallbackTypeConverter(fb, false);
             }
@@ -286,7 +287,7 @@ public abstract class BaseTypeConverterRegistry extends CoreTypeConverterRegistr
             injector = camelContext.getInjector();
         }
         if (resolver == null && camelContext != null) {
-            resolver = PluginHelper.getPackageScanClassResolver(camelContext);
+            resolver = camelContext.adapt(ExtendedCamelContext.class).getPackageScanClassResolver();
         }
 
         List<FallbackTypeConverter> fallbacks = new ArrayList<>();

@@ -41,10 +41,10 @@ public class SendingToAlotOfDifferentDirectEndpointTest extends ContextTestSuppo
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:start").to("direct:foo");
 
                 from("direct:foo").to("log:foo").to("mock:foo");

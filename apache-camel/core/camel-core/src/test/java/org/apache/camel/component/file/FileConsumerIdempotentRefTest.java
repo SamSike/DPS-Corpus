@@ -17,7 +17,6 @@
 package org.apache.camel.component.file;
 
 import java.nio.file.Files;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
@@ -25,7 +24,6 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.spi.IdempotentRepository;
 import org.apache.camel.spi.Registry;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,16 +37,16 @@ public class FileConsumerIdempotentRefTest extends ContextTestSupport {
     private static volatile boolean invoked;
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myRepo", new MyIdempotentRepository());
         return jndi;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?idempotent=true&idempotentRepository=#myRepo&move=done/${file:name}&initialDelay=0&delay=10"))
                         .convertBodyTo(String.class)
                         .to("mock:result");
@@ -77,9 +75,8 @@ public class FileConsumerIdempotentRefTest extends ContextTestSupport {
         Files.move(testFile("done/report.txt"), testFile("report.txt"));
 
         // should NOT consume the file again, let a bit time go
-        Awaitility.await().pollDelay(100, TimeUnit.MILLISECONDS).untilAsserted(() -> {
-            assertMockEndpointsSatisfied();
-        });
+        Thread.sleep(100);
+        assertMockEndpointsSatisfied();
 
         assertTrue(invoked, "MyIdempotentRepository should have been invoked");
     }
@@ -112,6 +109,7 @@ public class FileConsumerIdempotentRefTest extends ContextTestSupport {
 
         @Override
         public void clear() {
+            return;
         }
 
         @Override

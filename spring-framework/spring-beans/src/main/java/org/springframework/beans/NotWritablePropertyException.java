@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package org.springframework.beans;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Exception thrown on an attempt to set the value of a property that
@@ -29,7 +29,8 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("serial")
 public class NotWritablePropertyException extends InvalidPropertyException {
 
-	private final String @Nullable [] possibleMatches;
+	@Nullable
+	private final String[] possibleMatches;
 
 
 	/**
@@ -85,7 +86,8 @@ public class NotWritablePropertyException extends InvalidPropertyException {
 	 * Return suggestions for actual bean property names that closely match
 	 * the invalid property name, if any.
 	 */
-	public String @Nullable [] getPossibleMatches() {
+	@Nullable
+	public String[] getPossibleMatches() {
 		return this.possibleMatches;
 	}
 

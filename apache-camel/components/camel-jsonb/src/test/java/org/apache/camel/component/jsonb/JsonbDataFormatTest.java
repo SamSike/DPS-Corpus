@@ -49,6 +49,18 @@ public class JsonbDataFormatTest {
                 new ArrayList<>(Collections.singletonList(Collections.singletonMap("value", 123))), null, type);
     }
 
+    @Test
+    public void testArray() throws Exception {
+        testJson("{\"value\":123}", new ArrayList<String>(), ArrayList.class, null);
+    }
+
+    @Test
+    public void testSkipEmptyArray() throws Exception {
+        JohnzonParameterizedType type = new JohnzonParameterizedType(ArrayList.class, ArrayList.class);
+        testJson("[{\"value\":123}]",
+                new ArrayList<>(Collections.singletonList(Collections.emptyList())), null, type);
+    }
+
     private void testJson(String json, Object expected, Class<?> unmarshalType, JohnzonParameterizedType customType)
             throws Exception {
         Object unmarshalled;
@@ -64,7 +76,7 @@ public class JsonbDataFormatTest {
             try (InputStream in = new ByteArrayInputStream(json.getBytes())) {
                 unmarshalled = jsonbDataFormat.unmarshal(new DefaultExchange(new DefaultCamelContext()), in);
             }
-            assertEquals(expected.toString(), unmarshalled.toString());
+            assertEquals(expected, unmarshalled);
         } finally {
             if (jsonbDataFormat != null) {
                 jsonbDataFormat.close();

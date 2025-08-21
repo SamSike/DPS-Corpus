@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,12 @@
 package org.springframework.jms.config;
 
 import jakarta.jms.MessageListener;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.jms.listener.AbstractMessageListenerContainer;
 import org.springframework.jms.listener.MessageListenerContainer;
 import org.springframework.jms.listener.endpoint.JmsActivationSpecConfig;
 import org.springframework.jms.listener.endpoint.JmsMessageEndpointManager;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -38,13 +38,17 @@ public abstract class AbstractJmsListenerEndpoint implements JmsListenerEndpoint
 
 	private String id = "";
 
-	private @Nullable String destination;
+	@Nullable
+	private String destination;
 
-	private @Nullable String subscription;
+	@Nullable
+	private String subscription;
 
-	private @Nullable String selector;
+	@Nullable
+	private String selector;
 
-	private @Nullable String concurrency;
+	@Nullable
+	private String concurrency;
 
 
 	/**
@@ -72,7 +76,8 @@ public abstract class AbstractJmsListenerEndpoint implements JmsListenerEndpoint
 	/**
 	 * Return the name of the destination for this endpoint.
 	 */
-	public @Nullable String getDestination() {
+	@Nullable
+	public String getDestination() {
 		return this.destination;
 	}
 
@@ -86,7 +91,8 @@ public abstract class AbstractJmsListenerEndpoint implements JmsListenerEndpoint
 	/**
 	 * Return the name for the durable subscription, if any.
 	 */
-	public @Nullable String getSubscription() {
+	@Nullable
+	public String getSubscription() {
 		return this.subscription;
 	}
 
@@ -101,14 +107,15 @@ public abstract class AbstractJmsListenerEndpoint implements JmsListenerEndpoint
 	/**
 	 * Return the JMS message selector expression, if any.
 	 */
-	public @Nullable String getSelector() {
+	@Nullable
+	public String getSelector() {
 		return this.selector;
 	}
 
 	/**
 	 * Set a concurrency for the listener, if any.
-	 * <p>The concurrency limits can be a "lower-upper" String, for example, "5-10", or a simple
-	 * upper limit String, for example, "10" (the lower limit will be 1 in this case).
+	 * <p>The concurrency limits can be a "lower-upper" String, e.g. "5-10", or a simple
+	 * upper limit String, e.g. "10" (the lower limit will be 1 in this case).
 	 * <p>The underlying container may or may not support all features. For instance, it
 	 * may not be able to scale: in that case only the upper value is used.
 	 */
@@ -119,15 +126,16 @@ public abstract class AbstractJmsListenerEndpoint implements JmsListenerEndpoint
 	/**
 	 * Return the concurrency for the listener, if any.
 	 */
-	public @Nullable String getConcurrency() {
+	@Nullable
+	public String getConcurrency() {
 		return this.concurrency;
 	}
 
 
 	@Override
 	public void setupListenerContainer(MessageListenerContainer listenerContainer) {
-		if (listenerContainer instanceof AbstractMessageListenerContainer abstractContainer) {
-			setupJmsListenerContainer(abstractContainer);
+		if (listenerContainer instanceof AbstractMessageListenerContainer) {
+			setupJmsListenerContainer((AbstractMessageListenerContainer) listenerContainer);
 		}
 		else {
 			new JcaEndpointConfigurer().configureEndpoint(listenerContainer);
@@ -186,8 +194,8 @@ public abstract class AbstractJmsListenerEndpoint implements JmsListenerEndpoint
 	private class JcaEndpointConfigurer {
 
 		public void configureEndpoint(Object listenerContainer) {
-			if (listenerContainer instanceof JmsMessageEndpointManager endpointManager) {
-				setupJcaMessageContainer(endpointManager);
+			if (listenerContainer instanceof JmsMessageEndpointManager) {
+				setupJcaMessageContainer((JmsMessageEndpointManager) listenerContainer);
 			}
 			else {
 				throw new IllegalArgumentException("Could not configure endpoint with the specified container '" +

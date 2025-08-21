@@ -18,14 +18,14 @@ package org.apache.camel.component.bean;
 
 import org.apache.camel.CamelExecutionException;
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.Exchange;
+import org.apache.camel.ExchangePattern;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class BeanWithMethodHeaderTest extends ContextTestSupport {
 
@@ -37,6 +37,36 @@ public class BeanWithMethodHeaderTest extends ContextTestSupport {
         mock.expectedBodiesReceived("echo Hello World");
 
         template.sendBody("direct:echo", "Hello World");
+
+        assertMockEndpointsSatisfied();
+        assertNull(mock.getExchanges().get(0).getIn().getHeader(Exchange.BEAN_METHOD_NAME),
+                "There should no Bean_METHOD_NAME header");
+    }
+
+    @Test
+    public void testEchoWithMethodHeaderHi() throws Exception {
+        MockEndpoint mock = getMockEndpoint("mock:result");
+        mock.expectedBodiesReceived("hi Hello World");
+        // header should be removed after usage
+        mock.message(0).header(Exchange.BEAN_METHOD_NAME).isNull();
+
+        // header overrule endpoint configuration, so we should invoke the hi
+        // method
+        template.sendBodyAndHeader("direct:echo", ExchangePattern.InOut, "Hello World", Exchange.BEAN_METHOD_NAME, "hi");
+
+        assertMockEndpointsSatisfied();
+    }
+
+    @Test
+    public void testMixedBeanEndpoints() throws Exception {
+        MockEndpoint mock = getMockEndpoint("mock:result");
+        mock.expectedBodiesReceived("hi hi Hello World");
+        // header should be removed after usage
+        mock.message(0).header(Exchange.BEAN_METHOD_NAME).isNull();
+
+        // header overrule endpoint configuration, so we should invoke the hi
+        // method
+        template.sendBodyAndHeader("direct:mixed", ExchangePattern.InOut, "Hello World", Exchange.BEAN_METHOD_NAME, "hi");
 
         assertMockEndpointsSatisfied();
     }
@@ -52,70 +82,70 @@ public class BeanWithMethodHeaderTest extends ContextTestSupport {
     }
 
     @Test
-    public void testFail() {
-
-        CamelExecutionException e = assertThrows(CamelExecutionException.class,
-                () -> template.sendBody("direct:fail", "Hello World"),
-                "Should throw an exception");
-
-        assertIsInstanceOf(AmbiguousMethodCallException.class, e.getCause());
-        AmbiguousMethodCallException ace = (AmbiguousMethodCallException) e.getCause();
-        assertEquals(2, ace.getMethods().size());
+    public void testFail() throws Exception {
+        try {
+            template.sendBody("direct:fail", "Hello World");
+            fail("Should throw an exception");
+        } catch (CamelExecutionException e) {
+            assertIsInstanceOf(AmbiguousMethodCallException.class, e.getCause());
+            AmbiguousMethodCallException ace = (AmbiguousMethodCallException) e.getCause();
+            assertEquals(2, ace.getMethods().size());
+        }
     }
 
     @Test
-    public void testMethodNotExists() {
-
-        Exception e = assertThrows(Exception.class,
-                () -> {
-                    context.addRoutes(new RouteBuilder() {
-                        @Override
-                        public void configure() {
-                            from("direct:typo").bean("myBean", "ups").to("mock:result");
-                        }
-                    });
-                }, "Should throw an exception");
-
-        MethodNotFoundException mnfe = assertIsInstanceOf(MethodNotFoundException.class, e.getCause());
-        assertEquals("ups", mnfe.getMethodName());
-        assertSame(bean, mnfe.getBean());
+    public void testMethodNotExists() throws Exception {
+        try {
+            context.addRoutes(new RouteBuilder() {
+                @Override
+                public void configure() throws Exception {
+                    from("direct:typo").bean("myBean", "ups").to("mock:result");
+                }
+            });
+            fail("Should throw an exception");
+        } catch (Exception e) {
+            MethodNotFoundException mnfe = assertIsInstanceOf(MethodNotFoundException.class, e.getCause());
+            assertEquals("ups", mnfe.getMethodName());
+            assertSame(bean, mnfe.getBean());
+        }
     }
 
     @Test
-    public void testMethodNotExistsOnInstance() {
+    public void testMethodNotExistsOnInstance() throws Exception {
         final MyBean myBean = new MyBean();
-
-        Exception e = assertThrows(Exception.class,
-                () -> {
-                    context.addRoutes(new RouteBuilder() {
-                        @Override
-                        public void configure() {
-                            from("direct:typo").bean(myBean, "ups").to("mock:result");
-                        }
-                    });
-                }, "Should throw an exception");
-
-        MethodNotFoundException mnfe = assertIsInstanceOf(MethodNotFoundException.class, e.getCause());
-        assertEquals("ups", mnfe.getMethodName());
-        assertSame(myBean, mnfe.getBean());
+        try {
+            context.addRoutes(new RouteBuilder() {
+                @Override
+                public void configure() throws Exception {
+                    from("direct:typo").bean(myBean, "ups").to("mock:result");
+                }
+            });
+            fail("Should throw an exception");
+        } catch (Exception e) {
+            MethodNotFoundException mnfe = assertIsInstanceOf(MethodNotFoundException.class, e.getCause());
+            assertEquals("ups", mnfe.getMethodName());
+            assertSame(myBean, mnfe.getBean());
+        }
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         bean = new MyBean();
         answer.bind("myBean", bean);
         return answer;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:echo").bean("myBean", "echo").to("mock:result");
 
                 from("direct:hi").bean("myBean", "hi").to("mock:result");
+
+                from("direct:mixed").bean("myBean", "echo").bean("myBean", "hi").to("mock:result");
 
                 from("direct:fail").bean("myBean").to("mock:result");
             }

@@ -17,9 +17,7 @@
 package org.apache.camel.coap;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Locale;
@@ -32,22 +30,18 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Consumer;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Processor;
-import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.RestConfiguration;
 import org.apache.camel.spi.RestConsumerFactory;
 import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.DefaultComponent;
-import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.util.FileUtil;
 import org.apache.camel.util.HostUtils;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.URISupport;
 import org.eclipse.californium.core.CoapServer;
 import org.eclipse.californium.core.network.CoapEndpoint;
-import org.eclipse.californium.elements.config.CertificateAuthenticationMode;
-import org.eclipse.californium.elements.config.Configuration;
-import org.eclipse.californium.elements.config.TcpConfig;
+import org.eclipse.californium.core.network.config.NetworkConfig;
 import org.eclipse.californium.elements.tcp.netty.TcpServerConnector;
 import org.eclipse.californium.elements.tcp.netty.TlsServerConnector;
 import org.eclipse.californium.scandium.DTLSConnector;
@@ -62,95 +56,61 @@ public class CoAPComponent extends DefaultComponent implements RestConsumerFacto
     static final int DEFAULT_PORT = 5684;
     private static final Logger LOG = LoggerFactory.getLogger(CoAPComponent.class);
 
-    @Metadata
-    private String configurationFile;
-
     final Map<Integer, CoapServer> servers = new ConcurrentHashMap<>();
 
     public CoAPComponent() {
     }
 
-    public CoapServer getServer(int port, CoAPEndpoint endpoint) throws IOException, GeneralSecurityException {
-        lock.lock();
-        try {
-            CoapServer server = servers.get(port);
-            if (server == null && port == -1) {
-                server = getServer(DEFAULT_PORT, endpoint);
-            }
-            if (server == null) {
-                CoapEndpoint.Builder builder = new CoapEndpoint.Builder();
-                Configuration config = loadConfiguration();
-                builder.setConfiguration(config);
+    public synchronized CoapServer getServer(int port, CoAPEndpoint endpoint) throws IOException, GeneralSecurityException {
+        CoapServer server = servers.get(port);
+        if (server == null && port == -1) {
+            server = getServer(DEFAULT_PORT, endpoint);
+        }
+        if (server == null) {
+            CoapEndpoint.Builder coapBuilder = new CoapEndpoint.Builder();
+            NetworkConfig config = NetworkConfig.createStandardWithoutFile();
+            InetSocketAddress address = new InetSocketAddress(port);
+            coapBuilder.setNetworkConfig(config);
 
-                // Configure TLS and / or TCP
-                InetSocketAddress address = new InetSocketAddress(port);
-                if (CoAPEndpoint.enableDTLS(endpoint.getUri())) {
-                    doEnableDTLS(endpoint, config, address, builder);
-                } else if (CoAPEndpoint.enableTCP(endpoint.getUri())) {
-                    doEnableTCP(endpoint, config, address, builder);
+            // Configure TLS and / or TCP
+            if (CoAPEndpoint.enableDTLS(endpoint.getUri())) {
+                DTLSConnector connector = endpoint.createDTLSConnector(address, false);
+                coapBuilder.setConnector(connector);
+            } else if (CoAPEndpoint.enableTCP(endpoint.getUri())) {
+                int tcpThreads = config.getInt(NetworkConfig.Keys.TCP_WORKER_THREADS);
+                int tcpIdleTimeout = config.getInt(NetworkConfig.Keys.TCP_CONNECTION_IDLE_TIMEOUT);
+
+                TcpServerConnector tcpConnector = null;
+                // TLS + TCP
+                if (endpoint.getUri().getScheme().startsWith("coaps")) {
+                    int tlsHandshakeTimeout = config.getInt(NetworkConfig.Keys.TLS_HANDSHAKE_TIMEOUT);
+
+                    SSLContext sslContext = endpoint.getSslContextParameters().createSSLContext(getCamelContext());
+                    TlsServerConnector.ClientAuthMode clientAuthMode = TlsServerConnector.ClientAuthMode.NONE;
+                    if (endpoint.isClientAuthenticationRequired()) {
+                        clientAuthMode = TlsServerConnector.ClientAuthMode.NEEDED;
+                    } else if (endpoint.isClientAuthenticationWanted()) {
+                        clientAuthMode = TlsServerConnector.ClientAuthMode.WANTED;
+                    }
+                    tcpConnector = new TlsServerConnector(
+                            sslContext, clientAuthMode, address, tcpThreads, tlsHandshakeTimeout, tcpIdleTimeout);
                 } else {
-                    builder.setInetSocketAddress(address);
+                    tcpConnector = new TcpServerConnector(address, tcpThreads, tcpIdleTimeout);
                 }
-
-                server = new CoapServer();
-                server.addEndpoint(builder.build());
-
-                servers.put(port, server);
-                if (this.isStarted()) {
-                    server.start();
-                }
+                coapBuilder.setConnector(tcpConnector);
+            } else {
+                coapBuilder.setInetSocketAddress(address);
             }
-            return server;
-        } finally {
-            lock.unlock();
-        }
-    }
 
-    public Configuration loadConfiguration() throws IOException {
-        Configuration config;
-        if (configurationFile != null) {
-            InputStream is = ResourceHelper.resolveMandatoryResourceAsInputStream(getCamelContext(), configurationFile);
-            config = Configuration.createStandardFromStream(is);
-        } else {
-            config = Configuration.createStandardWithoutFile();
-        }
-        return config;
-    }
+            server = new CoapServer();
+            server.addEndpoint(coapBuilder.build());
 
-    private void doEnableTCP(
-            CoAPEndpoint endpoint, Configuration config, InetSocketAddress address, CoapEndpoint.Builder coapBuilder)
-            throws GeneralSecurityException, IOException {
-        TcpServerConnector tcpConnector;
-        // TLS + TCP
-        if (endpoint.getUri().getScheme().startsWith("coaps")) {
-            tcpConnector = doEnableTLSTCP(endpoint, config, address);
-        } else {
-            tcpConnector = new TcpServerConnector(address, config);
+            servers.put(port, server);
+            if (this.isStarted()) {
+                server.start();
+            }
         }
-        coapBuilder.setConnector(tcpConnector);
-    }
-
-    private TcpServerConnector doEnableTLSTCP(CoAPEndpoint endpoint, Configuration config, InetSocketAddress address)
-            throws GeneralSecurityException, IOException {
-        TcpServerConnector tcpConnector;
-        SSLContext sslContext = endpoint.getSslContextParameters().createSSLContext(getCamelContext());
-        if (endpoint.isClientAuthenticationRequired()) {
-            config.set(TcpConfig.TLS_CLIENT_AUTHENTICATION_MODE, CertificateAuthenticationMode.NEEDED);
-        } else if (endpoint.isClientAuthenticationWanted()) {
-            config.set(TcpConfig.TLS_CLIENT_AUTHENTICATION_MODE, CertificateAuthenticationMode.WANTED);
-        } else {
-            config.set(TcpConfig.TLS_CLIENT_AUTHENTICATION_MODE, CertificateAuthenticationMode.NONE);
-        }
-        tcpConnector = new TlsServerConnector(
-                sslContext, address, config);
-        return tcpConnector;
-    }
-
-    private static void doEnableDTLS(
-            CoAPEndpoint endpoint, Configuration config, InetSocketAddress address, CoapEndpoint.Builder coapBuilder)
-            throws IOException {
-        DTLSConnector connector = endpoint.createDTLSConnector(address, false, config);
-        coapBuilder.setConnector(connector);
+        return server;
     }
 
     @Override
@@ -187,7 +147,16 @@ public class CoAPComponent extends DefaultComponent implements RestConsumerFacto
             LOG.info("CORS configuration will be ignored as CORS is not supported by the CoAP component");
         }
 
-        final String host = doGetHost(config);
+        String host = config.getHost();
+        if (ObjectHelper.isEmpty(host)) {
+            if (config.getHostNameResolver() == RestConfiguration.RestHostNameResolver.allLocalIp) {
+                host = "0.0.0.0";
+            } else if (config.getHostNameResolver() == RestConfiguration.RestHostNameResolver.localHostName) {
+                host = HostUtils.getLocalHostName();
+            } else if (config.getHostNameResolver() == RestConfiguration.RestHostNameResolver.localIp) {
+                host = HostUtils.getLocalIp();
+            }
+        }
 
         Map<String, Object> map = new HashMap<>();
         // setup endpoint options
@@ -229,32 +198,6 @@ public class CoAPComponent extends DefaultComponent implements RestConsumerFacto
             setProperties(camelContext, consumer, config.getConsumerProperties());
         }
         return consumer;
-    }
-
-    private static String doGetHost(RestConfiguration config) throws UnknownHostException {
-        String host = config.getHost();
-        if (ObjectHelper.isEmpty(host)) {
-            if (config.getHostNameResolver() == RestConfiguration.RestHostNameResolver.allLocalIp) {
-                host = "0.0.0.0";
-            } else if (config.getHostNameResolver() == RestConfiguration.RestHostNameResolver.localHostName) {
-                host = HostUtils.getLocalHostName();
-            } else if (config.getHostNameResolver() == RestConfiguration.RestHostNameResolver.localIp) {
-                host = HostUtils.getLocalIp();
-            }
-        }
-        return host;
-    }
-
-    public String getConfigurationFile() {
-        return configurationFile;
-    }
-
-    /**
-     * Name of COAP configuration file to load and use. Will by default load from classpath, so use file: as prefix to
-     * load from file system.
-     */
-    public void setConfigurationFile(String configurationFile) {
-        this.configurationFile = configurationFile;
     }
 
     @Override

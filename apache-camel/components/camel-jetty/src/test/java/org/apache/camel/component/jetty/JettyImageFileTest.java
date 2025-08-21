@@ -46,12 +46,12 @@ public class JettyImageFileTest extends BaseJettyTest {
     }
 
     @Test
-    public void testImageContentType() {
+    public void testImageContentType() throws Exception {
         sendImageContent(false);
     }
 
     @Test
-    public void testImageContentWithGZip() {
+    public void testImageContentWithGZip() throws Exception {
         sendImageContent(true);
     }
 
@@ -64,7 +64,7 @@ public class JettyImageFileTest extends BaseJettyTest {
         };
     }
 
-    public static class MyImageService implements Processor {
+    public class MyImageService implements Processor {
         @Override
         public void process(Exchange exchange) {
             exchange.getMessage().setBody(new File("src/test/data/logo.jpeg"));

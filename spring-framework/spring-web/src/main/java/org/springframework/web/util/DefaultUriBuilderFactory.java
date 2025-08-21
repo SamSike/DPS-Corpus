@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.jspecify.annotations.Nullable;
-
-import org.springframework.util.CollectionUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -43,13 +41,12 @@ import org.springframework.util.StringUtils;
  */
 public class DefaultUriBuilderFactory implements UriBuilderFactory {
 
-	private final @Nullable UriComponentsBuilder baseUri;
-
-	private UriComponentsBuilder.@Nullable ParserType parserType;
+	@Nullable
+	private final UriComponentsBuilder baseUri;
 
 	private EncodingMode encodingMode = EncodingMode.TEMPLATE_AND_VALUES;
 
-	private @Nullable Map<String, @Nullable Object> defaultUriVariables;
+	private final Map<String, Object> defaultUriVariables = new HashMap<>();
 
 	private boolean parsePath = true;
 
@@ -85,36 +82,6 @@ public class DefaultUriBuilderFactory implements UriBuilderFactory {
 
 
 	/**
-	 * Determine whether this factory has been configured with a base URI.
-	 * @since 6.1.4
-	 * @see #DefaultUriBuilderFactory()
-	 */
-	public final boolean hasBaseUri() {
-		return (this.baseUri != null);
-	}
-
-	/**
-	 * Set the {@link UriComponentsBuilder.ParserType} to use.
-	 * <p>By default, {@link UriComponentsBuilder} uses the
-	 * {@link UriComponentsBuilder.ParserType#RFC parser type}.
-	 * @param parserType the parser type
-	 * @since 6.2
-	 * @see UriComponentsBuilder.ParserType
-	 * @see UriComponentsBuilder#fromUriString(String, UriComponentsBuilder.ParserType)
-	 */
-	public void setParserType(UriComponentsBuilder.ParserType parserType) {
-		this.parserType = parserType;
-	}
-
-	/**
-	 * Return the configured parser type.
-	 * @since 6.2
-	 */
-	public UriComponentsBuilder.@Nullable ParserType getParserType() {
-		return this.parserType;
-	}
-
-	/**
 	 * Set the {@link EncodingMode encoding mode} to use.
 	 * <p>By default this is set to {@link EncodingMode#TEMPLATE_AND_VALUES
 	 * EncodingMode.TEMPLATE_AND_VALUES}.
@@ -140,19 +107,10 @@ public class DefaultUriBuilderFactory implements UriBuilderFactory {
 	 * with a Map of variables.
 	 * @param defaultUriVariables default URI variable values
 	 */
-	public void setDefaultUriVariables(@Nullable Map<String, ? extends @Nullable Object> defaultUriVariables) {
+	public void setDefaultUriVariables(@Nullable Map<String, ?> defaultUriVariables) {
+		this.defaultUriVariables.clear();
 		if (defaultUriVariables != null) {
-			if (this.defaultUriVariables == null) {
-				this.defaultUriVariables = new HashMap<>(defaultUriVariables);
-			}
-			else {
-				this.defaultUriVariables.putAll(defaultUriVariables);
-			}
-		}
-		else {
-			if (this.defaultUriVariables != null) {
-				this.defaultUriVariables.clear();
-			}
+			this.defaultUriVariables.putAll(defaultUriVariables);
 		}
 	}
 
@@ -160,12 +118,7 @@ public class DefaultUriBuilderFactory implements UriBuilderFactory {
 	 * Return the configured default URI variable values.
 	 */
 	public Map<String, ?> getDefaultUriVariables() {
-		if (this.defaultUriVariables != null) {
-			return Collections.unmodifiableMap(this.defaultUriVariables);
-		}
-		else {
-			return Collections.emptyMap();
-		}
+		return Collections.unmodifiableMap(this.defaultUriVariables);
 	}
 
 	/**
@@ -192,12 +145,12 @@ public class DefaultUriBuilderFactory implements UriBuilderFactory {
 	// UriTemplateHandler
 
 	@Override
-	public URI expand(String uriTemplate, Map<String, ? extends @Nullable Object> uriVars) {
+	public URI expand(String uriTemplate, Map<String, ?> uriVars) {
 		return uriString(uriTemplate).build(uriVars);
 	}
 
 	@Override
-	public URI expand(String uriTemplate, @Nullable Object... uriVars) {
+	public URI expand(String uriTemplate, Object... uriVars) {
 		return uriString(uriTemplate).build(uriVars);
 	}
 
@@ -287,24 +240,18 @@ public class DefaultUriBuilderFactory implements UriBuilderFactory {
 				result = (baseUri != null ? baseUri.cloneBuilder() : UriComponentsBuilder.newInstance());
 			}
 			else if (baseUri != null) {
-				UriComponentsBuilder builder = parseUri(uriTemplate);
+				UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(uriTemplate);
 				UriComponents uri = builder.build();
 				result = (uri.getHost() == null ? baseUri.cloneBuilder().uriComponents(uri) : builder);
 			}
 			else {
-				result = parseUri(uriTemplate);
+				result = UriComponentsBuilder.fromUriString(uriTemplate);
 			}
 			if (encodingMode.equals(EncodingMode.TEMPLATE_AND_VALUES)) {
 				result.encode();
 			}
 			parsePathIfNecessary(result);
 			return result;
-		}
-
-		private UriComponentsBuilder parseUri(String uriTemplate) {
-			return (getParserType() != null ?
-					UriComponentsBuilder.fromUriString(uriTemplate, getParserType()) :
-					UriComponentsBuilder.fromUriString(uriTemplate));
 		}
 
 		private void parsePathIfNecessary(UriComponentsBuilder result) {
@@ -432,8 +379,8 @@ public class DefaultUriBuilderFactory implements UriBuilderFactory {
 
 		@Override
 		public URI build(Map<String, ?> uriVars) {
-			if (!CollectionUtils.isEmpty(defaultUriVariables)) {
-				Map<String, Object> map = new HashMap<>(defaultUriVariables.size() + uriVars.size());
+			if (!defaultUriVariables.isEmpty()) {
+				Map<String, Object> map = new HashMap<>();
 				map.putAll(defaultUriVariables);
 				map.putAll(uriVars);
 				uriVars = map;
@@ -446,8 +393,8 @@ public class DefaultUriBuilderFactory implements UriBuilderFactory {
 		}
 
 		@Override
-		public URI build(@Nullable Object... uriVars) {
-			if (ObjectUtils.isEmpty(uriVars) && !CollectionUtils.isEmpty(defaultUriVariables)) {
+		public URI build(Object... uriVars) {
+			if (ObjectUtils.isEmpty(uriVars) && !defaultUriVariables.isEmpty()) {
 				return build(Collections.emptyMap());
 			}
 			if (encodingMode.equals(EncodingMode.VALUES_ONLY)) {
@@ -462,11 +409,6 @@ public class DefaultUriBuilderFactory implements UriBuilderFactory {
 				uric = uric.encode();
 			}
 			return URI.create(uric.toString());
-		}
-
-		@Override
-		public String toUriString() {
-			return this.uriComponentsBuilder.build().toUriString();
 		}
 	}
 

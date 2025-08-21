@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.springframework.jdbc.core.metadata;
 
 import java.sql.DatabaseMetaData;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Holder of meta-data for a specific parameter that is used for call processing.
@@ -32,16 +32,28 @@ public class CallParameterMetaData {
 
 	private final boolean function;
 
-	private final @Nullable String parameterName;
+	@Nullable
+	private final String parameterName;
 
 	private final int parameterType;
 
 	private final int sqlType;
 
-	private final @Nullable String typeName;
+	@Nullable
+	private final String typeName;
 
 	private final boolean nullable;
 
+
+	/**
+	 * Constructor taking all the properties except the function marker.
+	 */
+	@Deprecated
+	public CallParameterMetaData(
+			@Nullable String columnName, int columnType, int sqlType, @Nullable String typeName, boolean nullable) {
+
+		this(false, columnName, columnType, sqlType, typeName, nullable);
+	}
 
 	/**
 	 * Constructor taking all the properties including the function marker.
@@ -70,7 +82,8 @@ public class CallParameterMetaData {
 	/**
 	 * Return the parameter name.
 	 */
-	public @Nullable String getParameterName() {
+	@Nullable
+	public String getParameterName() {
 		return this.parameterName;
 	}
 
@@ -95,28 +108,6 @@ public class CallParameterMetaData {
 	}
 
 	/**
-	 * Determine whether the declared parameter qualifies as an 'out' parameter
-	 * for our purposes: type {@link DatabaseMetaData#procedureColumnOut},
-	 * or in case of a function, {@link DatabaseMetaData#functionColumnOut}.
-	 * @since 5.3.31
-	 */
-	public boolean isOutParameter() {
-		return (this.function ? this.parameterType == DatabaseMetaData.functionColumnOut :
-				this.parameterType == DatabaseMetaData.procedureColumnOut);
-	}
-
-	/**
-	 * Determine whether the declared parameter qualifies as an 'in-out' parameter
-	 * for our purposes: type {@link DatabaseMetaData#procedureColumnInOut},
-	 * or in case of a function, {@link DatabaseMetaData#functionColumnInOut}.
-	 * @since 5.3.31
-	 */
-	public boolean isInOutParameter() {
-		return (this.function ? this.parameterType == DatabaseMetaData.functionColumnInOut :
-				this.parameterType == DatabaseMetaData.procedureColumnInOut);
-	}
-
-	/**
 	 * Return the parameter SQL type.
 	 */
 	public int getSqlType() {
@@ -126,7 +117,8 @@ public class CallParameterMetaData {
 	/**
 	 * Return the parameter type name.
 	 */
-	public @Nullable String getTypeName() {
+	@Nullable
+	public String getTypeName() {
 		return this.typeName;
 	}
 

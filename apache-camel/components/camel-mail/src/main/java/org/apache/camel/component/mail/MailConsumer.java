@@ -33,22 +33,23 @@ import jakarta.mail.PasswordAuthentication;
 import jakarta.mail.Store;
 import jakarta.mail.search.SearchTerm;
 
+import com.sun.mail.imap.IMAPFolder;
+import com.sun.mail.imap.IMAPStore;
+import com.sun.mail.imap.SortTerm;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
+import org.apache.camel.ExtendedCamelContext;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Processor;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.attachment.Attachment;
 import org.apache.camel.attachment.AttachmentMessage;
 import org.apache.camel.spi.BeanIntrospection;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.ScheduledBatchPollingConsumer;
 import org.apache.camel.support.SynchronizationAdapter;
 import org.apache.camel.util.CastUtils;
 import org.apache.camel.util.KeyValueHolder;
 import org.apache.camel.util.ObjectHelper;
-import org.eclipse.angus.mail.imap.IMAPFolder;
-import org.eclipse.angus.mail.imap.IMAPStore;
-import org.eclipse.angus.mail.imap.SortTerm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -158,9 +159,6 @@ public class MailConsumer extends ScheduledBatchPollingConsumer {
             return 0; // return since we cannot poll mail messages, but will re-connect on next poll.
         }
 
-        // okay consumer is connected to the mail server
-        forceConsumerAsReady();
-
         try {
             int count = folder.getMessageCount();
             if (count > 0) {
@@ -233,12 +231,11 @@ public class MailConsumer extends ScheduledBatchPollingConsumer {
             // update pending number of exchanges
             pendingExchanges = total - index - 1;
 
-            // must use the original message in case we need to work around a charset issue when extracting mail content
-            var msg = exchange.getIn();
-            final Message mail = ((MailMessage) msg).getOriginalMessage();
+            // must use the original message in case we need to workaround a charset issue when extracting mail content
+            final Message mail = exchange.getIn(MailMessage.class).getOriginalMessage();
 
             // add on completion to handle after work when the exchange is done
-            exchange.getExchangeExtension().addOnCompletion(new SynchronizationAdapter() {
+            exchange.adapt(ExtendedExchange.class).addOnCompletion(new SynchronizationAdapter() {
                 @Override
                 public void onComplete(Exchange exchange) {
                     processCommit(mail, exchange);
@@ -275,7 +272,7 @@ public class MailConsumer extends ScheduledBatchPollingConsumer {
             try {
                 LOG.trace("Calling setPeek(true) on mail message {}", mail);
                 BeanIntrospection beanIntrospection
-                        = PluginHelper.getBeanIntrospection(getEndpoint().getCamelContext());
+                        = getEndpoint().getCamelContext().adapt(ExtendedCamelContext.class).getBeanIntrospection();
                 beanIntrospection.setProperty(getEndpoint().getCamelContext(), mail, "peek", true);
             } catch (Exception e) {
                 // ignore
@@ -362,7 +359,7 @@ public class MailConsumer extends ScheduledBatchPollingConsumer {
                 }
             }
         }
-        return msgs.toArray(new Message[0]);
+        return msgs.toArray(new Message[msgs.size()]);
     }
 
     private boolean isValidMessage(String key, Message msg) {
@@ -451,10 +448,8 @@ public class MailConsumer extends ScheduledBatchPollingConsumer {
      */
     protected void processExchange(Exchange exchange) throws Exception {
         if (LOG.isDebugEnabled()) {
-            var msg = exchange.getIn();
-            if (msg instanceof MailMessage mm) {
-                LOG.debug("Processing message: {}", MailUtils.dumpMessage(mm.getMessage()));
-            }
+            MailMessage msg = (MailMessage) exchange.getIn();
+            LOG.debug("Processing message: {}", MailUtils.dumpMessage(msg.getMessage()));
         }
         getProcessor().process(exchange);
     }

@@ -33,7 +33,6 @@ import org.apache.camel.language.simple.types.SimpleIllegalSyntaxException;
 import org.apache.camel.language.simple.types.SimpleParserException;
 import org.apache.camel.language.simple.types.SimpleToken;
 import org.apache.camel.language.simple.types.TokenType;
-import org.apache.camel.support.LanguageHelper;
 import org.apache.camel.support.builder.ExpressionBuilder;
 import org.apache.camel.util.StringHelper;
 
@@ -43,7 +42,7 @@ import org.apache.camel.util.StringHelper;
 public class SimpleExpressionParser extends BaseSimpleParser {
 
     // use caches to avoid re-parsing the same expressions over and over again
-    private final Map<String, Expression> cacheExpression;
+    private Map<String, Expression> cacheExpression;
 
     public SimpleExpressionParser(CamelContext camelContext, String expression, boolean allowEscape,
                                   Map<String, Expression> cacheExpression) {
@@ -95,9 +94,9 @@ public class SimpleExpressionParser extends BaseSimpleParser {
             nextToken();
         }
 
-        // now after parsing, we need a bit of work to do, to make it easier to turn the tokens
+        // now after parsing we need a bit of work to do, to make it easier to turn the tokens
         // into an ast, and then from the ast, to Camel expression(s).
-        // hence why there are a number of tasks going on below to accomplish this
+        // hence why there is a number of tasks going on below to accomplish this
 
         // turn the tokens into the ast model
         parseAndCreateAstModel();
@@ -153,7 +152,7 @@ public class SimpleExpressionParser extends BaseSimpleParser {
                 continue;
             }
 
-            // if no token was created, then it's a character/whitespace/escaped symbol
+            // if no token was created then its a character/whitespace/escaped symbol
             // which we need to add together in the same image
             if (imageToken == null) {
                 imageToken = new LiteralExpression(token);
@@ -203,15 +202,15 @@ public class SimpleExpressionParser extends BaseSimpleParser {
      * Second step parsing into code
      */
     protected String doParseCode() {
-        StringBuilder sb = new StringBuilder(256);
+        StringBuilder sb = new StringBuilder();
         boolean firstIsLiteral = false;
         for (SimpleNode node : nodes) {
-            String exp = node.createCode(camelContext, expression);
+            String exp = node.createCode(expression);
             if (exp != null) {
-                if (sb.isEmpty() && node instanceof LiteralNode) {
+                if (sb.length() == 0 && node instanceof LiteralNode) {
                     firstIsLiteral = true;
                 }
-                if (!sb.isEmpty()) {
+                if (sb.length() > 0) {
                     // okay we append together and this requires that the first node to be literal
                     if (!firstIsLiteral) {
                         // then insert an empty string + to force type into string so the compiler
@@ -220,35 +219,43 @@ public class SimpleExpressionParser extends BaseSimpleParser {
                     }
                     sb.append(" + ");
                 }
-                parseLiteralNode(sb, node, exp);
+                if (node instanceof LiteralNode) {
+                    exp = StringHelper.removeLeadingAndEndingQuotes(exp);
+                    sb.append("\"");
+                    // " should be escaped to \"
+                    exp = escapeQuotes(exp);
+                    // \n \t \r should be escaped
+                    exp = exp.replaceAll("\n", "\\\\n");
+                    exp = exp.replaceAll("\t", "\\\\t");
+                    exp = exp.replaceAll("\r", "\\\\r");
+                    if (exp.endsWith("\\") && !exp.endsWith("\\\\")) {
+                        // there is a single trailing slash which we need to escape
+                        exp += "\\";
+                    }
+                    sb.append(exp);
+                    sb.append("\"");
+                } else {
+                    sb.append(exp);
+                }
             }
         }
-
-        String code = sb.toString();
-        code = code.replace(BaseSimpleParser.CODE_START, "");
-        code = code.replace(BaseSimpleParser.CODE_END, "");
-        return code;
+        return sb.toString();
     }
 
-    static void parseLiteralNode(StringBuilder sb, SimpleNode node, String exp) {
-        if (node instanceof LiteralNode) {
-            exp = StringHelper.removeLeadingAndEndingQuotes(exp);
-            sb.append("\"");
-            // " should be escaped to \"
-            exp = LanguageHelper.escapeQuotes(exp);
-            // \n \t \r should be escaped
-            exp = exp.replaceAll("\n", "\\\\n");
-            exp = exp.replaceAll("\t", "\\\\t");
-            exp = exp.replaceAll("\r", "\\\\r");
-            if (exp.endsWith("\\") && !exp.endsWith("\\\\")) {
-                // there is a single trailing slash which we need to escape
-                exp += "\\";
+    private static String escapeQuotes(String text) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char prev = i > 0 ? text.charAt(i - 1) : 0;
+            char ch = text.charAt(i);
+
+            if (ch == '"' && (i == 0 || prev != '\\')) {
+                sb.append('\\');
+                sb.append('"');
+            } else {
+                sb.append(ch);
             }
-            sb.append(exp);
-            sb.append("\"");
-        } else {
-            sb.append(exp);
         }
+        return sb.toString();
     }
 
     // --------------------------------------------------------------
@@ -257,11 +264,11 @@ public class SimpleExpressionParser extends BaseSimpleParser {
 
     // the expression parser only understands
     // - template = literal texts with can contain embedded functions
-    // - function = simple functions such as ${body} etc.
-    // - unary operator = operator attached to the left-hand side node
+    // - function = simple functions such as ${body} etc
+    // - unary operator = operator attached to the left hand side node
 
     protected void templateText() {
-        // for template, we accept anything but functions
+        // for template we accept anything but functions
         while (!token.getType().isFunctionStart() && !token.getType().isFunctionEnd() && !token.getType().isEol()) {
             nextToken();
         }

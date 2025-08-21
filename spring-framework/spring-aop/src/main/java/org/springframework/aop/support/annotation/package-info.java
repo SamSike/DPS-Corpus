@@ -1,7 +1,9 @@
 /**
  * Annotation support for AOP pointcuts.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.aop.support.annotation;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

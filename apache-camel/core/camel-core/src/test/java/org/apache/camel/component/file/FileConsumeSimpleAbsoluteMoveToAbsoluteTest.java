@@ -24,7 +24,8 @@ import org.junit.jupiter.api.Test;
 
 public class FileConsumeSimpleAbsoluteMoveToAbsoluteTest extends ContextTestSupport {
 
-    private String base;
+    private String fileUrl = fileUri();
+    private String base = testDirectory().toAbsolutePath().toString();
 
     @Test
     public void testMoveToSubDir() throws Exception {
@@ -36,19 +37,18 @@ public class FileConsumeSimpleAbsoluteMoveToAbsoluteTest extends ContextTestSupp
         mock.expectedFileExists(base + "/.done/hello.txt");
         mock.expectedFileExists(base + "/.done/goodday.txt");
 
-        template.sendBodyAndHeader(fileUri(), "Bye World", Exchange.FILE_NAME, "bye.txt");
-        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "sub/hello.txt");
-        template.sendBodyAndHeader(fileUri(), "Goodday World", Exchange.FILE_NAME, "sub/sub2/goodday.txt");
+        template.sendBodyAndHeader(fileUrl, "Bye World", Exchange.FILE_NAME, "bye.txt");
+        template.sendBodyAndHeader(fileUrl, "Hello World", Exchange.FILE_NAME, "sub/hello.txt");
+        template.sendBodyAndHeader(fileUrl, "Goodday World", Exchange.FILE_NAME, "sub/sub2/goodday.txt");
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
-        base = testDirectory().toAbsolutePath().toString();
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("file://" + base + "?recursive=true&move=" + base + "/.done&initialDelay=0&delay=10")
                         .convertBodyTo(String.class).to("mock:result");
             }

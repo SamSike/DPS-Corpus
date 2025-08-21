@@ -20,11 +20,11 @@ import org.apache.camel.BeanInject;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spi.CamelBeanPostProcessor;
 import org.apache.camel.spi.Registry;
-import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.Test;
 
 public class BeanInjectRouteBuilderTest extends ContextTestSupport {
@@ -33,8 +33,8 @@ public class BeanInjectRouteBuilderTest extends ContextTestSupport {
     private FooBar foo;
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry registry = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry registry = super.createRegistry();
         registry.bind("foo", new FooBar());
         return registry;
     }
@@ -45,7 +45,7 @@ public class BeanInjectRouteBuilderTest extends ContextTestSupport {
 
         // manual post process us as ContextTestSupport in camel-core doesn't do
         // that out of the box
-        CamelBeanPostProcessor post = PluginHelper.getBeanPostProcessor(context);
+        CamelBeanPostProcessor post = context.adapt(ExtendedCamelContext.class).getBeanPostProcessor();
         post.postProcessBeforeInitialization(this, "MyRoute");
         post.postProcessAfterInitialization(this, "MyRoute");
         return context;
@@ -61,13 +61,13 @@ public class BeanInjectRouteBuilderTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         String out = foo.hello(exchange.getIn().getBody(String.class));
                         exchange.getIn().setBody(out);
                     }

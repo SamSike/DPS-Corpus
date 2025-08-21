@@ -22,6 +22,8 @@ import org.apache.camel.BindToRegistry;
 import org.apache.camel.CamelExecutionException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -38,13 +40,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class NettyHttpSimpleBasicAuthConstraintMapperTest extends BaseNettyTest {
 
     @Override
-    public void doPreSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
         System.setProperty("java.security.auth.login.config", "src/test/resources/myjaas.config");
+        super.setUp();
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
         System.clearProperty("java.security.auth.login.config");
+        super.tearDown();
     }
 
     @BindToRegistry("myConstraint")
@@ -107,8 +113,8 @@ public class NettyHttpSimpleBasicAuthConstraintMapperTest extends BaseNettyTest 
             public void configure() {
                 from("netty-http:http://0.0.0.0:{{port}}/foo?matchOnUriPrefix=true"
                      + "&securityConfiguration.realm=karaf&securityConfiguration.securityConstraint=#myConstraint")
-                        .to("mock:input")
-                        .transform().constant("Bye World");
+                             .to("mock:input")
+                             .transform().constant("Bye World");
             }
         };
     }

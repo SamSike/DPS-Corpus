@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,15 +38,14 @@
 package org.jooq.meta.sqlite;
 
 import static org.jooq.impl.DSL.all;
+import static org.jooq.impl.DSL.any;
 import static org.jooq.impl.DSL.coalesce;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.list;
-import static org.jooq.impl.DSL.lower;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.one;
-import static org.jooq.impl.DSL.quotedName;
 import static org.jooq.impl.DSL.replace;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.selectFrom;
@@ -57,10 +56,9 @@ import static org.jooq.impl.SQLDataType.VARCHAR;
 import static org.jooq.meta.sqlite.sqlite_master.SQLiteMaster.SQLITE_MASTER;
 import static org.jooq.tools.StringUtils.isBlank;
 
-import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -74,27 +72,20 @@ import org.jooq.Meta;
 import org.jooq.Query;
 import org.jooq.Record;
 import org.jooq.Record1;
-import org.jooq.Record12;
-import org.jooq.Record14;
-import org.jooq.Record4;
-import org.jooq.Record5;
-import org.jooq.Record6;
 import org.jooq.Result;
-import org.jooq.ResultQuery;
 import org.jooq.SQLDialect;
+import org.jooq.Select;
+import org.jooq.SelectConditionStep;
 import org.jooq.SortOrder;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions.TableType;
-import org.jooq.conf.RenderQuotedNames;
-// ...
-// ...
-// ...
 import org.jooq.UniqueKey;
+import org.jooq.conf.SettingsTools;
 import org.jooq.exception.DataDefinitionException;
 import org.jooq.impl.DSL;
+import org.jooq.impl.Internal;
 import org.jooq.impl.ParserException;
-import org.jooq.impl.QOM;
 import org.jooq.meta.AbstractDatabase;
 import org.jooq.meta.AbstractIndexDefinition;
 import org.jooq.meta.ArrayDefinition;
@@ -102,33 +93,29 @@ import org.jooq.meta.CatalogDefinition;
 import org.jooq.meta.DefaultCheckConstraintDefinition;
 import org.jooq.meta.DefaultIndexColumnDefinition;
 import org.jooq.meta.DefaultRelations;
-// ...
 import org.jooq.meta.DomainDefinition;
 import org.jooq.meta.EnumDefinition;
 import org.jooq.meta.IndexColumnDefinition;
 import org.jooq.meta.IndexDefinition;
 import org.jooq.meta.PackageDefinition;
-import org.jooq.meta.ResultQueryDatabase;
 import org.jooq.meta.RoutineDefinition;
 import org.jooq.meta.SchemaDefinition;
 import org.jooq.meta.SequenceDefinition;
 import org.jooq.meta.TableDefinition;
-// ...
 import org.jooq.meta.UDTDefinition;
-import org.jooq.meta.XMLSchemaCollectionDefinition;
 import org.jooq.meta.jaxb.SchemaMappingType;
 import org.jooq.meta.sqlite.sqlite_master.SQLiteMaster;
 import org.jooq.tools.JooqLogger;
 import org.jooq.tools.StringUtils;
 
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * SQLite implementation of {@link AbstractDatabase}
  *
  * @author Lukas Eder
  */
-public class SQLiteDatabase extends AbstractDatabase implements ResultQueryDatabase {
+public class SQLiteDatabase extends AbstractDatabase {
 
     private static final JooqLogger log = JooqLogger.getLogger(SQLiteDatabase.class);
 
@@ -151,16 +138,11 @@ public class SQLiteDatabase extends AbstractDatabase implements ResultQueryDatab
     }
 
     @Override
-    protected RenderQuotedNames getRenderQuotedNames() {
-        return RenderQuotedNames.EXPLICIT_DEFAULT_UNQUOTED;
-    }
-
-    @Override
     protected List<IndexDefinition> getIndexes0() throws SQLException {
         final List<IndexDefinition> result = new ArrayList<>();
 
         final Field<String> fIndexName = field("il.name", String.class).as("index_name");
-        final Field<Boolean> fUnique = field("il.\"unique\"", boolean.class).as(quotedName("unique"));
+        final Field<Boolean> fUnique = field("il.\"unique\"", boolean.class).as("unique");
         final Field<Integer> fSeqno = field("ii.seqno", int.class).add(one()).as("seqno");
         final Field<String> fColumnName = field("ii.name", String.class).as("column_name");
 
@@ -209,7 +191,6 @@ public class SQLiteDatabase extends AbstractDatabase implements ResultQueryDatab
             final boolean unique = index.get(fUnique);
 
             // [#6310] [#6620] Function-based indexes are not yet supported
-            // [#16237]        Alternatively, the column could be hidden or excluded
             for (Record column : columns)
                 if (table.getColumn(column.get(fColumnName)) == null)
                     continue indexLoop;
@@ -320,9 +301,7 @@ public class SQLiteDatabase extends AbstractDatabase implements ResultQueryDatab
                         ukName,
                         ukTable,
                         ukTable.getColumn(ukFields[i].getName(), true),
-                        true,
-                        fk.getDeleteRule(),
-                        fk.getUpdateRule()
+                        true
                     );
                 }
             }
@@ -395,43 +374,6 @@ public class SQLiteDatabase extends AbstractDatabase implements ResultQueryDatab
     }
 
     @Override
-    public ResultQuery<Record4<String, String, String, String>> sources(List<String> schemas) {
-        return create()
-            .select(
-                inline(null, VARCHAR).as("catalog"),
-                inline(null, VARCHAR).as("schema"),
-                SQLiteMaster.NAME,
-                SQLiteMaster.SQL)
-            .from(SQLITE_MASTER)
-            .orderBy(SQLiteMaster.NAME);
-    }
-
-    @Override
-    public ResultQuery<Record5<String, String, String, String, String>> comments(List<String> schemas) {
-        return null;
-    }
-
-    @Override
-    public ResultQuery<Record12<String, String, String, String, Integer, Integer, Long, Long, BigDecimal, BigDecimal, Boolean, Long>> sequences(List<String> schemas) {
-        return null;
-    }
-
-    @Override
-    public ResultQuery<Record6<String, String, String, String, String, Integer>> enums(List<String> schemas) {
-        return null;
-    }
-
-    @Override
-    public ResultQuery<Record6<String, String, String, String, String, Integer>> primaryKeys(List<String> schemas) {
-        return null;
-    }
-
-    @Override
-    public ResultQuery<Record6<String, String, String, String, String, Integer>> uniqueKeys(List<String> schemas) {
-        return null;
-    }
-
-    @Override
     protected List<TableDefinition> getTables0() throws SQLException {
         List<TableDefinition> result = new ArrayList<>();
 
@@ -452,22 +394,18 @@ public class SQLiteDatabase extends AbstractDatabase implements ResultQueryDatab
                 .where(SQLiteMaster.TYPE.in("table", "view"))
                 .and(getIncludeSystemTables()
                     ? noCondition()
-                    : SQLiteMaster.NAME.notIn(inline("sqlite_sequence"), inline("sqlite_master"))
-                    .and(SQLiteMaster.NAME.notLike(inline("sqlite!_stat%")).escape('!'))
-                    .and(
-                          SQLiteMaster.NAME.notLike(all(
-                            inline("%!_content"),
-                            inline("%!_segments"),
-                            inline("%!_segdir"),
-                            inline("%!_docsize"),
-                            inline("%!_stat")
-                          )).escape('!')
-                            .or(SQLiteMaster.NAME.like(inline("%!_content" )).escape('!').and(replace(SQLiteMaster.NAME, inline("_content" )).notIn(selectFrom(virtualTables))))
-                            .or(SQLiteMaster.NAME.like(inline("%!_segments")).escape('!').and(replace(SQLiteMaster.NAME, inline("_segments")).notIn(selectFrom(virtualTables))))
-                            .or(SQLiteMaster.NAME.like(inline("%!_segdir"  )).escape('!').and(replace(SQLiteMaster.NAME, inline("_segdir"  )).notIn(selectFrom(virtualTables))))
-                            .or(SQLiteMaster.NAME.like(inline("%!_docsize" )).escape('!').and(replace(SQLiteMaster.NAME, inline("_docsize" )).notIn(selectFrom(virtualTables))))
-                            .or(SQLiteMaster.NAME.like(inline("%!_stat"    )).escape('!').and(replace(SQLiteMaster.NAME, inline("_stat"    )).notIn(selectFrom(virtualTables))))
-                    )
+                    : SQLiteMaster.NAME.notLike(all(
+                        inline("%!_content"),
+                        inline("%!_segments"),
+                        inline("%!_segdir"),
+                        inline("%!_docsize"),
+                        inline("%!_stat")
+                      )).escape('!')
+                        .or(SQLiteMaster.NAME.like(inline("%!_content" )).escape('!').and(replace(SQLiteMaster.NAME, inline("_content" )).notIn(selectFrom(virtualTables))))
+                        .or(SQLiteMaster.NAME.like(inline("%!_segments")).escape('!').and(replace(SQLiteMaster.NAME, inline("_segments")).notIn(selectFrom(virtualTables))))
+                        .or(SQLiteMaster.NAME.like(inline("%!_segdir"  )).escape('!').and(replace(SQLiteMaster.NAME, inline("_segdir"  )).notIn(selectFrom(virtualTables))))
+                        .or(SQLiteMaster.NAME.like(inline("%!_docsize" )).escape('!').and(replace(SQLiteMaster.NAME, inline("_docsize" )).notIn(selectFrom(virtualTables))))
+                        .or(SQLiteMaster.NAME.like(inline("%!_stat"    )).escape('!').and(replace(SQLiteMaster.NAME, inline("_stat"    )).notIn(selectFrom(virtualTables))))
                 )
                 .orderBy(SQLiteMaster.NAME)) {
 
@@ -505,129 +443,6 @@ public class SQLiteDatabase extends AbstractDatabase implements ResultQueryDatab
         return result;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
-    protected List<XMLSchemaCollectionDefinition> getXMLSchemaCollections0() throws SQLException {
-        List<XMLSchemaCollectionDefinition> result = new ArrayList<>();
-        return result;
-    }
-
     @Override
     protected List<UDTDefinition> getUDTs0() throws SQLException {
         List<UDTDefinition> result = new ArrayList<>();
@@ -647,19 +462,5 @@ public class SQLiteDatabase extends AbstractDatabase implements ResultQueryDatab
             snapshot = create().meta().snapshot();
 
         return snapshot;
-    }
-
-    private Boolean existsSqliteSequence;
-
-    boolean existsSqliteSequence() {
-        if (existsSqliteSequence == null) {
-            existsSqliteSequence = create()
-                .selectCount()
-                .from(SQLITE_MASTER)
-                .where(lower(SQLiteMaster.NAME).eq("sqlite_sequence"))
-                .fetchOne(0, boolean.class);
-        }
-
-        return existsSqliteSequence;
     }
 }

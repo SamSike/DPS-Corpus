@@ -58,6 +58,9 @@ public class HttpMessage extends DefaultMessage {
 
         this.request = request;
         this.response = response;
+        // Put the request and response into the message header
+        this.setHeader(Exchange.HTTP_SERVLET_REQUEST, request);
+        this.setHeader(Exchange.HTTP_SERVLET_RESPONSE, response);
 
         // Check the setting of exchange
         Boolean flag = exchange.getProperty(Exchange.SKIP_WWW_FORM_URLENCODED, Boolean.class);
@@ -95,7 +98,7 @@ public class HttpMessage extends DefaultMessage {
         }
 
         try {
-            return endpoint.getHttpBinding().parseBody(request, this);
+            return endpoint.getHttpBinding().parseBody(this);
         } catch (IOException e) {
             throw new RuntimeCamelException(e);
         } finally {

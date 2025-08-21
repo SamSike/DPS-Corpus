@@ -46,7 +46,7 @@ public class BeanSingletonTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
+    protected Registry createRegistry() throws Exception {
         context = createJndiContext();
         context.bind("something", new MyBean());
         registry = new DefaultRegistry(new JndiBeanRepository(context));
@@ -87,7 +87,7 @@ public class BeanSingletonTest extends ContextTestSupport {
     public static class MyBean {
         private boolean invoked;
 
-        public void doSomething(Exchange exchange) {
+        public void doSomething(Exchange exchange) throws Exception {
             if (invoked) {
                 throw new IllegalStateException("This bean is not supported to be invoked again!");
             } else {

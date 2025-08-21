@@ -1,8 +1,10 @@
 /**
  * Generic support for UI layer concepts.
- * <p>Provides generic {@code Model} and {@code ModelMap} holders for model attributes.
+ * Provides a generic ModelMap for model holding.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.ui;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

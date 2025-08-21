@@ -18,7 +18,6 @@ package org.apache.camel.cloud;
 
 import java.util.Map;
 
-@Deprecated(since = "4.8.0")
 public interface DiscoverableService {
     /**
      * Get the service properties.

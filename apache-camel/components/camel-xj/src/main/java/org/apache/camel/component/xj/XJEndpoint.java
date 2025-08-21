@@ -17,7 +17,6 @@
 package org.apache.camel.component.xj;
 
 import com.fasterxml.jackson.core.JsonFactory;
-import org.apache.camel.Category;
 import org.apache.camel.Component;
 import org.apache.camel.api.management.ManagedAttribute;
 import org.apache.camel.api.management.ManagedResource;
@@ -33,7 +32,7 @@ import org.apache.camel.spi.UriParam;
  */
 @ManagedResource(description = "Managed XJEndpoint")
 @UriEndpoint(firstVersion = "3.0.0", scheme = "xj", title = "XJ", syntax = "xj:resourceUri", producerOnly = true,
-             remote = false, category = { Category.TRANSFORMATION }, headersClass = XJConstants.class)
+             label = "transformation", headersClass = XJConstants.class)
 public class XJEndpoint extends XsltSaxonEndpoint {
 
     private final JsonFactory jsonFactory = new JsonFactory();
@@ -44,11 +43,6 @@ public class XJEndpoint extends XsltSaxonEndpoint {
 
     public XJEndpoint(String endpointUri, Component component) {
         super(endpointUri, component);
-    }
-
-    @Override
-    public boolean isRemote() {
-        return false;
     }
 
     @ManagedAttribute(description = "Transform direction")
@@ -99,7 +93,6 @@ public class XJEndpoint extends XsltSaxonEndpoint {
     /**
      * Configures the result output depending on the {@link XJEndpoint#transformDirection}
      */
-    @Override
     protected void configureOutput(XsltBuilder xsltBuilder, String output) throws Exception {
         switch (this.transformDirection) {
             case JSON2XML:

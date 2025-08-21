@@ -19,18 +19,21 @@ package org.apache.camel.component.kafka.integration;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.camel.Endpoint;
+import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
+import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.kafka.KafkaConstants;
-import org.apache.camel.component.kafka.integration.common.KafkaTestUtil;
-import org.apache.camel.component.kafka.integration.common.TestProducerUtil;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -44,14 +47,36 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class KafkaTransactionIT extends BaseKafkaTestSupport {
-    public static final String SEQUENTIAL_TRANSACTION_URI = "direct:startTransaction";
-    public static final String CONCURRENT_TRANSACTION_URI = "seda:startTransaction";
-
+public class KafkaTransactionIT extends BaseEmbeddedKafkaTestSupport {
     private static final String TOPIC_TRANSACTION = "transaction";
     private static final String TOPIC_CONCURRENCY_TRANSACTION = "concurrency_transaction";
-    private static final int THREAD_NUM = 5;
     private static KafkaConsumer<String, String> stringsConsumerConn;
+    private static final int THREAD_NUM = 5;
+
+    @EndpointInject("kafka:" + TOPIC_TRANSACTION + "?requestRequiredAcks=-1"
+                    + "&additional-properties[transactional.id]=1234"
+                    + "&additional-properties[enable.idempotence]=true"
+                    + "&additional-properties[retries]=5")
+    private Endpoint toTransaction;
+
+    @EndpointInject("kafka:" + TOPIC_CONCURRENCY_TRANSACTION + "?requestRequiredAcks=-1&synchronous=true"
+                    + "&additional-properties[transactional.id]=5678"
+                    + "&additional-properties[enable.idempotence]=true"
+                    + "&additional-properties[retries]=5")
+    private Endpoint toConcurrencyTransaction;
+
+    @EndpointInject("mock:kafkaAck")
+    private MockEndpoint mockEndpoint;
+
+    @Produce("direct:startTransaction")
+    private ProducerTemplate testTransaction;
+
+    @Produce("seda:startTransaction")
+    private ProducerTemplate testConcurrencyTransaction;
+
+    public KafkaTransactionIT() {
+
+    }
 
     @BeforeAll
     public static void before() {
@@ -71,27 +96,19 @@ public class KafkaTransactionIT extends BaseKafkaTestSupport {
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override
-            public void configure() {
-                from(SEQUENTIAL_TRANSACTION_URI).to("kafka:" + TOPIC_TRANSACTION + "?recordMetadata=true&requestRequiredAcks=-1"
-                                                    + "&additional-properties[transactional.id]=1234"
-                                                    + "&additional-properties[enable.idempotence]=true"
-                                                    + "&additional-properties[retries]=5")
+            public void configure() throws Exception {
+                from("direct:startTransaction").to(toTransaction)
                         .process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 String body = exchange.getIn().getBody(String.class);
                                 if (body.contains("fail")) {
                                     throw new RuntimeException("fail process message " + body);
                                 }
                             }
-                        }).to(KafkaTestUtil.MOCK_RESULT);
+                        }).to(mockEndpoint);
 
-                from(CONCURRENT_TRANSACTION_URI)
-                        .to("kafka:" + TOPIC_CONCURRENCY_TRANSACTION
-                            + "?recordMetadata=true&requestRequiredAcks=-1&synchronous=true"
-                            + "&additional-properties[transactional.id]=5678"
-                            + "&additional-properties[enable.idempotence]=true"
-                            + "&additional-properties[retries]=5");
+                from("seda:startTransaction").to(toConcurrencyTransaction);
             }
         };
     }
@@ -107,10 +124,7 @@ public class KafkaTransactionIT extends BaseKafkaTestSupport {
             threads[i] = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    ProducerTemplate testConcurrencyTransaction = contextExtension.getProducerTemplate();
-
-                    TestProducerUtil.sendMessagesInRoute(CONCURRENT_TRANSACTION_URI, messageInTopic, testConcurrencyTransaction,
-                            "IT test concurrency transaction message",
+                    sendMessagesInRoute(messageInTopic, testConcurrencyTransaction, "IT test concurrency transaction message",
                             KafkaConstants.PARTITION_KEY,
                             "0");
                 }
@@ -136,15 +150,11 @@ public class KafkaTransactionIT extends BaseKafkaTestSupport {
 
         CountDownLatch messagesLatch = new CountDownLatch(messageInTopic);
 
-        ProducerTemplate testTransaction = contextExtension.getProducerTemplate();
-        TestProducerUtil.sendMessagesInRoute(SEQUENTIAL_TRANSACTION_URI, messageInTopic, testTransaction,
-                "IT test transaction message",
-                KafkaConstants.PARTITION_KEY, "0");
+        sendMessagesInRoute(messageInTopic, testTransaction, "IT test transaction message", KafkaConstants.PARTITION_KEY, "0");
         assertThrows(RuntimeException.class, new Executable() {
             @Override
-            public void execute() {
-                TestProducerUtil.sendMessagesInRoute(SEQUENTIAL_TRANSACTION_URI, messageInTopic, testTransaction,
-                        "IT test transaction fail message",
+            public void execute() throws Throwable {
+                sendMessagesInRoute(messageInTopic, testTransaction, "IT test transaction fail message",
                         KafkaConstants.PARTITION_KEY,
                         "0");
             }
@@ -157,14 +167,12 @@ public class KafkaTransactionIT extends BaseKafkaTestSupport {
         assertTrue(allMessagesReceived,
                 "Not all messages were published to the kafka topics. Not received: " + messagesLatch.getCount());
 
-        MockEndpoint mockEndpoint = contextExtension.getMockEndpoint(KafkaTestUtil.MOCK_RESULT);
-
         List<Exchange> exchangeList = mockEndpoint.getExchanges();
         assertEquals(10, exchangeList.size(), "Ten Exchanges are expected");
         for (Exchange exchange : exchangeList) {
             @SuppressWarnings("unchecked")
             List<RecordMetadata> recordMetaData1
-                    = (List<RecordMetadata>) (exchange.getIn().getHeader(KafkaConstants.KAFKA_RECORD_META));
+                    = (List<RecordMetadata>) (exchange.getIn().getHeader(KafkaConstants.KAFKA_RECORDMETA));
             assertEquals(1, recordMetaData1.size(), "One RecordMetadata is expected.");
             assertTrue(recordMetaData1.get(0).offset() >= 0, "Offset is positive");
             assertTrue(recordMetaData1.get(0).topic().startsWith("transaction"), "Topic Name start with 'transaction'");
@@ -206,4 +214,19 @@ public class KafkaTransactionIT extends BaseKafkaTestSupport {
         }
     }
 
+    private void sendMessagesInRoute(int messages, ProducerTemplate template, Object bodyOther, String... headersWithValue) {
+        Map<String, Object> headerMap = new HashMap<>();
+        if (headersWithValue != null) {
+            for (int i = 0; i < headersWithValue.length; i = i + 2) {
+                headerMap.put(headersWithValue[i], headersWithValue[i + 1]);
+            }
+        }
+        sendMessagesInRoute(messages, template, bodyOther, headerMap);
+    }
+
+    private void sendMessagesInRoute(int messages, ProducerTemplate template, Object bodyOther, Map<String, Object> headerMap) {
+        for (int k = 0; k < messages; k++) {
+            template.sendBodyAndHeaders(bodyOther, headerMap);
+        }
+    }
 }

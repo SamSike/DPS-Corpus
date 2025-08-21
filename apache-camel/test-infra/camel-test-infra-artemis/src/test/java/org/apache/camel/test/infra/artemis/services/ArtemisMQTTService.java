@@ -17,11 +17,13 @@
 package org.apache.camel.test.infra.artemis.services;
 
 import org.apache.activemq.artemis.core.config.Configuration;
-import org.apache.camel.test.infra.artemis.common.ArtemisRunException;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
-public class ArtemisMQTTService extends ArtemisMQTTInfraService implements ArtemisService {
+public class ArtemisMQTTService extends AbstractArtemisEmbeddedService {
+
+    private String brokerURL;
+    private int port;
 
     public ArtemisMQTTService(int port) {
         super(port);
@@ -32,14 +34,27 @@ public class ArtemisMQTTService extends ArtemisMQTTInfraService implements Artem
     }
 
     @Override
-    protected Configuration configure(Configuration configuration, int port, int brokerId) {
-        Configuration config = null;
+    protected Configuration getConfiguration(Configuration configuration, int port) {
+        this.port = port;
+        brokerURL = "tcp://0.0.0.0:" + port;
+
         try {
-            config = super.configure(configuration, port, brokerId);
-        } catch (ArtemisRunException e) {
-            fail(e.getMessage());
+            configuration.addAcceptorConfiguration("mqtt", brokerURL + "?protocols=MQTT");
+        } catch (Exception e) {
+            LOG.warn(e.getMessage(), e);
+            fail("mqtt acceptor cannot be configured");
         }
 
-        return config;
+        return configuration;
+    }
+
+    @Override
+    public String serviceAddress() {
+        return brokerURL;
+    }
+
+    @Override
+    public int brokerPort() {
+        return port;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,9 @@
 
 package org.springframework.r2dbc.core;
 
-import org.jspecify.annotations.Nullable;
+import java.util.Objects;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -28,12 +29,11 @@ import org.springframework.util.ObjectUtils;
  * @author Mark Paluch
  * @author Juergen Hoeller
  * @since 5.3
- * @deprecated since 6.0, use {@code io.r2dbc.spi.Parameter} instead.
  */
-@Deprecated(since = "6.0")
 public final class Parameter {
 
-	private final @Nullable Object value;
+	@Nullable
+	private final Object value;
 
 	private final Class<?> type;
 
@@ -79,7 +79,8 @@ public final class Parameter {
 	 * Return the column value (can be {@code null}).
 	 * @see #hasValue()
 	 */
-	public @Nullable Object getValue() {
+	@Nullable
+	public Object getValue() {
 		return this.value;
 	}
 
@@ -99,7 +100,7 @@ public final class Parameter {
 	}
 
 	/**
-	 * Return whether this {@link Parameter} has an empty value.
+	 * Return whether this {@link Parameter} has a empty.
 	 * @return {@code true} if {@link #getValue()} is {@code null}
 	 */
 	public boolean isEmpty() {
@@ -108,15 +109,21 @@ public final class Parameter {
 
 
 	@Override
-	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof Parameter that &&
-				ObjectUtils.nullSafeEquals(this.value, that.value) &&
-				ObjectUtils.nullSafeEquals(this.type, that.type)));
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof Parameter)) {
+			return false;
+		}
+		Parameter other = (Parameter) obj;
+		return (ObjectUtils.nullSafeEquals(this.value, other.value) &&
+				ObjectUtils.nullSafeEquals(this.type, other.type));
 	}
 
 	@Override
 	public int hashCode() {
-		return ObjectUtils.nullSafeHash(this.value, this.type);
+		return Objects.hash(this.value, this.type);
 	}
 
 	@Override

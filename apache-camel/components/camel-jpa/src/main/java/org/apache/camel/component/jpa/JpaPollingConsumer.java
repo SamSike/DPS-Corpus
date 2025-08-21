@@ -199,10 +199,7 @@ public class JpaPollingConsumer extends PollingConsumerSupport {
         Future<Exchange> future = executorService.submit((Callable<Exchange>) this::receive);
         try {
             return future.get(timeout, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw RuntimeCamelException.wrapRuntimeCamelException(e);
-        } catch (ExecutionException e) {
+        } catch (ExecutionException | InterruptedException e) {
             throw RuntimeCamelException.wrapRuntimeCamelException(e);
         } catch (TimeoutException e) {
             // ignore as we hit timeout then return null
@@ -283,7 +280,7 @@ public class JpaPollingConsumer extends PollingConsumerSupport {
         Entity entity = clazz.getAnnotation(Entity.class);
 
         // Check if the property name has been defined for Entity annotation
-        if (entity != null && !entity.name().isEmpty()) {
+        if (entity != null && !entity.name().equals("")) {
             return entity.name();
         } else {
             return null;

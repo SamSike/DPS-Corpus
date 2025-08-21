@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Reusable query in which concrete subclasses must implement the abstract
@@ -39,7 +39,7 @@ import org.jspecify.annotations.Nullable;
  * @param <T> the result type
  * @see MappingSqlQueryWithParameters
  */
-public abstract class MappingSqlQuery<T extends @Nullable Object> extends MappingSqlQueryWithParameters<T> {
+public abstract class MappingSqlQuery<T> extends MappingSqlQueryWithParameters<T> {
 
 	/**
 	 * Constructor that allows use as a JavaBean.
@@ -63,7 +63,8 @@ public abstract class MappingSqlQuery<T extends @Nullable Object> extends Mappin
 	 * @see #mapRow(ResultSet, int)
 	 */
 	@Override
-	protected final T mapRow(ResultSet rs, int rowNum, @Nullable Object @Nullable [] parameters, @Nullable Map<?, ?> context)
+	@Nullable
+	protected final T mapRow(ResultSet rs, int rowNum, @Nullable Object[] parameters, @Nullable Map<?, ?> context)
 			throws SQLException {
 
 		return mapRow(rs, rowNum);
@@ -82,6 +83,7 @@ public abstract class MappingSqlQuery<T extends @Nullable Object> extends Mappin
 	 * Subclasses can simply not catch SQLExceptions, relying on the
 	 * framework to clean up.
 	 */
+	@Nullable
 	protected abstract T mapRow(ResultSet rs, int rowNum) throws SQLException;
 
 }

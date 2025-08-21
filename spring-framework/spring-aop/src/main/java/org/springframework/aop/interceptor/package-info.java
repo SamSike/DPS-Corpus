@@ -3,7 +3,9 @@
  * More specific interceptors can be found in corresponding
  * functionality packages, like "transaction" and "orm".
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.aop.interceptor;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

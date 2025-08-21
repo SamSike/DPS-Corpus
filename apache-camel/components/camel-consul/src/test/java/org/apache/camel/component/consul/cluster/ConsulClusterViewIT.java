@@ -42,7 +42,7 @@ public class ConsulClusterViewIT {
 
         //Set up context with single locked route.
         DefaultCamelContext context = new DefaultCamelContext();
-        context.getCamelContextExtension().setName("context");
+        context.setName("context");
         context.addService(consulClusterService);
 
         context.addRoutes(new RouteBuilder() {

@@ -24,6 +24,7 @@ import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -65,7 +66,7 @@ public class RollbackDoTryCatchTest extends ContextTestSupport {
         getMockEndpoint("mock:doCatch").expectedMessageCount(1);
 
         Exchange out = template.request("direct:start", new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("bad");
             }
         });
@@ -73,14 +74,14 @@ public class RollbackDoTryCatchTest extends ContextTestSupport {
 
         assertNotNull(out.getException());
         assertIsInstanceOf(RollbackExchangeException.class, out.getException());
-        assertTrue(out.isRollbackOnly(), "Should be marked as rollback");
+        assertEquals(true, out.isRollbackOnly(), "Should be marked as rollback");
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                     .doTry()
                         .to("mock:doTry")

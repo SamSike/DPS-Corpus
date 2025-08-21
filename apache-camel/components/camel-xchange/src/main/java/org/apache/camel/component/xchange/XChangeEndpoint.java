@@ -18,7 +18,6 @@ package org.apache.camel.component.xchange;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,8 +30,6 @@ import org.apache.camel.component.xchange.XChangeConfiguration.XChangeService;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.DefaultEndpoint;
-import org.knowm.xchange.binance.BinanceAdapters;
-import org.knowm.xchange.binance.service.BinanceAccountService;
 import org.knowm.xchange.currency.Currency;
 import org.knowm.xchange.currency.CurrencyPair;
 import org.knowm.xchange.dto.account.AccountInfo;
@@ -41,10 +38,8 @@ import org.knowm.xchange.dto.account.FundingRecord;
 import org.knowm.xchange.dto.account.Wallet;
 import org.knowm.xchange.dto.marketdata.Ticker;
 import org.knowm.xchange.dto.meta.CurrencyMetaData;
+import org.knowm.xchange.dto.meta.CurrencyPairMetaData;
 import org.knowm.xchange.dto.meta.ExchangeMetaData;
-import org.knowm.xchange.dto.meta.InstrumentMetaData;
-import org.knowm.xchange.exceptions.NotYetImplementedForExchangeException;
-import org.knowm.xchange.instrument.Instrument;
 import org.knowm.xchange.service.account.AccountService;
 import org.knowm.xchange.service.marketdata.MarketDataService;
 import org.knowm.xchange.service.trade.params.TradeHistoryParams;
@@ -54,7 +49,7 @@ import org.knowm.xchange.utils.Assert;
  * Access market data and trade on Bitcoin and Altcoin exchanges.
  */
 @UriEndpoint(firstVersion = "2.21.0", scheme = "xchange", title = "XChange", syntax = "xchange:name", producerOnly = true,
-             category = { Category.BLOCKCHAIN }, headersClass = XChangeConfiguration.class)
+             category = { Category.BITCOIN, Category.BLOCKCHAIN }, headersClass = XChangeConfiguration.class)
 public class XChangeEndpoint extends DefaultEndpoint {
 
     @UriParam
@@ -122,16 +117,13 @@ public class XChangeEndpoint extends DefaultEndpoint {
 
     public List<CurrencyPair> getCurrencyPairs() {
         ExchangeMetaData metaData = xchange.getExchangeMetaData();
-        return metaData.getInstruments().keySet().stream()
-                .filter(it -> it instanceof CurrencyPair)
-                .map(it -> (CurrencyPair) it)
-                .sorted().collect(Collectors.toList());
+        return metaData.getCurrencyPairs().keySet().stream().sorted().collect(Collectors.toList());
     }
 
-    public InstrumentMetaData getCurrencyPairMetaData(CurrencyPair pair) {
+    public CurrencyPairMetaData getCurrencyPairMetaData(CurrencyPair pair) {
         Assert.notNull(pair, "Null currency");
         ExchangeMetaData metaData = xchange.getExchangeMetaData();
-        return metaData.getInstruments().get(pair);
+        return metaData.getCurrencyPairs().get(pair);
     }
 
     public List<Balance> getBalances() throws IOException {
@@ -150,42 +142,36 @@ public class XChangeEndpoint extends DefaultEndpoint {
                 }
             }
         });
-        return balances.stream().sorted((Balance o1, Balance o2) -> o1.getCurrency().compareTo(o2.getCurrency()))
-                .collect(Collectors.toList());
+        return balances.stream().sorted(new Comparator<Balance>() {
+            public int compare(Balance o1, Balance o2) {
+                return o1.getCurrency().compareTo(o2.getCurrency());
+            }
+        }).collect(Collectors.toList());
     }
 
     public List<FundingRecord> getFundingHistory() throws IOException {
         AccountService accountService = xchange.getAccountService();
         TradeHistoryParams fundingHistoryParams = accountService.createFundingHistoryParams();
-        return accountService.getFundingHistory(fundingHistoryParams).stream()
-                .sorted((FundingRecord o1, FundingRecord o2) -> o1.getDate().compareTo(o2.getDate()))
-                .collect(Collectors.toList());
+        return accountService.getFundingHistory(fundingHistoryParams).stream().sorted(new Comparator<FundingRecord>() {
+            public int compare(FundingRecord o1, FundingRecord o2) {
+                return o1.getDate().compareTo(o2.getDate());
+            }
+        }).collect(Collectors.toList());
     }
 
     public List<Wallet> getWallets() throws IOException {
-        // [#4741] BinanceAccountService assumes futures account when not using sandbox
-        // https://github.com/knowm/XChange/issues/4741
         AccountService accountService = xchange.getAccountService();
-        if (accountService instanceof BinanceAccountService binanceAccountService) {
-            Wallet wallet = BinanceAdapters.adaptBinanceSpotWallet(binanceAccountService.account());
-            return Collections.singletonList(wallet);
-        } else {
-            AccountInfo accountInfo = accountService.getAccountInfo();
-            return accountInfo.getWallets().values().stream().sorted(Comparator.comparing(Wallet::getName))
-                    .collect(Collectors.toList());
-        }
+        AccountInfo accountInfo = accountService.getAccountInfo();
+        return accountInfo.getWallets().values().stream().sorted(new Comparator<Wallet>() {
+            public int compare(Wallet o1, Wallet o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        }).collect(Collectors.toList());
     }
 
     public Ticker getTicker(CurrencyPair pair) throws IOException {
         Assert.notNull(pair, "Null currency pair");
         MarketDataService marketService = xchange.getMarketDataService();
-        try {
-            return marketService.getTicker((Instrument) pair);
-        } catch (NotYetImplementedForExchangeException e) {
-            // Ignored
-        }
-
-        // Retry service lookup using deprecated (but still in use) MarketDataService.getTicker(CurrencyPair)
         return marketService.getTicker(pair);
     }
 }

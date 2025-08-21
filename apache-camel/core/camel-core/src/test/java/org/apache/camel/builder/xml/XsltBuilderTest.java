@@ -33,6 +33,7 @@ import org.xml.sax.InputSource;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExpectedBodyTypeException;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.component.xslt.StreamResultHandlerFactory;
 import org.apache.camel.component.xslt.XsltBuilder;
 import org.apache.camel.converter.jaxp.XmlConverter;
@@ -44,8 +45,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class XsltBuilderTest extends ContextTestSupport {
 
@@ -260,8 +261,8 @@ public class XsltBuilderTest extends ContextTestSupport {
         assertTrue(body.endsWith("<goodbye>world!</goodbye>"));
 
         // now done the exchange
-        List<Synchronization> onCompletions = exchange.getExchangeExtension().handoverCompletions();
-        UnitOfWorkHelper.doneSynchronizations(exchange, onCompletions);
+        List<Synchronization> onCompletions = exchange.adapt(ExtendedExchange.class).handoverCompletions();
+        UnitOfWorkHelper.doneSynchronizations(exchange, onCompletions, log);
 
         // the file should be deleted
         assertFileNotExists(testFile("xsltout.xml"));
@@ -294,8 +295,12 @@ public class XsltBuilderTest extends ContextTestSupport {
         Exchange exchange = new DefaultExchange(context);
         exchange.getIn().setBody(null);
 
-        assertThrows(ExpectedBodyTypeException.class,
-                () -> builder.process(exchange), "Should thrown an exception");
+        try {
+            builder.process(exchange);
+            fail("Should thrown an exception");
+        } catch (ExpectedBodyTypeException e) {
+            // expected
+        }
     }
 
     @Test
@@ -308,8 +313,12 @@ public class XsltBuilderTest extends ContextTestSupport {
         Exchange exchange = new DefaultExchange(context);
         exchange.getIn().setBody(null);
 
-        assertThrows(ExpectedBodyTypeException.class,
-                () -> builder.process(exchange), "Should thrown an exception");
+        try {
+            builder.process(exchange);
+            fail("Should thrown an exception");
+        } catch (ExpectedBodyTypeException e) {
+            // expected
+        }
     }
 
     @Test

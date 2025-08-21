@@ -3,7 +3,9 @@
  * and {@link org.springframework.http.codec.ServerCodecConfigurer} based on the converter
  * implementations from {@code org.springframework.http.codec.json} and co.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.http.codec.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

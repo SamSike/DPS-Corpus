@@ -42,10 +42,10 @@ public class SedaAsyncRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             // START SNIPPET: e1
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         // send it to the seda queue that is async
                         .to("seda:next")

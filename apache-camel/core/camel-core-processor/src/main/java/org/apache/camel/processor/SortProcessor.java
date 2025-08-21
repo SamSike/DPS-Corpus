@@ -96,4 +96,13 @@ public class SortProcessor<T> extends AsyncProcessorSupport implements IdAware, 
         return comparator;
     }
 
+    @Override
+    protected void doStart() throws Exception {
+        // noop
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        // noop
+    }
 }

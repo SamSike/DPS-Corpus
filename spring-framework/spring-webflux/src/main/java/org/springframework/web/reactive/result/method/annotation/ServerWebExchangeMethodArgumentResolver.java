@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ import java.time.ZoneId;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.context.i18n.LocaleContext;
 import org.springframework.context.i18n.TimeZoneAwareLocaleContext;
 import org.springframework.core.MethodParameter;
@@ -30,6 +28,7 @@ import org.springframework.core.ReactiveAdapterRegistry;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.BindingContext;
 import org.springframework.web.reactive.result.method.HandlerMethodArgumentResolverSupport;
 import org.springframework.web.reactive.result.method.SyncHandlerMethodArgumentResolver;
@@ -81,7 +80,7 @@ public class ServerWebExchangeMethodArgumentResolver extends HandlerMethodArgume
 	}
 
 	@Override
-	public @Nullable Object resolveArgumentValue(
+	public Object resolveArgumentValue(
 			MethodParameter methodParameter, BindingContext context, ServerWebExchange exchange) {
 
 		Class<?> paramType = methodParameter.getParameterType();
@@ -122,10 +121,11 @@ public class ServerWebExchangeMethodArgumentResolver extends HandlerMethodArgume
 		}
 	}
 
-	private @Nullable TimeZone getTimeZone(LocaleContext localeContext) {
+	@Nullable
+	private TimeZone getTimeZone(LocaleContext localeContext) {
 		TimeZone timeZone = null;
-		if (localeContext instanceof TimeZoneAwareLocaleContext timeZoneAwareLocaleContext) {
-			timeZone = timeZoneAwareLocaleContext.getTimeZone();
+		if (localeContext instanceof TimeZoneAwareLocaleContext) {
+			timeZone = ((TimeZoneAwareLocaleContext) localeContext).getTimeZone();
 		}
 		return timeZone;
 	}

@@ -58,9 +58,9 @@ public class XPathNamespaceTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 Namespaces ns = new Namespaces("c", "http://acme.com/cheese");
 
                 from("direct:in").choice().when(xpath("/c:number = 55", Integer.class, ns)).to("mock:55").otherwise()

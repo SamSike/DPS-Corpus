@@ -25,23 +25,20 @@ import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.health.HealthCheck;
 import org.apache.camel.health.HealthCheckRegistry;
-import org.apache.camel.health.HealthCheckRepository;
 import org.eclipse.microprofile.health.HealthCheckResponse.Status;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CamelMicroProfileHealthComponentsTest extends CamelMicroProfileHealthTestSupport {
-
     @Override
     protected CamelContext createCamelContext() throws Exception {
         CamelContext camelContext = super.createCamelContext();
         camelContext.addComponent("my", new CamelMicroProfileHealthTestHelper.MyComponent());
 
         HealthCheckRegistry healthCheckRegistry = HealthCheckRegistry.get(camelContext);
-        // enable producers health check
-        HealthCheckRepository hc = (HealthCheckRepository) healthCheckRegistry.resolveById("producers");
-        hc.setEnabled(true);
+        // enable consumers health check
+        Object hc = healthCheckRegistry.resolveById("components");
         healthCheckRegistry.register(hc);
 
         return camelContext;
@@ -58,7 +55,7 @@ public class CamelMicroProfileHealthComponentsTest extends CamelMicroProfileHeal
 
         JsonArray checks = healthObject.getJsonArray("checks");
 
-        assertHealthCheckOutput("camel-producers", Status.UP, checks);
+        assertHealthCheckOutput("camel-components", Status.UP, checks);
     }
 
     @Test
@@ -72,7 +69,7 @@ public class CamelMicroProfileHealthComponentsTest extends CamelMicroProfileHeal
 
         JsonArray checks = healthObject.getJsonArray("checks");
 
-        assertHealthCheckOutput("camel-producers", Status.DOWN, checks);
+        assertHealthCheckOutput("camel-components", Status.DOWN, checks);
     }
 
     @Override

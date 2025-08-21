@@ -23,7 +23,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class AdviceWithOnExceptionRemoveTest extends ContextTestSupport {
 
@@ -44,17 +44,19 @@ public class AdviceWithOnExceptionRemoveTest extends ContextTestSupport {
 
         AdviceWith.adviceWith(context.getRouteDefinition("foo"), context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 weaveById("myException").remove();
             }
         });
 
         context.start();
 
-        Exception e = assertThrows(Exception.class, () -> template.sendBody("direct:foo", "Hello World"),
-                "Should throw exception");
-
-        assertEquals("Forced", e.getCause().getMessage());
+        try {
+            template.sendBody("direct:foo", "Hello World");
+            fail("Should throw exception");
+        } catch (Exception e) {
+            assertEquals("Forced", e.getCause().getMessage());
+        }
 
         assertMockEndpointsSatisfied();
     }
@@ -72,7 +74,7 @@ public class AdviceWithOnExceptionRemoveTest extends ContextTestSupport {
 
         AdviceWith.adviceWith(context.getRouteDefinition("foo"), context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 weaveById("myException").replace().onException(Exception.class).handled(true).to("mock:dead2");
             }
         });
@@ -85,10 +87,10 @@ public class AdviceWithOnExceptionRemoveTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).id("myException").handled(true).transform(constant("Bye World")).to("mock:dead");
 
                 from("direct:bar").routeId("bar").to("mock:c").to("mock:d");

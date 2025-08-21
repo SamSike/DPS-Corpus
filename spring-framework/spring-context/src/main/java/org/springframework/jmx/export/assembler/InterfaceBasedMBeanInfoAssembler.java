@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,9 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -62,15 +61,19 @@ import org.springframework.util.StringUtils;
 public class InterfaceBasedMBeanInfoAssembler extends AbstractConfigurableMBeanInfoAssembler
 		implements BeanClassLoaderAware, InitializingBean {
 
-	private Class<?> @Nullable [] managedInterfaces;
+	@Nullable
+	private Class<?>[] managedInterfaces;
 
 	/** Mappings of bean keys to an array of classes. */
-	private @Nullable Properties interfaceMappings;
+	@Nullable
+	private Properties interfaceMappings;
 
-	private @Nullable ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
+	@Nullable
+	private ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
 
 	/** Mappings of bean keys to an array of classes. */
-	private @Nullable Map<String, Class<?>[]> resolvedInterfaceMappings;
+	@Nullable
+	private Map<String, Class<?>[]> resolvedInterfaceMappings;
 
 
 	/**
@@ -81,7 +84,7 @@ public class InterfaceBasedMBeanInfoAssembler extends AbstractConfigurableMBeanI
 	 * Each entry <strong>MUST</strong> be an interface.
 	 * @see #setInterfaceMappings
 	 */
-	public void setManagedInterfaces(Class<?> @Nullable ... managedInterfaces) {
+	public void setManagedInterfaces(@Nullable Class<?>... managedInterfaces) {
 		if (managedInterfaces != null) {
 			for (Class<?> ifc : managedInterfaces) {
 				if (!ifc.isInterface()) {

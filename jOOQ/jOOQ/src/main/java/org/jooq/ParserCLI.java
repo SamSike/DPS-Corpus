@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -50,6 +50,7 @@ import java.util.regex.Pattern;
 import org.jooq.conf.ParseNameCase;
 import org.jooq.conf.ParseUnknownFunctions;
 import org.jooq.conf.ParseUnsupportedSyntax;
+import org.jooq.conf.ParseWithMetaLookups;
 import org.jooq.conf.RenderKeywordCase;
 import org.jooq.conf.RenderNameCase;
 import org.jooq.conf.RenderOptionalKeyword;
@@ -153,10 +154,6 @@ public final class ParserCLI {
             settings.setTransformRownum(a.transformQualify);
         if (a.transformRownum != null)
             settings.setTransformRownum(a.transformRownum);
-        if (a.transformGroupByColumnIndex != null)
-            settings.setTransformGroupByColumnIndex(a.transformGroupByColumnIndex);
-        if (a.transformInlineCTE != null)
-            settings.setTransformInlineCTE(a.transformInlineCTE);
     }
 
     private static final <E extends Enum<E>> void parseInteractive(
@@ -318,10 +315,6 @@ public final class ParserCLI {
                                 parseInteractive(Transformation.class, arg, e -> { a.transformQualify = e; }, () -> displayTransformQualify(a));
                             else if ("transform-rownum".equals(flag))
                                 parseInteractive(Transformation.class, arg, e -> { a.transformRownum = e; }, () -> displayTransformRownum(a));
-                            else if ("transform-group-by-column-index".equals(flag))
-                                parseInteractive(Transformation.class, arg, e -> { a.transformGroupByColumnIndex = e; }, () -> displayTransformGroupByColumnIndex(a));
-                            else if ("transform-inline-cte".equals(flag))
-                                parseInteractive(Transformation.class, arg, e -> { a.transformInlineCTE = e; }, () -> displayTransformInlineCTE(a));
                             else if ("transform-table-lists-to-ansi-join".equals(flag)) {
                                 if (arg != null)
                                     a.transformTableListsToAnsiJoin = Boolean.parseBoolean(arg.toLowerCase());
@@ -376,8 +369,6 @@ public final class ParserCLI {
         displayTransformRownum(a);
         displayTransformTableListsToAnsiJoin(a);
         displayTransformUnneededArithmetic(a);
-        displayTransformGroupByColumnIndex(a);
-        displayTransformInlineCTE(a);
         displaySchema(a);
     }
 
@@ -491,14 +482,6 @@ public final class ParserCLI {
 
     private static void displayTransformRownum(Args a) {
         System.out.println("Transform ROWNUM                   : " + a.transformRownum);
-    }
-
-    private static void displayTransformGroupByColumnIndex(Args a) {
-        System.out.println("Transform GROUP BY <column index>  : " + a.transformGroupByColumnIndex);
-    }
-
-    private static void displayTransformInlineCTE(Args a) {
-        System.out.println("Transform inline CTE               : " + a.transformInlineCTE);
     }
 
     private static void displayTransformTableListsToAnsiJoin(Args a) {
@@ -621,10 +604,6 @@ public final class ParserCLI {
                     result.transformQualify = parse((Class<Transformation>) (enumArgument = Transformation.class), args[++i]);
                 else if ("--transform-rownum".equals(args[i]))
                     result.transformRownum = parse((Class<Transformation>) (enumArgument = Transformation.class), args[++i]);
-                else if ("--transform-group-by-column-index".equals(args[i]))
-                    result.transformGroupByColumnIndex = parse((Class<Transformation>) (enumArgument = Transformation.class), args[++i]);
-                else if ("--transform-inline-cte".equals(args[i]))
-                    result.transformInlineCTE = parse((Class<Transformation>) (enumArgument = Transformation.class), args[++i]);
                 else if ("--transform-table-lists-to-ansi-join".equals(args[i]))
                     result.transformTableListsToAnsiJoin = true;
                 else if ("--transform-unneeded-arithmetic".equals(args[i]))
@@ -694,8 +673,6 @@ public final class ParserCLI {
         System.out.println("  --transform-ansi-join-to-table-lists");
         System.out.println("  --transform-qualify                             <Transformation>");
         System.out.println("  --transform-rownum                              <Transformation>");
-        System.out.println("  --transform-group-by-column-index               <Transformation>");
-        System.out.println("  --transform-inline-cte                          <Transformation>");
         System.out.println("  --transform-table-lists-to-ansi-join");
         System.out.println("  --transform-unneeded-arithmetic                 <TransformUnneededArithmeticExpressions>");
         System.out.println("");
@@ -736,8 +713,6 @@ public final class ParserCLI {
         System.out.println("  /transform-ansi-join-to-table-lists            <boolean>");
         System.out.println("  /transform-qualify                             <Transformation>");
         System.out.println("  /transform-rownum                              <Transformation>");
-        System.out.println("  /transform-group-by-column-index               <Transformation>");
-        System.out.println("  /transform-inline-cte                          <Transformation>");
         System.out.println("  /transform-table-lists-to-ansi-join            <boolean>");
         System.out.println("  /transform-unneeded-arithmetic                 <TransformUnneededArithmeticExpressions>");
         System.out.println("");
@@ -758,8 +733,8 @@ public final class ParserCLI {
         RenderQuotedNames                      quoted                                 = RenderQuotedNames.EXPLICIT_DEFAULT_UNQUOTED;
         SQLDialect                             toDialect                              = SQLDialect.DEFAULT;
         SQLDialect                             fromDialect                            = SQLDialect.DEFAULT;
-        Boolean                                formatted                              = d.isRenderFormatted();
-        Boolean                                renderCoalesceToEmptyStringInConcat    = d.isRenderCoalesceToEmptyStringInConcat();
+        Boolean                                formatted;
+        Boolean                                renderCoalesceToEmptyStringInConcat;
         RenderOptionalKeyword                  renderOptionalInnerKeyword             = RenderOptionalKeyword.DEFAULT;
         RenderOptionalKeyword                  renderOptionalOuterKeyword             = RenderOptionalKeyword.DEFAULT;
         RenderOptionalKeyword                  renderOptionalAsKeywordForFieldAliases = RenderOptionalKeyword.DEFAULT;
@@ -776,13 +751,11 @@ public final class ParserCLI {
         String                                 parseTimestampFormat                   = d.getParseTimestampFormat();
         ParseUnknownFunctions                  parseUnknownFunctions                  = d.getParseUnknownFunctions();
         ParseUnsupportedSyntax                 parseUnsupportedSyntax                 = d.getParseUnsupportedSyntax();
-        Boolean                                transformPatterns                      = d.isTransformPatterns();
-        Boolean                                transformAnsiJoinToTableLists          = d.isTransformAnsiJoinToTableLists();
-        Transformation                         transformQualify                       = d.getTransformQualify();
-        Transformation                         transformRownum                        = d.getTransformRownum();
-        Transformation                         transformGroupByColumnIndex            = d.getTransformGroupByColumnIndex();
-        Transformation                         transformInlineCTE                     = d.getTransformInlineCTE();
-        Boolean                                transformTableListsToAnsiJoin          = d.isTransformTableListsToAnsiJoin();
+        Boolean                                transformPatterns;
+        Boolean                                transformAnsiJoinToTableLists;
+        Transformation                         transformQualify;
+        Transformation                         transformRownum;
+        Boolean                                transformTableListsToAnsiJoin;
         TransformUnneededArithmeticExpressions transformUnneededArithmetic            = TransformUnneededArithmeticExpressions.NEVER;
     }
 }

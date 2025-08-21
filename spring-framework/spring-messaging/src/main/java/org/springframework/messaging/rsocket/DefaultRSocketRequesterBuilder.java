@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,6 @@ import io.rsocket.transport.ClientTransport;
 import io.rsocket.transport.netty.client.TcpClientTransport;
 import io.rsocket.transport.netty.client.WebsocketClientTransport;
 import io.rsocket.util.DefaultPayload;
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
@@ -48,6 +47,7 @@ import org.springframework.core.codec.StringDecoder;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MimeType;
@@ -69,23 +69,30 @@ final class DefaultRSocketRequesterBuilder implements RSocketRequester.Builder {
 	private static final Payload EMPTY_SETUP_PAYLOAD = DefaultPayload.create(EMPTY_BYTE_ARRAY);
 
 
-	private @Nullable MimeType dataMimeType;
+	@Nullable
+	private MimeType dataMimeType;
 
-	private @Nullable MimeType metadataMimeType;
+	@Nullable
+	private MimeType metadataMimeType;
 
-	private @Nullable Object setupData;
+	@Nullable
+	private Object setupData;
 
-	private @Nullable String setupRoute;
+	@Nullable
+	private String setupRoute;
 
-	private Object @Nullable [] setupRouteVars;
+	@Nullable
+	private Object[] setupRouteVars;
 
-	private @Nullable Map<Object, MimeType> setupMetadata;
+	@Nullable
+	private Map<Object, MimeType> setupMetadata;
 
-	private @Nullable RSocketStrategies strategies;
+	@Nullable
+	private RSocketStrategies strategies;
 
-	private final List<Consumer<RSocketStrategies.Builder>> strategiesConfigurers = new ArrayList<>();
+	private List<Consumer<RSocketStrategies.Builder>> strategiesConfigurers = new ArrayList<>();
 
-	private final List<RSocketConnectorConfigurer> rsocketConnectorConfigurers = new ArrayList<>();
+	private List<RSocketConnectorConfigurer> rsocketConnectorConfigurers = new ArrayList<>();
 
 
 	@Override
@@ -96,7 +103,7 @@ final class DefaultRSocketRequesterBuilder implements RSocketRequester.Builder {
 
 	@Override
 	public RSocketRequester.Builder metadataMimeType(MimeType mimeType) {
-		Assert.notNull(mimeType, "'metadataMimeType' is required");
+		Assert.notNull(mimeType, "`metadataMimeType` is required");
 		this.metadataMimeType = mimeType;
 		return this;
 	}
@@ -238,13 +245,13 @@ final class DefaultRSocketRequesterBuilder implements RSocketRequester.Builder {
 		if (this.dataMimeType != null) {
 			return this.dataMimeType;
 		}
-		// First non-basic Decoder (for example, CBOR, Protobuf)
+		// First non-basic Decoder (e.g. CBOR, Protobuf)
 		for (Decoder<?> candidate : strategies.decoders()) {
 			if (!isCoreCodec(candidate) && !candidate.getDecodableMimeTypes().isEmpty()) {
 				return getMimeType(candidate);
 			}
 		}
-		// First core decoder (for example, String)
+		// First core decoder (e.g. String)
 		for (Decoder<?> decoder : strategies.decoders()) {
 			if (!decoder.getDecodableMimeTypes().isEmpty()) {
 				return getMimeType(decoder);
@@ -274,7 +281,7 @@ final class DefaultRSocketRequesterBuilder implements RSocketRequester.Builder {
 		Mono<DataBuffer> dataMono = Mono.empty();
 		if (data != null) {
 			ReactiveAdapter adapter = strategies.reactiveAdapterRegistry().getAdapter(data.getClass());
-			Assert.isTrue(adapter == null || !adapter.isMultiValue(), () -> "Expected single value: " + data);
+			Assert.isTrue(adapter == null || !adapter.isMultiValue(), "Expected single value: " + data);
 			Mono<?> mono = (adapter != null ? Mono.from(adapter.toPublisher(data)) : Mono.just(data));
 			dataMono = mono.map(value -> {
 				ResolvableType type = ResolvableType.forClass(value.getClass());

@@ -83,10 +83,6 @@ public class DefaultTimeoutMap<K, V> extends ServiceSupport implements TimeoutMa
     @Override
     public V get(K key) {
         TimeoutMapEntry<K, V> entry;
-        // if no contains, the lock is not necessary
-        if (!map.containsKey(key)) {
-            return null;
-        }
         lock.lock();
         try {
             entry = map.get(key);
@@ -134,11 +130,6 @@ public class DefaultTimeoutMap<K, V> extends ServiceSupport implements TimeoutMa
 
     @Override
     public V remove(K key) {
-        // if no contains, the lock is not necessary
-        if (!map.containsKey(key)) {
-            return null;
-        }
-
         V value = null;
         lock.lock();
         try {
@@ -170,7 +161,7 @@ public class DefaultTimeoutMap<K, V> extends ServiceSupport implements TimeoutMa
         log.trace("Running purge task to see if any entries have been timed out");
         try {
             purge();
-        } catch (Exception t) {
+        } catch (Throwable t) {
             // must catch and log exception otherwise the executor will now schedule next purgeTask
             log.warn("Exception occurred during purge task. This exception will be ignored.", t);
         }
@@ -242,7 +233,7 @@ public class DefaultTimeoutMap<K, V> extends ServiceSupport implements TimeoutMa
         for (Listener<K, V> listener : listeners) {
             try {
                 listener.timeoutMapEvent(type, key, value);
-            } catch (Exception t) {
+            } catch (Throwable t) {
                 // Ignore
             }
         }

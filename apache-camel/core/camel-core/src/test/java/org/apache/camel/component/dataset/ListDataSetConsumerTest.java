@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.dataset;
 
-import java.time.Duration;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -36,8 +35,8 @@ public class ListDataSetConsumerTest extends ContextTestSupport {
     final String dataSetUri = "dataset://" + dataSetName;
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("foo", dataSet);
         return answer;
     }
@@ -47,7 +46,7 @@ public class ListDataSetConsumerTest extends ContextTestSupport {
         MockEndpoint result = getMockEndpoint(resultUri);
         result.expectedMinimumMessageCount((int) dataSet.getSize());
 
-        result.assertIsSatisfied(Duration.ofSeconds(5).toMillis());
+        result.assertIsSatisfied();
     }
 
     @Test
@@ -56,7 +55,7 @@ public class ListDataSetConsumerTest extends ContextTestSupport {
         dataSet.setSize(10);
         result.expectedMinimumMessageCount((int) dataSet.getSize());
 
-        result.assertIsSatisfied(Duration.ofSeconds(5).toMillis());
+        result.assertIsSatisfied();
     }
 
     @Override
@@ -70,9 +69,9 @@ public class ListDataSetConsumerTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from(dataSetUri).to("mock://result");
             }
         };

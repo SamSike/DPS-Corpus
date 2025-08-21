@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,13 +25,7 @@ import java.sql.Clob;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Types;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -40,10 +34,10 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.SpringProperties;
 import org.springframework.jdbc.support.SqlValue;
+import org.springframework.lang.Nullable;
 
 /**
  * Utility methods for PreparedStatementSetter/Creator and CallableStatementCreator
@@ -75,17 +69,17 @@ public abstract class StatementCreatorUtils {
 	 * {@link PreparedStatement#setNull} / {@link PreparedStatement#setObject} calls based on
 	 * well-known behavior of common databases.
 	 * <p>Consider switching this flag to "true" if you experience misbehavior at runtime,
-	 * for example, with connection pool issues in case of an exception thrown from {@code getParameterType}
+	 * e.g. with connection pool issues in case of an exception thrown from {@code getParameterType}
 	 * (as reported on JBoss AS 7) or in case of performance problems (as reported on PostgreSQL).
 	 */
 	public static final String IGNORE_GETPARAMETERTYPE_PROPERTY_NAME = "spring.jdbc.getParameterType.ignore";
 
 
+	static boolean shouldIgnoreGetParameterType = SpringProperties.getFlag(IGNORE_GETPARAMETERTYPE_PROPERTY_NAME);
+
 	private static final Log logger = LogFactory.getLog(StatementCreatorUtils.class);
 
-	private static final Map<Class<?>, Integer> javaTypeToSqlTypeMap = new HashMap<>(64);
-
-	static @Nullable Boolean shouldIgnoreGetParameterType = SpringProperties.checkFlag(IGNORE_GETPARAMETERTYPE_PROPERTY_NAME);
+	private static final Map<Class<?>, Integer> javaTypeToSqlTypeMap = new HashMap<>(32);
 
 	static {
 		javaTypeToSqlTypeMap.put(boolean.class, Types.BOOLEAN);
@@ -104,11 +98,6 @@ public abstract class StatementCreatorUtils {
 		javaTypeToSqlTypeMap.put(double.class, Types.DOUBLE);
 		javaTypeToSqlTypeMap.put(Double.class, Types.DOUBLE);
 		javaTypeToSqlTypeMap.put(BigDecimal.class, Types.DECIMAL);
-		javaTypeToSqlTypeMap.put(LocalDate.class, Types.DATE);
-		javaTypeToSqlTypeMap.put(LocalTime.class, Types.TIME);
-		javaTypeToSqlTypeMap.put(LocalDateTime.class, Types.TIMESTAMP);
-		javaTypeToSqlTypeMap.put(OffsetTime.class, Types.TIME_WITH_TIMEZONE);
-		javaTypeToSqlTypeMap.put(OffsetDateTime.class, Types.TIMESTAMP_WITH_TIMEZONE);
 		javaTypeToSqlTypeMap.put(java.sql.Date.class, Types.DATE);
 		javaTypeToSqlTypeMap.put(java.sql.Time.class, Types.TIME);
 		javaTypeToSqlTypeMap.put(java.sql.Timestamp.class, Types.TIMESTAMP);
@@ -213,7 +202,8 @@ public abstract class StatementCreatorUtils {
 		Object inValueToUse = inValue;
 
 		// override type info?
-		if (inValue instanceof SqlParameterValue parameterValue) {
+		if (inValue instanceof SqlParameterValue) {
+			SqlParameterValue parameterValue = (SqlParameterValue) inValue;
 			if (logger.isDebugEnabled()) {
 				logger.debug("Overriding type info with runtime info from SqlParameterValue: column index " + paramIndex +
 						", SQL type " + parameterValue.getSqlType() + ", type name " + parameterValue.getTypeName());
@@ -250,26 +240,9 @@ public abstract class StatementCreatorUtils {
 			throws SQLException {
 
 		if (sqlType == SqlTypeValue.TYPE_UNKNOWN || (sqlType == Types.OTHER && typeName == null)) {
-			boolean callGetParameterType = false;
 			boolean useSetObject = false;
 			Integer sqlTypeToUse = null;
-			if (shouldIgnoreGetParameterType != null) {
-				callGetParameterType = !shouldIgnoreGetParameterType;
-			}
-			else {
-				String jdbcDriverName = ps.getConnection().getMetaData().getDriverName();
-				if (jdbcDriverName.startsWith("PostgreSQL")) {
-					sqlTypeToUse = Types.NULL;
-				}
-				else if (jdbcDriverName.startsWith("Microsoft") && jdbcDriverName.contains("SQL Server")) {
-					sqlTypeToUse = Types.NULL;
-					useSetObject = true;
-				}
-				else {
-					callGetParameterType = true;
-				}
-			}
-			if (callGetParameterType) {
+			if (!shouldIgnoreGetParameterType) {
 				try {
 					sqlTypeToUse = ps.getParameterMetaData().getParameterType(paramIndex);
 				}
@@ -308,30 +281,18 @@ public abstract class StatementCreatorUtils {
 			ps.setNull(paramIndex, sqlType, typeName);
 		}
 		else {
-			// Fall back to generic setNull call.
-			try {
-				// Try generic setNull call with SQL type specified.
-				ps.setNull(paramIndex, sqlType);
-			}
-			catch (SQLFeatureNotSupportedException ex) {
-				if (sqlType == Types.NULL) {
-					throw ex;
-				}
-				// Fall back to generic setNull call without SQL type specified
-				// (for example, for MySQL TIME_WITH_TIMEZONE / TIMESTAMP_WITH_TIMEZONE).
-				ps.setNull(paramIndex, Types.NULL);
-			}
+			ps.setNull(paramIndex, sqlType);
 		}
 	}
 
 	private static void setValue(PreparedStatement ps, int paramIndex, int sqlType,
 			@Nullable String typeName, @Nullable Integer scale, Object inValue) throws SQLException {
 
-		if (inValue instanceof SqlTypeValue sqlTypeValue) {
-			sqlTypeValue.setTypeValue(ps, paramIndex, sqlType, typeName);
+		if (inValue instanceof SqlTypeValue) {
+			((SqlTypeValue) inValue).setTypeValue(ps, paramIndex, sqlType, typeName);
 		}
-		else if (inValue instanceof SqlValue sqlValue) {
-			sqlValue.setValue(ps, paramIndex);
+		else if (inValue instanceof SqlValue) {
+			((SqlValue) inValue).setValue(ps, paramIndex);
 		}
 		else if (sqlType == Types.VARCHAR || sqlType == Types.LONGVARCHAR ) {
 			ps.setString(paramIndex, inValue.toString());
@@ -362,8 +323,8 @@ public abstract class StatementCreatorUtils {
 			}
 		}
 		else if (sqlType == Types.DECIMAL || sqlType == Types.NUMERIC) {
-			if (inValue instanceof BigDecimal bigDecimal) {
-				ps.setBigDecimal(paramIndex, bigDecimal);
+			if (inValue instanceof BigDecimal) {
+				ps.setBigDecimal(paramIndex, (BigDecimal) inValue);
 			}
 			else if (scale != null) {
 				ps.setObject(paramIndex, inValue, sqlType, scale);
@@ -373,23 +334,24 @@ public abstract class StatementCreatorUtils {
 			}
 		}
 		else if (sqlType == Types.BOOLEAN) {
-			if (inValue instanceof Boolean flag) {
-				ps.setBoolean(paramIndex, flag);
+			if (inValue instanceof Boolean) {
+				ps.setBoolean(paramIndex, (Boolean) inValue);
 			}
 			else {
 				ps.setObject(paramIndex, inValue, Types.BOOLEAN);
 			}
 		}
 		else if (sqlType == Types.DATE) {
-			if (inValue instanceof java.util.Date date) {
-				if (inValue instanceof java.sql.Date sqlDate) {
-					ps.setDate(paramIndex, sqlDate);
+			if (inValue instanceof java.util.Date) {
+				if (inValue instanceof java.sql.Date) {
+					ps.setDate(paramIndex, (java.sql.Date) inValue);
 				}
 				else {
-					ps.setDate(paramIndex, new java.sql.Date(date.getTime()));
+					ps.setDate(paramIndex, new java.sql.Date(((java.util.Date) inValue).getTime()));
 				}
 			}
-			else if (inValue instanceof Calendar cal) {
+			else if (inValue instanceof Calendar) {
+				Calendar cal = (Calendar) inValue;
 				ps.setDate(paramIndex, new java.sql.Date(cal.getTime().getTime()), cal);
 			}
 			else {
@@ -397,15 +359,16 @@ public abstract class StatementCreatorUtils {
 			}
 		}
 		else if (sqlType == Types.TIME) {
-			if (inValue instanceof java.util.Date date) {
-				if (inValue instanceof java.sql.Time time) {
-					ps.setTime(paramIndex, time);
+			if (inValue instanceof java.util.Date) {
+				if (inValue instanceof java.sql.Time) {
+					ps.setTime(paramIndex, (java.sql.Time) inValue);
 				}
 				else {
-					ps.setTime(paramIndex, new java.sql.Time(date.getTime()));
+					ps.setTime(paramIndex, new java.sql.Time(((java.util.Date) inValue).getTime()));
 				}
 			}
-			else if (inValue instanceof Calendar cal) {
+			else if (inValue instanceof Calendar) {
+				Calendar cal = (Calendar) inValue;
 				ps.setTime(paramIndex, new java.sql.Time(cal.getTime().getTime()), cal);
 			}
 			else {
@@ -413,15 +376,16 @@ public abstract class StatementCreatorUtils {
 			}
 		}
 		else if (sqlType == Types.TIMESTAMP) {
-			if (inValue instanceof java.util.Date date) {
-				if (inValue instanceof java.sql.Timestamp timestamp) {
-					ps.setTimestamp(paramIndex, timestamp);
+			if (inValue instanceof java.util.Date) {
+				if (inValue instanceof java.sql.Timestamp) {
+					ps.setTimestamp(paramIndex, (java.sql.Timestamp) inValue);
 				}
 				else {
-					ps.setTimestamp(paramIndex, new java.sql.Timestamp(date.getTime()));
+					ps.setTimestamp(paramIndex, new java.sql.Timestamp(((java.util.Date) inValue).getTime()));
 				}
 			}
-			else if (inValue instanceof Calendar cal) {
+			else if (inValue instanceof Calendar) {
+				Calendar cal = (Calendar) inValue;
 				ps.setTimestamp(paramIndex, new java.sql.Timestamp(cal.getTime().getTime()), cal);
 			}
 			else {
@@ -430,16 +394,14 @@ public abstract class StatementCreatorUtils {
 		}
 		else if (sqlType == SqlTypeValue.TYPE_UNKNOWN || (sqlType == Types.OTHER &&
 				"Oracle".equals(ps.getConnection().getMetaData().getDatabaseProductName()))) {
-			if (inValue instanceof byte[] bytes) {
-				ps.setBytes(paramIndex, bytes);
-			}
-			else if (isStringValue(inValue.getClass())) {
+			if (isStringValue(inValue.getClass())) {
 				ps.setString(paramIndex, inValue.toString());
 			}
 			else if (isDateValue(inValue.getClass())) {
 				ps.setTimestamp(paramIndex, new java.sql.Timestamp(((java.util.Date) inValue).getTime()));
 			}
-			else if (inValue instanceof Calendar cal) {
+			else if (inValue instanceof Calendar) {
+				Calendar cal = (Calendar) inValue;
 				ps.setTimestamp(paramIndex, new java.sql.Timestamp(cal.getTime().getTime()), cal);
 			}
 			else {
@@ -448,16 +410,8 @@ public abstract class StatementCreatorUtils {
 			}
 		}
 		else {
-			// Fall back to generic setObject call.
-			try {
-				// Try generic setObject call with SQL type specified.
-				ps.setObject(paramIndex, inValue, sqlType);
-			}
-			catch (SQLFeatureNotSupportedException ex) {
-				// Fall back to generic setObject call without SQL type specified
-				// (for example, for MySQL TIME_WITH_TIMEZONE / TIMESTAMP_WITH_TIMEZONE).
-				ps.setObject(paramIndex, inValue);
-			}
+			// Fall back to generic setObject call with SQL type specified.
+			ps.setObject(paramIndex, inValue, sqlType);
 		}
 	}
 
@@ -488,7 +442,7 @@ public abstract class StatementCreatorUtils {
 	 * @see DisposableSqlTypeValue#cleanup()
 	 * @see org.springframework.jdbc.core.support.SqlLobValue#cleanup()
 	 */
-	public static void cleanupParameters(@Nullable Object @Nullable ... paramValues) {
+	public static void cleanupParameters(@Nullable Object... paramValues) {
 		if (paramValues != null) {
 			cleanupParameters(Arrays.asList(paramValues));
 		}
@@ -505,15 +459,15 @@ public abstract class StatementCreatorUtils {
 		if (paramValues != null) {
 			for (Object inValue : paramValues) {
 				// Unwrap SqlParameterValue first...
-				if (inValue instanceof SqlParameterValue sqlParameterValue) {
-					inValue = sqlParameterValue.getValue();
+				if (inValue instanceof SqlParameterValue) {
+					inValue = ((SqlParameterValue) inValue).getValue();
 				}
 				// Check for disposable value types
-				if (inValue instanceof SqlValue sqlValue) {
-					sqlValue.cleanup();
+				if (inValue instanceof SqlValue) {
+					((SqlValue) inValue).cleanup();
 				}
-				else if (inValue instanceof DisposableSqlTypeValue disposableSqlTypeValue) {
-					disposableSqlTypeValue.cleanup();
+				else if (inValue instanceof DisposableSqlTypeValue) {
+					((DisposableSqlTypeValue) inValue).cleanup();
 				}
 			}
 		}

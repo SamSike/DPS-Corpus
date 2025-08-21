@@ -151,7 +151,7 @@ public abstract class AbstractServiceNowProcessor implements Processor {
     protected AbstractServiceNowProcessor validateBody(Object body, Class<?> model) {
         ObjectHelper.notNull(body, "body");
 
-        if (!model.isAssignableFrom(body.getClass())) {
+        if (!body.getClass().isAssignableFrom(model)) {
             throw new IllegalArgumentException(
                     "Body is not compatible with model (body=" + body.getClass() + ", model=" + model);
         }

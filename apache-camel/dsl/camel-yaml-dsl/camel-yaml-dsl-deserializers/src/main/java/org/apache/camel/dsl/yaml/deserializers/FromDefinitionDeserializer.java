@@ -30,6 +30,7 @@ import org.snakeyaml.engine.v2.nodes.NodeTuple;
 import org.snakeyaml.engine.v2.nodes.NodeType;
 
 import static org.apache.camel.dsl.yaml.common.YamlDeserializerSupport.asText;
+import static org.apache.camel.dsl.yaml.common.YamlDeserializerSupport.asType;
 import static org.apache.camel.dsl.yaml.common.YamlDeserializerSupport.getDeserializationContext;
 
 @YamlType(
@@ -38,7 +39,6 @@ import static org.apache.camel.dsl.yaml.common.YamlDeserializerSupport.getDeseri
           order = YamlDeserializerResolver.ORDER_DEFAULT,
           properties = {
                   @YamlProperty(name = "uri", type = "string", required = true),
-                  @YamlProperty(name = "variableReceive", type = "string"),
                   @YamlProperty(name = "id", type = "string"),
                   @YamlProperty(name = "description", type = "string"),
                   @YamlProperty(name = "parameters", type = "object"),
@@ -53,9 +53,8 @@ public class FromDefinitionDeserializer implements ConstructNode {
             line = node.getStartMark().get().getLine();
         }
 
-        String desc = null;
+        org.apache.camel.model.DescriptionDefinition desc = null;
         String id = null;
-        String variableReceive = null;
         if (node.getNodeType() == NodeType.MAPPING) {
             final MappingNode mn = (MappingNode) node;
             for (NodeTuple tuple : mn.getValue()) {
@@ -66,11 +65,9 @@ public class FromDefinitionDeserializer implements ConstructNode {
                         line = tuple.getKeyNode().getStartMark().get().getLine() + 1;
                     }
                 } else if ("description".equals(key)) {
-                    desc = asText(tuple.getValueNode());
+                    desc = asType(tuple.getValueNode(), org.apache.camel.model.DescriptionDefinition.class);
                 } else if ("id".equals(key)) {
                     id = asText(tuple.getValueNode());
-                } else if ("variableReceive".equals(key)) {
-                    variableReceive = asText(tuple.getValueNode());
                 }
             }
         }
@@ -94,9 +91,6 @@ public class FromDefinitionDeserializer implements ConstructNode {
         }
         if (id != null) {
             target.setId(id);
-        }
-        if (variableReceive != null) {
-            target.setVariableReceive(variableReceive);
         }
 
         // enrich model with line number

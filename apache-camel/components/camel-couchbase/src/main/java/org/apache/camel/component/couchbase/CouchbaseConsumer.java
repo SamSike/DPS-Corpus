@@ -16,11 +16,6 @@
  */
 package org.apache.camel.component.couchbase;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import com.couchbase.client.core.deps.com.fasterxml.jackson.databind.JsonNode;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Collection;
@@ -30,11 +25,10 @@ import com.couchbase.client.java.view.ViewOrdering;
 import com.couchbase.client.java.view.ViewResult;
 import com.couchbase.client.java.view.ViewRow;
 import org.apache.camel.Exchange;
-import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.Processor;
 import org.apache.camel.resume.ResumeAware;
 import org.apache.camel.resume.ResumeStrategy;
-import org.apache.camel.support.ScheduledBatchPollingConsumer;
+import org.apache.camel.support.DefaultScheduledPollConsumer;
 import org.apache.camel.support.resume.ResumeStrategyHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,14 +39,13 @@ import static org.apache.camel.component.couchbase.CouchbaseConstants.HEADER_ID;
 import static org.apache.camel.component.couchbase.CouchbaseConstants.HEADER_KEY;
 import static org.apache.camel.component.couchbase.CouchbaseConstants.HEADER_VIEWNAME;
 
-public class CouchbaseConsumer extends ScheduledBatchPollingConsumer implements ResumeAware<ResumeStrategy> {
+public class CouchbaseConsumer extends DefaultScheduledPollConsumer implements ResumeAware<ResumeStrategy> {
 
     private static final Logger LOG = LoggerFactory.getLogger(CouchbaseConsumer.class);
 
-    private final Lock lock = new ReentrantLock();
     private final CouchbaseEndpoint endpoint;
-    private Bucket bucket;
-    private Collection collection;
+    private final Bucket bucket;
+    private final Collection collection;
     private ViewOptions viewOptions;
 
     private ResumeStrategy resumeStrategy;
@@ -61,25 +54,22 @@ public class CouchbaseConsumer extends ScheduledBatchPollingConsumer implements 
         super(endpoint, processor);
         this.bucket = client;
         this.endpoint = endpoint;
-    }
-
-    @Override
-    protected void doInit() throws Exception {
-        super.doInit();
-
         Scope scope;
         if (endpoint.getScope() != null) {
-            scope = bucket.scope(endpoint.getScope());
+            scope = client.scope(endpoint.getScope());
         } else {
-            scope = bucket.defaultScope();
+            scope = client.defaultScope();
         }
 
         if (endpoint.getCollection() != null) {
             this.collection = scope.collection(endpoint.getCollection());
         } else {
-            this.collection = bucket.defaultCollection();
+            this.collection = client.defaultCollection();
         }
+    }
 
+    @Override
+    protected void doInit() {
         this.viewOptions = ViewOptions.viewOptions();
         int limit = endpoint.getLimit();
         if (limit > 0) {
@@ -97,15 +87,16 @@ public class CouchbaseConsumer extends ScheduledBatchPollingConsumer implements 
 
         String rangeStartKey = endpoint.getRangeStartKey();
         String rangeEndKey = endpoint.getRangeEndKey();
-        if (rangeStartKey == null || rangeStartKey.isEmpty() || rangeEndKey == null || rangeEndKey.isEmpty()) {
+        if ("".equals(rangeStartKey) || "".equals(rangeEndKey)) {
             return;
         }
-        viewOptions.startKey(rangeStartKey).endKey(rangeEndKey);
+        viewOptions.startKey(rangeEndKey).endKey(rangeEndKey);
     }
 
     @Override
     protected void doStart() throws Exception {
         super.doStart();
+
         ResumeStrategyHelper.resume(getEndpoint().getCamelContext(), this, resumeStrategy, COUCHBASE_RESUME_ACTION);
     }
 
@@ -118,35 +109,29 @@ public class CouchbaseConsumer extends ScheduledBatchPollingConsumer implements 
     }
 
     @Override
-    protected int poll() throws Exception {
-        lock.lock();
-        try {
-            ViewResult result = bucket.viewQuery(endpoint.getDesignDocumentName(), endpoint.getViewName(), this.viewOptions);
+    protected synchronized int poll() throws Exception {
+        ViewResult result = bucket.viewQuery(endpoint.getDesignDocumentName(), endpoint.getViewName(), this.viewOptions);
 
-            // okay we have some response from CouchBase so lets mark the consumer as ready
-            forceConsumerAsReady();
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("ViewResponse =  {}", result);
+        }
 
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("ViewResponse: {}", result);
+        String consumerProcessedStrategy = endpoint.getConsumerProcessedStrategy();
+        for (ViewRow row : result.rows()) {
+            Object doc;
+            String id = row.id().get();
+            if (endpoint.isFullDocument()) {
+                doc = CouchbaseCollectionOperation.getDocument(collection, id, endpoint.getQueryTimeout());
+            } else {
+                doc = row.valueAs(Object.class);
             }
 
-            String consumerProcessedStrategy = endpoint.getConsumerProcessedStrategy();
+            String key = row.keyAs(JsonNode.class).get().asText();
+            String designDocumentName = endpoint.getDesignDocumentName();
+            String viewName = endpoint.getViewName();
 
-            Queue<Object> exchanges = new ArrayDeque<>();
-            for (ViewRow row : result.rows()) {
-                Object doc;
-                String id = row.id().get();
-                if (endpoint.isFullDocument()) {
-                    doc = CouchbaseCollectionOperation.getDocument(collection, id, endpoint.getQueryTimeout());
-                } else {
-                    doc = row.valueAs(Object.class);
-                }
-
-                String key = row.keyAs(JsonNode.class).get().asText();
-                String designDocumentName = endpoint.getDesignDocumentName();
-                String viewName = endpoint.getViewName();
-
-                Exchange exchange = createExchange(true);
+            Exchange exchange = createExchange(false);
+            try {
                 exchange.getIn().setBody(doc);
                 exchange.getIn().setHeader(HEADER_ID, id);
                 exchange.getIn().setHeader(HEADER_KEY, key);
@@ -169,35 +154,16 @@ public class CouchbaseConsumer extends ScheduledBatchPollingConsumer implements 
                 }
 
                 logDetails(id, doc, key, designDocumentName, viewName, exchange);
-                exchanges.add(exchange);
+
+                getProcessor().process(exchange);
+            } catch (Exception e) {
+                this.getExceptionHandler().handleException("Error processing exchange.", exchange, e);
+            } finally {
+                releaseExchange(exchange, false);
             }
-
-            return processBatch(exchanges);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
-    public int processBatch(Queue<Object> exchanges) throws Exception {
-        int total = exchanges.size();
-        int answer = total;
-        if (this.maxMessagesPerPoll > 0 && total > this.maxMessagesPerPoll) {
-            LOG.debug("Limiting to maximum messages to poll {} as there were {} messages in this poll.",
-                    this.maxMessagesPerPoll, total);
-            total = this.maxMessagesPerPoll;
         }
 
-        for (int index = 0; index < total && this.isBatchAllowed(); ++index) {
-            Exchange exchange = (Exchange) exchanges.poll();
-            exchange.setProperty(ExchangePropertyKey.BATCH_INDEX, index);
-            exchange.setProperty(ExchangePropertyKey.BATCH_SIZE, total);
-            exchange.setProperty(ExchangePropertyKey.BATCH_COMPLETE, index == total - 1);
-            this.pendingExchanges = total - index - 1;
-            getProcessor().process(exchange);
-        }
-
-        return answer;
+        return result.rows().size();
     }
 
     private void logDetails(String id, Object doc, String key, String designDocumentName, String viewName, Exchange exchange) {
@@ -210,6 +176,7 @@ public class CouchbaseConsumer extends ScheduledBatchPollingConsumer implements 
             LOG.trace("Design Document Name = {}", designDocumentName);
             LOG.trace("View Name = {}", viewName);
         }
+
     }
 
     @Override

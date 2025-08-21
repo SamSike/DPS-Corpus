@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,9 @@ import org.springframework.context.i18n.LocaleContextHolder;
  * <p>Alternatively, Spring's {@link org.springframework.web.filter.RequestContextFilter}
  * and Spring's {@link org.springframework.web.servlet.DispatcherServlet} also expose
  * the same request context to the current thread. In contrast to this listener,
- * advanced options are available there (for example, "threadContextInheritable").
+ * advanced options are available there (e.g. "threadContextInheritable").
  *
- * <p>This listener is mainly for use with third-party servlets, for example, the JSF FacesServlet.
+ * <p>This listener is mainly for use with third-party servlets, e.g. the JSF FacesServlet.
  * Within Spring's own web support, DispatcherServlet's processing is perfectly sufficient.
  *
  * @author Juergen Hoeller
@@ -51,10 +51,11 @@ public class RequestContextListener implements ServletRequestListener {
 
 	@Override
 	public void requestInitialized(ServletRequestEvent requestEvent) {
-		if (!(requestEvent.getServletRequest() instanceof HttpServletRequest request)) {
+		if (!(requestEvent.getServletRequest() instanceof HttpServletRequest)) {
 			throw new IllegalArgumentException(
 					"Request is not an HttpServletRequest: " + requestEvent.getServletRequest());
 		}
+		HttpServletRequest request = (HttpServletRequest) requestEvent.getServletRequest();
 		ServletRequestAttributes attributes = new ServletRequestAttributes(request);
 		request.setAttribute(REQUEST_ATTRIBUTES_ATTRIBUTE, attributes);
 		LocaleContextHolder.setLocale(request.getLocale());
@@ -65,16 +66,16 @@ public class RequestContextListener implements ServletRequestListener {
 	public void requestDestroyed(ServletRequestEvent requestEvent) {
 		ServletRequestAttributes attributes = null;
 		Object reqAttr = requestEvent.getServletRequest().getAttribute(REQUEST_ATTRIBUTES_ATTRIBUTE);
-		if (reqAttr instanceof ServletRequestAttributes servletRequestAttributes) {
-			attributes = servletRequestAttributes;
+		if (reqAttr instanceof ServletRequestAttributes) {
+			attributes = (ServletRequestAttributes) reqAttr;
 		}
 		RequestAttributes threadAttributes = RequestContextHolder.getRequestAttributes();
 		if (threadAttributes != null) {
 			// We're assumably within the original request thread...
 			LocaleContextHolder.resetLocaleContext();
 			RequestContextHolder.resetRequestAttributes();
-			if (attributes == null && threadAttributes instanceof ServletRequestAttributes servletRequestAttributes) {
-				attributes = servletRequestAttributes;
+			if (attributes == null && threadAttributes instanceof ServletRequestAttributes) {
+				attributes = (ServletRequestAttributes) threadAttributes;
 			}
 		}
 		if (attributes != null) {

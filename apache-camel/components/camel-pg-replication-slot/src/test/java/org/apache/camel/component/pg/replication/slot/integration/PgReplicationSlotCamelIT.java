@@ -25,6 +25,7 @@ import java.util.Properties;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +37,9 @@ public class PgReplicationSlotCamelIT extends PgReplicationITSupport {
 
     @Override
     @BeforeEach
-    public void doPostSetup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
+
         String url = String.format("jdbc:postgresql://%s/camel", service.getServiceAddress());
         Properties props = new Properties();
         props.setProperty("user", service.userName());
@@ -49,8 +52,10 @@ public class PgReplicationSlotCamelIT extends PgReplicationITSupport {
     }
 
     @Override
-    public void doPostTearDown() throws SQLException {
+    @AfterEach
+    public void tearDown() throws Exception {
         this.connection.close();
+        super.tearDown();
     }
 
     @Override

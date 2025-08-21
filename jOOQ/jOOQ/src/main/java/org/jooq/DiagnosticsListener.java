@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,29 +41,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-import org.jooq.conf.DiagnosticsConnection;
-import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
-import org.jooq.impl.LoggingDiagnosticsListener;
 import org.jooq.impl.ParserException;
 
 /**
  * A diagnostics listener.
- * <p>
- * Users can implement this in order to receive and handle diagnostics events
- * explicitly. A default implementation is available via
- * {@link LoggingDiagnosticsListener}, which can be activated using
- * {@link Settings#isDiagnosticsLogging()}.
- * <p>
- * Events are received on any {@link DSLContext#diagnosticsConnection()} or
- * {@link DSLContext#diagnosticsDataSource()}, if
- * {@link Settings#getDiagnosticsConnection()} is not turned
- * {@link DiagnosticsConnection#OFF}. Use {@link DiagnosticsConnection#ON} to
- * turn diagnostics on for all of jOOQ's {@link ConnectionProvider} usage.
- * <p>
- * For more information about individual diagnostics, please also check out the
- * manual pages: <a href=
- * "https://www.jooq.org/doc/dev/manual/sql-execution/diagnostics/">https://www.jooq.org/doc/dev/manual/sql-execution/diagnostics/</a>.
  *
  * @author Lukas Eder
  */
@@ -79,9 +61,6 @@ public interface DiagnosticsListener {
      * Typically, this problem can be remedied by applying the appropriate
      * <code>LIMIT</code> clause in SQL, or
      * {@link SelectLimitStep#limit(Number)} clause in jOOQ.
-     * <p>
-     * This diagnostic can be turned off using
-     * {@link Settings#isDiagnosticsTooManyRowsFetched()}.
      *
      * @param ctx The context containing information about the diagnostic.
      */
@@ -96,9 +75,6 @@ public interface DiagnosticsListener {
      * <p>
      * Typically, this problem can be remedied by not running a
      * <code>SELECT *</code> query when this isn't strictly required.
-     * <p>
-     * This diagnostic can be turned off using
-     * {@link Settings#isDiagnosticsTooManyColumnsFetched()}.
      *
      * @param ctx The context containing information about the diagnostic.
      */
@@ -108,9 +84,6 @@ public interface DiagnosticsListener {
      * The fetched JDBC {@link ResultSet} returned a value for a column, on
      * which {@link ResultSet#wasNull()} was called unnecessarily (more than
      * once, or for a non-primitive type).
-     * <p>
-     * This diagnostic can be turned off using
-     * {@link Settings#isDiagnosticsUnnecessaryWasNullCall()}.
      *
      * @param ctx The context containing information about the diagnostic.
      */
@@ -120,9 +93,6 @@ public interface DiagnosticsListener {
      * The fetched JDBC {@link ResultSet} returned a primitive type value for a
      * column, which could have been null, but {@link ResultSet#wasNull()} was
      * not called.
-     * <p>
-     * This diagnostic can be turned off using
-     * {@link Settings#isDiagnosticsMissingWasNullCall()}.
      *
      * @param ctx The context containing information about the diagnostic.
      */
@@ -144,55 +114,36 @@ public interface DiagnosticsListener {
      * <p>
      * <h3>Whitespace differences</h3>
      * <p>
-     *
-     * <pre>
-     * <code>
+     * <code><pre>
      * SELECT * FROM  actor;
      * SELECT  * FROM actor;
-     * </code>
-     * </pre>
+     * </pre></code>
      * <p>
      * <h3>Inline bind values</h3>
      * <p>
-     *
-     * <pre>
-     * <code>
+     * <code><pre>
      * SELECT * FROM actor WHERE id = 1;
      * SELECT * FROM actor WHERE id = 2;
-     * </code>
-     * </pre>
+     * </pre></code>
      * <p>
      * <h3>Aliasing and qualification</h3>
      * <p>
-     *
-     * <pre>
-     * <code>
+     * <code><pre>
      * SELECT a1.* FROM actor a1 WHERE id = ?;
      * SELECT * FROM actor a2 WHERE a2.id = ?;
-     * </code>
-     * </pre>
+     * </pre></code>
      * <p>
      * Examples of identical statements (which are not considered duplicate, but
      * {@link #repeatedStatements(DiagnosticsContext)}, if on the same
      * {@link Connection}) are:
      * <p>
-     *
-     * <pre>
-     * <code>
+     * <code><pre>
      * SELECT * FROM actor WHERE id = ?;
      * SELECT * FROM actor WHERE id = ?;
-     * </code>
-     * </pre>
+     * </pre></code>
      * <p>
      * This is a system-wide diagnostic that is not specific to individual
-     * {@link Connection} instances. Its caches are located in the
-     * {@link Configuration} that this listener pertains to.
-     * <p>
-     * This diagnostic can be turned off using
-     * {@link Settings#isDiagnosticsDuplicateStatements()}.
-     * <p>
-     * Advanced duplicate statement recognition can be turned off using
-     * {@link Settings#isDiagnosticsDuplicateStatementsUsingTransformPatterns()}.
+     * {@link Connection} instances.
      *
      * @param ctx The context containing information about the diagnostic.
      */
@@ -220,197 +171,24 @@ public interface DiagnosticsListener {
      * <p>
      * Repeated statements may or may not be "identical". In the following
      * example, there are two repeated <em>and</em> identical statements:
-     *
-     * <pre>
-     * <code>
+     * <code><pre>
      * SELECT * FROM actor WHERE id = ?;
      * SELECT * FROM actor WHERE id = ?;
-     * </code>
-     * </pre>
+     * </pre></code>
      * <p>
      * In this example, we have three repeated statements, only some of which
-     * are also identical:
-     *
-     * <pre>
-     * <code>
+     * are also identical: <code><pre>
      * SELECT * FROM actor WHERE id = ?;
      * SELECT * FROM actor WHERE id = ?;
      * SELECT * FROM actor WHERE id =  ?;
-     * </code>
-     * </pre>
+     * </pre></code>
      * <p>
      * This is a {@link Connection}-specific diagnostic that is reset every time
-     * {@link Connection#close()} is called for explicitly created
-     * {@link DSLContext#diagnosticsConnection()}, or if
-     * {@link DiagnosticsConnection#ON} is specified, also globally on a
-     * {@link TransactionContext} level (if available), or {@link Configuration}
-     * level.
-     * <p>
-     * This diagnostic can be turned off using
-     * {@link Settings#isDiagnosticsRepeatedStatements()}.
+     * {@link Connection#close()} is called.
      *
      * @param ctx The context containing information about the diagnostic.
      */
     default void repeatedStatements(DiagnosticsContext ctx) {}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -46,11 +46,21 @@ public abstract class FeedEndpoint extends DefaultPollingEndpoint {
                                                    + "single feed poll should be delivered immediately. If true, only one entry is processed "
                                                    + "per delay. Only applicable when splitEntries = true.")
     private boolean throttleEntries = true;
+    @UriParam(label = "security", secret = true,
+              description = "Sets the username to be used for basic authentication when polling from a HTTP feed. "
+                            + "Notice: Basic authentication is not a secured method, and is not recommended to be used.")
+    @Deprecated
+    private String username;
+    @UriParam(label = "security", secret = true,
+              description = "Sets the password to be used for basic authentication when polling from a HTTP feed."
+                            + "Notice: Basic authentication is not a secured method, and is not recommended to be used.")
+    @Deprecated
+    private String password;
 
-    protected FeedEndpoint() {
+    public FeedEndpoint() {
     }
 
-    protected FeedEndpoint(String endpointUri, FeedComponent component, String feedUri) {
+    public FeedEndpoint(String endpointUri, FeedComponent component, String feedUri) {
         super(endpointUri, component);
         this.feedUri = feedUri;
     }
@@ -140,7 +150,8 @@ public abstract class FeedEndpoint extends DefaultPollingEndpoint {
     }
 
     /**
-     * Sets whether entries should be sent individually or whether the entire feed should be sent as a single message
+     * Sets whether or not entries should be sent individually or whether the entire feed should be sent as a single
+     * message
      */
     public void setSplitEntries(boolean splitEntries) {
         this.splitEntries = splitEntries;
@@ -185,5 +196,30 @@ public abstract class FeedEndpoint extends DefaultPollingEndpoint {
     public boolean isThrottleEntries() {
         return this.throttleEntries;
     }
+
+    public String getUsername() {
+        return username;
+    }
+
+    /**
+     * Sets the username to be used for basic authentication when polling from a HTTP feed
+     */
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    /**
+     * Sets the password to be used for basic authentication when polling from a HTTP feed
+     */
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    // Implementation methods
+    //-------------------------------------------------------------------------
 
 }

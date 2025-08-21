@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 public class FileProducerFilenameConstantTest extends ContextTestSupport {
 
     @Test
-    public void testFileProducerFilenameConstant() {
+    public void testFileProducerFilenameConstant() throws Exception {
         template.sendBody(fileUri("?fileName=header.txt"), "Hello World");
 
         assertFileExists(testFile("header.txt"));

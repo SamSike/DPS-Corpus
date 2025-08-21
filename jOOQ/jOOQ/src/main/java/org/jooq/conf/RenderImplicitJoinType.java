@@ -15,8 +15,6 @@ import jakarta.xml.bind.annotation.XmlType;
  *     &lt;enumeration value="DEFAULT"/&gt;
  *     &lt;enumeration value="INNER_JOIN"/&gt;
  *     &lt;enumeration value="LEFT_JOIN"/&gt;
- *     &lt;enumeration value="SCALAR_SUBQUERY"/&gt;
- *     &lt;enumeration value="THROW"/&gt;
  *   &lt;/restriction&gt;
  * &lt;/simpleType&gt;
  * </pre>
@@ -26,36 +24,9 @@ import jakarta.xml.bind.annotation.XmlType;
 @XmlEnum
 public enum RenderImplicitJoinType {
 
-
-    /**
-     * The DEFAULT behaviour, depending on the type of path
-     * 
-     */
     DEFAULT,
-
-    /**
-     * Always render INNER JOIN
-     * 
-     */
     INNER_JOIN,
-
-    /**
-     * Always render LEFT JOIN
-     * 
-     */
-    LEFT_JOIN,
-
-    /**
-     * Always render a scalar subquery
-     * 
-     */
-    SCALAR_SUBQUERY,
-
-    /**
-     * Always throw an exception (effectively disallowing the type of implicit joins)
-     * 
-     */
-    THROW;
+    LEFT_JOIN;
 
     public String value() {
         return name();

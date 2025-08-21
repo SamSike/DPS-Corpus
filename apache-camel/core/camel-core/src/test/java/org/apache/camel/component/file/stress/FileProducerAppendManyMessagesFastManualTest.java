@@ -60,10 +60,10 @@ public class FileProducerAppendManyMessagesFastManualTest extends ContextTestSup
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("big?initialDelay=1000")).process(new Processor() {
                     @Override
                     public void process(Exchange exchange) throws Exception {

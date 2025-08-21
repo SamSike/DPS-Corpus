@@ -39,9 +39,7 @@ import org.apache.camel.cloud.ServiceDefinition;
 import org.apache.camel.component.undertow.UndertowConstants.EventType;
 import org.apache.camel.component.undertow.handlers.CamelWebSocketHandler;
 import org.apache.camel.component.undertow.spi.UndertowSecurityProvider;
-import org.apache.camel.http.base.HttpHeaderFilterStrategy;
 import org.apache.camel.http.base.cookie.CookieHandler;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.HeaderFilterStrategy;
 import org.apache.camel.spi.HeaderFilterStrategyAware;
 import org.apache.camel.spi.Metadata;
@@ -61,14 +59,12 @@ import org.xnio.Options;
  * Expose HTTP and WebSocket endpoints and access external HTTP/WebSocket servers.
  */
 @UriEndpoint(firstVersion = "2.16.0", scheme = "undertow", title = "Undertow", syntax = "undertow:httpURI",
-             category = { Category.HTTP, Category.NETWORKING }, lenientProperties = true,
-             headersClass = UndertowConstants.class)
-public class UndertowEndpoint extends DefaultEndpoint
-        implements AsyncEndpoint, HeaderFilterStrategyAware, DiscoverableService, EndpointServiceLocation {
+             category = { Category.HTTP, Category.WEBSOCKET }, lenientProperties = true, headersClass = UndertowConstants.class)
+public class UndertowEndpoint extends DefaultEndpoint implements AsyncEndpoint, HeaderFilterStrategyAware, DiscoverableService {
 
     private static final Logger LOG = LoggerFactory.getLogger(UndertowEndpoint.class);
 
-    private final UndertowComponent component;
+    private UndertowComponent component;
     private SSLContext sslContext;
     private OptionMap optionMap;
     private HttpHandlerRegistrationInfo registrationInfo;
@@ -85,7 +81,7 @@ public class UndertowEndpoint extends DefaultEndpoint
     @UriParam(label = "advanced")
     private AccessLogReceiver accessLogReceiver;
     @UriParam(label = "advanced")
-    private HeaderFilterStrategy headerFilterStrategy = new HttpHeaderFilterStrategy();
+    private HeaderFilterStrategy headerFilterStrategy = new UndertowHeaderFilterStrategy();
     @UriParam(label = "security")
     private SSLContextParameters sslContextParameters;
     @UriParam(label = "consumer")
@@ -145,22 +141,6 @@ public class UndertowEndpoint extends DefaultEndpoint
     public UndertowEndpoint(String uri, UndertowComponent component) {
         super(uri, component);
         this.component = component;
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (httpURI != null) {
-            return httpURI.toString();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        if (httpURI != null) {
-            return httpURI.getScheme();
-        }
-        return null;
     }
 
     @Override
@@ -552,7 +532,7 @@ public class UndertowEndpoint extends DefaultEndpoint
             ServiceLoader<UndertowSecurityProvider> securityProvider = ServiceLoader.load(UndertowSecurityProvider.class);
 
             Iterator<UndertowSecurityProvider> iter = securityProvider.iterator();
-            List<String> providers = new LinkedList<>();
+            List<String> providers = new LinkedList();
             while (iter.hasNext()) {
                 UndertowSecurityProvider security = iter.next();
                 //only securityProvider, who accepts security configuration, could be used

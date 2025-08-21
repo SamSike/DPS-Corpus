@@ -94,10 +94,10 @@ public class ManagedRouteStopAndStartTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?initialDelay=0&delay=10")).routeId("foo")
                         .routeDescription("This is the foo route")
                         .convertBodyTo(String.class)

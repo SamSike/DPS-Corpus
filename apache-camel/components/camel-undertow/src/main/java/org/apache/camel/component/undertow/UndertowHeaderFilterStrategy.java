@@ -17,12 +17,7 @@
 package org.apache.camel.component.undertow;
 
 import org.apache.camel.support.DefaultHeaderFilterStrategy;
-import org.apache.camel.support.http.HttpUtil;
 
-/**
- *
- * @deprecated use {@link org.apache.camel.http.base.HttpHeaderFilterStrategy} instead.
- */
 public class UndertowHeaderFilterStrategy extends DefaultHeaderFilterStrategy {
 
     public UndertowHeaderFilterStrategy() {
@@ -30,13 +25,25 @@ public class UndertowHeaderFilterStrategy extends DefaultHeaderFilterStrategy {
     }
 
     protected void initialize() {
-        HttpUtil.addCommonFilters(getOutFilter());
+        getOutFilter().add("content-length");
+        getOutFilter().add("content-type");
+        getOutFilter().add("host");
+        // Add the filter for the Generic Message header
+        // http://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.5
+        getOutFilter().add("cache-control");
+        getOutFilter().add("connection");
+        getOutFilter().add("date");
+        getOutFilter().add("pragma");
+        getOutFilter().add("trailer");
+        getOutFilter().add("transfer-encoding");
+        getOutFilter().add("upgrade");
+        getOutFilter().add("via");
+        getOutFilter().add("warning");
 
         setLowerCase(true);
 
         // filter headers begin with "Camel" or "org.apache.camel"
         // must ignore case for Http based transports
         setOutFilterStartsWith(CAMEL_FILTER_STARTS_WITH);
-        setInFilterStartsWith(CAMEL_FILTER_STARTS_WITH);
     }
 }

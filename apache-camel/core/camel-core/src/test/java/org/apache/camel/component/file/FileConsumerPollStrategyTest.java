@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.file;
 
-import java.time.Duration;
-
 import org.apache.camel.Consumer;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Endpoint;
@@ -26,7 +24,6 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.spi.PollingConsumerPollStrategy;
 import org.apache.camel.spi.Registry;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -40,16 +37,16 @@ public class FileConsumerPollStrategyTest extends ContextTestSupport {
     private static String event = "";
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myPoll", new MyPollStrategy());
         return jndi;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?pollStrategy=#myPoll&noop=true&initialDelay=0&delay=10")).convertBodyTo(String.class)
                         .to("mock:result");
             }
@@ -67,8 +64,10 @@ public class FileConsumerPollStrategyTest extends ContextTestSupport {
 
         oneExchangeDone.matchesWaitTime();
 
-        // give the file consumer a bit of time
-        Awaitility.await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> assertTrue(event.startsWith("rollbackcommit")));
+        // give file consumer a bit time
+        Thread.sleep(20);
+
+        assertTrue(event.startsWith("rollbackcommit"));
     }
 
     private static class MyPollStrategy implements PollingConsumerPollStrategy {
@@ -88,7 +87,7 @@ public class FileConsumerPollStrategyTest extends ContextTestSupport {
         }
 
         @Override
-        public boolean rollback(Consumer consumer, Endpoint endpoint, int retryCounter, Exception cause) {
+        public boolean rollback(Consumer consumer, Endpoint endpoint, int retryCounter, Exception cause) throws Exception {
             if (cause.getMessage().equals("Damn I cannot do this")) {
                 event += "rollback";
             }

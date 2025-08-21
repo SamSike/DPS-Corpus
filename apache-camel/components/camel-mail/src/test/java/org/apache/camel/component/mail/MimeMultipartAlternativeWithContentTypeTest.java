@@ -23,11 +23,10 @@ import jakarta.mail.internet.MimeMultipart;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mail.Mailbox.MailboxUser;
-import org.apache.camel.component.mail.Mailbox.Protocol;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
+import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +35,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MimeMultipartAlternativeWithContentTypeTest extends CamelTestSupport {
-    private static final MailboxUser sachin = Mailbox.getOrCreateUser("sachin", "secret");
     private Logger log = LoggerFactory.getLogger(getClass());
     private String alternativeBody = "hello world! (plain text)";
     private String htmlBody = "<html><body><h1>Hello</h1>World</body></html>";
@@ -46,7 +44,7 @@ public class MimeMultipartAlternativeWithContentTypeTest extends CamelTestSuppor
 
         // create an exchange with a normal body and attachment to be produced as email
         MailEndpoint endpoint = context.getEndpoint(
-                sachin.uriPrefix(Protocol.smtp) + "&contentType=text/html; charset=UTF-8", MailEndpoint.class);
+                "smtp://sachin@mymailserver.com?password=secret&contentType=text/html; charset=UTF-8", MailEndpoint.class);
         endpoint.getConfiguration().setAlternativeBodyHeader(MailConstants.MAIL_ALTERNATIVE_BODY);
 
         // create the exchange with the mail message that is multipart with a file and a Hello World text/plain message.
@@ -92,8 +90,7 @@ public class MimeMultipartAlternativeWithContentTypeTest extends CamelTestSuppor
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
-                from(sachin.uriPrefix(Protocol.imap)
-                     + "&initialDelay=100&delay=100&closeFolder=false&contentType=text/html; charset=UTF-8")
+                from("pop3://sachin@mymailserver.com?password=secret&initialDelay=100&delay=100&contentType=text/html; charset=UTF-8")
                         .to("mock:result");
             }
         };

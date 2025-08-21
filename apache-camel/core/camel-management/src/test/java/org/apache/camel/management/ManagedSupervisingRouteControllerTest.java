@@ -95,10 +95,10 @@ public class ManagedSupervisingRouteControllerTest extends ManagementTestSupport
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 getContext().addComponent("jms", new MyJmsComponent());
 
                 from("timer:foo").to("mock:foo").routeId("foo");
@@ -107,26 +107,26 @@ public class ManagedSupervisingRouteControllerTest extends ManagementTestSupport
 
                 from("jms:cake").to("mock:cake").routeId("cake");
 
-                from("seda:bar").routeId("bar").autoStartup(false).to("mock:bar");
+                from("seda:bar").routeId("bar").noAutoStartup().to("mock:bar");
             }
         };
     }
 
-    private static class MyJmsComponent extends SedaComponent {
+    private class MyJmsComponent extends SedaComponent {
 
         @Override
-        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) {
+        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
             return new MyJmsEndpoint();
         }
     }
 
-    private static class MyJmsEndpoint extends SedaEndpoint {
+    private class MyJmsEndpoint extends SedaEndpoint {
 
         public MyJmsEndpoint() {
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             return new MyJmsConsumer(this, processor);
         }
 
@@ -136,14 +136,14 @@ public class ManagedSupervisingRouteControllerTest extends ManagementTestSupport
         }
     }
 
-    private static class MyJmsConsumer extends SedaConsumer {
+    private class MyJmsConsumer extends SedaConsumer {
 
         public MyJmsConsumer(SedaEndpoint endpoint, Processor processor) {
             super(endpoint, processor);
         }
 
         @Override
-        protected void doStart() {
+        protected void doStart() throws Exception {
             throw new IllegalArgumentException("Cannot start");
         }
     }

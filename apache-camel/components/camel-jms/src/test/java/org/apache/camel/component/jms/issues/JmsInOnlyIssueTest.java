@@ -19,34 +19,17 @@ package org.apache.camel.component.jms.issues;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jms.AbstractJMSTest;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DisplayName("CAMEL-1770: unit tests for inout and in-only routing with jms")
 public class JmsInOnlyIssueTest extends AbstractJMSTest {
-
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
-    protected CamelContext context;
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
 
     @Test
     public void testInOnlyWithSendBody() throws Exception {
@@ -120,15 +103,4 @@ public class JmsInOnlyIssueTest extends AbstractJMSTest {
         };
     }
 
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        context = camelContextExtension.getContext();
-        template = camelContextExtension.getProducerTemplate();
-        consumer = camelContextExtension.getConsumerTemplate();
-    }
 }

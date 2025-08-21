@@ -22,6 +22,8 @@ import java.net.URISyntaxException;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.camel.component.whatsapp.WhatsAppTestSupport;
 import org.apache.camel.component.whatsapp.model.Address;
@@ -142,13 +144,6 @@ public class WhatsAppServiceIT extends WhatsAppTestSupport {
         Assertions.assertThat(response.getMessages().get(0).getId()).isNotNull();
     }
 
-    private void assertTemplateResponse(MessageResponse response) {
-        Assertions.assertThat(response).isNotNull();
-        Assertions.assertThat(response.getMessages()).isNotNull();
-        Assertions.assertThat(response.getMessages().get(0).getId()).isNotNull();
-        Assertions.assertThat(response.getMessages().get(0).getMessageStatus()).isNotNull();
-    }
-
     @Test
     public void testMediaStickerMessage() {
         MediaMessage mediaMessage = new MediaMessage();
@@ -189,7 +184,7 @@ public class WhatsAppServiceIT extends WhatsAppTestSupport {
     }
 
     @Test
-    public void testMediaUploadVideoWithInputStream() {
+    public void testMediaUploadVideoWithInputStream() throws URISyntaxException {
         UploadMediaRequest uploadMediaRequest = new UploadMediaRequest();
         UploadMedia uploadMedia = new UploadMedia(
                 "sample.mp4",
@@ -215,7 +210,7 @@ public class WhatsAppServiceIT extends WhatsAppTestSupport {
     }
 
     @Test
-    public void testTemplateMessage() throws IOException {
+    public void testTemplateMessage() throws StreamReadException, DatabindException, IOException {
         TemplateMessageRequest request
                 = MAPPER.readValue(WhatsAppServiceIT.class.getResourceAsStream("/template-message.json"),
                         TemplateMessageRequest.class);
@@ -223,7 +218,7 @@ public class WhatsAppServiceIT extends WhatsAppTestSupport {
 
         MessageResponse response = (MessageResponse) template.requestBody("whatsapp://" + phoneNumberId, request);
 
-        assertTemplateResponse(response);
+        assertResponse(response);
     }
 
     @Test

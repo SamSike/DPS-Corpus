@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,19 +22,19 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-import tools.jackson.databind.SerializationFeature;
-import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.testfixture.io.buffer.AbstractDataBufferAllocatingTests;
 import org.springframework.http.MediaType;
-import org.springframework.http.codec.json.JacksonJsonEncoder;
+import org.springframework.http.codec.json.Jackson2JsonEncoder;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.web.testfixture.http.server.reactive.MockServerHttpResponse;
 import org.springframework.web.testfixture.xml.Pojo;
 
@@ -42,7 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.core.ResolvableType.forClass;
 
 /**
- * Tests for {@link ServerSentEventHttpMessageWriter}.
+ * Unit tests for {@link ServerSentEventHttpMessageWriter}.
  *
  * @author Sebastien Deleuze
  * @author Rossen Stoyanchev
@@ -54,11 +54,11 @@ class ServerSentEventHttpMessageWriterTests extends AbstractDataBufferAllocating
 	private static final Map<String, Object> HINTS = Collections.emptyMap();
 
 	private ServerSentEventHttpMessageWriter messageWriter =
-			new ServerSentEventHttpMessageWriter(new JacksonJsonEncoder());
+			new ServerSentEventHttpMessageWriter(new Jackson2JsonEncoder());
 
 
 	@ParameterizedDataBufferAllocatingTest
-	void canWrite(DataBufferFactory bufferFactory) {
+	void canWrite(String displayName, DataBufferFactory bufferFactory) {
 		super.bufferFactory = bufferFactory;
 
 		assertThat(this.messageWriter.canWrite(forClass(Object.class), null)).isTrue();
@@ -73,7 +73,7 @@ class ServerSentEventHttpMessageWriterTests extends AbstractDataBufferAllocating
 	}
 
 	@ParameterizedDataBufferAllocatingTest
-	void writeServerSentEvent(DataBufferFactory bufferFactory) {
+	void writeServerSentEvent(String displayName, DataBufferFactory bufferFactory) {
 		super.bufferFactory = bufferFactory;
 
 		ServerSentEvent<?> event = ServerSentEvent.builder().data("bar").id("c42").event("foo")
@@ -91,7 +91,7 @@ class ServerSentEventHttpMessageWriterTests extends AbstractDataBufferAllocating
 	}
 
 	@ParameterizedDataBufferAllocatingTest
-	void writeString(DataBufferFactory bufferFactory) {
+	void writeString(String displayName, DataBufferFactory bufferFactory) {
 		super.bufferFactory = bufferFactory;
 
 		MockServerHttpResponse outputMessage = new MockServerHttpResponse(super.bufferFactory);
@@ -106,7 +106,7 @@ class ServerSentEventHttpMessageWriterTests extends AbstractDataBufferAllocating
 	}
 
 	@ParameterizedDataBufferAllocatingTest
-	void writeMultiLineString(DataBufferFactory bufferFactory) {
+	void writeMultiLineString(String displayName, DataBufferFactory bufferFactory) {
 		super.bufferFactory = bufferFactory;
 
 		MockServerHttpResponse outputMessage = new MockServerHttpResponse(super.bufferFactory);
@@ -121,7 +121,7 @@ class ServerSentEventHttpMessageWriterTests extends AbstractDataBufferAllocating
 	}
 
 	@ParameterizedDataBufferAllocatingTest // SPR-16516
-	void writeStringWithCustomCharset(DataBufferFactory bufferFactory) {
+	void writeStringWithCustomCharset(String displayName, DataBufferFactory bufferFactory) {
 		super.bufferFactory = bufferFactory;
 
 		MockServerHttpResponse outputMessage = new MockServerHttpResponse(super.bufferFactory);
@@ -142,7 +142,7 @@ class ServerSentEventHttpMessageWriterTests extends AbstractDataBufferAllocating
 	}
 
 	@ParameterizedDataBufferAllocatingTest
-	void writePojo(DataBufferFactory bufferFactory) {
+	void writePojo(String displayName, DataBufferFactory bufferFactory) {
 		super.bufferFactory = bufferFactory;
 
 		MockServerHttpResponse outputMessage = new MockServerHttpResponse(super.bufferFactory);
@@ -151,21 +151,21 @@ class ServerSentEventHttpMessageWriterTests extends AbstractDataBufferAllocating
 
 		StepVerifier.create(outputMessage.getBody())
 				.consumeNextWith(stringConsumer("data:"))
-				.consumeNextWith(stringConsumer("{\"bar\":\"barbar\",\"foo\":\"foofoo\"}"))
+				.consumeNextWith(stringConsumer("{\"foo\":\"foofoo\",\"bar\":\"barbar\"}"))
 				.consumeNextWith(stringConsumer("\n\n"))
 				.consumeNextWith(stringConsumer("data:"))
-				.consumeNextWith(stringConsumer("{\"bar\":\"barbarbar\",\"foo\":\"foofoofoo\"}"))
+				.consumeNextWith(stringConsumer("{\"foo\":\"foofoofoo\",\"bar\":\"barbarbar\"}"))
 				.consumeNextWith(stringConsumer("\n\n"))
 				.expectComplete()
 				.verify();
 	}
 
 	@ParameterizedDataBufferAllocatingTest  // SPR-14899
-	void writePojoWithPrettyPrint(DataBufferFactory bufferFactory) {
+	void writePojoWithPrettyPrint(String displayName, DataBufferFactory bufferFactory) {
 		super.bufferFactory = bufferFactory;
 
-		JsonMapper mapper = JsonMapper.builder().enable(SerializationFeature.INDENT_OUTPUT).build();
-		this.messageWriter = new ServerSentEventHttpMessageWriter(new JacksonJsonEncoder(mapper));
+		ObjectMapper mapper = Jackson2ObjectMapperBuilder.json().indentOutput(true).build();
+		this.messageWriter = new ServerSentEventHttpMessageWriter(new Jackson2JsonEncoder(mapper));
 
 		MockServerHttpResponse outputMessage = new MockServerHttpResponse(super.bufferFactory);
 		Flux<Pojo> source = Flux.just(new Pojo("foofoo", "barbar"), new Pojo("foofoofoo", "barbarbar"));
@@ -173,25 +173,21 @@ class ServerSentEventHttpMessageWriterTests extends AbstractDataBufferAllocating
 
 		StepVerifier.create(outputMessage.getBody())
 				.consumeNextWith(stringConsumer("data:"))
-				.consumeNextWith(stringConsumer("""
-						{
-						data:  "bar" : "barbar",
-						data:  "foo" : "foofoo"
-						data:}"""))
+				.consumeNextWith(stringConsumer("{\n" +
+						"data:  \"foo\" : \"foofoo\",\n" +
+						"data:  \"bar\" : \"barbar\"\n" + "data:}"))
 				.consumeNextWith(stringConsumer("\n\n"))
 				.consumeNextWith(stringConsumer("data:"))
-				.consumeNextWith(stringConsumer("""
-						{
-						data:  "bar" : "barbarbar",
-						data:  "foo" : "foofoofoo"
-						data:}"""))
+				.consumeNextWith(stringConsumer("{\n" +
+						"data:  \"foo\" : \"foofoofoo\",\n" +
+						"data:  \"bar\" : \"barbarbar\"\n" + "data:}"))
 				.consumeNextWith(stringConsumer("\n\n"))
 				.expectComplete()
 				.verify();
 	}
 
 	@ParameterizedDataBufferAllocatingTest // SPR-16516, SPR-16539
-	void writePojoWithCustomEncoding(DataBufferFactory bufferFactory) {
+	void writePojoWithCustomEncoding(String displayName, DataBufferFactory bufferFactory) {
 		super.bufferFactory = bufferFactory;
 
 		MockServerHttpResponse outputMessage = new MockServerHttpResponse(super.bufferFactory);
@@ -203,7 +199,7 @@ class ServerSentEventHttpMessageWriterTests extends AbstractDataBufferAllocating
 		assertThat(outputMessage.getHeaders().getContentType()).isEqualTo(mediaType);
 		StepVerifier.create(outputMessage.getBody())
 				.consumeNextWith(stringConsumer("data:", charset))
-				.consumeNextWith(stringConsumer("{\"bar\":\"bar\uD834\uDD1E\",\"foo\":\"foo\uD834\uDD1E\"}", charset))
+				.consumeNextWith(stringConsumer("{\"foo\":\"foo\uD834\uDD1E\",\"bar\":\"bar\uD834\uDD1E\"}", charset))
 				.consumeNextWith(stringConsumer("\n\n", charset))
 				.expectComplete()
 				.verify();

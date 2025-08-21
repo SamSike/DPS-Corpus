@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Rossen Stoyanchev
  */
-class UriComponentsBuilderMethodArgumentResolverTests {
+public class UriComponentsBuilderMethodArgumentResolverTests {
 
 	private UriComponentsBuilderMethodArgumentResolver resolver;
 
@@ -49,12 +49,12 @@ class UriComponentsBuilderMethodArgumentResolverTests {
 
 
 	@BeforeEach
-	void setup() throws Exception {
+	public void setup() throws Exception {
 		this.resolver = new UriComponentsBuilderMethodArgumentResolver();
 		this.servletRequest = new MockHttpServletRequest();
 		this.webRequest = new ServletWebRequest(this.servletRequest);
 
-		Method method = getClass().getDeclaredMethod(
+		Method method = this.getClass().getDeclaredMethod(
 				"handle", UriComponentsBuilder.class, ServletUriComponentsBuilder.class, int.class);
 		this.builderParam = new MethodParameter(method, 0);
 		this.servletBuilderParam = new MethodParameter(method, 1);
@@ -63,14 +63,14 @@ class UriComponentsBuilderMethodArgumentResolverTests {
 
 
 	@Test
-	void supportsParameter() throws Exception {
+	public void supportsParameter() throws Exception {
 		assertThat(this.resolver.supportsParameter(this.builderParam)).isTrue();
 		assertThat(this.resolver.supportsParameter(this.servletBuilderParam)).isTrue();
 		assertThat(this.resolver.supportsParameter(this.intParam)).isFalse();
 	}
 
 	@Test
-	void resolveArgument() throws Exception {
+	public void resolveArgument() throws Exception {
 		this.servletRequest.setContextPath("/myapp");
 		this.servletRequest.setServletPath("/main");
 		this.servletRequest.setPathInfo("/accounts");

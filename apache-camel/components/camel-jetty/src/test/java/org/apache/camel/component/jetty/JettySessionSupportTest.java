@@ -17,42 +17,41 @@
 package org.apache.camel.component.jetty;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
-class JettySessionSupportTest extends BaseJettyTest {
+public class JettySessionSupportTest extends BaseJettyTest {
 
-    @BeforeEach
-    void setup() {
-        testConfigurationBuilder.withUseRouteBuilder(false);
+    @Override
+    public boolean isUseRouteBuilder() {
+        return false;
     }
 
     @Test
-    void testJettySessionSupportInvalid() {
-        RouteBuilder routeBuilder = new RouteBuilder() {
+    public void testJettySessionSupportInvalid() throws Exception {
+        context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
                 from("jetty:http://localhost:{{port}}/hello").to("mock:foo");
 
                 from("jetty:http://localhost:{{port}}/bye?sessionSupport=true").to("mock:bar");
             }
-        };
-
-        assertThrows(
-                IllegalStateException.class,
-                () -> context.addRoutes(routeBuilder),
-                "Server has already been started. Cannot enabled sessionSupport on http:localhost:%d".formatted(getPort()));
-
-        if (context.isStarted()) {
+        });
+        try {
+            context.start();
+            fail("Should have thrown an exception");
+        } catch (IllegalStateException e) {
+            assertEquals("Server has already been started. Cannot enabled sessionSupport on http:localhost:" + getPort(),
+                    e.getMessage());
+        } finally {
             context.stop();
         }
     }
 
     @Test
-    void testJettySessionSupportOk() throws Exception {
+    public void testJettySessionSupportOk() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {

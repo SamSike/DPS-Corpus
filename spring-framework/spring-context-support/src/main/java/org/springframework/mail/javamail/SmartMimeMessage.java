@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,8 @@ package org.springframework.mail.javamail;
 import jakarta.activation.FileTypeMap;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Special subclass of the standard JavaMail {@link MimeMessage}, carrying a
@@ -38,9 +39,11 @@ import org.jspecify.annotations.Nullable;
  */
 class SmartMimeMessage extends MimeMessage {
 
-	private final @Nullable String defaultEncoding;
+	@Nullable
+	private final String defaultEncoding;
 
-	private final @Nullable FileTypeMap defaultFileTypeMap;
+	@Nullable
+	private final FileTypeMap defaultFileTypeMap;
 
 
 	/**
@@ -61,14 +64,16 @@ class SmartMimeMessage extends MimeMessage {
 	/**
 	 * Return the default encoding of this message, or {@code null} if none.
 	 */
-	public final @Nullable String getDefaultEncoding() {
+	@Nullable
+	public final String getDefaultEncoding() {
 		return this.defaultEncoding;
 	}
 
 	/**
 	 * Return the default FileTypeMap of this message, or {@code null} if none.
 	 */
-	public final @Nullable FileTypeMap getDefaultFileTypeMap() {
+	@Nullable
+	public final FileTypeMap getDefaultFileTypeMap() {
 		return this.defaultFileTypeMap;
 	}
 

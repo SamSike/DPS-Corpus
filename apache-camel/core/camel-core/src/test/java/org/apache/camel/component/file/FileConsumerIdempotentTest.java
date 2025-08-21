@@ -17,14 +17,12 @@
 package org.apache.camel.component.file;
 
 import java.nio.file.Files;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.support.processor.idempotent.MemoryIdempotentRepository;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,9 +34,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class FileConsumerIdempotentTest extends ContextTestSupport {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?idempotent=true&move=done/${file:name}&initialDelay=0&delay=10"))
                         .convertBodyTo(String.class).to("mock:result");
             }
@@ -66,7 +64,8 @@ public class FileConsumerIdempotentTest extends ContextTestSupport {
 
         // should NOT consume the file again, let a bit time pass to let the
         // consumer try to consume it but it should not
-        Awaitility.await().pollDelay(100, TimeUnit.MILLISECONDS).untilAsserted(() -> assertMockEndpointsSatisfied());
+        Thread.sleep(100);
+        assertMockEndpointsSatisfied();
 
         FileEndpoint fe = context.getEndpoint(fileUri(), FileEndpoint.class);
         assertNotNull(fe);

@@ -22,7 +22,7 @@ public enum EvictionType {
     SIZE_BASED("size_based"),
     TIME_BASED("time_based");
 
-    private static final EvictionType[] VALUES = values();
+    private static EvictionType[] values = values();
     private final String type;
 
     EvictionType(String type) {
@@ -33,7 +33,7 @@ public enum EvictionType {
         if (name == null) {
             return null;
         }
-        for (EvictionType evictionType : VALUES) {
+        for (EvictionType evictionType : values) {
             if (evictionType.toString().equalsIgnoreCase(name) || evictionType.name().equalsIgnoreCase(name)) {
                 return evictionType;
             }

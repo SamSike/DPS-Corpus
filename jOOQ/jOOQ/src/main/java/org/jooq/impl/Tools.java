@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -45,23 +45,16 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.nCopies;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
-import static org.jooq.ContextConverter.scoped;
 // ...
 // ...
-// ...
-// ...
-// ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 // ...
 // ...
 // ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
-// ...
 // ...
 import static org.jooq.SQLDialect.HSQLDB;
 // ...
@@ -69,14 +62,10 @@ import static org.jooq.SQLDialect.HSQLDB;
 // ...
 import static org.jooq.SQLDialect.MARIADB;
 // ...
-// ...
 import static org.jooq.SQLDialect.MYSQL;
 // ...
 // ...
-// ...
-// ...
 import static org.jooq.SQLDialect.POSTGRES;
-// ...
 // ...
 // ...
 // ...
@@ -85,7 +74,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.conf.BackslashEscaping.DEFAULT;
 import static org.jooq.conf.BackslashEscaping.ON;
@@ -98,9 +86,6 @@ import static org.jooq.conf.SettingsTools.getBackslashEscaping;
 import static org.jooq.conf.SettingsTools.updatablePrimaryKeys;
 import static org.jooq.conf.ThrowExceptions.THROW_FIRST;
 import static org.jooq.conf.ThrowExceptions.THROW_NONE;
-import static org.jooq.exception.DataAccessException.sqlStateClass;
-import static org.jooq.impl.AbstractDataType.convert0;
-import static org.jooq.impl.BlockImpl.semicolonAfterStatement;
 import static org.jooq.impl.CacheType.REFLECTION_CACHE_GET_ANNOTATED_GETTER;
 import static org.jooq.impl.CacheType.REFLECTION_CACHE_GET_ANNOTATED_MEMBERS;
 import static org.jooq.impl.CacheType.REFLECTION_CACHE_GET_ANNOTATED_SETTERS;
@@ -108,7 +93,6 @@ import static org.jooq.impl.CacheType.REFLECTION_CACHE_GET_MATCHING_GETTER;
 import static org.jooq.impl.CacheType.REFLECTION_CACHE_GET_MATCHING_MEMBERS;
 import static org.jooq.impl.CacheType.REFLECTION_CACHE_GET_MATCHING_SETTERS;
 import static org.jooq.impl.CacheType.REFLECTION_CACHE_HAS_COLUMN_ANNOTATIONS;
-import static org.jooq.impl.Convert.convert;
 import static org.jooq.impl.DDLStatementType.ALTER_SCHEMA;
 import static org.jooq.impl.DDLStatementType.ALTER_TABLE;
 import static org.jooq.impl.DDLStatementType.ALTER_VIEW;
@@ -122,12 +106,10 @@ import static org.jooq.impl.DDLStatementType.CREATE_VIEW;
 import static org.jooq.impl.DDLStatementType.DROP_INDEX;
 import static org.jooq.impl.DDLStatementType.DROP_SCHEMA;
 import static org.jooq.impl.DDLStatementType.DROP_SEQUENCE;
-import static org.jooq.impl.DDLStatementType.DROP_SYNONYM;
 import static org.jooq.impl.DDLStatementType.DROP_TABLE;
 import static org.jooq.impl.DDLStatementType.DROP_VIEW;
-import static org.jooq.impl.DSL.all;
-import static org.jooq.impl.DSL.any;
 import static org.jooq.impl.DSL.asterisk;
+import static org.jooq.impl.DSL.concat;
 import static org.jooq.impl.DSL.escape;
 import static org.jooq.impl.DSL.getDataType;
 import static org.jooq.impl.DSL.keyword;
@@ -137,18 +119,12 @@ import static org.jooq.impl.DSL.row;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.unquotedName;
 import static org.jooq.impl.DSL.val;
-import static org.jooq.impl.DSL.when;
-import static org.jooq.impl.DefaultDataType.unsupportedDatetimePrecision;
 import static org.jooq.impl.DefaultExecuteContext.localConnection;
 import static org.jooq.impl.DefaultParseContext.SUPPORTS_HASH_COMMENT_SYNTAX;
-import static org.jooq.impl.DerivedTable.NO_SUPPORT_CORRELATED_DERIVED_TABLE;
 import static org.jooq.impl.Identifiers.QUOTES;
 import static org.jooq.impl.Identifiers.QUOTE_END_DELIMITER;
 import static org.jooq.impl.Identifiers.QUOTE_END_DELIMITER_ESCAPED;
 import static org.jooq.impl.Identifiers.QUOTE_START_DELIMITER;
-import static org.jooq.impl.Internal.getInstanceMembers;
-import static org.jooq.impl.Internal.getInstanceMethods;
-import static org.jooq.impl.Keywords.K_ALIAS;
 import static org.jooq.impl.Keywords.K_ALWAYS;
 import static org.jooq.impl.Keywords.K_AS;
 import static org.jooq.impl.Keywords.K_ATOMIC;
@@ -177,16 +153,11 @@ import static org.jooq.impl.Keywords.K_EXECUTE_BLOCK;
 import static org.jooq.impl.Keywords.K_EXECUTE_IMMEDIATE;
 import static org.jooq.impl.Keywords.K_EXECUTE_STATEMENT;
 import static org.jooq.impl.Keywords.K_GENERATED;
-import static org.jooq.impl.Keywords.K_HIDDEN;
 import static org.jooq.impl.Keywords.K_IDENTITY;
 import static org.jooq.impl.Keywords.K_IF;
-import static org.jooq.impl.Keywords.K_IMPLICITLY;
 import static org.jooq.impl.Keywords.K_INT;
-import static org.jooq.impl.Keywords.K_INVISIBLE;
 import static org.jooq.impl.Keywords.K_LIKE;
-import static org.jooq.impl.Keywords.K_MATERIALIZED;
 import static org.jooq.impl.Keywords.K_NOT;
-import static org.jooq.impl.Keywords.K_NOT_IN;
 import static org.jooq.impl.Keywords.K_NOT_NULL;
 import static org.jooq.impl.Keywords.K_NULL;
 import static org.jooq.impl.Keywords.K_NVARCHAR;
@@ -203,14 +174,11 @@ import static org.jooq.impl.Keywords.K_STORED;
 import static org.jooq.impl.Keywords.K_THEN;
 import static org.jooq.impl.Keywords.K_THROW;
 import static org.jooq.impl.Keywords.K_VIRTUAL;
-import static org.jooq.impl.Keywords.K_VISIBLE;
 import static org.jooq.impl.Keywords.K_WHEN;
 import static org.jooq.impl.QOM.GenerationOption.STORED;
 import static org.jooq.impl.QOM.GenerationOption.VIRTUAL;
 import static org.jooq.impl.SQLDataType.BLOB;
 import static org.jooq.impl.SQLDataType.CLOB;
-import static org.jooq.impl.SQLDataType.DECIMAL;
-import static org.jooq.impl.SQLDataType.DOUBLE;
 import static org.jooq.impl.SQLDataType.INTEGER;
 import static org.jooq.impl.SQLDataType.JSON;
 import static org.jooq.impl.SQLDataType.JSONB;
@@ -218,17 +186,15 @@ import static org.jooq.impl.SQLDataType.OTHER;
 import static org.jooq.impl.SQLDataType.SMALLINT;
 import static org.jooq.impl.SQLDataType.VARCHAR;
 import static org.jooq.impl.SQLDataType.XML;
-import static org.jooq.impl.ScalarSubquery.NO_SUPPORT_CORRELATED_SUBQUERY;
-import static org.jooq.impl.SubqueryCharacteristics.DERIVED_TABLE;
-import static org.jooq.impl.SubqueryCharacteristics.PREDICAND;
-import static org.jooq.impl.SubqueryCharacteristics.SET_OPERATION;
-import static org.jooq.impl.Tools.ExtendedDataKey.DATA_OMIT_DATETIME_LITERAL_PREFIX;
+import static org.jooq.impl.Tools.anyMatch;
 import static org.jooq.impl.Tools.SimpleDataKey.DATA_BLOCK_NESTING;
 import static org.jooq.tools.StringUtils.defaultIfNull;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Connection;
@@ -251,6 +217,7 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -268,7 +235,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ManagedBlocker;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -283,7 +249,6 @@ import java.util.stream.Stream;
 
 // ...
 // ...
-// ...
 import org.jooq.Asterisk;
 import org.jooq.Attachable;
 import org.jooq.BindContext;
@@ -294,9 +259,7 @@ import org.jooq.CommonTableExpression;
 import org.jooq.Condition;
 import org.jooq.Configuration;
 import org.jooq.Context;
-import org.jooq.ContextConverter;
 import org.jooq.Converter;
-import org.jooq.ConverterContext;
 import org.jooq.ConverterProvider;
 import org.jooq.Converters;
 import org.jooq.Cursor;
@@ -311,9 +274,6 @@ import org.jooq.FieldOrRow;
 import org.jooq.FieldOrRowOrSelect;
 import org.jooq.Fields;
 import org.jooq.ForeignKey;
-import org.jooq.Function1;
-import org.jooq.Function2;
-import org.jooq.Function3;
 import org.jooq.Generator;
 import org.jooq.JSON;
 import org.jooq.JSONB;
@@ -323,10 +283,8 @@ import org.jooq.Name;
 import org.jooq.OrderField;
 import org.jooq.Param;
 // ...
-// ...
 import org.jooq.QualifiedAsterisk;
 import org.jooq.QualifiedRecord;
-import org.jooq.QuantifiedSelect;
 import org.jooq.Query;
 import org.jooq.QueryPart;
 import org.jooq.Record;
@@ -334,6 +292,7 @@ import org.jooq.Record1;
 import org.jooq.RecordQualifier;
 import org.jooq.RenderContext;
 import org.jooq.RenderContext.CastMode;
+// ...
 import org.jooq.Result;
 import org.jooq.ResultOrRows;
 import org.jooq.ResultQuery;
@@ -341,27 +300,23 @@ import org.jooq.Results;
 import org.jooq.Row;
 import org.jooq.SQLDialect;
 import org.jooq.Schema;
+import org.jooq.SchemaMapping;
 import org.jooq.Scope;
 import org.jooq.Select;
 import org.jooq.SelectFieldOrAsterisk;
-import org.jooq.Sequence;
 import org.jooq.SortField;
 import org.jooq.Source;
 import org.jooq.Table;
-import org.jooq.TableElement;
 import org.jooq.TableField;
 import org.jooq.TableRecord;
-import org.jooq.TransactionProperty;
+// ...
 import org.jooq.UDT;
-import org.jooq.UDTRecord;
 import org.jooq.UpdatableRecord;
 import org.jooq.WindowSpecification;
 import org.jooq.XML;
 import org.jooq.conf.BackslashEscaping;
 import org.jooq.conf.NestedCollectionEmulation;
-import org.jooq.conf.ParamType;
 import org.jooq.conf.ParseNameCase;
-import org.jooq.conf.RecordDirtyTracking;
 import org.jooq.conf.RenderDefaultNullability;
 import org.jooq.conf.RenderMapping;
 import org.jooq.conf.RenderQuotedNames;
@@ -369,17 +324,15 @@ import org.jooq.conf.Settings;
 import org.jooq.conf.SettingsTools;
 import org.jooq.conf.ThrowExceptions;
 import org.jooq.exception.DataAccessException;
-import org.jooq.exception.DataException;
 import org.jooq.exception.DataTypeException;
 import org.jooq.exception.DetachedException;
 import org.jooq.exception.ExceptionTools;
-import org.jooq.exception.IntegrityConstraintViolationException;
 import org.jooq.exception.MappingException;
 import org.jooq.exception.NoDataFoundException;
-import org.jooq.exception.SQLStateClass;
 import org.jooq.exception.TemplatingException;
 import org.jooq.exception.TooManyRowsException;
-import org.jooq.impl.QOM.Quantifier;
+import org.jooq.impl.QOM.GenerationOption;
+import org.jooq.impl.QOM.UEmpty;
 import org.jooq.impl.ResultsImpl.ResultOrRowsImpl;
 import org.jooq.tools.Ints;
 import org.jooq.tools.JooqLogger;
@@ -391,12 +344,14 @@ import org.jooq.types.UByte;
 import org.jooq.types.UInteger;
 import org.jooq.types.ULong;
 import org.jooq.types.UShort;
-import org.jooq.util.xml.jaxb.Column;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import io.r2dbc.spi.R2dbcException;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * General internal jOOQ utilities
@@ -438,16 +393,35 @@ final class Tools {
     static final TableField<?, ?>[]         EMPTY_TABLE_FIELD             = {};
     static final TableRecord<?>[]           EMPTY_TABLE_RECORD            = {};
     static final UpdatableRecord<?>[]       EMPTY_UPDATABLE_RECORD        = {};
-    static final TransactionProperty[]      EMPTY_TRANSACTION_PROPERTY    = {};
 
     // ------------------------------------------------------------------------
     // Some constants for use with Context.data()
     // ------------------------------------------------------------------------
 
+    static final class DataKeyScopeStackPart extends AbstractQueryPart implements UEmpty {
+
+        static final DataKeyScopeStackPart INSTANCE = new DataKeyScopeStackPart();
+
+        private DataKeyScopeStackPart() {}
+
+        @Override
+        public final void accept(Context<?> ctx) {}
+
+        @Override
+        public boolean equals(Object that) {
+            return this == that;
+        }
+
+        @Override
+        public int hashCode() {
+            return 0;
+        }
+    }
+
     /**
      * A common super types for {@link BooleanDataKey}, {@link SimpleDataKey} and {@link ExtendedDataKey}
      */
-    interface DataKey {
+    /* sealed */ interface DataKey {
 
         /**
          * Whether this data key resets itself to {@link #resetValue()} when
@@ -480,12 +454,6 @@ final class Tools {
         DATA_MANDATORY_WHERE_CLAUSE(true, null, 1),
 
         /**
-         * [#7539] Whether {@link Context#qualify()} should be set for the local
-         * scope.
-         */
-        DATA_UNQUALIFY_LOCAL_SCOPE(true, null, 1),
-
-        /**
          * [#1520] Count the number of bind values, and potentially enforce a
          * static statement.
          */
@@ -494,19 +462,17 @@ final class Tools {
         /**
          * [#1520] Enforce executing static statements.
          * <p>
-         * Some SQL dialects support only a limited amount of bind variables.
-         * This flag is set when static statements have too many bind variables.
-         * Known values are:
+         * Some SQL dialects support only a limited amount of bind variables. This
+         * flag is set when static statements have too many bind variables. Known
+         * values are:
          * <ul>
-         * <li>{@link org.jooq.SQLDialect#ACCESS} : 768</li>
-         * <li>{@link org.jooq.SQLDialect#ASE} : 2000</li>
-         * <li>{@link org.jooq.SQLDialect#DATABRICKS} : 256</li>
-         * <li>{@link org.jooq.SQLDialect#INGRES} : 1024</li>
-         * <li>{@link org.jooq.SQLDialect#ORACLE} : 32767</li>
-         * <li>{@link org.jooq.SQLDialect#POSTGRES} : 32767</li>
-         * <li>{@link org.jooq.SQLDialect#SQLITE} : 999</li>
-         * <li>{@link org.jooq.SQLDialect#SQLSERVER} : 2100</li>
-         * <li>{@link org.jooq.SQLDialect#TERADATA} : 2536</li>
+         * <li>{@link SQLDialect#ACCESS} : 768</li>
+         * <li>{@link SQLDialect#ASE} : 2000</li>
+         * <li>{@link SQLDialect#INGRES} : 1024</li>
+         * <li>{@link SQLDialect#ORACLE} : 32767</li>
+         * <li>{@link SQLDialect#POSTGRES} : 32767</li>
+         * <li>{@link SQLDialect#SQLITE} : 999</li>
+         * <li>{@link SQLDialect#SQLSERVER} : 2100</li>
          * </ul>
          */
         DATA_FORCE_STATIC_STATEMENT,
@@ -553,24 +519,11 @@ final class Tools {
 
 
 
-
-
-
-
-
-
-
         /**
          * [#1629] The {@link Connection#getAutoCommit()} flag value before starting
          * a new transaction.
          */
         DATA_DEFAULT_TRANSACTION_PROVIDER_AUTOCOMMIT,
-
-        /**
-         * [#4836] The {@link Connection#isReadOnly()} flag value before starting
-         * a new transaction.
-         */
-        DATA_DEFAULT_TRANSACTION_PROVIDER_READONLY,
 
         /**
          * [#2080] When emulating OFFSET pagination in certain databases, synthetic
@@ -584,7 +537,7 @@ final class Tools {
         /**
          * [#7139] No data must be selected in the <code>SELECT</code> statement.
          */
-        DATA_SELECT_NO_DATA(true, null, 1),
+        DATA_SELECT_NO_DATA,
 
         /**
          * [#3381] Omit the {@link Clause#SELECT_INTO}, as it is being emulated.
@@ -621,7 +574,7 @@ final class Tools {
         DATA_COLLECT_SEMI_ANTI_JOIN,
 
         /**
-         * [#11486] An <code>INSERT … SELECT</code> statement.
+         * [#11486] An <code>INSERT .. SELECT</code> statement.
          */
         DATA_INSERT_SELECT,
 
@@ -658,10 +611,10 @@ final class Tools {
         DATA_MULTISET_CONTENT,
 
         /**
-         * [#15991] ROW content may need to be rendered differently (e.g.
-         * nested <code>ROW</code> types).
+         * [#12072] In some cases, it's recommended to generate an explicit
+         * <code>ELSE NULL</code> clause in a <code>CASE</code> expression.
          */
-        DATA_ROW_CONTENT,
+        DATA_FORCE_CASE_ELSE_NULL,
 
         /**
          * [#12092] Whether the @@group_concat_max_len value has already been
@@ -682,29 +635,6 @@ final class Tools {
          */
         DATA_PARSE_ON_CONFLICT,
 
-        /**
-         * [#228] [#13808] We're in a store assignment context.
-         * <p>
-         * This includes e.g.
-         * <ul>
-         * <li><code>INSERT</code> columns list.</li>
-         * <li><code>UPDATE … SET</code> clause.</li>
-         * <li>The procedural assignment statement.</li>
-         * </ul>
-         */
-        DATA_STORE_ASSIGNMENT,
-
-        /**
-         * [#14985] We're in a context where implicit joins are being rendered,
-         * not the query itself.
-         */
-        DATA_RENDER_IMPLICIT_JOIN,
-
-        /**
-         * [#17088] Tell the {@link RenderContext} that we're rendering for
-         * R2DBC.
-         */
-        DATA_RENDER_FOR_R2DBC
         ;
 
         private final boolean resetInSubqueryScope;
@@ -751,8 +681,8 @@ final class Tools {
         /**
          * [#2744] Currently rendering the data change delta table syntax.
          * <p>
-         * In some dialects, a <code>FINAL TABLE (INSERT …)</code> clause exists, which
-         * corresponds to the PostgreSQL <code>INSERT … RETURNING</code> clause.
+         * In some dialects, a <code>FINAL TABLE (INSERT ...)</code> clause exists, which
+         * corresponds to the PostgreSQL <code>INSERT .. RETURNING</code> clause.
          */
         DATA_RENDERING_DATA_CHANGE_DELTA_TABLE,
 
@@ -776,12 +706,6 @@ final class Tools {
          * the transaction.
          */
         DATA_DEFAULT_TRANSACTION_PROVIDER_CONNECTION,
-
-        /**
-         * [#4836] The {@link Connection#getTransactionIsolation()} flag value
-         * before starting a new transaction.
-         */
-        DATA_DEFAULT_TRANSACTION_PROVIDER_ISOLATION,
 
         /**
          * [#2080] When emulating OFFSET pagination in certain databases, synthetic
@@ -808,7 +732,7 @@ final class Tools {
          * This needs to be done e.g. to emulate inline table valued parameters
          * in SQL Server:
          * <p>
-         * <pre><code>
+         * <code><pre>
          * -- With TVP bind variable:
          * SELECT * FROM func (?)
          *
@@ -816,7 +740,7 @@ final class Tools {
          * DECLARE @t TABLE_TYPE;
          * INSERT INTO @t VALUES (?),(?),...,(?);
          * SELECT * FROM func (@t)
-         * </code></pre>
+         * </pre></code>
          */
         DATA_PREPEND_SQL,
 
@@ -828,12 +752,12 @@ final class Tools {
          * MySQL @@group_concat_max_len setting is set to an appropriate value,
          * and reset to the previous value again.
          * <p>
-         * <pre><code>
+         * <code><pre>
          * SET @t = @@group_concat_max_len;
          * SET @@group_concat_max_len = 4294967295;
          * SELECT group_concat(...);
          * SET @@group_concat_max_len = @t;
-         * </code></pre>
+         * </pre></code>
          */
         DATA_APPEND_SQL,
 
@@ -868,11 +792,6 @@ final class Tools {
          * [#6583] The target table on which a DML operation operates on.
          */
         DATA_DML_TARGET_TABLE,
-
-        /**
-         * [#6583] [#14742] The target table on which a DML operation operates on.
-         */
-        DATA_DML_USING_TABLES,
 
         /**
          * [#8479] There is a WHERE clause to be emulated for ON DUPLICATE KEY
@@ -929,18 +848,6 @@ final class Tools {
      * more optimal memory layout.
      */
     enum ExtendedDataKey implements DataKey {
-
-        /**
-         * [#4498] [#7552] The original INSERT ON DUPLICATE KEY UPDATE query
-         * that produced a MERGE statement for its emulation.
-         */
-        DATA_INSERT_ON_DUPLICATE_KEY_UPDATE,
-
-
-
-
-
-
 
 
 
@@ -1015,26 +922,6 @@ final class Tools {
          */
         DATA_WINDOW_FUNCTION,
 
-        /**
-         * [#8893] Whether {@link TableField} should be qualified with their
-         * tables when rendering in the current scope.
-         */
-        DATA_RENDER_TABLE(true, null, 0),
-
-        /**
-         * [#15982] The base type of an empty array in the current scope.
-         */
-        DATA_EMPTY_ARRAY_BASE_TYPE,
-
-        /**
-         * [#16498] In some cases, the datetime literal prefix needs to be
-         * omitted.
-         * <p>
-         * E.g. instead of <code>DATE '2000-01-01'</code>, only
-         * <code>'2001-01-01'</code> should be rendered.
-         */
-        DATA_OMIT_DATETIME_LITERAL_PREFIX,
-
         ;
 
         private final boolean resetInSubqueryScope;
@@ -1083,15 +970,21 @@ final class Tools {
     // ------------------------------------------------------------------------
 
     /**
-     * The default escape character for <code>[a] LIKE [b] ESCAPE […]</code>
+     * The default escape character for <code>[a] LIKE [b] ESCAPE [...]</code>
      * clauses.
      */
-    static final char                    ESCAPE                                     = '!';
+    static final char                    ESCAPE                             = '!';
 
     /**
      * A lock for the initialisation of other static members
      */
-    private static final Object          initLock                                   = new Object();
+    private static final Object          initLock                           = new Object();
+
+    /**
+     * Indicating whether JPA (<code>jakarta.persistence</code>) is on the
+     * classpath.
+     */
+    private static volatile JPANamespace jpaNamespace;
 
     /**
      * Indicating whether Kotlin (<code>kotlin.*</code>) is on the classpath.
@@ -1107,23 +1000,23 @@ final class Tools {
      * {@link #consumeExceptions(Configuration, PreparedStatement, SQLException)}
      * helps prevent infinite loops and {@link OutOfMemoryError}.
      */
-    static int                           maxConsumedExceptions                      = 256;
-    static int                           maxConsumedResults                         = 65536;
+    static int                           maxConsumedExceptions              = 256;
+    static int                           maxConsumedResults                 = 65536;
 
     /**
      * A pattern for the dash line syntax
      */
-    private static final Pattern         DASH_PATTERN                               = Pattern.compile("(-+)");
+    private static final Pattern         DASH_PATTERN                       = Pattern.compile("(-+)");
 
     /**
      * A pattern for the pipe line syntax
      */
-    private static final Pattern         PIPE_PATTERN                               = Pattern.compile("(?<=\\|)([^|]+)(?=\\|)");
+    private static final Pattern         PIPE_PATTERN                       = Pattern.compile("(?<=\\|)([^|]+)(?=\\|)");
 
     /**
      * A pattern for the dash line syntax
      */
-    private static final Pattern         PLUS_PATTERN                               = Pattern.compile("\\+(-+)(?=\\+)");
+    private static final Pattern         PLUS_PATTERN                       = Pattern.compile("\\+(-+)(?=\\+)");
 
     /**
      * All characters that are matched by Java's interpretation of \s.
@@ -1133,25 +1026,25 @@ final class Tools {
      * processing, it is probably safe to ignore most of those alternative
      * Unicode whitespaces.
      */
-    private static final char[]          WHITESPACE_CHARACTERS                      = " \t\n\u000B\f\r".toCharArray();
+    private static final char[]          WHITESPACE_CHARACTERS              = " \t\n\u000B\f\r".toCharArray();
 
     /**
      * Acceptable prefixes for JDBC escape syntax.
      */
-    private static final char[][]        JDBC_ESCAPE_PREFIXES                       = {
+    private static final char[][]        JDBC_ESCAPE_PREFIXES                = {
         "{fn ".toCharArray(),
         "{d ".toCharArray(),
         "{t ".toCharArray(),
         "{ts ".toCharArray()
     };
 
-    private static final char[]          TOKEN_SINGLE_LINE_COMMENT                  = { '-', '-' };
-    private static final char[]          TOKEN_SINGLE_LINE_COMMENT_C                = { '/', '/' };
-    private static final char[]          TOKEN_HASH                                 = { '#' };
-    private static final char[]          TOKEN_MULTI_LINE_COMMENT_OPEN              = { '/', '*' };
-    private static final char[]          TOKEN_MULTI_LINE_COMMENT_CLOSE             = { '*', '/' };
-    private static final char[]          TOKEN_APOS                                 = { '\'' };
-    private static final char[]          TOKEN_ESCAPED_APOS                         = { '\'', '\'' };
+    private static final char[]          TOKEN_SINGLE_LINE_COMMENT          = { '-', '-' };
+    private static final char[]          TOKEN_SINGLE_LINE_COMMENT_C        = { '/', '/' };
+    private static final char[]          TOKEN_HASH                         = { '#' };
+    private static final char[]          TOKEN_MULTI_LINE_COMMENT_OPEN      = { '/', '*' };
+    private static final char[]          TOKEN_MULTI_LINE_COMMENT_CLOSE     = { '*', '/' };
+    private static final char[]          TOKEN_APOS                         = { '\'' };
+    private static final char[]          TOKEN_ESCAPED_APOS                 = { '\'', '\'' };
 
     /**
      * "Suffixes" that are placed behind a "?" character to form an operator,
@@ -1186,7 +1079,7 @@ final class Tools {
      * <li>?|</li>
      * </ul>
      */
-    private static final char[][]        NON_BIND_VARIABLE_SUFFIXES                 = {
+    private static final char[][]        NON_BIND_VARIABLE_SUFFIXES         = {
         { '?' },
         { '|' },
         { '&' },
@@ -1205,7 +1098,7 @@ final class Tools {
      * such as <code>"?&lt;&gt;"</code>, which is a non-equality operator, not
      * an operator on its own.
      */
-    private static final char[][]        BIND_VARIABLE_SUFFIXES                     = {
+    private static final char[][]        BIND_VARIABLE_SUFFIXES             = {
         { '<', '>' }
     };
 
@@ -1213,8 +1106,8 @@ final class Tools {
      * All hexadecimal digits accessible through array index, e.g.
      * <code>HEX_DIGITS[15] == 'f'</code>.
      */
-    private static final char[]          HEX_DIGITS                                 = "0123456789ABCDEF".toCharArray();
-    private static final byte[]          HEX_LOOKUP                                 = {
+    private static final char[]          HEX_DIGITS                         = "0123456789ABCDEF".toCharArray();
+    private static final byte[]          HEX_LOOKUP                         = {
         /* 0x00 */ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
         /* 0x10 */ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
         /* 0x20 */ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -1224,25 +1117,15 @@ final class Tools {
         /* 0x60 */ 0, 10, 11, 12, 13, 14, 15,  0,  0,  0,  0,  0,  0,  0,  0,  0,
     };
 
-    static final Set<SQLDialect>         REQUIRES_BACKSLASH_ESCAPING                = SQLDialect.supportedBy(MARIADB, MYSQL);
-    static final Set<SQLDialect>         NO_SUPPORT_NULL                            = SQLDialect.supportedBy(CLICKHOUSE, DERBY, FIREBIRD, H2, HSQLDB, TRINO);
-    static final Set<SQLDialect>         NO_SUPPORT_NOT_NULL                        = SQLDialect.supportedBy(CLICKHOUSE, TRINO);
-    static final Set<SQLDialect>         NO_SUPPORT_BINARY_TYPE_LENGTH              = SQLDialect.supportedBy(POSTGRES, TRINO, YUGABYTEDB);
-    static final Set<SQLDialect>         NO_SUPPORT_CAST_TYPE_IN_DDL                = SQLDialect.supportedBy(MARIADB, MYSQL);
-    static final Set<SQLDialect>         SUPPORT_NON_BIND_VARIABLE_SUFFIXES         = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
-    static final Set<SQLDialect>         SUPPORT_POSTGRES_LITERALS                  = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
-    static final Set<SQLDialect>         DEFAULT_BEFORE_NULL                        = SQLDialect.supportedBy(FIREBIRD, HSQLDB);
-    static final Set<SQLDialect>         NO_SUPPORT_TIMESTAMP_PRECISION             = SQLDialect.supportedBy(DERBY, FIREBIRD);
-    static final Set<SQLDialect>         NO_SUPPORT_TIME_PRECISION                  = SQLDialect.supportedBy(DERBY, FIREBIRD);
-    static final Set<SQLDialect>         DEFAULT_TIMESTAMP_NOT_NULL                 = SQLDialect.supportedBy(MARIADB);
-    static final Set<SQLDialect>         REQUIRES_PARENTHESISED_DEFAULT             = SQLDialect.supportedBy(SQLITE);
-    static final Set<SQLDialect>         REQUIRES_PARENTHESISED_DEFAULT_FOR_LOBS    = SQLDialect.supportedBy(MYSQL);
-    static final Set<SQLDialect>         NO_SUPPORT_DEFAULT_DATETIME_LITERAL_PREFIX = SQLDialect.supportedBy(MARIADB, MYSQL);
-    static final Set<SQLDialect>         NO_SUPPORT_DEFAULT_CAST                    = SQLDialect.supportedBy(FIREBIRD);
-
-
-
-
+    static final Set<SQLDialect>         REQUIRES_BACKSLASH_ESCAPING        = SQLDialect.supportedBy(MARIADB, MYSQL);
+    static final Set<SQLDialect>         NO_SUPPORT_NULL                    = SQLDialect.supportedBy(DERBY, FIREBIRD, HSQLDB);
+    static final Set<SQLDialect>         NO_SUPPORT_BINARY_TYPE_LENGTH      = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
+    static final Set<SQLDialect>         NO_SUPPORT_CAST_TYPE_IN_DDL        = SQLDialect.supportedBy(MARIADB, MYSQL);
+    static final Set<SQLDialect>         SUPPORT_NON_BIND_VARIABLE_SUFFIXES = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
+    static final Set<SQLDialect>         SUPPORT_POSTGRES_LITERALS          = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
+    static final Set<SQLDialect>         DEFAULT_BEFORE_NULL                = SQLDialect.supportedBy(FIREBIRD, HSQLDB);
+    static final Set<SQLDialect>         NO_SUPPORT_TIMESTAMP_PRECISION     = SQLDialect.supportedBy(DERBY);
+    static final Set<SQLDialect>         DEFAULT_TIMESTAMP_NOT_NULL         = SQLDialect.supportedBy(MARIADB);
 
 
 
@@ -1341,115 +1224,45 @@ final class Tools {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * Create a new record
      */
-    static final <R extends Record> RecordDelegate<R> newRecord(boolean fetched, Configuration configuration, Class<R> type) {
-        return newRecord(fetched, configuration, type, null);
+    static final <R extends Record> RecordDelegate<R> newRecord(boolean fetched, Class<R> type) {
+        return newRecord(fetched, type, null);
+    }
+
+    /**
+     * Create a new record.
+     */
+    static final <R extends Record> RecordDelegate<R> newRecord(boolean fetched, Class<R> type, AbstractRow<R> fields) {
+        return newRecord(fetched, type, fields, null);
     }
 
     /**
      * Create a new {@link Table} or {@link UDT} record.
      */
-    static final <R extends Record> RecordDelegate<R> newRecord(boolean fetched, Configuration configuration, RecordQualifier<R> type) {
-        return newRecord(
-            fetched,
-            configuration,
-            recordFactory(
-                type,
-                type.getRecordType(),
-                (AbstractRow<R>) type.fieldsRow()
-            )
-        );
+    static final <R extends Record> RecordDelegate<R> newRecord(boolean fetched, RecordQualifier<R> type) {
+        return newRecord(fetched, type, null);
+    }
+
+    /**
+     * Create a new {@link Table} or {@link UDT} record.
+     */
+    static final <R extends Record> RecordDelegate<R> newRecord(boolean fetched, RecordQualifier<R> type, Configuration configuration) {
+        return newRecord(fetched, type.getRecordType(), (AbstractRow<R>) type.fieldsRow(), configuration);
     }
 
     /**
      * Create a new record.
      */
-    static final <R extends Record> RecordDelegate<R> newRecord(boolean fetched, Configuration configuration, Class<? extends R> type, AbstractRow<? extends R> fields) {
-        return newRecord(fetched, configuration, recordFactory(null, type, fields));
+    static final <R extends Record> RecordDelegate<R> newRecord(boolean fetched, Class<? extends R> type, AbstractRow<? extends R> fields, Configuration configuration) {
+        return newRecord(fetched, recordFactory(type, fields), configuration);
     }
 
     /**
      * Create a new record.
      */
-    static final <R extends Record> RecordDelegate<R> newRecord(boolean fetched, Configuration configuration, Supplier<R> factory) {
+    static final <R extends Record> RecordDelegate<R> newRecord(boolean fetched, Supplier<R> factory, Configuration configuration) {
         return new RecordDelegate<>(configuration, factory, fetched);
     }
 
@@ -1532,11 +1345,7 @@ final class Tools {
      * Create a new record factory.
      */
     @SuppressWarnings({ "unchecked" })
-    static final <R extends Record> Supplier<R> recordFactory(
-        RecordQualifier<? extends R> qualifier,
-        Class<? extends R> type,
-        AbstractRow<? extends R> row
-    ) {
+    static final <R extends Record> Supplier<R> recordFactory(Class<? extends R> type, AbstractRow<? extends R> row) {
 
         // An ad-hoc type resulting from a JOIN or arbitrary SELECT
         if (type == AbstractRecord.class || type == Record.class || InternalRecord.class.isAssignableFrom(type)) {
@@ -1577,9 +1386,7 @@ final class Tools {
             try {
 
                 // [#919] Allow for accessing non-public constructors
-                final Constructor<? extends R> constructor = qualifier instanceof TableImpl<? extends R> t
-                    ? t.getRecordConstructor()
-                    : Reflect.accessible(type.getDeclaredConstructor());
+                final Constructor<? extends R> constructor = Reflect.accessible(type.getDeclaredConstructor());
 
                 return () -> {
                     try {
@@ -1596,40 +1403,17 @@ final class Tools {
         }
     }
 
-    private static final JooqLogger logResetTouchedOnNotNull = JooqLogger.getLogger(Tools.class, "logResetTouchedOnNotNull", 5);
-
     /**
      * [#2700] [#3582] If a POJO attribute is NULL, but the column is NOT NULL
      * then we should let the database apply DEFAULT values
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    static final void resetTouchedOnNotNull(Record record) {
+    static final void resetChangedOnNotNull(Record record) {
         int size = record.size();
-        ConverterContext c = null;
 
-        for (int i = 0; i < size; i++) {
-            Field field = record.field(i);
-
-            // [#17224] Reset the touched value only if T typed value is null, not U type!
-            // [#17272] Read only converters (such as Field.convertFrom()) can't convert back to the T type
-            try {
-                if (!field.getDataType().nullable() &&
-                    field.getConverter().toSupported() &&
-                    scoped(field.getConverter()).to(record.get(i), c == null ? c = converterContext(record) : c) == null
-                )
-                    record.touched(i, false);
-            }
-            catch (Exception e) {
-                logResetTouchedOnNotNull.warn(
-                    "Exception in Converter",
-                    """
-                    An exception when calling in {converter}.to(). If this converter doesn't support the to()
-                    method, it is recommended to override Converter.toSupported() to prevent this call.
-                    """.replace("{converter}", field.getConverter().getClass().getName()),
-                    e
-                );
-            }
-        }
+        for (int i = 0; i < size; i++)
+            if (record.get(i) == null)
+                if (!record.field(i).getDataType().nullable())
+                    record.changed(i, false);
     }
 
     /**
@@ -1648,7 +1432,7 @@ final class Tools {
      * if <code>null</code>.
      */
     static final Configuration configuration(Attachable attachable) {
-        return configuration(attachable != null ? attachable.configuration() : null);
+        return configuration(attachable.configuration());
     }
 
     /**
@@ -1671,11 +1455,11 @@ final class Tools {
      * Get a converter from a {@link ConverterProvider} or <code>null</code> if
      * no converter could be provided.
      */
-    static final <T, U> ContextConverter<T, U> converter(Configuration configuration, T instance, Class<T> tType, Class<U> uType) {
+    static final <T, U> Converter<T, U> converter(Configuration configuration, T instance, Class<T> tType, Class<U> uType) {
         Converter<T, U> result = configuration(configuration).converterProvider().provide(tType, uType);
 
         if (result == null)
-            result = CONFIG.get().converterProvider().provide(tType, uType);
+            result = CONFIG.converterProvider().provide(tType, uType);
 
         // [#11823] [#12208] The new ad-hoc conversion API tries to avoid the Class<U> literal
         //                   meaning there are perfectly reasonable API usages when using MULTISET
@@ -1684,15 +1468,15 @@ final class Tools {
         if (result == null && tType == Converters.UnknownType.class)
             result = converter(configuration, instance, (Class<T>) (instance == null ? Object.class : instance.getClass()), uType);
 
-        return result == null ? null : scoped(result);
+        return result;
     }
 
     /**
      * Get a converter from a {@link ConverterProvider} or <code>null</code> if
      * no converter could be provided.
      */
-    static final <T, U> ContextConverter<T, U> converterOrFail(Configuration configuration, T instance, Class<T> tType, Class<U> uType) {
-        ContextConverter<T, U> result = converter(configuration, instance, tType, uType);
+    static final <T, U> Converter<T, U> converterOrFail(Configuration configuration, T instance, Class<T> tType, Class<U> uType) {
+        Converter<T, U> result = converter(configuration, instance, tType, uType);
 
         if (result == null)
             throw new DataTypeException("No Converter found for types " + tType.getName() + " and " + uType.getName());
@@ -1703,7 +1487,7 @@ final class Tools {
     /**
      * Get a converter from a {@link ConverterProvider}.
      */
-    static final <T, U> ContextConverter<T, U> converterOrFail(Attachable attachable, T instance, Class<T> tType, Class<U> uType) {
+    static final <T, U> Converter<T, U> converterOrFail(Attachable attachable, T instance, Class<T> tType, Class<U> uType) {
         return converterOrFail(configuration(attachable), instance, tType, uType);
     }
 
@@ -1772,17 +1556,17 @@ final class Tools {
     }
 
     static final <T> SortField<T> sortField(OrderField<T> field) {
-        if (field instanceof SortField<T> s)
-            return s;
-        else if (field instanceof Field<T> f)
-            return f.sortDefault();
+        if (field instanceof SortField)
+            return (SortField<T>) field;
+        else if (field instanceof Field)
+            return ((Field<T>) field).sortDefault();
         else
             throw new IllegalArgumentException("Field not supported : " + field);
     }
 
     static final SortField<?>[] sortFields(OrderField<?>[] fields) {
-        if (fields instanceof SortField<?>[] s)
-            return s;
+        if (fields instanceof SortField[])
+            return (SortField<?>[]) fields;
         else
             return map(fields, o -> sortField(o), SortField[]::new);
     }
@@ -1791,7 +1575,6 @@ final class Tools {
         return Tools.map(fields, (OrderField<?> o) -> sortField(o));
     }
 
-    // TODO: Check if these field names are ever really needed, or if we can just use the C field names
     private static final String fieldNameString0(int index) {
         return "v" + index;
     }
@@ -1836,41 +1619,31 @@ final class Tools {
         return result;
     }
 
-    static final boolean reference(Field<?> field) {
-        return field instanceof TableField
-            || field instanceof SQLField && ((SQLField<?>) field).delegate.isName;
-    }
-
     static final <T> Field<T> unqualified(Field<T> field) {
-        return field instanceof TableField ? DSL.field(field.getUnqualifiedName(), field.getDataType()) : field;
+        return DSL.field(field.getUnqualifiedName(), field.getDataType());
     }
 
     static final <T> SortField<T> unqualified(SortField<T> field) {
-        return field.$field(unqualified(field.$field()));
+        SortFieldImpl<T> i = (SortFieldImpl<T>) field;
+        return i.transform(unqualified(i.getField()));
     }
 
     static final List<Field<?>> unaliasedFields(Collection<? extends Field<?>> fields) {
         return map(fields, (f, i) -> DSL.field(fieldName(i), f.getDataType()).as(f));
     }
 
-    static final <R extends Record, O extends Record> ReferenceImpl<R, O> aliasedKey(
-        ForeignKey<R, O> key,
-        Table<R> child,
-        Table<O> parent
-    ) {
+    static final <R extends Record, O extends Record> ReferenceImpl<R, O> aliasedKey(ForeignKey<R, O> key, Table<R> child, Table<O> parent) {
 
         // [#10603] [#5050] TODO: Solve aliasing constraints more generically
         // [#8762] We can't dereference child.fields() or parent.fields() here yet, because this method is being called by
         //         the TableImpl constructor, meaning the fields are not initialised yet.
-        return new ReferenceImpl<R, O>(
+        return new ReferenceImpl<>(
             child,
             key.getQualifiedName(),
             Tools.fieldsByName(child, key.getFieldsArray()),
             key.getKey(),
             Tools.fieldsByName(parent, key.getKeyFieldsArray()),
-            key.enforced(),
-            key.getDeleteRule(),
-            key.getUpdateRule()
+            key.enforced()
         );
     }
 
@@ -1878,7 +1651,7 @@ final class Tools {
         return map(fields, (f, i) -> f.as(fieldName(i)));
     }
 
-    static final List<Field<?>> fieldsByName(String[] fieldNames) {
+    static final Field<?>[] fieldsByName(String[] fieldNames) {
         return fieldsByName(null, fieldNames);
     }
 
@@ -1903,22 +1676,22 @@ final class Tools {
             return map(fieldNames, n -> (TableField<R, ?>) DSL.field(tableName.getQualifiedName().append(n.getUnqualifiedName()), n.getDataType()), TableField[]::new);
     }
 
-    static final List<Field<?>> fieldsByName(Name tableName, Name[] fieldNames) {
+    static final Field<?>[] fieldsByName(Name tableName, Name[] fieldNames) {
         if (tableName == null)
-            return map(fieldNames, n -> DSL.field(n));
+            return map(fieldNames, n -> DSL.field(n), Field[]::new);
         else
-            return map(fieldNames, n -> DSL.field(name(tableName, n)));
+            return map(fieldNames, n -> DSL.field(name(tableName, n)), Field[]::new);
     }
 
-    static final List<Field<?>> fieldsByName(String tableName, String[] fieldNames) {
+    static final Field<?>[] fieldsByName(String tableName, String[] fieldNames) {
         if (StringUtils.isEmpty(tableName))
-            return map(fieldNames, n -> DSL.field(name(n)));
+            return map(fieldNames, n -> DSL.field(name(n)), Field[]::new);
         else
-            return map(fieldNames, n -> DSL.field(name(tableName, n)));
+            return map(fieldNames, n -> DSL.field(name(tableName, n)), Field[]::new);
     }
 
-    static final List<Field<?>> fieldsByName(Name[] names) {
-        return map(names, n -> DSL.field(n));
+    static final Field<?>[] fieldsByName(Name[] names) {
+        return map(names, n -> DSL.field(n), Field[]::new);
     }
 
     static final Name[] names(String[] names) {
@@ -1926,7 +1699,7 @@ final class Tools {
     }
 
     static final List<Name> names(Collection<?> names) {
-        return map(names, n -> n instanceof Name name ? name : DSL.name(String.valueOf(n)));
+        return map(names, n -> n instanceof Name ? (Name) n : DSL.name(String.valueOf(n)));
     }
 
     static final String sanitiseName(Configuration configuration, String name) {
@@ -1943,7 +1716,7 @@ final class Tools {
     }
 
     static final List<JSONEntry<?>> jsonEntries(Field<?>[] entries) {
-        return Tools.map(entries, (Field<?> f) -> DSL.jsonEntry(f));
+        return Tools.map(entries, f -> DSL.jsonEntry(f));
     }
 
     private static final IllegalArgumentException fieldExpected(Object value) {
@@ -1981,7 +1754,7 @@ final class Tools {
      */
     @SuppressWarnings("unchecked")
     static final <T> Field<T> castIfNeeded(Field<?> field, Class<T> type) {
-        if (field.getDataType().getFromType().equals(type))
+        if (field.getType().equals(type))
             return (Field<T>) field;
         else
             return field.cast(type);
@@ -2161,34 +1934,10 @@ final class Tools {
     }
 
     @SuppressWarnings("unchecked")
-    private static final <T> Field<T> field0(
-        Object value,
-        boolean defaultInferred,
-        BiFunction<? super Object, ? super Val<?>, ? extends Param<T>> defaultValue
-    ) {
-
-        // [#14694] Inferred data types may have to be refined lazily, here.
-        //          For example, when wrapping row(1, 2), then the integers may
-        //          still require a converter to be applied to them, when the
-        //          row is passed to the INSERT's valuesOfRows() method.
-        if (value instanceof Val<?> p1) {
-            if (p1.inferredDataType && !defaultInferred) {
-                Val<T> p2 = (Val<T>) defaultValue.apply(p1.getValue(), p1);
-
-                // [#17802] But only if the refinement is for a specific data type
-                if (p1.getDataType().isOther()
-                        || !p2.getDataType().isOther()
-                        || p2.getDataType() instanceof ConvertedDataType) {
-                    p2.setInline0(p1.isInline());
-                    return p2;
-                }
-            }
-
-            return (Field<T>) p1;
-        }
+    private static final <T> Field<T> field(Object value, Supplier<Field<T>> defaultValue) {
 
         // Fields can be mixed with constant values
-        else if (value instanceof Field<?>)
+        if (value instanceof Field<?>)
             return (Field<T>) value;
 
         // [#6362] [#8220] Single-column selects can be considered fields, too
@@ -2196,39 +1945,31 @@ final class Tools {
             return DSL.field((Select<Record1<T>>) value);
 
         // [#13251] Rows can be mixed with values in ROW constructors
-        else if (value instanceof AbstractRow<?> r)
-            return (Field<T>) r.rf();
-
-        // [#15008] Tables can be mixed with values in ROW constructors
-        else if (value instanceof AbstractTable<?> t)
-            return (Field<T>) t.tf();
+        else if (value instanceof AbstractRow)
+            return (Field<T>) ((AbstractRow<?>) value).rf();
 
         // [#4771] Any other QueryPart type is not supported here
         else if (value instanceof QueryPart)
             throw fieldExpected(value);
 
         else
-            return defaultValue.apply(value, null);
+            return defaultValue.get();
     }
 
-    @SuppressWarnings("unchecked")
     static final <T> Field<T> field(T value) {
-        return field0(value, true, (v, val) -> DSL.val0((T) v, true));
+        return field(value, () -> val(value));
     }
 
-    @SuppressWarnings("unchecked")
     static final <T> Field<T> field(Object value, Field<T> field) {
-        return field0(value, false, (v, val) -> DSL.val0((T) v, nullSafeDataType(field), false, val != null ? val.index : 0, val != null ? val.getParamName() : null));
+        return field(value, () -> val(value, field));
     }
 
-    @SuppressWarnings("unchecked")
     static final <T> Field<T> field(Object value, Class<T> type) {
-        return field0(value, false, (v, val) -> DSL.val0((T) v, DSL.getDataType0(type), true, val != null ? val.index : 0, val != null ? val.getParamName() : null));
+        return field(value, () -> val(value, type));
     }
 
-    @SuppressWarnings("unchecked")
     static final <T> Field<T> field(Object value, DataType<T> type) {
-        return field0(value, false, (v, val) -> DSL.val0((T) v, type, false, val != null ? val.index : 0, val != null ? val.getParamName() : null));
+        return field(value, () -> val(value, type));
     }
 
     static final <T> List<Field<T>> fields(T[] values) {
@@ -2277,26 +2018,7 @@ final class Tools {
     }
 
     static final IllegalArgumentException indexFail(Fields row, Field<?> field) {
-        if (lookupNested(row, field))
-            return new IllegalArgumentException("Field " + field + " is not contained at the top level of row type containing nested row types. Unnest the nested row type first and access the field from there: " + row);
-        else
-            return new IllegalArgumentException("Field " + field + " is not contained in row type " + row);
-    }
-
-    private static final boolean lookupNested(Fields row, Field<?> field) {
-
-        // [#15085] [#16721] Help users spot the problem if they accidentally nest row types
-        if (row.field(field) != null)
-            return true;
-
-        for (Field<?> f : row.fields()) {
-            if (f instanceof AbstractRowAsField<?> rf) {
-                if (lookupNested(rf.fields0(), field))
-                    return true;
-            }
-        }
-
-        return false;
+        return new IllegalArgumentException("Field (" + field + ") is not contained in Row " + row);
     }
 
     static final int indexOrFail(Fields row, Field<?> field) {
@@ -2309,7 +2031,7 @@ final class Tools {
     }
 
     static final IllegalArgumentException indexFail(Fields row, String fieldName) {
-        return indexFail(row, DSL.name(fieldName));
+        throw new IllegalArgumentException("Field (" + fieldName + ") is not contained in Row " + row);
     }
 
     static final int indexOrFail(Fields row, String fieldName) {
@@ -2322,7 +2044,7 @@ final class Tools {
     }
 
     static final IllegalArgumentException indexFail(Fields row, Name fieldName) {
-        return indexFail(row, DSL.field(fieldName));
+        throw new IllegalArgumentException("Field (" + fieldName + ") is not contained in Row " + row);
     }
 
     static final int indexOrFail(Fields row, Name fieldName) {
@@ -2335,23 +2057,7 @@ final class Tools {
     }
 
     static final IllegalArgumentException indexFail(Fields row, int fieldIndex) {
-        if (fieldIndex < countFlattened(row, 0))
-            return new IllegalArgumentException("No field at index " + fieldIndex + " is not contained at the top level of row type containing nested row types. Unnest the nested row types first and access the field from there: " + row);
-        else
-            return new IllegalArgumentException("No field at index " + fieldIndex + " in row type " + row);
-    }
-
-    private static final int countFlattened(Fields row, int count) {
-
-        // [#15085] [#16721] Help users spot the problem if they accidentally nest row types
-        for (Field<?> f : row.fields()) {
-            if (f instanceof AbstractRowAsField<?> rf)
-                count += countFlattened(rf.fields0(), count);
-            else
-                count++;
-        }
-
-        return count;
+        throw new IllegalArgumentException("Field (" + fieldIndex + ") is not contained in Row " + row);
     }
 
     static final int indexOrFail(Fields row, int fieldIndex) {
@@ -2364,7 +2070,7 @@ final class Tools {
     }
 
     private static final <T> List<T> newListWithCapacity(Iterable<?> it) {
-        return it instanceof Collection<?> c ? new ArrayList<>(c.size()) : new ArrayList<>();
+        return it instanceof Collection ? new ArrayList<>(((Collection<?>) it).size()) : new ArrayList<>();
     }
 
     static final <T, R, X extends Throwable> R apply(@Nullable T t, ThrowingFunction<? super @NotNull T, ? extends R, ? extends X> f) throws X {
@@ -2379,27 +2085,9 @@ final class Tools {
         return t == null ? s.get() : t;
     }
 
-    static final <T> T let(@Nullable T t, Consumer<? super @NotNull T> consumer) {
-        if (t != null)
-            consumer.accept(t);
-
+    static final <T> T let(T t, Consumer<? super T> consumer) {
+        consumer.accept(t);
         return t;
-    }
-
-    static final <T, E extends Exception> boolean allMatch(T[] array, ThrowingPredicate<? super T, E> test) throws E {
-        return !anyMatch(array, test.negate());
-    }
-
-    static final <T, E extends Exception> boolean allMatch(T[] array, ThrowingIntPredicate<? super T, E> test) throws E {
-        return !anyMatch(array, test.negate());
-    }
-
-    static final <T, E extends Exception> boolean allMatch(Iterable<? extends T> it, ThrowingPredicate<? super T, E> test) throws E {
-        return !anyMatch(it, test.negate());
-    }
-
-    static final <T, E extends Exception> boolean allMatch(Iterable<? extends T> it, ThrowingIntPredicate<? super T, E> test) throws E {
-        return !anyMatch(it, test.negate());
     }
 
     static final <T, E extends Exception> boolean anyMatch(T[] array, ThrowingPredicate<? super T, E> test) throws E {
@@ -2476,56 +2164,12 @@ final class Tools {
         return null;
     }
 
-    static final Condition allNull(Collection<? extends Field<?>> fields) {
+    static final Condition allNull(Field<?>[] fields) {
         return DSL.and(map(fields, Field::isNull));
     }
 
-    static final Condition allNotNull(Collection<? extends Field<?>> fields) {
+    static final Condition allNotNull(Field<?>[] fields) {
         return DSL.and(map(fields, Field::isNotNull));
-    }
-
-    static final <T> List<List<T>> chunks(List<T> list, int size) {
-        int l;
-
-        if (size <= 0 || size == Integer.MAX_VALUE || (l = list.size()) <= size)
-            return asList(list);
-
-        List<List<T>> result = new ArrayList<>();
-        int prev = 0, next = size;
-        while (prev < l) {
-            result.add(list.subList(prev, Math.min(next, l)));
-            prev = next;
-            next += size;
-        }
-
-        return result;
-    }
-
-    /**
-     * "sneaky-throw" a checked exception or throwable.
-     */
-    static final void throwChecked(Throwable t) {
-        Tools.<RuntimeException>throwChecked0(t);
-    }
-
-    /**
-     * "sneaky-throw" a checked exception or throwable.
-     */
-    @SuppressWarnings("unchecked")
-    static final <E extends Throwable> void throwChecked0(Throwable throwable) throws E {
-        throw (E) throwable;
-    }
-
-    static final <T, R> Function<T, R> checkedFunction(ThrowingFunction<T, R, Throwable> function) {
-        return t -> {
-            try {
-                return function.apply(t);
-            }
-            catch (Throwable e) {
-                throwChecked(e);
-                throw new IllegalStateException(e);
-            }
-        };
     }
 
     /**
@@ -2746,10 +2390,6 @@ final class Tools {
         return array;
     }
 
-    static final <T> Iterable<T> iterable(Iterator<T> iterator) {
-        return () -> iterator;
-    }
-
     static final <T, U> Iterator<U> iterator(Iterator<? extends T> iterator, Function<? super T, ? extends U> mapper) {
         return new Iterator<U>() {
             @Override
@@ -2828,25 +2468,16 @@ final class Tools {
     /**
      * Turn a {@link Record} into a {@link Map}
      */
-    static final Map<Field<?>, Object> mapOfTouchedValues(Attachable attachable, Record record) {
+    static final Map<Field<?>, Object> mapOfChangedValues(Record record) {
         Map<Field<?>, Object> result = new LinkedHashMap<>();
         int size = record.size();
-        ObjIntPredicate<Record> dirty = recordDirtyTrackingPredicate(attachable);
 
         for (int i = 0; i < size; i++)
-            if (dirty.test(record, i))
+            if (record.changed(i))
                 result.put(record.field(i), record.get(i));
 
         return result;
     }
-
-    static final ObjIntPredicate<Record> recordDirtyTrackingPredicate(Attachable attachable) {
-        return RecordDirtyTracking.MODIFIED.equals(configuration(attachable).settings().getRecordDirtyTracking())
-            ? Record::modified
-            : Record::touched;
-    }
-
-
 
     /**
      * Extract the first item from an iterable or <code>null</code>, if there is
@@ -2866,8 +2497,8 @@ final class Tools {
     static final <T> T last(Collection<T> collection) {
         if (collection.isEmpty())
             return null;
-        else if (collection instanceof List<T> l)
-            return l.get(collection.size() - 1);
+        else if (collection instanceof List)
+            return ((List<T>) collection).get(collection.size() - 1);
 
         T last = null;
         for (Iterator<T> it = collection.iterator(); it.hasNext(); last = it.next());
@@ -3025,7 +2656,7 @@ final class Tools {
     private static final RuntimeException exception(Cursor<?> cursor, RuntimeException e) {
 
         // [#8877] Make sure these exceptions pass through ExecuteListeners as well
-        if (cursor instanceof CursorImpl<?> c) {
+        if (cursor instanceof CursorImpl) { CursorImpl<?> c = (CursorImpl<?>) cursor;
             c.ctx.exception(e);
             c.listener.exception(c.ctx);
             return c.ctx.exception();
@@ -3034,40 +2665,22 @@ final class Tools {
             return e;
     }
 
-    @SuppressWarnings("unchecked")
-    static final <Q extends QueryPart> void visitAutoAliased(
-        Context<?> ctx,
-        Q q,
-        Predicate<? super Context<?>> declaring,
-        BiConsumer<? super Context<?>, ? super Q> visit
-    ) {
-        Q alternative;
-
-        if (declaring.test(ctx) && q instanceof AutoAlias && (alternative = ((AutoAlias<Q>) q).autoAlias(ctx, q)) != null)
-            visit.accept(ctx, alternative);
-        else
-            visit.accept(ctx, q);
-    }
-
     static final void visitSubquery(
         Context<?> ctx,
-        QueryPart query
+        QueryPart query,
+        boolean derivedTableSubquery,
+        boolean setOperationSubquery,
+        boolean predicandSubquery
     ) {
-        visitSubquery(ctx, query, 0, true);
+        visitSubquery(ctx, query, derivedTableSubquery, setOperationSubquery, predicandSubquery, true);
     }
 
     static final void visitSubquery(
         Context<?> ctx,
         QueryPart query,
-        int characteristics
-    ) {
-        visitSubquery(ctx, query, characteristics, true);
-    }
-
-    static final void visitSubquery(
-        Context<?> ctx,
-        QueryPart query,
-        int characteristics,
+        boolean derivedTableSubquery,
+        boolean setOperationSubquery,
+        boolean predicandSubquery,
         boolean parentheses
     ) {
 
@@ -3082,10 +2695,10 @@ final class Tools {
         boolean previousDerivedTableSubquery = ctx.derivedTableSubquery();
         boolean previousSetOperationSubquery = ctx.setOperationSubquery();
 
-        ctx.subquery(true, query)
-           .predicandSubquery((characteristics & PREDICAND) != 0)
-           .derivedTableSubquery((characteristics & DERIVED_TABLE) != 0)
-           .setOperationSubquery((characteristics & SET_OPERATION) != 0)
+        ctx.subquery(true)
+           .predicandSubquery(predicandSubquery)
+           .derivedTableSubquery(derivedTableSubquery)
+           .setOperationSubquery(setOperationSubquery)
            .formatIndentStart()
            .formatNewLine()
            .visit(query)
@@ -3156,19 +2769,15 @@ final class Tools {
      */
     @SuppressWarnings("null")
     static final void renderAndBind(Context<?> ctx, String sql, List<QueryPart> substitutes) {
-        if (TRUE.equals(ctx.settings().isRenderPlainSQLTemplatesAsRaw())) {
-            ctx.sql(sql);
-            return;
-        }
-
-        RenderContext render = ctx instanceof RenderContext r ? r : null;
-        BindContext   bind   = ctx instanceof BindContext b   ? b : null;
+        RenderContext render = ctx instanceof RenderContext ? (RenderContext) ctx : null;
+        BindContext   bind   = ctx instanceof BindContext   ? (BindContext) ctx : null;
 
         int substituteIndex = 0;
         char[] sqlChars = sql.toCharArray();
 
         // [#1593] Create a dummy renderer if we're in bind mode
-        if (render == null) render = new DefaultRenderContext(bind.configuration(), ctx.executeContext());
+        if (render == null) render = new DefaultRenderContext(bind.configuration());
+
         SQLDialect family = render.family();
         boolean mysql = SUPPORTS_HASH_COMMENT_SYNTAX.contains(render.dialect());
         char[][][] quotes = QUOTES.get(family);
@@ -3557,15 +3166,29 @@ final class Tools {
      * Create {@link QueryPart} objects from bind values or substitutes
      */
     static final List<QueryPart> queryParts(Object... substitutes) {
-
         // [#724] When bindings is null, this is probably due to API-misuse
         // The user probably meant new Object[] { null }
-        if (substitutes == null)
+        if (substitutes == null) {
             return queryParts(new Object[] { null });
+        }
+        else {
+            List<QueryPart> result = new ArrayList<>(substitutes.length);
 
-        // [#1432] Distinguish between QueryParts and other objects
-        else
-            return map(substitutes, s -> (QueryPart) (s instanceof QueryPart q ? q : val(s)));
+            for (Object substitute : substitutes) {
+
+                // [#1432] Distinguish between QueryParts and other objects
+                if (substitute instanceof QueryPart) { QueryPart q = (QueryPart) substitute;
+                    result.add(q);
+                }
+                else {
+                    @SuppressWarnings("unchecked")
+                    Class<Object> type = (Class<Object>) (substitute != null ? substitute.getClass() : Object.class);
+                    result.add(new Val<>(substitute, DSL.getDataType(type)));
+                }
+            }
+
+            return result;
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -3641,13 +3264,13 @@ final class Tools {
     /**
      * Translate a {@link R2dbcException} to a {@link DataAccessException}
      */
-    static final RuntimeException translate(Scope scope, String sql, Throwable t) {
-        if (t instanceof R2dbcException e)
-            return translate(scope, sql, e);
-        else if (t instanceof SQLException e)
-            return translate(scope, sql, e);
-        else if (t instanceof RuntimeException e)
-            return translate(scope, sql, e);
+    static final RuntimeException translate(String sql, Throwable t) {
+        if (t instanceof R2dbcException)
+            return translate(sql, (R2dbcException) t);
+        else if (t instanceof SQLException)
+            return translate(sql, (SQLException) t);
+        else if (t instanceof RuntimeException)
+            return translate(sql, (RuntimeException) t);
         else if (t != null)
             return new DataAccessException("SQL [" + sql + "]; Unspecified Throwable", t);
         else
@@ -3657,9 +3280,9 @@ final class Tools {
     /**
      * Translate a {@link R2dbcException} to a {@link DataAccessException}
      */
-    static final DataAccessException translate(Scope scope, String sql, R2dbcException e) {
+    static final DataAccessException translate(String sql, R2dbcException e) {
         if (e != null)
-            return translate(scope, sql, e, sqlStateClass(e));
+            return new DataAccessException("SQL [" + sql + "]; " + e.getMessage(), e);
         else
             return new DataAccessException("SQL [" + sql + "]; Unspecified R2dbcException");
     }
@@ -3667,42 +3290,17 @@ final class Tools {
     /**
      * Translate a {@link SQLException} to a {@link DataAccessException}
      */
-    static final DataAccessException translate(Scope scope, String sql, SQLException e) {
+    static final DataAccessException translate(String sql, SQLException e) {
         if (e != null)
-            return translate(scope, sql, e, sqlStateClass(e));
+            return new DataAccessException("SQL [" + sql + "]; " + e.getMessage(), e);
         else
             return new DataAccessException("SQL [" + sql + "]; Unspecified SQLException");
-    }
-
-    private static final DataAccessException translate(Scope scope, String sql, Exception e, SQLStateClass sqlState) {
-        switch (sqlState) {
-            case C22_DATA_EXCEPTION:
-                return new DataException("SQL [" + sql + "]; " + e.getMessage(), e);
-            case C23_INTEGRITY_CONSTRAINT_VIOLATION:
-                return new IntegrityConstraintViolationException("SQL [" + sql + "]; " + e.getMessage(), e);
-            case NONE:
-                switch (scope.family()) {
-                    case DUCKDB: {
-                        String m = e.getMessage().toLowerCase();
-
-                        if (m.contains("constraint violated: duplicate key")
-                            || m.contains("constraint error: duplicate key")
-                            || m.contains("constraint error: not null constraint failed")
-                            || m.contains("constraint error: check constraint failed"))
-                            return new IntegrityConstraintViolationException("SQL [" + sql + "]; " + e.getMessage(), e);
-                    }
-
-                    break;
-                }
-        }
-
-        return new DataAccessException("SQL [" + sql + "]; " + e.getMessage(), e);
     }
 
     /**
      * Translate a {@link RuntimeException} to a {@link DataAccessException}
      */
-    static final RuntimeException translate(Scope scope, String sql, RuntimeException e) {
+    static final RuntimeException translate(String sql, RuntimeException e) {
         if (e != null)
             return e;
         else
@@ -3766,22 +3364,29 @@ final class Tools {
     /**
      * Type-safely copy a value from one record to another
      */
-    static final <T> void setValue(Record target, Field<T> targetField, Record source, Field<?> sourceField, ConverterContext cc) {
-        setValue(target, targetField, source.get(sourceField), cc);
+    static final <T> void setValue(Record target, Field<T> targetField, Record source, Field<?> sourceField) {
+        setValue(target, targetField, source.get(sourceField));
+    }
+
+    /**
+     * Type-safely copy a value from one record to another
+     */
+    static final <T> void setValue(AbstractRecord target, Field<T> targetField, int targetIndex, Record source, int sourceIndex) {
+        setValue(target, targetField, targetIndex, source.get(sourceIndex));
     }
 
     /**
      * Type-safely set a value to a record
      */
-    static final <T> void setValue(Record target, Field<T> targetField, Object value, ConverterContext cc) {
-        target.set(targetField, convert0(targetField.getDataType(), value, cc));
+    static final <T> void setValue(Record target, Field<T> targetField, Object value) {
+        target.set(targetField, targetField.getDataType().convert(value));
     }
 
     /**
      * Type-safely set a value to a record
      */
-    static final <T> void setValue(AbstractRecord target, Field<T> targetField, int targetIndex, Object value, ConverterContext cc) {
-        target.set(targetField, targetIndex, convert0(targetField.getDataType(), value, cc));
+    static final <T> void setValue(AbstractRecord target, Field<T> targetField, int targetIndex, Object value) {
+        target.set(targetField, targetIndex, targetField.getDataType().convert(value));
     }
 
     /**
@@ -3795,7 +3400,7 @@ final class Tools {
 
         target.values[targetIndex] = targetType.convert(source.get(sourceIndex));
         target.originals[targetIndex] = targetType.convert(source.original(sourceIndex));
-        target.touched.set(targetIndex, source.touched(sourceIndex));
+        target.changed.set(targetIndex, source.changed(sourceIndex));
     }
 
     /**
@@ -3829,36 +3434,12 @@ final class Tools {
     }
 
     /**
-     * Map a {@link UDT} according to the configured {@link org.jooq.SchemaMapping}
-     */
-    static final <R extends UDTRecord<R>> UDT<R> getMappedUDT(Scope scope, UDT<R> udt) {
-        if (scope != null)
-            return scope.configuration().schemaMapping().map(udt);
-
-        return udt;
-    }
-
-    /**
-     * Map a {@link UDT} according to the configured {@link org.jooq.SchemaMapping}
-     */
-    static final RecordQualifier<?> getMappedQualifier(Scope scope, RecordQualifier<?> qualifier) {
-        if (scope != null) {
-            if (qualifier instanceof UDT<?> u)
-                return scope.configuration().schemaMapping().map(u);
-            else if (qualifier instanceof Table<?> t)
-                return scope.configuration().schemaMapping().map(t);
-        }
-
-        return qualifier;
-    }
-
-    /**
      * Map an {@link QualifiedRecord} according to the configured
      * {@link org.jooq.SchemaMapping}
      */
     @SuppressWarnings("unchecked")
     static final String getMappedUDTName(Scope scope, Class<? extends QualifiedRecord<?>> type) {
-        return getMappedUDTName(scope, Tools.newRecord(false, scope.configuration(), (Class<QualifiedRecord<?>>) type).operate(null));
+        return getMappedUDTName(scope, Tools.newRecord(false, (Class<QualifiedRecord<?>>) type).operate(null));
     }
 
     /**
@@ -3867,11 +3448,6 @@ final class Tools {
      */
     static final String getMappedUDTName(Scope scope, QualifiedRecord<?> record) {
         RecordQualifier<?> udt = record.getQualifier();
-        RecordQualifier<?> mappedUDT = getMappedQualifier(scope, udt);
-
-        if (mappedUDT != null && mappedUDT != udt)
-            return mappedUDT.getQualifiedName().unquotedName().toString();
-
         Schema mapped = getMappedSchema(scope, udt.getSchema());
         StringBuilder sb = new StringBuilder();
 
@@ -3990,64 +3566,14 @@ final class Tools {
 
 
 
-    static final RecordQualifier<?> getRecordQualifier(DataType<?> t) {
-        return getRecordQualifier(t.getType());
+    static final Configuration CONFIG          = new DefaultConfiguration();
+    static final Configuration CONFIG_UNQUOTED = new DefaultConfiguration();
+
+    static {
+        CONFIG_UNQUOTED.settings().setRenderQuotedNames(RenderQuotedNames.NEVER);
     }
 
-    static final RecordQualifier<?> getRecordQualifier(Class<?> t) {
-        try {
-            return ((QualifiedRecord<?>) Reflect.accessible(t.getDeclaredConstructor()).newInstance()).getQualifier();
-        }
-        catch (Exception e) {
-            throw new IllegalArgumentException(e);
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    static final Lazy<Configuration> CONFIG          = Lazy.of(() -> new DefaultConfiguration());
-    static final Lazy<Configuration> CONFIG_UNQUOTED = Lazy.of(() -> {
-        DefaultConfiguration c = new DefaultConfiguration();
-        c.settings().setRenderQuotedNames(RenderQuotedNames.NEVER);
-        return c;
-    });
-
-    static final Lazy<DSLContext>    CTX             = Lazy.of(() -> DSL.using(CONFIG.get()));
-
-    /**
-     * A possibly inefficient but stable way to generate an alias for any
-     * {@link QueryPart}.
-     * <p>
-     * Stability is important to profit from execution plan caching. Equal query
-     * parts must produce the same alias every time.
-     */
-    static final String autoAlias(Configuration configuration, QueryPart part) {
-        return normaliseNameCase(configuration, autoAlias(part), false);
-    }
+    static final DSLContext    CTX             = DSL.using(CONFIG);
 
     /**
      * A possibly inefficient but stable way to generate an alias for any
@@ -4104,66 +3630,17 @@ final class Tools {
         return field instanceof Param;
     }
 
-    static final boolean isParamOrCastParam(Field<?> field) {
-        return field instanceof Param
-            || field instanceof Cast && isParamOrCastParam(((Cast<?>) field).$field());
-    }
-
     static final boolean isVal(Field<?> field) {
         return field instanceof Val
             || field instanceof ConvertedVal && ((ConvertedVal<?>) field).delegate instanceof Val;
-    }
-
-    static final boolean isVal0(QueryPart p, Predicate<? super Val<?>> predicate) {
-        if (p instanceof Val<?> v) {
-            return predicate.test(v);
-        }
-        else if (p instanceof ConvertedVal<?> v) {
-            return isVal0(v.delegate, predicate);
-        }
-        else
-            return false;
-    }
-
-    static final <T> boolean isVal1(Field<T> p, Predicate<? super Val<T>> predicate) {
-        if (p instanceof Val<T> v) {
-            return predicate.test(v);
-        }
-        else if (p instanceof ConvertedVal<T> v) {
-            return isVal1((Field<T>) v.delegate, predicate);
-        }
-        else
-            return false;
-    }
-
-    static final boolean isInlineVal0(QueryPart p, Predicate<? super Object> predicate) {
-        return Tools.isVal0(p, v -> v.isInline() && predicate.test(v.$value()));
-    }
-
-    static final boolean isInlineVal0(Context<?> ctx, QueryPart p, Predicate<? super Object> predicate) {
-        return Tools.isVal0(p, v -> v.isInline(ctx) && predicate.test(v.$value()));
-    }
-
-    static final <T> boolean isInlineVal1(Field<T> p, Predicate<? super T> predicate) {
-        return Tools.isVal1(p, v -> v.isInline() && predicate.test(v.$value()));
-    }
-
-    static final <T> boolean isInlineVal1(Context<?> ctx, Field<T> p, Predicate<? super T> predicate) {
-        return Tools.isVal1(p, v -> v.isInline(ctx) && predicate.test(v.$value()));
     }
 
     static final boolean isWindow(QueryPart part) {
         return part instanceof AbstractWindowFunction && ((AbstractWindowFunction<?>) part).isWindow();
     }
 
-    static final boolean isComplex(Context<?> ctx, QueryPart part) {
-        return part instanceof ComplexQueryPart
-            || part instanceof ComplexCheckQueryPart && ((ComplexCheckQueryPart) part).isComplex(ctx);
-    }
-
     static final boolean isSimple(Context<?> ctx, QueryPart part) {
-        return part instanceof SimpleQueryPart
-            || part instanceof SimpleCheckQueryPart && ((SimpleCheckQueryPart) part).isSimple(ctx);
+        return part instanceof SimpleQueryPart && ((SimpleQueryPart) part).isSimple(ctx);
     }
 
     static final boolean isSimple(Context<?> ctx, QueryPart... parts) {
@@ -4174,24 +3651,19 @@ final class Tools {
         return true;
     }
 
-    static final boolean hasName(Context<?> ctx, Field<?> field) {
-        return field instanceof NamedField
-            || field instanceof NamedCheckField && ((NamedCheckField<?>) field).hasName(ctx);
-    }
-
     static final boolean isRendersSeparator(QueryPart part) {
         return part instanceof SeparatedQueryPart && ((SeparatedQueryPart) part).rendersSeparator();
     }
 
-    static final boolean isNullable(Field<?> f) {
-        return f instanceof AbstractField && ((AbstractField<?>) f).isNullable();
+    static final boolean isPossiblyNullable(Field<?> f) {
+        return f instanceof AbstractField && ((AbstractField<?>) f).isPossiblyNullable();
     }
 
     static final Val<?> extractVal(Field<?> field) {
-        return field instanceof Val<?> v
-             ? v
-             : field instanceof ConvertedVal<?> v
-             ? (Val<?>) v.delegate
+        return field instanceof Val
+             ? (Val<?>) field
+             : field instanceof ConvertedVal
+             ? (Val<?>) ((ConvertedVal<?>) field).delegate
              : null;
     }
 
@@ -4221,44 +3693,42 @@ final class Tools {
 
 
 
-    static final Select<?> extractSelectFromDerivedTable(Table<?> table) {
-        return extractSelectFromDerivedTable(table, false);
-    }
 
-    private static final Select<?> extractSelectFromDerivedTable(Table<?> table, boolean force) {
-        Table<?> aliased;
 
-        if (table instanceof DerivedTable<?> t)
-            return t.query();
-        else if (table instanceof AliasedSelect<?> s)
-            return s.query();
-        else if ((aliased = aliased(table)) != null)
-            return extractSelectFromDerivedTable(aliased, true);
-        else if (force)
-            return select(asterisk()).from(table);
-        else
-            return null;
-    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     static final <R extends Record> SelectQueryImpl<R> selectQueryImpl(QueryPart part) {
-        if (part instanceof SelectQueryImpl s)
-            return s;
-        else if (part instanceof SelectImpl s)
-            return (SelectQueryImpl<R>) s.getDelegate();
-        else if (part instanceof ScalarSubquery<?> s)
-            return selectQueryImpl(s.query);
-        else if (part instanceof QuantifiedSelectImpl<?> s)
-            return selectQueryImpl(s.query);
+        if (part instanceof SelectQueryImpl)
+            return (SelectQueryImpl) part;
+        else if (part instanceof SelectImpl)
+            return (SelectQueryImpl<R>) ((SelectImpl) part).getDelegate();
+        else if (part instanceof ScalarSubquery)
+            return selectQueryImpl(((ScalarSubquery<?>) part).query);
+        else if (part instanceof QuantifiedSelectImpl)
+            return selectQueryImpl(((QuantifiedSelectImpl<?>) part).query);
         else
             return null;
     }
 
     static final AbstractResultQuery<?> abstractResultQuery(Query query) {
-        if (query instanceof AbstractResultQuery<?> q)
-            return q;
-        else if (query instanceof AbstractDelegatingQuery<?, ?> q)
-            return abstractResultQuery(q.getDelegate());
+        if (query instanceof AbstractResultQuery)
+            return (AbstractResultQuery<?>) query;
+        else if (query instanceof AbstractDelegatingQuery)
+            return abstractResultQuery(((AbstractDelegatingQuery<?, ?>) query).getDelegate());
         else
             return null;
     }
@@ -4266,8 +3736,8 @@ final class Tools {
     static final InsertQueryImpl<?> insertQueryImpl(Query query) {
         AbstractDMLQuery<?> result = abstractDMLQuery(query);
 
-        if (result instanceof InsertQueryImpl<?> q)
-            return q;
+        if (result instanceof InsertQueryImpl)
+            return (InsertQueryImpl<?>) result;
         else
             return null;
     }
@@ -4275,8 +3745,8 @@ final class Tools {
     static final UpdateQueryImpl<?> updateQueryImpl(Query query) {
         AbstractDMLQuery<?> result = abstractDMLQuery(query);
 
-        if (result instanceof UpdateQueryImpl<?> q)
-            return q;
+        if (result instanceof UpdateQueryImpl)
+            return (UpdateQueryImpl<?>) result;
         else
             return null;
     }
@@ -4284,19 +3754,19 @@ final class Tools {
     static final DeleteQueryImpl<?> deleteQueryImpl(Query query) {
         AbstractDMLQuery<?> result = abstractDMLQuery(query);
 
-        if (result instanceof DeleteQueryImpl<?> q)
-            return q;
+        if (result instanceof DeleteQueryImpl)
+            return (DeleteQueryImpl<?>) result;
         else
             return null;
     }
 
     static final AbstractDMLQuery<?> abstractDMLQuery(Query query) {
-        if (query instanceof AbstractDMLQuery<?> q)
-            return q;
-        else if (query instanceof AbstractDelegatingDMLQuery<?, ?> q)
-            return abstractDMLQuery(q.getDelegate());
-        else if (query instanceof AbstractDMLQueryAsResultQuery<?, ?> q)
-            return q.getDelegate();
+        if (query instanceof AbstractDMLQuery)
+            return (AbstractDMLQuery<?>) query;
+        else if (query instanceof AbstractDelegatingDMLQuery)
+            return abstractDMLQuery(((AbstractDelegatingDMLQuery<?, ?>) query).getDelegate());
+        else if (query instanceof DMLQueryAsResultQuery)
+            return ((DMLQueryAsResultQuery<?, ?>) query).getDelegate();
         else
             return null;
     }
@@ -4349,7 +3819,7 @@ final class Tools {
      */
     static final <T> void addCondition(org.jooq.ConditionProvider provider, Record record, Field<T> field) {
 
-        // [#2764] If primary keys are allowed to be touched, the
+        // [#2764] If primary keys are allowed to be changed, the
         if (updatablePrimaryKeys(settings(record)))
             provider.addConditions(condition(field, record.original(field)));
         else
@@ -4366,6 +3836,38 @@ final class Tools {
     // ------------------------------------------------------------------------
     // XXX: Reflection utilities used for POJO mapping
     // ------------------------------------------------------------------------
+
+    /**
+     * Check if JPA classes can be loaded. This is only done once per JVM!
+     */
+    static final JPANamespace jpaNamespace() {
+        if (jpaNamespace == null) {
+            synchronized (initLock) {
+                if (jpaNamespace == null) {
+                    try {
+                        Class.forName(Column.class.getName());
+                        jpaNamespace = JPANamespace.JAKARTA;
+                    }
+                    catch (Throwable e) {
+                        try {
+                            Class.forName("javax.persistence.Column");
+                            jpaNamespace = JPANamespace.JAVAX;
+                            JooqLogger.getLogger(Tools.class, "isJPAAvailable", 1).info("javax.persistence.Column was found on the classpath instead of jakarta.persistence.Column. jOOQ 3.16 requires you to upgrade to Jakarta EE if you wish to use JPA annotations in your DefaultRecordMapper");
+                        }
+                        catch (Throwable ignore) {
+                            jpaNamespace = JPANamespace.NONE;
+                        }
+                    }
+                }
+            }
+        }
+
+        return jpaNamespace;
+    }
+
+    enum JPANamespace {
+        JAVAX, JAKARTA, NONE
+    }
 
     static final boolean isKotlinAvailable() {
         if (isKotlinAvailable == null) {
@@ -4460,11 +3962,36 @@ final class Tools {
      * or methods
      */
     static final boolean hasColumnAnnotations(final Configuration configuration, final Class<?> type) {
-        return Cache.run(configuration,
-            () -> configuration.annotatedPojoMemberProvider().hasAnnotations(type),
-            REFLECTION_CACHE_HAS_COLUMN_ANNOTATIONS,
-            () -> type
-        );
+        return Cache.run(configuration, () -> {
+            switch (Tools.jpaNamespace()) {
+                case JAVAX:
+                    if (anyMatch(type.getAnnotations(), a -> a.annotationType().getName().startsWith("javax.persistence.")))
+                        JooqLogger.getLogger(Tools.class, "hasColumnAnnotations", 1).warn("Type " + type + " is annotated with javax.persistence annotation for usage in DefaultRecordMapper, but starting from jOOQ 3.16, only JakartaEE annotations are supported.");
+
+                    return false;
+
+                case JAKARTA:
+
+                    // An @Entity or @Table usually has @Column annotations, too
+                    if (type.getAnnotation(Entity.class) != null)
+                        return true;
+
+                    if (type.getAnnotation(jakarta.persistence.Table.class) != null)
+                        return true;
+
+                    if (anyMatch(getInstanceMembers(type), m ->
+                            m.getAnnotation(Column.class) != null
+                         || m.getAnnotation(Id.class) != null))
+                        return true;
+                    else
+                        return anyMatch(getInstanceMethods(type), m -> m.getAnnotation(Column.class) != null);
+
+                case NONE:
+                default:
+                    return false;
+            }
+
+        }, REFLECTION_CACHE_HAS_COLUMN_ANNOTATIONS, () -> type);
     }
 
     static final <T extends AccessibleObject> T accessible(T object, boolean makeAccessible) {
@@ -4481,13 +4008,36 @@ final class Tools {
         final boolean makeAccessible
     ) {
         return Cache.run(configuration, () -> {
-            List<java.lang.reflect.Field> result = configuration.annotatedPojoMemberProvider().getMembers(type, name);
+            List<java.lang.reflect.Field> result = new ArrayList<>();
 
-            if (makeAccessible)
-                result.forEach(Reflect::accessible);
+            for (java.lang.reflect.Field member : getInstanceMembers(type)) {
+                Column column = member.getAnnotation(Column.class);
+
+                if (column != null) {
+                    if (namesMatch(name, column.name()))
+                        result.add(accessible(member, makeAccessible));
+                }
+
+                else {
+                    Id id = member.getAnnotation(Id.class);
+
+                    if (id != null)
+                        if (namesMatch(name, member.getName()))
+                            result.add(accessible(member, makeAccessible));
+                }
+            }
 
             return result;
-        }, REFLECTION_CACHE_GET_ANNOTATED_MEMBERS, () -> Cache.key(type, name, makeAccessible));
+        }, REFLECTION_CACHE_GET_ANNOTATED_MEMBERS, () -> Cache.key(type, name));
+    }
+
+    private static final boolean namesMatch(String name, String annotation) {
+
+        // [#4128] JPA @Column.name() properties are case-insensitive, unless
+        // the names are quoted using double quotes.
+        return annotation.startsWith("\"")
+            ? ('"' + name + '"').equals(annotation)
+            : name.equalsIgnoreCase(annotation);
     }
 
     /**
@@ -4513,7 +4063,7 @@ final class Tools {
                     result.add(accessible(member, makeAccessible));
 
             return result;
-        }, REFLECTION_CACHE_GET_MATCHING_MEMBERS, () -> Cache.key(type, name, makeAccessible));
+        }, REFLECTION_CACHE_GET_MATCHING_MEMBERS, () -> Cache.key(type, name));
     }
 
     /**
@@ -4528,11 +4078,43 @@ final class Tools {
         return Cache.run(configuration, () -> {
             Set<SourceMethod> set = new LinkedHashSet<>();
 
-            for (Method m : configuration.annotatedPojoMemberProvider().getSetters(type, name))
-                set.add(new SourceMethod(accessible(m, makeAccessible)));
+            for (Method method : getInstanceMethods(type)) {
+                Column column = method.getAnnotation(Column.class);
+
+                if (column != null && namesMatch(name, column.name())) {
+
+                    // Annotated setter
+                    if (method.getParameterTypes().length == 1) {
+                        set.add(new SourceMethod(accessible(method, makeAccessible)));
+                    }
+
+                    // Annotated getter with matching setter
+                    else if (method.getParameterTypes().length == 0) {
+                        String m = method.getName();
+                        String suffix = m.startsWith("get")
+                                      ? m.substring(3)
+                                      : m.startsWith("is")
+                                      ? m.substring(2)
+                                      : null;
+
+                        if (suffix != null) {
+                            try {
+
+                                // [#7953] [#8496] Search the hierarchy for a matching setter
+                                Method setter = getInstanceMethod(type, "set" + suffix, new Class[] { method.getReturnType() });
+
+                                // Setter annotation is more relevant
+                                if (setter.getAnnotation(Column.class) == null)
+                                    set.add(new SourceMethod(accessible(setter, makeAccessible)));
+                            }
+                            catch (NoSuchMethodException ignore) {}
+                        }
+                    }
+                }
+            }
 
             return SourceMethod.methods(set);
-        }, REFLECTION_CACHE_GET_ANNOTATED_SETTERS, () -> Cache.key(type, name, makeAccessible));
+        }, REFLECTION_CACHE_GET_ANNOTATED_SETTERS, () -> Cache.key(type, name));
     }
 
     /**
@@ -4545,13 +4127,45 @@ final class Tools {
         final boolean makeAccessible
     ) {
         return Cache.run(configuration, () -> {
-            List<Method> result = configuration.annotatedPojoMemberProvider().getGetters(type, name);
+            for (Method method : getInstanceMethods(type)) {
+                Column column = method.getAnnotation(Column.class);
 
-            if (makeAccessible)
-                result.forEach(Reflect::accessible);
+                if (column != null && namesMatch(name, column.name())) {
 
-            return result.isEmpty() ? null : result.get(0);
-        }, REFLECTION_CACHE_GET_ANNOTATED_GETTER, () -> Cache.key(type, name, makeAccessible));
+                    // Annotated getter
+                    if (method.getParameterTypes().length == 0) {
+                        return accessible(method, makeAccessible);
+                    }
+
+                    // Annotated setter with matching getter
+                    else if (method.getParameterTypes().length == 1) {
+                        String m = method.getName();
+
+                        if (m.startsWith("set")) {
+                            try {
+                                Method getter1 = type.getMethod("get" + m.substring(3));
+
+                                // Getter annotation is more relevant
+                                if (getter1.getAnnotation(Column.class) == null)
+                                    return accessible(getter1, makeAccessible);
+                            }
+                            catch (NoSuchMethodException ignore1) {}
+
+                            try {
+                                Method getter2 = type.getMethod("is" + m.substring(3));
+
+                                // Getter annotation is more relevant
+                                if (getter2.getAnnotation(Column.class) == null)
+                                    return accessible(getter2, makeAccessible);
+                            }
+                            catch (NoSuchMethodException ignore2) {}
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }, REFLECTION_CACHE_GET_ANNOTATED_GETTER, () -> Cache.key(type, name));
     }
 
     /**
@@ -4588,7 +4202,7 @@ final class Tools {
             }
 
             return SourceMethod.methods(set);
-        }, REFLECTION_CACHE_GET_MATCHING_SETTERS, () -> Cache.key(type, name, makeAccessible));
+        }, REFLECTION_CACHE_GET_MATCHING_SETTERS, () -> Cache.key(type, name));
     }
 
 
@@ -4623,7 +4237,7 @@ final class Tools {
                         return accessible(method, makeAccessible);
 
             return null;
-        }, REFLECTION_CACHE_GET_MATCHING_GETTER, () -> Cache.key(type, name, makeAccessible));
+        }, REFLECTION_CACHE_GET_MATCHING_GETTER, () -> Cache.key(type, name));
     }
 
     /**
@@ -4653,7 +4267,7 @@ final class Tools {
 
         @Override
         public boolean equals(Object obj) {
-            if (obj instanceof SourceMethod s) {
+            if (obj instanceof SourceMethod) { SourceMethod s = (SourceMethod) obj;
                 Method other = s.method;
 
                 if (method.getName().equals(other.getName())) {
@@ -4672,6 +4286,69 @@ final class Tools {
             return method.toString();
         }
     }
+
+    private static final Method getInstanceMethod(Class<?> type, String name, Class<?>[] parameters) throws NoSuchMethodException {
+
+        // first priority: find a public method with exact signature match in class hierarchy
+        try {
+            return type.getMethod(name, parameters);
+        }
+
+        // second priority: find a private method with exact signature match on declaring class
+        catch (NoSuchMethodException e) {
+            do {
+                try {
+                    return type.getDeclaredMethod(name, parameters);
+                }
+                catch (NoSuchMethodException ignore) {}
+
+                type = type.getSuperclass();
+            }
+            while (type != null);
+
+            throw new NoSuchMethodException();
+        }
+    }
+
+    /**
+     * All the public and declared methods of a type.
+     * <p>
+     * This method returns each method only once. Public methods are returned
+     * first in the resulting set while declared methods are returned
+     * afterwards, from lowest to highest type in the type hierarchy.
+     */
+    private static final Set<Method> getInstanceMethods(Class<?> type) {
+        Set<Method> result = new LinkedHashSet<>();
+
+        for (Method method : type.getMethods())
+            if ((method.getModifiers() & Modifier.STATIC) == 0)
+                result.add(method);
+
+        do
+            for (Method method : type.getDeclaredMethods())
+                if ((method.getModifiers() & Modifier.STATIC) == 0)
+                    result.add(method);
+        while ((type = type.getSuperclass()) != null);
+
+        return result;
+    }
+
+    private static final List<java.lang.reflect.Field> getInstanceMembers(Class<?> type) {
+        List<java.lang.reflect.Field> result = new ArrayList<>();
+
+        for (java.lang.reflect.Field field : type.getFields())
+            if ((field.getModifiers() & Modifier.STATIC) == 0)
+                result.add(field);
+
+        do
+            for (java.lang.reflect.Field field : type.getDeclaredFields())
+                if ((field.getModifiers() & Modifier.STATIC) == 0)
+                    result.add(field);
+        while ((type = type.getSuperclass()) != null);
+
+        return result;
+    }
+
     /**
      * Get a property name associated with a getter/setter method name.
      */
@@ -4726,16 +4403,6 @@ final class Tools {
 
 
 
-
-
-
-
-
-
-
-
-
-
     }
 
     /**
@@ -4761,38 +4428,14 @@ final class Tools {
             listener.warning(ctx);
     }
 
-    static final SQLException consumeExceptions(ExecuteContext ctx, ThrowingRunnable<SQLException> runnable) throws SQLException {
-        try {
-            runnable.run();
-            return null;
-        }
-
-        // [#3011] [#3054] [#6390] [#6413] Consume additional exceptions if there are any
-        catch (SQLException e) {
-            if (ctx.settings().getThrowExceptions() != THROW_NONE) {
-                consumeExceptions(ctx.configuration(), ctx.statement(), e);
-                throw e;
-            }
-            else {
-                return e;
-            }
-        }
-    }
-
-    static final SQLException executeUpdateAndConsumeExceptions(ExecuteContext ctx) throws SQLException {
-        return consumeExceptions(ctx, () -> {
-            ctx.resultSet(null);
-            ctx.rows(ctx.statement().executeUpdate());
-        });
-    }
-
     /**
      * [#5666] Handle the complexity of each dialect's understanding of
      * correctly calling {@link PreparedStatement#execute()}}.
      */
     static final SQLException executeStatementAndGetFirstResultSet(ExecuteContext ctx, int skipUpdateCounts) throws SQLException {
-        return consumeExceptions(ctx, () -> {
-            PreparedStatement stmt = ctx.statement();
+        PreparedStatement stmt = ctx.statement();
+
+        try {
 
 
 
@@ -4844,7 +4487,6 @@ final class Tools {
             // first ResultSet. Unexpected result sets could be produced as
             // well, but it's much harder to skip them.
             if (skipUpdateCounts > 0) {
-                int skipUpdateCounts0 = skipUpdateCounts;
 
                 fetchLoop:
                 for (int i = 0; i < maxConsumedResults; i++) {
@@ -4868,7 +4510,7 @@ final class Tools {
                             ctx.rows(updateCount);
                         }
 
-                        if (updateCount == -1 || skipUpdateCounts0-- == 0)
+                        if (updateCount == -1 || skipUpdateCounts-- == 0)
                             break fetchLoop;
                     }
                 }
@@ -4884,9 +4526,21 @@ final class Tools {
                 ctx.resultSet(null);
                 ctx.rows(stmt.getUpdateCount());
             }
-        });
-    }
 
+            return null;
+        }
+
+        // [#3011] [#3054] [#6390] [#6413] Consume additional exceptions if there are any
+        catch (SQLException e) {
+            if (ctx.settings().getThrowExceptions() != THROW_NONE) {
+                consumeExceptions(ctx.configuration(), ctx.statement(), e);
+                throw e;
+            }
+            else {
+                return e;
+            }
+        }
+    }
 
 
 
@@ -4901,7 +4555,7 @@ final class Tools {
     /**
      * [#3681] Consume all {@link ResultSet}s from a JDBC {@link Statement}.
      */
-    static final void consumeResultSets(ExecuteContext ctx, ExecuteListener listener, Results results, SQLException prev) throws SQLException {
+    static final void consumeResultSets(ExecuteContext ctx, ExecuteListener listener, Results results, Intern intern, SQLException prev) throws SQLException {
         boolean anyResults = false;
         int i;
         int rows = (ctx.resultSet() == null) ? ctx.rows() : 0;
@@ -4912,7 +4566,7 @@ final class Tools {
                     anyResults = true;
 
                     Field<?>[] fields = new MetaDataFieldProvider(ctx.configuration(), ctx.resultSet().getMetaData()).getFields();
-                    Cursor<Record> c = new CursorImpl<>(ctx, listener, fields, true, false);
+                    Cursor<Record> c = new CursorImpl<>(ctx, listener, fields, intern != null ? intern.internIndexes(fields) : null, true, false);
                     results.resultsOrRows().add(new ResultOrRowsImpl(c.fetch()));
                 }
                 else if (prev == null) {
@@ -4944,7 +4598,7 @@ final class Tools {
 
                 if (ctx.settings().getThrowExceptions() == THROW_NONE) {
                     ctx.sqlException(e);
-                    results.resultsOrRows().add(new ResultOrRowsImpl(Tools.translate(ctx, ctx.sql(), e)));
+                    results.resultsOrRows().add(new ResultOrRowsImpl(Tools.translate(ctx.sql(), e)));
                 }
                 else {
                     consumeExceptions(ctx.configuration(), ctx.statement(), e);
@@ -4954,7 +4608,7 @@ final class Tools {
         }
 
         if (i == maxConsumedResults)
-            log.warn("Maximum consumed results reached: " + maxConsumedResults + ". This is probably a bug. Please report to https://jooq.org/bug");
+            log.warn("Maximum consumed results reached: " + maxConsumedResults + ". This is probably a bug. Please report to https://github.com/jOOQ/jOOQ/issues/new");
 
         // Call this only when there was at least one ResultSet.
         if (anyResults) {
@@ -5158,7 +4812,7 @@ final class Tools {
             case POSTGRES:
             case YUGABYTEDB:
                 if (increment(ctx.data(), DATA_BLOCK_NESTING))
-                    ctx.visit(K_DO).sql(" $").sql(ctx.settings().getRenderDollarQuotedStringToken()).sql('$').formatSeparator();
+                    ctx.visit(K_DO).sql(" $$").formatSeparator();
 
                 ctx.visit(K_BEGIN).formatIndentStart().formatSeparator();
                 break;
@@ -5193,22 +4847,9 @@ final class Tools {
                    .visit(K_END);
 
                 if (decrement(ctx.data(), DATA_BLOCK_NESTING))
-                    ctx.sql(" $").sql(ctx.settings().getRenderDollarQuotedStringToken()).sql('$');
+                    ctx.sql(" $$");
 
                 break;
-        }
-    }
-
-    /**
-     * Wrap a statement in an <code>EXECUTE IMMEDIATE</code> statement.
-     */
-    static final void executeImmediateIf(boolean wrap, Context<?> ctx, Consumer<? super Context<?>> runnable) {
-        if (wrap) {
-            executeImmediate(ctx, runnable);
-        }
-        else {
-            runnable.accept(ctx);
-            ctx.sql(';');
         }
     }
 
@@ -5248,8 +4889,8 @@ final class Tools {
     }
 
     /**
-     * Wrap a <code>DROP … IF EXISTS</code> statement with
-     * <code>BEGIN EXECUTE IMMEDIATE '…' EXCEPTION WHEN … END;</code>, if
+     * Wrap a <code>DROP .. IF EXISTS</code> statement with
+     * <code>BEGIN EXECUTE IMMEDIATE '...' EXCEPTION WHEN ... END;</code>, if
      * <code>IF EXISTS</code> is not supported.
      */
     static final void tryCatch(Context<?> ctx, DDLStatementType type, Consumer<? super Context<?>> runnable) {
@@ -5258,21 +4899,6 @@ final class Tools {
 
     static final void tryCatch(Context<?> ctx, DDLStatementType type, Boolean container, Boolean element, Consumer<? super Context<?>> runnable) {
         switch (ctx.family()) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -5583,15 +5209,35 @@ final class Tools {
                 break;
             }
 
-            case MYSQL: {
-
-
-
-
-            }
-
             case MARIADB: {
-                tryCatchMySQL(ctx, type, container, element, runnable);
+                List<String> sqlstates = new ArrayList<>();
+
+//                if (type == CREATE_SCHEMA)
+//                    sqlstates.add("42710");
+//                else if (type == CREATE_SEQUENCE)
+//                    sqlstates.add("42710");
+//                else if (type == CREATE_VIEW)
+//                    sqlstates.add("42710");
+//                else
+//                    if (type == ALTER_TABLE) {
+//                    if (TRUE.equals(container))
+//                        sqlstates.add("42704");
+//
+//                    if (TRUE.equals(element))
+//                        sqlstates.add("42703");
+//                    else if (FALSE.equals(element))
+//                        sqlstates.add("42711");
+//                }
+//                else
+                    sqlstates.add("42S02");
+
+                begin(ctx, c -> {
+                    for (String sqlstate : sqlstates)
+                        c.visit(keyword("declare continue handler for sqlstate")).sql(' ').visit(DSL.inline(sqlstate)).sql(' ').visit(K_BEGIN).sql(' ').visit(K_END).sql(';').formatSeparator();
+
+                    runnable.accept(c);
+                    c.sql(';');
+                });
                 break;
             }
 
@@ -5599,45 +5245,20 @@ final class Tools {
             case POSTGRES:
             case YUGABYTEDB: {
                 begin(ctx, c -> {
-                    Set<String> sqlstates = new LinkedHashSet<>();
+                    String sqlstate;
 
                     switch (type) {
-                        case ALTER_DATABASE:
-                            sqlstates.add("3D000");
-                            break;
-
-                        case ALTER_DOMAIN:
-                        case ALTER_TABLE:
-                        case ALTER_TYPE:
-                            if (TRUE.equals(container))
-                                sqlstates.add("42704");
-
-                            if (TRUE.equals(element))
-                                sqlstates.addAll(asList("42703", "42704"));
-
-                            if (sqlstates.isEmpty())
-                                sqlstates.add("42704");
-
-                            break;
-
-                        case CREATE_DOMAIN:
-                        case CREATE_TYPE:
-                            sqlstates.add("42710");
-                            break;
-
-                        default:
-                            sqlstates.add("42P07");
-                            break;
+                        case ALTER_DATABASE: sqlstate = "3D000"; break;
+                        case ALTER_DOMAIN  : sqlstate = "42704"; break;
+                        case CREATE_DOMAIN : sqlstate = "42710"; break;
+                        default            : sqlstate = "42P07"; break;
                     }
 
                     runnable.accept(c);
 
-                    semicolonAfterStatement(c, null);
-                    c.formatIndentEnd().formatSeparator()
-                     .visit(K_EXCEPTION).formatIndentStart().formatSeparator();
-
-                    for (String sqlstate : sqlstates)
-                        c.visit(K_WHEN).sql(' ').visit(K_SQLSTATE).sql(' ').visit(DSL.inline(sqlstate)).sql(' ').visit(K_THEN).sql(' ').visit(K_NULL).sql(';').formatSeparator();
+                    c.sql(';').formatIndentEnd().formatSeparator()
+                     .visit(K_EXCEPTION).formatIndentStart().formatSeparator()
+                     .visit(K_WHEN).sql(' ').visit(K_SQLSTATE).sql(' ').visit(DSL.inline(sqlstate)).sql(' ').visit(K_THEN).sql(' ').visit(K_NULL).sql(';').formatIndentEnd();
                 });
                 break;
             }
@@ -5648,71 +5269,9 @@ final class Tools {
         }
     }
 
-    private static final void tryCatchMySQL(Context<?> ctx, DDLStatementType type, Boolean container, Boolean element, Consumer<? super Context<?>> runnable) {
-        List<String> sqlstates = new ArrayList<>();
-
-        switch (ctx.family()) {
-            case MARIADB:
-                switch (type) {
-                    case ALTER_INDEX:
-                    case CREATE_INDEX:
-                    case DROP_INDEX:
-                        sqlstates.add("42000");
-                        break;
-                }
-
-                sqlstates.add("42S02");
-                break;
-
-            case MYSQL:
-                switch (type) {
-                    case ALTER_INDEX:
-                    case CREATE_INDEX:
-                    case DROP_INDEX:
-                        sqlstates.add("42000");
-                        break;
-
-                    case ALTER_TABLE:
-                        if (TRUE.equals(container))
-                            sqlstates.add("42S02");
-
-                        if (TRUE.equals(element))
-                            sqlstates.add("42S22");
-
-                        if (sqlstates.isEmpty())
-                            sqlstates.add("42S02");
-
-                        break;
-
-                    case ALTER_VIEW:
-                    case CREATE_VIEW:
-                    case DROP_VIEW:
-                        sqlstates.add("42S01");
-                        break;
-                }
-
-                break;
-        }
-
-        begin(ctx, c -> {
-            for (String sqlstate : sqlstates)
-                c.visit(keyword("declare continue handler for sqlstate")).sql(' ').visit(DSL.inline(sqlstate)).sql(' ').visit(K_BEGIN).sql(' ').visit(K_END).sql(';').formatSeparator();
-
-            runnable.accept(c);
-            semicolonAfterStatement(c, null);
-        });
-    }
-
-    static final void toSQLDDLTypeDeclarationForAddition(Context<?> ctx, Table<?> table, DataType<?> type) {
-        boolean qualify = ctx.qualify();
+    static final void toSQLDDLTypeDeclarationForAddition(Context<?> ctx, DataType<?> type) {
         toSQLDDLTypeDeclaration(ctx, type);
-
-        // [#15048] While qualified type declarations are supported, we can't
-        //          have qualified field references elsewhere, e.g. in computed
-        //          column declarations.
-        ctx.qualify(false);
-        toSQLDDLTypeDeclarationIdentityBeforeNull(ctx, table, type);
-
+        toSQLDDLTypeDeclarationIdentityBeforeNull(ctx, type);
 
 
 
@@ -5732,29 +5291,21 @@ final class Tools {
         if (!DEFAULT_BEFORE_NULL.contains(ctx.dialect()))
             toSQLDDLTypeDeclarationDefault(ctx, type);
 
-        toSQLDDLTypeDeclarationIdentityAfterNull(ctx, table, type);
+        toSQLDDLTypeDeclarationIdentityAfterNull(ctx, type);
 
 
 
-
-
-        ctx.qualify(qualify);
     }
 
     private static final void toSQLDDLTypeDeclarationForAdditionNullability(Context<?> ctx, DataType<?> type) {
         switch (type.nullability()) {
             case NOT_NULL:
-
-                // [#11485] Some dialects don't support NOT NULL constraints!
-                // [#7539]  Or they support them (being the default), but not the syntax
-                if (!NO_SUPPORT_NOT_NULL.contains(ctx.dialect()))
-                    ctx.sql(' ').visit(K_NOT_NULL);
-
+                ctx.sql(' ').visit(K_NOT_NULL);
                 break;
 
             case NULL:
 
-                // [#3400] [#4321] [#7392] [#10819] E.g. Derby, Firebird, HSQLDB do not support explicit nullability.
+                // [#3400] [#4321] [#7392] E.g. Derby, Firebird, HSQLDB do not support explicit nullability.
                 if (!NO_SUPPORT_NULL.contains(ctx.dialect()))
                     ctx.sql(' ').visit(K_NULL);
 
@@ -5798,28 +5349,13 @@ final class Tools {
         }
     }
 
-    static final Sequence<?> identitySequence(Table<?> table) {
-        if (table == null)
-            return DSL.sequence(unquotedName("id"));
-
-        Name n = table.getQualifiedName();
-
-        if (n.qualified())
-            n = n.qualifier().append(n.last() + "_seq");
-        else
-            n = name(n.last() + "_seq");
-
-        return DSL.sequence(n);
-    }
-
-    private static final Set<SQLDialect> REQUIRE_IDENTITY_AFTER_NULL = SQLDialect.supportedBy(DUCKDB, H2, MARIADB, MYSQL);
-    private static final Set<SQLDialect> SUPPORT_PG_IDENTITY         = SQLDialect.supportedBy(POSTGRES);
+    private static final Set<SQLDialect> REQUIRE_IDENTITY_AFTER_NULL = SQLDialect.supportedBy(H2, MARIADB, MYSQL);
 
     /**
      * If a type is an identity type, some dialects require the relevant
      * keywords before the [ NOT ] NULL constraint.
      */
-    static final void toSQLDDLTypeDeclarationIdentityBeforeNull(Context<?> ctx, Table<?> table, DataType<?> type) {
+    static final void toSQLDDLTypeDeclarationIdentityBeforeNull(Context<?> ctx, DataType<?> type) {
         if (REQUIRE_IDENTITY_AFTER_NULL.contains(ctx.dialect()))
             return;
 
@@ -5838,11 +5374,16 @@ final class Tools {
 
                 case HSQLDB:    ctx.sql(' ').visit(K_GENERATED).sql(' ').visit(K_BY).sql(' ').visit(K_DEFAULT).sql(' ').visit(K_AS).sql(' ').visit(K_IDENTITY).sql('(').visit(K_START_WITH).sql(" 1)"); break;
                 case SQLITE:    ctx.sql(' ').visit(K_PRIMARY_KEY).sql(' ').visit(K_AUTOINCREMENT); break;
-
                 case POSTGRES:
-                    if (SUPPORT_PG_IDENTITY.contains(ctx.dialect()))
-                        ctx.sql(' ').visit(K_GENERATED).sql(' ').visit(K_BY).sql(' ').visit(K_DEFAULT).sql(' ').visit(K_AS).sql(' ').visit(K_IDENTITY);
+                    switch (ctx.dialect()) {
 
+
+
+
+
+                        case POSTGRES:
+                                ctx.sql(' ').visit(K_GENERATED).sql(' ').visit(K_BY).sql(' ').visit(K_DEFAULT).sql(' ').visit(K_AS).sql(' ').visit(K_IDENTITY); break;
+                    }
                     break;
 
 
@@ -5857,7 +5398,7 @@ final class Tools {
      * If a type is an identity type, some dialects require the relevant
      * keywords after the [ NOT ] NULL constraint.
      */
-    static final void toSQLDDLTypeDeclarationIdentityAfterNull(Context<?> ctx, Table<?> table, DataType<?> type) {
+    static final void toSQLDDLTypeDeclarationIdentityAfterNull(Context<?> ctx, DataType<?> type) {
         if (!REQUIRE_IDENTITY_AFTER_NULL.contains(ctx.dialect()))
             return;
 
@@ -5877,96 +5418,9 @@ final class Tools {
 
                 case MARIADB:
                 case MYSQL:  ctx.sql(' ').visit(K_AUTO_INCREMENT); break;
-                case DUCKDB: ctx.sql(' ').visit(K_DEFAULT).sql(' ').visit(identitySequence(table).nextval()); break;
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -6075,36 +5529,8 @@ final class Tools {
 
 
     private static final void toSQLDDLTypeDeclarationDefault(Context<?> ctx, DataType<?> type) {
-        if (type.defaulted()) {
-            Field<?> v = type.defaultValue();
-            ctx.sql(' ').visit(K_DEFAULT).sql(' ');
-
-            // [#17803] Some dialects can't handle expressions in defaults.
-            if (NO_SUPPORT_DEFAULT_CAST.contains(ctx.dialect()))
-                ctx.castMode(CastMode.NEVER, c -> visitDefault(c, type, v));
-            else
-                visitDefault(ctx, type, v);
-        }
-    }
-
-    private static final void visitDefault(Context<?> ctx, DataType<?> type, Field<?> v) {
-        // [#15943] Some dialects require parentheses around expressions. We can't use AbstractField::parenthesised
-        //          as that just declares whether an expression requires additional parentheses in operator
-        //          expressions, not if actual parentheses are rendered.
-        if (REQUIRES_PARENTHESISED_DEFAULT.contains(ctx.dialect()))
-            ctx.sql('(').visit(v).sql(')');
-
-        // [#16853] MySQL LOB types can't have defaults. Except if we parenthesise them, then they can o_O
-        else if (REQUIRES_PARENTHESISED_DEFAULT_FOR_LOBS.contains(ctx.dialect()) && (type.isLob() || type.isJSON() || type.isSpatial()))
-            ctx.sql('(').visit(v).sql(')');
-
-        // [#16498] Special cases where the standard datetime literal prefix needs to be omitted
-        //          See: https://bugs.mysql.com/bug.php?id=114450
-        else if (NO_SUPPORT_DEFAULT_DATETIME_LITERAL_PREFIX.contains(ctx.dialect()) && type.isDateTime())
-            ctx.data(DATA_OMIT_DATETIME_LITERAL_PREFIX, true, c -> c.visit(v));
-
-        else
-            ctx.visit(v);
+        if (type.defaulted())
+            ctx.sql(' ').visit(K_DEFAULT).sql(' ').visit(type.defaultValue());
     }
 
     static final void toSQLDDLTypeDeclaration(Context<?> ctx, DataType<?> type) {
@@ -6115,16 +5541,13 @@ final class Tools {
 
 
 
-        toSQLDDLTypeDeclaration0(ctx, type);
-    }
+        DataType<?> elementType = type instanceof ArrayDataType
+            ? ((ArrayDataType<?>) type).elementType
+            : type;
 
-
-    static final void toSQLDDLTypeDeclaration0(Context<?> ctx, DataType<?> type) {
-
-
-
-
-
+        // In some databases, identity is a type, not a flag.
+        if (type.identity()) {
+            switch (ctx.family()) {
 
 
 
@@ -6155,12 +5578,8 @@ final class Tools {
 
 
 
-
-
-
-
-
-
+            }
+        }
 
         // [#5299] MySQL enum types
         if (EnumType.class.isAssignableFrom(type.getType())) {
@@ -6177,7 +5596,7 @@ final class Tools {
                     ctx.visit(K_ENUM).sql('(');
 
                     String separator = "";
-                    for (EnumType e : enums(enumType)) {
+                    for (EnumType e : enumConstants(enumType)) {
                         ctx.sql(separator).visit(DSL.inline(e.getLiteral()));
                         separator = ", ";
                     }
@@ -6189,7 +5608,6 @@ final class Tools {
                 // [#7597] In PostgreSQL, the enum type reference should be used
 
 
-                case DUCKDB:
                 case POSTGRES:
                 case YUGABYTEDB: {
 
@@ -6218,19 +5636,7 @@ final class Tools {
         if (type.isTimestamp() && (type.getBinding() instanceof DateAsTimestampBinding || type.getBinding() instanceof LocalDateAsLocalDateTimeBinding))
             type = SQLDataType.DATE;
 
-        if (ctx.family() == CLICKHOUSE) {
-            ctx.sql(type.getCastTypeName(ctx.configuration()));
-            return;
-        }
-
-        DataType<?> elementType = type.getArrayBaseDataType();
         String typeName = type.getTypeName(ctx.configuration());
-
-
-
-
-
-
 
         // [#8070] Make sure VARCHAR(n) ARRAY types are generated as such in HSQLDB
         if (type.hasLength() || elementType.hasLength()) {
@@ -6262,10 +5668,7 @@ final class Tools {
                     ctx.sql(typeName);
             }
         }
-        else if (type.hasPrecision()
-            && type.precisionDefined()
-            && !unsupportedDatetimePrecision(ctx, type)
-        ) {
+        else if (type.hasPrecision() && type.precision() > 0 && (!type.isTimestamp() || !NO_SUPPORT_TIMESTAMP_PRECISION.contains(ctx.dialect()))) {
 
             // [#6745] [#9473] The DataType.getCastTypeName() cannot be used in some dialects, for DDL
             if (NO_SUPPORT_CAST_TYPE_IN_DDL.contains(ctx.dialect()))
@@ -6299,9 +5702,6 @@ final class Tools {
 
 
 
-        // [#15048] User defined types may need quoting, etc.
-        else if (type.isOther() && !(type instanceof BuiltInDataType))
-            ctx.visit(type.getQualifiedName());
         else
             ctx.sql(typeName);
 
@@ -6315,15 +5715,20 @@ final class Tools {
     }
 
     static final boolean storedEnumType(DataType<EnumType> enumType) {
-        return enums(enumType)[0].getName() != null;
+        return enumConstants(enumType)[0].getSchema() != null;
     }
 
-    static final EnumType[] enums(DataType<? extends EnumType> type) {
-        return enums(type.getType());
+    private static final EnumType[] enumConstants(DataType<? extends EnumType> type) {
+        EnumType[] enums = type.getType().getEnumConstants();
+
+        if (enums == null)
+            throw new DataTypeException("EnumType must be a Java enum");
+
+        return enums;
     }
 
     static final DataType<String> emulateEnumType(DataType<? extends EnumType> type) {
-        return emulateEnumType(type, enums(type));
+        return emulateEnumType(type, enumConstants(type));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -6333,13 +5738,6 @@ final class Tools {
             length = Math.max(length, e.getLiteral().length());
 
         return VARCHAR(length).nullability(type.nullability()).defaultValue((Field) type.defaultValue());
-    }
-
-    static final <C extends Context<? extends C>> C prependInline(C ctx, String prepend, Field<?> inline, String append) {
-        if (inline instanceof Param<?> p)
-            return ctx.visit(DSL.inline(prepend + p.getValue() + append));
-        else
-            return ctx.visit(DSL.inline(prepend).concat(inline).concat(DSL.inline(append)), ParamType.INLINED);
     }
 
     static final <C extends Context<? extends C>> C prependSQL(C ctx, Query... queries) {
@@ -6405,8 +5803,29 @@ final class Tools {
         };
     }
 
+    @SuppressWarnings("unchecked")
     static final <E extends EnumType> E[] enums(Class<? extends E> type) {
-        return Internal.enums(type);
+
+        // Java implementation
+        if (Enum.class.isAssignableFrom(type)) {
+            return type.getEnumConstants();
+        }
+
+        // [#4427] Scala implementation
+        else {
+            try {
+
+                // There's probably a better way to do this:
+                // http://stackoverflow.com/q/36068089/521799
+                Class<?> companionClass = Thread.currentThread().getContextClassLoader().loadClass(type.getName() + "$");
+                java.lang.reflect.Field module = companionClass.getField("MODULE$");
+                Object companion = module.get(companionClass);
+                return (E[]) companionClass.getMethod("values").invoke(companion);
+            }
+            catch (Exception e) {
+                throw new MappingException("Error while looking up Scala enum", e);
+            }
+        }
     }
 
     /**
@@ -6430,15 +5849,7 @@ final class Tools {
         return t == Date.class || t == LocalDate.class;
     }
 
-    static final boolean hasAmbiguousNamesInTables(Iterable<? extends Table<?>> tables) {
-        if (tables == null)
-            return false;
-
-        Set<String> names = new HashSet<>();
-        return anyMatch(tables, t -> anyMatch(t.fields(), f -> !names.add(f.getName())));
-    }
-
-    static final boolean hasAmbiguousNames(Iterable<? extends Field<?>> fields) {
+    static final boolean hasAmbiguousNames(Collection<? extends Field<?>> fields) {
         if (fields == null)
             return false;
 
@@ -6447,8 +5858,8 @@ final class Tools {
     }
 
     static final SelectFieldOrAsterisk qualify(Table<?> table, SelectFieldOrAsterisk field) {
-        if (field instanceof Field<?> f)
-            return qualify(table, f);
+        if (field instanceof Field)
+            return qualify(table, (Field<?>) field);
         else if (field instanceof Asterisk)
             return table.asterisk();
         else if (field instanceof QualifiedAsterisk)
@@ -6456,10 +5867,6 @@ final class Tools {
         // [#11812] TODO: handle field instanceof Row
         else
             throw new UnsupportedOperationException("Unsupported field : " + field);
-    }
-
-    static final Field<?>[] qualify(Table<?> table, Field<?>[] fields) {
-        return map(fields, f -> qualify(table, f), Field<?>[]::new);
     }
 
     static final <T> Field<T> qualify(Table<?> table, Field<T> field) {
@@ -6477,10 +5884,10 @@ final class Tools {
     }
 
     static final <T> Field<T> field(OrderField<T> orderField) {
-        if (orderField instanceof Field<T> f)
-            return f;
+        if (orderField instanceof Field)
+            return (Field<T>) orderField;
         else
-            return ((SortField<T>) orderField).$field();
+            return ((SortFieldImpl<T>) orderField).getField();
     }
 
     static final Field<?>[] fields(OrderField<?>[] orderFields) {
@@ -6496,24 +5903,9 @@ final class Tools {
         return result != null ? result : field;
     }
 
-    @SuppressWarnings("unchecked")
-    static final <T> Field<T> unaliasTable(Field<T> field) {
-        if (field instanceof TableField<?, ?> tf) {
-            Table<?> t = aliased(tf.getTable());
-
-            // [#14671] Use only the Field::getName for lookups to avoid:
-            //          - StackOverflowError
-            //          - Otherwise Field or Name related lookup efforts
-            if (t != null)
-                return (Field<T>) t.field(field.getName());
-        }
-
-        return field;
-    }
-
     static final <T> Field<T> aliased(Field<T> field) {
-        if (field instanceof FieldAlias<T> f)
-            return f.getAliasedField();
+        if (field instanceof FieldAlias)
+            return ((FieldAlias<T>) field).getAliasedField();
         else
             return null;
     }
@@ -6523,51 +5915,29 @@ final class Tools {
         return result != null ? result : table;
     }
 
-    static final TableElement uncollate(TableElement field) {
-        if (field instanceof QOM.Collated c)
-            return uncollate(c.$field());
-        else
-            return field;
-    }
-
     static final boolean isScalarSubquery(Field<?> field) {
         // TODO: Replace other instanceof checks by this one
         return uncoerce(field) instanceof ScalarSubquery;
     }
 
     static final Field<?> uncoerce(Field<?> field) {
-        return field instanceof Coerce<?> f ? f.field : field;
-    }
-
-    static final <R extends Record> Table<R> unwrap(Table<R> table) {
-        return unwrap(table, true);
-    }
-
-    static final <R extends Record> Table<R> unwrap(Table<R> table, boolean unalias) {
-        Table<R> r = table;
-
-        if (table instanceof AbstractDelegatingTable<R> t)
-            return unwrap(t.delegate);
-        else if (unalias && (r = unalias(table)) != table)
-            return unwrap(r);
-        else
-            return r;
+        return field instanceof Coerce ? ((Coerce<?>) field).field : field;
     }
 
     static final <R extends Record> Table<R> aliased(Table<R> table) {
-        if (table instanceof TableImpl<R> t)
-            return t.getAliasedTable();
-        else if (table instanceof TableAlias<R> t)
-            return t.getAliasedTable();
+        if (table instanceof TableImpl)
+            return ((TableImpl<R>) table).getAliasedTable();
+        else if (table instanceof TableAlias)
+            return ((TableAlias<R>) table).getAliasedTable();
         else
             return null;
     }
 
     static final <R extends Record> Alias<Table<R>> alias(Table<R> table) {
-        if (table instanceof TableImpl<R> t)
-            return t.alias;
-        else if (table instanceof TableAlias<R> t)
-            return t.alias;
+        if (table instanceof TableImpl)
+            return ((TableImpl<R>) table).alias;
+        else if (table instanceof TableAlias)
+            return ((TableAlias<R>) table).alias;
         else
             return null;
     }
@@ -6634,15 +6004,15 @@ final class Tools {
      * Look up a field in a table, or create a new qualified field from the table.
      */
     static final Field<?> tableField(Table<?> table, Object field) {
-        if (field instanceof Field<?> f)
-            return f;
-        else if (field instanceof Name n) {
+        if (field instanceof Field)
+            return (Field<?>) field;
+        else if (field instanceof Name) { Name n = (Name) field;
             if (table.fieldsRow().size() == 0)
                 return DSL.field(table.getQualifiedName().append(n.unqualifiedName())) ;
             else
                 return table.field(n);
         }
-        else if (field instanceof String s) {
+        else if (field instanceof String) { String s = (String) field;
             if (table.fieldsRow().size() == 0)
                 return DSL.field(table.getQualifiedName().append(s));
             else
@@ -6734,25 +6104,11 @@ final class Tools {
     static final boolean isEmpty(Iterable<?> it) {
         if (it == null)
             return true;
-        else if (it instanceof Collection<?> c)
-            return isEmpty(c);
+        else if (it instanceof Collection)
+            return isEmpty((Collection<?>) it);
 
         Iterator<?> i = it.iterator();
         return !i.hasNext();
-    }
-
-    static final boolean exactlyOne(Iterable<?> it) {
-        if (it == null)
-            return false;
-        else if (it instanceof Collection<?> c)
-            return c.size() == 1;
-
-        Iterator<?> i = it.iterator();
-        return i.hasNext() && true_(i.next()) && !i.hasNext();
-    }
-
-    static final boolean true_(Object o) {
-        return true;
     }
 
     static final boolean isNotEmpty(Object[] array) {
@@ -6769,8 +6125,8 @@ final class Tools {
 
     @SuppressWarnings("unchecked")
     static final Class<? extends AbstractRecord> embeddedRecordType(Field<?> field) {
-        return field instanceof EmbeddableTableField<?, ?> e
-             ? (Class<AbstractRecord>) e.recordType
+        return field instanceof EmbeddableTableField
+             ? (Class<AbstractRecord>) ((EmbeddableTableField<?, ?>) field).recordType
              : field instanceof Val && ((Val<?>) field).value instanceof EmbeddableRecord
              ? ((AbstractRecord) ((Val<?>) field).value).getClass()
              : field.getDataType().isEmbeddable()
@@ -6780,12 +6136,12 @@ final class Tools {
 
     @SuppressWarnings("unchecked")
     static final Field<?>[] embeddedFields(Field<?> field) {
-        return field instanceof EmbeddableTableField<?, ?> e
-             ? e.fields
+        return field instanceof EmbeddableTableField
+             ? ((EmbeddableTableField<?, ?>) field).fields
              : field instanceof Val && ((Val<?>) field).value instanceof EmbeddableRecord
              ? ((EmbeddableRecord<?>) ((Val<?>) field).value).valuesRow().fields()
-             : field instanceof ScalarSubquery<?> s
-             ? embeddedFields(s)
+             : field instanceof ScalarSubquery
+             ? embeddedFields((ScalarSubquery<?>) field)
              : field.getDataType().isEmbeddable()
              ? newInstance(((Field<EmbeddableRecord<?>>) field).getType()).valuesRow().fields()
              : null;
@@ -6825,16 +6181,6 @@ final class Tools {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
     static final boolean hasEmbeddedFields(Field<?>[] fields) {
         return anyMatch(fields, f -> f.getDataType().isEmbeddable());
     }
@@ -6843,43 +6189,9 @@ final class Tools {
         return anyMatch(fields, f -> f.getDataType().isEmbeddable());
     }
 
-    static final <E> Iterable<E> concat(Iterable<E> i1, Iterable<E> i2) {
-        return () -> concat(i1.iterator(), i2.iterator());
-    }
-
-    static final <E> Iterator<E> concat(Iterator<E> i1, Iterator<E> i2) {
-        return new Iterator<E>() {
-            boolean first = true;
-
-            @Override
-            public boolean hasNext() {
-                if (first)
-                    if (i1.hasNext())
-                        return true;
-                    else
-                        first = false;
-
-                return i2.hasNext();
-            }
-
-            @Override
-            public E next() {
-                return first ? i1.next() : i2.next();
-            }
-
-            @Override
-            public void remove() {
-                if (first)
-                    i1.remove();
-                else
-                    i2.remove();
-            }
-        };
-    }
-
     static final <E> List<E> collect(Iterable<E> iterable) {
-        if (iterable instanceof List<E> l)
-            return l;
+        if (iterable instanceof List)
+            return (List<E>) iterable;
 
         List<E> result = new ArrayList<>();
         for (E e : iterable)
@@ -6927,11 +6239,6 @@ final class Tools {
                 uptodate = false;
                 return next;
             }
-
-            @Override
-            public void remove() {
-                iterator.remove();
-            }
         };
     }
 
@@ -6952,8 +6259,8 @@ final class Tools {
     }
 
     static final Iterable<Field<?>> flattenFieldOrRow(FieldOrRow fr) {
-        if (fr instanceof Field<?> f)
-            return flatten(f);
+        if (fr instanceof Field)
+            return flatten((Field<?>) fr);
         else
             return asList(((Row) fr).fields());
     }
@@ -7017,7 +6324,7 @@ final class Tools {
 
             // TODO [#10525] Should embedded records be emulated as RowField?
             if (flattenRowFields) {
-                if (e instanceof AbstractRowAsField<?> r) {
+                if (e instanceof AbstractRowAsField) { AbstractRowAsField<?> r = (AbstractRowAsField<?>) e;
                     List<Field<?>> result = new ArrayList<>();
 
                     for (Field<?> field : flattenCollection(asList(r.fields0().fields()), removeDuplicates, flattenRowFields))
@@ -7046,7 +6353,7 @@ final class Tools {
         return () -> new FlatteningIterator<>(iterable.iterator(), (e, duplicates) -> {
 
             // [#9879] [#13325] TODO: Support also UPDATE .. SET ROW = ...
-            if (e.getKey() instanceof EmbeddableTableField<?, ?> key) {
+            if (e.getKey() instanceof EmbeddableTableField) { EmbeddableTableField<?, ?> key = (EmbeddableTableField<?, ?>) e.getKey();
                 List<Entry<FieldOrRow, FieldOrRowOrSelect>> result = new ArrayList<>();
                 Field<?>[] keys = embeddedFields(key);
                 Field<?>[] values = embeddedFields((Field<?>) e.getValue());
@@ -7219,14 +6526,6 @@ final class Tools {
      * Normalise a name case depending on the dialect and the setting for
      * {@link ParseNameCase}.
      */
-    static final String normaliseNameCase(Configuration configuration, String name, boolean quoted) {
-        return normaliseNameCase(configuration, name, quoted, SettingsTools.parseLocale(configuration.settings()));
-    }
-
-    /**
-     * Normalise a name case depending on the dialect and the setting for
-     * {@link ParseNameCase}.
-     */
     static final String normaliseNameCase(Configuration configuration, String name, boolean quoted, Locale locale) {
         switch (parseNameCase(configuration)) {
             case LOWER_IF_UNQUOTED:
@@ -7257,7 +6556,7 @@ final class Tools {
      * Get the {@link ParseNameCase}, looking up the default value from the
      * parse dialect.
      */
-    static final ParseNameCase parseNameCase(Configuration configuration) {
+    private static final ParseNameCase parseNameCase(Configuration configuration) {
         ParseNameCase result = defaultIfNull(configuration.settings().getParseNameCase(), ParseNameCase.DEFAULT);
 
         if (result == ParseNameCase.DEFAULT) {
@@ -7281,12 +6580,9 @@ final class Tools {
 
 
 
-                case CLICKHOUSE:
-                case DUCKDB:
                 case MARIADB:
                 case MYSQL:
                 case SQLITE:
-                case TRINO:
                     return ParseNameCase.AS_IS;
 
                 default:
@@ -7306,16 +6602,14 @@ final class Tools {
 
 
 
+                case H2:
                 case POSTGRES:
                 case YUGABYTEDB:
                     return NestedCollectionEmulation.JSONB;
 
-
-                case H2:
                 case MARIADB:
                 case MYSQL:
                 case SQLITE:
-                case TRINO:
                     return NestedCollectionEmulation.JSON;
 
 
@@ -7337,7 +6631,6 @@ final class Tools {
 
 
 
-                case DUCKDB:
                 default:
                     return NestedCollectionEmulation.NATIVE;
             }
@@ -7469,35 +6762,9 @@ final class Tools {
     static final <T> Field<T> nullSafe(Field<T> field, DataType<?> type) {
         return field == null
              ? (Field<T>) DSL.val((T) null, type)
-             : field instanceof Condition c
-             ? (Field<T>) DSL.field(c)
+             : field instanceof Condition
+             ? (Field<T>) DSL.field((Condition) field)
              : convertVal(field, type);
-    }
-
-    @SuppressWarnings("unchecked")
-    static final <T, R extends Record1<T>> QuantifiedSelect<? extends Record1<T>> nullSafeQuantifiedSelect(QuantifiedSelect<? extends Record1<T>> s, DataType<?> type) {
-        if (s instanceof QuantifiedArray) {
-            QuantifiedArray<R> a = (QuantifiedArray<R>) s;
-            Field<R[]> a1 = a.array;
-            Field<R[]> a2 = convertVal(a1, type.array());
-
-            if (a1 != a2) {
-                return (QuantifiedArray) a.$array(a2);
-            }
-        }
-        return s;
-    }
-
-    /**
-     * In very rare cases, we want {@link #nullSafe(Field, DataType)} behaviour
-     * but only for <code>null</code> values.
-     */
-    static final Field<?> nullSafeNoConvertVal(Object field, DataType<?> type) {
-        return field == null
-             ? DSL.val(null, type)
-             : field instanceof Condition c
-             ? DSL.field(c)
-             : field(field);
     }
 
     @SuppressWarnings("unchecked")
@@ -7505,17 +6772,6 @@ final class Tools {
         return isVal(field)
              ? (Field<T>) extractVal(field).convertTo(type)
              : field;
-    }
-
-    static final List<Field<?>> nullSafe(Collection<? extends Field<?>> fields) {
-        if (fields == null)
-            return emptyList();
-
-        List<Field<?>> result = new ArrayList<>(fields.size());
-        for (Field<?> f : fields)
-            result.add(nullSafe(f));
-
-        return result;
     }
 
     static final Field<?>[] nullSafe(Field<?>... fields) {
@@ -7559,17 +6815,8 @@ final class Tools {
         return (DataType<T>) (field == null ? SQLDataType.OTHER : field.getDataType());
     }
 
-    @SuppressWarnings("unchecked")
-    static final <T> DataType<T> nullSafeDataType(Field<?>[] values) {
-        return (DataType<T>) (isEmpty(values) ? SQLDataType.OTHER : values[0].getDataType());
-    }
-
     static final <T> Field<T> nullSafeNotNull(Field<T> field, DataType<?> type) {
         return nullableIf(false, nullSafe(field, type));
-    }
-
-    static final Field<?> nullSafeNoConvertValNotNull(Field<?> field, DataType<?> type) {
-        return nullableIf(false, nullSafeNoConvertVal(field, type));
     }
 
     static final <T> Field<T> nullableIf(boolean nullable, Field<T> field) {
@@ -7594,40 +6841,16 @@ final class Tools {
         return (r, t) -> r || unaliased.equals(f.apply(t));
     }
 
-    static final boolean containsTable(Table<?> in, Table<?> search, boolean unalias) {
-
-        // [#6304] [#7626] [#14668] Improved alias discovery
-        return traverseJoins(in, false, r -> r, search(search, t -> unwrap(t, unalias)));
-    }
-
-    static final boolean containsTable(Iterable<? extends Table<?>> in, Table<?> search, boolean unalias) {
-
-        // [#6304] [#7626] [#14668] Improved alias discovery
-        return traverseJoins(in, false, r -> r, search(search, t -> unwrap(t, unalias)));
-    }
-
     static final boolean containsUnaliasedTable(Table<?> in, Table<?> search) {
 
-        // [#6304] [#7626] [#14668] Improved alias discovery
-        return traverseJoins(in, false, r -> r, search(search, Tools::unwrap));
+        // [#6304] [#7626] Improved alias discovery
+        return traverseJoins(in, false, r -> r, search(search, Tools::unalias));
     }
 
     static final boolean containsUnaliasedTable(Iterable<? extends Table<?>> in, Table<?> search) {
 
-        // [#6304] [#7626] [#14668] Improved alias discovery
-        return traverseJoins(in, false, r -> r, search(search, Tools::unwrap));
-    }
-
-    static final List<Table<?>> joinedTables(Iterable<? extends Table<?>> i) {
-        List<Table<?>> result = new ArrayList<>();
-        traverseJoins(i, result::add);
-        return result;
-    }
-
-    static final List<Table<?>> joinedTables(Table<?> t) {
-        List<Table<?>> result = new ArrayList<>();
-        traverseJoins(t, result::add);
-        return result;
+        // [#6304] [#7626] Improved alias discovery
+        return traverseJoins(in, false, r -> r, search(search, Tools::unalias));
     }
 
     static final void traverseJoins(Iterable<? extends Table<?>> i, Consumer<? super Table<?>> consumer) {
@@ -7667,8 +6890,8 @@ final class Tools {
         Iterable<? extends Table<?>> i,
         T result,
         Predicate<? super T> abort,
-        Predicate<? super JoinTable<?>> recurseLhs,
-        Predicate<? super JoinTable<?>> recurseRhs,
+        Predicate<? super JoinTable> recurseLhs,
+        Predicate<? super JoinTable> recurseRhs,
         BiFunction<? super T, ? super JoinType, ? extends T> joinTypeFunction,
         BiFunction<? super T, ? super Table<?>, ? extends T> tableFunction
     ) {
@@ -7685,15 +6908,15 @@ final class Tools {
         Table<?> t,
         T result,
         Predicate<? super T> abort,
-        Predicate<? super JoinTable<?>> recurseLhs,
-        Predicate<? super JoinTable<?>> recurseRhs,
+        Predicate<? super JoinTable> recurseLhs,
+        Predicate<? super JoinTable> recurseRhs,
         BiFunction<? super T, ? super JoinType, ? extends T> joinTypeFunction,
         BiFunction<? super T, ? super Table<?>, ? extends T> tableFunction
     ) {
         if (abort != null && abort.test(result))
             return result;
 
-        if (t instanceof JoinTable<?> j) {
+        if (t instanceof JoinTable) { JoinTable j = (JoinTable) t;
             if (recurseLhs == null || recurseLhs.test(j)) {
                 result = traverseJoins(j.lhs, result, abort, recurseLhs, recurseRhs, joinTypeFunction, tableFunction);
 
@@ -7794,215 +7017,5 @@ final class Tools {
             else
                 throw e;
         }
-    }
-
-    static final <T> DataType<T> removeGenerator(Configuration configuration, DataType<T> dataType) {
-
-
-
-
-
-
-
-
-
-        return dataType;
-    }
-
-    static final ConverterContext converterContext(Attachable attachable) {
-        return new DefaultConverterContext(configuration(attachable));
-    }
-
-    static final ConverterContext converterContext(Configuration configuration) {
-        return new DefaultConverterContext(configuration(configuration));
-    }
-
-
-
-
-
-
-
-
-
-
-    /**
-     * Wrap an expression in a derived table to allow for simplifying
-     * referencing it.
-     */
-    static final <T1, R> Field<R> derivedTable(
-        Context<?> ctx,
-        Field<T1> f1,
-        Function1<? super Field<T1>, ? extends Field<R>> f
-    ) {
-        return derivedTableIf(ctx, true, f1, f);
-    }
-
-    /**
-     * Wrap expressions in a derived table to allow for simplifying referencing
-     * them.
-     */
-    static final <T1, T2, R> Field<R> derivedTable(
-        Context<?> ctx,
-        Field<T1> f1,
-        Field<T2> f2,
-        Function2<? super Field<T1>, ? super Field<T2>, ? extends Field<R>> f
-    ) {
-        return derivedTableIf(ctx, true, f1, f2, f);
-    }
-
-    /**
-     * Wrap expressions in a derived table to allow for simplifying referencing
-     * them.
-     */
-    static final <T1, T2, T3, R> Field<R> derivedTable(
-        Context<?> ctx,
-        Field<T1> f1,
-        Field<T2> f2,
-        Field<T3> f3,
-        Function3<? super Field<T1>, ? super Field<T2>, ? super Field<T3>, ? extends Field<R>> f
-    ) {
-        return derivedTableIf(ctx, true, f1, f2, f3, f);
-    }
-
-    /**
-     * Wrap an expression in a derived table to allow for simplifying
-     * referencing it.
-     */
-    static final <T1, R> Field<R> derivedTableIf(
-        Context<?> ctx,
-        boolean condition,
-        Field<T1> f1,
-        Function1<? super Field<T1>, ? extends Field<R>> f
-    ) {
-        if (condition && derivedTableEnabled(ctx) && !isSimple(ctx, f1))
-            return DSL.field(select(f.apply(DSL.field(name("f1"), f1.getDataType()))).from(select(f1.as("f1")).asTable("t")));
-        else
-            return f.apply(f1);
-    }
-
-    /**
-     * Wrap expressions in a derived table to allow for simplifying referencing
-     * them.
-     */
-    static final <T1, T2, R> Field<R> derivedTableIf(
-        Context<?> ctx,
-        boolean condition,
-        Field<T1> f1,
-        Field<T2> f2,
-        Function2<? super Field<T1>, ? super Field<T2>, ? extends Field<R>> f
-    ) {
-        if (condition && derivedTableEnabled(ctx) && !isSimple(ctx, f1) && !isSimple(ctx, f2))
-            return DSL.field(select(f.apply(DSL.field(name("f1"), f1.getDataType()), DSL.field(name("f2"), f2.getDataType()))).from(select(f1.as("f1"), f2.as("f2")).asTable("t")));
-        else
-            return f.apply(f1, f2);
-    }
-
-    /**
-     * Wrap expressions in a derived table to allow for simplifying referencing
-     * them.
-     */
-    static final <T1, T2, T3, R> Field<R> derivedTableIf(
-        Context<?> ctx,
-        boolean condition,
-        Field<T1> f1,
-        Field<T2> f2,
-        Field<T3> f3,
-        Function3<? super Field<T1>, ? super Field<T2>, ? super Field<T3>, ? extends Field<R>> f
-    ) {
-        if (condition && derivedTableEnabled(ctx) && !isSimple(ctx, f1) && !isSimple(ctx, f2) && !isSimple(ctx, f3))
-            return DSL.field(select(f.apply(DSL.field(name("f1"), f1.getDataType()), DSL.field(name("f2"), f2.getDataType()), DSL.field(name("f3"), f3.getDataType()))).from(select(f1.as("f1"), f2.as("f2"), f3.as("f3")).asTable("t")));
-        else
-            return f.apply(f1, f2, f3);
-    }
-
-    private static boolean derivedTableEnabled(Context<?> ctx) {
-        return !FALSE.equals(ctx.settings().isRenderVariablesInDerivedTablesForEmulations())
-            && !NO_SUPPORT_CORRELATED_SUBQUERY.contains(ctx.dialect())
-            && !NO_SUPPORT_CORRELATED_DERIVED_TABLE.contains(ctx.dialect());
-    }
-
-    @SuppressWarnings("removal")
-    static final DataType<?> componentDataType(Object[] array) {
-        if (!isEmpty(array) && array[0] instanceof Field<?> f) {
-            return f.getDataType();
-        }
-        else
-            return DSL.getDataType(array.getClass().getComponentType());
-    }
-
-    static final Object[] mostSpecificArray(Object[] array) {
-        if (isEmpty(array))
-            return array;
-
-        Class<?> type = null;
-        for (Object o : array)
-            if (o != null)
-                if (type == null)
-                    type = o.getClass();
-                else if (type != o.getClass())
-                    return array;
-
-        if (type == null)
-            return array;
-        else
-            return (Object[]) Convert.convertArray(array, type);
-    }
-
-    static final <R extends Record> QuantifiedSelect<R> quantify(Quantifier q, Select<R> select) {
-        switch (q) {
-            case ANY:
-                return any(select);
-            case ALL:
-                return all(select);
-            default:
-                throw new IllegalArgumentException("Unsupported quantifier: " + q);
-        }
-    }
-
-    static final <T> Field<T> ifNotNull(Field<?> field, Field<T> ifNotNull) {
-        if (field instanceof AbstractField<?> af) {
-            if (!af.isNullable())
-                return ifNotNull;
-        }
-
-        return when(field.isNotNull(), ifNotNull);
-    }
-
-    static final boolean sortable(Field<?> f) {
-        return !f.getDataType().isBinary();
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    static final String rtrim(String string) {
-        if (string == null)
-            return null;
-
-        int l = string.length();
-        int i = l - 1;
-
-        while (i >= 0 && Character.isWhitespace(string.charAt(i)))
-            i--;
-
-        if (i < l - 1)
-            return string.substring(0, i + 1);
-        else
-            return string;
     }
 }

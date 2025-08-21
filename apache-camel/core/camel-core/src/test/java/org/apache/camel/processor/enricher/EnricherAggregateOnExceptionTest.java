@@ -77,10 +77,10 @@ public class EnricherAggregateOnExceptionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").enrich("direct:foo", new MyAggregationStrategy(), true).to("mock:result");
 
                 from("direct:start2").enrich("direct:foo", new MyAggregationStrategy(), false).to("mock:result");
@@ -93,7 +93,7 @@ public class EnricherAggregateOnExceptionTest extends ContextTestSupport {
     public static class MyProcessor implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             String body = exchange.getIn().getBody(String.class);
             if (body.startsWith("Kaboom")) {
                 throw new IllegalArgumentException("I cannot do this");

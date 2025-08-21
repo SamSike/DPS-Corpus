@@ -32,17 +32,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisabledIfSystemProperty(named = "ci.env.name", matches = ".*", disabledReason = "Flaky on GitHub Actions")
+@DisabledIfSystemProperty(named = "ci.env.name", matches = "github.com", disabledReason = "Flaky on Apache CI")
 public class SecretsManagerUpdateSecretProducerLocalstackIT extends AwsSecretsManagerBaseTest {
 
     @EndpointInject("mock:result")
     private MockEndpoint mock;
 
     @Test
-    public void createSecretTest() throws InterruptedException {
+    public void createSecretTest() {
 
         mock.expectedMessageCount(1);
-        mock.expectedBodiesReceived("Test Body");
         Exchange exchange = template.request("direct:createSecret", new Processor() {
             @Override
             public void process(Exchange exchange) {
@@ -58,7 +57,7 @@ public class SecretsManagerUpdateSecretProducerLocalstackIT extends AwsSecretsMa
             @Override
             public void process(Exchange exchange) {
                 exchange.getIn().setHeader(SecretsManagerConstants.SECRET_ID, resultGet.arn());
-                exchange.getIn().setBody("Test Body");
+                exchange.getIn().setBody("Binary Body");
             }
         });
         Assertions.assertNotNull(exchange);
@@ -75,7 +74,8 @@ public class SecretsManagerUpdateSecretProducerLocalstackIT extends AwsSecretsMa
         });
         Assertions.assertNotNull(exchange);
 
-        mock.assertIsSatisfied();
+        String secret = exchange.getIn().getBody(String.class);
+        assertEquals("Binary Body", secret);
     }
 
     @Override
@@ -87,10 +87,10 @@ public class SecretsManagerUpdateSecretProducerLocalstackIT extends AwsSecretsMa
                         .to("aws-secrets-manager://test?operation=createSecret");
 
                 from("direct:updateSecret")
-                        .to("aws-secrets-manager://test?operation=updateSecret");
+                        .to("aws-secrets-manager://test?operation=updateSecret&binaryPayload=true");
 
                 from("direct:getSecret")
-                        .to("aws-secrets-manager://test?operation=getSecret")
+                        .to("aws-secrets-manager://test?operation=getSecret&binaryPayload=true")
                         .to("mock:result");
             }
         };

@@ -22,7 +22,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.component.seda.SedaComponent;
 import org.apache.camel.component.zookeepermaster.CuratorFactoryBean;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.support.SimpleRegistry;
@@ -62,15 +61,13 @@ public class MasterEndpointFailoverIT {
         registry.bind("curator", client);
 
         producerContext = new DefaultCamelContext(registry);
-        // Add the seda:start endpoint to avoid the NPE before starting the consumerContext1
+        // Add the vm:start endpoint to avoid the NPE before starting the consumerContext1
         producerContext.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
-                from("direct:start").to("seda:start");
+                from("direct:start").to("vm:start");
             }
         });
-        SedaComponent sedaComponent = new SedaComponent();
-        producerContext.addComponent("seda", sedaComponent);
 
         template = producerContext.createProducerTemplate();
 
@@ -78,23 +75,21 @@ public class MasterEndpointFailoverIT {
         consumerContext1.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
-                from("zookeeper-master:MasterEndpointFailoverTest:seda:start")
+                from("zookeeper-master:MasterEndpointFailoverTest:vm:start")
                         .to("log:result1")
                         .to("mock:result1");
             }
         });
-        consumerContext1.addComponent("seda", sedaComponent);
         consumerContext2 = new DefaultCamelContext(registry);
         consumerContext2.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
-                from("zookeeper-master:MasterEndpointFailoverTest:seda:start")
+                from("zookeeper-master:MasterEndpointFailoverTest:vm:start")
                         .to("log:result2")
                         .to("mock:result2");
             }
         });
-        consumerContext2.addComponent("seda", sedaComponent);
-        // Need to start at less one consumerContext to enable the seda queue for producerContext
+        // Need to start at less one consumerContext to enable the vm queue for producerContext
         producerContext.start();
         consumerContext1.start();
 
@@ -144,7 +139,7 @@ public class MasterEndpointFailoverIT {
 
         template.sendBody("direct:start", expectedBody);
 
-        LOG.info("Expecting master: {} and standby: {}", masterEndpoint, standbyEndpoint);
+        LOG.info("Expecting master: " + masterEndpoint + " and standby: " + standbyEndpoint);
         MockEndpoint.assertIsSatisfied(masterEndpoint, standbyEndpoint);
     }
 

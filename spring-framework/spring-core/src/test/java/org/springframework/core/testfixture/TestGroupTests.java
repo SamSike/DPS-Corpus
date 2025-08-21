@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package org.springframework.core.testfixture;
 
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
@@ -53,7 +52,12 @@ class TestGroupTests {
 
 	@AfterEach
 	void restoreOriginalTestGroups() {
-		setTestGroups(Objects.requireNonNullElse(this.originalTestGroups, ""));
+		if (this.originalTestGroups != null) {
+			setTestGroups(this.originalTestGroups);
+		}
+		else {
+			setTestGroups("");
+		}
 	}
 
 	@Test

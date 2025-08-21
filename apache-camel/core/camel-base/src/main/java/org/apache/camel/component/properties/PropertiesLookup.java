@@ -25,10 +25,9 @@ public interface PropertiesLookup {
     /**
      * Lookup the property with the given name
      *
-     * @param  name         property name
-     * @param  defaultValue default value for the property (if any exists)
-     * @return              the property value, or <tt>null</tt> if the properties does not exist.
+     * @param  name property name
+     * @return      the property value, or <tt>null</tt> if the properties does not exist.
      */
-    String lookup(String name, String defaultValue);
+    String lookup(String name);
 
 }

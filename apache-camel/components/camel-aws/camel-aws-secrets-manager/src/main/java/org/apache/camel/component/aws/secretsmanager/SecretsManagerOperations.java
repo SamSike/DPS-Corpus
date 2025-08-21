@@ -21,12 +21,10 @@ public enum SecretsManagerOperations {
     listSecrets,
     createSecret,
     getSecret,
-    batchGetSecret,
     describeSecret,
     deleteSecret,
     rotateSecret,
     updateSecret,
     restoreSecret,
-    replicateSecretToRegions,
-    putSecretValue
+    replicateSecretToRegions
 }

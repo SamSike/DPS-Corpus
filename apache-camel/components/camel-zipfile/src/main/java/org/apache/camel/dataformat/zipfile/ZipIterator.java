@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * <a href="http://camel.465427.n5.nabble.com/zip-file-best-practices-td5713437.html">zip file best practices</a>
  */
 public class ZipIterator implements Iterator<Message>, Closeable {
-    private static final Logger LOG = LoggerFactory.getLogger(ZipIterator.class);
+    static final Logger LOGGER = LoggerFactory.getLogger(ZipIterator.class);
 
     private final Exchange exchange;
     private boolean allowEmptyDirectory;
@@ -55,11 +55,7 @@ public class ZipIterator implements Iterator<Message>, Closeable {
         if (inputStream instanceof ZipInputStream) {
             zipInputStream = (ZipInputStream) inputStream;
         } else {
-            if (inputStream instanceof InputStream) {
-                zipInputStream = new ZipInputStream(inputStream);
-            } else {
-                zipInputStream = new ZipInputStream(new BufferedInputStream(inputStream));
-            }
+            zipInputStream = new ZipInputStream(new BufferedInputStream(inputStream));
         }
         parent = null;
         first = true;
@@ -67,12 +63,6 @@ public class ZipIterator implements Iterator<Message>, Closeable {
 
     @Override
     public boolean hasNext() {
-        boolean answer = doHasNext();
-        LOG.trace("hasNext: {}", answer);
-        return answer;
-    }
-
-    protected boolean doHasNext() {
         try {
             if (zipInputStream == null) {
                 return false;
@@ -99,12 +89,6 @@ public class ZipIterator implements Iterator<Message>, Closeable {
 
     @Override
     public Message next() {
-        Message answer = doNext();
-        LOG.trace("next: {}", answer);
-        return answer;
-    }
-
-    protected Message doNext() {
         if (parent == null) {
             parent = getNextElement();
         }
@@ -130,7 +114,7 @@ public class ZipIterator implements Iterator<Message>, Closeable {
             ZipEntry current = getNextEntry();
 
             if (current != null) {
-                LOG.debug("read zipEntry {}", current.getName());
+                LOGGER.debug("read zipEntry {}", current.getName());
                 Message answer = new DefaultMessage(exchange.getContext());
                 answer.getHeaders().putAll(exchange.getIn().getHeaders());
                 answer.setHeader("zipFileName", current.getName());
@@ -138,7 +122,7 @@ public class ZipIterator implements Iterator<Message>, Closeable {
                 answer.setBody(new ZipInputStreamWrapper(zipInputStream));
                 return answer;
             } else {
-                LOG.trace("close zipInputStream");
+                LOGGER.trace("close zipInputStream");
                 return null;
             }
         } catch (IOException exception) {

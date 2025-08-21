@@ -16,11 +16,9 @@
  */
 package org.apache.camel.dsl.jbang.core.commands.catalog;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.github.freva.asciitable.AsciiTable;
@@ -30,51 +28,19 @@ import org.apache.camel.catalog.CamelCatalog;
 import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.dsl.jbang.core.commands.CamelCommand;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
-import org.apache.camel.dsl.jbang.core.common.CatalogLoader;
-import org.apache.camel.dsl.jbang.core.common.RuntimeCompletionCandidates;
-import org.apache.camel.dsl.jbang.core.common.RuntimeType;
-import org.apache.camel.dsl.jbang.core.common.RuntimeTypeConverter;
-import org.apache.camel.dsl.jbang.core.common.VersionHelper;
-import org.apache.camel.tooling.maven.MavenGav;
+import org.apache.camel.main.download.MavenGav;
 import org.apache.camel.tooling.model.ArtifactModel;
-import org.apache.camel.util.json.Jsoner;
 import picocli.CommandLine;
 
 public abstract class CatalogBaseCommand extends CamelCommand {
-
-    @CommandLine.Option(names = { "--camel-version" },
-                        description = "To use a different Camel version than the default version")
-    String camelVersion;
-
-    @CommandLine.Option(names = { "--runtime" },
-                        completionCandidates = RuntimeCompletionCandidates.class,
-                        converter = RuntimeTypeConverter.class,
-                        description = "Runtime (${COMPLETION-CANDIDATES})")
-    RuntimeType runtime;
-
-    @CommandLine.Option(names = { "--download" }, defaultValue = "true",
-                        description = "Whether to allow automatic downloading JAR dependencies (over the internet)")
-    boolean download = true;
-
-    @CommandLine.Option(names = { "--quarkus-version" }, description = "Quarkus Platform version",
-                        defaultValue = RuntimeType.QUARKUS_VERSION)
-    String quarkusVersion;
-
-    @CommandLine.Option(names = { "--quarkus-group-id" }, description = "Quarkus Platform Maven groupId",
-                        defaultValue = "io.quarkus.platform")
-    String quarkusGroupId = "io.quarkus.platform";
-
-    @CommandLine.Option(names = { "--repos" },
-                        description = "Additional maven repositories for download on-demand (Use commas to separate multiple repositories)")
-    String repos;
 
     @CommandLine.Option(names = { "--sort" },
                         description = "Sort by name, support-level, or description", defaultValue = "name")
     String sort;
 
-    @CommandLine.Option(names = { "--display-gav" },
+    @CommandLine.Option(names = { "--gav" },
                         description = "Display Maven GAV instead of name", defaultValue = "false")
-    boolean displayGav;
+    boolean gav;
 
     @CommandLine.Option(names = { "--filter" },
                         description = "Filter by name or description")
@@ -88,11 +54,7 @@ public abstract class CatalogBaseCommand extends CamelCommand {
                         description = "Filter by version more recent (inclusive)")
     String sinceAfter;
 
-    @CommandLine.Option(names = { "--json" },
-                        description = "Output in JSON Format")
-    boolean jsonOutput;
-
-    CamelCatalog catalog;
+    final CamelCatalog catalog = new DefaultCamelCatalog(true);
 
     public CatalogBaseCommand(CamelJBangMain main) {
         super(main);
@@ -104,22 +66,8 @@ public abstract class CatalogBaseCommand extends CamelCommand {
         return model.getGroupId() + ":" + model.getArtifactId() + ":" + model.getVersion();
     }
 
-    CamelCatalog loadCatalog() throws Exception {
-        if (RuntimeType.springBoot == runtime) {
-            return CatalogLoader.loadSpringBootCatalog(repos, camelVersion, download);
-        } else if (RuntimeType.quarkus == runtime) {
-            return CatalogLoader.loadQuarkusCatalog(repos, quarkusVersion, quarkusGroupId, download);
-        }
-        if (camelVersion == null) {
-            return new DefaultCamelCatalog(true);
-        } else {
-            return CatalogLoader.loadCatalog(repos, camelVersion, download);
-        }
-    }
-
     @Override
-    public Integer doCall() throws Exception {
-        this.catalog = loadCatalog();
+    public Integer call() throws Exception {
         List<Row> rows = collectRows();
 
         if (filterName != null) {
@@ -146,32 +94,15 @@ public abstract class CatalogBaseCommand extends CamelCommand {
         rows.sort(this::sortRow);
 
         if (!rows.isEmpty()) {
-            if (jsonOutput) {
-                printer().println(
-                        Jsoner.serialize(
-                                rows.stream().map(row -> Map.of(
-                                        "name", row.name,
-                                        "level", row.level,
-                                        "native", row.nativeSupported)).collect(Collectors.toList())));
-            } else {
-                printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
-                        new Column().header("NAME").visible(!displayGav).dataAlign(HorizontalAlign.LEFT).maxWidth(nameWidth())
-                                .with(r -> r.name),
-                        new Column().header("ARTIFACT-ID").visible(displayGav).dataAlign(HorizontalAlign.LEFT)
-                                .with(this::shortGav),
-                        new Column().header("LEVEL").dataAlign(HorizontalAlign.LEFT).with(r -> r.level),
-                        new Column().header("NATIVE").dataAlign(HorizontalAlign.CENTER)
-                                .visible(RuntimeType.quarkus == runtime).with(this::nativeSupported),
-                        new Column().header("SINCE").dataAlign(HorizontalAlign.RIGHT).with(r -> r.since),
-                        new Column().header("DESCRIPTION").dataAlign(HorizontalAlign.LEFT).with(this::shortDescription))));
-            }
+            System.out.println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
+                    new Column().header("NAME").visible(!gav).dataAlign(HorizontalAlign.LEFT).maxWidth(30).with(r -> r.name),
+                    new Column().header("ARTIFACT-ID").visible(gav).dataAlign(HorizontalAlign.LEFT).with(this::shortGav),
+                    new Column().header("LEVEL").dataAlign(HorizontalAlign.LEFT).with(r -> r.level),
+                    new Column().header("SINCE").dataAlign(HorizontalAlign.RIGHT).with(r -> r.since),
+                    new Column().header("DESCRIPTION").dataAlign(HorizontalAlign.LEFT).with(this::shortDescription))));
         }
 
         return 0;
-    }
-
-    int nameWidth() {
-        return 30;
     }
 
     int sortRow(Row o1, Row o2) {
@@ -207,32 +138,11 @@ public abstract class CatalogBaseCommand extends CamelCommand {
         }
     }
 
-    String nativeSupported(Row r) {
-        return r.nativeSupported ? "x" : "";
-    }
-
-    static String fixQuarkusSince(String since) {
-        // quarkus-catalog may have 0.1 and 0.0.1 versions that are really 1.0
-        if (since != null && since.startsWith("0")) {
-            return "1.0";
-        }
-        return since;
-    }
-
-    static List<String> findComponentNames(CamelCatalog catalog) {
-        List<String> answer = catalog.findComponentNames();
-        List<String> copy = new ArrayList<>(answer);
-        // remove empty (spring boot catalog has a bug)
-        copy.removeIf(String::isBlank);
-        return copy;
-    }
-
     static class Row {
         String name;
         String title;
         String level;
         String since;
-        boolean nativeSupported;
         String description;
         String label;
         String gav;

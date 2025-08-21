@@ -16,20 +16,16 @@
  */
 package org.apache.camel.processor.resequencer;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 /**
  * A container for objects to be resequenced. This container can be scheduled for timing out. Non-scheduled objects or
  * already timed-out objects are ready for being released by the {@link ResequencerEngine}.
  */
 class Element<E> implements TimeoutHandler {
 
-    private final Lock lock = new ReentrantLock();
     /**
      * The contained object.
      */
-    private final E object;
+    private E object;
 
     /**
      * Not <code>null</code> if this element is currently beeing scheduled for timing out.
@@ -38,7 +34,7 @@ class Element<E> implements TimeoutHandler {
 
     /**
      * Creates a new container instance.
-     *
+     * 
      * @param object contained object.
      */
     Element(E object) {
@@ -47,7 +43,7 @@ class Element<E> implements TimeoutHandler {
 
     /**
      * Returns the contained object.
-     *
+     * 
      * @return the contained object.
      */
     public E getObject() {
@@ -56,64 +52,44 @@ class Element<E> implements TimeoutHandler {
 
     /**
      * Returns <code>true</code> if this element is currently scheduled for timing out.
-     *
+     * 
      * @return <code>true</code> if scheduled or <code>false</code> if not scheduled or already timed-out.
      */
-    public boolean scheduled() {
-        lock.lock();
-        try {
-            return timeout != null;
-        } finally {
-            lock.unlock();
-        }
+    public synchronized boolean scheduled() {
+        return timeout != null;
     }
 
     /**
      * Schedules the given timeout task. Before this methods calls the {@link Timeout#schedule()} method it sets this
      * element as timeout listener.
-     *
+     * 
      * @param t a timeout task.
      */
-    public void schedule(Timeout t) {
-        lock.lock();
-        try {
-            this.timeout = t;
-            this.timeout.setTimeoutHandler(this);
-            this.timeout.schedule();
-        } finally {
-            lock.unlock();
-        }
+    public synchronized void schedule(Timeout t) {
+        this.timeout = t;
+        this.timeout.setTimeoutHandler(this);
+        this.timeout.schedule();
     }
 
     /**
      * Cancels the scheduled timeout for this element. If this element is not scheduled or has already timed-out this
      * method has no effect.
      */
-    public void cancel() {
-        lock.lock();
-        try {
-            if (timeout != null) {
-                timeout.cancel();
-            }
-            timeout(null);
-        } finally {
-            lock.unlock();
+    public synchronized void cancel() {
+        if (timeout != null) {
+            timeout.cancel();
         }
+        timeout(null);
     }
 
     /**
      * Marks this element as timed-out.
-     *
+     * 
      * @param t timeout task that caused the notification.
      */
     @Override
-    public void timeout(Timeout t) {
-        lock.lock();
-        try {
-            this.timeout = null;
-        } finally {
-            lock.unlock();
-        }
+    public synchronized void timeout(Timeout t) {
+        this.timeout = null;
     }
 
 }

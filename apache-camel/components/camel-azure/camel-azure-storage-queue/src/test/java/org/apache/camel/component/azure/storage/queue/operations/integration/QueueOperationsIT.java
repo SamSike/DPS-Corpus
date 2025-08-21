@@ -19,6 +19,7 @@ package org.apache.camel.component.azure.storage.queue.operations.integration;
 import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import com.azure.storage.queue.QueueServiceClient;
 import com.azure.storage.queue.models.PeekedMessageItem;
@@ -85,7 +86,7 @@ class QueueOperationsIT extends CamelTestSupport {
         assertTrue(serviceClientWrapper.listQueues(null, null)
                 .stream()
                 .map(QueueItem::getName)
-                .toList()
+                .collect(Collectors.toList())
                 .contains(queueName));
 
         // delete and test
@@ -96,7 +97,7 @@ class QueueOperationsIT extends CamelTestSupport {
         assertFalse(serviceClientWrapper.listQueues(null, null)
                 .stream()
                 .map(QueueItem::getName)
-                .toList()
+                .collect(Collectors.toList())
                 .contains(queueName));
     }
 
@@ -238,7 +239,7 @@ class QueueOperationsIT extends CamelTestSupport {
     }
 
     @AfterAll
-    public void cleanup() {
+    public void tearDown() {
         // make sure to clean everything
         final List<QueueItem> queues = serviceClientWrapper.listQueues(null, null);
 

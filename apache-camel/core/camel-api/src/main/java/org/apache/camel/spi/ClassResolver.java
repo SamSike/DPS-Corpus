@@ -19,11 +19,10 @@ package org.apache.camel.spi;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.Set;
 
 /**
  * A class resolver for loading classes in a loosly coupled manner to cater for different platforms such as standalone,
- * Spring Boot, Quarkus, JBang etc.
+ * web container, j2ee container and OSGi platforms.
  */
 public interface ClassResolver {
 
@@ -33,19 +32,6 @@ public interface ClassResolver {
      * @param classLoader a custom class loader
      */
     void addClassLoader(ClassLoader classLoader);
-
-    /**
-     * Gets the custom class loaders.
-     */
-    Set<ClassLoader> getClassLoaders();
-
-    /**
-     * Gets a custom class loader by its name
-     *
-     * @param  name the name of the custom classloader
-     * @return      the class loader or <tt>null</tt> if not found
-     */
-    ClassLoader getClassLoader(String name);
 
     /**
      * Resolves the given class by its name

@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.kubernetes.secrets;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -72,8 +71,8 @@ public class KubernetesSecretsProducer extends DefaultProducer {
                 doCreateSecret(exchange);
                 break;
 
-            case KubernetesOperations.UPDATE_SECRET_OPERATION:
-                doUpdateSecret(exchange);
+            case KubernetesOperations.REPLACE_SECRET_OPERATION:
+                doReplaceSecret(exchange);
                 break;
 
             case KubernetesOperations.DELETE_SECRET_OPERATION:
@@ -86,32 +85,27 @@ public class KubernetesSecretsProducer extends DefaultProducer {
     }
 
     protected void doList(Exchange exchange) {
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
-        SecretList secretsList;
-
-        if (ObjectHelper.isEmpty(namespace)) {
-            secretsList = getEndpoint().getKubernetesClient().secrets().inAnyNamespace().list();
-        } else {
-            secretsList = getEndpoint().getKubernetesClient().secrets().inNamespace(namespace).list();
-        }
-
+        SecretList secretsList = getEndpoint().getKubernetesClient().secrets().inAnyNamespace().list();
         prepareOutboundMessage(exchange, secretsList.getItems());
     }
 
     protected void doListSecretsByLabels(Exchange exchange) {
         Map<String, String> labels = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_SECRETS_LABELS, Map.class);
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
+        String namespaceName = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
         SecretList secretsList;
-
-        if (ObjectHelper.isEmpty(labels)) {
-            LOG.error("Listing Secrets by labels requires specifying labels");
-            throw new IllegalArgumentException("Listing Secrets by labels requires specifying labels");
-        }
-
-        if (ObjectHelper.isEmpty(namespace)) {
-            secretsList = getEndpoint().getKubernetesClient().secrets().inAnyNamespace().withLabels(labels).list();
+        if (!ObjectHelper.isEmpty(namespaceName)) {
+            secretsList = getEndpoint()
+                    .getKubernetesClient()
+                    .secrets()
+                    .inNamespace(namespaceName)
+                    .withLabels(labels)
+                    .list();
         } else {
-            secretsList = getEndpoint().getKubernetesClient().secrets().inNamespace(namespace).withLabels(labels).list();
+            secretsList = getEndpoint()
+                    .getKubernetesClient()
+                    .secrets()
+                    .inAnyNamespace()
+                    .withLabels(labels).list();
         }
 
         prepareOutboundMessage(exchange, secretsList.getItems());
@@ -133,8 +127,8 @@ public class KubernetesSecretsProducer extends DefaultProducer {
         prepareOutboundMessage(exchange, secret);
     }
 
-    protected void doUpdateSecret(Exchange exchange) {
-        doCreateOrUpdateSecret(exchange, "Update", Resource::update);
+    protected void doReplaceSecret(Exchange exchange) {
+        doCreateOrUpdateSecret(exchange, "Replace", Resource::replace);
     }
 
     protected void doCreateSecret(Exchange exchange) {
@@ -144,8 +138,6 @@ public class KubernetesSecretsProducer extends DefaultProducer {
     private void doCreateOrUpdateSecret(Exchange exchange, String operationName, Function<Resource<Secret>, Secret> operation) {
         String namespaceName = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
         Secret secretToCreate = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_SECRET, Secret.class);
-        HashMap<String, String> secretAnnotations
-                = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_SECRETS_ANNOTATIONS, HashMap.class);
         if (ObjectHelper.isEmpty(namespaceName)) {
             LOG.error("{} a specific secret require specify a namespace name", operationName);
             throw new IllegalArgumentException(
@@ -155,9 +147,6 @@ public class KubernetesSecretsProducer extends DefaultProducer {
             LOG.error("{} a specific secret require specify a secret bean", operationName);
             throw new IllegalArgumentException(
                     String.format("%s a specific secret require specify a secret bean", operationName));
-        }
-        if (ObjectHelper.isNotEmpty(secretAnnotations)) {
-            secretToCreate.getMetadata().setAnnotations(secretAnnotations);
         }
         Secret secret
                 = operation.apply(

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,16 +21,14 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
-
-import org.springframework.util.CollectionUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.cors.reactive.CorsUtils;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
- * A logical conjunction ({@code ' && '}) request condition that matches a request against
+ * A logical conjunction (' && ') request condition that matches a request against
  * a set of header expressions with syntax defined in {@link RequestMapping#headers()}.
  *
  * <p>Expressions passed to the constructor with header names 'Accept' or
@@ -67,7 +65,7 @@ public final class HeadersRequestCondition extends AbstractRequestCondition<Head
 				if ("Accept".equalsIgnoreCase(expr.name) || "Content-Type".equalsIgnoreCase(expr.name)) {
 					continue;
 				}
-				result = (result != null ? result : CollectionUtils.newLinkedHashSet(headers.length));
+				result = (result != null ? result : new LinkedHashSet<>(headers.length));
 				result.add(expr);
 			}
 		}
@@ -121,7 +119,8 @@ public final class HeadersRequestCondition extends AbstractRequestCondition<Head
 	 * or {@code null} otherwise.
 	 */
 	@Override
-	public @Nullable HeadersRequestCondition getMatchingCondition(ServerWebExchange exchange) {
+	@Nullable
+	public HeadersRequestCondition getMatchingCondition(ServerWebExchange exchange) {
 		if (CorsUtils.isPreFlightRequest(exchange.getRequest())) {
 			return PRE_FLIGHT_MATCH;
 		}

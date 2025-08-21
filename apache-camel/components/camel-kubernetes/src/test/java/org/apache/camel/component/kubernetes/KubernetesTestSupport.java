@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.kubernetes;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -35,7 +34,7 @@ public class KubernetesTestSupport extends CamelTestSupport {
     /*
      * NOTE: The Camel-Kubernetes tests were originally meant to be run along with the vagrant fabric8-image
      * https://github.com/fabric8io/fabric8-installer/tree/master/vagrant/openshift which would provide an
-     * environment with OpenShift/Kubernetes installed.
+     * environment with Openshift/Kubernetes installed.
      *
      * However, since that image is deprecated, you can also run the tests with kind. See the README.md file
      * on the root of the component directory for details.
@@ -43,17 +42,14 @@ public class KubernetesTestSupport extends CamelTestSupport {
 
     @Override
     @BeforeEach
-    public void doPreSetup() {
+    public void setUp() throws Exception {
         // INSERT credentials and host here
         authToken = System.getProperty("kubernetes.test.auth");
         host = System.getProperty("kubernetes.test.host");
+        super.setUp();
     }
 
     public static String toUrlEncoded(String str) throws UnsupportedEncodingException {
         return URLEncoder.encode(str, StandardCharsets.UTF_8);
-    }
-
-    protected byte[] readExampleBinaryFile() throws IOException {
-        return getClass().getResourceAsStream("/binary-example/binary.bin").readAllBytes();
     }
 }

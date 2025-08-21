@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,10 @@ import java.util.stream.Collectors;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.style.ToStringCreator;
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MvcResult;
@@ -172,14 +172,15 @@ public class PrintingResultHandler implements ResultHandler {
 	/**
 	 * Print the handler.
 	 */
-	protected void printHandler(@Nullable Object handler, HandlerInterceptor @Nullable [] interceptors)
+	protected void printHandler(@Nullable Object handler, @Nullable HandlerInterceptor[] interceptors)
 			throws Exception {
 
 		if (handler == null) {
 			this.printer.printValue("Type", null);
 		}
 		else {
-			if (handler instanceof HandlerMethod handlerMethod) {
+			if (handler instanceof HandlerMethod) {
+				HandlerMethod handlerMethod = (HandlerMethod) handler;
 				this.printer.printValue("Type", handlerMethod.getBeanType().getName());
 				this.printer.printValue("Method", handlerMethod);
 			}
@@ -207,7 +208,7 @@ public class PrintingResultHandler implements ResultHandler {
 	protected void printModelAndView(@Nullable ModelAndView mav) throws Exception {
 		this.printer.printValue("View name", (mav != null) ? mav.getViewName() : null);
 		this.printer.printValue("View", (mav != null) ? mav.getView() : null);
-		if (mav == null || mav.getModel().isEmpty()) {
+		if (mav == null || mav.getModel().size() == 0) {
 			this.printer.printValue("Model", null);
 		}
 		else {
@@ -259,7 +260,6 @@ public class PrintingResultHandler implements ResultHandler {
 	 * {@link Cookie} implementation does not provide its own {@code toString()}.
 	 * @since 4.2
 	 */
-	@SuppressWarnings("removal")
 	private void printCookies(Cookie[] cookies) {
 		String[] cookieStrings = new String[cookies.length];
 		for (int i = 0; i < cookies.length; i++) {

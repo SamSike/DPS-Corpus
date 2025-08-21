@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class JettySuspendTest extends BaseJettyTest {
 
-    private final String serverUri = "http://localhost:" + getPort() + "/cool";
+    private String serverUri = "http://localhost:" + getPort() + "/cool";
 
     @Test
     public void testJettySuspend() {

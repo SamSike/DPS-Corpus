@@ -37,10 +37,10 @@ public class SedaInOutChainedTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:a").to("mock:a").transform(simple("${body}-a")).to("seda:b");
 
                 from("seda:b").to("mock:b").transform(simple("${body}-b")).to("seda:c");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.http.server;
 
 import org.junit.jupiter.api.Test;
@@ -21,8 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link DefaultRequestPath}.
- *
+ * Unit tests for {@link DefaultRequestPath}.
  * @author Rossen Stoyanchev
  */
 class DefaultRequestPathTests {
@@ -61,7 +59,7 @@ class DefaultRequestPathTests {
 	void modifyContextPath() {
 		RequestPath requestPath = RequestPath.parse("/aA/bB/cC", null);
 
-		assertThat(requestPath.contextPath().value()).isEmpty();
+		assertThat(requestPath.contextPath().value()).isEqualTo("");
 		assertThat(requestPath.pathWithinApplication().value()).isEqualTo("/aA/bB/cC");
 
 		requestPath = requestPath.modifyContextPath("/aA");

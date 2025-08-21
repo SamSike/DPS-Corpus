@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 public class DirectQueueTest extends ContextTestSupport {
 
     @Test
-    public void testQueue() {
+    public void testQueue() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedBodiesReceivedInAnyOrder("Hello World", "Bye World", "Bar");
 
@@ -34,10 +34,10 @@ public class DirectQueueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").to("mock:result");
 
                 from("direct:bar").to("mock:result");

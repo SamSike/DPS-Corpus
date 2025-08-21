@@ -35,8 +35,6 @@ public class ComponentModel extends ArtifactModel<ComponentModel.ComponentOption
     protected boolean consumerOnly;
     protected boolean producerOnly;
     protected boolean lenientProperties;
-    protected boolean browsable;
-    protected boolean remote;
     protected String verifiers;
     protected final List<EndpointOptionModel> endpointOptions = new ArrayList<>();
     protected final List<EndpointHeaderModel> headers = new ArrayList<>();
@@ -47,8 +45,8 @@ public class ComponentModel extends ArtifactModel<ComponentModel.ComponentOption
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.component;
+    public String getKind() {
+        return "component";
     }
 
     public String getScheme() {
@@ -137,22 +135,6 @@ public class ComponentModel extends ArtifactModel<ComponentModel.ComponentOption
 
     public void setLenientProperties(boolean lenientProperties) {
         this.lenientProperties = lenientProperties;
-    }
-
-    public boolean isBrowsable() {
-        return browsable;
-    }
-
-    public void setBrowsable(boolean browsable) {
-        this.browsable = browsable;
-    }
-
-    public boolean isRemote() {
-        return remote;
-    }
-
-    public void setRemote(boolean remote) {
-        this.remote = remote;
     }
 
     public String getVerifiers() {

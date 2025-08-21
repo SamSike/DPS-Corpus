@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -48,7 +48,6 @@ import java.sql.Timestamp;
 import java.util.function.Consumer;
 
 import org.jooq.exception.DataAccessException;
-import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultBinding;
 import org.jooq.impl.SQLDataType;
 
@@ -62,30 +61,6 @@ import org.jetbrains.annotations.NotNull;
  * that would otherwise not be supported by jOOQ and/or JDBC. All of jOOQ's
  * internal support for bind variable types is implemented in
  * {@link DefaultBinding}.
- * <h3>When <code>Binding</code> is invoked</h3>
- * <p>
- * A <code>Binding</code> is invoked whenever jOOQ interacts with JDBC's various
- * types, including:
- * <ul>
- * <li>{@link #get(BindingGetResultSetContext)}: To read from a JDBC
- * {@link ResultSet}</li>
- * <li>{@link #get(BindingGetStatementContext)}: To read from a JDBC
- * {@link CallableStatement} (<code>OUT</code> parameters).
- * {@link #register(BindingRegisterContext)} may be needed to declare
- * <code>OUT</code> parameters beforehand.</li>
- * <li>{@link #get(BindingGetSQLInputContext)}: To read from a JDBC
- * {@link SQLInput} (UDT attributes)</li>
- * <li>{@link #set(BindingSetStatementContext)}: To write to a JDBC
- * {@link PreparedStatement} ({@link #sql(BindingSQLContext)} may be needed to
- * specify the bind value syntax)</li>
- * <li>{@link #set(BindingSetSQLOutputContext)}: To read from a JDBC
- * {@link SQLOutput} (UDT attributes)</li>
- * </ul>
- * <p>
- * Unlike a {@link Converter}, a <code>Binding</code> applies <em>only</em> to
- * JDBC interactions. It does not influence how nested data structures (such as
- * {@link DSL#multiset(TableLike)} or {@link DSL#row(SelectField...)}) are
- * mapped to Java objects, for example.
  * <p>
  * <h3>Creating user defined {@link DataType}s</h3>
  * <p>
@@ -95,14 +70,7 @@ import org.jetbrains.annotations.NotNull;
  * {@link DataType#asConvertedDataType(Binding)}, for example. Custom data types
  * can also be defined on generated code using the
  * <code>&lt;forcedType/&gt;</code> configuration, see <a href=
- * "https://www.jooq.org/doc/latest/manual/code-generation/codegen-advanced/codegen-config-database/codegen-database-forced-types/">the
- * manual for more details</a>.
- * <p>
- * <a href=
- * "https://www.jooq.org/doc/latest/manual/sql-execution/fetching/ad-hoc-converter/">Ad-hoc
- * converters</a> allow for attaching a converter directly to a SQL expression
- * in order to keep related logic close together, see the {@link Converter}
- * Javadoc for more details.
+ * "https://www.jooq.org/doc/latest/manual/code-generation/codegen-advanced/codegen-config-database/codegen-database-forced-types/">the manual for more details</a>
  *
  * @param <T> The database type - i.e. any type available from
  *            {@link SQLDataType}
@@ -114,15 +82,6 @@ public interface Binding<T, U> extends Serializable {
     /**
      * A converter that can convert between the database type and the custom
      * type.
-     * <p>
-     * While the {@link Converter} property of a binding is not optional
-     * ({@link Converter#fromType()} and {@link Converter#toType()} are needed
-     * by jOOQ's internals), the conversion implementation (i.e.
-     * {@link Converter#from(Object)} and {@link Converter#to(Object)}) isn't
-     * strictly required if implementations don't rely on it. If these
-     * conversion implementations are non-functional, it is advised to hint at
-     * this fact in {@link Converter#fromSupported()} and
-     * {@link Converter#toSupported()}.
      */
     @NotNull
     Converter<T, U> converter();

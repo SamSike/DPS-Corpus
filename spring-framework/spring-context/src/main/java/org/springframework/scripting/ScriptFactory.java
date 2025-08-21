@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.springframework.scripting;
 
 import java.io.IOException;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Script definition interface, encapsulating the configuration
@@ -51,7 +51,8 @@ public interface ScriptFactory {
 	 * its Java interfaces (such as in the case of Groovy).
 	 * @return the interfaces for the script
 	 */
-	Class<?> @Nullable [] getScriptInterfaces();
+	@Nullable
+	Class<?>[] getScriptInterfaces();
 
 	/**
 	 * Return whether the script requires a config interface to be
@@ -77,7 +78,8 @@ public interface ScriptFactory {
 	 * @throws IOException if script retrieval failed
 	 * @throws ScriptCompilationException if script compilation failed
 	 */
-	@Nullable Object getScriptedObject(ScriptSource scriptSource, Class<?> @Nullable ... actualInterfaces)
+	@Nullable
+	Object getScriptedObject(ScriptSource scriptSource, @Nullable Class<?>... actualInterfaces)
 			throws IOException, ScriptCompilationException;
 
 	/**
@@ -93,11 +95,12 @@ public interface ScriptFactory {
 	 * @throws ScriptCompilationException if script compilation failed
 	 * @since 2.0.3
 	 */
-	@Nullable Class<?> getScriptedObjectType(ScriptSource scriptSource)
+	@Nullable
+	Class<?> getScriptedObjectType(ScriptSource scriptSource)
 			throws IOException, ScriptCompilationException;
 
 	/**
-	 * Determine whether a refresh is required (for example, through
+	 * Determine whether a refresh is required (e.g. through
 	 * ScriptSource's {@code isModified()} method).
 	 * @param scriptSource the actual ScriptSource to retrieve
 	 * the script source text from (never {@code null})

@@ -22,7 +22,7 @@ import org.apache.camel.Processor;
 public class ProcessorB implements Processor {
 
     @Override
-    public void process(Exchange exchange) {
+    public void process(Exchange exchange) throws Exception {
         exchange.getIn().setHeader("b", "b");
     }
 }

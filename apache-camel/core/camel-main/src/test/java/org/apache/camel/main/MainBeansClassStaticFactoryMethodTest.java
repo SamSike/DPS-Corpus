@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class MainBeansClassStaticFactoryMethodTest {
 
     @Test
-    public void testBindBeans() {
+    public void testBindBeans() throws Exception {
         MyFoo myFoo = new MyFoo();
 
         Main main = new Main();
@@ -57,7 +57,7 @@ public class MainBeansClassStaticFactoryMethodTest {
 
     public static class MyRouteBuilder extends RouteBuilder {
         @Override
-        public void configure() {
+        public void configure() throws Exception {
             from("direct:start").to("mock:foo");
         }
     }

@@ -56,10 +56,10 @@ public class CustomListAggregationStrategyEmptySplitTest extends ContextTestSupp
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").split(body(), new MyListOfNumbersStrategy()).to("mock:line").end().to("mock:result");
             }
         };
@@ -69,7 +69,7 @@ public class CustomListAggregationStrategyEmptySplitTest extends ContextTestSupp
      * Our strategy is irrelevant as getValue will not be called on an empty list, however this strategy will group a
      * list of integers.
      */
-    public static final class MyListOfNumbersStrategy extends AbstractListAggregationStrategy<Integer> {
+    public final class MyListOfNumbersStrategy extends AbstractListAggregationStrategy<Integer> {
 
         @Override
         public Integer getValue(Exchange exchange) {

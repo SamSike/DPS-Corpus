@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.beans.factory.support;
 
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.lang.NonNull;
 
 /**
  * Subclass of {@link BeanDefinitionStoreException} indicating an invalid override
@@ -48,23 +49,7 @@ public class BeanDefinitionOverrideException extends BeanDefinitionStoreExceptio
 
 		super(beanDefinition.getResourceDescription(), beanName,
 				"Cannot register bean definition [" + beanDefinition + "] for bean '" + beanName +
-				"' since there is already [" + existingDefinition + "] bound.");
-		this.beanDefinition = beanDefinition;
-		this.existingDefinition = existingDefinition;
-	}
-
-	/**
-	 * Create a new BeanDefinitionOverrideException for the given new and existing definition.
-	 * @param beanName the name of the bean
-	 * @param beanDefinition the newly registered bean definition
-	 * @param existingDefinition the existing bean definition for the same name
-	 * @param msg the detail message to include
-	 * @since 6.2.1
-	 */
-	public BeanDefinitionOverrideException(
-			String beanName, BeanDefinition beanDefinition, BeanDefinition existingDefinition, String msg) {
-
-		super(beanDefinition.getResourceDescription(), beanName, msg);
+				"': There is already [" + existingDefinition + "] bound.");
 		this.beanDefinition = beanDefinition;
 		this.existingDefinition = existingDefinition;
 	}
@@ -74,6 +59,7 @@ public class BeanDefinitionOverrideException extends BeanDefinitionStoreExceptio
 	 * Return the description of the resource that the bean definition came from.
 	 */
 	@Override
+	@NonNull
 	public String getResourceDescription() {
 		return String.valueOf(super.getResourceDescription());
 	}
@@ -82,6 +68,7 @@ public class BeanDefinitionOverrideException extends BeanDefinitionStoreExceptio
 	 * Return the name of the bean.
 	 */
 	@Override
+	@NonNull
 	public String getBeanName() {
 		return String.valueOf(super.getBeanName());
 	}

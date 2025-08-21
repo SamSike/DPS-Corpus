@@ -51,11 +51,11 @@ public abstract class HazelcastDefaultComponent extends DefaultComponent {
     @Metadata(label = "advanced", defaultValue = "" + HazelcastConstants.HAZELCAST_NODE_MODE)
     private String hazelcastMode = HazelcastConstants.HAZELCAST_NODE_MODE;
 
-    protected HazelcastDefaultComponent() {
+    public HazelcastDefaultComponent() {
         this.customHazelcastInstances = new LinkedHashSet<>();
     }
 
-    protected HazelcastDefaultComponent(final CamelContext context) {
+    public HazelcastDefaultComponent(final CamelContext context) {
         super(context);
         this.customHazelcastInstances = new LinkedHashSet<>();
     }

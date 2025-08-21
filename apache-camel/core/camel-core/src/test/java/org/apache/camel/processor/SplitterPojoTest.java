@@ -17,7 +17,6 @@
 package org.apache.camel.processor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.camel.Body;
@@ -37,8 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SplitterPojoTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("mySplitterBean", new MySplitterBean());
         return jndi;
     }
@@ -55,8 +54,8 @@ public class SplitterPojoTest extends ContextTestSupport {
     }
 
     @Test
-    public void testSplitMessageWithPojoBean() {
-        String[] users = { "James", "Jonathan", "Hadrian", "Claus", "Willem" };
+    public void testSplitMessageWithPojoBean() throws Exception {
+        String users[] = { "James", "Jonathan", "Hadrian", "Claus", "Willem" };
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.reset();
         mock.expectedMessageCount(5);
@@ -90,7 +89,7 @@ public class SplitterPojoTest extends ContextTestSupport {
     }
 
     // START SNIPPET: e2
-    public static class MySplitterBean {
+    public class MySplitterBean {
 
         /**
          * The split body method returns something that is iteratable such as a java.util.List.
@@ -104,8 +103,11 @@ public class SplitterPojoTest extends ContextTestSupport {
             // of the box support for splitting a String based on comma
             // but this is for show and tell, since this is java code
             // you have the full power how you like to split your messages
+            List<String> answer = new ArrayList<>();
             String[] parts = body.split(",");
-            List<String> answer = new ArrayList<>(Arrays.asList(parts));
+            for (String part : parts) {
+                answer.add(part);
+            }
             return answer;
         }
 

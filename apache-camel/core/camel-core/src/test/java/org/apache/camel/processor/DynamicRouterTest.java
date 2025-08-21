@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class DynamicRouterTest extends ContextTestSupport {
 
     private static int invoked;
-    private static final List<String> bodies = new ArrayList<>();
+    private static List<String> bodies = new ArrayList<>();
 
     @Test
     public void testDynamicRouter() throws Exception {
@@ -51,10 +51,10 @@ public class DynamicRouterTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start")
                         // use a bean as the dynamic router

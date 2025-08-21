@@ -35,14 +35,11 @@ import org.apache.camel.support.service.ServiceHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class EventDrivenPollingConsumerQueueSizeTest extends ContextTestSupport {
 
-    private final String uri = "my:foo?pollingConsumerQueueSize=10&pollingConsumerBlockWhenFull=false";
+    private String uri = "my:foo?pollingConsumerQueueSize=10&pollingConsumerBlockWhenFull=false";
 
     @Override
     @BeforeEach
@@ -71,10 +68,13 @@ public class EventDrivenPollingConsumerQueueSizeTest extends ContextTestSupport 
 
         assertEquals(10, edpc.getQueueSize());
 
-        CamelExecutionException e = assertThrows(CamelExecutionException.class, () -> template.sendBody(uri, "Message 10"),
-                "Should have thrown exception");
-
-        assertIsInstanceOf(IllegalStateException.class, e.getCause());
+        try {
+            template.sendBody(uri, "Message 10");
+            fail("Should have thrown exception");
+        } catch (CamelExecutionException e) {
+            // queue should be full
+            assertIsInstanceOf(IllegalStateException.class, e.getCause());
+        }
 
         Exchange out = consumer.receive(5000);
         assertNotNull(out);
@@ -105,15 +105,15 @@ public class EventDrivenPollingConsumerQueueSizeTest extends ContextTestSupport 
         return false;
     }
 
-    private static final class MyQueueComponent extends DefaultComponent {
+    private final class MyQueueComponent extends DefaultComponent {
 
         @Override
-        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) {
+        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
             return new MyQueueEndpoint(uri, this);
         }
     }
 
-    private static final class MyQueueEndpoint extends DefaultEndpoint {
+    private final class MyQueueEndpoint extends DefaultEndpoint {
 
         private EventDrivenPollingConsumer consumer;
 
@@ -122,7 +122,7 @@ public class EventDrivenPollingConsumerQueueSizeTest extends ContextTestSupport 
         }
 
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             return new DefaultProducer(this) {
                 @Override
                 public void process(Exchange exchange) throws Exception {
@@ -132,12 +132,12 @@ public class EventDrivenPollingConsumerQueueSizeTest extends ContextTestSupport 
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             return consumer;
         }
 
         @Override
-        public PollingConsumer createPollingConsumer() {
+        public PollingConsumer createPollingConsumer() throws Exception {
             return consumer;
         }
 

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,16 +37,9 @@
  */
 package org.jooq.impl;
 
-import org.jooq.CharacterSet;
-import org.jooq.Collation;
 import org.jooq.Configuration;
 import org.jooq.DataType;
 import org.jooq.Domain;
-import org.jooq.Field;
-import org.jooq.Generator;
-import org.jooq.Nullability;
-import org.jooq.impl.QOM.GenerationLocation;
-import org.jooq.impl.QOM.GenerationOption;
 
 /**
  * A <code>DataType</code> used for {@link Domain} types.
@@ -71,8 +64,6 @@ final class DomainDataType<T> extends DefaultDataType<T> {
             baseType.scaleDefined() ? baseType.scale() : null,
             baseType.lengthDefined() ? baseType.length() : null,
             baseType.nullability(),
-            baseType.hidden(),
-            baseType.redacted(),
             baseType.readonly(),
             baseType.generatedAlwaysAsGenerator(),
             baseType.generationOption(),
@@ -85,44 +76,6 @@ final class DomainDataType<T> extends DefaultDataType<T> {
 
         this.domain = domain;
         this.baseType = baseType;
-    }
-
-    @Override
-    DefaultDataType<T> construct(
-        Integer newPrecision,
-        Integer newScale,
-        Integer newLength,
-        Nullability newNullability,
-        boolean newHidden,
-        boolean newRedacted,
-        boolean newReadonly,
-        Generator<?, ?, T> newGeneratedAlwaysAs,
-        GenerationOption newGenerationOption,
-        GenerationLocation newGenerationLocation,
-        Collation newCollation,
-        CharacterSet newCharacterSet,
-        boolean newIdentity,
-        Field<T> newDefaultValue
-    ) {
-        return new DomainDataType<>(
-            domain,
-            ((AbstractDataTypeX<T>) baseType).construct(
-                newPrecision,
-                newScale,
-                newLength,
-                newNullability,
-                newHidden,
-                newRedacted,
-                newReadonly,
-                newGeneratedAlwaysAs,
-                newGenerationOption,
-                newGenerationLocation,
-                newCollation,
-                newCharacterSet,
-                newIdentity,
-                newDefaultValue
-            )
-        );
     }
 
     @Override

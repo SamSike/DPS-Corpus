@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,68 +39,68 @@ import static java.util.Locale.US;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link AcceptHeaderLocaleContextResolver}.
+ * Unit tests for {@link AcceptHeaderLocaleContextResolver}.
  *
  * @author Sebastien Deleuze
  * @author Juergen Hoeller
  */
-class AcceptHeaderLocaleContextResolverTests {
+public class AcceptHeaderLocaleContextResolverTests {
 
 	private final AcceptHeaderLocaleContextResolver resolver = new AcceptHeaderLocaleContextResolver();
 
 
 	@Test
-	void resolve() {
+	public void resolve() {
 		assertThat(this.resolver.resolveLocaleContext(exchange(CANADA)).getLocale()).isEqualTo(CANADA);
 		assertThat(this.resolver.resolveLocaleContext(exchange(US, CANADA)).getLocale()).isEqualTo(US);
 	}
 
 	@Test
-	void resolvePreferredSupported() {
+	public void resolvePreferredSupported() {
 		this.resolver.setSupportedLocales(Collections.singletonList(CANADA));
 		assertThat(this.resolver.resolveLocaleContext(exchange(US, CANADA)).getLocale()).isEqualTo(CANADA);
 	}
 
 	@Test
-	void resolvePreferredNotSupported() {
+	public void resolvePreferredNotSupported() {
 		this.resolver.setSupportedLocales(Collections.singletonList(CANADA));
 		assertThat(this.resolver.resolveLocaleContext(exchange(US, UK)).getLocale()).isEqualTo(US);
 	}
 
 	@Test
-	void resolvePreferredNotSupportedWithDefault() {
+	public void resolvePreferredNotSupportedWithDefault() {
 		this.resolver.setSupportedLocales(Arrays.asList(US, JAPAN));
 		this.resolver.setDefaultLocale(JAPAN);
 		assertThat(this.resolver.resolveLocaleContext(exchange(KOREA)).getLocale()).isEqualTo(JAPAN);
 	}
 
 	@Test
-	void resolvePreferredAgainstLanguageOnly() {
+	public void resolvePreferredAgainstLanguageOnly() {
 		this.resolver.setSupportedLocales(Collections.singletonList(ENGLISH));
 		assertThat(this.resolver.resolveLocaleContext(exchange(GERMANY, US, UK)).getLocale()).isEqualTo(ENGLISH);
 	}
 
 	@Test
-	void resolvePreferredAgainstCountryIfPossible() {
+	public void resolvePreferredAgainstCountryIfPossible() {
 		this.resolver.setSupportedLocales(Arrays.asList(ENGLISH, UK));
 		assertThat(this.resolver.resolveLocaleContext(exchange(GERMANY, US, UK)).getLocale()).isEqualTo(UK);
 	}
 
 	@Test
-	void resolvePreferredAgainstLanguageWithMultipleSupportedLocales() {
+	public void resolvePreferredAgainstLanguageWithMultipleSupportedLocales() {
 		this.resolver.setSupportedLocales(Arrays.asList(GERMAN, US));
 		assertThat(this.resolver.resolveLocaleContext(exchange(GERMANY, US, UK)).getLocale()).isEqualTo(GERMAN);
 	}
 
 	@Test
-	void resolveMissingAcceptLanguageHeader() {
+	public void resolveMissingAcceptLanguageHeader() {
 		MockServerHttpRequest request = MockServerHttpRequest.get("/").build();
 		MockServerWebExchange exchange = MockServerWebExchange.from(request);
 		assertThat(this.resolver.resolveLocaleContext(exchange).getLocale()).isNull();
 	}
 
 	@Test
-	void resolveMissingAcceptLanguageHeaderWithDefault() {
+	public void resolveMissingAcceptLanguageHeaderWithDefault() {
 		this.resolver.setDefaultLocale(US);
 
 		MockServerHttpRequest request = MockServerHttpRequest.get("/").build();
@@ -109,14 +109,14 @@ class AcceptHeaderLocaleContextResolverTests {
 	}
 
 	@Test
-	void resolveEmptyAcceptLanguageHeader() {
+	public void resolveEmptyAcceptLanguageHeader() {
 		MockServerHttpRequest request = MockServerHttpRequest.get("/").header(HttpHeaders.ACCEPT_LANGUAGE, "").build();
 		MockServerWebExchange exchange = MockServerWebExchange.from(request);
 		assertThat(this.resolver.resolveLocaleContext(exchange).getLocale()).isNull();
 	}
 
 	@Test
-	void resolveEmptyAcceptLanguageHeaderWithDefault() {
+	public void resolveEmptyAcceptLanguageHeaderWithDefault() {
 		this.resolver.setDefaultLocale(US);
 
 		MockServerHttpRequest request = MockServerHttpRequest.get("/").header(HttpHeaders.ACCEPT_LANGUAGE, "").build();
@@ -125,14 +125,14 @@ class AcceptHeaderLocaleContextResolverTests {
 	}
 
 	@Test
-	void resolveInvalidAcceptLanguageHeader() {
+	public void resolveInvalidAcceptLanguageHeader() {
 		MockServerHttpRequest request = MockServerHttpRequest.get("/").header(HttpHeaders.ACCEPT_LANGUAGE, "en_US").build();
 		MockServerWebExchange exchange = MockServerWebExchange.from(request);
 		assertThat(this.resolver.resolveLocaleContext(exchange).getLocale()).isNull();
 	}
 
 	@Test
-	void resolveInvalidAcceptLanguageHeaderWithDefault() {
+	public void resolveInvalidAcceptLanguageHeaderWithDefault() {
 		this.resolver.setDefaultLocale(US);
 
 		MockServerHttpRequest request = MockServerHttpRequest.get("/").header(HttpHeaders.ACCEPT_LANGUAGE, "en_US").build();
@@ -141,7 +141,7 @@ class AcceptHeaderLocaleContextResolverTests {
 	}
 
 	@Test
-	void defaultLocale() {
+	public void defaultLocale() {
 		this.resolver.setDefaultLocale(JAPANESE);
 		MockServerHttpRequest request = MockServerHttpRequest.get("/").build();
 		MockServerWebExchange exchange = MockServerWebExchange.from(request);

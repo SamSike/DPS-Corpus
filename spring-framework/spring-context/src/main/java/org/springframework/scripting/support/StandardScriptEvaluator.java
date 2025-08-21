@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,9 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
 import org.springframework.scripting.ScriptCompilationException;
 import org.springframework.scripting.ScriptEvaluator;
 import org.springframework.scripting.ScriptSource;
@@ -45,11 +44,14 @@ import org.springframework.util.StringUtils;
  */
 public class StandardScriptEvaluator implements ScriptEvaluator, BeanClassLoaderAware {
 
-	private @Nullable String engineName;
+	@Nullable
+	private String engineName;
 
-	private volatile @Nullable Bindings globalBindings;
+	@Nullable
+	private volatile Bindings globalBindings;
 
-	private volatile @Nullable ScriptEngineManager scriptEngineManager;
+	@Nullable
+	private volatile ScriptEngineManager scriptEngineManager;
 
 
 	/**
@@ -78,7 +80,7 @@ public class StandardScriptEvaluator implements ScriptEvaluator, BeanClassLoader
 
 
 	/**
-	 * Set the name of the language meant for evaluating the scripts (for example, "Groovy").
+	 * Set the name of the language meant for evaluating the scripts (e.g. "Groovy").
 	 * <p>This is effectively an alias for {@link #setEngineName "engineName"},
 	 * potentially (but not yet) providing common abbreviations for certain languages
 	 * beyond what the JSR-223 script engine factory exposes.
@@ -89,7 +91,7 @@ public class StandardScriptEvaluator implements ScriptEvaluator, BeanClassLoader
 	}
 
 	/**
-	 * Set the name of the script engine for evaluating the scripts (for example, "Groovy"),
+	 * Set the name of the script engine for evaluating the scripts (e.g. "Groovy"),
 	 * as exposed by the JSR-223 script engine factory.
 	 * @since 4.2.2
 	 * @see #setLanguage
@@ -130,12 +132,14 @@ public class StandardScriptEvaluator implements ScriptEvaluator, BeanClassLoader
 
 
 	@Override
-	public @Nullable Object evaluate(ScriptSource script) {
+	@Nullable
+	public Object evaluate(ScriptSource script) {
 		return evaluate(script, null);
 	}
 
 	@Override
-	public @Nullable Object evaluate(ScriptSource script, @Nullable Map<String, Object> argumentBindings) {
+	@Nullable
+	public Object evaluate(ScriptSource script, @Nullable Map<String, Object> argumentBindings) {
 		ScriptEngine engine = getScriptEngine(script);
 		try {
 			if (CollectionUtils.isEmpty(argumentBindings)) {
@@ -169,8 +173,8 @@ public class StandardScriptEvaluator implements ScriptEvaluator, BeanClassLoader
 		if (StringUtils.hasText(this.engineName)) {
 			return StandardScriptUtils.retrieveEngineByName(scriptEngineManager, this.engineName);
 		}
-		else if (script instanceof ResourceScriptSource resourceScriptSource) {
-			Resource resource = resourceScriptSource.getResource();
+		else if (script instanceof ResourceScriptSource) {
+			Resource resource = ((ResourceScriptSource) script).getResource();
 			String extension = StringUtils.getFilenameExtension(resource.getFilename());
 			if (extension == null) {
 				throw new IllegalStateException(

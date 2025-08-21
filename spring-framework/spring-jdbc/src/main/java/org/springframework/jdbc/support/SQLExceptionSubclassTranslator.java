@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,20 +30,17 @@ import java.sql.SQLTransactionRollbackException;
 import java.sql.SQLTransientConnectionException;
 import java.sql.SQLTransientException;
 
-import org.jspecify.annotations.Nullable;
-
-import org.springframework.dao.CannotAcquireLockException;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
-import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.dao.QueryTimeoutException;
 import org.springframework.dao.RecoverableDataAccessException;
 import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link SQLExceptionTranslator} implementation which analyzes the specific
@@ -52,13 +49,11 @@ import org.springframework.jdbc.BadSqlGrammarException;
  * <p>Falls back to a standard {@link SQLStateSQLExceptionTranslator} if the JDBC
  * driver does not actually expose JDBC 4 compliant {@code SQLException} subclasses.
  *
- * <p>This translator serves as the default translator as of 6.0.
- *
  * @author Thomas Risberg
  * @author Juergen Hoeller
  * @since 2.5
  * @see java.sql.SQLTransientException
- * @see java.sql.SQLNonTransientException
+ * @see java.sql.SQLTransientException
  * @see java.sql.SQLRecoverableException
  */
 public class SQLExceptionSubclassTranslator extends AbstractFallbackSQLExceptionTranslator {
@@ -68,18 +63,16 @@ public class SQLExceptionSubclassTranslator extends AbstractFallbackSQLException
 	}
 
 	@Override
-	protected @Nullable DataAccessException doTranslate(String task, @Nullable String sql, SQLException ex) {
+	@Nullable
+	protected DataAccessException doTranslate(String task, @Nullable String sql, SQLException ex) {
 		if (ex instanceof SQLTransientException) {
 			if (ex instanceof SQLTransientConnectionException) {
 				return new TransientDataAccessResourceException(buildMessage(task, sql, ex), ex);
 			}
-			if (ex instanceof SQLTransactionRollbackException) {
-				if (SQLStateSQLExceptionTranslator.indicatesCannotAcquireLock(ex.getSQLState())) {
-					return new CannotAcquireLockException(buildMessage(task, sql, ex), ex);
-				}
-				return new PessimisticLockingFailureException(buildMessage(task, sql, ex), ex);
+			else if (ex instanceof SQLTransactionRollbackException) {
+				return new ConcurrencyFailureException(buildMessage(task, sql, ex), ex);
 			}
-			if (ex instanceof SQLTimeoutException) {
+			else if (ex instanceof SQLTimeoutException) {
 				return new QueryTimeoutException(buildMessage(task, sql, ex), ex);
 			}
 		}
@@ -87,22 +80,19 @@ public class SQLExceptionSubclassTranslator extends AbstractFallbackSQLException
 			if (ex instanceof SQLNonTransientConnectionException) {
 				return new DataAccessResourceFailureException(buildMessage(task, sql, ex), ex);
 			}
-			if (ex instanceof SQLDataException) {
+			else if (ex instanceof SQLDataException) {
 				return new DataIntegrityViolationException(buildMessage(task, sql, ex), ex);
 			}
-			if (ex instanceof SQLIntegrityConstraintViolationException) {
-				if (SQLStateSQLExceptionTranslator.indicatesDuplicateKey(ex.getSQLState(), ex.getErrorCode())) {
-					return new DuplicateKeyException(buildMessage(task, sql, ex), ex);
-				}
+			else if (ex instanceof SQLIntegrityConstraintViolationException) {
 				return new DataIntegrityViolationException(buildMessage(task, sql, ex), ex);
 			}
-			if (ex instanceof SQLInvalidAuthorizationSpecException) {
+			else if (ex instanceof SQLInvalidAuthorizationSpecException) {
 				return new PermissionDeniedDataAccessException(buildMessage(task, sql, ex), ex);
 			}
-			if (ex instanceof SQLSyntaxErrorException) {
+			else if (ex instanceof SQLSyntaxErrorException) {
 				return new BadSqlGrammarException(task, (sql != null ? sql : ""), ex);
 			}
-			if (ex instanceof SQLFeatureNotSupportedException) {
+			else if (ex instanceof SQLFeatureNotSupportedException) {
 				return new InvalidDataAccessApiUsageException(buildMessage(task, sql, ex), ex);
 			}
 		}

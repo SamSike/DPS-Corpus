@@ -17,25 +17,22 @@
 package org.apache.camel.builder;
 
 import org.apache.camel.model.dataformat.ASN1DataFormat;
+import org.apache.camel.model.dataformat.Any23DataFormat;
 import org.apache.camel.model.dataformat.AvroDataFormat;
 import org.apache.camel.model.dataformat.BarcodeDataFormat;
 import org.apache.camel.model.dataformat.Base64DataFormat;
-import org.apache.camel.model.dataformat.BeanioDataFormat;
 import org.apache.camel.model.dataformat.BindyDataFormat;
 import org.apache.camel.model.dataformat.CBORDataFormat;
 import org.apache.camel.model.dataformat.CryptoDataFormat;
 import org.apache.camel.model.dataformat.CsvDataFormat;
 import org.apache.camel.model.dataformat.CustomDataFormat;
-import org.apache.camel.model.dataformat.DfdlDataFormat;
 import org.apache.camel.model.dataformat.FhirJsonDataFormat;
 import org.apache.camel.model.dataformat.FhirXmlDataFormat;
 import org.apache.camel.model.dataformat.FlatpackDataFormat;
-import org.apache.camel.model.dataformat.ForyDataFormat;
 import org.apache.camel.model.dataformat.GrokDataFormat;
 import org.apache.camel.model.dataformat.GzipDeflaterDataFormat;
 import org.apache.camel.model.dataformat.HL7DataFormat;
 import org.apache.camel.model.dataformat.IcalDataFormat;
-import org.apache.camel.model.dataformat.Iso8583DataFormat;
 import org.apache.camel.model.dataformat.JacksonXMLDataFormat;
 import org.apache.camel.model.dataformat.JaxbDataFormat;
 import org.apache.camel.model.dataformat.JsonApiDataFormat;
@@ -43,10 +40,8 @@ import org.apache.camel.model.dataformat.JsonDataFormat;
 import org.apache.camel.model.dataformat.LZFDataFormat;
 import org.apache.camel.model.dataformat.MimeMultipartDataFormat;
 import org.apache.camel.model.dataformat.PGPDataFormat;
-import org.apache.camel.model.dataformat.ParquetAvroDataFormat;
 import org.apache.camel.model.dataformat.ProtobufDataFormat;
 import org.apache.camel.model.dataformat.RssDataFormat;
-import org.apache.camel.model.dataformat.SmooksDataFormat;
 import org.apache.camel.model.dataformat.SoapDataFormat;
 import org.apache.camel.model.dataformat.SwiftMtDataFormat;
 import org.apache.camel.model.dataformat.SwiftMxDataFormat;
@@ -66,6 +61,13 @@ import org.apache.camel.model.dataformat.ZipFileDataFormat;
  * {@code DataFormatBuilderFactory} is a factory class of builder of all supported data formats.
  */
 public final class DataFormatBuilderFactory {
+
+    /**
+     * Uses the Any23 data format
+     */
+    public Any23DataFormat.Builder any23() {
+        return new Any23DataFormat.Builder();
+    }
 
     /**
      * Uses the ASN.1 file data format
@@ -93,13 +95,6 @@ public final class DataFormatBuilderFactory {
      */
     public Base64DataFormat.Builder base64() {
         return new Base64DataFormat.Builder();
-    }
-
-    /**
-     * Uses the BeanIO data format
-     */
-    public BeanioDataFormat.Builder beanio() {
-        return new BeanioDataFormat.Builder();
     }
 
     /**
@@ -138,13 +133,6 @@ public final class DataFormatBuilderFactory {
     }
 
     /**
-     * Uses the DFDL data format
-     */
-    public DfdlDataFormat.Builder dfdl() {
-        return new DfdlDataFormat.Builder();
-    }
-
-    /**
      * Uses the FHIR JSON data format
      */
     public FhirJsonDataFormat.Builder fhirJson() {
@@ -163,13 +151,6 @@ public final class DataFormatBuilderFactory {
      */
     public FlatpackDataFormat.Builder flatpack() {
         return new FlatpackDataFormat.Builder();
-    }
-
-    /**
-     * Uses the Fory data format
-     */
-    public ForyDataFormat.Builder fory() {
-        return new ForyDataFormat.Builder();
     }
 
     /**
@@ -198,13 +179,6 @@ public final class DataFormatBuilderFactory {
      */
     public IcalDataFormat.Builder ical() {
         return new IcalDataFormat.Builder();
-    }
-
-    /**
-     * Uses the ISO-8583 data format
-     */
-    public Iso8583DataFormat.Builder iso8583() {
-        return new Iso8583DataFormat.Builder();
     }
 
     /**
@@ -250,13 +224,6 @@ public final class DataFormatBuilderFactory {
     }
 
     /**
-     * Uses the protobuf data format
-     */
-    public ParquetAvroDataFormat.Builder parquetAvro() {
-        return new ParquetAvroDataFormat.Builder();
-    }
-
-    /**
      * Uses the PGP data format
      */
     public PGPDataFormat.Builder pgp() {
@@ -275,13 +242,6 @@ public final class DataFormatBuilderFactory {
      */
     public RssDataFormat.Builder rss() {
         return new RssDataFormat.Builder();
-    }
-
-    /**
-     * Uses the Smooks data format
-     */
-    public SmooksDataFormat.Builder smooks() {
-        return new SmooksDataFormat.Builder();
     }
 
     /**

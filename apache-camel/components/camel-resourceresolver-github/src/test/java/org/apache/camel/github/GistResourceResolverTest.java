@@ -16,8 +16,8 @@
  */
 package org.apache.camel.github;
 
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.Resource;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +29,8 @@ public class GistResourceResolverTest extends CamelTestSupport {
 
     @Test
     public void testGist() throws Exception {
-        Resource res = PluginHelper.getResourceLoader(context).resolveResource("gist:davsclaus:123:456:beer.xml");
+        ExtendedCamelContext ecc = context.adapt(ExtendedCamelContext.class);
+        Resource res = ecc.getResourceLoader().resolveResource("gist:davsclaus:123:456:beer.xml");
         assertNotNull(res);
         assertFalse(res.exists());
         assertEquals("https://gist.githubusercontent.com/davsclaus/123/raw/456/beer.xml", res.getLocation());

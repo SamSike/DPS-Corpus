@@ -28,12 +28,10 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class Generator implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlElement(defaultValue = "org.jooq.codegen.DefaultGenerator")
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String name = "org.jooq.codegen.DefaultGenerator";
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String java;
     protected Strategy strategy;
     protected Database database;
     protected Generate generate;
@@ -53,22 +51,6 @@ public class Generator implements Serializable, XMLAppendable
      */
     public void setName(String value) {
         this.name = value;
-    }
-
-    /**
-     * A self-contained, inline implementation of {@link org.jooq.codegen.Generator} that will be compiled and class-loaded on the fly by the code generator.
-     * 
-     */
-    public String getJava() {
-        return java;
-    }
-
-    /**
-     * A self-contained, inline implementation of {@link org.jooq.codegen.Generator} that will be compiled and class-loaded on the fly by the code generator.
-     * 
-     */
-    public void setJava(String value) {
-        this.java = value;
     }
 
     /**
@@ -145,15 +127,6 @@ public class Generator implements Serializable, XMLAppendable
     }
 
     /**
-     * A self-contained, inline implementation of {@link org.jooq.codegen.Generator} that will be compiled and class-loaded on the fly by the code generator.
-     * 
-     */
-    public Generator withJava(String value) {
-        setJava(value);
-        return this;
-    }
-
-    /**
      * Definitions of custom naming strategies (declarative or programmatic) to define how generated Java objects should be named.
      * 
      */
@@ -192,7 +165,6 @@ public class Generator implements Serializable, XMLAppendable
     @Override
     public final void appendTo(XMLBuilder builder) {
         builder.append("name", name);
-        builder.append("java", java);
         builder.append("strategy", strategy);
         builder.append("database", database);
         builder.append("generate", generate);
@@ -224,15 +196,6 @@ public class Generator implements Serializable, XMLAppendable
             }
         } else {
             if (!name.equals(other.name)) {
-                return false;
-            }
-        }
-        if (java == null) {
-            if (other.java!= null) {
-                return false;
-            }
-        } else {
-            if (!java.equals(other.java)) {
                 return false;
             }
         }
@@ -280,7 +243,6 @@ public class Generator implements Serializable, XMLAppendable
         final int prime = 31;
         int result = 1;
         result = ((prime*result)+((name == null)? 0 :name.hashCode()));
-        result = ((prime*result)+((java == null)? 0 :java.hashCode()));
         result = ((prime*result)+((strategy == null)? 0 :strategy.hashCode()));
         result = ((prime*result)+((database == null)? 0 :database.hashCode()));
         result = ((prime*result)+((generate == null)? 0 :generate.hashCode()));

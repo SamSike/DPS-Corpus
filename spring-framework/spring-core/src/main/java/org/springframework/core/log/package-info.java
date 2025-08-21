@@ -1,7 +1,9 @@
 /**
  * Useful delegates for Spring's logging conventions.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.core.log;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,17 +19,12 @@ package org.springframework.context.expression;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanExpressionException;
 import org.springframework.beans.factory.config.BeanExpressionContext;
 import org.springframework.beans.factory.config.BeanExpressionResolver;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.core.SpringProperties;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.ParserContext;
@@ -38,6 +33,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.expression.spel.support.StandardTypeConverter;
 import org.springframework.expression.spel.support.StandardTypeLocator;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -51,7 +47,6 @@ import org.springframework.util.StringUtils;
  * beans such as "environment", "systemProperties" and "systemEnvironment".
  *
  * @author Juergen Hoeller
- * @author Sam Brannen
  * @since 3.0
  * @see BeanExpressionContext#getBeanFactory()
  * @see org.springframework.expression.ExpressionParser
@@ -59,14 +54,6 @@ import org.springframework.util.StringUtils;
  * @see org.springframework.expression.spel.support.StandardEvaluationContext
  */
 public class StandardBeanExpressionResolver implements BeanExpressionResolver {
-
-	/**
-	 * System property to configure the maximum length for SpEL expressions: {@value}.
-	 * <p>Can also be configured via the {@link SpringProperties} mechanism.
-	 * @since 6.1.3
-	 * @see SpelParserConfiguration#getMaximumExpressionLength()
-	 */
-	public static final String MAX_SPEL_EXPRESSION_LENGTH_PROPERTY_NAME = "spring.context.expression.maxLength";
 
 	/** Default expression prefix: "#{". */
 	public static final String DEFAULT_EXPRESSION_PREFIX = "#{";
@@ -103,24 +90,18 @@ public class StandardBeanExpressionResolver implements BeanExpressionResolver {
 
 	/**
 	 * Create a new {@code StandardBeanExpressionResolver} with default settings.
-	 * <p>As of Spring Framework 6.1.3, the maximum SpEL expression length can be
-	 * configured via the {@link #MAX_SPEL_EXPRESSION_LENGTH_PROPERTY_NAME} property.
 	 */
 	public StandardBeanExpressionResolver() {
-		this(null);
+		this.expressionParser = new SpelExpressionParser();
 	}
 
 	/**
 	 * Create a new {@code StandardBeanExpressionResolver} with the given bean class loader,
 	 * using it as the basis for expression compilation.
-	 * <p>As of Spring Framework 6.1.3, the maximum SpEL expression length can be
-	 * configured via the {@link #MAX_SPEL_EXPRESSION_LENGTH_PROPERTY_NAME} property.
 	 * @param beanClassLoader the factory's bean class loader
 	 */
 	public StandardBeanExpressionResolver(@Nullable ClassLoader beanClassLoader) {
-		SpelParserConfiguration parserConfig = new SpelParserConfiguration(
-				null, beanClassLoader, false, false, Integer.MAX_VALUE, retrieveMaxExpressionLength());
-		this.expressionParser = new SpelExpressionParser(parserConfig);
+		this.expressionParser = new SpelExpressionParser(new SpelParserConfiguration(null, beanClassLoader));
 	}
 
 
@@ -156,30 +137,34 @@ public class StandardBeanExpressionResolver implements BeanExpressionResolver {
 
 
 	@Override
-	public @Nullable Object evaluate(@Nullable String value, BeanExpressionContext beanExpressionContext) throws BeansException {
+	@Nullable
+	public Object evaluate(@Nullable String value, BeanExpressionContext evalContext) throws BeansException {
 		if (!StringUtils.hasLength(value)) {
 			return value;
 		}
 		try {
-			Expression expr = this.expressionCache.computeIfAbsent(value, expression ->
-					this.expressionParser.parseExpression(expression, this.beanExpressionParserContext));
-			EvaluationContext evalContext = this.evaluationCache.computeIfAbsent(beanExpressionContext, bec -> {
-					ConfigurableBeanFactory beanFactory = bec.getBeanFactory();
-					StandardEvaluationContext sec = new StandardEvaluationContext(bec);
-					sec.addPropertyAccessor(new BeanExpressionContextAccessor());
-					sec.addPropertyAccessor(new BeanFactoryAccessor());
-					sec.addPropertyAccessor(new MapAccessor());
-					sec.addPropertyAccessor(new EnvironmentAccessor());
-					sec.setBeanResolver(new BeanFactoryResolver(beanFactory));
-					sec.setTypeLocator(new StandardTypeLocator(beanFactory.getBeanClassLoader()));
-					sec.setTypeConverter(new StandardTypeConverter(() -> {
-						ConversionService cs = beanFactory.getConversionService();
-						return (cs != null ? cs : DefaultConversionService.getSharedInstance());
-					}));
-					customizeEvaluationContext(sec);
-					return sec;
-				});
-			return expr.getValue(evalContext);
+			Expression expr = this.expressionCache.get(value);
+			if (expr == null) {
+				expr = this.expressionParser.parseExpression(value, this.beanExpressionParserContext);
+				this.expressionCache.put(value, expr);
+			}
+			StandardEvaluationContext sec = this.evaluationCache.get(evalContext);
+			if (sec == null) {
+				sec = new StandardEvaluationContext(evalContext);
+				sec.addPropertyAccessor(new BeanExpressionContextAccessor());
+				sec.addPropertyAccessor(new BeanFactoryAccessor());
+				sec.addPropertyAccessor(new MapAccessor());
+				sec.addPropertyAccessor(new EnvironmentAccessor());
+				sec.setBeanResolver(new BeanFactoryResolver(evalContext.getBeanFactory()));
+				sec.setTypeLocator(new StandardTypeLocator(evalContext.getBeanFactory().getBeanClassLoader()));
+				sec.setTypeConverter(new StandardTypeConverter(() -> {
+					ConversionService cs = evalContext.getBeanFactory().getConversionService();
+					return (cs != null ? cs : DefaultConversionService.getSharedInstance());
+				}));
+				customizeEvaluationContext(sec);
+				this.evaluationCache.put(evalContext, sec);
+			}
+			return expr.getValue(sec);
 		}
 		catch (Throwable ex) {
 			throw new BeanExpressionException("Expression parsing failed", ex);
@@ -191,24 +176,6 @@ public class StandardBeanExpressionResolver implements BeanExpressionResolver {
 	 * <p>The default implementation is empty.
 	 */
 	protected void customizeEvaluationContext(StandardEvaluationContext evalContext) {
-	}
-
-	private static int retrieveMaxExpressionLength() {
-		String value = SpringProperties.getProperty(MAX_SPEL_EXPRESSION_LENGTH_PROPERTY_NAME);
-		if (!StringUtils.hasText(value)) {
-			return SpelParserConfiguration.DEFAULT_MAX_EXPRESSION_LENGTH;
-		}
-
-		try {
-			int maxLength = Integer.parseInt(value.trim());
-			Assert.isTrue(maxLength > 0, () -> "Value [" + maxLength + "] for system property [" +
-					MAX_SPEL_EXPRESSION_LENGTH_PROPERTY_NAME + "] must be positive");
-			return maxLength;
-		}
-		catch (NumberFormatException ex) {
-			throw new IllegalArgumentException("Failed to parse value for system property [" +
-					MAX_SPEL_EXPRESSION_LENGTH_PROPERTY_NAME + "]: " + ex.getMessage(), ex);
-		}
 	}
 
 }

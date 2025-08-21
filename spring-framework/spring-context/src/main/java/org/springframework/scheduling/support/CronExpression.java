@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.util.Arrays;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -30,14 +29,9 @@ import org.springframework.util.StringUtils;
  * <a href="https://www.manpagez.com/man/5/crontab/">crontab expression</a>
  * that can calculate the next time it matches.
  *
- * <p>{@code CronExpression} instances are created through {@link #parse(String)};
- * the next match is determined with {@link #next(Temporal)}.
- *
- * <p>Supports a Quartz day-of-month/week field with an L/# expression. Follows
- * common cron conventions in every other respect, including 0-6 for SUN-SAT
- * (plus 7 for SUN as well). Note that Quartz deviates from the day-of-week
- * convention in cron through 1-7 for SUN-SAT whereas Spring strictly follows
- * cron even in combination with the optional Quartz-specific L/# expressions.
+ * <p>{@code CronExpression} instances are created through
+ * {@link #parse(String)}; the next match is determined with
+ * {@link #next(Temporal)}.
  *
  * @author Arjen Poutsma
  * @since 5.3
@@ -63,12 +57,18 @@ public final class CronExpression {
 	private final String expression;
 
 
-	private CronExpression(CronField seconds, CronField minutes, CronField hours,
-			CronField daysOfMonth, CronField months, CronField daysOfWeek, String expression) {
+	private CronExpression(
+			CronField seconds,
+			CronField minutes,
+			CronField hours,
+			CronField daysOfMonth,
+			CronField months,
+			CronField daysOfWeek,
+			String expression) {
 
-		// Reverse order, to make big changes first.
-		// To make sure we end up at 0 nanos, we add an extra field.
-		this.fields = new CronField[] {daysOfWeek, months, daysOfMonth, hours, minutes, seconds, CronField.zeroNanos()};
+		// reverse order, to make big changes first
+		// to make sure we end up at 0 nanos, we add an extra field
+		this.fields = new CronField[]{daysOfWeek, months, daysOfMonth, hours, minutes, seconds, CronField.zeroNanos()};
 		this.expression = expression;
 	}
 
@@ -121,8 +121,11 @@ public final class CronExpression {
 	 * {@code LW}), it means "the last weekday of the month".
 	 * </li>
 	 * <li>
-	 * In the "day of week" field, {@code dL} or {@code DDDL} stands for
-	 * "the last day of week {@code d} (or {@code DDD}) in the month".
+	 * In the "day of week" field, {@code L} stands for "the last day of the
+	 * week".
+	 * If prefixed by a number or three-letter name (i.e. {@code dL} or
+	 * {@code DDDL}), it means "the last day of week {@code d} (or {@code DDD})
+	 * in the month".
 	 * </li>
 	 * </ul>
 	 * </li>
@@ -143,11 +146,11 @@ public final class CronExpression {
 	 *
 	 * <p>Example expressions:
 	 * <ul>
-	 * <li>{@code "0 0 * * * *"} = the top of every hour of every day</li>
-	 * <li><code>"*&#47;10 * * * * *"</code> = every ten seconds</li>
-	 * <li>{@code "0 0 8-10 * * *"} = 8, 9 and 10 o'clock of every day</li>
-	 * <li>{@code "0 0 6,19 * * *"} = 6:00 AM and 7:00 PM every day</li>
-	 * <li>{@code "0 0/30 8-10 * * *"} = 8:00, 8:30, 9:00, 9:30, 10:00 and 10:30 every day</li>
+	 * <li>{@code "0 0 * * * *"} = the top of every hour of every day.</li>
+	 * <li><code>"*&#47;10 * * * * *"</code> = every ten seconds.</li>
+	 * <li>{@code "0 0 8-10 * * *"} = 8, 9 and 10 o'clock of every day.</li>
+	 * <li>{@code "0 0 6,19 * * *"} = 6:00 AM and 7:00 PM every day.</li>
+	 * <li>{@code "0 0/30 8-10 * * *"} = 8:00, 8:30, 9:00, 9:30, 10:00 and 10:30 every day.</li>
 	 * <li>{@code "0 0 9-17 * * MON-FRI"} = on the hour nine-to-five weekdays</li>
 	 * <li>{@code "0 0 0 25 12 ?"} = every Christmas Day at midnight</li>
 	 * <li>{@code "0 0 0 L * *"} = last day of the month at midnight</li>
@@ -160,21 +163,22 @@ public final class CronExpression {
 	 * <li>{@code "0 0 0 ? * MON#1"} = the first Monday in the month at midnight</li>
 	 * </ul>
 	 *
-	 * <p>The following macros are also supported.
+	 * <p>The following macros are also supported:
 	 * <ul>
-	 * <li>{@code "@yearly"} (or {@code "@annually"}) to run un once a year, i.e. {@code "0 0 0 1 1 *"}</li>
-	 * <li>{@code "@monthly"} to run once a month, i.e. {@code "0 0 0 1 * *"}</li>
-	 * <li>{@code "@weekly"} to run once a week, i.e. {@code "0 0 0 * * 0"}</li>
-	 * <li>{@code "@daily"} (or {@code "@midnight"}) to run once a day, i.e. {@code "0 0 0 * * *"}</li>
-	 * <li>{@code "@hourly"} to run once an hour, i.e. {@code "0 0 * * * *"}</li>
+	 * <li>{@code "@yearly"} (or {@code "@annually"}) to run un once a year, i.e. {@code "0 0 0 1 1 *"},</li>
+	 * <li>{@code "@monthly"} to run once a month, i.e. {@code "0 0 0 1 * *"},</li>
+	 * <li>{@code "@weekly"} to run once a week, i.e. {@code "0 0 0 * * 0"},</li>
+	 * <li>{@code "@daily"} (or {@code "@midnight"}) to run once a day, i.e. {@code "0 0 0 * * *"},</li>
+	 * <li>{@code "@hourly"} to run once an hour, i.e. {@code "0 0 * * * *"}.</li>
 	 * </ul>
+	 *
 	 * @param expression the expression string to parse
 	 * @return the parsed {@code CronExpression} object
 	 * @throws IllegalArgumentException in the expression does not conform to
 	 * the cron format
 	 */
 	public static CronExpression parse(String expression) {
-		Assert.hasLength(expression, "Expression must not be empty");
+		Assert.hasLength(expression, "Expression string must not be empty");
 
 		expression = resolveMacros(expression);
 
@@ -237,12 +241,14 @@ public final class CronExpression {
 	 * @return the next temporal that matches this expression, or {@code null}
 	 * if no such temporal can be found
 	 */
-	public <T extends Temporal & Comparable<? super T>> @Nullable T next(T temporal) {
+	@Nullable
+	public <T extends Temporal & Comparable<? super T>> T next(T temporal) {
 		return nextOrSame(ChronoUnit.NANOS.addTo(temporal, 1));
 	}
 
 
-	private <T extends Temporal & Comparable<? super T>> @Nullable T nextOrSame(T temporal) {
+	@Nullable
+	private <T extends Temporal & Comparable<? super T>> T nextOrSame(T temporal) {
 		for (int i = 0; i < MAX_ATTEMPTS; i++) {
 			T result = nextOrSameInternal(temporal);
 			if (result == null || result.equals(temporal)) {
@@ -253,7 +259,8 @@ public final class CronExpression {
 		return null;
 	}
 
-	private <T extends Temporal & Comparable<? super T>> @Nullable T nextOrSameInternal(T temporal) {
+	@Nullable
+	private <T extends Temporal & Comparable<? super T>> T nextOrSameInternal(T temporal) {
 		for (CronField field : this.fields) {
 			temporal = field.nextOrSame(temporal);
 			if (temporal == null) {
@@ -265,18 +272,27 @@ public final class CronExpression {
 
 
 	@Override
-	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof CronExpression that &&
-				Arrays.equals(this.fields, that.fields)));
-	}
-
-	@Override
 	public int hashCode() {
 		return Arrays.hashCode(this.fields);
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o instanceof CronExpression) {
+			CronExpression other = (CronExpression) o;
+			return Arrays.equals(this.fields, other.fields);
+		}
+		else {
+			return false;
+		}
+	}
+
 	/**
 	 * Return the expression string used to create this {@code CronExpression}.
+	 * @return the expression string
 	 */
 	@Override
 	public String toString() {

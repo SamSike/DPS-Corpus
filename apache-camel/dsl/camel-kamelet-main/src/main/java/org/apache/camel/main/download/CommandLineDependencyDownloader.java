@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.support.service.ServiceSupport;
-import org.apache.camel.tooling.maven.MavenGav;
 
 public class CommandLineDependencyDownloader extends ServiceSupport {
 
@@ -43,10 +42,7 @@ public class CommandLineDependencyDownloader extends ServiceSupport {
     private void downloadDependencies() {
         final List<String> gavs = new ArrayList<>();
         for (String dep : dependencies.split(",")) {
-            // trim whitespace
-            dep = dep.trim();
             String gav = dep;
-            gav = gav.trim();
             if (dep.startsWith("camel:") || dep.startsWith("camel-")) {
                 // it's a known camel component
                 gav = "org.apache.camel:camel-" + dep.substring(6) + ":" + camelContext.getVersion();

@@ -26,13 +26,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DataSetPreloadTest extends ContextTestSupport {
 
-    private final SimpleDataSet dataSet = new SimpleDataSet(20);
+    private SimpleDataSet dataSet = new SimpleDataSet(20);
 
-    private final String uri = "dataset:foo?initialDelay=0&preloadSize=5";
+    private String uri = "dataset:foo?initialDelay=0&preloadSize=5";
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("foo", dataSet);
         return answer;
     }
@@ -55,10 +55,10 @@ public class DataSetPreloadTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
-                from(uri).to("seda:test").autoStartup(false);
+            public void configure() throws Exception {
+                from(uri).to("seda:test").noAutoStartup();
 
                 from("seda:test").to(uri);
             }

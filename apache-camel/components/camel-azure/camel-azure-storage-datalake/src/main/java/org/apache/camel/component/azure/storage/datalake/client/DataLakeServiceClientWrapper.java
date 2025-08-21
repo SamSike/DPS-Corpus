@@ -18,6 +18,7 @@ package org.apache.camel.component.azure.storage.datalake.client;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.azure.storage.file.datalake.DataLakeServiceClient;
 import com.azure.storage.file.datalake.models.FileSystemItem;
@@ -34,7 +35,7 @@ public class DataLakeServiceClientWrapper {
     }
 
     public List<FileSystemItem> listFileSystems(final ListFileSystemsOptions options, final Duration timeout) {
-        return client.listFileSystems(options, timeout).stream().toList();
+        return client.listFileSystems(options, timeout).stream().collect(Collectors.toList());
     }
 
     public DataLakeFileSystemClientWrapper getDataLakeFileSystemClientWrapper(final String fileSystemName) {

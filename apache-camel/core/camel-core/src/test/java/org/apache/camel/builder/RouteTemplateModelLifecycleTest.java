@@ -17,6 +17,7 @@
 package org.apache.camel.builder;
 
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.model.ModelLifecycleStrategySupport;
 import org.apache.camel.model.RouteTemplateDefinition;
 import org.junit.jupiter.api.Assertions;
@@ -32,7 +33,7 @@ public class RouteTemplateModelLifecycleTest extends ContextTestSupport {
     @Test
     public void testModelLifecycle() throws Exception {
         // add lifecycle before we add routes
-        context.addModelLifecycleStrategy(new ModelLifecycleStrategySupport() {
+        context.adapt(ModelCamelContext.class).addModelLifecycleStrategy(new ModelLifecycleStrategySupport() {
             @Override
             public void onAddRouteTemplateDefinition(RouteTemplateDefinition template) {
                 // lets mutate the template a bit
@@ -42,7 +43,7 @@ public class RouteTemplateModelLifecycleTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 routeTemplate("myTemplate").templateParameter("foo").templateParameter("bar")
                         .from("direct:{{foo}}")
                         .to("mock:{{bar}}");
@@ -70,7 +71,7 @@ public class RouteTemplateModelLifecycleTest extends ContextTestSupport {
     public void testModelLifecycleViaHandler() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 routeTemplate("myTemplate").templateParameter("foo").templateParameter("bar")
                         .from("direct:{{foo}}")
                         .to("mock:{{bar}}");

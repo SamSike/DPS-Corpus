@@ -24,13 +24,11 @@ import java.util.Map;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Expression;
 import org.apache.camel.ExtendedCamelContext;
-import org.apache.camel.model.BasicExpressionNode;
 import org.apache.camel.model.ExpressionNode;
 import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.model.RoutesDefinition;
 import org.apache.camel.model.language.ExpressionDefinition;
 import org.apache.camel.spi.NamespaceAware;
-import org.apache.camel.xml.jaxb.JaxbHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.model.ProcessorDefinitionHelper.filterTypeInOutputs;
@@ -91,51 +89,37 @@ public class CreateModelFromXmlTest extends ContextTestSupport {
     }
 
     private RoutesDefinition createModelFromXml(String camelContextResource, boolean fromString) throws Exception {
-        ExtendedCamelContext ecc = context.getCamelContextExtension();
+        ExtendedCamelContext ecc = context.adapt(ExtendedCamelContext.class);
 
         InputStream inputStream = getClass().getResourceAsStream(camelContextResource);
 
         if (fromString) {
             String xml = context.getTypeConverter().convertTo(String.class, inputStream);
-            inputStream = context.getTypeConverter().convertTo(InputStream.class, xml);
+            InputStream isxml = context.getTypeConverter().convertTo(InputStream.class, xml);
+            return (RoutesDefinition) ecc.getXMLRoutesDefinitionLoader().loadRoutesDefinition(context, isxml);
         }
 
-        return JaxbHelper.loadRoutesDefinition(context, inputStream);
+        return (RoutesDefinition) ecc.getXMLRoutesDefinitionLoader().loadRoutesDefinition(context, inputStream);
     }
 
     private void assertNamespacesPresent(RoutesDefinition routesDefinition, Map<String, String> expectedNamespaces) {
         for (RouteDefinition route : routesDefinition.getRoutes()) {
             Collection<ExpressionNode> col = filterTypeInOutputs(route.getOutputs(), ExpressionNode.class);
-            for (ExpressionNode en : col) {
-                ExpressionDefinition ed = en.getExpression();
+            if (col.isEmpty()) {
+                fail("Expected to find at least one ExpressionNode in route");
+            } else {
+                for (ExpressionNode en : col) {
+                    ExpressionDefinition ed = en.getExpression();
 
-                NamespaceAware na = null;
-                Expression exp = ed.getExpressionValue();
-                if (exp instanceof NamespaceAware) {
-                    na = (NamespaceAware) exp;
-                } else if (ed instanceof NamespaceAware) {
-                    na = (NamespaceAware) ed;
-                }
+                    NamespaceAware na = null;
+                    Expression exp = ed.getExpressionValue();
+                    if (exp instanceof NamespaceAware) {
+                        na = (NamespaceAware) exp;
+                    } else if (ed instanceof NamespaceAware) {
+                        na = (NamespaceAware) ed;
+                    }
 
-                assertNotNull(na);
-                if (na.getNamespaces() != null) {
-                    assertEquals(expectedNamespaces, na.getNamespaces());
-                }
-            }
-            Collection<BasicExpressionNode> col2 = filterTypeInOutputs(route.getOutputs(), BasicExpressionNode.class);
-            for (BasicExpressionNode en : col2) {
-                ExpressionDefinition ed = en.getExpression();
-
-                NamespaceAware na = null;
-                Expression exp = ed.getExpressionValue();
-                if (exp instanceof NamespaceAware) {
-                    na = (NamespaceAware) exp;
-                } else if (ed instanceof NamespaceAware) {
-                    na = (NamespaceAware) ed;
-                }
-
-                assertNotNull(na);
-                if (na.getNamespaces() != null) {
+                    assertNotNull(na);
                     assertEquals(expectedNamespaces, na.getNamespaces());
                 }
             }

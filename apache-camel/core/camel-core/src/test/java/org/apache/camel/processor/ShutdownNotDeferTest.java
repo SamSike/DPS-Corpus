@@ -55,10 +55,10 @@ public class ShutdownNotDeferTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo").startupOrder(1).to(fileUri());
 
                 // use file component to transfer files from route 1 -> route 2

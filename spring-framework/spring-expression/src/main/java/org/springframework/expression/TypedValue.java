@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,13 @@
 
 package org.springframework.expression;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
  * Encapsulates an object and a {@link TypeDescriptor} that describes it.
- *
- * <p>The type descriptor can contain generic declarations that would not
+ * The type descriptor can contain generic declarations that would not
  * be accessible through a simple {@code getClass()} call on the object.
  *
  * @author Andy Clement
@@ -39,9 +37,11 @@ public class TypedValue {
 	public static final TypedValue NULL = new TypedValue(null);
 
 
-	private final @Nullable Object value;
+	@Nullable
+	private final Object value;
 
-	private @Nullable TypeDescriptor typeDescriptor;
+	@Nullable
+	private TypeDescriptor typeDescriptor;
 
 
 	/**
@@ -66,11 +66,13 @@ public class TypedValue {
 	}
 
 
-	public @Nullable Object getValue() {
+	@Nullable
+	public Object getValue() {
 		return this.value;
 	}
 
-	public @Nullable TypeDescriptor getTypeDescriptor() {
+	@Nullable
+	public TypeDescriptor getTypeDescriptor() {
 		if (this.typeDescriptor == null && this.value != null) {
 			this.typeDescriptor = TypeDescriptor.forObject(this.value);
 		}
@@ -80,11 +82,17 @@ public class TypedValue {
 
 	@Override
 	public boolean equals(@Nullable Object other) {
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof TypedValue)) {
+			return false;
+		}
+		TypedValue otherTv = (TypedValue) other;
 		// Avoid TypeDescriptor initialization if not necessary
-		return (this == other || (other instanceof TypedValue that &&
-				ObjectUtils.nullSafeEquals(this.value, that.value) &&
-				((this.typeDescriptor == null && that.typeDescriptor == null) ||
-						ObjectUtils.nullSafeEquals(getTypeDescriptor(), that.getTypeDescriptor()))));
+		return (ObjectUtils.nullSafeEquals(this.value, otherTv.value) &&
+				((this.typeDescriptor == null && otherTv.typeDescriptor == null) ||
+						ObjectUtils.nullSafeEquals(getTypeDescriptor(), otherTv.getTypeDescriptor())));
 	}
 
 	@Override

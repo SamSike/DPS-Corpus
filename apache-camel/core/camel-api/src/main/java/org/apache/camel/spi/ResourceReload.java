@@ -25,10 +25,9 @@ public interface ResourceReload {
     /**
      * Callback when the resource is re-loaded.
      *
-     * @param  name      name of the resource such as the file name (absolute)
-     * @param  resource  the resource
-     * @throws Exception error reloading the resources
+     * @param name     name of the resource such as the file name (absolute)
+     * @param resource the resource
      */
-    void onReload(String name, Resource resource) throws Exception;
+    void onReload(String name, Resource resource);
 
 }

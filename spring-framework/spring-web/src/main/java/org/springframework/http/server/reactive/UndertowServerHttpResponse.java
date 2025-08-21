@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import java.nio.file.StandardOpenOption;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.Cookie;
 import io.undertow.server.handlers.CookieImpl;
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Processor;
 import org.reactivestreams.Publisher;
 import org.xnio.channels.StreamSinkChannel;
@@ -36,9 +35,10 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ZeroCopyHttpOutputMessage;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -47,7 +47,6 @@ import org.springframework.util.Assert;
  * @author Marek Hawrylczak
  * @author Rossen Stoyanchev
  * @author Arjen Poutsma
- * @author Juergen Hoeller
  * @since 5.0
  */
 class UndertowServerHttpResponse extends AbstractListenerServerHttpResponse implements ZeroCopyHttpOutputMessage {
@@ -56,19 +55,20 @@ class UndertowServerHttpResponse extends AbstractListenerServerHttpResponse impl
 
 	private final UndertowServerHttpRequest request;
 
-	private @Nullable StreamSinkChannel responseChannel;
+	@Nullable
+	private StreamSinkChannel responseChannel;
 
 
 	UndertowServerHttpResponse(
 			HttpServerExchange exchange, DataBufferFactory bufferFactory, UndertowServerHttpRequest request) {
 
 		super(bufferFactory, createHeaders(exchange));
+		Assert.notNull(exchange, "HttpServerExchange must not be null");
 		this.exchange = exchange;
 		this.request = request;
 	}
 
 	private static HttpHeaders createHeaders(HttpServerExchange exchange) {
-		Assert.notNull(exchange, "HttpServerExchange must not be null");
 		UndertowHeadersAdapter headersMap = new UndertowHeadersAdapter(exchange.getResponseHeaders());
 		return new HttpHeaders(headersMap);
 	}
@@ -81,16 +81,22 @@ class UndertowServerHttpResponse extends AbstractListenerServerHttpResponse impl
 	}
 
 	@Override
-	public HttpStatusCode getStatusCode() {
-		HttpStatusCode status = super.getStatusCode();
-		return (status != null ? status : HttpStatusCode.valueOf(this.exchange.getStatusCode()));
+	public HttpStatus getStatusCode() {
+		HttpStatus status = super.getStatusCode();
+		return (status != null ? status : HttpStatus.resolve(this.exchange.getStatusCode()));
+	}
+
+	@Override
+	public Integer getRawStatusCode() {
+		Integer status = super.getRawStatusCode();
+		return (status != null ? status : this.exchange.getStatusCode());
 	}
 
 	@Override
 	protected void applyStatusCode() {
-		HttpStatusCode status = super.getStatusCode();
+		Integer status = super.getRawStatusCode();
 		if (status != null) {
-			this.exchange.setStatusCode(status.value());
+			this.exchange.setStatusCode(status);
 		}
 	}
 
@@ -98,6 +104,7 @@ class UndertowServerHttpResponse extends AbstractListenerServerHttpResponse impl
 	protected void applyHeaders() {
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void applyCookies() {
 		for (String name : getCookies().keySet()) {
@@ -114,9 +121,9 @@ class UndertowServerHttpResponse extends AbstractListenerServerHttpResponse impl
 				}
 				cookie.setSecure(httpCookie.isSecure());
 				cookie.setHttpOnly(httpCookie.isHttpOnly());
-				// TODO: add "Partitioned" attribute when Undertow supports it
 				cookie.setSameSiteMode(httpCookie.getSameSite());
-				this.exchange.setResponseCookie(cookie);
+				// getResponseCookies() is deprecated in Undertow 2.2
+				this.exchange.getResponseCookies().putIfAbsent(name, cookie);
 			}
 		}
 	}
@@ -127,10 +134,14 @@ class UndertowServerHttpResponse extends AbstractListenerServerHttpResponse impl
 				Mono.create(sink -> {
 					try {
 						FileChannel source = FileChannel.open(file, StandardOpenOption.READ);
-						TransferBodyListener listener = new TransferBodyListener(source, position, count, sink);
+
+						TransferBodyListener listener = new TransferBodyListener(source, position,
+								count, sink);
 						sink.onDispose(listener::closeSource);
+
 						StreamSinkChannel destination = this.exchange.getResponseChannel();
 						destination.getWriteSetter().set(listener::transfer);
+
 						listener.transfer(destination);
 					}
 					catch (IOException ex) {
@@ -156,7 +167,8 @@ class UndertowServerHttpResponse extends AbstractListenerServerHttpResponse impl
 
 		private final StreamSinkChannel channel;
 
-		private volatile @Nullable ByteBuffer byteBuffer;
+		@Nullable
+		private volatile ByteBuffer byteBuffer;
 
 		/** Keep track of write listener calls, for {@link #writePossible}. */
 		private volatile boolean writePossible;
@@ -186,7 +198,7 @@ class UndertowServerHttpResponse extends AbstractListenerServerHttpResponse impl
 				return false;
 			}
 
-			// Track write listener calls from here on.
+			// Track write listener calls from here on..
 			this.writePossible = false;
 
 			// In case of IOException, onError handling should call discardData(DataBuffer)..
@@ -200,7 +212,7 @@ class UndertowServerHttpResponse extends AbstractListenerServerHttpResponse impl
 				return false;
 			}
 
-			// We wrote all, so can still write more.
+			// We wrote all, so can still write more..
 			this.writePossible = true;
 
 			DataBufferUtils.release(dataBuffer);
@@ -222,9 +234,7 @@ class UndertowServerHttpResponse extends AbstractListenerServerHttpResponse impl
 		@Override
 		protected void dataReceived(DataBuffer dataBuffer) {
 			super.dataReceived(dataBuffer);
-			ByteBuffer byteBuffer = ByteBuffer.allocate(dataBuffer.readableByteCount());
-			dataBuffer.toByteBuffer(byteBuffer);
-			this.byteBuffer = byteBuffer;
+			this.byteBuffer = dataBuffer.asByteBuffer();
 		}
 
 		@Override
@@ -277,7 +287,7 @@ class UndertowServerHttpResponse extends AbstractListenerServerHttpResponse impl
 		protected boolean isWritePossible() {
 			StreamSinkChannel channel = UndertowServerHttpResponse.this.responseChannel;
 			if (channel != null) {
-				// We can always call flush, just ensure writes are on.
+				// We can always call flush, just ensure writes are on..
 				channel.resumeWrites();
 				return true;
 			}

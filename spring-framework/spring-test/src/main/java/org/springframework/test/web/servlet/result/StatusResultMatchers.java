@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,8 @@ package org.springframework.test.web.servlet.result;
 import org.hamcrest.Matcher;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.util.Assert;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.test.util.AssertionErrors.assertEquals;
@@ -106,9 +104,9 @@ public class StatusResultMatchers {
 	}
 
 	private HttpStatus.Series getHttpStatusSeries(MvcResult result) {
-		HttpStatus.Series series = HttpStatus.Series.resolve(result.getResponse().getStatus());
-		Assert.state(series != null, "HTTP status series must not be null");
-		return series;
+		int statusValue = result.getResponse().getStatus();
+		HttpStatus status = HttpStatus.valueOf(statusValue);
+		return status.series();
 	}
 
 	/**
@@ -147,10 +145,9 @@ public class StatusResultMatchers {
 	}
 
 	/**
-	 * Assert the response status code is {@code HttpStatus.EARLY_HINTS} (103).
-	 * @since 6.0.5
+	 * Assert the response status code is {@code HttpStatus.CHECKPOINT} (103).
 	 */
-	public ResultMatcher isEarlyHints() {
+	public ResultMatcher isCheckpoint() {
 		return matcher(HttpStatus.valueOf(103));
 	}
 
@@ -246,6 +243,16 @@ public class StatusResultMatchers {
 	}
 
 	/**
+	 * Assert the response status code is {@code HttpStatus.MOVED_TEMPORARILY} (302).
+	 * @see #isFound()
+	 * @deprecated in favor of {@link #isFound()}
+	 */
+	@Deprecated
+	public ResultMatcher isMovedTemporarily() {
+		return matcher(HttpStatus.MOVED_TEMPORARILY);
+	}
+
+	/**
 	 * Assert the response status code is {@code HttpStatus.SEE_OTHER} (303).
 	 */
 	public ResultMatcher isSeeOther() {
@@ -257,6 +264,15 @@ public class StatusResultMatchers {
 	 */
 	public ResultMatcher isNotModified() {
 		return matcher(HttpStatus.NOT_MODIFIED);
+	}
+
+	/**
+	 * Assert the response status code is {@code HttpStatus.USE_PROXY} (305).
+	 * @deprecated matching the deprecation of {@code HttpStatus.USE_PROXY}
+	 */
+	@Deprecated
+	public ResultMatcher isUseProxy() {
+		return matcher(HttpStatus.USE_PROXY);
 	}
 
 	/**
@@ -373,11 +389,31 @@ public class StatusResultMatchers {
 	}
 
 	/**
+	 * Assert the response status code is {@code HttpStatus.REQUEST_ENTITY_TOO_LARGE} (413).
+	 * @deprecated matching the deprecation of {@code HttpStatus.REQUEST_ENTITY_TOO_LARGE}
+	 * @see #isPayloadTooLarge()
+	 */
+	@Deprecated
+	public ResultMatcher isRequestEntityTooLarge() {
+		return matcher(HttpStatus.REQUEST_ENTITY_TOO_LARGE);
+	}
+
+	/**
 	 * Assert the response status code is {@code HttpStatus.REQUEST_URI_TOO_LONG} (414).
 	 * @since 4.1
 	 */
 	public ResultMatcher isUriTooLong() {
 		return matcher(HttpStatus.URI_TOO_LONG);
+	}
+
+	/**
+	 * Assert the response status code is {@code HttpStatus.REQUEST_URI_TOO_LONG} (414).
+	 * @deprecated matching the deprecation of {@code HttpStatus.REQUEST_URI_TOO_LONG}
+	 * @see #isUriTooLong()
+	 */
+	@Deprecated
+	public ResultMatcher isRequestUriTooLong() {
+		return matcher(HttpStatus.REQUEST_URI_TOO_LONG);
 	}
 
 	/**
@@ -406,6 +442,33 @@ public class StatusResultMatchers {
 	 */
 	public ResultMatcher isIAmATeapot() {
 		return matcher(HttpStatus.valueOf(418));
+	}
+
+	/**
+	 * Assert the response status code is {@code HttpStatus.INSUFFICIENT_SPACE_ON_RESOURCE} (419).
+	 * @deprecated matching the deprecation of {@code HttpStatus.INSUFFICIENT_SPACE_ON_RESOURCE}
+	 */
+	@Deprecated
+	public ResultMatcher isInsufficientSpaceOnResource() {
+		return matcher(HttpStatus.INSUFFICIENT_SPACE_ON_RESOURCE);
+	}
+
+	/**
+	 * Assert the response status code is {@code HttpStatus.METHOD_FAILURE} (420).
+	 * @deprecated matching the deprecation of {@code HttpStatus.METHOD_FAILURE}
+	 */
+	@Deprecated
+	public ResultMatcher isMethodFailure() {
+		return matcher(HttpStatus.METHOD_FAILURE);
+	}
+
+	/**
+	 * Assert the response status code is {@code HttpStatus.DESTINATION_LOCKED} (421).
+	 * @deprecated matching the deprecation of {@code HttpStatus.DESTINATION_LOCKED}
+	 */
+	@Deprecated
+	public ResultMatcher isDestinationLocked() {
+		return matcher(HttpStatus.DESTINATION_LOCKED);
 	}
 
 	/**
@@ -560,7 +623,7 @@ public class StatusResultMatchers {
 	/**
 	 * Match the expected response status to that of the HttpServletResponse.
 	 */
-	private ResultMatcher matcher(HttpStatusCode status) {
+	private ResultMatcher matcher(HttpStatus status) {
 		return result -> assertEquals("Status", status.value(), result.getResponse().getStatus());
 	}
 

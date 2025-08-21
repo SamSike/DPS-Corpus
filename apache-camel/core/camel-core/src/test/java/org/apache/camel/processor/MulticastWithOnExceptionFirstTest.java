@@ -21,10 +21,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class MulticastWithOnExceptionFirstTest extends MulticastWithOnExceptionTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).handled(true).to("mock:handled").transform(simple("Damn ${exception.message}"));
 
                 from("direct:start").multicast().to("direct:bar", "direct:foo", "direct:baz").end().to("mock:result");

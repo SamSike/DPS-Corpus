@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,16 +18,13 @@ package org.springframework.aop.framework.autoproxy;
 
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.aop.Advisor;
 import org.springframework.aop.TargetSource;
-import org.springframework.aop.framework.AopConfigException;
 import org.springframework.aop.support.AopUtils;
-import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -54,17 +51,18 @@ import org.springframework.util.Assert;
 @SuppressWarnings("serial")
 public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyCreator {
 
-	private @Nullable BeanFactoryAdvisorRetrievalHelper advisorRetrievalHelper;
+	@Nullable
+	private BeanFactoryAdvisorRetrievalHelper advisorRetrievalHelper;
 
 
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) {
 		super.setBeanFactory(beanFactory);
-		if (!(beanFactory instanceof ConfigurableListableBeanFactory clbf)) {
+		if (!(beanFactory instanceof ConfigurableListableBeanFactory)) {
 			throw new IllegalArgumentException(
 					"AdvisorAutoProxyCreator requires a ConfigurableListableBeanFactory: " + beanFactory);
 		}
-		initBeanFactory(clbf);
+		initBeanFactory((ConfigurableListableBeanFactory) beanFactory);
 	}
 
 	protected void initBeanFactory(ConfigurableListableBeanFactory beanFactory) {
@@ -73,7 +71,8 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 
 
 	@Override
-	protected Object @Nullable [] getAdvicesAndAdvisorsForBean(
+	@Nullable
+	protected Object[] getAdvicesAndAdvisorsForBean(
 			Class<?> beanClass, String beanName, @Nullable TargetSource targetSource) {
 
 		List<Advisor> advisors = findEligibleAdvisors(beanClass, beanName);
@@ -98,13 +97,7 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 		List<Advisor> eligibleAdvisors = findAdvisorsThatCanApply(candidateAdvisors, beanClass, beanName);
 		extendAdvisors(eligibleAdvisors);
 		if (!eligibleAdvisors.isEmpty()) {
-			try {
-				eligibleAdvisors = sortAdvisors(eligibleAdvisors);
-			}
-			catch (BeanCreationException ex) {
-				throw new AopConfigException("Advisor sorting failed with unexpected bean creation, probably due " +
-						"to custom use of the Ordered interface. Consider using the @Order annotation instead.", ex);
-			}
+			eligibleAdvisors = sortAdvisors(eligibleAdvisors);
 		}
 		return eligibleAdvisors;
 	}

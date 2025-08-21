@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,16 +41,16 @@ import static org.assertj.core.api.Assertions.within;
  * @author Rossen Stoyanchev
  * @author Sebastien Deleuze
  */
-class GsonMessageConverterTests {
+public class GsonMessageConverterTests {
 
 	@Test
-	void defaultConstructor() {
+	public void defaultConstructor() {
 		GsonMessageConverter converter = new GsonMessageConverter();
 		assertThat(converter.getSupportedMimeTypes()).contains(new MimeType("application", "json"));
 	}
 
 	@Test
-	void fromMessage() {
+	public void fromMessage() {
 		GsonMessageConverter converter = new GsonMessageConverter();
 		String payload = "{\"array\":[\"Foo\",\"Bar\"]," +
 				"\"number\":42,\"string\":\"Foo\",\"bool\":true,\"fraction\":42.0}";
@@ -65,7 +65,7 @@ class GsonMessageConverterTests {
 	}
 
 	@Test
-	void fromMessageUntyped() {
+	public void fromMessageUntyped() {
 		GsonMessageConverter converter = new GsonMessageConverter();
 		String payload = "{\"array\":[\"Foo\",\"Bar\"]," +
 				"\"number\":42,\"string\":\"Foo\",\"bool\":true,\"fraction\":42.0}";
@@ -81,7 +81,7 @@ class GsonMessageConverterTests {
 	}
 
 	@Test
-	void fromMessageMatchingInstance() {
+	public void fromMessageMatchingInstance() {
 		MyBean myBean = new MyBean();
 		GsonMessageConverter converter = new GsonMessageConverter();
 		Message<?> message = MessageBuilder.withPayload(myBean).build();
@@ -89,7 +89,7 @@ class GsonMessageConverterTests {
 	}
 
 	@Test
-	void fromMessageInvalidJson() {
+	public void fromMessageInvalidJson() {
 		GsonMessageConverter converter = new GsonMessageConverter();
 		String payload = "FooBar";
 		Message<?> message = MessageBuilder.withPayload(payload.getBytes(StandardCharsets.UTF_8)).build();
@@ -98,7 +98,7 @@ class GsonMessageConverterTests {
 	}
 
 	@Test
-	void fromMessageValidJsonWithUnknownProperty() {
+	public void fromMessageValidJsonWithUnknownProperty() {
 		GsonMessageConverter converter = new GsonMessageConverter();
 		String payload = "{\"string\":\"string\",\"unknownProperty\":\"value\"}";
 		Message<?> message = MessageBuilder.withPayload(payload.getBytes(StandardCharsets.UTF_8)).build();
@@ -107,7 +107,7 @@ class GsonMessageConverterTests {
 	}
 
 	@Test
-	void fromMessageToList() throws Exception {
+	public void fromMessageToList() throws Exception {
 		GsonMessageConverter converter = new GsonMessageConverter();
 		String payload = "[1, 2, 3, 4, 5, 6, 7, 8, 9]";
 		Message<?> message = MessageBuilder.withPayload(payload.getBytes(StandardCharsets.UTF_8)).build();
@@ -121,7 +121,7 @@ class GsonMessageConverterTests {
 	}
 
 	@Test
-	void fromMessageToMessageWithPojo() throws Exception {
+	public void fromMessageToMessageWithPojo() throws Exception {
 		GsonMessageConverter converter = new GsonMessageConverter();
 		String payload = "{\"string\":\"foo\"}";
 		Message<?> message = MessageBuilder.withPayload(payload.getBytes(StandardCharsets.UTF_8)).build();
@@ -130,12 +130,12 @@ class GsonMessageConverterTests {
 		MethodParameter param = new MethodParameter(method, 0);
 		Object actual = converter.fromMessage(message, MyBean.class, param);
 
-		assertThat(actual).isInstanceOf(MyBean.class);
+		assertThat(actual instanceof MyBean).isTrue();
 		assertThat(((MyBean) actual).getString()).isEqualTo("foo");
 	}
 
 	@Test
-	void toMessage() {
+	public void toMessage() {
 		GsonMessageConverter converter = new GsonMessageConverter();
 		MyBean payload = new MyBean();
 		payload.setString("Foo");
@@ -147,16 +147,16 @@ class GsonMessageConverterTests {
 		Message<?> message = converter.toMessage(payload, null);
 		String actual = new String((byte[]) message.getPayload(), StandardCharsets.UTF_8);
 
-		assertThat(actual).contains("\"string\":\"Foo\"");
-		assertThat(actual).contains("\"number\":42");
-		assertThat(actual).contains("fraction\":42.0");
-		assertThat(actual).contains("\"array\":[\"Foo\",\"Bar\"]");
-		assertThat(actual).contains("\"bool\":true");
+		assertThat(actual.contains("\"string\":\"Foo\"")).isTrue();
+		assertThat(actual.contains("\"number\":42")).isTrue();
+		assertThat(actual.contains("fraction\":42.0")).isTrue();
+		assertThat(actual.contains("\"array\":[\"Foo\",\"Bar\"]")).isTrue();
+		assertThat(actual.contains("\"bool\":true")).isTrue();
 		assertThat(message.getHeaders().get(MessageHeaders.CONTENT_TYPE, MimeType.class)).as("Invalid content-type").isEqualTo(new MimeType("application", "json"));
 	}
 
 	@Test
-	void toMessageUtf16() {
+	public void toMessageUtf16() {
 		GsonMessageConverter converter = new GsonMessageConverter();
 		MimeType contentType = new MimeType("application", "json", StandardCharsets.UTF_16BE);
 		Map<String, Object> map = new HashMap<>();
@@ -170,7 +170,7 @@ class GsonMessageConverterTests {
 	}
 
 	@Test
-	void toMessageUtf16String() {
+	public void toMessageUtf16String() {
 		GsonMessageConverter converter = new GsonMessageConverter();
 		converter.setSerializedPayloadClass(String.class);
 

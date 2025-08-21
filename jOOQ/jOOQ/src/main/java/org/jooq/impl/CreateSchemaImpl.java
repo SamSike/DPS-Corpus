@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -97,10 +94,7 @@ implements
 
 
     private static final Clause[]            CLAUSES                    = { Clause.CREATE_SCHEMA };
-    private static final Set<SQLDialect>     NO_SUPPORT_IF_NOT_EXISTS   = SQLDialect.supportedUntil(DERBY, FIREBIRD);
-    private static final Set<SQLDialect>     SUPPORT_SCHEMA_AS_DATABASE = SQLDialect.supportedBy(CLICKHOUSE);
-
-
+    private static final Set<SQLDialect>     NO_SUPPORT_IF_NOT_EXISTS   = SQLDialect.supportedBy(DERBY, FIREBIRD);
 
 
 
@@ -158,30 +152,18 @@ implements
         ctx.start(Clause.CREATE_SCHEMA_NAME)
            .visit(K_CREATE);
 
-        if (SUPPORT_SCHEMA_AS_DATABASE.contains(ctx.dialect()))
-            ctx.sql(' ').visit(K_DATABASE);
 
 
 
 
-        else
+
             ctx.sql(' ').visit(K_SCHEMA);
 
         if (ifNotExists && supportsIfNotExists(ctx))
             ctx.sql(' ').visit(K_IF_NOT_EXISTS);
 
-        ctx.sql(' ').visit(schema);
-
-
-
-
-
-
-
-
-
-
-        ctx.end(Clause.CREATE_SCHEMA_NAME);
+        ctx.sql(' ').visit(schema)
+           .end(Clause.CREATE_SCHEMA_NAME);
     }
 
     @Override

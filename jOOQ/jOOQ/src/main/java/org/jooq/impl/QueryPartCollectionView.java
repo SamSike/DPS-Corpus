@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,22 +40,25 @@ package org.jooq.impl;
 
 import static java.lang.Boolean.TRUE;
 import static org.jooq.impl.Tools.EMPTY_QUERYPART;
-import static org.jooq.impl.Tools.allMatch;
 import static org.jooq.impl.Tools.anyMatch;
 import static org.jooq.impl.Tools.isRendersSeparator;
 import static org.jooq.impl.Tools.last;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_LIST_ALREADY_INDENTED;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.BiConsumer;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.jooq.Condition;
 import org.jooq.Context;
+import org.jooq.Function1;
 import org.jooq.QueryPart;
 import org.jooq.QueryPartInternal;
 // ...
@@ -68,13 +71,18 @@ import org.jooq.impl.QOM.UnmodifiableCollection;
  *
  * @author Lukas Eder
  */
-class QueryPartCollectionView<T extends QueryPart>
+/* sealed */ class QueryPartCollectionView<T extends QueryPart>
 extends
     AbstractQueryPart
 implements
     UnmodifiableCollection<T>,
-    SimpleCheckQueryPart,
+    SimpleQueryPart,
     SeparatedQueryPart
+/* permits
+
+
+
+    QueryPartListView */ 
 {
 
     final Collection<T>                    wrapped;
@@ -86,24 +94,10 @@ implements
         return new QueryPartCollectionView<>(wrapped);
     }
 
-    static final <T extends QueryPart> QueryPartCollectionView<T> wrap(Collection<T> wrapped, BiConsumer<? super Context<?>, ? super QueryPart> acceptElement) {
-        return new QueryPartCollectionView<T>(wrapped) {
-            @Override
-            protected void acceptElement(Context<?> ctx, T part) {
-
-                // [#11969] See QueryPartCollectionView.acceptElement() method
-                if (part instanceof Condition c)
-                    acceptElement.accept(ctx, DSL.field(c));
-                else
-                    acceptElement.accept(ctx, part);
-            }
-        };
-    }
-
     QueryPartCollectionView(Collection<T> wrapped) {
         this.wrapped = wrapped != null ? wrapped : Collections.emptyList();
 
-        if (wrapped instanceof QueryPartCollectionView<T> v) {
+        if (wrapped instanceof QueryPartCollectionView) { QueryPartCollectionView<T> v = (QueryPartCollectionView<T>) wrapped;
             this.qualify = v.qualify;
             this.separator = v.separator;
             this.mapper = v.mapper;
@@ -135,13 +129,9 @@ implements
         return wrapped;
     }
 
-    private final boolean isComplex(Context<?> ctx) {
-        return anyMatch(this, e -> Tools.isComplex(ctx, e));
-    }
-
     @Override
     public boolean isSimple(Context<?> ctx) {
-        return allMatch(this, e -> Tools.isSimple(ctx, e));
+        return !anyMatch(this, e -> !Tools.isSimple(ctx, e));
     }
 
     @Override
@@ -157,14 +147,6 @@ implements
         return !isEmpty();
     }
 
-    final boolean format(Context<?> ctx, int size) {
-        return ctx.format() && (
-            size == 1 && isComplex(ctx)
-         || size >= 2 && !isSimple(ctx)
-         || size > 4
-        );
-    }
-
     @Override
     public /* non-final */ void accept(Context<?> ctx) {
         BitSet rendersContent = new BitSet(size());
@@ -174,7 +156,7 @@ implements
             rendersContent.set(i++, ((QueryPartInternal) e).rendersContent(ctx));
 
         int size = rendersContent.cardinality();
-        boolean format = format(ctx, size);
+        boolean format = ctx.format() && (size >= 2 && !isSimple(ctx) || size > 4);
         boolean previousQualify = ctx.qualify();
         boolean previousAlreadyIndented = TRUE.equals(ctx.data(DATA_LIST_ALREADY_INDENTED));
         boolean indent = format && !previousAlreadyIndented;
@@ -232,7 +214,7 @@ implements
 
                         ctx.data(
                             DATA_LIST_ALREADY_INDENTED,
-                            t instanceof QueryPartCollectionView && ((QueryPartCollectionView<?>) t).format(ctx, ((QueryPartCollectionView<?>) t).size()),
+                            t instanceof QueryPartCollectionView && ((QueryPartCollectionView<?>) t).size() > 1,
                             c -> acceptElement(c, t)
                         );
                     }
@@ -264,8 +246,8 @@ implements
         //          declarations. Hence, it is currently safe to assume that
         //          if (part instanceof Condition), then it must have been passed
         //          as a subtype of Field<?> and must be wrapped
-        if (part instanceof Condition c)
-            ctx.visit((QueryPart) DSL.field(c));
+        if (part instanceof Condition)
+            ctx.visit((QueryPart) DSL.field((Condition) part));
         else
             ctx.visit(part);
     }
@@ -406,8 +388,8 @@ implements
         // Maintain List::equals and Set::equals contracts
         else if (that instanceof List && !(this instanceof List))
             return false;
-        else if (that instanceof QueryPartCollectionView<?> q)
-            return wrapped.equals(q.wrapped);
+        else if (that instanceof QueryPartCollectionView)
+            return wrapped.equals(((QueryPartCollectionView<?>) that).wrapped);
         else
             return super.equals(that);
     }

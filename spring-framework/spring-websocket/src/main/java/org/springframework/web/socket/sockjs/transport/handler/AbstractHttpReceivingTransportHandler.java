@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.sockjs.SockJsException;
@@ -66,7 +64,7 @@ public abstract class AbstractHttpReceivingTransportHandler extends AbstractTran
 		catch (IOException ex) {
 			logger.error("Failed to read message", ex);
 			if (ex.getClass().getName().contains("Mapping")) {
-				// for example, Jackson's JsonMappingException, indicating an incomplete payload
+				// e.g. Jackson's JsonMappingException, indicating an incomplete payload
 				handleReadError(response, "Payload expected.", sockJsSession.getId());
 			}
 			else {
@@ -84,7 +82,7 @@ public abstract class AbstractHttpReceivingTransportHandler extends AbstractTran
 			return;
 		}
 		if (logger.isTraceEnabled()) {
-			logger.trace("Received message(s): " + Arrays.toString(messages));
+			logger.trace("Received message(s): " + Arrays.asList(messages));
 		}
 		response.setStatusCode(getResponseStatus());
 		response.getHeaders().setContentType(new MediaType("text", "plain", StandardCharsets.UTF_8));
@@ -103,8 +101,9 @@ public abstract class AbstractHttpReceivingTransportHandler extends AbstractTran
 	}
 
 
-	protected abstract String @Nullable [] readMessages(ServerHttpRequest request) throws IOException;
+	@Nullable
+	protected abstract String[] readMessages(ServerHttpRequest request) throws IOException;
 
-	protected abstract HttpStatusCode getResponseStatus();
+	protected abstract HttpStatus getResponseStatus();
 
 }

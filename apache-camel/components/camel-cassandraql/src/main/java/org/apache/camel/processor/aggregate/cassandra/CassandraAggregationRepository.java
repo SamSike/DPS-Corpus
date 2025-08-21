@@ -34,8 +34,6 @@ import com.datastax.oss.driver.api.querybuilder.select.Select;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.spi.AggregationRepository;
-import org.apache.camel.spi.Configurer;
-import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.RecoverableAggregationRepository;
 import org.apache.camel.support.service.ServiceSupport;
 import org.apache.camel.utils.cassandra.CassandraSessionHolder;
@@ -55,39 +53,50 @@ import static org.apache.camel.utils.cassandra.CassandraUtils.generateSelect;
  * LeveledCompaction for this table and tune read/write consistency levels. Warning: Cassandra is not the best tool for
  * queuing use cases See: http://www.datastax.com/dev/blog/cassandra-anti-patterns-queues-and-queue-like-datasets
  */
-@Metadata(label = "bean",
-          description = "Aggregation repository that uses Cassandra table to store exchanges."
-                        + " Advice: use LeveledCompaction for this table and tune read/write consistency levels.",
-          annotations = { "interfaceName=org.apache.camel.spi.AggregationRepository" })
-@Configurer(metadataOnly = true)
 public class CassandraAggregationRepository extends ServiceSupport implements RecoverableAggregationRepository {
-
+    /**
+     * Logger
+     */
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraAggregationRepository.class);
-
-    private final CassandraCamelCodec exchangeCodec = new CassandraCamelCodec();
-
-    @Metadata(description = "Cassandra session", required = true)
+    /**
+     * Session holder
+     */
     private CassandraSessionHolder sessionHolder;
-    @Metadata(description = "The table name for storing the data", defaultValue = "CAMEL_AGGREGATION")
+    /**
+     * Table name
+     */
     private String table = "CAMEL_AGGREGATION";
-    @Metadata(description = "Column name for Exchange ID", defaultValue = "EXCHANGE_ID")
+    /**
+     * Exchange Id column name
+     */
     private String exchangeIdColumn = "EXCHANGE_ID";
-    @Metadata(description = "Column name for Exchange", defaultValue = "EXCHANGE")
+    /**
+     * Exchange column name
+     */
     private String exchangeColumn = "EXCHANGE";
-    @Metadata(description = "Values used as primary key prefix. Multiple values can be separated by comma.",
-              displayName = "Prefix Primary Key Values", javaType = "java.lang.String")
+    /**
+     * Values used as primary key prefix
+     */
     private Object[] prefixPKValues = new Object[0];
-    @Metadata(description = "Primary key columns. Multiple values can be separated by comma.",
-              displayName = "Primary Key Columns",
-              javaType = "java.lang.String", defaultValue = "KEY")
+    /**
+     * Primary key columns
+     */
     private String[] pkColumns = { "KEY" };
-    @Metadata(description = "Time to live in seconds used for inserts", displayName = "Time to Live")
+    /**
+     * Exchange marshaller/unmarshaller
+     */
+    private final CassandraCamelCodec exchangeCodec = new CassandraCamelCodec();
+    /**
+     * Time to live in seconds used for inserts
+     */
     private Integer ttl;
-    @Metadata(description = "Write consistency level",
-              enums = "ANY,ONE,TWO,THREE,QUORUM,ALL,LOCAL_ONE,LOCAL_QUORUM,EACH_QUORUM,SERIAL,LOCAL_SERIAL")
+    /**
+     * Writeconsistency level
+     */
     private ConsistencyLevel writeConsistencyLevel;
-    @Metadata(description = "Read consistency level",
-              enums = "ANY,ONE,TWO,THREE,QUORUM,ALL,LOCAL_ONE,LOCAL_QUORUM,EACH_QUORUM,SERIAL,LOCAL_SERIAL")
+    /**
+     * Read consistency level
+     */
     private ConsistencyLevel readConsistencyLevel;
 
     private PreparedStatement insertStatement;
@@ -102,26 +111,15 @@ public class CassandraAggregationRepository extends ServiceSupport implements Re
      */
     private PreparedStatement deleteIfIdStatement;
 
-    @Metadata(description = "Sets the interval between recovery scans", defaultValue = "5000")
-    private long recoveryInterval = 5000;
-    @Metadata(description = "Whether or not recovery is enabled", defaultValue = "true")
-    private boolean useRecovery = true;
-    @Metadata(description = "Sets an optional dead letter channel which exhausted recovered Exchange should be send to.")
-    private String deadLetterUri;
-    @Metadata(description = "Sets an optional limit of the number of redelivery attempt of recovered Exchange should be attempted, before its exhausted."
-                            + " When this limit is hit, then the Exchange is moved to the dead letter channel.")
-    private int maximumRedeliveries;
-    @Metadata(label = "advanced",
-              description = "Whether headers on the Exchange that are Java objects and Serializable should be included and saved to the repository")
-    private boolean allowSerializedHeaders;
+    private long recoveryIntervalInMillis = 5000;
 
-    /**
-     * Sets a deserialization filter while reading Object from Aggregation Repository. By default the filter will allow
-     * all java packages and subpackages and all org.apache.camel packages and subpackages, while the remaining will be
-     * blacklisted and not deserialized. This parameter should be customized if you're using classes you trust to be
-     * deserialized.
-     */
-    private String deserializationFilter = "java.**;org.apache.camel.**;!*";
+    private boolean useRecovery = true;
+
+    private String deadLetterUri;
+
+    private int maximumRedeliveries;
+
+    private boolean allowSerializedHeaders;
 
     public CassandraAggregationRepository() {
     }
@@ -213,8 +211,7 @@ public class CassandraAggregationRepository extends ServiceSupport implements Re
         Exchange exchange = null;
         if (row != null) {
             try {
-                exchange = exchangeCodec.unmarshallExchange(camelContext, row.getByteBuffer(exchangeColumn),
-                        deserializationFilter);
+                exchange = exchangeCodec.unmarshallExchange(camelContext, row.getByteBuffer(exchangeColumn));
             } catch (IOException iOException) {
                 throw new CassandraAggregationException("Failed to read exchange", exchange, iOException);
             } catch (ClassNotFoundException classNotFoundException) {
@@ -280,9 +277,9 @@ public class CassandraAggregationRepository extends ServiceSupport implements Re
                 // Id
                 // columns
                 pkColumns, pkColumns.length - 1); // Where
-        // fixed
-        // PK
-        // columns
+                                                 // fixed
+                                                 // PK
+                                                 // columns
         SimpleStatement statement = applyConsistencyLevel(select.build(), readConsistencyLevel);
         LOGGER.debug("Generated Select keys {}", statement);
         selectKeyIdStatement = getSession().prepare(statement);
@@ -415,18 +412,23 @@ public class CassandraAggregationRepository extends ServiceSupport implements Re
         this.ttl = ttl;
     }
 
-    public long getRecoveryInterval() {
-        return recoveryInterval;
+    @Override
+    public long getRecoveryIntervalInMillis() {
+        return recoveryIntervalInMillis;
+    }
+
+    public void setRecoveryIntervalInMillis(long recoveryIntervalInMillis) {
+        this.recoveryIntervalInMillis = recoveryIntervalInMillis;
     }
 
     @Override
     public void setRecoveryInterval(long interval, TimeUnit timeUnit) {
-        this.recoveryInterval = timeUnit.toMillis(interval);
+        this.recoveryIntervalInMillis = timeUnit.toMillis(interval);
     }
 
     @Override
-    public void setRecoveryInterval(long recoveryInterval) {
-        this.recoveryInterval = recoveryInterval;
+    public void setRecoveryInterval(long recoveryIntervalInMillis) {
+        this.recoveryIntervalInMillis = recoveryIntervalInMillis;
     }
 
     @Override
@@ -465,13 +467,5 @@ public class CassandraAggregationRepository extends ServiceSupport implements Re
 
     public void setAllowSerializedHeaders(boolean allowSerializedHeaders) {
         this.allowSerializedHeaders = allowSerializedHeaders;
-    }
-
-    public String getDeserializationFilter() {
-        return deserializationFilter;
-    }
-
-    public void setDeserializationFilter(String deserializationFilter) {
-        this.deserializationFilter = deserializationFilter;
     }
 }

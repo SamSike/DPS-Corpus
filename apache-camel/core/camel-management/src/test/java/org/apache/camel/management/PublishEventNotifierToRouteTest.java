@@ -36,7 +36,7 @@ public class PublishEventNotifierToRouteTest extends ContextTestSupport {
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        CamelContext context = new DefaultCamelContext(createCamelRegistry());
+        CamelContext context = new DefaultCamelContext(createRegistry());
 
         PublishEventNotifier notifier = new PublishEventNotifier();
         notifier.setCamelContext(context);
@@ -73,10 +73,10 @@ public class PublishEventNotifierToRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("log:foo").to("mock:result");
 
                 from("direct:fail").throwException(new IllegalArgumentException("Damn"));

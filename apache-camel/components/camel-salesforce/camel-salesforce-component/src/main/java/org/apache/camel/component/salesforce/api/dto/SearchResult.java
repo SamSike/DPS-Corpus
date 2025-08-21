@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * DTO for Salesforce SOSL Search result record. Starting with v37, this is wrapped by
  * {@link org.apache.camel.component.salesforce.api.dto.SearchResult2}
  */
+//CHECKSTYLE:OFF
 public final class SearchResult extends AbstractDTOBase {
 
     // WARNING: these fields have case sensitive names,
@@ -48,3 +49,4 @@ public final class SearchResult extends AbstractDTOBase {
         this.Id = id;
     }
 }
+//CHECKSTYLE:ON

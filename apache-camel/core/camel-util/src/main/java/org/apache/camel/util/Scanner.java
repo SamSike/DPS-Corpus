@@ -38,8 +38,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,8 +50,7 @@ public final class Scanner implements Iterator<String>, Closeable {
         FIND_ANY_PATTERN = Pattern.compile("(?s).*");
     }
 
-    private static final Lock LOCK = new ReentrantLock();
-    private static final Map<String, Pattern> CACHE = new LinkedHashMap<>() {
+    private static final Map<String, Pattern> CACHE = new LinkedHashMap<String, Pattern>() {
         @Override
         protected boolean removeEldestEntry(Entry<String, Pattern> eldest) {
             return size() >= 7;
@@ -66,9 +63,9 @@ public final class Scanner implements Iterator<String>, Closeable {
 
     private static final int BUFFER_SIZE = 1024;
 
-    private final Readable source;
-    private final Pattern delimPattern;
-    private final Matcher matcher;
+    private Readable source;
+    private Pattern delimPattern;
+    private Matcher matcher;
     private CharBuffer buf;
     private int position;
     private boolean inputExhausted;
@@ -303,9 +300,9 @@ public final class Scanner implements Iterator<String>, Closeable {
     public void close() throws IOException {
         if (!closed) {
             closed = true;
-            if (source instanceof Closeable closeable) {
+            if (source instanceof Closeable) {
                 try {
-                    closeable.close();
+                    ((Closeable) source).close();
                 } catch (IOException e) {
                     lastIOException = e;
                 }
@@ -320,11 +317,8 @@ public final class Scanner implements Iterator<String>, Closeable {
         if (pattern == null) {
             return null;
         }
-        LOCK.lock();
-        try {
+        synchronized (CACHE) {
             return CACHE.computeIfAbsent(pattern, Pattern::compile);
-        } finally {
-            LOCK.unlock();
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import java.lang.annotation.Target;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -35,46 +34,70 @@ import org.springframework.web.util.UrlPathHelper;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.junit.jupiter.api.Named.named;
 
 /**
- * Tests for {@link UrlBasedCorsConfigurationSource}.
- *
+ * Unit tests for {@link UrlBasedCorsConfigurationSource}.
  * @author Sebastien Deleuze
  * @author Rossen Stoyanchev
  */
 class UrlBasedCorsConfigurationSourceTests {
 
-	private final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
+	@ParameterizedTest
+	@MethodSource("pathPatternsArguments")
+	@interface PathPatternsParameterizedTest {
+	}
+
+	@SuppressWarnings("unused")
+	private static Stream<Function<String, MockHttpServletRequest>> pathPatternsArguments() {
+		return Stream.of(
+				requestUri -> {
+					MockHttpServletRequest request = new MockHttpServletRequest("GET", requestUri);
+					ServletRequestPathUtils.parseAndCache(request);
+					return request;
+				},
+				requestUri -> {
+					MockHttpServletRequest request = new MockHttpServletRequest("GET", requestUri);
+					UrlPathHelper.defaultInstance.getLookupPathForRequest(request);
+					return request;
+				}
+		);
+	}
 
 
 	@PathPatternsParameterizedTest
 	void empty(Function<String, MockHttpServletRequest> requestFactory) {
+		CorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		assertThat(source.getCorsConfiguration(requestFactory.apply("/bar/test.html"))).isNull();
 	}
 
 	@PathPatternsParameterizedTest
 	void registerAndMatch(Function<String, MockHttpServletRequest> requestFactory) {
 		CorsConfiguration config = new CorsConfiguration();
-		source.registerCorsConfiguration("/bar/**", config);
+		UrlBasedCorsConfigurationSource configSource = new UrlBasedCorsConfigurationSource();
+		configSource.registerCorsConfiguration("/bar/**", config);
 
 		MockHttpServletRequest request = requestFactory.apply("/foo/test.html");
-		assertThat(source.getCorsConfiguration(request)).isNull();
+		assertThat(configSource.getCorsConfiguration(request)).isNull();
 
 		request = requestFactory.apply("/bar/test.html");
-		assertThat(source.getCorsConfiguration(request)).isEqualTo(config);
+		assertThat(configSource.getCorsConfiguration(request)).isEqualTo(config);
 	}
 
 	@Test
 	void unmodifiableConfigurationsMap() {
 		assertThatExceptionOfType(UnsupportedOperationException.class)
-				.isThrownBy(() -> source.getCorsConfigurations().put("/**", new CorsConfiguration()));
+				.isThrownBy(() -> {
+					UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+					source.getCorsConfigurations().put("/**", new CorsConfiguration());
+				});
 	}
 
-	@SuppressWarnings("removal")
 	@Test
 	void allowInitLookupPath() {
 		CorsConfiguration config = new CorsConfiguration();
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", config);
 
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/foo");
@@ -85,29 +108,4 @@ class UrlBasedCorsConfigurationSourceTests {
 		source.setAllowInitLookupPath(false);
 		assertThatIllegalArgumentException().isThrownBy(() -> source.getCorsConfiguration(request));
 	}
-
-
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.METHOD)
-	@ParameterizedTest(name = "[{index}] {0}")
-	@MethodSource("pathPatternsArguments")
-	private @interface PathPatternsParameterizedTest {
-	}
-
-	@SuppressWarnings("unused")
-	private static Stream<Named<Function<String, MockHttpServletRequest>>> pathPatternsArguments() {
-		return Stream.of(
-				named("ServletRequestPathUtils", requestUri -> {
-					MockHttpServletRequest request = new MockHttpServletRequest("GET", requestUri);
-					ServletRequestPathUtils.parseAndCache(request);
-					return request;
-				}),
-				named("UrlPathHelper", requestUri -> {
-					MockHttpServletRequest request = new MockHttpServletRequest("GET", requestUri);
-					UrlPathHelper.defaultInstance.getLookupPathForRequest(request);
-					return request;
-				})
-		);
-	}
-
 }

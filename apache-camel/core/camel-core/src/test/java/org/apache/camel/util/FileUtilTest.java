@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FileUtilTest extends TestSupport {
@@ -49,7 +48,7 @@ public class FileUtilTest extends TestSupport {
 
     @Test
     public void testStripLeadingSeparator() {
-        assertNull(FileUtil.stripLeadingSeparator(null));
+        assertEquals(null, FileUtil.stripLeadingSeparator(null));
         assertEquals("foo", FileUtil.stripLeadingSeparator("foo"));
         assertEquals("foo/bar", FileUtil.stripLeadingSeparator("foo/bar"));
         assertEquals("foo/", FileUtil.stripLeadingSeparator("foo/"));
@@ -60,18 +59,18 @@ public class FileUtilTest extends TestSupport {
 
     @Test
     public void testHasLeadingSeparator() {
-        assertFalse(FileUtil.hasLeadingSeparator(null));
-        assertFalse(FileUtil.hasLeadingSeparator("foo"));
-        assertFalse(FileUtil.hasLeadingSeparator("foo/bar"));
-        assertFalse(FileUtil.hasLeadingSeparator("foo/"));
-        assertTrue(FileUtil.hasLeadingSeparator("/foo/bar"));
-        assertTrue(FileUtil.hasLeadingSeparator("//foo/bar"));
-        assertTrue(FileUtil.hasLeadingSeparator("///foo/bar"));
+        assertEquals(false, FileUtil.hasLeadingSeparator(null));
+        assertEquals(false, FileUtil.hasLeadingSeparator("foo"));
+        assertEquals(false, FileUtil.hasLeadingSeparator("foo/bar"));
+        assertEquals(false, FileUtil.hasLeadingSeparator("foo/"));
+        assertEquals(true, FileUtil.hasLeadingSeparator("/foo/bar"));
+        assertEquals(true, FileUtil.hasLeadingSeparator("//foo/bar"));
+        assertEquals(true, FileUtil.hasLeadingSeparator("///foo/bar"));
     }
 
     @Test
     public void testStripFirstLeadingSeparator() {
-        assertNull(FileUtil.stripFirstLeadingSeparator(null));
+        assertEquals(null, FileUtil.stripFirstLeadingSeparator(null));
         assertEquals("foo", FileUtil.stripFirstLeadingSeparator("foo"));
         assertEquals("foo/bar", FileUtil.stripFirstLeadingSeparator("foo/bar"));
         assertEquals("foo/", FileUtil.stripFirstLeadingSeparator("foo/"));
@@ -82,7 +81,7 @@ public class FileUtilTest extends TestSupport {
 
     @Test
     public void testStripTrailingSeparator() {
-        assertNull(FileUtil.stripTrailingSeparator(null));
+        assertEquals(null, FileUtil.stripTrailingSeparator(null));
         assertEquals("foo", FileUtil.stripTrailingSeparator("foo"));
         assertEquals("foo/bar", FileUtil.stripTrailingSeparator("foo/bar"));
         assertEquals("foo", FileUtil.stripTrailingSeparator("foo/"));
@@ -100,7 +99,7 @@ public class FileUtilTest extends TestSupport {
 
     @Test
     public void testStripPath() {
-        assertNull(FileUtil.stripPath(null));
+        assertEquals(null, FileUtil.stripPath(null));
         assertEquals("", FileUtil.stripPath("/"));
         assertEquals("foo.xml", FileUtil.stripPath("/foo.xml"));
         assertEquals("foo", FileUtil.stripPath("foo"));
@@ -110,7 +109,7 @@ public class FileUtilTest extends TestSupport {
 
     @Test
     public void testStripPathWithMixedSeparators() {
-        assertNull(FileUtil.stripPath(null));
+        assertEquals(null, FileUtil.stripPath(null));
         assertEquals("", FileUtil.stripPath("/"));
         assertEquals("foo.xml", FileUtil.stripPath("/foo.xml"));
         assertEquals("foo", FileUtil.stripPath("foo"));
@@ -121,7 +120,7 @@ public class FileUtilTest extends TestSupport {
 
     @Test
     public void testStripExt() {
-        assertNull(FileUtil.stripExt(null));
+        assertEquals(null, FileUtil.stripExt(null));
         assertEquals("foo", FileUtil.stripExt("foo"));
         assertEquals("foo", FileUtil.stripExt("foo.xml"));
         assertEquals("/foo/bar", FileUtil.stripExt("/foo/bar.xml"));
@@ -129,8 +128,8 @@ public class FileUtilTest extends TestSupport {
 
     @Test
     public void testOnlyExt() {
-        assertNull(FileUtil.onlyExt(null));
-        assertNull(FileUtil.onlyExt("foo"));
+        assertEquals(null, FileUtil.onlyExt(null));
+        assertEquals(null, FileUtil.onlyExt("foo"));
         assertEquals("xml", FileUtil.onlyExt("foo.xml"));
         assertEquals("xml", FileUtil.onlyExt("/foo/bar.xml"));
         assertEquals("tar.gz", FileUtil.onlyExt("/foo/bigfile.tar.gz"));
@@ -139,9 +138,9 @@ public class FileUtilTest extends TestSupport {
 
     @Test
     public void testOnlyPath() {
-        assertNull(FileUtil.onlyPath(null));
-        assertNull(FileUtil.onlyPath("foo"));
-        assertNull(FileUtil.onlyPath("foo.xml"));
+        assertEquals(null, FileUtil.onlyPath(null));
+        assertEquals(null, FileUtil.onlyPath("foo"));
+        assertEquals(null, FileUtil.onlyPath("foo.xml"));
         assertEquals("foo", FileUtil.onlyPath("foo/bar.xml"));
         assertEquals("/foo", FileUtil.onlyPath("/foo/bar.xml"));
         assertEquals("/foo/bar", FileUtil.onlyPath("/foo/bar/baz.xml"));
@@ -151,9 +150,9 @@ public class FileUtilTest extends TestSupport {
 
     @Test
     public void testOnlyPathWithMixedSeparators() {
-        assertNull(FileUtil.onlyPath(null));
-        assertNull(FileUtil.onlyPath("foo"));
-        assertNull(FileUtil.onlyPath("foo.xml"));
+        assertEquals(null, FileUtil.onlyPath(null));
+        assertEquals(null, FileUtil.onlyPath("foo"));
+        assertEquals(null, FileUtil.onlyPath("foo.xml"));
         assertEquals("foo", FileUtil.onlyPath("foo/bar.xml"));
         assertEquals("/foo", FileUtil.onlyPath("/foo\\bar.xml"));
         assertEquals("\\foo\\bar", FileUtil.onlyPath("\\foo\\bar/baz.xml"));
@@ -163,7 +162,7 @@ public class FileUtilTest extends TestSupport {
 
     @Test
     public void testOnlyName() {
-        assertNull(FileUtil.onlyName(null));
+        assertEquals(null, FileUtil.onlyName(null));
         assertEquals("foo", FileUtil.onlyName("foo"));
         assertEquals("foo", FileUtil.onlyName("foo.xml"));
         assertEquals("bar", FileUtil.onlyName("foo/bar.xml"));
@@ -175,7 +174,7 @@ public class FileUtilTest extends TestSupport {
 
     @Test
     public void testCompactPath() {
-        assertNull(FileUtil.compactPath(null));
+        assertEquals(null, FileUtil.compactPath(null));
         if (FileUtil.isWindows()) {
             assertEquals("..\\foo", FileUtil.compactPath("..\\foo"));
             assertEquals("..\\..\\foo", FileUtil.compactPath("..\\..\\foo"));
@@ -232,7 +231,7 @@ public class FileUtilTest extends TestSupport {
 
     @Test
     public void testCompactPathSeparator() {
-        assertNull(FileUtil.compactPath(null, '\''));
+        assertEquals(null, FileUtil.compactPath(null, '\''));
         assertEquals("..\\foo", FileUtil.compactPath("..\\foo", '\\'));
         assertEquals("../foo", FileUtil.compactPath("../foo", '/'));
 

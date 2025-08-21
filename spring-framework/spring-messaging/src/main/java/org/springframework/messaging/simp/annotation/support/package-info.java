@@ -2,7 +2,9 @@
  * Support classes for handling messages from simple messaging protocols
  * (like STOMP).
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.messaging.simp.annotation.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

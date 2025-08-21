@@ -78,7 +78,7 @@ public class Jt400Configuration {
          */
         SAME(MessageQueue.SAME);
 
-        private final String jt400Value;
+        private String jt400Value;
 
         private MessageAction(final String jt400Value) {
             this.jt400Value = jt400Value;
@@ -102,7 +102,7 @@ public class Jt400Configuration {
     /**
      * Constant used to specify that the default system CCSID be used (a negative CCSID is otherwise invalid).
      */
-    public static final int DEFAULT_SYSTEM_CCSID = -1;
+    private static final int DEFAULT_SYSTEM_CCSID = -1;
 
     private final AS400ConnectionPool connectionPool;
 
@@ -155,9 +155,6 @@ public class Jt400Configuration {
 
     @UriParam(label = "consumer", defaultValue = "30000")
     private int readTimeout = 30000;
-
-    @UriParam(label = "consumer")
-    private int dataQueueCcsid = DEFAULT_SYSTEM_CCSID;
 
     @UriParam(label = "producer")
     private String procedureName;
@@ -364,17 +361,6 @@ public class Jt400Configuration {
         this.readTimeout = readTimeout;
     }
 
-    public int getDataQueueCcsid() {
-        return dataQueueCcsid;
-    }
-
-    /**
-     * Sets the CCSID to use for the receiving data messages from the IBM i system.
-     */
-    public void setDataQueueCcsid(int dataQueueCcsid) {
-        this.dataQueueCcsid = (dataQueueCcsid < 0) ? DEFAULT_SYSTEM_CCSID : dataQueueCcsid;
-    }
-
     public String getProcedureName() {
         return procedureName;
     }
@@ -438,14 +424,14 @@ public class Jt400Configuration {
     /**
      * Obtains an {@code AS400} object that connects to this endpoint. Since these objects represent limited resources,
      * clients have the responsibility of {@link #releaseConnection(AS400) releasing them} when done.
-     *
+     * 
      * @return an {@code AS400} object that connects to this endpoint
      */
     public AS400 getConnection() {
         AS400 system = null;
         try {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Getting an AS400 object for '{}/{}' from {}.", systemName, userID, connectionPool);
+                LOG.debug("Getting an AS400 object for '{}' from {}.", systemName + '/' + userID, connectionPool);
             }
 
             if (isSecured()) {
@@ -476,7 +462,7 @@ public class Jt400Configuration {
 
     /**
      * Releases a previously obtained {@code AS400} object from use.
-     *
+     * 
      * @param connection a previously obtained {@code AS400} object to release
      */
     public void releaseConnection(AS400 connection) {

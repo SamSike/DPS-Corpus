@@ -8,10 +8,8 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -33,7 +31,7 @@ import org.jooq.types.ULong;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Tables extends TableImpl<Record> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 43722443;
 
     /**
      * The reference instance of <code>information_schema.TABLES</code>
@@ -154,11 +152,11 @@ public class Tables extends TableImpl<Record> {
     public final TableField<Record, String> TABLE_COMMENT = createField(DSL.name("TABLE_COMMENT"), SQLDataType.CLOB, this, "");
 
     private Tables(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Tables(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private Tables(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -182,13 +180,13 @@ public class Tables extends TableImpl<Record> {
         this(DSL.name("TABLES"), null);
     }
 
-    public <O extends Record> Tables(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, TABLES);
+    public <O extends Record> Tables(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, TABLES);
     }
 
     @Override
     public Schema getSchema() {
-        return aliased() ? null : InformationSchema.INFORMATION_SCHEMA;
+        return InformationSchema.INFORMATION_SCHEMA;
     }
 
     @Override
@@ -197,60 +195,8 @@ public class Tables extends TableImpl<Record> {
     }
 
     @Override
-    public List<ForeignKey<Record, ?>> getReferences() {
-        return Arrays.asList(Keys.SYNTHETIC_FK_TABLES__SYNTHETIC_PK_SCHEMATA);
-    }
-
-    private transient Schemata _schemata;
-
-    /**
-     * Get the implicit join path to the
-     * <code>information_schema.SCHEMATA</code> table.
-     */
-    public Schemata schemata() {
-        if (_schemata == null)
-            _schemata = new Schemata(this, Keys.SYNTHETIC_FK_TABLES__SYNTHETIC_PK_SCHEMATA, null);
-
-        return _schemata;
-    }
-
-    private transient Columns _columns;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>information_schema.COLUMNS</code> table
-     */
-    public Columns columns() {
-        if (_columns == null)
-            _columns = new Columns(this, null, Keys.SYNTHETIC_FK_COLUMNS__SYNTHETIC_PK_TABLES.getInverseKey());
-
-        return _columns;
-    }
-
-    private transient Triggers _triggers;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>information_schema.TRIGGERS</code> table
-     */
-    public Triggers triggers() {
-        if (_triggers == null)
-            _triggers = new Triggers(this, null, Keys.SYNTHETIC_FK_TRIGGERS__SYNTHETIC_PK_TABLES.getInverseKey());
-
-        return _triggers;
-    }
-
-    private transient Views _views;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>information_schema.VIEWS</code> table
-     */
-    public Views views() {
-        if (_views == null)
-            _views = new Views(this, null, Keys.SYNTHETIC_FK_VIEWS__SYNTHETIC_PK_TABLES.getInverseKey());
-
-        return _views;
+    public List<UniqueKey<Record>> getKeys() {
+        return Arrays.<UniqueKey<Record>>asList(Keys.SYNTHETIC_PK_TABLES);
     }
 
     @Override
@@ -263,8 +209,19 @@ public class Tables extends TableImpl<Record> {
         return new Tables(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public Tables as(Table<?> alias) {
-        return new Tables(alias.getQualifiedName(), this);
+    public Tables rename(String name) {
+        return new Tables(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public Tables rename(Name name) {
+        return new Tables(name, null);
     }
 }

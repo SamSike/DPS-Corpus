@@ -16,24 +16,34 @@
  */
 package org.apache.camel.openapi;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.Operation;
-import io.swagger.v3.oas.models.PathItem;
-import io.swagger.v3.oas.models.parameters.Parameter;
-import io.swagger.v3.oas.models.responses.ApiResponse;
-import io.swagger.v3.parser.OpenAPIV3Parser;
-import io.swagger.v3.parser.core.models.SwaggerParseResult;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.apicurio.datamodels.Library;
+import io.apicurio.datamodels.openapi.models.OasDocument;
+import io.apicurio.datamodels.openapi.models.OasOperation;
+import io.apicurio.datamodels.openapi.models.OasParameter;
+import io.apicurio.datamodels.openapi.models.OasPathItem;
+import io.apicurio.datamodels.openapi.models.OasResponse;
+import io.apicurio.datamodels.openapi.v2.models.Oas20Document;
+import io.apicurio.datamodels.openapi.v2.models.Oas20Operation;
+import io.apicurio.datamodels.openapi.v3.models.Oas30Operation;
+import io.apicurio.datamodels.openapi.v3.models.Oas30Response;
 import org.apache.camel.CamelContext;
-import org.apache.camel.CamelContextAware;
 import org.apache.camel.Producer;
 import org.apache.camel.spi.RestConfiguration;
 import org.apache.camel.spi.RestProducerFactory;
 import org.apache.camel.support.CamelContextHelper;
+import org.apache.camel.util.IOHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.camel.support.ResourceHelper.resolveMandatoryResourceAsInputStream;
 
 public class OpenApiRestProducerFactory implements RestProducerFactory {
 
@@ -58,16 +68,16 @@ public class OpenApiRestProducerFactory implements RestProducerFactory {
             path = "/" + path;
         }
 
-        OpenAPI openApi = loadOpenApiModel(apiDoc);
-        Operation operation = getOpenApiOperation(openApi, verb, path);
+        OasDocument openApi = loadOpenApiModel(camelContext, apiDoc);
+        OasOperation operation = getOpenApiOperation(openApi, verb, path);
         if (operation == null) {
             throw new IllegalArgumentException("OpenApi api-doc does not contain operation for " + verb + ":" + path);
         }
 
         // validate if we have the query parameters also
         if (queryParameters != null) {
-            for (Parameter param : operation.getParameters()) {
-                if ("query".equals(param.getIn()) && Boolean.TRUE.equals(param.getRequired())) {
+            for (OasParameter param : operation.parameters) {
+                if ("query".equals(param.in) && Boolean.TRUE.equals(param.required)) {
                     // check if we have the required query parameter defined
                     String key = param.getName();
                     String token = key + "=";
@@ -86,43 +96,56 @@ public class OpenApiRestProducerFactory implements RestProducerFactory {
                 produces, consumes, componentName, parameters);
     }
 
-    OpenAPI loadOpenApiModel(String apiDoc) throws Exception {
-        final OpenAPIV3Parser openApiParser = new OpenAPIV3Parser();
-        final SwaggerParseResult openApi = openApiParser.readLocation(apiDoc, null, null);
+    OasDocument loadOpenApiModel(CamelContext camelContext, String apiDoc) throws Exception {
+        InputStream is = resolveMandatoryResourceAsInputStream(camelContext, apiDoc);
+        final ObjectMapper mapper = new ObjectMapper();
+        try {
+            final JsonNode node = mapper.readTree(is);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Loaded openApi api-doc:\n{}", node.toPrettyString());
+            }
+            return (OasDocument) Library.readDocument(node);
 
-        if (openApi != null && openApi.getOpenAPI() != null) {
-            return openApi.getOpenAPI();
+        } finally {
+            IOHelper.close(is);
         }
-
-        // In theory there should be a message in the parse result but it has disappeared...
-        throw new IllegalArgumentException(
-                "The given OpenApi specification could not be loaded from `" + apiDoc + "`.");
 
     }
 
-    private Operation getOpenApiOperation(OpenAPI openApi, String verb, String path) {
+    private OasOperation getOpenApiOperation(OasDocument openApi, String verb, String path) {
         // path may include base path so skip that
         String basePath = RestOpenApiSupport.getBasePathFromOasDocument(openApi);
         if (basePath != null && path.startsWith(basePath)) {
             path = path.substring(basePath.length());
         }
 
-        PathItem modelPath = openApi.getPaths().get(path);
+        OasPathItem modelPath = openApi.paths.getItem(path);
         if (modelPath == null) {
             return null;
         }
 
         // get,put,post,head,delete,patch,options
-        Operation op = null;
-        PathItem.HttpMethod method = PathItem.HttpMethod.valueOf(verb.toUpperCase());
-        if (method != null) {
-            return modelPath.readOperationsMap().get(method);
+        OasOperation op = null;
+        if ("get".equals(verb)) {
+            op = modelPath.get;
+        } else if ("put".equals(verb)) {
+            op = modelPath.put;
+        } else if ("post".equals(verb)) {
+            op = modelPath.post;
+        } else if ("head".equals(verb)) {
+            op = modelPath.head;
+        } else if ("delete".equals(verb)) {
+            op = modelPath.delete;
+        } else if ("patch".equals(verb)) {
+            op = modelPath.patch;
+        } else if ("options".equals(verb)) {
+            op = modelPath.options;
         }
         return op;
     }
 
     private Producer createHttpProducer(
-            CamelContext camelContext, OpenAPI openApi, Operation operation,
+            CamelContext camelContext, OasDocument openApi, OasOperation operation,
             String host, String verb, String path, String queryParameters,
             String consumes, String produces,
             String componentName, Map<String, Object> parameters)
@@ -137,22 +160,50 @@ public class OpenApiRestProducerFactory implements RestProducerFactory {
 
             if (produces == null) {
                 StringJoiner producesBuilder = new StringJoiner(",");
-                if (operation.getResponses() != null) {
-                    for (ApiResponse response : operation.getResponses().values()) {
-                        if (response.getContent() != null) {
-                            for (String mediaType : response.getContent().keySet()) {
-                                producesBuilder.add(mediaType);
-                            }
-                        }
+                List<String> list = new ArrayList<>();
+                if (operation instanceof Oas20Operation) {
+                    list = ((Oas20Operation) operation).produces;
+                } else if (operation instanceof Oas30Operation) {
+                    Oas30Operation oas30Operation = (Oas30Operation) operation;
+                    for (OasResponse response : oas30Operation.responses.getResponses()) {
+                        Oas30Response oas30Response = (Oas30Response) response;
+                        list.addAll(oas30Response.content.keySet());
+                    }
+
+                }
+                if (list == null || list.isEmpty()) {
+                    if (openApi instanceof Oas20Document) {
+                        list = ((Oas20Document) openApi).produces;
+                    }
+                }
+                if (list != null) {
+                    for (String s : list) {
+                        producesBuilder.add(s);
                     }
                 }
                 produces = producesBuilder.length() == 0 ? null : producesBuilder.toString();
             }
             if (consumes == null) {
                 StringJoiner consumesBuilder = new StringJoiner(",");
-                if (operation.getRequestBody() != null && operation.getRequestBody().getContent() != null) {
-                    for (String mediaType : operation.getRequestBody().getContent().keySet()) {
-                        consumesBuilder.add(mediaType);
+                List<String> list = new ArrayList<>();
+                if (operation instanceof Oas20Operation) {
+                    list = ((Oas20Operation) operation).consumes;
+                } else if (operation instanceof Oas30Operation) {
+                    Oas30Operation oas30Operation = (Oas30Operation) operation;
+                    if (oas30Operation.requestBody != null
+                            && oas30Operation.requestBody.content != null) {
+                        list.addAll(oas30Operation.requestBody.content.keySet());
+                    }
+
+                }
+                if (list == null || list.isEmpty()) {
+                    if (openApi instanceof Oas20Document) {
+                        list = ((Oas20Document) openApi).consumes;
+                    }
+                }
+                if (list != null) {
+                    for (String s : list) {
+                        consumesBuilder.add(s);
                     }
                 }
                 consumes = consumesBuilder.length() == 0 ? null : consumesBuilder.toString();
@@ -161,10 +212,12 @@ public class OpenApiRestProducerFactory implements RestProducerFactory {
             String basePath;
             String uriTemplate;
             if (host == null) {
+
                 //if no explicit host has been configured then use host and base path from the openApi api-doc
                 host = RestOpenApiSupport.getHostFromOasDocument(openApi);
                 basePath = RestOpenApiSupport.getBasePathFromOasDocument(openApi);
                 uriTemplate = path;
+
             } else {
                 // path includes also uri template
                 basePath = path;
@@ -172,11 +225,9 @@ public class OpenApiRestProducerFactory implements RestProducerFactory {
             }
 
             RestConfiguration config = CamelContextHelper.getRestConfiguration(camelContext, null, componentName);
-            Producer answer = factory.createProducer(camelContext, host, verb, basePath, uriTemplate, queryParameters, consumes,
-                    produces,
+            return factory.createProducer(camelContext, host, verb, basePath, uriTemplate, queryParameters, consumes, produces,
                     config, parameters);
-            CamelContextAware.trySetCamelContext(answer, camelContext);
-            return answer;
+
         } else {
             throw new IllegalStateException("Cannot find RestProducerFactory in Registry or as a Component to use");
         }

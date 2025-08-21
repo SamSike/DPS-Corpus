@@ -37,18 +37,8 @@ public class RemoveHeaderDefinition extends NoOutputDefinition<RemoveHeaderDefin
     public RemoveHeaderDefinition() {
     }
 
-    protected RemoveHeaderDefinition(RemoveHeaderDefinition source) {
-        super(source);
-        this.name = source.name;
-    }
-
     public RemoveHeaderDefinition(String headerName) {
         setName(headerName);
-    }
-
-    @Override
-    public RemoveHeaderDefinition copyDefinition() {
-        return new RemoveHeaderDefinition(this);
     }
 
     @Override

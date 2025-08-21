@@ -72,8 +72,8 @@ public final class CollectionConverter {
      */
     @Converter(order = 4)
     public static <T> ArrayList<T> toArrayList(Iterator<T> it) {
-        if (it instanceof ArrayList list) {
-            return list;
+        if (it instanceof ArrayList) {
+            return (ArrayList<T>) it;
         }
         ArrayList<T> list = new ArrayList<>();
         while (it.hasNext()) {
@@ -87,8 +87,8 @@ public final class CollectionConverter {
      */
     @Converter(order = 5)
     public static <T> ArrayList<T> toArrayList(Iterable<T> it) {
-        if (it instanceof ArrayList list) {
-            return list;
+        if (it instanceof ArrayList) {
+            return (ArrayList<T>) it;
         }
         ArrayList<T> list = new ArrayList<>();
         for (T value : it) {
@@ -99,7 +99,9 @@ public final class CollectionConverter {
 
     @Converter(order = 6)
     public static Set<Object> toSet(Object[] array) {
-        return new HashSet<>(Arrays.asList(array));
+        Set<Object> answer = new HashSet<>();
+        answer.addAll(Arrays.asList(array));
+        return answer;
     }
 
     @Converter(order = 7)
@@ -139,8 +141,8 @@ public final class CollectionConverter {
      */
     @Converter(order = 13)
     public static <T> List<T> toList(Iterable<T> iterable) {
-        if (iterable instanceof List list) {
-            return list;
+        if (iterable instanceof List) {
+            return (List<T>) iterable;
         }
         List<T> result = new LinkedList<>();
         for (T value : iterable) {
@@ -154,8 +156,8 @@ public final class CollectionConverter {
      */
     @Converter(order = 14)
     public static <T> List<T> toList(Iterator<T> it) {
-        if (it instanceof List value) {
-            return value;
+        if (it instanceof List) {
+            return (List<T>) it;
         }
         List<T> result = new LinkedList<>();
         while (it.hasNext()) {
@@ -163,4 +165,5 @@ public final class CollectionConverter {
         }
         return result;
     }
+
 }

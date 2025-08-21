@@ -59,7 +59,9 @@ public class EndpointValidationResult extends PropertiesValidationResult impleme
         if (lenient == null) {
             lenient = new LinkedHashSet<>();
         }
-        lenient.add(name);
+        if (!lenient.contains(name)) {
+            lenient.add(name);
+        }
     }
 
     public void addNotConsumerOnly(String name) {
@@ -244,7 +246,7 @@ public class EndpointValidationResult extends PropertiesValidationResult impleme
         String format = "%" + maxLen + "s    %s";
 
         // build the human error summary
-        StringBuilder sb = new StringBuilder(512);
+        StringBuilder sb = new StringBuilder();
         if (includeHeader) {
             sb.append("Endpoint validator error\n");
             sb.append(

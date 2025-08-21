@@ -27,7 +27,6 @@ import org.apache.camel.model.DataFormatDefinition;
 import org.apache.camel.spi.Metadata;
 
 public abstract class FhirDataformat extends DataFormatDefinition implements ContentTypeHeaderAware {
-
     @XmlAttribute
     @Metadata(enums = "DSTU2,DSTU2_HL7ORG,DSTU2_1,DSTU3,R4,R5", defaultValue = "R4")
     private String fhirVersion;
@@ -87,28 +86,6 @@ public abstract class FhirDataformat extends DataFormatDefinition implements Con
 
     protected FhirDataformat(String dataFormatName) {
         super(dataFormatName);
-    }
-
-    protected FhirDataformat(FhirDataformat source) {
-        super(source);
-        this.fhirContext = source.fhirContext;
-        this.fhirVersion = source.fhirVersion;
-        this.prettyPrint = source.prettyPrint;
-        this.parserErrorHandler = source.parserErrorHandler;
-        this.parserOptions = source.parserOptions;
-        this.preferTypes = source.preferTypes;
-        this.forceResourceId = source.forceResourceId;
-        this.serverBaseUrl = source.serverBaseUrl;
-        this.omitResourceId = source.omitResourceId;
-        this.encodeElementsAppliesToChildResourcesOnly = source.encodeElementsAppliesToChildResourcesOnly;
-        this.encodeElements = source.encodeElements;
-        this.dontEncodeElements = source.dontEncodeElements;
-        this.stripVersionsFromReferences = source.stripVersionsFromReferences;
-        this.overrideResourceIdWithBundleEntryFullUrl = source.overrideResourceIdWithBundleEntryFullUrl;
-        this.summaryMode = source.summaryMode;
-        this.suppressNarratives = source.suppressNarratives;
-        this.dontStripVersionsFromReferencesAtPaths = source.dontStripVersionsFromReferencesAtPaths;
-        this.contentTypeHeader = source.contentTypeHeader;
     }
 
     protected FhirDataformat() {
@@ -500,7 +477,7 @@ public abstract class FhirDataformat extends DataFormatDefinition implements Con
      */
     @XmlTransient
     @SuppressWarnings("unchecked")
-    protected abstract static class AbstractBuilder<T extends AbstractBuilder<T, F>, F extends FhirDataformat>
+    abstract static class AbstractBuilder<T extends AbstractBuilder<T, F>, F extends FhirDataformat>
             implements DataFormatBuilder<F> {
 
         private String fhirContext;

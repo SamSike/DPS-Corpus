@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class OnCompletionShutdownProcessorTest extends ContextTestSupport {
 
-    private final MyProcessor processor = new MyProcessor();
+    private MyProcessor processor = new MyProcessor();
 
     @Test
     public void testSynchronizeComplete() throws Exception {
@@ -47,10 +47,10 @@ public class OnCompletionShutdownProcessorTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onCompletion().process(processor);
 
                 from("direct:start").to("mock:result");
@@ -64,17 +64,17 @@ public class OnCompletionShutdownProcessorTest extends ContextTestSupport {
         }
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             exchange.getIn().setBody("Bye World");
         }
 
         @Override
-        protected void doStart() {
+        protected void doStart() throws Exception {
             // noop
         }
 
         @Override
-        protected void doStop() {
+        protected void doStop() throws Exception {
             // noop
         }
     }

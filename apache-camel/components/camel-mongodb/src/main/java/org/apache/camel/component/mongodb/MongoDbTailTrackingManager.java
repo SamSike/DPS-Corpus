@@ -16,9 +16,6 @@
  */
 package org.apache.camel.component.mongodb;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
@@ -39,7 +36,6 @@ public class MongoDbTailTrackingManager {
 
     private final MongoClient connection;
     private final MongoDbTailTrackingConfig config;
-    private final Lock lock = new ReentrantLock();
     private MongoCollection<Document> dbCol;
     private Document trackingObj;
 
@@ -64,42 +60,32 @@ public class MongoDbTailTrackingManager {
         trackingObj = new Document(MONGO_ID, trackingObj.get(MONGO_ID));
     }
 
-    public void persistToStore() {
-        lock.lock();
-        try {
-            if (!config.persistent || lastVal == null) {
-                return;
-            }
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Persisting lastVal={} to store, collection: {}", lastVal, config.collection);
-            }
-
-            Bson updateObj = Updates.set(config.field, lastVal);
-            FindOneAndUpdateOptions options = new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER);
-            trackingObj = dbCol.findOneAndUpdate(trackingObj, updateObj, options);
-        } finally {
-            lock.unlock();
+    public synchronized void persistToStore() {
+        if (!config.persistent || lastVal == null) {
+            return;
         }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Persisting lastVal={} to store, collection: {}", lastVal, config.collection);
+        }
+
+        Bson updateObj = Updates.set(config.field, lastVal);
+        FindOneAndUpdateOptions options = new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER);
+        trackingObj = dbCol.findOneAndUpdate(trackingObj, updateObj, options);
     }
 
-    public Object recoverFromStore() {
-        lock.lock();
-        try {
-            if (!config.persistent) {
-                return null;
-            }
-
-            lastVal = dbCol.find(trackingObj).first().get(config.field);
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Recovered lastVal={} from store, collection: {}", lastVal, config.collection);
-            }
-
-            return lastVal;
-        } finally {
-            lock.unlock();
+    public synchronized Object recoverFromStore() {
+        if (!config.persistent) {
+            return null;
         }
+
+        lastVal = dbCol.find(trackingObj).first().get(config.field);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Recovered lastVal={} from store, collection: {}", lastVal, config.collection);
+        }
+
+        return lastVal;
     }
 
     public void setLastVal(Document dbObj) {

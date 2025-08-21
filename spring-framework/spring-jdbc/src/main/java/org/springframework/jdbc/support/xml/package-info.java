@@ -1,7 +1,9 @@
 /**
  * Abstraction for handling fields of SQLXML data type.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jdbc.support.xml;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -38,11 +38,6 @@ public class HttpConsumer extends DefaultConsumer implements Suspendable {
     }
 
     @Override
-    public boolean isHostedService() {
-        return true;
-    }
-
-    @Override
     public HttpCommonEndpoint getEndpoint() {
         return (HttpCommonEndpoint) super.getEndpoint();
     }

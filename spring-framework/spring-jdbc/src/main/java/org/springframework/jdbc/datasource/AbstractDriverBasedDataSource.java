@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Abstract base class for JDBC {@link javax.sql.DataSource} implementations
@@ -33,17 +33,23 @@ import org.jspecify.annotations.Nullable;
  */
 public abstract class AbstractDriverBasedDataSource extends AbstractDataSource {
 
-	private @Nullable String url;
+	@Nullable
+	private String url;
 
-	private @Nullable String username;
+	@Nullable
+	private String username;
 
-	private @Nullable String password;
+	@Nullable
+	private String password;
 
-	private @Nullable String catalog;
+	@Nullable
+	private String catalog;
 
-	private @Nullable String schema;
+	@Nullable
+	private String schema;
 
-	private @Nullable Properties connectionProperties;
+	@Nullable
+	private Properties connectionProperties;
 
 
 	/**
@@ -57,7 +63,8 @@ public abstract class AbstractDriverBasedDataSource extends AbstractDataSource {
 	/**
 	 * Return the JDBC URL to use for connecting through the Driver.
 	 */
-	public @Nullable String getUrl() {
+	@Nullable
+	public String getUrl() {
 		return this.url;
 	}
 
@@ -72,7 +79,8 @@ public abstract class AbstractDriverBasedDataSource extends AbstractDataSource {
 	/**
 	 * Return the JDBC username to use for connecting through the Driver.
 	 */
-	public @Nullable String getUsername() {
+	@Nullable
+	public String getUsername() {
 		return this.username;
 	}
 
@@ -87,7 +95,8 @@ public abstract class AbstractDriverBasedDataSource extends AbstractDataSource {
 	/**
 	 * Return the JDBC password to use for connecting through the Driver.
 	 */
-	public @Nullable String getPassword() {
+	@Nullable
+	public String getPassword() {
 		return this.password;
 	}
 
@@ -104,7 +113,8 @@ public abstract class AbstractDriverBasedDataSource extends AbstractDataSource {
 	 * Return the database catalog to be applied to each Connection, if any.
 	 * @since 4.3.2
 	 */
-	public @Nullable String getCatalog() {
+	@Nullable
+	public String getCatalog() {
 		return this.catalog;
 	}
 
@@ -121,7 +131,8 @@ public abstract class AbstractDriverBasedDataSource extends AbstractDataSource {
 	 * Return the database schema to be applied to each Connection, if any.
 	 * @since 4.3.2
 	 */
-	public @Nullable String getSchema() {
+	@Nullable
+	public String getSchema() {
 		return this.schema;
 	}
 
@@ -140,7 +151,8 @@ public abstract class AbstractDriverBasedDataSource extends AbstractDataSource {
 	/**
 	 * Return the connection properties to be passed to the Driver, if any.
 	 */
-	public @Nullable Properties getConnectionProperties() {
+	@Nullable
+	public Properties getConnectionProperties() {
 		return this.connectionProperties;
 	}
 

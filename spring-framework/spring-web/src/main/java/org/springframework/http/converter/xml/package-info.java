@@ -1,7 +1,9 @@
 /**
  * Provides HttpMessageConverter implementations for handling XML.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.http.converter.xml;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

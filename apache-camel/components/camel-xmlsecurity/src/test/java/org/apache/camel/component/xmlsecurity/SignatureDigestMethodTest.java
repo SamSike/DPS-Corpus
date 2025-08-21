@@ -72,8 +72,10 @@ import org.apache.camel.component.xmlsecurity.util.ValidationFailedHandlerIgnore
 import org.apache.camel.component.xmlsecurity.util.XmlSignature2Message2MessageWithTimestampProperty;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.Registry;
+import org.apache.camel.support.SimpleRegistry;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.camel.test.junit5.TestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -107,7 +109,9 @@ public class SignatureDigestMethodTest extends CamelTestSupport {
     }
 
     @Override
-    protected void bindToRegistry(Registry registry) throws Exception {
+    protected Registry createCamelRegistry() throws Exception {
+        Registry registry = new SimpleRegistry();
+
         registry.bind("accessor", getKeyAccessor(keyPair.getPrivate()));
         registry.bind("canonicalizationMethod1", getCanonicalizationMethod());
         registry.bind("selector", KeySelector.singletonKeySelector(keyPair.getPublic()));
@@ -128,6 +132,8 @@ public class SignatureDigestMethodTest extends CamelTestSupport {
         registry.bind("xpathsToIdAttributes", xpaths);
 
         registry.bind("parentXpathBean", getParentXPathBean());
+
+        return registry;
     }
 
     @Override
@@ -356,9 +362,11 @@ public class SignatureDigestMethodTest extends CamelTestSupport {
     }
 
     @Override
-    public void doPreSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
         setUpKeys("RSA", 1024);
-        testConfigurationBuilder.withDisableJMX();
+        disableJMX();
+        super.setUp();
     }
 
     public void setUpKeys(String algorithm, int keylength) {

@@ -30,42 +30,12 @@ import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.component.PropertyConfigurerSupport;
 import org.apache.qpid.jms.JmsConnectionFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Messaging with AMQP protocol using Apache QPid Client.
  */
 @Component("amqp")
 public class AMQPComponent extends JmsComponent {
-
-    private static final Logger LOG = LoggerFactory.getLogger(AMQPComponent.class);
-
-    public static final String AMQP_DEFAULT_HOST = "localhost";
-    public static final int AMQP_DEFAULT_PORT = 5672;
-
-    @Metadata(description = "Remote URL to broker. The URL is used to setup connection factory and is broker specific (such as ActiveMQ).")
-    private String brokerUrl;
-    @Metadata(description = "The host name or IP address of the computer that hosts the AMQP Broker.")
-    private String host;
-    @Metadata(description = "The port number on which the AMPQ Broker listens.")
-    private Integer port;
-    @Metadata(description = "Whether to configure topics with a `topic://` prefix.")
-    private Boolean useTopicPrefix;
-    @Metadata(description = "Whether to enable SSL when connecting to the AMQP Broker.")
-    private Boolean useSsl;
-    @Metadata(description = "The SSL keystore location.")
-    private String keyStoreLocation;
-    @Metadata(defaultValue = "JKS", description = "The SSL keystore type.")
-    private String keyStoreType = "JKS";
-    @Metadata(label = "security", secret = true, description = "The SSL keystore password.")
-    private String keyStorePassword;
-    @Metadata(description = "The SSL truststore location.")
-    private String trustStoreLocation;
-    @Metadata(defaultValue = "JKS", description = "The SSL truststore type.")
-    private String trustStoreType = "JKS";
-    @Metadata(label = "security", secret = true, description = "The SSL truststore password.")
-    private String trustStorePassword;
 
     // Constructors
 
@@ -103,45 +73,15 @@ public class AMQPComponent extends JmsComponent {
 
     @Override
     protected void doInit() throws Exception {
-        if (brokerUrl != null) {
+        Set<AMQPConnectionDetails> connectionDetails = getCamelContext().getRegistry().findByType(AMQPConnectionDetails.class);
+        if (connectionDetails.size() == 1) {
+            AMQPConnectionDetails details = connectionDetails.iterator().next();
             JmsConnectionFactory connectionFactory
-                    = new JmsConnectionFactory(brokerUrl);
-            if (useTopicPrefix != Boolean.FALSE) {
+                    = new JmsConnectionFactory(details.username(), details.password(), details.uri());
+            if (details.setTopicPrefix()) {
                 connectionFactory.setTopicPrefix("topic://");
             }
             getConfiguration().setConnectionFactory(connectionFactory);
-        } else if (host != null || port != null || getUsername() != null || getPassword() != null || useTopicPrefix != null
-                || useSsl != null) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(useSsl == Boolean.TRUE ? "amqps://" : "amqp://");
-            sb.append(host == null ? AMQP_DEFAULT_HOST : host).append(":").append(port == null ? AMQP_DEFAULT_PORT : port);
-            if (useSsl == Boolean.TRUE) {
-                sb.append("?transport.trustStoreLocation=").append(trustStoreLocation == null ? "" : trustStoreLocation);
-                sb.append("&transport.trustStoreType=").append(trustStoreType);
-                sb.append("&transport.trustStorePassword=").append(trustStorePassword == null ? "" : trustStorePassword);
-                sb.append("&transport.keyStoreLocation=").append(keyStoreLocation == null ? "" : keyStoreLocation);
-                sb.append("&transport.keyStoreType=").append(keyStoreType);
-                sb.append("&transport.keyStorePassword=").append(keyStorePassword == null ? "" : keyStorePassword);
-            }
-            JmsConnectionFactory connectionFactory
-                    = new JmsConnectionFactory(getUsername(), getPassword(), sb.toString());
-            if (useTopicPrefix != Boolean.FALSE) {
-                connectionFactory.setTopicPrefix("topic://");
-            }
-            getConfiguration().setConnectionFactory(connectionFactory);
-        } else {
-            Set<AMQPConnectionDetails> connectionDetails
-                    = getCamelContext().getRegistry().findByType(AMQPConnectionDetails.class);
-            if (connectionDetails.size() == 1) {
-                LOG.warn("Using AMQPConnectionDetails is deprecated");
-                AMQPConnectionDetails details = connectionDetails.iterator().next();
-                JmsConnectionFactory connectionFactory
-                        = new JmsConnectionFactory(details.username(), details.password(), details.uri());
-                if (details.setTopicPrefix()) {
-                    connectionFactory.setTopicPrefix("topic://");
-                }
-                getConfiguration().setConnectionFactory(connectionFactory);
-            }
         }
         super.doInit();
     }
@@ -172,14 +112,14 @@ public class AMQPComponent extends JmsComponent {
      */
     @Metadata(displayName = "Include AMQP Annotations")
     public void setIncludeAmqpAnnotations(boolean includeAmqpAnnotations) {
-        if (getConfiguration() instanceof AMQPConfiguration amqpConfiguration) {
-            amqpConfiguration.setIncludeAmqpAnnotations(includeAmqpAnnotations);
+        if (getConfiguration() instanceof AMQPConfiguration) {
+            ((AMQPConfiguration) getConfiguration()).setIncludeAmqpAnnotations(includeAmqpAnnotations);
         }
     }
 
     public boolean isIncludeAmqpAnnotations() {
-        if (getConfiguration() instanceof AMQPConfiguration amqpConfiguration) {
-            return amqpConfiguration.isIncludeAmqpAnnotations();
+        if (getConfiguration() instanceof AMQPConfiguration) {
+            return ((AMQPConfiguration) getConfiguration()).isIncludeAmqpAnnotations();
         }
         return false;
     }
@@ -195,91 +135,4 @@ public class AMQPComponent extends JmsComponent {
         super.setProperties(bean, parameters);
     }
 
-    public String getBrokerUrl() {
-        return brokerUrl;
-    }
-
-    public void setBrokerUrl(String brokerUrl) {
-        this.brokerUrl = brokerUrl;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public Integer getPort() {
-        return port;
-    }
-
-    public void setPort(Integer port) {
-        this.port = port;
-    }
-
-    public Boolean getUseTopicPrefix() {
-        return useTopicPrefix;
-    }
-
-    public void setUseTopicPrefix(Boolean useTopicPrefix) {
-        this.useTopicPrefix = useTopicPrefix;
-    }
-
-    public Boolean getUseSsl() {
-        return useSsl;
-    }
-
-    public void setUseSsl(Boolean useSsl) {
-        this.useSsl = useSsl;
-    }
-
-    public String getKeyStoreLocation() {
-        return keyStoreLocation;
-    }
-
-    public void setKeyStoreLocation(String keyStoreLocation) {
-        this.keyStoreLocation = keyStoreLocation;
-    }
-
-    public String getKeyStoreType() {
-        return keyStoreType;
-    }
-
-    public void setKeyStoreType(String keyStoreType) {
-        this.keyStoreType = keyStoreType;
-    }
-
-    public String getKeyStorePassword() {
-        return keyStorePassword;
-    }
-
-    public void setKeyStorePassword(String keyStorePassword) {
-        this.keyStorePassword = keyStorePassword;
-    }
-
-    public String getTrustStoreLocation() {
-        return trustStoreLocation;
-    }
-
-    public void setTrustStoreLocation(String trustStoreLocation) {
-        this.trustStoreLocation = trustStoreLocation;
-    }
-
-    public String getTrustStoreType() {
-        return trustStoreType;
-    }
-
-    public void setTrustStoreType(String trustStoreType) {
-        this.trustStoreType = trustStoreType;
-    }
-
-    public String getTrustStorePassword() {
-        return trustStorePassword;
-    }
-
-    public void setTrustStorePassword(String trustStorePassword) {
-        this.trustStorePassword = trustStorePassword;
-    }
 }

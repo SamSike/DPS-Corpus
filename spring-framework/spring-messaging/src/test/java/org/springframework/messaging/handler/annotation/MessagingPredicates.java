@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.messaging.handler.annotation;
 
 import java.util.function.Predicate;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.MethodParameter;
+import org.springframework.lang.Nullable;
 
 /**
  * Predicates for messaging annotations.
@@ -56,7 +54,8 @@ public class MessagingPredicates {
 
 	public static class DestinationVariablePredicate implements Predicate<MethodParameter> {
 
-		private @Nullable String value;
+		@Nullable
+		private String value;
 
 
 		public DestinationVariablePredicate value(@Nullable String name) {
@@ -79,11 +78,14 @@ public class MessagingPredicates {
 
 	public static class HeaderPredicate implements Predicate<MethodParameter> {
 
-		private @Nullable String name;
+		@Nullable
+		private String name;
 
-		private @Nullable Boolean required;
+		@Nullable
+		private Boolean required;
 
-		private @Nullable String defaultValue;
+		@Nullable
+		private String defaultValue;
 
 
 		public HeaderPredicate name(@Nullable String name) {

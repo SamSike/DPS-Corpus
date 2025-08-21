@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 import org.aopalliance.intercept.MethodInvocation;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.aop.DynamicIntroductionAdvice;
 import org.springframework.aop.IntroductionInterceptor;
 import org.springframework.aop.ProxyMethodInvocation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -61,9 +61,9 @@ public class DelegatePerTargetObjectIntroductionInterceptor extends Introduction
 	 */
 	private final Map<Object, Object> delegateMap = new WeakHashMap<>();
 
-	private final Class<?> defaultImplType;
+	private Class<?> defaultImplType;
 
-	private final Class<?> interfaceType;
+	private Class<?> interfaceType;
 
 
 	public DelegatePerTargetObjectIntroductionInterceptor(Class<?> defaultImplType, Class<?> interfaceType) {
@@ -86,7 +86,8 @@ public class DelegatePerTargetObjectIntroductionInterceptor extends Introduction
 	 * method, which handles introduced interfaces and forwarding to the target.
 	 */
 	@Override
-	public @Nullable Object invoke(MethodInvocation mi) throws Throwable {
+	@Nullable
+	public Object invoke(MethodInvocation mi) throws Throwable {
 		if (isMethodOnIntroducedInterface(mi)) {
 			Object delegate = getIntroductionDelegateFor(mi.getThis());
 
@@ -97,8 +98,8 @@ public class DelegatePerTargetObjectIntroductionInterceptor extends Introduction
 
 			// Massage return value if possible: if the delegate returned itself,
 			// we really want to return the proxy.
-			if (retVal == delegate && mi instanceof ProxyMethodInvocation pmi) {
-				retVal = pmi.getProxy();
+			if (retVal == delegate && mi instanceof ProxyMethodInvocation) {
+				retVal = ((ProxyMethodInvocation) mi).getProxy();
 			}
 			return retVal;
 		}
@@ -113,7 +114,8 @@ public class DelegatePerTargetObjectIntroductionInterceptor extends Introduction
 	 * that it is introduced into. This method is <strong>never</strong> called for
 	 * {@link MethodInvocation MethodInvocations} on the introduced interfaces.
 	 */
-	protected @Nullable Object doProceed(MethodInvocation mi) throws Throwable {
+	@Nullable
+	protected Object doProceed(MethodInvocation mi) throws Throwable {
 		// If we get here, just pass the invocation on.
 		return mi.proceed();
 	}

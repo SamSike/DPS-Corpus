@@ -41,10 +41,10 @@ public class ClaimCheckEipPushPopRemoveHeaderTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").setHeader("bar", constant("Moes")).to("mock:a").claimCheck(ClaimCheckOperation.Push)
                         .transform().constant("Bye World")
                         .setHeader("foo", constant(456)).setHeader("bar", constant("Jacks")).to("mock:b")

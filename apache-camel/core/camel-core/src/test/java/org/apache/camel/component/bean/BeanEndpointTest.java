@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BeanEndpointTest extends ContextTestSupport {
 
@@ -33,8 +32,8 @@ public class BeanEndpointTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("foo", new FooBean());
         return jndi;
     }
@@ -48,14 +47,14 @@ public class BeanEndpointTest extends ContextTestSupport {
         endpoint.setBeanName("foo");
         assertEquals("foo", endpoint.getBeanName());
 
-        assertTrue(endpoint.isSingleton());
+        assertEquals(true, endpoint.isSingleton());
         assertNull(endpoint.getBeanHolder());
         assertNull(endpoint.getMethod());
         assertEquals("bean:foo", endpoint.getEndpointUri());
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to(endpoint);
             }
         });
@@ -74,14 +73,14 @@ public class BeanEndpointTest extends ContextTestSupport {
         endpoint.setBeanName("foo");
         assertEquals("foo", endpoint.getBeanName());
 
-        assertTrue(endpoint.isSingleton());
+        assertEquals(true, endpoint.isSingleton());
         assertNull(endpoint.getBeanHolder());
         assertNull(endpoint.getMethod());
         assertEquals("bean:foo", endpoint.getEndpointUri());
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to(endpoint);
             }
         });
@@ -102,14 +101,14 @@ public class BeanEndpointTest extends ContextTestSupport {
         endpoint.setBeanName("foo");
         assertEquals("foo", endpoint.getBeanName());
 
-        assertTrue(endpoint.isSingleton());
+        assertEquals(true, endpoint.isSingleton());
         assertNull(endpoint.getBeanHolder());
         assertNull(endpoint.getMethod());
         assertEquals("bean:foo", endpoint.getEndpointUri());
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to(endpoint);
             }
         });
@@ -128,14 +127,14 @@ public class BeanEndpointTest extends ContextTestSupport {
         endpoint.setMethod("hello");
         assertEquals("foo", endpoint.getBeanName());
 
-        assertTrue(endpoint.isSingleton());
+        assertEquals(true, endpoint.isSingleton());
         assertNull(endpoint.getBeanHolder());
         assertEquals("hello", endpoint.getMethod());
         assertEquals("bean:foo?method=hello", endpoint.getEndpointUri());
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to(endpoint);
             }
         });
@@ -145,7 +144,37 @@ public class BeanEndpointTest extends ContextTestSupport {
         assertEquals("Hello World", out);
     }
 
-    public static class FooBean {
+    @Test
+    public void testBeanEndpointCtrWithMethodAndCache() throws Exception {
+        final BeanEndpoint endpoint = new BeanEndpoint();
+        endpoint.setCamelContext(context);
+        endpoint.setCache(true);
+
+        endpoint.setBeanName("foo");
+        endpoint.setMethod("hello");
+        assertEquals("foo", endpoint.getBeanName());
+
+        assertEquals(true, endpoint.isSingleton());
+        assertNull(endpoint.getBeanHolder());
+        assertEquals("hello", endpoint.getMethod());
+        assertEquals("bean:foo?method=hello", endpoint.getEndpointUri());
+
+        context.addRoutes(new RouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                from("direct:start").to(endpoint);
+            }
+        });
+        context.start();
+
+        String out = template.requestBody("direct:start", "World", String.class);
+        assertEquals("Hello World", out);
+
+        out = template.requestBody("direct:start", "Moon", String.class);
+        assertEquals("Hello Moon", out);
+    }
+
+    public class FooBean {
 
         public String hello(String hello) {
             return "Hello " + hello;

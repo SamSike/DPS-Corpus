@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package org.springframework.util;
 
 import java.io.Serializable;
-import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -26,7 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Simple {@link List} wrapper class that allows for elements to be
@@ -139,7 +138,7 @@ public class AutoPopulatingList<E> implements List<E>, Serializable {
 	@Override
 	public E get(int index) {
 		int backingListSize = this.backingList.size();
-		E element;
+		E element = null;
 		if (index < backingListSize) {
 			element = this.backingList.get(index);
 			if (element == null) {
@@ -306,7 +305,7 @@ public class AutoPopulatingList<E> implements List<E>, Serializable {
 				throw new ElementInstantiationException(
 						"Unable to instantiate element class: " + this.elementClass.getName(), ex);
 			}
-			catch (IllegalAccessException | InaccessibleObjectException ex) {
+			catch (IllegalAccessException ex) {
 				throw new ElementInstantiationException(
 						"Could not access element constructor: " + this.elementClass.getName(), ex);
 			}

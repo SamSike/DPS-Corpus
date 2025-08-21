@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class AggregateRepositoryReturnNullTest extends ContextTestSupport {
 
     @Test
-    public void testAggregateRepositoryReturnNull() {
+    public void testAggregateRepositoryReturnNull() throws Exception {
         try {
             template.sendBodyAndHeader("direct:start", "Hello World", "id", 123);
             fail("Should throw exception");
@@ -42,10 +42,10 @@ public class AggregateRepositoryReturnNullTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(header("id"), new MyNullAggregationStrategy()).completionSize(3)
                         .to("mock:result");
             }

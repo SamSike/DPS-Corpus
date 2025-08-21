@@ -46,8 +46,9 @@ public final class AsyncProcessorConverterHelper {
      * Creates a {@link AsyncProcessor} that delegates to the given processor. It is important that this implements
      * {@link DelegateProcessor}
      */
-    private static class ProcessorToAsyncProcessorBridge
-            implements DelegateProcessor, AsyncProcessor, Navigate<Processor>, Service {
+    // CHECKSTYLE:OFF
+    private static class ProcessorToAsyncProcessorBridge implements DelegateProcessor, AsyncProcessor, Navigate<Processor>, Service {
+    // CHECKSTYLE:ON
         protected final Processor processor;
 
         private ProcessorToAsyncProcessorBridge(Processor processor) {
@@ -63,7 +64,7 @@ public final class AsyncProcessorConverterHelper {
             }
             try {
                 processor.process(exchange);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 // must catch throwable so we catch all
                 exchange.setException(e);
             } finally {
@@ -189,15 +190,15 @@ public final class AsyncProcessorConverterHelper {
     }
 
     public static AsyncProducer convert(Producer value) {
-        if (value instanceof AsyncProducer asyncProducer) {
-            return asyncProducer;
+        if (value instanceof AsyncProducer) {
+            return (AsyncProducer) value;
         }
         return new ProducerToAsyncProducerBridge(value);
     }
 
     public static AsyncProcessor convert(Processor value) {
-        if (value instanceof AsyncProcessor asyncProcessor) {
-            return asyncProcessor;
+        if (value instanceof AsyncProcessor) {
+            return (AsyncProcessor) value;
         }
         return new ProcessorToAsyncProcessorBridge(value);
     }

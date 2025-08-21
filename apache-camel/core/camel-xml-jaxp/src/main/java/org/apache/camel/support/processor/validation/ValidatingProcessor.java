@@ -31,6 +31,7 @@ import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -68,7 +69,7 @@ public class ValidatingProcessor extends AsyncProcessorSupport {
     private boolean failOnNullBody = true;
     private boolean failOnNullHeader = true;
     private String headerName;
-    private final XMLConverterHelper converter = new XMLConverterHelper();
+    private XMLConverterHelper converter = new XMLConverterHelper();
 
     public ValidatingProcessor() {
         schemaReader = new SchemaReader();
@@ -117,7 +118,7 @@ public class ValidatingProcessor extends AsyncProcessorSupport {
         Source source = null;
         InputStream is = null;
         try {
-            Result result;
+            Result result = null;
             // only convert to input stream if really needed
             if (isInputStreamNeeded(exchange)) {
                 is = getContentToValidate(exchange, InputStream.class);
@@ -147,7 +148,7 @@ public class ValidatingProcessor extends AsyncProcessorSupport {
                 result = new DOMResult();
             } else if (source instanceof SAXSource) {
                 result = new SAXResult();
-            } else {
+            } else if (source instanceof StAXSource || source instanceof StreamSource) {
                 result = null;
             }
 
@@ -165,8 +166,8 @@ public class ValidatingProcessor extends AsyncProcessorSupport {
                 } catch (SAXParseException e) {
                     // can be thrown for non-well-formed XML
                     throw new SchemaValidationException(
-                            exchange, schema, Collections.singletonList(e), Collections.emptyList(),
-                            Collections.emptyList());
+                            exchange, schema, Collections.singletonList(e), Collections.<SAXParseException> emptyList(),
+                            Collections.<SAXParseException> emptyList());
                 }
             }
         } finally {
@@ -327,7 +328,7 @@ public class ValidatingProcessor extends AsyncProcessorSupport {
      *
      * @param  exchange the current exchange
      * @return          <tt>true</tt> to convert to {@link InputStream} beforehand converting to {@link Source}
-     *                  afterward.
+     *                  afterwards.
      */
     protected boolean isInputStreamNeeded(Exchange exchange) {
         Object content = getContentToValidate(exchange);
@@ -366,12 +367,12 @@ public class ValidatingProcessor extends AsyncProcessorSupport {
      */
     protected Source getSource(Exchange exchange, Object content) {
         // body or header may already be a source
-        if (content instanceof Source source) {
-            return source;
+        if (content instanceof Source) {
+            return (Source) content;
         }
         Source source = null;
-        if (content instanceof InputStream stream) {
-            return new StreamSource(stream);
+        if (content instanceof InputStream) {
+            return new StreamSource((InputStream) content);
         }
         if (content != null) {
             TypeConverter tc = exchange.getContext().getTypeConverterRegistry().lookup(Source.class, content.getClass());

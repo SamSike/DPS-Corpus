@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import org.springframework.web.servlet.view.AbstractView;
  * Abstract base class for Atom and RSS Feed views, using the
  * <a href="https://github.com/rometools/rome">ROME</a> package.
  *
- * <p><b>NOTE: As of Spring 4.1, this is based on the {@code com.rometools}
+ * <p>><b>NOTE: As of Spring 4.1, this is based on the {@code com.rometools}
  * variant of ROME, version 1.5. Please upgrade your build dependency.</b>
  *
  * <p>Application-specific view classes will typically extend from either

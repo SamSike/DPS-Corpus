@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,13 +27,13 @@ import static org.springframework.core.testfixture.TestGroup.LONG_RUNNING;
  * @author Rob Harrop
  * @author Chris Beams
  */
-class RefreshableTargetSourceTests {
+public class RefreshableTargetSourceTests {
 
 	/**
 	 * Test what happens when checking for refresh but not refreshing object.
 	 */
 	@Test
-	void testRefreshCheckWithNonRefresh() throws Exception {
+	public void testRefreshCheckWithNonRefresh() throws Exception {
 		CountingRefreshableTargetSource ts = new CountingRefreshableTargetSource();
 		ts.setRefreshCheckDelay(0);
 
@@ -49,7 +49,7 @@ class RefreshableTargetSourceTests {
 	 * Test what happens when checking for refresh and refresh occurs.
 	 */
 	@Test
-	void testRefreshCheckWithRefresh() throws Exception {
+	public void testRefreshCheckWithRefresh() throws Exception {
 		CountingRefreshableTargetSource ts = new CountingRefreshableTargetSource(true);
 		ts.setRefreshCheckDelay(0);
 
@@ -65,7 +65,7 @@ class RefreshableTargetSourceTests {
 	 * Test what happens when no refresh occurs.
 	 */
 	@Test
-	void testWithNoRefreshCheck() {
+	public void testWithNoRefreshCheck() throws Exception {
 		CountingRefreshableTargetSource ts = new CountingRefreshableTargetSource(true);
 		ts.setRefreshCheckDelay(-1);
 

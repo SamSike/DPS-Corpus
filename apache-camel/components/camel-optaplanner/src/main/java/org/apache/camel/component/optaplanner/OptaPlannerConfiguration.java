@@ -20,14 +20,13 @@ import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
 import org.apache.camel.spi.UriPath;
-import org.optaplanner.core.api.solver.SolverManager;
 
 @UriParams
 public class OptaPlannerConfiguration {
 
     @UriPath
     @Metadata(required = true)
-    private String problemName;
+    private String configFile;
     @UriParam(label = "common", defaultValue = "DEFAULT_SOLVER")
     private String solverId = OptaPlannerConstants.DEFAULT_SOLVER_ID;
     @UriParam(label = "producer", defaultValue = "10")
@@ -36,18 +35,17 @@ public class OptaPlannerConfiguration {
     private boolean async;
     @UriParam(label = "common", defaultValue = "1L")
     private Long problemId = 1L;
-    @UriParam(label = "common")
-    private String configFile;
-    @UriParam(label = "advanced")
-    private SolverManager solverManager;
+    @UriParam(label = "common", defaultValue = "false")
+    private boolean useSolverManager;
 
     public String getConfigFile() {
         return configFile;
     }
 
     /**
-     * If SolverManager is absent from the header OptaPlannerConstants.SOLVER_MANAGER then a SolverManager will be
-     * created using this Optaplanner config file.
+     * Specifies the location to the solver file. If useSolverManager=FALSE, Camel uses this file and create the Solver.
+     * If useSolverManager=TRUE and SolverManager is set in the header {OptaPlannerConstants.SOLVER_MANAGER} : this file
+     * is ignored by Camel + usage of SolverManager. SolverManager can be injected by DI in Quarkus or Spring.
      */
     public void setConfigFile(String configFile) {
         this.configFile = configFile;
@@ -55,17 +53,6 @@ public class OptaPlannerConfiguration {
 
     public String getSolverId() {
         return solverId;
-    }
-
-    /**
-     * Problem name
-     */
-    public String getProblemName() {
-        return problemName;
-    }
-
-    public void setProblemName(String problemName) {
-        this.problemName = problemName;
     }
 
     /**
@@ -103,19 +90,23 @@ public class OptaPlannerConfiguration {
 
     /**
      * In case of using SolverManager : the problem id
+     *
+     * @param problemId
      */
     public void setProblemId(Long problemId) {
         this.problemId = problemId;
     }
 
-    public SolverManager getSolverManager() {
-        return solverManager;
+    public boolean isUseSolverManager() {
+        return useSolverManager;
     }
 
     /**
-     * SolverManager
+     * use SolverManager instead of XML file config. Use this mode on Quarkus app.
+     *
+     * @param useSolverManager
      */
-    public void setSolverManager(SolverManager solverManager) {
-        this.solverManager = solverManager;
+    public void setUseSolverManager(boolean useSolverManager) {
+        this.useSolverManager = useSolverManager;
     }
 }

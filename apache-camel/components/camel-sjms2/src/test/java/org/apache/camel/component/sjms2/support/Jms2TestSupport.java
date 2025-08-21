@@ -18,7 +18,6 @@ package org.apache.camel.component.sjms2.support;
 
 import jakarta.jms.Connection;
 import jakarta.jms.ConnectionFactory;
-import jakarta.jms.JMSException;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.Session;
 
@@ -31,15 +30,21 @@ import org.apache.camel.component.sjms.jms.DefaultDestinationCreationStrategy;
 import org.apache.camel.component.sjms.jms.DestinationCreationStrategy;
 import org.apache.camel.component.sjms2.Sjms2Component;
 import org.apache.camel.component.sjms2.jms.Jms2ObjectFactory;
+import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.test.infra.artemis.services.ArtemisService;
+import org.apache.camel.test.infra.artemis.services.ArtemisServiceFactory;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * A support class that builds up and tears down an ActiveMQ Artemis instance to be used for unit testing.
  */
-public abstract class Jms2TestSupport extends CamelTestSupport {
+public class Jms2TestSupport extends CamelTestSupport {
+
+    @RegisterExtension
+    public ArtemisService service = ArtemisServiceFactory.createTCPAllProtocolsService();
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -49,8 +54,18 @@ public abstract class Jms2TestSupport extends CamelTestSupport {
     private Session session;
     private DestinationCreationStrategy destinationCreationStrategy = new DefaultDestinationCreationStrategy();
 
-    @AfterEach
-    public void closeSessions() throws JMSException {
+    @Override
+    protected boolean useJmx() {
+        return false;
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+        DefaultCamelContext dcc = (DefaultCamelContext) context;
+        while (!dcc.isStopped()) {
+            log.info("Waiting on the Camel Context to stop");
+        }
         log.info("Closing JMS Session");
         if (getSession() != null) {
             getSession().close();
@@ -81,7 +96,7 @@ public abstract class Jms2TestSupport extends CamelTestSupport {
         return camelContext;
     }
 
-    protected static ConnectionFactory getConnectionFactory(String serviceAddress) throws Exception {
+    protected ConnectionFactory getConnectionFactory() throws Exception {
         final String protocol = System.getProperty("protocol", "CORE").toUpperCase();
 
         //Currently AMQP and HORENTQ don't operate in exactly the same way on artemis as OPENWIRE
@@ -89,13 +104,11 @@ public abstract class Jms2TestSupport extends CamelTestSupport {
         //of artemis we may be able test against them in an agnostic way.
         switch (protocol) {
             case "OPENWIRE":
-                return new ActiveMQConnectionFactory(serviceAddress);
+                return new ActiveMQConnectionFactory(service.serviceAddress());
             default:
-                return ActiveMQJMSClient.createConnectionFactory(serviceAddress, "test");
+                return ActiveMQJMSClient.createConnectionFactory(service.serviceAddress(), "test");
         }
     }
-
-    protected abstract ConnectionFactory getConnectionFactory() throws Exception;
 
     public void setSession(Session session) {
         this.session = session;

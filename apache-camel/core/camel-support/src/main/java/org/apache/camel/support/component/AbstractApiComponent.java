@@ -23,11 +23,11 @@ import java.util.Map;
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelException;
 import org.apache.camel.Endpoint;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.ExtendedPropertyConfigurerGetter;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.PropertyConfigurer;
 import org.apache.camel.support.DefaultComponent;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.PropertyBindingSupport;
 
 /**
@@ -42,56 +42,20 @@ public abstract class AbstractApiComponent<E extends Enum<E> & ApiName, T, S ext
     // API collection
     protected final S collection;
 
-    /**
-     * Deprecated constructor for AbstractApiComponent.
-     *
-     * @deprecated               Use {@link AbstractApiComponent#AbstractApiComponent(Class, ApiCollection)}
-     * @param      endpointClass This is deprecated. Do not use
-     * @param      apiNameClass  The API name class
-     * @param      collection    The collection of API methods
-     */
-    @Deprecated(since = "4.1.0")
-    public AbstractApiComponent(Class<? extends Endpoint> endpointClass, Class<E> apiNameClass, S collection) {
-        this(apiNameClass, collection);
-    }
+    // API name class
+    protected final Class<E> apiNameClass;
 
-    /**
-     * Deprecated constructor for AbstractApiComponent.
-     *
-     * @deprecated               Use
-     *                           {@link AbstractApiComponent#AbstractApiComponent(CamelContext, Class, ApiCollection)}
-     *                           instead
-     * @param      context       The CamelContext
-     * @param      endpointClass This is deprecated. Do not use
-     * @param      apiNameClass  The API name class
-     * @param      collection    The collection of API methods
-     */
-    @Deprecated(since = "4.2.0")
-    public AbstractApiComponent(CamelContext context, Class<? extends Endpoint> endpointClass, Class<E> apiNameClass,
-                                S collection) {
-        this(context, apiNameClass, collection);
-    }
-
-    /**
-     * Creates a new AbstractApiComponent
-     *
-     * @param apiNameClass The API name class
-     * @param collection   The collection of API methods
-     */
-    protected AbstractApiComponent(Class<E> apiNameClass, S collection) {
+    public AbstractApiComponent(Class<? extends Endpoint> endpointClass,
+                                Class<E> apiNameClass, S collection) {
         this.collection = collection;
+        this.apiNameClass = apiNameClass;
     }
 
-    /**
-     * Creates a new AbstractApiComponent
-     *
-     * @param context      The CamelContext
-     * @param apiNameClass The API name class
-     * @param collection   The collection of API methods
-     */
-    protected AbstractApiComponent(CamelContext context, Class<E> apiNameClass, S collection) {
+    public AbstractApiComponent(CamelContext context, Class<? extends Endpoint> endpointClass,
+                                Class<E> apiNameClass, S collection) {
         super(context);
         this.collection = collection;
+        this.apiNameClass = apiNameClass;
     }
 
     @Override
@@ -150,10 +114,11 @@ public abstract class AbstractApiComponent<E extends Enum<E> & ApiName, T, S ext
         final Map<String, Object> componentProperties = new HashMap<>();
         // copy component configuration, if set
         if (configuration != null) {
-            PropertyConfigurer configurer = PluginHelper.getConfigurerResolver(getCamelContext())
+            PropertyConfigurer configurer = getCamelContext().adapt(ExtendedCamelContext.class).getConfigurerResolver()
                     .resolvePropertyConfigurer(configuration.getClass().getName(), getCamelContext());
             // use reflection free configurer (if possible)
-            if (configurer instanceof ExtendedPropertyConfigurerGetter getter) {
+            if (configurer instanceof ExtendedPropertyConfigurerGetter) {
+                ExtendedPropertyConfigurerGetter getter = (ExtendedPropertyConfigurerGetter) configurer;
                 for (String key : getter.getAllOptions(configuration).keySet()) {
                     Object value = getter.getOptionValue(configuration, key, true);
                     if (value != null) {
@@ -161,14 +126,14 @@ public abstract class AbstractApiComponent<E extends Enum<E> & ApiName, T, S ext
                     }
                 }
             } else {
-                PluginHelper.getBeanIntrospection(getCamelContext()).getProperties(configuration,
+                getCamelContext().adapt(ExtendedCamelContext.class).getBeanIntrospection().getProperties(configuration,
                         componentProperties, null, false);
             }
         }
 
         // create endpoint configuration with component properties
         final T endpointConfiguration = collection.getEndpointConfiguration(name);
-        PropertyConfigurer configurer = PluginHelper.getConfigurerResolver(getCamelContext())
+        PropertyConfigurer configurer = getCamelContext().adapt(ExtendedCamelContext.class).getConfigurerResolver()
                 .resolvePropertyConfigurer(endpointConfiguration.getClass().getName(), getCamelContext());
         PropertyBindingSupport.build()
                 .withConfigurer(configurer)

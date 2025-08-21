@@ -72,7 +72,6 @@ public class VelocityTemplateInHeaderTest extends CamelTestSupport {
         for (Entry<String, Object> entry : entrySet) {
             if (entry.getKey().equals(headerName)) {
                 keyFound = true;
-                break;
             }
         }
         assertTrue(keyFound, "Header should been found");

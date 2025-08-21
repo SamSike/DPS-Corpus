@@ -19,32 +19,28 @@ package org.apache.camel.component.file;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
 
 public class FileConsumerFileNameFilterTest extends ContextTestSupport {
 
     @Test
     public void testFileConsumer() throws Exception {
-        final MockEndpoint mockEndpoint = getMockEndpoint("mock:txt");
-        mockEndpoint.expectedBodiesReceivedInAnyOrder("Hello World", "Bye World");
-        String fileUri = fileUri();
-        template.sendBodyAndHeader(fileUri, "Hello World", Exchange.FILE_NAME, "hello.txt");
-        template.sendBodyAndHeader(fileUri, "<customer>123</customer>", Exchange.FILE_NAME, "customer.xml");
-        template.sendBodyAndHeader(fileUri, "<book>Camel Rocks</book>", Exchange.FILE_NAME, "book.xml");
-        template.sendBodyAndHeader(fileUri, "Bye World", Exchange.FILE_NAME, "bye.txt");
+        getMockEndpoint("mock:txt").expectedBodiesReceivedInAnyOrder("Hello World", "Bye World");
 
-        context.getRouteController().startAllRoutes();
+        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
+        template.sendBodyAndHeader(fileUri(), "<customer>123</customer>", Exchange.FILE_NAME, "customer.xml");
+        template.sendBodyAndHeader(fileUri(), "<book>Camel Rocks</book>", Exchange.FILE_NAME, "book.xml");
+        template.sendBodyAndHeader(fileUri(), "Bye World", Exchange.FILE_NAME, "bye.txt");
 
-        mockEndpoint.assertIsSatisfied();
+        assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
-                from(fileUri("?initialDelay=0&delay=10&fileName=${file:onlyname.noext}.txt")).autoStartup(false)
+            public void configure() throws Exception {
+                from(fileUri("?initialDelay=0&delay=10&fileName=${file:onlyname.noext}.txt"))
                         .to("mock:txt");
             }
         };

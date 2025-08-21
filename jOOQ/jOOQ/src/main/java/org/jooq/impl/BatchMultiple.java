@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,20 +37,15 @@
  */
 package org.jooq.impl;
 
-import static org.jooq.impl.AbstractQuery.connection;
-
+import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import org.jooq.Configuration;
-import org.jooq.ExecuteContext.BatchMode;
+import org.jooq.ExecuteContext;
 import org.jooq.ExecuteListener;
 import org.jooq.Query;
 import org.jooq.conf.SettingsTools;
 import org.jooq.exception.ControlFlowSignal;
-import org.jooq.impl.DefaultRenderContext.Rendered;
 import org.jooq.impl.R2DBC.BatchMultipleSubscriber;
 import org.jooq.impl.R2DBC.BatchSubscription;
 
@@ -85,59 +80,47 @@ final class BatchMultiple extends AbstractBatch {
 
         // TODO: [#11700] Implement this
         else
-            throw new UnsupportedOperationException("The blocking, JDBC backed implementation of reactive batching has not yet been implemented. Use the R2DBC backed implementation, instead, or avoid batching.");
+            throw new UnsupportedOperationException();
     }
 
     @Override
     public final int[] execute() {
-        return
-        Tools.chunks(Arrays.asList(queries), SettingsTools.getBatchSize(Tools.settings(configuration)))
-             .stream()
-             .map(chunk -> execute(Tools.configuration(configuration), chunk.toArray(Tools.EMPTY_QUERY)))
-             .flatMapToInt(IntStream::of)
-             .toArray();
+        return execute(configuration, queries);
     }
 
-    static int[] execute(Configuration configuration, Query[] queries) {
-
-        // [#14784] TODO: Make this configurable also for other dialects
-        if (NO_SUPPORT_BATCH.contains(configuration.dialect()))
-            return Stream.of(queries).mapToInt(configuration.dsl()::execute).toArray();
-
-        DefaultExecuteContext ctx = new DefaultExecuteContext(configuration, BatchMode.MULTIPLE, queries);
+    static int[] execute(final Configuration configuration, final Query[] queries) {
+        ExecuteContext ctx = new DefaultExecuteContext(configuration, queries);
         ExecuteListener listener = ExecuteListeners.get(ctx);
+        Connection connection = ctx.connection();
 
         try {
 
             // [#8968] Keep start() event inside of lifecycle management
             listener.start(ctx);
-            ctx.transformQueries(listener);
 
             if (ctx.statement() == null)
-                ctx.statement(new SettingsEnabledPreparedStatement(connection(ctx)));
-
-            // [#9295] use query timeout from settings
-            int t = SettingsTools.getQueryTimeout(0, ctx.settings());
-            if (t != 0)
-                ctx.statement().setQueryTimeout(t);
+                ctx.statement(new SettingsEnabledPreparedStatement(connection));
 
             String[] batchSQL = ctx.batchSQL();
-            for (int i = 0; i < ctx.batchQueries().length; i++) {
+            for (int i = 0; i < queries.length; i++) {
                 ctx.sql(null);
                 listener.renderStart(ctx);
-
-                Rendered r = Rendered.rendered(configuration, ctx, ctx.batchQueries()[i], false, true);
-                r.setSQLAndParams(ctx);
-                ctx.sql(batchSQL[i] = r.sql);
+                batchSQL[i] = DSL.using(configuration).renderInlined(queries[i]);
+                ctx.sql(batchSQL[i]);
                 listener.renderEnd(ctx);
             }
 
-            for (int i = 0; i < ctx.batchQueries().length; i++) {
+            for (int i = 0; i < queries.length; i++) {
                 ctx.sql(batchSQL[i]);
                 listener.prepareStart(ctx);
                 ctx.statement().addBatch(batchSQL[i]);
                 listener.prepareEnd(ctx);
             }
+
+            // [#9295] use query timeout from settings
+            int t = SettingsTools.getQueryTimeout(0, ctx.settings());
+            if (t != 0)
+                ctx.statement().setQueryTimeout(t);
 
             listener.executeStart(ctx);
 
@@ -167,14 +150,5 @@ final class BatchMultiple extends AbstractBatch {
         finally {
             Tools.safeClose(listener, ctx);
         }
-    }
-
-    // -------------------------------------------------------------------------
-    // The Object API
-    // -------------------------------------------------------------------------
-
-    @Override
-    public String toString() {
-        return dsl.queries(queries).toString();
     }
 }

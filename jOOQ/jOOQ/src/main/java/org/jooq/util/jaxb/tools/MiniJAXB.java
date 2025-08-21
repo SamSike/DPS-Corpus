@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -50,9 +50,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -80,10 +78,8 @@ import org.jooq.tools.reflect.Reflect;
 import org.jooq.tools.reflect.ReflectException;
 
 import org.jetbrains.annotations.ApiStatus.Internal;
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.ErrorHandler;
@@ -139,7 +135,7 @@ public final class MiniJAXB {
     public static void marshal(XMLAppendable object, Writer out) {
         try {
             XMLBuilder builder = XMLBuilder.formatting();
-            XmlRootElement e = getAnnotation(object.getClass(), XmlRootElement.class);
+            XmlRootElement e = object.getClass().getAnnotation(XmlRootElement.class);
             if (e != null) {
                 out.write("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n");
                 builder.append(e.name(), object);
@@ -148,7 +144,6 @@ public final class MiniJAXB {
                 builder.append(object);
 
             builder.appendTo(out);
-            out.flush();
         }
         catch (Exception e) {
             throw new ConfigurationException("Cannot print object", e);
@@ -232,91 +227,57 @@ public final class MiniJAXB {
         if (result == null)
             return;
 
-        Map<String, Field> fieldsByElementName = fieldsByElementName(fieldsByClass, result.getClass());
-        NodeList childNodes = element.getChildNodes();
+        Map<String, Field> map = fieldsByElementName(fieldsByClass, result.getClass());
 
+        NodeList childNodes = element.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node item = childNodes.item(i);
-            unmarshal1(result, item, fieldsByClass, fieldsByElementName);
-        }
 
-        NamedNodeMap attributes = element.getAttributes();
+            if (item.getNodeType() != Node.ELEMENT_NODE)
+                continue;
 
-        for (int i = 0; i < attributes.getLength(); i++) {
-            Node item = attributes.item(i);
-            unmarshal1(result, item, fieldsByClass, fieldsByElementName);
-        }
-    }
-
-    private static void unmarshal1(Object result, Node item, Map<Class<?>, Map<String, Field>> fieldsByClass, Map<String, Field> fieldsByName) throws Exception {
-        Field child = null;
-        Element childElement = null;
-        String textContent = null;
-
-        if (item.getNodeType() == Node.ELEMENT_NODE) {
-            childElement = (Element) item;
-            child = fieldsByName.remove(childElement.getTagName());
-
+            Element childElement = (Element) item;
+            Field child = map.get(childElement.getTagName());
             if (child == null)
-                child = fieldsByName.remove(childElement.getLocalName());
-
-            if (child != null)
-                textContent = childElement.getTextContent();
-        }
-        else if (item.getNodeType() == Node.ATTRIBUTE_NODE) {
-            Attr childAttr = (Attr) item;
-            child = fieldsByName.remove(childAttr.getName());
-
+                child = map.get(childElement.getLocalName());
+            // skip unknown elements
             if (child == null)
-                child = fieldsByName.remove(childAttr.getLocalName());
+                continue;
 
-            if (child != null)
-                textContent = childAttr.getValue();
-        }
+            XmlElementWrapper w = child.getAnnotation(XmlElementWrapper.class);
+            XmlElement e = child.getAnnotation(XmlElement.class);
+            XmlJavaTypeAdapter a = child.getAnnotation(XmlJavaTypeAdapter.class);
+            XmlList l = child.getAnnotation(XmlList.class);
 
-        // skip unknown elements
-        if (child == null)
-            return;
+            String childName = child.getName();
+            Class<?> childType = child.getType();
 
-        XmlElementWrapper w = child.getAnnotation(XmlElementWrapper.class);
-        XmlElement e = child.getAnnotation(XmlElement.class);
-        XmlJavaTypeAdapter a = child.getAnnotation(XmlJavaTypeAdapter.class);
-        XmlList l = child.getAnnotation(XmlList.class);
+            if (List.class.isAssignableFrom(childType) && w != null && e != null) {
+                List<Object> list = new ArrayList<Object>();
+                unmarshalList0(list, childElement, e.name(), (Class<?>) ((ParameterizedType) child.getGenericType()).getActualTypeArguments()[0], fieldsByClass);
+                Reflect.on(result).set(childName, list);
+            }
+            else if (List.class.isAssignableFrom(childType) && l != null) {
+                List<Object> list = new ArrayList<Object>(asList(childElement.getTextContent().split(" +")));
+                Reflect.on(result).set(childName, Convert.convert(list, (Class<?>) ((ParameterizedType) child.getGenericType()).getActualTypeArguments()[0]));
+            }
+            else if (childType.getAnnotation(XmlEnum.class) != null) {
+                Reflect.on(result).set(childName, Reflect.onClass(childType).call("fromValue", childElement.getTextContent().trim()));
+            }
+            else if (childType.getAnnotation(XmlType.class) != null) {
+                Object object = Reflect.on(childType).create().get();
+                Reflect.on(result).set(childName, object);
 
-        String childName = child.getName();
-        Class<?> childType = child.getType();
-
-        if (List.class.isAssignableFrom(childType) && w != null && e != null) {
-            if (childElement == null)
-                return;
-
-            List<Object> list = new ArrayList<Object>();
-            unmarshalList0(list, childElement, e.name(), (Class<?>) ((ParameterizedType) child.getGenericType()).getActualTypeArguments()[0], fieldsByClass);
-            Reflect.on(result).set(childName, list);
-        }
-        else if (List.class.isAssignableFrom(childType) && l != null) {
-            if (childElement == null)
-                return;
-
-            List<Object> list = new ArrayList<Object>(asList(childElement.getTextContent().split(" +")));
-            Reflect.on(result).set(childName, Convert.convert(list, (Class<?>) ((ParameterizedType) child.getGenericType()).getActualTypeArguments()[0]));
-        }
-        else if (getAnnotation(childType, XmlEnum.class) != null) {
-            Reflect.on(result).set(childName, Reflect.onClass(childType).call("fromValue", textContent.trim()));
-        }
-        else if (getAnnotation(childType, XmlType.class) != null) {
-            Object object = Reflect.on(childType).create().get();
-            Reflect.on(result).set(childName, object);
-
-            unmarshal0(object, childElement, fieldsByClass);
-        }
-        else if (a != null) {
-            @SuppressWarnings("unchecked")
-            XmlAdapter<Object, Object> adapter = a.value().getDeclaredConstructor().newInstance();
-            Reflect.on(result).set(childName, adapter.unmarshal(textContent.trim()));
-        }
-        else {
-            Reflect.on(result).set(childName, Convert.convert(textContent.trim(), childType));
+                unmarshal0(object, childElement, fieldsByClass);
+            }
+            else if (a != null) {
+                @SuppressWarnings("unchecked")
+                XmlAdapter<Object, Object> adapter = a.value().getDeclaredConstructor().newInstance();
+                Reflect.on(result).set(childName, adapter.unmarshal(childElement.getTextContent().trim()));
+            }
+            else {
+                Reflect.on(result).set(childName, Convert.convert(childElement.getTextContent().trim(), childType));
+            }
         }
     }
 
@@ -324,21 +285,15 @@ public final class MiniJAXB {
         if (result == null)
             return;
 
-        // [#13897] Distinguish between lists of xs:complexType and xs:simpleType
-        boolean isComplexType = getAnnotation(type, XmlType.class) != null;
         NodeList list = element.getChildNodes();
         for (int i = 0; i < list.getLength(); i++) {
             Node item = list.item(i);
 
             if (item.getNodeType() == Node.ELEMENT_NODE) {
                 if (name.equals(((Element) item).getTagName()) || name.equals(((Element) item).getLocalName())) {
-                    if (isComplexType) {
-                        Object o = Reflect.on(type).create().get();
-                        unmarshal0(o, (Element) item, fieldsByClass);
-                        result.add(o);
-                    }
-                    else
-                        result.add(Convert.convert(item.getTextContent().trim(), type));
+                    Object o = Reflect.on(type).create().get();
+                    unmarshal0(o, (Element) item, fieldsByClass);
+                    result.add(o);
                 }
             }
         }
@@ -346,7 +301,6 @@ public final class MiniJAXB {
 
     private static Map<String, Field> fieldsByElementName(Map<Class<?>, Map<String, Field>> fieldsByClass, Class<?> type) {
         Map<String, Field> result = fieldsByClass.get(type);
-
         if (result == null) {
             result = new HashMap<String, Field>();
             fieldsByClass.put(type, result);
@@ -372,8 +326,7 @@ public final class MiniJAXB {
                 result.put(childElementName, child);
             }
         }
-
-        return new HashMap<>(result);
+        return result;
     }
 
     private static DocumentBuilder builder(Class<?> type) {
@@ -447,7 +400,6 @@ public final class MiniJAXB {
     private static String getNamespace(Class<?> type) {
         if (type != null && type.getPackage() != null && type.getPackage().isAnnotationPresent(XmlSchema.class))
             return type.getPackage().getAnnotation(XmlSchema.class).namespace();
-
         return null;
     }
 
@@ -485,53 +437,33 @@ public final class MiniJAXB {
         if (second == null)
             return first;
 
-        Class<T> firstClass = (Class<T>) first.getClass();
-        Class<T> secondClass = (Class<T>) second.getClass();
-
-        if (!firstClass.isAssignableFrom(secondClass) && !secondClass.isAssignableFrom(firstClass))
-            throw new IllegalArgumentException("Can only append compatible types");
+        Class<T> klass = (Class<T>) first.getClass();
+        if (klass != second.getClass())
+            throw new IllegalArgumentException("Can only append identical types");
         // [#8527] support enum types
-        else if (firstClass.isEnum())
+        else if (klass.isEnum())
             return first;
 
         // We're assuming that XJC generated objects are all in the same package
-        Package pkg = firstClass.getPackage();
+        Package pkg = klass.getPackage();
         try {
-            Class<T> defaultsClass = nonGradleExtensionClass(firstClass);
-            T defaults = defaultsClass.getDeclaredConstructor().newInstance();
+            T defaults = klass.getDeclaredConstructor().newInstance();
 
-            methodLoop:
-            for (Method setter : firstClass.getMethods()) {
-                if (setter.getName().startsWith("set") && setter.getParameterCount() == 1) {
-
-                    // [#12985] [#15974] [#15966] Don't call any gradle specific setters.
-                    try {
-                        defaultsClass.getMethod(setter.getName(), setter.getParameterTypes());
-                    }
-                    catch (NoSuchMethodException e) {
-                        continue methodLoop;
-                    }
-
-
-                    Method defaultsGetter;
-                    Method firstGetter;
-                    Method secondGetter;
+            for (Method setter : klass.getMethods()) {
+                if (setter.getName().startsWith("set")) {
+                    Method getter;
 
                     try {
-                        defaultsGetter = defaultsClass.getMethod("get" + setter.getName().substring(3));
-                        firstGetter = firstClass.getMethod("get" + setter.getName().substring(3));
-                        secondGetter = secondClass.getMethod("get" + setter.getName().substring(3));
+                        getter = klass.getMethod("get" + setter.getName().substring(3));
                     }
                     catch (NoSuchMethodException e) {
-                        defaultsGetter = defaultsClass.getMethod("is" + setter.getName().substring(3));
-                        firstGetter = firstClass.getMethod("is" + setter.getName().substring(3));
-                        secondGetter = firstClass.getMethod("is" + setter.getName().substring(3));
+                        getter = klass.getMethod("is" + setter.getName().substring(3));
                     }
 
                     Class<?> childType = setter.getParameterTypes()[0];
-                    Object firstChild = firstGetter.invoke(first);
-                    Object secondChild = secondGetter.invoke(second);
-                    Object defaultChild = defaults != null ? defaultsGetter.invoke(defaults) : null;
+                    Object firstChild = getter.invoke(first);
+                    Object secondChild = getter.invoke(second);
+                    Object defaultChild = getter.invoke(defaults);
 
                     if (Collection.class.isAssignableFrom(childType))
                         ((List) firstChild).addAll((List) secondChild);
@@ -549,22 +481,5 @@ public final class MiniJAXB {
         }
 
         return first;
-    }
-
-    /**
-     * [#12985] [#15974] [#15966] Gradle generates a subclass for our
-     * configuration extensions, which will accept an injected argument. We
-     * shouldn't use that subclass here.
-     */
-    @SuppressWarnings("unchecked")
-    private static <T> Class<T> nonGradleExtensionClass(Class<T> klass) {
-        while (klass.getName().startsWith("org.jooq.codegen.gradle"))
-            klass = (Class<T>) klass.getSuperclass();
-
-        return klass;
-    }
-
-    private static <A extends Annotation> A getAnnotation(Class<?> klass, Class<A> annotation) {
-        return nonGradleExtensionClass(klass).getAnnotation(annotation);
     }
 }

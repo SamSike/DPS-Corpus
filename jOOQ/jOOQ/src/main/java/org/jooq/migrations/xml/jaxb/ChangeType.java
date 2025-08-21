@@ -26,35 +26,10 @@ import jakarta.xml.bind.annotation.XmlType;
 @XmlEnum
 public enum ChangeType {
 
-
-    /**
-     * ADD a file to the migration.
-     * 
-     */
     ADD,
-
-    /**
-     * MODIFY a file from the migration.
-     * 
-     */
     MODIFY,
-
-    /**
-     * DELETE a file from the migration.
-     * 
-     */
     DELETE,
-
-    /**
-     * RENAME a file in the migration.
-     * 
-     */
     RENAME,
-
-    /**
-     * COPY a file within the migration.
-     * 
-     */
     COPY;
 
     public String value() {

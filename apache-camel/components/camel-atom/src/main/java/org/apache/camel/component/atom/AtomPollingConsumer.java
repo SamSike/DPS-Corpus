@@ -18,32 +18,29 @@ package org.apache.camel.component.atom;
 
 import java.io.IOException;
 
-import com.apptasticsoftware.rssreader.Item;
-import com.apptasticsoftware.rssreader.RssReader;
+import org.apache.abdera.model.Document;
+import org.apache.abdera.model.Feed;
 import org.apache.camel.Processor;
 import org.apache.camel.component.feed.FeedPollingConsumer;
+import org.apache.camel.util.ObjectHelper;
 
 /**
  * Consumer to poll atom feeds and return the full feed.
  */
 public class AtomPollingConsumer extends FeedPollingConsumer {
 
-    private RssReader rssReader;
-
     public AtomPollingConsumer(AtomEndpoint endpoint, Processor processor) {
         super(endpoint, processor);
     }
 
     @Override
-    protected void doStart() throws Exception {
-        this.rssReader = new RssReader();
-        this.rssReader.addItemExtension("name", Item::setAuthor);
-        super.doStart();
-    }
-
-    @Override
     protected Object createFeed() throws IOException {
-        return AtomUtils.readItems(endpoint.getCamelContext(), endpoint.getFeedUri(), rssReader, endpoint.isSortEntries());
+        Document<Feed> document;
+        if (ObjectHelper.isEmpty(endpoint.getUsername()) || ObjectHelper.isEmpty(endpoint.getPassword())) {
+            document = AtomUtils.parseDocument(endpoint.getFeedUri());
+        } else {
+            document = AtomUtils.parseDocument(endpoint.getFeedUri(), endpoint.getUsername(), endpoint.getPassword());
+        }
+        return document.getRoot();
     }
-
 }

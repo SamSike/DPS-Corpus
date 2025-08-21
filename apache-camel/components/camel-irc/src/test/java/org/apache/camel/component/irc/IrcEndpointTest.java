@@ -76,7 +76,7 @@ public class IrcEndpointTest {
     @Test
     public void doHandleIrcErrorNickInUse() {
         when(connection.getNick()).thenReturn("nick");
-        endpoint.handleIrcError(IRCConstants.ERR_NICKNAMEINUSE);
+        endpoint.handleIrcError(IRCConstants.ERR_NICKNAMEINUSE, "foo");
 
         verify(connection).doNick("nick-");
         when(connection.getNick()).thenReturn("nick---");

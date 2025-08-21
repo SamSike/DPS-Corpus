@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SimpleLanguageTransformRandomTest extends ContextTestSupport {
 
     @Test
-    public void testSimpleTransform() {
+    public void testSimpleTransform() throws Exception {
         int out = template.requestBodyAndHeader("direct:start", "Random number", "max", "5", int.class);
         assertTrue(out <= 5);
 
@@ -40,9 +40,9 @@ public class SimpleLanguageTransformRandomTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").transform().simple("${random(1,${header.max})}");
             }
         };

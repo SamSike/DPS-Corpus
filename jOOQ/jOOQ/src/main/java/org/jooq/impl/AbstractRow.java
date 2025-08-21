@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,14 +41,8 @@ import static org.jooq.Clause.FIELD_ROW;
 // ...
 // ...
 import static org.jooq.impl.Keywords.K_ROW;
-import static org.jooq.impl.Names.N_COALESCE;
 import static org.jooq.impl.Names.N_ROW;
 import static org.jooq.impl.QueryPartListView.wrap;
-import static org.jooq.impl.Tools.extractVal;
-import static org.jooq.impl.Tools.isVal;
-import static org.jooq.impl.Tools.isVal1;
-import static org.jooq.impl.Tools.map;
-import static org.jooq.impl.Tools.nullSafe;
 
 import java.util.Collection;
 import java.util.function.Function;
@@ -57,27 +51,20 @@ import java.util.stream.Stream;
 import org.jooq.Binding;
 import org.jooq.Clause;
 import org.jooq.Comment;
-import org.jooq.Comparator;
 import org.jooq.Condition;
 import org.jooq.Configuration;
 import org.jooq.Context;
 import org.jooq.Converter;
 import org.jooq.DataType;
 import org.jooq.Field;
-import org.jooq.Fields;
 import org.jooq.Name;
-// ...
 import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.Record1;
 // ...
 import org.jooq.Row;
 import org.jooq.Row1;
 import org.jooq.Row2;
-import org.jooq.Select;
-import org.jooq.ContextConverter;
 import org.jooq.SelectField;
-import org.jooq.TableField;
 // ...
 import org.jooq.impl.QOM.UnmodifiableList;
 
@@ -85,14 +72,7 @@ import org.jooq.impl.QOM.UnmodifiableList;
  * A common base class for the various degrees of {@link Row1}, {@link Row2},
  * etc.
  */
-abstract class AbstractRow<R extends Record>
-extends
-    AbstractQueryPart
-implements
-    Row,
-    FieldsTrait,
-    SelectField<R>
-{
+abstract class AbstractRow<R extends Record> extends AbstractQueryPart implements Row, SelectField<R> {
 
     private static final Clause[] CLAUSES = { FIELD_ROW };
 
@@ -171,7 +151,7 @@ implements
     }
 
     @Override
-    public final ContextConverter<?, R> getConverter() {
+    public final Converter<?, R> getConverter() {
         return rf().getConverter();
     }
 
@@ -229,8 +209,7 @@ implements
 
         findConversionCandidates: {
             for (int i = 0; i < size; i++)
-                if (isVal1(fields.field(i), v -> v.inferredDataType)
-                    && !isVal1(row.field(i), v -> v.inferredDataType))
+                if (fields.field(i) instanceof Val && !(row.field(i) instanceof Val))
                     break findConversionCandidates;
 
             return this;
@@ -239,12 +218,9 @@ implements
         Field<?>[] result = new Field[size];
         for (int i = 0; i < size; i++) {
             Field<?> f = fields.field(i);
-            Val<?> val;
 
-            if (isVal1(fields.field(i), v -> v.inferredDataType)
-                    && !isVal1(row.field(i), v -> v.inferredDataType)
-                    && (val = extractVal(f)) != null)
-                result[i] = val.convertTo(row.field(i).getDataType());
+            if (f instanceof Val)
+                result[i] = ((Val) f).convertTo(row.field(i).getDataType());
             else
                 result[i] = f;
         }
@@ -258,7 +234,6 @@ implements
 
     @Override
     public final void accept(Context<?> ctx) {
-        switch (ctx.family()) {
 
 
 
@@ -270,21 +245,6 @@ implements
 
 
 
-
-
-
-
-
-
-
-
-            default:
-                acceptDefault(ctx);
-                break;
-        }
-    }
-
-    final void acceptDefault(Context<?> ctx) {
         ctx.sql("(")
            .visit(wrap(fields.fields))
            .sql(")");
@@ -299,60 +259,173 @@ implements
     // XXX: Row accessor API
     // ------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    static final Condition compare(Row arg1, Comparator comparator, Row arg2) {
-        switch (comparator) {
-            case EQUALS:
-                return new RowEq(arg1, arg2);
-            case GREATER:
-                return new RowGt(arg1, arg2);
-            case GREATER_OR_EQUAL:
-                return new RowGe(arg1, arg2);
-            case LESS:
-                return new RowLt(arg1, arg2);
-            case LESS_OR_EQUAL:
-                return new RowLe(arg1, arg2);
-            case NOT_EQUALS:
-                return new RowNe(arg1, arg2);
-
-            case IS_DISTINCT_FROM:
-                return new RowIsDistinctFrom(arg1, arg2, false);
-            case IS_NOT_DISTINCT_FROM:
-                return new RowIsDistinctFrom(arg1, arg2, true);
-        }
-
-        throw new IllegalArgumentException("Comparator not supported: " + comparator);
-    }
-
-    final Condition compare(Comparator comparator, Row row) {
-        return compare(this, comparator, row);
-    }
-
     @Override
     public final int size() {
         return fields.size();
     }
 
     @Override
-    public final Fields internalFieldsRow() {
-        return fields;
+    public final Row fieldsRow() {
+        return this;
     }
 
     @Override
-    public final Row fieldsRow() {
-        return this;
+    public final Stream<Field<?>> fieldStream() {
+        return Stream.of(fields());
+    }
+
+    @Override
+    public final <T> Field<T> field(Field<T> field) {
+        return fields.field(field);
+    }
+
+    /**
+     * @deprecated This method hides static import {@link DSL#field(String)}.
+     */
+    @Deprecated
+    @Override
+    public final Field<?> field(String name) {
+        return fields.field(name);
+    }
+
+    /**
+     * @deprecated This method hides static import {@link DSL#field(String, Class)}.
+     */
+    @Deprecated
+    @Override
+    public final <T> Field<T> field(String name, Class<T> type) {
+        return fields.field(name, type);
+    }
+
+    /**
+     * @deprecated This method hides static import {@link DSL#field(String, DataType)}.
+     */
+    @Deprecated
+    @Override
+    public final <T> Field<T> field(String name, DataType<T> dataType) {
+        return fields.field(name, dataType);
+    }
+
+    /**
+     * @deprecated This method hides static import {@link DSL#field(Name)}.
+     */
+    @Deprecated
+    @Override
+    public final Field<?> field(Name name) {
+        return fields.field(name);
+    }
+
+    /**
+     * @deprecated This method hides static import {@link DSL#field(Name, Class)}.
+     */
+    @Deprecated
+    @Override
+    public final <T> Field<T> field(Name name, Class<T> type) {
+        return fields.field(name, type);
+    }
+
+    /**
+     * @deprecated This method hides static import {@link DSL#field(Name, DataType)}.
+     */
+    @Deprecated
+    @Override
+    public final <T> Field<T> field(Name name, DataType<T> dataType) {
+        return fields.field(name, dataType);
+    }
+
+    @Override
+    public final Field<?> field(int index) {
+        return fields.field(index);
+    }
+
+    @Override
+    public final <T> Field<T> field(int index, Class<T> type) {
+        return fields.field(index, type);
+    }
+
+    @Override
+    public final <T> Field<T> field(int index, DataType<T> dataType) {
+        return fields.field(index, dataType);
+    }
+
+    @Override
+    public final Field<?>[] fields() {
+        return fields.fields();
+    }
+
+    @Override
+    public final Field<?>[] fields(Field<?>... f) {
+        return fields.fields(f);
+    }
+
+    @Override
+    public final Field<?>[] fields(String... fieldNames) {
+        return fields.fields(fieldNames);
+    }
+
+    @Override
+    public final Field<?>[] fields(Name... fieldNames) {
+        return fields.fields(fieldNames);
+    }
+
+    @Override
+    public final Field<?>[] fields(int... fieldIndexes) {
+        return fields.fields(fieldIndexes);
+    }
+
+    @Override
+    public final int indexOf(Field<?> field) {
+        return fields.indexOf(field);
+    }
+
+    @Override
+    public final int indexOf(String fieldName) {
+        return fields.indexOf(fieldName);
+    }
+
+    @Override
+    public final int indexOf(Name fieldName) {
+        return fields.indexOf(fieldName);
+    }
+
+    @Override
+    public final Class<?>[] types() {
+        return fields.types();
+    }
+
+    @Override
+    public final Class<?> type(int fieldIndex) {
+        return fields.type(fieldIndex);
+    }
+
+    @Override
+    public final Class<?> type(String fieldName) {
+        return fields.type(fieldName);
+    }
+
+    @Override
+    public final Class<?> type(Name fieldName) {
+        return fields.type(fieldName);
+    }
+
+    @Override
+    public final DataType<?>[] dataTypes() {
+        return fields.dataTypes();
+    }
+
+    @Override
+    public final DataType<?> dataType(int fieldIndex) {
+        return fields.dataType(fieldIndex);
+    }
+
+    @Override
+    public final DataType<?> dataType(String fieldName) {
+        return fields.dataType(fieldName);
+    }
+
+    @Override
+    public final DataType<?> dataType(Name fieldName) {
+        return fields.dataType(fieldName);
     }
 
     // ------------------------------------------------------------------------
@@ -402,23 +475,4 @@ implements
 
 
 
-    // ------------------------------------------------------------------------
-    // XXX: Object API
-    // ------------------------------------------------------------------------
-
-    @Override
-    public int hashCode() {
-        return fields.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object that) {
-        if (this == that)
-            return true;
-
-        if (that instanceof AbstractRow<?> r)
-            return fields.equals(r.fields);
-
-        return super.equals(that);
-    }
 }

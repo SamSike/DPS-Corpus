@@ -25,10 +25,6 @@ import org.apache.camel.cloud.ServiceDefinition;
 import org.apache.camel.cloud.ServiceDiscovery;
 import org.apache.camel.support.service.ServiceSupport;
 
-/**
- * @deprecated since 4.7
- */
-@Deprecated(since = "4.7")
 public class DefaultServiceDiscovery
         extends ServiceSupport
         implements ServiceDiscovery, CamelContextAware {

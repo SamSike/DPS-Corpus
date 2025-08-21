@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 
 @Disabled("Manual test")
 public class BigDataSetManualTest extends ContextTestSupport {
-    protected final SimpleDataSet dataSet = new SimpleDataSet(20000);
+    protected SimpleDataSet dataSet = new SimpleDataSet(20000);
 
     @Test
     public void testDataSet() throws Exception {
@@ -37,16 +37,16 @@ public class BigDataSetManualTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("foo", dataSet);
         return answer;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 // start this first to make sure the "direct:foo" consumer is
                 // ready
                 from("direct:foo").to("dataset:foo");

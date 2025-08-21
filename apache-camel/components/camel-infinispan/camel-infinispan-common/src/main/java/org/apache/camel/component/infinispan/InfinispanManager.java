@@ -32,8 +32,9 @@ public interface InfinispanManager<C extends BasicCacheContainer> extends BasicC
 
     default <K, V> BasicCache<K, V> getCache(Message message, String defaultCache) {
         final String cacheName = message.getHeader(InfinispanConstants.CACHE_NAME, defaultCache, String.class);
+        final BasicCache<K, V> cache = getCache(cacheName);
 
-        return getCache(cacheName);
+        return cache;
     }
 
     default <K, V, CacheType extends BasicCache<K, V>> CacheType getCache(

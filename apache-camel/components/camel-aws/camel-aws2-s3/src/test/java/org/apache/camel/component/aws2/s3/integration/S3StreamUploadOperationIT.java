@@ -67,14 +67,11 @@ public class S3StreamUploadOperationIT extends Aws2S3Base {
             @Override
             public void configure() {
                 String awsEndpoint1
-                        = String.format(
-                                "aws2-s3://%s?autoCreateBucket=true&streamingUploadMode=true&keyName=fileTest.txt&batchMessageNumber=25&namingStrategy=random",
-                                name.get());
+                        = "aws2-s3://mycamel-1?autoCreateBucket=true&streamingUploadMode=true&keyName=fileTest.txt&batchMessageNumber=25&namingStrategy=random";
 
                 from("direct:stream1").to(awsEndpoint1).to("mock:result");
 
-                String awsEndpoint = String.format("aws2-s3://%s?autoCreateBucket=true",
-                        name.get());
+                String awsEndpoint = "aws2-s3://mycamel-1?autoCreateBucket=true";
 
                 from("direct:listObjects").to(awsEndpoint);
             }

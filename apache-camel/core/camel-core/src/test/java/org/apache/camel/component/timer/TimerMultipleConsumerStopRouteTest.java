@@ -44,10 +44,10 @@ public class TimerMultipleConsumerStopRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("timer:mytimer?period=100").routeId("foo").to("mock:foo");
 
                 from("timer:mytimer?period=100").routeId("bar").to("mock:bar");

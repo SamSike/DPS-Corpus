@@ -32,10 +32,10 @@ public class EnricherLambdaAggregateTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .enrich("direct:b", (e1, e2) -> {
                             String b = e1.getMessage().getBody(String.class) + "+" + e2.getMessage().getBody(String.class);

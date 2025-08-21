@@ -20,12 +20,12 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.ExchangePropertyKey;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.PooledExchange;
 import org.apache.camel.Processor;
 import org.apache.camel.spi.ProcessorExchangeFactory;
 import org.apache.camel.support.DefaultPooledExchange;
 import org.apache.camel.support.ExchangeHelper;
-import org.apache.camel.support.ResetableClock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +59,7 @@ public class PooledProcessorExchangeFactory extends PrototypeProcessorExchangeFa
 
     @Override
     public Exchange createCopy(Exchange exchange) {
-        Exchange answer = pool.poll();
+        ExtendedExchange answer = (ExtendedExchange) pool.poll();
         if (answer == null) {
             if (statisticsEnabled) {
                 statistics.created.increment();
@@ -73,14 +73,16 @@ public class PooledProcessorExchangeFactory extends PrototypeProcessorExchangeFa
         }
 
         // reset exchange for reuse
-        ((ResetableClock) exchange.getClock()).reset();
+        PooledExchange ee = (PooledExchange) answer;
+        ee.reset(System.currentTimeMillis());
+
         ExchangeHelper.copyResults(answer, exchange);
         return answer;
     }
 
     @Override
     public Exchange createCorrelatedCopy(Exchange exchange, boolean handover) {
-        Exchange answer = pool.poll();
+        ExtendedExchange answer = (ExtendedExchange) pool.poll();
         if (answer == null) {
             if (statisticsEnabled) {
                 statistics.created.increment();
@@ -89,7 +91,7 @@ public class PooledProcessorExchangeFactory extends PrototypeProcessorExchangeFa
             answer = new DefaultPooledExchange(exchange);
             // if creating a copy via constructor (as above) then the unit of work is also
             // copied over to answer, which we then must set to null as we do not want to share unit of work
-            answer.getExchangeExtension().setUnitOfWork(null);
+            answer.setUnitOfWork(null);
         } else {
             if (statisticsEnabled) {
                 statistics.acquired.increment();
@@ -97,14 +99,15 @@ public class PooledProcessorExchangeFactory extends PrototypeProcessorExchangeFa
         }
 
         // reset exchange for reuse
-        ((ResetableClock) exchange.getClock()).reset();
+        PooledExchange ee = (PooledExchange) answer;
+        ee.reset(System.currentTimeMillis());
 
         ExchangeHelper.copyResults(answer, exchange);
         // do not reuse message id on copy
         answer.getIn().setMessageId(null);
         if (handover) {
             // Need to hand over the completion for async invocation
-            answer.getExchangeExtension().handoverCompletions(exchange);
+            answer.handoverCompletions(exchange);
         }
         // set a correlation id so we can track back the original exchange
         answer.setProperty(ExchangePropertyKey.CORRELATION_ID, exchange.getExchangeId());
@@ -116,7 +119,7 @@ public class PooledProcessorExchangeFactory extends PrototypeProcessorExchangeFa
         Exchange answer = pool.poll();
         if (answer == null) {
             // create a new exchange as there was no free from the pool
-            answer = DefaultPooledExchange.newFromEndpoint(fromEndpoint, exchangePattern);
+            answer = new DefaultPooledExchange(fromEndpoint, exchangePattern);
             if (statisticsEnabled) {
                 statistics.created.increment();
             }
@@ -127,7 +130,9 @@ public class PooledProcessorExchangeFactory extends PrototypeProcessorExchangeFa
         }
 
         // reset exchange for reuse
-        ((ResetableClock) answer.getClock()).reset();
+        PooledExchange ee = (PooledExchange) answer;
+        ee.reset(System.currentTimeMillis());
+
         return answer;
     }
 

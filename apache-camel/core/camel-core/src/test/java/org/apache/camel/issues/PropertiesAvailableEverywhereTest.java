@@ -53,10 +53,10 @@ public class PropertiesAvailableEverywhereTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // Properties in headers
                 from("direct:header-start").setHeader("foo", simple("{{foo}}")).choice().when(simple("${header.foo} == 'bar'"))
                         .to("mock:header-ok").otherwise().to("mock:ko");

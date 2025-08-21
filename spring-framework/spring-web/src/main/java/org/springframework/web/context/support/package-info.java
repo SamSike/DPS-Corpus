@@ -2,7 +2,9 @@
  * Classes supporting the {@code org.springframework.web.context} package,
  * such as WebApplicationContext implementations and various utility classes.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.context.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

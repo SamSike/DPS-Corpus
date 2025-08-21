@@ -21,16 +21,15 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class KafkaToDIT extends BaseKafkaTestSupport {
+public class KafkaToDIT extends BaseEmbeddedKafkaTestSupport {
 
     @Test
     public void testToD() {
-        contextExtension.getProducerTemplate().sendBodyAndHeader("direct:start", "Hello bar", "where", "bar");
-        contextExtension.getProducerTemplate().sendBodyAndHeader("direct:start", "Hello beer", "where", "beer");
+        template.sendBodyAndHeader("direct:start", "Hello bar", "where", "bar");
+        template.sendBodyAndHeader("direct:start", "Hello beer", "where", "beer");
 
         // there should only be one kafka endpoint
-        long count = contextExtension.getContext().getEndpoints().stream().filter(e -> e.getEndpointUri().startsWith("kafka:"))
-                .count();
+        long count = context.getEndpoints().stream().filter(e -> e.getEndpointUri().startsWith("kafka:")).count();
         assertEquals(1, count, "There should only be 1 kafka endpoint");
     }
 

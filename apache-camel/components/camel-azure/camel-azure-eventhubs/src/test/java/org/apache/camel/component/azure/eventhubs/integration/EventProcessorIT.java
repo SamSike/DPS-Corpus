@@ -109,7 +109,7 @@ public class EventProcessorIT {
     }
 
     @AfterAll
-    public void cleanup() {
+    public void tearDown() {
         containerAsyncClient.delete().block();
     }
 }

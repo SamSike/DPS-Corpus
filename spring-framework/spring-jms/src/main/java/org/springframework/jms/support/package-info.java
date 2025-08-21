@@ -2,7 +2,9 @@
  * This package provides generic JMS support classes,
  * to be used by higher-level classes like JmsTemplate.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jms.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -23,6 +23,7 @@ package org.apache.camel.component.salesforce.dto.generated;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+//CHECKSTYLE:OFF
 /**
  * Salesforce Enumeration DTO for picklist Industry
  */
@@ -115,3 +116,4 @@ public enum Account_IndustryEnum {
     }
 
 }
+//CHECKSTYLE:ON

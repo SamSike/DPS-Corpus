@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package org.aopalliance.intercept;
 
 import java.lang.reflect.Method;
+
+import javax.annotation.Nonnull;
 
 /**
  * Description of an invocation to a method, given to an interceptor
@@ -36,6 +38,7 @@ public interface MethodInvocation extends Invocation {
 	 * {@link Joinpoint#getStaticPart()} method (same result).
 	 * @return the method being called
 	 */
+	@Nonnull
 	Method getMethod();
 
 }

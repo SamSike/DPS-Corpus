@@ -193,7 +193,7 @@ public class YamlDeserializerSupport {
                     answer.put(StringHelper.dashToCamelCase(key), asMap(val));
                     break;
                 default:
-                    throw new UnsupportedNodeTypeException(val);
+                    throw new UnsupportedNodeTypeException(node);
             }
         }
 
@@ -388,21 +388,27 @@ public class YamlDeserializerSupport {
 
     public static Map<String, Object> parseParameters(NodeTuple node) {
         Node value = node.getValueNode();
-        return asScalarMap(value);
+        final YamlDeserializationContext dc = getDeserializationContext(value);
+        Map<String, Object> answer = asScalarMap(value);
+        return answer;
     }
 
     public static void setSteps(Block target, Node node) {
-        setStepsFlowMode(target, node);
+        final YamlDeserializationContext dc = getDeserializationContext(node);
+        boolean flow = dc.getDeserializationMode() == YamlDeserializationMode.FLOW;
+        setSteps(target, node, flow);
     }
 
-    private static void setStepsFlowMode(Block target, Node node) {
+    private static void setSteps(Block target, Node node, boolean flowMode) {
         Block block = target;
         for (ProcessorDefinition<?> definition : asFlatList(node, ProcessorDefinition.class)) {
             block.addOutput(definition);
-            // flow mode
-            if (definition instanceof OutputNode) {
-                if (ObjectHelper.isEmpty(definition.getOutputs())) {
-                    block = definition;
+
+            if (flowMode) {
+                if (definition instanceof OutputNode) {
+                    if (ObjectHelper.isEmpty(definition.getOutputs())) {
+                        block = definition;
+                    }
                 }
             }
         }

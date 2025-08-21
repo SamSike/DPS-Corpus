@@ -35,7 +35,7 @@ public class GenerateXmlTest extends XmlTestSupport {
         RouteDefinition route = context.route();
         route.from("seda:a");
         route.filter(new XQueryExpression("in.header.foo == 'bar'")).to("seda:b");
-        route.description("This is a description of the route");
+        route.description(null, "This is a description of the route", "en");
         dump(context);
     }
 
@@ -45,7 +45,7 @@ public class GenerateXmlTest extends XmlTestSupport {
         RouteDefinition route = context.route();
         route.from("seda:a");
         route.filter(new GroovyExpression("in.headers.any { h -> h.startsWith('foo') }")).to("seda:b");
-        route.description("This is a description of the route");
+        route.description(null, "This is a description of the route", "en");
         List<?> list = route.getOutputs();
         assertEquals(1, list.size(), "Size of list: " + list);
 
@@ -57,7 +57,7 @@ public class GenerateXmlTest extends XmlTestSupport {
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
         StringWriter buffer = new StringWriter();
         marshaller.marshal(context, buffer);
-        log.info("Created: {}", buffer);
+        log.info("Created: " + buffer);
         assertNotNull(buffer);
         String out = buffer.toString();
         assertTrue(out.indexOf("This is a description of the route") > 0, "Should contain the description");

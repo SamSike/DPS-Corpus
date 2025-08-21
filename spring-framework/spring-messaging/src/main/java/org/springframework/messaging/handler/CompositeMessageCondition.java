@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.util.Assert;
 
@@ -81,7 +80,7 @@ public class CompositeMessageCondition implements MessageCondition<CompositeMess
 	}
 
 	@Override
-	public @Nullable CompositeMessageCondition getMatchingCondition(Message<?> message) {
+	public CompositeMessageCondition getMatchingCondition(Message<?> message) {
 		List<MessageCondition<?>> result = new ArrayList<>(this.messageConditions.size());
 		for (MessageCondition<?> condition : this.messageConditions) {
 			MessageCondition<?> matchingCondition = (MessageCondition<?>) condition.getMatchingCondition(message);
@@ -98,7 +97,7 @@ public class CompositeMessageCondition implements MessageCondition<CompositeMess
 		checkCompatible(other);
 		List<MessageCondition<?>> otherConditions = other.getMessageConditions();
 		for (int i = 0; i < this.messageConditions.size(); i++) {
-			int result = compare(this.messageConditions.get(i), otherConditions.get(i), message);
+			int result = compare (this.messageConditions.get(i), otherConditions.get(i), message);
 			if (result != 0) {
 				return result;
 			}
@@ -132,9 +131,10 @@ public class CompositeMessageCondition implements MessageCondition<CompositeMess
 		if (this == other) {
 			return true;
 		}
-		if (!(other instanceof CompositeMessageCondition otherComposite)) {
+		if (!(other instanceof CompositeMessageCondition)) {
 			return false;
 		}
+		CompositeMessageCondition otherComposite = (CompositeMessageCondition) other;
 		checkCompatible(otherComposite);
 		List<MessageCondition<?>> otherConditions = otherComposite.getMessageConditions();
 		for (int i = 0; i < this.messageConditions.size(); i++) {

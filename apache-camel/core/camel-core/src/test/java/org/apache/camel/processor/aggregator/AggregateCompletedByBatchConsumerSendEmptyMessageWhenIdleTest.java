@@ -40,10 +40,10 @@ public class AggregateCompletedByBatchConsumerSendEmptyMessageWhenIdleTest exten
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?initialDelay=0&delay=10&sendEmptyMessageWhenIdle=true"))
                         .aggregate(constant(true), new UseLatestAggregationStrategy())
                         .completionFromBatchConsumer().to("mock:result");

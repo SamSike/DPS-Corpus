@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,15 @@
 
 package org.springframework.r2dbc.core;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.function.BiFunction;
 
 import io.r2dbc.spi.ColumnMetadata;
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.LinkedCaseInsensitiveMap;
 
 /**
@@ -49,18 +49,17 @@ import org.springframework.util.LinkedCaseInsensitiveMap;
 public class ColumnMapRowMapper implements BiFunction<Row, RowMetadata, Map<String, Object>> {
 
 	/** A default {@code ColumnMapRowMapper} instance. */
-	public static final ColumnMapRowMapper INSTANCE = new ColumnMapRowMapper();
+	public final static ColumnMapRowMapper INSTANCE = new ColumnMapRowMapper();
 
 
-	@SuppressWarnings("deprecation")  // getColumnNames() is deprecated as of R2DBC 0.9
 	@Override
 	public Map<String, Object> apply(Row row, RowMetadata rowMetadata) {
-		List<? extends ColumnMetadata> columns = rowMetadata.getColumnMetadatas();
+		Collection<String> columns = rowMetadata.getColumnNames();
 		int columnCount = columns.size();
 		Map<String, Object> mapOfColValues = createColumnMap(columnCount);
 		int index = 0;
-		for (ColumnMetadata column : columns) {
-			String key = getColumnKey(column.getName());
+		for (String column : columns) {
+			String key = getColumnKey(column);
 			Object obj = getColumnValue(row, index++);
 			mapOfColValues.put(key, obj);
 		}
@@ -95,7 +94,8 @@ public class ColumnMapRowMapper implements BiFunction<Row, RowMetadata, Map<Stri
 	 * @param index is the column index
 	 * @return the Object returned
 	 */
-	protected @Nullable Object getColumnValue(Row row, int index) {
+	@Nullable
+	protected Object getColumnValue(Row row, int index) {
 		return row.get(index);
 	}
 

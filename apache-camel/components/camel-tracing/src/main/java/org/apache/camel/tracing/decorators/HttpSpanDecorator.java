@@ -16,9 +16,6 @@
  */
 package org.apache.camel.tracing.decorators;
 
-import org.apache.camel.Endpoint;
-import org.apache.camel.Exchange;
-
 public class HttpSpanDecorator extends AbstractHttpSpanDecorator {
 
     @Override
@@ -29,16 +26,6 @@ public class HttpSpanDecorator extends AbstractHttpSpanDecorator {
     @Override
     public String getComponentClassName() {
         return "org.apache.camel.component.http.HttpComponent";
-    }
-
-    @Override
-    public String getHttpMethod(Exchange exchange, Endpoint endpoint) {
-        //this component supports the httpMethod parameter, so we try to find it first
-        String methodFromParameters = HttpMethodHelper.getHttpMethodFromParameters(exchange, endpoint);
-        if (methodFromParameters != null) {
-            return methodFromParameters;
-        }
-        return super.getHttpMethod(exchange, endpoint);
     }
 
 }

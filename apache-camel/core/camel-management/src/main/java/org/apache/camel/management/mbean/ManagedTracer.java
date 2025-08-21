@@ -84,16 +84,6 @@ public class ManagedTracer implements ManagedTracerMBean {
     }
 
     @Override
-    public boolean isTraceRests() {
-        return tracer.isTraceRests();
-    }
-
-    @Override
-    public boolean isTraceTemplates() {
-        return tracer.isTraceTemplates();
-    }
-
-    @Override
     public long getTraceCounter() {
         return tracer.getTraceCounter();
     }

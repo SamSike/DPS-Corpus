@@ -21,7 +21,6 @@ import java.util.Objects;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
-import org.apache.camel.support.jsse.SSLContextParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,9 +110,6 @@ public class MllpConfiguration implements Cloneable {
     @UriParam(label = "advanced", defaultValue = "" + 0x40000000)
     int maxBufferSize = 0x40000000;
 
-    @UriParam(label = "security")
-    private SSLContextParameters sslContextParameters;
-
     public MllpConfiguration() {
     }
 
@@ -149,7 +145,6 @@ public class MllpConfiguration implements Cloneable {
             target.validatePayload = source.validatePayload;
             target.charsetName = source.charsetName;
             target.maxConcurrentConsumers = source.maxConcurrentConsumers;
-            target.sslContextParameters = source.sslContextParameters;
         }
     }
 
@@ -561,31 +556,6 @@ public class MllpConfiguration implements Cloneable {
         this.maxBufferSize = maxBufferSize;
     }
 
-    /**
-     * Gets the SSLContextParameters for securing TCP connections.
-     *
-     * Returns the SSLContextParameters that configure SSL/TLS settings for the MLLP component. If null, plain TCP
-     * communication will be used.
-     *
-     * @return the configured SSLContextParameters, or null if not set.
-     */
-    public SSLContextParameters getSslContextParameters() {
-        return sslContextParameters;
-    }
-
-    /**
-     * Sets the SSLContextParameters for securing TCP connections.
-     *
-     * If set, the MLLP component will use SSL/TLS for securing both producer and consumer TCP connections. This allows
-     * the configuration of trust stores, key stores, protocols, and other SSL/TLS settings. If not set, the MLLP
-     * component will use plain TCP communication.
-     *
-     * @param sslContextParameters the SSLContextParameters to use for secure connections.
-     */
-    public void setSslContextParameters(SSLContextParameters sslContextParameters) {
-        this.sslContextParameters = sslContextParameters;
-    }
-
     @Override
     public int hashCode() {
         return Objects.hash(bridgeErrorHandler,
@@ -612,8 +582,7 @@ public class MllpConfiguration implements Cloneable {
                 validatePayload,
                 charsetName,
                 minBufferSize,
-                maxBufferSize,
-                sslContextParameters);
+                maxBufferSize);
     }
 
     @Override
@@ -652,8 +621,7 @@ public class MllpConfiguration implements Cloneable {
                 && Objects.equals(reuseAddress, rhs.reuseAddress)
                 && Objects.equals(receiveBufferSize, rhs.receiveBufferSize)
                 && Objects.equals(sendBufferSize, rhs.sendBufferSize)
-                && Objects.equals(charsetName, rhs.charsetName)
-                && Objects.equals(sslContextParameters, rhs.sslContextParameters);
+                && Objects.equals(charsetName, rhs.charsetName);
     }
 
     @Override
@@ -684,7 +652,6 @@ public class MllpConfiguration implements Cloneable {
                + ", minBufferSize=" + minBufferSize
                + ", maxBufferSize=" + maxBufferSize
                + ", charsetName='" + charsetName + '\''
-               + ", sslContextParameters=" + sslContextParameters
                + '}';
     }
 }

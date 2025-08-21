@@ -39,7 +39,7 @@ class RestDefinitionEmitter implements CodeEmitter<RestsDefinition> {
     @Override
     public CodeEmitter<RestsDefinition> emit(final String method, final Object... args) {
         try {
-            final Class<?> type = variable.getClass();
+            final Class<? extends Object> type = variable.getClass();
 
             final Object[] arguments = argumentsFor(args);
 
@@ -69,7 +69,7 @@ class RestDefinitionEmitter implements CodeEmitter<RestsDefinition> {
             }
         }
 
-        return arguments.toArray(new Object[0]);
+        return arguments.toArray(new Object[arguments.size()]);
     }
 
     static Class<?>[] parameterTypesOf(final Object[] args) {

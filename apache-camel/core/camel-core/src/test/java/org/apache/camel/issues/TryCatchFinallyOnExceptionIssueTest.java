@@ -37,10 +37,10 @@ public class TryCatchFinallyOnExceptionIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:start").onException(Exception.class).handled(true).redeliveryDelay(0).maximumRedeliveries(2)
                         .to("mock:error").end().doTry()
                         .throwException(new IllegalArgumentException("Damn")).doFinally().to("mock:finally").end()

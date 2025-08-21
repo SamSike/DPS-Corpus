@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -87,7 +84,7 @@ implements
             allNotNull((DataType<T>) StringUtils.defaultIfNull(array.getDataType().getArrayComponentDataType(), OTHER), array, index)
         );
 
-        this.array = nullSafeNotNull(array, ((DataType) OTHER).array());
+        this.array = nullSafeNotNull(array, ((DataType) OTHER).getArrayDataType());
         this.index = nullSafeNotNull(index, INTEGER);
     }
 
@@ -114,16 +111,10 @@ implements
 
 
 
+
+
             case HSQLDB:
-                if (Boolean.TRUE.equals(ctx.data(DATA_STORE_ASSIGNMENT)))
-                    ctx.visit(new Standard());
-                else
-                    ctx.visit(when(cardinality(array).ge(index), new Standard()));
-
-                break;
-
-            case TRINO:
-                ctx.visit(function(N_ELEMENT_AT, getDataType(), array, index));
+                ctx.visit(when(cardinality(array).ge(index), new Standard()));
                 break;
 
             default:
@@ -132,7 +123,7 @@ implements
         }
     }
 
-    private class Standard extends AbstractField<T> implements QOM.UTransient {
+    private class Standard extends AbstractField<T> implements UTransient {
 
         Standard() {
             super(ArrayGet.this.getQualifiedName(), ArrayGet.this.getDataType());
@@ -140,29 +131,7 @@ implements
 
         @Override
         public void accept(Context<?> ctx) {
-            switch (ctx.family()) {
-
-
-
-
-
-
-                default:
-                    accept0(ctx, index);
-                    break;
-            }
-        }
-
-        private void accept0(Context<?> ctx, Field<?> i) {
-
-            // [#13808] When using an array element reference as a store assignment
-            //          target, the parentheses must not be rendered
-            if (array instanceof TableField || Boolean.TRUE.equals(ctx.data(DATA_STORE_ASSIGNMENT)))
-                ctx.visit(array).sql('[').visit(i).sql(']');
-
-            // [#12480] For expressions the parens might be required
-            else
-                ctx.sql('(').visit(array).sql(')').sql('[').visit(i).sql(']');
+            ctx.sql('(').visit(array).sql(')').sql('[').visit(index).sql(']');
         }
     }
 
@@ -186,29 +155,51 @@ implements
     // -------------------------------------------------------------------------
 
     @Override
-    public final Field<T[]> $arg1() {
+    public final Field<T[]> $array() {
         return array;
     }
 
     @Override
-    public final Field<Integer> $arg2() {
+    public final Field<Integer> $index() {
         return index;
     }
 
     @Override
-    public final QOM.ArrayGet<T> $arg1(Field<T[]> newValue) {
-        return $constructor().apply(newValue, $arg2());
+    public final QOM.ArrayGet<T> $array(Field<T[]> newValue) {
+        return $constructor().apply(newValue, $index());
     }
 
     @Override
-    public final QOM.ArrayGet<T> $arg2(Field<Integer> newValue) {
-        return $constructor().apply($arg1(), newValue);
+    public final QOM.ArrayGet<T> $index(Field<Integer> newValue) {
+        return $constructor().apply($array(), newValue);
     }
 
-    @Override
     public final Function2<? super Field<T[]>, ? super Field<Integer>, ? extends QOM.ArrayGet<T>> $constructor() {
         return (a1, a2) -> new ArrayGet<>(a1, a2);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // -------------------------------------------------------------------------
     // XXX: The Object API
@@ -216,7 +207,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.ArrayGet<?> o) {
+        if (that instanceof QOM.ArrayGet) { QOM.ArrayGet<?> o = (QOM.ArrayGet<?>) that;
             return
                 StringUtils.equals($array(), o.$array()) &&
                 StringUtils.equals($index(), o.$index())

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ package org.springframework.web.server.handler;
 import org.springframework.web.testfixture.server.handler.AbstractResponseStatusExceptionHandlerTests;
 
 /**
- * Tests for {@link ResponseStatusExceptionHandler}.
+ * Unit tests for {@link ResponseStatusExceptionHandler}.
  *
  * @author Rossen Stoyanchev
  * @author Juergen Hoeller
  */
-class ResponseStatusExceptionHandlerTests extends AbstractResponseStatusExceptionHandlerTests {
+public class ResponseStatusExceptionHandlerTests extends AbstractResponseStatusExceptionHandlerTests {
 
-	// all tests in superclass
+	// all tests in super class
 
 }

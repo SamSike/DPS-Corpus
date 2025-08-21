@@ -49,7 +49,7 @@ import static org.apache.camel.component.schematron.constant.Constants.SAXON_TRA
  * Validate XML payload using the Schematron Library.
  */
 @UriEndpoint(firstVersion = "2.15.0", scheme = "schematron", title = "Schematron", syntax = "schematron:path",
-             remote = false, producerOnly = true, category = { Category.VALIDATION })
+             producerOnly = true, category = { Category.VALIDATION })
 public class SchematronEndpoint extends DefaultEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(SchematronEndpoint.class);
@@ -57,7 +57,7 @@ public class SchematronEndpoint extends DefaultEndpoint {
     private TransformerFactory transformerFactory;
 
     @UriPath
-    @Metadata(required = true, supportFileReference = true)
+    @Metadata(required = true)
     private String path;
     @UriParam
     private boolean abort;
@@ -72,11 +72,6 @@ public class SchematronEndpoint extends DefaultEndpoint {
     public SchematronEndpoint(String uri, String path, SchematronComponent component) {
         super(uri, component);
         this.path = path;
-    }
-
-    @Override
-    public boolean isRemote() {
-        return false;
     }
 
     @Override

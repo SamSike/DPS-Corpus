@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,14 +42,15 @@ package org.jooq.impl;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
+import static org.jooq.SQLDialect.H2;
+// ...
+import static org.jooq.SQLDialect.HSQLDB;
 import static org.jooq.SQLDialect.IGNITE;
 // ...
 // ...
@@ -67,7 +68,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.conf.WriteIfReadonly.IGNORE;
@@ -78,25 +78,18 @@ import static org.jooq.impl.DSL.row;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.table;
 import static org.jooq.impl.DSL.when;
-import static org.jooq.impl.Default.patchDefaultForUpdate;
-import static org.jooq.impl.FieldMapsForInsert.EMULATE_UDT_PATHS;
 import static org.jooq.impl.Keywords.K_ROW;
 import static org.jooq.impl.Tools.anyMatch;
 import static org.jooq.impl.Tools.apply;
 import static org.jooq.impl.Tools.collect;
 import static org.jooq.impl.Tools.fieldName;
-import static org.jooq.impl.Tools.fieldNameString;
-import static org.jooq.impl.Tools.fieldNameStrings;
 import static org.jooq.impl.Tools.filter;
 import static org.jooq.impl.Tools.flattenEntrySet;
 import static org.jooq.impl.Tools.map;
 import static org.jooq.impl.Tools.row0;
 import static org.jooq.impl.Tools.unqualified;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_FORCE_LIMIT_WITH_ORDER_BY;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_STORE_ASSIGNMENT;
+import static org.jooq.impl.Tools.visitSubquery;
 import static org.jooq.impl.Tools.SimpleDataKey.DATA_ON_DUPLICATE_KEY_WHERE;
-import static org.jooq.impl.UDTPathFieldImpl.construct;
-import static org.jooq.impl.UDTPathFieldImpl.patchUDTConstructor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -105,9 +98,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import org.jooq.Clause;
 import org.jooq.Condition;
@@ -117,28 +107,22 @@ import org.jooq.FieldOrRow;
 import org.jooq.FieldOrRowOrSelect;
 import org.jooq.GeneratorStatementType;
 // ...
-import org.jooq.QueryPart;
 import org.jooq.RenderContext.CastMode;
 import org.jooq.Row;
 import org.jooq.SQLDialect;
 import org.jooq.Select;
 import org.jooq.Table;
-import org.jooq.UDT;
-import org.jooq.UDTPathField;
-import org.jooq.UDTPathTableField;
 import org.jooq.exception.DataTypeException;
+import org.jooq.impl.QOM.UNotYetImplemented;
 
 /**
  * @author Lukas Eder
  */
-final class FieldMapForUpdate
-extends
-    AbstractQueryPartMap<FieldOrRow, FieldOrRowOrSelect>
-{
+final class FieldMapForUpdate extends AbstractQueryPartMap<FieldOrRow, FieldOrRowOrSelect> implements UNotYetImplemented {
 
-    static final Set<SQLDialect> CASTS_NEEDED                      = SQLDialect.supportedBy(POSTGRES, TRINO, YUGABYTEDB);
-    static final Set<SQLDialect> NO_SUPPORT_QUALIFY                = SQLDialect.supportedBy(CLICKHOUSE, DUCKDB, POSTGRES, SQLITE, YUGABYTEDB);
-    static final Set<SQLDialect> EMULATE_RVE_SET_QUERY             = SQLDialect.supportedBy(CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, IGNITE, MARIADB, MYSQL, SQLITE);
+    static final Set<SQLDialect> CASTS_NEEDED                      = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
+    static final Set<SQLDialect> NO_SUPPORT_QUALIFY                = SQLDialect.supportedBy(POSTGRES, SQLITE, YUGABYTEDB);
+    static final Set<SQLDialect> EMULATE_RVE_SET_QUERY             = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, IGNITE, MARIADB, MYSQL, SQLITE);
 
 
 
@@ -147,8 +131,7 @@ extends
 
 
 
-    static final Set<SQLDialect> NO_SUPPORT_RVE_SET                = SQLDialect.supportedBy(CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, IGNITE, MARIADB, MYSQL, SQLITE);
-    static final Set<SQLDialect> NO_SUPPORT_RVE_SET_IN_MERGE       = SQLDialect.supportedBy(CLICKHOUSE, CUBRID, DERBY, FIREBIRD, IGNITE, MARIADB, MYSQL, SQLITE);
+    static final Set<SQLDialect> SUPPORT_RVE_SET                   = SQLDialect.supportedBy(H2, HSQLDB, POSTGRES, YUGABYTEDB);
     static final Set<SQLDialect> REQUIRE_RVE_ROW_CLAUSE            = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
 
     final Table<?>               table;
@@ -165,56 +148,6 @@ extends
         this.table = table;
         this.setClause = setClause;
         this.assignmentClause = assignmentClause;
-    }
-
-
-
-    final FieldMapForUpdate emulateUDTPaths(Context<?> ctx) {
-        if (EMULATE_UDT_PATHS.contains(ctx.dialect()) && anyMatch(keySet(), f -> f instanceof UDTPathField && table.indexOf((Field<?>) f) == -1)) {
-            FieldMapForUpdate result = new FieldMapForUpdate(table, setClause, assignmentClause);
-
-            for (Entry<FieldOrRow, FieldOrRowOrSelect> e : entrySet()) {
-                FieldOrRow key = e.getKey();
-                FieldOrRowOrSelect value = e.getValue();
-
-                if (key instanceof UDTPathField && value instanceof Field && table.indexOf((Field<?>) key) == -1) {
-                    UDTPathField<?, ?, ?> u = (UDTPathField<?, ?, ?>) key;
-                    UDTPathTableField<?, ?, ?> f = u.getTableField();
-
-                    // [#9666] [#18777] TODO: Offer throwing a MetaDataUnavailableException.
-                    if (f.getUDT() == null) {
-                        result.put(key, value);
-                    }
-                    else {
-                        BiFunction<UDT<?>, Field<?>, Field<?>> init = (u0, f0) -> {
-                            return new UDTPathFieldImpl<>(
-                                f0.getUnqualifiedName(),
-                                f0.getDataType(),
-                                UDTPathFieldImpl.getPathFieldFor(u0, u).getQualifier(),
-                                u0,
-                                null
-                            );
-                        };
-
-                        result.compute(f, (k, v) -> {
-                            FieldOrRowOrSelect v0 = v;
-
-                            if (v0 == null)
-                                v0 = construct(f.getUDT(), init);
-
-                            patchUDTConstructor(u, (UDTConstructor<?>) v0, (Field<?>) value, init);
-                            return v0;
-                        });
-                    }
-                }
-                else
-                    result.put(key, value);
-            }
-
-            return result;
-        }
-
-        return null;
     }
 
     @Override
@@ -280,22 +213,19 @@ extends
             ctx.start(assignmentClause);
 
         // A multi-row update was specified
-        if (key instanceof Row multiRow) {
+        if (key instanceof Row) { Row multiRow = (Row) key;
             Row multiValue = value instanceof Row ? (Row) value : null;
             Select<?> multiSelect = value instanceof Select ? (Select<?>) value : null;
 
             // [#6884] This syntax can be emulated trivially, if the RHS is not a SELECT subquery
-            if (multiValue != null
-                && (NO_SUPPORT_RVE_SET.contains(ctx.dialect())
-                        || (NO_SUPPORT_RVE_SET_IN_MERGE.contains(ctx.dialect()) && setClause == SetClause.MERGE))
-            ) {
+            if (multiValue != null && !SUPPORT_RVE_SET.contains(ctx.dialect())) {
                 FieldMapForUpdate map = new FieldMapForUpdate(table(), setClause, null);
 
                 for (int i = 0; i < multiRow.size(); i++) {
                     Field<?> k = multiRow.field(i);
                     Field<?> v = multiValue.field(i);
 
-                    map.put(k, patchDefaultForUpdate(ctx, Tools.field(v, k), k));
+                    map.put(k, Tools.field(v, k));
                 }
 
                 ctx.visit(map);
@@ -316,15 +246,9 @@ extends
 
 
 
-
-
-
             // [#10523] Generic SET ROW = (SELECT ..) emulation that works
             //          everywhere, but inefficiently duplicates the subquery
-            else if (multiSelect != null
-                && (EMULATE_RVE_SET_QUERY.contains(ctx.dialect())
-                        || (NO_SUPPORT_RVE_SET_IN_MERGE.contains(ctx.dialect()) && setClause == SetClause.MERGE))
-            ) {
+            else if (multiSelect != null && EMULATE_RVE_SET_QUERY.contains(ctx.dialect())) {
                 Row row = removeReadonly(ctx, multiRow);
                 int size = row.size();
                 Select<?> select;
@@ -338,8 +262,10 @@ extends
 
                 // [#10523] Simplify special case
                 if (size == 1) {
-                    acceptStoreAssignment(ctx, false, row.field(0));
-                    visitSubquery(ctx, select);
+                    ctx.qualify(false, c -> c.visit(row.field(0)))
+                       .sql(" = ");
+
+                    visitSubquery(ctx, select, false, false, false);
                 }
                 else {
                     for (int i = 0; i < size; i++) {
@@ -355,74 +281,61 @@ extends
             }
             else {
                 Row row = removeReadonly(ctx, multiRow);
-                acceptStoreAssignment(ctx, false, row);
 
-                if (multiValue != null) {
+                ctx.qualify(false, c -> c.visit(row))
+                   .sql(" = ");
+
+                // Some dialects don't really support row value expressions on the
+                // right hand side of a SET clause
+                if (multiValue != null
 
 
 
+                ) {
 
+                    // [#6763] Incompatible change in PostgreSQL 10 requires ROW() constructor for
+                    //         single-degree rows. Let's just always render it, here.
+                    if (REQUIRE_RVE_ROW_CLAUSE.contains(ctx.dialect()))
+                        ctx.visit(K_ROW).sql(" ");
 
-
-                    {
-
-                        // [#6763] Incompatible change in PostgreSQL 10 requires ROW() constructor for
-                        //         single-degree rows. Let's just always render it, here.
-                        if (REQUIRE_RVE_ROW_CLAUSE.contains(ctx.dialect()))
-                            ctx.visit(K_ROW).sql(" ");
-
-                        ctx.visit(removeReadonly(ctx, multiRow, multiValue));
-                    }
+                    ctx.visit(removeReadonly(ctx, multiRow, multiValue));
                 }
 
                 // Subselects or subselect emulations of row value expressions
                 else if (multiSelect != null) {
+                    Select<?> select;
+
+                    if (multiValue != null)
+                        select = select(removeReadonly(ctx, multiRow, multiValue).fields());
 
 
 
 
+                    else
+                        select = multiSelect;
 
-
-
-                    visitSubquery(ctx, multiSelect);
+                    visitSubquery(ctx, select, false, false, false);
                 }
             }
         }
 
         // A regular (non-multi-row) update was specified
         else {
-            acceptStoreAssignment(ctx, supportsQualify, key);
+            ctx.qualify(supportsQualify, c -> c.visit(key))
+               .sql(" = ");
 
             // [#8479] Emulate WHERE clause using CASE
             Condition condition = (Condition) ctx.data(DATA_ON_DUPLICATE_KEY_WHERE);
             if (condition != null)
                 ctx.visit(when(condition, (Field) value).else_(key));
-
-
-
-
             else
-                ctx.visit(patchDefaultForUpdate(ctx, (Field) value, (Field) key));
+                ctx.visit(value);
         }
 
         if (assignmentClause != null)
             ctx.end(assignmentClause);
 
         return ",";
-    }
-
-    private static final void acceptStoreAssignment(Context<?> ctx, boolean qualify, QueryPart target) {
-        ctx.qualify(qualify, c1 -> c1.data(DATA_STORE_ASSIGNMENT, true, c2 -> c2.visit(target)))
-           .sql(" = ");
-    }
-
-    private static final void visitSubquery(Context<?> ctx, Select<?> select) {
-
-
-
-
-
-        Tools.visitSubquery(ctx, select);
     }
 
     static final Row removeReadonly(Context<?> ctx, Row row) {
@@ -439,7 +352,7 @@ extends
 
     final void set(Map<?, ?> map) {
         map.forEach((k, v) -> {
-            if (k instanceof Row r) {
+            if (k instanceof Row) { Row r = (Row) k;
                 put(r, (FieldOrRowOrSelect) v);
             }
             else {
@@ -574,61 +487,9 @@ extends
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     enum SetClause {
         UPDATE,
         INSERT,
         MERGE
-    }
-
-    // -------------------------------------------------------------------------
-    // XXX: Query Object Model
-    // -------------------------------------------------------------------------
-
-    @Override
-    final Function<? super Map<FieldOrRow, FieldOrRowOrSelect>, ? extends AbstractQueryPartMap<FieldOrRow, FieldOrRowOrSelect>> $construct() {
-        return m -> {
-            FieldMapForUpdate r = new FieldMapForUpdate(table, setClause, assignmentClause);
-            r.putAll(m);
-            return r;
-        };
     }
 }

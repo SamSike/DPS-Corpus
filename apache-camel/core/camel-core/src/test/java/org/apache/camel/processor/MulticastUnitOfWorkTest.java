@@ -50,20 +50,20 @@ public class MulticastUnitOfWorkTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setTracing(true);
 
                 from("direct:start").process(new MyUOWProcessor("A")).multicast().to("direct:foo", "direct:bar");
 
                 from("direct:foo").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         assertNull(sync, "First exchange is not complete yet");
                     }
                 }).process(new MyUOWProcessor("B")).process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         lastOne = "processor";
                     }
                 }).to("mock:result");
@@ -75,14 +75,14 @@ public class MulticastUnitOfWorkTest extends ContextTestSupport {
 
     private static final class MyUOWProcessor implements Processor {
 
-        private final String id;
+        private String id;
 
         private MyUOWProcessor(String id) {
             this.id = id;
         }
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             exchange.getUnitOfWork().addSynchronization(new Synchronization() {
                 public void onComplete(Exchange exchange) {
                     sync = "onComplete" + id;

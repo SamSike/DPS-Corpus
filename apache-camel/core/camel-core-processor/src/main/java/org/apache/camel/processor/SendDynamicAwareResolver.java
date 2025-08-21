@@ -16,7 +16,10 @@
  */
 package org.apache.camel.processor;
 
+import java.io.IOException;
+
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.FactoryFinder;
 import org.apache.camel.spi.SendDynamicAware;
 import org.slf4j.Logger;
@@ -31,18 +34,19 @@ public class SendDynamicAwareResolver {
     private FactoryFinder factoryFinder;
 
     public SendDynamicAware resolve(CamelContext context, String scheme) {
+        String name = scheme;
 
         // use factory finder to find a custom implementations
         Class<?> type = null;
         try {
-            type = findFactory(scheme, context);
+            type = findFactory(name, context);
         } catch (Exception e) {
             // ignore
         }
 
         if (type != null) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Found SendDynamicAware: {} via: {}{}", type.getName(), factoryFinder.getResourcePath(), scheme);
+                LOG.debug("Found SendDynamicAware: {} via: {}{}", type.getName(), factoryFinder.getResourcePath(), name);
             }
             if (SendDynamicAware.class.isAssignableFrom(type)) {
                 SendDynamicAware answer = (SendDynamicAware) context.getInjector().newInstance(type, false);
@@ -57,9 +61,9 @@ public class SendDynamicAwareResolver {
         return null;
     }
 
-    private Class<?> findFactory(String name, CamelContext context) {
+    private Class<?> findFactory(String name, CamelContext context) throws IOException {
         if (factoryFinder == null) {
-            factoryFinder = context.getCamelContextExtension().getFactoryFinder(RESOURCE_PATH);
+            factoryFinder = context.adapt(ExtendedCamelContext.class).getFactoryFinder(RESOURCE_PATH);
         }
         return factoryFinder.findClass(name).orElse(null);
     }

@@ -59,8 +59,6 @@ import com.azure.storage.blob.sas.BlobSasPermission;
 import com.azure.storage.blob.sas.BlobServiceSasSignatureValues;
 import com.azure.storage.blob.specialized.AppendBlobClient;
 import com.azure.storage.blob.specialized.BlobInputStream;
-import com.azure.storage.blob.specialized.BlobLeaseClient;
-import com.azure.storage.blob.specialized.BlobLeaseClientBuilder;
 import com.azure.storage.blob.specialized.BlockBlobClient;
 import com.azure.storage.blob.specialized.PageBlobClient;
 import com.azure.storage.common.StorageSharedKeyCredential;
@@ -126,7 +124,7 @@ public class BlobClientWrapper {
             final Map<String, String> metadata, AccessTier tier, final byte[] contentMd5,
             final BlobRequestConditions requestConditions,
             final Duration timeout) {
-        Flux<ByteBuffer> dataBuffer = Utility.convertStreamToByteBuffer(data, length, 4194304, data.markSupported());
+        Flux<ByteBuffer> dataBuffer = Utility.convertStreamToByteBuffer(data, length, 4194304, false);
         BlockBlobSimpleUploadOptions uploadOptions = new BlockBlobSimpleUploadOptions(dataBuffer, length).setHeaders(headers)
                 .setMetadata(metadata).setTier(tier).setContentMd5(contentMd5).setRequestConditions(requestConditions);
         return getBlockBlobClient().uploadWithResponse(uploadOptions, timeout, Context.NONE);
@@ -236,9 +234,5 @@ public class BlobClientWrapper {
 
     private PageBlobClient getPageBlobClient() {
         return client.getPageBlobClient();
-    }
-
-    public BlobLeaseClient getLeaseClient() {
-        return new BlobLeaseClientBuilder().blobClient(client).buildClient();
     }
 }

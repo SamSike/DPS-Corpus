@@ -30,7 +30,7 @@ import org.apache.camel.spi.Metadata;
 @Metadata(firstVersion = "2.0.0", label = "language,core", title = "Tokenize")
 @XmlRootElement(name = "tokenize")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class TokenizerExpression extends SingleInputTypedExpressionDefinition {
+public class TokenizerExpression extends SingleInputExpressionDefinition {
 
     @XmlAttribute(required = true)
     private String token;
@@ -61,19 +61,6 @@ public class TokenizerExpression extends SingleInputTypedExpressionDefinition {
     public TokenizerExpression() {
     }
 
-    protected TokenizerExpression(TokenizerExpression source) {
-        super(source);
-        this.token = source.token;
-        this.endToken = source.endToken;
-        this.inheritNamespaceTagName = source.inheritNamespaceTagName;
-        this.regex = source.regex;
-        this.xml = source.xml;
-        this.includeTokens = source.includeTokens;
-        this.group = source.group;
-        this.groupDelimiter = source.groupDelimiter;
-        this.skipFirst = source.skipFirst;
-    }
-
     public TokenizerExpression(String token) {
         this.token = token;
     }
@@ -89,11 +76,6 @@ public class TokenizerExpression extends SingleInputTypedExpressionDefinition {
         this.group = builder.group;
         this.groupDelimiter = builder.groupDelimiter;
         this.skipFirst = builder.skipFirst;
-    }
-
-    @Override
-    public TokenizerExpression copyDefinition() {
-        return new TokenizerExpression(this);
     }
 
     @Override
@@ -166,8 +148,7 @@ public class TokenizerExpression extends SingleInputTypedExpressionDefinition {
     }
 
     /**
-     * Whether to include the tokens in the parts when using pairs. When including tokens then the endToken property
-     * must also be configured (to use pair mode).
+     * Whether to include the tokens in the parts when using pairs
      * <p/>
      * The default value is false
      */
@@ -209,15 +190,20 @@ public class TokenizerExpression extends SingleInputTypedExpressionDefinition {
         this.skipFirst = skipFirst;
     }
 
+    @Override
     public String toString() {
         if (endToken != null) {
             return "tokenize{body() using tokens: " + token + "..." + endToken + "}";
         } else {
-            String s = getSource();
-            if (s == null) {
-                s = "body";
+            final String source;
+            if (getHeaderName() != null) {
+                source = "header: " + getHeaderName();
+            } else if (getPropertyName() != null) {
+                source = "property: " + getPropertyName();
+            } else {
+                source = "body()";
             }
-            return "tokenize{" + s + " using token: " + token + "}";
+            return "tokenize{" + source + " using token: " + token + "}";
         }
     }
 
@@ -238,7 +224,7 @@ public class TokenizerExpression extends SingleInputTypedExpressionDefinition {
         private String skipFirst;
 
         /**
-         * The (start) token to use as tokenizer, for example, you can use the new line token. You can use simple
+         * The (start) token to use as tokenizer, for example you can use the new line token. You can use simple
          * language as the token to support dynamic tokens.
          */
         public Builder token(String token) {
@@ -256,7 +242,7 @@ public class TokenizerExpression extends SingleInputTypedExpressionDefinition {
         }
 
         /**
-         * To inherit namespaces from a root/parent tag name when using XML, you can use simple language as the tag name
+         * To inherit namespaces from a root/parent tag name when using XML You can use simple language as the tag name
          * to support dynamic names.
          */
         public Builder inheritNamespaceTagName(String inheritNamespaceTagName) {
@@ -321,7 +307,7 @@ public class TokenizerExpression extends SingleInputTypedExpressionDefinition {
         }
 
         /**
-         * To group N parts together, for example, to split big files into chunks of 1000 lines. You can use simple
+         * To group N parts together, for example to split big files into chunks of 1000 lines. You can use simple
          * language as the group to support dynamic group sizes.
          */
         public Builder group(String group) {
@@ -330,17 +316,7 @@ public class TokenizerExpression extends SingleInputTypedExpressionDefinition {
         }
 
         /**
-         * To group N parts together, for example, to split big files into chunks of 1000 lines. You can use simple
-         * language as the group to support dynamic group sizes.
-         */
-        public Builder group(int group) {
-            this.group = Integer.toString(group);
-            return this;
-        }
-
-        /**
-         * Sets the delimiter to use when grouping. If this has not been set, then the token will be used as the
-         * delimiter.
+         * Sets the delimiter to use when grouping. If this has not been set then token will be used as the delimiter.
          */
         public Builder groupDelimiter(String groupDelimiter) {
             this.groupDelimiter = groupDelimiter;

@@ -17,11 +17,8 @@
 package org.apache.camel.maven;
 
 import java.io.File;
-import java.io.FileInputStream;
 
-import org.apache.camel.util.IOHelper;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -87,14 +84,5 @@ public class EipDocumentationEnricherMojoTest {
         } catch (MojoExecutionException e) {
             // Expected.
         }
-    }
-
-    @Test
-    public void testFixXmlOutput() throws Exception {
-        String xml = IOHelper.loadText(new FileInputStream("src/test/resources/enriched-camel-spring.xsd"));
-        String out = EipDocumentationEnricherMojo.fixXmlOutput(xml);
-        Assertions.assertNotNull(out);
-        Assertions.assertNotEquals(xml, out);
-        // System.out.println(out);
     }
 }

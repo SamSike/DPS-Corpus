@@ -16,8 +16,6 @@
  */
 package org.apache.camel.impl.event;
 
-import java.io.Serial;
-
 import org.apache.camel.Exchange;
 import org.apache.camel.spi.CamelEvent;
 
@@ -28,14 +26,14 @@ import org.apache.camel.spi.CamelEvent;
  * event is the first event being send for a given {@link Exchange} lifecycle.
  */
 public class ExchangeCreatedEvent extends AbstractExchangeEvent implements CamelEvent.ExchangeCreatedEvent {
-    private static final @Serial long serialVersionUID = -19248832613958243L;
+    private static final long serialVersionUID = -19248832613958243L;
 
     public ExchangeCreatedEvent(Exchange source) {
         super(source);
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return getExchange().getExchangeId() + " exchange created";
     }
 }

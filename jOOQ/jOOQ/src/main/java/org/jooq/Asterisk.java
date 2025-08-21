@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,8 +40,6 @@ package org.jooq;
 import org.jetbrains.annotations.*;
 import org.jetbrains.annotations.ApiStatus.Experimental;
 
-import java.util.Collection;
-
 import org.jooq.impl.DSL;
 import org.jooq.impl.QOM;
 import org.jooq.impl.QOM.UnmodifiableList;
@@ -58,21 +56,21 @@ import org.jooq.impl.QOM.UnmodifiableList;
  * <p>
  * <strong>Example:</strong>
  * <p>
- * <pre><code>
+ * <code><pre>
  * // Assuming import static org.jooq.impl.DSL.*;
  *
  * using(configuration)
  *    .select(asterisk())
  *    .from(ACTOR)
  *    .fetch();
- * </code></pre>
+ * </pre></code>
  * <p>
  * Instances can be created using {@link DSL#asterisk()}.
  *
  * @see Table#asterisk()
  * @author Lukas Eder
  */
-public interface Asterisk extends SelectFieldOrAsterisk {
+public /* non-sealed */ interface Asterisk extends SelectFieldOrAsterisk {
 
     /**
      * The asterisk (<code>* EXCEPT (fields)</code>) expression to be used in
@@ -107,17 +105,6 @@ public interface Asterisk extends SelectFieldOrAsterisk {
     @NotNull
     @Support
     Asterisk except(Field<?>... fields);
-
-    /**
-     * The asterisk (<code>*</code>) to be used in <code>SELECT</code> clauses.
-     * <p>
-     * This expression is a convenient way to select "all but some fields". Some
-     * dialects (e.g. {@link SQLDialect#H2}) implement this feature natively. In
-     * other dialects, jOOQ expands the asterisk if possible.
-     */
-    @NotNull
-    @Support
-    Asterisk except(Collection<? extends Field<?>> fields);
 
     // -------------------------------------------------------------------------
     // XXX: Query Object Model

@@ -37,9 +37,9 @@ public class BeanPackageScopeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 bindToRegistry("myBean", new MyBean());
 
                 from("direct:in").to("bean:myBean").to("mock:result");

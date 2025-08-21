@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.http;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
@@ -27,15 +28,14 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.GregorianCalendar;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static java.util.stream.Collectors.toList;
@@ -45,7 +45,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 import static org.assertj.core.api.Assertions.entry;
 
 /**
- * Tests for {@link org.springframework.http.HttpHeaders}.
+ * Unit tests for {@link org.springframework.http.HttpHeaders}.
  *
  * @author Arjen Poutsma
  * @author Sebastien Deleuze
@@ -53,45 +53,10 @@ import static org.assertj.core.api.Assertions.entry;
  * @author Juergen Hoeller
  * @author Sam Brannen
  */
-class HttpHeadersTests {
+public class HttpHeadersTests {
 
-	final HttpHeaders headers = new HttpHeaders();
+	private final HttpHeaders headers = new HttpHeaders();
 
-	@Test
-	void constructorUnwrapsReadonly() {
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		HttpHeaders readOnly = HttpHeaders.readOnlyHttpHeaders(headers);
-		assertThat(readOnly.getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
-		HttpHeaders writable = new HttpHeaders(readOnly);
-		writable.setContentType(MediaType.TEXT_PLAIN);
-		// content-type value is cached by ReadOnlyHttpHeaders
-		assertThat(readOnly.getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
-		assertThat(writable.getContentType()).isEqualTo(MediaType.TEXT_PLAIN);
-	}
-
-	@Test
-	void writableHttpHeadersUnwrapsMultiple() {
-		HttpHeaders originalExchangeHeaders = HttpHeaders.readOnlyHttpHeaders(new HttpHeaders());
-		HttpHeaders firewallHeaders = new HttpHeaders(originalExchangeHeaders);
-		HttpHeaders writeable = new HttpHeaders(firewallHeaders);
-		writeable.setContentType(MediaType.APPLICATION_JSON);
-	}
-
-	@Test
-	void copyOfCopiesHeaders() {
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		headers.add("X-Project", "Spring");
-		headers.add("X-Project", "Framework");
-		HttpHeaders readOnly = HttpHeaders.readOnlyHttpHeaders(headers);
-		assertThat(readOnly.getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
-
-		HttpHeaders writable = HttpHeaders.copyOf(readOnly);
-		writable.setContentType(MediaType.TEXT_PLAIN);
-		// content-type value is cached by ReadOnlyHttpHeaders
-		assertThat(readOnly.getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
-		assertThat(writable.getContentType()).isEqualTo(MediaType.TEXT_PLAIN);
-		assertThat(writable.get("X-Project")).contains("Spring", "Framework");
-	}
 
 	@Test
 	void getOrEmpty() {
@@ -164,7 +129,7 @@ class HttpHeadersTests {
 
 	@Test
 	void allow() {
-		Set<HttpMethod> methods = new LinkedHashSet<>(Arrays.asList(HttpMethod.GET, HttpMethod.POST));
+		EnumSet<HttpMethod> methods = EnumSet.of(HttpMethod.GET, HttpMethod.POST);
 		headers.setAllow(methods);
 		assertThat(headers.getAllow()).as("Invalid Allow header").isEqualTo(methods);
 		assertThat(headers.getFirst("Allow")).as("Invalid Allow header").isEqualTo("GET,POST");
@@ -179,17 +144,6 @@ class HttpHeadersTests {
 	}
 
 	@Test
-	void setContentLengthWithNegativeValue() {
-		assertThatIllegalArgumentException().isThrownBy(() ->
-				headers.setContentLength(-1));
-	}
-
-	@Test
-	void getContentLengthReturnsMinusOneForAbsentHeader() {
-		assertThat(headers.getContentLength()).isEqualTo(-1);
-	}
-
-	@Test
 	void contentType() {
 		MediaType contentType = new MediaType("text", "html", StandardCharsets.UTF_8);
 		headers.setContentType(contentType);
@@ -198,8 +152,8 @@ class HttpHeadersTests {
 	}
 
 	@Test
-	void location() {
-		URI location = URI.create("https://www.example.com/hotels");
+	void location() throws URISyntaxException {
+		URI location = new URI("https://www.example.com/hotels");
 		headers.setLocation(location);
 		assertThat(headers.getLocation()).as("Invalid Location header").isEqualTo(location);
 		assertThat(headers.getFirst("Location")).as("Invalid Location header").isEqualTo("https://www.example.com/hotels");
@@ -237,32 +191,17 @@ class HttpHeadersTests {
 		assertThat(headers.getFirst("Host")).as("Invalid Host header").isEqualTo("[::1]");
 	}
 
-	@Test // gh-33716
-	void hostDeletion() {
-		InetSocketAddress host = InetSocketAddress.createUnresolved("localhost", 8080);
-		headers.setHost(host);
-		headers.setHost(null);
-		assertThat(headers.getHost()).as("Host is not deleted").isEqualTo(null);
-		assertThat(headers.getFirst("Host")).as("Host is not deleted").isEqualTo(null);
-	}
-
 	@Test
-	void eTagWithoutQuotes() {
-		headers.setETag("v2.6");
-		assertThat(headers.getETag()).isEqualTo("\"v2.6\"");
-	}
-
-	@Test
-	void weakETagWithoutLeadingQuote() {
-		headers.setETag("W/v2.6\"");
-		assertThat(headers.getETag()).isEqualTo("\"W/v2.6\"\"");
+	void illegalETag() {
+		String eTag = "v2.6";
+		assertThatIllegalArgumentException().isThrownBy(() -> headers.setETag(eTag));
 	}
 
 	@Test
 	void ifMatch() {
 		String ifMatch = "\"v2.6\"";
 		headers.setIfMatch(ifMatch);
-		assertThat(headers.getIfMatch()).containsExactly(ifMatch);
+		assertThat(headers.getIfMatch().get(0)).as("Invalid If-Match header").isEqualTo(ifMatch);
 		assertThat(headers.getFirst("If-Match")).as("Invalid If-Match header").isEqualTo("\"v2.6\"");
 	}
 
@@ -276,7 +215,8 @@ class HttpHeadersTests {
 	void ifMatchMultipleHeaders() {
 		headers.add(HttpHeaders.IF_MATCH, "\"v2,0\"");
 		headers.add(HttpHeaders.IF_MATCH, "W/\"v2,1\", \"v2,2\"");
-		assertThat(headers.get(HttpHeaders.IF_MATCH)).containsExactly("\"v2,0\"", "W/\"v2,1\", \"v2,2\"");
+		assertThat(headers.get(HttpHeaders.IF_MATCH).get(0)).as("Invalid If-Match header").isEqualTo("\"v2,0\"");
+		assertThat(headers.get(HttpHeaders.IF_MATCH).get(1)).as("Invalid If-Match header").isEqualTo("W/\"v2,1\", \"v2,2\"");
 		assertThat(headers.getIfMatch()).contains("\"v2,0\"", "W/\"v2,1\"", "\"v2,2\"");
 	}
 
@@ -284,7 +224,7 @@ class HttpHeadersTests {
 	void ifNoneMatch() {
 		String ifNoneMatch = "\"v2.6\"";
 		headers.setIfNoneMatch(ifNoneMatch);
-		assertThat(headers.getIfNoneMatch()).containsExactly(ifNoneMatch);
+		assertThat(headers.getIfNoneMatch().get(0)).as("Invalid If-None-Match header").isEqualTo(ifNoneMatch);
 		assertThat(headers.getFirst("If-None-Match")).as("Invalid If-None-Match header").isEqualTo("\"v2.6\"");
 	}
 
@@ -292,7 +232,7 @@ class HttpHeadersTests {
 	void ifNoneMatchWildCard() {
 		String ifNoneMatch = "*";
 		headers.setIfNoneMatch(ifNoneMatch);
-		assertThat(headers.getIfNoneMatch()).containsExactly(ifNoneMatch);
+		assertThat(headers.getIfNoneMatch().get(0)).as("Invalid If-None-Match header").isEqualTo(ifNoneMatch);
 		assertThat(headers.getFirst("If-None-Match")).as("Invalid If-None-Match header").isEqualTo("*");
 	}
 
@@ -438,12 +378,13 @@ class HttpHeadersTests {
 	}
 
 	@Test
+	@SuppressWarnings("deprecation")
 	void contentDisposition() {
 		ContentDisposition disposition = headers.getContentDisposition();
 		assertThat(disposition).isNotNull();
 		assertThat(headers.getContentDisposition()).as("Invalid Content-Disposition header").isEqualTo(ContentDisposition.empty());
 
-		disposition = ContentDisposition.attachment().name("foo").filename("foo.txt").build();
+		disposition = ContentDisposition.attachment().name("foo").filename("foo.txt").size(123L).build();
 		headers.setContentDisposition(disposition);
 		assertThat(headers.getContentDisposition()).as("Invalid Content-Disposition header").isEqualTo(disposition);
 	}
@@ -532,45 +473,26 @@ class HttpHeadersTests {
 
 	@Test
 	void acceptLanguage() {
-		String headerValue = "fr-ch, fr;q=0.9, en-*;q=0.8, de;q=0.7, *-us;q=0.6, *;q=0.5";
+		String headerValue = "fr-ch, fr;q=0.9, en-*;q=0.8, de;q=0.7, *;q=0.5";
 		headers.setAcceptLanguage(Locale.LanguageRange.parse(headerValue));
 		assertThat(headers.getFirst(HttpHeaders.ACCEPT_LANGUAGE)).isEqualTo(headerValue);
 
-		List<Locale.LanguageRange> expectedRanges = List.of(
+		List<Locale.LanguageRange> expectedRanges = Arrays.asList(
 				new Locale.LanguageRange("fr-ch"),
 				new Locale.LanguageRange("fr", 0.9),
 				new Locale.LanguageRange("en-*", 0.8),
 				new Locale.LanguageRange("de", 0.7),
-				new Locale.LanguageRange("*-us", 0.6),
 				new Locale.LanguageRange("*", 0.5)
 		);
 		assertThat(headers.getAcceptLanguage()).isEqualTo(expectedRanges);
-		assertThat(headers.getAcceptLanguageAsLocales()).containsExactly(
-				Locale.forLanguageTag("fr-ch"),
-				Locale.forLanguageTag("fr"),
-				Locale.forLanguageTag("en"),
-				Locale.forLanguageTag("de"));
+		assertThat(headers.getAcceptLanguageAsLocales().get(0)).isEqualTo(Locale.forLanguageTag("fr-ch"));
 
 		headers.setAcceptLanguageAsLocales(Collections.singletonList(Locale.FRANCE));
-		assertThat(headers.getAcceptLanguageAsLocales()).first().isEqualTo(Locale.FRANCE);
-	}
-
-	@Test // gh-32259
-	void acceptLanguageTrailingSemicolon() {
-		String headerValue = "en-us,en;,nl;";
-		headers.set(HttpHeaders.ACCEPT_LANGUAGE, headerValue);
-		assertThat(headers.getFirst(HttpHeaders.ACCEPT_LANGUAGE)).isEqualTo(headerValue);
-
-		List<Locale.LanguageRange> expectedRanges = Arrays.asList(
-				new Locale.LanguageRange("en-us"),
-				new Locale.LanguageRange("en"),
-				new Locale.LanguageRange("nl")
-		);
-		assertThat(headers.getAcceptLanguage()).isEqualTo(expectedRanges);
+		assertThat(headers.getAcceptLanguageAsLocales().get(0)).isEqualTo(Locale.FRANCE);
 	}
 
 	@Test // SPR-15603
-	void acceptLanguageWithEmptyValue() {
+	void acceptLanguageWithEmptyValue() throws Exception {
 		this.headers.set(HttpHeaders.ACCEPT_LANGUAGE, "");
 		assertThat(this.headers.getAcceptLanguageAsLocales()).isEqualTo(Collections.emptyList());
 	}
@@ -584,7 +506,7 @@ class HttpHeadersTests {
 
 	@Test
 	void contentLanguageSerialized() {
-		headers.set(HttpHeaders.CONTENT_LANGUAGE, "de, en_CA");
+		headers.set(HttpHeaders.CONTENT_LANGUAGE,  "de, en_CA");
 		assertThat(headers.getContentLanguage()).as("Expected one (first) locale").isEqualTo(Locale.GERMAN);
 	}
 
@@ -632,7 +554,7 @@ class HttpHeadersTests {
 		headers.setBasicAuth(username, password);
 		String authorization = headers.getFirst(HttpHeaders.AUTHORIZATION);
 		assertThat(authorization).isNotNull();
-		assertThat(authorization).startsWith("Basic ");
+		assertThat(authorization.startsWith("Basic ")).isTrue();
 		byte[] result = Base64.getDecoder().decode(authorization.substring(6).getBytes(StandardCharsets.ISO_8859_1));
 		assertThat(new String(result, StandardCharsets.ISO_8859_1)).isEqualTo("foo:bar");
 	}
@@ -653,188 +575,142 @@ class HttpHeadersTests {
 		assertThat(authorization).isEqualTo("Bearer foo");
 	}
 
+	@Test
+	void keySetOperations() {
+		headers.add("Alpha", "apple");
+		headers.add("Bravo", "banana");
+		Set<String> keySet = headers.keySet();
 
-	@Nested
-	class MapEntriesTests {
+		// Please DO NOT simplify the following with AssertJ's fluent API.
+		//
+		// We explicitly invoke methods directly on HttpHeaders#keySet()
+		// here to check the behavior of the entire contract.
 
-		@Test
-		void keySetOperations() {
-			headers.add("Alpha", "apple");
-			headers.add("Bravo", "banana");
-			Set<String> keySet = headers.headerNames();
+		// isEmpty() and size()
+		assertThat(keySet.isEmpty()).isFalse();
+		assertThat(keySet.size()).isEqualTo(2);
 
-			// Please DO NOT simplify the following with AssertJ's fluent API.
-			//
-			// We explicitly invoke methods directly on HttpHeaders#keySet()
-			// here to check the behavior of the entire contract.
+		// contains()
+		assertThat(keySet.contains("Alpha")).as("Alpha should be present").isTrue();
+		assertThat(keySet.contains("alpha")).as("alpha should be present").isTrue();
+		assertThat(keySet.contains("Bravo")).as("Bravo should be present").isTrue();
+		assertThat(keySet.contains("BRAVO")).as("BRAVO should be present").isTrue();
+		assertThat(keySet.contains("Charlie")).as("Charlie should not be present").isFalse();
 
-			// isEmpty() and size()
-			assertThat(keySet).isNotEmpty();
-			assertThat(keySet).hasSize(2);
+		// toArray()
+		assertThat(keySet.toArray()).isEqualTo(new String[] {"Alpha", "Bravo"});
 
-			// contains()
-			assertThat(keySet.contains("Alpha")).as("Alpha should be present").isTrue();
-			assertThat(keySet.contains("alpha")).as("alpha should be present").isTrue();
-			assertThat(keySet.contains("Bravo")).as("Bravo should be present").isTrue();
-			assertThat(keySet.contains("BRAVO")).as("BRAVO should be present").isTrue();
-			assertThat(keySet.contains("Charlie")).as("Charlie should not be present").isFalse();
+		// spliterator() via stream()
+		assertThat(keySet.stream().collect(toList())).isEqualTo(Arrays.asList("Alpha", "Bravo"));
 
-			// toArray()
-			assertThat(keySet.toArray()).isEqualTo(new String[] {"Alpha", "Bravo"});
+		// iterator()
+		List<String> results = new ArrayList<>();
+		keySet.iterator().forEachRemaining(results::add);
+		assertThat(results).isEqualTo(Arrays.asList("Alpha", "Bravo"));
 
-			// spliterator() via stream()
-			assertThat(keySet.stream().collect(toList())).isEqualTo(Arrays.asList("Alpha", "Bravo"));
+		// remove()
+		assertThat(keySet.remove("Alpha")).isTrue();
+		assertThat(keySet.size()).isEqualTo(1);
+		assertThat(headers.size()).isEqualTo(1);
+		assertThat(keySet.remove("Alpha")).isFalse();
+		assertThat(keySet.size()).isEqualTo(1);
+		assertThat(headers.size()).isEqualTo(1);
 
-			// iterator()
-			List<String> results = new ArrayList<>();
-			keySet.iterator().forEachRemaining(results::add);
-			assertThat(results).isEqualTo(Arrays.asList("Alpha", "Bravo"));
+		// clear()
+		keySet.clear();
+		assertThat(keySet.isEmpty()).isTrue();
+		assertThat(keySet.size()).isEqualTo(0);
+		assertThat(headers.isEmpty()).isTrue();
+		assertThat(headers.size()).isEqualTo(0);
 
-			// remove()
-			assertThat(keySet.remove("Alpha")).isTrue();
-			assertThat(keySet).hasSize(1);
-			assertThat(headers.size()).isOne();
-			assertThat(keySet.remove("Alpha")).isFalse();
-			assertThat(keySet).hasSize(1);
-			assertThat(headers.size()).isOne();
+		// Unsupported operations
+		assertThatExceptionOfType(UnsupportedOperationException.class)
+			.isThrownBy(() -> keySet.add("x"));
+		assertThatExceptionOfType(UnsupportedOperationException.class)
+			.isThrownBy(() -> keySet.addAll(Collections.singleton("enigma")));
+	}
 
-			// clear()
-			keySet.clear();
-			assertThat(keySet).isEmpty();
-			assertThat(keySet).isEmpty();
-			assertThat(headers.isEmpty()).as("isEmpty").isTrue();
-			assertThat(headers.isEmpty()).as("isEmpty").isTrue();
+	/**
+	 * This method intentionally checks a wider/different range of functionality
+	 * than {@link #removalFromKeySetRemovesEntryFromUnderlyingMap()}.
+	 */
+	@Test // https://github.com/spring-projects/spring-framework/issues/23633
+	void keySetRemovalChecks() {
+		// --- Given ---
+		headers.add("Alpha", "apple");
+		headers.add("Bravo", "banana");
+		assertThat(headers).containsOnlyKeys("Alpha", "Bravo");
 
-			// Unsupported operations
-			assertThatExceptionOfType(UnsupportedOperationException.class)
-					.isThrownBy(() -> keySet.add("x"));
-			assertThatExceptionOfType(UnsupportedOperationException.class)
-					.isThrownBy(() -> keySet.addAll(Collections.singleton("enigma")));
-		}
+		// --- When ---
+		boolean removed = headers.keySet().remove("Alpha");
 
-		/**
-		 * This method intentionally checks a wider/different range of functionality
-		 * than {@link #removalFromKeySetRemovesEntryFromUnderlyingMap()}.
-		 */
-		@Test // https://github.com/spring-projects/spring-framework/issues/23633
-		void keySetRemovalChecks() {
-			// --- Given ---
-			headers.add("Alpha", "apple");
-			headers.add("Bravo", "banana");
-			assertThat(headers.headerNames()).containsOnly("Alpha", "Bravo");
+		// --- Then ---
 
-			// --- When ---
-			boolean removed = headers.headerNames().remove("Alpha");
+		// Please DO NOT simplify the following with AssertJ's fluent API.
+		//
+		// We explicitly invoke methods directly on HttpHeaders here to check
+		// the behavior of the entire contract.
 
-			// --- Then ---
+		assertThat(removed).isTrue();
+		assertThat(headers.keySet().remove("Alpha")).isFalse();
+		assertThat(headers.size()).isEqualTo(1);
+		assertThat(headers.containsKey("Alpha")).as("Alpha should have been removed").isFalse();
+		assertThat(headers.containsKey("Bravo")).as("Bravo should be present").isTrue();
+		assertThat(headers.keySet()).containsOnly("Bravo");
+		assertThat(headers.entrySet()).containsOnly(entry("Bravo", Arrays.asList("banana")));
+	}
 
-			// Please DO NOT simplify the following with AssertJ's fluent API.
-			//
-			// We explicitly invoke methods directly on HttpHeaders here to check
-			// the behavior of the entire contract.
+	@Test
+	void removalFromKeySetRemovesEntryFromUnderlyingMap() {
+		String headerName = "MyHeader";
+		String headerValue = "value";
 
-			assertThat(removed).isTrue();
-			assertThat(headers.headerNames().remove("Alpha")).isFalse();
-			assertThat(headers.size()).isOne();
-			assertThat(headers.containsHeader("Alpha")).as("Alpha should have been removed").isFalse();
-			assertThat(headers.containsHeader("Bravo")).as("Bravo should be present").isTrue();
-			assertThat(headers.headerNames()).containsOnly("Bravo");
-			assertThat(headers.headerSet()).containsOnly(entry("Bravo", List.of("banana")));
-		}
+		assertThat(headers.isEmpty()).isTrue();
+		headers.add(headerName, headerValue);
+		assertThat(headers.containsKey(headerName)).isTrue();
+		headers.keySet().removeIf(key -> key.equals(headerName));
+		assertThat(headers.isEmpty()).isTrue();
+		headers.add(headerName, headerValue);
+		assertThat(headers.get(headerName).get(0)).isEqualTo(headerValue);
+	}
 
-		@Test
-		void removalFromKeySetRemovesEntryFromUnderlyingMap() {
-			String headerName = "MyHeader";
-			String headerValue = "value";
+	@Test
+	void removalFromEntrySetRemovesEntryFromUnderlyingMap() {
+		String headerName = "MyHeader";
+		String headerValue = "value";
 
-			assertThat(headers.isEmpty()).as("isEmpty").isTrue();
-			headers.add(headerName, headerValue);
-			assertThat(headers.containsHeader(headerName)).isTrue();
-			headers.headerNames().removeIf(key -> key.equals(headerName));
-			assertThat(headers.isEmpty()).as("isEmpty").isTrue();
-			headers.add(headerName, headerValue);
-			assertThat(headers.get(headerName)).containsExactly(headerValue);
-		}
+		assertThat(headers.isEmpty()).isTrue();
+		headers.add(headerName, headerValue);
+		assertThat(headers.containsKey(headerName)).isTrue();
+		headers.entrySet().removeIf(entry -> entry.getKey().equals(headerName));
+		assertThat(headers.isEmpty()).isTrue();
+		headers.add(headerName, headerValue);
+		assertThat(headers.get(headerName).get(0)).isEqualTo(headerValue);
+	}
 
-		@Test
-		void removalFromEntrySetRemovesEntryFromUnderlyingMap() {
-			String headerName = "MyHeader";
-			String headerValue = "value";
+	@Test
+	void readOnlyHttpHeadersRetainEntrySetOrder() {
+		headers.add("aardvark", "enigma");
+		headers.add("beaver", "enigma");
+		headers.add("cat", "enigma");
+		headers.add("dog", "enigma");
+		headers.add("elephant", "enigma");
 
-			assertThat(headers.isEmpty()).as("isEmpty").isTrue();
-			headers.add(headerName, headerValue);
-			assertThat(headers.containsHeader(headerName)).isTrue();
-			headers.headerSet().removeIf(entry -> entry.getKey().equals(headerName));
-			assertThat(headers.isEmpty()).as("isEmpty").isTrue();
-			headers.add(headerName, headerValue);
-			assertThat(headers.get(headerName)).containsExactly(headerValue);
-		}
+		String[] expectedKeys = new String[] { "aardvark", "beaver", "cat", "dog", "elephant" };
 
-		@Test
-		void readOnlyHttpHeadersRetainEntrySetOrder() {
-			headers.add("aardvark", "enigma");
-			headers.add("beaver", "enigma");
-			headers.add("cat", "enigma");
-			headers.add("dog", "enigma");
-			headers.add("elephant", "enigma");
+		assertThat(headers.entrySet()).extracting(Entry::getKey).containsExactly(expectedKeys);
 
-			String[] expectedKeys = new String[] { "aardvark", "beaver", "cat", "dog", "elephant" };
+		HttpHeaders readOnlyHttpHeaders = HttpHeaders.readOnlyHttpHeaders(headers);
+		assertThat(readOnlyHttpHeaders.entrySet()).extracting(Entry::getKey).containsExactly(expectedKeys);
+	}
 
-			assertThat(headers.headerSet()).extracting(Entry::getKey).containsExactly(expectedKeys);
+	@Test // gh-25034
+	void equalsUnwrapsHttpHeaders() {
+		HttpHeaders headers1 = new HttpHeaders();
+		HttpHeaders headers2 = new HttpHeaders(new HttpHeaders(headers1));
 
-			HttpHeaders readOnlyHttpHeaders = HttpHeaders.readOnlyHttpHeaders(headers);
-			assertThat(readOnlyHttpHeaders.headerSet()).extracting(Entry::getKey).containsExactly(expectedKeys);
-		}
-
-		@Test
-		void readOnlyHttpHeadersCopyOrderTest() {
-			headers.add("aardvark", "enigma");
-			headers.add("beaver", "enigma");
-			headers.add("cat", "enigma");
-			headers.add("dog", "enigma");
-			headers.add("elephant", "enigma");
-
-			String[] expectedKeys = new String[] { "aardvark", "beaver", "cat", "dog", "elephant" };
-
-			HttpHeaders readOnlyHttpHeaders = HttpHeaders.readOnlyHttpHeaders(headers);
-
-			HttpHeaders forEachHeaders = new HttpHeaders();
-			readOnlyHttpHeaders.forEach(forEachHeaders::putIfAbsent);
-			assertThat(forEachHeaders.headerSet()).extracting(Entry::getKey).containsExactly(expectedKeys);
-
-			HttpHeaders putAllHeaders = new HttpHeaders();
-			putAllHeaders.putAll(readOnlyHttpHeaders);
-			assertThat(putAllHeaders.headerSet()).extracting(Entry::getKey).containsExactly(expectedKeys);
-
-			HttpHeaders addAllHeaders = new HttpHeaders();
-			addAllHeaders.addAll(readOnlyHttpHeaders);
-			assertThat(addAllHeaders.headerSet()).extracting(Entry::getKey).containsExactly(expectedKeys);
-		}
-
-		@Test // gh-25034
-		void equalsUnwrapsHttpHeaders() {
-			HttpHeaders headers1 = new HttpHeaders();
-			HttpHeaders headers2 = new HttpHeaders(new HttpHeaders(headers1));
-
-			assertThat(headers1).isEqualTo(headers2);
-			assertThat(headers2).isEqualTo(headers1);
-		}
-
-		@Test
-		void getValuesAsList() {
-			HttpHeaders headers = new HttpHeaders();
-			headers.add("Foo", "Bar");
-			headers.add("Foo", "Baz, Qux");
-			headers.add("Quux", "\t\"Corge\", \"Grault\"");
-			headers.add("Garply", " Waldo \"Fred\\!\", \"\tPlugh, Xyzzy! \"");
-			headers.add("Example-Dates", "\"Sat, 04 May 1996\", \"Wed, 14 Sep 2005\"");
-
-			assertThat(headers.getValuesAsList("Foo")).containsExactly("Bar", "Baz", "Qux");
-			assertThat(headers.getValuesAsList("Quux")).containsExactly("Corge", "Grault");
-			assertThat(headers.getValuesAsList("Garply")).containsExactly("Waldo \"Fred\\!\"", "\tPlugh, Xyzzy! ");
-			assertThat(headers.getValuesAsList("Example-Dates")).containsExactly("Sat, 04 May 1996", "Wed, 14 Sep 2005");
-		}
-
+		assertThat(headers1).isEqualTo(headers2);
+		assertThat(headers2).isEqualTo(headers1);
 	}
 
 }

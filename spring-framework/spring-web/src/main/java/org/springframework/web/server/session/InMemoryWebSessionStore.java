@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import reactor.core.publisher.Mono;
@@ -79,10 +78,10 @@ public class InMemoryWebSessionStore implements WebSessionStore {
 	}
 
 	/**
-	 * Configure the {@link Clock} to use to set the {@code lastAccessTime} on
-	 * every created session and to calculate if the session has expired.
-	 * <p>This may be useful to align to different time zones or to set the clock
-	 * back in a test, for example, {@code Clock.offset(clock, Duration.ofMinutes(-31))}
+	 * Configure the {@link Clock} to use to set lastAccessTime on every created
+	 * session and to calculate if it is expired.
+	 * <p>This may be useful to align to different timezone or to set the clock
+	 * back in a test, e.g. {@code Clock.offset(clock, Duration.ofMinutes(-31))}
 	 * in order to simulate session expiration.
 	 * <p>By default this is {@code Clock.system(ZoneId.of("GMT"))}.
 	 * @param clock the clock to use
@@ -94,17 +93,16 @@ public class InMemoryWebSessionStore implements WebSessionStore {
 	}
 
 	/**
-	 * Return the configured clock for session {@code lastAccessTime} calculations.
+	 * Return the configured clock for session lastAccessTime calculations.
 	 */
 	public Clock getClock() {
 		return this.clock;
 	}
 
 	/**
-	 * Return an {@linkplain Collections#unmodifiableMap unmodifiable} copy of the
-	 * map of sessions.
-	 * <p>This could be used for management purposes, to list active sessions,
-	 * to invalidate expired sessions, etc.
+	 * Return the map of sessions with an {@link Collections#unmodifiableMap
+	 * unmodifiable} wrapper. This could be used for management purposes, to
+	 * list active sessions, invalidate expired ones, etc.
 	 * @since 5.0.8
 	 */
 	public Map<String, WebSession> getSessions() {
@@ -158,11 +156,10 @@ public class InMemoryWebSessionStore implements WebSessionStore {
 	}
 
 	/**
-	 * Check for expired sessions and remove them.
-	 * <p>Typically such checks are kicked off lazily during calls to
-	 * {@link #createWebSession()} or {@link #retrieveSession}, no less than 60
-	 * seconds apart.
-	 * <p>This method can be called to force a check at a specific time.
+	 * Check for expired sessions and remove them. Typically such checks are
+	 * kicked off lazily during calls to {@link #createWebSession() create} or
+	 * {@link #retrieveSession retrieve}, no less than 60 seconds apart.
+	 * This method can be called to force a check at a specific time.
 	 * @since 5.0.8
 	 */
 	public void removeExpiredSessions() {
@@ -191,7 +188,6 @@ public class InMemoryWebSessionStore implements WebSessionStore {
 		}
 
 		@Override
-		@SuppressWarnings("NullAway") // Dataflow analysis limitation
 		public String getId() {
 			return this.id.get();
 		}
@@ -227,24 +223,18 @@ public class InMemoryWebSessionStore implements WebSessionStore {
 		}
 
 		@Override
-		@SuppressWarnings("NullAway") // Dataflow analysis limitation
 		public boolean isStarted() {
 			return this.state.get().equals(State.STARTED) || !getAttributes().isEmpty();
 		}
 
 		@Override
 		public Mono<Void> changeSessionId() {
-			return Mono.<Void>defer(() -> {
-						String currentId = this.id.get();
-						InMemoryWebSessionStore.this.sessions.remove(currentId);
-						String newId = String.valueOf(idGenerator.generateId());
-						this.id.set(newId);
-						InMemoryWebSessionStore.this.sessions.put(this.id.get(), this);
-						return Mono.empty();
-					})
-					.subscribeOn(Schedulers.boundedElastic())
-					.publishOn(Schedulers.parallel())
-					.then();
+			String currentId = this.id.get();
+			InMemoryWebSessionStore.this.sessions.remove(currentId);
+			String newId = String.valueOf(idGenerator.generateId());
+			this.id.set(newId);
+			InMemoryWebSessionStore.this.sessions.put(this.getId(), this);
+			return Mono.empty();
 		}
 
 		@Override
@@ -256,7 +246,6 @@ public class InMemoryWebSessionStore implements WebSessionStore {
 		}
 
 		@Override
-		@SuppressWarnings("NullAway") // Dataflow analysis limitation
 		public Mono<Void> save() {
 
 			checkMaxSessionsLimit();
@@ -268,11 +257,11 @@ public class InMemoryWebSessionStore implements WebSessionStore {
 
 			if (isStarted()) {
 				// Save
-				InMemoryWebSessionStore.this.sessions.put(this.id.get(), this);
+				InMemoryWebSessionStore.this.sessions.put(this.getId(), this);
 
 				// Unless it was invalidated
 				if (this.state.get().equals(State.EXPIRED)) {
-					InMemoryWebSessionStore.this.sessions.remove(this.id.get());
+					InMemoryWebSessionStore.this.sessions.remove(this.getId());
 					return Mono.error(new IllegalStateException("Session was invalidated"));
 				}
 			}
@@ -283,7 +272,7 @@ public class InMemoryWebSessionStore implements WebSessionStore {
 		private void checkMaxSessionsLimit() {
 			if (sessions.size() >= maxSessions) {
 				expiredSessionChecker.removeExpiredSessions(clock.instant());
-				if (sessions.size() >= maxSessions && !sessions.containsKey(this.id.get())) {
+				if (sessions.size() >= maxSessions) {
 					throw new IllegalStateException("Max sessions limit reached: " + sessions.size());
 				}
 			}
@@ -294,7 +283,6 @@ public class InMemoryWebSessionStore implements WebSessionStore {
 			return isExpired(clock.instant());
 		}
 
-		@SuppressWarnings("NullAway") // Dataflow analysis limitation
 		private boolean isExpired(Instant now) {
 			if (this.state.get().equals(State.EXPIRED)) {
 				return true;
@@ -322,9 +310,11 @@ public class InMemoryWebSessionStore implements WebSessionStore {
 		/** Max time between expiration checks. */
 		private static final int CHECK_PERIOD = 60 * 1000;
 
-		private final Lock lock = new ReentrantLock();
+
+		private final ReentrantLock lock = new ReentrantLock();
 
 		private Instant checkTime = clock.instant().plus(CHECK_PERIOD, ChronoUnit.MILLIS);
+
 
 		public void checkIfNecessary(Instant now) {
 			if (this.checkTime.isBefore(now)) {

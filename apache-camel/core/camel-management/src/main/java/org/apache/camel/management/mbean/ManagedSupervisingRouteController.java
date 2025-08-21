@@ -16,11 +16,14 @@
  */
 package org.apache.camel.management.mbean;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeDataSupport;
@@ -35,7 +38,6 @@ import org.apache.camel.api.management.ManagedResource;
 import org.apache.camel.api.management.mbean.CamelOpenMBeanTypes;
 import org.apache.camel.api.management.mbean.ManagedSupervisingRouteControllerMBean;
 import org.apache.camel.spi.SupervisingRouteController;
-import org.apache.camel.support.ExceptionHelper;
 import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.backoff.BackOffTimer;
 
@@ -104,26 +106,6 @@ public class ManagedSupervisingRouteController extends ManagedService implements
     }
 
     @Override
-    public boolean isUnhealthyOnExhausted() {
-        return controller.isUnhealthyOnExhausted();
-    }
-
-    @Override
-    public boolean isUnhealthyOnRestarting() {
-        return controller.isUnhealthyOnRestarting();
-    }
-
-    @Override
-    public boolean isStartingRoutes() {
-        return controller.isStartingRoutes();
-    }
-
-    @Override
-    public boolean isHasUnhealthyRoutes() {
-        return controller.hasUnhealthyRoutes();
-    }
-
-    @Override
     public int getNumberOfControlledRoutes() {
         return controller.getControlledRoutes().size();
     }
@@ -143,7 +125,7 @@ public class ManagedSupervisingRouteController extends ManagedService implements
         if (controller != null) {
             return controller.getControlledRoutes().stream()
                     .map(Route::getId)
-                    .toList();
+                    .collect(Collectors.toList());
         }
 
         return Collections.emptyList();
@@ -163,7 +145,7 @@ public class ManagedSupervisingRouteController extends ManagedService implements
         if (controller != null) {
             return controller.getRestartingRoutes().stream()
                     .map(Route::getId)
-                    .toList();
+                    .collect(Collectors.toList());
         }
 
         return Collections.emptyList();
@@ -174,7 +156,7 @@ public class ManagedSupervisingRouteController extends ManagedService implements
         if (controller != null) {
             return controller.getExhaustedRoutes().stream()
                     .map(Route::getId)
-                    .toList();
+                    .collect(Collectors.toList());
         }
 
         return Collections.emptyList();
@@ -223,7 +205,10 @@ public class ManagedSupervisingRouteController extends ManagedService implements
                 if (cause != null) {
                     error = cause.getMessage();
                     if (includeStacktrace) {
-                        stacktrace = ExceptionHelper.stackTraceToString(cause);
+                        StringWriter writer = new StringWriter();
+                        cause.printStackTrace(new PrintWriter(writer));
+                        writer.flush();
+                        stacktrace = writer.toString();
                     }
                 }
 
@@ -242,10 +227,5 @@ public class ManagedSupervisingRouteController extends ManagedService implements
         } catch (Exception e) {
             throw RuntimeCamelException.wrapRuntimeCamelException(e);
         }
-    }
-
-    @Override
-    public void startRoutes() {
-        controller.startRoutes();
     }
 }

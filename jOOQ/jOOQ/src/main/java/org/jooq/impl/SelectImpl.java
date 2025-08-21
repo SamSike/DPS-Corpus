@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,12 +39,8 @@ package org.jooq.impl;
 
 import static org.jooq.impl.DSL.condition;
 import static org.jooq.impl.DSL.exists;
-import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.notExists;
 import static org.jooq.impl.DSL.table;
-import static org.jooq.impl.QOM.JoinHint.HASH;
-import static org.jooq.impl.QOM.JoinHint.LOOP;
-import static org.jooq.impl.QOM.JoinHint.MERGE;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
 import static org.jooq.impl.Tools.map;
 
@@ -72,7 +68,6 @@ import org.jooq.JoinType;
 import org.jooq.Name;
 import org.jooq.Operator;
 import org.jooq.OrderField;
-import org.jooq.Path;
 // ...
 import org.jooq.QuantifiedSelect;
 import org.jooq.QueryPart;
@@ -136,11 +131,8 @@ import org.jooq.TableField;
 import org.jooq.TableLike;
 // ...
 import org.jooq.WindowDefinition;
-import org.jooq.impl.QOM.JoinHint;
 import org.jooq.impl.QOM.UnmodifiableList;
 import org.jooq.impl.QOM.With;
-
-import org.jetbrains.annotations.Nullable;
 
 /**
  * A wrapper for a {@link SelectQuery}
@@ -149,8 +141,9 @@ import org.jetbrains.annotations.Nullable;
  */
 @SuppressWarnings({ "unchecked", "rawtypes" })
 final class SelectImpl<R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22>
-extends AbstractDelegatingResultQuery<R, SelectQueryImpl<R>>
+extends AbstractDelegatingQuery<R, SelectQueryImpl<R>>
 implements
+    ResultQueryTrait<R>,
 
     // Cascading interface implementations for Select behaviour
     SelectSelectStep<R>,
@@ -221,11 +214,6 @@ implements
      * A temporary member holding a join type
      */
     private transient JoinType                joinType;
-
-    /**
-     * A temporary member holding a join hint
-     */
-    private transient JoinHint                joinHint;
 
     /**
      * A temporary member holding a join condition
@@ -1596,18 +1584,12 @@ implements
 
 
     private final List<? extends Field<?>> seekValues(Object[] values) {
-        if (getQuery() instanceof SelectQueryImpl<R> s) {
-            List<Field<?>> fields = s.getOrderBy().fields();
-
-            if (fields.size() != values.length)
-                throw new IllegalArgumentException("Seek list length (" + Arrays.asList(values) + ") must match ORDER BY expression list length (" + s.getOrderBy() + ")");
-
+        if (getQuery() instanceof SelectQueryImpl)
             return Tools.fields(values, map(
-                fields,
+                ((SelectQueryImpl<R>) getQuery()).getOrderBy().fields(),
                 (Field<?> f) -> f.getDataType(),
                 DataType[]::new
             ));
-        }
         else
             return Tools.fields(values);
     }
@@ -1992,26 +1974,22 @@ implements
 
 
 
-    @Override
-    public final SelectFinalStep<R> withCheckOption() {
-        getQuery().setWithCheckOption();
-        return this;
-    }
 
-    @Override
-    public final SelectFinalStep<R> withReadOnly() {
-        getQuery().setWithReadOnly();
-        return this;
-    }
+
+
+
+
+
+
+
+
+
+
+
 
     @Override
     public final SelectImpl union(Select<? extends R> select) {
         return new SelectImpl(getDelegate().union(select));
-    }
-
-    @Override
-    public final SelectImpl unionDistinct(Select<? extends R> select) {
-        return new SelectImpl(getDelegate().unionDistinct(select));
     }
 
     @Override
@@ -2025,11 +2003,6 @@ implements
     }
 
     @Override
-    public final SelectImpl exceptDistinct(Select<? extends R> select) {
-        return new SelectImpl(getDelegate().exceptDistinct(select));
-    }
-
-    @Override
     public final SelectImpl exceptAll(Select<? extends R> select) {
         return new SelectImpl(getDelegate().exceptAll(select));
     }
@@ -2037,11 +2010,6 @@ implements
     @Override
     public final SelectImpl intersect(Select<? extends R> select) {
         return new SelectImpl(getDelegate().intersect(select));
-    }
-
-    @Override
-    public final SelectImpl intersectDistinct(Select<? extends R> select) {
-        return new SelectImpl(getDelegate().intersectDistinct(select));
     }
 
     @Override
@@ -2156,54 +2124,38 @@ implements
     @Override
     public final SelectImpl on(Condition conditions) {
         conditionStep = ConditionStep.ON;
-
-        if (joinTable == null) {
-            joinConditions.addConditions(conditions);
-        }
-        else {
-            joinConditions = new ConditionProviderImpl();
-            joinConditions.addConditions(conditions);
+        joinConditions = new ConditionProviderImpl();
+        joinConditions.addConditions(conditions);
 
 
 
 
 
 
-                getQuery().addJoin(joinTable, joinType, joinHint, joinConditions);
+            getQuery().addJoin(joinTable, joinType, joinConditions);
 
-            joinTable = null;
-            joinPartitionBy = null;
-            joinType = null;
-            joinHint = null;
-        }
-
+        joinTable = null;
+        joinPartitionBy = null;
+        joinType = null;
         return this;
     }
 
     @Override
     public final SelectImpl on(Condition... conditions) {
         conditionStep = ConditionStep.ON;
-
-        if (joinTable == null) {
-            joinConditions.addConditions(conditions);
-        }
-        else {
-            joinConditions = new ConditionProviderImpl();
-            joinConditions.addConditions(conditions);
+        joinConditions = new ConditionProviderImpl();
+        joinConditions.addConditions(conditions);
 
 
 
 
 
 
-                getQuery().addJoin(joinTable, joinType, joinHint, new Condition[] { joinConditions });
+            getQuery().addJoin(joinTable, joinType, new Condition[] { joinConditions });
 
-            joinTable = null;
-            joinPartitionBy = null;
-            joinType = null;
-            joinHint = null;
-        }
-
+        joinTable = null;
+        joinPartitionBy = null;
+        joinType = null;
         return this;
     }
 
@@ -2235,52 +2187,38 @@ implements
     @Override
     public final SelectImpl onKey() {
         conditionStep = ConditionStep.ON;
+        getQuery().addJoinOnKey(joinTable, joinType);
 
-        if (joinTable != null) {
-            getQuery().addJoinOnKey(joinTable, joinType, joinHint);
-
-            joinConditions = ((JoinTable) getDelegate().getFrom().get(getDelegate().getFrom().size() - 1)).condition;
-            joinTable = null;
-            joinPartitionBy = null;
-            joinType = null;
-            joinHint = null;
-        }
-
+        joinConditions = ((JoinTable) getDelegate().getFrom().get(getDelegate().getFrom().size() - 1)).condition;
+        joinTable = null;
+        joinPartitionBy = null;
+        joinType = null;
         return this;
     }
 
     @Override
     public final SelectImpl onKey(TableField<?, ?>... keyFields) {
         conditionStep = ConditionStep.ON;
+        getQuery().addJoinOnKey(joinTable, joinType, keyFields);
 
-        if (joinTable != null) {
-            getQuery().addJoinOnKey(joinTable, joinType, joinHint, keyFields);
-
-            joinConditions = ((JoinTable) getDelegate().getFrom().get(getDelegate().getFrom().size() - 1)).condition;
-            joinTable = null;
-            joinPartitionBy = null;
-            joinType = null;
-            joinHint = null;
-        }
-
+        joinConditions = ((JoinTable) getDelegate().getFrom().get(getDelegate().getFrom().size() - 1)).condition;
+        joinTable = null;
+        joinPartitionBy = null;
+        joinType = null;
         return this;
     }
 
     @Override
     public final SelectImpl onKey(ForeignKey<?, ?> key) {
         conditionStep = ConditionStep.ON;
+        getQuery().addJoinOnKey(joinTable, joinType, key);
 
-        if (joinTable != null) {
-            getQuery().addJoinOnKey(joinTable, joinType, joinHint, key);
-
-            joinConditions = ((JoinTable) getDelegate().getFrom().get(getDelegate().getFrom().size() - 1)).condition;
-            joinTable = null;
-            joinPartitionBy = null;
-            joinType = null;
-            joinHint = null;
-        }
-
+        joinConditions = ((JoinTable) getDelegate().getFrom().get(getDelegate().getFrom().size() - 1)).condition;
+        joinTable = null;
+        joinPartitionBy = null;
+        joinType = null;
         return this;
+
     }
 
     @Override
@@ -2290,14 +2228,10 @@ implements
 
     @Override
     public final SelectImpl using(Collection<? extends Field<?>> fields) {
-        if (joinTable != null) {
-            getQuery().addJoinUsing(joinTable, joinType, joinHint, fields);
-            joinTable = null;
-            joinPartitionBy = null;
-            joinType = null;
-            joinHint = null;
-        }
-
+        getQuery().addJoinUsing(joinTable, joinType, fields);
+        joinTable = null;
+        joinPartitionBy = null;
+        joinType = null;
         return this;
     }
 
@@ -2307,87 +2241,9 @@ implements
     }
 
     @Override
-    public final SelectImpl join(Path<?> path) {
-        return innerJoin(path);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
     public final SelectImpl innerJoin(TableLike<?> table) {
         return join(table, JoinType.JOIN);
     }
-
-    @Override
-    public final SelectImpl innerJoin(Path<?> path) {
-        return join(path, JoinType.JOIN).on(noCondition());
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public final SelectImpl leftJoin(TableLike<?> table) {
@@ -2395,87 +2251,9 @@ implements
     }
 
     @Override
-    public final SelectImpl leftJoin(Path<?> path) {
-        return leftOuterJoin(path);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
     public final SelectImpl leftOuterJoin(TableLike<?> table) {
         return join(table, JoinType.LEFT_OUTER_JOIN);
     }
-
-    @Override
-    public final SelectImpl leftOuterJoin(Path<?> path) {
-        return join(path, JoinType.LEFT_OUTER_JOIN).on(noCondition());
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public final SelectImpl rightJoin(TableLike<?> table) {
@@ -2483,131 +2261,14 @@ implements
     }
 
     @Override
-    public final SelectImpl rightJoin(Path<?> path) {
-        return rightOuterJoin(path);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
     public final SelectImpl rightOuterJoin(TableLike<?> table) {
         return join(table, JoinType.RIGHT_OUTER_JOIN);
     }
 
     @Override
-    public final SelectImpl rightOuterJoin(Path<?> path) {
-        return join(path, JoinType.RIGHT_OUTER_JOIN).on(noCondition());
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
-    public final SelectImpl fullJoin(TableLike<?> table) {
+    public final SelectOnStep<R> fullJoin(TableLike<?> table) {
         return fullOuterJoin(table);
     }
-
-    @Override
-    public final SelectImpl fullJoin(Path<?> path) {
-        return fullOuterJoin(path);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public final SelectImpl fullOuterJoin(TableLike<?> table) {
@@ -2615,51 +2276,7 @@ implements
     }
 
     @Override
-    public final SelectImpl fullOuterJoin(Path<?> path) {
-        return join(path, JoinType.FULL_OUTER_JOIN).on(noCondition());
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
     public final SelectImpl join(TableLike<?> table, JoinType type) {
-        return join(table, type, null);
-    }
-
-    @Override
-    public final SelectImpl join(TableLike<?> table, JoinType type, JoinHint hint) {
         switch (type) {
             case CROSS_JOIN:
             case NATURAL_JOIN:
@@ -2668,11 +2285,10 @@ implements
             case NATURAL_FULL_OUTER_JOIN:
             case CROSS_APPLY:
             case OUTER_APPLY: {
-                getQuery().addJoin(table, type, hint);
+                getQuery().addJoin(table, type);
                 joinTable = null;
                 joinPartitionBy = null;
                 joinType = null;
-                joinHint = null;
 
                 return this;
             }
@@ -2681,7 +2297,6 @@ implements
                 conditionStep = ConditionStep.ON;
                 joinTable = table;
                 joinType = type;
-                joinHint = hint;
                 joinPartitionBy = null;
                 joinConditions = null;
 
@@ -2721,18 +2336,8 @@ implements
     }
 
     @Override
-    public final SelectImpl leftSemiJoin(Path<?> path) {
-        return join(path, JoinType.LEFT_SEMI_JOIN).on(noCondition());
-    }
-
-    @Override
     public final SelectImpl leftAntiJoin(TableLike<?> table) {
         return join(table, JoinType.LEFT_ANTI_JOIN);
-    }
-
-    @Override
-    public final SelectImpl leftAntiJoin(Path<?> path) {
-        return join(path, JoinType.LEFT_ANTI_JOIN).on(noCondition());
     }
 
     @Override
@@ -2748,11 +2353,6 @@ implements
     @Override
     public final SelectImpl straightJoin(TableLike<?> table) {
         return join(table, JoinType.STRAIGHT_JOIN);
-    }
-
-    @Override
-    public final SelectImpl straightJoin(Path<?> path) {
-        return join(path, JoinType.STRAIGHT_JOIN).on(noCondition());
     }
 
     @Override
@@ -3195,6 +2795,26 @@ implements
     @Override
     public final CloseableResultQuery<R> resultSetHoldability(int resultSetHoldability) {
         return getDelegate().resultSetHoldability(resultSetHoldability);
+    }
+
+    @Override
+    public final CloseableResultQuery<R> intern(Field<?>... fields) {
+        return getDelegate().intern(fields);
+    }
+
+    @Override
+    public final CloseableResultQuery<R> intern(int... fieldIndexes) {
+        return getDelegate().intern(fieldIndexes);
+    }
+
+    @Override
+    public final CloseableResultQuery<R> intern(String... fieldNames) {
+        return getDelegate().intern(fieldNames);
+    }
+
+    @Override
+    public final CloseableResultQuery<R> intern(Name... fieldNames) {
+        return getDelegate().intern(fieldNames);
     }
 
     @Override
@@ -3709,12 +3329,12 @@ implements
 
     @Override
     public final Condition isNull() {
-        return getDelegate().isNull();
+        return new SelectIsNull(this);
     }
 
     @Override
     public final Condition isNotNull() {
-        return getDelegate().isNotNull();
+        return new SelectIsNotNull(this);
     }
 
     /**
@@ -3784,11 +3404,6 @@ implements
     }
 
     @Override
-    public final Select<?> $with(With newWith) {
-        return getDelegate().$with(newWith);
-    }
-
-    @Override
     public final UnmodifiableList<? extends SelectFieldOrAsterisk> $select() {
         return getDelegate().$select();
     }
@@ -3806,16 +3421,6 @@ implements
     @Override
     public final Select<R> $distinct(boolean newDistinct) {
         return getDelegate().$distinct(newDistinct);
-    }
-
-    @Override
-    public final UnmodifiableList<? extends SelectFieldOrAsterisk> $distinctOn() {
-        return getDelegate().$distinctOn();
-    }
-
-    @Override
-    public final Select<R> $distinctOn(Collection<? extends SelectFieldOrAsterisk> newDistinctOn) {
-        return getDelegate().$distinctOn(newDistinctOn);
     }
 
     @Override

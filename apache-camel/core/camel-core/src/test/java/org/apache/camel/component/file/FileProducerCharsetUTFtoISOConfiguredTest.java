@@ -27,35 +27,34 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ *
+ */
 class FileProducerCharsetUTFtoISOConfiguredTest extends ContextTestSupport {
 
     private static final String DATA = "ABC\u00e6";
-    private static final String INPUT_FILE
-            = "input." + FileProducerCharsetUTFtoISOConfiguredTest.class.getSimpleName() + ".txt";
-    private static final String OUTPUT_FILE
-            = "output." + FileProducerCharsetUTFtoISOConfiguredTest.class.getSimpleName() + ".txt";
 
     @Test
     void testFileProducerCharsetUTFtoISO() throws Exception {
-        try (OutputStream fos = Files.newOutputStream(testFile(INPUT_FILE))) {
+        try (OutputStream fos = Files.newOutputStream(testFile("input.txt"))) {
             fos.write(DATA.getBytes(StandardCharsets.UTF_8));
         }
 
         assertTrue(oneExchangeDone.matchesWaitTime());
 
-        assertFileExists(testFile(OUTPUT_FILE));
-        byte[] data = Files.readAllBytes(testFile(OUTPUT_FILE));
+        assertFileExists(testFile("output.txt"));
+        byte[] data = Files.readAllBytes(testFile("output.txt"));
 
         assertEquals(DATA, new String(data, StandardCharsets.ISO_8859_1));
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
             public void configure() {
-                fromF(fileUri("?initialDelay=0&delay=10&charset=utf-8&fileName=%s"), INPUT_FILE)
-                        .toF(fileUri("?fileName=%s&charset=iso-8859-1"), OUTPUT_FILE);
+                from(fileUri("?initialDelay=0&delay=10&charset=utf-8&fileName=input.txt"))
+                        .to(fileUri("?fileName=output.txt&charset=iso-8859-1"));
             }
         };
     }

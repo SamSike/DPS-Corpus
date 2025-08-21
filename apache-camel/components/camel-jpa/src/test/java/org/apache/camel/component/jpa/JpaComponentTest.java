@@ -37,7 +37,7 @@ public class JpaComponentTest extends CamelTestSupport {
         try (JpaComponent comp = new JpaComponent()) {
             comp.setCamelContext(context);
             assertNull(comp.getEntityManagerFactory());
-            assertNull(comp.getTransactionStrategy());
+            assertNull(comp.getTransactionManager());
 
             JpaEndpoint jpa
                     = (JpaEndpoint) comp
@@ -53,7 +53,7 @@ public class JpaComponentTest extends CamelTestSupport {
         try (JpaComponent comp = new JpaComponent()) {
             comp.setCamelContext(context);
             assertNull(comp.getEntityManagerFactory());
-            assertNull(comp.getTransactionStrategy());
+            assertNull(comp.getTransactionManager());
 
             JpaEndpoint jpa = (JpaEndpoint) comp.createEndpoint("jpa://" + SendEmail.class.getName());
             assertNotNull(jpa);
@@ -66,21 +66,17 @@ public class JpaComponentTest extends CamelTestSupport {
         try (JpaComponent comp = new JpaComponent()) {
             comp.setCamelContext(context);
             assertNull(comp.getEntityManagerFactory());
-            assertNull(comp.getTransactionStrategy());
+            assertNull(comp.getTransactionManager());
 
             EntityManagerFactory fac = Persistence.createEntityManagerFactory("camel");
             JpaTransactionManager tm = new JpaTransactionManager(fac);
             tm.afterPropertiesSet();
 
             comp.setEntityManagerFactory(fac);
-            if (comp.getTransactionStrategy() instanceof DefaultTransactionStrategy strategy) {
-                strategy.setTransactionManager(tm);
-            }
+            comp.setTransactionManager(tm);
 
             assertSame(fac, comp.getEntityManagerFactory());
-            if (comp.getTransactionStrategy() instanceof DefaultTransactionStrategy strategy) {
-                assertSame(tm, strategy.getTransactionManager());
-            }
+            assertSame(tm, comp.getTransactionManager());
 
             JpaEndpoint jpa = (JpaEndpoint) comp.createEndpoint("jpa://" + SendEmail.class.getName());
             assertNotNull(jpa);
@@ -93,7 +89,7 @@ public class JpaComponentTest extends CamelTestSupport {
         try (JpaComponent comp = new JpaComponent()) {
             comp.setCamelContext(context);
             assertNull(comp.getEntityManagerFactory());
-            assertNull(comp.getTransactionStrategy());
+            assertNull(comp.getTransactionManager());
 
             JpaEndpoint jpa = (JpaEndpoint) comp.createEndpoint(
                     "jpa://" + SendEmail.class.getName() + "?persistenceUnit=journalPersistenceUnit&usePersist=true");
@@ -107,7 +103,7 @@ public class JpaComponentTest extends CamelTestSupport {
         try (JpaComponent comp = new JpaComponent()) {
             comp.setCamelContext(context);
             assertNull(comp.getEntityManagerFactory());
-            assertNull(comp.getTransactionStrategy());
+            assertNull(comp.getTransactionManager());
 
             JpaEndpoint jpa = (JpaEndpoint) comp.createEndpoint("jpa:?persistenceUnit=journalPersistenceUnit&usePersist=true");
             assertNotNull(jpa);

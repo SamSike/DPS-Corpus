@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,7 @@ package org.springframework.http.server.reactive;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Flux;
 
 import org.springframework.core.io.buffer.DataBuffer;
@@ -28,12 +26,13 @@ import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.RequestPath;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.MultiValueMap;
 
 /**
  * Wraps another {@link ServerHttpRequest} and delegates all methods to it.
- * Subclasses can override specific methods selectively.
+ * Sub-classes can override specific methods selectively.
  *
  * @author Rossen Stoyanchev
  * @since 5.0
@@ -62,18 +61,19 @@ public class ServerHttpRequestDecorator implements ServerHttpRequest {
 	}
 
 	@Override
+	@Nullable
 	public HttpMethod getMethod() {
 		return getDelegate().getMethod();
 	}
 
 	@Override
-	public URI getURI() {
-		return getDelegate().getURI();
+	public String getMethodValue() {
+		return getDelegate().getMethodValue();
 	}
 
 	@Override
-	public Map<String, Object> getAttributes() {
-		return getDelegate().getAttributes();
+	public URI getURI() {
+		return getDelegate().getURI();
 	}
 
 	@Override
@@ -97,28 +97,26 @@ public class ServerHttpRequestDecorator implements ServerHttpRequest {
 	}
 
 	@Override
-	public @Nullable InetSocketAddress getLocalAddress() {
+	@Nullable
+	public InetSocketAddress getLocalAddress() {
 		return getDelegate().getLocalAddress();
 	}
 
 	@Override
-	public @Nullable InetSocketAddress getRemoteAddress() {
+	@Nullable
+	public InetSocketAddress getRemoteAddress() {
 		return getDelegate().getRemoteAddress();
 	}
 
 	@Override
-	public @Nullable SslInfo getSslInfo() {
+	@Nullable
+	public SslInfo getSslInfo() {
 		return getDelegate().getSslInfo();
 	}
 
 	@Override
 	public Flux<DataBuffer> getBody() {
 		return getDelegate().getBody();
-	}
-
-	@Override
-	public String toString() {
-		return getClass().getSimpleName() + " [delegate=" + getDelegate() + "]";
 	}
 
 
@@ -131,15 +129,22 @@ public class ServerHttpRequestDecorator implements ServerHttpRequest {
 	 * @since 5.3.3
 	 */
 	public static <T> T getNativeRequest(ServerHttpRequest request) {
-		if (request instanceof AbstractServerHttpRequest abstractServerHttpRequest) {
-			return abstractServerHttpRequest.getNativeRequest();
+		if (request instanceof AbstractServerHttpRequest) {
+			return ((AbstractServerHttpRequest) request).getNativeRequest();
 		}
-		else if (request instanceof ServerHttpRequestDecorator serverHttpRequestDecorator) {
-			return getNativeRequest(serverHttpRequestDecorator.getDelegate());
+		else if (request instanceof ServerHttpRequestDecorator) {
+			return getNativeRequest(((ServerHttpRequestDecorator) request).getDelegate());
 		}
 		else {
-			throw new IllegalArgumentException("Cannot find native request in " + request.getClass().getName());
+			throw new IllegalArgumentException(
+					"Can't find native request in " + request.getClass().getName());
 		}
+	}
+
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + " [delegate=" + getDelegate() + "]";
 	}
 
 }

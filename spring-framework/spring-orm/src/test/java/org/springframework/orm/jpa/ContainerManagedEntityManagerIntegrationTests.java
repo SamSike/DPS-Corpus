@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,24 +41,24 @@ import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
  * @author Juergen Hoeller
  * @since 2.0
  */
-class ContainerManagedEntityManagerIntegrationTests extends AbstractEntityManagerFactoryIntegrationTests {
+public class ContainerManagedEntityManagerIntegrationTests extends AbstractEntityManagerFactoryIntegrationTests {
 
 	@Autowired
 	private AbstractEntityManagerFactoryBean entityManagerFactoryBean;
 
 
 	@Test
-	void testExceptionTranslationWithDialectFoundOnIntroducedEntityManagerInfo() throws Exception {
+	public void testExceptionTranslationWithDialectFoundOnIntroducedEntityManagerInfo() throws Exception {
 		doTestExceptionTranslationWithDialectFound(((EntityManagerFactoryInfo) entityManagerFactory).getJpaDialect());
 	}
 
 	@Test
-	void testExceptionTranslationWithDialectFoundOnEntityManagerFactoryBean() throws Exception {
+	public void testExceptionTranslationWithDialectFoundOnEntityManagerFactoryBean() throws Exception {
 		assertThat(entityManagerFactoryBean.getJpaDialect()).as("Dialect must have been set").isNotNull();
 		doTestExceptionTranslationWithDialectFound(entityManagerFactoryBean);
 	}
 
-	protected void doTestExceptionTranslationWithDialectFound(PersistenceExceptionTranslator pet) {
+	protected void doTestExceptionTranslationWithDialectFound(PersistenceExceptionTranslator pet) throws Exception {
 		RuntimeException in1 = new RuntimeException("in1");
 		PersistenceException in2 = new PersistenceException();
 		assertThat(pet.translateExceptionIfPossible(in1)).as("No translation here").isNull();
@@ -74,7 +74,7 @@ class ContainerManagedEntityManagerIntegrationTests extends AbstractEntityManage
 		assertThat(Proxy.isProxyClass(em.getClass())).isTrue();
 		Query q = em.createQuery("select p from Person as p");
 		List<Person> people = q.getResultList();
-		assertThat(people).isEmpty();
+		assertThat(people.isEmpty()).isTrue();
 
 		assertThat(em.isOpen()).as("Should be open to start with").isTrue();
 		assertThatIllegalStateException().as("Close should not work on container managed EM").isThrownBy(
@@ -84,7 +84,7 @@ class ContainerManagedEntityManagerIntegrationTests extends AbstractEntityManage
 
 	// This would be legal, at least if not actually _starting_ a tx
 	@Test
-	void testEntityManagerProxyRejectsProgrammaticTxManagement() {
+	public void testEntityManagerProxyRejectsProgrammaticTxManagement() {
 		assertThatIllegalStateException().isThrownBy(
 				createContainerManagedEntityManager()::getTransaction);
 	}
@@ -94,19 +94,19 @@ class ContainerManagedEntityManagerIntegrationTests extends AbstractEntityManage
 	 * We take the view that this is a valid no op.
 	 */
 	@Test
-	void testContainerEntityManagerProxyAllowsJoinTransactionInTransaction() {
+	public void testContainerEntityManagerProxyAllowsJoinTransactionInTransaction() {
 		createContainerManagedEntityManager().joinTransaction();
 	}
 
 	@Test
-	void testContainerEntityManagerProxyRejectsJoinTransactionWithoutTransaction() {
+	public void testContainerEntityManagerProxyRejectsJoinTransactionWithoutTransaction() {
 		endTransaction();
 		assertThatExceptionOfType(TransactionRequiredException.class).isThrownBy(
 				createContainerManagedEntityManager()::joinTransaction);
 	}
 
 	@Test
-	void testInstantiateAndSave() {
+	public void testInstantiateAndSave() {
 		EntityManager em = createContainerManagedEntityManager();
 		doInstantiateAndSave(em);
 	}
@@ -124,7 +124,7 @@ class ContainerManagedEntityManagerIntegrationTests extends AbstractEntityManage
 	}
 
 	@Test
-	void testReuseInNewTransaction() {
+	public void testReuseInNewTransaction() {
 		EntityManager em = createContainerManagedEntityManager();
 		doInstantiateAndSave(em);
 		endTransaction();
@@ -138,7 +138,7 @@ class ContainerManagedEntityManagerIntegrationTests extends AbstractEntityManage
 
 		doInstantiateAndSave(em);
 		setComplete();
-		endTransaction();	// Should roll back
+		endTransaction();	// Should rollback
 		assertThat(countRowsInTable(em, "person")).as("Tx must have committed back").isEqualTo(1);
 
 		// Now clean up the database
@@ -146,19 +146,19 @@ class ContainerManagedEntityManagerIntegrationTests extends AbstractEntityManage
 	}
 
 	@Test
-	void testRollbackOccurs() {
+	public void testRollbackOccurs() {
 		EntityManager em = createContainerManagedEntityManager();
 		doInstantiateAndSave(em);
-		endTransaction();	// Should roll back
+		endTransaction();	// Should rollback
 		assertThat(countRowsInTable(em, "person")).as("Tx must have been rolled back").isEqualTo(0);
 	}
 
 	@Test
-	void testCommitOccurs() {
+	public void testCommitOccurs() {
 		EntityManager em = createContainerManagedEntityManager();
 		doInstantiateAndSave(em);
 		setComplete();
-		endTransaction();	// Should roll back
+		endTransaction();	// Should rollback
 		assertThat(countRowsInTable(em, "person")).as("Tx must have committed back").isEqualTo(1);
 
 		// Now clean up the database

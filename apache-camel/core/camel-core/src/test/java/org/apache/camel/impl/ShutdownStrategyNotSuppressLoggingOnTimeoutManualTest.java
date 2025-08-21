@@ -37,10 +37,10 @@ public class ShutdownStrategyNotSuppressLoggingOnTimeoutManualTest extends Conte
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo").delay(8000).to("log:out");
             }
         };

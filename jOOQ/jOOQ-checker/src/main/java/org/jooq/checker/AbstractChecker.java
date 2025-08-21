@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,6 +43,7 @@ import java.io.PrintWriter;
 
 import org.jooq.checker.Tools.Printer;
 
+import org.checkerframework.framework.source.Result;
 import org.checkerframework.framework.source.SourceChecker;
 
 /**
@@ -52,40 +53,15 @@ import org.checkerframework.framework.source.SourceChecker;
  */
 abstract class AbstractChecker extends SourceChecker {
 
-
     Void error(Object node, String message) {
-
-        /*
-
-        getChecker().report(org.checkerframework.framework.source.Result.failure(message, node), node);
-
-        */
-
-
-        reportError(node, message);
-
-
+        getChecker().report(Result.failure(message, node), node);
         return null;
     }
-
-    public SourceChecker getChecker() {
-
-        /*
-
-        return super.getChecker();
-
-        */
-
-
-        return this;
-
-    }
-
 
     static Void print(Printer printer) {
         try (PrintWriter writer = new PrintWriter(new FileWriter("error.txt"))){
             writer.println("This is probably a bug in jOOQ-checker.");
-            writer.println("If you think this is a bug in jOOQ, please report it here: https://jooq.org/bug");
+            writer.println("If you think this is a bug in jOOQ, please report it here: https://github.com/jOOQ/jOOQ/issues/new");
             writer.println("---------------------------------------------------------------------");
 
             printer.print(writer);

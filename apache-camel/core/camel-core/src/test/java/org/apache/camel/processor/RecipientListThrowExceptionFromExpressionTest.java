@@ -40,10 +40,10 @@ public class RecipientListThrowExceptionFromExpressionTest extends ContextTestSu
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(ExpressionEvaluationException.class).handled(true).to("mock://error");
 
                 from("direct://start").to("log:foo").recipientList()

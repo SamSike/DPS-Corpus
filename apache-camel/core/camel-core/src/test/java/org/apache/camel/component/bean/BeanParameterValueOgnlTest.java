@@ -59,17 +59,17 @@ public class BeanParameterValueOgnlTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("foo", new MyBean());
         return jndi;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("bean:foo?method=bar(${body},true)").to("mock:result");
 
                 from("direct:start2").to("bean:foo?method=bar(${body.name}, true)").to("mock:result");
@@ -103,8 +103,8 @@ public class BeanParameterValueOgnlTest extends ContextTestSupport {
     }
 
     public static final class Animal {
-        private final String name;
-        private final int age;
+        private String name;
+        private int age;
         private Animal friend;
 
         private Animal(String name, int age) {

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,10 +38,11 @@
 package org.jooq.impl;
 
 import static java.lang.Boolean.TRUE;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static org.jooq.impl.DSL.createSchema;
-import static org.jooq.impl.DSL.createSchemaIfNotExists;
+import static org.jooq.impl.DSL.name;
+import static org.jooq.impl.DSL.schema;
 import static org.jooq.impl.Tools.anyMatch;
 import static org.jooq.impl.Tools.map;
 
@@ -49,9 +50,12 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
-import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Meta;
 import org.jooq.Queries;
@@ -59,7 +63,6 @@ import org.jooq.Query;
 import org.jooq.Source;
 import org.jooq.Version;
 import org.jooq.conf.InterpreterSearchSchema;
-import org.jooq.conf.MigrationSchema;
 import org.jooq.exception.DataDefinitionException;
 
 /**
@@ -67,44 +70,37 @@ import org.jooq.exception.DataDefinitionException;
  */
 final class VersionImpl extends AbstractNode<Version> implements Version {
 
-    final DSLContext   ctx;
-    final Meta         meta;
-    final List<Parent> parents;
+    private final DSLContext   ctx;
+    private final Meta         meta;
+    private final List<Parent> parents;
 
-    private VersionImpl(Configuration configuration, String id, Meta meta, Version root, List<Parent> parents) {
-        super(configuration, id, null, null, root);
+    private VersionImpl(DSLContext ctx, String id, Meta meta, List<Parent> parents) {
+        super(id, null);
 
-        this.ctx = configuration.dsl();
-        this.meta = init(ctx, meta);
+        this.ctx = ctx;
+        this.meta = meta != null ? meta : init(ctx);
         this.parents = parents;
     }
 
-    private static final Meta init(DSLContext ctx, Meta meta) {
-        Meta result = meta;
+    private static final Meta init(DSLContext ctx) {
+        Meta result = ctx.meta("");
 
-        if (result == null)
-            result = ctx.meta("");
-
-        MigrationSchema ds = ctx.settings().getMigrationDefaultSchema();
-        if (ds != null)
-            result = result.apply(createSchemaIfNotExists(MigrationImpl.schema(ds)));
+        // TODO: Instead of reusing interpreter search path, we should have some dedicated
+        //       configuration for this.
+        // TODO: Should this be moved in DSLContext.meta()?
+        List<InterpreterSearchSchema> searchPath = ctx.settings().getInterpreterSearchPath();
+        for (InterpreterSearchSchema schema : searchPath)
+            result = result.apply(createSchema(schema(name(schema.getCatalog(), schema.getSchema()))));
 
         return result;
     }
 
-    VersionImpl(Configuration configuration, String id, Meta meta, Version root, Version parent, Queries queries) {
-        this(configuration, id, meta, root, Arrays.asList(new Parent((VersionImpl) parent, queries)));
+    VersionImpl(DSLContext ctx, String id, Meta meta, Version parent, Queries queries) {
+        this(ctx, id, meta, Arrays.asList(new Parent((VersionImpl) parent, queries)));
     }
 
-    VersionImpl(Configuration configuration, String id, Meta meta, Version root, Version[] parents) {
-        this(configuration, id, meta, root, wrap(parents));
-    }
-
-    /**
-     * Create the root {@link Version}.
-     */
-    VersionImpl(Configuration configuration, String id) {
-        this(configuration, id, null, null, asList());
+    VersionImpl(DSLContext ctx, String id, Meta meta, Version[] parents) {
+        this(ctx, id, meta, wrap(parents));
     }
 
     private static List<Parent> wrap(Version[] parents) {
@@ -148,7 +144,7 @@ final class VersionImpl extends AbstractNode<Version> implements Version {
 
     @Override
     public final Version apply(String newId, Queries migration) {
-        return new VersionImpl(ctx.configuration(), newId, meta().apply(migration), root, this, migration);
+        return new VersionImpl(ctx, newId, meta().apply(migration), this, migration);
     }
 
     @Override
@@ -177,7 +173,7 @@ final class VersionImpl extends AbstractNode<Version> implements Version {
                 if (list == null)
                     list = new ArrayList<>();
 
-                list.add(new Parent(new VersionImpl(ctx.configuration(), parent.version.id(), parent.version.meta, root, emptyList()), parent.queries));
+                list.add(new Parent(new VersionImpl(ctx, parent.version.id(), parent.version.meta, emptyList()), parent.queries));
             }
             else {
                 VersionImpl p = parent.version.subgraphTo(ancestor);
@@ -191,14 +187,13 @@ final class VersionImpl extends AbstractNode<Version> implements Version {
             }
         }
 
-        return list == null ? null : new VersionImpl(ctx.configuration(), id(), meta, root, list);
+        return list == null ? null : new VersionImpl(ctx, id(), meta, list);
     }
 
     private final Queries migrateTo(VersionImpl target, Queries result) {
         if (!target.forceApply())
             return meta().migrateTo(target.meta());
 
-        // TODO: Avoid recursion here, and iterate, instead
         for (Parent parent : target.parents) {
             result = migrateTo(parent.version, result);
 
@@ -227,17 +222,13 @@ final class VersionImpl extends AbstractNode<Version> implements Version {
 
     @Override
     public final Version commit(String newId, Meta newMeta) {
-        return new VersionImpl(ctx.configuration(), newId, newMeta, root, new Version[] { this });
-    }
-
-    final Version commit(String newId, Meta newMeta, Queries migration) {
-        return new VersionImpl(ctx.configuration(), newId, newMeta, root, this, migration);
+        return new VersionImpl(ctx, newId, newMeta, new Version[] { this });
     }
 
     @Override
     public final Version merge(String newId, Version with) {
         Meta m = commonAncestor(with).meta();
-        return new VersionImpl(ctx.configuration(), newId, m.apply(m.migrateTo(meta()).concat(m.migrateTo(with.meta()))), root, new Version[] { this, with });
+        return new VersionImpl(ctx, newId, m.apply(m.migrateTo(meta()).concat(m.migrateTo(with.meta()))), new Version[] { this, with });
     }
 
     @Override
@@ -267,7 +258,7 @@ final class VersionImpl extends AbstractNode<Version> implements Version {
         return "-- Version: " + id() + "\n" + meta();
     }
 
-    private static final record Parent(VersionImpl version, Queries queries) {
+    private static final /* record */ class Parent { private final VersionImpl version; private final Queries queries; public Parent(VersionImpl version, Queries queries) { this.version = version; this.queries = queries; } public VersionImpl version() { return version; } public Queries queries() { return queries; } @Override public boolean equals(Object o) { if (!(o instanceof Parent)) return false; Parent other = (Parent) o; if (!java.util.Objects.equals(this.version, other.version)) return false; if (!java.util.Objects.equals(this.queries, other.queries)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.version, this.queries); }
         @Override
         public String toString() {
             return version.toString();

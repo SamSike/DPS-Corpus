@@ -16,14 +16,11 @@
  */
 package org.apache.camel.impl.engine;
 
-import java.util.function.Supplier;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.RuntimeCamelException;
-import org.apache.camel.spi.CamelBeanPostProcessor;
 import org.apache.camel.spi.CamelDependencyInjectionAnnotationFactory;
-import org.apache.camel.support.PluginHelper;
 
 /**
  * Default implementation of the {@link CamelDependencyInjectionAnnotationFactory}.
@@ -31,10 +28,10 @@ import org.apache.camel.support.PluginHelper;
 public class DefaultDependencyInjectionAnnotationFactory
         implements CamelDependencyInjectionAnnotationFactory, CamelContextAware {
 
-    private CamelContext camelContext;
+    private ExtendedCamelContext camelContext;
 
     public DefaultDependencyInjectionAnnotationFactory(CamelContext camelContext) {
-        this.camelContext = camelContext;
+        this.camelContext = camelContext.adapt(ExtendedCamelContext.class);
     }
 
     @Override
@@ -44,46 +41,24 @@ public class DefaultDependencyInjectionAnnotationFactory
 
     @Override
     public void setCamelContext(CamelContext camelContext) {
-        this.camelContext = camelContext;
+        this.camelContext = camelContext.adapt(ExtendedCamelContext.class);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public Runnable createBindToRegistryFactory(
-            String id, Object bean, Class<?> beanType, String beanName, boolean beanPostProcess,
-            String initMethod, String destroyMethod) {
-
-        if (beanType.isAssignableFrom(Supplier.class)) {
-            beanType = Object.class;
-        }
-        final Class<?> beanTarget = beanType;
-
+    public Runnable createBindToRegistryFactory(String id, Object bean, String beanName, boolean beanPostProcess) {
         return () -> {
             if (beanPostProcess) {
                 try {
-                    final CamelBeanPostProcessor beanPostProcessor = PluginHelper.getBeanPostProcessor(camelContext);
-                    beanPostProcessor.postProcessBeforeInitialization(bean, beanName);
-                    beanPostProcessor.postProcessAfterInitialization(bean, beanName);
+                    camelContext.getBeanPostProcessor()
+                            .postProcessBeforeInitialization(bean, beanName);
+                    camelContext.adapt(ExtendedCamelContext.class).getBeanPostProcessor()
+                            .postProcessAfterInitialization(bean, beanName);
                 } catch (Exception e) {
                     throw RuntimeCamelException.wrapRuntimeException(e);
                 }
             }
             CamelContextAware.trySetCamelContext(bean, camelContext);
-            if (bean instanceof Supplier) {
-                // must be Supplier<Object> to ensure correct binding
-                Supplier<Object> sup = (Supplier<Object>) bean;
-                if (initMethod != null || destroyMethod != null) {
-                    camelContext.getRegistry().bind(id, beanTarget, sup, initMethod, destroyMethod);
-                } else {
-                    camelContext.getRegistry().bind(id, beanTarget, sup);
-                }
-            } else {
-                if (initMethod != null || destroyMethod != null) {
-                    camelContext.getRegistry().bind(id, bean, initMethod, destroyMethod);
-                } else {
-                    camelContext.getRegistry().bind(id, bean);
-                }
-            }
+            camelContext.getRegistry().bind(id, bean);
         };
     }
 }

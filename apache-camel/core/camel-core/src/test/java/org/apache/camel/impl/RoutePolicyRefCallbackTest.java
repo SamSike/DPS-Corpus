@@ -25,8 +25,8 @@ import org.apache.camel.spi.Registry;
 public class RoutePolicyRefCallbackTest extends RoutePolicyCallbackTest {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry registry = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry registry = super.createRegistry();
         registry.bind("myPolicy", policy);
         return registry;
     }
@@ -37,10 +37,10 @@ public class RoutePolicyRefCallbackTest extends RoutePolicyCallbackTest {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo").routePolicyRef("myPolicy").to("mock:result");
             }
         };

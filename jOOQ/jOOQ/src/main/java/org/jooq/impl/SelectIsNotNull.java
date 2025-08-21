@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,21 +40,13 @@ package org.jooq.impl;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.selectCount;
 import static org.jooq.impl.Keywords.K_IS_NOT_NULL;
-import static org.jooq.impl.SubqueryCharacteristics.PREDICAND;
 import static org.jooq.impl.Tools.allNotNull;
-import static org.jooq.impl.Tools.collect;
-import static org.jooq.impl.Tools.fieldNames;
-import static org.jooq.impl.Tools.fieldsByName;
-import static org.jooq.impl.Tools.flattenCollection;
 import static org.jooq.impl.Tools.visitSubquery;
 
-import java.util.List;
-
 import org.jooq.Clause;
+import org.jooq.Condition;
 import org.jooq.Context;
-import org.jooq.Field;
 import org.jooq.Function1;
-import org.jooq.Name;
 import org.jooq.Select;
 import org.jooq.Table;
 
@@ -85,15 +77,12 @@ final class SelectIsNotNull extends AbstractCondition implements QOM.SelectIsNot
         if (SelectIsNull.EMULATE_NULL_QUERY.contains(ctx.dialect())) {
 
             // [#11011] Avoid the RVE IS NULL emulation for queries of degree 1
-            // [#16319] Flatten embeddables to find collection size
-            List<Field<?>> f = collect(flattenCollection(select.getSelect()));
-            if (f.size() == 1) {
+            if (select.getSelect().size() == 1) {
                 acceptStandard(ctx);
             }
             else {
-                Name[] n = fieldNames(f.size());
-                Table<?> t = new AliasedSelect<>(select, true, true, false, n).as("t");
-                ctx.visit(inline(1).eq(selectCount().from(t).where(allNotNull(fieldsByName(n)))));
+                Table<?> t = new AliasedSelect<>(select, true, true, false).as("t");
+                ctx.visit(inline(1).eq(selectCount().from(t).where(allNotNull(t.fields()))));
             }
         }
         else
@@ -101,7 +90,7 @@ final class SelectIsNotNull extends AbstractCondition implements QOM.SelectIsNot
     }
 
     private final void acceptStandard(Context<?> ctx) {
-        visitSubquery(ctx, select, PREDICAND);
+        visitSubquery(ctx, select, false, false, true);
 
         switch (ctx.family()) {
 
@@ -132,7 +121,7 @@ final class SelectIsNotNull extends AbstractCondition implements QOM.SelectIsNot
     }
 
     @Override
-    public final Function1<? super Select<?>, ? extends QOM.SelectIsNotNull> $constructor() {
+    public final Function1<? super Select<?>, ? extends Condition> $constructor() {
         return r -> new SelectIsNotNull(r);
     }
 }

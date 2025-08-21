@@ -17,7 +17,9 @@
  * <p>Spring AOP can be used programmatically or (preferably)
  * integrated with the Spring IoC container.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.aop;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

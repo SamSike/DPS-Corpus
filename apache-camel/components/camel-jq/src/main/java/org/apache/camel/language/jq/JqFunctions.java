@@ -30,11 +30,9 @@ import net.thisptr.jackson.jq.Scope;
 import net.thisptr.jackson.jq.Version;
 import net.thisptr.jackson.jq.Versions;
 import net.thisptr.jackson.jq.exception.JsonQueryException;
-import net.thisptr.jackson.jq.internal.tree.FunctionCall;
 import net.thisptr.jackson.jq.path.Path;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
-import org.apache.camel.StreamCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +61,8 @@ public final class JqFunctions {
                         Versions.JQ_1_6,
                         scope);
 
+        Map<String, Function> fromRegistry = camelContext.getRegistry().findByTypeWithName(Function.class);
+
         if (fromServiceLoader != null) {
             LOGGER.debug("Loading {} jq functions from ServiceLoader", fromServiceLoader.size());
             fromServiceLoader.forEach(scope::addFunction);
@@ -72,10 +72,7 @@ public final class JqFunctions {
             LOGGER.debug("Loading {} jq functions from Json JQ", fromJq.size());
             fromJq.forEach(scope::addFunction);
         }
-    }
 
-    public static void loadFromRegistry(CamelContext camelContext, Scope scope) {
-        Map<String, Function> fromRegistry = camelContext.getRegistry().findByTypeWithName(Function.class);
         if (fromRegistry != null) {
             LOGGER.debug("Loading {} jq functions from Registry", fromRegistry.size());
             fromRegistry.forEach(scope::addFunction);
@@ -87,11 +84,6 @@ public final class JqFunctions {
         scope.addFunction(Header.NAME, 2, new Header());
         scope.addFunction(Property.NAME, 1, new Property());
         scope.addFunction(Property.NAME, 2, new Property());
-        scope.addFunction(Constant.NAME, 1, new Constant());
-        scope.addFunction(Constant.NAME, 2, new Constant());
-        scope.addFunction(Variable.NAME, 1, new Variable());
-        scope.addFunction(Variable.NAME, 2, new Variable());
-        scope.addFunction(Body.NAME, new Body());
     }
 
     public abstract static class ExchangeAwareFunction implements Function {
@@ -186,7 +178,7 @@ public final class JqFunctions {
      *
      * <pre>
      * {@code
-     * .name = property(\"CommitterName\")"
+     * .name = proeprty(\"CommitterName\")"
      * }
      * </pre>
      *
@@ -235,119 +227,4 @@ public final class JqFunctions {
             }
         }
     }
-
-    /**
-     * A function that returns a constant value as part of JQ expression evaluation.
-     *
-     * As example, the following JQ expression sets the {@code .name} property to the constant value Donald.
-     *
-     * <pre>
-     * {@code
-     * .name = constant(\"Donald\")"
-     * }
-     * </pre>
-     *
-     */
-    public static class Constant implements Function {
-        public static final String NAME = "constant";
-
-        @Override
-        public void apply(Scope scope, List<Expression> args, JsonNode in, Path path, PathOutput output, Version version)
-                throws JsonQueryException {
-            FunctionCall fc = (FunctionCall) args.get(0);
-            String t = fc.toString();
-            output.emit(new TextNode(t), null);
-        }
-    }
-
-    /**
-     * A function that allow to retrieve an {@link org.apache.camel.Exchange} variable value as part of JQ expression
-     * evaluation.
-     *
-     * As example, the following JQ expression sets the {@code .name} property to the value of the variable named
-     * {@code CommitterName}.
-     *
-     * <pre>
-     * {@code
-     * .name = variable(\"CommitterName\")"
-     * }
-     * </pre>
-     *
-     */
-    public static class Variable extends ExchangeAwareFunction {
-        public static final String NAME = "variable";
-
-        @Override
-        protected void doApply(
-                Scope scope,
-                List<Expression> args,
-                JsonNode in,
-                Path path,
-                PathOutput output,
-                Version version,
-                Exchange exchange)
-                throws JsonQueryException {
-
-            args.get(0).apply(scope, in, name -> {
-                if (args.size() == 2) {
-                    args.get(1).apply(scope, in, defval -> {
-                        extract(
-                                exchange,
-                                name.asText(),
-                                defval.asText(),
-                                output);
-                    });
-                } else {
-                    extract(
-                            exchange,
-                            name.asText(),
-                            null,
-                            output);
-                }
-            });
-        }
-
-        private void extract(Exchange exchange, String variableName, String variableValue, PathOutput output)
-                throws JsonQueryException {
-            String variable = exchange.getVariable(variableName, variableValue, String.class);
-
-            if (variable == null) {
-                output.emit(NullNode.getInstance(), null);
-            } else {
-                output.emit(new TextNode(variable), null);
-            }
-        }
-    }
-
-    /**
-     * A function that returns the message body as part of JQ expression evaluation.
-     *
-     * As example, the following JQ expression sets the {@code .name} property to the message body.
-     *
-     * <pre>
-     * {@code
-     * .name = body()"
-     * }
-     * </pre>
-     *
-     */
-    public static class Body implements Function {
-        public static final String NAME = "body";
-
-        @Override
-        public void apply(Scope scope, List<Expression> args, JsonNode in, Path path, PathOutput output, Version version)
-                throws JsonQueryException {
-            Exchange exchange = EXCHANGE_LOCAL.get();
-            if (exchange != null) {
-                // in case you refer to the body multiple times then we need to handle stream-caching
-                Object body = exchange.getMessage().getBody();
-                if (body instanceof StreamCache sc) {
-                    sc.reset();
-                }
-                String t = exchange.getMessage().getBody(String.class);
-                output.emit(new TextNode(t), null);
-            }
-        }
-    }
-
 }

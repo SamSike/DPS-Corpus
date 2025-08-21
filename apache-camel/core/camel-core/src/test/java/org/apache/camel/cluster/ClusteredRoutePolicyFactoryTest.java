@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ClusteredRoutePolicyFactoryTest extends ContextTestSupport {
 
+    private ClusteredRoutePolicyFactory factory;
     private TestClusterService cs;
 
     @Override
@@ -43,7 +44,7 @@ public class ClusteredRoutePolicyFactoryTest extends ContextTestSupport {
         cs = new TestClusterService("my-cluster-service");
         context.addService(cs);
 
-        ClusteredRoutePolicyFactory factory = ClusteredRoutePolicyFactory.forNamespace("my-ns");
+        factory = ClusteredRoutePolicyFactory.forNamespace("my-ns");
         context.addRoutePolicyFactory(factory);
 
         return context;
@@ -70,7 +71,7 @@ public class ClusteredRoutePolicyFactoryTest extends ContextTestSupport {
     public void testClusteredRoutePolicyFactoryAddRoute() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:bar").routeId("bar")
                         .to("mock:bar");
             }
@@ -95,10 +96,10 @@ public class ClusteredRoutePolicyFactoryTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo").routeId("foo")
                         .to("mock:foo");
             }
@@ -111,7 +112,7 @@ public class ClusteredRoutePolicyFactoryTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:bar").routeId("bar")
                         .to("mock:bar");
             }
@@ -174,6 +175,14 @@ public class ClusteredRoutePolicyFactoryTest extends ContextTestSupport {
             return Collections.emptyList();
         }
 
+        @Override
+        protected void doStart() throws Exception {
+        }
+
+        @Override
+        protected void doStop() throws Exception {
+        }
+
         public boolean isLeader() {
             return leader;
         }
@@ -182,7 +191,7 @@ public class ClusteredRoutePolicyFactoryTest extends ContextTestSupport {
             this.leader = leader;
 
             if (isRunAllowed()) {
-                fireLeadershipChangedEvent(getLeader().orElse(null));
+                fireLeadershipChangedEvent(getLeader());
             }
         }
     }
@@ -196,7 +205,7 @@ public class ClusteredRoutePolicyFactoryTest extends ContextTestSupport {
         }
 
         @Override
-        protected TestClusterView createView(String namespace) {
+        protected TestClusterView createView(String namespace) throws Exception {
             if (view == null) {
                 view = new TestClusterView(this, namespace);
             }

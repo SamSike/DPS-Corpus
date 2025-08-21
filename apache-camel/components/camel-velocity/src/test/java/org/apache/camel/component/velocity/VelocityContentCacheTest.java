@@ -26,6 +26,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -34,7 +35,10 @@ import org.junit.jupiter.api.Test;
 public class VelocityContentCacheTest extends CamelTestSupport {
 
     @Override
-    public void doPostSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
+
         // create a vm file in the classpath as this is the tricky reloading stuff
         template.sendBodyAndHeader("file://target/test-classes/org/apache/camel/component/velocity?fileExist=Override",
                 "Hello $headers.name", Exchange.FILE_NAME, "hello.vm");

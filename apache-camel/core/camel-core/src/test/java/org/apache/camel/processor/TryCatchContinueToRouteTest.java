@@ -40,10 +40,10 @@ public class TryCatchContinueToRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:a").to("mock:a").to("direct:b").to("direct:c");
 
                 from("direct:b").doTry().to("mock:b").throwException(new IllegalArgumentException("Damn"))

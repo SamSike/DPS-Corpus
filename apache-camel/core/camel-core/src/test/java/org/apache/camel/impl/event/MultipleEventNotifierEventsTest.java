@@ -25,15 +25,16 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.support.EventNotifierSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class MultipleEventNotifierEventsTest extends ContextTestSupport {
 
-    private final List<CamelEvent> events = new ArrayList<>();
-    private final List<CamelEvent> events2 = new ArrayList<>();
+    private static List<CamelEvent> events = new ArrayList<>();
+    private static List<CamelEvent> events2 = new ArrayList<>();
 
     @Override
     protected boolean useJmx() {
@@ -41,20 +42,28 @@ public class MultipleEventNotifierEventsTest extends ContextTestSupport {
     }
 
     @Override
+    @BeforeEach
+    public void setUp() throws Exception {
+        events.clear();
+        events2.clear();
+        super.setUp();
+    }
+
+    @Override
     protected CamelContext createCamelContext() throws Exception {
-        DefaultCamelContext context = new DefaultCamelContext(createCamelRegistry());
+        DefaultCamelContext context = new DefaultCamelContext(createRegistry());
         context.getManagementStrategy().addEventNotifier(new EventNotifierSupport() {
-            public void notify(CamelEvent event) {
+            public void notify(CamelEvent event) throws Exception {
                 events.add(event);
             }
         });
         context.getManagementStrategy().addEventNotifier(new EventNotifierSupport() {
-            public void notify(CamelEvent event) {
+            public void notify(CamelEvent event) throws Exception {
                 events2.add(event);
             }
 
             @Override
-            protected void doBuild() {
+            protected void doBuild() throws Exception {
                 setIgnoreCamelContextEvents(true);
                 setIgnoreServiceEvents(true);
                 setIgnoreRouteEvents(true);
@@ -121,12 +130,14 @@ public class MultipleEventNotifierEventsTest extends ContextTestSupport {
     }
 
     @Test
-    public void testExchangeFailed() {
-        Exception e = assertThrows(Exception.class,
-                () -> template.sendBody("direct:fail", "Hello World"),
-                "Should have thrown an exception");
-
-        assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
+    public void testExchangeFailed() throws Exception {
+        try {
+            template.sendBody("direct:fail", "Hello World");
+            fail("Should have thrown an exception");
+        } catch (Exception e) {
+            // expected
+            assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
+        }
 
         assertEquals(16, events.size());
         assertIsInstanceOf(CamelEvent.CamelContextInitializingEvent.class, events.get(0));
@@ -170,10 +181,10 @@ public class MultipleEventNotifierEventsTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("log:foo").to("mock:result");
 
                 from("direct:fail").throwException(new IllegalArgumentException("Damn"));

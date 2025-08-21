@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,22 +23,18 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.HttpComponentsClientHttpConnector;
-import org.springframework.http.client.reactive.JdkClientHttpConnector;
 import org.springframework.http.client.reactive.JettyClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.codec.ClientCodecConfigurer;
-import org.springframework.http.server.reactive.SslInfo;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.ApiVersionInserter;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.ExchangeFunctions;
@@ -51,12 +47,11 @@ import org.springframework.web.util.UriBuilderFactory;
  * Default implementation of {@link WebTestClient.Builder}.
  *
  * @author Rossen Stoyanchev
- * @author Sam Brannen
  * @since 5.0
  */
 class DefaultWebTestClientBuilder implements WebTestClient.Builder {
 
-	private static final boolean reactorNettyClientPresent;
+	private static final boolean reactorClientPresent;
 
 	private static final boolean jettyClientPresent;
 
@@ -66,7 +61,7 @@ class DefaultWebTestClientBuilder implements WebTestClient.Builder {
 
 	static {
 		ClassLoader loader = DefaultWebTestClientBuilder.class.getClassLoader();
-		reactorNettyClientPresent = ClassUtils.isPresent("reactor.netty.http.client.HttpClient", loader);
+		reactorClientPresent = ClassUtils.isPresent("reactor.netty.http.client.HttpClient", loader);
 		jettyClientPresent = ClassUtils.isPresent("org.eclipse.jetty.client.HttpClient", loader);
 		httpComponentsClientPresent =
 				ClassUtils.isPresent("org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient", loader) &&
@@ -76,52 +71,56 @@ class DefaultWebTestClientBuilder implements WebTestClient.Builder {
 	}
 
 
-	private final @Nullable WebHttpHandlerBuilder httpHandlerBuilder;
+	@Nullable
+	private final WebHttpHandlerBuilder httpHandlerBuilder;
 
-	private @Nullable ClientHttpConnector connector;
+	@Nullable
+	private final ClientHttpConnector connector;
 
-	private @Nullable SslInfo sslInfo;
+	@Nullable
+	private String baseUrl;
 
-	private @Nullable String baseUrl;
+	@Nullable
+	private UriBuilderFactory uriBuilderFactory;
 
-	private @Nullable UriBuilderFactory uriBuilderFactory;
+	@Nullable
+	private HttpHeaders defaultHeaders;
 
-	private @Nullable HttpHeaders defaultHeaders;
+	@Nullable
+	private MultiValueMap<String, String> defaultCookies;
 
-	private @Nullable MultiValueMap<String, String> defaultCookies;
-
-	private @Nullable Object defaultApiVersion;
-
-	private @Nullable ApiVersionInserter apiVersionInserter;
-
-	private @Nullable List<ExchangeFilterFunction> filters;
+	@Nullable
+	private List<ExchangeFilterFunction> filters;
 
 	private Consumer<EntityExchangeResult<?>> entityResultConsumer = result -> {};
 
-	private @Nullable ExchangeStrategies strategies;
+	@Nullable
+	private ExchangeStrategies strategies;
 
-	private @Nullable List<Consumer<ExchangeStrategies.Builder>> strategiesConfigurers;
+	@Nullable
+	private List<Consumer<ExchangeStrategies.Builder>> strategiesConfigurers;
 
-	private @Nullable Duration responseTimeout;
+	@Nullable
+	private Duration responseTimeout;
 
 
 	/** Determine connector via classpath detection. */
 	DefaultWebTestClientBuilder() {
-		this(null, null, null);
+		this(null, null);
 	}
 
 	/** Use HttpHandlerConnector with mock server. */
-	DefaultWebTestClientBuilder(WebHttpHandlerBuilder httpHandlerBuilder, @Nullable SslInfo sslInfo) {
-		this(httpHandlerBuilder, null, sslInfo);
+	DefaultWebTestClientBuilder(WebHttpHandlerBuilder httpHandlerBuilder) {
+		this(httpHandlerBuilder, null);
 	}
 
 	/** Use given connector. */
 	DefaultWebTestClientBuilder(ClientHttpConnector connector) {
-		this(null, connector, null);
+		this(null, connector);
 	}
 
-	private DefaultWebTestClientBuilder(@Nullable WebHttpHandlerBuilder httpHandlerBuilder,
-			@Nullable ClientHttpConnector connector, @Nullable SslInfo sslInfo) {
+	DefaultWebTestClientBuilder(
+			@Nullable WebHttpHandlerBuilder httpHandlerBuilder, @Nullable ClientHttpConnector connector) {
 
 		Assert.isTrue(httpHandlerBuilder == null || connector == null,
 				"Expected WebHttpHandlerBuilder or ClientHttpConnector but not both.");
@@ -131,7 +130,6 @@ class DefaultWebTestClientBuilder implements WebTestClient.Builder {
 				"To use WebTestClient, please add spring-webflux to the test classpath.");
 
 		this.connector = connector;
-		this.sslInfo = sslInfo;
 		this.httpHandlerBuilder = (httpHandlerBuilder != null ? httpHandlerBuilder.clone() : null);
 	}
 
@@ -139,7 +137,6 @@ class DefaultWebTestClientBuilder implements WebTestClient.Builder {
 	DefaultWebTestClientBuilder(DefaultWebTestClientBuilder other) {
 		this.httpHandlerBuilder = (other.httpHandlerBuilder != null ? other.httpHandlerBuilder.clone() : null);
 		this.connector = other.connector;
-		this.sslInfo = other.sslInfo;
 		this.responseTimeout = other.responseTimeout;
 
 		this.baseUrl = other.baseUrl;
@@ -153,8 +150,6 @@ class DefaultWebTestClientBuilder implements WebTestClient.Builder {
 		}
 		this.defaultCookies = (other.defaultCookies != null ?
 				new LinkedMultiValueMap<>(other.defaultCookies) : null);
-		this.defaultApiVersion = other.defaultApiVersion;
-		this.apiVersionInserter = other.apiVersionInserter;
 		this.filters = (other.filters != null ? new ArrayList<>(other.filters) : null);
 		this.entityResultConsumer = other.entityResultConsumer;
 		this.strategies = other.strategies;
@@ -214,18 +209,6 @@ class DefaultWebTestClientBuilder implements WebTestClient.Builder {
 	}
 
 	@Override
-	public WebTestClient.Builder defaultApiVersion(Object version) {
-		this.defaultApiVersion = version;
-		return this;
-	}
-
-	@Override
-	public WebTestClient.Builder apiVersionInserter(ApiVersionInserter apiVersionInserter) {
-		this.apiVersionInserter = apiVersionInserter;
-		return this;
-	}
-
-	@Override
 	public WebTestClient.Builder filter(ExchangeFilterFunction filter) {
 		Assert.notNull(filter, "ExchangeFilterFunction is required");
 		initFilters().add(filter);
@@ -247,7 +230,7 @@ class DefaultWebTestClientBuilder implements WebTestClient.Builder {
 
 	@Override
 	public WebTestClient.Builder entityExchangeResultConsumer(Consumer<EntityExchangeResult<?>> entityResultConsumer) {
-		Assert.notNull(entityResultConsumer, "'entityResultConsumer' is required");
+		Assert.notNull(entityResultConsumer, "`entityResultConsumer` is required");
 		this.entityResultConsumer = this.entityResultConsumer.andThen(entityResultConsumer);
 		return this;
 	}
@@ -268,6 +251,16 @@ class DefaultWebTestClientBuilder implements WebTestClient.Builder {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
+	public WebTestClient.Builder exchangeStrategies(Consumer<ExchangeStrategies.Builder> configurer) {
+		if (this.strategiesConfigurers == null) {
+			this.strategiesConfigurers = new ArrayList<>(4);
+		}
+		this.strategiesConfigurers.add(configurer);
+		return this;
+	}
+
+	@Override
 	public WebTestClient.Builder apply(WebTestClientConfigurer configurer) {
 		configurer.afterConfigurerAdded(this, this.httpHandlerBuilder, this.connector);
 		return this;
@@ -280,25 +273,18 @@ class DefaultWebTestClientBuilder implements WebTestClient.Builder {
 	}
 
 	@Override
-	public WebTestClient.Builder clientConnector(ClientHttpConnector connector) {
-		this.connector = connector;
-		return this;
-	}
-
-	@Override
 	public WebTestClient build() {
 		ClientHttpConnector connectorToUse = this.connector;
 		if (connectorToUse == null) {
 			if (this.httpHandlerBuilder != null) {
-				connectorToUse = new HttpHandlerConnector(this.httpHandlerBuilder.build(), this.sslInfo);
+				connectorToUse = new HttpHandlerConnector(this.httpHandlerBuilder.build());
 			}
 		}
 		if (connectorToUse == null) {
 			connectorToUse = initConnector();
 		}
-		ExchangeStrategies exchangeStrategies = initExchangeStrategies();
 		Function<ClientHttpConnector, ExchangeFunction> exchangeFactory = connector -> {
-			ExchangeFunction exchange = ExchangeFunctions.create(connector, exchangeStrategies);
+			ExchangeFunction exchange = ExchangeFunctions.create(connector, initExchangeStrategies());
 			if (CollectionUtils.isEmpty(this.filters)) {
 				return exchange;
 			}
@@ -308,16 +294,14 @@ class DefaultWebTestClientBuilder implements WebTestClient.Builder {
 					.orElse(exchange);
 
 		};
-		return new DefaultWebTestClient(
-				connectorToUse, exchangeStrategies, exchangeFactory, initUriBuilderFactory(),
-				(this.defaultHeaders != null ? HttpHeaders.readOnlyHttpHeaders(this.defaultHeaders) : null),
-				(this.defaultCookies != null ? CollectionUtils.unmodifiableMultiValueMap(this.defaultCookies) : null),
-				this.defaultApiVersion, this.apiVersionInserter, this.entityResultConsumer,
-				this.responseTimeout, new DefaultWebTestClientBuilder(this));
+		return new DefaultWebTestClient(connectorToUse, exchangeFactory, initUriBuilderFactory(),
+				this.defaultHeaders != null ? HttpHeaders.readOnlyHttpHeaders(this.defaultHeaders) : null,
+				this.defaultCookies != null ? CollectionUtils.unmodifiableMultiValueMap(this.defaultCookies) : null,
+				this.entityResultConsumer, this.responseTimeout, new DefaultWebTestClientBuilder(this));
 	}
 
 	private static ClientHttpConnector initConnector() {
-		if (reactorNettyClientPresent) {
+		if (reactorClientPresent) {
 			return new ReactorClientHttpConnector();
 		}
 		else if (jettyClientPresent) {
@@ -326,9 +310,7 @@ class DefaultWebTestClientBuilder implements WebTestClient.Builder {
 		else if (httpComponentsClientPresent) {
 			return new HttpComponentsClientHttpConnector();
 		}
-		else {
-			return new JdkClientHttpConnector();
-		}
+		throw new IllegalStateException("No suitable default ClientHttpConnector found");
 	}
 
 	private ExchangeStrategies initExchangeStrategies() {

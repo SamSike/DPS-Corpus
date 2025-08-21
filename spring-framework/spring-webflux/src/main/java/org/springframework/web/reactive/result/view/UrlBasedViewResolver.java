@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ package org.springframework.web.reactive.result.view;
 import java.util.Locale;
 import java.util.function.Function;
 
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.PatternMatchUtils;
 
@@ -45,11 +45,11 @@ import org.springframework.util.PatternMatchUtils;
  * specified prefix and/or suffix. Exporting an attribute that holds the
  * RequestContext to all views is explicitly supported.
  *
- * <p>Example: prefix="templates/", suffix=".ftl", viewname="test" &rarr;
+ * <p>Example: prefix="templates/", suffix=".ftl", viewname="test" ->
  * "templates/test.ftl"
  *
  * <p>As a special feature, redirect URLs can be specified via the "redirect:"
- * prefix. For example: "redirect:myAction" will trigger a redirect to the given
+ * prefix. E.g.: "redirect:myAction" will trigger a redirect to the given
  * URL, rather than resolution as standard view name. This is typically used
  * for redirecting to a controller URL after finishing a form workflow.
  *
@@ -74,19 +74,23 @@ public class UrlBasedViewResolver extends ViewResolverSupport
 	public static final String REDIRECT_URL_PREFIX = "redirect:";
 
 
-	private @Nullable Class<?> viewClass;
+	@Nullable
+	private Class<?> viewClass;
 
 	private String prefix = "";
 
 	private String suffix = "";
 
-	private String @Nullable [] viewNames;
+	@Nullable
+	private String[] viewNames;
 
 	private Function<String, RedirectView> redirectViewProvider = RedirectView::new;
 
-	private @Nullable String requestContextAttribute;
+	@Nullable
+	private String requestContextAttribute;
 
-	private @Nullable ApplicationContext applicationContext;
+	@Nullable
+	private ApplicationContext applicationContext;
 
 
 	/**
@@ -110,7 +114,8 @@ public class UrlBasedViewResolver extends ViewResolverSupport
 	 * Return the view class to be used to create views.
 	 * @see #setViewClass
 	 */
-	protected @Nullable Class<?> getViewClass() {
+	@Nullable
+	protected Class<?> getViewClass() {
 		return this.viewClass;
 	}
 
@@ -148,7 +153,7 @@ public class UrlBasedViewResolver extends ViewResolverSupport
 	 * 'my*', '*Report' and '*Repo*' will all match the view name 'myReport'.
 	 * @see #canHandle
 	 */
-	public void setViewNames(String @Nullable ... viewNames) {
+	public void setViewNames(@Nullable String... viewNames) {
 		this.viewNames = viewNames;
 	}
 
@@ -156,7 +161,8 @@ public class UrlBasedViewResolver extends ViewResolverSupport
 	 * Return the view names (or name patterns) that can be handled by this
 	 * {@link ViewResolver}.
 	 */
-	protected String @Nullable [] getViewNames() {
+	@Nullable
+	protected String[] getViewNames() {
 		return this.viewNames;
 	}
 
@@ -180,7 +186,8 @@ public class UrlBasedViewResolver extends ViewResolverSupport
 	/**
 	 * Return the name of the {@link RequestContext} attribute for all views, if any.
 	 */
-	protected @Nullable String getRequestContextAttribute() {
+	@Nullable
+	protected String getRequestContextAttribute() {
 		return this.requestContextAttribute;
 	}
 
@@ -201,7 +208,8 @@ public class UrlBasedViewResolver extends ViewResolverSupport
 	 * Return the containing {@code ApplicationContext}, if any.
 	 * @see #setApplicationContext
 	 */
-	public @Nullable ApplicationContext getApplicationContext() {
+	@Nullable
+	public ApplicationContext getApplicationContext() {
 		return this.applicationContext;
 	}
 
@@ -230,12 +238,16 @@ public class UrlBasedViewResolver extends ViewResolverSupport
 		}
 
 		View view = applyLifecycleMethods(viewName, urlBasedView);
-		return urlBasedView.resourceExists(locale)
-				.flatMap(exists -> exists ? Mono.just(view) : Mono.empty());
+		try {
+			return (urlBasedView.checkResourceExists(locale) ? Mono.just(view) : Mono.empty());
+		}
+		catch (Exception ex) {
+			return Mono.error(ex);
+		}
 	}
 
 	/**
-	 * Indicates whether this {@link ViewResolver} can handle the supplied
+	 * Indicates whether or not this {@link ViewResolver} can handle the supplied
 	 * view name. If not, an empty result is returned. The default implementation
 	 * checks against the configured {@link #setViewNames view names}.
 	 * @param viewName the name of the view to retrieve
@@ -312,8 +324,8 @@ public class UrlBasedViewResolver extends ViewResolverSupport
 		ApplicationContext context = getApplicationContext();
 		if (context != null) {
 			Object initialized = context.getAutowireCapableBeanFactory().initializeBean(view, viewName);
-			if (initialized instanceof View initializedView) {
-				return initializedView;
+			if (initialized instanceof View) {
+				return (View) initialized;
 			}
 		}
 		return view;

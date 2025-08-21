@@ -45,10 +45,10 @@ public class SimpleTryThrowExceptionFinallyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").doTry().to("mock:try").throwException(new IllegalArgumentException("Damn")).doFinally()
                         .to("mock:finally").end().to("mock:result");
             }

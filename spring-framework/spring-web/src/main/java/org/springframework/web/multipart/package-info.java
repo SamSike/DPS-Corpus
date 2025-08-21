@@ -4,7 +4,9 @@
  * and a generic extension of the HttpServletRequest interface
  * for accessing multipart files in web application code.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.multipart;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

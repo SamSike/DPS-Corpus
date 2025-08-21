@@ -24,8 +24,7 @@ import javax.xml.namespace.QName;
 @XmlRegistry
 public class ObjectFactory {
 
-    private final static QName _Migrations_QNAME = new QName("http://www.jooq.org/xsd/jooq-migrations-3.20.0.xsd", "migrations");
-    private final static QName _Commit_QNAME = new QName("http://www.jooq.org/xsd/jooq-migrations-3.20.0.xsd", "commit");
+    private final static QName _Migrations_QNAME = new QName("http://www.jooq.org/xsd/jooq-migrations-3.15.0.xsd", "migrations");
 
     /**
      * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: org.jooq.migrations.xml.jaxb
@@ -59,14 +58,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link TagType }
-     * 
-     */
-    public TagType createTagType() {
-        return new TagType();
-    }
-
-    /**
      * Create an instance of {@link FileType }
      * 
      */
@@ -82,22 +73,9 @@ public class ObjectFactory {
      * @return
      *     the new instance of {@link JAXBElement }{@code <}{@link MigrationsType }{@code >}
      */
-    @XmlElementDecl(namespace = "http://www.jooq.org/xsd/jooq-migrations-3.20.0.xsd", name = "migrations")
+    @XmlElementDecl(namespace = "http://www.jooq.org/xsd/jooq-migrations-3.15.0.xsd", name = "migrations")
     public JAXBElement<MigrationsType> createMigrations(MigrationsType value) {
         return new JAXBElement<MigrationsType>(_Migrations_QNAME, MigrationsType.class, null, value);
-    }
-
-    /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link CommitType }{@code >}
-     * 
-     * @param value
-     *     Java instance representing xml element's value.
-     * @return
-     *     the new instance of {@link JAXBElement }{@code <}{@link CommitType }{@code >}
-     */
-    @XmlElementDecl(namespace = "http://www.jooq.org/xsd/jooq-migrations-3.20.0.xsd", name = "commit")
-    public JAXBElement<CommitType> createCommit(CommitType value) {
-        return new JAXBElement<CommitType>(_Commit_QNAME, CommitType.class, null, value);
     }
 
 }

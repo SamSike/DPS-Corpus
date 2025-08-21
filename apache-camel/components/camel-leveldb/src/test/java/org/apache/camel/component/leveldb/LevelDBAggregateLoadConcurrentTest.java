@@ -40,8 +40,9 @@ public class LevelDBAggregateLoadConcurrentTest extends LevelDBTestSupport {
 
     @BeforeEach
     @Override
-    public void doPreSetup() throws Exception {
+    public void setUp() throws Exception {
         deleteDirectory("target/data");
+        super.setUp();
     }
 
     @Test
@@ -52,7 +53,7 @@ public class LevelDBAggregateLoadConcurrentTest extends LevelDBTestSupport {
 
         ExecutorService executor = Executors.newFixedThreadPool(10);
 
-        LOG.info("Starting to send {} messages.", SIZE);
+        LOG.info("Staring to send " + SIZE + " messages.");
 
         for (int i = 0; i < SIZE; i++) {
             final int value = 1;
@@ -61,7 +62,7 @@ public class LevelDBAggregateLoadConcurrentTest extends LevelDBTestSupport {
                 public Object call() throws Exception {
                     char id = KEYS[key];
                     LOG.debug("Sending {} with id {}", value, id);
-                    template.sendBodyAndHeader("direct:start", value, "id", Character.toString(id));
+                    template.sendBodyAndHeader("direct:start", value, "id", "" + id);
                     // simulate a little delay
                     Thread.sleep(3);
                     return null;
@@ -69,7 +70,7 @@ public class LevelDBAggregateLoadConcurrentTest extends LevelDBTestSupport {
             });
         }
 
-        LOG.info("Sending all {} message done. Now waiting for aggregation to complete.", SIZE);
+        LOG.info("Sending all " + SIZE + " message done. Now waiting for aggregation to complete.");
 
         MockEndpoint.assertIsSatisfied(context);
         executor.shutdownNow();

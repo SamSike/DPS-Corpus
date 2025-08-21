@@ -16,13 +16,10 @@
  */
 package org.apache.camel.util;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 
 import org.apache.camel.util.function.TriConsumer;
 
-@Deprecated(since = "4.1.0")
 @SuppressWarnings("unchecked")
 public class DoubleMap<K1, K2, V> {
 
@@ -38,7 +35,6 @@ public class DoubleMap<K1, K2, V> {
         Entry next;
     }
 
-    private final Lock lock = new ReentrantLock();
     private Entry[] table;
     private int mask;
 
@@ -81,78 +77,68 @@ public class DoubleMap<K1, K2, V> {
         return false;
     }
 
-    public void put(K1 k1, K2 k2, V v) {
-        lock.lock();
-        try {
-            Entry[] table = this.table;
-            int size = size() + 1;
-            int realSize = closedTableSize(size);
-            if (realSize <= table.length) {
-                realSize = table.length;
-                int index = smear(k1.hashCode() * 31 + k2.hashCode()) & (realSize - 1);
-                for (Entry oldEntry = table[index]; oldEntry != null; oldEntry = oldEntry.next) {
-                    if (oldEntry.k1 == k1 && oldEntry.k2 == k2) {
-                        oldEntry.v = v;
-                        return;
-                    }
+    public synchronized void put(K1 k1, K2 k2, V v) {
+        Entry[] table = this.table;
+        int size = size() + 1;
+        int realSize = closedTableSize(size);
+        if (realSize <= table.length) {
+            realSize = table.length;
+            int index = smear(k1.hashCode() * 31 + k2.hashCode()) & (realSize - 1);
+            for (Entry oldEntry = table[index]; oldEntry != null; oldEntry = oldEntry.next) {
+                if (oldEntry.k1 == k1 && oldEntry.k2 == k2) {
+                    oldEntry.v = v;
+                    return;
                 }
-                Entry entry = new Entry();
-                entry.k1 = k1;
-                entry.k2 = k2;
-                entry.v = v;
-                entry.next = table[index];
-                table[index] = entry;
-            } else {
-                Entry[] newT = new Entry[realSize];
-                int index = smear(k1.hashCode() * 31 + k2.hashCode()) & (realSize - 1);
-                Entry entry = new Entry();
-                newT[index] = entry;
-                entry.k1 = k1;
-                entry.k2 = k2;
-                entry.v = v;
-                for (Entry oldEntry : table) {
-                    while (oldEntry != null) {
-                        if (k1 != oldEntry.k1 || k2 != oldEntry.k2) {
-                            index = smear(oldEntry.k1.hashCode() * 31 + oldEntry.k2.hashCode()) & (realSize - 1);
-                            Entry newEntry = new Entry();
-                            newEntry.k1 = oldEntry.k1;
-                            newEntry.k2 = oldEntry.k2;
-                            newEntry.v = oldEntry.v;
-                            newEntry.next = newT[index];
-                            newT[index] = newEntry;
-                        }
-                        oldEntry = oldEntry.next;
-                    }
-                }
-                this.table = newT;
-                this.mask = realSize - 1;
             }
-        } finally {
-            lock.unlock();
+            Entry entry = new Entry();
+            entry.k1 = k1;
+            entry.k2 = k2;
+            entry.v = v;
+            entry.next = table[index];
+            table[index] = entry;
+        } else {
+            Entry[] newT = new Entry[realSize];
+            int index = smear(k1.hashCode() * 31 + k2.hashCode()) & (realSize - 1);
+            Entry entry = new Entry();
+            newT[index] = entry;
+            entry.k1 = k1;
+            entry.k2 = k2;
+            entry.v = v;
+            for (Entry oldEntry : table) {
+                while (oldEntry != null) {
+                    if (k1 != oldEntry.k1 || k2 != oldEntry.k2) {
+                        index = smear(oldEntry.k1.hashCode() * 31 + oldEntry.k2.hashCode()) & (realSize - 1);
+                        Entry newEntry = new Entry();
+                        newEntry.k1 = oldEntry.k1;
+                        newEntry.k2 = oldEntry.k2;
+                        newEntry.v = oldEntry.v;
+                        newEntry.next = newT[index];
+                        newT[index] = newEntry;
+                    }
+                    oldEntry = oldEntry.next;
+                }
+            }
+            this.table = newT;
+            this.mask = realSize - 1;
         }
     }
 
-    public boolean remove(K1 k1, K2 k2) {
-        lock.lock();
-        try {
-            Entry[] table = this.table;
-            int mask = this.mask;
-            int index = smear(k1.hashCode() * 31 + k2.hashCode()) & mask;
-            Entry prevEntry = null;
-            for (Entry oldEntry = table[index]; oldEntry != null; prevEntry = oldEntry, oldEntry = oldEntry.next) {
-                if (oldEntry.k1 == k1 && oldEntry.k2 == k2) {
-                    if (prevEntry == null) {
-                        table[index] = oldEntry.next;
-                    } else {
-                        prevEntry.next = oldEntry.next;
-                    }
-                    return true;
+    public synchronized boolean remove(K1 k1, K2 k2) {
+        Entry[] table = this.table;
+        int mask = this.mask;
+        int index = smear(k1.hashCode() * 31 + k2.hashCode()) & mask;
+        Entry prevEntry = null;
+        for (Entry oldEntry = table[index]; oldEntry != null; prevEntry = oldEntry, oldEntry = oldEntry.next) {
+            if (oldEntry.k1 == k1 && oldEntry.k2 == k2) {
+                if (prevEntry == null) {
+                    table[index] = oldEntry.next;
+                } else {
+                    prevEntry.next = oldEntry.next;
                 }
+                return true;
             }
-            return false;
-        } finally {
-            lock.unlock();
         }
+        return false;
     }
 
     public V getFirst(Predicate<K1> p1, Predicate<K2> p2) {
@@ -180,13 +166,8 @@ public class DoubleMap<K1, K2, V> {
         return n;
     }
 
-    public void clear() {
-        lock.lock();
-        try {
-            this.table = new Entry[table.length];
-        } finally {
-            lock.unlock();
-        }
+    public synchronized void clear() {
+        this.table = new Entry[table.length];
     }
 
     static int smear(int hashCode) {

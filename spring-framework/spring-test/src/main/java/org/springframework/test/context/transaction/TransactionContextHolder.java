@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package org.springframework.test.context.transaction;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.NamedInheritableThreadLocal;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link InheritableThreadLocal}-based holder for the current {@link TransactionContext}.
@@ -40,11 +39,13 @@ final class TransactionContextHolder {
 		currentTransactionContext.set(transactionContext);
 	}
 
-	static @Nullable TransactionContext getCurrentTransactionContext() {
+	@Nullable
+	static TransactionContext getCurrentTransactionContext() {
 		return currentTransactionContext.get();
 	}
 
-	static @Nullable TransactionContext removeCurrentTransactionContext() {
+	@Nullable
+	static TransactionContext removeCurrentTransactionContext() {
 		TransactionContext transactionContext = currentTransactionContext.get();
 		currentTransactionContext.remove();
 		return transactionContext;

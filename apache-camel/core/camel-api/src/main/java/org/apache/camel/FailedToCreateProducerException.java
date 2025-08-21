@@ -16,8 +16,6 @@
  */
 package org.apache.camel;
 
-import static org.apache.camel.util.URISupport.sanitizeUri;
-
 /**
  * Thrown if Camel failed to create a producer for a given endpoint.
  */
@@ -27,7 +25,7 @@ public class FailedToCreateProducerException extends RuntimeCamelException {
 
     public FailedToCreateProducerException(Endpoint endpoint, Throwable cause) {
         super("Failed to create Producer for endpoint: " + endpoint + ". Reason: " + cause, cause);
-        this.uri = sanitizeUri(endpoint.getEndpointUri());
+        this.uri = endpoint.getEndpointUri();
     }
 
     public String getUri() {

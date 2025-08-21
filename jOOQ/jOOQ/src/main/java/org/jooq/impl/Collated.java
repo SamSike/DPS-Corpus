@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,16 +37,17 @@
  */
 package org.jooq.impl;
 
-// ...
-import static org.jooq.impl.DSL.collation;
-import static org.jooq.impl.DSL.unquotedName;
 import static org.jooq.impl.Keywords.K_COLLATE;
+
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 import org.jooq.Binding;
 import org.jooq.Collation;
 import org.jooq.Context;
 import org.jooq.DataType;
 import org.jooq.Field;
+import org.jooq.Function1;
 import org.jooq.QueryPart;
 // ...
 // ...
@@ -56,11 +57,11 @@ import org.jooq.QueryPart;
  */
 final class Collated extends AbstractField<String> implements QOM.Collated {
 
-    final Field<?>  field;
-    final Collation collation;
+    private final Field<?>  field;
+    private final Collation collation;
 
     Collated(Field<?> field, Collation collation) {
-        super(field.getQualifiedName(), type(field).collation(collation), field.getCommentPart(), binding(field));
+        super(field.getQualifiedName(), type(field), field.getCommentPart(), binding(field));
 
         this.field = field;
         this.collation = collation;
@@ -68,28 +69,22 @@ final class Collated extends AbstractField<String> implements QOM.Collated {
 
     @SuppressWarnings("unchecked")
     private static final Binding<?, String> binding(Field<?> field) {
-        return field.getDataType().isString() ? (Binding<?, String>) field.getBinding() : SQLDataType.VARCHAR.getBinding();
+        return field.getType() == String.class ? (Binding<?, String>) field.getBinding() : SQLDataType.VARCHAR.getBinding();
     }
 
     @SuppressWarnings("unchecked")
     private static final DataType<String> type(Field<?> field) {
-        return field.getDataType().isString() ? (DataType<String>) field.getDataType() : SQLDataType.VARCHAR;
+        return field.getType() == String.class ? (DataType<String>) field.getDataType() : SQLDataType.VARCHAR;
     }
 
     @Override
     public final void accept(Context<?> ctx) {
 
         // [#8011] Collations are vendor-specific storage clauses, which we might need to ignore
-        if (ctx.configuration().data("org.jooq.ddl.ignore-storage-clauses") != null)
-            ctx.visit(field);
-
-
-
-
-
-
-        else
+        if (ctx.configuration().data("org.jooq.ddl.ignore-storage-clauses") == null)
             ctx.sql("((").visit(field).sql(") ").visit(K_COLLATE).sql(' ').visit(collation).sql(')');
+        else
+            ctx.visit(field);
     }
 
     // -------------------------------------------------------------------------

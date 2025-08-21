@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,29 +21,26 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ProblemDetail;
-import org.springframework.web.ErrorResponse;
 
 /**
- * Thrown when the {@link DispatcherServlet} can't find a handler for a request,
- * which may be handled with a configured {@link HandlerExceptionResolver}.
+ * By default when the DispatcherServlet can't find a handler for a request it
+ * sends a 404 response. However if its property "throwExceptionIfNoHandlerFound"
+ * is set to {@code true} this exception is raised and may be handled with
+ * a configured HandlerExceptionResolver.
  *
  * @author Brian Clozel
  * @since 4.0
+ * @see DispatcherServlet#setThrowExceptionIfNoHandlerFound(boolean)
  * @see DispatcherServlet#noHandlerFound(HttpServletRequest, HttpServletResponse)
  */
 @SuppressWarnings("serial")
-public class NoHandlerFoundException extends ServletException implements ErrorResponse {
+public class NoHandlerFoundException extends ServletException {
 
 	private final String httpMethod;
 
 	private final String requestURL;
 
-	private final HttpHeaders requestHeaders;
-
-	private final ProblemDetail body;
+	private final HttpHeaders headers;
 
 
 	/**
@@ -53,17 +50,12 @@ public class NoHandlerFoundException extends ServletException implements ErrorRe
 	 * @param headers the HTTP request headers
 	 */
 	public NoHandlerFoundException(String httpMethod, String requestURL, HttpHeaders headers) {
-		super("No endpoint " + httpMethod + " " + requestURL + ".");
+		super("No handler found for " + httpMethod + " " + requestURL);
 		this.httpMethod = httpMethod;
 		this.requestURL = requestURL;
-		this.requestHeaders = headers;
-		this.body = ProblemDetail.forStatusAndDetail(getStatusCode(), getMessage());
+		this.headers = headers;
 	}
 
-	@Override
-	public HttpStatusCode getStatusCode() {
-		return HttpStatus.NOT_FOUND;
-	}
 
 	public String getHttpMethod() {
 		return this.httpMethod;
@@ -73,28 +65,8 @@ public class NoHandlerFoundException extends ServletException implements ErrorRe
 		return this.requestURL;
 	}
 
-	/**
-	 * Return headers to use for the response.
-	 * <p><strong>Note:</strong> As of 6.0 this method overlaps with
-	 * {@link ErrorResponse#getHeaders()} and therefore no longer returns request
-	 * headers. Use {@link #getRequestHeaders()} instead for request headers.
-	 */
-	@Override
 	public HttpHeaders getHeaders() {
-		return ErrorResponse.super.getHeaders();
-	}
-
-	/**
-	 * Return the headers of the request.
-	 * @since 6.0.3
-	 */
-	public HttpHeaders getRequestHeaders() {
-		return this.requestHeaders;
-	}
-
-	@Override
-	public ProblemDetail getBody() {
-		return this.body;
+		return this.headers;
 	}
 
 }

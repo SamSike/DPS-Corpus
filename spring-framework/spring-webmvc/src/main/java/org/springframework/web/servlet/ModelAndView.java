@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,8 @@ package org.springframework.web.servlet;
 
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.ui.ModelMap;
 import org.springframework.util.CollectionUtils;
 
@@ -48,15 +47,18 @@ import org.springframework.util.CollectionUtils;
 public class ModelAndView {
 
 	/** View instance or view name String. */
-	private @Nullable Object view;
+	@Nullable
+	private Object view;
 
 	/** Model Map. */
-	private @Nullable ModelMap model;
+	@Nullable
+	private ModelMap model;
 
 	/** Optional HTTP status for the response. */
-	private @Nullable HttpStatusCode status;
+	@Nullable
+	private HttpStatus status;
 
-	/** Indicates whether this instance has been cleared with a call to {@link #clear()}. */
+	/** Indicates whether or not this instance has been cleared with a call to {@link #clear()}. */
 	private boolean cleared = false;
 
 
@@ -130,7 +132,7 @@ public class ModelAndView {
 	 * (to be set just prior to View rendering)
 	 * @since 4.3.8
 	 */
-	public ModelAndView(String viewName, HttpStatusCode status) {
+	public ModelAndView(String viewName, HttpStatus status) {
 		this.view = viewName;
 		this.status = status;
 	}
@@ -146,7 +148,7 @@ public class ModelAndView {
 	 * (to be set just prior to View rendering)
 	 * @since 4.3
 	 */
-	public ModelAndView(@Nullable String viewName, @Nullable Map<String, ?> model, @Nullable HttpStatusCode status) {
+	public ModelAndView(@Nullable String viewName, @Nullable Map<String, ?> model, @Nullable HttpStatus status) {
 		this.view = viewName;
 		if (model != null) {
 			getModelMap().addAllAttributes(model);
@@ -191,8 +193,9 @@ public class ModelAndView {
 	 * Return the view name to be resolved by the DispatcherServlet
 	 * via a ViewResolver, or {@code null} if we are using a View object.
 	 */
-	public @Nullable String getViewName() {
-		return (this.view instanceof String name ? name : null);
+	@Nullable
+	public String getViewName() {
+		return (this.view instanceof String ? (String) this.view : null);
 	}
 
 	/**
@@ -207,12 +210,13 @@ public class ModelAndView {
 	 * Return the View object, or {@code null} if we are using a view name
 	 * to be resolved by the DispatcherServlet via a ViewResolver.
 	 */
-	public @Nullable View getView() {
-		return (this.view instanceof View v ? v : null);
+	@Nullable
+	public View getView() {
+		return (this.view instanceof View ? (View) this.view : null);
 	}
 
 	/**
-	 * Indicate whether this {@code ModelAndView} has a view, either
+	 * Indicate whether or not this {@code ModelAndView} has a view, either
 	 * as a view name or as a direct {@link View} instance.
 	 */
 	public boolean hasView() {
@@ -232,7 +236,8 @@ public class ModelAndView {
 	 * Return the model map. May return {@code null}.
 	 * Called by DispatcherServlet for evaluation of the model.
 	 */
-	protected @Nullable Map<String, Object> getModelInternal() {
+	@Nullable
+	protected Map<String, Object> getModelInternal() {
 		return this.model;
 	}
 
@@ -259,7 +264,7 @@ public class ModelAndView {
 	 * <p>The response status is set just prior to View rendering.
 	 * @since 4.3
 	 */
-	public void setStatus(@Nullable HttpStatusCode status) {
+	public void setStatus(@Nullable HttpStatus status) {
 		this.status = status;
 	}
 
@@ -267,7 +272,8 @@ public class ModelAndView {
 	 * Return the configured HTTP status for the response, if any.
 	 * @since 4.3
 	 */
-	public @Nullable HttpStatusCode getStatus() {
+	@Nullable
+	public HttpStatus getStatus() {
 		return this.status;
 	}
 
@@ -297,7 +303,7 @@ public class ModelAndView {
 
 	/**
 	 * Add all attributes contained in the provided Map to the model.
-	 * @param modelMap a Map of attributeName &rarr; attributeValue pairs
+	 * @param modelMap a Map of attributeName -> attributeValue pairs
 	 * @see ModelMap#addAllAttributes(Map)
 	 * @see #getModelMap()
 	 */

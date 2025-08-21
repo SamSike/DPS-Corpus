@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package org.springframework.web.reactive.function.server;
 
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
@@ -35,15 +34,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
 /**
- * Tests for {@link DefaultServerRequestBuilder}.
+ * Unit tests for {@link DefaultServerRequestBuilder}.
  *
  * @author Arjen Poutsma
  * @author Sam Brannen
  */
-class DefaultServerRequestBuilderTests {
+public class DefaultServerRequestBuilderTests {
 
 	@Test
-	void from() {
+	public void from() {
 		MockServerHttpRequest request = MockServerHttpRequest.post("https://example.com")
 				.header("foo", "bar")
 				.build();
@@ -57,11 +56,8 @@ class DefaultServerRequestBuilderTests {
 				.map(s -> s.getBytes(StandardCharsets.UTF_8))
 				.map(DefaultDataBufferFactory.sharedInstance::wrap);
 
-		URI uri = URI.create("https://example2.com/foo/bar");
 		ServerRequest result = ServerRequest.from(other)
 				.method(HttpMethod.HEAD)
-				.uri(uri)
-				.contextPath("/foo")
 				.headers(httpHeaders -> httpHeaders.set("foo", "baar"))
 				.cookies(cookies -> cookies.set("baz", ResponseCookie.from("baz", "quux").build()))
 				.attribute("attr2", "value2")
@@ -70,10 +66,7 @@ class DefaultServerRequestBuilderTests {
 				.build();
 
 		assertThat(result.method()).isEqualTo(HttpMethod.HEAD);
-		assertThat(result.uri()).isEqualTo(uri);
-		assertThat(result.requestPath().pathWithinApplication().value()).isEqualTo("/bar");
-		assertThat(result.requestPath().contextPath().value()).isEqualTo("/foo");
-		assertThat(result.headers().asHttpHeaders().size()).isOne();
+		assertThat(result.headers().asHttpHeaders()).hasSize(1);
 		assertThat(result.headers().asHttpHeaders().getFirst("foo")).isEqualTo("baar");
 		assertThat(result.cookies()).hasSize(1);
 		assertThat(result.cookies().getFirst("baz").getValue()).isEqualTo("quux");

@@ -25,11 +25,12 @@ import java.security.PrivateKey;
 import org.apache.camel.component.as2.api.AS2Header;
 import org.apache.camel.component.as2.api.CanonicalOutputStream;
 import org.apache.camel.component.as2.api.util.EntityUtils;
-import org.apache.camel.util.ObjectHelper;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.Header;
-import org.apache.hc.core5.http.HttpException;
-import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.apache.http.Header;
+import org.apache.http.HeaderIterator;
+import org.apache.http.HttpException;
+import org.apache.http.entity.ContentType;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.Args;
 import org.bouncycastle.cms.CMSEnvelopedData;
 import org.bouncycastle.cms.CMSEnvelopedDataGenerator;
 import org.bouncycastle.cms.CMSException;
@@ -49,9 +50,9 @@ public class ApplicationPkcs7MimeEnvelopedDataEntity extends MimeEntity {
                                                    String encryptedContentTransferEncoding,
                                                    boolean isMainBody)
                                                                        throws HttpException {
-        super(ContentType.create("application/pkcs7-mime", new BasicNameValuePair("smime-type", "enveloped-data"),
-                new BasicNameValuePair("name", "smime.p7m")),
-              encryptedContentTransferEncoding);
+        setContentType(ContentType.create("application/pkcs7-mime", new BasicNameValuePair("smime-type", "enveloped-data"),
+                new BasicNameValuePair("name", "smime.p7m")));
+        setContentTransferEncoding(encryptedContentTransferEncoding);
         addHeader(AS2Header.CONTENT_DISPOSITION, CONTENT_DISPOSITION);
         setMainBody(isMainBody);
         try {
@@ -63,11 +64,11 @@ public class ApplicationPkcs7MimeEnvelopedDataEntity extends MimeEntity {
 
     public ApplicationPkcs7MimeEnvelopedDataEntity(byte[] encryptedData, String encryptedContentTransferEncoding,
                                                    boolean isMainBody) {
-        super(ContentType.create("application/pkcs7-mime", new BasicNameValuePair("smime-type", "enveloped-data"),
-                new BasicNameValuePair("name", "smime.p7m")),
-              encryptedContentTransferEncoding);
-        this.encryptedData = ObjectHelper.notNull(encryptedData, "encryptedData");
+        this.encryptedData = Args.notNull(encryptedData, "encryptedData");
 
+        setContentType(ContentType.create("application/pkcs7-mime", new BasicNameValuePair("smime-type", "enveloped-data"),
+                new BasicNameValuePair("name", "smime.p7m")));
+        setContentTransferEncoding(encryptedContentTransferEncoding);
         addHeader(AS2Header.CONTENT_DISPOSITION, CONTENT_DISPOSITION);
         setMainBody(isMainBody);
     }
@@ -80,7 +81,9 @@ public class ApplicationPkcs7MimeEnvelopedDataEntity extends MimeEntity {
         if (!isMainBody()) {
             try (CanonicalOutputStream canonicalOutstream = new CanonicalOutputStream(ncos, StandardCharsets.US_ASCII.name())) {
 
-                for (Header header : getAllHeaders()) {
+                HeaderIterator it = headerIterator();
+                while (it.hasNext()) {
+                    Header header = it.nextHeader();
                     canonicalOutstream.writeln(header.toString());
                 }
                 canonicalOutstream.writeln(); // ensure empty line between
@@ -116,8 +119,4 @@ public class ApplicationPkcs7MimeEnvelopedDataEntity extends MimeEntity {
         }
     }
 
-    @Override
-    public void close() throws IOException {
-        // do nothing
-    }
 }

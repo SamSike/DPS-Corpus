@@ -23,39 +23,23 @@ import java.util.concurrent.TimeUnit;
 import jakarta.jms.Destination;
 
 import org.apache.activemq.artemis.jms.client.ActiveMQQueue;
-import org.apache.camel.CamelContext;
-import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.Exchange;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.awaitility.Awaitility;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.apache.camel.component.jms.JmsConstants.JMS_X_GROUP_ID;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 @Tags({ @Tag("slow") })
 @Timeout(60)
 public class JmsProducerWithJMSHeaderTest extends AbstractJMSTest {
-
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
-    protected CamelContext context;
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
 
     @Test
     public void testInOnlyJMSPrioritory() throws Exception {
@@ -141,6 +125,9 @@ public class JmsProducerWithJMSHeaderTest extends AbstractJMSTest {
         template.sendBodyAndHeader("activemq:queue:barJmsProducerWithJMSHeaderTest?preserveMessageQos=true", "Hello World",
                 "JMSExpiration", ttl);
 
+        // sleep just a little
+        Thread.sleep(2000);
+
         // use timeout in case running on slow box
         Exchange bar = consumer.receive("activemq:queue:barJmsProducerWithJMSHeaderTest", 10000);
         assertNotNull(bar, "Should be a message on queue");
@@ -199,12 +186,16 @@ public class JmsProducerWithJMSHeaderTest extends AbstractJMSTest {
         template.sendBodyAndHeaders("activemq:queue:barJmsProducerWithJMSHeaderTest?preserveMessageQos=true", "Hello World",
                 headers);
 
+        // sleep just a little
+        Thread.sleep(50);
+
         Exchange bar = consumer.receive("activemq:queue:barJmsProducerWithJMSHeaderTest", 5000);
         assertNotNull(bar, "Should be a message on queue");
         template.send("activemq:queue:fooJmsProducerWithJMSHeaderTest?preserveMessageQos=true", bar);
 
-        Awaitility.await().atMost(1, TimeUnit.SECONDS)
-                .untilAsserted(() -> MockEndpoint.assertIsSatisfied(context));
+        Thread.sleep(1000);
+
+        MockEndpoint.assertIsSatisfied(context);
     }
 
     @Test
@@ -330,17 +321,5 @@ public class JmsProducerWithJMSHeaderTest extends AbstractJMSTest {
 
             }
         };
-    }
-
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        context = camelContextExtension.getContext();
-        template = camelContextExtension.getProducerTemplate();
-        consumer = camelContextExtension.getConsumerTemplate();
     }
 }

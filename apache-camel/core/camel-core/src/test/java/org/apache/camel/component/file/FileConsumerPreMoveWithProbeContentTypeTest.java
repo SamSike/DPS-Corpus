@@ -36,10 +36,10 @@ public class FileConsumerPreMoveWithProbeContentTypeTest extends ContextTestSupp
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?probeContentType=true&preMove=work/work-${file:name}&initialDelay=0&delay=10"))
                         .to("mock:result");
             }

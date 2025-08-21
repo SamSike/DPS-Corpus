@@ -127,31 +127,25 @@ public class HazelcastSedaConsumer extends DefaultConsumer implements Runnable {
                             transactionCtx.rollbackTransaction();
                         }
                     }
-                } else {
-                    if (transactionCtx != null) {
-                        transactionCtx.commitTransaction();
-                    }
                 }
             } catch (InterruptedException e) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Hzlq Consumer Interrupted: {}", e, e);
                 }
-                Thread.currentThread().interrupt();
                 continue;
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 // Rollback
                 if (transactionCtx != null) {
                     LOG.trace("Rollback transaction: {}", transactionCtx.getTxnId());
                     try {
                         transactionCtx.rollbackTransaction();
-                    } catch (Exception ignore) {
+                    } catch (Throwable ignore) {
                     }
                 }
                 getExceptionHandler().handleException("Error processing exchange", exchange, e);
                 try {
                     Thread.sleep(endpoint.getConfiguration().getOnErrorDelay());
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
+                } catch (InterruptedException ignore) {
                 }
             }
         }

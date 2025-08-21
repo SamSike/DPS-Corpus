@@ -119,9 +119,6 @@ public class JpaConsumer extends ScheduledBatchPollingConsumer {
                 List<?> results = toExecute.getResultList();
                 LOG.trace("Got result list from query {}", results);
 
-                // okay we have some response from jpa so lets mark the consumer as ready
-                forceConsumerAsReady();
-
                 for (Object result : results) {
                     DataHolder holder = new DataHolder();
                     holder.manager = entityManager;
@@ -346,7 +343,7 @@ public class JpaConsumer extends ScheduledBatchPollingConsumer {
 
     /**
      * A strategy method to lock an object with an exclusive lock so that it can be processed
-     *
+     * 
      * @param  entity        the entity to be locked
      * @param  entityManager entity manager
      * @return               true if the entity was locked
@@ -409,7 +406,7 @@ public class JpaConsumer extends ScheduledBatchPollingConsumer {
         Entity entity = clazz.getAnnotation(Entity.class);
 
         // Check if the property name has been defined for Entity annotation
-        if (entity != null && !entity.name().isEmpty()) {
+        if (entity != null && !entity.name().equals("")) {
             return entity.name();
         } else {
             return null;

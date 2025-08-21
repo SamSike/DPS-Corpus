@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
@@ -39,10 +38,12 @@ import org.springframework.http.HttpRange;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.AbstractServerHttpRequest;
 import org.springframework.http.server.reactive.SslInfo;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MimeType;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
@@ -54,22 +55,32 @@ import org.springframework.web.util.UriComponentsBuilder;
  */
 public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 
+	/**
+	 * String representation of one of {@link HttpMethod} or not empty custom method (e.g. <i>CONNECT</i>).
+	 */
+	private final String httpMethod;
+
 	private final MultiValueMap<String, HttpCookie> cookies;
 
-	private final @Nullable InetSocketAddress localAddress;
+	@Nullable
+	private final InetSocketAddress localAddress;
 
-	private final @Nullable InetSocketAddress remoteAddress;
+	@Nullable
+	private final InetSocketAddress remoteAddress;
 
-	private final @Nullable SslInfo sslInfo;
+	@Nullable
+	private final SslInfo sslInfo;
 
 	private final Flux<DataBuffer> body;
 
-	private MockServerHttpRequest(HttpMethod httpMethod,
+	private MockServerHttpRequest(String httpMethod,
 			URI uri, @Nullable String contextPath, HttpHeaders headers, MultiValueMap<String, HttpCookie> cookies,
 			@Nullable InetSocketAddress localAddress, @Nullable InetSocketAddress remoteAddress,
 			@Nullable SslInfo sslInfo, Publisher<? extends DataBuffer> body) {
 
-		super(httpMethod, uri, contextPath, headers);
+		super(uri, contextPath, headers);
+		Assert.isTrue(StringUtils.hasText(httpMethod), "HTTP method is required.");
+		this.httpMethod = httpMethod;
 		this.cookies = cookies;
 		this.localAddress = localAddress;
 		this.remoteAddress = remoteAddress;
@@ -79,17 +90,31 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 
 
 	@Override
-	public @Nullable InetSocketAddress getLocalAddress() {
+	@Nullable
+	public HttpMethod getMethod() {
+		return HttpMethod.resolve(this.httpMethod);
+	}
+
+	@Override
+	public String getMethodValue() {
+		return this.httpMethod;
+	}
+
+	@Override
+	@Nullable
+	public InetSocketAddress getLocalAddress() {
 		return this.localAddress;
 	}
 
 	@Override
-	public @Nullable InetSocketAddress getRemoteAddress() {
+	@Nullable
+	public InetSocketAddress getRemoteAddress() {
 		return this.remoteAddress;
 	}
 
 	@Override
-	protected @Nullable SslInfo initSslInfo() {
+	@Nullable
+	protected SslInfo initSslInfo() {
 		return this.sslInfo;
 	}
 
@@ -119,7 +144,7 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 	 * @param uriVars zero or more URI variables
 	 * @return the created builder
 	 */
-	public static BaseBuilder<?> get(String urlTemplate, @Nullable Object... uriVars) {
+	public static BaseBuilder<?> get(String urlTemplate, Object... uriVars) {
 		return method(HttpMethod.GET, urlTemplate, uriVars);
 	}
 
@@ -129,7 +154,7 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 	 * @param uriVars zero or more URI variables
 	 * @return the created builder
 	 */
-	public static BaseBuilder<?> head(String urlTemplate, @Nullable Object... uriVars) {
+	public static BaseBuilder<?> head(String urlTemplate, Object... uriVars) {
 		return method(HttpMethod.HEAD, urlTemplate, uriVars);
 	}
 
@@ -139,7 +164,7 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 	 * @param uriVars zero or more URI variables
 	 * @return the created builder
 	 */
-	public static BodyBuilder post(String urlTemplate, @Nullable Object... uriVars) {
+	public static BodyBuilder post(String urlTemplate, Object... uriVars) {
 		return method(HttpMethod.POST, urlTemplate, uriVars);
 	}
 
@@ -150,7 +175,7 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 	 * @param uriVars zero or more URI variables
 	 * @return the created builder
 	 */
-	public static BodyBuilder put(String urlTemplate, @Nullable Object... uriVars) {
+	public static BodyBuilder put(String urlTemplate, Object... uriVars) {
 		return method(HttpMethod.PUT, urlTemplate, uriVars);
 	}
 
@@ -160,7 +185,7 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 	 * @param uriVars zero or more URI variables
 	 * @return the created builder
 	 */
-	public static BodyBuilder patch(String urlTemplate, @Nullable Object... uriVars) {
+	public static BodyBuilder patch(String urlTemplate, Object... uriVars) {
 		return method(HttpMethod.PATCH, urlTemplate, uriVars);
 	}
 
@@ -170,7 +195,7 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 	 * @param uriVars zero or more URI variables
 	 * @return the created builder
 	 */
-	public static BaseBuilder<?> delete(String urlTemplate, @Nullable Object... uriVars) {
+	public static BaseBuilder<?> delete(String urlTemplate, Object... uriVars) {
 		return method(HttpMethod.DELETE, urlTemplate, uriVars);
 	}
 
@@ -180,7 +205,7 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 	 * @param uriVars zero or more URI variables
 	 * @return the created builder
 	 */
-	public static BaseBuilder<?> options(String urlTemplate, @Nullable Object... uriVars) {
+	public static BaseBuilder<?> options(String urlTemplate, Object... uriVars) {
 		return method(HttpMethod.OPTIONS, urlTemplate, uriVars);
 	}
 
@@ -193,7 +218,7 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 	public static BodyBuilder method(HttpMethod method, URI url) {
 		Assert.notNull(method, "HTTP method is required. " +
 				"For a custom HTTP method, please provide a String HTTP method value.");
-		return new DefaultBodyBuilder(method, url);
+		return new DefaultBodyBuilder(method.name(), url);
 	}
 
 	/**
@@ -205,18 +230,31 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 	 * @param vars variables to expand into the template
 	 * @return the created builder
 	 */
-	public static BodyBuilder method(HttpMethod method, String uri, @Nullable Object... vars) {
+	public static BodyBuilder method(HttpMethod method, String uri, Object... vars) {
 		return method(method, toUri(uri, vars));
 	}
 
-	private static URI toUri(String uri, @Nullable Object[] vars) {
+	/**
+	 * Create a builder with a raw HTTP method value value that is outside the
+	 * range of {@link HttpMethod} enum values.
+	 * @param httpMethod the HTTP methodValue value
+	 * @param uri the URI template for target the URL
+	 * @param vars variables to expand into the template
+	 * @return the created builder
+	 * @since 5.2.7
+	 */
+	public static BodyBuilder method(String httpMethod, String uri, Object... vars) {
+		return new DefaultBodyBuilder(httpMethod, toUri(uri, vars));
+	}
+
+	private static URI toUri(String uri, Object[] vars) {
 		return UriComponentsBuilder.fromUriString(uri).buildAndExpand(vars).encode().toUri();
 	}
 
 
 	/**
 	 * Request builder exposing properties not related to the body.
-	 * @param <B> the builder subclass
+	 * @param <B> the builder sub-class
 	 */
 	public interface BaseBuilder<B extends BaseBuilder<B>> {
 
@@ -258,7 +296,7 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 		/**
 		 * Set SSL session information and certificates.
 		 */
-		B sslInfo(SslInfo sslInfo);
+		void sslInfo(SslInfo sslInfo);
 
 		/**
 		 * Add one or more cookies.
@@ -283,7 +321,7 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 		 * Add the given header values.
 		 * @param headers the header values
 		 */
-		B headers(HttpHeaders headers);
+		B headers(MultiValueMap<String, String> headers);
 
 		/**
 		 * Set the list of acceptable {@linkplain MediaType media types}, as
@@ -389,11 +427,12 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 
 	private static class DefaultBodyBuilder implements BodyBuilder {
 
-		private final HttpMethod method;
+		private final String methodValue;
 
 		private final URI url;
 
-		private @Nullable String contextPath;
+		@Nullable
+		private String contextPath;
 
 		private final UriComponentsBuilder queryParamsBuilder = UriComponentsBuilder.newInstance();
 
@@ -401,14 +440,17 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 
 		private final MultiValueMap<String, HttpCookie> cookies = new LinkedMultiValueMap<>();
 
-		private @Nullable InetSocketAddress remoteAddress;
+		@Nullable
+		private InetSocketAddress remoteAddress;
 
-		private @Nullable InetSocketAddress localAddress;
+		@Nullable
+		private InetSocketAddress localAddress;
 
-		private @Nullable SslInfo sslInfo;
+		@Nullable
+		private SslInfo sslInfo;
 
-		DefaultBodyBuilder(HttpMethod method, URI url) {
-			this.method = method;
+		DefaultBodyBuilder(String method, URI url) {
+			this.methodValue = method;
 			this.url = url;
 		}
 
@@ -443,9 +485,8 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 		}
 
 		@Override
-		public BodyBuilder sslInfo(SslInfo sslInfo) {
+		public void sslInfo(SslInfo sslInfo) {
 			this.sslInfo = sslInfo;
-			return this;
 		}
 
 		@Override
@@ -469,7 +510,7 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 		}
 
 		@Override
-		public BodyBuilder headers(HttpHeaders headers) {
+		public BodyBuilder headers(MultiValueMap<String, String> headers) {
 			this.headers.putAll(headers);
 			return this;
 		}
@@ -548,7 +589,7 @@ public final class MockServerHttpRequest extends AbstractServerHttpRequest {
 		@Override
 		public MockServerHttpRequest body(Publisher<? extends DataBuffer> body) {
 			applyCookiesIfNecessary();
-			return new MockServerHttpRequest(this.method, getUrlToUse(), this.contextPath,
+			return new MockServerHttpRequest(this.methodValue, getUrlToUse(), this.contextPath,
 					this.headers, this.cookies, this.localAddress, this.remoteAddress, this.sslInfo, body);
 		}
 

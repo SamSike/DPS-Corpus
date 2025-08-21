@@ -55,7 +55,7 @@ public class JmxManagementStrategy extends DefaultManagementStrategy {
     public JmxManagementStrategy(CamelContext context, ManagementAgent managementAgent) {
         super(context, managementAgent);
         // add JMX capable CamelContext as extension
-        context.getCamelContextExtension().addContextPlugin(ManagedCamelContext.class, new ManagedCamelContextImpl(context));
+        context.setExtension(ManagedCamelContext.class, new ManagedCamelContextImpl(context));
     }
 
     @Override
@@ -100,8 +100,8 @@ public class JmxManagementStrategy extends DefaultManagementStrategy {
     @Override
     public boolean isManagedName(Object name) {
         try {
-            if (name instanceof ObjectName objectName) {
-                return getManagementAgent().isRegistered(objectName);
+            if (name instanceof ObjectName) {
+                return getManagementAgent().isRegistered((ObjectName) name);
             }
         } catch (Exception e) {
             LOG.warn("Cannot check whether the managed object is registered. This exception will be ignored.", e);

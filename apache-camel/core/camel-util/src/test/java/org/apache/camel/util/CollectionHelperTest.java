@@ -75,7 +75,7 @@ public class CollectionHelperTest {
     }
 
     @Test
-    public void testCreateSetContaining() {
+    public void testCreateSetContaining() throws Exception {
         Set<String> set = CollectionHelper.createSetContaining("foo", "bar", "baz");
         assertEquals(3, set.size());
         assertTrue(set.contains("foo"));
@@ -84,7 +84,7 @@ public class CollectionHelperTest {
     }
 
     @Test
-    public void testflattenKeysInMap() {
+    public void testflattenKeysInMap() throws Exception {
         Map<String, Object> root = new LinkedHashMap<>();
         Map<String, Object> api = new LinkedHashMap<>();
         Map<String, Object> contact = new LinkedHashMap<>();

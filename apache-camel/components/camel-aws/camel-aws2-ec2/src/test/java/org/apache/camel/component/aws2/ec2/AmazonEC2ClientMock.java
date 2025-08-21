@@ -24,7 +24,6 @@ import org.apache.camel.util.ObjectHelper;
 import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.ec2.Ec2Client;
-import software.amazon.awssdk.services.ec2.Ec2ServiceClientConfiguration;
 import software.amazon.awssdk.services.ec2.model.CreateTagsRequest;
 import software.amazon.awssdk.services.ec2.model.CreateTagsResponse;
 import software.amazon.awssdk.services.ec2.model.DeleteTagsRequest;
@@ -314,11 +313,6 @@ public class AmazonEC2ClientMock implements Ec2Client {
             result.instanceMonitorings(coll);
         }
         return result.build();
-    }
-
-    @Override
-    public Ec2ServiceClientConfiguration serviceClientConfiguration() {
-        return null;
     }
 
     @Override

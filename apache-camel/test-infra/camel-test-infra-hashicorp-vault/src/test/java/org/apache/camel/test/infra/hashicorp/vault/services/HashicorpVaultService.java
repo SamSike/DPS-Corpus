@@ -16,11 +16,29 @@
  */
 package org.apache.camel.test.infra.hashicorp.vault.services;
 
-import org.apache.camel.test.infra.common.services.ContainerTestService;
 import org.apache.camel.test.infra.common.services.TestService;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 /**
- * Test infra service for HashicorpVault
+ * Test infra service for Infinispan
  */
-public interface HashicorpVaultService extends TestService, HashicorpVaultInfraService, ContainerTestService {
+public interface HashicorpVaultService extends BeforeAllCallback, AfterAllCallback, TestService {
+
+    String token();
+
+    int port();
+
+    String host();
+
+    @Override
+    default void beforeAll(ExtensionContext extensionContext) throws Exception {
+        initialize();
+    }
+
+    @Override
+    default void afterAll(ExtensionContext extensionContext) throws Exception {
+        shutdown();
+    }
 }

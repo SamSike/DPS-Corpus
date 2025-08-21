@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
 
 package org.springframework.web.servlet.handler;
 
+import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,11 +31,10 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.testfixture.servlet.MockHttpServletRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests for {@link org.springframework.web.servlet.HandlerMapping}.
+ * Unit tests for {@link org.springframework.web.servlet.HandlerMapping}.
  *
  * @author Brian Clozel
  * @author Rossen Stoyanchev
@@ -42,16 +43,24 @@ class HandlerMappingTests {
 
 	@SuppressWarnings("unused")
 	private static Stream<Arguments> pathPatternsArguments() {
-		return PathPatternsTestUtils.requestArguments().map(function -> arguments(function, new TestHandlerMapping()));
+		List<Function<String, MockHttpServletRequest>> factories =
+				PathPatternsTestUtils.requestArguments().collect(Collectors.toList());
+		return Stream.of(
+				Arguments.arguments(new TestHandlerMapping(), factories.get(0)),
+				Arguments.arguments(new TestHandlerMapping(), factories.get(1))
+		);
 	}
 
 
 	@PathPatternsParameterizedTest
-	void orderedInterceptors(Function<String, MockHttpServletRequest> requestFactory, TestHandlerMapping mapping) throws Exception {
+	void orderedInterceptors(
+			TestHandlerMapping mapping, Function<String, MockHttpServletRequest> requestFactory)
+			throws Exception {
+
 		MappedInterceptor i1 = new MappedInterceptor(new String[] {"/**"}, mock(HandlerInterceptor.class));
-		HandlerInterceptor i2 = mock();
+		HandlerInterceptor i2 = mock(HandlerInterceptor.class);
 		MappedInterceptor i3 = new MappedInterceptor(new String[] {"/**"}, mock(HandlerInterceptor.class));
-		HandlerInterceptor i4 = mock();
+		HandlerInterceptor i4 = mock(HandlerInterceptor.class);
 
 		mapping.setInterceptors(i1, i2, i3, i4);
 		mapping.setApplicationContext(new StaticWebApplicationContext());

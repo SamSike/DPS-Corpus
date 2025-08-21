@@ -56,7 +56,7 @@ import org.xnio.ssl.XnioSsl;
  *
  * The implementation of Producer is considered as experimental. The Undertow client classes are not thread safe, their
  * purpose is for the reverse proxy usage inside Undertow itself. This may change in the future versions and general
- * purpose HTTP client wrapper will be added. Therefore, this producer may be changed too.
+ * purpose HTTP client wrapper will be added. Therefore this Producer may be changed too.
  */
 public class UndertowProducer extends DefaultAsyncProducer {
 
@@ -84,7 +84,7 @@ public class UndertowProducer extends DefaultAsyncProducer {
     boolean isSendToAll(Message in) {
         // header may be null; have to be careful here (and fallback to use sendToAll option configured from endpoint)
         Boolean value = in.getHeader(UndertowConstants.SEND_TO_ALL, endpoint.getSendToAll(), Boolean.class);
-        return value != null && value;
+        return value == null ? false : value;
     }
 
     @Override

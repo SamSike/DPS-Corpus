@@ -16,13 +16,11 @@
  */
 package org.apache.camel.test.infra.common;
 
-import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.utility.TestcontainersConfiguration;
@@ -38,7 +36,7 @@ public final class TestUtils {
 
     /**
      * Wait for a given condition to be true or the retry amount (30) to expire
-     *
+     * 
      * @param resourceCheck
      * @param payload
      * @param <T>
@@ -68,7 +66,7 @@ public final class TestUtils {
 
     /**
      * Wait for a given condition to be true or the retry amount (30) to expire
-     *
+     * 
      * @param resourceCheck
      */
     public static boolean waitFor(BooleanSupplier resourceCheck) {
@@ -95,7 +93,7 @@ public final class TestUtils {
 
     /**
      * Gets a random number within range
-     *
+     * 
      * @param  min
      * @param  max
      * @return
@@ -112,24 +110,5 @@ public final class TestUtils {
      */
     public static String prependHubImageNamePrefixIfNeeded(String imageName) {
         return TestcontainersConfiguration.getInstance().getEnvVarOrProperty("hub.image.name.prefix", "") + imageName;
-    }
-
-    /**
-     * Logs service initialization failure
-     *
-     * @param clazz
-     * @param <T>
-     */
-    public static <T> void logInitializationFailure(ExtensionContext extensionContext, Class<T> clazz) {
-        Logger log = LoggerFactory.getLogger(clazz);
-
-        Optional<Object> testInstance = extensionContext.getTestInstance();
-        if (testInstance.isPresent()) {
-            final Object o = testInstance.get();
-            log.error("Failed to initialize service {} for test {} on ({})", clazz.getSimpleName(),
-                    extensionContext.getDisplayName(), o.getClass().getName());
-        } else {
-            log.error("Failed to initialize service {} for test {}", clazz.getSimpleName(), extensionContext.getDisplayName());
-        }
     }
 }

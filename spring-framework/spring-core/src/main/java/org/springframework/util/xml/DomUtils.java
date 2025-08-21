@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Element;
@@ -30,6 +29,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.ContentHandler;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -65,8 +65,8 @@ public abstract class DomUtils {
 		List<Element> childEles = new ArrayList<>();
 		for (int i = 0; i < nl.getLength(); i++) {
 			Node node = nl.item(i);
-			if (node instanceof Element element && nodeNameMatch(node, childEleNameList)) {
-				childEles.add(element);
+			if (node instanceof Element && nodeNameMatch(node, childEleNameList)) {
+				childEles.add((Element) node);
 			}
 		}
 		return childEles;
@@ -92,14 +92,15 @@ public abstract class DomUtils {
 	 * @param childEleName the child element name to look for
 	 * @return the {@code org.w3c.dom.Element} instance, or {@code null} if none found
 	 */
-	public static @Nullable Element getChildElementByTagName(Element ele, String childEleName) {
+	@Nullable
+	public static Element getChildElementByTagName(Element ele, String childEleName) {
 		Assert.notNull(ele, "Element must not be null");
 		Assert.notNull(childEleName, "Element name must not be null");
 		NodeList nl = ele.getChildNodes();
 		for (int i = 0; i < nl.getLength(); i++) {
 			Node node = nl.item(i);
-			if (node instanceof Element element && nodeNameMatch(node, childEleName)) {
-				return element;
+			if (node instanceof Element && nodeNameMatch(node, childEleName)) {
+				return (Element) node;
 			}
 		}
 		return null;
@@ -111,7 +112,8 @@ public abstract class DomUtils {
 	 * @param childEleName the child element name to look for
 	 * @return the extracted text value, or {@code null} if no child element found
 	 */
-	public static @Nullable String getChildElementValueByTagName(Element ele, String childEleName) {
+	@Nullable
+	public static String getChildElementValueByTagName(Element ele, String childEleName) {
 		Element child = getChildElementByTagName(ele, childEleName);
 		return (child != null ? getTextValue(child) : null);
 	}
@@ -127,8 +129,8 @@ public abstract class DomUtils {
 		List<Element> childEles = new ArrayList<>();
 		for (int i = 0; i < nl.getLength(); i++) {
 			Node node = nl.item(i);
-			if (node instanceof Element element) {
-				childEles.add(element);
+			if (node instanceof Element) {
+				childEles.add((Element) node);
 			}
 		}
 		return childEles;

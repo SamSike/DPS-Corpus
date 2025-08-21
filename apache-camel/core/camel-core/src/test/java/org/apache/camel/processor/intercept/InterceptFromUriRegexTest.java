@@ -66,9 +66,9 @@ public class InterceptFromUriRegexTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 // only trigger when incoming from either seda:bar or seda:foo
                 // as we use regex

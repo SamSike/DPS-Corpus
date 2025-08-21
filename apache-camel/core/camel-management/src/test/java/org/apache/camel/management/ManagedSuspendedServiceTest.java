@@ -96,10 +96,10 @@ public class ManagedSuspendedServiceTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 MyPolicy myPolicy = new MyPolicy();
 
                 from(fileUri("?initialDelay=0&delay=10&maxMessagesPerPoll=1&delete=true"))

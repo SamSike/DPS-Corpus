@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -39,7 +38,8 @@ public class DefaultRequestExpectation implements RequestExpectation {
 
 	private final List<RequestMatcher> requestMatchers = new ArrayList<>(1);
 
-	private @Nullable ResponseCreator responseCreator;
+	@Nullable
+	private ResponseCreator responseCreator;
 
 
 	/**
@@ -63,7 +63,8 @@ public class DefaultRequestExpectation implements RequestExpectation {
 		return this.requestMatchers;
 	}
 
-	protected @Nullable ResponseCreator getResponseCreator() {
+	@Nullable
+	protected ResponseCreator getResponseCreator() {
 		return this.responseCreator;
 	}
 

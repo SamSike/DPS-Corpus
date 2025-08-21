@@ -44,7 +44,7 @@ public class KameletConsumeOnlyTest extends CamelTestSupport {
             @Override
             public void configure() {
                 routeTemplate("tick")
-                        .from("timer:{{routeId}}?repeatCount=1&delay=-1&includeMetadata=true")
+                        .from("timer:{{routeId}}?repeatCount=1&delay=-1")
                         .setBody().exchangeProperty(Exchange.TIMER_COUNTER)
                         .to("kamelet:sink");
             }

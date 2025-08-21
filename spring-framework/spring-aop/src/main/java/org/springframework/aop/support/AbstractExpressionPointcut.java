@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.springframework.aop.support;
 
 import java.io.Serializable;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Abstract superclass for expression pointcuts,
@@ -33,9 +33,11 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("serial")
 public abstract class AbstractExpressionPointcut implements ExpressionPointcut, Serializable {
 
-	private @Nullable String location;
+	@Nullable
+	private String location;
 
-	private @Nullable String expression;
+	@Nullable
+	private String expression;
 
 
 	/**
@@ -51,7 +53,8 @@ public abstract class AbstractExpressionPointcut implements ExpressionPointcut, 
 	 * @return location information as a human-readable String,
 	 * or {@code null} if none is available
 	 */
-	public @Nullable String getLocation() {
+	@Nullable
+	public String getLocation() {
 		return this.location;
 	}
 
@@ -86,7 +89,8 @@ public abstract class AbstractExpressionPointcut implements ExpressionPointcut, 
 	 * Return this pointcut's expression.
 	 */
 	@Override
-	public @Nullable String getExpression() {
+	@Nullable
+	public String getExpression() {
 		return this.expression;
 	}
 

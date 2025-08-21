@@ -17,14 +17,13 @@
 package org.apache.camel.reifier;
 
 import org.apache.camel.BeanScope;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
 import org.apache.camel.model.BeanDefinition;
 import org.apache.camel.model.ProcessorDefinition;
 import org.apache.camel.spi.BeanProcessorFactory;
 import org.apache.camel.spi.IdAware;
-import org.apache.camel.spi.NodeIdFactory;
-import org.apache.camel.support.PluginHelper;
 
 public class BeanReifier extends ProcessorReifier<BeanDefinition> {
 
@@ -40,16 +39,16 @@ public class BeanReifier extends ProcessorReifier<BeanDefinition> {
         String beanType = parseString(definition.getBeanType());
         Class<?> beanClass = definition.getBeanClass();
 
-        final BeanProcessorFactory fac = PluginHelper.getBeanProcessorFactory(camelContext);
+        BeanProcessorFactory fac = camelContext.adapt(ExtendedCamelContext.class).getBeanProcessorFactory();
         // use singleton as default scope
         BeanScope scope = BeanScope.Singleton;
         if (definition.getScope() != null) {
             scope = parse(BeanScope.class, definition.getScope());
         }
         Processor answer = fac.createBeanProcessor(camelContext, bean, beanType, beanClass, ref, method, scope);
-        if (answer instanceof IdAware idAware) {
-            String id = camelContext.getCamelContextExtension().getContextPlugin(NodeIdFactory.class).createId(definition);
-            idAware.setId(id);
+        if (answer instanceof IdAware) {
+            String id = camelContext.adapt(ExtendedCamelContext.class).getNodeIdFactory().createId(definition);
+            ((IdAware) answer).setId(id);
         }
         return answer;
     }

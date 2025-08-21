@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /*
  */
@@ -50,7 +50,7 @@ public class ExceptionThrownFromOnExceptionTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // on exception to catch all IO exceptions and handle them
                 // specially
                 onException(IOException.class).redeliveryDelay(0).maximumRedeliveries(3).to("mock:b").process(new Processor() {
@@ -80,12 +80,13 @@ public class ExceptionThrownFromOnExceptionTest extends ContextTestSupport {
         getMockEndpoint("mock:result").expectedMessageCount(0);
         getMockEndpoint("mock:end").expectedMessageCount(0);
 
-        CamelExecutionException e
-                = assertThrows(CamelExecutionException.class, () -> template.sendBody("direct:start", "Hello World"),
-                        "Should have thrown an exception");
-
-        IOException cause = assertIsInstanceOf(IOException.class, e.getCause());
-        assertEquals("Some other IOException", cause.getMessage());
+        try {
+            template.sendBody("direct:start", "Hello World");
+            fail("Should have thrown an exception");
+        } catch (CamelExecutionException e) {
+            IOException cause = assertIsInstanceOf(IOException.class, e.getCause());
+            assertEquals("Some other IOException", cause.getMessage());
+        }
 
         assertMockEndpointsSatisfied();
 
@@ -100,7 +101,7 @@ public class ExceptionThrownFromOnExceptionTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // on exception to catch all IO exceptions and handle them
                 // specially
                 onException(IOException.class).redeliveryDelay(0).maximumRedeliveries(3)
@@ -132,12 +133,13 @@ public class ExceptionThrownFromOnExceptionTest extends ContextTestSupport {
         getMockEndpoint("mock:result").expectedMessageCount(0);
         getMockEndpoint("mock:end").expectedMessageCount(0);
 
-        CamelExecutionException e
-                = assertThrows(CamelExecutionException.class, () -> template.sendBody("direct:start", "Hello World"),
-                        "Should have thrown an exception");
-
-        IOException cause = assertIsInstanceOf(IOException.class, e.getCause());
-        assertEquals("Some other IOException", cause.getMessage());
+        try {
+            template.sendBody("direct:start", "Hello World");
+            fail("Should have thrown an exception");
+        } catch (CamelExecutionException e) {
+            IOException cause = assertIsInstanceOf(IOException.class, e.getCause());
+            assertEquals("Some other IOException", cause.getMessage());
+        }
 
         assertMockEndpointsSatisfied();
 
@@ -152,7 +154,7 @@ public class ExceptionThrownFromOnExceptionTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // DLC
                 deadLetterChannel("mock:error").redeliveryDelay(0).maximumRedeliveries(3);
 
@@ -189,12 +191,13 @@ public class ExceptionThrownFromOnExceptionTest extends ContextTestSupport {
         // so the exchange will throw an exception
         getMockEndpoint("mock:error").expectedMessageCount(0);
 
-        CamelExecutionException e = assertThrows(CamelExecutionException.class,
-                () -> template.sendBody("direct:start", "Hello World"),
-                "Should have thrown an exception");
-
-        IOException cause = assertIsInstanceOf(IOException.class, e.getCause());
-        assertEquals("Some other IOException", cause.getMessage());
+        try {
+            template.sendBody("direct:start", "Hello World");
+            fail("Should have thrown an exception");
+        } catch (CamelExecutionException e) {
+            IOException cause = assertIsInstanceOf(IOException.class, e.getCause());
+            assertEquals("Some other IOException", cause.getMessage());
+        }
 
         assertMockEndpointsSatisfied();
 
@@ -209,7 +212,7 @@ public class ExceptionThrownFromOnExceptionTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // DLC
                 deadLetterChannel("mock:error").redeliveryDelay(0).maximumRedeliveries(3);
 
@@ -248,12 +251,13 @@ public class ExceptionThrownFromOnExceptionTest extends ContextTestSupport {
         // so the exchange will throw an exception
         getMockEndpoint("mock:error").expectedMessageCount(0);
 
-        CamelExecutionException e = assertThrows(CamelExecutionException.class,
-                () -> template.sendBody("direct:start", "Hello World"),
-                "Should have thrown an exception");
-
-        IOException cause = assertIsInstanceOf(IOException.class, e.getCause());
-        assertEquals("Some other IOException", cause.getMessage());
+        try {
+            template.sendBody("direct:start", "Hello World");
+            fail("Should have thrown an exception");
+        } catch (CamelExecutionException e) {
+            IOException cause = assertIsInstanceOf(IOException.class, e.getCause());
+            assertEquals("Some other IOException", cause.getMessage());
+        }
 
         assertMockEndpointsSatisfied();
 
@@ -268,7 +272,7 @@ public class ExceptionThrownFromOnExceptionTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // DLC
                 deadLetterChannel("mock:error").redeliveryDelay(0).maximumRedeliveries(3);
 
@@ -276,7 +280,7 @@ public class ExceptionThrownFromOnExceptionTest extends ContextTestSupport {
                 // specially
                 onException(IOException.class).redeliveryDelay(0).maximumRedeliveries(3).to("mock:b").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         ON_EXCEPTION_RETRY.incrementAndGet();
                         // no exception is thrown this time
                     }
@@ -305,13 +309,14 @@ public class ExceptionThrownFromOnExceptionTest extends ContextTestSupport {
 
         // and this time there was no exception thrown from onException,
         // but the caller still fails since handled is false on onException
-
-        CamelExecutionException e = assertThrows(CamelExecutionException.class,
-                () -> template.sendBody("direct:start", "Hello World"),
-                "Should have thrown an exception");
-
-        IOException cause = assertIsInstanceOf(IOException.class, e.getCause());
-        assertEquals("IO error", cause.getMessage());
+        try {
+            template.sendBody("direct:start", "Hello World");
+            fail("Should have thrown an exception");
+        } catch (CamelExecutionException e) {
+            // this time its the first exception thrown from the route
+            IOException cause = assertIsInstanceOf(IOException.class, e.getCause());
+            assertEquals("IO error", cause.getMessage());
+        }
 
         assertMockEndpointsSatisfied();
 
@@ -326,7 +331,7 @@ public class ExceptionThrownFromOnExceptionTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // DLC
                 deadLetterChannel("mock:error").redeliveryDelay(0).maximumRedeliveries(3);
 
@@ -336,7 +341,7 @@ public class ExceptionThrownFromOnExceptionTest extends ContextTestSupport {
                         // we now handle the exception
                         .handled(true).to("mock:b").process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 ON_EXCEPTION_RETRY.incrementAndGet();
                                 // no exception is thrown this time
                             }

@@ -16,8 +16,6 @@
  */
 package org.apache.camel.processor.async;
 
-import java.util.concurrent.atomic.LongAdder;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -33,7 +31,7 @@ public class AsyncEndpointRedeliveryErrorHandlerNonBlockedDelayTest extends Cont
 
     private static final Logger LOG = LoggerFactory.getLogger(AsyncEndpointRedeliveryErrorHandlerNonBlockedDelayTest.class);
 
-    private static final LongAdder attempt = new LongAdder();
+    private static volatile int attempt;
     private static String beforeThreadName;
     private static String afterThreadName;
 
@@ -54,22 +52,21 @@ public class AsyncEndpointRedeliveryErrorHandlerNonBlockedDelayTest extends Cont
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.addComponent("async", new MyAsyncComponent());
 
                 errorHandler(defaultErrorHandler().maximumRedeliveries(5).redeliveryDelay(100).asyncDelayedRedelivery());
 
                 from("seda:start").to("log:before").to("mock:before").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         LOG.info("Processing at attempt {} {}", attempt, exchange);
 
                         String body = exchange.getIn().getBody(String.class);
                         if (body.contains("World")) {
-                            attempt.increment();
-                            if (attempt.intValue() <= 2) {
+                            if (++attempt <= 2) {
                                 LOG.info("Processing failed will thrown an exception");
                                 throw new IllegalArgumentException("Damn");
                             }
@@ -79,11 +76,11 @@ public class AsyncEndpointRedeliveryErrorHandlerNonBlockedDelayTest extends Cont
                         LOG.info("Processing at attempt {} complete {}", attempt, exchange);
                     }
                 }).to("log:after").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         beforeThreadName = Thread.currentThread().getName();
                     }
                 }).to("async:bye:camel").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         afterThreadName = Thread.currentThread().getName();
                     }
                 }).to("mock:result");

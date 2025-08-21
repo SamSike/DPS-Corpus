@@ -16,27 +16,18 @@
  */
 package org.apache.camel.catalog.maven;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collections;
 import java.util.Enumeration;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
+import groovy.grape.Grape;
+import groovy.lang.GroovyClassLoader;
 import org.apache.camel.catalog.VersionManager;
-import org.apache.camel.tooling.maven.MavenArtifact;
-import org.apache.camel.tooling.maven.MavenDownloader;
-import org.apache.camel.tooling.maven.MavenDownloaderImpl;
-import org.apache.camel.tooling.maven.MavenResolutionException;
-import org.apache.maven.settings.Settings;
-import org.eclipse.aether.ConfigurationProperties;
-import org.eclipse.aether.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
+import org.apache.ivy.util.url.URLHandlerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,66 +35,34 @@ import org.slf4j.LoggerFactory;
  * A {@link VersionManager} that can load the resources using Maven to download needed artifacts from a local or remote
  * Maven repository.
  * <p/>
- * This implementation uses Maven Resolver to download the Maven JARs.
+ * This implementation uses Groovy Grape to download the Maven JARs.
  */
-public class MavenVersionManager implements VersionManager {
+public class MavenVersionManager implements VersionManager, Closeable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MavenVersionManager.class);
 
     private ClassLoader classLoader;
-    private final OpenURLClassLoader helperClassLoader = new OpenURLClassLoader();
-
+    private final ClassLoader groovyClassLoader = new GroovyClassLoader();
+    private final TimeoutHttpClientHandler httpClient = new TimeoutHttpClientHandler();
     private String version;
     private String runtimeProviderVersion;
-    private String localRepository;
+    private String cacheDirectory;
     private boolean log;
-
-    private final MavenDownloader downloader;
-
-    private final Map<String, String> repositories = new LinkedHashMap<>();
-
-    private int connectTimeout = ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT;
-    private int requestTimeout = ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT;
-
-    private boolean customized;
-
-    private MavenVersionManager(MavenDownloaderImpl downloader) {
-        this.downloader = downloader;
-        downloader.build();
-    }
-
-    public MavenVersionManager() {
-        this(new MavenDownloaderImpl());
-    }
-
-    public MavenVersionManager(RepositorySystem repositorySystem, RepositorySystemSession repositorySystemSession,
-                               Settings settings) {
-        this(new MavenDownloaderImpl(repositorySystem, repositorySystemSession, settings));
-    }
 
     @Override
     public void setClassLoader(ClassLoader classLoader) {
         this.classLoader = classLoader;
     }
 
-    @Override
-    public ClassLoader getClassLoader() {
-        if (classLoader != null) {
-            return classLoader;
-        }
-        return helperClassLoader;
-    }
-
     /**
      * Configures the directory for the download cache.
      * <p/>
-     * The default folder is <tt>USER_HOME/.m2/repository</tt>
+     * The default folder is <tt>USER_HOME/.groovy/grape</tt>
      *
      * @param directory the directory.
      */
     public void setCacheDirectory(String directory) {
-        this.localRepository = directory;
-        this.customized = true;
+        this.cacheDirectory = directory;
     }
 
     /**
@@ -114,23 +73,12 @@ public class MavenVersionManager implements VersionManager {
     }
 
     /**
-     * Sets the connection timeout in millis when downloading via http/https protocols.
+     * Sets the timeout in millis (http.socket.timeout) when downloading via http/https protocols.
      * <p/>
      * The default value is 10000
      */
     public void setHttpClientTimeout(int timeout) {
-        this.connectTimeout = timeout;
-        this.customized = true;
-    }
-
-    /**
-     * Sets the read timeout in millis when downloading via http/https protocols.
-     * <p/>
-     * The default value is 1800000
-     */
-    public void setHttpClientRequestTimeout(int timeout) {
-        this.requestTimeout = timeout;
-        this.customized = true;
+        httpClient.setTimeout(timeout);
     }
 
     /**
@@ -140,7 +88,10 @@ public class MavenVersionManager implements VersionManager {
      * @param url  the repository url
      */
     public void addMavenRepository(String name, String url) {
-        repositories.put(name, url);
+        Map<String, Object> repo = new HashMap<>();
+        repo.put("name", name);
+        repo.put("root", url);
+        Grape.addResolver(repo);
     }
 
     @Override
@@ -151,13 +102,21 @@ public class MavenVersionManager implements VersionManager {
     @Override
     public boolean loadVersion(String version) {
         try {
-            MavenDownloader mavenDownloader = downloader;
-            if (customized) {
-                mavenDownloader = mavenDownloader.customize(localRepository, connectTimeout, requestTimeout);
+            URLHandlerRegistry.setDefault(httpClient);
+
+            if (cacheDirectory != null) {
+                System.setProperty("grape.root", cacheDirectory);
             }
 
-            String camelCatalogGAV = String.format("org.apache.camel:camel-catalog:%s", version);
-            resolve(mavenDownloader, camelCatalogGAV, version.contains("SNAPSHOT"));
+            Grape.setEnableAutoDownload(true);
+
+            Map<String, Object> param = new HashMap<>();
+            param.put("classLoader", groovyClassLoader);
+            param.put("group", "org.apache.camel");
+            param.put("module", "camel-catalog");
+            param.put("version", version);
+
+            Grape.grab(param);
 
             this.version = version;
             return true;
@@ -177,13 +136,17 @@ public class MavenVersionManager implements VersionManager {
     @Override
     public boolean loadRuntimeProviderVersion(String groupId, String artifactId, String version) {
         try {
-            MavenDownloader mavenDownloader = downloader;
-            if (customized) {
-                mavenDownloader = mavenDownloader.customize(localRepository, connectTimeout, requestTimeout);
-            }
+            URLHandlerRegistry.setDefault(httpClient);
 
-            String gav = String.format("%s:%s:%s", groupId, artifactId, version);
-            resolve(mavenDownloader, gav, version.contains("SNAPSHOT"));
+            Grape.setEnableAutoDownload(true);
+
+            Map<String, Object> param = new HashMap<>();
+            param.put("classLoader", groovyClassLoader);
+            param.put("group", groupId);
+            param.put("module", artifactId);
+            param.put("version", version);
+
+            Grape.grab(param);
 
             this.runtimeProviderVersion = version;
             return true;
@@ -192,23 +155,6 @@ public class MavenVersionManager implements VersionManager {
                 LOGGER.warn("Cannot load runtime provider version {} due {}", version, e.getMessage(), e);
             }
             return false;
-        }
-    }
-
-    /**
-     * Resolves Maven artifact using passed coordinates and use downloaded artifact as one of the URLs in the
-     * helperClassLoader, so further Catalog access may load resources from it.
-     */
-    private void resolve(MavenDownloader mavenDownloader, String gav, boolean useSnapshots)
-            throws MavenResolutionException, MalformedURLException {
-        Set<String> extraRepositories = new LinkedHashSet<>(repositories.values());
-
-        // non-transitive resolve, because we load static data from the catalog artifacts
-        List<MavenArtifact> artifacts = mavenDownloader.resolveArtifacts(Collections.singletonList(gav),
-                extraRepositories, false, useSnapshots);
-
-        for (MavenArtifact ma : artifacts) {
-            helperClassLoader.addURL(ma.getFile().toURI().toURL());
         }
     }
 
@@ -229,7 +175,7 @@ public class MavenVersionManager implements VersionManager {
             is = MavenVersionManager.class.getClassLoader().getResourceAsStream(name);
         }
         if (is == null) {
-            is = helperClassLoader.getResourceAsStream(name);
+            is = groovyClassLoader.getResourceAsStream(name);
         }
 
         return is;
@@ -242,7 +188,7 @@ public class MavenVersionManager implements VersionManager {
 
         try {
             URL found = null;
-            Enumeration<URL> urls = helperClassLoader.getResources(name);
+            Enumeration<URL> urls = groovyClassLoader.getResources(name);
             while (urls.hasMoreElements()) {
                 URL url = urls.nextElement();
                 if (url.getPath().contains(version)) {
@@ -260,5 +206,9 @@ public class MavenVersionManager implements VersionManager {
         }
 
         return null;
+    }
+
+    @Override
+    public void close() {
     }
 }

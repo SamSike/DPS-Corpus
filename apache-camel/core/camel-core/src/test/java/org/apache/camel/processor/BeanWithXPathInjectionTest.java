@@ -27,11 +27,11 @@ import org.slf4j.LoggerFactory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BeanWithXPathInjectionTest extends ContextTestSupport {
-    private static final Logger LOG = LoggerFactory.getLogger(BeanWithXPathInjectionTest.class);
-    protected final MyBean myBean = new MyBean();
+    private static final Logger LOG = LoggerFactory.getLogger(BeanRouteTest.class);
+    protected MyBean myBean = new MyBean();
 
     @Test
-    public void testSendMessage() {
+    public void testSendMessage() throws Exception {
         String expectedBody = "<env:Envelope xmlns:env='http://www.w3.org/2003/05/soap-envelope'><env:Body>"
                               + "<foo>bar</foo></env:Body></env:Envelope>";
 
@@ -42,7 +42,7 @@ public class BeanWithXPathInjectionTest extends ContextTestSupport {
     }
 
     @Test
-    public void testSendTwoMessages() {
+    public void testSendTwoMessages() throws Exception {
         // 1st message
         String expectedBody = "<env:Envelope xmlns:env='http://www.w3.org/2003/05/soap-envelope'><env:Body>"
                               + "<foo>bar</foo></env:Body></env:Envelope>";
@@ -63,8 +63,8 @@ public class BeanWithXPathInjectionTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
 
         answer.bind("myBean", myBean);
         return answer;
@@ -91,7 +91,7 @@ public class BeanWithXPathInjectionTest extends ContextTestSupport {
         public void read(String body, @XPath("/soap:Envelope/soap:Body/foo/text()") String foo) {
             this.foo = foo;
             this.body = body;
-            LOG.info("read() method called on {}", this);
+            LOG.info("read() method called on " + this);
         }
     }
 }

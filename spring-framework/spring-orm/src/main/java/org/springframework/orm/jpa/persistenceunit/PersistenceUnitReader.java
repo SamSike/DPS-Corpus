@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.ErrorHandler;
@@ -40,6 +39,7 @@ import org.xml.sax.SAXException;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.jdbc.datasource.lookup.DataSourceLookup;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
@@ -61,11 +61,15 @@ final class PersistenceUnitReader {
 
 	private static final String UNIT_NAME = "name";
 
+	private static final String MAPPING_FILE_NAME = "mapping-file";
+
+	private static final String JAR_FILE_URL = "jar-file";
+
+	private static final String MANAGED_CLASS_NAME = "class";
+
+	private static final String PROPERTIES = "properties";
+
 	private static final String PROVIDER = "provider";
-
-	private static final String SCOPE = "scope";
-
-	private static final String QUALIFIER = "qualifier";
 
 	private static final String TRANSACTION_TYPE = "transaction-type";
 
@@ -73,19 +77,11 @@ final class PersistenceUnitReader {
 
 	private static final String NON_JTA_DATA_SOURCE = "non-jta-data-source";
 
-	private static final String MAPPING_FILE_NAME = "mapping-file";
-
-	private static final String JAR_FILE_URL = "jar-file";
-
-	private static final String MANAGED_CLASS_NAME = "class";
-
 	private static final String EXCLUDE_UNLISTED_CLASSES = "exclude-unlisted-classes";
 
 	private static final String SHARED_CACHE_MODE = "shared-cache-mode";
 
 	private static final String VALIDATION_MODE = "validation-mode";
-
-	private static final String PROPERTIES = "properties";
 
 	private static final String META_INF = "META-INF";
 
@@ -158,12 +154,9 @@ final class PersistenceUnitReader {
 	/**
 	 * Validate the given stream and return a valid DOM document for parsing.
 	 */
-	Document buildDocument(ErrorHandler handler, InputStream stream)
+	protected Document buildDocument(ErrorHandler handler, InputStream stream)
 			throws ParserConfigurationException, SAXException, IOException {
 
-		// This document loader is used for loading application configuration files.
-		// As a result, attackers would need complete write access to application configuration
-		// to leverage XXE attacks. This does not qualify as privilege escalation.
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		dbf.setNamespaceAware(true);
 		DocumentBuilder parser = dbf.newDocumentBuilder();
@@ -175,7 +168,9 @@ final class PersistenceUnitReader {
 	/**
 	 * Parse the validated document and add entries to the given unit info list.
 	 */
-	void parseDocument(Resource resource, Document document, List<SpringPersistenceUnitInfo> infos) throws IOException {
+	protected List<SpringPersistenceUnitInfo> parseDocument(
+			Resource resource, Document document, List<SpringPersistenceUnitInfo> infos) throws IOException {
+
 		Element persistence = document.getDocumentElement();
 		String version = persistence.getAttribute(PERSISTENCE_VERSION);
 		URL rootUrl = determinePersistenceUnitRootUrl(resource);
@@ -184,13 +179,14 @@ final class PersistenceUnitReader {
 		for (Element unit : units) {
 			infos.add(parsePersistenceUnitInfo(unit, version, rootUrl));
 		}
+
+		return infos;
 	}
 
 	/**
 	 * Parse the unit info DOM element.
 	 */
-	@SuppressWarnings("removal")
-	SpringPersistenceUnitInfo parsePersistenceUnitInfo(
+	protected SpringPersistenceUnitInfo parsePersistenceUnitInfo(
 			Element persistenceUnit, String version, @Nullable URL rootUrl) throws IOException {
 
 		SpringPersistenceUnitInfo unitInfo = new SpringPersistenceUnitInfo();
@@ -203,18 +199,6 @@ final class PersistenceUnitReader {
 
 		// set unit name
 		unitInfo.setPersistenceUnitName(persistenceUnit.getAttribute(UNIT_NAME).trim());
-
-		// provider
-		String provider = DomUtils.getChildElementValueByTagName(persistenceUnit, PROVIDER);
-		if (StringUtils.hasText(provider)) {
-			unitInfo.setPersistenceProviderClassName(provider.trim());
-		}
-
-		// scope
-		String scope = DomUtils.getChildElementValueByTagName(persistenceUnit, SCOPE);
-		if (StringUtils.hasText(scope)) {
-			unitInfo.setScopeAnnotationName(scope.trim());
-		}
 
 		// set transaction type
 		String txType = persistenceUnit.getAttribute(TRANSACTION_TYPE).trim();
@@ -231,6 +215,12 @@ final class PersistenceUnitReader {
 		String nonJtaDataSource = DomUtils.getChildElementValueByTagName(persistenceUnit, NON_JTA_DATA_SOURCE);
 		if (StringUtils.hasText(nonJtaDataSource)) {
 			unitInfo.setNonJtaDataSource(this.dataSourceLookup.getDataSource(nonJtaDataSource.trim()));
+		}
+
+		// provider
+		String provider = DomUtils.getChildElementValueByTagName(persistenceUnit, PROVIDER);
+		if (StringUtils.hasText(provider)) {
+			unitInfo.setPersistenceProviderClassName(provider.trim());
 		}
 
 		// exclude unlisted classes
@@ -252,24 +242,39 @@ final class PersistenceUnitReader {
 			unitInfo.setValidationMode(ValidationMode.valueOf(validationMode));
 		}
 
-		parseQualifiers(persistenceUnit, unitInfo);
+		parseProperties(persistenceUnit, unitInfo);
+		parseManagedClasses(persistenceUnit, unitInfo);
 		parseMappingFiles(persistenceUnit, unitInfo);
 		parseJarFiles(persistenceUnit, unitInfo);
-		parseManagedClasses(persistenceUnit, unitInfo);
-		parseProperties(persistenceUnit, unitInfo);
 
 		return unitInfo;
 	}
 
 	/**
-	 * Parse the {@code qualifier} XML elements.
+	 * Parse the {@code property} XML elements.
 	 */
-	void parseQualifiers(Element persistenceUnit, SpringPersistenceUnitInfo unitInfo) {
-		List<Element> classes = DomUtils.getChildElementsByTagName(persistenceUnit, QUALIFIER);
+	protected void parseProperties(Element persistenceUnit, SpringPersistenceUnitInfo unitInfo) {
+		Element propRoot = DomUtils.getChildElementByTagName(persistenceUnit, PROPERTIES);
+		if (propRoot == null) {
+			return;
+		}
+		List<Element> properties = DomUtils.getChildElementsByTagName(propRoot, "property");
+		for (Element property : properties) {
+			String name = property.getAttribute("name");
+			String value = property.getAttribute("value");
+			unitInfo.addProperty(name, value);
+		}
+	}
+
+	/**
+	 * Parse the {@code class} XML elements.
+	 */
+	protected void parseManagedClasses(Element persistenceUnit, SpringPersistenceUnitInfo unitInfo) {
+		List<Element> classes = DomUtils.getChildElementsByTagName(persistenceUnit, MANAGED_CLASS_NAME);
 		for (Element element : classes) {
 			String value = DomUtils.getTextValue(element).trim();
 			if (StringUtils.hasText(value)) {
-				unitInfo.addQualifierAnnotationName(value);
+				unitInfo.addManagedClassName(value);
 			}
 		}
 	}
@@ -277,7 +282,7 @@ final class PersistenceUnitReader {
 	/**
 	 * Parse the {@code mapping-file} XML elements.
 	 */
-	void parseMappingFiles(Element persistenceUnit, SpringPersistenceUnitInfo unitInfo) {
+	protected void parseMappingFiles(Element persistenceUnit, SpringPersistenceUnitInfo unitInfo) {
 		List<Element> files = DomUtils.getChildElementsByTagName(persistenceUnit, MAPPING_FILE_NAME);
 		for (Element element : files) {
 			String value = DomUtils.getTextValue(element).trim();
@@ -290,7 +295,7 @@ final class PersistenceUnitReader {
 	/**
 	 * Parse the {@code jar-file} XML elements.
 	 */
-	void parseJarFiles(Element persistenceUnit, SpringPersistenceUnitInfo unitInfo) throws IOException {
+	protected void parseJarFiles(Element persistenceUnit, SpringPersistenceUnitInfo unitInfo) throws IOException {
 		List<Element> jars = DomUtils.getChildElementsByTagName(persistenceUnit, JAR_FILE_URL);
 		for (Element element : jars) {
 			String value = DomUtils.getTextValue(element).trim();
@@ -307,7 +312,7 @@ final class PersistenceUnitReader {
 					// relative to the persistence unit root, according to the JPA spec
 					URL rootUrl = unitInfo.getPersistenceUnitRootUrl();
 					if (rootUrl != null) {
-						unitInfo.addJarFileUrl(ResourceUtils.toRelativeURL(rootUrl, value));
+						unitInfo.addJarFileUrl(new URL(rootUrl, value));
 					}
 					else {
 						logger.warn("Cannot resolve jar-file entry [" + value + "] in persistence unit '" +
@@ -315,35 +320,6 @@ final class PersistenceUnitReader {
 					}
 				}
 			}
-		}
-	}
-
-	/**
-	 * Parse the {@code class} XML elements.
-	 */
-	void parseManagedClasses(Element persistenceUnit, SpringPersistenceUnitInfo unitInfo) {
-		List<Element> classes = DomUtils.getChildElementsByTagName(persistenceUnit, MANAGED_CLASS_NAME);
-		for (Element element : classes) {
-			String value = DomUtils.getTextValue(element).trim();
-			if (StringUtils.hasText(value)) {
-				unitInfo.addManagedClassName(value);
-			}
-		}
-	}
-
-	/**
-	 * Parse the {@code property} XML elements.
-	 */
-	void parseProperties(Element persistenceUnit, SpringPersistenceUnitInfo unitInfo) {
-		Element propRoot = DomUtils.getChildElementByTagName(persistenceUnit, PROPERTIES);
-		if (propRoot == null) {
-			return;
-		}
-		List<Element> properties = DomUtils.getChildElementsByTagName(propRoot, "property");
-		for (Element property : properties) {
-			String name = property.getAttribute("name");
-			String value = property.getAttribute("value");
-			unitInfo.addProperty(name, value);
 		}
 	}
 
@@ -355,7 +331,8 @@ final class PersistenceUnitReader {
 	 * @return the corresponding persistence unit root URL
 	 * @throws IOException if the checking failed
 	 */
-	static @Nullable URL determinePersistenceUnitRootUrl(Resource resource) throws IOException {
+	@Nullable
+	static URL determinePersistenceUnitRootUrl(Resource resource) throws IOException {
 		URL originalURL = resource.getURL();
 
 		// If we get an archive, simply return the jar URL (section 6.2 from the JPA spec)
@@ -386,7 +363,7 @@ final class PersistenceUnitReader {
 		if (persistenceUnitRoot.endsWith("/")) {
 			persistenceUnitRoot = persistenceUnitRoot.substring(0, persistenceUnitRoot.length() - 1);
 		}
-		return ResourceUtils.toURL(persistenceUnitRoot);
+		return new URL(persistenceUnitRoot);
 	}
 
 }

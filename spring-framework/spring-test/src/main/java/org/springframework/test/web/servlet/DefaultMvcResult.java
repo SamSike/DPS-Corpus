@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.util.Assert;
@@ -46,17 +45,22 @@ class DefaultMvcResult implements MvcResult {
 
 	private final MockHttpServletResponse mockResponse;
 
-	private @Nullable Object handler;
+	@Nullable
+	private Object handler;
 
-	private HandlerInterceptor @Nullable [] interceptors;
+	@Nullable
+	private HandlerInterceptor[] interceptors;
 
-	private @Nullable ModelAndView modelAndView;
+	@Nullable
+	private ModelAndView modelAndView;
 
-	private @Nullable Exception resolvedException;
+	@Nullable
+	private Exception resolvedException;
 
 	private final AtomicReference<Object> asyncResult = new AtomicReference<>(RESULT_NONE);
 
-	private @Nullable CountDownLatch asyncDispatchLatch;
+	@Nullable
+	private CountDownLatch asyncDispatchLatch;
 
 
 	/**
@@ -83,16 +87,18 @@ class DefaultMvcResult implements MvcResult {
 	}
 
 	@Override
-	public @Nullable Object getHandler() {
+	@Nullable
+	public Object getHandler() {
 		return this.handler;
 	}
 
-	public void setInterceptors(HandlerInterceptor @Nullable ... interceptors) {
+	public void setInterceptors(@Nullable HandlerInterceptor... interceptors) {
 		this.interceptors = interceptors;
 	}
 
 	@Override
-	public HandlerInterceptor @Nullable [] getInterceptors() {
+	@Nullable
+	public HandlerInterceptor[] getInterceptors() {
 		return this.interceptors;
 	}
 
@@ -101,7 +107,8 @@ class DefaultMvcResult implements MvcResult {
 	}
 
 	@Override
-	public @Nullable Exception getResolvedException() {
+	@Nullable
+	public Exception getResolvedException() {
 		return this.resolvedException;
 	}
 
@@ -110,7 +117,8 @@ class DefaultMvcResult implements MvcResult {
 	}
 
 	@Override
-	public @Nullable ModelAndView getModelAndView() {
+	@Nullable
+	public ModelAndView getModelAndView() {
 		return this.modelAndView;
 	}
 
@@ -119,17 +127,17 @@ class DefaultMvcResult implements MvcResult {
 		return RequestContextUtils.getOutputFlashMap(this.mockRequest);
 	}
 
-	public void setAsyncResult(@Nullable Object asyncResult) {
+	public void setAsyncResult(Object asyncResult) {
 		this.asyncResult.set(asyncResult);
 	}
 
 	@Override
-	public @Nullable Object getAsyncResult() {
+	public Object getAsyncResult() {
 		return getAsyncResult(-1);
 	}
 
 	@Override
-	public @Nullable Object getAsyncResult(long timeToWait) {
+	public Object getAsyncResult(long timeToWait) {
 		if (this.mockRequest.getAsyncContext() != null && timeToWait == -1) {
 			long requestTimeout = this.mockRequest.getAsyncContext().getTimeout();
 			timeToWait = requestTimeout == -1 ? Long.MAX_VALUE : requestTimeout;

@@ -22,14 +22,14 @@ import picocli.AutoComplete;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "complete", description = "Generate completion script for bash/zsh")
-public class Complete extends CamelCommand {
+class Complete extends CamelCommand {
 
     public Complete(CamelJBangMain main) {
         super(main);
     }
 
     @Override
-    public Integer doCall() throws Exception {
+    public Integer call() throws Exception {
         String script = AutoComplete.bash(
                 spec.parent().name(),
                 spec.parent().commandLine());

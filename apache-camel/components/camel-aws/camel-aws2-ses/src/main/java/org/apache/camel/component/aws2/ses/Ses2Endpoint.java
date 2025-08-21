@@ -22,7 +22,8 @@ import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.component.aws2.ses.client.Ses2ClientFactory;
-import org.apache.camel.spi.EndpointServiceLocation;
+import org.apache.camel.health.HealthCheckHelper;
+import org.apache.camel.impl.health.ComponentsHealthCheckRepository;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.DefaultEndpoint;
@@ -30,11 +31,14 @@ import org.apache.camel.util.ObjectHelper;
 import software.amazon.awssdk.services.ses.SesClient;
 
 /**
- * Send e-mails through AWS SES service.
+ * Send e-mails through AWS SES service using AWS SDK version 2.x.
  */
 @UriEndpoint(firstVersion = "3.1.0", scheme = "aws2-ses", title = "AWS Simple Email Service (SES)", syntax = "aws2-ses:from",
              producerOnly = true, category = { Category.CLOUD, Category.MAIL }, headersClass = Ses2Constants.class)
-public class Ses2Endpoint extends DefaultEndpoint implements EndpointServiceLocation {
+public class Ses2Endpoint extends DefaultEndpoint {
+
+    private ComponentsHealthCheckRepository healthCheckRepository;
+    private Ses2HealthCheck clientHealthCheck;
 
     private SesClient sesClient;
 
@@ -47,16 +51,19 @@ public class Ses2Endpoint extends DefaultEndpoint implements EndpointServiceLoca
     }
 
     @Override
-    public Ses2Component getComponent() {
-        return (Ses2Component) super.getComponent();
-    }
-
-    @Override
     public void doStart() throws Exception {
         super.doStart();
         sesClient = configuration.getAmazonSESClient() != null
                 ? configuration.getAmazonSESClient()
                 : Ses2ClientFactory.getSesClient(configuration).getSesClient();
+
+        healthCheckRepository = HealthCheckHelper.getHealthCheckRepository(getCamelContext(),
+                ComponentsHealthCheckRepository.REPOSITORY_ID, ComponentsHealthCheckRepository.class);
+
+        if (healthCheckRepository != null) {
+            clientHealthCheck = new Ses2HealthCheck(this, getId());
+            healthCheckRepository.addHealthCheck(clientHealthCheck);
+        }
     }
 
     @Override
@@ -66,6 +73,12 @@ public class Ses2Endpoint extends DefaultEndpoint implements EndpointServiceLoca
                 sesClient.close();
             }
         }
+
+        if (healthCheckRepository != null && clientHealthCheck != null) {
+            healthCheckRepository.removeHealthCheck(clientHealthCheck);
+            clientHealthCheck = null;
+        }
+
         super.doStop();
     }
 
@@ -85,22 +98,5 @@ public class Ses2Endpoint extends DefaultEndpoint implements EndpointServiceLoca
 
     public SesClient getSESClient() {
         return sesClient;
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (!configuration.isOverrideEndpoint()) {
-            if (ObjectHelper.isNotEmpty(configuration.getRegion())) {
-                return configuration.getRegion();
-            }
-        } else if (ObjectHelper.isNotEmpty(configuration.getUriEndpointOverride())) {
-            return configuration.getUriEndpointOverride();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "ses";
     }
 }

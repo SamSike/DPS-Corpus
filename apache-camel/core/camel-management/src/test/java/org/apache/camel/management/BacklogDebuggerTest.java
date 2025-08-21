@@ -24,7 +24,7 @@ import javax.management.ObjectName;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.impl.debugger.DefaultBacklogDebugger;
+import org.apache.camel.impl.debugger.BacklogDebugger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -53,9 +53,6 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         Boolean enabled = (Boolean) mbeanServer.getAttribute(on, "Enabled");
         assertEquals(Boolean.FALSE, enabled, "Should not be enabled");
 
-        Boolean standby = (Boolean) mbeanServer.getAttribute(on, "Standby");
-        assertEquals(Boolean.FALSE, standby, "Should not be standby");
-
         // enable debugger
         mbeanServer.invoke(on, "enableDebugger", null, null);
 
@@ -75,15 +72,15 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // wait for breakpoint at bar
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("bar", suspended.iterator().next());
         });
 
         // the message should be ours
-        String xml = (String) mbeanServer.invoke(on, "dumpTracedMessagesAsXml", new Object[] { "bar", false },
-                new String[] { "java.lang.String", "boolean" });
+        String xml = (String) mbeanServer.invoke(on, "dumpTracedMessagesAsXml", new Object[] { "bar" },
+                new String[] { "java.lang.String" });
         assertNotNull(xml);
         log.info(xml);
 
@@ -99,7 +96,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // and no suspended anymore
-        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(0, nodes.size());
     }
@@ -135,7 +132,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // add breakpoint at bar
-        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(1, nodes.size());
         assertEquals("foo", nodes.iterator().next());
@@ -153,7 +150,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // wait for breakpoint at bar
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("bar", suspended.iterator().next());
@@ -169,7 +166,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertTrue(xml.contains("<toNode>bar</toNode>"), "Should contain bar node");
         assertTrue(xml.contains("<header key=\"beer\" type=\"java.lang.String\">Carlsberg</header>"),
                 "Should contain our added header");
-        assertTrue(xml.contains("<exchangeProperty key=\"food\" type=\"java.lang.String\">Bratwurst</exchangeProperty>"),
+        assertTrue(xml.contains("<exchangeProperty name=\"food\" type=\"java.lang.String\">Bratwurst</exchangeProperty>"),
                 "Should contain our added exchange property");
 
         resetMocks();
@@ -181,7 +178,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // and no suspended anymore
-        nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(0, nodes.size());
     }
@@ -217,7 +214,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // add breakpoint at bar
-        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(1, nodes.size());
         assertEquals("foo", nodes.iterator().next());
@@ -235,7 +232,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // wait for breakpoint at bar
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("bar", suspended.iterator().next());
@@ -251,7 +248,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertTrue(xml.contains("<toNode>bar</toNode>"), "Should contain bar node");
         assertTrue(xml.contains("<header key=\"beer\" type=\"java.lang.Integer\">123</header>"),
                 "Should contain our added header");
-        assertTrue(xml.contains("<exchangeProperty key=\"food\" type=\"java.lang.Integer\">987</exchangeProperty>"),
+        assertTrue(xml.contains("<exchangeProperty name=\"food\" type=\"java.lang.Integer\">987</exchangeProperty>"),
                 "Should contain our added exchange property");
 
         // update body and header
@@ -272,7 +269,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertTrue(xml.contains("<toNode>bar</toNode>"), "Should contain bar node");
         assertTrue(xml.contains("<header key=\"wine\" type=\"java.lang.Integer\">456</header>"),
                 "Should contain our added header");
-        assertTrue(xml.contains("<exchangeProperty key=\"drink\" type=\"java.lang.Integer\">798</exchangeProperty>"),
+        assertTrue(xml.contains("<exchangeProperty name=\"drink\" type=\"java.lang.Integer\">798</exchangeProperty>"),
                 "Should contain our added exchange property");
 
         resetMocks();
@@ -284,7 +281,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // and no suspended anymore
-        nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(0, nodes.size());
     }
@@ -320,7 +317,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // add breakpoint at bar
-        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(1, nodes.size());
         assertEquals("foo", nodes.iterator().next());
@@ -337,7 +334,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // wait for breakpoint at bar
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("bar", suspended.iterator().next());
@@ -349,10 +346,10 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertNotNull(xml);
         log.info(xml);
 
+        assertTrue(xml.contains("<body>[Body is null]</body>"), "Should not contain our body");
         assertTrue(xml.contains("<toNode>bar</toNode>"), "Should contain bar node");
         assertFalse(xml.contains("<header"), "Should not contain any headers");
-        assertFalse(xml.contains("<exchangeProperty key=\"food\""), "Should not contain exchange property 'food'");
-        assertTrue(xml.contains("<body></body>"), "Should not contain our body");
+        assertFalse(xml.contains("<exchangeProperty name=\"food\""), "Should not contain exchange property 'food'");
 
         resetMocks();
         mock.expectedMessageCount(1);
@@ -363,7 +360,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // and no suspended anymore
-        nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(0, nodes.size());
     }
@@ -400,14 +397,14 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // add breakpoint at bar
-        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(1, nodes.size());
         assertEquals("bar", nodes.iterator().next());
 
         // the message should be ours
-        String xml = (String) mbeanServer.invoke(on, "dumpTracedMessagesAsXml", new Object[] { "bar", false },
-                new String[] { "java.lang.String", "boolean" });
+        String xml = (String) mbeanServer.invoke(on, "dumpTracedMessagesAsXml", new Object[] { "bar" },
+                new String[] { "java.lang.String" });
         assertNotNull(xml);
         log.info(xml);
 
@@ -422,7 +419,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // and no suspended anymore
-        nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(0, nodes.size());
     }
@@ -473,7 +470,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // add not breakpoint at bar as condition did not match
-        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(0, nodes.size());
 
@@ -486,14 +483,14 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         assertMockEndpointsSatisfied();
 
-        nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(1, nodes.size());
         assertEquals("bar", nodes.iterator().next());
 
         // the message should be ours
-        String xml = (String) mbeanServer.invoke(on, "dumpTracedMessagesAsXml", new Object[] { "bar", false },
-                new String[] { "java.lang.String", "boolean" });
+        String xml = (String) mbeanServer.invoke(on, "dumpTracedMessagesAsXml", new Object[] { "bar" },
+                new String[] { "java.lang.String" });
         assertNotNull(xml);
         log.info(xml);
 
@@ -509,7 +506,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // and no suspended anymore
-        nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(0, nodes.size());
     }
@@ -544,7 +541,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // add breakpoint at bar
-        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(1, nodes.size());
         assertEquals("foo", nodes.iterator().next());
@@ -557,7 +554,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // then at bar now
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("bar", suspended.iterator().next());
@@ -568,7 +565,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // then at transform now
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("transform", suspended.iterator().next());
@@ -579,7 +576,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // then at cheese now
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("cheese", suspended.iterator().next());
@@ -590,7 +587,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // then at result now
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("result", suspended.iterator().next());
@@ -601,7 +598,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // then the exchange is completed
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(0, suspended.size());
         });
@@ -641,7 +638,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // add breakpoint at bar
-        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(1, nodes.size());
         assertEquals("foo", nodes.iterator().next());
@@ -654,7 +651,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // then at bar now
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("bar", suspended.iterator().next());
@@ -665,7 +662,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // then at transform now
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("transform", suspended.iterator().next());
@@ -676,7 +673,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // then at cheese now
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("cheese", suspended.iterator().next());
@@ -687,7 +684,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // then at result now
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("result", suspended.iterator().next());
@@ -698,7 +695,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // then the exchange is completed
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(0, suspended.size());
         });
@@ -739,7 +736,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // wait for breakpoint at bar
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("bar", suspended.iterator().next());
@@ -751,7 +748,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertNotNull(xml);
         log.info(xml);
 
-        assertTrue(xml.contains("<exchangeProperty key=\"myProperty\" type=\"java.lang.String\">myValue</exchangeProperty>"),
+        assertTrue(xml.contains("<exchangeProperty name=\"myProperty\" type=\"java.lang.String\">myValue</exchangeProperty>"),
                 "Should contain myProperty");
 
         resetMocks();
@@ -763,7 +760,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // and no suspended anymore
-        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(0, nodes.size());
     }
@@ -799,7 +796,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // wait for breakpoint at bar
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("bar", suspended.iterator().next());
@@ -847,7 +844,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // and no suspended anymore
-        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(0, nodes.size());
     }
@@ -883,7 +880,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
 
         // wait for breakpoint at bar
         await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> {
-            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+            Set<String> suspended = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
             assertNotNull(suspended);
             assertEquals(1, suspended.size());
             assertEquals("bar", suspended.iterator().next());
@@ -913,7 +910,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
         assertMockEndpointsSatisfied();
 
         // and no suspended anymore
-        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "suspendedBreakpointNodeIds", null, null);
+        Set<String> nodes = (Set<String>) mbeanServer.invoke(on, "getSuspendedBreakpointNodeIds", null, null);
         assertNotNull(nodes);
         assertEquals(0, nodes.size());
     }
@@ -922,7 +919,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
      * Ensure that the suspend mode works as expected when it is set using an environment variable.
      */
     @Test
-    @SetEnvironmentVariable(key = DefaultBacklogDebugger.SUSPEND_MODE_ENV_VAR_NAME, value = "true")
+    @SetEnvironmentVariable(key = BacklogDebugger.SUSPEND_MODE_ENV_VAR_NAME, value = "true")
     public void testSuspendModeConfiguredWithEnvVariable() throws Exception {
         testSuspendMode();
     }
@@ -931,7 +928,7 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
      * Ensure that the suspend mode works as expected when it is set using a system property.
      */
     @Test
-    @SetSystemProperty(key = DefaultBacklogDebugger.SUSPEND_MODE_SYSTEM_PROP_NAME, value = "true")
+    @SetSystemProperty(key = BacklogDebugger.SUSPEND_MODE_SYSTEM_PROP_NAME, value = "true")
     public void testSuspendModeConfiguredWithSystemProperty() throws Exception {
         testSuspendMode();
     }
@@ -941,8 +938,8 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
      * variable over the system property.
      */
     @Test
-    @SetEnvironmentVariable(key = DefaultBacklogDebugger.SUSPEND_MODE_ENV_VAR_NAME, value = "true")
-    @SetSystemProperty(key = DefaultBacklogDebugger.SUSPEND_MODE_SYSTEM_PROP_NAME, value = "false")
+    @SetEnvironmentVariable(key = BacklogDebugger.SUSPEND_MODE_ENV_VAR_NAME, value = "true")
+    @SetSystemProperty(key = BacklogDebugger.SUSPEND_MODE_SYSTEM_PROP_NAME, value = "false")
     public void testSuspendModeConfiguredWithBoth() throws Exception {
         testSuspendMode();
     }
@@ -988,10 +985,10 @@ public class BacklogDebuggerTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setUseBreadcrumb(false);
                 context.setDebugging(true);
                 context.setMessageHistory(true);

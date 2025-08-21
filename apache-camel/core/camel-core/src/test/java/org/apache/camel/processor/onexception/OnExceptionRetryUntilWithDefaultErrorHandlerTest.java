@@ -37,8 +37,8 @@ public class OnExceptionRetryUntilWithDefaultErrorHandlerTest extends ContextTes
     private static int invoked;
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myRetryHandler", new MyRetryBean());
         return jndi;
     }
@@ -47,7 +47,7 @@ public class OnExceptionRetryUntilWithDefaultErrorHandlerTest extends ContextTes
     public void testRetryUntil() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // as its based on a unit test we do not have any delays between
                 // and do not log the stack trace
                 errorHandler(defaultErrorHandler().maximumRedeliveries(1).logStackTrace(false));
@@ -68,7 +68,7 @@ public class OnExceptionRetryUntilWithDefaultErrorHandlerTest extends ContextTes
         assertEquals(3, invoked);
     }
 
-    public static class MyRetryBean {
+    public class MyRetryBean {
 
         // using bean binding we can bind the information from the exchange to
         // the types we have in our method signature

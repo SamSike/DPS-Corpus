@@ -103,7 +103,7 @@ public class SpringJAXRSClientFactoryBean extends JAXRSClientFactoryBean
     public void setSkipFaultLogging(boolean skipFaultLogging) {
         if (skipFaultLogging) {
             if (this.getProperties() == null) {
-                this.setProperties(new HashMap<>());
+                this.setProperties(new HashMap<String, Object>());
             }
             this.getProperties().put(FaultListener.class.getName(), new NullFaultListener());
         }

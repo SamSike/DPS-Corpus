@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import software.amazon.awssdk.services.kms.KmsClient;
-import software.amazon.awssdk.services.kms.KmsServiceClientConfiguration;
 import software.amazon.awssdk.services.kms.model.CreateKeyRequest;
 import software.amazon.awssdk.services.kms.model.CreateKeyResponse;
 import software.amazon.awssdk.services.kms.model.DescribeKeyRequest;
@@ -90,11 +89,6 @@ public class AmazonKMSClientMock implements KmsClient {
         ScheduleKeyDeletionResponse.Builder response = ScheduleKeyDeletionResponse.builder();
         response.keyId("test");
         return response.build();
-    }
-
-    @Override
-    public KmsServiceClientConfiguration serviceClientConfiguration() {
-        return null;
     }
 
     @Override

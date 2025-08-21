@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.NamedThreadLocal;
 import org.springframework.core.OrderComparator;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -38,7 +37,7 @@ import org.springframework.util.Assert;
  * to be removed before a new one can be set for the same key.
  * Supports a list of transaction synchronizations if synchronization is active.
  *
- * <p>Resource management code should check for thread-bound resources, for example, JDBC
+ * <p>Resource management code should check for thread-bound resources, e.g. JDBC
  * Connections or Hibernate Sessions, via {@code getResource}. Such code is
  * normally not supposed to bind resources to threads, as this is the responsibility
  * of transaction managers. A further option is to lazily bind on first use if
@@ -59,7 +58,7 @@ import org.springframework.util.Assert;
  * doesn't support transaction synchronization.
  *
  * <p>Synchronization is for example used to always return the same resources
- * within a JTA transaction, for example, a JDBC Connection or a Hibernate Session for
+ * within a JTA transaction, e.g. a JDBC Connection or a Hibernate Session for
  * any given DataSource or SessionFactory, respectively.
  *
  * @author Juergen Hoeller
@@ -130,7 +129,8 @@ public abstract class TransactionSynchronizationManager {
 	 * resource object), or {@code null} if none
 	 * @see ResourceTransactionManager#getResourceFactory()
 	 */
-	public static @Nullable Object getResource(Object key) {
+	@Nullable
+	public static Object getResource(Object key) {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
 		return doGetResource(actualKey);
 	}
@@ -138,14 +138,15 @@ public abstract class TransactionSynchronizationManager {
 	/**
 	 * Actually check the value of the resource that is bound for the given key.
 	 */
-	private static @Nullable Object doGetResource(Object actualKey) {
+	@Nullable
+	private static Object doGetResource(Object actualKey) {
 		Map<Object, Object> map = resources.get();
 		if (map == null) {
 			return null;
 		}
 		Object value = map.get(actualKey);
 		// Transparently remove ResourceHolder that was marked as void...
-		if (value instanceof ResourceHolder resourceHolder && resourceHolder.isVoid()) {
+		if (value instanceof ResourceHolder && ((ResourceHolder) value).isVoid()) {
 			map.remove(actualKey);
 			// Remove entire ThreadLocal if empty...
 			if (map.isEmpty()) {
@@ -158,73 +159,13 @@ public abstract class TransactionSynchronizationManager {
 
 	/**
 	 * Bind the given resource for the given key to the current thread.
-	 * <p><b>Note: Any bound resource needs to get explicitly unbound through
-	 * {@link #unbindResource}. For automatic unbinding after transaction
-	 * completion, use {@link #bindSynchronizedResource} instead.</b>
 	 * @param key the key to bind the value to (usually the resource factory)
 	 * @param value the value to bind (usually the active resource object)
 	 * @throws IllegalStateException if there is already a value bound to the thread
 	 * @see ResourceTransactionManager#getResourceFactory()
-	 * @see #bindSynchronizedResource
 	 */
 	public static void bindResource(Object key, Object value) throws IllegalStateException {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
-		Object oldValue = doBindResource(actualKey, value);
-		if (oldValue != null) {
-			throw new IllegalStateException(
-					"Already value [" + oldValue + "] for key [" + actualKey + "] bound to thread");
-		}
-	}
-
-	/**
-	 * Bind the given resource for the given key to the current thread,
-	 * synchronizing it with the current transaction for automatic unbinding
-	 * after transaction completion.
-	 * <p>This is effectively a programmatic way to register a transaction-scoped
-	 * resource, similar to the BeanFactory-driven {@link SimpleTransactionScope}.
-	 * <p>An existing value bound for the given key will be preserved and re-bound
-	 * after transaction completion, restoring the state before this bind call.
-	 * @param key the key to bind the value to (usually the resource factory)
-	 * @param value the value to bind (usually the active resource object)
-	 * @throws IllegalStateException if transaction synchronization is not active
-	 * @since 7.0
-	 * @see #bindResource
-	 * @see #registerSynchronization
-	 */
-	public static void bindSynchronizedResource(Object key, Object value) throws IllegalStateException {
-		Set<TransactionSynchronization> synchs = synchronizations.get();
-		if (synchs == null) {
-			throw new IllegalStateException("Transaction synchronization is not active");
-		}
-		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
-		Object oldValue = doBindResource(actualKey, value);
-		synchs.add(new TransactionSynchronization() {
-			@Override
-			public void suspend() {
-				doUnbindResource(actualKey);
-			}
-			@Override
-			public void resume() {
-				Object existingValue = doBindResource(actualKey, value);
-				if (existingValue != null) {
-					throw new IllegalStateException(
-							"Unexpected value [" + existingValue + "] for key [" + actualKey + "] bound on resume");
-				}
-			}
-			@Override
-			public void afterCompletion(int status) {
-				doUnbindResource(actualKey);
-				if (oldValue != null) {
-					doBindResource(actualKey, oldValue);
-				}
-			}
-		});
-	}
-
-	/**
-	 * Actually bind the given resource for the given key to the current thread.
-	 */
-	private static @Nullable Object doBindResource(Object actualKey, Object value) {
 		Assert.notNull(value, "Value must not be null");
 		Map<Object, Object> map = resources.get();
 		// set ThreadLocal Map if none found
@@ -234,22 +175,21 @@ public abstract class TransactionSynchronizationManager {
 		}
 		Object oldValue = map.put(actualKey, value);
 		// Transparently suppress a ResourceHolder that was marked as void...
-		if (oldValue instanceof ResourceHolder resourceHolder && resourceHolder.isVoid()) {
+		if (oldValue instanceof ResourceHolder && ((ResourceHolder) oldValue).isVoid()) {
 			oldValue = null;
 		}
-		return oldValue;
+		if (oldValue != null) {
+			throw new IllegalStateException(
+					"Already value [" + oldValue + "] for key [" + actualKey + "] bound to thread");
+		}
 	}
 
 	/**
 	 * Unbind a resource for the given key from the current thread.
-	 * <p>This explicit step is only necessary with {@link #bindResource}.
-	 * For automatic unbinding, consider {@link #bindSynchronizedResource}.
 	 * @param key the key to unbind (usually the resource factory)
 	 * @return the previously bound value (usually the active resource object)
 	 * @throws IllegalStateException if there is no value bound to the thread
 	 * @see ResourceTransactionManager#getResourceFactory()
-	 * @see #bindResource
-	 * @see #unbindResourceIfPossible
 	 */
 	public static Object unbindResource(Object key) throws IllegalStateException {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
@@ -262,14 +202,11 @@ public abstract class TransactionSynchronizationManager {
 
 	/**
 	 * Unbind a resource for the given key from the current thread.
-	 * <p>This explicit step is only necessary with {@link #bindResource}.
-	 * For automatic unbinding, consider {@link #bindSynchronizedResource}.
 	 * @param key the key to unbind (usually the resource factory)
 	 * @return the previously bound value, or {@code null} if none bound
-	 * @see #bindResource
-	 * @see #unbindResource
 	 */
-	public static @Nullable Object unbindResourceIfPossible(Object key) {
+	@Nullable
+	public static Object unbindResourceIfPossible(Object key) {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
 		return doUnbindResource(actualKey);
 	}
@@ -277,7 +214,8 @@ public abstract class TransactionSynchronizationManager {
 	/**
 	 * Actually remove the value of the resource that is bound for the given key.
 	 */
-	private static @Nullable Object doUnbindResource(Object actualKey) {
+	@Nullable
+	private static Object doUnbindResource(Object actualKey) {
 		Map<Object, Object> map = resources.get();
 		if (map == null) {
 			return null;
@@ -288,7 +226,7 @@ public abstract class TransactionSynchronizationManager {
 			resources.remove();
 		}
 		// Transparently suppress a ResourceHolder that was marked as void...
-		if (value instanceof ResourceHolder resourceHolder && resourceHolder.isVoid()) {
+		if (value instanceof ResourceHolder && ((ResourceHolder) value).isVoid()) {
 			value = null;
 		}
 		return value;
@@ -359,9 +297,6 @@ public abstract class TransactionSynchronizationManager {
 		if (synchs.isEmpty()) {
 			return Collections.emptyList();
 		}
-		else if (synchs.size() == 1) {
-			return Collections.singletonList(synchs.iterator().next());
-		}
 		else {
 			// Sort lazily here, not in registerSynchronization.
 			List<TransactionSynchronization> sortedSynchs = new ArrayList<>(synchs);
@@ -403,7 +338,8 @@ public abstract class TransactionSynchronizationManager {
 	 * for example to optimize fetch strategies for specific named transactions.
 	 * @see org.springframework.transaction.TransactionDefinition#getName()
 	 */
-	public static @Nullable String getCurrentTransactionName() {
+	@Nullable
+	public static String getCurrentTransactionName() {
 		return currentTransactionName.get();
 	}
 
@@ -471,7 +407,8 @@ public abstract class TransactionSynchronizationManager {
 	 * @see org.springframework.transaction.TransactionDefinition#ISOLATION_SERIALIZABLE
 	 * @see org.springframework.transaction.TransactionDefinition#getIsolationLevel()
 	 */
-	public static @Nullable Integer getCurrentTransactionIsolationLevel() {
+	@Nullable
+	public static Integer getCurrentTransactionIsolationLevel() {
 		return currentTransactionIsolationLevel.get();
 	}
 
@@ -489,10 +426,10 @@ public abstract class TransactionSynchronizationManager {
 	 * Return whether there currently is an actual transaction active.
 	 * This indicates whether the current thread is associated with an actual
 	 * transaction rather than just with active transaction synchronization.
-	 * <p>To be called by resource management code that wants to differentiate
-	 * between active transaction synchronization (with or without a backing
+	 * <p>To be called by resource management code that wants to discriminate
+	 * between active transaction synchronization (with or without backing
 	 * resource transaction; also on PROPAGATION_SUPPORTS) and an actual
-	 * transaction being active (with a backing resource transaction;
+	 * transaction being active (with backing resource transaction;
 	 * on PROPAGATION_REQUIRED, PROPAGATION_REQUIRES_NEW, etc).
 	 * @see #isSynchronizationActive()
 	 */

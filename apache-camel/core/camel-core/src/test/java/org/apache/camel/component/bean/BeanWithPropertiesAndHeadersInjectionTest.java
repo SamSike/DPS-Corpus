@@ -25,6 +25,7 @@ import org.apache.camel.Headers;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.processor.BeanRouteTest;
 import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -34,13 +35,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class BeanWithPropertiesAndHeadersInjectionTest extends ContextTestSupport {
-    private static final Logger LOG = LoggerFactory.getLogger(BeanWithPropertiesAndHeadersInjectionTest.class);
-    protected final MyBean myBean = new MyBean();
+    private static final Logger LOG = LoggerFactory.getLogger(BeanRouteTest.class);
+    protected MyBean myBean = new MyBean();
 
     @Test
-    public void testSendMessage() {
+    public void testSendMessage() throws Exception {
         template.send("direct:in", new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.setProperty("p1", "abc");
                 exchange.setProperty("p2", 123);
 
@@ -63,8 +64,8 @@ public class BeanWithPropertiesAndHeadersInjectionTest extends ContextTestSuppor
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("myBean", myBean);
         return answer;
     }
@@ -90,7 +91,7 @@ public class BeanWithPropertiesAndHeadersInjectionTest extends ContextTestSuppor
         public void myMethod(@ExchangeProperties Map<?, ?> foo, @Headers Map<?, ?> bar) {
             this.foo = foo;
             this.bar = bar;
-            LOG.info("myMethod() method called on {}", this);
+            LOG.info("myMethod() method called on " + this);
         }
     }
 }

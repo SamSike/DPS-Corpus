@@ -23,10 +23,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.cloud.ServiceRegistry;
 import org.apache.camel.util.ObjectHelper;
 
-/**
- * @deprecated since 4.7
- */
-@Deprecated(since = "4.7")
 public final class ServiceRegistryHelper {
     private ServiceRegistryHelper() {
     }

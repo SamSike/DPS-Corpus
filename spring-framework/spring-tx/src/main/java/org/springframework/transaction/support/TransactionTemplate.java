@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ import java.lang.reflect.UndeclaredThrowableException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionException;
@@ -68,7 +68,8 @@ public class TransactionTemplate extends DefaultTransactionDefinition
 	/** Logger available to subclasses. */
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	private @Nullable PlatformTransactionManager transactionManager;
+	@Nullable
+	private PlatformTransactionManager transactionManager;
 
 
 	/**
@@ -111,7 +112,8 @@ public class TransactionTemplate extends DefaultTransactionDefinition
 	/**
 	 * Return the transaction management strategy to be used.
 	 */
-	public @Nullable PlatformTransactionManager getTransactionManager() {
+	@Nullable
+	public PlatformTransactionManager getTransactionManager() {
 		return this.transactionManager;
 	}
 
@@ -124,11 +126,12 @@ public class TransactionTemplate extends DefaultTransactionDefinition
 
 
 	@Override
-	public <T> @Nullable T execute(TransactionCallback<T> action) throws TransactionException {
+	@Nullable
+	public <T> T execute(TransactionCallback<T> action) throws TransactionException {
 		Assert.state(this.transactionManager != null, "No PlatformTransactionManager set");
 
-		if (this.transactionManager instanceof CallbackPreferringPlatformTransactionManager cpptm) {
-			return cpptm.execute(this, action);
+		if (this.transactionManager instanceof CallbackPreferringPlatformTransactionManager) {
+			return ((CallbackPreferringPlatformTransactionManager) this.transactionManager).execute(this, action);
 		}
 		else {
 			TransactionStatus status = this.transactionManager.getTransaction(this);
@@ -178,8 +181,8 @@ public class TransactionTemplate extends DefaultTransactionDefinition
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (super.equals(other) && (!(other instanceof TransactionTemplate template) ||
-				getTransactionManager() == template.getTransactionManager())));
+		return (this == other || (super.equals(other) && (!(other instanceof TransactionTemplate) ||
+				getTransactionManager() == ((TransactionTemplate) other).getTransactionManager())));
 	}
 
 }

@@ -52,14 +52,11 @@ public class SchedulerConsumer extends ScheduledPollConsumer {
 
     protected int sendTimerExchange() {
         final Exchange exchange = createExchange(false);
+        exchange.setProperty(Exchange.TIMER_NAME, getEndpoint().getName());
 
-        if (getEndpoint().isIncludeMetadata()) {
-            exchange.setProperty(Exchange.TIMER_NAME, getEndpoint().getName());
-
-            Date now = new Date();
-            exchange.setProperty(Exchange.TIMER_FIRED_TIME, now);
-            exchange.getIn().setHeader(SchedulerConstants.MESSAGE_TIMESTAMP, now.getTime());
-        }
+        Date now = new Date();
+        exchange.setProperty(Exchange.TIMER_FIRED_TIME, now);
+        exchange.getIn().setHeader(SchedulerConstants.MESSAGE_TIMESTAMP, now.getTime());
 
         if (LOG.isTraceEnabled()) {
             LOG.trace("Timer {} is firing", getEndpoint().getName());

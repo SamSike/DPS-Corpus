@@ -29,24 +29,21 @@ import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.DefaultExchangeHolder;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultExchangeHolderTest extends ContextTestSupport {
 
     private String id;
 
     @Test
-    public void testMarshal() {
+    public void testMarshal() throws Exception {
         DefaultExchangeHolder holder = createHolder(true);
         assertNotNull(holder);
         assertNotNull(holder.toString());
     }
 
     @Test
-    public void testNoProperties() {
+    public void testNoProperties() throws Exception {
         DefaultExchangeHolder holder = createHolder(false);
         assertNotNull(holder);
 
@@ -57,12 +54,10 @@ public class DefaultExchangeHolderTest extends ContextTestSupport {
         assertEquals("Bye World", exchange.getOut().getBody());
         assertEquals(123, exchange.getIn().getHeader("foo"));
         assertNull(exchange.getProperty("bar"));
-        assertNull(exchange.getProperty("myVar"));
-        assertNull(exchange.getProperty("myOtherVar"));
     }
 
     @Test
-    public void testUnmarshal() {
+    public void testUnmarshal() throws Exception {
         id = null;
         Exchange exchange = new DefaultExchange(context);
 
@@ -73,13 +68,11 @@ public class DefaultExchangeHolderTest extends ContextTestSupport {
         assertEquals("Hi Camel", exchange.getIn().getHeader("CamelFoo"));
         assertEquals(444, exchange.getProperty("bar"));
         assertEquals(555, exchange.getProperty("CamelBar"));
-        assertEquals(666, exchange.getVariable("myVar"));
-        assertEquals("cheese", exchange.getVariable("myOtherVar"));
         assertEquals(id, exchange.getExchangeId());
     }
 
     @Test
-    public void testSkipNonSerializableData() {
+    public void testSkipNonSerializableData() throws Exception {
         Exchange exchange = new DefaultExchange(context);
         exchange.getIn().setBody("Hello World");
         exchange.getIn().setHeader("Foo", new MyFoo("Tiger"));
@@ -97,7 +90,7 @@ public class DefaultExchangeHolderTest extends ContextTestSupport {
     }
 
     @Test
-    public void testSkipNonSerializableDataFromList() {
+    public void testSkipNonSerializableDataFromList() throws Exception {
         // use a mixed list, the MyFoo is not serializable so the entire list
         // should be skipped
         List<Object> list = new ArrayList<>();
@@ -121,7 +114,7 @@ public class DefaultExchangeHolderTest extends ContextTestSupport {
     }
 
     @Test
-    public void testSkipNonSerializableDataFromMap() {
+    public void testSkipNonSerializableDataFromMap() throws Exception {
         // use a mixed Map, the MyFoo is not serializable so the entire map
         // should be skipped
         Map<String, Object> map = new HashMap<>();
@@ -145,16 +138,20 @@ public class DefaultExchangeHolderTest extends ContextTestSupport {
     }
 
     @Test
-    public void testFileNotSupported() {
+    public void testFileNotSupported() throws Exception {
         Exchange exchange = new DefaultExchange(context);
         exchange.getIn().setBody(new File("src/test/resources/log4j2.properties"));
 
-        assertThrows(RuntimeExchangeException.class, () -> DefaultExchangeHolder.marshal(exchange),
-                "Should have thrown exception");
+        try {
+            DefaultExchangeHolder.marshal(exchange);
+            fail("Should have thrown exception");
+        } catch (RuntimeExchangeException e) {
+            // expected
+        }
     }
 
     @Test
-    public void testCaughtException() {
+    public void testCaughtException() throws Exception {
         // use a mixed list, the MyFoo is not serializable so the entire list
         // should be skipped
         List<Object> list = new ArrayList<>();
@@ -188,14 +185,12 @@ public class DefaultExchangeHolderTest extends ContextTestSupport {
         exchange.getIn().setHeader("CamelFoo", "Hi Camel");
         exchange.setProperty("bar", 444);
         exchange.setProperty("CamelBar", 555);
-        exchange.setVariable("myVar", 666);
-        exchange.setVariable("myOtherVar", "cheese");
         exchange.getOut().setBody("Bye World");
-        return DefaultExchangeHolder.marshal(exchange, includeProperties, false);
+        return DefaultExchangeHolder.marshal(exchange, includeProperties);
     }
 
     private static final class MyFoo {
-        private final String foo;
+        private String foo;
 
         private MyFoo(String foo) {
             this.foo = foo;

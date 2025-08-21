@@ -40,18 +40,19 @@ import org.apache.camel.component.kafka.serde.KafkaHeaderSerializer;
 import org.apache.camel.health.HealthCheckHelper;
 import org.apache.camel.health.WritableHealthCheckRepository;
 import org.apache.camel.spi.HeaderFilterStrategy;
-import org.apache.camel.spi.RouteIdAware;
-import org.apache.camel.spi.UnitOfWork;
 import org.apache.camel.support.DefaultAsyncProducer;
+import org.apache.camel.support.SynchronizationAdapter;
 import org.apache.camel.util.KeyValueHolder;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.ReflectionHelper;
 import org.apache.camel.util.URISupport;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.NetworkClient;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.slf4j.Logger;
@@ -59,7 +60,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.apache.camel.component.kafka.producer.support.ProducerUtil.tryConvertToSerializedType;
 
-public class KafkaProducer extends DefaultAsyncProducer implements RouteIdAware {
+public class KafkaProducer extends DefaultAsyncProducer {
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaProducer.class);
 
@@ -77,7 +78,6 @@ public class KafkaProducer extends DefaultAsyncProducer implements RouteIdAware 
     private final String endpointTopic;
     private final Integer configPartitionKey;
     private final String configKey;
-    private String routeId;
 
     public KafkaProducer(KafkaEndpoint endpoint) {
         super(endpoint);
@@ -157,32 +157,21 @@ public class KafkaProducer extends DefaultAsyncProducer implements RouteIdAware 
     @SuppressWarnings("rawtypes")
     protected void doStart() throws Exception {
         Properties props = getProps();
-        transactionId = ObjectHelper.isNotEmpty(configuration.getTransactionalId())
-                ? configuration.getTransactionalId() : props.getProperty(ProducerConfig.TRANSACTIONAL_ID_CONFIG);
-        if (ObjectHelper.isEmpty(transactionId) && configuration.isTransacted()) {
-            transactionId = getEndpoint().getId() + "-" + getRouteId();
-            props.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, transactionId);
-        }
         if (kafkaProducer == null) {
             createProducer(props);
         }
 
         // init kafka transaction
+        transactionId = props.getProperty(ProducerConfig.TRANSACTIONAL_ID_CONFIG);
         if (transactionId != null) {
             kafkaProducer.initTransactions();
         }
 
         // if we are in asynchronous mode we need a worker pool
         if (!configuration.isSynchronous() && workerPool == null) {
-            // If custom worker pool is provided, then use it, else create a new one.
-            if (configuration.getWorkerPool() != null) {
-                workerPool = configuration.getWorkerPool();
-                shutdownWorkerPool = false;
-            } else {
-                workerPool = endpoint.createProducerExecutor();
-                // we create a thread pool so we should also shut it down
-                shutdownWorkerPool = true;
-            }
+            workerPool = endpoint.createProducerExecutor();
+            // we create a thread pool so we should also shut it down
+            shutdownWorkerPool = true;
         }
 
         // init client id which we may need to get from the kafka producer via reflection
@@ -202,12 +191,11 @@ public class KafkaProducer extends DefaultAsyncProducer implements RouteIdAware 
         // health-check is optional so discover and resolve
         healthCheckRepository = HealthCheckHelper.getHealthCheckRepository(
                 endpoint.getCamelContext(),
-                "producers",
+                "components",
                 WritableHealthCheckRepository.class);
 
         if (healthCheckRepository != null) {
             producerHealthCheck = new KafkaProducerHealthCheck(this, clientId);
-            producerHealthCheck.setEnabled(getEndpoint().getComponent().isHealthCheckProducerEnabled());
             healthCheckRepository.addHealthCheck(producerHealthCheck);
         }
     }
@@ -397,7 +385,7 @@ public class KafkaProducer extends DefaultAsyncProducer implements RouteIdAware 
             startKafkaTransaction(exchange);
         }
 
-        if (endpoint.getConfiguration().isUseIterator() && isIterable(message.getBody())) {
+        if (isIterable(message.getBody())) {
             processIterableSync(exchange, message);
         } else {
             processSingleMessageSync(exchange, message);
@@ -421,7 +409,7 @@ public class KafkaProducer extends DefaultAsyncProducer implements RouteIdAware 
         // This sets an empty metadata for the very first message on the batch
         List<RecordMetadata> recordMetadata = new ArrayList<>();
         if (configuration.isRecordMetadata()) {
-            exchange.getMessage().setHeader(KafkaConstants.KAFKA_RECORD_META, recordMetadata);
+            exchange.getMessage().setHeader(KafkaConstants.KAFKA_RECORDMETA, recordMetadata);
         }
 
         while (recordIterable.hasNext()) {
@@ -453,7 +441,9 @@ public class KafkaProducer extends DefaultAsyncProducer implements RouteIdAware 
 
         if (configuration.isRecordMetadata()) {
             List<RecordMetadata> metadataList = Collections.singletonList(metadata);
+
             ProducerUtil.setRecordMetadata(key, metadataList);
+
             return metadataList;
         }
 
@@ -474,10 +464,11 @@ public class KafkaProducer extends DefaultAsyncProducer implements RouteIdAware 
 
         try {
             // is the message body a list or something that contains multiple values
-            if (endpoint.getConfiguration().isUseIterator() && isIterable(body)) {
+            if (isIterable(body)) {
                 processIterableAsync(exchange, producerCallBack, message);
             } else {
                 final ProducerRecord<Object, Object> record = createRecord(exchange, message);
+
                 doSend(exchange, record, producerCallBack);
             }
 
@@ -518,8 +509,7 @@ public class KafkaProducer extends DefaultAsyncProducer implements RouteIdAware 
             KafkaProducerMetadataCallBack metadataCallBack = new KafkaProducerMetadataCallBack(
                     key, configuration.isRecordMetadata());
 
-            // make sure to cb is last in the order here
-            DelegatingCallback delegatingCallback = new DelegatingCallback(metadataCallBack, cb);
+            DelegatingCallback delegatingCallback = new DelegatingCallback(cb, metadataCallBack);
 
             kafkaProducer.send(record, delegatingCallback);
         } else {
@@ -528,26 +518,46 @@ public class KafkaProducer extends DefaultAsyncProducer implements RouteIdAware 
     }
 
     private void startKafkaTransaction(Exchange exchange) {
-        UnitOfWork uow = exchange.getUnitOfWork();
+        exchange.getUnitOfWork().beginTransactedBy(transactionId);
+        kafkaProducer.beginTransaction();
+        exchange.getUnitOfWork().addSynchronization(new KafkaTransactionSynchronization(transactionId, kafkaProducer));
+    }
+}
 
-        if (!uow.isTransactedBy(transactionId)) {
-            LOG.debug("Starting kafka transaction {} with exchange {}", transactionId, exchange.getExchangeId());
-            uow.beginTransactedBy(transactionId);
-            kafkaProducer.beginTransaction();
-            uow.addSynchronization(new KafkaTransactionSynchronization(transactionId, kafkaProducer));
-        } else {
-            LOG.debug("Using existing kafka transaction {} with exchange {}.",
-                    transactionId, exchange.getExchangeId());
+class KafkaTransactionSynchronization extends SynchronizationAdapter {
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaTransactionSynchronization.class);
+    private final String transactionId;
+    private final Producer kafkaProducer;
+
+    public KafkaTransactionSynchronization(String transactionId, Producer kafkaProducer) {
+        this.transactionId = transactionId;
+        this.kafkaProducer = kafkaProducer;
+    }
+
+    @Override
+    public void onDone(Exchange exchange) {
+        try {
+            if (exchange.getException() != null || exchange.isRollbackOnly()) {
+                if (exchange.getException() instanceof KafkaException) {
+                    LOG.warn("Catch {} and will close kafka producer with transaction {} ", exchange.getException(),
+                            transactionId);
+                    kafkaProducer.close();
+                } else {
+                    LOG.warn("Abort kafka transaction {} with exchange {}", transactionId, exchange.getExchangeId());
+                    kafkaProducer.abortTransaction();
+                }
+            } else {
+                LOG.debug("Commit kafka transaction {} with exchange {}", transactionId, exchange.getExchangeId());
+                kafkaProducer.commitTransaction();
+            }
+        } catch (Throwable t) {
+            exchange.setException(t);
+            if (!(t instanceof KafkaException)) {
+                LOG.warn("Abort kafka transaction {} with exchange {} due to {} ", transactionId, exchange.getExchangeId(), t);
+                kafkaProducer.abortTransaction();
+            }
+        } finally {
+            exchange.getUnitOfWork().endTransactedBy(transactionId);
         }
-    }
-
-    @Override
-    public String getRouteId() {
-        return routeId;
-    }
-
-    @Override
-    public void setRouteId(String routeId) {
-        this.routeId = routeId;
     }
 }

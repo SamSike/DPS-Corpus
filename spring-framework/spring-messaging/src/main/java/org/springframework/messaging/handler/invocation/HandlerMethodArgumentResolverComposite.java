@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.MethodParameter;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 
 /**
@@ -85,11 +84,10 @@ public class HandlerMethodArgumentResolverComposite implements HandlerMethodArgu
 	}
 
 	/**
-	 * Clear the list of configured resolvers and the resolver cache.
+	 * Clear the list of configured resolvers.
 	 */
 	public void clear() {
 		this.argumentResolvers.clear();
-		this.argumentResolverCache.clear();
 	}
 
 
@@ -109,7 +107,8 @@ public class HandlerMethodArgumentResolverComposite implements HandlerMethodArgu
 	 * @throws IllegalArgumentException if no suitable argument resolver is found
 	 */
 	@Override
-	public @Nullable Object resolveArgument(MethodParameter parameter, Message<?> message) throws Exception {
+	@Nullable
+	public Object resolveArgument(MethodParameter parameter, Message<?> message) throws Exception {
 		HandlerMethodArgumentResolver resolver = getArgumentResolver(parameter);
 		if (resolver == null) {
 			throw new IllegalArgumentException("Unsupported parameter type [" +
@@ -122,7 +121,8 @@ public class HandlerMethodArgumentResolverComposite implements HandlerMethodArgu
 	 * Find a registered {@link HandlerMethodArgumentResolver} that supports
 	 * the given method parameter.
 	 */
-	private @Nullable HandlerMethodArgumentResolver getArgumentResolver(MethodParameter parameter) {
+	@Nullable
+	private HandlerMethodArgumentResolver getArgumentResolver(MethodParameter parameter) {
 		HandlerMethodArgumentResolver result = this.argumentResolverCache.get(parameter);
 		if (result == null) {
 			for (HandlerMethodArgumentResolver resolver : this.argumentResolvers) {

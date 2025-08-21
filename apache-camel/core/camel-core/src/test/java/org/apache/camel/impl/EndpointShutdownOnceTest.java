@@ -17,7 +17,6 @@
 package org.apache.camel.impl;
 
 import java.util.Map;
-import java.util.concurrent.atomic.LongAdder;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Component;
@@ -37,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class EndpointShutdownOnceTest {
 
     @Test
-    public void testEndpointShutdown() {
+    public void testEndpointShutdown() throws Exception {
         CamelContext context = new DefaultCamelContext();
         context.addComponent("my", new MyComponent());
         context.start();
@@ -56,30 +55,30 @@ public class EndpointShutdownOnceTest {
     private static final class MyComponent extends DefaultComponent {
 
         @Override
-        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) {
+        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
             return new MyEndpoint(uri, this);
         }
     }
 
     private static final class MyEndpoint extends DefaultEndpoint {
 
-        private final LongAdder invoked = new LongAdder();
+        private volatile int invoked;
 
         private MyEndpoint(String endpointUri, Component component) {
             super(endpointUri, component);
         }
 
         public int getInvoked() {
-            return invoked.intValue();
+            return invoked;
         }
 
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             return null;
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             return null;
         }
 
@@ -91,7 +90,7 @@ public class EndpointShutdownOnceTest {
         @Override
         protected void doShutdown() throws Exception {
             super.doShutdown();
-            invoked.increment();
+            invoked++;
         }
     }
 }

@@ -29,9 +29,11 @@ import org.apache.camel.tooling.model.ComponentModel;
 public class DependencyDownloaderUriFactoryResolver extends DefaultUriFactoryResolver {
 
     private final CamelCatalog catalog = new DefaultCamelCatalog();
+    private final CamelContext camelContext;
     private final DependencyDownloader downloader;
 
     public DependencyDownloaderUriFactoryResolver(CamelContext camelContext) {
+        this.camelContext = camelContext;
         this.downloader = camelContext.hasService(DependencyDownloader.class);
     }
 

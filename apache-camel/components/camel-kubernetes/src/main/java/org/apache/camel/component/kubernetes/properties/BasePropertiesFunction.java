@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.fabric8.kubernetes.client.ConfigBuilder;
@@ -28,11 +29,11 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.PropertiesComponent;
 import org.apache.camel.spi.PropertiesFunction;
 import org.apache.camel.spi.PropertyConfigurer;
 import org.apache.camel.support.CamelContextHelper;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.PropertyBindingSupport;
 import org.apache.camel.support.service.ServiceSupport;
 import org.apache.camel.util.LocationHelper;
@@ -55,10 +56,8 @@ abstract class BasePropertiesFunction extends ServiceSupport implements Properti
     public static final String MOUNT_PATH_SECRETS = "camel.kubernetes-config.mount-path-secrets";
 
     // use camel-k ENV for mount paths
-    public static final String JVM_PROP_MOUNT_PATH_CONFIGMAPS = "camel.k.mount-path.configmaps";
-    public static final String ENV_MOUNT_PATH_CONFIGMAPS = "CAMEL_K_MOUNT_PATH_CONFIGMAPS";
-    public static final String JVM_PROP_MOUNT_PATH_SECRETS = "camel.k.mount-path.secrets";
-    public static final String ENV_MOUNT_PATH_SECRETS = "CAMEL_K_MOUNT_PATH_SECRETS";
+    public static final String ENV_MOUNT_PATH_CONFIGMAPS = "camel.k.mount-path.configmaps";
+    public static final String ENV_MOUNT_PATH_SECRETS = "camel.k.mount-path.secrets";
     private static final Logger LOG = LoggerFactory.getLogger(BasePropertiesFunction.class);
 
     private static final AtomicBoolean LOGGED = new AtomicBoolean();
@@ -69,7 +68,6 @@ abstract class BasePropertiesFunction extends ServiceSupport implements Properti
     private Boolean clientEnabled;
     private String mountPathConfigMaps;
     private String mountPathSecrets;
-    private boolean isAutowiredClient;
 
     @Override
     protected void doInit() {
@@ -90,18 +88,14 @@ abstract class BasePropertiesFunction extends ServiceSupport implements Properti
         }
         if (mountPathConfigMaps == null) {
             mountPathConfigMaps = camelContext.getPropertiesComponent().resolveProperty(MOUNT_PATH_CONFIGMAPS)
-                    .orElseGet(
-                            () -> System.getProperty(JVM_PROP_MOUNT_PATH_CONFIGMAPS, System.getenv(ENV_MOUNT_PATH_CONFIGMAPS)));
+                    .orElseGet(() -> System.getProperty(ENV_MOUNT_PATH_CONFIGMAPS, System.getenv(ENV_MOUNT_PATH_CONFIGMAPS)));
         }
         if (mountPathSecrets == null) {
             mountPathSecrets = camelContext.getPropertiesComponent().resolveProperty(MOUNT_PATH_SECRETS)
-                    .orElseGet(() -> System.getProperty(JVM_PROP_MOUNT_PATH_SECRETS, System.getenv(ENV_MOUNT_PATH_SECRETS)));
+                    .orElseGet(() -> System.getProperty(ENV_MOUNT_PATH_SECRETS, System.getenv(ENV_MOUNT_PATH_SECRETS)));
         }
         if (clientEnabled && client == null) {
             client = CamelContextHelper.findSingleByType(camelContext, KubernetesClient.class);
-            if (client != null) {
-                isAutowiredClient = true;
-            }
         }
         if (clientEnabled && client == null) {
             // try to auto-configure via properties
@@ -112,15 +106,15 @@ abstract class BasePropertiesFunction extends ServiceSupport implements Properti
             if (!properties.isEmpty()) {
                 ConfigBuilder config = new ConfigBuilder();
 
-                PropertyConfigurer configurer = PluginHelper.getConfigurerResolver(camelContext)
-                        .resolvePropertyConfigurer(ConfigBuilder.class.getName(), camelContext);
+                PropertyConfigurer configurer = camelContext.adapt(ExtendedCamelContext.class)
+                        .getConfigurerResolver().resolvePropertyConfigurer(ConfigBuilder.class.getName(), camelContext);
 
-                // use copy to keep track of which options was configured or not
+                // use copy to keep track of which options was configureed or not
                 OrderedLocationProperties copy = new OrderedLocationProperties();
                 copy.putAll(properties);
 
                 PropertyBindingSupport.build()
-                        .withProperties(copy.asMap())
+                        .withProperties((Map) copy)
                         .withFluentBuilder(true)
                         .withIgnoreCase(true)
                         .withReflection(false)
@@ -228,10 +222,6 @@ abstract class BasePropertiesFunction extends ServiceSupport implements Properti
         this.mountPathSecrets = mountPathSecrets;
     }
 
-    public boolean isAutowiredClient() {
-        return isAutowiredClient;
-    }
-
     @Override
     public String apply(String remainder) {
         String defaultValue = StringHelper.after(remainder, ":");
@@ -239,10 +229,6 @@ abstract class BasePropertiesFunction extends ServiceSupport implements Properti
         String key = StringHelper.after(remainder, "/");
         if (name == null || key == null) {
             return defaultValue;
-        }
-
-        if (key.contains(":")) {
-            key = StringHelper.before(key, ":");
         }
 
         // local-mode will not lookup in kubernetes but as local properties
@@ -257,11 +243,7 @@ abstract class BasePropertiesFunction extends ServiceSupport implements Properti
             Path file = root.resolve(name.toLowerCase(Locale.US)).resolve(key);
             if (Files.exists(file) && !Files.isDirectory(file)) {
                 try {
-                    if (isBinaryProperty()) {
-                        answer = writeDataToTempFile(file.getFileName().toString(), Files.readAllBytes(file));
-                    } else {
-                        answer = Files.readString(file, StandardCharsets.UTF_8);
-                    }
+                    answer = Files.readString(file, StandardCharsets.UTF_8);
                 } catch (IOException e) {
                     // ignore
                 }
@@ -281,22 +263,4 @@ abstract class BasePropertiesFunction extends ServiceSupport implements Properti
     abstract Path getMountPath();
 
     abstract String lookup(String name, String key, String defaultValue);
-
-    protected String handleData(String key, byte[] raw) {
-        return isBinaryProperty() ? writeDataToTempFile(key, raw) : new String(raw);
-    }
-
-    private boolean isBinaryProperty() {
-        return getName().endsWith("-binary");
-    }
-
-    protected String writeDataToTempFile(String fileName, byte[] data) {
-        try {
-            final Path filePath = Files.createTempDirectory("camel").resolve(fileName);
-            Files.write(filePath, data);
-            return filePath.toAbsolutePath().toString();
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
 }

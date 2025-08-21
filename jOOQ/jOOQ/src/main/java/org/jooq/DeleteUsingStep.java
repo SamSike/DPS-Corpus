@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,19 +40,8 @@ package org.jooq;
 // ...
 // ...
 // ...
-// ...
-// ...
-import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
-// ...
-import static org.jooq.SQLDialect.FIREBIRD;
-import static org.jooq.SQLDialect.H2;
-import static org.jooq.SQLDialect.HSQLDB;
-// ...
 import static org.jooq.SQLDialect.MARIADB;
-// ...
 import static org.jooq.SQLDialect.MYSQL;
-// ...
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
@@ -69,13 +58,13 @@ import org.jetbrains.annotations.NotNull;
 /**
  * This type is used for the {@link Delete}'s DSL API.
  * <p>
- * Example: <pre><code>
+ * Example: <code><pre>
  * DSLContext create = DSL.using(configuration);
  *
  * create.delete(table)
  *       .where(field1.greaterThan(100))
  *       .execute();
- * </code></pre>
+ * </pre></code>
  * <p>
  * <h3>Referencing <code>XYZ*Step</code> types directly from client code</h3>
  * <p>
@@ -103,21 +92,21 @@ public interface DeleteUsingStep<R extends Record> extends DeleteWhereStep<R> {
      * Add a <code>USING</code> clause to the query.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ MARIADB, MYSQL, POSTGRES })
     DeleteWhereStep<R> using(TableLike<?> table);
 
     /**
      * Add a <code>USING</code> clause to the query.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ MARIADB, MYSQL, POSTGRES })
     DeleteWhereStep<R> using(TableLike<?>... tables);
 
     /**
      * Add a <code>USING</code> clause to the query.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ MARIADB, MYSQL, POSTGRES })
     DeleteWhereStep<R> using(Collection<? extends TableLike<?>> tables);
 
     /**
@@ -132,7 +121,7 @@ public interface DeleteUsingStep<R extends Record> extends DeleteWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ MARIADB, MYSQL, POSTGRES })
     @PlainSQL
     DeleteWhereStep<R> using(SQL sql);
 
@@ -148,7 +137,7 @@ public interface DeleteUsingStep<R extends Record> extends DeleteWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ MARIADB, MYSQL, POSTGRES })
     @PlainSQL
     DeleteWhereStep<R> using(String sql);
 
@@ -165,7 +154,7 @@ public interface DeleteUsingStep<R extends Record> extends DeleteWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ MARIADB, MYSQL, POSTGRES })
     @PlainSQL
     DeleteWhereStep<R> using(String sql, Object... bindings);
 
@@ -182,7 +171,7 @@ public interface DeleteUsingStep<R extends Record> extends DeleteWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ MARIADB, MYSQL, POSTGRES })
     @PlainSQL
     DeleteWhereStep<R> using(String sql, QueryPart... parts);
 
@@ -192,6 +181,6 @@ public interface DeleteUsingStep<R extends Record> extends DeleteWhereStep<R> {
      * @see DSL#table(Name)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ MARIADB, MYSQL, POSTGRES })
     DeleteWhereStep<R> using(Name name);
 }

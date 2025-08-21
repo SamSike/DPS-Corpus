@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.web.reactive.result.method.annotation;
 
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.function.Function;
@@ -27,7 +28,6 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ReactiveAdapterRegistry;
 import org.springframework.http.MediaType;
@@ -46,12 +46,11 @@ import org.springframework.web.testfixture.server.MockServerWebExchange;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link ModelAttributeMethodArgumentResolver}.
+ * Unit tests for {@link ModelAttributeMethodArgumentResolver}.
  *
  * @author Rossen Stoyanchev
  * @author Juergen Hoeller
  * @author Sam Brannen
- * @author Sebastien Deleuze
  */
 class ModelAttributeMethodArgumentResolverTests {
 
@@ -65,8 +64,6 @@ class ModelAttributeMethodArgumentResolverTests {
 		LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
 		validator.afterPropertiesSet();
 		ConfigurableWebBindingInitializer initializer = new ConfigurableWebBindingInitializer();
-		initializer.setPropertyEditorRegistrar(registry ->
-				registry.registerCustomEditor(String.class, "name", new StringTrimmerEditor(true)));
 		initializer.setValidator(validator);
 		this.bindContext = new BindingContext(initializer);
 	}
@@ -115,7 +112,7 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void createAndBind() {
+	void createAndBind() throws Exception {
 		testBindPojo("pojo", this.testMethod.annotPresent(ModelAttribute.class).arg(Pojo.class), value -> {
 			assertThat(value.getClass()).isEqualTo(Pojo.class);
 			return (Pojo) value;
@@ -123,7 +120,7 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void createAndBindToMono() {
+	void createAndBindToMono() throws Exception {
 		MethodParameter parameter = this.testMethod
 				.annotNotPresent(ModelAttribute.class).arg(Mono.class, Pojo.class);
 
@@ -136,7 +133,7 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void createAndBindToSingle() {
+	void createAndBindToSingle() throws Exception {
 		MethodParameter parameter = this.testMethod
 				.annotPresent(ModelAttribute.class).arg(Single.class, Pojo.class);
 
@@ -149,7 +146,7 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void createButDoNotBind() {
+	void createButDoNotBind() throws Exception {
 		MethodParameter parameter =
 				this.testMethod.annotPresent(ModelAttribute.class).arg(NonBindingPojo.class);
 
@@ -160,7 +157,7 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void createButDoNotBindToMono() {
+	void createButDoNotBindToMono() throws Exception {
 		MethodParameter parameter =
 				this.testMethod.annotPresent(ModelAttribute.class).arg(Mono.class, NonBindingPojo.class);
 
@@ -173,7 +170,7 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void createButDoNotBindToSingle() {
+	void createButDoNotBindToSingle() throws Exception {
 		MethodParameter parameter =
 				this.testMethod.annotPresent(ModelAttribute.class).arg(Single.class, NonBindingPojo.class);
 
@@ -186,7 +183,7 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	private void createButDoNotBindToPojo(String modelKey, MethodParameter methodParameter,
-			Function<Object, NonBindingPojo> valueExtractor) {
+			Function<Object, NonBindingPojo> valueExtractor) throws Exception {
 
 		Object value = createResolver()
 				.resolveArgument(methodParameter, this.bindContext, postForm("name=Enigma"))
@@ -205,7 +202,7 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void bindExisting() {
+	void bindExisting() throws Exception {
 		Pojo pojo = new Pojo();
 		pojo.setName("Jim");
 		this.bindContext.getModel().addAttribute(pojo);
@@ -220,7 +217,7 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void bindExistingMono() {
+	void bindExistingMono() throws Exception {
 		Pojo pojo = new Pojo();
 		pojo.setName("Jim");
 		this.bindContext.getModel().addAttribute("pojoMono", Mono.just(pojo));
@@ -235,7 +232,7 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void bindExistingSingle() {
+	void bindExistingSingle() throws Exception {
 		Pojo pojo = new Pojo();
 		pojo.setName("Jim");
 		this.bindContext.getModel().addAttribute("pojoSingle", Single.just(pojo));
@@ -250,7 +247,7 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void bindExistingMonoToMono() {
+	void bindExistingMonoToMono() throws Exception {
 		Pojo pojo = new Pojo();
 		pojo.setName("Jim");
 		String modelKey = "pojoMono";
@@ -267,10 +264,11 @@ class ModelAttributeMethodArgumentResolverTests {
 		});
 	}
 
-	private void testBindPojo(String modelKey, MethodParameter param, Function<Object, Pojo> valueExtractor) {
+	private void testBindPojo(String modelKey, MethodParameter param, Function<Object, Pojo> valueExtractor)
+			throws Exception {
 
 		Object value = createResolver()
-				.resolveArgument(param, this.bindContext, postForm("name= Robert&age=25"))
+				.resolveArgument(param, this.bindContext, postForm("name=Robert&age=25"))
 				.block(Duration.ZERO);
 
 		Pojo pojo = valueExtractor.apply(value);
@@ -286,19 +284,13 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void validationErrorForPojo() {
+	void validationErrorForPojo() throws Exception {
 		MethodParameter parameter = this.testMethod.annotNotPresent(ModelAttribute.class).arg(Pojo.class);
 		testValidationError(parameter, Function.identity());
 	}
 
 	@Test
-	void validationErrorForDataClass() {
-		MethodParameter parameter = this.testMethod.annotNotPresent(ModelAttribute.class).arg(DataClass.class);
-		testValidationError(parameter, Function.identity());
-	}
-
-	@Test
-	void validationErrorForMono() {
+	void validationErrorForMono() throws Exception {
 		MethodParameter parameter = this.testMethod
 				.annotNotPresent(ModelAttribute.class).arg(Mono.class, Pojo.class);
 
@@ -311,7 +303,7 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void validationErrorForSingle() {
+	void validationErrorForSingle() throws Exception {
 		MethodParameter parameter = this.testMethod
 				.annotPresent(ModelAttribute.class).arg(Single.class, Pojo.class);
 
@@ -324,13 +316,13 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void validationErrorWithoutBindingForPojo() {
+	void validationErrorWithoutBindingForPojo() throws Exception {
 		MethodParameter parameter = this.testMethod.annotPresent(ModelAttribute.class).arg(ValidatedPojo.class);
 		testValidationErrorWithoutBinding(parameter, Function.identity());
 	}
 
 	@Test
-	void validationErrorWithoutBindingForMono() {
+	void validationErrorWithoutBindingForMono() throws Exception {
 		MethodParameter parameter = this.testMethod.annotPresent(ModelAttribute.class).arg(Mono.class, ValidatedPojo.class);
 
 		testValidationErrorWithoutBinding(parameter, resolvedArgumentMono -> {
@@ -341,7 +333,7 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void validationErrorWithoutBindingForSingle() {
+	void validationErrorWithoutBindingForSingle() throws Exception {
 		MethodParameter parameter = this.testMethod.annotPresent(ModelAttribute.class).arg(Single.class, ValidatedPojo.class);
 
 		testValidationErrorWithoutBinding(parameter, resolvedArgumentMono -> {
@@ -351,16 +343,20 @@ class ModelAttributeMethodArgumentResolverTests {
 		});
 	}
 
-	private void testValidationError(MethodParameter parameter, Function<Mono<?>, Mono<?>> valueMonoExtractor) {
+	private void testValidationError(MethodParameter parameter, Function<Mono<?>, Mono<?>> valueMonoExtractor)
+			throws URISyntaxException {
+
 		testValidationError(parameter, valueMonoExtractor, "age=invalid", "age", "invalid");
 	}
 
-	private void testValidationErrorWithoutBinding(MethodParameter parameter, Function<Mono<?>, Mono<?>> valueMonoExtractor) {
+	private void testValidationErrorWithoutBinding(MethodParameter parameter, Function<Mono<?>, Mono<?>> valueMonoExtractor)
+			throws URISyntaxException {
+
 		testValidationError(parameter, valueMonoExtractor, "name=Enigma", "name", null);
 	}
 
 	private void testValidationError(MethodParameter param, Function<Mono<?>, Mono<?>> valueMonoExtractor,
-			String formData, String field, String rejectedValue) {
+			String formData, String field, String rejectedValue) throws URISyntaxException {
 
 		Mono<?> mono = createResolver().resolveArgument(param, this.bindContext, postForm(formData));
 		mono = valueMonoExtractor.apply(mono);
@@ -377,11 +373,11 @@ class ModelAttributeMethodArgumentResolverTests {
 	}
 
 	@Test
-	void bindDataClass() {
+	void bindDataClass() throws Exception {
 		MethodParameter parameter = this.testMethod.annotNotPresent(ModelAttribute.class).arg(DataClass.class);
 
 		Object value = createResolver()
-				.resolveArgument(parameter, this.bindContext, postForm("name= Robert&age=25&count=1"))
+				.resolveArgument(parameter, this.bindContext, postForm("name=Robert&age=25&count=1"))
 				.block(Duration.ZERO);
 
 		DataClass dataClass = (DataClass) value;
@@ -405,7 +401,7 @@ class ModelAttributeMethodArgumentResolverTests {
 		return new ModelAttributeMethodArgumentResolver(ReactiveAdapterRegistry.getSharedInstance(), false);
 	}
 
-	private ServerWebExchange postForm(String formData) {
+	private ServerWebExchange postForm(String formData) throws URISyntaxException {
 		return MockServerWebExchange.from(MockServerHttpRequest.post("/")
 				.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 				.body(formData));

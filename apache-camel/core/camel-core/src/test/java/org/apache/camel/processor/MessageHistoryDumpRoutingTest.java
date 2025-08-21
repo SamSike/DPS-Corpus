@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 
 public class MessageHistoryDumpRoutingTest extends ContextTestSupport {
 
-    private final String body
+    private String body
             = "Hello World 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
 
     @Test
@@ -39,17 +39,17 @@ public class MessageHistoryDumpRoutingTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setMessageHistory(true);
                 // to test that the message history exchange gets clipped
                 context.getGlobalOptions().put(Exchange.LOG_DEBUG_BODY_MAX_CHARS, "100");
 
                 from("seda:start").to("log:foo").to("direct:bar").delay(300).to("log:baz").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         throw new IllegalArgumentException("Forced to dump message history");
                     }
                 }).to("mock:result");

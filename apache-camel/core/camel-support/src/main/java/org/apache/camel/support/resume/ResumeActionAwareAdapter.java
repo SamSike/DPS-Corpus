@@ -78,8 +78,4 @@ public class ResumeActionAwareAdapter implements ResumeActionAware, Cacheable, D
 
         return add(key, value);
     }
-
-    protected ResumeAction getResumeAction() {
-        return resumeAction;
-    }
 }

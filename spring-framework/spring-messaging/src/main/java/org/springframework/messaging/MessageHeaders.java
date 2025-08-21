@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.AlternativeJdkIdGenerator;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.IdGenerator;
@@ -112,9 +112,10 @@ public class MessageHeaders implements Map<String, Object>, Serializable {
 
 	private static final IdGenerator defaultIdGenerator = new AlternativeJdkIdGenerator();
 
-	private static volatile @Nullable IdGenerator idGenerator;
+	@Nullable
+	private static volatile IdGenerator idGenerator;
 
-	@SuppressWarnings("serial")
+
 	private final Map<String, Object> headers;
 
 
@@ -182,25 +183,30 @@ public class MessageHeaders implements Map<String, Object>, Serializable {
 		return (generator != null ? generator : defaultIdGenerator);
 	}
 
-	public @Nullable UUID getId() {
+	@Nullable
+	public UUID getId() {
 		return get(ID, UUID.class);
 	}
 
-	public @Nullable Long getTimestamp() {
+	@Nullable
+	public Long getTimestamp() {
 		return get(TIMESTAMP, Long.class);
 	}
 
-	public @Nullable Object getReplyChannel() {
+	@Nullable
+	public Object getReplyChannel() {
 		return get(REPLY_CHANNEL);
 	}
 
-	public @Nullable Object getErrorChannel() {
+	@Nullable
+	public Object getErrorChannel() {
 		return get(ERROR_CHANNEL);
 	}
 
 
 	@SuppressWarnings("unchecked")
-	public <T> @Nullable T get(Object key, Class<T> type) {
+	@Nullable
+	public <T> T get(Object key, Class<T> type) {
 		Object value = this.headers.get(key);
 		if (value == null) {
 			return null;
@@ -231,7 +237,8 @@ public class MessageHeaders implements Map<String, Object>, Serializable {
 	}
 
 	@Override
-	public @Nullable Object get(Object key) {
+	@Nullable
+	public Object get(Object key) {
 		return this.headers.get(key);
 	}
 
@@ -327,7 +334,8 @@ public class MessageHeaders implements Map<String, Object>, Serializable {
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof MessageHeaders that && this.headers.equals(that.headers)));
+		return (this == other ||
+				(other instanceof MessageHeaders && this.headers.equals(((MessageHeaders) other).headers)));
 	}
 
 	@Override

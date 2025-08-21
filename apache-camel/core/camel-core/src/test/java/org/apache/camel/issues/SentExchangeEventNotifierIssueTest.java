@@ -31,14 +31,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SentExchangeEventNotifierIssueTest extends ContextTestSupport {
 
-    private final MyNotifier notifier = new MyNotifier();
+    private MyNotifier notifier = new MyNotifier();
 
-    private static class MyNotifier extends EventNotifierSupport {
+    private class MyNotifier extends EventNotifierSupport {
 
         private int counter;
 
         @Override
-        public void notify(CamelEvent event) {
+        public void notify(CamelEvent event) throws Exception {
             counter++;
         }
 
@@ -64,7 +64,7 @@ public class SentExchangeEventNotifierIssueTest extends ContextTestSupport {
     }
 
     @Test
-    public void testExchangeSentNotifier() {
+    public void testExchangeSentNotifier() throws Exception {
         notifier.reset();
 
         String out = template.requestBody("direct:start", "Hello World", String.class);
@@ -75,12 +75,12 @@ public class SentExchangeEventNotifierIssueTest extends ContextTestSupport {
     }
 
     @Test
-    public void testExchangeSentNotifierExchange() {
+    public void testExchangeSentNotifierExchange() throws Exception {
         notifier.reset();
 
         Exchange out = template.request("direct:start", new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("Hello World");
             }
         });
@@ -91,7 +91,7 @@ public class SentExchangeEventNotifierIssueTest extends ContextTestSupport {
     }
 
     @Test
-    public void testExchangeSentNotifierManualExchange() {
+    public void testExchangeSentNotifierManualExchange() throws Exception {
         notifier.reset();
 
         Exchange exchange = new DefaultExchange(context);
@@ -105,13 +105,13 @@ public class SentExchangeEventNotifierIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         exchange.getIn().setBody("I was here");
                     }
                 });

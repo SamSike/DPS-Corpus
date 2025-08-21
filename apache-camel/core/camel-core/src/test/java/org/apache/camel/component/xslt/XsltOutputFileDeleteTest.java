@@ -29,6 +29,8 @@ public class XsltOutputFileDeleteTest extends ContextTestSupport {
 
     @Test
     public void testXsltOutputDeleteFile() throws Exception {
+        testDirectory(true);
+
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedBodiesReceived("<?xml version=\"1.0\" encoding=\"UTF-8\"?><goodbye>world!</goodbye>");
         template.sendBodyAndHeader("direct:start", "<hello>world!</hello>", Exchange.XSLT_FILE_NAME,
@@ -42,10 +44,10 @@ public class XsltOutputFileDeleteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("xslt:org/apache/camel/component/xslt/example.xsl?output=file&deleteOutputFile=true")
                         .to("mock:result");
             }

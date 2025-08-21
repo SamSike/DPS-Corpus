@@ -41,9 +41,6 @@ public class ConstantLanguage extends LanguageSupport {
 
     @Override
     public Expression createExpression(String expression) {
-        if (expression != null && isStaticResource(expression)) {
-            expression = loadResource(expression);
-        }
         return ConstantLanguage.constant(expression);
     }
 
@@ -69,4 +66,8 @@ public class ConstantLanguage extends LanguageSupport {
         }
     }
 
+    @Override
+    public boolean isSingleton() {
+        return true;
+    }
 }

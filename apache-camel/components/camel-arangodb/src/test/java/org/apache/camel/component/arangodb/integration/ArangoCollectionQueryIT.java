@@ -20,11 +20,10 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
+import com.arangodb.util.MapBuilder;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperties;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import static org.apache.camel.component.arangodb.ArangoDbConstants.AQL_QUERY;
 import static org.apache.camel.component.arangodb.ArangoDbConstants.AQL_QUERY_BIND_PARAMETERS;
@@ -33,13 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisabledIfSystemProperties({
-        @DisabledIfSystemProperty(named = "ci.env.name", matches = ".*",
-                                  disabledReason = "Apache CI nodes are too resource constrained for this test"),
-        @DisabledIfSystemProperty(named = "arangodb.tests.disable", matches = "true",
-                                  disabledReason = "Manually disabled tests")
-})
-public class ArangoCollectionQueryIT extends BaseArangoDb {
+public class ArangoCollectionQueryIT extends BaseCollection {
 
     @Override
     protected RouteBuilder createRouteBuilder() {
@@ -64,7 +57,9 @@ public class ArangoCollectionQueryIT extends BaseArangoDb {
         collection.insertDocument(test3);
 
         String query = "FOR t IN " + COLLECTION_NAME + " FILTER t.foo == @foo AND t.number == @number RETURN t";
-        Map<String, Object> bindVars = Map.of("foo", test.getFoo(), "number", test.getNumber());
+        Map<String, Object> bindVars = new MapBuilder().put("foo", test.getFoo())
+                .put("number", test.getNumber())
+                .get();
 
         Exchange result = template.request("direct:query", exchange -> {
             exchange.getMessage().setHeader(AQL_QUERY, query);

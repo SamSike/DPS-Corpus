@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.beans.factory.parsing;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -37,9 +36,11 @@ public class Problem {
 
 	private final Location location;
 
-	private final @Nullable ParseState parseState;
+	@Nullable
+	private final ParseState parseState;
 
-	private final @Nullable Throwable rootCause;
+	@Nullable
+	private final Throwable rootCause;
 
 
 	/**
@@ -104,14 +105,16 @@ public class Problem {
 	/**
 	 * Get the {@link ParseState} at the time of the error (may be {@code null}).
 	 */
-	public @Nullable ParseState getParseState() {
+	@Nullable
+	public ParseState getParseState() {
 		return this.parseState;
 	}
 
 	/**
 	 * Get the underlying exception that caused the error (may be {@code null}).
 	 */
-	public @Nullable Throwable getRootCause() {
+	@Nullable
+	public Throwable getRootCause() {
 		return this.rootCause;
 	}
 

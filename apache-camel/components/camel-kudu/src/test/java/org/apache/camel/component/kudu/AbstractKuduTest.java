@@ -30,7 +30,9 @@ import org.apache.kudu.client.KuduClient;
 import org.apache.kudu.client.KuduException;
 import org.apache.kudu.client.KuduTable;
 import org.apache.kudu.client.PartialRow;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,23 +74,22 @@ public abstract class AbstractKuduTest extends CamelTestSupport {
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
         }
-        LOG.trace("Table {} created.", tableName);
+        LOG.trace("Table " + tableName + " created.");
     }
 
-    @Override
-    public void doPreSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
         Assumptions.assumeTrue(ikc.hasKuduHarness(), "Skipping the test because the Kudu harness is not runnable");
-    }
 
-    @Override
-    protected void doPostSetup() {
+        super.setUp();
         ikc.setupCamelContext(this.context);
     }
 
-    @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
         if (ikc.hasKuduHarness()) {
             deleteTestTable("TestTable");
+            super.tearDown();
         }
     }
 

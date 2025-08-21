@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,11 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
@@ -53,13 +53,16 @@ public class HandshakeInfo {
 
 	private final MultiValueMap<String, HttpCookie> cookies;
 
-	private final @Nullable String protocol;
+	@Nullable
+	private final String protocol;
 
-	private final @Nullable InetSocketAddress remoteAddress;
+	@Nullable
+	private final InetSocketAddress remoteAddress;
 
 	private final Map<String, Object> attributes;
 
-	private final @Nullable String logPrefix;
+	@Nullable
+	private final String logPrefix;
 
 
 	/**
@@ -71,6 +74,28 @@ public class HandshakeInfo {
 	 */
 	public HandshakeInfo(URI uri, HttpHeaders headers, Mono<Principal> principal, @Nullable String protocol) {
 		this(uri, headers, EMPTY_COOKIES, principal, protocol, null, Collections.emptyMap(), null);
+	}
+
+	/**
+	 * Constructor targeting server-side use with extra information such as
+	 * the remote address, attributes, and a log prefix.
+	 * @param uri the endpoint URL
+	 * @param headers server request headers
+	 * @param principal the principal for the session
+	 * @param protocol the negotiated sub-protocol (may be {@code null})
+	 * @param remoteAddress the remote address of the client
+	 * @param attributes initial attributes for the WebSocket session
+	 * @param logPrefix the log prefix for the handshake request.
+	 * @since 5.1
+	 * @deprecated as of 5.3.5 in favor of
+	 * {@link #HandshakeInfo(URI, HttpHeaders, MultiValueMap, Mono, String, InetSocketAddress, Map, String)}
+	 */
+	@Deprecated
+	public HandshakeInfo(URI uri, HttpHeaders headers, Mono<Principal> principal,
+				@Nullable String protocol, @Nullable InetSocketAddress remoteAddress,
+				Map<String, Object> attributes, @Nullable String logPrefix) {
+
+		this(uri, headers, EMPTY_COOKIES, principal, protocol, remoteAddress, attributes, logPrefix);
 	}
 
 	/**
@@ -92,9 +117,9 @@ public class HandshakeInfo {
 
 		Assert.notNull(uri, "URI is required");
 		Assert.notNull(headers, "HttpHeaders are required");
-		Assert.notNull(cookies, "'cookies' are required");
+		Assert.notNull(cookies, "`cookies` are required");
 		Assert.notNull(principal, "Principal is required");
-		Assert.notNull(attributes, "'attributes' are required");
+		Assert.notNull(attributes, "'attributes' is required");
 
 		this.uri = uri;
 		this.headers = headers;
@@ -144,7 +169,8 @@ public class HandshakeInfo {
 	 * @see <a href="https://tools.ietf.org/html/rfc6455#section-1.9">
 	 * https://tools.ietf.org/html/rfc6455#section-1.9</a>
 	 */
-	public @Nullable String getSubProtocol() {
+	@Nullable
+	public String getSubProtocol() {
 		return this.protocol;
 	}
 
@@ -153,7 +179,8 @@ public class HandshakeInfo {
 	 * request came from. For a client session, it is {@code null}.
 	 * @since 5.1
 	 */
-	public @Nullable InetSocketAddress getRemoteAddress() {
+	@Nullable
+	public InetSocketAddress getRemoteAddress() {
 		return this.remoteAddress;
 	}
 
@@ -170,7 +197,8 @@ public class HandshakeInfo {
 	 * @return a log prefix, or {@code null} if not specified
 	 * @since 5.1
 	 */
-	public @Nullable String getLogPrefix() {
+	@Nullable
+	public String getLogPrefix() {
 		return this.logPrefix;
 	}
 

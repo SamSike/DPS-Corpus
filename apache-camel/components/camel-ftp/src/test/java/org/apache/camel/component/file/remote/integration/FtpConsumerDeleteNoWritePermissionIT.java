@@ -19,6 +19,7 @@ package org.apache.camel.component.file.remote.integration;
 import org.apache.camel.Exchange;
 import org.apache.camel.PollingConsumer;
 import org.apache.camel.component.file.GenericFileOperationFailedException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -33,7 +34,9 @@ public class FtpConsumerDeleteNoWritePermissionIT extends FtpServerTestSupport {
     }
 
     @Override
-    public void doPostSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
         prepareFtpServer();
     }
 

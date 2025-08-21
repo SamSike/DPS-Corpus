@@ -23,27 +23,26 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.util.StopWatch;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RoutePerformanceCountTest extends ContextTestSupport {
 
-    private final CountProcessor processor = new CountProcessor();
+    private CountProcessor processor = new CountProcessor();
+    private int size = 500;
+    private String url = "direct:start";
 
     @Test
-    public void testSendMessages() {
-        StopWatch watch = new StopWatch();
+    public void testSendMessages() throws Exception {
+        long start = System.currentTimeMillis();
 
-        int size = 500;
         for (int i = 0; i < size; i++) {
-            String url = "direct:start";
             template.sendBody(url, "Message " + i);
         }
         assertEquals(size, processor.getCounter());
 
-        long delta = watch.taken();
+        long delta = System.currentTimeMillis() - start;
         log.info("RoutePerformanceCountTest: Sent: {} Took: {} ms", size, delta);
     }
 
@@ -55,10 +54,10 @@ public class RoutePerformanceCountTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("log:a?level=OFF", "log:b?level=OFF", "direct:c");
 
                 from("direct:c").choice().when().header("foo").process(processor).otherwise().process(processor).end();
@@ -67,10 +66,10 @@ public class RoutePerformanceCountTest extends ContextTestSupport {
     }
 
     private static class CountProcessor implements Processor {
-        private final AtomicInteger counter = new AtomicInteger();
+        private AtomicInteger counter = new AtomicInteger();
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             counter.incrementAndGet();
         }
 

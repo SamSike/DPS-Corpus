@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,6 +40,7 @@ package org.jooq.meta;
 import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -50,7 +51,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.jooq.impl.QOM.ForeignKeyRule;
 import org.jooq.tools.JooqLogger;
 
 public class DefaultRelations implements Relations {
@@ -68,9 +68,6 @@ public class DefaultRelations implements Relations {
     private transient Map<ColumnDefinition, List<UniqueKeyDefinition>>      uniqueKeysByColumn;
     private transient Map<ColumnDefinition, List<UniqueKeyDefinition>>      keysByColumn;
     private transient Map<ColumnDefinition, List<ForeignKeyDefinition>>     foreignKeysByColumn;
-    private transient Map<TableDefinition, List<UniqueKeyDefinition>>       uniqueKeysByTable;
-    private transient Map<TableDefinition, List<UniqueKeyDefinition>>       keysByTable;
-    private transient Map<TableDefinition, List<ForeignKeyDefinition>>      foreignKeysByTable;
     private transient Map<TableDefinition, List<CheckConstraintDefinition>> checkConstraintsByTable;
 
     public void addPrimaryKey(String keyName, TableDefinition table, ColumnDefinition column) {
@@ -145,11 +142,7 @@ public class DefaultRelations implements Relations {
         // Remove the existing key from the column -> key mapping
         primaryKeysByColumn = null;
         uniqueKeysByColumn = null;
-        uniqueKeysByTable = null;
         keysByColumn = null;
-        keysByTable = null;
-        foreignKeysByColumn = null;
-        foreignKeysByTable = null;
 
         // Remove the existing key from the primary key mapping (not from the unique key mapping!)
         Iterator<Entry<Key, UniqueKeyDefinition>> it = primaryKeys.entrySet().iterator();
@@ -203,8 +196,7 @@ public class DefaultRelations implements Relations {
         TableDefinition foreignKeyTable,
         ColumnDefinition foreignKeyColumn,
         String uniqueKeyName,
-        TableDefinition uniqueKeyTable
-    ) {
+        TableDefinition uniqueKeyTable) {
         addForeignKey(foreignKeyName, foreignKeyTable, foreignKeyColumn, uniqueKeyName, uniqueKeyTable, true);
     }
 
@@ -215,28 +207,6 @@ public class DefaultRelations implements Relations {
         String uniqueKeyName,
         TableDefinition uniqueKeyTable,
         boolean enforced
-    ) {
-        addForeignKey(
-            foreignKeyName,
-            foreignKeyTable,
-            foreignKeyColumn,
-            uniqueKeyName,
-            uniqueKeyTable,
-            enforced,
-            null,
-            null
-        );
-    }
-
-    public void addForeignKey(
-        String foreignKeyName,
-        TableDefinition foreignKeyTable,
-        ColumnDefinition foreignKeyColumn,
-        String uniqueKeyName,
-        TableDefinition uniqueKeyTable,
-        boolean enforced,
-        ForeignKeyRule deleteRule,
-        ForeignKeyRule updateRule
     ) {
         UniqueKeyDefinition uk = keys.get(key(uniqueKeyTable, uniqueKeyName));
         Key key = key(foreignKeyTable, foreignKeyName);
@@ -255,17 +225,7 @@ public class DefaultRelations implements Relations {
             return;
         }
 
-        addForeignKey(
-            foreignKeyName,
-            foreignKeyTable,
-            foreignKeyColumn,
-            uniqueKeyName,
-            uniqueKeyTable,
-            getNextUkColumn(key, uk),
-            enforced,
-            deleteRule,
-            updateRule
-        );
+        addForeignKey(foreignKeyName, foreignKeyTable, foreignKeyColumn, uniqueKeyName, uniqueKeyTable, getNextUkColumn(key, uk), enforced);
     }
 
     private final Map<Key, Integer> nextUkColumnIndex = new HashMap<>();
@@ -287,96 +247,8 @@ public class DefaultRelations implements Relations {
         ColumnDefinition foreignKeyColumn,
         String uniqueKeyName,
         TableDefinition uniqueKeyTable,
-        Integer positionInUniqueKey,
-        boolean enforced
-    ) {
-        addForeignKey(
-            foreignKeyName,
-            foreignKeyTable,
-            foreignKeyColumn,
-            uniqueKeyName,
-            uniqueKeyTable,
-            positionInUniqueKey,
-            enforced,
-            null,
-            null
-        );
-    }
-
-    public void addForeignKey(
-        String foreignKeyName,
-        TableDefinition foreignKeyTable,
-        ColumnDefinition foreignKeyColumn,
-        String uniqueKeyName,
-        TableDefinition uniqueKeyTable,
-        Integer positionInUniqueKey,
-        boolean enforced,
-        ForeignKeyRule deleteRule,
-        ForeignKeyRule updateRule
-    ) {
-        if (positionInUniqueKey == null) {
-            addForeignKey(
-                foreignKeyName,
-                foreignKeyTable,
-                foreignKeyColumn,
-                uniqueKeyName,
-                uniqueKeyTable,
-                enforced,
-                deleteRule,
-                updateRule
-            );
-        }
-        else {
-            UniqueKeyDefinition uniqueKey = keys.get(key(uniqueKeyTable, uniqueKeyName));
-
-            if (uniqueKey != null) {
-                addForeignKey(
-                    foreignKeyName,
-                    foreignKeyTable,
-                    foreignKeyColumn,
-                    uniqueKeyName,
-                    uniqueKeyTable,
-                    uniqueKey.getKeyColumns().get(positionInUniqueKey - 1),
-                    enforced,
-                    deleteRule,
-                    updateRule
-                );
-            }
-        }
-    }
-
-    public void addForeignKey(
-        String foreignKeyName,
-        TableDefinition foreignKeyTable,
-        ColumnDefinition foreignKeyColumn,
-        String uniqueKeyName,
-        TableDefinition uniqueKeyTable,
         ColumnDefinition uniqueKeyColumn,
         boolean enforced
-    ) {
-        addForeignKey(
-            foreignKeyName,
-            foreignKeyTable,
-            foreignKeyColumn,
-            uniqueKeyName,
-            uniqueKeyTable,
-            uniqueKeyColumn,
-            enforced,
-            null,
-            null
-        );
-    }
-
-    public void addForeignKey(
-        String foreignKeyName,
-        TableDefinition foreignKeyTable,
-        ColumnDefinition foreignKeyColumn,
-        String uniqueKeyName,
-        TableDefinition uniqueKeyTable,
-        ColumnDefinition uniqueKeyColumn,
-        boolean enforced,
-        ForeignKeyRule deleteRule,
-        ForeignKeyRule updateRule
     ) {
         // [#2718] Column exclusions may hit foreign key references. Ignore
         // such foreign keys
@@ -421,9 +293,7 @@ public class DefaultRelations implements Relations {
                     foreignKeyName,
                     foreignKeyColumn.getContainer(),
                     uniqueKey,
-                    enforced,
-                    deleteRule,
-                    updateRule
+                    enforced
                 );
 
                 foreignKeys.put(key, foreignKey);
@@ -462,19 +332,20 @@ public class DefaultRelations implements Relations {
 	        for (UniqueKeyDefinition uniqueKey : uniqueKeys.values())
                 for (ColumnDefinition keyColumn : uniqueKey.getKeyColumns())
                     uniqueKeysByColumn.computeIfAbsent(keyColumn, c -> new ArrayList<>()).add(uniqueKey);
-
-	        uniqueKeysByColumn.forEach((t, l) -> t.getDatabase().sort(l));
         }
 
-	    return nonNull(uniqueKeysByColumn, column);
+        List<UniqueKeyDefinition> list = uniqueKeysByColumn.get(column);
+        return list != null ? list : emptyList();
     }
 
     @Override
     public List<UniqueKeyDefinition> getUniqueKeys(TableDefinition table) {
-        if (uniqueKeysByTable == null)
-            uniqueKeysByTable = initByTable(uniqueKeys);
+        Set<UniqueKeyDefinition> result = new LinkedHashSet<>();
 
-        return nonNull(uniqueKeysByTable, table);
+        for (ColumnDefinition column : table.getColumns())
+            result.addAll(getUniqueKeys(column));
+
+        return new ArrayList<>(result);
     }
 
     @Override
@@ -484,12 +355,12 @@ public class DefaultRelations implements Relations {
         for (TableDefinition table : schema.getDatabase().getTables(schema))
             result.addAll(getUniqueKeys(table));
 
-        return sort(new ArrayList<>(result));
+        return new ArrayList<>(result);
     }
 
     @Override
     public List<UniqueKeyDefinition> getUniqueKeys() {
-        return sort(new ArrayList<>(uniqueKeys.values()));
+        return new ArrayList<>(uniqueKeys.values());
     }
 
     @Override
@@ -500,19 +371,20 @@ public class DefaultRelations implements Relations {
             for (UniqueKeyDefinition uniqueKey : keys.values())
                 for (ColumnDefinition keyColumn : uniqueKey.getKeyColumns())
                     keysByColumn.computeIfAbsent(keyColumn, c -> new ArrayList<>()).add(uniqueKey);
-
-            keysByColumn.forEach((t, l) -> t.getDatabase().sort(l));
         }
 
-        return nonNull(keysByColumn, column);
+        List<UniqueKeyDefinition> list = keysByColumn.get(column);
+        return list != null ? list : emptyList();
     }
 
     @Override
     public List<UniqueKeyDefinition> getKeys(TableDefinition table) {
-        if (keysByTable == null)
-            keysByTable = initByTable(keys);
+        Set<UniqueKeyDefinition> result = new LinkedHashSet<>();
 
-        return nonNull(keysByTable, table);
+        for (ColumnDefinition column : table.getColumns())
+            result.addAll(getKeys(column));
+
+        return new ArrayList<>(result);
     }
 
     @Override
@@ -522,12 +394,12 @@ public class DefaultRelations implements Relations {
         for (TableDefinition table : schema.getDatabase().getTables(schema))
             result.addAll(getKeys(table));
 
-        return sort(new ArrayList<>(result));
+        return new ArrayList<>(result);
     }
 
     @Override
     public List<UniqueKeyDefinition> getKeys() {
-        return sort(new ArrayList<>(keys.values()));
+        return new ArrayList<>(keys.values());
     }
 
     @Override
@@ -538,46 +410,33 @@ public class DefaultRelations implements Relations {
             for (ForeignKeyDefinition foreignKey : foreignKeys.values())
                 for (ColumnDefinition keyColumn : foreignKey.getKeyColumns())
                     foreignKeysByColumn.computeIfAbsent(keyColumn, c -> new ArrayList<>()).add(foreignKey);
-
-            foreignKeysByColumn.forEach((t, l) -> t.getDatabase().sort(l));
         }
 
-        return nonNull(foreignKeysByColumn, column);
+
+        List<ForeignKeyDefinition> list = foreignKeysByColumn.get(column);
+        return list != null ? list : emptyList();
 	}
 
     @Override
     public List<ForeignKeyDefinition> getForeignKeys(TableDefinition table) {
-        if (foreignKeysByTable == null)
-            foreignKeysByTable = initByTable(foreignKeys);
+        Set<ForeignKeyDefinition> result = new LinkedHashSet<>();
 
-        return nonNull(foreignKeysByTable, table);
+        for (ColumnDefinition column : table.getColumns())
+            result.addAll(getForeignKeys(column));
+
+        return new ArrayList<>(result);
     }
 
     @Override
     public List<CheckConstraintDefinition> getCheckConstraints(TableDefinition table) {
-        if (checkConstraintsByTable == null)
-            checkConstraintsByTable = initByTable(checkConstraints);
+        if (checkConstraintsByTable == null) {
+            checkConstraintsByTable = new LinkedHashMap<>();
+            checkConstraints.forEach((k, v) -> checkConstraintsByTable.computeIfAbsent(k.table, t -> new ArrayList<>()).add(v));
+            checkConstraintsByTable.forEach((t, l) -> table.getDatabase().sort(l));
+        }
 
-        return nonNull(checkConstraintsByTable, table);
-    }
-
-    private static <D extends Definition> Map<TableDefinition, List<D>> initByTable(
-        Map<Key, D> map
-    ) {
-        Map<TableDefinition, List<D>> result = new LinkedHashMap<>();
-        map.forEach((k, v) -> result.computeIfAbsent(k.table, t -> new ArrayList<>()).add(v));
-        result.forEach((t, l) -> t.getDatabase().sort(l));
-
-        return result;
-    }
-
-    private static <K extends Definition, V extends Definition> List<V> nonNull(Map<K, List<V>> map, K key) {
-        List<V> list = map.get(key);
+        List<CheckConstraintDefinition> list = checkConstraintsByTable.get(table);
         return list != null ? list : emptyList();
-    }
-
-    private static <D extends Definition> List<D> sort(List<D> list) {
-        return list.isEmpty() ? list : list.get(0).getDatabase().sort(list);
     }
 
     private static Key key(TableDefinition definition, String keyName) {
@@ -587,5 +446,5 @@ public class DefaultRelations implements Relations {
     /**
      * A simple local wrapper for a key definition (table + key name)
      */
-    private static record Key(TableDefinition table, String keyName) {}
+    private static final /* record */ class Key { private final TableDefinition table; private final String keyName; public Key(TableDefinition table, String keyName) { this.table = table; this.keyName = keyName; } public TableDefinition table() { return table; } public String keyName() { return keyName; } @Override public boolean equals(Object o) { if (!(o instanceof Key)) return false; Key other = (Key) o; if (!java.util.Objects.equals(this.table, other.table)) return false; if (!java.util.Objects.equals(this.keyName, other.keyName)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.table, this.keyName); } @Override public String toString() { return new StringBuilder("Key[").append("table=").append(this.table).append(", keyName=").append(this.keyName).append("]").toString(); } }
 }

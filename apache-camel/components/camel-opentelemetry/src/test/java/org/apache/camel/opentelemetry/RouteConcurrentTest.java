@@ -18,29 +18,19 @@ package org.apache.camel.opentelemetry;
 
 import java.util.concurrent.TimeUnit;
 
-import io.opentelemetry.api.trace.SpanKind;
 import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.NotifyBuilder;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tags({ @Tag("not-parallel") })
 class RouteConcurrentTest extends CamelOpenTelemetryTestSupport {
 
     private static SpanTestData[] testdata = {
-            new SpanTestData().setLabel("seda:foo server").setUri("seda://foo").setOperation("foo")
-                    .setKind(SpanKind.CLIENT),
-            new SpanTestData().setLabel("seda:bar server").setUri("seda://bar").setOperation("bar")
-                    .setParentId(2)
-                    .setKind(SpanKind.CLIENT),
-            new SpanTestData().setLabel("seda:foo server").setUri("seda://foo?concurrentConsumers=5").setOperation("foo")
-                    .setParentId(0),
+            new SpanTestData().setLabel("seda:foo server").setUri("seda://foo?concurrentConsumers=5").setOperation("foo"),
             new SpanTestData().setLabel("seda:bar server").setUri("seda://bar?concurrentConsumers=5").setOperation("bar")
-                    .setParentId(1),
+                    .setParentId(0)
     };
 
     RouteConcurrentTest() {

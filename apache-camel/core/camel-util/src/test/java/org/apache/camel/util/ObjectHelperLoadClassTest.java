@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 public class ObjectHelperLoadClassTest {
 
     @Test
-    public void testLoadClass() {
+    public void testLoadClass() throws Exception {
         Class<?> clazz = ObjectHelper.loadClass("int");
         Assertions.assertEquals("int", clazz.getName());
 

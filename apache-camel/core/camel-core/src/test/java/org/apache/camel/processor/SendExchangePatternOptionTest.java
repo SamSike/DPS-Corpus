@@ -20,7 +20,9 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
 
+@ResourceLock("VmComponent")
 public class SendExchangePatternOptionTest extends ContextTestSupport {
 
     @Test
@@ -50,10 +52,10 @@ public class SendExchangePatternOptionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("stub:foo?exchangePattern=InOnly").to("mock:result");
 
                 from("stub:foo").to("mock:stub");

@@ -22,14 +22,14 @@ import org.junit.jupiter.api.Test;
 public class ConstantTest extends LanguageTestSupport {
 
     @Test
-    public void testConstantExpressions() {
+    public void testConstantExpressions() throws Exception {
         // We can put anything in here, the expression will
         // always evaluate to itself
         assertExpression("a value", "a value");
     }
 
     @Test
-    public void testPredicates() {
+    public void testPredicates() throws Exception {
         assertPredicate("another value");
     }
 

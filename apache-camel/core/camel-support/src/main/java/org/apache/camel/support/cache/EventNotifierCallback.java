@@ -30,14 +30,15 @@ class EventNotifierCallback implements AsyncCallback {
     private final StopWatch watch;
     private final Exchange exchange;
     private final Endpoint endpoint;
+    private final boolean sending;
 
     public EventNotifierCallback(AsyncCallback originalCallback, Exchange exchange,
                                  Endpoint endpoint) {
         this.originalCallback = originalCallback;
         this.exchange = exchange;
         this.endpoint = endpoint;
-        final boolean sending = EventHelper.notifyExchangeSending(exchange.getContext(), exchange, endpoint);
-        if (sending) {
+        this.sending = EventHelper.notifyExchangeSending(exchange.getContext(), exchange, endpoint);
+        if (this.sending) {
             this.watch = new StopWatch();
         } else {
             this.watch = null;

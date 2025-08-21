@@ -66,7 +66,8 @@ public class DefaultAnnotationExpressionFactory implements AnnotationExpressionF
     protected Object getAnnotationObjectValue(Annotation annotation, String methodName) {
         try {
             Method method = annotation.annotationType().getDeclaredMethod(methodName);
-            return ObjectHelper.invokeMethod(method, annotation);
+            Object value = ObjectHelper.invokeMethod(method, annotation);
+            return value;
         } catch (NoSuchMethodException e) {
             throw new IllegalArgumentException(
                     "Cannot determine the Object value of the annotation: " + annotation

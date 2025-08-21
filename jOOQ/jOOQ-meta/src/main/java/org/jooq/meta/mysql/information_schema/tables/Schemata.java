@@ -4,10 +4,11 @@
 package org.jooq.meta.mysql.information_schema.tables;
 
 
-import org.jooq.Condition;
+import java.util.Arrays;
+import java.util.List;
+
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -28,7 +29,7 @@ import org.jooq.meta.mysql.information_schema.Keys;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Schemata extends TableImpl<Record> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 994269618;
 
     /**
      * The reference instance of <code>information_schema.SCHEMATA</code>
@@ -54,14 +55,12 @@ public class Schemata extends TableImpl<Record> {
     public final TableField<Record, String> SCHEMA_NAME = createField(DSL.name("SCHEMA_NAME"), SQLDataType.VARCHAR(64).nullable(false), this, "");
 
     /**
-     * The column
-     * <code>information_schema.SCHEMATA.DEFAULT_CHARACTER_SET_NAME</code>.
+     * The column <code>information_schema.SCHEMATA.DEFAULT_CHARACTER_SET_NAME</code>.
      */
     public final TableField<Record, String> DEFAULT_CHARACTER_SET_NAME = createField(DSL.name("DEFAULT_CHARACTER_SET_NAME"), SQLDataType.VARCHAR(64).nullable(false), this, "");
 
     /**
-     * The column
-     * <code>information_schema.SCHEMATA.DEFAULT_COLLATION_NAME</code>.
+     * The column <code>information_schema.SCHEMATA.DEFAULT_COLLATION_NAME</code>.
      */
     public final TableField<Record, String> DEFAULT_COLLATION_NAME = createField(DSL.name("DEFAULT_COLLATION_NAME"), SQLDataType.VARCHAR(64).nullable(false), this, "");
 
@@ -76,24 +75,22 @@ public class Schemata extends TableImpl<Record> {
     public final TableField<Record, String> DEFAULT_ENCRYPTION = createField(DSL.name("DEFAULT_ENCRYPTION"), SQLDataType.VARCHAR(3).nullable(false), this, "");
 
     private Schemata(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Schemata(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private Schemata(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
-     * Create an aliased <code>information_schema.SCHEMATA</code> table
-     * reference
+     * Create an aliased <code>information_schema.SCHEMATA</code> table reference
      */
     public Schemata(String alias) {
         this(DSL.name(alias), SCHEMATA);
     }
 
     /**
-     * Create an aliased <code>information_schema.SCHEMATA</code> table
-     * reference
+     * Create an aliased <code>information_schema.SCHEMATA</code> table reference
      */
     public Schemata(Name alias) {
         this(alias, SCHEMATA);
@@ -106,13 +103,13 @@ public class Schemata extends TableImpl<Record> {
         this(DSL.name("SCHEMATA"), null);
     }
 
-    public <O extends Record> Schemata(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, SCHEMATA);
+    public <O extends Record> Schemata(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, SCHEMATA);
     }
 
     @Override
     public Schema getSchema() {
-        return aliased() ? null : InformationSchema.INFORMATION_SCHEMA;
+        return InformationSchema.INFORMATION_SCHEMA;
     }
 
     @Override
@@ -120,108 +117,9 @@ public class Schemata extends TableImpl<Record> {
         return Keys.SYNTHETIC_PK_SCHEMATA;
     }
 
-    private transient CheckConstraints _checkConstraints;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>information_schema.CHECK_CONSTRAINTS</code> table
-     */
-    public CheckConstraints checkConstraints() {
-        if (_checkConstraints == null)
-            _checkConstraints = new CheckConstraints(this, null, Keys.SYNTHETIC_FK_CHECK_CONSTRAINTS__SYNTHETIC_PK_SCHEMATA.getInverseKey());
-
-        return _checkConstraints;
-    }
-
-    private transient KeyColumnUsage _keyColumnUsage;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>information_schema.KEY_COLUMN_USAGE</code> table
-     */
-    public KeyColumnUsage keyColumnUsage() {
-        if (_keyColumnUsage == null)
-            _keyColumnUsage = new KeyColumnUsage(this, null, Keys.SYNTHETIC_FK_KEY_COLUMN_USAGE__SYNTHETIC_PK_SCHEMATA.getInverseKey());
-
-        return _keyColumnUsage;
-    }
-
-    private transient ReferentialConstraints _referentialConstraints;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>information_schema.REFERENTIAL_CONSTRAINTS</code> table
-     */
-    public ReferentialConstraints referentialConstraints() {
-        if (_referentialConstraints == null)
-            _referentialConstraints = new ReferentialConstraints(this, null, Keys.SYNTHETIC_FK_REFERENTIAL_CONSTRAINTS__SYNTHETIC_PK_SCHEMATA.getInverseKey());
-
-        return _referentialConstraints;
-    }
-
-    private transient TableConstraints _tableConstraints;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>information_schema.TABLE_CONSTRAINTS</code> table
-     */
-    public TableConstraints tableConstraints() {
-        if (_tableConstraints == null)
-            _tableConstraints = new TableConstraints(this, null, Keys.SYNTHETIC_FK_TABLE_CONSTRAINTS__SYNTHETIC_PK_SCHEMATA.getInverseKey());
-
-        return _tableConstraints;
-    }
-
-    private transient Columns _columns;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>information_schema.COLUMNS</code> table
-     */
-    public Columns columns() {
-        if (_columns == null)
-            _columns = new Columns(this, null, Keys.SYNTHETIC_FK_COLUMNS__SYNTHETIC_PK_SCHEMATA.getInverseKey());
-
-        return _columns;
-    }
-
-    private transient Tables _tables;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>information_schema.TABLES</code> table
-     */
-    public Tables tables() {
-        if (_tables == null)
-            _tables = new Tables(this, null, Keys.SYNTHETIC_FK_TABLES__SYNTHETIC_PK_SCHEMATA.getInverseKey());
-
-        return _tables;
-    }
-
-    private transient Views _views;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>information_schema.VIEWS</code> table
-     */
-    public Views views() {
-        if (_views == null)
-            _views = new Views(this, null, Keys.SYNTHETIC_FK_VIEWS__SYNTHETIC_PK_SCHEMATA.getInverseKey());
-
-        return _views;
-    }
-
-    private transient Routines _routines;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>information_schema.ROUTINES</code> table
-     */
-    public Routines routines() {
-        if (_routines == null)
-            _routines = new Routines(this, null, Keys.SYNTHETIC_FK_ROUTINES__SYNTHETIC_PK_SCHEMATA.getInverseKey());
-
-        return _routines;
+    @Override
+    public List<UniqueKey<Record>> getKeys() {
+        return Arrays.<UniqueKey<Record>>asList(Keys.SYNTHETIC_PK_SCHEMATA);
     }
 
     @Override
@@ -234,8 +132,19 @@ public class Schemata extends TableImpl<Record> {
         return new Schemata(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public Schemata as(Table<?> alias) {
-        return new Schemata(alias.getQualifiedName(), this);
+    public Schemata rename(String name) {
+        return new Schemata(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public Schemata rename(Name name) {
+        return new Schemata(name, null);
     }
 }

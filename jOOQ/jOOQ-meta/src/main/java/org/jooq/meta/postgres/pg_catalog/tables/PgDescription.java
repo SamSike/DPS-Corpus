@@ -4,8 +4,8 @@
 package org.jooq.meta.postgres.pg_catalog.tables;
 
 
-import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.ForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -62,11 +62,11 @@ public class PgDescription extends TableImpl<Record> {
     public final TableField<Record, String> DESCRIPTION = createField(DSL.name("description"), SQLDataType.CLOB.nullable(false), this, "");
 
     private PgDescription(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private PgDescription(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private PgDescription(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -90,6 +90,10 @@ public class PgDescription extends TableImpl<Record> {
         this(DSL.name("pg_description"), null);
     }
 
+    public <O extends Record> PgDescription(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, PG_DESCRIPTION);
+    }
+
     @Override
     public Schema getSchema() {
         return aliased() ? null : PgCatalog.PG_CATALOG;
@@ -110,8 +114,19 @@ public class PgDescription extends TableImpl<Record> {
         return new PgDescription(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public PgDescription as(Table<?> alias) {
-        return new PgDescription(alias.getQualifiedName(), this);
+    public PgDescription rename(String name) {
+        return new PgDescription(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public PgDescription rename(Name name) {
+        return new PgDescription(name, null);
     }
 }

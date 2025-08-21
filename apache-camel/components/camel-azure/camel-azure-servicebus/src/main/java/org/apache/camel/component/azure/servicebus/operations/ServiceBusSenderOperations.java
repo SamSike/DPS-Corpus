@@ -20,122 +20,105 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.StreamSupport;
 
 import com.azure.messaging.servicebus.ServiceBusMessage;
-import com.azure.messaging.servicebus.ServiceBusSenderClient;
 import com.azure.messaging.servicebus.ServiceBusTransactionContext;
 import org.apache.camel.component.azure.servicebus.ServiceBusUtils;
+import org.apache.camel.component.azure.servicebus.client.ServiceBusSenderAsyncClientWrapper;
 import org.apache.camel.util.ObjectHelper;
+import reactor.core.publisher.Mono;
 
 public class ServiceBusSenderOperations {
 
-    private final ServiceBusSenderClient client;
+    private final ServiceBusSenderAsyncClientWrapper client;
 
-    public ServiceBusSenderOperations(ServiceBusSenderClient client) {
+    public ServiceBusSenderOperations(ServiceBusSenderAsyncClientWrapper client) {
         ObjectHelper.notNull(client, "client");
 
         this.client = client;
     }
 
-    public void sendMessages(
+    public Mono<Void> sendMessages(
             final Object data,
             final ServiceBusTransactionContext context,
-            final Map<String, Object> applicationProperties,
-            final String correlationId,
-            final String sessionId) {
-        if (data instanceof Iterable<?>) {
-            sendMessages((Iterable<?>) data, context, applicationProperties, correlationId, sessionId);
-        } else {
-            sendMessage(data, context, applicationProperties, correlationId, sessionId);
+            final Map<String, Object> applicationProperties) {
+        if (data instanceof Iterable) {
+            return sendMessages((Iterable<Object>) data, context, applicationProperties);
         }
+
+        return sendMessage(data, context, applicationProperties);
     }
 
-    public List<Long> scheduleMessages(
+    public Mono<List<Long>> scheduleMessages(
             final Object data,
             final OffsetDateTime scheduledEnqueueTime,
             final ServiceBusTransactionContext context,
-            final Map<String, Object> applicationProperties,
-            final String correlationId,
-            final String sessionId) {
+            final Map<String, Object> applicationProperties) {
         if (ObjectHelper.isEmpty(scheduledEnqueueTime)) {
             throw new IllegalArgumentException("To schedule a message, you need to set scheduledEnqueueTime.");
         }
 
-        if (data instanceof Iterable<?>) {
-            return scheduleMessages((Iterable<?>) data, scheduledEnqueueTime, context, applicationProperties, correlationId,
-                    sessionId);
+        if (data instanceof Iterable) {
+            return scheduleMessages((Iterable<Object>) data, scheduledEnqueueTime, context, applicationProperties);
         }
 
-        return scheduleMessage(data, scheduledEnqueueTime, context, applicationProperties, correlationId,
-                sessionId);
+        return scheduleMessage(data, scheduledEnqueueTime, context, applicationProperties);
     }
 
-    private void sendMessages(
-            final Iterable<?> data,
+    private Mono<Void> sendMessages(
+            final Iterable<Object> data,
             final ServiceBusTransactionContext context,
-            final Map<String, Object> applicationProperties,
-            final String correlationId,
-            final String sessionId) {
-        final Iterable<ServiceBusMessage> messages
-                = ServiceBusUtils.createServiceBusMessages(data, applicationProperties, correlationId,
-                        sessionId);
+            final Map<String, Object> applicationProperties) {
+        final Iterable<ServiceBusMessage> messages = ServiceBusUtils.createServiceBusMessages(data, applicationProperties);
 
         if (ObjectHelper.isEmpty(context)) {
-            client.sendMessages(messages);
-        } else {
-            client.sendMessages(messages, context);
+            return client.sendMessages(messages);
         }
+
+        return client.sendMessages(messages, context);
     }
 
-    private void sendMessage(
+    private Mono<Void> sendMessage(
             final Object data,
             final ServiceBusTransactionContext context,
-            final Map<String, Object> applicationProperties,
-            final String correlationId,
-            final String sessionId) {
-        final ServiceBusMessage message = ServiceBusUtils.createServiceBusMessage(data, applicationProperties, correlationId,
-                sessionId);
+            final Map<String, Object> applicationProperties) {
+        final ServiceBusMessage message = ServiceBusUtils.createServiceBusMessage(data, applicationProperties);
 
         if (ObjectHelper.isEmpty(context)) {
-            client.sendMessage(message);
-        } else {
-            client.sendMessage(message, context);
+            return client.sendMessage(message);
         }
+
+        return client.sendMessage(message, context);
     }
 
-    private List<Long> scheduleMessage(
+    private Mono<List<Long>> scheduleMessage(
             final Object data,
             final OffsetDateTime scheduledEnqueueTime,
             final ServiceBusTransactionContext context,
-            final Map<String, Object> applicationProperties,
-            final String correlationId,
-            final String sessionId) {
-        final ServiceBusMessage message = ServiceBusUtils.createServiceBusMessage(data, applicationProperties, correlationId,
-                sessionId);
+            final Map<String, Object> applicationProperties) {
+        final ServiceBusMessage message = ServiceBusUtils.createServiceBusMessage(data, applicationProperties);
 
         if (ObjectHelper.isEmpty(context)) {
-            return Collections.singletonList(client.scheduleMessage(message, scheduledEnqueueTime));
+            return client.scheduleMessage(message, scheduledEnqueueTime)
+                    .map(Collections::singletonList);
         }
 
-        return Collections.singletonList(client.scheduleMessage(message, scheduledEnqueueTime, context));
+        return client.scheduleMessage(message, scheduledEnqueueTime, context)
+                .map(Collections::singletonList);
     }
 
-    private List<Long> scheduleMessages(
-            final Iterable<?> data, final OffsetDateTime scheduledEnqueueTime,
+    private Mono<List<Long>> scheduleMessages(
+            final Iterable<Object> data, final OffsetDateTime scheduledEnqueueTime,
             final ServiceBusTransactionContext context,
-            final Map<String, Object> applicationProperties,
-            final String correlationId,
-            final String sessionId) {
-        final Iterable<ServiceBusMessage> messages
-                = ServiceBusUtils.createServiceBusMessages(data, applicationProperties, correlationId,
-                        sessionId);
+            final Map<String, Object> applicationProperties) {
+        final Iterable<ServiceBusMessage> messages = ServiceBusUtils.createServiceBusMessages(data, applicationProperties);
 
         if (ObjectHelper.isEmpty(context)) {
-            return StreamSupport.stream(client.scheduleMessages(messages, scheduledEnqueueTime).spliterator(), false).toList();
+            return client.scheduleMessages(messages, scheduledEnqueueTime)
+                    .collectList();
         }
 
-        return StreamSupport.stream(client.scheduleMessages(messages, scheduledEnqueueTime, context).spliterator(), false)
-                .toList();
+        return client.scheduleMessages(messages, scheduledEnqueueTime, context)
+                .collectList();
     }
 }

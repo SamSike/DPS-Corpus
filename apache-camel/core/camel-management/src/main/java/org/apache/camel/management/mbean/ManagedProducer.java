@@ -44,8 +44,4 @@ public class ManagedProducer extends ManagedService implements ManagedProducerMB
         return producer.isSingleton();
     }
 
-    @Override
-    public boolean isRemoteEndpoint() {
-        return producer.getEndpoint().isRemote();
-    }
 }

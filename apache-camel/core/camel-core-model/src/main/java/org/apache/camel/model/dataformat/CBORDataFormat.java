@@ -71,22 +71,6 @@ public class CBORDataFormat extends DataFormatDefinition {
         super("cbor");
     }
 
-    protected CBORDataFormat(CBORDataFormat source) {
-        super(source);
-        this.collectionType = source.collectionType;
-        this.unmarshalType = source.unmarshalType;
-        this.objectMapper = source.objectMapper;
-        this.useDefaultObjectMapper = source.useDefaultObjectMapper;
-        this.unmarshalTypeName = source.unmarshalTypeName;
-        this.collectionTypeName = source.collectionTypeName;
-        this.useList = source.useList;
-        this.allowUnmarshallType = source.allowUnmarshallType;
-        this.prettyPrint = source.prettyPrint;
-        this.allowJmsType = source.allowJmsType;
-        this.enableFeatures = source.enableFeatures;
-        this.disableFeatures = source.disableFeatures;
-    }
-
     private CBORDataFormat(Builder builder) {
         this();
         this.collectionType = builder.collectionType;
@@ -101,11 +85,6 @@ public class CBORDataFormat extends DataFormatDefinition {
         this.allowJmsType = builder.allowJmsType;
         this.enableFeatures = builder.enableFeatures;
         this.disableFeatures = builder.disableFeatures;
-    }
-
-    @Override
-    public CBORDataFormat copyDefinition() {
-        return new CBORDataFormat(this);
     }
 
     public String getObjectMapper() {

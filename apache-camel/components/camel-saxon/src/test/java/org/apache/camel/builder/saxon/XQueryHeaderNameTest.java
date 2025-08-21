@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
  * Test XQuery DSL with the ability to apply XPath on a header
  */
 public class XQueryHeaderNameTest extends CamelTestSupport {
-
     @Test
     public void testChoiceWithHeaderNamePremium() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:premium");
@@ -68,19 +67,14 @@ public class XQueryHeaderNameTest extends CamelTestSupport {
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
-                var premium = expression().xquery().expression("/invoice/@orderType = 'premium'")
-                        .source("header:invoiceDetails").end();
-                var standard = expression().xquery().expression("/invoice/@orderType = 'standard'")
-                        .source("header:invoiceDetails").end();
-
                 from("direct:in")
-                    .choice()
-                        .when(premium)
-                            .to("mock:premium")
-                        .when(standard)
-                            .to("mock:standard")
+                        .choice()
+                        .when().xquery("/invoice/@orderType = 'premium'", "invoiceDetails")
+                        .to("mock:premium")
+                        .when().xquery("/invoice/@orderType = 'standard'", "invoiceDetails")
+                        .to("mock:standard")
                         .otherwise()
-                            .to("mock:unknown")
+                        .to("mock:unknown")
                         .end();
             }
         };

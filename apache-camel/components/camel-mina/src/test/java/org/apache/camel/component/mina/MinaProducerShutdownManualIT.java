@@ -22,7 +22,6 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Producer;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.util.StopWatch;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -38,7 +37,7 @@ public class MinaProducerShutdownManualIT {
 
     private static final Logger LOG = LoggerFactory.getLogger(MinaProducerShutdownManualIT.class);
     private static final String URI = "mina:tcp://localhost:6321?textline=true&sync=false";
-    private StopWatch stopWatch;
+    private long start;
     private CamelContext context;
 
     public static void main(String[] args) throws Exception {
@@ -52,7 +51,7 @@ public class MinaProducerShutdownManualIT {
         Thread hook = new AssertShutdownHook();
         Runtime.getRuntime().addShutdownHook(hook);
 
-        stopWatch = new StopWatch();
+        start = System.currentTimeMillis();
 
         context = new DefaultCamelContext();
         context.addRoutes(createRouteBuilder());
@@ -67,9 +66,9 @@ public class MinaProducerShutdownManualIT {
 
         @Override
         public void run() {
-            long diff = stopWatch.taken();
+            long diff = System.currentTimeMillis() - start;
             if (diff > 5000) {
-                LOG.error("ERROR: MinaProducer should be able to shutdown within 5000 millis: time={}", diff);
+                LOG.error("ERROR: MinaProducer should be able to shutdown within 5000 millis: time=" + diff);
             }
         }
     }

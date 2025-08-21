@@ -31,63 +31,52 @@ public class Sns2Configuration implements Cloneable {
 
     // Common properties
     private String topicName;
-    @UriParam(label = "advanced")
+    @UriParam
     @Metadata(autowired = true)
     private SnsClient amazonSNSClient;
     @UriParam(label = "security", secret = true)
     private String accessKey;
     @UriParam(label = "security", secret = true)
     private String secretKey;
-    @UriParam(label = "security", secret = true)
-    private String sessionToken;
-    @UriParam(label = "proxy", enums = "HTTP,HTTPS", defaultValue = "HTTPS")
+    @UriParam(enums = "HTTP,HTTPS", defaultValue = "HTTPS")
     private Protocol proxyProtocol = Protocol.HTTPS;
-    @UriParam(label = "proxy")
+    @UriParam
     private String proxyHost;
-    @UriParam(label = "proxy")
+    @UriParam
     private Integer proxyPort;
     @UriParam
-    private String queueArn;
+    private String queueUrl;
     @UriParam
     private boolean subscribeSNStoSQS;
     @UriParam
     private String kmsMasterKeyId;
     @UriParam
     private boolean serverSideEncryptionEnabled;
-    @UriParam
+    @UriParam(defaultValue = "false")
     private boolean autoCreateTopic;
-    @UriParam
+    @UriParam(defaultValue = "false")
     private boolean overrideEndpoint;
     @UriParam
     private String uriEndpointOverride;
 
-    // Producer-only properties
+    // Producer only properties
     @UriParam
     private String subject;
     @UriParam
-    @Metadata(supportFileReference = true)
     private String policy;
     @UriParam
     private String messageStructure;
-    @UriParam(enums = "ap-south-2,ap-south-1,eu-south-1,eu-south-2,us-gov-east-1,me-central-1,il-central-1,ca-central-1,eu-central-1,us-iso-west-1,eu-central-2,eu-isoe-west-1,us-west-1,us-west-2,af-south-1,eu-north-1,eu-west-3,eu-west-2,eu-west-1,ap-northeast-3,ap-northeast-2,ap-northeast-1,me-south-1,sa-east-1,ap-east-1,cn-north-1,ca-west-1,us-gov-west-1,ap-southeast-1,ap-southeast-2,us-iso-east-1,ap-southeast-3,ap-southeast-4,us-east-1,us-east-2,cn-northwest-1,us-isob-east-1,aws-global,aws-cn-global,aws-us-gov-global,aws-iso-global,aws-iso-b-global")
+    @UriParam
     private String region;
-    @UriParam(label = "security")
+    @UriParam(defaultValue = "false")
     private boolean trustAllCertificates;
-    @UriParam(label = "security")
+    @UriParam(defaultValue = "false")
     private boolean useDefaultCredentialsProvider;
-    @UriParam(label = "security")
-    private boolean useProfileCredentialsProvider;
-    @UriParam(label = "security")
-    private boolean useSessionCredentials;
-    @UriParam(label = "security")
-    private String profileCredentialsName;
     @UriParam(label = "producer", javaType = "java.lang.String", enums = "useConstant,useExchangeId,usePropertyValue")
     private MessageGroupIdStrategy messageGroupIdStrategy;
     @UriParam(label = "producer", javaType = "java.lang.String", defaultValue = "useExchangeId",
               enums = "useExchangeId,useContentBasedDeduplication")
     private MessageDeduplicationIdStrategy messageDeduplicationIdStrategy = new ExchangeIdMessageDeduplicationIdStrategy();
-    @UriParam
-    private boolean batchEnabled;
 
     public String getSubject() {
         return subject;
@@ -131,17 +120,6 @@ public class Sns2Configuration implements Cloneable {
      */
     public void setSecretKey(String secretKey) {
         this.secretKey = secretKey;
-    }
-
-    public String getSessionToken() {
-        return sessionToken;
-    }
-
-    /**
-     * Amazon AWS Session Token used when the user needs to assume an IAM role
-     */
-    public void setSessionToken(String sessionToken) {
-        this.sessionToken = sessionToken;
     }
 
     public SnsClient getAmazonSNSClient() {
@@ -227,22 +205,22 @@ public class Sns2Configuration implements Cloneable {
     }
 
     /**
-     * The region in which the SNS client needs to work. When using this parameter, the configuration will expect the
-     * lowercase name of the region (for example, ap-east-1) You'll need to use the name Region.EU_WEST_1.id()
+     * The region in which SNS client needs to work. When using this parameter, the configuration will expect the
+     * lowercase name of the region (for example ap-east-1) You'll need to use the name Region.EU_WEST_1.id()
      */
     public void setRegion(String region) {
         this.region = region;
     }
 
-    public String getQueueArn() {
-        return queueArn;
+    public String getQueueUrl() {
+        return queueUrl;
     }
 
     /**
-     * The ARN endpoint to subscribe to
+     * The queueUrl to subscribe to
      */
-    public void setQueueArn(String queueArn) {
-        this.queueArn = queueArn;
+    public void setQueueUrl(String queueUrl) {
+        this.queueUrl = queueUrl;
     }
 
     public boolean isSubscribeSNStoSQS() {
@@ -283,7 +261,7 @@ public class Sns2Configuration implements Cloneable {
     }
 
     /**
-     * Setting the auto-creation of the topic
+     * Setting the autocreation of the topic
      */
     public void setAutoCreateTopic(boolean autoCreateTopic) {
         this.autoCreateTopic = autoCreateTopic;
@@ -313,43 +291,9 @@ public class Sns2Configuration implements Cloneable {
     }
 
     /**
-     * Set whether the SNS client should expect to load credentials through a profile credentials provider.
-     */
-    public void setUseProfileCredentialsProvider(boolean useProfileCredentialsProvider) {
-        this.useProfileCredentialsProvider = useProfileCredentialsProvider;
-    }
-
-    public boolean isUseProfileCredentialsProvider() {
-        return useProfileCredentialsProvider;
-    }
-
-    public boolean isUseSessionCredentials() {
-        return useSessionCredentials;
-    }
-
-    /**
-     * Set whether the SNS client should expect to use Session Credentials. This is useful in a situation in which the
-     * user needs to assume an IAM role for doing operations in SNS.
-     */
-    public void setUseSessionCredentials(boolean useSessionCredentials) {
-        this.useSessionCredentials = useSessionCredentials;
-    }
-
-    public String getProfileCredentialsName() {
-        return profileCredentialsName;
-    }
-
-    /**
-     * If using a profile credentials provider, this parameter will set the profile name
-     */
-    public void setProfileCredentialsName(String profileCredentialsName) {
-        this.profileCredentialsName = profileCredentialsName;
-    }
-
-    /**
-     * Only for FIFO Topic. Strategy for setting the messageGroupId on the message. It can be one of the following
-     * options: *useConstant*, *useExchangeId*, *usePropertyValue*. For the *usePropertyValue* option, the value of
-     * property "CamelAwsSnsMessageGroupId" will be used.
+     * Only for FIFO Topic. Strategy for setting the messageGroupId on the message. Can be one of the following options:
+     * *useConstant*, *useExchangeId*, *usePropertyValue*. For the *usePropertyValue* option, the value of property
+     * "CamelAwsMessageGroupId" will be used.
      */
     public void setMessageGroupIdStrategy(String strategy) {
         if ("useConstant".equalsIgnoreCase(strategy)) {
@@ -376,9 +320,9 @@ public class Sns2Configuration implements Cloneable {
     }
 
     /**
-     * Only for FIFO Topic. Strategy for setting the messageDeduplicationId on the message. It can be one of the
-     * following options: *useExchangeId*, *useContentBasedDeduplication*. For the *useContentBasedDeduplication*
-     * option, no messageDeduplicationId will be set on the message.
+     * Only for FIFO Topic. Strategy for setting the messageDeduplicationId on the message. Can be one of the following
+     * options: *useExchangeId*, *useContentBasedDeduplication*. For the *useContentBasedDeduplication* option, no
+     * messageDeduplicationId will be set on the message.
      */
     public void setMessageDeduplicationIdStrategy(String strategy) {
         if ("useExchangeId".equalsIgnoreCase(strategy)) {
@@ -399,8 +343,8 @@ public class Sns2Configuration implements Cloneable {
     }
 
     /**
-     * Set the need for overriding the endpoint. This option needs to be used in combination with the
-     * uriEndpointOverride option
+     * Set the need for overidding the endpoint. This option needs to be used in combination with uriEndpointOverride
+     * option
      */
     public void setOverrideEndpoint(boolean overrideEndpoint) {
         this.overrideEndpoint = overrideEndpoint;
@@ -417,17 +361,6 @@ public class Sns2Configuration implements Cloneable {
         this.uriEndpointOverride = uriEndpointOverride;
     }
 
-    public boolean isBatchEnabled() {
-        return batchEnabled;
-    }
-
-    /**
-     * Define if we are publishing a single message or a batch
-     */
-    public void setBatchEnabled(boolean batchEnabled) {
-        this.batchEnabled = batchEnabled;
-    }
-
     // *************************************************
     //
     // *************************************************
@@ -441,11 +374,11 @@ public class Sns2Configuration implements Cloneable {
     }
 
     /**
-     * Whether the topic is a FIFO topic
+     * Whether or not the topic is a FIFO topic
      */
     boolean isFifoTopic() {
-        // AWS docs suggest this is a valid derivation.
-        // FIFO topic names must end with .fifo, and a standard topic cannot
+        // AWS docs suggest this is valid derivation.
+        // FIFO topic names must end with .fifo, and standard topic cannot
         if (ObjectHelper.isNotEmpty(topicName)) {
             if (topicName.endsWith(".fifo")) {
                 return true;

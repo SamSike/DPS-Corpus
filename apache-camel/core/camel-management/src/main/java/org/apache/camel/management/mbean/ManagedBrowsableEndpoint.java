@@ -24,9 +24,6 @@ import org.apache.camel.api.management.ManagedResource;
 import org.apache.camel.api.management.mbean.ManagedBrowsableEndpointMBean;
 import org.apache.camel.spi.BrowsableEndpoint;
 import org.apache.camel.support.MessageHelper;
-import org.apache.camel.util.json.JsonArray;
-import org.apache.camel.util.json.JsonObject;
-import org.apache.camel.util.json.Jsoner;
 
 @ManagedResource(description = "Managed BrowsableEndpoint")
 public class ManagedBrowsableEndpoint extends ManagedEndpoint implements ManagedBrowsableEndpointMBean {
@@ -46,12 +43,7 @@ public class ManagedBrowsableEndpoint extends ManagedEndpoint implements Managed
     }
 
     @Override
-    public int getBrowseLimit() {
-        return getEndpoint().getBrowseLimit();
-    }
-
-    @Override
-    public int queueSize() {
+    public long queueSize() {
         return getEndpoint().getExchanges().size();
     }
 
@@ -82,8 +74,10 @@ public class ManagedBrowsableEndpoint extends ManagedEndpoint implements Managed
             return null;
         }
 
-        Message msg = exchange.getMessage();
-        return MessageHelper.extractBodyAsString(msg);
+        // must use java type with JMX such as java.lang.String
+        String body = exchange.getMessage().getBody(String.class);
+
+        return body;
     }
 
     @Override
@@ -99,7 +93,9 @@ public class ManagedBrowsableEndpoint extends ManagedEndpoint implements Managed
         }
 
         Message msg = exchange.getMessage();
-        return MessageHelper.dumpAsXml(msg, includeBody);
+        String xml = MessageHelper.dumpAsXml(msg, includeBody);
+
+        return xml;
     }
 
     @Override
@@ -137,53 +133,4 @@ public class ManagedBrowsableEndpoint extends ManagedEndpoint implements Managed
         return sb.toString();
     }
 
-    @Override
-    public String browseMessageAsJSon(Integer index, Boolean includeBody) {
-        List<Exchange> exchanges = getEndpoint().getExchanges();
-
-        if (index >= exchanges.size()) {
-            return null;
-        }
-        Exchange exchange = exchanges.get(index);
-        if (exchange == null) {
-            return null;
-        }
-
-        Message msg = exchange.getMessage();
-        return MessageHelper.dumpAsJSon(msg, includeBody);
-    }
-
-    @Override
-    public String browseAllMessagesAsJSon(Boolean includeBody) {
-        return browseRangeMessagesAsJSon(0, Integer.MAX_VALUE, includeBody);
-    }
-
-    @Override
-    public String browseRangeMessagesAsJSon(Integer fromIndex, Integer toIndex, Boolean includeBody) {
-        if (fromIndex == null) {
-            fromIndex = 0;
-        }
-        if (toIndex == null) {
-            toIndex = Integer.MAX_VALUE;
-        }
-        if (fromIndex > toIndex) {
-            throw new IllegalArgumentException(
-                    "From index cannot be larger than to index, was: " + fromIndex + " > " + toIndex);
-        }
-
-        List<Exchange> exchanges = getEndpoint().getExchanges();
-        if (exchanges.isEmpty()) {
-            return null;
-        }
-
-        JsonArray arr = new JsonArray();
-        for (int i = fromIndex; i < exchanges.size() && i <= toIndex; i++) {
-            Exchange exchange = exchanges.get(i);
-            Message msg = exchange.getMessage();
-            JsonObject jo = MessageHelper.dumpAsJSonObject(msg, false, false, includeBody, true, true, true, 128 * 1024);
-            arr.add(jo);
-        }
-        String out = arr.toJson();
-        return Jsoner.prettyPrint(out);
-    }
 }

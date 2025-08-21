@@ -82,9 +82,9 @@ public class DefaultExecBinding implements ExecBinding {
             argsList = splitToWhiteSpaceSeparatedTokens(s);
         }
 
-        Set<Integer> exitValues = new HashSet<>();
+        Set<Integer> exitValues = new HashSet<Integer>();
         if (exitValuesString != null && exitValuesString.length() > 0) {
-            exitValues = new HashSet<>(splitCommaSeparatedToListOfInts(exitValuesString));
+            exitValues = new HashSet<Integer>(splitCommaSeparatedToListOfInts(exitValuesString));
         }
 
         File outFile = outFilePath == null ? null : new File(outFilePath);
@@ -126,7 +126,7 @@ public class DefaultExecBinding implements ExecBinding {
      * Write the {@link ExecResult} in the message body. Write the stderr and the exit value for convenience in the
      * message headers. <br>
      * The stdout and/or resultFile should be accessible using a converter or using the result object directly.
-     *
+     * 
      * @param message a Camel message
      * @param result  an {@link ExecResult} instance
      */

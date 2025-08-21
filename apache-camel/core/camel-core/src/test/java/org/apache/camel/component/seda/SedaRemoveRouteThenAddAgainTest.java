@@ -19,11 +19,11 @@ package org.apache.camel.component.seda;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 
 public class SedaRemoveRouteThenAddAgainTest extends ContextTestSupport {
 
-    @RepeatedTest(5)
+    @Test
     public void testRemoveRouteAndThenAddAgain() throws Exception {
         MockEndpoint out = getMockEndpoint("mock:out");
         out.expectedMessageCount(1);
@@ -51,10 +51,10 @@ public class SedaRemoveRouteThenAddAgainTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:in").routeId("sedaToMock").to("mock:out");
             }
         };

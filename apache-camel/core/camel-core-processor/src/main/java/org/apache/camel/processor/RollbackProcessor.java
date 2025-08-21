@@ -120,4 +120,13 @@ public class RollbackProcessor extends AsyncProcessorSupport implements Traceabl
         this.markRollbackOnlyLast = markRollbackOnlyLast;
     }
 
+    @Override
+    protected void doStart() throws Exception {
+        // noop
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        // noop
+    }
 }

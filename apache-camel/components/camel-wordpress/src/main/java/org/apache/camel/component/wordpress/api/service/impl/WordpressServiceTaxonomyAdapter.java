@@ -22,7 +22,9 @@ import org.apache.camel.component.wordpress.api.model.Context;
 import org.apache.camel.component.wordpress.api.model.Taxonomy;
 import org.apache.camel.component.wordpress.api.service.WordpressServiceTaxonomy;
 import org.apache.camel.component.wordpress.api.service.spi.TaxonomySPI;
-import org.apache.camel.util.ObjectHelper;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Strings.emptyToNull;
 
 public class WordpressServiceTaxonomyAdapter extends AbstractWordpressServiceAdapter<TaxonomySPI>
         implements WordpressServiceTaxonomy {
@@ -43,7 +45,7 @@ public class WordpressServiceTaxonomyAdapter extends AbstractWordpressServiceAda
 
     @Override
     public Taxonomy retrieve(Context context, String taxonomy) {
-        ObjectHelper.notNullOrEmpty(taxonomy, "Please define a taxonomy");
+        checkNotNull(emptyToNull(taxonomy), "Please define a taxonomy");
         return getSpi().retrieve(this.getApiVersion(), context, taxonomy);
     }
 

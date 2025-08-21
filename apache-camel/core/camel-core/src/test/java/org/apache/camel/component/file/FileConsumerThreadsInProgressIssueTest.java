@@ -36,13 +36,15 @@ public class FileConsumerThreadsInProgressIssueTest extends ContextTestSupport {
     private final Map<String, Integer> duplicate = new HashMap<>();
     private final SampleProcessor processor = new SampleProcessor(duplicate);
 
+    private int number = 2000;
+
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?sortBy=file:name&delay=10&synchronous=false")).routeId("myRoute")
-                        .autoStartup(false).threads(1, 10).maxQueueSize(0)
+                        .noAutoStartup().threads(1, 10).maxQueueSize(0)
                         .convertBodyTo(String.class).process(processor).to("log:done", "mock:done");
             }
         };
@@ -54,7 +56,6 @@ public class FileConsumerThreadsInProgressIssueTest extends ContextTestSupport {
         context.getShutdownStrategy().setTimeout(180);
 
         MockEndpoint mock = getMockEndpoint("mock:done");
-        int number = 2000;
         mock.expectedMessageCount(number);
         mock.expectsNoDuplicates(body());
 
@@ -74,7 +75,7 @@ public class FileConsumerThreadsInProgressIssueTest extends ContextTestSupport {
             Integer count = ent.getValue();
             if (count > 1) {
                 found++;
-                log.info("{} :: {}", ent.getKey(), count);
+                log.info(ent.getKey() + " :: " + count);
             }
         }
 
@@ -84,16 +85,15 @@ public class FileConsumerThreadsInProgressIssueTest extends ContextTestSupport {
     private void createManyFiles(int number) throws Exception {
         Path dir = testDirectory();
         for (int i = 0; i < number; i++) {
-            String fileNamesSuffix = String.format("%04d", i);
             String pad = String.format("%04d%n", i);
-            try (Writer writer = Files.newBufferedWriter(dir.resolve("newFile-" + fileNamesSuffix))) {
+            try (Writer writer = Files.newBufferedWriter(dir.resolve("newFile-" + pad))) {
                 writer.write(pad);
             }
         }
     }
 
     private class SampleProcessor implements Processor {
-        private final Map<String, Integer> duplicate;
+        private Map<String, Integer> duplicate;
 
         public SampleProcessor(Map<String, Integer> duplicate) {
             this.duplicate = duplicate;
@@ -108,7 +108,7 @@ public class FileConsumerThreadsInProgressIssueTest extends ContextTestSupport {
                 integer++;
                 duplicate.put(exchange.getExchangeId(), integer);
             }
-            log.info("Process called for-{}", exchange.getExchangeId());
+            log.info("Process called for-" + exchange.getExchangeId());
             Thread.sleep(20);
         }
 

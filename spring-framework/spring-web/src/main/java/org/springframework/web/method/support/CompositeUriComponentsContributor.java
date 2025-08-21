@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
+import org.springframework.lang.Nullable;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
@@ -37,7 +36,6 @@ import org.springframework.web.util.UriComponentsBuilder;
  *
  * @author Rossen Stoyanchev
  * @author Juergen Hoeller
- * @author Sam Brannen
  * @since 4.0
  */
 public class CompositeUriComponentsContributor implements UriComponentsContributor {
@@ -106,13 +104,13 @@ public class CompositeUriComponentsContributor implements UriComponentsContribut
 	@Override
 	public boolean supportsParameter(MethodParameter parameter) {
 		for (Object contributor : this.contributors) {
-			if (contributor instanceof UriComponentsContributor ucc) {
-				if (ucc.supportsParameter(parameter)) {
+			if (contributor instanceof UriComponentsContributor) {
+				if (((UriComponentsContributor) contributor).supportsParameter(parameter)) {
 					return true;
 				}
 			}
-			else if (contributor instanceof HandlerMethodArgumentResolver resolver) {
-				if (resolver.supportsParameter(parameter)) {
+			else if (contributor instanceof HandlerMethodArgumentResolver) {
+				if (((HandlerMethodArgumentResolver) contributor).supportsParameter(parameter)) {
 					return false;
 				}
 			}
@@ -125,14 +123,15 @@ public class CompositeUriComponentsContributor implements UriComponentsContribut
 			UriComponentsBuilder builder, Map<String, Object> uriVariables, ConversionService conversionService) {
 
 		for (Object contributor : this.contributors) {
-			if (contributor instanceof UriComponentsContributor ucc) {
+			if (contributor instanceof UriComponentsContributor) {
+				UriComponentsContributor ucc = (UriComponentsContributor) contributor;
 				if (ucc.supportsParameter(parameter)) {
 					ucc.contributeMethodArgument(parameter, value, builder, uriVariables, conversionService);
 					break;
 				}
 			}
-			else if (contributor instanceof HandlerMethodArgumentResolver resolver) {
-				if (resolver.supportsParameter(parameter)) {
+			else if (contributor instanceof HandlerMethodArgumentResolver) {
+				if (((HandlerMethodArgumentResolver) contributor).supportsParameter(parameter)) {
 					break;
 				}
 			}

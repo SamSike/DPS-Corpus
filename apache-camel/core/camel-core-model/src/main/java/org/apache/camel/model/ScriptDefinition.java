@@ -35,17 +35,8 @@ public class ScriptDefinition extends ExpressionNode {
     public ScriptDefinition() {
     }
 
-    private ScriptDefinition(ScriptDefinition source) {
-        super(source);
-    }
-
     public ScriptDefinition(Expression expression) {
         super(expression);
-    }
-
-    @Override
-    public ScriptDefinition copyDefinition() {
-        return new ScriptDefinition(this);
     }
 
     @Override
@@ -64,7 +55,7 @@ public class ScriptDefinition extends ExpressionNode {
     }
 
     /**
-     * Script to be executed.
+     * Expression to return the transformed message body (the new message body to use)
      */
     @Override
     public void setExpression(ExpressionDefinition expression) {

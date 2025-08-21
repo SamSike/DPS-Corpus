@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -118,19 +115,19 @@ implements
                 if (decimals == null) {
                     ctx.visit(DSL
                         .when(isub(value, DSL.floor(value))
-                        .lessThan(inline((T) Double.valueOf(0.5))), DSL.floor(value))
+                        .lessThan((T) Double.valueOf(0.5)), DSL.floor(value))
                         .otherwise(DSL.ceil(value)));
 
                     return;
                 }
-                else if (decimals instanceof Param<Integer> p) {
+                else if (decimals instanceof Param) { Param<Integer> p = (Param<Integer>) decimals;
                     Integer decimalsValue = p.getValue();
                     Field<?> factor = DSL.val(java.math.BigDecimal.ONE.movePointRight(decimalsValue));
                     Field<T> mul = imul(value, factor);
 
                     ctx.visit(DSL
                         .when(isub(mul, DSL.floor(mul))
-                        .lessThan(inline((T) Double.valueOf(0.5))), idiv(DSL.floor(mul), factor))
+                        .lessThan((T) Double.valueOf(0.5)), idiv(DSL.floor(mul), factor))
                         .otherwise(idiv(DSL.ceil(mul), factor)));
 
                     return;
@@ -204,29 +201,51 @@ implements
     // -------------------------------------------------------------------------
 
     @Override
-    public final Field<T> $arg1() {
+    public final Field<T> $value() {
         return value;
     }
 
     @Override
-    public final Field<Integer> $arg2() {
+    public final Field<Integer> $decimals() {
         return decimals;
     }
 
     @Override
-    public final QOM.Round<T> $arg1(Field<T> newValue) {
-        return $constructor().apply(newValue, $arg2());
+    public final QOM.Round<T> $value(Field<T> newValue) {
+        return $constructor().apply(newValue, $decimals());
     }
 
     @Override
-    public final QOM.Round<T> $arg2(Field<Integer> newValue) {
-        return $constructor().apply($arg1(), newValue);
+    public final QOM.Round<T> $decimals(Field<Integer> newValue) {
+        return $constructor().apply($value(), newValue);
     }
 
-    @Override
     public final Function2<? super Field<T>, ? super Field<Integer>, ? extends QOM.Round<T>> $constructor() {
         return (a1, a2) -> new Round<>(a1, a2);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // -------------------------------------------------------------------------
     // XXX: The Object API
@@ -234,7 +253,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.Round<?> o) {
+        if (that instanceof QOM.Round) { QOM.Round<?> o = (QOM.Round<?>) that;
             return
                 StringUtils.equals($value(), o.$value()) &&
                 StringUtils.equals($decimals(), o.$decimals())

@@ -24,6 +24,7 @@ import org.apache.camel.Headers;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.processor.BeanRouteTest;
 import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -32,13 +33,13 @@ import org.slf4j.LoggerFactory;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BeanWithHeadersAndBodyInjectionTest extends ContextTestSupport {
-    private static final Logger LOG = LoggerFactory.getLogger(BeanWithHeadersAndBodyInjectionTest.class);
-    protected final MyBean myBean = new MyBean();
+    private static final Logger LOG = LoggerFactory.getLogger(BeanRouteTest.class);
+    protected MyBean myBean = new MyBean();
 
     @Test
-    public void testSendMessage() {
+    public void testSendMessage() throws Exception {
         template.send("direct:in", new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.setProperty("p1", "abc");
                 exchange.setProperty("p2", 123);
 
@@ -59,8 +60,8 @@ public class BeanWithHeadersAndBodyInjectionTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("myBean", myBean);
         return answer;
     }
@@ -86,7 +87,7 @@ public class BeanWithHeadersAndBodyInjectionTest extends ContextTestSupport {
         public void myMethod(@Headers Map<String, Object> headers, Object body) {
             this.headers = headers;
             this.body = body;
-            LOG.info("myMethod() method called on {}", this);
+            LOG.info("myMethod() method called on " + this);
         }
 
         public void anotherMethod(@Headers Map<String, Object> headers, Object body) {

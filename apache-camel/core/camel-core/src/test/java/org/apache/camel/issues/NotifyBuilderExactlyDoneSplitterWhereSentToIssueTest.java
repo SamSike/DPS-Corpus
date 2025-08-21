@@ -22,9 +22,11 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.NotifyBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ResourceLock("VmComponent")
 public class NotifyBuilderExactlyDoneSplitterWhereSentToIssueTest extends ContextTestSupport {
 
     @Test
@@ -37,10 +39,10 @@ public class NotifyBuilderExactlyDoneSplitterWhereSentToIssueTest extends Contex
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:split").split(body()).parallelProcessing().log("Received: ${body}").to("stub:direct:somewhere");
             }
         };

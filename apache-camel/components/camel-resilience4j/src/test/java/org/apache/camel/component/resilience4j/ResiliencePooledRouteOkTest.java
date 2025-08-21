@@ -17,13 +17,13 @@
 package org.apache.camel.component.resilience4j;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.engine.PooledExchangeFactory;
 import org.apache.camel.spi.BeanIntrospection;
 import org.apache.camel.spi.CircuitBreakerConstants;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
 
@@ -34,11 +34,16 @@ public class ResiliencePooledRouteOkTest extends CamelTestSupport {
     private BeanIntrospection bi;
 
     @Override
+    protected boolean useJmx() {
+        return false;
+    }
+
+    @Override
     protected CamelContext createCamelContext() throws Exception {
         CamelContext context = super.createCamelContext();
-        context.getCamelContextExtension().setExchangeFactory(new PooledExchangeFactory());
+        context.adapt(ExtendedCamelContext.class).setExchangeFactory(new PooledExchangeFactory());
 
-        bi = PluginHelper.getBeanIntrospection(context);
+        bi = context.adapt(ExtendedCamelContext.class).getBeanIntrospection();
         bi.setLoggingLevel(LoggingLevel.INFO);
         bi.resetCounters();
 

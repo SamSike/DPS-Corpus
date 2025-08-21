@@ -1,7 +1,9 @@
 /**
  * Support classes for serving static resources.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.reactive.resource;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

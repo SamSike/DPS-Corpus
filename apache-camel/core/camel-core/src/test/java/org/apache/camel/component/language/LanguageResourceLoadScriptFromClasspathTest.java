@@ -21,10 +21,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class LanguageResourceLoadScriptFromClasspathTest extends LanguageLoadScriptFromClasspathTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start")
                         // load the script from the classpath

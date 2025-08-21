@@ -38,9 +38,9 @@ public class SimpleLanguageRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo").filter().simple("${header.foo}").to("mock:foo");
             }
         };

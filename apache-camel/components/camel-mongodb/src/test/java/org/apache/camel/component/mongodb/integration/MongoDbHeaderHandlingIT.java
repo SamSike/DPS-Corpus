@@ -17,16 +17,11 @@
 package org.apache.camel.component.mongodb.integration;
 
 import com.mongodb.client.result.UpdateResult;
-import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mongodb.MongoDbConstants;
-import org.apache.camel.test.infra.core.annotations.RouteFixture;
-import org.apache.camel.test.infra.core.api.ConfigurableRoute;
 import org.bson.Document;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -36,16 +31,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class MongoDbHeaderHandlingIT extends AbstractMongoDbITSupport implements ConfigurableRoute {
-
-    @BeforeEach
-    void checkDocuments() {
-        Assumptions.assumeTrue(0 == testCollection.countDocuments(), "The collection should have no documents");
-    }
+public class MongoDbHeaderHandlingIT extends AbstractMongoDbITSupport {
 
     @Test
     public void testInHeadersTransferredToOutOnCount() {
         // a read operation
+        assertEquals(0, testCollection.countDocuments());
         Exchange result = template.request("direct:count", new Processor() {
             @Override
             public void process(Exchange exchange) {
@@ -78,6 +69,7 @@ public class MongoDbHeaderHandlingIT extends AbstractMongoDbITSupport implements
     @Test
     public void testWriteResultAsHeaderWithWriteOp() {
         // Prepare test
+        assertEquals(0, testCollection.countDocuments());
         Object[] req = new Object[] {
                 new Document(MONGO_ID, "testSave1").append("scientist", "Einstein").toJson(),
                 new Document(MONGO_ID, "testSave2").append("scientist", "Copernicus").toJson() };
@@ -123,6 +115,7 @@ public class MongoDbHeaderHandlingIT extends AbstractMongoDbITSupport implements
         assertEquals("def", resultExch.getMessage().getHeader("abc"));
     }
 
+    @Override
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
@@ -141,11 +134,5 @@ public class MongoDbHeaderHandlingIT extends AbstractMongoDbITSupport implements
 
             }
         };
-    }
-
-    @RouteFixture
-    @Override
-    public void createRouteBuilder(CamelContext context) throws Exception {
-        context.addRoutes(createRouteBuilder());
     }
 }

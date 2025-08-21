@@ -25,14 +25,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Expression;
-import org.apache.camel.NonManagedService;
 import org.apache.camel.Predicate;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.spi.CamelEvent;
@@ -350,7 +347,7 @@ public class NotifyBuilder {
     public NotifyBuilder wereSentTo(final String endpointUri) {
         // insert in start of stack but after the previous wereSentTo
         stack.add(wereSentToIndex++, new EventPredicateSupport() {
-            private final ConcurrentMap<String, String> sentTo = new ConcurrentHashMap<>();
+            private ConcurrentMap<String, String> sentTo = new ConcurrentHashMap<>();
 
             @Override
             public boolean isAbstract() {
@@ -401,7 +398,7 @@ public class NotifyBuilder {
      */
     public NotifyBuilder whenReceived(final int number) {
         stack.add(new EventPredicateSupport() {
-            private final AtomicInteger current = new AtomicInteger();
+            private AtomicInteger current = new AtomicInteger();
 
             @Override
             public boolean onExchangeCreated(Exchange exchange) {
@@ -481,9 +478,9 @@ public class NotifyBuilder {
      */
     public NotifyBuilder whenDoneByIndex(final int index) {
         stack.add(new EventPredicateSupport() {
-            private final AtomicInteger current = new AtomicInteger();
+            private AtomicInteger current = new AtomicInteger();
             private String id;
-            private final AtomicBoolean done = new AtomicBoolean();
+            private AtomicBoolean done = new AtomicBoolean();
 
             @Override
             public boolean onExchangeCreated(Exchange exchange) {
@@ -542,7 +539,7 @@ public class NotifyBuilder {
      */
     public NotifyBuilder whenCompleted(final int number) {
         stack.add(new EventPredicateSupport() {
-            private final AtomicInteger current = new AtomicInteger();
+            private AtomicInteger current = new AtomicInteger();
 
             @Override
             public boolean onExchangeCompleted(Exchange exchange) {
@@ -577,7 +574,7 @@ public class NotifyBuilder {
      */
     public NotifyBuilder whenFailed(final int number) {
         stack.add(new EventPredicateSupport() {
-            private final AtomicInteger current = new AtomicInteger();
+            private AtomicInteger current = new AtomicInteger();
 
             @Override
             public boolean onExchangeFailed(Exchange exchange) {
@@ -612,7 +609,7 @@ public class NotifyBuilder {
      */
     public NotifyBuilder whenExactlyDone(final int number) {
         stack.add(new EventPredicateSupport() {
-            private final AtomicInteger current = new AtomicInteger();
+            private AtomicInteger current = new AtomicInteger();
 
             @Override
             public boolean onExchangeCompleted(Exchange exchange) {
@@ -654,7 +651,7 @@ public class NotifyBuilder {
      */
     public NotifyBuilder whenExactlyCompleted(final int number) {
         stack.add(new EventPredicateSupport() {
-            private final AtomicInteger current = new AtomicInteger();
+            private AtomicInteger current = new AtomicInteger();
 
             @Override
             public boolean onExchangeCompleted(Exchange exchange) {
@@ -687,7 +684,7 @@ public class NotifyBuilder {
      */
     public NotifyBuilder whenExactlyFailed(final int number) {
         stack.add(new EventPredicateSupport() {
-            private final AtomicInteger current = new AtomicInteger();
+            private AtomicInteger current = new AtomicInteger();
 
             @Override
             public boolean onExchangeFailed(Exchange exchange) {
@@ -861,7 +858,8 @@ public class NotifyBuilder {
      * @see           #whenExactBodiesReceived(Object...)
      */
     public NotifyBuilder whenBodiesReceived(Object... bodies) {
-        List<Object> bodyList = new ArrayList<>(Arrays.asList(bodies));
+        List<Object> bodyList = new ArrayList<>();
+        bodyList.addAll(Arrays.asList(bodies));
         return doWhenBodies(bodyList, true, false);
     }
 
@@ -876,7 +874,8 @@ public class NotifyBuilder {
      * @see           #whenExactBodiesDone(Object...)
      */
     public NotifyBuilder whenBodiesDone(Object... bodies) {
-        List<Object> bodyList = new ArrayList<>(Arrays.asList(bodies));
+        List<Object> bodyList = new ArrayList<>();
+        bodyList.addAll(Arrays.asList(bodies));
         return doWhenBodies(bodyList, false, false);
     }
 
@@ -890,7 +889,8 @@ public class NotifyBuilder {
      * @see           #whenBodiesReceived(Object...)
      */
     public NotifyBuilder whenExactBodiesReceived(Object... bodies) {
-        List<Object> bodyList = new ArrayList<>(Arrays.asList(bodies));
+        List<Object> bodyList = new ArrayList<>();
+        bodyList.addAll(Arrays.asList(bodies));
         return doWhenBodies(bodyList, true, true);
     }
 
@@ -904,7 +904,8 @@ public class NotifyBuilder {
      * @see           #whenExactBodiesDone(Object...)
      */
     public NotifyBuilder whenExactBodiesDone(Object... bodies) {
-        List<Object> bodyList = new ArrayList<>(Arrays.asList(bodies));
+        List<Object> bodyList = new ArrayList<>();
+        bodyList.addAll(Arrays.asList(bodies));
         return doWhenBodies(bodyList, false, true);
     }
 
@@ -965,9 +966,9 @@ public class NotifyBuilder {
             @Override
             public String toString() {
                 if (received) {
-                    return (exact ? "whenExactBodiesReceived(" : "whenBodiesReceived(") + bodies + ")";
+                    return "" + (exact ? "whenExactBodiesReceived(" : "whenBodiesReceived(") + bodies + ")";
                 } else {
-                    return (exact ? "whenExactBodiesDone(" : "whenBodiesDone(") + bodies + ")";
+                    return "" + (exact ? "whenExactBodiesDone(" : "whenBodiesDone(") + bodies + ")";
                 }
             }
         });
@@ -1232,11 +1233,8 @@ public class NotifyBuilder {
             throw new IllegalStateException("NotifyBuilder has not been created. Invoke the create() method before matching.");
         }
         try {
-            if (!latch.await(timeout, timeUnit)) {
-                LOG.warn("The notify builder latch has timed out. It's likely the condition has never been satisfied");
-            }
+            latch.await(timeout, timeUnit);
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
             throw RuntimeCamelException.wrapRuntimeCamelException(e);
         }
         return matches();
@@ -1273,9 +1271,9 @@ public class NotifyBuilder {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder(256);
+        StringBuilder sb = new StringBuilder();
         for (EventPredicateHolder eventPredicateHolder : predicates) {
-            if (!sb.isEmpty()) {
+            if (sb.length() > 0) {
                 sb.append(".");
             }
             sb.append(eventPredicateHolder.toString());
@@ -1325,20 +1323,18 @@ public class NotifyBuilder {
     /**
      * Notifier which hooks into Camel to listen for {@link Exchange} relevant events for this builder
      */
-    private final class ExchangeNotifier extends EventNotifierSupport implements NonManagedService {
-
-        private final Lock lock = new ReentrantLock();
+    private final class ExchangeNotifier extends EventNotifierSupport {
 
         @Override
         public void notify(CamelEvent event) throws Exception {
-            if (event instanceof ExchangeCreatedEvent exchangeCreatedEvent) {
-                onExchangeCreated(exchangeCreatedEvent);
-            } else if (event instanceof ExchangeCompletedEvent exchangeCompletedEvent) {
-                onExchangeCompleted(exchangeCompletedEvent);
-            } else if (event instanceof ExchangeFailedEvent exchangeFailedEvent) {
-                onExchangeFailed(exchangeFailedEvent);
-            } else if (event instanceof ExchangeSentEvent exchangeSentEvent) {
-                onExchangeSent(exchangeSentEvent);
+            if (event instanceof ExchangeCreatedEvent) {
+                onExchangeCreated((ExchangeCreatedEvent) event);
+            } else if (event instanceof ExchangeCompletedEvent) {
+                onExchangeCompleted((ExchangeCompletedEvent) event);
+            } else if (event instanceof ExchangeFailedEvent) {
+                onExchangeFailed((ExchangeFailedEvent) event);
+            } else if (event instanceof ExchangeSentEvent) {
+                onExchangeSent((ExchangeSentEvent) event);
             }
 
             // now compute whether we matched
@@ -1374,52 +1370,42 @@ public class NotifyBuilder {
             }
         }
 
-        /*
-         * At a first glance, it may seem like a bug that the latch may not be count down in some cases: this is by design. It
-         * means there was never a match.
-         * This may cause the matchesWaitTime() to take a long time in some cases as it waits for the latch to be counted.
-         */
-        private void computeMatches() {
-            lock.lock();
-            try {
-                // use a temporary answer until we have computed the value to assign
-                Boolean answer = null;
+        private synchronized void computeMatches() {
+            // use a temporary answer until we have computed the value to assign
+            Boolean answer = null;
 
-                for (EventPredicateHolder holder : predicates) {
-                    EventOperation operation = holder.getOperation();
-                    if (EventOperation.and == operation) {
-                        if (holder.getPredicate().matches()) {
-                            answer = true;
-                        } else {
-                            answer = false;
-                            // and break out since its an AND so it must match
-                            break;
-                        }
-                    } else if (EventOperation.or == operation) {
-                        if (holder.getPredicate().matches()) {
-                            answer = true;
-                        }
-                    } else if (EventOperation.not == operation) {
-                        if (holder.getPredicate().matches()) {
-                            answer = false;
-                            // and break out since its a NOT so it must not match
-                            break;
-                        } else {
-                            answer = true;
-                        }
+            for (EventPredicateHolder holder : predicates) {
+                EventOperation operation = holder.getOperation();
+                if (EventOperation.and == operation) {
+                    if (holder.getPredicate().matches()) {
+                        answer = true;
+                    } else {
+                        answer = false;
+                        // and break out since its an AND so it must match
+                        break;
+                    }
+                } else if (EventOperation.or == operation) {
+                    if (holder.getPredicate().matches()) {
+                        answer = true;
+                    }
+                } else if (EventOperation.not == operation) {
+                    if (holder.getPredicate().matches()) {
+                        answer = false;
+                        // and break out since its a NOT so it must not match
+                        break;
+                    } else {
+                        answer = true;
                     }
                 }
+            }
 
-                // if we did compute a value then assign that
-                if (answer != null) {
-                    matches = answer;
-                    if (matches) {
-                        // signal completion
-                        latch.countDown();
-                    }
+            // if we did compute a value then assign that
+            if (answer != null) {
+                matches = answer;
+                if (matches) {
+                    // signal completion
+                    latch.countDown();
                 }
-            } finally {
-                lock.unlock();
             }
         }
 
@@ -1492,7 +1478,7 @@ public class NotifyBuilder {
         boolean onExchangeSent(Exchange exchange, Endpoint endpoint, long timeTaken);
     }
 
-    private abstract static class EventPredicateSupport implements EventPredicate {
+    private abstract class EventPredicateSupport implements EventPredicate {
 
         @Override
         public boolean isAbstract() {
@@ -1567,7 +1553,7 @@ public class NotifyBuilder {
      */
     private static final class CompoundEventPredicate implements EventPredicate {
 
-        private final List<EventPredicate> predicates = new ArrayList<>();
+        private List<EventPredicate> predicates = new ArrayList<>();
 
         private CompoundEventPredicate(List<EventPredicate> predicates) {
             this.predicates.addAll(predicates);
@@ -1653,9 +1639,9 @@ public class NotifyBuilder {
 
         @Override
         public String toString() {
-            StringBuilder sb = new StringBuilder(256);
+            StringBuilder sb = new StringBuilder();
             for (EventPredicate eventPredicate : predicates) {
-                if (!sb.isEmpty()) {
+                if (sb.length() > 0) {
                     sb.append(".");
                 }
                 sb.append(eventPredicate.toString());

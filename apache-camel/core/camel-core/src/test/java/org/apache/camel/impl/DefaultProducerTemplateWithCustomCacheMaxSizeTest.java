@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class DefaultProducerTemplateWithCustomCacheMaxSizeTest extends ContextTestSupport {
 
@@ -39,7 +39,7 @@ public class DefaultProducerTemplateWithCustomCacheMaxSizeTest extends ContextTe
     }
 
     @Test
-    public void testCacheProducers() {
+    public void testCacheProducers() throws Exception {
         ProducerTemplate template = context.createProducerTemplate();
 
         assertEquals(0, template.getCurrentCacheSize(), "Size should be 0");
@@ -63,20 +63,22 @@ public class DefaultProducerTemplateWithCustomCacheMaxSizeTest extends ContextTe
     @Test
     public void testInvalidSizeABC() {
         context.getGlobalOptions().put(Exchange.MAXIMUM_CACHE_POOL_SIZE, "ABC");
-
-        Exception e = assertThrows(Exception.class, () -> context.createProducerTemplate(),
-                "Should have thrown an exception");
-
-        assertEquals("Property CamelMaximumCachePoolSize must be a positive number, was: ABC", e.getCause().getMessage());
+        try {
+            context.createProducerTemplate();
+            fail("Should have thrown an exception");
+        } catch (Exception e) {
+            assertEquals("Property CamelMaximumCachePoolSize must be a positive number, was: ABC", e.getCause().getMessage());
+        }
     }
 
     @Test
     public void testInvalidSizeZero() {
         context.getGlobalOptions().put(Exchange.MAXIMUM_CACHE_POOL_SIZE, "0");
-
-        Exception e = assertThrows(Exception.class, () -> context.createProducerTemplate(),
-                "Should have thrown an exception");
-
-        assertEquals("Property CamelMaximumCachePoolSize must be a positive number, was: 0", e.getCause().getMessage());
+        try {
+            context.createProducerTemplate();
+            fail("Should have thrown an exception");
+        } catch (Exception e) {
+            assertEquals("Property CamelMaximumCachePoolSize must be a positive number, was: 0", e.getCause().getMessage());
+        }
     }
 }

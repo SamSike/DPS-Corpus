@@ -16,8 +16,6 @@
  */
 package org.apache.camel.processor;
 
-import java.util.concurrent.atomic.LongAdder;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -31,7 +29,7 @@ public class RedeliveryErrorHandlerBlockedDelayTest extends ContextTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(RedeliveryErrorHandlerBlockedDelayTest.class);
 
-    private static final LongAdder attempt = new LongAdder();
+    private static volatile int attempt;
 
     @Test
     public void testRedelivery() throws Exception {
@@ -50,21 +48,20 @@ public class RedeliveryErrorHandlerBlockedDelayTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // will by default block
                 errorHandler(defaultErrorHandler().maximumRedeliveries(5).redeliveryDelay(10));
 
                 from("seda:start").to("log:before").to("mock:before").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         LOG.info("Processing at attempt {} {}", attempt, exchange);
 
                         String body = exchange.getIn().getBody(String.class);
                         if (body.contains("World")) {
-                            attempt.increment();
-                            if (attempt.intValue() <= 2) {
+                            if (++attempt <= 2) {
                                 LOG.info("Processing failed will thrown an exception");
                                 throw new IllegalArgumentException("Damn");
                             }

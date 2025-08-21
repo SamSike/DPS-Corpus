@@ -284,12 +284,12 @@ public class JsonRestProcessor extends AbstractRestProcessor {
                 Class<?> responseClass = exchange.getProperty(RESPONSE_CLASS, Class.class);
                 response = (AbstractQueryRecordsBase<?>) objectMapper.readValue(responseEntity, responseClass);
                 out.setHeader(HEADER_SALESFORCE_QUERY_RESULT_TOTAL_SIZE, response.getTotalSize());
-                QueryResultIterator<?> iterator
+                QueryResultIterator iterator
                         = new QueryResultIterator(
                                 objectMapper, responseClass, restClient, determineHeaders(exchange), response);
                 out.setBody(iterator);
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             String msg = "Error parsing JSON response: " + e.getMessage();
             exchange.setException(new SalesforceException(msg, e));
         } finally {

@@ -16,16 +16,16 @@
  */
 package org.apache.camel.dsl.jbang.core.commands.action;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
 import java.util.List;
 
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
+import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.json.JsonObject;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "reset-stats",
-                     description = "Reset performance statistics", sortOptions = false, showDefaultValues = true)
+                     description = "Reset performance statistics")
 public class CamelResetStatsAction extends ActionBaseCommand {
 
     @CommandLine.Parameters(description = "Name or pid of running Camel integration. (default selects all)", arity = "0..1")
@@ -36,13 +36,13 @@ public class CamelResetStatsAction extends ActionBaseCommand {
     }
 
     @Override
-    public Integer doCall() throws Exception {
+    public Integer call() throws Exception {
         List<Long> pids = findPids(name);
         for (long pid : pids) {
             JsonObject root = new JsonObject();
             root.put("action", "reset-stats");
-            Path f = getActionFile(Long.toString(pid));
-            Files.writeString(f, root.toJson());
+            File f = getActionFile("" + pid);
+            IOHelper.writeText(root.toJson(), f);
         }
 
         return 0;

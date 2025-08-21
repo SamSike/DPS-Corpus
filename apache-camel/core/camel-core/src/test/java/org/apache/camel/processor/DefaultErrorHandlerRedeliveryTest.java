@@ -34,7 +34,7 @@ public class DefaultErrorHandlerRedeliveryTest extends ContextTestSupport {
     private static int counter;
 
     @Test
-    public void testRedeliveryTest() {
+    public void testRedeliveryTest() throws Exception {
         counter = 0;
 
         try {
@@ -49,7 +49,7 @@ public class DefaultErrorHandlerRedeliveryTest extends ContextTestSupport {
     }
 
     @Test
-    public void testNoRedeliveriesTest() {
+    public void testNoRedeliveriesTest() throws Exception {
         counter = 0;
 
         try {
@@ -64,7 +64,7 @@ public class DefaultErrorHandlerRedeliveryTest extends ContextTestSupport {
     }
 
     @Test
-    public void testOneRedeliveryTest() {
+    public void testOneRedeliveryTest() throws Exception {
         counter = 0;
         try {
             template.sendBody("direct:one", "Hello World");
@@ -78,9 +78,9 @@ public class DefaultErrorHandlerRedeliveryTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").errorHandler(defaultErrorHandler().redeliveryDelay(0).maximumRedeliveries(2))
                         .process(new Processor() {
                             public void process(Exchange exchange) throws Exception {

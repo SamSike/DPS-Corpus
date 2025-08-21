@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,10 +42,8 @@ package org.jooq;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
-// ...
 // ...
 import static org.jooq.SQLDialect.DERBY;
 // ...
@@ -72,12 +70,9 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
-// ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
 import org.jooq.impl.DSL;
-import org.jooq.impl.QOM.JoinHint;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -85,7 +80,7 @@ import org.jetbrains.annotations.NotNull;
  * This type is used for the {@link Select}'s DSL API when selecting generic
  * {@link Record} types.
  * <p>
- * Example: <pre><code>
+ * Example: <code><pre>
  * -- get all authors' first and last names, and the number
  * -- of books they've written in German, if they have written
  * -- more than five books in German in the last three years
@@ -105,7 +100,7 @@ import org.jetbrains.annotations.NotNull;
  *      FOR UPDATE
  *       OF FIRST_NAME, LAST_NAME
  *       NO WAIT
- * </code></pre> Its equivalent in jOOQ <pre><code>
+ * </pre></code> Its equivalent in jOOQ <code><pre>
  * create.select(TAuthor.FIRST_NAME, TAuthor.LAST_NAME, create.count())
  *       .from(T_AUTHOR)
  *       .join(T_BOOK).on(TBook.AUTHOR_ID.equal(TAuthor.ID))
@@ -119,7 +114,7 @@ import org.jetbrains.annotations.NotNull;
  *       .forUpdate()
  *       .of(TAuthor.FIRST_NAME, TAuthor.LAST_NAME)
  *       .noWait();
- * </code></pre> Refer to the manual for more details
+ * </pre></code> Refer to the manual for more details
  * <p>
  * <h3>Referencing <code>XYZ*Step</code> types directly from client code</h3>
  * <p>
@@ -157,23 +152,6 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
     SelectOptionalOnStep<R> join(TableLike<?> table, JoinType type);
 
     /**
-     * Convenience method to join a table to the last table added to the
-     * <code>FROM</code> clause using
-     * {@link Table#join(TableLike, JoinType, JoinHint)}
-     * <p>
-     * Depending on the <code>JoinType</code>, a subsequent
-     * {@link SelectOnStep#on(Condition)} or
-     * {@link SelectOnStep#using(Field...)} clause is required. If it is
-     * required but omitted, the JOIN clause will be ignored.
-     * <p>
-     * {@link JoinHint} are a commercial only feature and are ignored in the
-     * jOOQ Open Source Edition.
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    SelectOptionalOnStep<R> join(TableLike<?> table, JoinType type, JoinHint hint);
-
-    /**
      * Convenience method to <code>INNER JOIN</code> a table to the last table
      * added to the <code>FROM</code> clause using {@link Table#join(TableLike)}.
      * <p>
@@ -185,107 +163,6 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
     @NotNull @CheckReturnValue
     @Support
     SelectOnStep<R> join(TableLike<?> table);
-
-    /**
-     * Convenience method to <code>INNER JOIN</code> a path to the last table
-     * added to the <code>FROM</code> clause using {@link Table#join(Path)}.
-     * <p>
-     * A synonym for {@link #innerJoin(Path)}.
-     *
-     * @see Table#join(Path)
-     * @see #innerJoin(Path)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    SelectOptionalOnStep<R> join(Path<?> path);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Convenience method to <code>INNER JOIN</code> a table to the last table
@@ -402,86 +279,6 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
     SelectOnStep<R> innerJoin(TableLike<?> table);
 
     /**
-     * Convenience method to <code>INNER JOIN</code> a path to the last table
-     * added to the <code>FROM</code> clause using {@link Table#join(Path)}.
-     *
-     * @see Table#innerJoin(Path)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    SelectOptionalOnStep<R> innerJoin(Path<?> path);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
      * Convenience method to <code>INNER JOIN</code> a table to the last table
      * added to the <code>FROM</code> clause using {@link Table#join(String)}.
      * <p>
@@ -576,15 +373,15 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * <p>
      * If this syntax is unavailable, it is emulated with a regular
      * <code>INNER JOIN</code>. The following two constructs are equivalent:
-     * <pre><code>
+     * <code><pre>
      * A cross join B
      * A join B on 1 = 1
-     * </code></pre>
+     * </pre></code>
      *
      * @see Table#crossJoin(TableLike)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support
     SelectJoinStep<R> crossJoin(TableLike<?> table);
 
     /**
@@ -594,10 +391,10 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * <p>
      * If this syntax is unavailable, it is emulated with a regular
      * <code>INNER JOIN</code>. The following two constructs are equivalent:
-     * <pre><code>
+     * <code><pre>
      * A cross join B
      * A join B on 1 = 1
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -609,7 +406,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support
     @PlainSQL
     SelectJoinStep<R> crossJoin(SQL sql);
 
@@ -620,10 +417,10 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * <p>
      * If this syntax is unavailable, it is emulated with a regular
      * <code>INNER JOIN</code>. The following two constructs are equivalent:
-     * <pre><code>
+     * <code><pre>
      * A cross join B
      * A join B on 1 = 1
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -635,7 +432,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support
     @PlainSQL
     SelectJoinStep<R> crossJoin(String sql);
 
@@ -646,10 +443,10 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * <p>
      * If this syntax is unavailable, it is emulated with a regular
      * <code>INNER JOIN</code>. The following two constructs are equivalent:
-     * <pre><code>
+     * <code><pre>
      * A cross join B
      * A join B on 1 = 1
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -662,7 +459,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support
     @PlainSQL
     SelectJoinStep<R> crossJoin(String sql, Object... bindings);
 
@@ -673,10 +470,10 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * <p>
      * If this syntax is unavailable, it is emulated with a regular
      * <code>INNER JOIN</code>. The following two constructs are equivalent:
-     * <pre><code>
+     * <code><pre>
      * A cross join B
      * A join B on 1 = 1
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -689,7 +486,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support
     @PlainSQL
     SelectJoinStep<R> crossJoin(String sql, QueryPart... parts);
 
@@ -700,16 +497,16 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * <p>
      * If this syntax is unavailable, it is emulated with a regular
      * <code>INNER JOIN</code>. The following two constructs are equivalent:
-     * <pre><code>
+     * <code><pre>
      * A cross join B
      * A join B on 1 = 1
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#table(Name)
      * @see Table#crossJoin(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support
     SelectJoinStep<R> crossJoin(Name name);
 
     /**
@@ -725,114 +522,6 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
     @NotNull @CheckReturnValue
     @Support
     SelectJoinPartitionByStep<R> leftJoin(TableLike<?> table);
-
-    /**
-     * Convenience method to <code>LEFT OUTER JOIN</code> a path to the last
-     * table added to the <code>FROM</code> clause using
-     * {@link Table#leftOuterJoin(Path)}.
-     * <p>
-     * A synonym for {@link #leftOuterJoin(Path)}.
-     *
-     * @see Table#leftOuterJoin(Path)
-     * @see #leftOuterJoin(Path)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    SelectOptionalOnStep<R> leftJoin(Path<?> table);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Convenience method to <code>LEFT OUTER JOIN</code> a table to the last
@@ -951,93 +640,6 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
     SelectJoinPartitionByStep<R> leftOuterJoin(TableLike<?> table);
 
     /**
-     * Convenience method to <code>LEFT OUTER JOIN</code> a path to the last
-     * table added to the <code>FROM</code> clause using
-     * {@link Table#leftOuterJoin(Path)}
-     *
-     * @see Table#leftOuterJoin(Path)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    SelectOptionalOnStep<R> leftOuterJoin(Path<?> path);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
      * Convenience method to <code>LEFT OUTER JOIN</code> a table to the last
      * table added to the <code>FROM</code> clause using
      * {@link Table#leftOuterJoin(String)}
@@ -1133,121 +735,15 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * {@link Table#rightOuterJoin(TableLike)}.
      * <p>
      * A synonym for {@link #rightOuterJoin(TableLike)}.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      *
      * @see Table#rightOuterJoin(TableLike)
      * @see #rightOuterJoin(TableLike)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     SelectJoinPartitionByStep<R> rightJoin(TableLike<?> table);
-
-    /**
-     * Convenience method to <code>RIGHT OUTER JOIN</code> a path to the last
-     * table added to the <code>FROM</code> clause using
-     * {@link Table#rightOuterJoin(Path)}.
-     * <p>
-     * A synonym for {@link #rightOuterJoin(Path)}.
-     *
-     * @see Table#rightOuterJoin(Path)
-     * @see #rightOuterJoin(Path)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    SelectOptionalOnStep<R> rightJoin(Path<?> path);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Convenience method to <code>RIGHT OUTER JOIN</code> a table to the last
@@ -1255,6 +751,8 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * {@link Table#rightOuterJoin(String)}.
      * <p>
      * A synonym for {@link #rightOuterJoin(String)}.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1267,7 +765,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinPartitionByStep<R> rightJoin(SQL sql);
 
@@ -1277,6 +775,8 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * {@link Table#rightOuterJoin(String)}.
      * <p>
      * A synonym for {@link #rightOuterJoin(String)}.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1289,7 +789,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinPartitionByStep<R> rightJoin(String sql);
 
@@ -1299,6 +799,8 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * {@link Table#rightOuterJoin(String, Object...)}.
      * <p>
      * A synonym for {@link #rightOuterJoin(String, Object...)}.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1312,7 +814,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinPartitionByStep<R> rightJoin(String sql, Object... bindings);
 
@@ -1322,6 +824,8 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * {@link Table#rightOuterJoin(String, QueryPart...)}.
      * <p>
      * A synonym for {@link #rightOuterJoin(String, QueryPart...)}.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1335,7 +839,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinPartitionByStep<R> rightJoin(String sql, QueryPart... parts);
 
@@ -1345,117 +849,36 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * {@link Table#rightOuterJoin(Name)}.
      * <p>
      * A synonym for {@link #rightOuterJoin(Name)}.
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      *
      * @see DSL#table(Name)
      * @see Table#rightOuterJoin(Name)
      * @see #rightOuterJoin(Name)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     SelectJoinPartitionByStep<R> rightJoin(Name name);
 
     /**
      * Convenience method to <code>RIGHT OUTER JOIN</code> a table to the last
      * table added to the <code>FROM</code> clause using
      * {@link Table#rightOuterJoin(TableLike)}
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      *
      * @see Table#rightOuterJoin(TableLike)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     SelectJoinPartitionByStep<R> rightOuterJoin(TableLike<?> table);
-
-    /**
-     * Convenience method to <code>RIGHT OUTER JOIN</code> a path to the last
-     * table added to the <code>FROM</code> clause using
-     * {@link Table#rightOuterJoin(Path)}
-     *
-     * @see Table#rightOuterJoin(Path)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    SelectOptionalOnStep<R> rightOuterJoin(Path<?> path);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Convenience method to <code>RIGHT OUTER JOIN</code> a table to the last
      * table added to the <code>FROM</code> clause using
      * {@link Table#rightOuterJoin(String)}
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1467,7 +890,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinPartitionByStep<R> rightOuterJoin(SQL sql);
 
@@ -1475,6 +898,8 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * Convenience method to <code>RIGHT OUTER JOIN</code> a table to the last
      * table added to the <code>FROM</code> clause using
      * {@link Table#rightOuterJoin(String)}
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1486,7 +911,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinPartitionByStep<R> rightOuterJoin(String sql);
 
@@ -1494,6 +919,8 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * Convenience method to <code>RIGHT OUTER JOIN</code> a table to the last
      * table added to the <code>FROM</code> clause using
      * {@link Table#rightOuterJoin(String, Object...)}
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1506,7 +933,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinPartitionByStep<R> rightOuterJoin(String sql, Object... bindings);
 
@@ -1514,6 +941,8 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * Convenience method to <code>RIGHT OUTER JOIN</code> a table to the last
      * table added to the <code>FROM</code> clause using
      * {@link Table#rightOuterJoin(String, QueryPart...)}
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1526,7 +955,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinPartitionByStep<R> rightOuterJoin(String sql, QueryPart... parts);
 
@@ -1534,12 +963,14 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * Convenience method to <code>RIGHT OUTER JOIN</code> a table to the last
      * table added to the <code>FROM</code> clause using
      * {@link Table#rightOuterJoin(Name)}
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      *
      * @see DSL#table(Name)
      * @see Table#rightOuterJoin(Name)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     SelectJoinPartitionByStep<R> rightOuterJoin(Name name);
 
     /**
@@ -1550,95 +981,8 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * A synonym for {@link #fullOuterJoin(TableLike)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     SelectOnStep<R> fullJoin(TableLike<?> table);
-
-    /**
-     * Convenience method to <code>FULL OUTER JOIN</code> a path to the last
-     * table added to the <code>FROM</code> clause using
-     * {@link Table#fullOuterJoin(Path)}.
-     * <p>
-     * A synonym for {@link #fullOuterJoin(Path)}.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    SelectOptionalOnStep<R> fullJoin(Path<?> table);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Convenience method to <code>FULL OUTER JOIN</code> a table to the last
@@ -1653,7 +997,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * escape literals when concatenated into SQL clauses!
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectOnStep<R> fullJoin(SQL sql);
 
@@ -1670,7 +1014,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * escape literals when concatenated into SQL clauses!
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectOnStep<R> fullJoin(String sql);
 
@@ -1687,7 +1031,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * escape literals when concatenated into SQL clauses!
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectOnStep<R> fullJoin(String sql, Object... bindings);
 
@@ -1704,7 +1048,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * escape literals when concatenated into SQL clauses!
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectOnStep<R> fullJoin(String sql, QueryPart... parts);
 
@@ -1716,111 +1060,28 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * A synonym for {@link #fullOuterJoin(Name)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     SelectOnStep<R> fullJoin(Name name);
 
     /**
      * Convenience method to <code>FULL OUTER JOIN</code> a table to the last
      * table added to the <code>FROM</code> clause using
      * {@link Table#fullOuterJoin(TableLike)}
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      *
      * @see Table#fullOuterJoin(TableLike)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     SelectOnStep<R> fullOuterJoin(TableLike<?> table);
-
-    /**
-     * Convenience method to <code>FULL OUTER JOIN</code> a path to the last
-     * table added to the <code>FROM</code> clause using
-     * {@link Table#fullOuterJoin(Path)}
-     *
-     * @see Table#fullOuterJoin(Path)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    SelectOptionalOnStep<R> fullOuterJoin(Path<?> table);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Convenience method to <code>FULL OUTER JOIN</code> a table to the last
      * table added to the <code>FROM</code> clause using
      * {@link Table#fullOuterJoin(String)}
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1832,7 +1093,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectOnStep<R> fullOuterJoin(SQL sql);
 
@@ -1840,6 +1101,8 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * Convenience method to <code>FULL OUTER JOIN</code> a table to the last
      * table added to the <code>FROM</code> clause using
      * {@link Table#fullOuterJoin(String)}
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1851,7 +1114,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectOnStep<R> fullOuterJoin(String sql);
 
@@ -1859,6 +1122,8 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * Convenience method to <code>FULL OUTER JOIN</code> a tableto the last
      * table added to the <code>FROM</code> clause using
      * {@link Table#fullOuterJoin(String, Object...)}
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1871,7 +1136,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectOnStep<R> fullOuterJoin(String sql, Object... bindings);
 
@@ -1879,6 +1144,8 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * Convenience method to <code>FULL OUTER JOIN</code> a tableto the last
      * table added to the <code>FROM</code> clause using
      * {@link Table#fullOuterJoin(String, QueryPart...)}
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1891,7 +1158,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectOnStep<R> fullOuterJoin(String sql, QueryPart... parts);
 
@@ -1899,12 +1166,14 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * Convenience method to <code>FULL OUTER JOIN</code> a tableto the last
      * table added to the <code>FROM</code> clause using
      * {@link Table#fullOuterJoin(Name)}
+     * <p>
+     * This is only possible where the underlying RDBMS supports it
      *
      * @see DSL#table(Name)
      * @see Table#fullOuterJoin(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     SelectOnStep<R> fullOuterJoin(Name name);
 
     /**
@@ -2156,7 +1425,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see Table#naturalRightOuterJoin(TableLike)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     SelectJoinStep<R> naturalRightOuterJoin(TableLike<?> table);
 
     /**
@@ -2177,7 +1446,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> naturalRightOuterJoin(SQL sql);
 
@@ -2199,7 +1468,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> naturalRightOuterJoin(String sql);
 
@@ -2222,7 +1491,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> naturalRightOuterJoin(String sql, Object... bindings);
 
@@ -2245,7 +1514,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> naturalRightOuterJoin(String sql, QueryPart... parts);
 
@@ -2261,7 +1530,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see Table#naturalRightOuterJoin(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     SelectJoinStep<R> naturalRightOuterJoin(Name name);
 
     /**
@@ -2275,7 +1544,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see Table#naturalFullOuterJoin(TableLike)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     SelectJoinStep<R> naturalFullOuterJoin(TableLike<?> table);
 
     /**
@@ -2296,7 +1565,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> naturalFullOuterJoin(SQL sql);
 
@@ -2318,7 +1587,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> naturalFullOuterJoin(String sql);
 
@@ -2341,7 +1610,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> naturalFullOuterJoin(String sql, Object... bindings);
 
@@ -2364,7 +1633,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> naturalFullOuterJoin(String sql, QueryPart... parts);
 
@@ -2380,7 +1649,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see Table#naturalFullOuterJoin(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, POSTGRES, YUGABYTEDB })
     SelectJoinStep<R> naturalFullOuterJoin(Name name);
 
     // -------------------------------------------------------------------------
@@ -2392,7 +1661,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * equivalent <code>EXISTS</code> predicate.
      * <p>
      * The following two SQL snippets are semantically equivalent:
-     * <pre><code>
+     * <code><pre>
      * -- Using LEFT SEMI JOIN
      * FROM A
      *     LEFT SEMI JOIN B
@@ -2403,7 +1672,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * WHERE EXISTS (
      *     SELECT 1 FROM B WHERE A.ID = B.ID
      * )
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Notice that according to
      * <a href="https://en.wikipedia.org/wiki/Relational_algebra">Relational
@@ -2419,42 +1688,11 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
     SelectOnStep<R> leftSemiJoin(TableLike<?> table);
 
     /**
-     * A synthetic <code>LEFT SEMI JOIN</code> clause that translates to an
-     * equivalent <code>EXISTS</code> predicate.
-     * <p>
-     * The following two SQL snippets are semantically equivalent:
-     * <pre><code>
-     * -- Using LEFT SEMI JOIN
-     * FROM A
-     *     LEFT SEMI JOIN B
-     *         ON A.ID = B.ID
-     *
-     * -- Using WHERE EXISTS
-     * FROM A
-     * WHERE EXISTS (
-     *     SELECT 1 FROM B WHERE A.ID = B.ID
-     * )
-     * </code></pre>
-     * <p>
-     * Notice that according to
-     * <a href="https://en.wikipedia.org/wiki/Relational_algebra">Relational
-     * algebra's</a> understanding of left semi join, the right hand side of the
-     * left semi join operator is not projected, i.e. it cannot be accessed from
-     * <code>WHERE</code> or <code>SELECT</code> or any other clause than
-     * <code>ON</code>.
-     *
-     * @see Table#leftSemiJoin(Path)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    SelectOptionalOnStep<R> leftSemiJoin(Path<?> path);
-
-    /**
      * A synthetic <code>LEFT ANTI JOIN</code> clause that translates to an
      * equivalent <code>NOT EXISTS</code> predicate.
      * <p>
      * The following two SQL snippets are semantically equivalent:
-     * <pre><code>
+     * <code><pre>
      * -- Using LEFT ANTI JOIN
      * FROM A
      *     LEFT ANTI JOIN B
@@ -2465,7 +1703,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * WHERE NOT EXISTS (
      *     SELECT 1 FROM B WHERE A.ID = B.ID
      * )
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Notice that according to
      * <a href="https://en.wikipedia.org/wiki/Relational_algebra">Relational
@@ -2480,37 +1718,6 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
     @Support
     SelectOnStep<R> leftAntiJoin(TableLike<?> table);
 
-    /**
-     * A synthetic <code>LEFT ANTI JOIN</code> clause that translates to an
-     * equivalent <code>NOT EXISTS</code> predicate.
-     * <p>
-     * The following two SQL snippets are semantically equivalent:
-     * <pre><code>
-     * -- Using LEFT ANTI JOIN
-     * FROM A
-     *     LEFT ANTI JOIN B
-     *         ON A.ID = B.ID
-     *
-     * -- Using WHERE NOT EXISTS
-     * FROM A
-     * WHERE NOT EXISTS (
-     *     SELECT 1 FROM B WHERE A.ID = B.ID
-     * )
-     * </code></pre>
-     * <p>
-     * Notice that according to
-     * <a href="https://en.wikipedia.org/wiki/Relational_algebra">Relational
-     * algebra's</a> understanding of left semi join, the right hand side of the
-     * left semi join operator is not projected, i.e. it cannot be accessed from
-     * <code>WHERE</code> or <code>SELECT</code> or any other clause than
-     * <code>ON</code>.
-     *
-     * @see Table#leftAntiJoin(Path)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    SelectOptionalOnStep<R> leftAntiJoin(Path<?> path);
-
     // -------------------------------------------------------------------------
     // XXX: APPLY clauses on tables
     // -------------------------------------------------------------------------
@@ -2521,7 +1728,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see Table#crossApply(TableLike)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     SelectJoinStep<R> crossApply(TableLike<?> table);
 
     /**
@@ -2537,7 +1744,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> crossApply(SQL sql);
 
@@ -2554,7 +1761,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> crossApply(String sql);
 
@@ -2572,7 +1779,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> crossApply(String sql, Object... bindings);
 
@@ -2590,7 +1797,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> crossApply(String sql, QueryPart... parts);
 
@@ -2601,7 +1808,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see Table#crossApply(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     SelectJoinStep<R> crossApply(Name name);
 
     /**
@@ -2610,7 +1817,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see Table#outerApply(TableLike)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     SelectJoinStep<R> outerApply(TableLike<?> table);
 
     /**
@@ -2626,7 +1833,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> outerApply(SQL sql);
 
@@ -2643,7 +1850,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> outerApply(String sql);
 
@@ -2661,7 +1868,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> outerApply(String sql, Object... bindings);
 
@@ -2679,7 +1886,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     @PlainSQL
     SelectJoinStep<R> outerApply(String sql, QueryPart... parts);
 
@@ -2690,7 +1897,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see Table#outerApply(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     SelectJoinStep<R> outerApply(Name name);
 
     /**
@@ -2699,17 +1906,8 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see Table#straightJoin(TableLike)
      */
     @NotNull @CheckReturnValue
-    @Support({ MARIADB, MYSQL })
+    @Support({ MYSQL })
     SelectOnStep<R> straightJoin(TableLike<?> table);
-
-    /**
-     * <code>STRAIGHT_JOIN</code> a path to this table.
-     *
-     * @see Table#straightJoin(Path)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ MARIADB, MYSQL })
-    SelectOnStep<R> straightJoin(Path<?> table);
 
     /**
      * <code>STRAIGHT_JOIN</code> a table to this table.
@@ -2723,7 +1921,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see Table#straightJoin(SQL)
      */
     @NotNull @CheckReturnValue
-    @Support({ MARIADB, MYSQL })
+    @Support({ MYSQL })
     @PlainSQL
     SelectOnStep<R> straightJoin(SQL sql);
 
@@ -2739,7 +1937,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see Table#straightJoin(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ MARIADB, MYSQL })
+    @Support({ MYSQL })
     @PlainSQL
     SelectOnStep<R> straightJoin(String sql);
 
@@ -2756,7 +1954,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see Table#straightJoin(String, Object...)
      */
     @NotNull @CheckReturnValue
-    @Support({ MARIADB, MYSQL })
+    @Support({ MYSQL })
     @PlainSQL
     SelectOnStep<R> straightJoin(String sql, Object... bindings);
 
@@ -2773,7 +1971,7 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see Table#straightJoin(String, QueryPart...)
      */
     @NotNull @CheckReturnValue
-    @Support({ MARIADB, MYSQL })
+    @Support({ MYSQL })
     @PlainSQL
     SelectOnStep<R> straightJoin(String sql, QueryPart... parts);
 
@@ -2784,6 +1982,6 @@ public interface SelectJoinStep<R extends Record> extends SelectWhereStep<R> {
      * @see Table#straightJoin(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ MARIADB, MYSQL })
+    @Support({ MYSQL })
     SelectOnStep<R> straightJoin(Name name);
 }

@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class KafkaProducerTest {
 
-    private final MockProducer kafkaProducer = new MockProducer<>(true, new StringSerializer(), new StringSerializer());
+    private MockProducer kafkaProducer = new MockProducer<>(true, new StringSerializer(), new StringSerializer());
     private KafkaProducer camelProducer;
     @Spy
     private Exchange exchange;
@@ -55,6 +55,7 @@ public class KafkaProducerTest {
         camelProducer = new KafkaProducer((KafkaEndpoint) component.createEndpoint("kafka:test"));
         camelProducer.setKafkaProducer(kafkaProducer);
         when(exchange.getIn()).thenReturn(message);
+        when(exchange.getMessage()).thenReturn(message);
         when(exchange.getContext()).thenReturn(context);
         when(message.getHeader("kafka.PARTITION_KEY", Integer.class)).thenReturn(0);
         when(message.getHeader("kafka.KEY")).thenReturn("key");

@@ -22,8 +22,8 @@ import java.util.Map;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
+import org.apache.camel.support.DefaultComponent;
 import org.apache.camel.support.EndpointHelper;
-import org.apache.camel.support.HealthCheckComponent;
 import org.apache.camel.support.ObjectHelper;
 import org.apache.camel.util.CastUtils;
 import org.apache.camel.util.StringHelper;
@@ -35,14 +35,14 @@ import static org.apache.camel.util.ObjectHelper.isNotEmpty;
 /**
  * Base class file component. To be extended.
  */
-public abstract class GenericFileComponent<T> extends HealthCheckComponent {
+public abstract class GenericFileComponent<T> extends DefaultComponent {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
 
-    protected GenericFileComponent() {
+    public GenericFileComponent() {
     }
 
-    protected GenericFileComponent(CamelContext context) {
+    public GenericFileComponent(CamelContext context) {
         super(context);
     }
 

@@ -26,8 +26,8 @@ import org.apache.camel.support.PollingConsumerSupport;
  * A JMS {@link org.apache.camel.PollingConsumer}.
  */
 public class SjmsPollingConsumer extends PollingConsumerSupport {
-    private final SjmsTemplate template;
-    private final SjmsEndpoint jmsEndpoint;
+    private SjmsTemplate template;
+    private SjmsEndpoint jmsEndpoint;
 
     public SjmsPollingConsumer(SjmsEndpoint endpoint, SjmsTemplate template) {
         super(endpoint);

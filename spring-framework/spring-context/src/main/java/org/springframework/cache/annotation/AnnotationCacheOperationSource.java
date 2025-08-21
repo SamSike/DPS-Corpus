@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,15 @@ package org.springframework.cache.annotation;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
-
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.cache.interceptor.AbstractFallbackCacheOperationSource;
 import org.springframework.cache.interceptor.CacheOperation;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -46,9 +47,9 @@ import org.springframework.util.Assert;
 @SuppressWarnings("serial")
 public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperationSource implements Serializable {
 
-	private final Set<CacheAnnotationParser> annotationParsers;
+	private final boolean publicMethodsOnly;
 
-	private boolean publicMethodsOnly = true;
+	private final Set<CacheAnnotationParser> annotationParsers;
 
 
 	/**
@@ -56,7 +57,7 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 	 * that carry the {@code Cacheable} and {@code CacheEvict} annotations.
 	 */
 	public AnnotationCacheOperationSource() {
-		this.annotationParsers = Collections.singleton(new SpringCacheAnnotationParser());
+		this(true);
 	}
 
 	/**
@@ -65,11 +66,10 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 	 * @param publicMethodsOnly whether to support only annotated public methods
 	 * typically for use with proxy-based AOP), or protected/private methods as well
 	 * (typically used with AspectJ class weaving)
-	 * @see #setPublicMethodsOnly
 	 */
 	public AnnotationCacheOperationSource(boolean publicMethodsOnly) {
-		this();
 		this.publicMethodsOnly = publicMethodsOnly;
+		this.annotationParsers = Collections.singleton(new SpringCacheAnnotationParser());
 	}
 
 	/**
@@ -77,6 +77,7 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 	 * @param annotationParser the CacheAnnotationParser to use
 	 */
 	public AnnotationCacheOperationSource(CacheAnnotationParser annotationParser) {
+		this.publicMethodsOnly = true;
 		Assert.notNull(annotationParser, "CacheAnnotationParser must not be null");
 		this.annotationParsers = Collections.singleton(annotationParser);
 	}
@@ -86,8 +87,9 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 	 * @param annotationParsers the CacheAnnotationParser to use
 	 */
 	public AnnotationCacheOperationSource(CacheAnnotationParser... annotationParsers) {
+		this.publicMethodsOnly = true;
 		Assert.notEmpty(annotationParsers, "At least one CacheAnnotationParser needs to be specified");
-		this.annotationParsers = Set.of(annotationParsers);
+		this.annotationParsers = new LinkedHashSet<>(Arrays.asList(annotationParsers));
 	}
 
 	/**
@@ -95,18 +97,9 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 	 * @param annotationParsers the CacheAnnotationParser to use
 	 */
 	public AnnotationCacheOperationSource(Set<CacheAnnotationParser> annotationParsers) {
+		this.publicMethodsOnly = true;
 		Assert.notEmpty(annotationParsers, "At least one CacheAnnotationParser needs to be specified");
 		this.annotationParsers = annotationParsers;
-	}
-
-
-	/**
-	 * Set whether cacheable methods are expected to be public.
-	 * <p>The default is {@code true}.
-	 * @since 6.2
-	 */
-	public void setPublicMethodsOnly(boolean publicMethodsOnly) {
-		this.publicMethodsOnly = publicMethodsOnly;
 	}
 
 
@@ -121,12 +114,14 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 	}
 
 	@Override
-	protected @Nullable Collection<CacheOperation> findCacheOperations(Class<?> clazz) {
+	@Nullable
+	protected Collection<CacheOperation> findCacheOperations(Class<?> clazz) {
 		return determineCacheOperations(parser -> parser.parseCacheAnnotations(clazz));
 	}
 
 	@Override
-	protected @Nullable Collection<CacheOperation> findCacheOperations(Method method) {
+	@Nullable
+	protected Collection<CacheOperation> findCacheOperations(Method method) {
 		return determineCacheOperations(parser -> parser.parseCacheAnnotations(method));
 	}
 
@@ -139,7 +134,8 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 	 * @param provider the cache operation provider to use
 	 * @return the configured caching operations, or {@code null} if none found
 	 */
-	protected @Nullable Collection<CacheOperation> determineCacheOperations(CacheOperationProvider provider) {
+	@Nullable
+	protected Collection<CacheOperation> determineCacheOperations(CacheOperationProvider provider) {
 		Collection<CacheOperation> ops = null;
 		for (CacheAnnotationParser parser : this.annotationParsers) {
 			Collection<CacheOperation> annOps = provider.getCacheOperations(parser);
@@ -160,7 +156,6 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 
 	/**
 	 * By default, only public methods can be made cacheable.
-	 * @see #setPublicMethodsOnly
 	 */
 	@Override
 	protected boolean allowPublicMethodsOnly() {
@@ -170,9 +165,15 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof AnnotationCacheOperationSource otherCos &&
-				this.annotationParsers.equals(otherCos.annotationParsers) &&
-				this.publicMethodsOnly == otherCos.publicMethodsOnly));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof AnnotationCacheOperationSource)) {
+			return false;
+		}
+		AnnotationCacheOperationSource otherCos = (AnnotationCacheOperationSource) other;
+		return (this.annotationParsers.equals(otherCos.annotationParsers) &&
+				this.publicMethodsOnly == otherCos.publicMethodsOnly);
 	}
 
 	@Override
@@ -193,7 +194,8 @@ public class AnnotationCacheOperationSource extends AbstractFallbackCacheOperati
 		 * @param parser the parser to use
 		 * @return the cache operations, or {@code null} if none found
 		 */
-		@Nullable Collection<CacheOperation> getCacheOperations(CacheAnnotationParser parser);
+		@Nullable
+		Collection<CacheOperation> getCacheOperations(CacheAnnotationParser parser);
 	}
 
 }

@@ -32,7 +32,6 @@ import org.apache.camel.cloud.ServiceDiscovery;
 import org.apache.camel.cloud.ServiceFilter;
 import org.apache.camel.cloud.ServiceLoadBalancer;
 import org.apache.camel.model.NoOutputDefinition;
-import org.apache.camel.model.ProcessorDefinition;
 import org.apache.camel.model.language.RefExpression;
 import org.apache.camel.spi.Metadata;
 
@@ -42,7 +41,7 @@ import org.apache.camel.spi.Metadata;
 @Metadata(label = "eip,routing")
 @XmlRootElement(name = "serviceCall")
 @XmlAccessorType(XmlAccessType.FIELD)
-@Deprecated(since = "3.19.0")
+@Deprecated
 public class ServiceCallDefinition extends NoOutputDefinition<ServiceCallDefinition> {
     @XmlAttribute
     @Metadata(required = true)
@@ -53,7 +52,7 @@ public class ServiceCallDefinition extends NoOutputDefinition<ServiceCallDefinit
     @Metadata(defaultValue = ServiceCallDefinitionConstants.DEFAULT_COMPONENT)
     private String component;
     @XmlAttribute
-    @Metadata(javaType = "org.apache.camel.ExchangePattern", enums = "InOnly,InOut")
+    @Metadata(javaType = "org.apache.camel.ExchangePattern", enums = "InOnly,InOut,InOptionalOut")
     private String pattern;
     @XmlAttribute
     private String configurationRef;
@@ -108,12 +107,6 @@ public class ServiceCallDefinition extends NoOutputDefinition<ServiceCallDefinit
 
     public ServiceCallDefinition(String name) {
         this.name = name;
-    }
-
-    @Override
-    public ProcessorDefinition<?> copyDefinition() {
-        // deprecated so we do not implement copy
-        return this;
     }
 
     @Override

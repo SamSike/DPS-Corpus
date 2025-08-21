@@ -7,8 +7,8 @@ package org.jooq.meta.postgres.pg_catalog.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.ForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -82,17 +82,12 @@ public class PgCollation extends TableImpl<Record> {
     /**
      * The column <code>pg_catalog.pg_collation.collcollate</code>.
      */
-    public final TableField<Record, String> COLLCOLLATE = createField(DSL.name("collcollate"), SQLDataType.CLOB, this, "");
+    public final TableField<Record, String> COLLCOLLATE = createField(DSL.name("collcollate"), SQLDataType.VARCHAR.nullable(false), this, "");
 
     /**
      * The column <code>pg_catalog.pg_collation.collctype</code>.
      */
-    public final TableField<Record, String> COLLCTYPE = createField(DSL.name("collctype"), SQLDataType.CLOB, this, "");
-
-    /**
-     * The column <code>pg_catalog.pg_collation.colliculocale</code>.
-     */
-    public final TableField<Record, String> COLLICULOCALE = createField(DSL.name("colliculocale"), SQLDataType.CLOB, this, "");
+    public final TableField<Record, String> COLLCTYPE = createField(DSL.name("collctype"), SQLDataType.VARCHAR.nullable(false), this, "");
 
     /**
      * The column <code>pg_catalog.pg_collation.collversion</code>.
@@ -100,11 +95,11 @@ public class PgCollation extends TableImpl<Record> {
     public final TableField<Record, String> COLLVERSION = createField(DSL.name("collversion"), SQLDataType.CLOB, this, "");
 
     private PgCollation(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private PgCollation(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private PgCollation(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -126,6 +121,10 @@ public class PgCollation extends TableImpl<Record> {
      */
     public PgCollation() {
         this(DSL.name("pg_collation"), null);
+    }
+
+    public <O extends Record> PgCollation(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, PG_COLLATION);
     }
 
     @Override
@@ -153,8 +152,19 @@ public class PgCollation extends TableImpl<Record> {
         return new PgCollation(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public PgCollation as(Table<?> alias) {
-        return new PgCollation(alias.getQualifiedName(), this);
+    public PgCollation rename(String name) {
+        return new PgCollation(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public PgCollation rename(Name name) {
+        return new PgCollation(name, null);
     }
 }

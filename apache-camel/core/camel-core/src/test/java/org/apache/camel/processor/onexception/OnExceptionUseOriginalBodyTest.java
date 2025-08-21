@@ -52,10 +52,10 @@ public class OnExceptionUseOriginalBodyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // will not use original exchange
                 errorHandler(deadLetterChannel("mock:dead").disableRedelivery().logStackTrace(false).redeliveryDelay(0));
 

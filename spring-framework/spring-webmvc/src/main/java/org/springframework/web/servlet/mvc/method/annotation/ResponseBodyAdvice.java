@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,12 @@
 
 package org.springframework.web.servlet.mvc.method.annotation;
 
-import java.util.Map;
-
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.SmartHttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.lang.Nullable;
 
 /**
  * Allows customizing the response after the execution of an {@code @ResponseBody}
@@ -38,7 +34,6 @@ import org.springframework.http.server.ServerHttpResponse;
  * will be auto-detected by both.
  *
  * @author Rossen Stoyanchev
- * @author Sebastien Deleuze
  * @since 4.1
  * @param <T> the body type
  */
@@ -65,22 +60,9 @@ public interface ResponseBodyAdvice<T> {
 	 * @param response the current response
 	 * @return the body that was passed in or a modified (possibly new) instance
 	 */
-	@Nullable T beforeBodyWrite(@Nullable T body, MethodParameter returnType, MediaType selectedContentType,
+	@Nullable
+	T beforeBodyWrite(@Nullable T body, MethodParameter returnType, MediaType selectedContentType,
 			Class<? extends HttpMessageConverter<?>> selectedConverterType,
 			ServerHttpRequest request, ServerHttpResponse response);
-
-	/**
-	 * Invoked to determine write hints if the converter is a {@link SmartHttpMessageConverter}.
-	 * @param body the body to be written
-	 * @param returnType the return type of the controller method
-	 * @param selectedContentType the content type selected through content negotiation
-	 * @param selectedConverterType the converter type selected to write to the response
-	 * @return the hints determined otherwise {@code null}
-	 * @since 7.0
-	 */
-	default @Nullable Map<String, Object> determineWriteHints(@Nullable T body, MethodParameter returnType, MediaType selectedContentType,
-			Class<? extends HttpMessageConverter<?>> selectedConverterType) {
-		return null;
-	}
 
 }

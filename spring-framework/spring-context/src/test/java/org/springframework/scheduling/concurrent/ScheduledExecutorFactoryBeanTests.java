@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,15 +41,15 @@ import static org.springframework.core.testfixture.TestGroup.LONG_RUNNING;
 class ScheduledExecutorFactoryBeanTests {
 
 	@Test
-	void throwsExceptionIfPoolSizeIsLessThanZero() {
+	void throwsExceptionIfPoolSizeIsLessThanZero() throws Exception {
 		ScheduledExecutorFactoryBean factory = new ScheduledExecutorFactoryBean();
 		assertThatIllegalArgumentException().isThrownBy(() -> factory.setPoolSize(-1));
 	}
 
 	@Test
 	@SuppressWarnings("serial")
-	void shutdownNowIsPropagatedToTheExecutorOnDestroy() {
-		final ScheduledExecutorService executor = mock();
+	void shutdownNowIsPropagatedToTheExecutorOnDestroy() throws Exception {
+		final ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
 
 		ScheduledExecutorFactoryBean factory = new ScheduledExecutorFactoryBean() {
 			@Override
@@ -66,8 +66,8 @@ class ScheduledExecutorFactoryBeanTests {
 
 	@Test
 	@SuppressWarnings("serial")
-	void shutdownIsPropagatedToTheExecutorOnDestroy() {
-		final ScheduledExecutorService executor = mock();
+	void shutdownIsPropagatedToTheExecutorOnDestroy() throws Exception {
+		final ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
 
 		ScheduledExecutorFactoryBean factory = new ScheduledExecutorFactoryBean() {
 			@Override
@@ -85,8 +85,8 @@ class ScheduledExecutorFactoryBeanTests {
 
 	@Test
 	@EnabledForTestGroups(LONG_RUNNING)
-	void oneTimeExecutionIsSetUpAndFiresCorrectly() {
-		Runnable runnable = mock();
+	void oneTimeExecutionIsSetUpAndFiresCorrectly() throws Exception {
+		Runnable runnable = mock(Runnable.class);
 
 		ScheduledExecutorFactoryBean factory = new ScheduledExecutorFactoryBean();
 		factory.setScheduledExecutorTasks(new ScheduledExecutorTask(runnable));
@@ -99,8 +99,8 @@ class ScheduledExecutorFactoryBeanTests {
 
 	@Test
 	@EnabledForTestGroups(LONG_RUNNING)
-	void fixedRepeatedExecutionIsSetUpAndFiresCorrectly() {
-		Runnable runnable = mock();
+	void fixedRepeatedExecutionIsSetUpAndFiresCorrectly() throws Exception {
+		Runnable runnable = mock(Runnable.class);
 
 		ScheduledExecutorTask task = new ScheduledExecutorTask(runnable);
 		task.setPeriod(500);
@@ -117,8 +117,8 @@ class ScheduledExecutorFactoryBeanTests {
 
 	@Test
 	@EnabledForTestGroups(LONG_RUNNING)
-	void fixedRepeatedExecutionIsSetUpAndFiresCorrectlyAfterException() {
-		Runnable runnable = mock();
+	void fixedRepeatedExecutionIsSetUpAndFiresCorrectlyAfterException() throws Exception {
+		Runnable runnable = mock(Runnable.class);
 		willThrow(new IllegalStateException()).given(runnable).run();
 
 		ScheduledExecutorTask task = new ScheduledExecutorTask(runnable);
@@ -137,8 +137,8 @@ class ScheduledExecutorFactoryBeanTests {
 
 	@Test
 	@EnabledForTestGroups(LONG_RUNNING)
-	void withInitialDelayRepeatedExecutionIsSetUpAndFiresCorrectly() {
-		Runnable runnable = mock();
+	void withInitialDelayRepeatedExecutionIsSetUpAndFiresCorrectly() throws Exception {
+		Runnable runnable = mock(Runnable.class);
 
 		ScheduledExecutorTask task = new ScheduledExecutorTask(runnable);
 		task.setPeriod(500);
@@ -157,8 +157,8 @@ class ScheduledExecutorFactoryBeanTests {
 
 	@Test
 	@EnabledForTestGroups(LONG_RUNNING)
-	void withInitialDelayRepeatedExecutionIsSetUpAndFiresCorrectlyAfterException() {
-		Runnable runnable = mock();
+	void withInitialDelayRepeatedExecutionIsSetUpAndFiresCorrectlyAfterException() throws Exception {
+		Runnable runnable = mock(Runnable.class);
 		willThrow(new IllegalStateException()).given(runnable).run();
 
 		ScheduledExecutorTask task = new ScheduledExecutorTask(runnable);
@@ -179,13 +179,11 @@ class ScheduledExecutorFactoryBeanTests {
 
 	@Test
 	@SuppressWarnings("serial")
-	void settingThreadFactoryToNullForcesUseOfDefaultButIsOtherwiseCool() {
+	void settingThreadFactoryToNullForcesUseOfDefaultButIsOtherwiseCool() throws Exception {
 		ScheduledExecutorFactoryBean factory = new ScheduledExecutorFactoryBean() {
 			@Override
 			protected ScheduledExecutorService createExecutor(int poolSize, ThreadFactory threadFactory, RejectedExecutionHandler rejectedExecutionHandler) {
-				assertThat(threadFactory)
-						.withFailMessage("Bah; the setThreadFactory(..) method must use a default ThreadFactory if a null arg is passed in.")
-						.isNotNull();
+				assertThat("Bah; the setThreadFactory(..) method must use a default ThreadFactory if a null arg is passed in.").isNotNull();
 				return super.createExecutor(poolSize, threadFactory, rejectedExecutionHandler);
 			}
 		};
@@ -197,10 +195,11 @@ class ScheduledExecutorFactoryBeanTests {
 
 	@Test
 	@SuppressWarnings("serial")
-	void settingRejectedExecutionHandlerToNullForcesUseOfDefaultButIsOtherwiseCool() {
+	void settingRejectedExecutionHandlerToNullForcesUseOfDefaultButIsOtherwiseCool() throws Exception {
 		ScheduledExecutorFactoryBean factory = new ScheduledExecutorFactoryBean() {
 			@Override
 			protected ScheduledExecutorService createExecutor(int poolSize, ThreadFactory threadFactory, RejectedExecutionHandler rejectedExecutionHandler) {
+				assertThat("Bah; the setRejectedExecutionHandler(..) method must use a default RejectedExecutionHandler if a null arg is passed in.").isNotNull();
 				return super.createExecutor(poolSize, threadFactory, rejectedExecutionHandler);
 			}
 		};
@@ -211,7 +210,7 @@ class ScheduledExecutorFactoryBeanTests {
 	}
 
 	@Test
-	void objectTypeReportsCorrectType() {
+	void objectTypeReportsCorrectType() throws Exception {
 		ScheduledExecutorFactoryBean factory = new ScheduledExecutorFactoryBean();
 		assertThat(factory.getObjectType()).isEqualTo(ScheduledExecutorService.class);
 	}
@@ -219,7 +218,7 @@ class ScheduledExecutorFactoryBeanTests {
 
 	private static void pauseToLetTaskStart(int seconds) {
 		try {
-			Thread.sleep(seconds * 1000L);
+			Thread.sleep(seconds * 1000);
 		}
 		catch (InterruptedException ignored) {
 		}

@@ -32,7 +32,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.Configurer;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.PropertyBindingSupport;
 import org.apache.camel.support.ResourceHelper;
 
@@ -80,7 +79,7 @@ public class KnativeEnvironment {
 
     /**
      * Construct an instance o a {@link KnativeEnvironment} from a json serialized string.
-     *
+     * 
      * <pre>
      * {@code
      * {
@@ -118,7 +117,7 @@ public class KnativeEnvironment {
 
     /**
      * Construct an instance o a {@link KnativeEnvironment} from a properties.
-     *
+     * 
      * <pre>
      * {@code
      * resources[0].name = ...
@@ -134,7 +133,7 @@ public class KnativeEnvironment {
      * @throws IOException if an error occur while parsing the file
      */
     public static KnativeEnvironment mandatoryLoadFromProperties(CamelContext context, Map<String, Object> properties) {
-        final ExtendedCamelContext econtext = context.getCamelContextExtension();
+        final ExtendedCamelContext econtext = context.adapt(ExtendedCamelContext.class);
         final KnativeEnvironment environment = new KnativeEnvironment();
 
         PropertyBindingSupport.build()
@@ -144,8 +143,7 @@ public class KnativeEnvironment {
                 .withProperties(properties)
                 .withRemoveParameters(true)
                 .withConfigurer(
-                        PluginHelper.getConfigurerResolver(econtext)
-                                .resolvePropertyConfigurer(KnativeEnvironment.class.getName(), context))
+                        econtext.getConfigurerResolver().resolvePropertyConfigurer(KnativeEnvironment.class.getName(), context))
                 .withMandatory(true)
                 .bind();
 
@@ -154,7 +152,7 @@ public class KnativeEnvironment {
 
     /**
      * Construct an instance o a {@link KnativeEnvironment} from a json file.
-     *
+     * 
      * <pre>
      * {@code
      * {

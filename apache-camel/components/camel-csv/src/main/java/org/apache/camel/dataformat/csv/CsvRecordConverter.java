@@ -31,8 +31,8 @@ public interface CsvRecordConverter<T> {
     /**
      * Converts the CSV record into another type.
      *
-     * @param  csvRecord CSV record to convert
-     * @return           converted CSV record
+     * @param  record CSV record to convert
+     * @return        converted CSV record
      */
-    T convertRecord(CSVRecord csvRecord);
+    T convertRecord(CSVRecord record);
 }

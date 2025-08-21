@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.sax.SAXSource;
 
-import org.jspecify.annotations.Nullable;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.DTDHandler;
 import org.xml.sax.EntityResolver;
@@ -34,6 +33,7 @@ import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.ext.LexicalHandler;
 
+import org.springframework.lang.Nullable;
 import org.springframework.oxm.Marshaller;
 import org.springframework.util.Assert;
 
@@ -109,15 +109,20 @@ public class MarshallingSource extends SAXSource {
 
 		private final Object content;
 
-		private @Nullable DTDHandler dtdHandler;
+		@Nullable
+		private DTDHandler dtdHandler;
 
-		private @Nullable ContentHandler contentHandler;
+		@Nullable
+		private ContentHandler contentHandler;
 
-		private @Nullable EntityResolver entityResolver;
+		@Nullable
+		private EntityResolver entityResolver;
 
-		private @Nullable ErrorHandler errorHandler;
+		@Nullable
+		private ErrorHandler errorHandler;
 
-		private @Nullable LexicalHandler lexicalHandler;
+		@Nullable
+		private LexicalHandler lexicalHandler;
 
 		private MarshallingXMLReader(Marshaller marshaller, Object content) {
 			Assert.notNull(marshaller, "'marshaller' must not be null");
@@ -132,7 +137,8 @@ public class MarshallingSource extends SAXSource {
 		}
 
 		@Override
-		public @Nullable ContentHandler getContentHandler() {
+		@Nullable
+		public ContentHandler getContentHandler() {
 			return this.contentHandler;
 		}
 
@@ -142,7 +148,8 @@ public class MarshallingSource extends SAXSource {
 		}
 
 		@Override
-		public @Nullable DTDHandler getDTDHandler() {
+		@Nullable
+		public DTDHandler getDTDHandler() {
 			return this.dtdHandler;
 		}
 
@@ -152,7 +159,8 @@ public class MarshallingSource extends SAXSource {
 		}
 
 		@Override
-		public @Nullable EntityResolver getEntityResolver() {
+		@Nullable
+		public EntityResolver getEntityResolver() {
 			return this.entityResolver;
 		}
 
@@ -162,11 +170,13 @@ public class MarshallingSource extends SAXSource {
 		}
 
 		@Override
-		public @Nullable ErrorHandler getErrorHandler() {
+		@Nullable
+		public ErrorHandler getErrorHandler() {
 			return this.errorHandler;
 		}
 
-		protected @Nullable LexicalHandler getLexicalHandler() {
+		@Nullable
+		protected LexicalHandler getLexicalHandler() {
 			return this.lexicalHandler;
 		}
 
@@ -181,7 +191,8 @@ public class MarshallingSource extends SAXSource {
 		}
 
 		@Override
-		public @Nullable Object getProperty(String name) throws SAXNotRecognizedException {
+		@Nullable
+		public Object getProperty(String name) throws SAXNotRecognizedException {
 			if ("http://xml.org/sax/properties/lexical-handler".equals(name)) {
 				return this.lexicalHandler;
 			}

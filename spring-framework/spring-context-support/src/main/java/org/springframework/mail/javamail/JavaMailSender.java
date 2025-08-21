@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,10 @@
 package org.springframework.mail.javamail;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 import org.springframework.mail.MailException;
-import org.springframework.mail.MailParseException;
-import org.springframework.mail.MailPreparationException;
 import org.springframework.mail.MailSender;
 
 /**
@@ -97,9 +92,7 @@ public interface JavaMailSender extends MailSender {
 	 * in case of failure when sending the message
 	 * @see #createMimeMessage
 	 */
-	default void send(MimeMessage mimeMessage) throws MailException {
-		send(new MimeMessage[] {mimeMessage});
-	}
+	void send(MimeMessage mimeMessage) throws MailException;
 
 	/**
 	 * Send the given array of JavaMail MIME messages in batch.
@@ -128,9 +121,7 @@ public interface JavaMailSender extends MailSender {
 	 * @throws org.springframework.mail.MailSendException
 	 * in case of failure when sending the message
 	 */
-	default void send(MimeMessagePreparator mimeMessagePreparator) throws MailException {
-		send(new MimeMessagePreparator[] {mimeMessagePreparator});
-	}
+	void send(MimeMessagePreparator mimeMessagePreparator) throws MailException;
 
 	/**
 	 * Send the JavaMail MIME messages prepared by the given MimeMessagePreparators.
@@ -147,25 +138,6 @@ public interface JavaMailSender extends MailSender {
 	 * @throws org.springframework.mail.MailSendException
 	 * in case of failure when sending a message
 	 */
-	default void send(MimeMessagePreparator... mimeMessagePreparators) throws MailException {
-		try {
-			List<MimeMessage> mimeMessages = new ArrayList<>(mimeMessagePreparators.length);
-			for (MimeMessagePreparator preparator : mimeMessagePreparators) {
-				MimeMessage mimeMessage = createMimeMessage();
-				preparator.prepare(mimeMessage);
-				mimeMessages.add(mimeMessage);
-			}
-			send(mimeMessages.toArray(new MimeMessage[0]));
-		}
-		catch (MailException ex) {
-			throw ex;
-		}
-		catch (MessagingException ex) {
-			throw new MailParseException(ex);
-		}
-		catch (Exception ex) {
-			throw new MailPreparationException(ex);
-		}
-	}
+	void send(MimeMessagePreparator... mimeMessagePreparators) throws MailException;
 
 }

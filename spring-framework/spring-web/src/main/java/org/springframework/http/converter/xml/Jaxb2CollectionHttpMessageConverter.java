@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.springframework.http.converter.xml;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -38,7 +37,6 @@ import jakarta.xml.bind.UnmarshalException;
 import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
@@ -48,6 +46,7 @@ import org.springframework.http.converter.GenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.xml.StaxUtils;
 
@@ -60,7 +59,6 @@ import org.springframework.util.xml.StaxUtils;
  *
  * @author Arjen Poutsma
  * @author Rossen Stoyanchev
- * @author Sam Brannen
  * @since 3.2
  * @param <T> the converted object type
  */
@@ -88,12 +86,14 @@ public class Jaxb2CollectionHttpMessageConverter<T extends Collection>
 	 */
 	@Override
 	public boolean canRead(Type type, @Nullable Class<?> contextClass, @Nullable MediaType mediaType) {
-		if (!(type instanceof ParameterizedType parameterizedType)) {
+		if (!(type instanceof ParameterizedType)) {
 			return false;
 		}
-		if (!(parameterizedType.getRawType() instanceof Class<?> rawType)) {
+		ParameterizedType parameterizedType = (ParameterizedType) type;
+		if (!(parameterizedType.getRawType() instanceof Class)) {
 			return false;
 		}
+		Class<?> rawType = (Class<?>) parameterizedType.getRawType();
 		if (!(Collection.class.isAssignableFrom(rawType))) {
 			return false;
 		}
@@ -101,9 +101,10 @@ public class Jaxb2CollectionHttpMessageConverter<T extends Collection>
 			return false;
 		}
 		Type typeArgument = parameterizedType.getActualTypeArguments()[0];
-		if (!(typeArgument instanceof Class<?> typeArgumentClass)) {
+		if (!(typeArgument instanceof Class)) {
 			return false;
 		}
+		Class<?> typeArgumentClass = (Class<?>) typeArgument;
 		return (typeArgumentClass.isAnnotationPresent(XmlRootElement.class) ||
 				typeArgumentClass.isAnnotationPresent(XmlType.class)) && canRead(mediaType);
 	}
@@ -149,10 +150,7 @@ public class Jaxb2CollectionHttpMessageConverter<T extends Collection>
 
 		try {
 			Unmarshaller unmarshaller = createUnmarshaller(elementClass);
-			Charset detectedCharset = detectCharset(inputMessage.getHeaders());
-			XMLStreamReader streamReader = (detectedCharset != null) ?
-					this.inputFactory.createXMLStreamReader(inputMessage.getBody(), detectedCharset.name()) :
-					this.inputFactory.createXMLStreamReader(inputMessage.getBody());
+			XMLStreamReader streamReader = this.inputFactory.createXMLStreamReader(inputMessage.getBody());
 			int event = moveToFirstChildOfRootElement(streamReader);
 
 			while (event != XMLStreamReader.END_DOCUMENT) {
@@ -177,7 +175,7 @@ public class Jaxb2CollectionHttpMessageConverter<T extends Collection>
 		}
 		catch (UnmarshalException ex) {
 			throw new HttpMessageNotReadableException(
-					"Could not unmarshal to [" + elementClass + "]: " + ex, ex, inputMessage);
+					"Could not unmarshal to [" + elementClass + "]: " + ex.getMessage(), ex, inputMessage);
 		}
 		catch (JAXBException ex) {
 			throw new HttpMessageConversionException("Invalid JAXB setup: " + ex.getMessage(), ex);

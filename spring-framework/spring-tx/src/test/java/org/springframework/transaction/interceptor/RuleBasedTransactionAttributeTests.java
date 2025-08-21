@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,13 +35,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Chris Beams
  * @since 09.04.2003
  */
-class RuleBasedTransactionAttributeTests {
+public class RuleBasedTransactionAttributeTests {
 
 	@Test
-	void defaultRule() {
+	public void testDefaultRule() {
 		RuleBasedTransactionAttribute rta = new RuleBasedTransactionAttribute();
 		assertThat(rta.rollbackOn(new RuntimeException())).isTrue();
-		assertThat(rta.rollbackOn(new MyRuntimeException())).isTrue();
+		assertThat(rta.rollbackOn(new MyRuntimeException(""))).isTrue();
 		assertThat(rta.rollbackOn(new Exception())).isFalse();
 		assertThat(rta.rollbackOn(new IOException())).isFalse();
 	}
@@ -50,20 +50,20 @@ class RuleBasedTransactionAttributeTests {
 	 * Test one checked exception that should roll back.
 	 */
 	@Test
-	void ruleForRollbackOnChecked() {
+	public void testRuleForRollbackOnChecked() {
 		List<RollbackRuleAttribute> list = new ArrayList<>();
 		list.add(new RollbackRuleAttribute(IOException.class.getName()));
 		RuleBasedTransactionAttribute rta = new RuleBasedTransactionAttribute(TransactionDefinition.PROPAGATION_REQUIRED, list);
 
 		assertThat(rta.rollbackOn(new RuntimeException())).isTrue();
-		assertThat(rta.rollbackOn(new MyRuntimeException())).isTrue();
+		assertThat(rta.rollbackOn(new MyRuntimeException(""))).isTrue();
 		assertThat(rta.rollbackOn(new Exception())).isFalse();
 		// Check that default behaviour is overridden
 		assertThat(rta.rollbackOn(new IOException())).isTrue();
 	}
 
 	@Test
-	void ruleForCommitOnUnchecked() {
+	public void testRuleForCommitOnUnchecked() {
 		List<RollbackRuleAttribute> list = new ArrayList<>();
 		list.add(new NoRollbackRuleAttribute(MyRuntimeException.class.getName()));
 		list.add(new RollbackRuleAttribute(IOException.class.getName()));
@@ -71,14 +71,14 @@ class RuleBasedTransactionAttributeTests {
 
 		assertThat(rta.rollbackOn(new RuntimeException())).isTrue();
 		// Check default behaviour is overridden
-		assertThat(rta.rollbackOn(new MyRuntimeException())).isFalse();
+		assertThat(rta.rollbackOn(new MyRuntimeException(""))).isFalse();
 		assertThat(rta.rollbackOn(new Exception())).isFalse();
 		// Check that default behaviour is overridden
 		assertThat(rta.rollbackOn(new IOException())).isTrue();
 	}
 
 	@Test
-	void ruleForSelectiveRollbackOnCheckedWithString() {
+	public void testRuleForSelectiveRollbackOnCheckedWithString() {
 		List<RollbackRuleAttribute> l = new ArrayList<>();
 		l.add(new RollbackRuleAttribute(java.rmi.RemoteException.class.getName()));
 		RuleBasedTransactionAttribute rta = new RuleBasedTransactionAttribute(TransactionDefinition.PROPAGATION_REQUIRED, l);
@@ -86,7 +86,7 @@ class RuleBasedTransactionAttributeTests {
 	}
 
 	@Test
-	void ruleForSelectiveRollbackOnCheckedWithClass() {
+	public void testRuleForSelectiveRollbackOnCheckedWithClass() {
 		List<RollbackRuleAttribute> l = Collections.singletonList(new RollbackRuleAttribute(RemoteException.class));
 		RuleBasedTransactionAttribute rta = new RuleBasedTransactionAttribute(TransactionDefinition.PROPAGATION_REQUIRED, l);
 		doTestRuleForSelectiveRollbackOnChecked(rta);
@@ -105,10 +105,10 @@ class RuleBasedTransactionAttributeTests {
 	 * when Exception prompts a rollback.
 	 */
 	@Test
-	void ruleForCommitOnSubclassOfChecked() {
+	public void testRuleForCommitOnSubclassOfChecked() {
 		List<RollbackRuleAttribute> list = new ArrayList<>();
-		// Note that it's important to ensure that we have this as a
-		// fully-qualified class name: otherwise it will match everything!
+		// Note that it's important to ensure that we have this as
+		// a FQN: otherwise it will match everything!
 		list.add(new RollbackRuleAttribute("java.lang.Exception"));
 		list.add(new NoRollbackRuleAttribute("IOException"));
 		RuleBasedTransactionAttribute rta = new RuleBasedTransactionAttribute(TransactionDefinition.PROPAGATION_REQUIRED, list);
@@ -120,20 +120,20 @@ class RuleBasedTransactionAttributeTests {
 	}
 
 	@Test
-	void rollbackNever() {
+	public void testRollbackNever() {
 		List<RollbackRuleAttribute> list = new ArrayList<>();
 		list.add(new NoRollbackRuleAttribute("Throwable"));
 		RuleBasedTransactionAttribute rta = new RuleBasedTransactionAttribute(TransactionDefinition.PROPAGATION_REQUIRED, list);
 
 		assertThat(rta.rollbackOn(new Throwable())).isFalse();
 		assertThat(rta.rollbackOn(new RuntimeException())).isFalse();
-		assertThat(rta.rollbackOn(new MyRuntimeException())).isFalse();
+		assertThat(rta.rollbackOn(new MyRuntimeException(""))).isFalse();
 		assertThat(rta.rollbackOn(new Exception())).isFalse();
 		assertThat(rta.rollbackOn(new IOException())).isFalse();
 	}
 
 	@Test
-	void toStringMatchesEditor() {
+	public void testToStringMatchesEditor() {
 		List<RollbackRuleAttribute> list = new ArrayList<>();
 		list.add(new NoRollbackRuleAttribute("Throwable"));
 		RuleBasedTransactionAttribute rta = new RuleBasedTransactionAttribute(TransactionDefinition.PROPAGATION_REQUIRED, list);
@@ -144,7 +144,7 @@ class RuleBasedTransactionAttributeTests {
 
 		assertThat(rta.rollbackOn(new Throwable())).isFalse();
 		assertThat(rta.rollbackOn(new RuntimeException())).isFalse();
-		assertThat(rta.rollbackOn(new MyRuntimeException())).isFalse();
+		assertThat(rta.rollbackOn(new MyRuntimeException(""))).isFalse();
 		assertThat(rta.rollbackOn(new Exception())).isFalse();
 		assertThat(rta.rollbackOn(new IOException())).isFalse();
 	}
@@ -153,7 +153,7 @@ class RuleBasedTransactionAttributeTests {
 	 * See <a href="https://forum.springframework.org/showthread.php?t=41350">this forum post</a>.
 	 */
 	@Test
-	void conflictingRulesToDetermineExactContract() {
+	public void testConflictingRulesToDetermineExactContract() {
 		List<RollbackRuleAttribute> list = new ArrayList<>();
 		list.add(new NoRollbackRuleAttribute(MyBusinessWarningException.class));
 		list.add(new RollbackRuleAttribute(MyBusinessException.class));

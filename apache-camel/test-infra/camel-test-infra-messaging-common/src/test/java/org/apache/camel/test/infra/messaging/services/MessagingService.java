@@ -14,12 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.camel.test.infra.messaging.services;
 
 import org.apache.camel.test.infra.common.services.TestService;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-/**
- * Test infra service for Messaging
- */
-public interface MessagingService extends TestService, MessagingInfraService {
+public interface MessagingService extends TestService, BeforeAllCallback, AfterAllCallback {
+
+    /**
+     * Gets the default endpoint for the messaging service (ie.: amqp://host:port, or tcp://host:port, etc)
+     *
+     * @return the endpoint URL as a string in the specific format used by the service
+     */
+    String defaultEndpoint();
+
+    @Override
+    default void beforeAll(ExtensionContext extensionContext) throws Exception {
+        initialize();
+    }
+
+    @Override
+    default void afterAll(ExtensionContext extensionContext) throws Exception {
+        shutdown();
+    }
 }

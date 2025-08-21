@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class DebugExceptionEventBreakpointTest extends ContextTestSupport {
 
-    private final List<String> logs = new ArrayList<>();
+    private List<String> logs = new ArrayList<>();
     private Condition exceptionCondition;
     private Breakpoint breakpoint;
 
@@ -84,10 +84,10 @@ public class DebugExceptionEventBreakpointTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // turn on debugging
                 context.setDebugging(true);
                 context.setDebugger(new DefaultDebugger());

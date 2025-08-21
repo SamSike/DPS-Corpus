@@ -29,8 +29,6 @@ public class JdbcAggregationRepositoryRecoverExistingTest extends AbstractJdbcAg
 
     @Override
     void configureJdbcAggregationRepository() {
-        super.configureJdbcAggregationRepository();
-
         repo.setReturnOldExchange(true);
         repo.setUseRecovery(true);
     }
@@ -39,8 +37,6 @@ public class JdbcAggregationRepositoryRecoverExistingTest extends AbstractJdbcAg
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
-                configureJdbcAggregationRepository();
-
                 // no routes added by default
             }
         };
@@ -54,7 +50,7 @@ public class JdbcAggregationRepositoryRecoverExistingTest extends AbstractJdbcAg
         Exchange exchange1 = new DefaultExchange(context);
         exchange1.getIn().setBody("counter:1");
         Exchange actual = repo.add(context, "foo", exchange1);
-        assertNull(actual);
+        assertEquals(null, actual);
 
         // Get and remove it, which makes it in the pre confirm stage
         exchange1 = repo.get(context, "foo");

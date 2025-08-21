@@ -41,10 +41,10 @@ public class FileSplitStreamingWithChoiceTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?initialDelay=0&delay=10")).split(body().tokenize(LS)).streaming()
                         .to("mock:split").choice().when(bodyAs(String.class).isNotNull())
                         .to("mock:body").otherwise().to("mock:other").end();

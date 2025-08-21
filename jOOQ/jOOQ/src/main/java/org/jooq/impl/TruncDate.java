@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,7 +37,6 @@
  */
 package org.jooq.impl;
 
-import static org.jooq.DatePart.YEAR;
 import static org.jooq.impl.DSL.function;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.keyword;
@@ -45,7 +44,6 @@ import static org.jooq.impl.Keywords.K_CAST;
 import static org.jooq.impl.Names.N_DATETIME_TRUNC;
 import static org.jooq.impl.Names.N_DATE_TRUNC;
 import static org.jooq.impl.Names.N_TRUNC;
-import static org.jooq.impl.SQLDataType.VARCHAR;
 import static org.jooq.impl.Tools.castIfNeeded;
 
 import java.sql.Date;
@@ -75,7 +73,6 @@ final class TruncDate<T> extends AbstractField<T> implements UNotYetImplemented 
         String keyword = null;
         String format = null;
 
-        familySwitch:
         switch (ctx.family()) {
 
             // [http://jira.cubrid.org/browse/ENGINE-120] This currently doesn't work for all date parts in CUBRID
@@ -88,7 +85,7 @@ final class TruncDate<T> extends AbstractField<T> implements UNotYetImplemented 
                     case HOUR:   keyword = "HH"; break;
                     case MINUTE: keyword = "MI"; break;
                     case SECOND: keyword = "SS"; break;
-                    default: acceptDefaultEmulation(ctx); break familySwitch;
+                    default: throwUnsupported();
                 }
 
                 ctx.visit(N_TRUNC).sql('(').visit(date).sql(", ").visit(inline(keyword)).sql(')');
@@ -103,7 +100,7 @@ final class TruncDate<T> extends AbstractField<T> implements UNotYetImplemented 
                     case HOUR:   format = "yyyy-MM-dd HH";       break;
                     case MINUTE: format = "yyyy-MM-dd HH:mm";    break;
                     case SECOND: format = "yyyy-MM-dd HH:mm:ss"; break;
-                    default: acceptDefaultEmulation(ctx); break familySwitch;
+                    default: throwUnsupported();
                 }
 
                 ctx.visit(DSL.keyword("parsedatetime")).sql('(')
@@ -132,7 +129,17 @@ final class TruncDate<T> extends AbstractField<T> implements UNotYetImplemented 
 
             case POSTGRES:
             case YUGABYTEDB: {
-                ctx.visit(N_DATE_TRUNC).sql('(').visit(inline(part.toKeyword().toString())).sql(", ").visit(date).sql(')');
+                switch (part) {
+                    case YEAR:   keyword = "year";   break;
+                    case MONTH:  keyword = "month";  break;
+                    case DAY:    keyword = "day";    break;
+                    case HOUR:   keyword = "hour";   break;
+                    case MINUTE: keyword = "minute"; break;
+                    case SECOND: keyword = "second"; break;
+                    default: throwUnsupported();
+                }
+
+                ctx.visit(N_DATE_TRUNC).sql('(').visit(inline(keyword)).sql(", ").visit(date).sql(')');
                 break;
             }
 
@@ -247,45 +254,6 @@ final class TruncDate<T> extends AbstractField<T> implements UNotYetImplemented 
                 ctx.visit(N_TRUNC).sql('(').visit(date).sql(", ").visit(inline(keyword)).sql(')');
                 break;
         }
-    }
-
-    private final void acceptDefaultEmulation(Context<?> ctx) {
-        switch (part) {
-            case DECADE:
-                ctx.visit(padYear(ctx, 3, DSL.extract(date, part)).concat(dateOrTimestampLiteral("0-01-01")).cast(getDataType()));
-                break;
-
-            case CENTURY:
-                ctx.visit(padYear(ctx, 2, DSL.extract(date, part).minus(inline(1))).concat(dateOrTimestampLiteral("01-01-01")).cast(getDataType()));
-                break;
-
-            case MILLENNIUM:
-                ctx.visit(DSL.extract(date, part).minus(inline(1)).cast(VARCHAR(10)).concat(dateOrTimestampLiteral("001-01-01")).cast(getDataType()));
-                break;
-
-            case QUARTER:
-                ctx.visit(padYear(ctx, 4, DSL.extract(date, YEAR)).concat(inline("-")).concat(DSL.extract(date, part).minus(inline(1)).times(inline(3)).plus(inline(1)).cast(VARCHAR(10))).concat(dateOrTimestampLiteral("-01")).cast(getDataType()));
-                break;
-
-            default:
-                throwUnsupported();
-                break;
-        }
-    }
-
-    private final Field<String> padYear(Context<?> ctx, int length, Field<Integer> year) {
-        switch (ctx.family()) {
-
-            case HSQLDB:
-                return DSL.lpad(year.cast(VARCHAR(10)), inline(length), inline("0"));
-
-            default:
-                return year.cast(VARCHAR(10));
-        }
-    }
-
-    private final Field<String> dateOrTimestampLiteral(String string) {
-        return DSL.inline(getDataType().isDate() ? string : string + " 00:00:00");
     }
 
     private final void throwUnsupported() {

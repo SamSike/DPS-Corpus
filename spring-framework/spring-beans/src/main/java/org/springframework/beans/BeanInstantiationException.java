@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package org.springframework.beans;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Exception thrown when instantiation of a bean failed.
@@ -33,9 +33,11 @@ public class BeanInstantiationException extends FatalBeanException {
 
 	private final Class<?> beanClass;
 
-	private final @Nullable Constructor<?> constructor;
+	@Nullable
+	private final Constructor<?> constructor;
 
-	private final @Nullable Method constructingMethod;
+	@Nullable
+	private final Method constructingMethod;
 
 
 	/**
@@ -67,7 +69,7 @@ public class BeanInstantiationException extends FatalBeanException {
 	 * @param cause the root cause
 	 * @since 4.3
 	 */
-	public BeanInstantiationException(Constructor<?> constructor, @Nullable String msg, @Nullable Throwable cause) {
+	public BeanInstantiationException(Constructor<?> constructor, String msg, @Nullable Throwable cause) {
 		super("Failed to instantiate [" + constructor.getDeclaringClass().getName() + "]: " + msg, cause);
 		this.beanClass = constructor.getDeclaringClass();
 		this.constructor = constructor;
@@ -82,7 +84,7 @@ public class BeanInstantiationException extends FatalBeanException {
 	 * @param cause the root cause
 	 * @since 4.3
 	 */
-	public BeanInstantiationException(Method constructingMethod, @Nullable String msg, @Nullable Throwable cause) {
+	public BeanInstantiationException(Method constructingMethod, String msg, @Nullable Throwable cause) {
 		super("Failed to instantiate [" + constructingMethod.getReturnType().getName() + "]: " + msg, cause);
 		this.beanClass = constructingMethod.getReturnType();
 		this.constructor = null;
@@ -104,7 +106,8 @@ public class BeanInstantiationException extends FatalBeanException {
 	 * factory method or in case of default instantiation
 	 * @since 4.3
 	 */
-	public @Nullable Constructor<?> getConstructor() {
+	@Nullable
+	public Constructor<?> getConstructor() {
 		return this.constructor;
 	}
 
@@ -114,7 +117,8 @@ public class BeanInstantiationException extends FatalBeanException {
 	 * or {@code null} in case of constructor-based instantiation
 	 * @since 4.3
 	 */
-	public @Nullable Method getConstructingMethod() {
+	@Nullable
+	public Method getConstructingMethod() {
 		return this.constructingMethod;
 	}
 

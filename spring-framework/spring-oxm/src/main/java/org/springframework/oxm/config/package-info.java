@@ -1,7 +1,9 @@
 /**
  * Provides an namespace handler for the Spring Object/XML namespace.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.oxm.config;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -85,7 +85,7 @@ public class ValidatorWithResourceResolverRouteTest extends ContextTestSupport {
 
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").doTry()
                         .to("validator:org/apache/camel/component/validator/report.xsd?resourceResolver=#resourceResolver")
                         .to("mock:valid")

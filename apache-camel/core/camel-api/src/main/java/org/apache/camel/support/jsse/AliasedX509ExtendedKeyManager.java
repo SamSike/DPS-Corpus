@@ -30,12 +30,12 @@ import javax.net.ssl.X509KeyManager;
  * with server and client sockets
  */
 public class AliasedX509ExtendedKeyManager extends X509ExtendedKeyManager {
-    private final String keyAlias;
-    private final X509KeyManager keyManager;
+    private String keyAlias;
+    private X509KeyManager keyManager;
 
     /**
      * Construct KeyManager instance
-     *
+     * 
      * @param keyAlias   Alias of the key to be selected
      * @param keyManager Instance of KeyManager to be wrapped
      */

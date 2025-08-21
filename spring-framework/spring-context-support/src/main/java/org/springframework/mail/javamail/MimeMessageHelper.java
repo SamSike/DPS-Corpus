@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ import jakarta.activation.FileTypeMap;
 import jakarta.mail.BodyPart;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
-import jakarta.mail.Part;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
@@ -38,12 +37,11 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimePart;
 import jakarta.mail.internet.MimeUtility;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.MimeTypeUtils;
 
 /**
  * Helper class for populating a {@link jakarta.mail.internet.MimeMessage}.
@@ -93,7 +91,6 @@ import org.springframework.util.MimeTypeUtils;
  * on the MULTIPART_MODE constants contains more detailed information.
  *
  * @author Juergen Hoeller
- * @author Sam Brannen
  * @since 19.01.2004
  * @see #setText(String, boolean)
  * @see #setText(String, String)
@@ -165,11 +162,14 @@ public class MimeMessageHelper {
 
 	private final MimeMessage mimeMessage;
 
-	private @Nullable MimeMultipart rootMimeMultipart;
+	@Nullable
+	private MimeMultipart rootMimeMultipart;
 
-	private @Nullable MimeMultipart mimeMultipart;
+	@Nullable
+	private MimeMultipart mimeMultipart;
 
-	private final @Nullable String encoding;
+	@Nullable
+	private final String encoding;
 
 	private FileTypeMap fileTypeMap;
 
@@ -331,18 +331,20 @@ public class MimeMessageHelper {
 	 */
 	protected void createMimeMultiparts(MimeMessage mimeMessage, int multipartMode) throws MessagingException {
 		switch (multipartMode) {
-			case MULTIPART_MODE_NO -> setMimeMultiparts(null, null);
-			case MULTIPART_MODE_MIXED -> {
+			case MULTIPART_MODE_NO:
+				setMimeMultiparts(null, null);
+				break;
+			case MULTIPART_MODE_MIXED:
 				MimeMultipart mixedMultipart = new MimeMultipart(MULTIPART_SUBTYPE_MIXED);
 				mimeMessage.setContent(mixedMultipart);
 				setMimeMultiparts(mixedMultipart, mixedMultipart);
-			}
-			case MULTIPART_MODE_RELATED -> {
+				break;
+			case MULTIPART_MODE_RELATED:
 				MimeMultipart relatedMultipart = new MimeMultipart(MULTIPART_SUBTYPE_RELATED);
 				mimeMessage.setContent(relatedMultipart);
 				setMimeMultiparts(relatedMultipart, relatedMultipart);
-			}
-			case MULTIPART_MODE_MIXED_RELATED -> {
+				break;
+			case MULTIPART_MODE_MIXED_RELATED:
 				MimeMultipart rootMixedMultipart = new MimeMultipart(MULTIPART_SUBTYPE_MIXED);
 				mimeMessage.setContent(rootMixedMultipart);
 				MimeMultipart nestedRelatedMultipart = new MimeMultipart(MULTIPART_SUBTYPE_RELATED);
@@ -350,8 +352,8 @@ public class MimeMessageHelper {
 				relatedBodyPart.setContent(nestedRelatedMultipart);
 				rootMixedMultipart.addBodyPart(relatedBodyPart);
 				setMimeMultiparts(rootMixedMultipart, nestedRelatedMultipart);
-			}
-			default ->
+				break;
+			default:
 				throw new IllegalArgumentException("Only multipart modes MIXED_RELATED, RELATED and NO supported");
 		}
 	}
@@ -423,9 +425,10 @@ public class MimeMessageHelper {
 	 * @return the default encoding associated with the MimeMessage,
 	 * or {@code null} if none found
 	 */
-	protected @Nullable String getDefaultEncoding(MimeMessage mimeMessage) {
-		if (mimeMessage instanceof SmartMimeMessage smartMimeMessage) {
-			return smartMimeMessage.getDefaultEncoding();
+	@Nullable
+	protected String getDefaultEncoding(MimeMessage mimeMessage) {
+		if (mimeMessage instanceof SmartMimeMessage) {
+			return ((SmartMimeMessage) mimeMessage).getDefaultEncoding();
 		}
 		return null;
 	}
@@ -433,7 +436,8 @@ public class MimeMessageHelper {
 	/**
 	 * Return the specific character encoding used for this message, if any.
 	 */
-	public @Nullable String getEncoding() {
+	@Nullable
+	public String getEncoding() {
 		return this.encoding;
 	}
 
@@ -445,8 +449,8 @@ public class MimeMessageHelper {
 	 * @see ConfigurableMimeFileTypeMap
 	 */
 	protected FileTypeMap getDefaultFileTypeMap(MimeMessage mimeMessage) {
-		if (mimeMessage instanceof SmartMimeMessage smartMimeMessage) {
-			FileTypeMap fileTypeMap = smartMimeMessage.getDefaultFileTypeMap();
+		if (mimeMessage instanceof SmartMimeMessage) {
+			FileTypeMap fileTypeMap = ((SmartMimeMessage) mimeMessage).getDefaultFileTypeMap();
 			if (fileTypeMap != null) {
 				return fileTypeMap;
 			}
@@ -892,7 +896,7 @@ public class MimeMessageHelper {
 	 * <p><b>NOTE:</b> Invoke {@code addInline} <i>after</i> {@link #setText};
 	 * else, mail readers might not be able to resolve inline references correctly.
 	 * @param contentId the content ID to use. Will end up as "Content-ID" header
-	 * in the body part, surrounded by angle brackets: for example, "myId" &rarr; "&lt;myId&gt;".
+	 * in the body part, surrounded by angle brackets: e.g. "myId" -> "&lt;myId&gt;".
 	 * Can be referenced in HTML source via src="cid:myId" expressions.
 	 * @param dataSource the {@code jakarta.activation.DataSource} to take
 	 * the content from, determining the InputStream and the content type
@@ -901,47 +905,12 @@ public class MimeMessageHelper {
 	 * @see #addInline(String, org.springframework.core.io.Resource)
 	 */
 	public void addInline(String contentId, DataSource dataSource) throws MessagingException {
-		addInline(contentId, null, dataSource);
-	}
-
-	/**
-	 * Add an inline element to the MimeMessage, taking the content from a
-	 * {@code jakarta.activation.DataSource} and assigning the provided
-	 * {@code inlineFileName} to the element.
-	 * <p>Note that the InputStream returned by the DataSource implementation
-	 * needs to be a <i>fresh one on each call</i>, as JavaMail will invoke
-	 * {@code getInputStream()} multiple times.
-	 * <p><b>NOTE:</b> Invoke {@code addInline} <i>after</i> {@link #setText};
-	 * else, mail readers might not be able to resolve inline references correctly.
-	 * @param contentId the content ID to use. Will end up as "Content-ID" header
-	 * in the body part, surrounded by angle brackets: for example, "myId" &rarr; "&lt;myId&gt;".
-	 * Can be referenced in HTML source via src="cid:myId" expressions.
-	 * @param inlineFilename the fileName to use for the inline element's part
-	 * @param dataSource the {@code jakarta.activation.DataSource} to take
-	 * the content from, determining the InputStream and the content type
-	 * @throws MessagingException in case of errors
-	 * @since 6.2
-	 * @see #addInline(String, java.io.File)
-	 * @see #addInline(String, org.springframework.core.io.Resource)
-	 */
-	public void addInline(String contentId, @Nullable String inlineFilename, DataSource dataSource)
-			throws MessagingException {
-
 		Assert.notNull(contentId, "Content ID must not be null");
 		Assert.notNull(dataSource, "DataSource must not be null");
 		MimeBodyPart mimeBodyPart = new MimeBodyPart();
-		mimeBodyPart.setDisposition(Part.INLINE);
+		mimeBodyPart.setDisposition(MimeBodyPart.INLINE);
 		mimeBodyPart.setContentID("<" + contentId + ">");
 		mimeBodyPart.setDataHandler(new DataHandler(dataSource));
-		if (inlineFilename != null) {
-			try {
-			mimeBodyPart.setFileName(isEncodeFilenames() ?
-					MimeUtility.encodeText(inlineFilename) : inlineFilename);
-			}
-			catch (UnsupportedEncodingException ex) {
-				throw new MessagingException("Failed to encode inline filename", ex);
-			}
-		}
 		getMimeMultipart().addBodyPart(mimeBodyPart);
 	}
 
@@ -954,7 +923,7 @@ public class MimeMessageHelper {
 	 * <p><b>NOTE:</b> Invoke {@code addInline} <i>after</i> {@link #setText};
 	 * else, mail readers might not be able to resolve inline references correctly.
 	 * @param contentId the content ID to use. Will end up as "Content-ID" header
-	 * in the body part, surrounded by angle brackets: for example, "myId" &rarr; "&lt;myId&gt;".
+	 * in the body part, surrounded by angle brackets: e.g. "myId" -> "&lt;myId&gt;".
 	 * Can be referenced in HTML source via src="cid:myId" expressions.
 	 * @param file the File resource to take the content from
 	 * @throws MessagingException in case of errors
@@ -981,7 +950,7 @@ public class MimeMessageHelper {
 	 * <p><b>NOTE:</b> Invoke {@code addInline} <i>after</i> {@link #setText};
 	 * else, mail readers might not be able to resolve inline references correctly.
 	 * @param contentId the content ID to use. Will end up as "Content-ID" header
-	 * in the body part, surrounded by angle brackets: for example, "myId" &rarr; "&lt;myId&gt;".
+	 * in the body part, surrounded by angle brackets: e.g. "myId" -> "&lt;myId&gt;".
 	 * Can be referenced in HTML source via src="cid:myId" expressions.
 	 * @param resource the resource to take the content from
 	 * @throws MessagingException in case of errors
@@ -991,8 +960,7 @@ public class MimeMessageHelper {
 	 */
 	public void addInline(String contentId, Resource resource) throws MessagingException {
 		Assert.notNull(resource, "Resource must not be null");
-		String contentType = (resource.getFilename() != null ?
-				getFileTypeMap().getContentType(resource.getFilename()) : MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE);
+		String contentType = getFileTypeMap().getContentType(resource.getFilename());
 		addInline(contentId, resource, contentType);
 	}
 
@@ -1008,7 +976,7 @@ public class MimeMessageHelper {
 	 * <p><b>NOTE:</b> Invoke {@code addInline} <i>after</i> {@code setText};
 	 * else, mail readers might not be able to resolve inline references correctly.
 	 * @param contentId the content ID to use. Will end up as "Content-ID" header
-	 * in the body part, surrounded by angle brackets: for example, "myId" &rarr; "&lt;myId&gt;".
+	 * in the body part, surrounded by angle brackets: e.g. "myId" -> "&lt;myId&gt;".
 	 * Can be referenced in HTML source via src="cid:myId" expressions.
 	 * @param inputStreamSource the resource to take the content from
 	 * @param contentType the content type to use for the element
@@ -1021,75 +989,14 @@ public class MimeMessageHelper {
 	public void addInline(String contentId, InputStreamSource inputStreamSource, String contentType)
 			throws MessagingException {
 
-		addInline(contentId, "inline", inputStreamSource, contentType);
-	}
-
-	/**
-	 * Add an inline element to the MimeMessage, taking the content from an
-	 * {@code org.springframework.core.InputStreamResource}, and
-	 * specifying the inline fileName explicitly.
-	 * <p>The content type will be determined by the name of the given
-	 * content file. Do not use this for temporary files with arbitrary
-	 * filenames (possibly ending in ".tmp" or the like)!
-	 * <p>Note that the InputStream returned by the InputStreamSource implementation
-	 * needs to be a <i>fresh one on each call</i>, as JavaMail will invoke
-	 * {@code getInputStream()} multiple times.
-	 * <p><b>NOTE:</b> Invoke {@code addInline} <i>after</i> {@code setText};
-	 * else, mail readers might not be able to resolve inline references correctly.
-	 * @param contentId the content ID to use. Will end up as "Content-ID" header
-	 * in the body part, surrounded by angle brackets: for example, "myId" &rarr; "&lt;myId&gt;".
-	 * Can be referenced in HTML source via src="cid:myId" expressions.
-	 * @param inlineFilename the file name to use for the inline element
-	 * @param inputStreamSource the resource to take the content from
-	 * @throws MessagingException in case of errors
-	 * @since 6.2
-	 * @see #setText(String)
-	 * @see #getFileTypeMap
-	 * @see #addInline(String, org.springframework.core.io.Resource)
-	 * @see #addInline(String, String, jakarta.activation.DataSource)
-	 */
-	public void addInline(String contentId, String inlineFilename, InputStreamSource inputStreamSource)
-			throws MessagingException {
-
-		String contentType = getFileTypeMap().getContentType(inlineFilename);
-		addInline(contentId, inlineFilename, inputStreamSource, contentType);
-	}
-
-	/**
-	 * Add an inline element to the MimeMessage, taking the content from an
-	 * {@code org.springframework.core.InputStreamResource}, and
-	 * specifying the inline fileName and content type explicitly.
-	 * <p>You can determine the content type for any given filename via a Java
-	 * Activation Framework's FileTypeMap, for example the one held by this helper.
-	 * <p>Note that the InputStream returned by the InputStreamSource implementation
-	 * needs to be a <i>fresh one on each call</i>, as JavaMail will invoke
-	 * {@code getInputStream()} multiple times.
-	 * <p><b>NOTE:</b> Invoke {@code addInline} <i>after</i> {@code setText};
-	 * else, mail readers might not be able to resolve inline references correctly.
-	 * @param contentId the content ID to use. Will end up as "Content-ID" header
-	 * in the body part, surrounded by angle brackets: for example, "myId" &rarr; "&lt;myId&gt;".
-	 * Can be referenced in HTML source via src="cid:myId" expressions.
-	 * @param inlineFilename the fileName to use for the inline element's part
-	 * @param inputStreamSource the resource to take the content from
-	 * @param contentType the content type to use for the element
-	 * @throws MessagingException in case of errors
-	 * @since 6.2
-	 * @see #setText
-	 * @see #getFileTypeMap
-	 * @see #addInline(String, org.springframework.core.io.Resource)
-	 * @see #addInline(String, String, jakarta.activation.DataSource)
-	 */
-	public void addInline(String contentId, String inlineFilename, InputStreamSource inputStreamSource, String contentType)
-			throws MessagingException {
-
 		Assert.notNull(inputStreamSource, "InputStreamSource must not be null");
-		if (inputStreamSource instanceof Resource resource && resource.isOpen()) {
+		if (inputStreamSource instanceof Resource && ((Resource) inputStreamSource).isOpen()) {
 			throw new IllegalArgumentException(
 					"Passed-in Resource contains an open stream: invalid argument. " +
 					"JavaMail requires an InputStreamSource that creates a fresh stream for every call.");
 		}
-		DataSource dataSource = createDataSource(inputStreamSource, contentType, inlineFilename);
-		addInline(contentId, inlineFilename, dataSource);
+		DataSource dataSource = createDataSource(inputStreamSource, contentType, "inline");
+		addInline(contentId, dataSource);
 	}
 
 	/**
@@ -1111,7 +1018,7 @@ public class MimeMessageHelper {
 		Assert.notNull(dataSource, "DataSource must not be null");
 		try {
 			MimeBodyPart mimeBodyPart = new MimeBodyPart();
-			mimeBodyPart.setDisposition(Part.ATTACHMENT);
+			mimeBodyPart.setDisposition(MimeBodyPart.ATTACHMENT);
 			mimeBodyPart.setFileName(isEncodeFilenames() ?
 					MimeUtility.encodeText(attachmentFilename) : attachmentFilename);
 			mimeBodyPart.setDataHandler(new DataHandler(dataSource));
@@ -1188,7 +1095,7 @@ public class MimeMessageHelper {
 			throws MessagingException {
 
 		Assert.notNull(inputStreamSource, "InputStreamSource must not be null");
-		if (inputStreamSource instanceof Resource resource && resource.isOpen()) {
+		if (inputStreamSource instanceof Resource && ((Resource) inputStreamSource).isOpen()) {
 			throw new IllegalArgumentException(
 					"Passed-in Resource contains an open stream: invalid argument. " +
 					"JavaMail requires an InputStreamSource that creates a fresh stream for every call.");

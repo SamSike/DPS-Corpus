@@ -43,6 +43,7 @@ public class JoltDefaultrTest extends CamelTestSupport {
         assertEquals("aa", exchange.getMessage().getBody(Map.class).get("a"));
         assertEquals("bb", exchange.getMessage().getBody(Map.class).get("b"));
         assertEquals("World", exchange.getMessage().getBody(Map.class).get("Hello"));
+
     }
 
     @Override

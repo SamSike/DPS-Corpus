@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jspecify.annotations.Nullable;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.ext.Locator2;
 import org.xml.sax.helpers.AttributesImpl;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -51,7 +51,8 @@ class StaxStreamXMLReader extends AbstractStaxXMLReader {
 
 	private String xmlVersion = DEFAULT_XML_VERSION;
 
-	private @Nullable String encoding;
+	@Nullable
+	private String encoding;
 
 
 	/**
@@ -83,29 +84,41 @@ class StaxStreamXMLReader extends AbstractStaxXMLReader {
 				documentStarted = true;
 			}
 			switch (eventType) {
-				case XMLStreamConstants.START_ELEMENT -> {
+				case XMLStreamConstants.START_ELEMENT:
 					elementDepth++;
 					handleStartElement();
-				}
-				case XMLStreamConstants.END_ELEMENT -> {
+					break;
+				case XMLStreamConstants.END_ELEMENT:
 					elementDepth--;
 					if (elementDepth >= 0) {
 						handleEndElement();
 					}
-				}
-				case XMLStreamConstants.PROCESSING_INSTRUCTION -> handleProcessingInstruction();
-				case XMLStreamConstants.CHARACTERS, XMLStreamConstants.SPACE, XMLStreamConstants.CDATA -> handleCharacters();
-				case XMLStreamConstants.START_DOCUMENT -> {
+					break;
+				case XMLStreamConstants.PROCESSING_INSTRUCTION:
+					handleProcessingInstruction();
+					break;
+				case XMLStreamConstants.CHARACTERS:
+				case XMLStreamConstants.SPACE:
+				case XMLStreamConstants.CDATA:
+					handleCharacters();
+					break;
+				case XMLStreamConstants.START_DOCUMENT:
 					handleStartDocument();
 					documentStarted = true;
-				}
-				case XMLStreamConstants.END_DOCUMENT -> {
+					break;
+				case XMLStreamConstants.END_DOCUMENT:
 					handleEndDocument();
 					documentEnded = true;
-				}
-				case XMLStreamConstants.COMMENT -> handleComment();
-				case XMLStreamConstants.DTD -> handleDtd();
-				case XMLStreamConstants.ENTITY_REFERENCE -> handleEntityReference();
+					break;
+				case XMLStreamConstants.COMMENT:
+					handleComment();
+					break;
+				case XMLStreamConstants.DTD:
+					handleDtd();
+					break;
+				case XMLStreamConstants.ENTITY_REFERENCE:
+					handleEntityReference();
+					break;
 			}
 			if (this.reader.hasNext() && elementDepth >= 0) {
 				eventType = this.reader.next();
@@ -141,11 +154,13 @@ class StaxStreamXMLReader extends AbstractStaxXMLReader {
 					return (location != null ? location.getLineNumber() : -1);
 				}
 				@Override
-				public @Nullable String getPublicId() {
+				@Nullable
+				public String getPublicId() {
 					return (location != null ? location.getPublicId() : null);
 				}
 				@Override
-				public @Nullable String getSystemId() {
+				@Nullable
+				public String getSystemId() {
 					return (location != null ? location.getSystemId() : null);
 				}
 				@Override
@@ -153,7 +168,8 @@ class StaxStreamXMLReader extends AbstractStaxXMLReader {
 					return xmlVersion;
 				}
 				@Override
-				public @Nullable String getEncoding() {
+				@Nullable
+				public String getEncoding() {
 					return encoding;
 				}
 			});

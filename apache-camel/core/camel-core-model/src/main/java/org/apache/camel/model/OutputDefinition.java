@@ -35,19 +35,6 @@ public class OutputDefinition<Type extends ProcessorDefinition<Type>> extends Pr
 
     protected List<ProcessorDefinition<?>> outputs = new ArrayList<>();
 
-    public OutputDefinition() {
-    }
-
-    protected OutputDefinition(OutputDefinition<?> source) {
-        super(source);
-        this.outputs = ProcessorDefinitionHelper.deepCopyDefinitions(source.outputs);
-    }
-
-    @Override
-    public ProcessorDefinition<?> copyDefinition() {
-        throw new UnsupportedOperationException("Should be implemented in child classes");
-    }
-
     @Override
     public List<ProcessorDefinition<?>> getOutputs() {
         return outputs;
@@ -71,5 +58,4 @@ public class OutputDefinition<Type extends ProcessorDefinition<Type>> extends Pr
     public String toString() {
         return getShortName() + " -> [" + outputs + "]";
     }
-
 }

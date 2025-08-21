@@ -17,12 +17,12 @@
 package org.apache.camel.component.stub;
 
 import org.apache.camel.Processor;
-import org.apache.camel.component.seda.SedaConsumer;
-import org.apache.camel.component.seda.SedaEndpoint;
+import org.apache.camel.component.vm.VmConsumer;
+import org.apache.camel.component.vm.VmEndpoint;
 
-public class StubConsumer extends SedaConsumer {
+public class StubConsumer extends VmConsumer {
 
-    public StubConsumer(SedaEndpoint endpoint, Processor processor) {
+    public StubConsumer(VmEndpoint endpoint, Processor processor) {
         super(endpoint, processor);
     }
 

@@ -26,6 +26,7 @@ import org.apache.camel.non_wrapper.types.GetPersonResponse;
 import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
 import org.apache.camel.util.IOHelper;
 import org.apache.cxf.jaxws.JaxWsProxyFactoryBean;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -46,8 +47,10 @@ public class PayLoadConvertToPOJOTest extends CamelSpringTestSupport {
     }
 
     @Override
-    public void doPostTearDown() throws Exception {
+    @AfterEach
+    public void tearDown() throws Exception {
         IOHelper.close(applicationContext);
+        super.tearDown();
     }
 
     @Test

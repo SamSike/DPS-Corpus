@@ -60,7 +60,7 @@ public class RollbackTest extends ContextTestSupport {
         getMockEndpoint("mock:rollback").expectedMessageCount(1);
 
         Exchange out = template.request("direct:start", new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("bad");
             }
         });
@@ -68,14 +68,14 @@ public class RollbackTest extends ContextTestSupport {
 
         assertNotNull(out.getException());
         assertIsInstanceOf(RollbackExchangeException.class, out.getException());
-        assertTrue(out.isRollbackOnly(), "Should be marked as rollback");
+        assertEquals(true, out.isRollbackOnly(), "Should be marked as rollback");
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").choice().when(body().isNotEqualTo("ok")).to("mock:rollback").rollback("That do not work")
                         .otherwise().to("mock:result").end();
             }

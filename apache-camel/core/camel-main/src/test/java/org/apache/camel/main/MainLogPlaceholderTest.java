@@ -32,7 +32,7 @@ public class MainLogPlaceholderTest {
         main.addInitialProperty("tap", "mock:tap");
         main.configure().addRoutesBuilder(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("timer:tick?period=10")
                         .log("{{message}}")
                         .transform().constant("Hello {{message}}")

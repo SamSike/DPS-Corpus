@@ -1,7 +1,9 @@
 /**
  * Useful generic {@code java.util.concurrent.Future} extensions.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.util.concurrent;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

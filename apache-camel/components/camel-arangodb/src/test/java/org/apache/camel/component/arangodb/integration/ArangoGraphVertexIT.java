@@ -22,8 +22,6 @@ import com.arangodb.entity.VertexUpdateEntity;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperties;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import static org.apache.camel.component.arangodb.ArangoDbConstants.ARANGO_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,12 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisabledIfSystemProperties({
-        @DisabledIfSystemProperty(named = "ci.env.name", matches = ".*",
-                                  disabledReason = "Apache CI nodes are too resource constrained for this test"),
-        @DisabledIfSystemProperty(named = "arangodb.tests.disable", matches = "true",
-                                  disabledReason = "Manually disabled tests")
-})
 public class ArangoGraphVertexIT extends BaseGraph {
 
     @Override
@@ -71,7 +63,7 @@ public class ArangoGraphVertexIT extends BaseGraph {
                 BaseDocument.class);
         assertEquals(vertexCreated.getKey(), actualResult.getKey());
         assertEquals("Foo", actualResult.getAttribute("a"));
-        assertEquals(42, actualResult.getAttribute("b"));
+        assertEquals(Long.valueOf(42), actualResult.getAttribute("b"));
     }
 
     @Test
@@ -100,7 +92,7 @@ public class ArangoGraphVertexIT extends BaseGraph {
                 BaseDocument.class);
         assertEquals(objectToUpdate.getKey(), actualResult.getKey());
         assertEquals("hello", actualResult.getAttribute("foo"));
-        assertEquals(42, actualResult.getAttribute("gg"));
+        assertEquals(Long.valueOf(42), actualResult.getAttribute("gg"));
     }
 
     @Test

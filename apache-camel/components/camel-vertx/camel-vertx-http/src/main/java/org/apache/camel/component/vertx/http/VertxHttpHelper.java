@@ -40,20 +40,17 @@ public final class VertxHttpHelper {
     /**
      * Resolves a HTTP URI query string from the given exchange message headers
      */
-    public static String resolveQueryString(Exchange exchange, VertxHttpEndpoint endpoint) throws URISyntaxException {
+    public static String resolveQueryString(Exchange exchange) throws URISyntaxException {
         Message message = exchange.getMessage();
         String queryString = (String) message.removeHeader(Exchange.REST_HTTP_QUERY);
         if (ObjectHelper.isEmpty(queryString)) {
             queryString = message.getHeader(VertxHttpConstants.HTTP_QUERY, String.class);
         }
 
-        String uriString = null;
-        if (!endpoint.getConfiguration().isBridgeEndpoint()) {
-            uriString = message.getHeader(VertxHttpConstants.HTTP_URI, String.class);
-            uriString = exchange.getContext().resolvePropertyPlaceholders(uriString);
-        }
+        String uriString = message.getHeader(VertxHttpConstants.HTTP_URI, String.class);
+        uriString = exchange.getContext().resolvePropertyPlaceholders(uriString);
 
-        if (ObjectHelper.isNotEmpty(uriString)) {
+        if (uriString != null) {
             uriString = UnsafeUriCharactersEncoder.encodeHttpURI(uriString);
             URI uri = new URI(uriString);
             queryString = uri.getQuery();
@@ -69,7 +66,7 @@ public final class VertxHttpHelper {
         Message message = exchange.getMessage();
         String uri = (String) message.removeHeader(Exchange.REST_HTTP_URI);
 
-        if (ObjectHelper.isEmpty(uri) && !endpoint.getConfiguration().isBridgeEndpoint()) {
+        if (ObjectHelper.isEmpty(uri)) {
             uri = message.getHeader(VertxHttpConstants.HTTP_URI, String.class);
         }
 
@@ -86,7 +83,7 @@ public final class VertxHttpHelper {
             if (path.startsWith("/")) {
                 path = path.substring(1);
             }
-            if (!path.isEmpty()) {
+            if (path.length() > 0) {
                 // make sure that there is exactly one "/" between HTTP_URI and
                 // HTTP_PATH
                 if (!uri.endsWith("/")) {

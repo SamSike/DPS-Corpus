@@ -21,10 +21,9 @@ import java.util.Map;
 
 import org.apache.camel.Consumer;
 import org.apache.camel.Endpoint;
+import org.apache.camel.Service;
 import org.apache.camel.support.DefaultPollingConsumerPollStrategy;
 import org.apache.camel.support.service.ServiceHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A {@link org.apache.camel.spi.PollingConsumerPollStrategy} which supports suspending consumers if they failed for X
@@ -34,9 +33,7 @@ import org.slf4j.LoggerFactory;
  * will be suspended/stopped. This prevents the log to get flooded with failed attempts, for example during nightly
  * runs.
  */
-public class LimitedPollingConsumerPollStrategy extends DefaultPollingConsumerPollStrategy {
-
-    private static final Logger LOG = LoggerFactory.getLogger(LimitedPollingConsumerPollStrategy.class);
+public class LimitedPollingConsumerPollStrategy extends DefaultPollingConsumerPollStrategy implements Service {
 
     private final Map<Consumer, Integer> state = new HashMap<>();
     private int limit = 3;
@@ -72,7 +69,7 @@ public class LimitedPollingConsumerPollStrategy extends DefaultPollingConsumerPo
         } else {
             times += 1;
         }
-        LOG.debug("Rollback occurred after {} times when consuming {}", times, endpoint);
+        log.debug("Rollback occurred after {} times when consuming {}", times, endpoint);
 
         boolean retry = false;
 
@@ -97,7 +94,7 @@ public class LimitedPollingConsumerPollStrategy extends DefaultPollingConsumerPo
      * @throws Exception is thrown if error suspending the consumer
      */
     protected void onSuspend(Consumer consumer, Endpoint endpoint) throws Exception {
-        LOG.warn("Suspending consumer {} after {} attempts to consume from {}. You have to manually resume the consumer!",
+        log.warn("Suspending consumer {} after {} attempts to consume from {}. You have to manually resume the consumer!",
                 consumer, limit, endpoint);
         ServiceHelper.suspendService(consumer);
     }
@@ -107,7 +104,7 @@ public class LimitedPollingConsumerPollStrategy extends DefaultPollingConsumerPo
      *
      * @param  consumer  the consumer
      * @param  endpoint  the endpoint
-     * @return           whether to retry immediately, is default <tt>false</tt>
+     * @return           whether or not to retry immediately, is default <tt>false</tt>
      * @throws Exception can be thrown in case something goes wrong
      */
     protected boolean onRollback(Consumer consumer, Endpoint endpoint) throws Exception {
@@ -116,8 +113,12 @@ public class LimitedPollingConsumerPollStrategy extends DefaultPollingConsumerPo
     }
 
     @Override
-    protected void doStop() throws Exception {
-        state.clear();
+    public void start() {
+        // noop
     }
 
+    @Override
+    public void stop() {
+        state.clear();
+    }
 }

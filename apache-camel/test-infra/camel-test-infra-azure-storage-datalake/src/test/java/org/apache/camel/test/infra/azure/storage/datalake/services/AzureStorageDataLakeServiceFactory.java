@@ -35,7 +35,4 @@ public final class AzureStorageDataLakeServiceFactory {
                 .addRemoteMapping(AzureStorageDataLakeRemoteService::new)
                 .build();
     }
-
-    static class AzureStorageDataLakeRemoteService extends AzureStorageDataLakeRemoteInfraService implements AzureService {
-    }
 }

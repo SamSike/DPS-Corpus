@@ -23,7 +23,7 @@ import org.apache.activemq.artemis.core.config.Configuration;
 public class ArtemisEmbeddedServiceBuilder {
 
     private boolean isPersistent;
-    private Consumer<Configuration> customConfigurator;
+    private Consumer<Configuration> artemisConfiguration;
 
     public ArtemisEmbeddedServiceBuilder() {
     }
@@ -34,21 +34,23 @@ public class ArtemisEmbeddedServiceBuilder {
         return this;
     }
 
-    public ArtemisEmbeddedServiceBuilder withCustomConfiguration(Consumer<Configuration> customConfigurator) {
-        this.customConfigurator = customConfigurator;
+    public ArtemisEmbeddedServiceBuilder withCustomConfiguration(Consumer<Configuration> configuration) {
+        artemisConfiguration = configuration;
 
         return this;
     }
 
     public ArtemisService build() {
-        ArtemisService artemisService;
+        AbstractArtemisEmbeddedService artemisService;
         if (isPersistent) {
             artemisService = new ArtemisPersistentVMService();
         } else {
             artemisService = new ArtemisVMService();
         }
 
-        ((AbstractArtemisEmbeddedService) artemisService).customConfiguration(customConfigurator);
+        if (artemisService != null) {
+            artemisService.customConfiguration(artemisConfiguration);
+        }
 
         return artemisService;
     }

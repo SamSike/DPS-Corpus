@@ -19,10 +19,7 @@ package org.apache.camel.component.splunkhec;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SplunkHECConfigurationTest {
 
@@ -64,38 +61,32 @@ public class SplunkHECConfigurationTest {
     }
 
     @Test
-    public void testDefaultToken() {
-        SplunkHECConfiguration config = new SplunkHECConfiguration();
-        assertNull(config.getToken());
-    }
-
-    @Test
     public void testDefaultSkipTlsVerifyIsFalse() {
         SplunkHECConfiguration config = new SplunkHECConfiguration();
-        assertFalse(config.isSkipTlsVerify());
+        assertEquals(false, config.isSkipTlsVerify());
     }
 
     @Test
     public void testDefaultHttps() {
         SplunkHECConfiguration config = new SplunkHECConfiguration();
-        assertTrue(config.isHttps());
+        assertEquals(true, config.isHttps());
     }
 
     @Test
     public void testDefaultBodyOnly() {
         SplunkHECConfiguration config = new SplunkHECConfiguration();
-        assertFalse(config.isBodyOnly());
+        assertEquals(false, config.isBodyOnly());
     }
 
     @Test
     public void testDefaultHeadersOnly() {
         SplunkHECConfiguration config = new SplunkHECConfiguration();
-        assertFalse(config.isHeadersOnly());
+        assertEquals(false, config.isHeadersOnly());
     }
 
     @Test
     public void testDefaultTime() {
         SplunkHECConfiguration config = new SplunkHECConfiguration();
-        assertNull(config.getTime());
+        assertEquals(null, config.getTime());
     }
 }

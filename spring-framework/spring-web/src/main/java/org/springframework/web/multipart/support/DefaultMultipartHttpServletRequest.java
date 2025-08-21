@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,9 @@ import java.util.Map;
 import java.util.Set;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,6 +34,8 @@ import org.springframework.web.multipart.MultipartFile;
  * Default implementation of the
  * {@link org.springframework.web.multipart.MultipartHttpServletRequest}
  * interface. Provides management of pre-generated parameter values.
+ *
+ * <p>Used by {@link org.springframework.web.multipart.commons.CommonsMultipartResolver}.
  *
  * @author Trevor D. Cook
  * @author Juergen Hoeller
@@ -45,10 +47,10 @@ public class DefaultMultipartHttpServletRequest extends AbstractMultipartHttpSer
 
 	private static final String CONTENT_TYPE = "Content-Type";
 
-	@SuppressWarnings("NullAway.Init")
+	@Nullable
 	private Map<String, String[]> multipartParameters;
 
-	@SuppressWarnings("NullAway.Init")
+	@Nullable
 	private Map<String, String> multipartParameterContentTypes;
 
 
@@ -78,7 +80,8 @@ public class DefaultMultipartHttpServletRequest extends AbstractMultipartHttpSer
 
 
 	@Override
-	public @Nullable String getParameter(String name) {
+	@Nullable
+	public String getParameter(String name) {
 		String[] values = getMultipartParameters().get(name);
 		if (values != null) {
 			return (values.length > 0 ? values[0] : null);
@@ -129,7 +132,7 @@ public class DefaultMultipartHttpServletRequest extends AbstractMultipartHttpSer
 	}
 
 	@Override
-	public @Nullable String getMultipartContentType(String paramOrFileName) {
+	public String getMultipartContentType(String paramOrFileName) {
 		MultipartFile file = getFile(paramOrFileName);
 		if (file != null) {
 			return file.getContentType();
@@ -140,7 +143,7 @@ public class DefaultMultipartHttpServletRequest extends AbstractMultipartHttpSer
 	}
 
 	@Override
-	public @Nullable HttpHeaders getMultipartHeaders(String paramOrFileName) {
+	public HttpHeaders getMultipartHeaders(String paramOrFileName) {
 		String contentType = getMultipartContentType(paramOrFileName);
 		if (contentType != null) {
 			HttpHeaders headers = new HttpHeaders();

@@ -21,10 +21,10 @@ import jakarta.xml.bind.annotation.XmlTransient;
 import org.apache.camel.ErrorHandlerFactory;
 
 /**
- * Legacy error handler for XML DSL in camel-spring-xml
+ * Legacy error handler for XML DSL in camel-spring-xml/camel-blueprint
  */
 @XmlTransient
-@Deprecated(since = "3.17.0")
+@Deprecated
 public class NoErrorHandlerConfiguration implements NoErrorHandlerProperties {
 
     // no configuration

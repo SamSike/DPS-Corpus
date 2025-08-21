@@ -17,6 +17,7 @@
 package org.apache.camel.issues;
 
 import java.util.Iterator;
+import java.util.function.Consumer;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
@@ -24,7 +25,7 @@ import org.apache.camel.processor.aggregate.UseLatestAggregationStrategy;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests the issue stated in <a href="https://issues.apache.org/jira/browse/CAMEL-12441">CAMEL-12441</a>.
@@ -36,12 +37,13 @@ public class SplitterParallelWithIteratorThrowingExceptionTest extends ContextTe
         getMockEndpoint("mock:line").expectedMessageCount(0);
         getMockEndpoint("mock:end").expectedMessageCount(0);
 
-        Exception e = assertThrows(Exception.class,
-                () -> template.sendBody("direct:start", new MyIterator(1)),
-                "Should throw exception");
-
-        IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
-        assertEquals("Forced error", iae.getMessage());
+        try {
+            template.sendBody("direct:start", new MyIterator(1));
+            fail("Should throw exception");
+        } catch (Exception e) {
+            IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
+            assertEquals("Forced error", iae.getMessage());
+        }
 
         assertMockEndpointsSatisfied();
     }
@@ -51,36 +53,22 @@ public class SplitterParallelWithIteratorThrowingExceptionTest extends ContextTe
         getMockEndpoint("mock:line").expectedMessageCount(1);
         getMockEndpoint("mock:end").expectedMessageCount(0);
 
-        Exception e = assertThrows(Exception.class,
-                () -> template.sendBody("direct:start", new MyIterator(2)),
-                "Should throw exception");
-
-        IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
-        assertEquals("Forced error", iae.getMessage());
-
-        assertMockEndpointsSatisfied();
-    }
-
-    @Test
-    public void testIteratorThrowExceptionOnThird() throws Exception {
-        getMockEndpoint("mock:line").expectedMessageCount(2);
-        getMockEndpoint("mock:end").expectedMessageCount(0);
-
-        Exception e = assertThrows(Exception.class,
-                () -> template.sendBody("direct:start", new MyIterator(3)),
-                "Should throw exception");
-
-        IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
-        assertEquals("Forced error", iae.getMessage());
+        try {
+            template.sendBody("direct:start", new MyIterator(0));
+            fail("Should throw exception");
+        } catch (Exception e) {
+            IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
+            assertEquals("Forced error", iae.getMessage());
+        }
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").split(body()).aggregationStrategy(new UseLatestAggregationStrategy()).streaming()
                         .stopOnException().parallelProcessing().parallelAggregate()
                         .to("mock:line").end().to("mock:end");
@@ -98,16 +86,27 @@ public class SplitterParallelWithIteratorThrowingExceptionTest extends ContextTe
 
         @Override
         public boolean hasNext() {
-            return true;
+            return count < 2;
         }
 
         @Override
         public String next() {
-            if (--count > 0) {
+            count++;
+            if (count == 1) {
                 return "Hello";
             } else {
                 throw new IllegalArgumentException("Forced error");
             }
+        }
+
+        @Override
+        public void remove() {
+            // noop
+        }
+
+        @Override
+        public void forEachRemaining(Consumer<? super String> action) {
+            // noop
         }
     }
 }

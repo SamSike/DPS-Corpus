@@ -44,7 +44,7 @@ public class CamelMicroProfileHealthSupervisedRoutesMainTest {
         CamelContext context = new DefaultCamelContext();
         CamelMicroProfileHealthCheckRegistry registry = new CamelMicroProfileHealthCheckRegistry(context);
         context.addComponent("my", new CamelMicroProfileHealthTestHelper.MyComponent());
-        context.getCamelContextExtension().addContextPlugin(HealthCheckRegistry.class, registry);
+        context.setExtension(HealthCheckRegistry.class, registry);
         context.getRouteController().supervising();
         context.addRoutes(new RouteBuilder() {
             @Override
@@ -57,7 +57,7 @@ public class CamelMicroProfileHealthSupervisedRoutesMainTest {
         SimpleMain main = new SimpleMain(context);
         main.addInitialProperty("camel.health.routes-enabled", "true");
         main.addInitialProperty("camel.health.consumers-enabled", "true");
-        main.addInitialProperty("camel.health.producers-enabled", "true");
+        main.addInitialProperty("camel.health.components-enabled", "true");
         main.start();
 
         try {
@@ -67,7 +67,7 @@ public class CamelMicroProfileHealthSupervisedRoutesMainTest {
             assertEquals(Status.UP.name(), healthObject.getString("status"));
 
             JsonArray checks = healthObject.getJsonArray("checks");
-            assertEquals(5, checks.size());
+            assertEquals(4, checks.size());
 
             Optional<JsonObject> camelRoutesCheck = findHealthCheck("camel-routes", checks);
             camelRoutesCheck.ifPresentOrElse(check -> {
@@ -79,10 +79,10 @@ public class CamelMicroProfileHealthSupervisedRoutesMainTest {
                 assertEquals(Status.UP.toString(), check.getString("status"));
             }, () -> fail("Expected camel-consumers check not found in health output"));
 
-            Optional<JsonObject> camelComponentsCheck = findHealthCheck("camel-producers", checks);
+            Optional<JsonObject> camelComponentsCheck = findHealthCheck("camel-components", checks);
             camelComponentsCheck.ifPresentOrElse(check -> {
                 assertEquals(Status.UP.toString(), check.getString("status"));
-            }, () -> fail("Expected camel-producers check not found in health output"));
+            }, () -> fail("Expected camel-components check not found in health output"));
         } finally {
             main.stop();
         }

@@ -37,8 +37,7 @@ public class TwilioProducer extends AbstractApiProducer<TwilioApiName, TwilioCon
     }
 
     @Override
-    protected Object doInvokeMethod(ApiMethod method, Map<String, Object> properties)
-            throws RuntimeCamelException {
+    protected Object doInvokeMethod(ApiMethod method, Map<String, Object> properties) throws RuntimeCamelException {
         Object executor = super.doInvokeMethod(method, properties);
         return endpoint.execute(executor, method, properties);
     }

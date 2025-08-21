@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,15 +28,15 @@ import java.util.TreeSet;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StringUtils;
 
 /**
  * A {@link ResourceTransformer} implementation that modifies links in a CSS
- * file to match the public URL paths that should be exposed to clients (for example,
+ * file to match the public URL paths that should be exposed to clients (e.g.
  * with an MD5 content-based hash inserted in the URL).
  *
  * <p>The implementation looks for links in CSS {@code @import} statements and
@@ -72,7 +72,8 @@ public class CssLinkResourceTransformer extends ResourceTransformerSupport {
 
 		String filename = resource.getFilename();
 		if (!"css".equals(StringUtils.getFilenameExtension(filename)) ||
-				resource instanceof EncodedResourceResolver.EncodedResource) {
+				resource instanceof EncodedResourceResolver.EncodedResource ||
+				resource instanceof GzipResourceResolver.GzippedResource) {
 			return resource;
 		}
 
@@ -128,7 +129,7 @@ public class CssLinkResourceTransformer extends ResourceTransformerSupport {
 	 */
 	protected abstract static class AbstractLinkParser implements LinkParser {
 
-		/** Return the keyword to use to search for links, for example, "@import", "url(". */
+		/** Return the keyword to use to search for links, e.g. "@import", "url(" */
 		protected abstract String getKeyword();
 
 		@Override
@@ -231,8 +232,14 @@ public class CssLinkResourceTransformer extends ResourceTransformerSupport {
 
 		@Override
 		public boolean equals(@Nullable Object other) {
-			return (this == other || (other instanceof ContentChunkInfo that &&
-					this.start == that.start && this.end == that.end));
+			if (this == other) {
+				return true;
+			}
+			if (!(other instanceof ContentChunkInfo)) {
+				return false;
+			}
+			ContentChunkInfo otherCci = (ContentChunkInfo) other;
+			return (this.start == otherCci.start && this.end == otherCci.end);
 		}
 
 		@Override

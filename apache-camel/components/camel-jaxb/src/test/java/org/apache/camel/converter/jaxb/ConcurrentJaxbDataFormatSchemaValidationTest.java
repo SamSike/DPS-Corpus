@@ -24,7 +24,6 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.converter.jaxb.address.Address;
 import org.apache.camel.converter.jaxb.person.Person;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.apache.camel.util.StopWatch;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,13 +56,13 @@ public class ConcurrentJaxbDataFormatSchemaValidationTest extends CamelTestSuppo
         person.setAge(Integer.valueOf(36));
         person.setAddress(address);
 
-        StopWatch watch = new StopWatch();
+        long start = System.currentTimeMillis();
         for (int i = 0; i < testCount; i++) {
             template.sendBody("seda:marshall", person);
         }
 
         MockEndpoint.assertIsSatisfied(context);
-        LOG.info("Validation of {} messages took {} ms", testCount, watch.taken());
+        LOG.info("Validation of {} messages took {} ms", testCount, System.currentTimeMillis() - start);
 
         String payload = mockMarshall.getExchanges().get(0).getIn().getBody(String.class);
         LOG.info(payload);
@@ -95,13 +94,13 @@ public class ConcurrentJaxbDataFormatSchemaValidationTest extends CamelTestSuppo
                 .append("</person>")
                 .toString();
 
-        StopWatch watch = new StopWatch();
+        long start = System.currentTimeMillis();
         for (int i = 0; i < testCount; i++) {
             template.sendBody("seda:unmarshall", xml);
         }
 
         MockEndpoint.assertIsSatisfied(context, 20, TimeUnit.SECONDS);
-        LOG.info("Validation of {} messages took {} ms", testCount, watch.taken());
+        LOG.info("Validation of {} messages took {} ms", testCount, System.currentTimeMillis() - start);
 
         Person person = mockUnmarshall.getExchanges().get(0).getIn().getBody(Person.class);
 

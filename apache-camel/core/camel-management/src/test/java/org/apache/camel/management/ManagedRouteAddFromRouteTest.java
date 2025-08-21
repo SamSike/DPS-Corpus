@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ManagedRouteAddFromRouteTest extends ManagementTestSupport {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
@@ -53,7 +53,7 @@ public class ManagedRouteAddFromRouteTest extends ManagementTestSupport {
                         .process(exchange -> {
                             RouteBuilder child = new RouteBuilder() {
                                 @Override
-                                public void configure() {
+                                public void configure() throws Exception {
                                     from("seda:bar").routeId("bar").to("mock:bar");
                                 }
                             };

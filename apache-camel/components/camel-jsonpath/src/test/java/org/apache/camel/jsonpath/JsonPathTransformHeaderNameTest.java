@@ -33,10 +33,8 @@ public class JsonPathTransformHeaderNameTest extends CamelTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() {
-                var jp = expression().jsonpath().expression("$.store.book[*].author").source("header:myHeader").end();
-
                 from("direct:start")
-                        .transform(jp)
+                        .transform().jsonpath("$.store.book[*].author", false, null, "myHeader")
                         .to("mock:authors");
             }
         };

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,11 @@ import org.aspectj.lang.Signature;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.aspectj.lang.reflect.SourceLocation;
 import org.aspectj.runtime.internal.AroundClosure;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.aop.ProxyMethodInvocation;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -55,13 +55,16 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 
 	private final ProxyMethodInvocation methodInvocation;
 
-	private @Nullable Object @Nullable [] args;
+	@Nullable
+	private Object[] args;
 
 	/** Lazily initialized signature object. */
-	private @Nullable Signature signature;
+	@Nullable
+	private Signature signature;
 
 	/** Lazily initialized source location object. */
-	private @Nullable SourceLocation sourceLocation;
+	@Nullable
+	private SourceLocation sourceLocation;
 
 
 	/**
@@ -81,12 +84,14 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 	}
 
 	@Override
-	public @Nullable Object proceed() throws Throwable {
+	@Nullable
+	public Object proceed() throws Throwable {
 		return this.methodInvocation.invocableClone().proceed();
 	}
 
 	@Override
-	public @Nullable Object proceed(Object[] arguments) throws Throwable {
+	@Nullable
+	public Object proceed(Object[] arguments) throws Throwable {
 		Assert.notNull(arguments, "Argument array passed to proceed cannot be null");
 		if (arguments.length != this.methodInvocation.getArguments().length) {
 			throw new IllegalArgumentException("Expecting " +
@@ -109,13 +114,13 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 	 * Returns the Spring AOP target. May be {@code null} if there is no target.
 	 */
 	@Override
-	public @Nullable Object getTarget() {
+	@Nullable
+	public Object getTarget() {
 		return this.methodInvocation.getThis();
 	}
 
 	@Override
-	@SuppressWarnings("NullAway") // Overridden method does not define nullness
-	public @Nullable Object[] getArgs() {
+	public Object[] getArgs() {
 		if (this.args == null) {
 			this.args = this.methodInvocation.getArguments().clone();
 		}
@@ -175,7 +180,8 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 	 */
 	private class MethodSignatureImpl implements MethodSignature {
 
-		private volatile @Nullable String @Nullable [] parameterNames;
+		@Nullable
+		private volatile String[] parameterNames;
 
 		@Override
 		public String getName() {
@@ -213,9 +219,9 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 		}
 
 		@Override
-		@SuppressWarnings("NullAway") // Overridden method does not define nullness
-		public @Nullable String @Nullable [] getParameterNames() {
-			@Nullable String[] parameterNames = this.parameterNames;
+		@Nullable
+		public String[] getParameterNames() {
+			String[] parameterNames = this.parameterNames;
 			if (parameterNames == null) {
 				parameterNames = parameterNameDiscoverer.getParameterNames(getMethod());
 				this.parameterNames = parameterNames;
@@ -285,7 +291,7 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 
 		private void appendType(StringBuilder sb, Class<?> type, boolean useLongTypeName) {
 			if (type.isArray()) {
-				appendType(sb, type.componentType(), useLongTypeName);
+				appendType(sb, type.getComponentType(), useLongTypeName);
 				sb.append("[]");
 			}
 			else {
@@ -319,7 +325,7 @@ public class MethodInvocationProceedingJoinPoint implements ProceedingJoinPoint,
 		}
 
 		@Override
-		@Deprecated(since = "4.0") // deprecated by AspectJ
+		@Deprecated
 		public int getColumn() {
 			throw new UnsupportedOperationException();
 		}

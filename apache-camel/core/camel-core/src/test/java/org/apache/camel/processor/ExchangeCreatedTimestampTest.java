@@ -34,15 +34,15 @@ public class ExchangeCreatedTimestampTest extends ContextTestSupport {
 
         assertMockEndpointsSatisfied();
 
-        long created = mock.getReceivedExchanges().get(0).getClock().getCreated();
+        long created = mock.getReceivedExchanges().get(0).getCreated();
         assertTrue(created > 0);
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:start").delay(500).to("direct:foo");
 
                 from("direct:foo").to("log:foo").to("mock:result");

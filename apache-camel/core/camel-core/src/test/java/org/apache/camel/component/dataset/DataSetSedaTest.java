@@ -27,13 +27,13 @@ import org.junit.jupiter.api.Test;
  */
 public class DataSetSedaTest extends ContextTestSupport {
 
-    private final SimpleDataSet dataSet = new SimpleDataSet(200);
+    private SimpleDataSet dataSet = new SimpleDataSet(200);
 
-    private final String uri = "dataset:foo?initialDelay=0&produceDelay=1";
+    private String uri = "dataset:foo?initialDelay=0&produceDelay=1";
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("foo", dataSet);
         return answer;
     }
@@ -49,10 +49,10 @@ public class DataSetSedaTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
-                from(uri).to("seda:test").autoStartup(false);
+            public void configure() throws Exception {
+                from(uri).to("seda:test").noAutoStartup();
 
                 from("seda:test").to(uri);
             }

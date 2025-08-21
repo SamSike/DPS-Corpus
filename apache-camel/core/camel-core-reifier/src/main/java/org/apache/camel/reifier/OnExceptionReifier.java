@@ -51,12 +51,7 @@ public class OnExceptionReifier extends ProcessorReifier<OnExceptionDefinition> 
             // wrap in our special safe fallback error handler if OnException
             // have child output
             Processor errorHandler = new FatalFallbackErrorHandler(child, false);
-            // clip node prefix id from the onException id we stored on the route
             String id = getId(definition);
-            String prefix = definition.getNodePrefixId();
-            if (prefix != null && id.startsWith(prefix)) {
-                id = id.substring(prefix.length());
-            }
             route.setOnException(id, errorHandler);
         }
         // lookup the error handler builder
@@ -85,11 +80,15 @@ public class OnExceptionReifier extends ProcessorReifier<OnExceptionDefinition> 
 
         Predicate when = null;
         if (definition.getOnWhen() != null) {
-            definition.getOnWhen().preCreateProcessor();
             when = createPredicate(definition.getOnWhen().getExpression());
         }
 
-        return new CatchProcessor(getCamelContext(), classes, childProcessor, when);
+        Predicate handle = null;
+        if (definition.getHandled() != null) {
+            handle = createPredicate(definition.getHandled());
+        }
+
+        return new CatchProcessor(classes, childProcessor, when);
     }
 
     protected List<Class<? extends Throwable>> createExceptionClasses(ClassResolver resolver) throws ClassNotFoundException {

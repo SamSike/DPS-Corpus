@@ -24,7 +24,6 @@ import org.apache.camel.component.direct.DirectComponent;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.component.quartz.QuartzComponent;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -64,11 +63,11 @@ public class SimpleScheduledCombinedRoutePolicyTest extends CamelTestSupport {
         });
         context.start();
 
-        Awaitility.await()
-                .untilAsserted(() -> assertSame(ServiceStatus.Started, context.getRouteController().getRouteStatus("test")));
+        Thread.sleep(5000);
+        assertSame(ServiceStatus.Started, context.getRouteController().getRouteStatus("test"));
         template.sendBody("direct:start", "Ready or not, Here, I come");
-        Awaitility.await()
-                .untilAsserted(() -> assertSame(ServiceStatus.Stopped, context.getRouteController().getRouteStatus("test")));
+        Thread.sleep(5000);
+        assertSame(ServiceStatus.Stopped, context.getRouteController().getRouteStatus("test"));
 
         context.getComponent("quartz", QuartzComponent.class).stop();
         success.assertIsSatisfied();

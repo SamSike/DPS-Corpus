@@ -49,7 +49,7 @@ public class ManagedEnricher extends ManagedProcessor implements ManagedEnricher
     @Override
     public void init(ManagementStrategy strategy) {
         super.init(strategy);
-        sanitize = strategy.getManagementAgent().getMask() != null ? strategy.getManagementAgent().getMask() : true;
+        sanitize = strategy.getManagementAgent().getMask() != null ? strategy.getManagementAgent().getMask() : false;
         uri = getDefinition().getExpression().getExpression();
         if (sanitize) {
             uri = URISupport.sanitizeUri(uri);
@@ -87,16 +87,6 @@ public class ManagedEnricher extends ManagedProcessor implements ManagedEnricher
     @Override
     public String getExpression() {
         return uri;
-    }
-
-    @Override
-    public String getVariableSend() {
-        return processor.getVariableSend();
-    }
-
-    @Override
-    public String getVariableReceive() {
-        return processor.getVariableReceive();
     }
 
     @Override

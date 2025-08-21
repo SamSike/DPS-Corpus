@@ -33,10 +33,10 @@ public class FileConsumeWithDollarInPathTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("edi$/dev1?initialDelay=0&delay=10")).to("mock:result");
             }
         };

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,13 @@
 package org.springframework.aop.target;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.aop.TargetSource;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
-import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -57,20 +54,19 @@ public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSour
 
 
 	/** Logger available to subclasses. */
-	protected final transient Log logger = LogFactory.getLog(getClass());
+	protected final Log logger = LogFactory.getLog(getClass());
 
 	/** Name of the target bean we will create on each invocation. */
-	protected @Nullable String targetBeanName;
+	private String targetBeanName;
 
 	/** Class of the target. */
-	private volatile @Nullable Class<?> targetClass;
+	private volatile Class<?> targetClass;
 
 	/**
 	 * BeanFactory that owns this TargetSource. We need to hold onto this
 	 * reference so that we can create new prototype instances as necessary.
 	 */
-	@SuppressWarnings("serial")
-	private @Nullable BeanFactory beanFactory;
+	private BeanFactory beanFactory;
 
 
 	/**
@@ -90,7 +86,6 @@ public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSour
 	 * Return the name of the target bean in the factory.
 	 */
 	public String getTargetBeanName() {
-		Assert.state(this.targetBeanName != null, "Target bean name not set");
 		return this.targetBeanName;
 	}
 
@@ -120,13 +115,12 @@ public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSour
 	 * Return the owning BeanFactory.
 	 */
 	public BeanFactory getBeanFactory() {
-		Assert.state(this.beanFactory != null, "BeanFactory not set");
 		return this.beanFactory;
 	}
 
 
 	@Override
-	public @Nullable Class<?> getTargetClass() {
+	public Class<?> getTargetClass() {
 		Class<?> targetClass = this.targetClass;
 		if (targetClass != null) {
 			return targetClass;
@@ -134,7 +128,7 @@ public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSour
 		synchronized (this) {
 			// Full check within synchronization, entering the BeanFactory interaction algorithm only once...
 			targetClass = this.targetClass;
-			if (targetClass == null && this.beanFactory != null && this.targetBeanName != null) {
+			if (targetClass == null && this.beanFactory != null) {
 				// Determine type of the target bean.
 				targetClass = this.beanFactory.getType(this.targetBeanName);
 				if (targetClass == null) {
@@ -148,6 +142,16 @@ public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSour
 			}
 			return targetClass;
 		}
+	}
+
+	@Override
+	public boolean isStatic() {
+		return false;
+	}
+
+	@Override
+	public void releaseTarget(Object target) throws Exception {
+		// Nothing to do here.
 	}
 
 
@@ -164,7 +168,7 @@ public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSour
 
 
 	@Override
-	public boolean equals(@Nullable Object other) {
+	public boolean equals(Object other) {
 		if (this == other) {
 			return true;
 		}
@@ -178,16 +182,18 @@ public abstract class AbstractBeanFactoryBasedTargetSource implements TargetSour
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(getClass(), this.targetBeanName);
+		int hashCode = getClass().hashCode();
+		hashCode = 13 * hashCode + ObjectUtils.nullSafeHashCode(this.beanFactory);
+		hashCode = 13 * hashCode + ObjectUtils.nullSafeHashCode(this.targetBeanName);
+		return hashCode;
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder(getClass().getSimpleName());
 		sb.append(" for target bean '").append(this.targetBeanName).append('\'');
-		Class<?> targetClass = this.targetClass;
-		if (targetClass != null) {
-			sb.append(" of type [").append(targetClass.getName()).append(']');
+		if (this.targetClass != null) {
+			sb.append(" of type [").append(this.targetClass.getName()).append(']');
 		}
 		return sb.toString();
 	}

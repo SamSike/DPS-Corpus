@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,8 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -44,7 +43,8 @@ public class OracleTableMetaDataProvider extends GenericTableMetaDataProvider {
 
 	private final boolean includeSynonyms;
 
-	private final @Nullable String defaultSchema;
+	@Nullable
+	private final String defaultSchema;
 
 
 	/**
@@ -72,7 +72,8 @@ public class OracleTableMetaDataProvider extends GenericTableMetaDataProvider {
 	/*
 	 * Oracle-based implementation for detecting the current schema.
 	 */
-	private static @Nullable String lookupDefaultSchema(DatabaseMetaData databaseMetaData) {
+	@Nullable
+	private static String lookupDefaultSchema(DatabaseMetaData databaseMetaData) {
 		try {
 			CallableStatement cstmt = null;
 			try {
@@ -99,7 +100,8 @@ public class OracleTableMetaDataProvider extends GenericTableMetaDataProvider {
 	}
 
 	@Override
-	protected @Nullable String getDefaultSchema() {
+	@Nullable
+	protected String getDefaultSchema() {
 		if (this.defaultSchema != null) {
 			return this.defaultSchema;
 		}

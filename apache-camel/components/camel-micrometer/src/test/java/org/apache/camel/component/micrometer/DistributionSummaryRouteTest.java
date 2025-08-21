@@ -75,7 +75,7 @@ public class DistributionSummaryRouteTest extends CamelSpringTestSupport {
     }
 
     @AfterEach
-    public void resetEndpoint() {
+    public void tearDown() {
         endpoint.reset();
     }
 

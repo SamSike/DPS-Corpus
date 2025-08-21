@@ -41,17 +41,17 @@ public class FileConsumerPollStrategyPolledMessagesTest extends ContextTestSuppo
     private final CountDownLatch latch = new CountDownLatch(1);
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myPoll", new MyPollStrategy());
         return jndi;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
-                from(fileUri("?pollStrategy=#myPoll&initialDelay=0&delay=10")).routeId("foo").autoStartup(false)
+            public void configure() throws Exception {
+                from(fileUri("?pollStrategy=#myPoll&initialDelay=0&delay=10")).routeId("foo").noAutoStartup()
                         .convertBodyTo(String.class).to("mock:result");
             }
         };
@@ -92,7 +92,7 @@ public class FileConsumerPollStrategyPolledMessagesTest extends ContextTestSuppo
         }
 
         @Override
-        public boolean rollback(Consumer consumer, Endpoint endpoint, int retryCounter, Exception cause) {
+        public boolean rollback(Consumer consumer, Endpoint endpoint, int retryCounter, Exception cause) throws Exception {
             return false;
         }
     }

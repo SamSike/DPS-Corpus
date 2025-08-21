@@ -21,7 +21,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.RouteConfigurationBuilder;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Fail.fail;
 
 public class RoutesConfigurationErrorHandlerTest extends ContextTestSupport {
 
@@ -34,7 +34,7 @@ public class RoutesConfigurationErrorHandlerTest extends ContextTestSupport {
     public void testGlobal() throws Exception {
         context.addRoutes(new RouteConfigurationBuilder() {
             @Override
-            public void configuration() {
+            public void configuration() throws Exception {
                 // global routes configuration
                 routeConfiguration().errorHandler(deadLetterChannel("mock:error"));
 
@@ -42,7 +42,7 @@ public class RoutesConfigurationErrorHandlerTest extends ContextTestSupport {
         });
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .throwException(new IllegalArgumentException("Foo"));
 
@@ -64,7 +64,7 @@ public class RoutesConfigurationErrorHandlerTest extends ContextTestSupport {
     public void testLocalOverride() throws Exception {
         context.addRoutes(new RouteConfigurationBuilder() {
             @Override
-            public void configuration() {
+            public void configuration() throws Exception {
                 // global routes configuration
                 routeConfiguration().errorHandler(deadLetterChannel("mock:error"));
 
@@ -72,7 +72,7 @@ public class RoutesConfigurationErrorHandlerTest extends ContextTestSupport {
         });
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .throwException(new IllegalArgumentException("Foo"));
 
@@ -96,14 +96,14 @@ public class RoutesConfigurationErrorHandlerTest extends ContextTestSupport {
     public void testLocalConfiguration() throws Exception {
         context.addRoutes(new RouteConfigurationBuilder() {
             @Override
-            public void configuration() {
+            public void configuration() throws Exception {
                 routeConfiguration("mylocal").errorHandler(deadLetterChannel("mock:error"));
 
             }
         });
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .throwException(new IllegalArgumentException("Foo"));
 
@@ -115,9 +115,12 @@ public class RoutesConfigurationErrorHandlerTest extends ContextTestSupport {
 
         getMockEndpoint("mock:error").expectedBodiesReceived("Bye World");
 
-        assertThrows(Exception.class, () -> template.sendBody("direct:start", "Hello World"),
-                "Should throw exception");
-
+        try {
+            template.sendBody("direct:start", "Hello World");
+            fail("Should throw exception");
+        } catch (Exception e) {
+            // expected
+        }
         template.sendBody("direct:start2", "Bye World");
 
         assertMockEndpointsSatisfied();
@@ -127,7 +130,7 @@ public class RoutesConfigurationErrorHandlerTest extends ContextTestSupport {
     public void testGlobalAndLocal() throws Exception {
         context.addRoutes(new RouteConfigurationBuilder() {
             @Override
-            public void configuration() {
+            public void configuration() throws Exception {
                 routeConfiguration().errorHandler(deadLetterChannel("mock:error"));
                 routeConfiguration("mylocal").errorHandler(deadLetterChannel("mock:error2"));
 
@@ -135,7 +138,7 @@ public class RoutesConfigurationErrorHandlerTest extends ContextTestSupport {
         });
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .throwException(new IllegalArgumentException("Foo"));
 

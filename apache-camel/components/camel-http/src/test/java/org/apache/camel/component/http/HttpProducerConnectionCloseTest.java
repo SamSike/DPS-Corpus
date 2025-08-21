@@ -22,9 +22,11 @@ import org.apache.camel.component.http.handler.BasicValidationHandler;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.http.common.HttpHeaderFilterStrategy;
 import org.apache.camel.spi.Registry;
-import org.apache.hc.core5.http.HeaderElements;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.protocol.HTTP;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.http.HttpMethods.GET;
@@ -40,18 +42,22 @@ public class HttpProducerConnectionCloseTest extends BaseHttpTest {
 
     private HttpServer localServer;
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+    public void setUp() throws Exception {
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext())
-                .register("/myget", new BasicValidationHandler(GET.name(), null, null, getExpectedContent())).create();
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext())
+                .registerHandler("/myget", new BasicValidationHandler(GET.name(), null, null, getExpectedContent())).create();
         localServer.start();
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() throws Exception {
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (localServer != null) {
             localServer.stop();
@@ -63,17 +69,17 @@ public class HttpProducerConnectionCloseTest extends BaseHttpTest {
         HttpComponent component = context.getComponent("http", HttpComponent.class);
         component.setConnectionTimeToLive(1000L);
         HttpEndpoint endpoint = (HttpEndpoint) component
-                .createEndpoint("http://localhost:"
+                .createEndpoint("http://" + localServer.getInetAddress().getHostName() + ":"
                                 + localServer.getLocalPort() + "/myget?headerFilterStrategy=#myFilter");
         HttpProducer producer = new HttpProducer(endpoint);
         Exchange exchange = producer.createExchange();
         exchange.getIn().setBody(null);
-        exchange.getIn().setHeader("connection", HeaderElements.CLOSE);
+        exchange.getIn().setHeader("connection", HTTP.CONN_CLOSE);
         producer.start();
         producer.process(exchange);
         producer.stop();
 
-        assertEquals(HeaderElements.CLOSE, exchange.getMessage().getHeader("connection"));
+        assertEquals(HTTP.CONN_CLOSE, exchange.getMessage().getHeader("connection"));
         assertExchange(exchange);
     }
 
@@ -83,7 +89,7 @@ public class HttpProducerConnectionCloseTest extends BaseHttpTest {
         registry.bind("myFilter", connectionCloseFilterStrategy);
     }
 
-    static class ConnectionCloseHeaderFilter extends HttpHeaderFilterStrategy {
+    class ConnectionCloseHeaderFilter extends HttpHeaderFilterStrategy {
         @Override
         protected void initialize() {
             super.initialize();

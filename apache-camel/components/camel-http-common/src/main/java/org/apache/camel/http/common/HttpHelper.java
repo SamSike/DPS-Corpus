@@ -35,8 +35,6 @@ import org.apache.camel.Exchange;
 import org.apache.camel.RuntimeExchangeException;
 import org.apache.camel.converter.stream.CachedOutputStream;
 import org.apache.camel.support.CamelObjectInputStream;
-import org.apache.camel.support.http.HttpUtil;
-import org.apache.camel.util.CollectionHelper;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.URISupport;
 import org.apache.camel.util.UnsafeUriCharactersEncoder;
@@ -56,11 +54,11 @@ public final class HttpHelper {
     }
 
     public static void setCharsetFromContentType(String contentType, Exchange exchange) {
-        HttpUtil.setCharsetFromContentType(contentType, exchange);
+        org.apache.camel.http.base.HttpHelper.setCharsetFromContentType(contentType, exchange);
     }
 
     public static String getCharsetFromContentType(String contentType) {
-        return HttpUtil.getCharsetFromContentType(contentType);
+        return org.apache.camel.http.base.HttpHelper.getCharsetFromContentType(contentType);
     }
 
     /**
@@ -120,7 +118,7 @@ public final class HttpHelper {
             return null;
         }
 
-        Object answer;
+        Object answer = null;
         ObjectInputStream ois = new CamelObjectInputStream(is, context);
         try {
             answer = ois.readObject();
@@ -204,24 +202,20 @@ public final class HttpHelper {
             if (path.length() > 1 && path.startsWith("/")) {
                 path = path.substring(1);
             }
-            if (!path.isEmpty()) {
+            if (path.length() > 0) {
                 // inject the dynamic path before the query params, if there are any
                 int idx = uri.indexOf('?');
 
                 // if there are no query params
                 if (idx == -1) {
                     // make sure that there is exactly one "/" between HTTP_URI and HTTP_PATH
-                    if (uri.endsWith("/") && path.startsWith("/")) {
-                        uri = uri.concat(path.substring(1));
-                    } else {
-                        uri = uri.endsWith("/") || path.startsWith("/") ? uri : uri + "/";
-                        uri = uri.concat(path);
-                    }
+                    uri = uri.endsWith("/") || path.startsWith("/") ? uri : uri + "/";
+                    uri = uri.concat(path);
                 } else {
                     // there are query params, so inject the relative path in the right place
                     String base = uri.substring(0, idx);
                     base = base.endsWith("/") ? base : base + "/";
-                    base = base.concat(path.startsWith("/") ? path.substring(1) : path);
+                    base = base.concat(path);
                     uri = base.concat(uri.substring(idx));
                 }
             }
@@ -278,8 +272,10 @@ public final class HttpHelper {
      * @param key     the key
      * @param value   the value
      */
+    @SuppressWarnings("unchecked")
     public static void appendHeader(Map<String, Object> headers, String key, Object value) {
-        CollectionHelper.appendEntry(headers, key, value);
+        org.apache.camel.http.base.HttpHelper.appendHeader(headers, key, value);
+
     }
 
     /**
@@ -357,22 +353,6 @@ public final class HttpHelper {
      */
     public static boolean isStatusCodeOk(int statusCode, String okStatusCodeRange) {
         return org.apache.camel.http.base.HttpHelper.isStatusCodeOk(statusCode, okStatusCodeRange);
-    }
-
-    /**
-     * Sanitize log: it removes any new line and carriage return in order to avoid third party integrations with logging
-     * system to suffer potential log injection.
-     *
-     * @param  input the log trace
-     * @return       a sanitized log trace
-     */
-    public static String[] sanitizeLog(String[] input) {
-        String[] sanitizedLog = new String[input.length];
-        for (int i = 0; i < input.length; i++) {
-            sanitizedLog[i] = input[i].replaceAll("[\n\r]", "_");
-        }
-
-        return sanitizedLog;
     }
 
 }

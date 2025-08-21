@@ -31,8 +31,8 @@ public class RoutePoliciesRefTest extends ContextTestSupport {
     private final MyCustomRoutePolicy policyB = new MyCustomRoutePolicy("B");
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("policy-a", policyA);
         jndi.bind("policy-b", policyB);
         return jndi;
@@ -66,10 +66,10 @@ public class RoutePoliciesRefTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routePolicyRef("policy-a, policy-b").to("mock:result");
             }
         };

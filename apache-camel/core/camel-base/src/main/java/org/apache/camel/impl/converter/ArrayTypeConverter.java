@@ -35,7 +35,8 @@ public class ArrayTypeConverter extends TypeConverterSupport {
     @SuppressWarnings("unchecked")
     public <T> T convertTo(Class<T> type, Exchange exchange, Object value) {
         if (type.isArray()) {
-            if (value instanceof Collection collection) {
+            if (value instanceof Collection) {
+                Collection<?> collection = (Collection<?>) value;
                 Object array = Array.newInstance(type.getComponentType(), collection.size());
                 if (array instanceof Object[]) {
                     collection.toArray((Object[]) array);

@@ -99,8 +99,7 @@ public class IrcProducer extends DefaultProducer {
         try {
             Thread.sleep(getEndpoint().getConfiguration().getCommandTimeout());
         } catch (InterruptedException ex) {
-            LOG.info("Interrupted while sleeping before sending commands");
-            Thread.currentThread().interrupt();
+            // ignore
         }
         getEndpoint().joinChannels();
     }
@@ -147,7 +146,7 @@ public class IrcProducer extends DefaultProducer {
 
         @Override
         public void onError(int num, String msg) {
-            IrcProducer.this.getEndpoint().handleIrcError(num);
+            IrcProducer.this.getEndpoint().handleIrcError(num, msg);
         }
 
     }

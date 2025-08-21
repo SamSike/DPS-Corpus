@@ -37,8 +37,8 @@ public final class ExpressionToPredicateAdapter implements Predicate, CamelConte
 
     @Override
     public boolean matches(Exchange exchange) {
-        if (expression instanceof Predicate predicate) {
-            return predicate.matches(exchange);
+        if (expression instanceof Predicate) {
+            return ((Predicate) expression).matches(exchange);
         } else {
             Object value = expression.evaluate(exchange, Object.class);
             return ObjectHelper.evaluateValuePredicate(value);
@@ -54,8 +54,8 @@ public final class ExpressionToPredicateAdapter implements Predicate, CamelConte
      * Converts the given expression into an {@link Predicate}
      */
     public static Predicate toPredicate(final Expression expression) {
-        if (expression instanceof Predicate predicate) {
-            return predicate;
+        if (expression instanceof Predicate) {
+            return (Predicate) expression;
         }
         return new ExpressionToPredicateAdapter(expression);
     }
@@ -72,8 +72,8 @@ public final class ExpressionToPredicateAdapter implements Predicate, CamelConte
 
     @Override
     public CamelContext getCamelContext() {
-        if (expression instanceof CamelContextAware camelContext) {
-            return camelContext.getCamelContext();
+        if (expression instanceof CamelContextAware) {
+            return ((CamelContextAware) expression).getCamelContext();
         } else {
             return null;
         }
@@ -81,10 +81,10 @@ public final class ExpressionToPredicateAdapter implements Predicate, CamelConte
 
     @Override
     public PropertyConfigurer getPropertyConfigurer(Object instance) {
-        if (expression instanceof PropertyConfigurer propertyConfigurer) {
-            return propertyConfigurer;
-        } else if (expression instanceof PropertyConfigurerAware propertyConfigurer) {
-            return propertyConfigurer.getPropertyConfigurer(expression);
+        if (expression instanceof PropertyConfigurer) {
+            return (PropertyConfigurer) expression;
+        } else if (expression instanceof PropertyConfigurerAware) {
+            return ((PropertyConfigurerAware) expression).getPropertyConfigurer(expression);
         } else {
             return null;
         }

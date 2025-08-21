@@ -40,6 +40,7 @@ import org.apache.cxf.frontend.ClientProxy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -47,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CXFWsdlOnlyPayloadModeNoSpringTest extends CamelTestSupport {
 
     protected static final String SERVICE_NAME_PROP = "serviceName=";
@@ -86,17 +88,17 @@ public class CXFWsdlOnlyPayloadModeNoSpringTest extends CamelTestSupport {
                 from("cxf://http://localhost:" + port2
                      + "/" + cn + "/PersonService?" + PORT_NAME_PROP + "&" + SERVICE_NAME_PROP + getServiceName() + "&"
                      + WSDL_URL_PROP + "&dataFormat=" + getDataFormat())
-                        .process(new Processor() {
+                             .process(new Processor() {
 
-                            @Override
-                            public void process(Exchange exchange) throws Exception {
-                                checkSOAPAction(exchange);
-                            }
+                                 @Override
+                                 public void process(Exchange exchange) throws Exception {
+                                     checkSOAPAction(exchange);
+                                 }
 
-                        })
-                        .to("cxf://http://localhost:" + port1
-                            + "/" + cn + "/PersonService?" + PORT_NAME_PROP + "&" + SERVICE_NAME_PROP + getServiceName()
-                            + "&" + WSDL_URL_PROP + "&dataFormat=" + getDataFormat());
+                             })
+                             .to("cxf://http://localhost:" + port1
+                                 + "/" + cn + "/PersonService?" + PORT_NAME_PROP + "&" + SERVICE_NAME_PROP + getServiceName()
+                                 + "&" + WSDL_URL_PROP + "&dataFormat=" + getDataFormat());
             }
         };
     }

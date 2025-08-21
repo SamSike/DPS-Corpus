@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,16 +28,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.core.testfixture.io.ResourceTestUtils.qualifiedResource;
 
 /**
- * Tests for {@link FieldRetrievingFactoryBean}.
+ * Unit tests for {@link FieldRetrievingFactoryBean}.
  *
  * @author Juergen Hoeller
  * @author Chris Beams
  * @since 31.07.2004
  */
-class FieldRetrievingFactoryBeanTests {
+public class FieldRetrievingFactoryBeanTests {
 
 	@Test
-	void testStaticField() throws Exception {
+	public void testStaticField() throws Exception {
 		FieldRetrievingFactoryBean fr = new FieldRetrievingFactoryBean();
 		fr.setStaticField("java.sql.Connection.TRANSACTION_SERIALIZABLE");
 		fr.afterPropertiesSet();
@@ -45,7 +45,7 @@ class FieldRetrievingFactoryBeanTests {
 	}
 
 	@Test
-	void testStaticFieldWithWhitespace() throws Exception {
+	public void testStaticFieldWithWhitespace() throws Exception {
 		FieldRetrievingFactoryBean fr = new FieldRetrievingFactoryBean();
 		fr.setStaticField("  java.sql.Connection.TRANSACTION_SERIALIZABLE  ");
 		fr.afterPropertiesSet();
@@ -53,7 +53,7 @@ class FieldRetrievingFactoryBeanTests {
 	}
 
 	@Test
-	void testStaticFieldViaClassAndFieldName() throws Exception {
+	public void testStaticFieldViaClassAndFieldName() throws Exception {
 		FieldRetrievingFactoryBean fr = new FieldRetrievingFactoryBean();
 		fr.setTargetClass(Connection.class);
 		fr.setTargetField("TRANSACTION_SERIALIZABLE");
@@ -62,7 +62,7 @@ class FieldRetrievingFactoryBeanTests {
 	}
 
 	@Test
-	void testNonStaticField() throws Exception {
+	public void testNonStaticField() throws Exception {
 		FieldRetrievingFactoryBean fr = new FieldRetrievingFactoryBean();
 		PublicFieldHolder target = new PublicFieldHolder();
 		fr.setTargetObject(target);
@@ -72,7 +72,7 @@ class FieldRetrievingFactoryBeanTests {
 	}
 
 	@Test
-	void testNothingButBeanName() throws Exception {
+	public void testNothingButBeanName() throws Exception {
 		FieldRetrievingFactoryBean fr = new FieldRetrievingFactoryBean();
 		fr.setBeanName("java.sql.Connection.TRANSACTION_SERIALIZABLE");
 		fr.afterPropertiesSet();
@@ -80,7 +80,7 @@ class FieldRetrievingFactoryBeanTests {
 	}
 
 	@Test
-	void testJustTargetField() throws Exception {
+	public void testJustTargetField() throws Exception {
 		FieldRetrievingFactoryBean fr = new FieldRetrievingFactoryBean();
 		fr.setTargetField("TRANSACTION_SERIALIZABLE");
 		try {
@@ -91,7 +91,7 @@ class FieldRetrievingFactoryBeanTests {
 	}
 
 	@Test
-	void testJustTargetClass() throws Exception {
+	public void testJustTargetClass() throws Exception {
 		FieldRetrievingFactoryBean fr = new FieldRetrievingFactoryBean();
 		fr.setTargetClass(Connection.class);
 		try {
@@ -102,7 +102,7 @@ class FieldRetrievingFactoryBeanTests {
 	}
 
 	@Test
-	void testJustTargetObject() throws Exception {
+	public void testJustTargetObject() throws Exception {
 		FieldRetrievingFactoryBean fr = new FieldRetrievingFactoryBean();
 		fr.setTargetObject(new PublicFieldHolder());
 		try {
@@ -113,7 +113,7 @@ class FieldRetrievingFactoryBeanTests {
 	}
 
 	@Test
-	void testWithConstantOnClassWithPackageLevelVisibility() throws Exception {
+	public void testWithConstantOnClassWithPackageLevelVisibility() throws Exception {
 		FieldRetrievingFactoryBean fr = new FieldRetrievingFactoryBean();
 		fr.setBeanName("org.springframework.beans.testfixture.beans.PackageLevelVisibleBean.CONSTANT");
 		fr.afterPropertiesSet();
@@ -121,7 +121,7 @@ class FieldRetrievingFactoryBeanTests {
 	}
 
 	@Test
-	void testBeanNameSyntaxWithBeanFactory() {
+	public void testBeanNameSyntaxWithBeanFactory() throws Exception {
 		DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
 		new XmlBeanDefinitionReader(bf).loadBeanDefinitions(
 				qualifiedResource(FieldRetrievingFactoryBeanTests.class, "context.xml"));

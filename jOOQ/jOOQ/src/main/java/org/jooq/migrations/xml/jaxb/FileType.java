@@ -23,12 +23,12 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
  * &lt;complexType name="FileType"&gt;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
- *       &lt;all&gt;
+ *       &lt;sequence&gt;
  *         &lt;element name="path" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="content" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="contentType" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
- *         &lt;element name="change" type="{http://www.jooq.org/xsd/jooq-migrations-3.20.0.xsd}ChangeType"/&gt;
- *       &lt;/all&gt;
+ *         &lt;element name="change" type="{http://www.jooq.org/xsd/jooq-migrations-3.15.0.xsd}ChangeType"/&gt;
+ *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
  * &lt;/complexType&gt;
@@ -38,7 +38,10 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "FileType", propOrder = {
-
+    "path",
+    "content",
+    "contentType",
+    "change"
 })
 @SuppressWarnings({
     "all"
@@ -46,7 +49,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class FileType implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32000L;
+    private final static long serialVersionUID = 31500L;
     @XmlElement(required = true)
     protected String path;
     protected String content;

@@ -35,16 +35,18 @@ import org.junit.jupiter.api.Test;
 import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-class TarFileSplitAndDeleteTest extends CamelTestSupport {
+public class TarFileSplitAndDeleteTest extends CamelTestSupport {
 
+    @Override
     @BeforeEach
-    public void cleanOutputDirectories() {
+    public void setUp() throws Exception {
         deleteDirectory("target/testDeleteTarFileWhenUnmarshalWithDataFormat");
         deleteDirectory("target/testDeleteTarFileWhenUnmarshalWithSplitter");
+        super.setUp();
     }
 
     @Test
-    void testDeleteTarFileWhenUnmarshalWithDataFormat() throws Exception {
+    public void testDeleteTarFileWhenUnmarshalWithDataFormat() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context)
                 .from("file://target/" + "testDeleteTarFileWhenUnmarshalWithDataFormat").whenDone(1).create();
         getMockEndpoint("mock:end").expectedMessageCount(3);
@@ -59,7 +61,7 @@ class TarFileSplitAndDeleteTest extends CamelTestSupport {
     }
 
     @Test
-    void testDeleteTarFileWhenUnmarshalWithSplitter() throws Exception {
+    public void testDeleteTarFileWhenUnmarshalWithSplitter() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).from("file://target/" + "testDeleteTarFileWhenUnmarshalWithSplitter")
                 .whenDone(1).create();
         getMockEndpoint("mock:end").expectedMessageCount(3);

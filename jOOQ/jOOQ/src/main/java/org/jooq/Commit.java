@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,30 +39,14 @@ package org.jooq;
 
 import java.util.Collection;
 
-import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * A change set describing the exact migration path between the
- * {@link #parents()} versions and the {@link #version()} represented by this
- * change.
+ * A commit in a version control system.
  *
  * @author Lukas Eder
  */
-@Experimental
 public interface Commit extends Node<Commit> {
-
-    /**
-     * Whether this commit is a valid commit that can be migrated to.
-     */
-    boolean valid();
-
-    /**
-     * Set the new {@link #valid()} flag for this commit, returning a copy of
-     * the commit itself.
-     */
-    @NotNull
-    Commit valid(boolean valid);
 
     /**
      * The files affected by this commit, in no particular order.
@@ -81,24 +65,6 @@ public interface Commit extends Node<Commit> {
      */
     @NotNull
     Collection<Source> sources();
-
-    /**
-     * The tags associated with this commit, in no particular order.
-     */
-    @NotNull
-    Collection<Tag> tags();
-
-    /**
-     * Add a tag to this commit, returning a copy of the commit itself.
-     */
-    @NotNull
-    Commit tag(String id);
-
-    /**
-     * Add a tag to this commit, returning a copy of the commit itself.
-     */
-    @NotNull
-    Commit tag(String id, String message);
 
     /**
      * Get the version representing this commit.
@@ -143,18 +109,6 @@ public interface Commit extends Node<Commit> {
     Commit commit(String id, String message, Collection<? extends File> delta);
 
     /**
-     * Create a new commit on top of this one.
-     */
-    @NotNull
-    Commit commit(String id, String message, String author, File... delta);
-
-    /**
-     * Create a new commit on top of this one.
-     */
-    @NotNull
-    Commit commit(String id, String message, String author, Collection<? extends File> delta);
-
-    /**
      * Merge two commits.
      */
     @NotNull
@@ -177,16 +131,4 @@ public interface Commit extends Node<Commit> {
      */
     @NotNull
     Commit merge(String id, String message, Commit with, Collection<? extends File> delta);
-
-    /**
-     * Merge two commits.
-     */
-    @NotNull
-    Commit merge(String id, String message, String author, Commit with, File... delta);
-
-    /**
-     * Merge two commits.
-     */
-    @NotNull
-    Commit merge(String id, String message, String author, Commit with, Collection<? extends File> delta);
 }

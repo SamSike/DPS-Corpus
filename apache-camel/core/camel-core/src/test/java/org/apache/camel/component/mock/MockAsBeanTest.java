@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 public class MockAsBeanTest extends ContextTestSupport {
 
     // create foo bean as a mock endpoint
-    private final MockEndpoint foo = new MockEndpoint("mock:foo", new MockComponent());
+    private MockEndpoint foo = new MockEndpoint("mock:foo", new MockComponent());
 
     // START SNIPPET: e1
     @Test
@@ -37,7 +37,7 @@ public class MockAsBeanTest extends ContextTestSupport {
         // the foo bean is a MockEndpoint which we use in this test to transform
         // the message
         foo.whenAnyExchangeReceived(new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 String in = exchange.getIn().getBody(String.class);
                 exchange.getIn().setBody("Bye " + in);
             }
@@ -51,10 +51,10 @@ public class MockAsBeanTest extends ContextTestSupport {
 
     @Override
     // START SNIPPET: e2
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.getRegistry().bind("foo", foo);
 
                 from("direct:start")

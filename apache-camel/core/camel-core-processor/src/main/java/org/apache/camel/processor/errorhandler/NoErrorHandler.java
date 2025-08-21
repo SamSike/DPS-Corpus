@@ -21,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.AsyncProcessor;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Processor;
 import org.apache.camel.spi.ErrorHandler;
 import org.apache.camel.support.AsyncCallbackToCompletableFutureAdapter;
@@ -46,7 +47,7 @@ public class NoErrorHandler extends ErrorHandlerSupport implements AsyncProcesso
         return output.process(exchange, new AsyncCallback() {
             @Override
             public void done(boolean doneSync) {
-                exchange.getExchangeExtension().setRedeliveryExhausted(false);
+                exchange.adapt(ExtendedExchange.class).setRedeliveryExhausted(false);
                 callback.done(doneSync);
             }
         });

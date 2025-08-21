@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RecipientListEventNotifierTest extends ContextTestSupport {
 
-    private final MyEventNotifier notifier = new MyEventNotifier();
+    private MyEventNotifier notifier = new MyEventNotifier();
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
@@ -62,13 +62,13 @@ public class RecipientListEventNotifierTest extends ContextTestSupport {
         };
     }
 
-    private static final class MyEventNotifier extends EventNotifierSupport {
+    private final class MyEventNotifier extends EventNotifierSupport {
 
         private int sending;
         private int sent;
 
         @Override
-        public void notify(CamelEvent event) {
+        public void notify(CamelEvent event) throws Exception {
             if (event instanceof ExchangeSendingEvent) {
                 sending++;
             } else {

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,16 +39,13 @@ package org.jooq;
 
 import org.jetbrains.annotations.*;
 
-import java.sql.Statement;
+
 import java.util.Collection;
 
 /**
  * This type is used for the {@link Insert}'s DSL API.
  * <p>
- * Example:
- *
- * <pre>
- * <code>
+ * Example: <code><pre>
  * DSLContext create = DSL.using(configuration);
  *
  * TableRecord&lt;?&gt; record =
@@ -56,37 +53,26 @@ import java.util.Collection;
  *       .values(value1, value2)
  *       .returning(field1)
  *       .fetchOne();
- * </code>
- * </pre>
+ * </pre></code>
  * <p>
  * This implemented differently for every dialect:
  * <ul>
- * <li>{@link SQLDialect#COCKROACHDB}, {@link SQLDialect#DUCKDB},
- * {@link SQLDialect#FIREBIRD}, {@link SQLDialect#MARIADB},
- * {@link SQLDialect#POSTGRES}, {@link SQLDialect#SQLITE},
- * {@link SQLDialect#YUGABYTEDB} have native support for
- * <code>UPDATE … RETURNING</code> clauses in SQL</li>
- * <li>{@link SQLDialect#ORACLE} has native support for
- * <code>UPDATE … RETURNING</code> in PL/SQL, so jOOQ can render an anonymous
- * block</li>
- * <li>{@link SQLDialect#SQLSERVER} supports an <code>UPDATE … OUTPUT</code>
- * syntax, which can capture defaults and computed column values, though not
- * trigger generated values.</li>
- * <li>{@link SQLDialect#DB2} and {@link SQLDialect#H2} allow to execute the
- * standard SQL data change delta table syntax:
- * <code>SELECT … FROM FINAL TABLE (UPDATE …)</code></li>
- * <li>Other dialects may be able to retrieve <code>IDENTITY</code> values using
- * JDBC {@link Statement#RETURN_GENERATED_KEYS} or using native SQL means, such
- * as <code>@@identity</code> or similar variables, and other fields using a
- * second query, in case of which clients will need to ensure transactional
- * integrity themselves.</li>
+ * <li>Firebird and Postgres have native support for
+ * <code>INSERT .. RETURNING</code> clauses</li>
+ * <li>DB2 allows to execute
+ * <code>SELECT .. FROM FINAL TABLE (INSERT ...)</code></li>
+ * <li>HSQLDB, and Oracle JDBC drivers allow for retrieving any table column as
+ * "generated key" in one statement</li>
+ * <li>Derby, H2, Ingres, MySQL, SQL Server only allow for retrieving IDENTITY
+ * column values as "generated key". If other fields are requested, a second
+ * statement is issued. Client code must assure transactional integrity between
+ * the two statements.</li>
+ * <li>Sybase and SQLite allow for retrieving IDENTITY values as
+ * <code>@@identity</code> or <code>last_inserted_rowid()</code> values. Those
+ * values are fetched in a separate <code>SELECT</code> statement. If other
+ * fields are requested, a second statement is issued. Client code must assure
+ * transactional integrity between the two statements.</li>
  * </ul>
- * <p>
- * <strong>Note that if jOOQ cannot fetch any identity value in your given
- * dialect because 1) there is no native SQL syntax or 2) there is no identity
- * column, or 3) there is no support for fetching any identity values, then the
- * <code>INSERT … RETURNING</code> statement will simply not produce any
- * rows!</strong>
  * <p>
  * <h3>Referencing <code>XYZ*Step</code> types directly from client code</h3>
  * <p>

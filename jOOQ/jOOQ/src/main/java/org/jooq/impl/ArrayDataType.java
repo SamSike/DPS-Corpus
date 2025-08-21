@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -46,8 +46,6 @@ import org.jooq.DataType;
 import org.jooq.Field;
 import org.jooq.Generator;
 import org.jooq.Nullability;
-import org.jooq.Record;
-import org.jooq.Row;
 import org.jooq.SQLDialect;
 import org.jooq.impl.QOM.GenerationLocation;
 import org.jooq.impl.QOM.GenerationOption;
@@ -77,8 +75,6 @@ final class ArrayDataType<T> extends DefaultDataType<T[]> {
         Integer scale,
         Integer length,
         Nullability nullability,
-        boolean hidden,
-        boolean redacted,
         boolean readonly,
         Generator<?, ?, T[]> generatedAlwaysAs,
         GenerationOption generationOption,
@@ -88,7 +84,7 @@ final class ArrayDataType<T> extends DefaultDataType<T[]> {
         boolean identity,
         Field<T[]> defaultValue
     ) {
-        super(t, precision, scale, length, nullability, hidden, redacted, readonly, generatedAlwaysAs, generationOption, generationLocation, collation, characterSet, identity, defaultValue);
+        super(t, precision, scale, length, nullability, readonly, generatedAlwaysAs, generationOption, generationLocation, collation, characterSet, identity, defaultValue);
 
         this.elementType = elementType;
     }
@@ -100,8 +96,6 @@ final class ArrayDataType<T> extends DefaultDataType<T[]> {
         Integer newScale,
         Integer newLength,
         Nullability newNullability,
-        boolean newHidden,
-        boolean newRedacted,
         boolean newReadonly,
         Generator<?, ?, T[]> newGeneratedAlwaysAs,
         GenerationOption newGenerationOption,
@@ -118,8 +112,6 @@ final class ArrayDataType<T> extends DefaultDataType<T[]> {
             newScale,
             newLength,
             newNullability,
-            newHidden,
-            newRedacted,
             newReadonly,
             newGeneratedAlwaysAs,
             newGenerationOption,
@@ -133,7 +125,7 @@ final class ArrayDataType<T> extends DefaultDataType<T[]> {
 
     @Override
     public final String getTypeName() {
-        return getTypeName(CONFIG.get());
+        return getTypeName(CONFIG);
     }
 
     @Override
@@ -144,23 +136,13 @@ final class ArrayDataType<T> extends DefaultDataType<T[]> {
 
     @Override
     public final String getCastTypeName() {
-        return getCastTypeName(CONFIG.get());
+        return getCastTypeName(CONFIG);
     }
 
     @Override
     public final String getCastTypeName(Configuration configuration) {
         String castTypeName = elementType.getCastTypeName(configuration);
         return getArrayType(configuration, castTypeName);
-    }
-
-    @Override
-    public final Row getRow() {
-        return elementType.getRow();
-    }
-
-    @Override
-    public final Class<? extends Record> getRecordType() {
-        return elementType.getRecordType();
     }
 
     @Override
@@ -173,38 +155,26 @@ final class ArrayDataType<T> extends DefaultDataType<T[]> {
         return elementType;
     }
 
-    @Override
-    public final Class<?> getArrayBaseType() {
-        return getArrayBaseDataType().getType();
-    }
-
-    @Override
-    public final DataType<?> getArrayBaseDataType() {
-        DataType<?> result = this;
-        DataType<?> t;
-
-        while ((t = result.getArrayComponentDataType()) != null)
-            result = t;
-
-        return result;
-    }
 
     private static String getArrayType(Configuration configuration, String dataType) {
-        if (DefaultDataType.SUPPORT_POSTGRES_SUFFIX_ARRAY_NOTATION.contains(configuration.dialect()))
-            return dataType + "[]";
-
-        else if (DefaultDataType.SUPPORT_TRINO_ARRAY_NOTATION.contains(configuration.dialect()))
-            return "Array(" + dataType + ")";
+        switch (configuration.family()) {
 
 
+            case POSTGRES:
+            case YUGABYTEDB:
+                return dataType + "[]";
 
-
-
+            case H2:
 
 
 
 
-        else
-            return dataType + " array";
+
+                return dataType + " array";
+
+            // Default implementation is needed for hash-codes and toString()
+            default:
+                return dataType + " array";
+        }
     }
 }

@@ -64,7 +64,7 @@ public class LuceneSuggestionStrategy implements SuggestionStrategy {
             // ignore
         }
 
-        return new String[0];
+        return null;
     }
 
 }

@@ -34,8 +34,14 @@ public class SSLContextServerParameters extends BaseSSLContextParameters {
 
     private static final Logger LOG = LoggerFactory.getLogger(SSLContextServerParameters.class);
 
+    /**
+     * The optional configuration options for server-side client-authentication requirements.
+     */
     protected String clientAuthentication;
 
+    /**
+     * @see #setClientAuthentication(String)
+     */
     public String getClientAuthentication() {
         return clientAuthentication;
     }
@@ -67,6 +73,8 @@ public class SSLContextServerParameters extends BaseSSLContextParameters {
     }
 
     /**
+     * {@inheritDoc}
+     * <p/>
      * This implementation allows for configuration of the need and want settings for client authentication, but ignores
      * the enabled cipher suites and protocols as they are not client and server side specific in an {@code SSLEngine}.
      * Consequently, overriding them here would be a bit odd as the server side specific configuration shouldn't really
@@ -85,7 +93,7 @@ public class SSLContextServerParameters extends BaseSSLContextParameters {
             final ClientAuthentication clientAuthValue
                     = ClientAuthentication.valueOf(this.parsePropertyValue(this.getClientAuthentication()));
 
-            Configurer<SSLEngine> sslEngineConfigurer = new Configurer<>() {
+            Configurer<SSLEngine> sslEngineConfigurer = new Configurer<SSLEngine>() {
                 @Override
                 public SSLEngine configure(SSLEngine engine) {
                     LOG.trace("Configuring client-auth on SSLEngine [{}] to [{}].", engine, clientAuthValue);
@@ -124,7 +132,7 @@ public class SSLContextServerParameters extends BaseSSLContextParameters {
             final ClientAuthentication clientAuthValue
                     = ClientAuthentication.valueOf(this.parsePropertyValue(this.getClientAuthentication()));
 
-            Configurer<SSLServerSocket> sslServerSocketConfigurer = new Configurer<>() {
+            Configurer<SSLServerSocket> sslServerSocketConfigurer = new Configurer<SSLServerSocket>() {
                 @Override
                 public SSLServerSocket configure(SSLServerSocket socket) {
                     LOG.trace("Configuring client-auth on SSLServerSocket [{}] to [{}].", socket, clientAuthValue);

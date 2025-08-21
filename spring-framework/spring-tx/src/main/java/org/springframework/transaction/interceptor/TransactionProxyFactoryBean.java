@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package org.springframework.transaction.interceptor;
 
 import java.util.Properties;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.aop.Pointcut;
 import org.springframework.aop.framework.AbstractSingletonProxyFactoryBean;
 import org.springframework.aop.framework.ProxyFactory;
@@ -28,6 +26,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
@@ -80,7 +79,7 @@ import org.springframework.transaction.PlatformTransactionManager;
  * deriving concrete child bean definitions for specific target objects.
  * This reduces the per-bean definition effort to a minimum.
  *
- * <pre class="code">
+ * <pre code="class">
  * &lt;bean id="baseTransactionProxy" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean"
  *     abstract="true"&gt;
  *   &lt;property name="transactionManager" ref="transactionManager"/&gt;
@@ -118,7 +117,8 @@ public class TransactionProxyFactoryBean extends AbstractSingletonProxyFactoryBe
 
 	private final TransactionInterceptor transactionInterceptor = new TransactionInterceptor();
 
-	private @Nullable Pointcut pointcut;
+	@Nullable
+	private Pointcut pointcut;
 
 
 	/**
@@ -133,7 +133,7 @@ public class TransactionProxyFactoryBean extends AbstractSingletonProxyFactoryBe
 	/**
 	 * Set properties with method names as keys and transaction attribute
 	 * descriptors (parsed via TransactionAttributeEditor) as values:
-	 * for example, key = "myMethod", value = "PROPAGATION_REQUIRED,readOnly".
+	 * e.g. key = "myMethod", value = "PROPAGATION_REQUIRED,readOnly".
 	 * <p>Note: Method names are always applied to the target class,
 	 * no matter if defined in an interface or the class itself.
 	 * <p>Internally, a NameMatchTransactionAttributeSource will be

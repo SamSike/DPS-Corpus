@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package org.springframework.web.bind.support;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 import jakarta.servlet.MultipartConfigElement;
@@ -25,11 +23,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
-import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee11.servlet.ServletHolder;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.NetworkConnector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,7 +37,6 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.util.FileSystemUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -64,8 +61,6 @@ class WebRequestDataBinderIntegrationTests {
 
 	private String baseUrl;
 
-	private Path tempDirectory;
-
 
 	@BeforeAll
 	void startJettyServer() throws Exception {
@@ -74,9 +69,7 @@ class WebRequestDataBinderIntegrationTests {
 
 		ServletContextHandler handler = new ServletContextHandler();
 
-		this.tempDirectory = Files.createTempDirectory("WebRequestDataBinderIntegrationTests");
-
-		MultipartConfigElement multipartConfig = new MultipartConfigElement(this.tempDirectory.toString());
+		MultipartConfigElement multipartConfig = new MultipartConfigElement("");
 
 		ServletHolder holder = new ServletHolder(partsServlet);
 		holder.getRegistration().setMultipartConfig(multipartConfig);
@@ -96,13 +89,8 @@ class WebRequestDataBinderIntegrationTests {
 
 	@AfterAll
 	void stopJettyServer() throws Exception {
-		try {
-			if (jettyServer != null) {
-				jettyServer.stop();
-			}
-		}
-		finally {
-			FileSystemUtils.deleteRecursively(this.tempDirectory);
+		if (jettyServer != null) {
+			jettyServer.stop();
 		}
 	}
 
@@ -137,7 +125,7 @@ class WebRequestDataBinderIntegrationTests {
 		template.postForLocation(baseUrl + "/partlist", parts);
 
 		assertThat(bean.getPartList()).isNotNull();
-		assertThat(bean.getPartList()).hasSize(parts.get("partList").size());
+		assertThat(bean.getPartList().size()).isEqualTo(parts.get("partList").size());
 	}
 
 

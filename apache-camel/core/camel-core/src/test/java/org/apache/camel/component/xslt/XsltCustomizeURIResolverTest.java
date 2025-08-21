@@ -49,10 +49,10 @@ public class XsltCustomizeURIResolverTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("file:src/test/data/?fileName=staff.xml&noop=true&initialDelay=0&delay=10")
                         .to("xslt:org/apache/camel/component/xslt/include_not_existing_resource.xsl?uriResolver=#customURIResolver")
                         .to("mock:resultURIResolverDirect");
@@ -74,14 +74,15 @@ public class XsltCustomizeURIResolverTest extends ContextTestSupport {
                     }
                 }
 
-                return new StreamSource(new ByteArrayInputStream(EXPECTED_XML_CONSTANT.getBytes()));
+                Source constantResult = new StreamSource(new ByteArrayInputStream(EXPECTED_XML_CONSTANT.getBytes()));
+                return constantResult;
             }
         };
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry registry = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry registry = super.createRegistry();
         URIResolver customURIResolver = getCustomURIResolver();
         registry.bind("customURIResolver", customURIResolver);
         return registry;

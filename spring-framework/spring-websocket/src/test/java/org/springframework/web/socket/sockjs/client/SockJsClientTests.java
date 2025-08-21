@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@
 package org.springframework.web.socket.sockjs.client;
 
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import org.mockito.ArgumentCaptor;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.concurrent.ListenableFutureCallback;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketHttpHeaders;
@@ -41,71 +43,85 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 /**
- * Tests for {@link SockJsClient}.
+ * Unit tests for {@link org.springframework.web.socket.sockjs.client.SockJsClient}.
  *
  * @author Rossen Stoyanchev
  */
-class SockJsClientTests {
+public class SockJsClientTests {
 
 	private static final String URL = "https://example.com";
 
-	private static final WebSocketHandler handler = mock();
+	private static final WebSocketHandler handler = mock(WebSocketHandler.class);
 
-	private final InfoReceiver infoReceiver = mock();
 
-	private final TestTransport webSocketTransport = new TestTransport("WebSocketTestTransport");
+	private SockJsClient sockJsClient;
 
-	private final XhrTestTransport xhrTransport = new XhrTestTransport("XhrTestTransport");
+	private InfoReceiver infoReceiver;
 
-	private final BiConsumer<WebSocketSession, Throwable> connectCallback = mock();
+	private TestTransport webSocketTransport;
 
-	private final SockJsClient sockJsClient = new SockJsClient(List.of(this.webSocketTransport, this.xhrTransport));
+	private XhrTestTransport xhrTransport;
+
+	private ListenableFutureCallback<WebSocketSession> connectCallback;
 
 
 	@BeforeEach
-	void setup() {
+	@SuppressWarnings("unchecked")
+	public void setup() {
+		this.infoReceiver = mock(InfoReceiver.class);
+		this.webSocketTransport = new TestTransport("WebSocketTestTransport");
+		this.xhrTransport = new XhrTestTransport("XhrTestTransport");
+
+		List<Transport> transports = new ArrayList<>();
+		transports.add(this.webSocketTransport);
+		transports.add(this.xhrTransport);
+		this.sockJsClient = new SockJsClient(transports);
 		this.sockJsClient.setInfoReceiver(this.infoReceiver);
+
+		this.connectCallback = mock(ListenableFutureCallback.class);
 	}
 
 	@Test
-	void connectWebSocket() {
+	public void connectWebSocket() throws Exception {
 		setupInfoRequest(true);
-		this.sockJsClient.execute(handler, URL).whenComplete(this.connectCallback);
+		this.sockJsClient.doHandshake(handler, URL).addCallback(this.connectCallback);
 		assertThat(this.webSocketTransport.invoked()).isTrue();
-		WebSocketSession session = mock();
-		this.webSocketTransport.getConnectCallback().accept(session, null);
-		verify(this.connectCallback).accept(session, null);
+		WebSocketSession session = mock(WebSocketSession.class);
+		this.webSocketTransport.getConnectCallback().onSuccess(session);
+		verify(this.connectCallback).onSuccess(session);
 		verifyNoMoreInteractions(this.connectCallback);
 	}
 
 	@Test
-	void connectWebSocketDisabled() {
+	public void connectWebSocketDisabled() throws URISyntaxException {
 		setupInfoRequest(false);
-		this.sockJsClient.execute(handler, URL);
+		this.sockJsClient.doHandshake(handler, URL);
 		assertThat(this.webSocketTransport.invoked()).isFalse();
 		assertThat(this.xhrTransport.invoked()).isTrue();
-		assertThat(this.xhrTransport.getRequest().getTransportUrl().toString()).endsWith("xhr_streaming");
+		assertThat(this.xhrTransport.getRequest().getTransportUrl().toString().endsWith("xhr_streaming")).isTrue();
 	}
 
 	@Test
-	void connectXhrStreamingDisabled() {
+	public void connectXhrStreamingDisabled() throws Exception {
 		setupInfoRequest(false);
 		this.xhrTransport.setStreamingDisabled(true);
-		this.sockJsClient.execute(handler, URL).whenComplete(this.connectCallback);
+		this.sockJsClient.doHandshake(handler, URL).addCallback(this.connectCallback);
 		assertThat(this.webSocketTransport.invoked()).isFalse();
 		assertThat(this.xhrTransport.invoked()).isTrue();
-		assertThat(this.xhrTransport.getRequest().getTransportUrl().toString()).endsWith("xhr");
+		assertThat(this.xhrTransport.getRequest().getTransportUrl().toString().endsWith("xhr")).isTrue();
 	}
 
-	@Test  // SPR-13254
-	void connectWithHandshakeHeaders() {
+	// SPR-13254
+
+	@Test
+	public void connectWithHandshakeHeaders() throws Exception {
 		ArgumentCaptor<HttpHeaders> headersCaptor = setupInfoRequest(false);
 		this.xhrTransport.setStreamingDisabled(true);
 
 		WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
 		headers.set("foo", "bar");
 		headers.set("auth", "123");
-		this.sockJsClient.execute(handler, headers, URI.create(URL)).whenComplete(this.connectCallback);
+		this.sockJsClient.doHandshake(handler, headers, new URI(URL)).addCallback(this.connectCallback);
 
 		HttpHeaders httpHeaders = headersCaptor.getValue();
 		assertThat(httpHeaders.size()).isEqualTo(2);
@@ -119,7 +135,7 @@ class SockJsClientTests {
 	}
 
 	@Test
-	void connectAndUseSubsetOfHandshakeHeadersForHttpRequests() {
+	public void connectAndUseSubsetOfHandshakeHeadersForHttpRequests() throws Exception {
 		ArgumentCaptor<HttpHeaders> headersCaptor = setupInfoRequest(false);
 		this.xhrTransport.setStreamingDisabled(true);
 
@@ -127,7 +143,7 @@ class SockJsClientTests {
 		headers.set("foo", "bar");
 		headers.set("auth", "123");
 		this.sockJsClient.setHttpHeaderNames("auth");
-		this.sockJsClient.execute(handler, headers, URI.create(URL)).whenComplete(this.connectCallback);
+		this.sockJsClient.doHandshake(handler, headers, new URI(URL)).addCallback(this.connectCallback);
 
 		assertThat(headersCaptor.getValue().size()).isEqualTo(1);
 		assertThat(headersCaptor.getValue().getFirst("auth")).isEqualTo("123");
@@ -136,41 +152,38 @@ class SockJsClientTests {
 	}
 
 	@Test
-	void connectSockJsInfo() {
+	public void connectSockJsInfo() throws Exception {
 		setupInfoRequest(true);
-		this.sockJsClient.execute(handler, URL);
+		this.sockJsClient.doHandshake(handler, URL);
 		verify(this.infoReceiver, times(1)).executeInfoRequest(any(), any());
 	}
 
 	@Test
-	void connectSockJsInfoCached() {
+	public void connectSockJsInfoCached() throws Exception {
 		setupInfoRequest(true);
-		this.sockJsClient.execute(handler, URL);
-		this.sockJsClient.execute(handler, URL);
-		this.sockJsClient.execute(handler, URL);
+		this.sockJsClient.doHandshake(handler, URL);
+		this.sockJsClient.doHandshake(handler, URL);
+		this.sockJsClient.doHandshake(handler, URL);
 		verify(this.infoReceiver, times(1)).executeInfoRequest(any(), any());
 	}
 
 	@Test
-	void connectInfoRequestFailure() {
+	public void connectInfoRequestFailure() throws URISyntaxException {
 		HttpServerErrorException exception = new HttpServerErrorException(HttpStatus.SERVICE_UNAVAILABLE);
 		given(this.infoReceiver.executeInfoRequest(any(), any())).willThrow(exception);
-		this.sockJsClient.execute(handler, URL).whenComplete(this.connectCallback);
-		verify(this.connectCallback).accept(null, exception);
+		this.sockJsClient.doHandshake(handler, URL).addCallback(this.connectCallback);
+		verify(this.connectCallback).onFailure(exception);
 		assertThat(this.webSocketTransport.invoked()).isFalse();
 		assertThat(this.xhrTransport.invoked()).isFalse();
 	}
 
 	private ArgumentCaptor<HttpHeaders> setupInfoRequest(boolean webSocketEnabled) {
-		String response = """
-			{
-			"entropy": 123,
-			"origins": ["*:*"],
-			"cookie_needed": true,
-			"websocket": %s
-			}""".formatted(webSocketEnabled).replace('\n', '\0');
 		ArgumentCaptor<HttpHeaders> headersCaptor = ArgumentCaptor.forClass(HttpHeaders.class);
-		given(this.infoReceiver.executeInfoRequest(any(), headersCaptor.capture())).willReturn(response);
+		given(this.infoReceiver.executeInfoRequest(any(), headersCaptor.capture())).willReturn(
+				"{\"entropy\":123," +
+						"\"origins\":[\"*:*\"]," +
+						"\"cookie_needed\":true," +
+						"\"websocket\":" + webSocketEnabled + "}");
 		return headersCaptor;
 	}
 

@@ -29,7 +29,6 @@ import com.github.freva.asciitable.Column;
 import com.github.freva.asciitable.HorizontalAlign;
 import org.apache.camel.dsl.jbang.core.commands.CamelCommand;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
-import org.apache.camel.dsl.jbang.core.common.VersionHelper;
 import org.apache.camel.main.download.DependencyDownloaderClassLoader;
 import org.apache.camel.main.download.MavenDependencyDownloader;
 import org.apache.camel.support.ObjectHelper;
@@ -37,7 +36,7 @@ import org.apache.camel.util.StringHelper;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "kamelet",
-                     description = "List Kamelets from the Kamelet Catalog", sortOptions = false, showDefaultValues = true)
+                     description = "List Kamelets from the Kamelet Catalog")
 public class CatalogKamelet extends CamelCommand {
 
     @CommandLine.Option(names = { "--sort" },
@@ -53,7 +52,7 @@ public class CatalogKamelet extends CamelCommand {
     String filterName;
 
     @CommandLine.Option(names = {
-            "--kamelets-version" }, description = "Apache Camel Kamelets version")
+            "--kamelets-version" }, description = "Apache Camel Kamelets version", defaultValue = "3.20.0")
     String kameletsVersion;
 
     public CatalogKamelet(CamelJBangMain main) {
@@ -61,15 +60,10 @@ public class CatalogKamelet extends CamelCommand {
     }
 
     @Override
-    public Integer doCall() throws Exception {
+    public Integer call() throws Exception {
         List<KameletModel> rows = new ArrayList<>();
 
-        if (kameletsVersion == null) {
-            kameletsVersion = VersionHelper.extractKameletsVersion();
-        }
-
         Map<String, Object> kamelets;
-        var tccLoader = Thread.currentThread().getContextClassLoader();
         try {
             ClassLoader cl = createClassLoader();
             MavenDependencyDownloader downloader = new MavenDependencyDownloader();
@@ -83,10 +77,8 @@ public class CatalogKamelet extends CamelCommand {
             Method m = clazz.getMethod("getKamelets");
             kamelets = (Map<String, Object>) ObjectHelper.invokeMethod(m, catalog);
         } catch (Exception e) {
-            printer().printErr("Cannot download camel-kamelets-catalog due to " + e.getMessage());
+            System.err.println("Cannot download camel-kamelets-catalog due to " + e.getMessage());
             return 1;
-        } finally {
-            Thread.currentThread().setContextClassLoader(tccLoader);
         }
 
         for (Object o : kamelets.values()) {
@@ -108,7 +100,7 @@ public class CatalogKamelet extends CamelCommand {
         rows.sort(this::sortRow);
 
         if (!rows.isEmpty()) {
-            printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
+            System.out.println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
                     new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).with(r -> r.name),
                     new Column().header("TYPE").dataAlign(HorizontalAlign.LEFT).minWidth(10).with(r -> r.type),
                     new Column().header("LEVEL").dataAlign(HorizontalAlign.LEFT).minWidth(12).with(r -> r.supportLevel),

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpLogging;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -43,7 +43,7 @@ import org.springframework.util.Assert;
  * @since 4.0
  * @see StompDecoder
  */
-public class StompEncoder {
+public class StompEncoder  {
 
 	private static final Byte LINE_FEED_BYTE = '\n';
 
@@ -58,7 +58,7 @@ public class StompEncoder {
 
 	@SuppressWarnings("serial")
 	private final Map<String, byte[]> headerKeyUpdateCache =
-			new LinkedHashMap<>(HEADER_KEY_CACHE_LIMIT, 0.75f, true) {
+			new LinkedHashMap<String, byte[]>(HEADER_KEY_CACHE_LIMIT, 0.75f, true) {
 				@Override
 				protected boolean removeEldestEntry(Map.Entry<String, byte[]> eldest) {
 					if (size() > HEADER_KEY_CACHE_LIMIT) {
@@ -83,8 +83,8 @@ public class StompEncoder {
 
 	/**
 	 * Encodes the given payload and headers into a {@code byte[]}.
-	 * @param headers the STOMP message headers
-	 * @param payload the STOMP message payload
+	 * @param headers the headers
+	 * @param payload the payload
 	 * @return the encoded message
 	 */
 	public byte[] encode(Map<String, Object> headers, byte[] payload) {
@@ -126,8 +126,8 @@ public class StompEncoder {
 			return;
 		}
 
-		boolean shouldEscape = (command != StompCommand.CONNECT && command != StompCommand.STOMP &&
-				command != StompCommand.CONNECTED);
+		boolean shouldEscape = (command != StompCommand.CONNECT && command != StompCommand.STOMP
+				&& command != StompCommand.CONNECTED);
 
 		for (Entry<String, List<String>> entry : nativeHeaders.entrySet()) {
 			if (command.requiresContentLength() && "content-length".equals(entry.getKey())) {
@@ -236,24 +236,22 @@ public class StompEncoder {
 
 		private int size;
 
-		@Override
 		public void add(byte[] bytes) {
 			this.size += bytes.length;
 			super.add(bytes);
 		}
 
-		@Override
 		public void add(byte b) {
 			this.size++;
 			super.add(b);
 		}
 
-		@Override
 		public byte[] toByteArray() {
 			byte[] result = new byte[this.size];
 			int position = 0;
 			for (Object o : this) {
-				if (o instanceof byte[] src) {
+				if (o instanceof byte[]) {
+					byte[] src = (byte[]) o;
 					System.arraycopy(src, 0, result, position, src.length);
 					position += src.length;
 				}

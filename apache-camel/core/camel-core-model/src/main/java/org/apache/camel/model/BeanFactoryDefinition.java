@@ -16,34 +16,30 @@
  */
 package org.apache.camel.model;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
-import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.camel.RouteTemplateContext;
-import org.apache.camel.model.app.BeanConstructorsAdapter;
-import org.apache.camel.model.app.BeanPropertiesAdapter;
 import org.apache.camel.spi.Metadata;
-import org.apache.camel.spi.Resource;
-import org.apache.camel.spi.ResourceAware;
 
 /**
- * Define custom beans that can be used in your Camel routes and in general.
+ * Base class for nodes that define a bean factory.
+ *
+ * @param <T> the type of the bean factory.
+ * @param <P> the type of the parent node.
  */
 @Metadata(label = "configuration")
-@XmlRootElement(name = "beanFactory")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class BeanFactoryDefinition<P> implements ResourceAware {
+public abstract class BeanFactoryDefinition<
+        T extends BeanFactoryDefinition<T, P>, P> {
 
-    @XmlTransient
-    private Resource resource;
     @XmlTransient
     private P parent;
     // special for java-dsl to allow using lambda style
@@ -57,40 +53,64 @@ public class BeanFactoryDefinition<P> implements ResourceAware {
     @XmlAttribute(required = true)
     private String type;
     @XmlAttribute
-    private String initMethod;
-    @XmlAttribute
-    private String destroyMethod;
-    @XmlAttribute
-    private String factoryMethod;
-    @XmlAttribute
-    private String factoryBean;
-    @XmlAttribute
-    private String builderClass;
-    @XmlAttribute
-    @Metadata(defaultValue = "build")
-    private String builderMethod;
-    @XmlAttribute
     @Metadata(label = "advanced")
-    private String scriptLanguage;
-    @XmlAttribute
-    @Metadata(javaType = "java.lang.Boolean", label = "advanced", defaultValue = "true")
-    private String scriptPropertyPlaceholders;
-    @XmlElement(name = "constructors")
-    @XmlJavaTypeAdapter(BeanConstructorsAdapter.class)
-    private Map<Integer, Object> constructors;
-    @XmlElement(name = "properties")
-    @XmlJavaTypeAdapter(BeanPropertiesAdapter.class)
-    private Map<String, Object> properties;
+    private String beanType;
+    @XmlElement(name = "property")
+    private List<PropertyDefinition> properties;
     @XmlElement(name = "script")
     @Metadata(label = "advanced")
     private String script;
 
-    public void setParent(P parent) {
+    void setParent(P parent) {
         this.parent = parent;
     }
 
+    public String getName() {
+        return name;
+    }
+
     /**
-     * To set the type (fully qualified class name) to use for creating the bean.
+     * Bean name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * What type to use for creating the bean. Can be one of: #class,#type,bean,groovy,joor,language,mvel,ognl.
+     *
+     * #class or #type then the bean is created via the fully qualified classname, such as #class:com.foo.MyBean
+     *
+     * The others are scripting languages that gives more power to create the bean with an inlined code in the script
+     * section, such as using groovy.
+     */
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getBeanType() {
+        return beanType;
+    }
+
+    /**
+     * To set the type (fully qualified class name) of the returned bean created by the script.
+     *
+     * Knowing the type of the bean can be needed when dependency injection by type is in use, or when looking in
+     * registry via class type.
+     */
+    public void setBeanType(String beanType) {
+        this.beanType = beanType;
+    }
+
+    /**
+     * To set the type (fully qualified class name) of the returned bean created by the script.
+     *
+     * Knowing the type of the bean can be needed when dependency injection by type is in use, or when looking in
+     * registry via class type.
      */
     public void setBeanType(Class<?> beanType) {
         this.beanClass = beanType;
@@ -98,6 +118,17 @@ public class BeanFactoryDefinition<P> implements ResourceAware {
 
     public Class<?> getBeanClass() {
         return beanClass;
+    }
+
+    public List<PropertyDefinition> getProperties() {
+        return properties;
+    }
+
+    /**
+     * Optional properties to set on the created local bean
+     */
+    public void setProperties(List<PropertyDefinition> properties) {
+        this.properties = properties;
     }
 
     public RouteTemplateContext.BeanSupplier<Object> getBeanSupplier() {
@@ -109,143 +140,6 @@ public class BeanFactoryDefinition<P> implements ResourceAware {
      */
     public void setBeanSupplier(RouteTemplateContext.BeanSupplier<Object> beanSupplier) {
         this.beanSupplier = beanSupplier;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * The name of the bean (bean id)
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    /**
-     * The class name (fully qualified) of the bean
-     */
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getInitMethod() {
-        return initMethod;
-    }
-
-    /**
-     * The name of the custom initialization method to invoke after setting bean properties. The method must have no
-     * arguments, but may throw any exception.
-     */
-    public void setInitMethod(String initMethod) {
-        this.initMethod = initMethod;
-    }
-
-    public String getDestroyMethod() {
-        return destroyMethod;
-    }
-
-    /**
-     * The name of the custom destroy method to invoke on bean shutdown, such as when Camel is shutting down. The method
-     * must have no arguments, but may throw any exception.
-     */
-    public void setDestroyMethod(String destroyMethod) {
-        this.destroyMethod = destroyMethod;
-    }
-
-    public String getFactoryMethod() {
-        return factoryMethod;
-    }
-
-    /**
-     * Name of method to invoke when creating the bean via a factory bean.
-     */
-    public void setFactoryMethod(String factoryMethod) {
-        this.factoryMethod = factoryMethod;
-    }
-
-    public String getFactoryBean() {
-        return factoryBean;
-    }
-
-    /**
-     * Name of factory bean (bean id) to use for creating the bean.
-     */
-    public void setFactoryBean(String factoryBean) {
-        this.factoryBean = factoryBean;
-    }
-
-    public String getBuilderClass() {
-        return builderClass;
-    }
-
-    /**
-     * Fully qualified class name of builder class to use for creating and configuring the bean. The builder will use
-     * the properties values to configure the bean.
-     */
-    public void setBuilderClass(String builderClass) {
-        this.builderClass = builderClass;
-    }
-
-    public String getBuilderMethod() {
-        return builderMethod;
-    }
-
-    /**
-     * Name of method when using builder class. This method is invoked after configuring to create the actual bean. This
-     * method is often named build (used by default).
-     */
-    public void setBuilderMethod(String builderMethod) {
-        this.builderMethod = builderMethod;
-    }
-
-    public Map<Integer, Object> getConstructors() {
-        return constructors;
-    }
-
-    /**
-     * Optional constructor arguments for creating the bean. Arguments correspond to specific index of the constructor
-     * argument list, starting from zero.
-     */
-    public void setConstructors(Map<Integer, Object> constructors) {
-        this.constructors = constructors;
-    }
-
-    public Map<String, Object> getProperties() {
-        return properties;
-    }
-
-    /**
-     * Optional properties to set on the created bean.
-     */
-    public void setProperties(Map<String, Object> properties) {
-        this.properties = properties;
-    }
-
-    public String getScriptLanguage() {
-        return scriptLanguage;
-    }
-
-    /**
-     * The script language to use when using inlined script for creating the bean, such as groovy, java, javascript etc.
-     */
-    public void setScriptLanguage(String scriptLanguage) {
-        this.scriptLanguage = scriptLanguage;
-    }
-
-    public String getScriptPropertyPlaceholders() {
-        return scriptPropertyPlaceholders;
-    }
-
-    /**
-     * Whether the script should support using Camel property placeholder syntax {{ }}.
-     */
-    public void setScriptPropertyPlaceholders(String scriptPropertyPlaceholders) {
-        this.scriptPropertyPlaceholders = scriptPropertyPlaceholders;
     }
 
     /**
@@ -266,33 +160,44 @@ public class BeanFactoryDefinition<P> implements ResourceAware {
     // ----------------------------------------------------
 
     /**
-     * What type to use for creating the bean. Can be one of: #class or #type
+     * What type to use for creating the bean. Can be one of: #class,#type,bean,groovy,joor,language,mvel,ognl.
      *
      * #class or #type then the bean is created via the fully qualified classname, such as #class:com.foo.MyBean
+     *
+     * The others are scripting languages that gives more power to create the bean with an inlined code in the script
+     * section, such as using groovy.
      */
-    public BeanFactoryDefinition<P> type(String prefix, Class<?> type) {
+    @SuppressWarnings("unchecked")
+    public T type(String prefix, Class<?> type) {
         if (prefix.startsWith("#type") || prefix.startsWith("#class")) {
             if (!prefix.endsWith(":")) {
                 prefix = prefix + ":";
             }
             setType(prefix + type.getName());
+        } else {
+            // its a script
+            setType(prefix);
         }
         setBeanType(type);
-        return this;
+        return (T) this;
     }
 
     /**
-     * What type to use for creating the bean. Can be one of: #class or #type
+     * What type to use for creating the bean. Can be one of: #class,#type,bean,groovy,joor,language,mvel,ognl.
      *
      * #class or #type then the bean is created via the fully qualified classname, such as #class:com.foo.MyBean
+     *
+     * The others are scripting languages that gives more power to create the bean with an inlined code in the script
+     * section, such as using groovy.
      */
-    public BeanFactoryDefinition<P> type(String type) {
+    @SuppressWarnings("unchecked")
+    public T type(String type) {
         if (!type.startsWith("#")) {
             // use #class as default
             type = "#class:" + type;
         }
         setType(type);
-        return this;
+        return (T) this;
     }
 
     /**
@@ -300,9 +205,10 @@ public class BeanFactoryDefinition<P> implements ResourceAware {
      *
      * @param type the type of the class to create as bean
      */
-    public BeanFactoryDefinition<P> typeClass(Class<?> type) {
+    @SuppressWarnings("unchecked")
+    public T typeClass(Class<?> type) {
         setType("#class:" + type.getName());
-        return this;
+        return (T) this;
     }
 
     /**
@@ -310,19 +216,38 @@ public class BeanFactoryDefinition<P> implements ResourceAware {
      *
      * @param type the type of the class to create as bean
      */
-    public BeanFactoryDefinition<P> typeClass(String type) {
+    @SuppressWarnings("unchecked")
+    public T typeClass(String type) {
         setType("#class:" + type);
-        return this;
+        return (T) this;
     }
 
     /**
-     * To set the type (fully qualified class name) to use for creating the bean.
+     * To set the return type of the script (fully qualified class name).
      *
-     * @param type the fully qualified type of the returned bean
+     * Knowing the type of the bean can be needed when dependency injection by type is in use, or when looking in
+     * registry via class type.
+     *
+     * @param type the fully qualified type of the returned bean from the script
      */
-    public BeanFactoryDefinition<P> beanType(Class<?> type) {
+    @SuppressWarnings("unchecked")
+    public T beanType(Class<?> type) {
         setBeanType(type);
-        return this;
+        return (T) this;
+    }
+
+    /**
+     * To set the return type of the script (fully qualified class name).
+     *
+     * Knowing the type of the bean can be needed when dependency injection by type is in use, or when looking in
+     * registry via class type.
+     *
+     * @param type the fully qualified type of the returned bean from the script
+     */
+    @SuppressWarnings("unchecked")
+    public T beanType(String type) {
+        setBeanType(type);
+        return (T) this;
     }
 
     /**
@@ -341,66 +266,13 @@ public class BeanFactoryDefinition<P> implements ResourceAware {
      * @param method the name of the method to call
      */
     public P bean(Class<?> type, String method) {
-        setScriptLanguage("bean");
-        setBeanType(type);
+        setType("bean");
         if (method != null) {
             setScript(type.getName() + "?method=" + method);
         } else {
             setScript(type.getName());
         }
         return parent;
-    }
-
-    /**
-     * The name of the custom initialization method to invoke after setting bean properties. The method must have no
-     * arguments, but may throw any exception.
-     */
-    public BeanFactoryDefinition<P> initMethod(String initMethod) {
-        setInitMethod(initMethod);
-        return this;
-    }
-
-    /**
-     * The name of the custom destroy method to invoke on bean shutdown, such as when Camel is shutting down. The method
-     * must have no arguments, but may throw any exception.
-     */
-    public BeanFactoryDefinition<P> destroyMethod(String destroyMethod) {
-        setDestroyMethod(destroyMethod);
-        return this;
-    }
-
-    /**
-     * Name of method to invoke when creating the bean via a factory bean.
-     */
-    public BeanFactoryDefinition<P> factoryMethod(String factoryMethod) {
-        setFactoryMethod(factoryMethod);
-        return this;
-    }
-
-    /**
-     * Name of factory bean (bean id) to use for creating the bean.
-     */
-    public BeanFactoryDefinition<P> factoryBean(String factoryBean) {
-        setFactoryBean(factoryBean);
-        return this;
-    }
-
-    /**
-     * Fully qualified class name of builder class to use for creating and configuring the bean. The builder will use
-     * the properties values to configure the bean.
-     */
-    public BeanFactoryDefinition<P> builderClass(String builderClass) {
-        setBuilderClass(builderClass);
-        return this;
-    }
-
-    /**
-     * Name of method when using builder class. This method is invoked after configuring to create the actual bean. This
-     * method is often named build (used by default).
-     */
-    public BeanFactoryDefinition<P> builderMethod(String builderMethod) {
-        setBuilderMethod(builderMethod);
-        return this;
     }
 
     /**
@@ -412,7 +284,7 @@ public class BeanFactoryDefinition<P> implements ResourceAware {
      * @param script the script
      */
     public P groovy(String script) {
-        setScriptLanguage("groovy");
+        setType("groovy");
         setScript(script);
         return parent;
     }
@@ -426,21 +298,9 @@ public class BeanFactoryDefinition<P> implements ResourceAware {
      * @param script the script
      */
     public P joor(String script) {
-        setScriptLanguage("joor");
+        setType("joor");
         setScript(script);
         return parent;
-    }
-
-    /**
-     * Calls java (Java source that is runtime compiled to Java bytecode) for creating the local bean
-     *
-     * If the script use the prefix <tt>resource:</tt> such as <tt>resource:classpath:com/foo/myscript.groovy</tt>,
-     * <tt>resource:file:/var/myscript.groovy</tt>, then its loaded from the external resource.
-     *
-     * @param script the script
-     */
-    public P java(String script) {
-        return joor(script);
     }
 
     /**
@@ -453,7 +313,7 @@ public class BeanFactoryDefinition<P> implements ResourceAware {
      * @param script   the script
      */
     public P language(String language, String script) {
-        setScriptLanguage(language);
+        setType(language);
         setScript(script);
         return parent;
     }
@@ -467,7 +327,7 @@ public class BeanFactoryDefinition<P> implements ResourceAware {
      * @param script the script
      */
     public P mvel(String script) {
-        setScriptLanguage("mvel");
+        setType("mvel");
         setScript(script);
         return parent;
     }
@@ -481,33 +341,9 @@ public class BeanFactoryDefinition<P> implements ResourceAware {
      * @param script the script
      */
     public P ognl(String script) {
-        setScriptLanguage("ognl");
+        setType("ognl");
         setScript(script);
         return parent;
-    }
-
-    /**
-     * Sets a constructor for creating the bean. Arguments correspond to specific index of the constructor argument
-     * list, starting from zero.
-     *
-     * @param index the constructor index (starting from zero)
-     * @param value the constructor value
-     */
-    public BeanFactoryDefinition<P> constructor(Integer index, String value) {
-        if (constructors == null) {
-            constructors = new LinkedHashMap<>();
-        }
-        constructors.put(index, value);
-        return this;
-    }
-
-    /**
-     * Optional constructor arguments for creating the bean. Arguments correspond to specific index of the constructor
-     * argument list, starting from zero.
-     */
-    public BeanFactoryDefinition<P> constructors(Map<Integer, Object> constructors) {
-        this.constructors = constructors;
-        return this;
     }
 
     /**
@@ -516,50 +352,29 @@ public class BeanFactoryDefinition<P> implements ResourceAware {
      * @param key   the property name
      * @param value the property value
      */
-    public BeanFactoryDefinition<P> property(String key, String value) {
+    @SuppressWarnings("unchecked")
+    public T property(String key, String value) {
         if (properties == null) {
-            properties = new LinkedHashMap<>();
+            properties = new ArrayList<>();
         }
-        properties.put(key, value);
-        return this;
+        properties.add(new PropertyDefinition(key, value));
+        return (T) this;
     }
 
     /**
      * Sets properties to set on the created local bean
      */
-    public BeanFactoryDefinition<P> properties(Map<String, Object> properties) {
-        this.properties = properties;
-        return this;
-    }
-
-    /**
-     * Whether the script should support using Camel property placeholder syntax {{ }}.
-     */
-    public BeanFactoryDefinition<P> scriptPropertyPlaceholders(boolean scriptPropertyPlaceholders) {
-        this.scriptPropertyPlaceholders = scriptPropertyPlaceholders ? "true" : "false";
-        return this;
-    }
-
-    /**
-     * Whether the script should support using Camel property placeholder syntax {{ }}.
-     */
-    public BeanFactoryDefinition<P> scriptPropertyPlaceholders(String scriptPropertyPlaceholders) {
-        this.scriptPropertyPlaceholders = scriptPropertyPlaceholders;
-        return this;
+    @SuppressWarnings("unchecked")
+    public T properties(Map<String, String> properties) {
+        if (this.properties == null) {
+            this.properties = new ArrayList<>();
+        }
+        properties.forEach((k, v) -> this.properties.add(new PropertyDefinition(k, v)));
+        return (T) this;
     }
 
     public P end() {
         return parent;
-    }
-
-    @Override
-    public Resource getResource() {
-        return resource;
-    }
-
-    @Override
-    public void setResource(Resource resource) {
-        this.resource = resource;
     }
 
 }

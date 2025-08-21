@@ -30,7 +30,6 @@ import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * This test validates that bindy can skip values in the fixed-length record when absolute pos values are provided
@@ -67,7 +66,7 @@ public class BindySimpleSkipFieldsTest extends CamelTestSupport {
                 = (BindySimpleSkipFieldsTest.Order) unmarshallResult.getReceivedExchanges().get(0).getIn().getBody();
         assertEquals(10, order.getOrderNr());
         // the field is not trimmed
-        assertNull(order.getFirstName());
+        assertEquals(null, order.getFirstName());
         assertEquals("M    ", order.getLastName());
         assertEquals("Hello     ", order.getComment());
     }

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,6 +37,7 @@
  */
 package org.jooq;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import org.jooq.tools.json.JSONParser;
@@ -54,27 +55,8 @@ import org.jetbrains.annotations.Nullable;
  * reference of type {@link JSONB}, not as <code>data() == null</code>. This is
  * consistent with jOOQ's general way of returning <code>NULL</code> from
  * {@link Result} and {@link Record} methods.
- * <p>
- * Unlike the purely text based, formatting-preserving {@link JSON} data type,
- * the {@link JSONB} type uses a normalised representation of the JSON content,
- * meaning that e.g. the following two documents are equal, despite their
- * different object attribute order and formatting:
- * <p>
- * <ul>
- * <li><code>{"a":1,"b":2}</code></li>
- * <li><code>{"b": 2, "a": 1}</code></li>
- * </ul>
- * <p>
- * This impacts the behaviour (and performance!) of
- * <ul>
- * <li>{@link #equals(Object)}</li>
- * <li>{@link #hashCode()}</li>
- * <li>{@link #toString()}</li>
- * </ul>
- * <p>
- * The {@link #data()} content, however, is not normalised.
  */
-public final class JSONB implements Data {
+public final class JSONB implements Serializable {
 
     private final String     data;
     private transient Object parsed;
@@ -83,7 +65,6 @@ public final class JSONB implements Data {
         this.data = String.valueOf(data);
     }
 
-    @Override
     @NotNull
     public final String data() {
         return data;
@@ -130,55 +111,21 @@ public final class JSONB implements Data {
         return parsed;
     }
 
-    // -------------------------------------------------------------------------
-    // The Object API
-    // -------------------------------------------------------------------------
-
-    /**
-     * {@inheritDoc}
-     * <p>
-     * <h3>{@link JSONB} specifics:</h3>
-     * <p>
-     * The {@link JSONB} type uses a normalised representation of the JSON
-     * content, meaning that two equivalent JSON documents are considered equal
-     * (see {@link JSONB} for details). This impacts both behaviour and
-     * performance!
-     */
     @Override
     public int hashCode() {
         Object p = parsed();
         return p == null ? 0 : p.hashCode();
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * <h3>{@link JSONB} specifics:</h3>
-     * <p>
-     * The {@link JSONB} type uses a normalised representation of the JSON
-     * content, meaning that two equivalent JSON documents are considered equal
-     * (see {@link JSONB} for details). This impacts both behaviour and
-     * performance!
-     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (obj instanceof JSONB j)
-            return Objects.equals(parsed(), (j.parsed()));
+        if (obj instanceof JSONB)
+            return Objects.equals(parsed(), (((JSONB) obj).parsed()));
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>
-     * <h3>{@link JSONB} specifics:</h3>
-     * <p>
-     * The {@link JSONB} type uses a normalised representation of the JSON
-     * content, meaning that two equivalent JSON documents are considered equal
-     * (see {@link JSONB} for details). This impacts both behaviour and
-     * performance!
-     */
     @Override
     public String toString() {
         return JSONValue.toJSONString(parsed());

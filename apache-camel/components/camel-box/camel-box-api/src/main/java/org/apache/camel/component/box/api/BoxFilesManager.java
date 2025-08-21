@@ -35,9 +35,7 @@ import com.box.sdk.BoxSharedLink;
 import com.box.sdk.FileUploadParams;
 import com.box.sdk.Metadata;
 import com.box.sdk.ProgressListener;
-import com.box.sdk.sharedlink.BoxSharedLinkRequest;
 import org.apache.camel.RuntimeCamelException;
-import org.apache.camel.util.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +70,9 @@ public class BoxFilesManager {
     public BoxFile.Info getFileInfo(String fileId, String... fields) {
         try {
             LOG.debug("Getting info for file(id={})", fileId);
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
 
             BoxFile file = new BoxFile(boxConnection, fileId);
 
@@ -82,7 +82,8 @@ public class BoxFilesManager {
                 return file.getInfo(fields);
             }
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -96,15 +97,18 @@ public class BoxFilesManager {
     public BoxFile updateFileInfo(String fileId, BoxFile.Info info) {
         try {
             LOG.debug("Updating info for file(id={})", fileId);
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
-            BoxHelper.notNull(info, BoxHelper.INFO);
-
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
+            if (info == null) {
+                throw new IllegalArgumentException("Parameter 'info' can not be null");
+            }
             BoxFile file = new BoxFile(boxConnection, fileId);
             file.updateInfo(info);
             return file;
         } catch (BoxAPIException e) {
             throw new RuntimeCamelException(
-                    BoxHelper.buildBoxApiErrorMessage(e), e);
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -126,9 +130,15 @@ public class BoxFilesManager {
             Long size, Boolean check, ProgressListener listener) {
         try {
             LOG.debug("Uploading file with name '{}}' to parent_folder(id={}})", fileName, parentFolderId);
-            BoxHelper.notNull(parentFolderId, BoxHelper.PARENT_FOLDER_ID);
-            BoxHelper.notNull(content, BoxHelper.CONTENT);
-            BoxHelper.notNull(fileName, BoxHelper.FILE_NAME);
+            if (parentFolderId == null) {
+                throw new IllegalArgumentException("Parameter 'parentFolderId' can not be null");
+            }
+            if (content == null) {
+                throw new IllegalArgumentException("Parameter 'content' can not be null");
+            }
+            if (fileName == null) {
+                throw new IllegalArgumentException("Parameter 'fileName' can not be null");
+            }
             BoxFile boxFile = null;
             boolean uploadNewFile = true;
             if (check != null && check) {
@@ -151,7 +161,7 @@ public class BoxFilesManager {
                         // for faster results, we recommend the folder to contain no more than 500 items
                         // otherwise it can take more time to iterate over all items to check if the filename exists
                         // display a WARN if the delay is higher than 5s
-                        final StopWatch watch = new StopWatch();
+                        long init = System.currentTimeMillis();
                         int delayLimit = 5;
                         boolean exists = false;
 
@@ -168,7 +178,8 @@ public class BoxFilesManager {
                                 }
                             }
                         }
-                        long elapsed = watch.taken();
+                        long end = System.currentTimeMillis();
+                        long elapsed = (end - init) / 1000;
                         if (elapsed > delayLimit) {
                             LOG.warn(
                                     "The upload operation, checks if the file exists by using the Box list folder, however it took {}"
@@ -208,7 +219,7 @@ public class BoxFilesManager {
             return boxFile;
         } catch (BoxAPIException e) {
             throw new RuntimeCamelException(
-                    BoxHelper.buildBoxApiErrorMessage(e), e);
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -227,8 +238,12 @@ public class BoxFilesManager {
             ProgressListener listener) {
         try {
             LOG.debug("Uploading new version of file(id={})", fileId);
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
-            BoxHelper.notNull(fileContent, BoxHelper.FILE_CONTENT);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
+            if (fileContent == null) {
+                throw new IllegalArgumentException("Parameter 'fileContent' can not be null");
+            }
 
             BoxFile file = new BoxFile(boxConnection, fileId);
 
@@ -244,7 +259,8 @@ public class BoxFilesManager {
 
             return file;
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -257,7 +273,9 @@ public class BoxFilesManager {
     public Collection<BoxFileVersion> getFileVersions(String fileId) {
         try {
             LOG.debug("Getting versions of file(id={})", fileId);
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
 
             BoxFile file = new BoxFile(boxConnection, fileId);
 
@@ -265,7 +283,7 @@ public class BoxFilesManager {
 
         } catch (BoxAPIException e) {
             throw new RuntimeCamelException(
-                    BoxHelper.buildBoxApiErrorMessage(e), e);
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -287,8 +305,12 @@ public class BoxFilesManager {
             ProgressListener listener) {
         try {
             LOG.debug("Downloading file(id={})", fileId);
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
-            BoxHelper.notNull(output, "output");
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
+            if (output == null) {
+                throw new IllegalArgumentException("Parameter 'output' can not be null");
+            }
             BoxFile file = new BoxFile(boxConnection, fileId);
 
             if (listener != null) {
@@ -306,7 +328,8 @@ public class BoxFilesManager {
             }
             return output;
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -326,9 +349,15 @@ public class BoxFilesManager {
             ProgressListener listener) {
         try {
             LOG.debug("Downloading file(id={}, version={})", fileId, version);
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
-            BoxHelper.notNull(version, BoxHelper.VERSION);
-            BoxHelper.notNull(output, "output");
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
+            if (version == null) {
+                throw new IllegalArgumentException("Parameter 'version' can not be null");
+            }
+            if (output == null) {
+                throw new IllegalArgumentException("Parameter 'output' can not be null");
+            }
             BoxFile file = new BoxFile(boxConnection, fileId);
 
             List<BoxFileVersion> fileVersions = (List<BoxFileVersion>) file.getVersions();
@@ -341,7 +370,8 @@ public class BoxFilesManager {
             }
             return output;
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -356,8 +386,12 @@ public class BoxFilesManager {
     public BoxFileVersion promoteFileVersion(String fileId, Integer version) {
         try {
             LOG.debug("Promoting file(id={}, version={})", fileId, version);
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
-            BoxHelper.notNull(version, BoxHelper.VERSION);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
+            if (version == null) {
+                throw new IllegalArgumentException("Parameter 'version' can not be null");
+            }
             BoxFile file = new BoxFile(boxConnection, fileId);
 
             List<BoxFileVersion> fileVersions = (List<BoxFileVersion>) file.getVersions();
@@ -366,7 +400,8 @@ public class BoxFilesManager {
             fileVersion.promote();
             return fileVersion;
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -384,8 +419,12 @@ public class BoxFilesManager {
             LOG.debug("Copying file(id={}) to destination_folder(id={}) {}",
                     fileId, destinationFolderId,
                     newName == null ? "" : " with new name '" + newName + "'");
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
-            BoxHelper.notNull(destinationFolderId, BoxHelper.VERSION);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
+            if (destinationFolderId == null) {
+                throw new IllegalArgumentException("Parameter 'destinationFolderId' can not be null");
+            }
             BoxFile fileToCopy = new BoxFile(boxConnection, fileId);
             BoxFolder destinationFolder = new BoxFolder(boxConnection, destinationFolderId);
             if (newName == null) {
@@ -394,7 +433,8 @@ public class BoxFilesManager {
                 return fileToCopy.copy(destinationFolder, newName).getResource();
             }
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -412,8 +452,12 @@ public class BoxFilesManager {
             LOG.debug("Moving file(id={}) to destination_folder(id={}) {}",
                     fileId, destinationFolderId,
                     newName == null ? "" : " with new name '" + newName + "'");
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
-            BoxHelper.notNull(destinationFolderId, BoxHelper.VERSION);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
+            if (destinationFolderId == null) {
+                throw new IllegalArgumentException("Parameter 'destinationFolderId' can not be null");
+            }
             BoxFile fileToMove = new BoxFile(boxConnection, fileId);
             BoxFolder destinationFolder = new BoxFolder(boxConnection, destinationFolderId);
             if (newName == null) {
@@ -422,7 +466,8 @@ public class BoxFilesManager {
                 return (BoxFile) fileToMove.move(destinationFolder, newName).getResource();
             }
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -436,13 +481,18 @@ public class BoxFilesManager {
     public BoxFile renameFile(String fileId, String newFileName) {
         try {
             LOG.debug("Renaming file(id={}) to '{}'", fileId, newFileName);
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
-            BoxHelper.notNull(newFileName, BoxHelper.VERSION);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
+            if (newFileName == null) {
+                throw new IllegalArgumentException("Parameter 'newName' can not be null");
+            }
             BoxFile fileToRename = new BoxFile(boxConnection, fileId);
             fileToRename.rename(newFileName);
             return fileToRename;
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -454,11 +504,14 @@ public class BoxFilesManager {
     public void deleteFile(String fileId) {
         try {
             LOG.debug("Deleting file(id={})", fileId);
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
             BoxFile file = new BoxFile(boxConnection, fileId);
             file.delete();
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -472,8 +525,12 @@ public class BoxFilesManager {
     public void deleteFileVersion(String fileId, Integer version) {
         try {
             LOG.debug("Deleting file(id={}, version={})", fileId, version);
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
-            BoxHelper.notNull(version, BoxHelper.VERSION);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
+            if (version == null) {
+                throw new IllegalArgumentException("Parameter 'version' can not be null");
+            }
 
             BoxFile file = new BoxFile(boxConnection, fileId);
             List<BoxFileVersion> versions = (List<BoxFileVersion>) file.getVersions();
@@ -481,7 +538,8 @@ public class BoxFilesManager {
 
             fileVersion.delete();
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -493,7 +551,7 @@ public class BoxFilesManager {
      * @param  unshareDate - the date and time at which time the created shared link will expire; if
      *                     <code>unsharedDate</code> is <code>null</code> then a non-expiring link is created.
      * @param  permissions - the permissions of the created link; if <code>permissions</code> is <code>null</code> then
-     *                     the created shared link is created with default permissions.
+     *                     the created shared link is create with default permissions.
      * @return             The created shared link.
      */
     public BoxSharedLink createFileSharedLink(
@@ -506,16 +564,18 @@ public class BoxFilesManager {
                             : " unsharedDate=" + DateFormat.getDateTimeInstance().format(unshareDate)
                               + " permissions=" + permissions);
 
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
-            BoxHelper.notNull(access, "access");
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
+            if (access == null) {
+                throw new IllegalArgumentException("Parameter 'access' can not be null");
+            }
 
             BoxFile file = new BoxFile(boxConnection, fileId);
-            BoxSharedLinkRequest request = new BoxSharedLinkRequest();
-            request.access(access).unsharedDate(unshareDate)
-                    .permissions(permissions.getCanDownload(), permissions.getCanPreview(), permissions.getCanEdit());
-            return file.createSharedLink(request);
+            return file.createSharedLink(access, unshareDate, permissions);
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -529,14 +589,17 @@ public class BoxFilesManager {
     public URL getDownloadURL(String fileId) {
         try {
             LOG.debug("Getting download URL for file(id={})", fileId);
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
 
             BoxFile file = new BoxFile(boxConnection, fileId);
 
             return file.getDownloadURL();
 
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -551,12 +614,62 @@ public class BoxFilesManager {
         try {
             LOG.debug("Getting preview link for file(id={})", fileId);
 
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
 
             BoxFile file = new BoxFile(boxConnection, fileId);
             return file.getPreviewLink();
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
+        }
+    }
+
+    /**
+     * Retrieves a thumbnail, or smaller image representation, of this file. Sizes of 32x32, 64x64, 128x128, and 256x256
+     * can be returned in the .png format and sizes of 32x32, 94x94, 160x160, and 320x320 can be returned in the .jpg
+     * format.
+     *
+     * @param  fileId    - the id of the file to get thumbnail.
+     * @param  fileType  either PNG of JPG
+     * @param  minWidth  minimum width
+     * @param  minHeight minimum height
+     * @param  maxWidth  maximum width
+     * @param  maxHeight maximum height
+     * @return           the byte array of the thumbnail image
+     */
+    public byte[] getFileThumbnail(
+            String fileId, BoxFile.ThumbnailFileType fileType, Integer minWidth,
+            Integer minHeight, Integer maxWidth, Integer maxHeight) {
+        try {
+            LOG.debug("Getting thumbnail for file(id={}) fileType={} minWidth={} minHeight={} maxWidth={} maxHeight={}",
+                    fileId, fileType, minWidth, minHeight, maxWidth, maxHeight);
+
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
+            if (fileType == null) {
+                throw new IllegalArgumentException("Parameter 'fileType' can not be null");
+            }
+            if (minWidth == null) {
+                throw new IllegalArgumentException("Parameter 'minWidth' can not be null");
+            }
+            if (minHeight == null) {
+                throw new IllegalArgumentException("Parameter 'minHeight' can not be null");
+            }
+            if (maxWidth == null) {
+                throw new IllegalArgumentException("Parameter 'maxWidth' can not be null");
+            }
+            if (maxHeight == null) {
+                throw new IllegalArgumentException("Parameter 'maxHeight' can not be null");
+            }
+
+            BoxFile file = new BoxFile(boxConnection, fileId);
+            return file.getThumbnail(fileType, minWidth, minHeight, maxWidth, maxHeight);
+        } catch (BoxAPIException e) {
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -573,8 +686,12 @@ public class BoxFilesManager {
         try {
             LOG.debug("Creating metadata for file(id={})", fileId);
 
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
-            BoxHelper.notNull(metadata, BoxHelper.METADATA);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
+            if (metadata == null) {
+                throw new IllegalArgumentException("Parameter 'metadata' can not be null");
+            }
 
             BoxFile file = new BoxFile(boxConnection, fileId);
 
@@ -584,7 +701,8 @@ public class BoxFilesManager {
                 return file.createMetadata(metadata);
             }
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -600,7 +718,9 @@ public class BoxFilesManager {
         try {
             LOG.debug("Get metadata for file(id={})", fileId);
 
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
 
             BoxFile file = new BoxFile(boxConnection, fileId);
 
@@ -610,7 +730,8 @@ public class BoxFilesManager {
                 return file.getMetadata();
             }
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
 
     }
@@ -625,12 +746,17 @@ public class BoxFilesManager {
     public Metadata updateFileMetadata(String fileId, Metadata metadata) {
         try {
             LOG.debug("Updating metadata for file(id={})", fileId);
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
-            BoxHelper.notNull(metadata, BoxHelper.METADATA);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
+            if (metadata == null) {
+                throw new IllegalArgumentException("Parameter 'metadata' can not be null");
+            }
             BoxFile file = new BoxFile(boxConnection, fileId);
             return file.updateMetadata(metadata);
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -642,11 +768,14 @@ public class BoxFilesManager {
     public void deleteFileMetadata(String fileId) {
         try {
             LOG.debug("Deleting metadata for file(id={})", fileId);
-            BoxHelper.notNull(fileId, BoxHelper.FILE_ID);
+            if (fileId == null) {
+                throw new IllegalArgumentException("Parameter 'fileId' can not be null");
+            }
             BoxFile file = new BoxFile(boxConnection, fileId);
             file.deleteMetadata();
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 
@@ -662,14 +791,21 @@ public class BoxFilesManager {
     public void checkUpload(String fileName, String parentFolderId, Long size) {
         try {
             LOG.debug("Preflight check file with name '{}' to parent_folder(id={})", fileName, parentFolderId);
-            BoxHelper.notNull(parentFolderId, BoxHelper.PARENT_FOLDER_ID);
-            BoxHelper.notNull(fileName, BoxHelper.FILE_NAME);
-            BoxHelper.notNull(size, BoxHelper.SIZE);
+            if (parentFolderId == null) {
+                throw new IllegalArgumentException("Parameter 'parentFolderId' can not be null");
+            }
+            if (fileName == null) {
+                throw new IllegalArgumentException("Parameter 'fileName' can not be null");
+            }
+            if (size == null) {
+                throw new IllegalArgumentException("Parameter 'size' can not be null");
+            }
 
             BoxFolder parentFolder = new BoxFolder(boxConnection, parentFolderId);
             parentFolder.canUpload(fileName, size);
         } catch (BoxAPIException e) {
-            throw new RuntimeCamelException(BoxHelper.buildBoxApiErrorMessage(e), e);
+            throw new RuntimeCamelException(
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 }

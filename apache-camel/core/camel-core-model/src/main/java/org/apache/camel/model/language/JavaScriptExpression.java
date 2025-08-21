@@ -34,21 +34,12 @@ public class JavaScriptExpression extends TypedExpressionDefinition {
     public JavaScriptExpression() {
     }
 
-    protected JavaScriptExpression(JavaScriptExpression source) {
-        super(source);
-    }
-
     public JavaScriptExpression(String expression) {
         super(expression);
     }
 
     private JavaScriptExpression(Builder builder) {
         super(builder);
-    }
-
-    @Override
-    public JavaScriptExpression copyDefinition() {
-        return new JavaScriptExpression(this);
     }
 
     @Override

@@ -23,6 +23,7 @@ import org.apache.camel.builder.NotifyBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
@@ -31,8 +32,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class ZipDeflaterDataFormatFileUnmarshalDeleteTest extends CamelTestSupport {
 
     @Override
-    public void doPreSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
         deleteDirectory("target/data/zip");
+        super.setUp();
     }
 
     @Test

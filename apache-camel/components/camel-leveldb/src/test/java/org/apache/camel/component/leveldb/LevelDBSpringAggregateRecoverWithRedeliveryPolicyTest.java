@@ -44,9 +44,11 @@ public class LevelDBSpringAggregateRecoverWithRedeliveryPolicyTest extends Camel
                 "org/apache/camel/component/leveldb/LevelDBSpringAggregateRecoverWithRedeliveryPolicyTest.xml");
     }
 
+    @Override
     @BeforeEach
-    public void cleanupDirectory() {
+    public void setUp() throws Exception {
         deleteDirectory("target/data");
+        super.setUp();
     }
 
     @Test

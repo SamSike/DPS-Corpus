@@ -7,10 +7,8 @@ package org.jooq.meta.postgres.pg_catalog.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -64,14 +62,14 @@ public class PgNamespace extends TableImpl<Record> {
     /**
      * The column <code>pg_catalog.pg_namespace.nspacl</code>.
      */
-    public final TableField<Record, String[]> NSPACL = createField(DSL.name("nspacl"), SQLDataType.VARCHAR.array(), this, "");
+    public final TableField<Record, String[]> NSPACL = createField(DSL.name("nspacl"), SQLDataType.VARCHAR.getArrayDataType(), this, "");
 
     private PgNamespace(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private PgNamespace(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private PgNamespace(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -95,8 +93,8 @@ public class PgNamespace extends TableImpl<Record> {
         this(DSL.name("pg_namespace"), null);
     }
 
-    public <O extends Record> PgNamespace(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, PG_NAMESPACE);
+    public <O extends Record> PgNamespace(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, PG_NAMESPACE);
     }
 
     @Override
@@ -114,58 +112,6 @@ public class PgNamespace extends TableImpl<Record> {
         return Arrays.asList(Keys.PG_NAMESPACE_OID_INDEX, Keys.PG_NAMESPACE_NSPNAME_INDEX);
     }
 
-    private transient PgClass _pgClass;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>pg_catalog.pg_class</code> table
-     */
-    public PgClass pgClass() {
-        if (_pgClass == null)
-            _pgClass = new PgClass(this, null, Keys.PG_CLASS__SYNTHETIC_FK_PG_CLASS__SYNTHETIC_PK_PG_NAMESPACE.getInverseKey());
-
-        return _pgClass;
-    }
-
-    private transient PgConstraint _pgConstraint;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>pg_catalog.pg_constraint</code> table
-     */
-    public PgConstraint pgConstraint() {
-        if (_pgConstraint == null)
-            _pgConstraint = new PgConstraint(this, null, Keys.PG_CONSTRAINT__SYNTHETIC_FK_PG_CONSTRAINT__SYNTHETIC_PK_PG_NAMESPACE.getInverseKey());
-
-        return _pgConstraint;
-    }
-
-    private transient PgProc _pgProc;
-
-    /**
-     * Get the implicit to-many join path to the <code>pg_catalog.pg_proc</code>
-     * table
-     */
-    public PgProc pgProc() {
-        if (_pgProc == null)
-            _pgProc = new PgProc(this, null, Keys.PG_PROC__SYNTHETIC_FK_PG_PROC__SYNTHETIC_PK_PG_NAMESPACE.getInverseKey());
-
-        return _pgProc;
-    }
-
-    private transient PgType _pgType;
-
-    /**
-     * Get the implicit to-many join path to the <code>pg_catalog.pg_type</code>
-     * table
-     */
-    public PgType pgType() {
-        if (_pgType == null)
-            _pgType = new PgType(this, null, Keys.PG_TYPE__SYNTHETIC_FK_PG_TYPE__SYNTHETIC_PK_PG_NAMESPACE.getInverseKey());
-
-        return _pgType;
-    }
-
     @Override
     public PgNamespace as(String alias) {
         return new PgNamespace(DSL.name(alias), this);
@@ -176,8 +122,19 @@ public class PgNamespace extends TableImpl<Record> {
         return new PgNamespace(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public PgNamespace as(Table<?> alias) {
-        return new PgNamespace(alias.getQualifiedName(), this);
+    public PgNamespace rename(String name) {
+        return new PgNamespace(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public PgNamespace rename(Name name) {
+        return new PgNamespace(name, null);
     }
 }

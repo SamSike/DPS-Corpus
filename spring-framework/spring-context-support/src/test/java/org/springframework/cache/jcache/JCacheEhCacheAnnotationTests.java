@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CachingConfigurer;
+import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.cache.interceptor.SimpleKeyGenerator;
@@ -46,7 +46,7 @@ import org.springframework.transaction.testfixture.CallCountingTransactionManage
  * @author Stephane Nicoll
  * @author Juergen Hoeller
  */
-class JCacheEhCacheAnnotationTests extends AbstractCacheAnnotationTests {
+public class JCacheEhCacheAnnotationTests extends AbstractCacheAnnotationTests {
 
 	private final TransactionTemplate txTemplate = new TransactionTemplate(new CallCountingTransactionManager());
 
@@ -68,7 +68,7 @@ class JCacheEhCacheAnnotationTests extends AbstractCacheAnnotationTests {
 	}
 
 	@AfterEach
-	void shutdown() {
+	public void shutdown() {
 		if (jCacheManager != null) {
 			jCacheManager.close();
 		}
@@ -82,29 +82,29 @@ class JCacheEhCacheAnnotationTests extends AbstractCacheAnnotationTests {
 	}
 
 	@Test
-	void testEvictWithTransaction() {
+	public void testEvictWithTransaction() {
 		txTemplate.executeWithoutResult(s -> testEvict(this.cs, false));
 	}
 
 	@Test
-	void testEvictEarlyWithTransaction() {
+	public void testEvictEarlyWithTransaction() {
 		txTemplate.executeWithoutResult(s -> testEvictEarly(this.cs));
 	}
 
 	@Test
-	void testEvictAllWithTransaction() {
+	public void testEvictAllWithTransaction() {
 		txTemplate.executeWithoutResult(s -> testEvictAll(this.cs, false));
 	}
 
 	@Test
-	void testEvictAllEarlyWithTransaction() {
+	public void testEvictAllEarlyWithTransaction() {
 		txTemplate.executeWithoutResult(s -> testEvictAllEarly(this.cs));
 	}
 
 
 	@Configuration
 	@EnableCaching
-	static class EnableCachingConfig implements CachingConfigurer {
+	static class EnableCachingConfig extends CachingConfigurerSupport {
 
 		@Autowired
 		CachingProvider cachingProvider;

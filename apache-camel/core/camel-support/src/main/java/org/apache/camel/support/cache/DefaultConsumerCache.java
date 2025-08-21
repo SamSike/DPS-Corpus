@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
 public class DefaultConsumerCache extends ServiceSupport implements ConsumerCache {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultConsumerCache.class);
-    public static final String CONTEXT_IS_STOPPED = "CamelContext is stopped";
 
     private final CamelContext camelContext;
     private final PollingConsumerServicePool consumers;
@@ -47,7 +46,7 @@ public class DefaultConsumerCache extends ServiceSupport implements ConsumerCach
 
     private EndpointUtilizationStatistics statistics;
     private boolean extendedStatistics;
-    private final int maxCacheSize;
+    private int maxCacheSize;
 
     public DefaultConsumerCache(Object source, CamelContext camelContext, int cacheSize) {
         this.source = source;
@@ -104,7 +103,7 @@ public class DefaultConsumerCache extends ServiceSupport implements ConsumerCach
                 statistics.onHit(endpoint.getEndpointUri());
             }
             return consumer;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             throw new FailedToCreateConsumerException(endpoint, e);
         }
     }
@@ -112,7 +111,7 @@ public class DefaultConsumerCache extends ServiceSupport implements ConsumerCach
     @Override
     public Exchange receive(Endpoint endpoint) {
         if (camelContext.isStopped()) {
-            throw new RejectedExecutionException(CONTEXT_IS_STOPPED);
+            throw new RejectedExecutionException("CamelContext is stopped");
         }
 
         LOG.debug("<<<< {}", endpoint);
@@ -130,7 +129,7 @@ public class DefaultConsumerCache extends ServiceSupport implements ConsumerCach
     @Override
     public Exchange receive(Endpoint endpoint, long timeout) {
         if (camelContext.isStopped()) {
-            throw new RejectedExecutionException(CONTEXT_IS_STOPPED);
+            throw new RejectedExecutionException("CamelContext is stopped");
         }
 
         LOG.debug("<<<< {}", endpoint);
@@ -148,7 +147,7 @@ public class DefaultConsumerCache extends ServiceSupport implements ConsumerCach
     @Override
     public Exchange receiveNoWait(Endpoint endpoint) {
         if (camelContext.isStopped()) {
-            throw new RejectedExecutionException(CONTEXT_IS_STOPPED);
+            throw new RejectedExecutionException("CamelContext is stopped");
         }
 
         LOG.debug("<<<< {}", endpoint);
@@ -203,20 +202,15 @@ public class DefaultConsumerCache extends ServiceSupport implements ConsumerCach
      * Purges this cache
      */
     @Override
-    public void purge() {
-        lock.lock();
+    public synchronized void purge() {
         try {
-            try {
-                consumers.stop();
-                consumers.start();
-            } catch (Exception e) {
-                LOG.debug("Error restarting consumer pool", e);
-            }
-            if (statistics != null) {
-                statistics.clear();
-            }
-        } finally {
-            lock.unlock();
+            consumers.stop();
+            consumers.start();
+        } catch (Exception e) {
+            LOG.debug("Error restarting consumer pool", e);
+        }
+        if (statistics != null) {
+            statistics.clear();
         }
     }
 

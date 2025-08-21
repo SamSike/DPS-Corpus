@@ -24,6 +24,8 @@ import java.util.Map;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
@@ -31,24 +33,26 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
 import static org.apache.camel.test.junit5.TestSupport.assertIsInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class SqlProducerUseMessageBodyForSqlTest extends CamelTestSupport {
 
     private EmbeddedDatabase db;
 
     @Override
-
-    public void doPreSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
         db = new EmbeddedDatabaseBuilder()
                 .setName(getClass().getSimpleName())
                 .setType(EmbeddedDatabaseType.H2)
                 .addScript("sql/createAndPopulateDatabase.sql").build();
 
+        super.setUp();
     }
 
     @Override
-    public void doPostTearDown() throws Exception {
+    @AfterEach
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (db != null) {
             db.shutdown();
@@ -145,7 +149,7 @@ public class SqlProducerUseMessageBodyForSqlTest extends CamelTestSupport {
         String origSql = assertIsInstanceOf(String.class, mock.getReceivedExchanges().get(0).getIn().getBody());
         assertEquals("insert into projects(id, project, license) values(:?id,:?project,:?lic)", origSql);
 
-        assertNull(mock.getReceivedExchanges().get(0).getOut().getBody());
+        assertEquals(null, mock.getReceivedExchanges().get(0).getOut().getBody());
 
         // Clear and then use route2 to verify result of above insert select
         context.removeRoute(context.getRoutes().get(0).getId());

@@ -60,13 +60,9 @@ public class InstanceMethodTypeConverter extends TypeConverterSupport {
         if (instance == null) {
             throw new RuntimeCamelException("Could not instantiate an instance of: " + type.getCanonicalName());
         }
-        Object answer = useExchange
+        return useExchange
                 ? (T) ObjectHelper.invokeMethod(method, instance, value, exchange) : (T) ObjectHelper
                         .invokeMethod(method, instance, value);
-        if (answer == null && allowNull) {
-            answer = Void.class;
-        }
-        return (T) answer;
     }
 
 }

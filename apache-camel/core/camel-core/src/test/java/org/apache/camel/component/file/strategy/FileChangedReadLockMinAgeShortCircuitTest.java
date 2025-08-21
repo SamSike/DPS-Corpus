@@ -17,8 +17,10 @@
 package org.apache.camel.component.file.strategy;
 
 import java.nio.file.Files;
+import java.util.Date;
 
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,28 +43,25 @@ public class FileChangedReadLockMinAgeShortCircuitTest extends ContextTestSuppor
     }
 
     @Test
-    public void testChangedReadLockMinAgeNotAcquired() throws Exception {
-        // terminate test quicker
-        context.getShutdownStrategy().setTimeout(1);
-
-        // we do not acquire read-lock because the check interval is 10s, so "changed" requires at least a poll of 10s
-        // before we can determine that the file has same size as before
-
+    public void testChangedReadLockMinAge() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
-        mock.expectedMessageCount(0);
+        mock.expectedMessageCount(1);
+        mock.expectedFileExists(testFile("out/file.dat"));
+        // We should get the file on the first poll
+        mock.expectedMessagesMatches(
+                exchangeProperty(Exchange.RECEIVED_TIMESTAMP).convertTo(long.class).isLessThan(new Date().getTime() + 15000));
 
-        // but the unit test only waits 2 seconds
-        mock.assertIsSatisfied(2000);
+        assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri(
-                        "in?initialDelay=500&delay=10&readLock=changed&readLockMinAge=1000&readLockCheckInterval=10000&readLockTimeout=20000"))
-                        .to(fileUri("out"), "mock:result");
+                        "in?initialDelay=500&delay=10&readLock=changed&readLockMinAge=10&readLockCheckInterval=30000&readLockTimeout=90000"))
+                                .to(fileUri("out"), "mock:result");
             }
         };
     }

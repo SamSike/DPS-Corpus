@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.camel.component.kafka;
 
 import java.util.Properties;
@@ -27,14 +28,16 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
  * should be marked as volatile).
  */
 public class TaskHealthState {
-
     private final boolean ready;
     private final boolean isTerminated;
     private final boolean isRecoverable;
     private final Exception lastError;
     private final String clientId;
+
     private final String bootstrapServers;
+
     private final long currentBackoffInterval;
+
     private final Properties clientProperties;
 
     public TaskHealthState(boolean ready, boolean isTerminated, boolean isRecoverable, Exception lastError, String clientId,

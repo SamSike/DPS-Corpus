@@ -19,7 +19,7 @@ package org.apache.camel.tracing.decorators;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.tracing.SpanAdapter;
-import org.apache.camel.tracing.TagConstants;
+import org.apache.camel.tracing.Tag;
 
 public class SqlSpanDecorator extends AbstractSpanDecorator {
 
@@ -38,11 +38,11 @@ public class SqlSpanDecorator extends AbstractSpanDecorator {
     @Override
     public void pre(SpanAdapter span, Exchange exchange, Endpoint endpoint) {
         super.pre(span, exchange, endpoint);
-        span.setTag(TagConstants.DB_SYSTEM, "sql");
+        span.setTag(Tag.DB_TYPE, "sql");
 
-        String query = exchange.getIn().getHeader(CAMEL_SQL_QUERY, String.class);
-        if (query != null) {
-            span.setTag(TagConstants.DB_STATEMENT, query);
+        String sqlquery = exchange.getIn().getHeader(CAMEL_SQL_QUERY, String.class);
+        if (sqlquery != null) {
+            span.setTag(Tag.DB_STATEMENT, sqlquery);
         }
     }
 

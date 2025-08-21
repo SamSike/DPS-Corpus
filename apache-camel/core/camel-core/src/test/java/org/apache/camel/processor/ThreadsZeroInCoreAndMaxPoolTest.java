@@ -35,11 +35,11 @@ public class ThreadsZeroInCoreAndMaxPoolTest extends ContextTestSupport {
     }
 
     @Test
-    public void testThreadsCoreBeZero() {
+    public void testThreadsCoreBeZero() throws Exception {
         try {
             context.addRoutes(new RouteBuilder() {
                 @Override
-                public void configure() {
+                public void configure() throws Exception {
                     from("direct:start")
                             // will use a a custom thread pool with -1 in core and 2
                             // max
@@ -63,10 +63,10 @@ public class ThreadsZeroInCoreAndMaxPoolTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
 
                 from("direct:foo")
                         // only change thread name and max, but rely on default

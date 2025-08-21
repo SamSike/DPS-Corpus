@@ -33,7 +33,7 @@ public class HttpStreamCacheFileIssueTest extends BaseJettyTest {
     @TempDir
     File testDirectory;
 
-    private final String body = "12345678901234567890123456789012345678901234567890";
+    private String body = "12345678901234567890123456789012345678901234567890";
 
     @Test
     public void testStreamCacheToFileShouldBeDeletedInCaseOfStop() throws Exception {

@@ -40,10 +40,10 @@ public class XPathContentBasedRouterTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:a").choice().when(xpath("//hello")).to("mock:english").when(xpath("//hallo"))
                         .to("mock:dutch", "mock:german").otherwise().to("mock:french");
             }

@@ -33,6 +33,7 @@ import org.apache.camel.converter.jaxb.message.Message;
 import org.apache.camel.converter.jaxb.message.ObjectFactory;
 import org.apache.camel.converter.jaxb.person.Person;
 import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +59,9 @@ public class JaxbDataFormatSchemaValidationSpringTest extends CamelSpringTestSup
     private JAXBContext jbCtx;
 
     @Override
-    public void doPostSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
         jbCtx = JAXBContext.newInstance(Person.class, Message.class);
     }
 

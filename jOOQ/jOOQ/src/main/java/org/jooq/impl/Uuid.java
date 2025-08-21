@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 import java.util.UUID;
 
 
@@ -110,9 +107,6 @@ implements
 
 
 
-            case CLICKHOUSE:
-                return true;
-
             case FIREBIRD:
                 return false;
 
@@ -124,12 +118,10 @@ implements
             case H2:
                 return true;
 
-            case DUCKDB:
             case HSQLDB:
             case IGNITE:
             case MARIADB:
             case MYSQL:
-            case TRINO:
                 return true;
 
 
@@ -195,10 +187,6 @@ implements
 
 
 
-            case CLICKHOUSE:
-                ctx.visit(function(N_generateUUIDv4, getDataType()));
-                break;
-
             case FIREBIRD:
                 ctx.visit(function(N_UUID_TO_CHAR, getDataType(), function(N_GEN_UUID, getDataType())));
                 break;
@@ -217,12 +205,10 @@ implements
                 ctx.visit(function(N_RANDOM_UUID, getDataType()));
                 break;
 
-            case DUCKDB:
             case HSQLDB:
             case IGNITE:
             case MARIADB:
             case MYSQL:
-            case TRINO:
                 ctx.visit(function(N_UUID, getDataType()));
                 break;
 
@@ -283,21 +269,12 @@ implements
 
 
     // -------------------------------------------------------------------------
-    // XXX: Query Object Model
-    // -------------------------------------------------------------------------
-
-    @Override
-    public final Function0<? extends QOM.Uuid> $constructor() {
-        return () -> new Uuid();
-    }
-
-    // -------------------------------------------------------------------------
     // XXX: The Object API
     // -------------------------------------------------------------------------
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.Uuid o) {
+        if (that instanceof QOM.Uuid) { QOM.Uuid o = (QOM.Uuid) that;
             return true;
         }
         else

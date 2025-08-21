@@ -35,10 +35,10 @@ public class MulticastSingleAggregateIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:a").multicast(new SumAggregateBean()).to("direct:foo").end().to("mock:a");
 
                 from("direct:foo").bean(IncreaseOne.class);

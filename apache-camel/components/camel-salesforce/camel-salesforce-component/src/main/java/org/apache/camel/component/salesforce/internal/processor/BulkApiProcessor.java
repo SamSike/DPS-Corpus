@@ -118,7 +118,12 @@ public class BulkApiProcessor extends AbstractSalesforceProcessor {
                     e));
             callback.done(true);
             done = true;
-        } catch (InvalidPayloadException | RuntimeException e) {
+        } catch (InvalidPayloadException e) {
+            exchange.setException(new SalesforceException(
+                    String.format("Unexpected Error processing %s: \"%s\"", operationName.value(), e.getMessage()), e));
+            callback.done(true);
+            done = true;
+        } catch (RuntimeException e) {
             exchange.setException(new SalesforceException(
                     String.format("Unexpected Error processing %s: \"%s\"", operationName.value(), e.getMessage()), e));
             callback.done(true);

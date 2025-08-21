@@ -22,15 +22,12 @@ import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 
 import org.apache.camel.BindToRegistry;
-import org.apache.camel.component.mail.Mailbox.MailboxUser;
-import org.apache.camel.component.mail.Mailbox.Protocol;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MailCustomMailSenderTest extends CamelTestSupport {
-    private static final MailboxUser claus = Mailbox.getOrCreateUser("claus", "secret");
 
     private static boolean sent;
 
@@ -39,7 +36,7 @@ public class MailCustomMailSenderTest extends CamelTestSupport {
 
     @Test
     public void testSendWithCustomMailSender() {
-        sendBody(claus.uriPrefix(Protocol.smtp) + "&javaMailSender=#mySender", "Hello World");
+        sendBody("smtp://claus@localhost?javaMailSender=#mySender", "Hello World");
 
         assertTrue(sent, "Should have used custom mail sender");
     }

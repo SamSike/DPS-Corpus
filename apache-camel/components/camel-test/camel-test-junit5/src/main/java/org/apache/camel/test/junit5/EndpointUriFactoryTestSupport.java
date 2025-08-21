@@ -18,6 +18,7 @@ package org.apache.camel.test.junit5;
 
 import java.util.Map;
 
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spi.EndpointUriFactory;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,7 @@ public abstract class EndpointUriFactoryTestSupport extends CamelTestSupport {
 
     @Test
     public void buildUri() {
-        // let's see if the route starts successfully
+        // let's just see if the route starts successfully
     }
 
     protected abstract String scheme();
@@ -37,7 +38,7 @@ public abstract class EndpointUriFactoryTestSupport extends CamelTestSupport {
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() throws Exception {
-                EndpointUriFactory factory = getContext().getCamelContextExtension().getEndpointUriFactory(scheme());
+                EndpointUriFactory factory = getContext().adapt(ExtendedCamelContext.class).getEndpointUriFactory(scheme());
                 String uri = factory.buildUri(scheme(), pathParameters(), false);
                 from(uri).to("mock:out");
             }

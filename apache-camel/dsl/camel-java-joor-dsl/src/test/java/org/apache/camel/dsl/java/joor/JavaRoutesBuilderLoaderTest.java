@@ -26,7 +26,6 @@ import org.apache.camel.model.ProcessDefinition;
 import org.apache.camel.model.SetBodyDefinition;
 import org.apache.camel.model.ToDefinition;
 import org.apache.camel.spi.Resource;
-import org.apache.camel.support.PluginHelper;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -45,8 +44,8 @@ public class JavaRoutesBuilderLoaderTest {
     })
     void testLoadRoutes(String location) throws Exception {
         try (DefaultCamelContext context = new DefaultCamelContext()) {
-            Resource resource = PluginHelper.getResourceLoader(context).resolveResource(location);
-            Collection<RoutesBuilder> builders = PluginHelper.getRoutesLoader(context).findRoutesBuilders(resource);
+            Resource resource = context.getResourceLoader().resolveResource(location);
+            Collection<RoutesBuilder> builders = context.getRoutesLoader().findRoutesBuilders(resource);
 
             assertThat(builders).hasSize(1);
 
@@ -69,8 +68,8 @@ public class JavaRoutesBuilderLoaderTest {
         final String location = "/routes/MyRoutesWithNestedClass.java";
 
         try (DefaultCamelContext context = new DefaultCamelContext()) {
-            Resource resource = PluginHelper.getResourceLoader(context).resolveResource(location);
-            Collection<RoutesBuilder> builders = PluginHelper.getRoutesLoader(context).findRoutesBuilders(resource);
+            Resource resource = context.getResourceLoader().resolveResource(location);
+            Collection<RoutesBuilder> builders = context.getRoutesLoader().findRoutesBuilders(resource);
 
             assertThat(builders).hasSize(1);
 
@@ -95,8 +94,8 @@ public class JavaRoutesBuilderLoaderTest {
         final String location = "/routes/MyRoutesWithRestConfiguration.java";
 
         try (DefaultCamelContext context = new DefaultCamelContext()) {
-            Resource resource = PluginHelper.getResourceLoader(context).resolveResource(location);
-            Collection<RoutesBuilder> builders = PluginHelper.getRoutesLoader(context).findRoutesBuilders(resource);
+            Resource resource = context.getResourceLoader().resolveResource(location);
+            Collection<RoutesBuilder> builders = context.getRoutesLoader().findRoutesBuilders(resource);
 
             assertThat(builders).hasSize(1);
 
@@ -114,8 +113,8 @@ public class JavaRoutesBuilderLoaderTest {
         final String location = "/routes/MyRoutesWithModel.java";
 
         try (DefaultCamelContext context = new DefaultCamelContext()) {
-            Resource resource = PluginHelper.getResourceLoader(context).resolveResource(location);
-            Collection<RoutesBuilder> builders = PluginHelper.getRoutesLoader(context).findRoutesBuilders(resource);
+            Resource resource = context.getResourceLoader().resolveResource(location);
+            Collection<RoutesBuilder> builders = context.getRoutesLoader().findRoutesBuilders(resource);
 
             assertThat(builders).hasSize(1);
 

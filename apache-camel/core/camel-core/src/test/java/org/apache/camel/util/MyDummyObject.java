@@ -21,7 +21,7 @@ package org.apache.camel.util;
  */
 public class MyDummyObject {
 
-    private final String name;
+    private String name;
 
     public MyDummyObject(String name) {
         this.name = name;

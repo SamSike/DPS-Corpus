@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.camel.support.task.budget;
 
 import java.time.Duration;
@@ -26,7 +27,6 @@ import org.apache.camel.support.task.budget.backoff.FixedBackOffStrategy;
  * This task budget limits the execution by a given number of iterations or an unlimited number if configured to do so.
  */
 public class IterationBoundedBudget implements IterationBudget {
-
     /**
      * Defines an "unlimited" number of iterations
      */
@@ -77,8 +77,10 @@ public class IterationBoundedBudget implements IterationBudget {
             if (iterations != UNLIMITED_ITERATIONS) {
                 iterations++;
             }
+
             return true;
         }
+
         return false;
     }
 
@@ -87,6 +89,7 @@ public class IterationBoundedBudget implements IterationBudget {
         if (maxIterations != UNLIMITED_ITERATIONS) {
             return iterations < maxIterations;
         }
+
         return true;
     }
 

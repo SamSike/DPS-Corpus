@@ -2,7 +2,9 @@
  * General exceptions for Spring's scheduling support,
  * independent of any specific scheduling system.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.scheduling;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

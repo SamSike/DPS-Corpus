@@ -28,9 +28,11 @@ import org.junit.jupiter.api.Test;
  */
 public class FileConsumerFileFilterTest extends ContextTestSupport {
 
+    private String fileUrl = fileUri("?initialDelay=0&delay=10&filter=#myFilter");
+
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myFilter", new MyFileFilter<>());
         return jndi;
     }
@@ -64,17 +66,16 @@ public class FileConsumerFileFilterTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
-                from(fileUri("?initialDelay=0&delay=10&filter=#myFilter"))
-                        .convertBodyTo(String.class).to("mock:result");
+            public void configure() throws Exception {
+                from(fileUrl).convertBodyTo(String.class).to("mock:result");
             }
         };
     }
 
     // START SNIPPET: e1
-    public static class MyFileFilter<T> implements GenericFileFilter<T> {
+    public class MyFileFilter<T> implements GenericFileFilter<T> {
         @Override
         public boolean accept(GenericFile<T> file) {
             // we want all directories

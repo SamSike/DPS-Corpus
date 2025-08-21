@@ -16,9 +16,6 @@
  */
 package org.apache.camel.util;
 
-import org.junit.jupiter.api.DisplayName;
-
-@DisplayName("theNameHere")
 public class MyPojo {
 
     private String name;

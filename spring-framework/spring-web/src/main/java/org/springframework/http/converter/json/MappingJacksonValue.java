@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@
 package org.springframework.http.converter.json;
 
 import com.fasterxml.jackson.databind.ser.FilterProvider;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * A simple holder for the POJO to serialize via
@@ -33,16 +34,16 @@ import org.jspecify.annotations.Nullable;
  *
  * @author Rossen Stoyanchev
  * @since 4.1
- * @deprecated since 7.0 in favor of using {@link org.springframework.http.converter.SmartHttpMessageConverter} hints
  */
-@Deprecated(since = "7.0", forRemoval = true)
 public class MappingJacksonValue {
 
 	private Object value;
 
-	private @Nullable Class<?> serializationView;
+	@Nullable
+	private Class<?> serializationView;
 
-	private @Nullable FilterProvider filters;
+	@Nullable
+	private FilterProvider filters;
 
 
 	/**
@@ -82,7 +83,8 @@ public class MappingJacksonValue {
 	 * @see com.fasterxml.jackson.databind.ObjectMapper#writerWithView(Class)
 	 * @see com.fasterxml.jackson.annotation.JsonView
 	 */
-	public @Nullable Class<?> getSerializationView() {
+	@Nullable
+	public Class<?> getSerializationView() {
 		return this.serializationView;
 	}
 
@@ -103,7 +105,8 @@ public class MappingJacksonValue {
 	 * @see com.fasterxml.jackson.databind.ObjectMapper#writer(FilterProvider)
 	 * @see com.fasterxml.jackson.annotation.JsonFilter
 	 */
-	public @Nullable FilterProvider getFilters() {
+	@Nullable
+	public FilterProvider getFilters() {
 		return this.filters;
 	}
 

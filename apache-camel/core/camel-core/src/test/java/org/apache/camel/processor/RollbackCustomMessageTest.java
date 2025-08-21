@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class RollbackCustomMessageTest extends ContextTestSupport {
 
     @Test
-    public void testRollbackCustomMessage() {
+    public void testRollbackCustomMessage() throws Exception {
         try {
             template.sendBody("direct:start", "Hello World");
             fail("Should have thrown an exception");
@@ -39,10 +39,10 @@ public class RollbackCustomMessageTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setTracing(true);
 
                 from("direct:start").rollback("boo");

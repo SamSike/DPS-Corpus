@@ -16,11 +16,12 @@
  */
 package org.apache.camel.microprofile.health;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Set;
 
 import org.apache.camel.health.HealthCheck;
 import org.apache.camel.health.HealthCheck.Result;
-import org.apache.camel.support.ExceptionHelper;
 import org.eclipse.microprofile.health.HealthCheckResponseBuilder;
 
 /**
@@ -60,8 +61,11 @@ final class CamelMicroProfileHealthHelper {
             result.getError().ifPresent(error -> {
                 builder.withData("error.message", error.getMessage());
 
-                final String s = ExceptionHelper.stackTraceToString(error);
-                builder.withData("error.stacktrace", s);
+                final StringWriter stackTraceWriter = new StringWriter();
+                try (final PrintWriter pw = new PrintWriter(stackTraceWriter, true)) {
+                    error.printStackTrace(pw);
+                    builder.withData("error.stacktrace", stackTraceWriter.toString());
+                }
             });
         }
     }

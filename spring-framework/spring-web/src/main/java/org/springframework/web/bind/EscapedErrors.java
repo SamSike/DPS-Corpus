@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,7 @@ package org.springframework.web.bind;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
@@ -96,7 +95,7 @@ public class EscapedErrors implements Errors {
 	}
 
 	@Override
-	public void reject(String errorCode, Object @Nullable [] errorArgs, @Nullable String defaultMessage) {
+	public void reject(String errorCode, @Nullable Object[] errorArgs, @Nullable String defaultMessage) {
 		this.source.reject(errorCode, errorArgs, defaultMessage);
 	}
 
@@ -111,8 +110,8 @@ public class EscapedErrors implements Errors {
 	}
 
 	@Override
-	public void rejectValue(@Nullable String field, String errorCode,
-			Object @Nullable [] errorArgs, @Nullable String defaultMessage) {
+	public void rejectValue(@Nullable String field, String errorCode, @Nullable Object[] errorArgs,
+			@Nullable String defaultMessage) {
 
 		this.source.rejectValue(field, errorCode, errorArgs, defaultMessage);
 	}
@@ -154,7 +153,8 @@ public class EscapedErrors implements Errors {
 	}
 
 	@Override
-	public @Nullable ObjectError getGlobalError() {
+	@Nullable
+	public ObjectError getGlobalError() {
 		return escapeObjectError(this.source.getGlobalError());
 	}
 
@@ -174,7 +174,8 @@ public class EscapedErrors implements Errors {
 	}
 
 	@Override
-	public @Nullable FieldError getFieldError() {
+	@Nullable
+	public FieldError getFieldError() {
 		return this.source.getFieldError();
 	}
 
@@ -194,23 +195,27 @@ public class EscapedErrors implements Errors {
 	}
 
 	@Override
-	public @Nullable FieldError getFieldError(String field) {
+	@Nullable
+	public FieldError getFieldError(String field) {
 		return escapeObjectError(this.source.getFieldError(field));
 	}
 
 	@Override
-	public @Nullable Object getFieldValue(String field) {
+	@Nullable
+	public Object getFieldValue(String field) {
 		Object value = this.source.getFieldValue(field);
-		return (value instanceof String text ? HtmlUtils.htmlEscape(text) : value);
+		return (value instanceof String ? HtmlUtils.htmlEscape((String) value) : value);
 	}
 
 	@Override
-	public @Nullable Class<?> getFieldType(String field) {
+	@Nullable
+	public Class<?> getFieldType(String field) {
 		return this.source.getFieldType(field);
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends ObjectError> @Nullable T escapeObjectError(@Nullable T source) {
+	@Nullable
+	private <T extends ObjectError> T escapeObjectError(@Nullable T source) {
 		if (source == null) {
 			return null;
 		}
@@ -218,10 +223,11 @@ public class EscapedErrors implements Errors {
 		if (defaultMessage != null) {
 			defaultMessage = HtmlUtils.htmlEscape(defaultMessage);
 		}
-		if (source instanceof FieldError fieldError) {
+		if (source instanceof FieldError) {
+			FieldError fieldError = (FieldError) source;
 			Object value = fieldError.getRejectedValue();
-			if (value instanceof String text) {
-				value = HtmlUtils.htmlEscape(text);
+			if (value instanceof String) {
+				value = HtmlUtils.htmlEscape((String) value);
 			}
 			return (T) new FieldError(
 					fieldError.getObjectName(), fieldError.getField(), value, fieldError.isBindingFailure(),

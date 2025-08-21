@@ -22,10 +22,10 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.support.HealthCheckComponent;
+import org.apache.camel.support.DefaultComponent;
 
 @Component("aws-cloudtrail")
-public class CloudtrailComponent extends HealthCheckComponent {
+public class CloudtrailComponent extends DefaultComponent {
 
     @Metadata
     private CloudtrailConfiguration configuration = new CloudtrailConfiguration();
@@ -45,12 +45,10 @@ public class CloudtrailComponent extends HealthCheckComponent {
         configuration.setLabel(remaining);
         CloudtrailEndpoint endpoint = new CloudtrailEndpoint(uri, configuration, this);
         setProperties(endpoint, parameters);
-        if (!configuration.isUseDefaultCredentialsProvider() && !configuration.isUseProfileCredentialsProvider()
-                && !configuration.isUseSessionCredentials()
-                && configuration.getCloudTrailClient() == null
+        if (!configuration.isUseDefaultCredentialsProvider() && configuration.getCloudTrailClient() == null
                 && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
             throw new IllegalArgumentException(
-                    "useDefaultCredentialsProvider is set to false, useProfileCredentialsProvider is set to false, useSessionCredentials is set to false, cloudTrailClient or accessKey and secretKey must be specified");
+                    "useDefaultCredentialsProvider is set to false, cloudTrailClient or accessKey and secretKey must be specified");
         }
         return endpoint;
     }

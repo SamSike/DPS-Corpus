@@ -19,6 +19,7 @@ package org.apache.camel.component.bean;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.language.simple.Simple;
+import org.apache.camel.processor.BeanRouteTest;
 import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -27,11 +28,11 @@ import org.slf4j.LoggerFactory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BeanWithExpressionInjectionTest extends ContextTestSupport {
-    private static final Logger LOG = LoggerFactory.getLogger(BeanWithExpressionInjectionTest.class);
-    protected final MyBean myBean = new MyBean();
+    private static final Logger LOG = LoggerFactory.getLogger(BeanRouteTest.class);
+    protected MyBean myBean = new MyBean();
 
     @Test
-    public void testSendMessage() {
+    public void testSendMessage() throws Exception {
         String expectedBody = "Wobble";
 
         template.sendBodyAndHeader("direct:in", expectedBody, "foo", "bar");
@@ -41,8 +42,8 @@ public class BeanWithExpressionInjectionTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
 
         answer.bind("myBean", myBean);
         return answer;
@@ -69,7 +70,7 @@ public class BeanWithExpressionInjectionTest extends ContextTestSupport {
         public void read(String body, @Simple("${header.foo}") String foo) {
             this.foo = foo;
             this.body = body;
-            LOG.info("read() method called on {}", this);
+            LOG.info("read() method called on " + this);
         }
     }
 }

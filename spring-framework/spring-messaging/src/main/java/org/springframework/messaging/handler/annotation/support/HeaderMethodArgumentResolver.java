@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,11 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandlingException;
 import org.springframework.messaging.handler.annotation.Header;
@@ -68,7 +68,8 @@ public class HeaderMethodArgumentResolver extends AbstractNamedValueMethodArgume
 	}
 
 	@Override
-	protected @Nullable Object resolveArgumentInternal(MethodParameter parameter, Message<?> message, String name)
+	@Nullable
+	protected Object resolveArgumentInternal(MethodParameter parameter, Message<?> message, String name)
 			throws Exception {
 
 		Object headerValue = message.getHeaders().get(name);
@@ -85,7 +86,8 @@ public class HeaderMethodArgumentResolver extends AbstractNamedValueMethodArgume
 		return (headerValue != null ? headerValue : nativeHeaderValue);
 	}
 
-	private @Nullable Object getNativeHeaderValue(Message<?> message, String name) {
+	@Nullable
+	private Object getNativeHeaderValue(Message<?> message, String name) {
 		Map<String, List<String>> nativeHeaders = getNativeHeaders(message);
 		if (name.startsWith("nativeHeaders.")) {
 			name = name.substring("nativeHeaders.".length());
@@ -98,7 +100,8 @@ public class HeaderMethodArgumentResolver extends AbstractNamedValueMethodArgume
 	}
 
 	@SuppressWarnings("unchecked")
-	private @Nullable Map<String, List<String>> getNativeHeaders(Message<?> message) {
+	@Nullable
+	private Map<String, List<String>> getNativeHeaders(Message<?> message) {
 		return (Map<String, List<String>>) message.getHeaders().get(NativeMessageHeaderAccessor.NATIVE_HEADERS);
 	}
 

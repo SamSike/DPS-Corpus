@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -57,13 +57,13 @@ import org.jooq.Table;
  */
 final class ArrayQuery<T> extends AbstractField<T[]> implements QOM.ArrayQuery<T> {
 
-    private final Select<? extends Record1<T>> query;
+    private final Select<? extends Record1<T>> select;
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    ArrayQuery(Select<? extends Record1<T>> query) {
-        super(N_ARRAY, (DataType) query.getSelect().get(0).getDataType().getArrayDataType());
+    ArrayQuery(Select<? extends Record1<T>> select) {
+        super(N_ARRAY, (DataType) select.getSelect().get(0).getDataType().getArrayDataType());
 
-        this.query = query;
+        this.select = select;
     }
 
     @Override
@@ -77,17 +77,17 @@ final class ArrayQuery<T> extends AbstractField<T[]> implements QOM.ArrayQuery<T
 
 
             case H2: {
-                Table<?> t = query.asTable("t", "c");
+                Table<?> t = select.asTable("t", "c");
                 Field<?> c = t.field("c");
 
                 // [#11053] TODO: Move ORDER BY clause from subquery to ARRAY_AGG
                 // See https://github.com/jOOQ/jOOQ/issues/11053#issuecomment-735773248
-                visitSubquery(ctx, DSL.select(arrayAgg(c)).from(t));
+                visitSubquery(ctx, DSL.select(arrayAgg(c)).from(t), false, false, false);
                 break;
             }
 
             default:
-                ctx.visit(K_ARRAY).visitSubquery(query);
+                ctx.visit(K_ARRAY).visitSubquery(select);
 
                 break;
         }
@@ -98,8 +98,8 @@ final class ArrayQuery<T> extends AbstractField<T[]> implements QOM.ArrayQuery<T
     // -------------------------------------------------------------------------
 
     @Override
-    public final Select<? extends Record1<T>> $query() {
-        return query;
+    public final Select<? extends Record1<T>> $select() {
+        return select;
     }
 
 

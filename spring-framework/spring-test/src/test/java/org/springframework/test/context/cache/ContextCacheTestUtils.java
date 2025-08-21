@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,7 @@
 
 package org.springframework.test.context.cache;
 
-import org.springframework.util.StringUtils;
-
-import static org.assertj.core.api.SoftAssertions.assertSoftly;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Collection of utility methods for testing scenarios involving the
@@ -32,29 +30,8 @@ public class ContextCacheTestUtils {
 	/**
 	 * Reset the state of the static context cache in {@link DefaultCacheAwareContextLoaderDelegate}.
 	 */
-	public static void resetContextCache() {
+	public static final void resetContextCache() {
 		DefaultCacheAwareContextLoaderDelegate.defaultContextCache.reset();
-	}
-
-	/**
-	 * Assert the statistics of the static context cache in {@link DefaultCacheAwareContextLoaderDelegate}.
-	 *
-	 * @param expectedSize the expected number of contexts in the cache
-	 * @param expectedHitCount the expected hit count
-	 * @param expectedMissCount the expected miss count
-	 */
-	public static void assertContextCacheStatistics(int expectedSize, int expectedHitCount, int expectedMissCount) {
-		ContextCache contextCache = DefaultCacheAwareContextLoaderDelegate.defaultContextCache;
-		String context = (StringUtils.hasText((String) null) ? " (" + null + ")" : "");
-
-		assertSoftly(softly -> {
-			softly.assertThat(contextCache.size())
-					.as("contexts in cache" + context).isEqualTo(expectedSize);
-			softly.assertThat(contextCache.getHitCount())
-					.as("cache hits" + context).isEqualTo(expectedHitCount);
-			softly.assertThat(contextCache.getMissCount())
-					.as("cache misses" + context).isEqualTo(expectedMissCount);
-		});
 	}
 
 	/**
@@ -62,16 +39,13 @@ public class ContextCacheTestUtils {
 	 *
 	 * @param usageScenario the scenario in which the statistics are used
 	 * @param expectedSize the expected number of contexts in the cache
-	 * @param expectedContextUsageCount the expected number of actively running
-	 * contexts in the cache
 	 * @param expectedHitCount the expected hit count
 	 * @param expectedMissCount the expected miss count
 	 */
-	public static void assertContextCacheStatistics(String usageScenario, int expectedSize,
-			int expectedContextUsageCount, int expectedHitCount, int expectedMissCount) {
-
+	public static final void assertContextCacheStatistics(String usageScenario, int expectedSize, int expectedHitCount,
+			int expectedMissCount) {
 		assertContextCacheStatistics(DefaultCacheAwareContextLoaderDelegate.defaultContextCache, usageScenario,
-			expectedSize, expectedContextUsageCount, expectedHitCount, expectedMissCount);
+			expectedSize, expectedHitCount, expectedMissCount);
 	}
 
 	/**
@@ -80,26 +54,15 @@ public class ContextCacheTestUtils {
 	 * @param contextCache the cache to assert against
 	 * @param usageScenario the scenario in which the statistics are used
 	 * @param expectedSize the expected number of contexts in the cache
-	 * @param expectedContextUsageCount the expected number of actively running
-	 * contexts in the cache
 	 * @param expectedHitCount the expected hit count
 	 * @param expectedMissCount the expected miss count
 	 */
-	public static void assertContextCacheStatistics(ContextCache contextCache, String usageScenario,
-			int expectedSize, int expectedContextUsageCount, int expectedHitCount, int expectedMissCount) {
+	public static final void assertContextCacheStatistics(ContextCache contextCache, String usageScenario,
+			int expectedSize, int expectedHitCount, int expectedMissCount) {
 
-		String context = (StringUtils.hasText(usageScenario) ? " (" + usageScenario + ")" : "");
-
-		assertSoftly(softly -> {
-			softly.assertThat(contextCache.size())
-					.as("contexts in cache" + context).isEqualTo(expectedSize);
-			softly.assertThat(contextCache.getContextUsageCount())
-					.as("active contexts in cache" + context).isEqualTo(expectedContextUsageCount);
-			softly.assertThat(contextCache.getHitCount())
-					.as("cache hits" + context).isEqualTo(expectedHitCount);
-			softly.assertThat(contextCache.getMissCount())
-					.as("cache misses" + context).isEqualTo(expectedMissCount);
-		});
+		assertThat(contextCache.size()).as("Verifying number of contexts in cache (" + usageScenario + ").").isEqualTo(expectedSize);
+		assertThat(contextCache.getHitCount()).as("Verifying number of cache hits (" + usageScenario + ").").isEqualTo(expectedHitCount);
+		assertThat(contextCache.getMissCount()).as("Verifying number of cache misses (" + usageScenario + ").").isEqualTo(expectedMissCount);
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 
 package org.springframework.web.reactive.function.client;
-
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.NestedRuntimeException;
 
@@ -44,7 +42,7 @@ public abstract class WebClientException extends NestedRuntimeException {
 	 * @param msg the message
 	 * @param ex the exception
 	 */
-	public WebClientException(@Nullable String msg, Throwable ex) {
+	public WebClientException(String msg, Throwable ex) {
 		super(msg, ex);
 	}
 

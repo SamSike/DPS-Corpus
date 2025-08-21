@@ -16,8 +16,10 @@
  */
 package org.apache.camel.model;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
@@ -25,7 +27,6 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementRef;
 import jakarta.xml.bind.annotation.XmlRootElement;
-import jakarta.xml.bind.annotation.XmlType;
 
 import org.apache.camel.ExpressionFactory;
 import org.apache.camel.Predicate;
@@ -33,15 +34,17 @@ import org.apache.camel.builder.ExpressionClause;
 import org.apache.camel.model.language.ExpressionDefinition;
 import org.apache.camel.spi.AsPredicate;
 import org.apache.camel.spi.Metadata;
+import org.apache.camel.util.ObjectHelper;
 
 /**
  * Route messages based on a series of predicates
  */
 @Metadata(label = "eip,routing")
 @XmlRootElement(name = "choice")
-@XmlType(propOrder = { "whenClauses", "otherwise" })
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ChoiceDefinition extends NoOutputDefinition<ChoiceDefinition> {
+public class ChoiceDefinition extends ProcessorDefinition<ChoiceDefinition> implements OutputNode {
+
+    private transient boolean onlyWhenOrOtherwise = true;
 
     @XmlElementRef(name = "when")
     @AsPredicate
@@ -57,21 +60,95 @@ public class ChoiceDefinition extends NoOutputDefinition<ChoiceDefinition> {
     public ChoiceDefinition() {
     }
 
-    protected ChoiceDefinition(ChoiceDefinition source) {
-        super(source);
-        this.whenClauses = ProcessorDefinitionHelper.deepCopyDefinitions(source.whenClauses);
-        this.otherwise = source.otherwise != null ? source.otherwise.copyDefinition() : null;
-        this.precondition = source.precondition;
-    }
-
     @Override
-    public ChoiceDefinition copyDefinition() {
-        return new ChoiceDefinition(this);
+    public List<ProcessorDefinition<?>> getOutputs() {
+        // wrap the outputs into a list where we can on the inside control the
+        // when/otherwise
+        // but make it appear as a list on the outside
+        return new AbstractList<ProcessorDefinition<?>>() {
+
+            public ProcessorDefinition<?> get(int index) {
+                if (index < whenClauses.size()) {
+                    return whenClauses.get(index);
+                }
+                if (index == whenClauses.size()) {
+                    return otherwise;
+                }
+                throw new IndexOutOfBoundsException("Index " + index + " is out of bounds with size " + size());
+            }
+
+            @Override
+            public boolean add(ProcessorDefinition<?> def) {
+                if (def instanceof WhenDefinition) {
+                    return whenClauses.add((WhenDefinition) def);
+                } else if (def instanceof OtherwiseDefinition) {
+                    otherwise = (OtherwiseDefinition) def;
+                    return true;
+                }
+                throw new IllegalArgumentException(
+                        "Expected either a WhenDefinition or OtherwiseDefinition but was "
+                                                   + ObjectHelper.classCanonicalName(def));
+            }
+
+            public int size() {
+                return whenClauses.size() + (otherwise == null ? 0 : 1);
+            }
+
+            @Override
+            public void clear() {
+                whenClauses.clear();
+                otherwise = null;
+            }
+
+            @Override
+            public ProcessorDefinition<?> set(int index, ProcessorDefinition<?> element) {
+                if (index < whenClauses.size()) {
+                    if (element instanceof WhenDefinition) {
+                        return whenClauses.set(index, (WhenDefinition) element);
+                    }
+                    throw new IllegalArgumentException(
+                            "Expected WhenDefinition but was " + ObjectHelper.classCanonicalName(element));
+                } else if (index == whenClauses.size()) {
+                    ProcessorDefinition<?> old = otherwise;
+                    otherwise = (OtherwiseDefinition) element;
+                    return old;
+                }
+                throw new IndexOutOfBoundsException("Index " + index + " is out of bounds with size " + size());
+            }
+
+            @Override
+            public ProcessorDefinition<?> remove(int index) {
+                if (index < whenClauses.size()) {
+                    return whenClauses.remove(index);
+                } else if (index == whenClauses.size()) {
+                    ProcessorDefinition<?> old = otherwise;
+                    otherwise = null;
+                    return old;
+                }
+                throw new IndexOutOfBoundsException("Index " + index + " is out of bounds with size " + size());
+            }
+        };
     }
 
     @Override
     public String toString() {
         return "Choice[" + getWhenClauses() + (getOtherwise() != null ? " " + getOtherwise() : "") + "]";
+    }
+
+    @Override
+    public void addOutput(ProcessorDefinition<?> output) {
+        if (onlyWhenOrOtherwise) {
+            if (output instanceof WhenDefinition || output instanceof OtherwiseDefinition) {
+                // okay we are adding a when or otherwise so allow any kind of
+                // output after this again
+                onlyWhenOrOtherwise = false;
+            } else {
+                throw new IllegalArgumentException(
+                        "A new choice clause should start with a when() or otherwise(). "
+                                                   + "If you intend to end the entire choice and are using endChoice() then use end() instead.");
+            }
+        }
+        super.addOutput(output);
     }
 
     public String getPrecondition() {
@@ -87,49 +164,17 @@ public class ChoiceDefinition extends NoOutputDefinition<ChoiceDefinition> {
     }
 
     @Override
-    public void addOutput(ProcessorDefinition<?> output) {
-        if (otherwise != null) {
-            output.setParent(this);
-            otherwise.addOutput(output);
-        } else if (!whenClauses.isEmpty()) {
-            output.setParent(this);
-            WhenDefinition last = whenClauses.get(whenClauses.size() - 1);
-            last.addOutput(output);
-        } else {
-            super.addOutput(output);
-        }
+    public ProcessorDefinition<?> end() {
+        // we end a block so only when or otherwise is supported
+        onlyWhenOrOtherwise = true;
+        return super.end();
     }
 
-    public void addOutput(WhenDefinition when) {
-        when.setParent(this);
-        whenClauses.add(when);
-    }
-
-    public void addOutput(OtherwiseDefinition other) {
-        other.setParent(this);
-        this.otherwise = other;
-    }
-
-    /**
-     * Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be
-     * enabled later at runtime.
-     */
     @Override
-    public ChoiceDefinition disabled(String disabled) {
-        // special to disable when/otherwise
-        if (otherwise != null && otherwise.getOutputs().isEmpty()) {
-            otherwise.setDisabled(disabled);
-        } else if (!whenClauses.isEmpty()) {
-            WhenDefinition last = whenClauses.get(whenClauses.size() - 1);
-            if (last.getOutputs().isEmpty()) {
-                last.setDisabled(disabled);
-            } else {
-                super.disabled(disabled);
-            }
-        } else {
-            super.disabled(disabled);
-        }
-        return this;
+    public ChoiceDefinition endChoice() {
+        // we end a block so only when or otherwise is supported
+        onlyWhenOrOtherwise = true;
+        return super.endChoice();
     }
 
     // Fluent API
@@ -176,8 +221,15 @@ public class ChoiceDefinition extends NoOutputDefinition<ChoiceDefinition> {
     @AsPredicate
     public ExpressionClause<ChoiceDefinition> when() {
         ExpressionClause<ChoiceDefinition> clause = new ExpressionClause<>(this);
-        addClause(new WhenDefinition((Predicate) clause));
+        addClause(new WhenDefinition(clause));
         return clause;
+    }
+
+    private void addClause(ProcessorDefinition<?> when) {
+        onlyWhenOrOtherwise = true;
+        popBlock();
+        addOutput(when);
+        pushBlock(when);
     }
 
     /**
@@ -186,51 +238,23 @@ public class ChoiceDefinition extends NoOutputDefinition<ChoiceDefinition> {
      * @return the builder
      */
     public ChoiceDefinition otherwise() {
-        if (this.otherwise != null) {
-            throw new IllegalArgumentException(
-                    "Cannot add a 2nd otherwise to this choice: " + this
-                                               + ". If you have nested choice then you may need to end().endChoice() to go back to parent choice.");
-        }
         OtherwiseDefinition answer = new OtherwiseDefinition();
         addClause(answer);
         return this;
     }
 
-    private void addClause(WhenDefinition when) {
-        popBlock();
-        addOutput(when);
-        pushBlock(when);
-    }
-
-    private void addClause(OtherwiseDefinition other) {
-        popBlock();
-        addOutput(other);
-        pushBlock(other);
-    }
-
     @Override
     public void setId(String id) {
-        // when setting id, we should set it on the fine grained element, if possible
+        // when setting id, we should set it on the fine grained element, if
+        // possible
         if (otherwise != null) {
             otherwise.setId(id);
         } else if (!getWhenClauses().isEmpty()) {
-            var last = getWhenClauses().get(getWhenClauses().size() - 1);
-            last.setId(id);
+            int size = getWhenClauses().size();
+            getWhenClauses().get(size - 1).setId(id);
         } else {
             super.setId(id);
         }
-    }
-
-    @Override
-    public List<ProcessorDefinition<?>> getOutputs() {
-        var answer = new ArrayList<ProcessorDefinition<?>>();
-        for (WhenDefinition when : whenClauses) {
-            answer.addAll(when.getOutputs());
-        }
-        if (otherwise != null) {
-            answer.addAll(otherwise.getOutputs());
-        }
-        return answer;
     }
 
     // Properties
@@ -243,16 +267,8 @@ public class ChoiceDefinition extends NoOutputDefinition<ChoiceDefinition> {
 
     @Override
     public String getLabel() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("choice[");
-        for (WhenDefinition when : whenClauses) {
-            sb.append(when.getLabel());
-        }
-        if (otherwise != null) {
-            sb.append(otherwise.getLabel());
-        }
-        sb.append("]");
-        return sb.toString();
+        return getOutputs().stream().map(ProcessorDefinition::getLabel)
+                .collect(Collectors.joining(",", getShortName() + "[", "]"));
     }
 
     public List<WhenDefinition> getWhenClauses() {
@@ -275,7 +291,7 @@ public class ChoiceDefinition extends NoOutputDefinition<ChoiceDefinition> {
     }
 
     @Override
-    public void preCreateProcessor() {
+    public void configureChild(ProcessorDefinition<?> output) {
         if (whenClauses == null || whenClauses.isEmpty()) {
             return;
         }
@@ -285,19 +301,19 @@ public class ChoiceDefinition extends NoOutputDefinition<ChoiceDefinition> {
                 exp = exp.getExpressionType();
             }
             Predicate pre = exp.getPredicate();
-            if (pre instanceof ExpressionClause clause) {
+            if (pre instanceof ExpressionClause) {
+                ExpressionClause<?> clause = (ExpressionClause<?>) pre;
                 if (clause.getExpressionType() != null) {
                     // if using the Java DSL then the expression may have been set using the
                     // ExpressionClause which is a fancy builder to define expressions and predicates
                     // using fluent builders in the DSL. However, we need afterwards a callback to
                     // reset the expression to the expression type the ExpressionClause did build for us
                     ExpressionFactory model = clause.getExpressionType();
-                    if (model instanceof ExpressionDefinition expressionDefinition) {
-                        when.setExpression(expressionDefinition);
+                    if (model instanceof ExpressionDefinition) {
+                        when.setExpression((ExpressionDefinition) model);
                     }
                 }
             }
         }
     }
-
 }

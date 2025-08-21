@@ -24,10 +24,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class OnExceptionSubRouteWithDefaultErrorHandlerTest extends OnExceptionRouteWithDefaultErrorHandlerTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // here we start the routing with the consumer
                 from("direct:start").onException(MyTechnicalException.class).maximumRedeliveries(0).handled(true).end()
                         .onException(MyFunctionalException.class)

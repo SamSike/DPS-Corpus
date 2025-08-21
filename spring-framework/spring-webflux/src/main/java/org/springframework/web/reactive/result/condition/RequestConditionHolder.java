@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,12 @@ package org.springframework.web.reactive.result.condition;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
  * A holder for a {@link RequestCondition} useful when the type of the request
- * condition is not known ahead of time, for example, custom condition. Since this
+ * condition is not known ahead of time, e.g. custom condition. Since this
  * class is also an implementation of {@code RequestCondition}, effectively it
  * decorates the held request condition and allows it to be combined and compared
  * with other request conditions in a type and null safe way.
@@ -39,7 +38,8 @@ import org.springframework.web.server.ServerWebExchange;
  */
 public final class RequestConditionHolder extends AbstractRequestCondition<RequestConditionHolder> {
 
-	private final @Nullable RequestCondition<Object> condition;
+	@Nullable
+	private final RequestCondition<Object> condition;
 
 
 	/**
@@ -55,7 +55,8 @@ public final class RequestConditionHolder extends AbstractRequestCondition<Reque
 	/**
 	 * Return the held request condition, or {@code null} if not holding one.
 	 */
-	public @Nullable RequestCondition<?> getCondition() {
+	@Nullable
+	public RequestCondition<?> getCondition() {
 		return this.condition;
 	}
 
@@ -98,7 +99,7 @@ public final class RequestConditionHolder extends AbstractRequestCondition<Reque
 	 * holder, return the same holder instance.
 	 */
 	@Override
-	public @Nullable RequestConditionHolder getMatchingCondition(ServerWebExchange exchange) {
+	public RequestConditionHolder getMatchingCondition(ServerWebExchange exchange) {
 		if (this.condition == null) {
 			return this;
 		}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.AbstractMessageCondition;
 import org.springframework.util.Assert;
@@ -75,7 +74,8 @@ public class SimpMessageTypeMessageCondition extends AbstractMessageCondition<Si
 	}
 
 	@Override
-	public @Nullable SimpMessageTypeMessageCondition getMatchingCondition(Message<?> message) {
+	@Nullable
+	public SimpMessageTypeMessageCondition getMatchingCondition(Message<?> message) {
 		SimpMessageType actual = SimpMessageHeaderAccessor.getMessageType(message.getHeaders());
 		return (actual != null && actual.equals(this.messageType) ? this : null);
 	}

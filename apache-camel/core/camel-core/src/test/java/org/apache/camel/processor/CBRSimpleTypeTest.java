@@ -39,10 +39,10 @@ public class CBRSimpleTypeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start").choice().when()
                         .simple("${header.customer} == ${type:org.apache.camel.processor.Customer.GOLD}").to("mock:gold").when()

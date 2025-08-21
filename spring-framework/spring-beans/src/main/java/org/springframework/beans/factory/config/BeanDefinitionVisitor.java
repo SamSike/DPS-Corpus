@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.PropertyValue;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringValueResolver;
@@ -48,7 +47,8 @@ import org.springframework.util.StringValueResolver;
  */
 public class BeanDefinitionVisitor {
 
-	private @Nullable StringValueResolver valueResolver;
+	@Nullable
+	private StringValueResolver valueResolver;
 
 
 	/**
@@ -170,14 +170,16 @@ public class BeanDefinitionVisitor {
 	}
 
 	@SuppressWarnings("rawtypes")
-	protected @Nullable Object resolveValue(@Nullable Object value) {
-		if (value instanceof BeanDefinition beanDef) {
-			visitBeanDefinition(beanDef);
+	@Nullable
+	protected Object resolveValue(@Nullable Object value) {
+		if (value instanceof BeanDefinition) {
+			visitBeanDefinition((BeanDefinition) value);
 		}
-		else if (value instanceof BeanDefinitionHolder beanDefHolder) {
-			visitBeanDefinition(beanDefHolder.getBeanDefinition());
+		else if (value instanceof BeanDefinitionHolder) {
+			visitBeanDefinition(((BeanDefinitionHolder) value).getBeanDefinition());
 		}
-		else if (value instanceof RuntimeBeanReference ref) {
+		else if (value instanceof RuntimeBeanReference) {
+			RuntimeBeanReference ref = (RuntimeBeanReference) value;
 			String newBeanName = resolveStringValue(ref.getBeanName());
 			if (newBeanName == null) {
 				return null;
@@ -186,7 +188,8 @@ public class BeanDefinitionVisitor {
 				return new RuntimeBeanReference(newBeanName);
 			}
 		}
-		else if (value instanceof RuntimeBeanNameReference ref) {
+		else if (value instanceof RuntimeBeanNameReference) {
+			RuntimeBeanNameReference ref = (RuntimeBeanNameReference) value;
 			String newBeanName = resolveStringValue(ref.getBeanName());
 			if (newBeanName == null) {
 				return null;
@@ -195,32 +198,33 @@ public class BeanDefinitionVisitor {
 				return new RuntimeBeanNameReference(newBeanName);
 			}
 		}
-		else if (value instanceof Object[] array) {
-			visitArray(array);
+		else if (value instanceof Object[]) {
+			visitArray((Object[]) value);
 		}
-		else if (value instanceof List list) {
-			visitList(list);
+		else if (value instanceof List) {
+			visitList((List) value);
 		}
-		else if (value instanceof Set set) {
-			visitSet(set);
+		else if (value instanceof Set) {
+			visitSet((Set) value);
 		}
-		else if (value instanceof Map map) {
-			visitMap(map);
+		else if (value instanceof Map) {
+			visitMap((Map) value);
 		}
-		else if (value instanceof TypedStringValue typedStringValue) {
+		else if (value instanceof TypedStringValue) {
+			TypedStringValue typedStringValue = (TypedStringValue) value;
 			String stringValue = typedStringValue.getValue();
 			if (stringValue != null) {
 				String visitedString = resolveStringValue(stringValue);
 				typedStringValue.setValue(visitedString);
 			}
 		}
-		else if (value instanceof String strValue) {
-			return resolveStringValue(strValue);
+		else if (value instanceof String) {
+			return resolveStringValue((String) value);
 		}
 		return value;
 	}
 
-	protected void visitArray(@Nullable Object[] arrayVal) {
+	protected void visitArray(Object[] arrayVal) {
 		for (int i = 0; i < arrayVal.length; i++) {
 			Object elem = arrayVal[i];
 			Object newVal = resolveValue(elem);
@@ -283,7 +287,8 @@ public class BeanDefinitionVisitor {
 	 * @param strVal the original String value
 	 * @return the resolved String value
 	 */
-	protected @Nullable String resolveStringValue(String strVal) {
+	@Nullable
+	protected String resolveStringValue(String strVal) {
 		if (this.valueResolver == null) {
 			throw new IllegalStateException("No StringValueResolver specified - pass a resolver " +
 					"object into the constructor or override the 'resolveStringValue' method");

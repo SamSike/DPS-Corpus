@@ -31,7 +31,7 @@ import org.apache.camel.spi.Metadata;
 /**
  * Sorts the contents of the message
  */
-@Metadata(label = "eip,transformation")
+@Metadata(label = "eip,routing")
 @XmlRootElement(name = "sort")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class SortDefinition<T> extends ExpressionNode {
@@ -45,12 +45,6 @@ public class SortDefinition<T> extends ExpressionNode {
     public SortDefinition() {
     }
 
-    protected SortDefinition(SortDefinition source) {
-        super(source);
-        this.comparatorBean = source.comparatorBean;
-        this.comparator = source.comparator;
-    }
-
     public SortDefinition(Expression expression) {
         setExpression(ExpressionNodeHelper.toExpressionDefinition(expression));
     }
@@ -58,11 +52,6 @@ public class SortDefinition<T> extends ExpressionNode {
     public SortDefinition(Expression expression, Comparator<? super T> comparator) {
         this(expression);
         this.comparatorBean = comparator;
-    }
-
-    @Override
-    public SortDefinition copyDefinition() {
-        return new SortDefinition(this);
     }
 
     @Override

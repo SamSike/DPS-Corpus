@@ -62,7 +62,8 @@ public class DeferServiceStartupListener implements StartupListener, Ordered {
             try {
                 ServiceHelper.startService(service);
             } catch (Exception e) {
-                if (service instanceof Endpoint endpoint) {
+                if (service instanceof Endpoint) {
+                    Endpoint endpoint = (Endpoint) service;
                     throw new ResolveEndpointFailedException(endpoint.getEndpointUri(), e);
                 } else {
                     throw e;

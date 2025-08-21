@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,8 @@ package org.springframework.web.jsf;
 
 import jakarta.faces.application.NavigationHandler;
 import jakarta.faces.context.FacesContext;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Base class for JSF NavigationHandler implementations that want
@@ -38,7 +39,8 @@ import org.jspecify.annotations.Nullable;
  */
 public abstract class DecoratingNavigationHandler extends NavigationHandler {
 
-	private @Nullable NavigationHandler decoratedNavigationHandler;
+	@Nullable
+	private NavigationHandler decoratedNavigationHandler;
 
 
 	/**
@@ -59,7 +61,8 @@ public abstract class DecoratingNavigationHandler extends NavigationHandler {
 	 * Return the fixed original NavigationHandler decorated by this handler, if any
 	 * (that is, if passed in through the constructor).
 	 */
-	public final @Nullable NavigationHandler getDecoratedNavigationHandler() {
+	@Nullable
+	public final NavigationHandler getDecoratedNavigationHandler() {
 		return this.decoratedNavigationHandler;
 	}
 
@@ -132,9 +135,10 @@ public abstract class DecoratingNavigationHandler extends NavigationHandler {
 
 		NavigationHandler decoratedNavigationHandler = getDecoratedNavigationHandler();
 
-		if (decoratedNavigationHandler instanceof DecoratingNavigationHandler decHandler) {
+		if (decoratedNavigationHandler instanceof DecoratingNavigationHandler) {
 			// DecoratingNavigationHandler specified through constructor argument:
 			// Call it with original NavigationHandler passed in.
+			DecoratingNavigationHandler decHandler = (DecoratingNavigationHandler) decoratedNavigationHandler;
 			decHandler.handleNavigation(facesContext, fromAction, outcome, originalNavigationHandler);
 		}
 		else if (decoratedNavigationHandler != null) {

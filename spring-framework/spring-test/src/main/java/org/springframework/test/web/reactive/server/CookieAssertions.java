@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,9 @@ import org.hamcrest.Matcher;
 import org.hamcrest.MatcherAssert;
 
 import org.springframework.http.ResponseCookie;
+import org.springframework.test.util.AssertionErrors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.springframework.test.util.AssertionErrors.assertEquals;
-import static org.springframework.test.util.AssertionErrors.fail;
 
 /**
  * Assertions on cookies of the response.
@@ -48,20 +47,18 @@ public class CookieAssertions {
 
 
 	/**
-	 * Expect a response cookie with the given name to match the specified value.
+	 * Expect a header with the given name to match the specified values.
 	 */
 	public WebTestClient.ResponseSpec valueEquals(String name, String value) {
-		String cookieValue = getCookie(name).getValue();
 		this.exchangeResult.assertWithDiagnostics(() -> {
 			String message = getMessage(name);
-			assertEquals(message, value, cookieValue);
+			AssertionErrors.assertEquals(message, value, getCookie(name).getValue());
 		});
 		return this.responseSpec;
 	}
 
 	/**
-	 * Assert the value of the response cookie with the given name with a Hamcrest
-	 * {@link Matcher}.
+	 * Assert the first value of the response cookie with a Hamcrest {@link Matcher}.
 	 */
 	public WebTestClient.ResponseSpec value(String name, Matcher<? super String> matcher) {
 		String value = getCookie(name).getValue();
@@ -73,7 +70,7 @@ public class CookieAssertions {
 	}
 
 	/**
-	 * Consume the value of the response cookie with the given name.
+	 * Consume the value of the response cookie.
 	 */
 	public WebTestClient.ResponseSpec value(String name, Consumer<String> consumer) {
 		String value = getCookie(name).getValue();
@@ -96,25 +93,25 @@ public class CookieAssertions {
 		ResponseCookie cookie = this.exchangeResult.getResponseCookies().getFirst(name);
 		if (cookie != null) {
 			String message = getMessage(name) + " exists with value=[" + cookie.getValue() + "]";
-			this.exchangeResult.assertWithDiagnostics(() -> fail(message));
+			this.exchangeResult.assertWithDiagnostics(() -> AssertionErrors.fail(message));
 		}
 		return this.responseSpec;
 	}
 
 	/**
-	 * Assert a cookie's "Max-Age" attribute.
+	 * Assert a cookie's maxAge attribute.
 	 */
 	public WebTestClient.ResponseSpec maxAge(String name, Duration expected) {
 		Duration maxAge = getCookie(name).getMaxAge();
 		this.exchangeResult.assertWithDiagnostics(() -> {
 			String message = getMessage(name) + " maxAge";
-			assertEquals(message, expected, maxAge);
+			AssertionErrors.assertEquals(message, expected, maxAge);
 		});
 		return this.responseSpec;
 	}
 
 	/**
-	 * Assert a cookie's "Max-Age" attribute with a Hamcrest {@link Matcher}.
+	 * Assert a cookie's maxAge attribute with a Hamcrest {@link Matcher}.
 	 */
 	public WebTestClient.ResponseSpec maxAge(String name, Matcher<? super Long> matcher) {
 		long maxAge = getCookie(name).getMaxAge().getSeconds();
@@ -126,19 +123,19 @@ public class CookieAssertions {
 	}
 
 	/**
-	 * Assert a cookie's "Path" attribute.
+	 * Assert a cookie's path attribute.
 	 */
 	public WebTestClient.ResponseSpec path(String name, String expected) {
 		String path = getCookie(name).getPath();
 		this.exchangeResult.assertWithDiagnostics(() -> {
 			String message = getMessage(name) + " path";
-			assertEquals(message, expected, path);
+			AssertionErrors.assertEquals(message, expected, path);
 		});
 		return this.responseSpec;
 	}
 
 	/**
-	 * Assert a cookie's "Path" attribute with a Hamcrest {@link Matcher}.
+	 * Assert a cookie's path attribute with a Hamcrest {@link Matcher}.
 	 */
 	public WebTestClient.ResponseSpec path(String name, Matcher<? super String> matcher) {
 		String path = getCookie(name).getPath();
@@ -150,19 +147,19 @@ public class CookieAssertions {
 	}
 
 	/**
-	 * Assert a cookie's "Domain" attribute.
+	 * Assert a cookie's domain attribute.
 	 */
 	public WebTestClient.ResponseSpec domain(String name, String expected) {
 		String path = getCookie(name).getDomain();
 		this.exchangeResult.assertWithDiagnostics(() -> {
 			String message = getMessage(name) + " domain";
-			assertEquals(message, expected, path);
+			AssertionErrors.assertEquals(message, expected, path);
 		});
 		return this.responseSpec;
 	}
 
 	/**
-	 * Assert a cookie's "Domain" attribute with a Hamcrest {@link Matcher}.
+	 * Assert a cookie's domain attribute with a Hamcrest {@link Matcher}.
 	 */
 	public WebTestClient.ResponseSpec domain(String name, Matcher<? super String> matcher) {
 		String domain = getCookie(name).getDomain();
@@ -174,50 +171,37 @@ public class CookieAssertions {
 	}
 
 	/**
-	 * Assert a cookie's "Secure" attribute.
+	 * Assert a cookie's secure attribute.
 	 */
 	public WebTestClient.ResponseSpec secure(String name, boolean expected) {
 		boolean isSecure = getCookie(name).isSecure();
 		this.exchangeResult.assertWithDiagnostics(() -> {
 			String message = getMessage(name) + " secure";
-			assertEquals(message, expected, isSecure);
+			AssertionErrors.assertEquals(message, expected, isSecure);
 		});
 		return this.responseSpec;
 	}
 
 	/**
-	 * Assert a cookie's "HttpOnly" attribute.
+	 * Assert a cookie's httpOnly attribute.
 	 */
 	public WebTestClient.ResponseSpec httpOnly(String name, boolean expected) {
 		boolean isHttpOnly = getCookie(name).isHttpOnly();
 		this.exchangeResult.assertWithDiagnostics(() -> {
-			String message = getMessage(name) + " httpOnly";
-			assertEquals(message, expected, isHttpOnly);
+			String message = getMessage(name) + " secure";
+			AssertionErrors.assertEquals(message, expected, isHttpOnly);
 		});
 		return this.responseSpec;
 	}
 
 	/**
-	 * Assert a cookie's "Partitioned" attribute.
-	 * @since 6.2
-	 */
-	public WebTestClient.ResponseSpec partitioned(String name, boolean expected) {
-		boolean isPartitioned = getCookie(name).isPartitioned();
-		this.exchangeResult.assertWithDiagnostics(() -> {
-			String message = getMessage(name) + " isPartitioned";
-			assertEquals(message, expected, isPartitioned);
-		});
-		return this.responseSpec;
-	}
-
-	/**
-	 * Assert a cookie's "SameSite" attribute.
+	 * Assert a cookie's sameSite attribute.
 	 */
 	public WebTestClient.ResponseSpec sameSite(String name, String expected) {
 		String sameSite = getCookie(name).getSameSite();
 		this.exchangeResult.assertWithDiagnostics(() -> {
-			String message = getMessage(name) + " sameSite";
-			assertEquals(message, expected, sameSite);
+			String message = getMessage(name) + " secure";
+			AssertionErrors.assertEquals(message, expected, sameSite);
 		});
 		return this.responseSpec;
 	}
@@ -225,16 +209,14 @@ public class CookieAssertions {
 
 	private ResponseCookie getCookie(String name) {
 		ResponseCookie cookie = this.exchangeResult.getResponseCookies().getFirst(name);
-		if (cookie != null) {
-			return cookie;
+		if (cookie == null) {
+			String message = "No cookie with name '" + name + "'";
+			this.exchangeResult.assertWithDiagnostics(() -> AssertionErrors.fail(message));
 		}
-		else {
-			this.exchangeResult.assertWithDiagnostics(() -> fail("No cookie with name '" + name + "'"));
-		}
-		throw new IllegalStateException("This code path should not be reachable");
+		return cookie;
 	}
 
-	private static String getMessage(String cookie) {
+	private String getMessage(String cookie) {
 		return "Response cookie '" + cookie + "'";
 	}
 

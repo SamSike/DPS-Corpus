@@ -38,7 +38,7 @@ public class ValidatorContractTest extends ContextTestSupport {
         context.getTypeConverterRegistry().addTypeConverters(new MyTypeConverters());
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 validator().type(A.class).withUri("direct:validator");
                 from("direct:a").inputTypeWithValidate(A.class).to("mock:a");
                 from("direct:validator").to("mock:validator");
@@ -65,7 +65,7 @@ public class ValidatorContractTest extends ContextTestSupport {
         context.getTypeConverterRegistry().addTypeConverters(new MyTypeConverters());
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 validator().type(A.class).withUri("direct:validator");
                 from("direct:a").outputTypeWithValidate(A.class).to("mock:a");
                 from("direct:validator").to("mock:validator");

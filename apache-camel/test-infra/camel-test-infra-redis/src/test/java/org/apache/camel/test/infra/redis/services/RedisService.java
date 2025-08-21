@@ -16,11 +16,31 @@
  */
 package org.apache.camel.test.infra.redis.services;
 
-import org.apache.camel.test.infra.common.services.ContainerTestService;
 import org.apache.camel.test.infra.common.services.TestService;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 /**
  * Test infra service for Redis
  */
-public interface RedisService extends TestService, RedisInfraService, ContainerTestService {
+public interface RedisService extends BeforeAllCallback, AfterAllCallback, TestService {
+
+    String host();
+
+    int port();
+
+    default String getServiceAddress() {
+        return String.format("%s:%d", host(), port());
+    }
+
+    @Override
+    default void beforeAll(ExtensionContext extensionContext) {
+        initialize();
+    }
+
+    @Override
+    default void afterAll(ExtensionContext extensionContext) {
+        shutdown();
+    }
 }

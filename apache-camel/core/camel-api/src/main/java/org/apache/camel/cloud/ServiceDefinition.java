@@ -26,7 +26,6 @@ import org.apache.camel.util.StringHelper;
  * @see ServiceChooser
  * @see ServiceDiscovery
  */
-@Deprecated(since = "4.8.0")
 public interface ServiceDefinition {
     String SERVICE_META_PREFIX = "service.";
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,7 +45,8 @@ public class MockMultipartFile implements MultipartFile {
 
 	private final String originalFilename;
 
-	private final @Nullable String contentType;
+	@Nullable
+	private final String contentType;
 
 	private final byte[] content;
 
@@ -55,7 +56,7 @@ public class MockMultipartFile implements MultipartFile {
 	 * @param name the name of the file
 	 * @param content the content of the file
 	 */
-	public MockMultipartFile(String name, byte @Nullable [] content) {
+	public MockMultipartFile(String name, @Nullable byte[] content) {
 		this(name, "", null, content);
 	}
 
@@ -77,7 +78,7 @@ public class MockMultipartFile implements MultipartFile {
 	 * @param content the content of the file
 	 */
 	public MockMultipartFile(
-			String name, @Nullable String originalFilename, @Nullable String contentType, byte @Nullable [] content) {
+			String name, @Nullable String originalFilename, @Nullable String contentType, @Nullable byte[] content) {
 
 		Assert.hasLength(name, "Name must not be empty");
 		this.name = name;
@@ -108,12 +109,14 @@ public class MockMultipartFile implements MultipartFile {
 	}
 
 	@Override
+	@NonNull
 	public String getOriginalFilename() {
 		return this.originalFilename;
 	}
 
 	@Override
-	public @Nullable String getContentType() {
+	@Nullable
+	public String getContentType() {
 		return this.contentType;
 	}
 

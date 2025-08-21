@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Rossen Stoyanchev
  * @since 3.1
  */
-class UriTemplateServletAnnotationControllerHandlerMethodTests extends AbstractServletHandlerMethodTests {
+public class UriTemplateServletAnnotationControllerHandlerMethodTests extends AbstractServletHandlerMethodTests {
 
 	@SuppressWarnings("unused")
 	static Stream<Boolean> pathPatternsArguments() {
@@ -173,6 +173,7 @@ class UriTemplateServletAnnotationControllerHandlerMethodTests extends AbstractS
 		initDispatcherServlet(SimpleUriTemplateController.class, usePathPatterns, wac -> {
 			if (!usePathPatterns) {
 				RootBeanDefinition mappingDef = new RootBeanDefinition(RequestMappingHandlerMapping.class);
+				mappingDef.getPropertyValues().add("useSuffixPatternMatch", true);
 				mappingDef.getPropertyValues().add("removeSemicolonContent", "false");
 				wac.registerBeanDefinition("handlerMapping", mappingDef);
 			}
@@ -181,7 +182,8 @@ class UriTemplateServletAnnotationControllerHandlerMethodTests extends AbstractS
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/42;jsessionid=c0o7fszeb1;q=24.xml");
 		MockHttpServletResponse response = new MockHttpServletResponse();
 		getServlet().service(request, response);
-		assertThat(response.getContentAsString()).isEqualTo("test-42-24.xml");
+		assertThat(response.getContentAsString())
+				.isEqualTo(!usePathPatterns ? "test-42-24" : "test-42-24.xml");
 	}
 
 	@PathPatternsParameterizedTest
@@ -223,12 +225,22 @@ class UriTemplateServletAnnotationControllerHandlerMethodTests extends AbstractS
 		getServlet().service(request, response);
 		assertThat(response.getContentAsString()).isEqualTo("list");
 
+		request = new MockHttpServletRequest("GET", "/hotels/");
+		response = new MockHttpServletResponse();
+		getServlet().service(request, response);
+		assertThat(response.getContentAsString()).isEqualTo("list");
+
 		request = new MockHttpServletRequest("POST", "/hotels");
 		response = new MockHttpServletResponse();
 		getServlet().service(request, response);
 		assertThat(response.getContentAsString()).isEqualTo("create");
 
 		request = new MockHttpServletRequest("GET", "/hotels/42");
+		response = new MockHttpServletResponse();
+		getServlet().service(request, response);
+		assertThat(response.getContentAsString()).isEqualTo("show-42");
+
+		request = new MockHttpServletRequest("GET", "/hotels/42/");
 		response = new MockHttpServletResponse();
 		getServlet().service(request, response);
 		assertThat(response.getContentAsString()).isEqualTo("show-42");
@@ -318,12 +330,18 @@ class UriTemplateServletAnnotationControllerHandlerMethodTests extends AbstractS
 
 	@PathPatternsParameterizedTest // gh-13187
 	void variableNamesWithUrlExtension(boolean usePathPatterns) throws Exception {
-		initDispatcherServlet(VariableNamesController.class, usePathPatterns);
+		initDispatcherServlet(VariableNamesController.class, usePathPatterns, wac -> {
+			if (!usePathPatterns) {
+				RootBeanDefinition mappingDef = new RootBeanDefinition(RequestMappingHandlerMapping.class);
+				mappingDef.getPropertyValues().add("useSuffixPatternMatch", true);
+				wac.registerBeanDefinition("handlerMapping", mappingDef);
+			}
+		});
 
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/test/foo.json");
 		MockHttpServletResponse response = new MockHttpServletResponse();
 		getServlet().service(request, response);
-		assertThat(response.getContentAsString()).isEqualTo("foo-foo.json");
+		assertThat(response.getContentAsString()).isEqualTo(!usePathPatterns ? "foo-foo" : "foo-foo.json");
 	}
 
 	@PathPatternsParameterizedTest // gh-11643
@@ -656,15 +674,15 @@ class UriTemplateServletAnnotationControllerHandlerMethodTests extends AbstractS
 		}
 
 		@Override
-		public View resolveViewName(final String viewName, Locale locale) {
-			return new AbstractView() {
+		public View resolveViewName(final String viewName, Locale locale) throws Exception {
+			return new AbstractView () {
 				@Override
 				public String getContentType() {
 					return null;
 				}
 				@Override
 				protected void renderMergedOutputModel(Map<String, Object> model, HttpServletRequest request,
-						HttpServletResponse response) {
+						HttpServletResponse response) throws Exception {
 					for (String key : attrsToValidate.keySet()) {
 						assertThat(model.containsKey(key)).as("Model should contain attribute named " + key).isTrue();
 						assertThat(model.get(key)).isEqualTo(attrsToValidate.get(key));
@@ -674,5 +692,14 @@ class UriTemplateServletAnnotationControllerHandlerMethodTests extends AbstractS
 			};
 		}
 	}
+
+// @Disabled("ControllerClassNameHandlerMapping")
+//	void controllerClassName() throws Exception {
+
+//	@Disabled("useDefaultSuffixPattern property not supported")
+//	void doubles() throws Exception {
+
+//	@Disabled("useDefaultSuffixPattern property not supported")
+//	void noDefaultSuffixPattern() throws Exception {
 
 }

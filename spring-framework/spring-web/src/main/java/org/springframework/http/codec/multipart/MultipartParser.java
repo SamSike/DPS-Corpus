@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,31 +17,25 @@
 package org.springframework.http.codec.multipart;
 
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
-import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
-import reactor.util.context.Context;
 
 import org.springframework.core.codec.DecodingException;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferLimitException;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 
 /**
  * Subscribes to a buffer stream and produces a flux of {@link Token} instances.
@@ -99,32 +93,23 @@ final class MultipartParser extends BaseSubscriber<DataBuffer> {
 		return Flux.create(sink -> {
 			MultipartParser parser = new MultipartParser(sink, boundary, maxHeadersSize, headersCharset);
 			sink.onCancel(parser::onSinkCancel);
-			sink.onRequest(l -> parser.requestBuffer());
+			sink.onRequest(n -> parser.requestBuffer());
 			buffers.subscribe(parser);
 		});
 	}
 
 	@Override
-	public Context currentContext() {
-		return Context.of(this.sink.contextView());
-	}
-
-	@Override
 	protected void hookOnSubscribe(Subscription subscription) {
-		if (this.sink.requestedFromDownstream() > 0) {
-			requestBuffer();
-		}
+		requestBuffer();
 	}
 
 	@Override
-	@SuppressWarnings("NullAway") // Dataflow analysis limitation
 	protected void hookOnNext(DataBuffer value) {
 		this.requestOutstanding.set(false);
 		this.state.get().onNext(value);
 	}
 
 	@Override
-	@SuppressWarnings("NullAway") // Dataflow analysis limitation
 	protected void hookOnComplete() {
 		this.state.get().onComplete();
 	}
@@ -172,11 +157,11 @@ final class MultipartParser extends BaseSubscriber<DataBuffer> {
 		this.sink.next(new HeadersToken(headers));
 	}
 
-	void emitBody(DataBuffer buffer, boolean last) {
+	void emitBody(DataBuffer buffer) {
 		if (logger.isTraceEnabled()) {
 			logger.trace("Emitting body: " + buffer);
 		}
-		this.sink.next(new BodyToken(buffer, last));
+		this.sink.next(new BodyToken(buffer));
 	}
 
 	void emitError(Throwable t) {
@@ -207,16 +192,13 @@ final class MultipartParser extends BaseSubscriber<DataBuffer> {
 		public abstract HttpHeaders headers();
 
 		public abstract DataBuffer buffer();
-
-		public abstract boolean isLast();
-
 	}
 
 
 	/**
 	 * Represents a token that contains {@link HttpHeaders}.
 	 */
-	public static final class HeadersToken extends Token {
+	public final static class HeadersToken extends Token {
 
 		private final HttpHeaders headers;
 
@@ -233,27 +215,18 @@ final class MultipartParser extends BaseSubscriber<DataBuffer> {
 		public DataBuffer buffer() {
 			throw new IllegalStateException();
 		}
-
-		@Override
-		public boolean isLast() {
-			return false;
-		}
 	}
 
 
 	/**
 	 * Represents a token that contains {@link DataBuffer}.
 	 */
-	public static final class BodyToken extends Token {
+	public final static class BodyToken extends Token {
 
 		private final DataBuffer buffer;
 
-		private final boolean last;
-
-
-		public BodyToken(DataBuffer buffer, boolean last) {
+		public BodyToken(DataBuffer buffer) {
 			this.buffer = buffer;
-			this.last = last;
 		}
 
 		@Override
@@ -264,11 +237,6 @@ final class MultipartParser extends BaseSubscriber<DataBuffer> {
 		@Override
 		public DataBuffer buffer() {
 			return this.buffer;
-		}
-
-		@Override
-		public boolean isLast() {
-			return this.last;
 		}
 	}
 
@@ -326,10 +294,10 @@ final class MultipartParser extends BaseSubscriber<DataBuffer> {
 				if (logger.isTraceEnabled()) {
 					logger.trace("First boundary found @" + endIdx + " in " + buf);
 				}
-				DataBuffer preambleBuffer = buf.split(endIdx + 1);
-				DataBufferUtils.release(preambleBuffer);
+				DataBuffer headersBuf = MultipartUtils.sliceFrom(buf, endIdx);
+				DataBufferUtils.release(buf);
 
-				changeState(this, new HeadersState(), buf);
+				changeState(this, new HeadersState(), headersBuf);
 			}
 			else {
 				DataBufferUtils.release(buf);
@@ -368,23 +336,33 @@ final class MultipartParser extends BaseSubscriber<DataBuffer> {
 
 		/**
 		 * First checks whether the multipart boundary leading to this state
-		 * was the final boundary. Then looks for the header-body boundary
-		 * ({@code CR LF CR LF}) in the given buffer. If found, checks whether
-		 * the size of all header buffers does not exceed {@link #maxHeadersSize},
-		 * converts all buffers collected so far into a {@link HttpHeaders} object
+		 * was the final boundary, or whether {@link #maxHeadersSize} is
+		 * exceeded. Then looks for the header-body boundary
+		 * ({@code CR LF CR LF}) in the given buffer. If found, convert
+		 * all buffers collected so far into a {@link HttpHeaders} object
 		 * and changes to {@link BodyState}, passing the remainder of the
-		 * buffer. If the boundary is not found, the buffer is collected if
-		 * its size does not exceed {@link #maxHeadersSize}.
+		 * buffer. If the boundary is not found, the buffer is collected.
 		 */
 		@Override
 		public void onNext(DataBuffer buf) {
-			if (isLastBoundary(buf)) {
-				if (logger.isTraceEnabled()) {
-					logger.trace("Last boundary found in " + buf);
-				}
+			long prevCount = this.byteCount.get();
+			long count = this.byteCount.addAndGet(buf.readableByteCount());
+			if (prevCount < 2 && count >= 2) {
+				if (isLastBoundary(buf)) {
+					if (logger.isTraceEnabled()) {
+						logger.trace("Last boundary found in " + buf);
+					}
 
+					if (changeState(this, DisposedState.INSTANCE, buf)) {
+						emitComplete();
+					}
+					return;
+				}
+			}
+			else if (count > MultipartParser.this.maxHeadersSize) {
 				if (changeState(this, DisposedState.INSTANCE, buf)) {
-					emitComplete();
+					emitError(new DataBufferLimitException("Part headers exceeded the memory usage limit of " +
+							MultipartParser.this.maxHeadersSize + " bytes"));
 				}
 				return;
 			}
@@ -393,21 +371,17 @@ final class MultipartParser extends BaseSubscriber<DataBuffer> {
 				if (logger.isTraceEnabled()) {
 					logger.trace("End of headers found @" + endIdx + " in " + buf);
 				}
-				long count = this.byteCount.addAndGet(endIdx);
-				if (belowMaxHeaderSize(count)) {
-					DataBuffer headerBuf = buf.split(endIdx + 1);
-					this.buffers.add(headerBuf);
-					emitHeaders(parseHeaders());
+				DataBuffer headerBuf = MultipartUtils.sliceTo(buf, endIdx);
+				this.buffers.add(headerBuf);
+				DataBuffer bodyBuf = MultipartUtils.sliceFrom(buf, endIdx);
+				DataBufferUtils.release(buf);
 
-					changeState(this, new BodyState(), buf);
-				}
+				emitHeaders(parseHeaders());
+				changeState(this, new BodyState(), bodyBuf);
 			}
 			else {
-				long count = this.byteCount.addAndGet(buf.readableByteCount());
-				if (belowMaxHeaderSize(count)) {
-					this.buffers.add(buf);
-					requestBuffer();
-				}
+				this.buffers.add(buf);
+				requestBuffer();
 			}
 		}
 
@@ -417,28 +391,14 @@ final class MultipartParser extends BaseSubscriber<DataBuffer> {
 		 */
 		private boolean isLastBoundary(DataBuffer buf) {
 			return (this.buffers.isEmpty() &&
-						buf.readableByteCount() >= 2 &&
-						buf.getByte(0) == HYPHEN && buf.getByte(1) == HYPHEN) ||
+					buf.readableByteCount() >= 2 &&
+					buf.getByte(0) == HYPHEN && buf.getByte(1) == HYPHEN)
+					||
 					(this.buffers.size() == 1 &&
-						this.buffers.get(0).readableByteCount() == 1 &&
-						this.buffers.get(0).getByte(0) == HYPHEN &&
-						buf.readableByteCount() >= 1 &&
-						buf.getByte(0) == HYPHEN);
-		}
-
-		/**
-		 * Checks whether the given {@code count} is below or equal to {@link #maxHeadersSize}
-		 * and emits a {@link DataBufferLimitException} if not.
-		 */
-		private boolean belowMaxHeaderSize(long count) {
-			if (count <= MultipartParser.this.maxHeadersSize) {
-				return true;
-			}
-			else {
-				emitError(new DataBufferLimitException("Part headers exceeded the memory usage limit of " +
-						MultipartParser.this.maxHeadersSize + " bytes"));
-				return false;
-			}
+							this.buffers.get(0).readableByteCount() == 1 &&
+							this.buffers.get(0).getByte(0) == HYPHEN &&
+							buf.readableByteCount() >= 1 &&
+							buf.getByte(0) == HYPHEN);
 		}
 
 		/**
@@ -494,20 +454,17 @@ final class MultipartParser extends BaseSubscriber<DataBuffer> {
 	/**
 	 * The state of the parser dealing with multipart bodies. Relays
 	 * data buffers as {@link BodyToken} until the boundary is found (or
-	 * rather: {@code CR LF - - boundary}).
+	 * rather: {@code CR LF - - boundary}.
 	 */
 	private final class BodyState implements State {
 
 		private final DataBufferUtils.Matcher boundary;
 
-		private final int boundaryLength;
-
-		private final Deque<DataBuffer> queue = new ConcurrentLinkedDeque<>();
+		private final AtomicReference<DataBuffer> previous = new AtomicReference<>();
 
 		public BodyState() {
-			byte[] delimiter = MultipartUtils.concat(CR_LF, TWO_HYPHENS, MultipartParser.this.boundary);
-			this.boundary = DataBufferUtils.matcher(delimiter);
-			this.boundaryLength = delimiter.length;
+			this.boundary = DataBufferUtils.matcher(
+					MultipartUtils.concat(CR_LF, TWO_HYPHENS, MultipartParser.this.boundary));
 		}
 
 		/**
@@ -516,55 +473,46 @@ final class MultipartParser extends BaseSubscriber<DataBuffer> {
 		 * previous buffer, so we calculate the length and slice the current
 		 * and previous buffers accordingly. We then change to {@link HeadersState}
 		 * and pass on the remainder of {@code buffer}. If the needle is not found, we
-		 * enqueue {@code buffer}.
+		 * make {@code buffer} the previous buffer.
 		 */
 		@Override
 		public void onNext(DataBuffer buffer) {
 			int endIdx = this.boundary.match(buffer);
 			if (endIdx != -1) {
-				DataBuffer boundaryBuffer = buffer.split(endIdx + 1);
 				if (logger.isTraceEnabled()) {
 					logger.trace("Boundary found @" + endIdx + " in " + buffer);
 				}
-				int len = endIdx - this.boundaryLength + 1 - boundaryBuffer.readPosition();
+				int len = endIdx - buffer.readPosition() - this.boundary.delimiter().length + 1;
 				if (len > 0) {
-					// whole boundary in buffer.
-					// slice off the body part, and flush
-					DataBuffer body = boundaryBuffer.split(len);
-					DataBufferUtils.release(boundaryBuffer);
+					// buffer contains complete delimiter, let's slice it and flush it
+					DataBuffer body = buffer.retainedSlice(buffer.readPosition(), len);
 					enqueue(body);
-					flush();
+					enqueue(null);
 				}
 				else if (len < 0) {
-					// boundary spans multiple buffers, and we've just found the end
-					// iterate over buffers in reverse order
-					DataBufferUtils.release(boundaryBuffer);
-					DataBuffer prev;
-					while ((prev = this.queue.pollLast()) != null) {
-						int prevByteCount = prev.readableByteCount();
-						int prevLen = prevByteCount + len;
-						if (prevLen >= 0) {
-							// slice body part of previous buffer, and flush it
-							DataBuffer body = prev.split(prevLen + prev.readPosition());
-							DataBufferUtils.release(prev);
-							enqueue(body);
-							flush();
-							break;
-						}
-						else {
-							// previous buffer only contains boundary bytes
-							DataBufferUtils.release(prev);
-							len += prevByteCount;
-						}
+					// buffer starts with the end of the delimiter, let's slice the previous buffer and flush it
+					DataBuffer previous = this.previous.get();
+					int prevLen = previous.readableByteCount() + len;
+					if (prevLen > 0) {
+						DataBuffer body = previous.retainedSlice(previous.readPosition(), prevLen);
+						DataBufferUtils.release(previous);
+						this.previous.set(body);
+						enqueue(null);
+					}
+					else {
+						DataBufferUtils.release(previous);
+						this.previous.set(null);
 					}
 				}
-				else /* if (len == 0) */ {
-					// buffer starts with complete delimiter, flush out the previous buffers
-					DataBufferUtils.release(boundaryBuffer);
-					flush();
+				else /* if (sliceLength == 0) */ {
+					// buffer starts with complete delimiter, flush out the previous buffer
+					enqueue(null);
 				}
 
-				changeState(this, new HeadersState(), buffer);
+				DataBuffer remainder = MultipartUtils.sliceFrom(buffer, endIdx);
+				DataBufferUtils.release(buffer);
+
+				changeState(this, new HeadersState(), remainder);
 			}
 			else {
 				enqueue(buffer);
@@ -573,52 +521,28 @@ final class MultipartParser extends BaseSubscriber<DataBuffer> {
 		}
 
 		/**
-		 * Store the given buffer. Emit buffers that cannot contain boundary bytes,
-		 * by iterating over the queue in reverse order, and summing buffer sizes.
-		 * The first buffer that passes the boundary length and subsequent buffers
-		 * are emitted (in the correct, non-reverse order).
+		 * Stores the given buffer and sends out the previous buffer.
 		 */
-		private void enqueue(DataBuffer buf) {
-			this.queue.add(buf);
-
-			int len = 0;
-			Deque<DataBuffer> emit = new ArrayDeque<>();
-			for (Iterator<DataBuffer> iterator = this.queue.descendingIterator(); iterator.hasNext(); ) {
-				DataBuffer previous = iterator.next();
-				if (len > this.boundaryLength) {
-					// addFirst to negate iterating in reverse order
-					emit.addFirst(previous);
-					iterator.remove();
-				}
-				len += previous.readableByteCount();
+		private void enqueue(@Nullable DataBuffer buf) {
+			DataBuffer previous = this.previous.getAndSet(buf);
+			if (previous != null) {
+				emitBody(previous);
 			}
-
-			emit.forEach(buffer -> MultipartParser.this.emitBody(buffer, false));
-		}
-
-		private void flush() {
-			for (Iterator<DataBuffer> iterator = this.queue.iterator(); iterator.hasNext(); ) {
-				DataBuffer buffer = iterator.next();
-				boolean last = !iterator.hasNext();
-				MultipartParser.this.emitBody(buffer, last);
-			}
-			this.queue.clear();
 		}
 
 		@Override
 		public void onComplete() {
 			if (changeState(this, DisposedState.INSTANCE, null)) {
-				String msg = "Could not find end of body (␍␊--" +
-						new String(MultipartParser.this.boundary, StandardCharsets.UTF_8) +
-						")";
-				emitError(new DecodingException(msg));
+				emitError(new DecodingException("Could not find end of body"));
 			}
 		}
 
 		@Override
 		public void dispose() {
-			this.queue.forEach(DataBufferUtils::release);
-			this.queue.clear();
+			DataBuffer previous = this.previous.getAndSet(null);
+			if (previous != null) {
+				DataBufferUtils.release(previous);
+			}
 		}
 
 		@Override

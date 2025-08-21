@@ -26,7 +26,10 @@ import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.component.pulsar.PulsarComponent;
+import org.apache.camel.component.pulsar.utils.AutoConfiguration;
 import org.apache.camel.spi.Registry;
+import org.apache.camel.support.SimpleRegistry;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.impl.ClientBuilderImpl;
@@ -61,13 +64,24 @@ public class PulsarConcurrentProducerInIT extends PulsarITSupport {
     }
 
     @Override
-    protected void bindToRegistry(Registry registry) throws Exception {
+    protected Registry createCamelRegistry() throws Exception {
+        SimpleRegistry registry = new SimpleRegistry();
+
         registerPulsarBeans(registry);
+
+        return registry;
     }
 
-    private void registerPulsarBeans(Registry registry) throws PulsarClientException {
+    private void registerPulsarBeans(SimpleRegistry registry) throws PulsarClientException {
         PulsarClient pulsarClient = givenPulsarClient();
-        registerPulsarBeans(registry, pulsarClient, context);
+        AutoConfiguration autoConfiguration = new AutoConfiguration(null, null);
+
+        registry.bind("pulsarClient", pulsarClient);
+        PulsarComponent comp = new PulsarComponent(context);
+        comp.setAutoConfiguration(autoConfiguration);
+        comp.setPulsarClient(pulsarClient);
+        registry.bind("pulsar", comp);
+
     }
 
     private PulsarClient givenPulsarClient() throws PulsarClientException {

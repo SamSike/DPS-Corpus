@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DisabledOnOs(OS.AIX)
 public class ManagedNonManagedServiceTest extends ManagementTestSupport {
 
-    private static final int SERVICES = 17;
+    private static final int SERVICES = 14;
 
     @Test
     public void testService() throws Exception {
@@ -73,22 +73,40 @@ public class ManagedNonManagedServiceTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .to("mock:result");
             }
         };
     }
 
-    private static final class MyService extends ServiceSupport {
+    private final class MyService extends ServiceSupport {
 
+        @Override
+        protected void doStart() throws Exception {
+            // noop
+        }
+
+        @Override
+        protected void doStop() throws Exception {
+            // noop
+        }
     }
 
-    private static final class MyNonService extends ServiceSupport implements NonManagedService {
+    private final class MyNonService extends ServiceSupport implements NonManagedService {
 
+        @Override
+        protected void doStart() throws Exception {
+            // noop
+        }
+
+        @Override
+        protected void doStop() throws Exception {
+            // noop
+        }
     }
 
 }

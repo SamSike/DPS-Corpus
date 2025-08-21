@@ -18,6 +18,7 @@ package org.apache.camel.component.mail;
 
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.Properties;
 
 import jakarta.mail.Address;
 import jakarta.mail.Header;
@@ -29,13 +30,13 @@ import jakarta.mail.internet.MimeMessage;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mail.Mailbox.MailboxUser;
-import org.apache.camel.component.mail.Mailbox.Protocol;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.support.ObjectHelper;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.camel.util.CastUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.jvnet.mock_javamail.Mailbox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,10 +44,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class MultipleDestinationConsumeTest extends CamelTestSupport {
-    private static final MailboxUser james = Mailbox.getOrCreateUser("james", "secret");
-    private static final MailboxUser bar = Mailbox.getOrCreateUser("bar", "secret");
     private Logger log = LoggerFactory.getLogger(getClass());
-    private String body = "hello world!\r\n";
+    private String body = "hello world!";
     private Session mailSession;
 
     @Test
@@ -61,8 +60,8 @@ public class MultipleDestinationConsumeTest extends CamelTestSupport {
 
         message.setRecipients(Message.RecipientType.TO,
                 new Address[] {
-                        new InternetAddress(james.getEmail()),
-                        new InternetAddress(bar.getEmail()) });
+                        new InternetAddress("james@localhost"),
+                        new InternetAddress("bar@localhost") });
 
         Transport.send(message);
 
@@ -88,9 +87,9 @@ public class MultipleDestinationConsumeTest extends CamelTestSupport {
         int i = 0;
         while (it.hasNext()) {
             if (i == 0) {
-                assertEquals(james.getEmail(), it.next().trim());
+                assertEquals("james@localhost", it.next().trim());
             } else {
-                assertEquals(bar.getEmail(), it.next().trim());
+                assertEquals("bar@localhost", it.next().trim());
             }
             i++;
         }
@@ -99,20 +98,25 @@ public class MultipleDestinationConsumeTest extends CamelTestSupport {
         while (iter.hasMoreElements()) {
             Header header = iter.nextElement();
             String[] value = message.getHeader(header.getName());
-            log.debug("Header: {} has value: {}", header.getName(), org.apache.camel.util.ObjectHelper.asString(value));
+            log.debug("Header: " + header.getName() + " has value: " + org.apache.camel.util.ObjectHelper.asString(value));
         }
     }
 
     @Override
-    public void doPreSetup() throws Exception {
-        mailSession = Mailbox.getSmtpSession();
+    @BeforeEach
+    public void setUp() throws Exception {
+        Properties properties = new Properties();
+        properties.put("mail.smtp.host", "localhost");
+        mailSession = Session.getInstance(properties, null);
+
+        super.setUp();
     }
 
     @Override
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
-                from(james.uriPrefix(Protocol.pop3) + "&initialDelay=100&delay=100&closeFolder=false").to("mock:result");
+                from("pop3://james@localhost?password=foo&initialDelay=100&delay=100").to("mock:result");
             }
         };
     }

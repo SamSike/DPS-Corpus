@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,17 +37,42 @@
  */
 package org.jooq;
 
-import static org.jooq.SQLDialect.*;
-import static org.jooq.impl.DSL.*;
-
-import java.util.*;
-
-import org.jooq.impl.DSL;
+// ...
+// ...
+// ...
+// ...
+// ...
+// ...
+import static org.jooq.SQLDialect.CUBRID;
+// ...
+import static org.jooq.SQLDialect.DERBY;
+// ...
+import static org.jooq.SQLDialect.FIREBIRD;
+import static org.jooq.SQLDialect.H2;
+// ...
+import static org.jooq.SQLDialect.HSQLDB;
+// ...
+// ...
+import static org.jooq.SQLDialect.MARIADB;
+// ...
+import static org.jooq.SQLDialect.MYSQL;
+// ...
+import static org.jooq.SQLDialect.POSTGRES;
+// ...
+// ...
+// ...
+import static org.jooq.SQLDialect.SQLITE;
+// ...
+// ...
+// ...
+// ...
+import static org.jooq.SQLDialect.YUGABYTEDB;
 
 import org.jetbrains.annotations.*;
 
+
 /**
- * A step in the construction of the <code>CREATE VIEW</code> statement.
+ * A {@link Query} that can create views.
  * <p>
  * <h3>Referencing <code>XYZ*Step</code> types directly from client code</h3>
  * <p>
@@ -66,74 +91,79 @@ import org.jetbrains.annotations.*;
  * <li>They're less readable</li>
  * <li>They might have binary incompatible changes between minor releases</li>
  * </ul>
+ *
+ * @author Lukas Eder
  */
-@SuppressWarnings({ "unused" })
 public interface CreateViewAsStep<R extends Record> {
 
     /**
-     * Add the <code>AS</code> clause to the <code>CREATE VIEW</code> statement.
+     * Add an <code>AS</code> clause to the <code>CREATE VIEW</code> statement.
      */
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateViewFinalStep as(ResultQuery<? extends R> query);
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    CreateViewFinalStep as(Select<? extends R> select);
 
     /**
-     * Add the <code>AS</code> clause to the <code>CREATE VIEW</code> statement.
+     * Add an <code>AS</code> clause to the <code>CREATE VIEW</code> statement.
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
      * malicious SQL injection. Be sure to properly use bind variables and/or
      * escape literals when concatenated into SQL clauses!
      *
+     * @param sql The SQL
      * @see SQL
      */
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    @PlainSQL
     @NotNull @CheckReturnValue
-    CreateViewFinalStep as(@Stringly.SQL String query, QueryPart... parts);
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @PlainSQL
+    CreateViewFinalStep as(SQL sql);
 
     /**
-     * Add the <code>AS</code> clause to the <code>CREATE VIEW</code> statement.
+     * Add an <code>AS</code> clause to the <code>CREATE VIEW</code> statement.
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
      * malicious SQL injection. Be sure to properly use bind variables and/or
      * escape literals when concatenated into SQL clauses!
      *
+     * @param sql The SQL
      * @see SQL
      */
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    @PlainSQL
     @NotNull @CheckReturnValue
-    CreateViewFinalStep as(@Stringly.SQL String query, Object... bindings);
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @PlainSQL
+    CreateViewFinalStep as(String sql);
 
     /**
-     * Add the <code>AS</code> clause to the <code>CREATE VIEW</code> statement.
+     * Add an <code>AS</code> clause to the <code>CREATE VIEW</code> statement.
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
      * malicious SQL injection. Be sure to properly use bind variables and/or
      * escape literals when concatenated into SQL clauses!
      *
+     * @param sql The SQL
      * @see SQL
      */
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    @PlainSQL
     @NotNull @CheckReturnValue
-    CreateViewFinalStep as(@Stringly.SQL String query);
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @PlainSQL
+    CreateViewFinalStep as(String sql, Object... bindings);
 
     /**
-     * Add the <code>AS</code> clause to the <code>CREATE VIEW</code> statement.
+     * Add an <code>AS</code> clause to the <code>CREATE VIEW</code> statement.
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
      * malicious SQL injection. Be sure to properly use bind variables and/or
      * escape literals when concatenated into SQL clauses!
      *
+     * @param sql The SQL
      * @see SQL
      */
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    @PlainSQL
     @NotNull @CheckReturnValue
-    CreateViewFinalStep as(SQL query);
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @PlainSQL
+    CreateViewFinalStep as(String sql, QueryPart... parts);
 }

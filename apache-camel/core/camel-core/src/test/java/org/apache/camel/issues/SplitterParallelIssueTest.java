@@ -29,21 +29,21 @@ import org.junit.jupiter.api.Test;
  */
 public class SplitterParallelIssueTest extends ContextTestSupport {
 
-    private final int delay = 100;
+    private int size = 20;
+    private int delay = 100;
 
     @Test
     public void testSplitParallel() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:end");
-        int size = 20;
         mock.expectedMessageCount(size);
-        int time = 10000;
+        int time = Math.max(10000, size * 2 * delay);
         mock.setResultWaitTime(time);
 
         for (int i = 0; i < size; i++) {
             final int num = i;
             new Thread(new Runnable() {
                 public void run() {
-                    template.sendBody("direct:start", Integer.toString(num));
+                    template.sendBody("direct:start", "" + num);
                 }
             }).start();
         }
@@ -52,17 +52,17 @@ public class SplitterParallelIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").log("Start ${body}").split(body().tokenize("@"), new UseLatestAggregationStrategy())
                         .parallelProcessing().streaming().process(new Processor() {
                             @Override
                             public void process(Exchange exchange) throws Exception {
                                 int num = exchange.getIn().getBody(int.class);
-                                final long sleep = (long) num * delay;
-                                log.info("Sleep for {} ms", sleep);
+                                final long sleep = num * delay;
+                                log.info("Sleep for " + sleep + "ms");
                                 Thread.sleep(sleep);
                             }
                         }).end().log("End ${body}").to("mock:end");

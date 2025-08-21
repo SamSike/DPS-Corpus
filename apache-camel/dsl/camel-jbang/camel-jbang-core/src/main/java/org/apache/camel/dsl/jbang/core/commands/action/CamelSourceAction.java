@@ -16,15 +16,16 @@
  */
 package org.apache.camel.dsl.jbang.core.commands.action;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
 import org.apache.camel.support.PatternHelper;
 import org.apache.camel.util.FileUtil;
+import org.apache.camel.util.IOHelper;
+import org.apache.camel.util.StopWatch;
 import org.apache.camel.util.json.JsonArray;
 import org.apache.camel.util.json.JsonObject;
 import org.apache.camel.util.json.Jsoner;
@@ -33,11 +34,13 @@ import picocli.CommandLine.Command;
 
 import static org.apache.camel.support.LoggerHelper.stripSourceLocationLineNumber;
 
-@Command(name = "source", description = "Display Camel route source code", sortOptions = false, showDefaultValues = true)
+@Command(name = "source", description = "Display Camel route source code")
 public class CamelSourceAction extends ActionBaseCommand {
 
-    @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
-    String name = "*";
+    // TODO: strip license header
+
+    @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "1")
+    String name;
 
     @CommandLine.Option(names = { "--filter" },
                         description = "Filter source by filename (multiple names can be separated by comma)")
@@ -54,23 +57,33 @@ public class CamelSourceAction extends ActionBaseCommand {
     }
 
     @Override
-    public Integer doCall() throws Exception {
+    public Integer call() throws Exception {
         List<Row> rows = new ArrayList<>();
 
         List<Long> pids = findPids(name);
         if (pids.isEmpty()) {
             return 0;
         } else if (pids.size() > 1) {
-            printer().println("Name or pid " + name + " matches " + pids.size()
-                              + " running Camel integrations. Specify a name or PID that matches exactly one.");
+            System.out.println("Name or pid " + name + " matches " + pids.size()
+                               + " running Camel integrations. Specify a name or PID that matches exactly one.");
             return 0;
         }
 
         this.pid = pids.get(0);
 
-        Path outputFile = prepareAction(Long.toString(pid), "source", root -> {
-            root.put("filter", "*");
-        });
+        // ensure output file is deleted before executing action
+        File outputFile = getOutputFile("" + pid);
+        FileUtil.deleteFile(outputFile);
+
+        JsonObject root = new JsonObject();
+        root.put("action", "source");
+        root.put("filter", "*");
+        File file = getActionFile("" + pid);
+        try {
+            IOHelper.writeText(root.toJson(), file);
+        } catch (Exception e) {
+            // ignore
+        }
 
         JsonObject jo = waitForOutputFile(outputFile);
         if (jo != null) {
@@ -115,7 +128,7 @@ public class CamelSourceAction extends ActionBaseCommand {
                 }
             }
         } else {
-            printer().println("Response from running Camel with PID " + pid + " not received within 5 seconds");
+            System.out.println("Response from running Camel with PID " + pid + " not received within 5 seconds");
             return 1;
         }
 
@@ -127,11 +140,7 @@ public class CamelSourceAction extends ActionBaseCommand {
         }
 
         // delete output file after use
-        try {
-            Files.deleteIfExists(outputFile);
-        } catch (IOException e) {
-            // ignore
-        }
+        FileUtil.deleteFile(outputFile);
 
         return 0;
     }
@@ -153,20 +162,37 @@ public class CamelSourceAction extends ActionBaseCommand {
 
     protected void printSource(List<Row> rows) {
         for (Row row : rows) {
-            printer().println();
-            printer().printf("Source: %s%n", row.location);
-            printer().println("--------------------------------------------------------------------------------");
+            System.out.println();
+            System.out.printf("Source: %s%n", row.location);
+            System.out.println("--------------------------------------------------------------------------------");
             for (int i = 0; i < row.code.size(); i++) {
                 Code code = row.code.get(i);
                 String c = Jsoner.unescape(code.code);
-                printer().printf("%4d: %s%n", code.line, c);
+                System.out.printf("%4d: %s%n", code.line, c);
             }
-            printer().println();
+            System.out.println();
         }
     }
 
-    protected JsonObject waitForOutputFile(Path outputFile) {
-        return getJsonObject((Path) outputFile);
+    protected JsonObject waitForOutputFile(File outputFile) {
+        StopWatch watch = new StopWatch();
+        while (watch.taken() < 5000) {
+            try {
+                // give time for response to be ready
+                Thread.sleep(100);
+
+                if (outputFile.exists()) {
+                    FileInputStream fis = new FileInputStream(outputFile);
+                    String text = IOHelper.loadText(fis);
+                    IOHelper.close(fis);
+                    return (JsonObject) Jsoner.deserialize(text);
+                }
+
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+        return null;
     }
 
     public static String extractSourceName(String loc) {

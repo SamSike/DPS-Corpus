@@ -69,8 +69,10 @@ public class JpaIdempotentConsumerTest extends AbstractJpaTest {
         });
     }
 
+    @Override
     @BeforeEach
-    public void setEndpoints() {
+    public void setUp() throws Exception {
+        super.setUp();
         startEndpoint = resolveMandatoryEndpoint("direct:start");
         resultEndpoint = getMockEndpoint("mock:result");
     }

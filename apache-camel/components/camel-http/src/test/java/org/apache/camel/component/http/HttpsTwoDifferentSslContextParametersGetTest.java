@@ -19,9 +19,11 @@ package org.apache.camel.component.http;
 import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.support.jsse.SSLContextParameters;
-import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -43,17 +45,22 @@ public class HttpsTwoDifferentSslContextParametersGetTest extends BaseHttpsTest 
     @BindToRegistry("sslContextParameters2")
     private SSLContextParameters sslContextParameters2 = new SSLContextParameters();
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+    public void setUp() throws Exception {
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext()).create();
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext()).create();
         localServer.start();
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() {
+    public void tearDown() throws Exception {
+        super.tearDown();
+
         if (localServer != null) {
             localServer.stop();
         }
@@ -68,13 +75,13 @@ public class HttpsTwoDifferentSslContextParametersGetTest extends BaseHttpsTest 
     public void httpsTwoDifferentSSLContextNotSupported() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo")
-                        .to("https://localhost:" + localServer.getLocalPort()
+                        .to("https://127.0.0.1:" + localServer.getLocalPort()
                             + "/mail?x509HostnameVerifier=x509HostnameVerifier&sslContextParameters=#sslContextParameters");
 
                 from("direct:bar")
-                        .to("https://localhost:" + localServer.getLocalPort()
+                        .to("https://127.0.0.1:" + localServer.getLocalPort()
                             + "/mail?x509HostnameVerifier=x509HostnameVerifier&sslContextParameters=#sslContextParameters2");
             }
         });

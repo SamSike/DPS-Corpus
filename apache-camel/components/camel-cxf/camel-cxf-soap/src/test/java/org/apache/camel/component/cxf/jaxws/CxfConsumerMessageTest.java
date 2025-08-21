@@ -26,11 +26,13 @@ import org.apache.cxf.BusFactory;
 import org.apache.cxf.frontend.ClientFactoryBean;
 import org.apache.cxf.frontend.ClientProxyFactoryBean;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CxfConsumerMessageTest extends CamelTestSupport {
     private static final String TEST_MESSAGE = "Hello World!";
 
@@ -58,7 +60,7 @@ public class CxfConsumerMessageTest extends CamelTestSupport {
                 from(simpleEndpointURI + "&dataFormat=RAW").process(new Processor() {
                     public void process(final Exchange exchange) {
                         Message in = exchange.getIn();
-                        // check the content-length header is filtered
+                        // check the content-length header is filtered 
                         Object value = in.getHeader("Content-Length");
                         assertNull(value, "The Content-Length header should be removed");
                         // Get the request message

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,61 +30,56 @@ import org.springframework.web.testfixture.servlet.MockHttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.mockito.Mockito.mock;
 
 /**
- * Tests for {@link RelativeRedirectFilter}.
+ * Unit tests for {@link RelativeRedirectFilter}.
  *
  * @author Rob Winch
  * @author Juergen Hoeller
  */
-class RelativeRedirectFilterTests {
+public class RelativeRedirectFilterTests {
 
 	private RelativeRedirectFilter filter = new RelativeRedirectFilter();
 
-	private HttpServletResponse response = mock();
+	private HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
 
 
 	@Test
-	void sendRedirectHttpStatusWhenNullThenIllegalArgumentException() {
+	public void sendRedirectHttpStatusWhenNullThenIllegalArgumentException() {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				this.filter.setRedirectStatus(null));
 	}
 
 	@Test
-	void sendRedirectHttpStatusWhenNot3xxThenIllegalArgumentException() {
+	public void sendRedirectHttpStatusWhenNot3xxThenIllegalArgumentException() {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				this.filter.setRedirectStatus(HttpStatus.OK));
 	}
 
 	@Test
-	void doFilterSendRedirectWhenDefaultsThenLocationAnd303() throws Exception {
+	public void doFilterSendRedirectWhenDefaultsThenLocationAnd303() throws Exception {
 		String location = "/foo";
 		sendRedirect(location);
 
 		InOrder inOrder = Mockito.inOrder(this.response);
-		inOrder.verify(this.response).resetBuffer();
 		inOrder.verify(this.response).setStatus(HttpStatus.SEE_OTHER.value());
 		inOrder.verify(this.response).setHeader(HttpHeaders.LOCATION, location);
-		inOrder.verify(this.response).flushBuffer();
 	}
 
 	@Test
-	void doFilterSendRedirectWhenCustomSendRedirectHttpStatusThenLocationAnd301() throws Exception {
+	public void doFilterSendRedirectWhenCustomSendRedirectHttpStatusThenLocationAnd301() throws Exception {
 		String location = "/foo";
 		HttpStatus status = HttpStatus.MOVED_PERMANENTLY;
 		this.filter.setRedirectStatus(status);
 		sendRedirect(location);
 
 		InOrder inOrder = Mockito.inOrder(this.response);
-		inOrder.verify(this.response).resetBuffer();
 		inOrder.verify(this.response).setStatus(status.value());
 		inOrder.verify(this.response).setHeader(HttpHeaders.LOCATION, location);
-		inOrder.verify(this.response).flushBuffer();
 	}
 
 	@Test
-	void wrapOnceOnly() throws Exception {
+	public void wrapOnceOnly() throws Exception {
 		HttpServletResponse original = new MockHttpServletResponse();
 
 		MockFilterChain chain = new MockFilterChain();

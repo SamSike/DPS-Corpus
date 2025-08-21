@@ -18,6 +18,7 @@ package org.apache.camel.component.telegram;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.camel.EndpointInject;
 import org.apache.camel.ProducerTemplate;
@@ -51,7 +52,7 @@ public class TelegramConsumerFallbackConversionTest extends TelegramTestSupport 
                         rawMessages -> rawMessages.size() == 1)
                 .stream()
                 .map(message -> (OutgoingTextMessage) message)
-                .toList();
+                .collect(Collectors.toList());
 
         assertCollectionSize(msgs, 1);
         String text = msgs.get(0).getText();

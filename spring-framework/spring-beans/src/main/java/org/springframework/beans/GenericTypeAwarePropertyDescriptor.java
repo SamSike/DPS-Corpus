@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,19 +20,17 @@ import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.BridgeMethodResolver;
+import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.MethodParameter;
-import org.springframework.core.ResolvableType;
-import org.springframework.core.convert.Property;
-import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -47,25 +45,23 @@ final class GenericTypeAwarePropertyDescriptor extends PropertyDescriptor {
 
 	private final Class<?> beanClass;
 
-	private final @Nullable Method readMethod;
+	@Nullable
+	private final Method readMethod;
 
-	private final @Nullable Method writeMethod;
+	@Nullable
+	private final Method writeMethod;
 
-	private @Nullable Set<Method> ambiguousWriteMethods;
+	@Nullable
+	private volatile Set<Method> ambiguousWriteMethods;
 
-	private volatile boolean ambiguousWriteMethodsLogged;
+	@Nullable
+	private MethodParameter writeMethodParameter;
 
-	private @Nullable MethodParameter writeMethodParameter;
+	@Nullable
+	private Class<?> propertyType;
 
-	private volatile @Nullable ResolvableType writeMethodType;
-
-	private @Nullable ResolvableType readMethodType;
-
-	private volatile @Nullable TypeDescriptor typeDescriptor;
-
-	private @Nullable Class<?> propertyType;
-
-	private final @Nullable Class<?> propertyEditorClass;
+	@Nullable
+	private final Class<?> propertyEditorClass;
 
 
 	public GenericTypeAwarePropertyDescriptor(Class<?> beanClass, String propertyName,
@@ -97,9 +93,9 @@ final class GenericTypeAwarePropertyDescriptor extends PropertyDescriptor {
 				// by the JDK's JavaBeans Introspector...
 				Set<Method> ambiguousCandidates = new HashSet<>();
 				for (Method method : beanClass.getMethods()) {
-					if (method.getName().equals(this.writeMethod.getName()) &&
-							!method.equals(this.writeMethod) && !method.isBridge() &&
-							method.getParameterCount() == this.writeMethod.getParameterCount()) {
+					if (method.getName().equals(writeMethodToUse.getName()) &&
+							!method.equals(writeMethodToUse) && !method.isBridge() &&
+							method.getParameterCount() == writeMethodToUse.getParameterCount()) {
 						ambiguousCandidates.add(method);
 					}
 				}
@@ -111,8 +107,7 @@ final class GenericTypeAwarePropertyDescriptor extends PropertyDescriptor {
 		}
 
 		if (this.readMethod != null) {
-			this.readMethodType = ResolvableType.forMethodReturnType(this.readMethod, this.beanClass);
-			this.propertyType = this.readMethodType.resolve(this.readMethod.getReturnType());
+			this.propertyType = GenericTypeResolver.resolveReturnType(this.readMethod, this.beanClass);
 		}
 		else if (this.writeMethodParameter != null) {
 			this.propertyType = this.writeMethodParameter.getParameterType();
@@ -127,47 +122,27 @@ final class GenericTypeAwarePropertyDescriptor extends PropertyDescriptor {
 	}
 
 	@Override
-	public @Nullable Method getReadMethod() {
+	@Nullable
+	public Method getReadMethod() {
 		return this.readMethod;
 	}
 
 	@Override
-	public @Nullable Method getWriteMethod() {
+	@Nullable
+	public Method getWriteMethod() {
 		return this.writeMethod;
 	}
 
 	public Method getWriteMethodForActualAccess() {
 		Assert.state(this.writeMethod != null, "No write method available");
-		if (this.ambiguousWriteMethods != null && !this.ambiguousWriteMethodsLogged) {
-			this.ambiguousWriteMethodsLogged = true;
+		Set<Method> ambiguousCandidates = this.ambiguousWriteMethods;
+		if (ambiguousCandidates != null) {
+			this.ambiguousWriteMethods = null;
 			LogFactory.getLog(GenericTypeAwarePropertyDescriptor.class).debug("Non-unique JavaBean property '" +
 					getName() + "' being accessed! Ambiguous write methods found next to actually used [" +
-					this.writeMethod + "]: " + this.ambiguousWriteMethods);
+					this.writeMethod + "]: " + ambiguousCandidates);
 		}
 		return this.writeMethod;
-	}
-
-	public @Nullable Method getWriteMethodFallback(@Nullable Class<?> valueType) {
-		if (this.ambiguousWriteMethods != null) {
-			for (Method method : this.ambiguousWriteMethods) {
-				Class<?> paramType = method.getParameterTypes()[0];
-				if (valueType != null ? paramType.isAssignableFrom(valueType) : !paramType.isPrimitive()) {
-					return method;
-				}
-			}
-		}
-		return null;
-	}
-
-	public @Nullable Method getUniqueWriteMethodFallback() {
-		if (this.ambiguousWriteMethods != null && this.ambiguousWriteMethods.size() == 1) {
-			return this.ambiguousWriteMethods.iterator().next();
-		}
-		return null;
-	}
-
-	public boolean hasUniqueWriteMethod() {
-		return (this.writeMethod != null && this.ambiguousWriteMethods == null);
 	}
 
 	public MethodParameter getWriteMethodParameter() {
@@ -175,51 +150,37 @@ final class GenericTypeAwarePropertyDescriptor extends PropertyDescriptor {
 		return this.writeMethodParameter;
 	}
 
-	public ResolvableType getWriteMethodType() {
-		ResolvableType writeMethodType = this.writeMethodType;
-		if (writeMethodType == null) {
-			writeMethodType = ResolvableType.forMethodParameter(getWriteMethodParameter());
-			this.writeMethodType = writeMethodType;
-		}
-		return writeMethodType;
-	}
-
-	public ResolvableType getReadMethodType() {
-		Assert.state(this.readMethodType != null, "No read method available");
-		return this.readMethodType;
-	}
-
-	public TypeDescriptor getTypeDescriptor() {
-		TypeDescriptor typeDescriptor = this.typeDescriptor;
-		if (typeDescriptor == null) {
-			Property property = new Property(getBeanClass(), getReadMethod(), getWriteMethod(), getName());
-			typeDescriptor = new TypeDescriptor(property);
-			this.typeDescriptor = typeDescriptor;
-		}
-		return typeDescriptor;
-	}
-
 	@Override
-	public @Nullable Class<?> getPropertyType() {
+	@Nullable
+	public Class<?> getPropertyType() {
 		return this.propertyType;
 	}
 
 	@Override
-	public @Nullable Class<?> getPropertyEditorClass() {
+	@Nullable
+	public Class<?> getPropertyEditorClass() {
 		return this.propertyEditorClass;
 	}
 
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof GenericTypeAwarePropertyDescriptor that &&
-				getBeanClass().equals(that.getBeanClass()) &&
-				PropertyDescriptorUtils.equals(this, that)));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof GenericTypeAwarePropertyDescriptor)) {
+			return false;
+		}
+		GenericTypeAwarePropertyDescriptor otherPd = (GenericTypeAwarePropertyDescriptor) other;
+		return (getBeanClass().equals(otherPd.getBeanClass()) && PropertyDescriptorUtils.equals(this, otherPd));
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(getBeanClass(), getReadMethod(), getWriteMethod());
+		int hashCode = getBeanClass().hashCode();
+		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(getReadMethod());
+		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(getWriteMethod());
+		return hashCode;
 	}
 
 }

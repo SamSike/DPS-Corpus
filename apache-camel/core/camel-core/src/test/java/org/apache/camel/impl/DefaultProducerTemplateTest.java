@@ -33,10 +33,7 @@ import org.apache.camel.impl.engine.DefaultProducerTemplate;
 import org.junit.jupiter.api.Test;
 
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit test for DefaultProducerTemplate
@@ -90,12 +87,15 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(0);
 
-        RuntimeCamelException e
-                = assertThrows(RuntimeCamelException.class, () -> template.sendBody("direct:exception", "Hello World"),
-                        "Should have thrown RuntimeCamelException");
+        try {
+            template.sendBody("direct:exception", "Hello World");
+            fail("Should have thrown RuntimeCamelException");
+        } catch (RuntimeCamelException e) {
+            boolean b = e.getCause() instanceof IllegalArgumentException;
+            assertTrue(b);
+            assertEquals("Forced exception by unit test", e.getCause().getMessage());
+        }
 
-        assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
-        assertEquals("Forced exception by unit test", e.getCause().getMessage());
         assertMockEndpointsSatisfied();
     }
 
@@ -104,12 +104,15 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(0);
 
-        RuntimeCamelException e = assertThrows(RuntimeCamelException.class,
-                () -> template.requestBody("direct:exception", "Hello World", Integer.class),
-                "Should have thrown RuntimeCamelException");
+        try {
+            template.requestBody("direct:exception", "Hello World", Integer.class);
+            fail("Should have thrown RuntimeCamelException");
+        } catch (RuntimeCamelException e) {
+            boolean b = e.getCause() instanceof IllegalArgumentException;
+            assertTrue(b);
+            assertEquals("Forced exception by unit test", e.getCause().getMessage());
+        }
 
-        assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
-        assertEquals("Forced exception by unit test", e.getCause().getMessage());
         assertMockEndpointsSatisfied();
     }
 
@@ -120,7 +123,7 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
 
         Exchange out = template.send("direct:exception", new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("Hello World");
             }
         });
@@ -151,12 +154,15 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(0);
 
-        RuntimeCamelException e = assertThrows(RuntimeCamelException.class,
-                () -> template.requestBody("direct:exception", "Hello World"),
-                "Should have thrown RuntimeCamelException");
+        try {
+            template.requestBody("direct:exception", "Hello World");
+            fail("Should have thrown RuntimeCamelException");
+        } catch (RuntimeCamelException e) {
+            boolean b = e.getCause() instanceof IllegalArgumentException;
+            assertTrue(b);
+            assertEquals("Forced exception by unit test", e.getCause().getMessage());
+        }
 
-        assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
-        assertEquals("Forced exception by unit test", e.getCause().getMessage());
         assertMockEndpointsSatisfied();
     }
 
@@ -167,7 +173,7 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
 
         Exchange out = template.request("direct:exception", new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("Hello World");
             }
         });
@@ -194,7 +200,7 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
     }
 
     @Test
-    public void testRequestBody() {
+    public void testRequestBody() throws Exception {
         // with endpoint as string uri
         Integer out = template.requestBody("direct:inout", "Hello", Integer.class);
         assertEquals(Integer.valueOf(123), (Object) out);
@@ -220,7 +226,7 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
     }
 
     @Test
-    public void testRequestUsingDefaultEndpoint() {
+    public void testRequestUsingDefaultEndpoint() throws Exception {
         ProducerTemplate producer = new DefaultProducerTemplate(context, context.getEndpoint("direct:out"));
         producer.start();
 
@@ -258,30 +264,30 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // for faster unit test
                 errorHandler(noErrorHandler());
 
                 from("direct:in").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         exchange.getIn().setBody("Bye World");
                     }
                 }).to("mock:result");
 
                 from("direct:out").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         exchange.getMessage().setBody("Bye Bye World");
                     }
                 }).to("mock:result");
 
                 from("direct:exception").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         throw new IllegalArgumentException("Forced exception by unit test");
                     }
                 }).to("mock:result");
@@ -292,7 +298,7 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
     }
 
     @Test
-    public void testCacheProducers() {
+    public void testCacheProducers() throws Exception {
         ProducerTemplate template = new DefaultProducerTemplate(context);
         template.setMaximumCacheSize(500);
         template.start();
@@ -317,7 +323,7 @@ public class DefaultProducerTemplateTest extends ContextTestSupport {
     }
 
     @Test
-    public void testCacheProducersFromContext() {
+    public void testCacheProducersFromContext() throws Exception {
         ProducerTemplate template = context.createProducerTemplate(500);
 
         assertEquals(0, template.getCurrentCacheSize(), "Size should be 0");

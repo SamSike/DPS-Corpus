@@ -18,10 +18,9 @@ package org.apache.camel.component.properties;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class PropertiesComponentOnlyUseDefaultValuesTest extends ContextTestSupport {
 
@@ -34,7 +33,7 @@ public class PropertiesComponentOnlyUseDefaultValuesTest extends ContextTestSupp
     public void testOnlyDefaults() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("{{foo:mock:foo}}").to("{{bar:mock:bar}}");
             }
         });
@@ -52,23 +51,34 @@ public class PropertiesComponentOnlyUseDefaultValuesTest extends ContextTestSupp
     public void testOneMissing() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("{{foo:mock:foo}}").to("{{bar}}");
             }
         });
 
-        assertThrows(Exception.class, () -> context.start(), "Should have thrown exception");
+        try {
+            context.start();
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // expected
+        }
     }
 
     @Test
     public void testAllMissing() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("{{foo:mock:foo}}").to("{{bar}}");
             }
         });
 
-        Assertions.assertThrows(Exception.class, () -> context.start(), "Should have thrown exception");
+        try {
+            context.start();
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // expected
+        }
     }
+
 }

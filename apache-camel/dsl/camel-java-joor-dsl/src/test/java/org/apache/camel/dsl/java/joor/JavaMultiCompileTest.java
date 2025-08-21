@@ -46,10 +46,6 @@ public class JavaMultiCompileTest {
         String out = main.getCamelTemplate().requestBody("direct:start", "Jack", String.class);
         assertEquals("Jack is at Moes Bar", out);
 
-        Object b = main.getCamelContext().getRegistry().lookupByName("myBarEcho");
-        assertNotNull(b);
-        assertEquals("MyBarEcho1", b.toString());
-
         main.stop();
     }
 

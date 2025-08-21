@@ -36,8 +36,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class InOutTempQueueProducerTest extends JmsTestSupport {
 
-    private static final String QUEUE_NAME = "in.out.queue.producer.test.request.InOutTempQueueProducerTest";
-
     @Override
     protected boolean useJmx() {
         return true;
@@ -45,12 +43,13 @@ public class InOutTempQueueProducerTest extends JmsTestSupport {
 
     @Test
     public void testInOutQueueProducer() throws Exception {
-        MessageConsumer mc = createQueueConsumer(QUEUE_NAME);
+        String queueName = "in.out.queue.producer.test.request";
+        MessageConsumer mc = createQueueConsumer(queueName);
         assertNotNull(mc);
         final String requestText = "Hello World!";
         final String responseText = "How are you";
         mc.setMessageListener(new MyMessageListener(requestText, responseText));
-        Object responseObject = template.requestBody("sjms:queue:" + QUEUE_NAME + "?exchangePattern=InOut", requestText);
+        Object responseObject = template.requestBody("sjms:queue:" + queueName + "?exchangePattern=InOut", requestText);
         assertNotNull(responseObject);
         assertTrue(responseObject instanceof String);
         assertEquals(responseText, responseObject);
@@ -60,13 +59,14 @@ public class InOutTempQueueProducerTest extends JmsTestSupport {
 
     @Test
     public void testInOutQueueProducerWithCorrelationId() throws Exception {
-        MessageConsumer mc = createQueueConsumer(QUEUE_NAME);
+        String queueName = "in.out.queue.producer.test.request";
+        MessageConsumer mc = createQueueConsumer(queueName);
         assertNotNull(mc);
         final String requestText = "Hello World!";
         final String responseText = "How are you";
         mc.setMessageListener(new MyMessageListener(requestText, responseText));
         final String correlationId = UUID.randomUUID().toString().replace("-", "");
-        Exchange exchange = template.request("sjms:queue:" + QUEUE_NAME + "?exchangePattern=InOut", exchange1 -> {
+        Exchange exchange = template.request("sjms:queue:" + queueName + "?exchangePattern=InOut", exchange1 -> {
             exchange1.getIn().setBody(requestText);
             exchange1.getIn().setHeader("JMSCorrelationID", correlationId);
         });

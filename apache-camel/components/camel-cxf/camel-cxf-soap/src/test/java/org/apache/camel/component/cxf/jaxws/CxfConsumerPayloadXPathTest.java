@@ -136,7 +136,7 @@ public class CxfConsumerPayloadXPathTest extends CamelTestSupport {
         @Override
         public void process(Exchange exchange) throws Exception {
             Object obj = exchange.getIn().getBody();
-            //xpath expression directly results in a: String
+            //xpath expression directly results in a: String  
             String content = (String) XPathBuilder.xpath("//xml/text()").stringResult().evaluate(context, obj, Object.class);
             exchange.getMessage().setBody(content);
             exchange.getMessage().setHeaders(exchange.getIn().getHeaders());
@@ -201,12 +201,12 @@ public class CxfConsumerPayloadXPathTest extends CamelTestSupport {
             String msgOut = constructSoapMessage(content);
             exchange.getMessage().setBody(msgOut);
             exchange.getMessage().setHeaders(exchange.getIn().getHeaders());
-            exchange.getMessage().setHeader(HEADER_SIZE, Integer.toString(content.length()));
+            exchange.getMessage().setHeader(HEADER_SIZE, "" + content.length());
         }
     }
 
     private void simpleTest(int repeat, BaseRouteBuilder builder) throws Exception {
-        testConfiguration().withUseRouteBuilder(false);
+        setUseRouteBuilder(false);
         context.addRoutes(builder);
         startCamelContext();
 
@@ -226,7 +226,7 @@ public class CxfConsumerPayloadXPathTest extends CamelTestSupport {
 
         //check for data loss in received input (after xpath)
         String headerSize = exchgOut.getMessage().getHeader(HEADER_SIZE, String.class);
-        assertEquals(Integer.toString(repeat), headerSize);
+        assertEquals("" + repeat, headerSize);
 
         assertTrue(result.length() > repeat, "dataloss in output occurred");
 

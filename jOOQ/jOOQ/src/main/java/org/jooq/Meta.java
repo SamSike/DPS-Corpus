@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,25 +42,18 @@ package org.jooq;
 import static org.jooq.SQLDialect.CUBRID;
 // ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 import static org.jooq.SQLDialect.FIREBIRD;
-// ...
 import static org.jooq.SQLDialect.H2;
 // ...
 import static org.jooq.SQLDialect.HSQLDB;
 // ...
 // ...
-import static org.jooq.SQLDialect.MARIADB;
-import static org.jooq.SQLDialect.MYSQL;
-// ...
 // ...
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
-import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.YUGABYTEDB;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -69,12 +62,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 
-import org.jooq.conf.Settings;
 import org.jooq.exception.DataAccessException;
 import org.jooq.util.xml.jaxb.InformationSchema;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * A wrapping object for {@link DatabaseMetaData} or for other sources of
@@ -196,103 +187,13 @@ public interface Meta extends Scope {
     List<Table<?>> getTables(Name name) throws DataAccessException;
 
     /**
-     * Resolve a {@link Table} by its name according to interpreter
-     * {@link Settings}.
-     * <p>
-     * Unlike {@link #getTables(String)}, which may list multiple tables by
-     * their case sensitive name, this method finds the best matching table
-     * according to the argument as well as the underlying
-     * {@link Settings#getInterpreterNameLookupCaseSensitivity()} and
-     * {@link Settings#getInterpreterSearchPath()}, or returns <code>null</code>
-     * if no such table was found.
-     */
-    @Nullable
-    @Support
-    Table<?> resolveTable(String name) throws DataAccessException;
-
-    /**
-     * Resolve a {@link Table} by its name according to interpreter
-     * {@link Settings}.
-     * <p>
-     * Unlike {@link #getTables(Name)}, which may list multiple tables by their
-     * case sensitive name, this method finds the best matching table according
-     * to the argument {@link Name#qualifier()} as well as the underlying
-     * {@link Settings#getInterpreterNameLookupCaseSensitivity()} and
-     * {@link Settings#getInterpreterSearchPath()}, or returns <code>null</code>
-     * if no such table was found.
-     */
-    @Nullable
-    @Support
-    Table<?> resolveTable(Name name) throws DataAccessException;
-
-    /**
-     * Get all {@link UDT} objects from the underlying meta data source.
-     *
-     * @throws DataAccessException If something went wrong fetching the meta
-     *             objects
-     */
-    @NotNull
-    @Support({ DUCKDB, POSTGRES, YUGABYTEDB })
-    List<UDT<?>> getUDTs() throws DataAccessException;
-
-    /**
-     * Get all {@link UDT} objects by name from the underlying meta data source.
-     *
-     * @throws DataAccessException If something went wrong fetching the meta
-     *             objects
-     */
-    @NotNull
-    @Support({ DUCKDB, POSTGRES, YUGABYTEDB })
-    List<UDT<?>> getUDTs(String name) throws DataAccessException;
-
-    /**
-     * Get all {@link UDT} objects by name from the underlying meta data source.
-     *
-     * @throws DataAccessException If something went wrong fetching the meta
-     *             objects
-     */
-    @NotNull
-    @Support({ DUCKDB, POSTGRES, YUGABYTEDB })
-    List<UDT<?>> getUDTs(Name name) throws DataAccessException;
-
-    /**
-     * Resolve a {@link UDT} by its name according to interpreter
-     * {@link Settings}.
-     * <p>
-     * Unlike {@link #getUDTs(String)}, which may list multiple UDTs by their
-     * case sensitive name, this method finds the best matching UDTs according
-     * to the argument as well as the underlying
-     * {@link Settings#getInterpreterNameLookupCaseSensitivity()} and
-     * {@link Settings#getInterpreterSearchPath()}, or returns <code>null</code>
-     * if no such UDTs was found.
-     */
-    @Nullable
-    @Support({ DUCKDB, POSTGRES, YUGABYTEDB })
-    UDT<?> resolveUDT(String name) throws DataAccessException;
-
-    /**
-     * Resolve a {@link UDT} by its name according to interpreter
-     * {@link Settings}.
-     * <p>
-     * Unlike {@link #getUDTs(Name)}, which may list multiple UDTs by their case
-     * sensitive name, this method finds the best matching UDTs according to the
-     * argument {@link Name#qualifier()} as well as the underlying
-     * {@link Settings#getInterpreterNameLookupCaseSensitivity()} and
-     * {@link Settings#getInterpreterSearchPath()}, or returns <code>null</code>
-     * if no such UDTs was found.
-     */
-    @Nullable
-    @Support({ DUCKDB, POSTGRES, YUGABYTEDB })
-    UDT<?> resolveUDT(Name name) throws DataAccessException;
-
-    /**
      * Get all domain objects from the underlying meta data source.
      *
      * @throws DataAccessException If something went wrong fetching the meta
      *             objects
      */
     @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
+    @Support({ H2, POSTGRES })
     List<Domain<?>> getDomains() throws DataAccessException;
 
     /**
@@ -302,7 +203,7 @@ public interface Meta extends Scope {
      *             objects
      */
     @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
+    @Support({ H2, POSTGRES })
     List<Domain<?>> getDomains(String name) throws DataAccessException;
 
     /**
@@ -312,207 +213,8 @@ public interface Meta extends Scope {
      *             objects
      */
     @NotNull
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
+    @Support({ H2, POSTGRES })
     List<Domain<?>> getDomains(Name name) throws DataAccessException;
-
-    /**
-     * Resolve a {@link Domain} by its name according to interpreter
-     * {@link Settings}.
-     * <p>
-     * Unlike {@link #getDomains(String)}, which may list multiple domains by
-     * their case sensitive name, this method finds the best matching domain
-     * according to the argument as well as the underlying
-     * {@link Settings#getInterpreterNameLookupCaseSensitivity()} and
-     * {@link Settings#getInterpreterSearchPath()}, or returns <code>null</code>
-     * if no such domain was found.
-     */
-    @Nullable
-    @Support({ H2, POSTGRES })
-    Domain<?> resolveDomain(String name) throws DataAccessException;
-
-    /**
-     * Resolve a {@link Domain} by its name according to interpreter
-     * {@link Settings}.
-     * <p>
-     * Unlike {@link #getDomains(Name)}, which may list multiple domains by
-     * their case sensitive name, this method finds the best matching domain
-     * according to the argument {@link Name#qualifier()} as well as the
-     * underlying {@link Settings#getInterpreterNameLookupCaseSensitivity()} and
-     * {@link Settings#getInterpreterSearchPath()}, or returns <code>null</code>
-     * if no such domain was found.
-     */
-    @Nullable
-    @Support({ H2, POSTGRES })
-    Domain<?> resolveDomain(Name name) throws DataAccessException;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Get all sequence objects from the underlying meta data source.
@@ -543,36 +245,6 @@ public interface Meta extends Scope {
     @NotNull
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES })
     List<Sequence<?>> getSequences(Name name) throws DataAccessException;
-
-    /**
-     * Resolve a {@link Sequence} by its name according to interpreter
-     * {@link Settings}.
-     * <p>
-     * Unlike {@link #getSequences(String)}, which may list multiple sequences
-     * by their case sensitive name, this method finds the best matching
-     * sequence according to the argument as well as the underlying
-     * {@link Settings#getInterpreterNameLookupCaseSensitivity()} and
-     * {@link Settings#getInterpreterSearchPath()}, or returns <code>null</code>
-     * if no such sequence was found.
-     */
-    @Nullable
-    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES })
-    Sequence<?> resolveSequence(String name) throws DataAccessException;
-
-    /**
-     * Resolve a {@link Sequence} by its name according to interpreter
-     * {@link Settings}.
-     * <p>
-     * Unlike {@link #getSequences(Name)}, which may list multiple sequences by
-     * their case sensitive name, this method finds the best matching sequence
-     * according to the argument {@link Name#qualifier()} as well as the
-     * underlying {@link Settings#getInterpreterNameLookupCaseSensitivity()} and
-     * {@link Settings#getInterpreterSearchPath()}, or returns <code>null</code>
-     * if no such sequence was found.
-     */
-    @Nullable
-    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES })
-    Sequence<?> resolveSequence(Name name) throws DataAccessException;
 
     /**
      * Get all primary keys from the underlying meta data source.
@@ -713,34 +385,10 @@ public interface Meta extends Scope {
     Meta filterTables(Predicate<? super Table<?>> filter);
 
     /**
-     * Create a wrapper {@link Meta} instance filtering out some UDTs.
-     */
-    @NotNull
-    Meta filterUDTs(Predicate<? super UDT<?>> filter);
-
-    /**
      * Create a wrapper {@link Meta} instance filtering out some domains.
      */
     @NotNull
     Meta filterDomains(Predicate<? super Domain<?>> filter);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Create a wrapper {@link Meta} instance filtering out some sequences.
@@ -778,14 +426,6 @@ public interface Meta extends Scope {
      */
     @NotNull
     Meta snapshot() throws DataAccessException;
-
-    /**
-     * Collect the object dependencies between the various objects in this {@link Meta}.
-     * <p>
-     * This is a commercial-only feature.
-     */
-    @NotNull
-    Dependencies dependencies() throws DataAccessException;
 
     /**
      * Generate a creation script for the entire meta data.

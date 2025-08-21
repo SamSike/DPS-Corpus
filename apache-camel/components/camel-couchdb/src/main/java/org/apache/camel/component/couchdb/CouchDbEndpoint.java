@@ -17,26 +17,25 @@
 package org.apache.camel.component.couchdb;
 
 import java.net.URI;
-import java.util.Map;
 
-import com.ibm.cloud.cloudant.v1.Cloudant;
-import com.ibm.cloud.sdk.core.security.Authenticator;
-import com.ibm.cloud.sdk.core.security.BasicAuthenticator;
-import com.ibm.cloud.sdk.core.security.NoAuthAuthenticator;
 import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.spi.*;
+import org.apache.camel.spi.Metadata;
+import org.apache.camel.spi.UriEndpoint;
+import org.apache.camel.spi.UriParam;
+import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultEndpoint;
+import org.lightcouch.CouchDbClient;
 
 /**
  * Consume changesets for inserts, updates and deletes in a CouchDB database, as well as get, save, update and delete
  * documents from a CouchDB database.
  */
 @UriEndpoint(firstVersion = "2.11.0", scheme = "couchdb", title = "CouchDB", syntax = "couchdb:protocol:hostname:port/database",
-             category = { Category.DATABASE }, headersClass = CouchDbConstants.class)
-public class CouchDbEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
+             category = { Category.DATABASE, Category.NOSQL }, headersClass = CouchDbConstants.class)
+public class CouchDbEndpoint extends DefaultEndpoint {
 
     public static final String DEFAULT_STYLE = "main_only";
     public static final long DEFAULT_HEARTBEAT = 30000;
@@ -70,8 +69,6 @@ public class CouchDbEndpoint extends DefaultEndpoint implements EndpointServiceL
     private boolean deletes = true;
     @UriParam(label = "consumer", defaultValue = "true")
     private boolean updates = true;
-    @UriParam(label = "consumer", defaultValue = "10")
-    private int maxMessagesPerPoll = 10;
 
     public CouchDbEndpoint() {
     }
@@ -88,7 +85,7 @@ public class CouchDbEndpoint extends DefaultEndpoint implements EndpointServiceL
 
         port = uri.getPort() == -1 ? DEFAULT_PORT : uri.getPort();
 
-        if (uri.getPath() == null || uri.getPath().isBlank()) {
+        if (uri.getPath() == null || uri.getPath().trim().length() == 0) {
             throw new IllegalArgumentException(URI_ERROR);
         }
         database = uri.getPath().substring(1);
@@ -100,27 +97,8 @@ public class CouchDbEndpoint extends DefaultEndpoint implements EndpointServiceL
     }
 
     @Override
-    public String getServiceUrl() {
-        return getProtocol() + ":" + getHostname() + ":" + getPort();
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return getProtocol();
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        if (username != null) {
-            return Map.of("username", username);
-        }
-        return null;
-    }
-
-    @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         CouchDbConsumer answer = new CouchDbConsumer(this, createClient(), processor);
-        answer.setMaxMessagesPerPoll(getMaxMessagesPerPoll());
         configureConsumer(answer);
         return answer;
     }
@@ -131,17 +109,8 @@ public class CouchDbEndpoint extends DefaultEndpoint implements EndpointServiceL
     }
 
     protected CouchDbClientWrapper createClient() {
-        Authenticator authenticator;
-        if (username == null) {
-            authenticator = new NoAuthAuthenticator();
-        } else {
-            authenticator = new BasicAuthenticator(username, password);
-        }
-
-        Cloudant cloudant = new Cloudant("camel-couchdb", authenticator);
-        cloudant.setServiceUrl(getServiceUrl());
-
-        return new CouchDbClientWrapper(cloudant, database, createDatabase);
+        return new CouchDbClientWrapper(
+                new CouchDbClient(database, createDatabase, protocol, hostname, port, username, password));
     }
 
     public String getProtocol() {
@@ -265,19 +234,5 @@ public class CouchDbEndpoint extends DefaultEndpoint implements EndpointServiceL
      */
     public void setUpdates(boolean updates) {
         this.updates = updates;
-    }
-
-    public int getMaxMessagesPerPoll() {
-        return maxMessagesPerPoll;
-    }
-
-    /**
-     * Gets the maximum number of messages as a limit to poll at each polling.
-     * <p/>
-     * Gets the maximum number of messages as a limit to poll at each polling. The default value is 10. Use 0 or a
-     * negative number to set it as unlimited.
-     */
-    public void setMaxMessagesPerPoll(int maxMessagesPerPoll) {
-        this.maxMessagesPerPoll = maxMessagesPerPoll;
     }
 }

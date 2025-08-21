@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ public interface ResultActions {
 	 *   .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 	 *   .andExpect(jsonPath("$.person.name").value("Jason"));
 	 * </pre>
+	 *
 	 * @see #andExpectAll(ResultMatcher...)
 	 */
 	ResultActions andExpect(ResultMatcher matcher) throws Exception;
@@ -57,7 +58,7 @@ public interface ResultActions {
 	 * <p>If a single {@link Error} or {@link Exception} is thrown, it will
 	 * be rethrown.
 	 * <p>If multiple exceptions are thrown, this method will throw an
-	 * {@link AssertionError} whose error message is a summary of all the
+	 * {@link AssertionError} whose error message is a summary of all of the
 	 * exceptions. In addition, each exception will be added as a
 	 * {@linkplain Throwable#addSuppressed(Throwable) suppressed exception} to
 	 * the {@code AssertionError}.
@@ -77,6 +78,7 @@ public interface ResultActions {
 	 *       jsonPath("$.person.name").value("Jason")
 	 *   );
 	 * </pre>
+	 *
 	 * @since 5.3.10
 	 * @see #andExpect(ResultMatcher)
 	 */
@@ -103,6 +105,7 @@ public interface ResultActions {
 
 	/**
 	 * Return the result of the executed request for direct access to the results.
+	 *
 	 * @return the result of the request
 	 */
 	MvcResult andReturn();

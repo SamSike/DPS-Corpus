@@ -22,6 +22,7 @@ import org.apache.camel.AsyncCallback;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NamedNode;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
@@ -41,7 +42,7 @@ public class AsyncEndpointCustomInterceptorTest extends ContextTestSupport {
 
     private static String beforeThreadName;
     private static String afterThreadName;
-    private final MyInterceptor interceptor = new MyInterceptor();
+    private MyInterceptor interceptor = new MyInterceptor();
 
     @Test
     public void testAsyncEndpoint() throws Exception {
@@ -60,19 +61,19 @@ public class AsyncEndpointCustomInterceptorTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.addComponent("async", new MyAsyncComponent());
-                context.getCamelContextExtension().addInterceptStrategy(interceptor);
+                context.adapt(ExtendedCamelContext.class).addInterceptStrategy(interceptor);
 
                 from("direct:start").to("mock:before").to("log:before").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         beforeThreadName = Thread.currentThread().getName();
                     }
                 }).to("async:bye:camel").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         afterThreadName = Thread.currentThread().getName();
                     }
                 }).to("log:after").to("mock:after").to("mock:result");
@@ -82,11 +83,12 @@ public class AsyncEndpointCustomInterceptorTest extends ContextTestSupport {
 
     // START SNIPPET: e1
     private static class MyInterceptor implements InterceptStrategy {
-        private final AtomicInteger counter = new AtomicInteger();
+        private AtomicInteger counter = new AtomicInteger();
 
         @Override
         public Processor wrapProcessorInInterceptors(
-                final CamelContext context, final NamedNode definition, final Processor target, final Processor nextTarget) {
+                final CamelContext context, final NamedNode definition, final Processor target, final Processor nextTarget)
+                throws Exception {
 
             return new DelegateAsyncProcessor(target) {
                 public boolean process(final Exchange exchange, final AsyncCallback callback) {

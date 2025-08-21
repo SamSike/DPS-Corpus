@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -53,7 +53,7 @@ final class Tips {
         "When plain SQL templating is not enough, you can write dialect agnostic CustomQueryPart implementations: https://www.jooq.org/doc/latest/manual/sql-building/queryparts/custom-queryparts/",
         "By default, all user values generate implicit bind values in jOOQ. But you can use DSL.val() explicitly, or create inline values (constants, literals) using DSL.inline(), too: https://www.jooq.org/doc/latest/manual/sql-building/bind-values/",
         "A Field<Boolean> can be turned into a Condition using DSL.condition(Field<Boolean>) for use in WHERE, HAVING, etc.: https://www.jooq.org/doc/latest/manual/sql-building/conditional-expressions/boolean-column/",
-        "A Condition can be turned into a Field<Boolean> using DSL.field(Condition) for use in SELECT, GROUP BY, ORDER BY, etc.: https://www.jooq.org/doc/latest/manual/sql-building/conditional-expressions/boolean-column/ (though it might not be necessary: https://blog.jooq.org/a-condition-is-a-field/)",
+        "A Condition can be turned into a Field<Boolean> using DSL.field(Condition) for use in SELECT, GROUP BY, ORDER BY, etc.: https://www.jooq.org/doc/latest/manual/sql-building/conditional-expressions/boolean-column/",
         "Views (and table valued functions) are the most underrated SQL feature! They work very well together with jOOQ and jOOQ's code generator! https://www.jooq.org/doc/latest/manual/code-generation/codegen-advanced/codegen-config-database/codegen-database-table-valued-functions/",
         "Multi tenancy is best implemented in jOOQ using runtime schema and table mapping: https://www.jooq.org/doc/latest/manual/sql-building/dsl-context/custom-settings/settings-render-mapping/",
         "When creating dynamic SQL Conditions, the DSL.trueCondition(), DSL.falseCondition(), DSL.noCondition(): https://blog.jooq.org/create-empty-optional-sql-clauses-with-jooq/",
@@ -92,29 +92,13 @@ final class Tips {
         "Want to exclude some columns from your write operations? No problem, specify them as 'readonly' in the code generator: https://www.jooq.org/doc/latest/manual/sql-building/column-expressions/readonly-columns/",
         "Need to frequently calculate the same expressions based on other columns from the same table? Many dialects support computed columns: https://www.jooq.org/doc/latest/manual/sql-building/column-expressions/computed-columns/",
         "You can use Table<R> references as SelectField<R> to project nested TableRecords in any query: https://blog.jooq.org/projecting-type-safe-nested-tablerecords-with-jooq-3-17/",
-        "Just like in SQL, a Condition is just a Field<Boolean>, so you can use conditions wherever you can use fields, e.g. in SELECT, GROUP BY, ORDER BY, etc.: https://blog.jooq.org/a-condition-is-a-field/",
+        "Just like in SQL, a Condition is just a Field<Boolean>, so you can use conditions wherever you can use fields, e.g. in SELECT, GROUP BY, ORDER BY, etc.",
         "For dynamic SQL, DSL.noCondition() helps create optional conditions, just like DSL.noField() helps create optional fields in the fluent API.",
-        "In order to improve cardinality estimates, it can be valuable to auto-inline bind variables on certain columns, e.g. on enum types: https://www.jooq.org/doc/latest/manual/sql-building/dsl-context/custom-settings/settings-auto-inline-bind-values/",
+        "In order to improve cardinality estimates, it can be valuable to auto-inline bind variables on certain columns, e.g. on enum types: https://www.jooq.org/doc/dev/manual/sql-building/dsl-context/custom-settings/settings-auto-inline-bind-values/",
         "Kotlin users can profit from a variety of convenient extension functions available from the jooq-kotlin module",
-        "jOOQ offers out of the box functionality for common scenarios related to audit columns: https://www.jooq.org/doc/latest/manual/code-generation/codegen-advanced/codegen-config-database/codegen-database-forced-types/codegen-database-forced-types-audit/",
-        "Client side computed columns are very useful if you have redundant behaviour in your queries and data: https://www.jooq.org/doc/latest/manual/code-generation/codegen-advanced/codegen-config-database/codegen-database-forced-types/codegen-database-forced-types-computed/",
+        "jOOQ offers out of the box functionality for common scenarios related to audit columns: https://www.jooq.org/doc/dev/manual/code-generation/codegen-advanced/codegen-config-database/codegen-database-forced-types/codegen-database-forced-types-audit/",
+        "Client side computed columns are very useful if you have redundant behaviour in your queries and data: https://www.jooq.org/doc/dev/manual/code-generation/codegen-advanced/codegen-config-database/codegen-database-forced-types/codegen-database-forced-types-computed/",
         "A list of common anti patterns in jOOQ or SQL is available here: https://www.jooq.org/doc/latest/manual/reference/dont-do-this/",
-        "In addition to <includes> and <excludes>, you can also use <includesSql> and <excludesSql> to generate regular expressions for the code generator! https://www.jooq.org/doc/latest/manual/code-generation/codegen-advanced/codegen-config-database/codegen-database-includes-excludes/",
-        "jOOQ can run diagnostics on all the queries passed to it, including if you're using JDBC or R2DBC directly: https://www.jooq.org/doc/latest/manual/sql-execution/diagnostics/",
-        "Common SQL patterns can be matched and transformed into more optimal or simpler SQL using pattern transformation, both on jOOQ queries or ordinary JDBC based queries: https://www.jooq.org/doc/latest/manual/sql-building/queryparts/sql-transformation/transform-patterns/",
-        "The most common jOOQ types like Field, Condition, Table are summarised in this blog post: https://blog.jooq.org/a-brief-overview-over-the-most-common-jooq-types/",
-        "Sometimes, a native query can be the better choice than writing a jOOQ query. Here's when that happens: https://blog.jooq.org/when-to-use-jooq-and-when-to-use-native-sql/",
-        "Thinking of building a query with jOOQ and executing it elsewhere? Think again: https://blog.jooq.org/why-you-should-execute-jooq-queries-with-jooq/",
-        "You can generate jOOQ code in a single package with package private visibility if this helps. Here's how: https://blog.jooq.org/how-to-generate-package-private-code-with-jooqs-code-generator/",
-        "Want to collect a flat representation of tree data into a hierarchy? Use this Collector based approach: https://blog.jooq.org/how-to-turn-a-list-of-flat-elements-into-a-hierarchy-in-java-sql-or-jooq/",
-        "When it comes to using Converter or Binding, only the first UNION subquery is relevant. Learn more about this here: https://blog.jooq.org/how-to-use-jooqs-converters-with-union-operations/",
-        "Want to upgrade your jOOQ experience? Check out these commercial only features of the jOOQ Professional and Enterprise Editions: https://www.jooq.org/commercial-only-features/",
-        "Should you use jOOQ's DAOs? They're convenient, but don't overuse them. SQL is often more powerful: https://blog.jooq.org/to-dao-or-not-to-dao/",
-        "Want to hide some legacy columns from your queries? Use jOOQ's hidden column support: https://www.jooq.org/doc/latest/manual/code-generation/codegen-advanced/codegen-config-database/codegen-database-hidden-columns/",
-        "Different jOOQ editions support multiple JDK versions. Check out the complete list here: https://www.jooq.org/download/support-matrix-jdk",
-        "Different jOOQ editions support multiple RDBMS versions. Check out the complete list here: https://www.jooq.org/download/support-matrix",
-        "By default, jOOQ's UpdatableRecords track \"touched\" dirty state. You can switch them to track \"modified\" dirty state instead: https://www.jooq.org/doc/latest/manual/sql-building/dsl-context/custom-settings/settings-dirty-tracking/",
-        "Your schema may encode ENUM semantics into a column using a CHECK constraint. Turn that into a generated enum, easily: https://www.jooq.org/doc/latest/manual/code-generation/codegen-advanced/codegen-config-database/codegen-database-synthetic-objects/codegen-database-synthetic-enums/",
         ""
     };
 

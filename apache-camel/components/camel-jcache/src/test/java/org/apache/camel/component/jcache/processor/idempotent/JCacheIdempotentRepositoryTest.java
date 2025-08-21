@@ -23,6 +23,8 @@ import org.apache.camel.component.jcache.JCacheHelper;
 import org.apache.camel.component.jcache.JCacheManager;
 import org.apache.camel.component.jcache.support.HazelcastTest;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +41,9 @@ public class JCacheIdempotentRepositoryTest extends CamelTestSupport {
     private JCacheIdempotentRepository repository;
 
     @Override
-    public void doPostSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
         cacheManager = JCacheHelper.createManager(context, new JCacheConfiguration("idempotent-repository"));
         cache = cacheManager.getCache();
 
@@ -50,7 +54,9 @@ public class JCacheIdempotentRepositoryTest extends CamelTestSupport {
     }
 
     @Override
-    public void doPostTearDown() throws Exception {
+    @AfterEach
+    public void tearDown() throws Exception {
+        super.tearDown();
         repository.stop();
         cacheManager.close();
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package org.springframework.web.method.annotation;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Rossen Stoyanchev
  */
-class MapMethodProcessorTests {
+public class MapMethodProcessorTests {
 
 	private MapMethodProcessor processor;
 
@@ -53,7 +52,7 @@ class MapMethodProcessorTests {
 
 
 	@BeforeEach
-	void setUp() {
+	public void setUp() throws Exception {
 		this.processor = new MapMethodProcessor();
 		this.mavContainer = new ModelAndViewContainer();
 		this.webRequest = new ServletWebRequest(new MockHttpServletRequest());
@@ -61,31 +60,26 @@ class MapMethodProcessorTests {
 
 
 	@Test
-	void supportsParameter() {
+	public void supportsParameter() {
 		assertThat(this.processor.supportsParameter(
 				this.resolvable.annotNotPresent().arg(Map.class, String.class, Object.class))).isTrue();
-
 		assertThat(this.processor.supportsParameter(
 				this.resolvable.annotPresent(RequestBody.class).arg(Map.class, String.class, Object.class))).isFalse();
-
-		// gh-33160
-		assertThat(this.processor.supportsParameter(
-				ResolvableMethod.on(getClass()).argTypes(ExtendedMap.class).build().arg(ExtendedMap.class))).isFalse();
 	}
 
 	@Test
-	void supportsReturnType() {
+	public void supportsReturnType() {
 		assertThat(this.processor.supportsReturnType(this.resolvable.returnType())).isTrue();
 	}
 
 	@Test
-	void resolveArgumentValue() throws Exception {
+	public void resolveArgumentValue() throws Exception {
 		MethodParameter param = this.resolvable.annotNotPresent().arg(Map.class, String.class, Object.class);
 		assertThat(this.processor.resolveArgument(param, this.mavContainer, this.webRequest, null)).isSameAs(this.mavContainer.getModel());
 	}
 
 	@Test
-	void handleMapReturnValue() throws Exception {
+	public void handleMapReturnValue() throws Exception {
 		this.mavContainer.addAttribute("attr1", "value1");
 		Map<String, Object> returnValue = new ModelMap("attr2", "value2");
 
@@ -104,17 +98,6 @@ class MapMethodProcessorTests {
 			@RequestBody Map<String, Object> annotMap) {
 
 		return null;
-	}
-
-
-	@SuppressWarnings("unused")
-	private Map<String, Object> handle(ExtendedMap extendedMap) {
-		return null;
-	}
-
-
-	@SuppressWarnings("serial")
-	private static final class ExtendedMap extends HashMap<String, Object> {
 	}
 
 }

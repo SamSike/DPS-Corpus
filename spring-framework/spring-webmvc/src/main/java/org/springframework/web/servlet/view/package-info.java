@@ -8,7 +8,9 @@
  * by subclassing the AbstractView class in this package can be
  * very helpful if an application has unusual view requirements.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.servlet.view;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -46,7 +46,6 @@ import software.amazon.awssdk.services.kms.model.ScheduleKeyDeletionResponse;
 public class KMS2Producer extends DefaultProducer {
 
     private static final Logger LOG = LoggerFactory.getLogger(KMS2Producer.class);
-    public static final String MISSING_KEY_ID = "Key Id must be specified";
 
     private transient String kmsProducerToString;
 
@@ -193,7 +192,7 @@ public class KMS2Producer extends DefaultProducer {
                 String keyId = exchange.getIn().getHeader(KMS2Constants.KEY_ID, String.class);
                 builder.keyId(keyId);
             } else {
-                throw new IllegalArgumentException(MISSING_KEY_ID);
+                throw new IllegalArgumentException("Key Id must be specified");
             }
             DisableKeyResponse result;
             try {
@@ -227,7 +226,7 @@ public class KMS2Producer extends DefaultProducer {
                 String keyId = exchange.getIn().getHeader(KMS2Constants.KEY_ID, String.class);
                 builder.keyId(keyId);
             } else {
-                throw new IllegalArgumentException(MISSING_KEY_ID);
+                throw new IllegalArgumentException("Key Id must be specified");
             }
             if (ObjectHelper.isNotEmpty(exchange.getIn().getHeader(KMS2Constants.PENDING_WINDOW_IN_DAYS))) {
                 int pendingWindows = exchange.getIn().getHeader(KMS2Constants.PENDING_WINDOW_IN_DAYS, Integer.class);
@@ -265,7 +264,7 @@ public class KMS2Producer extends DefaultProducer {
                 String keyId = exchange.getIn().getHeader(KMS2Constants.KEY_ID, String.class);
                 builder.keyId(keyId);
             } else {
-                throw new IllegalArgumentException(MISSING_KEY_ID);
+                throw new IllegalArgumentException("Key Id must be specified");
             }
             DescribeKeyResponse result;
             try {
@@ -299,7 +298,7 @@ public class KMS2Producer extends DefaultProducer {
                 String keyId = exchange.getIn().getHeader(KMS2Constants.KEY_ID, String.class);
                 builder.keyId(keyId);
             } else {
-                throw new IllegalArgumentException(MISSING_KEY_ID);
+                throw new IllegalArgumentException("Key Id must be specified");
             }
             EnableKeyResponse result;
             try {

@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.file.remote.integration;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -47,7 +45,7 @@ public class FtpRecursiveDepth2IT extends FtpServerTestSupport {
         template.sendBodyAndHeader("ftp://admin@localhost:{{ftp.server.port}}/depth2/bar/foo?password=admin", "b3",
                 Exchange.FILE_NAME, "b3.txt");
 
-        MockEndpoint.assertIsSatisfied(context, 20, TimeUnit.SECONDS);
+        MockEndpoint.assertIsSatisfied(context);
     }
 
     @Override

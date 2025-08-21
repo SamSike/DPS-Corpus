@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ public interface ApplicationContextInitializer<C extends ConfigurableApplication
 
 	/**
 	 * Initialize the given application context.
-	 * @param applicationContext the application context to bootstrap
+	 * @param applicationContext the application to configure
 	 */
 	void initialize(C applicationContext);
 

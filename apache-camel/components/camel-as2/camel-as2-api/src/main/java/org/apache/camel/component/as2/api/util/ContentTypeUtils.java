@@ -18,7 +18,7 @@ package org.apache.camel.component.as2.api.util;
 
 import org.apache.camel.component.as2.api.AS2MediaType;
 import org.apache.camel.component.as2.api.AS2MimeType;
-import org.apache.hc.core5.http.ContentType;
+import org.apache.http.entity.ContentType;
 
 public final class ContentTypeUtils {
 

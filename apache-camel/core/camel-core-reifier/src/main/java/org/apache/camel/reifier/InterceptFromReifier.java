@@ -16,42 +16,33 @@
  */
 package org.apache.camel.reifier;
 
-import org.apache.camel.ExchangePropertyKey;
-import org.apache.camel.Predicate;
+import org.apache.camel.AsyncCallback;
+import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
 import org.apache.camel.model.InterceptFromDefinition;
 import org.apache.camel.model.ProcessorDefinition;
-import org.apache.camel.processor.FilterProcessor;
-import org.apache.camel.processor.Pipeline;
+import org.apache.camel.support.processor.DelegateAsyncProcessor;
 
-public class InterceptFromReifier extends ProcessorReifier<InterceptFromDefinition> {
+public class InterceptFromReifier extends InterceptReifier<InterceptFromDefinition> {
 
     public InterceptFromReifier(Route route, ProcessorDefinition<?> definition) {
-        super(route, (InterceptFromDefinition) definition);
+        super(route, definition);
     }
 
     @Override
     public Processor createProcessor() throws Exception {
-        Processor child = this.createChildProcessor(true);
+        final Processor child = this.createChildProcessor(true);
 
-        Predicate when;
-        if (definition.getOnWhen() != null) {
-            when = createPredicate(definition.getOnWhen().getExpression());
-        } else {
-            when = e -> true;
-        }
-        // set property before processing the child
-
-        Processor p = exchange -> {
-            exchange.setProperty(ExchangePropertyKey.INTERCEPTED_ROUTE_ID, route.getId());
-            exchange.setProperty(ExchangePropertyKey.INTERCEPTED_ROUTE_ENDPOINT_URI, route.getEndpoint().getEndpointUri());
-
-            if (exchange.getFromEndpoint() != null) {
-                exchange.setProperty(ExchangePropertyKey.INTERCEPTED_ENDPOINT, exchange.getFromEndpoint().getEndpointUri());
+        return new DelegateAsyncProcessor(child) {
+            @Override
+            public boolean process(Exchange exchange, AsyncCallback callback) {
+                if (exchange.getFromEndpoint() != null) {
+                    exchange.getMessage().setHeader(Exchange.INTERCEPTED_ENDPOINT, exchange.getFromEndpoint().getEndpointUri());
+                }
+                return super.process(exchange, callback);
             }
         };
-        return new FilterProcessor(getCamelContext(), when, Pipeline.newInstance(getCamelContext(), p, child));
     }
 
 }

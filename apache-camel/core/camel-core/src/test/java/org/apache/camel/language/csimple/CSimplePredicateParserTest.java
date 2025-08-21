@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 public class CSimplePredicateParserTest {
 
     @Test
-    public void testParse() {
+    public void testParse() throws Exception {
         CSimplePredicateParser parser = new CSimplePredicateParser();
 
         String code = parser.parsePredicate("'bar' != 'foo'");
@@ -67,7 +67,7 @@ public class CSimplePredicateParserTest {
     }
 
     @Test
-    public void testParseEmbeddedFunctions() {
+    public void testParseEmbeddedFunctions() throws Exception {
         CSimplePredicateParser parser = new CSimplePredicateParser();
 
         String code = parser.parsePredicate("${body.substring(1, ${header.max})} == 'foo'");
@@ -75,7 +75,7 @@ public class CSimplePredicateParserTest {
     }
 
     @Test
-    public void testParseSysFunctions() {
+    public void testParseSysFunctions() throws Exception {
         CSimplePredicateParser parser = new CSimplePredicateParser();
         String code = parser.parsePredicate("${sys.foo} != 'bar'");
         Assertions.assertEquals("isNotEqualTo(exchange, sys(\"foo\"), \"bar\")", code);
@@ -86,7 +86,7 @@ public class CSimplePredicateParserTest {
     }
 
     @Test
-    public void testParseExchangeProperty() {
+    public void testParseExchangeProperty() throws Exception {
         CSimplePredicateParser parser = new CSimplePredicateParser();
         String code = parser.parsePredicate("${exchangeProperty.foo} != 'bar'");
         Assertions.assertEquals("isNotEqualTo(exchange, exchangeProperty(exchange, \"foo\"), \"bar\")", code);

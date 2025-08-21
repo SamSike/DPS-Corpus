@@ -18,7 +18,6 @@ package org.apache.camel.component.jetty.rest;
 
 import org.apache.camel.CamelExecutionException;
 import org.apache.camel.Exchange;
-import org.apache.camel.FluentProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jetty.BaseJettyTest;
 import org.apache.camel.http.base.HttpOperationFailedException;
@@ -42,33 +41,18 @@ public class RestJettyRequiredQueryParameterTest extends BaseJettyTest {
     }
 
     @Test
-    public void testJettyMissing() {
-        FluentProducerTemplate requestTemplate = fluentTemplate.withHeader(Exchange.CONTENT_TYPE, "application/json")
+    public void testJettyInvalid() {
+        fluentTemplate = fluentTemplate.withHeader(Exchange.CONTENT_TYPE, "application/json")
                 .withHeader("Accept", "application/json")
                 .withHeader(Exchange.HTTP_METHOD, "post")
                 .withBody("{ \"name\": \"Donald Duck\" }")
                 .to("http://localhost:" + getPort() + "/users/123/update");
 
-        Exception ex = assertThrows(CamelExecutionException.class, () -> requestTemplate.request(String.class));
+        Exception ex = assertThrows(CamelExecutionException.class, () -> fluentTemplate.request(String.class));
 
         HttpOperationFailedException cause = assertIsInstanceOf(HttpOperationFailedException.class, ex.getCause());
         assertEquals(400, cause.getStatusCode());
         assertEquals("Some of the required query parameters are missing.", cause.getResponseBody());
-    }
-
-    @Test
-    public void testJettyNotAllowed() {
-        FluentProducerTemplate requestTemplate = fluentTemplate.withHeader(Exchange.CONTENT_TYPE, "application/json")
-                .withHeader("Accept", "application/json")
-                .withHeader(Exchange.HTTP_METHOD, "post")
-                .withBody("{ \"name\": \"Donald Duck\" }")
-                .to("http://localhost:" + getPort() + "/users/123/update?country=se");
-
-        Exception ex = assertThrows(CamelExecutionException.class, () -> requestTemplate.request(String.class));
-
-        HttpOperationFailedException cause = assertIsInstanceOf(HttpOperationFailedException.class, ex.getCause());
-        assertEquals(400, cause.getStatusCode());
-        assertEquals("Some of the query parameters or HTTP headers has a not-allowed value.", cause.getResponseBody());
     }
 
     @Override
@@ -83,7 +67,7 @@ public class RestJettyRequiredQueryParameterTest extends BaseJettyTest {
 
                 // use the rest DSL to define the rest services
                 rest("/users/").post("{id}/update").consumes("application/json").produces("application/json").param()
-                        .name("country").required(true).allowableValues("uk,dk").type(RestParamType.query)
+                        .name("country").required(true).type(RestParamType.query)
                         .endParam().to("direct:update");
 
                 from("direct:update").setBody(constant("{ \"status\": \"ok\" }"));

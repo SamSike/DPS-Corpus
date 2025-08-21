@@ -16,9 +16,11 @@
  */
 package org.apache.camel.util;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.support.ExceptionHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,12 +29,16 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class NoClassDefFoundErrorWrapExceptionTest extends ContextTestSupport {
 
     @Test
-    public void testNoClassDef() {
+    public void testNoClassDef() throws Exception {
         try {
             template.requestBody("seda:start", "Hello World");
             fail("Should throw exception");
         } catch (Exception e) {
-            final String s = ExceptionHelper.stackTraceToString(e);
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+
+            String s = sw.toString();
             assertTrue(s.contains("java.lang.LinkageError"));
             assertTrue(s.contains("Cannot do this"));
             assertTrue(s.contains("org.apache.camel.util.ProcessorFail.process"));
@@ -40,10 +46,10 @@ public class NoClassDefFoundErrorWrapExceptionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:start").process(new ProcessorA()).process(new ProcessorB()).process(new ProcessorFail());
             }
         };

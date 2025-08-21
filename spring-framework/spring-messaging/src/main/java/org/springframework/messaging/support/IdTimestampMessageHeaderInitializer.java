@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.messaging.support;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.util.IdGenerator;
 
@@ -33,7 +32,8 @@ public class IdTimestampMessageHeaderInitializer implements MessageHeaderInitial
 	private static final IdGenerator ID_VALUE_NONE_GENERATOR = () -> MessageHeaders.ID_VALUE_NONE;
 
 
-	private @Nullable IdGenerator idGenerator;
+	@Nullable
+	private IdGenerator idGenerator;
 
 	private boolean enableTimestamp;
 
@@ -52,7 +52,8 @@ public class IdTimestampMessageHeaderInitializer implements MessageHeaderInitial
 	/**
 	 * Return the configured {@code IdGenerator}, if any.
 	 */
-	public @Nullable IdGenerator getIdGenerator() {
+	@Nullable
+	public IdGenerator getIdGenerator() {
 		return this.idGenerator;
 	}
 

@@ -16,31 +16,14 @@
  */
 package org.apache.camel.processor;
 
-import java.util.concurrent.Phaser;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.parallel.Isolated;
 
-@Isolated
-@Timeout(60)
 public class MulticastParallelTimeout2Test extends ContextTestSupport {
-
-    private final Phaser phaser = new Phaser(3);
-
-    @BeforeEach
-    void sendEarly() {
-        Assumptions.assumeTrue(context.isStarted(), "The test cannot be run because the context is not started");
-        template.sendBody("direct:start", "Hello");
-    }
 
     @Test
     public void testMulticastParallelTimeout() throws Exception {
@@ -52,16 +35,16 @@ public class MulticastParallelTimeout2Test extends ContextTestSupport {
         getMockEndpoint("mock:B").expectedMessageCount(0);
         getMockEndpoint("mock:C").expectedMessageCount(1);
 
-        phaser.awaitAdvanceInterruptibly(0, 5000, TimeUnit.SECONDS);
+        template.sendBody("direct:start", "Hello");
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start").multicast(new AggregationStrategy() {
                     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
@@ -77,11 +60,11 @@ public class MulticastParallelTimeout2Test extends ContextTestSupport {
                         // use end to indicate end of multicast route
                         .end().to("mock:result");
 
-                from("direct:a").process(e -> phaser.arriveAndAwaitAdvance()).to("mock:A").setBody(constant("A"));
+                from("direct:a").to("mock:A").setBody(constant("A"));
 
-                from("direct:b").process(e -> phaser.arriveAndAwaitAdvance()).delay(1000).to("mock:B").setBody(constant("B"));
+                from("direct:b").delay(1000).to("mock:B").setBody(constant("B"));
 
-                from("direct:c").process(e -> phaser.arriveAndAwaitAdvance()).to("mock:C").setBody(constant("C"));
+                from("direct:c").to("mock:C").setBody(constant("C"));
                 // END SNIPPET: e1
             }
         };

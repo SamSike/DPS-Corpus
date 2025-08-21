@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -60,7 +60,6 @@ import org.jooq.CharsetProvider;
 import org.jooq.CommitProvider;
 import org.jooq.Configuration;
 import org.jooq.ConnectionProvider;
-import org.jooq.ConstructorPropertiesProvider;
 import org.jooq.ConverterProvider;
 import org.jooq.DSLContext;
 import org.jooq.DiagnosticsListener;
@@ -74,7 +73,6 @@ import org.jooq.MigrationListenerProvider;
 // ...
 // ...
 // ...
-// ...
 import org.jooq.Record;
 import org.jooq.RecordListener;
 import org.jooq.RecordListenerProvider;
@@ -84,7 +82,6 @@ import org.jooq.RecordType;
 import org.jooq.RecordUnmapper;
 import org.jooq.RecordUnmapperProvider;
 import org.jooq.SQLDialect;
-import org.jooq.SubscriberProvider;
 import org.jooq.TransactionListener;
 import org.jooq.TransactionListenerProvider;
 import org.jooq.TransactionProvider;
@@ -96,7 +93,6 @@ import org.jooq.VisitListenerProvider;
 import org.jooq.conf.Settings;
 import org.jooq.conf.SettingsTools;
 import org.jooq.exception.ConfigurationException;
-import org.jooq.impl.DefaultConnectionFactory.NonClosingConnection;
 import org.jooq.impl.DefaultExecuteContext.ExecuteContextConnectionProvider;
 import org.jooq.impl.ThreadLocalTransactionProvider.ThreadLocalConnectionProvider;
 import org.jooq.migrations.xml.jaxb.MigrationsType;
@@ -128,8 +124,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
     private transient ExecutorProvider                  executorProvider;
     private transient CacheProvider                     cacheProvider;
     private transient TransactionProvider               transactionProvider;
-    private transient AnnotatedPojoMemberProvider       annotatedPojoMemberProvider;
-    private transient ConstructorPropertiesProvider     constructorPropertiesProvider;
     private transient RecordMapperProvider              recordMapperProvider;
     private transient RecordUnmapperProvider            recordUnmapperProvider;
     private transient RecordListenerProvider[]          recordListenerProviders;
@@ -142,9 +136,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
     private transient CharsetProvider                   charsetProvider;
     private transient ConverterProvider                 converterProvider;
     private transient FormattingProvider                formattingProvider;
-    private transient SubscriberProvider<?>             subscriberProvider;
-
-
 
 
 
@@ -180,7 +171,7 @@ public class DefaultConfiguration extends AbstractConfiguration {
         this(
             null,
             dialect,
-            null
+            SettingsTools.defaultSettings()
         );
     }
 
@@ -210,10 +201,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             null,
             null,
             null,
-            null,
-            null,
-            null,
-
 
 
 
@@ -245,8 +232,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             configuration.executorProvider,
             configuration.cacheProvider,
             configuration.transactionProvider,
-            configuration.annotatedPojoMemberProvider,
-            configuration.constructorPropertiesProvider,
             configuration.recordMapperProvider,
             configuration.recordUnmapperProvider,
             configuration.recordListenerProviders,
@@ -259,8 +244,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             configuration.charsetProvider,
             configuration.converterProvider,
             configuration.formattingProvider,
-            configuration.subscriberProvider,
-
 
 
 
@@ -291,8 +274,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
         ExecutorProvider executorProvider,
         CacheProvider cacheProvider,
         TransactionProvider transactionProvider,
-        AnnotatedPojoMemberProvider annotatedPojoMemberProvider,
-        ConstructorPropertiesProvider constructorPropertiesProvider,
         RecordMapperProvider recordMapperProvider,
         RecordUnmapperProvider recordUnmapperProvider,
         RecordListenerProvider[] recordListenerProviders,
@@ -305,8 +286,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
         CharsetProvider charsetProvider,
         ConverterProvider converterProvider,
         FormattingProvider formattingProvider,
-        SubscriberProvider<?> subscriberProvider,
-
 
 
 
@@ -326,8 +305,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
         set(executorProvider);
         set(cacheProvider);
         set(transactionProvider);
-        set(annotatedPojoMemberProvider);
-        set(constructorPropertiesProvider);
         set(recordMapperProvider);
         set(recordUnmapperProvider);
         set(recordListenerProviders);
@@ -340,8 +317,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
         set(charsetProvider);
         set(converterProvider);
         set(formattingProvider);
-        set(subscriberProvider);
-
 
 
 
@@ -396,8 +371,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -410,8 +383,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -436,8 +407,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -450,8 +419,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -476,8 +443,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -490,8 +455,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -516,8 +479,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -530,8 +491,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -561,8 +520,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             newExecutorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -575,8 +532,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -601,8 +556,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             newCacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -615,8 +568,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -641,8 +592,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             newTransactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -655,88 +604,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
-
-
-
-
-
-            clock,
-            dialect,
-            settings,
-            data
-        );
-    }
-
-    @Override
-    public final Configuration derive(ConstructorPropertiesProvider newConstructorPropertiesProvider) {
-        return new DefaultConfiguration(
-            connectionProvider,
-            interpreterConnectionProvider,
-            systemConnectionProvider,
-            connectionFactory,
-            metaProvider,
-            commitProvider,
-            executorProvider,
-            cacheProvider,
-            transactionProvider,
-            annotatedPojoMemberProvider,
-            newConstructorPropertiesProvider,
-            recordMapperProvider,
-            recordUnmapperProvider,
-            recordListenerProviders,
-            executeListenerProviders,
-            migrationListenerProviders,
-            visitListenerProviders,
-            transactionListenerProviders,
-            diagnosticsListenerProviders,
-            unwrapperProvider,
-            charsetProvider,
-            converterProvider,
-            formattingProvider,
-            subscriberProvider,
-
-
-
-
-
-
-            clock,
-            dialect,
-            settings,
-            data
-        );
-    }
-
-    @Override
-    public final Configuration derive(AnnotatedPojoMemberProvider newAnnotatedPojoMemberProvider) {
-        return new DefaultConfiguration(
-            connectionProvider,
-            interpreterConnectionProvider,
-            systemConnectionProvider,
-            connectionFactory,
-            metaProvider,
-            commitProvider,
-            executorProvider,
-            cacheProvider,
-            transactionProvider,
-            newAnnotatedPojoMemberProvider,
-            constructorPropertiesProvider,
-            recordMapperProvider,
-            recordUnmapperProvider,
-            recordListenerProviders,
-            executeListenerProviders,
-            migrationListenerProviders,
-            visitListenerProviders,
-            transactionListenerProviders,
-            diagnosticsListenerProviders,
-            unwrapperProvider,
-            charsetProvider,
-            converterProvider,
-            formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -766,8 +633,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             newRecordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -780,8 +645,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -811,8 +674,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             newRecordUnmapperProvider,
             recordListenerProviders,
@@ -825,8 +686,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -851,8 +710,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             newRecordListenerProviders,
@@ -865,8 +722,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -891,8 +746,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -905,8 +758,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -931,8 +782,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -945,8 +794,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -971,8 +818,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -985,8 +830,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -1011,8 +854,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -1025,8 +866,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -1051,8 +890,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -1065,8 +902,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -1096,8 +931,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -1110,8 +943,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -1136,8 +967,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -1150,8 +979,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             newCharsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -1176,8 +1003,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -1190,8 +1015,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             newConverterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -1216,8 +1039,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -1230,48 +1051,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             newFormattingProvider,
-            subscriberProvider,
-
-
-
-
-
-
-            clock,
-            dialect,
-            settings,
-            data
-        );
-    }
-
-    @Override
-    public final Configuration derive(SubscriberProvider<?> newSubscriberProvider) {
-        return new DefaultConfiguration(
-            connectionProvider,
-            interpreterConnectionProvider,
-            systemConnectionProvider,
-            connectionFactory,
-            metaProvider,
-            commitProvider,
-            executorProvider,
-            cacheProvider,
-            transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
-            recordMapperProvider,
-            recordUnmapperProvider,
-            recordListenerProviders,
-            executeListenerProviders,
-            migrationListenerProviders,
-            visitListenerProviders,
-            transactionListenerProviders,
-            diagnosticsListenerProviders,
-            unwrapperProvider,
-            charsetProvider,
-            converterProvider,
-            formattingProvider,
-            newSubscriberProvider,
-
 
 
 
@@ -1283,57 +1062,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             data
         );
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1456,8 +1184,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -1470,8 +1196,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -1496,8 +1220,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -1510,8 +1232,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -1536,8 +1256,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             executorProvider,
             cacheProvider,
             transactionProvider,
-            annotatedPojoMemberProvider,
-            constructorPropertiesProvider,
             recordMapperProvider,
             recordUnmapperProvider,
             recordListenerProviders,
@@ -1550,8 +1268,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             charsetProvider,
             converterProvider,
             formattingProvider,
-            subscriberProvider,
-
 
 
 
@@ -1603,10 +1319,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
     @Override
     public final Configuration set(ConnectionFactory newConnectionFactory) {
         this.connectionFactory = newConnectionFactory;
-
-        if (connectionFactory instanceof DefaultConnectionFactory dcf)
-            dcf.configuration = this;
-
         return this;
     }
 
@@ -1646,24 +1358,12 @@ public class DefaultConfiguration extends AbstractConfiguration {
         if (newTransactionProvider != null && !(this.connectionProvider instanceof ExecuteContextConnectionProvider)) {
             this.transactionProvider = newTransactionProvider;
 
-            if (newTransactionProvider instanceof ThreadLocalTransactionProvider t)
-                this.connectionProvider = t.localConnectionProvider;
+            if (newTransactionProvider instanceof ThreadLocalTransactionProvider)
+                this.connectionProvider = ((ThreadLocalTransactionProvider) newTransactionProvider).localConnectionProvider;
         }
         else
             this.transactionProvider = new NoTransactionProvider();
 
-        return this;
-    }
-
-    @Override
-    public final Configuration set(AnnotatedPojoMemberProvider newAnnotatedPojoMemberProvider) {
-        this.annotatedPojoMemberProvider = newAnnotatedPojoMemberProvider;
-        return this;
-    }
-
-    @Override
-    public final Configuration set(ConstructorPropertiesProvider newConstructorPropertiesProvider) {
-        this.constructorPropertiesProvider = newConstructorPropertiesProvider;
         return this;
     }
 
@@ -1773,21 +1473,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
         this.formattingProvider = newFormattingProvider;
         return this;
     }
-
-    @Override
-    public final Configuration set(SubscriberProvider<?> newSubscriberProvider) {
-        this.subscriberProvider = newSubscriberProvider;
-        return this;
-    }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1934,20 +1619,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
     }
 
     /**
-     * @see #set(AnnotatedPojoMemberProvider)
-     */
-    public final void setAnnotatedPojoMemberProvider(AnnotatedPojoMemberProvider newAnnotatedPojoMemberProvider) {
-        set(newAnnotatedPojoMemberProvider);
-    }
-
-    /**
-     * @see #set(ConstructorPropertiesProvider)
-     */
-    public final void setConstructorPropertiesProvider(ConstructorPropertiesProvider newConstructorPropertiesProvider) {
-        set(newConstructorPropertiesProvider);
-    }
-
-    /**
      * @see #set(RecordMapper)
      */
     public final void setRecordMapper(RecordMapper<?, ?> newRecordMapper) {
@@ -2081,14 +1752,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
 
 
 
-
-
-
-
-
-
-
-
     /**
      * @see #set(Unwrapper)
      */
@@ -2134,8 +1797,8 @@ public class DefaultConfiguration extends AbstractConfiguration {
         // [#3229] [#5377] If we're currently in a transaction, return that transaction's
         // local DefaultConnectionProvider, not the one from this configuration
         TransactionProvider tp = transactionProvider();
-        ConnectionProvider transactional = tp instanceof ThreadLocalTransactionProvider t
-            ? t.localConnectionProvider
+        ConnectionProvider transactional = tp instanceof ThreadLocalTransactionProvider
+            ? ((ThreadLocalTransactionProvider) tp).localConnectionProvider
             : (ConnectionProvider) data(DATA_DEFAULT_TRANSACTION_PROVIDER_CONNECTION);
 
         return transactional != null
@@ -2203,20 +1866,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             return new DefaultTransactionProvider(connectionProvider);
 
         return transactionProvider;
-    }
-
-    @Override
-    public final AnnotatedPojoMemberProvider annotatedPojoMemberProvider() {
-        return annotatedPojoMemberProvider != null
-             ? annotatedPojoMemberProvider
-             : new LegacyAnnotatedPojoMemberProvider();
-    }
-
-    @Override
-    public final ConstructorPropertiesProvider constructorPropertiesProvider() {
-        return constructorPropertiesProvider != null
-             ? constructorPropertiesProvider
-             : new LegacyConstructorPropertiesProvider();
     }
 
     @Override
@@ -2297,18 +1946,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
             : new DefaultFormattingProvider();
     }
 
-    @Override
-    public final SubscriberProvider<?> subscriberProvider() {
-        return subscriberProvider != null
-            ? subscriberProvider
-            : new DefaultSubscriberProvider<>();
-    }
-
-
-
-
-
-
 
 
 
@@ -2379,12 +2016,8 @@ public class DefaultConfiguration extends AbstractConfiguration {
     @Override
     public String toString() {
         return "DefaultConfiguration " +
-            "[\n\tconnected=" + (
-                connectionProvider != null && !(connectionProvider instanceof NoConnectionProvider)
-             || connectionFactory != null && !(connectionFactory instanceof NoConnectionFactory)) +
-            ",\n\ttransactional=" + (
-                transactionProvider != null && !(transactionProvider instanceof NoTransactionProvider)
-             || connectionFactory instanceof DefaultConnectionFactory && ((DefaultConnectionFactory) connectionFactory).connection instanceof NonClosingConnection) +
+            "[\n\tconnected=" + (connectionProvider != null && !(connectionProvider instanceof NoConnectionProvider)) +
+            ",\n\ttransactional=" + (transactionProvider != null && !(transactionProvider instanceof NoTransactionProvider)) +
             ",\n\tdialect=" + dialect +
             ",\n\tdata=" + data +
             ",\n\tsettings=\n\t\t" + settings +
@@ -2399,16 +2032,31 @@ public class DefaultConfiguration extends AbstractConfiguration {
         oos.defaultWriteObject();
 
         // Allow these objects to be non-serializable
-        oos.writeObject(serializableOrNull(connectionProvider));
-        oos.writeObject(serializableOrNull(interpreterConnectionProvider));
-        oos.writeObject(serializableOrNull(systemConnectionProvider));
-        oos.writeObject(serializableOrNull(metaProvider));
-        oos.writeObject(serializableOrNull(commitProvider));
-        oos.writeObject(serializableOrNull(transactionProvider));
-        oos.writeObject(serializableOrNull(annotatedPojoMemberProvider));
-        oos.writeObject(serializableOrNull(constructorPropertiesProvider));
-        oos.writeObject(serializableOrNull(recordMapperProvider));
-        oos.writeObject(serializableOrNull(recordUnmapperProvider));
+        oos.writeObject(connectionProvider instanceof Serializable
+            ? connectionProvider
+            : null);
+        oos.writeObject(interpreterConnectionProvider instanceof Serializable
+            ? interpreterConnectionProvider
+            : null);
+        oos.writeObject(systemConnectionProvider instanceof Serializable
+            ? systemConnectionProvider
+            : null);
+        oos.writeObject(metaProvider instanceof Serializable
+            ? metaProvider
+            : null);
+        oos.writeObject(commitProvider instanceof Serializable
+            ? commitProvider
+            : null);
+        oos.writeObject(transactionProvider instanceof Serializable
+            ? transactionProvider
+            : null);
+        oos.writeObject(recordMapperProvider instanceof Serializable
+            ? recordMapperProvider
+            : null);
+        oos.writeObject(recordUnmapperProvider instanceof Serializable
+            ? recordUnmapperProvider
+            : null);
+
         oos.writeObject(cloneSerializables(executeListenerProviders));
         oos.writeObject(cloneSerializables(recordListenerProviders));
         oos.writeObject(cloneSerializables(visitListenerProviders));
@@ -2418,13 +2066,21 @@ public class DefaultConfiguration extends AbstractConfiguration {
 
 
 
+        oos.writeObject(unwrapperProvider instanceof Serializable
+            ? unwrapperProvider
+            : null);
 
+        oos.writeObject(charsetProvider instanceof Serializable
+            ? charsetProvider
+            : null);
 
-        oos.writeObject(serializableOrNull(unwrapperProvider));
-        oos.writeObject(serializableOrNull(charsetProvider));
-        oos.writeObject(serializableOrNull(converterProvider));
-        oos.writeObject(serializableOrNull(formattingProvider));
-        oos.writeObject(serializableOrNull(subscriberProvider));
+        oos.writeObject(converterProvider instanceof Serializable
+            ? converterProvider
+            : null);
+
+        oos.writeObject(formattingProvider instanceof Serializable
+            ? formattingProvider
+            : null);
 
         // [#7062] Exclude reflection cache from serialisation
         for (Entry<Object, Object> entry : data.entrySet()) {
@@ -2441,11 +2097,7 @@ public class DefaultConfiguration extends AbstractConfiguration {
 
     private static final String END_OF_MAP_MARKER = "EOM";
 
-    private final Serializable serializableOrNull(Object o) {
-        return o instanceof Serializable s ? s : null;
-    }
-
-    private final <E> E[] cloneSerializables(E[] array) {
+    private <E> E[] cloneSerializables(E[] array) {
         E[] clone = array.clone();
 
         for (int i = 0; i < clone.length; i++)
@@ -2464,8 +2116,6 @@ public class DefaultConfiguration extends AbstractConfiguration {
         metaProvider = (MetaProvider) ois.readObject();
         commitProvider = (CommitProvider) ois.readObject();
         transactionProvider = (TransactionProvider) ois.readObject();
-        annotatedPojoMemberProvider = (AnnotatedPojoMemberProvider) ois.readObject();
-        constructorPropertiesProvider = (ConstructorPropertiesProvider) ois.readObject();
         recordMapperProvider = (RecordMapperProvider) ois.readObject();
         recordUnmapperProvider = (RecordUnmapperProvider) ois.readObject();
         executeListenerProviders = (ExecuteListenerProvider[]) ois.readObject();
@@ -2476,14 +2126,10 @@ public class DefaultConfiguration extends AbstractConfiguration {
 
 
 
-
-
-
         unwrapperProvider = (UnwrapperProvider) ois.readObject();
         charsetProvider = (CharsetProvider) ois.readObject();
         converterProvider = (ConverterProvider) ois.readObject();
         formattingProvider = (FormattingProvider) ois.readObject();
-        subscriberProvider = (SubscriberProvider<?>) ois.readObject();
         data = new ConcurrentHashMap<>();
 
         Object key;

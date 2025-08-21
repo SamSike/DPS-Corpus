@@ -16,18 +16,14 @@
  */
 package org.apache.camel.impl.converter;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import org.apache.camel.spi.TypeConverterRegistry;
 
 /**
  * A caching proxy
  */
-public class CachingInjector<T> {
+class CachingInjector<T> {
     private final TypeConverterRegistry repository;
     private final Class<T> type;
-    private final Lock lock = new ReentrantLock();
     private T instance;
 
     public CachingInjector(TypeConverterRegistry repository, Class<T> type) {
@@ -35,16 +31,11 @@ public class CachingInjector<T> {
         this.type = type;
     }
 
-    public T newInstance() {
-        lock.lock();
-        try {
-            if (instance == null) {
-                instance = createInstance(type);
-            }
-            return instance;
-        } finally {
-            lock.unlock();
+    public synchronized T newInstance() {
+        if (instance == null) {
+            instance = createInstance(type);
         }
+        return instance;
     }
 
     protected T createInstance(Class<T> t) {

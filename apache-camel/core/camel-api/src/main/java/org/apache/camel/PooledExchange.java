@@ -23,7 +23,7 @@ import org.apache.camel.spi.ExchangeFactory;
  * internally by Camel for optimizing memory footprint by reusing exchanges created by {@link Consumer}s via
  * {@link ExchangeFactory}.
  */
-public interface PooledExchange extends Exchange {
+public interface PooledExchange extends ExtendedExchange {
 
     /**
      * Task to execute when the exchange is done.
@@ -52,7 +52,6 @@ public interface PooledExchange extends Exchange {
      * <p/>
      * <b>Important:</b> This API is NOT intended for Camel end users, but used internally by Camel itself.
      */
-    @Deprecated(since = "4.4.0")
     void reset(long created);
 
     /**

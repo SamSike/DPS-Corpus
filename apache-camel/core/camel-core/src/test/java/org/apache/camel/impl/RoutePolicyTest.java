@@ -29,10 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class RoutePolicyTest extends ContextTestSupport {
-    private final MyRoutPolicy routePolicy = new MyRoutPolicy();
+    private MyRoutPolicy routePolicy = new MyRoutPolicy();
 
     @Test
-    public void testStartCalledWhenCamelStarts() {
+    public void testStartCalledWhenCamelStarts() throws Exception {
         assertEquals(1, routePolicy.getStartCount());
     }
 
@@ -84,7 +84,7 @@ public class RoutePolicyTest extends ContextTestSupport {
     }
 
     @Test
-    public void testRemoveCalledWhenCamelIsStopped() {
+    public void testRemoveCalledWhenCamelIsStopped() throws Exception {
         assertTrue(context.getStatus().isStarted());
         assertEquals(0, routePolicy.getRemoveCount());
         context.stop();
@@ -93,21 +93,21 @@ public class RoutePolicyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo").routePolicy(routePolicy).to("mock:result");
             }
         };
     }
 
-    private static class MyRoutPolicy implements RoutePolicy {
-        private final AtomicInteger removeCounter = new AtomicInteger();
-        private final AtomicInteger startCounter = new AtomicInteger();
-        private final AtomicInteger stopCounter = new AtomicInteger();
-        private final AtomicInteger suspendCounter = new AtomicInteger();
-        private final AtomicInteger resumeCounter = new AtomicInteger();
+    private class MyRoutPolicy implements RoutePolicy {
+        private AtomicInteger removeCounter = new AtomicInteger();
+        private AtomicInteger startCounter = new AtomicInteger();
+        private AtomicInteger stopCounter = new AtomicInteger();
+        private AtomicInteger suspendCounter = new AtomicInteger();
+        private AtomicInteger resumeCounter = new AtomicInteger();
 
         @Override
         public void onRemove(Route route) {

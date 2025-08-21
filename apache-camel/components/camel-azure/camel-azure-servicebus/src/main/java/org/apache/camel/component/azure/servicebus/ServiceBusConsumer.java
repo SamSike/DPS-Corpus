@@ -16,32 +16,37 @@
  */
 package org.apache.camel.component.azure.servicebus;
 
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import com.azure.messaging.servicebus.ServiceBusErrorContext;
-import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
-import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
-import com.azure.messaging.servicebus.models.DeadLetterOptions;
-import com.azure.messaging.servicebus.models.ServiceBusReceiveMode;
-import com.azure.messaging.servicebus.models.SubQueue;
+import com.azure.messaging.servicebus.ServiceBusReceiverAsyncClient;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
-import org.apache.camel.spi.HeaderFilterStrategy;
+import org.apache.camel.RuntimeCamelException;
+import org.apache.camel.component.azure.servicebus.client.ServiceBusClientFactory;
+import org.apache.camel.component.azure.servicebus.client.ServiceBusReceiverAsyncClientWrapper;
+import org.apache.camel.component.azure.servicebus.operations.ServiceBusReceiverOperations;
+import org.apache.camel.spi.Synchronization;
 import org.apache.camel.support.DefaultConsumer;
 import org.apache.camel.support.SynchronizationAdapter;
 import org.apache.camel.util.ObjectHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ServiceBusConsumer extends DefaultConsumer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceBusConsumer.class);
-    private ServiceBusProcessorClient client;
+    private Synchronization onCompletion;
+    private ServiceBusReceiverAsyncClientWrapper clientWrapper;
+    private ServiceBusReceiverOperations operations;
+
+    private final Map<ServiceBusConsumerOperationDefinition, Runnable> operationsToExecute = new HashMap<>();
+
+    {
+        bind(ServiceBusConsumerOperationDefinition.peekMessages, this::peekMessages);
+        bind(ServiceBusConsumerOperationDefinition.receiveMessages, this::receiveMessages);
+    }
 
     public ServiceBusConsumer(final ServiceBusEndpoint endpoint, final Processor processor) {
         super(endpoint, processor);
@@ -50,56 +55,36 @@ public class ServiceBusConsumer extends DefaultConsumer {
     @Override
     protected void doInit() throws Exception {
         super.doInit();
-        ServiceBusUtils.validateConfiguration(getConfiguration(), true);
+        onCompletion = new ConsumerOnCompletion();
     }
 
     @Override
     protected void doStart() throws Exception {
         super.doStart();
 
-        LOG.debug("Creating connection to Azure ServiceBus");
+        // create the client
+        final ServiceBusReceiverAsyncClient client = getConfiguration().getReceiverAsyncClient() != null
+                ? getConfiguration().getReceiverAsyncClient()
+                : ServiceBusClientFactory.createServiceBusReceiverAsyncClient(getConfiguration());
 
-        client = getConfiguration().getProcessorClient();
-        if (client == null) {
-            // create client as per sessions
-            if (Boolean.FALSE.equals(getConfiguration().isSessionEnabled())) {
-                client = getEndpoint().getServiceBusClientFactory().createServiceBusProcessorClient(getConfiguration(),
-                        this::processMessage, this::processError);
-            } else {
-                client = getEndpoint().getServiceBusClientFactory().createServiceBusSessionProcessorClient(getConfiguration(),
-                        this::processMessage, this::processError);
-            }
-        }
+        // create the wrapper
+        clientWrapper = new ServiceBusReceiverAsyncClientWrapper(client);
 
-        client.start();
-    }
+        // create the operations
+        operations = new ServiceBusReceiverOperations(clientWrapper);
 
-    private void processMessage(ServiceBusReceivedMessageContext messageContext) {
-        final ServiceBusReceivedMessage message = messageContext.getMessage();
-        final Exchange exchange = createServiceBusExchange(message);
-        final ConsumerOnCompletion onCompletion = new ConsumerOnCompletion(messageContext);
-        // add exchange callback
-        exchange.getExchangeExtension().addOnCompletion(onCompletion);
-        // use default consumer callback
-        AsyncCallback cb = defaultConsumerCallback(exchange, true);
-        getAsyncProcessor().process(exchange, cb);
-    }
+        // get the operation that we want to invoke
+        final ServiceBusConsumerOperationDefinition chosenOperation = getConfiguration().getConsumerOperation();
 
-    private void processError(ServiceBusErrorContext errorContext) {
-        final Exchange exchange = createServiceBusExchange(errorContext);
-
-        // log exception if an exception occurred and was not handled
-        if (exchange.getException() != null) {
-            getExceptionHandler().handleException("Error from Service Bus: " + errorContext.getErrorSource(), exchange,
-                    exchange.getException());
-        }
+        // invoke the operation and run it
+        invokeOperation(chosenOperation);
     }
 
     @Override
     protected void doStop() throws Exception {
-        if (client != null) {
+        if (clientWrapper != null) {
             // shutdown the client
-            client.close();
+            clientWrapper.close();
         }
 
         // shutdown camel consumer
@@ -115,10 +100,51 @@ public class ServiceBusConsumer extends DefaultConsumer {
         return (ServiceBusEndpoint) super.getEndpoint();
     }
 
-    private Exchange createServiceBusExchange(final ServiceBusErrorContext errorContext) {
-        final Exchange exchange = createExchange(true);
-        exchange.setException(errorContext.getException());
-        return exchange;
+    private void bind(final ServiceBusConsumerOperationDefinition operation, Runnable fn) {
+        operationsToExecute.put(operation, fn);
+    }
+
+    /**
+     * Entry method that selects the appropriate operation and executes it
+     */
+    private void invokeOperation(final ServiceBusConsumerOperationDefinition operation) {
+        final ServiceBusConsumerOperationDefinition operationsToInvoke;
+
+        if (ObjectHelper.isEmpty(operation)) {
+            operationsToInvoke = ServiceBusConsumerOperationDefinition.receiveMessages;
+        } else {
+            operationsToInvoke = operation;
+        }
+
+        final Runnable fnToInvoke = operationsToExecute.get(operationsToInvoke);
+
+        if (fnToInvoke != null) {
+            fnToInvoke.run();
+        } else {
+            throw new RuntimeCamelException("Operation not supported. Value: " + operationsToInvoke);
+        }
+    }
+
+    private void receiveMessages() {
+        operations.receiveMessages()
+                .subscribe(this::onEventListener, this::onErrorListener, () -> {
+                });
+    }
+
+    private void peekMessages() {
+        operations.peekMessages(getConfiguration().getPeekNumMaxMessages())
+                .subscribe(this::onEventListener, this::onErrorListener, () -> {
+                });
+    }
+
+    private void onEventListener(final ServiceBusReceivedMessage message) {
+        final Exchange exchange = createServiceBusExchange(message);
+
+        // add exchange callback
+        exchange.adapt(ExtendedExchange.class).addOnCompletion(onCompletion);
+        // use default consumer callback
+        AsyncCallback cb = defaultConsumerCallback(exchange, true);
+        getAsyncProcessor().process(exchange, cb);
     }
 
     private Exchange createServiceBusExchange(final ServiceBusReceivedMessage receivedMessage) {
@@ -153,54 +179,35 @@ public class ServiceBusConsumer extends DefaultConsumer {
         message.setHeader(ServiceBusConstants.TIME_TO_LIVE, receivedMessage.getTimeToLive());
         message.setHeader(ServiceBusConstants.TO, receivedMessage.getTo());
 
-        // propagate headers
-        final HeaderFilterStrategy headerFilterStrategy = getConfiguration().getHeaderFilterStrategy();
-        message.getHeaders().putAll(receivedMessage.getApplicationProperties().entrySet().stream()
-                .filter(entry -> !headerFilterStrategy.applyFilterToExternalHeaders(entry.getKey(), entry.getValue(), exchange))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        return exchange;
+    }
+
+    private void onErrorListener(final Throwable errorContext) {
+        final Exchange exchange = createServiceBusExchange(errorContext);
+
+        // log exception if an exception occurred and was not handled
+        if (exchange.getException() != null) {
+            getExceptionHandler().handleException("Error processing exchange", exchange,
+                    exchange.getException());
+        }
+    }
+
+    private Exchange createServiceBusExchange(final Throwable errorContext) {
+        final Exchange exchange = createExchange(true);
+
+        // set exception
+        exchange.setException(errorContext);
 
         return exchange;
     }
 
     private class ConsumerOnCompletion extends SynchronizationAdapter {
-        private final ServiceBusReceivedMessageContext messageContext;
-
-        private ConsumerOnCompletion(ServiceBusReceivedMessageContext messageContext) {
-            this.messageContext = messageContext;
-        }
-
-        @Override
-        public void onComplete(Exchange exchange) {
-            super.onComplete(exchange);
-            if (getConfiguration().getServiceBusReceiveMode() == ServiceBusReceiveMode.PEEK_LOCK) {
-                messageContext.complete();
-            }
-        }
 
         @Override
         public void onFailure(Exchange exchange) {
             final Exception cause = exchange.getException();
             if (cause != null) {
                 getExceptionHandler().handleException("Error during processing exchange.", exchange, cause);
-            }
-
-            if (getConfiguration().getServiceBusReceiveMode() == ServiceBusReceiveMode.PEEK_LOCK) {
-                if (getConfiguration().isEnableDeadLettering() && (ObjectHelper.isEmpty(getConfiguration().getSubQueue())
-                        || ObjectHelper.equal(getConfiguration().getSubQueue(), SubQueue.NONE))) {
-                    DeadLetterOptions deadLetterOptions = new DeadLetterOptions();
-                    if (cause != null) {
-                        deadLetterOptions
-                                .setDeadLetterReason(String.format("%s: %s", cause.getClass().getName(), cause.getMessage()));
-                        deadLetterOptions.setDeadLetterErrorDescription(Arrays.stream(cause.getStackTrace())
-                                .map(StackTraceElement::toString)
-                                .collect(Collectors.joining("\n")));
-                        messageContext.deadLetter(deadLetterOptions);
-                    } else {
-                        messageContext.deadLetter();
-                    }
-                } else {
-                    messageContext.abandon();
-                }
             }
         }
     }

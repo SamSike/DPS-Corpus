@@ -32,6 +32,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class RoasterJavaRestDslTest extends CamelTestSupport {
 
+    @Override
+    public boolean isDumpRouteCoverage() {
+        return false;
+    }
+
     @Test
     void parseRestConfiguration() throws Exception {
         JavaClassSource clazz = (JavaClassSource) Roaster

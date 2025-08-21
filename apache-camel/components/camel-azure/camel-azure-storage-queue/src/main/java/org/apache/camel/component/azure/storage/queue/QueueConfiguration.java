@@ -34,7 +34,6 @@ public class QueueConfiguration implements Cloneable {
     @UriPath
     private String queueName;
     @UriParam(label = "security")
-    @Metadata(autowired = true)
     private StorageSharedKeyCredential credentials;
     @UriParam(label = "security", secret = true)
     private String accessKey;
@@ -58,9 +57,6 @@ public class QueueConfiguration implements Cloneable {
     private String messageId;
     @UriParam(label = "queue")
     private String popReceipt;
-    @UriParam(label = "common", enums = "SHARED_ACCOUNT_KEY,SHARED_KEY_CREDENTIAL,AZURE_IDENTITY",
-              defaultValue = "SHARED_ACCOUNT_KEY")
-    private CredentialType credentialType;
 
     /**
      * Azure account name to be used for authentication with azure queue services
@@ -222,17 +218,6 @@ public class QueueConfiguration implements Cloneable {
 
     public void setPopReceipt(String popReceipt) {
         this.popReceipt = popReceipt;
-    }
-
-    public CredentialType getCredentialType() {
-        return credentialType;
-    }
-
-    /**
-     * Determines the credential strategy to adopt
-     */
-    public void setCredentialType(CredentialType credentialType) {
-        this.credentialType = credentialType;
     }
 
     // *************************************************

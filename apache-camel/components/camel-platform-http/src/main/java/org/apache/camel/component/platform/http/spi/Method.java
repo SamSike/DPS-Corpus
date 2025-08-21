@@ -16,29 +16,43 @@
  */
 package org.apache.camel.component.platform.http.spi;
 
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * An HTTP method.
  */
 public enum Method {
-    GET,
-    HEAD,
-    POST,
-    PUT,
-    DELETE,
-    TRACE,
-    OPTIONS,
-    CONNECT,
-    PATCH;
+    GET(false),
+    HEAD(false),
+    POST(true),
+    PUT(true),
+    DELETE(false),
+    TRACE(false),
+    OPTIONS(false),
+    CONNECT(false),
+    PATCH(
+          true);
 
-    private static final Set<Method> ALL = Collections.unmodifiableSet(EnumSet.allOf(Method.class));
+    private static final Set<Method> ALL = Collections.unmodifiableSet(new TreeSet<>(Arrays.asList(values())));
+    private final boolean canHaveBody;
+
+    private Method(boolean canHaveBody) {
+        this.canHaveBody = canHaveBody;
+    }
 
     public static Set<Method> getAll() {
         return ALL;
+    }
+
+    /**
+     * @return {@code true} if HTTP requests with this {@link Method} can have a body; {@code false} otherwise
+     */
+    public boolean canHaveBody() {
+        return canHaveBody;
     }
 
     /**
@@ -59,7 +73,7 @@ public enum Method {
         } else if (methods.length == 1) {
             return Collections.singleton(Method.valueOf(methods[0]));
         } else {
-            Set<Method> result = EnumSet.noneOf(Method.class);
+            Set<Method> result = new TreeSet<>();
             for (String method : methods) {
                 result.add(Method.valueOf(method.trim()));
             }

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,21 +37,11 @@
  */
 package org.jooq.impl;
 
-import static org.jooq.impl.Internal.converterContext;
-
 import org.jooq.Binding;
-import org.jooq.CharacterSet;
-import org.jooq.Collation;
 import org.jooq.Configuration;
 import org.jooq.Converter;
-import org.jooq.ConverterContext;
 import org.jooq.DataType;
 import org.jooq.Field;
-import org.jooq.Generator;
-import org.jooq.Nullability;
-import org.jooq.impl.QOM.GenerationLocation;
-import org.jooq.impl.QOM.GenerationOption;
-import org.jooq.ContextConverter;
 
 /**
  * @author Lukas Eder
@@ -62,10 +52,10 @@ import org.jooq.ContextConverter;
 @Deprecated
 final class LegacyConvertedDataType<T, U> extends DefaultDataType<U> {
 
-    private final AbstractDataTypeX<T> delegate;
+    private final DataType<T>           delegate;
 
     @SuppressWarnings("unchecked")
-    LegacyConvertedDataType(AbstractDataTypeX<T> delegate, Binding<? super T, U> binding) {
+    LegacyConvertedDataType(AbstractDataType<T> delegate, Binding<? super T, U> binding) {
         super(
             null,
             binding.converter().toType(),
@@ -81,45 +71,6 @@ final class LegacyConvertedDataType<T, U> extends DefaultDataType<U> {
         );
 
         this.delegate = delegate;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    DefaultDataType<U> construct(
-        Integer newPrecision,
-        Integer newScale,
-        Integer newLength,
-        Nullability newNullability,
-        boolean newHidden,
-        boolean newRedacted,
-        boolean newReadonly,
-        Generator<?, ?, U> newGeneratedAlwaysAs,
-        GenerationOption newGenerationOption,
-        GenerationLocation newGenerationLocation,
-        Collation newCollation,
-        CharacterSet newCharacterSet,
-        boolean newIdentity,
-        Field<U> newDefaultValue
-    ) {
-        return new LegacyConvertedDataType<>(
-            ((AbstractDataTypeX) delegate).construct(
-                newPrecision,
-                newScale,
-                newLength,
-                newNullability,
-                newHidden,
-                newRedacted,
-                newReadonly,
-                newGeneratedAlwaysAs,
-                newGenerationOption,
-                newGenerationLocation,
-                newCollation,
-                newCharacterSet,
-                newIdentity,
-                newDefaultValue
-            ),
-            (Binding<T, U>) getBinding()
-        );
     }
 
     @Override
@@ -139,24 +90,18 @@ final class LegacyConvertedDataType<T, U> extends DefaultDataType<U> {
 
     @SuppressWarnings("unchecked")
     @Override
-    final U convert(Object object, ConverterContext cc) {
+    public U convert(Object object) {
         if (getConverter().toType().isInstance(object))
             return (U) object;
 
         // [#3200] Try to convert arbitrary objects to T
         else
-            return ((ContextConverter<T, U>) getConverter()).from(delegate.convert(object, cc), cc);
+            return ((Converter<T, U>) getConverter()).from(delegate.convert(object));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public <X> DataType<X> asConvertedDataType(Converter<? super U, X> converter) {
         return super.asConvertedDataType(new ChainedConverterBinding(getBinding(), converter));
-    }
-
-    static final boolean isInstance(DataType<?> t) {
-        return t instanceof LegacyConvertedDataType
-            || t instanceof ArrayDataType && isInstance(((ArrayDataType<?>) t).getArrayComponentDataType())
-            || t instanceof DataTypeProxy && isInstance(((DataTypeProxy<?>) t).type());
     }
 }

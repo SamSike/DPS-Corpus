@@ -34,10 +34,10 @@ public class XsltIncludeRelativeNestedTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("file:src/test/data/?fileName=staff.xml&noop=true&initialDelay=0&delay=10")
                         .to("xslt:org/apache/camel/component/xslt/staff_include_relative_nested.xsl")
                         .to("log:foo").to("mock:result");

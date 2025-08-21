@@ -3,7 +3,9 @@
  * a PlatformTransactionManager for a single DataSource,
  * and various simple DataSource implementations.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jdbc.datasource;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

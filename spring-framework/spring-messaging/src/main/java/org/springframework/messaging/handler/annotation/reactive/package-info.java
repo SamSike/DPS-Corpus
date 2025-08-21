@@ -2,7 +2,9 @@
  * Support classes for working with annotated message-handling methods with
  * non-blocking, reactive contracts.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.messaging.handler.annotation.reactive;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

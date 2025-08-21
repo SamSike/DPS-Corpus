@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -50,7 +50,6 @@ import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
-import static org.jooq.conf.ParamType.INLINED;
 import static org.jooq.conf.RenderOptionalKeyword.ON;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.inlined;
@@ -90,12 +89,7 @@ import static org.jooq.impl.SQLDataType.TIMESTAMP;
 import static org.jooq.impl.Tools.castIfNeeded;
 
 import java.sql.Timestamp;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -108,10 +102,8 @@ import org.jooq.Function2;
 import org.jooq.Param;
 // ...
 import org.jooq.QueryPart;
-import org.jooq.SQL;
 import org.jooq.SQLDialect;
 import org.jooq.Typed;
-import org.jooq.conf.ParamType;
 import org.jooq.conf.TransformUnneededArithmeticExpressions;
 import org.jooq.exception.DataTypeException;
 import org.jooq.impl.QOM.UOperator2;
@@ -121,12 +113,7 @@ import org.jooq.types.Interval;
 import org.jooq.types.YearToMonth;
 import org.jooq.types.YearToSecond;
 
-final class Expression<T>
-extends
-    AbstractTransformable<T>
-implements
-    UOperator2<Field<T>, Field<?>, Expression<T>>
-{
+final class Expression<T> extends AbstractTransformable<T> implements UOperator2<Field<T>, Field<?>, Field<T>> {
     static final Set<SQLDialect>     HASH_OP_FOR_BIT_XOR    = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
     static final Set<SQLDialect>     SUPPORT_YEAR_TO_SECOND = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
 
@@ -219,11 +206,11 @@ implements
 
     @Override
     public final Field<T> transform(TransformUnneededArithmeticExpressions transform) {
-        return transform((UOperator2) this, lhs, operator, (Field<T>) rhs, internal, transform);
+        return transform((UOperator2<Field<T>, Field<T>, Field<T>>) (UOperator2) this, lhs, operator, (Field<T>) rhs, internal, transform);
     }
 
-    static final <T, R extends UOperator2<Field<T>, Field<T>, R>> Field<T> transform(
-        R expression,
+    static final <T> Field<T> transform(
+        UOperator2<Field<T>, Field<T>, Field<T>> expression,
         Field<T> lhs,
         ExpressionOperator operator,
         Field<T> rhs,
@@ -364,7 +351,7 @@ implements
 
         @Override
         public final void accept(Context<?> ctx) {
-            if (rhs.getDataType().getFromType() == YearToSecond.class && !SUPPORT_YEAR_TO_SECOND.contains(ctx.dialect()))
+            if (rhs.getType() == YearToSecond.class && !SUPPORT_YEAR_TO_SECOND.contains(ctx.dialect()))
                 acceptYTSExpression(ctx);
             else if (rhs.getDataType().isInterval())
                 acceptIntervalExpression(ctx);
@@ -403,7 +390,7 @@ implements
                     if (operator == SUBTRACT)
                         interval = interval.neg();
 
-                    if (rhs.getDataType().getFromType() == YearToMonth.class)
+                    if (rhs.getType() == YearToMonth.class)
                         ctx.visit(N_DATE_ADD).sql('(').visit(lhs).sql(", ").visit(K_INTERVAL).sql(' ')
                            .visit(Tools.field(interval, SQLDataType.VARCHAR)).sql(' ').visit(K_YEAR_MONTH).sql(')');
                     else if (family == CUBRID)
@@ -425,7 +412,7 @@ implements
                     if (needsCast)
                         ctx.visit(K_CAST).sql('(');
 
-                    if (rhs.getDataType().getFromType() == YearToMonth.class)
+                    if (rhs.getType() == YearToMonth.class)
                         ctx.sql("{fn ").visit(N_TIMESTAMPADD).sql('(').visit(N_SQL_TSI_MONTH).sql(", ")
                             .visit(p(sign * rhsAsYTM().intValue())).sql(", ").visit(lhs).sql(") }");
                     else
@@ -443,7 +430,7 @@ implements
                 }
 
                 case FIREBIRD: {
-                    if (rhs.getDataType().getFromType() == YearToMonth.class)
+                    if (rhs.getType() == YearToMonth.class)
                         ctx.visit(N_DATEADD).sql('(').visit(K_MONTH).sql(", ").visit(p(sign * rhsAsYTM().intValue())).sql(", ").visit(lhs).sql(')');
 
                     // [#10448] Firebird only supports adding integers
@@ -458,7 +445,7 @@ implements
                 }
 
                 case SQLITE: {
-                    boolean ytm = rhs.getDataType().getFromType() == YearToMonth.class;
+                    boolean ytm = rhs.getType() == YearToMonth.class;
                     Field<?> interval = p(ytm ? rhsAsYTM().intValue() : rhsAsDTS().getTotalSeconds());
 
                     if (sign < 0)
@@ -666,12 +653,6 @@ implements
 
 
 
-
-                case TRINO: {
-                    ctx.sql('(').visit(lhs).sql(' ').sql(operator.toSQL()).sql(' ').paramType(INLINED, c -> c.visit(rhs)).sql(')');
-                    break;
-                }
-
                 default:
                     ctx.sql('(').visit(lhs).sql(' ').sql(operator.toSQL()).sql(' ').visit(rhs).sql(')');
                     break;
@@ -792,10 +773,8 @@ implements
 
 
 
-                case DUCKDB:
                 case POSTGRES:
-                case YUGABYTEDB:
-                case TRINO: {
+                case YUGABYTEDB: {
 
                     // This seems to be the most reliable way to avoid issues
                     // with incompatible data types and timezones
@@ -882,79 +861,53 @@ implements
         }
     }
 
-    static final record Expr<Q extends QueryPart>(Q lhs, Q rhs) {}
+    static final /* record */ class Expr<Q extends QueryPart> { private final Q lhs; private final QueryPart op; private final Q rhs; public Expr(Q lhs, QueryPart op, Q rhs) { this.lhs = lhs; this.op = op; this.rhs = rhs; } public Q lhs() { return lhs; } public QueryPart op() { return op; } public Q rhs() { return rhs; } @Override public boolean equals(Object o) { if (!(o instanceof Expr)) return false; Expr other = (Expr) o; if (!java.util.Objects.equals(this.lhs, other.lhs)) return false; if (!java.util.Objects.equals(this.op, other.op)) return false; if (!java.util.Objects.equals(this.rhs, other.rhs)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.lhs, this.op, this.rhs); } @Override public String toString() { return new StringBuilder("Expr[").append("lhs=").append(this.lhs).append(", op=").append(this.op).append(", rhs=").append(this.rhs).append("]").toString(); } }
 
-    static enum Associativity {
-        BOTH,
-        LEFT,
-        RIGHT
+    @SuppressWarnings("unchecked")
+    static final <Q1 extends QueryPart, Q2 extends Q1> void acceptAssociative(
+        Context<?> ctx,
+        Q2 exp,
+        Function<? super Q2, ? extends Expr<Q1>> expProvider,
+        Consumer<? super Context<?>> formatSeparator
+    ) {
+        Expr<Q1> e = expProvider.apply(exp);
+        Class<Q2> expType = (Class<Q2>) exp.getClass();
+
+        // [#10665] Associativity is only given for two operands of the same data type
+        // [#12896] ... and if the feature is enabled
+        boolean associativity = (
+              e.lhs instanceof Typed && e.rhs instanceof Typed
+            ? ((Typed<?>) e.lhs).getDataType().equals(((Typed<?>) e.rhs).getDataType())
+            : true
+        ) && !ON.equals(ctx.settings().getRenderOptionalAssociativityParentheses());
+
+        acceptAssociative(ctx, associativity, e.lhs, e.op, expType, expProvider, formatSeparator);
+        formatSeparator.accept(ctx);
+        ctx.visit(e.op)
+           .sql(' ');
+        acceptAssociative(ctx, associativity, e.rhs, e.op, expType, expProvider, formatSeparator);
     }
 
     @SuppressWarnings("unchecked")
-    static final <Q1 extends QueryPart, Q2 extends UOperator2<Q1, Q1, Q2>> void acceptAssociative(
+    private static final <Q1 extends QueryPart, Q2 extends Q1> void acceptAssociative(
         Context<?> ctx,
-        Q2 exp,
-        QueryPart operator,
-        Consumer<? super Context<?>> formatSeparator,
-        Associativity associativity
+        boolean associativity,
+        Q1 q,
+        QueryPart op,
+        Class<Q2> expType,
+        Function<? super Q2, ? extends Expr<Q1>> expProvider,
+        Consumer<? super Context<?>> formatSeparator
     ) {
-        Class<Q2> expType = (Class<Q2>) exp.getClass();
+        if (associativity && expType.isInstance(q)) {
+            Expr<Q1> exp = expProvider.apply((Q2) q);
 
-        // [#16725] Run this associative operand flattening logic only if there are any nested expressions
-        if (!ON.equals(ctx.settings().getRenderOptionalAssociativityParentheses())
-            && (exp.$arg1().getClass() == expType || exp.$arg2().getClass() == expType)
-        ) {
-            Expr<Q1> e = new Expr<>(exp.$arg1(), exp.$arg2());
-            List<Q1> elements = new ArrayList<>();
-
-            // Effectively Deque<Q1|Expr<Q1>>
-            Deque<Object> queue = new ArrayDeque<>();
-            queue.push(e);
-
-            // [#14356] Iterative breadth first tree traversal trading stack space
-            //          for heap space to prevent StackOverflowError if tree is
-            //          10000+ elements deep
-            for (Object o; (o = queue.pollFirst()) != null;) {
-                if (o instanceof Expr) {
-                    Expr<Q1> p = (Expr<Q1>) o;
-
-                    // [#10665] Associativity is only given for two operands of the same data type
-                    // [#12896] ... and if the feature is enabled
-                    boolean a =
-                          p.lhs instanceof Typed && p.rhs instanceof Typed
-                        ? ((Typed<?>) p.lhs).getDataType().equals(((Typed<?>) p.rhs).getDataType())
-                        : true;
-
-                    // [#14356] Delay processing of RHS to emulate depth first traversal.
-                    if (a && associativity != Associativity.LEFT && expType.isInstance(p.rhs))
-                        queue.push(new Expr<>(((Q2) p.rhs).$arg1(), ((Q2) p.rhs).$arg2()));
-                    else
-                        queue.push(p.rhs);
-
-                    if (a && associativity != Associativity.RIGHT && expType.isInstance(p.lhs))
-                        queue.push(new Expr<>(((Q2) p.lhs).$arg1(), ((Q2) p.lhs).$arg2()));
-                    else
-                        elements.add(p.lhs);
-                }
-                else
-                    elements.add((Q1) o);
-            }
-
-            for (int i = 0; i < elements.size(); i++) {
-                if (i > 0) {
-                    formatSeparator.accept(ctx);
-                    ctx.visit(operator).sql(' ');
-                }
-
-                ctx.visit(elements.get(i));
+            if (op.equals(exp.op)) {
+                acceptAssociative(ctx, (Q2) q, expProvider, formatSeparator);
+                return;
             }
         }
-        else {
-            ctx.visit(exp.$arg1());
-            formatSeparator.accept(ctx);
-            ctx.visit(operator).sql(' ');
-            ctx.visit(exp.$arg2());
-        }
+
+        ctx.visit(q);
     }
 
     // -------------------------------------------------------------------------

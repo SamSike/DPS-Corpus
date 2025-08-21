@@ -33,28 +33,28 @@ public class FileConsumerRelativeFileNameTest extends ContextTestSupport {
 
         // the file name is also starting with filename-consumer
         template.sendBodyAndHeader(fileUri("filename-consumer"), "Hello World", Exchange.FILE_NAME,
-                testFile("filename-consumer-hello.txt").getFileName().toString());
+                testFile("filename-consumer-hello.txt").toString());
         template.sendBodyAndHeader(fileUri("filename-consumer"), "Bye World", Exchange.FILE_NAME,
-                testFile("filename-consumer-bye.txt").getFileName().toString());
+                testFile("filename-consumer-bye.txt").toString());
 
         context.getRouteController().startAllRoutes();
 
         assertMockEndpointsSatisfied();
 
         // and expect name to contain filename-consumer-XXX.txt
-        assertDirectoryEquals(testFile("filename-consumer-bye.txt").getFileName().toString(),
+        assertDirectoryEquals(testFile("filename-consumer-bye.txt").toString(),
                 mock.getReceivedExchanges().get(0).getIn().getHeader(Exchange.FILE_NAME, String.class));
-        assertDirectoryEquals(testFile("filename-consumer-hello.txt").getFileName().toString(),
+        assertDirectoryEquals(testFile("filename-consumer-hello.txt").toString(),
                 mock.getReceivedExchanges().get(1).getIn().getHeader(Exchange.FILE_NAME, String.class));
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("filename-consumer?initialDelay=0&delay=10&recursive=true&sortBy=file:name"))
-                        .autoStartup(false).to("mock:result");
+                        .noAutoStartup().to("mock:result");
             }
         };
     }

@@ -25,7 +25,6 @@ import org.quartz.Scheduler;
 import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -79,7 +78,7 @@ public class QuartzNameCollisionTest {
                 from("quartz://myGroup/myTimerName=0/2+*+*+*+*+?").to("log:two", "mock:two");
             }
         });
-        assertDoesNotThrow(() -> camel2.start());
+        camel2.start();
     }
 
     /**
@@ -103,8 +102,8 @@ public class QuartzNameCollisionTest {
                 from("quartz://myGroup/myTimerName?stateful=true").to("log:two", "mock:two");
             }
         });
+        camel2.start();
         // if no exception is thrown then this test passed.
-        assertDoesNotThrow(() -> camel2.start());
     }
 
     /**
@@ -122,17 +121,17 @@ public class QuartzNameCollisionTest {
         });
 
         // traverse a litany of states
-        assertDoesNotThrow(camel::start, "Start should have not thrown exception");
+        camel.start();
         Thread.sleep(100);
-        assertDoesNotThrow(camel::suspend, "Suspend should not have thrown exception");
+        camel.suspend();
         Thread.sleep(100);
-        assertDoesNotThrow(camel::resume, "Resume should not have thrown exception");
+        camel.resume();
         Thread.sleep(100);
-        assertDoesNotThrow(camel::stop, "Stop should not have thrown exception");
+        camel.stop();
         Thread.sleep(100);
-        assertDoesNotThrow(camel::start, "Start again should have thrown exception");
+        camel.start();
         Thread.sleep(100);
-        assertDoesNotThrow(camel::stop, "Final stop should have thrown exception");
+        camel.stop();
     }
 
     /**

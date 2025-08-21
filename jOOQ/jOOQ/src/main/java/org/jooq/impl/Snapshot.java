@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -44,7 +44,6 @@ import static org.jooq.impl.Tools.map;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Predicate;
 
 import org.jooq.Catalog;
 import org.jooq.Check;
@@ -53,15 +52,12 @@ import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Index;
 import org.jooq.Meta;
-// ...
 import org.jooq.Record;
 import org.jooq.Schema;
 import org.jooq.Sequence;
 import org.jooq.SortField;
-// ...
 import org.jooq.Table;
 import org.jooq.TableField;
-// ...
 import org.jooq.UDT;
 import org.jooq.UDTRecord;
 import org.jooq.UniqueKey;
@@ -82,16 +78,8 @@ final class Snapshot extends AbstractMeta {
 
         delegate = meta;
         getCatalogs();
-
-
-
         delegate = null;
         resolveReferences();
-    }
-
-    @Override
-    final AbstractMeta filtered0(Predicate<? super Catalog> catalogFilter, Predicate<? super Schema> schemaFilter) {
-        return this;
     }
 
     private final void resolveReferences() {
@@ -103,15 +91,6 @@ final class Snapshot extends AbstractMeta {
     final List<Catalog> getCatalogs0() throws DataAccessException {
         return map(delegate.getCatalogs(), SnapshotCatalog::new);
     }
-
-
-
-
-
-
-
-
-
 
     private class SnapshotCatalog extends CatalogImpl {
         private final List<SnapshotSchema> schemas;
@@ -139,10 +118,6 @@ final class Snapshot extends AbstractMeta {
         private final List<SnapshotSequence<?>> sequences;
         private final List<SnapshotUDT<?>>      udts;
 
-
-
-
-
         SnapshotSchema(SnapshotCatalog catalog, Schema schema) {
             super(schema.getQualifiedName(), catalog, schema.getCommentPart());
 
@@ -150,10 +125,6 @@ final class Snapshot extends AbstractMeta {
             tables = map(schema.getTables(), t -> new SnapshotTable<>(this, t));
             sequences = map(schema.getSequences(), s -> new SnapshotSequence<>(this, s));
             udts = map(schema.getUDTs(), u -> new SnapshotUDT<>(this, u));
-
-
-
-
         }
 
         final void resolveReferences() {
@@ -180,25 +151,11 @@ final class Snapshot extends AbstractMeta {
         public final List<UDT<?>> getUDTs() {
             return unmodifiableList(udts);
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 
     private class SnapshotDomain<T> extends DomainImpl<T> {
         SnapshotDomain(SnapshotSchema schema, Domain<T> domain) {
-            super(schema, domain.getQualifiedName(), domain.getCommentPart(), domain.getDataType(), domain.getChecks().toArray(EMPTY_CHECK));
+            super(schema, domain.getQualifiedName(), domain.getDataType(), domain.getChecks().toArray(EMPTY_CHECK));
         }
     }
 
@@ -209,13 +166,10 @@ final class Snapshot extends AbstractMeta {
         private final List<ForeignKey<R, ?>> foreignKeys;
         private final List<Check<R>>         checks;
 
-
-
-
         SnapshotTable(SnapshotSchema schema, Table<R> table) {
             super(table.getQualifiedName(), schema, null, null, table.getCommentPart(), table.getOptions());
 
-            for (Field<?> field : table.fieldsIncludingHidden().fields())
+            for (Field<?> field : table.fields())
                 createField(field.getUnqualifiedName(), field.getDataType(), this, field.getComment());
 
             indexes = map(table.getIndexes(), index -> new IndexImpl(
@@ -242,9 +196,6 @@ final class Snapshot extends AbstractMeta {
 
             foreignKeys = new ArrayList<>(table.getReferences());
             checks = new ArrayList<>(table.getChecks());
-
-
-
         }
 
         @SuppressWarnings("unchecked")
@@ -298,15 +249,6 @@ final class Snapshot extends AbstractMeta {
         public final List<Check<R>> getChecks() {
             return Collections.unmodifiableList(checks);
         }
-
-
-
-
-
-
-
-
-
     }
 
     private class SnapshotSequence<T extends Number> extends SequenceImpl<T> {
@@ -314,8 +256,8 @@ final class Snapshot extends AbstractMeta {
             super(
                 sequence.getQualifiedName(),
                 schema,
-                sequence.getCommentPart(),
                 sequence.getDataType(),
+                false,
                 sequence.getStartWith(),
                 sequence.getIncrementBy(),
                 sequence.getMinvalue(),
@@ -326,47 +268,9 @@ final class Snapshot extends AbstractMeta {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private class SnapshotUDT<R extends UDTRecord<R>> extends UDTImpl<R> {
         SnapshotUDT(SnapshotSchema schema, UDT<R> udt) {
-            super(udt.getUnqualifiedName(), schema, udt.getPackage(), udt.isSynthetic());
-
-            for (Field<?> field : udt.fields())
-                createField(field.getUnqualifiedName(), field.getDataType(), this, field.getCommentPart() != null ? field.getComment() : null);
+            super(udt.getName(), schema, udt.getPackage(), udt.isSynthetic());
         }
     }
 }

@@ -24,23 +24,8 @@ import jakarta.xml.bind.annotation.XmlType;
 @XmlEnum
 public enum BackslashEscaping {
 
-
-    /**
-     * Use the database's most sensible default value for ON (MySQL, MariaDB) / OFF (all other databases)
-     * 
-     */
     DEFAULT,
-
-    /**
-     * Always escape backslashes.
-     * 
-     */
     ON,
-
-    /**
-     * Never escape backslashes.
-     * 
-     */
     OFF;
 
     public String value() {

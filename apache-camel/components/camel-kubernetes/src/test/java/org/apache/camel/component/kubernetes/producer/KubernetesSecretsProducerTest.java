@@ -19,7 +19,6 @@ package org.apache.camel.component.kubernetes.producer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
@@ -55,43 +54,26 @@ public class KubernetesSecretsProducerTest extends KubernetesTestSupport {
         server.expect().withPath("/api/v1/secrets")
                 .andReturn(200, new SecretListBuilder().addNewItem().and().addNewItem().and().addNewItem().and().build())
                 .once();
-        server.expect().withPath("/api/v1/namespaces/test/secrets")
-                .andReturn(200, new SecretListBuilder().addNewItem().and().addNewItem().and().build())
-                .once();
         List<?> result = template.requestBody("direct:list", "", List.class);
-        assertEquals(3, result.size());
 
-        Exchange ex = template.request("direct:list",
-                exchange -> exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test"));
-        assertEquals(2, ex.getMessage().getBody(List.class).size());
+        assertEquals(3, result.size());
     }
 
     @Test
     void listByLabelsTest() throws Exception {
-        Map<String, String> labels = Map.of(
-                "key1", "value1",
-                "key2", "value2");
-
-        String urlEncodedLabels = toUrlEncoded(labels.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue())
-                .collect(Collectors.joining(",")));
-
-        server.expect().withPath("/api/v1/secrets?labelSelector=" + urlEncodedLabels)
+        server.expect().withPath("/api/v1/secrets?labelSelector=" + toUrlEncoded("key1=value1,key2=value2"))
                 .andReturn(200, new SecretListBuilder().addNewItem().and().addNewItem().and().addNewItem().and().build())
                 .once();
-        server.expect().withPath("/api/v1/namespaces/test/secrets?labelSelector=" + urlEncodedLabels)
-                .andReturn(200, new SecretListBuilder().addNewItem().and().addNewItem().and().build())
-                .once();
-        Exchange ex = template.request("direct:listByLabels",
-                exchange -> exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_SECRETS_LABELS, labels));
-
-        assertEquals(3, ex.getMessage().getBody(List.class).size());
-
-        ex = template.request("direct:listByLabels", exchange -> {
+        Exchange ex = template.request("direct:listByLabels", exchange -> {
+            Map<String, String> labels = new HashMap<>();
+            labels.put("key1", "value1");
+            labels.put("key2", "value2");
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_SECRETS_LABELS, labels);
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test");
         });
 
-        assertEquals(2, ex.getMessage().getBody(List.class).size());
+        List<?> result = ex.getMessage().getBody(List.class);
+
+        assertEquals(3, result.size());
     }
 
     @Test
@@ -126,35 +108,12 @@ public class KubernetesSecretsProducerTest extends KubernetesTestSupport {
     }
 
     @Test
-    void createSecretWithAnnotations() {
-        HashMap<String, String> annotations = new HashMap<>();
-        annotations.put("environment", "prod");
-        annotations.put("version", "v3");
-
-        Secret sc1 = new SecretBuilder().withNewMetadata().withName("sc1").withNamespace("test").withAnnotations(annotations)
-                .and().build();
-        server.expect().post().withPath("/api/v1/namespaces/test/secrets").andReturn(200, sc1).once();
-
-        Exchange ex = template.request("direct:createWithAnnotations", exchange -> {
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test");
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_SECRET, sc1);
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_SECRETS_ANNOTATIONS, annotations);
-        });
-
-        Secret result = ex.getMessage().getBody(Secret.class);
-
-        assertEquals("test", result.getMetadata().getNamespace());
-        assertEquals("sc1", result.getMetadata().getName());
-        assertEquals(annotations, result.getMetadata().getAnnotations());
-    }
-
-    @Test
-    void updateSecret() {
+    void replaceSecret() {
         Secret sc1 = new SecretBuilder().withNewMetadata().withName("sc1").withNamespace("test").and().build();
         server.expect().get().withPath("/api/v1/namespaces/test/secrets/sc1").andReturn(200, sc1).once();
         server.expect().put().withPath("/api/v1/namespaces/test/secrets/sc1").andReturn(200, sc1).once();
 
-        Exchange ex = template.request("direct:update", exchange -> {
+        Exchange ex = template.request("direct:replace", exchange -> {
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test");
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_SECRET, sc1);
         });
@@ -190,9 +149,7 @@ public class KubernetesSecretsProducerTest extends KubernetesTestSupport {
                         .to("kubernetes-secrets:///?kubernetesClient=#kubernetesClient&operation=listSecretsByLabels");
                 from("direct:get").to("kubernetes-secrets:///?kubernetesClient=#kubernetesClient&operation=getSecret");
                 from("direct:create").to("kubernetes-secrets:///?kubernetesClient=#kubernetesClient&operation=createSecret");
-                from("direct:createWithAnnotations")
-                        .to("kubernetes-secrets:///?kubernetesClient=#kubernetesClient&operation=createSecret");
-                from("direct:update").to("kubernetes-secrets:///?kubernetesClient=#kubernetesClient&operation=updateSecret");
+                from("direct:replace").to("kubernetes-secrets:///?kubernetesClient=#kubernetesClient&operation=replaceSecret");
                 from("direct:delete").to("kubernetes-secrets:///?kubernetesClient=#kubernetesClient&operation=deleteSecret");
             }
         };

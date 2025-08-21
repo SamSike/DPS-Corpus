@@ -413,7 +413,7 @@ public class QuickfixjEngineTest {
 
         quickfixjEngine = new QuickfixjEngine(
                 camelContext,
-                "quickfix:test", "examples/inprocess.qf.cfg");
+                "quickfix:test", "examples/inprocess.cfg");
 
         doLogonEventsTest(acceptorSessionID, initiatorSessionID, quickfixjEngine);
 

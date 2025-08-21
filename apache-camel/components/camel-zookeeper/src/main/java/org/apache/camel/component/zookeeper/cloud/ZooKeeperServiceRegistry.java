@@ -16,12 +16,15 @@
  */
 package org.apache.camel.component.zookeeper.cloud;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import com.fasterxml.jackson.annotation.JsonRootName;
 import org.apache.camel.cloud.ServiceDefinition;
 import org.apache.camel.component.zookeeper.ZooKeeperCuratorHelper;
 import org.apache.camel.impl.cloud.AbstractServiceRegistry;
@@ -34,7 +37,6 @@ import org.apache.curator.x.discovery.ServiceInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Deprecated
 public class ZooKeeperServiceRegistry extends AbstractServiceRegistry {
     private static final Logger LOGGER = LoggerFactory.getLogger(ZooKeeperServiceRegistry.class);
 
@@ -338,7 +340,7 @@ public class ZooKeeperServiceRegistry extends AbstractServiceRegistry {
             // add the serviceId to the list of known server
             serviceList.add(definition.getId());
         } catch (Exception e) {
-            LOGGER.warn("{}", e.getMessage(), e);
+            LOGGER.warn("", e);
         }
     }
 
@@ -361,7 +363,7 @@ public class ZooKeeperServiceRegistry extends AbstractServiceRegistry {
                 }
             }
         } catch (Exception e) {
-            LOGGER.warn("{}", e.getMessage(), e);
+            LOGGER.warn("", e);
         }
     }
 
@@ -379,4 +381,13 @@ public class ZooKeeperServiceRegistry extends AbstractServiceRegistry {
         return ObjectHelper.notNull(host, "service host");
     }
 
+    @JsonRootName("meta")
+    public static final class MetaData extends HashMap<String, String> {
+        public MetaData() {
+        }
+
+        public MetaData(Map<? extends String, ? extends String> meta) {
+            super(meta);
+        }
+    }
 }

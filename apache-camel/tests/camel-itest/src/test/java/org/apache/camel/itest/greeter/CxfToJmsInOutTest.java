@@ -24,17 +24,13 @@ import org.apache.camel.itest.utils.extensions.JmsServiceExtension;
 import org.apache.camel.test.AvailablePortFinder;
 import org.apache.camel.test.spring.junit5.CamelSpringTest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.api.parallel.Isolated;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Timeout(30)
-@Isolated
 @CamelSpringTest
 @ContextConfiguration
 public class CxfToJmsInOutTest {
@@ -44,7 +40,7 @@ public class CxfToJmsInOutTest {
     private static int port = AvailablePortFinder.getNextAvailable();
     static {
         //set them as system properties so Spring can use the property place holder
-        //things to set them into the URL's in the spring contexts
+        //things to set them into the URL's in the spring contexts 
         System.setProperty("CxfToJmsInOutTest.port", Integer.toString(port));
     }
 

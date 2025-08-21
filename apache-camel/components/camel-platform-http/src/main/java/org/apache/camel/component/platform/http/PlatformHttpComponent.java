@@ -16,9 +16,7 @@
  */
 package org.apache.camel.component.platform.http;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -27,6 +25,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.Consumer;
 import org.apache.camel.Endpoint;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Processor;
 import org.apache.camel.component.platform.http.spi.PlatformHttpEngine;
 import org.apache.camel.spi.FactoryFinder;
@@ -34,10 +33,9 @@ import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.RestApiConsumerFactory;
 import org.apache.camel.spi.RestConfiguration;
 import org.apache.camel.spi.RestConsumerFactory;
-import org.apache.camel.spi.RestOpenApiConsumerFactory;
 import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.CamelContextHelper;
-import org.apache.camel.support.HeaderFilterStrategyComponent;
+import org.apache.camel.support.DefaultComponent;
 import org.apache.camel.support.RestComponentHelper;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.FileUtil;
@@ -49,26 +47,17 @@ import org.slf4j.LoggerFactory;
  * Exposes HTTP endpoints leveraging the given platform's (SpringBoot, WildFly, Quarkus, ...) HTTP server.
  */
 @Component("platform-http")
-public class PlatformHttpComponent extends HeaderFilterStrategyComponent
-        implements RestConsumerFactory, RestApiConsumerFactory, RestOpenApiConsumerFactory {
-
+public class PlatformHttpComponent extends DefaultComponent implements RestConsumerFactory, RestApiConsumerFactory {
     private static final Logger LOG = LoggerFactory.getLogger(PlatformHttpComponent.class);
 
     @Metadata(label = "advanced", description = "An HTTP Server engine implementation to serve the requests")
     private volatile PlatformHttpEngine engine;
-    @Metadata(label = "advanced,consumer", defaultValue = "false",
-              description = "When Camel is complete processing the message, and the HTTP server is writing response. This option controls whether Camel"
-                            + " should catch any failure during writing response and store this on the Exchange, which allows onCompletion/UnitOfWork to"
-                            + " regard the Exchange as failed and have access to the caused exception from the HTTP server.")
-    private boolean handleWriteResponseError;
-    @Metadata(label = "advanced,consumer",
-              description = "The period in milliseconds after which the request should be timed out.")
-    private long requestTimeout;
 
     private final Set<HttpEndpointModel> httpEndpoints = new TreeSet<>();
-    private final Set<HttpEndpointModel> httpManagementEndpoints = new TreeSet<>();
-    private final List<PlatformHttpListener> listeners = new ArrayList<>();
+
     private volatile boolean localEngine;
+
+    private final Object lock = new Object();
 
     public PlatformHttpComponent() {
         this(null);
@@ -82,9 +71,6 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         PlatformHttpEndpoint endpoint = new PlatformHttpEndpoint(uri, remaining, this);
         endpoint.setPlatformHttpEngine(engine);
-        endpoint.setHandleWriteResponseError(handleWriteResponseError);
-        endpoint.setRequestTimeout(requestTimeout);
-        setEndpointHeaderFilterStrategy(endpoint);
         setProperties(endpoint, parameters);
         return endpoint;
     }
@@ -96,9 +82,10 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
             throws Exception {
 
         // reuse the createConsumer method we already have. The api need to use GET and match on uri prefix
-        return doCreateConsumer(camelContext, processor, "GET", contextPath, null, null, "application/json,text/yaml",
-                configuration,
-                parameters, true, true);
+        Consumer consumer = doCreateConsumer(camelContext, processor, "GET", contextPath, null, null, null, configuration,
+                parameters, true);
+        addHttpEndpoint(contextPath, "GET");
+        return consumer;
     }
 
     @Override
@@ -107,43 +94,31 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
             String uriTemplate,
             String consumes, String produces, RestConfiguration configuration, Map<String, Object> parameters)
             throws Exception {
-        return doCreateConsumer(camelContext, processor, verb, basePath, uriTemplate, consumes, produces, configuration,
-                parameters, false, true);
-    }
-
-    @Override
-    public Consumer createConsumer(
-            CamelContext camelContext, Processor processor, String contextPath, RestConfiguration configuration,
-            Map<String, Object> parameters)
-            throws Exception {
-        return doCreateConsumer(camelContext, processor, null, contextPath, null, null, null, configuration,
-                parameters, true, false);
+        Consumer consumer
+                = doCreateConsumer(camelContext, processor, verb, basePath, uriTemplate, consumes, produces, configuration,
+                        parameters, false);
+        if (uriTemplate != null) {
+            if (uriTemplate.startsWith("/")) {
+                addHttpEndpoint(basePath + uriTemplate, verb);
+            } else {
+                addHttpEndpoint(basePath + "/" + uriTemplate, verb);
+            }
+        } else {
+            addHttpEndpoint(basePath, verb);
+        }
+        return consumer;
     }
 
     /**
      * Adds a known http endpoint managed by this component.
      */
-    public void addHttpEndpoint(String uri, String verbs, String consumes, String produces, Consumer consumer) {
-        this.addHttpEndpoint(this.httpEndpoints, uri, verbs, consumes, produces, consumer);
-    }
-
-    /**
-     * Adds a known http management endpoint managed by this component.
-     */
-    public void addHttpManagementEndpoint(String uri, String verbs, String consumes, String produces, Consumer consumer) {
-        this.addHttpEndpoint(this.httpManagementEndpoints, uri, verbs, consumes, produces, consumer);
-    }
-
-    private void addHttpEndpoint(
-            Set<HttpEndpointModel> endpoints, String uri, String verbs, String consumes, String produces, Consumer consumer) {
-        HttpEndpointModel model = new HttpEndpointModel(uri, verbs, consumes, produces, consumer);
-        endpoints.add(model);
-        for (PlatformHttpListener listener : listeners) {
-            try {
-                listener.registerHttpEndpoint(model);
-            } catch (Exception e) {
-                LOG.warn("Error adding listener due to {}. This exception is ignored", e.getMessage(), e);
-            }
+    public void addHttpEndpoint(String uri, String verbs) {
+        HttpEndpointModel model = httpEndpoints.stream().filter(e -> e.getUri().equals(uri)).findFirst().orElse(null);
+        if (model == null) {
+            model = new HttpEndpointModel(uri, verbs);
+            httpEndpoints.add(model);
+        } else {
+            model.addVerb(verbs);
         }
     }
 
@@ -151,43 +126,7 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
      * Removes a known http endpoint managed by this component.
      */
     public void removeHttpEndpoint(String uri) {
-        this.removeHttpEndpoint(this.httpEndpoints, uri);
-    }
-
-    /**
-     * Removes a known http endpoint managed by this component.
-     */
-    public void removeHttpManagementEndpoint(String uri) {
-        this.removeHttpEndpoint(this.httpManagementEndpoints, uri);
-    }
-
-    private void removeHttpEndpoint(Set<HttpEndpointModel> endpoints, String uri) {
-        List<HttpEndpointModel> toRemove = new ArrayList<>();
-        endpoints.stream().filter(e -> e.getUri().equals(uri)).forEach(model -> {
-            toRemove.add(model);
-            for (PlatformHttpListener listener : listeners) {
-                try {
-                    listener.unregisterHttpEndpoint(model);
-                } catch (Exception e) {
-                    LOG.warn("Error removing listener due to {}. This exception is ignored", e.getMessage(), e);
-                }
-            }
-        });
-        toRemove.forEach(endpoints::remove);
-    }
-
-    /**
-     * Adds a {@link PlatformHttpListener} listener.
-     */
-    public void addPlatformHttpListener(PlatformHttpListener listener) {
-        this.listeners.add(listener);
-    }
-
-    /**
-     * Removes an existing {@link PlatformHttpListener} listener.
-     */
-    public void removePlatformHttpListener(PlatformHttpListener listener) {
-        this.listeners.remove(listener);
+        httpEndpoints.stream().filter(e -> e.getUri().equals(uri)).findFirst().ifPresent(httpEndpoints::remove);
     }
 
     /**
@@ -195,14 +134,6 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
      */
     public Set<HttpEndpointModel> getHttpEndpoints() {
         return Collections.unmodifiableSet(httpEndpoints);
-    }
-
-    /**
-     * Lists the known http management endpoints managed by this component. The endpoints are without
-     * host:port/[context-path]
-     */
-    public Set<HttpEndpointModel> getHttpManagementEndpoints() {
-        return Collections.unmodifiableSet(httpManagementEndpoints);
     }
 
     @Override
@@ -232,27 +163,10 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
         this.engine = engine;
     }
 
-    public boolean isHandleWriteResponseError() {
-        return handleWriteResponseError;
-    }
-
-    public void setHandleWriteResponseError(boolean handleWriteResponseError) {
-        this.handleWriteResponseError = handleWriteResponseError;
-    }
-
-    public long getRequestTimeout() {
-        return requestTimeout;
-    }
-
-    public void setRequestTimeout(long requestTimeout) {
-        this.requestTimeout = requestTimeout;
-    }
-
     private Consumer doCreateConsumer(
             CamelContext camelContext, Processor processor, String verb, String basePath,
             String uriTemplate,
-            String consumes, String produces, RestConfiguration configuration, Map<String, Object> parameters,
-            boolean api, boolean register)
+            String consumes, String produces, RestConfiguration configuration, Map<String, Object> parameters, boolean api)
             throws Exception {
 
         String path = basePath;
@@ -291,9 +205,8 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
         if (api) {
             map.put("matchOnUriPrefix", "true");
         }
-        if (verb != null) {
-            RestComponentHelper.addHttpRestrictParam(map, verb, cors);
-        }
+
+        RestComponentHelper.addHttpRestrictParam(map, verb, cors);
 
         String url = RestComponentHelper.createRestConsumerUrl("platform-http", path, map);
 
@@ -302,8 +215,7 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
         endpoint.setProduces(produces);
 
         // configure consumer properties
-        DefaultPlatformHttpConsumer consumer = endpoint.createConsumer(processor);
-        consumer.setRegister(register);
+        Consumer consumer = endpoint.createConsumer(processor);
         if (config.getConsumerProperties() != null && !config.getConsumerProperties().isEmpty()) {
             setProperties(camelContext, consumer, config.getConsumerProperties());
         }
@@ -313,8 +225,7 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
 
     PlatformHttpEngine getOrCreateEngine() {
         if (engine == null) {
-            lock.lock();
-            try {
+            synchronized (lock) {
                 if (engine == null) {
                     LOG.debug("Lookup platform http engine from registry");
 
@@ -325,7 +236,7 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
                         LOG.debug("Lookup platform http engine from factory");
 
                         engine = getCamelContext()
-                                .getCamelContextExtension()
+                                .adapt(ExtendedCamelContext.class)
                                 .getFactoryFinder(FactoryFinder.DEFAULT_PATH)
                                 .newInstance(PlatformHttpConstants.PLATFORM_HTTP_ENGINE_FACTORY, PlatformHttpEngine.class)
                                 .orElseThrow(() -> new IllegalStateException(
@@ -334,8 +245,6 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
                         localEngine = true;
                     }
                 }
-            } finally {
-                lock.unlock();
             }
         }
 

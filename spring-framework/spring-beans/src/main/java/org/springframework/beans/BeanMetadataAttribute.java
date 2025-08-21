@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,13 @@
 
 package org.springframework.beans;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 /**
  * Holder for a key-value style attribute that is part of a bean definition.
- *
- * <p>Keeps track of the definition source in addition to the key-value pair.
+ * Keeps track of the definition source in addition to the key-value pair.
  *
  * @author Juergen Hoeller
  * @since 2.5
@@ -33,13 +31,15 @@ public class BeanMetadataAttribute implements BeanMetadataElement {
 
 	private final String name;
 
-	private final @Nullable Object value;
+	@Nullable
+	private final Object value;
 
-	private @Nullable Object source;
+	@Nullable
+	private Object source;
 
 
 	/**
-	 * Create a new {@code AttributeValue} instance.
+	 * Create a new AttributeValue instance.
 	 * @param name the name of the attribute (never {@code null})
 	 * @param value the value of the attribute (possibly before type conversion)
 	 */
@@ -60,7 +60,8 @@ public class BeanMetadataAttribute implements BeanMetadataElement {
 	/**
 	 * Return the value of the attribute.
 	 */
-	public @Nullable Object getValue() {
+	@Nullable
+	public Object getValue() {
 		return this.value;
 	}
 
@@ -73,27 +74,34 @@ public class BeanMetadataAttribute implements BeanMetadataElement {
 	}
 
 	@Override
-	public @Nullable Object getSource() {
+	@Nullable
+	public Object getSource() {
 		return this.source;
 	}
 
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other ||(other instanceof BeanMetadataAttribute that &&
-				this.name.equals(that.name) &&
-				ObjectUtils.nullSafeEquals(this.value, that.value) &&
-				ObjectUtils.nullSafeEquals(this.source, that.source)));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof BeanMetadataAttribute)) {
+			return false;
+		}
+		BeanMetadataAttribute otherMa = (BeanMetadataAttribute) other;
+		return (this.name.equals(otherMa.name) &&
+				ObjectUtils.nullSafeEquals(this.value, otherMa.value) &&
+				ObjectUtils.nullSafeEquals(this.source, otherMa.source));
 	}
 
 	@Override
 	public int hashCode() {
-		return ObjectUtils.nullSafeHash(this.name, this.value);
+		return this.name.hashCode() * 29 + ObjectUtils.nullSafeHashCode(this.value);
 	}
 
 	@Override
 	public String toString() {
-		return "metadata attribute: name='" + this.name + "'; value=" + this.value;
+		return "metadata attribute '" + this.name + "'";
 	}
 
 }

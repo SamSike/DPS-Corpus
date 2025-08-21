@@ -18,54 +18,47 @@ package org.apache.camel.component.cassandra.integration;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.file.Paths;
 import java.time.Duration;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
-import org.apache.camel.CamelContext;
-import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.test.infra.cassandra.services.CassandraService;
-import org.apache.camel.test.infra.cassandra.services.CassandraServiceFactory;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.apache.camel.test.infra.core.annotations.RouteFixture;
-import org.apache.camel.test.infra.core.api.CamelTestSupportHelper;
-import org.apache.camel.test.infra.core.api.ConfigurableRoute;
-import org.apache.camel.util.IOHelper;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
+import org.apache.camel.test.infra.cassandra.services.CassandraLocalContainerService;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 
-public abstract class BaseCassandra implements ConfigurableRoute, CamelTestSupportHelper {
+public abstract class BaseCassandra extends CamelTestSupport {
 
-    @Order(1)
     @RegisterExtension
-    public static CassandraService service = CassandraServiceFactory.createLocalService("initScript.cql");
-
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
+    public static CassandraLocalContainerService service;
 
     public static final String KEYSPACE_NAME = "camel_ks";
     public static final String DATACENTER_NAME = "datacenter1";
 
-    protected CamelContext context = camelContextExtension.getContext();
-
     private CqlSession session;
 
-    @BeforeEach
-    public void executeScript() throws Exception {
+    static {
+        service = new CassandraLocalContainerService();
+
+        service.getContainer()
+                .withInitScript("initScript.cql")
+                .withNetworkAliases("cassandra");
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext context) throws Exception {
+        super.beforeEach(context);
+
         executeScript("BasicDataSet.cql");
     }
 
     public void executeScript(String pathToScript) throws IOException {
-        String s = IOHelper.stripLineComments(Paths.get("src/test/resources/" + pathToScript), "--", true);
+        String s = IOUtils.toString(getClass().getResourceAsStream("/" + pathToScript), "UTF-8");
         String[] statements = s.split(";");
         for (int i = 0; i < statements.length; i++) {
-            if (!statements[i].isBlank()) {
+            if (!statements[i].isEmpty()) {
                 executeCql(statements[i]);
             }
         }
@@ -75,8 +68,10 @@ public abstract class BaseCassandra implements ConfigurableRoute, CamelTestSuppo
         getSession().execute(cql);
     }
 
-    @AfterEach
+    @Override
     protected void doPostTearDown() throws Exception {
+        super.doPostTearDown();
+
         try {
             if (session != null) {
                 session.close();
@@ -104,22 +99,5 @@ public abstract class BaseCassandra implements ConfigurableRoute, CamelTestSuppo
 
     public String getUrl() {
         return service.getCQL3Endpoint();
-    }
-
-    protected abstract RouteBuilder createRouteBuilder();
-
-    @Override
-    @RouteFixture
-    public void createRouteBuilder(CamelContext context) throws Exception {
-        final RouteBuilder routeBuilder = createRouteBuilder();
-
-        if (routeBuilder != null) {
-            context.addRoutes(routeBuilder);
-        }
-    }
-
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
     }
 }

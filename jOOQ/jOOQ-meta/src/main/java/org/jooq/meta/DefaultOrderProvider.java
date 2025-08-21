@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -48,7 +48,7 @@ import java.util.Comparator;
  * reasonable, predictable way, according to these rules:
  * <p>
  * <ul>
- * <li><strong>Alphabetic when irrelevant</strong>:<br>
+ * <li><strong>Alphabetic when irrelevant</strong>:<br/>
  * When the order of objects within a parent is irrelevant, they are ordered
  * alphabetically. Such objects include:
  * <ul>
@@ -65,7 +65,7 @@ import java.util.Comparator;
  * <li>{@link SequenceDefinition} within {@link SchemaDefinition}</li>
  * </ul>
  * </li>
- * <li><strong>In given order when relevant</strong>:<br>
+ * <li><strong>In given order when relevant</strong>:<br/>
  * When the order of objects within a parent is relevant, and provided by the
  * database vendor, then that order is used. Such objects include:
  * <ul>

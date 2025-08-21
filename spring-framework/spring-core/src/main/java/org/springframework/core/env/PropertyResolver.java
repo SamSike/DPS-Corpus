@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package org.springframework.core.env;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Interface for resolving properties against any underlying source.
@@ -30,23 +30,24 @@ import org.jspecify.annotations.Nullable;
 public interface PropertyResolver {
 
 	/**
-	 * Determine whether the given property key is available for resolution
-	 * &mdash; for example, if the value for the given key is not {@code null}.
+	 * Return whether the given property key is available for resolution,
+	 * i.e. if the value for the given key is not {@code null}.
 	 */
 	boolean containsProperty(String key);
 
 	/**
-	 * Resolve the property value associated with the given key,
+	 * Return the property value associated with the given key,
 	 * or {@code null} if the key cannot be resolved.
 	 * @param key the property name to resolve
 	 * @see #getProperty(String, String)
 	 * @see #getProperty(String, Class)
 	 * @see #getRequiredProperty(String)
 	 */
-	@Nullable String getProperty(String key);
+	@Nullable
+	String getProperty(String key);
 
 	/**
-	 * Resolve the property value associated with the given key, or
+	 * Return the property value associated with the given key, or
 	 * {@code defaultValue} if the key cannot be resolved.
 	 * @param key the property name to resolve
 	 * @param defaultValue the default value to return if no value is found
@@ -56,16 +57,17 @@ public interface PropertyResolver {
 	String getProperty(String key, String defaultValue);
 
 	/**
-	 * Resolve the property value associated with the given key,
+	 * Return the property value associated with the given key,
 	 * or {@code null} if the key cannot be resolved.
 	 * @param key the property name to resolve
 	 * @param targetType the expected type of the property value
 	 * @see #getRequiredProperty(String, Class)
 	 */
-	<T> @Nullable T getProperty(String key, Class<T> targetType);
+	@Nullable
+	<T> T getProperty(String key, Class<T> targetType);
 
 	/**
-	 * Resolve the property value associated with the given key,
+	 * Return the property value associated with the given key,
 	 * or {@code defaultValue} if the key cannot be resolved.
 	 * @param key the property name to resolve
 	 * @param targetType the expected type of the property value
@@ -75,14 +77,14 @@ public interface PropertyResolver {
 	<T> T getProperty(String key, Class<T> targetType, T defaultValue);
 
 	/**
-	 * Resolve the property value associated with the given key (never {@code null}).
+	 * Return the property value associated with the given key (never {@code null}).
 	 * @throws IllegalStateException if the key cannot be resolved
 	 * @see #getRequiredProperty(String, Class)
 	 */
 	String getRequiredProperty(String key) throws IllegalStateException;
 
 	/**
-	 * Resolve the property value associated with the given key, converted to the given
+	 * Return the property value associated with the given key, converted to the given
 	 * targetType (never {@code null}).
 	 * @throws IllegalStateException if the given key cannot be resolved
 	 */

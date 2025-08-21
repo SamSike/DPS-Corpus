@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -73,15 +73,14 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     RecordType<R> recordType();
 
     /**
-     * Convenience method to fetch a value at a given position in the result,
-     * using {@link #field(Field)} for lookup.
+     * Convenience method to fetch a value at a given position in the result.
      *
      * @param <T> The value's field's generic type parameter
      * @param index The record's 0-based index in the record list
      * @param field The value's field
      * @return The value
      * @throws IndexOutOfBoundsException if the index is out of range (
-     *             <code>index &lt; 0 || index &gt;= size()</code>)
+     *             <tt>index &lt; 0 || index &gt;= size()</tt>)
      * @throws IllegalArgumentException If the argument field is not contained
      *             in {@link #fieldsRow()}
      */
@@ -94,7 +93,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @param fieldIndex The value's field index
      * @return The value
      * @throws IndexOutOfBoundsException if the index is out of range (
-     *             <code>index &lt; 0 || index &gt;= size()</code>)
+     *             <tt>index &lt; 0 || index &gt;= size()</tt>)
      * @throws IllegalArgumentException If the argument fieldIndex is not
      *             contained in {@link #fieldsRow()}
      */
@@ -102,14 +101,13 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Object getValue(int index, int fieldIndex) throws IndexOutOfBoundsException, IllegalArgumentException;
 
     /**
-     * Convenience method to fetch a value at a given position in the result,
-     * using {@link #field(String)} for lookup.
+     * Convenience method to fetch a value at a given position in the result.
      *
      * @param index The record's 0-based index in the record list
      * @param fieldName The value's field name
      * @return The value
      * @throws IndexOutOfBoundsException if the index is out of range (
-     *             <code>index &lt; 0 || index &gt;= size()</code>)
+     *             <tt>index &lt; 0 || index &gt;= size()</tt>)
      * @throws IllegalArgumentException If the argument fieldName is not
      *             contained in {@link #fieldsRow()}
      */
@@ -118,8 +116,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Convenience method to fetch all values for a given field. This is
-     * especially useful, when selecting only a single field, using
-     * {@link #field(Field)} for lookup.
+     * especially useful, when selecting only a single field.
      *
      * @param <T> The values' field's generic type parameter
      * @param field The values' field
@@ -132,8 +129,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Convenience method to fetch all values for a given field. This is
-     * especially useful, when selecting only a single field, using
-     * {@link #field(Field)} for lookup.
+     * especially useful, when selecting only a single field.
      * <p>
      * The {@link Converter} that is provided by
      * {@link Configuration#converterProvider()} will be used to convert the
@@ -151,8 +147,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Convenience method to fetch all values for a given field. This is
-     * especially useful, when selecting only a single field, using
-     * {@link #field(Field)} for lookup.
+     * especially useful, when selecting only a single field.
      *
      * @param field The values' field
      * @param converter The data type converter used for type conversion
@@ -162,8 +157,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             in {@link #fieldsRow()}
      */
     @NotNull
-    <T, U> List<U> getValues(Field<T> field, Converter<? super T, ? extends U> converter)
-        throws IllegalArgumentException;
+    <T, U> List<U> getValues(Field<T> field, Converter<? super T, ? extends U> converter) throws IllegalArgumentException;
 
     /**
      * Convenience method to fetch all values for a given field. This is
@@ -211,13 +205,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             that might have occurred
      */
     @NotNull
-    <U> List<U> getValues(int index, Converter<?, ? extends U> converter)
-        throws IllegalArgumentException, DataTypeException;
+    <U> List<U> getValues(int index, Converter<?, ? extends U> converter) throws IllegalArgumentException, DataTypeException;
 
     /**
      * Convenience method to fetch all values for a given field. This is
-     * especially useful, when selecting only a single field, using
-     * {@link #field(String)} for lookup.
+     * especially useful, when selecting only a single field.
      *
      * @param fieldName The values' field name
      * @return The values
@@ -229,8 +221,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Convenience method to fetch all values for a given field. This is
-     * especially useful, when selecting only a single field, using
-     * {@link #field(String)} for lookup.
+     * especially useful, when selecting only a single field.
      * <p>
      * The {@link Converter} that is provided by
      * {@link Configuration#converterProvider()} will be used to convert the
@@ -250,8 +241,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Convenience method to fetch all values for a given field. This is
-     * especially useful, when selecting only a single field, using
-     * {@link #field(String)} for lookup.
+     * especially useful, when selecting only a single field.
      *
      * @param fieldName The values' field name
      * @param converter The data type converter used for type conversion
@@ -263,13 +253,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             that might have occurred
      */
     @NotNull
-    <U> List<U> getValues(String fieldName, Converter<?, ? extends U> converter)
-        throws IllegalArgumentException, DataTypeException;
+    <U> List<U> getValues(String fieldName, Converter<?, ? extends U> converter) throws IllegalArgumentException, DataTypeException;
 
     /**
      * Convenience method to fetch all values for a given field. This is
-     * especially useful, when selecting only a single field, using
-     * {@link #field(Name)} for lookup.
+     * especially useful, when selecting only a single field.
      *
      * @param fieldName The values' field name
      * @return The values
@@ -281,8 +269,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Convenience method to fetch all values for a given field. This is
-     * especially useful, when selecting only a single field, using
-     * {@link #field(Name)} for lookup.
+     * especially useful, when selecting only a single field.
      * <p>
      * The {@link Converter} that is provided by
      * {@link Configuration#converterProvider()} will be used to convert the
@@ -302,8 +289,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Convenience method to fetch all values for a given field. This is
-     * especially useful, when selecting only a single field, using
-     * {@link #field(Name)} for lookup.
+     * especially useful, when selecting only a single field.
      *
      * @param fieldName The values' field name
      * @param converter The data type converter used for type conversion
@@ -315,8 +301,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             that might have occurred
      */
     @NotNull
-    <U> List<U> getValues(Name fieldName, Converter<?, ? extends U> converter)
-        throws IllegalArgumentException, DataTypeException;
+    <U> List<U> getValues(Name fieldName, Converter<?, ? extends U> converter) throws IllegalArgumentException, DataTypeException;
 
     /**
      * Whether there are any records contained in this <code>Result</code>.
@@ -348,7 +333,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with one of the result's columns as key and the
-     * corresponding records as value, using {@link #field(Field)} for lookup.
+     * corresponding records as value.
      * <p>
      * An {@link InvalidResultException} is thrown, if the key turns out to be
      * non-unique in the result set. Use {@link #intoGroups(Field)} instead, if
@@ -391,7 +376,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with one of the result's columns as key and the
-     * corresponding records as value, using {@link #field(String)} for lookup.
+     * corresponding records as value.
      * <p>
      * An {@link InvalidResultException} is thrown, if the key turns out to be
      * non-unique in the result set. Use {@link #intoGroups(String)} instead, if
@@ -412,7 +397,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with one of the result's columns as key and the
-     * corresponding records as value, using {@link #field(Name)} for lookup.
+     * corresponding records as value.
      * <p>
      * An {@link InvalidResultException} is thrown, if the key turns out to be
      * non-unique in the result set. Use {@link #intoGroups(Name)} instead, if
@@ -433,8 +418,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with one of the result's columns as key and another
-     * one of the result's columns as value, using {@link #field(Field)} for
-     * lookup.
+     * one of the result's columns as value
      * <p>
      * An {@link InvalidResultException} is thrown, if the key turns out to be
      * non-unique in the result set. Use {@link #intoGroups(Field, Field)}
@@ -480,8 +464,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with one of the result's columns as key and another
-     * one of the result's columns as value, using {@link #field(String)} for
-     * lookup.
+     * one of the result's columns as value
      * <p>
      * An {@link InvalidResultException} is thrown, if the key turns out to be
      * non-unique in the result set. Use {@link #intoGroups(String, String)}
@@ -499,13 +482,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             equal values from the result set.
      */
     @NotNull
-    Map<?, ?> intoMap(String keyFieldName, String valueFieldName)
-        throws IllegalArgumentException, InvalidResultException;
+    Map<?, ?> intoMap(String keyFieldName, String valueFieldName) throws IllegalArgumentException, InvalidResultException;
 
     /**
      * Return a {@link Map} with one of the result's columns as key and another
-     * one of the result's columns as value, using {@link #field(Name)} for
-     * lookup.
+     * one of the result's columns as value
      * <p>
      * An {@link InvalidResultException} is thrown, if the key turns out to be
      * non-unique in the result set. Use {@link #intoGroups(Name, Name)}
@@ -527,7 +508,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped
-     * into the given entity type, using {@link #field(Field)} for lookup.
+     * into the given entity type.
      * <p>
      * An {@link InvalidResultException} is thrown, if the key is non-unique in
      * the result set. Use {@link #intoGroups(Field, Class)} instead, if your
@@ -548,8 +529,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <K, E> Map<K, E> intoMap(Field<K> key, Class<? extends E> type)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <K, E> Map<K, E> intoMap(Field<K> key, Class<? extends E> type) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped
@@ -574,12 +554,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<?, E> intoMap(int keyFieldIndex, Class<? extends E> type)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E> Map<?, E> intoMap(int keyFieldIndex, Class<? extends E> type) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped
-     * into the given entity type, using {@link #field(String)} for lookup.
+     * into the given entity type.
      * <p>
      * An {@link InvalidResultException} is thrown, if the key is non-unique in
      * the result set. Use {@link #intoGroups(String, Class)} instead, if your
@@ -600,16 +579,15 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<?, E> intoMap(String keyFieldName, Class<? extends E> type)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E> Map<?, E> intoMap(String keyFieldName, Class<? extends E> type) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped
-     * into the given entity type, using {@link #field(Name)} for lookup.
+     * into the given entity type.
      * <p>
      * An {@link InvalidResultException} is thrown, if the key is non-unique in
-     * the result set. Use {@link #intoGroups(Name, Class)} instead, if your key
-     * is non-unique.
+     * the result set. Use {@link #intoGroups(Name, Class)} instead, if your
+     * key is non-unique.
      * <p>
      * The resulting map is iteration order preserving.
      *
@@ -626,12 +604,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<?, E> intoMap(Name keyFieldName, Class<? extends E> type)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E> Map<?, E> intoMap(Name keyFieldName, Class<? extends E> type) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped by
-     * the given mapper, using {@link #field(Field)} for lookup.
+     * the given mapper.
      * <p>
      * An {@link InvalidResultException} is thrown, if the key is non-unique in
      * the result set. Use {@link #intoGroups(Field, Class)} instead, if your
@@ -652,8 +629,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <K, E> Map<K, E> intoMap(Field<K> key, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <K, E> Map<K, E> intoMap(Field<K> key, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped by
@@ -678,16 +654,15 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<?, E> intoMap(int keyFieldIndex, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E> Map<?, E> intoMap(int keyFieldIndex, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped by
-     * the given mapper, using {@link #field(String)} for lookup.
+     * the given mapper.
      * <p>
      * An {@link InvalidResultException} is thrown, if the key is non-unique in
-     * the result set. Use {@link #intoGroups(String, Class)} instead, if your
-     * key is non-unique.
+     * the result set. Use {@link #intoGroups(String, Class)} instead, if your key
+     * is non-unique.
      * <p>
      * The resulting map is iteration order preserving.
      *
@@ -704,12 +679,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<?, E> intoMap(String keyFieldName, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E> Map<?, E> intoMap(String keyFieldName, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped by
-     * the given mapper, using {@link #field(Name)} for lookup.
+     * the given mapper.
      * <p>
      * An {@link InvalidResultException} is thrown, if the key is non-unique in
      * the result set. Use {@link #intoGroups(Name, Class)} instead, if your key
@@ -730,12 +704,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<?, E> intoMap(Name keyFieldName, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E> Map<?, E> intoMap(Name keyFieldName, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with the given keys as a map key and the
-     * corresponding record as value, using {@link #field(Field)} for lookup.
+     * corresponding record as value.
      * <p>
      * An {@link InvalidResultException} is thrown, if the keys are non-unique
      * in the result set. Use {@link #intoGroups(Field[])} instead, if your keys
@@ -780,7 +753,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with the given keys as a map key and the
-     * corresponding record as value, using {@link #field(String)} for lookup.
+     * corresponding record as value.
      * <p>
      * An {@link InvalidResultException} is thrown, if the keys are non-unique
      * in the result set. Use {@link #intoGroups(String[])} instead, if your
@@ -802,11 +775,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with the given keys as a map key and the
-     * corresponding record as value, using {@link #field(Name)} for lookup.
+     * corresponding record as value.
      * <p>
      * An {@link InvalidResultException} is thrown, if the keys are non-unique
-     * in the result set. Use {@link #intoGroups(Name[])} instead, if your keys
-     * are non-unique.
+     * in the result set. Use {@link #intoGroups(Name[])} instead, if your
+     * keys are non-unique.
      * <p>
      * The resulting map is iteration order preserving.
      *
@@ -824,11 +797,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with the given keys as a map key and the
-     * corresponding record as value, using {@link #field(Field)} for lookup.
+     * corresponding record as value.
      * <p>
      * An {@link InvalidResultException} is thrown, if the keys are non-unique
-     * in the result set. Use {@link #intoGroups(Field[], Field[])} instead, if
-     * your keys are non-unique.
+     * in the result set. Use {@link #intoGroups(Field[], Field[])} instead, if your keys
+     * are non-unique.
      * <p>
      * The resulting map is iteration order preserving.
      *
@@ -843,8 +816,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             set.
      */
     @NotNull
-    Map<Record, Record> intoMap(Field<?>[] keys, Field<?>[] values)
-        throws IllegalArgumentException, InvalidResultException;
+    Map<Record, Record> intoMap(Field<?>[] keys, Field<?>[] values) throws IllegalArgumentException, InvalidResultException;
 
     /**
      * Return a {@link Map} with the given keys as a map key and the
@@ -868,12 +840,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             set.
      */
     @NotNull
-    Map<Record, Record> intoMap(int[] keyFieldIndexes, int[] valueFieldIndexes)
-        throws IllegalArgumentException, InvalidResultException;
+    Map<Record, Record> intoMap(int[] keyFieldIndexes, int[] valueFieldIndexes) throws IllegalArgumentException, InvalidResultException;
 
     /**
      * Return a {@link Map} with the given keys as a map key and the
-     * corresponding record as value, using {@link #field(String)} for lookup.
+     * corresponding record as value.
      * <p>
      * An {@link InvalidResultException} is thrown, if the keys are non-unique
      * in the result set. Use {@link #intoGroups(String[], String[])} instead,
@@ -892,12 +863,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             set.
      */
     @NotNull
-    Map<Record, Record> intoMap(String[] keyFieldNames, String[] valueFieldNames)
-        throws IllegalArgumentException, InvalidResultException;
+    Map<Record, Record> intoMap(String[] keyFieldNames, String[] valueFieldNames) throws IllegalArgumentException, InvalidResultException;
 
     /**
      * Return a {@link Map} with the given keys as a map key and the
-     * corresponding record as value, using {@link #field(Name)} for lookup.
+     * corresponding record as value.
      * <p>
      * An {@link InvalidResultException} is thrown, if the keys are non-unique
      * in the result set. Use {@link #intoGroups(Name[], Name[])} instead, if
@@ -916,12 +886,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             set.
      */
     @NotNull
-    Map<Record, Record> intoMap(Name[] keyFieldNames, Name[] valueFieldNames)
-        throws IllegalArgumentException, InvalidResultException;
+    Map<Record, Record> intoMap(Name[] keyFieldNames, Name[] valueFieldNames) throws IllegalArgumentException, InvalidResultException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped
-     * into the given entity type, using {@link #field(Field)} for lookup.
+     * into the given entity type.
      * <p>
      * An {@link InvalidResultException} is thrown, if the keys are non-unique
      * in the result set. Use {@link #intoGroups(Field[], Class)} instead, if
@@ -943,8 +912,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<List<?>, E> intoMap(Field<?>[] keys, Class<? extends E> type)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E> Map<List<?>, E> intoMap(Field<?>[] keys, Class<? extends E> type) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped
@@ -971,16 +939,15 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<List<?>, E> intoMap(int[] keyFieldIndexes, Class<? extends E> type)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E> Map<List<?>, E> intoMap(int[] keyFieldIndexes, Class<? extends E> type) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped
-     * into the given entity type, using {@link #field(String)} for lookup.
+     * into the given entity type.
      * <p>
      * An {@link InvalidResultException} is thrown, if the keys are non-unique
-     * in the result set. Use {@link #intoGroups(String[], Class)} instead, if
-     * your keys are non-unique.
+     * in the result set. Use {@link #intoGroups(String[], Class)} instead, if your
+     * keys are non-unique.
      * <p>
      * The resulting map is iteration order preserving.
      *
@@ -998,16 +965,15 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<List<?>, E> intoMap(String[] keyFieldNames, Class<? extends E> type)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E> Map<List<?>, E> intoMap(String[] keyFieldNames, Class<? extends E> type) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped
-     * into the given entity type, using {@link #field(Name)} for lookup.
+     * into the given entity type.
      * <p>
      * An {@link InvalidResultException} is thrown, if the keys are non-unique
-     * in the result set. Use {@link #intoGroups(Name[], Class)} instead, if
-     * your keys are non-unique.
+     * in the result set. Use {@link #intoGroups(Name[], Class)} instead, if your
+     * keys are non-unique.
      * <p>
      * The resulting map is iteration order preserving.
      *
@@ -1025,12 +991,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<List<?>, E> intoMap(Name[] keyFieldNames, Class<? extends E> type)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E> Map<List<?>, E> intoMap(Name[] keyFieldNames, Class<? extends E> type) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped by
-     * the given mapper, using {@link #field(Field)} for lookup.
+     * the given mapper.
      * <p>
      * An {@link InvalidResultException} is thrown, if the keys are non-unique
      * in the result set. Use {@link #intoGroups(Field[], Class)} instead, if
@@ -1052,8 +1017,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<List<?>, E> intoMap(Field<?>[] keys, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E> Map<List<?>, E> intoMap(Field<?>[] keys, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped by
@@ -1080,12 +1044,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<List<?>, E> intoMap(int[] keyFieldIndexes, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E> Map<List<?>, E> intoMap(int[] keyFieldIndexes, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped by
-     * the given mapper, using {@link #field(String)} for lookup.
+     * the given mapper.
      * <p>
      * An {@link InvalidResultException} is thrown, if the keys are non-unique
      * in the result set. Use {@link #intoGroups(String[], Class)} instead, if
@@ -1107,12 +1070,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<List<?>, E> intoMap(String[] keyFieldNames, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E> Map<List<?>, E> intoMap(String[] keyFieldNames, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped by
-     * the given mapper, using {@link #field(Name)} for lookup.
+     * the given mapper.
      * <p>
      * An {@link InvalidResultException} is thrown, if the keys are non-unique
      * in the result set. Use {@link #intoGroups(Name[], Class)} instead, if
@@ -1134,8 +1096,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<List<?>, E> intoMap(Name[] keyFieldNames, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E> Map<List<?>, E> intoMap(Name[] keyFieldNames, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key entity.
@@ -1187,8 +1148,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <K, V> Map<K, V> intoMap(Class<? extends K> keyType, Class<? extends V> valueType)
-        throws MappingException, InvalidResultException;
+    <K, V> Map<K, V> intoMap(Class<? extends K> keyType, Class<? extends V> valueType) throws MappingException, InvalidResultException;
 
     /**
      * Return a {@link Map} with results grouped by the given key entity and
@@ -1215,8 +1175,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <K, V> Map<K, V> intoMap(Class<? extends K> keyType, RecordMapper<? super R, V> valueMapper)
-        throws InvalidResultException, MappingException;
+    <K, V> Map<K, V> intoMap(Class<? extends K> keyType, RecordMapper<? super R, V> valueMapper) throws InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key entity and
@@ -1267,8 +1226,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <K, V> Map<K, V> intoMap(RecordMapper<? super R, K> keyMapper, Class<V> valueType)
-        throws InvalidResultException, MappingException;
+    <K, V> Map<K, V> intoMap(RecordMapper<? super R, K> keyMapper, Class<V> valueType) throws InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key entity and
@@ -1294,8 +1252,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <K, V> Map<K, V> intoMap(RecordMapper<? super R, K> keyMapper, RecordMapper<? super R, V> valueMapper)
-        throws InvalidResultException, MappingException;
+    <K, V> Map<K, V> intoMap(RecordMapper<? super R, K> keyMapper, RecordMapper<? super R, V> valueMapper) throws InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with the given key table as a map key and the
@@ -1338,8 +1295,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             set.
      */
     @NotNull
-    <S extends Record, T extends Record> Map<S, T> intoMap(Table<S> keyTable, Table<T> valueTable)
-        throws IllegalArgumentException, InvalidResultException;
+    <S extends Record, T extends Record> Map<S, T> intoMap(Table<S> keyTable, Table<T> valueTable) throws IllegalArgumentException, InvalidResultException;
 
     /**
      * Return a {@link Map} with results grouped by the given key table and
@@ -1364,8 +1320,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E, S extends Record> Map<S, E> intoMap(Table<S> table, Class<? extends E> type)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E, S extends Record> Map<S, E> intoMap(Table<S> table, Class<? extends E> type) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key table and
@@ -1390,13 +1345,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E, S extends Record> Map<S, E> intoMap(Table<S> table, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, InvalidResultException, MappingException;
+    <E, S extends Record> Map<S, E> intoMap(Table<S> table, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, InvalidResultException, MappingException;
 
     /**
      * Return a {@link Map} with one of the result's columns as key and a list
-     * of corresponding records as value, using {@link #field(Field)} for
-     * lookup.
+     * of corresponding records as value.
      * <p>
      * Unlike {@link #intoMap(Field)}, this method allows for non-unique keys in
      * the result set.
@@ -1431,11 +1384,10 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with one of the result's columns as key and a list
-     * of corresponding records as value, using {@link #field(String)} for
-     * lookup.
+     * of corresponding records as value.
      * <p>
-     * Unlike {@link #intoMap(String)}, this method allows for non-unique keys
-     * in the result set.
+     * Unlike {@link #intoMap(String)}, this method allows for non-unique keys in
+     * the result set.
      * <p>
      * The resulting map is iteration order preserving.
      *
@@ -1449,7 +1401,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with one of the result's columns as key and a list
-     * of corresponding records as value, using {@link #field(Name)} for lookup.
+     * of corresponding records as value.
      * <p>
      * Unlike {@link #intoMap(Name)}, this method allows for non-unique keys in
      * the result set.
@@ -1466,8 +1418,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with one of the result's columns as key and another
-     * one of the result's columns as value, using {@link #field(Field)} for
-     * lookup.
+     * one of the result's columns as value.
      * <p>
      * Unlike {@link #intoMap(Field, Field)}, this method allows for non-unique
      * keys in the result set.
@@ -1505,8 +1456,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with one of the result's columns as key and another
-     * one of the result's columns as value, using {@link #field(String)} for
-     * lookup.
+     * one of the result's columns as value.
      * <p>
      * Unlike {@link #intoMap(String, String)}, this method allows for
      * non-unique keys in the result set.
@@ -1524,11 +1474,10 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with one of the result's columns as key and another
-     * one of the result's columns as value, using {@link #field(Name)} for
-     * lookup.
+     * one of the result's columns as value.
      * <p>
-     * Unlike {@link #intoMap(Name, Name)}, this method allows for non-unique
-     * keys in the result set.
+     * Unlike {@link #intoMap(Name, Name)}, this method allows for
+     * non-unique keys in the result set.
      * <p>
      * The resulting map is iteration order preserving.
      *
@@ -1543,10 +1492,10 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped
-     * into the given entity type, using {@link #field(Field)} for lookup.
+     * into the given entity type.
      * <p>
-     * Unlike {@link #intoMap(Field, Class)}, this method allows for non-unique
-     * keys in the result set.
+     * Unlike {@link #intoMap(Field, Class)}, this method allows for
+     * non-unique keys in the result set.
      * <p>
      * The resulting map is iteration order preserving.
      *
@@ -1561,15 +1510,14 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <K, E> Map<K, List<E>> intoGroups(Field<K> key, Class<? extends E> type)
-        throws IllegalArgumentException, MappingException;
+    <K, E> Map<K, List<E>> intoGroups(Field<K> key, Class<? extends E> type) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped
      * into the given entity type.
      * <p>
-     * Unlike {@link #intoMap(int, Class)}, this method allows for non-unique
-     * keys in the result set.
+     * Unlike {@link #intoMap(int, Class)}, this method allows for
+     * non-unique keys in the result set.
      * <p>
      * The resulting map is iteration order preserving.
      *
@@ -1582,15 +1530,14 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<?, List<E>> intoGroups(int keyFieldIndex, Class<? extends E> type)
-        throws IllegalArgumentException, MappingException;
+    <E> Map<?, List<E>> intoGroups(int keyFieldIndex, Class<? extends E> type) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped
-     * into the given entity type, using {@link #field(String)} for lookup.
+     * into the given entity type.
      * <p>
-     * Unlike {@link #intoMap(String, Class)}, this method allows for non-unique
-     * keys in the result set.
+     * Unlike {@link #intoMap(String, Class)}, this method allows for
+     * non-unique keys in the result set.
      * <p>
      * The resulting map is iteration order preserving.
      *
@@ -1603,15 +1550,14 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<?, List<E>> intoGroups(String keyFieldName, Class<? extends E> type)
-        throws IllegalArgumentException, MappingException;
+    <E> Map<?, List<E>> intoGroups(String keyFieldName, Class<? extends E> type) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped
-     * into the given entity type, using {@link #field(Name)} for lookup.
+     * into the given entity type.
      * <p>
-     * Unlike {@link #intoMap(Name, Class)}, this method allows for non-unique
-     * keys in the result set.
+     * Unlike {@link #intoMap(Name, Class)}, this method allows for
+     * non-unique keys in the result set.
      * <p>
      * The resulting map is iteration order preserving.
      *
@@ -1624,12 +1570,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<?, List<E>> intoGroups(Name keyFieldName, Class<? extends E> type)
-        throws IllegalArgumentException, MappingException;
+    <E> Map<?, List<E>> intoGroups(Name keyFieldName, Class<? extends E> type) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped by
-     * the given mapper, using {@link #field(Field)} for lookup.
+     * the given mapper.
      * <p>
      * Unlike {@link #intoMap(Field, RecordMapper)}, this method allows for
      * non-unique keys in the result set.
@@ -1646,8 +1591,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             exception that might have occurred while mapping records
      */
     @NotNull
-    <K, E> Map<K, List<E>> intoGroups(Field<K> key, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, MappingException;
+    <K, E> Map<K, List<E>> intoGroups(Field<K> key, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped by
@@ -1666,12 +1610,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             exception that might have occurred while mapping records
      */
     @NotNull
-    <E> Map<?, List<E>> intoGroups(int keyFieldIndex, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, MappingException;
+    <E> Map<?, List<E>> intoGroups(int keyFieldIndex, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped by
-     * the given mapper, using {@link #field(String)} for lookup.
+     * the given mapper.
      * <p>
      * Unlike {@link #intoMap(String, RecordMapper)}, this method allows for
      * non-unique keys in the result set.
@@ -1686,12 +1629,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             exception that might have occurred while mapping records
      */
     @NotNull
-    <E> Map<?, List<E>> intoGroups(String keyFieldName, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, MappingException;
+    <E> Map<?, List<E>> intoGroups(String keyFieldName, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key and mapped by
-     * the given mapper, using {@link #field(Name)} for lookup.
+     * the given mapper.
      * <p>
      * Unlike {@link #intoMap(Name, RecordMapper)}, this method allows for
      * non-unique keys in the result set.
@@ -1706,12 +1648,10 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             exception that might have occurred while mapping records
      */
     @NotNull
-    <E> Map<?, List<E>> intoGroups(Name keyFieldName, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, MappingException;
+    <E> Map<?, List<E>> intoGroups(Name keyFieldName, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, MappingException;
 
     /**
-     * Return a {@link Map} with the result grouped by the given keys, using
-     * {@link #field(Field)} for lookup.
+     * Return a {@link Map} with the result grouped by the given keys.
      * <p>
      * Unlike {@link #intoMap(Field[])}, this method allows for non-unique keys
      * in the result set.
@@ -1746,8 +1686,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Map<Record, Result<R>> intoGroups(int[] keyFieldIndexes) throws IllegalArgumentException;
 
     /**
-     * Return a {@link Map} with the result grouped by the given keys, using
-     * {@link #field(String)} for lookup.
+     * Return a {@link Map} with the result grouped by the given keys.
      * <p>
      * Unlike {@link #intoMap(String[])}, this method allows for non-unique keys
      * in the result set.
@@ -1764,8 +1703,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Map<Record, Result<R>> intoGroups(String[] keyFieldNames) throws IllegalArgumentException;
 
     /**
-     * Return a {@link Map} with the result grouped by the given keys, using
-     * {@link #field(Name)} for lookup.
+     * Return a {@link Map} with the result grouped by the given keys.
      * <p>
      * Unlike {@link #intoMap(Name[])}, this method allows for non-unique keys
      * in the result set.
@@ -1782,8 +1720,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Map<Record, Result<R>> intoGroups(Name[] keyFieldNames) throws IllegalArgumentException;
 
     /**
-     * Return a {@link Map} with the result grouped by the given keys, using
-     * {@link #field(Field)} for lookup.
+     * Return a {@link Map} with the result grouped by the given keys.
      * <p>
      * Unlike {@link #intoMap(Field[], Field[])}, this method allows for
      * non-unique keys in the result set.
@@ -1817,15 +1754,13 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             not contained in {@link #fieldsRow()}
      */
     @NotNull
-    Map<Record, Result<Record>> intoGroups(int[] keyFieldIndexes, int[] valueFieldIndexes)
-        throws IllegalArgumentException;
+    Map<Record, Result<Record>> intoGroups(int[] keyFieldIndexes, int[] valueFieldIndexes) throws IllegalArgumentException;
 
     /**
-     * Return a {@link Map} with the result grouped by the given keys, using
-     * {@link #field(String)} for lookup.
+     * Return a {@link Map} with the result grouped by the given keys.
      * <p>
-     * Unlike {@link #intoMap(String[], String[])}, this method allows for
-     * non-unique keys in the result set.
+     * Unlike {@link #intoMap(String[], String[])}, this method allows for non-unique keys
+     * in the result set.
      * <p>
      * The resulting map is iteration order preserving.
      *
@@ -1837,12 +1772,10 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             not contained in {@link #fieldsRow()}
      */
     @NotNull
-    Map<Record, Result<Record>> intoGroups(String[] keyFieldNames, String[] valueFieldNames)
-        throws IllegalArgumentException;
+    Map<Record, Result<Record>> intoGroups(String[] keyFieldNames, String[] valueFieldNames) throws IllegalArgumentException;
 
     /**
-     * Return a {@link Map} with the result grouped by the given keys, using
-     * {@link #field(Name)} for lookup.
+     * Return a {@link Map} with the result grouped by the given keys.
      * <p>
      * Unlike {@link #intoMap(Name[], Name[])}, this method allows for
      * non-unique keys in the result set.
@@ -1857,12 +1790,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             not contained in {@link #fieldsRow()}
      */
     @NotNull
-    Map<Record, Result<Record>> intoGroups(Name[] keyFieldNames, Name[] valueFieldNames)
-        throws IllegalArgumentException;
+    Map<Record, Result<Record>> intoGroups(Name[] keyFieldNames, Name[] valueFieldNames) throws IllegalArgumentException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped
-     * into the given entity type, using {@link #field(Field)} for lookup.
+     * into the given entity type.
      * <p>
      * Unlike {@link #intoMap(Field[], Class)}, this method allows for
      * non-unique keys in the result set.
@@ -1880,8 +1812,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<Record, List<E>> intoGroups(Field<?>[] keys, Class<? extends E> type)
-        throws IllegalArgumentException, MappingException;
+    <E> Map<Record, List<E>> intoGroups(Field<?>[] keys, Class<? extends E> type) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped
@@ -1904,12 +1835,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<Record, List<E>> intoGroups(int[] keyFieldIndexes, Class<? extends E> type)
-        throws IllegalArgumentException, MappingException;
+    <E> Map<Record, List<E>> intoGroups(int[] keyFieldIndexes, Class<? extends E> type) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped
-     * into the given entity type, using {@link #field(String)} for lookup.
+     * into the given entity type.
      * <p>
      * Unlike {@link #intoMap(String[], Class)}, this method allows for
      * non-unique keys in the result set.
@@ -1927,15 +1857,14 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<Record, List<E>> intoGroups(String[] keyFieldNames, Class<? extends E> type)
-        throws IllegalArgumentException, MappingException;
+    <E> Map<Record, List<E>> intoGroups(String[] keyFieldNames, Class<? extends E> type) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped
-     * into the given entity type, using {@link #field(Name)} for lookup.
+     * into the given entity type.
      * <p>
-     * Unlike {@link #intoMap(Name[], Class)}, this method allows for non-unique
-     * keys in the result set.
+     * Unlike {@link #intoMap(Name[], Class)}, this method allows for
+     * non-unique keys in the result set.
      * <p>
      * The resulting map is iteration order preserving.
      *
@@ -1950,12 +1879,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<Record, List<E>> intoGroups(Name[] keyFieldNames, Class<? extends E> type)
-        throws IllegalArgumentException, MappingException;
+    <E> Map<Record, List<E>> intoGroups(Name[] keyFieldNames, Class<? extends E> type) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped
-     * into the given entity type, using {@link #field(Field)} for lookup.
+     * into the given entity type.
      * <p>
      * Unlike {@link #intoMap(Field[], RecordMapper)}, this method allows for
      * non-unique keys in the result set.
@@ -1973,8 +1901,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<Record, List<E>> intoGroups(Field<?>[] keys, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, MappingException;
+    <E> Map<Record, List<E>> intoGroups(Field<?>[] keys, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped
@@ -1997,12 +1924,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<Record, List<E>> intoGroups(int[] keyFieldIndexes, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, MappingException;
+    <E> Map<Record, List<E>> intoGroups(int[] keyFieldIndexes, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped
-     * into the given entity type, using {@link #field(String)} for lookup.
+     * into the given entity type.
      * <p>
      * Unlike {@link #intoMap(String[], RecordMapper)}, this method allows for
      * non-unique keys in the result set.
@@ -2020,12 +1946,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<Record, List<E>> intoGroups(String[] keyFieldNames, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, MappingException;
+    <E> Map<Record, List<E>> intoGroups(String[] keyFieldNames, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given keys and mapped
-     * into the given entity type, using {@link #field(Name)} for lookup.
+     * into the given entity type.
      * <p>
      * Unlike {@link #intoMap(Name[], RecordMapper)}, this method allows for
      * non-unique keys in the result set.
@@ -2043,8 +1968,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E> Map<Record, List<E>> intoGroups(Name[] keyFieldNames, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, MappingException;
+    <E> Map<Record, List<E>> intoGroups(Name[] keyFieldNames, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key entity.
@@ -2114,8 +2038,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <K, V> Map<K, List<V>> intoGroups(Class<? extends K> keyType, RecordMapper<? super R, V> valueMapper)
-        throws MappingException;
+    <K, V> Map<K, List<V>> intoGroups(Class<? extends K> keyType, RecordMapper<? super R, V> valueMapper) throws MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key entity and
@@ -2183,8 +2106,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <K, V> Map<K, List<V>> intoGroups(RecordMapper<? super R, K> keyMapper, RecordMapper<? super R, V> valueMapper)
-        throws MappingException;
+    <K, V> Map<K, List<V>> intoGroups(RecordMapper<? super R, K> keyMapper, RecordMapper<? super R, V> valueMapper) throws MappingException;
 
     /**
      * Return a {@link Map} with the result grouped by the given key table.
@@ -2217,8 +2139,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             contained in {@link #fieldsRow()}
      */
     @NotNull
-    <S extends Record, T extends Record> Map<S, Result<T>> intoGroups(Table<S> keyTable, Table<T> valueTable)
-        throws IllegalArgumentException;
+    <S extends Record, T extends Record> Map<S, Result<T>> intoGroups(Table<S> keyTable, Table<T> valueTable) throws IllegalArgumentException;
 
     /**
      * Return a {@link Map} with results grouped by the given key table and
@@ -2239,8 +2160,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E, S extends Record> Map<S, List<E>> intoGroups(Table<S> table, Class<? extends E> type)
-        throws IllegalArgumentException, MappingException;
+    <E, S extends Record> Map<S, List<E>> intoGroups(Table<S> table, Class<? extends E> type) throws IllegalArgumentException, MappingException;
 
     /**
      * Return a {@link Map} with results grouped by the given key table and
@@ -2261,8 +2181,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @see DefaultRecordMapper
      */
     @NotNull
-    <E, S extends Record> Map<S, List<E>> intoGroups(Table<S> table, RecordMapper<? super R, E> mapper)
-        throws IllegalArgumentException, MappingException;
+    <E, S extends Record> Map<S, List<E>> intoGroups(Table<S> table, RecordMapper<? super R, E> mapper) throws IllegalArgumentException, MappingException;
 
     /**
      * Convert this result into an array of arrays.
@@ -2272,13 +2191,10 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * elements as this result's records have fields. The resulting array
      * contains data as such:
      * <p>
-     *
-     * <pre>
-     * <code>
+     * <code><pre>
      * // For arbitrary values of i, j
      * result.getValue(i, j) == result.intoArray()[i][j]
-     * </code>
-     * </pre>
+     * </pre></code>
      *
      * @return This result as an array of arrays
      * @see Record#intoArray()
@@ -2290,10 +2206,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * Return all values for a field index from the result.
      * <p>
      * You can access data like this
-     *
-     * <pre>
-     * <code>result.intoArray(fieldIndex)[recordIndex]</code>
-     * </pre>
+     * <code><pre>result.intoArray(fieldIndex)[recordIndex]</pre></code>
      *
      * @param fieldIndex The 0-based field index
      * @return The resulting values. This may be an array type more concrete
@@ -2310,10 +2223,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * Return all values for a field index from the result.
      * <p>
      * You can access data like this
-     *
-     * <pre>
-     * <code>result.intoArray(fieldIndex)[recordIndex]</code>
-     * </pre>
+     * <code><pre>result.intoArray(fieldIndex)[recordIndex]</pre></code>
      *
      * @param fieldIndex The 0-based field index
      * @return The resulting values.
@@ -2323,17 +2233,13 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @throws DataTypeException wrapping any data type conversion exception
      *             that might have occurred
      */
-    <U> U @NotNull [] intoArray(int fieldIndex, Class<? extends U> type)
-        throws IllegalArgumentException, DataTypeException;
+    <U> U @NotNull [] intoArray(int fieldIndex, Class<? extends U> type) throws IllegalArgumentException, DataTypeException;
 
     /**
      * Return all values for a field index from the result.
      * <p>
      * You can access data like this
-     *
-     * <pre>
-     * <code>result.intoArray(fieldIndex)[recordIndex]</code>
-     * </pre>
+     * <code><pre>result.intoArray(fieldIndex)[recordIndex]</pre></code>
      *
      * @param fieldIndex The 0-based field index
      * @return The resulting values.
@@ -2343,18 +2249,13 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @throws DataTypeException wrapping any data type conversion exception
      *             that might have occurred
      */
-    <U> U @NotNull [] intoArray(int fieldIndex, Converter<?, ? extends U> converter)
-        throws IllegalArgumentException, DataTypeException;
+    <U> U @NotNull [] intoArray(int fieldIndex, Converter<?, ? extends U> converter) throws IllegalArgumentException, DataTypeException;
 
     /**
-     * Return all values for a field name from the result, using
-     * {@link #field(String)} for lookup.
+     * Return all values for a field name from the result.
      * <p>
      * You can access data like this
-     *
-     * <pre>
-     * <code>result.intoArray(fieldName)[recordIndex]</code>
-     * </pre>
+     * <code><pre>result.intoArray(fieldName)[recordIndex]</pre></code>
      *
      * @return The resulting values. This may be an array type more concrete
      *         than <code>Object[]</code>, depending on whether jOOQ has any
@@ -2367,14 +2268,10 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Object @NotNull [] intoArray(String fieldName) throws IllegalArgumentException;
 
     /**
-     * Return all values for a field name from the result, using
-     * {@link #field(String)} for lookup.
+     * Return all values for a field name from the result.
      * <p>
      * You can access data like this
-     *
-     * <pre>
-     * <code>result.intoArray(fieldName)[recordIndex]</code>
-     * </pre>
+     * <code><pre>result.intoArray(fieldName)[recordIndex]</pre></code>
      *
      * @return The resulting values.
      * @see #getValues(String, Class)
@@ -2383,18 +2280,13 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @throws DataTypeException wrapping any data type conversion exception
      *             that might have occurred
      */
-    <U> U @NotNull [] intoArray(String fieldName, Class<? extends U> type)
-        throws IllegalArgumentException, DataTypeException;
+    <U> U @NotNull [] intoArray(String fieldName, Class<? extends U> type) throws IllegalArgumentException, DataTypeException;
 
     /**
-     * Return all values for a field name from the result, using
-     * {@link #field(String)} for lookup.
+     * Return all values for a field name from the result.
      * <p>
      * You can access data like this
-     *
-     * <pre>
-     * <code>result.intoArray(fieldName)[recordIndex]</code>
-     * </pre>
+     * <code><pre>result.intoArray(fieldName)[recordIndex]</pre></code>
      *
      * @return The resulting values.
      * @see #getValues(String, Converter)
@@ -2403,18 +2295,13 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @throws DataTypeException wrapping any data type conversion exception
      *             that might have occurred
      */
-    <U> U @NotNull [] intoArray(String fieldName, Converter<?, ? extends U> converter)
-        throws IllegalArgumentException, DataTypeException;
+    <U> U @NotNull [] intoArray(String fieldName, Converter<?, ? extends U> converter) throws IllegalArgumentException, DataTypeException;
 
     /**
-     * Return all values for a field name from the result, using
-     * {@link #field(Name)} for lookup.
+     * Return all values for a field name from the result.
      * <p>
      * You can access data like this
-     *
-     * <pre>
-     * <code>result.intoArray(fieldName)[recordIndex]</code>
-     * </pre>
+     * <code><pre>result.intoArray(fieldName)[recordIndex]</pre></code>
      *
      * @return The resulting values. This may be an array type more concrete
      *         than <code>Object[]</code>, depending on whether jOOQ has any
@@ -2427,14 +2314,10 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Object @NotNull [] intoArray(Name fieldName) throws IllegalArgumentException;
 
     /**
-     * Return all values for a field name from the result, using
-     * {@link #field(Name)} for lookup.
+     * Return all values for a field name from the result.
      * <p>
      * You can access data like this
-     *
-     * <pre>
-     * <code>result.intoArray(fieldName)[recordIndex]</code>
-     * </pre>
+     * <code><pre>result.intoArray(fieldName)[recordIndex]</pre></code>
      *
      * @return The resulting values.
      * @see #getValues(Name, Class)
@@ -2443,18 +2326,13 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @throws DataTypeException wrapping any data type conversion exception
      *             that might have occurred
      */
-    <U> U @NotNull [] intoArray(Name fieldName, Class<? extends U> type)
-        throws IllegalArgumentException, DataTypeException;
+    <U> U @NotNull [] intoArray(Name fieldName, Class<? extends U> type) throws IllegalArgumentException, DataTypeException;
 
     /**
-     * Return all values for a field name from the result, using
-     * {@link #field(Name)} for lookup.
+     * Return all values for a field name from the result.
      * <p>
      * You can access data like this
-     *
-     * <pre>
-     * <code>result.intoArray(fieldName)[recordIndex]</code>
-     * </pre>
+     * <code><pre>result.intoArray(fieldName)[recordIndex]</pre></code>
      *
      * @return The resulting values.
      * @see #getValues(Name, Converter)
@@ -2463,18 +2341,13 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @throws DataTypeException wrapping any data type conversion exception
      *             that might have occurred
      */
-    <U> U @NotNull [] intoArray(Name fieldName, Converter<?, ? extends U> converter)
-        throws IllegalArgumentException, DataTypeException;
+    <U> U @NotNull [] intoArray(Name fieldName, Converter<?, ? extends U> converter) throws IllegalArgumentException, DataTypeException;
 
     /**
-     * Return all values for a field from the result, using
-     * {@link #field(Field)} for lookup.
+     * Return all values for a field from the result.
      * <p>
      * You can access data like this
-     *
-     * <pre>
-     * <code>result.intoArray(field)[recordIndex]</code>
-     * </pre>
+     * <code><pre>result.intoArray(field)[recordIndex]</pre></code>
      *
      * @return The resulting values.
      * @see #getValues(Field)
@@ -2484,14 +2357,10 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     <T> T @NotNull [] intoArray(Field<T> field) throws IllegalArgumentException;
 
     /**
-     * Return all values for a field from the result, using
-     * {@link #field(Field)} for lookup.
+     * Return all values for a field from the result.
      * <p>
      * You can access data like this
-     *
-     * <pre>
-     * <code>result.intoArray(field)[recordIndex]</code>
-     * </pre>
+     * <code><pre>result.intoArray(field)[recordIndex]</pre></code>
      *
      * @return The resulting values.
      * @see #getValues(Field, Class)
@@ -2500,18 +2369,13 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @throws DataTypeException wrapping any data type conversion exception
      *             that might have occurred
      */
-    <U> U @NotNull [] intoArray(Field<?> field, Class<? extends U> type)
-        throws IllegalArgumentException, DataTypeException;
+    <U> U @NotNull [] intoArray(Field<?> field, Class<? extends U> type) throws IllegalArgumentException, DataTypeException;
 
     /**
-     * Return all values for a field from the result, using
-     * {@link #field(Field)} for lookup.
+     * Return all values for a field from the result.
      * <p>
      * You can access data like this
-     *
-     * <pre>
-     * <code>result.intoArray(field)[recordIndex]</code>
-     * </pre>
+     * <code><pre>result.intoArray(field)[recordIndex]</pre></code>
      *
      * @return The resulting values.
      * @see #getValues(Field, Converter)
@@ -2520,8 +2384,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * @throws DataTypeException wrapping any data type conversion exception
      *             that might have occurred
      */
-    <T, U> U @NotNull [] intoArray(Field<T> field, Converter<? super T, ? extends U> converter)
-        throws IllegalArgumentException, DataTypeException;
+    <T, U> U @NotNull [] intoArray(Field<T> field, Converter<? super T, ? extends U> converter) throws IllegalArgumentException, DataTypeException;
 
     /**
      * Map results into a custom mapper callback.
@@ -2572,12 +2435,10 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             that might have occurred
      */
     @NotNull
-    <U> Set<U> intoSet(int fieldIndex, Converter<?, ? extends U> converter)
-        throws IllegalArgumentException, DataTypeException;
+    <U> Set<U> intoSet(int fieldIndex, Converter<?, ? extends U> converter) throws IllegalArgumentException, DataTypeException;
 
     /**
-     * Return all values for a field name from the result, using
-     * {@link #field(String)} for lookup.
+     * Return all values for a field name from the result.
      *
      * @return The resulting values. This may be an array type more concrete
      *         than <code>Object[]</code>, depending on whether jOOQ has any
@@ -2590,8 +2451,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Set<?> intoSet(String fieldName) throws IllegalArgumentException;
 
     /**
-     * Return all values for a field name from the result, using
-     * {@link #field(String)} for lookup.
+     * Return all values for a field name from the result.
      *
      * @return The resulting values.
      * @see #getValues(String, Class)
@@ -2604,8 +2464,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     <U> Set<U> intoSet(String fieldName, Class<? extends U> type) throws IllegalArgumentException, DataTypeException;
 
     /**
-     * Return all values for a field name from the result, using
-     * {@link #field(String)} for lookup.
+     * Return all values for a field name from the result.
      *
      * @return The resulting values.
      * @see #getValues(String, Converter)
@@ -2615,12 +2474,10 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             that might have occurred
      */
     @NotNull
-    <U> Set<U> intoSet(String fieldName, Converter<?, ? extends U> converter)
-        throws IllegalArgumentException, DataTypeException;
+    <U> Set<U> intoSet(String fieldName, Converter<?, ? extends U> converter) throws IllegalArgumentException, DataTypeException;
 
     /**
-     * Return all values for a field name from the result, using
-     * {@link #field(Name)} for lookup.
+     * Return all values for a field name from the result.
      *
      * @return The resulting values. This may be an array type more concrete
      *         than <code>Object[]</code>, depending on whether jOOQ has any
@@ -2633,8 +2490,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Set<?> intoSet(Name fieldName) throws IllegalArgumentException;
 
     /**
-     * Return all values for a field name from the result, using
-     * {@link #field(Name)} for lookup.
+     * Return all values for a field name from the result.
      *
      * @return The resulting values.
      * @see #getValues(Name, Class)
@@ -2647,8 +2503,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     <U> Set<U> intoSet(Name fieldName, Class<? extends U> type) throws IllegalArgumentException, DataTypeException;
 
     /**
-     * Return all values for a field name from the result, using
-     * {@link #field(Name)} for lookup.
+     * Return all values for a field name from the result.
      *
      * @return The resulting values.
      * @see #getValues(Name, Converter)
@@ -2658,12 +2513,10 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             that might have occurred
      */
     @NotNull
-    <U> Set<U> intoSet(Name fieldName, Converter<?, ? extends U> converter)
-        throws IllegalArgumentException, DataTypeException;
+    <U> Set<U> intoSet(Name fieldName, Converter<?, ? extends U> converter) throws IllegalArgumentException, DataTypeException;
 
     /**
-     * Return all values for a field from the result, using
-     * {@link #field(Field)} for lookup.
+     * Return all values for a field from the result.
      *
      * @return The resulting values.
      * @see #getValues(Field)
@@ -2674,8 +2527,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     <T> Set<T> intoSet(Field<T> field) throws IllegalArgumentException;
 
     /**
-     * Return all values for a field from the result, using
-     * {@link #field(Field)} for lookup.
+     * Return all values for a field from the result.
      *
      * @return The resulting values.
      * @see #getValues(Field, Class)
@@ -2688,8 +2540,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     <U> Set<U> intoSet(Field<?> field, Class<? extends U> type) throws IllegalArgumentException, DataTypeException;
 
     /**
-     * Return all values for a field from the result, using
-     * {@link #field(Field)} for lookup.
+     * Return all values for a field from the result.
      *
      * @return The resulting values.
      * @see #getValues(Field, Converter)
@@ -2699,13 +2550,11 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      *             that might have occurred
      */
     @NotNull
-    <T, U> Set<U> intoSet(Field<T> field, Converter<? super T, ? extends U> converter)
-        throws IllegalArgumentException, DataTypeException;
+    <T, U> Set<U> intoSet(Field<T> field, Converter<? super T, ? extends U> converter) throws IllegalArgumentException, DataTypeException;
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @param fields The fields of the new records
      * @return The new result
@@ -2717,8 +2566,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2727,8 +2575,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2737,8 +2584,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2747,8 +2593,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2757,8 +2602,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2767,8 +2611,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2777,8 +2620,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2787,8 +2629,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2797,8 +2638,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2807,8 +2647,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2817,8 +2656,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2827,8 +2665,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2837,8 +2674,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2847,8 +2683,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2857,8 +2692,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2867,8 +2701,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2877,8 +2710,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2887,8 +2719,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2897,8 +2728,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2907,8 +2737,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2917,8 +2746,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2927,8 +2755,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Copy all records from this result into a new result with new records
-     * holding only a subset of the previous fields, using {@link #field(Field)}
-     * for lookup.
+     * holding only a subset of the previous fields.
      *
      * @return The new result
      */
@@ -2991,14 +2818,14 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      * returned <code>ResultSet</code> allows for the following behaviour
      * according to the JDBC specification:
      * <ul>
-     * <li>{@link ResultSet#CLOSE_CURSORS_AT_COMMIT}: The cursors (i.e.
+     * <li> {@link ResultSet#CLOSE_CURSORS_AT_COMMIT}: The cursors (i.e.
      * {@link Statement} object) are no longer available</li>
-     * <li>{@link ResultSet#CONCUR_READ_ONLY}: You cannot update the database
+     * <li> {@link ResultSet#CONCUR_READ_ONLY}: You cannot update the database
      * through this <code>ResultSet</code>, as the underlying {@link Result}
      * object does not hold any open database refences anymore</li>
-     * <li>{@link ResultSet#FETCH_FORWARD}: The fetch direction is forward only,
+     * <li> {@link ResultSet#FETCH_FORWARD}: The fetch direction is forward only,
      * and cannot be changed</li>
-     * <li>{@link ResultSet#TYPE_SCROLL_INSENSITIVE}: You can use any of the
+     * <li> {@link ResultSet#TYPE_SCROLL_INSENSITIVE}: You can use any of the
      * <code>ResultSet</code>'s scrolling methods, e.g. {@link ResultSet#next()}
      * or {@link ResultSet#previous()}, etc.</li>
      * </ul>
@@ -3021,8 +2848,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     <E> List<E> map(RecordMapper<? super R, E> mapper);
 
     /**
-     * Sort this result by one of its contained fields, using
-     * {@link #field(Field)} for lookup.
+     * Sort this result by one of its contained fields.
      * <p>
      * <code>nulls</code> are sorted last by this method.
      *
@@ -3035,8 +2861,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     <T extends Comparable<? super T>> Result<R> sortAsc(Field<T> field) throws IllegalArgumentException;
 
     /**
-     * Reverse-sort this result by one of its contained fields, using
-     * {@link #field(Field)} for lookup.
+     * Reverse-sort this result by one of its contained fields.
      * <p>
      * <code>nulls</code> are sorted last by this method.
      *
@@ -3075,8 +2900,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Result<R> sortDesc(int fieldIndex) throws IllegalArgumentException;
 
     /**
-     * Sort this result by one of its contained fields, using
-     * {@link #field(String)} for lookup.
+     * Sort this result by one of its contained fields.
      * <p>
      * <code>nulls</code> are sorted last by this method.
      *
@@ -3089,8 +2913,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Result<R> sortAsc(String fieldName) throws IllegalArgumentException;
 
     /**
-     * Reverse-sort this result by one of its contained fields, using
-     * {@link #field(String)} for lookup.
+     * Reverse-sort this result by one of its contained fields.
      * <p>
      * <code>nulls</code> are sorted last by this method.
      *
@@ -3103,8 +2926,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Result<R> sortDesc(String fieldName) throws IllegalArgumentException;
 
     /**
-     * Sort this result by one of its contained fields, using
-     * {@link #field(Name)} for lookup.
+     * Sort this result by one of its contained fields.
      * <p>
      * <code>nulls</code> are sorted last by this method.
      *
@@ -3117,8 +2939,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Result<R> sortAsc(Name fieldName) throws IllegalArgumentException;
 
     /**
-     * Reverse-sort this result by one of its contained fields, using
-     * {@link #field(Name)} for lookup.
+     * Reverse-sort this result by one of its contained fields.
      * <p>
      * <code>nulls</code> are sorted last by this method.
      *
@@ -3131,8 +2952,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Result<R> sortDesc(Name fieldName) throws IllegalArgumentException;
 
     /**
-     * Sort this result by one of its contained fields using a comparator, using
-     * {@link #field(Field)} for lookup.
+     * Sort this result by one of its contained fields using a comparator.
      * <p>
      * <code>null</code> sorting must be handled by the supplied
      * <code>comparator</code>.
@@ -3148,7 +2968,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Reverse-sort this result by one of its contained fields using a
-     * comparator, using {@link #field(Field)} for lookup.
+     * comparator.
      * <p>
      * <code>null</code> sorting must be handled by the supplied
      * <code>comparator</code>.
@@ -3194,8 +3014,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Result<R> sortDesc(int fieldIndex, java.util.Comparator<?> comparator) throws IllegalArgumentException;
 
     /**
-     * Sort this result by one of its contained fields using a comparator, using
-     * {@link #field(String)} for lookup.
+     * Sort this result by one of its contained fields using a comparator.
      * <p>
      * <code>null</code> sorting must be handled by the supplied
      * <code>comparator</code>.
@@ -3211,7 +3030,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Reverse-sort this result by one of its contained fields using a
-     * comparator, using {@link #field(String)} for lookup.
+     * comparator.
      * <p>
      * <code>null</code> sorting must be handled by the supplied
      * <code>comparator</code>.
@@ -3226,8 +3045,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
     Result<R> sortDesc(String fieldName, java.util.Comparator<?> comparator) throws IllegalArgumentException;
 
     /**
-     * Sort this result by one of its contained fields using a comparator, using
-     * {@link #field(Name)} for lookup.
+     * Sort this result by one of its contained fields using a comparator.
      * <p>
      * <code>null</code> sorting must be handled by the supplied
      * <code>comparator</code>.
@@ -3243,7 +3061,7 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
 
     /**
      * Reverse-sort this result by one of its contained fields using a
-     * comparator, using {@link #field(Name)} for lookup.
+     * comparator.
      * <p>
      * <code>null</code> sorting must be handled by the supplied
      * <code>comparator</code>.
@@ -3274,6 +3092,83 @@ public interface Result<R extends Record> extends Fields, List<R>, Attachable, F
      */
     @NotNull
     Result<R> sortDesc(java.util.Comparator<? super R> comparator);
+
+    /**
+     * Specify a set of fields whose values should be interned.
+     * <p>
+     * See {@link Result#intern(int...)} for more details.
+     *
+     * @param fields The fields whose values should be interned
+     * @return The same result
+     * @see Result#intern(Field...)
+     * @see String#intern()
+     *
+     * @deprecated - 3.10 - [#6254] - This functionality is no longer supported
+     *             and will be removed in 4.0
+     */
+    @NotNull
+    @Deprecated(forRemoval = true, since = "3.10")
+    Result<R> intern(Field<?>... fields);
+
+    /**
+     * Specify a set of field indexes whose values should be interned.
+     * <p>
+     * This traverses all records and interns <code>String</code> values for a
+     * given set of field indexes. Use this method to save memory when a large
+     * result set contains many identical string literals.
+     * <p>
+     * Please refer to {@link String#intern()} and to publicly available
+     * literature to learn more about potential side-effects of string
+     * interning.
+     * <p>
+     * Future versions of jOOQ may also "intern" other data types, such as
+     * {@link Integer}, {@link Long}, within a <code>Result</code> object.
+     *
+     * @param fieldIndexes The 0-based field indexes whose values should be
+     *            interned
+     * @return The same result
+     * @see Result#intern(Field...)
+     * @see String#intern()
+     * @deprecated - 3.10 - [#6254] - This functionality is no longer supported
+     *             and will be removed in 4.0
+     */
+    @NotNull
+    @Deprecated(forRemoval = true, since = "3.10")
+    Result<R> intern(int... fieldIndexes);
+
+    /**
+     * Specify a set of field names whose values should be interned.
+     * <p>
+     * See {@link Result#intern(int...)} for more details.
+     *
+     * @param fieldNames The field names whose values should be interned
+     * @return The same result
+     * @see Result#intern(Field...)
+     * @see String#intern()
+     *
+     * @deprecated - 3.10 - [#6254] - This functionality is no longer supported
+     *             and will be removed in 4.0
+     */
+    @NotNull
+    @Deprecated(forRemoval = true, since = "3.10")
+    Result<R> intern(String... fieldNames);
+
+    /**
+     * Specify a set of field names whose values should be interned.
+     * <p>
+     * See {@link Result#intern(int...)} for more details.
+     *
+     * @param fieldNames The field names whose values should be interned
+     * @return The same result
+     * @see Result#intern(Field...)
+     * @see String#intern()
+     *
+     * @deprecated - 3.10 - [#6254] - This functionality is no longer supported
+     *             and will be removed in 4.0
+     */
+    @NotNull
+    @Deprecated(forRemoval = true, since = "3.10")
+    Result<R> intern(Name... fieldNames);
 
     // ------------------------------------------------------------------------
     // Fetching of new results based on records in this result

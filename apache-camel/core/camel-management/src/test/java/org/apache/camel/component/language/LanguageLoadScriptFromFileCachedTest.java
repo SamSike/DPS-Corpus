@@ -76,10 +76,10 @@ public class LanguageLoadScriptFromFileCachedTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start")
                         // use content cache to load the script once and cache it (content cache and script cache both enabled)

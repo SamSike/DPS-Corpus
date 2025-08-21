@@ -337,7 +337,9 @@ public class MinaProducer extends DefaultProducer {
         appendIoFiltersToChain(filters, connector.getFilterChain());
         if (configuration.getSslContextParameters() != null) {
             SslFilter filter = new SslFilter(
-                    configuration.getSslContextParameters().createSSLContext(getEndpoint().getCamelContext()));
+                    configuration.getSslContextParameters().createSSLContext(getEndpoint().getCamelContext()),
+                    configuration.isAutoStartTls());
+            filter.setUseClientMode(true);
             connector.getFilterChain().addFirst("sslFilter", filter);
         }
         configureCodecFactory("MinaProducer", connector);
@@ -370,10 +372,6 @@ public class MinaProducer extends DefaultProducer {
                     codecFactory.getEncoderMaxLineLength(), codecFactory.getDecoderMaxLineLength());
         } else {
             ObjectSerializationCodecFactory codecFactory = new ObjectSerializationCodecFactory();
-            if (configuration.getObjectCodecPattern() != null) {
-                String[] arr = configuration.getObjectCodecPattern().split(",");
-                codecFactory.accept(arr);
-            }
             addCodecFactory(service, codecFactory);
             LOG.debug("{}: Using ObjectSerializationCodecFactory: {}", type, codecFactory);
         }

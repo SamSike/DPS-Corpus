@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.jdbc.support.JdbcUtils;
+import org.springframework.lang.Nullable;
 
 /**
  * Implementation of RowCallbackHandler. Convenient superclass for callback handlers.
@@ -56,12 +55,14 @@ public class RowCountCallbackHandler implements RowCallbackHandler {
 	 * Indexed from 0. Type (as in java.sql.Types) for the columns
 	 * as returned by ResultSetMetaData object.
 	 */
-	private int @Nullable [] columnTypes;
+	@Nullable
+	private int[] columnTypes;
 
 	/**
 	 * Indexed from 0. Column name as returned by ResultSetMetaData object.
 	 */
-	private String @Nullable [] columnNames;
+	@Nullable
+	private String[] columnNames;
 
 
 	/**
@@ -104,7 +105,8 @@ public class RowCountCallbackHandler implements RowCallbackHandler {
 	 * @return the types of the columns as java.sql.Types constants.
 	 * <b>Indexed from 0 to n-1.</b>
 	 */
-	public final int @Nullable [] getColumnTypes() {
+	@Nullable
+	public final int[] getColumnTypes() {
 		return this.columnTypes;
 	}
 
@@ -114,7 +116,8 @@ public class RowCountCallbackHandler implements RowCallbackHandler {
 	 * @return the names of the columns.
 	 * <b>Indexed from 0 to n-1.</b>
 	 */
-	public final String @Nullable [] getColumnNames() {
+	@Nullable
+	public final String[] getColumnNames() {
 		return this.columnNames;
 	}
 

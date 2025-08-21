@@ -30,8 +30,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class StaticFallbackConverterTest extends ContextTestSupport {
 
+    @Override
+    protected boolean isLoadTypeConverters() {
+        return true;
+    }
+
     @Test
-    public void testStaticFallbackConverter() {
+    public void testStaticFallbackConverter() throws Exception {
         Exchange exchange = new DefaultExchange(context);
         TimeZone tz = TimeZone.getDefault();
 
@@ -49,16 +54,19 @@ public class StaticFallbackConverterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testStaticFallbackMandatoryFailed() {
+    public void testStaticFallbackMandatoryFailed() throws Exception {
         Exchange exchange = new DefaultExchange(context);
 
-        assertThrows(NoTypeConversionAvailableException.class,
-                () -> context.getTypeConverter().mandatoryConvertTo(Date.class, exchange, new Timestamp(0)),
-                "Should have thrown an exception");
+        try {
+            context.getTypeConverter().mandatoryConvertTo(Date.class, exchange, new Timestamp(0));
+            fail("Should have thrown an exception");
+        } catch (NoTypeConversionAvailableException e) {
+            // expected
+        }
     }
 
     @Test
-    public void testStaticFallbackFailed() {
+    public void testStaticFallbackFailed() throws Exception {
         Exchange exchange = new DefaultExchange(context);
 
         Date out = context.getTypeConverter().convertTo(Date.class, exchange, new Timestamp(0));

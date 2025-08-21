@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -105,7 +105,7 @@ public class MySQLDSL extends DSL {
     @NotNull
     @Support({ MYSQL })
     public static <T> Field<T> decode(Field<T> cryptString, Field<T> keyString) {
-        return function("decode", cryptString.getDataType(), cryptString, keyString);
+        return function("decode", cryptString.getType(), cryptString, keyString);
     }
 
     /**
@@ -141,7 +141,7 @@ public class MySQLDSL extends DSL {
     @NotNull
     @Support({ MYSQL })
     public static <T> Field<T> encode(Field<T> string, Field<T> keyString) {
-        return function("encode", string.getDataType(), string, keyString);
+        return function("encode", string.getType(), string, keyString);
     }
 
     /**
@@ -168,7 +168,7 @@ public class MySQLDSL extends DSL {
     @NotNull
     @Support({ MYSQL })
     public static <T> Field<T> aesDecrypt(Field<T> cryptString, Field<T> keyString) {
-        return function("aes_decrypt", cryptString.getDataType(), cryptString, keyString);
+        return function("aes_decrypt", cryptString.getType(), cryptString, keyString);
     }
 
     /**
@@ -195,7 +195,7 @@ public class MySQLDSL extends DSL {
     @NotNull
     @Support({ MYSQL })
     public static <T> Field<T> aesEncrypt(Field<T> string, Field<T> keyString) {
-        return function("aes_encrypt", string.getDataType(), string, keyString);
+        return function("aes_encrypt", string.getType(), string, keyString);
     }
 
     /**
@@ -231,7 +231,7 @@ public class MySQLDSL extends DSL {
     @NotNull
     @Support({ MYSQL })
     public static <T> Field<T> desDecrypt(Field<T> cryptString) {
-        return function("des_decrypt", cryptString.getDataType(), cryptString);
+        return function("des_decrypt", cryptString.getType(), cryptString);
     }
 
     /**
@@ -267,7 +267,7 @@ public class MySQLDSL extends DSL {
     @NotNull
     @Support({ MYSQL })
     public static <T> Field<T> desDecrypt(Field<T> cryptString, Field<T> keyString) {
-        return function("des_decrypt", cryptString.getDataType(), cryptString, keyString);
+        return function("des_decrypt", cryptString.getType(), cryptString, keyString);
     }
 
     /**
@@ -303,7 +303,7 @@ public class MySQLDSL extends DSL {
     @NotNull
     @Support({ MYSQL })
     public static <T> Field<T> desEncrypt(Field<T> string) {
-        return function("des_encrypt", string.getDataType(), string);
+        return function("des_encrypt", string.getType(), string);
     }
 
     /**
@@ -339,7 +339,7 @@ public class MySQLDSL extends DSL {
     @NotNull
     @Support({ MYSQL })
     public static <T> Field<T> desEncrypt(Field<T> string, Field<T> keyString) {
-        return function("des_encrypt", string.getDataType(), string, keyString);
+        return function("des_encrypt", string.getType(), string, keyString);
     }
 
     /**
@@ -366,7 +366,7 @@ public class MySQLDSL extends DSL {
     @NotNull
     @Support({ MYSQL })
     public static <T> Field<T> compress(Field<T> string) {
-        return function("compress", string.getDataType(), string);
+        return function("compress", string.getType(), string);
     }
 
     /**
@@ -393,7 +393,7 @@ public class MySQLDSL extends DSL {
     @NotNull
     @Support({ MYSQL })
     public static <T> Field<T> uncompress(Field<T> string) {
-        return function("uncompress", string.getDataType(), string);
+        return function("uncompress", string.getType(), string);
     }
 
     /**
@@ -447,7 +447,7 @@ public class MySQLDSL extends DSL {
     @NotNull
     @Support({ MYSQL })
     public static <T> Field<T> sha1(Field<T> string) {
-        return function("sha1", string.getDataType(), string);
+        return function("sha1", string.getType(), string);
     }
 
     /**
@@ -474,7 +474,7 @@ public class MySQLDSL extends DSL {
     @NotNull
     @Support({ MYSQL })
     public static <T> Field<T> sha2(Field<T> string, Field<Integer> hashLength) {
-        return function("sha2", string.getDataType(), string, hashLength);
+        return function("sha2", string.getType(), string, hashLength);
     }
 
     /**
@@ -510,7 +510,7 @@ public class MySQLDSL extends DSL {
     @NotNull
     @Support({ MYSQL })
     public static <T> Field<T> password(Field<T> string) {
-        return function("password", string.getDataType(), string);
+        return function("password", string.getType(), string);
     }
 
     // -------------------------------------------------------------------------
@@ -519,7 +519,7 @@ public class MySQLDSL extends DSL {
 
     /**
      * Get the MySQL-specific <code>VALUES()</code> function for use with
-     * <code>INSERT … ON DUPLICATE KEY UPDATE</code> statements.
+     * <code>INSERT .. ON DUPLICATE KEY UPDATE</code> statements.
      *
      * @see <a href=
      *      "http://dev.mysql.com/doc/refman/5.7/en/miscellaneous-functions.html#function_values">
@@ -528,7 +528,7 @@ public class MySQLDSL extends DSL {
      * @deprecated - 3.15.0 - [#12099] - MySQL 8.0.20 has deprecated this clause
      *             and replaced it by something new, which we'll support soon,
      *             see <a href=
-     *             "https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html">https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html/</a>
+     *             "https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html">https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html/<a>
      *             and <a href=
      *             "https://github.com/jOOQ/jOOQ/issues/12099">https://github.com/jOOQ/jOOQ/issues/12099</a>
      */

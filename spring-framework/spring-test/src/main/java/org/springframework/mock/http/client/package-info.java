@@ -3,7 +3,9 @@
  * This package contains {@code MockClientHttpRequest} and
  * {@code MockClientHttpResponse}.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.mock.http.client;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

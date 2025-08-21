@@ -20,18 +20,22 @@ import java.util.List;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
+import org.apache.camel.resume.ResumeAdapter;
+import org.apache.camel.resume.ResumeAware;
+import org.apache.camel.resume.ResumeStrategy;
 
 /**
  * Consumer to poll feeds and return each entry from the feed step by step.
  */
-public abstract class FeedEntryPollingConsumer<E> extends FeedPollingConsumer {
+public abstract class FeedEntryPollingConsumer<E> extends FeedPollingConsumer implements ResumeAware<ResumeStrategy> {
     protected int entryIndex;
+    protected ResumeStrategy resumeStrategy;
     @SuppressWarnings("rawtypes")
     protected List<E> list;
     protected boolean throttleEntries;
     protected Object feed;
 
-    protected FeedEntryPollingConsumer(FeedEndpoint endpoint, Processor processor, boolean throttleEntries) {
+    public FeedEntryPollingConsumer(FeedEndpoint endpoint, Processor processor, boolean throttleEntries) {
         super(endpoint, processor);
         this.throttleEntries = throttleEntries;
     }
@@ -49,11 +53,21 @@ public abstract class FeedEntryPollingConsumer<E> extends FeedPollingConsumer {
             E entry = list.get(entryIndex--);
             polledMessages++;
 
-            Exchange exchange = endpoint.createExchange(feed, entry);
-            getProcessor().process(exchange);
-            if (this.throttleEntries) {
-                // return and wait for the next poll to continue from last time (this consumer is stateful)
-                return polledMessages;
+            boolean valid = true;
+            if (resumeStrategy != null) {
+                ResumeAdapter adapter = resumeStrategy.getAdapter();
+
+                if (adapter instanceof EntryFilter) {
+                    valid = ((EntryFilter) adapter).isValidEntry(entry);
+                }
+            }
+            if (valid) {
+                Exchange exchange = endpoint.createExchange(feed, entry);
+                getProcessor().process(exchange);
+                if (this.throttleEntries) {
+                    // return and wait for the next poll to continue from last time (this consumer is stateful)
+                    return polledMessages;
+                }
             }
         }
 
@@ -62,6 +76,21 @@ public abstract class FeedEntryPollingConsumer<E> extends FeedPollingConsumer {
         resetList();
 
         return polledMessages;
+    }
+
+    @Override
+    public void setResumeStrategy(ResumeStrategy resumeStrategy) {
+        this.resumeStrategy = resumeStrategy;
+    }
+
+    @Override
+    public ResumeStrategy getResumeStrategy() {
+        return resumeStrategy;
+    }
+
+    @Override
+    public String adapterFactoryService() {
+        return "atom-adapter-factory";
     }
 
     protected abstract void resetList();

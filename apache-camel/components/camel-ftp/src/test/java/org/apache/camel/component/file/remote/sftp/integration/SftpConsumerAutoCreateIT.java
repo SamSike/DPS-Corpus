@@ -32,8 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @EnabledIf(value = "org.apache.camel.test.infra.ftp.services.embedded.SftpUtil#hasRequiredAlgorithms('src/test/resources/hostkey.pem')")
 public class SftpConsumerAutoCreateIT extends SftpServerTestSupport {
     protected String getFtpUrl() {
-        return "sftp://admin@localhost:{{ftp.server.port}}/{{ftp.root.dir}}/foo/bar/baz/xxx?password=admin&knownHostsFile="
-               + service.getKnownHostsFile();
+        return "sftp://admin@localhost:{{ftp.server.port}}/{{ftp.root.dir}}/foo/bar/baz/xxx?password=admin";
     }
 
     @AfterEach

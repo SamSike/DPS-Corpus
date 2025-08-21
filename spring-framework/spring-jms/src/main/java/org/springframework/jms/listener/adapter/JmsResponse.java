@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ package org.springframework.jms.listener.adapter;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
 import jakarta.jms.Session;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.jms.support.destination.DestinationResolver;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -62,11 +62,11 @@ public class JmsResponse<T> {
 
 	/**
 	 * Create a new {@link JmsResponse} instance.
-	 * @param response the content of the response
+	 * @param response the content of the result
 	 * @param destination the destination
 	 */
 	protected JmsResponse(T response, Object destination) {
-		Assert.notNull(response, "'response' must not be null");
+		Assert.notNull(response, "Result must not be null");
 		this.response = response;
 		this.destination = destination;
 	}
@@ -87,13 +87,15 @@ public class JmsResponse<T> {
 	 * @return the {@link Destination} to use
 	 * @throws JMSException if the DestinationResolver failed to resolve the destination
 	 */
-	public @Nullable Destination resolveDestination(DestinationResolver destinationResolver, Session session)
+	@Nullable
+	public Destination resolveDestination(DestinationResolver destinationResolver, Session session)
 			throws JMSException {
 
-		if (this.destination instanceof Destination dest) {
-			return dest;
+		if (this.destination instanceof Destination) {
+			return (Destination) this.destination;
 		}
-		if (this.destination instanceof DestinationNameHolder nameHolder) {
+		if (this.destination instanceof DestinationNameHolder) {
+			DestinationNameHolder nameHolder = (DestinationNameHolder) this.destination;
 			return destinationResolver.resolveDestinationName(session,
 					nameHolder.destinationName, nameHolder.pubSubDomain);
 		}

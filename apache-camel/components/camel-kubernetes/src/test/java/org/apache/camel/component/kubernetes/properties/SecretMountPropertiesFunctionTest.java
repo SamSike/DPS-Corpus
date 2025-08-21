@@ -35,7 +35,7 @@ public class SecretMountPropertiesFunctionTest extends KubernetesTestSupport {
             cmf.setCamelContext(context);
             cmf.start();
 
-            String out = cmf.apply("mysecret/myuser.txt");
+            String out = cmf.apply("mysecret/myuser");
             Assertions.assertEquals("donald", out);
 
             out = cmf.apply("mysecret/unknown");
@@ -44,7 +44,7 @@ public class SecretMountPropertiesFunctionTest extends KubernetesTestSupport {
             out = cmf.apply("mysecret/unknown:444");
             Assertions.assertEquals("444", out);
 
-            out = cmf.apply("mysecret/mypass.txt");
+            out = cmf.apply("mysecret/mypass");
             Assertions.assertEquals("seCre!t", out);
         }
     }

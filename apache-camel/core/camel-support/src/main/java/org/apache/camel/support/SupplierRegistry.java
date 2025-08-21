@@ -43,18 +43,18 @@ public class SupplierRegistry extends SimpleRegistry {
         }
 
         Object answer = map.get(type);
-        if (answer instanceof Supplier<?> supplier) {
+        if (answer instanceof Supplier) {
             // okay then eval the supplier to get the actual value
-            answer = supplier.get();
+            answer = ((Supplier<?>) answer).get();
         }
         if (answer == null) {
             // no direct type match then check if assignable
             for (Map.Entry<Class<?>, Object> entry : map.entrySet()) {
                 if (type.isAssignableFrom(entry.getKey())) {
                     Object value = entry.getValue();
-                    if (value instanceof Supplier<?> supplier) {
+                    if (value instanceof Supplier) {
                         // okay then eval the supplier to get the actual value
-                        value = supplier.get();
+                        value = ((Supplier<?>) value).get();
                     }
                     answer = value;
                     break;
@@ -66,9 +66,9 @@ public class SupplierRegistry extends SimpleRegistry {
             for (Map.Entry<Class<?>, Object> entry : map.entrySet()) {
                 if (Object.class == entry.getKey()) {
                     Object value = entry.getValue();
-                    if (value instanceof Supplier<?> supplier) {
+                    if (value instanceof Supplier) {
                         // okay then eval the supplier to get the actual value
-                        value = supplier.get();
+                        value = ((Supplier<?>) value).get();
                     }
                     if (type.isInstance(value)) {
                         answer = value;
@@ -83,7 +83,7 @@ public class SupplierRegistry extends SimpleRegistry {
         try {
             answer = unwrap(answer);
             return type.cast(answer);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             String msg = "Found bean: " + name + " in SupplierRegistry: " + this
                          + " of type: " + answer.getClass().getName() + " expected type was: " + type;
             throw new NoSuchBeanException(name, msg, e);
@@ -97,9 +97,9 @@ public class SupplierRegistry extends SimpleRegistry {
             for (Map.Entry<Class<?>, Object> subEntry : entry.getValue().entrySet()) {
                 if (type.isAssignableFrom(subEntry.getKey())) {
                     Object value = subEntry.getValue();
-                    if (value instanceof Supplier<?> supplier) {
+                    if (value instanceof Supplier) {
                         // okay then eval the supplier to get the actual value
-                        value = supplier.get();
+                        value = ((Supplier<?>) value).get();
                     }
                     result.add(type.cast(value));
                 }
@@ -115,9 +115,9 @@ public class SupplierRegistry extends SimpleRegistry {
             for (Map.Entry<Class<?>, Object> subEntry : entry.getValue().entrySet()) {
                 if (type.isAssignableFrom(subEntry.getKey())) {
                     Object value = subEntry.getValue();
-                    if (value instanceof Supplier<?> supplier) {
+                    if (value instanceof Supplier) {
                         // okay then eval the supplier to get the actual value
-                        value = supplier.get();
+                        value = ((Supplier<?>) value).get();
                     }
                     result.put(entry.getKey(), type.cast(value));
                 }

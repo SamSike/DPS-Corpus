@@ -2,7 +2,9 @@
  * Support package for EJB/Jakarta EE-related configuration,
  * with XML schema being the primary configuration format.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.ejb.config;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

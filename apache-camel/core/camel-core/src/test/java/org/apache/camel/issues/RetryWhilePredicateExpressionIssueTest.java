@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class RetryWhilePredicateExpressionIssueTest extends ContextTestSupport {
 
     @Test
-    public void testRetryWhilePredicate() {
+    public void testRetryWhilePredicate() throws Exception {
         MyCoolDude dude = new MyCoolDude();
         template.sendBodyAndHeader("direct:start", dude, "foo", 123);
 
@@ -40,15 +40,16 @@ public class RetryWhilePredicateExpressionIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(IllegalArgumentException.class).handled(true).redeliveryDelay(0).retryWhile(new Predicate() {
                     @Override
                     public boolean matches(Exchange exchange) {
                         Predicate predicate = and(simple("${body.areWeCool} == 'no'"), isNotNull(header("foo")));
-                        return predicate.matches(exchange);
+                        boolean answer = predicate.matches(exchange);
+                        return answer;
                     }
                 });
 

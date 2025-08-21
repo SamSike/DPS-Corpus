@@ -26,7 +26,7 @@ import org.apache.camel.support.DefaultComponent;
 @Component("dummy")
 public class MyDummyComponent extends DefaultComponent {
     private MyDummyConfiguration configuration;
-    private final boolean configurer;
+    private boolean configurer;
     private String componentValue;
 
     public MyDummyComponent(boolean configurer) {
@@ -56,7 +56,7 @@ public class MyDummyComponent extends DefaultComponent {
     }
 
     @Override
-    protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) {
+    protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         throw new UnsupportedOperationException();
     }
 

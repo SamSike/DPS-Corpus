@@ -24,8 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.camel.util.FileUtil;
-
 public class DependencyDownloaderClassLoader extends URLClassLoader {
 
     private static final URL[] EMPTY_URL_ARRAY = new URL[0];
@@ -42,7 +40,12 @@ public class DependencyDownloaderClassLoader extends URLClassLoader {
         }
     }
 
+    @Override
+    public Class<?> loadClass(String name) throws ClassNotFoundException {
+        return super.loadClass(name);
+    }
+
     public List<String> getDownloaded() {
-        return Arrays.stream(getURLs()).map(u -> FileUtil.stripPath(u.getFile())).collect(Collectors.toList());
+        return Arrays.stream(getURLs()).map(URL::getFile).collect(Collectors.toList());
     }
 }

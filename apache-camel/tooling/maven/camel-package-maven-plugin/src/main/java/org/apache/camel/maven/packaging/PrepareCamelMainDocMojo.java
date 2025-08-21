@@ -22,8 +22,7 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.inject.Inject;
+import java.util.stream.Collectors;
 
 import org.apache.camel.tooling.model.JsonMapper;
 import org.apache.camel.tooling.model.MainModel;
@@ -37,11 +36,11 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.codehaus.plexus.build.BuildContext;
 import org.mvel2.templates.TemplateRuntime;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 /**
- * Prepares camel-main by updating the main documentation.
+ * Prepares camel-main by updating main documentation.
  */
 @Mojo(name = "prepare-main", defaultPhase = LifecyclePhase.PROCESS_CLASSES, threadSafe = true,
       requiresDependencyResolution = ResolutionScope.COMPILE)
@@ -59,24 +58,19 @@ public class PrepareCamelMainDocMojo extends AbstractGeneratorMojo {
     @Parameter(defaultValue = "${project.basedir}/src/generated/resources/META-INF/camel-main-configuration-metadata.json")
     protected File mainJsonFile;
 
-    @Inject
-    public PrepareCamelMainDocMojo(MavenProjectHelper projectHelper, BuildContext buildContext) {
-        super(projectHelper, buildContext);
-    }
-
     @Override
-    public void execute(MavenProject project)
+    public void execute(MavenProject project, MavenProjectHelper projectHelper, BuildContext buildContext)
             throws MojoFailureException, MojoExecutionException {
         docDocDir = new File(project.getBasedir(), "src/main/docs");
         mainJsonFile
                 = new File(project.getBasedir(), "src/generated/resources/META-INF/camel-main-configuration-metadata.json");
-        super.execute(project);
+        super.execute(project, projectHelper, buildContext);
     }
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (!mainJsonFile.exists()) {
-            // it's not this module so skip
+            // its not this module so skip
             return;
         }
 
@@ -104,7 +98,7 @@ public class PrepareCamelMainDocMojo extends AbstractGeneratorMojo {
     }
 
     private static String evaluateTemplate(final String templateName, final MainModel model) throws MojoExecutionException {
-        StringBuilder sb = new StringBuilder(256);
+        StringBuilder sb = new StringBuilder();
 
         try (InputStream templateStream = UpdateReadmeMojo.class.getClassLoader().getResourceAsStream(templateName)) {
             String template = PackageHelper.loadText(templateStream);
@@ -114,7 +108,7 @@ public class PrepareCamelMainDocMojo extends AbstractGeneratorMojo {
                 root.put("group", group);
                 root.put("options", model.getOptions().stream()
                         .filter(o -> o.getName().startsWith(group.getName()))
-                        .toList());
+                        .collect(Collectors.toList()));
                 String eval
                         = (String) TemplateRuntime.eval(template, root, Collections.singletonMap("util", MvelHelper.INSTANCE));
                 sb.append(eval);

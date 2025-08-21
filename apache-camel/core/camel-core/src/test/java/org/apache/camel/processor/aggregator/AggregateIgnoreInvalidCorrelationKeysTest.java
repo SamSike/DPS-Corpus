@@ -37,7 +37,7 @@ public class AggregateIgnoreInvalidCorrelationKeysTest extends ContextTestSuppor
     public void testAggregateIgnoreInvalidCorrelationKeys() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(header("id"), new BodyInAggregatingStrategy()).completionSize(2)
                         .ignoreInvalidCorrelationKeys().to("mock:result");
             }
@@ -60,7 +60,7 @@ public class AggregateIgnoreInvalidCorrelationKeysTest extends ContextTestSuppor
     public void testAggregateNotIgnoreInvalidCorrelationKeys() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(header("id"), new BodyInAggregatingStrategy()).completionSize(2)
                         .to("mock:result");
             }

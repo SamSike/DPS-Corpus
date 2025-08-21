@@ -43,7 +43,8 @@ public class SftpFromSedaDeleteFileIT extends SftpServerTestSupport {
 
     @Override
     @BeforeEach
-    public void doPostSetup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         createSampleFile();
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,9 +56,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Server-side handling of RSocket requests.
  *
  * @author Rossen Stoyanchev
- * @author Sebastien Deleuze
  */
-class RSocketClientToServerIntegrationTests {
+public class RSocketClientToServerIntegrationTests {
 
 	private static final MimeType FOO_MIME_TYPE = MimeTypeUtils.parseMimeType("messaging/x.foo");
 
@@ -96,16 +95,15 @@ class RSocketClientToServerIntegrationTests {
 	}
 
 	@AfterAll
-	static void tearDownOnce() {
+	public static void tearDownOnce() {
 		requester.rsocketClient().dispose();
 		server.dispose();
 	}
 
 
 	@Test
-	void fireAndForget() {
+	public void fireAndForget() {
 		Flux.range(1, 3)
-				.delayElements(Duration.ofMillis(10))
 				.concatMap(i -> requester.route("receive").data("Hello " + i).send())
 				.blockLast();
 
@@ -113,7 +111,7 @@ class RSocketClientToServerIntegrationTests {
 				.expectNext("Hello 1")
 				.expectNext("Hello 2")
 				.expectNext("Hello 3")
-				.thenAwait(Duration.ofMillis(10))
+				.thenAwait(Duration.ofMillis(50))
 				.thenCancel()
 				.verify(Duration.ofSeconds(5));
 
@@ -123,7 +121,7 @@ class RSocketClientToServerIntegrationTests {
 	}
 
 	@Test
-	void echo() {
+	public void echo() {
 		Flux<String> result = Flux.range(1, 3).concatMap(i ->
 				requester.route("echo").data("Hello " + i).retrieveMono(String.class));
 
@@ -134,7 +132,7 @@ class RSocketClientToServerIntegrationTests {
 	}
 
 	@Test
-	void echoAsync() {
+	public void echoAsync() {
 		Flux<String> result = Flux.range(1, 3).concatMap(i ->
 				requester.route("echo-async").data("Hello " + i).retrieveMono(String.class));
 
@@ -145,7 +143,7 @@ class RSocketClientToServerIntegrationTests {
 	}
 
 	@Test
-	void echoStream() {
+	public void echoStream() {
 		Flux<String> result = requester.route("echo-stream").data("Hello").retrieveFlux(String.class);
 
 		StepVerifier.create(result)
@@ -155,7 +153,7 @@ class RSocketClientToServerIntegrationTests {
 	}
 
 	@Test
-	void echoChannel() {
+	public void echoChannel() {
 		Flux<String> result = requester.route("echo-channel")
 				.data(Flux.range(1, 10).map(i -> "Hello " + i), String.class)
 				.retrieveFlux(String.class);
@@ -173,16 +171,15 @@ class RSocketClientToServerIntegrationTests {
 	}
 
 	@Test
-	void metadataPush() {
+	public void metadataPush() {
 		Flux.just("bar", "baz")
-				.delayElements(Duration.ofMillis(10))
 				.concatMap(s -> requester.route("foo-updates").metadata(s, FOO_MIME_TYPE).sendMetadata())
 				.blockLast();
 
 		StepVerifier.create(context.getBean(ServerController.class).metadataPushPayloads.asFlux())
 				.expectNext("bar")
 				.expectNext("baz")
-				.thenAwait(Duration.ofMillis(10))
+				.thenAwait(Duration.ofMillis(50))
 				.thenCancel()
 				.verify(Duration.ofSeconds(5));
 
@@ -192,19 +189,19 @@ class RSocketClientToServerIntegrationTests {
 	}
 
 	@Test
-	void voidReturnValue() {
+	public void voidReturnValue() {
 		Mono<String> result = requester.route("void-return-value").data("Hello").retrieveMono(String.class);
 		StepVerifier.create(result).expectComplete().verify(Duration.ofSeconds(5));
 	}
 
 	@Test
-	void voidReturnValueFromExceptionHandler() {
+	public void voidReturnValueFromExceptionHandler() {
 		Mono<String> result = requester.route("void-return-value").data("bad").retrieveMono(String.class);
 		StepVerifier.create(result).expectComplete().verify(Duration.ofSeconds(5));
 	}
 
 	@Test
-	void handleWithThrownException() {
+	public void handleWithThrownException() {
 		Mono<String> result = requester.route("thrown-exception").data("a").retrieveMono(String.class);
 		StepVerifier.create(result)
 				.expectNext("Invalid input error handled")
@@ -213,7 +210,7 @@ class RSocketClientToServerIntegrationTests {
 	}
 
 	@Test
-	void handleWithErrorSignal() {
+	public void handleWithErrorSignal() {
 		Mono<String> result = requester.route("error-signal").data("a").retrieveMono(String.class);
 		StepVerifier.create(result)
 				.expectNext("Invalid input error handled")
@@ -222,7 +219,7 @@ class RSocketClientToServerIntegrationTests {
 	}
 
 	@Test
-	void noMatchingRoute() {
+	public void noMatchingRoute() {
 		Mono<String> result = requester.route("invalid").data("anything").retrieveMono(String.class);
 		StepVerifier.create(result)
 				.expectErrorMessage("No handler for destination 'invalid'")

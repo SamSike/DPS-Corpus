@@ -26,11 +26,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.builder.NotifyBuilder;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mail.Mailbox.MailboxUser;
-import org.apache.camel.component.mail.Mailbox.Protocol;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
+import org.jvnet.mock_javamail.Mailbox;
 
 import static org.apache.camel.test.junit5.TestSupport.body;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,8 +39,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Mail producer concurrent test.
  */
 public class MailProducerConcurrentTest extends CamelTestSupport {
-    private static final MailboxUser camel = Mailbox.getOrCreateUser("camel", "secret");
-    private static final MailboxUser someone = Mailbox.getOrCreateUser("someone", "secret");
 
     @Test
     public void testNoConcurrentProducers() throws Exception {
@@ -67,7 +64,7 @@ public class MailProducerConcurrentTest extends CamelTestSupport {
             final int index = i;
             executor.submit(new Callable<Object>() {
                 public Object call() {
-                    template.sendBodyAndHeader("direct:start", "Message " + index, "To", someone.getEmail());
+                    template.sendBodyAndHeader("direct:start", "Message " + index, "To", "someone@localhost");
                     latch.countDown();
                     return null;
                 }
@@ -80,8 +77,8 @@ public class MailProducerConcurrentTest extends CamelTestSupport {
         MockEndpoint.assertIsSatisfied(context);
         assertTrue(builder.matchesWaitTime());
 
-        Mailbox box = someone.getInbox();
-        assertEquals(files, box.getMessageCount());
+        Mailbox box = Mailbox.get("someone@localhost");
+        assertEquals(files, box.size());
 
         // as we use concurrent producers the mails can arrive out of order
         Set<Object> bodies = new HashSet<>();
@@ -98,7 +95,7 @@ public class MailProducerConcurrentTest extends CamelTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() {
-                from("direct:start").to(camel.uriPrefix(Protocol.smtp), "mock:result");
+                from("direct:start").to("smtp://camel@localhost", "mock:result");
             }
         };
     }

@@ -26,7 +26,7 @@ public class CamelJaxbNoNamespaceSchemaLocationSpringTest extends CamelJaxbNoNam
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        testConfiguration().withUseRouteBuilder(false);
+        setUseRouteBuilder(false);
         final AbstractXmlApplicationContext applicationContext
                 = new ClassPathXmlApplicationContext("org/apache/camel/jaxb/CamelJaxbNoNamespaceSchemaLocationTest.xml");
         setCamelContextService(new Service() {

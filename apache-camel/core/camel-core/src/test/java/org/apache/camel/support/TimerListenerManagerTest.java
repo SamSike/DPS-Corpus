@@ -54,9 +54,9 @@ public class TimerListenerManagerTest extends ContextTestSupport {
         executor.shutdown();
     }
 
-    private static class MyTask implements TimerListener {
+    private class MyTask implements TimerListener {
 
-        private final CountDownLatch latch = new CountDownLatch(1);
+        private CountDownLatch latch = new CountDownLatch(1);
 
         @Override
         public void onTimer() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import jakarta.servlet.ServletContext;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.io.AbstractFileResolvingResource;
 import org.springframework.core.io.ContextResource;
 import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
@@ -57,7 +57,7 @@ public class ServletContextResource extends AbstractFileResolvingResource implem
 
 
 	/**
-	 * Create a new {@code ServletContextResource} for the given path.
+	 * Create a new ServletContextResource.
 	 * <p>The Servlet spec requires that resource paths start with a slash,
 	 * even if many containers accept paths without leading slash too.
 	 * Consequently, the given path will be prepended with a slash if it
@@ -94,7 +94,6 @@ public class ServletContextResource extends AbstractFileResolvingResource implem
 		return this.path;
 	}
 
-
 	/**
 	 * This implementation checks {@code ServletContext.getResource}.
 	 * @see jakarta.servlet.ServletContext#getResource(String)
@@ -112,7 +111,7 @@ public class ServletContextResource extends AbstractFileResolvingResource implem
 
 	/**
 	 * This implementation delegates to {@code ServletContext.getResourceAsStream},
-	 * which returns {@code null} in case of a non-readable resource (for example, a directory).
+	 * which returns {@code null} in case of a non-readable resource (e.g. a directory).
 	 * @see jakarta.servlet.ServletContext#getResourceAsStream(String)
 	 */
 	@Override
@@ -122,7 +121,8 @@ public class ServletContextResource extends AbstractFileResolvingResource implem
 			try {
 				is.close();
 			}
-			catch (IOException ignored) {
+			catch (IOException ex) {
+				// ignore
 			}
 			return true;
 		}
@@ -139,15 +139,10 @@ public class ServletContextResource extends AbstractFileResolvingResource implem
 				return true;
 			}
 			else {
-				String realPath = this.servletContext.getRealPath(this.path);
-				if (realPath == null) {
-					return false;
-				}
-				File file = new File(realPath);
-				return (file.exists() && file.isFile());
+				return (this.servletContext.getRealPath(this.path) != null);
 			}
 		}
-		catch (IOException ex) {
+		catch (MalformedURLException ex) {
 			return false;
 		}
 	}
@@ -218,7 +213,8 @@ public class ServletContextResource extends AbstractFileResolvingResource implem
 	 * @see org.springframework.util.StringUtils#getFilename(String)
 	 */
 	@Override
-	public @Nullable String getFilename() {
+	@Nullable
+	public String getFilename() {
 		return StringUtils.getFilename(this.path);
 	}
 
@@ -242,8 +238,14 @@ public class ServletContextResource extends AbstractFileResolvingResource implem
 	 */
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof ServletContextResource that &&
-				this.path.equals(that.path) && this.servletContext.equals(that.servletContext)));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof ServletContextResource)) {
+			return false;
+		}
+		ServletContextResource otherRes = (ServletContextResource) other;
+		return (this.servletContext.equals(otherRes.servletContext) && this.path.equals(otherRes.path));
 	}
 
 	/**

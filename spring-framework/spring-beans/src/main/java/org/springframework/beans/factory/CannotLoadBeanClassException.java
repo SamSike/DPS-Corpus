@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package org.springframework.beans.factory;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.FatalBeanException;
+import org.springframework.lang.Nullable;
 
 /**
  * Exception thrown when the BeanFactory cannot load the specified class
@@ -30,11 +29,13 @@ import org.springframework.beans.FatalBeanException;
 @SuppressWarnings("serial")
 public class CannotLoadBeanClassException extends FatalBeanException {
 
-	private final @Nullable String resourceDescription;
+	@Nullable
+	private final String resourceDescription;
 
 	private final String beanName;
 
-	private final @Nullable String beanClassName;
+	@Nullable
+	private final String beanClassName;
 
 
 	/**
@@ -79,7 +80,8 @@ public class CannotLoadBeanClassException extends FatalBeanException {
 	 * Return the description of the resource that the bean
 	 * definition came from.
 	 */
-	public @Nullable String getResourceDescription() {
+	@Nullable
+	public String getResourceDescription() {
 		return this.resourceDescription;
 	}
 
@@ -93,7 +95,8 @@ public class CannotLoadBeanClassException extends FatalBeanException {
 	/**
 	 * Return the name of the class we were trying to load.
 	 */
-	public @Nullable String getBeanClassName() {
+	@Nullable
+	public String getBeanClassName() {
 		return this.beanClassName;
 	}
 

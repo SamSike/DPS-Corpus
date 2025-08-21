@@ -29,9 +29,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.model.AggregateDefinition;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
-@DisabledIfSystemProperty(named = "ci.env.name", matches = ".*", disabledReason = "Flaky on Github CI")
 public class AlbertoAggregatorTest extends ContextTestSupport {
     private static final String SURNAME_HEADER = "surname";
     private static final String TYPE_HEADER = "type";
@@ -43,18 +41,6 @@ public class AlbertoAggregatorTest extends ContextTestSupport {
         String allNames
                 = "Harpo Marx,Fiodor Karamazov,Chico Marx,Ivan Karamazov,Groucho Marx,Alexei Karamazov,Dimitri Karamazov";
 
-        final Map<String, List<String>> allBrothers = getAllBrothers();
-
-        MockEndpoint resultEndpoint = getMockEndpoint("mock:result");
-        resultEndpoint.expectedMessageCount(1);
-        resultEndpoint.expectedBodiesReceived(allBrothers);
-
-        template.sendBody("direct:start", allNames);
-
-        assertMockEndpointsSatisfied();
-    }
-
-    private static Map<String, List<String>> getAllBrothers() {
         List<String> marxBrothers = new ArrayList<>();
         marxBrothers.add("Harpo");
         marxBrothers.add("Chico");
@@ -69,14 +55,21 @@ public class AlbertoAggregatorTest extends ContextTestSupport {
         Map<String, List<String>> allBrothers = new HashMap<>();
         allBrothers.put("Marx", marxBrothers);
         allBrothers.put("Karamazov", karamazovBrothers);
-        return allBrothers;
+
+        MockEndpoint resultEndpoint = getMockEndpoint("mock:result");
+        resultEndpoint.expectedMessageCount(1);
+        resultEndpoint.expectedBodiesReceived(allBrothers);
+
+        template.sendBody("direct:start", allNames);
+
+        assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
 
         return new RouteBuilder() {
-            final AggregationStrategy surnameAggregator = new AggregationStrategy() {
+            AggregationStrategy surnameAggregator = new AggregationStrategy() {
                 @SuppressWarnings("unchecked")
                 public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
                     debugIn("Surname Aggregator", oldExchange, newExchange);
@@ -100,7 +93,7 @@ public class AlbertoAggregatorTest extends ContextTestSupport {
             };
 
             @SuppressWarnings("unchecked")
-            final AggregationStrategy brothersAggregator = new AggregationStrategy() {
+            AggregationStrategy brothersAggregator = new AggregationStrategy() {
                 public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
                     debugIn("Brothers Aggregator", oldExchange, newExchange);
 
@@ -126,20 +119,20 @@ public class AlbertoAggregatorTest extends ContextTestSupport {
 
             private void debugIn(String stringId, Exchange oldExchange, Exchange newExchange) {
                 if (oldExchange != null) {
-                    log.debug("{} old headers in: {}", stringId, oldExchange.getIn().getHeaders());
-                    log.debug("{} old body in: {}", stringId, oldExchange.getIn().getBody());
+                    log.debug(stringId + " old headers in: " + oldExchange.getIn().getHeaders());
+                    log.debug(stringId + " old body in: " + oldExchange.getIn().getBody());
                 }
-                log.debug("{} new headers in: {}", stringId, newExchange.getIn().getHeaders());
-                log.debug("{} new body in: {}", stringId, newExchange.getIn().getBody());
+                log.debug(stringId + " new headers in: " + newExchange.getIn().getHeaders());
+                log.debug(stringId + " new body in: " + newExchange.getIn().getBody());
             }
 
             private void debugOut(String stringId, Exchange exchange) {
-                log.debug("{} old headers out: {}", stringId, exchange.getIn().getHeaders());
-                log.debug("{} old body out: {}", stringId, exchange.getIn().getBody());
+                log.debug(stringId + " old headers out: " + exchange.getIn().getHeaders());
+                log.debug(stringId + " old body out: " + exchange.getIn().getBody());
             }
 
             @Override
-            public void configure() {
+            public void configure() throws Exception {
 
                 from("direct:start")
                         // Separate people
@@ -156,7 +149,7 @@ public class AlbertoAggregatorTest extends ContextTestSupport {
                                 // in a
                                 // header
                                 new Processor() {
-                                    public void process(Exchange exchange) {
+                                    public void process(Exchange exchange) throws Exception {
 
                                         String[] parts = exchange.getIn().getBody(String.class).split(" ");
                                         exchange.getIn().setBody(parts[0]);

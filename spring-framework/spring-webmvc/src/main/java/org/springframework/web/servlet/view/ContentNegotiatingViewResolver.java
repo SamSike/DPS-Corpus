@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,16 +28,15 @@ import java.util.Set;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.http.MediaType;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.MimeTypeUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.accept.ContentNegotiationManager;
@@ -90,15 +89,18 @@ import org.springframework.web.servlet.ViewResolver;
 public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 		implements ViewResolver, Ordered, InitializingBean {
 
-	private @Nullable ContentNegotiationManager contentNegotiationManager;
+	@Nullable
+	private ContentNegotiationManager contentNegotiationManager;
 
 	private final ContentNegotiationManagerFactoryBean cnmFactoryBean = new ContentNegotiationManagerFactoryBean();
 
 	private boolean useNotAcceptableStatusCode = false;
 
-	private @Nullable List<View> defaultViews;
+	@Nullable
+	private List<View> defaultViews;
 
-	private @Nullable List<ViewResolver> viewResolvers;
+	@Nullable
+	private List<ViewResolver> viewResolvers;
 
 	private int order = Ordered.HIGHEST_PRECEDENCE;
 
@@ -117,7 +119,8 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 	 * Return the {@link ContentNegotiationManager} to use to determine requested media types.
 	 * @since 4.1.9
 	 */
-	public @Nullable ContentNegotiationManager getContentNegotiationManager() {
+	@Nullable
+	public ContentNegotiationManager getContentNegotiationManager() {
 		return this.contentNegotiationManager;
 	}
 
@@ -201,6 +204,7 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 
 		}
 		AnnotationAwareOrderComparator.sort(this.viewResolvers);
+		this.cnmFactoryBean.setServletContext(servletContext);
 	}
 
 	@Override
@@ -215,7 +219,8 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 
 
 	@Override
-	public @Nullable View resolveViewName(String viewName, Locale locale) throws Exception {
+	@Nullable
+	public View resolveViewName(String viewName, Locale locale) throws Exception {
 		RequestAttributes attrs = RequestContextHolder.getRequestAttributes();
 		Assert.state(attrs instanceof ServletRequestAttributes, "No current ServletRequestAttributes");
 		List<MediaType> requestedMediaTypes = getMediaTypes(((ServletRequestAttributes) attrs).getRequest());
@@ -227,8 +232,8 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 			}
 		}
 
-		String mediaTypeInfo = (logger.isDebugEnabled() && requestedMediaTypes != null ?
-				" given " + requestedMediaTypes.toString() : "");
+		String mediaTypeInfo = logger.isDebugEnabled() && requestedMediaTypes != null ?
+				" given " + requestedMediaTypes.toString() : "";
 
 		if (this.useNotAcceptableStatusCode) {
 			if (logger.isDebugEnabled()) {
@@ -247,7 +252,8 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 	 * @param request the current servlet request
 	 * @return the list of media types requested, if any
 	 */
-	protected @Nullable List<MediaType> getMediaTypes(HttpServletRequest request) {
+	@Nullable
+	protected List<MediaType> getMediaTypes(HttpServletRequest request) {
 		Assert.state(this.contentNegotiationManager != null, "No ContentNegotiationManager set");
 		try {
 			ServletWebRequest webRequest = new ServletWebRequest(request);
@@ -262,7 +268,7 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 				}
 			}
 			List<MediaType> selectedMediaTypes = new ArrayList<>(compatibleMediaTypes);
-			MimeTypeUtils.sortBySpecificity(selectedMediaTypes);
+			MediaType.sortBySpecificityAndQuality(selectedMediaTypes);
 			return selectedMediaTypes;
 		}
 		catch (HttpMediaTypeNotAcceptableException ex) {
@@ -291,12 +297,7 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 	 */
 	private MediaType getMostSpecificMediaType(MediaType acceptType, MediaType produceType) {
 		produceType = produceType.copyQualityValue(acceptType);
-		if (acceptType.isLessSpecific(produceType)) {
-			return produceType;
-		}
-		else {
-			return acceptType;
-		}
+		return (MediaType.SPECIFICITY_COMPARATOR.compare(acceptType, produceType) < 0 ? acceptType : produceType);
 	}
 
 	private List<View> getCandidateViews(String viewName, Locale locale, List<MediaType> requestedMediaTypes)
@@ -328,9 +329,11 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 		return candidateViews;
 	}
 
-	private @Nullable View getBestView(List<View> candidateViews, List<MediaType> requestedMediaTypes, RequestAttributes attrs) {
+	@Nullable
+	private View getBestView(List<View> candidateViews, List<MediaType> requestedMediaTypes, RequestAttributes attrs) {
 		for (View candidateView : candidateViews) {
-			if (candidateView instanceof SmartView smartView) {
+			if (candidateView instanceof SmartView) {
+				SmartView smartView = (SmartView) candidateView;
 				if (smartView.isRedirectView()) {
 					return candidateView;
 				}
@@ -358,7 +361,8 @@ public class ContentNegotiatingViewResolver extends WebApplicationObjectSupport
 	private static final View NOT_ACCEPTABLE_VIEW = new View() {
 
 		@Override
-		public @Nullable String getContentType() {
+		@Nullable
+		public String getContentType() {
 			return null;
 		}
 

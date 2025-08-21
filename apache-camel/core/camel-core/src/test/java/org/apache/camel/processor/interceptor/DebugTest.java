@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DebugTest extends ContextTestSupport {
 
-    private final List<String> logs = new ArrayList<>();
+    private List<String> logs = new ArrayList<>();
     private Condition camelCondition;
     private Condition mockCondition;
     private Condition doneCondition;
@@ -62,15 +62,16 @@ public class DebugTest extends ContextTestSupport {
         };
 
         camelCondition = new ConditionSupport() {
-            public boolean matchProcess(Exchange exchange, Processor processor, NamedNode definition, boolean before) {
+            public boolean matchProcess(Exchange exchange, Processor processor, NamedNode definition) {
                 return body().contains("Camel").matches(exchange);
             }
         };
 
         mockCondition = new ConditionSupport() {
-            public boolean matchProcess(Exchange exchange, Processor processor, NamedNode definition, boolean before) {
+            public boolean matchProcess(Exchange exchange, Processor processor, NamedNode definition) {
                 // match when sending to mocks
-                if (definition instanceof ToDefinition to) {
+                if (definition instanceof ToDefinition) {
+                    ToDefinition to = (ToDefinition) definition;
                     return to.getUri().startsWith("mock");
                 }
                 return false;
@@ -179,10 +180,10 @@ public class DebugTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // turn on debugging
                 context.setDebugging(true);
                 context.setDebugger(new DefaultDebugger());

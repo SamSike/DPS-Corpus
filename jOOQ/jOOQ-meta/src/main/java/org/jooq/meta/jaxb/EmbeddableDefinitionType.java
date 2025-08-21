@@ -32,7 +32,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class EmbeddableDefinitionType implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String catalog;
     @XmlJavaTypeAdapter(StringAdapter.class)
@@ -49,8 +49,6 @@ public class EmbeddableDefinitionType implements Serializable, XMLAppendable
     protected String tables;
     @XmlElement(defaultValue = "false")
     protected Boolean replacesFields = false;
-    @XmlElement(defaultValue = "false")
-    protected Boolean ignoreUnused = false;
     @XmlElementWrapper(name = "fields")
     @XmlElement(name = "field")
     protected List<EmbeddableField> fields;
@@ -180,7 +178,7 @@ public class EmbeddableDefinitionType implements Serializable, XMLAppendable
     }
 
     /**
-     * Specify that the embeddable field replaces its underlying fields in code generation output, and when working with asterisks.
+     * Sets the value of the replacesFields property.
      * 
      * @param value
      *     allowed object is
@@ -189,30 +187,6 @@ public class EmbeddableDefinitionType implements Serializable, XMLAppendable
      */
     public void setReplacesFields(Boolean value) {
         this.replacesFields = value;
-    }
-
-    /**
-     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isIgnoreUnused() {
-        return ignoreUnused;
-    }
-
-    /**
-     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setIgnoreUnused(Boolean value) {
-        this.ignoreUnused = value;
     }
 
     public List<EmbeddableField> getFields() {
@@ -289,21 +263,8 @@ public class EmbeddableDefinitionType implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Specify that the embeddable field replaces its underlying fields in code generation output, and when working with asterisks.
-     * 
-     */
     public EmbeddableDefinitionType withReplacesFields(Boolean value) {
         setReplacesFields(value);
-        return this;
-    }
-
-    /**
-     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
-     * 
-     */
-    public EmbeddableDefinitionType withIgnoreUnused(Boolean value) {
-        setIgnoreUnused(value);
         return this;
     }
 
@@ -338,7 +299,6 @@ public class EmbeddableDefinitionType implements Serializable, XMLAppendable
         builder.append("referencingComment", referencingComment);
         builder.append("tables", tables);
         builder.append("replacesFields", replacesFields);
-        builder.append("ignoreUnused", ignoreUnused);
         builder.append("fields", "field", fields);
     }
 
@@ -433,17 +393,8 @@ public class EmbeddableDefinitionType implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (ignoreUnused == null) {
-            if (other.ignoreUnused!= null) {
-                return false;
-            }
-        } else {
-            if (!ignoreUnused.equals(other.ignoreUnused)) {
-                return false;
-            }
-        }
-        if ((fields == null)||fields.isEmpty()) {
-            if ((other.fields!= null)&&(!other.fields.isEmpty())) {
+        if (fields == null) {
+            if (other.fields!= null) {
                 return false;
             }
         } else {
@@ -466,8 +417,7 @@ public class EmbeddableDefinitionType implements Serializable, XMLAppendable
         result = ((prime*result)+((referencingComment == null)? 0 :referencingComment.hashCode()));
         result = ((prime*result)+((tables == null)? 0 :tables.hashCode()));
         result = ((prime*result)+((replacesFields == null)? 0 :replacesFields.hashCode()));
-        result = ((prime*result)+((ignoreUnused == null)? 0 :ignoreUnused.hashCode()));
-        result = ((prime*result)+(((fields == null)||fields.isEmpty())? 0 :fields.hashCode()));
+        result = ((prime*result)+((fields == null)? 0 :fields.hashCode()));
         return result;
     }
 

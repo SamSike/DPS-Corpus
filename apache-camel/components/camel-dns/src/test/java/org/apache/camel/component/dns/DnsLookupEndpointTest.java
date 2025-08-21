@@ -61,7 +61,7 @@ public class DnsLookupEndpointTest extends CamelTestSupport {
         try {
             template.sendBody("hello");
             fail("Should have thrown exception");
-        } catch (Exception t) {
+        } catch (Throwable t) {
             assertTrue(t.getCause() instanceof IllegalArgumentException);
         }
         resultEndpoint.assertIsSatisfied();
@@ -73,7 +73,7 @@ public class DnsLookupEndpointTest extends CamelTestSupport {
         try {
             template.sendBodyAndHeader("hello", "dns.name", "");
             fail("Should have thrown exception");
-        } catch (Exception t) {
+        } catch (Throwable t) {
             assertTrue(t.getCause() instanceof IllegalArgumentException, t.toString());
         }
         resultEndpoint.assertIsSatisfied();

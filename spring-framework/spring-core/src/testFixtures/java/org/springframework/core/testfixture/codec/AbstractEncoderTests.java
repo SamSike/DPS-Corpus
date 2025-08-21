@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.springframework.core.testfixture.codec;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -30,6 +29,7 @@ import org.springframework.core.codec.Encoder;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.testfixture.io.buffer.AbstractLeakCheckingTests;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
 
@@ -39,8 +39,8 @@ import static org.springframework.core.io.buffer.DataBufferUtils.release;
 
 /**
  * Abstract base class for {@link Encoder} unit tests. Subclasses need to implement
- * {@link #canEncode()} and {@link #encode()}, possibly using the wide variety of
- * helper methods like {@link #testEncodeAll}.
+ * {@link #canEncode()} and {@link #encode()}, possibly using the wide
+ *  * variety of helper methods like {@link #testEncodeAll}.
  *
  * @author Arjen Poutsma
  * @since 5.1.3
@@ -58,7 +58,9 @@ public abstract class AbstractEncoderTests<E extends Encoder<?>> extends Abstrac
 	 * @param encoder the encoder
 	 */
 	protected AbstractEncoderTests(E encoder) {
+
 		Assert.notNull(encoder, "Encoder must not be null");
+
 		this.encoder = encoder;
 	}
 
@@ -67,21 +69,21 @@ public abstract class AbstractEncoderTests<E extends Encoder<?>> extends Abstrac
 	 * Subclasses should implement this method to test {@link Encoder#canEncode}.
 	 */
 	@Test
-	protected abstract void canEncode() throws Exception;
+	public abstract void canEncode() throws Exception;
 
 	/**
 	 * Subclasses should implement this method to test {@link Encoder#encode}, possibly using
 	 * {@link #testEncodeAll} or other helper methods.
 	 */
 	@Test
-	protected abstract void encode() throws Exception;
+	public abstract void encode() throws Exception;
 
 
 	/**
-	 * Helper method that tests for a variety of encoding scenarios. This method
+	 * Helper methods that tests for a variety of encoding scenarios. This methods
 	 * invokes:
 	 * <ul>
-	 *     <li>{@link #testEncode(Publisher, ResolvableType, MimeType, Map, Consumer)}</li>
+	 *     <li>{@link #testEncode(Publisher, ResolvableType, Consumer, MimeType, Map)}</li>
 	 *     <li>{@link #testEncodeError(Publisher, ResolvableType, MimeType, Map)}</li>
 	 *     <li>{@link #testEncodeCancel(Publisher, ResolvableType, MimeType, Map)}</li>
 	 *     <li>{@link #testEncodeEmpty(ResolvableType, MimeType, Map)}</li>
@@ -94,32 +96,30 @@ public abstract class AbstractEncoderTests<E extends Encoder<?>> extends Abstrac
 	 */
 	protected <T> void testEncodeAll(Publisher<? extends T> input, Class<? extends T> inputClass,
 			Consumer<StepVerifier.FirstStep<DataBuffer>> stepConsumer) {
-
-		testEncodeAll(input, ResolvableType.forClass(inputClass), null, null, stepConsumer);
+		testEncodeAll(input, ResolvableType.forClass(inputClass), stepConsumer, null, null);
 	}
 
 	/**
-	 * Helper method that tests for a variety of decoding scenarios. This method
+	 * Helper methods that tests for a variety of decoding scenarios. This methods
 	 * invokes:
 	 * <ul>
-	 *     <li>{@link #testEncode(Publisher, ResolvableType, MimeType, Map, Consumer)}</li>
+	 *     <li>{@link #testEncode(Publisher, ResolvableType, Consumer, MimeType, Map)}</li>
 	 *     <li>{@link #testEncodeError(Publisher, ResolvableType, MimeType, Map)}</li>
 	 *     <li>{@link #testEncodeCancel(Publisher, ResolvableType, MimeType, Map)}</li>
 	 *     <li>{@link #testEncodeEmpty(ResolvableType, MimeType, Map)}</li>
 	 * </ul>
 	 *
-	 * @param <T> the output type
 	 * @param input the input to be provided to the encoder
 	 * @param inputType the input type
+	 * @param stepConsumer a consumer to {@linkplain StepVerifier verify} the output
 	 * @param mimeType the mime type to use for decoding. May be {@code null}.
 	 * @param hints the hints used for decoding. May be {@code null}.
-	 * @param stepConsumer a consumer to {@linkplain StepVerifier verify} the output
+	 * @param <T> the output type
 	 */
 	protected <T> void testEncodeAll(Publisher<? extends T> input, ResolvableType inputType,
-			@Nullable MimeType mimeType, @Nullable Map<String, Object> hints,
-			Consumer<StepVerifier.FirstStep<DataBuffer>> stepConsumer) {
-
-		testEncode(input, inputType, mimeType, hints, stepConsumer);
+			Consumer<StepVerifier.FirstStep<DataBuffer>> stepConsumer,
+			@Nullable MimeType mimeType, @Nullable Map<String, Object> hints) {
+		testEncode(input, inputType, stepConsumer, mimeType, hints);
 		testEncodeError(input, inputType, mimeType, hints);
 		testEncodeCancel(input, inputType, mimeType, hints);
 		testEncodeEmpty(inputType, mimeType, hints);
@@ -135,25 +135,25 @@ public abstract class AbstractEncoderTests<E extends Encoder<?>> extends Abstrac
 	 */
 	protected <T> void testEncode(Publisher<? extends T> input, Class<? extends T> inputClass,
 			Consumer<StepVerifier.FirstStep<DataBuffer>> stepConsumer) {
-
-		testEncode(input, ResolvableType.forClass(inputClass), null, null, stepConsumer);
+		testEncode(input, ResolvableType.forClass(inputClass), stepConsumer, null, null);
 	}
 
 	/**
 	 * Test a standard {@link Encoder#encode encode} scenario.
 	 *
-	 * @param <T> the output type
 	 * @param input the input to be provided to the encoder
 	 * @param inputType the input type
+	 * @param stepConsumer a consumer to {@linkplain StepVerifier verify} the output
 	 * @param mimeType the mime type to use for decoding. May be {@code null}.
 	 * @param hints the hints used for decoding. May be {@code null}.
-	 * @param stepConsumer a consumer to {@linkplain StepVerifier verify} the output
+	 * @param <T> the output type
 	 */
 	protected <T> void testEncode(Publisher<? extends T> input, ResolvableType inputType,
-			@Nullable MimeType mimeType, @Nullable Map<String, Object> hints,
-			Consumer<StepVerifier.FirstStep<DataBuffer>> stepConsumer) {
+			Consumer<StepVerifier.FirstStep<DataBuffer>> stepConsumer,
+			@Nullable MimeType mimeType, @Nullable Map<String, Object> hints) {
 
-		Flux<DataBuffer> result = encoder().encode(input, this.bufferFactory, inputType, mimeType, hints);
+		Flux<DataBuffer> result = encoder().encode(input, this.bufferFactory, inputType,
+				mimeType, hints);
 		StepVerifier.FirstStep<DataBuffer> step = StepVerifier.create(result);
 		stepConsumer.accept(step);
 	}
@@ -251,13 +251,15 @@ public abstract class AbstractEncoderTests<E extends Encoder<?>> extends Abstrac
 		return dataBuffer -> {
 			String actual = dataBuffer.toString(UTF_8);
 			release(dataBuffer);
-			assertThat(actual).isEqualToNormalizingNewlines(expected);
+			assertThat(actual).isEqualTo(expected);
 		};
+
 	}
 
 	@SuppressWarnings("unchecked")
 	private <T> Encoder<T> encoder() {
 		return (Encoder<T>) this.encoder;
+
 	}
 
 	/**

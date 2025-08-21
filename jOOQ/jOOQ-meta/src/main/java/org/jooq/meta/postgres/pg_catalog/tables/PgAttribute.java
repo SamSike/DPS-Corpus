@@ -7,10 +7,8 @@ package org.jooq.meta.postgres.pg_catalog.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -159,29 +157,35 @@ public class PgAttribute extends TableImpl<Record> {
     /**
      * The column <code>pg_catalog.pg_attribute.attacl</code>.
      */
-    public final TableField<Record, String[]> ATTACL = createField(DSL.name("attacl"), SQLDataType.VARCHAR.array(), this, "");
+    public final TableField<Record, String[]> ATTACL = createField(DSL.name("attacl"), SQLDataType.VARCHAR.getArrayDataType(), this, "");
 
     /**
      * The column <code>pg_catalog.pg_attribute.attoptions</code>.
      */
-    public final TableField<Record, String[]> ATTOPTIONS = createField(DSL.name("attoptions"), SQLDataType.CLOB.array(), this, "");
+    public final TableField<Record, String[]> ATTOPTIONS = createField(DSL.name("attoptions"), SQLDataType.CLOB.getArrayDataType(), this, "");
 
     /**
      * The column <code>pg_catalog.pg_attribute.attfdwoptions</code>.
      */
-    public final TableField<Record, String[]> ATTFDWOPTIONS = createField(DSL.name("attfdwoptions"), SQLDataType.CLOB.array(), this, "");
+    public final TableField<Record, String[]> ATTFDWOPTIONS = createField(DSL.name("attfdwoptions"), SQLDataType.CLOB.getArrayDataType(), this, "");
 
     /**
-     * The column <code>pg_catalog.pg_attribute.attmissingval</code>.
+     * @deprecated Unknown data type. If this is a qualified, user-defined type,
+     * it may have been excluded from code generation. If this is a built-in
+     * type, you can define an explicit {@link org.jooq.Binding} to specify how
+     * this type should be handled. Deprecation can be turned off using
+     * {@literal <deprecationOnUnknownTypes/>} in your code generator
+     * configuration.
      */
-    public final TableField<Record, Object[]> ATTMISSINGVAL = createField(DSL.name("attmissingval"), SQLDataType.OTHER.array(), this, "");
+    @Deprecated
+    public final TableField<Record, Object> ATTMISSINGVAL = createField(DSL.name("attmissingval"), org.jooq.impl.DefaultDataType.getDefaultDataType("\"pg_catalog\".\"anyarray\""), this, "");
 
     private PgAttribute(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private PgAttribute(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private PgAttribute(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -205,8 +209,8 @@ public class PgAttribute extends TableImpl<Record> {
         this(DSL.name("pg_attribute"), null);
     }
 
-    public <O extends Record> PgAttribute(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, PG_ATTRIBUTE);
+    public <O extends Record> PgAttribute(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, PG_ATTRIBUTE);
     }
 
     @Override
@@ -225,35 +229,6 @@ public class PgAttribute extends TableImpl<Record> {
     }
 
     @Override
-    public List<ForeignKey<Record, ?>> getReferences() {
-        return Arrays.asList(Keys.PG_ATTRIBUTE__SYNTHETIC_FK_PG_ATTRIBUTE__SYNTHETIC_PK_PG_CLASS, Keys.PG_ATTRIBUTE__SYNTHETIC_FK_PG_ATTRIBUTE__SYNTHETIC_PK_PG_TYPE);
-    }
-
-    private transient PgClass _pgClass;
-
-    /**
-     * Get the implicit join path to the <code>pg_catalog.pg_class</code> table.
-     */
-    public PgClass pgClass() {
-        if (_pgClass == null)
-            _pgClass = new PgClass(this, Keys.PG_ATTRIBUTE__SYNTHETIC_FK_PG_ATTRIBUTE__SYNTHETIC_PK_PG_CLASS, null);
-
-        return _pgClass;
-    }
-
-    private transient PgType _pgType;
-
-    /**
-     * Get the implicit join path to the <code>pg_catalog.pg_type</code> table.
-     */
-    public PgType pgType() {
-        if (_pgType == null)
-            _pgType = new PgType(this, Keys.PG_ATTRIBUTE__SYNTHETIC_FK_PG_ATTRIBUTE__SYNTHETIC_PK_PG_TYPE, null);
-
-        return _pgType;
-    }
-
-    @Override
     public PgAttribute as(String alias) {
         return new PgAttribute(DSL.name(alias), this);
     }
@@ -263,8 +238,19 @@ public class PgAttribute extends TableImpl<Record> {
         return new PgAttribute(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public PgAttribute as(Table<?> alias) {
-        return new PgAttribute(alias.getQualifiedName(), this);
+    public PgAttribute rename(String name) {
+        return new PgAttribute(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public PgAttribute rename(Name name) {
+        return new PgAttribute(name, null);
     }
 }

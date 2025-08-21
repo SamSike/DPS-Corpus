@@ -29,7 +29,9 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.support.DefaultConsumer;
+import org.apache.plc4x.java.api.PlcConnection;
 import org.apache.plc4x.java.api.exceptions.PlcConnectionException;
+import org.apache.plc4x.java.api.exceptions.PlcIncompatibleDatatypeException;
 import org.apache.plc4x.java.api.messages.PlcReadRequest;
 import org.apache.plc4x.java.scraper.config.JobConfigurationImpl;
 import org.apache.plc4x.java.scraper.config.ScraperConfiguration;
@@ -44,7 +46,8 @@ import org.slf4j.LoggerFactory;
 public class Plc4XConsumer extends DefaultConsumer {
     private static final Logger LOGGER = LoggerFactory.getLogger(Plc4XConsumer.class);
 
-    private final Map<String, String> tags;
+    private PlcConnection plcConnection;
+    private final Map<String, Object> tags;
     private final String trigger;
     private final Plc4XEndpoint plc4XEndpoint;
 
@@ -71,15 +74,9 @@ public class Plc4XConsumer extends DefaultConsumer {
     @Override
     protected void doStart() throws Exception {
         super.doStart();
-        try {
-            plc4XEndpoint.setupConnection();
-        } catch (PlcConnectionException e) {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.error("Connection setup failed, stopping Consumer", e);
-            } else {
-                LOGGER.error("Connection setup failed, stopping Consumer");
-            }
-            doStop();
+        this.plcConnection = plc4XEndpoint.getConnection();
+        if (!plcConnection.isConnected()) {
+            plc4XEndpoint.reconnect();
         }
         if (trigger == null) {
             startUnTriggered();
@@ -89,24 +86,30 @@ public class Plc4XConsumer extends DefaultConsumer {
     }
 
     private void startUnTriggered() {
-        try {
-            plc4XEndpoint.reconnectIfNeeded();
-        } catch (PlcConnectionException e) {
-            if (LOGGER.isTraceEnabled()) {
+        if (plc4XEndpoint.isAutoReconnect() && !plcConnection.isConnected()) {
+            try {
+                plc4XEndpoint.reconnect();
+                LOGGER.debug("Successfully reconnected");
+            } catch (PlcConnectionException e) {
                 LOGGER.warn("Unable to reconnect, skipping request", e);
-            } else {
-                LOGGER.warn("Unable to reconnect, skipping request");
+                return;
             }
-            return;
         }
-
-        PlcReadRequest request = plc4XEndpoint.buildPlcReadRequest();
-
+        PlcReadRequest.Builder builder = plcConnection.readRequestBuilder();
+        for (Map.Entry<String, Object> tag : tags.entrySet()) {
+            try {
+                builder.addItem(tag.getKey(), (String) tag.getValue());
+            } catch (PlcIncompatibleDatatypeException e) {
+                LOGGER.error("For consumer, please use Map<String,String>, currently using {}",
+                        tags.getClass().getSimpleName());
+            }
+        }
+        PlcReadRequest request = builder.build();
         future = executorService.schedule(() -> request.execute().thenAccept(response -> {
             try {
                 Exchange exchange = plc4XEndpoint.createExchange();
                 Map<String, Object> rsp = new HashMap<>();
-                for (String field : response.getTagNames()) {
+                for (String field : response.getFieldNames()) {
                     rsp.put(field, response.getObject(field));
                 }
                 exchange.getIn().setBody(rsp);
@@ -118,28 +121,41 @@ public class Plc4XConsumer extends DefaultConsumer {
     }
 
     private void startTriggered() throws ScraperException {
-        ScraperConfiguration configuration = getScraperConfig(tags);
+        ScraperConfiguration configuration = getScraperConfig(validateTags());
         TriggerCollector collector = new TriggerCollectorImpl(plc4XEndpoint.getPlcDriverManager());
 
         TriggeredScraperImpl scraper = new TriggeredScraperImpl(configuration, (job, alias, response) -> {
             try {
-                plc4XEndpoint.reconnectIfNeeded();
-
+                if (plc4XEndpoint.isAutoReconnect() && !plcConnection.isConnected()) {
+                    plc4XEndpoint.reconnect();
+                    LOGGER.debug("Successfully reconnected");
+                }
                 Exchange exchange = plc4XEndpoint.createExchange();
                 exchange.getIn().setBody(response);
                 getProcessor().process(exchange);
             } catch (PlcConnectionException e) {
-                if (LOGGER.isTraceEnabled()) {
-                    LOGGER.warn("Unable to reconnect, skipping request", e);
-                } else {
-                    LOGGER.warn("Unable to reconnect, skipping request");
-                }
+                LOGGER.warn("Unable to reconnect, skipping request", e);
             } catch (Exception e) {
                 getExceptionHandler().handleException(e);
             }
         }, collector);
         scraper.start();
         collector.start();
+    }
+
+    private Map<String, String> validateTags() {
+        Map<String, String> map = new HashMap<>();
+        for (Map.Entry<String, Object> tag : tags.entrySet()) {
+            if (tag.getValue() instanceof String) {
+                map.put(tag.getKey(), (String) tag.getValue());
+            }
+        }
+        if (map.size() != tags.size()) {
+            LOGGER.error("At least one entry does not match the format : Map.Entry<String,String> ");
+            return null;
+        } else {
+            return map;
+        }
     }
 
     private ScraperConfigurationTriggeredImpl getScraperConfig(Map<String, String> tagList) {

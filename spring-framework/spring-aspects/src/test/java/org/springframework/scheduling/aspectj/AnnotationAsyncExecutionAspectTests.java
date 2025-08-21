@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,12 +35,13 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.concurrent.ListenableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.core.testfixture.TestGroup.LONG_RUNNING;
 
 /**
- * Tests for {@link AnnotationAsyncExecutionAspect}.
+ * Unit tests for {@link AnnotationAsyncExecutionAspect}.
  *
  * @author Ramnivas Laddad
  * @author Stephane Nicoll
@@ -63,7 +64,7 @@ public class AnnotationAsyncExecutionAspectTests {
 
 
 	@Test
-	void asyncMethodGetsRoutedAsynchronously() {
+	public void asyncMethodGetsRoutedAsynchronously() {
 		ClassWithoutAsyncAnnotation obj = new ClassWithoutAsyncAnnotation();
 		obj.incrementAsync();
 		executor.waitForCompletion();
@@ -73,7 +74,7 @@ public class AnnotationAsyncExecutionAspectTests {
 	}
 
 	@Test
-	void asyncMethodReturningFutureGetsRoutedAsynchronouslyAndReturnsAFuture() throws InterruptedException, ExecutionException {
+	public void asyncMethodReturningFutureGetsRoutedAsynchronouslyAndReturnsAFuture() throws InterruptedException, ExecutionException {
 		ClassWithoutAsyncAnnotation obj = new ClassWithoutAsyncAnnotation();
 		Future<Integer> future = obj.incrementReturningAFuture();
 		// No need to executor.waitForCompletion() as future.get() will have the same effect
@@ -84,7 +85,7 @@ public class AnnotationAsyncExecutionAspectTests {
 	}
 
 	@Test
-	void syncMethodGetsRoutedSynchronously() {
+	public void syncMethodGetsRoutedSynchronously() {
 		ClassWithoutAsyncAnnotation obj = new ClassWithoutAsyncAnnotation();
 		obj.increment();
 		assertThat(obj.counter).isEqualTo(1);
@@ -93,7 +94,7 @@ public class AnnotationAsyncExecutionAspectTests {
 	}
 
 	@Test
-	void voidMethodInAsyncClassGetsRoutedAsynchronously() {
+	public void voidMethodInAsyncClassGetsRoutedAsynchronously() {
 		ClassWithAsyncAnnotation obj = new ClassWithAsyncAnnotation();
 		obj.increment();
 		executor.waitForCompletion();
@@ -103,7 +104,7 @@ public class AnnotationAsyncExecutionAspectTests {
 	}
 
 	@Test
-	void methodReturningFutureInAsyncClassGetsRoutedAsynchronouslyAndReturnsAFuture() throws InterruptedException, ExecutionException {
+	public void methodReturningFutureInAsyncClassGetsRoutedAsynchronouslyAndReturnsAFuture() throws InterruptedException, ExecutionException {
 		ClassWithAsyncAnnotation obj = new ClassWithAsyncAnnotation();
 		Future<Integer> future = obj.incrementReturningAFuture();
 		assertThat(future.get().intValue()).isEqualTo(5);
@@ -114,7 +115,7 @@ public class AnnotationAsyncExecutionAspectTests {
 
 	/*
 	@Test
-	void methodReturningNonVoidNonFutureInAsyncClassGetsRoutedSynchronously() {
+	public void methodReturningNonVoidNonFutureInAsyncClassGetsRoutedSynchronously() {
 		ClassWithAsyncAnnotation obj = new ClassWithAsyncAnnotation();
 		int returnValue = obj.return5();
 		assertEquals(5, returnValue);
@@ -124,7 +125,7 @@ public class AnnotationAsyncExecutionAspectTests {
 	*/
 
 	@Test
-	void qualifiedAsyncMethodsAreRoutedToCorrectExecutor() throws InterruptedException, ExecutionException {
+	public void qualifiedAsyncMethodsAreRoutedToCorrectExecutor() throws InterruptedException, ExecutionException {
 		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
 		beanFactory.registerBeanDefinition("e1", new RootBeanDefinition(ThreadPoolTaskExecutor.class));
 		AnnotationAsyncExecutionAspect.aspectOf().setBeanFactory(beanFactory);
@@ -135,12 +136,15 @@ public class AnnotationAsyncExecutionAspectTests {
 		assertThat(defaultThread.get()).isNotEqualTo(Thread.currentThread());
 		assertThat(defaultThread.get().getName()).doesNotStartWith("e1-");
 
-		CompletableFuture<Thread> e1OtherThread = obj.e1Work();
+		ListenableFuture<Thread> e1Thread = obj.e1Work();
+		assertThat(e1Thread.get().getName()).startsWith("e1-");
+
+		CompletableFuture<Thread> e1OtherThread = obj.e1OtherWork();
 		assertThat(e1OtherThread.get().getName()).startsWith("e1-");
 	}
 
 	@Test
-	void exceptionHandlerCalled() {
+	public void exceptionHandlerCalled() {
 		Method m = ReflectionUtils.findMethod(ClassWithException.class, "failWithVoid");
 		TestableAsyncUncaughtExceptionHandler exceptionHandler = new TestableAsyncUncaughtExceptionHandler();
 		AnnotationAsyncExecutionAspect.aspectOf().setExceptionHandler(exceptionHandler);
@@ -157,7 +161,7 @@ public class AnnotationAsyncExecutionAspectTests {
 	}
 
 	@Test
-	void exceptionHandlerNeverThrowsUnexpectedException() {
+	public void exceptionHandlerNeverThrowsUnexpectedException() {
 		Method m = ReflectionUtils.findMethod(ClassWithException.class, "failWithVoid");
 		TestableAsyncUncaughtExceptionHandler exceptionHandler = new TestableAsyncUncaughtExceptionHandler(true);
 		AnnotationAsyncExecutionAspect.aspectOf().setExceptionHandler(exceptionHandler);
@@ -217,7 +221,7 @@ public class AnnotationAsyncExecutionAspectTests {
 
 		@Async public Future<Integer> incrementReturningAFuture() {
 			counter++;
-			return new AsyncResult<>(5);
+			return new AsyncResult<Integer>(5);
 		}
 
 		/**
@@ -252,7 +256,7 @@ public class AnnotationAsyncExecutionAspectTests {
 
 		public Future<Integer> incrementReturningAFuture() {
 			counter++;
-			return new AsyncResult<>(5);
+			return new AsyncResult<Integer>(5);
 		}
 	}
 
@@ -261,11 +265,16 @@ public class AnnotationAsyncExecutionAspectTests {
 
 		@Async
 		public Future<Thread> defaultWork() {
-			return new AsyncResult<>(Thread.currentThread());
+			return new AsyncResult<Thread>(Thread.currentThread());
 		}
 
 		@Async("e1")
-		public CompletableFuture<Thread> e1Work() {
+		public ListenableFuture<Thread> e1Work() {
+			return new AsyncResult<Thread>(Thread.currentThread());
+		}
+
+		@Async("e1")
+		public CompletableFuture<Thread> e1OtherWork() {
 			return CompletableFuture.completedFuture(Thread.currentThread());
 		}
 	}

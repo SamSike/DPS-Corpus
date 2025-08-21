@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,7 @@ package org.springframework.messaging.simp;
 
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageDeliveryException;
@@ -40,7 +39,8 @@ import org.springframework.util.StringUtils;
  *
  * <p>Also provides methods for sending messages to a user. See
  * {@link org.springframework.messaging.simp.user.UserDestinationResolver
- * UserDestinationResolver} for more on user destinations.
+ * UserDestinationResolver}
+ * for more on user destinations.
  *
  * @author Rossen Stoyanchev
  * @since 4.0
@@ -54,7 +54,8 @@ public class SimpMessagingTemplate extends AbstractMessageSendingTemplate<String
 
 	private volatile long sendTimeout = -1;
 
-	private @Nullable MessageHeaderInitializer headerInitializer;
+	@Nullable
+	private MessageHeaderInitializer headerInitializer;
 
 
 	/**
@@ -118,7 +119,8 @@ public class SimpMessagingTemplate extends AbstractMessageSendingTemplate<String
 	/**
 	 * Return the configured header initializer.
 	 */
-	public @Nullable MessageHeaderInitializer getHeaderInitializer() {
+	@Nullable
+	public MessageHeaderInitializer getHeaderInitializer() {
 		return this.headerInitializer;
 	}
 
@@ -129,14 +131,14 @@ public class SimpMessagingTemplate extends AbstractMessageSendingTemplate<String
 	 * SimpMessageHeaderAccessor#DESTINATION_HEADER} then the message is sent without
 	 * further changes.
 	 * <p>If a destination header is not already present ,the message is sent
-	 * to the configured {@link AbstractMessageSendingTemplate#setDefaultDestination(Object)
-	 * defaultDestination} or an {@code IllegalStateException} is raised if that isn't
+	 * to the configured {@link #setDefaultDestination(Object) defaultDestination}
+	 * or an exception an {@code IllegalStateException} is raised if that isn't
 	 * configured.
 	 * @param message the message to send (never {@code null})
 	 */
 	@Override
 	public void send(Message<?> message) {
-		Assert.notNull(message, "Message must not be null");
+		Assert.notNull(message, "Message is required");
 		String destination = SimpMessageHeaderAccessor.getDestination(message.getHeaders());
 		if (destination != null) {
 			sendInternal(message);
@@ -156,7 +158,7 @@ public class SimpMessagingTemplate extends AbstractMessageSendingTemplate<String
 			if (simpAccessor.isMutable()) {
 				simpAccessor.setDestination(destination);
 				simpAccessor.setMessageTypeIfNotSet(SimpMessageType.MESSAGE);
-				// ImmutableMessageChannelInterceptor will make it immutable
+				simpAccessor.setImmutable();
 				sendInternal(message);
 				return;
 			}
@@ -222,8 +224,7 @@ public class SimpMessagingTemplate extends AbstractMessageSendingTemplate<String
 			throws MessagingException {
 
 		Assert.notNull(user, "User must not be null");
-		String username = user;
-		Assert.isTrue(!user.contains("%2F"), () -> "Invalid sequence \"%2F\" in user name: " + username);
+		Assert.isTrue(!user.contains("%2F"), "Invalid sequence \"%2F\" in user name: " + user);
 		user = StringUtils.replace(user, "/", "%2F");
 		destination = destination.startsWith("/") ? destination : "/" + destination;
 		super.convertAndSend(this.destinationPrefix + user + destination, payload, headers, postProcessor);
@@ -232,11 +233,12 @@ public class SimpMessagingTemplate extends AbstractMessageSendingTemplate<String
 
 	/**
 	 * Creates a new map and puts the given headers under the key
-	 * {@link NativeMessageHeaderAccessor#NATIVE_HEADERS NATIVE_HEADERS}.
-	 * <p>Effectively treats the input header map as headers to be sent out to the
+	 * {@link NativeMessageHeaderAccessor#NATIVE_HEADERS NATIVE_HEADERS NATIVE_HEADERS NATIVE_HEADERS}.
+	 * effectively treats the input header map as headers to be sent out to the
 	 * destination.
-	 * <p>However if the given headers already contain the key {@code NATIVE_HEADERS}
-	 * then the same headers instance is returned without changes.
+	 * <p>However if the given headers already contain the key
+	 * {@code NATIVE_HEADERS NATIVE_HEADERS} then the same headers instance is
+	 * returned without changes.
 	 * <p>Also if the given headers were prepared and obtained with
 	 * {@link SimpMessageHeaderAccessor#getMessageHeaders()} then the same headers
 	 * instance is also returned without changes.
@@ -252,9 +254,9 @@ public class SimpMessagingTemplate extends AbstractMessageSendingTemplate<String
 		if (headers.containsKey(NativeMessageHeaderAccessor.NATIVE_HEADERS)) {
 			return headers;
 		}
-		if (headers instanceof MessageHeaders messageHeaders) {
+		if (headers instanceof MessageHeaders) {
 			SimpMessageHeaderAccessor accessor =
-					MessageHeaderAccessor.getAccessor(messageHeaders, SimpMessageHeaderAccessor.class);
+					MessageHeaderAccessor.getAccessor((MessageHeaders) headers, SimpMessageHeaderAccessor.class);
 			if (accessor != null) {
 				return headers;
 			}

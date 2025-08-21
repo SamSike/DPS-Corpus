@@ -16,13 +16,11 @@
  */
 package org.apache.camel.component.zookeepermaster.group.internal;
 
-import org.apache.camel.component.zookeepermaster.group.NodeState;
-
-class RefreshOperation<T extends NodeState> implements Operation {
-    private final ZooKeeperGroup<T> cache;
+class RefreshOperation implements Operation {
+    private final ZooKeeperGroup cache;
     private final ZooKeeperGroup.RefreshMode mode;
 
-    RefreshOperation(ZooKeeperGroup<T> cache, ZooKeeperGroup.RefreshMode mode) {
+    RefreshOperation(ZooKeeperGroup cache, ZooKeeperGroup.RefreshMode mode) {
         this.cache = cache;
         this.mode = mode;
     }
@@ -41,7 +39,7 @@ class RefreshOperation<T extends NodeState> implements Operation {
             return false;
         }
 
-        RefreshOperation<T> that = (RefreshOperation<T>) o;
+        RefreshOperation that = (RefreshOperation) o;
 
         //noinspection RedundantIfStatement
         if (mode != that.mode) {

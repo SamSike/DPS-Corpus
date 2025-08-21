@@ -37,10 +37,6 @@ import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @deprecated since 4.7
- */
-@Deprecated(since = "4.7")
 public class DefaultServiceLoadBalancer
         extends ServiceSupport
         implements CamelContextAware, ServiceDiscoveryAware, ServiceChooserAware, ServiceFilterAware, ServiceLoadBalancer {

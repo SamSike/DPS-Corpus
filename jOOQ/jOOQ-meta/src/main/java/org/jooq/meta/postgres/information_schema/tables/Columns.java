@@ -4,13 +4,8 @@
 package org.jooq.meta.postgres.information_schema.tables;
 
 
-import java.util.Arrays;
-import java.util.List;
-
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -21,7 +16,6 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 import org.jooq.meta.postgres.information_schema.InformationSchema;
-import org.jooq.meta.postgres.information_schema.Keys;
 
 
 /**
@@ -86,14 +80,12 @@ public class Columns extends TableImpl<Record> {
     public final TableField<Record, String> DATA_TYPE = createField(DSL.name("data_type"), SQLDataType.VARCHAR, this, "");
 
     /**
-     * The column
-     * <code>information_schema.columns.character_maximum_length</code>.
+     * The column <code>information_schema.columns.character_maximum_length</code>.
      */
     public final TableField<Record, Integer> CHARACTER_MAXIMUM_LENGTH = createField(DSL.name("character_maximum_length"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column
-     * <code>information_schema.columns.character_octet_length</code>.
+     * The column <code>information_schema.columns.character_octet_length</code>.
      */
     public final TableField<Record, Integer> CHARACTER_OCTET_LENGTH = createField(DSL.name("character_octet_length"), SQLDataType.INTEGER, this, "");
 
@@ -103,8 +95,7 @@ public class Columns extends TableImpl<Record> {
     public final TableField<Record, Integer> NUMERIC_PRECISION = createField(DSL.name("numeric_precision"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column
-     * <code>information_schema.columns.numeric_precision_radix</code>.
+     * The column <code>information_schema.columns.numeric_precision_radix</code>.
      */
     public final TableField<Record, Integer> NUMERIC_PRECISION_RADIX = createField(DSL.name("numeric_precision_radix"), SQLDataType.INTEGER, this, "");
 
@@ -269,11 +260,11 @@ public class Columns extends TableImpl<Record> {
     public final TableField<Record, String> IS_UPDATABLE = createField(DSL.name("is_updatable"), SQLDataType.VARCHAR(3), this, "");
 
     private Columns(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Columns(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view(), where);
+    private Columns(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view());
     }
 
     /**
@@ -297,44 +288,13 @@ public class Columns extends TableImpl<Record> {
         this(DSL.name("columns"), null);
     }
 
-    public <O extends Record> Columns(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, COLUMNS);
+    public <O extends Record> Columns(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, COLUMNS);
     }
 
     @Override
     public Schema getSchema() {
-        return aliased() ? null : InformationSchema.INFORMATION_SCHEMA;
-    }
-
-    @Override
-    public List<ForeignKey<Record, ?>> getReferences() {
-        return Arrays.asList(Keys.COLUMNS__SYNTHETIC_FK_COLUMNS__SYNTHETIC_PK_TABLES, Keys.COLUMNS__SYNTHETIC_FK_COLUMNS__SYNTHETIC_PK_SCHEMATA);
-    }
-
-    private transient Tables _tables;
-
-    /**
-     * Get the implicit join path to the <code>information_schema.tables</code>
-     * table.
-     */
-    public Tables tables() {
-        if (_tables == null)
-            _tables = new Tables(this, Keys.COLUMNS__SYNTHETIC_FK_COLUMNS__SYNTHETIC_PK_TABLES, null);
-
-        return _tables;
-    }
-
-    private transient Schemata _schemata;
-
-    /**
-     * Get the implicit join path to the
-     * <code>information_schema.schemata</code> table.
-     */
-    public Schemata schemata() {
-        if (_schemata == null)
-            _schemata = new Schemata(this, Keys.COLUMNS__SYNTHETIC_FK_COLUMNS__SYNTHETIC_PK_SCHEMATA, null);
-
-        return _schemata;
+        return InformationSchema.INFORMATION_SCHEMA;
     }
 
     @Override
@@ -347,8 +307,19 @@ public class Columns extends TableImpl<Record> {
         return new Columns(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public Columns as(Table<?> alias) {
-        return new Columns(alias.getQualifiedName(), this);
+    public Columns rename(String name) {
+        return new Columns(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public Columns rename(Name name) {
+        return new Columns(name, null);
     }
 }

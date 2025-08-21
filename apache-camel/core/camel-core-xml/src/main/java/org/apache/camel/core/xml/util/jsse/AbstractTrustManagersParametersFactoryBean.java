@@ -31,19 +31,18 @@ import org.apache.camel.support.jsse.TrustManagersParameters;
 public abstract class AbstractTrustManagersParametersFactoryBean extends AbstractJsseUtilFactoryBean<TrustManagersParameters> {
 
     @XmlAttribute
-    @Metadata(label = "advanced", description = "The provider identifier for the TrustManagerFactory used to create"
-                                                + " TrustManagers represented by this object's configuration.")
+    @Metadata(description = "The optional provider identifier for the TrustManagerFactory used to create"
+                            + " TrustManagers represented by this object's configuration.")
     protected String provider;
 
     @XmlAttribute
-    @Metadata(label = "advanced", description = "The optional algorithm name for the TrustManagerFactory used to"
-                                                + " create the TrustManagers represented by this objects configuration."
-                                                + " See https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html")
+    @Metadata(description = "The optional algorithm name for the TrustManagerFactory used to"
+                            + " create the TrustManagers represented by this objects configuration."
+                            + " See the Java Secure Socket Extension Reference Guide for information about standard algorithm names.")
     protected String algorithm;
 
     @XmlAttribute
-    @Metadata(label = "advanced",
-              description = "To use a existing configured trust manager instead of using TrustManagerFactory to get the TrustManager.")
+    @Metadata(description = "To use a existing configured trust manager instead of using TrustManagerFactory to get the TrustManager.")
     protected String trustManager;
 
     @XmlTransient

@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 public class DefaultHttpBindingTest extends CamelTestSupport {
 
     @Test
-    public void testConvertDate() {
+    public void testConvertDate() throws Exception {
         DefaultHttpBinding binding = new DefaultHttpBinding();
         Date date = new Date();
         Exchange exchange = super.createExchangeWithBody(null);
@@ -40,7 +40,7 @@ public class DefaultHttpBindingTest extends CamelTestSupport {
     }
 
     @Test
-    public void testConvertDateTypeConverter() {
+    public void testConvertDateTypeConverter() throws Exception {
         DefaultHttpBinding binding = new DefaultHttpBinding();
         Date date = new Date();
         Exchange exchange = super.createExchangeWithBody(null);
@@ -50,7 +50,7 @@ public class DefaultHttpBindingTest extends CamelTestSupport {
     }
 
     @Test
-    public void testConvertLocale() {
+    public void testConvertLocale() throws Exception {
         DefaultHttpBinding binding = new DefaultHttpBinding();
         Locale l = Locale.SIMPLIFIED_CHINESE;
         Exchange exchange = super.createExchangeWithBody(null);
@@ -61,7 +61,7 @@ public class DefaultHttpBindingTest extends CamelTestSupport {
     }
 
     @Test
-    public void testConvertLocaleTypeConverter() {
+    public void testConvertLocaleTypeConverter() throws Exception {
         DefaultHttpBinding binding = new DefaultHttpBinding();
         Locale l = Locale.SIMPLIFIED_CHINESE;
         Exchange exchange = super.createExchangeWithBody(null);

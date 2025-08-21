@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AggregationStrategyBeanAdapterAllowNullTest extends ContextTestSupport {
 
-    private final MyUserAppender appender = new MyUserAppender();
+    private MyUserAppender appender = new MyUserAppender();
 
     @Test
     public void testAggregate() throws Exception {
@@ -49,10 +49,10 @@ public class AggregationStrategyBeanAdapterAllowNullTest extends ContextTestSupp
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(constant(true), AggregationStrategies.beanAllowNull(appender, "addUsers"))
                         .completionSize(3).to("mock:result");
             }
@@ -75,7 +75,7 @@ public class AggregationStrategyBeanAdapterAllowNullTest extends ContextTestSupp
      */
     @XmlRootElement(name = "user")
     public static final class User {
-        private final String name;
+        private String name;
 
         public User(String name) {
             this.name = name;

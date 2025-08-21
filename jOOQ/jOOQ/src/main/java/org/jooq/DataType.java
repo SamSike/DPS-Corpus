@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,13 +42,9 @@ package org.jooq;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
-// ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 // ...
@@ -63,7 +59,6 @@ import static org.jooq.SQLDialect.MARIADB;
 import static org.jooq.SQLDialect.MYSQL;
 // ...
 // ...
-// ...
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
@@ -73,7 +68,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
@@ -83,9 +77,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.jooq.Converters.UnknownType;
-import org.jooq.conf.Settings;
 import org.jooq.exception.DataTypeException;
-import org.jooq.impl.AutoConverter;
 import org.jooq.impl.DSL;
 import org.jooq.impl.QOM.GenerationLocation;
 import org.jooq.impl.QOM.GenerationOption;
@@ -146,27 +138,13 @@ public interface DataType<T> extends Named {
      * Get the converter associated with this data type.
      */
     @NotNull
-    ContextConverter<?, T> getConverter();
+    Converter<?, T> getConverter();
 
     /**
      * Retrieve the Java type associated with this data type.
-     * <p>
-     * This is the same as {@link #getUserType()}.
      */
     @NotNull
     Class<T> getType();
-
-    /**
-     * The {@link Converter#fromType()} (or database type) in case this {@link DataType} has a converter.
-     */
-    @NotNull
-    Class<?> getFromType();
-
-    /**
-     * The {@link Converter#toType()} (or user type) in case this {@link DataType} has a converter.
-     */
-    @NotNull
-    Class<T> getToType();
 
     /**
      * Get the defining DOMAIN type or <code>NULL</code> if there is no such
@@ -206,7 +184,7 @@ public interface DataType<T> extends Named {
      * {@link #getBinding()} cannot be translated to an array data type. Use
      * this idiom, instead:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * // Doesn't work
      * DataType<UserType[]> t1 =
      *   SQLDataType.INTEGER.asConvertedDataType(binding).getArrayDataType();
@@ -214,7 +192,7 @@ public interface DataType<T> extends Named {
      * // Works
      * DataType<UserType[]> t2 =
      *   SQLDataType.INTEGER.getArrayDataType().asConvertedDataType(arrayBinding);
-     * </code></pre>
+     * </pre></code>
      *
      * @throws DataTypeException When this data type has a custom
      *             {@link #getBinding()}, which cannot be automatically
@@ -224,18 +202,8 @@ public interface DataType<T> extends Named {
     DataType<T[]> getArrayDataType() throws DataTypeException;
 
     /**
-     * A convenient short for form {@link #getArrayDataType()} for DSL usage
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
-    DataType<T[]> array() throws DataTypeException;
-
-    /**
      * Retrieve the Java component type if this is an ARRAY type, or
      * <code>null</code>, otherwise.
-     * <p>
-     * E.g. for <code>DataType<String[][][]></code>, this will return
-     * <code>String[][]</code>.
      */
     @Nullable
     Class<?> getArrayComponentType();
@@ -243,32 +211,9 @@ public interface DataType<T> extends Named {
     /**
      * Retrieve the Java component data type if this is an ARRAY type, or
      * <code>null</code>, otherwise.
-     * <p>
-     * E.g. for <code>DataType<String[][][]></code>, this will return
-     * <code>DataType&lt;String[][]></code>.
      */
     @Nullable
     DataType<?> getArrayComponentDataType();
-
-    /**
-     * Retrieve the Java base type if this is an ARRAY type, or
-     * {@link #getType()}, otherwise.
-     * <p>
-     * E.g. for <code>DataType<String[][][]></code>, this will return
-     * <code>String</code>.
-     */
-    @NotNull
-    Class<?> getArrayBaseType();
-
-    /**
-     * Retrieve the Java component data type if this is an ARRAY type, or
-     * <code>this</code>, otherwise.
-     * <p>
-     * E.g. for <code>DataType<String[][][]></code>, this will return
-     * <code>DataType&lt;String></code>.
-     */
-    @NotNull
-    DataType<?> getArrayBaseDataType();
 
 
 
@@ -297,14 +242,6 @@ public interface DataType<T> extends Named {
      */
     @NotNull
     <U> DataType<U> asConvertedDataType(Converter<? super T, U> converter);
-
-    /**
-     * Convenience method for converting this type using {@link AutoConverter}.
-     */
-    @NotNull
-    default <U> DataType<U> asConvertedDataType(Class<U> toType) {
-        return asConvertedDataType(new AutoConverter<>(getType(), toType));
-    }
 
     /**
      * Convenience method for converting this type using
@@ -435,21 +372,7 @@ public interface DataType<T> extends Named {
      * @param object The object to be converted
      * @return The converted object
      * @throws DataTypeException If conversion fails.
-     * @deprecated - 3.20.0 - [#16810] - Static data type conversion has been a
-     *             controversial historic feature of jOOQ. While occasionally
-     *             useful for internal data types (such as {@link String} to
-     *             {@link Integer} conversion, etc.) it doesn't work well with
-     *             user defined types. 1) This method does not go through
-     *             {@link Configuration#converterProvider()}, 2) nor does it
-     *             provide an appropriate {@link ConverterContext} to a
-     *             {@link ContextConverter}, leading to subtle bugs. 3) It also
-     *             doesn't make any guarantees related to what user defined
-     *             types can be passed to it. This is why this method is
-     *             deprecated and will be removed in a future jOOQ version. Use
-     *             {@link #getConverter()} on this type, instead, and use that
-     *             for data type conversions.
      */
-    @Deprecated(forRemoval = true)
     T convert(Object object);
 
     /**
@@ -462,21 +385,7 @@ public interface DataType<T> extends Named {
      * @param objects The objects to be converted
      * @return The converted objects
      * @throws DataTypeException If conversion fails.
-     * @deprecated - 3.20.0 - [#16810] - Static data type conversion has been a
-     *             controversial historic feature of jOOQ. While occasionally
-     *             useful for internal data types (such as {@link String} to
-     *             {@link Integer} conversion, etc.) it doesn't work well with
-     *             user defined types. 1) This method does not go through
-     *             {@link Configuration#converterProvider()}, 2) nor does it
-     *             provide an appropriate {@link ConverterContext} to a
-     *             {@link ContextConverter}, leading to subtle bugs. 3) It also
-     *             doesn't make any guarantees related to what user defined
-     *             types can be passed to it. This is why this method is
-     *             deprecated and will be removed in a future jOOQ version. Use
-     *             {@link #getConverter()} on this type, instead, and use that
-     *             for data type conversions.
      */
-    @Deprecated(forRemoval = true)
     T @NotNull [] convert(Object... objects);
 
     /**
@@ -489,21 +398,7 @@ public interface DataType<T> extends Named {
      * @param objects The objects to be converted
      * @return The converted objects
      * @throws DataTypeException If conversion fails.
-     * @deprecated - 3.20.0 - [#16810] - Static data type conversion has been a
-     *             controversial historic feature of jOOQ. While occasionally
-     *             useful for internal data types (such as {@link String} to
-     *             {@link Integer} conversion, etc.) it doesn't work well with
-     *             user defined types. 1) This method does not go through
-     *             {@link Configuration#converterProvider()}, 2) nor does it
-     *             provide an appropriate {@link ConverterContext} to a
-     *             {@link ContextConverter}, leading to subtle bugs. 3) It also
-     *             doesn't make any guarantees related to what user defined
-     *             types can be passed to it. This is why this method is
-     *             deprecated and will be removed in a future jOOQ version. Use
-     *             {@link #getConverter()} on this type, instead, and use that
-     *             for data type conversions.
      */
-    @Deprecated(forRemoval = true)
     @NotNull
     List<T> convert(Collection<?> objects);
 
@@ -554,44 +449,6 @@ public interface DataType<T> extends Named {
     boolean nullable();
 
     /**
-     * Return a new data type like this, with a new hidden attribute.
-     * <p>
-     * This feature is implemented in commercial distributions only.
-     *
-     * @param hidden The new hidden attribute value.
-     * @return The new data type
-     */
-    @NotNull
-    @Support
-    DataType<T> hidden(boolean hidden);
-
-    /**
-     * Get the hidden attribute of this data type.
-     * <p>
-     * This feature is implemented in commercial distributions only.
-     */
-    boolean hidden();
-
-    /**
-     * Return a new data type like this, with a new redacted attribute.
-     * <p>
-     * This feature is implemented in commercial distributions only.
-     *
-     * @param redacted The new redacted attribute value.
-     * @return The new data type
-     */
-    @NotNull
-    @Support
-    DataType<T> redacted(boolean redacted);
-
-    /**
-     * Get the redacted attribute of this data type.
-     * <p>
-     * This feature is implemented in commercial distributions only.
-     */
-    boolean redacted();
-
-    /**
      * Return a new data type like this, with a new readonly attribute.
      * <p>
      * This feature is implemented in commercial distributions only.
@@ -633,41 +490,9 @@ public interface DataType<T> extends Named {
      * <li>Columns used for optimistic locking</li>
      * </ul>
      * <p>
-     * This method returns the static information for this data type. The
-     * information may be overridden by a {@link Settings} value, e.g.
-     * {@link Settings#isEmulateComputedColumns()}, in case of which
-     * {@link #readonlyInternal(Configuration)} should be called.
-     * <p>
      * This feature is implemented in commercial distributions only.
      */
     boolean readonlyInternal();
-
-    /**
-     * Get the readonly attribute of this data type, combined with other flags
-     * that influence readonly behaviour.
-     * <p>
-     * A column may be marked as {@link #readonly()} for various reasons,
-     * including:
-     * <ul>
-     * <li>When it is marked as readonly explicitly by the code generator.</li>
-     * <li>When it is marked as readonly implicitly because it's a computed
-     * column with {@link GenerationLocation#SERVER} or with
-     * {@link GenerationLocation#CLIENT} and
-     * {@link GenerationOption#VIRTUAL}.</li>
-     * </ul>
-     * <p>
-     * Some columns are readonly for users, meaning users of the jOOQ API cannot
-     * write to them, but jOOQ, internally, may still write to those columns.
-     * Such columns may include:
-     * <ul>
-     * <li>Columns that are computed with {@link GenerationLocation#CLIENT} and
-     * {@link GenerationOption#STORED}</li>
-     * <li>Columns used for optimistic locking</li>
-     * </ul>
-     * <p>
-     * This feature is implemented in commercial distributions only.
-     */
-    boolean readonlyInternal(Configuration configuration);
 
     /**
      * Whether this column is computed.
@@ -677,40 +502,6 @@ public interface DataType<T> extends Named {
     boolean computed();
 
     /**
-     * Whether this column is computed on the server.
-     * <p>
-     * This is true only if all of these hold true:
-     * <ul>
-     * <li>{@link #computed()}</li>
-     * <li>{@link #generationLocation()} ==
-     * {@link GenerationLocation#SERVER}</li>
-     * </ul>
-     * <p>
-     * This method returns the static information for this data type. The
-     * information may be overridden by a {@link Settings} value, e.g.
-     * {@link Settings#isEmulateComputedColumns()}, in case of which
-     * {@link #computedOnServer(Configuration)} should be called.
-     * <p>
-     * This feature is implemented in commercial distributions only.
-     */
-    boolean computedOnServer();
-
-    /**
-     * Whether this column is computed on the server.
-     * <p>
-     * This is true only if all of these hold true:
-     * <ul>
-     * <li>{@link #computed()}</li>
-     * <li>{@link #generationLocation()} ==
-     * {@link GenerationLocation#SERVER}</li>
-     * <li>{@link Settings#isEmulateComputedColumns() == false}</li>
-     * </ul>
-     * <p>
-     * This feature is implemented in commercial distributions only.
-     */
-    boolean computedOnServer(Configuration configuration);
-
-    /**
      * Whether this column is computed on the client.
      * <p>
      * This is true only if all of these hold true:
@@ -718,38 +509,10 @@ public interface DataType<T> extends Named {
      * <li>{@link #computed()}</li>
      * <li>{@link #generationLocation()} ==
      * {@link GenerationLocation#CLIENT}</li>
-     * </ul>
-     * <p>
-     * This method returns the static information for this data type. The
-     * information may be overridden by a {@link Settings} value, e.g.
-     * {@link Settings#isEmulateComputedColumns()}, in case of which
-     * {@link #computedOnClient(Configuration)} should be called.
      * <p>
      * This feature is implemented in commercial distributions only.
      */
     boolean computedOnClient();
-
-    /**
-     * Whether this column is computed on the client.
-     * <p>
-     * This is true only if all of these hold true:
-     * <ul>
-     * <li>{@link #computed()}</li>
-     * <li>{@link #generationLocation()} ==
-     * {@link GenerationLocation#CLIENT}</li>
-     * </ul>
-     * <p>
-     * Alternatively, this makes the result true as well:
-     * <ul>
-     * <li>{@link #computed()}</li>
-     * <li>{@link #generationLocation()} ==
-     * {@link GenerationLocation#SERVER}</li>
-     * <li>{@link Settings#isEmulateComputedColumns() == true}</li>
-     * </ul>
-     * <p>
-     * This feature is implemented in commercial distributions only.
-     */
-    boolean computedOnClient(Configuration configuration);
 
     /**
      * Whether this column is computed on the client.
@@ -764,12 +527,6 @@ public interface DataType<T> extends Named {
      * {@link Generator#supports(GeneratorStatementType)} any of
      * {@link GeneratorStatementType#INSERT} or
      * {@link GeneratorStatementType#UPDATE}</li>
-     * </ul>
-     * <p>
-     * This method returns the static information for this data type. The
-     * information may be overridden by a {@link Settings} value, e.g.
-     * {@link Settings#isEmulateComputedColumns()}, in case of which
-     * {@link #computedOnClientStored(Configuration)} should be called.
      * <p>
      * This feature is implemented in commercial distributions only.
      */
@@ -785,33 +542,8 @@ public interface DataType<T> extends Named {
      * {@link GenerationLocation#CLIENT}</li>
      * <li>{@link #generationOption()} == {@link GenerationOption#STORED}</li>
      * <li>{@link #generatedAlwaysAsGenerator()} produces a generator that
-     * {@link Generator#supports(GeneratorStatementType)} any of
-     * {@link GeneratorStatementType#INSERT} or
-     * {@link GeneratorStatementType#UPDATE}</li>
-     * </ul>
-     * <p>
-     * This feature is implemented in commercial distributions only.
-     */
-    boolean computedOnClientStored(Configuration configuration);
-
-    /**
-     * Whether this column is computed on the client.
-     * <p>
-     * This is true only if all of these hold true:
-     * <ul>
-     * <li>{@link #computed()}</li>
-     * <li>{@link #generationLocation()} ==
-     * {@link GenerationLocation#CLIENT}</li>
-     * <li>{@link #generationOption()} == {@link GenerationOption#STORED}</li>
-     * <li>{@link #generatedAlwaysAsGenerator()} produces a generator that
      * {@link Generator#supports(GeneratorStatementType)} the argument
      * <code>statementType</code></li>
-     * </ul>
-     * <p>
-     * This method returns the static information for this data type. The
-     * information may be overridden by a {@link Settings} value, e.g.
-     * {@link Settings#isEmulateComputedColumns()}, in case of which
-     * {@link #computedOnClientStoredOn(GeneratorStatementType, Configuration)} should be called.
      * <p>
      * This feature is implemented in commercial distributions only.
      */
@@ -825,56 +557,14 @@ public interface DataType<T> extends Named {
      * <li>{@link #computed()}</li>
      * <li>{@link #generationLocation()} ==
      * {@link GenerationLocation#CLIENT}</li>
-     * <li>{@link #generationOption()} == {@link GenerationOption#STORED}</li>
-     * <li>{@link #generatedAlwaysAsGenerator()} produces a generator that
-     * {@link Generator#supports(GeneratorStatementType)} the argument
-     * <code>statementType</code></li>
-     * </ul>
-     * <p>
-     * This feature is implemented in commercial distributions only.
-     */
-    boolean computedOnClientStoredOn(GeneratorStatementType statementType, Configuration configuration);
-
-    /**
-     * Whether this column is computed on the client.
-     * <p>
-     * This is true only if all of these hold true:
-     * <ul>
-     * <li>{@link #computed()}</li>
-     * <li>{@link #generationLocation()} ==
-     * {@link GenerationLocation#CLIENT}</li>
      * <li>{@link #generationOption()} == {@link GenerationOption#VIRTUAL}</li>
      * <li>{@link #generatedAlwaysAsGenerator()} produces a generator that
      * {@link Generator#supports(GeneratorStatementType)} the type
      * {@link GeneratorStatementType#SELECT}</li>
-     * </ul>
-     * <p>
-     * This method returns the static information for this data type. The
-     * information may be overridden by a {@link Settings} value, e.g.
-     * {@link Settings#isEmulateComputedColumns()}, in case of which
-     * {@link #computedOnClientVirtual(Configuration)} should be called.
      * <p>
      * This feature is implemented in commercial distributions only.
      */
     boolean computedOnClientVirtual();
-
-    /**
-     * Whether this column is computed on the client.
-     * <p>
-     * This is true only if all of these hold true:
-     * <ul>
-     * <li>{@link #computed()}</li>
-     * <li>{@link #generationLocation()} ==
-     * {@link GenerationLocation#CLIENT}</li>
-     * <li>{@link #generationOption()} == {@link GenerationOption#VIRTUAL}</li>
-     * <li>{@link #generatedAlwaysAsGenerator()} produces a generator that
-     * {@link Generator#supports(GeneratorStatementType)} the type
-     * {@link GeneratorStatementType#SELECT}</li>
-     * </ul>
-     * <p>
-     * This feature is implemented in commercial distributions only.
-     */
-    boolean computedOnClientVirtual(Configuration configuration);
 
     /**
      * Set the computed column expression of this data type to a constant value.
@@ -884,7 +574,7 @@ public interface DataType<T> extends Named {
      * This feature is implemented in commercial distributions only.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     DataType<T> generatedAlwaysAs(T generatedAlwaysAsValue);
 
     /**
@@ -896,7 +586,7 @@ public interface DataType<T> extends Named {
      * This feature is implemented in commercial distributions only.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     DataType<T> generatedAlwaysAs(Field<T> generatedAlwaysAsValue);
 
     /**
@@ -952,7 +642,7 @@ public interface DataType<T> extends Named {
      * This feature is implemented in commercial distributions only.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     DataType<T> stored();
 
     /**
@@ -964,7 +654,7 @@ public interface DataType<T> extends Named {
      * This feature is implemented in commercial distributions only.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     DataType<T> virtual();
 
     /**
@@ -975,7 +665,7 @@ public interface DataType<T> extends Named {
      * This feature is implemented in commercial distributions only.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
     DataType<T> generationOption(GenerationOption generationOption);
 
     /**
@@ -1073,36 +763,6 @@ public interface DataType<T> extends Named {
     CharacterSet characterSet();
 
     /**
-     * Return a new data type like this, with the {@link #identity(boolean)}
-     * flag set to <code>true</code>.
-     * <p>
-     * [#5709] The IDENTITY flag imposes a NOT NULL constraint, and removes all
-     * DEFAULT values.
-     * <p>
-     * This is the same as calling <code>identity(true)</code>.
-     *
-     * @return The new data type
-     */
-    @NotNull
-    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    DataType<T> autoIncrement();
-
-    /**
-     * Return a new data type like this, with the {@link #identity(boolean)}
-     * flag set to <code>true</code>.
-     * <p>
-     * [#5709] The IDENTITY flag imposes a NOT NULL constraint, and removes all
-     * DEFAULT values.
-     * <p>
-     * This is the same as calling <code>identity(true)</code>.
-     *
-     * @return The new data type
-     */
-    @NotNull
-    @Support({ DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    DataType<T> generatedByDefaultAsIdentity();
-
-    /**
      * Return a new data type like this, with a new identity flag.
      * <p>
      * [#5709] The IDENTITY flag imposes a NOT NULL constraint, and removes all
@@ -1133,7 +793,7 @@ public interface DataType<T> extends Named {
      * @see #defaultValue(Field)
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     DataType<T> defaultValue(T defaultValue);
 
     /**
@@ -1153,7 +813,7 @@ public interface DataType<T> extends Named {
      * This is an alias for {@link #default_(Field)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     DataType<T> defaultValue(Field<T> defaultValue);
 
     /**
@@ -1178,7 +838,7 @@ public interface DataType<T> extends Named {
      * @see #defaultValue(Field)
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     DataType<T> default_(T defaultValue);
 
     /**
@@ -1196,7 +856,7 @@ public interface DataType<T> extends Named {
      * to learn what expressions are possible.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     DataType<T> default_(Field<T> defaultValue);
 
     /**
@@ -1209,6 +869,18 @@ public interface DataType<T> extends Named {
      */
     @Nullable
     Field<T> default_();
+
+    /**
+     * Return a new data type like this, with a new defaultability.
+     *
+     * @param defaulted The new defaultability
+     * @return The new data type
+     *
+     * @deprecated - [#3852] - 3.8.0 - Use {@link #defaultValue(Field)} instead.
+     */
+    @NotNull
+    @Deprecated(forRemoval = true, since = "3.8")
+    DataType<T> defaulted(boolean defaulted);
 
     /**
      * Get the defaultability of this data type.
@@ -1334,13 +1006,6 @@ public interface DataType<T> extends Named {
     boolean hasLength();
 
     /**
-     * Whether this data type has a fixed length.
-     *
-     * @return Whether this data type has a fixed length
-     */
-    boolean hasFixedLength();
-
-    /**
      * Whether the precision returned by {@link #length()} is defined.
      * <p>
      * The default length is <code>0</code> for all data types. If a data type
@@ -1365,7 +1030,6 @@ public interface DataType<T> extends Named {
      * <li> {@link SQLDataType#DECIMAL}</li>
      * <li> {@link SQLDataType#DECIMAL_INTEGER}</li>
      * <li> {@link SQLDataType#NUMERIC}</li>
-     * <li> {@link SQLDataType#DECFLOAT}</li>
      * </ul>
      *
      * @see #isNumeric()
@@ -1384,43 +1048,6 @@ public interface DataType<T> extends Named {
      * </ul>
      */
     boolean isInteger();
-
-    /**
-     * Whether this data type is any floating point data type.
-     * <p>
-     * This applies to any of these types:
-     * <ul>
-     * <li> {@link SQLDataType#FLOAT}</li>
-     * <li> {@link SQLDataType#DOUBLE}</li>
-     * <li> {@link SQLDataType#REAL}</li>
-     * <li> {@link SQLDataType#DECFLOAT}</li>
-     * </ul>
-     */
-    boolean isFloat();
-
-    /**
-     * Whether this data type is any decimal numeric data type.
-     * <p>
-     * This applies to any of these types:
-     * <ul>
-     * <li> {@link SQLDataType#DECIMAL}</li>
-     * <li> {@link SQLDataType#DECIMAL_INTEGER}</li>
-     * <li> {@link SQLDataType#NUMERIC}</li>
-     * <li> {@link SQLDataType#DECFLOAT}</li>
-     * </ul>
-     */
-    boolean isDecimal();
-
-    /**
-     * Whether this data type is any boolean data type.
-     * <p>
-     * This applies to any of these types:
-     * <ul>
-     * <li> {@link SQLDataType#BIT}</li>
-     * <li> {@link SQLDataType#BOOLEAN}</li>
-     * </ul>
-     */
-    boolean isBoolean();
 
     /**
      * Whether this data type is any character data type.
@@ -1466,7 +1093,6 @@ public interface DataType<T> extends Named {
      * <li> {@link SQLDataType#OFFSETTIME}</li>
      * <li> {@link SQLDataType#OFFSETDATETIME}</li>
      * <li> {@link SQLDataType#INSTANT}</li>
-     * <li> {@link SQLDataType#YEAR}</li>
      * </ul>
      *
      * @see #isDate()
@@ -1496,17 +1122,6 @@ public interface DataType<T> extends Named {
     boolean isTimestamp();
 
     /**
-     * Whether this data type is any timestamp type.
-     * <p>
-     * This applies to any of these types.
-     * <ul>
-     * <li>{@link SQLDataType#TIMESTAMPWITHTIMEZONE}</li>
-     * <li>{@link SQLDataType#INSTANT}</li>
-     * </ul>
-     */
-    boolean isTimestampWithTimeZone();
-
-    /**
      * Whether this data type is any time type.
      * <p>
      * This applies to any of these types.
@@ -1516,16 +1131,6 @@ public interface DataType<T> extends Named {
      * </ul>
      */
     boolean isTime();
-
-    /**
-     * Whether this data type is any time type.
-     * <p>
-     * This applies to any of these types.
-     * <ul>
-     * <li>{@link SQLDataType#TIMEWITHTIMEZONE}</li>
-     * </ul>
-     */
-    boolean isTimeWithTimeZone();
 
     /**
      * Whether this data type is any date or time type.
@@ -1540,8 +1145,6 @@ public interface DataType<T> extends Named {
      * <li> {@link SQLDataType#LOCALDATETIME}</li>
      * <li> {@link SQLDataType#OFFSETTIME}</li>
      * <li> {@link SQLDataType#OFFSETDATETIME}</li>
-     * <li> {@link SQLDataType#INSTANT}</li>
-     * <li> {@link SQLDataType#YEAR}</li>
      * <li> {@link YearToSecond}</li>
      * <li> {@link YearToMonth}</li>
      * <li> {@link DayToSecond}</li>
@@ -1605,29 +1208,8 @@ public interface DataType<T> extends Named {
 
     /**
      * Whether this data type is a UDT type.
-     * <p>
-     * It is recommended to use {@link #isQualifiedRecord()} instead, which
-     * returns the same thing as {@link #isUDT()}, or {@link #isUDTRecord()} if
-     * only actual {@link UDT} types are requested.
-     *
-     * @deprecated - 3.21.0 - [#18732] - Use {@link #isQualifiedRecord()}
-     *             instead, or {@link #isUDTRecord()} if that's more precise.
      */
-    @Deprecated(forRemoval = true)
     boolean isUDT();
-
-    /**
-     * Whether this data type is a {@link UDTRecord} type.
-     */
-    boolean isUDTRecord();
-
-    /**
-     * Whether this data type is a {@link QualifiedRecord} type.
-     * <p>
-     * This includes {@link UDT#getDataType()} as well as
-     * {@link Table#getDataType()}.
-     */
-    boolean isQualifiedRecord();
 
     /**
      * Whether this data type is a nested record type.
@@ -1642,7 +1224,7 @@ public interface DataType<T> extends Named {
      * Whether this data type is a nested collection type.
      * <p>
      * This is true for anonymous, structural nested collection types
-     * constructed with {@link DSL#multiset(TableLike)} or
+     * constructed with {@link DSL#multiset(Select)} or
      * {@link DSL#multisetAgg(Field...)}.
      */
     boolean isMultiset();
@@ -1666,28 +1248,4 @@ public interface DataType<T> extends Named {
      * Whether this data type is a spatial type.
      */
     boolean isSpatial();
-
-    /**
-     * Whether this data type is a UUID type.
-     */
-    boolean isUUID();
-
-    /**
-     * Whether this data type is a {@link RowId} type.
-     */
-    boolean isRowId();
-
-    /**
-     * Whether this data type is an OTHER type.
-     * <p>
-     * The {@link SQLDataType#OTHER} type maps any unknown data types to a jOOQ
-     * {@link DataType}. This includes unknown vendor specific types as well as
-     * unknown user defined types which do not have any custom {@link Converter}
-     * or {@link Binding} attached. The type may still be usable with the jOOQ
-     * API, but jOOQ's behaviour may not be well defined. Please note that any
-     * future minor release may add support for a vendor specific type, meaning
-     * the type loses its "otherness."
-     */
-    boolean isOther();
-
 }

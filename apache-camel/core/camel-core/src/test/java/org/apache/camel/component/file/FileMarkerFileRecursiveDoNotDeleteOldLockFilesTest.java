@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.file;
 
-import java.util.UUID;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
@@ -25,9 +23,6 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
 
 public class FileMarkerFileRecursiveDoNotDeleteOldLockFilesTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME_1 = "hello" + UUID.randomUUID() + ".txt";
-    private static final String TEST_FILE_NAME_2 = "gooday" + UUID.randomUUID() + ".txt";
-    private static final String TEST_FILE_NAME_3 = "new" + UUID.randomUUID() + ".txt";
 
     @Test
     public void testDeleteOldLockOnStartup() throws Exception {
@@ -35,13 +30,13 @@ public class FileMarkerFileRecursiveDoNotDeleteOldLockFilesTest extends ContextT
         mock.expectedBodiesReceived("New World");
 
         template.sendBodyAndHeader(fileUri(), "locked", Exchange.FILE_NAME,
-                TEST_FILE_NAME_1 + FileComponent.DEFAULT_LOCK_FILE_POSTFIX);
-        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME_1);
+                "hello.txt" + FileComponent.DEFAULT_LOCK_FILE_POSTFIX);
+        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
         template.sendBodyAndHeader(fileUri("foo"), "locked", Exchange.FILE_NAME,
-                TEST_FILE_NAME_2 + FileComponent.DEFAULT_LOCK_FILE_POSTFIX);
-        template.sendBodyAndHeader(fileUri("foo"), "Goodday World", Exchange.FILE_NAME, TEST_FILE_NAME_2);
+                "gooday.txt" + FileComponent.DEFAULT_LOCK_FILE_POSTFIX);
+        template.sendBodyAndHeader(fileUri("foo"), "Goodday World", Exchange.FILE_NAME, "gooday.txt");
         // and a new file that has no lock
-        template.sendBodyAndHeader(fileUri(), "New World", Exchange.FILE_NAME, TEST_FILE_NAME_3);
+        template.sendBodyAndHeader(fileUri(), "New World", Exchange.FILE_NAME, "new.txt");
 
         // start the route
         context.getRouteController().startRoute("foo");
@@ -50,12 +45,12 @@ public class FileMarkerFileRecursiveDoNotDeleteOldLockFilesTest extends ContextT
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?initialDelay=0&delay=10&readLock=markerFile&readLockDeleteOrphanLockFiles=false&recursive=true"))
-                        .routeId("foo").autoStartup(false)
+                        .routeId("foo").noAutoStartup()
                         .convertBodyTo(String.class).to("log:result", "mock:result");
             }
         };

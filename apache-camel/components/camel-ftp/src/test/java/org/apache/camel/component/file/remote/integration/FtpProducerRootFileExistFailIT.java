@@ -33,8 +33,10 @@ public class FtpProducerRootFileExistFailIT extends FtpServerTestSupport {
         return "ftp://admin@localhost:{{ftp.server.port}}?password=admin&fileExist=Fail";
     }
 
+    @Override
     @BeforeEach
-    public void sendMessages() {
+    public void setUp() throws Exception {
+        super.setUp();
         // create existing file on ftp server
         template.sendBodyAndHeader(getFtpUrl(), "Hello World", Exchange.FILE_NAME, "hello.txt");
     }

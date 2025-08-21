@@ -20,11 +20,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.camel.Endpoint;
-import org.apache.camel.spi.*;
+import org.apache.camel.component.extension.ComponentVerifierExtension;
+import org.apache.camel.spi.Metadata;
+import org.apache.camel.spi.RestConfiguration;
 import org.apache.camel.support.CamelContextHelper;
-import org.apache.camel.support.HeaderFilterStrategyComponent;
+import org.apache.camel.support.DefaultComponent;
 import org.apache.camel.util.FileUtil;
-import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.StringHelper;
 import org.apache.camel.util.URISupport;
 
@@ -33,7 +34,7 @@ import org.apache.camel.util.URISupport;
  */
 @org.apache.camel.spi.annotations.Component("rest")
 @Metadata(label = "verifiers", enums = "parameters,connectivity")
-public class RestComponent extends HeaderFilterStrategyComponent {
+public class RestComponent extends DefaultComponent {
 
     public static final String DEFAULT_REST_CONFIGURATION_ID = "rest-configuration";
 
@@ -47,6 +48,7 @@ public class RestComponent extends HeaderFilterStrategyComponent {
     private String host;
 
     public RestComponent() {
+        registerExtension(RestComponentVerifierExtension::new);
     }
 
     @Override
@@ -77,34 +79,16 @@ public class RestComponent extends HeaderFilterStrategyComponent {
         }
         answer.setHost(h);
 
-        // custom header filter strategy
-        if (getHeaderFilterStrategy() != null) {
-            parameters.put("headerFilterStrategy", getHeaderFilterStrategy());
-        }
-
         setProperties(answer, parameters);
         if (!parameters.isEmpty()) {
             // use only what remains and at this point parameters that have been used have been removed
             // without overwriting any query parameters set via queryParameters endpoint option
             final Map<String, Object> queryParameters = new LinkedHashMap<>(parameters);
-
-            // filter out known options from the producer, as they should not be in the query parameters
-            EndpointUriFactory factory = getEndpointUriFactory(pname);
-            if (factory != null) {
-                for (String key : parameters.keySet()) {
-                    if (factory.propertyNames().contains(key)) {
-                        queryParameters.remove(key);
-                    }
-                }
-            }
-
             final Map<String, Object> existingQueryParameters = URISupport.parseQuery(answer.getQueryParameters());
             queryParameters.putAll(existingQueryParameters);
 
             final String remainingParameters = URISupport.createQueryString(queryParameters);
-            if (ObjectHelper.isNotEmpty(remainingParameters)) {
-                answer.setQueryParameters(remainingParameters);
-            }
+            answer.setQueryParameters(remainingParameters);
         }
 
         answer.setParameters(parameters);
@@ -206,14 +190,8 @@ public class RestComponent extends HeaderFilterStrategyComponent {
     // Helpers
     // ****************************************
 
-    private EndpointUriFactory getEndpointUriFactory(String name) {
-        if (name != null) {
-            UriFactoryResolver resolver
-                    = getCamelContext().getCamelContextExtension().getContextPlugin(UriFactoryResolver.class);
-            if (resolver != null) {
-                return resolver.resolveFactory(name, getCamelContext());
-            }
-        }
-        return null;
+    public ComponentVerifierExtension getVerifier() {
+        return (scope, parameters) -> getExtension(ComponentVerifierExtension.class)
+                .orElseThrow(UnsupportedOperationException::new).verify(scope, parameters);
     }
 }

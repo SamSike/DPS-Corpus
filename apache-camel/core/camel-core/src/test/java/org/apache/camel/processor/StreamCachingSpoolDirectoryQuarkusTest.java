@@ -19,7 +19,6 @@ package org.apache.camel.processor;
 import java.io.ByteArrayInputStream;
 import java.io.FilterInputStream;
 import java.io.InputStream;
-import java.nio.file.Path;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
@@ -32,13 +31,12 @@ import org.apache.camel.spi.StreamCachingStrategy;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class StreamCachingSpoolDirectoryQuarkusTest extends ContextTestSupport {
 
-    private final MyCustomSpoolRule spoolRule = new MyCustomSpoolRule();
+    private MyCustomSpoolRule spoolRule = new MyCustomSpoolRule();
 
-    private static class MyCamelContext extends DefaultCamelContext {
+    private class MyCamelContext extends DefaultCamelContext {
 
         public MyCamelContext(boolean init) {
             super(init);
@@ -55,7 +53,8 @@ public class StreamCachingSpoolDirectoryQuarkusTest extends ContextTestSupport {
     protected CamelContext createCamelContext() throws Exception {
         DefaultCamelContext context = new MyCamelContext(false);
         context.disableJMX();
-        context.getCamelContextExtension().setRegistry(createCamelRegistry());
+        context.setRegistry(createRegistry());
+        context.setLoadTypeConverters(isLoadTypeConverters());
         return context;
     }
 
@@ -78,7 +77,7 @@ public class StreamCachingSpoolDirectoryQuarkusTest extends ContextTestSupport {
         assertMockEndpointsSatisfied();
     }
 
-    private static final class MyInputStream extends FilterInputStream {
+    private final class MyInputStream extends FilterInputStream {
 
         private MyInputStream(InputStream in) {
             super(in);
@@ -86,12 +85,11 @@ public class StreamCachingSpoolDirectoryQuarkusTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
-                final Path path = testDirectory();
-                context.getStreamCachingStrategy().setSpoolDirectory(path.toFile());
+            public void configure() throws Exception {
+                context.getStreamCachingStrategy().setSpoolDirectory(testDirectory().toFile());
                 context.getStreamCachingStrategy().setSpoolEnabled(true);
                 context.getStreamCachingStrategy().addSpoolRule(spoolRule);
                 context.getStreamCachingStrategy().setAnySpoolRules(true);
@@ -101,11 +99,10 @@ public class StreamCachingSpoolDirectoryQuarkusTest extends ContextTestSupport {
                         .to("mock:dutch", "mock:german").otherwise().to("mock:french").end()
                         .process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 // check if spool file exists
                                 if (spoolRule.isSpool()) {
-                                    String[] names = path.toFile().list();
-                                    assertNotNull(names, "Should be able to list files in " + path);
+                                    String[] names = testDirectory().toFile().list();
                                     assertEquals(1, names.length, "There should be a cached spool file");
                                 }
                             }

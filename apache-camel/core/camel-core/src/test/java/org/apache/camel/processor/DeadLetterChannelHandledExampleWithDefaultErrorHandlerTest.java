@@ -24,9 +24,9 @@ import org.apache.camel.builder.RouteBuilder;
 public class DeadLetterChannelHandledExampleWithDefaultErrorHandlerTest extends DeadLetterChannelHandledExampleTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 // we do special error handling for when OrderFailedException is
                 // thrown

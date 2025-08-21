@@ -85,9 +85,7 @@ abstract class MongoAbstractConsumerThread implements Runnable {
                     if (cursorRegenerationDelayEnabled) {
                         try {
                             Thread.sleep(cursorRegenerationDelay);
-                        } catch (InterruptedException e) {
-                            log.info("Interrupted while waiting for the cursor regeneration");
-                            Thread.currentThread().interrupt();
+                        } catch (InterruptedException ignored) {
                         }
                     }
 

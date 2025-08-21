@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,11 +38,28 @@
 package org.jooq.impl;
 
 import static org.jooq.Clause.FIELD;
+import static org.jooq.Comparator.EQUALS;
+import static org.jooq.Comparator.GREATER;
+import static org.jooq.Comparator.GREATER_OR_EQUAL;
+import static org.jooq.Comparator.IN;
+import static org.jooq.Comparator.LESS;
+import static org.jooq.Comparator.LESS_OR_EQUAL;
+import static org.jooq.Comparator.LIKE;
+import static org.jooq.Comparator.LIKE_IGNORE_CASE;
+import static org.jooq.Comparator.NOT_EQUALS;
+import static org.jooq.Comparator.NOT_IN;
+import static org.jooq.Comparator.NOT_LIKE;
+import static org.jooq.Comparator.NOT_LIKE_IGNORE_CASE;
+import static org.jooq.Comparator.NOT_SIMILAR_TO;
+import static org.jooq.Comparator.SIMILAR_TO;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.ExpressionOperator.ADD;
+import static org.jooq.impl.ExpressionOperator.DIVIDE;
+import static org.jooq.impl.ExpressionOperator.MULTIPLY;
 import static org.jooq.impl.ExpressionOperator.SUBTRACT;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
 import static org.jooq.impl.Tools.castIfNeeded;
+import static org.jooq.impl.Tools.fieldsArray;
 import static org.jooq.impl.Tools.map;
 import static org.jooq.impl.Tools.nullSafe;
 import static org.jooq.impl.Tools.nullSafeList;
@@ -80,18 +97,11 @@ import org.jooq.SortField;
 import org.jooq.SortOrder;
 import org.jooq.WindowIgnoreNullsStep;
 import org.jooq.WindowPartitionByStep;
-import org.jooq.impl.QOM.Aliasable;
 
 /**
  * @author Lukas Eder
  */
-abstract class AbstractField<T>
-extends
-    AbstractTypedNamed<T>
-implements
-    Field<T>,
-    Aliasable<Field<?>>
-{
+abstract class AbstractField<T> extends AbstractTypedNamed<T> implements Field<T>, ScopeMappable {
 
     private static final Clause[] CLAUSES = { FIELD };
 
@@ -112,21 +122,16 @@ implements
     // XXX: API (not implemented)
     // ------------------------------------------------------------------------
 
-    /**
-     * [#10179] [#11757] [#14665] Subclasses may override this method to
-     * indicate that the condition may produce <code>TRUE</code>,
-     * <code>FALSE</code>, or <code>NULL</code>.
-     */
-    /* non-final */ boolean isNullable() {
-        return true;
-    }
-
     @Override
     public abstract void accept(Context<?> ctx);
 
     @Override
     public Clause[] clauses(Context<?> ctx) {
         return CLAUSES;
+    }
+
+    /* non-final */ boolean isPossiblyNullable() {
+        return true;
     }
 
     /* non-final */ int projectionSize() {
@@ -175,11 +180,6 @@ implements
     }
 
     @Override
-    public final boolean touched(Record record) {
-        return record.touched(this);
-    }
-
-    @Override
     public final void reset(Record record) {
         record.reset(this);
     }
@@ -187,20 +187,6 @@ implements
     @Override
     public final Record1<T> from(Record record) {
         return record.into(this);
-    }
-
-    // ------------------------------------------------------------------------
-    // XXX: QOM API
-    // ------------------------------------------------------------------------
-
-    @Override
-    public /* non-final */ Name $alias() {
-        return null;
-    }
-
-    @Override
-    public /* non-final */ Field<?> $aliased() {
-        return this;
     }
 
     // ------------------------------------------------------------------------
@@ -254,7 +240,7 @@ implements
     @SuppressWarnings("unchecked")
     @Override
     public Field<T> as(Name alias) {
-        return new FieldAlias<>((Field<T>) (this instanceof Condition c ? DSL.field(c) : this), alias);
+        return new FieldAlias<>((Field<T>) (this instanceof Condition ? DSL.field((Condition) this) : this), alias);
     }
 
     @Override
@@ -265,20 +251,6 @@ implements
     @Override
     public final Field<T> as(Function<? super Field<T>, ? extends String> aliasFunction) {
         return as(aliasFunction.apply(this));
-    }
-
-    // ------------------------------------------------------------------------
-    // XXX: DDL API
-    // ------------------------------------------------------------------------
-
-    @Override
-    public final Field<T> comment(String comment) {
-        return comment(DSL.comment(comment));
-    }
-
-    @Override
-    public final Field<T> comment(Comment comment) {
-        return DSL.field(getQualifiedName(), getDataType(), comment);
     }
 
     // ------------------------------------------------------------------------
@@ -297,7 +269,7 @@ implements
 
     @Override
     public final <Z> Field<Z> cast(Class<Z> type) {
-        return cast(DefaultDataType.check(DefaultDataType.getDataType(null, type)));
+        return cast(DefaultDataType.getDataType(null, type));
     }
 
     // ------------------------------------------------------------------------
@@ -316,7 +288,7 @@ implements
 
     @Override
     public final <Z> Field<Z> coerce(Class<Z> type) {
-        return coerce(DefaultDataType.check(DefaultDataType.getDataType(null, type)));
+        return coerce(DefaultDataType.getDataType(null, type));
     }
 
     // ------------------------------------------------------------------------
@@ -340,7 +312,7 @@ implements
 
     @Override
     public final SortField<T> sort(SortOrder order) {
-        return this instanceof NoField<T> n ? n : new SortFieldImpl<>(this, order);
+        return this instanceof NoField ? (NoField<T>) this : new SortFieldImpl<>(this, order);
     }
 
     @Override
@@ -364,7 +336,7 @@ implements
     public final SortField<Integer> sortDesc(Collection<T> sortList) {
         Map<T, Integer> map = new LinkedHashMap<>();
 
-        int i = sortList.size();
+        int i = 0;
         for (T value : sortList)
             map.put(value, i--);
 
@@ -385,36 +357,11 @@ implements
              : DSL.case_(this).mapValues(sortMap).asc();
     }
 
-    @Override
-    public final SortField<T> nullsFirst() {
-        return sortDefault().nullsFirst();
-    }
-
-    @Override
-    public final SortField<T> nullsLast() {
-        return sortDefault().nullsLast();
-    }
-
 
 
     // -------------------------------------------------------------------------
     // Generic predicates
     // -------------------------------------------------------------------------
-
-    @Override
-    public final Condition binaryLike(byte[] pattern) {
-        return new BinaryLike(this, Tools.field(pattern));
-    }
-
-    @Override
-    public final Condition binaryLike(Field<byte[]> pattern) {
-        return new BinaryLike(this, nullSafe(pattern, getDataType()));
-    }
-
-    @Override
-    public final Condition binaryLike(org.jooq.QuantifiedSelect<? extends Record1<byte[]>> pattern) {
-        return new BinaryLikeQuantified(this, pattern);
-    }
 
     @Override
     public final Condition eq(T arg2) {
@@ -432,11 +379,6 @@ implements
     }
 
     @Override
-    public final Condition eq(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2) {
-        return new EqQuantified<>(this, arg2);
-    }
-
-    @Override
     public final Condition equal(T arg2) {
         return eq(arg2);
     }
@@ -448,11 +390,6 @@ implements
 
     @Override
     public final Condition equal(Field<T> arg2) {
-        return eq(arg2);
-    }
-
-    @Override
-    public final Condition equal(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2) {
         return eq(arg2);
     }
 
@@ -472,11 +409,6 @@ implements
     }
 
     @Override
-    public final Condition ge(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2) {
-        return new GeQuantified<>(this, arg2);
-    }
-
-    @Override
     public final Condition greaterOrEqual(T arg2) {
         return ge(arg2);
     }
@@ -488,11 +420,6 @@ implements
 
     @Override
     public final Condition greaterOrEqual(Field<T> arg2) {
-        return ge(arg2);
-    }
-
-    @Override
-    public final Condition greaterOrEqual(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2) {
         return ge(arg2);
     }
 
@@ -512,11 +439,6 @@ implements
     }
 
     @Override
-    public final Condition greaterThan(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2) {
-        return gt(arg2);
-    }
-
-    @Override
     public final Condition gt(T arg2) {
         return new Gt<>(this, Tools.field(arg2, this));
     }
@@ -529,11 +451,6 @@ implements
     @Override
     public final Condition gt(Field<T> arg2) {
         return new Gt<>(this, nullSafe(arg2, getDataType()));
-    }
-
-    @Override
-    public final Condition gt(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2) {
-        return new GtQuantified<>(this, arg2);
     }
 
     @Override
@@ -597,11 +514,6 @@ implements
     }
 
     @Override
-    public final Condition le(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2) {
-        return new LeQuantified<>(this, arg2);
-    }
-
-    @Override
     public final Condition lessOrEqual(T arg2) {
         return le(arg2);
     }
@@ -613,11 +525,6 @@ implements
 
     @Override
     public final Condition lessOrEqual(Field<T> arg2) {
-        return le(arg2);
-    }
-
-    @Override
-    public final Condition lessOrEqual(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2) {
         return le(arg2);
     }
 
@@ -637,11 +544,6 @@ implements
     }
 
     @Override
-    public final Condition lessThan(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2) {
-        return lt(arg2);
-    }
-
-    @Override
     public final LikeEscapeStep like(String pattern) {
         return new Like(this, Tools.field(pattern));
     }
@@ -649,11 +551,6 @@ implements
     @Override
     public final LikeEscapeStep like(Field<String> pattern) {
         return new Like(this, nullSafe(pattern, getDataType()));
-    }
-
-    @Override
-    public final LikeEscapeStep like(org.jooq.QuantifiedSelect<? extends Record1<String>> pattern) {
-        return new LikeQuantified(this, pattern);
     }
 
     @Override
@@ -682,11 +579,6 @@ implements
     }
 
     @Override
-    public final Condition lt(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2) {
-        return new LtQuantified<>(this, arg2);
-    }
-
-    @Override
     public final Condition ne(T arg2) {
         return new Ne<>(this, Tools.field(arg2, this));
     }
@@ -699,26 +591,6 @@ implements
     @Override
     public final Condition ne(Field<T> arg2) {
         return new Ne<>(this, nullSafe(arg2, getDataType()));
-    }
-
-    @Override
-    public final Condition ne(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2) {
-        return new NeQuantified<>(this, arg2);
-    }
-
-    @Override
-    public final Condition notBinaryLike(byte[] pattern) {
-        return new NotBinaryLike(this, Tools.field(pattern));
-    }
-
-    @Override
-    public final Condition notBinaryLike(Field<byte[]> pattern) {
-        return new NotBinaryLike(this, nullSafe(pattern, getDataType()));
-    }
-
-    @Override
-    public final Condition notBinaryLike(org.jooq.QuantifiedSelect<? extends Record1<byte[]>> pattern) {
-        return new NotBinaryLikeQuantified(this, pattern);
     }
 
     @Override
@@ -737,11 +609,6 @@ implements
     }
 
     @Override
-    public final Condition notEqual(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2) {
-        return ne(arg2);
-    }
-
-    @Override
     public final Condition notIn(Select<? extends Record1<T>> arg2) {
         return new NotIn<>(this, arg2);
     }
@@ -754,11 +621,6 @@ implements
     @Override
     public final LikeEscapeStep notLike(Field<String> pattern) {
         return new NotLike(this, nullSafe(pattern, getDataType()));
-    }
-
-    @Override
-    public final LikeEscapeStep notLike(org.jooq.QuantifiedSelect<? extends Record1<String>> pattern) {
-        return new NotLikeQuantified(this, pattern);
     }
 
     @Override
@@ -782,11 +644,6 @@ implements
     }
 
     @Override
-    public final LikeEscapeStep notSimilarTo(org.jooq.QuantifiedSelect<? extends Record1<String>> pattern) {
-        return new NotSimilarToQuantified(this, pattern);
-    }
-
-    @Override
     public final LikeEscapeStep similarTo(String pattern) {
         return new SimilarTo(this, Tools.field(pattern));
     }
@@ -794,11 +651,6 @@ implements
     @Override
     public final LikeEscapeStep similarTo(Field<String> pattern) {
         return new SimilarTo(this, nullSafe(pattern, getDataType()));
-    }
-
-    @Override
-    public final LikeEscapeStep similarTo(org.jooq.QuantifiedSelect<? extends Record1<String>> pattern) {
-        return new SimilarToQuantified(this, pattern);
     }
 
     // -------------------------------------------------------------------------
@@ -1221,30 +1073,32 @@ implements
         static final List<Field<String>> FALSE_VALUES = Tools.map(Convert.FALSE_VALUES, v -> DSL.inline(v));
     }
 
+    @SuppressWarnings({ "unchecked" })
     @Override
     public final Condition isTrue() {
-        DataType<T> t = getDataType();
+        Class<?> type = getType();
 
-        if (t.isString())
-            return in(map(BooleanValues.TRUE_VALUES, v -> v.coerce(this)));
-        else if (t.isNumeric())
-            return eq(inline(1).coerce(this));
-        else if (t.isBoolean())
-            return eq(inline(true).coerce(this));
+        if (type == String.class)
+            return ((Field<String>) this).in(BooleanValues.TRUE_VALUES);
+        else if (Number.class.isAssignableFrom(type))
+            return ((Field<Number>) this).equal(inline((Number) getDataType().convert(1)));
+        else if (Boolean.class.isAssignableFrom(type))
+            return ((Field<Boolean>) this).equal(inline(true, (DataType<Boolean>) getDataType()));
         else
             return castIfNeeded(this, String.class).in(BooleanValues.TRUE_VALUES);
     }
 
+    @SuppressWarnings({ "unchecked" })
     @Override
     public final Condition isFalse() {
-        DataType<T> t = getDataType();
+        Class<?> type = getType();
 
-        if (t.isString())
-            return in(map(BooleanValues.FALSE_VALUES, v -> v.coerce(this)));
-        else if (t.isNumeric())
-            return eq(inline(0).coerce(this));
-        else if (t.isBoolean())
-            return eq(inline(false).coerce(this));
+        if (type == String.class)
+            return ((Field<String>) this).in(BooleanValues.FALSE_VALUES);
+        else if (Number.class.isAssignableFrom(type))
+            return ((Field<Number>) this).equal(inline((Number) getDataType().convert(0)));
+        else if (Boolean.class.isAssignableFrom(type))
+            return ((Field<Boolean>) this).equal(inline(false, (DataType<Boolean>) getDataType()));
         else
             return castIfNeeded(this, String.class).in(BooleanValues.FALSE_VALUES);
     }
@@ -1280,6 +1134,11 @@ implements
     }
 
     @Override
+    public final LikeEscapeStep like(QuantifiedSelect<Record1<String>> query) {
+        return new QuantifiedComparisonCondition(query, this, LIKE);
+    }
+
+    @Override
     public final Condition likeIgnoreCase(String value, char escape) {
         return likeIgnoreCase(Tools.field(value), escape);
     }
@@ -1307,6 +1166,11 @@ implements
     @Override
     public final Condition notLike(Field<String> field, char escape) {
         return notLike(field).escape(escape);
+    }
+
+    @Override
+    public final LikeEscapeStep notLike(QuantifiedSelect<Record1<String>> query) {
+        return new QuantifiedComparisonCondition(query, this, NOT_LIKE);
     }
 
     @Override
@@ -1498,6 +1362,36 @@ implements
     }
 
     @Override
+    public final Condition eq(QuantifiedSelect<? extends Record1<T>> query) {
+        return equal(query);
+    }
+
+    @Override
+    public final Condition ne(QuantifiedSelect<? extends Record1<T>> query) {
+        return notEqual(query);
+    }
+
+    @Override
+    public final Condition lt(QuantifiedSelect<? extends Record1<T>> query) {
+        return lessThan(query);
+    }
+
+    @Override
+    public final Condition le(QuantifiedSelect<? extends Record1<T>> query) {
+        return lessOrEqual(query);
+    }
+
+    @Override
+    public final Condition gt(QuantifiedSelect<? extends Record1<T>> query) {
+        return greaterThan(query);
+    }
+
+    @Override
+    public final Condition ge(QuantifiedSelect<? extends Record1<T>> query) {
+        return greaterOrEqual(query);
+    }
+
+    @Override
     public final Condition equalIgnoreCase(String value) {
         return equalIgnoreCase(Tools.field(value));
     }
@@ -1508,6 +1402,11 @@ implements
     }
 
     @Override
+    public final Condition equal(QuantifiedSelect<? extends Record1<T>> query) {
+        return compare(EQUALS, query);
+    }
+
+    @Override
     public final Condition notEqualIgnoreCase(String value) {
         return notEqualIgnoreCase(Tools.field(value));
     }
@@ -1515,6 +1414,31 @@ implements
     @Override
     public final Condition notEqualIgnoreCase(Field<String> value) {
         return DSL.lower(castIfNeeded(this, String.class)).notEqual(DSL.lower(value));
+    }
+
+    @Override
+    public final Condition notEqual(QuantifiedSelect<? extends Record1<T>> query) {
+        return compare(NOT_EQUALS, query);
+    }
+
+    @Override
+    public final Condition lessThan(QuantifiedSelect<? extends Record1<T>> query) {
+        return compare(LESS, query);
+    }
+
+    @Override
+    public final Condition lessOrEqual(QuantifiedSelect<? extends Record1<T>> query) {
+        return compare(LESS_OR_EQUAL, query);
+    }
+
+    @Override
+    public final Condition greaterThan(QuantifiedSelect<? extends Record1<T>> query) {
+        return compare(GREATER, query);
+    }
+
+    @Override
+    public final Condition greaterOrEqual(QuantifiedSelect<? extends Record1<T>> query) {
+        return compare(GREATER_OR_EQUAL, query);
     }
 
     @Override
@@ -1558,14 +1482,14 @@ implements
                 return new IsNotDistinctFrom<>(this, nullSafe(field, getDataType()));
 
             case IN:
-                if (field instanceof ScalarSubquery<?> s)
-                    return new In<>(this, (Select<? extends Record1<T>>) s.query);
+                if (field instanceof ScalarSubquery)
+                    return new In<>(this, (Select<? extends Record1<T>>) ((ScalarSubquery<?>) field).query);
 
                 break;
 
             case NOT_IN:
-                if (field instanceof ScalarSubquery<?> s)
-                    return new NotIn<>(this, (Select<? extends Record1<T>>) s.query);
+                if (field instanceof ScalarSubquery)
+                    return new NotIn<>(this, (Select<? extends Record1<T>>) ((ScalarSubquery<?>) field).query);
 
                 break;
         }
@@ -1580,30 +1504,7 @@ implements
 
     @Override
     public final Condition compare(Comparator comparator, QuantifiedSelect<? extends Record1<T>> query) {
-        switch (comparator) {
-            case EQUALS:
-                return new EqQuantified<>(this, query);
-            case GREATER:
-                return new GtQuantified<>(this, query);
-            case GREATER_OR_EQUAL:
-                return new GeQuantified<>(this, query);
-            case LESS:
-                return new LtQuantified<>(this, query);
-            case LESS_OR_EQUAL:
-                return new LeQuantified<>(this, query);
-            case NOT_EQUALS:
-                return new NeQuantified<>(this, query);
-            case LIKE:
-                return new LikeQuantified(this, (QuantifiedSelect) query);
-            case NOT_LIKE:
-                return new NotLikeQuantified(this, (QuantifiedSelect) query);
-            case SIMILAR_TO:
-                return new SimilarToQuantified(this, (QuantifiedSelect) query);
-            case NOT_SIMILAR_TO:
-                return new NotSimilarToQuantified(this, (QuantifiedSelect) query);
-        }
-
-        throw new IllegalArgumentException("Comparator not supported: " + comparator);
+        return new QuantifiedComparisonCondition(query, this, comparator);
     }
 
     // ------------------------------------------------------------------------

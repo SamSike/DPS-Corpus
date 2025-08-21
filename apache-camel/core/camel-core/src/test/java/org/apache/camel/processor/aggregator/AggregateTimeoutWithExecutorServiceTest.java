@@ -69,10 +69,10 @@ public class AggregateTimeoutWithExecutorServiceTest extends ContextTestSupport 
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // share 8 threads among the 20 routes
                 ScheduledExecutorService threadPool
                         = context.getExecutorServiceManager().newScheduledThreadPool(this, "MyThreadPool", 8);

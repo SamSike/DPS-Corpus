@@ -21,9 +21,7 @@ import java.lang.reflect.Method;
 import org.apache.camel.Consume;
 import org.apache.camel.ContextTestSupport;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
-@DisabledIfSystemProperty(named = "ci.env.name", matches = ".*", disabledReason = "Flaky on GitHub Actions")
 public class CamelPostProcessorHelperSedaConsumePredicateTest extends ContextTestSupport {
 
     @Test

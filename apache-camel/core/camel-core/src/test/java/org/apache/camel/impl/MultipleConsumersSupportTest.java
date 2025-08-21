@@ -26,8 +26,8 @@ import org.apache.camel.support.DefaultConsumer;
 import org.apache.camel.support.DefaultEndpoint;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class MultipleConsumersSupportTest extends ContextTestSupport {
 
@@ -40,7 +40,7 @@ public class MultipleConsumersSupportTest extends ContextTestSupport {
     public void testNotMultipleConsumersSupport() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 MyEndpoint my = new MyEndpoint();
                 my.setCamelContext(context);
                 my.setEndpointUriIfNotSpecified("my:endpoint");
@@ -52,16 +52,19 @@ public class MultipleConsumersSupportTest extends ContextTestSupport {
                 from(my).to("mock:b");
             }
         });
-
-        Exception e = assertThrows(Exception.class, () -> context.start(), "Should have thrown exception");
-        assertTrue(e.getMessage().endsWith("Multiple consumers for the same endpoint is not allowed: my:endpoint"));
+        try {
+            context.start();
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            assertTrue(e.getMessage().endsWith("Multiple consumers for the same endpoint is not allowed: my:endpoint"));
+        }
     }
 
     @Test
     public void testYesMultipleConsumersSupport() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 MyOtherEndpoint my = new MyOtherEndpoint();
                 my.setCamelContext(context);
 
@@ -88,12 +91,12 @@ public class MultipleConsumersSupportTest extends ContextTestSupport {
         }
 
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             return null;
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             return new DefaultConsumer(this, processor);
         }
 
@@ -116,12 +119,12 @@ public class MultipleConsumersSupportTest extends ContextTestSupport {
         }
 
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             return null;
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             return new DefaultConsumer(this, processor);
         }
 

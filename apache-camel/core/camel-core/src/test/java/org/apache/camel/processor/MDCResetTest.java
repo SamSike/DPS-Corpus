@@ -53,27 +53,27 @@ public class MDCResetTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // enable MDC
                 context.setUseMDCLogging(true);
 
                 from("direct:a").routeId("route-a").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         assertEquals("route-a", MDC.get("camel.routeId"));
                         assertEquals(exchange.getExchangeId(), MDC.get("camel.exchangeId"));
                     }
                 }).to("log:foo").to("direct:b").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         assertEquals("route-a", MDC.get("camel.routeId"));
                         assertEquals(exchange.getExchangeId(), MDC.get("camel.exchangeId"));
                     }
                 }).to("log:result").to("mock:result");
 
                 from("direct:b").routeId("route-b").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         assertEquals("route-b", MDC.get("camel.routeId"));
                         assertEquals(exchange.getExchangeId(), MDC.get("camel.exchangeId"));
 

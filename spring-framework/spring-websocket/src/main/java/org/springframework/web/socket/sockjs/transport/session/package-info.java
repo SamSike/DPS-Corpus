@@ -2,7 +2,9 @@
  * SockJS specific implementations of
  * {@link org.springframework.web.socket.WebSocketSession}.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.socket.sockjs.transport.session;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

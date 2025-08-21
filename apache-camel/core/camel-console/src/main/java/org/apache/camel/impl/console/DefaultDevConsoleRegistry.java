@@ -25,10 +25,10 @@ import java.util.stream.Stream;
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.DeferredContextBinding;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.console.DevConsole;
 import org.apache.camel.console.DevConsoleRegistry;
 import org.apache.camel.console.DevConsoleResolver;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.support.service.ServiceSupport;
 import org.apache.camel.util.StopWatch;
@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Default {@link org.apache.camel.console.DevConsoleRegistry}.
  */
-@org.apache.camel.spi.annotations.DevConsole(name = DevConsoleRegistry.NAME, description = "Default Console Registry")
+@org.apache.camel.spi.annotations.DevConsole(DevConsoleRegistry.NAME)
 @DeferredContextBinding
 public class DefaultDevConsoleRegistry extends ServiceSupport implements DevConsoleRegistry {
 
@@ -118,7 +118,7 @@ public class DefaultDevConsoleRegistry extends ServiceSupport implements DevCons
         DevConsole answer = consoles.stream().filter(h -> h.getId().equals(id)).findFirst()
                 .orElse(camelContext.getRegistry().findByTypeWithName(DevConsole.class).get(id));
         if (answer == null) {
-            DevConsoleResolver resolver = PluginHelper.getDevConsoleResolver(camelContext);
+            DevConsoleResolver resolver = camelContext.adapt(ExtendedCamelContext.class).getDevConsoleResolver();
             answer = resolver.resolveDevConsole(id);
             if (answer != null) {
                 register(answer);
@@ -177,7 +177,7 @@ public class DefaultDevConsoleRegistry extends ServiceSupport implements DevCons
             loadDevConsolesDone = true;
 
             DefaultDevConsolesLoader loader = new DefaultDevConsolesLoader(camelContext);
-            Collection<DevConsole> col = loader.loadDevConsoles(force);
+            Collection<DevConsole> col = loader.loadDevConsoles();
 
             if (!col.isEmpty()) {
                 int added = 0;
@@ -188,7 +188,7 @@ public class DefaultDevConsoleRegistry extends ServiceSupport implements DevCons
                     }
                 }
                 String time = TimeUtils.printDuration(watch.taken(), true);
-                LOG.debug("Dev consoles (scanned: {} registered: {}) loaded in {}", col.size(), added, time);
+                LOG.debug("Dev consoles (scanned: {} registered:{}) loaded in {}", col.size(), added, time);
             }
         }
     }

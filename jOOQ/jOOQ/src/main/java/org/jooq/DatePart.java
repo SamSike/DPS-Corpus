@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -124,10 +124,6 @@ public enum DatePart {
 
     /**
      * The millisecond.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support({ H2, HSQLDB, POSTGRES })
@@ -135,10 +131,6 @@ public enum DatePart {
 
     /**
      * The microsecond.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
@@ -146,10 +138,6 @@ public enum DatePart {
 
     /**
      * The nanosecond.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support({ H2, HSQLDB })
@@ -158,10 +146,6 @@ public enum DatePart {
     /**
      * The millennium. The year 2000 is in the 2nd millennium, the year 2001 in
      * the 3rd.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support
@@ -170,10 +154,6 @@ public enum DatePart {
     /**
      * The century. The year 2000 is in the 20th century, the year 2001 in the
      * 21st.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support
@@ -181,10 +161,6 @@ public enum DatePart {
 
     /**
      * The decade. The year divided by 10.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support
@@ -192,10 +168,6 @@ public enum DatePart {
 
     /**
      * The epoch in seconds since 1970-01-01.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
@@ -203,10 +175,6 @@ public enum DatePart {
 
     /**
      * The quarter. Jan-Mar = 1, Apr-Jun = 2, Jul-Sep = 3, Oct-Dec = 4.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support
@@ -214,10 +182,6 @@ public enum DatePart {
 
     /**
      * The week of the year.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES })
@@ -225,10 +189,6 @@ public enum DatePart {
 
     /**
      * The day of the year. Corresponds to {@link ChronoField#DAY_OF_YEAR}.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
@@ -237,10 +197,6 @@ public enum DatePart {
     /**
      * The day of the week. 1 = Sunday, 2 = Monday, ..., 7 = Saturday.
      * Corresponds to {@link ChronoField#DAY_OF_WEEK}, shifted by one day.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
@@ -249,10 +205,6 @@ public enum DatePart {
     /**
      * The ISO day of the week. 1 = Monday, 2 = Tuesday, ..., 7 = Sunday.
      * Corresponds to {@link ChronoField#DAY_OF_WEEK}.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE })
@@ -261,10 +213,6 @@ public enum DatePart {
     /**
      * The timezone offset in seconds. Corresponds to
      * {@link ChronoField#OFFSET_SECONDS}.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support({ H2, HSQLDB, POSTGRES })
@@ -272,10 +220,6 @@ public enum DatePart {
 
     /**
      * The time zone offset's hour part.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support({ H2, HSQLDB, POSTGRES })
@@ -283,10 +227,6 @@ public enum DatePart {
 
     /**
      * The time zone offset's minute part.
-     * <p>
-     * The documented {@link Support} is for
-     * {@link DSL#extract(Field, DatePart)}, and possibly other temporal
-     * functions. It does not guarantee support on all temporal functions.
      */
     @NotNull
     @Support({ H2, HSQLDB, POSTGRES })

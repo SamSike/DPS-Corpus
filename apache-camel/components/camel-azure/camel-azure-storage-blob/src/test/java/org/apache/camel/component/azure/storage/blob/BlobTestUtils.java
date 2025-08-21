@@ -16,9 +16,10 @@
  */
 package org.apache.camel.component.azure.storage.blob;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Objects;
 import java.util.Properties;
-
-import org.apache.camel.test.junit5.TestSupport;
 
 public final class BlobTestUtils {
 
@@ -26,6 +27,18 @@ public final class BlobTestUtils {
     }
 
     public static Properties getAzuriteProperties() {
-        return TestSupport.loadExternalPropertiesQuietly(BlobTestUtils.class, "azurite.properties");
+        final Properties properties = new Properties();
+        final String fileName = "azurite.properties";
+
+        final InputStream inputStream
+                = Objects.requireNonNull(BlobTestUtils.class.getClassLoader().getResourceAsStream(fileName));
+
+        try {
+            properties.load(inputStream);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not initialize Azurite properties", e);
+        }
+
+        return properties;
     }
 }

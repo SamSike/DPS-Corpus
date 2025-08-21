@@ -30,9 +30,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class FileConsumerIdleMessageTest extends ContextTestSupport {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?initialDelay=0&delay=10&sendEmptyMessageWhenIdle=true"))
                         .convertBodyTo(String.class).to("mock:result");
             }

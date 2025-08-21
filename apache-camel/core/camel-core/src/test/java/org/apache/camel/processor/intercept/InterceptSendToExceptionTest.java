@@ -43,10 +43,10 @@ public class InterceptSendToExceptionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 interceptSendToEndpoint("mock:foo").throwException(new IllegalArgumentException("Damn"));
 
                 from("direct:start").to("mock:foo").to("mock:result");

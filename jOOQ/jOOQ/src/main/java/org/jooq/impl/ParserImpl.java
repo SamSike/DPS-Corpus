@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,6 +37,7 @@
  */
 package org.jooq.impl;
 
+import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -47,48 +48,38 @@ import static org.jooq.DatePart.HOUR;
 import static org.jooq.DatePart.MINUTE;
 import static org.jooq.DatePart.MONTH;
 import static org.jooq.DatePart.SECOND;
+import static org.jooq.DatePart.YEAR;
 import static org.jooq.JoinType.JOIN;
 // ...
 // ...
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.FIREBIRD;
 // ...
-import static org.jooq.SQLDialect.HSQLDB;
 // ...
 import static org.jooq.SQLDialect.MARIADB;
 // ...
 import static org.jooq.SQLDialect.MYSQL;
 // ...
 // ...
-import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
 import static org.jooq.VisitListener.onVisitStart;
 import static org.jooq.conf.ParseWithMetaLookups.IGNORE_ON_FAILURE;
 import static org.jooq.conf.ParseWithMetaLookups.THROW_ON_FAILURE;
+import static org.jooq.conf.SettingsTools.parseLocale;
 import static org.jooq.impl.AbstractName.NO_NAME;
-import static org.jooq.impl.Convert.convert;
 import static org.jooq.impl.DSL.abs;
 import static org.jooq.impl.DSL.acos;
 import static org.jooq.impl.DSL.acosh;
 import static org.jooq.impl.DSL.acoth;
 import static org.jooq.impl.DSL.all;
-import static org.jooq.impl.DSL.and;
 import static org.jooq.impl.DSL.any;
 import static org.jooq.impl.DSL.anyValue;
 import static org.jooq.impl.DSL.arrayAgg;
 import static org.jooq.impl.DSL.arrayAggDistinct;
-import static org.jooq.impl.DSL.arrayAppend;
-import static org.jooq.impl.DSL.arrayConcat;
 import static org.jooq.impl.DSL.arrayGet;
-import static org.jooq.impl.DSL.arrayOverlap;
-import static org.jooq.impl.DSL.arrayPrepend;
-import static org.jooq.impl.DSL.arrayRemove;
-import static org.jooq.impl.DSL.arrayReplace;
 import static org.jooq.impl.DSL.ascii;
 import static org.jooq.impl.DSL.asin;
 import static org.jooq.impl.DSL.asinh;
@@ -98,16 +89,6 @@ import static org.jooq.impl.DSL.atanh;
 import static org.jooq.impl.DSL.avg;
 import static org.jooq.impl.DSL.avgDistinct;
 import static org.jooq.impl.DSL.begin;
-import static org.jooq.impl.DSL.binaryBitLength;
-import static org.jooq.impl.DSL.binaryLength;
-import static org.jooq.impl.DSL.binaryListAgg;
-import static org.jooq.impl.DSL.binaryListAggDistinct;
-import static org.jooq.impl.DSL.binaryLtrim;
-import static org.jooq.impl.DSL.binaryMd5;
-import static org.jooq.impl.DSL.binaryOctetLength;
-import static org.jooq.impl.DSL.binaryOverlay;
-import static org.jooq.impl.DSL.binaryRtrim;
-import static org.jooq.impl.DSL.binaryTrim;
 import static org.jooq.impl.DSL.bitAnd;
 import static org.jooq.impl.DSL.bitAndAgg;
 import static org.jooq.impl.DSL.bitCount;
@@ -126,7 +107,6 @@ import static org.jooq.impl.DSL.bitXorAgg;
 import static org.jooq.impl.DSL.boolOr;
 // ...
 import static org.jooq.impl.DSL.cardinality;
-import static org.jooq.impl.DSL.case_;
 import static org.jooq.impl.DSL.cast;
 import static org.jooq.impl.DSL.catalog;
 import static org.jooq.impl.DSL.ceil;
@@ -174,7 +154,6 @@ import static org.jooq.impl.DSL.deg;
 import static org.jooq.impl.DSL.denseRank;
 import static org.jooq.impl.DSL.digits;
 import static org.jooq.impl.DSL.domain;
-import static org.jooq.impl.DSL.dual;
 import static org.jooq.impl.DSL.epoch;
 import static org.jooq.impl.DSL.every;
 import static org.jooq.impl.DSL.excluded;
@@ -184,7 +163,6 @@ import static org.jooq.impl.DSL.exists;
 // ...
 import static org.jooq.impl.DSL.exp;
 import static org.jooq.impl.DSL.extract;
-import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.finalTable;
 import static org.jooq.impl.DSL.firstValue;
@@ -218,31 +196,18 @@ import static org.jooq.impl.DSL.isnull;
 import static org.jooq.impl.DSL.isoDayOfWeek;
 import static org.jooq.impl.DSL.jsonArray;
 import static org.jooq.impl.DSL.jsonArrayAgg;
-import static org.jooq.impl.DSL.jsonArrayAggDistinct;
 import static org.jooq.impl.DSL.jsonExists;
-import static org.jooq.impl.DSL.jsonGetAttribute;
-import static org.jooq.impl.DSL.jsonGetAttributeAsText;
-import static org.jooq.impl.DSL.jsonGetElement;
-import static org.jooq.impl.DSL.jsonGetElementAsText;
-import static org.jooq.impl.DSL.jsonKeyExists;
 import static org.jooq.impl.DSL.jsonObject;
 import static org.jooq.impl.DSL.jsonObjectAgg;
 import static org.jooq.impl.DSL.jsonTable;
 import static org.jooq.impl.DSL.jsonValue;
 import static org.jooq.impl.DSL.jsonbArray;
 import static org.jooq.impl.DSL.jsonbArrayAgg;
-import static org.jooq.impl.DSL.jsonbArrayAggDistinct;
-import static org.jooq.impl.DSL.jsonbGetAttribute;
-import static org.jooq.impl.DSL.jsonbGetAttributeAsText;
-import static org.jooq.impl.DSL.jsonbGetElement;
-import static org.jooq.impl.DSL.jsonbGetElementAsText;
-import static org.jooq.impl.DSL.jsonbKeyExists;
 import static org.jooq.impl.DSL.jsonbObject;
 import static org.jooq.impl.DSL.jsonbObjectAgg;
 import static org.jooq.impl.DSL.key;
 import static org.jooq.impl.DSL.keyword;
 import static org.jooq.impl.DSL.lag;
-import static org.jooq.impl.DSL.lambda;
 import static org.jooq.impl.DSL.lastValue;
 import static org.jooq.impl.DSL.lateral;
 import static org.jooq.impl.DSL.lead;
@@ -251,7 +216,6 @@ import static org.jooq.impl.DSL.length;
 // ...
 import static org.jooq.impl.DSL.list;
 import static org.jooq.impl.DSL.listAgg;
-import static org.jooq.impl.DSL.listAggDistinct;
 import static org.jooq.impl.DSL.ln;
 import static org.jooq.impl.DSL.log;
 import static org.jooq.impl.DSL.log10;
@@ -259,7 +223,6 @@ import static org.jooq.impl.DSL.log10;
 import static org.jooq.impl.DSL.lower;
 import static org.jooq.impl.DSL.ltrim;
 import static org.jooq.impl.DSL.max;
-import static org.jooq.impl.DSL.maxBy;
 import static org.jooq.impl.DSL.maxDistinct;
 import static org.jooq.impl.DSL.md5;
 import static org.jooq.impl.DSL.median;
@@ -267,7 +230,6 @@ import static org.jooq.impl.DSL.microsecond;
 import static org.jooq.impl.DSL.millennium;
 import static org.jooq.impl.DSL.millisecond;
 import static org.jooq.impl.DSL.min;
-import static org.jooq.impl.DSL.minBy;
 import static org.jooq.impl.DSL.minDistinct;
 import static org.jooq.impl.DSL.minute;
 import static org.jooq.impl.DSL.mode;
@@ -284,12 +246,13 @@ import static org.jooq.impl.DSL.nvl2;
 import static org.jooq.impl.DSL.octetLength;
 import static org.jooq.impl.DSL.oldTable;
 import static org.jooq.impl.DSL.one;
-import static org.jooq.impl.DSL.or;
 import static org.jooq.impl.DSL.orderBy;
 import static org.jooq.impl.DSL.out;
 import static org.jooq.impl.DSL.overlay;
 import static org.jooq.impl.DSL.partitionBy;
 import static org.jooq.impl.DSL.percentRank;
+import static org.jooq.impl.DSL.percentileCont;
+import static org.jooq.impl.DSL.percentileDisc;
 import static org.jooq.impl.DSL.pi;
 import static org.jooq.impl.DSL.primaryKey;
 // ...
@@ -311,7 +274,6 @@ import static org.jooq.impl.DSL.rangeUnboundedFollowing;
 import static org.jooq.impl.DSL.rangeUnboundedPreceding;
 import static org.jooq.impl.DSL.rank;
 import static org.jooq.impl.DSL.ratioToReport;
-import static org.jooq.impl.DSL.raw;
 import static org.jooq.impl.DSL.regexpReplaceAll;
 import static org.jooq.impl.DSL.regexpReplaceFirst;
 // ...
@@ -380,22 +342,10 @@ import static org.jooq.impl.DSL.square;
 // ...
 // ...
 // ...
-// ...
-// ...
-// ...
-// ...
-// ...
-// ...
-// ...
-// ...
-// ...
-// ...
-// ...
 import static org.jooq.impl.DSL.stddevPop;
 import static org.jooq.impl.DSL.stddevSamp;
 import static org.jooq.impl.DSL.sum;
 import static org.jooq.impl.DSL.sumDistinct;
-// ...
 // ...
 import static org.jooq.impl.DSL.systemName;
 import static org.jooq.impl.DSL.table;
@@ -411,12 +361,9 @@ import static org.jooq.impl.DSL.toHex;
 import static org.jooq.impl.DSL.toTimestamp;
 import static org.jooq.impl.DSL.translate;
 import static org.jooq.impl.DSL.trim;
-import static org.jooq.impl.DSL.trueCondition;
 import static org.jooq.impl.DSL.trunc;
-import static org.jooq.impl.DSL.tryCast;
 import static org.jooq.impl.DSL.unique;
 import static org.jooq.impl.DSL.unnest;
-import static org.jooq.impl.DSL.unquotedName;
 import static org.jooq.impl.DSL.user;
 import static org.jooq.impl.DSL.uuid;
 import static org.jooq.impl.DSL.values0;
@@ -442,13 +389,10 @@ import static org.jooq.impl.DSL.xmlquery;
 import static org.jooq.impl.DSL.xmlserializeContent;
 import static org.jooq.impl.DSL.xmlserializeDocument;
 import static org.jooq.impl.DSL.xmltable;
-import static org.jooq.impl.DSL.xor;
 import static org.jooq.impl.DSL.year;
 import static org.jooq.impl.DSL.zero;
 import static org.jooq.impl.DefaultParseContext.FunctionKeyword.FK_AND;
 import static org.jooq.impl.DefaultParseContext.FunctionKeyword.FK_IN;
-import static org.jooq.impl.Internal.iadd;
-import static org.jooq.impl.Internal.isub;
 import static org.jooq.impl.Keywords.K_DELETE;
 import static org.jooq.impl.Keywords.K_INSERT;
 import static org.jooq.impl.Keywords.K_SELECT;
@@ -469,7 +413,6 @@ import static org.jooq.impl.SQLDataType.BOOLEAN;
 import static org.jooq.impl.SQLDataType.CHAR;
 import static org.jooq.impl.SQLDataType.CLOB;
 import static org.jooq.impl.SQLDataType.DATE;
-import static org.jooq.impl.SQLDataType.DECFLOAT;
 import static org.jooq.impl.SQLDataType.DECIMAL;
 import static org.jooq.impl.SQLDataType.DOUBLE;
 import static org.jooq.impl.SQLDataType.FLOAT;
@@ -517,9 +460,7 @@ import static org.jooq.impl.Tools.aliased;
 import static org.jooq.impl.Tools.anyMatch;
 import static org.jooq.impl.Tools.asInt;
 import static org.jooq.impl.Tools.deleteQueryImpl;
-import static org.jooq.impl.Tools.map;
 import static org.jooq.impl.Tools.normaliseNameCase;
-import static org.jooq.impl.Tools.parseNameCase;
 import static org.jooq.impl.Tools.selectQueryImpl;
 import static org.jooq.impl.Tools.updateQueryImpl;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_PARSE_ON_CONFLICT;
@@ -532,8 +473,6 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -542,6 +481,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -578,7 +518,6 @@ import org.jooq.CharacterSet;
 import org.jooq.Collation;
 import org.jooq.Comment;
 import org.jooq.CommentOnIsStep;
-import org.jooq.CommentOnRoutineParametersStep;
 import org.jooq.CommonTableExpression;
 import org.jooq.Comparator;
 import org.jooq.Condition;
@@ -599,9 +538,7 @@ import org.jooq.CreateIndexWhereStep;
 // ...
 // ...
 // ...
-import org.jooq.CreateSequenceAsStep;
 import org.jooq.CreateSequenceFlagsStep;
-// ...
 import org.jooq.CreateTableAsStep;
 import org.jooq.CreateTableCommentStep;
 import org.jooq.CreateTableElementListStep;
@@ -631,12 +568,9 @@ import org.jooq.DropIndexCascadeStep;
 import org.jooq.DropIndexOnStep;
 import org.jooq.DropSchemaStep;
 import org.jooq.DropTableStep;
-// ...
 import org.jooq.DropTypeStep;
-import org.jooq.DropViewStep;
 import org.jooq.Field;
 import org.jooq.FieldOrRow;
-import org.jooq.FieldOrRowOrSelect;
 // ...
 // ...
 import org.jooq.Function1;
@@ -659,7 +593,6 @@ import org.jooq.InsertOnDuplicateStep;
 import org.jooq.InsertReturningStep;
 import org.jooq.InsertSetStep;
 import org.jooq.InsertValuesStepN;
-import org.jooq.JSON;
 import org.jooq.JSONArrayAggNullStep;
 import org.jooq.JSONArrayAggOrderByStep;
 import org.jooq.JSONArrayAggReturningStep;
@@ -677,7 +610,6 @@ import org.jooq.JSONValueOnStep;
 import org.jooq.JoinType;
 import org.jooq.Keyword;
 // ...
-import org.jooq.Lambda1;
 import org.jooq.LanguageContext;
 import org.jooq.LikeEscapeStep;
 // ...
@@ -685,13 +617,10 @@ import org.jooq.Merge;
 import org.jooq.MergeMatchedDeleteStep;
 import org.jooq.MergeMatchedStep;
 import org.jooq.MergeMatchedWhereStep;
-import org.jooq.MergeNotMatchedThenStep;
-import org.jooq.MergeNotMatchedWhereStep;
 import org.jooq.MergeUsingStep;
 import org.jooq.Meta;
 import org.jooq.Name;
 import org.jooq.Name.Quoted;
-import org.jooq.OptionallyOrderedAggregateFunction;
 import org.jooq.OrderedAggregateFunction;
 import org.jooq.OrderedAggregateFunctionOfDeferredType;
 import org.jooq.Param;
@@ -716,31 +645,24 @@ import org.jooq.Row;
 import org.jooq.Row2;
 import org.jooq.SQL;
 import org.jooq.SQLDialect;
-import org.jooq.SQLDialectCategory;
 import org.jooq.Schema;
 import org.jooq.Select;
-import org.jooq.SelectCorrelatedSubqueryStep;
 import org.jooq.SelectField;
 import org.jooq.SelectFieldOrAsterisk;
 import org.jooq.Sequence;
 import org.jooq.SortField;
 import org.jooq.SortOrder;
 import org.jooq.Statement;
-// ...
 import org.jooq.Table;
 import org.jooq.TableElement;
 import org.jooq.TableField;
 import org.jooq.TableLike;
 import org.jooq.TableOnStep;
 import org.jooq.TableOptionalOnStep;
-import org.jooq.TableOuterJoinStep;
 import org.jooq.TablePartitionByStep;
-import org.jooq.TableSampleRepeatableStep;
-import org.jooq.TableSampleRowsStep;
 import org.jooq.Truncate;
 import org.jooq.TruncateCascadeStep;
 import org.jooq.TruncateIdentityStep;
-import org.jooq.UDTPathField;
 import org.jooq.Update;
 import org.jooq.UpdateFromStep;
 import org.jooq.UpdateLimitStep;
@@ -767,7 +689,6 @@ import org.jooq.XMLAttributes;
 import org.jooq.XMLTableColumnPathStep;
 import org.jooq.XMLTableColumnsStep;
 import org.jooq.XMLTablePassingStep;
-import org.jooq.conf.ParseNameCase;
 import org.jooq.conf.ParseSearchSchema;
 import org.jooq.conf.ParseUnknownFunctions;
 import org.jooq.conf.ParseUnsupportedSyntax;
@@ -777,13 +698,11 @@ import org.jooq.conf.RenderNameCase;
 import org.jooq.conf.RenderQuotedNames;
 import org.jooq.impl.QOM.DocumentOrContent;
 import org.jooq.impl.QOM.JSONOnNull;
-import org.jooq.impl.QOM.JoinHint;
-import org.jooq.impl.QOM.PrimaryKey;
 // ...
-import org.jooq.impl.QOM.TableScope;
 import org.jooq.impl.QOM.UEmpty;
 import org.jooq.impl.QOM.XMLPassingMechanism;
 import org.jooq.impl.ScopeStack.Value;
+import org.jooq.impl.Tools.BooleanDataKey;
 import org.jooq.tools.StringUtils;
 import org.jooq.tools.reflect.Reflect;
 import org.jooq.types.DayToSecond;
@@ -932,7 +851,7 @@ final class ParserImpl implements Parser {
 }
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
-final class DefaultParseContext extends AbstractParseContext implements ParseContext {
+final class DefaultParseContext extends AbstractScope implements ParseContext {
 
 
 
@@ -940,8 +859,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
 
-    static final Set<SQLDialect>         SUPPORTS_HASH_COMMENT_SYNTAX             = SQLDialect.supportedBy(MARIADB, MYSQL);
-    static final Set<SQLDialect>         NO_SUPPORT_QUOTED_BUILT_IN_FUNCION_NAMES = SQLDialect.supportedBy(DERBY, FIREBIRD, HSQLDB);
+    static final Set<SQLDialect>         SUPPORTS_HASH_COMMENT_SYNTAX  = SQLDialect.supportedBy(MARIADB, MYSQL);
 
     final Queries parse() {
         return wrap(() -> {
@@ -957,16 +875,14 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
                 retainComments(result, p);
                 query = patchParsedQuery(parseQuery(false, false));
-                if (query == IGNORE.get() || query == IGNORE_NO_DELIMITER.get())
+                if (query == IGNORE || query == IGNORE_NO_DELIMITER)
                     continue;
                 if (query != null)
                     result.add(query);
             }
             while (parseDelimiterIf(true) && (p = positionBeforeWhitespace) >= 0 && !done());
 
-            if (query != null)
-                retainComments(result, p);
-
+            retainComments(result, p);
             return done("Unexpected token or missing query delimiter", dsl.queries(result));
         });
     }
@@ -989,7 +905,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         // [#8910] Some statements can be parsed differently when we know we're
         //         parsing them for the DDLDatabase. This method patches these
         //         statements.
-        if (isDDLDatabase()) {
+        if (TRUE.equals(configuration().data("org.jooq.ddl.parse-for-ddldatabase"))) {
             if (query instanceof Select) {
                 String string =
                 configuration().deriveSettings(s -> s
@@ -1009,15 +925,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     if (!StringUtils.isBlank(schema = matcher.group(2)))
                         return configuration().dsl().setSchema(schema);
                     else
-                        return IGNORE.get();
+                        return IGNORE;
             }
         }
 
         return query;
-    }
-
-    private boolean isDDLDatabase() {
-        return TRUE.equals(configuration().data("org.jooq.ddl.parse-for-ddldatabase"));
     }
 
     final Query parseQuery0() {
@@ -1169,17 +1081,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 case 'A':
                     if (!parseResultQuery && peekKeyword("ALTER"))
                         return result = metaLookupsForceIgnore(true).parseAlter();
-                    else if (!parseResultQuery && peekKeyword("ANALYZE"))
-                        throw notImplemented("ANALYZE statement");
 
                     break;
 
                 case 'B':
-                    if (!parseResultQuery && peekKeyword("BEGIN WORK", "BEGIN TRANSACTION", "BEGIN TRAN"))
-                        return result = parseStartTransaction();
-                    else if (!parseResultQuery && parseKeywordIf("BT"))
-                        return dsl.startTransaction();
-                    else if (!parseResultQuery && peekKeyword("BEGIN")) {
+                    if (!parseResultQuery && peekKeyword("BEGIN")) {
                         languageContext = previous;
                         return result = parseBlock(false);
                     }
@@ -1192,34 +1098,30 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     else if (!parseResultQuery && peekKeyword("COMMENT ON"))
                         return result = metaLookupsForceIgnore(true).parseCommentOn();
                     else if (!parseResultQuery && parseKeywordIf("CT"))
-                        return result = metaLookupsForceIgnore(true).parseCreateTable(null);
+                        return result = metaLookupsForceIgnore(true).parseCreateTable(false);
                     else if (!parseResultQuery && parseKeywordIf("CV"))
-                        return result = metaLookupsForceIgnore(true).parseCreateView(false, false);
+                        return result = metaLookupsForceIgnore(true).parseCreateView(false);
                     else if (!ignoreProEdition() && peekKeyword("CALL") && requireProEdition())
 
 
 
                         ;
-                    else if (!parseResultQuery && peekKeyword("COMMIT"))
-                        return result = parseCommit();
+                    else if (parseKeywordIf("COMMIT"))
+                        throw notImplemented("COMMIT");
                     else if (parseKeywordIf("CONNECT"))
                         throw notImplemented("CONNECT");
 
                     break;
 
                 case 'D':
-                    if (!parseResultQuery && parseKeywordIf("DECLARE GLOBAL TEMPORARY TABLE"))
-                        return result = parseCreateTable(TableScope.LOCAL_TEMPORARY);
-                    else if (!parseResultQuery && !ignoreProEdition() && peekKeyword("DECLARE") && requireProEdition())
+                    if (!parseResultQuery && !ignoreProEdition() && peekKeyword("DECLARE") && requireProEdition())
                         return result = parseBlock(true);
-                    else if (!parseSelect && (peekKeyword("DELETE", "DEL")))
+                    else if (!parseSelect && (peekKeyword("DELETE") || peekKeyword("DEL")))
                         return result = parseDelete(null, parseResultQuery);
                     else if (!parseResultQuery && peekKeyword("DROP"))
                         return result = metaLookupsForceIgnore(true).parseDrop();
                     else if (!parseResultQuery && peekKeyword("DO"))
                         return result = parseDo();
-                    else if (!parseResultQuery && peekKeyword("DESC", "DESCRIBE"))
-                        throw notImplemented("DESCRIBE statement");
 
                     break;
 
@@ -1233,10 +1135,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
                         ;
-                    else if (!parseResultQuery && parseKeywordIf("ET", "END TRANSACTION"))
-                        return dsl.commit();
-                    else if (!parseResultQuery && peekKeyword("EXPLAIN"))
-                        throw notImplemented("EXPLAIN statement");
 
                     break;
 
@@ -1247,7 +1145,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     break;
 
                 case 'I':
-                    if (!parseSelect && (peekKeyword("INSERT", "INS")))
+                    if (!parseSelect && (peekKeyword("INSERT") || peekKeyword("INS")))
                         return result = parseInsert(null, parseResultQuery);
 
                     break;
@@ -1255,8 +1153,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 case 'L':
                     if (parseKeywordIf("LOAD"))
                         throw notImplemented("LOAD");
-                    else if (!parseResultQuery && peekKeyword("LOCK"))
-                        throw notImplemented("LOCK statement");
 
                     break;
 
@@ -1272,12 +1168,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
                     break;
 
-                case 'P':
-                    if (!parseResultQuery && peekKeyword("PREPARE"))
-                        throw notImplemented("PREPARE statement");
-
-                    break;
-
                 case 'R':
                     if (!parseResultQuery && peekKeyword("RENAME"))
                         return result = metaLookupsForceIgnore(true).parseRename();
@@ -1285,14 +1175,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                         return result = metaLookupsForceIgnore(true).parseRevoke();
                     else if (parseKeywordIf("REPLACE"))
                         throw notImplemented("REPLACE");
-                    else if (!parseResultQuery && peekKeyword("RELEASE"))
-                        return result = parseReleaseSavepoint();
-                    else if (!parseResultQuery && peekKeyword("ROLLBACK"))
-                        return result = parseRollback();
-                    else if (!parseResultQuery && peekKeyword("REFRESH"))
-                        throw notImplemented("REFRESH statement", "https://github.com/jOOQ/jOOQ/issues/15533");
-                    else if (!parseResultQuery && peekKeyword("RESET"))
-                        throw notImplemented("RESET statement");
+                    else if (parseKeywordIf("ROLLBACK"))
+                        throw notImplemented("ROLLBACK");
 
                     break;
 
@@ -1301,12 +1185,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                         return result = parseSelect();
                     else if (!parseResultQuery && peekKeyword("SET"))
                         return result = parseSet();
-                    else if (!parseResultQuery && peekKeyword("SAVE", "SAVEPOINT"))
-                        return result = parseSavepoint();
-                    else if (!parseResultQuery && peekKeyword("START"))
-                        return result = parseStartTransaction();
-                    else if (!parseResultQuery && peekKeyword("SHOW"))
-                        throw notImplemented("SHOW statement");
+                    else if (parseKeywordIf("SAVEPOINT"))
+                        throw notImplemented("SAVEPOINT");
 
                     break;
 
@@ -1319,7 +1199,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     break;
 
                 case 'U':
-                    if (!parseSelect && (peekKeyword("UPDATE", "UPD")))
+                    if (!parseSelect && (peekKeyword("UPDATE") || peekKeyword("UPD")))
                         return result = parseUpdate(null, parseResultQuery);
                     else if (!parseResultQuery && peekKeyword("USE"))
                         return result = parseUse();
@@ -1393,9 +1273,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
         List<CommonTableExpression<?>> cte = new ArrayList<>();
         do {
-            if (parseKeywordIf("FUNCTION"))
-                throw notImplemented("WITH FUNCTION");
-
             Name name = parseIdentifier();
             DerivedColumnList dcl = null;
 
@@ -1430,15 +1307,15 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         // TODO Better model API for WITH clause
         WithImpl with = (WithImpl) new WithImpl(dsl.configuration(), recursive).with(cte.toArray(EMPTY_COMMON_TABLE_EXPRESSION));
         Query result;
-        if (!parseSelect && (peekKeyword("DELETE", "DEL")))
+        if (!parseSelect && (peekKeyword("DELETE") || peekKeyword("DEL")))
             result = parseDelete(with, false);
-        else if (!parseSelect && (peekKeyword("INSERT", "INS")))
+        else if (!parseSelect && (peekKeyword("INSERT") || peekKeyword("INS")))
             result = parseInsert(with, false);
         else if (!parseSelect && peekKeyword("MERGE"))
             result = parseMerge(with);
         else if (peekSelect(true))
             result = parseSelect(degree, with);
-        else if (!parseSelect && (peekKeyword("UPDATE", "UPD")))
+        else if (!parseSelect && (peekKeyword("UPDATE") || peekKeyword("UPD")))
             result = parseUpdate(with, false);
         else if ((parseWhitespaceIf() || true) && done())
             throw exception("Missing statement after WITH");
@@ -1452,19 +1329,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final Field<?> parseScalarSubqueryIf() {
-        FieldOrRowOrSelect r = parseSubqueryIf();
-
-        if (r instanceof Select<?> s) {
-            if (Tools.degree(s) != 1)
-                throw exception("Select list must contain exactly one column");
-
-            return field((Select) s);
-        }
-
-        return null;
-    }
-
-    private final FieldOrRowOrSelect parseSubqueryIf() {
         int p = position();
 
         try {
@@ -1472,8 +1336,10 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 parse('(');
                 SelectQueryImpl<Record> select = parseWithOrSelect();
                 parse(')');
+                if (Tools.degree(select) != 1)
+                    throw exception("Select list must contain exactly one column");
 
-                return select;
+                return field((Select) select);
             }
         }
         catch (ParserException e) {
@@ -1501,12 +1367,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final SelectQueryImpl<Record> parseSelect(Integer degree, WithImpl with) {
-        return parseSelect(degree, with, null);
-    }
-
-    private final SelectQueryImpl<Record> parseSelect(Integer degree, WithImpl with, SelectQueryImpl<Record> prefix) {
         scope.scopeStart();
-        SelectQueryImpl<Record> result = parseQueryExpressionBody(degree, with, prefix);
+        SelectQueryImpl<Record> result = parseQueryExpressionBody(degree, with, null);
         List<SortField<?>> orderBy = null;
 
         for (Field<?> field : result.getSelect())
@@ -1514,7 +1376,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 scope.scope(field);
 
         if (parseKeywordIf("ORDER")) {
-            if (parseProKeywordIf("SIBLINGS BY")) {
+            if (!ignoreProEdition() && parseKeywordIf("SIBLINGS BY") && requireProEdition()) {
 
 
 
@@ -1525,10 +1387,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             else
                 throw expected("SIBLINGS BY", "BY");
         }
-
-        boolean limit = false;
-        boolean for_ = false;
-        boolean offset = false;
 
         if (orderBy != null && parseKeywordIf("SEEK")) {
             boolean before = parseKeywordIf("BEFORE");
@@ -1544,36 +1402,15 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             else
                 result.addSeekAfter(seek);
 
-            offset = true;
+            if (!result.getLimit().isApplicable())
+                parseLimit(result, false);
+        }
+        else if (!result.getLimit().isApplicable()) {
+            parseLimit(result, true);
         }
 
-        while ((!limit && (limit = parseSelectLimit(result, offset)))
-            || (!for_ && (for_ = parseSelectFor(result))))
-            ;
-
-        if (parseKeywordIf("WITH CHECK OPTION"))
-            result.setWithCheckOption();
-        else if (parseKeywordIf("WITH READ ONLY"))
-            result.setWithReadOnly();
-
-        scope.scopeEnd(result);
-        return result;
-    }
-
-    private final boolean parseSelectLimit(SelectQueryImpl<Record> result, boolean offset) {
-        boolean limit = result.getLimit().isApplicable();
-
-        if (!limit)
-            parseLimit(result, !offset);
-
-        return limit;
-    }
-
-    private final boolean parseSelectFor(SelectQueryImpl<Record> result) {
-        boolean for_;
-
         forClause:
-        if (for_ = parseKeywordIf("FOR")) {
+        if (parseKeywordIf("FOR")) {
             boolean jsonb;
 
             if (parseKeywordIf("KEY SHARE"))
@@ -1584,7 +1421,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 result.setForShare(true);
             else if (parseKeywordIf("UPDATE"))
                 result.setForUpdate(true);
-            else if (parseProKeywordIf("XML")) {
+            else if (!ignoreProEdition() && parseKeywordIf("XML") && requireProEdition()) {
 
 
 
@@ -1631,7 +1468,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
             }
-            else if (!ignoreProEdition() && (jsonb = parseKeywordIf("JSONB", "JSON")) && requireProEdition()) {
+            else if (!ignoreProEdition() && (jsonb = parseKeywordIf("JSONB") || parseKeywordIf("JSON")) && requireProEdition()) {
 
 
 
@@ -1673,7 +1510,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             if (parseKeywordIf("NOWAIT"))
                 result.setForUpdateNoWait();
-            else if (parseProKeywordIf("WAIT"))
+            else if (!ignoreProEdition() && parseKeywordIf("WAIT") && requireProEdition())
 
 
 
@@ -1682,17 +1519,18 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 result.setForUpdateSkipLocked();
         }
 
-        return for_;
+        scope.scopeEnd(result);
+        return result;
     }
 
-    private final void parseLimit(SelectQueryImpl<Record> result, boolean allowOffset) {
+    private final void parseLimit(SelectQueryImpl<Record> result, boolean offset) {
         boolean offsetStandard = false;
         boolean offsetPostgres = false;
 
-        if (allowOffset && parseKeywordIf("OFFSET")) {
+        if (offset && parseKeywordIf("OFFSET")) {
             result.addOffset((Field) parseField());
 
-            if (parseKeywordIf("ROWS", "ROW"))
+            if (parseKeywordIf("ROWS") || parseKeywordIf("ROW"))
                 offsetStandard = true;
 
             // Ingres doesn't have a ROWS keyword after offset
@@ -1714,7 +1552,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 if (parseKeywordIf("WITH TIES"))
                     result.setWithTies(true);
             }
-            else if (allowOffset && parseIf(',')) {
+            else if (offset && parseIf(',')) {
                 result.addLimit(limit, (Field) parseField());
             }
             else {
@@ -1724,7 +1562,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 if (parseKeywordIf("WITH TIES"))
                     result.setWithTies(true);
 
-                if (allowOffset && parseKeywordIf("OFFSET"))
+                if (offset && parseKeywordIf("OFFSET"))
                     result.addLimit((Field) parseField(), limit);
                 else
                     result.addLimit(limit);
@@ -1826,11 +1664,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return lhs;
     }
 
-    private final <S extends Select<?>> S degreeCheck(int expected, S s) {
-        return degreeCheck(expected, s, true);
-    }
-
-    private final <S extends Select<?>> S degreeCheck(int expected, S s, boolean throwIfNotMatched) {
+    private final SelectQueryImpl<Record> degreeCheck(int expected, SelectQueryImpl<Record> s) {
         if (expected == 0)
             return s;
 
@@ -1839,10 +1673,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             return s;
 
         if (expected != actual)
-            if (throwIfNotMatched)
-                throw exception("Select list must contain " + expected + " columns. Got: " + actual);
-            else
-                return null;
+            throw exception("Select list must contain " + expected + " columns. Got: " + actual);
 
         return s;
     }
@@ -1860,9 +1691,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             return (SelectQueryImpl<Record>) dsl.selectQuery(parseExplicitTable());
 
         ignoreHints(false);
-        parseKeywordUndocumentedAlternatives("SELECT", "SEL");
+        parseKeyword("SELECT", "SEL");
         String hints = parseHints();
-        boolean distinct = parseKeywordIf("DISTINCT", "UNIQUE");
+        boolean distinct = parseKeywordIf("DISTINCT") || parseKeywordIf("UNIQUE");
         List<Field<?>> distinctOn = null;
 
         if (distinct) {
@@ -1881,32 +1712,25 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         boolean withTies = false;
 
         // T-SQL style TOP .. START AT
-        try {
-            supportArraySubscripts = false;
+        if (parseKeywordIf("TOP")) {
+            limit = (Field) parseField();
+            percent = !ignoreProEdition() && parseKeywordIf("PERCENT") && requireProEdition();
 
-            if (parseKeywordIf("TOP")) {
-                limit = (Field) parseField();
-                percent = parseProKeywordIf("PERCENT");
-
-                if (parseKeywordIf("START AT"))
-                    offset = (Field) parseField();
-                else if (parseKeywordIf("WITH TIES"))
-                    withTies = true;
-            }
-
-            // Informix style SKIP .. FIRST
-            else if (parseKeywordIf("SKIP")) {
+            if (parseKeywordIf("START AT"))
                 offset = (Field) parseField();
-
-                if (parseKeywordIf("FIRST"))
-                    limit = (Field) parseField();
-            }
-            else if (parseKeywordIf("FIRST")) {
-                limit = (Field) parseField();
-            }
+            else if (parseKeywordIf("WITH TIES"))
+                withTies = true;
         }
-        finally {
-            supportArraySubscripts = true;
+
+        // Informix style SKIP .. FIRST
+        else if (parseKeywordIf("SKIP")) {
+            offset = (Field) parseField();
+
+            if (parseKeywordIf("FIRST"))
+                limit = (Field) parseField();
+        }
+        else if (parseKeywordIf("FIRST")) {
+            limit = (Field) parseField();
         }
 
         List<SelectFieldOrAsterisk> select = parseSelectList();
@@ -1949,25 +1773,17 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
 
-
-
-
-
-
-
             }
             else
                 intoTable = parseTableName();
         }
 
-        if (parseKeywordIf("FROM")) {
+        if (parseKeywordIf("FROM"))
             from = parseList(',', ParseContext::parseTable);
 
-            // [#16762] No explicit DUAL tables should be present at the top level, by default
-            if (from.size() == 1)
-                from.removeIf(t -> t instanceof Dual);
-        }
-
+        // TODO is there a better way?
+        if (from != null && from.size() == 1 && from.get(0).getName().equalsIgnoreCase("dual"))
+            from = null;
 
         // [#9061] Register tables in scope as early as possible
         // TODO: Move this into parseTables() so lateral joins can profit from lookups (?)
@@ -2067,7 +1883,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             if (!parseKeywordIf("ALL") && parseKeywordIf("DISTINCT"))
                 result.setGroupByDistinct(true);
 
-            if (parseIf('(', ')', true)) {
+            if (parseIf('(')) {
                 parse(')');
                 result.addGroupBy();
             }
@@ -2083,12 +1899,12 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             }
             else if (parseKeywordIf("GROUPING SETS")) {
                 parse('(');
-                List<List<Field<?>>> fieldSets = parseList(',', c -> parseFieldsOrEmptyOptionallyParenthesised(false));
+                List<List<Field<?>>> fieldSets = parseList(',', c -> parseFieldsOrEmptyParenthesised());
                 parse(')');
                 result.addGroupBy(groupingSets(fieldSets.toArray((Collection[]) EMPTY_COLLECTION)));
             }
             else {
-                groupBy = parseOrdinaryGroupingSets();
+                groupBy = parseList(',', c -> c.parseField());
 
                 if (parseKeywordIf("WITH ROLLUP"))
                     result.addGroupBy(rollup(groupBy.toArray(EMPTY_FIELD)));
@@ -2102,32 +1918,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             return false;
     }
 
-    private final List<GroupField> parseOrdinaryGroupingSets() {
-        List<GroupField> result = new ArrayList<>();
-
-        do {
-
-            // [#14159] Explicit ROW expressions are actual RowAsFields.
-            //          Other parenthesised expressions are grouping column reference lists
-            if (peekKeyword("ROW")) {
-                result.add(parseField());
-            }
-            else {
-                FieldOrRow fr = parseFieldOrRow();
-
-                if (fr instanceof Field<?> f)
-                    result.add(f);
-                else
-                    result.addAll(asList(((Row) fr).fields()));
-            }
-        }
-        while (parseIf(','));
-
-        return result;
-    }
-
     private final boolean parseQueryPrimaryConnectBy(SelectQueryImpl<Record> result) {
-        if (parseProKeywordIf("CONNECT BY")) {
+        if (!ignoreProEdition() && parseKeywordIf("CONNECT BY") && requireProEdition()) {
 
 
 
@@ -2142,7 +1934,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final boolean parseQueryPrimaryStartWith(SelectQueryImpl<Record> result) {
-        if (parseProKeywordIf("START WITH")) {
+        if (!ignoreProEdition() && parseKeywordIf("START WITH") && requireProEdition()) {
 
 
 
@@ -2396,9 +2188,12 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         }
 
         parseKeywordIf("FROM");
-        Table<?> table = scope.scope(parseJoinedTable(() -> peekKeyword(KEYWORD_LOOKUP_IN_DELETE_FROM)));
+        Table<?> table = parseTable(() -> peekKeyword(KEYWORDS_IN_DELETE_FROM));
+
+        scope.scope(table);
+
         DeleteUsingStep<?> s1 = with == null ? dsl.delete(table) : with.delete(table);
-        DeleteWhereStep<?> s2 = parseKeywordIf("USING", "FROM") ? s1.using(parseList(',', t -> scope.scope(parseJoinedTable(() -> peekKeyword(KEYWORD_LOOKUP_IN_DELETE_FROM))))) : s1;
+        DeleteWhereStep<?> s2 = parseKeywordIf("USING", "FROM") ? s1.using(parseList(',', t -> parseTable(() -> peekKeyword(KEYWORDS_IN_DELETE_FROM)))) : s1;
         DeleteOrderByStep<?> s3 = parseKeywordIf("ALL")
             ? s2
             : parseKeywordIf("WHERE")
@@ -2415,7 +2210,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
     private final Query parseInsert(WithImpl with, boolean parseResultQuery) {
         scope.scopeStart();
-        parseKeywordUndocumentedAlternatives("INSERT", "INS");
+        parseKeyword("INSERT", "INS");
         parseKeywordIf("INTO");
         Table<?> table = parseTableNameIf();
         if (table == null)
@@ -2514,16 +2309,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 if (parseKeywordIf("DUPLICATE KEY UPDATE")) {
                     parseKeywordIf("SET");
 
-                    // Cast is necessary, see https://github.com/eclipse-jdt/eclipse.jdt.core/issues/99
-                    InsertOnConflictWhereStep<?> where =
-                          parseKeywordIf("ALL TO EXCLUDED")
+                    InsertOnConflictWhereStep<?> where = parseKeywordIf("ALL TO EXCLUDED")
                         ? onDuplicate.onDuplicateKeyUpdate().setAllToExcluded()
-                        : parseKeywordIf("NON KEY TO EXCLUDED")
-                        ? onDuplicate.onDuplicateKeyUpdate().setNonKeyToExcluded()
-                        : parseKeywordIf("NON PRIMARY KEY TO EXCLUDED")
-                        ? onDuplicate.onDuplicateKeyUpdate().setNonPrimaryKeyToExcluded()
-                        : parseKeywordIf("NON CONFLICTING KEY TO EXCLUDED")
-                        ? onDuplicate.onDuplicateKeyUpdate().setNonConflictingKeyToExcluded()
                         : onDuplicate.onDuplicateKeyUpdate().set((Map<?, ?>) data(DATA_PARSE_ON_CONFLICT, true, c -> c.parseSetClauseList()));
 
                     if (parseKeywordIf("WHERE"))
@@ -2557,17 +2344,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                         returning = doUpdate.doNothing();
                     }
                     else if (parseKeywordIf("UPDATE SET")) {
-
-                        // Cast is necessary, see https://github.com/eclipse-jdt/eclipse.jdt.core/issues/99
-                        InsertOnConflictWhereStep<?> where =
-                              parseKeywordIf("ALL TO EXCLUDED")
+                        InsertOnConflictWhereStep<?> where = parseKeywordIf("ALL TO EXCLUDED")
                             ? doUpdate.doUpdate().setAllToExcluded()
-                            : parseKeywordIf("NON KEY TO EXCLUDED")
-                            ? doUpdate.doUpdate().setNonKeyToExcluded()
-                            : parseKeywordIf("NON PRIMARY KEY TO EXCLUDED")
-                            ? doUpdate.doUpdate().setNonPrimaryKeyToExcluded()
-                            : parseKeywordIf("NON CONFLICTING KEY TO EXCLUDED")
-                            ? doUpdate.doUpdate().setNonConflictingKeyToExcluded()
                             : doUpdate.doUpdate().set((Map<?, ?>) data(DATA_PARSE_ON_CONFLICT, true, c -> c.parseSetClauseList()));
 
                         if (parseKeywordIf("WHERE"))
@@ -2592,7 +2370,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final Query parseUpdate(WithImpl with, boolean parseResultQuery) {
-        parseKeywordUndocumentedAlternatives("UPDATE", "UPD");
+        parseKeyword("UPDATE", "UPD");
         Field<Long> limit = null;
 
         // T-SQL style TOP .. START AT
@@ -2603,9 +2381,12 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             // percent = parseKeywordIf("PERCENT") && requireProEdition();
         }
 
-        Table<?> table = scope.scope(parseJoinedTable(() -> peekKeyword(KEYWORD_LOOKUP_IN_UPDATE_FROM)));
+        Table<?> table = parseTable(() -> peekKeyword(KEYWORDS_IN_UPDATE_FROM));
+
+        scope.scope(table);
+
         UpdateSetFirstStep<?> s1 = (with == null ? dsl.update(table) : with.update(table));
-        List<Table<?>> from = parseKeywordIf("FROM") ? parseList(',', t -> scope.scope(parseJoinedTable(() -> peekKeyword(KEYWORD_LOOKUP_IN_UPDATE_FROM)))) : null;
+        List<Table<?>> from = parseKeywordIf("FROM") ? parseList(',', t -> parseTable(() -> peekKeyword(KEYWORDS_IN_UPDATE_FROM))) : null;
 
         parseKeyword("SET");
         UpdateFromStep<?> s2;
@@ -2630,7 +2411,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         UpdateWhereStep<?> s3 = from != null
             ? s2.from(from)
             : parseKeywordIf("FROM")
-            ? s2.from(parseList(',', t -> parseJoinedTable(() -> peekKeyword(KEYWORD_LOOKUP_IN_UPDATE_FROM))))
+            ? s2.from(parseList(',', t -> parseTable(() -> peekKeyword(KEYWORDS_IN_UPDATE_FROM))))
             : s2;
         UpdateOrderByStep<?> s4 = parseKeywordIf("ALL")
             ? s3
@@ -2690,35 +2471,28 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         Condition on = parseCondition();
         boolean update = false;
         boolean insert = false;
+        Field<?>[] insertColumns = null;
+        List<Field<?>> insertValues = null;
+        Condition insertWhere = null;
+        Map<Field<?>, Object> updateSet;
+        Condition updateAnd = null;
+        Condition updateWhere = null;
+        Condition deleteWhere = null;
+
         MergeUsingStep<?> s1 = (with == null ? dsl.mergeInto(target) : with.mergeInto(target));
         MergeMatchedStep<?> s2 = s1.using(usingTable).on(on);
 
         for (;;) {
-            Map<Field<?>, Object> updateSet;
-            Condition updateAnd = null;
-            Condition updateWhere = null;
-            Condition deleteWhere = null;
-            List<Field<?>> insertColumns = null;
-            List<Field<?>> insertValues = null;
-            Condition insertAnd = null;
-            Condition insertWhere = null;
-
-            boolean notMatchedBySource = false;
-
-            if (parseKeywordIf("WHEN MATCHED") || (notMatchedBySource = parseKeywordIf("WHEN NOT MATCHED BY SOURCE"))) {
+            if (parseKeywordIf("WHEN MATCHED")) {
                 update = true;
 
                 if (parseKeywordIf("AND"))
                     updateAnd = parseCondition();
 
                 if (parseKeywordIf("THEN DELETE")) {
-                    s2 = notMatchedBySource
-                        ? updateAnd != null
-                            ? s2.whenNotMatchedBySourceAnd(updateAnd).thenDelete()
-                            : s2.whenNotMatchedBySource().thenDelete()
-                        : updateAnd != null
-                            ? s2.whenMatchedAnd(updateAnd).thenDelete()
-                            : s2.whenMatchedThenDelete();
+                    s2 = updateAnd != null
+                       ? s2.whenMatchedAnd(updateAnd).thenDelete()
+                       : s2.whenMatchedThenDelete();
                 }
                 else {
                     parseKeyword("THEN UPDATE SET");
@@ -2731,51 +2505,33 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                         deleteWhere = parseCondition();
 
                     if (updateAnd != null) {
-                        if (notMatchedBySource)
-                            s2.whenNotMatchedBySourceAnd(updateAnd).thenUpdate().set(updateSet);
-                        else
-                            s2.whenMatchedAnd(updateAnd).thenUpdate().set(updateSet);
+                        s2.whenMatchedAnd(updateAnd).thenUpdate().set(updateSet);
                     }
                     else {
-                        MergeMatchedWhereStep<?> s3 = notMatchedBySource
-                            ? s2.whenNotMatchedBySource().thenUpdate().set(updateSet)
-                            : s2.whenMatchedThenUpdate().set(updateSet);
+                        MergeMatchedWhereStep<?> s3 = s2.whenMatchedThenUpdate().set(updateSet);
                         MergeMatchedDeleteStep<?> s4 = updateWhere != null ? s3.where(updateWhere) : s3;
                         s2 = deleteWhere != null ? s4.deleteWhere(deleteWhere) : s3;
                     }
                 }
             }
-            else if (parseKeywordIf("WHEN NOT MATCHED")) {
-                insert = true;
-                boolean byTarget = parseKeywordIf("BY TARGET");
-
+            else if (!insert && (insert = parseKeywordIf("WHEN NOT MATCHED"))) {
                 if (parseKeywordIf("AND"))
-                    insertAnd = parseCondition();
+                    insertWhere = parseCondition();
 
                 parseKeyword("THEN INSERT");
                 parse('(');
-                insertColumns = parseUniqueList("identifier", ',', c -> parseFieldName());
+                insertColumns = Tools.fieldsByName(parseIdentifiers().toArray(EMPTY_NAME));
                 parse(')');
                 parseKeyword("VALUES");
                 parse('(');
                 insertValues = parseList(',', c -> c.parseKeywordIf("DEFAULT") ? default_() : c.parseField());
                 parse(')');
 
-                if (insertColumns.size() != insertValues.size())
-                    throw exception("Insert column size (" + insertColumns.size() + ") must match values size (" + insertValues.size() + ")");
+                if (insertColumns.length != insertValues.size())
+                    throw exception("Insert column size (" + insertColumns.length + ") must match values size (" + insertValues.size() + ")");
 
                 if (insertWhere == null && parseKeywordIf("WHERE"))
                     insertWhere = parseCondition();
-
-                MergeNotMatchedThenStep<?> s3 = byTarget
-                    ? insertAnd != null
-                        ? s2.whenNotMatchedByTargetAnd(insertAnd)
-                        : s2.whenNotMatchedByTarget()
-                    : insertAnd != null
-                        ? s2.whenNotMatchedAnd(insertAnd)
-                        : s2.whenNotMatched();
-                MergeNotMatchedWhereStep<?> s4 = s3.thenInsert(insertColumns).values(insertValues);
-                s2 = (MergeMatchedStep<?>) (insertWhere != null ? s4.where(insertWhere) : s4);
             }
             else
                 break;
@@ -2784,7 +2540,15 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         if (!update && !insert)
             throw exception("At least one of UPDATE or INSERT clauses is required");
 
-        return s2;
+        // TODO support multi clause MERGE
+        // TODO support DELETE
+        Merge<?> s3 = insert
+            ? insertWhere != null
+                ? s2.whenNotMatchedThenInsert(insertColumns).values(insertValues).where(insertWhere)
+                : s2.whenNotMatchedThenInsert(insertColumns).values(insertValues)
+            : s2;
+
+        return s3;
     }
 
     private final Query parseOpen() {
@@ -2826,7 +2590,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         // There are many SET commands in programs like sqlplus, which we'll simply ignore
         else {
             parseUntilEOL();
-            return IGNORE_NO_DELIMITER.get();
+            return IGNORE_NO_DELIMITER;
         }
     }
 
@@ -2836,9 +2600,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
     private final Query parseUse() {
         parseKeyword("USE");
-        if (parseKeywordIf("SCHEMA"))
-            return dsl.setSchema(parseSchemaName());
-
         parseKeywordIf("DATABASE");
         return dsl.setCatalog(parseCatalogName());
     }
@@ -2867,7 +2628,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final DDLQuery parseCommentOn() {
         parseKeyword("COMMENT ON");
 
-        CommentOnIsStep s1 = null;
+        CommentOnIsStep s1;
 
         if (parseKeywordIf("COLUMN")) {
             s1 = dsl.commentOnColumn(parseFieldName());
@@ -2887,23 +2648,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         }
         else if (parseKeywordIf("VIEW")) {
             s1 = dsl.commentOnView(parseTableName());
-        }
-        else if (parseKeywordIf("MATERIALIZED VIEW")) {
-            s1 = dsl.commentOnMaterializedView(parseTableName());
-        }
-        else if (parseProKeywordIf("FUNCTION")) {
-
-
-
-
-
-        }
-        else if (parseProKeywordIf("PROCEDURE")) {
-
-
-
-
-
         }
 
         // Ignored no-arg object comments
@@ -2925,6 +2669,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             "INDEXTYPE",
             "LANGUAGE",
             "LARGE OBJECT",
+            "MATERIALIZED VIEW",
             "MINING MODEL",
             "OPERATOR",
             "PROCEDURAL LANGUAGE",
@@ -2946,7 +2691,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             parseIdentifier();
             parseKeyword("IS");
             parseStringLiteral();
-            return IGNORE.get();
+            return IGNORE;
         }
 
         // TODO: (PostgreSQL)
@@ -2961,7 +2706,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             parseName();
             parseKeyword("IS");
             parseStringLiteral();
-            return IGNORE.get();
+            return IGNORE;
         }
         else if (parseAndGetKeywordIf(
             "POLICY",
@@ -2973,7 +2718,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             parseIdentifier();
             parseKeyword("IS");
             parseStringLiteral();
-            return IGNORE.get();
+            return IGNORE;
         }
         else if (parseKeywordIf("TRANSFORM FOR")) {
             parseIdentifier();
@@ -2981,7 +2726,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             parseIdentifier();
             parseKeyword("IS");
             parseStringLiteral();
-            return IGNORE.get();
+            return IGNORE;
         }
         else
             throw unsupportedClause();
@@ -2994,20 +2739,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         parseKeyword("CREATE");
 
         switch (characterUpper()) {
-            case 'A':
-                if (parseProKeywordIf("ALIAS"))
-
-
-
-                    ;
-                break;
-
-            case 'C':
-                if (parseKeywordIf("CACHED TABLE"))
-                    return parseCreateTable(null);
-
-                break;
-
             case 'D':
                 if (parseKeywordIf("DATABASE"))
                     return parseCreateDatabase();
@@ -3024,12 +2755,10 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             case 'F':
                 if (parseKeywordIf("FORCE VIEW"))
-                    return parseCreateView(false, false);
-                else if (parseKeywordIf("FORCE MATERIALIZED VIEW"))
-                    return parseCreateView(false, true);
+                    return parseCreateView(false);
                 else if (parseKeywordIf("FULLTEXT INDEX") && requireUnsupportedSyntax())
                     return parseCreateIndex(false);
-                else if (parseProKeywordIf("FUNCTION"))
+                else if (!ignoreProEdition() && parseKeywordIf("FUNCTION") && requireProEdition())
 
 
 
@@ -3041,7 +2770,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 if (parseKeywordIf("GENERATOR"))
                     return parseCreateSequence();
                 else if (parseKeywordIf("GLOBAL TEMP TABLE", "GLOBAL TEMPORARY TABLE"))
-                    return parseCreateTable(TableScope.GLOBAL_TEMPORARY);
+                    return parseCreateTable(true);
 
                 break;
 
@@ -3051,77 +2780,39 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
                 break;
 
-            case 'L':
-                if (parseKeywordIf("LOCAL TEMP TABLE", "LOCAL TEMPORARY TABLE"))
-                    return parseCreateTable(TableScope.LOCAL_TEMPORARY);
-
-                break;
-
-            case 'M':
-                if (parseKeywordIf("MEMORY TABLE"))
-                    return parseCreateTable(null);
-                else if (parseKeywordIf("MATERIALIZED VIEW"))
-                    return parseCreateView(false, true);
-
-                break;
-
             case 'O':
                 if (parseKeywordIf("OR")) {
                     parseKeyword("REPLACE", "ALTER");
 
-                    if (parseProKeywordIf("TRIGGER"))
+                    if (!ignoreProEdition() && parseKeywordIf("TRIGGER") && requireProEdition())
 
 
 
                         ;
                     else if (parseKeywordIf("VIEW", "FORCE VIEW"))
-                        return parseCreateView(true, false);
-                    else if (parseKeywordIf("MATERIALIZED VIEW"))
-                        return parseCreateView(true, true);
-                    else if (parseProKeywordIf("FUNCTION"))
+                        return parseCreateView(true);
+                    else if (!ignoreProEdition() && parseKeywordIf("FUNCTION") && requireProEdition())
 
 
 
                         ;
                     else if (parseKeywordIf("PACKAGE"))
                         throw notImplemented("CREATE PACKAGE", "https://github.com/jOOQ/jOOQ/issues/9190");
-                    else if (parseProKeywordIf("PROC", "PROCEDURE"))
-
-
-
-                        ;
-                    else if (parseProKeywordIf("PUBLIC SYNONYM", "PUBLIC ALIAS"))
-
-
-
-                        ;
-                    else if (parseProKeywordIf("PRIVATE SYNONYM", "SYNONYM", "ALIAS"))
+                    else if (!ignoreProEdition() && parseKeywordIf("PROC", "PROCEDURE") && requireProEdition())
 
 
 
                         ;
                     else
-                        throw expected("ALIAS", "FUNCTION", "PACKAGE", "PROCEDURE", "PRIVATE SYNONYM", "PUBLIC ALIAS", "PUBLIC SYNONYM", "SYNONYM", "TRIGGER", "VIEW");
+                        throw expected("FUNCTION", "PACKAGE", "PROCEDURE", "TRIGGER", "VIEW");
                 }
 
                 break;
 
             case 'P':
-                if (parseKeywordIf("PRIVATE TEMP TABLE", "PRIVATE TEMPORARY TABLE"))
-                    return parseCreateTable(TableScope.LOCAL_TEMPORARY);
-                else if (parseKeywordIf("PACKAGE"))
+                if (parseKeywordIf("PACKAGE"))
                     throw notImplemented("CREATE PACKAGE", "https://github.com/jOOQ/jOOQ/issues/9190");
-                else if (parseProKeywordIf("PROC", "PROCEDURE"))
-
-
-
-                    ;
-                else if (parseProKeywordIf("PUBLIC SYNONYM", "PUBLIC ALIAS"))
-
-
-
-                    ;
-                else if (parseProKeywordIf("PRIVATE SYNONYM"))
+                else if (!ignoreProEdition() && parseKeywordIf("PROC", "PROCEDURE") && requireProEdition())
 
 
 
@@ -3142,20 +2833,17 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return parseCreateSequence();
                 else if (parseKeywordIf("SPATIAL INDEX") && requireUnsupportedSyntax())
                     return parseCreateIndex(false);
-                else if (parseProKeywordIf("SYNONYM"))
-
-
-
-                    ;
+                else if (parseKeywordIf("SYNONYM"))
+                    throw notImplemented("CREATE SYNONYM", "https://github.com/jOOQ/jOOQ/issues/9574");
 
                 break;
 
             case 'T':
                 if (parseKeywordIf("TABLE"))
-                    return parseCreateTable(null);
+                    return parseCreateTable(false);
                 else if (parseKeywordIf("TEMP TABLE", "TEMPORARY TABLE"))
-                    return parseCreateTable(TableScope.TEMPORARY);
-                else if (parseProKeywordIf("TRIGGER"))
+                    return parseCreateTable(true);
+                else if (!ignoreProEdition() && parseKeywordIf("TRIGGER") && requireProEdition())
 
 
 
@@ -3177,32 +2865,24 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             case 'V':
                 if (parseKeywordIf("VIEW"))
-                    return parseCreateView(false, false);
+                    return parseCreateView(false);
                 else if (parseKeywordIf("VIRTUAL") && parseKeyword("TABLE"))
-                    return parseCreateTable(null);
+                    return parseCreateTable(false);
 
                 break;
         }
 
         throw expected(
-            "ALIAS",
             "FUNCTION",
-            "LOCAL TEMPORARY TABLE",
             "GENERATOR",
             "GLOBAL TEMPORARY TABLE",
             "INDEX",
             "OR ALTER",
             "OR REPLACE",
-            "PRIVATE SYNONYM",
-            "PRIVATE TEMPORARY TABLE",
             "PROCEDURE",
-            "PUBLIC ALIAS",
-            "PUBLIC SYNONYM",
             "SCHEMA",
             "SEQUENCE",
-            "SYNONYM",
             "TABLE",
-            "TEMP TABLE",
             "TEMPORARY TABLE",
             "TRIGGER",
             "TYPE",
@@ -3230,11 +2910,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'F':
-                if (parseProKeywordIf("FUNCTION"))
-
-
-
-                    ;
+                if (parseKeywordIf("FUNCTION"))
+                    throw notImplemented("ALTER FUNCTION", "https://github.com/jOOQ/jOOQ/issues/9190");
 
                 break;
 
@@ -3244,19 +2921,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
                 break;
 
-            case 'M':
-                if (parseKeywordIf("MATERIALIZED VIEW"))
-                    return parseAlterView(true);
-
-                break;
             case 'P':
                 if (parseKeywordIf("PACKAGE"))
                     throw notImplemented("ALTER PACKAGE", "https://github.com/jOOQ/jOOQ/issues/9190");
-                else if (parseProKeywordIf("PROCEDURE"))
-
-
-
-                    ;
+                else if (parseKeywordIf("PROCEDURE"))
+                    throw notImplemented("ALTER PROCEDURE", "https://github.com/jOOQ/jOOQ/issues/9190");
 
                 break;
 
@@ -3298,7 +2967,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             case 'V':
                 if (parseKeywordIf("VIEW"))
-                    return parseAlterView(false);
+                    return parseAlterView();
 
                 break;
         }
@@ -3310,14 +2979,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         parseKeyword("DROP");
 
         switch (characterUpper()) {
-            case 'A':
-                if (parseProKeywordIf("ALIAS"))
-
-
-
-                    ;
-                break;
-
             case 'D':
                 if (parseKeywordIf("DATABASE"))
                     return parseDropDatabase();
@@ -3337,7 +2998,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'F':
-                if (parseProKeywordIf("FUNCTION"))
+                if (!ignoreProEdition() && parseKeywordIf("FUNCTION") && requireProEdition())
 
 
 
@@ -3348,8 +3009,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             case 'G':
                 if (parseKeywordIf("GENERATOR"))
                     return parseDropSequence();
-                else if (parseKeywordIf("GLOBAL TEMPORARY TABLE"))
-                    return parseDropTable(TableScope.GLOBAL_TEMPORARY);
 
                 break;
 
@@ -3359,27 +3018,10 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
                 break;
 
-            case 'L':
-                if (parseKeywordIf("LOCAL TEMPORARY TABLE"))
-                    return parseDropTable(TableScope.LOCAL_TEMPORARY);
-
-                break;
-
-            case 'M':
-                if (parseKeywordIf("MATERIALIZED VIEW"))
-                    return parseDropView(true);
-
-                break;
-
             case 'P':
                 if (parseKeywordIf("PACKAGE"))
                     throw notImplemented("DROP PACKAGE", "https://github.com/jOOQ/jOOQ/issues/9190");
-                else if (parseProKeywordIf("PROC", "PROCEDURE"))
-
-
-
-                    ;
-                else if (parseProKeywordIf("PUBLIC ALIAS", "PUBLIC SYNONYM"))
+                else if (!ignoreProEdition() && parseKeywordIf("PROC", "PROCEDURE") && requireProEdition())
 
 
 
@@ -3402,46 +3044,25 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                         DropSchemaStep::cascade,
                         DropSchemaStep::restrict
                     );
-                else if (parseProKeywordIf("SYNONYM"))
-
-
-
-                    ;
 
                 break;
 
             case 'T':
                 if (parseKeywordIf("TABLE"))
-                    return parseDropTable(null);
+                    return parseDropTable(false);
                 else if (parseKeywordIf("TEMPORARY TABLE"))
-                    return parseDropTable(TableScope.TEMPORARY);
-                else if (parseProKeywordIf("TRIGGER"))
+                    return parseDropTable(true);
+                else if (!ignoreProEdition() && parseKeywordIf("TRIGGER") && requireProEdition())
 
 
 
                     ;
-                else if (parseKeywordIf("TYPE")) {
-
-
-
-
-
-
-
-
-
-
-
-
+                else if (parseKeywordIf("TYPE"))
                     return parseCascadeRestrictIf(
-                        parseIfExists(this::parseNames,
-                            n -> dsl.dropTypeIfExists(n.toArray(EMPTY_NAME)),
-                            n -> dsl.dropType(n.toArray(EMPTY_NAME))
-                        ),
+                        parseIfExists(this::parseIdentifiers, dsl::dropTypeIfExists, dsl::dropType),
                         DropTypeStep::cascade,
                         DropTypeStep::restrict
                     );
-                }
                 else if (parseKeywordIf("TABLESPACE"))
                     throw notImplemented("DROP TABLESPACE");
 
@@ -3455,22 +3076,18 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             case 'V':
                 if (parseKeywordIf("VIEW"))
-                    return parseDropView(false);
+                    return parseDropView();
 
                 break;
         }
 
         throw expected(
-            "ALIAS",
             "GENERATOR",
             "FUNCTION",
             "INDEX",
             "PROCEDURE",
-            "PUBLIC ALIAS",
-            "PUBLIC SYNONYM",
             "SCHEMA",
             "SEQUENCE",
-            "SYNONYM",
             "TABLE",
             "TEMPORARY TABLE",
             "TRIGGER",
@@ -3482,7 +3099,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final Truncate<?> parseTruncate() {
         parseKeyword("TRUNCATE");
         parseKeywordIf("TABLE");
-        List<Table<?>> table = parseList(',', ctx -> parseTableName());
+        Table<?> table = parseTableName();
         boolean continueIdentity = parseKeywordIf("CONTINUE IDENTITY");
         boolean restartIdentity = !continueIdentity && parseKeywordIf("RESTART IDENTITY");
         boolean cascade = parseKeywordIf("CASCADE");
@@ -3620,7 +3237,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
 
-            if (allowDeclareSection && parseProKeywordIf("DECLARE"))
+            if (allowDeclareSection && !ignoreProEdition() && parseKeywordIf("DECLARE") && requireProEdition())
 
 
 
@@ -3774,57 +3391,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
 
-    private final Query parseStartTransaction() {
-        parseKeyword("START", "BEGIN");
-        parseKeyword("WORK", "TRAN", "TRANSACTION");
-        parseKeywordIf("READ WRITE");
-        return dsl.startTransaction();
-    }
-
-    private final Query parseSavepoint() {
-        if (parseKeywordIf("SAVEPOINT")) {
-            Name n = parseIdentifier();
-            parseKeywordIf("UNIQUE");
-            parseKeywordIf("ON ROLLBACK RETAIN CURSORS");
-            return dsl.savepoint(n);
-        }
-
-        parseKeyword("SAVE");
-        parseKeyword("TRAN", "TRANSACTION");
-        return dsl.savepoint(parseIdentifier());
-    }
-
-    private final Query parseReleaseSavepoint() {
-        parseKeyword("RELEASE");
-        parseKeywordIf("TO");
-        parseKeywordIf("SAVEPOINT");
-        return dsl.releaseSavepoint(parseIdentifier());
-    }
-
-    private final Query parseCommit() {
-        parseKeyword("COMMIT");
-        parseKeywordIf("WORK", "TRAN", "TRANSACTION");
-        return dsl.commit();
-    }
-
-    private final Query parseRollback() {
-        parseKeyword("ROLLBACK");
-
-        if (parseKeywordIf(
-                "TRAN",
-                "TRANSACTION TO SAVEPOINT",
-                "TRANSACTION TO",
-                "TRANSACTION",
-                "WORK TO SAVEPOINT",
-                "TO SAVEPOINT",
-                "TO"
-        ))
-            return dsl.rollback().toSavepoint(parseIdentifier());
-
-        parseKeywordIf("WORK");
-        return dsl.rollback();
-    }
-
     private final Block parseDo() {
         parseKeyword("DO");
         return (Block) dsl.parser().parseQuery(parseStringLiteral());
@@ -3875,7 +3441,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
                 ;
-                else if (peekProKeyword("EXIT"))
+                else if (!ignoreProEdition() && peekKeyword("EXIT") && requireProEdition())
 
 
 
@@ -3884,7 +3450,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'F':
-                if (peekProKeyword("FOR"))
+                if (!ignoreProEdition() && peekKeyword("FOR") && requireProEdition())
 
 
 
@@ -3893,7 +3459,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'G':
-                if (peekProKeyword("GOTO"))
+                if (!ignoreProEdition() && peekKeyword("GOTO") && requireProEdition())
 
 
 
@@ -3902,12 +3468,12 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'I':
-                if (peekProKeyword("IF"))
+                if (!ignoreProEdition() && peekKeyword("IF") && requireProEdition())
 
 
 
                 ;
-                else if (peekProKeyword("ITERATE"))
+                else if (!ignoreProEdition() && peekKeyword("ITERATE") && requireProEdition())
 
 
 
@@ -3916,17 +3482,17 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'L':
-                if (peekProKeyword("LEAVE"))
+                if (!ignoreProEdition() && peekKeyword("LEAVE") && requireProEdition())
 
 
 
                 ;
-                else if (peekProKeyword("LET"))
+                else if (!ignoreProEdition() && peekKeyword("LET") && requireProEdition())
 
 
 
                 ;
-                else if (peekProKeyword("LOOP"))
+                else if (!ignoreProEdition() && peekKeyword("LOOP") && requireProEdition())
 
 
 
@@ -3941,17 +3507,17 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'R':
-                if (peekProKeyword("REPEAT"))
+                if (!ignoreProEdition() && peekKeyword("REPEAT") && requireProEdition())
 
 
 
                 ;
-                else if (peekProKeyword("RETURN"))
+                else if (!ignoreProEdition() && peekKeyword("RETURN") && requireProEdition())
 
 
 
                 ;
-                else if (peekProKeyword("RAISE"))
+                else if (!ignoreProEdition() && peekKeyword("RAISE") && requireProEdition())
 
 
 
@@ -3960,12 +3526,12 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'S':
-                if (peekProKeyword("SET"))
+                if (!ignoreProEdition() && peekKeyword("SET") && requireProEdition())
 
 
 
                 ;
-                else if (peekProKeyword("SIGNAL"))
+                else if (!ignoreProEdition() && peekKeyword("SIGNAL") && requireProEdition())
 
 
 
@@ -3974,7 +3540,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'W':
-                if (peekProKeyword("WHILE"))
+                if (!ignoreProEdition() && peekKeyword("WHILE") && requireProEdition())
 
 
 
@@ -4437,6 +4003,16 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
 
+
+
+
+
+
+
+
+
+
+
     // -----------------------------------------------------------------------------------------------------------------
     // Statement clause parsing
     // -----------------------------------------------------------------------------------------------------------------
@@ -4458,7 +4034,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return user(parseName());
     }
 
-    private final DDLQuery parseCreateView(boolean orReplace, boolean materialized) {
+    private final DDLQuery parseCreateView(boolean orReplace) {
         boolean ifNotExists = !orReplace && parseKeywordIf("IF NOT EXISTS");
         Table<?> view = parseTableName();
         Field<?>[] fields = EMPTY_FIELD;
@@ -4475,18 +4051,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         if (fields.length > 0 && fields.length != degree)
             throw exception("Select list size (" + degree + ") must match declared field size (" + fields.length + ")");
 
-        return (ifNotExists
-            ? materialized
-                ? dsl.createMaterializedViewIfNotExists(view, fields)
-                : dsl.createViewIfNotExists(view, fields)
+        return ifNotExists
+            ? dsl.createViewIfNotExists(view, fields).as(select)
             : orReplace
-            ? materialized
-                ? dsl.createOrReplaceMaterializedView(view, fields)
-                : dsl.createOrReplaceView(view, fields)
-            : materialized
-                ? dsl.createMaterializedView(view, fields)
-                : dsl.createView(view, fields)
-        ).as(select);
+            ? dsl.createOrReplaceView(view, fields).as(select)
+            : dsl.createView(view, fields).as(select);
     }
 
     private final DDLQuery parseCreateExtension() {
@@ -4502,7 +4071,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             if (parseIdentifierIf() == null)
                 parseStringLiteral();
         parseKeywordIf("CASCADE");
-        return IGNORE.get();
+        return IGNORE;
     }
 
     private final DDLQuery parseDropExtension() {
@@ -4511,55 +4080,27 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         ifExists = ifExists || parseKeywordIf("IF EXISTS");
         if (!parseKeywordIf("CASCADE"))
             parseKeywordIf("RESTRICT");
-        return IGNORE.get();
+        return IGNORE;
     }
 
-    private final DDLQuery parseAlterView(boolean materialized) {
+    private final DDLQuery parseAlterView() {
         boolean ifExists = parseKeywordIf("IF EXISTS");
         Table<?> oldName = parseTableName();
-        Field<?>[] fields = EMPTY_FIELD;
 
-        if (parseIf('(')) {
-            fields = parseList(',', c -> parseFieldName()).toArray(fields);
-            parse(')');
-        }
-
-        if (parseKeywordIf("AS")) {
-            Select<?> select = parseWithOrSelect();
-            int degree = Tools.degree(select);
-
-            if (fields.length > 0 && fields.length != degree)
-                throw exception("Select list size (" + degree + ") must match declared field size (" + fields.length + ")");
-
-            if (fields.length == 0)
-                return dsl.alterView(oldName).as(select);
-            else
-                return dsl.alterView(oldName, fields).as(select);
-        }
-        else if (fields.length > 0)
-            throw expected("AS");
-        else if (parseKeywordIf("RENAME")) {
+        if (parseKeywordIf("RENAME")) {
             parseKeyword("AS", "TO");
             Table<?> newName = parseTableName();
 
-            return (
-                  ifExists
-                ? materialized
-                    ? dsl.alterMaterializedViewIfExists(oldName)
-                    : dsl.alterViewIfExists(oldName)
-                : materialized
-                    ? dsl.alterMaterializedView(oldName)
-                    : dsl.alterView(oldName)
-            ).renameTo(newName);
+            return ifExists
+                ? dsl.alterViewIfExists(oldName).renameTo(newName)
+                : dsl.alterView(oldName).renameTo(newName);
         }
         else if (parseKeywordIf("OWNER TO") && parseUser() != null)
-            return IGNORE.get();
+            return IGNORE;
         else if (parseKeywordIf("SET"))
-            return (materialized
-                ? dsl.alterMaterializedView(oldName)
-                : dsl.alterView(oldName)).comment(parseOptionsDescription());
+            return dsl.alterView(oldName).comment(parseOptionsDescription());
         else
-            throw expected("AS", "OWNER TO", "RENAME", "SET");
+            throw expected("OWNER TO", "RENAME", "SET");
     }
 
     private final Comment parseOptionsDescription() {
@@ -4573,15 +4114,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return comment;
     }
 
-    private final DDLQuery parseDropView(boolean materialized) {
-        return parseCascadeRestrictIf(
-            materialized
-                 ? parseIfExists(this::parseTableName, dsl::dropMaterializedViewIfExists, dsl::dropMaterializedView)
-                 : parseIfExists(this::parseTableName, dsl::dropViewIfExists, dsl::dropView),
-            DropViewStep::cascade,
-            DropViewStep::restrict,
-            true
-        );
+    private final DDLQuery parseDropView() {
+        return parseIfExists(this::parseTableName, dsl::dropViewIfExists, dsl::dropView);
     }
 
     private final DDLQuery parseCreateSequence() {
@@ -4592,7 +4126,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             ? dsl.createSequenceIfNotExists(schemaName)
             : dsl.createSequence(schemaName);
 
-        boolean as = false;
         boolean startWith = false;
         boolean incrementBy = false;
         boolean minvalue = false;
@@ -4601,12 +4134,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         boolean cache = false;
 
         for (;;) {
-            Field field;
-            DataType type = null;
+            Field<Long> field;
 
-            if (!as && (as |= (parseKeywordIf("AS") && (type = parseDataType()) != null)))
-                s = ((CreateSequenceAsStep) s).as(type);
-            else if (!startWith && (startWith |= (field = parseSequenceStartWithIf()) != null))
+            if (!startWith && (startWith |= (field = parseSequenceStartWithIf()) != null))
                 s = s.startWith(field);
             else if (!incrementBy && (incrementBy |= (field = parseSequenceIncrementByIf()) != null))
                 s = s.incrementBy(field);
@@ -4633,25 +4163,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return s;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private final DDLQuery parseAlterSequence() {
         boolean ifExists = parseKeywordIf("IF EXISTS");
         Sequence<?> sequenceName = parseSequenceName();
@@ -4665,10 +4176,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             return s.renameTo(parseSequenceName());
         }
         else if (parseKeywordIf("OWNER TO") && parseUser() != null) {
-            return IGNORE.get();
-        }
-        else if (parseKeywordIf("OWNED BY") && parseName() != null) {
-            return IGNORE.get();
+            return IGNORE;
         }
         else {
             boolean found = false;
@@ -4682,7 +4190,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             AlterSequenceFlagsStep s1 = s;
             while (true) {
-                Field<? extends Number> field;
+                Field<Long> field;
 
                 if (!startWith && (startWith |= (field = parseSequenceStartWithIf()) != null))
                     s1 = s1.startWith(field);
@@ -4738,39 +4246,39 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final boolean parseSequenceNoCacheIf() {
-        return parseKeywordIf("NO CACHE", "NOCACHE");
+        return parseKeywordIf("NO CACHE") || parseKeywordIf("NOCACHE");
     }
 
-    private final Field<? extends Number> parseSequenceCacheIf() {
+    private final Field<Long> parseSequenceCacheIf() {
         return parseKeywordIf("CACHE") && (parseIf("=") || true) ? parseUnsignedIntegerOrBindVariable() : null;
     }
 
     private final boolean parseSequenceNoCycleIf() {
-        return parseKeywordIf("NO CYCLE", "NOCYCLE");
+        return parseKeywordIf("NO CYCLE") || parseKeywordIf("NOCYCLE");
     }
 
     private final boolean parseSequenceNoMaxvalueIf() {
-        return parseKeywordIf("NO MAXVALUE", "NOMAXVALUE");
+        return parseKeywordIf("NO MAXVALUE") || parseKeywordIf("NOMAXVALUE");
     }
 
-    private final Field<? extends Number> parseSequenceMaxvalueIf() {
-        return parseKeywordIf("MAXVALUE") && (parseIf("=") || true) ? parseSignedIntegerOrBindVariable() : null;
+    private final Field<Long> parseSequenceMaxvalueIf() {
+        return parseKeywordIf("MAXVALUE") && (parseIf("=") || true) ? parseUnsignedIntegerOrBindVariable() : null;
     }
 
     private final boolean parseSequenceNoMinvalueIf() {
-        return parseKeywordIf("NO MINVALUE", "NOMINVALUE");
+        return parseKeywordIf("NO MINVALUE") || parseKeywordIf("NOMINVALUE");
     }
 
-    private final Field<? extends Number> parseSequenceMinvalueIf() {
-        return parseKeywordIf("MINVALUE") && (parseIf("=") || true) ? parseSignedIntegerOrBindVariable() : null;
+    private final Field<Long> parseSequenceMinvalueIf() {
+        return parseKeywordIf("MINVALUE") && (parseIf("=") || true) ? parseUnsignedIntegerOrBindVariable() : null;
     }
 
-    private final Field<? extends Number> parseSequenceIncrementByIf() {
-        return parseKeywordIf("INCREMENT") && (parseKeywordIf("BY") || parseIf("=") || true) ? parseSignedIntegerOrBindVariable() : null;
+    private final Field<Long> parseSequenceIncrementByIf() {
+        return parseKeywordIf("INCREMENT") && (parseKeywordIf("BY") || parseIf("=") || true) ? parseUnsignedIntegerOrBindVariable() : null;
     }
 
-    private final Field<? extends Number> parseSequenceStartWithIf() {
-        return parseKeywordIf("START") && (parseKeywordIf("WITH") || parseIf("=") || true) ? parseSignedIntegerOrBindVariable() : null;
+    private final Field<Long> parseSequenceStartWithIf() {
+        return parseKeywordIf("START") && (parseKeywordIf("WITH") || parseIf("=") || true) ? parseUnsignedIntegerOrBindVariable() : null;
     }
 
     private final Query parseAlterSession() {
@@ -4796,41 +4304,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             : dsl.dropSequence(sequenceName);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private final DDLQuery parseCreateTable(TableScope tableScope) {
+    private final DDLQuery parseCreateTable(boolean temporary) {
         boolean ifNotExists = parseKeywordIf("IF NOT EXISTS");
         Table<?> tableName = DSL.table(parseTableName().getQualifiedName());
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         if (parseKeywordIf("USING"))
             parseIdentifier();
@@ -4843,7 +4319,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         List<Index> indexes = new ArrayList<>();
         boolean primary = false;
         boolean identity = false;
-        boolean hidden = false;
         boolean readonly = false;
         boolean ctas = false;
 
@@ -4853,35 +4328,14 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             do {
                 int p = position();
 
-                ConstraintTypeStep constraint = parseConstraintNameSpecificationIf();
+                ConstraintTypeStep constraint = parseConstraintNameSpecification();
 
                 if (parsePrimaryKeyClusteredNonClusteredKeywordIf()) {
                     if (primary)
                         throw exception("Duplicate primary key specification");
 
                     primary = true;
-                    PrimaryKeySpecification pk = parsePrimaryKeySpecification(constraint, true);
-                    constraints.add(pk.constraint());
-                    if (pk.identity()) {
-                        PrimaryKey c = (PrimaryKey) pk.constraint();
-
-                        replacement:
-                        if (c.$fields().size() == 1) {
-                            for (int i = 0; i < fields.size(); i++) {
-                                Field<?> f = fields.get(i);
-
-                                if (f.getName().equalsIgnoreCase(c.$fields().get(0).getName())) {
-                                    fields.set(i, field(f.getQualifiedName(), f.getDataType().identity(true)));
-                                    break replacement;
-                                }
-                            }
-
-                            throw expected("Column not found: " + c.$fields().get(0).getName());
-                        }
-                        else
-                            throw expected("Single column primary key with inline identity");
-                    }
-
+                    constraints.add(parsePrimaryKeySpecification(constraint));
                     continue columnLoop;
                 }
                 else if (parseKeywordIf("UNIQUE")) {
@@ -4944,7 +4398,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     constraints,
                     primary,
                     identity,
-                    hidden,
                     readonly
                 );
 
@@ -4964,18 +4417,10 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             ctas = true;
 
         CreateTableElementListStep elementListStep = ifNotExists
-            ? tableScope == TableScope.GLOBAL_TEMPORARY
-                ? dsl.createGlobalTemporaryTableIfNotExists(tableName)
-                : tableScope == TableScope.LOCAL_TEMPORARY
-                ? dsl.createLocalTemporaryTableIfNotExists(tableName)
-                : tableScope == TableScope.TEMPORARY
+            ? temporary
                 ? dsl.createTemporaryTableIfNotExists(tableName)
                 : dsl.createTableIfNotExists(tableName)
-            : tableScope == TableScope.GLOBAL_TEMPORARY
-                ? dsl.createGlobalTemporaryTable(tableName)
-                : tableScope == TableScope.LOCAL_TEMPORARY
-                ? dsl.createLocalTemporaryTable(tableName)
-                : tableScope == TableScope.TEMPORARY
+            : temporary
                 ? dsl.createTemporaryTable(tableName)
                 : dsl.createTable(tableName);
 
@@ -4992,7 +4437,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         // [#6133] Historically, the jOOQ API places the ON COMMIT clause after
         // the AS clause, which doesn't correspond to dialect implementations
         Function<CreateTableOnCommitStep, CreateTableCommentStep> onCommit;
-        if (tableScope != null && parseKeywordIf("ON COMMIT")) {
+        if (temporary && parseKeywordIf("ON COMMIT")) {
             if (parseKeywordIf("DELETE ROWS"))
                 onCommit = CreateTableOnCommitStep::onCommitDeleteRows;
             else if (parseKeywordIf("DROP"))
@@ -5019,16 +4464,10 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 ? withDataStep.withNoData()
                 : withDataStep;
         }
-        else if (ctas) {
+        else if (ctas)
             throw expected("AS, WITH, SELECT, or (");
-        }
-        else {
+        else
             onCommitStep = asStep;
-
-            // [#14631] [#14690] SQLite optional keywords
-            if (parseKeywordIf("STRICT", "WITHOUT ROWID") && parseIf(','))
-                parseKeyword("STRICT", "WITHOUT ROWID");
-        }
 
         commentStep = onCommit.apply(onCommitStep);
 
@@ -5073,7 +4512,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             // [#10164] In a statement batch, this could already be the next statement
             else if (!peekKeyword("COMMENT ON") && parseKeywordIf("COMMENT")) {
-                parseEqualOrIsIf();
+                if (!parseIf('='))
+                    parseKeywordIf("IS");
                 comment = parseComment();
             }
             else if (peekKeyword("OPTIONS")) {
@@ -5175,14 +4615,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             return storageStep;
     }
 
-    private final boolean parseEqualOrIsIf() {
-        if (!parseIf('='))
-            parseKeywordIf("IS");
-
-        return true;
-    }
-
-    private static final record ParseInlineConstraints(DataType<?> type, Comment fieldComment, boolean primary, boolean identity, boolean hidden, boolean readonly) {}
+    private static final /* record */ class ParseInlineConstraints { private final DataType<?> type; private final Comment fieldComment; private final boolean primary; private final boolean identity; private final boolean readonly; public ParseInlineConstraints(DataType<?> type, Comment fieldComment, boolean primary, boolean identity, boolean readonly) { this.type = type; this.fieldComment = fieldComment; this.primary = primary; this.identity = identity; this.readonly = readonly; } public DataType<?> type() { return type; } public Comment fieldComment() { return fieldComment; } public boolean primary() { return primary; } public boolean identity() { return identity; } public boolean readonly() { return readonly; } @Override public boolean equals(Object o) { if (!(o instanceof ParseInlineConstraints)) return false; ParseInlineConstraints other = (ParseInlineConstraints) o; if (!java.util.Objects.equals(this.type, other.type)) return false; if (!java.util.Objects.equals(this.fieldComment, other.fieldComment)) return false; if (!java.util.Objects.equals(this.primary, other.primary)) return false; if (!java.util.Objects.equals(this.identity, other.identity)) return false; if (!java.util.Objects.equals(this.readonly, other.readonly)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.type, this.fieldComment, this.primary, this.identity, this.readonly); } @Override public String toString() { return new StringBuilder("ParseInlineConstraints[").append("type=").append(this.type).append(", fieldComment=").append(this.fieldComment).append(", primary=").append(this.primary).append(", identity=").append(this.identity).append(", readonly=").append(this.readonly).append("]").toString(); } }
 
     private final ParseInlineConstraints parseInlineConstraints(
         Name fieldName,
@@ -5190,7 +4623,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         List<? super Constraint> constraints,
         boolean primary,
         boolean identity,
-        boolean hidden,
         boolean readonly
     ) {
         boolean nullable = false;
@@ -5198,19 +4630,14 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         boolean computed = false;
         boolean onUpdate = false;
         boolean unique = false;
-        Constraint uniqueConstraint = null;
         boolean comment = false;
         boolean compress = false;
-        boolean sparse = false;
         Comment fieldComment = null;
 
         identity |= type.identity();
-        hidden |= type.hidden();
         readonly |= type.readonly();
 
         for (;;) {
-            ConstraintTypeStep inlineConstraint = parseConstraintNameSpecificationIf();
-
             if (!nullable) {
                 if (parseKeywordIf("NULL")) {
                     type = type.nullable(true);
@@ -5238,14 +4665,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     identity = true;
                     continue;
                 }
-                else if (parseKeywordIf("NOT HIDDEN", "VISIBLE")) {
-                    continue;
-                }
-                else if (parseKeywordIf("IMPLICITLY HIDDEN", "HIDDEN", "NOT VISIBLE", "INVISIBLE")) {
-                    type = type.hidden(true);
-                    continue;
-                }
-                else if (parseProKeywordIf("READONLY")) {
+                else if (!ignoreProEdition() && parseKeywordIf("READONLY") && requireProEdition()) {
 
 
 
@@ -5275,8 +4695,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 else if (!computed
                         && !ignoreProEdition()
                         && (parseKeywordIf("AS")
-                            || parseKeywordIf("COMPUTED") && (parseKeywordIf("BY") || true)
-                            || parseKeywordIf("COMPUTE"))
+                            || parseKeywordIf("COMPUTED") && (parseKeywordIf("BY") || true))
                         && requireProEdition()) {
 
 
@@ -5285,23 +4704,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
                 }
-                else if (!computed && parseProKeywordIf("ALIAS")) {
-
-
-
-
-
-
-                }
-                else if (!computed && parseProKeywordIf("MATERIALIZED")) {
-
-
-
-
-
-
-                }
-                else if ((!identity || !computed) && parseKeywordIf("GENERATED")) {
+                else if (!identity && !computed && parseKeywordIf("GENERATED")) {
                     boolean always;
                     if (!(always = parseKeywordIf("ALWAYS"))) {
                         parseKeyword("BY DEFAULT");
@@ -5328,35 +4731,40 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 }
             }
 
-            if (!primary && parsePrimaryKeyClusteredNonClusteredKeywordIf()) {
-                constraints.add(parseConstraintEnforcementIf(inlineConstraint == null
-                    ? primaryKey(fieldName)
-                    : inlineConstraint.primaryKey(fieldName)));
+            if (!onUpdate) {
+                if (parseKeywordIf("ON UPDATE")) {
 
-                parseUniqueIndexStorageClausesIf();
-
-                // [#13880] Remove all lexically preceding inline UNIQUE KEYs as
-                //          soon as a PRIMARY KEY is encountered
-                if (uniqueConstraint != null)
-                    constraints.remove(uniqueConstraint);
-
-                primary = true;
-                unique = true;
-                continue;
+                    // [#6132] TODO: Support this feature in the jOOQ DDL API
+                    parseConcat();
+                    onUpdate = true;
+                    continue;
+                }
             }
-            else if (parseKeywordIf("UNIQUE")) {
-                if (!parseKeywordIf("KEY"))
-                    parseKeywordIf("INDEX");
 
-                parseUniqueIndexStorageClausesIf();
+            ConstraintTypeStep inlineConstraint = parseConstraintNameSpecification();
 
-                if (!unique)
-                    constraints.add(uniqueConstraint = parseConstraintEnforcementIf(inlineConstraint == null
+            if (!unique) {
+                if (!primary && parsePrimaryKeyClusteredNonClusteredKeywordIf()) {
+                    if (!parseKeywordIf("CLUSTERED"))
+                        parseKeywordIf("NONCLUSTERED");
+
+                    constraints.add(parseConstraintEnforcementIf(inlineConstraint == null
+                        ? primaryKey(fieldName)
+                        : inlineConstraint.primaryKey(fieldName)));
+                    primary = true;
+                    unique = true;
+                    continue;
+                }
+                else if (parseKeywordIf("UNIQUE")) {
+                    if (!parseKeywordIf("KEY"))
+                        parseKeywordIf("INDEX");
+
+                    constraints.add(parseConstraintEnforcementIf(inlineConstraint == null
                         ? unique(fieldName)
                         : inlineConstraint.unique(fieldName)));
-
-                unique = true;
-                continue;
+                    unique = true;
+                    continue;
+                }
             }
 
             if (parseKeywordIf("CHECK")) {
@@ -5369,18 +4777,21 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 continue;
             }
 
-            if (inlineConstraint != null)
-                throw expected("CHECK", "DEFAULT", "NOT NULL", "NULL", "PRIMARY KEY", "REFERENCES", "UNIQUE");
-
-            if (!onUpdate) {
-                if (parseKeywordIf("ON UPDATE")) {
-
-                    // [#6132] TODO: Support this feature in the jOOQ DDL API
-                    parseConcat();
-                    onUpdate = true;
+            if (!nullable) {
+                if (parseKeywordIf("NULL")) {
+                    type = type.nullable(true);
+                    nullable = true;
+                    continue;
+                }
+                else if (parseNotNullOptionalEnable()) {
+                    type = type.nullable(false);
+                    nullable = true;
                     continue;
                 }
             }
+
+            if (inlineConstraint != null)
+                throw expected("CHECK", "NOT NULL", "NULL", "PRIMARY KEY", "REFERENCES", "UNIQUE");
 
             if (!identity) {
                 if (parseKeywordIf("AUTO_INCREMENT") ||
@@ -5395,7 +4806,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
                 // [#10164] In a statement batch, this could already be the next statement
                 if (!peekKeyword("COMMENT ON") && parseKeywordIf("COMMENT")) {
-                    parseEqualOrIsIf();
+                    if (!parseIf('='))
+                        parseKeywordIf("IS");
                     fieldComment = parseComment();
                     comment = true;
                     continue;
@@ -5409,13 +4821,13 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
             if (!compress) {
-                if (parseProKeywordIf("NO COMPRESS")) {
+                if (!ignoreProEdition() && parseKeywordIf("NO COMPRESS") && requireProEdition()) {
 
 
 
 
                 }
-                else if (parseProKeywordIf("COMPRESS")) {
+                else if (!ignoreProEdition() && parseKeywordIf("COMPRESS") && requireProEdition()) {
 
 
 
@@ -5424,24 +4836,17 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
 
-
-
-
-                }
-            }
-
-            if (!sparse) {
-                if (parseProKeywordIf("SPARSE")) {
 
 
 
                 }
             }
+
 
             break;
         }
 
-        return new ParseInlineConstraints(type, fieldComment, primary, identity, hidden, readonly);
+        return new ParseInlineConstraints(type, fieldComment, primary, identity, readonly);
     }
 
 
@@ -5533,172 +4938,63 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         if (!parseKeywordIf("CLUSTERED"))
             parseKeywordIf("NONCLUSTERED");
 
-        if (!parseKeywordIf("ASC"))
-            parseKeywordIf("DESC");
-
         return true;
     }
-
-    private final boolean parseUniqueIndexStorageClausesIf() {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        return true;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private final DDLQuery parseCreateType() {
-        boolean ifNotExists = parseKeywordIf("IF NOT EXISTS");
         Name name = parseName();
+        parseKeyword("AS ENUM");
+        List<String> values;
+        parse('(');
 
-        if (parseKeywordIf("AS")) {
-            if (parseKeywordIf("ENUM")) {
-                List<String> values;
-                parse('(');
-
-                if (!parseIf(')')) {
-                    values = parseList(',', ParseContext::parseStringLiteral);
-                    parse(')');
-                }
-                else
-                    values = new ArrayList<>();
-
-                return (ifNotExists ? dsl.createTypeIfNotExists(name) : dsl.createType(name))
-                    .asEnum(values.toArray(EMPTY_STRING));
-            }
-            else {
-                parseKeywordIf("OBJECT", "STRUCT");
-                parse('(');
-                List<Field<?>> fields = parseList(',', ctx -> DSL.field(parseIdentifier(), parseDataType()));
-                parse(')');
-                return (ifNotExists ? dsl.createTypeIfNotExists(name) : dsl.createType(name))
-                    .as(fields);
-            }
-        }
-        else if (parseKeywordIf("FROM")) {
-            return (ifNotExists ? dsl.createDomainIfNotExists(name) : dsl.createDomain(name))
-                .as(parseDataType());
+        if (!parseIf(')')) {
+            values = parseList(',', ParseContext::parseStringLiteral);
+            parse(')');
         }
         else
-            throw expected("AS", "FROM");
+            values = new ArrayList<>();
+
+        return dsl.createType(name).asEnum(values);
     }
 
     private final Index parseIndexSpecification(Table<?> table) {
         Name name = parseIdentifierIf();
         parseUsingIndexTypeIf();
-        return Internal.createIndex(name == null ? NO_NAME : name, table, parseParenthesisedSortSpecification(false).fields(), false);
-    }
-
-    private final boolean parseConstraintConflictClauseIf() {
-        return parseKeywordIf("ON CONFLICT") && parseKeyword("ROLLBACK", "ABORT", "FAIL", "IGNORE", "REPLACE");
+        return Internal.createIndex(name == null ? NO_NAME : name, table, parseParenthesisedSortSpecification(), false);
     }
 
     private final Constraint parseConstraintEnforcementIf(ConstraintEnforcementStep e) {
-        boolean onConflict = false;
-        boolean deferrable = false;
-        boolean initially = false;
+        boolean deferrable = parseConstraintDeferrableIf();
+        parseConstraintInitiallyIf();
+        if (!deferrable)
+            parseConstraintDeferrableIf();
 
-        while ((!onConflict && (onConflict = parseConstraintConflictClauseIf()))
-            || (!deferrable && (deferrable = parseConstraintDeferrableIf()))
-            || (!initially && (initially = parseConstraintInitiallyIf())))
-            ;
-
-        if ((parseKeywordIf("ENABLE", "ENFORCED")))
+        if ((parseKeywordIf("ENABLE") || parseKeywordIf("ENFORCED")))
             return e.enforced();
-        else if ((parseKeywordIf("DISABLE", "NOT ENFORCED")))
+        else if ((parseKeywordIf("DISABLE") || parseKeywordIf("NOT ENFORCED")))
             return e.notEnforced();
         else
             return e;
     }
 
     private final boolean parseConstraintDeferrableIf() {
-        return parseKeywordIf("DEFERRABLE", "NOT DEFERRABLE");
+        return parseKeywordIf("DEFERRABLE") || parseKeywordIf("NOT DEFERRABLE");
     }
 
     private final boolean parseConstraintInitiallyIf() {
         return parseKeywordIf("INITIALLY") && parseKeyword("DEFERRED", "IMMEDIATE");
     }
 
-    private static final record PrimaryKeySpecification(Constraint constraint, boolean identity) {}
-
-    private final PrimaryKeySpecification parsePrimaryKeySpecification(ConstraintTypeStep constraint, boolean allowIdentity) {
+    private final Constraint parsePrimaryKeySpecification(ConstraintTypeStep constraint) {
         parseUsingIndexTypeIf();
-        KeyColumnList k = parseKeyColumnList(allowIdentity);
+        Field<?>[] fieldNames = parseKeyColumnList();
 
         ConstraintEnforcementStep e = constraint == null
-            ? primaryKey(k.fields())
-            : constraint.primaryKey(k.fields());
+            ? primaryKey(fieldNames)
+            : constraint.primaryKey(fieldNames);
 
         parseUsingIndexTypeIf();
-        parseUniqueIndexStorageClausesIf();
-        return new PrimaryKeySpecification(parseConstraintEnforcementIf(e), k.identity());
+        return parseConstraintEnforcementIf(e);
     }
 
     private final Constraint parseUniqueSpecification(ConstraintTypeStep constraint) {
@@ -5710,32 +5006,29 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         if (constraint == null && (constraintName = parseIdentifierIf()) != null)
             constraint = constraint(constraintName);
 
-        Field<?>[] fieldNames = parseKeyColumnList(false).fields();
+        Field<?>[] fieldNames = parseKeyColumnList();
 
         ConstraintEnforcementStep e = constraint == null
             ? unique(fieldNames)
             : constraint.unique(fieldNames);
 
         parseUsingIndexTypeIf();
-        parseUniqueIndexStorageClausesIf();
         return parseConstraintEnforcementIf(e);
     }
 
-    private static final record KeyColumnList(Field<?>[] fields, boolean identity) {}
+    private final Field<?>[] parseKeyColumnList() {
+        SortField<?>[] fieldExpressions = parseParenthesisedSortSpecification();
+        Field<?>[] fieldNames = new Field[fieldExpressions.length];
 
-    private final KeyColumnList parseKeyColumnList(boolean allowIdentity) {
-        SortSpecification s = parseParenthesisedSortSpecification(allowIdentity);
-        Field<?>[] fieldNames = new Field[s.fields().length];
-
-        for (int i = 0; i < s.fields().length; i++)
-            if (s.fields()[i].$sortOrder() != SortOrder.DESC)
-                fieldNames[i] = s.fields()[i].$field();
+        for (int i = 0; i < fieldExpressions.length; i++)
+            if (fieldExpressions[i].getOrder() != SortOrder.DESC)
+                fieldNames[i] = ((SortFieldImpl<?>) fieldExpressions[i]).getField();
 
             // [#7899] TODO: Support this in jOOQ
             else
                 throw notImplemented("DESC sorting in constraints");
 
-        return new KeyColumnList(fieldNames, s.identity());
+        return fieldNames;
     }
 
     private final Constraint parseCheckSpecification(ConstraintTypeStep constraint) {
@@ -5840,16 +5133,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         Function<? super S1, ? extends S2> stepCascade,
         Function<? super S1, ? extends S2> stepRestrict
     ) {
-        return parseCascadeRestrictIf(step, stepCascade, stepRestrict, false);
-    }
-
-    private final <S2 extends QueryPart, S1 extends S2> S2 parseCascadeRestrictIf(
-        S1 step,
-        Function<? super S1, ? extends S2> stepCascade,
-        Function<? super S1, ? extends S2> stepRestrict,
-        boolean cascadeConstraints
-    ) {
-        boolean cascade = parseKeywordIf("CASCADE") && (cascadeConstraints && parseKeywordIf("CONSTRAINTS") || true);
+        boolean cascade = parseKeywordIf("CASCADE");
         boolean restrict = !cascade && parseKeywordIf("RESTRICT");
 
         return cascade
@@ -5891,31 +5175,22 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         switch (characterUpper()) {
             case 'A':
                 if (parseKeywordIf("ADD"))
-                    return parseAlterTableAdd(s1, tableName, false);
+                    return parseAlterTableAdd(s1, tableName);
                 else if (parseKeywordIf("ALTER"))
                     if (parseKeywordIf("CONSTRAINT"))
                         return parseAlterTableAlterConstraint(s1);
                     else if ((parseKeywordIf("COLUMN") || true))
-                        return parseAlterTableAlterColumn(tableName, s1);
+                        return parseAlterTableAlterColumn(s1);
 
                 break;
 
             case 'C':
 
                 // TODO: support all of the storageLoop from the CREATE TABLE statement
-                if (parseKeywordIf("CHANGE")) {
-                    parseKeywordIf("COLUMN");
-                    return parseAlterTableChangeColumn(s1);
-                }
-                else if (parseKeywordIf("COMMENT")) {
-                    if (parseKeywordIf("COLUMN")) {
-                        return dsl.commentOnColumn(tableName.getQualifiedName().append(parseIdentifier()))
-                                  .is(parseStringLiteral());
-                    }
-                    else {
-                        parseEqualOrIsIf();
-                        return dsl.commentOnTable(tableName).is(parseStringLiteral());
-                    }
+                if (parseKeywordIf("COMMENT")) {
+                    if (!parseIf('='))
+                        parseKeywordIf("IS");
+                    return dsl.commentOnTable(tableName).is(parseStringLiteral());
                 }
 
                 break;
@@ -5933,7 +5208,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                         return parseCascadeRestrictIf(
                             s1.dropUnique(
                                   peek('(')
-                                ? unique(parseKeyColumnList(false).fields())
+                                ? unique(parseKeyColumnList())
                                 : constraint(parseIdentifier())
                             ),
                             AlterTableDropStep::cascade,
@@ -5941,7 +5216,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                         );
                     }
                     else if (parseKeywordIf("PRIMARY KEY")) {
-                        Name identifier = !peekKeyword("CASCADE", "RESTRICT") ? parseIdentifierIf() : null;
+                        Name identifier = parseIdentifierIf();
                         return parseCascadeRestrictIf(
                             identifier == null ? s1.dropPrimaryKey() : s1.dropPrimaryKey(identifier),
                             AlterTableDropStep::cascade,
@@ -5963,10 +5238,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                         List<Field<?>> fields = null;
 
                         if (!ifColumnExists) {
-                            while (parseIf(',')
-                                && (parseKeywordIf("DROP") || true) && (parseKeywordIf("COLUMN") || true)
-                                || parseKeywordIf("DROP") && (parseKeywordIf("COLUMN") || true)
-                            ) {
+                            while (parseIf(',') || parseKeywordIf("DROP") && (parseKeywordIf("COLUMN") || true)) {
                                 if (fields == null) {
                                     fields = new ArrayList<>();
                                     fields.add(field);
@@ -5997,33 +5269,30 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 if (parseKeywordIf("MODIFY"))
                     if (parseKeywordIf("CONSTRAINT"))
                         return parseAlterTableAlterConstraint(s1);
-                    else if (parseKeywordIf("COMMENT"))
-                        return s1.comment(parseComment());
                     else if ((parseKeywordIf("COLUMN") || true))
-                        return parseAlterTableAlterColumn(tableName, s1);
+                        return parseAlterTableAlterColumn(s1);
 
                 break;
 
             case 'O':
                 if (parseKeywordIf("OWNER TO") && parseUser() != null)
-                    return IGNORE.get();
+                    return IGNORE;
 
                 break;
 
             case 'R':
                 if (parseKeywordIf("RENAME")) {
-                    if (parseKeywordIf("AS", "TO")) {
+                    if (parseKeywordIf("AS") || parseKeywordIf("TO")) {
                         Table<?> newName = parseTableName();
 
                         return s1.renameTo(newName);
                     }
                     else if (parseKeywordIf("COLUMN")) {
-                        boolean ifExists = parseKeywordIf("IF EXISTS");
                         Name oldName = parseIdentifier();
                         parseKeyword("AS", "TO");
                         Name newName = parseIdentifier();
 
-                        return (ifExists ? s1.renameColumnIfExists(oldName) : s1.renameColumn(oldName)).to(newName);
+                        return s1.renameColumn(oldName).to(newName);
                     }
                     else if (parseKeywordIf("INDEX")) {
                         Name oldName = parseIdentifier();
@@ -6048,43 +5317,36 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return s1.comment(parseOptionsDescription());
 
                 break;
-
-            case 'W':
-                if (parseKeywordIf("WITH CHECK ADD"))
-                    return parseAlterTableAdd(s1, tableName, true);
-
-                break;
         }
 
-        throw expected("ADD", "ALTER", "CHANGE", "COMMENT", "DROP", "MODIFY", "OWNER TO", "RENAME", "SET", "WITH");
+        throw expected("ADD", "ALTER", "COMMENT", "DROP", "MODIFY", "OWNER TO", "RENAME", "SET");
     }
 
-    private final DDLQuery parseAlterTableAdd(AlterTableStep s1, Table<?> tableName, boolean constraintOnly) {
+    private final DDLQuery parseAlterTableAdd(AlterTableStep s1, Table<?> tableName) {
         List<TableElement> list = new ArrayList<>();
 
-        if (!constraintOnly && parseIndexOrKeyIf()) {
+        if (parseIndexOrKeyIf()) {
             Name name = parseIdentifierIf();
 
             return name == null
-                ? dsl.createIndex().on(tableName, parseParenthesisedSortSpecification(false).fields())
-                : dsl.createIndex(name).on(tableName, parseParenthesisedSortSpecification(false).fields());
+                ? dsl.createIndex().on(tableName, parseParenthesisedSortSpecification())
+                : dsl.createIndex(name).on(tableName, parseParenthesisedSortSpecification());
         }
 
         if (parseIf('(')) {
             do
-                parseAlterTableAddFieldsOrConstraints(list, constraintOnly);
+                parseAlterTableAddFieldsOrConstraints(list);
             while (parseIf(','));
 
             parse(')');
         }
-        else if (!constraintOnly && (
-                 parseKeywordIf("COLUMN IF NOT EXISTS")
-              || parseKeywordIf("IF NOT EXISTS"))) {
+        else if (parseKeywordIf("COLUMN IF NOT EXISTS")
+              || parseKeywordIf("IF NOT EXISTS")) {
             return parseAlterTableAddFieldFirstBeforeLast(s1.addColumnIfNotExists(parseAlterTableAddField(null)));
         }
         else {
             do
-                parseAlterTableAddFieldsOrConstraints(list, constraintOnly);
+                parseAlterTableAddFieldsOrConstraints(list);
             while (
                 parseKeywordIf("ADD") ||
                 parseIf(',') && (parseKeywordIf("ADD") || !peekKeyword("ALTER", "COMMENT", "DROP", "MODIFY", "OWNER TO", "RENAME"))
@@ -6092,8 +5354,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         }
 
         if (list.size() == 1)
-            if (list.get(0) instanceof Constraint c)
-                return s1.add(c);
+            if (list.get(0) instanceof Constraint)
+                return s1.add((Constraint) list.get(0));
             else
                 return parseAlterTableAddFieldFirstBeforeLast(s1.add((Field<?>) list.get(0)));
         else
@@ -6122,12 +5384,12 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             || parseKeywordIf("KEY");
     }
 
-    private final void parseAlterTableAddFieldsOrConstraints(List<TableElement> list, boolean constraintOnly) {
-        ConstraintTypeStep constraint = parseConstraintNameSpecificationIf();
+    private final void parseAlterTableAddFieldsOrConstraints(List<TableElement> list) {
+        ConstraintTypeStep constraint = parseConstraintNameSpecification();
 
         if (parsePrimaryKeyClusteredNonClusteredKeywordIf())
-            list.add(parsePrimaryKeySpecification(constraint, false).constraint());
-        else if (parseKeywordIf("UNIQUE") && (parseKeywordIf("KEY", "INDEX") || true))
+            list.add(parsePrimaryKeySpecification(constraint));
+        else if (parseKeywordIf("UNIQUE") && (parseKeywordIf("KEY") || parseKeywordIf("INDEX") || true))
             list.add(parseUniqueSpecification(constraint));
         else if (parseKeywordIf("FOREIGN KEY"))
             list.add(parseForeignKeySpecification(constraint));
@@ -6135,11 +5397,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             list.add(parseCheckSpecification(constraint));
         else if (constraint != null)
             throw expected("CHECK", "FOREIGN KEY", "PRIMARY KEY", "UNIQUE");
-        else if (!constraintOnly && (parseKeywordIf("COLUMN") || true))
+        else if (parseKeywordIf("COLUMN") || true)
             parseAlterTableAddField(list);
     }
 
-    private final ConstraintTypeStep parseConstraintNameSpecificationIf() {
+    private final ConstraintTypeStep parseConstraintNameSpecification() {
         if (parseKeywordIf("CONSTRAINT") && !peekKeyword("PRIMARY KEY", "UNIQUE", "FOREIGN KEY", "CHECK"))
             return constraint(parseIdentifier());
 
@@ -6160,7 +5422,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
         int p = list == null ? -1 : list.size();
 
-        ParseInlineConstraints inline = parseInlineConstraints(fieldName, type, list, false, false, false, false);
+        ParseInlineConstraints inline = parseInlineConstraints(fieldName, type, list, false, false, false);
         Field<?> result = field(fieldName, inline.type, inline.fieldComment);
 
         if (list != null)
@@ -6169,45 +5431,29 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return result;
     }
 
-    private final DDLQuery parseAlterTableAlterColumn(Table<?> table, AlterTableStep s1) {
+    private final DDLQuery parseAlterTableAlterColumn(AlterTableStep s1) {
         boolean paren = parseIf('(');
-
-        // [#5316] TODO: Support this also for non-renames
-        boolean ifExists = !paren && parseKeywordIf("IF EXISTS");
         TableField<?, ?> field = parseFieldName();
 
         if (!paren)
             if (parseKeywordIf("CONSTRAINT") && parseIdentifier() != null)
                 if (parseKeywordIf("NULL"))
-                    return (ifExists ? s1.alterIfExists(field) : s1.alter(field)).dropNotNull();
+                    return s1.alter(field).dropNotNull();
                 else if (parseNotNullOptionalEnable())
-                    return (ifExists ? s1.alterIfExists(field) : s1.alter(field)).setNotNull();
+                    return s1.alter(field).setNotNull();
                 else
                     throw expected("NOT NULL", "NULL");
-            else if (parseKeywordIf("DROP NOT NULL", "SET NULL", "NULL"))
-                return (ifExists ? s1.alterIfExists(field) : s1.alter(field)).dropNotNull();
+            else if (parseKeywordIf("DROP NOT NULL") || parseKeywordIf("SET NULL") || parseKeywordIf("NULL"))
+                return s1.alter(field).dropNotNull();
             else if (parseKeywordIf("DROP DEFAULT"))
-                return (ifExists ? s1.alterIfExists(field) : s1.alter(field)).dropDefault();
-            else if (parseKeywordIf("DROP IDENTITY"))
-                return (ifExists ? s1.alterIfExists(field) : s1.alter(field)).dropIdentity();
+                return s1.alter(field).dropDefault();
             else if (parseKeywordIf("SET NOT NULL") || parseNotNullOptionalEnable())
-                return (ifExists ? s1.alterIfExists(field) : s1.alter(field)).setNotNull();
-            else if (parseKeywordIf("SET DEFAULT", "DEFAULT"))
-                return (ifExists ? s1.alterIfExists(field) : s1.alter(field)).default_((Field) toField(parseConcat()));
-            else if (parseKeywordIf(
-                    "SET GENERATED BY DEFAULT AS IDENTITY",
-                    "SET GENERATED BY DEFAULT",
-                    "ADD GENERATED BY DEFAULT AS IDENTITY"))
-                return (ifExists ? s1.alterIfExists(field) : s1.alter(field)).setGeneratedByDefaultAsIdentity();
-            else if (parseKeywordIf(
-                    "SET GENERATED ALWAYS",
-                    "ADD GENERATED ALWAYS AS IDENTITY"))
-                throw notImplemented("GENERATED ALWAYS AS IDENTITY", "https://github.com/jOOQ/jOOQ/issues/15952");
-            else if (peekKeyword("SET OPTIONS") && parseKeywordIf("SET"))
-                return dsl.commentOnColumn(field(table.getQualifiedName().append(field.getUnqualifiedName()))).is(parseOptionsDescription());
-            else if (parseKeywordIf("TO", "RENAME TO", "RENAME AS"))
-                return (ifExists ? s1.renameColumnIfExists(field) : s1.renameColumn(field)).to(parseFieldName());
-            else if (parseKeywordIf("TYPE", "SET DATA TYPE"))
+                return s1.alter(field).setNotNull();
+            else if (parseKeywordIf("SET DEFAULT"))
+                return s1.alter(field).default_((Field) toField(parseConcat()));
+            else if (parseKeywordIf("TO") || parseKeywordIf("RENAME TO") || parseKeywordIf("RENAME AS"))
+                return s1.renameColumn(field).to(parseFieldName());
+            else if (parseKeywordIf("TYPE") || parseKeywordIf("SET DATA TYPE"))
                 ;
 
         DataType<?> type = parseDataType();
@@ -6220,27 +5466,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         if (paren)
             parse(')');
 
-        return (ifExists ? s1.alterIfExists(field) : s1.alter(field)).set(type);
-    }
-
-    private final DDLQuery parseAlterTableChangeColumn(AlterTableStep s1) {
-        boolean ifExists = parseKeywordIf("IF EXISTS");
-        TableField<?, ?> oldName = parseFieldName();
-        TableField<?, ?> newName = parseFieldName();
-        DataType<?> type = parseDataType();
-
-        if (parseKeywordIf("NULL"))
-            type = type.nullable(true);
-        else if (parseNotNullOptionalEnable())
-            type = type.nullable(false);
-
-        return (ifExists ? s1.changeIfExists(oldName, newName) : s1.change(oldName, newName)).set(type);
+        return s1.alter(field).set(type);
     }
 
     private final boolean parseNotNullOptionalEnable() {
-        return parseKeywordIf("NOT NULL")
-            && (parseKeywordIf("ENABLE") || true)
-            && (parseConstraintConflictClauseIf() || true);
+        return parseKeywordIf("NOT NULL") && (parseKeywordIf("ENABLE") || true);
     }
 
     private final DDLQuery parseAlterTableAlterConstraint(AlterTableStep s1) {
@@ -6259,14 +5489,13 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final DDLQuery parseAlterType() {
-        AlterTypeStep s1 = parseKeywordIf("IF EXISTS")
-            ? dsl.alterTypeIfExists(parseName())
-            : dsl.alterType(parseName());
+        AlterTypeStep s1 = dsl.alterType(parseName());
+
 
         if (parseKeywordIf("ADD VALUE"))
             return s1.addValue(parseStringLiteral());
         else if (parseKeywordIf("OWNER TO") && parseUser() != null)
-            return IGNORE.get();
+            return IGNORE;
         else if (parseKeywordIf("RENAME TO"))
             return s1.renameTo(parseIdentifier());
         else if (parseKeywordIf("RENAME VALUE"))
@@ -6283,68 +5512,50 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         switch (characterUpper()) {
             case 'C':
                 if (parseKeywordIf("COLUMN")) {
-                    boolean ifExists = parseKeywordIf("IF EXISTS");
                     TableField<?, ?> oldName = parseFieldName();
                     parseKeyword("AS", "TO");
-                    return ifExists
-                        ? dsl.alterTableIfExists(oldName.getTable()).renameColumnIfExists(oldName).to(parseFieldName())
-                        : dsl.alterTable(oldName.getTable()).renameColumn(oldName).to(parseFieldName());
+                    return dsl.alterTable(oldName.getTable()).renameColumn(oldName).to(parseFieldName());
                 }
 
                 break;
 
             case 'D':
                 if (parseKeywordIf("DATABASE")) {
-                    boolean ifExists = parseKeywordIf("IF EXISTS");
                     Catalog oldName = parseCatalogName();
                     parseKeyword("AS", "TO");
-                    return ifExists
-                        ? dsl.alterDatabaseIfExists(oldName).renameTo(parseCatalogName())
-                        : dsl.alterDatabase(oldName).renameTo(parseCatalogName());
+                    return dsl.alterDatabase(oldName).renameTo(parseCatalogName());
                 }
 
                 break;
 
             case 'I':
                 if (parseKeywordIf("INDEX")) {
-                    boolean ifExists = parseKeywordIf("IF EXISTS");
                     Name oldName = parseIndexName();
                     parseKeyword("AS", "TO");
-                    return ifExists
-                        ? dsl.alterIndexIfExists(oldName).renameTo(parseIndexName())
-                        : dsl.alterIndex(oldName).renameTo(parseIndexName());
+                    return dsl.alterIndex(oldName).renameTo(parseIndexName());
                 }
 
                 break;
 
             case 'S':
                 if (parseKeywordIf("SCHEMA")) {
-                    boolean ifExists = parseKeywordIf("IF EXISTS");
                     Schema oldName = parseSchemaName();
                     parseKeyword("AS", "TO");
-                    return ifExists
-                        ? dsl.alterSchemaIfExists(oldName).renameTo(parseSchemaName())
-                        : dsl.alterSchema(oldName).renameTo(parseSchemaName());
+                    return dsl.alterSchema(oldName).renameTo(parseSchemaName());
                 }
                 else if (parseKeywordIf("SEQUENCE")) {
-                    boolean ifExists = parseKeywordIf("IF EXISTS");
                     Sequence<?> oldName = parseSequenceName();
                     parseKeyword("AS", "TO");
-                    return ifExists
-                        ? dsl.alterSequenceIfExists(oldName).renameTo(parseSequenceName())
-                        : dsl.alterSequence(oldName).renameTo(parseSequenceName());
+                    return dsl.alterSequence(oldName).renameTo(parseSequenceName());
                 }
 
                 break;
 
             case 'V':
                 if (parseKeywordIf("VIEW")) {
-                    boolean ifExists = parseKeywordIf("IF EXISTS");
                     Table<?> oldName = parseTableName();
                     parseKeyword("AS", "TO");
-                    return ifExists
-                        ? dsl.alterViewIfExists(oldName).renameTo(parseTableName())
-                        : dsl.alterView(oldName).renameTo(parseTableName());
+                    return dsl.alterView(oldName).renameTo(parseTableName());
                 }
 
                 break;
@@ -6352,115 +5563,32 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
         // If all of the above fails, we can assume we're renaming a table.
         parseKeywordIf("TABLE");
-        boolean ifExists = parseKeywordIf("IF EXISTS");
         Table<?> oldName = parseTableName();
         parseKeyword("AS", "TO");
-        return ifExists
-            ? dsl.alterTableIfExists(oldName).renameTo(parseTableName())
-            : dsl.alterTable(oldName).renameTo(parseTableName());
+        return dsl.alterTable(oldName).renameTo(parseTableName());
     }
 
-    private final DDLQuery parseDropTable(TableScope tableScope) {
+    private final DDLQuery parseDropTable(boolean temporary) {
         boolean ifExists = parseKeywordIf("IF EXISTS");
         Table<?> tableName = parseTableName();
         ifExists = ifExists || parseKeywordIf("IF EXISTS");
+        boolean cascade = parseKeywordIf("CASCADE") && (parseKeywordIf("CONSTRAINTS") || true);
+        boolean restrict = !cascade && parseKeywordIf("RESTRICT");
 
-        return parseCascadeRestrictIf(
-            ifExists
-                ? tableScope == TableScope.GLOBAL_TEMPORARY
-                    ? dsl.dropGlobalTemporaryTableIfExists(tableName)
-                    : tableScope == TableScope.LOCAL_TEMPORARY
-                    ? dsl.dropLocalTemporaryTableIfExists(tableName)
-                    : tableScope == TableScope.TEMPORARY
-                    ? dsl.dropTemporaryTableIfExists(tableName)
-                    : dsl.dropTableIfExists(tableName)
-                : tableScope == TableScope.GLOBAL_TEMPORARY
-                    ? dsl.dropGlobalTemporaryTable(tableName)
-                    : tableScope == TableScope.LOCAL_TEMPORARY
-                    ? dsl.dropLocalTemporaryTable(tableName)
-                    : tableScope == TableScope.TEMPORARY
-                    ? dsl.dropTemporaryTable(tableName)
-                    : dsl.dropTable(tableName),
-            DropTableStep::cascade,
-            DropTableStep::restrict,
-            true
-        );
+        DropTableStep s1;
+
+        s1 = ifExists
+           ? dsl.dropTableIfExists(tableName)
+           : temporary
+           ? dsl.dropTemporaryTable(tableName)
+           : dsl.dropTable(tableName);
+
+        return cascade
+           ? s1.cascade()
+           : restrict
+           ? s1.restrict()
+           : s1;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -6828,7 +5956,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
         constraintLoop:
         for (;;) {
-            ConstraintTypeStep constraint = parseConstraintNameSpecificationIf();
+            ConstraintTypeStep constraint = parseConstraintNameSpecification();
 
             // TODO: NOT NULL constraints
             if (parseKeywordIf("CHECK")) {
@@ -6856,7 +5984,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             : dsl.alterDomain(domainName);
 
         if (parseKeywordIf("ADD")) {
-            ConstraintTypeStep constraint = parseConstraintNameSpecificationIf();
+            ConstraintTypeStep constraint = parseConstraintNameSpecification();
 
             // TODO: NOT NULL constraints
             if (parseKeywordIf("CHECK"))
@@ -6879,7 +6007,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 : s2;
         }
         else if (parseKeywordIf("RENAME")) {
-            if (parseKeywordIf("TO", "AS")) {
+            if (parseKeywordIf("TO") || parseKeywordIf("AS")) {
                 return s1.renameTo(parseDomainName());
             }
             else if (parseKeywordIf("CONSTRAINT")) {
@@ -6905,53 +6033,19 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             return s1.dropNotNull();
         else if (parseKeywordIf("OWNER TO")) {
             parseUser();
-            return IGNORE.get();
+            return IGNORE;
         }
         else
             throw expected("ADD", "DROP", "RENAME", "SET", "OWNER TO");
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private final DDLQuery parseCreateDatabase() {
         boolean ifNotExists = parseKeywordIf("IF NOT EXISTS");
         Catalog catalogName = parseCatalogName();
-        parseMySQLCreateDatabaseFlagsIf();
 
         return ifNotExists
             ? dsl.createDatabaseIfNotExists(catalogName)
             : dsl.createDatabase(catalogName);
-    }
-
-    private final void parseMySQLCreateDatabaseFlagsIf() {
-        for (;;) {
-            if (parseKeywordIf("DEFAULT CHARACTER SET", "CHARACTER SET") && (parseIf("=") || true))
-                parseCharacterSet();
-            else if (parseKeywordIf("DEFAULT COLLATE", "COLLATE") && (parseIf("=") || true))
-                parseCollation();
-            else if (parseKeywordIf("DEFAULT ENCRYPTION", "ENCRYPTION") && (parseIf("=") || true))
-                parseCharacterLiteral();
-            else
-                break;
-        }
     }
 
     private final DDLQuery parseAlterDatabase() {
@@ -6967,9 +6061,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             return s1.renameTo(parseCatalogName());
         }
         else if (parseKeywordIf("OWNER TO") && parseUser() != null)
-            return IGNORE.get();
+            return IGNORE;
         else if (parseAlterDatabaseFlags(true))
-            return IGNORE.get();
+            return IGNORE;
         else
             throw expected("OWNER TO", "RENAME TO");
     }
@@ -7007,7 +6101,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         if (!authorization && parseKeywordIf("AUTHORIZATION"))
             parseUser();
 
-        parseMySQLCreateDatabaseFlagsIf();
         return ifNotExists
             ? dsl.createSchemaIfNotExists(schemaName)
             : dsl.createSchema(schemaName);
@@ -7025,9 +6118,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             return s1.renameTo(parseSchemaName());
         }
         else if (parseKeywordIf("OWNER TO") && parseUser() != null)
-            return IGNORE.get();
+            return IGNORE;
         else if (parseAlterDatabaseFlags(false))
-            return IGNORE.get();
+            return IGNORE;
         else
             throw expected("OWNER TO", "RENAME TO");
     }
@@ -7038,22 +6131,21 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         parseUsingIndexTypeIf();
         SortField<?>[] fields = null;
         if (peek('('))
-            fields = parseParenthesisedSortSpecification(false).fields();
+            fields = parseParenthesisedSortSpecification();
         parseKeyword("ON");
         Table<?> tableName = parseTableName();
         parseUsingIndexTypeIf();
         if (fields == null)
-            fields = parseParenthesisedSortSpecification(false).fields();
+            fields = parseParenthesisedSortSpecification();
         parseUsingIndexTypeIf();
 
         Name[] include = null;
-        if (parseKeywordIf("INCLUDE", "COVERING", "STORING")) {
+        if (parseKeywordIf("INCLUDE") || parseKeywordIf("COVERING") || parseKeywordIf("STORING")) {
             parse('(');
             include = parseIdentifiers().toArray(EMPTY_NAME);
             parse(')');
         }
 
-        parseKeywordIf("VISIBLE");
         Condition condition = parseKeywordIf("WHERE")
             ? parseCondition()
             : null;
@@ -7084,15 +6176,12 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             : s3;
     }
 
-    private static final record SortSpecification(SortField<?>[] fields, boolean identity) {}
-
-    private SortSpecification parseParenthesisedSortSpecification(boolean allowIdentity) {
+    private SortField<?>[] parseParenthesisedSortSpecification() {
         parse('(');
         SortField<?>[] fields = parseList(',', c -> c.parseSortField()).toArray(EMPTY_SORTFIELD);
-        boolean identity = fields.length == 1 && allowIdentity && parseKeywordIf("AUTOINCREMENT", "AUTO_INCREMENT");
         parse(')');
 
-        return new SortSpecification(fields, identity);
+        return fields;
     }
 
     private final boolean parseUsingIndexTypeIf() {
@@ -7150,19 +6239,10 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final QueryPart parseOr() {
-        QueryPart condition = parseXor();
-
-        while (parseKeywordIf("OR"))
-            condition = toCondition(condition).or(toCondition(parseXor()));
-
-        return condition;
-    }
-
-    private final QueryPart parseXor() {
         QueryPart condition = parseAnd();
 
-        while (parseKeywordIf("XOR"))
-            condition = toCondition(condition).xor(toCondition(parseAnd()));
+        while (parseKeywordIf("OR"))
+            condition = toCondition(condition).or(toCondition(parseAnd()));
 
         return condition;
     }
@@ -7170,7 +6250,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final QueryPart parseAnd() {
         QueryPart condition = parseNot();
 
-        while (!forbidden.contains(FK_AND) && parseKeywordIf("AND") || parseCategory() == SQLDialectCategory.MYSQL && parseIf("&&"))
+        while (!forbidden.contains(FK_AND) && parseKeywordIf("AND"))
             condition = toCondition(condition).and(toCondition(parseNot()));
 
         return condition;
@@ -7179,12 +6259,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final QueryPart parseNot() {
         int not = parseNot0();
         QueryPart condition = parsePredicate();
-
-
-
-
-
-
 
         for (int i = 0; i < not; i++)
             condition = toCondition(condition).not();
@@ -7195,14 +6269,13 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final int parseNot0() {
         int not = 0;
 
-        while (parseKeywordIf("NOT") || parseCategory() == SQLDialectCategory.MYSQL && parseIf('!'))
+        while (parseKeywordIf("NOT"))
             not++;
 
         return not;
     }
 
     private final QueryPart parsePredicate() {
-        int p1 = position();
         Condition condition;
 
 
@@ -7222,9 +6295,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'E':
-                if (parseFunctionNameIf("EQUAL_NULL"))
-                    return parseEqualNull();
-                else if (parseKeywordIf("EXISTS"))
+                if (parseKeywordIf("EXISTS"))
                     return exists(parseParenthesised(c -> parseWithOrSelect()));
 
                 break;
@@ -7244,28 +6315,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
                 break;
 
-            case 'P':
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                break;
-
             case 'R':
                 if (parseKeywordIf("REGEXP_LIKE"))
                     return parseFunctionArgs2(Field::likeRegex);
@@ -7273,77 +6322,52 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'S':
-                if (parseProFunctionNameIf("ST_CONTAINS", "SDO_CONTAINS")) {
+                if (!ignoreProEdition() && parseFunctionNameIf("ST_CONTAINS", "SDO_CONTAINS") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_COVEREDBY", "SDO_COVEREDBY")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_CROSSES") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_COVERS", "SDO_COVERS")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_DISJOINT") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_CROSSES")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_EQUALS", "SDO_EQUAL") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_DISJOINT")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_INTERSECTS") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_EQUALS", "SDO_EQUAL")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_ISCLOSED") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_INTERSECTS")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_ISEMPTY") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_ISCLOSED")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_OVERLAPS", "SDO_OVERLAPS") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_ISEMPTY")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_TOUCHES", "SDO_TOUCH") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_ISRING")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_ISSIMPLE")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_ISVALID")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_OVERLAPS", "SDO_OVERLAPS")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_TOUCHES", "SDO_TOUCH")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_WITHIN", "SDO_INSIDE")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_WITHIN", "SDO_INSIDE") && requireProEdition()) {
 
 
 
@@ -7371,14 +6395,16 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
         }
 
-        boolean notOp = false;
-        FieldOrRowOrSelect left = parseConcat();
-        Field leftScalar = toField(left, false);
-        Select leftSelect = left instanceof Select s ? s : null;
-        int p2 = position();
-        boolean not = parseKeywordIf("NOT");
+        FieldOrRow left;
         Comparator comp;
         TSQLOuterJoinComparator outer;
+        boolean not;
+        boolean notOp = false;
+
+        left = parseConcat();
+        int p = position();
+        not = parseKeywordIf("NOT");
+        boolean isField = left instanceof Field;
 
 
         if (!not && !ignoreProEdition() && ((outer = parseTSQLOuterJoinComparatorIf()) != null) && requireProEdition()) {
@@ -7399,33 +6425,33 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         }
         else if (!not && (comp = parseComparatorIf()) != null) {
             boolean all = parseKeywordIf("ALL");
-            boolean any = !all && parseKeywordIf("ANY", "SOME");
+            boolean any = !all && (parseKeywordIf("ANY") || parseKeywordIf("SOME"));
             if (all || any)
                 parse('(');
 
             // TODO equal degrees
             Condition result =
                   all
-                ? leftScalar != null
+                ? isField
                     ? peekSelectOrWith(true)
-                        ? leftScalar.compare(comp, DSL.all(parseWithOrSelect(1)))
-                        : leftScalar.compare(comp, DSL.all(parseList(',', c -> c.parseField()).toArray(EMPTY_FIELD)))
+                        ? ((Field) left).compare(comp, DSL.all(parseWithOrSelect(1)))
+                        : ((Field) left).compare(comp, DSL.all(parseList(',', c -> c.parseField()).toArray(EMPTY_FIELD)))
 
                     // TODO: Support quantifiers also for rows
                     : new RowSubqueryCondition((Row) left, DSL.all(parseWithOrSelect(((Row) left).size())), comp)
 
                 : any
-                ? leftScalar != null
+                ? isField
                     ? peekSelectOrWith(true)
-                        ? leftScalar.compare(comp, DSL.any(parseWithOrSelect(1)))
-                        : leftScalar.compare(comp, DSL.any(parseList(',', c -> c.parseField()).toArray(EMPTY_FIELD)))
+                        ? ((Field) left).compare(comp, DSL.any(parseWithOrSelect(1)))
+                        : ((Field) left).compare(comp, DSL.any(parseList(',', c -> c.parseField()).toArray(EMPTY_FIELD)))
 
                     // TODO: Support quantifiers also for rows
                     : new RowSubqueryCondition((Row) left, DSL.any(parseWithOrSelect(((Row) left).size())), comp)
 
-                : leftScalar != null
-                    ? leftScalar.compare(comp, toField(parseConcat()))
-                    : AbstractRow.compare((Row) left, comp, parseRow(((Row) left).size(), true));
+                : isField
+                    ? ((Field) left).compare(comp, toField(parseConcat()))
+                    : new RowCondition((Row) left, parseRow(((Row) left).size(), true), comp);
 
             if (all || any)
                 parse(')');
@@ -7437,32 +6463,25 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             if (parseKeywordIf("NULL"))
                 return not
-                    ? leftScalar != null
-                        ? leftScalar.isNotNull()
-                        : leftSelect != null
-                        ? leftSelect.isNotNull()
+                    ? isField
+                        ? ((Field) left).isNotNull()
                         : ((Row) left).isNotNull()
-                    : leftScalar != null
-                        ? leftScalar.isNull()
-                        : leftSelect != null
-                        ? leftSelect.isNull()
+                    : isField
+                        ? ((Field) left).isNull()
                         : ((Row) left).isNull();
-            else if (leftScalar != null && parseKeywordIf("JSON"))
+            else if (isField && parseKeywordIf("JSON"))
                 return not
-                    ? leftScalar.isNotJson()
-                    : leftScalar.isJson();
-            else if (leftScalar != null && parseKeywordIf("DOCUMENT"))
+                    ? ((Field) left).isNotJson()
+                    : ((Field) left).isJson();
+            else if (isField && parseKeywordIf("DOCUMENT"))
                 return not
-                    ? leftScalar.isNotDocument()
-                    : leftScalar.isDocument();
+                    ? ((Field) left).isNotDocument()
+                    : ((Field) left).isDocument();
 
             not = parseKeywordIf("DISTINCT FROM") == not;
-            if (leftScalar != null) {
+            if (left instanceof Field) { Field f = (Field) left;
                 Field right = toField(parseConcat());
-                return not ? leftScalar.isNotDistinctFrom(right) : leftScalar.isDistinctFrom(right);
-            }
-            else if (leftSelect != null) {
-                throw notImplementedNonScalarSelectPredicate();
+                return not ? f.isNotDistinctFrom(right) : f.isDistinctFrom(right);
             }
             else {
                 Row right = parseRow(((Row) left).size(), true);
@@ -7476,40 +6495,37 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             Condition result;
 
             // [#12691] Some dialects support A IN B syntax without parentheses for single element in lists
-            if (leftScalar != null && !peek('(')) {
+            if (isField && !peek('(')) {
                 result = not
-                    ? leftScalar.notIn(parseConcat())
-                    : leftScalar.in(parseConcat());
+                    ? ((Field) left).notIn(parseConcat())
+                    : ((Field) left).in(parseConcat());
             }
             else {
                 parse('(');
 
-                if (leftScalar == null && leftSelect != null)
-                    throw notImplementedNonScalarSelectPredicate();
-
                 if (peek(')'))
                     result = not
-                        ? leftScalar != null
-                            ? leftScalar.notIn(EMPTY_FIELD)
+                        ? isField
+                            ? ((Field) left).notIn(EMPTY_FIELD)
                             : new RowInCondition((Row) left, new QueryPartList<>(), true)
-                        : leftScalar != null
-                            ? leftScalar.in(EMPTY_FIELD)
+                        : isField
+                            ? ((Field) left).in(EMPTY_FIELD)
                             : new RowInCondition((Row) left, new QueryPartList<>(), false);
                 else if (peekSelectOrWith(true))
                     result = not
-                        ? leftScalar != null
-                            ? leftScalar.notIn(parseWithOrSelect(1))
+                        ? isField
+                            ? ((Field) left).notIn(parseWithOrSelect(1))
                             : new RowSubqueryCondition((Row) left, parseWithOrSelect(((Row) left).size()), NOT_IN)
-                        : leftScalar != null
-                            ? leftScalar.in(parseWithOrSelect(1))
+                        : isField
+                            ? ((Field) left).in(parseWithOrSelect(1))
                             : new RowSubqueryCondition((Row) left, parseWithOrSelect(((Row) left).size()), IN);
                 else
                     result = not
-                        ? leftScalar != null
-                            ? leftScalar.notIn(parseList(',', c -> c.parseField()))
+                        ? isField
+                            ? ((Field) left).notIn(parseList(',', c -> c.parseField()))
                             : new RowInCondition((Row) left, new QueryPartList<>(parseList(',', c -> parseRow(((Row) left).size()))), true)
-                        : leftScalar != null
-                            ? leftScalar.in(parseList(',', c -> c.parseField()))
+                        : isField
+                            ? ((Field) left).in(parseList(',', c -> c.parseField()))
                             : new RowInCondition((Row) left, new QueryPartList<>(parseList(',', c -> parseRow(((Row) left).size()))), false);
 
                 parse(')');
@@ -7519,44 +6535,38 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         }
         else if (parseKeywordIf("BETWEEN")) {
             boolean symmetric = !parseKeywordIf("ASYMMETRIC") && parseKeywordIf("SYMMETRIC");
-
-            if (leftScalar == null && leftSelect != null)
-                throw notImplementedNonScalarSelectPredicate();
-
-            FieldOrRowOrSelect r1 = leftScalar != null
+            FieldOrRow r1 = isField
                 ? parseConcat()
                 : parseRow(((Row) left).size());
             parseKeyword("AND");
-            FieldOrRowOrSelect r2 = leftScalar != null
+            FieldOrRow r2 = isField
                 ? parseConcat()
                 : parseRow(((Row) left).size());
 
             return symmetric
                 ? not
-                    ? leftScalar != null
-                        ? leftScalar.notBetweenSymmetric((Field) r1, (Field) r2)
+                    ? isField
+                        ? ((Field) left).notBetweenSymmetric((Field) r1, (Field) r2)
                         : new RowBetweenCondition((Row) left, (Row) r1, not, symmetric, (Row) r2)
-                    : leftScalar != null
-                        ? leftScalar.betweenSymmetric((Field) r1, (Field) r2)
+                    : isField
+                        ? ((Field) left).betweenSymmetric((Field) r1, (Field) r2)
                         : new RowBetweenCondition((Row) left, (Row) r1, not, symmetric, (Row) r2)
                 : not
-                    ? leftScalar != null
-                        ? leftScalar.notBetween((Field) r1, (Field) r2)
+                    ? isField
+                        ? ((Field) left).notBetween((Field) r1, (Field) r2)
                         : new RowBetweenCondition((Row) left, (Row) r1, not, symmetric, (Row) r2)
-                    : leftScalar != null
-                        ? leftScalar.between((Field) r1, (Field) r2)
+                    : isField
+                        ? ((Field) left).between((Field) r1, (Field) r2)
                         : new RowBetweenCondition((Row) left, (Row) r1, not, symmetric, (Row) r2);
         }
-        else if (leftScalar != null && (parseKeywordIf("LIKE") || parseOperatorIf("~~") || (notOp = parseOperatorIf("!~~")))) {
+        else if (isField && (parseKeywordIf("LIKE") || parseOperatorIf("~~") || (notOp = parseOperatorIf("!~~")))) {
             if (parseKeywordIf("ANY")) {
                 parse('(');
                 if (peekSelectOrWith(true)) {
                     Select<?> select = parseWithOrSelect();
                     parse(')');
-                    if (binary(leftScalar))
-                        return (not ^ notOp) ? leftScalar.notBinaryLike(any(select)) : leftScalar.binaryLike(any(select));
-                    else
-                        return parseEscapeClauseIf((not ^ notOp) ? leftScalar.notLike(any(select)) : leftScalar.like(any(select)));
+                    LikeEscapeStep result = (not ^ notOp) ? ((Field) left).notLike(any(select)) : ((Field) left).like(any(select));
+                    return parseEscapeClauseIf(result);
                 }
                 else {
                     List<Field<?>> fields;
@@ -7567,10 +6577,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                         fields = parseList(',', c -> toField(parseConcat()));
                         parse(')');
                     }
-                    if (binary(leftScalar))
-                        return (not ^ notOp) ? leftScalar.notBinaryLike(any((Field<byte[]>[]) fields.toArray(EMPTY_FIELD))) : leftScalar.binaryLike(any((Field<byte[]>[]) fields.toArray(EMPTY_FIELD)));
-                    else
-                        return parseEscapeClauseIf((not ^ notOp) ? leftScalar.notLike(any((Field<String>[]) fields.toArray(EMPTY_FIELD))) : leftScalar.like(any((Field<String>[]) fields.toArray(EMPTY_FIELD))));
+                    Field<String>[] fieldArray = fields.toArray(new Field[0]);
+                    LikeEscapeStep result = (not ^ notOp) ? ((Field<String>) left).notLike(any(fieldArray)) : ((Field<String>) left).like(any(fieldArray));
+                    return parseEscapeClauseIf(result);
                 }
             }
             else if (parseKeywordIf("ALL")) {
@@ -7578,10 +6587,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 if (peekSelectOrWith(true)) {
                     Select<?> select = parseWithOrSelect();
                     parse(')');
-                    if (binary(leftScalar))
-                        return (not ^ notOp) ? leftScalar.notBinaryLike(all(select)) : leftScalar.binaryLike(all(select));
-                    else
-                        return parseEscapeClauseIf((not ^ notOp) ? leftScalar.notLike(all(select)) : leftScalar.like(all(select)));
+                    LikeEscapeStep result = (not ^ notOp) ? ((Field) left).notLike(all(select)) : ((Field) left).like(all(select));
+                    return parseEscapeClauseIf(result);
                 }
                 else {
                     List<Field<?>> fields;
@@ -7592,39 +6599,35 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                         fields = parseList(',', c -> toField(parseConcat()));
                         parse(')');
                     }
-                    if (binary(leftScalar))
-                        return (not ^ notOp) ? leftScalar.notBinaryLike(all((Field<byte[]>[]) fields.toArray(EMPTY_FIELD))) : leftScalar.binaryLike(all((Field<byte[]>[]) fields.toArray(EMPTY_FIELD)));
-                    else
-                        return parseEscapeClauseIf((not ^ notOp) ? leftScalar.notLike(all((Field<String>[]) fields.toArray(EMPTY_FIELD))) : leftScalar.like(all((Field<String>[]) fields.toArray(EMPTY_FIELD))));
+                    Field<String>[] fieldArray = fields.toArray(new Field[0]);
+                    LikeEscapeStep result = (not ^ notOp) ? ((Field<String>) left).notLike(all(fieldArray)) : ((Field<String>) left).like(all(fieldArray));
+                    return parseEscapeClauseIf(result);
                 }
             }
             else {
                 Field right = toField(parseConcat());
-
-                if (binary(leftScalar) || binary(right))
-                    return (not ^ notOp) ? leftScalar.notBinaryLike(right) : leftScalar.binaryLike(right);
-                else
-                    return parseEscapeClauseIf((not ^ notOp) ? leftScalar.notLike(right) : leftScalar.like(right));
+                LikeEscapeStep like = (not ^ notOp) ? ((Field) left).notLike(right) : ((Field) left).like(right);
+                return parseEscapeClauseIf(like);
             }
         }
-        else if (leftScalar != null && (parseKeywordIf("ILIKE") || parseOperatorIf("~~*") || (notOp = parseOperatorIf("!~~*")))) {
+        else if (isField && (parseKeywordIf("ILIKE") || parseOperatorIf("~~*") || (notOp = parseOperatorIf("!~~*")))) {
             Field right = toField(parseConcat());
-            LikeEscapeStep like = (not ^ notOp) ? leftScalar.notLikeIgnoreCase(right) : leftScalar.likeIgnoreCase(right);
+            LikeEscapeStep like = (not ^ notOp) ? ((Field) left).notLikeIgnoreCase(right) : ((Field) left).likeIgnoreCase(right);
             return parseEscapeClauseIf(like);
         }
-        else if (leftScalar != null && (parseKeywordIf("REGEXP")
+        else if (isField && (parseKeywordIf("REGEXP")
                                         || parseKeywordIf("RLIKE")
                                         || parseKeywordIf("LIKE_REGEX")
                                         || parseOperatorIf("~")
                                         || (notOp = parseOperatorIf("!~")))) {
             Field right = toField(parseConcat());
             return (not ^ notOp)
-                    ? leftScalar.notLikeRegex(right)
-                    : leftScalar.likeRegex(right);
+                    ? ((Field) left).notLikeRegex(right)
+                    : ((Field) left).likeRegex(right);
         }
-        else if (leftScalar != null && parseKeywordIf("SIMILAR TO")) {
+        else if (isField && parseKeywordIf("SIMILAR TO")) {
             Field right = toField(parseConcat());
-            LikeEscapeStep like = not ? leftScalar.notSimilarTo(right) : leftScalar.similarTo(right);
+            LikeEscapeStep like = not ? ((Field) left).notSimilarTo(right) : ((Field) left).similarTo(right);
             return parseEscapeClauseIf(like);
         }
         else if (left instanceof Row && ((Row) left).size() == 2 && parseKeywordIf("OVERLAPS")) {
@@ -7637,26 +6640,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             return leftRow2.overlaps(rightRow2);
         }
         else {
-            position(p2);
+            position(p);
             return left;
         }
-    }
-
-    private final Condition parseEqualNull() {
-        Condition result;
-
-        parse('(');
-        FieldOrRowOrSelect left = parseConcat();
-        parse(',');
-
-        Field f = toField(left, false);
-        if (f != null)
-            result = f.isNotDistinctFrom(toField(parseConcat()));
-        else
-            result = new RowIsDistinctFrom((Row) left, parseRow(((Row) left).size(), true), true);
-
-        parse(')');
-        return result;
     }
 
     private final Condition parsePredicateXMLExistsIf() {
@@ -7710,7 +6696,20 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
     @Override
     public final Table<?> parseTable() {
-        return parseJoinedTable(() -> peekKeyword(KEYWORD_LOOKUP_IN_SELECT_FROM) || (!delimiterRequired && peekKeyword(KEYWORD_LOOKUP_IN_STATEMENTS)));
+        return parseTable(() -> peekKeyword(KEYWORDS_IN_SELECT_FROM));
+    }
+
+    private final Table<?> parseTable(BooleanSupplier forbiddenKeywords) {
+        Table<?> result = parseLateral(forbiddenKeywords);
+
+        for (;;) {
+            Table<?> joined = parseJoinedTableIf(result, forbiddenKeywords);
+
+            if (joined == null)
+                return result;
+            else
+                result = joined;
+        }
     }
 
     private final Table<?> parseLateral(BooleanSupplier forbiddenKeywords) {
@@ -7726,8 +6725,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
     private final <R extends Record> Table<R> t(TableLike<R> table, boolean dummyAlias) {
         return
-            table instanceof Table<R> t
-          ? t
+            table instanceof Table
+          ? (Table<R>) table
           : dummyAlias
           ? table.asTable("x")
           : table.asTable();
@@ -7749,12 +6748,12 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             Query query = parseQuery(false, false);
             parse(')');
 
-            if (query instanceof Merge<?> q)
-                result = oldTable(q);
-            else if (query instanceof Update<?> q)
-                result = oldTable(q);
-            else if (query instanceof Delete<?> q)
-                result = oldTable(q);
+            if (query instanceof Merge)
+                result = oldTable((Merge<?>) query);
+            else if (query instanceof Update)
+                result = oldTable((Update<?>) query);
+            else if (query instanceof Delete)
+                result = oldTable((Delete<?>) query);
             else
                 throw expected("UPDATE", "DELETE", "MERGE");
         }
@@ -7763,12 +6762,12 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             Query query = parseQuery(false, false);
             parse(')');
 
-            if (query instanceof Merge<?> q)
-                result = newTable(q);
-            else if (query instanceof Insert<?> q)
-                result = newTable(q);
-            else if (query instanceof Update<?> q)
-                result = newTable(q);
+            if (query instanceof Merge)
+                result = newTable((Merge<?>) query);
+            else if (query instanceof Insert)
+                result = newTable((Insert<?>) query);
+            else if (query instanceof Update)
+                result = newTable((Update<?>) query);
             else
                 throw expected("INSERT", "UPDATE", "MERGE");
         }
@@ -7777,12 +6776,12 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             Query query = parseQuery(false, false);
             parse(')');
 
-            if (query instanceof Merge<?> q)
-                result = finalTable(q);
-            else if (query instanceof Insert<?> q)
-                result = finalTable(q);
-            else if (query instanceof Update<?> q)
-                result = finalTable(q);
+            if (query instanceof Merge)
+                result = finalTable((Merge<?>) query);
+            else if (query instanceof Insert)
+                result = finalTable((Insert<?>) query);
+            else if (query instanceof Update)
+                result = finalTable((Update<?>) query);
             else
                 throw expected("INSERT", "UPDATE", "MERGE");
         }
@@ -7804,8 +6803,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 Field<?> f = parseField();
 
                 // Work around a missing feature in unnest()
-                if (!f.getDataType().isArray())
-                    f = f.coerce(f.getDataType().array());
+                if (!f.getType().isArray())
+                    f = f.coerce(f.getDataType().getArrayDataType());
 
                 result = unnest(f);
             }
@@ -7828,18 +6827,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 ? generateSeries(from, to)
                 : generateSeries(from, to, step);
         }
-        else if (parseFunctionNameIf("NUMBERS")) {
-            parse('(');
-            Field f1 = toField(parseConcat());
-            Field f2 = parseIf(',') ? toField(parseConcat()) : null;
-            parse(')');
-
-            result = f2 == null
-                ? generateSeries(zero(), isub(f1, one()))
-                : generateSeries(f1, isub(iadd(f1, f2), one()));
-        }
         else if (parseFunctionNameIf("JSON_TABLE")) {
             parse('(');
+
             Field json = parseField();
             parse(',');
             Field path = toField(parseConcat());
@@ -7863,30 +6853,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             parse(')');
             parse(')');
             result = s1;
-        }
-        else if (parseFunctionNameIf("OPENJSON") && requireProEdition()) {
-            result = null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         }
         else if (peekFunctionNameIf("VALUES")) {
             result = parseTableValueConstructor();
@@ -7945,29 +6911,16 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             }
             else {
                 result = parseJoinedTable(forbiddenKeywords);
-
-                // [#18543] We don't really know what the parentheses mean at this point, so
-                //          after the fact, if we happen to have parsed what looks like a
-                //          "derived table, we could still encounter more set operations or
-                //          ORDER BY .. LIMIT clauses
-                if (result instanceof Table<?> t) {
-                    Select<?> s = Tools.extractSelectFromDerivedTable(t);
-
-                    if (s != null)
-                        result = parseSelect(null, null, selectQueryImpl(s));
-                }
-
                 parse(')');
             }
         }
-        else if ((result = parseTemplateIf(DSL::table)) != null) {}
         else {
             result = parseTableName();
 
             // TODO Sample clause
         }
 
-        if (parseProKeywordIf("VERSIONS BETWEEN")) {
+        if (!ignoreProEdition() && parseKeywordIf("VERSIONS BETWEEN") && requireProEdition()) {
 
 
 
@@ -7999,13 +6952,15 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
         }
-        else if (!ignoreProEdition() && parseForPeriodIf() && requireProEdition()) {
-
-
-
-
-
-
+        else if (!ignoreProEdition()
+            && peekKeyword("FOR")
+            && !peekKeyword("FOR JSON")
+            && !peekKeyword("FOR KEY SHARE")
+            && !peekKeyword("FOR NO KEY UPDATE")
+            && !peekKeyword("FOR SHARE")
+            && !peekKeyword("FOR UPDATE")
+            && !peekKeyword("FOR XML")
+            && parseKeyword("FOR") && requireProEdition()) {
 
 
 
@@ -8032,7 +6987,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
         }
-        else if (parseProKeywordIf("AS OF")) {
+        else if (!ignoreProEdition() && parseKeywordIf("AS OF") && requireProEdition()) {
 
 
 
@@ -8044,43 +6999,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
         }
-        else if (parseKeywordIf("SAMPLE", "TABLESAMPLE", "USING SAMPLE")) {
-            boolean bernoulli = parseKeywordIf("BERNOULLI", "ROW");
-            boolean system = !bernoulli && parseKeywordIf("SYSTEM", "BLOCK");
-            boolean reservoir = !bernoulli && !system && parseKeywordIf("RESERVOIR");
 
-            parse('(');
-            Field<Number> size = parseFieldUnsignedNumericLiteral(Sign.NONE);
-            boolean percent = parseKeywordIf("PERCENT");
-            boolean rows = !percent && parseKeywordIf("ROWS");
-            parse(')');
-            Field<Number> seed = null;
-
-            if (parseKeywordIf("REPEATABLE", "SEED")) {
-                parse('(');
-                seed = parseFieldUnsignedNumericLiteral(Sign.NONE);
-                parse(')');
-            }
-
-            TableSampleRowsStep<?> s1 =
-                  bernoulli
-                ? t(result).tablesampleBernoulli(size)
-                : system
-                ? t(result).tablesampleSystem(size)
-                : t(result).tablesample(size);
-            TableSampleRepeatableStep<?> s2 =
-                  percent
-                ? s1.percent()
-                : rows
-                ? s1.rows()
-                : s1;
-            result = seed != null ? s2.repeatable(seed) : s2;
-        }
-
-        if (parseKeywordIf("WITH ORDINALITY"))
-            result = t(result).withOrdinality();
-
-        if (parseProKeywordIf("PIVOT")) {
+        if (!ignoreProEdition() && parseKeywordIf("PIVOT") && requireProEdition()) {
 
 
 
@@ -8134,7 +7054,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         result = parseCorrelationNameIf(result, forbiddenKeywords);
 
         int p = position();
-        if (!peekKeyword("WITH CHECK OPTION", "WITH READ ONLY") && parseKeywordIf("WITH")) {
+        if (parseKeywordIf("WITH")) {
             if (!ignoreProEdition() && parseIf('(') && requireProEdition()) {
 
 
@@ -8149,73 +7069,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 position(p);
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        else {
-            for (;;) {
-                if (parseKeywordIf("USE KEY", "USE INDEX")) {
-                    if (parseKeywordIf("FOR JOIN"))
-                        result = t(result).useIndexForJoin(parseParenthesisedIdentifiers());
-                    else if (parseKeywordIf("FOR ORDER BY"))
-                        result = t(result).useIndexForOrderBy(parseParenthesisedIdentifiers());
-                    else if (parseKeywordIf("FOR GROUP BY"))
-                        result = t(result).useIndexForGroupBy(parseParenthesisedIdentifiers());
-                    else
-                        result = t(result).useIndex(parseParenthesisedIdentifiers());
-                }
-                else if (parseKeywordIf("FORCE KEY", "FORCE INDEX")) {
-                    if (parseKeywordIf("FOR JOIN"))
-                        result = t(result).forceIndexForJoin(parseParenthesisedIdentifiers());
-                    else if (parseKeywordIf("FOR ORDER BY"))
-                        result = t(result).forceIndexForOrderBy(parseParenthesisedIdentifiers());
-                    else if (parseKeywordIf("FOR GROUP BY"))
-                        result = t(result).forceIndexForGroupBy(parseParenthesisedIdentifiers());
-                    else
-                        result = t(result).forceIndex(parseParenthesisedIdentifiers());
-                }
-                else if (parseKeywordIf("IGNORE KEY", "IGNORE INDEX")) {
-                    if (parseKeywordIf("FOR JOIN"))
-                        result = t(result).ignoreIndexForJoin(parseParenthesisedIdentifiers());
-                    else if (parseKeywordIf("FOR ORDER BY"))
-                        result = t(result).ignoreIndexForOrderBy(parseParenthesisedIdentifiers());
-                    else if (parseKeywordIf("FOR GROUP BY"))
-                        result = t(result).ignoreIndexForGroupBy(parseParenthesisedIdentifiers());
-                    else
-                        result = t(result).ignoreIndex(parseParenthesisedIdentifiers());
-                }
-                else
-                    break;
-            }
-        }
-
         return t(result);
-    }
-
-    private final boolean parseForPeriodIf() {
-        return peekKeyword("FOR")
-            && !peekKeyword("FOR JSON")
-            && !peekKeyword("FOR KEY SHARE")
-            && !peekKeyword("FOR NO KEY UPDATE")
-            && !peekKeyword("FOR SHARE")
-            && !peekKeyword("FOR UPDATE")
-            && !peekKeyword("FOR XML")
-            && parseKeyword("FOR");
-    }
-
-    private final String[] parseParenthesisedIdentifiers() {
-        return parseParenthesised(c -> map(parseIdentifiers(), Name::last, String[]::new));
     }
 
     private final Field<?> parseFunctionArgumentIf(String parameterName) {
@@ -8248,11 +7102,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
         return result;
     }
-
-
-
-
-
 
 
 
@@ -8418,67 +7267,25 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final Table<?> parseJoinedTableIf(Table<?> left, BooleanSupplier forbiddenKeywords) {
-        int p = position();
-        if (parseProKeywordIf("PARTITION BY")) {
+        JoinType joinType = parseJoinTypeIf();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        }
-
-        Join join = parseJoinTypeIf();
-
-        if (join == null)
+        if (joinType == null)
             return null;
 
-        Table<?> right = join.type.qualified() ? parseJoinedTable(forbiddenKeywords) : parseLateral(forbiddenKeywords);
+        Table<?> right = joinType.qualified() ? parseTable(forbiddenKeywords) : parseLateral(forbiddenKeywords);
 
         TableOptionalOnStep<?> s0;
         TablePartitionByStep<?> s1;
         TableOnStep<?> s2;
-        s2 = s1 = (TablePartitionByStep<?>) (s0 = left.join(right, join.type, join.hint));
+        s2 = s1 = (TablePartitionByStep<?>) (s0 = left.join(right, joinType));
 
-        switch (join.type) {
+        switch (joinType) {
             case LEFT_OUTER_JOIN:
             case FULL_OUTER_JOIN:
             case RIGHT_OUTER_JOIN:
-                if (parseProKeywordIf("PARTITION BY")) {
+                if (!ignoreProEdition() && parseKeywordIf("PARTITION BY")) {
+                    requireProEdition();
+
 
 
 
@@ -8498,7 +7305,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return parseJoinUsing(s2);
 
                 // [#9476] MySQL treats INNER JOIN and CROSS JOIN as the same
-                else if (join.type == JOIN)
+                else if (joinType == JOIN)
                     return s0;
                 else
                     throw expected("ON", "USING");
@@ -8541,7 +7348,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             QualifiedAsterisk qa;
 
             if (parseIf('*')) {
-                if (parseKeywordIf("EXCEPT", "EXCLUDE")) {
+                if (parseKeywordIf("EXCEPT")) {
                     parse('(');
                     result.add(DSL.asterisk().except(parseList(',', c -> parseFieldName()).toArray(EMPTY_FIELD)));
                     parse(')');
@@ -8550,7 +7357,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     result.add(DSL.asterisk());
             }
             else if ((qa = parseQualifiedAsteriskIf()) != null) {
-                if (parseKeywordIf("EXCEPT", "EXCLUDE")) {
+                if (parseKeywordIf("EXCEPT")) {
                     parse('(');
                     result.add(qa.except(parseList(',', c -> parseFieldName()).toArray(EMPTY_FIELD)));
                     parse(')');
@@ -8580,7 +7387,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
                     if (parseKeywordIf("AS"))
                         alias = parseIdentifier(true, false);
-                    else if (!peekKeyword(KEYWORD_LOOKUP_IN_SELECT) && (delimiterRequired || !peekKeyword(KEYWORD_LOOKUP_IN_STATEMENTS)))
+                    else if (!peekKeyword(KEYWORDS_IN_SELECT) && !peekKeyword(KEYWORDS_IN_STATEMENTS))
                         alias = parseIdentifierIf(true, false);
                 }
 
@@ -8623,19 +7430,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             parse(')');
             return result;
         }
-    }
-
-    private final List<Field<?>> parseFieldsOrEmptyOptionallyParenthesised(boolean allowUnparenthesisedLists) {
-        if (peek('('))
-            return parseFieldsOrEmptyParenthesised();
-
-
-
-
-        else if (allowUnparenthesisedLists)
-            return parseList(',', c -> c.parseField());
-        else
-            return asList(parseField());
     }
 
     private final SelectField<?> parseSelectField() {
@@ -8685,15 +7479,10 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 int i = position();
 
                 loop:
-                while (i < chars.length) {
-                    if (peekTemplateComment(i)) {
-                        position(p);
-                        return null;
-                    }
-
-                    switch (chars[i]) {
+                while (i < sql.length) {
+                    switch (sql[i]) {
                         case '*':
-                            if (i + 1 < chars.length && chars[i + 1] == '/')
+                            if (i + 1 < sql.length && sql[i + 1] == '/')
                                 break loop;
                     }
 
@@ -8717,12 +7506,13 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final Condition toCondition(QueryPart part) {
         if (part == null)
             return null;
-        else if (part instanceof Condition c)
-            return c;
-        else if (part instanceof Field f) {
+        else if (part instanceof Condition)
+            return (Condition) part;
+        else if (part instanceof Field) { Field f = (Field) part;
             DataType dataType = f.getDataType();
+            Class<?> type = dataType.getType();
 
-            if (dataType.isBoolean())
+            if (type == Boolean.class)
                 return condition(f);
 
             // [#11631] [#12394] Numeric expressions are booleans in MySQL
@@ -8730,10 +7520,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 return f.ne(zero());
 
             // [#7266] Support parsing column references as predicates
-            else if (dataType.isOther() && (part instanceof TableFieldImpl || part instanceof Val))
+            else if (type == Object.class && (part instanceof TableFieldImpl || part instanceof Val))
                 return condition((Field) part);
-            else if (dataType.isOther() && part instanceof SQLField)
-                return condition(((SQLField) part).delegate);
             else
                 throw expected("Boolean field");
         }
@@ -8744,77 +7532,39 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final FieldOrRow toFieldOrRow(QueryPart part) {
         if (part == null)
             return null;
-        else if (part instanceof Field<?> f)
-            return f;
-        else if (part instanceof Select<?> s)
-            return DSL.field((Select) degreeCheck(1, s));
-        else if (part instanceof Row r)
-            return r;
+        else if (part instanceof Field)
+            return (Field<?>) part;
+        else if (part instanceof Row)
+            return (Row) part;
         else
             throw expected("Field or row");
     }
 
     private final Field<?> toField(QueryPart part) {
-        return toField(part, true);
-    }
-
-    private final Field<?> toField(QueryPart part, boolean throwIfNonScalar) {
         if (part == null)
             return null;
-        else if (part instanceof Field<?> f)
-            return f;
-        else if (part instanceof Select s)
-            if (degreeCheck(1, s, throwIfNonScalar) != null)
-                return DSL.field(s);
-            else
-                return null;
-        else if (throwIfNonScalar)
-            throw expected("Field");
+        else if (part instanceof Field)
+            return (Field<?>) part;
         else
-            return null;
+            throw expected("Field");
     }
 
-    private final FieldOrRowOrSelect parseConcat() {
-        FieldOrRowOrSelect r = parseCollated();
+    private final FieldOrRow parseConcat() {
+        FieldOrRow r = parseCollated();
 
-        Field f = toField(r, false);
-        if (f != null)
+        if (r instanceof Field)
             while (parseIf("||"))
-                r = f = concatOperator(f, toField(parseCollated()));
+                r = concat((Field) r, toField(parseCollated()));
 
         return r;
     }
 
-    private final Field<?> concatOperator(Field<?> a1, Field<?> a2) {
-        if (a1.getDataType().isArray() && a2.getDataType().isArray())
-            return DSL.arrayConcat((Field) a1, (Field) a2);
-        else if (a1.getDataType().isBinary() && a2.getDataType().isBinary())
-            return DSL.binaryConcat((Field) a1, (Field) a2);
-        else
-            return DSL.concat(a1, a2);
-    }
+    private final FieldOrRow parseCollated() {
+        FieldOrRow r = parseNumericOp();
 
-    private final FieldOrRowOrSelect parseCollated() {
-        FieldOrRowOrSelect r = parseOp();
-
-        Field f = toField(r, false);
-        if (f != null) {
+        if (r instanceof Field) {
             if (parseKeywordIf("COLLATE"))
-                r = f = f.collate(parseCollation());
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                r = ((Field) r).collate(parseCollation());
 
 
 
@@ -8845,7 +7595,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
     private final Field<?> parseFieldNumericOpParenthesised() {
         parse('(');
-        Field<?> r = toField(parseOp());
+        Field<?> r = toField(parseNumericOp());
         parse(')');
 
         return r;
@@ -8940,114 +7690,62 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return parse('(') && parse(')');
     }
 
-    private final boolean parseEmptyParensOr(Predicate<? super ParseContext> p) {
-        return parse('(') && (parseIf(')') || p.test(this) && parse(')'));
-    }
-
     private final boolean parseEmptyParensIf() {
         return parseIf('(') && parse(')') || true;
     }
 
     // Any numeric operator of low precedence
     // See https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-PRECEDENCE
-    private final FieldOrRowOrSelect parseOp() {
-        FieldOrRowOrSelect l = parseSum();
+    private final FieldOrRow parseNumericOp() {
+        FieldOrRow r = parseSum();
 
-        Field f = toField(l, false);
-        if (f != null)
+        if (r instanceof Field)
             for (;;)
                 if (parseIf("<<"))
-                    l = f = f.shl(toField(parseSum()));
+                    r = ((Field) r).shl((Field) parseSum());
                 else if (parseIf(">>"))
-                    l = f = f.shr(toField(parseSum()));
-                else if (parseIf("->>")) {
-                    Field r = toField(parseSum());
-
-                    // [#10018] We cannot really know reliably whether this is a
-                    //          index or attribute access. Let's default to the
-                    //          more popular attribute access for now. Also,
-                    //          JSONB is likely more popular than JSON.
-                    if (r.getDataType().isNumeric())
-                        if (f.getDataType().getFromType() == JSON.class)
-                            l = f = jsonGetElementAsText(f, r);
-                        else
-                            l = f = jsonbGetElementAsText(f, r);
-                    else
-                        if (f.getDataType().getFromType() == JSON.class)
-                            l = f = jsonGetAttributeAsText(f, r);
-                        else
-                            l = f = jsonbGetAttributeAsText(f, r);
-                }
-                else if (parseIf("->")) {
-                    Field r = toField(parseSum());
-
-                    // [#10018] We cannot really know reliably whether this is a
-                    //          index or attribute access. Let's default to the
-                    //          more popular attribute access for now. Also,
-                    //          JSONB is likely more popular than JSON.
-                    if (r.getDataType().isNumeric())
-                        if (f.getDataType().getFromType() == JSON.class)
-                            l = f = jsonGetElement(f, r);
-                        else
-                            l = f = jsonbGetElement(f, r);
-                    else
-                        if (f.getDataType().getFromType() == JSON.class)
-                            l = f = jsonGetAttribute(f, r);
-                        else
-                            l = f = jsonbGetAttribute(f, r);
-                }
-                else if (parseIf("??") || parseIf("?"))
-                    if (f.getDataType().getFromType() == JSON.class)
-                        return jsonKeyExists(f, (Field) toField(parseSum()));
-                    else
-                        return jsonbKeyExists(f, (Field) toField(parseSum()));
-                else
-                    break;
-
-        return l;
-    }
-
-    private final FieldOrRowOrSelect parseSum() {
-        FieldOrRowOrSelect r = parseFactor();
-
-        Field f = toField(r, false);
-        if (f != null)
-            for (;;)
-                if (parseIf('+'))
-                    r = f = parseSumRightOperand(f, true);
-                else if (!peek("->") && parseIf('-'))
-                    r = f = parseSumRightOperand(f, false);
+                    r = ((Field) r).shr((Field) parseSum());
                 else
                     break;
 
         return r;
     }
 
-    private final Field parseSumRightOperand(FieldOrRowOrSelect r, boolean add) {
-        Field rhs = toField(parseFactor());
+    private final FieldOrRow parseSum() {
+        FieldOrRow r = parseFactor();
+
+        if (r instanceof Field)
+            for (;;)
+                if (parseIf('+'))
+                    r = parseSumRightOperand(r, true);
+                else if (parseIf('-'))
+                    r = parseSumRightOperand(r, false);
+                else
+                    break;
+
+        return r;
+    }
+
+    private final Field parseSumRightOperand(FieldOrRow r, boolean add) {
+        Field rhs = (Field) parseFactor();
         DatePart part;
 
-        if (parseProKeywordIf("YEAR", "YEARS"))
+        if (!ignoreProEdition() && (parseKeywordIf("YEAR") || parseKeywordIf("YEARS")) && requireProEdition())
             part = DatePart.YEAR;
-        else if (parseProKeywordIf("MONTH", "MONTHS"))
+        else if (!ignoreProEdition() && (parseKeywordIf("MONTH") || parseKeywordIf("MONTHS")) && requireProEdition())
             part = DatePart.MONTH;
-        else if (parseProKeywordIf("DAY", "DAYS"))
+        else if (!ignoreProEdition() && (parseKeywordIf("DAY") || parseKeywordIf("DAYS")) && requireProEdition())
             part = DatePart.DAY;
-        else if (parseProKeywordIf("HOUR", "HOURS"))
+        else if (!ignoreProEdition() && (parseKeywordIf("HOUR") || parseKeywordIf("HOURS")) && requireProEdition())
             part = DatePart.HOUR;
-        else if (parseProKeywordIf("MINUTE", "MINUTES"))
+        else if (!ignoreProEdition() && (parseKeywordIf("MINUTE") || parseKeywordIf("MINUTES")) && requireProEdition())
             part = DatePart.MINUTE;
-        else if (parseProKeywordIf("SECOND", "SECONDS"))
+        else if (!ignoreProEdition() && (parseKeywordIf("SECOND") || parseKeywordIf("SECONDS")) && requireProEdition())
             part = DatePart.SECOND;
         else
             part = null;
 
-        Field lhs = toField(r);
-
-
-
-
-
+        Field lhs = (Field) r;
 
 
 
@@ -9067,18 +7765,17 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 return lhs.sub(rhs);
     }
 
-    private final FieldOrRowOrSelect parseFactor() {
-        FieldOrRowOrSelect r = parseExp();
+    private final FieldOrRow parseFactor() {
+        FieldOrRow r = parseExp();
 
-        Field f = toField(r, false);
-        if (f != null)
+        if (r instanceof Field)
             for (;;)
                 if (!peek("*=") && parseIf('*'))
-                    r = f = f.mul(toField(parseExp()));
+                    r = ((Field) r).mul((Field) parseExp());
                 else if (parseIf('/'))
-                    r = f = f.div(toField(parseExp()));
+                    r = ((Field) r).div((Field) parseExp());
                 else if (parseIf('%'))
-                    r = f = f.mod(toField(parseExp()));
+                    r = ((Field) r).mod((Field) parseExp());
 
 
 
@@ -9091,22 +7788,21 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return r;
     }
 
-    private final FieldOrRowOrSelect parseExp() {
-        FieldOrRowOrSelect r = parseUnaryOps();
+    private final FieldOrRow parseExp() {
+        FieldOrRow r = parseUnaryOps();
 
-        Field f = toField(r, false);
-        if (f != null)
+        if (r instanceof Field)
             for (;;)
                 if (!peek("^=") && parseIf('^') || parseIf("**"))
-                    r = f = f.pow(toField(parseUnaryOps()));
+                    r = ((Field) r).pow(toField(parseUnaryOps()));
                 else
                     break;
 
         return r;
     }
 
-    private final FieldOrRowOrSelect parseUnaryOps() {
-        if (parseProKeywordIf("CONNECT_BY_ROOT")) {
+    private final FieldOrRow parseUnaryOps() {
+        if (!ignoreProEdition() && parseKeywordIf("CONNECT_BY_ROOT") && requireProEdition()) {
 
 
 
@@ -9115,7 +7811,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         if (parseIf('~'))
             return toField(parseUnaryOps()).bitNot();
 
-        FieldOrRowOrSelect r;
+        FieldOrRow r;
         Sign sign = parseSign();
 
         if (sign == Sign.NONE)
@@ -9149,7 +7845,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
 
-        if (peek('[') && possiblyArrayTyped(r) && parseIf('[')) {
+        if (parseIf('[')) {
             r = arrayGet((Field) toField(r), (Field) parseField());
             parse(']');
         }
@@ -9158,26 +7854,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return r;
     }
 
-    private final boolean possiblyArrayTyped(FieldOrRowOrSelect r) {
-        if (!supportArraySubscripts)
-            return false;
-        else if (r instanceof Row)
-            return false;
-        else if (r instanceof Field<?> f)
-            return f.getDataType().isArray() || f.getDataType().isOther();
-        else if (r instanceof Select<?> s) {
-            List<Field<?>> l = s.getSelect();
-
-            if (l.size() != 1)
-                return false;
-            else if (!l.get(0).getDataType().isArray() && !l.get(0).getDataType().isOther())
-                return false;
-        }
-
-        return true;
-    }
-
-    private final FieldOrRowOrSelect parseMethodCallIf(FieldOrRowOrSelect r) {
+    private final FieldOrRow parseMethodCallIf(FieldOrRow r) {
 
 
 
@@ -9189,18 +7866,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return r;
     }
 
-    private final FieldOrRowOrSelect parseMethodCallIf0(FieldOrRowOrSelect r) {
-
-
-
-
-
-
-
-
-
-
-
+    private final FieldOrRow parseMethodCallIf0(FieldOrRow r) {
 
 
 
@@ -9325,9 +7991,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         for (;;)
             if (parseIf('+'))
                 sign = sign == Sign.NONE ? Sign.PLUS  : sign;
-
-            // [#9447] Semantic comments are not stripped out as whitespace, so ignore them here
-            else if (peek('-') && !peek("--") && parseIf('-'))
+            else if (parseIf('-'))
                 sign = sign == Sign.NONE ? Sign.MINUS : sign.invert();
             else
                 break;
@@ -9350,8 +8014,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         }
     }
 
-    private final FieldOrRowOrSelect parseTerm() {
-        FieldOrRowOrSelect field;
+    private final FieldOrRow parseTerm() {
+        FieldOrRow field;
         Object value;
 
 
@@ -9359,35 +8023,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-        char u = characterUpper();
-
-
-
-
-
-        // [#18480] Allow for quoted built-in function identifiers
-        switch (u) {
-            case '`':
-            case '[':
-            case '"':
-                u = characterNextUpper();
-                break;
-        }
-
-        switch (u) {
+        switch (characterUpper()) {
 
             // [#8821] Known prefixes so far:
             case ':':
@@ -9437,7 +8073,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 else if (parseFunctionNameIf("ATANH"))
                     return atanh((Field) parseFieldNumericOpParenthesised());
                 else if (parseFunctionNameIf("ATN2", "ATAN2"))
-                    return parseFunctionArgs2(() -> toField(parseOp()), DSL::atan2);
+                    return parseFunctionArgs2(() -> toField(parseNumericOp()), DSL::atan2);
 
                 else if (parseFunctionNameIf("ASCII_CHAR"))
                     return chr((Field) parseFieldParenthesised());
@@ -9446,7 +8082,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return field;
 
                 else if (parseFunctionNameIf("ADD_YEARS"))
-                    return parseFieldAddDatePart(DatePart.YEAR);
+                    return parseFieldAddDatePart(YEAR);
                 else if (parseFunctionNameIf("ADD_MONTHS"))
                     return parseFieldAddDatePart(MONTH);
                 else if (parseFunctionNameIf("ADD_DAYS"))
@@ -9457,68 +8093,23 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return parseFieldAddDatePart(MINUTE);
                 else if (parseFunctionNameIf("ADD_SECONDS"))
                     return parseFieldAddDatePart(SECOND);
-                else if (parseFunctionNameIf("ARRAY_APPEND", "arrayPushBack"))
-                    return parseFunctionArgs2((f1, f2) -> arrayAppend((Field<Void[]>) f1, (Field<Void>) f2));
-                else if (parseFunctionNameIf("ARRAY_CAT", "ARRAY_CONCAT", "arrayConcat"))
-                    return parseFunctionArgs2((f1, f2) -> arrayConcat(f1, f2));
-                else if (parseFunctionNameIf("ARRAY_GET", "arrayElement"))
+                else if (parseFunctionNameIf("ARRAY_GET"))
                     return parseFunctionArgs2((f1, f2) -> arrayGet(f1, f2));
-                else if (parseFunctionNameIf("ARRAY_FILTER", "arrayFilter"))
-                    return parseArrayLambdaFunction(DSL::arrayFilter);
-                else if (parseFunctionNameIf("ARRAY_MAP", "arrayMap", "ARRAY_TRANSFORM"))
-                    return parseArrayLambdaFunction(DSL::arrayMap);
-                else if (parseFunctionNameIf("ARRAY_ALL_MATCH", "arrayAll", "ALL_MATCH"))
-                    return parseArrayLambdaFunction(DSL::arrayAllMatch);
-                else if (parseFunctionNameIf("ARRAY_ANY_MATCH", "arrayExists", "ANY_MATCH"))
-                    return parseArrayLambdaFunction(DSL::arrayAnyMatch);
-                else if (parseFunctionNameIf("ARRAY_NONE_MATCH"))
-                    return parseArrayLambdaFunction(DSL::arrayNoneMatch);
-                else if (parseFunctionNameIf("ARRAY_MAP", "arrayMap", "ARRAY_TRANSFORM"))
-                    return parseArrayLambdaFunction(DSL::arrayMap);
-                else if (parseFunctionNameIf("ARRAY_OVERLAP", "ARRAYS_OVERLAP"))
-                    return parseFunctionArgs2((f1, f2) -> arrayOverlap((Field<Void[]>) f1, (Field<Void[]>) f2));
-                else if (parseFunctionNameIf("ARRAY_PREPEND"))
-                    return parseFunctionArgs2((f1, f2) -> arrayPrepend((Field<Void>) f1, (Field<Void[]>) f2));
-                else if (parseFunctionNameIf("arrayPushFront"))
-                    return parseFunctionArgs2((f1, f2) -> arrayPrepend((Field<Void>) f2, (Field<Void[]>) f1));
-                else if (parseFunctionNameIf("ARRAY_REMOVE"))
-                    return parseFunctionArgs2((f1, f2) -> arrayRemove((Field<Void[]>) f1, (Field<Void>) f2));
-                else if (parseFunctionNameIf("ARRAY_REPLACE"))
-                    return parseFunctionArgs3((f1, f2, f3) -> arrayReplace((Field<Void[]>) f1, (Field<Void>) f2, (Field<Void>) f3));
-                else if (parseFunctionNameIf("ARRAY_TO_STRING"))
-                    return parseFunctionArgs3(DSL::arrayToString, DSL::arrayToString);
-                else if ((field = parseFieldArrayConstructIf()) != null)
-                    return field;
-                else if (parseFunctionNameIf("ADD"))
-                    return parseFunctionArgs2(Field::add);
-                else if (parseFunctionNameIf("AND"))
-                    return parseFunctionArgs2((f1, f2) -> and(condition(f1), condition(f2)));
 
                 break;
 
             case 'B':
                 if (parseFunctionNameIf("BIT_LENGTH"))
-                    return parseFunctionArgs1(f -> binary(f) ? binaryBitLength(f) : bitLength(f));
-                else if (parseFunctionNameIf("BITGET", "BIT_GET", "bitTest"))
-                    return parseFunctionArgs2(DSL::bitGet);
-                else if (parseFunctionNameIf("BITSET", "BIT_SET"))
-                    return parseFunctionArgs3(DSL::bitSet, DSL::bitSet);
+                    return bitLength((Field) parseFieldParenthesised());
                 else if (parseFunctionNameIf("BITCOUNT", "BIT_COUNT"))
                     return bitCount((Field) parseFieldNumericOpParenthesised());
-                else if (parseKeywordIf("BIT_LSHIFT"))
-                    return parseFunctionArgs2(() -> toField(parseOp()), (f1, f2) -> shl(f1, f2));
-                else if (parseKeywordIf("BIT_RSHIFT"))
-                    return parseFunctionArgs2(() -> toField(parseOp()), (f1, f2) -> shr(f1, f2));
                 else if (parseFunctionNameIf("BYTE_LENGTH"))
                     return octetLength((Field) parseFieldParenthesised());
                 else if ((field = parseFieldBitwiseFunctionIf()) != null)
                     return field;
-                else if (parseFunctionNameIf("BIN_TO_UUID"))
-                    return parseFunctionArgs1(DSL::binToUuid);
+
                 else if ((value = parseBitLiteralIf()) != null)
                     return DSL.inline((Boolean) value);
-                else if ((field = parseTypedLiteralIf("BIGINT", BIGINT)) != null)
-                    return field;
 
                 break;
 
@@ -9527,7 +8118,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return field;
                 else if ((parseFunctionNameIf("CURRENT_CATALOG") && parseEmptyParens()))
                     return currentCatalog();
-                else if ((parseFunctionNameIf("CURRENT_DATABASE", "currentDatabase") && parseEmptyParens()))
+                else if ((parseFunctionNameIf("CURRENT_DATABASE") && parseEmptyParens()))
                     return currentCatalog();
                 else if ((parseKeywordIf("CURRENT_SCHEMA", "CURRENT SCHEMA")) && parseEmptyParensIf())
                     return currentSchema();
@@ -9537,10 +8128,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return chr((Field) parseFieldParenthesised());
 
                 else if (parseFunctionNameIf("CHARINDEX"))
-                    return parseFunctionArgs3(
-                        (f1, f2) -> binary(f1, f2) ? DSL.binaryPosition(f2, f1) : DSL.position(f2, f1),
-                        (f1, f2, f3) -> binary(f1, f2) ? DSL.binaryPosition(f2, f1, f3) : DSL.position(f2, f1, f3)
-                    );
+                    return parseFunctionArgs3((f1, f2) -> DSL.position(f2, f1), (f1, f2, f3) -> DSL.position(f2, f1, f3));
                 else if (parseFunctionNameIf("CHAR_LENGTH"))
                     return charLength((Field) parseFieldParenthesised());
                 else if (parseFunctionNameIf("CARDINALITY"))
@@ -9555,18 +8143,14 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return coth((Field) parseFieldNumericOpParenthesised());
                 else if (parseFunctionNameIf("COT"))
                     return cot((Field) parseFieldNumericOpParenthesised());
-                else if (parseFunctionNameIf("CBRT"))
-                    return parseFunctionArgs1(DSL::cbrt);
-                else if (parseFunctionNameIf("CONTAINS"))
-                    return parseFunctionArgs2((f1, f2) -> f1.contains(f2));
                 else if ((field = parseNextvalCurrvalIf(SequenceMethod.CURRVAL)) != null)
                     return field;
                 else if (parseFunctionNameIf("CENTURY"))
                     return century(parseFieldParenthesised());
 
-                else if (parseKeywordIf("CURRENT_DATE", "CURRENT DATE") && parseEmptyParensIf())
+                else if ((parseKeywordIf("CURRENT_DATE") || parseKeywordIf("CURRENT DATE")) && parseEmptyParensIf())
                     return currentDate();
-                else if (parseKeywordIf("CURRENT_TIMESTAMP", "CURRENT TIMESTAMP")) {
+                else if (parseKeywordIf("CURRENT_TIMESTAMP") || parseKeywordIf("CURRENT TIMESTAMP")) {
                     Field<Integer> precision = null;
                     if (parseIf('('))
                         if (!parseIf(')')) {
@@ -9575,7 +8159,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                         }
                     return precision != null ? currentTimestamp(precision) : currentTimestamp();
                 }
-                else if (parseKeywordIf("CURRENT_TIME", "CURRENT TIME") && parseEmptyParensIf())
+                else if ((parseKeywordIf("CURRENT_TIME") || parseKeywordIf("CURRENT TIME")) && parseEmptyParensIf())
                     return currentTime();
                 else if (parseFunctionNameIf("CURDATE") && parseEmptyParens())
                     return currentDate();
@@ -9594,22 +8178,16 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return field;
                 else if ((field = parseFieldChooseIf()) != null)
                     return field;
-                else if (parseProKeywordIf("CONNECT_BY_ISCYCLE")) {
+                else if (!ignoreProEdition() && parseKeywordIf("CONNECT_BY_ISCYCLE") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProKeywordIf("CONNECT_BY_ISLEAF")) {
+                else if (!ignoreProEdition() && parseKeywordIf("CONNECT_BY_ISLEAF") && requireProEdition()) {
 
 
 
                 }
-
-
-
-
-                else if ((field = parseTypedLiteralIf("CHAR", CHAR)) != null)
-                    return field;
 
                 break;
 
@@ -9633,8 +8211,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return field;
                 else if ((field = parseFieldDatePartIf()) != null)
                     return field;
-                else if (parseFunctionNameIf("DATE_PART_YEAR"))
-                    return year(parseFieldParenthesised());
 
                 else if ((field = parseFieldDenseRankIf()) != null)
                     return field;
@@ -9664,29 +8240,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 else if (parseKeywordIf("DEFAULT"))
                     return default_();
 
-                else if ((field = parseFieldSubstringIf()) != null)
-                    return field;
-                else if (parseProFunctionNameIf("DBMS_LOB.INSTR")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("DBMS_LOB.GETLENGTH")) {
-
-
-
-                }
-                else if (parseFunctionNameIf("DIV", "DIVIDE"))
-                    return parseFunctionArgs2(Field::div);
-                else if ((field = parseTypedLiteralIf("DECIMAL", DECIMAL)) != null)
-                    return field;
-                else if ((field = parseTypedLiteralIf("DECFLOAT", DECFLOAT)) != null)
-                    return field;
-                else if ((field = parseTypedLiteralIf("DOUBLE PRECISION", DOUBLE)) != null)
-                    return field;
-                else if ((field = parseTypedLiteralIf("DOUBLE", DOUBLE)) != null)
-                    return field;
-
                 break;
 
             case 'E':
@@ -9694,18 +8247,14 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 // [#6704] PostgreSQL E'...' escaped string literals
                 if (characterNext() == '\'')
                     return inline(parseStringLiteral());
+
                 else if ((field = parseFieldExtractIf()) != null)
                     return field;
-                else if (parseFunctionNameIf("ELEMENT_AT"))
-                    return parseFunctionArgs2(DSL::arrayGet);
-                else if (parseFunctionNameIf("ENDS_WITH", "ENDSWITH"))
-                    return parseFunctionArgs2((f1, f2) -> f1.endsWith(f2));
                 else if (parseFunctionNameIf("EXP"))
                     return exp((Field) parseFieldNumericOpParenthesised());
+
                 else if (parseFunctionNameIf("EPOCH"))
                     return epoch(parseFieldParenthesised());
-                else if ((field = parseFieldChooseIf()) != null)
-                    return field;
 
                 break;
 
@@ -9717,24 +8266,19 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return field;
                 else if ((field = parseFieldFieldIf()) != null)
                     return field;
-                else if ((field = parseTypedLiteralIf("FLOAT", FLOAT)) != null)
-                    return field;
 
                 break;
 
             case 'G':
                 if (parseKeywordIf("GETDATE") && parseEmptyParens())
                     return currentTimestamp();
+
                 else if (parseFunctionNameIf("GENGUID", "GENERATE_UUID", "GEN_RANDOM_UUID") && parseEmptyParens())
                     return uuid();
-                else if (parseFunctionNameIf("generateUUIDv4") && parseEmptyParensOr(c -> c.parseField() != null))
-                    return uuid();
-                else if (parseFunctionNameIf("GET_BIT", "GETBIT"))
-                    return parseFunctionArgs2(DSL::bitGet);
 
                 else if ((field = parseFieldGreatestIf()) != null)
                     return field;
-                else if (parseProFunctionNameIf("GROUP_ID") && parseEmptyParens()) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("GROUP_ID") && requireProEdition() && parseEmptyParens()) {
 
 
 
@@ -9743,57 +8287,44 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return field;
                 else if (parseFunctionNameIf("GROUPING"))
                     return grouping(parseFieldParenthesised());
-                else if (parseProFunctionNameIf("GEOMETRY::STGEOMFROMWKB", "GEOGRAPHY::STGEOMFROMWKB")) {
+                else if (!ignoreProEdition() && (parseFunctionNameIf("GEOMETRY::STGEOMFROMWKB") || parseFunctionNameIf("GEOGRAPHY::STGEOMFROMWKB")) && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("GEOMETRY::STGEOMFROMTEXT", "GEOGRAPHY::STGEOMFROMTEXT")) {
+                else if (!ignoreProEdition() && (parseFunctionNameIf("GEOMETRY::STGEOMFROMTEXT") || parseFunctionNameIf("GEOGRAPHY::STGEOMFROMTEXT")) && requireProEdition()) {
 
 
 
                 }
-                else if ((field = parseFieldBitwiseFunctionIf()) != null)
-                    return field;
-
-                break;
+                else
+                    break;
 
             case 'H':
                 if (parseFunctionNameIf("HOUR"))
                     return hour(parseFieldParenthesised());
 
                 else if (parseFunctionNameIf("HASH_MD5"))
-                    return parseFunctionArgs1(f -> binary(f) ? binaryMd5(f) : md5(f));
+                    return md5((Field) parseFieldParenthesised());
                 else if (parseFunctionNameIf("HEX"))
                     return toHex((Field) parseFieldParenthesised());
 
                 break;
 
             case 'I':
-
-                // [#8792] TODO: Support parsing interval expressions
-                if ((field = parseFieldIntervalLiteralIf(true)) != null)
+                if ((field = parseFieldIntervalLiteralIf()) != null)
                     return field;
                 else if (parseFunctionNameIf("ISO_DAY_OF_WEEK"))
                     return isoDayOfWeek(parseFieldParenthesised());
                 else if (parseFunctionNameIf("INSTR"))
-                    return parseFunctionArgs3(
-                        (f1, f2) -> binary(f1, f2) ? DSL.binaryPosition(f1, f2) : DSL.position(f1, f2),
-                        (f1, f2, f3) -> binary(f1, f2) ? DSL.binaryPosition(f1, f2, f3) : DSL.position(f1, f2, f3)
-                    );
+                    return parseFunctionArgs3(DSL::position, DSL::position);
                 else if (parseFunctionNameIf("INSERT"))
                     return parseFunctionArgs4(DSL::insert);
                 else if (parseFunctionNameIf("IFNULL"))
                     return parseFunctionArgs2((f1, f2) -> ifnull((Field<?>) f1, (Field<?>) f2));
-                else if (parseFunctionNameIf("ISJSON"))
-                    return parseFunctionArgs1(f -> case_(f.isJson()).when(trueCondition(), one()).when(falseCondition(), zero()));
                 else if (parseFunctionNameIf("ISNULL"))
                     return parseFunctionArgs2(f -> f.isNull(), (f1, f2) -> isnull((Field<?>) f1, (Field<?>) f2));
                 else if ((field = parseFieldIfIf()) != null)
-                    return field;
-                else if ((field = parseTypedLiteralIf("INTEGER", INTEGER)) != null)
-                    return field;
-                else if ((field = parseTypedLiteralIf("INT", INTEGER)) != null)
                     return field;
                 else
                     break;
@@ -9807,50 +8338,20 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return field;
                 else if ((field = parseFieldJSONLiteralIf()) != null)
                     return field;
-                else if (parseFunctionNameIf("JSON_ARRAY_LENGTH", "JSON_LENGTH", "JSONARRAYLENGTH"))
-                    return parseFunctionArgs1(DSL::jsonArrayLength);
-                else if (parseFunctionNameIf("JSON_KEYS", "JSONExtractKeys"))
-                    return parseFunctionArgs1(DSL::jsonKeys);
-                else if (parseFunctionNameIf("JSON_KEY_EXISTS"))
-                    return parseFunctionArgs2(DSL::jsonKeyExists);
-                else if (parseFunctionNameIf("JSON_INSERT"))
-                    return parseFunctionArgs3(DSL::jsonInsert);
-                else if (parseFunctionNameIf("JSON_REMOVE"))
-                    return parseFunctionArgs2(DSL::jsonRemove);
-                else if (parseFunctionNameIf("JSON_REPLACE"))
-                    return parseFunctionArgs3(DSL::jsonReplace);
-                else if (parseFunctionNameIf("JSON_SET"))
-                    return parseFunctionArgs3(DSL::jsonSet);
-                else if (parseFunctionNameIf("JSON_VALID"))
-                    return parseFunctionArgs1(f -> case_(f.isJson()).when(trueCondition(), one()).when(falseCondition(), zero()));
-                else if (parseFunctionNameIf("JSONB_ARRAY_LENGTH"))
-                    return parseFunctionArgs1(DSL::jsonbArrayLength);
-                else if (parseFunctionNameIf("JSONB_KEYS"))
-                    return parseFunctionArgs1(DSL::jsonbKeys);
-                else if (parseFunctionNameIf("JSONB_KEY_EXISTS"))
-                    return parseFunctionArgs2(DSL::jsonbKeyExists);
-                else if (parseFunctionNameIf("JSONB_INSERT"))
-                    return parseFunctionArgs3(DSL::jsonbInsert);
-                else if (parseFunctionNameIf("JSONB_REMOVE"))
-                    return parseFunctionArgs2(DSL::jsonbRemove);
-                else if (parseFunctionNameIf("JSONB_REPLACE"))
-                    return parseFunctionArgs3(DSL::jsonbReplace);
-                else if (parseFunctionNameIf("JSONB_SET"))
-                    return parseFunctionArgs3(DSL::jsonbSet);
 
                 break;
 
             case 'L':
                 if (parseFunctionNameIf("LOWER", "LCASE"))
-                    return DSL.lower((Field) parseFieldParenthesised());
-                else if (parseFunctionNameIf("LPAD", "leftPad"))
+                    return lower((Field) parseFieldParenthesised());
+                else if (parseFunctionNameIf("LPAD"))
                     return parseFunctionArgs3(DSL::lpad, DSL::lpad);
                 else if (parseFunctionNameIf("LTRIM"))
-                    return parseFunctionArgs2(DSL::ltrim, (f1, f2) -> binary(f1, f2) ? binaryLtrim(f1, f2) : ltrim(f1, f2));
+                    return parseFunctionArgs2(DSL::ltrim, DSL::ltrim);
                 else if (parseFunctionNameIf("LEFT"))
                     return parseFunctionArgs2(DSL::left);
                 else if (parseFunctionNameIf("LENGTH", "LEN"))
-                    return parseFunctionArgs1(f -> binary(f) ? binaryLength(f) : length(f));
+                    return length((Field) parseFieldParenthesised());
                 else if (parseFunctionNameIf("LENGTHB"))
                     return octetLength((Field) parseFieldParenthesised());
                 else if (parseFunctionNameIf("LN", "LOGN"))
@@ -9861,13 +8362,13 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return field;
                 else if ((field = parseFieldLocateIf()) != null)
                     return field;
-                else if (parseProKeywordIf("LEVEL")) {
+                else if (!ignoreProEdition() && parseKeywordIf("LEVEL") && requireProEdition()) {
 
 
 
                 }
-                else if (parseKeywordIf("LSHIFT", "LEFT_SHIFT"))
-                    return parseFunctionArgs2(() -> toField(parseOp()), (f1, f2) -> shl(f1, f2));
+                else if (parseKeywordIf("LSHIFT"))
+                    return parseFunctionArgs2(() -> toField(parseNumericOp()), (f1, f2) -> shl(f1, f2));
                 else if ((field = parseFieldLeastIf()) != null)
                     return field;
                 else if ((field = parseFieldLeadLagIf()) != null)
@@ -9878,10 +8379,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'M':
-                if (parseFunctionNameIf("MOD", "MODULO"))
+                if (parseFunctionNameIf("MOD"))
                     return parseFunctionArgs2(Field::mod);
-                else if (parseFunctionNameIf("MULTIPLY"))
-                    return parseFunctionArgs2(Field::mul);
                 else if (parseFunctionNameIf("MICROSECOND"))
                     return microsecond(parseFieldParenthesised());
                 else if (parseFunctionNameIf("MILLENNIUM"))
@@ -9895,7 +8394,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 else if (parseFunctionNameIf("MID"))
                     return parseFunctionArgs3(DSL::mid);
                 else if (parseFunctionNameIf("MD5"))
-                    return parseFunctionArgs1(f -> binary(f) ? binaryMd5(f) : md5(f));
+                    return md5((Field) parseFieldParenthesised());
 
                 else if ((field = parseMultisetValueConstructorIf()) != null)
                     return field;
@@ -9906,16 +8405,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return field;
                 else if ((field = parseFieldDecodeIf()) != null)
                     return field;
-
-
-
-
-
-
-
-
-                else if (parseFunctionNameIf("MINUS"))
-                    return parseFunctionArgs2(Field::sub);
 
                 break;
 
@@ -9947,14 +8436,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     parse(')');
                     return now(precision);
                 }
-                else if (parseFunctionNameIf("NEG", "NEGATE"))
-                    return parseFunctionArgs1(DSL::neg);
-                else if (parseFunctionNameIf("NONE_MATCH"))
-                    return parseArrayLambdaFunction(DSL::arrayNoneMatch);
-                else if ((field = parseTypedLiteralIf("NUMERIC", NUMERIC)) != null)
-                    return field;
-                else if ((field = parseTypedLiteralIf("NUMBER", NUMERIC)) != null)
-                    return field;
 
                 break;
 
@@ -9965,14 +8446,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return field;
                 else if ((field = parseFieldTranslateIf()) != null)
                     return field;
+
                 else if (parseFunctionNameIf("OCTET_LENGTH"))
-                    return parseFunctionArgs1(f -> binary(f) ? binaryOctetLength(f) : octetLength(f));
-                else if ((field = parseFieldObjectConstructIf()) != null)
-                    return field;
-                else if (parseFunctionNameIf("OBJECT_KEYS"))
-                    return parseFunctionArgs1(DSL::jsonKeys);
-                else if (parseFunctionNameIf("OR"))
-                    return parseFunctionArgs2((f1, f2) -> or(condition(f1), condition(f2)));
+                    return octetLength((Field) parseFieldParenthesised());
 
                 break;
 
@@ -9982,17 +8458,15 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 else if ((field = parseFieldPercentRankIf()) != null)
                     return field;
                 else if (parseFunctionNameIf("POWER", "POW"))
-                    return parseFunctionArgs2(() -> toField(parseOp()), DSL::power);
+                    return parseFunctionArgs2(() -> toField(parseNumericOp()), DSL::power);
                 else if (parseFunctionNameIf("PI") && parseEmptyParens())
                     return pi();
 
-                else if (parseProKeywordIf("PRIOR")) {
+                else if (!ignoreProEdition() && parseKeywordIf("PRIOR") && requireProEdition()) {
 
 
 
                 }
-                else if (parseFunctionNameIf("PLUS"))
-                    return parseFunctionArgs2(Field::add);
 
                 break;
 
@@ -10003,13 +8477,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 else if (parseFunctionNameIf("QUARTER"))
                     return quarter(parseFieldParenthesised());
 
-
-
-
-
-
             case 'R':
-                if (parseFunctionNameIf("REPLACE", "replaceAll"))
+                if (parseFunctionNameIf("REPLACE"))
                     return parseFunctionArgs3(DSL::replace, DSL::replace);
                 else if ((field = parseFieldRegexpReplaceIf()) != null)
                     return field;
@@ -10017,22 +8486,22 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return parseFunctionArgs2(DSL::repeat);
                 else if (parseFunctionNameIf("REVERSE"))
                     return reverse((Field) parseFieldParenthesised());
-                else if (parseFunctionNameIf("RPAD", "rightPad"))
+                else if (parseFunctionNameIf("RPAD"))
                     return parseFunctionArgs3(DSL::rpad, DSL::rpad);
                 else if (parseFunctionNameIf("RTRIM"))
-                    return parseFunctionArgs2(DSL::rtrim, (f1, f2) -> binary(f1, f2) ? binaryRtrim(f1, f2) : rtrim(f1, f2));
+                    return parseFunctionArgs2(DSL::rtrim, DSL::rtrim);
                 else if (parseFunctionNameIf("RIGHT"))
                     return parseFunctionArgs2(DSL::right);
                 else if (parseFunctionNameIf("RANDOM_UUID") && parseEmptyParens())
                     return uuid();
 
-                else if (parseFunctionNameIf("ROW_NUMBER", "ROWNUMBER") && parseEmptyParens())
+                else if (parseFunctionNameIf("ROW_NUMBER") && parseEmptyParens())
                     return parseWindowFunction(null, null, rowNumber());
                 else if ((field = parseFieldRankIf()) != null)
                     return field;
                 else if ((field = parseFieldRoundIf()) != null)
                     return field;
-                else if (parseProKeywordIf("ROWNUM")) {
+                else if (!ignoreProEdition() && parseKeywordIf("ROWNUM") && requireProEdition()) {
 
 
 
@@ -10046,42 +8515,30 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
                 else if (parseFunctionNameIf("RATIO_TO_REPORT"))
                     return parseFunctionArgs1(f -> parseWindowFunction(null, null, ratioToReport(f)));
-                else if (parseKeywordIf("RSHIFT", "RIGHT_SHIFT"))
-                    return parseFunctionArgs2(() -> toField(parseOp()), (f1, f2) -> shr(f1, f2));
-                else if (parseFunctionNameIf("ROOT"))
-                    return parseFunctionArgs2(DSL::sqrt, DSL::root);
+                else if (parseKeywordIf("RSHIFT"))
+                    return parseFunctionArgs2(() -> toField(parseNumericOp()), (f1, f2) -> shr(f1, f2));
                 else if (parseFunctionNameIf("ROW"))
                     return parseTuple();
-                else if ((field = parseTypedLiteralIf("REAL", REAL)) != null)
-                    return field;
 
                 break;
 
             case 'S':
                 if ((field = parseFieldSubstringIf()) != null)
                     return field;
-                else if (parseFunctionNameIf("SUBSTRING_INDEX", "substringIndex"))
+                else if (parseFunctionNameIf("SUBSTRING_INDEX"))
                     return parseFunctionArgs3(DSL::substringIndex);
                 else if (parseFunctionNameIf("SPACE"))
                     return space((Field) parseFieldParenthesised());
                 else if (parseFunctionNameIf("SPLIT_PART"))
                     return parseFunctionArgs3(DSL::splitPart);
-                else if (parseFunctionNameIf("SPLIT", "STRING_TO_ARRAY"))
-                    return parseFunctionArgs3(DSL::stringToArray, DSL::stringToArray);
                 else if (parseFunctionNameIf("STR_REPLACE"))
                     return parseFunctionArgs3(DSL::replace, DSL::replace);
-                else if (parseFunctionNameIf("STARTS_WITH", "STARTSWITH"))
-                    return parseFunctionArgs2((f1, f2) -> f1.startsWith(f2));
                 else if (parseFunctionNameIf("SCHEMA") && parseEmptyParensIf())
                     return currentSchema();
                 else if (parseFunctionNameIf("STRREVERSE"))
                     return reverse((Field) parseFieldParenthesised());
-                else if (parseFunctionNameIf("STRTOK"))
-                    return parseFunctionArgs3(DSL::splitPart);
                 else if (parseFunctionNameIf("SYSUUID") && parseEmptyParensIf())
                     return uuid();
-                else if (parseFunctionNameIf("SET_BIT", "SETBIT"))
-                    return parseFunctionArgs3(DSL::bitSet, DSL::bitSet);
 
                 else if (parseFunctionNameIf("SECOND"))
                     return second(parseFieldParenthesised());
@@ -10101,99 +8558,87 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 else if (parseFunctionNameIf("SIN"))
                     return sin((Field) parseFieldNumericOpParenthesised());
                 else if (parseKeywordIf("SHL", "SHIFTLEFT"))
-                    return parseFunctionArgs2(() -> toField(parseOp()), (f1, f2) -> shl(f1, f2));
+                    return parseFunctionArgs2(() -> toField(parseNumericOp()), (f1, f2) -> shl(f1, f2));
                 else if (parseKeywordIf("SHR", "SHIFTRIGHT"))
-                    return parseFunctionArgs2(() -> toField(parseOp()), (f1, f2) -> shr(f1, f2));
+                    return parseFunctionArgs2(() -> toField(parseNumericOp()), (f1, f2) -> shr(f1, f2));
                 else if ((field = parseFieldSysConnectByPathIf()) != null)
                     return field;
-                else if ((field = parseFieldCastIf()) != null)
-                    return field;
-                else if (parseProFunctionNameIf("ST_AREA")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_AREA") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("SDO_GEOM.SDO_AREA")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("SDO_GEOM.SDO_AREA") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_ASBINARY", "ST_ASWKB")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_ASBINARY") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_ASTEXT")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_ASTEXT") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_BOUNDARY")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_CENTROID") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_CENTROID")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("SDO_GEOM.SDO_CENTROID") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("SDO_GEOM.SDO_CENTROID")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_DIFFERENCE") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_DIFFERENCE")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("SDO_GEOM.SDO_DIFFERENCE") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("SDO_GEOM.SDO_DIFFERENCE")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_DISTANCE") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_DIMENSION")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("SDO_GEOM.SDO_DISTANCE") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_DISTANCE")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_ENDPOINT") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("SDO_GEOM.SDO_DISTANCE")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_EXTERIORRING") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_ENDPOINT", "SDO_LRS.GEOM_SEGMENT_END_PT")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_GEOMETRYN") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_EXTERIORRING")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_GEOMETRYTYPE") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_GEOMETRYN", "SDO_UTIL.EXTRACT")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_GEOMFROMWKB") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_GEOMETRYTYPE")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_GEOMFROMWKB")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_GEOMFROMTEXT", "SDO_GEOMETRY")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_GEOMFROMTEXT", "SDO_GEOMETRY") && requireProEdition()) {
 
 
 
@@ -10202,158 +8647,86 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
                 }
-                else if (parseProFunctionNameIf("ST_INTERIORRINGN")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_INTERIORRINGN") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_INTERSECTION")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_INTERSECTION") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("SDO_GEOM.SDO_INTERSECTION")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("SDO_GEOM.SDO_INTERSECTION") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_LENGTH")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_LENGTH") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("SDO_GEOM.SDO_LENGTH")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("SDO_GEOM.SDO_LENGTH") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_NUMINTERIORRING", "ST_NUMINTERIORRINGS", "ST_NINTERIORRINGS")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_NUMINTERIORRING", "ST_NUMINTERIORRINGS") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_NUMGEOMETRIES", "SDO_UTIL.GETNUMELEM")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_NUMGEOMETRIES", "SDO_UTIL.GETNUMELEM") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_NPOINTS", "ST_NUMPOINTS")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_NUMPOINTS") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_PERIMETER")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_POINTN") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_POINTN")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_SRID") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_SRID")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_STARTPOINT") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_STARTPOINT", "SDO_LRS.GEOM_SEGMENT_START_PT")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_UNION") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_TRANSFORM", "SDO_CS.TRANSFORM")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("SDO_GEOM.SDO_UNION") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("ST_UNION")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_X") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("SDO_GEOM.SDO_UNION")) {
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_Y") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("SDO_GEOM.SDO_MIN_MBR_ORDINATE")) {
-
-
-
-
-
-
-
-
-
+                else if (!ignoreProEdition() && parseFunctionNameIf("ST_Z") && requireProEdition()) {
 
 
 
                 }
-                else if (parseProFunctionNameIf("SDO_GEOM.SDO_MAX_MBR_ORDINATE")) {
-
-
-
-
-
-
-
-
-
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_X")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_XMIN")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_XMAX")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_Y")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_YMIN")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_YMAX")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_Z")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_ZMIN")) {
-
-
-
-                }
-                else if (parseProFunctionNameIf("ST_ZMAX")) {
-
-
-
-                }
-                else if (parseFunctionNameIf("SUB", "SUBTRACT"))
-                    return parseFunctionArgs2(Field::sub);
-                else if ((field = parseTypedLiteralIf("SMALLINT", SMALLINT)) != null)
-                    return field;
 
                 break;
 
@@ -10363,12 +8736,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
                 else if ((field = parseFieldTrimIf()) != null)
                     return field;
-                else if (parseFunctionNameIf("trimBoth"))
-                    return parseFunctionArgs1(DSL::trim);
-                else if (parseFunctionNameIf("trimLeft"))
-                    return parseFunctionArgs1(DSL::ltrim);
-                else if (parseFunctionNameIf("trimRight"))
-                    return parseFunctionArgs1(DSL::rtrim);
                 else if ((field = parseFieldTranslateIf()) != null)
                     return field;
                 else if (parseFunctionNameIf("TO_CHAR"))
@@ -10401,19 +8768,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return parseFunctionArgs2((f1, f2) -> DSL.timestampDiff(f1, f2));
                 else if ((field = parseFieldTruncIf()) != null)
                     return field;
-                else if ((field = parseFieldCastIf()) != null)
-                    return field;
-                else if (parseFunctionNameIf("TRANSFORM"))
-                    return parseArrayLambdaFunction(DSL::arrayMap);
-                else if (parseDialect() == SQLITE && parseFunctionNameIf("TOTAL"))
-                    return coalesce(
-                        parseAggregateFunctionIf(false,
-                            (AggregateFunction<?>) parseGeneralSetFunctionIf(ComputationalOperation.SUM)
-                        ),
-                        inline(BigDecimal.ZERO)
-                    );
-                else if ((field = parseTypedLiteralIf("TINYINT", TINYINT)) != null)
-                    return field;
 
                 break;
 
@@ -10422,10 +8776,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return DSL.upper((Field) parseFieldParenthesised());
                 else if (parseFunctionNameIf("UUID", "UUID_GENERATE", "UUID_STRING") && parseEmptyParens())
                     return uuid();
-                else if (parseFunctionNameIf("UUID_TO_BIN", "UUIDStringToNum"))
-                    return parseFunctionArgs1(DSL::uuidToBin);
-                else if (parseFunctionNameIf("UUIDNumToString"))
-                    return parseFunctionArgs1(DSL::binToUuid);
 
                 else if (parseFunctionNameIf("UNIX_TIMESTAMP"))
                     return epoch(parseFieldParenthesised());
@@ -10435,11 +8785,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             case 'V':
                 if (TRUE.equals(data(DATA_PARSE_ON_CONFLICT)) && (parseFunctionNameIf("VALUES") || parseFunctionNameIf("VALUE")))
                     return excluded(parseFieldParenthesised());
-                else if ((field = parseTypedLiteralIf("VARCHAR", VARCHAR)) != null)
-                    return field;
 
             case 'W':
-                if (parseFunctionNameIf("WIDTH_BUCKET", "widthBucket"))
+                if (parseFunctionNameIf("WIDTH_BUCKET"))
                     return parseFunctionArgs4((f1, f2, f3, f4) -> widthBucket(f1, f2, f3, f4));
                 else if (parseFunctionNameIf("WEEK"))
                     return week(parseFieldParenthesised());
@@ -10470,8 +8818,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return field;
                 else if ((field = parseFieldXMLSerializeIf()) != null)
                     return field;
-                else if (parseFunctionNameIf("XOR"))
-                    return parseFunctionArgs2((f1, f2) -> xor(condition(f1), condition(f2)));
 
                 break;
 
@@ -10553,7 +8899,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     if (!forbidden.isEmpty())
                         forbidden = EnumSet.noneOf(FunctionKeyword.class);
 
-                    FieldOrRowOrSelect r = parseSubqueryIf();
+                    FieldOrRow r = parseScalarSubqueryIf();
                     if (r != null)
                         return r;
 
@@ -10561,7 +8907,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     r = parseFieldOrRow();
                     List<Field<?>> list = null;
 
-                    if (r instanceof Field<?> f) {
+                    if (r instanceof Field) { Field<?> f = (Field<?>) r;
                         while (parseIf(',')) {
                             if (list == null) {
                                 list = new ArrayList<>();
@@ -10574,19 +8920,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     }
 
                     parse(')');
-
-                    if (list != null)
-                        return row(list);
-                    else if (peek('.') && r instanceof TableField)
-                        return parseUDTPath((TableField<?, ?>) r);
-
-
-
-
-                    else if (peek('.') && r instanceof UDTPathField)
-                        return parseUDTPath((UDTPathField<?, ?, ?>) r);
-                    else
-                        return r;
+                    return list != null ? row(list) : r;
                 }
                 finally {
                     forbidden = fk;
@@ -10599,137 +8933,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         else if ((field = parseBooleanValueExpressionIf()) != null)
             return field;
 
-        else if ((field = parseTemplateIf(DSL::field)) != null)
-            return field;
-
         else
             return parseFieldNameOrSequenceExpression();
     }
-
-    private final <T> Field<T> parseTypedLiteralIf(String keyword, DataType<T> type) {
-        int p = position();
-
-        if (parseKeywordIf(keyword)) {
-            if (peek('\'')) {
-                String s = parseStringLiteral();
-                return inline(convert(s, type.getType()), type);
-            }
-            else
-                position(p);
-        }
-
-        return null;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private final Field<?> parseUDTPath(TableField<?, ?> tf) {
-        return parseUDTPath((UDTPathField<?, ?, ?>) new UDTPathTableFieldImpl<>(
-            tf.getUnqualifiedName(),
-            tf.getDataType(),
-            tf.getTable(),
-            null, null, null
-        ));
-    }
-
-    private final Field<?> parseUDTPath(UDTPathField<?, ?, ?> r) {
-        while (parseIf('.'))
-            r = new UDTPathFieldImpl<>(parseIdentifier(), OTHER, r.asQualifier(), null, null);
-
-        return r;
-    }
-
-    private final <Q extends QueryPart> Q parseTemplateIf(Function<? super SQL, ? extends Q> wrap) {
-        boolean raw = false;
-        afterWhitespace(position, false, true, icTemplate);
-
-        if (markerStart == -1) {
-            raw = true;
-            afterWhitespace(position, false, true, icRaw);
-        }
-
-        if (markerStart > -1) {
-            position(markerStart);
-
-            try {
-                String s = substring(markerStart, markerStop);
-                return wrap.apply(raw ? raw(s) : sql(s));
-            }
-            finally {
-                position(markerStop);
-                parseWhitespaceIf();
-
-                markerStart = -1;
-                markerStop = -1;
-            }
-        }
-        else
-            return null;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private final Field<?> parseFieldAddDatePart(DatePart part) {
         return parseFunctionArgs2((f1, f2) -> dateAdd(f1, f2, part));
@@ -10745,7 +8951,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final Field<?> parseFieldSysConnectByPathIf() {
-        if (parseProFunctionNameIf("SYS_CONNECT_BY_PATH")) {
+        if (!ignoreProEdition() && parseFunctionNameIf("SYS_CONNECT_BY_PATH") && requireProEdition()) {
 
 
 
@@ -10762,43 +8968,29 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final Field<?> parseFieldBitwiseFunctionIf() {
         int p = position();
 
-        char c0 = characterUpper();
         char c1 = character(p + 1);
         char c2 = character(p + 2);
         boolean agg = false;
 
-        if (c0 == 'B') {
-            if (c1 != 'I' && c1 != 'i')
-                return null;
-            if (c2 != 'T' && c2 != 't' && c2 != 'N' && c2 != 'n')
-                return null;
-        }
-        else {
-            if (c1 != 'r')
-                return null;
-            if (c2 != 'o')
-                return null;
-        }
+        if (c1 != 'I' && c1 != 'i')
+            return null;
+        if (c2 != 'T' && c2 != 't' && c2 != 'N' && c2 != 'n')
+            return null;
 
         if (parseKeywordIf("BIT_AND") ||
-            parseKeywordIf("BITWISE_AND") ||
             parseKeywordIf("BITAND") ||
             parseKeywordIf("BIN_AND") ||
             (agg = parseKeywordIf("BIT_AND_AGG")) ||
-            (agg = parseKeywordIf("BITWISE_AND_AGG")) ||
             (agg = parseKeywordIf("BITAND_AGG")) ||
-            (agg = parseKeywordIf("BIN_AND_AGG")) ||
-            (agg = parseFunctionNameIf("groupBitAnd"))) {
+            (agg = parseKeywordIf("BIN_AND_AGG"))) {
             parse('(');
-            if (parseKeywordIf("DISTINCT", "ALL"))
-                agg = true;
-            Field<?> x = toField(parseOp());
+            Field<?> x = toField(parseNumericOp());
 
             if (agg && parse(')') || parseIf(')'))
                 return parseAggregateFunctionIf(false, bitAndAgg((Field) x));
 
             parse(',');
-            Field<?> y = toField(parseOp());
+            Field<?> y = toField(parseNumericOp());
             parse(')');
 
             return bitAnd((Field) x, (Field) y);
@@ -10808,41 +9000,33 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             parseKeywordIf("BIN_NAND") ||
             (agg = parseKeywordIf("BIT_NAND_AGG")) ||
             (agg = parseKeywordIf("BITNAND_AGG")) ||
-            (agg = parseKeywordIf("BIN_NAND_AGG")) ||
-            (agg = parseFunctionNameIf("groupBitNand"))) {
+            (agg = parseKeywordIf("BIN_NAND_AGG"))) {
             parse('(');
-            if (parseKeywordIf("DISTINCT", "ALL"))
-                agg = true;
-            Field<?> x = toField(parseOp());
+            Field<?> x = toField(parseNumericOp());
 
             if (agg && parse(')') || parseIf(')'))
                 return parseAggregateFunctionIf(false, bitNandAgg((Field) x));
 
             parse(',');
-            Field<?> y = toField(parseOp());
+            Field<?> y = toField(parseNumericOp());
             parse(')');
 
             return bitNand((Field) x, (Field) y);
         }
         else if (parseKeywordIf("BIT_OR") ||
-            parseKeywordIf("BITWISE_OR") ||
             parseKeywordIf("BITOR") ||
             parseKeywordIf("BIN_OR") ||
             (agg = parseKeywordIf("BIT_OR_AGG")) ||
-            (agg = parseKeywordIf("BITWISE_OR_AGG")) ||
             (agg = parseKeywordIf("BITOR_AGG")) ||
-            (agg = parseKeywordIf("BIN_OR_AGG")) ||
-            (agg = parseKeywordIf("groupBitOr"))) {
+            (agg = parseKeywordIf("BIN_OR_AGG"))) {
             parse('(');
-            if (parseKeywordIf("DISTINCT", "ALL"))
-                agg = true;
-            Field<?> x = toField(parseOp());
+            Field<?> x = toField(parseNumericOp());
 
             if (agg && parse(')') || parseIf(')'))
                 return parseAggregateFunctionIf(false, bitOrAgg((Field) x));
 
             parse(',');
-            Field<?> y = toField(parseOp());
+            Field<?> y = toField(parseNumericOp());
             parse(')');
 
             return bitOr((Field) x, (Field) y);
@@ -10852,38 +9036,33 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             parseKeywordIf("BIN_NOR") ||
             (agg = parseKeywordIf("BIT_NOR_AGG")) ||
             (agg = parseKeywordIf("BITNOR_AGG")) ||
-            (agg = parseKeywordIf("BIN_NOR_AGG")) ||
-            (agg = parseKeywordIf("groupBitNor"))) {
+            (agg = parseKeywordIf("BIN_NOR_AGG"))) {
             parse('(');
-            if (parseKeywordIf("DISTINCT", "ALL"))
-                agg = true;
-            Field<?> x = toField(parseOp());
+            Field<?> x = toField(parseNumericOp());
 
             if (agg && parse(')') || parseIf(')'))
                 return parseAggregateFunctionIf(false, bitNorAgg((Field) x));
 
             parse(',');
-            Field<?> y = toField(parseOp());
+            Field<?> y = toField(parseNumericOp());
             parse(')');
 
             return bitNor((Field) x, (Field) y);
         }
         else if (parseKeywordIf("BIT_XOR") ||
-            parseKeywordIf("BITWISE_XOR") ||
             parseKeywordIf("BITXOR") ||
             parseKeywordIf("BIN_XOR") ||
             (agg = parseKeywordIf("BIT_XOR_AGG")) ||
             (agg = parseKeywordIf("BITXOR_AGG")) ||
-            (agg = parseKeywordIf("BIN_XOR_AGG")) ||
-            (agg = parseKeywordIf("groupBitXor"))) {
+            (agg = parseKeywordIf("BIN_XOR_AGG"))) {
             parse('(');
-            Field<?> x = toField(parseOp());
+            Field<?> x = toField(parseNumericOp());
 
             if (agg && parse(')') || parseIf(')'))
                 return parseAggregateFunctionIf(false, bitXorAgg((Field) x));
 
             parse(',');
-            Field<?> y = toField(parseOp());
+            Field<?> y = toField(parseNumericOp());
             parse(')');
 
             return bitXor((Field) x, (Field) y);
@@ -10893,41 +9072,40 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             parseKeywordIf("BIN_XNOR") ||
             (agg = parseKeywordIf("BIT_XNOR_AGG")) ||
             (agg = parseKeywordIf("BITXNOR_AGG")) ||
-            (agg = parseKeywordIf("BIN_XNOR_AGG")) ||
-            (agg = parseKeywordIf("groupBitXnor"))) {
+            (agg = parseKeywordIf("BIN_XNOR_AGG"))) {
             parse('(');
-            Field<?> x = toField(parseOp());
+            Field<?> x = toField(parseNumericOp());
 
             if (agg && parse(')') || parseIf(')'))
                 return parseAggregateFunctionIf(false, bitXNorAgg((Field) x));
 
             parse(',');
-            Field<?> y = toField(parseOp());
+            Field<?> y = toField(parseNumericOp());
             parse(')');
 
             return bitXNor((Field) x, (Field) y);
         }
-        else if (parseKeywordIf("BIT_NOT", "BITNOT", "BIN_NOT", "BITWISE_NOT")) {
+        else if (parseKeywordIf("BIT_NOT") || parseKeywordIf("BITNOT") || parseKeywordIf("BIN_NOT")) {
             parse('(');
-            Field<?> x = toField(parseOp());
+            Field<?> x = toField(parseNumericOp());
             parse(')');
 
             return bitNot((Field) x);
         }
-        else if (parseKeywordIf("BIN_SHL", "BITSHIFTLEFT", "BITWISE_LEFT_SHIFT")) {
+        else if (parseKeywordIf("BIN_SHL", "BITSHIFTLEFT")) {
             parse('(');
-            Field<?> x = toField(parseOp());
+            Field<?> x = toField(parseNumericOp());
             parse(',');
-            Field<?> y = toField(parseOp());
+            Field<?> y = toField(parseNumericOp());
             parse(')');
 
             return shl((Field) x, (Field) y);
         }
-        else if (parseKeywordIf("BIN_SHR", "BITSHIFTRIGHT", "BITWISE_RIGHT_SHIFT")) {
+        else if (parseKeywordIf("BIN_SHR", "BITSHIFTRIGHT")) {
             parse('(');
-            Field<?> x = toField(parseOp());
+            Field<?> x = toField(parseNumericOp());
             parse(',');
-            Field<?> y = toField(parseOp());
+            Field<?> y = toField(parseNumericOp());
             parse(')');
 
             return shr((Field) x, (Field) y);
@@ -10994,7 +9172,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             Field<XML> value = (Field<XML>) parseField();
             parseKeyword("AS");
-            DataType<?> type = parseCastDataType(false);
+            DataType<?> type = parseCastDataType();
             parse(')');
 
             return content ? xmlserializeContent(value, type) : xmlserializeDocument(value, type);
@@ -11048,7 +9226,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final Field<?> parseFieldXMLDocumentIf() {
-        if (parseProFunctionNameIf("XMLDOCUMENT")) {
+        if (!ignoreProEdition() && parseFunctionNameIf("XMLDOCUMENT") && requireProEdition()) {
 
 
 
@@ -11177,7 +9355,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             AggregateFilterStep<?> s2;
 
             parse('(');
-            parseKeywordIf("ALL");
             s2 = s1 = xmlagg((Field<XML>) parseField());
 
             if (parseKeywordIf("ORDER BY"))
@@ -11240,11 +9417,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final JSONValue.Behaviour parseJSONValueBehaviourIf() {
-        if (parseProKeywordIf("ERROR"))
+        if (!ignoreProEdition() && parseKeywordIf("ERROR") && requireProEdition())
             return JSONValue.Behaviour.ERROR;
-        else if (parseProKeywordIf("NULL"))
+        else if (!ignoreProEdition() && parseKeywordIf("NULL") && requireProEdition())
             return JSONValue.Behaviour.NULL;
-        else if (parseProKeywordIf("DEFAULT"))
+        else if (!ignoreProEdition() && parseKeywordIf("DEFAULT") && requireProEdition())
             return JSONValue.Behaviour.DEFAULT;
         else
             return null;
@@ -11343,10 +9520,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             DataType<?> returning;
 
             parse('(');
-            boolean distinct = parseSetQuantifier();
-            result = s3 = s2 = s1 = jsonb
-                ? distinct ? jsonbArrayAggDistinct(parseField()) : jsonbArrayAgg(parseField())
-                : distinct ? jsonArrayAggDistinct(parseField()) : jsonArrayAgg(parseField());
+            result = s3 = s2 = s1 = jsonb ? jsonbArrayAgg(parseField()) : jsonArrayAgg(parseField());
 
             if (parseKeywordIf("ORDER BY"))
                 result = s3 = s2 = s1.orderBy(parseList(',', c -> c.parseSortField()));
@@ -11359,81 +9533,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             parse(')');
             return result;
-        }
-
-        return null;
-    }
-
-    private final Field<?> parseArrayLambdaFunction(Function2<Field, Lambda1, Field> function) {
-        parse('(');
-        Field f;
-        Lambda1 l = parseLambdaIf(c -> c.parseField());
-
-        if (l != null && parse(',')) {
-            f = parseField();
-        }
-        else {
-            f = parseField();
-            parse(',');
-            l = parseLambda(c -> c.parseField());
-        }
-
-        parse(')');
-        return function.apply(f, l);
-    }
-
-    private final Lambda1<?, ?> parseLambda(Function<? super ParseContext, ? extends Field<?>> field) {
-        Lambda1<?, ?> l = parseLambdaIf(field);
-
-        if (l == null)
-            throw expected("Lambda");
-
-        return l;
-    }
-
-    private final Lambda1<?, ?> parseLambdaIf(Function<? super ParseContext, ? extends Field<?>> field) {
-        int p = position();
-        Name e = parseIdentifierIf();
-
-        if (e != null && parseIf("->"))
-            return lambda(field(e), (Field<?>) field.apply(this));
-        else
-            position(p);
-
-        return null;
-    }
-
-    private final Field<?> parseFieldArrayConstructIf() {
-        boolean absentOnNull = false;
-
-        if ((parseFunctionNameIf("ARRAY_CONSTRUCT") || (absentOnNull = parseFunctionNameIf("ARRAY_CONSTRUCT_COMPACT"))) && requireProEdition()) {
-
-
-
-
-
-
-
-
-
-        }
-
-        return null;
-    }
-
-    private final Field<?> parseFieldObjectConstructIf() {
-        boolean nullOnNull = false;
-
-        if ((parseFunctionNameIf("OBJECT_CONSTRUCT") || (nullOnNull = parseFunctionNameIf("OBJECT_CONSTRUCT_KEEP_NULL"))) && requireProEdition()) {
-
-
-
-
-
-
-
-
-
         }
 
         return null;
@@ -11475,16 +9574,15 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
     private final AggregateFilterStep<?> parseJSONObjectAggFunctionIf() {
         boolean jsonb = false;
-        AggregateFilterStep<?> result;
 
         if (parseFunctionNameIf("JSON_OBJECTAGG", "JSON_OBJECT_AGG", "JSON_GROUP_OBJECT") || (jsonb = parseFunctionNameIf("JSONB_OBJECT_AGG"))) {
+            AggregateFilterStep<?> result;
             JSONObjectAggNullStep<?> s1;
             JSONObjectAggReturningStep<?> s2;
             JSONOnNull onNull;
             DataType<?> returning;
 
             parse('(');
-            parseKeywordIf("ALL");
             result = s2 = s1 = jsonb ? jsonbObjectAgg(parseJSONEntry()) : jsonObjectAgg(parseJSONEntry());
 
             if ((onNull = parseJSONNullTypeIf()) != null)
@@ -11495,14 +9593,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             parse(')');
             return result;
-        }
-        else if (parseFunctionNameIf("OBJECT_AGG") && requireProEdition()) {
-
-
-
-
-
-
         }
 
         return null;
@@ -11518,14 +9608,10 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final JSONEntry<?> parseJSONEntry() {
-        return parseJSONEntry(true);
-    }
-
-    private final JSONEntry<?> parseJSONEntry(boolean supportKeyValue) {
-        boolean valueRequired = supportKeyValue && parseKeywordIf("KEY");
+        boolean valueRequired = parseKeywordIf("KEY");
 
         Field<String> key = (Field<String>) parseField();
-        if (supportKeyValue && parseKeywordIf("VALUE"))
+        if (parseKeywordIf("VALUE"))
             ;
         else if (valueRequired)
             throw expected("VALUE");
@@ -11582,8 +9668,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final Field<?> parseFieldLogIf() {
         if (parseFunctionNameIf("LOG")) {
             parse('(');
-            Field f1 = toField(parseOp());
-            Field f2 = parseIf(',') ? toField(parseOp()) : null;
+            Field f1 = toField(parseNumericOp());
+            Field f2 = parseIf(',') ? toField(parseNumericOp()) : null;
             parse(')');
 
             switch (parseFamily()) {
@@ -11644,7 +9730,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return DSL.trunc((Field) arg1, p);
                 }
                 else {
-                    Field<?> arg2 = toField(parseOp());
+                    Field<?> arg2 = toField(parseNumericOp());
                     parse(')');
                     return DSL.trunc((Field) arg1, (Field) arg2);
                 }
@@ -11671,8 +9757,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final Field<?> parseFieldRoundIf() {
         if (parseFunctionNameIf("ROUND")) {
             parse('(');
-            Field arg1 = toField(parseOp());
-            Field arg2 = parseIf(',') ? toField(parseOp()) : null;
+            Field arg1 = toField(parseNumericOp());
+            Field arg2 = parseIf(',') ? toField(parseNumericOp()) : null;
             parse(')');
 
             return arg2 == null ? round(arg1) : round(arg1, arg2);
@@ -11706,7 +9792,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final Field<?> parseFieldGroupingIdIf() {
-        if (parseProFunctionNameIf("GROUPING_ID")) {
+        if (!ignoreProEdition() && parseFunctionNameIf("GROUPING_ID") && requireProEdition()) {
 
 
 
@@ -11727,9 +9813,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             if (parseKeywordIf("WITHOUT TIME ZONE")) {
                 return inline(parseTimestampLiteral());
             }
-            else if (parseKeywordIf("WITH TIME ZONE")) {
-                return inline(parseTimestampTZLiteral());
-            }
             else if (parseIf('(')) {
                 Field<?> f = parseField();
                 parse(')');
@@ -11748,21 +9831,12 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final Timestamp parseTimestampLiteral() {
-        Timestamp timestamp = Convert.convert(parseStringLiteral(), Timestamp.class);
-
-        if (timestamp == null)
+        try {
+            return Timestamp.valueOf(parseStringLiteral());
+        }
+        catch (IllegalArgumentException e) {
             throw exception("Illegal timestamp literal");
-
-        return timestamp;
-    }
-
-    private final OffsetDateTime parseTimestampTZLiteral() {
-        OffsetDateTime timestamp = Convert.convert(parseStringLiteral(), OffsetDateTime.class);
-
-        if (timestamp == null)
-            throw exception("Illegal timestamp literal");
-
-        return timestamp;
+        }
     }
 
     private final Field<?> parseFieldTimeLiteralIf() {
@@ -11771,9 +9845,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         if (parseKeywordIf("TIME")) {
             if (parseKeywordIf("WITHOUT TIME ZONE")) {
                 return inline(parseTimeLiteral());
-            }
-            else if (parseKeywordIf("WITH TIME ZONE")) {
-                return inline(parseTimeTZLiteral());
             }
             else if (parseIf('(')) {
                 Field<?> f = parseField();
@@ -11793,24 +9864,15 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final Time parseTimeLiteral() {
-        Time time = Convert.convert(parseStringLiteral(), Time.class);
-
-        if (time == null)
+        try {
+            return Time.valueOf(parseStringLiteral());
+        }
+        catch (IllegalArgumentException e) {
             throw exception("Illegal time literal");
-
-        return time;
+        }
     }
 
-    private final OffsetTime parseTimeTZLiteral() {
-        OffsetTime time = Convert.convert(parseStringLiteral(), OffsetTime.class);
-
-        if (time == null)
-            throw exception("Illegal time literal");
-
-        return time;
-    }
-
-    private final Field<?> parseFieldIntervalLiteralIf(boolean parseUnknownSyntaxAsIdentifier) {
+    private final Field<?> parseFieldIntervalLiteralIf() {
         int p = position();
 
         if (parseKeywordIf("INTERVAL")) {
@@ -11853,21 +9915,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
                 else {
                     position(p);
-
-                    if (parseUnknownSyntaxAsIdentifier)
-                        return field(parseIdentifier());
+                    return field(parseIdentifier());
                 }
             }
-        }
-
-        return null;
-    }
-
-    private final Field<?> parseFieldMySQLIntervalLiteralIf(BiFunction<? super Field<?>, ? super DatePart, ? extends Field<?>> f) {
-        if (parseKeywordIf("INTERVAL")) {
-            Field<?> interval = parseField();
-            DatePart part = parseIntervalDatePart();
-            return f.apply(interval, part);
         }
 
         return null;
@@ -12016,8 +10066,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 return requireNotNull(YearToMonth.yearToMonth(string), message);
             else
                 return requireNotNull(YearToMonth.year(string), message);
-        else if (parseKeywordIf("YEAR_MONTH"))
-            return requireNotNull(YearToMonth.yearToMonth(string), message);
         else if (parseIntervalPrecisionKeywordIf("MONTH"))
             return requireNotNull(YearToMonth.month(string), message);
         else if (parseIntervalPrecisionKeywordIf("DAY"))
@@ -12032,12 +10080,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     throw expected("HOUR", "MINUTE", "SECOND");
             else
                 return requireNotNull(DayToSecond.day(string), message);
-        else if (parseKeywordIf("DAY_SECOND"))
-            return requireNotNull(DayToSecond.dayToSecond(string), message);
-        else if (parseKeywordIf("DAY_MINUTE"))
-            return requireNotNull(DayToSecond.dayToMinute(string), message);
-        else if (parseKeywordIf("DAY_HOUR"))
-            return requireNotNull(DayToSecond.dayToHour(string), message);
         else if (parseIntervalPrecisionKeywordIf("HOUR"))
             if (parseKeywordIf("TO"))
                 if (parseIntervalPrecisionKeywordIf("SECOND"))
@@ -12048,17 +10090,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     throw expected("MINUTE", "SECOND");
             else
                 return requireNotNull(DayToSecond.hour(string), message);
-        else if (parseKeywordIf("HOUR_SECOND"))
-            return requireNotNull(DayToSecond.hourToSecond(string), message);
-        else if (parseKeywordIf("HOUR_MINUTE"))
-            return requireNotNull(DayToSecond.hourToMinute(string), message);
         else if (parseIntervalPrecisionKeywordIf("MINUTE"))
             if (parseKeywordIf("TO") && parseIntervalPrecisionKeywordIf("SECOND"))
                 return requireNotNull(DayToSecond.minuteToSecond(string), message);
             else
                 return requireNotNull(DayToSecond.minute(string), message);
-        else if (parseKeywordIf("MINUTE_SECOND"))
-            return requireNotNull(DayToSecond.minuteToSecond(string), message);
         else if (parseIntervalPrecisionKeywordIf("SECOND"))
             return requireNotNull(DayToSecond.second(string), message);
 
@@ -12159,8 +10195,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
         // MySQL style
         else if (parseFunctionNameIf("DATE_ADD") || (sub = parseFunctionNameIf("DATE_SUB"))) {
-            boolean s = sub;
-
             parse('(');
             Field<?> d = parseField();
 
@@ -12169,20 +10203,10 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             parse(',');
 
             // [#8792] TODO: Support parsing interval expressions
-            Field<?> interval = parseFieldIntervalLiteralIf(false);
+            Field<?> interval = parseFieldIntervalLiteralIf();
+            parse(')');
 
-            if (interval == null) {
-                interval = parseFieldMySQLIntervalLiteralIf((i, p) -> s ? DSL.dateSub((Field) date, (Field) i, p) : DSL.dateAdd((Field) date, (Field) i, p));
-
-                if (interval != null) {
-                    parse(')');
-                    return interval;
-                }
-            }
-            else {
-                parse(')');
-                return s ? DSL.dateSub((Field) date, (Field) interval) : DSL.dateAdd((Field) date, (Field) interval);
-            }
+            return sub ? DSL.dateSub((Field) date, (Field) interval) : DSL.dateAdd((Field) date, (Field) interval);
         }
 
         return null;
@@ -12255,7 +10279,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final Field<?> parseFieldDatePartIf() {
-        if (parseFunctionNameIf("DATEPART", "DATE_PART")) {
+        if (parseFunctionNameIf("DATEPART")) {
             parse('(');
             DatePart part = parseDatePart();
             parse(',');
@@ -12525,9 +10549,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final Field<?> parseFieldOverlayIf() {
         if (parseFunctionNameIf("OVERLAY")) {
             parse('(');
-            Field f1 = parseField();
+            Field<String> f1 = (Field) parseField();
             parseKeyword("PLACING");
-            Field f2 = parseField();
+            Field<String> f2 = (Field) parseField();
             parseKeyword("FROM");
             Field<Number> f3 = (Field) parseField();
             Field<Number> f4 =
@@ -12540,51 +10564,22 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
               : null;
             parse(')');
 
-            return f4 == null
-                ? binary(f1, f2)
-                    ? binaryOverlay(f1, f2, f3)
-                    : overlay(f1, f2, f3)
-                : binary(f1, f2)
-                    ? binaryOverlay(f1, f2, f3, f4)
-                    : overlay(f1, f2, f3, f4);
+            return f4 == null ? overlay(f1, f2, f3) : overlay(f1, f2, f3, f4);
         }
 
         return null;
-    }
-
-    private final boolean binary(Field<?> f1) {
-        return f1.getDataType().isBinary();
-    }
-
-    private final boolean binary(Field<?> f1, Field<?> f2) {
-        return f1.getDataType().isBinary() || f2.getDataType().isBinary();
     }
 
     private final Field<?> parseFieldPositionIf() {
         if (parseFunctionNameIf("POSITION")) {
             parse('(');
             forbidden.add(FK_IN);
-            Field f1 = parseField();
-
-            if (parseIf(',')) {
-                Field f2 = parseField();
-                Field f3 = parseIf(',') ? parseField() : null;
-                parse(')');
-
-                return f3 == null
-                     ? DSL.position(f1, f2)
-                     : DSL.position(f1, f2, f3);
-            }
-            else {
-                parseKeyword("IN");
-                forbidden.remove(FK_IN);
-                Field f2 = parseField();
-                parse(')');
-
-                return binary(f1, f2)
-                     ? DSL.binaryPosition(f2, f1)
-                     : DSL.position(f2, f1);
-            }
+            Field<String> f1 = (Field) parseField();
+            parseKeyword("IN");
+            forbidden.remove(FK_IN);
+            Field<String> f2 = (Field) parseField();
+            parse(')');
+            return DSL.position(f2, f1);
         }
 
         return null;
@@ -12594,9 +10589,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         boolean locate = parseFunctionNameIf("LOCATE");
         if (locate || parseFunctionNameIf("LOCATE_IN_STRING")) {
             parse('(');
-            Field f1 = parseField();
+            Field<String> f1 = (Field) parseField();
             parse(',');
-            Field f2 = parseField();
+            Field<String> f2 = (Field) parseField();
             Field<Integer> f3 = (Field) (parseIf(',') ? parseField() : null);
             parse(')');
 
@@ -12611,36 +10606,18 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
 
-
-
-
-
-
-
             if (locate)
-                return f3 == null
-                     ? binary(f1, f2)
-                         ? DSL.binaryPosition(f2, f1)
-                         : DSL.position(f2, f1)
-                     : binary(f1, f2)
-                         ? DSL.binaryPosition(f2, f1, f3)
-                         : DSL.position(f2, f1, f3);
+                return f3 == null ? DSL.position(f2, f1) : DSL.position(f2, f1, f3);
             else
-                return f3 == null
-                     ? binary(f1, f2)
-                         ? DSL.binaryPosition(f1, f2)
-                         : DSL.position(f1, f2)
-                     : binary(f1, f2)
-                         ? DSL.binaryPosition(f1, f2, f3)
-                         : DSL.position(f1, f2, f3);
+                return f3 == null ? DSL.position(f1, f2) : DSL.position(f1, f2, f3);
         }
 
         return null;
     }
 
     private final Field<?> parseFieldRegexpReplaceIf() {
-        boolean all = parseFunctionNameIf("REGEXP_REPLACE_ALL", "replaceRegexpAll");
-        boolean first = !all && parseFunctionNameIf("REGEXP_REPLACE_FIRST", "replaceRegexpOne");
+        boolean all = parseFunctionNameIf("REGEXP_REPLACE_ALL");
+        boolean first = !all && parseFunctionNameIf("REGEXP_REPLACE_FIRST");
         boolean ifx = !all && !first && parseFunctionNameIf("REGEX_REPLACE");
 
         if (all || first || ifx || parseFunctionNameIf("REGEXP_REPLACE")) {
@@ -12720,38 +10697,24 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final Field<?> parseFieldSubstringIf() {
         boolean substring = parseFunctionNameIf("SUBSTRING");
         boolean substr = !substring && parseFunctionNameIf("SUBSTR");
-        boolean dbmslob = !substr && parseProFunctionNameIf("DBMS_LOB.SUBSTR");
 
         if (substring || substr) {
             boolean keywords = !substr;
             parse('(');
-            Field f1 = parseField();
+            Field<String> f1 = (Field) parseField();
             if (substr || !(keywords = parseKeywordIf("FROM")))
                 parse(',');
-            Field f2 = toField(parseOp());
+            Field f2 = toField(parseNumericOp());
             Field f3 =
                     ((keywords && parseKeywordIf("FOR")) || (!keywords && parseIf(',')))
-                ? (Field) toField(parseOp())
+                ? (Field) toField(parseNumericOp())
                 : null;
             parse(')');
 
             return f3 == null
-                ? binary(f1)
-                    ? DSL.binarySubstring(f1, f2)
-                    : DSL.substring(f1, f2)
-                : binary(f1)
-                    ? DSL.binarySubstring(f1, f2, f3)
-                    : DSL.substring(f1, f2, f3);
+                ? DSL.substring(f1, f2)
+                : DSL.substring(f1, f2, f3);
         }
-
-
-
-
-
-
-
-
-
 
         return null;
     }
@@ -12761,9 +10724,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             parse('(');
             int p = position();
 
-            boolean leading = parseKeywordIf("LEADING", "L");
-            boolean trailing = !leading && parseKeywordIf("TRAILING", "T");
-            boolean both = !leading && !trailing && parseKeywordIf("BOTH", "B");
+            boolean leading = parseKeywordIf("LEADING") || parseKeywordIf("L");
+            boolean trailing = !leading && (parseKeywordIf("TRAILING") || parseKeywordIf("T"));
+            boolean both = !leading && !trailing && (parseKeywordIf("BOTH") || parseKeywordIf("B"));
 
             if (leading || trailing || both) {
                 if (parseIf(',') || parseIf(')')) {
@@ -12773,10 +10736,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     Field<String> f = (Field) parseField();
                     parse(')');
 
-                    return leading
-                         ? ltrim(f)
-                         : trailing
-                         ? rtrim(f)
+                    return leading ? ltrim(f)
+                         : trailing ? rtrim(f)
                          : trim(f);
                 }
             }
@@ -12792,33 +10753,21 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 }
             }
 
-            Field f1 = parseField();
+            Field<String> f1 = (Field) parseField();
 
             if (parseKeywordIf("FROM")) {
-                Field f2 = parseField();
+                Field<String> f2 = (Field) parseField();
                 parse(')');
 
-                return leading
-                     ? binary(f1, f2)
-                         ? binaryLtrim(f2, f1)
-                         : ltrim(f2, f1)
-                     : trailing
-                     ? binary(f1, f2)
-                         ? binaryRtrim(f2, f1)
-                         : rtrim(f2, f1)
-                     : binary(f1, f2)
-                         ? binaryTrim(f2, f1)
-                         : trim(f2, f1);
+                return leading ? ltrim(f2, f1)
+                     : trailing ? rtrim(f2, f1)
+                     : trim(f2, f1);
             }
             else {
-                Field f2 = parseIf(',') ? parseField() : null;
+                Field<String> f2 = parseIf(',') ? (Field) parseField() : null;
                 parse(')');
 
-                return f2 == null
-                     ? trim(f1)
-                     : binary(f1, f2)
-                         ? binaryTrim(f1, f2)
-                         : trim(f1, f2);
+                return f2 == null ? trim(f1) : trim(f1, f2);
             }
         }
 
@@ -12839,7 +10788,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final Field<?> parseFieldDecodeIf() {
-        if (parseFunctionNameIf("DECODE", "DECODE_ORACLE", "MAP")) {
+        if (parseFunctionNameIf("DECODE", "MAP")) {
             parse('(');
             List<Field<?>> fields = parseList(',', c -> c.parseField());
             int size = fields.size();
@@ -12859,7 +10808,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final Field<?> parseFieldChooseIf() {
-        if (parseFunctionNameIf("CHOOSE", "ELT")) {
+        if (parseFunctionNameIf("CHOOSE")) {
             parse('(');
             Field<Integer> index = (Field<Integer>) parseField();
             parse(',');
@@ -12967,24 +10916,15 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final Field<?> parseFieldCastIf() {
         boolean cast = parseFunctionNameIf("CAST");
         boolean coerce = !cast && parseFunctionNameIf("COERCE");
-        boolean tryCast = !cast && !coerce && parseFunctionNameIf("TRY_CAST", "SAFE_CAST");
 
-        if (cast || coerce || tryCast) {
+        if (cast || coerce) {
             parse('(');
             Field<?> field = parseField();
             parseKeyword("AS");
-            DataType<?> type = parseCastDataType(false);
-
-            if (!tryCast)
-                tryCast = parseKeywordIf("DEFAULT NULL ON CONVERSION ERROR");
-
+            DataType<?> type = parseCastDataType();
             parse(')');
 
-            return tryCast
-                 ? tryCast(field, type)
-                 : cast
-                 ? cast(field, type)
-                 : coerce(field, type);
+            return cast ? cast(field, type) : coerce(field, type);
         }
 
         return null;
@@ -13012,7 +10952,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return null;
     }
 
-    private final Field<?> parseBooleanValueExpressionIf() {
+    private final Field<Boolean> parseBooleanValueExpressionIf() {
         TruthValue truth = parseTruthValueIf();
 
         if (truth != null) {
@@ -13021,10 +10961,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return inline(true);
                 case T_FALSE:
                     return inline(false);
-
-                // [#16368] We cannot decide the data type at this point
                 case T_NULL:
-                    return inline(null, OTHER);
+                    return inline((Boolean) null);
                 default:
                     throw exception("Truth value not supported: " + truth);
             }
@@ -13064,8 +11002,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         if (filter == null && !basic)
             over = filter = parseOrderedSetFunctionIf();
         if (filter == null && !basic)
-            over = filter = parseMinMaxByFunctionIf();
-        if (filter == null && !basic)
             over = filter = parseArrayAggFunctionIf();
         if (filter == null && !basic)
             over = filter = parseMultisetAggFunctionIf();
@@ -13103,9 +11039,15 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
 
+
         }
         else if (filter != null && !basic && parseKeywordIf("FILTER")) {
-            result = over = parseAggregateFilter(filter);
+            parse('(');
+            parseKeyword("WHERE");
+            condition = parseCondition();
+            parse(')');
+
+            result = over = filter.filterWhere(condition);
         }
         else if (filter != null)
             result = filter;
@@ -13115,28 +11057,15 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         if (!basic && parseKeywordIf("OVER")) {
             Object nameOrSpecification = parseWindowNameOrSpecification(filter != null);
 
-            if (nameOrSpecification instanceof Name n)
-                result = over.over(n);
-            else if (nameOrSpecification instanceof WindowSpecification w)
-                result = over.over(w);
+            if (nameOrSpecification instanceof Name)
+                result = over.over((Name) nameOrSpecification);
+            else if (nameOrSpecification instanceof WindowSpecification)
+                result = over.over((WindowSpecification) nameOrSpecification);
             else
                 result = over.over();
         }
 
         return result;
-    }
-
-    private final Field<?> parseAggregateFilterIf(AggregateFilterStep<?> filter) {
-        return parseKeywordIf("FILTER") ? parseAggregateFilter(filter) : filter;
-    }
-
-    private final WindowBeforeOverStep<?> parseAggregateFilter(AggregateFilterStep<?> filter) {
-        parse('(');
-        parseKeyword("WHERE");
-        Condition condition = parseCondition();
-        parse(')');
-
-        return filter.filterWhere(condition);
     }
 
     private final Field<?> parseSpecialAggregateFunctionIf() {
@@ -13149,7 +11078,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             if (parseKeywordIf("DISTINCT"))
                 s1 = DSL.groupConcatDistinct(parseField());
-            else if (parseKeywordIf("ALL") || true)
+            else
                 s1 = DSL.groupConcat(parseField());
 
             if (parseKeywordIf("ORDER BY"))
@@ -13158,7 +11087,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 s2 = s1;
 
             if (parseKeywordIf("SEPARATOR"))
-                s3 = s2.separator((Field) parseField());
+                s3 = s2.separator(parseStringLiteral());
             else
                 s3 = s2;
 
@@ -13189,38 +11118,27 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             if (parseIf(')'))
                 return parseWindowFunction(null, null, rank());
-            else
-                parseKeywordIf("ALL");
-
-
-
-
-
-
-
 
             // Hypothetical set function
             List<Field<?>> args = parseList(',', c -> c.parseField());
             parse(')');
-            return parseAggregateFilterIf(rank(args).withinGroupOrderBy(parseWithinGroupN()));
+            return rank(args).withinGroupOrderBy(parseWithinGroupN());
         }
 
         return null;
     }
 
     private final Field<?> parseFieldDenseRankIf() {
-        if (parseFunctionNameIf("DENSE_RANK", "DENSERANK")) {
+        if (parseFunctionNameIf("DENSE_RANK")) {
             parse('(');
 
             if (parseIf(')'))
                 return parseWindowFunction(null, null, denseRank());
-            else
-                parseKeywordIf("ALL");
 
             // Hypothetical set function
             List<Field<?>> args = parseList(',', c -> c.parseField());
             parse(')');
-            return parseAggregateFilterIf(denseRank(args).withinGroupOrderBy(parseWithinGroupN()));
+            return denseRank(args).withinGroupOrderBy(parseWithinGroupN());
         }
 
         return null;
@@ -13232,13 +11150,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             if (parseIf(')'))
                 return parseWindowFunction(null, null, percentRank());
-            else
-                parseKeywordIf("ALL");
 
             // Hypothetical set function
             List<Field<?>> args = parseList(',', c -> c.parseField());
             parse(')');
-            return parseAggregateFilterIf(percentRank(args).withinGroupOrderBy(parseWithinGroupN()));
+            return percentRank(args).withinGroupOrderBy(parseWithinGroupN());
         }
 
         return null;
@@ -13250,13 +11166,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
             if (parseIf(')'))
                 return parseWindowFunction(null, null, cumeDist());
-            else
-                parseKeywordIf("ALL");
 
             // Hypothetical set function
             List<Field<?>> args = parseList(',', c -> c.parseField());
             parse(')');
-            return parseAggregateFilterIf(cumeDist(args).withinGroupOrderBy(parseWithinGroupN()));
+            return cumeDist(args).withinGroupOrderBy(parseWithinGroupN());
         }
 
         return null;
@@ -13274,8 +11188,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final Field<?> parseFieldLeadLagIf() {
-        boolean lead = parseFunctionNameIf("LEAD", "leadInFrame");
-        boolean lag = !lead && parseFunctionNameIf("LAG", "lagInFrame");
+        boolean lead = parseFunctionNameIf("LEAD");
+        boolean lag = !lead && parseFunctionNameIf("LAG");
 
         if (lead || lag) {
             parse('(');
@@ -13359,10 +11273,10 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         parseKeyword("OVER");
         Object nameOrSpecification = parseWindowNameOrSpecification(true);
 
-        return nameOrSpecification instanceof Name n
-            ? s3.over(n)
-            : nameOrSpecification instanceof WindowSpecification w
-            ? s3.over(w)
+        return nameOrSpecification instanceof Name
+            ? s3.over((Name) nameOrSpecification)
+            : nameOrSpecification instanceof WindowSpecification
+            ? s3.over((WindowSpecification) nameOrSpecification)
             : s3.over();
     }
 
@@ -13394,33 +11308,33 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         switch (characterUpper()) {
             case 'C':
                 if (parseFunctionNameIf("CORR"))
-                    return parseBinarySetFunction(DSL::corr);
-                else if (parseFunctionNameIf("COVAR_POP", "covarPop"))
-                    return parseBinarySetFunction(DSL::covarPop);
-                else if (parseFunctionNameIf("COVAR_SAMP", "covarSamp"))
-                    return parseBinarySetFunction(DSL::covarSamp);
+                    return parseBindarySetFunction(DSL::corr);
+                else if (parseFunctionNameIf("COVAR_POP"))
+                    return parseBindarySetFunction(DSL::covarPop);
+                else if (parseFunctionNameIf("COVAR_SAMP"))
+                    return parseBindarySetFunction(DSL::covarSamp);
 
                 break;
 
             case 'R':
                 if (parseFunctionNameIf("REGR_AVGX"))
-                    return parseBinarySetFunction(DSL::regrAvgX);
+                    return parseBindarySetFunction(DSL::regrAvgX);
                 else if (parseFunctionNameIf("REGR_AVGY"))
-                    return parseBinarySetFunction(DSL::regrAvgY);
+                    return parseBindarySetFunction(DSL::regrAvgY);
                 else if (parseFunctionNameIf("REGR_COUNT"))
-                    return parseBinarySetFunction(DSL::regrCount);
+                    return parseBindarySetFunction(DSL::regrCount);
                 else if (parseFunctionNameIf("REGR_INTERCEPT"))
-                    return parseBinarySetFunction(DSL::regrIntercept);
+                    return parseBindarySetFunction(DSL::regrIntercept);
                 else if (parseFunctionNameIf("REGR_R2"))
-                    return parseBinarySetFunction(DSL::regrR2);
+                    return parseBindarySetFunction(DSL::regrR2);
                 else if (parseFunctionNameIf("REGR_SLOPE"))
-                    return parseBinarySetFunction(DSL::regrSlope);
+                    return parseBindarySetFunction(DSL::regrSlope);
                 else if (parseFunctionNameIf("REGR_SXX"))
-                    return parseBinarySetFunction(DSL::regrSXX);
+                    return parseBindarySetFunction(DSL::regrSXX);
                 else if (parseFunctionNameIf("REGR_SXY"))
-                    return parseBinarySetFunction(DSL::regrSXY);
+                    return parseBindarySetFunction(DSL::regrSXY);
                 else if (parseFunctionNameIf("REGR_SYY"))
-                    return parseBinarySetFunction(DSL::regrSYY);
+                    return parseBindarySetFunction(DSL::regrSYY);
 
                 break;
         }
@@ -13428,9 +11342,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return null;
     }
 
-    private final AggregateFunction<?> parseBinarySetFunction(BiFunction<? super Field<? extends Number>, ? super Field<? extends Number>, ? extends AggregateFunction<?>> function) {
+    private final AggregateFunction<?> parseBindarySetFunction(BiFunction<? super Field<? extends Number>, ? super Field<? extends Number>, ? extends AggregateFunction<?>> function) {
         parse('(');
-        parseKeywordIf("ALL");
         Field<? extends Number> arg1 = (Field) parseField();
         parse(',');
         Field<? extends Number> arg2 = (Field) parseField();
@@ -13440,21 +11353,14 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final AggregateFilterStep<?> parseOrderedSetFunctionIf() {
+        // TODO Listagg set function
         OrderedAggregateFunction<?> orderedN;
         OrderedAggregateFunctionOfDeferredType ordered1;
         boolean optionalWithinGroup = false;
 
         orderedN = parseHypotheticalSetFunctionIf();
-        if (orderedN == null) {
-            InverseDistributionFunction idf = parseInverseDistributionFunctionIf();
-
-            if (idf != null)
-                if (idf.field() != null)
-                    return idf.field();
-                else
-                    orderedN = idf.ordered();
-        }
-
+        if (orderedN == null)
+            orderedN = parseInverseDistributionFunctionIf();
         if (orderedN == null)
             optionalWithinGroup = (orderedN = parseListaggFunctionIf()) != null;
         if (orderedN != null)
@@ -13467,51 +11373,17 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return null;
     }
 
-    private final AggregateFilterStep<?> parseMinMaxByFunctionIf() {
-        boolean minBy = parseFunctionNameIf("MIN_BY", "ARG_MIN", "argMin");
-        boolean maxBy = !minBy && parseFunctionNameIf("MAX_BY", "ARG_MAX", "argMax");
-
-        if (minBy || maxBy) {
-            parse('(');
-            parseSetQuantifier();
-            Field<?> f1 = parseField();
-            parse(',');
-            Field<?> f2 = parseField();
-            List<SortField<?>> sort = parseAggregateOrderByIf();
-            parse(')');
-
-            OptionallyOrderedAggregateFunction<?> s1 = minBy ? minBy(f1, f2) : maxBy(f1, f2);
-            return sort == null ? s1 : s1.orderBy(sort);
-        }
-
-        return null;
-    }
-
-    private final List<SortField<?>> parseAggregateOrderBy() {
-        List<SortField<?>> sort = parseAggregateOrderByIf();
-
-        if (sort == null)
-            throw expected("ORDER BY");
-
-        return sort;
-    }
-
-    private final List<SortField<?>> parseAggregateOrderByIf() {
-        List<SortField<?>> sort = null;
-
-        if (parseKeywordIf("ORDER BY"))
-            sort = parseList(',', c -> c.parseSortField());
-
-        return sort;
-    }
-
     private final AggregateFilterStep<?> parseArrayAggFunctionIf() {
-        if (parseKeywordIf("ARRAY_AGG", "groupArray")) {
+        if (parseKeywordIf("ARRAY_AGG")) {
             parse('(');
 
-            boolean distinct = parseSetQuantifier();
+            boolean distinct = parseKeywordIf("DISTINCT");
             Field<?> a1 = parseField();
-            List<SortField<?>> sort = parseAggregateOrderByIf();
+            List<SortField<?>> sort = null;
+
+            if (parseKeywordIf("ORDER BY"))
+                sort = parseList(',', c -> c.parseSortField());
+
             parse(')');
 
             ArrayAggOrderByStep<?> s1 = distinct
@@ -13527,11 +11399,14 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final AggregateFilterStep<?> parseMultisetAggFunctionIf() {
         if (parseKeywordIf("MULTISET_AGG")) {
             parse('(');
-            parseKeywordIf("ALL");
-            List<Field<?>> fields = parseList(',', c -> c.parseField());
-            List<SortField<?>> sort = parseAggregateOrderByIf();
-            parse(')');
 
+            List<Field<?>> fields = parseList(',', c -> c.parseField());
+            List<SortField<?>> sort = null;
+
+            if (parseKeywordIf("ORDER BY"))
+                sort = parseList(',', c -> c.parseSortField());
+
+            parse(')');
             ArrayAggOrderByStep<?> s1 = multisetAgg(fields);
             return sort == null ? s1 : s1.orderBy(sort);
         }
@@ -13599,60 +11474,36 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return ordered;
     }
 
-    private static final record InverseDistributionFunction(OrderedAggregateFunction<BigDecimal> ordered, AggregateFilterStep<?> field) {}
+    private final OrderedAggregateFunction<BigDecimal> parseInverseDistributionFunctionIf() {
+        OrderedAggregateFunction<BigDecimal> ordered;
 
-    private final InverseDistributionFunction parseInverseDistributionFunctionIf() {
-        if (parseFunctionNameIf("PERCENTILE_CONT"))
-            return parseInverseDistributionFunctionIf0(DSL::percentileCont);
-        else if (parseFunctionNameIf("PERCENTILE_DISC"))
-            return parseInverseDistributionFunctionIf0(DSL::percentileDisc);
-        else
-            return null;
-    }
-
-    private final InverseDistributionFunction parseInverseDistributionFunctionIf0(Function<? super Field, ? extends OrderedAggregateFunction<BigDecimal>> f) {
-        parse('(');
-        parseKeywordIf("ALL");
-        Field f1 = parseField();
-        Field f2 = parseIf(',') ? parseField() : null;
-
-        if (f2 != null)
-            parseKeywordIf("IGNORE NULLS");
-
-        parse(')');
-
-        return f2 == null
-            ? new InverseDistributionFunction(f.apply(f1), null)
-            : new InverseDistributionFunction(null, f.apply(f2).withinGroupOrderBy(f1));
-    }
-
-    private final OrderedAggregateFunction<?> parseListaggFunctionIf() {
-        OrderedAggregateFunction<?> ordered;
-
-        if (parseFunctionNameIf("LISTAGG", "STRING_AGG")) {
+        if (parseFunctionNameIf("PERCENTILE_CONT")) {
             parse('(');
-            boolean distinct = parseSetQuantifier();
+            ordered = percentileCont((Field) parseField());
+            parse(')');
+        }
+        else if (parseFunctionNameIf("PERCENTILE_DISC")) {
+            parse('(');
+            ordered = percentileDisc((Field) parseField());
+            parse(')');
+        }
+        else
+            ordered = null;
+
+        return ordered;
+    }
+
+    private final OrderedAggregateFunction<String> parseListaggFunctionIf() {
+        OrderedAggregateFunction<String> ordered;
+
+        if (parseFunctionNameIf("LISTAGG")) {
+            parse('(');
             Field<?> field = parseField();
 
             if (parseIf(','))
-                ordered = distinct
-                    ? binary(field)
-                        ? binaryListAggDistinct(field, (Field) parseField())
-                        : listAggDistinct(field, (Field) parseField())
-                    : binary(field)
-                        ? binaryListAgg(field, (Field) parseField())
-                        : listAgg(field, (Field) parseField());
+                ordered = listAgg(field, parseStringLiteral());
             else
-                ordered = distinct
-                    ? binary(field)
-                        ? binaryListAggDistinct(field)
-                        : listAggDistinct(field)
-                    : binary(field)
-                        ? binaryListAgg(field)
-                        : listAgg(field);
-
-            if (parseKeywordIf("ORDER BY"))
-                ordered.withinGroupOrderBy(parseList(',', c -> c.parseSortField()));
+                ordered = listAgg(field);
 
             parse(')');
         }
@@ -13677,12 +11528,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final Field<?> parseGeneralSetFunctionIf() {
-        return parseGeneralSetFunctionIf(parseComputationalOperationIf());
-    }
-
-    private final Field<?> parseGeneralSetFunctionIf(ComputationalOperation operation) {
         boolean distinct;
         Field arg;
+        ComputationalOperation operation = parseComputationalOperationIf();
 
         if (operation == null)
             return null;
@@ -13690,10 +11538,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         parse('(');
 
         switch (operation) {
-            case ANY:
-            case ANY_VALUE:
             case AVG:
-            case EVERY:
             case MAX:
             case MIN:
             case SUM:
@@ -13701,7 +11546,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 distinct = parseSetQuantifier();
                 break;
             default:
-                parseKeywordIf("ALL");
                 distinct = false;
                 break;
         }
@@ -13716,31 +11560,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     parse(')');
 
                     return operation == ComputationalOperation.MAX ? greatest(arg, fields.toArray(EMPTY_FIELD)) : least(arg, fields.toArray(EMPTY_FIELD));
-                }
-            }
-
-            case PRODUCT: {
-                if (!distinct && parseIf(',')) {
-                    Field<?> result = arg.mul(parseField());
-                    parse(')');
-
-                    return result;
-                }
-            }
-
-            case ANY_VALUE: {
-                if (parseKeywordIf("HAVING")) {
-                    boolean min = parseKeywordIf("MIN");
-
-                    if (!min)
-                        parseKeyword("MAX");
-
-                    Field<?> f = parseField();
-                    List<SortField<?>> sort = parseAggregateOrderByIf();
-                    parse(')');
-
-                    OptionallyOrderedAggregateFunction<?> s1 = min ? minBy(arg, f) : maxBy(arg, f);
-                    return sort == null ? s1 : s1.orderBy(sort);
                 }
             }
         }
@@ -13783,9 +11602,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     private final AggregateFunction<?> parseCountIf() {
         if (parseFunctionNameIf("COUNT")) {
             parse('(');
-            if (parseIf(')'))
-                return count();
-
             boolean distinct = parseSetQuantifier();
 
             if (parseIf('*') && parse(')'))
@@ -13912,10 +11728,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             else
                 arguments = new ArrayList<>();
 
-            // [#10107] Completely ignore functions in the DDLDatabase
-            return isDDLDatabase()
-                 ? inline((Object) null)
-                 : function(name, Object.class, arguments);
+            return function(name, Object.class, arguments.toArray(EMPTY_FIELD));
         }
 
 
@@ -13938,15 +11751,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return sequence(parseName());
     }
 
-
-
-
-
-
-
-
-
-
     private final Name parseIndexName() {
         Name result = parseNameIf();
 
@@ -13964,24 +11768,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final Collation parseCollation() {
-        return collation(parseNameOrStringLiteral());
+        return collation(parseName());
     }
 
     private final CharacterSet parseCharacterSet() {
-        return characterSet(parseNameOrStringLiteral());
-    }
-
-    public final Name parseNameOrStringLiteral() {
-        Name result = parseNameIf();
-
-        if (result == null)
-            return name(parseStringLiteral());
-        else
-            return result;
-    }
-
-    private final List<Name> parseNames() {
-        return parseUniqueList("name", ',', c -> parseName());
+        return characterSet(parseName());
     }
 
     @Override
@@ -14045,7 +11836,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 }
                 else {
                     parse('*');
-                    return lookupQualifiedAsterisk(positionBeforeName, result == null ? i1 : DSL.name(result.toArray(EMPTY_NAME)));
+                    return lookupTable(positionBeforeName, result == null ? i1 : DSL.name(result.toArray(EMPTY_NAME))).asterisk();
                 }
             }
             while (parseIf('.'));
@@ -14056,7 +11847,13 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final List<Name> parseIdentifiers() {
-        return parseUniqueList("identifier", ',', c -> parseIdentifier());
+        LinkedHashSet<Name> result = new LinkedHashSet<>();
+
+        do
+            if (!result.add(parseIdentifier()))
+                throw exception("Duplicate identifier encountered");
+        while (parseIf(','));
+        return new ArrayList<>(result);
     }
 
     @Override
@@ -14126,15 +11923,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
              : 0;
     }
 
-    private final char peekQuote(boolean allowAposQuotes, int p) {
-        return peek('"', p) ? '"'
-             : peek('`', p) ? '`'
-             : peek('[', p) ? ']'
-             : allowAposQuotes && peek('\'', p) ? '\''
-             : 0;
-    }
-
-    private final DataType<?> parseCastDataType(boolean numericOnly) {
+    private final DataType<?> parseCastDataType() {
         char character = characterUpper();
 
         switch (character) {
@@ -14151,57 +11940,40 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
         }
 
-        return parseDataType(numericOnly);
+        return parseDataType();
     }
 
     @Override
     public final DataType<?> parseDataType() {
-        return parseDataType(false);
-    }
-
-    private final DataType<?> parseDataType(boolean numericOnly) {
-        DataType<?> result = parseDataTypeIf(true, numericOnly);
+        DataType<?> result = parseDataTypeIf(true);
 
         if (result == null)
-            if (numericOnly)
-                throw expected("Numeric data type");
-            else
-                throw expected("Data type");
+            throw expected("Data type");
 
         return result;
     }
 
     private final DataType<?> parseDataTypeIf(boolean parseUnknownTypes) {
-        return parseDataTypeIf(parseUnknownTypes, false);
-    }
+        DataType<?> result = parseDataTypePrefixIf(parseUnknownTypes);
 
-    private final DataType<?> parseDataTypeIf(boolean parseUnknownTypes, boolean numericOnly) {
-        DataType<?> result = parseDataTypePrefixIf(parseUnknownTypes, numericOnly);
+        if (result != null) {
+            boolean array = parseKeywordIf("ARRAY");
 
-        if (result != null && !numericOnly) {
-            boolean array;
+            if (parseIf('[')) {
+                parseUnsignedIntegerLiteralIf();
+                parse(']');
 
-            do {
-                array = parseKeywordIf("ARRAY");
-
-                if (parseIf('[')) {
-                    parseUnsignedIntegerLiteralIf();
-                    parse(']');
-
-                    array = true;
-                }
-
-                if (array)
-                    result = result.array();
+                array = true;
             }
-            while (array);
+
+            if (array)
+                result = result.getArrayDataType();
         }
 
         return result;
     }
 
-    private final DataType<?> parseDataTypePrefixIf(boolean parseUnknownTypes, boolean parseNumericOnly) {
-        boolean parseUnknownTypes0 = parseUnknownTypes = parseUnknownTypes && !parseNumericOnly;
+    private final DataType<?> parseDataTypePrefixIf(boolean parseUnknownTypes) {
         char character = characterUpper();
 
         if (character == '[' || character == '"' || character == '`')
@@ -14209,80 +11981,67 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
         switch (character) {
             case 'A':
-                if (!parseNumericOnly) {
-                    if (parseKeywordOrIdentifierIf("ARRAY")) {
-                        if (peek('('))
-                            return parseParenthesised(c -> parseDataTypeIf(parseUnknownTypes0).array());
-                        else if (peek('<'))
-                            return parseParenthesised('<', c -> parseDataTypeIf(parseUnknownTypes0).array(), '>');
-                        else
-                            return OTHER.array();
-                    }
-                    else if (parseKeywordIf("AUTO_INCREMENT")) {
-                        parseDataTypeIdentityArgsIf();
-                        return INTEGER.identity(true);
-                    }
+                if (parseKeywordOrIdentifierIf("ARRAY"))
+                    return OTHER.getArrayDataType();
+                else if (parseKeywordIf("AUTO_INCREMENT")) {
+                    parseDataTypeIdentityArgsIf();
+                    return INTEGER.identity(true);
                 }
 
                 break;
 
             case 'B':
-                if (parseKeywordOrIdentifierIf("BIGINT")) {
+                if (parseKeywordOrIdentifierIf("BIGINT"))
                     return parseUnsigned(parseAndIgnoreDataTypeLength(BIGINT));
-                }
-                else if (!parseNumericOnly) {
-                    if (parseKeywordOrIdentifierIf("BIGSERIAL"))
-                        return BIGINT.identity(true);
-                    else if (parseKeywordOrIdentifierIf("BINARY"))
-                        if (parseKeywordIf("VARYING"))
-                            return parseDataTypeLength(VARBINARY);
-                        else
-                            return parseDataTypeLength(BINARY);
-                    else if (parseKeywordOrIdentifierIf("BIT"))
-                        return parseDataTypeLength(BIT);
-                    else if (parseKeywordOrIdentifierIf("BLOB"))
-                        if (parseKeywordIf("SUB_TYPE"))
-                            if (parseKeywordIf("0", "BINARY"))
-                                return parseDataTypeLength(BLOB);
-                            else if (parseKeywordIf("1", "TEXT"))
-                                return parseDataTypeLength(CLOB);
-                            else
-                                throw expected("0", "BINARY", "1", "TEXT");
-                        else
+                else if (parseKeywordOrIdentifierIf("BIGSERIAL"))
+                    return BIGINT.identity(true);
+                else if (parseKeywordOrIdentifierIf("BINARY"))
+                    if (parseKeywordIf("VARYING"))
+                        return parseDataTypeLength(VARBINARY);
+                    else
+                        return parseDataTypeLength(BINARY);
+                else if (parseKeywordOrIdentifierIf("BIT"))
+                    return parseDataTypeLength(BIT);
+                else if (parseKeywordOrIdentifierIf("BLOB"))
+                    if (parseKeywordIf("SUB_TYPE"))
+                        if (parseKeywordIf("0", "BINARY"))
                             return parseDataTypeLength(BLOB);
-                    else if (parseKeywordOrIdentifierIf("BOOLEAN") ||
-                             parseKeywordOrIdentifierIf("BOOL"))
-                        return BOOLEAN;
-                    else if (parseKeywordOrIdentifierIf("BYTEA"))
-                        return BLOB;
-                }
+                        else if (parseKeywordIf("1", "TEXT"))
+                            return parseDataTypeLength(CLOB);
+                        else
+                            throw expected("0", "BINARY", "1", "TEXT");
+                    else
+                        return parseDataTypeLength(BLOB);
+                else if (parseKeywordOrIdentifierIf("BOOLEAN") ||
+                         parseKeywordOrIdentifierIf("BOOL"))
+                    return BOOLEAN;
+                else if (parseKeywordOrIdentifierIf("BYTEA"))
+                    return BLOB;
 
                 break;
 
             case 'C':
-                if (!parseNumericOnly) {
-                    if (parseKeywordOrIdentifierIf("CHAR") ||
-                        parseKeywordOrIdentifierIf("CHARACTER"))
-                        if (parseKeywordIf("VARYING"))
-                            return parseDataTypeCollation(parseDataTypeLength(VARCHAR, VARBINARY, () -> parseKeywordIf("FOR BIT DATA")));
-                        else if (parseKeywordIf("LARGE OBJECT"))
-                            return parseDataTypeCollation(parseDataTypeLength(CLOB));
-                        else
-                            return parseDataTypeCollation(parseDataTypeLength(CHAR, BINARY, () -> parseKeywordIf("FOR BIT DATA")));
-
-                    // [#5934] [#10291] TODO: support as actual data type as well
-                    else if (parseKeywordOrIdentifierIf("CITEXT"))
-                        return parseDataTypeCollation(parseAndIgnoreDataTypeLength(CLOB));
-                    else if (parseKeywordOrIdentifierIf("CLOB"))
+                if (parseKeywordOrIdentifierIf("CHAR") ||
+                    parseKeywordOrIdentifierIf("CHARACTER"))
+                    if (parseKeywordIf("VARYING"))
+                        return parseDataTypeCollation(parseDataTypeLength(VARCHAR, VARBINARY, () -> parseKeywordIf("FOR BIT DATA")));
+                    else if (parseKeywordIf("LARGE OBJECT"))
                         return parseDataTypeCollation(parseDataTypeLength(CLOB));
-                }
+                    else
+                        return parseDataTypeCollation(parseDataTypeLength(CHAR, BINARY, () -> parseKeywordIf("FOR BIT DATA")));
+
+                // [#5934] [#10291] TODO: support as actual data type as well
+                else if (parseKeywordOrIdentifierIf("CITEXT"))
+                    return parseDataTypeCollation(parseAndIgnoreDataTypeLength(CLOB));
+                else if (parseKeywordOrIdentifierIf("CLOB"))
+                    return parseDataTypeCollation(parseDataTypeLength(CLOB));
 
                 break;
 
             case 'D':
-                if (!parseNumericOnly && parseKeywordOrIdentifierIf("DATE"))
+                if (parseKeywordOrIdentifierIf("DATE"))
                     return DATE;
-                else if (!parseNumericOnly && parseKeywordOrIdentifierIf("DATETIME"))
+                else if (parseKeywordOrIdentifierIf("DATETIME"))
                     return parseDataTypePrecisionIf(TIMESTAMP);
                 else if (parseKeywordOrIdentifierIf("DECIMAL") ||
                          parseKeywordOrIdentifierIf("DEC"))
@@ -14294,7 +12053,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'E':
-                if (!parseNumericOnly && parseKeywordOrIdentifierIf("ENUM"))
+                if (parseKeywordOrIdentifierIf("ENUM"))
                     return parseDataTypeCollation(parseDataTypeEnum());
 
                 break;
@@ -14306,20 +12065,18 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'G':
-                if (!parseNumericOnly) {
-                    if (!ignoreProEdition()
-                        && (parseKeywordOrIdentifierIf("GEOMETRY") || parseKeywordOrIdentifierIf("SDO_GEOMETRY"))
-                        && requireProEdition()
-                    ) {
+                if (!ignoreProEdition()
+                    && (parseKeywordOrIdentifierIf("GEOMETRY") || parseKeywordOrIdentifierIf("SDO_GEOMETRY"))
+                    && requireProEdition()
+                ) {
 
 
 
-                    }
-                    else if (!ignoreProEdition() && parseKeywordOrIdentifierIf("GEOGRAPHY") && requireProEdition()) {
+                }
+                else if (!ignoreProEdition() && parseKeywordOrIdentifierIf("GEOGRAPHY") && requireProEdition()) {
 
 
 
-                    }
                 }
 
                 break;
@@ -14333,7 +12090,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return SMALLINT;
                 else if (parseKeywordOrIdentifierIf("INT8"))
                     return BIGINT;
-                else if (!parseNumericOnly && parseKeywordIf("INTERVAL")) {
+                else if (parseKeywordIf("INTERVAL")) {
                     if (parseKeywordIf("YEAR")) {
                         parseDataTypePrecisionIf();
                         parseKeyword("TO MONTH");
@@ -14348,7 +12105,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     else
                         return INTERVAL;
                 }
-                else if (!parseNumericOnly && parseKeywordIf("IDENTITY")) {
+                else if (parseKeywordIf("IDENTITY")) {
                     parseDataTypeIdentityArgsIf();
                     return INTEGER.identity(true);
                 }
@@ -14356,79 +12113,68 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'J':
-                if (!parseNumericOnly) {
-                    if (parseKeywordOrIdentifierIf("JSON"))
-                        return JSON;
-                    else if (parseKeywordOrIdentifierIf("JSONB"))
-                        return JSONB;
-                }
+                if (parseKeywordOrIdentifierIf("JSON"))
+                    return JSON;
+                else if (parseKeywordOrIdentifierIf("JSONB"))
+                    return JSONB;
 
                 break;
 
             case 'L':
-                if (!parseNumericOnly) {
-                    if (parseKeywordOrIdentifierIf("LONGBLOB"))
-                        return BLOB;
-                    else if (parseKeywordOrIdentifierIf("LONGTEXT"))
-                        return parseDataTypeCollation(CLOB);
-                    else if (parseKeywordOrIdentifierIf("LONG NVARCHAR"))
-                        return parseDataTypeCollation(parseDataTypeLength(LONGNVARCHAR));
-                    else if (parseKeywordOrIdentifierIf("LONG VARBINARY") ||
-                             parseKeywordOrIdentifierIf("LONGVARBINARY"))
-                        return parseDataTypeCollation(parseDataTypeLength(LONGVARBINARY));
-                    else if (parseKeywordOrIdentifierIf("LONG VARCHAR") ||
-                             parseKeywordOrIdentifierIf("LONGVARCHAR"))
-                        return parseDataTypeCollation(parseDataTypeLength(LONGVARCHAR, LONGVARBINARY, () -> parseKeywordIf("FOR BIT DATA")));
-                }
+                if (parseKeywordOrIdentifierIf("LONGBLOB"))
+                    return BLOB;
+                else if (parseKeywordOrIdentifierIf("LONGTEXT"))
+                    return parseDataTypeCollation(CLOB);
+                else if (parseKeywordOrIdentifierIf("LONG NVARCHAR"))
+                    return parseDataTypeCollation(parseDataTypeLength(LONGNVARCHAR));
+                else if (parseKeywordOrIdentifierIf("LONG VARBINARY") ||
+                         parseKeywordOrIdentifierIf("LONGVARBINARY"))
+                    return parseDataTypeCollation(parseDataTypeLength(LONGVARBINARY));
+                else if (parseKeywordOrIdentifierIf("LONG VARCHAR") ||
+                         parseKeywordOrIdentifierIf("LONGVARCHAR"))
+                    return parseDataTypeCollation(parseDataTypeLength(LONGVARCHAR, LONGVARBINARY, () -> parseKeywordIf("FOR BIT DATA")));
 
                 break;
 
             case 'M':
-                if (parseKeywordOrIdentifierIf("MEDIUMINT"))
+                if (parseKeywordOrIdentifierIf("MEDIUMBLOB"))
+                    return BLOB;
+                else if (parseKeywordOrIdentifierIf("MEDIUMINT"))
                     return parseUnsigned(parseAndIgnoreDataTypeLength(INTEGER));
-                else if (!parseNumericOnly) {
-                    if (parseKeywordOrIdentifierIf("MEDIUMBLOB"))
-                        return BLOB;
-                    else if (parseKeywordOrIdentifierIf("MEDIUMTEXT"))
-                        return parseDataTypeCollation(CLOB);
-                }
+                else if (parseKeywordOrIdentifierIf("MEDIUMTEXT"))
+                    return parseDataTypeCollation(CLOB);
 
                 break;
 
             case 'N':
-                if (parseKeywordOrIdentifierIf("NUMBER") ||
-                    parseKeywordOrIdentifierIf("NUMERIC")) {
-                    return parseDataTypePrecisionScaleIf(NUMERIC);
-                }
-                else if (!parseNumericOnly) {
-                    if (parseKeywordIf("NATIONAL CHARACTER") ||
-                        parseKeywordIf("NATIONAL CHAR"))
-                        if (parseKeywordIf("VARYING"))
-                            return parseDataTypeCollation(parseDataTypeLength(NVARCHAR));
-                        else if (parseKeywordIf("LARGE OBJECT"))
-                            return parseDataTypeCollation(parseDataTypeLength(NCLOB));
-                        else
-                            return parseDataTypeCollation(parseDataTypeLength(NCHAR));
-                    else if (parseKeywordOrIdentifierIf("NCHAR"))
-                        if (parseKeywordIf("VARYING"))
-                            return parseDataTypeCollation(parseDataTypeLength(NVARCHAR));
-                        else if (parseKeywordIf("LARGE OBJECT"))
-                            return parseDataTypeCollation(parseDataTypeLength(NCLOB));
-                        else
-                            return parseDataTypeCollation(parseDataTypeLength(NCHAR));
-                    else if (parseKeywordOrIdentifierIf("NCLOB"))
-                        return parseDataTypeCollation(parseDataTypeLength(NCLOB));
-                    else if (parseKeywordOrIdentifierIf("NVARCHAR") ||
-                             parseKeywordOrIdentifierIf("NVARCHAR2"))
+                if (parseKeywordIf("NATIONAL CHARACTER") ||
+                    parseKeywordIf("NATIONAL CHAR"))
+                    if (parseKeywordIf("VARYING"))
                         return parseDataTypeCollation(parseDataTypeLength(NVARCHAR));
-                    else if (parseKeywordOrIdentifierIf("NTEXT"))
-                        return parseDataTypeCollation(parseAndIgnoreDataTypeLength(NCLOB));
-                }
+                    else if (parseKeywordIf("LARGE OBJECT"))
+                        return parseDataTypeCollation(parseDataTypeLength(NCLOB));
+                    else
+                        return parseDataTypeCollation(parseDataTypeLength(NCHAR));
+                else if (parseKeywordOrIdentifierIf("NCHAR"))
+                    if (parseKeywordIf("VARYING"))
+                        return parseDataTypeCollation(parseDataTypeLength(NVARCHAR));
+                    else if (parseKeywordIf("LARGE OBJECT"))
+                        return parseDataTypeCollation(parseDataTypeLength(NCLOB));
+                    else
+                        return parseDataTypeCollation(parseDataTypeLength(NCHAR));
+                else if (parseKeywordOrIdentifierIf("NCLOB"))
+                    return parseDataTypeCollation(parseDataTypeLength(NCLOB));
+                else if (parseKeywordOrIdentifierIf("NUMBER") ||
+                         parseKeywordOrIdentifierIf("NUMERIC"))
+                    return parseDataTypePrecisionScaleIf(NUMERIC);
+                else if (parseKeywordOrIdentifierIf("NVARCHAR") ||
+                         parseKeywordOrIdentifierIf("NVARCHAR2"))
+                    return parseDataTypeCollation(parseDataTypeLength(NVARCHAR));
 
                 break;
 
             case 'O':
-                if (!parseNumericOnly && parseKeywordOrIdentifierIf("OTHER"))
+                if (parseKeywordOrIdentifierIf("OTHER"))
                     return OTHER;
 
                 break;
@@ -14440,106 +12186,82 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 break;
 
             case 'S':
-                if (parseKeywordOrIdentifierIf("SMALLINT"))
+                if (parseKeywordOrIdentifierIf("SERIAL4") ||
+                    parseKeywordOrIdentifierIf("SERIAL"))
+                    return INTEGER.identity(true);
+                else if (parseKeywordOrIdentifierIf("SERIAL8"))
+                    return BIGINT.identity(true);
+                else if (parseKeywordOrIdentifierIf("SET"))
+                    return parseDataTypeCollation(parseDataTypeEnum());
+                else if (parseKeywordOrIdentifierIf("SMALLINT"))
                     return parseUnsigned(parseAndIgnoreDataTypeLength(SMALLINT));
-                else if (!parseNumericOnly) {
-                    if (parseKeywordOrIdentifierIf("SERIAL4") ||
-                        parseKeywordOrIdentifierIf("SERIAL"))
-                        return INTEGER.identity(true);
-                    else if (parseKeywordOrIdentifierIf("SERIAL8"))
-                        return BIGINT.identity(true);
-                    else if (parseKeywordOrIdentifierIf("SET"))
-                        return parseDataTypeCollation(parseDataTypeEnum());
-                    else if (parseKeywordOrIdentifierIf("SMALLSERIAL") ||
-                             parseKeywordOrIdentifierIf("SERIAL2"))
-                        return SMALLINT.identity(true);
-                    else if (parseKeywordOrIdentifierIf("STRING"))
-                        return parseDataTypeCollation(parseDataTypeLength(VARCHAR));
-                }
+                else if (parseKeywordOrIdentifierIf("SMALLSERIAL") ||
+                         parseKeywordOrIdentifierIf("SERIAL2"))
+                    return SMALLINT.identity(true);
 
                 break;
 
             case 'T':
-                if (parseKeywordOrIdentifierIf("TINYINT"))
-                    return parseUnsigned(parseAndIgnoreDataTypeLength(TINYINT));
-                else if (!parseNumericOnly) {
-                    if (parseKeywordOrIdentifierIf("TEXT"))
-                        return parseDataTypeCollation(parseAndIgnoreDataTypeLength(CLOB));
-                    else if (parseKeywordOrIdentifierIf("TIMESTAMPTZ"))
-                        return parseDataTypePrecisionIf(TIMESTAMPWITHTIMEZONE);
-                    else if (parseKeywordOrIdentifierIf("TIMESTAMP")) {
-                        Integer precision = parseDataTypePrecisionIf();
+                if (parseKeywordOrIdentifierIf("TEXT"))
+                    return parseDataTypeCollation(parseAndIgnoreDataTypeLength(CLOB));
+                else if (parseKeywordOrIdentifierIf("TIMESTAMPTZ"))
+                    return parseDataTypePrecisionIf(TIMESTAMPWITHTIMEZONE);
+                else if (parseKeywordOrIdentifierIf("TIMESTAMP")) {
+                    Integer precision = parseDataTypePrecisionIf();
 
-                        if (parseKeywordOrIdentifierIf("WITH TIME ZONE"))
-                            return precision == null ? TIMESTAMPWITHTIMEZONE : TIMESTAMPWITHTIMEZONE(precision);
-                        else if (parseKeywordOrIdentifierIf("WITHOUT TIME ZONE") || true)
-                            return precision == null ? TIMESTAMP : TIMESTAMP(precision);
-                    }
-                    else if (parseKeywordOrIdentifierIf("TIMETZ"))
-                        return parseDataTypePrecisionIf(TIMEWITHTIMEZONE);
-                    else if (parseKeywordOrIdentifierIf("TIME")) {
-                        Integer precision = parseDataTypePrecisionIf();
-
-                        if (parseKeywordOrIdentifierIf("WITH TIME ZONE"))
-                            return precision == null ? TIMEWITHTIMEZONE : SQLDataType.TIMEWITHTIMEZONE(precision);
-                        else if (parseKeywordOrIdentifierIf("WITHOUT TIME ZONE") || true)
-                            return precision == null ? TIME : TIME(precision);
-                    }
-                    else if (parseKeywordOrIdentifierIf("TINYBLOB"))
-                        return BLOB;
-                    else if (parseKeywordOrIdentifierIf("TINYTEXT"))
-                        return parseDataTypeCollation(CLOB);
+                    if (parseKeywordOrIdentifierIf("WITH TIME ZONE"))
+                        return precision == null ? TIMESTAMPWITHTIMEZONE : TIMESTAMPWITHTIMEZONE(precision);
+                    else if (parseKeywordOrIdentifierIf("WITHOUT TIME ZONE") || true)
+                        return precision == null ? TIMESTAMP : TIMESTAMP(precision);
                 }
+                else if (parseKeywordOrIdentifierIf("TIMETZ"))
+                    return parseDataTypePrecisionIf(TIMEWITHTIMEZONE);
+                else if (parseKeywordOrIdentifierIf("TIME")) {
+                    Integer precision = parseDataTypePrecisionIf();
+
+                    if (parseKeywordOrIdentifierIf("WITH TIME ZONE"))
+                        return precision == null ? TIMEWITHTIMEZONE : SQLDataType.TIMEWITHTIMEZONE(precision);
+                    else if (parseKeywordOrIdentifierIf("WITHOUT TIME ZONE") || true)
+                        return precision == null ? TIME : TIME(precision);
+                }
+                else if (parseKeywordOrIdentifierIf("TINYBLOB"))
+                    return BLOB;
+                else if (parseKeywordOrIdentifierIf("TINYINT"))
+                    return parseUnsigned(parseAndIgnoreDataTypeLength(TINYINT));
+                else if (parseKeywordOrIdentifierIf("TINYTEXT"))
+                    return parseDataTypeCollation(CLOB);
 
                 break;
 
             case 'U':
-                if (parseKeywordOrIdentifierIf("UTINYINT"))
-                    return SQLDataType.TINYINTUNSIGNED;
-                else if (parseKeywordOrIdentifierIf("USMALLINT"))
-                    return SQLDataType.SMALLINTUNSIGNED;
-                else if (parseKeywordOrIdentifierIf("UINTEGER"))
-                    return SQLDataType.INTEGERUNSIGNED;
-                else if (parseKeywordOrIdentifierIf("UBIGINT"))
-                    return SQLDataType.BIGINTUNSIGNED;
-                else if (!parseNumericOnly) {
-                    if (parseKeywordOrIdentifierIf("UUID"))
-                        return SQLDataType.UUID;
-                    else if (parseKeywordOrIdentifierIf("UNIQUEIDENTIFIER"))
-                        return SQLDataType.UUID;
-                }
+                if (parseKeywordOrIdentifierIf("UUID"))
+                    return SQLDataType.UUID;
+                else if (parseKeywordOrIdentifierIf("UNIQUEIDENTIFIER"))
+                    return SQLDataType.UUID;
 
                 break;
 
             case 'V':
-                if (!parseNumericOnly) {
-                    if (parseKeywordOrIdentifierIf("VARCHAR") ||
-                        parseKeywordOrIdentifierIf("VARCHAR2") ||
-                        // [#5934] [#10291] TODO: support as actual data type as well
-                        parseKeywordOrIdentifierIf("VARCHAR_IGNORECASE"))
-                        return parseDataTypeCollation(parseDataTypeLength(VARCHAR, VARBINARY, () -> parseKeywordIf("FOR BIT DATA")));
-                    else if (parseKeywordOrIdentifierIf("VARBINARY"))
-                        return parseDataTypeLength(VARBINARY);
-                }
+                if (parseKeywordOrIdentifierIf("VARCHAR") ||
+                    parseKeywordOrIdentifierIf("VARCHAR2") ||
+                    // [#5934] [#10291] TODO: support as actual data type as well
+                    parseKeywordOrIdentifierIf("VARCHAR_IGNORECASE"))
+                    return parseDataTypeCollation(parseDataTypeLength(VARCHAR, VARBINARY, () -> parseKeywordIf("FOR BIT DATA")));
+                else if (parseKeywordOrIdentifierIf("VARBINARY"))
+                    return parseDataTypeLength(VARBINARY);
 
                 break;
 
             case 'X':
-                if (!parseNumericOnly && parseKeywordOrIdentifierIf("XML"))
+                if (parseKeywordOrIdentifierIf("XML"))
                     return SQLDataType.XML;
-
-                break;
-
-            case 'Y':
-                if (!parseNumericOnly && parseKeywordOrIdentifierIf("YEAR"))
-                    return parseDataTypeLength(SQLDataType.YEAR);
 
                 break;
         }
 
         Name name;
         if (parseUnknownTypes && (name = parseNameIf()) != null)
-            return parseDataTypeLength(new DefaultDataType(dsl.dialect(), Object.class, name));
+            return new DefaultDataType(dsl.dialect(), Object.class, name);
         else
             return null;
     }
@@ -14622,7 +12344,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final CharacterSet parseCharacterSetSpecificationIf() {
-        if (parseKeywordIf("CHARACTER SET", "CHARSET")) {
+        if (parseKeywordIf("CHARACTER SET") || parseKeywordIf("CHARSET")) {
             parseIf('=');
             return parseCharacterSet();
         }
@@ -14718,7 +12440,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                   + "  private ").append(className).append("(String literal) { this.literal = literal; }\n"
                   + "  @Override\n"
                   + "  public String getName() {\n"
-                  + "    return null;\n"
+                  + "    return getClass().getName();\n"
                   + "  }\n"
                   + "  @Override\n"
                   + "  public String getLiteral() {\n"
@@ -14754,18 +12476,13 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         switch (character()) {
             case '?':
                 parse('?');
-                paramName = null;
+                paramName = "" + bindIndex;
                 break;
 
             default:
                 String prefix = defaultIfNull(settings().getParseNamedParamPrefix(), ":");
 
                 if (parseIf(prefix, false)) {
-
-                    // [#14594] ": param" is a valid placeholder in Oracle
-                    if (":".equals(prefix))
-                        parseWhitespaceIf();
-
                     Name identifier = parseIdentifier(false, true);
                     paramName = identifier.last();
 
@@ -14783,31 +12500,14 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
         // [#11074] Bindings can be Param or even Field types
         Object binding = nextBinding();
-        Param<?> param;
 
-        if (binding instanceof Val<?> v) {
-            param = DSL.val0(
-                v.getValue(),
-                v.getDataType(),
-                v.inferredDataType,
-                bindIndex,
-                paramName
-            );
-        }
-        else if (binding instanceof Field<?> f) {
-            return f;
-        }
-        else
-            param = DSL.val0(
-                binding,
-                DSL.getDataType0((Class<?>) (binding != null ? binding.getClass() : Object.class)),
-                true,
-                bindIndex,
-                paramName
-            );
+        if (binding instanceof Field)
+            return (Field<?>) binding;
+
+        Param<?> param = DSL.param(paramName, binding);
 
         if (bindParamListener != null)
-            bindParams.put(paramName != null ? paramName : ("" + bindIndex), param);
+            bindParams.put(paramName, param);
 
         return param;
     }
@@ -14896,7 +12596,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     throw exception("Unexpected token: \"'\"");
 
                 try {
-                    buffer.write(parseInt("" + c1 + c2, 16));
+                    buffer.write(Integer.parseInt("" + c1 + c2, 16));
                 }
                 catch (NumberFormatException e) {
                     throw exception("Illegal character for binary literal");
@@ -14937,7 +12637,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         }
 
         StringBuilder sb = new StringBuilder();
-        for (int i = position(); i < chars.length; i++) {
+        for (int i = position(); i < sql.length; i++) {
             char c = character(i);
 
             if (c == end)
@@ -14971,7 +12671,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         int closeTokenEnd = -1;
 
         tokenLoop:
-        for (int i = position(); i < chars.length; i++) {
+        for (int i = position(); i < sql.length; i++) {
             char c = character(i);
 
             // "Good enough" approximation of PostgreSQL's syntax requirements
@@ -14990,7 +12690,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         position(openTokenEnd + 1);
 
         literalLoop:
-        for (int i = position(); i < chars.length; i++) {
+        for (int i = position(); i < sql.length; i++) {
             char c = character(i);
 
             if (c == '$')
@@ -15019,7 +12719,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         StringBuilder sb = new StringBuilder();
 
         characterLoop:
-        for (int i = position(); i < chars.length; i++) {
+        for (int i = position(); i < sql.length; i++) {
             char c1 = character(i);
 
             // TODO MySQL string escaping...
@@ -15074,13 +12774,13 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
                         // Unicode character value UTF-16
                         case 'u':
-                            c1 = (char) parseInt(substring(i + 1, i + 5), 16);
+                            c1 = (char) Integer.parseInt(new String(sql, i + 1, 4), 16);
                             i += 4;
                             break;
 
                         // Unicode character value UTF-32
                         case 'U':
-                            sb.appendCodePoint(parseInt(substring(i + 1, i + 9), 16));
+                            sb.appendCodePoint(Integer.parseInt(new String(sql, i + 1, 8), 16));
                             i += 8;
                             continue characterLoop;
 
@@ -15096,14 +12796,14 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
                                     if (Character.digit(c4, 8) != -1) {
                                         i++;
-                                        c1 = (char) parseInt("" + c2 + c3 + c4, 8);
+                                        c1 = (char) Integer.parseInt("" + c2 + c3 + c4, 8);
                                     }
                                     else {
-                                        c1 = (char) parseInt("" + c2 + c3, 8);
+                                        c1 = (char) Integer.parseInt("" + c2 + c3, 8);
                                     }
                                 }
                                 else {
-                                    c1 = (char) parseInt("" + c2, 8);
+                                    c1 = (char) Integer.parseInt("" + c2, 8);
                                 }
                             }
 
@@ -15170,16 +12870,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
         if (parseIf('e', false) || parseIf('E', false)) {
             parseIf('-', false);
-            int p0 = position();
             parseDigits();
 
-            // [#16330] Support implicit 0 exponents (e.g. 0e or 0.0e as supported by SQL Server)
             String s = substring(p, position());
-            if (position() == p0)
-                s = s + "0";
-
             parseWhitespaceIf();
-            return sign == Sign.MINUS ? -parseDouble(s) : parseDouble(s);
+            return sign == Sign.MINUS ? -Double.parseDouble(s) : Double.parseDouble(s);
         }
         else {
             String s = substring(p, position());
@@ -15197,7 +12892,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         }
     }
 
-    private final void parseDigits() {
+    private void parseDigits() {
         for (;;) {
             char c = character();
 
@@ -15275,25 +12970,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return result;
     }
 
-    private final <T> List<T> parseUniqueList(String objectType, char separator, Function<? super ParseContext, ? extends T> element) {
-        return parseUniqueList(objectType, c -> c.parseIf(separator), element);
-    }
-
-    private final <T> List<T> parseUniqueList(String objectType, String separator, Function<? super ParseContext, ? extends T> element) {
-        return parseUniqueList(objectType, c -> c.parseIf(separator), element);
-    }
-
-    private final <T> List<T> parseUniqueList(String objectType, Predicate<? super ParseContext> separator, Function<? super ParseContext, ? extends T> element) {
-        Set<T> result = new LinkedHashSet<>();
-
-        do
-            if (!result.add(element.apply(this)))
-                throw exception("Duplicate " + objectType + " encountered: ");
-        while (separator.test(this));
-
-        return new ArrayList<>(result);
-    }
-
     @Override
     public final <T> T parseParenthesised(Function<? super ParseContext, ? extends T> content) {
         return parseParenthesised('(', content, ')');
@@ -15317,10 +12993,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return result;
     }
 
-    private final Field<? extends Number> parseCastIntegerOrBindVariable0(
-        Supplier<Long> l
-    ) {
-        Long i = l.get();
+    private final Field<Long> parseUnsignedIntegerOrBindVariable() {
+        Long i = parseUnsignedIntegerLiteralIf();
 
         if (i != null)
             return DSL.inline(i);
@@ -15329,31 +13003,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         if (f != null)
             return (Field<Long>) f;
 
-        throw expected("Integer or bind variable");
-    }
-
-    private final Field<? extends Number> parseCastIntegerOrBindVariable(
-        Supplier<Long> l
-    ) {
-        if (parseFunctionNameIf("CAST")) {
-            parse('(');
-            Field<?> field = parseCastIntegerOrBindVariable0(l);
-            parseKeyword("AS");
-            parseCastDataType(true);
-            parse(')');
-
-            return (Field<? extends Number>) field;
-        }
-        else
-            return parseCastIntegerOrBindVariable0(l);
-    }
-
-    private final Field<? extends Number> parseUnsignedIntegerOrBindVariable() {
-        return parseCastIntegerOrBindVariable(this::parseUnsignedIntegerLiteralIf);
-    }
-
-    private final Field<? extends Number> parseSignedIntegerOrBindVariable() {
-        return parseCastIntegerOrBindVariable(this::parseSignedIntegerLiteralIf);
+        throw expected("Unsigned integer or bind variable");
     }
 
     @Override
@@ -15379,71 +13029,46 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return Long.valueOf(s);
     }
 
-    private static final record Join(JoinType type, JoinHint hint) {}
-
-    private final Join parseJoinTypeIf() {
-        JoinHint hint;
-
-        if (parseKeywordIf("ANTI JOIN"))
-            return new Join(JoinType.LEFT_ANTI_JOIN, null);
-        else if (parseKeywordIf("CROSS")) {
+    private final JoinType parseJoinTypeIf() {
+        if (parseKeywordIf("CROSS")) {
             if (parseKeywordIf("JOIN"))
-                return new Join(JoinType.CROSS_JOIN, null);
+                return JoinType.CROSS_JOIN;
             else if (parseKeywordIf("APPLY"))
-                return new Join(JoinType.CROSS_APPLY, null);
+                return JoinType.CROSS_APPLY;
         }
-        else if (parseKeywordIf("INNER") && asTrue(hint = parseJoinHintIf()) && parseKeyword("JOIN"))
-            return new Join(JoinType.JOIN, hint);
-        else if (parseKeywordIf("JOIN") && asTrue(hint = parseJoinHintIf()))
-            return new Join(JoinType.JOIN, hint);
+        else if (parseKeywordIf("INNER") && parseKeyword("JOIN"))
+            return JoinType.JOIN;
+        else if (parseKeywordIf("JOIN"))
+            return JoinType.JOIN;
         else if (parseKeywordIf("LEFT")) {
             if (parseKeywordIf("SEMI") && parseKeyword("JOIN"))
-                return new Join(JoinType.LEFT_SEMI_JOIN, null);
+                return JoinType.LEFT_SEMI_JOIN;
             else if (parseKeywordIf("ANTI") && parseKeyword("JOIN"))
-                return new Join(JoinType.LEFT_ANTI_JOIN, null);
-            else if ((parseKeywordIf("OUTER") || true) && asTrue(hint = parseJoinHintIf()) && parseKeyword("JOIN"))
-                return new Join(JoinType.LEFT_OUTER_JOIN, hint);
+                return JoinType.LEFT_ANTI_JOIN;
+            else if ((parseKeywordIf("OUTER") || true) && parseKeyword("JOIN"))
+                return JoinType.LEFT_OUTER_JOIN;
         }
-        else if (parseKeywordIf("RIGHT")) {
-            if (parseKeywordIf("ANTI JOIN"))
-                throw notImplemented("RIGHT ANTI JOIN");
-            else if (parseKeywordIf("SEMI JOIN"))
-                throw notImplemented("RIGHT SEMI JOIN");
-            else if ((parseKeywordIf("OUTER") || true) && asTrue(hint = parseJoinHintIf()) && parseKeyword("JOIN"))
-                return new Join(JoinType.RIGHT_OUTER_JOIN, hint);
-        }
-        else if (parseKeywordIf("FULL") && (parseKeywordIf("OUTER") || true) && asTrue(hint = parseJoinHintIf()) && parseKeyword("JOIN"))
-            return new Join(JoinType.FULL_OUTER_JOIN, hint);
+        else if (parseKeywordIf("RIGHT") && (parseKeywordIf("OUTER") || true) && parseKeyword("JOIN"))
+            return JoinType.RIGHT_OUTER_JOIN;
+        else if (parseKeywordIf("FULL") && (parseKeywordIf("OUTER") || true) && parseKeyword("JOIN"))
+            return JoinType.FULL_OUTER_JOIN;
         else if (parseKeywordIf("OUTER APPLY"))
-            return new Join(JoinType.OUTER_APPLY, null);
+            return JoinType.OUTER_APPLY;
         else if (parseKeywordIf("NATURAL")) {
             if (parseKeywordIf("LEFT") && (parseKeywordIf("OUTER") || true) && parseKeyword("JOIN"))
-                return new Join(JoinType.NATURAL_LEFT_OUTER_JOIN, null);
+                return JoinType.NATURAL_LEFT_OUTER_JOIN;
             else if (parseKeywordIf("RIGHT") && (parseKeywordIf("OUTER") || true) && parseKeyword("JOIN"))
-                return new Join(JoinType.NATURAL_RIGHT_OUTER_JOIN, null);
+                return JoinType.NATURAL_RIGHT_OUTER_JOIN;
             else if (parseKeywordIf("FULL") && (parseKeywordIf("OUTER") || true) && parseKeyword("JOIN"))
-                return new Join(JoinType.NATURAL_FULL_OUTER_JOIN, null);
+                return JoinType.NATURAL_FULL_OUTER_JOIN;
             else if ((parseKeywordIf("INNER") || true) && parseKeyword("JOIN"))
-                return new Join(JoinType.NATURAL_JOIN, null);
+                return JoinType.NATURAL_JOIN;
         }
-        else if (parseKeywordIf("SEMI JOIN"))
-            return new Join(JoinType.LEFT_SEMI_JOIN, null);
         else if (parseKeywordIf("STRAIGHT_JOIN"))
-            return new Join(JoinType.STRAIGHT_JOIN, null);
+            return JoinType.STRAIGHT_JOIN;
 
         return null;
         // TODO partitioned join
-    }
-
-    private final JoinHint parseJoinHintIf() {
-        if (parseKeywordIf("HASH"))
-            return JoinHint.HASH;
-        else if (parseKeywordIf("LOOP", "LOOKUP"))
-            return JoinHint.LOOP;
-        else if (parseKeywordIf("MERGE"))
-            return JoinHint.MERGE;
-        else
-            return null;
     }
 
     private final TruthValue parseTruthValueIf() {
@@ -15465,7 +13090,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 return CombineOperator.UNION;
             else
                 return CombineOperator.UNION;
-        else if (!intersectOnly && parseKeywordIf("EXCEPT", "MINUS"))
+        else if (!intersectOnly && (parseKeywordIf("EXCEPT") || parseKeywordIf("MINUS")))
             if (parseKeywordIf("ALL"))
                 return CombineOperator.EXCEPT_ALL;
             else if (parseKeywordIf("DISTINCT"))
@@ -15488,7 +13113,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             case 'A':
                 if (parseFunctionNameIf("ANY"))
                     return ComputationalOperation.ANY;
-                else if (parseFunctionNameIf("ANY_VALUE", "ARBITRARY"))
+                else if (parseFunctionNameIf("ANY_VALUE"))
                     return ComputationalOperation.ANY_VALUE;
                 else if (parseFunctionNameIf("AVG"))
                     return ComputationalOperation.AVG;
@@ -15519,11 +13144,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
             case 'M':
-                if (parseFunctionNameIf("MAX", "MAXIMUM"))
+                if (parseFunctionNameIf("MAX"))
                     return ComputationalOperation.MAX;
                 else if (parseFunctionNameIf("MEDIAN"))
                     return ComputationalOperation.MEDIAN;
-                else if (parseFunctionNameIf("MIN", "MINIMUM"))
+                else if (parseFunctionNameIf("MIN"))
                     return ComputationalOperation.MIN;
                 else if (parseFunctionNameIf("MUL"))
                     return ComputationalOperation.PRODUCT;
@@ -15541,25 +13166,25 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     return ComputationalOperation.SUM;
                 else if (parseFunctionNameIf("SOME"))
                     return ComputationalOperation.ANY;
-                else if (parseFunctionNameIf("STDDEV", "STDEVP", "STDDEV_POP", "stddevPop"))
+                else if (parseFunctionNameIf("STDDEV", "STDEVP", "STDDEV_POP"))
                     return ComputationalOperation.STDDEV_POP;
 
 
 
 
-                else if (parseFunctionNameIf("STDDEV_SAMP", "STDEV", "STDEV_SAMP", "stddevSamp"))
+                else if (parseFunctionNameIf("STDDEV_SAMP", "STDEV", "STDEV_SAMP"))
                     return ComputationalOperation.STDDEV_SAMP;
 
                 break;
 
             case 'V':
-                if (parseFunctionNameIf("VAR_POP", "VARIANCE", "VARP", "varPop"))
+                if (parseFunctionNameIf("VAR_POP", "VARIANCE", "VARP"))
                     return ComputationalOperation.VAR_POP;
 
 
 
 
-                else if (parseFunctionNameIf("VAR_SAMP", "VARIANCE_SAMP", "VAR", "varSamp"))
+                else if (parseFunctionNameIf("VAR_SAMP", "VARIANCE_SAMP", "VAR"))
                     return ComputationalOperation.VAR_SAMP;
 
                 break;
@@ -15579,7 +13204,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
 
-        if (parseIf("==") || parseIf("=") || parseKeywordIf("EQ"))
+        if (parseIf("=") || parseKeywordIf("EQ"))
             return Comparator.EQUALS;
         else if (parseIf("!=") || parseIf("<>") || parseIf("^=") || parseKeywordIf("NE"))
             return Comparator.NOT_EQUALS;
@@ -15629,7 +13254,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         int start = position();
         int stop = start;
 
-        for (; stop < chars.length; stop++) {
+        for (; stop < sql.length; stop++) {
             char c = character(stop);
 
             if (c == '\r') {
@@ -15650,24 +13275,117 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return substring(start, stop);
     }
 
+    private final boolean parseTokens(char... tokens) {
+        boolean result = parseTokensIf(tokens);
+
+        if (!result)
+            throw expected(new String(tokens));
+
+        return result;
+    }
+
+    private final boolean parseTokensIf(char... tokens) {
+        int p = position();
+
+        for (char token : tokens) {
+            if (!parseIf(token)) {
+                position(p);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private final boolean peekTokens(char... tokens) {
+        int p = position();
+
+        for (char token : tokens) {
+            if (!parseIf(token)) {
+                position(p);
+                return false;
+            }
+        }
+
+        position(p);
+        return true;
+    }
+
+    @Override
+    public final boolean parse(String string) {
+        boolean result = parseIf(string);
+
+        if (!result)
+            throw expected(string);
+
+        return result;
+    }
+
+    @Override
+    public final boolean parseIf(String string) {
+        return parseIf(string, true);
+    }
+
+    private final boolean parseIf(String string, boolean skipAfterWhitespace) {
+        boolean result = peek(string);
+
+        if (result) {
+            positionInc(string.length());
+
+            if (skipAfterWhitespace)
+                parseWhitespaceIf();
+        }
+
+        return result;
+    }
+
+    @Override
+    public final boolean parse(char c) {
+        return parse(c, true);
+    }
+
+    private final boolean parse(char c, boolean skipAfterWhitespace) {
+        if (!parseIf(c, skipAfterWhitespace))
+            throw expected("Token '" + c + "'");
+
+        return true;
+    }
+
+    @Override
+    public final boolean parseIf(char c) {
+        return parseIf(c, true);
+    }
+
+    private final boolean parseIf(char c, boolean skipAfterWhitespace) {
+        boolean result = peek(c);
+
+        if (result) {
+            positionInc();
+
+            if (skipAfterWhitespace)
+                parseWhitespaceIf();
+        }
+
+        return result;
+    }
+
+    private final boolean parseIf(char c, char peek, boolean skipAfterWhitespace) {
+        if (character() != c)
+            return false;
+
+        if (characterNext() != peek)
+            return false;
+
+        positionInc();
+
+        if (skipAfterWhitespace)
+            parseWhitespaceIf();
+
+        return true;
+    }
+
     private final boolean peekFunctionNameIf(String name) {
         return peekKeyword(name, false, false, true);
-    }
-
-    private final boolean parseProFunctionNameIf(String name) {
-        return !ignoreProEdition() && parseFunctionNameIf(name) && requireProEdition();
-    }
-
-    private final boolean parseProFunctionNameIf(String name1, String name2) {
-        return !ignoreProEdition() && parseFunctionNameIf(name1, name2) && requireProEdition();
-    }
-
-    private final boolean parseProFunctionNameIf(String name1, String name2, String name3) {
-        return !ignoreProEdition() && parseFunctionNameIf(name1, name2, name3) && requireProEdition();
-    }
-
-    private final boolean parseProFunctionNameIf(String... names) {
-        return !ignoreProEdition() && parseFunctionNameIf(names) && requireProEdition();
     }
 
     @Override
@@ -15707,13 +13425,13 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         int length = operator.length();
         int p = position();
 
-        if (chars.length < p + length)
+        if (sql.length < p + length)
             return false;
 
-        int pos = afterWhitespace(p);
+        int pos = afterWhitespace(p, false);
 
         for (int i = 0; i < length; i++, pos++)
-            if (chars[pos] != operator.charAt(i))
+            if (sql[pos] != operator.charAt(i))
                 return false;
 
         // [#9888] An operator that is followed by a special character is very likely another, more complex operator
@@ -15750,29 +13468,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         throw expected(keyword1, keyword2, keyword3);
     }
 
-    private final boolean parseKeywordUndocumentedAlternatives(String keyword, String undocumented1) {
-        if (parseKeywordIf(undocumented1))
-            return true;
-        else
-            return parseKeyword(keyword);
-    }
-
-    private final boolean parseProKeywordIf(String name) {
-        return !ignoreProEdition() && parseKeywordIf(name) && requireProEdition();
-    }
-
-    private final boolean parseProKeywordIf(String name1, String name2) {
-        return !ignoreProEdition() && parseKeywordIf(name1, name2) && requireProEdition();
-    }
-
-    private final boolean parseProKeywordIf(String name1, String name2, String name3) {
-        return !ignoreProEdition() && parseKeywordIf(name1, name2, name3) && requireProEdition();
-    }
-
-    private final boolean parseProKeywordIf(String... names) {
-        return !ignoreProEdition() && parseKeywordIf(names) && requireProEdition();
-    }
-
     @Override
     public final boolean parseKeywordIf(String keyword) {
         return peekKeyword(keyword, true, false, false);
@@ -15784,10 +13479,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
     private final boolean parseKeywordIf(String keyword1, String keyword2, String keyword3) {
         return parseKeywordIf(keyword1) || parseKeywordIf(keyword2) || parseKeywordIf(keyword3);
-    }
-
-    private final boolean parseKeywordIf(String keyword1, String keyword2, String keyword3, String keyword4) {
-        return parseKeywordIf(keyword1) || parseKeywordIf(keyword2) || parseKeywordIf(keyword3) || parseKeywordIf(keyword4);
     }
 
     @Override
@@ -15823,20 +13514,27 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return null;
     }
 
-    private final boolean peekProKeyword(String... keywords) {
-        return !ignoreProEdition() && peekKeyword(keywords) && requireProEdition();
+    @Override
+    public final boolean peek(char c) {
+        return character() == c;
     }
 
-    private final boolean peekProKeyword(String keyword) {
-        return !ignoreProEdition() && peekKeyword(keyword) && requireProEdition();
+    @Override
+    public final boolean peek(String string) {
+        return peek(string, position());
     }
 
-    private final boolean peekProKeyword(String keyword1, String keyword2) {
-        return !ignoreProEdition() && peekKeyword(keyword1, keyword2) && requireProEdition();
-    }
+    private final boolean peek(String string, int p) {
+        int length = string.length();
 
-    private final boolean peekProKeyword(String keyword1, String keyword2, String keyword3) {
-        return !ignoreProEdition() && peekKeyword(keyword1, keyword2, keyword3) && requireProEdition();
+        if (sql.length < p + length)
+            return false;
+
+        for (int i = 0; i < length; i++)
+            if (sql[p + i] != string.charAt(i))
+                return false;
+
+        return true;
     }
 
     @Override
@@ -15858,68 +13556,28 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private final boolean peekKeyword(String keyword, boolean updatePosition, boolean peekIntoParens, boolean requireFunction) {
-        boolean caseSensitive =
-               Character.isLowerCase(keyword.charAt(0))
-            || Character.isLowerCase(keyword.charAt(keyword.length() - 1));
         int length = keyword.length();
         int p = position();
 
-        if (chars.length < p + length)
+        if (sql.length < p + length)
             return false;
 
-        int skip = afterWhitespace(p, peekIntoParens, false, icIgnore) - p;
-
-        // [#18480] Function names are allowed to be quoted
-        char quoteEnd = requireFunction ? peekQuote(false, p + skip) : 0;
-        boolean quoted = quoteEnd != 0;
-        ParseNameCase nameCase = null;
-
-        if (quoted) {
-            if (NO_SUPPORT_QUOTED_BUILT_IN_FUNCION_NAMES.contains(parseDialect()))
-                return false;
-
-            nameCase = parseNameCase(configuration);
-            switch (parseDialect()) {
-
-
-
-
-
-
-                default:
-                    caseSensitive =
-                           nameCase != ParseNameCase.AS_IS
-                        && nameCase != ParseNameCase.LOWER;
-                    break;
-            }
-
-            skip++;
-        }
+        int skip = afterWhitespace(p, peekIntoParens) - p;
 
         for (int i = 0; i < length; i++) {
             char c = keyword.charAt(i);
-
-            if (caseSensitive && (
-                nameCase == ParseNameCase.LOWER_IF_UNQUOTED ||
-                nameCase == ParseNameCase.LOWER))
-                c = lower(c);
-
             int pos = p + i + skip;
 
             switch (c) {
                 case ' ':
-                    if (!Character.isWhitespace(character(pos)))
+                    if (!Character.isWhitespace(sql[pos]))
                         return false;
 
                     skip = skip + (afterWhitespace(pos) - pos - 1);
                     break;
 
                 default:
-                    if (caseSensitive) {
-                        if (character(pos) != c)
-                            return false;
-                    }
-                    else if (upper(character(pos)) != c)
+                    if (upper(sql[pos]) != c)
                         return false;
 
                     break;
@@ -15927,15 +13585,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         }
 
         int pos = p + length + skip;
-
-        if (quoted) {
-            if (character(pos) == quoteEnd) {
-                pos++;
-                skip++;
-            }
-            else
-                return false;
-        }
 
         // [#8806] A keyword that is followed by a period is very likely an identifier
         if (isIdentifierPart(pos) || character(pos) == '.')
@@ -15953,42 +13602,29 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return true;
     }
 
-    private final boolean peekKeyword(KeywordLookup lookup) {
-        int pos = afterWhitespace(position(), false, false, icIgnore);
-        int p = lookup.lookup(chars, pos, i -> afterWhitespace(i, false, false, icIgnore));
-
-        if (p == pos)
-            return false;
-
-        // [#8806] A keyword that is followed by a period is very likely an identifier
-        if (isIdentifierPart(p) || character(p) == '.')
-            return false;
-
-        return true;
+    private final boolean parseWhitespaceIf() {
+        positionBeforeWhitespace = position();
+        position(afterWhitespace(positionBeforeWhitespace));
+        return positionBeforeWhitespace != position();
     }
 
-    @Override
-    final int afterWhitespace(int p) {
-        return afterWhitespace(p, false, false, icIgnore);
+    private final int afterWhitespace(int p) {
+        return afterWhitespace(p, false);
     }
 
-    private static final record IgnoreComment(
-        boolean check,
-        String start,
-        String stop
-    ) {}
-
-    private final int afterWhitespace(int p, boolean peekIntoParens, boolean toggleMarkers, IgnoreComment ic) {
+    private final int afterWhitespace(int p, boolean peekIntoParens) {
 
         // [#8074] The SQL standard and some implementations (e.g. PostgreSQL,
         //         SQL Server) support nesting block comments
-        int p0 = p;
         int blockCommentNestLevel = 0;
         boolean ignoreComment = false;
+        final String ignoreCommentStart = settings().getParseIgnoreCommentStart();
+        final String ignoreCommentStop = settings().getParseIgnoreCommentStop();
+        final boolean checkIgnoreComment = !FALSE.equals(settings().isParseIgnoreComments());
 
         loop:
-        for (int i = p; i < chars.length; i++) {
-            switch (chars[i]) {
+        for (int i = p; i < sql.length; i++) {
+            switch (sql[i]) {
                 case ' ':
                 case '\t':
                 case '\r':
@@ -16003,19 +13639,15 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                         break loop;
 
                 case '/':
-                    if (i + 1 < chars.length && chars[i + 1] == '*') {
+                    if (i + 1 < sql.length && sql[i + 1] == '*') {
                         i = i + 2;
                         blockCommentNestLevel++;
 
-                        while (i < chars.length) {
-                            if (!toggleMarkers && peekTemplateComment(i)) {
-                                blockCommentNestLevel = 0;
-                                break loop;
-                            }
-                            else if (!(ignoreComment = peekIgnoreComment(ignoreComment, ic, toggleMarkers, i))) {
-                                switch (chars[i]) {
+                        while (i < sql.length) {
+                            if (!(ignoreComment = peekIgnoreComment(ignoreComment, ignoreCommentStart, ignoreCommentStop, checkIgnoreComment, i))) {
+                                switch (sql[i]) {
                                     case '/':
-                                        if (i + 1 < chars.length && chars[i + 1] == '*') {
+                                        if (i + 1 < sql.length && sql[i + 1] == '*') {
                                             i = i + 2;
                                             blockCommentNestLevel++;
                                         }
@@ -16023,7 +13655,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                                         break;
 
                                     case '+':
-                                        if (!ignoreHints() && i + 1 < chars.length && ((chars[i + 1] >= 'A' && chars[i + 1] <= 'Z') || (chars[i + 1] >= 'a' && chars[i + 1] <= 'z'))) {
+                                        if (!ignoreHints() && i + 1 < sql.length && ((sql[i + 1] >= 'A' && sql[i + 1] <= 'Z') || (sql[i + 1] >= 'a' && sql[i + 1] <= 'z'))) {
                                             blockCommentNestLevel = 0;
                                             break loop;
                                         }
@@ -16031,17 +13663,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                                         break;
 
                                     case '*':
-                                        if (i + 1 < chars.length && chars[i + 1] == '/') {
+                                        if (i + 1 < sql.length && sql[i + 1] == '/') {
                                             p = (i = i + 1) + 1;
 
-                                            if (--blockCommentNestLevel == 0) {
-                                                if (toggleMarkers && markerStart > -1) {
-                                                    markerStart = p0;
-                                                    markerStop = p;
-                                                }
-
+                                            if (--blockCommentNestLevel == 0)
                                                 continue loop;
-                                            }
                                         }
 
                                         break;
@@ -16053,26 +13679,16 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                     }
 
                     // [#9651] H2 and Snowflake's c-style single line comments
-                    else if (i + 1 < chars.length && chars[i + 1] == '/') {
+                    else if (i + 1 < sql.length && sql[i + 1] == '/') {
                         i = i + 2;
 
-                        while (i < chars.length) {
-                            if (!toggleMarkers && peekTemplateComment(i)) {
-                                break loop;
-                            }
-                            else if (!(ignoreComment = peekIgnoreComment(ignoreComment, ic, toggleMarkers, i))) {
-                                switch (chars[i]) {
+                        while (i < sql.length) {
+                            if (!(ignoreComment = peekIgnoreComment(ignoreComment, ignoreCommentStart, ignoreCommentStop, checkIgnoreComment, i))) {
+                                switch (sql[i]) {
                                     case '\r':
-                                    case '\n': {
+                                    case '\n':
                                         p = i + 1;
-
-                                        if (toggleMarkers && markerStart > -1) {
-                                            markerStart = p0;
-                                            markerStop = p;
-                                        }
-
                                         continue loop;
-                                    }
                                 }
                             }
 
@@ -16086,31 +13702,21 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
                 case '-':
                 case '#':
-                    if (chars[i] == '-' && i + 1 < chars.length && chars[i + 1] == '-' ||
-                        chars[i] == '#' && SUPPORTS_HASH_COMMENT_SYNTAX.contains(parseDialect())) {
+                    if (sql[i] == '-' && i + 1 < sql.length && sql[i + 1] == '-' ||
+                        sql[i] == '#' && SUPPORTS_HASH_COMMENT_SYNTAX.contains(parseDialect())) {
 
-                        if (chars[i] == '-')
+                        if (sql[i] == '-')
                             i = i + 2;
                         else
                             i++;
 
-                        while (i < chars.length) {
-                            if (!toggleMarkers && peekTemplateComment(i)) {
-                                break loop;
-                            }
-                            else if (!(ignoreComment = peekIgnoreComment(ignoreComment, ic, toggleMarkers, i))) {
-                                switch (chars[i]) {
+                        while (i < sql.length) {
+                            if (!(ignoreComment = peekIgnoreComment(ignoreComment, ignoreCommentStart, ignoreCommentStop, checkIgnoreComment, i))) {
+                                switch (sql[i]) {
                                     case '\r':
-                                    case '\n': {
+                                    case '\n':
                                         p = i + 1;
-
-                                        if (toggleMarkers && markerStart > -1) {
-                                            markerStart = p0;
-                                            markerStop = p;
-                                        }
-
                                         continue loop;
-                                    }
                                 }
                             }
 
@@ -16137,29 +13743,25 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return p;
     }
 
-    private boolean peekTemplateComment(int i) {
-        return peekIgnoreComment(false, icTemplate, false, i)
-            || peekIgnoreComment(false, icRaw, false, i);
-    }
-
     private final boolean peekIgnoreComment(
         boolean ignoreComment,
-        IgnoreComment check,
-        boolean toggleMarkers,
+        String ignoreCommentStart,
+        String ignoreCommentStop,
+        boolean checkIgnoreComment,
         int i
     ) {
-        if (check.check()) {
-            if (!ignoreComment) {
-                if ((ignoreComment = peek(check.start(), i)) && toggleMarkers)
-                    markerStart = i;
-            }
-            else {
-                if (!(ignoreComment = !peek(check.stop(), i)) && toggleMarkers)
-                    markerStop = i;
-            }
-        }
+
+        if (checkIgnoreComment)
+            if (!ignoreComment)
+                ignoreComment = peek(ignoreCommentStart, i);
+            else
+                ignoreComment = !peek(ignoreCommentStop, i);
 
         return ignoreComment;
+    }
+
+    private final char upper(char c) {
+        return c >= 'a' && c <= 'z' ? (char) (c - ('a' - 'A')) : c;
     }
 
     private enum TruthValue {
@@ -16213,8 +13815,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         "WITH",
     };
 
-    private static final KeywordLookup KEYWORD_LOOKUP_IN_STATEMENTS = KeywordLookup.from(KEYWORDS_IN_STATEMENTS);
-
     private static final String[] KEYWORDS_IN_SELECT = {
         "CONNECT BY",
         "EXCEPT",
@@ -16246,39 +13846,16 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         "WINDOW",
     };
 
-    private static final KeywordLookup KEYWORD_LOOKUP_IN_SELECT = KeywordLookup.from(KEYWORDS_IN_SELECT);
-
     private static final String[] KEYWORDS_IN_FROM = {
-        "ANTI JOIN",
         "CROSS APPLY",
         "CROSS JOIN",
         "FULL JOIN",
-        "FULL HASH JOIN",
-        "FULL LOOP JOIN",
-        "FULL LOOKUP JOIN",
-        "FULL MERGE JOIN",
         "FULL OUTER JOIN",
-        "FULL OUTER HASH JOIN",
-        "FULL OUTER LOOP JOIN",
-        "FULL OUTER LOOKUP JOIN",
-        "FULL OUTER MERGE JOIN",
         "INNER JOIN",
-        "INNER HASH JOIN",
-        "INNER LOOP JOIN",
-        "INNER LOOKUP JOIN",
-        "INNER MERGE JOIN",
         "JOIN",
         "LEFT ANTI JOIN",
         "LEFT JOIN",
-        "LEFT HASH JOIN",
-        "LEFT LOOP JOIN",
-        "LEFT LOOKUP JOIN",
-        "LEFT MERGE JOIN",
         "LEFT OUTER JOIN",
-        "LEFT OUTER HASH JOIN",
-        "LEFT OUTER LOOP JOIN",
-        "LEFT OUTER LOOKUP JOIN",
-        "LEFT OUTER MERGE JOIN",
         "LEFT SEMI JOIN",
         "NATURAL FULL JOIN",
         "NATURAL FULL OUTER JOIN",
@@ -16293,27 +13870,17 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         "PARTITION BY",
         "RIGHT ANTI JOIN",
         "RIGHT JOIN",
-        "RIGHT HASH JOIN",
-        "RIGHT LOOP JOIN",
-        "RIGHT LOOKUP JOIN",
-        "RIGHT MERGE JOIN",
         "RIGHT OUTER JOIN",
-        "RIGHT OUTER HASH JOIN",
-        "RIGHT OUTER LOOP JOIN",
-        "RIGHT OUTER LOOKUP JOIN",
-        "RIGHT OUTER MERGE JOIN",
         "RIGHT SEMI JOIN",
-        "SEMI JOIN",
         "STRAIGHT_JOIN",
         "USING"
     };
-
-    private static final KeywordLookup KEYWORD_LOOKUP_IN_FROM = KeywordLookup.from(KEYWORDS_IN_FROM);
 
     private static final String[] KEYWORDS_IN_SELECT_FROM;
 
     static {
         Set<String> set = new TreeSet<>(asList(KEYWORDS_IN_FROM));
+        set.addAll(asList(KEYWORDS_IN_STATEMENTS));
 
         set.addAll(asList(
             "CONNECT BY",
@@ -16327,12 +13894,8 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             "FOR SHARE",
             "FOR UPDATE",
             "FOR XML",
-            "FORCE KEY",
-            "FORCE INDEX",
             "GROUP BY",
             "HAVING",
-            "IGNORE KEY",
-            "IGNORE INDEX",
             "INTERSECT",
             "INTO",
             "LIMIT",
@@ -16344,16 +13907,12 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             "ROWS",
             "START WITH",
             "UNION",
-            "USE KEY",
-            "USE INDEX",
             "WHERE",
             "WINDOW"
         ));
 
         KEYWORDS_IN_SELECT_FROM = set.toArray(EMPTY_STRING);
     }
-
-    private static final KeywordLookup KEYWORD_LOOKUP_IN_SELECT_FROM = KeywordLookup.from(KEYWORDS_IN_SELECT_FROM);
 
     private static final String[] KEYWORDS_IN_UPDATE_FROM;
 
@@ -16362,8 +13921,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         set.addAll(asList("FROM", "SET", "WHERE", "ORDER BY", "LIMIT", "RETURNING"));
         KEYWORDS_IN_UPDATE_FROM = set.toArray(EMPTY_STRING);
     }
-
-    private static final KeywordLookup KEYWORD_LOOKUP_IN_UPDATE_FROM = KeywordLookup.from(KEYWORDS_IN_UPDATE_FROM);
 
     private static final String[] KEYWORDS_IN_DELETE_FROM;
 
@@ -16374,14 +13931,12 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         KEYWORDS_IN_DELETE_FROM = set.toArray(EMPTY_STRING);
     }
 
-    private static final KeywordLookup KEYWORD_LOOKUP_IN_DELETE_FROM = KeywordLookup.from(KEYWORDS_IN_DELETE_FROM);
-
     private static final String[] PIVOT_KEYWORDS      = {
         "FOR"
     };
 
-    private static final Lazy<DDLQuery> IGNORE              = Lazy.of(() -> new IgnoreQuery());
-    private static final Lazy<Query>    IGNORE_NO_DELIMITER = Lazy.of(() -> new IgnoreQuery());
+    private static final DDLQuery IGNORE              = new IgnoreQuery();
+    private static final Query    IGNORE_NO_DELIMITER = new IgnoreQuery();
 
     static final class IgnoreQuery extends AbstractDDLQuery implements UEmpty {
         final String sql;
@@ -16391,11 +13946,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         }
 
         IgnoreQuery(String sql) {
-            this(sql, CONFIG.get());
-        }
-
-        IgnoreQuery(String sql, Configuration configuration) {
-            super(configuration);
+            super(CONFIG);
 
             this.sql = sql;
         }
@@ -16407,26 +13958,24 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
 
+
+    private final DSLContext            dsl;
+    private final Locale                locale;
     private final Meta                  meta;
+    private char[]                      sql;
     private final ParseWithMetaLookups  metaLookups;
     private boolean                     metaLookupsForceIgnore;
     private final Consumer<Param<?>>    bindParamListener;
-    private boolean                     ignoreHints            = true;
+    private int                         positionBeforeWhitespace;
+    private int                         position        = 0;
+    private boolean                     ignoreHints     = true;
     private final Object[]              bindings;
-    private int                         bindIndex              = 0;
-    private final Map<String, Param<?>> bindParams             = new LinkedHashMap<>();
-    private String                      delimiter              = ";";
-    private boolean                     delimiterRequired      = false;
-    private LanguageContext             languageContext        = LanguageContext.QUERY;
-    private EnumSet<FunctionKeyword>    forbidden              = EnumSet.noneOf(FunctionKeyword.class);
-    private boolean                     supportArraySubscripts = true;
-    private ParseScope                  scope                  = new ParseScope();
-
-    private final IgnoreComment         icIgnore;
-    private final IgnoreComment         icTemplate;
-    private final IgnoreComment         icRaw;
-    private int                         markerStart            = -1;
-    private int                         markerStop             = -1;
+    private int                         bindIndex       = 0;
+    private final Map<String, Param<?>> bindParams      = new LinkedHashMap<>();
+    private String                      delimiter       = ";";
+    private LanguageContext             languageContext = LanguageContext.QUERY;
+    private EnumSet<FunctionKeyword>    forbidden       = EnumSet.noneOf(FunctionKeyword.class);
+    private ParseScope                  scope           = new ParseScope();
 
 
 
@@ -16445,39 +13994,24 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         DSLContext dsl,
         Meta meta,
         ParseWithMetaLookups metaLookups,
-        String chars,
+        String sqlString,
         Object[] bindings
     ) {
-        super(dsl, chars);
+        super(dsl.configuration());
 
+        this.dsl = dsl;
+        this.locale = parseLocale(dsl.settings());
         this.meta = meta;
         this.metaLookups = metaLookups;
+        this.sql = sqlString != null ? sqlString.toCharArray() : new char[0];
         this.bindings = bindings;
 
         // [#8722] This is an undocumented flag that allows for collecting parameters from the parser
         //         Do not rely on this flag. It will change incompatibly in the future.
         this.bindParamListener = (Consumer<Param<?>>) dsl.configuration().data("org.jooq.parser.param-collector");
-        this.delimiterRequired = TRUE.equals(dsl.configuration().data("org.jooq.parser.delimiter-required"));
 
 
 
-
-
-        this.icIgnore = new IgnoreComment(
-            TRUE.equals(dsl.settings().isParseIgnoreComments()),
-            dsl.settings().getParseIgnoreCommentStart(),
-            dsl.settings().getParseIgnoreCommentStop()
-        );
-        this.icTemplate = new IgnoreComment(
-            TRUE.equals(dsl.settings().isParsePlainSQLTemplateComments()),
-            dsl.settings().getParsePlainSQLTemplateCommentStart(),
-            dsl.settings().getParsePlainSQLTemplateCommentStop()
-        );
-        this.icRaw = new IgnoreComment(
-            TRUE.equals(dsl.settings().isParseRawSQLComments()),
-            dsl.settings().getParseRawSQLCommentStart(),
-            dsl.settings().getParseRawSQLCommentStop()
-        );
 
         parseWhitespaceIf();
     }
@@ -16495,11 +14029,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     @Override
     public final SQLDialect parseFamily() {
         return parseDialect().family();
-    }
-
-    @Override
-    public final SQLDialectCategory parseCategory() {
-        return parseDialect().category();
     }
 
     @Override
@@ -16551,12 +14080,37 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         return true;
     }
 
-    private final ParserException notImplemented(String feature) {
-        return notImplemented(feature, "https://github.com/jOOQ/jOOQ/issues/16487");
+    private final String substring(int startPosition, int endPosition) {
+        return new String(sql, startPosition, endPosition - startPosition);
     }
 
-    private final ParserException notImplementedNonScalarSelectPredicate() {
-        return notImplemented("Non-scalar SELECT predicate", "https://github.com/jOOQ/jOOQ/issues/10176");
+    private final ParserException internalError() {
+        return exception("Internal Error");
+    }
+
+    private final ParserException expected(String object) {
+        return init(new ParserException(mark(), object + " expected"));
+    }
+
+    private final ParserException expected(String... objects) {
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < objects.length; i++)
+            if (i == 0)
+                sb.append(objects[i]);
+            // [#10169] Correct application of Oxford comma 🧐
+            else if (i == 1 && objects.length == 2)
+                sb.append(" or ").append(objects[i]);
+            else if (i == objects.length - 1)
+                sb.append(", or ").append(objects[i]);
+            else
+                sb.append(", ").append(objects[i]);
+
+        return init(new ParserException(mark(), sb.toString() + " expected"));
+    }
+
+    private final ParserException notImplemented(String feature) {
+        return notImplemented(feature, "https://github.com/jOOQ/jOOQ/issues/10171");
     }
 
     private final ParserException notImplemented(String feature, String link) {
@@ -16565,6 +14119,16 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
     private final ParserException unsupportedClause() {
         return init(new ParserException(mark(), "Unsupported clause"));
+    }
+
+    @Override
+    public final ParserException exception(String message) {
+        return init(new ParserException(mark(), message));
+    }
+
+    private final ParserException init(ParserException e) {
+        int[] line = line();
+        return e.position(position).line(line[0]).column(line[1]);
     }
 
     private final Object nextBinding() {
@@ -16576,10 +14140,80 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             throw exception("No binding provided for bind index " + bindIndex);
     }
 
+    private final int[] line() {
+        int line = 1;
+        int column = 1;
+
+        for (int i = 0; i < position; i++) {
+            if (sql[i] == '\r') {
+                line++;
+                column = 1;
+
+                if (i + 1 < sql.length && sql[i + 1] == '\n')
+                    i++;
+            }
+            else if (sql[i] == '\n') {
+                line++;
+                column = 1;
+            }
+            else {
+                column++;
+            }
+        }
+
+        return new int[] { line, column };
+    }
+
+    private final char characterUpper() {
+        return Character.toUpperCase(character());
+    }
+
+    @Override
+    public final char character() {
+        return character(position);
+    }
+
+    @Override
+    public final char character(int pos) {
+        return pos >= 0 && pos < sql.length ? sql[pos] : ' ';
+    }
+
+    private final char characterNextUpper() {
+        return Character.toUpperCase(characterNext());
+    }
+
+    private final char characterNext() {
+        return character(position + 1);
+    }
+
+    @Override
+    public final char[] characters() {
+        return sql;
+    }
+
     @Override
     public final ParseContext characters(char[] newCharacters) {
-        this.chars = newCharacters;
+        this.sql = newCharacters;
         return this;
+    }
+
+    @Override
+    public final int position() {
+        return position;
+    }
+
+    @Override
+    public final boolean position(int newPosition) {
+        position = newPosition;
+        return true;
+    }
+
+    private final boolean positionInc() {
+        return positionInc(1);
+    }
+
+    private final boolean positionInc(int inc) {
+        return position(position + inc);
     }
 
     private final String delimiter() {
@@ -16659,9 +14293,16 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
            &&   character != delimiter.charAt(0));
     }
 
-    @Override
-    final boolean done() {
-        return super.done() && (bindings.length == 0 || bindings.length == bindIndex);
+    private final boolean hasMore() {
+        return position < sql.length;
+    }
+
+    private final boolean hasMore(int offset) {
+        return position + offset < sql.length;
+    }
+
+    private final boolean done() {
+        return position >= sql.length && (bindings.length == 0 || bindings.length == bindIndex);
     }
 
     private final <Q extends QueryPart> Q done(String message, Q result) {
@@ -16703,17 +14344,9 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             // [#11054] Use a VisitListener to find actual Params in the expression tree,
             //          which may have more refined DataTypes attached to them, from context
             dsl.configuration().deriveAppending(onVisitStart(ctx -> {
-                if (ctx.queryPart() instanceof Param<?> p) {
-                    if (!p.isInline()) {
-                        String name = p.getParamName();
-
-                        if (name == null)
-                            name = "" + ctx.context().peekIndex();
-
-                        if (!params.containsKey(name))
-                            params.put(name, p);
-                    }
-                }
+                if (ctx.queryPart() instanceof Param)
+                    if (!params.containsKey(((Param<?>) ctx.queryPart()).getParamName()))
+                        params.put(((Param<?>) ctx.queryPart()).getParamName(), (Param<?>) ctx.queryPart());
             })).dsl().render(result);
 
             for (String name : bindParams.keySet())
@@ -16726,6 +14359,16 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     @SuppressWarnings("unused")
     private final boolean asTrue(Object o) {
         return true;
+    }
+
+    private final String mark() {
+        int[] line = line();
+        return "[" + line[0] + ":" + line[1] + "] "
+              + (position > 50 ? "..." : "")
+              + substring(Math.max(0, position - 50), position)
+              + "[*]"
+              + substring(position, Math.min(sql.length, position + 80))
+              + (sql.length > position + 80 ? "..." : "");
     }
 
     private final <T> T newScope(Supplier<T> scoped) {
@@ -16741,31 +14384,26 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
     }
 
     private class ParseScope {
-        private boolean                                        scopeClear               = false;
-        private final ScopeStack<Name, Table<?>>               tableScope               = new ScopeStack<>();
-        private final ScopeStack<Name, Field<?>>               fieldScope               = new ScopeStack<>();
-        private final ScopeStack<Name, QualifiedAsteriskProxy> lookupQualifiedAsterisks = new ScopeStack<>();
-        private final ScopeStack<Name, FieldProxy<?>>          lookupFields             = new ScopeStack<>();
+        private boolean                               scopeClear      = false;
+        private final ScopeStack<Name, Table<?>>      tableScope      = new ScopeStack<>();
+        private final ScopeStack<Name, Field<?>>      fieldScope      = new ScopeStack<>();
+        private final ScopeStack<Name, FieldProxy<?>> lookupFields    = new ScopeStack<>();
 
 
 
 
 
-        private final Table<?> scope(Table<?> table) {
+        private final void scope(Table<?> table) {
             tableScope.set(table.getQualifiedName(), table);
-            return table;
         }
 
-        private final Field<?> scope(Field<?> field) {
+        private final void scope(Field<?> field) {
             fieldScope.set(field.getQualifiedName(), field);
-            return field;
         }
 
         private final void scopeResolve() {
             if (!lookupFields.isEmpty())
                 unknownField(lookupFields.iterator().next());
-            if (!lookupQualifiedAsterisks.isEmpty())
-                unknownTable(lookupQualifiedAsterisks.iterator().next());
         }
 
         private final void scopeStart() {
@@ -16773,31 +14411,12 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
             fieldScope.scopeStart();
             lookupFields.scopeStart();
             lookupFields.setAll(null);
-            lookupQualifiedAsterisks.scopeStart();
-            lookupQualifiedAsterisks.setAll(null);
         }
 
         private final void scopeEnd(Query scopeOwner) {
-            List<FieldProxy<?>> fields = new ArrayList<>();
+            List<FieldProxy<?>> retain = new ArrayList<>();
 
-            // [#14372] Avoid looking up tables at a higher scope level
-            lookupLoop:
-            for (QualifiedAsteriskProxy lookup : scope.lookupQualifiedAsterisks.iterableAtScopeLevel()) {
-                for (Table<?> t : scope.tableScope) {
-
-                    // [#15056] TODO: Could there be an ambiguity, as with fields?
-                    if (t.getName().equals(lookup.$table().getName())) {
-                        lookup.delegate((QualifiedAsteriskImpl) t.asterisk());
-                        continue lookupLoop;
-                    }
-                }
-
-                // [#15056] TODO: Should we support references to higher scopes?
-                unknownTable(lookup);
-            }
-
-            // [#14372] Avoid looking up fields at a higher scope level
-            for (FieldProxy<?> lookup : scope.lookupFields.iterableAtScopeLevel()) {
+            for (FieldProxy<?> lookup : scope.lookupFields) {
                 Value<Field<?>> found = null;
 
                 for (Field<?> f : scope.fieldScope) {
@@ -16819,16 +14438,15 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 }
                 else {
                     lookup.scopeOwner(scopeOwner);
-                    fields.add(lookup);
+                    retain.add(lookup);
                 }
             }
 
-            scope.lookupQualifiedAsterisks.scopeEnd();
             scope.lookupFields.scopeEnd();
             scope.tableScope.scopeEnd();
             scope.fieldScope.scopeEnd();
 
-            for (FieldProxy<?> r : fields)
+            for (FieldProxy<?> r : retain)
                 if (scope.lookupFields.get(r.getQualifiedName()) == null)
                     if (scope.lookupFields.inScope())
                         scope.lookupFields.set(r.getQualifiedName(), r);
@@ -16878,15 +14496,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 }
             }
         }
-
-        private final void unknownTable(QualifiedAsteriskProxy asterisk) {
-            if (!scopeClear) {
-                if (metaLookups() == THROW_ON_FAILURE) {
-                    position(asterisk.position());
-                    throw exception("Unknown table identifier");
-                }
-            }
-        }
     }
 
     private final Value<Field<?>> resolveInTableScope(Iterable<Value<Table<?>>> tables, Name lookupName, FieldProxy<?> lookup, Value<Field<?>> found) {
@@ -16895,7 +14504,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         for (Value<Table<?>> t : tables) {
             Value<Field<?>> f;
 
-            if (t.value() instanceof JoinTable j) {
+            if (t.value() instanceof JoinTable) { JoinTable j = (JoinTable) t.value();
                 found = resolveInTableScope(
                     asList(
                         new Value<>(t.scopeLevel(), j.lhs),
@@ -16913,7 +14522,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                 Name q = lookupName.qualifier();
                 boolean x = q.qualified();
                 if (x && q.equals(t.value().getQualifiedName()) || !x && q.last().equals(t.value().getName()))
-                    if ((found = Value.of(t.scopeLevel(), t.value().fieldsIncludingHidden().field(lookup.getName()))) != null)
+                    if ((found = Value.of(t.scopeLevel(), t.value().field(lookup.getName()))) != null)
                         break tableScopeLoop;
 
 
@@ -16924,7 +14533,7 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
 
 
             }
-            else if ((f = Value.of(t.scopeLevel(), t.value().fieldsIncludingHidden().field(lookup.getName()))) != null) {
+            else if ((f = Value.of(t.scopeLevel(), t.value().field(lookup.getName()))) != null) {
                 if (found == null || found.scopeLevel() < f.scopeLevel()) {
                     found = f;
                 }
@@ -16950,32 +14559,11 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
                         return tables.get(0);
 
             // [#8616] If name is not qualified, try the search path as well
-            if (!name.qualified()) {
+            if (!name.qualified())
                 for (ParseSearchSchema schema : settings().getParseSearchPath())
                     if ((tables = meta.getTables(name(schema.getCatalog(), schema.getSchema()).append(name))).size() == 1)
                         return tables.get(0);
-            }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         }
-
-        // [#16762] It should always be possible to lookup the DUAL pseudo table
-        if (Dual.isDual(name))
-            return dual();
 
         if (metaLookups() == THROW_ON_FAILURE) {
             position(positionBeforeName);
@@ -16983,17 +14571,6 @@ final class DefaultParseContext extends AbstractParseContext implements ParseCon
         }
 
         return table(name);
-    }
-
-    private final QualifiedAsterisk lookupQualifiedAsterisk(int positionBeforeName, Name name) {
-        if (metaLookups() == ParseWithMetaLookups.OFF || scope.lookupQualifiedAsterisks.scopeLevel() < 0)
-            return table(name).asterisk();
-
-        QualifiedAsteriskProxy asterisk = scope.lookupQualifiedAsterisks.get(name);
-        if (asterisk == null)
-            scope.lookupQualifiedAsterisks.set(name, asterisk = new QualifiedAsteriskProxy((QualifiedAsteriskImpl) table(name).asterisk(), positionBeforeName));
-
-        return asterisk;
     }
 
     private final Field<?> lookupField(int positionBeforeName, Name name) {

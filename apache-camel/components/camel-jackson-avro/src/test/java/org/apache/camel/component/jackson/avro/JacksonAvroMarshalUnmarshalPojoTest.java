@@ -17,11 +17,11 @@
 package org.apache.camel.component.jackson.avro;
 
 import com.fasterxml.jackson.dataformat.avro.AvroSchema;
-import org.apache.avro.NameValidator;
 import org.apache.avro.Schema;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jackson.SchemaResolver;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.model.dataformat.AvroLibrary;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
@@ -65,7 +65,7 @@ public class JacksonAvroMarshalUnmarshalPojoTest extends CamelTestSupport {
                             + "\"fields\": [\n"
                             + " {\"name\": \"text\", \"type\": \"string\"}\n"
                             + "]}";
-        Schema raw = new Schema.Parser(NameValidator.UTF_VALIDATOR).parse(schemaJson);
+        Schema raw = new Schema.Parser().setValidate(true).parse(schemaJson);
         AvroSchema schema = new AvroSchema(raw);
         SchemaResolver resolver = ex -> schema;
         registry.bind("schema-resolver", SchemaResolver.class, resolver);
@@ -76,8 +76,8 @@ public class JacksonAvroMarshalUnmarshalPojoTest extends CamelTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() {
-                from("direct:serialized").unmarshal().avro(Pojo.class).to("mock:pojo");
-                from("direct:pojo").marshal().avro().to("mock:serialized");
+                from("direct:serialized").unmarshal().avro(AvroLibrary.Jackson, Pojo.class).to("mock:pojo");
+                from("direct:pojo").marshal().avro(AvroLibrary.Jackson).to("mock:serialized");
             }
         };
     }

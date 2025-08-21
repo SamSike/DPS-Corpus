@@ -45,8 +45,7 @@ public class RestConfiguration {
     public enum RestHostNameResolver {
         allLocalIp,
         localIp,
-        localHostName,
-        none;
+        localHostName
     }
 
     private String component;
@@ -55,7 +54,7 @@ public class RestConfiguration {
     private String producerApiDoc;
     private String scheme;
     private String host;
-    private boolean useXForwardHeaders;
+    private boolean useXForwardHeaders = true;
     private String apiHost;
     private int port;
     private String contextPath;
@@ -64,13 +63,10 @@ public class RestConfiguration {
     private boolean apiVendorExtension;
     private RestHostNameResolver hostNameResolver = RestHostNameResolver.allLocalIp;
     private RestBindingMode bindingMode = RestBindingMode.off;
-    private String bindingPackageScan;
     private boolean skipBindingOnErrorCode = true;
     private boolean clientRequestValidation;
-    private boolean clientResponseValidation;
-    private boolean inlineRoutes = true;
+    private boolean inlineRoutes;
     private boolean enableCORS;
-    private boolean enableNoContentResponse;
     private String jsonDataFormat;
     private String xmlDataFormat;
     private Map<String, Object> componentProperties;
@@ -79,7 +75,6 @@ public class RestConfiguration {
     private Map<String, Object> dataFormatProperties;
     private Map<String, Object> apiProperties;
     private Map<String, String> corsHeaders;
-    private Map<String, String> validationLevels;
 
     /**
      * Gets the name of the Camel component to use as the REST consumer
@@ -147,8 +142,9 @@ public class RestConfiguration {
 
     /**
      * Sets the location of the api document (swagger api) the REST producer will use to validate the REST uri and query
-     * parameters are valid accordingly to the api document. This requires adding camel-openapi-java to the classpath,
-     * and any miss configuration will let Camel fail on startup and report the error(s).
+     * parameters are valid accordingly to the api document. This requires adding camel-openapi-java
+     * to the classpath, and any miss configuration will let Camel fail on startup and report the
+     * error(s).
      * <p/>
      * The location of the api document is loaded from classpath by default, but you can use <tt>file:</tt> or
      * <tt>http:</tt> to refer to resources to load from file or http url.
@@ -176,22 +172,18 @@ public class RestConfiguration {
     }
 
     /**
-     * Whether to use X-Forward headers to set host etc. for OpenApi.
-     *
-     * This may be needed in special cases involving reverse-proxy and networking going from HTTP to HTTPS etc. Then the
-     * proxy can send X-Forward headers (X-Forwarded-Proto) that influences the host names in the OpenAPI schema that
-     * camel-openapi-java generates from Rest DSL routes.
+     * Whether to use X-Forward headers to set host etc. for Swagger.
+     * <p/>
+     * This option is default <tt>true</tt>.
      */
     public boolean isUseXForwardHeaders() {
         return useXForwardHeaders;
     }
 
     /**
-     * Whether to use X-Forward headers to set host etc. for OpenApi.
-     *
-     * This may be needed in special cases involving reverse-proxy and networking going from HTTP to HTTPS etc. Then the
-     * proxy can send X-Forward headers (X-Forwarded-Proto) that influences the host names in the OpenAPI schema that
-     * camel-openapi-java generates from Rest DSL routes.
+     * Whether to use X-Forward headers to set host etc. for Swagger.
+     * <p/>
+     * This option is default <tt>true</tt>.
      */
     public void setUseXForwardHeaders(boolean useXForwardHeaders) {
         this.useXForwardHeaders = useXForwardHeaders;
@@ -366,18 +358,6 @@ public class RestConfiguration {
         this.bindingMode = RestBindingMode.valueOf(bindingMode);
     }
 
-    public String getBindingPackageScan() {
-        return bindingPackageScan;
-    }
-
-    /**
-     * Package name to use as base (offset) for classpath scanning of POJO classes are located when using binding mode
-     * is enabled for JSon or XML. Multiple package names can be separated by comma.
-     */
-    public void setBindingPackageScan(String bindingPackageScan) {
-        this.bindingPackageScan = bindingPackageScan;
-    }
-
     /**
      * Whether to skip binding output if there is a custom HTTP error code, and instead use the response body as-is.
      * <p/>
@@ -416,23 +396,8 @@ public class RestConfiguration {
         this.clientRequestValidation = clientRequestValidation;
     }
 
-    public boolean isClientResponseValidation() {
-        return clientResponseValidation;
-    }
-
     /**
-     * Whether to check what Camel is returning as response to the client:
-     *
-     * 1) Status-code and Content-Type matches Rest DSL response messages. 2) Check whether expected headers is included
-     * according to the Rest DSL repose message headers. 3) If the response body is JSon then check whether its valid
-     * JSon. Returns 500 if validation error detected.
-     */
-    public void setClientResponseValidation(boolean clientResponseValidation) {
-        this.clientResponseValidation = clientResponseValidation;
-    }
-
-    /**
-     * To specify whether to enable CORS which means Camel will automatically include CORS in the HTTP headers in the
+     * To specify whether to enable CORS which means Camel will automatic include CORS in the HTTP headers in the
      * response.
      * <p/>
      * This option is default <tt>false</tt>
@@ -455,21 +420,6 @@ public class RestConfiguration {
         this.enableCORS = enableCORS;
     }
 
-    public boolean isEnableNoContentResponse() {
-        return enableNoContentResponse;
-    }
-
-    /**
-     * Whether to return HTTP 204 with an empty body when a response contains an empty JSON object or XML root object.
-     * <p/>
-     * The default value is <tt>false</tt>.
-     *
-     * @param enableNoContentResponse <tt>true</tt> to enable HTTP 204 response codes
-     */
-    public void setEnableNoContentResponse(boolean enableNoContentResponse) {
-        this.enableNoContentResponse = enableNoContentResponse;
-    }
-
     public boolean isInlineRoutes() {
         return inlineRoutes;
     }
@@ -477,12 +427,11 @@ public class RestConfiguration {
     /**
      * Inline routes in rest-dsl which are linked using direct endpoints.
      *
-     * Each service in Rest DSL is an individual route, meaning that you would have at least two routes per service
-     * (rest-dsl, and the route linked from rest-dsl). By inlining (default) allows Camel to optimize and inline this as
-     * a single route, however this requires to use direct endpoints, which must be unique per service. If a route is
-     * not using direct endpoint then the rest-dsl is not inlined, and will become an individual route.
+     * By default, each service in Rest DSL is an individual route, meaning that you would have at least two routes per
+     * service (rest-dsl, and the route linked from rest-dsl). Enabling this allows Camel to optimize and inline this as
+     * a single route, however this requires to use direct endpoints, which must be unique per service.
      *
-     * This option is default <tt>true</tt>.
+     * This option is default <tt>false</tt>.
      */
     public void setInlineRoutes(boolean inlineRoutes) {
         this.inlineRoutes = inlineRoutes;
@@ -637,21 +586,5 @@ public class RestConfiguration {
      */
     public void setCorsHeaders(Map<String, String> corsHeaders) {
         this.corsHeaders = corsHeaders;
-    }
-
-    /**
-     * Gets the client request validation levels when using camel-openapi-validator.
-     *
-     * @return the validation levels
-     */
-    public Map<String, String> getValidationLevels() {
-        return validationLevels;
-    }
-
-    /**
-     * Sets the client request validation levels when using camel-openapi-validator.
-     */
-    public void setValidationLevels(Map<String, String> validationLevels) {
-        this.validationLevels = validationLevels;
     }
 }

@@ -32,13 +32,12 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class Jdbc implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String driver;
+    @XmlElement(required = true)
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String url;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String urlProperty;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String schema;
     @XmlJavaTypeAdapter(StringAdapter.class)
@@ -86,22 +85,6 @@ public class Jdbc implements Serializable, XMLAppendable
      */
     public void setUrl(String value) {
         this.url = value;
-    }
-
-    /**
-     * The system property name that describes the JDBC connection URL.
-     * 
-     */
-    public String getUrlProperty() {
-        return urlProperty;
-    }
-
-    /**
-     * The system property name that describes the JDBC connection URL.
-     * 
-     */
-    public void setUrlProperty(String value) {
-        this.urlProperty = value;
     }
 
     /**
@@ -183,7 +166,7 @@ public class Jdbc implements Serializable, XMLAppendable
     }
 
     /**
-     * The value of the JDBC autocommit flag. The flag is not set by default, i.e. it keeps the default provided to jOOQ.
+     * Sets the value of the autoCommit property.
      * 
      * @param value
      *     allowed object is
@@ -256,15 +239,6 @@ public class Jdbc implements Serializable, XMLAppendable
     }
 
     /**
-     * The system property name that describes the JDBC connection URL.
-     * 
-     */
-    public Jdbc withUrlProperty(String value) {
-        setUrlProperty(value);
-        return this;
-    }
-
-    /**
      * @deprecated Use database schema configuration elements instead.
      * 
      */
@@ -301,10 +275,6 @@ public class Jdbc implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * The value of the JDBC autocommit flag. The flag is not set by default, i.e. it keeps the default provided to jOOQ.
-     * 
-     */
     public Jdbc withAutoCommit(Boolean value) {
         setAutoCommit(value);
         return this;
@@ -353,7 +323,6 @@ public class Jdbc implements Serializable, XMLAppendable
     public final void appendTo(XMLBuilder builder) {
         builder.append("driver", driver);
         builder.append("url", url);
-        builder.append("urlProperty", urlProperty);
         builder.append("schema", schema);
         builder.append("user", user);
         builder.append("username", username);
@@ -398,15 +367,6 @@ public class Jdbc implements Serializable, XMLAppendable
             }
         } else {
             if (!url.equals(other.url)) {
-                return false;
-            }
-        }
-        if (urlProperty == null) {
-            if (other.urlProperty!= null) {
-                return false;
-            }
-        } else {
-            if (!urlProperty.equals(other.urlProperty)) {
                 return false;
             }
         }
@@ -473,8 +433,8 @@ public class Jdbc implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((properties == null)||properties.isEmpty()) {
-            if ((other.properties!= null)&&(!other.properties.isEmpty())) {
+        if (properties == null) {
+            if (other.properties!= null) {
                 return false;
             }
         } else {
@@ -491,7 +451,6 @@ public class Jdbc implements Serializable, XMLAppendable
         int result = 1;
         result = ((prime*result)+((driver == null)? 0 :driver.hashCode()));
         result = ((prime*result)+((url == null)? 0 :url.hashCode()));
-        result = ((prime*result)+((urlProperty == null)? 0 :urlProperty.hashCode()));
         result = ((prime*result)+((schema == null)? 0 :schema.hashCode()));
         result = ((prime*result)+((user == null)? 0 :user.hashCode()));
         result = ((prime*result)+((username == null)? 0 :username.hashCode()));
@@ -499,7 +458,7 @@ public class Jdbc implements Serializable, XMLAppendable
         result = ((prime*result)+((autoCommit == null)? 0 :autoCommit.hashCode()));
         result = ((prime*result)+((initScript == null)? 0 :initScript.hashCode()));
         result = ((prime*result)+((initSeparator == null)? 0 :initSeparator.hashCode()));
-        result = ((prime*result)+(((properties == null)||properties.isEmpty())? 0 :properties.hashCode()));
+        result = ((prime*result)+((properties == null)? 0 :properties.hashCode()));
         return result;
     }
 

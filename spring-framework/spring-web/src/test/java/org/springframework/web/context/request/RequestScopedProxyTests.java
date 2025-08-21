@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,17 +36,18 @@ import org.springframework.web.testfixture.servlet.MockHttpServletRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.springframework.beans.factory.config.AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR;
 
 /**
  * @author Juergen Hoeller
  */
-class RequestScopedProxyTests {
+public class RequestScopedProxyTests {
 
 	private final DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		this.beanFactory.registerScope("request", new RequestScope());
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(this.beanFactory);
 		reader.loadBeanDefinitions(new ClassPathResource("requestScopedProxyTests.xml", getClass()));
@@ -55,7 +56,7 @@ class RequestScopedProxyTests {
 
 
 	@Test
-	void testGetFromScope() {
+	public void testGetFromScope() {
 		String name = "requestScopedObject";
 		TestBean bean = (TestBean) this.beanFactory.getBean(name);
 		assertThat(AopUtils.isCglibProxy(bean)).isTrue();
@@ -80,7 +81,7 @@ class RequestScopedProxyTests {
 	}
 
 	@Test
-	void testGetFromScopeThroughDynamicProxy() {
+	public void testGetFromScopeThroughDynamicProxy() {
 		String name = "requestScopedProxy";
 		ITestBean bean = (ITestBean) this.beanFactory.getBean(name);
 		// assertTrue(AopUtils.isJdkDynamicProxy(bean));
@@ -105,7 +106,7 @@ class RequestScopedProxyTests {
 	}
 
 	@Test
-	void testDestructionAtRequestCompletion() {
+	public void testDestructionAtRequestCompletion() {
 		String name = "requestScopedDisposableObject";
 		DerivedTestBean bean = (DerivedTestBean) this.beanFactory.getBean(name);
 		assertThat(AopUtils.isCglibProxy(bean)).isTrue();
@@ -131,7 +132,7 @@ class RequestScopedProxyTests {
 	}
 
 	@Test
-	void testGetFromFactoryBeanInScope() {
+	public void testGetFromFactoryBeanInScope() {
 		String name = "requestScopedFactoryBean";
 		TestBean bean = (TestBean) this.beanFactory.getBean(name);
 		assertThat(AopUtils.isCglibProxy(bean)).isTrue();
@@ -153,7 +154,7 @@ class RequestScopedProxyTests {
 	}
 
 	@Test
-	void testGetInnerBeanFromScope() {
+	public void testGetInnerBeanFromScope() {
 		TestBean bean = (TestBean) this.beanFactory.getBean("outerBean");
 		assertThat(AopUtils.isAopProxy(bean)).isFalse();
 		assertThat(AopUtils.isCglibProxy(bean.getSpouse())).isTrue();
@@ -177,7 +178,7 @@ class RequestScopedProxyTests {
 	}
 
 	@Test
-	void testGetAnonymousInnerBeanFromScope() {
+	public void testGetAnonymousInnerBeanFromScope() {
 		TestBean bean = (TestBean) this.beanFactory.getBean("outerBean");
 		assertThat(AopUtils.isAopProxy(bean)).isFalse();
 		assertThat(AopUtils.isCglibProxy(bean.getSpouse())).isTrue();
@@ -204,16 +205,17 @@ class RequestScopedProxyTests {
 	}
 
 	@Test
-	void scopeNotAvailable() {
+	public void scopeNotAvailable() {
 		assertThatExceptionOfType(ScopeNotActiveException.class).isThrownBy(
 				() -> this.beanFactory.getBean(CountingTestBean.class).absquatulate());
 
-		ObjectProvider<CountingTestBean> beanProvider = this.beanFactory.getBeanProvider(CountingTestBean.class);
+		final ObjectProvider<CountingTestBean> beanProvider = this.beanFactory.getBeanProvider(CountingTestBean.class);
 		assertThatExceptionOfType(ScopeNotActiveException.class).isThrownBy(() -> beanProvider.getObject().absquatulate());
 		beanProvider.ifAvailable(TestBean::absquatulate);
 		beanProvider.ifUnique(TestBean::absquatulate);
 
-		ObjectProvider<CountingTestBean> provider = this.beanFactory.createBean(ProviderBean.class).provider;
+		final ObjectProvider<CountingTestBean> provider =
+				((ProviderBean) this.beanFactory.createBean(ProviderBean.class, AUTOWIRE_CONSTRUCTOR, false)).provider;
 		assertThatExceptionOfType(ScopeNotActiveException.class).isThrownBy(() -> provider.getObject().absquatulate());
 		provider.ifAvailable(TestBean::absquatulate);
 		provider.ifUnique(TestBean::absquatulate);

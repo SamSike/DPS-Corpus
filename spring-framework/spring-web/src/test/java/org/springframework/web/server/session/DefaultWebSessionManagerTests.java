@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,8 +43,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 /**
- * Tests for {@link DefaultWebSessionManager}.
- *
+ * Unit tests for {@link DefaultWebSessionManager}.
  * @author Rossen Stoyanchev
  * @author Rob Winch
  */
@@ -69,7 +68,7 @@ class DefaultWebSessionManagerTests {
 
 
 	@BeforeEach
-	void setUp() {
+	void setUp() throws Exception {
 		given(this.createSession.save()).willReturn(Mono.empty());
 		given(this.createSession.getId()).willReturn("create-session-id");
 		given(this.updateSession.getId()).willReturn("update-session-id");

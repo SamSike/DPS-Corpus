@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -76,7 +76,7 @@ import org.jooq.SQLDialect;
 public final class YearToMonth extends Number implements Interval, Comparable<YearToMonth> {
 
     private static final Pattern PATTERN_SQL = Pattern.compile("^([+-])?(\\d+)-(\\d+)$");
-    private static final Pattern PATTERN_ISO = Pattern.compile("^([+-])?P(?:([+-]?\\d+)Y)?(?:([+-]?\\d+)M)?(?:0D)?$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PATTERN_ISO = Pattern.compile("^([+-])?P(?:([+-]?\\d+)Y)?(?:([+-]?\\d+)M)?$", Pattern.CASE_INSENSITIVE);
 
     private final boolean        negative;
     private final int            years;
@@ -140,14 +140,6 @@ public final class YearToMonth extends Number implements Interval, Comparable<Ye
 
                 int years = group2 == null ? 0 : Integer.parseInt(group2);
                 int months = group3 == null ? 0 : Integer.parseInt(group3);
-
-                // [#18165] ISO intervals can be negative in 2 ways: -P1Y or P-1Y
-                //          We don't handle P1Y-1M and similar edge cases yet.
-                if (years < 0 || years == 0 && months < 0) {
-                    negative = !negative;
-                    years = -years;
-                    months = -months;
-                }
 
                 return new YearToMonth(years, months, negative);
             }

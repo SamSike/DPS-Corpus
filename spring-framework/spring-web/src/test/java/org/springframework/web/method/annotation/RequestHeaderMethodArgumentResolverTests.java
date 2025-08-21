@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 /**
- * Tests for {@link RequestHeaderMethodArgumentResolver}.
+ * Unit tests for {@link RequestHeaderMethodArgumentResolver}.
  *
  * @author Arjen Poutsma
  * @author Rossen Stoyanchev
@@ -68,7 +68,6 @@ class RequestHeaderMethodArgumentResolverTests {
 	private MethodParameter paramInstant;
 	private MethodParameter paramUuid;
 	private MethodParameter paramUuidOptional;
-	private MethodParameter paramUuidPlaceholder;
 
 	private MockHttpServletRequest servletRequest;
 
@@ -76,6 +75,7 @@ class RequestHeaderMethodArgumentResolverTests {
 
 
 	@BeforeEach
+	@SuppressWarnings("resource")
 	void setup() throws Exception {
 		GenericWebApplicationContext context = new GenericWebApplicationContext();
 		context.refresh();
@@ -93,7 +93,6 @@ class RequestHeaderMethodArgumentResolverTests {
 		paramInstant = new SynthesizingMethodParameter(method, 8);
 		paramUuid = new SynthesizingMethodParameter(method, 9);
 		paramUuidOptional = new SynthesizingMethodParameter(method, 10);
-		paramUuidPlaceholder = new SynthesizingMethodParameter(method, 11);
 
 		servletRequest = new MockHttpServletRequest();
 		webRequest = new ServletWebRequest(servletRequest, new MockHttpServletResponse());
@@ -131,6 +130,7 @@ class RequestHeaderMethodArgumentResolverTests {
 		servletRequest.addHeader("name", expected);
 
 		Object result = resolver.resolveArgument(paramNamedValueStringArray, null, webRequest, null);
+		assertThat(result).isInstanceOf(String[].class);
 		assertThat(result).isEqualTo(expected);
 	}
 
@@ -143,8 +143,8 @@ class RequestHeaderMethodArgumentResolverTests {
 
 	@Test
 	void resolveDefaultValueFromSystemProperty() throws Exception {
+		System.setProperty("systemProperty", "bar");
 		try {
-			System.setProperty("systemProperty", "bar");
 			Object result = resolver.resolveArgument(paramSystemProperty, null, webRequest, null);
 
 			assertThat(result).isEqualTo("bar");
@@ -159,8 +159,8 @@ class RequestHeaderMethodArgumentResolverTests {
 		String expected = "foo";
 		servletRequest.addHeader("bar", expected);
 
+		System.setProperty("systemProperty", "bar");
 		try {
-			System.setProperty("systemProperty", "bar");
 			Object result = resolver.resolveArgument(paramResolvedNameWithExpression, null, webRequest, null);
 
 			assertThat(result).isEqualTo(expected);
@@ -175,26 +175,11 @@ class RequestHeaderMethodArgumentResolverTests {
 		String expected = "foo";
 		servletRequest.addHeader("bar", expected);
 
+		System.setProperty("systemProperty", "bar");
 		try {
-			System.setProperty("systemProperty", "bar");
 			Object result = resolver.resolveArgument(paramResolvedNameWithPlaceholder, null, webRequest, null);
 
 			assertThat(result).isEqualTo(expected);
-		}
-		finally {
-			System.clearProperty("systemProperty");
-		}
-	}
-
-	@Test
-	void missingParameterFromSystemPropertyThroughPlaceholder() {
-		try {
-			String expected = "bar";
-			System.setProperty("systemProperty", expected);
-
-			assertThatExceptionOfType(MissingRequestHeaderException.class)
-					.isThrownBy(() -> resolver.resolveArgument(paramResolvedNameWithPlaceholder, null, webRequest, null))
-					.extracting("headerName").isEqualTo(expected);
 		}
 		finally {
 			System.clearProperty("systemProperty");
@@ -211,7 +196,7 @@ class RequestHeaderMethodArgumentResolverTests {
 	}
 
 	@Test
-	void notFound() {
+	void notFound() throws Exception {
 		assertThatExceptionOfType(ServletRequestBindingException.class).isThrownBy(() ->
 				resolver.resolveArgument(paramNamedValueStringArray, null, webRequest, null));
 	}
@@ -257,37 +242,36 @@ class RequestHeaderMethodArgumentResolverTests {
 	}
 
 	@Test
-	void uuidConversionWithInvalidValue() {
+	void uuidConversionWithInvalidValue() throws Exception {
 		servletRequest.addHeader("name", "bogus-uuid");
 
 		ConfigurableWebBindingInitializer bindingInitializer = new ConfigurableWebBindingInitializer();
 		bindingInitializer.setConversionService(new DefaultFormattingConversionService());
-		DefaultDataBinderFactory binderFactory = new DefaultDataBinderFactory(bindingInitializer);
 
-		assertThatExceptionOfType(MethodArgumentTypeMismatchException.class)
-				.isThrownBy(() -> resolver.resolveArgument(paramUuid, null, webRequest, binderFactory))
-				.extracting("propertyName").isEqualTo("name");
+		assertThatExceptionOfType(MethodArgumentTypeMismatchException.class).isThrownBy(
+				() -> resolver.resolveArgument(paramUuid, null, webRequest,
+						new DefaultDataBinderFactory(bindingInitializer)));
 	}
 
 	@Test
-	void uuidConversionWithEmptyValue() {
+	void uuidConversionWithEmptyValue() throws Exception {
 		uuidConversionWithEmptyOrBlankValue("");
 	}
 
 	@Test
-	void uuidConversionWithBlankValue() {
+	void uuidConversionWithBlankValue() throws Exception {
 		uuidConversionWithEmptyOrBlankValue("     ");
 	}
 
-	private void uuidConversionWithEmptyOrBlankValue(String uuid) {
+	private void uuidConversionWithEmptyOrBlankValue(String uuid) throws Exception {
 		servletRequest.addHeader("name", uuid);
 
 		ConfigurableWebBindingInitializer bindingInitializer = new ConfigurableWebBindingInitializer();
 		bindingInitializer.setConversionService(new DefaultFormattingConversionService());
-		DefaultDataBinderFactory binderFactory = new DefaultDataBinderFactory(bindingInitializer);
 
-		assertThatExceptionOfType(MissingRequestHeaderException.class)
-				.isThrownBy(() -> resolver.resolveArgument(paramUuid, null, webRequest, binderFactory));
+		assertThatExceptionOfType(MissingRequestHeaderException.class).isThrownBy(() ->
+				resolver.resolveArgument(paramUuid, null, webRequest,
+						new DefaultDataBinderFactory(bindingInitializer)));
 	}
 
 	@Test
@@ -311,26 +295,6 @@ class RequestHeaderMethodArgumentResolverTests {
 		assertThat(result).isNull();
 	}
 
-	@Test
-	public void uuidPlaceholderConversionWithEmptyValue() {
-		try {
-			String expected = "name";
-			servletRequest.addHeader(expected, "");
-
-			System.setProperty("systemProperty", expected);
-
-			ConfigurableWebBindingInitializer bindingInitializer = new ConfigurableWebBindingInitializer();
-			bindingInitializer.setConversionService(new DefaultFormattingConversionService());
-			DefaultDataBinderFactory binderFactory = new DefaultDataBinderFactory(bindingInitializer);
-
-			assertThatExceptionOfType(MissingRequestHeaderException.class)
-					.isThrownBy(() -> resolver.resolveArgument(paramUuidPlaceholder, null, webRequest, binderFactory))
-					.extracting("headerName").isEqualTo(expected);
-		}
-		finally {
-			System.clearProperty("systemProperty");
-		}
-	}
 
 	void params(
 			@RequestHeader(name = "name", defaultValue = "bar") String param1,
@@ -343,8 +307,7 @@ class RequestHeaderMethodArgumentResolverTests {
 			@RequestHeader("name") Date dateParam,
 			@RequestHeader("name") Instant instantParam,
 			@RequestHeader("name") UUID uuid,
-			@RequestHeader(name = "name", required = false) UUID uuidOptional,
-			@RequestHeader(name = "${systemProperty}") UUID uuidPlaceholder) {
+			@RequestHeader(name = "name", required = false) UUID uuidOptional) {
 	}
 
 }

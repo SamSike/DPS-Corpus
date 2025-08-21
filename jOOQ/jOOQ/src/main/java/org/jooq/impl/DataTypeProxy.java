@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,8 +38,6 @@
 package org.jooq.impl;
 
 import static org.jooq.tools.StringUtils.defaultIfNull;
-
-import java.util.IdentityHashMap;
 
 import org.jooq.Binding;
 import org.jooq.CharacterSet;
@@ -67,8 +65,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
     private final Integer            overrideScale;
     private final Integer            overrideLength;
     private final Nullability        overrideNullability;
-    private final Boolean            overrideHidden;
-    private final Boolean            overrideRedacted;
     private final Boolean            overrideReadonly;
     private final Generator<?, ?, T> overrideGeneratedAlwaysAs;
     private final GenerationOption   overrideGenerationOption;
@@ -79,17 +75,16 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
     private final Field<T>           overrideDefaultValue;
 
     DataTypeProxy(AbstractDataType<T> type) {
-        this(type, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        this(type, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
+    @SuppressWarnings("unchecked")
     private DataTypeProxy(
         AbstractDataType<T> type,
         Integer overridePrecision,
         Integer overrideScale,
         Integer overrideLength,
         Nullability overrideNullability,
-        Boolean overrideHidden,
-        Boolean overrideRedacted,
         Boolean overrideReadonly,
         Generator<?, ?, T> overrideGeneratedAlwaysAs,
         GenerationOption overrideGenerationOption,
@@ -106,8 +101,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
         this.overrideScale = overrideScale;
         this.overrideLength = overrideLength;
         this.overrideNullability = overrideNullability;
-        this.overrideHidden = overrideHidden;
-        this.overrideRedacted = overrideRedacted;
         this.overrideReadonly = overrideReadonly;
         this.overrideGeneratedAlwaysAs = overrideGeneratedAlwaysAs;
         this.overrideGenerationOption = overrideGenerationOption;
@@ -123,22 +116,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
     }
 
     final void type(AbstractDataType<T> t) {
-        if (t instanceof DataTypeProxy<T> p) {
-
-            // [#11856] [#14343] [#14373] [#17868] Prevent cycles in DataTypeProxy chains
-            IdentityHashMap<AbstractDataType<?>, AbstractDataType<?>> m = new IdentityHashMap<>();
-            m.put(this, this);
-            if (m.put(p, p) != null)
-                return;
-
-            while (p.type() instanceof DataTypeProxy<T> p2) {
-                if (m.put(p2, p2) != null)
-                    return;
-
-                p = p2;
-            }
-        }
-
         this.type = t;
     }
 
@@ -185,60 +162,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
             overrideScale,
             overrideLength,
             n,
-            overrideHidden,
-            overrideRedacted,
-            overrideReadonly,
-            overrideGeneratedAlwaysAs,
-            overrideGenerationOption,
-            overrideGenerationLocation,
-            overrideCollation,
-            overrideCharacterSet,
-            overrideIdentity,
-            overrideDefaultValue
-        );
-    }
-
-    @Override
-    public final boolean hidden() {
-        return defaultIfNull(overrideHidden, type.hidden());
-    }
-
-    @Override
-    public final DataType<T> hidden(boolean h) {
-        return new DataTypeProxy<>(
-            this,
-            overridePrecision,
-            overrideScale,
-            overrideLength,
-            overrideNullability,
-            h,
-            overrideRedacted,
-            overrideReadonly,
-            overrideGeneratedAlwaysAs,
-            overrideGenerationOption,
-            overrideGenerationLocation,
-            overrideCollation,
-            overrideCharacterSet,
-            overrideIdentity,
-            overrideDefaultValue
-        );
-    }
-
-    @Override
-    public final boolean redacted() {
-        return defaultIfNull(overrideRedacted, type.redacted());
-    }
-
-    @Override
-    public final DataType<T> redacted(boolean r) {
-        return new DataTypeProxy<>(
-            this,
-            overridePrecision,
-            overrideScale,
-            overrideLength,
-            overrideNullability,
-            overrideHidden,
-            r,
             overrideReadonly,
             overrideGeneratedAlwaysAs,
             overrideGenerationOption,
@@ -263,8 +186,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
             overrideScale,
             overrideLength,
             overrideNullability,
-            overrideHidden,
-            overrideRedacted,
             r,
             overrideGeneratedAlwaysAs,
             overrideGenerationOption,
@@ -289,8 +210,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
             overrideScale,
             overrideLength,
             overrideNullability,
-            overrideHidden,
-            overrideRedacted,
             overrideReadonly,
             g,
             overrideGenerationOption,
@@ -315,8 +234,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
             overrideScale,
             overrideLength,
             overrideNullability,
-            overrideHidden,
-            overrideRedacted,
             overrideReadonly,
             overrideGeneratedAlwaysAs,
             g,
@@ -341,8 +258,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
             overrideScale,
             overrideLength,
             overrideNullability,
-            overrideHidden,
-            overrideRedacted,
             overrideReadonly,
             overrideGeneratedAlwaysAs,
             overrideGenerationOption,
@@ -367,8 +282,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
             overrideScale,
             overrideLength,
             overrideNullability,
-            overrideHidden,
-            overrideRedacted,
             overrideReadonly,
             overrideGeneratedAlwaysAs,
             overrideGenerationOption,
@@ -393,8 +306,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
             overrideScale,
             overrideLength,
             overrideNullability,
-            overrideHidden,
-            overrideRedacted,
             overrideReadonly,
             overrideGeneratedAlwaysAs,
             overrideGenerationOption,
@@ -419,8 +330,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
             overrideScale,
             overrideLength,
             overrideNullability,
-            overrideHidden,
-            overrideRedacted,
             overrideReadonly,
             overrideGeneratedAlwaysAs,
             overrideGenerationOption,
@@ -445,8 +354,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
             overrideScale,
             overrideLength,
             overrideNullability,
-            overrideHidden,
-            overrideRedacted,
             overrideReadonly,
             overrideGeneratedAlwaysAs,
             overrideGenerationOption,
@@ -501,8 +408,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
             s,
             overrideLength,
             overrideNullability,
-            overrideHidden,
-            overrideRedacted,
             overrideReadonly,
             overrideGeneratedAlwaysAs,
             overrideGenerationOption,
@@ -527,8 +432,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
             s,
             overrideLength,
             overrideNullability,
-            overrideHidden,
-            overrideRedacted,
             overrideReadonly,
             overrideGeneratedAlwaysAs,
             overrideGenerationOption,
@@ -553,8 +456,6 @@ final class DataTypeProxy<T> extends AbstractDataType<T> {
             overrideScale,
             l,
             overrideNullability,
-            overrideHidden,
-            overrideRedacted,
             overrideReadonly,
             overrideGeneratedAlwaysAs,
             overrideGenerationOption,

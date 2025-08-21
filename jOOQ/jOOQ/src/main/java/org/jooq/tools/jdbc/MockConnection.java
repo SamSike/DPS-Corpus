@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -68,7 +68,7 @@ import java.util.Properties;
  * round-trip of using an actual in-memory test database, such as Derby, H2 or
  * HSQLDB. A usage example:
  * <p>
- * <pre><code>
+ * <code><pre>
  * MockDataProvider provider = new MockDataProvider() {
  *     public MockResult[] execute(MockExecuteContext context) throws SQLException {
  *         Result&lt;MyTableRecord&gt; result = executor.newResult(MY_TABLE);
@@ -82,7 +82,7 @@ import java.util.Properties;
  * Connection connection = new MockConnection(provider);
  * DSLContext create = DSL.using(connection, dialect);
  * assertEquals(1, create.selectOne().fetch().size());
- * </code></pre>
+ * </pre></code>
  * <p>
  * While this <code>MockConnection</code> can be used independently of jOOQ, it
  * has been optimised for usage with jOOQ. JDBC features that are not used by

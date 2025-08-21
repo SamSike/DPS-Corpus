@@ -48,7 +48,7 @@ public class MainIoCBeanPostProcessorDisabledTest {
     }
 
     @Test
-    public void testMainIoCDisabled() {
+    public void testMainIoCDisabled() throws Exception {
         Main main = new Main();
         main.configure().addRoutesBuilder(new MyRouteBuilder());
         main.configure().withBeanPostProcessorEnabled(false);
@@ -65,10 +65,10 @@ public class MainIoCBeanPostProcessorDisabledTest {
     public static class MyRouteBuilder extends RouteBuilder {
 
         @BindToRegistry("tiger")
-        private final String foo = "tony";
+        private String foo = "tony";
 
         @Override
-        public void configure() {
+        public void configure() throws Exception {
             from("direct:start").bean("tiger", "toString").to("mock:results");
         }
     }

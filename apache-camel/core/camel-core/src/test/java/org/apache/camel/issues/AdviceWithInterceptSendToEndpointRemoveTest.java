@@ -41,7 +41,7 @@ public class AdviceWithInterceptSendToEndpointRemoveTest extends ContextTestSupp
 
         AdviceWith.adviceWith(context.getRouteDefinition("foo"), context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 weaveById("myIntercept").remove();
             }
         });
@@ -66,7 +66,7 @@ public class AdviceWithInterceptSendToEndpointRemoveTest extends ContextTestSupp
 
         AdviceWith.adviceWith(context.getRouteDefinition("foo"), context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 weaveById("myIntercept").replace().to("mock:intercept2");
             }
         });
@@ -79,10 +79,10 @@ public class AdviceWithInterceptSendToEndpointRemoveTest extends ContextTestSupp
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 interceptSendToEndpoint("mock:b").id("myIntercept").transform(constant("Bye World")).to("mock:intercept");
 
                 from("direct:bar").routeId("bar").to("mock:c").to("mock:d");

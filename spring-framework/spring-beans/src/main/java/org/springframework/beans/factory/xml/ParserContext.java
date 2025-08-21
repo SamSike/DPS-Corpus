@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,13 @@ package org.springframework.beans.factory.xml;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.parsing.BeanComponentDefinition;
 import org.springframework.beans.factory.parsing.ComponentDefinition;
 import org.springframework.beans.factory.parsing.CompositeComponentDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionReaderUtils;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.lang.Nullable;
 
 /**
  * Context that gets passed along a bean definition parsing process,
@@ -45,7 +44,8 @@ public final class ParserContext {
 
 	private final BeanDefinitionParserDelegate delegate;
 
-	private @Nullable BeanDefinition containingBeanDefinition;
+	@Nullable
+	private BeanDefinition containingBeanDefinition;
 
 	private final Deque<CompositeComponentDefinition> containingComponents = new ArrayDeque<>();
 
@@ -64,23 +64,24 @@ public final class ParserContext {
 	}
 
 
-	public XmlReaderContext getReaderContext() {
+	public final XmlReaderContext getReaderContext() {
 		return this.readerContext;
 	}
 
-	public BeanDefinitionRegistry getRegistry() {
+	public final BeanDefinitionRegistry getRegistry() {
 		return this.readerContext.getRegistry();
 	}
 
-	public BeanDefinitionParserDelegate getDelegate() {
+	public final BeanDefinitionParserDelegate getDelegate() {
 		return this.delegate;
 	}
 
-	public @Nullable BeanDefinition getContainingBeanDefinition() {
+	@Nullable
+	public final BeanDefinition getContainingBeanDefinition() {
 		return this.containingBeanDefinition;
 	}
 
-	public boolean isNested() {
+	public final boolean isNested() {
 		return (this.containingBeanDefinition != null);
 	}
 
@@ -88,11 +89,13 @@ public final class ParserContext {
 		return BeanDefinitionParserDelegate.TRUE_VALUE.equals(this.delegate.getDefaults().getLazyInit());
 	}
 
-	public @Nullable Object extractSource(Object sourceCandidate) {
+	@Nullable
+	public Object extractSource(Object sourceCandidate) {
 		return this.readerContext.extractSource(sourceCandidate);
 	}
 
-	public @Nullable CompositeComponentDefinition getContainingComponent() {
+	@Nullable
+	public CompositeComponentDefinition getContainingComponent() {
 		return this.containingComponents.peek();
 	}
 

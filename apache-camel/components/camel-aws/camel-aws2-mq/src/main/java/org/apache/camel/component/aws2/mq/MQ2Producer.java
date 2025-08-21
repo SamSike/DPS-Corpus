@@ -22,9 +22,6 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.InvalidPayloadException;
 import org.apache.camel.Message;
-import org.apache.camel.health.HealthCheck;
-import org.apache.camel.health.HealthCheckHelper;
-import org.apache.camel.health.WritableHealthCheckRepository;
 import org.apache.camel.support.DefaultProducer;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.URISupport;
@@ -55,11 +52,8 @@ import software.amazon.awssdk.services.mq.model.User;
 public class MQ2Producer extends DefaultProducer {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQ2Producer.class);
-    public static final String MISSING_BROKER_NAME = "Broker Name must be specified";
 
     private transient String mqProducerToString;
-    private HealthCheck producerHealthCheck;
-    private WritableHealthCheckRepository healthCheckRepository;
 
     public MQ2Producer(Endpoint endpoint) {
         super(endpoint);
@@ -176,7 +170,7 @@ public class MQ2Producer extends DefaultProducer {
                 brokerName = exchange.getIn().getHeader(MQ2Constants.BROKER_NAME, String.class);
                 builder.brokerName(brokerName);
             } else {
-                throw new IllegalArgumentException(MISSING_BROKER_NAME);
+                throw new IllegalArgumentException("Broker Name must be specified");
             }
             if (ObjectHelper.isNotEmpty(exchange.getIn().getHeader(MQ2Constants.BROKER_ENGINE))) {
                 brokerEngine = exchange.getIn().getHeader(MQ2Constants.BROKER_ENGINE, String.class);
@@ -247,7 +241,7 @@ public class MQ2Producer extends DefaultProducer {
                 brokerId = exchange.getIn().getHeader(MQ2Constants.BROKER_ID, String.class);
                 builder.brokerId(brokerId);
             } else {
-                throw new IllegalArgumentException(MISSING_BROKER_NAME);
+                throw new IllegalArgumentException("Broker Name must be specified");
             }
             DeleteBrokerResponse result;
             try {
@@ -282,7 +276,7 @@ public class MQ2Producer extends DefaultProducer {
                 brokerId = exchange.getIn().getHeader(MQ2Constants.BROKER_ID, String.class);
                 builder.brokerId(brokerId);
             } else {
-                throw new IllegalArgumentException(MISSING_BROKER_NAME);
+                throw new IllegalArgumentException("Broker Name must be specified");
             }
             RebootBrokerResponse result;
             try {
@@ -318,13 +312,13 @@ public class MQ2Producer extends DefaultProducer {
                 brokerId = exchange.getIn().getHeader(MQ2Constants.BROKER_ID, String.class);
                 builder.brokerId(brokerId);
             } else {
-                throw new IllegalArgumentException(MISSING_BROKER_NAME);
+                throw new IllegalArgumentException("Broker Name must be specified");
             }
             if (ObjectHelper.isNotEmpty(exchange.getIn().getHeader(MQ2Constants.CONFIGURATION_ID))) {
                 configurationId = exchange.getIn().getHeader(MQ2Constants.CONFIGURATION_ID, ConfigurationId.class);
                 builder.configuration(configurationId);
             } else {
-                throw new IllegalArgumentException(MISSING_BROKER_NAME);
+                throw new IllegalArgumentException("Broker Name must be specified");
             }
             UpdateBrokerResponse result;
             try {
@@ -359,7 +353,7 @@ public class MQ2Producer extends DefaultProducer {
                 brokerId = exchange.getIn().getHeader(MQ2Constants.BROKER_ID, String.class);
                 builder.brokerId(brokerId);
             } else {
-                throw new IllegalArgumentException(MISSING_BROKER_NAME);
+                throw new IllegalArgumentException("Broker Name must be specified");
             }
             DescribeBrokerResponse result;
             try {
@@ -376,29 +370,4 @@ public class MQ2Producer extends DefaultProducer {
     public static Message getMessageForResponse(final Exchange exchange) {
         return exchange.getMessage();
     }
-
-    @Override
-    protected void doStart() throws Exception {
-        // health-check is optional so discover and resolve
-        healthCheckRepository = HealthCheckHelper.getHealthCheckRepository(
-                getEndpoint().getCamelContext(),
-                "producers",
-                WritableHealthCheckRepository.class);
-
-        if (healthCheckRepository != null) {
-            String id = getEndpoint().getId();
-            producerHealthCheck = new MQ2ProducerHealthCheck(getEndpoint(), id);
-            producerHealthCheck.setEnabled(getEndpoint().getComponent().isHealthCheckProducerEnabled());
-            healthCheckRepository.addHealthCheck(producerHealthCheck);
-        }
-    }
-
-    @Override
-    protected void doStop() throws Exception {
-        if (healthCheckRepository != null && producerHealthCheck != null) {
-            healthCheckRepository.removeHealthCheck(producerHealthCheck);
-            producerHealthCheck = null;
-        }
-    }
-
 }

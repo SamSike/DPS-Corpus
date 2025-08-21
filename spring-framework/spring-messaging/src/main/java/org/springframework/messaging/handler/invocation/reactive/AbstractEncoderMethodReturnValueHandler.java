@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -37,11 +36,11 @@ import org.springframework.core.codec.Encoder;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.MimeType;
 
 /**
@@ -145,7 +144,7 @@ public abstract class AbstractEncoderMethodReturnValueHandler implements Handler
 					ResolvableType.forInstance(content) : returnValueType);
 		}
 
-		if (ClassUtils.isVoidType(elementType.resolve())) {
+		if (elementType.resolve() == void.class || elementType.resolve() == Void.class) {
 			return Flux.from(publisher).cast(DataBuffer.class);
 		}
 
@@ -166,8 +165,9 @@ public abstract class AbstractEncoderMethodReturnValueHandler implements Handler
 		}
 	}
 
+	@Nullable
 	@SuppressWarnings("unchecked")
-	private <T> @Nullable Encoder<T> getEncoder(ResolvableType elementType, @Nullable MimeType mimeType) {
+	private <T> Encoder<T> getEncoder(ResolvableType elementType, @Nullable MimeType mimeType) {
 		for (Encoder<?> encoder : getEncoders()) {
 			if (encoder.canEncode(elementType, mimeType)) {
 				return (Encoder<T>) encoder;

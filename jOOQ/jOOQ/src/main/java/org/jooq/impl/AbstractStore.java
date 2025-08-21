@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -137,11 +137,42 @@ abstract class AbstractStore extends AbstractFormattable {
             return true;
 
         // Note: keep this implementation in-sync with AbstractRecord.compareTo()!
-        if (obj instanceof AbstractStore that) {
+        if (obj instanceof AbstractStore) { AbstractStore that = (AbstractStore) obj;
             if (size() == that.size()) {
-                for (int i = 0; i < size(); i++)
-                    if (!deepEqual(get(i), that.get(i)))
+                for (int i = 0; i < size(); i++) {
+                    final Object thisValue = get(i);
+                    final Object thatValue = that.get(i);
+
+                    // [#1850] Only return false early. In all other cases,
+                    // continue checking the remaining fields
+                    if (thisValue == null && thatValue == null)
+                        continue;
+
+                    else if (thisValue == null || thatValue == null)
                         return false;
+
+                    // [#985] Compare arrays too.
+                    else if (thisValue.getClass().isArray() && thatValue.getClass().isArray()) {
+
+                        // Might be byte[]
+                        if (thisValue.getClass() == byte[].class && thatValue.getClass() == byte[].class) {
+                            if (!Arrays.equals((byte[]) thisValue, (byte[]) thatValue))
+                                return false;
+                        }
+
+                        // Other primitive types are not expected
+                        else if (!thisValue.getClass().getComponentType().isPrimitive() &&
+                                 !thatValue.getClass().getComponentType().isPrimitive()) {
+                            if (!Arrays.equals((Object[]) thisValue, (Object[]) thatValue))
+                                return false;
+                        }
+
+                        else
+                            return false;
+                    }
+                    else if (!thisValue.equals(thatValue))
+                        return false;
+                }
 
                 // If we got through the above loop, the two records are equal
                 return true;
@@ -149,36 +180,5 @@ abstract class AbstractStore extends AbstractFormattable {
         }
 
         return false;
-    }
-
-    static final boolean deepEqual(Object thisValue, Object thatValue) {
-
-        // [#1850] Only return false early. In all other cases,
-        // continue checking the remaining fields
-        if (thisValue == null && thatValue == null)
-            return true;
-
-        else if (thisValue == null || thatValue == null)
-            return false;
-
-        // [#985] Compare arrays too.
-        else if (thisValue.getClass().isArray() && thatValue.getClass().isArray()) {
-
-            // Might be byte[]
-            if (thisValue.getClass() == byte[].class && thatValue.getClass() == byte[].class) {
-                return Arrays.equals((byte[]) thisValue, (byte[]) thatValue);
-            }
-
-            // Other primitive types are not expected
-            else if (!thisValue.getClass().getComponentType().isPrimitive() &&
-                     !thatValue.getClass().getComponentType().isPrimitive()) {
-                return Arrays.deepEquals((Object[]) thisValue, (Object[]) thatValue);
-            }
-
-            else
-                return false;
-        }
-        else
-            return thisValue.equals(thatValue);
     }
 }

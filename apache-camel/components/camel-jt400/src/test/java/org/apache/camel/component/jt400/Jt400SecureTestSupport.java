@@ -19,6 +19,7 @@ package org.apache.camel.component.jt400;
 import com.ibm.as400.access.AS400ConnectionPool;
 import org.apache.camel.BindToRegistry;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
 /**
@@ -35,12 +36,15 @@ public abstract class Jt400SecureTestSupport extends CamelTestSupport {
 
     @Override
     @BeforeEach
-    public void doPreSetup() {
+    public void setUp() throws Exception {
         connectionPool = new MockAS400SecureConnectionPool();
+        super.setUp();
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
+        super.tearDown();
         if (connectionPool != null) {
             connectionPool.close();
         }

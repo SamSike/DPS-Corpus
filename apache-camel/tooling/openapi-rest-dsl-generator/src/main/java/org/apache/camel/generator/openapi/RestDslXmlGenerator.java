@@ -33,16 +33,17 @@ import org.w3c.dom.NodeList;
 
 import org.xml.sax.InputSource;
 
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.PathItem;
+import io.apicurio.datamodels.openapi.models.OasDocument;
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.model.rest.RestsDefinition;
 import org.apache.camel.util.ObjectHelper;
-import org.apache.camel.xml.LwModelToXMLDumper;
 
 public class RestDslXmlGenerator extends RestDslGenerator<RestDslXmlGenerator> {
 
-    RestDslXmlGenerator(final OpenAPI document) {
+    private boolean blueprint;
+
+    RestDslXmlGenerator(final OasDocument document) {
         super(document);
     }
 
@@ -51,16 +52,13 @@ public class RestDslXmlGenerator extends RestDslGenerator<RestDslXmlGenerator> {
         final String basePath = RestDslGenerator.determineBasePathFrom(this.basePath, document);
         final PathVisitor<RestsDefinition> restDslStatement = new PathVisitor<>(
                 basePath, emitter, filter,
-                destinationGenerator(),
-                dtoPackageName);
+                destinationGenerator());
 
-        for (String name : document.getPaths().keySet()) {
-            PathItem item = document.getPaths().get(name);
-            restDslStatement.visit(name, item);
-        }
+        document.paths.getPathItems().forEach(restDslStatement::visit);
 
         final RestsDefinition rests = emitter.result();
-        final String xml = new LwModelToXMLDumper().dumpModelAsXml(context, rests);
+        final ExtendedCamelContext ecc = context.adapt(ExtendedCamelContext.class);
+        final String xml = ecc.getModelToXMLDumper().dumpModelAsXml(context, rests);
 
         final DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
@@ -73,6 +71,10 @@ public class RestDslXmlGenerator extends RestDslGenerator<RestDslXmlGenerator> {
 
         final Element root = document.getDocumentElement();
 
+        if (blueprint) {
+            document.renameNode(root, "http://camel.apache.org/schema/blueprint", root.getTagName());
+        }
+
         // remove all customId attributes as we do not want them in the output
         final NodeList elements = document.getElementsByTagName("*");
         for (int i = 0; i < elements.getLength(); i++) {
@@ -80,21 +82,22 @@ public class RestDslXmlGenerator extends RestDslGenerator<RestDslXmlGenerator> {
             element.removeAttribute("customId");
         }
 
-        boolean restConfig = restComponent != null || restContextPath != null || clientRequestValidation;
-        if (restConfig) {
+        if (restComponent != null) {
             final Element configuration = document.createElement("restConfiguration");
-            if (ObjectHelper.isNotEmpty(restComponent)) {
-                configuration.setAttribute("component", restComponent);
-            }
-            if (ObjectHelper.isNotEmpty(restContextPath)) {
+            configuration.setAttribute("component", restComponent);
+
+            if (restContextPath != null) {
                 configuration.setAttribute("contextPath", restContextPath);
             }
+
             if (ObjectHelper.isNotEmpty(apiContextPath)) {
                 configuration.setAttribute("apiContextPath", apiContextPath);
             }
+
             if (clientRequestValidation) {
                 configuration.setAttribute("clientRequestValidation", "true");
             }
+
             root.insertBefore(configuration, root.getFirstChild());
         }
 
@@ -116,5 +119,10 @@ public class RestDslXmlGenerator extends RestDslGenerator<RestDslXmlGenerator> {
         transformer.transform(new DOMSource(document), new StreamResult(writer));
 
         return writer.toString();
+    }
+
+    public RestDslXmlGenerator withBlueprint() {
+        blueprint = true;
+        return this;
     }
 }

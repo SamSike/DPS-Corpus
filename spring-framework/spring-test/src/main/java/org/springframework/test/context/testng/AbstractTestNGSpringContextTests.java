@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.lang.reflect.Method;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 import org.testng.IHookCallBack;
 import org.testng.IHookable;
 import org.testng.ITestResult;
@@ -32,10 +31,17 @@ import org.testng.annotations.BeforeMethod;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.TestContextManager;
 import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.event.ApplicationEventsTestExecutionListener;
+import org.springframework.test.context.event.EventPublishingTestExecutionListener;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
+import org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener;
+import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
+import org.springframework.test.context.web.ServletTestExecutionListener;
 
 /**
  * Abstract base test class which integrates the <em>Spring TestContext Framework</em>
@@ -46,9 +52,24 @@ import org.springframework.test.context.TestExecutionListeners;
  * {@link ContextConfiguration @ContextConfiguration} annotation to
  * configure the {@linkplain ApplicationContext application context} {@linkplain
  * ContextConfiguration#locations() resource locations} or {@linkplain
- * ContextConfiguration#classes() component classes}. Concrete subclasses must
- * also have constructors which either implicitly or explicitly delegate to
- * {@code super();}.
+ * ContextConfiguration#classes() component classes}. <em>If your test does not
+ * need to load an application context, you may choose to omit the
+ * {@link ContextConfiguration @ContextConfiguration} declaration and to configure
+ * the appropriate {@link org.springframework.test.context.TestExecutionListener
+ * TestExecutionListeners} manually.</em> Concrete subclasses must also have
+ * constructors which either implicitly or explicitly delegate to {@code super();}.
+ *
+ * <p>The following {@link org.springframework.test.context.TestExecutionListener
+ * TestExecutionListeners} are configured by default:
+ *
+ * <ul>
+ * <li>{@link org.springframework.test.context.web.ServletTestExecutionListener}
+ * <li>{@link org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener}
+ * <li>{@link org.springframework.test.context.event.ApplicationEventsTestExecutionListener}
+ * <li>{@link org.springframework.test.context.support.DependencyInjectionTestExecutionListener}
+ * <li>{@link org.springframework.test.context.support.DirtiesContextTestExecutionListener}
+ * <li>{@link org.springframework.test.context.event.EventPublishingTestExecutionListener}
+ * </ul>
  *
  * @author Sam Brannen
  * @author Juergen Hoeller
@@ -57,9 +78,18 @@ import org.springframework.test.context.TestExecutionListeners;
  * @see TestContext
  * @see TestContextManager
  * @see TestExecutionListeners
+ * @see ServletTestExecutionListener
+ * @see DirtiesContextBeforeModesTestExecutionListener
+ * @see ApplicationEventsTestExecutionListener
+ * @see DependencyInjectionTestExecutionListener
+ * @see DirtiesContextTestExecutionListener
+ * @see EventPublishingTestExecutionListener
  * @see AbstractTransactionalTestNGSpringContextTests
  * @see org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests
  */
+@TestExecutionListeners({ ServletTestExecutionListener.class, DirtiesContextBeforeModesTestExecutionListener.class,
+	ApplicationEventsTestExecutionListener.class, DependencyInjectionTestExecutionListener.class,
+	DirtiesContextTestExecutionListener.class, EventPublishingTestExecutionListener.class })
 public abstract class AbstractTestNGSpringContextTests implements IHookable, ApplicationContextAware {
 
 	/** Logger available to subclasses. */
@@ -69,11 +99,13 @@ public abstract class AbstractTestNGSpringContextTests implements IHookable, App
 	 * The {@link ApplicationContext} that was injected into this test instance
 	 * via {@link #setApplicationContext(ApplicationContext)}.
 	 */
-	protected @Nullable ApplicationContext applicationContext;
+	@Nullable
+	protected ApplicationContext applicationContext;
 
 	private final TestContextManager testContextManager;
 
-	private @Nullable Throwable testException;
+	@Nullable
+	private Throwable testException;
 
 
 	/**
@@ -171,6 +203,7 @@ public abstract class AbstractTestNGSpringContextTests implements IHookable, App
 	 * Delegates to the configured {@link TestContextManager} to
 	 * {@linkplain TestContextManager#afterTestMethod(Object, Method, Throwable)
 	 * post-process} the test method after the actual test has executed.
+	 *
 	 * @param testMethod the test method which has just been executed on the
 	 * test instance
 	 * @throws Exception allows all exceptions to propagate
@@ -196,10 +229,10 @@ public abstract class AbstractTestNGSpringContextTests implements IHookable, App
 	}
 
 
-	private @Nullable Throwable getTestResultException(ITestResult testResult) {
+	private Throwable getTestResultException(ITestResult testResult) {
 		Throwable testResultException = testResult.getThrowable();
 		if (testResultException instanceof InvocationTargetException) {
-			testResultException = testResultException.getCause();
+			testResultException = ((InvocationTargetException) testResultException).getCause();
 		}
 		return testResultException;
 	}

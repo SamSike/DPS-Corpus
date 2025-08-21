@@ -16,11 +16,8 @@
  */
 package org.apache.camel.processor;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
@@ -30,25 +27,16 @@ import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
-import org.junit.jupiter.api.parallel.Isolated;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Wire tap unit test
  */
-@DisabledIfSystemProperty(named = "camel.threads.virtual.enabled", matches = "true",
-                          disabledReason = "Tasks are not rejected when using Virtual Threads")
-@Isolated
 public class WireTapAbortPolicyTest extends ContextTestSupport {
-
     protected MockEndpoint tap;
     protected MockEndpoint result;
     protected ExecutorService pool;
-
-    private final CountDownLatch latch = new CountDownLatch(1);
-    private final CyclicBarrier barrier = new CyclicBarrier(2);
 
     @Override
     @AfterEach
@@ -72,8 +60,6 @@ public class WireTapAbortPolicyTest extends ContextTestSupport {
             fail("Task should be rejected");
         } catch (Exception e) {
             assertIsInstanceOf(RejectedExecutionException.class, e.getCause());
-        } finally {
-            latch.countDown();
         }
 
         assertMockEndpointsSatisfied();
@@ -91,14 +77,13 @@ public class WireTapAbortPolicyTest extends ContextTestSupport {
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() throws Exception {
-
                 // START SNIPPET: e1
                 // use a custom thread pool for sending tapped messages
                 ExecutorService pool = new ThreadPoolBuilder(context)
-                        // only allow 2 threads
-                        .poolSize(2)
-                        .maxPoolSize(2)
-                        .maxQueueSize(0)
+                        // only allow 1 thread and 1 pending task
+                        .poolSize(1)
+                        .maxPoolSize(1)
+                        .maxQueueSize(1)
                         // and about tasks
                         .rejectedPolicy(ThreadPoolRejectedPolicy.Abort)
                         .build();
@@ -108,12 +93,7 @@ public class WireTapAbortPolicyTest extends ContextTestSupport {
                         .wireTap("direct:tap").executorService(pool).to("mock:result");
                 // END SNIPPET: e1
 
-                from("direct:tap")
-                        .process(e -> {
-                            barrier.await(5, TimeUnit.SECONDS);
-                        })
-                        .process(e -> latch.await(5, TimeUnit.SECONDS))
-                        .to("mock:tap");
+                from("direct:tap").delay(1000).to("mock:tap");
             }
         };
     }

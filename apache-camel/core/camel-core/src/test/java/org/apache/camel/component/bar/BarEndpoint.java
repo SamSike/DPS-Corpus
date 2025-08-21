@@ -48,12 +48,12 @@ public class BarEndpoint extends DefaultEndpoint {
     }
 
     @Override
-    public Producer createProducer() {
+    public Producer createProducer() throws Exception {
         return new BarProducer(this);
     }
 
     @Override
-    public Consumer createConsumer(Processor processor) {
+    public Consumer createConsumer(Processor processor) throws Exception {
         throw new UnsupportedOperationException("Consumer not supported");
     }
 

@@ -29,7 +29,9 @@ public enum JsonLibrary {
     Fastjson("fastjson"),
     Gson("gson"),
     Jackson("jackson"),
-    Jsonb("jsonb");
+    Johnzon("johnzon"),
+    Jsonb("jsonb"),
+    XStream("xstreamJson");
 
     private final String dataFormatName;
 

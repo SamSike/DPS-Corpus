@@ -35,8 +35,6 @@ import org.apache.camel.util.ObjectHelper;
 @Component("freemarker")
 public class FreemarkerComponent extends DefaultComponent {
 
-    @Metadata(defaultValue = "true", description = "Sets whether to use resource content cache or not")
-    private boolean contentCache = true;
     @Metadata
     private boolean allowTemplateFromHeader;
     @Metadata
@@ -55,7 +53,7 @@ public class FreemarkerComponent extends DefaultComponent {
         // should we use regular configuration or no cache (content cache is default true)
         Configuration config;
         String encoding = getAndRemoveParameter(parameters, "encoding", String.class);
-        boolean cache = getAndRemoveParameter(parameters, "contentCache", Boolean.class, contentCache);
+        boolean cache = getAndRemoveParameter(parameters, "contentCache", Boolean.class, Boolean.TRUE);
         int templateUpdateDelay = getAndRemoveParameter(parameters, "templateUpdateDelay", Integer.class, 0);
         if (cache) {
             config = getConfiguration();
@@ -87,30 +85,24 @@ public class FreemarkerComponent extends DefaultComponent {
         return endpoint;
     }
 
-    public Configuration getConfiguration() {
-        lock.lock();
-        try {
-            if (configuration == null) {
-                configuration = new Configuration(Configuration.VERSION_2_3_34);
-                configuration.setLocalizedLookup(isLocalizedLookup());
-                configuration.setTemplateLoader(new URLTemplateLoader() {
-
-                    @Override
-                    protected URL getURL(String name) {
-                        try {
-                            return ResourceHelper.resolveMandatoryResourceAsUrl(getCamelContext(), name);
-                        } catch (Exception e) {
-                            // freemarker prefers to ask for locale first (eg xxx_en_GB, xxX_en), and then fallback without locale
-                            // so we should return null to signal the resource could not be found
-                            return null;
-                        }
+    public synchronized Configuration getConfiguration() {
+        if (configuration == null) {
+            configuration = new Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);
+            configuration.setLocalizedLookup(isLocalizedLookup());
+            configuration.setTemplateLoader(new URLTemplateLoader() {
+                @Override
+                protected URL getURL(String name) {
+                    try {
+                        return ResourceHelper.resolveMandatoryResourceAsUrl(getCamelContext(), name);
+                    } catch (Exception e) {
+                        // freemarker prefers to ask for locale first (eg xxx_en_GB, xxX_en), and then fallback without locale
+                        // so we should return null to signal the resource could not be found
+                        return null;
                     }
-                });
-            }
-            return (Configuration) configuration.clone();
-        } finally {
-            lock.unlock();
+                }
+            });
         }
+        return (Configuration) configuration.clone();
     }
 
     /**
@@ -118,17 +110,6 @@ public class FreemarkerComponent extends DefaultComponent {
      */
     public void setConfiguration(Configuration configuration) {
         this.configuration = configuration;
-    }
-
-    public boolean isContentCache() {
-        return contentCache;
-    }
-
-    /**
-     * Sets whether to use resource content cache or not
-     */
-    public void setContentCache(boolean contentCache) {
-        this.contentCache = contentCache;
     }
 
     public boolean isAllowTemplateFromHeader() {
@@ -169,19 +150,14 @@ public class FreemarkerComponent extends DefaultComponent {
         this.localizedLookup = localizedLookup;
     }
 
-    private Configuration getNoCacheConfiguration() {
-        lock.lock();
-        try {
-            if (noCacheConfiguration == null) {
-                // create a clone of the regular configuration
-                noCacheConfiguration = (Configuration) getConfiguration().clone();
-                // set this one to not use cache
-                noCacheConfiguration.setCacheStorage(new NullCacheStorage());
-            }
-            return noCacheConfiguration;
-        } finally {
-            lock.unlock();
+    private synchronized Configuration getNoCacheConfiguration() {
+        if (noCacheConfiguration == null) {
+            // create a clone of the regular configuration
+            noCacheConfiguration = (Configuration) getConfiguration().clone();
+            // set this one to not use cache
+            noCacheConfiguration.setCacheStorage(new NullCacheStorage());
         }
+        return noCacheConfiguration;
     }
 
 }

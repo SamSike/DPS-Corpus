@@ -16,8 +16,6 @@
  */
 package org.apache.camel.api.management.mbean;
 
-import java.util.Date;
-
 public interface RouteError {
     enum Phase {
         START,
@@ -41,9 +39,4 @@ public interface RouteError {
      * @return the error.
      */
     Throwable getException();
-
-    /**
-     * Gets the date when the error happened
-     */
-    Date getDate();
 }

@@ -42,15 +42,13 @@ public class SagaReifier extends ProcessorReifier<SagaDefinition> {
 
     @Override
     public Processor createProcessor() throws Exception {
-        Endpoint compensationEndpoint = Optional.ofNullable(definition.getCompensation())
+        Optional<Endpoint> compensationEndpoint = Optional.ofNullable(definition.getCompensation())
                 .map(SagaActionUriDefinition::getUri)
-                .map(this::resolveEndpoint)
-                .orElse(null);
+                .map(this::resolveEndpoint);
 
-        Endpoint completionEndpoint = Optional.ofNullable(definition.getCompletion())
+        Optional<Endpoint> completionEndpoint = Optional.ofNullable(definition.getCompletion())
                 .map(SagaActionUriDefinition::getUri)
-                .map(this::resolveEndpoint)
-                .orElse(null);
+                .map(this::resolveEndpoint);
 
         Map<String, Expression> optionsMap = new TreeMap<>();
         if (definition.getOptions() != null) {
@@ -64,7 +62,7 @@ public class SagaReifier extends ProcessorReifier<SagaDefinition> {
         String timeout = definition.getTimeout();
         CamelSagaStep step = new CamelSagaStep(
                 compensationEndpoint, completionEndpoint, optionsMap,
-                parseDuration(timeout));
+                Optional.ofNullable(parseDuration(timeout)));
 
         SagaPropagation propagation = parse(SagaPropagation.class, definition.getPropagation());
         if (propagation == null) {
@@ -104,7 +102,13 @@ public class SagaReifier extends ProcessorReifier<SagaDefinition> {
             return sagaService;
         }
 
-        return mandatoryFindSingleByType(CamelSagaService.class);
+        sagaService = findSingleByType(CamelSagaService.class);
+        if (sagaService != null) {
+            return sagaService;
+        }
+
+        throw new IllegalArgumentException(
+                "Cannot find CamelSagaService in Registry");
     }
 
 }

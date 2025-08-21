@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.lang.Nullable;
 
 /**
  * Caching implementation of the {@link MetadataReaderFactory} interface,
@@ -34,18 +33,16 @@ import org.springframework.core.io.ResourceLoader;
  *
  * @author Juergen Hoeller
  * @author Costin Leau
- * @author Brian Clozel
  * @since 2.5
  */
-public class CachingMetadataReaderFactory extends AbstractMetadataReaderFactory {
+public class CachingMetadataReaderFactory extends SimpleMetadataReaderFactory {
 
 	/** Default maximum number of entries for a local MetadataReader cache: 256. */
 	public static final int DEFAULT_CACHE_LIMIT = 256;
 
-	private final MetadataReaderFactory delegate;
-
 	/** MetadataReader cache: either local or shared at the ResourceLoader level. */
-	private @Nullable Map<Resource, MetadataReader> metadataReaderCache;
+	@Nullable
+	private Map<Resource, MetadataReader> metadataReaderCache;
 
 
 	/**
@@ -53,7 +50,8 @@ public class CachingMetadataReaderFactory extends AbstractMetadataReaderFactory 
 	 * using a local resource cache.
 	 */
 	public CachingMetadataReaderFactory() {
-		this(MetadataReaderFactory.create((ClassLoader) null));
+		super();
+		setCacheLimit(DEFAULT_CACHE_LIMIT);
 	}
 
 	/**
@@ -62,7 +60,8 @@ public class CachingMetadataReaderFactory extends AbstractMetadataReaderFactory 
 	 * @param classLoader the ClassLoader to use
 	 */
 	public CachingMetadataReaderFactory(@Nullable ClassLoader classLoader) {
-		this(MetadataReaderFactory.create(classLoader));
+		super(classLoader);
+		setCacheLimit(DEFAULT_CACHE_LIMIT);
 	}
 
 	/**
@@ -73,14 +72,10 @@ public class CachingMetadataReaderFactory extends AbstractMetadataReaderFactory 
 	 * @see DefaultResourceLoader#getResourceCache
 	 */
 	public CachingMetadataReaderFactory(@Nullable ResourceLoader resourceLoader) {
-		this(MetadataReaderFactory.create(resourceLoader));
-	}
-
-	CachingMetadataReaderFactory(MetadataReaderFactory delegate) {
-		super(delegate.getResourceLoader());
-		this.delegate = delegate;
-		if (getResourceLoader() instanceof DefaultResourceLoader defaultResourceLoader) {
-			this.metadataReaderCache = defaultResourceLoader.getResourceCache(MetadataReader.class);
+		super(resourceLoader);
+		if (resourceLoader instanceof DefaultResourceLoader) {
+			this.metadataReaderCache =
+					((DefaultResourceLoader) resourceLoader).getResourceCache(MetadataReader.class);
 		}
 		else {
 			setCacheLimit(DEFAULT_CACHE_LIMIT);
@@ -98,8 +93,8 @@ public class CachingMetadataReaderFactory extends AbstractMetadataReaderFactory 
 		if (cacheLimit <= 0) {
 			this.metadataReaderCache = null;
 		}
-		else if (this.metadataReaderCache instanceof LocalResourceCache localResourceCache) {
-			localResourceCache.setCacheLimit(cacheLimit);
+		else if (this.metadataReaderCache instanceof LocalResourceCache) {
+			((LocalResourceCache) this.metadataReaderCache).setCacheLimit(cacheLimit);
 		}
 		else {
 			this.metadataReaderCache = new LocalResourceCache(cacheLimit);
@@ -110,13 +105,14 @@ public class CachingMetadataReaderFactory extends AbstractMetadataReaderFactory 
 	 * Return the maximum number of entries for the MetadataReader cache.
 	 */
 	public int getCacheLimit() {
-		if (this.metadataReaderCache instanceof LocalResourceCache localResourceCache) {
-			return localResourceCache.getCacheLimit();
+		if (this.metadataReaderCache instanceof LocalResourceCache) {
+			return ((LocalResourceCache) this.metadataReaderCache).getCacheLimit();
 		}
 		else {
 			return (this.metadataReaderCache != null ? Integer.MAX_VALUE : 0);
 		}
 	}
+
 
 	@Override
 	public MetadataReader getMetadataReader(Resource resource) throws IOException {
@@ -124,7 +120,7 @@ public class CachingMetadataReaderFactory extends AbstractMetadataReaderFactory 
 			// No synchronization necessary...
 			MetadataReader metadataReader = this.metadataReaderCache.get(resource);
 			if (metadataReader == null) {
-				metadataReader = this.delegate.getMetadataReader(resource);
+				metadataReader = super.getMetadataReader(resource);
 				this.metadataReaderCache.put(resource, metadataReader);
 			}
 			return metadataReader;
@@ -133,14 +129,14 @@ public class CachingMetadataReaderFactory extends AbstractMetadataReaderFactory 
 			synchronized (this.metadataReaderCache) {
 				MetadataReader metadataReader = this.metadataReaderCache.get(resource);
 				if (metadataReader == null) {
-					metadataReader = this.delegate.getMetadataReader(resource);
+					metadataReader = super.getMetadataReader(resource);
 					this.metadataReaderCache.put(resource, metadataReader);
 				}
 				return metadataReader;
 			}
 		}
 		else {
-			return this.delegate.getMetadataReader(resource);
+			return super.getMetadataReader(resource);
 		}
 	}
 

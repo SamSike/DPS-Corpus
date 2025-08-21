@@ -26,7 +26,6 @@ import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Unit test to verify unit of work with disruptor. That the UnitOfWork is able to route using disruptor but keeping the
@@ -66,7 +65,7 @@ public class DisruptorUnitOfWorkTest extends CamelTestSupport {
                 from("disruptor:foo").process(new Processor() {
                     @Override
                     public void process(final Exchange exchange) {
-                        assertNull(sync);
+                        assertEquals(null, sync);
                     }
                 }).process(new Processor() {
                     @Override

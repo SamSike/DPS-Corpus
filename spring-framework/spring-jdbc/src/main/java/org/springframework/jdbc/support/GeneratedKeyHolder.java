@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.lang.Nullable;
 
 /**
  * The standard implementation of the {@link KeyHolder} interface, to be used for
@@ -61,12 +60,14 @@ public class GeneratedKeyHolder implements KeyHolder {
 
 
 	@Override
-	public @Nullable Number getKey() throws InvalidDataAccessApiUsageException, DataRetrievalFailureException {
+	@Nullable
+	public Number getKey() throws InvalidDataAccessApiUsageException, DataRetrievalFailureException {
 		return getKeyAs(Number.class);
 	}
 
 	@Override
-	public <T> @Nullable T getKeyAs(Class<T> keyType) throws InvalidDataAccessApiUsageException, DataRetrievalFailureException {
+	@Nullable
+	public <T> T getKeyAs(Class<T> keyType) throws InvalidDataAccessApiUsageException, DataRetrievalFailureException {
 		if (this.keyList.isEmpty()) {
 			return null;
 		}
@@ -93,7 +94,8 @@ public class GeneratedKeyHolder implements KeyHolder {
 	}
 
 	@Override
-	public @Nullable Map<String, Object> getKeys() throws InvalidDataAccessApiUsageException {
+	@Nullable
+	public Map<String, Object> getKeys() throws InvalidDataAccessApiUsageException {
 		if (this.keyList.isEmpty()) {
 			return null;
 		}

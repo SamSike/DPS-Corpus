@@ -46,10 +46,8 @@ public class SyncCommitManager extends AbstractCommitManager {
 
     @Override
     public void commit() {
-        if (kafkaConsumer.getEndpoint().getConfiguration().isAutoCommitEnable()) {
-            LOG.info("Auto commitSync {} from {}", threadId, printableTopic);
-            consumer.commitSync();
-        }
+        LOG.info("Auto commitSync {} from {}", threadId, printableTopic);
+        consumer.commitSync();
     }
 
     @Override

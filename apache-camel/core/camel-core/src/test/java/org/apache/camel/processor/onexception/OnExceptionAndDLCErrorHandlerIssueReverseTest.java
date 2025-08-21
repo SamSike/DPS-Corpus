@@ -45,10 +45,10 @@ public class OnExceptionAndDLCErrorHandlerIssueReverseTest extends ContextTestSu
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead"));
 
                 from("direct:foo").routeId("foo").to("mock:foo").throwException(new IllegalArgumentException("Damn"));

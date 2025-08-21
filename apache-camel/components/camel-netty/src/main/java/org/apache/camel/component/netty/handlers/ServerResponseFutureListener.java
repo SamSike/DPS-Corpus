@@ -34,7 +34,8 @@ import org.slf4j.LoggerFactory;
  */
 public class ServerResponseFutureListener implements ChannelFutureListener {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ServerResponseFutureListener.class);
+    // use NettyConsumer as logger to make it easier to read the logs as this is part of the consumer
+    private static final Logger LOG = LoggerFactory.getLogger(NettyConsumer.class);
     private final NettyConsumer consumer;
     private final Exchange exchange;
     private final SocketAddress remoteAddress;

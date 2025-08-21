@@ -47,10 +47,10 @@ public class BatchGoogleMailClientFactory implements GoogleMailClientFactory {
         try {
             Credential credential = authorize(clientId, clientSecret);
 
-            if (refreshToken != null && !refreshToken.isEmpty()) {
+            if (refreshToken != null && !"".equals(refreshToken)) {
                 credential.setRefreshToken(refreshToken);
             }
-            if (accessToken != null && !accessToken.isEmpty()) {
+            if (accessToken != null && !"".equals(accessToken)) {
                 credential.setAccessToken(accessToken);
             }
             return new Gmail.Builder(transport, jsonFactory, credential).setApplicationName(applicationName).build();

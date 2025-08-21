@@ -120,7 +120,11 @@ public class DefaultKeySelector extends KeySelector implements CamelContextAware
                 } else {
                     key = keyStoreAndAlias.getKeyStore().getKey(keyStoreAndAlias.getAlias(), keyStoreAndAlias.getPassword());
                 }
-            } catch (UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException e) {
+            } catch (UnrecoverableKeyException e) {
+                throw new KeySelectorException(e);
+            } catch (KeyStoreException e) {
+                throw new KeySelectorException(e);
+            } catch (NoSuchAlgorithmException e) {
                 throw new KeySelectorException(e);
             }
             return getKeySelectorResult(key);
@@ -138,12 +142,20 @@ public class DefaultKeySelector extends KeySelector implements CamelContextAware
     }
 
     private KeySelectorResult getKeySelectorResult(final Key key) {
-        return () -> key;
+        return new KeySelectorResult() {
+            public Key getKey() {
+                return key;
+            }
+        };
     }
 
     private KeySelectorResult getNullKeyResult() {
         if (nullKeyResult == null) {
-            nullKeyResult = () -> null;
+            nullKeyResult = new KeySelectorResult() {
+                public Key getKey() {
+                    return null;
+                }
+            };
         }
         return nullKeyResult;
     }

@@ -103,7 +103,7 @@ class ChoiceInPreconditionModeTest extends ContextTestSupport {
     void testNone() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("myRoute")
                     .choice().precondition().id("mySwitch")
                         .when(simple("{{?red}}")).to("mock:red").id("myRed")

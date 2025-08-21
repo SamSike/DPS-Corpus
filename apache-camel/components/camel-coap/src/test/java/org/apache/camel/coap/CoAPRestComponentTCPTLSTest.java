@@ -28,7 +28,7 @@ import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.support.jsse.TrustManagersParameters;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.network.CoapEndpoint;
-import org.eclipse.californium.elements.config.Configuration;
+import org.eclipse.californium.core.network.config.NetworkConfig;
 import org.eclipse.californium.elements.tcp.netty.TcpClientConnector;
 import org.eclipse.californium.elements.tcp.netty.TlsClientConnector;
 
@@ -45,7 +45,10 @@ public class CoAPRestComponentTCPTLSTest extends CoAPRestComponentTestBase {
     @Override
     protected void decorateClient(CoapClient client) throws GeneralSecurityException, IOException {
 
-        Configuration config = Configuration.createStandardWithoutFile();
+        NetworkConfig config = NetworkConfig.createStandardWithoutFile();
+        int tcpThreads = config.getInt(NetworkConfig.Keys.TCP_WORKER_THREADS);
+        int tcpConnectTimeout = config.getInt(NetworkConfig.Keys.TCP_CONNECT_TIMEOUT);
+        int tcpIdleTimeout = config.getInt(NetworkConfig.Keys.TCP_CONNECTION_IDLE_TIMEOUT);
 
         KeyStoreParameters truststoreParameters = new KeyStoreParameters();
         truststoreParameters.setResource("truststore.jks");
@@ -57,7 +60,7 @@ public class CoAPRestComponentTCPTLSTest extends CoAPRestComponentTestBase {
         clientSSLContextParameters.setTrustManagers(clientSSLTrustManagers);
 
         SSLContext sslContext = clientSSLContextParameters.createSSLContext(context);
-        TcpClientConnector tcpConnector = new TlsClientConnector(sslContext, config);
+        TcpClientConnector tcpConnector = new TlsClientConnector(sslContext, tcpThreads, tcpConnectTimeout, tcpIdleTimeout);
 
         CoapEndpoint.Builder tcpBuilder = new CoapEndpoint.Builder();
         tcpBuilder.setConnector(tcpConnector);

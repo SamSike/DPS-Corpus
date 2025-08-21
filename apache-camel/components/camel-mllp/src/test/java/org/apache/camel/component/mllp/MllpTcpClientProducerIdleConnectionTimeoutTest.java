@@ -31,7 +31,6 @@ import org.apache.camel.test.junit.rule.mllp.MllpJUnitResourceException;
 import org.apache.camel.test.junit.rule.mllp.MllpServerResource;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.camel.test.mllp.Hl7TestMessageGenerator;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -39,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class MllpTcpClientProducerIdleConnectionTimeoutTest extends CamelTestSupport {
 
@@ -69,7 +69,7 @@ public class MllpTcpClientProducerIdleConnectionTimeoutTest extends CamelTestSup
         DefaultCamelContext context = (DefaultCamelContext) super.createCamelContext();
 
         context.setUseMDCLogging(true);
-        context.getCamelContextExtension().setName(this.getClass().getSimpleName());
+        context.setName(this.getClass().getSimpleName());
 
         return context;
     }
@@ -114,18 +114,17 @@ public class MllpTcpClientProducerIdleConnectionTimeoutTest extends CamelTestSup
         // Need to send one message to get the connection established
         source.sendBody(Hl7TestMessageGenerator.generateMessage());
 
+        Thread.sleep(IDLE_TIMEOUT / 2);
         source.sendBody(Hl7TestMessageGenerator.generateMessage());
 
-        Awaitility.await().atMost(IDLE_TIMEOUT / 2, TimeUnit.MILLISECONDS).untilAsserted(() -> {
-            assertTrue(done.matches(5, TimeUnit.SECONDS), "Should have completed two exchanges");
+        assertTrue(done.matches(5, TimeUnit.SECONDS), "Should have completed two exchanges");
 
-            MockEndpoint.assertIsSatisfied(context, 5, TimeUnit.SECONDS);
-        });
+        MockEndpoint.assertIsSatisfied(context, 5, TimeUnit.SECONDS);
 
-        Awaitility.await().atMost((long) (IDLE_TIMEOUT * 1.1), TimeUnit.MILLISECONDS).untilAsserted(() -> {
-            assertThrows(MllpJUnitResourceException.class,
-                    () -> mllpServer.checkClientConnections());
-        });
+        Thread.sleep((long) (IDLE_TIMEOUT * 1.1));
+
+        assertThrows(MllpJUnitResourceException.class,
+                () -> mllpServer.checkClientConnections());
     }
 
     @Test
@@ -139,19 +138,23 @@ public class MllpTcpClientProducerIdleConnectionTimeoutTest extends CamelTestSup
         // Need to send one message to get the connection established
         source.sendBody(Hl7TestMessageGenerator.generateMessage());
 
+        Thread.sleep(IDLE_TIMEOUT / 2);
         source.sendBody(Hl7TestMessageGenerator.generateMessage());
 
-        Awaitility.await().atMost(IDLE_TIMEOUT / 2, TimeUnit.MILLISECONDS)
-                .untilAsserted(() -> assertTrue(done.matches(5, TimeUnit.SECONDS), "Should have completed two exchanges"));
+        assertTrue(done.matches(5, TimeUnit.SECONDS), "Should have completed two exchanges");
 
-        Awaitility.await().untilAsserted(() -> {
-            assertThrows(MllpJUnitResourceException.class, () -> mllpServer.checkClientConnections(),
-                    "Should receive and exception for the closed connection");
+        Thread.sleep((long) (IDLE_TIMEOUT * 1.1));
 
-            source.sendBody(Hl7TestMessageGenerator.generateMessage());
+        try {
+            mllpServer.checkClientConnections();
+            fail("Should receive and exception for the closed connection");
+        } catch (MllpJUnitResourceException expectedEx) {
+            // Eat this
+        }
 
-            MockEndpoint.assertIsSatisfied(context, 5, TimeUnit.SECONDS);
-        });
+        source.sendBody(Hl7TestMessageGenerator.generateMessage());
+
+        MockEndpoint.assertIsSatisfied(context, 5, TimeUnit.SECONDS);
 
         log.debug("Breakpoint");
     }

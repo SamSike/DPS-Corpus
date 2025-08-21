@@ -72,34 +72,40 @@ public class JCacheConsumer extends DefaultConsumer {
     }
 
     private CacheEntryListenerConfiguration<Object, Object> createEntryListenerConfiguration() {
-
-        Factory<CacheEntryListener<Object, Object>> listenerFactory = () -> new JCacheEntryEventListener() {
-            @Override
-            protected void onEvents(Iterable<CacheEntryEvent<?, ?>> events) {
-                for (CacheEntryEvent<?, ?> event : events) {
-                    Exchange exchange = createExchange(true);
-                    Message message = exchange.getIn();
-                    message.setHeader(JCacheConstants.EVENT_TYPE, event.getEventType().name());
-                    message.setHeader(JCacheConstants.KEY, event.getKey());
-                    message.setBody(event.getValue());
-
-                    if (event.isOldValueAvailable()) {
-                        message.setHeader(JCacheConstants.OLD_VALUE, event.getOldValue());
-                    }
-
-                    try {
-                        getProcessor().process(exchange);
-                    } catch (Exception e) {
-                        getExceptionHandler().handleException(e);
-                    }
-                }
-            }
-        };
-
-        Factory<CacheEntryEventFilter<Object, Object>> filterFactory = () -> getJCacheEndpoint().getManager().getEventFilter();
-
         return new MutableCacheEntryListenerConfiguration<>(
-                listenerFactory, filterFactory,
+                new Factory<CacheEntryListener<Object, Object>>() {
+                    @Override
+                    public CacheEntryListener<Object, Object> create() {
+                        return new JCacheEntryEventListener() {
+                            @Override
+                            protected void onEvents(Iterable<CacheEntryEvent<?, ?>> events) {
+                                for (CacheEntryEvent<?, ?> event : events) {
+                                    Exchange exchange = createExchange(true);
+                                    Message message = exchange.getIn();
+                                    message.setHeader(JCacheConstants.EVENT_TYPE, event.getEventType().name());
+                                    message.setHeader(JCacheConstants.KEY, event.getKey());
+                                    message.setBody(event.getValue());
+
+                                    if (event.isOldValueAvailable()) {
+                                        message.setHeader(JCacheConstants.OLD_VALUE, event.getOldValue());
+                                    }
+
+                                    try {
+                                        getProcessor().process(exchange);
+                                    } catch (Exception e) {
+                                        getExceptionHandler().handleException(e);
+                                    }
+                                }
+                            }
+                        };
+                    }
+                },
+                new Factory<CacheEntryEventFilter<Object, Object>>() {
+                    @Override
+                    public CacheEntryEventFilter<Object, Object> create() {
+                        return getJCacheEndpoint().getManager().getEventFilter();
+                    }
+                },
                 getJCacheEndpoint().getManager().getConfiguration().isOldValueRequired(),
                 getJCacheEndpoint().getManager().getConfiguration().isSynchronous());
     }

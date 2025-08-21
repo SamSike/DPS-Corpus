@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,7 +38,6 @@
 package org.jooq.impl;
 
 import static org.jooq.impl.R2DBC.AbstractSubscription.onRequest;
-import static org.jooq.impl.Tools.CONFIG;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,7 +45,6 @@ import java.util.function.IntFunction;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-import org.jooq.Configuration;
 import org.jooq.exception.DetachedException;
 
 import org.reactivestreams.Publisher;
@@ -67,18 +65,16 @@ import io.r2dbc.spi.ValidationDepth;
  */
 final class DefaultConnectionFactory implements ConnectionFactory {
 
-    Configuration       configuration;
     Connection          connection;
     final boolean       finalize;
     final boolean       nested;
     final AtomicInteger savepoints = new AtomicInteger();
 
-    DefaultConnectionFactory(Configuration configuration, Connection connection) {
-        this(configuration, connection, false, true);
+    DefaultConnectionFactory(Connection connection) {
+        this(connection, false, true);
     }
 
-    DefaultConnectionFactory(Configuration configuration, Connection connection, boolean finalize, boolean nested) {
-        this.configuration = configuration != null ? configuration : CONFIG.get();
+    DefaultConnectionFactory(Connection connection, boolean finalize, boolean nested) {
         this.connection = connection;
         this.finalize = finalize;
         this.nested = nested;
@@ -93,7 +89,7 @@ final class DefaultConnectionFactory implements ConnectionFactory {
 
     @Override
     public final Publisher<? extends Connection> create() {
-        return s -> s.onSubscribe(onRequest(configuration, s, x -> {
+        return s -> s.onSubscribe(onRequest(s, x -> {
             x.onNext(new NonClosingConnection());
             x.onComplete();
         }));
@@ -141,7 +137,7 @@ final class DefaultConnectionFactory implements ConnectionFactory {
 
         @Override
         public Publisher<Void> close() {
-            return s -> s.onSubscribe(onRequest(configuration, s, x -> x.onComplete()));
+            return s -> s.onSubscribe(onRequest(s, x -> x.onComplete()));
         }
 
         @Override

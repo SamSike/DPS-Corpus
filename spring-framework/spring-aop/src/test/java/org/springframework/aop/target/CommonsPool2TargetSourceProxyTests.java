@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,13 +30,13 @@ import static org.springframework.core.testfixture.io.ResourceTestUtils.qualifie
 /**
  * @author Stephane Nicoll
  */
-class CommonsPool2TargetSourceProxyTests {
+public class CommonsPool2TargetSourceProxyTests {
 
 	private static final Resource CONTEXT =
 		qualifiedResource(CommonsPool2TargetSourceProxyTests.class, "context.xml");
 
 	@Test
-	void testProxy() {
+	public void testProxy() throws Exception {
 		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(beanFactory);
 		reader.loadBeanDefinitions(CONTEXT);

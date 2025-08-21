@@ -22,6 +22,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.converter.IOConverter;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.stream.StreamGroupLinesTest.LS;
@@ -32,9 +33,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SplitStreamFileTest extends CamelTestSupport {
 
     @Override
-    public void doPreSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
         deleteDirectory("target/stream");
         createDirectory("target/stream");
+
+        super.setUp();
     }
 
     @Test

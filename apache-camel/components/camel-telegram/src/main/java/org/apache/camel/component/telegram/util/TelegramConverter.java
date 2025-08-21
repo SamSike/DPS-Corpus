@@ -41,13 +41,13 @@ public final class TelegramConverter {
     }
 
     @Converter
-    public static String toString(Update update, Exchange exchange) {
-        return toString(update.getMessage(), exchange);
+    public static String toString(Update update) {
+        return update != null ? toString(update.getMessage()) : null;
     }
 
     @Converter
-    public static String toString(IncomingMessage message, Exchange exchange) {
-        return message.getText();
+    public static String toString(IncomingMessage message) {
+        return message != null ? message.getText() : null;
     }
 
     /**
@@ -55,12 +55,17 @@ public final class TelegramConverter {
      */
     @Converter
     public static OutgoingMessage toOutgoingMessage(Object message, Exchange exchange) {
-        String content = exchange.getContext().getTypeConverter().convertTo(String.class, exchange, message);
+        String content = exchange.getIn().getBody(String.class);
         return toOutgoingMessage(content, exchange);
     }
 
     @Converter
     public static OutgoingMessage toOutgoingMessage(String message, Exchange exchange) {
+        if (message == null) {
+            // fail fast
+            return null;
+        }
+
         Object typeObj = exchange.getIn().getHeader(TelegramConstants.TELEGRAM_MEDIA_TYPE);
         TelegramMediaType type;
         if (typeObj instanceof String) {
@@ -99,6 +104,11 @@ public final class TelegramConverter {
 
     @Converter
     public static OutgoingMessage toOutgoingMessage(byte[] message, Exchange exchange) {
+        if (message == null) {
+            // fail fast
+            return null;
+        }
+
         Object typeObj = exchange.getIn().getHeader(TelegramConstants.TELEGRAM_MEDIA_TYPE);
         TelegramMediaType type;
         if (typeObj instanceof String) {
@@ -182,13 +192,14 @@ public final class TelegramConverter {
     }
 
     private static TelegramParseMode getParseMode(Exchange exchange) {
-        TelegramParseMode mode;
+        TelegramParseMode mode = null;
         Object parseMode = exchange.getIn().getHeader(TelegramConstants.TELEGRAM_PARSE_MODE);
         if (parseMode instanceof String) {
             mode = TelegramParseMode.valueOf((String) parseMode);
         } else {
             mode = (TelegramParseMode) parseMode;
         }
+
         return mode;
     }
 

@@ -77,11 +77,6 @@ public class MyBatisBeanProducer extends DefaultProducer {
         beanProcessor.process(copy);
         beanProcessor.stop();
 
-        if (copy.getException() != null) {
-            session.rollback();
-            throw copy.getException();
-        }
-
         Object result = copy.getMessage().getBody();
         if (result != input) {
             if (endpoint.getOutputHeader() != null) {

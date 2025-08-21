@@ -42,6 +42,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.camel.util.IOHelper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -68,8 +69,8 @@ public class PrinterPrintTest extends CamelTestSupport {
         setupJavaPrint();
     }
 
-    @Override
-    public void doPostTearDown() throws Exception {
+    @AfterEach
+    public void tearDown() throws Exception {
         restoreJavaPrint();
     }
 
@@ -129,7 +130,7 @@ public class PrinterPrintTest extends CamelTestSupport {
         template.send("direct:start", new Processor() {
             public void process(Exchange exchange) throws Exception {
                 // Read from an input stream
-                InputStream is = IOHelper.buffered(new FileInputStream("src/test/resources/asf-logo.jpg"));
+                InputStream is = IOHelper.buffered(new FileInputStream("src/test/resources/asf-logo.JPG"));
 
                 byte buffer[] = new byte[is.available()];
                 int n = is.available();
@@ -234,7 +235,7 @@ public class PrinterPrintTest extends CamelTestSupport {
 
         int numberOfPrintservicesBefore = PrintServiceLookup.lookupPrintServices(null, null).length;
 
-        // setup javax.print
+        // setup javax.print 
         PrintService ps1 = mock(PrintService.class);
         when(ps1.getName()).thenReturn("printer1");
         when(ps1.isDocFlavorSupported(any(DocFlavor.class))).thenReturn(Boolean.TRUE);
@@ -260,7 +261,7 @@ public class PrinterPrintTest extends CamelTestSupport {
         context.start();
 
         // Are there two different PrintConfigurations?
-        Map<String, Endpoint> epm = context().getEndpointRegistry().getReadOnlyMap();
+        Map<String, Endpoint> epm = context().getEndpointMap();
         assertEquals(4, epm.size(), "Four endpoints");
         Endpoint lp1 = null;
         Endpoint lp2 = null;
@@ -318,7 +319,7 @@ public class PrinterPrintTest extends CamelTestSupport {
      * */
     @Test
     public void testSendingFileToRemotePrinter() throws Exception {
-        // setup javax.print
+        // setup javax.print 
         PrintService ps1 = mock(PrintService.class);
         when(ps1.getName()).thenReturn("printer1");
         when(ps1.isDocFlavorSupported(any(DocFlavor.class))).thenReturn(Boolean.TRUE);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ import static org.springframework.transaction.support.TransactionSynchronization
  * @since 3.1
  */
 @ContextConfiguration
-class AnnotationConfigTransactionalTestNGSpringContextTests
+public class AnnotationConfigTransactionalTestNGSpringContextTests
 		extends AbstractTransactionalTestNGSpringContextTests {
 
 	private static final String JANE = "jane";
@@ -112,7 +112,7 @@ class AnnotationConfigTransactionalTestNGSpringContextTests
 
 	@Test
 	@Transactional(propagation = Propagation.NOT_SUPPORTED)
-	void autowiringFromConfigClass() {
+	public void autowiringFromConfigClass() {
 		assertThat(employee).as("The employee should have been autowired.").isNotNull();
 		assertThat(employee.getName()).isEqualTo("John Smith");
 
@@ -127,7 +127,7 @@ class AnnotationConfigTransactionalTestNGSpringContextTests
 	}
 
 	@BeforeMethod
-	void setUp() {
+	void setUp() throws Exception {
 		numSetUpCalls++;
 		if (isActualTransactionActive()) {
 			numSetUpCallsInTransaction++;
@@ -136,7 +136,7 @@ class AnnotationConfigTransactionalTestNGSpringContextTests
 	}
 
 	@Test
-	void modifyTestDataWithinTransaction() {
+	public void modifyTestDataWithinTransaction() {
 		assertThatTransaction().isActive();
 		assertAddPerson(JANE);
 		assertAddPerson(SUE);
@@ -144,7 +144,7 @@ class AnnotationConfigTransactionalTestNGSpringContextTests
 	}
 
 	@AfterMethod
-	void tearDown() {
+	void tearDown() throws Exception {
 		numTearDownCalls++;
 		if (isActualTransactionActive()) {
 			numTearDownCallsInTransaction++;
@@ -183,11 +183,10 @@ class AnnotationConfigTransactionalTestNGSpringContextTests
 
 		@Bean
 		DataSource dataSource() {
-			return new EmbeddedDatabaseBuilder()
-					.generateUniqueName(true)
-					.addScript("classpath:/org/springframework/test/jdbc/schema.sql")
-					.addScript("classpath:/org/springframework/test/jdbc/data.sql")
-					.build();
+			return new EmbeddedDatabaseBuilder()//
+			.addScript("classpath:/org/springframework/test/jdbc/schema.sql")//
+			.addScript("classpath:/org/springframework/test/jdbc/data.sql")//
+			.build();
 		}
 
 	}

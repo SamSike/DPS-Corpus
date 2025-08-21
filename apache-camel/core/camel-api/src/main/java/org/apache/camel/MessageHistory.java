@@ -32,7 +32,7 @@ public interface MessageHistory {
     NamedNode getNode();
 
     /**
-     * Gets the point in time the message history was created
+     * Gets the timestamp at the point of this history.
      */
     long getTime();
 
@@ -40,13 +40,6 @@ public interface MessageHistory {
      * Gets the elapsed time in millis processing the node took (this is 0 until the node processing is done)
      */
     long getElapsed();
-
-    /**
-     * The elapsed time since created.
-     */
-    default long getElapsedSinceCreated() {
-        return System.nanoTime() - getTime();
-    }
 
     /**
      * Used for signalling that processing of the node is done.
@@ -57,17 +50,5 @@ public interface MessageHistory {
      * A read-only copy of the message at the point of this history (if this has been enabled).
      */
     Message getMessage();
-
-    /**
-     * Used specially during debugging where some EIP nodes are not accepted for debugging and are essentially skipped.
-     * This allows tooling to avoid dumping message history for nodes that did not take part in the debugger.
-     */
-    void setAcceptDebugger(boolean acceptDebugger);
-
-    /**
-     * Used specially during debugging where some EIP nodes are not accepted for debugging and are essentially skipped.
-     * This allows tooling to avoid dumping message history for nodes that did not take part in the debugger.
-     */
-    boolean isAcceptDebugger();
 
 }

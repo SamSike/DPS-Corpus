@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package org.springframework.web.method.annotation;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.MethodParameter;
+import org.springframework.lang.Nullable;
 import org.springframework.ui.Model;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -46,7 +45,8 @@ public class ModelMethodProcessor implements HandlerMethodArgumentResolver, Hand
 	}
 
 	@Override
-	public @Nullable Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer,
+	@Nullable
+	public Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer,
 			NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) throws Exception {
 
 		Assert.state(mavContainer != null, "ModelAndViewContainer is required for model exposure");
@@ -65,9 +65,8 @@ public class ModelMethodProcessor implements HandlerMethodArgumentResolver, Hand
 		if (returnValue == null) {
 			return;
 		}
-
-		if (returnValue instanceof Model model) {
-			mavContainer.addAllAttributes(model.asMap());
+		else if (returnValue instanceof Model) {
+			mavContainer.addAllAttributes(((Model) returnValue).asMap());
 		}
 		else {
 			// should not happen

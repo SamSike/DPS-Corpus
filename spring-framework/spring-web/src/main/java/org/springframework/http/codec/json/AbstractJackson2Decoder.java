@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.springframework.http.codec.json;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -31,11 +30,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.context.ContextView;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
@@ -45,27 +42,25 @@ import org.springframework.core.codec.Hints;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferLimitException;
 import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.core.io.buffer.PooledDataBuffer;
 import org.springframework.core.log.LogFormatUtils;
-import org.springframework.http.codec.AbstractJacksonDecoder;
 import org.springframework.http.codec.HttpMessageDecoder;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
 
 /**
- * Abstract base class for Jackson 2.x decoding, leveraging non-blocking parsing.
+ * Abstract base class for Jackson 2.9 decoding, leveraging non-blocking parsing.
+ *
+ * <p>Compatible with Jackson 2.9.7 and higher.
  *
  * @author Sebastien Deleuze
  * @author Rossen Stoyanchev
  * @author Arjen Poutsma
  * @since 5.0
  * @see <a href="https://github.com/FasterXML/jackson-core/issues/57" target="_blank">Add support for non-blocking ("async") JSON parsing</a>
- * @deprecated since 7.0 in favor of {@link AbstractJacksonDecoder}
  */
-@Deprecated(since = "7.0", forRemoval = true)
-@SuppressWarnings("removal")
 public abstract class AbstractJackson2Decoder extends Jackson2CodecSupport implements HttpMessageDecoder<Object> {
 
 	private int maxInMemorySize = 256 * 1024;
@@ -101,20 +96,17 @@ public abstract class AbstractJackson2Decoder extends Jackson2CodecSupport imple
 	}
 
 
-	@SuppressWarnings("deprecation")  // as of Jackson 2.18: can(De)Serialize
 	@Override
 	public boolean canDecode(ResolvableType elementType, @Nullable MimeType mimeType) {
-		if (!supportsMimeType(mimeType)) {
-			return false;
-		}
 		ObjectMapper mapper = selectObjectMapper(elementType, mimeType);
 		if (mapper == null) {
 			return false;
 		}
-		if (CharSequence.class.isAssignableFrom(elementType.toClass())) {
+		JavaType javaType = mapper.constructType(elementType.getType());
+		// Skip String: CharSequenceDecoder + "*/*" comes after
+		if (CharSequence.class.isAssignableFrom(elementType.toClass()) || !supportsMimeType(mimeType)) {
 			return false;
 		}
-		JavaType javaType = mapper.constructType(elementType.getType());
 		if (!logger.isDebugEnabled()) {
 			return mapper.canDeserialize(javaType);
 		}
@@ -134,7 +126,7 @@ public abstract class AbstractJackson2Decoder extends Jackson2CodecSupport imple
 
 		ObjectMapper mapper = selectObjectMapper(elementType, mimeType);
 		if (mapper == null) {
-			return Flux.error(new IllegalStateException("No ObjectMapper for " + elementType));
+			throw new IllegalStateException("No ObjectMapper for " + elementType);
 		}
 
 		boolean forceUseOfBigDecimal = mapper.isEnabled(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
@@ -142,33 +134,23 @@ public abstract class AbstractJackson2Decoder extends Jackson2CodecSupport imple
 			forceUseOfBigDecimal = true;
 		}
 
-		boolean tokenizeArrays = (!elementType.isArray() &&
-				!Collection.class.isAssignableFrom(elementType.resolve(Object.class)));
-
 		Flux<DataBuffer> processed = processInput(input, elementType, mimeType, hints);
 		Flux<TokenBuffer> tokens = Jackson2Tokenizer.tokenize(processed, mapper.getFactory(), mapper,
-				tokenizeArrays, forceUseOfBigDecimal, getMaxInMemorySize());
+				true, forceUseOfBigDecimal, getMaxInMemorySize());
 
-		return Flux.deferContextual(contextView -> {
+		ObjectReader reader = getObjectReader(mapper, elementType, hints);
 
-			Map<String, Object> hintsToUse = contextView.isEmpty() ? hints :
-					Hints.merge(hints, ContextView.class.getName(), contextView);
-
-			ObjectReader reader = createObjectReader(mapper, elementType, hintsToUse);
-
-			return tokens.handle((tokenBuffer, sink) -> {
-				try {
-					Object value = reader.readValue(tokenBuffer.asParser(mapper));
-					logValue(value, hints);
-					if (value != null) {
-						sink.next(value);
-					}
+		return tokens.handle((tokenBuffer, sink) -> {
+			try {
+				Object value = reader.readValue(tokenBuffer.asParser(mapper));
+				logValue(value, hints);
+				if (value != null) {
+					sink.next(value);
 				}
-				catch (IOException ex) {
-					sink.error(processException(ex));
-				}
-			})
-			.doOnDiscard(PooledDataBuffer.class, DataBufferUtils::release);
+			}
+			catch (IOException ex) {
+				sink.error(processException(ex));
+			}
 		});
 	}
 
@@ -184,7 +166,7 @@ public abstract class AbstractJackson2Decoder extends Jackson2CodecSupport imple
 	 * @since 5.1.14
 	 */
 	protected Flux<DataBuffer> processInput(Publisher<DataBuffer> input, ResolvableType elementType,
-			@Nullable MimeType mimeType, @Nullable Map<String, Object> hints) {
+				@Nullable MimeType mimeType, @Nullable Map<String, Object> hints) {
 
 		return Flux.from(input);
 	}
@@ -193,14 +175,8 @@ public abstract class AbstractJackson2Decoder extends Jackson2CodecSupport imple
 	public Mono<Object> decodeToMono(Publisher<DataBuffer> input, ResolvableType elementType,
 			@Nullable MimeType mimeType, @Nullable Map<String, Object> hints) {
 
-		return Mono.deferContextual(contextView -> {
-
-			Map<String, Object> hintsToUse = contextView.isEmpty() ? hints :
-					Hints.merge(hints, ContextView.class.getName(), contextView);
-
-			return DataBufferUtils.join(input, this.maxInMemorySize).flatMap(dataBuffer ->
-					Mono.justOrEmpty(decode(dataBuffer, elementType, mimeType, hintsToUse)));
-		});
+		return DataBufferUtils.join(input, this.maxInMemorySize)
+				.flatMap(dataBuffer -> Mono.justOrEmpty(decode(dataBuffer, elementType, mimeType, hints)));
 	}
 
 	@Override
@@ -213,7 +189,7 @@ public abstract class AbstractJackson2Decoder extends Jackson2CodecSupport imple
 		}
 
 		try {
-			ObjectReader objectReader = createObjectReader(mapper, targetType, hints);
+			ObjectReader objectReader = getObjectReader(mapper, targetType, hints);
 			Object value = objectReader.readValue(dataBuffer.asInputStream());
 			logValue(value, hints);
 			return value;
@@ -226,7 +202,7 @@ public abstract class AbstractJackson2Decoder extends Jackson2CodecSupport imple
 		}
 	}
 
-	private ObjectReader createObjectReader(
+	private ObjectReader getObjectReader(
 			ObjectMapper mapper, ResolvableType elementType, @Nullable Map<String, Object> hints) {
 
 		Assert.notNull(elementType, "'elementType' must not be null");
@@ -236,33 +212,14 @@ public abstract class AbstractJackson2Decoder extends Jackson2CodecSupport imple
 		}
 		JavaType javaType = getJavaType(elementType.getType(), contextClass);
 		Class<?> jsonView = (hints != null ? (Class<?>) hints.get(Jackson2CodecSupport.JSON_VIEW_HINT) : null);
-
-		ObjectReader objectReader = (jsonView != null ?
+		return jsonView != null ?
 				mapper.readerWithView(jsonView).forType(javaType) :
-				mapper.readerFor(javaType));
-
-		return customizeReader(objectReader, elementType, hints);
+				mapper.readerFor(javaType);
 	}
 
-	/**
-	 * Subclasses can use this method to customize {@link ObjectReader} used
-	 * for reading values.
-	 * @param reader the reader instance to customize
-	 * @param elementType the target type of element values to read to
-	 * @param hints a map with serialization hints;
-	 * the Reactor Context, when available, may be accessed under the key
-	 * {@code ContextView.class.getName()}
-	 * @return the customized {@code ObjectReader} to use
-	 * @since 6.0
-	 */
-	protected ObjectReader customizeReader(
-			ObjectReader reader, ResolvableType elementType, @Nullable Map<String, Object> hints) {
-
-		return reader;
-	}
-
-	private @Nullable Class<?> getContextClass(@Nullable ResolvableType elementType) {
-		MethodParameter param = (elementType != null ? getParameter(elementType) : null);
+	@Nullable
+	private Class<?> getContextClass(@Nullable ResolvableType elementType) {
+		MethodParameter param = (elementType != null ? getParameter(elementType)  : null);
 		return (param != null ? param.getContainingClass() : null);
 	}
 
@@ -276,12 +233,12 @@ public abstract class AbstractJackson2Decoder extends Jackson2CodecSupport imple
 	}
 
 	private CodecException processException(IOException ex) {
-		if (ex instanceof InvalidDefinitionException ide) {
-			JavaType type = ide.getType();
+		if (ex instanceof InvalidDefinitionException) {
+			JavaType type = ((InvalidDefinitionException) ex).getType();
 			return new CodecException("Type definition error: " + type, ex);
 		}
-		if (ex instanceof JsonProcessingException jpe) {
-			String originalMessage = jpe.getOriginalMessage();
+		if (ex instanceof JsonProcessingException) {
+			String originalMessage = ((JsonProcessingException) ex).getOriginalMessage();
 			return new DecodingException("JSON decoding error: " + originalMessage, ex);
 		}
 		return new DecodingException("I/O error while parsing input stream", ex);
@@ -310,7 +267,7 @@ public abstract class AbstractJackson2Decoder extends Jackson2CodecSupport imple
 	// Jackson2CodecSupport
 
 	@Override
-	protected <A extends Annotation> @Nullable A getAnnotation(MethodParameter parameter, Class<A> annotType) {
+	protected <A extends Annotation> A getAnnotation(MethodParameter parameter, Class<A> annotType) {
 		return parameter.getParameterAnnotation(annotType);
 	}
 

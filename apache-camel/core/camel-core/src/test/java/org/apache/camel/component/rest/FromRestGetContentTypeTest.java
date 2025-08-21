@@ -29,17 +29,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class FromRestGetContentTypeTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("dummy-rest", new DummyRestConsumerFactory());
         return jndi;
     }
 
     @Test
-    public void testFromRestModelContentType() {
+    public void testFromRestModelContentType() throws Exception {
         Exchange out = template.request("seda:get-say-hello", new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
 
             }
         });
@@ -50,10 +50,10 @@ public class FromRestGetContentTypeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 restConfiguration().host("localhost");
 
                 rest("/say/hello").produces("application/json").get().to("direct:hello");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 
 package org.springframework.dao;
-
-import org.jspecify.annotations.Nullable;
 
 /**
  * Data access exception thrown when a result was not of the expected size,
@@ -73,7 +71,7 @@ public class IncorrectResultSizeDataAccessException extends DataRetrievalFailure
 	 * @param expectedSize the expected result size
 	 * @param ex the wrapped exception
 	 */
-	public IncorrectResultSizeDataAccessException(@Nullable String msg, int expectedSize, @Nullable Throwable ex) {
+	public IncorrectResultSizeDataAccessException(String msg, int expectedSize, Throwable ex) {
 		super(msg, ex);
 		this.expectedSize = expectedSize;
 		this.actualSize = -1;
@@ -85,7 +83,7 @@ public class IncorrectResultSizeDataAccessException extends DataRetrievalFailure
 	 * @param expectedSize the expected result size
 	 * @param actualSize the actual result size (or -1 if unknown)
 	 */
-	public IncorrectResultSizeDataAccessException(@Nullable String msg, int expectedSize, int actualSize) {
+	public IncorrectResultSizeDataAccessException(String msg, int expectedSize, int actualSize) {
 		super(msg);
 		this.expectedSize = expectedSize;
 		this.actualSize = actualSize;
@@ -98,7 +96,7 @@ public class IncorrectResultSizeDataAccessException extends DataRetrievalFailure
 	 * @param actualSize the actual result size (or -1 if unknown)
 	 * @param ex the wrapped exception
 	 */
-	public IncorrectResultSizeDataAccessException(@Nullable String msg, int expectedSize, int actualSize, @Nullable Throwable ex) {
+	public IncorrectResultSizeDataAccessException(String msg, int expectedSize, int actualSize, Throwable ex) {
 		super(msg, ex);
 		this.expectedSize = expectedSize;
 		this.actualSize = actualSize;

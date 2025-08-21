@@ -22,6 +22,8 @@ import java.util.Date;
 import org.apache.camel.Exchange;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.test.junit5.params.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
@@ -37,7 +39,9 @@ public class LevelDBExchangeSerializationTest extends LevelDBTestSupport {
     private LevelDBFile levelDBFile;
 
     @Override
-    public void doPostSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
         deleteDirectory("target/data");
         File file = new File("target/data/leveldb.dat");
         levelDBFile = new LevelDBFile();
@@ -46,8 +50,10 @@ public class LevelDBExchangeSerializationTest extends LevelDBTestSupport {
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
         levelDBFile.stop();
+        super.tearDown();
     }
 
     @Test

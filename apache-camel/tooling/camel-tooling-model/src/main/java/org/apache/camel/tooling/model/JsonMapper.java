@@ -17,6 +17,7 @@
 package org.apache.camel.tooling.model;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -44,7 +45,7 @@ public final class JsonMapper {
 
     public static BaseModel<?> generateModel(Path file) {
         try {
-            String json = Files.readString(file);
+            String json = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
             return generateModel(json);
         } catch (IOException e) {
             throw new RuntimeException("Error reading json file: " + file, e);
@@ -63,16 +64,10 @@ public final class JsonMapper {
             return generateLanguageModel(obj);
         } else if (obj.containsKey("dataformat")) {
             return generateDataFormatModel(obj);
-        } else if (obj.containsKey("transformer")) {
-            return generateTransformerModel(obj);
-        } else if (obj.containsKey("console")) {
-            return generateDevConsoleModel(obj);
         } else if (obj.containsKey("other")) {
             return generateOtherModel(obj);
         } else if (obj.containsKey("model")) {
             return generateEipModel(obj);
-        } else if (obj.containsKey("bean")) {
-            return generatePojoBeanModel(obj);
         } else {
             return null;
         }
@@ -193,8 +188,6 @@ public final class JsonMapper {
         model.setConsumerOnly(mobj.getBooleanOrDefault("consumerOnly", false));
         model.setProducerOnly(mobj.getBooleanOrDefault("producerOnly", false));
         model.setLenientProperties(mobj.getBooleanOrDefault("lenientProperties", false));
-        model.setBrowsable(mobj.getBooleanOrDefault("browsable", false));
-        model.setRemote(mobj.getBooleanOrDefault("remote", false));
         parseArtifact(mobj, model);
     }
 
@@ -226,8 +219,6 @@ public final class JsonMapper {
         obj.put("consumerOnly", model.isConsumerOnly());
         obj.put("producerOnly", model.isProducerOnly());
         obj.put("lenientProperties", model.isLenientProperties());
-        obj.put("browsable", model.isBrowsable());
-        obj.put("remote", model.isRemote());
         obj.put("verifiers", model.getVerifiers());
         obj.entrySet().removeIf(e -> e.getValue() == null);
         JsonObject wrapper = new JsonObject();
@@ -299,44 +290,11 @@ public final class JsonMapper {
         model.setInput(mobj.getBooleanOrDefault("input", false));
         model.setOutput(mobj.getBooleanOrDefault("output", false));
         JsonObject mprp = (JsonObject) obj.get("properties");
-        if (mprp != null) {
-            for (Map.Entry<String, Object> entry : mprp.entrySet()) {
-                JsonObject mp = (JsonObject) entry.getValue();
-                EipOptionModel option = new EipOptionModel();
-                parseOption(mp, option, entry.getKey());
-                model.addOption(option);
-            }
-        }
-        mprp = (JsonObject) obj.get("exchangeProperties");
-        if (mprp != null) {
-            for (Map.Entry<String, Object> entry : mprp.entrySet()) {
-                JsonObject mp = (JsonObject) entry.getValue();
-                EipOptionModel option = new EipOptionModel();
-                parseOption(mp, option, entry.getKey());
-                model.addExchangeProperty(option);
-            }
-        }
-        return model;
-    }
-
-    public static PojoBeanModel generatePojoBeanModel(String json) {
-        JsonObject obj = deserialize(json);
-        return generatePojoBeanModel(obj);
-    }
-
-    public static PojoBeanModel generatePojoBeanModel(JsonObject obj) {
-        JsonObject mobj = (JsonObject) obj.get("bean");
-        PojoBeanModel model = new PojoBeanModel();
-        parseModel(mobj, model);
-        parseArtifact(mobj, model);
-        JsonObject mprp = (JsonObject) mobj.get("properties");
-        if (mprp != null) {
-            for (Map.Entry<String, Object> entry : mprp.entrySet()) {
-                JsonObject mp = (JsonObject) entry.getValue();
-                PojoBeanModel.PojoBeanOptionModel option = new PojoBeanModel.PojoBeanOptionModel();
-                parseOption(mp, option, entry.getKey());
-                model.addOption(option);
-            }
+        for (Map.Entry<String, Object> entry : mprp.entrySet()) {
+            JsonObject mp = (JsonObject) entry.getValue();
+            EipOptionModel option = new EipOptionModel();
+            parseOption(mp, option, entry.getKey());
+            model.addOption(option);
         }
         return model;
     }
@@ -355,25 +313,6 @@ public final class JsonMapper {
         obj.entrySet().removeIf(e -> e.getValue() == null);
         JsonObject wrapper = new JsonObject();
         wrapper.put("model", obj);
-        wrapper.put("properties", asJsonObject(model.getOptions()));
-        if (!model.getExchangeProperties().isEmpty()) {
-            wrapper.put("exchangeProperties", asJsonObject(model.getExchangeProperties()));
-        }
-        return wrapper;
-    }
-
-    public static String createParameterJsonSchema(PojoBeanModel model) {
-        JsonObject wrapper = asJsonObject(model);
-        return serialize(wrapper);
-    }
-
-    public static JsonObject asJsonObject(PojoBeanModel model) {
-        JsonObject obj = new JsonObject();
-        baseToJson(model, obj);
-        artifactToJson(model, obj);
-        obj.entrySet().removeIf(e -> e.getValue() == null);
-        JsonObject wrapper = new JsonObject();
-        wrapper.put("bean", obj);
         wrapper.put("properties", asJsonObject(model.getOptions()));
         return wrapper;
     }
@@ -397,15 +336,6 @@ public final class JsonMapper {
             parseOption(mp, option, entry.getKey());
             model.addOption(option);
         }
-        JsonObject mprf = (JsonObject) obj.get("functions");
-        if (mprf != null) {
-            for (Map.Entry<String, Object> entry : mprf.entrySet()) {
-                JsonObject mp = (JsonObject) entry.getValue();
-                LanguageModel.LanguageFunctionModel func = new LanguageModel.LanguageFunctionModel();
-                parseFunction(mp, func, entry.getKey());
-                model.addFunction(func);
-            }
-        }
         return model;
     }
 
@@ -424,72 +354,6 @@ public final class JsonMapper {
         JsonObject wrapper = new JsonObject();
         wrapper.put("language", obj);
         wrapper.put("properties", asJsonObject(model.getOptions()));
-        final List<LanguageModel.LanguageFunctionModel> functions = model.getFunctions();
-        if (!functions.isEmpty()) {
-            wrapper.put("functions", asJsonObjectFunctions(functions));
-        }
-        return wrapper;
-    }
-
-    public static TransformerModel generateTransformerModel(String json) {
-        JsonObject obj = deserialize(json);
-        return generateTransformerModel(obj);
-    }
-
-    public static TransformerModel generateTransformerModel(JsonObject obj) {
-        JsonObject mobj = (JsonObject) obj.get("transformer");
-        TransformerModel model = new TransformerModel();
-        parseModel(mobj, model);
-        model.setFrom(mobj.getString("from"));
-        model.setTo(mobj.getString("to"));
-        parseArtifact(mobj, model);
-        return model;
-    }
-
-    public static String createParameterJsonSchema(TransformerModel model) {
-        JsonObject wrapper = asJsonObject(model);
-        return serialize(wrapper);
-    }
-
-    public static JsonObject asJsonObject(TransformerModel model) {
-        JsonObject obj = new JsonObject();
-        baseToJson(model, obj);
-        artifactToJson(model, obj);
-        obj.put("from", model.getFrom());
-        obj.put("to", model.getTo());
-        obj.entrySet().removeIf(e -> e.getValue() == null);
-        JsonObject wrapper = new JsonObject();
-        wrapper.put("transformer", obj);
-        return wrapper;
-    }
-
-    public static DevConsoleModel generateDevConsoleModel(String json) {
-        JsonObject obj = deserialize(json);
-        return generateDevConsoleModel(obj);
-    }
-
-    public static DevConsoleModel generateDevConsoleModel(JsonObject obj) {
-        JsonObject mobj = (JsonObject) obj.get("console");
-        DevConsoleModel model = new DevConsoleModel();
-        parseModel(mobj, model);
-        model.setGroup(mobj.getString("group"));
-        parseArtifact(mobj, model);
-        return model;
-    }
-
-    public static String createParameterJsonSchema(DevConsoleModel model) {
-        JsonObject wrapper = asJsonObject(model);
-        return serialize(wrapper);
-    }
-
-    public static JsonObject asJsonObject(DevConsoleModel model) {
-        JsonObject obj = new JsonObject();
-        baseToJson(model, obj);
-        artifactToJson(model, obj);
-        obj.put("group", model.getGroup());
-        obj.entrySet().removeIf(e -> e.getValue() == null);
-        JsonObject wrapper = new JsonObject();
-        wrapper.put("console", obj);
         return wrapper;
     }
 
@@ -566,10 +430,6 @@ public final class JsonMapper {
 
     private static void parseOption(JsonObject mp, BaseOptionModel option, String name) {
         option.setName(name);
-        Integer idx = mp.getInteger("index");
-        if (idx != null) {
-            option.setIndex(idx);
-        }
         option.setKind(mp.getString("kind"));
         option.setDisplayName(mp.getString("displayName"));
         option.setGroup(mp.getString("group"));
@@ -593,9 +453,6 @@ public final class JsonMapper {
         option.setDescription(mp.getString("description"));
         option.setGetterMethod(mp.getString("getterMethod"));
         option.setSetterMethod(mp.getString("setterMethod"));
-        option.setSupportFileReference(mp.getBooleanOrDefault("supportFileReference", false));
-        option.setLargeInput(mp.getBooleanOrDefault("largeInput", false));
-        option.setInputLanguage(mp.getString("inputLanguage"));
     }
 
     private static void parseGroup(JsonObject mp, MainGroupModel option) {
@@ -604,52 +461,9 @@ public final class JsonMapper {
         option.setSourceType(mp.getString("sourceType"));
     }
 
-    private static void parseFunction(JsonObject mp, LanguageModel.LanguageFunctionModel func, String name) {
-        func.setName(name);
-        func.setConstantName(name);
-        Integer idx = mp.getInteger("index");
-        if (idx != null) {
-            func.setIndex(idx);
-        }
-        func.setKind(mp.getString("kind"));
-        func.setDisplayName(mp.getString("displayName"));
-        func.setGroup(mp.getString("group"));
-        func.setLabel(mp.getString("label"));
-        func.setRequired(mp.getBooleanOrDefault("required", false));
-        func.setJavaType(mp.getString("javaType"));
-        func.setPrefix(mp.getString("prefix"));
-        func.setDeprecated(mp.getBooleanOrDefault("deprecated", false));
-        func.setDeprecationNote(mp.getString("deprecationNote"));
-        func.setDescription(mp.getString("description"));
-        func.setOgnl(mp.getBoolean("ognl"));
-        func.setSuffix(mp.getString("suffix"));
-    }
-
     public static JsonObject asJsonObject(List<? extends BaseOptionModel> options) {
         JsonObject json = new JsonObject();
-        for (int i = 0; i < options.size(); i++) {
-            var o = options.get(i);
-            o.setIndex(i);
-            json.put(o.getName(), asJsonObject(o));
-        }
-        return json;
-    }
-
-    public static JsonObject asJsonObjectFunctions(List<LanguageModel.LanguageFunctionModel> options) {
-        JsonObject json = new JsonObject();
-        for (int i = 0; i < options.size(); i++) {
-            var o = options.get(i);
-            o.setIndex(i);
-            JsonObject jo = asJsonObject(o);
-            jo.put("ognl", o.isOgnl());
-            if (o.getPrefix() != null) {
-                jo.put("prefix", o.getPrefix());
-            }
-            if (o.getSuffix() != null) {
-                jo.put("suffix", o.getSuffix());
-            }
-            json.put(o.getName(), jo);
-        }
+        options.forEach(option -> json.put(option.getName(), asJsonObject(option)));
         return json;
     }
 
@@ -693,7 +507,6 @@ public final class JsonMapper {
 
     public static JsonObject asJsonObject(BaseOptionModel option) {
         JsonObject prop = new JsonObject();
-        prop.put("index", option.getIndex());
         prop.put("kind", option.getKind());
         prop.put("displayName", option.getDisplayName());
         prop.put("group", option.getGroup());
@@ -711,18 +524,6 @@ public final class JsonMapper {
         prop.put("autowired", option.isAutowired());
         prop.put("secret", option.isSecret());
         prop.put("defaultValue", option.getDefaultValue());
-        if (option.isSupportFileReference()) {
-            // only include if supported to not regen all files
-            prop.put("supportFileReference", option.isSupportFileReference());
-        }
-        if (option.isLargeInput()) {
-            // only include if supported to not regen all files
-            prop.put("largeInput", option.isLargeInput());
-        }
-        if (!Strings.isNullOrEmpty(option.getInputLanguage())) {
-            // only include if supported to not regen all files
-            prop.put("inputLanguage", option.getInputLanguage());
-        }
         prop.put("asPredicate", option.isAsPredicate());
         prop.put("configurationClass", option.getConfigurationClass());
         prop.put("configurationField", option.getConfigurationField());
@@ -803,32 +604,6 @@ public final class JsonMapper {
         }
         json.put("properties", props);
         return json;
-    }
-
-    public static JsonObject asJsonObject(ReleaseModel model) {
-        JsonObject json = new JsonObject();
-        json.put("version", model.getVersion());
-        json.put("date", model.getDate());
-        if (model.getEol() != null) {
-            json.put("eol", model.getEol());
-        }
-        if (model.getKind() != null) {
-            json.put("kind", model.getKind());
-        }
-        if (model.getJdk() != null) {
-            json.put("jdk", model.getJdk());
-        }
-        return json;
-    }
-
-    public static ReleaseModel generateReleaseModel(JsonObject obj) {
-        ReleaseModel model = new ReleaseModel();
-        model.setVersion(obj.getString("version"));
-        model.setDate(obj.getString("date"));
-        model.setEol(obj.getString("eol"));
-        model.setKind(obj.getString("kind"));
-        model.setJdk(obj.getString("jdk"));
-        return model;
     }
 
     public static String createJsonSchema(MainModel model) {

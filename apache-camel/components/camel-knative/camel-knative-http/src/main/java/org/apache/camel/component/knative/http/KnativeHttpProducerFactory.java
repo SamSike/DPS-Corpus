@@ -27,7 +27,6 @@ import org.apache.camel.Producer;
 import org.apache.camel.component.knative.spi.KnativeProducerFactory;
 import org.apache.camel.component.knative.spi.KnativeResource;
 import org.apache.camel.component.knative.spi.KnativeTransportConfiguration;
-import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.support.service.ServiceSupport;
 
 public class KnativeHttpProducerFactory extends ServiceSupport implements CamelContextAware, KnativeProducerFactory {
@@ -35,22 +34,11 @@ public class KnativeHttpProducerFactory extends ServiceSupport implements CamelC
     private WebClientOptions vertxHttpClientOptions;
     private CamelContext camelContext;
 
-    public KnativeHttpProducerFactory() {
-    }
-
-    public KnativeHttpProducerFactory(CamelContext camelContext) {
-        this.camelContext = camelContext;
-    }
-
     public Vertx getVertx() {
         return vertx;
     }
 
     public KnativeHttpProducerFactory setVertx(Vertx vertx) {
-        if (ServiceHelper.isStarted(this)) {
-            throw new IllegalArgumentException("Can't set the Vertx instance after the service has been started");
-        }
-
         this.vertx = vertx;
         return this;
     }
@@ -71,18 +59,6 @@ public class KnativeHttpProducerFactory extends ServiceSupport implements CamelC
     @Override
     public CamelContext getCamelContext() {
         return camelContext;
-    }
-
-    @Override
-    protected void doInit() throws Exception {
-        if (vertx == null) {
-            vertx = KnativeHttpSupport.lookupVertxInstance(camelContext);
-        }
-
-        if (vertxHttpClientOptions == null) {
-            KnativeHttpSupport.lookupClientOptions(camelContext)
-                    .ifPresent(options -> vertxHttpClientOptions = options);
-        }
     }
 
     @Override

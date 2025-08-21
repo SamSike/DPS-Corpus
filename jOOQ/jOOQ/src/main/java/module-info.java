@@ -14,6 +14,16 @@ module org.jooq {
     // - InformationSchema (org.jooq.util.xml.jaxb)
     requires static jakarta.xml.bind;
 
+    // The DefaultRecordMapper makes use of JavaBeans utilities, including:
+    // - Support for ConstructorProperties
+    requires static java.desktop;
+
+    // Various utilities can make use of JPA annotations, when present, including:
+    // - The DefaultRecordMapper
+    // - The JPADatabase in the code generator
+    // - The EntityManagerConnectionProvider
+    requires static jakarta.persistence;
+
     // The runtime Java compiler is used to generate enum types on the fly.
     // This dependency may be removed in the future.
     requires static java.compiler;
@@ -43,11 +53,9 @@ module org.jooq {
     exports org.jooq.tools.csv;
     exports org.jooq.tools.jdbc;
     exports org.jooq.tools.json;
-    exports org.jooq.tools.r2dbc;
     exports org.jooq.tools.reflect;
     exports org.jooq.types;
     exports org.jooq.util.jaxb.tools;
-    exports org.jooq.util.xml;
     exports org.jooq.util.xml.jaxb;
 
 

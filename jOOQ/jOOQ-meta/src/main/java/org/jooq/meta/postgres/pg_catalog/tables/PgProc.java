@@ -7,10 +7,8 @@ package org.jooq.meta.postgres.pg_catalog.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -19,7 +17,6 @@ import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
-import org.jooq.impl.DefaultDataType;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 import org.jooq.meta.postgres.pg_catalog.Keys;
@@ -145,22 +142,22 @@ public class PgProc extends TableImpl<Record> {
     /**
      * The column <code>pg_catalog.pg_proc.proargtypes</code>.
      */
-    public final TableField<Record, Object[]> PROARGTYPES = createField(DSL.name("proargtypes"), DefaultDataType.getDefaultDataType("\"pg_catalog\".\"idvector\"").nullable(false).array(), this, "");
+    public final TableField<Record, Long[]> PROARGTYPES = createField(DSL.name("proargtypes"), SQLDataType.BIGINT.getArrayDataType(), this, "");
 
     /**
      * The column <code>pg_catalog.pg_proc.proallargtypes</code>.
      */
-    public final TableField<Record, Long[]> PROALLARGTYPES = createField(DSL.name("proallargtypes"), SQLDataType.BIGINT.array(), this, "");
+    public final TableField<Record, Long[]> PROALLARGTYPES = createField(DSL.name("proallargtypes"), SQLDataType.BIGINT.getArrayDataType(), this, "");
 
     /**
      * The column <code>pg_catalog.pg_proc.proargmodes</code>.
      */
-    public final TableField<Record, String[]> PROARGMODES = createField(DSL.name("proargmodes"), SQLDataType.CHAR.array(), this, "");
+    public final TableField<Record, String[]> PROARGMODES = createField(DSL.name("proargmodes"), SQLDataType.CHAR.getArrayDataType(), this, "");
 
     /**
      * The column <code>pg_catalog.pg_proc.proargnames</code>.
      */
-    public final TableField<Record, String[]> PROARGNAMES = createField(DSL.name("proargnames"), SQLDataType.CLOB.array(), this, "");
+    public final TableField<Record, String[]> PROARGNAMES = createField(DSL.name("proargnames"), SQLDataType.CLOB.getArrayDataType(), this, "");
 
     /**
      * @deprecated Unknown data type. If this is a qualified, user-defined type,
@@ -171,12 +168,12 @@ public class PgProc extends TableImpl<Record> {
      * configuration.
      */
     @Deprecated
-    public final TableField<Record, Object> PROARGDEFAULTS = createField(DSL.name("proargdefaults"), DefaultDataType.getDefaultDataType("\"pg_catalog\".\"pg_node_tree\""), this, "");
+    public final TableField<Record, Object> PROARGDEFAULTS = createField(DSL.name("proargdefaults"), org.jooq.impl.DefaultDataType.getDefaultDataType("\"pg_catalog\".\"pg_node_tree\""), this, "");
 
     /**
      * The column <code>pg_catalog.pg_proc.protrftypes</code>.
      */
-    public final TableField<Record, Long[]> PROTRFTYPES = createField(DSL.name("protrftypes"), SQLDataType.BIGINT.array(), this, "");
+    public final TableField<Record, Long[]> PROTRFTYPES = createField(DSL.name("protrftypes"), SQLDataType.BIGINT.getArrayDataType(), this, "");
 
     /**
      * The column <code>pg_catalog.pg_proc.prosrc</code>.
@@ -197,24 +194,24 @@ public class PgProc extends TableImpl<Record> {
      * configuration.
      */
     @Deprecated
-    public final TableField<Record, Object> PROSQLBODY = createField(DSL.name("prosqlbody"), DefaultDataType.getDefaultDataType("\"pg_catalog\".\"pg_node_tree\""), this, "");
+    public final TableField<Record, Object> PROSQLBODY = createField(DSL.name("prosqlbody"), org.jooq.impl.DefaultDataType.getDefaultDataType("\"pg_catalog\".\"pg_node_tree\""), this, "");
 
     /**
      * The column <code>pg_catalog.pg_proc.proconfig</code>.
      */
-    public final TableField<Record, String[]> PROCONFIG = createField(DSL.name("proconfig"), SQLDataType.CLOB.array(), this, "");
+    public final TableField<Record, String[]> PROCONFIG = createField(DSL.name("proconfig"), SQLDataType.CLOB.getArrayDataType(), this, "");
 
     /**
      * The column <code>pg_catalog.pg_proc.proacl</code>.
      */
-    public final TableField<Record, String[]> PROACL = createField(DSL.name("proacl"), SQLDataType.VARCHAR.array(), this, "");
+    public final TableField<Record, String[]> PROACL = createField(DSL.name("proacl"), SQLDataType.VARCHAR.getArrayDataType(), this, "");
 
     private PgProc(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private PgProc(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private PgProc(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -238,8 +235,8 @@ public class PgProc extends TableImpl<Record> {
         this(DSL.name("pg_proc"), null);
     }
 
-    public <O extends Record> PgProc(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, PG_PROC);
+    public <O extends Record> PgProc(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, PG_PROC);
     }
 
     @Override
@@ -258,36 +255,6 @@ public class PgProc extends TableImpl<Record> {
     }
 
     @Override
-    public List<ForeignKey<Record, ?>> getReferences() {
-        return Arrays.asList(Keys.PG_PROC__SYNTHETIC_FK_PG_PROC__SYNTHETIC_PK_PG_NAMESPACE, Keys.PG_PROC__SYNTHETIC_FK_PG_PROC__SYNTHETIC_PK_PG_TYPE);
-    }
-
-    private transient PgNamespace _pgNamespace;
-
-    /**
-     * Get the implicit join path to the <code>pg_catalog.pg_namespace</code>
-     * table.
-     */
-    public PgNamespace pgNamespace() {
-        if (_pgNamespace == null)
-            _pgNamespace = new PgNamespace(this, Keys.PG_PROC__SYNTHETIC_FK_PG_PROC__SYNTHETIC_PK_PG_NAMESPACE, null);
-
-        return _pgNamespace;
-    }
-
-    private transient PgType _pgType;
-
-    /**
-     * Get the implicit join path to the <code>pg_catalog.pg_type</code> table.
-     */
-    public PgType pgType() {
-        if (_pgType == null)
-            _pgType = new PgType(this, Keys.PG_PROC__SYNTHETIC_FK_PG_PROC__SYNTHETIC_PK_PG_TYPE, null);
-
-        return _pgType;
-    }
-
-    @Override
     public PgProc as(String alias) {
         return new PgProc(DSL.name(alias), this);
     }
@@ -297,8 +264,19 @@ public class PgProc extends TableImpl<Record> {
         return new PgProc(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public PgProc as(Table<?> alias) {
-        return new PgProc(alias.getQualifiedName(), this);
+    public PgProc rename(String name) {
+        return new PgProc(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public PgProc rename(Name name) {
+        return new PgProc(name, null);
     }
 }

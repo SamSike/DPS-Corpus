@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,29 +40,30 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static org.hamcrest.Matchers.startsWith;
 
+
+
 /**
  * Samples of tests using {@link WebTestClient} with XML content.
  *
  * @author Eric Deandrea
  * @since 5.1
  */
-class XmlContentTests {
+public class XmlContentTests {
 
-	private static final String persons_XML = """
-			<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-			<persons>
-				<person><name>Jane</name></person>
-				<person><name>Jason</name></person>
-				<person><name>John</name></person>
-			</persons>
-			""";
+	private static final String persons_XML =
+			"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+			+ "<persons>"
+			+ "<person><name>Jane</name></person>"
+			+ "<person><name>Jason</name></person>"
+			+ "<person><name>John</name></person>"
+			+ "</persons>";
 
 
 	private final WebTestClient client = WebTestClient.bindToController(new PersonController()).build();
 
 
 	@Test
-	void xmlContent() {
+	public void xmlContent() {
 		this.client.get().uri("/persons")
 				.accept(MediaType.APPLICATION_XML)
 				.exchange()
@@ -71,7 +72,7 @@ class XmlContentTests {
 	}
 
 	@Test
-	void xpathIsEqualTo() {
+	public void xpathIsEqualTo() {
 		this.client.get().uri("/persons")
 				.accept(MediaType.APPLICATION_XML)
 				.exchange()
@@ -87,7 +88,7 @@ class XmlContentTests {
 	}
 
 	@Test
-	void xpathMatches() {
+	public void xpathMatches() {
 		this.client.get().uri("/persons")
 				.accept(MediaType.APPLICATION_XML)
 				.exchange()
@@ -97,7 +98,7 @@ class XmlContentTests {
 	}
 
 	@Test
-	void xpathContainsSubstringViaRegex() {
+	public void xpathContainsSubstringViaRegex() {
 		this.client.get().uri("/persons/John")
 				.accept(MediaType.APPLICATION_XML)
 				.exchange()
@@ -107,7 +108,8 @@ class XmlContentTests {
 	}
 
 	@Test
-	void postXmlContent() {
+	public void postXmlContent() {
+
 		String content =
 				"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
 				"<person><name>John</name></person>";

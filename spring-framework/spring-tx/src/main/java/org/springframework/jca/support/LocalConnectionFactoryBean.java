@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@ package org.springframework.jca.support;
 import jakarta.resource.ResourceException;
 import jakarta.resource.spi.ConnectionManager;
 import jakarta.resource.spi.ManagedConnectionFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link org.springframework.beans.factory.FactoryBean} that creates
@@ -56,9 +56,10 @@ import org.springframework.beans.factory.InitializingBean;
  * of XA enlistment. You need to specify an XA-capable ConnectionManager in
  * order to make the connector interact with an XA transaction coordinator.
  * Alternatively, simply use the native local transaction facilities of the
- * exposed API (for example, CCI local transactions), or use a corresponding
- * implementation of Spring's PlatformTransactionManager SPI to drive local
- * transactions.
+ * exposed API (e.g. CCI local transactions), or use a corresponding
+ * implementation of Spring's PlatformTransactionManager SPI
+ * (e.g. {@link org.springframework.jca.cci.connection.CciLocalTransactionManager})
+ * to drive local transactions.
  *
  * @author Juergen Hoeller
  * @since 1.2
@@ -66,14 +67,18 @@ import org.springframework.beans.factory.InitializingBean;
  * @see #setConnectionManager
  * @see jakarta.resource.cci.ConnectionFactory
  * @see jakarta.resource.cci.Connection#getLocalTransaction
+ * @see org.springframework.jca.cci.connection.CciLocalTransactionManager
  */
 public class LocalConnectionFactoryBean implements FactoryBean<Object>, InitializingBean {
 
-	private @Nullable ManagedConnectionFactory managedConnectionFactory;
+	@Nullable
+	private ManagedConnectionFactory managedConnectionFactory;
 
-	private @Nullable ConnectionManager connectionManager;
+	@Nullable
+	private ConnectionManager connectionManager;
 
-	private @Nullable Object connectionFactory;
+	@Nullable
+	private Object connectionFactory;
 
 
 	/**
@@ -123,12 +128,13 @@ public class LocalConnectionFactoryBean implements FactoryBean<Object>, Initiali
 
 
 	@Override
-	public @Nullable Object getObject() {
+	@Nullable
+	public Object getObject() {
 		return this.connectionFactory;
 	}
 
 	@Override
-	public @Nullable Class<?> getObjectType() {
+	public Class<?> getObjectType() {
 		return (this.connectionFactory != null ? this.connectionFactory.getClass() : null);
 	}
 

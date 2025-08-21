@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.aop.Advisor;
@@ -33,6 +32,7 @@ import org.springframework.aop.ThrowsAdvice;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.core.OverridingClassLoader;
+import org.springframework.lang.Nullable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -40,17 +40,17 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 /**
  * @author Dave Syer
  */
-class TrickyAspectJPointcutExpressionTests {
+public class TrickyAspectJPointcutExpressionTests {
 
 	@Test
-	void testManualProxyJavaWithUnconditionalPointcut() {
+	public void testManualProxyJavaWithUnconditionalPointcut() throws Exception {
 		TestService target = new TestServiceImpl();
 		LogUserAdvice logAdvice = new LogUserAdvice();
 		testAdvice(new DefaultPointcutAdvisor(logAdvice), logAdvice, target, "TestServiceImpl");
 	}
 
 	@Test
-	void testManualProxyJavaWithStaticPointcut() {
+	public void testManualProxyJavaWithStaticPointcut() throws Exception {
 		TestService target = new TestServiceImpl();
 		LogUserAdvice logAdvice = new LogUserAdvice();
 		AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
@@ -59,7 +59,7 @@ class TrickyAspectJPointcutExpressionTests {
 	}
 
 	@Test
-	void testManualProxyJavaWithDynamicPointcut() {
+	public void testManualProxyJavaWithDynamicPointcut() throws Exception {
 		TestService target = new TestServiceImpl();
 		LogUserAdvice logAdvice = new LogUserAdvice();
 		AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
@@ -68,7 +68,7 @@ class TrickyAspectJPointcutExpressionTests {
 	}
 
 	@Test
-	void testManualProxyJavaWithDynamicPointcutAndProxyTargetClass() {
+	public void testManualProxyJavaWithDynamicPointcutAndProxyTargetClass() throws Exception {
 		TestService target = new TestServiceImpl();
 		LogUserAdvice logAdvice = new LogUserAdvice();
 		AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
@@ -77,7 +77,7 @@ class TrickyAspectJPointcutExpressionTests {
 	}
 
 	@Test
-	void testManualProxyJavaWithStaticPointcutAndTwoClassLoaders() throws Exception {
+	public void testManualProxyJavaWithStaticPointcutAndTwoClassLoaders() throws Exception {
 
 		LogUserAdvice logAdvice = new LogUserAdvice();
 		AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
@@ -95,12 +95,13 @@ class TrickyAspectJPointcutExpressionTests {
 		testAdvice(new DefaultPointcutAdvisor(pointcut, logAdvice), logAdvice, other, "TestServiceImpl");
 	}
 
-	private void testAdvice(Advisor advisor, LogUserAdvice logAdvice, TestService target, String message) {
+	private void testAdvice(Advisor advisor, LogUserAdvice logAdvice, TestService target, String message)
+			throws Exception {
 		testAdvice(advisor, logAdvice, target, message, false);
 	}
 
 	private void testAdvice(Advisor advisor, LogUserAdvice logAdvice, TestService target, String message,
-			boolean proxyTargetClass) {
+			boolean proxyTargetClass) throws Exception {
 
 		logAdvice.reset();
 
@@ -141,13 +142,13 @@ class TrickyAspectJPointcutExpressionTests {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Inherited
-	@interface Log {
+	public static @interface Log {
 	}
 
 
-	public interface TestService {
+	public static interface TestService {
 
-		String sayHello();
+		public String sayHello();
 	}
 
 
@@ -161,14 +162,14 @@ class TrickyAspectJPointcutExpressionTests {
 	}
 
 
-	public static class LogUserAdvice implements MethodBeforeAdvice, ThrowsAdvice {
+	public class LogUserAdvice implements MethodBeforeAdvice, ThrowsAdvice {
 
 		private int countBefore = 0;
 
 		private int countThrows = 0;
 
 		@Override
-		public void before(Method method, Object[] objects, @Nullable Object o) {
+		public void before(Method method, Object[] objects, @Nullable Object o) throws Throwable {
 			countBefore++;
 		}
 

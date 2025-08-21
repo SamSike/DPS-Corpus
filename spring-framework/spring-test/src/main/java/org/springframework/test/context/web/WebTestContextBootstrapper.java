@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.test.context.web;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextLoader;
 import org.springframework.test.context.MergedContextConfiguration;
 import org.springframework.test.context.TestContextAnnotationUtils;
@@ -72,7 +71,8 @@ public class WebTestContextBootstrapper extends DefaultTestContextBootstrapper {
 		}
 	}
 
-	private static @Nullable WebAppConfiguration getWebAppConfiguration(Class<?> testClass) {
+	@Nullable
+	private static WebAppConfiguration getWebAppConfiguration(Class<?> testClass) {
 		return TestContextAnnotationUtils.findMergedAnnotation(testClass, WebAppConfiguration.class);
 	}
 

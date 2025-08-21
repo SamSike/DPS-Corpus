@@ -38,7 +38,6 @@ import org.xbill.DNS.SRVRecord;
 import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
-@Deprecated
 public final class DnsServiceDiscovery extends DefaultServiceDiscovery {
     private static final Comparator<SRVRecord> COMPARATOR = comparator();
     private final DnsConfiguration configuration;
@@ -60,7 +59,7 @@ public final class DnsServiceDiscovery extends DefaultServiceDiscovery {
                     .filter(SRVRecord.class::isInstance)
                     .map(SRVRecord.class::cast)
                     .sorted(COMPARATOR)
-                    .map(srvRecord -> asService(name, srvRecord))
+                    .map(record -> asService(name, record))
                     .collect(Collectors.toList());
         } else {
             services = Collections.emptyList();
@@ -86,15 +85,15 @@ public final class DnsServiceDiscovery extends DefaultServiceDiscovery {
         return byPriority.thenComparing(byWeight);
     }
 
-    private static ServiceDefinition asService(String serviceName, SRVRecord srvRecord) {
+    private static ServiceDefinition asService(String serviceName, SRVRecord record) {
         Map<String, String> meta = new HashMap<>();
-        ObjectHelper.ifNotEmpty(srvRecord.getPriority(), val -> meta.put("priority", Integer.toString(val)));
-        ObjectHelper.ifNotEmpty(srvRecord.getWeight(), val -> meta.put("weight", Integer.toString(val)));
+        ObjectHelper.ifNotEmpty(record.getPriority(), val -> meta.put("priority", Integer.toString(val)));
+        ObjectHelper.ifNotEmpty(record.getWeight(), val -> meta.put("weight", Integer.toString(val)));
 
         return new DefaultServiceDefinition(
                 serviceName,
-                srvRecord.getTarget().toString(true),
-                srvRecord.getPort(),
+                record.getTarget().toString(true),
+                record.getPort(),
                 meta);
     }
 }

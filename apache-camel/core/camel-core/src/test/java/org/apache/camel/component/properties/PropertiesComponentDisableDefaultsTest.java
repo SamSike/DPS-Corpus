@@ -34,7 +34,7 @@ public class PropertiesComponentDisableDefaultsTest extends ContextTestSupport {
     public void testDisableDefaultValueResolution() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").transform().simple("{{p:message}}").to("mock:{{p:mockend}}");
             }
         });

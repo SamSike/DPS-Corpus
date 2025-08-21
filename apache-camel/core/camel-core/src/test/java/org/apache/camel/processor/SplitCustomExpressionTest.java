@@ -16,6 +16,7 @@
  */
 package org.apache.camel.processor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.camel.ContextTestSupport;
@@ -39,10 +40,10 @@ public class SplitCustomExpressionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").split(new MyCustomExpression()).to("mock:split");
             }
         };
@@ -57,7 +58,10 @@ public class SplitCustomExpressionTest extends ContextTestSupport {
 
             // just split the body by comma
             String[] parts = body.split(",");
-            List<String> list = List.of(parts);
+            List<String> list = new ArrayList<>();
+            for (String part : parts) {
+                list.add(part);
+            }
 
             return (T) list.iterator();
         }

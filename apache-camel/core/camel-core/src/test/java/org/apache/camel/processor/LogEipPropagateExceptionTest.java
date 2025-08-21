@@ -31,7 +31,7 @@ public class LogEipPropagateExceptionTest extends ContextTestSupport {
     public void testFailure() throws Exception {
         getMockEndpoint("mock:handleFailure").whenAnyExchangeReceived(new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 throw new RuntimeException("TEST EXCEPTION");
             }
         });
@@ -47,7 +47,7 @@ public class LogEipPropagateExceptionTest extends ContextTestSupport {
     public void testSuccess() throws Exception {
         getMockEndpoint("mock:handleSuccess").whenAnyExchangeReceived(new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 throw new RuntimeException("TEST EXCEPTION");
             }
         });
@@ -60,10 +60,10 @@ public class LogEipPropagateExceptionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:startFailure").onException(Throwable.class).to("mock:exceptionFailure").end()
                         .to("direct:handleFailure").to("mock:resultFailure");
 

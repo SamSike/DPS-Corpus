@@ -18,7 +18,6 @@ package org.apache.camel;
 
 import java.net.ServerSocket;
 import java.net.SocketTimeoutException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -27,7 +26,6 @@ import org.apache.camel.test.junit.rule.mllp.MllpClientResource;
 import org.apache.camel.test.junit.rule.mllp.MllpJUnitResourceTimeoutException;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.camel.test.mllp.Hl7TestMessageGenerator;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -68,9 +66,9 @@ public class MllpTcpServerConsumerLenientBindTest extends CamelTestSupport {
             public void configure() {
                 fromF("mllp://%s:%d?bindTimeout=15000&bindRetryInterval=500&receiveTimeout=%d&readTimeout=%d&reuseAddress=false&lenientBind=true",
                         mllpClient.getMllpHost(), mllpClient.getMllpPort(), RECEIVE_TIMEOUT, READ_TIMEOUT)
-                        .routeId(routeId)
-                        .log(LoggingLevel.INFO, routeId, "Receiving: ${body}")
-                        .to(result);
+                                .routeId(routeId)
+                                .log(LoggingLevel.INFO, routeId, "Receiving: ${body}")
+                                .to(result);
             }
         };
 
@@ -88,10 +86,10 @@ public class MllpTcpServerConsumerLenientBindTest extends CamelTestSupport {
             assertIsInstanceOf(SocketTimeoutException.class, expectedEx.getCause());
         }
         mllpClient.reset();
-        portBlocker.close();
 
-        Awaitility.await().atMost(2000, TimeUnit.MILLISECONDS).pollInterval(500, TimeUnit.MILLISECONDS)
-                .untilAsserted(() -> assertEquals(ServiceStatus.Started, context.getStatus()));
+        portBlocker.close();
+        Thread.sleep(2000);
+        assertEquals(ServiceStatus.Started, context.getStatus());
 
         mllpClient.connect();
         String acknowledgement

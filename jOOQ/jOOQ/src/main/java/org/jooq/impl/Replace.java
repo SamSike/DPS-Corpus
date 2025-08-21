@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -151,7 +148,6 @@ implements
 
 
 
-            case DUCKDB:
             case FIREBIRD:
             case HSQLDB:
             case MARIADB:
@@ -163,14 +159,6 @@ implements
                     ctx.visit(function(N_REPLACE, VARCHAR, string, search, inline("")));
                 else
                     ctx.visit(function(N_REPLACE, VARCHAR, string, search, replace));
-
-                return;
-
-            case CLICKHOUSE:
-                if (replace == null)
-                    ctx.visit(function(N_replaceAll, VARCHAR, string, search, inline("")));
-                else
-                    ctx.visit(function(N_replaceAll, VARCHAR, string, search, replace));
 
                 return;
 
@@ -205,39 +193,63 @@ implements
     // -------------------------------------------------------------------------
 
     @Override
-    public final Field<String> $arg1() {
+    public final Field<String> $string() {
         return string;
     }
 
     @Override
-    public final Field<String> $arg2() {
+    public final Field<String> $search() {
         return search;
     }
 
     @Override
-    public final Field<String> $arg3() {
+    public final Field<String> $replace() {
         return replace;
     }
 
     @Override
-    public final QOM.Replace $arg1(Field<String> newValue) {
-        return $constructor().apply(newValue, $arg2(), $arg3());
+    public final QOM.Replace $string(Field<String> newValue) {
+        return $constructor().apply(newValue, $search(), $replace());
     }
 
     @Override
-    public final QOM.Replace $arg2(Field<String> newValue) {
-        return $constructor().apply($arg1(), newValue, $arg3());
+    public final QOM.Replace $search(Field<String> newValue) {
+        return $constructor().apply($string(), newValue, $replace());
     }
 
     @Override
-    public final QOM.Replace $arg3(Field<String> newValue) {
-        return $constructor().apply($arg1(), $arg2(), newValue);
+    public final QOM.Replace $replace(Field<String> newValue) {
+        return $constructor().apply($string(), $search(), newValue);
     }
 
-    @Override
     public final Function3<? super Field<String>, ? super Field<String>, ? super Field<String>, ? extends QOM.Replace> $constructor() {
         return (a1, a2, a3) -> new Replace(a1, a2, a3);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // -------------------------------------------------------------------------
     // XXX: The Object API
@@ -245,7 +257,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.Replace o) {
+        if (that instanceof QOM.Replace) { QOM.Replace o = (QOM.Replace) that;
             return
                 StringUtils.equals($string(), o.$string()) &&
                 StringUtils.equals($search(), o.$search()) &&

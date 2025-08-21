@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class StepEventNotifierTest extends ContextTestSupport {
 
-    private final MyEventNotifier notifier = new MyEventNotifier();
+    private MyEventNotifier notifier = new MyEventNotifier();
 
     @Test
     public void testStepEventNotifier() throws Exception {
@@ -58,17 +58,17 @@ public class StepEventNotifierTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").step("foo").to("log:foo").to("mock:foo").end().step("bar").to("log:bar").to("mock:bar")
                         .end().to("mock:result");
             }
         };
     }
 
-    private static class MyEventNotifier extends EventNotifierSupport {
+    private class MyEventNotifier extends EventNotifierSupport {
 
         private final List<CamelEvent> events = new ArrayList<>();
 
@@ -81,7 +81,7 @@ public class StepEventNotifierTest extends ContextTestSupport {
         }
 
         @Override
-        public void notify(CamelEvent event) {
+        public void notify(CamelEvent event) throws Exception {
             events.add(event);
         }
 

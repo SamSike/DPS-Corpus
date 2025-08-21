@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.engine.HashMapHeadersMapFactory;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,7 @@ public class HashMapHeadersMapFactoryRouteTest extends ContextTestSupport {
     @Override
     protected CamelContext createCamelContext() throws Exception {
         CamelContext context = super.createCamelContext();
-        context.getCamelContextExtension().setHeadersMapFactory(new HashMapHeadersMapFactory());
+        context.adapt(ExtendedCamelContext.class).setHeadersMapFactory(new HashMapHeadersMapFactory());
         return context;
     }
 
@@ -51,10 +52,10 @@ public class HashMapHeadersMapFactoryRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("mock:result");
             }
         };

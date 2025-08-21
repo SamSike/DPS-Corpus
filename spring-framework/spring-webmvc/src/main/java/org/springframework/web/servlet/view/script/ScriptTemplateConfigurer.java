@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import java.util.function.Supplier;
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * An implementation of Spring MVC's {@link ScriptTemplateConfig} for creating
@@ -51,25 +51,35 @@ import org.jspecify.annotations.Nullable;
  */
 public class ScriptTemplateConfigurer implements ScriptTemplateConfig {
 
-	private @Nullable ScriptEngine engine;
+	@Nullable
+	private ScriptEngine engine;
 
-	private @Nullable Supplier<ScriptEngine> engineSupplier;
+	@Nullable
+	private Supplier<ScriptEngine> engineSupplier;
 
-	private @Nullable String engineName;
+	@Nullable
+	private String engineName;
 
-	private @Nullable Boolean sharedEngine;
+	@Nullable
+	private Boolean sharedEngine;
 
-	private String @Nullable [] scripts;
+	@Nullable
+	private String[] scripts;
 
-	private @Nullable String renderObject;
+	@Nullable
+	private String renderObject;
 
-	private @Nullable String renderFunction;
+	@Nullable
+	private String renderFunction;
 
-	private @Nullable String contentType;
+	@Nullable
+	private String contentType;
 
-	private @Nullable Charset charset;
+	@Nullable
+	private Charset charset;
 
-	private @Nullable String resourceLoaderPath;
+	@Nullable
+	private String resourceLoaderPath;
 
 
 	/**
@@ -102,7 +112,8 @@ public class ScriptTemplateConfigurer implements ScriptTemplateConfig {
 	}
 
 	@Override
-	public @Nullable ScriptEngine getEngine() {
+	@Nullable
+	public ScriptEngine getEngine() {
 		return this.engine;
 	}
 
@@ -120,7 +131,8 @@ public class ScriptTemplateConfigurer implements ScriptTemplateConfig {
 	}
 
 	@Override
-	public @Nullable Supplier<ScriptEngine> getEngineSupplier() {
+	@Nullable
+	public Supplier<ScriptEngine> getEngineSupplier() {
 		return this.engineSupplier;
 	}
 
@@ -136,7 +148,8 @@ public class ScriptTemplateConfigurer implements ScriptTemplateConfig {
 	}
 
 	@Override
-	public @Nullable String getEngineName() {
+	@Nullable
+	public String getEngineName() {
 		return this.engineName;
 	}
 
@@ -156,7 +169,8 @@ public class ScriptTemplateConfigurer implements ScriptTemplateConfig {
 	}
 
 	@Override
-	public @Nullable Boolean isSharedEngine() {
+	@Nullable
+	public Boolean isSharedEngine() {
 		return this.sharedEngine;
 	}
 
@@ -171,12 +185,13 @@ public class ScriptTemplateConfigurer implements ScriptTemplateConfig {
 	 * @see #setResourceLoaderPath
 	 * @see <a href="https://www.webjars.org">WebJars</a>
 	 */
-	public void setScripts(String @Nullable ... scriptNames) {
+	public void setScripts(@Nullable String... scriptNames) {
 		this.scripts = scriptNames;
 	}
 
 	@Override
-	public String @Nullable [] getScripts() {
+	@Nullable
+	public String[] getScripts() {
 		return this.scripts;
 	}
 
@@ -190,7 +205,8 @@ public class ScriptTemplateConfigurer implements ScriptTemplateConfig {
 	}
 
 	@Override
-	public @Nullable String getRenderObject() {
+	@Nullable
+	public String getRenderObject() {
 		return this.renderObject;
 	}
 
@@ -210,7 +226,8 @@ public class ScriptTemplateConfigurer implements ScriptTemplateConfig {
 	}
 
 	@Override
-	public @Nullable String getRenderFunction() {
+	@Nullable
+	public String getRenderFunction() {
 		return this.renderFunction;
 	}
 
@@ -228,7 +245,8 @@ public class ScriptTemplateConfigurer implements ScriptTemplateConfig {
 	 * @since 4.2.1
 	 */
 	@Override
-	public @Nullable String getContentType() {
+	@Nullable
+	public String getContentType() {
 		return this.contentType;
 	}
 
@@ -241,7 +259,8 @@ public class ScriptTemplateConfigurer implements ScriptTemplateConfig {
 	}
 
 	@Override
-	public @Nullable Charset getCharset() {
+	@Nullable
+	public Charset getCharset() {
 		return this.charset;
 	}
 
@@ -258,7 +277,8 @@ public class ScriptTemplateConfigurer implements ScriptTemplateConfig {
 	}
 
 	@Override
-	public @Nullable String getResourceLoaderPath() {
+	@Nullable
+	public String getResourceLoaderPath() {
 		return this.resourceLoaderPath;
 	}
 

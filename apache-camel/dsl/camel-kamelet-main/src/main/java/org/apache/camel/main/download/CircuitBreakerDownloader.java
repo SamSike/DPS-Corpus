@@ -46,12 +46,14 @@ public final class CircuitBreakerDownloader {
                             }
                             if (cb.getConfiguration() != null) {
                                 String id = cb.getConfiguration();
-                                Object cfg = ((ModelCamelContext) route.getCamelContext()).getResilience4jConfiguration(id);
+                                Object cfg = route.getCamelContext().adapt(ModelCamelContext.class)
+                                        .getResilience4jConfiguration(id);
                                 if (cfg != null) {
                                     downloader.downloadDependency("org.apache.camel", "camel-resilience4j",
                                             route.getCamelContext().getVersion());
                                 }
-                                cfg = ((ModelCamelContext) route.getCamelContext()).getFaultToleranceConfiguration(id);
+                                cfg = route.getCamelContext().adapt(ModelCamelContext.class)
+                                        .getFaultToleranceConfiguration(id);
                                 if (cfg != null) {
                                     downloader.downloadDependency("org.apache.camel", "camel-microprofile-fault-tolerance",
                                             route.getCamelContext().getVersion());

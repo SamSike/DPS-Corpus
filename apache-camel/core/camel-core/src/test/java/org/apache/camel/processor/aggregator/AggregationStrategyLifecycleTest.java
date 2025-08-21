@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AggregationStrategyLifecycleTest extends ContextTestSupport {
 
-    private final MyCompletionStrategy strategy = new MyCompletionStrategy();
+    private MyCompletionStrategy strategy = new MyCompletionStrategy();
 
     @Test
     public void testAggregateLifecycle() throws Exception {
@@ -54,16 +54,16 @@ public class AggregationStrategyLifecycleTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(header("id"), strategy).completionSize(3).to("mock:aggregated");
             }
         };
     }
 
-    private static final class MyCompletionStrategy extends ServiceSupport implements AggregationStrategy, CamelContextAware {
+    private final class MyCompletionStrategy extends ServiceSupport implements AggregationStrategy, CamelContextAware {
 
         private CamelContext camelContext;
         private String separator;
@@ -90,10 +90,15 @@ public class AggregationStrategyLifecycleTest extends ContextTestSupport {
         }
 
         @Override
-        protected void doStart() {
+        protected void doStart() throws Exception {
             ObjectHelper.notNull(camelContext, "CamelContext");
 
             separator = "+";
+        }
+
+        @Override
+        protected void doStop() throws Exception {
+            // noop
         }
     }
 }

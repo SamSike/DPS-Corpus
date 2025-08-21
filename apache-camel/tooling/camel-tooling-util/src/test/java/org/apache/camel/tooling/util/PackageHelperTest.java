@@ -19,6 +19,7 @@ package org.apache.camel.tooling.util;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,7 @@ public class PackageHelperTest {
         try (Stream<Path> stream = PackageHelper.findJsonFiles(dir)) {
             jsonFiles = stream
                     .map(PackageHelper::asName)
-                    .toList();
+                    .collect(Collectors.toList());
         }
 
         assertTrue(jsonFiles.contains("a"), "Files a.json must be found");

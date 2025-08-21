@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +28,17 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import io.rsocket.Payload;
+import io.rsocket.RSocket;
 import io.rsocket.metadata.WellKnownMimeType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.rsocket.RSocketRequester.RequestSpec;
 import org.springframework.messaging.rsocket.RSocketRequester.RetrieveSpec;
 import org.springframework.util.MimeType;
@@ -47,11 +50,11 @@ import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 import static org.springframework.util.MimeTypeUtils.TEXT_PLAIN;
 
 /**
- * Tests for {@link DefaultRSocketRequester}.
+ * Unit tests for {@link DefaultRSocketRequester}.
  *
  * @author Rossen Stoyanchev
  */
-class DefaultRSocketRequesterTests {
+public class DefaultRSocketRequesterTests {
 
 	private static final Duration MILLIS_10 = Duration.ofMillis(10);
 
@@ -64,14 +67,14 @@ class DefaultRSocketRequesterTests {
 
 
 	@BeforeEach
-	void setUp() {
+	public void setUp() {
 		this.rsocket = new TestRSocket();
 		this.requester = RSocketRequester.wrap(this.rsocket, TEXT_PLAIN, TEXT_PLAIN, this.strategies);
 	}
 
 
 	@Test
-	void sendMono() {
+	public void sendMono() {
 
 		// data(Object)
 		testSendMono(spec -> spec.data("bodyA"), "bodyA");
@@ -95,7 +98,7 @@ class DefaultRSocketRequesterTests {
 	}
 
 	@Test
-	void sendFlux() {
+	public void sendFlux() {
 		String[] values = new String[] {"bodyA", "bodyB", "bodyC"};
 		Flux<String> stringFlux = Flux.fromArray(values).delayElements(MILLIS_10);
 
@@ -119,9 +122,9 @@ class DefaultRSocketRequesterTests {
 		assertThat(payloads).isNotNull();
 
 		if (Arrays.equals(new String[] {""}, expectedValues)) {
-			assertThat(payloads).hasSize(1);
+			assertThat(payloads.size()).isEqualTo(1);
 			assertThat(payloads.get(0).getMetadataUtf8()).isEqualTo("toA");
-			assertThat(payloads.get(0).getDataUtf8()).isEmpty();
+			assertThat(payloads.get(0).getDataUtf8()).isEqualTo("");
 		}
 		else {
 			assertThat(payloads.stream().map(Payload::getMetadataUtf8).toArray(String[]::new))
@@ -132,16 +135,16 @@ class DefaultRSocketRequesterTests {
 	}
 
 	@Test
-	void sendWithoutData() {
+	public void sendWithoutData() {
 		this.requester.route("toA").send().block(Duration.ofSeconds(5));
 
 		assertThat(this.rsocket.getSavedMethodName()).isEqualTo("fireAndForget");
 		assertThat(this.rsocket.getSavedPayload().getMetadataUtf8()).isEqualTo("toA");
-		assertThat(this.rsocket.getSavedPayload().getDataUtf8()).isEmpty();
+		assertThat(this.rsocket.getSavedPayload().getDataUtf8()).isEqualTo("");
 	}
 
 	@Test
-	void testSendWithAsyncMetadata() {
+	public void testSendWithAsyncMetadata() {
 
 		MimeType compositeMimeType =
 				MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_COMPOSITE_METADATA.getString());
@@ -171,7 +174,7 @@ class DefaultRSocketRequesterTests {
 	}
 
 	@Test
-	void retrieveMono() {
+	public void retrieveMono() {
 		String value = "bodyA";
 		this.rsocket.setPayloadMonoToReturn(Mono.delay(MILLIS_10).thenReturn(toPayload(value)));
 		Mono<String> response = this.requester.route("").data("").retrieveMono(String.class);
@@ -181,7 +184,7 @@ class DefaultRSocketRequesterTests {
 	}
 
 	@Test
-	void retrieveMonoVoid() {
+	public void retrieveMonoVoid() {
 		AtomicBoolean consumed = new AtomicBoolean();
 		Mono<Payload> mono = Mono.delay(MILLIS_10).thenReturn(toPayload("bodyA")).doOnSuccess(p -> consumed.set(true));
 		this.rsocket.setPayloadMonoToReturn(mono);
@@ -192,16 +195,16 @@ class DefaultRSocketRequesterTests {
 	}
 
 	@Test
-	void retrieveMonoWithoutData() {
+	public void retrieveMonoWithoutData() {
 		this.requester.route("toA").retrieveMono(String.class).block(Duration.ofSeconds(5));
 
 		assertThat(this.rsocket.getSavedMethodName()).isEqualTo("requestResponse");
 		assertThat(this.rsocket.getSavedPayload().getMetadataUtf8()).isEqualTo("toA");
-		assertThat(this.rsocket.getSavedPayload().getDataUtf8()).isEmpty();
+		assertThat(this.rsocket.getSavedPayload().getDataUtf8()).isEqualTo("");
 	}
 
 	@Test
-	void retrieveFlux() {
+	public void retrieveFlux() {
 		String[] values = new String[] {"bodyA", "bodyB", "bodyC"};
 		this.rsocket.setPayloadFluxToReturn(Flux.fromArray(values).delayElements(MILLIS_10).map(this::toPayload));
 		Flux<String> response = this.requester.route("").data("").retrieveFlux(String.class);
@@ -211,7 +214,7 @@ class DefaultRSocketRequesterTests {
 	}
 
 	@Test
-	void retrieveFluxVoid() {
+	public void retrieveFluxVoid() {
 		AtomicBoolean consumed = new AtomicBoolean();
 		Flux<Payload> flux = Flux.just("bodyA", "bodyB")
 				.delayElements(MILLIS_10).map(this::toPayload).doOnComplete(() -> consumed.set(true));
@@ -223,16 +226,16 @@ class DefaultRSocketRequesterTests {
 	}
 
 	@Test
-	void retrieveFluxWithoutData() {
+	public void retrieveFluxWithoutData() {
 		this.requester.route("toA").retrieveFlux(String.class).blockLast(Duration.ofSeconds(5));
 
 		assertThat(this.rsocket.getSavedMethodName()).isEqualTo("requestStream");
 		assertThat(this.rsocket.getSavedPayload().getMetadataUtf8()).isEqualTo("toA");
-		assertThat(this.rsocket.getSavedPayload().getDataUtf8()).isEmpty();
+		assertThat(this.rsocket.getSavedPayload().getDataUtf8()).isEqualTo("");
 	}
 
 	@Test
-	void fluxToMonoIsRejected() {
+	public void fluxToMonoIsRejected() {
 		assertThatIllegalStateException()
 				.isThrownBy(() -> this.requester.route("").data(Flux.just("a", "b")).retrieveMono(String.class))
 				.withMessage("No RSocket interaction with Flux request and Mono response.");
@@ -241,6 +244,75 @@ class DefaultRSocketRequesterTests {
 	private Payload toPayload(String value) {
 		byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
 		return PayloadUtils.createPayload(DefaultDataBufferFactory.sharedInstance.wrap(bytes));
+	}
+
+
+	private static class TestRSocket implements RSocket {
+
+		private Mono<Payload> payloadMonoToReturn = Mono.empty();
+		private Flux<Payload> payloadFluxToReturn = Flux.empty();
+
+		@Nullable private volatile String savedMethodName;
+		@Nullable private volatile Payload savedPayload;
+		@Nullable private volatile Flux<Payload> savedPayloadFlux;
+
+		void setPayloadMonoToReturn(Mono<Payload> payloadMonoToReturn) {
+			this.payloadMonoToReturn = payloadMonoToReturn;
+		}
+
+		void setPayloadFluxToReturn(Flux<Payload> payloadFluxToReturn) {
+			this.payloadFluxToReturn = payloadFluxToReturn;
+		}
+
+		@Nullable
+		String getSavedMethodName() {
+			return this.savedMethodName;
+		}
+
+		@Nullable
+		Payload getSavedPayload() {
+			return this.savedPayload;
+		}
+
+		@Nullable
+		Flux<Payload> getSavedPayloadFlux() {
+			return this.savedPayloadFlux;
+		}
+
+		public void reset() {
+			this.savedMethodName = null;
+			this.savedPayload = null;
+			this.savedPayloadFlux = null;
+		}
+
+
+		@Override
+		public Mono<Void> fireAndForget(Payload payload) {
+			this.savedMethodName = "fireAndForget";
+			this.savedPayload = payload;
+			return Mono.empty();
+		}
+
+		@Override
+		public Mono<Payload> requestResponse(Payload payload) {
+			this.savedMethodName = "requestResponse";
+			this.savedPayload = payload;
+			return this.payloadMonoToReturn;
+		}
+
+		@Override
+		public Flux<Payload> requestStream(Payload payload) {
+			this.savedMethodName = "requestStream";
+			this.savedPayload = payload;
+			return this.payloadFluxToReturn;
+		}
+
+		@Override
+		public Flux<Payload> requestChannel(Publisher<Payload> publisher) {
+			this.savedMethodName = "requestChannel";
+			this.savedPayloadFlux = Flux.from(publisher);
+			return this.payloadFluxToReturn;
+		}
 	}
 
 }

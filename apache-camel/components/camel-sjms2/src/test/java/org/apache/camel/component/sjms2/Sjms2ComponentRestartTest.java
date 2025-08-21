@@ -29,7 +29,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public class Sjms2ComponentRestartTest extends CamelTestSupport {
 
     @RegisterExtension
-    public static ArtemisService service = ArtemisServiceFactory.createSingletonVMService();
+    public ArtemisService service = ArtemisServiceFactory.createVMService();
 
     @BindToRegistry("activemqCF")
     private ActiveMQConnectionFactory connectionFactory

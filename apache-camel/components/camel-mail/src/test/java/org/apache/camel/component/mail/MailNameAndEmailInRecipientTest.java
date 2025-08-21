@@ -20,15 +20,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mail.Mailbox.MailboxUser;
-import org.apache.camel.component.mail.Mailbox.Protocol;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
+import org.jvnet.mock_javamail.Mailbox;
 
 public class MailNameAndEmailInRecipientTest extends CamelTestSupport {
-    private static final MailboxUser davsclaus = Mailbox.getOrCreateUser("davsclaus", "secret");
-    private static final MailboxUser jstrachan = Mailbox.getOrCreateUser("jstrachan", "secret");
 
     @Test
     public void testSendWithNameAndEmailInRecipient() throws Exception {
@@ -42,7 +39,7 @@ public class MailNameAndEmailInRecipientTest extends CamelTestSupport {
         assertMailbox("davsclaus");
         assertMailbox("jstrachan");
 
-        template.sendBodyAndHeaders(davsclaus.uriPrefix(Protocol.smtp), "Hello World", headers);
+        template.sendBodyAndHeaders("smtp://localhost", "Hello World", headers);
         // END SNIPPET: e1
 
         MockEndpoint.assertIsSatisfied(context);
@@ -50,7 +47,7 @@ public class MailNameAndEmailInRecipientTest extends CamelTestSupport {
 
     private void assertMailbox(String name) {
         MockEndpoint mock = getMockEndpoint("mock:" + name);
-        mock.expectedBodiesReceived("Hello World\r\n");
+        mock.expectedBodiesReceived("Hello World");
         mock.message(0).header("to").isEqualTo("Claus Ibsen <davsclaus@localhost>");
         mock.message(0).header("cc").isEqualTo("James Strachan <jstrachan@localhost>");
     }
@@ -59,9 +56,9 @@ public class MailNameAndEmailInRecipientTest extends CamelTestSupport {
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
-                from(davsclaus.uriPrefix(Protocol.pop3) + "&initialDelay=100&delay=100").to("mock:davsclaus");
+                from("pop3://davsclaus@localhost?initialDelay=100&delay=100").to("mock:davsclaus");
 
-                from(jstrachan.uriPrefix(Protocol.pop3) + "&initialDelay=100&delay=100").to("mock:jstrachan");
+                from("pop3://jstrachan@localhost?initialDelay=100&delay=100").to("mock:jstrachan");
             }
         };
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,21 +34,21 @@ class ParameterizedTypeReferenceTests {
 
 	@Test
 	void stringTypeReference() {
-		ParameterizedTypeReference<String> typeReference = new ParameterizedTypeReference<>() {};
+		ParameterizedTypeReference<String> typeReference = new ParameterizedTypeReference<String>() {};
 		assertThat(typeReference.getType()).isEqualTo(String.class);
 	}
 
 	@Test
 	void mapTypeReference() throws Exception {
 		Type mapType = getClass().getMethod("mapMethod").getGenericReturnType();
-		ParameterizedTypeReference<Map<Object,String>> typeReference = new ParameterizedTypeReference<>() {};
+		ParameterizedTypeReference<Map<Object,String>> typeReference = new ParameterizedTypeReference<Map<Object,String>>() {};
 		assertThat(typeReference.getType()).isEqualTo(mapType);
 	}
 
 	@Test
 	void listTypeReference() throws Exception {
 		Type listType = getClass().getMethod("listMethod").getGenericReturnType();
-		ParameterizedTypeReference<List<String>> typeReference = new ParameterizedTypeReference<>() {};
+		ParameterizedTypeReference<List<String>> typeReference = new ParameterizedTypeReference<List<String>>() {};
 		assertThat(typeReference.getType()).isEqualTo(listType);
 	}
 

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,8 +39,7 @@ package org.jooq;
 
 import org.jetbrains.annotations.*;
 
-// ...
-// ...
+
 // ...
 // ...
 // ...
@@ -48,7 +47,6 @@ import org.jetbrains.annotations.*;
 import static org.jooq.SQLDialect.CUBRID;
 // ...
 import static org.jooq.SQLDialect.DERBY;
-// ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
 // ...
@@ -62,19 +60,13 @@ import static org.jooq.SQLDialect.MYSQL;
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
-// ...
-import static org.jooq.SQLDialect.SQLITE;
-// ...
-// ...
-// ...
-// ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
 /**
  * This type is used for the {@link Select}'s DSL API when selecting generic
  * {@link Record} types.
  * <p>
- * Example: <pre><code>
+ * Example: <code><pre>
  * -- get all authors' first and last names, and the number
  * -- of books they've written in German, if they have written
  * -- more than five books in German in the last three years
@@ -94,7 +86,7 @@ import static org.jooq.SQLDialect.YUGABYTEDB;
  *      FOR UPDATE
  *       OF FIRST_NAME, LAST_NAME
  *       NO WAIT
- * </code></pre> Its equivalent in jOOQ <pre><code>
+ * </pre></code> Its equivalent in jOOQ <code><pre>
  * create.select(TAuthor.FIRST_NAME, TAuthor.LAST_NAME, create.count())
  *       .from(T_AUTHOR)
  *       .join(T_BOOK).on(TBook.AUTHOR_ID.equal(TAuthor.ID))
@@ -108,7 +100,7 @@ import static org.jooq.SQLDialect.YUGABYTEDB;
  *       .forUpdate()
  *       .of(TAuthor.FIRST_NAME, TAuthor.LAST_NAME)
  *       .noWait();
- * </code></pre> Refer to the manual for more details
+ * </pre></code> Refer to the manual for more details
  * <p>
  * <h3>Referencing <code>XYZ*Step</code> types directly from client code</h3>
  * <p>
@@ -136,7 +128,7 @@ public interface SelectForUpdateStep<R extends Record> extends SelectForStep<R> 
      * Add a <code>FOR UPDATE</code> clause to the end of the query.
      * <p>
      * Note: not all SQL dialects allow for combining a <code>FOR UPDATE</code>
-     * clause with <code>LIMIT … OFFSET</code>, or with <code>GROUP BY</code>.
+     * clause with <code>LIMIT .. OFFSET</code>, or with <code>GROUP BY</code>.
      * This essentially includes {@link SQLDialect#INGRES} and
      * {@link SQLDialect#ORACLE}. These incompatibilities are not reflected by
      * the jOOQ API.
@@ -174,18 +166,22 @@ public interface SelectForUpdateStep<R extends Record> extends SelectForStep<R> 
     @Support({ POSTGRES, YUGABYTEDB })
     SelectForUpdateOfStep<R> forKeyShare();
 
-    /**
-     * Add a <code>WITH CHECK OPTION</code> clause to the end of the subquery.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES })
-    SelectFinalStep<R> withCheckOption();
 
-    /**
-     * Add a <code>WITH READ ONLY</code> clause to the end of the subquery.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    SelectFinalStep<R> withReadOnly();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }

@@ -18,6 +18,7 @@ package org.apache.camel.processor;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.support.SynchronizationAdapter;
@@ -35,7 +36,7 @@ public class EnrichWithUnitOfWorkTest extends ContextTestSupport {
     public void testEnrichWith() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:routeA").enrichWith("direct:routeB", true, false).body((a, b) -> b);
 
                 from("direct:routeB").enrichWith("direct:routeC", true, false).body((a, b) -> b);
@@ -47,9 +48,9 @@ public class EnrichWithUnitOfWorkTest extends ContextTestSupport {
 
         Exchange out = template.request("direct:routeA", new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getMessage().setBody("Hello World");
-                exchange.getExchangeExtension().addOnCompletion(new SynchronizationAdapter() {
+                exchange.adapt(ExtendedExchange.class).addOnCompletion(new SynchronizationAdapter() {
                     @Override
                     public void onDone(Exchange exchange) {
                         exchange.getMessage().setBody("Done " + exchange.getMessage().getBody());
@@ -65,7 +66,7 @@ public class EnrichWithUnitOfWorkTest extends ContextTestSupport {
     public void testEnrichWithShareUnitOfWork() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:routeA").enrichWith("direct:routeB", true, true).body((a, b) -> b);
 
                 from("direct:routeB").enrichWith("direct:routeC", true, true).body((a, b) -> b);
@@ -77,9 +78,9 @@ public class EnrichWithUnitOfWorkTest extends ContextTestSupport {
 
         Exchange out = template.request("direct:routeA", new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getMessage().setBody("Hello World");
-                exchange.getExchangeExtension().addOnCompletion(new SynchronizationAdapter() {
+                exchange.adapt(ExtendedExchange.class).addOnCompletion(new SynchronizationAdapter() {
                     @Override
                     public void onDone(Exchange exchange) {
                         exchange.getMessage().setBody("Done " + exchange.getMessage().getBody());

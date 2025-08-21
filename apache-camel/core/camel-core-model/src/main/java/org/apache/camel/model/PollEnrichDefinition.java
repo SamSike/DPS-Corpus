@@ -34,14 +34,11 @@ import org.apache.camel.spi.Metadata;
 @Metadata(label = "eip,transformation")
 @XmlRootElement(name = "pollEnrich")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class PollEnrichDefinition extends ExpressionNode
-        implements AggregationStrategyAwareDefinition<PollEnrichDefinition> {
+public class PollEnrichDefinition extends ExpressionNode implements AggregationStrategyAwareDefinition<PollEnrichDefinition> {
 
     @XmlTransient
     private AggregationStrategy aggregationStrategyBean;
 
-    @XmlAttribute
-    private String variableReceive;
     @XmlAttribute
     @Metadata(javaType = "org.apache.camel.AggregationStrategy")
     private String aggregationStrategy;
@@ -63,12 +60,6 @@ public class PollEnrichDefinition extends ExpressionNode
     @XmlAttribute
     @Metadata(label = "advanced", javaType = "java.lang.Boolean")
     private String ignoreInvalidEndpoint;
-    @XmlAttribute
-    @Metadata(label = "advanced", defaultValue = "true", javaType = "java.lang.Boolean")
-    private String allowOptimisedComponents;
-    @XmlAttribute
-    @Metadata(label = "advanced", defaultValue = "true", javaType = "java.lang.Boolean")
-    private String autoStartComponents;
 
     public PollEnrichDefinition() {
     }
@@ -76,21 +67,6 @@ public class PollEnrichDefinition extends ExpressionNode
     public PollEnrichDefinition(AggregationStrategy aggregationStrategy, long timeout) {
         this.aggregationStrategyBean = aggregationStrategy;
         this.timeout = Long.toString(timeout);
-    }
-
-    protected PollEnrichDefinition(PollEnrichDefinition source) {
-        super(source);
-        this.aggregationStrategyBean = source.aggregationStrategyBean;
-        this.variableReceive = source.variableReceive;
-        this.aggregationStrategy = source.aggregationStrategy;
-        this.aggregationStrategyMethodName = source.aggregationStrategyMethodName;
-        this.aggregationStrategyMethodAllowNull = source.aggregationStrategyMethodAllowNull;
-        this.aggregateOnException = source.aggregateOnException;
-        this.timeout = source.timeout;
-        this.cacheSize = source.cacheSize;
-        this.ignoreInvalidEndpoint = source.ignoreInvalidEndpoint;
-        this.allowOptimisedComponents = source.allowOptimisedComponents;
-        this.autoStartComponents = source.autoStartComponents;
     }
 
     @Override
@@ -152,18 +128,6 @@ public class PollEnrichDefinition extends ExpressionNode
     }
 
     /**
-     * To use a variable to store the received message body (only body, not headers). This makes it handy to use
-     * variables for user data and to easily control what data to use for sending and receiving.
-     *
-     * Important: When using receive variable then the received body is stored only in this variable and not on the
-     * current message.
-     */
-    public PollEnrichDefinition variableReceive(String variableReceive) {
-        this.variableReceive = variableReceive;
-        return this;
-    }
-
-    /**
      * Sets the AggregationStrategy to be used to merge the reply from the external service, into a single outgoing
      * message. By default Camel will use the reply from the external service as outgoing message.
      */
@@ -217,16 +181,16 @@ public class PollEnrichDefinition extends ExpressionNode
      * consumers when uris are reused.
      *
      * Beware that when using dynamic endpoints then it affects how well the cache can be utilized. If each dynamic
-     * endpoint is unique then its best to turn off caching by setting this to -1, which allows Camel to not cache both
-     * the consumers and endpoints; they are regarded as prototype scoped and will be stopped and discarded after use.
-     * This reduces memory usage as otherwise consumers/endpoints are stored in memory in the caches.
+     * endpoint is unique then its best to turn of caching by setting this to -1, which allows Camel to not cache both
+     * the producers and endpoints; they are regarded as prototype scoped and will be stopped and discarded after use.
+     * This reduces memory usage as otherwise producers/endpoints are stored in memory in the caches.
      *
-     * However, if there are a high degree of dynamic endpoints that have been used before, then it can benefit to use
-     * the cache to reuse both consumers and endpoints and therefore the cache size can be set accordingly or rely on
+     * However if there are a high degree of dynamic endpoints that have been used before, then it can benefit to use
+     * the cache to reuse both producers and endpoints and therefore the cache size can be set accordingly or rely on
      * the default size (1000).
      *
      * If there is a mix of unique and used before dynamic endpoints, then setting a reasonable cache size can help
-     * reduce memory usage to avoid storing too many non-frequent used consumers.
+     * reduce memory usage to avoid storing too many non frequent used producers.
      *
      * @param  cacheSize the cache size, use <tt>0</tt> for default cache size, or <tt>-1</tt> to turn cache off.
      * @return           the builder
@@ -237,20 +201,20 @@ public class PollEnrichDefinition extends ExpressionNode
     }
 
     /**
-     * /** Sets the maximum size used by the {@link org.apache.camel.spi.ConsumerCache} which is used to cache and reuse
+     * Sets the maximum size used by the {@link org.apache.camel.spi.ConsumerCache} which is used to cache and reuse
      * consumers when uris are reused.
      *
      * Beware that when using dynamic endpoints then it affects how well the cache can be utilized. If each dynamic
-     * endpoint is unique then its best to turn off caching by setting this to -1, which allows Camel to not cache both
-     * the consumers and endpoints; they are regarded as prototype scoped and will be stopped and discarded after use.
-     * This reduces memory usage as otherwise consumers/endpoints are stored in memory in the caches.
+     * endpoint is unique then its best to turn of caching by setting this to -1, which allows Camel to not cache both
+     * the producers and endpoints; they are regarded as prototype scoped and will be stopped and discarded after use.
+     * This reduces memory usage as otherwise producers/endpoints are stored in memory in the caches.
      *
-     * However, if there are a high degree of dynamic endpoints that have been used before, then it can benefit to use
-     * the cache to reuse both consumers and endpoints and therefore the cache size can be set accordingly or rely on
+     * However if there are a high degree of dynamic endpoints that have been used before, then it can benefit to use
+     * the cache to reuse both producers and endpoints and therefore the cache size can be set accordingly or rely on
      * the default size (1000).
      *
      * If there is a mix of unique and used before dynamic endpoints, then setting a reasonable cache size can help
-     * reduce memory usage to avoid storing too many non-frequent used consumers.
+     * reduce memory usage to avoid storing too many non frequent used producers.
      *
      * @param  cacheSize the cache size, use <tt>0</tt> for default cache size, or <tt>-1</tt> to turn cache off.
      * @return           the builder
@@ -261,52 +225,12 @@ public class PollEnrichDefinition extends ExpressionNode
     }
 
     /**
-     * Ignore the invalidate endpoint exception when try to create a consumer with that endpoint
+     * Ignore the invalidate endpoint exception when try to create a producer with that endpoint
      *
      * @return the builder
      */
     public PollEnrichDefinition ignoreInvalidEndpoint() {
         setIgnoreInvalidEndpoint(Boolean.toString(true));
-        return this;
-    }
-
-    /**
-     * Whether to auto startup components when poll enricher is starting up.
-     *
-     * @return the builder
-     */
-    public PollEnrichDefinition autoStartComponents(String autoStartComponents) {
-        setAutoStartComponents(autoStartComponents);
-        return this;
-    }
-
-    /**
-     * Whether to auto startup components when poll enricher is starting up.
-     *
-     * @return the builder
-     */
-    public PollEnrichDefinition autoStartComponents(boolean autoStartComponents) {
-        setAutoStartComponents(Boolean.toString(autoStartComponents));
-        return this;
-    }
-
-    /**
-     * Whether to allow components to optimise if they are {@link org.apache.camel.spi.PollDynamicAware}
-     *
-     * @return the builder
-     */
-    public PollEnrichDefinition allowOptimisedComponents(String allowOptimisedComponents) {
-        setAllowOptimisedComponents(allowOptimisedComponents);
-        return this;
-    }
-
-    /**
-     * Whether to allow components to optimise if they are {@link org.apache.camel.spi.PollDynamicAware}
-     *
-     * @return the builder
-     */
-    public PollEnrichDefinition allowOptimisedComponents(boolean allowOptimisedComponents) {
-        setAllowOptimisedComponents(Boolean.toString(allowOptimisedComponents));
         return this;
     }
 
@@ -338,14 +262,6 @@ public class PollEnrichDefinition extends ExpressionNode
 
     public void setTimeout(String timeout) {
         this.timeout = timeout;
-    }
-
-    public String getVariableReceive() {
-        return variableReceive;
-    }
-
-    public void setVariableReceive(String variableReceive) {
-        this.variableReceive = variableReceive;
     }
 
     public String getAggregationStrategy() {
@@ -398,26 +314,5 @@ public class PollEnrichDefinition extends ExpressionNode
 
     public void setIgnoreInvalidEndpoint(String ignoreInvalidEndpoint) {
         this.ignoreInvalidEndpoint = ignoreInvalidEndpoint;
-    }
-
-    public String getAutoStartComponents() {
-        return autoStartComponents;
-    }
-
-    public void setAutoStartComponents(String autoStartComponents) {
-        this.autoStartComponents = autoStartComponents;
-    }
-
-    public String getAllowOptimisedComponents() {
-        return allowOptimisedComponents;
-    }
-
-    public void setAllowOptimisedComponents(String allowOptimisedComponents) {
-        this.allowOptimisedComponents = allowOptimisedComponents;
-    }
-
-    @Override
-    public PollEnrichDefinition copyDefinition() {
-        return new PollEnrichDefinition(this);
     }
 }

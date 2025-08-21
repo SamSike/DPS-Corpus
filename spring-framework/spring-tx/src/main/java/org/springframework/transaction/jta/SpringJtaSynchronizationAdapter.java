@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.Assert;
@@ -48,7 +48,8 @@ public class SpringJtaSynchronizationAdapter implements Synchronization {
 
 	private final TransactionSynchronization springSynchronization;
 
-	private @Nullable UserTransaction jtaTransaction;
+	@Nullable
+	private UserTransaction jtaTransaction;
 
 	private boolean beforeCompletionCalled = false;
 
@@ -66,15 +67,16 @@ public class SpringJtaSynchronizationAdapter implements Synchronization {
 	/**
 	 * Create a new SpringJtaSynchronizationAdapter for the given Spring
 	 * TransactionSynchronization and JTA TransactionManager.
+	 * <p>Note that this adapter will never perform a rollback-only call on WebLogic,
+	 * since WebLogic Server is known to automatically mark the transaction as
+	 * rollback-only in case of a {@code beforeCompletion} exception. Hence,
+	 * on WLS, this constructor is equivalent to the single-arg constructor.
 	 * @param springSynchronization the Spring TransactionSynchronization to delegate to
 	 * @param jtaUserTransaction the JTA UserTransaction to use for rollback-only
 	 * setting in case of an exception thrown in {@code beforeCompletion}
-	 * @deprecated as of 6.0.12 since JTA 1.1+ requires implicit rollback-only setting
-	 * in case of an exception thrown in {@code beforeCompletion}, so the regular
-	 * {@link #SpringJtaSynchronizationAdapter(TransactionSynchronization)} constructor
-	 * is sufficient for all scenarios
+	 * (can be omitted if the JTA provider itself marks the transaction rollback-only
+	 * in such a scenario, which is required by the JTA specification as of JTA 1.1).
 	 */
-	@Deprecated(since = "6.0.12")
 	public SpringJtaSynchronizationAdapter(TransactionSynchronization springSynchronization,
 			@Nullable UserTransaction jtaUserTransaction) {
 
@@ -85,21 +87,21 @@ public class SpringJtaSynchronizationAdapter implements Synchronization {
 	/**
 	 * Create a new SpringJtaSynchronizationAdapter for the given Spring
 	 * TransactionSynchronization and JTA TransactionManager.
+	 * <p>Note that this adapter will never perform a rollback-only call on WebLogic,
+	 * since WebLogic Server is known to automatically mark the transaction as
+	 * rollback-only in case of a {@code beforeCompletion} exception. Hence,
+	 * on WLS, this constructor is equivalent to the single-arg constructor.
 	 * @param springSynchronization the Spring TransactionSynchronization to delegate to
 	 * @param jtaTransactionManager the JTA TransactionManager to use for rollback-only
 	 * setting in case of an exception thrown in {@code beforeCompletion}
-	 * @deprecated as of 6.0.12 since JTA 1.1+ requires implicit rollback-only setting
-	 * in case of an exception thrown in {@code beforeCompletion}, so the regular
-	 * {@link #SpringJtaSynchronizationAdapter(TransactionSynchronization)} constructor
-	 * is sufficient for all scenarios
+	 * (can be omitted if the JTA provider itself marks the transaction rollback-only
+	 * in such a scenario, which is required by the JTA specification as of JTA 1.1)
 	 */
-	@Deprecated(since = "6.0.12")
-	public SpringJtaSynchronizationAdapter(TransactionSynchronization springSynchronization,
-			@Nullable TransactionManager jtaTransactionManager) {
+	public SpringJtaSynchronizationAdapter(
+			TransactionSynchronization springSynchronization, @Nullable TransactionManager jtaTransactionManager) {
 
 		this(springSynchronization);
-		this.jtaTransaction =
-				(jtaTransactionManager != null ? new UserTransactionAdapter(jtaTransactionManager) : null);
+		this.jtaTransaction = new UserTransactionAdapter(jtaTransactionManager);
 	}
 
 
@@ -121,7 +123,7 @@ public class SpringJtaSynchronizationAdapter implements Synchronization {
 		finally {
 			// Process Spring's beforeCompletion early, in order to avoid issues
 			// with strict JTA implementations that issue warnings when doing JDBC
-			// operations after transaction completion (for example, Connection.getWarnings).
+			// operations after transaction completion (e.g. Connection.getWarnings).
 			this.beforeCompletionCalled = true;
 			this.springSynchronization.beforeCompletion();
 		}
@@ -169,11 +171,13 @@ public class SpringJtaSynchronizationAdapter implements Synchronization {
 		}
 		// Call afterCompletion with the appropriate status indication.
 		switch (status) {
-			case Status.STATUS_COMMITTED ->
+			case Status.STATUS_COMMITTED:
 				this.springSynchronization.afterCompletion(TransactionSynchronization.STATUS_COMMITTED);
-			case Status.STATUS_ROLLEDBACK ->
+				break;
+			case Status.STATUS_ROLLEDBACK:
 				this.springSynchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK);
-			default ->
+				break;
+			default:
 				this.springSynchronization.afterCompletion(TransactionSynchronization.STATUS_UNKNOWN);
 		}
 	}

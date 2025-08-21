@@ -22,10 +22,7 @@ import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests that a Seda component properly set blockWhenFull on endpoints.
@@ -43,11 +40,11 @@ public class SedaDefaultBlockWhenFullTest extends ContextTestSupport {
             = "seda:foo" + String.format(SIZE_PARAM, QUEUE_SIZE) + "&blockWhenFull=false&timeout=0";
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
+    protected Registry createRegistry() throws Exception {
         SedaComponent component = new SedaComponent();
         component.setDefaultBlockWhenFull(true);
 
-        Registry registry = super.createCamelRegistry();
+        Registry registry = super.createRegistry();
         registry.bind("seda", component);
 
         return registry;
@@ -57,7 +54,7 @@ public class SedaDefaultBlockWhenFullTest extends ContextTestSupport {
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 fromF(BLOCK_WHEN_FULL_URI).delay(DELAY_LONG).to(MOCK_URI);
 
                 // use same delay as above on purpose
@@ -73,15 +70,18 @@ public class SedaDefaultBlockWhenFullTest extends ContextTestSupport {
     }
 
     @Test
-    public void testSedaDefaultWhenFull() {
-        SedaEndpoint seda = context.getEndpoint(DEFAULT_URI, SedaEndpoint.class);
-        assertFalse(seda.isBlockWhenFull(),
-                "Seda Endpoint is not setting the correct default (should be false) for \"blockWhenFull\"");
+    public void testSedaDefaultWhenFull() throws Exception {
+        try {
+            SedaEndpoint seda = context.getEndpoint(DEFAULT_URI, SedaEndpoint.class);
+            assertFalse(seda.isBlockWhenFull(),
+                    "Seda Endpoint is not setting the correct default (should be false) for \"blockWhenFull\"");
 
-        Exception e = assertThrows(Exception.class, () -> sendTwoOverCapacity(DEFAULT_URI, QUEUE_SIZE),
-                "The route didn't fill the queue beyond capacity: test class isn't working as intended");
+            sendTwoOverCapacity(DEFAULT_URI, QUEUE_SIZE);
 
-        assertIsInstanceOf(IllegalStateException.class, e.getCause());
+            fail("The route didn't fill the queue beyond capacity: test class isn't working as intended");
+        } catch (Exception e) {
+            assertIsInstanceOf(IllegalStateException.class, e.getCause());
+        }
     }
 
     @Test

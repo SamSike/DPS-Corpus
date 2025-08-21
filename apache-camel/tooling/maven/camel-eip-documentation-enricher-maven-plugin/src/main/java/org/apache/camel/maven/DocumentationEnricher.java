@@ -30,7 +30,7 @@ import org.apache.camel.tooling.model.BaseModel;
 import org.apache.camel.tooling.model.BaseOptionModel;
 import org.apache.camel.tooling.model.ComponentModel;
 import org.apache.camel.tooling.model.JsonMapper;
-import org.apache.commons.text.WordUtils;
+import org.apache.commons.lang3.text.WordUtils;
 import org.apache.maven.plugin.logging.Log;
 
 import static org.apache.camel.maven.XmlHelper.isNullOrEmpty;
@@ -87,15 +87,17 @@ public class DocumentationEnricher {
         Object defaultValueText = option != null ? option.getDefaultValue() : null;
 
         // special for this option
-        if ("binding".equals(name)) {
+        if ("useBlueprintPropertyResolver".equals(name)) {
+            descriptionText
+                    = "Whether to automatic detect OSGi Blueprint property placeholder service in use, and bridge with Camel property placeholder."
+                      + " When enabled this allows you to only setup OSGi Blueprint property placeholder and Camel can use the properties in the camelContext.";
+        } else if ("binding".equals(name)) {
             descriptionText
                     = "In binding mode we bind the passed in arguments (args) to the created exchange using the existing Camel"
                       + " @Body, @Header, @Headers, @ExchangeProperty annotations if no annotation then its bound as the message body";
         } else if ("serviceRef".equals(name) && jsonFile.getName().endsWith("proxy.json")) {
             descriptionText
                     = "Reference to existing endpoint to lookup by endpoint id in the Camel registry to be used as proxied service";
-        } else if ("dataFormats".equals(name) && jsonFile.getName().endsWith("beans.json")) {
-            descriptionText = "List of data formats";
         }
 
         if (descriptionText == null || descriptionText.equals("null")) {
@@ -118,10 +120,7 @@ public class DocumentationEnricher {
         } else {
             // we should skip warning about these if no documentation as they are special
             boolean skip = "customId".equals(name) || "inheritErrorHandler".equals(name)
-                    || ("rest".equals(name) && jsonFile.getName().endsWith("route.json"))
-                    || ("template".equals(name) && jsonFile.getName().endsWith("route.json"))
-                    || ("kamelet".equals(name) && jsonFile.getName().endsWith("route.json"))
-                    || ("routeProperty".equals(name) && jsonFile.getName().endsWith("route.json"));
+                    || "rest".equals(name) && jsonFile.getName().endsWith("route.json");
             if (!skip) {
                 log.warn("Cannot find documentation for name: " + name + " in json schema: " + jsonFile);
             }
@@ -144,9 +143,9 @@ public class DocumentationEnricher {
 
     private String formatTextContent(Element item, String textContent) {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("\n")
+        stringBuilder.append(System.lineSeparator())
                 .append(WordUtils.wrap(textContent, Constants.WRAP_LENGTH))
-                .append("\n");
+                .append(System.lineSeparator());
         // Fix closing tag intention.
         stringBuilder.append(Constants.DEFAULT_XML_INTENTION);
         for (Node parent = item.getParentNode(); parent != null; parent = parent.getParentNode()) {

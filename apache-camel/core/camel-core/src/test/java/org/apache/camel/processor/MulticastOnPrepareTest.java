@@ -42,10 +42,10 @@ public class MulticastOnPrepareTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start").multicast().onPrepare(new AnimalDeepClonePrepare()).to("direct:a").to("direct:b");
                 // END SNIPPET: e1
@@ -59,7 +59,7 @@ public class MulticastOnPrepareTest extends ContextTestSupport {
     public static class ProcessorA implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             Animal body = exchange.getIn().getBody(Animal.class);
             assertEquals(1, body.getId());
             assertEquals("Tiger", body.getName());
@@ -72,7 +72,7 @@ public class MulticastOnPrepareTest extends ContextTestSupport {
     public static class ProcessorB implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             Animal body = exchange.getIn().getBody(Animal.class);
             assertEquals(1, body.getId());
             assertEquals("Tiger", body.getName());

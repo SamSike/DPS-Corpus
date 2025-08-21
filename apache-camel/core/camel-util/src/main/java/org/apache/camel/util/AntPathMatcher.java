@@ -140,7 +140,9 @@ public class AntPathMatcher {
         if (pathIdxStart > pathIdxEnd) {
             // Path is exhausted, only match if rest of pattern is * or **'s
             if (pattIdxStart > pattIdxEnd) {
-                return pattern.endsWith(this.pathSeparator) == path.endsWith(this.pathSeparator);
+                return pattern.endsWith(this.pathSeparator)
+                        ? path.endsWith(this.pathSeparator) : !path
+                                .endsWith(this.pathSeparator);
             }
             if (!fullMatch) {
                 return true;
@@ -405,7 +407,7 @@ public class AntPathMatcher {
         String[] patternParts = tokenizeToStringArray(pattern, this.pathSeparator);
         String[] pathParts = tokenizeToStringArray(path, this.pathSeparator);
 
-        StringBuilder buffer = new StringBuilder(path.length());
+        StringBuilder buffer = new StringBuilder();
 
         // Add any path parts that have a wildcarded pattern part.
         int puts = 0;
@@ -454,11 +456,11 @@ public class AntPathMatcher {
         while (st.hasMoreTokens()) {
             String token = st.nextToken();
             token = token.trim();
-            if (!token.isEmpty()) {
+            if (token.length() > 0) {
                 tokens.add(token);
             }
         }
-        return tokens.toArray(new String[0]);
+        return tokens.toArray(new String[tokens.size()]);
     }
 
     private static boolean different(boolean caseSensitive, char ch, char other) {

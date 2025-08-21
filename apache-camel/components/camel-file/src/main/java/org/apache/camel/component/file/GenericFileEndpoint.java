@@ -97,10 +97,6 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
                             + "file.<p/> Only ${file.name} and ${file.name.next} is supported as dynamic placeholders.")
     protected String doneFileName;
 
-    @UriParam(label = "advanced", defaultValue = "100",
-              description = "Maximum number of messages to keep in memory available for browsing. Use 0 for unlimited.")
-    private int browseLimit = 100;
-
     // producer options
 
     @UriParam(label = "producer", description = "Flatten is used to flatten the file name path to strip any leading "
@@ -166,12 +162,6 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
                                                 + "To specify new-line (slash-n or slash-r) or tab (slash-t) characters then escape with an extra slash, "
                                                 + "eg slash-slash-n.")
     protected String appendChars;
-    @UriParam(label = "producer",
-              enums = "MD2,MD5,SHA_1,SHA_224,SHA_256,SHA_384,SHA_512,SHA_512_224,SHA_512_256,SHA3_224,SHA3_256,SHA3_384,SHA3_512",
-              description = "If provided, then Camel will write a checksum file when the original file has been written. The checksum file"
-                            + " will contain the checksum created with the provided algorithm for the original file. The checksum file will"
-                            + " always be written in the same folder as the original file.")
-    protected String checksumFileAlgorithm;
 
     // consumer options
 
@@ -280,9 +270,6 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
                                                                                + "LRUCache that holds 1000 entries. If noop=true then idempotent will be enabled as well to avoid "
                                                                                + "consuming the same files over and over again.")
     protected Boolean idempotent;
-    @UriParam(label = "consumer,filter", javaType = "java.lang.Boolean", defaultValue = "true",
-              description = "Sets whether to eagerly add the filename to the idempotent repository or wait until the exchange is complete.")
-    private Boolean idempotentEager = Boolean.TRUE;
     @UriParam(label = "consumer,filter", javaType = "java.lang.String", description = "To use a custom idempotent "
                                                                                       + "key. By default the absolute path of the file is used. You can use the File Language, for example to "
                                                                                       + "use the file name and file size, you can do: idempotentKey=${file:name}-${file:size}")
@@ -303,7 +290,7 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
     protected Predicate filterFile;
     @UriParam(label = "consumer,filter", defaultValue = "true", description = "Sets case sensitive flag on ant filter.")
     protected boolean antFilterCaseSensitive = true;
-    protected volatile AntFilter antFilter;
+    protected volatile AntPathMatcherGenericFileFilter<T> antFilter;
     @UriParam(label = "consumer,filter",
               description = "Ant style filter inclusion. Multiple inclusions may be " + "specified in comma-delimited format.")
     protected String antInclude;
@@ -362,7 +349,7 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
                                                                             + "slow writes. The default of 1 sec. may be too fast if the producer is very slow writing the file. <p/>"
                                                                             + "Notice: For FTP the default readLockCheckInterval is 5000. <p/> The readLockTimeout value must be "
                                                                             + "higher than readLockCheckInterval, but a rule of thumb is to have a timeout that is at least 2 or more "
-                                                                            + "times higher than the readLockCheckInterval. This is needed to ensure that ample time is allowed for "
+                                                                            + "times higher than the readLockCheckInterval. This is needed to ensure that amble time is allowed for "
                                                                             + "the read lock process to try to grab the lock before the timeout was hit.")
     protected long readLockCheckInterval = 1000;
     @UriParam(label = "consumer,lock", defaultValue = "10000", description = "Optional timeout in millis for the "
@@ -372,7 +359,7 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
                                                                              + "fileLock, changed and rename support the timeout. <p/> Notice: For FTP the default readLockTimeout "
                                                                              + "value is 20000 instead of 10000. <p/> The readLockTimeout value must be higher than "
                                                                              + "readLockCheckInterval, but a rule of thumb is to have a timeout that is at least 2 or more times "
-                                                                             + "higher than the readLockCheckInterval. This is needed to ensure that ample time is allowed for the "
+                                                                             + "higher than the readLockCheckInterval. This is needed to ensure that amble time is allowed for the "
                                                                              + "read lock process to try to grab the lock before the timeout was hit.")
     protected long readLockTimeout = 10000;
     @UriParam(label = "consumer,lock", defaultValue = "true", description = "Whether to use marker file with the "
@@ -452,10 +439,10 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
     private Pattern includePattern;
     private Pattern excludePattern;
 
-    protected GenericFileEndpoint() {
+    public GenericFileEndpoint() {
     }
 
-    protected GenericFileEndpoint(String endpointUri, Component component) {
+    public GenericFileEndpoint(String endpointUri, Component component) {
         super(endpointUri, component);
     }
 
@@ -473,10 +460,6 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
 
     public abstract boolean isAbsolute(String name);
 
-    public boolean isHiddenFilesEnabled() {
-        return false;
-    }
-
     /**
      * Return the file name that will be auto-generated for the given message if none is provided
      */
@@ -486,76 +469,22 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
 
     /**
      * This implementation will <b>not</b> load the file content. Any file locking is neither in use by this
-     * implementation.
+     * implementation..
      */
     @Override
     public List<Exchange> getExchanges() {
-        return getExchanges(browseLimit, null);
-    }
-
-    @Override
-    public List<Exchange> getExchanges(int limit, java.util.function.Predicate filter) {
-        return getExchanges(limit, filter, false);
-    }
-
-    @Override
-    public BrowseStatus getBrowseStatus(int limit) {
-        List<Exchange> list = getExchanges(limit, null, true);
-        long ts = 0;
-        long ts2 = 0;
-        if (!list.isEmpty()) {
-            ts = list.get(0).getMessage().getHeader(Exchange.MESSAGE_TIMESTAMP, 0L, long.class);
-            ts2 = list.get(list.size() - 1).getMessage().getHeader(Exchange.MESSAGE_TIMESTAMP, 0L, long.class);
-        }
-        return new BrowseStatus(list.size(), ts, ts2);
-    }
-
-    private List<Exchange> getExchanges(int limit, java.util.function.Predicate filter, boolean status) {
         final List<Exchange> answer = new ArrayList<>();
 
         GenericFileConsumer<?> consumer = null;
         try {
-            // create a new consumer which can poll the exchanges we want to browse
+            // create a new consumer which can poll the exchanges we want to
+            // browse
             // do not provide a processor as we do some custom processing
             consumer = createConsumer(null);
-            if (filter == null) {
-                consumer.setMaxMessagesPerPoll(browseLimit);
-            }
-            if (status) {
-                // optimize to not download files as we only want status
-                consumer.setRetrieveFile(false);
-            }
-            final GenericFileConsumer gfc = consumer;
             consumer.setCustomProcessor(new Processor() {
                 @Override
                 public void process(Exchange exchange) throws Exception {
-                    boolean include = true;
-                    if (filter != null) {
-                        include = filter.test(exchange);
-                    }
-                    if (include && answer.size() < browseLimit) {
-                        if (!status) {
-                            // ensure payload is downloaded (when not in status mode)
-                            GenericFile<?> gf = exchange.getMessage().getBody(GenericFile.class);
-                            if (gf != null) {
-                                final String name = gf.getAbsoluteFilePath();
-                                try {
-                                    boolean downloaded = gfc.tryRetrievingFile(exchange, name, gf, name, gf);
-                                    if (downloaded) {
-                                        gf.getBinding().loadContent(exchange, gf);
-                                        Object data = gf.getBody();
-                                        if (data != null) {
-                                            exchange.getMessage().setBody(data);
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    LOG.debug("Error trying to retrieve file: {} due to: {}. This exception is ignored.", name,
-                                            e.getMessage(), e);
-                                }
-                            }
-                        }
-                        answer.add(exchange);
-                    }
+                    answer.add(exchange);
                 }
             });
             // do not start scheduler, as we invoke the poll manually
@@ -574,6 +503,7 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
                 LOG.debug("Error stopping consumer used for browsing exchanges. This exception will be ignored", e);
             }
         }
+
         return answer;
     }
 
@@ -680,7 +610,7 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
         this.antFilterCaseSensitive = antFilterCaseSensitive;
     }
 
-    public AntFilter getAntFilter() {
+    public GenericFileFilter<T> getAntFilter() {
         return antFilter;
     }
 
@@ -802,7 +732,7 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
     /**
      * Filters the directory based on Simple language. For example to filter on current date, you can use a simple date
      * pattern such as ${date:now:yyyMMdd}
-     *
+     * 
      * @see #setFilterDirectory(Predicate)
      */
     public void setFilterDirectory(String expression) {
@@ -822,7 +752,7 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
 
     /**
      * Filters the file based on Simple language. For example to filter on file size, you can use ${file:size} > 5000
-     *
+     * 
      * @see #setFilterFile(Predicate)
      */
     public void setFilterFile(String expression) {
@@ -921,22 +851,8 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
         this.doneFileName = doneFileName;
     }
 
-    @Override
-    public int getBrowseLimit() {
-        return browseLimit;
-    }
-
-    @Override
-    public void setBrowseLimit(int browseLimit) {
-        this.browseLimit = browseLimit;
-    }
-
     public Boolean isIdempotent() {
         return idempotent != null ? idempotent : false;
-    }
-
-    public boolean isIdempotentEager() {
-        return idempotentEager != null ? idempotentEager : false;
     }
 
     public String getCharset() {
@@ -970,17 +886,6 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
      */
     public void setIdempotent(Boolean idempotent) {
         this.idempotent = idempotent;
-    }
-
-    public Boolean getIdempotentEager() {
-        return idempotentEager;
-    }
-
-    /**
-     * Sets whether to eagerly add the key to the idempotent repository or wait until the exchange is complete.
-     */
-    public void setIdempotentEager(Boolean idempotentEager) {
-        this.idempotentEager = idempotentEager;
     }
 
     public Expression getIdempotentKey() {
@@ -1185,7 +1090,7 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
      * Notice: For FTP the default readLockCheckInterval is 5000.
      * <p/>
      * The readLockTimeout value must be higher than readLockCheckInterval, but a rule of thumb is to have a timeout
-     * that is at least 2 or more times higher than the readLockCheckInterval. This is needed to ensure that ample time
+     * that is at least 2 or more times higher than the readLockCheckInterval. This is needed to ensure that amble time
      * is allowed for the read lock process to try to grab the lock before the timeout was hit.
      */
     public void setReadLockCheckInterval(long readLockCheckInterval) {
@@ -1205,7 +1110,7 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
      * Notice: For FTP the default readLockTimeout value is 20000 instead of 10000.
      * <p/>
      * The readLockTimeout value must be higher than readLockCheckInterval, but a rule of thumb is to have a timeout
-     * that is at least 2 or more times higher than the readLockCheckInterval. This is needed to ensure that ample time
+     * that is at least 2 or more times higher than the readLockCheckInterval. This is needed to ensure that amble time
      * is allowed for the read lock process to try to grab the lock before the timeout was hit.
      */
     public void setReadLockTimeout(long readLockTimeout) {
@@ -1609,19 +1514,6 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
         this.synchronous = synchronous;
     }
 
-    public String getChecksumFileAlgorithm() {
-        return checksumFileAlgorithm;
-    }
-
-    /**
-     * If provided, then Camel will write a checksum file when the original file has been written. The checksum file
-     * will contain the checksum created with the provided algorithm for the original file. The checksum file will
-     * always be written in the same folder as the original file.
-     */
-    public void setChecksumFileAlgorithm(String checksumFileAlgorithm) {
-        this.checksumFileAlgorithm = checksumFileAlgorithm;
-    }
-
     /**
      * Configures the given message with the file which sets the body to the file object.
      */
@@ -1671,14 +1563,14 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
     protected String configureMoveOrPreMoveExpression(String expression) {
         // if the expression already have ${ } placeholders then pass it
         // unmodified
-        if (isSimpleLanguage(expression)) {
+        if (StringHelper.hasStartToken(expression, "simple")) {
             return expression;
         }
 
         // remove trailing slash
         expression = FileUtil.stripTrailingSeparator(expression);
 
-        StringBuilder sb = new StringBuilder(64);
+        StringBuilder sb = new StringBuilder();
 
         // if relative then insert start with the parent folder
         if (!isAbsolute(expression)) {
@@ -1787,7 +1679,7 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
         pattern = pattern.replaceFirst("\\$simple\\{file:name.noext\\}", FileUtil.stripExt(onlyName, true));
 
         // must be able to resolve all placeholders supported
-        if (isSimpleLanguage(pattern)) {
+        if (StringHelper.hasStartToken(pattern, "simple")) {
             throw new ExpressionIllegalSyntaxException(fileName + ". Cannot resolve reminder: " + pattern);
         }
 
@@ -1817,7 +1709,7 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
         String pattern = getDoneFileName();
         StringHelper.notEmpty(pattern, "doneFileName", pattern);
 
-        if (!isSimpleLanguage(pattern)) {
+        if (!StringHelper.hasStartToken(pattern, "simple")) {
             // no tokens, so just match names directly
             return pattern.equals(fileName);
         }
@@ -1834,7 +1726,7 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
         pattern = pattern.replaceFirst("\\$simple\\{file:name.noext\\}", "");
 
         // must be able to resolve all placeholders supported
-        if (isSimpleLanguage(pattern)) {
+        if (StringHelper.hasStartToken(pattern, "simple")) {
             throw new ExpressionIllegalSyntaxException(fileName + ". Cannot resolve reminder: " + pattern);
         }
 
@@ -1843,10 +1735,6 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
         } else {
             return fileName.endsWith(pattern);
         }
-    }
-
-    private static boolean isSimpleLanguage(String pattern) {
-        return StringHelper.hasStartToken(pattern, "simple");
     }
 
     @Override
@@ -1873,13 +1761,13 @@ public abstract class GenericFileEndpoint<T> extends ScheduledPollEndpoint imple
 
         if (antInclude != null) {
             if (antFilter == null) {
-                antFilter = new AntFilter();
+                antFilter = new AntPathMatcherGenericFileFilter<>();
             }
             antFilter.setIncludes(antInclude);
         }
         if (antExclude != null) {
             if (antFilter == null) {
-                antFilter = new AntFilter();
+                antFilter = new AntPathMatcherGenericFileFilter<>();
             }
             antFilter.setExcludes(antExclude);
         }

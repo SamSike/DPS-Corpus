@@ -17,6 +17,7 @@
 package org.apache.camel.impl.engine;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.net.URL;
 
 import org.apache.camel.spi.ClassResolver;
@@ -42,7 +43,7 @@ public class DefaultFactoryFinderTest {
     final DefaultFactoryFinder factoryFinder = new DefaultFactoryFinder(new DefaultClassResolver(), TEST_RESOURCE_PATH);
 
     @Test
-    public void shouldComplainIfClassResolverCannotResolveClass() {
+    public void shouldComplainIfClassResolverCannotResolveClass() throws IOException {
         final ClassResolver classResolver = mock(ClassResolver.class);
 
         final String properties = "class=" + TestImplA.class.getName();
@@ -58,7 +59,7 @@ public class DefaultFactoryFinderTest {
     }
 
     @Test
-    public void shouldCacheFailedAttemptToResolveClass() {
+    public void shouldCacheFailedAttemptToResolveClass() throws IOException {
         final ClassResolver classResolver = mock(ClassResolver.class);
 
         final String properties = "class=" + TestImplA.class.getName();
@@ -77,42 +78,44 @@ public class DefaultFactoryFinderTest {
     }
 
     @Test
-    public void shouldComplainIfInstanceTypeIsNotAsExpected() {
+    public void shouldComplainIfInstanceTypeIsNotAsExpected() throws ClassNotFoundException, IOException {
         final Injector injector = mock(Injector.class);
 
         final TestImplA expected = new TestImplA();
         when(injector.newInstance(TestImplA.class, false)).thenReturn(expected);
 
-        Exception e = assertThrows(Exception.class,
-                () -> factoryFinder.newInstance("TestImplA", TestImplB.class),
-                "Exception should have been thrown");
-
-        assertInstanceOf(ClassCastException.class, e);
+        try {
+            factoryFinder.newInstance("TestImplA", TestImplB.class);
+            fail("Exception should have been thrown");
+        } catch (Exception e) {
+            assertTrue(e instanceof ClassCastException);
+        }
     }
 
     @Test
-    public void shouldComplainIfUnableToCreateNewInstances() {
+    public void shouldComplainIfUnableToCreateNewInstances() throws ClassNotFoundException, IOException {
         assertFalse(factoryFinder.newInstance("TestImplX").isPresent());
     }
 
     @Test
-    public void shouldComplainNoClassKeyInPropertyFile() {
-        Exception e = assertThrows(Exception.class,
-                () -> factoryFinder.findClass("TestImplNoProperty"),
-                "NoFactoryAvailableException should have been thrown");
-
-        assertEquals("Expected property is missing: class", e.getCause().getMessage());
+    public void shouldComplainNoClassKeyInPropertyFile() throws ClassNotFoundException {
+        try {
+            factoryFinder.findClass("TestImplNoProperty");
+            fail("NoFactoryAvailableException should have been thrown");
+        } catch (Exception e) {
+            assertEquals("Expected property is missing: class", e.getCause().getMessage());
+        }
     }
 
     @Test
-    public void shouldCreateNewInstances() {
+    public void shouldCreateNewInstances() throws ClassNotFoundException, IOException {
         final Object instance = factoryFinder.newInstance("TestImplA").get();
 
         assertTrue(TestImplA.class.isInstance(instance));
     }
 
     @Test
-    public void shouldFindSingleClass() {
+    public void shouldFindSingleClass() throws ClassNotFoundException, IOException {
         final Class<?> clazz = factoryFinder.findClass("TestImplA").orElse(null);
 
         assertEquals(TestImplA.class, clazz);

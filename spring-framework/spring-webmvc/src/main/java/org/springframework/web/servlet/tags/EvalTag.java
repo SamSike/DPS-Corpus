@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,8 @@ package org.springframework.web.servlet.tags;
 
 import java.io.IOException;
 
-import jakarta.el.ELContext;
 import jakarta.servlet.jsp.JspException;
 import jakarta.servlet.jsp.PageContext;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.context.expression.EnvironmentAccessor;
@@ -36,6 +34,7 @@ import org.springframework.expression.TypedValue;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.expression.spel.support.StandardTypeConverter;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.util.JavaScriptUtils;
 import org.springframework.web.util.TagUtils;
@@ -74,7 +73,7 @@ import org.springframework.web.util.TagUtils;
  * <td>false</td>
  * <td>true</td>
  * <td>Set JavaScript escaping for this tag, as a boolean value.
- * Default is {@code false}.</td>
+ * Default is false.</td>
  * </tr>
  * <tr>
  * <td>scope</td>
@@ -97,7 +96,6 @@ import org.springframework.web.util.TagUtils;
  *
  * @author Keith Donald
  * @author Juergen Hoeller
- * @author Sam Brannen
  * @since 3.0.1
  */
 @SuppressWarnings("serial")
@@ -113,9 +111,11 @@ public class EvalTag extends HtmlEscapingAwareTag {
 
 	private final ExpressionParser expressionParser = new SpelExpressionParser();
 
-	private @Nullable Expression expression;
+	@Nullable
+	private Expression expression;
 
-	private @Nullable String var;
+	@Nullable
+	private String var;
 
 	private int scope = PageContext.PAGE_SCOPE;
 
@@ -200,7 +200,8 @@ public class EvalTag extends HtmlEscapingAwareTag {
 		return context;
 	}
 
-	private @Nullable ConversionService getConversionService(PageContext pageContext) {
+	@Nullable
+	private ConversionService getConversionService(PageContext pageContext) {
 		return (ConversionService) pageContext.getRequest().getAttribute(ConversionService.class.getName());
 	}
 
@@ -210,16 +211,17 @@ public class EvalTag extends HtmlEscapingAwareTag {
 
 		private final PageContext pageContext;
 
-		private final @Nullable ELContext elContext;
-
+		@Nullable
+		private final jakarta.servlet.jsp.el.VariableResolver variableResolver;
 
 		public JspPropertyAccessor(PageContext pageContext) {
 			this.pageContext = pageContext;
-			this.elContext = pageContext.getELContext();
+			this.variableResolver = pageContext.getVariableResolver();
 		}
 
 		@Override
-		public Class<?> @Nullable [] getSpecificTargetClasses() {
+		@Nullable
+		public Class<?>[] getSpecificTargetClasses() {
 			return null;
 		}
 
@@ -248,12 +250,13 @@ public class EvalTag extends HtmlEscapingAwareTag {
 			throw new UnsupportedOperationException();
 		}
 
-		private @Nullable Object resolveImplicitVariable(String name) throws AccessException {
-			if (this.elContext == null) {
+		@Nullable
+		private Object resolveImplicitVariable(String name) throws AccessException {
+			if (this.variableResolver == null) {
 				return null;
 			}
 			try {
-				return this.elContext.getELResolver().getValue(this.elContext, null, name);
+				return this.variableResolver.resolveVariable(name);
 			}
 			catch (Exception ex) {
 				throw new AccessException(

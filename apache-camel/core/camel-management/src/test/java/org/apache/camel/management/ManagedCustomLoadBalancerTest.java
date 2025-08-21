@@ -36,8 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ManagedCustomLoadBalancerTest extends ManagementTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("myBalancer", new MyLoadBalancer());
         return answer;
     }
@@ -71,10 +71,10 @@ public class ManagedCustomLoadBalancerTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .loadBalance().custom("myBalancer").id("mysend")
                         .to("mock:foo", "mock:bar");

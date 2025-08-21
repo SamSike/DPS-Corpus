@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -66,19 +66,6 @@ implements
 
     static final UnqualifiedName NO_NAME          = new UnqualifiedName("");
 
-    static final Name name(Quoted quoted, String name) {
-        switch (quoted) {
-            case QUOTED:
-                return DSL.quotedName(name);
-            case UNQUOTED:
-                return DSL.unquotedName(name);
-            case SYSTEM:
-                return DSL.systemName(name);
-            default:
-                return DSL.name(name);
-        }
-    }
-
     @Override
     public final Name append(String name) {
         return append(new UnqualifiedName(name));
@@ -86,14 +73,17 @@ implements
 
     @Override
     public final Name append(Name name) {
-        if (name == null || name.empty())
-            return this;
-        else if (empty())
+        if (empty())
             return name;
-        else if (name instanceof UnqualifiedName last)
-            return new QualifiedName(this, last);
-        else
-            return append(name.qualifier()).append(name.unqualifiedName());
+        else if (name.empty())
+            return this;
+
+        Name[] p1 = parts();
+        Name[] p2 = name.parts();
+        Name[] array = new Name[p1.length + p2.length];
+        System.arraycopy(p1, 0, array, 0, p1.length);
+        System.arraycopy(p2, 0, array, p1.length, p2.length);
+        return new QualifiedName(array);
     }
 
     @Override
@@ -383,7 +373,7 @@ implements
 
         // [#1626] [#11126] NameImpl equality can be decided without executing the
         // rather expensive implementation of AbstractQueryPart.equals()
-        if (that instanceof AbstractName n) {
+        if (that instanceof AbstractName) { AbstractName n = (AbstractName) that;
 
             // [#11126] No need to access name arrays if not both names are equally qualified
             if (qualified() != n.qualified())

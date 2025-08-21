@@ -60,10 +60,10 @@ public class EvaluateExpressionProcessorTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").process(new EvaluateExpressionProcessor(body().prepend("Hello "))).to("mock:result");
 
                 from("direct:fail").process(new EvaluateExpressionProcessor(new Expression() {

@@ -22,6 +22,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.test.junit5.TestSupport.createDirectory;
@@ -31,12 +32,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HttpStreamCacheFileStopIssueTest extends BaseJettyTest {
 
-    private final String body = "12345678901234567890123456789012345678901234567890";
+    private String body = "12345678901234567890123456789012345678901234567890";
 
     @Override
-    public void doPreSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
         deleteDirectory("target/cachedir");
         createDirectory("target/cachedir");
+        super.setUp();
     }
 
     @Test

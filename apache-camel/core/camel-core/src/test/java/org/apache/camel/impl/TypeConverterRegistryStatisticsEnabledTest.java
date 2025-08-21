@@ -22,14 +22,13 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spi.TypeConverterRegistry;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TypeConverterRegistryStatisticsEnabledTest extends ContextTestSupport {
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        CamelContext context = new DefaultCamelContext(false);
+        CamelContext context = super.createCamelContext();
         context.setTypeConverterStatisticsEnabled(true);
         return context;
     }
@@ -44,35 +43,40 @@ public class TypeConverterRegistryStatisticsEnabledTest extends ContextTestSuppo
         assertMockEndpointsSatisfied();
 
         TypeConverterRegistry reg = context.getTypeConverterRegistry();
+        assertTrue(reg.getStatistics().isStatisticsEnabled(), "Should be enabled");
 
-        long failed = reg.getStatistics().getFailedCounter();
-        assertEquals(0, (int) failed);
-        long miss = reg.getStatistics().getMissCounter();
-        assertEquals(0, (int) miss);
+        Long failed = reg.getStatistics().getFailedCounter();
+        assertEquals(0, failed.intValue());
+        Long miss = reg.getStatistics().getMissCounter();
+        assertEquals(4, miss.intValue()); // stream caching misses
 
-        assertThrows(Exception.class, () -> template.sendBody("direct:start", "foo"),
-                "Should have thrown exception");
+        try {
+            template.sendBody("direct:start", "foo");
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // expected
+        }
 
         // should now have a failed
         failed = reg.getStatistics().getFailedCounter();
-        assertEquals(1, (int) failed);
+        assertEquals(1, failed.intValue());
         miss = reg.getStatistics().getMissCounter();
-        assertEquals(0, (int) miss);
+        assertEquals(5, miss.intValue()); // stream caching misses
 
         // reset
         reg.getStatistics().reset();
 
         failed = reg.getStatistics().getFailedCounter();
-        assertEquals(0, (int) failed);
+        assertEquals(0, failed.intValue());
         miss = reg.getStatistics().getMissCounter();
-        assertEquals(0, (int) miss);
+        assertEquals(0, miss.intValue());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo").convertBodyTo(int.class).to("mock:a");
             }
         };

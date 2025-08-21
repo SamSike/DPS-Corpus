@@ -17,8 +17,6 @@
 package org.apache.camel.builder;
 
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -38,8 +36,7 @@ import org.apache.camel.support.builder.Namespaces;
  * part of the DSL
  */
 public class ExpressionClause<T> implements Expression, Predicate {
-    private final ExpressionClauseSupport<T> delegate;
-    private final Lock lock = new ReentrantLock();
+    private ExpressionClauseSupport<T> delegate;
     private volatile Expression expr;
     private volatile Predicate pred;
 
@@ -370,7 +367,6 @@ public class ExpressionClause<T> implements Expression, Predicate {
     /**
      * Returns a JOOR expression value builder
      */
-    @Deprecated(since = "4.3.0")
     public T joor(String value) {
         return delegate.joor(value);
     }
@@ -378,23 +374,8 @@ public class ExpressionClause<T> implements Expression, Predicate {
     /**
      * Returns a JOOR expression value builder
      */
-    @Deprecated(since = "4.3.0")
     public T joor(String value, Class<?> resultType) {
         return delegate.joor(value, resultType);
-    }
-
-    /**
-     * Returns a Java expression value builder
-     */
-    public T java(String value) {
-        return delegate.java(value);
-    }
-
-    /**
-     * Returns a Java expression value builder
-     */
-    public T java(String value, Class<?> resultType) {
-        return delegate.java(value, resultType);
     }
 
     /**
@@ -416,6 +397,54 @@ public class ExpressionClause<T> implements Expression, Predicate {
      */
     public T jq(String value, Class<?> resultType) {
         return delegate.jq(value, resultType);
+    }
+
+    /**
+     * Evaluates a <a href="http://camel.apache.org/jq.html">JQ expression</a>
+     *
+     * @param  value                the expression to be evaluated
+     * @param  headerOrPropertyName the name of the header or property to apply the expression to
+     * @return                      the builder to continue processing the DSL
+     */
+    public T jq(String value, String headerOrPropertyName) {
+        return delegate.jq(value, headerOrPropertyName);
+    }
+
+    /**
+     * Evaluates a <a href="http://camel.apache.org/jq.html">JQ expression</a>
+     *
+     * @param  value        the expression to be evaluated
+     * @param  headerName   the name of the header to apply the expression to
+     * @param  propertyName the name of the property to apply the expression to
+     * @return              the builder to continue processing the DSL
+     */
+    public T jq(String value, String headerName, String propertyName) {
+        return delegate.jq(value, headerName, propertyName);
+    }
+
+    /**
+     * Evaluates a <a href="http://camel.apache.org/jq.html">JQ expression</a>
+     *
+     * @param  value                the expression to be evaluated
+     * @param  resultType           the return type expected by the expression
+     * @param  headerOrPropertyName the name of the header or property to apply the expression to
+     * @return                      the builder to continue processing the DSL
+     */
+    public T jq(String value, Class<?> resultType, String headerOrPropertyName) {
+        return delegate.jq(value, resultType, headerOrPropertyName);
+    }
+
+    /**
+     * Evaluates a <a href="http://camel.apache.org/jq.html">JQ expression</a>
+     *
+     * @param  value        the expression to be evaluated
+     * @param  resultType   the return type expected by the expression
+     * @param  headerName   the name of the header to apply the expression to
+     * @param  propertyName the name of the property to apply the expression to
+     * @return              the builder to continue processing the DSL
+     */
+    public T jq(String value, Class<?> resultType, String headerName, String propertyName) {
+        return delegate.jq(value, resultType, headerName, propertyName);
     }
 
     /**
@@ -487,6 +516,19 @@ public class ExpressionClause<T> implements Expression, Predicate {
     }
 
     /**
+     * Evaluates a <a href="http://camel.apache.org/jsonpath.html">Json Path expression</a>
+     *
+     * @param  text               the expression to be evaluated
+     * @param  suppressExceptions whether to suppress exceptions such as PathNotFoundException
+     * @param  resultType         the return type expected by the expression
+     * @param  headerName         the name of the header to apply the expression to
+     * @return                    the builder to continue processing the DSL
+     */
+    public T jsonpath(String text, boolean suppressExceptions, Class<?> resultType, String headerName) {
+        return delegate.jsonpath(text, suppressExceptions, true, resultType, headerName);
+    }
+
+    /**
      * Evaluates a <a href="http://camel.apache.org/jsonpath.html">Json Path expression</a> with writeAsString enabled.
      *
      * @param  text the expression to be evaluated
@@ -528,6 +570,18 @@ public class ExpressionClause<T> implements Expression, Predicate {
      */
     public T jsonpathWriteAsString(String text, boolean suppressExceptions, Class<?> resultType) {
         return delegate.jsonpathWriteAsString(text, suppressExceptions, resultType);
+    }
+
+    /**
+     * Evaluates a <a href="http://camel.apache.org/jsonpath.html">Json Path expression</a> with writeAsString enabled.
+     *
+     * @param  text               the expression to be evaluated
+     * @param  suppressExceptions whether to suppress exceptions such as PathNotFoundException
+     * @param  headerName         the name of the header to apply the expression to
+     * @return                    the builder to continue processing the DSL
+     */
+    public T jsonpathWriteAsString(String text, boolean suppressExceptions, String headerName) {
+        return delegate.jsonpathWriteAsString(text, suppressExceptions, true, headerName);
     }
 
     /**
@@ -668,7 +722,7 @@ public class ExpressionClause<T> implements Expression, Predicate {
      * @return           the builder to continue processing the DSL
      */
     public T tokenize(String token, boolean regex, boolean skipFirst) {
-        return delegate.tokenize(token, regex, null, skipFirst);
+        return delegate.tokenize(token, null, regex, skipFirst);
     }
 
     /**
@@ -705,7 +759,7 @@ public class ExpressionClause<T> implements Expression, Predicate {
      * @return           the builder to continue processing the DSL
      */
     public T tokenize(String token, boolean regex, int group, boolean skipFirst) {
-        return delegate.tokenize(token, regex, group, skipFirst);
+        return delegate.tokenize(token, null, regex, group, skipFirst);
     }
 
     /**
@@ -718,7 +772,20 @@ public class ExpressionClause<T> implements Expression, Predicate {
      * @return           the builder to continue processing the DSL
      */
     public T tokenize(String token, boolean regex, String group, boolean skipFirst) {
-        return delegate.tokenize(token, regex, group, skipFirst);
+        return delegate.tokenize(token, null, regex, group, skipFirst);
+    }
+
+    /**
+     * Evaluates a token expression on the message body
+     *
+     * @param  token     the token
+     * @param  regex     whether the token is a regular expression or not
+     * @param  group     to group by the given number
+     * @param  skipFirst whether to skip the first element
+     * @return           the builder to continue processing the DSL
+     */
+    public T tokenize(String token, boolean regex, int group, String groupDelimiter, boolean skipFirst) {
+        return delegate.tokenize(token, null, regex, "" + group, groupDelimiter, skipFirst);
     }
 
     /**
@@ -742,6 +809,29 @@ public class ExpressionClause<T> implements Expression, Predicate {
      */
     public T tokenize(String token, int group, boolean skipFirst) {
         return delegate.tokenize(token, group, skipFirst);
+    }
+
+    /**
+     * Evaluates a token expression on the given header
+     *
+     * @param  token      the token
+     * @param  headerName name of header to tokenize
+     * @return            the builder to continue processing the DSL
+     */
+    public T tokenize(String token, String headerName) {
+        return delegate.tokenize(token, headerName);
+    }
+
+    /**
+     * Evaluates a token expression on the given header
+     *
+     * @param  token      the token
+     * @param  headerName name of header to tokenize
+     * @param  regex      whether the token is a regular expression or not
+     * @return            the builder to continue processing the DSL
+     */
+    public T tokenize(String token, String headerName, boolean regex) {
+        return delegate.tokenize(token, headerName, regex);
     }
 
     /**
@@ -776,7 +866,7 @@ public class ExpressionClause<T> implements Expression, Predicate {
      * @return         the builder to continue processing the DSL
      */
     public T tokenizeXML(String tagName) {
-        return delegate.tokenizeXMLPair(tagName, null, null);
+        return tokenizeXML(tagName, null);
     }
 
     /**
@@ -798,7 +888,7 @@ public class ExpressionClause<T> implements Expression, Predicate {
      * @return                         the builder to continue processing the DSL
      */
     public T tokenizeXML(String tagName, String inheritNamespaceTagName) {
-        return delegate.tokenizeXMLPair(tagName, inheritNamespaceTagName, null);
+        return tokenizeXML(tagName, inheritNamespaceTagName, 0);
     }
 
     /**
@@ -811,16 +901,6 @@ public class ExpressionClause<T> implements Expression, Predicate {
      */
     public T tokenizeXML(String tagName, String inheritNamespaceTagName, int group) {
         return delegate.tokenizeXMLPair(tagName, inheritNamespaceTagName, group);
-    }
-
-    /**
-     * Evaluates a variable expression
-     *
-     * @param  name the variable name
-     * @return      the builder to continue processing the DSL
-     */
-    public T variable(String name) {
-        return delegate.variable(name);
     }
 
     public T xtokenize(String path, Namespaces namespaces) {
@@ -846,6 +926,18 @@ public class ExpressionClause<T> implements Expression, Predicate {
     }
 
     /**
+     * Evaluates an <a href="http://camel.apache.org/xpath.html">XPath expression</a> on the supplied header name's
+     * contents
+     *
+     * @param  text       the expression to be evaluated
+     * @param  headerName the name of the header to apply the expression to
+     * @return            the builder to continue processing the DSL
+     */
+    public T xpath(String text, String headerName) {
+        return delegate.xpath(text, headerName);
+    }
+
+    /**
      * Evaluates an <a href="http://camel.apache.org/xpath.html">XPath expression</a> with the specified result type
      *
      * @param  text       the expression to be evaluated
@@ -854,6 +946,19 @@ public class ExpressionClause<T> implements Expression, Predicate {
      */
     public T xpath(String text, Class<?> resultType) {
         return delegate.xpath(text, resultType);
+    }
+
+    /**
+     * Evaluates an <a href="http://camel.apache.org/xpath.html">XPath expression</a> with the specified result type on
+     * the supplied header name's contents
+     *
+     * @param  text       the expression to be evaluated
+     * @param  resultType the return type expected by the expression
+     * @param  headerName the name of the header to apply the expression to
+     * @return            the builder to continue processing the DSL
+     */
+    public T xpath(String text, Class<?> resultType, String headerName) {
+        return delegate.xpath(text, resultType, headerName);
     }
 
     /**
@@ -867,6 +972,20 @@ public class ExpressionClause<T> implements Expression, Predicate {
      */
     public T xpath(String text, Class<?> resultType, Namespaces namespaces) {
         return delegate.xpath(text, resultType, namespaces);
+    }
+
+    /**
+     * Evaluates an <a href="http://camel.apache.org/xpath.html">XPath expression</a> with the specified result type and
+     * set of namespace prefixes and URIs on the supplied header name's contents
+     *
+     * @param  text       the expression to be evaluated
+     * @param  resultType the return type expected by the expression
+     * @param  headerName the name of the header to apply the expression to
+     * @param  namespaces the namespace prefix and URIs to use
+     * @return            the builder to continue processing the DSL
+     */
+    public T xpath(String text, Class<?> resultType, Namespaces namespaces, String headerName) {
+        return delegate.xpath(text, resultType, namespaces, headerName);
     }
 
     /**
@@ -917,6 +1036,18 @@ public class ExpressionClause<T> implements Expression, Predicate {
     }
 
     /**
+     * Evaluates an <a href="http://camel.apache.org/xpath.html">XPath expression</a> on the supplied header name's
+     * contents
+     *
+     * @param  text       the expression to be evaluated
+     * @param  headerName the name of the header to apply the expression to
+     * @return            the builder to continue processing the DSL
+     */
+    public T xquery(String text, String headerName) {
+        return delegate.xquery(text, headerName);
+    }
+
+    /**
      * Evaluates an <a href="http://camel.apache.org/xquery.html">XQuery expression</a> with the specified result type
      *
      * @param  text       the expression to be evaluated
@@ -925,6 +1056,18 @@ public class ExpressionClause<T> implements Expression, Predicate {
      */
     public T xquery(String text, Class<?> resultType) {
         return delegate.xquery(text, resultType);
+    }
+
+    /**
+     * Evaluates an <a href="http://camel.apache.org/xquery.html">XQuery expression</a> with the specified result type
+     *
+     * @param  text       the expression to be evaluated
+     * @param  resultType the return type expected by the expression
+     * @param  headerName the name of the header to apply the expression to
+     * @return            the builder to continue processing the DSL
+     */
+    public T xquery(String text, Class<?> resultType, String headerName) {
+        return delegate.xquery(text, resultType, headerName);
     }
 
     /**
@@ -938,6 +1081,19 @@ public class ExpressionClause<T> implements Expression, Predicate {
      */
     public T xquery(String text, Class<?> resultType, Namespaces namespaces) {
         return delegate.xquery(text, resultType, namespaces);
+    }
+
+    /**
+     * Evaluates an <a href="http://camel.apache.org/xquery.html">XQuery expression</a> with the specified result type
+     *
+     * @param  text       the expression to be evaluated
+     * @param  resultType the return type expected by the expression
+     * @param  headerName the name of the header to apply the expression to
+     * @param  namespaces the namespace prefix and URIs to use
+     * @return            the builder to continue processing the DSL
+     */
+    public T xquery(String text, Class<?> resultType, Namespaces namespaces, String headerName) {
+        return delegate.xquery(text, resultType, namespaces, headerName);
     }
 
     /**
@@ -978,29 +1134,6 @@ public class ExpressionClause<T> implements Expression, Predicate {
     }
 
     /**
-     * Evaluates a <a href="http://camel.apache.org/wasm.html">Wasm expression</a>
-     *
-     * @param  functionName the name of the Wasm function to be evaluated
-     * @param  module       the Wasm module providing the expression function
-     * @return              the builder to continue processing the DSL
-     */
-    public T wasm(String functionName, String module) {
-        return delegate.wasm(functionName, module);
-    }
-
-    /**
-     * Evaluates a <a href="http://camel.apache.org/wasm.html">Wasm expression</a>
-     *
-     * @param  functionName the name of the Wasm function to be evaluated
-     * @param  module       the Wasm module providing the expression function
-     * @param  resultType   the return type expected by the expression
-     * @return              the builder to continue processing the DSL
-     */
-    public T wasm(String functionName, String module, Class<?> resultType) {
-        return delegate.wasm(functionName, module, resultType);
-    }
-
-    /**
      * Evaluates a given language name with the expression text
      *
      * @param  language   the name of the language
@@ -1025,8 +1158,7 @@ public class ExpressionClause<T> implements Expression, Predicate {
     @Override
     public void init(CamelContext context) {
         if (expr == null) {
-            lock.lock();
-            try {
+            synchronized (this) {
                 if (expr == null) {
                     Expression newExpression = getExpressionValue();
                     if (newExpression == null) {
@@ -1035,8 +1167,6 @@ public class ExpressionClause<T> implements Expression, Predicate {
                     newExpression.init(context);
                     expr = newExpression;
                 }
-            } finally {
-                lock.unlock();
             }
         }
     }
@@ -1044,8 +1174,7 @@ public class ExpressionClause<T> implements Expression, Predicate {
     @Override
     public void initPredicate(CamelContext context) {
         if (pred == null) {
-            lock.lock();
-            try {
+            synchronized (this) {
                 if (pred == null) {
                     Expression newExpression = getExpressionValue();
                     Predicate newPredicate;
@@ -1057,14 +1186,12 @@ public class ExpressionClause<T> implements Expression, Predicate {
                     newPredicate.initPredicate(context);
                     pred = newPredicate;
                 }
-            } finally {
-                lock.unlock();
             }
         }
     }
 
     @Override
-    public <U> U evaluate(Exchange exchange, Class<U> type) {
+    public <T> T evaluate(Exchange exchange, Class<T> type) {
         init(exchange.getContext());
         return expr.evaluate(exchange, type);
     }

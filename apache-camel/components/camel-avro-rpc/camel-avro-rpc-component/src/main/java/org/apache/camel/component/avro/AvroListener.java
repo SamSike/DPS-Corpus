@@ -29,6 +29,7 @@ import org.apache.avro.specific.SpecificData;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.component.avro.spi.AvroRpcHttpServerFactory;
 import org.apache.camel.spi.FactoryFinder;
 import org.apache.camel.support.ExchangeHelper;
@@ -47,7 +48,7 @@ public class AvroListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AvroListener.class);
 
-    private final ConcurrentMap<String, AvroConsumer> consumerRegistry = new ConcurrentHashMap<>();
+    private ConcurrentMap<String, AvroConsumer> consumerRegistry = new ConcurrentHashMap<>();
     private AvroConsumer defaultConsumer;
     private final Server server;
 
@@ -83,7 +84,7 @@ public class AvroListener {
             throws Exception {
         if (AVRO_HTTP_TRANSPORT.equalsIgnoreCase(configuration.getTransport().name())) {
             AvroRpcHttpServerFactory factory = camelContext
-                    .getCamelContextExtension()
+                    .adapt(ExtendedCamelContext.class)
                     .getFactoryFinder(FactoryFinder.DEFAULT_PATH)
                     .newInstance("avro-rpc-http-server-factory", AvroRpcHttpServerFactory.class)
                     .orElseThrow(() -> new IllegalStateException(

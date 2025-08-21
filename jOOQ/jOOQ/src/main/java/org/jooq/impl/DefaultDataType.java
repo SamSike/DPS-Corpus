@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,14 +37,9 @@
  */
 package org.jooq.impl;
 
-import static java.lang.Boolean.TRUE;
 import static java.util.Collections.unmodifiableCollection;
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
-// ...
-// ...
-import static org.jooq.SQLDialect.DUCKDB;
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
 import static org.jooq.SQLDialect.HSQLDB;
@@ -53,7 +48,6 @@ import static org.jooq.SQLDialect.MARIADB;
 import static org.jooq.SQLDialect.MYSQL;
 import static org.jooq.SQLDialect.POSTGRES;
 import static org.jooq.SQLDialect.SQLITE;
-import static org.jooq.SQLDialect.TRINO;
 import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.impl.CommentImpl.NO_COMMENT;
 import static org.jooq.impl.DSL.systemName;
@@ -90,8 +84,6 @@ import static org.jooq.impl.SQLDataType.TINYINT;
 import static org.jooq.impl.SQLDataType.VARBINARY;
 import static org.jooq.impl.SQLDataType.VARCHAR;
 import static org.jooq.impl.SQLDataType.XML;
-import static org.jooq.impl.Tools.NO_SUPPORT_TIME_PRECISION;
-import static org.jooq.impl.Tools.getRecordQualifier;
 import static org.jooq.tools.reflect.Reflect.wrapper;
 
 import java.math.BigDecimal;
@@ -102,7 +94,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 // ...
@@ -117,18 +109,13 @@ import org.jooq.Field;
 import org.jooq.Generator;
 import org.jooq.Name;
 import org.jooq.Nullability;
-// ...
 import org.jooq.QualifiedRecord;
-import org.jooq.QueryPart;
 import org.jooq.SQLDialect;
-import org.jooq.Scope;
-import org.jooq.exception.DataTypeException;
 import org.jooq.exception.MappingException;
 import org.jooq.exception.SQLDialectNotSupportedException;
 import org.jooq.impl.DefaultBinding.InternalBinding;
 import org.jooq.impl.QOM.GenerationLocation;
 import org.jooq.impl.QOM.GenerationOption;
-import org.jooq.tools.JooqLogger;
 import org.jooq.types.UByte;
 import org.jooq.types.UInteger;
 import org.jooq.types.ULong;
@@ -149,38 +136,21 @@ import org.jetbrains.annotations.ApiStatus.Internal;
 @Internal
 public class DefaultDataType<T> extends AbstractDataTypeX<T> {
 
-    private static final Set<SQLDialect>                        ENCODED_TIMESTAMP_PRECISION            = SQLDialect.supportedBy(HSQLDB, MARIADB);
-    private static final Set<SQLDialect>                        NO_SUPPORT_TIMESTAMP_PRECISION         = SQLDialect.supportedBy(FIREBIRD, MYSQL, SQLITE);
-    static final Set<SQLDialect>                                SUPPORT_POSTGRES_PREFIX_ARRAY_NOTATION = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
-    static final Set<SQLDialect>                                SUPPORT_POSTGRES_SUFFIX_ARRAY_NOTATION = SQLDialect.supportedBy(DUCKDB, POSTGRES, YUGABYTEDB);
-    static final Set<SQLDialect>                                SUPPORT_HSQLDB_ARRAY_NOTATION          = SQLDialect.supportedBy(H2, HSQLDB, POSTGRES, YUGABYTEDB);
-    static final Set<SQLDialect>                                SUPPORT_TRINO_ARRAY_NOTATION           = SQLDialect.supportedBy(CLICKHOUSE, TRINO);
-
-
-
-
+    private static final Set<SQLDialect>                        ENCODED_TIMESTAMP_PRECISION     = SQLDialect.supportedBy(HSQLDB, MARIADB);
+    private static final Set<SQLDialect>                        NO_SUPPORT_TIMESTAMP_PRECISION  = SQLDialect.supportedBy(FIREBIRD, MYSQL, SQLITE);
+    private static final Set<SQLDialect>                        SUPPORT_POSTGRES_ARRAY_NOTATION = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
+    private static final Set<SQLDialect>                        SUPPORT_HSQLDB_ARRAY_NOTATION   = SQLDialect.supportedBy(H2, HSQLDB);
 
     /**
      * A pattern for data type name normalisation.
      */
-    private static final Pattern                                P_NORMALISE                            = Pattern.compile("\"|\\.|\\s|\\(\\w+(\\s*,\\s*\\w+)*\\)|(NOT\\s*NULL)?");
-
-    /**
-     * A pattern for data type name normalisation.
-     */
-    private static final Pattern                                P_NULLABLE                             = Pattern.compile("^Nullable\\((.*)\\)$");
+    private static final Pattern                                NORMALISE_PATTERN = Pattern.compile("\"|\\.|\\s|\\(\\w+(\\s*,\\s*\\w+)*\\)|(NOT\\s*NULL)?");
 
     /**
      * A pattern to be used to replace all precision, scale, and length
      * information.
      */
-    private static final Pattern                                P_TYPE_NAME                            = Pattern.compile("\\([^)]*\\)");
-
-    /**
-     * A pattern to be used to extract all precision, scale, and length
-     * information.
-     */
-    private static final Pattern                                P_PRECISION_SCALE                      = Pattern.compile("\\(\\s*(\\d+)(?:\\s*,\\s*(\\d+))?\\s*\\)");
+    private static final Pattern                                TYPE_NAME_PATTERN = Pattern.compile("\\([^)]*\\)");
 
     // -------------------------------------------------------------------------
     // Data type caches
@@ -288,8 +258,6 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
     private final String                                        typeName;
 
     private final Nullability                                   nullability;
-    private final boolean                                       hidden;
-    private final boolean                                       redacted;
     private final boolean                                       readonly;
     private final Generator<?, ?, T>                            generatedAlwaysAs;
     private final GenerationOption                              generationOption;
@@ -350,16 +318,8 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
         this(dialect, null, type, systemName(typeName), typeName, castTypeName, null, null, null, Nullability.DEFAULT, null);
     }
 
-    DefaultDataType(SQLDialect dialect, Class<T> type, String typeName, Nullability nullability) {
-        this(dialect, null, type, systemName(typeName), typeName, typeName, null, null, null, nullability, null);
-    }
-
     DefaultDataType(SQLDialect dialect, Class<T> type, Name qualifiedTypeName) {
-        this(dialect, null, type, qualifiedTypeName, null, null, null, null, null, Nullability.DEFAULT, null);
-    }
-
-    DefaultDataType(SQLDialect dialect, DataType<T> type, Name qualifiedTypeName) {
-        this(dialect, type, type.getType(), qualifiedTypeName, null, null, null, null, null, Nullability.DEFAULT, null);
+        this(dialect, null, type, qualifiedTypeName, qualifiedTypeName.last(), null, null, null, null, Nullability.DEFAULT, null);
     }
 
     DefaultDataType(SQLDialect dialect, Class<T> type, Binding<?, T> binding, Name qualifiedTypeName, String typeName, String castTypeName, Integer precision, Integer scale, Integer length, Nullability nullability, Field<T> defaultValue) {
@@ -371,15 +331,11 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
     }
 
     DefaultDataType(SQLDialect dialect, DataType<T> sqlDataType, Class<T> type, Binding<?, T> binding, Name qualifiedTypeName, String typeName, String castTypeName, Integer precision, Integer scale, Integer length, Nullability nullability, Field<T> defaultValue) {
-        this(dialect, sqlDataType, type, binding, qualifiedTypeName, typeName, castTypeName, precision, scale, length, nullability, false, false, false, null, GenerationOption.DEFAULT, GenerationLocation.SERVER, null, null, false, defaultValue);
+        this(dialect, sqlDataType, type, binding, qualifiedTypeName, typeName, castTypeName, precision, scale, length, nullability, false, null, GenerationOption.DEFAULT, GenerationLocation.SERVER, null, null, false, defaultValue);
     }
 
-    DefaultDataType(SQLDialect dialect, DataType<T> sqlDataType, Class<T> type, Binding<?, T> binding, Name qualifiedTypeName, String typeName, String castTypeName, Integer precision, Integer scale, Integer length, Nullability nullability, boolean hidden, boolean redacted, boolean readonly, Generator<?, ?, T> generatedAlwaysAs, GenerationOption generationOption, GenerationLocation generationLocation, Collation collation, CharacterSet characterSet, boolean identity, Field<T> defaultValue) {
+    DefaultDataType(SQLDialect dialect, DataType<T> sqlDataType, Class<T> type, Binding<?, T> binding, Name qualifiedTypeName, String typeName, String castTypeName, Integer precision, Integer scale, Integer length, Nullability nullability, boolean readonly, Generator<?, ?, T> generatedAlwaysAs, GenerationOption generationOption, GenerationLocation generationLocation, Collation collation, CharacterSet characterSet, boolean identity, Field<T> defaultValue) {
         super(qualifiedTypeName, NO_COMMENT);
-
-        // [#13934] Patch parameters
-        if (typeName == null)
-            typeName = qualifiedTypeName.toString();
 
         // Initialise final instance members
         // ---------------------------------
@@ -389,20 +345,18 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
         // [#858] [#11086] SQLDataTypes should reference themselves for more convenience
         this.sqlDataType = (dialect == null && sqlDataType == null) ? this : sqlDataType;
         this.uType = type;
-        this.typeName = P_TYPE_NAME.matcher(typeName).replaceAll("").trim();
+        this.typeName = TYPE_NAME_PATTERN.matcher(typeName).replaceAll("").trim();
         this.castTypeName = castTypeName == null ? this.typeName : castTypeName;
 
-        String[] split = P_TYPE_NAME.split(castTypeName == null ? typeName : castTypeName);
+        String[] split = TYPE_NAME_PATTERN.split(castTypeName == null ? typeName : castTypeName);
         this.castTypePrefix = split.length > 0 ? split[0] : "";
         this.castTypeSuffix = split.length > 1 ? split[1] : "";
 
-        this.nullability = nullabilityDefault(nullability);
-        this.hidden = hidden;
-        this.redacted = redacted;
+        this.nullability = nullability == null ? Nullability.DEFAULT : nullability;
         this.readonly = readonly;
         this.generatedAlwaysAs = generatedAlwaysAs;
-        this.generationOption = generationOptionDefault(generationOption);
-        this.generationLocation = generationLocationDefault(generationLocation);
+        this.generationOption = generationOption == null ? GenerationOption.DEFAULT : generationOption;
+        this.generationLocation = generationLocation == null ? GenerationLocation.SERVER : generationLocation;
         this.collation = collation;
         this.characterSet = characterSet;
         this.identity = identity;
@@ -419,7 +373,7 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
 
         // [#3225] Avoid normalisation if not necessary
         if (!TYPES_BY_NAME[ordinal].containsKey(typeName.toUpperCase()))
-            TYPES_BY_NAME[ordinal].putIfAbsent(DefaultDataType.normalise(dialect, typeName), this);
+            TYPES_BY_NAME[ordinal].putIfAbsent(DefaultDataType.normalise(typeName), this);
 
         TYPES_BY_TYPE[ordinal].putIfAbsent(type, this);
         if (sqlDataType != null)
@@ -437,18 +391,6 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
             getArrayDataType();
     }
 
-    static final Nullability nullabilityDefault(Nullability nullability) {
-        return nullability == null ? Nullability.DEFAULT : nullability;
-    }
-
-    static final GenerationLocation generationLocationDefault(GenerationLocation generationLocation) {
-        return generationLocation == null ? GenerationLocation.SERVER : generationLocation;
-    }
-
-    static final GenerationOption generationOptionDefault(GenerationOption generationOption) {
-        return generationOption == null ? GenerationOption.DEFAULT : generationOption;
-    }
-
     /**
      * [#7811] Allow for subtypes to override the constructor
      */
@@ -458,8 +400,6 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
         Integer newScale,
         Integer newLength,
         Nullability newNullability,
-        boolean newHidden,
-        boolean newRedacted,
         boolean newReadonly,
         Generator<?, ?, T> newGeneratedAlwaysAs,
         GenerationOption newGenerationOption,
@@ -475,8 +415,6 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
             newScale,
             newLength,
             newNullability,
-            newHidden,
-            newRedacted,
             newReadonly,
             newGeneratedAlwaysAs,
             newGenerationOption,
@@ -497,8 +435,6 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
         Integer scale,
         Integer length,
         Nullability nullability,
-        boolean hidden,
-        boolean redacted,
         boolean readonly,
         Generator<?, ?, T> generatedAlwaysAs,
         GenerationOption generationOption,
@@ -519,13 +455,11 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
         this.castTypePrefix = t.castTypePrefix0();
         this.castTypeSuffix = t.castTypeSuffix0();
 
-        this.nullability = nullabilityDefault(nullability);
-        this.hidden = hidden;
-        this.redacted = redacted;
+        this.nullability = nullability;
         this.readonly = readonly;
         this.generatedAlwaysAs = generatedAlwaysAs;
-        this.generationOption = generationOptionDefault(generationOption);
-        this.generationLocation = generationLocationDefault(generationLocation);
+        this.generationOption = generationOption;
+        this.generationLocation = generationLocation;
         this.collation = collation;
         this.characterSet = characterSet;
         this.identity = identity;
@@ -558,16 +492,6 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
     @Override
     public final Nullability nullability() {
         return nullability;
-    }
-
-    @Override
-    public final boolean hidden() {
-        return hidden;
-    }
-
-    @Override
-    public final boolean redacted() {
-        return redacted;
     }
 
     @Override
@@ -650,7 +574,7 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
 
                 // ... and then, set them back to the original value
                 // [#2710] TODO: Remove this logic along with cached data types
-                return dataType.construct(precision, scale, length, nullability, hidden, redacted, readonly, generatedAlwaysAs, generationOption, generationLocation, collation, characterSet, identity, defaultValue);
+                return dataType.construct(precision, scale, length, nullability, readonly, generatedAlwaysAs, generationOption, generationLocation, collation, characterSet, identity, defaultValue);
         }
 
         // If this is already the dialect's specific data type, return this
@@ -736,17 +660,11 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
 
         // [#3225] Normalise only if necessary
         if (result == null) {
-            result = TYPES_BY_NAME[ordinal].get(normalised = DefaultDataType.normalise(dialect, typeName));
+            result = TYPES_BY_NAME[ordinal].get(normalised = DefaultDataType.normalise(typeName));
 
-            // UDT data types and built-in array data types are registered using DEFAULT
+            // UDT data types and others are registered using DEFAULT
             if (result == null) {
                 result = TYPES_BY_NAME[SQLDialect.DEFAULT.ordinal()].get(normalised);
-
-                // [#13107] [#15476] ArrayDataType of BuiltInDataType are registered eagerly for
-                //                   historic reasons, so if the component data type has length,
-                //                   precision, or scale, we'll ignore the pre-registered data type.
-                boolean arrayCheck = result == null
-                    || result.isArray() && hasLengthPrecisionOrScale(result.getArrayComponentDataType());
 
                 // [#9797] INT = INTEGER alias in case dialect specific information is not available
                 // [#5713] TODO: A more generic type aliasing system would be useful, in general!
@@ -754,25 +672,18 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
                     result = TYPES_BY_NAME[SQLDialect.DEFAULT.ordinal()].get("INTEGER");
 
                 // [#4065] PostgreSQL reports array types as _typename, e.g. _varchar
-                else if (arrayCheck && SUPPORT_POSTGRES_PREFIX_ARRAY_NOTATION.contains(dialect) && typeName.charAt(0) == '_')
-                    result = getDataType(dialect, typeName.substring(1)).getArrayDataType();
-
-                // [#8545] CockroachDB is a little different from PostgreSQL. We're reading crdb_sql_type rather
-                //         than data_type / udt_name from information_schema.columns
-                else if (arrayCheck && SUPPORT_POSTGRES_SUFFIX_ARRAY_NOTATION.contains(dialect) && typeName.endsWith("[]"))
-                    result = getDataType(dialect, typeName.substring(0, typeName.length() - 2)).getArrayDataType();
+                else if (result == null && SUPPORT_POSTGRES_ARRAY_NOTATION.contains(dialect) && normalised.charAt(0) == '_')
+                    result = getDataType(dialect, normalised.substring(1)).getArrayDataType();
 
                 // [#6466] HSQLDB reports array types as XYZARRAY. H2 should, too
-                else if (arrayCheck && SUPPORT_HSQLDB_ARRAY_NOTATION.contains(dialect) && upper.endsWith(" ARRAY"))
+                else if (result == null && SUPPORT_HSQLDB_ARRAY_NOTATION.contains(dialect) && upper.endsWith(" ARRAY"))
                     result = getDataType(dialect, typeName.substring(0, typeName.length() - 6)).getArrayDataType();
 
                 // [#9609] H2 might still report an untyped array, too
-                else if (arrayCheck && SUPPORT_HSQLDB_ARRAY_NOTATION.contains(dialect) && upper.equals("ARRAY"))
+                else if (result == null && SUPPORT_HSQLDB_ARRAY_NOTATION.contains(dialect) && upper.equals("ARRAY"))
                     result = SQLDataType.OTHER.getArrayDataType();
 
-                // [#11485] Trino lists arrays as array(component_type)
-                else if (arrayCheck && SUPPORT_TRINO_ARRAY_NOTATION.contains(dialect) && upper.startsWith("ARRAY("))
-                    result = getDataType(dialect, typeName.substring(6, typeName.length() - 1)).getArrayDataType();
+
 
 
 
@@ -786,26 +697,7 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
             }
         }
 
-        // [#11311] [#15476] Support VARCHAR(10) or DECIMAL(20, 10) type names here
-        if (hasLengthPrecisionOrScale(result)) {
-            Matcher m = P_PRECISION_SCALE.matcher(typeName);
-
-            if (m.find()) {
-                String g1 = m.group(1);
-                String g2 = m.group(2);
-
-                int i1 = Integer.parseInt(g1);
-                int i2 = g2 != null ? Integer.parseInt(g2) : 0;
-
-                result = patchPrecisionAndScale(dialect, i1, i2, result);
-            }
-        }
-
         return result;
-    }
-
-    private static final boolean hasLengthPrecisionOrScale(DataType<?> result) {
-        return result.hasLength() || result.hasPrecision();
     }
 
     public static final DataType<?> getDataType(SQLDialect dialect, SQLType sqlType) {
@@ -886,80 +778,14 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
         return getDataType(dialect, type, null);
     }
 
-    private static final JooqLogger getDataType = JooqLogger.getLogger(DefaultDataType.class, "getDataType", 5);
-    private static final JooqLogger getDataTypeAccess = JooqLogger.getLogger(DefaultDataType.class, "getDataTypeAccess", 50);
-    private static final class DiscouragedStaticTypeRegistryUsage extends RuntimeException {}
-
     public static final <T> DataType<T> getDataType(SQLDialect dialect, Class<T> type, DataType<T> fallbackDataType) {
-        return getDataType0(dialect, type, fallbackDataType);
-    }
-
-    static final <T> DataType<T> check(DataType<T> result) {
-
-        // [#5713] [#15286] TODO: Move this to a dynamic type registry and make warning configurable
-        if (LegacyConvertedDataType.isInstance(result)) {
-            if (getDataType.isWarnEnabled())
-                getDataType.warn("Static type registry", """
-                    The deprecated static type registry was being accessed for a non-built-in data type:
-
-                    {result}
-
-                    It is strongly recommended not looking up DataType<U> references for user-defined types from
-                    Class<U> references by relying on the internal static type registry. For example, avoid calling
-                    DSL.val(Object) or DSL.val(Object, Class), and call DSL.val(Object, DataType), or
-                    DSL.val(Object, Field) instead, providing an explicit DataType reference to jOOQ if your
-                    DataType uses a Converter or a Binding.
-
-                    The same is true for plain SQL templates, such as DSL.condition("a = ?", userDefinedValue),
-                    which should be replaced by explicit type usage, such as
-                    DSL.condition("a = ?", DSL.val(userDefinedValue, myType))
-
-                    Note, despite the above, in many cases, the user defined type can be inferred correctly,
-                    implicitly by jOOQ, e.g. when writing:
-
-                    - TABLE.COLUMN.eq(userDefinedValue)
-
-                    In those cases, providing an explicit type reference is unnecessary. If it is necessary, such a
-                    DataType reference can be obtained, for example, using:
-
-                    - Generated TABLE.COLUMN.getDataType(), if you attached a Converter/Binding to generated code
-                    - From a base type, e.g. SQLDataType.VARCHAR.asConvertedDataType(converterOrBinding)
-
-                    If the source of the warning isn't clear due to query complexity, you can turn on the following
-                    system property, which will enable warning logs when the static type registry is accessed, e.g.
-                    at bind value construction time, before this warning here is rendered at bind value rendering
-                    time:
-
-                    -Dorg.jooq.debug-log-on-discouraged-static-type-registry-access=true
-
-                    If you think jOOQ should be able to infer your user type in your particular query, or if you
-                    struggle to address this issue, please report a bug/support request here: https://jooq.org/bug
-
-                    More information here:
-                    https://www.jooq.org/doc/latest/manual/sql-execution/fetching/data-type-lookups/
-                    """.replace("{result}", "" + result), new DiscouragedStaticTypeRegistryUsage());
-
-            // [#16090] [#16425]
-            // An undocumented flag to throw the logged exception to help with faster fixing of this problem
-            // Users should not rely on this flag as it may be removed without announcement when it isn't needed anymore.
-            if ("true".equals(System.getProperty("org.jooq.throw-on-discouraged-static-type-registry-access")))
-                throw new DiscouragedStaticTypeRegistryUsage();
-        }
-
-        if (result instanceof ArrayDataType<?> a)
-            check(a.elementType);
-
-        return result;
-    }
-
-    private static final <T> DataType<T> getDataType0(SQLDialect dialect, Class<T> type, DataType<T> fallbackDataType) {
 
         // Treat primitive types the same way as their respective wrapper types
         type = wrapper(type);
 
         // Recurse for arrays
         if (byte[].class != type && type.isArray()) {
-            return (DataType<T>) getDataType(dialect, (Class<T>) type.getComponentType(), fallbackDataType).getArrayDataType();
+            return (DataType<T>) getDataType(dialect, type.getComponentType()).getArrayDataType();
         }
 
         // Base types are registered statically
@@ -976,7 +802,7 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
 
                     // [#7174] PostgreSQL table records can be function argument types
                     if (QualifiedRecord.class.isAssignableFrom(type))
-                        return (DataType<T>) getRecordQualifier(type).getDataType();
+                        return (DataType<T>) ((QualifiedRecord<?>) type.getDeclaredConstructor().newInstance()).getQualifier().getDataType();
 
 
 
@@ -1003,91 +829,20 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
                 else if (java.util.Date.class == type)
                     return (DataType<T>) SQLDataType.TIMESTAMP;
 
-
-                // [#16529] Help users trouble shoot this particular problem
-                else if (QueryPart.class.isAssignableFrom(type))
-                    throw new DataTypeException(
-                        """
-                        Type {type} cannot be used as a bind variable type.
-
-                        This error often appears when a wrong overload is chosen, e.g. among:
-
-                        - <T> Field<T> someFunction(T arg1, T arg2);
-                        - <T> Field<T> someFunction(Field<T> arg1, Field<T> arg2)
-
-                        When mixing expression arguments with bind value arguments, such as:
-
-                          someFunction(TABLE.COLUMN, "bind value")
-
-                        Then only the first overload is applicable, and in some cases, jOOQ cannot auto-wrap
-                        the "bind value" in DSL.val("bind value") for you. Consider calling the function
-                        like this, instead:
-
-                          someFunction(TABLE.COLUMN, DSL.val("bind value"))
-
-                        If you think this error shouldn't appear, please report it here: https://jooq.org/bug
-                        """.replace("{type}", type.getName())
-                    );
-
                 // All other data types are illegal
                 else
                     throw new SQLDialectNotSupportedException("Type " + type + " is not supported in dialect " + dialect);
-            }
-
-            if (result instanceof LegacyConvertedDataType l) {
-                if (debugLogOnDiscouragedStaticTypeRegistryAccess() && getDataTypeAccess.isWarnEnabled())
-                    getDataTypeAccess.warn("Static type registry",
-                        """
-                        A static type registry access candidate has been encountered for data type
-
-                        {type}
-
-                        The system property org.jooq.debug-log-on-discouraged-static-type-registry-access is enabled
-                        to render this static type registry access candidate warning. This logs a warning for every
-                        implicit data type lookup of a user defined data type. It may help debug
-                        DiscouragedStaticTypeRegistryUsage encounters, and should be used only for debugging
-                        purposes, as it also produces false positives for cases where implicit data types can be
-                        correctly looked up from query context, after the construction of the bind value, such as:
-
-                        - TABLE.COLUMN.eq(userDefinedValue)
-
-                        A true positive may be a plain SQL template, for example:
-
-                        - DSL.condition("column = ?", userDefinedValue)
-                        - DSL.field("column", MyType.class)
-                        """.replace("{type}", "" + result),
-                        new DiscouragedStaticTypeRegistryUsage()
-                    );
             }
 
             return (DataType<T>) result;
         }
     }
 
-    private static transient Boolean debugLogOnDiscouragedStaticTypeRegistryAccess;
-
-    private static final boolean debugLogOnDiscouragedStaticTypeRegistryAccess() {
-        if (debugLogOnDiscouragedStaticTypeRegistryAccess == null)
-            debugLogOnDiscouragedStaticTypeRegistryAccess = "true".equals(System.getProperty("org.jooq.debug-log-on-discouraged-static-type-registry-access"));
-
-        return TRUE.equals(debugLogOnDiscouragedStaticTypeRegistryAccess);
-    }
-
     /**
      * @return The type name without all special characters and white spaces
      */
     public static final String normalise(String typeName) {
-        return P_NORMALISE.matcher(typeName.toUpperCase()).replaceAll("");
-    }
-
-    /**
-     * @return The type name without all special characters and white spaces
-     */
-    static final String normalise(SQLDialect dialect, String typeName) {
-        if (dialect != null && dialect.family() == CLICKHOUSE && typeName.startsWith("Nullable("))
-            typeName = P_NULLABLE.matcher(typeName).replaceFirst("$1");
-
-        return normalise(typeName);
+        return NORMALISE_PATTERN.matcher(typeName.toUpperCase()).replaceAll("");
     }
 
     /**
@@ -1112,29 +867,9 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
             result = DefaultDataType.getDataType(dialect, getNumericClass(p, s));
 
         // [#10809] Use dialect only for lookup, don't report the dialect-specific type
-        // [#15476] Maintain any length, precision, or scale already defined on the type name, e.g. VARCHAR(20)
-        if (result.getSQLDataType() != null) {
-            if (result.lengthDefined())
-                result = result.getSQLDataType().length(result.length());
-            else if (result.scaleDefined())
-                result = result.getSQLDataType().precision(result.precision(), result.scale());
-            else if (result.precisionDefined())
-                result = result.getSQLDataType().precision(result.precision());
-            else
-                result = result.getSQLDataType();
-        }
+        if (result.getSQLDataType() != null)
+            result = result.getSQLDataType();
 
-        // [#15476] Length, precision, or scale may already be defined based on the type name, e.g. VARCHAR(20)
-        if (!result.lengthDefined() && !result.precisionDefined() && !result.scaleDefined() || p > 0 || s > 0)
-            result = patchPrecisionAndScale(dialect, p, s, result);
-
-        if (array)
-            result = result.getArrayDataType();
-
-        return result;
-    }
-
-    private static final DataType<?> patchPrecisionAndScale(SQLDialect dialect, int p, int s, DataType<?> result) {
         if (result.hasPrecision() && result.hasScale())
             result = result.precision(p, s);
 
@@ -1150,6 +885,9 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
 
         else if (result.hasLength())
             result = result.length(p);
+
+        if (array)
+            result = result.getArrayDataType();
 
         return result;
     }
@@ -1211,18 +949,5 @@ public class DefaultDataType<T> extends AbstractDataTypeX<T> {
                 d = d.precision(p);
 
         return d;
-    }
-
-    static final boolean unsupportedDatetimePrecision(Scope ctx, DataType<?> type) {
-        if (!type.isDateTime())
-            return false;
-        else if (!type.precisionDefined())
-            return false;
-        else if ((type.isTime() || type.isTimeWithTimeZone()) && NO_SUPPORT_TIME_PRECISION.contains(ctx.dialect()))
-            return true;
-        else if (!type.isTime() && !type.isTimeWithTimeZone() && Tools.NO_SUPPORT_TIMESTAMP_PRECISION.contains(ctx.dialect()))
-            return true;
-        else
-            return false;
     }
 }

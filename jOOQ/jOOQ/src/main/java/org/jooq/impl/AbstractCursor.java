@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -85,17 +85,71 @@ abstract class AbstractCursor<R extends Record> extends AbstractResult<R> implem
 
     @Override
     public final Result<R> fetch() {
-        return fetchNext(Integer.MAX_VALUE);
+        return fetch(Integer.MAX_VALUE);
+    }
+
+    @Override
+    @Deprecated
+    public final R fetchOne() {
+        return fetchNext();
+    }
+
+    @Override
+    @Deprecated
+    public final <E> E fetchOne(RecordMapper<? super R, E> mapper) {
+        return fetchNext(mapper);
+    }
+
+    @Override
+    @Deprecated
+    public final <H extends RecordHandler<? super R>> H fetchOneInto(H handler) {
+        return fetchNextInto(handler);
+    }
+
+    @Override
+    @Deprecated
+    public final <Z extends Record> Z fetchOneInto(Table<Z> table) {
+        return fetchNextInto(table);
+    }
+
+    @Override
+    @Deprecated
+    public final <E> E fetchOneInto(Class<? extends E> type) {
+        return fetchNextInto(type);
     }
 
     @Override
     public final R fetchNext() {
-        Result<R> result = fetchNext(1);
+        Result<R> result = fetch(1);
 
         if (result.size() == 1)
             return result.get(0);
 
         return null;
+    }
+
+    @Override
+    @Deprecated
+    public final Optional<R> fetchOptional() {
+        return fetchNextOptional();
+    }
+
+    @Override
+    @Deprecated
+    public final <E> Optional<E> fetchOptional(RecordMapper<? super R, E> mapper) {
+        return fetchNextOptional(mapper);
+    }
+
+    @Override
+    @Deprecated
+    public final <E> Optional<E> fetchOptionalInto(Class<? extends E> type) {
+        return fetchNextOptionalInto(type);
+    }
+
+    @Override
+    @Deprecated
+    public final <Z extends Record> Optional<Z> fetchOptionalInto(Table<Z> table) {
+        return fetchNextOptionalInto(table);
     }
 
     @Override
@@ -116,6 +170,11 @@ abstract class AbstractCursor<R extends Record> extends AbstractResult<R> implem
     @Override
     public final <Z extends Record> Optional<Z> fetchNextOptionalInto(Table<Z> table) {
         return Optional.ofNullable(fetchNextInto(table));
+    }
+
+    @Override
+    public final Result<R> fetch(int number) {
+        return fetchNext(number);
     }
 
     @Override

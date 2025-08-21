@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import org.springframework.beans.factory.support.RootBeanDefinition;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for SPR-8954, in which a custom {@link InstantiationAwareBeanPostProcessor}
+ * Unit tests for SPR-8954, in which a custom {@link InstantiationAwareBeanPostProcessor}
  * forces the predicted type of a FactoryBean, effectively preventing retrieval of the
  * bean from calls to #getBeansOfType(FactoryBean.class). The implementation of
  * {@link AbstractBeanFactory#isFactoryBean(String, RootBeanDefinition)} now ensures
@@ -44,7 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class Spr8954Tests {
 
 	@Test
-	void repro() {
+	public void repro() {
 		AnnotationConfigApplicationContext bf = new AnnotationConfigApplicationContext();
 		bf.registerBeanDefinition("fooConfig", new RootBeanDefinition(FooConfig.class));
 		bf.getBeanFactory().addBeanPostProcessor(new PredictingBPP());
@@ -57,14 +57,16 @@ public class Spr8954Tests {
 
 		@SuppressWarnings("rawtypes")
 		Map<String, FactoryBean> fbBeans = bf.getBeansOfType(FactoryBean.class);
-		assertThat(fbBeans).containsOnlyKeys("&foo");
+		assertThat(1).isEqualTo(fbBeans.size());
+		assertThat("&foo").isEqualTo(fbBeans.keySet().iterator().next());
 
 		Map<String, AnInterface> aiBeans = bf.getBeansOfType(AnInterface.class);
-		assertThat(aiBeans).containsOnlyKeys("&foo");
+		assertThat(1).isEqualTo(aiBeans.size());
+		assertThat("&foo").isEqualTo(aiBeans.keySet().iterator().next());
 	}
 
 	@Test
-	void findsBeansByTypeIfNotInstantiated() {
+	public void findsBeansByTypeIfNotInstantiated() {
 		AnnotationConfigApplicationContext bf = new AnnotationConfigApplicationContext();
 		bf.registerBeanDefinition("fooConfig", new RootBeanDefinition(FooConfig.class));
 		bf.getBeanFactory().addBeanPostProcessor(new PredictingBPP());
@@ -74,10 +76,12 @@ public class Spr8954Tests {
 
 		@SuppressWarnings("rawtypes")
 		Map<String, FactoryBean> fbBeans = bf.getBeansOfType(FactoryBean.class);
-		assertThat(fbBeans).containsOnlyKeys("&foo");
+		assertThat(1).isEqualTo(fbBeans.size());
+		assertThat("&foo").isEqualTo(fbBeans.keySet().iterator().next());
 
 		Map<String, AnInterface> aiBeans = bf.getBeansOfType(AnInterface.class);
-		assertThat(aiBeans).containsOnlyKeys("&foo");
+		assertThat(1).isEqualTo(aiBeans.size());
+		assertThat("&foo").isEqualTo(aiBeans.keySet().iterator().next());
 	}
 
 
@@ -124,7 +128,7 @@ public class Spr8954Tests {
 
 		@Override
 		public Class<?> predictBeanType(Class<?> beanClass, String beanName) {
-			return (FactoryBean.class.isAssignableFrom(beanClass) ? PredictedType.class : null);
+			return FactoryBean.class.isAssignableFrom(beanClass) ? PredictedType.class : null;
 		}
 
 		@Override

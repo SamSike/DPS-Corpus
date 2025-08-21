@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,14 +42,11 @@ package org.jooq;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 // ...
@@ -79,7 +76,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
@@ -87,9 +83,6 @@ import java.util.Collection;
 
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
-import org.jooq.impl.QOM.JoinHint;
-
-import org.jetbrains.annotations.NotNull;
 
 /**
  * A <code>SELECT</code> statement (model API).
@@ -127,26 +120,26 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
     void setDistinct(boolean distinct);
 
     /**
-     * Add a PostgreSQL-specific <code>DISTINCT ON (fields…)</code> clause.
+     * Add a PostgreSQL-specific <code>DISTINCT ON (fields...)</code> clause.
      * <p>
      * This also sets the <code>distinct</code> flag to <code>true</code>
      */
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addDistinctOn(SelectFieldOrAsterisk... fields);
 
     /**
-     * Add a PostgreSQL-specific <code>DISTINCT ON (fields…)</code> clause.
+     * Add a PostgreSQL-specific <code>DISTINCT ON (fields...)</code> clause.
      * <p>
      * This also sets the <code>distinct</code> flag to <code>true</code>
      */
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addDistinctOn(Collection<? extends SelectFieldOrAsterisk> fields);
 
     /**
      * Add a T-SQL style <code>INTO</code> clause to the <code>SELECT</code>
      * statement to create a new table from a <code>SELECT</code> statement.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void setInto(Table<?> table);
 
 
@@ -228,78 +221,6 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
     @Support
     void addJoin(TableLike<?> table, JoinType type, Condition... conditions);
 
-    /**
-     * Joins the existing table product to a new table using a condition,
-     * connecting them with each other with {@link Operator#AND}.
-     * <p>
-     * {@link JoinHint} are a commercial only feature and are ignored in the
-     * jOOQ Open Source Edition.
-     *
-     * @param table The joined table
-     * @param type The type of join
-     * @param hint The hint to apply to the join
-     * @param condition The joining condition
-     */
-    @Support
-    void addJoin(TableLike<?> table, JoinType type, JoinHint hint, Condition condition);
-
-    /**
-     * Joins the existing table product to a new table using a condition,
-     * connecting them with each other with {@link Operator#AND}.
-     * <p>
-     * {@link JoinHint} are a commercial only feature and are ignored in the
-     * jOOQ Open Source Edition.
-     *
-     * @param table The joined table
-     * @param type The type of join
-     * @param hint The hint to apply to the join
-     * @param conditions The joining conditions
-     */
-    @Support
-    void addJoin(TableLike<?> table, JoinType type, JoinHint hint, Condition... conditions);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -364,34 +285,13 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
     void addJoinUsing(TableLike<?> table, JoinType type, Collection<? extends Field<?>> fields);
 
     /**
-     * Joins the existing table product to a new table with a <code>USING</code>
-     * clause.
-     * <p>
-     * If this is not supported by your RDBMS, then jOOQ will try to emulate
-     * this behaviour using the information provided in this query.
-     * <p>
-     * {@link JoinHint} are a commercial only feature and are ignored in the
-     * jOOQ Open Source Edition.
-     *
-     * @param table The joined table
-     * @param type The type of join
-     * @param hint The hint to apply to the join
-     * @param fields The fields for the <code>USING</code> clause
-     */
-    @Support
-    void addJoinUsing(TableLike<?> table, JoinType type, JoinHint hint, Collection<? extends Field<?>> fields);
-
-    /**
      * Joins the existing table product to a new table using a foreign key.
      *
      * @param table The joined table
      * @param type The type of join
      * @see TableOnStep#onKey(ForeignKey)
      * @throws DataAccessException If there is no non-ambiguous key definition
-     *             known to jOOQ. <em>Please note that if you evolve your
-     *             schema, a previously non-ambiguous <code>ON KEY</code> clause
-     *             can suddenly become ambiguous on an existing query, so use
-     *             this clause with care.</em>
+     *             known to jOOQ
      */
     @Support
     void addJoinOnKey(TableLike<?> table, JoinType type) throws DataAccessException;
@@ -404,52 +304,10 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      * @param keyFields The foreign key fields
      * @see TableOnStep#onKey(ForeignKey)
      * @throws DataAccessException If there is no non-ambiguous key definition
-     *             known to jOOQ. <em>Please note that if you evolve your
-     *             schema, a previously non-ambiguous <code>ON KEY</code> clause
-     *             can suddenly become ambiguous on an existing query, so use
-     *             this clause with care.</em>
+     *             known to jOOQ
      */
     @Support
     void addJoinOnKey(TableLike<?> table, JoinType type, TableField<?, ?>... keyFields) throws DataAccessException;
-
-    /**
-     * Joins the existing table product to a new table using a foreign key.
-     * <p>
-     * {@link JoinHint} are a commercial only feature and are ignored in the
-     * jOOQ Open Source Edition.
-     *
-     * @param table The joined table
-     * @param type The type of join
-     * @param hint The hint to apply to the join
-     * @see TableOnStep#onKey(ForeignKey)
-     * @throws DataAccessException If there is no non-ambiguous key definition
-     *             known to jOOQ. <em>Please note that if you evolve your
-     *             schema, a previously non-ambiguous <code>ON KEY</code> clause
-     *             can suddenly become ambiguous on an existing query, so use
-     *             this clause with care.</em>
-     */
-    @Support
-    void addJoinOnKey(TableLike<?> table, JoinType type, JoinHint hint) throws DataAccessException;
-
-    /**
-     * Joins the existing table product to a new table using a foreign key.
-     * <p>
-     * {@link JoinHint} are a commercial only feature and are ignored in the
-     * jOOQ Open Source Edition.
-     *
-     * @param table The joined table
-     * @param type The type of join
-     * @param hint The hint to apply to the join
-     * @param keyFields The foreign key fields
-     * @see TableOnStep#onKey(ForeignKey)
-     * @throws DataAccessException If there is no non-ambiguous key definition
-     *             known to jOOQ. <em>Please note that if you evolve your
-     *             schema, a previously non-ambiguous <code>ON KEY</code> clause
-     *             can suddenly become ambiguous on an existing query, so use
-     *             this clause with care.</em>
-     */
-    @Support
-    void addJoinOnKey(TableLike<?> table, JoinType type, JoinHint hint, TableField<?, ?>... keyFields) throws DataAccessException;
 
     /**
      * Joins the existing table product to a new table using a foreign key.
@@ -461,21 +319,6 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      */
     @Support
     void addJoinOnKey(TableLike<?> table, JoinType type, ForeignKey<?, ?> key);
-
-    /**
-     * Joins the existing table product to a new table using a foreign key.
-     * <p>
-     * {@link JoinHint} are a commercial only feature and are ignored in the
-     * jOOQ Open Source Edition.
-     *
-     * @param table The joined table
-     * @param type The type of join
-     * @param hint The hint to apply to the join
-     * @param key The foreign key
-     * @see TableOnStep#onKey(ForeignKey)
-     */
-    @Support
-    void addJoinOnKey(TableLike<?> table, JoinType type, JoinHint hint, ForeignKey<?, ?> key);
 
     /**
      * Adds grouping fields.
@@ -574,7 +417,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      *
      * @param definitions The definitions
      */
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addWindow(WindowDefinition... definitions);
 
     /**
@@ -582,7 +425,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      *
      * @param definitions The definitions
      */
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addWindow(Collection<? extends WindowDefinition> definitions);
 
     /**
@@ -591,7 +434,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      *
      * @param condition The condition
      */
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addQualify(Condition condition);
 
     /**
@@ -600,7 +443,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      *
      * @param conditions The condition
      */
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addQualify(Condition... conditions);
 
     /**
@@ -609,7 +452,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      *
      * @param conditions The condition
      */
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addQualify(Collection<? extends Condition> conditions);
 
     /**
@@ -620,7 +463,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      *            conditions
      * @param condition The condition
      */
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addQualify(Operator operator, Condition condition);
 
     /**
@@ -631,7 +474,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      *            conditions
      * @param conditions The condition
      */
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addQualify(Operator operator, Condition... conditions);
 
     /**
@@ -642,33 +485,33 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      *            conditions
      * @param conditions The condition
      */
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addQualify(Operator operator, Collection<? extends Condition> conditions);
 
     /**
      * Add an Oracle-style hint to the select clause.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.select(field1, field2)
      *       .hint("/*+ALL_ROWS&#42;/")
      *       .from(table1)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * You can also use this clause for any other database, that accepts hints
      * or options at the same syntactic location, e.g. for MySQL's
-     * <code>SQL_CALC_FOUND_ROWS</code> option: <pre><code>
+     * <code>SQL_CALC_FOUND_ROWS</code> option: <code><pre>
      * create.select(field1, field2)
      *       .hint("SQL_CALC_FOUND_ROWS")
      *       .from(table1)
      *       .fetch();
-     * </code></pre>
+     * </pre></code>
      * <p>
-     * The outcome of such a query is this: <pre><code>
+     * The outcome of such a query is this: <code><pre>
      * SELECT [hint] field1, field2 FROM table1
-     * </code></pre>
+     * </pre></code>
      * <p>
      * For SQL Server style table hints, see {@link Table#with(String)}
      *
@@ -680,26 +523,26 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
     /**
      * Add a SQL Server-style query hint to the select clause.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.select(field1, field2)
      *       .from(table1)
      *       .option("OPTION (OPTIMIZE FOR UNKNOWN)")
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * You can also use this clause for any other database, that accepts hints
-     * or options at the same syntactic location, e.g. for DB2's isolation clause: <pre><code>
+     * or options at the same syntactic location, e.g. for DB2's isolation clause: <code><pre>
      * create.select(field1, field2)
      *       .from(table1)
      *       .option("WITH RR USE AND KEEP EXCLUSIVE LOCKS")
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      * <p>
-     * The outcome of such a query is this: <pre><code>
+     * The outcome of such a query is this: <code><pre>
      * SELECT field1, field2 FROM table1 [option]
-     * </code></pre>
+     * </pre></code>
      * <p>
      * For SQL Server style table hints, see {@link Table#with(String)}
      *
@@ -788,7 +631,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      * Indexes start at <code>1</code> in SQL!
      * <p>
      * Note, you can use <code>addOrderBy(DSL.val(1).desc())</code> or
-     * <code>addOrderBy(DSL.inline(1).desc())</code> to apply descending
+     * <code>addOrderBy(DSL.literal(1).desc())</code> to apply descending
      * ordering
      *
      * @param fieldIndexes The ordering fields
@@ -856,7 +699,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      * <p>
      * Offsets are 0-based as they describe the number of rows to <em>skip</em>.
      * <p>
-     * If there is no <code>LIMIT … OFFSET</code> or <code>TOP</code> clause in
+     * If there is no <code>LIMIT .. OFFSET</code> or <code>TOP</code> clause in
      * your RDBMS, or if your RDBMS does not natively support offsets, this is
      * emulated with a <code>ROW_NUMBER()</code> window function and nested
      * <code>SELECT</code> statements.
@@ -869,7 +712,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      * <p>
      * Offsets are 0-based as they describe the number of rows to <em>skip</em>.
      * <p>
-     * If there is no <code>LIMIT … OFFSET</code> or <code>TOP</code> clause in
+     * If there is no <code>LIMIT .. OFFSET</code> or <code>TOP</code> clause in
      * your RDBMS, or if your RDBMS does not natively support offsets, this is
      * emulated with a <code>ROW_NUMBER()</code> window function and nested
      * <code>SELECT</code> statements.
@@ -900,8 +743,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      * <code>ROW_NUMBER()</code> window function and nested <code>SELECT</code>
      * statements.
      * <p>
-     * This is the same as calling {@link #addLimit(Number, Number)} with offset
-     * = 0
+     * This is the same as calling {@link #addLimit(int, int)} with offset = 0
      *
      * @param numberOfRows The number of rows to return
      */
@@ -988,7 +830,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
     /**
      * Add the <code>WITH TIES</code> clause to a <code>LIMIT</code> clause.
      */
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     void setWithTies(boolean withTies);
 
     /**
@@ -1031,6 +873,12 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      * <ul>
      * <li>{@link SQLDialect#SQLITE}</li>
      * </ul>
+     * <p>
+     * If your dialect does not support this clause, jOOQ will still render it,
+     * if you apply it to your query. This might then cause syntax errors
+     * reported either by your database or your JDBC driver.
+     * <p>
+     * You shouldn't combine this with {@link #setForShare(boolean)}
      *
      * @param forUpdate The flag's value
      */
@@ -1190,6 +1038,12 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      * "http://www.postgresql.org/docs/9.0/static/sql-select.html#SQL-FOR-UPDATE-SHARE"
      * >Postgres FOR UPDATE / FOR SHARE</a></li>
      * </ul>
+     * <p>
+     * If your dialect does not support this clause, jOOQ will still render it,
+     * if you apply it to your query. This might then cause syntax errors
+     * reported either by your database or your JDBC driver.
+     * <p>
+     * You shouldn't combine this with {@link #setForUpdate(boolean)}
      *
      * @param forShare The flag's value
      */
@@ -1260,7 +1114,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      *
      * @param seconds The number of seconds to wait for a lock
      */
-    @Support({ H2, MARIADB, MYSQL, POSTGRES })
+    @Support({ MARIADB, MYSQL, POSTGRES })
     void setForLockModeWait(int seconds);
 
     /**
@@ -1275,7 +1129,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      * Depending on the dialect and lock mode this flag may or may not be
      * supported.
      */
-    @Support({ H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     void setForLockModeNoWait();
 
     /**
@@ -1290,7 +1144,7 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
      * Depending on the dialect and lock mode this flag may or may not be
      * supported.
      */
-    @Support({ H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     void setForLockModeSkipLocked();
 
 
@@ -1438,16 +1292,17 @@ public interface SelectQuery<R extends Record> extends Select<R>, ConditionProvi
 
 
 
-    /**
-     * Add a <code>WITH CHECK OPTION</code> clause to the end of the subquery.
-     */
-    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES })
-    void setWithCheckOption();
 
-    /**
-     * Add a <code>WITH READ ONLY</code> clause to the end of the subquery.
-     */
-    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    void setWithReadOnly();
+
+
+
+
+
+
+
+
+
+
+
 
 }

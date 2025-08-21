@@ -20,34 +20,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.camel.CamelContext;
 import org.apache.camel.support.jsse.KeyStoreParameters;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.support.jsse.TrustManagersParameters;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
+import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class KafkaComponentTest {
-
-    @RegisterExtension
-    protected static CamelContextExtension contextExtension = new DefaultCamelContextExtension();
-
-    private final CamelContext context = contextExtension.getContext();
-
-    @AfterEach
-    void clear() {
-        context.removeComponent("kafka");
-    }
+public class KafkaComponentTest extends CamelTestSupport {
 
     @Test
     public void testPropertiesSet() {
@@ -77,16 +63,14 @@ public class KafkaComponentTest {
     public void testCreateAdditionalPropertiesOnEndpointAndComponent() {
         final KafkaComponent kafkaComponent = context.getComponent("kafka", KafkaComponent.class);
 
-        // update with options on component level and restart
         // also we set the configs on the component level
         final KafkaConfiguration kafkaConfiguration = new KafkaConfiguration();
         final Map<String, Object> params = new HashMap<>();
+
         params.put("extra.1", 789);
         params.put("extra.3", "test.extra.3");
         kafkaConfiguration.setAdditionalProperties(params);
         kafkaComponent.setConfiguration(kafkaConfiguration);
-        kafkaComponent.stop();
-        kafkaComponent.start();
 
         final String uri
                 = "kafka:mytopic?brokers=broker1:12345,broker2:12566&partitioner=com.class.Party&additionalProperties.extra.1=123&additionalProperties.extra.2=test";
@@ -191,6 +175,7 @@ public class KafkaComponentTest {
         props.put(ProducerConfig.LINGER_MS_CONFIG, "0");
         props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, "60000");
         props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, "1048576");
+        props.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, KafkaConstants.KAFKA_DEFAULT_PARTITIONER);
         props.put(ProducerConfig.RECEIVE_BUFFER_CONFIG, "32768");
         props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, "30000");
         props.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, "120000");
@@ -202,11 +187,9 @@ public class KafkaComponentTest {
         props.put(ProducerConfig.RECONNECT_BACKOFF_MS_CONFIG, "50");
         props.put(ProducerConfig.RECONNECT_BACKOFF_MAX_MS_CONFIG, "1000");
         props.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, "100");
-        props.put(ProducerConfig.RETRY_BACKOFF_MAX_MS_CONFIG, "1000");
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaConstants.KAFKA_DEFAULT_SERIALIZER);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaConstants.KAFKA_DEFAULT_SERIALIZER);
         props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "false");
-        props.put(ProducerConfig.PARTITIONER_IGNORE_KEYS_CONFIG, "false");
         props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "PLAINTEXT");
 
         return props;
@@ -344,31 +327,4 @@ public class KafkaComponentTest {
         assertEquals("my-password", props.getProperty("ssl.truststore.password"));
         assertNull(props.getProperty("ssl.keystore.password"));
     }
-
-    @Test
-    public void testCreateAdditionalPropertiesResolvePlaceholders() {
-        context.getPropertiesComponent().addOverrideProperty("foo", "123");
-        context.getPropertiesComponent().addOverrideProperty("bar", "test");
-
-        final String uri
-                = "kafka:mytopic?brokers=broker1:12345,broker2:12566&partitioner=com.class.Party&additionalProperties.extra.1={{foo}}&additionalProperties.extra.2={{bar}}";
-
-        KafkaEndpoint endpoint = context.getEndpoint(uri, KafkaEndpoint.class);
-        assertEquals("broker1:12345,broker2:12566", endpoint.getConfiguration().getBrokers());
-        assertEquals("mytopic", endpoint.getConfiguration().getTopic());
-        assertEquals("com.class.Party", endpoint.getConfiguration().getPartitioner());
-        assertEquals("123", endpoint.getConfiguration().getAdditionalProperties().get("extra.1"));
-        assertEquals("test", endpoint.getConfiguration().getAdditionalProperties().get("extra.2"));
-
-        // test properties on producer keys
-        final Properties producerProperties = endpoint.getConfiguration().createProducerProperties();
-        assertEquals("123", producerProperties.getProperty("extra.1"));
-        assertEquals("test", producerProperties.getProperty("extra.2"));
-
-        // test properties on consumer keys
-        final Properties consumerProperties = endpoint.getConfiguration().createConsumerProperties();
-        assertEquals("123", consumerProperties.getProperty("extra.1"));
-        assertEquals("test", consumerProperties.getProperty("extra.2"));
-    }
-
 }

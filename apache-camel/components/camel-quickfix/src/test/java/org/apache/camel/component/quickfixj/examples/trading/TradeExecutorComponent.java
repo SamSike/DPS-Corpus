@@ -50,7 +50,7 @@ import quickfix.field.TargetSubID;
 
 /**
  * Adapts the TradeExecutor for use as a Camel endpoint.
- *
+ * 
  * @see TradeExecutor
  */
 public class TradeExecutorComponent extends DefaultComponent {
@@ -83,7 +83,7 @@ public class TradeExecutorComponent extends DefaultComponent {
             if (endpoint == null) {
                 endpoint = new TradeExecutorEndpoint(uri, new TradeExecutor());
                 endpoints.put(uri, (TradeExecutorEndpoint) endpoint);
-                LOG.info("Created trade executor: {}", uri);
+                LOG.info("Created trade executor: " + uri);
             }
             return endpoint;
         }

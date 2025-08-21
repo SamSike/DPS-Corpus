@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,23 +23,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.NoTransactionException;
 import org.springframework.util.Assert;
 
 /**
  * Central delegate that manages resources and transaction synchronizations per
- * subscriber context. To be used by resource management code but not by typical
- * application code.
+ * subscriber context.
+ * To be used by resource management code but not by typical application code.
  *
  * <p>Supports one resource per key without overwriting, that is, a resource needs
  * to be removed before a new one can be set for the same key.
  * Supports a list of transaction synchronizations if synchronization is active.
  *
- * <p>Resource management code should check for context-bound resources, for example,
+ * <p>Resource management code should check for context-bound resources, e.g.
  * database connections, via {@code getResource}. Such code is normally not
  * supposed to bind resources to units of work, as this is the responsibility
  * of transaction managers. A further option is to lazily bind on first use if
@@ -58,7 +58,7 @@ import org.springframework.util.Assert;
  * doesn't support transaction synchronization.
  *
  * <p>Synchronization is for example used to always return the same resources within
- * a transaction, for example, a database connection for any given connection factory.
+ * a transaction, e.g. a database connection for any given connection factory.
  *
  * @author Mark Paluch
  * @author Juergen Hoeller
@@ -73,7 +73,6 @@ public class TransactionSynchronizationManager {
 
 
 	public TransactionSynchronizationManager(TransactionContext transactionContext) {
-		Assert.notNull(transactionContext, "TransactionContext must not be null");
 		this.transactionContext = transactionContext;
 	}
 
@@ -89,11 +88,10 @@ public class TransactionSynchronizationManager {
 		return TransactionContextManager.currentContext().map(TransactionSynchronizationManager::new);
 	}
 
-
 	/**
-	 * Check if there is a resource for the given key bound to the current context.
+	 * Check if there is a resource for the given key bound to the current thread.
 	 * @param key the key to check (usually the resource factory)
-	 * @return if there is a value bound to the current context
+	 * @return if there is a value bound to the current thread
 	 */
 	public boolean hasResource(Object key) {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
@@ -102,12 +100,13 @@ public class TransactionSynchronizationManager {
 	}
 
 	/**
-	 * Retrieve a resource for the given key that is bound to the current context.
+	 * Retrieve a resource for the given key that is bound to the current thread.
 	 * @param key the key to check (usually the resource factory)
-	 * @return a value bound to the current context (usually the active
+	 * @return a value bound to the current thread (usually the active
 	 * resource object), or {@code null} if none
 	 */
-	public @Nullable Object getResource(Object key) {
+	@Nullable
+	public Object getResource(Object key) {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
 		return doGetResource(actualKey);
 	}
@@ -115,7 +114,8 @@ public class TransactionSynchronizationManager {
 	/**
 	 * Actually check the value of the resource that is bound for the given key.
 	 */
-	private @Nullable Object doGetResource(Object actualKey) {
+	@Nullable
+	private Object doGetResource(Object actualKey) {
 		return this.transactionContext.getResources().get(actualKey);
 	}
 
@@ -156,7 +156,8 @@ public class TransactionSynchronizationManager {
 	 * @param key the key to unbind (usually the resource factory)
 	 * @return the previously bound value, or {@code null} if none bound
 	 */
-	public @Nullable Object unbindResourceIfPossible(Object key) {
+	@Nullable
+	public Object unbindResourceIfPossible(Object key) {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
 		return doUnbindResource(actualKey);
 	}
@@ -164,7 +165,8 @@ public class TransactionSynchronizationManager {
 	/**
 	 * Actually remove the value of the resource that is bound for the given key.
 	 */
-	private @Nullable Object doUnbindResource(Object actualKey) {
+	@Nullable
+	private Object doUnbindResource(Object actualKey) {
 		Map<Object, Object> map = this.transactionContext.getResources();
 		return map.remove(actualKey);
 	}
@@ -275,7 +277,8 @@ public class TransactionSynchronizationManager {
 	 * for example to optimize fetch strategies for specific named transactions.
 	 * @see org.springframework.transaction.TransactionDefinition#getName()
 	 */
-	public @Nullable String getCurrentTransactionName() {
+	@Nullable
+	public String getCurrentTransactionName() {
 		return this.transactionContext.getCurrentTransactionName();
 	}
 
@@ -334,7 +337,8 @@ public class TransactionSynchronizationManager {
 	 * @see org.springframework.transaction.TransactionDefinition#ISOLATION_SERIALIZABLE
 	 * @see org.springframework.transaction.TransactionDefinition#getIsolationLevel()
 	 */
-	public @Nullable Integer getCurrentTransactionIsolationLevel() {
+	@Nullable
+	public Integer getCurrentTransactionIsolationLevel() {
 		return this.transactionContext.getCurrentTransactionIsolationLevel();
 	}
 
@@ -352,10 +356,10 @@ public class TransactionSynchronizationManager {
 	 * Return whether there currently is an actual transaction active.
 	 * This indicates whether the current context is associated with an actual
 	 * transaction rather than just with active transaction synchronization.
-	 * <p>To be called by resource management code that wants to differentiate
-	 * between active transaction synchronization (with or without a backing
+	 * <p>To be called by resource management code that wants to discriminate
+	 * between active transaction synchronization (with or without backing
 	 * resource transaction; also on PROPAGATION_SUPPORTS) and an actual
-	 * transaction being active (with a backing resource transaction;
+	 * transaction being active (with backing resource transaction;
 	 * on PROPAGATION_REQUIRED, PROPAGATION_REQUIRES_NEW, etc).
 	 * @see #isSynchronizationActive()
 	 */

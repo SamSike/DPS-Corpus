@@ -47,10 +47,10 @@ public class OnCompletionModeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo")
                         // we do not want parallel as we want to change the message
                         // before the consumer writes the response

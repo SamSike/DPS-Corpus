@@ -27,7 +27,6 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class ChangeHeaderCaseIssueTest extends ContextTestSupport {
 
@@ -44,16 +43,16 @@ public class ChangeHeaderCaseIssueTest extends ContextTestSupport {
         // only the changed case header should exist
         Map<String, Object> headers = new HashMap<>(mock.getReceivedExchanges().get(0).getIn().getHeaders());
         assertEquals("cool", headers.get("SoapAction"));
-        assertNull(headers.get("SOAPAction"));
+        assertEquals(null, headers.get("SOAPAction"));
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 interceptSendToEndpoint("mock:result").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         // change the case of the header
                         Object value = exchange.getIn().removeHeader("SOAPAction");
                         exchange.getIn().setHeader("SoapAction", value);

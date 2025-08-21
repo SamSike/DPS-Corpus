@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -44,14 +44,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.jooq.EnumType;
-
 /**
  * A base class for enum conversion.
  *
  * @author Lukas Eder
  */
-public /* non-final */ class EnumConverter<T, U extends Enum<U>> extends AbstractConverter<T, U> {
+public class EnumConverter<T, U extends Enum<U>> extends AbstractConverter<T, U> {
 
     private final Map<T, U>                        lookup;
     private final Function<? super U, ? extends T> to;
@@ -64,8 +62,6 @@ public /* non-final */ class EnumConverter<T, U extends Enum<U>> extends Abstrac
             // [#8045] Also support Kotlin Int type (which translates to int.class)
             Number.class.isAssignableFrom(wrapper(fromType))
                 ? u -> convert(u.ordinal(), fromType)
-                : EnumType.class.isAssignableFrom(toType)
-                ? u -> convert(((EnumType) u).getLiteral(), fromType)
                 : u -> convert(u.name(), fromType)
         );
     }
@@ -76,20 +72,13 @@ public /* non-final */ class EnumConverter<T, U extends Enum<U>> extends Abstrac
         this.to = to;
         this.lookup = new LinkedHashMap<>();
 
-        for (U u : Internal.enums(toType)) {
-            T key = to(u);
-
-            if (key != null)
-                this.lookup.put(key, u);
-        }
+        for (U u : toType.getEnumConstants())
+            this.lookup.put(to(u), u);
     }
 
     @Override
-    public final U from(T t) {
-        if (t == null)
-            return null;
-        else
-            return lookup.get(t);
+    public final U from(T databaseObject) {
+        return lookup.get(databaseObject);
     }
 
     /**
@@ -99,11 +88,11 @@ public /* non-final */ class EnumConverter<T, U extends Enum<U>> extends Abstrac
      * {@inheritDoc}
      */
     @Override
-    public T to(U u) {
-        if (u == null)
+    public T to(U userObject) {
+        if (userObject == null)
             return null;
         else
-            return to.apply(u);
+            return to.apply(userObject);
     }
 
     @Override

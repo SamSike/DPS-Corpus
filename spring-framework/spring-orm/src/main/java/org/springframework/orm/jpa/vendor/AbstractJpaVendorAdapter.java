@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ import java.util.Map;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.spi.PersistenceUnitInfo;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.orm.jpa.JpaDialect;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 
@@ -39,7 +39,8 @@ public abstract class AbstractJpaVendorAdapter implements JpaVendorAdapter {
 
 	private Database database = Database.DEFAULT;
 
-	private @Nullable String databasePlatform;
+	@Nullable
+	private String databasePlatform;
 
 	private boolean generateDdl = false;
 
@@ -76,7 +77,8 @@ public abstract class AbstractJpaVendorAdapter implements JpaVendorAdapter {
 	/**
 	 * Return the name of the target database to operate on.
 	 */
-	protected @Nullable String getDatabasePlatform() {
+	@Nullable
+	protected String getDatabasePlatform() {
 		return this.databasePlatform;
 	}
 
@@ -86,10 +88,10 @@ public abstract class AbstractJpaVendorAdapter implements JpaVendorAdapter {
 	 * <p>Note that the exact semantics of this flag depend on the underlying
 	 * persistence provider. For any more advanced needs, specify the appropriate
 	 * vendor-specific settings as "jpaProperties".
-	 * <p><b>NOTE: Do not set this flag to 'true' while also setting JPA's
+	 * <p><b>NOTE: Do not set this flag to 'true' while also setting JPA 2.1's
 	 * {@code jakarta.persistence.schema-generation.database.action} property.</b>
 	 * These two schema generation mechanisms - standard JPA versus provider-native -
-	 * are mutually exclusive, for example, with Hibernate 5.
+	 * are mutually exclusive, e.g. with Hibernate 5.
 	 * @see org.springframework.orm.jpa.AbstractEntityManagerFactoryBean#setJpaProperties
 	 */
 	public void setGenerateDdl(boolean generateDdl) {
@@ -123,7 +125,8 @@ public abstract class AbstractJpaVendorAdapter implements JpaVendorAdapter {
 
 
 	@Override
-	public @Nullable String getPersistenceProviderRootPackage() {
+	@Nullable
+	public String getPersistenceProviderRootPackage() {
 		return null;
 	}
 
@@ -138,7 +141,8 @@ public abstract class AbstractJpaVendorAdapter implements JpaVendorAdapter {
 	}
 
 	@Override
-	public @Nullable JpaDialect getJpaDialect() {
+	@Nullable
+	public JpaDialect getJpaDialect() {
 		return null;
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.web.bind.support;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.context.request.WebRequest;
 
@@ -57,7 +56,8 @@ public class DefaultSessionAttributeStore implements SessionAttributeStore {
 	}
 
 	@Override
-	public @Nullable Object retrieveAttribute(WebRequest request, String attributeName) {
+	@Nullable
+	public Object retrieveAttribute(WebRequest request, String attributeName) {
 		Assert.notNull(request, "WebRequest must not be null");
 		Assert.notNull(attributeName, "Attribute name must not be null");
 		String storeAttributeName = getAttributeNameInSession(request, attributeName);

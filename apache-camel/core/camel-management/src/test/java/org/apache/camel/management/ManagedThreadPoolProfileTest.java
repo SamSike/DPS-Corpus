@@ -23,17 +23,13 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spi.ThreadPoolProfile;
 import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 import static org.apache.camel.management.DefaultManagementObjectNameStrategy.TYPE_THREAD_POOL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisabledIfSystemProperty(named = "camel.threads.virtual.enabled", matches = "true",
-                          disabledReason = "In case of Virtual Threads, the created thread pools don't have all these attributes")
 @DisabledOnOs(OS.AIX)
 public class ManagedThreadPoolProfileTest extends ManagementTestSupport {
 
@@ -44,7 +40,7 @@ public class ManagedThreadPoolProfileTest extends ManagementTestSupport {
         ObjectName on = getCamelObjectName(TYPE_THREAD_POOL, "mythreads(threads)");
 
         Boolean shutdown = (Boolean) mbeanServer.getAttribute(on, "Shutdown");
-        assertFalse(shutdown.booleanValue());
+        assertEquals(false, shutdown.booleanValue());
 
         Integer corePoolSize = (Integer) mbeanServer.getAttribute(on, "CorePoolSize");
         assertEquals(5, corePoolSize.intValue());
@@ -59,7 +55,7 @@ public class ManagedThreadPoolProfileTest extends ManagementTestSupport {
         assertEquals(25, keepAlive.intValue());
 
         Boolean allow = (Boolean) mbeanServer.getAttribute(on, "AllowCoreThreadTimeout");
-        assertTrue(allow.booleanValue());
+        assertEquals(true, allow.booleanValue());
 
         getMockEndpoint("mock:result").expectedMessageCount(1);
         template.sendBody("direct:start", "Hello World");
@@ -80,10 +76,10 @@ public class ManagedThreadPoolProfileTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 ThreadPoolProfile profile = new ThreadPoolProfile("custom");
                 profile.setPoolSize(5);
                 profile.setMaxPoolSize(15);

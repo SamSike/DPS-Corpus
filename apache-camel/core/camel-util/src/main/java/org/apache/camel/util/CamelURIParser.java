@@ -51,7 +51,7 @@ public final class CamelURIParser {
      * Parses the URI.
      *
      * If this parser cannot parse the uri then <tt>null</tt> is returned. And instead the follow code can be used:
-     *
+     * 
      * <pre>
      * URI u = new URI(UnsafeUriCharactersEncoder.encode(uri, true));
      * </pre>
@@ -97,6 +97,10 @@ public final class CamelURIParser {
             }
         }
 
+        if (pathStart == 0 && schemeEnd != 0) {
+            // skip colon
+            pathStart = schemeEnd + 1;
+        }
         // invalid if there is no path anyway
         if (pathStart >= len) {
             return null;

@@ -22,7 +22,6 @@ import java.util.Map;
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.DefaultComponent;
-import org.apache.camel.util.URISupport;
 
 @Component("graphql")
 public class GraphqlComponent extends DefaultComponent {
@@ -33,17 +32,6 @@ public class GraphqlComponent extends DefaultComponent {
         endpoint.setHttpUri(new URI(remaining));
         setProperties(endpoint, parameters);
         return endpoint;
-    }
-
-    @Override
-    protected void afterConfiguration(String uri, String remaining, Endpoint endpoint, Map<String, Object> parameters)
-            throws Exception {
-
-        GraphqlEndpoint graphqlEndpoint = (GraphqlEndpoint) endpoint;
-        if (!parameters.isEmpty()) {
-            URI httpUri = URISupport.createRemainingURI(graphqlEndpoint.getHttpUri(), parameters);
-            graphqlEndpoint.setHttpUri(httpUri);
-        }
     }
 
 }

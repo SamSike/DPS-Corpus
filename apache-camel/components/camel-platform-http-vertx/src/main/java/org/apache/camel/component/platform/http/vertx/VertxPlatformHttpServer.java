@@ -29,12 +29,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
-import org.apache.camel.StaticService;
-import org.apache.camel.api.management.ManagedAttribute;
-import org.apache.camel.api.management.ManagedResource;
 import org.apache.camel.component.platform.http.PlatformHttpConstants;
-import org.apache.camel.component.platform.http.vertx.auth.AuthenticationConfig;
-import org.apache.camel.component.platform.http.vertx.auth.AuthenticationConfig.AuthenticationConfigEntry;
 import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.support.service.ServiceSupport;
@@ -49,8 +44,7 @@ import static org.apache.camel.component.platform.http.vertx.VertxPlatformHttpSe
  * This class implement a basic Vert.x Web based server that can be used by the {@link VertxPlatformHttpEngine} on
  * platforms that do not provide Vert.x based http services.
  */
-@ManagedResource(description = "Vert.x HTTP Server")
-public class VertxPlatformHttpServer extends ServiceSupport implements CamelContextAware, StaticService {
+public class VertxPlatformHttpServer extends ServiceSupport implements CamelContextAware {
     private static final Logger LOGGER = LoggerFactory.getLogger(VertxPlatformHttpServer.class);
 
     private final VertxPlatformHttpServerConfiguration configuration;
@@ -121,34 +115,6 @@ public class VertxPlatformHttpServer extends ServiceSupport implements CamelCont
         }
     }
 
-    @ManagedAttribute(description = "HTTP port number")
-    public int getPort() {
-        if (server != null) {
-            return server.actualPort();
-        }
-        return configuration.getBindPort();
-    }
-
-    @ManagedAttribute(description = "HTTP hostname")
-    public String getHost() {
-        return configuration.getBindHost();
-    }
-
-    @ManagedAttribute(description = "HTTP context-path")
-    public String getPath() {
-        return configuration.getPath();
-    }
-
-    @ManagedAttribute(description = "HTTP maximum HTTP body size")
-    public Long getMaxBodySize() {
-        return configuration.getMaxBodySize();
-    }
-
-    @ManagedAttribute(description = "Should SSL be used from global SSL configuration")
-    public boolean isUseGlobalSslContextParameters() {
-        return configuration.isUseGlobalSslContextParameters();
-    }
-
     // *******************************
     //
     // Helpers
@@ -185,25 +151,14 @@ public class VertxPlatformHttpServer extends ServiceSupport implements CamelCont
             subRouter.route().handler(createCorsHandler(configuration));
         }
 
-        if (configuration.getSessionConfig().isEnabled()) {
-            subRouter.route().handler(
-                    configuration.getSessionConfig().createSessionHandler(vertx));
-        }
+        router.mountSubRouter(configuration.getPath(), subRouter);
 
-        AuthenticationConfig authenticationConfig = configuration.getAuthenticationConfig();
-        if (authenticationConfig.isEnabled()) {
-            addAuthenticationHandlersStartingFromMoreSpecificPaths(authenticationConfig);
-        }
-
-        router.route(configuration.getPath() + "*").subRouter(subRouter);
-
-        String routerName = VertxPlatformHttpRouter.getRouterNameFromPort(configuration.getPort());
         context.getRegistry().bind(
-                routerName,
-                new VertxPlatformHttpRouter(this, vertx, subRouter, routerName) {
+                VertxPlatformHttpRouter.PLATFORM_HTTP_ROUTER_NAME,
+                new VertxPlatformHttpRouter(this, vertx, subRouter) {
                     @Override
                     public Handler<RoutingContext> bodyHandler() {
-                        return createBodyHandler(getCamelContext(), configuration);
+                        return createBodyHandler(configuration);
                     }
                 });
     }
@@ -240,7 +195,6 @@ public class VertxPlatformHttpServer extends ServiceSupport implements CamelCont
                     try {
                         latch.await();
                     } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
                         throw new RuntimeException(e);
                     }
                 },
@@ -278,7 +232,6 @@ public class VertxPlatformHttpServer extends ServiceSupport implements CamelCont
                         try {
                             latch.await();
                         } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
                             throw new RuntimeException(e);
                         }
                     },
@@ -289,7 +242,7 @@ public class VertxPlatformHttpServer extends ServiceSupport implements CamelCont
     }
 
     protected void stopVertx() {
-        if (this.vertx == null || !this.localVertx) {
+        if (this.vertx == null || this.localVertx) {
             return;
         }
 
@@ -316,7 +269,6 @@ public class VertxPlatformHttpServer extends ServiceSupport implements CamelCont
                         try {
                             latch.await();
                         } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
                             throw new RuntimeException(e);
                         }
                     },
@@ -325,26 +277,5 @@ public class VertxPlatformHttpServer extends ServiceSupport implements CamelCont
             this.vertx = null;
             this.localVertx = false;
         }
-    }
-
-    private void addAuthenticationHandlersStartingFromMoreSpecificPaths(AuthenticationConfig authenticationConfig) {
-        authenticationConfig.getEntries()
-                .stream()
-                .sorted(this::compareUrlPathsSpecificity)
-                .forEach(entry -> subRouter.route(entry.getPath()).handler(entry.createAuthenticationHandler(vertx)));
-    }
-
-    private int compareUrlPathsSpecificity(AuthenticationConfigEntry entry1, AuthenticationConfigEntry entry2) {
-        long entry1PathLength = entry1.getPath().chars().filter(ch -> ch == '/').count();
-        long entry2PathLength = entry2.getPath().chars().filter(ch -> ch == '/').count();
-        if (entry1PathLength == entry2PathLength) {
-            if (entry1.getPath().endsWith("*")) {
-                return 1;
-            }
-            if (entry2.getPath().endsWith("*")) {
-                return -1;
-            }
-        }
-        return (int) (entry2PathLength - entry1PathLength);
     }
 }

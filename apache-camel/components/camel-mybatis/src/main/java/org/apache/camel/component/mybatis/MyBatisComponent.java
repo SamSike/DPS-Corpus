@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.support.HealthCheckComponent;
+import org.apache.camel.support.DefaultComponent;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
@@ -31,11 +31,11 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
 @Component("mybatis")
-public class MyBatisComponent extends HealthCheckComponent {
+public class MyBatisComponent extends DefaultComponent {
 
-    @Metadata(label = "advanced", autowired = true)
-    private volatile SqlSessionFactory sqlSessionFactory;
-    @Metadata(defaultValue = "SqlMapConfig.xml", supportFileReference = true)
+    @Metadata(label = "advanced")
+    private SqlSessionFactory sqlSessionFactory;
+    @Metadata(defaultValue = "SqlMapConfig.xml")
     private String configurationUri = "SqlMapConfig.xml";
 
     @Override
@@ -46,20 +46,12 @@ public class MyBatisComponent extends HealthCheckComponent {
     }
 
     protected SqlSessionFactory createSqlSessionFactory() throws IOException {
-        lock.lock();
+        ObjectHelper.notNull(configurationUri, "configurationUri", this);
+        InputStream is = ResourceHelper.resolveMandatoryResourceAsInputStream(getCamelContext(), configurationUri);
         try {
-            if (sqlSessionFactory == null) {
-                ObjectHelper.notNull(configurationUri, "configurationUri", this);
-                InputStream is = ResourceHelper.resolveMandatoryResourceAsInputStream(getCamelContext(), configurationUri);
-                try {
-                    sqlSessionFactory = new SqlSessionFactoryBuilder().build(is);
-                } finally {
-                    IOHelper.close(is);
-                }
-            }
-            return sqlSessionFactory;
+            return new SqlSessionFactoryBuilder().build(is);
         } finally {
-            lock.unlock();
+            IOHelper.close(is);
         }
     }
 
@@ -87,4 +79,17 @@ public class MyBatisComponent extends HealthCheckComponent {
         this.configurationUri = configurationUri;
     }
 
+    @Override
+    protected void doStart() throws Exception {
+        super.doStart();
+
+        if (sqlSessionFactory == null) {
+            sqlSessionFactory = createSqlSessionFactory();
+        }
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        super.doStop();
+    }
 }

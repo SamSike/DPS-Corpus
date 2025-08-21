@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,8 @@ package org.springframework.mock.web;
 
 import jakarta.servlet.http.HttpServletMapping;
 import jakarta.servlet.http.MappingMatch;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Mock implementation of {@link HttpServletMapping}.
@@ -38,7 +39,8 @@ public class MockHttpServletMapping implements HttpServletMapping {
 
 	private final String servletName;
 
-	private final @Nullable MappingMatch mappingMatch;
+	@Nullable
+	private final MappingMatch mappingMatch;
 
 
 	public MockHttpServletMapping(
@@ -67,7 +69,8 @@ public class MockHttpServletMapping implements HttpServletMapping {
 	}
 
 	@Override
-	public @Nullable MappingMatch getMappingMatch() {
+	@Nullable
+	public MappingMatch getMappingMatch() {
 		return this.mappingMatch;
 	}
 

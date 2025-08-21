@@ -31,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class RemovePropertyTest extends ContextTestSupport {
     private MockEndpoint end;
     private MockEndpoint mid;
-    private final String propertyName = "foo";
-    private final String expectedPropertyValue = "bar";
+    private String propertyName = "foo";
+    private String expectedPropertyValue = "bar";
 
     @Test
     public void testSetExchangePropertyMidRouteThenRemove() throws Exception {

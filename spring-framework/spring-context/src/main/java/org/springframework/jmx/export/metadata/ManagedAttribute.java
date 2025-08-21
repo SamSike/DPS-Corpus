@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package org.springframework.jmx.export.metadata;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Metadata that indicates to expose a given bean property as JMX attribute.
@@ -35,9 +35,11 @@ public class ManagedAttribute extends AbstractJmxAttribute {
 	public static final ManagedAttribute EMPTY = new ManagedAttribute();
 
 
-	private @Nullable Object defaultValue;
+	@Nullable
+	private Object defaultValue;
 
-	private @Nullable String persistPolicy;
+	@Nullable
+	private String persistPolicy;
 
 	private int persistPeriod = -1;
 
@@ -52,7 +54,8 @@ public class ManagedAttribute extends AbstractJmxAttribute {
 	/**
 	 * Return the default value of this attribute.
 	 */
-	public @Nullable Object getDefaultValue() {
+	@Nullable
+	public Object getDefaultValue() {
 		return this.defaultValue;
 	}
 
@@ -60,7 +63,8 @@ public class ManagedAttribute extends AbstractJmxAttribute {
 		this.persistPolicy = persistPolicy;
 	}
 
-	public @Nullable String getPersistPolicy() {
+	@Nullable
+	public String getPersistPolicy() {
 		return this.persistPolicy;
 	}
 

@@ -36,7 +36,7 @@ public class ToEndpointPropertyTest extends ContextTestSupport {
     public void testSimpleToEndpoint() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("mock:result");
             }
         });
@@ -55,7 +55,7 @@ public class ToEndpointPropertyTest extends ContextTestSupport {
     public void testMediumToEndpoint() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("direct:foo");
 
                 from("direct:foo").to("mock:result");
@@ -77,7 +77,7 @@ public class ToEndpointPropertyTest extends ContextTestSupport {
     public void testRecipientListToEndpoint() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").recipientList(header("foo"));
             }
         });
@@ -96,7 +96,7 @@ public class ToEndpointPropertyTest extends ContextTestSupport {
     public void testRoutingSlipToEndpoint() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routingSlip(header("foo"));
             }
         });
@@ -123,7 +123,7 @@ public class ToEndpointPropertyTest extends ContextTestSupport {
     public void testWireTapToEndpoint() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").wireTap("mock:tap").to("mock:result");
             }
         });
@@ -146,9 +146,9 @@ public class ToEndpointPropertyTest extends ContextTestSupport {
     public void testMulticastToEndpoint() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").multicast().to("direct:a", "direct:b").end().process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         String to = exchange.getProperty(Exchange.TO_ENDPOINT, String.class);
                         assertEquals("direct://b", to);
                     }
@@ -174,7 +174,7 @@ public class ToEndpointPropertyTest extends ContextTestSupport {
     public void testDLCToEndpoint() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead").disableRedelivery());
 
                 from("direct:start").to("direct:foo").to("mock:result");
@@ -198,7 +198,7 @@ public class ToEndpointPropertyTest extends ContextTestSupport {
     public void testMediumDLCToEndpoint() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("direct:dead").disableRedelivery());
 
                 from("direct:start").to("direct:foo").to("mock:result");
@@ -224,7 +224,7 @@ public class ToEndpointPropertyTest extends ContextTestSupport {
     public void testMulticastDLC() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead").disableRedelivery());
 
                 from("direct:start").multicast().to("direct:a", "direct:b");

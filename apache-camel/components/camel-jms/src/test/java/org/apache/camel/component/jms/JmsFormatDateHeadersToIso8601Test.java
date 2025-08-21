@@ -27,8 +27,6 @@ import org.apache.camel.test.infra.artemis.common.ConnectionFactoryHelper;
 import org.apache.camel.test.infra.artemis.services.ArtemisService;
 import org.apache.camel.test.infra.artemis.services.ArtemisVMService;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -37,14 +35,13 @@ import static org.apache.camel.component.jms.JmsComponent.jmsComponentAutoAcknow
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-@Tags({ @Tag("not-parallel") })
-@TestInstance(TestInstance.Lifecycle.PER_METHOD)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class JmsFormatDateHeadersToIso8601Test extends CamelTestSupport {
 
     private static final Date DATE = Date.from(Instant.ofEpochMilli(1519672338000L));
 
     @RegisterExtension
-    public static ArtemisService service = new ArtemisVMService();
+    public ArtemisService service = new ArtemisVMService();
 
     @Test
     public void testComponentFormatDateHeaderToIso8601() {

@@ -16,10 +16,6 @@
  */
 package org.apache.camel.component.mail;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
 import jakarta.activation.DataHandler;
 import jakarta.activation.FileDataSource;
 
@@ -28,13 +24,12 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Producer;
 import org.apache.camel.attachment.AttachmentMessage;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mail.Mailbox.MailboxUser;
-import org.apache.camel.component.mail.Mailbox.Protocol;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.jvnet.mock_javamail.Mailbox;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Tests the {@link SplitAttachmentsExpression}.
  */
 public class MailSplitAttachmentsTest extends CamelTestSupport {
-    private static final MailboxUser james = Mailbox.getOrCreateUser("james", "secret");
 
     private Endpoint endpoint;
     private SplitAttachmentsExpression splitAttachmentsExpression;
@@ -57,7 +51,7 @@ public class MailSplitAttachmentsTest extends CamelTestSupport {
     @BeforeEach
     public void setup() {
         // create the exchange with the mail message that is multipart with a file and a Hello World text/plain message.
-        endpoint = context.getEndpoint(james.uriPrefix(Protocol.smtp));
+        endpoint = context.getEndpoint("smtp://james@mymailserver.com?password=secret");
         exchange = endpoint.createExchange();
         AttachmentMessage in = exchange.getIn(AttachmentMessage.class);
         in.setBody("Hello World");
@@ -87,8 +81,7 @@ public class MailSplitAttachmentsTest extends CamelTestSupport {
         assertEquals("log4j2.properties", second.getHeader("CamelSplitAttachmentId"));
 
         byte[] expected1 = IOUtils.toByteArray(new FileDataSource("src/test/data/logo.jpeg").getInputStream());
-        byte[] expected2 = Files.readString(Paths.get("src/test/resources/log4j2.properties"), StandardCharsets.UTF_8)
-                .replace("\n", "\r\n").trim().getBytes(StandardCharsets.UTF_8);
+        byte[] expected2 = IOUtils.toByteArray(new FileDataSource("src/test/resources/log4j2.properties").getInputStream());
 
         assertArrayEquals(expected1, first.getBody(byte[].class));
         assertArrayEquals(expected2, second.getBody(byte[].class));
@@ -103,7 +96,7 @@ public class MailSplitAttachmentsTest extends CamelTestSupport {
             @Override
             public void configure() {
                 // START SNIPPET: e1
-                from(james.uriPrefix(Protocol.imap) + "&initialDelay=100&delay=100")
+                from("pop3://james@mymailserver.com?password=secret&initialDelay=100&delay=100")
                         .to("log:email")
                         // use the SplitAttachmentsExpression which will split the message per attachment
                         .split(splitAttachmentsExpression)

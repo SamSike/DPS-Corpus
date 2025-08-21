@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.PropertyEditorRegistry;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -98,13 +97,13 @@ public abstract class AbstractBindingResult extends AbstractErrors implements Bi
 	}
 
 	@Override
-	public void reject(String errorCode, Object @Nullable [] errorArgs, @Nullable String defaultMessage) {
+	public void reject(String errorCode, @Nullable Object[] errorArgs, @Nullable String defaultMessage) {
 		addError(new ObjectError(getObjectName(), resolveMessageCodes(errorCode), errorArgs, defaultMessage));
 	}
 
 	@Override
-	public void rejectValue(@Nullable String field, String errorCode,
-			Object @Nullable [] errorArgs, @Nullable String defaultMessage) {
+	public void rejectValue(@Nullable String field, String errorCode, @Nullable Object[] errorArgs,
+			@Nullable String defaultMessage) {
 
 		if (!StringUtils.hasLength(getNestedPath()) && !StringUtils.hasLength(field)) {
 			// We're at the top of the nested object hierarchy,
@@ -156,7 +155,8 @@ public abstract class AbstractBindingResult extends AbstractErrors implements Bi
 	}
 
 	@Override
-	public @Nullable ObjectError getGlobalError() {
+	@Nullable
+	public ObjectError getGlobalError() {
 		for (ObjectError objectError : this.errors) {
 			if (!(objectError instanceof FieldError)) {
 				return objectError;
@@ -169,18 +169,19 @@ public abstract class AbstractBindingResult extends AbstractErrors implements Bi
 	public List<FieldError> getFieldErrors() {
 		List<FieldError> result = new ArrayList<>();
 		for (ObjectError objectError : this.errors) {
-			if (objectError instanceof FieldError fieldError) {
-				result.add(fieldError);
+			if (objectError instanceof FieldError) {
+				result.add((FieldError) objectError);
 			}
 		}
 		return Collections.unmodifiableList(result);
 	}
 
 	@Override
-	public @Nullable FieldError getFieldError() {
+	@Nullable
+	public FieldError getFieldError() {
 		for (ObjectError objectError : this.errors) {
-			if (objectError instanceof FieldError fieldError) {
-				return fieldError;
+			if (objectError instanceof FieldError) {
+				return (FieldError) objectError;
 			}
 		}
 		return null;
@@ -191,26 +192,31 @@ public abstract class AbstractBindingResult extends AbstractErrors implements Bi
 		List<FieldError> result = new ArrayList<>();
 		String fixedField = fixedField(field);
 		for (ObjectError objectError : this.errors) {
-			if (objectError instanceof FieldError fieldError && isMatchingFieldError(fixedField, fieldError)) {
-				result.add(fieldError);
+			if (objectError instanceof FieldError && isMatchingFieldError(fixedField, (FieldError) objectError)) {
+				result.add((FieldError) objectError);
 			}
 		}
 		return Collections.unmodifiableList(result);
 	}
 
 	@Override
-	public @Nullable FieldError getFieldError(String field) {
+	@Nullable
+	public FieldError getFieldError(String field) {
 		String fixedField = fixedField(field);
 		for (ObjectError objectError : this.errors) {
-			if (objectError instanceof FieldError fieldError && isMatchingFieldError(fixedField, fieldError)) {
-				return fieldError;
+			if (objectError instanceof FieldError) {
+				FieldError fieldError = (FieldError) objectError;
+				if (isMatchingFieldError(fixedField, fieldError)) {
+					return fieldError;
+				}
 			}
 		}
 		return null;
 	}
 
 	@Override
-	public @Nullable Object getFieldValue(String field) {
+	@Nullable
+	public Object getFieldValue(String field) {
 		FieldError fieldError = getFieldError(field);
 		// Use rejected value in case of error, current field value otherwise.
 		if (fieldError != null) {
@@ -234,7 +240,8 @@ public abstract class AbstractBindingResult extends AbstractErrors implements Bi
 	 * @see #getActualFieldValue
 	 */
 	@Override
-	public @Nullable Class<?> getFieldType(@Nullable String field) {
+	@Nullable
+	public Class<?> getFieldType(@Nullable String field) {
 		if (getTarget() != null) {
 			Object value = getActualFieldValue(fixedField(field));
 			if (value != null) {
@@ -272,7 +279,8 @@ public abstract class AbstractBindingResult extends AbstractErrors implements Bi
 	}
 
 	@Override
-	public @Nullable Object getRawFieldValue(String field) {
+	@Nullable
+	public Object getRawFieldValue(String field) {
 		return (getTarget() != null ? getActualFieldValue(fixedField(field)) : null);
 	}
 
@@ -282,7 +290,8 @@ public abstract class AbstractBindingResult extends AbstractErrors implements Bi
 	 * editor lookup facility, if available.
 	 */
 	@Override
-	public @Nullable PropertyEditor findEditor(@Nullable String field, @Nullable Class<?> valueType) {
+	@Nullable
+	public PropertyEditor findEditor(@Nullable String field, @Nullable Class<?> valueType) {
 		PropertyEditorRegistry editorRegistry = getPropertyEditorRegistry();
 		if (editorRegistry != null) {
 			Class<?> valueTypeToUse = valueType;
@@ -300,7 +309,8 @@ public abstract class AbstractBindingResult extends AbstractErrors implements Bi
 	 * This implementation returns {@code null}.
 	 */
 	@Override
-	public @Nullable PropertyEditorRegistry getPropertyEditorRegistry() {
+	@Nullable
+	public PropertyEditorRegistry getPropertyEditorRegistry() {
 		return null;
 	}
 
@@ -351,10 +361,16 @@ public abstract class AbstractBindingResult extends AbstractErrors implements Bi
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof BindingResult that &&
-				getObjectName().equals(that.getObjectName()) &&
-				ObjectUtils.nullSafeEquals(getTarget(), that.getTarget()) &&
-				getAllErrors().equals(that.getAllErrors())));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof BindingResult)) {
+			return false;
+		}
+		BindingResult otherResult = (BindingResult) other;
+		return (getObjectName().equals(otherResult.getObjectName()) &&
+				ObjectUtils.nullSafeEquals(getTarget(), otherResult.getTarget()) &&
+				getAllErrors().equals(otherResult.getAllErrors()));
 	}
 
 	@Override
@@ -371,14 +387,16 @@ public abstract class AbstractBindingResult extends AbstractErrors implements Bi
 	 * Return the wrapped target object.
 	 */
 	@Override
-	public abstract @Nullable Object getTarget();
+	@Nullable
+	public abstract Object getTarget();
 
 	/**
 	 * Extract the actual field value for the given field.
 	 * @param field the field to check
 	 * @return the current value of the field
 	 */
-	protected abstract @Nullable Object getActualFieldValue(String field);
+	@Nullable
+	protected abstract Object getActualFieldValue(String field);
 
 	/**
 	 * Format the given value for the specified field.
@@ -388,7 +406,8 @@ public abstract class AbstractBindingResult extends AbstractErrors implements Bi
 	 * other than from a binding error, or an actual field value)
 	 * @return the formatted value
 	 */
-	protected @Nullable Object formatFieldValue(String field, @Nullable Object value) {
+	@Nullable
+	protected Object formatFieldValue(String field, @Nullable Object value) {
 		return value;
 	}
 

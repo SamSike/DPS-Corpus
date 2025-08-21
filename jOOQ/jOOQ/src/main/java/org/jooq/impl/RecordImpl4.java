@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -53,7 +53,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author Lukas Eder
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({ "unchecked" })
 final class RecordImpl4<T1, T2, T3, T4> extends AbstractRecord implements InternalRecord, Record4<T1, T2, T3, T4> {
 
     RecordImpl4(AbstractRow<?> row) {
@@ -65,33 +65,33 @@ final class RecordImpl4<T1, T2, T3, T4> extends AbstractRecord implements Intern
     // ------------------------------------------------------------------------
 
     @Override
-    public RowImpl4 fieldsRow() {
-        return new RowImpl4(field1(), field2(), field3(), field4());
+    public RowImpl4<T1, T2, T3, T4> fieldsRow() {
+        return new RowImpl4<>(field1(), field2(), field3(), field4());
     }
 
     @Override
-    public final RowImpl4 valuesRow() {
-        return new RowImpl4(Tools.field(value1(), field1()), Tools.field(value2(), field2()), Tools.field(value3(), field3()), Tools.field(value4(), field4()));
+    public final RowImpl4<T1, T2, T3, T4> valuesRow() {
+        return new RowImpl4<>(Tools.field(value1(), field1()), Tools.field(value2(), field2()), Tools.field(value3(), field3()), Tools.field(value4(), field4()));
     }
 
     @Override
-    public final Field field1() {
-        return (@NotNull Field) fields.field(0);
+    public final Field<T1> field1() {
+        return (@NotNull Field<T1>) fields.field(0);
     }
 
     @Override
-    public final Field field2() {
-        return (@NotNull Field) fields.field(1);
+    public final Field<T2> field2() {
+        return (@NotNull Field<T2>) fields.field(1);
     }
 
     @Override
-    public final Field field3() {
-        return (@NotNull Field) fields.field(2);
+    public final Field<T3> field3() {
+        return (@NotNull Field<T3>) fields.field(2);
     }
 
     @Override
-    public final Field field4() {
-        return (@NotNull Field) fields.field(3);
+    public final Field<T4> field4() {
+        return (@NotNull Field<T4>) fields.field(3);
     }
 
     @Override
@@ -139,7 +139,7 @@ final class RecordImpl4<T1, T2, T3, T4> extends AbstractRecord implements Intern
     }
 
     @Override
-    public final Record4 values(T1 t1, T2 t2, T3 t3, T4 t4) {
+    public final Record4<T1, T2, T3, T4> values(T1 t1, T2 t2, T3 t3, T4 t4) {
         set(0, t1);
         set(1, t2);
         set(2, t3);
@@ -148,13 +148,13 @@ final class RecordImpl4<T1, T2, T3, T4> extends AbstractRecord implements Intern
     }
 
     @Override
-    public <T> Record4 with(Field<T> field, T value) {
-        return (Record4) super.with(field, value);
+    public <T> Record4<T1, T2, T3, T4> with(Field<T> field, T value) {
+        return (Record4<T1, T2, T3, T4>) super.with(field, value);
     }
 
     @Override
-    public <T, U> Record4 with(Field<T> field, U value, Converter<? extends T, ? super U> converter) {
-        return (Record4) super.with(field, value, converter);
+    public <T, U> Record4<T1, T2, T3, T4> with(Field<T> field, U value, Converter<? extends T, ? super U> converter) {
+        return (Record4<T1, T2, T3, T4>) super.with(field, value, converter);
     }
 
     @Override

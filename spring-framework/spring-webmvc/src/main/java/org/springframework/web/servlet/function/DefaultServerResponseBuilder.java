@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,18 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
@@ -49,7 +49,7 @@ import org.springframework.web.servlet.ModelAndView;
  */
 class DefaultServerResponseBuilder implements ServerResponse.BodyBuilder {
 
-	private final HttpStatusCode statusCode;
+	private final int statusCode;
 
 	private final HttpHeaders headers = new HttpHeaders();
 
@@ -58,19 +58,23 @@ class DefaultServerResponseBuilder implements ServerResponse.BodyBuilder {
 
 	public DefaultServerResponseBuilder(ServerResponse other) {
 		Assert.notNull(other, "ServerResponse must not be null");
-		this.statusCode = other.statusCode();
+		this.statusCode = (other instanceof AbstractServerResponse ?
+				((AbstractServerResponse) other).statusCode : other.statusCode().value());
 		this.headers.addAll(other.headers());
 		this.cookies.addAll(other.cookies());
 	}
 
-	public DefaultServerResponseBuilder(HttpStatusCode status) {
-		Assert.notNull(status, "HttpStatusCode must not be null");
-		this.statusCode = status;
+	public DefaultServerResponseBuilder(HttpStatus status) {
+		Assert.notNull(status, "HttpStatus must not be null");
+		this.statusCode = status.value();
+	}
+
+	public DefaultServerResponseBuilder(int statusCode) {
+		this.statusCode = statusCode;
 	}
 
 	@Override
-	public ServerResponse.BodyBuilder header(String headerName, @Nullable String... headerValues) {
-		Assert.notNull(headerName, "HeaderName must not be null");
+	public ServerResponse.BodyBuilder header(String headerName, String... headerValues) {
 		for (String headerValue : headerValues) {
 			this.headers.add(headerName, headerValue);
 		}
@@ -79,7 +83,6 @@ class DefaultServerResponseBuilder implements ServerResponse.BodyBuilder {
 
 	@Override
 	public ServerResponse.BodyBuilder headers(Consumer<HttpHeaders> headersConsumer) {
-		Assert.notNull(headersConsumer, "HeaderConsumer must not be null");
 		headersConsumer.accept(this.headers);
 		return this;
 	}
@@ -93,21 +96,18 @@ class DefaultServerResponseBuilder implements ServerResponse.BodyBuilder {
 
 	@Override
 	public ServerResponse.BodyBuilder cookies(Consumer<MultiValueMap<String, Cookie>> cookiesConsumer) {
-		Assert.notNull(cookiesConsumer, "CookiesConsumer must not be null");
 		cookiesConsumer.accept(this.cookies);
 		return this;
 	}
 
 	@Override
 	public ServerResponse.BodyBuilder allow(HttpMethod... allowedMethods) {
-		Assert.notNull(allowedMethods, "Http AllowedMethods must not be null");
 		this.headers.setAllow(new LinkedHashSet<>(Arrays.asList(allowedMethods)));
 		return this;
 	}
 
 	@Override
 	public ServerResponse.BodyBuilder allow(Set<HttpMethod> allowedMethods) {
-		Assert.notNull(allowedMethods, "Http AllowedMethods must not be null");
 		this.headers.setAllow(allowedMethods);
 		return this;
 	}
@@ -120,14 +120,19 @@ class DefaultServerResponseBuilder implements ServerResponse.BodyBuilder {
 
 	@Override
 	public ServerResponse.BodyBuilder contentType(MediaType contentType) {
-		Assert.notNull(contentType, "ContentType must not be null");
 		this.headers.setContentType(contentType);
 		return this;
 	}
 
 	@Override
-	public ServerResponse.BodyBuilder eTag(String tag) {
-		this.headers.setETag(tag);
+	public ServerResponse.BodyBuilder eTag(String etag) {
+		if (!etag.startsWith("\"") && !etag.startsWith("W/\"")) {
+			etag = "\"" + etag;
+		}
+		if (!etag.endsWith("\"")) {
+			etag = etag + "\"";
+		}
+		this.headers.setETag(etag);
 		return this;
 	}
 
@@ -167,8 +172,10 @@ class DefaultServerResponseBuilder implements ServerResponse.BodyBuilder {
 	}
 
 	@Override
-	public ServerResponse build(WriteFunction writeFunction) {
-		return new WriteFunctionResponse(this.statusCode, this.headers, this.cookies, writeFunction);
+	public ServerResponse build(
+			BiFunction<HttpServletRequest, HttpServletResponse, ModelAndView> writeFunction) {
+
+		return new WriterFunctionResponse(this.statusCode, this.headers, this.cookies, writeFunction);
 	}
 
 	@Override
@@ -209,17 +216,13 @@ class DefaultServerResponseBuilder implements ServerResponse.BodyBuilder {
 				.build();
 	}
 
-	@Override
-	public ServerResponse stream(Consumer<ServerResponse.StreamBuilder> streamConsumer) {
-		return StreamingServerResponse.create(this.statusCode, this.headers, this.cookies, streamConsumer, null);
-	}
 
-	private static class WriteFunctionResponse extends AbstractServerResponse {
+	private static class WriterFunctionResponse extends AbstractServerResponse {
 
-		private final WriteFunction writeFunction;
+		private final BiFunction<HttpServletRequest, HttpServletResponse, ModelAndView> writeFunction;
 
-		public WriteFunctionResponse(HttpStatusCode statusCode, HttpHeaders headers, MultiValueMap<String, Cookie> cookies,
-				WriteFunction writeFunction) {
+		public WriterFunctionResponse(int statusCode, HttpHeaders headers, MultiValueMap<String, Cookie> cookies,
+				BiFunction<HttpServletRequest, HttpServletResponse, ModelAndView> writeFunction) {
 
 			super(statusCode, headers, cookies);
 			Assert.notNull(writeFunction, "WriteFunction must not be null");
@@ -227,10 +230,10 @@ class DefaultServerResponseBuilder implements ServerResponse.BodyBuilder {
 		}
 
 		@Override
-		protected @Nullable ModelAndView writeToInternal(HttpServletRequest request, HttpServletResponse response,
-				Context context) throws Exception {
+		protected ModelAndView writeToInternal(
+				HttpServletRequest request, HttpServletResponse response, Context context) {
 
-			return this.writeFunction.write(request, response);
+			return this.writeFunction.apply(request, response);
 		}
 	}
 

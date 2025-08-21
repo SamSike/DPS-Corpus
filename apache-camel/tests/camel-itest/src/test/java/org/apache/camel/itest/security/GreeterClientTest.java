@@ -27,7 +27,7 @@ import jakarta.xml.ws.soap.SOAPFaultException;
 import javax.xml.namespace.QName;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.test.AvailablePort;
+import org.apache.camel.test.AvailablePortFinder;
 import org.apache.camel.test.spring.junit5.CamelSpringTest;
 import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.frontend.ClientProxy;
@@ -68,7 +68,7 @@ public class GreeterClientTest {
         Map<String, Object> props = new HashMap<>();
         props.put("action", "UsernameToken");
         props.put("user", username);
-        // Set the password type to be plain text,
+        // Set the password type to be plain text, 
         // so we can keep using the password to authenticate with spring security
         props.put("passwordType", "PasswordText");
         WSS4JOutInterceptor wss4jOut = new WSS4JOutInterceptor(props);
@@ -122,14 +122,14 @@ public class GreeterClientTest {
                     "Get a wrong exception message");
             assertTrue(
                     ex.getMessage().endsWith(
-                            "Caused by: [org.springframework.security.authorization.AuthorizationDeniedException - Access Denied]"),
+                            "Caused by: [org.springframework.security.access.AccessDeniedException - Access is denied]"),
                     "Get a wrong exception message");
         }
     }
 
     public static boolean isPortAvailable() {
         try {
-            AvailablePort.probePort(InetAddress.getByName("localhost"), 9000);
+            AvailablePortFinder.probePort(InetAddress.getByName("localhost"), 9000);
         } catch (IllegalStateException | UnknownHostException e) {
             return false;
         }

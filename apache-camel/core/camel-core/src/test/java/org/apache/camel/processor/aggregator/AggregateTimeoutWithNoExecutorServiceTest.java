@@ -21,12 +21,9 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.processor.aggregate.UseLatestAggregationStrategy;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisabledIfSystemProperty(named = "camel.threads.virtual.enabled", matches = "true",
-                          disabledReason = "In case of Virtual Threads, the threads cannot be counted this way")
 public class AggregateTimeoutWithNoExecutorServiceTest extends ContextTestSupport {
 
     @Test
@@ -51,10 +48,10 @@ public class AggregateTimeoutWithNoExecutorServiceTest extends ContextTestSuppor
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 for (int i = 0; i < AggregateTimeoutWithExecutorServiceTest.NUM_AGGREGATORS; ++i) {
                     from("direct:start" + i)
                             // aggregate timeout after 0.1 second

@@ -2,7 +2,9 @@
  * Core package of the JMS support.
  * Provides a JmsTemplate class and various callback interfaces.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jms.core;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

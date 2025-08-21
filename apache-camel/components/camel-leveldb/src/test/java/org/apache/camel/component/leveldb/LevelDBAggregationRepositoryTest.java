@@ -21,12 +21,13 @@ import java.io.File;
 import org.apache.camel.Exchange;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.test.junit5.params.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 @DisabledOnOs({ OS.AIX, OS.OTHER })
 public class LevelDBAggregationRepositoryTest extends LevelDBTestSupport {
@@ -34,7 +35,9 @@ public class LevelDBAggregationRepositoryTest extends LevelDBTestSupport {
     private LevelDBFile levelDBFile;
 
     @Override
-    public void doPostSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
         deleteDirectory("target/data");
         File file = new File("target/data/leveldb.dat");
         levelDBFile = new LevelDBFile();
@@ -43,8 +46,10 @@ public class LevelDBAggregationRepositoryTest extends LevelDBTestSupport {
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
         levelDBFile.stop();
+        super.tearDown();
     }
 
     @Test
@@ -56,13 +61,13 @@ public class LevelDBAggregationRepositoryTest extends LevelDBTestSupport {
 
         // Can't get something we have not put in...
         Exchange actual = repo.get(context, "missing");
-        assertNull(actual);
+        assertEquals(null, actual);
 
         // Store it..
         Exchange exchange1 = new DefaultExchange(context);
         exchange1.getIn().setBody("counter:1");
         actual = repo.add(context, "foo", exchange1);
-        assertNull(actual);
+        assertEquals(null, actual);
 
         // Get it back..
         actual = repo.get(context, "foo");
@@ -82,13 +87,13 @@ public class LevelDBAggregationRepositoryTest extends LevelDBTestSupport {
         // now remove it
         repo.remove(context, "foo", actual);
         actual = repo.get(context, "foo");
-        assertNull(actual);
+        assertEquals(null, actual);
 
         // add it again
         exchange1 = new DefaultExchange(context);
         exchange1.getIn().setBody("counter:3");
         actual = repo.add(context, "foo", exchange1);
-        assertNull(actual);
+        assertEquals(null, actual);
 
         // Get it back..
         actual = repo.get(context, "foo");

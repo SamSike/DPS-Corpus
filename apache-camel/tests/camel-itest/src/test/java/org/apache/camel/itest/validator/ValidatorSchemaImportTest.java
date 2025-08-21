@@ -33,7 +33,7 @@ public class ValidatorSchemaImportTest extends CamelTestSupport {
 
     /**
      * Test for the valid schema location
-     *
+     * 
      * @throws Exception
      */
     @Test
@@ -63,7 +63,7 @@ public class ValidatorSchemaImportTest extends CamelTestSupport {
 
     /**
      * Test for the invalid schema import location.
-     *
+     * 
      * @throws Exception
      */
     @Test
@@ -89,7 +89,7 @@ public class ValidatorSchemaImportTest extends CamelTestSupport {
 
     /**
      * Test for the invalid schema import location.
-     *
+     * 
      * @throws Exception
      */
     @Test
@@ -115,7 +115,7 @@ public class ValidatorSchemaImportTest extends CamelTestSupport {
 
     /**
      * Test for the valid schema location relative to a path other than the validating schema
-     *
+     * 
      * @throws Exception
      */
     @Test
@@ -145,7 +145,8 @@ public class ValidatorSchemaImportTest extends CamelTestSupport {
 
     @Override
     @BeforeEach
-    public void doPostSetup() {
+    public void setUp() throws Exception {
+        super.setUp();
         validEndpoint = resolveMandatoryEndpoint("mock:valid", MockEndpoint.class);
         invalidEndpoint = resolveMandatoryEndpoint("mock:invalid", MockEndpoint.class);
         finallyEndpoint = resolveMandatoryEndpoint("mock:finally", MockEndpoint.class);

@@ -16,7 +16,6 @@
  */
 package org.apache.camel.support.processor.validation;
 
-import java.io.Serial;
 import java.util.List;
 
 import org.xml.sax.SAXParseException;
@@ -28,7 +27,7 @@ import org.apache.camel.ValidationException;
  * A Schema validation exception occurred
  */
 public class SchemaValidationException extends ValidationException {
-    private static final @Serial long serialVersionUID = 2656907296674888684L;
+    private static final long serialVersionUID = 2656907296674888684L;
 
     private final Object schema;
     private final List<SAXParseException> fatalErrors;
@@ -75,8 +74,7 @@ public class SchemaValidationException extends ValidationException {
     protected static String message(
             Object schema, List<SAXParseException> fatalErrors,
             List<SAXParseException> errors, List<SAXParseException> warnings) {
-        StringBuilder buffer = new StringBuilder(128)
-                .append("Validation failed for: ")
+        StringBuilder buffer = new StringBuilder("Validation failed for: ")
                 .append(schema)
                 .append("\n");
 

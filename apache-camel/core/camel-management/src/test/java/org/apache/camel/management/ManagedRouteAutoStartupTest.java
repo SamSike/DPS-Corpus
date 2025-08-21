@@ -64,13 +64,13 @@ public class ManagedRouteAutoStartupTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:bar").routeId("bar").to("mock:bar");
 
-                from("direct:foo").routeId("foo").autoStartup(false).transform(constant("Bye World"));
+                from("direct:foo").routeId("foo").noAutoStartup().transform(constant("Bye World"));
             }
         };
     }

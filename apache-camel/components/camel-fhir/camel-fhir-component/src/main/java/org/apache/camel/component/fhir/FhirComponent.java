@@ -33,11 +33,11 @@ public class FhirComponent extends AbstractApiComponent<FhirApiName, FhirConfigu
     private FhirConfiguration configuration;
 
     public FhirComponent() {
-        super(FhirApiName.class, FhirApiCollection.getCollection());
+        super(FhirEndpoint.class, FhirApiName.class, FhirApiCollection.getCollection());
     }
 
     public FhirComponent(CamelContext context) {
-        super(context, FhirApiName.class, FhirApiCollection.getCollection());
+        super(context, FhirEndpoint.class, FhirApiName.class, FhirApiCollection.getCollection());
     }
 
     @Override

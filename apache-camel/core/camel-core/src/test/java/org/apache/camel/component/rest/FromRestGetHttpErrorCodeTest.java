@@ -29,20 +29,20 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class FromRestGetHttpErrorCodeTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("dummy-rest", new DummyRestConsumerFactory());
         return jndi;
     }
 
     @Test
-    public void testFromRestModel() {
+    public void testFromRestModel() throws Exception {
         String out = template.requestBody("seda:get-say-bye", "I was here", String.class);
         assertEquals("Bye World", out);
 
         Exchange reply = template.request("seda:get-say-bye", new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("Kaboom");
             }
         });
@@ -52,10 +52,10 @@ public class FromRestGetHttpErrorCodeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 restConfiguration().host("localhost");
                 rest("/say/bye").get().to("direct:bye");
 

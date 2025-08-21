@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -50,38 +50,24 @@ import static org.jooq.Clause.INSERT_ON_DUPLICATE_KEY_UPDATE_ASSIGNMENT;
 import static org.jooq.Clause.INSERT_RETURNING;
 // ...
 // ...
-// ...
-// ...
-// ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
-import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
-// ...
 import static org.jooq.SQLDialect.MARIADB;
 // ...
 import static org.jooq.SQLDialect.MYSQL;
 // ...
 // ...
-import static org.jooq.SQLDialect.POSTGRES;
-// ...
-// ...
 import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
-// ...
-import static org.jooq.SQLDialect.TRINO;
-import static org.jooq.conf.ParamType.INLINED;
-import static org.jooq.impl.ConditionProviderImpl.extractCondition;
 import static org.jooq.impl.DSL.constraint;
-import static org.jooq.impl.DSL.default_;
+import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.one;
+import static org.jooq.impl.DSL.row;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.selectFrom;
 import static org.jooq.impl.DSL.selectOne;
-import static org.jooq.impl.Default.NO_SUPPORT_DEFAULT_EXPRESSION_INSERT;
 import static org.jooq.impl.FieldMapsForInsert.toSQLInsertSelect;
 import static org.jooq.impl.Keywords.K_AS;
 import static org.jooq.impl.Keywords.K_DEFAULT;
@@ -106,15 +92,12 @@ import static org.jooq.impl.Tools.flattenCollection;
 import static org.jooq.impl.Tools.map;
 import static org.jooq.impl.Tools.orElse;
 import static org.jooq.impl.Tools.qualify;
-import static org.jooq.impl.Tools.recordDirtyTrackingPredicate;
-import static org.jooq.impl.Tools.unalias;
 import static org.jooq.impl.Tools.unqualified;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_CONSTRAINT_REFERENCE;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_INSERT_SELECT;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_INSERT_SELECT_WITHOUT_INSERT_COLUMN_LIST;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_MANDATORY_WHERE_CLAUSE;
 import static org.jooq.impl.Tools.SimpleDataKey.DATA_ON_DUPLICATE_KEY_WHERE;
-import static org.jooq.tools.StringUtils.defaultIfNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -124,7 +107,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import org.jooq.Clause;
 import org.jooq.Condition;
@@ -132,9 +114,6 @@ import org.jooq.Configuration;
 import org.jooq.Constraint;
 import org.jooq.Context;
 import org.jooq.Field;
-import org.jooq.FieldOrRow;
-import org.jooq.FieldOrRowOrSelect;
-import org.jooq.Fields;
 import org.jooq.GeneratorStatementType;
 import org.jooq.Identity;
 import org.jooq.InsertQuery;
@@ -145,21 +124,15 @@ import org.jooq.Operator;
 // ...
 import org.jooq.QueryPart;
 import org.jooq.Record;
-// ...
-import org.jooq.Row;
 import org.jooq.SQLDialect;
 import org.jooq.Scope;
 import org.jooq.Select;
 import org.jooq.Table;
 import org.jooq.TableField;
-// ...
-// ...
 import org.jooq.UniqueKey;
 import org.jooq.conf.WriteIfReadonly;
 import org.jooq.impl.FieldMapForUpdate.SetClause;
-import org.jooq.impl.QOM.Insert;
-import org.jooq.impl.QOM.UnmodifiableList;
-import org.jooq.impl.QOM.UnmodifiableMap;
+import org.jooq.impl.QOM.UNotYetImplemented;
 import org.jooq.impl.Tools.BooleanDataKey;
 import org.jooq.impl.Tools.ExtendedDataKey;
 import org.jooq.tools.StringUtils;
@@ -172,37 +145,35 @@ extends
     AbstractStoreQuery<R, Field<?>, Field<?>>
 implements
     InsertQuery<R>,
-    QOM.Insert<R>
+    UNotYetImplemented
 {
 
-    static final Clause[]        CLAUSES                                       = { INSERT };
-    static final Set<SQLDialect> SUPPORT_INSERT_IGNORE                         = SQLDialect.supportedBy(MARIADB, MYSQL);
-    static final Set<SQLDialect> SUPPORTS_OPTIONAL_DO_UPDATE_CONFLICT_TARGETS  = SQLDialect.supportedBy(SQLITE);
-    static final Set<SQLDialect> NO_SUPPORT_DERIVED_COLUMN_LIST_IN_MERGE_USING = SQLDialect.supportedBy(DERBY, H2);
-    static final Set<SQLDialect> NO_SUPPORT_SUBQUERY_IN_MERGE_USING            = SQLDialect.supportedBy(DERBY);
-    static final Set<SQLDialect> REQUIRE_NEW_MYSQL_EXCLUDED_EMULATION          = SQLDialect.supportedBy(MYSQL);
-    static final Set<SQLDialect> NO_SUPPORT_INSERT_ALIASED_TABLE               = SQLDialect.supportedBy(DERBY, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, TRINO);
-    static final Set<SQLDialect> NO_SUPPORT_ON_CONSTRAINT_ON_CONFLICT          = SQLDialect.supportedUntil(DUCKDB);
+    private static final Clause[]        CLAUSES                                       = { INSERT };
+    private static final Set<SQLDialect> SUPPORT_INSERT_IGNORE                         = SQLDialect.supportedBy(MARIADB, MYSQL);
+    private static final Set<SQLDialect> SUPPORTS_OPTIONAL_DO_UPDATE_CONFLICT_TARGETS  = SQLDialect.supportedBy(SQLITE);
+    private static final Set<SQLDialect> NO_SUPPORT_DERIVED_COLUMN_LIST_IN_MERGE_USING = SQLDialect.supportedBy(DERBY, H2);
+    private static final Set<SQLDialect> NO_SUPPORT_SUBQUERY_IN_MERGE_USING            = SQLDialect.supportedBy(DERBY);
+    static final Set<SQLDialect>         REQUIRE_NEW_MYSQL_EXCLUDED_EMULATION          = SQLDialect.supportedBy(MYSQL);
 
-    final FieldMapsForInsert     insertMaps;
-    Select<?>                    select;
-    boolean                      defaultValues;
-    boolean                      onDuplicateKeyUpdate;
-    boolean                      onDuplicateKeyIgnore;
-    Constraint                   onConstraint;
-    UniqueKey<R>                 onConstraintUniqueKey;
-    QueryPartList<Field<?>>      onConflict;
-    final ConditionProviderImpl  onConflictWhere;
-    final FieldMapForUpdate      updateMap;
-    final ConditionProviderImpl  updateWhere;
+    final FieldMapForUpdate              updateMap;
+    final FieldMapsForInsert             insertMaps;
+    Select<?>                            select;
+    boolean                              defaultValues;
+    boolean                              onDuplicateKeyUpdate;
+    boolean                              onDuplicateKeyIgnore;
+    Constraint                           onConstraint;
+    UniqueKey<R>                         onConstraintUniqueKey;
+    QueryPartList<Field<?>>              onConflict;
+    final ConditionProviderImpl          onConflictWhere;
+    final ConditionProviderImpl          condition;
 
     InsertQueryImpl(Configuration configuration, WithImpl with, Table<R> into) {
         super(configuration, with, into);
 
+        this.updateMap = new FieldMapForUpdate(into, SetClause.INSERT, INSERT_ON_DUPLICATE_KEY_UPDATE_ASSIGNMENT);
         this.insertMaps = new FieldMapsForInsert(into);
         this.onConflictWhere = new ConditionProviderImpl();
-        this.updateMap = new FieldMapForUpdate(into, SetClause.INSERT, INSERT_ON_DUPLICATE_KEY_UPDATE_ASSIGNMENT);
-        this.updateWhere = new ConditionProviderImpl();
+        this.condition = new ConditionProviderImpl();
     }
 
     @Override
@@ -272,22 +243,14 @@ implements
 
     @Override
     public final void onDuplicateKeyUpdate(boolean flag) {
-        onDuplicateKeyUpdate = flag;
-
-        if (flag) {
-            onDuplicateKeyIgnore = false;
-        }
+        this.onDuplicateKeyIgnore = false;
+        this.onDuplicateKeyUpdate = flag;
     }
 
     @Override
     public final void onDuplicateKeyIgnore(boolean flag) {
-        onDuplicateKeyIgnore = flag;
-
-        if (flag) {
-            onDuplicateKeyUpdate = false;
-            updateMap.clear();
-            updateWhere.setWhere(null);
-        }
+        this.onDuplicateKeyUpdate = false;
+        this.onDuplicateKeyIgnore = flag;
     }
 
     @Override
@@ -305,50 +268,39 @@ implements
         updateMap.set(map);
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Override
-    public final void setRecordForUpdate(R record) {
-        ObjIntPredicate<Record> dirty = recordDirtyTrackingPredicate(this);
-
-        for (int i = 0; i < record.size(); i++)
-            if (dirty.test(record, i))
-                addValueForUpdate((Field) record.field(i), record.get(i));
-    }
-
     @Override
     public final void addConditions(Condition conditions) {
-        updateWhere.addConditions(conditions);
+        condition.addConditions(conditions);
     }
 
     @Override
     public final void addConditions(Condition... conditions) {
-        updateWhere.addConditions(conditions);
+        condition.addConditions(conditions);
     }
 
     @Override
     public final void addConditions(Collection<? extends Condition> conditions) {
-        updateWhere.addConditions(conditions);
+        condition.addConditions(conditions);
     }
 
     @Override
     public final void addConditions(Operator operator, Condition conditions) {
-        updateWhere.addConditions(operator, conditions);
+        condition.addConditions(operator, conditions);
     }
 
     @Override
     public final void addConditions(Operator operator, Condition... conditions) {
-        updateWhere.addConditions(operator, conditions);
+        condition.addConditions(operator, conditions);
     }
 
     @Override
     public final void addConditions(Operator operator, Collection<? extends Condition> conditions) {
-        updateWhere.addConditions(operator, conditions);
+        condition.addConditions(operator, conditions);
     }
 
     @Override
     public final void setDefaultValues() {
         defaultValues = true;
-        select = null;
     }
 
     private final boolean defaultValues(Configuration c) {
@@ -367,8 +319,6 @@ implements
 
     @Override
     public final void setSelect(Collection<? extends Field<?>> f, Select<?> s) {
-        defaultValues = false;
-        insertMaps.clear();
         insertMaps.addFields(f);
         select = s;
     }
@@ -378,90 +328,8 @@ implements
         insertMaps.set(map);
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
-    public final void accept(Context<?> ctx) {
-
-        // [#15506] Transform the statement if UDT paths have to be emulated
-        FieldMapsForInsert.OrSelect ei = insertMaps.emulateUDTPaths(ctx, select);
-        FieldMapForUpdate eu = updateMap.emulateUDTPaths(ctx);
-        if (ei != null || eu != null) {
-            Insert<?> i = this;
-
-            if (ei != null) {
-                if (ei.select() != null)
-                    i = i.$columns(ei.values().$columns()).$select(ei.select());
-                else
-                    i = i.$columns(ei.values().$columns()).$values(ei.values().$values());
-            }
-            if (eu != null)
-                i = i.$updateSet(eu);
-
-            ctx.visit(i);
-            return;
-        }
-
-        ctx.scopeStart(this);
-
-        // [#2682] [#15632] Apply inline derived tables to the target table
-        Table<?> t = InlineDerivedTable.inlineDerivedTable(ctx, table(ctx));
-        if (t instanceof InlineDerivedTable<?> i) {
-            copy(
-                d -> {
-                    if (!d.insertMaps.values.isEmpty()) {
-
-                        // [#15632] SchemaMapping could produce a different table than the one contained
-                        //          in the inline derived table specification, and the alias must reflect that
-                        Table<?> m = DSL.table(name("t"));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                        if ((onDuplicateKeyIgnore || onDuplicateKeyUpdate) && ctx.configuration().requireCommercial(() -> "InlineDerivedTable emulation for INSERT .. ON DUPLICATE KEY clauses is available in the commercial jOOQ editions only")) {
-
-
-
-
-
-                        }
-
-                        d.select =
-                            selectFrom(
-                                (d.select != null ? d.select : d.insertMaps.insertSelect(ctx, null))
-                                .asTable(m, d.insertMaps.keysFlattened(ctx, GeneratorStatementType.INSERT)))
-                            .where(CustomCondition.of(c1 -> c1
-
-                                // [#15632] Map the original table reference to the derived table alias
-                                //          to prevent schema mapping in the condition.
-                                .scopeRegister(i.table, false, m)
-                                .visit(i.condition)
-                                .scopeRegister(i.table, false, null)
-                            ));
-                    }
-                },
-                i.table
-            ).accept0(ctx);
-        }
-        else
-            accept0(ctx);
-
-        ctx.scopeEnd();
-    }
-
-    @Override
-    final void accept1(Context<?> ctx) {
+    final void accept0(Context<?> ctx) {
 
 
 
@@ -473,79 +341,74 @@ implements
             switch (ctx.family()) {
 
 
-                case DUCKDB:
                 case POSTGRES:
                 case SQLITE:
                 case YUGABYTEDB: {
+                    ctx.data(DATA_MANDATORY_WHERE_CLAUSE, ctx.family() == SQLITE, c -> toSQLInsert(c, false));
 
-                    // [#7552] Dialects supporting both MERGE and ON CONFLICT should
-                    //         generate MERGE to emulate MySQL's ON DUPLICATE KEY UPDATE
-                    //         if there are multiple known unique constraints.
-                    if (ctx.dialect().supports(POSTGRES)
-                            && onConstraint == null
-                            && onConflict == null
-                            && returning.isEmpty()
-                            && table().getKeys().size() > 1) {
-                        acceptMerge(ctx);
+                    ctx.formatSeparator()
+                       .start(INSERT_ON_DUPLICATE_KEY_UPDATE)
+                       .visit(K_ON_CONFLICT)
+                       .sql(' ');
+
+                    if (onConstraint != null ) {
+                        ctx.data(DATA_CONSTRAINT_REFERENCE, true);
+                        ctx.visit(K_ON_CONSTRAINT)
+                           .sql(' ')
+                           .visit(onConstraint);
+
+                        ctx.data().remove(DATA_CONSTRAINT_REFERENCE);
                     }
                     else {
-                        ctx.data(DATA_MANDATORY_WHERE_CLAUSE, ctx.family() == SQLITE, c -> toSQLInsert(c, false));
+                        if (onConflict != null && onConflict.size() > 0)
+                            ctx.sql('(').visit(onConflict).sql(')');
 
-                        ctx.formatSeparator()
-                           .start(INSERT_ON_DUPLICATE_KEY_UPDATE)
-                           .visit(K_ON_CONFLICT)
-                           .sql(' ');
 
-                        if (onConstraint != null && !NO_SUPPORT_ON_CONSTRAINT_ON_CONFLICT.contains(ctx.dialect())) {
-                            ctx.data(DATA_CONSTRAINT_REFERENCE, true);
-                            ctx.visit(K_ON_CONSTRAINT)
-                               .sql(' ')
-                               .visit(onConstraint);
 
-                            ctx.data().remove(DATA_CONSTRAINT_REFERENCE);
-                        }
-                        else {
-                            if (onConflict != null && onConflict.size() > 0)
-                                ctx.sql('(').visit(onConflict).sql(')');
 
-                            else if (onConstraint != null && NO_SUPPORT_ON_CONSTRAINT_ON_CONFLICT.contains(ctx.dialect()))
-                                if (onConstraintUniqueKey != null)
-                                    ctx.sql('(').qualify(false, c -> c.visit(new FieldsImpl<>(onConstraintUniqueKey.getFields()))).sql(')');
-                                else
-                                    ctx.sql("[unknown unique key]");
 
-                            // [#13273] SQLite 3.38 has started supporting optional on conflict targets
-                            else if (SUPPORTS_OPTIONAL_DO_UPDATE_CONFLICT_TARGETS.contains(ctx.dialect()) && !onConflictWhere.hasWhere())
-                                ;
-                            // [#6462] There is no way to emulate MySQL's ON DUPLICATE KEY UPDATE
-                            //         where all UNIQUE keys are considered for conflicts. PostgreSQL
-                            //         doesn't allow ON CONFLICT DO UPDATE without either a conflict
-                            //         column list or a constraint reference.
-                            else if (table().getPrimaryKey() == null)
-                                ctx.sql("[unknown primary key]");
-                            else
-                                ctx.sql('(').qualify(false, c -> c.visit(new FieldsImpl<>(table().getPrimaryKey().getFields()))).sql(')');
-                        }
 
-                        acceptOnConflictWhere(ctx);
 
-                        ctx.formatSeparator()
-                           .visit(K_DO_UPDATE)
-                           .formatSeparator()
-                           .visit(K_SET)
-                           .formatIndentStart()
-                           .formatSeparator()
-                           .visit(updateMapComputedOnClientStored(ctx))
-                           .formatIndentEnd();
 
-                        if (updateWhere.hasWhere())
-                            ctx.formatSeparator()
-                               .visit(K_WHERE)
-                               .sql(' ')
-                               .visit(updateWhere);
 
-                        ctx.end(INSERT_ON_DUPLICATE_KEY_UPDATE);
+
+
+                        // [#13273] SQLite 3.38 has started supporting optional on conflict targets
+                        else if (SUPPORTS_OPTIONAL_DO_UPDATE_CONFLICT_TARGETS.contains(ctx.dialect()) && !onConflictWhere.hasWhere())
+                            ;
+                        // [#6462] There is no way to emulate MySQL's ON DUPLICATE KEY UPDATE
+                        //         where all UNIQUE keys are considered for conflicts. PostgreSQL
+                        //         doesn't allow ON CONFLICT DO UPDATE without either a conflict
+                        //         column list or a constraint reference.
+                        else if (table().getPrimaryKey() == null)
+                            ctx.sql("[unknown primary key]");
+                        else
+                            ctx.sql('(').qualify(false, c -> c.visit(new FieldsImpl<>(table().getPrimaryKey().getFields()))).sql(')');
                     }
+
+                    if (onConflictWhere.hasWhere())
+                        ctx.qualify(false, c -> c
+                                .formatSeparator()
+                                .visit(K_WHERE)
+                                .sql(' ')
+                                .visit(onConflictWhere.getWhere()));
+
+                    ctx.formatSeparator()
+                       .visit(K_DO_UPDATE)
+                       .formatSeparator()
+                       .visit(K_SET)
+                       .formatIndentStart()
+                       .formatSeparator()
+                       .visit(updateMapComputedOnClientStored(ctx))
+                       .formatIndentEnd();
+
+                    if (condition.hasWhere())
+                        ctx.formatSeparator()
+                           .visit(K_WHERE)
+                           .sql(' ')
+                           .visit(condition);
+
+                    ctx.end(INSERT_ON_DUPLICATE_KEY_UPDATE);
 
                     break;
                 }
@@ -562,11 +425,15 @@ implements
 
 
 
+
+
+
+
                 case DERBY:
                 case FIREBIRD:
                 case H2:
                 case HSQLDB: {
-                    acceptMerge(ctx);
+                    ctx.visit(toMerge(ctx));
                     break;
                 }
 
@@ -597,12 +464,12 @@ implements
                        .qualify(newQualify);
 
                     // [#8479] Emulate WHERE clause using CASE
-                    if (updateWhere.hasWhere())
-                        ctx.data(DATA_ON_DUPLICATE_KEY_WHERE, updateWhere.getWhere());
+                    if (condition.hasWhere())
+                        ctx.data(DATA_ON_DUPLICATE_KEY_WHERE, condition.getWhere());
 
                     if (requireNewMySQLExcludedEmulation) {
                         um.replaceAll((k, v) -> {
-                            if (v instanceof Excluded<?> e) {
+                            if (v instanceof Excluded) { Excluded<?> e = (Excluded<?>) v;
                                 return keys.contains(e.$field()) ? v : qualify(table(), e.$field());
                             }
                             else
@@ -612,7 +479,7 @@ implements
 
                     ctx.visit(um);
 
-                    if (updateWhere.hasWhere())
+                    if (condition.hasWhere())
                         ctx.data().remove(DATA_ON_DUPLICATE_KEY_WHERE);
 
                     ctx.qualify(oldQualify)
@@ -639,45 +506,26 @@ implements
 
 
 
-                case CLICKHOUSE:
-                case IGNITE:
-                case TRINO: {
-                    acceptInsertSelect(ctx);
-                    break;
-                }
-
-                case FIREBIRD: {
 
 
-
-
-
-                    acceptMerge(ctx);
-
+                case FIREBIRD:
+                case IGNITE: {
+                    ctx.visit(toInsertSelect(ctx));
                     break;
                 }
 
 
 
-                case DUCKDB:
                 case POSTGRES:
                 case SQLITE:
                 case YUGABYTEDB: {
-
-
-
-
-
-
-
-
                     ctx.data(DATA_MANDATORY_WHERE_CLAUSE, ctx.family() == SQLITE, c -> toSQLInsert(c, false));
 
                     ctx.formatSeparator()
                        .start(INSERT_ON_DUPLICATE_KEY_UPDATE)
                        .visit(K_ON_CONFLICT);
 
-                    if (onConstraint != null && !NO_SUPPORT_ON_CONSTRAINT_ON_CONFLICT.contains(ctx.dialect())) {
+                    if (onConstraint != null ) {
                         ctx.data(DATA_CONSTRAINT_REFERENCE, true, c -> c
                             .sql(' ')
                             .visit(K_ON_CONSTRAINT)
@@ -688,15 +536,24 @@ implements
                     else {
                         if (onConflict != null && onConflict.size() > 0) {
                             ctx.sql(" (").visit(onConflict).sql(')');
-                            acceptOnConflictWhere(ctx);
+
+                            if (onConflictWhere.hasWhere())
+                                ctx.formatSeparator()
+                                   .visit(K_WHERE)
+                                   .sql(' ')
+                                   .visit(onConflictWhere.getWhere());
                         }
 
-                        else if (onConstraint != null && NO_SUPPORT_ON_CONSTRAINT_ON_CONFLICT.contains(ctx.dialect())) {
-                            if (onConstraintUniqueKey != null)
-                                ctx.sql(" (").qualify(false, c -> c.visit(new FieldsImpl<>(onConstraintUniqueKey.getFields()))).sql(')');
-                            else
-                                ctx.sql(" [ unknown unique key ]");
-                        }
+
+
+
+
+
+
+
+
+
+
                     }
 
                     ctx.formatSeparator()
@@ -729,12 +586,9 @@ implements
 
 
 
-
-
-
                 case H2:
                 case HSQLDB: {
-                    acceptMerge(ctx);
+                    ctx.visit(toMerge(ctx));
                     break;
                 }
 
@@ -742,9 +596,9 @@ implements
 
                     // [#10989] Cannot use MERGE with SELECT: [42XAL]: The source table of a MERGE statement must be a base table or table function.
                     if (select != null)
-                        acceptInsertSelect(ctx);
+                        ctx.visit(toInsertSelect(ctx));
                     else
-                        acceptMerge(ctx);
+                        ctx.visit(toMerge(ctx));
 
                     break;
                 }
@@ -772,23 +626,6 @@ implements
         ctx.end(INSERT_RETURNING);
     }
 
-    private final void acceptOnConflictWhere(Context<?> ctx) {
-        if (onConflictWhere.hasWhere())
-
-            // [#11732] [#13660] Avoid qualification, which wasn't supported in older PG versions
-            // [#12531]          In this very particular case, bind values aren't desirable to avoid
-            //                   mismatches with index specifications
-            ctx.paramType(INLINED,
-                c1 -> c1.qualify(false,
-                    c2 -> c2
-                        .formatSeparator()
-                        .visit(K_WHERE)
-                        .sql(' ')
-                        .visit(onConflictWhere.getWhere())
-                )
-            );
-    }
-
     @Override
     public final Clause[] clauses(Context<?> ctx) {
         return CLAUSES;
@@ -808,15 +645,7 @@ implements
 
         ctx.visit(K_INTO)
            .sql(' ')
-           .declareTables(true, c -> {
-               Table<?> t = table(c);
-
-               // [#8382] [#8384] Table might be aliased and dialect doesn't like that
-               if (NO_SUPPORT_INSERT_ALIASED_TABLE.contains(ctx.dialect()))
-                   ctx.visit(defaultIfNull(Tools.aliased(t), t));
-               else
-                   c.visit(t);
-           });
+           .declareTables(true, c -> c.visit(table(c)));
 
         Set<Field<?>> fields = insertMaps.toSQLReferenceKeys(ctx);
         ctx.end(INSERT_INSERT_INTO);
@@ -889,9 +718,6 @@ implements
 
 
 
-
-
-
                 case DERBY:
                 case MARIADB:
                 case MYSQL:
@@ -899,18 +725,6 @@ implements
                     break;
 
                 default:
-
-
-
-
-
-
-
-
-
-
-
-
                     ctx.formatSeparator()
                        .visit(K_DEFAULT_VALUES);
 
@@ -969,7 +783,7 @@ implements
 
         // [#6462] MySQL ON DUPLICATE KEY UPDATE clause
         //         Flag for backwards compatibility considers only PRIMARY KEY
-        else if (TRUE.equals(ctx.settings().isEmulateOnDuplicateKeyUpdateOnPrimaryKeyOnly()))
+        else if (TRUE.equals(Tools.settings(ctx.configuration()).isEmulateOnDuplicateKeyUpdateOnPrimaryKeyOnly()))
             return singletonList(table().getPrimaryKey().getFields());
 
         // [#6462] MySQL ON DUPLICATE KEY UPDATE clause
@@ -979,7 +793,7 @@ implements
     }
 
     @SuppressWarnings("unchecked")
-    private final void acceptInsertSelect(Context<?> ctx) {
+    private final QueryPart toInsertSelect(Context<?> ctx) {
         List<List<? extends Field<?>>> keys = conflictingKeys(ctx);
 
         if (!keys.isEmpty()) {
@@ -991,15 +805,14 @@ implements
                 Map<Field<?>, Field<?>> map = new HashMap<>();
                 Field<?>[] names = Tools.fields(degree(select));
                 List<Field<?>> f = new ArrayList<>(fields);
-                FieldsImpl<?> lookup = new FieldsImpl<Record>(f);
                 for (int i = 0; i < fields.size() && i < names.length; i++)
                     map.put(f.get(i), names[i]);
 
                 rows = (Select<Record>) selectFrom(select.asTable(DSL.table(name("t")), names))
                     .whereNotExists(
-                        select(one())
+                        selectOne()
                         .from(table())
-                        .where(matchByConflictingKeys(ctx, lookup, map))
+                        .where(matchByConflictingKeys(ctx, map))
                     );
             }
 
@@ -1012,9 +825,9 @@ implements
                     Select<Record> row =
                         select(aliasedFields(map.entrySet().stream().filter(e -> fields.contains(e.getKey())).map(Entry::getValue).collect(toList())))
                         .whereNotExists(
-                            select(one())
+                            selectOne()
                             .from(table())
-                            .where(matchByConflictingKeys(ctx, table(), map))
+                            .where(matchByConflictingKeys(ctx, map))
                         );
 
                     if (rows == null)
@@ -1024,21 +837,16 @@ implements
                 }
             }
 
-            ctx.visit(ctx.dsl()
+            return ctx.dsl()
                 .insertInto(table())
                 .columns(fields)
-                .select(selectFrom(rows.asTable("t")))
-            );
+                .select(selectFrom(rows.asTable("t")));
         }
         else
-            ctx.sql("[ The ON DUPLICATE KEY IGNORE/UPDATE clause cannot be emulated when inserting into tables without any known keys : " + table() + " ]");
+            return DSL.sql("[ The ON DUPLICATE KEY IGNORE/UPDATE clause cannot be emulated when inserting into tables without any known keys : " + table() + " ]");
     }
 
-    private final void acceptMerge(Context<?> ctx) {
-        ctx.data(ExtendedDataKey.DATA_INSERT_ON_DUPLICATE_KEY_UPDATE, this, c -> acceptMerge0(c));
-    }
-
-    private final void acceptMerge0(Context<?> ctx) {
+    private final QueryPart toMerge(Context<?> ctx) {
         if ((onConflict != null && onConflict.size() > 0)
             || onConstraint != null
             || !table().getKeys().isEmpty()) {
@@ -1047,8 +855,7 @@ implements
             Set<Field<?>> k = insertMaps.keysFlattened(ctx, null);
             Collection<Field<?>> f = null;
 
-            // [#15668] The no-subquery-in-MERGE-USING emulation only applies to single row INSERTs
-            if (!NO_SUPPORT_SUBQUERY_IN_MERGE_USING.contains(ctx.dialect()) || select != null || insertMaps.rows > 1) {
+            if (!NO_SUPPORT_SUBQUERY_IN_MERGE_USING.contains(ctx.dialect())) {
                 f = k.isEmpty() ? asList(table().fields()) : k;
 
                 // [#10461]          Multi row inserts need to be emulated using select
@@ -1060,7 +867,7 @@ implements
                 // [#8937] With DEFAULT VALUES, there is no SELECT. Create one from
                 //         known DEFAULT expressions, or use NULL.
                 if (s == null)
-                    s = select(map(f, (Field<?> x) -> x.getDataType().defaulted() ? x.getDataType().default_() : DSL.inline(null, x)));
+                    s = select(map(f, x -> x.getDataType().defaulted() ? x.getDataType().default_() : DSL.NULL(x)));
 
 
 
@@ -1086,7 +893,7 @@ implements
                            .on(matchByConflictingKeys(ctx, t))
                 : ctx.dsl().mergeInto(table())
                            .usingDual()
-                           .on(matchByConflictingKeys(ctx, table(), insertMaps.lastMap()));
+                           .on(matchByConflictingKeys(ctx, insertMaps.lastMap()));
 
             // [#1295] Use UPDATE clause only when with ON DUPLICATE KEY UPDATE,
             //         not with ON DUPLICATE KEY IGNORE
@@ -1097,7 +904,7 @@ implements
                 // [#5214] [#13571] PostgreSQL EXCLUDED pseudo table emulation
                 //                  The InsertQueryImpl uses "t" as table name
                 um.replaceAll((key, v) -> {
-                    if (v instanceof Excluded<?> e) {
+                    if (v instanceof Excluded) { Excluded<?> e = (Excluded<?>) v;
                         if (t != null)
 
                             // If the field isn't part of the USING clause, just
@@ -1116,18 +923,17 @@ implements
                 //         computed column emulation
                 um = updateMapComputedOnClientStored(ctx, um);
 
-                notMatched = updateWhere.hasWhere()
-                    ? on.whenMatchedAnd(updateWhere.getWhere()).thenUpdate().set(um)
+                notMatched = condition.hasWhere()
+                    ? on.whenMatchedAnd(condition.getWhere()).thenUpdate().set(um)
                     : on.whenMatchedThenUpdate().set(um);
             }
 
-            ctx.visit(t != null
+            return t != null
                 ? notMatched.whenNotMatchedThenInsert(f).values(t.fields())
-                : notMatched.whenNotMatchedThenInsert(k).values(insertMaps.lastMap().entrySet().stream().filter(e -> k.contains(e.getKey())).map(Entry::getValue).collect(toList()))
-            );
+                : notMatched.whenNotMatchedThenInsert(k).values(insertMaps.lastMap().entrySet().stream().filter(e -> k.contains(e.getKey())).map(Entry::getValue).collect(toList()));
         }
         else
-            ctx.sql("[ The ON DUPLICATE KEY IGNORE/UPDATE clause cannot be emulated when inserting into non-updatable tables : " + table() + " ]");
+            return DSL.sql("[ The ON DUPLICATE KEY IGNORE/UPDATE clause cannot be emulated when inserting into non-updatable tables : " + table() + " ]");
     }
 
     private final FieldMapForUpdate updateMapComputedOnClientStored(Context<?> ctx) {
@@ -1157,7 +963,7 @@ implements
      * updated primary key values.
      */
     @SuppressWarnings("unchecked")
-    private final Condition matchByConflictingKeys(Context<?> ctx, Fields lookup, Map<Field<?>, Field<?>> map) {
+    private final Condition matchByConflictingKeys(Context<?> ctx, Map<Field<?>, Field<?>> map) {
         Condition or = null;
 
         // [#7365] The ON CONFLICT clause can be emulated using MERGE by joining
@@ -1173,8 +979,8 @@ implements
             Condition and = null;
 
             for (Field<?> field : fields) {
-                Field<Object> f = (Field<Object>) orElse(lookup.field(field), () -> field);
-                Condition other = matchByConflictingKey(f, (Field<Object>) map.get(f));
+                Field<Object> f = (Field<Object>) field;
+                Condition other = matchByConflictingKey(ctx, f, (Field<Object>) map.get(f));
                 and = (and == null) ? other : and.and(other);
             }
 
@@ -1205,8 +1011,8 @@ implements
             Condition and = null;
 
             for (Field<?> field : fields) {
-                Field<Object> f = (Field<Object>) orElse(table().field(field), () -> field);
-                Condition other = matchByConflictingKey(f, s.field(f));
+                Field<Object> f = (Field<Object>) field;
+                Condition other = matchByConflictingKey(ctx, f, s.field(f));
                 and = (and == null) ? other : and.and(other);
             }
 
@@ -1216,273 +1022,20 @@ implements
         return or;
     }
 
-    private final <T> Condition matchByConflictingKey(Field<T> field, Field<T> v) {
-        return field.eq(v);
+    private final <T> Condition matchByConflictingKey(Context<?> ctx, Field<T> f, Field<T> v) {
+
+
+
+
+
+
+        return f.eq(v);
     }
 
     @Override
     public final boolean isExecutable() {
         return insertMaps.isExecutable() || defaultValues(configuration()) || select != null;
     }
-
-    @Override
-    final int estimatedRowCount(Scope ctx) {
-        if (defaultValues(ctx.configuration()))
-            return 1;
-
-        else if (select != null)
-            return Integer.MAX_VALUE;
-
-        // [#2682] [#15632] Inline derived tables (and policies) may generate a SELECT
-        else if (InlineDerivedTable.inlineDerivedTable(ctx, table(ctx)) instanceof InlineDerivedTable)
-            return Integer.MAX_VALUE;
-
-
-
-
-
-
-
-
-        else
-            return insertMaps.rows;
-    }
-
-    // -------------------------------------------------------------------------
-    // XXX: Query Object Model
-    // -------------------------------------------------------------------------
-
-    final InsertQueryImpl<R> copy(Consumer<? super InsertQueryImpl<R>> finisher) {
-        return copy(finisher, with, table);
-    }
-
-    final <O extends Record> InsertQueryImpl<O> copy(Consumer<? super InsertQueryImpl<O>> finisher, Table<O> t) {
-        return copy(finisher, with, t);
-    }
-
-    final <O extends Record> InsertQueryImpl<O> copy(Consumer<? super InsertQueryImpl<O>> finisher, WithImpl w, Table<O> t) {
-        InsertQueryImpl<O> i = new InsertQueryImpl<>(configuration(), w, t);
-
-        if (!returning.isEmpty())
-            i.setReturning(returning);
-
-        i.insertMaps.from(insertMaps);
-        i.defaultValues = defaultValues;
-        i.select = select;
-
-        if (onConflict != null)
-            i.onConflict(onConflict);
-
-        if (onConflictWhere.hasWhere())
-            i.onConflictWhere.setWhere(extractCondition(onConflictWhere));
-
-        i.onConstraint = onConstraint;
-        i.onConstraintUniqueKey = (UniqueKey) onConstraintUniqueKey;
-        i.onDuplicateKeyIgnore = onDuplicateKeyIgnore;
-        i.onDuplicateKeyUpdate = onDuplicateKeyUpdate;
-        i.updateWhere.setWhere(updateWhere.getWhere());
-        i.updateMap.putAll(updateMap);
-        finisher.accept(i);
-        return i;
-    }
-
-    @Override
-    public final WithImpl $with() {
-        return with;
-    }
-
-    @Override
-    public final Table<R> $into() {
-        return table;
-    }
-
-    @Override
-    public final Insert<?> $into(Table<?> newInto) {
-        if ($into() == newInto)
-            return this;
-        else
-            return copy(i -> {}, newInto);
-    }
-
-    @Override
-    public final UnmodifiableList<? extends Field<?>> $columns() {
-        return insertMaps.$columns();
-    }
-
-    @Override
-    public final Insert<?> $columns(Collection<? extends Field<?>> columns) {
-        return copy(i -> i.insertMaps.set(columns, null));
-    }
-
-    @Override
-    public final Select<?> $select() {
-        return select;
-    }
-
-    @Override
-    public final Insert<?> $select(Select<?> newSelect) {
-        if ($select() == newSelect)
-            return this;
-        else
-            return copy(i -> {
-                i.setSelect($columns(), newSelect);
-            });
-    }
-
-    @Override
-    public final boolean $defaultValues() {
-        return defaultValues;
-    }
-
-    @Override
-    public final Insert<?> $defaultValues(boolean newDefaultValues) {
-        if ($defaultValues() == newDefaultValues)
-            return this;
-        else
-            return copy(i -> {
-                if (newDefaultValues)
-                    i.setDefaultValues();
-                else
-                    i.defaultValues = false;
-            });
-    }
-
-    @Override
-    public final UnmodifiableList<? extends Row> $values() {
-        return insertMaps.$values();
-    }
-
-    @Override
-    public final Insert<?> $values(Collection<? extends Row> values) {
-        return copy(i -> i.insertMaps.set(null, values));
-    }
-
-    @Override
-    public final boolean $onDuplicateKeyIgnore() {
-        return onDuplicateKeyIgnore;
-    }
-
-    @Override
-    public final Insert<?> $onDuplicateKeyIgnore(boolean newOnDuplicateKeyIgnore) {
-        if ($onDuplicateKeyIgnore() == newOnDuplicateKeyIgnore)
-            return this;
-        else
-            return copy(i -> i.onDuplicateKeyIgnore(newOnDuplicateKeyIgnore));
-    }
-
-    @Override
-    public final boolean $onDuplicateKeyUpdate() {
-        return onDuplicateKeyUpdate;
-    }
-
-    @Override
-    public final Insert<?> $onDuplicateKeyUpdate(boolean newOnDuplicateKeyUpdate) {
-        if ($onDuplicateKeyUpdate() == newOnDuplicateKeyUpdate)
-            return this;
-        else
-            return copy(i -> i.onDuplicateKeyUpdate(newOnDuplicateKeyUpdate));
-    }
-
-    @Override
-    public final UnmodifiableList<? extends Field<?>> $onConflict() {
-        return QOM.unmodifiable(onConflict == null ? new ArrayList<>() : onConflict);
-    }
-
-    @Override
-    public final Insert<?> $onConflict(Collection<? extends Field<?>> newOnConflict) {
-        if ($onConflict() == newOnConflict)
-            return this;
-        else
-            return copy(i -> i.onConflict(newOnConflict));
-    }
-
-    @Override
-    public final Condition $onConflictWhere() {
-        return onConflictWhere.getWhereOrNull();
-    }
-
-    @Override
-    public final Insert<?> $onConflictWhere(Condition newWhere) {
-        if ($onConflictWhere() == newWhere)
-            return this;
-        else
-            return copy(i -> i.onConflictWhere.setWhere(newWhere));
-    }
-
-    @Override
-    public final UnmodifiableMap<? extends FieldOrRow, ? extends FieldOrRowOrSelect> $updateSet() {
-        return QOM.unmodifiable(updateMap);
-    }
-
-    @Override
-    public final Insert<?> $updateSet(Map<? extends FieldOrRow, ? extends FieldOrRowOrSelect> newUpdateSet) {
-        if ($updateSet() == newUpdateSet)
-            return this;
-        else
-            return copy(i -> {
-                i.updateMap.clear();
-                i.updateMap.putAll(newUpdateSet);
-            });
-    }
-
-    @Override
-    public final Condition $updateWhere() {
-        return updateWhere.getWhereOrNull();
-    }
-
-    @Override
-    public final Insert<?> $updateWhere(Condition newWhere) {
-        if ($updateWhere() == newWhere)
-            return this;
-        else
-            return copy(i -> i.updateWhere.setWhere(newWhere));
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

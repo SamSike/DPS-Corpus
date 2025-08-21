@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.lang.Nullable;
 
 /**
  * A basic, no operation {@link CacheManager} implementation suitable
@@ -52,14 +51,16 @@ public class NoOpCacheManager implements CacheManager {
 	 * Additionally, the request cache will be remembered by the manager for consistency.
 	 */
 	@Override
-	public @Nullable Cache getCache(String name) {
+	@Nullable
+	public Cache getCache(String name) {
 		Cache cache = this.caches.get(name);
 		if (cache == null) {
-			this.caches.computeIfAbsent(name, NoOpCache::new);
+			this.caches.computeIfAbsent(name, key -> new NoOpCache(name));
 			synchronized (this.cacheNames) {
 				this.cacheNames.add(name);
 			}
 		}
+
 		return this.caches.get(name);
 	}
 

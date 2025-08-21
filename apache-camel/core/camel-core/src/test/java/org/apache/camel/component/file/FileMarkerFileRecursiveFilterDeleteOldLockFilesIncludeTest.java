@@ -55,14 +55,14 @@ public class FileMarkerFileRecursiveFilterDeleteOldLockFilesIncludeTest extends 
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri(
                         "?initialDelay=0&delay=10&recursive=true&sortBy=file:name&include=.*(hello.txt|bye.txt|gooday.txt)$"))
-                        .routeId("foo").autoStartup(false)
-                        .convertBodyTo(String.class).to("mock:result");
+                                .routeId("foo").noAutoStartup()
+                                .convertBodyTo(String.class).to("mock:result");
             }
         };
     }

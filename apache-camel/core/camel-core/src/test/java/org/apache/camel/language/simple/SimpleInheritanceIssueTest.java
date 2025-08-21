@@ -34,7 +34,7 @@ public class SimpleInheritanceIssueTest extends LanguageTestSupport {
     }
 
     @Test
-    public void testMethodCall() {
+    public void testMethodCall() throws Exception {
         MySingleParser parser = new MySingleParser();
         exchange.getIn().setBody(parser);
 
@@ -44,7 +44,7 @@ public class SimpleInheritanceIssueTest extends LanguageTestSupport {
     }
 
     @Test
-    public void testMethodCallHeader() {
+    public void testMethodCallHeader() throws Exception {
         MySingleParser parser = new MySingleParser();
         exchange.getIn().setBody(parser);
         // the input stream should only be read once so we should get the byte array
@@ -57,7 +57,7 @@ public class SimpleInheritanceIssueTest extends LanguageTestSupport {
     }
 
     @Test
-    public void testMethodCallOverloadedHeader() {
+    public void testMethodCallOverloadedHeader() throws Exception {
         MyParser parser = new MyParser();
         exchange.getIn().setBody(parser);
         // the input stream should only be read once so we should get the byte array
@@ -84,7 +84,8 @@ public class SimpleInheritanceIssueTest extends LanguageTestSupport {
         }
 
         public String parse(InputStream input) throws Exception {
-            return IOConverter.toString(input, null);
+            String data = IOConverter.toString(input, null);
+            return data;
         }
     }
 

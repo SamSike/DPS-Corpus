@@ -62,12 +62,12 @@ public class DefaultEndpointTest extends ContextTestSupport {
 
     private static class MyEndpoint extends DefaultEndpoint {
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             return null;
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             return null;
         }
 

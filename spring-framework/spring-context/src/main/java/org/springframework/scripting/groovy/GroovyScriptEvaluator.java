@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,9 @@ import groovy.lang.GroovyRuntimeException;
 import groovy.lang.GroovyShell;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.CompilationCustomizer;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.BeanClassLoaderAware;
+import org.springframework.lang.Nullable;
 import org.springframework.scripting.ScriptCompilationException;
 import org.springframework.scripting.ScriptEvaluator;
 import org.springframework.scripting.ScriptSource;
@@ -41,7 +41,8 @@ import org.springframework.scripting.support.ResourceScriptSource;
  */
 public class GroovyScriptEvaluator implements ScriptEvaluator, BeanClassLoaderAware {
 
-	private @Nullable ClassLoader classLoader;
+	@Nullable
+	private ClassLoader classLoader;
 
 	private CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
 
@@ -97,17 +98,19 @@ public class GroovyScriptEvaluator implements ScriptEvaluator, BeanClassLoaderAw
 
 
 	@Override
-	public @Nullable Object evaluate(ScriptSource script) {
+	@Nullable
+	public Object evaluate(ScriptSource script) {
 		return evaluate(script, null);
 	}
 
 	@Override
-	public @Nullable Object evaluate(ScriptSource script, @Nullable Map<String, Object> arguments) {
+	@Nullable
+	public Object evaluate(ScriptSource script, @Nullable Map<String, Object> arguments) {
 		GroovyShell groovyShell = new GroovyShell(
 				this.classLoader, new Binding(arguments), this.compilerConfiguration);
 		try {
-			String filename = (script instanceof ResourceScriptSource resourceScriptSource ?
-					resourceScriptSource.getResource().getFilename() : null);
+			String filename = (script instanceof ResourceScriptSource ?
+					((ResourceScriptSource) script).getResource().getFilename() : null);
 			if (filename != null) {
 				return groovyShell.evaluate(script.getScriptAsString(), filename);
 			}

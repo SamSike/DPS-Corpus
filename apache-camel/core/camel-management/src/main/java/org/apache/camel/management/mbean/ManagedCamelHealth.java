@@ -16,6 +16,9 @@
  */
 package org.apache.camel.management.mbean;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
@@ -35,7 +38,6 @@ import org.apache.camel.health.HealthCheckHelper;
 import org.apache.camel.health.HealthCheckRegistry;
 import org.apache.camel.health.HealthCheckRepository;
 import org.apache.camel.spi.ManagementStrategy;
-import org.apache.camel.support.ExceptionHelper;
 
 public class ManagedCamelHealth implements ManagedCamelHealthMBean {
     private final CamelContext context;
@@ -109,7 +111,13 @@ public class ManagedCamelHealth implements ManagedCamelHealthMBean {
 
                 String stacktrace = "";
                 if (result.getError().isPresent()) {
-                    stacktrace = ExceptionHelper.stackTraceToString(result.getError().get());
+                    try (StringWriter stackTraceWriter = new StringWriter();
+                         PrintWriter pw = new PrintWriter(stackTraceWriter, true)) {
+                        result.getError().get().printStackTrace(pw);
+                        stacktrace = stackTraceWriter.getBuffer().toString();
+                    } catch (IOException exception) {
+                        // ignore
+                    }
                 }
 
                 CompositeData data = new CompositeDataSupport(

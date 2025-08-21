@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,8 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
@@ -42,7 +40,8 @@ final class OpaqueUriComponents extends UriComponents {
 
 	private static final MultiValueMap<String, String> QUERY_PARAMS_NONE = new LinkedMultiValueMap<>();
 
-	private final @Nullable String ssp;
+	@Nullable
+	private final String ssp;
 
 
 	OpaqueUriComponents(@Nullable String scheme, @Nullable String schemeSpecificPart, @Nullable String fragment) {
@@ -52,17 +51,20 @@ final class OpaqueUriComponents extends UriComponents {
 
 
 	@Override
-	public @Nullable String getSchemeSpecificPart() {
+	@Nullable
+	public String getSchemeSpecificPart() {
 		return this.ssp;
 	}
 
 	@Override
-	public @Nullable String getUserInfo() {
+	@Nullable
+	public String getUserInfo() {
 		return null;
 	}
 
 	@Override
-	public @Nullable String getHost() {
+	@Nullable
+	public String getHost() {
 		return null;
 	}
 
@@ -72,7 +74,8 @@ final class OpaqueUriComponents extends UriComponents {
 	}
 
 	@Override
-	public @Nullable String getPath() {
+	@Nullable
+	public String getPath() {
 		return null;
 	}
 
@@ -82,7 +85,8 @@ final class OpaqueUriComponents extends UriComponents {
 	}
 
 	@Override
-	public @Nullable String getQuery() {
+	@Nullable
+	public String getQuery() {
 		return null;
 	}
 
@@ -154,15 +158,24 @@ final class OpaqueUriComponents extends UriComponents {
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof OpaqueUriComponents that &&
-				ObjectUtils.nullSafeEquals(getScheme(), that.getScheme()) &&
-				ObjectUtils.nullSafeEquals(this.ssp, that.ssp) &&
-				ObjectUtils.nullSafeEquals(getFragment(), that.getFragment())));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof OpaqueUriComponents)) {
+			return false;
+		}
+		OpaqueUriComponents otherComp = (OpaqueUriComponents) other;
+		return (ObjectUtils.nullSafeEquals(getScheme(), otherComp.getScheme()) &&
+				ObjectUtils.nullSafeEquals(this.ssp, otherComp.ssp) &&
+				ObjectUtils.nullSafeEquals(getFragment(), otherComp.getFragment()));
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(getScheme(), this.ssp, getFragment());
+		int result = ObjectUtils.nullSafeHashCode(getScheme());
+		result = 31 * result + ObjectUtils.nullSafeHashCode(this.ssp);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(getFragment());
+		return result;
 	}
 
 }

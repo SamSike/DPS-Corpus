@@ -16,9 +16,9 @@
  */
 package org.apache.camel.component.kubernetes.producer;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -54,43 +54,25 @@ public class KubernetesConfigMapsProducerTest extends KubernetesTestSupport {
         server.expect().withPath("/api/v1/configmaps")
                 .andReturn(200, new ConfigMapListBuilder().addNewItem().and().addNewItem().and().addNewItem().and().build())
                 .once();
-        server.expect().withPath("/api/v1/namespaces/test/configmaps")
-                .andReturn(200, new ConfigMapListBuilder().addNewItem().and().addNewItem().and().build())
-                .once();
         List<?> result = template.requestBody("direct:list", "", List.class);
         assertEquals(3, result.size());
-
-        Exchange ex = template.request("direct:list",
-                exchange -> exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test"));
-        assertEquals(2, ex.getMessage().getBody(List.class).size());
     }
 
     @Test
     void listByLabelsTest() throws Exception {
-        Map<String, String> labels = Map.of(
-                "key1", "value1",
-                "key2", "value2");
-
-        String urlEncodedLabels = toUrlEncoded(labels.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue())
-                .collect(Collectors.joining(",")));
-
-        server.expect().withPath("/api/v1/configmaps?labelSelector=" + urlEncodedLabels)
+        server.expect().withPath("/api/v1/configmaps?labelSelector=" + toUrlEncoded("key1=value1,key2=value2"))
                 .andReturn(200, new ConfigMapListBuilder().addNewItem().and().addNewItem().and().addNewItem().and().build())
                 .once();
-        server.expect().withPath("/api/v1/namespaces/test/configmaps?labelSelector=" + urlEncodedLabels)
-                .andReturn(200, new ConfigMapListBuilder().addNewItem().and().addNewItem().and().build())
-                .once();
-        Exchange ex = template.request("direct:listByLabels",
-                exchange -> exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_CONFIGMAPS_LABELS, labels));
-
-        assertEquals(3, ex.getMessage().getBody(List.class).size());
-
-        ex = template.request("direct:listByLabels", exchange -> {
+        Exchange ex = template.request("direct:listConfigMapsByLabels", exchange -> {
+            Map<String, String> labels = new HashMap<>();
+            labels.put("key1", "value1");
+            labels.put("key2", "value2");
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_CONFIGMAPS_LABELS, labels);
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test");
         });
 
-        assertEquals(2, ex.getMessage().getBody(List.class).size());
+        List<?> result = ex.getMessage().getBody(List.class);
+
+        assertEquals(3, result.size());
     }
 
     @Test
@@ -150,33 +132,7 @@ public class KubernetesConfigMapsProducerTest extends KubernetesTestSupport {
     }
 
     @Test
-    void createConfigMapWithAnnotations() {
-        Map<String, String> labels = Map.of("my.label.key", "my.label.value");
-        Map<String, String> annotations = Map.of("my.annotation.key", "my.annotation.value");
-        Map<String, String> data = Map.of("my.data.key", "my.data.value");
-        ConfigMap cm1 = new ConfigMapBuilder().withNewMetadata().withName("cmAnnotated").withNamespace("test")
-                .withLabels(labels).withAnnotations(annotations).and()
-                .withData(data).build();
-        server.expect().post().withPath("/api/v1/namespaces/test/configmaps").andReturn(200, cm1).once();
-
-        Exchange ex = template.request("direct:createConfigMap", exchange -> {
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test");
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_CONFIGMAPS_LABELS, labels);
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_CONFIGMAP_NAME, "cmAnnotated");
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_CONFIGMAP_DATA, data);
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_CONFIGMAPS_ANNOTATIONS, annotations);
-        });
-
-        ConfigMap result = ex.getMessage().getBody(ConfigMap.class);
-
-        assertEquals("test", result.getMetadata().getNamespace());
-        assertEquals("cmAnnotated", result.getMetadata().getName());
-        assertEquals(labels, result.getMetadata().getLabels());
-        assertEquals(annotations, result.getMetadata().getAnnotations());
-    }
-
-    @Test
-    void updateConfigMap() {
+    void replaceConfigMap() {
         Map<String, String> labels = Map.of("my.label.key", "my.label.value");
         Map<String, String> data = Map.of("my.data.key", "my.data.value");
         ConfigMap cm1 = new ConfigMapBuilder().withNewMetadata().withName("cm1").withNamespace("test").withLabels(labels).and()
@@ -187,7 +143,7 @@ public class KubernetesConfigMapsProducerTest extends KubernetesTestSupport {
                 .once();
         server.expect().put().withPath("/api/v1/namespaces/test/configmaps/cm1").andReturn(200, cm1).once();
 
-        Exchange ex = template.request("direct:updateConfigMap", exchange -> {
+        Exchange ex = template.request("direct:replaceConfigMap", exchange -> {
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test");
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_CONFIGMAPS_LABELS, labels);
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_CONFIGMAP_NAME, "cm1");
@@ -223,14 +179,14 @@ public class KubernetesConfigMapsProducerTest extends KubernetesTestSupport {
             public void configure() {
                 from("direct:list")
                         .to("kubernetes-config-maps:///?kubernetesClient=#kubernetesClient&operation=listConfigMaps");
-                from("direct:listByLabels")
+                from("direct:listConfigMapsByLabels")
                         .to("kubernetes-config-maps:///?kubernetesClient=#kubernetesClient&operation=listConfigMapsByLabels");
                 from("direct:getConfigMap")
                         .to("kubernetes-config-maps:///?kubernetesClient=#kubernetesClient&operation=getConfigMap");
                 from("direct:createConfigMap")
                         .to("kubernetes-config-maps:///?kubernetesClient=#kubernetesClient&operation=createConfigMap");
-                from("direct:updateConfigMap")
-                        .to("kubernetes-config-maps:///?kubernetesClient=#kubernetesClient&operation=updateConfigMap");
+                from("direct:replaceConfigMap")
+                        .to("kubernetes-config-maps:///?kubernetesClient=#kubernetesClient&operation=replaceConfigMap");
                 from("direct:deleteConfigMap")
                         .to("kubernetes-config-maps:///?kubernetesClient=#kubernetesClient&operation=deleteConfigMap");
             }

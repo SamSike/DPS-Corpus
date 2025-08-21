@@ -35,10 +35,10 @@ public class FromRestRouteIdTest extends FromRestGetTest {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 restConfiguration().host("localhost");
                 rest("/say/hello").get().to("direct:hello");
 

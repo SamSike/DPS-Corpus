@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -50,7 +50,6 @@ import org.jooq.meta.PackageDefinition;
 import org.jooq.meta.ParameterDefinition;
 import org.jooq.meta.SchemaDefinition;
 import org.jooq.tools.StringUtils;
-import org.jooq.util.xml.jaxb.Column;
 import org.jooq.util.xml.jaxb.InformationSchema;
 import org.jooq.util.xml.jaxb.Parameter;
 import org.jooq.util.xml.jaxb.Routine;
@@ -87,10 +86,7 @@ public class XMLRoutineDefinition extends AbstractRoutineDefinition {
                 routine.getNumericPrecision(),
                 routine.getNumericScale(),
                 null,
-                (String) null,
-                StringUtils.isEmpty(routine.getUdtName())
-                    ? null
-                    : name(routine.getUdtCatalog(), routine.getUdtSchema(), routine.getUdtName())
+                (String) null
             );
 
             this.returnValue = new DefaultParameterDefinition(this, "RETURN_VALUE", -1, type);
@@ -134,41 +130,47 @@ public class XMLRoutineDefinition extends AbstractRoutineDefinition {
 
     @Override
     protected void init0() {
-        for (Parameter parameter : ((XMLDatabase) getDatabase()).getParametersByRoutineName(specificName)) {
-            DataTypeDefinition type = new DefaultDataTypeDefinition(
-                getDatabase(),
-                getSchema(),
-                parameter.getDataType(),
-                parameter.getCharacterMaximumLength(),
-                parameter.getNumericPrecision(),
-                parameter.getNumericScale(),
-                null,
-                parameter.getParameterDefault(),
-                StringUtils.isEmpty(parameter.getUdtName())
-                    ? null
-                    : name(parameter.getUdtCatalog(), parameter.getUdtSchema(), parameter.getUdtName())
+        for (Parameter parameter : info.getParameters()) {
+            Name parameterRoutineName = name(
+                parameter.getSpecificCatalog(),
+                parameter.getSpecificSchema(),
+                parameter.getSpecificPackage(),
+                parameter.getSpecificName()
             );
 
-            ParameterDefinition p = new DefaultParameterDefinition(
-                this,
-                parameter.getParameterName(),
-                parameter.getOrdinalPosition(),
-                type,
-                !StringUtils.isBlank(parameter.getParameterDefault()),
-                StringUtils.isBlank(parameter.getParameterName()),
-                parameter.getComment()
-            );
+            if (specificName.equals(parameterRoutineName)) {
+                DataTypeDefinition type = new DefaultDataTypeDefinition(
+                    getDatabase(),
+                    getSchema(),
+                    parameter.getDataType(),
+                    parameter.getCharacterMaximumLength(),
+                    parameter.getNumericPrecision(),
+                    parameter.getNumericScale(),
+                    null,
+                    parameter.getParameterDefault()
+                );
 
-            switch (parameter.getParameterMode()) {
-                case IN:
-                    addParameter(InOutDefinition.IN, p);
-                    break;
-                case INOUT:
-                    addParameter(InOutDefinition.INOUT, p);
-                    break;
-                case OUT:
-                    addParameter(InOutDefinition.OUT, p);
-                    break;
+                ParameterDefinition p = new DefaultParameterDefinition(
+                    this,
+                    parameter.getParameterName(),
+                    parameter.getOrdinalPosition(),
+                    type,
+                    !StringUtils.isBlank(parameter.getParameterDefault()),
+                    StringUtils.isBlank(parameter.getParameterName()),
+                    parameter.getComment()
+                );
+
+                switch (parameter.getParameterMode()) {
+                    case IN:
+                        addParameter(InOutDefinition.IN, p);
+                        break;
+                    case INOUT:
+                        addParameter(InOutDefinition.INOUT, p);
+                        break;
+                    case OUT:
+                        addParameter(InOutDefinition.OUT, p);
+                        break;
+                }
             }
         }
     }

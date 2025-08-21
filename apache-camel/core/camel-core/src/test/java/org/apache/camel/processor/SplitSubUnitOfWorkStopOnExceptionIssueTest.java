@@ -24,10 +24,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class SplitSubUnitOfWorkStopOnExceptionIssueTest extends SplitSubUnitOfWorkStopOnExceptionTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("direct:dead").useOriginalMessage().maximumRedeliveries(3).redeliveryDelay(0));
 
                 from("direct:dead").setBody(simple("${body}")).to("mock:dead");

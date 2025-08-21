@@ -57,7 +57,9 @@ public class EhcacheTestSupport extends CamelTestSupport {
     }
 
     @Override
-    public void doPostTearDown() {
+    public void tearDown() throws Exception {
+        super.tearDown();
+
         if (cacheManager != null) {
             cacheManager.close();
         }

@@ -26,14 +26,12 @@ import org.apache.camel.test.AvailablePortFinder;
 import org.apache.camel.test.junit.rule.mllp.MllpClientResource;
 import org.apache.camel.test.junit.rule.mllp.MllpJUnitResourceException;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.apache.camel.test.junit5.ThrottlingExecutor.slowly;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class MllpTcpServerConsumerConnectionTest extends CamelTestSupport {
     static final int RECEIVE_TIMEOUT = 1000;
@@ -83,13 +81,15 @@ public class MllpTcpServerConsumerConnectionTest extends CamelTestSupport {
 
         addTestRouteWithIdleTimeout(-1);
 
-        slowly().repeat(connectionCount).awaiting(connectionMillis, TimeUnit.MILLISECONDS)
-                .beforeEach((i) -> mllpClient.connect())
-                .afterEach((i) -> mllpClient.reset())
-                .execute();
+        for (int i = 1; i <= connectionCount; ++i) {
+            mllpClient.connect();
+            Thread.sleep(connectionMillis);
+            mllpClient.close();
+        }
 
         // Connect one more time and allow a client thread to start
         mllpClient.connect();
+        Thread.sleep(1000);
         mllpClient.close();
 
         MockEndpoint.assertIsSatisfied(context, 15, TimeUnit.SECONDS);
@@ -105,13 +105,15 @@ public class MllpTcpServerConsumerConnectionTest extends CamelTestSupport {
 
         addTestRouteWithIdleTimeout(-1);
 
-        slowly().repeat(connectionCount).awaiting(connectionMillis, TimeUnit.MILLISECONDS)
-                .beforeEach((i) -> mllpClient.connect())
-                .afterEach((i) -> mllpClient.reset())
-                .execute();
+        for (int i = 1; i <= connectionCount; ++i) {
+            mllpClient.connect();
+            Thread.sleep(connectionMillis);
+            mllpClient.reset();
+        }
 
         // Connect one more time and allow a client thread to start
         mllpClient.connect();
+        Thread.sleep(1000);
         mllpClient.reset();
 
         MockEndpoint.assertIsSatisfied(context, 15, TimeUnit.SECONDS);
@@ -134,17 +136,17 @@ public class MllpTcpServerConsumerConnectionTest extends CamelTestSupport {
 
         mllpClient.connect();
         mllpClient.sendMessageAndWaitForAcknowledgement(testMessage);
+        Thread.sleep(idleTimeout + RECEIVE_TIMEOUT);
 
-        Awaitility.await().untilAsserted(() -> {
+        try {
+            mllpClient.checkConnection();
+            fail("The MllpClientResource should have thrown an exception when writing to the reset socket");
+        } catch (MllpJUnitResourceException expectedEx) {
+            assertEquals("checkConnection failed - read() returned END_OF_STREAM", expectedEx.getMessage());
+            assertNull(expectedEx.getCause());
+        }
 
-            MllpJUnitResourceException ex = assertThrows(MllpJUnitResourceException.class, () -> mllpClient.checkConnection(),
-                    "The MllpClientResource should have thrown an exception when writing to the reset socket");
-
-            assertEquals("checkConnection failed - read() returned END_OF_STREAM", ex.getMessage());
-            assertNull(ex.getCause());
-
-            MockEndpoint.assertIsSatisfied(context, 15, TimeUnit.SECONDS);
-        });
+        MockEndpoint.assertIsSatisfied(context, 15, TimeUnit.SECONDS);
     }
 
     void addTestRouteWithIdleTimeout(final int idleTimeout) throws Exception {
@@ -154,9 +156,9 @@ public class MllpTcpServerConsumerConnectionTest extends CamelTestSupport {
             public void configure() {
                 fromF("mllp://%s:%d?receiveTimeout=%d&readTimeout=%d&idleTimeout=%d", mllpClient.getMllpHost(),
                         mllpClient.getMllpPort(), RECEIVE_TIMEOUT, READ_TIMEOUT, idleTimeout)
-                        .routeId(routeId)
-                        .log(LoggingLevel.INFO, routeId, "Receiving: ${body}")
-                        .to(result);
+                                .routeId(routeId)
+                                .log(LoggingLevel.INFO, routeId, "Receiving: ${body}")
+                                .to(result);
             }
         };
 

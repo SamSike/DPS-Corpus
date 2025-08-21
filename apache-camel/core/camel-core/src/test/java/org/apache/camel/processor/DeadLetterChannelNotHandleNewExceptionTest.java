@@ -30,13 +30,13 @@ public class DeadLetterChannelNotHandleNewExceptionTest extends ContextTestSuppo
 
     public static class BadErrorHandler {
         @Handler
-        public void onException(Exchange exchange, Exception exception) {
+        public void onException(Exchange exchange, Exception exception) throws Exception {
             throw new RuntimeException("error in errorhandler");
         }
     }
 
     @Test
-    public void testDeadLetterChannelNotHandleNewException() {
+    public void testDeadLetterChannelNotHandleNewException() throws Exception {
         try {
             template.sendBody("direct:start", "Hello World");
             fail("Should have thrown exception");
@@ -47,10 +47,10 @@ public class DeadLetterChannelNotHandleNewExceptionTest extends ContextTestSuppo
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("bean:" + BadErrorHandler.class.getName()).deadLetterHandleNewException(false));
 
                 from("direct:start").log("Incoming ${body}").throwException(new IllegalArgumentException("Forced"));

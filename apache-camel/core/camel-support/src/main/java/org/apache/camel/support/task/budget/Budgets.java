@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.camel.support.task.budget;
 
 import java.time.Duration;
@@ -22,7 +23,6 @@ import java.time.Duration;
  * Helper builder of budgets
  */
 public final class Budgets {
-
     private static final long DEFAULT_INITIAL_DELAY = 0;
     private static final long DEFAULT_INTERVAL = 1000;
 
@@ -39,21 +39,25 @@ public final class Budgets {
 
         public TimeBoundedBudgetBuilder withInitialDelay(Duration duration) {
             this.initialDelay = duration.toMillis();
+
             return this;
         }
 
         public TimeBoundedBudgetBuilder withInterval(Duration duration) {
             this.interval = duration.toMillis();
+
             return this;
         }
 
         public TimeBoundedBudgetBuilder withMaxDuration(Duration duration) {
             this.maxDuration = duration.toMillis();
+
             return this;
         }
 
         public TimeBoundedBudgetBuilder withUnlimitedDuration() {
             this.maxDuration = TimeBoundedBudget.UNLIMITED_DURATION;
+
             return this;
         }
 
@@ -79,7 +83,7 @@ public final class Budgets {
 
     /**
      * Some components use 0 to disable retrying the task. This sanitizes it to run at least once
-     *
+     * 
      * @param  iterations the number of iterations
      * @return            an integer greater than or equal to 1 equivalent to the maximum number of iterations allowed
      */
@@ -87,6 +91,7 @@ public final class Budgets {
         if (iterations <= 0) {
             return 1;
         }
+
         return iterations;
     }
 }

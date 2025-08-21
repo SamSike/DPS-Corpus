@@ -38,18 +38,15 @@ public class BeanValidationException extends ValidationException {
     }
 
     protected static String buildMessage(Set<ConstraintViolation<Object>> constraintViolations, Object bean) {
-        StringBuilder buffer = new StringBuilder(256);
-
-        buffer.append("Validation failed for: ");
+        StringBuilder buffer = new StringBuilder("Validation failed for: ");
         buffer.append(bean);
 
         buffer.append(" errors: [");
         for (ConstraintViolation<Object> constraintViolation : constraintViolations) {
-            buffer.append("property: ").append(constraintViolation.getPropertyPath()).append("; value: ")
-                    .append(constraintViolation.getInvalidValue()).append("; constraint: ")
-                    .append(constraintViolation.getMessage()).append("; ");
+            buffer.append("property: " + constraintViolation.getPropertyPath() + "; value: "
+                          + constraintViolation.getInvalidValue() + "; constraint: " + constraintViolation.getMessage() + "; ");
         }
-        buffer.append(']');
+        buffer.append("]");
 
         return buffer.toString();
     }

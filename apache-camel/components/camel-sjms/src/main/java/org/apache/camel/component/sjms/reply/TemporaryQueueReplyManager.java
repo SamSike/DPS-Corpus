@@ -16,9 +16,7 @@
  */
 package org.apache.camel.component.sjms.reply;
 
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.jms.Destination;
 import jakarta.jms.ExceptionListener;
@@ -48,7 +46,6 @@ public class TemporaryQueueReplyManager extends ReplyManagerSupport {
             destResolver.destinationReady();
         } catch (InterruptedException e) {
             log.warn("Interrupted while waiting for JMSReplyTo destination refresh", e);
-            Thread.currentThread().interrupt();
         }
         return super.getReplyTo();
     }
@@ -65,8 +62,9 @@ public class TemporaryQueueReplyManager extends ReplyManagerSupport {
 
     @Override
     protected void handleReplyMessage(String correlationID, Message message, Session session) {
-        ReplyHandler handler = correlation.remove(correlationID);
+        ReplyHandler handler = correlation.get(correlationID);
         if (handler != null) {
+            correlation.remove(correlationID);
             handler.onReply(correlationID, message, session);
         } else {
             // we could not correlate the received reply message to a matching request and therefore
@@ -112,10 +110,8 @@ public class TemporaryQueueReplyManager extends ReplyManagerSupport {
     }
 
     private final class TemporaryReplyQueueDestinationResolver implements DestinationCreationStrategy {
-        private final Lock lock = new ReentrantLock();
-        private final Condition condition = lock.newCondition();
         private TemporaryQueue queue;
-        private volatile boolean refreshWanted;
+        private final AtomicBoolean refreshWanted = new AtomicBoolean();
 
         @Override
         public Destination createDestination(Session session, String name, boolean topic) throws JMSException {
@@ -124,38 +120,32 @@ public class TemporaryQueueReplyManager extends ReplyManagerSupport {
 
         @Override
         public Destination createTemporaryDestination(Session session, boolean topic) throws JMSException {
-            lock.lock();
-            try {
-                if (queue == null || refreshWanted) {
-                    refreshWanted = false;
+            synchronized (refreshWanted) {
+                if (queue == null || refreshWanted.get()) {
+                    refreshWanted.set(false);
                     queue = session.createTemporaryQueue();
                     setReplyTo(queue);
                     if (log.isDebugEnabled()) {
                         log.debug("Refreshed Temporary ReplyTo Queue. New queue: {}", queue.getQueueName());
                     }
-                    condition.signalAll();
+                    refreshWanted.notifyAll();
                 }
-            } finally {
-                lock.unlock();
             }
             return queue;
         }
 
         public void scheduleRefresh() {
-            refreshWanted = true;
+            refreshWanted.set(true);
         }
 
         public void destinationReady() throws InterruptedException {
-            if (refreshWanted) {
-                lock.lock();
-                try {
+            if (refreshWanted.get()) {
+                synchronized (refreshWanted) {
                     //check if requestWanted is still true
-                    if (refreshWanted) {
+                    if (refreshWanted.get()) {
                         log.debug("Waiting for new Temporary ReplyTo queue to be assigned before we can continue");
-                        condition.await();
+                        refreshWanted.wait();
                     }
-                } finally {
-                    lock.unlock();
                 }
             }
         }

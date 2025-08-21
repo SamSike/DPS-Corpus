@@ -64,11 +64,11 @@ public class JGroupsClusterTest {
     @BeforeEach
     public void setUp() throws Exception {
         firstCamelContext = new DefaultCamelContext();
-        firstCamelContext.getCamelContextExtension().setName("firstNode");
+        firstCamelContext.setName("firstNode");
         firstCamelContext.addRoutes(new Builder());
 
         secondCamelContext = new DefaultCamelContext();
-        secondCamelContext.getCamelContextExtension().setName("secondNode");
+        secondCamelContext.setName("secondNode");
         secondCamelContext.addRoutes(new Builder());
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,25 +17,22 @@
 package org.springframework.jms.listener;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import jakarta.jms.Connection;
 import jakarta.jms.JMSException;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.Session;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.core.Constants;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.jms.JmsException;
 import org.springframework.jms.support.JmsUtils;
 import org.springframework.jms.support.destination.CachingDestinationResolver;
 import org.springframework.jms.support.destination.DestinationResolver;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.SchedulingAwareRunnable;
 import org.springframework.scheduling.SchedulingTaskExecutor;
 import org.springframework.util.Assert;
@@ -47,7 +44,7 @@ import org.springframework.util.backoff.FixedBackOff;
 /**
  * Message listener container variant that uses plain JMS client APIs, specifically
  * a loop of {@code MessageConsumer.receive()} calls that also allow for
- * transactional receipt of messages (registering them with XA transactions).
+ * transactional reception of messages (registering them with XA transactions).
  * Designed to work in a native JMS environment as well as in a Jakarta EE environment,
  * with only minimal differences in configuration.
  *
@@ -65,12 +62,13 @@ import org.springframework.util.backoff.FixedBackOff;
  * abstraction. By default, the specified number of invoker tasks will be created
  * on startup, according to the {@link #setConcurrentConsumers "concurrentConsumers"}
  * setting. Specify an alternative {@code TaskExecutor} to integrate with an existing
- * thread pool facility (such as a Jakarta EE server's). With a native JMS setup,
- * each of those listener threads is going to use a cached JMS {@code Session} and
- * {@code MessageConsumer} (only refreshed in case of failure), using the JMS provider's
- * resources as efficiently as possible.
+ * thread pool facility (such as a Jakarta EE server's), for example using a
+ * {@link org.springframework.scheduling.commonj.WorkManagerTaskExecutor CommonJ WorkManager}.
+ * With a native JMS setup, each of those listener threads is going to use a
+ * cached JMS {@code Session} and {@code MessageConsumer} (only refreshed in case
+ * of failure), using the JMS provider's resources as efficiently as possible.
  *
- * <p>Message receipt and listener execution can automatically be wrapped
+ * <p>Message reception and listener execution can automatically be wrapped
  * in transactions by passing a Spring
  * {@link org.springframework.transaction.PlatformTransactionManager} into the
  * {@link #setTransactionManager "transactionManager"} property. This will usually
@@ -89,7 +87,7 @@ import org.springframework.util.backoff.FixedBackOff;
  * by specifying a {@link #setMaxConcurrentConsumers "maxConcurrentConsumers"}
  * value that is higher than the {@link #setConcurrentConsumers "concurrentConsumers"}
  * value. Since the latter's default is 1, you can also simply specify a
- * "maxConcurrentConsumers" of, for example, 5, which will lead to dynamic scaling up to
+ * "maxConcurrentConsumers" of e.g. 5, which will lead to dynamic scaling up to
  * 5 concurrent consumers in case of increasing message load, as well as dynamic
  * shrinking back to the standard number of consumers once the load decreases.
  * Consider adapting the {@link #setIdleTaskExecutionLimit "idleTaskExecutionLimit"}
@@ -101,14 +99,12 @@ import org.springframework.util.backoff.FixedBackOff;
  * number of 1 consumer, otherwise you'd receive the same message multiple times on
  * the same node.
  *
- * <p><b>Note: You may use {@link org.springframework.jms.connection.CachingConnectionFactory}
- * with a listener container but it comes with limitations.</b> It is generally preferable
- * to let the listener container itself handle appropriate caching within its lifecycle.
- * Also, stopping and restarting a listener container will only work with an independent,
- * locally cached {@code Connection}, not with an externally cached one. Last but not least,
- * with {@code CachingConnectionFactory}, dynamic scaling with custom provider hints such as
- * {@link #setMaxMessagesPerTask "maxMessagesPerTask"} can result in JMS messages delivered
- * to cached consumers even when they are no longer attached to the listener container.
+ * <p><b>Note: Don't use Spring's {@link org.springframework.jms.connection.CachingConnectionFactory}
+ * in combination with dynamic scaling.</b> Ideally, don't use it with a message
+ * listener container at all, since it is generally preferable to let the
+ * listener container itself handle appropriate caching within its lifecycle.
+ * Also, stopping and restarting a listener container will only work with an
+ * independent, locally cached Connection - not with an externally cached one.
  *
  * <p><b>It is strongly recommended to either set {@link #setSessionTransacted
  * "sessionTransacted"} to "true" or specify an external {@link #setTransactionManager
@@ -120,7 +116,6 @@ import org.springframework.util.backoff.FixedBackOff;
  * before listener execution, with no redelivery in case of an exception.
  *
  * @author Juergen Hoeller
- * @author Sam Brannen
  * @since 2.0
  * @see #setTransactionManager
  * @see #setCacheLevel
@@ -177,24 +172,13 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	public static final int CACHE_AUTO = 4;
 
 
-	/**
-	 * Map of constant names to constant values for the cache constants defined
-	 * in this class.
-	 */
-	private static final Map<String, Integer> constants = Map.of(
-			"CACHE_NONE", CACHE_NONE,
-			"CACHE_CONNECTION", CACHE_CONNECTION,
-			"CACHE_SESSION", CACHE_SESSION,
-			"CACHE_CONSUMER", CACHE_CONSUMER,
-			"CACHE_AUTO", CACHE_AUTO
-		);
+	private static final Constants constants = new Constants(DefaultMessageListenerContainer.class);
 
 
-	private @Nullable Executor taskExecutor;
+	@Nullable
+	private Executor taskExecutor;
 
-	private boolean virtualThreads = false;
-
-	private BackOff backOff = new FixedBackOff(DEFAULT_RECOVERY_INTERVAL);
+	private BackOff backOff = new FixedBackOff(DEFAULT_RECOVERY_INTERVAL, Long.MAX_VALUE);
 
 	private int cacheLevel = CACHE_AUTO;
 
@@ -220,11 +204,12 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 
 	private volatile boolean interrupted;
 
-	private @Nullable Runnable stopCallback;
+	@Nullable
+	private Runnable stopCallback;
 
 	private Object currentRecoveryMarker = new Object();
 
-	private final Lock recoveryLock = new ReentrantLock();
+	private final Object recoveryMonitor = new Object();
 
 
 	/**
@@ -237,40 +222,12 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * managed in a specific fashion, for example within a Jakarta EE environment.
 	 * A plain thread pool does not add much value, as this listener container
 	 * will occupy a number of threads for its entire lifetime.
-	 * <p>If the specified executor is a {@link SchedulingTaskExecutor} indicating
-	 * {@link SchedulingTaskExecutor#prefersShortLivedTasks() a preference for
-	 * short-lived tasks}, a {@link #setMaxMessagesPerTask} default of 10 will be
-	 * applied in order to provide dynamic scaling at runtime. With the default
-	 * task executor or a similarly non-pooling external executor specified,
-	 * a {@link #setIdleReceivesPerTaskLimit} default of 10 will apply instead.
 	 * @see #setConcurrentConsumers
 	 * @see org.springframework.core.task.SimpleAsyncTaskExecutor
+	 * @see org.springframework.scheduling.commonj.WorkManagerTaskExecutor
 	 */
 	public void setTaskExecutor(Executor taskExecutor) {
 		this.taskExecutor = taskExecutor;
-	}
-
-	/**
-	 * Specify whether the default {@link SimpleAsyncTaskExecutor} should be
-	 * configured to use virtual threads instead of platform threads, for
-	 * efficient blocking behavior in listener threads on Java 21 or higher.
-	 * This is off by default, setting up one platform thread per consumer.
-	 * <p>Only applicable if the internal default executor is in use rather than
-	 * an externally provided {@link #setTaskExecutor TaskExecutor} instance.
-	 * The thread name prefix for virtual threads will be derived from the
-	 * listener container's bean name, just like with default platform threads.
-	 * <p>Alternatively, pass in a virtual threads based executor through
-	 * {@link #setTaskExecutor} (with externally defined thread naming).
-	 * <p>Consider specifying concurrency limits through {@link #setConcurrency}
-	 * or {@link #setConcurrentConsumers}/{@link #setMaxConcurrentConsumers},
-	 * for potential dynamic scaling. This works fine with the default executor;
-	 * see {@link #setIdleReceivesPerTaskLimit} with its effective default of 10.
-	 * @since 6.2
-	 * @see #setTaskExecutor
-	 * @see SimpleAsyncTaskExecutor#setVirtualThreads
-	 */
-	public void setVirtualThreads(boolean virtualThreads) {
-		this.virtualThreads = virtualThreads;
 	}
 
 	/**
@@ -278,8 +235,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * between recovery attempts. If the {@link BackOffExecution} implementation
 	 * returns {@link BackOffExecution#STOP}, this listener container will not further
 	 * attempt to recover.
-	 * <p>Note that setting the {@linkplain #setRecoveryInterval(long) recovery
-	 * interval} overrides this property.
+	 * <p>The {@link #setRecoveryInterval(long) recovery interval} is ignored
+	 * when this property is set.
 	 * @since 4.1
 	 */
 	public void setBackOff(BackOff backOff) {
@@ -288,35 +245,27 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 
 	/**
 	 * Specify the interval between recovery attempts, in <b>milliseconds</b>.
-	 * <p>The default is 5000 ms, that is, 5 seconds.
-	 * <p>This is a convenience method to create a {@link FixedBackOff} with the
-	 * specified interval. For more recovery options, consider specifying a
-	 * {@link #setBackOff(BackOff) BackOff} instance instead. Note, however, that
-	 * explicitly setting the {@link #setBackOff(BackOff) BackOff} overrides this
-	 * property.
+	 * The default is 5000 ms, that is, 5 seconds. This is a convenience method
+	 * to create a {@link FixedBackOff} with the specified interval.
+	 * <p>For more recovery options, consider specifying a {@link BackOff}
+	 * instance instead.
 	 * @see #setBackOff(BackOff)
 	 * @see #handleListenerSetupFailure
 	 */
 	public void setRecoveryInterval(long recoveryInterval) {
-		this.backOff = new FixedBackOff(recoveryInterval);
+		this.backOff = new FixedBackOff(recoveryInterval, Long.MAX_VALUE);
 	}
 
 	/**
 	 * Specify the level of caching that this listener container is allowed to apply,
-	 * in the form of the name of the corresponding constant &mdash; for example,
-	 * {@code "CACHE_CONNECTION"}.
+	 * in the form of the name of the corresponding constant: e.g. "CACHE_CONNECTION".
 	 * @see #setCacheLevel
-	 * @see #CACHE_NONE
-	 * @see #CACHE_CONNECTION
-	 * @see #CACHE_SESSION
-	 * @see #CACHE_CONSUMER
-	 * @see #CACHE_AUTO
 	 */
 	public void setCacheLevelName(String constantName) throws IllegalArgumentException {
-		Assert.hasText(constantName, "'constantName' must not be null or blank");
-		Integer cacheLevel = constants.get(constantName);
-		Assert.notNull(cacheLevel, "Only cache constants allowed");
-		this.cacheLevel = cacheLevel;
+		if (!constantName.startsWith("CACHE_")) {
+			throw new IllegalArgumentException("Only cache constants allowed");
+		}
+		setCacheLevel(constants.asNumber(constantName).intValue());
 	}
 
 	/**
@@ -335,12 +284,10 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * @see #CACHE_CONNECTION
 	 * @see #CACHE_SESSION
 	 * @see #CACHE_CONSUMER
-	 * @see #CACHE_AUTO
 	 * @see #setCacheLevelName
 	 * @see #setTransactionManager
 	 */
 	public void setCacheLevel(int cacheLevel) {
-		Assert.isTrue(constants.containsValue(cacheLevel), "Only values of cache constants allowed");
 		this.cacheLevel = cacheLevel;
 	}
 
@@ -353,8 +300,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 
 
 	/**
-	 * Specify concurrency limits via a "lower-upper" String, for example, "5-10", or a simple
-	 * upper limit String, for example, "10" (the lower limit will be 1 in this case).
+	 * Specify concurrency limits via a "lower-upper" String, e.g. "5-10", or a simple
+	 * upper limit String, e.g. "10" (the lower limit will be 1 in this case).
 	 * <p>This listener container will always hold on to the minimum number of consumers
 	 * ({@link #setConcurrentConsumers}) and will slowly scale up to the maximum number
 	 * of consumers {@link #setMaxConcurrentConsumers} in case of increasing load.
@@ -364,8 +311,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 		try {
 			int separatorIndex = concurrency.indexOf('-');
 			if (separatorIndex != -1) {
-				setConcurrentConsumers(Integer.parseInt(concurrency, 0, separatorIndex, 10));
-				setMaxConcurrentConsumers(Integer.parseInt(concurrency, separatorIndex + 1, concurrency.length(), 10));
+				setConcurrentConsumers(Integer.parseInt(concurrency.substring(0, separatorIndex)));
+				setMaxConcurrentConsumers(Integer.parseInt(concurrency.substring(separatorIndex + 1)));
 			}
 			else {
 				setConcurrentConsumers(1);
@@ -374,12 +321,12 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 		}
 		catch (NumberFormatException ex) {
 			throw new IllegalArgumentException("Invalid concurrency value [" + concurrency + "]: only " +
-					"single maximum integer (for example, \"5\") and minimum-maximum combo (for example, \"3-5\") supported.");
+					"single maximum integer (e.g. \"5\") and minimum-maximum combo (e.g. \"3-5\") supported.");
 		}
 	}
 
 	/**
-	 * Specify the number of core concurrent consumers to create. Default is 1.
+	 * Specify the number of concurrent consumers to create. Default is 1.
 	 * <p>Specifying a higher value for this setting will increase the standard
 	 * level of scheduled concurrent consumers at runtime: This is effectively
 	 * the minimum number of concurrent consumers which will be scheduled
@@ -398,15 +345,11 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 */
 	public void setConcurrentConsumers(int concurrentConsumers) {
 		Assert.isTrue(concurrentConsumers > 0, "'concurrentConsumers' value must be at least 1 (one)");
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			this.concurrentConsumers = concurrentConsumers;
 			if (this.maxConcurrentConsumers < concurrentConsumers) {
 				this.maxConcurrentConsumers = concurrentConsumers;
 			}
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -418,19 +361,15 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * @see #getActiveConsumerCount()
 	 */
 	public final int getConcurrentConsumers() {
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			return this.concurrentConsumers;
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
 	/**
 	 * Specify the maximum number of concurrent consumers to create. Default is 1.
 	 * <p>If this setting is higher than "concurrentConsumers", the listener container
-	 * will dynamically schedule surplus consumers at runtime, provided that enough
+	 * will dynamically schedule new consumers at runtime, provided that enough
 	 * incoming messages are encountered. Once the load goes down again, the number of
 	 * consumers will be reduced to the standard level ("concurrentConsumers") again.
 	 * <p>Raising the number of concurrent consumers is recommendable in order
@@ -446,12 +385,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 */
 	public void setMaxConcurrentConsumers(int maxConcurrentConsumers) {
 		Assert.isTrue(maxConcurrentConsumers > 0, "'maxConcurrentConsumers' value must be at least 1 (one)");
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			this.maxConcurrentConsumers = Math.max(maxConcurrentConsumers, this.concurrentConsumers);
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -463,18 +398,14 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * @see #getActiveConsumerCount()
 	 */
 	public final int getMaxConcurrentConsumers() {
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			return this.maxConcurrentConsumers;
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
 	/**
 	 * Specify the maximum number of messages to process in one task.
-	 * More concretely, this limits the number of message receipt attempts
+	 * More concretely, this limits the number of message reception attempts
 	 * per task, which includes receive iterations that did not actually
 	 * pick up a message until they hit their timeout (see the
 	 * {@link #setReceiveTimeout "receiveTimeout"} property).
@@ -496,12 +427,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 */
 	public void setMaxMessagesPerTask(int maxMessagesPerTask) {
 		Assert.isTrue(maxMessagesPerTask != 0, "'maxMessagesPerTask' must not be 0");
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			this.maxMessagesPerTask = maxMessagesPerTask;
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -509,12 +436,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * Return the maximum number of messages to process in one task.
 	 */
 	public final int getMaxMessagesPerTask() {
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			return this.maxMessagesPerTask;
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -530,12 +453,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 */
 	public void setIdleConsumerLimit(int idleConsumerLimit) {
 		Assert.isTrue(idleConsumerLimit > 0, "'idleConsumerLimit' must be 1 or higher");
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			this.idleConsumerLimit = idleConsumerLimit;
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -543,12 +462,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * Return the limit for the number of idle consumers.
 	 */
 	public final int getIdleConsumerLimit() {
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			return this.idleConsumerLimit;
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -562,7 +477,7 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * The minimum number of consumers
 	 * (see {@link #setConcurrentConsumers "concurrentConsumers"})
 	 * will be kept around until shutdown in any case.
-	 * <p>Within each task execution, a number of message receipt attempts
+	 * <p>Within each task execution, a number of message reception attempts
 	 * (according to the "maxMessagesPerTask" setting) will each wait for an incoming
 	 * message (according to the "receiveTimeout" setting). If all of those receive
 	 * attempts in a given task return without a message, the task is considered
@@ -581,12 +496,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 */
 	public void setIdleTaskExecutionLimit(int idleTaskExecutionLimit) {
 		Assert.isTrue(idleTaskExecutionLimit > 0, "'idleTaskExecutionLimit' must be 1 or higher");
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			this.idleTaskExecutionLimit = idleTaskExecutionLimit;
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -594,12 +505,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * Return the limit for idle executions of a consumer task.
 	 */
 	public final int getIdleTaskExecutionLimit() {
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			return this.idleTaskExecutionLimit;
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -624,28 +531,14 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * idle messages received, the task would be marked as idle and released. This also
 	 * means that after the last message was processed, the task would be released after
 	 * 60 seconds as long as no new messages appear.
-	 * <p><b>NOTE: On its own, this idle limit does not apply to core consumers within
-	 * {@link #setConcurrentConsumers} but rather just to surplus consumers up until
-	 * {@link #setMaxConcurrentConsumers} (as of 6.2).</b> Only in combination with
-	 * {@link #setMaxMessagesPerTask} does it have an effect on core consumers as well,
-	 * as inferred for an external thread pool indicating a preference for short-lived
-	 * tasks, leading to dynamic rescheduling of all consumer tasks in the thread pool.
-	 * <p><b>The default for surplus consumers on a default/simple executor is 10,
-	 * leading to a removal of surplus tasks after 10 idle receives in each task.</b>
-	 * In combination with the default {@link #setReceiveTimeout} of 1000 ms (1 second),
-	 * a surplus task will be scaled down after 10 seconds of idle receives by default.
 	 * @since 5.3.5
 	 * @see #setMaxMessagesPerTask
 	 * @see #setReceiveTimeout
 	 */
 	public void setIdleReceivesPerTaskLimit(int idleReceivesPerTaskLimit) {
 		Assert.isTrue(idleReceivesPerTaskLimit != 0, "'idleReceivesPerTaskLimit' must not be 0)");
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			this.idleReceivesPerTaskLimit = idleReceivesPerTaskLimit;
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -655,12 +548,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * @since 5.3.5
 	 */
 	public int getIdleReceivesPerTaskLimit() {
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			return this.idleReceivesPerTaskLimit;
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -676,28 +565,19 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 			this.cacheLevel = (getTransactionManager() != null ? CACHE_NONE : CACHE_CONSUMER);
 		}
 
-		// Prepare taskExecutor and maxMessagesPerTask/idleReceivesPerTaskLimit.
-		this.lifecycleLock.lock();
-		try {
+		// Prepare taskExecutor and maxMessagesPerTask.
+		synchronized (this.lifecycleMonitor) {
 			if (this.taskExecutor == null) {
 				this.taskExecutor = createDefaultTaskExecutor();
 			}
-			if (this.taskExecutor instanceof SchedulingTaskExecutor ste && ste.prefersShortLivedTasks()) {
-				if (this.maxMessagesPerTask == Integer.MIN_VALUE) {
-					// TaskExecutor indicated a preference for short-lived tasks. According to
-					// setMaxMessagesPerTask javadoc, we'll use 10 message per task in this case
-					// unless the user specified a custom value.
-					this.maxMessagesPerTask = 10;
-				}
+			else if (this.taskExecutor instanceof SchedulingTaskExecutor &&
+					((SchedulingTaskExecutor) this.taskExecutor).prefersShortLivedTasks() &&
+					this.maxMessagesPerTask == Integer.MIN_VALUE) {
+				// TaskExecutor indicated a preference for short-lived tasks. According to
+				// setMaxMessagesPerTask javadoc, we'll use 10 message per task in this case
+				// unless the user specified a custom value.
+				this.maxMessagesPerTask = 10;
 			}
-			else if (this.idleReceivesPerTaskLimit == Integer.MIN_VALUE) {
-				// A simple non-pooling executor: unlimited core consumer tasks
-				// whereas surplus consumer tasks terminate after 10 idle receives.
-				this.idleReceivesPerTaskLimit = 10;
-			}
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 
 		// Proceed with actual listener initialization.
@@ -713,14 +593,10 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 */
 	@Override
 	protected void doInitialize() throws JMSException {
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			for (int i = 0; i < this.concurrentConsumers; i++) {
 				scheduleNewInvoker();
 			}
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -730,45 +606,43 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	@Override
 	protected void doShutdown() throws JMSException {
 		logger.debug("Waiting for shutdown of message listener invokers");
-		this.lifecycleLock.lock();
 		try {
-			long receiveTimeout = getReceiveTimeout();
-			long waitStartTime = System.currentTimeMillis();
-			int waitCount = 0;
-			while (this.activeInvokerCount > 0) {
-				if (waitCount > 0 && !isAcceptMessagesWhileStopping() &&
-						System.currentTimeMillis() - waitStartTime >= receiveTimeout) {
-					// Unexpectedly some invokers are still active after the receive timeout period
-					// -> interrupt remaining receive attempts since we'd reject the messages anyway
-					for (AsyncMessageListenerInvoker scheduledInvoker : this.scheduledInvokers) {
-						scheduledInvoker.interruptIfNecessary();
+			synchronized (this.lifecycleMonitor) {
+				long receiveTimeout = getReceiveTimeout();
+				long waitStartTime = System.currentTimeMillis();
+				int waitCount = 0;
+				while (this.activeInvokerCount > 0) {
+					if (waitCount > 0 && !isAcceptMessagesWhileStopping() &&
+							System.currentTimeMillis() - waitStartTime >= receiveTimeout) {
+						// Unexpectedly some invokers are still active after the receive timeout period
+						// -> interrupt remaining receive attempts since we'd reject the messages anyway
+						for (AsyncMessageListenerInvoker scheduledInvoker : this.scheduledInvokers) {
+							scheduledInvoker.interruptIfNecessary();
+						}
 					}
+					if (logger.isDebugEnabled()) {
+						logger.debug("Still waiting for shutdown of " + this.activeInvokerCount +
+								" message listener invokers (iteration " + waitCount + ")");
+					}
+					// Wait for AsyncMessageListenerInvokers to deactivate themselves...
+					if (receiveTimeout > 0) {
+						this.lifecycleMonitor.wait(receiveTimeout);
+					}
+					else {
+						this.lifecycleMonitor.wait();
+					}
+					waitCount++;
 				}
-				if (logger.isDebugEnabled()) {
-					logger.debug("Still waiting for shutdown of " + this.activeInvokerCount +
-							" message listener invokers (iteration " + waitCount + ")");
+				// Clear remaining scheduled invokers, possibly left over as paused tasks
+				for (AsyncMessageListenerInvoker scheduledInvoker : this.scheduledInvokers) {
+					scheduledInvoker.clearResources();
 				}
-				// Wait for AsyncMessageListenerInvokers to deactivate themselves...
-				if (receiveTimeout > 0) {
-					this.lifecycleCondition.await(receiveTimeout, TimeUnit.MILLISECONDS);
-				}
-				else {
-					this.lifecycleCondition.await();
-				}
-				waitCount++;
+				this.scheduledInvokers.clear();
 			}
-			// Clear remaining scheduled invokers, possibly left over as paused tasks
-			for (AsyncMessageListenerInvoker scheduledInvoker : this.scheduledInvokers) {
-				scheduledInvoker.clearResources();
-			}
-			this.scheduledInvokers.clear();
 		}
 		catch (InterruptedException ex) {
 			// Re-interrupt current thread, to allow other threads to react.
 			Thread.currentThread().interrupt();
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -777,12 +651,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 */
 	@Override
 	public void start() throws JmsException {
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			this.stopCallback = null;
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 		super.start();
 	}
@@ -802,8 +672,7 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 */
 	@Override
 	public void stop(Runnable callback) throws JmsException {
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			if (!isRunning() || this.stopCallback != null) {
 				// Not started, already stopped, or previous stop attempt in progress
 				// -> return immediately, no stop process to control anymore.
@@ -811,9 +680,6 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 				return;
 			}
 			this.stopCallback = callback;
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 		stop();
 	}
@@ -828,12 +694,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * @see #getActiveConsumerCount()
 	 */
 	public final int getScheduledConsumerCount() {
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			return this.scheduledInvokers.size();
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -847,12 +709,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * @see #getActiveConsumerCount()
 	 */
 	public final int getActiveConsumerCount() {
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			return this.activeInvokerCount;
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -872,12 +730,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * only {@link #CACHE_CONSUMER} will lead to a fixed registration.
 	 */
 	public boolean isRegisteredWithDestination() {
-		this.lifecycleLock.lock();
-		try {
+		synchronized (this.lifecycleMonitor) {
 			return (this.registeredWithDestination > 0);
-		}
-		finally {
-			this.lifecycleLock.unlock();
 		}
 	}
 
@@ -887,15 +741,11 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * <p>The default implementation builds a {@link org.springframework.core.task.SimpleAsyncTaskExecutor}
 	 * with the specified bean name (or the class name, if no bean name specified) as thread name prefix.
 	 * @see org.springframework.core.task.SimpleAsyncTaskExecutor#SimpleAsyncTaskExecutor(String)
-	 * @see #setVirtualThreads
 	 */
 	protected TaskExecutor createDefaultTaskExecutor() {
 		String beanName = getBeanName();
 		String threadNamePrefix = (beanName != null ? beanName + "-" : DEFAULT_THREAD_NAME_PREFIX);
-
-		SimpleAsyncTaskExecutor executor = new SimpleAsyncTaskExecutor(threadNamePrefix);
-		executor.setVirtualThreads(this.virtualThreads);
-		return executor;
+		return new SimpleAsyncTaskExecutor(threadNamePrefix);
 	}
 
 	/**
@@ -962,8 +812,7 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	protected void scheduleNewInvokerIfAppropriate() {
 		if (isRunning()) {
 			resumePausedTasks();
-			this.lifecycleLock.lock();
-			try {
+			synchronized (this.lifecycleMonitor) {
 				if (this.scheduledInvokers.size() < this.maxConcurrentConsumers &&
 						getIdleInvokerCount() < this.idleConsumerLimit) {
 					scheduleNewInvoker();
@@ -971,9 +820,6 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 						logger.debug("Raised scheduled invoker count: " + this.scheduledInvokers.size());
 					}
 				}
-			}
-			finally {
-				this.lifecycleLock.unlock();
 			}
 		}
 	}
@@ -992,7 +838,7 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	}
 
 	/**
-	 * Called to determine whether this listener container currently has more
+	 * Determine whether this listener container currently has more
 	 * than one idle instance among its scheduled invokers.
 	 */
 	private int getIdleInvokerCount() {
@@ -1017,8 +863,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 			super.establishSharedConnection();
 		}
 		catch (Exception ex) {
-			if (ex instanceof JMSException jmsException) {
-				invokeExceptionListener(jmsException);
+			if (ex instanceof JMSException) {
+				invokeExceptionListener((JMSException) ex);
 			}
 			logger.debug("Could not establish shared JMS Connection - " +
 					"leaving it up to asynchronous invokers to establish a Connection as soon as possible", ex);
@@ -1026,7 +872,7 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	}
 
 	/**
-	 * This implementation proceeds even after an exception thrown from
+	 * This implementations proceeds even after an exception thrown from
 	 * {@code Connection.start()}, relying on listeners to perform
 	 * appropriate recovery.
 	 */
@@ -1041,7 +887,7 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	}
 
 	/**
-	 * This implementation proceeds even after an exception thrown from
+	 * This implementations proceeds even after an exception thrown from
 	 * {@code Connection.stop()}, relying on listeners to perform
 	 * appropriate recovery after a restart.
 	 */
@@ -1069,8 +915,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 * @see #recoverAfterListenerSetupFailure()
 	 */
 	protected void handleListenerSetupFailure(Throwable ex, boolean alreadyRecovered) {
-		if (ex instanceof JMSException jmsException) {
-			invokeExceptionListener(jmsException);
+		if (ex instanceof JMSException) {
+			invokeExceptionListener((JMSException) ex);
 		}
 		if (ex instanceof SharedConnectionNotInitializedException) {
 			if (!alreadyRecovered) {
@@ -1086,8 +932,7 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 				StringBuilder msg = new StringBuilder();
 				msg.append("Setup of JMS message listener invoker failed for destination '");
 				msg.append(getDestinationDescription()).append("' - trying to recover. Cause: ");
-				msg.append(ex instanceof JMSException jmsException ? JmsUtils.buildExceptionMessage(jmsException) :
-						ex.getMessage());
+				msg.append(ex instanceof JMSException ? JmsUtils.buildExceptionMessage((JMSException) ex) : ex.getMessage());
 				if (logger.isDebugEnabled()) {
 					logger.warn(msg, ex);
 				}
@@ -1147,15 +992,14 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 				break;
 			}
 			catch (Exception ex) {
-				if (ex instanceof JMSException jmsException) {
-					invokeExceptionListener(jmsException);
+				if (ex instanceof JMSException) {
+					invokeExceptionListener((JMSException) ex);
 				}
 				StringBuilder msg = new StringBuilder();
 				msg.append("Could not refresh JMS Connection for destination '");
 				msg.append(getDestinationDescription()).append("' - retrying using ");
 				msg.append(execution).append(". Cause: ");
-				msg.append(ex instanceof JMSException jmsException ? JmsUtils.buildExceptionMessage(jmsException) :
-						ex.getMessage());
+				msg.append(ex instanceof JMSException ? JmsUtils.buildExceptionMessage((JMSException) ex) : ex.getMessage());
 				if (logger.isDebugEnabled()) {
 					logger.error(msg, ex);
 				}
@@ -1184,8 +1028,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 		String destName = getDestinationName();
 		if (destName != null) {
 			DestinationResolver destResolver = getDestinationResolver();
-			if (destResolver instanceof CachingDestinationResolver cachingResolver) {
-				cachingResolver.removeFromCache(destName);
+			if (destResolver instanceof CachingDestinationResolver) {
+				((CachingDestinationResolver) destResolver).removeFromCache(destName);
 			}
 		}
 	}
@@ -1207,9 +1051,10 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 			return false;
 		}
 		else {
-			this.lifecycleLock.lock();
 			try {
-				this.lifecycleCondition.await(interval, TimeUnit.MILLISECONDS);
+				synchronized (this.lifecycleMonitor) {
+					this.lifecycleMonitor.wait(interval);
+				}
 			}
 			catch (InterruptedException interEx) {
 				// Re-interrupt current thread, to allow other threads to react.
@@ -1217,9 +1062,6 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 				if (this.recovering) {
 					this.interrupted = true;
 				}
-			}
-			finally {
-				this.lifecycleLock.unlock();
 			}
 			return true;
 		}
@@ -1246,11 +1088,14 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 	 */
 	private class AsyncMessageListenerInvoker implements SchedulingAwareRunnable {
 
-		private @Nullable Session session;
+		@Nullable
+		private Session session;
 
-		private @Nullable MessageConsumer consumer;
+		@Nullable
+		private MessageConsumer consumer;
 
-		private @Nullable Object lastRecoveryMarker;
+		@Nullable
+		private Object lastRecoveryMarker;
 
 		private boolean lastMessageSucceeded;
 
@@ -1258,28 +1103,20 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 
 		private volatile boolean idle = true;
 
-		private volatile @Nullable Thread currentReceiveThread;
+		@Nullable
+		private volatile Thread currentReceiveThread;
 
 		@Override
 		public void run() {
-			boolean surplus;
-			lifecycleLock.lock();
-			try {
-				surplus = (scheduledInvokers.size() > concurrentConsumers);
+			synchronized (lifecycleMonitor) {
 				activeInvokerCount++;
-				lifecycleCondition.signalAll();
-			}
-			finally {
-				lifecycleLock.unlock();
+				lifecycleMonitor.notifyAll();
 			}
 			boolean messageReceived = false;
 			try {
-				// For core consumers without maxMessagesPerTask, no idle limit applies since they
-				// will always get rescheduled immediately anyway. Whereas for surplus consumers
-				// between concurrentConsumers and maxConcurrentConsumers, an idle limit does apply.
 				int messageLimit = maxMessagesPerTask;
 				int idleLimit = idleReceivesPerTaskLimit;
-				if (messageLimit < 0 && (!surplus || idleLimit < 0)) {
+				if (messageLimit < 0 && idleLimit < 0) {
 					messageReceived = executeOngoingLoop();
 				}
 				else {
@@ -1303,8 +1140,7 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 				}
 				this.lastMessageSucceeded = false;
 				boolean alreadyRecovered = false;
-				recoveryLock.lock();
-				try {
+				synchronized (recoveryMonitor) {
 					if (this.lastRecoveryMarker == currentRecoveryMarker) {
 						handleListenerSetupFailure(ex, false);
 						recoverAfterListenerSetupFailure();
@@ -1314,21 +1150,14 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 						alreadyRecovered = true;
 					}
 				}
-				finally {
-					recoveryLock.unlock();
-				}
 				if (alreadyRecovered) {
 					handleListenerSetupFailure(ex, true);
 				}
 			}
 			finally {
-				lifecycleLock.lock();
-				try {
+				synchronized (lifecycleMonitor) {
 					decreaseActiveInvokerCount();
-					lifecycleCondition.signalAll();
-				}
-				finally {
-					lifecycleLock.unlock();
+					lifecycleMonitor.notifyAll();
 				}
 				if (!messageReceived) {
 					this.idleTaskExecutionCount++;
@@ -1336,15 +1165,14 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 				else {
 					this.idleTaskExecutionCount = 0;
 				}
-				lifecycleLock.lock();
-				try {
+				synchronized (lifecycleMonitor) {
 					if (!shouldRescheduleInvoker(this.idleTaskExecutionCount) || !rescheduleTaskIfNecessary(this)) {
 						// We're shutting down completely.
 						scheduledInvokers.remove(this);
 						if (logger.isDebugEnabled()) {
 							logger.debug("Lowered scheduled invoker count: " + scheduledInvokers.size());
 						}
-						lifecycleCondition.signalAll();
+						lifecycleMonitor.notifyAll();
 						clearResources();
 					}
 					else if (isRunning()) {
@@ -1360,9 +1188,6 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 						}
 					}
 				}
-				finally {
-					lifecycleLock.unlock();
-				}
 			}
 		}
 
@@ -1370,8 +1195,7 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 			boolean messageReceived = false;
 			boolean active = true;
 			while (active) {
-				lifecycleLock.lock();
-				try {
+				synchronized (lifecycleMonitor) {
 					boolean interrupted = false;
 					boolean wasWaiting = false;
 					while ((active = isActive()) && !isRunning()) {
@@ -1384,7 +1208,7 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 						}
 						wasWaiting = true;
 						try {
-							lifecycleCondition.await();
+							lifecycleMonitor.wait();
 						}
 						catch (InterruptedException ex) {
 							// Re-interrupt current thread, to allow other threads to react.
@@ -1398,9 +1222,6 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 					if (scheduledInvokers.size() > maxConcurrentConsumers) {
 						active = false;
 					}
-				}
-				finally {
-					lifecycleLock.unlock();
 				}
 				if (active) {
 					messageReceived = (invokeListener() || messageReceived);
@@ -1424,19 +1245,12 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 
 		private void decreaseActiveInvokerCount() {
 			activeInvokerCount--;
-			if (activeInvokerCount == 0) {
-				if (!isRunning()) {
-					// Proactively release shared Connection when stopped.
-					releaseSharedConnection();
-				}
-				if (stopCallback != null) {
-					stopCallback.run();
-					stopCallback = null;
-				}
+			if (stopCallback != null && activeInvokerCount == 0) {
+				stopCallback.run();
+				stopCallback = null;
 			}
 		}
 
-		@SuppressWarnings("NullAway") // Dataflow analysis limitation
 		private void initResourcesIfNecessary() throws JMSException {
 			if (getCacheLevel() <= CACHE_CONNECTION) {
 				updateRecoveryMarker();
@@ -1448,24 +1262,16 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 				}
 				if (this.consumer == null && getCacheLevel() >= CACHE_CONSUMER) {
 					this.consumer = createListenerConsumer(this.session);
-					lifecycleLock.lock();
-					try {
+					synchronized (lifecycleMonitor) {
 						registeredWithDestination++;
-					}
-					finally {
-						lifecycleLock.unlock();
 					}
 				}
 			}
 		}
 
 		private void updateRecoveryMarker() {
-			recoveryLock.lock();
-			try {
+			synchronized (recoveryMonitor) {
 				this.lastRecoveryMarker = currentRecoveryMarker;
-			}
-			finally {
-				recoveryLock.unlock();
 			}
 		}
 
@@ -1478,13 +1284,9 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 
 		private void clearResources() {
 			if (sharedConnectionEnabled()) {
-				sharedConnectionLock.lock();
-				try {
+				synchronized (sharedConnectionMonitor) {
 					JmsUtils.closeMessageConsumer(this.consumer);
 					JmsUtils.closeSession(this.session);
-				}
-				finally {
-					sharedConnectionLock.unlock();
 				}
 			}
 			else {
@@ -1492,12 +1294,8 @@ public class DefaultMessageListenerContainer extends AbstractPollingMessageListe
 				JmsUtils.closeSession(this.session);
 			}
 			if (this.consumer != null) {
-				lifecycleLock.lock();
-				try {
+				synchronized (lifecycleMonitor) {
 					registeredWithDestination--;
-				}
-				finally {
-					lifecycleLock.unlock();
 				}
 			}
 			this.consumer = null;

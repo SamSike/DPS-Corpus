@@ -34,7 +34,7 @@ public class RefComponentTest extends ContextTestSupport {
 
         Endpoint slow = comp.createEndpoint("direct:somename");
         Consumer consumer = slow.createConsumer(new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 template.send("mock:result", exchange);
             }
         });

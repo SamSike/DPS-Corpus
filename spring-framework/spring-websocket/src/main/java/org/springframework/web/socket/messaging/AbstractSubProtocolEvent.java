@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,14 @@ package org.springframework.web.socket.messaging;
 
 import java.security.Principal;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.context.ApplicationEvent;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.util.Assert;
 
 /**
  * A base class for events for a message received from a WebSocket client and
- * parsed into a higher-level sub-protocol (for example, STOMP).
+ * parsed into a higher-level sub-protocol (e.g. STOMP).
  *
  * @author Rossen Stoyanchev
  * @since 4.1
@@ -36,7 +35,8 @@ public abstract class AbstractSubProtocolEvent extends ApplicationEvent {
 
 	private final Message<byte[]> message;
 
-	private final @Nullable Principal user;
+	@Nullable
+	private final Principal user;
 
 
 	/**
@@ -79,7 +79,8 @@ public abstract class AbstractSubProtocolEvent extends ApplicationEvent {
 	/**
 	 * Return the user for the session associated with the event.
 	 */
-	public @Nullable Principal getUser() {
+	@Nullable
+	public Principal getUser() {
 		return this.user;
 	}
 

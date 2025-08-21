@@ -57,7 +57,7 @@ public class DriveFilesIT extends AbstractGoogleDriveTestSupport {
         String fromFileId = testFile.getId();
 
         File toFile = new File();
-        toFile.setName(UPLOAD_FILE.getName() + "_copy");
+        toFile.setTitle(UPLOAD_FILE.getName() + "_copy");
 
         final Map<String, Object> headers = new HashMap<>();
         // parameter type is String
@@ -68,8 +68,8 @@ public class DriveFilesIT extends AbstractGoogleDriveTestSupport {
         final File result = requestBodyAndHeaders("direct://COPY", null, headers);
 
         assertNotNull(result, "copy result");
-        assertEquals(toFile.getName(), result.getName());
-        LOG.debug("copy: {}", result);
+        assertEquals(toFile.getTitle(), result.getTitle());
+        LOG.debug("copy: " + result);
     }
 
     @Test
@@ -99,17 +99,17 @@ public class DriveFilesIT extends AbstractGoogleDriveTestSupport {
         final File result = requestBody("direct://GET", fileId);
 
         assertNotNull(result, "get result");
-        LOG.debug("get: {}", result);
+        LOG.debug("get: " + result);
     }
 
     @Test
     public void testInsert() {
         File file = new File();
-        file.setName(UPLOAD_FILE.getName());
+        file.setTitle(UPLOAD_FILE.getName());
         // using com.google.api.services.drive.model.File message body for single parameter "content"
         File result = requestBody("direct://INSERT", file);
         assertNotNull(result, "insert result");
-        LOG.debug("insert: {}", result);
+        LOG.debug("insert: " + result);
     }
 
     @Test
@@ -117,26 +117,26 @@ public class DriveFilesIT extends AbstractGoogleDriveTestSupport {
         File result = uploadTestFile();
 
         assertNotNull(result, "insert result");
-        LOG.debug("insert: {}", result);
+        LOG.debug("insert: " + result);
     }
 
     @Test
     public void testList() {
         // upload a test file
-        //File testFile = uploadTestFile();
+        File testFile = uploadTestFile();
 
-        FileList result = requestBody("direct://LIST", "{}");
+        FileList result = requestBody("direct://LIST", null);
         assertNotNull(result, "list result");
-        assertTrue(result.getFiles().size() >= 1);
+        assertTrue(result.getItems().size() >= 1);
 
-        //File testFile2 = uploadTestFile();
+        File testFile2 = uploadTestFile();
 
         Map<String, Object> headers = new HashMap<>();
         headers.put("CamelGoogleDrive.maxResults", 1);
 
         result = requestBodyAndHeaders("direct://LIST", null, headers);
         assertNotNull(result, "list result");
-        assertEquals(1, result.getFiles().size());
+        assertEquals(1, result.getItems().size());
 
         // test paging the list
         List<File> resultList = new ArrayList<>();
@@ -145,7 +145,7 @@ public class DriveFilesIT extends AbstractGoogleDriveTestSupport {
         do {
             result = requestBodyAndHeaders("direct://LIST", null, headers);
 
-            resultList.addAll(result.getFiles());
+            resultList.addAll(result.getItems());
             pageToken = result.getNextPageToken();
             headers.put("CamelGoogleDrive.pageToken", pageToken);
 
@@ -163,7 +163,7 @@ public class DriveFilesIT extends AbstractGoogleDriveTestSupport {
         File file = uploadTestFile();
 
         // lets update the filename
-        file.setName(UPLOAD_FILE.getName() + "PATCHED");
+        file.setTitle(UPLOAD_FILE.getName() + "PATCHED");
 
         final Map<String, Object> headers = new HashMap<>();
         // parameter type is String
@@ -176,19 +176,19 @@ public class DriveFilesIT extends AbstractGoogleDriveTestSupport {
         File result = requestBodyAndHeaders("direct://PATCH", null, headers);
 
         assertNotNull(result, "patch result");
-        assertEquals(UPLOAD_FILE.getName() + "PATCHED", result.getName());
-        LOG.debug("patch: {}", result);
+        assertEquals(UPLOAD_FILE.getName() + "PATCHED", result.getTitle());
+        LOG.debug("patch: " + result);
     }
 
     @Test
     public void testTouch() {
         File theTestFile = uploadTestFile();
-        DateTime createdDate = theTestFile.getModifiedByMeTime();
+        DateTime createdDate = theTestFile.getModifiedDate();
         // using String message body for single parameter "fileId"
         File result = requestBody("direct://TOUCH", theTestFile.getId());
 
         assertNotNull(result, "touch result");
-        assertTrue(result.getModifiedByMeTime().getValue() > createdDate.getValue());
+        assertTrue(result.getModifiedDate().getValue() > createdDate.getValue());
     }
 
     @Test
@@ -214,7 +214,7 @@ public class DriveFilesIT extends AbstractGoogleDriveTestSupport {
         File result = requestBodyAndHeaders("direct://UPDATE", null, headers);
 
         assertNotNull(result, "update result");
-        LOG.debug("update: {}", result);
+        LOG.debug("update: " + result);
     }
 
     @Test
@@ -228,7 +228,7 @@ public class DriveFilesIT extends AbstractGoogleDriveTestSupport {
         final File file = requestBody("direct://GET", fileId);
 
         // File's new metadata.
-        file.setName("camel.png");
+        file.setTitle("camel.png");
 
         // File's new content.
         java.io.File fileContent = new java.io.File(TEST_UPLOAD_IMG);
@@ -247,7 +247,7 @@ public class DriveFilesIT extends AbstractGoogleDriveTestSupport {
         File result = requestBodyAndHeaders("direct://UPDATE_1", null, headers);
 
         assertNotNull(result, "update result");
-        LOG.debug("update: {}", result);
+        LOG.debug("update: " + result);
     }
 
     // TODO provide parameter values for watch
@@ -263,16 +263,65 @@ public class DriveFilesIT extends AbstractGoogleDriveTestSupport {
         final com.google.api.services.drive.Drive.Files.Watch result = requestBodyAndHeaders("direct://WATCH", null, headers);
 
         assertNotNull(result, "watch result");
-        LOG.debug("watch: {}", result);
+        LOG.debug("watch: " + result);
     }
 
     @Override
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
+                // test route for copy
+                from("direct://COPY")
+                        .to("google-drive://" + PATH_PREFIX + "/copy");
+
+                // test route for delete
+                from("direct://DELETE")
+                        .to("google-drive://" + PATH_PREFIX + "/delete?inBody=fileId");
+
+                // test route for get
+                from("direct://GET")
+                        .to("google-drive://" + PATH_PREFIX + "/get?inBody=fileId");
+
+                // test route for insert
+                from("direct://INSERT")
+                        .to("google-drive://" + PATH_PREFIX + "/insert?inBody=content");
+
+                // test route for insert
+                from("direct://INSERT_1")
+                        .to("google-drive://" + PATH_PREFIX + "/insert");
+
                 // test route for list
                 from("direct://LIST")
                         .to("google-drive://" + PATH_PREFIX + "/list");
+
+                // test route for patch
+                from("direct://PATCH")
+                        .to("google-drive://" + PATH_PREFIX + "/patch");
+
+                // test route for touch
+                from("direct://TOUCH")
+                        .to("google-drive://" + PATH_PREFIX + "/touch?inBody=fileId");
+
+                // test route for trash
+                from("direct://TRASH")
+                        .to("google-drive://" + PATH_PREFIX + "/trash?inBody=fileId");
+
+                // test route for untrash
+                from("direct://UNTRASH")
+                        .to("google-drive://" + PATH_PREFIX + "/untrash?inBody=fileId");
+
+                // test route for update
+                from("direct://UPDATE")
+                        .to("google-drive://" + PATH_PREFIX + "/update");
+
+                // test route for update
+                from("direct://UPDATE_1")
+                        .to("google-drive://" + PATH_PREFIX + "/update");
+
+                // test route for watch
+                from("direct://WATCH")
+                        .to("google-drive://" + PATH_PREFIX + "/watch");
+
             }
         };
     }

@@ -32,11 +32,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PollEnrichBridgeErrorHandlerTest extends ContextTestSupport {
 
-    private final MyPollingStrategy myPoll = new MyPollingStrategy();
+    private MyPollingStrategy myPoll = new MyPollingStrategy();
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myPoll", myPoll);
         return jndi;
     }
@@ -60,10 +60,10 @@ public class PollEnrichBridgeErrorHandlerTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // try at most 3 times and if still failing move to DLQ
                 errorHandler(deadLetterChannel("mock:dead").maximumRedeliveries(3).redeliveryDelay(0));
 
@@ -77,7 +77,7 @@ public class PollEnrichBridgeErrorHandlerTest extends ContextTestSupport {
         };
     }
 
-    private static class MyPollingStrategy implements PollingConsumerPollStrategy {
+    private class MyPollingStrategy implements PollingConsumerPollStrategy {
 
         private int counter;
 
@@ -93,7 +93,7 @@ public class PollEnrichBridgeErrorHandlerTest extends ContextTestSupport {
         }
 
         @Override
-        public boolean rollback(Consumer consumer, Endpoint endpoint, int retryCounter, Exception cause) {
+        public boolean rollback(Consumer consumer, Endpoint endpoint, int retryCounter, Exception cause) throws Exception {
             return false;
         }
 

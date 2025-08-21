@@ -40,7 +40,7 @@ public abstract class MainCommandLineSupport extends MainSupport {
     private volatile boolean initOptionsDone;
 
     @SafeVarargs
-    public MainCommandLineSupport(Class<? extends CamelConfiguration>... configurationClasses) {
+    public MainCommandLineSupport(Class<CamelConfiguration>... configurationClasses) {
         super(configurationClasses);
     }
 
@@ -155,27 +155,10 @@ public abstract class MainCommandLineSupport extends MainSupport {
         });
         addOption(new ParameterOption(
                 "pl", "propertiesLocation",
-                "Sets location(s) to load properties, such as from classpath or file system."
-                                            + " You can use comma to separate multiple locations. Camel loads by default from classpath, so use file: as prefix to load from file system.",
+                "Sets location(s) to load properties, such as from classpath or file system.",
                 "propertiesLocation") {
             protected void doProcess(String arg, String parameter, LinkedList<String> remainingArgs) {
                 setPropertyPlaceholderLocations(parameter);
-            }
-        });
-        addOption(new ParameterOption(
-                "cwd", "compileWorkDir",
-                "Work directory for compiler. Can be used to write compiled classes or other resources.",
-                "compileWorkDir") {
-            protected void doProcess(String arg, String parameter, LinkedList<String> remainingArgs) {
-                configure().withCompileWorkDir(parameter);
-            }
-        });
-        addOption(new ParameterOption(
-                "pro", "profile",
-                "Camel profile to use when running. (dev,test,prod)",
-                "profile") {
-            protected void doProcess(String arg, String parameter, LinkedList<String> remainingArgs) {
-                configure().withProfile(parameter);
             }
         });
     }
@@ -242,13 +225,6 @@ public abstract class MainCommandLineSupport extends MainSupport {
 
     @Override
     protected void configurePropertiesService(CamelContext camelContext) throws Exception {
-        if (mainConfigurationProperties.getProfile() != null) {
-            // setup property placeholder location to include the profile based properties file also
-            defaultPropertyPlaceholderLocation
-                    = String.format("classpath:application-%s.properties;optional=true," + defaultPropertyPlaceholderLocation,
-                            mainConfigurationProperties.getProfile());
-        }
-
         super.configurePropertiesService(camelContext);
 
         PropertiesComponent pc = camelContext.getPropertiesComponent();
@@ -299,7 +275,7 @@ public abstract class MainCommandLineSupport extends MainSupport {
         System.out.println();
     }
 
-    public abstract static class Option {
+    public abstract class Option {
         private final String abbreviation;
         private final String fullName;
         private final String description;

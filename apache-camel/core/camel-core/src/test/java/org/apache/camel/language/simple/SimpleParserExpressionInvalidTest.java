@@ -21,7 +21,7 @@ import org.apache.camel.language.simple.types.SimpleIllegalSyntaxException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  *
@@ -29,52 +29,61 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class SimpleParserExpressionInvalidTest extends ExchangeTestSupport {
 
     @Test
-    public void testSimpleUnbalanceFunction() {
+    public void testSimpleUnbalanceFunction() throws Exception {
         SimpleExpressionParser parser = new SimpleExpressionParser(context, "${body is a nice day", true, null);
-        SimpleIllegalSyntaxException e = assertThrows(SimpleIllegalSyntaxException.class,
-                parser::parseExpression, "Should thrown exception");
-
-        assertEquals(19, e.getIndex());
+        try {
+            parser.parseExpression();
+            fail("Should thrown exception");
+        } catch (SimpleIllegalSyntaxException e) {
+            assertEquals(19, e.getIndex());
+        }
     }
 
     @Test
-    public void testSimpleNestedUnbalanceFunction() {
+    public void testSimpleNestedUnbalanceFunction() throws Exception {
         SimpleExpressionParser parser = new SimpleExpressionParser(context, "${body${foo}", true, null);
-        SimpleIllegalSyntaxException e = assertThrows(SimpleIllegalSyntaxException.class,
-                parser::parseExpression, "Should thrown exception");
-
-        assertEquals(11, e.getIndex());
+        try {
+            parser.parseExpression();
+            fail("Should thrown exception");
+        } catch (SimpleIllegalSyntaxException e) {
+            assertEquals(11, e.getIndex());
+        }
     }
 
     @Test
-    public void testSimpleUnknownFunction() {
+    public void testSimpleUnknownFunction() throws Exception {
         SimpleExpressionParser parser = new SimpleExpressionParser(context, "Hello ${foo} how are you?", true, null);
-        SimpleIllegalSyntaxException e = assertThrows(SimpleIllegalSyntaxException.class,
-                parser::parseExpression, "Should thrown exception");
-
-        assertEquals(6, e.getIndex());
+        try {
+            parser.parseExpression();
+            fail("Should thrown exception");
+        } catch (SimpleIllegalSyntaxException e) {
+            assertEquals(6, e.getIndex());
+        }
     }
 
     @Test
-    public void testSimpleNestedUnknownFunction() {
+    public void testSimpleNestedUnknownFunction() throws Exception {
         SimpleExpressionParser parser = new SimpleExpressionParser(context, "Hello ${bodyAs(${foo})} how are you?", true, null);
-        // nested functions can only be syntax evaluated when evaluating an
-        // exchange at runtime
-        SimpleIllegalSyntaxException e = assertThrows(SimpleIllegalSyntaxException.class,
-                () -> parser.parseExpression().evaluate(exchange, String.class),
-                "Should thrown exception");
-
-        assertEquals(0, e.getIndex());
+        try {
+            // nested functions can only be syntax evaluated when evaluating an
+            // exchange at runtime
+            parser.parseExpression().evaluate(exchange, String.class);
+            fail("Should thrown exception");
+        } catch (SimpleIllegalSyntaxException e) {
+            // its a nested function is it reset the index
+            assertEquals(0, e.getIndex());
+        }
     }
 
     @Test
-    public void testNoEndFunction() {
+    public void testNoEndFunction() throws Exception {
         SimpleExpressionParser parser = new SimpleExpressionParser(context, "Hello ${body", true, null);
-        SimpleIllegalSyntaxException e = assertThrows(SimpleIllegalSyntaxException.class,
-                parser::parseExpression,
-                "Should thrown exception");
-
-        assertEquals(11, e.getIndex());
+        try {
+            parser.parseExpression();
+            fail("Should thrown exception");
+        } catch (SimpleIllegalSyntaxException e) {
+            assertEquals(11, e.getIndex());
+        }
     }
 
 }

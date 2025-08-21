@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,13 +40,13 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests for {@link ResourceUrlProvider}.
+ * Unit tests for {@link ResourceUrlProvider}.
  *
  * @author Jeremy Grelle
  * @author Rossen Stoyanchev
  * @author Brian Clozel
  */
-class ResourceUrlProviderTests {
+public class ResourceUrlProviderTests {
 
 	private final List<Resource> locations = new ArrayList<>();
 
@@ -97,7 +97,7 @@ class ResourceUrlProviderTests {
 		request.setRequestURI("/contextpath-longer-than-request-path/style.css");
 		String url = "/resources/foo.css";
 		String resolvedUrl = this.urlProvider.getForRequestUrl(request, url);
-		assertThat(resolvedUrl).isNull();
+		assertThat((Object) resolvedUrl).isNull();
 	}
 
 	@Test
@@ -117,7 +117,7 @@ class ResourceUrlProviderTests {
 	}
 
 	@Test // SPR-12647
-	void bestPatternMatch() {
+	void bestPatternMatch() throws Exception {
 		ResourceHttpRequestHandler otherHandler = new ResourceHttpRequestHandler();
 		otherHandler.setLocations(this.locations);
 		Map<String, VersionStrategy> versionStrategyMap = new HashMap<>();
@@ -138,7 +138,8 @@ class ResourceUrlProviderTests {
 	}
 
 	@Test // SPR-12592
-	void initializeOnce() {
+	@SuppressWarnings("resource")
+	void initializeOnce() throws Exception {
 		AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
 		context.setServletContext(new MockServletContext());
 		context.register(HandlerMappingConfiguration.class);
@@ -150,6 +151,7 @@ class ResourceUrlProviderTests {
 	}
 
 	@Test
+	@SuppressWarnings("resource")
 	void initializeOnCurrentContext() {
 		AnnotationConfigWebApplicationContext parentContext = new AnnotationConfigWebApplicationContext();
 		parentContext.setServletContext(new MockServletContext());
@@ -174,7 +176,7 @@ class ResourceUrlProviderTests {
 	@Test // SPR-16296
 	void getForLookupPathShouldNotFailIfPathContainsDoubleSlashes() {
 		// given
-		ResourceResolver mockResourceResolver = mock();
+		ResourceResolver mockResourceResolver = mock(ResourceResolver.class);
 		given(mockResourceResolver.resolveUrlPath(any(), any(), any())).willReturn("some-path");
 
 		ResourceHttpRequestHandler handler = new ResourceHttpRequestHandler();

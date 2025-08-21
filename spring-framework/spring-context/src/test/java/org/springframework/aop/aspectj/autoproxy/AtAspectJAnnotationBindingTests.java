@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Juergen Hoeller
  * @author Chris Beams
  */
-class AtAspectJAnnotationBindingTests {
+public class AtAspectJAnnotationBindingTests {
 
 	private AnnotatedTestBean testBean;
 
@@ -41,26 +41,26 @@ class AtAspectJAnnotationBindingTests {
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		ctx = new ClassPathXmlApplicationContext(getClass().getSimpleName() + "-context.xml", getClass());
 		testBean = (AnnotatedTestBean) ctx.getBean("testBean");
 	}
 
 
 	@Test
-	void testAnnotationBindingInAroundAdvice() {
+	public void testAnnotationBindingInAroundAdvice() {
 		assertThat(testBean.doThis()).isEqualTo("this value doThis");
 		assertThat(testBean.doThat()).isEqualTo("that value doThat");
-		assertThat(testBean.doArray()).hasSize(2);
+		assertThat(testBean.doArray().length).isEqualTo(2);
 	}
 
 	@Test
-	void testNoMatchingWithoutAnnotationPresent() {
+	public void testNoMatchingWithoutAnnotationPresent() {
 		assertThat(testBean.doTheOther()).isEqualTo("doTheOther");
 	}
 
 	@Test
-	void testPointcutEvaluatedAgainstArray() {
+	public void testPointcutEvaluatedAgainstArray() {
 		ctx.getBean("arrayFactoryBean");
 	}
 

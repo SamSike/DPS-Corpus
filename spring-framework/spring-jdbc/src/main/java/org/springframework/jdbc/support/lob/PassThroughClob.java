@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +28,9 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Clob;
 import java.sql.SQLException;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.util.StreamUtils;
 
 /**
  * Simple JDBC {@link Clob} adapter that exposes a given String or character stream.
@@ -39,16 +39,18 @@ import org.springframework.util.FileCopyUtils;
  * @author Juergen Hoeller
  * @since 2.5.3
  */
-@Deprecated(since = "6.2")
 class PassThroughClob implements Clob {
 
-	private @Nullable String content;
+	@Nullable
+	private String content;
 
-	private @Nullable Reader characterStream;
+	@Nullable
+	private Reader characterStream;
 
-	private @Nullable InputStream asciiStream;
+	@Nullable
+	private InputStream asciiStream;
 
-	private final long contentLength;
+	private long contentLength;
 
 
 	public PassThroughClob(String content) {
@@ -82,7 +84,7 @@ class PassThroughClob implements Clob {
 		}
 		else {
 			return new InputStreamReader(
-					(this.asciiStream != null ? this.asciiStream : InputStream.nullInputStream()),
+					(this.asciiStream != null ? this.asciiStream : StreamUtils.emptyInput()),
 					StandardCharsets.US_ASCII);
 		}
 	}
@@ -98,7 +100,7 @@ class PassThroughClob implements Clob {
 				return new ByteArrayInputStream(tempContent.getBytes(StandardCharsets.US_ASCII));
 			}
 			else {
-				return (this.asciiStream != null ? this.asciiStream : InputStream.nullInputStream());
+				return (this.asciiStream != null ? this.asciiStream : StreamUtils.emptyInput());
 			}
 		}
 		catch (IOException ex) {

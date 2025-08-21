@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.util.comparator.Comparators;
+import org.springframework.util.comparator.ComparableComparator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -45,45 +45,45 @@ class ConvertingComparatorTests {
 	private final TestComparator comparator = new TestComparator();
 
 	@Test
-	void shouldThrowOnNullComparator() {
+	void shouldThrowOnNullComparator() throws Exception {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				new ConvertingComparator<>(null, this.converter));
 	}
 
 	@Test
-	void shouldThrowOnNullConverter() {
+	void shouldThrowOnNullConverter() throws Exception {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				new ConvertingComparator<String, Integer>(this.comparator, null));
 	}
 
 	@Test
-	void shouldThrowOnNullConversionService() {
+	void shouldThrowOnNullConversionService() throws Exception {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				new ConvertingComparator<String, Integer>(this.comparator, null, Integer.class));
 	}
 
 	@Test
-	void shouldThrowOnNullType() {
+	void shouldThrowOnNullType() throws Exception {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				new ConvertingComparator<String, Integer>(this.comparator, this.conversionService, null));
 	}
 
 	@Test
-	void shouldUseConverterOnCompare() {
+	void shouldUseConverterOnCompare() throws Exception {
 		ConvertingComparator<String, Integer> convertingComparator = new ConvertingComparator<>(
 				this.comparator, this.converter);
 		testConversion(convertingComparator);
 	}
 
 	@Test
-	void shouldUseConversionServiceOnCompare() {
+	void shouldUseConversionServiceOnCompare() throws Exception {
 		ConvertingComparator<String, Integer> convertingComparator = new ConvertingComparator<>(
 				comparator, conversionService, Integer.class);
 		testConversion(convertingComparator);
 	}
 
 	@Test
-	void shouldGetForConverter() {
+	void shouldGetForConverter() throws Exception {
 		testConversion(new ConvertingComparator<>(comparator, converter));
 	}
 
@@ -95,17 +95,17 @@ class ConvertingComparatorTests {
 	}
 
 	@Test
-	void shouldGetMapEntryKeys() {
+	void shouldGetMapEntryKeys() throws Exception {
 		ArrayList<Entry<String, Integer>> list = createReverseOrderMapEntryList();
-		Comparator<Map.Entry<String, Integer>> comparator = ConvertingComparator.mapEntryKeys(Comparators.comparable());
+		Comparator<Map.Entry<String, Integer>> comparator = ConvertingComparator.mapEntryKeys(new ComparableComparator<String>());
 		list.sort(comparator);
 		assertThat(list.get(0).getKey()).isEqualTo("a");
 	}
 
 	@Test
-	void shouldGetMapEntryValues() {
+	void shouldGetMapEntryValues() throws Exception {
 		ArrayList<Entry<String, Integer>> list = createReverseOrderMapEntryList();
-		Comparator<Map.Entry<String, Integer>> comparator = ConvertingComparator.mapEntryValues(Comparators.comparable());
+		Comparator<Map.Entry<String, Integer>> comparator = ConvertingComparator.mapEntryValues(new ComparableComparator<Integer>());
 		list.sort(comparator);
 		assertThat(list.get(0).getValue()).isEqualTo(1);
 	}
@@ -130,7 +130,7 @@ class ConvertingComparatorTests {
 	}
 
 
-	private static class TestComparator implements Comparator<Integer> {
+	private static class TestComparator extends ComparableComparator<Integer> {
 
 		private boolean called;
 
@@ -139,8 +139,8 @@ class ConvertingComparatorTests {
 			assertThat(o1).isInstanceOf(Integer.class);
 			assertThat(o2).isInstanceOf(Integer.class);
 			this.called = true;
-			return Comparators.comparable().compare(o1, o2);
-		}
+			return super.compare(o1, o2);
+		};
 
 		public void assertCalled() {
 			assertThat(this.called).isTrue();

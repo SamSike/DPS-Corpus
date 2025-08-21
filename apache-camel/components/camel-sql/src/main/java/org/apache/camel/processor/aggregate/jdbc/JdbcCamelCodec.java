@@ -16,12 +16,19 @@
  */
 package org.apache.camel.processor.aggregate.jdbc;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.DefaultExchangeHolder;
 import org.apache.camel.util.ClassLoadingAwareObjectInputStream;
@@ -67,14 +74,13 @@ public class JdbcCamelCodec {
         encode(pe, outputStream);
     }
 
-    public Exchange unmarshallExchange(CamelContext camelContext, byte[] buffer, String deserializationFilter)
-            throws IOException, ClassNotFoundException {
-        return unmarshallExchange(camelContext, new ByteArrayInputStream(buffer), deserializationFilter);
+    public Exchange unmarshallExchange(CamelContext camelContext, byte[] buffer) throws IOException, ClassNotFoundException {
+        return unmarshallExchange(camelContext, new ByteArrayInputStream(buffer));
     }
 
-    public Exchange unmarshallExchange(CamelContext camelContext, InputStream inputStream, String deserializationFilter)
+    public Exchange unmarshallExchange(CamelContext camelContext, InputStream inputStream)
             throws IOException, ClassNotFoundException {
-        DefaultExchangeHolder pe = decode(camelContext, inputStream, deserializationFilter);
+        DefaultExchangeHolder pe = decode(camelContext, inputStream);
         Exchange answer = new DefaultExchange(camelContext);
         DefaultExchangeHolder.unmarshal(answer, pe);
         // restore the from endpoint
@@ -82,7 +88,7 @@ public class JdbcCamelCodec {
         if (fromEndpointUri != null) {
             Endpoint fromEndpoint = camelContext.hasEndpoint(fromEndpointUri);
             if (fromEndpoint != null) {
-                answer.getExchangeExtension().setFromEndpoint(fromEndpoint);
+                answer.adapt(ExtendedExchange.class).setFromEndpoint(fromEndpoint);
             }
         }
         return answer;
@@ -94,13 +100,12 @@ public class JdbcCamelCodec {
         }
     }
 
-    private DefaultExchangeHolder decode(CamelContext camelContext, InputStream bytesIn, String deserializationFilter)
+    private DefaultExchangeHolder decode(CamelContext camelContext, InputStream bytesIn)
             throws IOException, ClassNotFoundException {
         ObjectInputStream objectIn = null;
         Object obj = null;
         try {
             objectIn = new ClassLoadingAwareObjectInputStream(camelContext.getApplicationContextClassLoader(), bytesIn);
-            objectIn.setObjectInputFilter(ObjectInputFilter.Config.createFilter(deserializationFilter));
             obj = objectIn.readObject();
         } finally {
             IOHelper.close(objectIn);

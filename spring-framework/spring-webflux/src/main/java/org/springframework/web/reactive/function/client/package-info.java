@@ -3,7 +3,9 @@
  * that builds on top of the
  * {@code org.springframework.http.client.reactive} reactive HTTP adapter layer.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.reactive.function.client;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

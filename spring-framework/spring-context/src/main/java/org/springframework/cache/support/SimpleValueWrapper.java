@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,8 @@
 
 package org.springframework.cache.support;
 
-import java.util.Objects;
-
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.cache.Cache.ValueWrapper;
+import org.springframework.lang.Nullable;
 
 /**
  * Straightforward implementation of {@link org.springframework.cache.Cache.ValueWrapper},
@@ -31,7 +28,8 @@ import org.springframework.cache.Cache.ValueWrapper;
  */
 public class SimpleValueWrapper implements ValueWrapper {
 
-	private final @Nullable Object value;
+	@Nullable
+	private final Object value;
 
 
 	/**
@@ -47,23 +45,9 @@ public class SimpleValueWrapper implements ValueWrapper {
 	 * Simply returns the value as given at construction time.
 	 */
 	@Override
-	public @Nullable Object get() {
+	@Nullable
+	public Object get() {
 		return this.value;
-	}
-
-	@Override
-	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof ValueWrapper wrapper && Objects.equals(get(), wrapper.get())));
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hashCode(this.value);
-	}
-
-	@Override
-	public String toString() {
-		return "ValueWrapper for [" + this.value + "]";
 	}
 
 }

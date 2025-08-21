@@ -67,7 +67,7 @@ public class ThreadsDefinition extends NoOutputDefinition<ThreadsDefinition>
     private String threadName;
     @XmlAttribute
     @Metadata(label = "advanced", javaType = "org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy",
-              enums = "Abort,CallerRuns")
+              enums = "Abort,CallerRuns,DiscardOldest,Discard")
     private String rejectedPolicy;
     @XmlAttribute
     @Metadata(label = "advanced", defaultValue = "true")
@@ -75,26 +75,6 @@ public class ThreadsDefinition extends NoOutputDefinition<ThreadsDefinition>
 
     public ThreadsDefinition() {
         this.threadName = "Threads";
-    }
-
-    protected ThreadsDefinition(ThreadsDefinition source) {
-        super(source);
-        this.executorServiceBean = source.executorServiceBean;
-        this.executorService = source.executorService;
-        this.poolSize = source.poolSize;
-        this.maxPoolSize = source.maxPoolSize;
-        this.keepAliveTime = source.keepAliveTime;
-        this.timeUnit = source.timeUnit;
-        this.maxQueueSize = source.maxQueueSize;
-        this.allowCoreThreadTimeOut = source.allowCoreThreadTimeOut;
-        this.threadName = source.threadName;
-        this.rejectedPolicy = source.rejectedPolicy;
-        this.callerRunsWhenRejected = source.callerRunsWhenRejected;
-    }
-
-    @Override
-    public ThreadsDefinition copyDefinition() {
-        return new ThreadsDefinition(this);
     }
 
     @Override

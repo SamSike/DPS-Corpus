@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,35 +39,26 @@ package org.jooq.impl;
 
 import static org.jooq.conf.ParamType.INLINED;
 import static org.jooq.conf.SettingsTools.executeStaticStatements;
-import static org.jooq.conf.SettingsTools.getBatchSize;
-import static org.jooq.impl.AbstractQuery.connection;
-import static org.jooq.impl.Tools.EMPTY_PARAM;
-import static org.jooq.impl.Tools.checkedFunction;
-import static org.jooq.impl.Tools.chunks;
 import static org.jooq.impl.Tools.fields;
 import static org.jooq.impl.Tools.map;
 import static org.jooq.impl.Tools.visitAll;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_COUNT_BIND_VALUES;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.IntStream;
 
-import org.jooq.Batch;
 import org.jooq.BatchBindStep;
 import org.jooq.Configuration;
-import org.jooq.ExecuteContext.BatchMode;
+import org.jooq.ExecuteContext;
 import org.jooq.ExecuteListener;
 import org.jooq.Param;
 import org.jooq.Query;
 import org.jooq.conf.SettingsTools;
 import org.jooq.exception.ControlFlowSignal;
-import org.jooq.impl.DefaultRenderContext.Rendered;
 import org.jooq.impl.R2DBC.BatchSingleSubscriber;
 import org.jooq.impl.R2DBC.BatchSubscription;
 import org.jooq.tools.JooqLogger;
@@ -86,7 +77,6 @@ final class BatchSingle extends AbstractBatch implements BatchBindStep {
     final Map<String, List<Integer>> nameToIndexMapping;
     final List<Object[]>             allBindValues;
     final int                        expectedBindValues;
-    transient List<Object>           defaultValues;
 
     public BatchSingle(Configuration configuration, Query query) {
         super(configuration);
@@ -128,9 +118,7 @@ final class BatchSingle extends AbstractBatch implements BatchBindStep {
     @Override
     @SafeVarargs
     public final BatchSingle bind(Map<String, Object>... namedBindValues) {
-        if (defaultValues == null) {
-            defaultValues = dsl.extractBindValues(query);
-        }
+        List<Object> defaultValues = dsl.extractBindValues(query);
 
         Object[][] bindValues = new Object[namedBindValues.length][];
         for (int i = 0; i < bindValues.length; i++) {
@@ -163,7 +151,7 @@ final class BatchSingle extends AbstractBatch implements BatchBindStep {
 
         // TODO: [#11700] Implement this
         else
-            throw new UnsupportedOperationException("The blocking, JDBC backed implementation of reactive batching has not yet been implemented. Use the R2DBC backed implementation, instead, or avoid batching.");
+            throw new UnsupportedOperationException();
     }
 
     @Override
@@ -198,21 +186,24 @@ final class BatchSingle extends AbstractBatch implements BatchBindStep {
     }
 
     private final int[] executePrepared() {
-        DefaultExecuteContext ctx = new DefaultExecuteContext(configuration, BatchMode.SINGLE, new Query[] { query });
+        ExecuteContext ctx = new DefaultExecuteContext(configuration, new Query[] { query });
         ExecuteListener listener = ExecuteListeners.get(ctx);
+        Connection connection = ctx.connection();
+
+        Param<?>[] params = extractParams();
 
         try {
             // [#8968] Keep start() event inside of lifecycle management
             listener.start(ctx);
-            ctx.transformQueries(listener);
 
             listener.renderStart(ctx);
-            Rendered.rendered(configuration, ctx, ctx.batchQueries()[0], false, false).setSQLAndParams(ctx);
+            // [#1520] TODO: Should the number of bind values be checked, here?
+            ctx.sql(dsl.render(query));
             listener.renderEnd(ctx);
 
             listener.prepareStart(ctx);
             if (ctx.statement() == null)
-                ctx.statement(connection(ctx).prepareStatement(ctx.sql()));
+                ctx.statement(connection.prepareStatement(ctx.sql()));
             listener.prepareEnd(ctx);
 
             // [#9295] use query timeout from settings
@@ -220,46 +211,31 @@ final class BatchSingle extends AbstractBatch implements BatchBindStep {
             if (t != 0)
                 ctx.statement().setQueryTimeout(t);
 
-            // [#14784] TODO: Make this configurable also for other dialects
-            if (NO_SUPPORT_BATCH.contains(ctx.dialect())) {
-                int size = allBindValues.size();
-                int[] result = new int[size];
+            for (Object[] bindValues : allBindValues) {
+                listener.bindStart(ctx);
 
-                for (int i = 0; i < size; i++) {
-                    Object[] bindValues = allBindValues.get(i);
+                // [#1371] [#2139] Don't bind variables directly onto statement, bind them through the collected params
+                //                 list to preserve type information
+                // [#3547]         The original query may have no Params specified - e.g. when it was constructed with
+                //                 plain SQL. In that case, infer the bind value type directly from the bind value
+                visitAll(new DefaultBindContext(configuration, ctx.statement()),
+                    (params.length > 0)
+                        ? fields(bindValues, params)
+                        : fields(bindValues));
 
-                    setBindValues(ctx, listener, ctx.params(), bindValues);
-                    listener.executeStart(ctx);
-                    result[i] = ctx.statement().executeUpdate();
-                    listener.executeEnd(ctx);
-                }
-
-                setBatchRows(ctx, result);
-                return result;
+                listener.bindEnd(ctx);
+                ctx.statement().addBatch();
             }
-            else {
-                AtomicBoolean reset = new AtomicBoolean();
-                return chunks(allBindValues, getBatchSize(ctx.settings()))
-                    .stream()
-                    .map(checkedFunction(chunk -> {
-                        if (reset.get())
-                            ctx.statement().clearBatch();
 
-                        for (Object[] bindValues : chunk) {
-                            setBindValues(ctx, listener, ctx.params(), bindValues);
-                            ctx.statement().addBatch();
-                        }
+            listener.executeStart(ctx);
+            int[] result = ctx.statement().executeBatch();
 
-                        listener.executeStart(ctx);
-                        int[] result = ctx.statement().executeBatch();
-                        setBatchRows(ctx, result);
-                        listener.executeEnd(ctx);
-                        reset.set(true);
-                        return result;
-                    }))
-                    .flatMapToInt(IntStream::of)
-                    .toArray();
-            }
+            int[] batchRows = ctx.batchRows();
+            for (int i = 0; i < batchRows.length && i < result.length; i++)
+                batchRows[i] = result[i];
+
+            listener.executeEnd(ctx);
+            return result;
         }
 
         // [#3427] ControlFlowSignals must not be passed on to ExecuteListners
@@ -281,34 +257,6 @@ final class BatchSingle extends AbstractBatch implements BatchBindStep {
         }
     }
 
-    private final void setBindValues(
-        DefaultExecuteContext ctx,
-        ExecuteListener listener,
-        Param<?>[] params,
-        Object[] bindValues
-    ) {
-        listener.bindStart(ctx);
-
-        // [#1371] [#2139] Don't bind variables directly onto statement, bind them through the collected params
-        //                 list to preserve type information
-        // [#3547]         The original query may have no Params specified - e.g. when it was constructed with
-        //                 plain SQL. In that case, infer the bind value type directly from the bind value
-        visitAll(new DefaultBindContext(configuration, ctx, ctx.statement()),
-            (params.length > 0)
-                ? fields(bindValues, params)
-                : fields(bindValues)
-        );
-
-        listener.bindEnd(ctx);
-    }
-
-    private final void setBatchRows(DefaultExecuteContext ctx, int[] result) {
-        int[] batchRows = ctx.batchRows();
-
-        for (int i = 0; i < batchRows.length && i < result.length; i++)
-            batchRows[i] = result[i];
-    }
-
     final Param<?>[] extractParams() {
         // [#1371] fetch bind variables to restore them again, later
         // [#3940] Don't include inlined bind variables
@@ -319,10 +267,6 @@ final class BatchSingle extends AbstractBatch implements BatchBindStep {
     }
 
     private final int[] executeStatic() {
-        return batchMultiple().execute();
-    }
-
-    private final Batch batchMultiple() {
         List<Query> queries = new ArrayList<>(allBindValues.size());
 
         for (Object[] bindValues : allBindValues) {
@@ -332,15 +276,6 @@ final class BatchSingle extends AbstractBatch implements BatchBindStep {
             queries.add(dsl.query(query.getSQL(INLINED)));
         }
 
-        return dsl.batch(queries);
-    }
-
-    // -------------------------------------------------------------------------
-    // The Object API
-    // -------------------------------------------------------------------------
-
-    @Override
-    public String toString() {
-        return batchMultiple().toString();
+        return dsl.batch(queries).execute();
     }
 }

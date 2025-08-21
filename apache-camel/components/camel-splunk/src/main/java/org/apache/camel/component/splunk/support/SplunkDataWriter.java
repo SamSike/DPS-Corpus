@@ -22,8 +22,6 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import com.splunk.Args;
 import com.splunk.Service;
@@ -39,7 +37,6 @@ public abstract class SplunkDataWriter implements DataWriter {
     protected Args args;
     private boolean connected;
     private Socket socket;
-    protected final Lock lock = new ReentrantLock();
 
     public SplunkDataWriter(SplunkEndpoint endpoint, Args args) {
         this.endpoint = endpoint;
@@ -58,36 +55,27 @@ public abstract class SplunkDataWriter implements DataWriter {
         doWrite(event + SplunkEvent.LINEBREAK);
     }
 
-    protected void doWrite(String event) throws IOException {
-        lock.lock();
-        try {
-            LOG.debug("writing event to splunk:{}", event);
-            OutputStream ostream = socket.getOutputStream();
-            Writer writer = new OutputStreamWriter(ostream, StandardCharsets.UTF_8);
-            writer.write(event);
-            writer.flush();
-        } finally {
-            lock.unlock();
-        }
+    protected synchronized void doWrite(String event) throws IOException {
+        LOG.debug("writing event to splunk:{}", event);
+        OutputStream ostream = socket.getOutputStream();
+        Writer writer = new OutputStreamWriter(ostream, StandardCharsets.UTF_8);
+        writer.write(event);
+        writer.flush();
     }
 
     @Override
-    public void start() {
-        lock.lock();
+    public synchronized void start() {
         try {
             socket = createSocket(endpoint.getService());
             connected = true;
         } catch (Exception e) {
             connected = false;
             throw new RuntimeException(e);
-        } finally {
-            lock.unlock();
         }
     }
 
     @Override
-    public void stop() {
-        lock.lock();
+    public synchronized void stop() {
         try {
             if (socket != null) {
                 socket.close();
@@ -95,8 +83,6 @@ public abstract class SplunkDataWriter implements DataWriter {
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            lock.unlock();
         }
     }
 

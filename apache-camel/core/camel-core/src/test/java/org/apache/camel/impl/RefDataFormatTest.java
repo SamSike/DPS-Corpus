@@ -33,8 +33,8 @@ import org.junit.jupiter.api.Test;
 public class RefDataFormatTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry registry = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry registry = super.createRegistry();
         registry.bind("reverse", new MyReverseDataFormat());
         return registry;
     }
@@ -58,10 +58,10 @@ public class RefDataFormatTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:a").marshal().custom("reverse").to("mock:a");
 
@@ -84,7 +84,8 @@ public class RefDataFormatTest extends ContextTestSupport {
         @Override
         public Object unmarshal(Exchange exchange, InputStream stream) throws Exception {
             byte[] bytes = exchange.getContext().getTypeConverter().mandatoryConvertTo(byte[].class, stream);
-            return reverseBytes(bytes);
+            String body = reverseBytes(bytes);
+            return body;
         }
 
         private String reverseBytes(byte[] data) {
@@ -94,6 +95,16 @@ public class RefDataFormatTest extends ContextTestSupport {
                 sb.append(ch);
             }
             return sb.toString();
+        }
+
+        @Override
+        protected void doStart() throws Exception {
+            // noop
+        }
+
+        @Override
+        protected void doStop() throws Exception {
+            // noop
         }
     }
     // END SNIPPET: e2

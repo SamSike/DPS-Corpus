@@ -16,9 +16,8 @@
  */
 package org.apache.camel.component.cxf.jaxrs;
 
-import java.nio.charset.StandardCharsets;
-
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.cxf.common.CXFTestSupport;
 import org.apache.camel.component.cxf.jaxrs.testbean.Customer;
@@ -26,13 +25,12 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.converter.stream.CachedOutputStream;
 import org.apache.camel.spi.Synchronization;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.apache.hc.client5.http.classic.methods.HttpPut;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,8 +41,8 @@ public class CxfRsStreamCacheTest extends CamelTestSupport {
     private static final String CXT = CXFTestSupport.getPort1() + CONTEXT;
     private static final String RESPONSE = "<pong xmlns=\"test/service\"/>";
 
-    private final String cxfRsEndpointUri = "cxfrs://http://localhost:" + CXT + "/rest?synchronous=" + isSynchronous()
-                                            + "&dataFormat=PAYLOAD&resourceClasses=org.apache.camel.component.cxf.jaxrs.testbean.CustomerService";
+    private String cxfRsEndpointUri = "cxfrs://http://localhost:" + CXT + "/rest?synchronous=" + isSynchronous()
+                                      + "&dataFormat=PAYLOAD&resourceClasses=org.apache.camel.component.cxf.jaxrs.testbean.CustomerService";
 
     @Override
     protected RouteBuilder createRouteBuilder() throws Exception {
@@ -63,11 +61,11 @@ public class CxfRsStreamCacheTest extends CamelTestSupport {
                         .process(exchange -> {
                             // respond with OK
                             CachedOutputStream cos = new CachedOutputStream(exchange);
-                            cos.write(RESPONSE.getBytes(StandardCharsets.UTF_8));
+                            cos.write(RESPONSE.getBytes("UTF-8"));
                             cos.close();
                             exchange.getMessage().setBody(cos.newStreamCache());
 
-                            exchange.getExchangeExtension().addOnCompletion(new Synchronization() {
+                            exchange.adapt(ExtendedExchange.class).addOnCompletion(new Synchronization() {
                                 @Override
                                 public void onComplete(Exchange exchange) {
                                     template.sendBody("mock:onComplete", "");
@@ -94,14 +92,18 @@ public class CxfRsStreamCacheTest extends CamelTestSupport {
         onComplete.expectedMessageCount(1);
 
         HttpPut put = new HttpPut("http://localhost:" + CXT + "/rest/customerservice/customers");
-        StringEntity entity = new StringEntity(PUT_REQUEST, ContentType.parse("text/xml; charset=ISO-8859-1"));
+        StringEntity entity = new StringEntity(PUT_REQUEST, "ISO-8859-1");
+        entity.setContentType("text/xml; charset=ISO-8859-1");
         put.addHeader("test", "header1;header2");
         put.setEntity(entity);
         CloseableHttpClient httpclient = HttpClientBuilder.create().build();
 
-        try (CloseableHttpResponse response = httpclient.execute(put)) {
-            assertEquals(200, response.getCode());
+        try {
+            HttpResponse response = httpclient.execute(put);
+            assertEquals(200, response.getStatusLine().getStatusCode());
             assertEquals(RESPONSE, EntityUtils.toString(response.getEntity()));
+        } finally {
+            httpclient.close();
         }
 
         mock.assertIsSatisfied();

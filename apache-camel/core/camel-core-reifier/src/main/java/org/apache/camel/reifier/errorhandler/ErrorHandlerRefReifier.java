@@ -33,13 +33,12 @@ public class ErrorHandlerRefReifier extends ErrorHandlerReifier<RefErrorHandlerD
     @Override
     public Processor createErrorHandler(Processor processor) throws Exception {
         ErrorHandlerFactory handler = lookupErrorHandler(route);
-        return ((ModelCamelContext) camelContext).getModelReifierFactory().createErrorHandler(route, handler,
+        return camelContext.adapt(ModelCamelContext.class).getModelReifierFactory().createErrorHandler(route, handler,
                 processor);
     }
 
     private ErrorHandlerFactory lookupErrorHandler(Route route) {
-        ErrorHandlerFactory handler
-                = ErrorHandlerHelper.lookupErrorHandlerFactory(route, parseString(definition.getRef()), true);
+        ErrorHandlerFactory handler = ErrorHandlerHelper.lookupErrorHandlerFactory(route, definition.getRef(), true);
         ObjectHelper.notNull(handler, "error handler '" + definition.getRef() + "'");
         route.addErrorHandlerFactoryReference(definition, handler);
         return handler;

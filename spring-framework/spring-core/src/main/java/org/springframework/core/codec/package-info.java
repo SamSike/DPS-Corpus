@@ -3,7 +3,9 @@
  * {@link org.springframework.core.codec.Decoder} abstractions to convert
  * between a reactive stream of bytes and Java objects.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.core.codec;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

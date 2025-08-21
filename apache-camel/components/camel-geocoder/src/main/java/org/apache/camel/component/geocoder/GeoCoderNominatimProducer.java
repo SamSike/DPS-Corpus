@@ -29,10 +29,11 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.support.DefaultProducer;
 import org.apache.camel.util.StringHelper;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,17 +43,11 @@ import org.slf4j.LoggerFactory;
 public class GeoCoderNominatimProducer extends DefaultProducer {
     private static final Logger LOG = LoggerFactory.getLogger(GeoCoderNominatimProducer.class);
 
-    private final GeoCoderEndpoint endpoint;
-    private final CloseableHttpClient httpClient = HttpClients.createDefault();
+    private GeoCoderEndpoint endpoint;
 
     public GeoCoderNominatimProducer(GeoCoderEndpoint endpoint) {
         super(endpoint);
         this.endpoint = endpoint;
-    }
-
-    @Override
-    protected void doStop() throws Exception {
-        httpClient.close();
     }
 
     @Override
@@ -88,7 +83,7 @@ public class GeoCoderNominatimProducer extends DefaultProducer {
 
     private String query(String dlat, String dlon) throws IOException {
 
-        Map<String, String> params = new HashMap<>();
+        Map<String, String> params = new HashMap<String, String>();
         params.put("format", "jsonv2");
         params.put("lat", dlat);
         params.put("lon", dlon);
@@ -97,7 +92,7 @@ public class GeoCoderNominatimProducer extends DefaultProducer {
     }
 
     private String query(String address) throws IOException {
-        Map<String, String> params = new HashMap<>();
+        Map<String, String> params = new HashMap<String, String>();
         params.put("format", "jsonv2");
         params.put("addressdetails", "1");
         params.put("q", address);
@@ -113,13 +108,17 @@ public class GeoCoderNominatimProducer extends DefaultProducer {
         }
         url += operation;
 
-        final ClassicRequestBuilder builder = ClassicRequestBuilder.get().setUri(url);
+        final RequestBuilder builder = RequestBuilder.get().setUri(url);
 
         for (Map.Entry<String, String> entry : params.entrySet()) {
             builder.addParameter(entry.getKey(), entry.getValue());
         }
 
-        return httpClient.execute(builder.build(), resp -> EntityUtils.toString(resp.getEntity()));
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            try (CloseableHttpResponse resp = httpClient.execute(builder.build())) {
+                return EntityUtils.toString(resp.getEntity());
+            }
+        }
     }
 
     protected void extractResult(String place, Exchange exchange) {
@@ -153,12 +152,10 @@ public class GeoCoderNominatimProducer extends DefaultProducer {
     }
 
     private void setLatLngToExchangeHeader(String resLat, String resLng, Exchange exchange) {
-        if (resLat != null && resLng != null) {
-            exchange.getIn().setHeader(GeoCoderConstants.LAT, formatLatOrLon(resLat));
-            exchange.getIn().setHeader(GeoCoderConstants.LNG, formatLatOrLon(resLng));
-            String resLatlng = formatLatOrLon(resLat) + ", " + formatLatOrLon(resLng);
-            exchange.getIn().setHeader(GeoCoderConstants.LATLNG, resLatlng);
-        }
+        exchange.getIn().setHeader(GeoCoderConstants.LAT, formatLatOrLon(resLat));
+        exchange.getIn().setHeader(GeoCoderConstants.LNG, formatLatOrLon(resLng));
+        String resLatlng = formatLatOrLon(resLat) + ", " + formatLatOrLon(resLng);
+        exchange.getIn().setHeader(GeoCoderConstants.LATLNG, resLatlng);
     }
 
     private void extractCountry(DocumentContext doc, Message in) {

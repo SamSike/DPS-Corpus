@@ -50,15 +50,15 @@ public class AsyncEndpointEventNotifierTest extends ContextTestSupport {
         assertTrue(latch.await(10, TimeUnit.SECONDS), "Should count down");
 
         long delta = time.get();
-        log.info("ExchangeEventSent took ms: {}", delta);
+        log.info("ExchangeEventSent took ms: " + delta);
         assertTrue(delta > 200, "Should take about 250 millis sec, was: " + delta);
     }
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        DefaultCamelContext context = new DefaultCamelContext(createCamelRegistry());
+        DefaultCamelContext context = new DefaultCamelContext(createRegistry());
         context.getManagementStrategy().addEventNotifier(new EventNotifierSupport() {
-            public void notify(CamelEvent event) {
+            public void notify(CamelEvent event) throws Exception {
                 try {
                     ExchangeSentEvent sent = (ExchangeSentEvent) event;
                     time.set(sent.getTimeTaken());
@@ -69,7 +69,8 @@ public class AsyncEndpointEventNotifierTest extends ContextTestSupport {
 
             public boolean isEnabled(CamelEvent event) {
                 // we only want the async endpoint
-                if (event instanceof ExchangeSentEvent sent) {
+                if (event instanceof ExchangeSentEvent) {
+                    ExchangeSentEvent sent = (ExchangeSentEvent) event;
                     return sent.getEndpoint().getEndpointUri().startsWith("async");
                 }
                 return false;
@@ -79,10 +80,10 @@ public class AsyncEndpointEventNotifierTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.addComponent("async", new MyAsyncComponent());
 
                 from("direct:start").to("mock:before").to("async:bye:camel?delay=250").to("mock:result");

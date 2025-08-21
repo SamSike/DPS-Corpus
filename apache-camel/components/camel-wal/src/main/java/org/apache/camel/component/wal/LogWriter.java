@@ -23,8 +23,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import org.apache.camel.RuntimeCamelException;
@@ -41,7 +39,6 @@ public final class LogWriter implements AutoCloseable {
     public static final int DEFAULT_CAPACITY = 1024 * 512;
     private static final Logger LOG = LoggerFactory.getLogger(LogWriter.class);
 
-    private final Lock lock = new ReentrantLock();
     private final FileChannel fileChannel;
 
     private final LogSupervisor flushPolicy;
@@ -92,15 +89,12 @@ public final class LogWriter implements AutoCloseable {
         fileChannel.force(true);
     }
 
-    private void tryFlush() {
-        lock.lock();
+    private synchronized void tryFlush() {
         try {
             flush();
         } catch (IOException e) {
             LOG.error("Unable to save record: {}", e.getMessage(), e);
             throw new RuntimeException(e);
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -171,7 +165,7 @@ public final class LogWriter implements AutoCloseable {
 
     /**
      * Persists an entry to the log
-     *
+     * 
      * @param  layerInfo   the in-memory layer information about the record being persisted
      * @param  entry       the entry to persist
      * @param  position    the position in the channel where the entry will be persisted
@@ -195,7 +189,7 @@ public final class LogWriter implements AutoCloseable {
 
     /**
      * Persists an entry to the log
-     *
+     * 
      * @param  layerInfo   the in-memory layer information about the record being persisted
      * @param  entry       the entry to persist
      * @return             an {@link EntryInfo} instance with details of the entry that was just persisted
@@ -216,7 +210,7 @@ public final class LogWriter implements AutoCloseable {
 
     /**
      * A wrapper for {@link LogWriter#persist(TransactionLog.LayerInfo, LogEntry)} that throws runtime errors on failure
-     *
+     * 
      * @param  layerInfo the in-memory layer information about the record being persisted
      * @param  entry     the entry to persist
      * @return           an {@link EntryInfo} instance with details of the entry that was just persisted
@@ -231,7 +225,7 @@ public final class LogWriter implements AutoCloseable {
 
     /**
      * Updates the state of af entry (i.e.: to mark them after they have seen successfully processed)
-     *
+     * 
      * @param  entryInfo   the entry information about the entry being updated
      * @param  state       the state to update the entry to
      * @throws IOException in case of lower-level I/O errors
@@ -242,7 +236,7 @@ public final class LogWriter implements AutoCloseable {
         /*
          If it has layer information, then it's a hot record kept in the cache. In this case, just
          update the cache and let the LogSupervisor flush to disk.
-
+        
          Trying to update a persisted entry here is not acceptable
          */
         assert layerInfo != null;
@@ -257,7 +251,7 @@ public final class LogWriter implements AutoCloseable {
     /**
      * Updates the state of af entry that has been already persisted to disk. Wraps any lower-level I/O errors in
      * runtime exceptions
-     *
+     * 
      * @param  entry       the entry to update
      * @param  state       the state to update the entry to
      * @throws IOException if the buffer is too small for the entry or in case of lower-level I/O errors

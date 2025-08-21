@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class DefaultConsumerCacheTest extends ContextTestSupport {
 
     @Test
-    public void testCacheConsumers() {
+    public void testCacheConsumers() throws Exception {
         DefaultConsumerCache cache = new DefaultConsumerCache(this, context, 0);
         cache.start();
 

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,13 +43,10 @@ import org.jetbrains.annotations.*;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.DUCKDB;
 import static org.jooq.SQLDialect.H2;
 import static org.jooq.SQLDialect.MARIADB;
 // ...
 import static org.jooq.SQLDialect.POSTGRES;
-// ...
-import static org.jooq.SQLDialect.TRINO;
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
 import java.util.Collection;
@@ -69,13 +66,13 @@ public interface JSONArrayAggOrderByStep<J> extends JSONArrayAggNullStep<J> {
      * Add an <code>ORDER BY</code> clause to the function.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, POSTGRES, YUGABYTEDB })
     JSONArrayAggNullStep<J> orderBy(OrderField<?>... fields);
 
     /**
      * Add an <code>ORDER BY</code> clause to the function.
      */
     @NotNull
-    @Support({ DUCKDB, H2, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, MARIADB, POSTGRES, YUGABYTEDB })
     JSONArrayAggNullStep<J> orderBy(Collection<? extends OrderField<?>> fields);
 }

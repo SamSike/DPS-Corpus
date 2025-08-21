@@ -30,6 +30,7 @@ import org.apache.camel.api.management.ManagedResource;
 import org.apache.camel.api.management.mbean.CamelOpenMBeanTypes;
 import org.apache.camel.api.management.mbean.ManagedTransformerRegistryMBean;
 import org.apache.camel.spi.DataType;
+import org.apache.camel.spi.ManagementStrategy;
 import org.apache.camel.spi.Transformer;
 import org.apache.camel.spi.TransformerRegistry;
 
@@ -40,6 +41,11 @@ public class ManagedTransformerRegistry extends ManagedService implements Manage
     public ManagedTransformerRegistry(CamelContext context, TransformerRegistry transformerRegistry) {
         super(context, transformerRegistry);
         this.transformerRegistry = transformerRegistry;
+    }
+
+    @Override
+    public void init(ManagementStrategy strategy) {
+        super.init(strategy);
     }
 
     public TransformerRegistry getTransformerRegistry() {
@@ -77,24 +83,25 @@ public class ManagedTransformerRegistry extends ManagedService implements Manage
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public TabularData listTransformers() {
         try {
             TabularData answer = new TabularDataSupport(CamelOpenMBeanTypes.listTransformersTabularType());
             Collection<Transformer> transformers = transformerRegistry.values();
             for (Transformer transformer : transformers) {
                 CompositeType ct = CamelOpenMBeanTypes.listTransformersCompositeType();
-                String name = transformer.getName();
+                String scheme = transformer.getModel();
                 DataType from = transformer.getFrom();
                 DataType to = transformer.getTo();
                 String desc = transformer.toString();
                 boolean fromStatic
-                        = name != null ? transformerRegistry.isStatic(name) : transformerRegistry.isStatic(from, to);
+                        = scheme != null ? transformerRegistry.isStatic(scheme) : transformerRegistry.isStatic(from, to);
                 boolean fromDynamic
-                        = name != null ? transformerRegistry.isDynamic(name) : transformerRegistry.isDynamic(from, to);
+                        = scheme != null ? transformerRegistry.isDynamic(scheme) : transformerRegistry.isDynamic(from, to);
 
                 CompositeData data = new CompositeDataSupport(
-                        ct, new String[] { "name", "from", "to", "static", "dynamic", "description" },
-                        new Object[] { name, from.toString(), to.toString(), fromStatic, fromDynamic, desc });
+                        ct, new String[] { "scheme", "from", "to", "static", "dynamic", "description" },
+                        new Object[] { scheme, from.toString(), to.toString(), fromStatic, fromDynamic, desc });
                 answer.put(data);
             }
             return answer;

@@ -21,14 +21,14 @@ import java.util.Map;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.BeanIntrospection;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.support.HealthCheckComponent;
-import org.apache.camel.support.PluginHelper;
+import org.apache.camel.support.DefaultComponent;
 
 @Component("wordpress")
-public class WordpressComponent extends HealthCheckComponent {
+public class WordpressComponent extends DefaultComponent {
 
     private static final String OP_SEPARATOR = ":";
 
@@ -61,7 +61,7 @@ public class WordpressComponent extends HealthCheckComponent {
         if (configuration != null) {
             // TODO: Better to make WordpressConfiguration cloneable
             Map<String, Object> properties = new HashMap<>();
-            BeanIntrospection beanIntrospection = PluginHelper.getBeanIntrospection(getCamelContext());
+            BeanIntrospection beanIntrospection = getCamelContext().adapt(ExtendedCamelContext.class).getBeanIntrospection();
             beanIntrospection.getProperties(configuration, properties, null, false);
             properties.forEach(parameters::putIfAbsent);
         }

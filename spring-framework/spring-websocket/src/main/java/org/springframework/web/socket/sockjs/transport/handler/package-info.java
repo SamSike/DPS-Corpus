@@ -3,7 +3,9 @@
  * implementation classes as well as a concrete
  * {@link org.springframework.web.socket.sockjs.SockJsService}.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.socket.sockjs.transport.handler;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

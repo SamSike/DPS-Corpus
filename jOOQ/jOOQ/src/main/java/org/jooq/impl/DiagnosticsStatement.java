@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -49,34 +49,17 @@ import org.jooq.tools.jdbc.DefaultCallableStatement;
  */
 final class DiagnosticsStatement extends DefaultCallableStatement {
 
-    final DiagnosticsConnection connection;
-    final String                actualStatement;
+    private final DiagnosticsConnection connection;
 
     DiagnosticsStatement(DiagnosticsConnection connection, Statement statement) {
-        this(connection, statement, null);
-    }
-
-    DiagnosticsStatement(DiagnosticsConnection connection, Statement statement, String actualStatement) {
         super(statement);
 
         this.connection = connection;
-        this.actualStatement = actualStatement;
     }
 
     @Override
     public final ResultSet executeQuery(String sql) throws SQLException {
-        if (connection.disabled())
-            return super.executeQuery(sql);
-        else
-            return new DiagnosticsResultSet(super.executeQuery(connection.parse(sql)), sql, this, connection);
-    }
-
-    @Override
-    public ResultSet executeQuery() throws SQLException {
-        if (connection.disabled())
-            return super.executeQuery();
-        else
-            return new DiagnosticsResultSet(super.executeQuery(), actualStatement, this, connection);
+        return new DiagnosticsResultSet(super.executeQuery(connection.parse(sql)), sql, this, connection);
     }
 
     @Override

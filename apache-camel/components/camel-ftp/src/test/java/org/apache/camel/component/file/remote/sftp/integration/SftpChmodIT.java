@@ -31,8 +31,7 @@ public class SftpChmodIT extends SftpServerTestSupport {
     @Test
     public void testSftpChmod() {
         template.sendBodyAndHeader(
-                "sftp://localhost:{{ftp.server.port}}/{{ftp.root.dir}}?username=admin&password=admin&chmod=777&knownHostsFile="
-                                   + service.getKnownHostsFile(),
+                "sftp://localhost:{{ftp.server.port}}/{{ftp.root.dir}}?username=admin&password=admin&chmod=777",
                 "Hello World", Exchange.FILE_NAME,
                 "hello.txt");
 

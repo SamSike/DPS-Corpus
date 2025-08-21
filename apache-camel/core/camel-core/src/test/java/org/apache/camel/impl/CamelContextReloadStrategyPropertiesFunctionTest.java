@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 
 public class CamelContextReloadStrategyPropertiesFunctionTest extends ContextTestSupport {
 
-    private final MyFunction my = new MyFunction();
+    private MyFunction my = new MyFunction();
 
     @Test
     public void testContextReload() throws Exception {
@@ -70,10 +70,10 @@ public class CamelContextReloadStrategyPropertiesFunctionTest extends ContextTes
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .setBody(constant("{{my:Bye}}"))
                         .to("mock:result");
@@ -81,7 +81,7 @@ public class CamelContextReloadStrategyPropertiesFunctionTest extends ContextTes
         };
     }
 
-    private static class MyFunction implements PropertiesFunction {
+    private class MyFunction implements PropertiesFunction {
 
         private int counter = 1;
 

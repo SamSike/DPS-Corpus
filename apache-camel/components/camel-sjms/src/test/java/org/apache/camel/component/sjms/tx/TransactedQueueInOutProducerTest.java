@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class TransactedQueueInOutProducerTest extends CamelTestSupport {
 
     @RegisterExtension
-    public static ArtemisService service = ArtemisServiceFactory.createSingletonVMService();
+    public ArtemisService service = ArtemisServiceFactory.createSingletonVMService();
 
     @Produce
     protected ProducerTemplate template;
@@ -76,10 +76,10 @@ public class TransactedQueueInOutProducerTest extends CamelTestSupport {
             @Override
             public void configure() {
                 from("direct:start")
-                        .to("sjms:queue:test.queue.TransactedQueueInOutProducerTest?transacted=true")
+                        .to("sjms:queue:test.queue?transacted=true")
                         // request/reply is not transacted
-                        .to(ExchangePattern.InOut, "sjms:queue:test.transform.TransactedQueueInOutProducerTest")
-                        .to("sjms:queue:test.queue2.TransactedQueueInOutProducerTest?transacted=true")
+                        .to(ExchangePattern.InOut, "sjms:queue:test.transform")
+                        .to("sjms:queue:test.queue2?transacted=true")
                         .process(
                                 new Processor() {
                                     @Override
@@ -93,13 +93,13 @@ public class TransactedQueueInOutProducerTest extends CamelTestSupport {
                                     }
                                 });
 
-                from("sjms:queue:test.queue.TransactedQueueInOutProducerTest?transacted=true")
+                from("sjms:queue:test.queue?transacted=true")
                         .to("mock:result");
 
-                from("sjms:queue:test.queue2.TransactedQueueInOutProducerTest?transacted=true")
+                from("sjms:queue:test.queue2?transacted=true")
                         .to("mock:result2");
 
-                from("sjms:queue:test.transform.TransactedQueueInOutProducerTest")
+                from("sjms:queue:test.transform")
                         .transform(body().prepend("Changed "));
             }
         };

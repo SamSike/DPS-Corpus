@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.beans.factory.config;
 
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.Set;
@@ -35,14 +36,12 @@ import org.springframework.beans.factory.BeanInitializationException;
  *
  * Example properties file:
  *
- * <pre class="code">
- * dataSource.driverClassName=com.mysql.jdbc.Driver
+ * <pre class="code">dataSource.driverClassName=com.mysql.jdbc.Driver
  * dataSource.url=jdbc:mysql:mydb</pre>
  *
- * <p>In contrast to {@link PropertyPlaceholderConfigurer}, the original definition
- * can have default values or no values at all for such bean properties. If an
- * overriding properties file does not have an entry for a certain bean property,
- * the default context definition is used.
+ * In contrast to PropertyPlaceholderConfigurer, the original definition can have default
+ * values or no values at all for such bean properties. If an overriding properties file does
+ * not have an entry for a certain bean property, the default context definition is used.
  *
  * <p>Note that the context definition <i>is not</i> aware of being overridden;
  * so this is not immediately obvious when looking at the XML definition file.
@@ -78,7 +77,7 @@ public class PropertyOverrideConfigurer extends PropertyResourceConfigurer {
 	/**
 	 * Contains names of beans that have overrides.
 	 */
-	private final Set<String> beanNames = ConcurrentHashMap.newKeySet(16);
+	private final Set<String> beanNames = Collections.newSetFromMap(new ConcurrentHashMap<>(16));
 
 
 	/**

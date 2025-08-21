@@ -17,7 +17,6 @@
 package org.apache.camel.component.http;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
@@ -25,16 +24,17 @@ import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.http.common.HttpHelper;
 import org.apache.camel.spi.HeaderFilterStrategy;
 import org.apache.camel.support.PollingConsumerSupport;
-import org.apache.hc.client5.http.classic.HttpClient;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
-import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
-import org.apache.hc.client5.http.config.RequestConfig;
-import org.apache.hc.client5.http.protocol.HttpClientContext;
-import org.apache.hc.core5.http.Header;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.io.HttpClientResponseHandler;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
 
 /**
  * A polling HTTP consumer which by default performs a GET
@@ -42,7 +42,7 @@ import org.apache.hc.core5.http.protocol.HttpContext;
 public class HttpPollingConsumer extends PollingConsumerSupport {
     private final HttpEndpoint endpoint;
     private HttpClient httpClient;
-    private final HttpContext httpContext;
+    private HttpContext httpContext;
 
     public HttpPollingConsumer(HttpEndpoint endpoint) {
         super(endpoint);
@@ -73,49 +73,45 @@ public class HttpPollingConsumer extends PollingConsumerSupport {
 
     protected Exchange doReceive(int timeout) {
         Exchange exchange = endpoint.createExchange();
-        HttpUriRequest method = createMethod(exchange);
+        HttpRequestBase method = createMethod(exchange);
         HttpClientContext httpClientContext = new HttpClientContext();
 
         // set optional timeout in millis
         if (timeout > 0) {
-            RequestConfig requestConfig = RequestConfig.custom().setResponseTimeout(timeout, TimeUnit.MILLISECONDS).build();
+            RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(timeout).build();
             httpClientContext.setRequestConfig(requestConfig);
         }
 
         HttpEntity responseEntity = null;
         try {
             // execute request
-            responseEntity = executeMethod(
-                    method, httpClientContext,
-                    response -> {
-                        int responseCode = response.getCode();
-                        HttpEntity entity = response.getEntity();
-                        Object body = HttpHelper.cacheResponseBodyFromInputStream(entity.getContent(), exchange);
+            HttpResponse response = executeMethod(method, httpClientContext);
+            int responseCode = response.getStatusLine().getStatusCode();
+            responseEntity = response.getEntity();
+            Object body = HttpHelper.cacheResponseBodyFromInputStream(responseEntity.getContent(), exchange);
 
-                        // lets store the result in the output message.
-                        Message message = exchange.getMessage();
-                        message.setBody(body);
+            // lets store the result in the output message.
+            Message message = exchange.getMessage();
+            message.setBody(body);
 
-                        // lets set the headers
-                        Header[] headers = response.getHeaders();
-                        HeaderFilterStrategy strategy = endpoint.getHeaderFilterStrategy();
-                        for (Header header : headers) {
-                            String name = header.getName();
-                            // mapping the content-type
-                            if (name.equalsIgnoreCase("content-type")) {
-                                name = Exchange.CONTENT_TYPE;
-                            }
-                            String value = header.getValue();
-                            if (strategy != null && !strategy.applyFilterToExternalHeaders(name, value, exchange)) {
-                                message.setHeader(name, value);
-                            }
-                        }
-                        message.setHeader(HttpConstants.HTTP_RESPONSE_CODE, responseCode);
-                        if (response.getReasonPhrase() != null) {
-                            message.setHeader(HttpConstants.HTTP_RESPONSE_TEXT, response.getReasonPhrase());
-                        }
-                        return entity;
-                    });
+            // lets set the headers
+            Header[] headers = response.getAllHeaders();
+            HeaderFilterStrategy strategy = endpoint.getHeaderFilterStrategy();
+            for (Header header : headers) {
+                String name = header.getName();
+                // mapping the content-type
+                if (name.equalsIgnoreCase("content-type")) {
+                    name = Exchange.CONTENT_TYPE;
+                }
+                String value = header.getValue();
+                if (strategy != null && !strategy.applyFilterToExternalHeaders(name, value, exchange)) {
+                    message.setHeader(name, value);
+                }
+            }
+            message.setHeader(HttpConstants.HTTP_RESPONSE_CODE, responseCode);
+            if (response.getStatusLine() != null) {
+                message.setHeader(HttpConstants.HTTP_RESPONSE_TEXT, response.getStatusLine().getReasonPhrase());
+            }
 
             return exchange;
         } catch (IOException e) {
@@ -138,13 +134,16 @@ public class HttpPollingConsumer extends PollingConsumerSupport {
      * @return             the response
      * @throws IOException can be thrown
      */
-    protected <T> T executeMethod(
-            HttpUriRequest httpRequest, HttpClientContext httpClientContext, HttpClientResponseHandler<T> handler)
-            throws IOException {
+    protected HttpResponse executeMethod(HttpRequestBase httpRequest, HttpClientContext httpClientContext) throws IOException {
+
+        if (getEndpoint().isAuthenticationPreemptive()) {
+            BasicScheme basicAuth = new BasicScheme();
+            httpClientContext.setAttribute("preemptive-auth", basicAuth);
+        }
         if (httpContext != null) {
             httpClientContext = new HttpClientContext(httpContext);
         }
-        return httpClient.execute(httpRequest, httpClientContext, handler);
+        return httpClient.execute(httpRequest, httpClientContext);
     }
 
     // Properties
@@ -161,7 +160,7 @@ public class HttpPollingConsumer extends PollingConsumerSupport {
     // Implementation methods
     //-------------------------------------------------------------------------
 
-    protected HttpUriRequest createMethod(Exchange exchange) {
+    protected HttpRequestBase createMethod(Exchange exchange) {
         String uri = HttpHelper.createURL(exchange, endpoint);
         return new HttpGet(uri);
     }

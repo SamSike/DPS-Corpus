@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package org.springframework.test.web.reactive.server;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * {@code ExchangeResult} sub-class that exposes the response body fully
@@ -29,7 +29,8 @@ import org.jspecify.annotations.Nullable;
  */
 public class EntityExchangeResult<T> extends ExchangeResult {
 
-	private final @Nullable T body;
+	@Nullable
+	private final T body;
 
 
 	EntityExchangeResult(ExchangeResult result, @Nullable T body) {
@@ -41,7 +42,8 @@ public class EntityExchangeResult<T> extends ExchangeResult {
 	/**
 	 * Return the entity extracted from the response body.
 	 */
-	public @Nullable T getResponseBody() {
+	@Nullable
+	public T getResponseBody() {
 		return this.body;
 	}
 

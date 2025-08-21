@@ -41,9 +41,11 @@ public class AggregationStrategyWithPreservationTest extends CamelTestSupport {
     private static final int EXPECTED_NO_FILES = 5;
     private static final String TEST_DIR = "target/out_AggregationStrategyWithPreservationTest";
 
+    @Override
     @BeforeEach
-    public void deleteTestDirs() {
+    public void setUp() throws Exception {
         deleteDirectory(TEST_DIR);
+        super.setUp();
     }
 
     @Test

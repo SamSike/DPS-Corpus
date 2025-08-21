@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -49,24 +49,19 @@ import static org.jooq.Clause.UPDATE_WHERE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
-import static org.jooq.SQLDialect.*;
+import static org.jooq.SQLDialect.CUBRID;
 // ...
 // ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
-// ...
 // ...
 import static org.jooq.SQLDialect.H2;
 // ...
 import static org.jooq.SQLDialect.HSQLDB;
 import static org.jooq.SQLDialect.IGNITE;
 // ...
-// ...
-import static org.jooq.SQLDialect.MARIADB;
 // ...
 // ...
 // ...
@@ -81,37 +76,18 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.conf.SettingsTools.getExecuteUpdateWithoutWhere;
-import static org.jooq.impl.ConditionProviderImpl.extractCondition;
-import static org.jooq.impl.DSL.insertInto;
 import static org.jooq.impl.DSL.mergeInto;
 import static org.jooq.impl.DSL.name;
-import static org.jooq.impl.DSL.noCondition;
-import static org.jooq.impl.DSL.noField;
 import static org.jooq.impl.DSL.row;
-// ...
 import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.selectFrom;
 import static org.jooq.impl.DSL.trueCondition;
-import static org.jooq.impl.DeleteQueryImpl.keyFieldsCondition;
-import static org.jooq.impl.DeleteQueryImpl.mergeUsing;
-import static org.jooq.impl.DeleteQueryImpl.traverseJoinsAndAddPathConditions;
-import static org.jooq.impl.InlineDerivedTable.hasInlineDerivedTables;
-import static org.jooq.impl.InlineDerivedTable.transformInlineDerivedTables;
-import static org.jooq.impl.InlineDerivedTable.transformInlineDerivedTables0;
-import static org.jooq.impl.Keywords.K_AND;
 import static org.jooq.impl.Keywords.K_FROM;
+import static org.jooq.impl.Keywords.K_LIMIT;
 import static org.jooq.impl.Keywords.K_ORDER_BY;
 import static org.jooq.impl.Keywords.K_SET;
 import static org.jooq.impl.Keywords.K_UPDATE;
 import static org.jooq.impl.Keywords.K_WHERE;
-import static org.jooq.impl.SQLDataType.INTEGER;
-import static org.jooq.impl.SelectQueryImpl.addPathConditions;
-import static org.jooq.impl.SelectQueryImpl.prependPathJoins;
-import static org.jooq.impl.Tools.anyMatch;
-import static org.jooq.impl.Tools.containsDeclaredTable;
 import static org.jooq.impl.Tools.findAny;
-import static org.jooq.impl.Tools.traverseJoins;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_UNQUALIFY_LOCAL_SCOPE;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -155,7 +131,6 @@ import org.jooq.Record6;
 import org.jooq.Record7;
 import org.jooq.Record8;
 import org.jooq.Record9;
-// ...
 import org.jooq.Row;
 import org.jooq.Row1;
 import org.jooq.Row10;
@@ -183,17 +158,12 @@ import org.jooq.RowN;
 import org.jooq.SQLDialect;
 import org.jooq.Scope;
 import org.jooq.Select;
-import org.jooq.SortField;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableLike;
-// ...
 import org.jooq.UpdateQuery;
-import org.jooq.impl.DeleteQueryImpl.MergeUsing;
 import org.jooq.impl.FieldMapForUpdate.SetClause;
-import org.jooq.impl.QOM.UnmodifiableList;
-import org.jooq.impl.QOM.UnmodifiableMap;
-import org.jooq.impl.QOM.Update;
+import org.jooq.impl.QOM.UNotYetImplemented;
 
 /**
  * @author Lukas Eder
@@ -203,10 +173,10 @@ extends
     AbstractStoreQuery<R, FieldOrRow, FieldOrRowOrSelect>
 implements
     UpdateQuery<R>,
-    QOM.Update<R>
+    UNotYetImplemented
 {
 
-    private static final Clause[]       CLAUSES                       = { UPDATE };
+    private static final Clause[]        CLAUSES                   = { UPDATE };
 
 
 
@@ -214,25 +184,19 @@ implements
 
 
 
-    static final Set<SQLDialect>        REQUIRES_WHERE                = SQLDialect.supportedBy(CLICKHOUSE);
-    static final Set<SQLDialect>        EMULATE_FROM_WITH_MERGE       = SQLDialect.supportedUntil(CUBRID, DERBY, FIREBIRD, H2, HSQLDB);
-    static final Set<SQLDialect>        NO_SUPPORT_FROM               = SQLDialect.supportedUntil(CLICKHOUSE, IGNITE, MARIADB, MYSQL, TRINO);
-    static final Set<SQLDialect>        EMULATE_RETURNING_WITH_UPSERT = SQLDialect.supportedBy(MARIADB);
+    private static final Set<SQLDialect> EMULATE_FROM_WITH_MERGE   = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, H2, HSQLDB);
 
     // LIMIT is not supported at all
-    static final Set<SQLDialect>        NO_SUPPORT_LIMIT              = SQLDialect.supportedUntil(CLICKHOUSE, CUBRID, DERBY, DUCKDB, H2, HSQLDB, POSTGRES, SQLITE, YUGABYTEDB);
+    private static final Set<SQLDialect> NO_SUPPORT_LIMIT          = SQLDialect.supportedUntil(CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE, YUGABYTEDB);
 
     // LIMIT is supported but not ORDER BY
-    static final Set<SQLDialect>        NO_SUPPORT_ORDER_BY_LIMIT     = SQLDialect.supportedBy(IGNITE);
-    static final Set<SQLDialect>        NO_SUPPORT_UPDATE_JOIN        = SQLDialect.supportedBy(CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, POSTGRES, SQLITE, YUGABYTEDB);
-    // https://github.com/ClickHouse/ClickHouse/issues/61020
-    static final Set<SQLDialect>        NO_SUPPORT_QUALIFY_IN_WHERE   = SQLDialect.supportedBy(CLICKHOUSE);
+    private static final Set<SQLDialect> NO_SUPPORT_ORDER_BY_LIMIT = SQLDialect.supportedBy(IGNITE);
 
-    private final FieldMapForUpdate     updateMap;
-    private final TableList             from;
-    private final ConditionProviderImpl condition;
-    private final SortFieldList         orderBy;
-    private Field<? extends Number>     limit;
+    private final FieldMapForUpdate      updateMap;
+    private final TableList              from;
+    private final ConditionProviderImpl  condition;
+    private final SortFieldList          orderBy;
+    private Field<? extends Number>      limit;
 
     UpdateQueryImpl(Configuration configuration, WithImpl with, Table<R> table) {
         super(configuration, with, table);
@@ -482,9 +446,8 @@ implements
 
 
 
-    @SuppressWarnings("rawtypes")
     final void addValues0(Row row, Row value) {
-        updateMap.put(row, ((AbstractRow) value).convertTo(row));
+        updateMap.put(row, value);
     }
 
     final void addValues0(Row row, Select<?> select) {
@@ -578,69 +541,11 @@ implements
     }
 
     @Override
-    public final void accept(Context<?> ctx) {
-
-        // [#15506] Transform the statement if UDT paths have to be emulated
-        FieldMapForUpdate e = updateMap.emulateUDTPaths(ctx);
-        if (e != null) {
-            ctx.visit($set(e));
-            return;
-        }
-
-        ctx.scopeStart(this);
-
-        // [#2682] [#15632] Apply inline derived tables to the target table
-        // [#15632] TODO: Refactor this logic with DeleteQueryImpl
-        Table<?> t = table(ctx);
-        if (hasInlineDerivedTables(ctx, t) || hasInlineDerivedTables(ctx, from)) {
-            ConditionProviderImpl where = new ConditionProviderImpl();
-            TableList f = transformInlineDerivedTables(ctx, from, where);
-
-            copy(
-                d -> {
-                    if (f != from) {
-                        d.from.clear();
-                        d.from.addAll(f);
-                    }
-
-                    if (where.hasWhere())
-                        d.addConditionsForInlineDerivedTable(where.getWhere());
-                },
-                transformInlineDerivedTables0(ctx, t, where, false)
-            ).accept0(ctx);
-        }
-        else
-            accept0(ctx);
-
-        ctx.scopeEnd();
-    }
-
-    private final void addConditionsForInlineDerivedTable(Condition c) {
-        addConditions(c);
-
-
-
-
-
-
-    }
-
-    @Override
-    final void accept1(Context<?> ctx) {
-        if ((!from.isEmpty() || table(ctx) instanceof JoinTable) && EMULATE_FROM_WITH_MERGE.contains(ctx.dialect())) {
+    final void accept0(Context<?> ctx) {
+        if (!from.isEmpty() && EMULATE_FROM_WITH_MERGE.contains(ctx.dialect())) {
             acceptFromAsMerge(ctx);
             return;
         }
-        else if (!returning.isEmpty()
-                && EMULATE_RETURNING_WITH_UPSERT.contains(ctx.dialect())
-                && table instanceof TableImpl
-
-                // [#15582] This implementation should be done only for plain SQL templates
-                //          or generated code with at least one known unique key
-                && (((TableImpl<?>) table).fields.fields.length == 0 || !table.getKeys().isEmpty())) {
-            acceptReturningAsUpsert(ctx);
-            return;
-        }
 
 
 
@@ -653,21 +558,7 @@ implements
 
 
 
-        accept2(ctx);
-    }
-
-    private final void acceptReturningAsUpsert(Context<?> ctx) {
-        ctx.visit(
-            insertInto(table)
-            .select(
-                selectFrom(table)
-                .where(hasWhere() ? getWhere() : noCondition())
-                .orderBy(orderBy)
-                .limit(limit != null ? limit : noField(INTEGER)))
-            .onDuplicateKeyUpdate()
-            .set(updateMap)
-            .returning(returning)
-        );
+        accept1(ctx);
     }
 
     private final void acceptFromAsMerge(Context<?> ctx) {
@@ -676,14 +567,29 @@ implements
         // TODO: What if there are SET ROW = ROW assignment(s)?
         // TODO: What if there are SET ROW = (SELECT ..) assignment(s)?
 
-        ConditionProviderImpl c = new ConditionProviderImpl(condition);
-        Table<?> t = table(ctx);
-        TableList from0 = new TableList(from);
-        t = emulateUpdateJoin(t, from0, c);
+        Table<?> s;
+        boolean patchSource = true;
+        Condition c = condition;
         FieldMapForUpdate um = updateMap;
-        MergeUsing mu = mergeUsing(from0, t, c, orderBy, limit);
 
-        if (!mu.lookup().isEmpty() && ctx.configuration().requireCommercial(() -> "The UPDATE .. FROM to MERGE transformation requires commercial only logic for non-trivial FROM clauses. Please upgrade to the jOOQ Professional Edition or jOOQ Enterprise Edition")) {
+        if (orderBy.isEmpty() && limit == null) {
+            if (from.size() == 1 && from.get(0) instanceof TableImpl && !(patchSource = false))
+                s = from.get(0);
+            else
+                s = select().from(from).asTable("s");
+        }
+
+        // TODO [#13326]: Avoid the JOIN if it isn't strictly necessary
+        //                (i.e. if ORDER BY references only from, not table)
+        else
+            s = select(from.fields())
+                .from(from)
+                .join(table).on(condition)
+                .orderBy(orderBy)
+                .limit(limit)
+                .asTable("s");
+
+        if (patchSource && ctx.configuration().requireCommercial(() -> "The UPDATE .. FROM to MERGE transformation requires commercial only logic for non-trivial FROM clauses. Please upgrade to the jOOQ Professional Edition or jOOQ Enterprise Edition")) {
 
 
 
@@ -701,23 +607,11 @@ implements
 
         }
 
-        ctx.visit(mergeInto(t).using(mu.table()).on(mu.lookup().isEmpty() ? c : keyFieldsCondition(ctx, t, mu)).whenMatchedThenUpdate().set(um));
+        ctx.visit(mergeInto(table).using(s).on(c).whenMatchedThenUpdate().set(um));
     }
 
-    final boolean updatesField(Field<?> field) {
-        return anyMatch(updateMap.keySet(), fr -> field.equals(fr) || fr instanceof Row && ((Row) fr).field(field) != null);
-    }
-
-    final boolean updatesAnyField(Collection<? extends Field<?>> fields) {
-        return anyMatch(fields, this::updatesField);
-    }
-
-    final UpdateQueryImpl<R> copy(Consumer<? super UpdateQueryImpl<R>> finisher) {
-        return copy(finisher, table);
-    }
-
-    final <O extends Record> UpdateQueryImpl<O> copy(Consumer<? super UpdateQueryImpl<O>> finisher, Table<O> t) {
-        UpdateQueryImpl<O> u = new UpdateQueryImpl<>(configuration(), with, t);
+    private final UpdateQueryImpl<R> copy(Consumer<? super UpdateQueryImpl<R>> consumer) {
+        UpdateQueryImpl<R> u = new UpdateQueryImpl<>(configuration(), with, table);
 
         if (!returning.isEmpty())
             u.setReturning(returning);
@@ -727,32 +621,13 @@ implements
         u.condition.setWhere(condition.getWhere());
         u.orderBy.addAll(orderBy);
         u.limit = limit;
-        finisher.accept(u);
+        consumer.accept(u);
         return u;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    final void accept2(Context<?> ctx) {
+    final void accept1(Context<?> ctx) {
         boolean declareTables = ctx.declareTables();
-
-        Table<?> t = table(ctx);
-        ctx.scopeRegister(t, true);
-
-        ConditionProviderImpl where0 = new ConditionProviderImpl();
-        TableList f = getFrom(ctx, where0);
-        Table<?> t0 = t;
-
-        // [#16732] Emulate UPDATE .. FROM with UPDATE .. JOIN where possible
-        if (!f.isEmpty() && NO_SUPPORT_FROM.contains(ctx.dialect()) && !NO_SUPPORT_UPDATE_JOIN.contains(ctx.dialect())) {
-            for (Table<?> x : f)
-                t0 = t0.crossJoin(x);
-        }
-
-        // [#11158] Emulate UPDATE .. JOIN with UPDATE .. FROM where possible
-        else if (NO_SUPPORT_UPDATE_JOIN.contains(ctx.dialect()) && !NO_SUPPORT_FROM.contains(ctx.dialect())) {
-            t0 = emulateUpdateJoin(t0, f, where0);
-        }
-
         ctx.start(UPDATE_UPDATE)
            .visit(K_UPDATE)
            .sql(' ')
@@ -766,7 +641,7 @@ implements
 
 
            )
-           .visit(t0)
+           .visit(table(ctx))
            .declareTables(declareTables)
            .end(UPDATE_UPDATE);
 
@@ -792,63 +667,52 @@ implements
 
 
 
-        acceptFrom(ctx, where0, f);
+        acceptFrom(ctx);
 
-        limitEmulation:
-        if (limitEmulation(ctx)) {
+        if (limit != null && NO_SUPPORT_LIMIT.contains(ctx.dialect()) || !orderBy.isEmpty() && NO_SUPPORT_ORDER_BY_LIMIT.contains(ctx.dialect())) {
+            Field<?>[] keyFields =
+                table().getKeys().isEmpty()
+              ? new Field[] { table().rowid() }
+              : (table().getPrimaryKey() != null
+                  ? table().getPrimaryKey()
+                  : table().getKeys().get(0)).getFieldsArray();
 
-
-
-
-
-
-
-
-
-            // [#16632] Push down USING table list here
-            TableList t1 = new TableList();
-            if (!containsDeclaredTable(from, t))
-                t1.add(t);
-            t1.addAll(from);
-
-            Field<?>[] keyFields = DeleteQueryImpl.keyFields(ctx, t);
+            ctx.start(UPDATE_WHERE)
+               .formatSeparator()
+               .visit(K_WHERE).sql(' ');
 
             if (keyFields.length == 1)
-                where0.addConditions(keyFields[0].in(select((Field) keyFields[0]).from(t1).where(getWhere()).orderBy(orderBy).limit(limit)));
+                ctx.visit(keyFields[0].in(select((Field) keyFields[0]).from(table()).where(getWhere()).orderBy(orderBy).limit(limit)));
             else
-                where0.addConditions(row(keyFields).in(select(keyFields).from(t1).where(getWhere()).orderBy(orderBy).limit(limit)));
+                ctx.visit(row(keyFields).in(select(keyFields).from(table()).where(getWhere()).orderBy(orderBy).limit(limit)));
+
+            ctx.end(UPDATE_WHERE);
         }
+        else {
+            ctx.start(UPDATE_WHERE);
 
-        // [#16733] Repeat the WHERE clause in case we have a non-empty FROM clause
-        if (hasWhere() && (from.isEmpty() || supportFromOrUpdateJoin(ctx)))
-            where0.addConditions(getWhere());
-        else if (!where0.hasWhere() && REQUIRES_WHERE.contains(ctx.dialect()))
-            where0.addConditions(trueCondition());
+            if (hasWhere())
+                ctx.formatSeparator()
+                   .visit(K_WHERE).sql(' ')
+                   .visit(getWhere());
 
-        ctx.start(UPDATE_WHERE);
 
-        if (where0.hasWhere()) {
-            boolean noQualifyInWhere = NO_SUPPORT_QUALIFY_IN_WHERE.contains(ctx.dialect());
 
-            if (noQualifyInWhere)
-                ctx.data(DATA_UNQUALIFY_LOCAL_SCOPE, true);
 
-            ctx.formatSeparator()
-               .visit(K_WHERE).sql(' ').visit(where0.getWhere());
 
-            if (noQualifyInWhere)
-                ctx.data(DATA_UNQUALIFY_LOCAL_SCOPE, false);
-        }
 
-        ctx.end(UPDATE_WHERE);
 
-        if (!limitEmulation(ctx)) {
+            ctx.end(UPDATE_WHERE);
+
             if (!orderBy.isEmpty())
                 ctx.formatSeparator()
                    .visit(K_ORDER_BY).sql(' ')
                    .visit(orderBy);
 
-            DeleteQueryImpl.acceptLimit(ctx, limit);
+            if (limit != null)
+                ctx.formatSeparator()
+                   .visit(K_LIMIT).sql(' ')
+                   .visit(limit);
         }
 
         ctx.start(UPDATE_RETURNING);
@@ -856,80 +720,26 @@ implements
         ctx.end(UPDATE_RETURNING);
     }
 
-    private final Table<?> emulateUpdateJoin(Table<?> t0, TableList from0, ConditionProviderImpl where0) {
-        if (t0 instanceof CrossJoin j) {
-            t0 = j.$table1();
-            from0.add(j.$table2());
-        }
-        else if (t0 instanceof Join j) {
-            t0 = j.$table1();
-            from0.add(j.$table2());
-            where0.addConditions(((JoinTable<?>) j).condition());
-        }
-
-        // [#11158] TODO: We could also emulate LeftSemiJoin and LeftAntiJoin here, though it's unlikely anyone does that.
-
-        return t0;
-    }
-
-    private final boolean limitEmulation(Context<?> ctx) {
-        if (limit != null && NO_SUPPORT_LIMIT.contains(ctx.dialect()))
-            return true;
-
-        if (!orderBy.isEmpty() && NO_SUPPORT_ORDER_BY_LIMIT.contains(ctx.dialect()))
-            return true;
-
-        if (!from.isEmpty() && !supportFromOrUpdateJoin(ctx))
-            return true;
-
-        return false;
-    }
-
-    private final TableList getFrom(Context<?> ctx, ConditionProviderImpl where0) {
-        TableList f = new TableList();
-
-        // [#16634] Prevent unnecessary FROM clause in some dialects, e.g. HANA
-        if (supportFromOrUpdateJoin(ctx)) {
-
-
-
-
-
-
-
-
-
-
-            f.addAll(from);
-
-
-
-
-
-
-
-
-            if (!f.isEmpty())
-                f = traverseJoinsAndAddPathConditions(ctx, where0, f);
-        }
-
-        return f;
-    }
-
-    private final boolean supportFromOrUpdateJoin(Context<?> ctx) {
-        return !NO_SUPPORT_FROM.contains(ctx.dialect()) || !NO_SUPPORT_UPDATE_JOIN.contains(ctx.dialect());
-    }
-
-    private final void acceptFrom(Context<?> ctx, ConditionProviderImpl where0, TableList f) {
+    private final void acceptFrom(Context<?> ctx) {
         ctx.start(UPDATE_FROM);
 
-        // [#16634] Prevent unnecessary FROM clause in some dialects, e.g. HANA
-        if (!NO_SUPPORT_FROM.contains(ctx.dialect())) {
-            if (!f.isEmpty())
-                ctx.formatSeparator()
-                   .visit(K_FROM).sql(' ')
-                   .declareTables(true, c -> c.visit(f));
-        }
+        TableList f;
+
+
+
+
+
+
+
+
+
+
+        f = from;
+
+        if (!f.isEmpty())
+            ctx.formatSeparator()
+               .visit(K_FROM).sql(' ')
+               .declareTables(true, c -> c.visit(f));
 
         ctx.end(UPDATE_FROM);
     }
@@ -948,135 +758,6 @@ implements
 
         return updateMap.size() > 0;
     }
-
-    @Override
-    final int estimatedRowCount(Scope ctx) {
-        return Integer.MAX_VALUE;
-    }
-
-    // -------------------------------------------------------------------------
-    // XXX: Query Object Model
-    // -------------------------------------------------------------------------
-
-    @Override
-    public final WithImpl $with() {
-        return with;
-    }
-
-    @Override
-    public final Table<R> $table() {
-        return table;
-    }
-
-    @Override
-    public final Update<?> $table(Table<?> newTable) {
-        if ($table() == newTable)
-            return this;
-        else
-            return copy(d -> {}, newTable);
-    }
-
-    @Override
-    public final UnmodifiableList<? extends Table<?>> $from() {
-        return QOM.unmodifiable(from);
-    }
-
-    @Override
-    public final Update<R> $from(Collection<? extends Table<?>> newFrom) {
-        return copy(d -> {
-            d.from.clear();
-            d.from.addAll(newFrom);
-        });
-    }
-
-    @Override
-    public final UnmodifiableMap<? extends FieldOrRow, ? extends FieldOrRowOrSelect> $set() {
-        return QOM.unmodifiable(updateMap);
-    }
-
-    @Override
-    public final Update<R> $set(Map<? extends FieldOrRow, ? extends FieldOrRowOrSelect> newSet) {
-        return copy(u -> {
-            u.updateMap.clear();
-            u.updateMap.putAll(newSet);
-        });
-    }
-
-    @Override
-    public final Condition $where() {
-        return condition.getWhereOrNull();
-    }
-
-    @Override
-    public final Update<R> $where(Condition newWhere) {
-        if ($where() == newWhere)
-            return this;
-        else
-            return copy(u -> u.condition.setWhere(newWhere));
-    }
-
-    @Override
-    public final UnmodifiableList<? extends SortField<?>> $orderBy() {
-        return QOM.unmodifiable(orderBy);
-    }
-
-    @Override
-    public final Update<R> $orderBy(Collection<? extends SortField<?>> newOrderBy) {
-        return copy(u -> {
-            u.orderBy.clear();
-            u.orderBy.addAll(newOrderBy);
-        });
-    }
-
-    @Override
-    public final Field<? extends Number> $limit() {
-        return limit;
-    }
-
-    @Override
-    public final Update<R> $limit(Field<? extends Number> newLimit) {
-        if ($limit() == newLimit)
-            return this;
-        else
-            return copy(s -> s.limit = newLimit);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

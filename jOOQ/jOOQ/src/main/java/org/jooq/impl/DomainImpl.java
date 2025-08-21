@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -45,7 +45,6 @@ import java.util.List;
 import org.jooq.Binding;
 import org.jooq.Catalog;
 import org.jooq.Check;
-import org.jooq.Comment;
 import org.jooq.Configuration;
 import org.jooq.Context;
 import org.jooq.Converter;
@@ -56,7 +55,6 @@ import org.jooq.Function1;
 import org.jooq.Function2;
 import org.jooq.Name;
 import org.jooq.Schema;
-import org.jooq.ContextConverter;
 import org.jooq.QueryPart;
 import org.jooq.impl.QOM.UNotYetImplemented;
 
@@ -65,20 +63,13 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @author Lukas Eder
  */
-class DomainImpl<T>
-extends
-    AbstractNamed
-implements
-    Domain<T>,
-    UNotYetImplemented
-{
-
+class DomainImpl<T> extends AbstractNamed implements Domain<T>, UNotYetImplemented {
     private final Schema      schema;
     private final Check<?>[]  checks;
     private final DataType<T> type;
 
-    DomainImpl(Schema schema, Name name, Comment comment, DataType<T> type, Check<?>... checks) {
-        super(qualify(schema, name), comment);
+    DomainImpl(Schema schema, Name name, DataType<T> type, Check<?>... checks) {
+        super(qualify(schema, name), null);
 
         this.schema = schema;
         this.checks = checks;
@@ -101,7 +92,7 @@ implements
     }
 
     @Override
-    public final ContextConverter<?, T> getConverter() {
+    public final Converter<?, T> getConverter() {
         return type.getConverter();
     }
 
@@ -127,7 +118,7 @@ implements
 
     @Override
     public final void accept(Context<?> ctx) {
-        ctx.visit(getQualifiedName());
+        ctx.visit(getUnqualifiedName());
     }
 
     // -------------------------------------------------------------------------

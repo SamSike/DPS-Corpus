@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,8 @@
 
 package org.springframework.web.servlet.mvc.method.annotation;
 
-import java.util.Collection;
-
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.MethodParameter;
+import org.springframework.lang.Nullable;
 import org.springframework.util.PatternMatchUtils;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
@@ -28,7 +25,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.SmartView;
 import org.springframework.web.servlet.View;
-import org.springframework.web.servlet.view.FragmentsRendering;
 
 /**
  * Handles return values of type {@link ModelAndView} copying view and model
@@ -48,7 +44,8 @@ import org.springframework.web.servlet.view.FragmentsRendering;
  */
 public class ModelAndViewMethodReturnValueHandler implements HandlerMethodReturnValueHandler {
 
-	private String @Nullable [] redirectPatterns;
+	@Nullable
+	private String[] redirectPatterns;
 
 
 	/**
@@ -58,7 +55,7 @@ public class ModelAndViewMethodReturnValueHandler implements HandlerMethodReturn
 	 * There must be a custom {@link View} that recognizes the prefix as well.
 	 * @since 4.1
 	 */
-	public void setRedirectPatterns(String @Nullable ... redirectPatterns) {
+	public void setRedirectPatterns(@Nullable String... redirectPatterns) {
 		this.redirectPatterns = redirectPatterns;
 	}
 
@@ -66,36 +63,23 @@ public class ModelAndViewMethodReturnValueHandler implements HandlerMethodReturn
 	 * Return the configured redirect patterns, if any.
 	 * @since 4.1
 	 */
-	public String @Nullable [] getRedirectPatterns() {
+	@Nullable
+	public String[] getRedirectPatterns() {
 		return this.redirectPatterns;
 	}
 
 
 	@Override
 	public boolean supportsReturnType(MethodParameter returnType) {
-		Class<?> type = returnType.getParameterType();
-		if (Collection.class.isAssignableFrom(type)) {
-			type = returnType.nested().getNestedParameterType();
-		}
-		return (ModelAndView.class.isAssignableFrom(type) || FragmentsRendering.class.isAssignableFrom(type));
+		return ModelAndView.class.isAssignableFrom(returnType.getParameterType());
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void handleReturnValue(@Nullable Object returnValue, MethodParameter returnType,
 			ModelAndViewContainer mavContainer, NativeWebRequest webRequest) throws Exception {
 
 		if (returnValue == null) {
 			mavContainer.setRequestHandled(true);
-			return;
-		}
-
-		if (returnValue instanceof Collection<?> mavs) {
-			returnValue = FragmentsRendering.fragments((Collection<ModelAndView>) mavs).build();
-		}
-
-		if (returnValue instanceof FragmentsRendering rendering) {
-			mavContainer.setView(rendering);
 			return;
 		}
 
@@ -110,7 +94,7 @@ public class ModelAndViewMethodReturnValueHandler implements HandlerMethodReturn
 		else {
 			View view = mav.getView();
 			mavContainer.setView(view);
-			if (view instanceof SmartView smartView && smartView.isRedirectView()) {
+			if (view instanceof SmartView && ((SmartView) view).isRedirectView()) {
 				mavContainer.setRedirectModelScenario(true);
 			}
 		}

@@ -28,9 +28,9 @@ import java.util.concurrent.TimeUnit;
  * Thread pool executor that creates {@link RejectableFutureTask} instead of {@link java.util.concurrent.FutureTask}
  * when registering new tasks for execution.
  * <p/>
- * Instances of {@link RejectableFutureTask} are required to handle {@link ThreadPoolRejectedPolicy#Abort} policies
- * correctly, e.g. notify {@link Callable} and {@link Runnable} tasks when they are rejected. To be notified of
- * rejection tasks have to implement {@link Rejectable} interface: <br/>
+ * Instances of {@link RejectableFutureTask} are required to handle {@link ThreadPoolRejectedPolicy#Discard} and
+ * {@link ThreadPoolRejectedPolicy#DiscardOldest} policies correctly, e.g. notify {@link Callable} and {@link Runnable}
+ * tasks when they are rejected. To be notified of rejection tasks have to implement {@link Rejectable} interface: <br/>
  * <code><pre>
  * public class RejectableTask implements Runnable, Rejectable {
  *     &#064;Override
@@ -95,8 +95,8 @@ public class RejectableThreadPoolExecutor extends ThreadPoolExecutor {
     @Override
     public String toString() {
         // the thread factory often have more precise details what the thread pool is used for
-        if (getThreadFactory() instanceof CamelThreadFactory camelThreadFactory) {
-            String name = camelThreadFactory.getName();
+        if (getThreadFactory() instanceof CamelThreadFactory) {
+            String name = ((CamelThreadFactory) getThreadFactory()).getName();
             return super.toString() + "[" + name + "]";
         } else {
             return super.toString();

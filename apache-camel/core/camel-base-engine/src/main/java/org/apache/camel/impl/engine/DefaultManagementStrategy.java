@@ -21,6 +21,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NamedNode;
 import org.apache.camel.impl.event.DefaultEventFactory;
 import org.apache.camel.spi.CamelEvent;
@@ -30,7 +31,6 @@ import org.apache.camel.spi.ManagementAgent;
 import org.apache.camel.spi.ManagementObjectNameStrategy;
 import org.apache.camel.spi.ManagementObjectStrategy;
 import org.apache.camel.spi.ManagementStrategy;
-import org.apache.camel.support.OrderedComparator;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.support.service.ServiceSupport;
 import org.apache.camel.util.ObjectHelper;
@@ -82,20 +82,14 @@ public class DefaultManagementStrategy extends ServiceSupport implements Managem
     @Override
     public void addEventNotifier(EventNotifier eventNotifier) {
         this.eventNotifiers.add(eventNotifier);
-        // resort after adding
-        this.eventNotifiers.sort(OrderedComparator.get());
         if (isStarted()) {
             // already started
             this.startedEventNotifiers.add(eventNotifier);
-            // resort after adding
-            this.startedEventNotifiers.sort(OrderedComparator.get());
         }
         if (getCamelContext() != null) {
-            // inject camel context if needed
-            CamelContextAware.trySetCamelContext(eventNotifier, getCamelContext());
             // okay we have an event notifier that accepts exchange events so its applicable
             if (!eventNotifier.isIgnoreExchangeEvents()) {
-                getCamelContext().getCamelContextExtension().setEventNotificationApplicable(true);
+                getCamelContext().adapt(ExtendedCamelContext.class).setEventNotificationApplicable(true);
             }
         }
     }
@@ -198,7 +192,7 @@ public class DefaultManagementStrategy extends ServiceSupport implements Managem
     protected void doInit() throws Exception {
         ObjectHelper.notNull(getCamelContext(), "CamelContext", this);
         if (!getEventNotifiers().isEmpty()) {
-            getCamelContext().getCamelContextExtension().setEventNotificationApplicable(true);
+            getCamelContext().adapt(ExtendedCamelContext.class).setEventNotificationApplicable(true);
         }
         for (EventNotifier notifier : eventNotifiers) {
             // inject CamelContext if the service is aware

@@ -7,12 +7,11 @@ package org.jooq.meta.firebird.rdb.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
+import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -20,6 +19,7 @@ import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+import org.jooq.meta.firebird.rdb.DefaultSchema;
 import org.jooq.meta.firebird.rdb.Keys;
 
 
@@ -47,12 +47,12 @@ public class Rdb$indices extends TableImpl<Record> {
     /**
      * The column <code>RDB$INDICES.RDB$INDEX_NAME</code>.
      */
-    public final TableField<Record, String> RDB$INDEX_NAME = createField(DSL.name("RDB$INDEX_NAME"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$INDEX_NAME = createField(DSL.name("RDB$INDEX_NAME"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$INDICES.RDB$RELATION_NAME</code>.
      */
-    public final TableField<Record, String> RDB$RELATION_NAME = createField(DSL.name("RDB$RELATION_NAME"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$RELATION_NAME = createField(DSL.name("RDB$RELATION_NAME"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$INDICES.RDB$INDEX_ID</code>.
@@ -87,7 +87,7 @@ public class Rdb$indices extends TableImpl<Record> {
     /**
      * The column <code>RDB$INDICES.RDB$FOREIGN_KEY</code>.
      */
-    public final TableField<Record, String> RDB$FOREIGN_KEY = createField(DSL.name("RDB$FOREIGN_KEY"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$FOREIGN_KEY = createField(DSL.name("RDB$FOREIGN_KEY"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$INDICES.RDB$SYSTEM_FLAG</code>.
@@ -110,11 +110,11 @@ public class Rdb$indices extends TableImpl<Record> {
     public final TableField<Record, Double> RDB$STATISTICS = createField(DSL.name("RDB$STATISTICS"), SQLDataType.DOUBLE, this, "");
 
     private Rdb$indices(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Rdb$indices(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private Rdb$indices(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -138,26 +138,18 @@ public class Rdb$indices extends TableImpl<Record> {
         this(DSL.name("RDB$INDICES"), null);
     }
 
-    public <O extends Record> Rdb$indices(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, RDB$INDICES);
+    public <O extends Record> Rdb$indices(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, RDB$INDICES);
+    }
+
+    @Override
+    public Schema getSchema() {
+        return aliased() ? null : DefaultSchema.DEFAULT_SCHEMA;
     }
 
     @Override
     public List<UniqueKey<Record>> getUniqueKeys() {
         return Arrays.asList(Keys.RDB$INDEX_5);
-    }
-
-    private transient Rdb$indexSegments _rdb$indexSegments;
-
-    /**
-     * Get the implicit to-many join path to the <code>RDB$INDEX_SEGMENTS</code>
-     * table
-     */
-    public Rdb$indexSegments rdb$indexSegments() {
-        if (_rdb$indexSegments == null)
-            _rdb$indexSegments = new Rdb$indexSegments(this, null, Keys.SYNTHETIC_FK_RDB$INDEX_SEGMENTS__RDB$INDEX_5.getInverseKey());
-
-        return _rdb$indexSegments;
     }
 
     @Override
@@ -170,8 +162,19 @@ public class Rdb$indices extends TableImpl<Record> {
         return new Rdb$indices(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public Rdb$indices as(Table<?> alias) {
-        return new Rdb$indices(alias.getQualifiedName(), this);
+    public Rdb$indices rename(String name) {
+        return new Rdb$indices(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public Rdb$indices rename(Name name) {
+        return new Rdb$indices(name, null);
     }
 }

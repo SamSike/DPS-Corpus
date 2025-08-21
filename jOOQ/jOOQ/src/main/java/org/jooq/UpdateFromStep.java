@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -44,7 +44,6 @@ package org.jooq;
 import static org.jooq.SQLDialect.CUBRID;
 // ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
@@ -70,7 +69,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * This type is used for the {@link Update}'s DSL API.
  * <p>
- * Example: <pre><code>
+ * Example: <code><pre>
  * DSLContext create = DSL.using(configuration);
  *
  * create.update(table)
@@ -78,7 +77,7 @@ import org.jetbrains.annotations.NotNull;
  *       .set(field2, value2)
  *       .where(field1.greaterThan(100))
  *       .execute();
- * </code></pre>
+ * </pre></code>
  * <p>
  * <h3>Referencing <code>XYZ*Step</code> types directly from client code</h3>
  * <p>
@@ -106,21 +105,21 @@ public interface UpdateFromStep<R extends Record> extends UpdateWhereStep<R> {
      * Add a <code>FROM</code> clause to the query.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     UpdateWhereStep<R> from(TableLike<?> table);
 
     /**
      * Add a <code>FROM</code> clause to the query.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     UpdateWhereStep<R> from(TableLike<?>... table);
 
     /**
      * Add a <code>FROM</code> clause to the query.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     UpdateWhereStep<R> from(Collection<? extends TableLike<?>> tables);
 
     /**
@@ -135,7 +134,7 @@ public interface UpdateFromStep<R extends Record> extends UpdateWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     @PlainSQL
     UpdateWhereStep<R> from(SQL sql);
 
@@ -151,7 +150,7 @@ public interface UpdateFromStep<R extends Record> extends UpdateWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     @PlainSQL
     UpdateWhereStep<R> from(String sql);
 
@@ -168,7 +167,7 @@ public interface UpdateFromStep<R extends Record> extends UpdateWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     @PlainSQL
     UpdateWhereStep<R> from(String sql, Object... bindings);
 
@@ -185,7 +184,7 @@ public interface UpdateFromStep<R extends Record> extends UpdateWhereStep<R> {
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     @PlainSQL
     UpdateWhereStep<R> from(String sql, QueryPart... parts);
 
@@ -195,6 +194,6 @@ public interface UpdateFromStep<R extends Record> extends UpdateWhereStep<R> {
      * @see DSL#table(Name)
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE })
     UpdateWhereStep<R> from(Name name);
 }

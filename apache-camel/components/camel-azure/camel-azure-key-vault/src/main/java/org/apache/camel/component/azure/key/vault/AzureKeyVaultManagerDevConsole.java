@@ -22,17 +22,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.PeriodTaskScheduler;
 import org.apache.camel.spi.PropertiesFunction;
 import org.apache.camel.spi.annotations.DevConsole;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.console.AbstractDevConsole;
 import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.json.JsonArray;
 import org.apache.camel.util.json.JsonObject;
 import org.apache.camel.vault.AzureVaultConfiguration;
 
-@DevConsole(name = "azure-secrets", displayName = "Azure Key Vault Secrets", description = "Azure Key Vault Secret Manager")
+@DevConsole("azure-secrets")
 public class AzureKeyVaultManagerDevConsole extends AbstractDevConsole {
 
     private KeyVaultPropertiesFunction propertiesFunction;
@@ -54,7 +54,7 @@ public class AzureKeyVaultManagerDevConsole extends AbstractDevConsole {
         }
         AzureVaultConfiguration azure = getCamelContext().getVaultConfiguration().getAzureVaultConfiguration();
         if (azure != null && azure.isRefreshEnabled()) {
-            PeriodTaskScheduler scheduler = PluginHelper.getPeriodTaskScheduler(getCamelContext());
+            PeriodTaskScheduler scheduler = getCamelContext().adapt(ExtendedCamelContext.class).getPeriodTaskScheduler();
             secretsRefreshTask = scheduler.getTaskByType(EventhubsReloadTriggerTask.class);
         }
     }

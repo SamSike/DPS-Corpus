@@ -23,13 +23,14 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.camel.Endpoint;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.EndpointRegistry;
 import org.apache.camel.spi.RuntimeEndpointRegistry;
 import org.apache.camel.spi.annotations.DevConsole;
 import org.apache.camel.support.console.AbstractDevConsole;
 import org.apache.camel.util.json.JsonObject;
 
-@DevConsole(name = "endpoint", displayName = "Endpoints", description = "Endpoint Registry information")
+@DevConsole("endpoint")
 public class EndpointDevConsole extends AbstractDevConsole {
 
     public EndpointDevConsole() {
@@ -42,31 +43,23 @@ public class EndpointDevConsole extends AbstractDevConsole {
 
         // runtime registry is optional but if enabled we have additional statistics to use in output
         List<RuntimeEndpointRegistry.Statistic> stats = null;
-        RuntimeEndpointRegistry runtimeReg = getCamelContext().getRuntimeEndpointRegistry();
+        RuntimeEndpointRegistry runtimeReg = getCamelContext().adapt(ExtendedCamelContext.class).getRuntimeEndpointRegistry();
         if (runtimeReg != null) {
             stats = runtimeReg.getEndpointStatistics();
         }
-        EndpointRegistry reg = getCamelContext().getEndpointRegistry();
+        EndpointRegistry<?> reg = getCamelContext().getEndpointRegistry();
         sb.append(
                 String.format("    Endpoints: %s (static: %s dynamic: %s)\n", reg.size(), reg.staticSize(), reg.dynamicSize()));
         sb.append(String.format("    Maximum Cache Size: %s\n", reg.getMaximumCacheSize()));
         Collection<Endpoint> col = reg.getReadOnlyValues();
         if (!col.isEmpty()) {
             for (Endpoint e : col) {
-                boolean stub = e.getComponent().getClass().getSimpleName().equals("StubComponent");
-                boolean remote = e.isRemote();
-                String uri = e.toString();
-                if (!uri.startsWith("stub:") && stub) {
-                    // shadow-stub
-                    uri = uri + " (stub)";
-                }
                 var stat = findStats(stats, e.getEndpointUri());
                 if (stat.isPresent()) {
                     var st = stat.get();
-                    sb.append(String.format("\n    %s (remote: %s direction: %s, usage: %s)", uri, remote, st.getDirection(),
-                            st.getHits()));
+                    sb.append(String.format("\n    %s (direction: %s, usage: %s)", e, st.getDirection(), st.getHits()));
                 } else {
-                    sb.append(String.format("\n    %s (remote: %s)", uri, remote));
+                    sb.append(String.format("\n    %s", e));
                 }
             }
         }
@@ -76,17 +69,16 @@ public class EndpointDevConsole extends AbstractDevConsole {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     protected JsonObject doCallJson(Map<String, Object> options) {
         JsonObject root = new JsonObject();
 
         // runtime registry is optional but if enabled we have additional statistics to use in output
         List<RuntimeEndpointRegistry.Statistic> stats = null;
-        RuntimeEndpointRegistry runtimeReg = getCamelContext().getRuntimeEndpointRegistry();
+        RuntimeEndpointRegistry runtimeReg = getCamelContext().adapt(ExtendedCamelContext.class).getRuntimeEndpointRegistry();
         if (runtimeReg != null) {
             stats = runtimeReg.getEndpointStatistics();
         }
-        EndpointRegistry reg = getCamelContext().getEndpointRegistry();
+        EndpointRegistry<?> reg = getCamelContext().getEndpointRegistry();
         root.put("size", reg.size());
         root.put("staticSize", reg.staticSize());
         root.put("dynamicSize", reg.dynamicSize());
@@ -97,10 +89,7 @@ public class EndpointDevConsole extends AbstractDevConsole {
         Collection<Endpoint> col = reg.getReadOnlyValues();
         for (Endpoint e : col) {
             JsonObject jo = new JsonObject();
-            jo.put("uri", e.getEndpointUri());
-            jo.put("remote", e.isRemote());
-            boolean stub = e.getComponent().getClass().getSimpleName().equals("StubComponent");
-            jo.put("stub", stub);
+            jo.put("uri", e.toString());
             var stat = findStats(stats, e.getEndpointUri());
             if (stat.isPresent()) {
                 var st = stat.get();

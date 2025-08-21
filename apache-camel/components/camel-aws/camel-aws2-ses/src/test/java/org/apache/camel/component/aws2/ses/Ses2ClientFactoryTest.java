@@ -19,7 +19,6 @@ package org.apache.camel.component.aws2.ses;
 import org.apache.camel.component.aws2.ses.client.Ses2ClientFactory;
 import org.apache.camel.component.aws2.ses.client.Ses2InternalClient;
 import org.apache.camel.component.aws2.ses.client.impl.Ses2ClientOptimizedImpl;
-import org.apache.camel.component.aws2.ses.client.impl.Ses2ClientSessionTokenImpl;
 import org.apache.camel.component.aws2.ses.client.impl.Ses2ClientStandardImpl;
 import org.junit.jupiter.api.Test;
 
@@ -48,13 +47,5 @@ public class Ses2ClientFactoryTest {
         ses2Configuration.setUseDefaultCredentialsProvider(true);
         Ses2InternalClient sesClient = Ses2ClientFactory.getSesClient(ses2Configuration);
         assertTrue(sesClient instanceof Ses2ClientOptimizedImpl);
-    }
-
-    @Test
-    public void getSESSessionTokenImplClient() {
-        Ses2Configuration ses2Configuration = new Ses2Configuration();
-        ses2Configuration.setUseSessionCredentials(true);
-        Ses2InternalClient sesClient = Ses2ClientFactory.getSesClient(ses2Configuration);
-        assertTrue(sesClient instanceof Ses2ClientSessionTokenImpl);
     }
 }

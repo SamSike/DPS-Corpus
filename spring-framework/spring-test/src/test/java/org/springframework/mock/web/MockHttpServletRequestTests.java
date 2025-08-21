@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import jakarta.servlet.AsyncContext;
-import jakarta.servlet.AsyncEvent;
-import jakarta.servlet.AsyncListener;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +43,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 /**
- * Tests for {@link MockHttpServletRequest}.
+ * Unit tests for {@link MockHttpServletRequest}.
  *
  * @author Rick Evans
  * @author Mark Fisher
@@ -86,28 +83,6 @@ class MockHttpServletRequestTests {
 	}
 
 	@Test
-	void readEmptyInputStreamWorksAcrossRequests() throws IOException {
-		MockHttpServletRequest firstRequest = new MockHttpServletRequest();
-		firstRequest.getInputStream().readAllBytes();
-		firstRequest.getInputStream().close();
-
-		MockHttpServletRequest secondRequest = new MockHttpServletRequest();
-		secondRequest.getInputStream().readAllBytes();
-		secondRequest.getInputStream().close();
-	}
-
-	@Test // gh-32820
-	void readEmptyReaderWorksAcrossRequests() throws IOException {
-		MockHttpServletRequest firstRequest = new MockHttpServletRequest();
-		firstRequest.getReader().read(new char[256]);
-		firstRequest.getReader().close();
-
-		MockHttpServletRequest secondRequest = new MockHttpServletRequest();
-		secondRequest.getReader().read(new char[256]);
-		secondRequest.getReader().close();
-	}
-
-	@Test
 	void setContentAndGetReader() throws IOException {
 		byte[] bytes = "body".getBytes(Charset.defaultCharset());
 		request.setContent(bytes);
@@ -128,7 +103,7 @@ class MockHttpServletRequestTests {
 	}
 
 	@Test
-	void getContentAsStringWithoutSettingCharacterEncoding() {
+	void getContentAsStringWithoutSettingCharacterEncoding() throws IOException {
 		assertThatIllegalStateException().isThrownBy(
 				request::getContentAsString)
 			.withMessageContaining("Cannot get content as a String for a null character encoding");
@@ -159,14 +134,14 @@ class MockHttpServletRequestTests {
 	}
 
 	@Test  // SPR-16505
-	void getInputStreamTwice() {
+	void getInputStreamTwice() throws IOException {
 		byte[] bytes = "body".getBytes(Charset.defaultCharset());
 		request.setContent(bytes);
 		assertThat(request.getInputStream()).isSameAs(request.getInputStream());
 	}
 
 	@Test  // SPR-16499
-	void getReaderAfterGettingInputStream() {
+	void getReaderAfterGettingInputStream() throws IOException {
 		request.getInputStream();
 		assertThatIllegalStateException().isThrownBy(
 				request::getReader)
@@ -199,15 +174,6 @@ class MockHttpServletRequestTests {
 		assertThat(request.getCharacterEncoding()).isEqualTo("UTF-8");
 	}
 
-	@Test // gh-29255
-	void setContentTypeInvalidWithNonAsciiCharacterAndCharset() {
-		String contentType = "İcharset=";
-		request.addHeader(HttpHeaders.CONTENT_TYPE, contentType);
-		assertThat(request.getContentType()).isEqualTo(contentType);
-		assertThat(request.getHeader(HttpHeaders.CONTENT_TYPE)).isEqualTo(contentType);
-		assertThat(request.getCharacterEncoding()).isEqualTo("");
-	}
-
 	@Test
 	void contentTypeHeader() {
 		String contentType = "test/plain";
@@ -224,15 +190,6 @@ class MockHttpServletRequestTests {
 		assertThat(request.getContentType()).isEqualTo(contentType);
 		assertThat(request.getHeader(HttpHeaders.CONTENT_TYPE)).isEqualTo(contentType);
 		assertThat(request.getCharacterEncoding()).isEqualTo("UTF-8");
-	}
-
-	@Test
-	void contentTypeMultipleCalls() {
-		String contentType = "text/html";
-		request.addHeader(HttpHeaders.CONTENT_TYPE, "text/plain");
-		request.addHeader(HttpHeaders.CONTENT_TYPE, contentType);
-		assertThat(request.getContentType()).isEqualTo(contentType);
-		assertThat(request.getHeader(HttpHeaders.CONTENT_TYPE)).isEqualTo(contentType);
 	}
 
 	@Test  // SPR-12677
@@ -279,11 +236,11 @@ class MockHttpServletRequestTests {
 		params.put("key3", new String[] { "value3A", "value3B" });
 		request.setParameters(params);
 		String[] values1 = request.getParameterValues("key1");
-		assertThat(values1).hasSize(1);
+		assertThat(values1.length).isEqualTo(1);
 		assertThat(request.getParameter("key1")).isEqualTo("newValue1");
 		assertThat(request.getParameter("key2")).isEqualTo("value2");
 		String[] values3 = request.getParameterValues("key3");
-		assertThat(values3).hasSize(2);
+		assertThat(values3.length).isEqualTo(2);
 		assertThat(values3[0]).isEqualTo("value3A");
 		assertThat(values3[1]).isEqualTo("value3B");
 	}
@@ -297,12 +254,12 @@ class MockHttpServletRequestTests {
 		params.put("key3", new String[] { "value3A", "value3B" });
 		request.addParameters(params);
 		String[] values1 = request.getParameterValues("key1");
-		assertThat(values1).hasSize(2);
+		assertThat(values1.length).isEqualTo(2);
 		assertThat(values1[0]).isEqualTo("value1");
 		assertThat(values1[1]).isEqualTo("newValue1");
 		assertThat(request.getParameter("key2")).isEqualTo("value2");
 		String[] values3 = request.getParameterValues("key3");
-		assertThat(values3).hasSize(2);
+		assertThat(values3.length).isEqualTo(2);
 		assertThat(values3[0]).isEqualTo("value3A");
 		assertThat(values3[1]).isEqualTo("value3B");
 	}
@@ -314,9 +271,9 @@ class MockHttpServletRequestTests {
 		params.put("key2", "value2");
 		params.put("key3", new String[] { "value3A", "value3B" });
 		request.addParameters(params);
-		assertThat(request.getParameterMap()).hasSize(3);
+		assertThat(request.getParameterMap().size()).isEqualTo(3);
 		request.removeAllParameters();
-		assertThat(request.getParameterMap()).isEmpty();
+		assertThat(request.getParameterMap().size()).isEqualTo(0);
 	}
 
 	@Test
@@ -405,7 +362,7 @@ class MockHttpServletRequestTests {
 	void emptyAcceptLanguageHeader() {
 		request.addHeader("Accept-Language", "");
 		assertThat(request.getLocale()).isEqualTo(Locale.ENGLISH);
-		assertThat(request.getHeader("Accept-Language")).isEmpty();
+		assertThat(request.getHeader("Accept-Language")).isEqualTo("");
 	}
 
 	@Test
@@ -675,44 +632,6 @@ class MockHttpServletRequestTests {
 				request.getDateHeader(HttpHeaders.IF_MODIFIED_SINCE));
 	}
 
-	@Test
-	void shouldRejectAsyncStartsIfUnsupported() {
-		assertThat(request.isAsyncStarted()).isFalse();
-		assertThatIllegalStateException().isThrownBy(request::startAsync);
-	}
-
-	@Test
-	void startAsyncShouldUpdateRequestState() {
-		assertThat(request.isAsyncStarted()).isFalse();
-		request.setAsyncSupported(true);
-		request.startAsync();
-		assertThat(request.isAsyncStarted()).isTrue();
-	}
-
-	@Test
-	void shouldNotifyAsyncListeners() {
-		request.setAsyncSupported(true);
-		AsyncContext asyncContext = request.startAsync();
-		TestAsyncListener testAsyncListener = new TestAsyncListener();
-		asyncContext.addListener(testAsyncListener);
-		asyncContext.complete();
-		assertThat(testAsyncListener.events).hasSize(1);
-		assertThat(testAsyncListener.events.get(0)).extracting("name").isEqualTo("onComplete");
-	}
-
-	@Test
-	void shouldNotifyAsyncListenersWhenNewAsyncStarted() {
-		request.setAsyncSupported(true);
-		AsyncContext asyncContext = request.startAsync();
-		TestAsyncListener testAsyncListener = new TestAsyncListener();
-		asyncContext.addListener(testAsyncListener);
-		AsyncContext newAsyncContext = request.startAsync();
-		assertThat(testAsyncListener.events).hasSize(1);
-		ListenerEvent listenerEvent = testAsyncListener.events.get(0);
-		assertThat(listenerEvent).extracting("name").isEqualTo("onStartAsync");
-		assertThat(listenerEvent.event.getAsyncContext()).isEqualTo(newAsyncContext);
-	}
-
 	private void assertEqualEnumerations(Enumeration<?> enum1, Enumeration<?> enum2) {
 		int count = 0;
 		while (enum1.hasMoreElements()) {
@@ -721,32 +640,5 @@ class MockHttpServletRequestTests {
 			assertThat(enum2.nextElement()).as(message).isEqualTo(enum1.nextElement());
 		}
 	}
-
-	static class TestAsyncListener implements AsyncListener {
-
-		List<ListenerEvent> events = new ArrayList<>();
-
-		@Override
-		public void onComplete(AsyncEvent asyncEvent) throws IOException {
-			this.events.add(new ListenerEvent("onComplete", asyncEvent));
-		}
-
-		@Override
-		public void onTimeout(AsyncEvent asyncEvent) throws IOException {
-			this.events.add(new ListenerEvent("onTimeout", asyncEvent));
-		}
-
-		@Override
-		public void onError(AsyncEvent asyncEvent) throws IOException {
-			this.events.add(new ListenerEvent("onError", asyncEvent));
-		}
-
-		@Override
-		public void onStartAsync(AsyncEvent asyncEvent) throws IOException {
-			this.events.add(new ListenerEvent("onStartAsync", asyncEvent));
-		}
-	}
-
-	record ListenerEvent(String name, AsyncEvent event) {}
 
 }

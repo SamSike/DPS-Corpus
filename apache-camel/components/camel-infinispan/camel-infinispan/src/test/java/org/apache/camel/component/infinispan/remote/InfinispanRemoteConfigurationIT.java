@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.infinispan.remote;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.test.infra.infinispan.services.InfinispanService;
 import org.apache.camel.test.infra.infinispan.services.InfinispanServiceFactory;
 import org.infinispan.client.hotrod.RemoteCache;
@@ -34,18 +32,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class InfinispanRemoteConfigurationIT {
     @RegisterExtension
-    static InfinispanService service = InfinispanServiceFactory.createSingletonInfinispanService();
+    static InfinispanService service = InfinispanServiceFactory.createService();
 
     @Test
     public void remoteCacheWithoutProperties() throws Exception {
-        final InfinispanRemoteConfiguration configuration = getBaseConfiguration();
+        InfinispanRemoteConfiguration configuration = new InfinispanRemoteConfiguration();
+        configuration.setHosts(service.host() + ":" + service.port());
+        configuration.setSecure(true);
+        configuration.setUsername(service.username());
+        configuration.setPassword(service.password());
+        configuration.setSecurityServerName("infinispan");
+        configuration.setSaslMechanism("DIGEST-MD5");
+        configuration.setSecurityRealm("default");
         if (SystemUtils.IS_OS_MAC) {
             configuration.addConfigurationProperty(
                     "infinispan.client.hotrod.client_intelligence", "BASIC");
         }
 
-        try (CamelContext context = new DefaultCamelContext();
-             InfinispanRemoteManager manager = new InfinispanRemoteManager(context, configuration)) {
+        try (InfinispanRemoteManager manager = new InfinispanRemoteManager(configuration)) {
             manager.start();
             manager.getCacheContainer().administration()
                     .getOrCreateCache(
@@ -64,7 +68,8 @@ public class InfinispanRemoteConfigurationIT {
         }
     }
 
-    private static InfinispanRemoteConfiguration getBaseConfiguration() {
+    @Test
+    public void remoteCacheWithProperties() throws Exception {
         InfinispanRemoteConfiguration configuration = new InfinispanRemoteConfiguration();
         configuration.setHosts(service.host() + ":" + service.port());
         configuration.setSecure(true);
@@ -73,20 +78,13 @@ public class InfinispanRemoteConfigurationIT {
         configuration.setSecurityServerName("infinispan");
         configuration.setSaslMechanism("DIGEST-MD5");
         configuration.setSecurityRealm("default");
-        return configuration;
-    }
-
-    @Test
-    public void remoteCacheWithProperties() throws Exception {
-        final InfinispanRemoteConfiguration configuration = getBaseConfiguration();
         if (SystemUtils.IS_OS_MAC) {
             configuration.setConfigurationUri("infinispan/client-mac.properties");
         } else {
             configuration.setConfigurationUri("infinispan/client.properties");
         }
 
-        try (CamelContext context = new DefaultCamelContext();
-             InfinispanRemoteManager manager = new InfinispanRemoteManager(context, configuration)) {
+        try (InfinispanRemoteManager manager = new InfinispanRemoteManager(configuration)) {
             manager.start();
             manager.getCacheContainer().administration()
                     .getOrCreateCache(

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
@@ -132,7 +131,8 @@ public class CachingResourceResolver extends AbstractResourceResolver {
 		return RESOLVED_RESOURCE_CACHE_KEY_PREFIX + requestPath;
 	}
 
-	private @Nullable String getContentCodingKey(ServerWebExchange exchange) {
+	@Nullable
+	private String getContentCodingKey(ServerWebExchange exchange) {
 		String header = exchange.getRequest().getHeaders().getFirst("Accept-Encoding");
 		if (!StringUtils.hasText(header)) {
 			return null;
@@ -140,7 +140,7 @@ public class CachingResourceResolver extends AbstractResourceResolver {
 		return Arrays.stream(StringUtils.tokenizeToStringArray(header, ","))
 				.map(token -> {
 					int index = token.indexOf(';');
-					return (index >= 0 ? token.substring(0, index) : token).trim().toLowerCase(Locale.ROOT);
+					return (index >= 0 ? token.substring(0, index) : token).trim().toLowerCase();
 				})
 				.filter(this.contentCodings::contains)
 				.sorted()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,13 @@ package org.springframework.expression.spel.support;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.expression.AccessException;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.MethodExecutor;
 import org.springframework.expression.TypedValue;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
@@ -35,21 +34,21 @@ import org.springframework.util.ReflectionUtils;
  *
  * @author Andy Clement
  * @author Juergen Hoeller
- * @author Sam Brannen
  * @since 3.0
  */
 public class ReflectiveMethodExecutor implements MethodExecutor {
 
 	private final Method originalMethod;
 
-	/**
-	 * The method to invoke via reflection or in a compiled expression.
-	 */
 	private final Method methodToInvoke;
 
-	private final @Nullable Integer varargsPosition;
+	@Nullable
+	private final Integer varargsPosition;
 
-	private final @Nullable Class<?> publicDeclaringClass;
+	private boolean computedPublicDeclaringClass = false;
+
+	@Nullable
+	private Class<?> publicDeclaringClass;
 
 	private boolean argumentConversionOccurred = false;
 
@@ -59,21 +58,14 @@ public class ReflectiveMethodExecutor implements MethodExecutor {
 	 * @param method the method to invoke
 	 */
 	public ReflectiveMethodExecutor(Method method) {
-		this(method, null);
-	}
-
-	/**
-	 * Create a new executor for the given method.
-	 * @param method the method to invoke
-	 * @param targetClass the target class to invoke the method on, or {@code null} if unknown
-	 * @since 5.3.16
-	 */
-	public ReflectiveMethodExecutor(Method method, @Nullable Class<?> targetClass) {
 		this.originalMethod = method;
-		this.methodToInvoke = ClassUtils.getPubliclyAccessibleMethodIfPossible(method, targetClass);
-		Class<?> declaringClass = this.methodToInvoke.getDeclaringClass();
-		this.publicDeclaringClass = (Modifier.isPublic(declaringClass.getModifiers()) ? declaringClass : null);
-		this.varargsPosition = (method.isVarArgs() ? method.getParameterCount() - 1 : null);
+		this.methodToInvoke = ClassUtils.getInterfaceMethodIfPossible(method);
+		if (method.isVarArgs()) {
+			this.varargsPosition = method.getParameterCount() - 1;
+		}
+		else {
+			this.varargsPosition = null;
+		}
 	}
 
 
@@ -85,15 +77,38 @@ public class ReflectiveMethodExecutor implements MethodExecutor {
 	}
 
 	/**
-	 * Get the public class or interface in the method's type hierarchy that declares the
-	 * {@linkplain #getMethod() original method}.
-	 * <p>See {@link ClassUtils#getPubliclyAccessibleMethodIfPossible(Method, Class)} for
-	 * details.
-	 * @return the public class or interface that declares the method, or {@code null} if
-	 * no such public type could be found
+	 * Find the first public class in the methods declaring class hierarchy that declares this method.
+	 * Sometimes the reflective method discovery logic finds a suitable method that can easily be
+	 * called via reflection but cannot be called from generated code when compiling the expression
+	 * because of visibility restrictions. For example if a non-public class overrides toString(),
+	 * this helper method will walk up the type hierarchy to find the first public type that declares
+	 * the method (if there is one!). For toString() it may walk as far as Object.
 	 */
-	public @Nullable Class<?> getPublicDeclaringClass() {
+	@Nullable
+	public Class<?> getPublicDeclaringClass() {
+		if (!this.computedPublicDeclaringClass) {
+			this.publicDeclaringClass =
+					discoverPublicDeclaringClass(this.originalMethod, this.originalMethod.getDeclaringClass());
+			this.computedPublicDeclaringClass = true;
+		}
 		return this.publicDeclaringClass;
+	}
+
+	@Nullable
+	private Class<?> discoverPublicDeclaringClass(Method method, Class<?> clazz) {
+		if (Modifier.isPublic(clazz.getModifiers())) {
+			try {
+				clazz.getDeclaredMethod(method.getName(), method.getParameterTypes());
+				return clazz;
+			}
+			catch (NoSuchMethodException ex) {
+				// Continue below...
+			}
+		}
+		if (clazz.getSuperclass() != null) {
+			return discoverPublicDeclaringClass(method, clazz.getSuperclass());
+		}
+		return null;
 	}
 
 	public boolean didArgumentConversionOccur() {
@@ -102,7 +117,7 @@ public class ReflectiveMethodExecutor implements MethodExecutor {
 
 
 	@Override
-	public TypedValue execute(EvaluationContext context, Object target, @Nullable Object... arguments) throws AccessException {
+	public TypedValue execute(EvaluationContext context, Object target, Object... arguments) throws AccessException {
 		try {
 			this.argumentConversionOccurred = ReflectionHelper.convertArguments(
 					context.getTypeConverter(), arguments, this.originalMethod, this.varargsPosition);

@@ -23,7 +23,7 @@ import org.apache.camel.TestSupport;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Testing for mistyped component name
@@ -31,35 +31,40 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class RouteWithMistypedComponentNameTest extends TestSupport {
 
     @Test
-    public void testNoSuchEndpoint() {
+    public void testNoSuchEndpoint() throws Exception {
         CamelContext context = new DefaultCamelContext();
-        assertThrows(NoSuchEndpointException.class, () -> {
+        try {
             context.addRoutes(new RouteBuilder() {
                 @Override
-                public void configure() {
+                public void configure() throws Exception {
                     from("direct:hello").to("mock:result");
 
                     // unknown component
                     endpoint("mistyped:hello");
                 }
             });
-        }, "Should have thrown a NoSuchEndpointException");
+            fail("Should have thrown a NoSuchEndpointException");
+        } catch (NoSuchEndpointException e) {
+            // expected
+        }
     }
 
     @Test
-    public void testNoSuchEndpointType() {
+    public void testNoSuchEndpointType() throws Exception {
         CamelContext context = new DefaultCamelContext();
-
-        assertThrows(NoSuchEndpointException.class, () -> {
+        try {
             context.addRoutes(new RouteBuilder() {
                 @Override
-                public void configure() {
+                public void configure() throws Exception {
                     from("direct:hello").to("mock:result");
 
                     // unknown component
                     endpoint("mistyped:hello", Endpoint.class);
                 }
             });
-        }, "Should have thrown a NoSuchEndpointException");
+            fail("Should have thrown a NoSuchEndpointException");
+        } catch (NoSuchEndpointException e) {
+            // expected
+        }
     }
 }

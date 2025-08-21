@@ -66,10 +66,10 @@ public class RecipientListBeanSubUnitOfWorkTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead").useOriginalMessage().maximumRedeliveries(3).redeliveryDelay(0));
 
                 from("direct:start").to("mock:start").process(new MyPreProcessor()).bean(WhereToGoBean.class).to("mock:result");
@@ -93,7 +93,7 @@ public class RecipientListBeanSubUnitOfWorkTest extends ContextTestSupport {
     public static class MyPreProcessor implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             // if its a bye message then alter it to something with
             // Donkey to cause a failure in the sub unit of work
             // but the DLC should still receive the original input
@@ -107,7 +107,7 @@ public class RecipientListBeanSubUnitOfWorkTest extends ContextTestSupport {
     public static class MyProcessor implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             String body = exchange.getIn().getBody(String.class);
             if (body.contains("Donkey")) {
                 counter++;

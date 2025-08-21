@@ -21,10 +21,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class OnCatchHandledTest extends OnExceptionHandledTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").doTry().throwException(new IllegalArgumentException("Forced"))
                         .doCatch(IllegalArgumentException.class).to("log:foo?showAll=true")
                         .to("mock:handled").end();

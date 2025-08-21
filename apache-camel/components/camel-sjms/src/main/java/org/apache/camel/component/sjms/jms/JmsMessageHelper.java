@@ -27,8 +27,6 @@ import jakarta.jms.Message;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.support.ExchangeHelper;
-import org.apache.camel.trait.message.MessageTrait;
-import org.apache.camel.trait.message.RedeliveryTraitPayload;
 import org.apache.camel.util.ObjectHelper;
 
 import static org.apache.camel.util.StringHelper.removeStartingCharacters;
@@ -105,7 +103,7 @@ public final class JmsMessageHelper {
      *
      * @param  jmsMessage   the JMS message
      * @param  name         name of the property to get
-     * @return              the property value, or <tt>null</tt> if does not exist
+     * @return              the property value, or <tt>null</tt> if does not exists
      * @throws JMSException can be thrown
      */
     public static Object getProperty(Message jmsMessage, String name) throws JMSException {
@@ -321,10 +319,6 @@ public final class JmsMessageHelper {
      * @return         <tt>true</tt> if redelivered, <tt>false</tt> if not, <tt>null</tt> if not able to determine
      */
     public static Boolean getJMSRedelivered(Message message) {
-        if (message == null) {
-            return null;
-        }
-
         try {
             return message.getJMSRedelivered();
         } catch (Exception e) {
@@ -332,28 +326,6 @@ public final class JmsMessageHelper {
         }
 
         return null;
-    }
-
-    /**
-     * For a given message, evaluates what is the redelivery state for it and gives the appropriate {@link MessageTrait}
-     * for that redelivery state
-     *
-     * @param  message the message to evalute
-     * @return         The appropriate MessageTrait for the redelivery state (one of MessageTrait.UNDEFINED_REDELIVERY,
-     *                 MessageTrait.IS_REDELIVERY or MessageTrait.NON_REDELIVERY).
-     */
-    public static RedeliveryTraitPayload evalRedeliveryMessageTrait(Message message) {
-        final Boolean redelivered = JmsMessageHelper.getJMSRedelivered(message);
-
-        if (redelivered == null) {
-            return RedeliveryTraitPayload.UNDEFINED_REDELIVERY;
-        }
-
-        if (Boolean.TRUE.equals(redelivered)) {
-            return RedeliveryTraitPayload.IS_REDELIVERY;
-        }
-
-        return RedeliveryTraitPayload.NON_REDELIVERY;
     }
 
     /**
@@ -408,6 +380,7 @@ public final class JmsMessageHelper {
 
         if (mode != null) {
             message.setJMSDeliveryMode(mode);
+            message.setIntProperty(JmsConstants.JMS_DELIVERY_MODE, mode);
         }
     }
 
@@ -435,12 +408,7 @@ public final class JmsMessageHelper {
      */
     public static String getJMSCorrelationIDAsBytes(Message message) {
         try {
-            final byte[] jmsCorrelationIDAsBytes = message.getJMSCorrelationIDAsBytes();
-            if (jmsCorrelationIDAsBytes != null) {
-                return new String(jmsCorrelationIDAsBytes);
-            }
-
-            return null;
+            return new String(message.getJMSCorrelationIDAsBytes());
         } catch (Exception e) {
             // ignore if JMS broker do not support this
         }

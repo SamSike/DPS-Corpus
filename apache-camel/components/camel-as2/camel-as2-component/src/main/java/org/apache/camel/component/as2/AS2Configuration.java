@@ -18,10 +18,6 @@ package org.apache.camel.component.as2;
 
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
-import java.time.Duration;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
 
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.component.as2.api.AS2CompressionAlgorithm;
@@ -34,6 +30,7 @@ import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
 import org.apache.camel.spi.UriPath;
+import org.apache.http.entity.ContentType;
 
 /**
  * Component configuration for AS2 component.
@@ -43,7 +40,7 @@ import org.apache.camel.spi.UriPath;
 public class AS2Configuration {
 
     @UriPath
-    @Metadata(required = true, enums = "client,server,receipt")
+    @Metadata(required = true, enums = "client,server")
     private AS2ApiName apiName;
     @UriPath
     @Metadata(required = true)
@@ -58,7 +55,7 @@ public class AS2Configuration {
     private String serverFqdn = "camel.apache.org";
     @UriParam
     private String targetHostname;
-    @UriParam(defaultValue = "80")
+    @UriParam
     private Integer targetPortNumber = 80;
     @UriParam(defaultValue = "camel.apache.org")
     private String clientFqdn = "camel.apache.org";
@@ -66,10 +63,8 @@ public class AS2Configuration {
     private Integer serverPortNumber;
     @UriParam(defaultValue = "/")
     private String requestUri = "/";
-    @UriParam(enums = "application/edifact,application/edi-x12,application/edi-consent,application/xml")
-    private String ediMessageType;
-    @UriParam(defaultValue = "us-ascii")
-    private String ediMessageCharset;
+    @UriParam
+    private ContentType ediMessageType;
     @UriParam
     private String ediMessageTransferEncoding;
     @UriParam
@@ -82,59 +77,28 @@ public class AS2Configuration {
     private String as2From;
     @UriParam
     private String as2To;
-    @UriParam(label = "security")
+    @UriParam
     private AS2SignatureAlgorithm signingAlgorithm;
-    @UriParam(label = "security")
+    @UriParam
     private Certificate[] signingCertificateChain;
-    @UriParam(label = "security")
+    @UriParam
     private PrivateKey signingPrivateKey;
     @UriParam
     private AS2CompressionAlgorithm compressionAlgorithm;
     @UriParam
     private String dispositionNotificationTo;
-    @UriParam(label = "security")
-    private String signedReceiptMicAlgorithms;
-    @UriParam(label = "security")
+    @UriParam
+    private String[] signedReceiptMicAlgorithms;
+    @UriParam
     private AS2EncryptionAlgorithm encryptingAlgorithm;
-    @UriParam(label = "security")
+    @UriParam
     private Certificate[] encryptingCertificateChain;
-    @UriParam(label = "security")
+    @UriParam
     private PrivateKey decryptingPrivateKey;
     @UriParam
     private String mdnMessageTemplate;
     @UriParam
     private String attachedFileName;
-    @UriParam(defaultValue = "5s")
-    private Duration httpSocketTimeout = Duration.ofSeconds(5);
-    @UriParam(defaultValue = "5s")
-    private Duration httpConnectionTimeout = Duration.ofSeconds(5);
-    @UriParam(defaultValue = "5")
-    private Integer httpConnectionPoolSize = 5;
-    @UriParam(defaultValue = "15m")
-    private Duration httpConnectionPoolTtl = Duration.ofMinutes(15);
-    @UriParam(label = "security")
-    private Certificate[] validateSigningCertificateChain;
-    @UriParam(label = "security")
-    private SSLContext sslContext;
-    // If you use localhost-based AS2 server, you don't need to specify a hostnameVerifier
-    @UriParam(label = "security")
-    private HostnameVerifier hostnameVerifier;
-    @UriParam
-    private Integer asyncMdnPortNumber;
-    @UriParam
-    private String receiptDeliveryOption;
-    @UriParam(label = "security", secret = true)
-    private String userName;
-    @UriParam(label = "security", secret = true)
-    private String password;
-    @UriParam(label = "security", secret = true)
-    private String accessToken;
-    @UriParam(label = "security", secret = true)
-    private String mdnUserName;
-    @UriParam(label = "security", secret = true)
-    private String mdnPassword;
-    @UriParam(label = "security", secret = true)
-    private String mdnAccessToken;
 
     public AS2ApiName getApiName() {
         return apiName;
@@ -271,27 +235,15 @@ public class AS2Configuration {
         this.requestUri = requestUri;
     }
 
-    public String getEdiMessageType() {
+    public ContentType getEdiMessageType() {
         return ediMessageType;
     }
 
     /**
-     * The content type of EDI message. One of application/edifact, application/edi-x12, application/edi-consent,
-     * application/xml
+     * The content type of EDI message. One of application/edifact, application/edi-x12, application/edi-consent
      */
-    public void setEdiMessageType(String ediMessageType) {
+    public void setEdiMessageType(ContentType ediMessageType) {
         this.ediMessageType = ediMessageType;
-    }
-
-    public String getEdiMessageCharset() {
-        return ediMessageCharset;
-    }
-
-    /**
-     * The charset of the content type of EDI message.
-     */
-    public void setEdiMessageCharset(String ediMessageCharset) {
-        this.ediMessageCharset = ediMessageCharset;
     }
 
     public String getEdiMessageTransferEncoding() {
@@ -411,22 +363,22 @@ public class AS2Configuration {
 
     /**
      * The value of the Disposition-Notification-To header.
-     *
+     * 
      * Assigning a value to this parameter requests a message disposition notification (MDN) for the AS2 message.
      */
     public void setDispositionNotificationTo(String dispositionNotificationTo) {
         this.dispositionNotificationTo = dispositionNotificationTo;
     }
 
-    public String getSignedReceiptMicAlgorithms() {
+    public String[] getSignedReceiptMicAlgorithms() {
         return signedReceiptMicAlgorithms;
     }
 
     /**
      * The list of algorithms, in order of preference, requested to generate a message integrity check (MIC) returned in
-     * message disposition notification (MDN). Multiple algorithms can be separated by comma.
+     * message dispostion notification (MDN)
      */
-    public void setSignedReceiptMicAlgorithms(String signedReceiptMicAlgorithms) {
+    public void setSignedReceiptMicAlgorithms(String[] signedReceiptMicAlgorithms) {
         this.signedReceiptMicAlgorithms = signedReceiptMicAlgorithms;
     }
 
@@ -483,174 +435,5 @@ public class AS2Configuration {
      */
     public void setAttachedFileName(String attachedFileName) {
         this.attachedFileName = attachedFileName;
-    }
-
-    public Duration getHttpSocketTimeout() {
-        return httpSocketTimeout;
-    }
-
-    /**
-     * The timeout of the underlying http socket (client only)
-     */
-    public void setHttpSocketTimeout(Duration httpSocketTimeout) {
-        this.httpSocketTimeout = httpSocketTimeout;
-    }
-
-    public Duration getHttpConnectionTimeout() {
-        return httpConnectionTimeout;
-    }
-
-    /**
-     * The timeout of the http connection (client only)
-     */
-    public void setHttpConnectionTimeout(Duration httpConnectionTimeout) {
-        this.httpConnectionTimeout = httpConnectionTimeout;
-    }
-
-    public Integer getHttpConnectionPoolSize() {
-        return httpConnectionPoolSize;
-    }
-
-    /**
-     * The maximum size of the connection pool for http connections (client only)
-     */
-    public void setHttpConnectionPoolSize(Integer httpConnectionPoolSize) {
-        this.httpConnectionPoolSize = httpConnectionPoolSize;
-    }
-
-    public Duration getHttpConnectionPoolTtl() {
-        return httpConnectionPoolTtl;
-    }
-
-    /**
-     * The time to live for connections in the connection pool (client only)
-     */
-    public void setHttpConnectionPoolTtl(Duration httpConnectionPoolTtl) {
-        this.httpConnectionPoolTtl = httpConnectionPoolTtl;
-    }
-
-    public Certificate[] getValidateSigningCertificateChain() {
-        return validateSigningCertificateChain;
-    }
-
-    /**
-     * Certificates to validate the message's signature against. If not supplied, validation will not take place.
-     * Server: validates the received message. Client: not yet implemented, should validate the MDN
-     */
-    public void setValidateSigningCertificateChain(Certificate[] validateSigningCertificateChain) {
-        this.validateSigningCertificateChain = validateSigningCertificateChain;
-    }
-
-    public SSLContext getSslContext() {
-        return sslContext;
-    }
-
-    /**
-     * Set SSL context for connection to remote server.
-     */
-    public void setSslContext(SSLContext sslContext) {
-        this.sslContext = sslContext;
-    }
-
-    public HostnameVerifier getHostnameVerifier() {
-        return hostnameVerifier;
-    }
-
-    /**
-     * Set hostname verifier for SSL session.
-     */
-    public void setHostnameVerifier(HostnameVerifier hostnameVerifier) {
-        this.hostnameVerifier = hostnameVerifier;
-    }
-
-    public Integer getAsyncMdnPortNumber() {
-        return asyncMdnPortNumber;
-    }
-
-    /**
-     * The port number of asynchronous MDN server.
-     */
-    public void setAsyncMdnPortNumber(Integer asyncMdnPortNumber) {
-        this.asyncMdnPortNumber = asyncMdnPortNumber;
-    }
-
-    public String getReceiptDeliveryOption() {
-        return receiptDeliveryOption;
-    }
-
-    /**
-     * The return URL that the message receiver should send an asynchronous MDN to. If not present the receipt is
-     * synchronous. (Client only)
-     */
-    public void setReceiptDeliveryOption(String receiptDeliveryOption) {
-        this.receiptDeliveryOption = receiptDeliveryOption;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    /**
-     * The user-name that is used by the client for basic authentication. If options for basic authentication and bearer
-     * authentication are both set then basic authentication takes precedence.
-     */
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    /**
-     * The password that is used by the client for basic authentication.
-     */
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    /**
-     * The access token that is used by the client for bearer authentication.
-     */
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    public String getMdnUserName() {
-        return mdnUserName;
-    }
-
-    /**
-     * The user-name that is used by the server for basic authentication when it sends an async MDN. If options for
-     * basic authentication and bearer authentication are both set then basic authentication takes precedence.
-     */
-    public void setMdnUserName(String mdnUserName) {
-        this.mdnUserName = mdnUserName;
-    }
-
-    public String getMdnPassword() {
-        return mdnPassword;
-    }
-
-    /**
-     * The password that is used by the server for basic authentication when it sends an async MDN.
-     */
-    public void setMdnPassword(String mdnPassword) {
-        this.mdnPassword = mdnPassword;
-    }
-
-    public String getMdnAccessToken() {
-        return mdnAccessToken;
-    }
-
-    /**
-     * The access token that is used by the server when it sends an async MDN.
-     */
-    public void setMdnAccessToken(String accessToken) {
-        this.mdnAccessToken = accessToken;
     }
 }

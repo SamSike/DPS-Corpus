@@ -26,8 +26,10 @@ import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http.handler.DrinkValidationHandler;
 import org.apache.camel.util.StopWatch;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -42,28 +44,33 @@ public class HttpProducerLoadManualIT extends BaseHttpTest {
 
     private HttpServer localServer;
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+    public void setUp() throws Exception {
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext())
-                .register("/echo", new DrinkValidationHandler(GET.name(), null, null, "myHeader")).create();
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext())
+                .registerHandler("/echo", new DrinkValidationHandler(GET.name(), null, null, "myHeader")).create();
         localServer.start();
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() throws Exception {
+    public void tearDown() throws Exception {
+        super.tearDown();
+
         if (localServer != null) {
             localServer.stop();
         }
     }
 
     @Override
-    protected RoutesBuilder createRouteBuilder() {
+    protected RoutesBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:echo")
                         .to("http://localhost:" + localServer.getLocalPort()
                             + "/echo?throwExceptionOnFailure=false");

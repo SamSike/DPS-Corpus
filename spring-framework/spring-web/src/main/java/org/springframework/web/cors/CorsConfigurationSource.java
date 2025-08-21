@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@
 package org.springframework.web.cors;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Interface to be implemented by classes (usually HTTP request handlers) that
@@ -32,6 +33,7 @@ public interface CorsConfigurationSource {
 	 * Return a {@link CorsConfiguration} based on the incoming request.
 	 * @return the associated {@link CorsConfiguration}, or {@code null} if none
 	 */
-	@Nullable CorsConfiguration getCorsConfiguration(HttpServletRequest request);
+	@Nullable
+	CorsConfiguration getCorsConfiguration(HttpServletRequest request);
 
 }

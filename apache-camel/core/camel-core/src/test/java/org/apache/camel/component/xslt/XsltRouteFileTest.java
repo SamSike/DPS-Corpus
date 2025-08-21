@@ -24,10 +24,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class XsltRouteFileTest extends XsltRouteTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("xslt:file:src/test/resources/org/apache/camel/component/xslt/transform.xsl")
                         .multicast().bean("testBean").to("mock:result");
             }

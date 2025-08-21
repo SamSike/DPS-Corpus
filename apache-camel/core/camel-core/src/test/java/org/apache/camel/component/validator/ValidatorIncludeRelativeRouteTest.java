@@ -43,10 +43,10 @@ public class ValidatorIncludeRelativeRouteTest extends ValidatorIncludeRouteTest
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").doTry().to("validator:org/apache/camel/component/validator/xsds/person.xsd")
                         .to("mock:valid").doCatch(ValidationException.class)
                         .to("mock:invalid").doFinally().to("mock:finally").end();

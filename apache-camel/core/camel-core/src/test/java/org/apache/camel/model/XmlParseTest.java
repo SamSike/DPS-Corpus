@@ -159,24 +159,6 @@ public class XmlParseTest extends XmlTestSupport {
     }
 
     @Test
-    public void testParseConvertHeaderXml() throws Exception {
-        RouteDefinition route = assertOneRoute("convertHeader.xml");
-        assertFrom(route, "seda:a");
-        ConvertHeaderDefinition node = assertOneProcessorInstanceOf(ConvertHeaderDefinition.class, route);
-        assertEquals("foo", node.getName());
-        assertEquals("java.lang.Integer", node.getType());
-    }
-
-    @Test
-    public void testParseConvertVariableXml() throws Exception {
-        RouteDefinition route = assertOneRoute("convertVariable.xml");
-        assertFrom(route, "seda:a");
-        ConvertVariableDefinition node = assertOneProcessorInstanceOf(ConvertVariableDefinition.class, route);
-        assertEquals("foo", node.getName());
-        assertEquals("java.lang.Integer", node.getType());
-    }
-
-    @Test
     public void testParseRoutingSlipXml() throws Exception {
         RouteDefinition route = assertOneRoute("routingSlip.xml");
         assertFrom(route, "seda:a");
@@ -289,6 +271,12 @@ public class XmlParseTest extends XmlTestSupport {
     }
 
     @Test
+    public void testParseXStreamDataFormat() throws Exception {
+        RouteDefinition route = assertOneRoute("routeWithXStreamDataFormat.xml");
+        assertFrom(route, "seda:a");
+    }
+
+    @Test
     public void testParseXMLSecurityDataFormat() throws Exception {
         RouteDefinition route = assertOneRoute("routeWithXMLSecurityDataFormat.xml");
         assertFrom(route, "seda:a");
@@ -391,7 +379,7 @@ public class XmlParseTest extends XmlTestSupport {
         assertEquals(uri, from.getUri(), "From URI");
     }
 
-    protected void assertChildTo(String message, OutputNode route, String uri) {
+    protected void assertChildTo(String message, ProcessorDefinition<?> route, String uri) {
         ProcessorDefinition<?> processor = assertOneElement(route.getOutputs());
         ToDefinition value = assertIsInstanceOf(ToDefinition.class, processor);
         String text = message + "To URI";
@@ -406,7 +394,7 @@ public class XmlParseTest extends XmlTestSupport {
         assertEquals(uri, value.getUri(), text);
     }
 
-    protected void assertChildTo(OutputNode route, String... uris) {
+    protected void assertChildTo(ProcessorDefinition<?> route, String... uris) {
         List<ProcessorDefinition<?>> list = assertListSize(route.getOutputs(), uris.length);
         int idx = 0;
         for (String uri : uris) {
@@ -414,17 +402,17 @@ public class XmlParseTest extends XmlTestSupport {
         }
     }
 
-    protected void assertChildTo(OutputNode route, String uri, int toIdx) {
+    protected void assertChildTo(ProcessorDefinition<?> route, String uri, int toIdx) {
         List<ProcessorDefinition<?>> list = route.getOutputs();
         assertTo("to and idx=" + toIdx, list.get(toIdx), uri);
     }
 
-    protected <T> T assertOneProcessorInstanceOf(Class<T> type, OutputNode route) {
+    protected <T> T assertOneProcessorInstanceOf(Class<T> type, ProcessorDefinition<?> route) {
         ProcessorDefinition<?> processor = assertOneElement(route.getOutputs());
         return assertIsInstanceOf(type, processor);
     }
 
-    protected <T> T assertNthProcessorInstanceOf(Class<T> type, OutputNode route, int index) {
+    protected <T> T assertNthProcessorInstanceOf(Class<T> type, ProcessorDefinition<?> route, int index) {
         ProcessorDefinition<?> processor = route.getOutputs().get(index);
         return assertIsInstanceOf(type, processor);
     }

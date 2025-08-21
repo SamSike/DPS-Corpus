@@ -23,34 +23,37 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class XsltFeatureRouteTest extends ContextTestSupport {
 
     @Test
-    public void testSendMessage() {
+    public void testSendMessage() throws Exception {
         String message = "<hello/>";
         sendXmlMessage("direct:start1", message);
         sendXmlMessage("direct:start2", message);
     }
 
     public void sendXmlMessage(String uri, String message) {
-        Exception ex = assertThrows(Exception.class, () -> template.sendBody("direct:start1", message),
-                "Expected an exception here");
+        try {
+            template.sendBody("direct:start1", message);
+            fail("expect an exception here");
+        } catch (Exception ex) {
+            // expect an exception here
+            boolean b1 = ex instanceof CamelExecutionException;
+            assertTrue(b1, "Get a wrong exception");
+            boolean b = ex.getCause() instanceof TransformerException;
+            assertTrue(b, "Get a wrong exception cause");
+        }
 
-        // expect an exception here
-        boolean b1 = ex instanceof CamelExecutionException;
-        assertTrue(b1, "Get a wrong exception");
-        boolean b = ex.getCause() instanceof TransformerException;
-        assertTrue(b, "Get a wrong exception cause");
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start1").to("xslt:org/apache/camel/component/xslt/transform_text_imported.xsl").to("mock:result");
 
                 from("direct:start2").to("xslt:org/apache/camel/component/xslt/transform_text.xsl").to("mock:result");

@@ -57,20 +57,19 @@ public abstract class AbstractApiConsumer<E extends Enum<E> & ApiName, T>
     @Override
     protected int poll() throws Exception {
         // invoke the consumer method
-        final Map<String, Object> args = new HashMap<>(endpoint.getEndpointProperties());
+        final Map<String, Object> args = new HashMap<>();
+        args.putAll(endpoint.getEndpointProperties());
 
         // let the endpoint and the Consumer intercept properties
         endpoint.interceptProperties(args);
         interceptProperties(args);
 
         try {
+
             Object result = doInvokeMethod(args);
-
-            // okay we have some response so lets mark the consumer as ready
-            forceConsumerAsReady();
-
             return ApiConsumerHelper.getResultsProcessed(this, result, isSplitResult());
-        } catch (Exception t) {
+
+        } catch (Throwable t) {
             throw RuntimeCamelException.wrapRuntimeCamelException(t);
         }
     }
@@ -88,7 +87,7 @@ public abstract class AbstractApiConsumer<E extends Enum<E> & ApiName, T>
     /**
      * Invoke the API method. This method can be overridden, for example to synchronize API calls for thread-unsafe
      * proxies. Derived class MUST call super.doInvokeMethod() to invoke the API method.
-     *
+     * 
      * @param  args method arguments from endpoint parameters.
      * @return      method invocation result.
      */

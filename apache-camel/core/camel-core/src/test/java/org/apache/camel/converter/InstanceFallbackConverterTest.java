@@ -27,9 +27,7 @@ import org.apache.camel.NoTypeConversionAvailableException;
 import org.apache.camel.support.DefaultExchange;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class InstanceFallbackConverterTest extends ContextTestSupport {
 
@@ -39,7 +37,7 @@ public class InstanceFallbackConverterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testInstanceFallbackConverter() {
+    public void testInstanceFallbackConverter() throws Exception {
         Exchange exchange = new DefaultExchange(context);
         Currency cur = Currency.getInstance(Locale.US);
 
@@ -57,16 +55,19 @@ public class InstanceFallbackConverterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testInstanceFallbackMandatoryFailed() {
+    public void testInstanceFallbackMandatoryFailed() throws Exception {
         Exchange exchange = new DefaultExchange(context);
 
-        assertThrows(NoTypeConversionAvailableException.class,
-                () -> context.getTypeConverter().mandatoryConvertTo(Date.class, exchange, new Timestamp(0)),
-                "Should have thrown an exception");
+        try {
+            context.getTypeConverter().mandatoryConvertTo(Date.class, exchange, new Timestamp(0));
+            fail("Should have thrown an exception");
+        } catch (NoTypeConversionAvailableException e) {
+            // expected
+        }
     }
 
     @Test
-    public void testInstanceFallbackFailed() {
+    public void testInstanceFallbackFailed() throws Exception {
         Exchange exchange = new DefaultExchange(context);
 
         Date out = context.getTypeConverter().convertTo(Date.class, exchange, new Timestamp(0));

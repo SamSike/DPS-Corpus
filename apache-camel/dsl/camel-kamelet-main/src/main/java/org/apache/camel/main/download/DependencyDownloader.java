@@ -16,13 +16,8 @@
  */
 package org.apache.camel.main.download;
 
-import java.util.Collection;
-import java.util.List;
-
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.StaticService;
-import org.apache.camel.tooling.maven.MavenArtifact;
-import org.apache.camel.tooling.maven.RepositoryResolver;
 
 /**
  * To download dependencies at runtime.
@@ -49,22 +44,12 @@ public interface DependencyDownloader extends CamelContextAware, StaticService {
      */
     void addArtifactDownloadListener(ArtifactDownloadListener downloadListener);
 
-    String getRepositories();
+    String getRepos();
 
     /**
      * Additional maven repositories for download on-demand (Use commas to separate multiple repositories).
      */
-    void setRepositories(String repositories);
-
-    /**
-     * Whether downloading from remote Maven repositories is enabled
-     */
-    void setDownload(boolean download);
-
-    /**
-     * Whether downloading from remote Maven repositories is enabled
-     */
-    boolean isDownload();
+    void setRepos(String repos);
 
     boolean isFresh();
 
@@ -88,36 +73,6 @@ public interface DependencyDownloader extends CamelContextAware, StaticService {
     void setMavenSettingsSecurity(String mavenSettingsSecurity);
 
     /**
-     * Whether downloading JARs from Maven Central repository is enabled
-     */
-    boolean isMavenCentralEnabled();
-
-    /**
-     * Whether downloading JARs from Maven Central repository is enabled
-     */
-    void setMavenCentralEnabled(boolean mavenCentralEnabled);
-
-    /**
-     * Whether downloading JARs from ASF Maven Snapshot repository is enabled
-     */
-    boolean isMavenApacheSnapshotEnabled();
-
-    /**
-     * Whether downloading JARs from ASF Maven Snapshot repository is enabled
-     */
-    void setMavenApacheSnapshotEnabled(boolean mavenApacheSnapshotEnabled);
-
-    /**
-     * Downloads the dependency incl transitive dependencies
-     *
-     * @param parentGav  maven parent GAV
-     * @param groupId    maven group id
-     * @param artifactId maven artifact id
-     * @param version    maven version
-     */
-    void downloadDependencyWithParent(String parentGav, String groupId, String artifactId, String version);
-
-    /**
      * Downloads the dependency incl transitive dependencies
      *
      * @param groupId    maven group id
@@ -125,16 +80,6 @@ public interface DependencyDownloader extends CamelContextAware, StaticService {
      * @param version    maven version
      */
     void downloadDependency(String groupId, String artifactId, String version);
-
-    /**
-     * Downloads the dependency incl transitive dependencies
-     *
-     * @param groupId    maven group id
-     * @param artifactId maven artifact id
-     * @param version    maven version
-     * @param extraRepos additional remote maven repositories to use when downloading
-     */
-    void downloadDependency(String groupId, String artifactId, String version, String extraRepos);
 
     /**
      * Downloads the dependency
@@ -166,29 +111,6 @@ public interface DependencyDownloader extends CamelContextAware, StaticService {
     MavenArtifact downloadArtifact(String groupId, String artifactId, String version);
 
     /**
-     * Downloads maven artifact (can also include transitive dependencies).
-     *
-     * @param  groupId      maven group id
-     * @param  artifactId   maven artifact id
-     * @param  version      maven version
-     * @param  transitively whether to include transitive dependencies
-     * @return              the artifacts, or null if none found
-     */
-    List<MavenArtifact> downloadArtifacts(String groupId, String artifactId, String version, boolean transitively);
-
-    /**
-     * Resolves the available versions for the given maven artifact
-     *
-     * @param  groupId        maven group id
-     * @param  artifactId     maven artifact id
-     * @param  minimumVersion optional minimum version to avoid resolving too old releases
-     * @param  repo           to use specific maven repository instead of maven central (used if repo is {@code null})
-     * @return                list of versions of the given artifact (0=camel-core version, 1=runtime version, such as
-     *                        spring-boot or quarkus)
-     */
-    List<String[]> resolveAvailableVersions(String groupId, String artifactId, String minimumVersion, String repo);
-
-    /**
      * Checks whether the dependency is already on the classpath
      *
      * @param  groupId    maven group id
@@ -206,21 +128,11 @@ public interface DependencyDownloader extends CamelContextAware, StaticService {
     void onLoadingKamelet(String name);
 
     /**
-     * Gets download record for a given artifact
+     * When a modeline is being loaded
      *
-     * @return download record (if any) or <tt>null</tt> if artifact was not downloaded, but could have been resolved
-     *         from local disk
+     * @param key   modeline key
+     * @param value modeline value
      */
-    DownloadRecord getDownloadState(String groupId, String artifactId, String version);
-
-    /**
-     * Gets the records for the downloaded artifacts
-     */
-    Collection<DownloadRecord> downloadRecords();
-
-    /**
-     * Gets the {@link RepositoryResolver}
-     */
-    RepositoryResolver getRepositoryResolver();
+    void onLoadingModeline(String key, String value);
 
 }

@@ -27,52 +27,19 @@ import org.apache.camel.Processor;
 import org.apache.camel.component.knative.spi.KnativeConsumerFactory;
 import org.apache.camel.component.knative.spi.KnativeResource;
 import org.apache.camel.component.knative.spi.KnativeTransportConfiguration;
-import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.support.service.ServiceSupport;
 
 public class KnativeHttpConsumerFactory extends ServiceSupport implements CamelContextAware, KnativeConsumerFactory {
     private Router router;
     private CamelContext camelContext;
-    private KnativeHttpServiceOptions serviceOptions;
-
-    public KnativeHttpConsumerFactory() {
-    }
-
-    public KnativeHttpConsumerFactory(CamelContext camelContext) {
-        this.camelContext = camelContext;
-    }
-
-    @Override
-    protected void doInit() throws Exception {
-        if (serviceOptions == null) {
-            KnativeHttpSupport.lookupServiceOptions(camelContext)
-                    .ifPresent(options -> serviceOptions = options);
-        }
-    }
 
     public Router getRouter() {
         return router;
     }
 
     public KnativeHttpConsumerFactory setRouter(Router router) {
-        if (ServiceHelper.isStarted(this)) {
-            throw new IllegalArgumentException("Can't set the Router instance after the service has been started");
-        }
-
         this.router = router;
         return this;
-    }
-
-    public KnativeHttpServiceOptions getServiceOptions() {
-        return serviceOptions;
-    }
-
-    public void setServiceOptions(KnativeHttpServiceOptions serviceOptions) {
-        if (ServiceHelper.isStarted(this)) {
-            throw new IllegalArgumentException("Can't set the service options after the service has been started");
-        }
-
-        this.serviceOptions = serviceOptions;
     }
 
     @Override
@@ -88,27 +55,14 @@ public class KnativeHttpConsumerFactory extends ServiceSupport implements CamelC
     @Override
     public Consumer createConsumer(
             Endpoint endpoint, KnativeTransportConfiguration config, KnativeResource service, Processor processor) {
+        Objects.requireNonNull(this.router, "router");
+
         return new KnativeHttpConsumer(
                 config,
                 endpoint,
                 service,
-                this::lookupRouter,
-                serviceOptions,
+                this.router,
                 processor);
-    }
-
-    /**
-     * Resolve router from given Camel context if not explicitly set. KnativeHttpConsumer implementation usually calls
-     * this method to retrieve the router during service startup phase.
-     */
-    private Router lookupRouter() {
-        if (router == null) {
-            router = KnativeHttpSupport.lookupRouter(camelContext);
-        }
-
-        Objects.requireNonNull(router, "router");
-
-        return router;
     }
 
 }

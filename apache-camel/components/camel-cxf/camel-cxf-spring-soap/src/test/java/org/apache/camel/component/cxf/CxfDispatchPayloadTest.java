@@ -17,7 +17,6 @@
 package org.apache.camel.component.cxf;
 
 import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -80,7 +79,7 @@ public class CxfDispatchPayloadTest extends CxfDispatchTestSupport {
                         name, exchange);
                 exchange.getIn().setBody(request, CxfPayload.class);
                 exchange.getIn().setHeader(CxfConstants.OPERATION_NAMESPACE, DISPATCH_NS);
-                // set the operation for oneway; otherwise use the default operation
+                // set the operation for oneway; otherwise use the default operation                
                 if (oneway) {
                     exchange.getIn().setHeader(CxfConstants.OPERATION_NAME, INVOKE_ONEWAY_NAME);
                 }
@@ -94,7 +93,7 @@ public class CxfDispatchPayloadTest extends CxfDispatchTestSupport {
         CxfPayload<T> payload = null;
         try {
             Document doc = getDocumentBuilderFactory().newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(payloadstr.getBytes(StandardCharsets.UTF_8)));
+                    .parse(new ByteArrayInputStream(payloadstr.getBytes("utf-8")));
             payload = CxfPayloadConverter.documentToCxfPayload(doc, exchange);
         } catch (Exception e) {
             // ignore and let it fail

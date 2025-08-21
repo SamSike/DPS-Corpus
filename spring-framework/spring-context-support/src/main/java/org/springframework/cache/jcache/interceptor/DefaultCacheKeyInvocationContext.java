@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import java.lang.annotation.Annotation;
 import javax.cache.annotation.CacheInvocationParameter;
 import javax.cache.annotation.CacheKeyInvocationContext;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * The default {@link CacheKeyInvocationContext} implementation.
@@ -35,14 +35,15 @@ class DefaultCacheKeyInvocationContext<A extends Annotation> extends DefaultCach
 
 	private final CacheInvocationParameter[] keyParameters;
 
-	private final @Nullable CacheInvocationParameter valueParameter;
+	@Nullable
+	private final CacheInvocationParameter valueParameter;
 
 
-	public DefaultCacheKeyInvocationContext(AbstractJCacheKeyOperation<A> operation, Object target, @Nullable Object[] args) {
+	public DefaultCacheKeyInvocationContext(AbstractJCacheKeyOperation<A> operation, Object target, Object[] args) {
 		super(operation, target, args);
 		this.keyParameters = operation.getKeyParameters(args);
-		if (operation instanceof CachePutOperation cachePutOperation) {
-			this.valueParameter = cachePutOperation.getValueParameter(args);
+		if (operation instanceof CachePutOperation) {
+			this.valueParameter = ((CachePutOperation) operation).getValueParameter(args);
 		}
 		else {
 			this.valueParameter = null;
@@ -56,7 +57,8 @@ class DefaultCacheKeyInvocationContext<A extends Annotation> extends DefaultCach
 	}
 
 	@Override
-	public @Nullable CacheInvocationParameter getValueParameter() {
+	@Nullable
+	public CacheInvocationParameter getValueParameter() {
 		return this.valueParameter;
 	}
 

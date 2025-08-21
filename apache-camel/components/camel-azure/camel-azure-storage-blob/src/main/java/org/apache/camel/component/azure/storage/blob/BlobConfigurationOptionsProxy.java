@@ -63,7 +63,7 @@ public class BlobConfigurationOptionsProxy {
     }
 
     public BlobListDetails getBlobListDetails(final Exchange exchange) {
-        return getOption(BlobExchangeHeaders::getBlobListDetailsFromHeaders, BlobListDetails::new, exchange);
+        return getOption(BlobExchangeHeaders::getBlobListDetailsFromHeaders, () -> null, exchange);
     }
 
     public String getPrefix(final Exchange exchange) {
@@ -86,6 +86,12 @@ public class BlobConfigurationOptionsProxy {
         ListBlobsOptions blobsOptions = getListBlobsOptions(exchange);
 
         if (blobsOptions == null) {
+            blobsOptions = new ListBlobsOptions();
+        }
+
+        if (!ObjectHelper.isEmpty(blobsOptions)) {
+            return blobsOptions;
+        } else {
             blobsOptions = new ListBlobsOptions();
         }
 
@@ -210,15 +216,6 @@ public class BlobConfigurationOptionsProxy {
 
     public Context getChangeFeedContext(final Exchange exchange) {
         return getOption(BlobExchangeHeaders::getChangeFeedContextFromHeaders, configuration::getChangeFeedContext, exchange);
-    }
-
-    public boolean getLeaseBlob(final Exchange exchange) {
-        return getOption(BlobExchangeHeaders::getLeaseBlobFromHeaders, configuration::isLeaseBlob, exchange);
-    }
-
-    public Integer getLeaseDurationInSeconds(final Exchange exchange) {
-        return getOption(BlobExchangeHeaders::getLeaseDurationInSecondsFromHeaders, configuration::getLeaseDurationInSeconds,
-                exchange);
     }
 
     public BlobConfiguration getConfiguration() {

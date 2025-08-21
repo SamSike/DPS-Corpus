@@ -16,13 +16,11 @@
  */
 package org.apache.camel.management;
 
-import java.io.InputStream;
 import java.util.Set;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.apache.camel.CamelContext;
 import org.apache.camel.StreamCache;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
@@ -39,12 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 @DisabledOnOs(OS.AIX)
 public class ManagedStreamCachingStrategyTest extends ManagementTestSupport {
-    @Override
-    protected CamelContext createCamelContext() throws Exception {
-        CamelContext camelContext = super.createCamelContext();
-        camelContext.getStreamCachingStrategy().setAllowClasses(InputStream.class);
-        return camelContext;
-    }
 
     @Test
     public void testStreamCachingStrategy() throws Exception {
@@ -99,12 +91,12 @@ public class ManagedStreamCachingStrategyTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 DefaultCamelContext dcc = (DefaultCamelContext) context;
-                dcc.getCamelContextExtension().setName("myCamel");
+                dcc.setName("myCamel");
 
                 context.setStreamCaching(true);
                 context.getStreamCachingStrategy().setSpoolEnabled(true);

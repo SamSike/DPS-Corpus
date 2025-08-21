@@ -136,7 +136,9 @@ public class NotificationXmlFormatter extends ServiceSupport {
             marshaller.marshal(bean, sw);
 
             return sw.toString();
-        } catch (DatatypeConfigurationException | JAXBException e) {
+        } catch (JAXBException e) {
+            throw new NotificationFormatException(e);
+        } catch (DatatypeConfigurationException e) {
             throw new NotificationFormatException(e);
         }
     }

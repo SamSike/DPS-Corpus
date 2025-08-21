@@ -25,7 +25,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.camel.Exchange;
 import org.apache.camel.FailedToStartRouteException;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.http.common.HttpMessage;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -115,7 +114,7 @@ public class HttpClientRouteTest extends ServletCamelRouterTestSupport {
 
     @Test
     public void testCreateSerlvetEndpointProducer() throws Exception {
-        assumeTrue(testConfiguration().autoStartContext(), "don't test it with web.xml configure");
+        assumeTrue(startCamelContext, "don't test it with web.xml configure");
         try {
             context.addRoutes(new RouteBuilder() {
                 @Override
@@ -161,10 +160,11 @@ public class HttpClientRouteTest extends ServletCamelRouterTestSupport {
             });
 
             from("servlet:testConverter?matchOnUriPrefix=true")
+                    .convertBodyTo(String.class)
                     .process(exchange -> {
-                        HttpServletRequest request = exchange.getIn(HttpMessage.class).getRequest();
+                        HttpServletRequest request = exchange.getIn(HttpServletRequest.class);
                         assertNotNull(request, "We should get request object here");
-                        HttpServletResponse response = exchange.getIn(HttpMessage.class).getResponse();
+                        HttpServletResponse response = exchange.getIn(HttpServletResponse.class);
                         assertNotNull(response, "We should get response object here");
                         String s = exchange.getIn().getBody(String.class);
                         assertEquals("<request> hello world </request>", s);

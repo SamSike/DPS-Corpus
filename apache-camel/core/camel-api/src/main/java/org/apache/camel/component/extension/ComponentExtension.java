@@ -21,7 +21,6 @@ package org.apache.camel.component.extension;
  * <p/>
  * An extension is a feature provided by the component such as ComponentVerifier.
  */
-@Deprecated(since = "4.11.0")
 public interface ComponentExtension {
 
     /**

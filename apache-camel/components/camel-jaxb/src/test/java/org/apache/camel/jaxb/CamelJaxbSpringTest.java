@@ -26,7 +26,7 @@ public class CamelJaxbSpringTest extends CamelJaxbTest {
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        testConfiguration().withUseRouteBuilder(false);
+        setUseRouteBuilder(false);
         final AbstractXmlApplicationContext applicationContext
                 = new ClassPathXmlApplicationContext("org/apache/camel/jaxb/CamelJaxbTest.xml");
         setCamelContextService(new Service() {

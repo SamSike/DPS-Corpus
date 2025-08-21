@@ -19,11 +19,9 @@ package org.apache.camel.processor.aggregate.cassandra;
 import java.util.Set;
 
 import org.apache.camel.Exchange;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.cassandra.integration.BaseCassandra;
 import org.apache.camel.support.DefaultExchange;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -41,14 +39,17 @@ public class CassandraAggregationRepositoryIT extends BaseCassandra {
 
     private CassandraAggregationRepository aggregationRepository;
 
-    @BeforeEach
+    @Override
     protected void doPreSetup() throws Exception {
         aggregationRepository = new CassandraAggregationRepository(getSession());
         aggregationRepository.start();
+        super.doPreSetup();
     }
 
+    @Override
     @AfterEach
     public void tearDown() throws Exception {
+        super.tearDown();
         aggregationRepository.stop();
     }
 
@@ -203,8 +204,4 @@ public class CassandraAggregationRepositoryIT extends BaseCassandra {
         assertNull(exchange3);
     }
 
-    @Override
-    protected RouteBuilder createRouteBuilder() {
-        return null;
-    }
 }

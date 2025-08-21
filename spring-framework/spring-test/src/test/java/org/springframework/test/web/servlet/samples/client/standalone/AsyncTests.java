@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.test.web.servlet.samples.client.standalone;
 
 import java.nio.charset.StandardCharsets;
@@ -30,6 +29,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.Person;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
+import org.springframework.util.concurrent.ListenableFuture;
+import org.springframework.util.concurrent.ListenableFutureTask;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,14 +45,14 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
  *
  * @author Rossen Stoyanchev
  */
-class AsyncTests {
+public class AsyncTests {
 
 	private final WebTestClient testClient =
 			MockMvcWebTestClient.bindToController(new AsyncController()).build();
 
 
 	@Test
-	void callable() {
+	public void callable() {
 		this.testClient.get()
 				.uri("/1?callable=true")
 				.exchange()
@@ -61,7 +62,7 @@ class AsyncTests {
 	}
 
 	@Test
-	void streaming() {
+	public void streaming() {
 		this.testClient.get()
 				.uri("/1?streaming=true")
 				.exchange()
@@ -70,7 +71,7 @@ class AsyncTests {
 	}
 
 	@Test
-	void streamingSlow() {
+	public void streamingSlow() {
 		this.testClient.get()
 				.uri("/1?streamingSlow=true")
 				.exchange()
@@ -79,7 +80,7 @@ class AsyncTests {
 	}
 
 	@Test
-	void streamingJson() {
+	public void streamingJson() {
 		this.testClient.get()
 				.uri("/1?streamingJson=true")
 				.exchange()
@@ -89,7 +90,7 @@ class AsyncTests {
 	}
 
 	@Test
-	void deferredResult() {
+	public void deferredResult() {
 		this.testClient.get()
 				.uri("/1?deferredResult=true")
 				.exchange()
@@ -99,7 +100,7 @@ class AsyncTests {
 	}
 
 	@Test
-	void deferredResultWithImmediateValue() {
+	public void deferredResultWithImmediateValue() {
 		this.testClient.get()
 				.uri("/1?deferredResultWithImmediateValue=true")
 				.exchange()
@@ -109,7 +110,7 @@ class AsyncTests {
 	}
 
 	@Test
-	void deferredResultWithDelayedError() {
+	public void deferredResultWithDelayedError() {
 		this.testClient.get()
 				.uri("/1?deferredResultWithDelayedError=true")
 				.exchange()
@@ -118,7 +119,17 @@ class AsyncTests {
 	}
 
 	@Test
-	void completableFutureWithImmediateValue() {
+	public void listenableFuture() {
+		this.testClient.get()
+				.uri("/1?listenableFuture=true")
+				.exchange()
+				.expectStatus().isOk()
+				.expectHeader().contentType(MediaType.APPLICATION_JSON)
+				.expectBody().json("{\"name\":\"Joe\",\"someDouble\":0.0,\"someBoolean\":false}");
+	}
+
+	@Test
+	public void completableFutureWithImmediateValue() throws Exception {
 		this.testClient.get()
 				.uri("/1?completableFutureWithImmediateValue=true")
 				.exchange()
@@ -133,17 +144,17 @@ class AsyncTests {
 	private static class AsyncController {
 
 		@GetMapping(params = "callable")
-		Callable<Person> getCallable() {
+		public Callable<Person> getCallable() {
 			return () -> new Person("Joe");
 		}
 
 		@GetMapping(params = "streaming")
-		StreamingResponseBody getStreaming() {
+		public StreamingResponseBody getStreaming() {
 			return os -> os.write("name=Joe".getBytes(StandardCharsets.UTF_8));
 		}
 
 		@GetMapping(params = "streamingSlow")
-		StreamingResponseBody getStreamingSlow() {
+		public StreamingResponseBody getStreamingSlow() {
 			return os -> {
 				os.write("name=Joe".getBytes());
 				try {
@@ -157,34 +168,41 @@ class AsyncTests {
 		}
 
 		@GetMapping(params = "streamingJson")
-		ResponseEntity<StreamingResponseBody> getStreamingJson() {
+		public ResponseEntity<StreamingResponseBody> getStreamingJson() {
 			return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
 					.body(os -> os.write("{\"name\":\"Joe\",\"someDouble\":0.5}".getBytes(StandardCharsets.UTF_8)));
 		}
 
 		@GetMapping(params = "deferredResult")
-		DeferredResult<Person> getDeferredResult() {
+		public DeferredResult<Person> getDeferredResult() {
 			DeferredResult<Person> result = new DeferredResult<>();
 			delay(100, () -> result.setResult(new Person("Joe")));
 			return result;
 		}
 
 		@GetMapping(params = "deferredResultWithImmediateValue")
-		DeferredResult<Person> getDeferredResultWithImmediateValue() {
+		public DeferredResult<Person> getDeferredResultWithImmediateValue() {
 			DeferredResult<Person> result = new DeferredResult<>();
 			result.setResult(new Person("Joe"));
 			return result;
 		}
 
 		@GetMapping(params = "deferredResultWithDelayedError")
-		DeferredResult<Person> getDeferredResultWithDelayedError() {
+		public DeferredResult<Person> getDeferredResultWithDelayedError() {
 			DeferredResult<Person> result = new DeferredResult<>();
 			delay(100, () -> result.setErrorResult(new RuntimeException("Delayed Error")));
 			return result;
 		}
 
+		@GetMapping(params = "listenableFuture")
+		public ListenableFuture<Person> getListenableFuture() {
+			ListenableFutureTask<Person> futureTask = new ListenableFutureTask<>(() -> new Person("Joe"));
+			delay(100, futureTask);
+			return futureTask;
+		}
+
 		@GetMapping(params = "completableFutureWithImmediateValue")
-		CompletableFuture<Person> getCompletableFutureWithImmediateValue() {
+		public CompletableFuture<Person> getCompletableFutureWithImmediateValue() {
 			CompletableFuture<Person> future = new CompletableFuture<>();
 			future.complete(new Person("Joe"));
 			return future;
@@ -192,7 +210,7 @@ class AsyncTests {
 
 		@ExceptionHandler(Exception.class)
 		@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-		String errorHandler(Exception ex) {
+		public String errorHandler(Exception ex) {
 			return ex.getMessage();
 		}
 

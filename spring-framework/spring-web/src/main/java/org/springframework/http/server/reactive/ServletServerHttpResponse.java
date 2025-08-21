@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,16 @@
 package org.springframework.http.server.reactive;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
+import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.List;
 
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.AsyncEvent;
 import jakarta.servlet.AsyncListener;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.WriteListener;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Processor;
 import org.reactivestreams.Publisher;
 
@@ -35,17 +34,16 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
  * Adapt {@link ServerHttpResponse} to the Servlet {@link HttpServletResponse}.
  *
  * @author Rossen Stoyanchev
- * @author Juergen Hoeller
- * @author Brian Clozel
  * @since 5.0
  */
 class ServletServerHttpResponse extends AbstractListenerServerHttpResponse {
@@ -54,9 +52,13 @@ class ServletServerHttpResponse extends AbstractListenerServerHttpResponse {
 
 	private final ServletOutputStream outputStream;
 
-	private volatile @Nullable ResponseBodyFlushProcessor bodyFlushProcessor;
+	private final int bufferSize;
 
-	private volatile @Nullable ResponseBodyProcessor bodyProcessor;
+	@Nullable
+	private volatile ResponseBodyFlushProcessor bodyFlushProcessor;
+
+	@Nullable
+	private volatile ResponseBodyProcessor bodyProcessor;
 
 	private volatile boolean flushOnNext;
 
@@ -66,21 +68,23 @@ class ServletServerHttpResponse extends AbstractListenerServerHttpResponse {
 
 
 	public ServletServerHttpResponse(HttpServletResponse response, AsyncContext asyncContext,
-			DataBufferFactory bufferFactory, ServletServerHttpRequest request) throws IOException {
+			DataBufferFactory bufferFactory, int bufferSize, ServletServerHttpRequest request) throws IOException {
 
-		this(new HttpHeaders(), response, asyncContext, bufferFactory, request);
+		this(new HttpHeaders(), response, asyncContext, bufferFactory, bufferSize, request);
 	}
 
 	public ServletServerHttpResponse(HttpHeaders headers, HttpServletResponse response, AsyncContext asyncContext,
-			DataBufferFactory bufferFactory, ServletServerHttpRequest request) throws IOException {
+			DataBufferFactory bufferFactory, int bufferSize, ServletServerHttpRequest request) throws IOException {
 
 		super(bufferFactory, headers);
 
 		Assert.notNull(response, "HttpServletResponse must not be null");
 		Assert.notNull(bufferFactory, "DataBufferFactory must not be null");
+		Assert.isTrue(bufferSize > 0, "Buffer size must be greater than 0");
 
 		this.response = response;
 		this.outputStream = response.getOutputStream();
+		this.bufferSize = bufferSize;
 		this.request = request;
 
 		this.asyncListener = new ResponseAsyncListener();
@@ -97,16 +101,22 @@ class ServletServerHttpResponse extends AbstractListenerServerHttpResponse {
 	}
 
 	@Override
-	public HttpStatusCode getStatusCode() {
-		HttpStatusCode status = super.getStatusCode();
-		return (status != null ? status : HttpStatusCode.valueOf(this.response.getStatus()));
+	public HttpStatus getStatusCode() {
+		HttpStatus status = super.getStatusCode();
+		return (status != null ? status : HttpStatus.resolve(this.response.getStatus()));
+	}
+
+	@Override
+	public Integer getRawStatusCode() {
+		Integer status = super.getRawStatusCode();
+		return (status != null ? status : this.response.getStatus());
 	}
 
 	@Override
 	protected void applyStatusCode() {
-		HttpStatusCode status = super.getStatusCode();
+		Integer status = super.getRawStatusCode();
 		if (status != null) {
-			this.response.setStatus(status.value());
+			this.response.setStatus(status);
 		}
 	}
 
@@ -117,11 +127,6 @@ class ServletServerHttpResponse extends AbstractListenerServerHttpResponse {
 				this.response.addHeader(headerName, headerValue);
 			}
 		});
-
-		adaptHeaders(false);
-	}
-
-	protected void adaptHeaders(boolean removeAdaptedHeaders) {
 		MediaType contentType = null;
 		try {
 			contentType = getHeaders().getContentType();
@@ -133,46 +138,31 @@ class ServletServerHttpResponse extends AbstractListenerServerHttpResponse {
 		if (this.response.getContentType() == null && contentType != null) {
 			this.response.setContentType(contentType.toString());
 		}
-
 		Charset charset = (contentType != null ? contentType.getCharset() : null);
 		if (this.response.getCharacterEncoding() == null && charset != null) {
 			this.response.setCharacterEncoding(charset.name());
 		}
-
 		long contentLength = getHeaders().getContentLength();
 		if (contentLength != -1) {
 			this.response.setContentLengthLong(contentLength);
-		}
-
-		if (removeAdaptedHeaders) {
-			getHeaders().remove(HttpHeaders.CONTENT_TYPE);
-			getHeaders().remove(HttpHeaders.CONTENT_LENGTH);
 		}
 	}
 
 	@Override
 	protected void applyCookies() {
-		for (String name : getCookies().keySet()) {
-			for (ResponseCookie httpCookie : getCookies().get(name)) {
-				Cookie cookie = new Cookie(name, httpCookie.getValue());
-				if (!httpCookie.getMaxAge().isNegative()) {
-					cookie.setMaxAge((int) httpCookie.getMaxAge().getSeconds());
-				}
-				if (httpCookie.getDomain() != null) {
-					cookie.setDomain(httpCookie.getDomain());
-				}
-				if (httpCookie.getPath() != null) {
-					cookie.setPath(httpCookie.getPath());
-				}
-				if (httpCookie.getSameSite() != null) {
-					cookie.setAttribute("SameSite", httpCookie.getSameSite());
-				}
-				cookie.setSecure(httpCookie.isSecure());
-				cookie.setHttpOnly(httpCookie.isHttpOnly());
-				if (httpCookie.isPartitioned()) {
-					cookie.setAttribute("Partitioned", "");
-				}
-				this.response.addCookie(cookie);
+
+		// Servlet Cookie doesn't support same site:
+		// https://github.com/eclipse-ee4j/servlet-api/issues/175
+
+		// For Jetty, starting 9.4.21+ we could adapt to HttpCookie:
+		// https://github.com/eclipse/jetty.project/issues/3040
+
+		// For Tomcat it seems to be a global option only:
+		// https://tomcat.apache.org/tomcat-8.5-doc/config/cookie-processor.html
+
+		for (List<ResponseCookie> cookies : getCookies().values()) {
+			for (ResponseCookie cookie : cookies) {
+				this.response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 			}
 		}
 	}
@@ -195,13 +185,6 @@ class ServletServerHttpResponse extends AbstractListenerServerHttpResponse {
 	}
 
 	/**
-	 * Return the {@link ServletOutputStream} for the current response.
-	 */
-	protected final ServletOutputStream getOutputStream() {
-		return this.outputStream;
-	}
-
-	/**
 	 * Write the DataBuffer to the response body OutputStream.
 	 * Invoked only when {@link ServletOutputStream#isReady()} returns "true"
 	 * and the readable bytes in the DataBuffer is greater than 0.
@@ -209,15 +192,15 @@ class ServletServerHttpResponse extends AbstractListenerServerHttpResponse {
 	 */
 	protected int writeToOutputStream(DataBuffer dataBuffer) throws IOException {
 		ServletOutputStream outputStream = this.outputStream;
-		int len = 0;
-		try (DataBuffer.ByteBufferIterator iterator = dataBuffer.readableByteBuffers()) {
-			while (iterator.hasNext() && outputStream.isReady()) {
-				ByteBuffer byteBuffer = iterator.next();
-				len += byteBuffer.remaining();
-				outputStream.write(byteBuffer);
-			}
+		InputStream input = dataBuffer.asInputStream();
+		int bytesWritten = 0;
+		byte[] buffer = new byte[this.bufferSize];
+		int bytesRead;
+		while (outputStream.isReady() && (bytesRead = input.read(buffer)) != -1) {
+			outputStream.write(buffer, 0, bytesRead);
+			bytesWritten += bytesRead;
 		}
-		return len;
+		return bytesWritten;
 	}
 
 	private void flush() throws IOException {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,10 @@
 
 package org.springframework.beans.factory.annotation;
 
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Predicate;
-
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -36,6 +33,7 @@ import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.AutowireCandidateQualifier;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -50,8 +48,8 @@ import org.springframework.util.Assert;
 public abstract class BeanFactoryAnnotationUtils {
 
 	/**
-	 * Retrieve all beans of type {@code T} from the given {@code BeanFactory} declaring a
-	 * qualifier (for example, via {@code <qualifier>} or {@code @Qualifier}) matching the given
+	 * Retrieve all bean of type {@code T} from the given {@code BeanFactory} declaring a
+	 * qualifier (e.g. via {@code <qualifier>} or {@code @Qualifier}) matching the given
 	 * qualifier, or having a bean name matching the given qualifier.
 	 * @param beanFactory the factory to get the target beans from (also searching ancestors)
 	 * @param beanType the type of beans to retrieve
@@ -76,7 +74,7 @@ public abstract class BeanFactoryAnnotationUtils {
 
 	/**
 	 * Obtain a bean of type {@code T} from the given {@code BeanFactory} declaring a
-	 * qualifier (for example, via {@code <qualifier>} or {@code @Qualifier}) matching the given
+	 * qualifier (e.g. via {@code <qualifier>} or {@code @Qualifier}) matching the given
 	 * qualifier, or having a bean name matching the given qualifier.
 	 * @param beanFactory the factory to get the target bean from (also searching ancestors)
 	 * @param beanType the type of bean to retrieve
@@ -92,11 +90,11 @@ public abstract class BeanFactoryAnnotationUtils {
 
 		Assert.notNull(beanFactory, "BeanFactory must not be null");
 
-		if (beanFactory instanceof ListableBeanFactory lbf) {
+		if (beanFactory instanceof ListableBeanFactory) {
 			// Full qualifier matching supported.
-			return qualifiedBeanOfType(lbf, beanType, qualifier);
+			return qualifiedBeanOfType((ListableBeanFactory) beanFactory, beanType, qualifier);
 		}
-		else if (beanFactory.containsBean(qualifier) && beanFactory.isTypeMatch(qualifier, beanType)) {
+		else if (beanFactory.containsBean(qualifier)) {
 			// Fallback: target bean at least found by bean name.
 			return beanFactory.getBean(qualifier, beanType);
 		}
@@ -110,17 +108,17 @@ public abstract class BeanFactoryAnnotationUtils {
 
 	/**
 	 * Obtain a bean of type {@code T} from the given {@code BeanFactory} declaring a qualifier
-	 * (for example, {@code <qualifier>} or {@code @Qualifier}) matching the given qualifier).
-	 * @param beanFactory the factory to get the target bean from
+	 * (e.g. {@code <qualifier>} or {@code @Qualifier}) matching the given qualifier).
+	 * @param bf the factory to get the target bean from
 	 * @param beanType the type of bean to retrieve
 	 * @param qualifier the qualifier for selecting between multiple bean matches
 	 * @return the matching bean of type {@code T} (never {@code null})
 	 */
-	private static <T> T qualifiedBeanOfType(ListableBeanFactory beanFactory, Class<T> beanType, String qualifier) {
-		String[] candidateBeans = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(beanFactory, beanType);
+	private static <T> T qualifiedBeanOfType(ListableBeanFactory bf, Class<T> beanType, String qualifier) {
+		String[] candidateBeans = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(bf, beanType);
 		String matchingBean = null;
 		for (String beanName : candidateBeans) {
-			if (isQualifierMatch(qualifier::equals, beanName, beanFactory)) {
+			if (isQualifierMatch(qualifier::equals, beanName, bf)) {
 				if (matchingBean != null) {
 					throw new NoUniqueBeanDefinitionException(beanType, matchingBean, beanName);
 				}
@@ -128,28 +126,16 @@ public abstract class BeanFactoryAnnotationUtils {
 			}
 		}
 		if (matchingBean != null) {
-			return beanFactory.getBean(matchingBean, beanType);
+			return bf.getBean(matchingBean, beanType);
 		}
-		else if (beanFactory.containsBean(qualifier) && beanFactory.isTypeMatch(qualifier, beanType)) {
+		else if (bf.containsBean(qualifier)) {
 			// Fallback: target bean at least found by bean name - probably a manually registered singleton.
-			return beanFactory.getBean(qualifier, beanType);
+			return bf.getBean(qualifier, beanType);
 		}
 		else {
 			throw new NoSuchBeanDefinitionException(qualifier, "No matching " + beanType.getSimpleName() +
 					" bean found for qualifier '" + qualifier + "' - neither qualifier match nor bean name match!");
 		}
-	}
-
-	/**
-	 * Determine the {@link Qualifier#value() qualifier value} for the given
-	 * annotated element.
-	 * @param annotatedElement the class, method or parameter to introspect
-	 * @return the associated qualifier value, or {@code null} if none
-	 * @since 6.2
-	 */
-	public static @Nullable String getQualifierValue(AnnotatedElement annotatedElement) {
-		Qualifier qualifier = AnnotationUtils.getAnnotation(annotatedElement, Qualifier.class);
-		return (qualifier != null ? qualifier.value() : null);
 	}
 
 	/**
@@ -177,10 +163,11 @@ public abstract class BeanFactoryAnnotationUtils {
 			}
 			try {
 				Class<?> beanType = beanFactory.getType(beanName);
-				if (beanFactory instanceof ConfigurableBeanFactory cbf) {
-					BeanDefinition bd = cbf.getMergedBeanDefinition(beanName);
+				if (beanFactory instanceof ConfigurableBeanFactory) {
+					BeanDefinition bd = ((ConfigurableBeanFactory) beanFactory).getMergedBeanDefinition(beanName);
 					// Explicit qualifier metadata on bean definition? (typically in XML definition)
-					if (bd instanceof AbstractBeanDefinition abd) {
+					if (bd instanceof AbstractBeanDefinition) {
+						AbstractBeanDefinition abd = (AbstractBeanDefinition) bd;
 						AutowireCandidateQualifier candidate = abd.getQualifier(Qualifier.class.getName());
 						if (candidate != null) {
 							Object value = candidate.getAttribute(AutowireCandidateQualifier.VALUE_KEY);
@@ -190,8 +177,8 @@ public abstract class BeanFactoryAnnotationUtils {
 						}
 					}
 					// Corresponding qualifier on factory method? (typically in configuration class)
-					if (bd instanceof RootBeanDefinition rbd) {
-						Method factoryMethod = rbd.getResolvedFactoryMethod();
+					if (bd instanceof RootBeanDefinition) {
+						Method factoryMethod = ((RootBeanDefinition) bd).getResolvedFactoryMethod();
 						if (factoryMethod != null) {
 							Qualifier targetAnnotation = AnnotationUtils.getAnnotation(factoryMethod, Qualifier.class);
 							if (targetAnnotation != null) {
@@ -208,8 +195,8 @@ public abstract class BeanFactoryAnnotationUtils {
 					}
 				}
 			}
-			catch (NoSuchBeanDefinitionException ignored) {
-				// can't compare qualifiers for a manually registered singleton object
+			catch (NoSuchBeanDefinitionException ex) {
+				// Ignore - can't compare qualifiers for a manually registered singleton object
 			}
 		}
 		return false;

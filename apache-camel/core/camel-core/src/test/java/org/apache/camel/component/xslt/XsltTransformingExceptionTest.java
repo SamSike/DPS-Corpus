@@ -22,7 +22,6 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -34,14 +33,13 @@ public class XsltTransformingExceptionTest extends ContextTestSupport {
     public void testXsltException() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(0);
-
-        CamelExecutionException ex = assertThrows(CamelExecutionException.class,
-                () -> template.sendBody("direct:start", BAD_XML_STRING),
-                "Except a camel Execution exception here");
-
-        boolean b = ex.getCause() instanceof javax.xml.transform.TransformerException;
-        assertTrue(b);
-
+        try {
+            template.sendBody("direct:start", BAD_XML_STRING);
+            fail("Except a camel Execution exception here");
+        } catch (CamelExecutionException ex) {
+            boolean b = ex.getCause() instanceof javax.xml.transform.TransformerException;
+            assertTrue(b);
+        }
         // we should not get any message from the result endpoint
         assertMockEndpointsSatisfied();
     }
@@ -63,10 +61,10 @@ public class XsltTransformingExceptionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("xslt:org/apache/camel/component/xslt/transformCallEcho.xsl").to("mock:result");
             }
         };

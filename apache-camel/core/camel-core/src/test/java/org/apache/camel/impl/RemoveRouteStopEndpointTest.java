@@ -138,10 +138,10 @@ public class RemoveRouteStopEndpointTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo").routeId("foo").to("log:foo").to("mock:result");
 
                 from("seda:bar").routeId("bar").to("log:bar").to("log:bar").to("mock:result");

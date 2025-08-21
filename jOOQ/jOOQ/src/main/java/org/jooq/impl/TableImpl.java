@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -44,55 +44,79 @@ import static org.jooq.Clause.TABLE_ALIAS;
 import static org.jooq.Clause.TABLE_REFERENCE;
 // ...
 // ...
+// ...
+// ...
 import static org.jooq.SQLDialect.FIREBIRD;
+import static org.jooq.SQLDialect.H2;
 import static org.jooq.SQLDialect.HSQLDB;
+// ...
+import static org.jooq.SQLDialect.MARIADB;
+import static org.jooq.SQLDialect.MYSQL;
 // ...
 // ...
 import static org.jooq.SQLDialect.POSTGRES;
 import static org.jooq.SQLDialect.YUGABYTEDB;
-import static org.jooq.impl.DSL.noCondition;
+import static org.jooq.impl.DSL.and;
+import static org.jooq.impl.DSL.exists;
+import static org.jooq.impl.DSL.falseCondition;
+import static org.jooq.impl.DSL.multiset;
+import static org.jooq.impl.DSL.multisetAgg;
+import static org.jooq.impl.DSL.one;
+import static org.jooq.impl.DSL.row;
+import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.selectFrom;
+import static org.jooq.impl.DSL.selectOne;
+import static org.jooq.impl.DSL.val;
 import static org.jooq.impl.DefaultMetaProvider.meta;
+import static org.jooq.impl.DerivedTable.NO_SUPPORT_CORRELATED_DERIVED_TABLE;
 import static org.jooq.impl.Internal.createPathAlias;
 import static org.jooq.impl.Keywords.K_TABLE;
-import static org.jooq.impl.QualifiedName.hashCode0;
+import static org.jooq.impl.Names.N_MULTISET;
 import static org.jooq.impl.QueryPartListView.wrap;
 import static org.jooq.impl.SchemaImpl.DEFAULT_SCHEMA;
+import static org.jooq.impl.Tools.CONFIG;
 import static org.jooq.impl.Tools.EMPTY_OBJECT;
 import static org.jooq.impl.Tools.getMappedTable;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_RENDER_IMPLICIT_JOIN;
+import static org.jooq.impl.Tools.unalias;
 import static org.jooq.tools.StringUtils.defaultIfNull;
 
-import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.jooq.Clause;
 import org.jooq.Comment;
 import org.jooq.Condition;
 import org.jooq.Context;
-import org.jooq.DDLQuery;
 import org.jooq.DataType;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.Identity;
-import org.jooq.InverseForeignKey;
-import org.jooq.JoinType;
 import org.jooq.Name;
+// ...
+import org.jooq.QueryPart;
 import org.jooq.Record;
+import org.jooq.Record1;
+import org.jooq.Record2;
+// ...
+import org.jooq.Result;
 import org.jooq.Row;
 import org.jooq.SQLDialect;
 import org.jooq.Schema;
 import org.jooq.Select;
 import org.jooq.Table;
+import org.jooq.TableField;
 import org.jooq.TableLike;
-import org.jooq.TableOptionalOnStep;
 import org.jooq.TableOptions;
-import org.jooq.impl.QOM.JoinHint;
-import org.jooq.impl.QOM.UEmpty;
+// ...
+import org.jooq.exception.DataAccessException;
+import org.jooq.impl.QOM.UEmptyField;
+import org.jooq.impl.QOM.UNotYetImplemented;
 import org.jooq.tools.StringUtils;
-import org.jooq.tools.reflect.Reflect;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -109,8 +133,8 @@ extends
 implements
     ScopeMappable,
     ScopeNestable,
-    SimpleCheckQueryPart,
-    UEmpty
+    SimpleQueryPart,
+    UNotYetImplemented
 {
 
     private static final Clause[]        CLAUSES_TABLE_REFERENCE           = { TABLE, TABLE_REFERENCE };
@@ -118,29 +142,76 @@ implements
     private static final Set<SQLDialect> NO_SUPPORT_QUALIFIED_TVF_CALLS    = SQLDialect.supportedBy(HSQLDB, POSTGRES, YUGABYTEDB);
     private static final Set<SQLDialect> REQUIRES_TVF_TABLE_CONSTRUCTOR    = SQLDialect.supportedBy(HSQLDB);
 
+
+
+
+
     final FieldsImpl<R>                  fields;
     final Alias<Table<R>>                alias;
-    final Condition                      where;
 
     protected final Field<?>[]           parameters;
-    final Table<?>                       path;
+    final Table<?>                       child;
     final ForeignKey<?, R>               childPath;
-    final InverseForeignKey<?, R>        parentPath;
+
+    /**
+     * @deprecated - 3.10 - [#5996] - Use {@link #TableImpl(Name)} instead (or
+     *             re-generated your code).
+     */
+    @Deprecated
+    public TableImpl(String name) {
+        this(DSL.name(name));
+    }
+
+    /**
+     * @deprecated - 3.10 - [#5996] - Use {@link #TableImpl(Name, Schema)}
+     *             instead (or re-generated your code).
+     */
+    @Deprecated
+    public TableImpl(String name, Schema schema) {
+        this(DSL.name(name), schema);
+    }
+
+    /**
+     * @deprecated - 3.10 - [#5996] - Use {@link #TableImpl(Name, Schema, Table)}
+     *             instead (or re-generated your code).
+     */
+    @Deprecated
+    public TableImpl(String name, Schema schema, Table<R> aliased) {
+        this(DSL.name(name), schema, aliased);
+    }
+
+    /**
+     * @deprecated - 3.10 - [#5996] - Use {@link #TableImpl(Name, Schema, Table, Field[])}
+     *             instead (or re-generated your code).
+     */
+    @Deprecated
+    public TableImpl(String name, Schema schema, Table<R> aliased, Field<?>[] parameters) {
+        this(DSL.name(name), schema, aliased, parameters);
+    }
+
+    /**
+     * @deprecated - 3.10 - [#5996] - Use {@link #TableImpl(Name, Schema, Table, Field[], String)}
+     *             instead (or re-generated your code).
+     */
+    @Deprecated
+    public TableImpl(String name, Schema schema, Table<R> aliased, Field<?>[] parameters, String comment) {
+        this(DSL.name(name), schema, aliased, parameters, comment);
+    }
 
     public TableImpl(Name name) {
-        this(name, null, null, null, null, null, null, (Comment) null);
+        this(name, null, null, null, null, null, (Comment) null);
     }
 
     public TableImpl(Name name, Schema schema) {
-        this(name, schema, null, null, null, null, null, (Comment) null);
+        this(name, schema, null, null, null, null, (Comment) null);
     }
 
     public TableImpl(Name name, Schema schema, Table<R> aliased) {
-        this(name, schema, null, null, null, aliased, null, (Comment) null);
+        this(name, schema, null, null, aliased, null, (Comment) null);
     }
 
     public TableImpl(Name name, Schema schema, Table<R> aliased, Field<?>[] parameters) {
-        this(name, schema, null, null, null, aliased, parameters, (Comment) null);
+        this(name, schema, null, null, aliased, parameters, (Comment) null);
     }
 
     /**
@@ -148,107 +219,42 @@ implements
      */
     @Deprecated
     public TableImpl(Name name, Schema schema, Table<R> aliased, Field<?>[] parameters, String comment) {
-        this(name, schema, null, null, null, aliased, parameters, DSL.comment(comment));
+        this(name, schema, null, null, aliased, parameters, DSL.comment(comment));
     }
 
     public TableImpl(Name name, Schema schema, Table<R> aliased, Field<?>[] parameters, Comment comment) {
-        this(name, schema, null, null, null, aliased, parameters, comment);
+        this(name, schema, null, null, aliased, parameters, comment);
     }
 
     public TableImpl(Name name, Schema schema, Table<R> aliased, Field<?>[] parameters, Comment comment, TableOptions options) {
-        this(name, schema, null, null, null, aliased, parameters, comment, options, null);
+        this(name, schema, null, null, aliased, parameters, comment, options);
     }
 
-    public TableImpl(Name name, Schema schema, Table<R> aliased, Field<?>[] parameters, Comment comment, TableOptions options, Condition where) {
-        this(name, schema, null, null, null, aliased, parameters, comment, options, where);
+    public TableImpl(Table<?> child, ForeignKey<?, R> path, Table<R> parent) {
+        this(createPathAlias(child, path), null, child, path, parent, null, parent.getCommentPart());
     }
 
-    /**
-     * @deprecated - [#13639] [#14985] [#15005] - 3.19.0 - Please re-generate your code.
-     */
-    @Deprecated
-    public TableImpl(Table<?> path, ForeignKey<?, R> childPath, Table<R> aliased) {
-        this(path, childPath, null, aliased);
-    }
-
-    public TableImpl(Table<?> path, ForeignKey<?, R> childPath, InverseForeignKey<?, R> parentPath, Table<R> aliased) {
-        this(createPathAlias(path, childPath, parentPath), null, path, childPath, parentPath, aliased, null, aliased.getCommentPart());
-    }
-
-    /**
-     * @deprecated - [#13639] [#14985] [#15005] - 3.19.0 - Please re-generate your code.
-     */
-    @Deprecated
-    public TableImpl(Name name, Schema schema, Table<?> path, ForeignKey<?, R> childPath, Table<R> aliased, Field<?>[] parameters, Comment comment) {
-        this(name, schema, path, childPath, aliased, parameters, comment, TableOptions.table());
-    }
-
-    public TableImpl(Name name, Schema schema, Table<?> path, ForeignKey<?, R> childPath, InverseForeignKey<?, R> parentPath, Table<R> aliased, Field<?>[] parameters, Comment comment) {
-        this(name, schema, path, childPath, parentPath, aliased, parameters, comment, TableOptions.table(), null);
-    }
-
-    /**
-     * @deprecated - [#13639] [#14985] [#15005] - 3.19.0 - Please re-generate your code.
-     */
-    @Deprecated
-    public TableImpl(Name name, Schema schema, Table<?> path, ForeignKey<?, R> childPath, Table<R> aliased, Field<?>[] parameters, Comment comment, TableOptions options) {
-        this(name, schema, path, childPath, null, aliased, parameters, comment, options);
-    }
-
-    /**
-     * @deprecated - [#8012] - 3.19.0 - Please re-generate your code.
-     */
-    @Deprecated
-    public TableImpl(
-        Name name,
-        Schema schema,
-        Table<?> path,
-        ForeignKey<?, R> childPath,
-        InverseForeignKey<?, R> parentPath,
-        Table<R> aliased,
-        Field<?>[] parameters,
-        Comment comment,
-        TableOptions options
-    ) {
-        this(name, schema, path, childPath, parentPath, aliased, parameters, comment, options, null);
+    public TableImpl(Name name, Schema schema, Table<?> child, ForeignKey<?, R> path, Table<R> aliased, Field<?>[] parameters, Comment comment) {
+        this(name, schema, child, path, aliased, parameters, comment, TableOptions.table());
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public TableImpl(
-        Name name,
-        Schema schema,
-        Table<?> path,
-        ForeignKey<?, R> childPath,
-        InverseForeignKey<?, R> parentPath,
-        Table<R> aliased,
-        Field<?>[] parameters,
-        Comment comment,
-        TableOptions options,
-        Condition where
-    ) {
+    public TableImpl(Name name, Schema schema, Table<?> child, ForeignKey<?, R> path, Table<R> aliased, Field<?>[] parameters, Comment comment, TableOptions options) {
         super(options, name, schema, comment);
 
         this.fields = new FieldsImpl<>();
 
-        if (childPath != null) {
-            this.path = path;
-            this.childPath = Tools.aliasedKey((ForeignKey) childPath, path, this);
-            this.parentPath = null;
+        if (child != null) {
+            this.child = child;
+            this.childPath = path == null ? null : Tools.aliasedKey((ForeignKey) path, child, this);
         }
-        else if (parentPath != null) {
-            this.path = path;
-            this.childPath = null;
-            this.parentPath = Tools.aliasedKey((ForeignKey) parentPath.getForeignKey(), this, path).getInverseKey();
-        }
-        else if (aliased instanceof TableImpl t) {
-            this.path = t.path;
-            this.childPath = t.childPath == null ? null : Tools.aliasedKey(t.childPath, t.path, this);
-            this.parentPath = t.parentPath == null ? null : Tools.aliasedKey(t.parentPath.getForeignKey(), this, t.path).getInverseKey();
+        else if (aliased instanceof TableImpl) { TableImpl t = (TableImpl) aliased;
+            this.child = t.child;
+            this.childPath = t.childPath;
         }
         else {
-            this.path = null;
+            this.child = null;
             this.childPath = null;
-            this.parentPath = null;
         }
 
         if (aliased != null) {
@@ -266,60 +272,301 @@ implements
             this.alias = null;
 
         this.parameters = parameters;
-        this.where = where;
-    }
-
-    static final Table<?> path(Table<?> t) {
-        if (t instanceof TableImpl<?> ti)
-            if (ti.path != null)
-                return ti.path;
-
-        return null;
-    }
-
-    final Condition pathCondition() {
-        if (childPath != null)
-            return wrapForImplicitJoin(new Join(path, this, null).onKey(childPath).condition.getWhere());
-        else if (parentPath != null)
-            return wrapForImplicitJoin(new Join(this, path, null).onKey(parentPath.getForeignKey()).condition.getWhere());
-        else
-            return noCondition();
-    }
-
-    static final Condition wrapForImplicitJoin(Condition condition) {
-
-        // [#15755] Omit SCALAR_SUBQUERY rendering of TableFieldImpl for to-many path joins
-        return CustomCondition.of(c -> {
-            c.data(DATA_RENDER_IMPLICIT_JOIN, true, c1 -> c1.visit(condition));
-        });
-    }
-
-    /**
-     * Get the root child if this is an implicit join path expression, or
-     * <code>null</code> if not
-     */
-    @Nullable
-    final Table<?> pathRoot() {
-        if (path instanceof TableImpl<?> t) {
-            if (t.path != null)
-                return t.pathRoot();
-            else
-                return t;
-        }
-        else
-            return null;
     }
 
     /**
      * Get the aliased table wrapped by this table.
      */
-    @Nullable
     Table<R> getAliasedTable() {
         if (alias != null)
             return alias.wrapped();
 
         return null;
     }
+
+    /**
+     * Create a <code>ROW</code> to-one parent table expression from this table.
+     */
+    @org.jooq.Internal
+    @NotNull
+    protected <O1 extends Record, O2 extends Record> Field<O2> toOneRow(
+        ForeignKey<R, O1> path,
+        Function<? super Table<O1>, ? extends TableLike<O2>> f
+    ) {
+
+        if (CONFIG.commercial()) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }
+
+        throw new DataAccessException("The to-one ROW convenience feature is available in the commercial jOOQ distribution only. Please consider upgrading to the jOOQ Professional Edition or jOOQ Enterprise Edition.");
+    }
+
+    /**
+     * Create a <code>MULTISET</code> one-to-many child table expression from
+     * this table.
+     */
+    @org.jooq.Internal
+    @NotNull
+    protected <O1 extends Record, O2 extends Record> Field<Result<O2>> oneToManyMultiset(
+        ForeignKey<O1, R> path,
+        Function<? super Table<O1>, ? extends TableLike<O2>> f
+    ) {
+        if (CONFIG.commercial()) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }
+
+        throw new DataAccessException("The one-to-many MULTISET convenience feature is available in the commercial jOOQ distribution only. Please consider upgrading to the jOOQ Professional Edition or jOOQ Enterprise Edition.");
+    }
+
+    /**
+     * Create a <code>MULTISET</code> many-to-many child table expression from
+     * this table.
+     */
+    @org.jooq.Internal
+    @NotNull
+    protected <O1 extends Record, X extends Record, O2 extends Record> Field<Result<O2>> manyToManyMultiset(
+        ForeignKey<O1, R> path1,
+        ForeignKey<O1, X> path2,
+        Function<? super Table<X>, ? extends TableLike<O2>> f
+    ) {
+        if (CONFIG.commercial()) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }
+
+        throw new DataAccessException("The many-to-many MULTISET convenience feature is available in the commercial jOOQ distribution only. Please consider upgrading to the jOOQ Professional Edition or jOOQ Enterprise Edition.");
+    }
+
+    /**
+     * Create a <code>MULTISET</code> one-to-many child table expression from
+     * this table.
+     */
+    @org.jooq.Internal
+    @NotNull
+    protected <O1 extends Record> Condition oneToManyExists(
+        ForeignKey<O1, R> path,
+        Function<? super Table<O1>, ? extends TableLike<?>> f
+    ) {
+        if (CONFIG.commercial()) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }
+
+        throw new DataAccessException("The one-to-many EXISTS convenience feature is available in the commercial jOOQ distribution only. Please consider upgrading to the jOOQ Professional Edition or jOOQ Enterprise Edition.");
+    }
+
+    /**
+     * Create a <code>MULTISET</code> many-to-many child table expression from
+     * this table.
+     */
+    @org.jooq.Internal
+    @NotNull
+    protected <O1 extends Record, X extends Record> Condition manyToManyExists(
+        ForeignKey<O1, R> path1,
+        ForeignKey<O1, X> path2,
+        Function<? super Table<X>, ? extends TableLike<?>> f
+    ) {
+        if (CONFIG.commercial()) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }
+
+        throw new DataAccessException("The many-to-many EXISTS convenience feature is available in the commercial jOOQ distribution only. Please consider upgrading to the jOOQ Professional Edition or jOOQ Enterprise Edition.");
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * Check if this table already aliases another one.
@@ -351,29 +598,13 @@ implements
 
     @Override
     final FieldsImpl<R> fields0() {
-
-        // [#8012] Implement the same behaviour as InlineDerivedTable to make
-        //         sure we produce the proper qualification of fields also when
-        //         dereferencing a field using Table.field(String), for example
-        if (where != null)
-            return new InlineDerivedTable<>(this, where, false).fields0();
-        else
-            return fields;
+        return fields;
     }
 
-    // [#8489] [#18033] [#12180] these overrides are necessary due to a Scala compiler bug (versions 2.10, 2.11, 3.5, 3.6)
-    // See:
-    // - https://github.com/scala/bug/issues/7936
-    // - https://github.com/scala/scala3/issues/22628
-
+    // [#8489] this override is necessary due to a Scala compiler bug (versions 2.10 and 2.11)
     @Override
     public Row fieldsRow() {
         return super.fieldsRow();
-    }
-
-    @Override
-    public Identity<R, ?> getIdentity() {
-        return super.getIdentity();
     }
 
     @Override
@@ -408,7 +639,7 @@ implements
             return;
         }
 
-        if (path != null)
+        if (child != null)
             ctx.scopeRegister(this);
 
         if (alias != null) {
@@ -430,18 +661,29 @@ implements
             else
                 accept0(ctx);
         }
+
+
+
+
+
     }
 
     private final void accept0(Context<?> ctx) {
         if (ctx.declareTables())
             ctx.scopeMarkStart(this);
 
-        boolean noSchemaMapping = !ctx.declareTables() && getSchema() == null && ctx.inScope(this);
-
-        if (!noSchemaMapping && ctx.qualifySchema() && (ctx.declareTables()
+        if (ctx.qualify() && (ctx.declareTables()
             || (!NO_SUPPORT_QUALIFIED_TVF_CALLS.contains(ctx.dialect()) || parameters == null)
+
+
+
         )) {
-            QualifiedImpl.acceptMappedSchemaPrefix(ctx, getSchema());
+            Schema mappedSchema = Tools.getMappedSchema(ctx, getSchema());
+
+            if (mappedSchema != null && !"".equals(mappedSchema.getName())) {
+                ctx.visit(mappedSchema);
+                ctx.sql('.');
+            }
         }
 
         ctx.visit(getMappedTable(ctx, this).getUnqualifiedName());
@@ -503,7 +745,7 @@ implements
 
     /**
      * Subclasses must override this method if they use the generic type
-     * parameter <code>R</code> for other types than {@link Record}
+     * parameter <R> for other types than {@link Record}
      * <p>
      * {@inheritDoc}
      */
@@ -515,34 +757,9 @@ implements
         return (Class<? extends R>) RecordImplN.class;
     }
 
-    private transient Constructor<? extends R> recordConstructor;
-
-    final Constructor<? extends R> getRecordConstructor() {
-        if (recordConstructor == null) {
-            try {
-                recordConstructor = Reflect.accessible(getRecordType().getDeclaredConstructor());
-            }
-            catch (Exception e) {
-                throw new IllegalStateException("Could not access record constructor", e);
-            }
-        }
-
-        return recordConstructor;
-    }
-
     @Override
     public boolean declaresTables() {
         return true;
-    }
-
-    @Override
-    public final TableOptionalOnStep<Record> join(TableLike<?> table, JoinType type) {
-        return super.join(table, type);
-    }
-
-    @Override
-    public final TableOptionalOnStep<Record> join(TableLike<?> table, JoinType type, JoinHint hint) {
-        return super.join(table, type, hint);
     }
 
     // -------------------------------------------------------------------------
@@ -602,40 +819,22 @@ implements
     // ------------------------------------------------------------------------
 
     @Override
-    public int hashCode() {
-
-        // [#7172] [#10274] [#14875] Cannot use getQualifiedName() based super implementation yet here
-        return hashCode0(defaultIfNull(getSchema(), DEFAULT_SCHEMA.get()).getQualifiedName(), getUnqualifiedName());
-    }
-
-    @Override
     public boolean equals(Object that) {
         if (this == that)
             return true;
 
         // [#2144] TableImpl equality can be decided without executing the
         // rather expensive implementation of AbstractQueryPart.equals()
-        if (that instanceof TableImpl<?> t) {
+        if (that instanceof TableImpl) { TableImpl<?> other = (TableImpl<?>) that;
             return
 
                 // [#7172] [#10274] Cannot use getQualifiedName() yet here
                 StringUtils.equals(
-                    defaultIfNull(getSchema(), DEFAULT_SCHEMA.get()),
-                    defaultIfNull(t.getSchema(), DEFAULT_SCHEMA.get())
+                    defaultIfNull(getSchema(), DEFAULT_SCHEMA),
+                    defaultIfNull(other.getSchema(), DEFAULT_SCHEMA)
                 ) &&
-                StringUtils.equals(getName(), t.getName()) &&
-                Arrays.equals(parameters, t.parameters);
-        }
-
-        // [#14371] Unqualified TableImpls can be equal to TableAlias
-        else if (that instanceof TableAlias<?> t) {
-
-            if ($alias() != null)
-                return t.getUnqualifiedName().equals($alias());
-
-            // [#7172] [#10274] Cannot use getQualifiedName() yet here
-            else if (getSchema() == null)
-                return t.getUnqualifiedName().equals(getQualifiedName());
+                StringUtils.equals(getName(), other.getName()) &&
+                Arrays.equals(parameters, other.parameters);
         }
 
         return super.equals(that);

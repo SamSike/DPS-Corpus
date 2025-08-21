@@ -142,9 +142,9 @@ public class CaseInsensitiveMapTest {
 
         map.remove("FOO");
 
-        assertNull(map.get("foo"));
-        assertNull(map.get("Foo"));
-        assertNull(map.get("FOO"));
+        assertEquals(null, map.get("foo"));
+        assertEquals(null, map.get("Foo"));
+        assertEquals(null, map.get("FOO"));
 
         assertTrue(map.isEmpty());
     }
@@ -169,7 +169,8 @@ public class CaseInsensitiveMapTest {
         assertEquals(123, map.get("BaR"));
 
         // key case should be preserved
-        Map<String, Object> keys = new HashMap<>(map);
+        Map<String, Object> keys = new HashMap<>();
+        keys.putAll(map);
 
         assertEquals("cheese", keys.get("Foo"));
         assertNull(keys.get("foo"));
@@ -205,7 +206,8 @@ public class CaseInsensitiveMapTest {
         Map<String, Object> map = new CaseInsensitiveMap();
         map.put("foo", "cheese");
 
-        map.putAll(new HashMap<>());
+        Map<String, Object> other = new HashMap<>();
+        map.putAll(other);
 
         assertEquals("cheese", map.get("FOO"));
         assertEquals("cheese", map.get("foo"));
@@ -308,19 +310,19 @@ public class CaseInsensitiveMapTest {
 
         assertEquals(1, map.size());
         assertEquals("cheese", map.get("fOo"));
-        assertTrue(map.containsKey("foo"));
-        assertTrue(map.containsKey("FOO"));
+        assertEquals(true, map.containsKey("foo"));
+        assertEquals(true, map.containsKey("FOO"));
 
-        assertTrue(map.containsKey("FOO"));
-        assertTrue(map.containsKey("FoO"));
-        assertTrue(map.containsKey("Foo"));
-        assertTrue(map.containsKey("foo"));
-        assertTrue(map.containsKey("fOO"));
+        assertEquals(true, map.keySet().contains("FOO"));
+        assertEquals(true, map.keySet().contains("FoO"));
+        assertEquals(true, map.keySet().contains("Foo"));
+        assertEquals(true, map.keySet().contains("foo"));
+        assertEquals(true, map.keySet().contains("fOO"));
 
         map.put("FOO", "cake");
         assertEquals(1, map.size());
-        assertTrue(map.containsKey("foo"));
-        assertTrue(map.containsKey("FOO"));
+        assertEquals(true, map.containsKey("foo"));
+        assertEquals(true, map.containsKey("FOO"));
 
         assertEquals("cake", map.get("fOo"));
     }
@@ -331,18 +333,18 @@ public class CaseInsensitiveMapTest {
         map.put("foo", "cheese");
 
         assertEquals(1, map.size());
-        assertNull(map.get("fOo"));
-        assertTrue(map.containsKey("foo"));
-        assertFalse(map.containsKey("FOO"));
+        assertEquals(null, map.get("fOo"));
+        assertEquals(true, map.containsKey("foo"));
+        assertEquals(false, map.containsKey("FOO"));
 
-        assertFalse(map.containsKey("FOO"));
+        assertEquals(false, map.keySet().contains("FOO"));
 
         map.put("FOO", "cake");
         assertEquals(2, map.size());
-        assertTrue(map.containsKey("foo"));
-        assertTrue(map.containsKey("FOO"));
+        assertEquals(true, map.containsKey("foo"));
+        assertEquals(true, map.containsKey("FOO"));
 
-        assertNull(map.get("fOo"));
+        assertEquals(null, map.get("fOo"));
         assertEquals("cheese", map.get("foo"));
         assertEquals("cake", map.get("FOO"));
     }
@@ -353,15 +355,15 @@ public class CaseInsensitiveMapTest {
         map.put("Foo", "cheese");
         map.put("FOO", "cake");
         assertEquals(1, map.size());
-        assertTrue(map.containsKey("foo"));
-        assertTrue(map.containsKey("FOO"));
+        assertEquals(true, map.containsKey("foo"));
+        assertEquals(true, map.containsKey("FOO"));
 
         Map<String, Object> other = new HashMap<>(map);
-        assertFalse(other.containsKey("foo"));
-        assertFalse(other.containsKey("FOO"));
+        assertEquals(false, other.containsKey("foo"));
+        assertEquals(false, other.containsKey("FOO"));
         // CaseInsensitiveMap preserves the original keys, which would be the
         // 1st key we put
-        assertTrue(other.containsKey("Foo"));
+        assertEquals(true, other.containsKey("Foo"));
         assertEquals(1, other.size());
     }
 
@@ -389,8 +391,8 @@ public class CaseInsensitiveMapTest {
         map.put("Foo", "cheese");
         map.put("BAR", "cake");
         assertEquals(2, map.size());
-        assertTrue(map.containsKey("foo"));
-        assertTrue(map.containsKey("bar"));
+        assertEquals(true, map.containsKey("foo"));
+        assertEquals(true, map.containsKey("bar"));
 
         Map<String, Object> other = new HashMap<>();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
@@ -399,10 +401,10 @@ public class CaseInsensitiveMapTest {
             other.put(key, value);
         }
 
-        assertFalse(other.containsKey("foo"));
-        assertTrue(other.containsKey("Foo"));
-        assertFalse(other.containsKey("bar"));
-        assertTrue(other.containsKey("BAR"));
+        assertEquals(false, other.containsKey("foo"));
+        assertEquals(true, other.containsKey("Foo"));
+        assertEquals(false, other.containsKey("bar"));
+        assertEquals(true, other.containsKey("BAR"));
         assertEquals(2, other.size());
     }
 
@@ -412,15 +414,16 @@ public class CaseInsensitiveMapTest {
         map.put("Foo", "cheese");
         map.put("BAR", "cake");
         assertEquals(2, map.size());
-        assertTrue(map.containsKey("foo"));
-        assertTrue(map.containsKey("bar"));
+        assertEquals(true, map.containsKey("foo"));
+        assertEquals(true, map.containsKey("bar"));
 
-        Map<String, Object> other = new HashMap<>(map);
+        Map<String, Object> other = new HashMap<>();
+        other.putAll(map);
 
-        assertFalse(other.containsKey("foo"));
-        assertTrue(other.containsKey("Foo"));
-        assertFalse(other.containsKey("bar"));
-        assertTrue(other.containsKey("BAR"));
+        assertEquals(false, other.containsKey("foo"));
+        assertEquals(true, other.containsKey("Foo"));
+        assertEquals(false, other.containsKey("bar"));
+        assertEquals(true, other.containsKey("BAR"));
         assertEquals(2, other.size());
     }
 
@@ -430,15 +433,15 @@ public class CaseInsensitiveMapTest {
         map.put("Foo", "cheese");
         map.put("BAR", "cake");
         assertEquals(2, map.size());
-        assertTrue(map.containsKey("foo"));
-        assertTrue(map.containsKey("bar"));
+        assertEquals(true, map.containsKey("foo"));
+        assertEquals(true, map.containsKey("bar"));
 
         Map<String, Object> other = new HashMap<>(map);
 
-        assertFalse(other.containsKey("foo"));
-        assertTrue(other.containsKey("Foo"));
-        assertFalse(other.containsKey("bar"));
-        assertTrue(other.containsKey("BAR"));
+        assertEquals(false, other.containsKey("foo"));
+        assertEquals(true, other.containsKey("Foo"));
+        assertEquals(false, other.containsKey("bar"));
+        assertEquals(true, other.containsKey("BAR"));
         assertEquals(2, other.size());
     }
 
@@ -448,16 +451,21 @@ public class CaseInsensitiveMapTest {
         map.put("Foo", "cheese");
         map.put("BAR", "cake");
         assertEquals(2, map.size());
-        assertTrue(map.containsKey("foo"));
-        assertTrue(map.containsKey("bar"));
+        assertEquals(true, map.containsKey("foo"));
+        assertEquals(true, map.containsKey("bar"));
 
-        Map<String, Object> other = new HashMap<>(map);
+        Map<String, Object> other = new HashMap<>();
+
+        for (String key : map.keySet()) {
+            Object value = map.get(key);
+            other.put(key, value);
+        }
 
         // the original case of the keys should be preserved
-        assertFalse(other.containsKey("foo"));
-        assertTrue(other.containsKey("Foo"));
-        assertFalse(other.containsKey("bar"));
-        assertTrue(other.containsKey("BAR"));
+        assertEquals(false, other.containsKey("foo"));
+        assertEquals(true, other.containsKey("Foo"));
+        assertEquals(false, other.containsKey("bar"));
+        assertEquals(true, other.containsKey("BAR"));
         assertEquals(2, other.size());
     }
 
@@ -492,9 +500,9 @@ public class CaseInsensitiveMapTest {
         assertTrue(latch.await(10, TimeUnit.SECONDS));
 
         assertEquals(1003, map.size());
-        assertTrue(map.containsKey("counter0"));
-        assertTrue(map.containsKey("counter500"));
-        assertTrue(map.containsKey("counter999"));
+        assertEquals(true, map.containsKey("counter0"));
+        assertEquals(true, map.containsKey("counter500"));
+        assertEquals(true, map.containsKey("counter999"));
 
         assertEquals(123, map.get("FOO"));
         assertEquals(456, map.get("Bar"));
@@ -503,8 +511,7 @@ public class CaseInsensitiveMapTest {
     }
 
     @Disabled("Manual test")
-    @Test
-    public void testCopyMapWithCamelHeadersTest() throws Exception {
+    public void xxxTestCopyMapWithCamelHeadersTest() throws Exception {
         Map<String, Object> map = new CaseInsensitiveMap();
         map.put("CamelA", "A");
         map.put("CamelB", "B");

@@ -64,10 +64,10 @@ public class ManagedCustomPolicyTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // custom policy but processors should be registered
                 from("direct:start").policy(new MyPolicy())
                         .to("log:foo").id("foo")

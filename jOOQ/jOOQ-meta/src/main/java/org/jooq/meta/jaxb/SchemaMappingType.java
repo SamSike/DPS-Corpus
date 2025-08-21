@@ -28,7 +28,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class SchemaMappingType implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlElement(required = true, defaultValue = "")
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String inputSchema = "";
@@ -82,7 +82,7 @@ public class SchemaMappingType implements Serializable, XMLAppendable
     }
 
     /**
-     * See also {@link Database#isOutputSchemaToDefault()}
+     * Sets the value of the outputSchemaToDefault property.
      * 
      * @param value
      *     allowed object is
@@ -111,10 +111,6 @@ public class SchemaMappingType implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * See also {@link Database#isOutputSchemaToDefault()}
-     * 
-     */
     public SchemaMappingType withOutputSchemaToDefault(Boolean value) {
         setOutputSchemaToDefault(value);
         return this;

@@ -70,30 +70,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link UserDefinedType }
-     * 
-     */
-    public UserDefinedType createUserDefinedType() {
-        return new UserDefinedType();
-    }
-
-    /**
-     * Create an instance of {@link Attribute }
-     * 
-     */
-    public Attribute createAttribute() {
-        return new Attribute();
-    }
-
-    /**
-     * Create an instance of {@link DirectSupertype }
-     * 
-     */
-    public DirectSupertype createDirectSupertype() {
-        return new DirectSupertype();
-    }
-
-    /**
      * Create an instance of {@link Domain }
      * 
      */
@@ -195,22 +171,6 @@ public class ObjectFactory {
      */
     public View createView() {
         return new View();
-    }
-
-    /**
-     * Create an instance of {@link Trigger }
-     * 
-     */
-    public Trigger createTrigger() {
-        return new Trigger();
-    }
-
-    /**
-     * Create an instance of {@link Synonym }
-     * 
-     */
-    public Synonym createSynonym() {
-        return new Synonym();
     }
 
 }

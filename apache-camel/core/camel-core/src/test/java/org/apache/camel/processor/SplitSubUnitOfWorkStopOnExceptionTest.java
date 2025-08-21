@@ -65,10 +65,10 @@ public class SplitSubUnitOfWorkStopOnExceptionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead").useOriginalMessage().maximumRedeliveries(3).redeliveryDelay(0));
 
                 from("direct:start").to("mock:a").split(body().tokenize(",")).shareUnitOfWork().stopOnException().to("mock:b")
@@ -82,7 +82,7 @@ public class SplitSubUnitOfWorkStopOnExceptionTest extends ContextTestSupport {
     public class MyProcessor implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             String body = exchange.getIn().getBody(String.class);
             if (body.contains("Donkey")) {
                 counter++;

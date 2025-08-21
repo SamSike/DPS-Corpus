@@ -4,7 +4,9 @@
  * {@link org.springframework.http.client.reactive.ClientHttpResponse} as well as a
  * {@link org.springframework.http.client.reactive.ClientHttpConnector}.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.http.client.reactive;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

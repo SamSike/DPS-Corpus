@@ -35,11 +35,6 @@ public final class PropertiesHelper {
         if (properties == null) {
             return new LinkedHashMap<>(0);
         }
-
-        return doExtractProperties(properties, optionPrefix, remove);
-    }
-
-    static Map<String, Object> doExtractProperties(Map<String, Object> properties, String optionPrefix, boolean remove) {
         Map<String, Object> rc = new LinkedHashMap<>(properties.size());
 
         for (Iterator<Map.Entry<String, Object>> it = properties.entrySet().iterator(); it.hasNext();) {
@@ -54,6 +49,19 @@ public final class PropertiesHelper {
                     it.remove();
                 }
             }
+        }
+
+        return rc;
+    }
+
+    @Deprecated
+    public static Map<String, String> extractStringProperties(Map<String, Object> properties) {
+        Map<String, String> rc = new LinkedHashMap<>(properties.size());
+
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            String name = entry.getKey();
+            String value = entry.getValue().toString();
+            rc.put(name, value);
         }
 
         return rc;

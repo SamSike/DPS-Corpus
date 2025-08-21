@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -60,18 +60,12 @@ final class SettingsEnabledConnection extends DefaultConnection {
 
     private final Settings       settings;
     private final ExecuteContext ctx;
-    private final boolean        forceStaticStatements;
 
     SettingsEnabledConnection(Connection delegate, Settings settings, ExecuteContext ctx) {
-        this(delegate, settings, ctx, false);
-    }
-
-    SettingsEnabledConnection(Connection delegate, Settings settings, ExecuteContext ctx, boolean forceStaticStatements) {
         super(delegate);
 
         this.settings = settings;
         this.ctx = ctx;
-        this.forceStaticStatements = forceStaticStatements;
     }
 
     // ------------------------------------------------------------------------
@@ -79,10 +73,7 @@ final class SettingsEnabledConnection extends DefaultConnection {
     // ------------------------------------------------------------------------
 
     private final boolean executePreparedStatements0() {
-        return !forceStaticStatements
-            && (ctx == null || !TRUE.equals(ctx.data(DATA_FORCE_STATIC_STATEMENT)))
-            && executePreparedStatements(settings)
-        ;
+        return executePreparedStatements(settings) && !TRUE.equals(ctx.data(DATA_FORCE_STATIC_STATEMENT));
     }
 
     @Override

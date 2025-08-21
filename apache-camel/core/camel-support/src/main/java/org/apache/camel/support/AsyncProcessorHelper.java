@@ -18,6 +18,7 @@ package org.apache.camel.support;
 
 import org.apache.camel.AsyncProcessor;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.AsyncProcessorAwaitManager;
 
 /**
@@ -43,7 +44,7 @@ public final class AsyncProcessorHelper {
      */
     public static void process(final AsyncProcessor processor, final Exchange exchange) throws Exception {
         final AsyncProcessorAwaitManager awaitManager
-                = PluginHelper.getAsyncProcessorAwaitManager(exchange.getContext());
+                = exchange.getContext().adapt(ExtendedCamelContext.class).getAsyncProcessorAwaitManager();
         awaitManager.process(processor, exchange);
     }
 

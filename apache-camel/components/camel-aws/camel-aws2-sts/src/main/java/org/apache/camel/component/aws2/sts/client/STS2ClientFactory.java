@@ -18,7 +18,6 @@ package org.apache.camel.component.aws2.sts.client;
 
 import org.apache.camel.component.aws2.sts.STS2Configuration;
 import org.apache.camel.component.aws2.sts.client.impl.STS2ClientIAMOptimized;
-import org.apache.camel.component.aws2.sts.client.impl.STS2ClientIAMProfileOptimized;
 import org.apache.camel.component.aws2.sts.client.impl.STS2ClientStandardImpl;
 
 /**
@@ -31,17 +30,12 @@ public final class STS2ClientFactory {
 
     /**
      * Return the correct aws STS client (based on remote vs local).
-     *
+     * 
      * @param  configuration configuration
      * @return               StsClient
      */
     public static STS2InternalClient getStsClient(STS2Configuration configuration) {
-        if (Boolean.TRUE.equals(configuration.isUseDefaultCredentialsProvider())) {
-            return new STS2ClientIAMOptimized(configuration);
-        } else if (Boolean.TRUE.equals(configuration.isUseProfileCredentialsProvider())) {
-            return new STS2ClientIAMProfileOptimized(configuration);
-        } else {
-            return new STS2ClientStandardImpl(configuration);
-        }
+        return Boolean.TRUE.equals(configuration.isUseDefaultCredentialsProvider())
+                ? new STS2ClientIAMOptimized(configuration) : new STS2ClientStandardImpl(configuration);
     }
 }

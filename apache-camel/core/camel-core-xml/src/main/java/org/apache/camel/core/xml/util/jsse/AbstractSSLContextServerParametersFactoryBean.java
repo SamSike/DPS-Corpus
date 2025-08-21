@@ -30,8 +30,7 @@ public abstract class AbstractSSLContextServerParametersFactoryBean
         extends AbstractBaseSSLContextParametersFactoryBean<SSLContextServerParameters> {
 
     @XmlAttribute
-    @Metadata(description = "The configuration options for server-side client-authentication requirements.",
-              enums = "NONE,WANT,REQUIRE")
+    @Metadata(description = "The optional configuration options for server-side client-authentication requirements.")
     protected String clientAuthentication;
 
     public String getClientAuthentication() {

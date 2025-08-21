@@ -29,7 +29,7 @@ import org.apache.camel.http.common.HttpConsumer;
 
 /**
  * This servlet is used to add some websocket specific handling at the moment.
- *
+ * 
  * REVISIT we might be able to get rid of this servlet by overriding some of the binding code that is executed between
  * the servlet and the consumer.
  */
@@ -54,7 +54,7 @@ public class CamelWebSocketServlet extends CamelHttpTransportServlet {
             handleDoService(request, response);
         } catch (Exception e) {
             // do not leak exception back to caller
-            log.warn("Error handling request due to: {}", e.getMessage(), e);
+            log.warn("Error handling request due to: " + e.getMessage(), e);
             try {
                 if (!response.isCommitted()) {
                     response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

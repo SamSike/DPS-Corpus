@@ -37,7 +37,8 @@ import org.slf4j.LoggerFactory;
  * Server handler which cannot be shared
  */
 public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
-    private static final Logger LOG = LoggerFactory.getLogger(ServerChannelHandler.class);
+    // use NettyConsumer as logger to make it easier to read the logs as this is part of the consumer
+    private static final Logger LOG = LoggerFactory.getLogger(NettyConsumer.class);
     private final NettyConsumer consumer;
     private final CamelLogger noReplyLogger;
 

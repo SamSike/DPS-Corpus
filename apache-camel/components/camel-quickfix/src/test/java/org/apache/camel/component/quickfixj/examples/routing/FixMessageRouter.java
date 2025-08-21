@@ -99,7 +99,7 @@ public class FixMessageRouter {
             try {
                 return fieldMap.getString(tag);
             } catch (Exception e) {
-                throw RuntimeCamelException.wrapRuntimeCamelException(e);
+                RuntimeCamelException.wrapRuntimeCamelException(e);
             }
         }
         return null;

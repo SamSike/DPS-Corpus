@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,9 +42,7 @@ package org.jooq;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
@@ -56,8 +54,6 @@ import static org.jooq.SQLDialect.MARIADB;
 import static org.jooq.SQLDialect.MYSQL;
 // ...
 import static org.jooq.SQLDialect.POSTGRES;
-// ...
-// ...
 // ...
 import static org.jooq.SQLDialect.SQLITE;
 // ...
@@ -72,7 +68,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * This type is used for the {@link Insert}'s DSL API.
  * <p>
- * Example: <pre><code>
+ * Example: <code><pre>
  * DSLContext create = DSL.using(configuration);
  *
  * create.insertInto(table, field1, field2)
@@ -82,7 +78,7 @@ import org.jetbrains.annotations.NotNull;
  *       .set(field1, value1)
  *       .set(field2, value2)
  *       .execute();
- * </code></pre>
+ * </pre></code>
  * <p>
  * <h3>Referencing <code>XYZ*Step</code> types directly from client code</h3>
  * <p>
@@ -110,14 +106,14 @@ public interface InsertOnDuplicateStep<R extends Record> extends InsertReturning
      * Add a <code>ON CONFLICT ON CONSTRAINT</code> clause to this INSERT statement.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MYSQL, POSTGRES, YUGABYTEDB })
     InsertOnConflictDoUpdateStep<R> onConflictOnConstraint(Constraint constraint);
 
     /**
      * Add a <code>ON CONFLICT ON CONSTRAINT</code> clause to this INSERT statement.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MYSQL, POSTGRES, YUGABYTEDB })
     InsertOnConflictDoUpdateStep<R> onConflictOnConstraint(Name constraint);
 
     /**
@@ -181,7 +177,7 @@ public interface InsertOnDuplicateStep<R extends Record> extends InsertReturning
      * H2 supports this clause in MySQL mode.
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     InsertOnDuplicateSetStep<R> onDuplicateKeyUpdate();
 
     /**
@@ -201,32 +197,32 @@ public interface InsertOnDuplicateStep<R extends Record> extends InsertReturning
      * </tr>
      * <tr>
      * <td>{@link SQLDialect#MYSQL} and {@link SQLDialect#MARIADB}</td>
-     * <td><pre><code>INSERT IGNORE INTO …</code></pre></td>
+     * <td><code><pre>INSERT IGNORE INTO ..</pre></code></td>
      * </tr>
      * <tr>
      * <td>{@link SQLDialect#POSTGRES_9_5} and {@link SQLDialect#SQLITE}</td>
-     * <td><pre><code>INSERT INTO … ON CONFLICT DO NOTHING</code></pre></td>
+     * <td><code><pre>INSERT INTO .. ON CONFLICT DO NOTHING</pre></code></td>
      * </tr>
      * <tr>
-     * <td>{@link SQLDialect#DB2}<br>
-     * {@link SQLDialect#HSQLDB}<br>
-     * {@link SQLDialect#ORACLE}<br>
-     * {@link SQLDialect#SQLSERVER}<br>
+     * <td>{@link SQLDialect#DB2}<br/>
+     * {@link SQLDialect#HSQLDB}<br/>
+     * {@link SQLDialect#ORACLE}<br/>
+     * {@link SQLDialect#SQLSERVER}<br/>
      * {@link SQLDialect#SYBASE}</td>
-     * <td><pre><code>MERGE INTO [dst]
+     * <td><code><pre>MERGE INTO [dst]
      * USING ([values])
      * ON [dst.key] = [values.key]
-     * WHEN NOT MATCHED THEN INSERT ..</code></pre></td>
+     * WHEN NOT MATCHED THEN INSERT ..</pre></code></td>
      * </tr>
      * <tr>
      * <td>All the others</td>
-     * <td><pre><code>INSERT INTO [dst] ( ... )
+     * <td><code><pre>INSERT INTO [dst] ( ... )
      * SELECT [values]
      * WHERE NOT EXISTS (
      *   SELECT 1
      *   FROM [dst]
      *   WHERE [dst.key] = [values.key]
-     * )</code></pre></td>
+     * )</pre></code></td>
      * </tr>
      * </table>
      */

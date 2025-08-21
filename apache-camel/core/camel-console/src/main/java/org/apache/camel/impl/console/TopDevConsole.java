@@ -21,10 +21,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Route;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedPerformanceCounterMBean;
@@ -34,7 +34,6 @@ import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.annotations.DevConsole;
 import org.apache.camel.support.LoggerHelper;
 import org.apache.camel.support.PatternHelper;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.console.AbstractDevConsole;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.StringHelper;
@@ -42,7 +41,7 @@ import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.json.JsonObject;
 import org.apache.camel.util.json.Jsoner;
 
-@DevConsole(name = "top", displayName = "Top Routes", description = "Display the top routes")
+@DevConsole("top")
 public class TopDevConsole extends AbstractDevConsole {
 
     /**
@@ -56,7 +55,7 @@ public class TopDevConsole extends AbstractDevConsole {
     public static final String LIMIT = "limit";
 
     public TopDevConsole() {
-        super("camel", "top", "Top Routes", "Display the top routes");
+        super("camel", "top", "Top", "Display the top routes");
     }
 
     @Override
@@ -68,11 +67,11 @@ public class TopDevConsole extends AbstractDevConsole {
         final int max = limit == null ? Integer.MAX_VALUE : Integer.parseInt(limit);
 
         final StringBuilder sb = new StringBuilder();
-        ManagedCamelContext mcc = getCamelContext().getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
+        ManagedCamelContext mcc = getCamelContext().getExtension(ManagedCamelContext.class);
         if (mcc != null) {
             if (subPath == null || subPath.isBlank()) {
                 Function<ManagedRouteMBean, Object> task = mrb -> {
-                    if (!sb.isEmpty()) {
+                    if (sb.length() > 0) {
                         sb.append("\n");
                     }
                     sb.append(String.format("    Route Id: %s", mrb.getRouteId()));
@@ -98,7 +97,7 @@ public class TopDevConsole extends AbstractDevConsole {
                 topRoutes(filter, max, mcc, task);
             } else {
                 Function<ManagedProcessorMBean, Object> task = mpb -> {
-                    if (!sb.isEmpty()) {
+                    if (sb.length() > 0) {
                         sb.append("\n");
                     }
                     sb.append(String.format("    Route Id: %s", mpb.getRouteId()));
@@ -109,7 +108,8 @@ public class TopDevConsole extends AbstractDevConsole {
                         int line = mpb.getSourceLineNumber();
                         try {
                             loc = LoggerHelper.stripSourceLocationLineNumber(loc);
-                            Resource resource = PluginHelper.getResourceLoader(getCamelContext()).resolveResource(loc);
+                            Resource resource = getCamelContext().adapt(ExtendedCamelContext.class).getResourceLoader()
+                                    .resolveResource(loc);
                             if (resource != null) {
                                 LineNumberReader reader = new LineNumberReader(resource.getReader());
                                 for (int i = 1; i < line + 3; i++) {
@@ -132,7 +132,7 @@ public class TopDevConsole extends AbstractDevConsole {
                     }
                     if (loc != null) {
                         sb.append(String.format("\n    Source: %s", loc));
-                        if (!code.isEmpty()) {
+                        if (code.length() > 0) {
                             sb.append(code);
                         }
                     }
@@ -169,7 +169,7 @@ public class TopDevConsole extends AbstractDevConsole {
         final JsonObject root = new JsonObject();
         final List<JsonObject> list = new ArrayList<>();
 
-        ManagedCamelContext mcc = getCamelContext().getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
+        ManagedCamelContext mcc = getCamelContext().getExtension(ManagedCamelContext.class);
         if (mcc != null) {
             if (subPath == null || subPath.isBlank()) {
                 Function<ManagedRouteMBean, Object> task = mrb -> {
@@ -183,7 +183,16 @@ public class TopDevConsole extends AbstractDevConsole {
                     }
                     jo.put("state", mrb.getState());
                     jo.put("uptime", mrb.getUptime());
-                    final JsonObject stats = getStatsObject(mrb);
+                    JsonObject stats = new JsonObject();
+                    stats.put("exchangesTotal", mrb.getExchangesTotal());
+                    stats.put("exchangesFailed", mrb.getExchangesFailed());
+                    stats.put("exchangesInflight", mrb.getExchangesInflight());
+                    stats.put("meanProcessingTime", mrb.getMeanProcessingTime());
+                    stats.put("maxProcessingTime", mrb.getMaxProcessingTime());
+                    stats.put("minProcessingTime", mrb.getMinProcessingTime());
+                    stats.put("lastProcessingTime", mrb.getLastProcessingTime());
+                    stats.put("deltaProcessingTime", mrb.getDeltaProcessingTime());
+                    stats.put("totalProcessingTime", mrb.getTotalProcessingTime());
                     jo.put("statistics", stats);
                     return null;
                 };
@@ -202,7 +211,8 @@ public class TopDevConsole extends AbstractDevConsole {
                         int line = mpb.getSourceLineNumber();
                         try {
                             loc = LoggerHelper.stripSourceLocationLineNumber(loc);
-                            Resource resource = PluginHelper.getResourceLoader(getCamelContext()).resolveResource(loc);
+                            Resource resource = getCamelContext().adapt(ExtendedCamelContext.class).getResourceLoader()
+                                    .resolveResource(loc);
                             if (resource != null) {
                                 LineNumberReader reader = new LineNumberReader(resource.getReader());
                                 for (int i = 1; i < line + 3; i++) {
@@ -235,7 +245,16 @@ public class TopDevConsole extends AbstractDevConsole {
                         }
                     }
 
-                    final JsonObject stats = getStatsObject(mpb);
+                    JsonObject stats = new JsonObject();
+                    stats.put("exchangesTotal", mpb.getExchangesTotal());
+                    stats.put("exchangesFailed", mpb.getExchangesFailed());
+                    stats.put("exchangesInflight", mpb.getExchangesInflight());
+                    stats.put("meanProcessingTime", mpb.getMeanProcessingTime());
+                    stats.put("maxProcessingTime", mpb.getMaxProcessingTime());
+                    stats.put("minProcessingTime", mpb.getMinProcessingTime());
+                    stats.put("lastProcessingTime", mpb.getLastProcessingTime());
+                    stats.put("deltaProcessingTime", mpb.getDeltaProcessingTime());
+                    stats.put("totalProcessingTime", mpb.getTotalProcessingTime());
                     jo.put("statistics", stats);
                     return null;
                 };
@@ -247,41 +266,12 @@ public class TopDevConsole extends AbstractDevConsole {
         return root;
     }
 
-    private static JsonObject getStatsObject(ManagedProcessorMBean mpb) {
-        JsonObject stats = new JsonObject();
-        stats.put("exchangesTotal", mpb.getExchangesTotal());
-        stats.put("exchangesFailed", mpb.getExchangesFailed());
-        stats.put("exchangesInflight", mpb.getExchangesInflight());
-        stats.put("meanProcessingTime", mpb.getMeanProcessingTime());
-        stats.put("maxProcessingTime", mpb.getMaxProcessingTime());
-        stats.put("minProcessingTime", mpb.getMinProcessingTime());
-        stats.put("lastProcessingTime", mpb.getLastProcessingTime());
-        stats.put("deltaProcessingTime", mpb.getDeltaProcessingTime());
-        stats.put("totalProcessingTime", mpb.getTotalProcessingTime());
-        return stats;
-    }
-
-    private static JsonObject getStatsObject(ManagedRouteMBean mrb) {
-        JsonObject stats = new JsonObject();
-        stats.put("exchangesTotal", mrb.getExchangesTotal());
-        stats.put("exchangesFailed", mrb.getExchangesFailed());
-        stats.put("exchangesInflight", mrb.getExchangesInflight());
-        stats.put("meanProcessingTime", mrb.getMeanProcessingTime());
-        stats.put("maxProcessingTime", mrb.getMaxProcessingTime());
-        stats.put("minProcessingTime", mrb.getMinProcessingTime());
-        stats.put("lastProcessingTime", mrb.getLastProcessingTime());
-        stats.put("deltaProcessingTime", mrb.getDeltaProcessingTime());
-        stats.put("totalProcessingTime", mrb.getTotalProcessingTime());
-        return stats;
-    }
-
     private void topRoutes(
             String filter, int max, ManagedCamelContext mcc,
             Function<ManagedRouteMBean, Object> task) {
         List<Route> routes = getCamelContext().getRoutes();
         routes.stream()
                 .map(route -> mcc.getManagedRoute(route.getRouteId()))
-                .filter(Objects::nonNull)
                 .filter(r -> acceptRoute(r, filter))
                 .sorted(TopDevConsole::top)
                 .limit(max)
@@ -296,7 +286,6 @@ public class TopDevConsole extends AbstractDevConsole {
 
         routes.stream()
                 .map(route -> mcc.getManagedRoute(route.getRouteId()))
-                .filter(Objects::nonNull)
                 .filter(r -> acceptRoute(r, subPath))
                 .forEach(r -> {
                     try {
@@ -319,11 +308,9 @@ public class TopDevConsole extends AbstractDevConsole {
             return true;
         }
 
-        String onlyName = LoggerHelper.sourceNameOnly(mrb.getSourceLocation());
         return PatternHelper.matchPattern(mrb.getRouteId(), filter)
                 || PatternHelper.matchPattern(mrb.getEndpointUri(), filter)
-                || PatternHelper.matchPattern(mrb.getSourceLocationShort(), filter)
-                || PatternHelper.matchPattern(onlyName, filter);
+                || PatternHelper.matchPattern(mrb.getSourceLocationShort(), filter);
     }
 
     private static boolean acceptProcessor(ManagedProcessorMBean mpb, String filter) {

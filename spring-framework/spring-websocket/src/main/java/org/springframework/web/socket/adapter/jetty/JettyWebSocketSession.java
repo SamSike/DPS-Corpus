@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package org.springframework.web.socket.adapter.jetty;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.security.Principal;
@@ -25,14 +24,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
-import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.ExtensionConfig;
+import org.eclipse.jetty.websocket.api.RemoteEndpoint;
 import org.eclipse.jetty.websocket.api.Session;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.socket.BinaryMessage;
@@ -45,7 +43,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.adapter.AbstractWebSocketSession;
 
 /**
- * A {@link WebSocketSession} for use with the Jetty WebSocket API.
+ * A {@link WebSocketSession} for use with the Jetty 9.4 WebSocket API.
  *
  * @author Phillip Webb
  * @author Rossen Stoyanchev
@@ -57,15 +55,20 @@ public class JettyWebSocketSession extends AbstractWebSocketSession<Session> {
 
 	private final String id;
 
-	private @Nullable URI uri;
+	@Nullable
+	private URI uri;
 
-	private @Nullable HttpHeaders headers;
+	@Nullable
+	private HttpHeaders headers;
 
-	private @Nullable String acceptedProtocol;
+	@Nullable
+	private String acceptedProtocol;
 
-	private @Nullable List<WebSocketExtension> extensions;
+	@Nullable
+	private List<WebSocketExtension> extensions;
 
-	private @Nullable Principal user;
+	@Nullable
+	private Principal user;
 
 
 	/**
@@ -80,7 +83,7 @@ public class JettyWebSocketSession extends AbstractWebSocketSession<Session> {
 	 * Create a new {@link JettyWebSocketSession} instance associated with the given user.
 	 * @param attributes the attributes from the HTTP handshake to associate with the WebSocket
 	 * session; the provided attributes are copied, the original map is not used.
-	 * @param user the user associated with the session; if {@code null} we'll fall back on the
+	 * @param user the user associated with the session; if {@code null} we'll fallback on the
 	 * user available via {@link org.eclipse.jetty.websocket.api.Session#getUpgradeRequest()}
 	 */
 	public JettyWebSocketSession(Map<String, Object> attributes, @Nullable Principal user) {
@@ -96,7 +99,8 @@ public class JettyWebSocketSession extends AbstractWebSocketSession<Session> {
 	}
 
 	@Override
-	public @Nullable URI getUri() {
+	@Nullable
+	public URI getUri() {
 		checkNativeSessionInitialized();
 		return this.uri;
 	}
@@ -108,7 +112,7 @@ public class JettyWebSocketSession extends AbstractWebSocketSession<Session> {
 	}
 
 	@Override
-	public @Nullable String getAcceptedProtocol() {
+	public String getAcceptedProtocol() {
 		checkNativeSessionInitialized();
 		return this.acceptedProtocol;
 	}
@@ -120,26 +124,28 @@ public class JettyWebSocketSession extends AbstractWebSocketSession<Session> {
 	}
 
 	@Override
-	public @Nullable Principal getPrincipal() {
+	public Principal getPrincipal() {
 		return this.user;
 	}
 
 	@Override
 	public InetSocketAddress getLocalAddress() {
 		checkNativeSessionInitialized();
-		return (InetSocketAddress) getNativeSession().getLocalSocketAddress();
+		return (InetSocketAddress) getNativeSession().getLocalAddress();
 	}
 
 	@Override
 	public InetSocketAddress getRemoteAddress() {
 		checkNativeSessionInitialized();
-		return (InetSocketAddress) getNativeSession().getRemoteSocketAddress();
+		return (InetSocketAddress) getNativeSession().getRemoteAddress();
 	}
 
+	/**
+	 * This method is a no-op for Jetty. As per {@link Session#getPolicy()}, the
+	 * returned {@code WebSocketPolicy} is read-only and changing it has no effect.
+	 */
 	@Override
 	public void setTextMessageSizeLimit(int messageSizeLimit) {
-		checkNativeSessionInitialized();
-		getNativeSession().setMaxTextMessageSize(messageSizeLimit);
 	}
 
 	@Override
@@ -148,10 +154,12 @@ public class JettyWebSocketSession extends AbstractWebSocketSession<Session> {
 		return (int) getNativeSession().getMaxTextMessageSize();
 	}
 
+	/**
+	 * This method is a no-op for Jetty. As per {@link Session#getPolicy()}, the
+	 * returned {@code WebSocketPolicy} is read-only and changing it has no effect.
+	 */
 	@Override
 	public void setBinaryMessageSizeLimit(int messageSizeLimit) {
-		checkNativeSessionInitialized();
-		getNativeSession().setMaxBinaryMessageSize(messageSizeLimit);
 	}
 
 	@Override
@@ -202,57 +210,31 @@ public class JettyWebSocketSession extends AbstractWebSocketSession<Session> {
 
 	@Override
 	protected void sendTextMessage(TextMessage message) throws IOException {
-		useSession((session, callback) -> session.sendText(message.getPayload(), callback));
+		getRemoteEndpoint().sendString(message.getPayload());
 	}
 
 	@Override
 	protected void sendBinaryMessage(BinaryMessage message) throws IOException {
-		useSession((session, callback) -> session.sendBinary(message.getPayload(), callback));
+		getRemoteEndpoint().sendBytes(message.getPayload());
 	}
 
 	@Override
 	protected void sendPingMessage(PingMessage message) throws IOException {
-		useSession((session, callback) -> session.sendPing(message.getPayload(), callback));
+		getRemoteEndpoint().sendPing(message.getPayload());
 	}
 
 	@Override
 	protected void sendPongMessage(PongMessage message) throws IOException {
-		useSession((session, callback) -> session.sendPong(message.getPayload(), callback));
+		getRemoteEndpoint().sendPong(message.getPayload());
+	}
+
+	private RemoteEndpoint getRemoteEndpoint() {
+		return getNativeSession().getRemote();
 	}
 
 	@Override
 	protected void closeInternal(CloseStatus status) throws IOException {
-		useSession((session, callback) -> session.close(status.getCode(), status.getReason(), callback));
-	}
-
-	private void useSession(SessionConsumer sessionConsumer) throws IOException {
-		try {
-			Callback.Completable completable = new Callback.Completable();
-			sessionConsumer.consume(getNativeSession(), completable);
-			completable.get();
-		}
-		catch (ExecutionException ex) {
-			Throwable cause = ex.getCause();
-
-			if (cause instanceof IOException ioEx) {
-				throw ioEx;
-			}
-			else if (cause instanceof UncheckedIOException uioEx) {
-				throw uioEx.getCause();
-			}
-			else {
-				throw new IOException(ex.getMessage(), cause);
-			}
-		}
-		catch (InterruptedException ex) {
-			Thread.currentThread().interrupt();
-		}
-	}
-
-	@FunctionalInterface
-	private interface SessionConsumer {
-
-		void consume(Session session, Callback callback) throws IOException;
+		getNativeSession().close(status.getCode(), status.getReason());
 	}
 
 }

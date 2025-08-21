@@ -21,6 +21,7 @@ import org.apache.camel.EndpointInject;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.RoutesBuilder;
+import org.apache.camel.Service;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.DefaultCamelContext;
@@ -28,9 +29,7 @@ import org.apache.camel.spi.Registry;
 import org.apache.camel.support.DefaultRegistry;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CamelTestSupportOneContextForAllTest extends CamelTestSupport {
 
     private static final CamelContext CUSTOM_CONTEXT;
@@ -48,6 +47,18 @@ class CamelTestSupportOneContextForAllTest extends CamelTestSupport {
     @Override
     protected CamelContext createCamelContext() throws Exception {
         return CUSTOM_CONTEXT;
+    }
+
+    @Override
+    protected void doStopCamelContext(CamelContext context, Service camelContextService) {
+        //don't stop
+    }
+
+    @Override
+    protected void doSetUp() throws Exception {
+        if (context == null) {
+            super.doSetUp();
+        }
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,8 @@ package org.springframework.jdbc.core;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.dao.DataAccessException;
+import org.springframework.lang.Nullable;
 
 /**
  * Generic callback interface for code that operates on a JDBC Statement.
@@ -37,7 +36,7 @@ import org.springframework.dao.DataAccessException;
  * @see JdbcTemplate#execute(StatementCallback)
  */
 @FunctionalInterface
-public interface StatementCallback<T extends @Nullable Object> {
+public interface StatementCallback<T> {
 
 	/**
 	 * Gets called by {@code JdbcTemplate.execute} with an active JDBC
@@ -68,6 +67,7 @@ public interface StatementCallback<T extends @Nullable Object> {
 	 * @see JdbcTemplate#queryForObject(String, Class)
 	 * @see JdbcTemplate#queryForRowSet(String)
 	 */
+	@Nullable
 	T doInStatement(Statement stmt) throws SQLException, DataAccessException;
 
 }

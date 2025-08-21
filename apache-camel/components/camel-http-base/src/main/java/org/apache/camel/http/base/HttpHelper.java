@@ -24,10 +24,9 @@ import java.util.function.BiConsumer;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
-import org.apache.camel.support.http.HttpUtil;
-import org.apache.camel.util.CollectionHelper;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
+import org.apache.camel.util.StringHelper;
 
 public final class HttpHelper {
 
@@ -78,6 +77,26 @@ public final class HttpHelper {
     }
 
     /**
+     * @deprecated use {@link IOHelper#getCharsetNameFromContentType(String)}
+     */
+    @Deprecated
+    public static String getCharsetFromContentType(String contentType) {
+        if (contentType != null) {
+            // find the charset and set it to the Exchange
+            int index = contentType.indexOf("charset=");
+            if (index > 0) {
+                String charset = contentType.substring(index + 8);
+                // there may be another parameter after a semi colon, so skip that
+                if (charset.contains(";")) {
+                    charset = StringHelper.before(charset, ";");
+                }
+                return IOHelper.normalizeCharset(charset);
+            }
+        }
+        return null;
+    }
+
+    /**
      * Appends the key/value to the headers.
      * <p/>
      * This implementation supports keys with multiple values. In such situations the value will be a
@@ -87,8 +106,22 @@ public final class HttpHelper {
      * @param key     the key
      * @param value   the value
      */
+    @SuppressWarnings("unchecked")
     public static void appendHeader(Map<String, Object> headers, String key, Object value) {
-        CollectionHelper.appendEntry(headers, key, value);
+        if (headers.containsKey(key)) {
+            Object existing = headers.get(key);
+            List<Object> list;
+            if (existing instanceof List) {
+                list = (List<Object>) existing;
+            } else {
+                list = new ArrayList<>();
+                list.add(existing);
+            }
+            list.add(value);
+            value = list;
+        }
+
+        headers.put(key, value);
     }
 
     /**
@@ -103,7 +136,7 @@ public final class HttpHelper {
      * @return       the extracted parameter value, see more details in javadoc.
      */
     public static Object extractHttpParameterValue(String value) {
-        if (ObjectHelper.isEmpty(value)) {
+        if (value == null || ObjectHelper.isEmpty(value)) {
             return value;
         }
 
@@ -132,13 +165,28 @@ public final class HttpHelper {
      * @return                   <tt>true</tt> if ok, <tt>false</tt> otherwise
      */
     public static boolean isStatusCodeOk(int statusCode, String okStatusCodeRange) {
-        return HttpUtil.isStatusCodeOk(statusCode, okStatusCodeRange);
+        String[] ranges = okStatusCodeRange.split(",");
+        for (String range : ranges) {
+            boolean ok;
+            if (range.contains("-")) {
+                int from = Integer.parseInt(StringHelper.before(range, "-"));
+                int to = Integer.parseInt(StringHelper.after(range, "-"));
+                ok = statusCode >= from && statusCode <= to;
+            } else {
+                int exact = Integer.parseInt(range);
+                ok = exact == statusCode;
+            }
+            if (ok) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
      * In the endpoint the user may have defined rest {} placeholders. This helper method map those placeholders with
      * data from the incoming request context path
-     *
+     * 
      * @param headersMap   a Map instance containing the headers
      * @param path         the URL path
      * @param consumerPath the consumer path
@@ -150,7 +198,7 @@ public final class HttpHelper {
     /**
      * In the endpoint the user may have defined rest {} placeholders. This helper method map those placeholders with
      * data from the incoming request context path
-     *
+     * 
      * @param keyPairConsumer a consumer for the placeholder key pair
      * @param path            the URL path
      * @param consumerPath    the consumer path

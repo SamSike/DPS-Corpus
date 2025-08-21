@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.spi.PersistenceProvider;
 import jakarta.persistence.spi.PersistenceUnitInfo;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * SPI interface that allows to plug in vendor-specific behavior
@@ -44,11 +45,12 @@ public interface JpaVendorAdapter {
 
 	/**
 	 * Return the name of the persistence provider's root package
-	 * (for example, "oracle.toplink.essentials"). Will be used for
+	 * (e.g. "oracle.toplink.essentials"). Will be used for
 	 * excluding provider classes from temporary class overriding.
 	 * @since 2.5.2
 	 */
-	default @Nullable String getPersistenceProviderRootPackage() {
+	@Nullable
+	default String getPersistenceProviderRootPackage() {
 		return null;
 	}
 
@@ -64,7 +66,7 @@ public interface JpaVendorAdapter {
 	 * to unit-specific characteristics such as the transaction type.
 	 * <p><b>NOTE:</b> This variant will only be invoked in case of Jakarta EE style
 	 * container bootstrapping where a {@link PersistenceUnitInfo} is present
-	 * (i.e. {@link LocalContainerEntityManagerFactoryBean}). In case of simple
+	 * (i.e. {@link LocalContainerEntityManagerFactoryBean}. In case of simple
 	 * Java SE style bootstrapping via {@link jakarta.persistence.Persistence}
 	 * (i.e. {@link LocalEntityManagerFactoryBean}), the parameter-less
 	 * {@link #getJpaPropertyMap()} variant will be called directly.
@@ -97,7 +99,8 @@ public interface JpaVendorAdapter {
 	 * Return the vendor-specific JpaDialect implementation for this
 	 * provider, or {@code null} if there is none.
 	 */
-	default @Nullable JpaDialect getJpaDialect() {
+	@Nullable
+	default JpaDialect getJpaDialect() {
 		return null;
 	}
 
@@ -137,7 +140,7 @@ public interface JpaVendorAdapter {
 	/**
 	 * Optional callback for post-processing the native EntityManager
 	 * before active use.
-	 * <p>This can be used for setting vendor-specific parameters, for example,
+	 * <p>This can be used for setting vendor-specific parameters, e.g.
 	 * Hibernate filters, on every new EntityManager.
 	 * @since 5.3
 	 */

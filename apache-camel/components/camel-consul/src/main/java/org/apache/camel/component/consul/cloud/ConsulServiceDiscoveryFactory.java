@@ -28,7 +28,6 @@ import org.apache.camel.support.jsse.SSLContextParameters;
 
 @CloudServiceFactory("consul-service-discovery")
 @Configurer
-@Deprecated
 public class ConsulServiceDiscoveryFactory implements ServiceDiscoveryFactory {
     private final ConsulConfiguration configuration;
 

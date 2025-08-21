@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,163 +37,93 @@
  */
 package org.jooq.impl;
 
-import static org.jooq.impl.DSL.*;
-import static org.jooq.impl.Internal.*;
-import static org.jooq.impl.Keywords.*;
-import static org.jooq.impl.Names.*;
-import static org.jooq.impl.SQLDataType.*;
-import static org.jooq.impl.Tools.*;
-import static org.jooq.impl.Tools.BooleanDataKey.*;
-import static org.jooq.impl.Tools.ExtendedDataKey.*;
-import static org.jooq.impl.Tools.SimpleDataKey.*;
-import static org.jooq.SQLDialect.*;
+import static org.jooq.impl.Keywords.K_CASCADE;
+import static org.jooq.impl.Keywords.K_DROP;
+import static org.jooq.impl.Keywords.K_IF_EXISTS;
+import static org.jooq.impl.Keywords.K_RESTRICT;
+import static org.jooq.impl.Keywords.K_TYPE;
 
-import org.jooq.*;
-import org.jooq.Function1;
-import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.impl.QOM.Cascade;
-import org.jooq.tools.StringUtils;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
-
+import org.jooq.Configuration;
+import org.jooq.Context;
+import org.jooq.DropTypeFinalStep;
+import org.jooq.DropTypeStep;
+import org.jooq.Field;
+import org.jooq.Function1;
+import org.jooq.Name;
+import org.jooq.impl.QOM.Cascade;
+import org.jooq.impl.QOM.DropType;
+import org.jooq.impl.QOM.UnmodifiableList;
+import org.jooq.QueryPart;
+// ...
+// ...
 
 /**
- * The <code>DROP TYPE</code> statement.
+ * @author Lukas Eder
  */
-@SuppressWarnings({ "rawtypes", "unused" })
 final class DropTypeImpl
 extends
     AbstractDDLQuery
 implements
-    QOM.DropType,
     DropTypeStep,
-    DropTypeFinalStep
+    DropType
 {
 
-    final QueryPartListView<? extends Type<?>> types;
-    final boolean                              ifExists;
-          Cascade                              cascade;
+    private final QueryPartList<Name> type;
+    private final boolean             ifExists;
+    private Cascade                   cascade;
 
-    DropTypeImpl(
-        Configuration configuration,
-        Collection<? extends Type<?>> types,
-        boolean ifExists
-    ) {
-        this(
-            configuration,
-            types,
-            ifExists,
-            null
-        );
-    }
-
-    DropTypeImpl(
-        Configuration configuration,
-        Collection<? extends Type<?>> types,
-        boolean ifExists,
-        Cascade cascade
-    ) {
+    DropTypeImpl(Configuration configuration, Collection<?> type, boolean ifExists) {
         super(configuration);
 
-        this.types = new QueryPartList<>(types);
+        this.type = new QueryPartList<>(Tools.names(type));
         this.ifExists = ifExists;
-        this.cascade = cascade;
     }
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // XXX: DSL API
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     @Override
-    public final DropTypeImpl cascade() {
+    public final DropTypeFinalStep cascade() {
         this.cascade = Cascade.CASCADE;
         return this;
     }
 
     @Override
-    public final DropTypeImpl restrict() {
+    public final DropTypeFinalStep restrict() {
         this.cascade = Cascade.RESTRICT;
         return this;
     }
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // XXX: QueryPart API
-    // -------------------------------------------------------------------------
-
-
-
-    private static final Set<SQLDialect> NO_SUPPORT_IF_EXISTS = SQLDialect.supportedUntil();
+    // ------------------------------------------------------------------------
 
     @Override
     public final void accept(Context<?> ctx) {
+        ctx.visit(K_DROP).sql(' ').visit(K_TYPE);
 
-
-
-
-
-
-
-
-
-
-
-        accept0(ctx);
-    }
-
-    private final boolean supportsIfExists(Context<?> ctx) {
-        return !NO_SUPPORT_IF_EXISTS.contains(ctx.dialect());
-    }
-
-    private final void accept0(Context<?> ctx) {
-        if (ifExists && !supportsIfExists(ctx))
-            tryCatch(ctx, DDLStatementType.DROP_TYPE, c -> accept1(c));
-        else
-            accept1(ctx);
-    }
-
-    private final void accept1(Context<?> ctx) {
-        ctx.visit(K_DROP).sql(' ');
-
-
-
-
-
-
-        ctx.visit(K_TYPE);
-
-        if (ifExists && supportsIfExists(ctx))
+        if (ifExists)
             ctx.sql(' ').visit(K_IF_EXISTS);
 
-        ctx.sql(' ').visit(types);
+        ctx.sql(' ').visit(type);
 
         if (cascade == Cascade.CASCADE)
             ctx.sql(' ').visit(K_CASCADE);
         else if (cascade == Cascade.RESTRICT)
             ctx.sql(' ').visit(K_RESTRICT);
-
-
-
-
-
     }
-
-
-
     // -------------------------------------------------------------------------
     // XXX: Query Object Model
     // -------------------------------------------------------------------------
 
     @Override
-    public final QOM.UnmodifiableList<? extends Type<?>> $types() {
-        return QOM.unmodifiable(types);
+    public final UnmodifiableList<? extends Name> $names() {
+        return QOM.unmodifiable(type);
     }
 
     @Override
@@ -205,30 +135,6 @@ implements
     public final Cascade $cascade() {
         return cascade;
     }
-
-    @Override
-    public final QOM.DropType $types(Collection<? extends Type<?>> newValue) {
-        return $constructor().apply(newValue, $ifExists(), $cascade());
-    }
-
-    @Override
-    public final QOM.DropType $ifExists(boolean newValue) {
-        return $constructor().apply($types(), newValue, $cascade());
-    }
-
-    @Override
-    public final QOM.DropType $cascade(Cascade newValue) {
-        return $constructor().apply($types(), $ifExists(), newValue);
-    }
-
-    public final Function3<? super Collection<? extends Type<?>>, ? super Boolean, ? super Cascade, ? extends QOM.DropType> $constructor() {
-        return (a1, a2, a3) -> new DropTypeImpl(configuration(), (Collection<? extends Type<?>>) a1, a2, a3);
-    }
-
-
-
-
-
 
 
 

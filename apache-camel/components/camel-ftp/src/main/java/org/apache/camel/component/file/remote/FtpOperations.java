@@ -139,15 +139,15 @@ public class FtpOperations implements RemoteFileOperations<FTPFile> {
 
         TaskPayload payload = new TaskPayload(configuration);
 
-        if (!task.run(endpoint.getCamelContext(), this::tryConnect, payload)) {
+        if (!task.run(this::tryConnect, payload)) {
             if (exchange != null) {
                 exchange.getIn().setHeader(FtpConstants.FTP_REPLY_CODE, client.getReplyCode());
                 exchange.getIn().setHeader(FtpConstants.FTP_REPLY_STRING, client.getReplyString());
             }
 
             if (payload.exception != null) {
-                if (payload.exception instanceof GenericFileOperationFailedException genericFileOperationFailedException) {
-                    throw genericFileOperationFailedException;
+                if (payload.exception instanceof GenericFileOperationFailedException) {
+                    throw (GenericFileOperationFailedException) payload.exception;
                 } else {
                     throw new GenericFileOperationFailedException(
                             client.getReplyCode(), client.getReplyString(), payload.exception.getMessage(), payload.exception);
@@ -381,24 +381,26 @@ public class FtpOperations implements RemoteFileOperations<FTPFile> {
             String originalDirectory = client.printWorkingDirectory();
 
             boolean success;
-            // maybe the full directory already exists
-            success = client.changeWorkingDirectory(directory);
-            if (!success) {
-                log.trace("Trying to build remote directory: {}", directory);
-                success = client.makeDirectory(directory);
+            try {
+                // maybe the full directory already exists
+                success = client.changeWorkingDirectory(directory);
                 if (!success) {
-                    // we are here if the server side doesn't create
-                    // intermediate folders so create the folder one by one
-                    success = buildDirectoryChunks(directory);
+                    log.trace("Trying to build remote directory: {}", directory);
+                    success = client.makeDirectory(directory);
+                    if (!success) {
+                        // we are here if the server side doesn't create
+                        // intermediate folders so create the folder one by one
+                        success = buildDirectoryChunks(directory);
+                    }
+                }
+
+                return success;
+            } finally {
+                // change back to original directory
+                if (originalDirectory != null) {
+                    changeCurrentDirectory(originalDirectory);
                 }
             }
-
-            // change back to original directory
-            if (originalDirectory != null) {
-                changeCurrentDirectory(originalDirectory);
-            }
-
-            return success;
         } catch (IOException e) {
             throw new GenericFileOperationFailedException(client.getReplyCode(), client.getReplyString(), e.getMessage(), e);
         }
@@ -696,26 +698,18 @@ public class FtpOperations implements RemoteFileOperations<FTPFile> {
 
             // store the file
             answer = doStoreFile(name, targetName, exchange);
-
+        } catch (GenericFileOperationFailedException e) {
+            clientActivityListener.onGeneralError(endpoint.getConfiguration().remoteServerInformation(), e.getMessage());
+            throw e;
+        } finally {
             // change back to current directory if we changed directory
             if (currentDir != null) {
                 changeCurrentDirectory(currentDir);
             }
-        } catch (GenericFileOperationFailedException e) {
-            clientActivityListener.onGeneralError(endpoint.getConfiguration().remoteServerInformation(), e.getMessage());
-            throw e;
         }
 
         if (answer) {
             clientActivityListener.onUploadComplete(endpoint.getConfiguration().remoteServerInformation(), name);
-        }
-
-        if (!answer) {
-            Integer code = exchange.getIn().getHeader(FtpConstants.FTP_REPLY_CODE, Integer.class);
-            String status = exchange.getIn().getHeader(FtpConstants.FTP_REPLY_STRING, String.class);
-            if (code != null && status != null) {
-                throw new GenericFileOperationFailedException(code, status, "Error writing file [" + targetName + "]");
-            }
         }
 
         return answer;

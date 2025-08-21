@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.inject.Inject;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -51,7 +50,7 @@ import org.apache.camel.tooling.util.FileUtil;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.execution.MavenSession;
+import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Exclusion;
@@ -60,13 +59,11 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.DefaultProjectBuildingRequest;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.ProjectBuildingRequest;
-import org.apache.maven.shared.transfer.artifact.resolve.ArtifactResolver;
 
 /**
  * Generate BOM by flattening the current project's dependency management section and applying exclusions.
@@ -79,12 +76,6 @@ public class BomGeneratorMojo extends AbstractMojo {
      */
     @Parameter(defaultValue = "${project}", readonly = true)
     protected MavenProject project;
-
-    /**
-     * The maven session.
-     */
-    @Parameter(defaultValue = "${session}", required = true, readonly = true)
-    private MavenSession session;
 
     /**
      * The source pom template file.
@@ -101,24 +92,26 @@ public class BomGeneratorMojo extends AbstractMojo {
     /**
      * The user configuration
      */
-    @Parameter
+    @Parameter(readonly = true)
     protected DependencySet dependencies;
 
     /**
      * The conflict checks configured by the user
      */
-    @Parameter
+    @Parameter(readonly = true)
     protected ExternalBomConflictCheckSet checkConflicts;
 
     /**
      * Used to look up Artifacts in the remote repository.
      */
-    protected final ArtifactFactory artifactFactory;
+    @Component
+    protected ArtifactFactory artifactFactory;
 
     /**
      * Used to look up Artifacts in the remote repository.
      */
-    protected final ArtifactResolver artifactResolver;
+    @Component
+    protected ArtifactResolver artifactResolver;
 
     /**
      * List of Remote Repositories used by the resolver
@@ -132,18 +125,12 @@ public class BomGeneratorMojo extends AbstractMojo {
     @Parameter(property = "localRepository", readonly = true, required = true)
     protected ArtifactRepository localRepository;
 
-    @Inject
-    public BomGeneratorMojo(ArtifactFactory artifactFactory, ArtifactResolver artifactResolver) {
-        this.artifactFactory = artifactFactory;
-        this.artifactResolver = artifactResolver;
-    }
-
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         try {
             DependencyManagement mng = project.getDependencyManagement();
 
-            List<Dependency> filteredDependencies = filter(mng.getDependencies());
+            List<Dependency> filteredDependencies = enhance(filter(mng.getDependencies()));
 
             Set<String> externallyManagedDependencies = getExternallyManagedDependencies();
             checkConflictsWithExternalBoms(filteredDependencies, externallyManagedDependencies);
@@ -160,6 +147,17 @@ public class BomGeneratorMojo extends AbstractMojo {
         } catch (Exception ex) {
             throw new MojoExecutionException("Cannot generate the output BOM file", ex);
         }
+    }
+
+    private List<Dependency> enhance(List<Dependency> dependencyList) {
+
+        for (Dependency dep : dependencyList) {
+            if (dep.getGroupId().startsWith("org.apache.camel") && project.getVersion().equals(dep.getVersion())) {
+                dep.setVersion("${project.version}");
+            }
+        }
+
+        return dependencyList;
     }
 
     private List<Dependency> filter(List<Dependency> dependencyList) {
@@ -423,14 +421,10 @@ public class BomGeneratorMojo extends AbstractMojo {
     private Artifact resolveArtifact(String groupId, String artifactId, String version, String type) throws Exception {
 
         Artifact art = artifactFactory.createArtifact(groupId, artifactId, version, "runtime", type);
-        ProjectBuildingRequest buildingRequest = new DefaultProjectBuildingRequest(session.getProjectBuildingRequest());
-        buildingRequest
-                .setRemoteRepositories(remoteRepositories)
-                .setLocalRepository(localRepository);
 
-        return artifactResolver
-                .resolveArtifact(buildingRequest, art)
-                .getArtifact();
+        artifactResolver.resolve(art, remoteRepositories, localRepository);
+
+        return art;
     }
 
     private MavenProject loadExternalProjectPom(File pomFile) throws Exception {

@@ -65,7 +65,7 @@ public class ManagedStepTest extends ManagementTestSupport {
         String state = (String) mbeanServer.getAttribute(on, "State");
         assertEquals(ServiceStatus.Started.name(), state);
 
-        ManagedCamelContext mcc = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
+        ManagedCamelContext mcc = context.getExtension(ManagedCamelContext.class);
         ManagedStepMBean step = mcc.getManagedStep("foo");
 
         assertEquals("foo", step.getProcessorId());
@@ -94,10 +94,10 @@ public class ManagedStepTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("route1")
                         .step("foo")
                         .to("log:foo").id("abc")

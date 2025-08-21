@@ -27,6 +27,7 @@ import org.apache.camel.CamelContextAware;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.ExchangePropertyKey;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.RuntimeCamelException;
@@ -64,7 +65,7 @@ public class WireTapProcessor extends AsyncProcessorSupport
     private final ExchangePattern exchangePattern;
     private final boolean copy;
     private final ExecutorService executorService;
-    private final boolean shutdownExecutorService;
+    private volatile boolean shutdownExecutorService;
     private final LongAdder taskCount = new LongAdder();
     private ProcessorExchangeFactory processorExchangeFactory;
     private PooledExchangeTaskFactory taskFactory;
@@ -201,10 +202,9 @@ public class WireTapProcessor extends AsyncProcessorSupport
         // send the exchange to the destination using an executor service
         try {
             // create task which has state used during routing
-            Runnable task = taskFactory.acquire(target, null);
-            task = ProcessorHelper.prepareMDCParallelTask(camelContext, task);
+            PooledExchangeTask task = taskFactory.acquire(target, null);
             executorService.submit(task);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             // in case the thread pool rejects or cannot submit the task then we need to catch
             // so camel error handler can react
             exchange.setException(e);
@@ -227,8 +227,9 @@ public class WireTapProcessor extends AsyncProcessorSupport
 
         // if the body is a stream cache we must use a copy of the stream in the wire tapped exchange
         Message msg = answer.getMessage();
-        if (msg.getBody() instanceof StreamCache cache) {
-            // in parallel processing case, the stream must be copied, therefore, get the stream
+        if (msg.getBody() instanceof StreamCache) {
+            // in parallel processing case, the stream must be copied, therefore get the stream
+            StreamCache cache = (StreamCache) msg.getBody();
             StreamCache copied = cache.copy(answer);
             if (copied != null) {
                 msg.setBody(copied);
@@ -247,29 +248,20 @@ public class WireTapProcessor extends AsyncProcessorSupport
         return answer;
     }
 
-    private Exchange configureCopyExchange(Exchange exchange) throws IOException {
+    private Exchange configureCopyExchange(Exchange exchange) {
         // must use a copy as we dont want it to cause side effects of the original exchange
-        Exchange target = processorExchangeFactory.createCorrelatedCopy(exchange, false);
-        // should not be correlated, but we needed to copy without handover
-        target.removeProperty(ExchangePropertyKey.CORRELATION_ID);
+        Exchange copy = processorExchangeFactory.createCorrelatedCopy(exchange, false);
         // set MEP to InOnly as this wire tap is a fire and forget
-        target.setPattern(ExchangePattern.InOnly);
+        copy.setPattern(ExchangePattern.InOnly);
         // move OUT to IN if needed
-        if (target.hasOut()) {
-            target.setIn(target.getOut());
-            target.setOut(null);
+        if (copy.hasOut()) {
+            copy.setIn(copy.getOut());
+            copy.setOut(null);
         }
         // remove STREAM_CACHE_UNIT_OF_WORK property because this wire tap will
         // close its own created stream cache(s)
-        target.removeProperty(ExchangePropertyKey.STREAM_CACHE_UNIT_OF_WORK);
-        // if the body is stream caching based we need to make a deep copy
-        if (target.getMessage().getBody() instanceof StreamCache sc) {
-            StreamCache newBody = sc.copy(target);
-            if (newBody != null) {
-                target.getMessage().setBody(newBody);
-            }
-        }
-        return target;
+        copy.removeProperty(ExchangePropertyKey.STREAM_CACHE_UNIT_OF_WORK);
+        return copy;
     }
 
     private Exchange configureNewExchange(Exchange exchange) {
@@ -315,12 +307,12 @@ public class WireTapProcessor extends AsyncProcessorSupport
     @Override
     protected void doBuild() throws Exception {
         // create a per processor exchange factory
-        this.processorExchangeFactory = getCamelContext().getCamelContextExtension()
+        this.processorExchangeFactory = getCamelContext().adapt(ExtendedCamelContext.class)
                 .getProcessorExchangeFactory().newProcessorExchangeFactory(this);
         this.processorExchangeFactory.setRouteId(getRouteId());
         this.processorExchangeFactory.setId(getId());
 
-        boolean pooled = camelContext.getCamelContextExtension().getExchangeFactory().isPooled();
+        boolean pooled = camelContext.adapt(ExtendedCamelContext.class).getExchangeFactory().isPooled();
         if (pooled) {
             taskFactory = new PooledTaskFactory(getId()) {
                 @Override
@@ -328,7 +320,7 @@ public class WireTapProcessor extends AsyncProcessorSupport
                     return new WireTapTask();
                 }
             };
-            int capacity = camelContext.getCamelContextExtension().getExchangeFactory().getCapacity();
+            int capacity = camelContext.adapt(ExtendedCamelContext.class).getExchangeFactory().getCapacity();
             taskFactory.setCapacity(capacity);
         } else {
             taskFactory = new PrototypeTaskFactory() {

@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BeanBeforeAggregateIssueTest extends ContextTestSupport {
 
-    private final MyAggRepo myRepo = new MyAggRepo();
+    private MyAggRepo myRepo = new MyAggRepo();
 
     @Test
     public void testBeanBeforeAggregation() throws Exception {
@@ -51,10 +51,10 @@ public class BeanBeforeAggregateIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:start").bean(TestBean.class).aggregate(constant("true"), new BodyInAggregatingStrategy())
                         .aggregationRepository(myRepo).completionSize(2)
                         .to("mock:result");

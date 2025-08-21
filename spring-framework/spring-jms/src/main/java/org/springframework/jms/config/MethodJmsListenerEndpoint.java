@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ package org.springframework.jms.config;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
@@ -33,6 +31,7 @@ import org.springframework.jms.listener.adapter.MessagingMessageListenerAdapter;
 import org.springframework.jms.support.QosSettings;
 import org.springframework.jms.support.converter.MessageConverter;
 import org.springframework.jms.support.destination.DestinationResolver;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.handler.annotation.support.MessageHandlerMethodFactory;
 import org.springframework.messaging.handler.invocation.InvocableHandlerMethod;
@@ -50,15 +49,20 @@ import org.springframework.util.StringValueResolver;
  */
 public class MethodJmsListenerEndpoint extends AbstractJmsListenerEndpoint implements BeanFactoryAware {
 
-	private @Nullable Object bean;
+	@Nullable
+	private Object bean;
 
-	private @Nullable Method method;
+	@Nullable
+	private Method method;
 
-	private @Nullable Method mostSpecificMethod;
+	@Nullable
+	private Method mostSpecificMethod;
 
-	private @Nullable MessageHandlerMethodFactory messageHandlerMethodFactory;
+	@Nullable
+	private MessageHandlerMethodFactory messageHandlerMethodFactory;
 
-	private @Nullable StringValueResolver embeddedValueResolver;
+	@Nullable
+	private StringValueResolver embeddedValueResolver;
 
 
 	/**
@@ -68,7 +72,8 @@ public class MethodJmsListenerEndpoint extends AbstractJmsListenerEndpoint imple
 		this.bean = bean;
 	}
 
-	public @Nullable Object getBean() {
+	@Nullable
+	public Object getBean() {
 		return this.bean;
 	}
 
@@ -79,7 +84,8 @@ public class MethodJmsListenerEndpoint extends AbstractJmsListenerEndpoint imple
 		this.method = method;
 	}
 
-	public @Nullable Method getMethod() {
+	@Nullable
+	public Method getMethod() {
 		return this.method;
 	}
 
@@ -93,7 +99,8 @@ public class MethodJmsListenerEndpoint extends AbstractJmsListenerEndpoint imple
 		this.mostSpecificMethod = mostSpecificMethod;
 	}
 
-	public @Nullable Method getMostSpecificMethod() {
+	@Nullable
+	public Method getMostSpecificMethod() {
 		if (this.mostSpecificMethod != null) {
 			return this.mostSpecificMethod;
 		}
@@ -129,8 +136,8 @@ public class MethodJmsListenerEndpoint extends AbstractJmsListenerEndpoint imple
 	 */
 	@Override
 	public void setBeanFactory(@Nullable BeanFactory beanFactory) {
-		if (this.embeddedValueResolver == null && beanFactory instanceof ConfigurableBeanFactory cbf) {
-			this.embeddedValueResolver = new EmbeddedValueResolver(cbf);
+		if (this.embeddedValueResolver == null && beanFactory instanceof ConfigurableBeanFactory) {
+			this.embeddedValueResolver = new EmbeddedValueResolver((ConfigurableBeanFactory) beanFactory);
 		}
 	}
 
@@ -181,7 +188,8 @@ public class MethodJmsListenerEndpoint extends AbstractJmsListenerEndpoint imple
 	/**
 	 * Return the default response destination, if any.
 	 */
-	protected @Nullable String getDefaultResponseDestination() {
+	@Nullable
+	protected String getDefaultResponseDestination() {
 		Method specificMethod = getMostSpecificMethod();
 		if (specificMethod == null) {
 			return null;
@@ -198,7 +206,8 @@ public class MethodJmsListenerEndpoint extends AbstractJmsListenerEndpoint imple
 		return null;
 	}
 
-	private @Nullable SendTo getSendTo(Method specificMethod) {
+	@Nullable
+	private SendTo getSendTo(Method specificMethod) {
 		SendTo ann = AnnotatedElementUtils.findMergedAnnotation(specificMethod, SendTo.class);
 		if (ann == null) {
 			ann = AnnotatedElementUtils.findMergedAnnotation(specificMethod.getDeclaringClass(), SendTo.class);
@@ -206,7 +215,8 @@ public class MethodJmsListenerEndpoint extends AbstractJmsListenerEndpoint imple
 		return ann;
 	}
 
-	private @Nullable String resolve(String value) {
+	@Nullable
+	private String resolve(String value) {
 		return (this.embeddedValueResolver != null ? this.embeddedValueResolver.resolveStringValue(value) : value);
 	}
 

@@ -21,9 +21,9 @@ import org.apache.camel.Route;
 import org.apache.camel.model.ProcessorDefinition;
 import org.apache.camel.processor.DisabledProcessor;
 
-public class DisabledReifier<T extends ProcessorDefinition<?>> extends ProcessorReifier<T> {
+public class DisabledReifier extends ProcessorReifier {
 
-    public DisabledReifier(Route route, T definition) {
+    public DisabledReifier(Route route, ProcessorDefinition<?> definition) {
         super(route, definition);
     }
 

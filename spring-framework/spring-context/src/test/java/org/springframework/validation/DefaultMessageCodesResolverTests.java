@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,13 +34,13 @@ class DefaultMessageCodesResolverTests {
 
 
 	@Test
-	void shouldResolveMessageCode() {
+	void shouldResolveMessageCode() throws Exception {
 		String[] codes = resolver.resolveMessageCodes("errorCode", "objectName");
 		assertThat(codes).containsExactly("errorCode.objectName", "errorCode");
 	}
 
 	@Test
-	void shouldResolveFieldMessageCode() {
+	void shouldResolveFieldMessageCode() throws Exception {
 		String[] codes = resolver.resolveMessageCodes("errorCode", "objectName", "field", TestBean.class);
 		assertThat(codes).containsExactly(
 				"errorCode.objectName.field",
@@ -50,7 +50,7 @@ class DefaultMessageCodesResolverTests {
 	}
 
 	@Test
-	void shouldResolveIndexedFieldMessageCode() {
+	void shouldResolveIndexedFieldMessageCode() throws Exception {
 		String[] codes = resolver.resolveMessageCodes("errorCode", "objectName", "a.b[3].c[5].d", TestBean.class);
 		assertThat(codes).containsExactly(
 				"errorCode.objectName.a.b[3].c[5].d",
@@ -65,14 +65,14 @@ class DefaultMessageCodesResolverTests {
 	}
 
 	@Test
-	void shouldResolveMessageCodeWithPrefix() {
+	void shouldResolveMessageCodeWithPrefix() throws Exception {
 		resolver.setPrefix("prefix.");
 		String[] codes = resolver.resolveMessageCodes("errorCode", "objectName");
 		assertThat(codes).containsExactly("prefix.errorCode.objectName", "prefix.errorCode");
 	}
 
 	@Test
-	void shouldResolveFieldMessageCodeWithPrefix() {
+	void shouldResolveFieldMessageCodeWithPrefix() throws Exception {
 		resolver.setPrefix("prefix.");
 		String[] codes = resolver.resolveMessageCodes("errorCode", "objectName", "field", TestBean.class);
 		assertThat(codes).containsExactly(
@@ -83,7 +83,7 @@ class DefaultMessageCodesResolverTests {
 	}
 
 	@Test
-	void shouldSupportNullPrefix() {
+	void shouldSupportNullPrefix() throws Exception {
 		resolver.setPrefix(null);
 		String[] codes = resolver.resolveMessageCodes("errorCode", "objectName", "field", TestBean.class);
 		assertThat(codes).containsExactly(
@@ -94,7 +94,7 @@ class DefaultMessageCodesResolverTests {
 	}
 
 	@Test
-	void shouldSupportMalformedIndexField() {
+	void shouldSupportMalformedIndexField() throws Exception {
 		String[] codes = resolver.resolveMessageCodes("errorCode", "objectName", "field[", TestBean.class);
 		assertThat(codes).containsExactly(
 				"errorCode.objectName.field[",
@@ -104,7 +104,7 @@ class DefaultMessageCodesResolverTests {
 	}
 
 	@Test
-	void shouldSupportNullFieldType() {
+	void shouldSupportNullFieldType() throws Exception {
 		String[] codes = resolver.resolveMessageCodes("errorCode", "objectName", "field", null);
 		assertThat(codes).containsExactly(
 				"errorCode.objectName.field",
@@ -113,14 +113,14 @@ class DefaultMessageCodesResolverTests {
 	}
 
 	@Test
-	void shouldSupportPostfixFormat() {
+	void shouldSupportPostfixFormat() throws Exception {
 		resolver.setMessageCodeFormatter(Format.POSTFIX_ERROR_CODE);
 		String[] codes = resolver.resolveMessageCodes("errorCode", "objectName");
 		assertThat(codes).containsExactly("objectName.errorCode", "errorCode");
 	}
 
 	@Test
-	void shouldSupportFieldPostfixFormat() {
+	void shouldSupportFieldPostfixFormat() throws Exception {
 		resolver.setMessageCodeFormatter(Format.POSTFIX_ERROR_CODE);
 		String[] codes = resolver.resolveMessageCodes("errorCode", "objectName", "field", TestBean.class);
 		assertThat(codes).containsExactly(
@@ -131,7 +131,7 @@ class DefaultMessageCodesResolverTests {
 	}
 
 	@Test
-	void shouldSupportCustomFormat() {
+	void shouldSupportCustomFormat() throws Exception {
 		resolver.setMessageCodeFormatter((errorCode, objectName, field) ->
 				DefaultMessageCodesResolver.Format.toDelimitedString("CUSTOM-" + errorCode, objectName, field));
 		String[] codes = resolver.resolveMessageCodes("errorCode", "objectName");

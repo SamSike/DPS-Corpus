@@ -40,11 +40,6 @@ public class SetHeaderDefinition extends ExpressionNode {
     public SetHeaderDefinition() {
     }
 
-    protected SetHeaderDefinition(SetHeaderDefinition source) {
-        super(source);
-        this.name = source.name;
-    }
-
     public SetHeaderDefinition(String name, ExpressionDefinition expression) {
         super(expression);
         setName(name);
@@ -58,11 +53,6 @@ public class SetHeaderDefinition extends ExpressionNode {
     public SetHeaderDefinition(String name, String value) {
         super(ExpressionBuilder.constantExpression(value));
         setName(name);
-    }
-
-    @Override
-    public SetHeaderDefinition copyDefinition() {
-        return new SetHeaderDefinition(this);
     }
 
     @Override

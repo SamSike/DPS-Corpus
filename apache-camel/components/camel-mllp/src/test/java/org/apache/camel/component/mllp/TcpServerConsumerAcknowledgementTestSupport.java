@@ -75,7 +75,7 @@ public abstract class TcpServerConsumerAcknowledgementTestSupport extends CamelT
         DefaultCamelContext context = (DefaultCamelContext) super.createCamelContext();
 
         context.setUseMDCLogging(true);
-        context.getCamelContextExtension().setName(this.getClass().getSimpleName());
+        context.setName(this.getClass().getSimpleName());
 
         return context;
     }
@@ -114,8 +114,8 @@ public abstract class TcpServerConsumerAcknowledgementTestSupport extends CamelT
                 fromF("mllp://%s:%d?bridgeErrorHandler=%b&autoAck=%b&exchangePattern=%s&connectTimeout=%d&receiveTimeout=%d",
                         mllpClient.getMllpHost(), mllpClient.getMllpPort(), isBridgeErrorHandler(), isAutoAck(),
                         exchangePattern(), connectTimeout, responseTimeout)
-                        .routeId(routeId)
-                        .to(result);
+                                .routeId(routeId)
+                                .to(result);
             }
         };
     }

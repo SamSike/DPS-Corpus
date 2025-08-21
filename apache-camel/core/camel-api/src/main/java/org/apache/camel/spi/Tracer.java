@@ -16,10 +16,10 @@
  */
 package org.apache.camel.spi;
 
-import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.NamedNode;
 import org.apache.camel.NamedRoute;
+import org.apache.camel.Route;
 import org.apache.camel.StaticService;
 
 /**
@@ -60,22 +60,22 @@ public interface Tracer extends StaticService {
     void traceAfterNode(NamedNode node, Exchange exchange);
 
     /**
-     * Trace when an Exchange was sent to a given endpoint
-     *
-     * @param node     the node EIP
-     * @param exchange the exchange
-     * @param endpoint the endpoint the exchange was sent to
-     * @param elapsed  time in millis for sending the exchange
-     */
-    void traceSentNode(NamedNode node, Exchange exchange, Endpoint endpoint, long elapsed);
-
-    /**
      * Trace after the route (eg output from route)
      *
      * @param route    the route EIP
      * @param exchange the exchange
      */
     void traceAfterRoute(NamedRoute route, Exchange exchange);
+
+    /**
+     * Trace after the route (eg output from route)
+     *
+     * @param      route    the route
+     * @param      exchange the exchange
+     * @deprecated          use {@link #traceAfterRoute(NamedRoute, Exchange)}
+     */
+    @Deprecated
+    void traceAfterRoute(Route route, Exchange exchange);
 
     /**
      * Number of traced messages
@@ -99,7 +99,7 @@ public interface Tracer extends StaticService {
 
     /**
      * Whether the tracer is standby.
-     * <p>
+     *
      * If a tracer is in standby then the tracer is activated during startup and are ready to be enabled manually via
      * JMX or calling the enabled method.
      */
@@ -107,33 +107,11 @@ public interface Tracer extends StaticService {
 
     /**
      * Whether the tracer is standby.
-     * <p>
+     *
      * If a tracer is in standby then the tracer is activated during startup and are ready to be enabled manually via
      * JMX or calling the enabled method.
      */
     void setStandby(boolean standby);
-
-    /**
-     * Whether to trace routes that is created from Rest DSL.
-     */
-    boolean isTraceRests();
-
-    /**
-     * Whether to trace routes that is created from route templates or kamelets.
-     */
-    void setTraceRests(boolean traceRests);
-
-    /**
-     * Whether tracing should trace inner details from route templates (or kamelets). Turning this off can reduce the
-     * verbosity of tracing when using many route templates, and allow to focus on tracing your own Camel routes only.
-     */
-    boolean isTraceTemplates();
-
-    /**
-     * Whether tracing should trace inner details from route templates (or kamelets). Turning this off can reduce the
-     * verbosity of tracing when using many route templates, and allow to focus on tracing your own Camel routes only.
-     */
-    void setTraceTemplates(boolean traceTemplates);
 
     /**
      * Tracing pattern to match which node EIPs to trace. For example to match all To EIP nodes, use to*. The pattern

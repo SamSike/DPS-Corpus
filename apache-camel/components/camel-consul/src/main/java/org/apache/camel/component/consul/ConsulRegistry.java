@@ -32,15 +32,15 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import com.orbitz.consul.Consul;
+import com.orbitz.consul.ConsulException;
+import com.orbitz.consul.KeyValueClient;
+import com.orbitz.consul.SessionClient;
+import com.orbitz.consul.model.session.ImmutableSession;
+import com.orbitz.consul.model.session.SessionCreatedResponse;
 import org.apache.camel.NoSuchBeanException;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.spi.Registry;
-import org.kiwiproject.consul.Consul;
-import org.kiwiproject.consul.ConsulException;
-import org.kiwiproject.consul.KeyValueClient;
-import org.kiwiproject.consul.SessionClient;
-import org.kiwiproject.consul.model.session.ImmutableSession;
-import org.kiwiproject.consul.model.session.SessionCreatedResponse;
 
 /**
  * Apache Camel Plug-in for Consul Registry (Objects stored under kv/key as well as bookmarked under kv/[type]/key to
@@ -156,24 +156,12 @@ public class ConsulRegistry implements Registry {
     }
 
     @Override
-    public void bind(String id, Class<?> type, Object bean) throws RuntimeCamelException {
+    public void bind(String id, Class type, Object bean) throws RuntimeCamelException {
         put(id, bean);
     }
 
     @Override
-    public void bind(String id, Class<?> type, Object bean, String initMethod, String destroyMethod)
-            throws RuntimeCamelException {
-        throw new UnsupportedOperationException("Binding with init/destroy method not supported");
-    }
-
-    @Override
     public void bind(String id, Class<?> type, Supplier<Object> bean) throws RuntimeCamelException {
-        throw new UnsupportedOperationException("Binding with supplier not supported");
-    }
-
-    @Override
-    public void bind(String id, Class<?> type, Supplier<Object> bean, String initMethod, String destroyMethod)
-            throws RuntimeCamelException {
         throw new UnsupportedOperationException("Binding with supplier not supported");
     }
 
@@ -185,7 +173,7 @@ public class ConsulRegistry implements Registry {
     public void remove(String key) {
         // create session to avoid conflicts (not sure if that is safe enough)
         SessionClient sessionClient = consul.sessionClient();
-        String sessionName = "session_" + UUID.randomUUID();
+        String sessionName = "session_" + UUID.randomUUID().toString();
 
         SessionCreatedResponse response = sessionClient.createSession(ImmutableSession.builder().name(sessionName).build());
         String sessionId = response.getId();
@@ -208,7 +196,7 @@ public class ConsulRegistry implements Registry {
         // create session to avoid conflicts
         // (not sure if that is safe enough, again)
         SessionClient sessionClient = consul.sessionClient();
-        String sessionName = "session_" + UUID.randomUUID();
+        String sessionName = "session_" + UUID.randomUUID().toString();
         SessionCreatedResponse response = sessionClient.createSession(ImmutableSession.builder().name(sessionName).build());
         String sessionId = response.getId();
         kvClient = consul.keyValueClient();
@@ -284,7 +272,7 @@ public class ConsulRegistry implements Registry {
 
         /**
          * Encodes using Base64.
-         *
+         * 
          * @param  binaryData the data to encode
          * @return            an encoded data as a {@link String}
          */
@@ -319,8 +307,9 @@ public class ConsulRegistry implements Registry {
 
         /**
          * Serializes the given {@code serializable} using Java Serialization
-         *
-         * @return the serialized object as a byte array
+         * 
+         * @param  serializable
+         * @return              the serialized object as a byte array
          */
         static byte[] serialize(Serializable serializable) {
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream(512);

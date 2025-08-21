@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,18 @@ import java.util.Map;
 
 import groovy.text.Template;
 import groovy.text.markup.MarkupTemplateEngine;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextException;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.view.AbstractTemplateView;
+import org.springframework.web.util.NestedServletException;
 
 /**
  * An {@link AbstractTemplateView} subclass based on Groovy XML/XHTML markup templates.
@@ -46,12 +46,13 @@ import org.springframework.web.servlet.view.AbstractTemplateView;
  * @since 4.1
  * @see GroovyMarkupViewResolver
  * @see GroovyMarkupConfigurer
- * @see <a href="https://groovy-lang.org/templating.html#_the_markuptemplateengine">
+ * @see <a href="http://groovy-lang.org/templating.html#_the_markuptemplateengine">
  * Groovy Markup Template engine documentation</a>
  */
 public class GroovyMarkupView extends AbstractTemplateView {
 
-	private @Nullable MarkupTemplateEngine engine;
+	@Nullable
+	private MarkupTemplateEngine engine;
 
 
 	/**
@@ -132,7 +133,7 @@ public class GroovyMarkupView extends AbstractTemplateView {
 		}
 		catch (ClassNotFoundException ex) {
 			Throwable cause = (ex.getCause() != null ? ex.getCause() : ex);
-			throw new ServletException(
+			throw new NestedServletException(
 					"Could not find class while rendering Groovy Markup view with name '" +
 					getUrl() + "': " + ex.getMessage() + "'", cause);
 		}

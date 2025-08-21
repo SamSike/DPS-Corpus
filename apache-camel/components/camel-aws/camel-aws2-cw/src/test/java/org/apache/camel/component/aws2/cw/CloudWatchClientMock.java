@@ -17,7 +17,6 @@
 package org.apache.camel.component.aws2.cw;
 
 import software.amazon.awssdk.services.cloudwatch.CloudWatchClient;
-import software.amazon.awssdk.services.cloudwatch.CloudWatchServiceClientConfiguration;
 import software.amazon.awssdk.services.cloudwatch.model.PutMetricDataRequest;
 import software.amazon.awssdk.services.cloudwatch.model.PutMetricDataResponse;
 
@@ -36,11 +35,6 @@ public class CloudWatchClientMock implements CloudWatchClient {
     public PutMetricDataResponse putMetricData(PutMetricDataRequest request) {
         PutMetricDataResponse.Builder builder = PutMetricDataResponse.builder();
         return builder.build();
-    }
-
-    @Override
-    public CloudWatchServiceClientConfiguration serviceClientConfiguration() {
-        return null;
     }
 
 }

@@ -30,6 +30,7 @@ import org.apache.camel.Predicate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.spi.Registry;
+import org.apache.camel.support.SimpleRegistry;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.txt.UniversalEncodingDetector;
@@ -49,38 +50,46 @@ public class TikaParseTest extends CamelTestSupport {
 
     @Test
     public void testDocumentParse() throws Exception {
+
+        File document = new File("src/test/resources/test.doc");
+        template.sendBody("direct:start", document);
+
         resultEndpoint.setExpectedMessageCount(1);
+
         resultEndpoint.expectedMessagesMatches(new Predicate() {
             @Override
             public boolean matches(Exchange exchange) {
-                String body = exchange.getIn().getBody(String.class);
+                Object body = exchange.getIn().getBody(String.class);
                 Map<String, Object> headerMap = exchange.getIn().getHeaders();
                 assertThat(body, instanceOf(String.class));
 
                 Charset detectedCharset = null;
                 try {
-                    InputStream bodyIs = new ByteArrayInputStream(body.getBytes());
+                    InputStream bodyIs = new ByteArrayInputStream(((String) body).getBytes());
                     UniversalEncodingDetector encodingDetector = new UniversalEncodingDetector();
                     detectedCharset = encodingDetector.detect(bodyIs, new Metadata());
                 } catch (IOException e1) {
                     fail();
                 }
 
-                assertThat(detectedCharset, equalTo(StandardCharsets.ISO_8859_1));
-                assertThat(body, containsString("<body/>"));
-                assertThat(headerMap.get(Exchange.CONTENT_TYPE), equalTo("application/x-tika-msoffice"));
+                assertThat(detectedCharset.name(), startsWith(Charset.defaultCharset().name()));
+
+                assertThat((String) body, containsString("test"));
+                assertThat(headerMap.get(Exchange.CONTENT_TYPE), equalTo("application/msword"));
                 return true;
             }
         });
-
-        File document = new File("src/test/resources/test.doc");
-        template.sendBody("direct:start", document);
         resultEndpoint.assertIsSatisfied();
     }
 
     @Test
     public void testDocumentParseWithEncoding() throws Exception {
+
+        File document = new File("src/test/resources/testOpenOffice2.odt");
+        template.sendBody("direct:start4", document);
+
         resultEndpoint.setExpectedMessageCount(1);
+
         resultEndpoint.expectedMessagesMatches(new Predicate() {
             @Override
             public boolean matches(Exchange exchange) {
@@ -102,15 +111,16 @@ public class TikaParseTest extends CamelTestSupport {
                 return true;
             }
         });
-
-        File document = new File("src/test/resources/testOpenOffice2.odt");
-        template.sendBody("direct:start4", document);
         resultEndpoint.assertIsSatisfied();
     }
 
     @Test
     public void testImageParse() throws Exception {
+        File document = new File("src/test/resources/testGIF.gif");
+        template.sendBody("direct:start", document);
+
         resultEndpoint.setExpectedMessageCount(1);
+
         resultEndpoint.expectedMessagesMatches(new Predicate() {
             @Override
             public boolean matches(Exchange exchange) {
@@ -122,15 +132,16 @@ public class TikaParseTest extends CamelTestSupport {
                 return true;
             }
         });
-
-        File document = new File("src/test/resources/testGIF.gif");
-        template.sendBody("direct:start", document);
         resultEndpoint.assertIsSatisfied();
     }
 
     @Test
     public void testEmptyConfigDocumentParse() throws Exception {
+        File document = new File("src/test/resources/test.doc");
+        template.sendBody("direct:start3", document);
+
         resultEndpoint.setExpectedMessageCount(1);
+
         resultEndpoint.expectedMessagesMatches(new Predicate() {
             @Override
             public boolean matches(Exchange exchange) {
@@ -138,19 +149,20 @@ public class TikaParseTest extends CamelTestSupport {
                 Map<String, Object> headerMap = exchange.getIn().getHeaders();
                 assertThat(body, instanceOf(String.class));
                 assertThat((String) body, containsString("<body/>"));
-                assertThat(headerMap.get(Exchange.CONTENT_TYPE), equalTo("application/x-tika-msoffice"));
+                assertThat(headerMap.get(Exchange.CONTENT_TYPE), equalTo("application/msword"));
                 return true;
             }
         });
-
-        File document = new File("src/test/resources/test.doc");
-        template.sendBody("direct:start3", document);
         resultEndpoint.assertIsSatisfied();
     }
 
     @Test
     public void testRegistryConfigDocumentParse() throws Exception {
+        File document = new File("src/test/resources/test.doc");
+        template.sendBody("direct:start3", document);
+
         resultEndpoint.setExpectedMessageCount(1);
+
         resultEndpoint.expectedMessagesMatches(new Predicate() {
             @Override
             public boolean matches(Exchange exchange) {
@@ -158,13 +170,10 @@ public class TikaParseTest extends CamelTestSupport {
                 Map<String, Object> headerMap = exchange.getIn().getHeaders();
                 assertThat(body, instanceOf(String.class));
                 assertThat((String) body, containsString("<body/>"));
-                assertThat(headerMap.get(Exchange.CONTENT_TYPE), equalTo("application/x-tika-msoffice"));
+                assertThat(headerMap.get(Exchange.CONTENT_TYPE), equalTo("application/msword"));
                 return true;
             }
         });
-
-        File document = new File("src/test/resources/test.doc");
-        template.sendBody("direct:start3", document);
         resultEndpoint.assertIsSatisfied();
     }
 
@@ -184,7 +193,9 @@ public class TikaParseTest extends CamelTestSupport {
     }
 
     @Override
-    protected void bindToRegistry(Registry registry) throws Exception {
-        registry.bind("testConfig", new TikaEmptyConfig());
+    protected Registry createCamelRegistry() throws Exception {
+        Registry reg = new SimpleRegistry();
+        reg.bind("testConfig", new TikaEmptyConfig());
+        return reg;
     }
 }

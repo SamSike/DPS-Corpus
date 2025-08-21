@@ -16,18 +16,15 @@
  */
 package org.apache.camel.component.file;
 
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 public class FileConsumerIdempotentKeyChangedIssue2Test extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello" + UUID.randomUUID() + ".txt";
 
     private Endpoint endpoint;
 
@@ -35,7 +32,7 @@ public class FileConsumerIdempotentKeyChangedIssue2Test extends ContextTestSuppo
     public void testFile() throws Exception {
         getMockEndpoint("mock:file").expectedBodiesReceived("Hello World");
 
-        template.sendBodyAndHeader(endpoint, "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader(endpoint, "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         context.getRouteController().startAllRoutes();
 
@@ -47,21 +44,22 @@ public class FileConsumerIdempotentKeyChangedIssue2Test extends ContextTestSuppo
 
         // wait a bit to allow the consumer to poll once and see a non-changed
         // file
-        Awaitility.await().pollDelay(250, TimeUnit.MILLISECONDS).untilAsserted(() -> {
-            template.sendBodyAndHeader(endpoint, "Hello World Again", Exchange.FILE_NAME, TEST_FILE_NAME);
-            assertMockEndpointsSatisfied();
-        });
+        Thread.sleep(50);
+
+        template.sendBodyAndHeader(endpoint, "Hello World Again", Exchange.FILE_NAME, "hello.txt");
+
+        assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
-                endpoint = endpoint(fileUri("?noop=true&initialDelay=0&delay=100"
+            public void configure() throws Exception {
+                endpoint = endpoint(fileUri("?noop=true&initialDelay=0&delay=10"
                                             + "&idempotentKey=${file:name}-${file:size}-${file:modified}"));
 
-                from(endpoint).autoStartup(false).convertBodyTo(String.class).to("log:file").to("mock:file");
+                from(endpoint).noAutoStartup().convertBodyTo(String.class).to("log:file").to("mock:file");
             }
         };
     }

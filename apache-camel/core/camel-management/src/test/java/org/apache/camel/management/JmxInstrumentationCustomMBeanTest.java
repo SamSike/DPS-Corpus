@@ -123,7 +123,8 @@ public class JmxInstrumentationCustomMBeanTest extends JmxInstrumentationUsingDe
 
     private static class CustomComponent extends MockComponent {
         @Override
-        protected Endpoint createEndpoint(final String uri, final String remaining, final Map<String, Object> parameters) {
+        protected Endpoint createEndpoint(final String uri, final String remaining, final Map<String, Object> parameters)
+                throws Exception {
             return new CustomEndpoint(uri, this);
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,22 +21,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.platform.testkit.engine.EngineTestKit;
+import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.springframework.test.context.support.DirtiesContextBeforeModesTestExecutionListener;
 import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
 import static org.springframework.test.context.cache.ContextCacheTestUtils.assertContextCacheStatistics;
 import static org.springframework.test.context.cache.ContextCacheTestUtils.resetContextCache;
+import static org.springframework.test.context.junit4.JUnitTestingUtils.runTestsAndAssertCounters;
 
 /**
  * @author Sam Brannen
@@ -55,30 +54,27 @@ class DirtiesContextInterfaceTests {
 		// for example, via JUnit's @Suite.
 		cacheHits.set(0);
 		cacheMisses.set(0);
-		assertContextCacheStatistics("BeforeClass", 0, 0, cacheHits.get(), cacheMisses.get());
+		assertContextCacheStatistics("BeforeClass", 0, cacheHits.get(), cacheMisses.get());
 	}
 
 	@AfterAll
 	static void verifyFinalCacheState() {
-		assertContextCacheStatistics("AfterClass", 0, 0, cacheHits.get(), cacheMisses.get());
+		assertContextCacheStatistics("AfterClass", 0, cacheHits.get(), cacheMisses.get());
 	}
 
 	@Test
 	void verifyDirtiesContextBehavior() throws Exception {
 		runTestClassAndAssertStats(ClassLevelDirtiesContextWithCleanMethodsAndDefaultModeTestCase.class, 1);
 		assertContextCacheStatistics("after class-level @DirtiesContext with clean test method and default class mode",
-			0, 0, cacheHits.get(), cacheMisses.incrementAndGet());
+			0, cacheHits.get(), cacheMisses.incrementAndGet());
 	}
 
 	private void runTestClassAndAssertStats(Class<?> testClass, int expectedTestCount) throws Exception {
-		EngineTestKit.engine("junit-jupiter")
-			.selectors(selectClass(testClass))
-			.execute()
-			.testEvents()
-			.assertStatistics(stats -> stats.started(expectedTestCount).succeeded(expectedTestCount).failed(0));
+		runTestsAndAssertCounters(testClass, expectedTestCount, 0, expectedTestCount, 0, 0);
 	}
 
-	@ExtendWith(SpringExtension.class)
+
+	@RunWith(SpringRunner.class)
 	// Ensure that we do not include the EventPublishingTestExecutionListener
 	// since it will access the ApplicationContext for each method in the
 	// TestExecutionListener API, thus distorting our cache hit/miss results.
@@ -94,13 +90,13 @@ class DirtiesContextInterfaceTests {
 		ApplicationContext applicationContext;
 
 
-		@Test
+		@org.junit.Test
 		public void verifyContextWasAutowired() {
 			assertThat(this.applicationContext).as("The application context should have been autowired.").isNotNull();
 		}
 
 
-		@Configuration(proxyBeanMethods = false)
+		@Configuration
 		static class Config {
 			/* no beans */
 		}

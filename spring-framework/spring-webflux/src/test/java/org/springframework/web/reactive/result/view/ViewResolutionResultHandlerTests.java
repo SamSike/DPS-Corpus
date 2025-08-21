@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package org.springframework.web.reactive.result.view;
 
-import java.net.URI;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.Arrays;
@@ -28,7 +27,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import io.reactivex.rxjava3.core.Completable;
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -42,8 +40,8 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.ui.ConcurrentModel;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -69,28 +67,19 @@ import static org.springframework.web.testfixture.method.ResolvableMethod.on;
  *
  * @author Rossen Stoyanchev
  */
-class ViewResolutionResultHandlerTests {
+public class ViewResolutionResultHandlerTests {
 
 	private final BindingContext bindingContext = new BindingContext();
 
 
 	@Test
-	void supports() {
+	public void supports() {
 		testSupports(on(Handler.class).annotPresent(ModelAttribute.class).resolveReturnType(String.class));
 		testSupports(on(Handler.class).annotNotPresent(ModelAttribute.class).resolveReturnType(String.class));
 		testSupports(on(Handler.class).resolveReturnType(Mono.class, String.class));
 
 		testSupports(on(Handler.class).resolveReturnType(Rendering.class));
 		testSupports(on(Handler.class).resolveReturnType(Mono.class, Rendering.class));
-
-		testSupports(on(Handler.class).resolveReturnType(FragmentsRendering.class));
-		testSupports(on(Handler.class).resolveReturnType(Flux.class, Fragment.class));
-		testSupports(on(Handler.class).resolveReturnType(
-				Flux.class, ResolvableType.forClassWithGenerics(ServerSentEvent.class, Fragment.class)));
-
-		testSupports(on(Handler.class).resolveReturnType(List.class, Fragment.class));
-		testSupports(on(Handler.class).resolveReturnType(
-				Mono.class, ResolvableType.forClassWithGenerics(List.class, Fragment.class)));
 
 		testSupports(on(Handler.class).resolveReturnType(View.class));
 		testSupports(on(Handler.class).resolveReturnType(Mono.class, View.class));
@@ -133,7 +122,7 @@ class ViewResolutionResultHandlerTests {
 	}
 
 	@Test
-	void viewResolverOrder() {
+	public void viewResolverOrder() {
 		TestViewResolver resolver1 = new TestViewResolver("account");
 		TestViewResolver resolver2 = new TestViewResolver("profile");
 		resolver1.setOrder(2);
@@ -144,7 +133,7 @@ class ViewResolutionResultHandlerTests {
 	}
 
 	@Test
-	void handleReturnValueTypes() {
+	public void handleReturnValueTypes() {
 		Object returnValue;
 		MethodParameter returnType;
 		ViewResolver resolver = new TestViewResolver("account");
@@ -207,22 +196,8 @@ class ViewResolutionResultHandlerTests {
 		assertThat(exchange.getResponse().getHeaders().getFirst("h")).isEqualTo("h1");
 	}
 
-	@Test // gh-33498
-	void handleRedirect() {
-		HttpStatus status = HttpStatus.MOVED_PERMANENTLY;
-		Rendering returnValue = Rendering.redirectTo("foo").status(status).build();
-		MethodParameter returnType = on(Handler.class).resolveReturnType(Rendering.class);
-		HandlerResult result = new HandlerResult(new Object(), returnValue, returnType, this.bindingContext);
-
-		MockServerWebExchange exchange = MockServerWebExchange.from(get("/path"));
-		resultHandler(new UrlBasedViewResolver()).handleResult(exchange, result).block(Duration.ofSeconds(5));
-
-		assertThat(exchange.getResponse().getStatusCode()).isEqualTo(status);
-		assertThat(exchange.getResponse().getHeaders().getLocation()).isEqualTo(URI.create("foo"));
-	}
-
 	@Test
-	void handleWithMultipleResolvers() {
+	public void handleWithMultipleResolvers() {
 		testHandle("/account",
 				on(Handler.class).annotNotPresent(ModelAttribute.class).resolveReturnType(String.class),
 				"profile", "profile: {id=123}",
@@ -230,7 +205,7 @@ class ViewResolutionResultHandlerTests {
 	}
 
 	@Test
-	void defaultViewName() {
+	public void defaultViewName() {
 		testDefaultViewName(null, on(Handler.class).annotPresent(ModelAttribute.class).resolveReturnType(String.class));
 		testDefaultViewName(Mono.empty(), on(Handler.class).resolveReturnType(Mono.class, String.class));
 		testDefaultViewName(Mono.empty(), on(Handler.class).resolveReturnType(Mono.class, Void.class));
@@ -256,7 +231,7 @@ class ViewResolutionResultHandlerTests {
 	}
 
 	@Test
-	void unresolvedViewName() {
+	public void unresolvedViewName() {
 		String returnValue = "account";
 		MethodParameter returnType = on(Handler.class).annotPresent(ModelAttribute.class).resolveReturnType(String.class);
 		HandlerResult result = new HandlerResult(new Object(), returnValue, returnType, this.bindingContext);
@@ -271,7 +246,7 @@ class ViewResolutionResultHandlerTests {
 	}
 
 	@Test
-	void contentNegotiation() {
+	public void contentNegotiation() {
 		TestBean value = new TestBean("Joe");
 		MethodParameter returnType = on(Handler.class).resolveReturnType(TestBean.class);
 		HandlerResult handlerResult = new HandlerResult(new Object(), value, returnType, this.bindingContext);
@@ -293,7 +268,7 @@ class ViewResolutionResultHandlerTests {
 	}
 
 	@Test
-	void contentNegotiationWith406() {
+	public void contentNegotiationWith406() {
 		TestBean value = new TestBean("Joe");
 		MethodParameter returnType = on(Handler.class).resolveReturnType(TestBean.class);
 		HandlerResult handlerResult = new HandlerResult(new Object(), value, returnType, this.bindingContext);
@@ -309,7 +284,7 @@ class ViewResolutionResultHandlerTests {
 	}
 
 	@Test  // SPR-15291
-	void contentNegotiationWithRedirect() {
+	public void contentNegotiationWithRedirect() {
 		HandlerResult handlerResult = new HandlerResult(new Object(), "redirect:/",
 				on(Handler.class).annotNotPresent(ModelAttribute.class).resolveReturnType(String.class),
 				this.bindingContext);
@@ -421,7 +396,7 @@ class ViewResolutionResultHandlerTests {
 				response.getHeaders().setContentType(mediaType);
 			}
 			model = new TreeMap<>(model);
-			String value = this.name + ": " + model;
+			String value = this.name + ": " + model.toString();
 			ByteBuffer byteBuffer = ByteBuffer.wrap(value.getBytes(UTF_8));
 			DataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(byteBuffer);
 			return response.writeWith(Flux.just(dataBuffer));
@@ -458,12 +433,6 @@ class ViewResolutionResultHandlerTests {
 
 		Rendering rendering() { return null; }
 		Mono<Rendering> monoRendering() { return null; }
-
-		FragmentsRendering fragmentsRendering() { return null; }
-		Flux<Fragment> fragmentFlux() { return null; }
-		Flux<ServerSentEvent<Fragment>> fragmentServerSentEventFlux() { return null; }
-		Mono<List<Fragment>> monoFragmentList() { return null; }
-		List<Fragment> fragmentList() { return null; }
 
 		View view() { return null; }
 		Mono<View> monoView() { return null; }

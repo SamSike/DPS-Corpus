@@ -9,7 +9,9 @@
  * routing and handling. The module also contains a functional, reactive
  * {@code WebClient} as well as client and server, reactive WebSocket support.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.reactive;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -66,22 +66,22 @@ public class AsyncDirectForceSynchronousTest extends ContextTestSupport {
         assertTrue(beforeThreadName.equalsIgnoreCase(afterThreadName), "Should use same threads");
     }
 
-    protected RouteBuilder createRouteBuilder(boolean sync) {
+    protected RouteBuilder createRouteBuilder(boolean sync) throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.addComponent("async", new MyAsyncComponent());
 
                 from("direct:start")
                         .to("mock:before")
                         .process(new Processor() {
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 beforeThreadName = Thread.currentThread().getName();
                             }
                         })
                         .to("direct:foo?synchronous=" + sync)
                         .process(new Processor() {
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 afterThreadName = Thread.currentThread().getName();
                             }
                         })

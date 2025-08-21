@@ -52,23 +52,23 @@ public class FailoverLoadBalancerBreakoutDuringShutdownTest extends ContextTestS
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
 
                 from("seda:start").to("mock:before")
                         // just keep on failover
                         .loadBalance().failover(-1, false, true).to("direct:a").to("direct:b").end().to("mock:after");
 
                 from("direct:a").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         throw new IllegalArgumentException("Forced");
                     }
                 });
 
                 from("direct:b").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         throw new IllegalArgumentException("Forced");
                     }
                 });

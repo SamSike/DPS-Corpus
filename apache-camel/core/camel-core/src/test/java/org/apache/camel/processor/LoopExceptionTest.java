@@ -26,7 +26,6 @@ public class LoopExceptionTest extends ContextTestSupport {
     public void testLoopException() throws Exception {
         getMockEndpoint("mock:dead").expectedMessageCount(1);
         getMockEndpoint("mock:loop").expectedMessageCount(1);
-        getMockEndpoint("mock:result").expectedMessageCount(0);
 
         template.sendBody("direct:start", "Hello World");
 
@@ -34,10 +33,10 @@ public class LoopExceptionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead"));
 
                 from("direct:start").loop(3).to("mock:loop").throwException(new IllegalArgumentException("Forced")).end()

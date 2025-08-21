@@ -20,14 +20,12 @@ import org.apache.camel.AsyncCallback;
 import org.apache.camel.AsyncProcessor;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
-import org.apache.camel.spi.ManagementStrategy;
-import org.apache.camel.spi.RouteIdAware;
 import org.apache.camel.support.DefaultAsyncProducer;
 import org.apache.camel.support.ExchangeHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-final class KameletProducer extends DefaultAsyncProducer implements RouteIdAware {
+final class KameletProducer extends DefaultAsyncProducer {
 
     private static final Logger LOG = LoggerFactory.getLogger(KameletProducer.class);
 
@@ -40,8 +38,6 @@ final class KameletProducer extends DefaultAsyncProducer implements RouteIdAware
     private final boolean block;
     private final long timeout;
     private final boolean sink;
-    private String routeId;
-    boolean registerKamelets;
 
     public KameletProducer(KameletEndpoint endpoint, String key) {
         super(endpoint);
@@ -51,6 +47,23 @@ final class KameletProducer extends DefaultAsyncProducer implements RouteIdAware
         this.block = endpoint.isBlock();
         this.timeout = endpoint.getTimeout();
         this.sink = getEndpoint().getEndpointKey().startsWith("kamelet://sink");
+    }
+
+    @Override
+    public void process(Exchange exchange) throws Exception {
+        if (consumer == null || stateCounter != component.getStateCounter()) {
+            stateCounter = component.getStateCounter();
+            consumer = component.getConsumer(key, block, timeout);
+        }
+        if (consumer == null) {
+            if (endpoint.isFailIfNoConsumers()) {
+                throw new KameletConsumerNotAvailableException("No consumers available on endpoint: " + endpoint, exchange);
+            } else {
+                LOG.debug("message ignored, no consumers available on endpoint: {}", endpoint);
+            }
+        } else {
+            consumer.getProcessor().process(exchange);
+        }
     }
 
     @Override
@@ -96,28 +109,9 @@ final class KameletProducer extends DefaultAsyncProducer implements RouteIdAware
                         }
                     }
                 }
-                if (registerKamelets) {
-                    // kamelets are first-class registered as route (as old behavior)
-                    return consumer.getAsyncProcessor().process(exchange, callback);
-                } else {
-                    // kamelet producer that calls its kamelet consumer to process the incoming exchange
-                    // create exchange copy to let a new lifecycle originate from the calling route (not the kamelet route)
-                    final Exchange copy = ExchangeHelper.createCorrelatedCopy(exchange, false, true);
-                    // fake copy as being created by the consumer
-                    copy.getExchangeExtension().setFromEndpoint(consumer.getEndpoint());
-                    copy.getExchangeExtension().setFromRouteId(consumer.getRouteId());
-                    return consumer.getAsyncProcessor().process(copy, doneSync -> {
-                        // copy result back after processing is done
-                        ExchangeHelper.copyResults(exchange, copy);
-                        callback.done(doneSync);
-                    });
-                }
+                // kamelet producer that calls its kamelet consumer to process the incoming exchange
+                return consumer.getAsyncProcessor().process(exchange, callback);
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            exchange.setException(e);
-            callback.done(true);
-            return true;
         } catch (Exception e) {
             exchange.setException(e);
             callback.done(true);
@@ -125,27 +119,8 @@ final class KameletProducer extends DefaultAsyncProducer implements RouteIdAware
         }
     }
 
-    @Override
-    public String getRouteId() {
-        return routeId;
-    }
-
-    @Override
-    public void setRouteId(String routeId) {
-        this.routeId = routeId;
-    }
-
     public String getKey() {
         return key;
-    }
-
-    @Override
-    protected void doInit() throws Exception {
-        super.doInit();
-        ManagementStrategy ms = getEndpoint().getCamelContext().getManagementStrategy();
-        if (ms != null && ms.getManagementAgent() != null) {
-            registerKamelets = ms.getManagementAgent().getRegisterRoutesCreateByKamelet();
-        }
     }
 
 }

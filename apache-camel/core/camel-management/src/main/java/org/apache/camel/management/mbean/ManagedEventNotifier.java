@@ -34,8 +34,8 @@ public class ManagedEventNotifier extends NotificationBroadcasterSupport impleme
     public ManagedEventNotifier(CamelContext context, EventNotifier eventNotifier) {
         this.context = context;
         this.eventNotifier = eventNotifier;
-        if (eventNotifier instanceof JmxNotificationBroadcasterAware jmxNotifier) {
-            jmxNotifier.setNotificationBroadcaster(this);
+        if (eventNotifier instanceof JmxNotificationBroadcasterAware) {
+            ((JmxNotificationBroadcasterAware) eventNotifier).setNotificationBroadcaster(this);
         }
     }
 
@@ -183,7 +183,7 @@ public class ManagedEventNotifier extends NotificationBroadcasterSupport impleme
             infos.add(info);
         }
 
-        return infos.toArray(new MBeanNotificationInfo[0]);
+        return infos.toArray(new MBeanNotificationInfo[infos.size()]);
     }
 
 }

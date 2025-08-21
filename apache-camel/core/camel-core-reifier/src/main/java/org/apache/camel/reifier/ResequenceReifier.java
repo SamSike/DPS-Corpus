@@ -18,6 +18,7 @@ package org.apache.camel.reifier;
 
 import org.apache.camel.AsyncProcessor;
 import org.apache.camel.Expression;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
 import org.apache.camel.model.ProcessorDefinition;
@@ -29,7 +30,6 @@ import org.apache.camel.processor.Resequencer;
 import org.apache.camel.processor.StreamResequencer;
 import org.apache.camel.processor.resequencer.DefaultExchangeComparator;
 import org.apache.camel.processor.resequencer.ExpressionResultComparator;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.util.ObjectHelper;
 
 public class ResequenceReifier extends ProcessorReifier<ResequenceDefinition> {
@@ -44,10 +44,10 @@ public class ResequenceReifier extends ProcessorReifier<ResequenceDefinition> {
         ResequencerConfig resequencer = definition.getResequencerConfig();
         StreamResequencerConfig stream = definition.getStreamConfig();
         BatchResequencerConfig batch = definition.getBatchConfig();
-        if (resequencer instanceof StreamResequencerConfig streamResequencerConfig) {
-            stream = streamResequencerConfig;
-        } else if (resequencer instanceof BatchResequencerConfig batchResequencerConfig) {
-            batch = batchResequencerConfig;
+        if (resequencer instanceof StreamResequencerConfig) {
+            stream = (StreamResequencerConfig) resequencer;
+        } else if (resequencer instanceof BatchResequencerConfig) {
+            batch = (BatchResequencerConfig) resequencer;
         }
 
         if (stream != null) {
@@ -68,12 +68,13 @@ public class ResequenceReifier extends ProcessorReifier<ResequenceDefinition> {
      * @return           the configured batch resequencer.
      * @throws Exception can be thrown
      */
+    @SuppressWarnings("deprecation")
     protected Resequencer createBatchResequencer(BatchResequencerConfig config) throws Exception {
         Processor processor = this.createChildProcessor(true);
         Expression expression = createExpression(definition.getExpression());
 
         // and wrap in unit of work
-        AsyncProcessor target = PluginHelper.getInternalProcessorFactory(camelContext)
+        AsyncProcessor target = camelContext.adapt(ExtendedCamelContext.class).getInternalProcessorFactory()
                 .addUnitOfWorkProcessorAdvice(camelContext, processor, route);
 
         ObjectHelper.notNull(config, "config", this);
@@ -110,7 +111,7 @@ public class ResequenceReifier extends ProcessorReifier<ResequenceDefinition> {
         Processor processor = this.createChildProcessor(true);
         Expression expression = createExpression(definition.getExpression());
 
-        AsyncProcessor target = PluginHelper.getInternalProcessorFactory(camelContext)
+        AsyncProcessor target = camelContext.adapt(ExtendedCamelContext.class).getInternalProcessorFactory()
                 .addUnitOfWorkProcessorAdvice(camelContext, processor, route);
 
         ObjectHelper.notNull(config, "config", this);

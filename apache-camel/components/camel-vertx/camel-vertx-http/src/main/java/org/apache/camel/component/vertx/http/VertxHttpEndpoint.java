@@ -28,21 +28,20 @@ import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.component.vertx.common.VertxHelper;
 import org.apache.camel.http.base.HttpHelper;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.DefaultEndpoint;
-import org.apache.camel.support.http.HttpUtil;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.util.ObjectHelper;
+import org.apache.camel.util.StringHelper;
 
 @UriEndpoint(firstVersion = "3.5.0", scheme = "vertx-http", title = "Vert.x HTTP Client", syntax = "vertx-http:httpUri",
              category = { Category.HTTP }, producerOnly = true, lenientProperties = true,
              headersClass = VertxHttpConstants.class)
-public class VertxHttpEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
+public class VertxHttpEndpoint extends DefaultEndpoint {
 
     @UriParam
-    private final VertxHttpConfiguration configuration;
+    private VertxHttpConfiguration configuration;
 
     private WebClient webClient;
     private int minOkRange;
@@ -54,19 +53,6 @@ public class VertxHttpEndpoint extends DefaultEndpoint implements EndpointServic
     }
 
     @Override
-    public String getServiceUrl() {
-        if (configuration != null && configuration.getHttpUri() != null) {
-            return configuration.getHttpUri().toString();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "http";
-    }
-
-    @Override
     public VertxHttpComponent getComponent() {
         return (VertxHttpComponent) super.getComponent();
     }
@@ -74,21 +60,16 @@ public class VertxHttpEndpoint extends DefaultEndpoint implements EndpointServic
     @Override
     protected void doInit() throws Exception {
         String range = configuration.getOkStatusCodeRange();
-        parseStatusRange(range);
-    }
-
-    private void parseStatusRange(String range) {
         if (!range.contains(",")) {
-            if (!HttpUtil.parseStatusRange(range, this::setRanges)) {
+            // default is 200-299 so lets optimize for this
+            if (range.contains("-")) {
+                minOkRange = Integer.parseInt(StringHelper.before(range, "-"));
+                maxOkRange = Integer.parseInt(StringHelper.after(range, "-"));
+            } else {
                 minOkRange = Integer.parseInt(range);
                 maxOkRange = minOkRange;
             }
         }
-    }
-
-    private void setRanges(int minOkRange, int maxOkRange) {
-        this.minOkRange = minOkRange;
-        this.maxOkRange = maxOkRange;
     }
 
     @Override

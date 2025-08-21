@@ -16,10 +16,12 @@
  */
 package org.apache.camel.component.digitalocean.integration;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.Properties;
 
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.apache.camel.test.junit5.TestSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +43,25 @@ public class DigitalOceanTestSupport extends CamelTestSupport {
     }
 
     private static Properties loadProperties() {
-        return TestSupport.loadExternalPropertiesQuietly(DigitalOceanTestSupport.class, "/test-options.properties");
+        URL url = DigitalOceanTestSupport.class.getResource("/test-options.properties");
+
+        InputStream inStream;
+        try {
+            inStream = url.openStream();
+        } catch (IOException e) {
+            LOG.error("I/O error opening the stream: {}", e.getMessage(), e);
+            throw new IllegalAccessError("test-options.properties could not be found");
+        }
+
+        Properties properties = new Properties();
+        try {
+            properties.load(inStream);
+
+            return properties;
+        } catch (IOException e) {
+            LOG.error("I/O error reading the stream: {}", e.getMessage(), e);
+            throw new IllegalAccessError("test-options.properties could not be found");
+        }
     }
 
     @Override

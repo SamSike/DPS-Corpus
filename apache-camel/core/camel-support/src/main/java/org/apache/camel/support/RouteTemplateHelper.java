@@ -19,8 +19,8 @@ package org.apache.camel.support;
 import java.io.File;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.Resource;
-import org.apache.camel.spi.ResourceLoader;
 import org.apache.camel.spi.RouteTemplateLoaderListener;
 import org.apache.camel.util.FileUtil;
 import org.slf4j.Logger;
@@ -38,7 +38,7 @@ public final class RouteTemplateHelper {
 
     /**
      * Loads the route template with the given template id from a given location. After the template is loaded, it is
-     * automatically added to the {@link CamelContext}.
+     * automatic added to the {@link CamelContext}.
      *
      * @param  camelContext the camel context
      * @param  listener     optional listener for when a route template is being loaded
@@ -50,13 +50,12 @@ public final class RouteTemplateHelper {
             CamelContext camelContext, RouteTemplateLoaderListener listener,
             String templateId, String location)
             throws Exception {
-
         if (location == null) {
             throw new IllegalArgumentException("Location is empty");
         }
 
+        ExtendedCamelContext ecc = camelContext.adapt(ExtendedCamelContext.class);
         boolean found = false;
-        final ResourceLoader resourceLoader = PluginHelper.getResourceLoader(camelContext);
         for (String path : location.split(",")) {
             // using dot as current dir must be expanded into absolute path
             if (".".equals(path) || "file:.".equals(path)) {
@@ -68,14 +67,14 @@ public final class RouteTemplateHelper {
             // first try resource as-is if the path has an extension
             String ext = FileUtil.onlyExt(path);
             if (ext != null && !ext.isEmpty()) {
-                res = resourceLoader.resolveResource(name);
+                res = ecc.getResourceLoader().resolveResource(name);
             }
             if (res == null || !res.exists()) {
                 if (!path.endsWith("/")) {
                     path += "/";
                 }
                 name = path + templateId + ".kamelet.yaml";
-                res = resourceLoader.resolveResource(name);
+                res = ecc.getResourceLoader().resolveResource(name);
             }
             if (res.exists()) {
                 try {
@@ -83,9 +82,11 @@ public final class RouteTemplateHelper {
                         listener.loadRouteTemplate(res);
                     }
                 } catch (Exception e) {
-                    LOG.warn("RouteTemplateLoaderListener error due to {}. This exception is ignored", e.getMessage(), e);
+                    LOG.warn("RouteTemplateLoaderListener error due to " + e.getMessage()
+                             + ". This exception is ignored",
+                            e);
                 }
-                PluginHelper.getRoutesLoader(camelContext).loadRoutes(res);
+                ecc.getRoutesLoader().loadRoutes(res);
                 found = true;
                 break;
             }
@@ -102,8 +103,8 @@ public final class RouteTemplateHelper {
                 path += "/";
             }
             String target = path + templateId + ".kamelet.yaml";
-            PluginHelper.getRoutesLoader(camelContext).loadRoutes(
-                    resourceLoader.resolveResource(target));
+            ecc.getRoutesLoader().loadRoutes(
+                    ecc.getResourceLoader().resolveResource(target));
         }
     }
 }

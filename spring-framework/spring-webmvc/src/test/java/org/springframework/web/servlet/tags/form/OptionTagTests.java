@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import java.util.List;
 
 import jakarta.servlet.jsp.tagext.BodyTag;
 import jakarta.servlet.jsp.tagext.Tag;
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.propertyeditors.StringArrayPropertyEditor;
@@ -57,6 +56,7 @@ class OptionTagTests extends AbstractHtmlElementTagTests {
 	private SelectTag parentTag;
 
 	@Override
+	@SuppressWarnings("serial")
 	protected void onSetUp() {
 		this.tag = new OptionTag() {
 			@Override
@@ -194,7 +194,7 @@ class OptionTagTests extends AbstractHtmlElementTagTests {
 	}
 
 	@Test
-	void withoutContext() {
+	void withoutContext() throws Exception {
 		this.tag.setParent(null);
 		this.tag.setValue("foo");
 		this.tag.setLabel("Foo");
@@ -462,7 +462,7 @@ class OptionTagTests extends AbstractHtmlElementTagTests {
 	}
 
 	@Test
-	void optionTagNotNestedWithinSelectTag() {
+	void optionTagNotNestedWithinSelectTag() throws Exception {
 		tag.setParent(null);
 		tag.setValue("foo");
 		assertThatIllegalStateException().as("when not nested within a <select/> tag").isThrownBy(
@@ -471,11 +471,11 @@ class OptionTagTests extends AbstractHtmlElementTagTests {
 
 
 	private void assertOptionTagOpened(String output) {
-		assertThat(output).startsWith("<option");
+		assertThat(output.startsWith("<option")).isTrue();
 	}
 
 	private void assertOptionTagClosed(String output) {
-		assertThat(output).endsWith("</option>");
+		assertThat(output.endsWith("</option>")).isTrue();
 	}
 
 	@Override
@@ -555,8 +555,9 @@ class OptionTagTests extends AbstractHtmlElementTagTests {
 		}
 
 		@Override
-		public boolean equals(@Nullable Object obj) {
-			if (obj instanceof RulesVariant other) {
+		public boolean equals(Object obj) {
+			if (obj instanceof RulesVariant) {
+				RulesVariant other = (RulesVariant) obj;
 				return this.toId().equals(other.toId());
 			}
 			return false;
@@ -569,7 +570,7 @@ class OptionTagTests extends AbstractHtmlElementTagTests {
 	}
 
 
-	public static class RulesVariantEditor extends PropertyEditorSupport {
+	public class RulesVariantEditor extends PropertyEditorSupport {
 
 		@Override
 		public void setAsText(String text) throws IllegalArgumentException {

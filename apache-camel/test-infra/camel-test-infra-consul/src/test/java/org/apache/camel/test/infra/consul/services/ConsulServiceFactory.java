@@ -19,8 +19,8 @@ package org.apache.camel.test.infra.consul.services;
 import org.apache.camel.test.infra.common.services.SimpleTestServiceBuilder;
 
 public final class ConsulServiceFactory {
-
     private ConsulServiceFactory() {
+
     }
 
     public static SimpleTestServiceBuilder<ConsulService> builder() {
@@ -29,14 +29,8 @@ public final class ConsulServiceFactory {
 
     public static ConsulService createService() {
         return builder()
-                .addLocalMapping(ConsulLocalContainerTestService::new)
-                .addRemoteMapping(ConsulRemoteTestService::new)
+                .addLocalMapping(ConsulLocalContainerService::new)
+                .addRemoteMapping(ConsulRemoteService::new)
                 .build();
-    }
-
-    public static class ConsulLocalContainerTestService extends ConsulLocalContainerInfraService implements ConsulService {
-    }
-
-    public static class ConsulRemoteTestService extends ConsulRemoteInfraService implements ConsulService {
     }
 }

@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The Camel simple language.
  */
-@Language(value = "simple", functionsClass = SimpleConstants.class)
+@Language("simple")
 public class SimpleLanguage extends LanguageSupport implements StaticService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleLanguage.class);
@@ -84,15 +84,17 @@ public class SimpleLanguage extends LanguageSupport implements StaticService {
 
     @Override
     public void stop() {
-        if (cachePredicate instanceof LRUCache<String, Predicate> cache) {
+        if (cachePredicate instanceof LRUCache) {
             if (LOG.isDebugEnabled()) {
+                LRUCache cache = (LRUCache) cachePredicate;
                 LOG.debug("Clearing simple language predicate cache[size={}, hits={}, misses={}, evicted={}]",
                         cache.size(), cache.getHits(), cache.getMisses(), cache.getEvicted());
             }
             cachePredicate.clear();
         }
-        if (cacheExpression instanceof LRUCache<String, Expression> cache) {
+        if (cacheExpression instanceof LRUCache) {
             if (LOG.isDebugEnabled()) {
+                LRUCache cache = (LRUCache) cacheExpression;
                 LOG.debug("Clearing simple language expression cache[size={}, hits={}, misses={}, evicted={}]",
                         cache.size(), cache.getHits(), cache.getMisses(), cache.getEvicted());
             }
@@ -113,7 +115,20 @@ public class SimpleLanguage extends LanguageSupport implements StaticService {
                 // so create an embedded expression as result
                 // need to lazy eval as its a dynamic resource
                 final String text = expression;
-                return new SimplePredicate(text);
+                return new Predicate() {
+                    @Override
+                    public boolean matches(Exchange exchange) {
+                        String r = ScriptHelper.resolveOptionalExternalScript(getCamelContext(), exchange, text);
+                        Predicate pred = SimpleLanguage.this.createPredicate(r);
+                        pred.init(getCamelContext());
+                        return pred.matches(exchange);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return text;
+                    }
+                };
             }
 
             if (isStaticResource(expression)) {
@@ -171,7 +186,20 @@ public class SimpleLanguage extends LanguageSupport implements StaticService {
                 // we need to load the resource dynamic based on evaluating the expression via the exchange
                 // so create an embedded expression as result need to lazy eval due to dynamic resource
                 final String text = expression;
-                return new SimpleExpression(text);
+                return new Expression() {
+                    @Override
+                    public <T> T evaluate(Exchange exchange, Class<T> type) {
+                        String r = ScriptHelper.resolveOptionalExternalScript(getCamelContext(), exchange, text);
+                        Expression exp = SimpleLanguage.this.createExpression(r);
+                        exp.init(getCamelContext());
+                        return exp.evaluate(exchange, type);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return text;
+                    }
+                };
             }
 
             if (isStaticResource(expression)) {
@@ -193,6 +221,26 @@ public class SimpleLanguage extends LanguageSupport implements StaticService {
         return answer;
     }
 
+    /**
+     * Creates a new {@link Expression}.
+     * <p/>
+     * <b>Important:</b> If you need to use a predicate (function to return true|false) then use
+     * {@link #predicate(String)} instead.
+     */
+    @Deprecated
+    public static Expression simple(String expression) {
+        return expression(expression);
+    }
+
+    /**
+     * Creates a new {@link Expression} (or {@link Predicate} if the resultType is a <tt>Boolean</tt>, or
+     * <tt>boolean</tt> type).
+     */
+    @Deprecated
+    public static Expression simple(String expression, Class<?> resultType) {
+        return new SimpleLanguage().createExpression(expression, resultType);
+    }
+
     public Expression createExpression(String expression, Class<?> resultType) {
         if (resultType == Boolean.class || resultType == boolean.class) {
             // if its a boolean as result then its a predicate
@@ -207,45 +255,23 @@ public class SimpleLanguage extends LanguageSupport implements StaticService {
         }
     }
 
-    private class SimplePredicate implements Predicate {
-        private final String text;
-
-        public SimplePredicate(String text) {
-            this.text = text;
-        }
-
-        @Override
-        public boolean matches(Exchange exchange) {
-            String r = ScriptHelper.resolveOptionalExternalScript(getCamelContext(), exchange, text);
-            Predicate pred = SimpleLanguage.this.createPredicate(r);
-            pred.init(getCamelContext());
-            return pred.matches(exchange);
-        }
-
-        @Override
-        public String toString() {
-            return text;
-        }
+    /**
+     * Creates a new {@link Expression}.
+     * <p/>
+     * <b>Important:</b> If you need to use a predicate (function to return true|false) then use
+     * {@link #predicate(String)} instead.
+     */
+    @Deprecated
+    public static Expression expression(String expression) {
+        return SIMPLE.createExpression(expression);
     }
 
-    private class SimpleExpression implements Expression {
-        private final String text;
-
-        public SimpleExpression(String text) {
-            this.text = text;
-        }
-
-        @Override
-        public <T> T evaluate(Exchange exchange, Class<T> type) {
-            String r = ScriptHelper.resolveOptionalExternalScript(getCamelContext(), exchange, text);
-            Expression exp = SimpleLanguage.this.createExpression(r);
-            exp.init(getCamelContext());
-            return exp.evaluate(exchange, type);
-        }
-
-        @Override
-        public String toString() {
-            return text;
-        }
+    /**
+     * Creates a new {@link Predicate}.
+     */
+    @Deprecated
+    public static Predicate predicate(String predicate) {
+        return SIMPLE.createPredicate(predicate);
     }
+
 }

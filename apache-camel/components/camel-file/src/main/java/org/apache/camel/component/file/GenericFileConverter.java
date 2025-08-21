@@ -52,20 +52,17 @@ public final class GenericFileConverter {
         if (GenericFile.class.isAssignableFrom(value.getClass())) {
 
             GenericFile<?> file = (GenericFile<?>) value;
-            Object body = file.getBody();
-            if (body == null) {
-                return null;
-            }
-            Class<?> from = body.getClass();
+            Class<?> from = file.getBody().getClass();
 
             // maybe from is already the type we want
             if (from.isAssignableFrom(type)) {
-                return body;
+                return file.getBody();
             }
 
             // no then try to lookup a type converter
             TypeConverter tc = registry.lookup(type, from);
             if (tc != null) {
+                Object body = file.getBody();
                 // if its a file and we have a charset then use a reader to
                 // ensure we read the content using the given charset
                 // this is a bit complicated, but a file consumer can be
@@ -112,8 +109,9 @@ public final class GenericFileConverter {
 
     @Converter
     public static InputStream genericFileToInputStream(GenericFile<?> file, Exchange exchange) throws IOException {
-        if (file.getFile() instanceof File f) {
+        if (file.getFile() instanceof File) {
             // prefer to use a file input stream if its a java.io.File
+            File f = (File) file.getFile();
             // the file must exists
             if (f.exists()) {
                 // read the file using the specified charset
@@ -167,14 +165,10 @@ public final class GenericFileConverter {
             // load the file using input stream
             InputStream is = genericFileToInputStream(file, exchange);
             if (is != null) {
-                try {
-                    // need to double convert to convert correctly
-                    byte[] data = exchange.getContext().getTypeConverter().convertTo(byte[].class, exchange, is);
-                    if (data != null) {
-                        return exchange.getContext().getTypeConverter().convertTo(Serializable.class, exchange, data);
-                    }
-                } finally {
-                    IOHelper.close(is);
+                // need to double convert to convert correctly
+                byte[] data = exchange.getContext().getTypeConverter().convertTo(byte[].class, exchange, is);
+                if (data != null) {
+                    return exchange.getContext().getTypeConverter().convertTo(Serializable.class, exchange, data);
                 }
             }
         }
@@ -184,8 +178,9 @@ public final class GenericFileConverter {
 
     @Converter
     public static Reader genericFileToReader(GenericFile<?> file, Exchange exchange) throws IOException {
-        if (file.getFile() instanceof File f) {
+        if (file.getFile() instanceof File) {
             // prefer to use a file input stream if its a java.io.File
+            File f = (File) file.getFile();
             // the file must exists
             if (!f.exists()) {
                 return null;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@
 package org.springframework.web.servlet.tags.form;
 
 import jakarta.servlet.jsp.JspException;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Abstract base class to provide common methods for
@@ -80,7 +81,8 @@ public abstract class AbstractCheckedElementTag extends AbstractHtmlInputElement
 	 * Return a unique ID for the bound name within the current PageContext.
 	 */
 	@Override
-	protected @Nullable String autogenerateId() throws JspException {
+	@Nullable
+	protected String autogenerateId() throws JspException {
 		String id = super.autogenerateId();
 		return (id != null ? TagIdGenerator.nextId(id, this.pageContext) : null);
 	}

@@ -88,7 +88,7 @@ public class FaultToleranceTimeoutThreadPoolTest extends CamelTestSupport {
         // this calls the slow route and therefore causes a timeout which
         // triggers an exception
         for (int i = 0; i < 10; i++) {
-            log.info(">>> test run {} <<<", i);
+            log.info(">>> test run " + i + " <<<");
             Exception exception = assertThrows(Exception.class,
                     () -> template.requestBody("direct:start", "slow"),
                     "Should fail due to timeout");
@@ -104,7 +104,7 @@ public class FaultToleranceTimeoutThreadPoolTest extends CamelTestSupport {
                 from("direct:start").circuitBreaker()
                         // enable and use 2 second timeout
                         .faultToleranceConfiguration().timeoutEnabled(true).timeoutDuration(2000)
-                        .threadOffloadExecutorService("myThreadPool").end()
+                        .timeoutScheduledExecutorService("myThreadPool").end()
                         .log("FaultTolerance processing start: ${threadName}").toD("direct:${body}")
                         .log("FaultTolerance processing end: ${threadName}").end().log("After Fault Tolerance ${body}");
 

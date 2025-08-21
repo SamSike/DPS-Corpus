@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class AbstractWordpressProducer<T> extends DefaultProducer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractWordpressProducer.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(WordpressPostProducer.class);
 
     private WordpressConfiguration configuration;
 

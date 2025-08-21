@@ -1,10 +1,11 @@
 /**
- * Annotations for MBean exposure.
- *
- * <p>Hooked into Spring's JMX export infrastructure via a special
- * {@link org.springframework.jmx.export.metadata.JmxAttributeSource} implementation.
+ * Java 5 annotations for MBean exposure.
+ * Hooked into Spring's JMX export infrastructure
+ * via a special JmxAttributeSource implementation.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jmx.export.annotation;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -39,28 +39,25 @@ public final class LoggerHelper {
     public static String getLineNumberLoggerName(Object node) {
         String name = null;
         if (node instanceof LineNumberAware) {
-            if (node instanceof NamedRoute namedRoute) {
+            if (node instanceof NamedRoute) {
                 // we want the input from a route as it has the source location / line number
-                node = namedRoute.getInput();
+                node = ((NamedRoute) node).getInput();
             }
-
-            final LineNumberAware lineNumberAware = (LineNumberAware) node;
-            String loc = lineNumberAware.getLocation();
-            int line = lineNumberAware.getLineNumber();
+            String loc = ((LineNumberAware) node).getLocation();
+            int line = ((LineNumberAware) node).getLineNumber();
             if (loc != null) {
                 // is it a class or file?
                 name = loc;
                 if (loc.contains(":")) {
                     // strip prefix
-                    loc = StringHelper.after(loc, ":", loc);
-
+                    loc = loc.substring(loc.indexOf(':') + 1);
                     // file based such as xml and yaml
                     name = FileUtil.stripPath(loc);
                 } else {
                     // classname so let us only grab the name
                     int pos = name.lastIndexOf('.');
                     if (pos > 0) {
-                        name = name.substring(0, pos);
+                        name = name.substring(pos + 1);
                     }
                 }
                 if (line != -1) {
@@ -74,38 +71,18 @@ public final class LoggerHelper {
     public static String getSourceLocation(Object node) {
         String name = null;
         if (node instanceof LineNumberAware) {
-            if (node instanceof NamedRoute namedRoute) {
+            if (node instanceof NamedRoute) {
                 // we want the input from a route as it has the source location / line number
-                node = namedRoute.getInput();
+                node = ((NamedRoute) node).getInput();
             }
-
-            final LineNumberAware lineNumberAware = (LineNumberAware) node;
-            String loc = lineNumberAware.getLocation();
-            int line = lineNumberAware.getLineNumber();
+            String loc = ((LineNumberAware) node).getLocation();
+            int line = ((LineNumberAware) node).getLineNumber();
             if (loc != null) {
                 // is it a class or file?
                 name = loc;
                 if (line != -1) {
                     name += ":" + line;
                 }
-            }
-        }
-        return name;
-    }
-
-    public static String getSourceLocationOnly(Object node) {
-        String name = null;
-        if (node instanceof LineNumberAware) {
-            if (node instanceof NamedRoute namedRoute) {
-                // we want the input from a route as it has the source location / line number
-                node = namedRoute.getInput();
-            }
-
-            final LineNumberAware lineNumberAware = (LineNumberAware) node;
-            String loc = lineNumberAware.getLocation();
-            if (loc != null) {
-                // is it a class or file?
-                name = loc;
             }
         }
         return name;
@@ -121,29 +98,19 @@ public final class LoggerHelper {
         }
     }
 
-    public static String stripScheme(String location) {
-        return StringHelper.after(location, ":", location);
-    }
-
-    public static String sourceNameOnly(String location) {
-        return stripScheme(stripSourceLocationLineNumber(location));
-    }
-
     public static Integer extractSourceLocationLineNumber(String location) {
         int cnt = StringHelper.countChar(location, ':');
         if (cnt > 1) {
             int pos = location.lastIndexOf(':');
-            // in case pos is end of line
-            if (pos < location.length() - 1) {
-                String num = location.substring(pos + 1);
-                try {
-                    return Integer.valueOf(num);
-                } catch (Exception e) {
-                    return null;
-                }
+            String num = location.substring(pos);
+            try {
+                return Integer.valueOf(num);
+            } catch (Exception e) {
+                return null;
             }
+        } else {
+            return null;
         }
-        return null;
     }
 
 }

@@ -24,6 +24,8 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Comment implements Serializable {
 
@@ -207,8 +209,10 @@ public class Comment implements Serializable {
 
     @Override
     public String toString() {
-        return "Comment{ID=" + getId() + ", " + this.authorName + ", " + this.authorEmail + ", " + this.date + ", "
-               + this.status + ", PostID=" + this.parent + "}";
+        // @formatter:off
+        return toStringHelper(this).add("ID", this.id).addValue(this.authorName).addValue(this.authorEmail).addValue(this.date)
+                .addValue(this.status).add("PostID", this.parent).toString();
+        // @formatter:on
     }
 
 }

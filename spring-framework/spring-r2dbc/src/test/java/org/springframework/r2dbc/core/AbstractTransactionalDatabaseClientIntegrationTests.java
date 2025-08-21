@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,21 +44,19 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-abstract class AbstractTransactionalDatabaseClientIntegrationTests {
+public abstract class AbstractTransactionalDatabaseClientIntegrationTests  {
 
 	private ConnectionFactory connectionFactory;
 
 	AnnotationConfigApplicationContext context;
 
 	DatabaseClient databaseClient;
-
 	R2dbcTransactionManager transactionManager;
-
 	TransactionalOperator rxtx;
-
 
 	@BeforeEach
 	public void before() {
+
 		connectionFactory = createConnectionFactory();
 
 		context = new AnnotationConfigApplicationContext();
@@ -66,10 +64,11 @@ abstract class AbstractTransactionalDatabaseClientIntegrationTests {
 		context.register(Config.class);
 		context.refresh();
 
+
 		Mono.from(connectionFactory.create())
 				.flatMapMany(connection -> Flux.from(connection.createStatement("DROP TABLE legoset").execute())
 						.flatMap(Result::getRowsUpdated)
-						.onErrorComplete()
+						.onErrorResume(e -> Mono.empty())
 						.thenMany(connection.createStatement(getCreateTableStatement()).execute())
 						.flatMap(Result::getRowsUpdated).thenMany(connection.close())).as(StepVerifier::create).verifyComplete();
 
@@ -82,7 +81,6 @@ abstract class AbstractTransactionalDatabaseClientIntegrationTests {
 	public void tearDown() {
 		context.close();
 	}
-
 
 	/**
 	 * Create a {@link ConnectionFactory} to be used in this test.
@@ -109,18 +107,17 @@ abstract class AbstractTransactionalDatabaseClientIntegrationTests {
 		return "INSERT INTO legoset (id, name, manual) VALUES(:id, :name, :manual)";
 	}
 
-
 	@Test
-	void executeInsertInTransaction() {
-		Flux<Long> longFlux = databaseClient
+	public void executeInsertInTransaction() {
+		Flux<Integer> integerFlux = databaseClient
 				.sql(getInsertIntoLegosetStatement())
 				.bind(0, 42055)
 				.bind(1, "SCHAUFELRADBAGGER")
 				.bindNull(2, Integer.class)
 				.fetch().rowsUpdated().flux().as(rxtx::transactional);
 
-		longFlux.as(StepVerifier::create)
-				.expectNext(1L)
+		integerFlux.as(StepVerifier::create)
+				.expectNext(1)
 				.verifyComplete();
 
 		databaseClient
@@ -133,7 +130,8 @@ abstract class AbstractTransactionalDatabaseClientIntegrationTests {
 	}
 
 	@Test
-	void shouldRollbackTransaction() {
+	public void shouldRollbackTransaction() {
+
 		Mono<Object> integerFlux = databaseClient.sql(getInsertIntoLegosetStatement())
 				.bind(0, 42055)
 				.bind(1, "SCHAUFELRADBAGGER")
@@ -155,7 +153,8 @@ abstract class AbstractTransactionalDatabaseClientIntegrationTests {
 	}
 
 	@Test
-	void shouldRollbackTransactionUsingTransactionalOperator() {
+	public void shouldRollbackTransactionUsingTransactionalOperator() {
+
 		DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
 
 		TransactionalOperator transactionalOperator = TransactionalOperator
@@ -184,8 +183,8 @@ abstract class AbstractTransactionalDatabaseClientIntegrationTests {
 	}
 
 	private Condition<? super Object> numberOf(int expected) {
-		return new Condition<>(object -> object instanceof Number num &&
-				num.intValue() == expected, "Number %d", expected);
+		return new Condition<>(object -> object instanceof Number &&
+				((Number) object).intValue() == expected, "Number  %d", expected);
 	}
 
 
@@ -203,6 +202,7 @@ abstract class AbstractTransactionalDatabaseClientIntegrationTests {
 		TransactionalOperator transactionalOperator(ReactiveTransactionManager transactionManager) {
 			return TransactionalOperator.create(transactionManager);
 		}
+
 	}
 
 }

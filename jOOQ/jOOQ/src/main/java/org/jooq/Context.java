@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -70,7 +70,7 @@ import org.jetbrains.annotations.Nullable;
  * @see BindContext
  * @see RenderContext
  */
-public interface Context<C extends Context<C>> extends ExecuteScope {
+public interface Context<C extends Context<C>> extends Scope {
 
     // ------------------------------------------------------------------------
     // Methods specifying the scope of the SQL being rendered
@@ -273,32 +273,6 @@ public interface Context<C extends Context<C>> extends ExecuteScope {
     C declareCTE(boolean declareCTE, Consumer<? super C> consumer);
 
     /**
-     * The top level {@link QueryPart} that is being rendered.
-     */
-    @Nullable
-    QueryPart topLevel();
-
-    /**
-     * Set the top level {@link QueryPart} that is being rendered.
-     */
-    @NotNull
-    C topLevel(QueryPart topLevel);
-
-    /**
-     * The top level {@link QueryPart} that is being rendered in the current
-     * {@link #languageContext()}.
-     */
-    @Nullable
-    QueryPart topLevelForLanguageContext();
-
-    /**
-     * Set the top level {@link QueryPart} that is being rendered in the current
-     * {@link #languageContext()}.
-     */
-    @NotNull
-    C topLevelForLanguageContext(QueryPart topLevelForLanguageContext);
-
-    /**
      * Whether the current context is rendering a subquery (nested query).
      */
     boolean subquery();
@@ -308,12 +282,6 @@ public interface Context<C extends Context<C>> extends ExecuteScope {
      */
     @NotNull
     C subquery(boolean subquery);
-
-    /**
-     * Set the new context value for {@link #subquery()} as well as {@link #scopePart()} a
-     */
-    @NotNull
-    C subquery(boolean subquery, QueryPart part);
 
     /**
      * Whether the current context is rendering a derived table subquery.
@@ -368,42 +336,10 @@ public interface Context<C extends Context<C>> extends ExecuteScope {
     C scopeStart();
 
     /**
-     * Start a new scope, passing the current {@link QueryPart} as the
-     * {@link #scopePart()}.
-     * <p>
-     * If the new scope doesn't have such a {@link QueryPart}, then
-     * {@link #scopeStart()} can be called instead.
-     */
-    @NotNull
-    C scopeStart(QueryPart part);
-
-    /**
-     * Return the {@link QueryPart} that defines the current
-     * {@link #scopeStart(QueryPart)}, if any, or <code>null</code> if there is
-     * no such {@link QueryPart}.
-     */
-    @Nullable
-    QueryPart scopePart();
-
-    /**
      * Mark the beginning of a scoped query part.
      */
     @NotNull
     C scopeMarkStart(QueryPart part);
-
-    /**
-     * Hide the argument query part from child scopes, if it has been registered
-     * previously.
-     */
-    @NotNull
-    C scopeHide(QueryPart part);
-
-    /**
-     * Show the argument query part in child scopes, if it has been registered
-     * previously.
-     */
-    @NotNull
-    C scopeShow(QueryPart part);
 
     /**
      * Register a "special" query part in the scope, reusing the object from a
@@ -441,28 +377,6 @@ public interface Context<C extends Context<C>> extends ExecuteScope {
      */
     @NotNull
     C scopeRegister(QueryPart part, boolean forceNew, QueryPart mapped);
-
-    /**
-     * Get all values of a type that are in the current scope or higher.
-     */
-    @NotNull
-    <Q extends QueryPart> Iterable<Q> scopeParts(Class<? extends Q> type);
-
-    /**
-     * Get all values of a type that are in the current scope.
-     */
-    @NotNull
-    <Q extends QueryPart> Iterable<Q> currentScopeParts(Class<? extends Q> type);
-
-    /**
-     * Check whether a query part is registered in the current scope or higher.
-     */
-    boolean inScope(QueryPart part);
-
-    /**
-     * Check whether a query part is registered in the current scope.
-     */
-    boolean inCurrentScope(QueryPart part);
 
     /**
      * Retrieve the registered mapping for a query part in the current scope.
@@ -584,6 +498,17 @@ public interface Context<C extends Context<C>> extends ExecuteScope {
      */
     @NotNull
     String render(QueryPart part);
+
+    /**
+     * Append a SQL keyword to the context's contained {@link StringBuilder}.
+     * <p>
+     * Use this to have your SQL keyword rendered in {@link RenderKeywordCase}.
+     *
+     * @deprecated - 3.10.0 - [#4990] - Use {@link DSL#keyword(String)} instead.
+     */
+    @NotNull
+    @Deprecated(forRemoval = true, since = "3.10")
+    C keyword(String keyword);
 
     /**
      * Append some SQL to the context's contained {@link StringBuilder}.
@@ -802,14 +727,24 @@ public interface Context<C extends Context<C>> extends ExecuteScope {
      * <p>
      * The print margin is applied to any of these <code>QueryParts</code>:
      * <ul>
-     * <li>{@link Field#in(Field...)} and related expressions</li>
-     * </ul>
+     * <li> {@link Field#in(Field...)} and related expressions</li>
      */
     @NotNull
     C formatPrintMargin(int margin);
 
     /**
-     * Whether {@link Name} parts should be quoted.
+     * Append some literal to the context's contained {@link StringBuilder}.
+     *
+     * @deprecated - 3.10.0 - [#4990] - Use any of {@link DSL#name(String)},
+     *             {@link DSL#quotedName(String)} or
+     *             {@link DSL#unquotedName(String)} instead.
+     */
+    @NotNull
+    @Deprecated(forRemoval = true, since = "3.10")
+    C literal(String literal);
+
+    /**
+     * Whether {@link Name} parts (and {@link #literal(String)}) should be quoted.
      */
     boolean quote();
 
@@ -833,6 +768,8 @@ public interface Context<C extends Context<C>> extends ExecuteScope {
 
     /**
      * Set the new context value for {@link #qualify()}.
+     * <p>
+     * This is the same as {@link #qualifySchema(boolean)}.
      */
     @NotNull
     C qualify(boolean qualify);
@@ -845,7 +782,9 @@ public interface Context<C extends Context<C>> extends ExecuteScope {
     C qualify(boolean qualify, Consumer<? super C> consumer);
 
     /**
-     * Whether query parts should render {@link Schema}-qualified names or not.
+     * Whether query parts should render qualified names or not.
+     * <p>
+     * This is the same as {@link #qualifySchema()}.
      */
     boolean qualifySchema();
 
@@ -863,12 +802,18 @@ public interface Context<C extends Context<C>> extends ExecuteScope {
     C qualifySchema(boolean qualifySchema, Consumer<? super C> consumer);
 
     /**
-     * Whether query parts should render {@link Catalog}-qualified names or not.
+     * Whether query parts should render qualified names or not.
+     * <p>
+     * The catalog can only be qualified when {@link #qualifySchema()} is
+     * <code>true</code> as well.
      */
     boolean qualifyCatalog();
 
     /**
      * Set the new context value for {@link #qualifyCatalog()}.
+     * <p>
+     * The catalog can only be qualified when {@link #qualifySchema()} is
+     * <code>true</code> as well.
      */
     @NotNull
     C qualifyCatalog(boolean qualifyCatalog);
@@ -876,6 +821,9 @@ public interface Context<C extends Context<C>> extends ExecuteScope {
     /**
      * Set the new context value for {@link #qualifyCatalog()} for the scope of
      * a {@link Consumer}.
+     * <p>
+     * The catalog can only be qualified when {@link #qualifySchema()} is
+     * <code>true</code> as well.
      */
     @NotNull
     C qualifyCatalog(boolean qualifyCatalog, Consumer<? super C> consumer);
@@ -884,11 +832,11 @@ public interface Context<C extends Context<C>> extends ExecuteScope {
      * Specify, how bind values should be rendered.
      * <p>
      * <ul>
-     * <li>As {@link ParamType#INDEXED} parameters: <br>
+     * <li>As {@link ParamType#INDEXED} parameters: <br/>
      * <code>&#160; ?, ?, ?</code></li>
-     * <li>As {@link ParamType#NAMED} parameters: <br>
+     * <li>As {@link ParamType#NAMED} parameters: <br/>
      * <code>&#160; :1, :2, :custom_name</code></li>
-     * <li>As {@link ParamType#INLINED} parameters: <br>
+     * <li>As {@link ParamType#INLINED} parameters: <br/>
      * <code>&#160; 1, 'A', null</code></li>
      * </ul>
      */
@@ -946,13 +894,6 @@ public interface Context<C extends Context<C>> extends ExecuteScope {
      */
     @NotNull
     C languageContext(LanguageContext languageContext, Consumer<? super C> consumer);
-
-    /**
-     * Set the new language context for {@link #languageContext()} for the scope
-     * of a {@link Consumer}.
-     */
-    @NotNull
-    C languageContext(LanguageContext languageContext, QueryPart topLevelForLanguageContext, Consumer<? super C> consumer);
 
     /**
      * Set the new language context for {@link #languageContext()}, if a

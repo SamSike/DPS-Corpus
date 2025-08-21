@@ -37,10 +37,10 @@ public class SedaErrorTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dlc"));
                 from("direct:start").log("start: ${body}").to("seda:seda1?size=2&blockWhenFull=false").log("after: ${body}");
             }

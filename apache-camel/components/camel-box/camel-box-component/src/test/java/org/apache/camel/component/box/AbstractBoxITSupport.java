@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.box;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -25,9 +24,9 @@ import com.box.sdk.BoxFile;
 import com.box.sdk.BoxFolder;
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelExecutionException;
+import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.support.PropertyBindingSupport;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.apache.camel.test.junit5.TestSupport;
 import org.junit.jupiter.api.TestInstance;
 
 /**
@@ -44,9 +43,20 @@ public class AbstractBoxITSupport extends CamelTestSupport {
     protected boolean jwtAuthentication;
     protected Map<String, Object> options;
 
-    private static boolean hasCredentials() throws IOException {
+    private static void loadProperties() {
+        // read Box component configuration from TEST_OPTIONS_PROPERTIES
+        try {
+            properties.load(AbstractBoxITSupport.class.getResourceAsStream(TEST_OPTIONS_PROPERTIES));
+        } catch (Exception e) {
+            throw new RuntimeCamelException(
+                    String.format("%s could not be loaded: %s", TEST_OPTIONS_PROPERTIES, e.getMessage()),
+                    e);
+        }
+    }
+
+    private static boolean hasCredentials() {
         if (properties.isEmpty()) {
-            TestSupport.loadExternalProperties(properties, AbstractBoxITSupport.class, TEST_OPTIONS_PROPERTIES);
+            loadProperties();
         }
 
         return !properties.getProperty("userName", "").isEmpty()
@@ -92,7 +102,7 @@ public class AbstractBoxITSupport extends CamelTestSupport {
     protected void deleteTestFolder() {
         try {
             testFolder.delete(true);
-        } catch (Exception t) {
+        } catch (Throwable t) {
         }
         testFolder = null;
     }
@@ -100,7 +110,7 @@ public class AbstractBoxITSupport extends CamelTestSupport {
     protected void deleteTestFile() {
         try {
             testFile.delete();
-        } catch (Exception t) {
+        } catch (Throwable t) {
         }
         testFile = null;
     }

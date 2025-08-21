@@ -37,6 +37,7 @@ import org.apache.camel.tooling.util.Strings;
 public final class CamelXmlHelper {
 
     private static final String CAMEL_NS_SPRING = "http://camel.apache.org/schema/spring";
+    private static final String CAMEL_NS_BLUEPRINT = "http://camel.apache.org/schema/blueprint";
 
     private CamelXmlHelper() {
         // utility class
@@ -121,7 +122,7 @@ public final class CamelXmlHelper {
     }
 
     private static void findAllUrisRecursive(Node node, List<Node> nodes) {
-        // okay it's a route so grab all uri attributes we can find
+        // okay its a route so grab all uri attributes we can find
         String url = getSafeAttribute(node, "uri");
         if (url != null) {
             nodes.add(node);
@@ -167,7 +168,7 @@ public final class CamelXmlHelper {
     }
 
     private static void findAllLanguageExpressionsRecursive(Node node, List<Node> nodes, String language) {
-        // okay it's a route so grab if it's the language
+        // okay its a route so grab if its the language
         if (isNodeName(language, node)) {
             nodes.add(node);
         }
@@ -254,7 +255,8 @@ public final class CamelXmlHelper {
 
     private static String getIdOrIndex(Node node, Map<String, Integer> nodeCounts) {
         String answer = null;
-        if (node instanceof Element element) {
+        if (node instanceof Element) {
+            Element element = (Element) node;
             String elementName = element.getTagName();
             if ("routes".equals(elementName)) {
                 elementName = "camelContext";
@@ -282,6 +284,9 @@ public final class CamelXmlHelper {
         NodeList list = dom.getElementsByTagName(tagName);
         if (list.getLength() == 0) {
             list = dom.getElementsByTagNameNS(CAMEL_NS_SPRING, tagName);
+        }
+        if (list.getLength() == 0) {
+            list = dom.getElementsByTagNameNS(CAMEL_NS_BLUEPRINT, tagName);
         }
         return list;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,8 @@ package org.springframework.web.util.pattern;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.http.server.PathContainer.PathSegment;
+import org.springframework.lang.Nullable;
 
 /**
  * A path element representing capturing a piece of the path as a variable. In the pattern
@@ -35,7 +34,8 @@ class CaptureVariablePathElement extends PathElement {
 
 	private final String variableName;
 
-	private final @Nullable Pattern constraintPattern;
+	@Nullable
+	private Pattern constraintPattern;
 
 
 	/**
@@ -55,13 +55,18 @@ class CaptureVariablePathElement extends PathElement {
 		if (colon == -1) {
 			// no constraint
 			this.variableName = new String(captureDescriptor, 1, captureDescriptor.length - 2);
-			this.constraintPattern = null;
 		}
 		else {
 			this.variableName = new String(captureDescriptor, 1, colon - 1);
-			this.constraintPattern = Pattern.compile(
-					new String(captureDescriptor, colon + 1, captureDescriptor.length - colon - 2),
-					Pattern.DOTALL | (caseSensitive ? 0 : Pattern.CASE_INSENSITIVE));
+			if (caseSensitive) {
+				this.constraintPattern = Pattern.compile(
+						new String(captureDescriptor, colon + 1, captureDescriptor.length - colon - 2));
+			}
+			else {
+				this.constraintPattern = Pattern.compile(
+						new String(captureDescriptor, colon + 1, captureDescriptor.length - colon - 2),
+						Pattern.CASE_INSENSITIVE);
+			}
 		}
 	}
 
@@ -73,7 +78,7 @@ class CaptureVariablePathElement extends PathElement {
 			return false;
 		}
 		String candidateCapture = matchingContext.pathElementValue(pathIndex);
-		if (candidateCapture.isEmpty()) {
+		if (candidateCapture.length() == 0) {
 			return false;
 		}
 
@@ -100,6 +105,11 @@ class CaptureVariablePathElement extends PathElement {
 			else {
 				// Needs to be at least one character #SPR15264
 				match = (pathIndex == matchingContext.pathLength);
+				if (!match && matchingContext.isMatchOptionalTrailingSeparator()) {
+					match = //(nextPos > candidateIndex) &&
+							(pathIndex + 1) == matchingContext.pathLength &&
+							matchingContext.isSeparator(pathIndex);
+				}
 			}
 		}
 		else {
@@ -125,18 +135,6 @@ class CaptureVariablePathElement extends PathElement {
 	}
 
 	@Override
-	public char[] getChars() {
-		StringBuilder sb = new StringBuilder();
-		sb.append('{');
-		sb.append(this.variableName);
-		if (this.constraintPattern != null) {
-			sb.append(':').append(this.constraintPattern.pattern());
-		}
-		sb.append('}');
-		return sb.toString().toCharArray();
-	}
-
-	@Override
 	public int getWildcardCount() {
 		return 0;
 	}
@@ -156,6 +154,18 @@ class CaptureVariablePathElement extends PathElement {
 	public String toString() {
 		return "CaptureVariable({" + this.variableName +
 				(this.constraintPattern != null ? ":" + this.constraintPattern.pattern() : "") + "})";
+	}
+
+	@Override
+	public char[] getChars() {
+		StringBuilder b = new StringBuilder();
+		b.append('{');
+		b.append(this.variableName);
+		if (this.constraintPattern != null) {
+			b.append(':').append(this.constraintPattern.pattern());
+		}
+		b.append('}');
+		return b.toString().toCharArray();
 	}
 
 }

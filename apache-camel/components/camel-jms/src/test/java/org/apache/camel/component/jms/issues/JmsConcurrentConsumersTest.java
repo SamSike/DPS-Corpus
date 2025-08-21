@@ -20,18 +20,9 @@ import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.ConsumerTemplate;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jms.AbstractJMSTest;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.apache.camel.util.StopWatch;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.parallel.Isolated;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -43,13 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @Isolated
 public class JmsConcurrentConsumersTest extends AbstractJMSTest {
-
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
-    protected CamelContext context;
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
 
     @Test
     public void testConcurrentConsumersWithReply() throws Exception {
@@ -70,14 +54,14 @@ public class JmsConcurrentConsumersTest extends AbstractJMSTest {
             });
         }
 
-        StopWatch watch = new StopWatch();
+        long start = System.currentTimeMillis();
 
         // wait for test completion, timeout after 30 sec to let other unit test run to not wait forever
         assertTrue(latch.await(30000L, TimeUnit.MILLISECONDS));
         assertEquals(0, latch.getCount(), "Latch should be zero");
 
-        long duration = watch.taken();
-        assertTrue(duration < 20000L, "Should be faster than 20000 millis, took " + duration + " millis");
+        long delta = System.currentTimeMillis() - start;
+        assertTrue(delta < 20000L, "Should be faster than 20000 millis, took " + delta + " millis");
         executor.shutdown();
     }
 
@@ -99,15 +83,4 @@ public class JmsConcurrentConsumersTest extends AbstractJMSTest {
         };
     }
 
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        context = camelContextExtension.getContext();
-        template = camelContextExtension.getProducerTemplate();
-        consumer = camelContextExtension.getConsumerTemplate();
-    }
 }

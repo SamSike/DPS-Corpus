@@ -22,18 +22,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.component.google.secret.manager.vault.PubsubReloadTriggerTask;
 import org.apache.camel.spi.PeriodTaskScheduler;
 import org.apache.camel.spi.PropertiesFunction;
 import org.apache.camel.spi.annotations.DevConsole;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.console.AbstractDevConsole;
 import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.json.JsonArray;
 import org.apache.camel.util.json.JsonObject;
 import org.apache.camel.vault.GcpVaultConfiguration;
 
-@DevConsole(name = "gcp-secrets", displayName = "GCP Secrets", description = "GCP Secret Manager")
+@DevConsole("gcp-secrets")
 public class GoogleSecretManagerDevConsole extends AbstractDevConsole {
 
     private GoogleSecretManagerPropertiesFunction propertiesFunction;
@@ -55,7 +55,7 @@ public class GoogleSecretManagerDevConsole extends AbstractDevConsole {
         }
         GcpVaultConfiguration gcp = getCamelContext().getVaultConfiguration().getGcpVaultConfiguration();
         if (gcp != null && gcp.isRefreshEnabled()) {
-            PeriodTaskScheduler scheduler = PluginHelper.getPeriodTaskScheduler(getCamelContext());
+            PeriodTaskScheduler scheduler = getCamelContext().adapt(ExtendedCamelContext.class).getPeriodTaskScheduler();
             secretsRefreshTask = scheduler.getTaskByType(PubsubReloadTriggerTask.class);
         }
     }

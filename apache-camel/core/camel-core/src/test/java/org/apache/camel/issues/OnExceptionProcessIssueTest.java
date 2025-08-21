@@ -29,9 +29,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class OnExceptionProcessIssueTest extends ContextTestSupport {
 
     @Test
-    public void testOnExceptionProcessIssue() {
+    public void testOnExceptionProcessIssue() throws Exception {
         Exchange out = template.send("direct:start", new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("Hello World");
             }
         });
@@ -41,13 +41,13 @@ public class OnExceptionProcessIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).useOriginalMessage().handled(true).setHeader("foo", constant("bar"))
                         .process(new Processor() {
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 Message in = exchange.getIn();
                                 Exception ex = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
                                 in.setBody("ERROR: " + ex.getMessage() + " for message: " + in.getBody());

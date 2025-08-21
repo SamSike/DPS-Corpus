@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,9 @@ package org.springframework.beans.factory.support;
 
 import java.util.Properties;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeanMetadataElement;
 import org.springframework.beans.Mergeable;
+import org.springframework.lang.Nullable;
 
 /**
  * Tag class which represents a Spring-managed {@link Properties} instance
@@ -34,7 +33,8 @@ import org.springframework.beans.Mergeable;
 @SuppressWarnings("serial")
 public class ManagedProperties extends Properties implements Mergeable, BeanMetadataElement {
 
-	private @Nullable Object source;
+	@Nullable
+	private Object source;
 
 	private boolean mergeEnabled;
 
@@ -48,7 +48,8 @@ public class ManagedProperties extends Properties implements Mergeable, BeanMeta
 	}
 
 	@Override
-	public @Nullable Object getSource() {
+	@Nullable
+	public Object getSource() {
 		return this.source;
 	}
 
@@ -74,11 +75,11 @@ public class ManagedProperties extends Properties implements Mergeable, BeanMeta
 		if (parent == null) {
 			return this;
 		}
-		if (!(parent instanceof Properties properties)) {
+		if (!(parent instanceof Properties)) {
 			throw new IllegalArgumentException("Cannot merge with object of type [" + parent.getClass() + "]");
 		}
 		Properties merged = new ManagedProperties();
-		merged.putAll(properties);
+		merged.putAll((Properties) parent);
 		merged.putAll(this);
 		return merged;
 	}

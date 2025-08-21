@@ -23,9 +23,9 @@ import javax.jcr.Value;
 
 import org.apache.camel.TypeConverter;
 import org.apache.camel.impl.converter.DefaultTypeConverter;
+import org.apache.camel.impl.engine.DefaultPackageScanClassResolver;
 import org.apache.camel.spi.Injector;
 import org.apache.camel.support.ObjectHelper;
-import org.apache.camel.support.scan.DefaultPackageScanClassResolver;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.jackrabbit.value.BinaryValue;
 import org.apache.jackrabbit.value.BooleanValue;
@@ -60,11 +60,6 @@ public class JcrConverterTest {
                     }
 
                     @Override
-                    public <T> T newInstance(Class<T> type, Class<?> factoryClass, String factoryMethod) {
-                        return null;
-                    }
-
-                    @Override
                     public <T> T newInstance(Class<T> type, boolean postProcessBean) {
                         return ObjectHelper.newInstance(type);
                     }
@@ -73,7 +68,7 @@ public class JcrConverterTest {
                     public boolean supportsAutoWiring() {
                         return false;
                     }
-                }, true, false);
+                }, true);
         ServiceHelper.startService(converter);
     }
 

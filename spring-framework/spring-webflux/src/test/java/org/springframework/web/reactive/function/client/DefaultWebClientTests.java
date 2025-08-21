@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -39,7 +38,6 @@ import org.springframework.core.NamedThreadLocal;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ClientCodecConfigurer;
 import org.springframework.web.reactive.function.BodyExtractors;
@@ -48,14 +46,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.when;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 /**
- * Tests for {@link DefaultWebClient}.
+ * Unit tests for {@link DefaultWebClient}.
  *
  * @author Rossen Stoyanchev
  * @author Brian Clozel
@@ -73,9 +71,8 @@ public class DefaultWebClientTests {
 
 
 	@BeforeEach
-	void setup() {
-		ClientResponse mockResponse = mock();
-		when(mockResponse.statusCode()).thenReturn(HttpStatus.OK);
+	public void setup() {
+		ClientResponse mockResponse = mock(ClientResponse.class);
 		when(mockResponse.bodyToMono(Void.class)).thenReturn(Mono.empty());
 		given(this.exchangeFunction.exchange(this.captor.capture())).willReturn(Mono.just(mockResponse));
 		this.builder = WebClient.builder().baseUrl("/base").exchangeFunction(this.exchangeFunction);
@@ -83,7 +80,7 @@ public class DefaultWebClientTests {
 
 
 	@Test
-	void basic() {
+	public void basic() {
 		this.builder.build().get().uri("/path")
 				.retrieve().bodyToMono(Void.class).block(Duration.ofSeconds(10));
 
@@ -94,7 +91,7 @@ public class DefaultWebClientTests {
 	}
 
 	@Test
-	void uriBuilder() {
+	public void uriBuilder() {
 		this.builder.build().get()
 				.uri(builder -> builder.path("/path").queryParam("q", "12").build())
 				.retrieve().bodyToMono(Void.class).block(Duration.ofSeconds(10));
@@ -111,11 +108,11 @@ public class DefaultWebClientTests {
 
 		ClientRequest request = verifyAndGetRequest();
 		assertThat(request.url().toString()).isEqualTo("/base/path/identifier?q=12");
-		assertThat(request.attribute(WebClient.class.getName() + ".uriTemplate")).contains("/base/path/{id}");
+		assertThat(request.attribute(WebClient.class.getName() + ".uriTemplate").get()).isEqualTo("/path/{id}");
 	}
 
 	@Test
-	void uriBuilderWithPathOverride() {
+	public void uriBuilderWithPathOverride() {
 		this.builder.build().get()
 				.uri(builder -> builder.replacePath("/path").build())
 				.retrieve().bodyToMono(Void.class).block(Duration.ofSeconds(10));
@@ -125,7 +122,7 @@ public class DefaultWebClientTests {
 	}
 
 	@Test
-	void requestHeaderAndCookie() {
+	public void requestHeaderAndCookie() {
 		this.builder.build().get().uri("/path").accept(MediaType.APPLICATION_JSON)
 				.cookies(cookies -> cookies.add("id", "123"))	// SPR-16178
 				.retrieve().bodyToMono(Void.class).block(Duration.ofSeconds(10));
@@ -136,7 +133,35 @@ public class DefaultWebClientTests {
 	}
 
 	@Test
-	void httpRequest() {
+	public void contextFromThreadLocal() {
+		WebClient client = this.builder
+				.filter((request, next) ->
+						// Async, continue on different thread
+						Mono.delay(Duration.ofMillis(10)).then(next.exchange(request)))
+				.filter((request, next) ->
+						Mono.deferContextual(contextView -> {
+							String fooValue = contextView.get("foo");
+							return next.exchange(ClientRequest.from(request).header("foo", fooValue).build());
+						}))
+				.build();
+
+		ThreadLocal<String> fooHolder = new ThreadLocal<>();
+		fooHolder.set("bar");
+		try {
+			client.get().uri("/path")
+					.context(context -> context.put("foo", fooHolder.get()))
+					.retrieve().bodyToMono(Void.class).block(Duration.ofSeconds(10));
+		}
+		finally {
+			fooHolder.remove();
+		}
+
+		ClientRequest request = verifyAndGetRequest();
+		assertThat(request.headers().getFirst("foo")).isEqualTo("bar");
+	}
+
+	@Test
+	public void httpRequest() {
 		this.builder.build().get().uri("/path")
 				.httpRequest(httpRequest -> {})
 				.retrieve().bodyToMono(Void.class).block(Duration.ofSeconds(10));
@@ -146,7 +171,7 @@ public class DefaultWebClientTests {
 	}
 
 	@Test
-	void defaultHeaderAndCookie() {
+	public void defaultHeaderAndCookie() {
 		WebClient client = this.builder
 				.defaultHeader("Accept", "application/json")
 				.defaultCookie("id", "123")
@@ -161,7 +186,7 @@ public class DefaultWebClientTests {
 	}
 
 	@Test
-	void defaultHeaderAndCookieOverrides() {
+	public void defaultHeaderAndCookieOverrides() {
 		WebClient client = this.builder
 				.defaultHeader("Accept", "application/json")
 				.defaultCookie("id", "123")
@@ -178,7 +203,7 @@ public class DefaultWebClientTests {
 	}
 
 	@Test
-	void defaultHeaderAndCookieCopies() {
+	public void defaultHeaderAndCookieCopies() {
 		WebClient client1 = this.builder
 				.defaultHeader("Accept", "application/json")
 				.defaultCookie("id", "123")
@@ -205,7 +230,7 @@ public class DefaultWebClientTests {
 	}
 
 	@Test
-	void defaultRequest() {
+	public void defaultRequest() {
 		ThreadLocal<String> context = new NamedThreadLocal<>("foo");
 
 		Map<String, Object> actual = new HashMap<>();
@@ -232,7 +257,7 @@ public class DefaultWebClientTests {
 	}
 
 	@Test
-	void bodyObjectPublisher() {
+	public void bodyObjectPublisher() {
 		Mono<Void> mono = Mono.empty();
 		WebClient client = this.builder.build();
 
@@ -241,7 +266,7 @@ public class DefaultWebClientTests {
 	}
 
 	@Test
-	void mutateDoesCopy() {
+	public void mutateDoesCopy() {
 		// First, build the clients
 
 		WebClient.Builder builder = WebClient.builder()
@@ -262,22 +287,22 @@ public class DefaultWebClientTests {
 				.defaultCookie("baz", "qux")
 				.build();
 
-		// Now, verify what each client has.
+		// Now, verify what each client has..
 
 		WebClient.Builder builder1 = client1.mutate();
-		builder1.filters(filters -> assertThat(filters).hasSize(1));
-		builder1.defaultHeaders(headers -> assertThat(headers.size()).isOne());
-		builder1.defaultCookies(cookies -> assertThat(cookies).hasSize(1));
+		builder1.filters(filters -> assertThat(filters.size()).isEqualTo(1));
+		builder1.defaultHeaders(headers -> assertThat(headers.size()).isEqualTo(1));
+		builder1.defaultCookies(cookies -> assertThat(cookies.size()).isEqualTo(1));
 
 		WebClient.Builder builder2 = client2.mutate();
-		builder2.filters(filters -> assertThat(filters).hasSize(2));
+		builder2.filters(filters -> assertThat(filters.size()).isEqualTo(2));
 		builder2.defaultHeaders(headers -> assertThat(headers.size()).isEqualTo(2));
-		builder2.defaultCookies(cookies -> assertThat(cookies).hasSize(2));
+		builder2.defaultCookies(cookies -> assertThat(cookies.size()).isEqualTo(2));
 
 		WebClient.Builder builder1a = client1a.mutate();
-		builder1a.filters(filters -> assertThat(filters).hasSize(2));
+		builder1a.filters(filters -> assertThat(filters.size()).isEqualTo(2));
 		builder1a.defaultHeaders(headers -> assertThat(headers.size()).isEqualTo(2));
-		builder1a.defaultCookies(cookies -> assertThat(cookies).hasSize(2));
+		builder1a.defaultCookies(cookies -> assertThat(cookies.size()).isEqualTo(2));
 	}
 
 	@Test
@@ -298,7 +323,7 @@ public class DefaultWebClientTests {
 	}
 
 	@Test
-	void withStringAttribute() {
+	public void withStringAttribute() {
 		Map<String, Object> actual = new HashMap<>();
 		ExchangeFilterFunction filter = (request, next) -> {
 			actual.putAll(request.attributes());
@@ -313,11 +338,11 @@ public class DefaultWebClientTests {
 		assertThat(actual.get("foo")).isEqualTo("bar");
 
 		ClientRequest request = verifyAndGetRequest();
-		assertThat(request.attribute("foo")).contains("bar");
+		assertThat(request.attribute("foo").get()).isEqualTo("bar");
 	}
 
 	@Test
-	void withNullAttribute() {
+	public void withNullAttribute() {
 		Map<String, Object> actual = new HashMap<>();
 		ExchangeFilterFunction filter = (request, next) -> {
 			actual.putAll(request.attributes());
@@ -332,35 +357,11 @@ public class DefaultWebClientTests {
 		assertThat(actual.get("foo")).isNull();
 
 		ClientRequest request = verifyAndGetRequest();
-		assertThat(request.attribute("foo")).isNotPresent();
+		assertThat(request.attribute("foo").isPresent()).isFalse();
 	}
 
 	@Test
-	void uriTemplateAttribute() {
-		testUriTemplateAttribute(client -> client.get().uri("/{id}", 1), "/base/{id}");
-		testUriTemplateAttribute(client -> client.get().uri("/{id}", Map.of("id", 1)), "/base/{id}");
-		testUriTemplateAttribute(client -> client.get().uri("/{id}", builder -> builder.build(1)), "/base/{id}");
-	}
-
-	private void testUriTemplateAttribute(
-			Function<WebClient, WebClient.RequestHeadersSpec<?>> requestFn, String expectedPath) {
-
-		Map<String, Object> actual = new HashMap<>();
-		ExchangeFilterFunction filter = (request, next) -> {
-			actual.putAll(request.attributes());
-			return next.exchange(request);
-		};
-
-		requestFn.apply(this.builder.filter(filter).build())
-				.retrieve().bodyToMono(Void.class)
-				.block(Duration.ofSeconds(10));
-
-		String key = WebClient.class.getName() + ".uriTemplate";
-		assertThat(actual.get(key)).isEqualTo(expectedPath);
-	}
-
-	@Test
-	void apply() {
+	public void apply() {
 		WebClient client = this.builder
 				.apply(builder -> builder
 						.defaultHeader("Accept", "application/json")
@@ -375,8 +376,8 @@ public class DefaultWebClientTests {
 	}
 
 	@Test
-	void switchToErrorOnEmptyClientResponseMono() {
-		ExchangeFunction exchangeFunction = mock();
+	public void switchToErrorOnEmptyClientResponseMono() {
+		ExchangeFunction exchangeFunction = mock(ExchangeFunction.class);
 		given(exchangeFunction.exchange(any())).willReturn(Mono.empty());
 		WebClient client = WebClient.builder().baseUrl("/base").exchangeFunction(exchangeFunction).build();
 		StepVerifier.create(client.get().uri("/path").retrieve().bodyToMono(Void.class))
@@ -385,7 +386,7 @@ public class DefaultWebClientTests {
 	}
 
 	@Test
-	void shouldApplyFiltersAtSubscription() {
+	public void shouldApplyFiltersAtSubscription() {
 		WebClient client = this.builder
 				.filter((request, next) ->
 					next.exchange(ClientRequest
@@ -412,55 +413,22 @@ public class DefaultWebClientTests {
 		Mono<Void> result = this.builder.build().get()
 				.uri("/path")
 				.retrieve()
-				.onStatus(HttpStatusCode::is4xxClientError, resp -> Mono.error(new IllegalStateException("1")))
-				.onStatus(HttpStatusCode::is4xxClientError, resp -> Mono.error(new IllegalStateException("2")))
+				.onStatus(HttpStatus::is4xxClientError, resp -> Mono.error(new IllegalStateException("1")))
+				.onStatus(HttpStatus::is4xxClientError, resp -> Mono.error(new IllegalStateException("2")))
 				.bodyToMono(Void.class);
 
 		StepVerifier.create(result).expectErrorMessage("1").verify();
-	}
-
-	@Test
-	void onStatusHandlerRegisteredGlobally() {
-
-		ClientResponse response = ClientResponse.create(HttpStatus.BAD_REQUEST).build();
-		given(exchangeFunction.exchange(any())).willReturn(Mono.just(response));
-
-		Mono<Void> result = this.builder
-				.defaultStatusHandler(HttpStatusCode::is4xxClientError, resp -> Mono.error(new IllegalStateException("1")))
-				.defaultStatusHandler(HttpStatusCode::is4xxClientError, resp -> Mono.error(new IllegalStateException("2")))
-				.build().get()
-				.uri("/path")
-				.retrieve()
-				.bodyToMono(Void.class);
-
-		StepVerifier.create(result).expectErrorMessage("1").verify();
-	}
-
-	@Test
-	void onStatusHandlerRegisteredGloballyHaveLowerPrecedence() {
-
-		ClientResponse response = ClientResponse.create(HttpStatus.BAD_REQUEST).build();
-		given(exchangeFunction.exchange(any())).willReturn(Mono.just(response));
-
-		Mono<Void> result = this.builder
-				.defaultStatusHandler(HttpStatusCode::is4xxClientError, resp -> Mono.error(new IllegalStateException("1")))
-				.build().get()
-				.uri("/path")
-				.retrieve()
-				.onStatus(HttpStatusCode::is4xxClientError, resp -> Mono.error(new IllegalStateException("2")))
-				.bodyToMono(Void.class);
-
-		StepVerifier.create(result).expectErrorMessage("2").verify();
 	}
 
 	@Test // gh-23880
+	@SuppressWarnings("unchecked")
 	public void onStatusHandlersDefaultHandlerIsLast() {
 
 		ClientResponse response = ClientResponse.create(HttpStatus.BAD_REQUEST).build();
 		given(exchangeFunction.exchange(any())).willReturn(Mono.just(response));
 
-		Predicate<HttpStatusCode> predicate1 = mock();
-		Predicate<HttpStatusCode> predicate2 = mock();
+		Predicate<HttpStatus> predicate1 = mock(Predicate.class);
+		Predicate<HttpStatus> predicate2 = mock(Predicate.class);
 
 		given(predicate1.test(HttpStatus.BAD_REQUEST)).willReturn(false);
 		given(predicate2.test(HttpStatus.BAD_REQUEST)).willReturn(false);
@@ -498,23 +466,6 @@ public class DefaultWebClientTests {
 	private void testStatusHandlerForToEntity(Publisher<?> responsePublisher) {
 		StepVerifier.create(responsePublisher).expectError(WebClientResponseException.class).verify();
 	}
-
-	@Test // gh-32053
-	void defaultRequestOverride() {
-		WebClient client = this.builder
-				.defaultRequest(spec -> spec.accept(MediaType.APPLICATION_JSON))
-				.build();
-
-		client.get().uri("/path")
-				.accept(MediaType.IMAGE_PNG)
-				.retrieve()
-				.bodyToMono(Void.class)
-				.block(Duration.ofSeconds(3));
-
-		ClientRequest request = verifyAndGetRequest();
-		assertThat(request.headers().getAccept()).containsExactly(MediaType.IMAGE_PNG);
-	}
-
 
 
 	private ClientRequest verifyAndGetRequest() {

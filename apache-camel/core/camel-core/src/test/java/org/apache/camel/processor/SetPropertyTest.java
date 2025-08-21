@@ -29,8 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SetPropertyTest extends ContextTestSupport {
     private MockEndpoint end;
-    private final String propertyName = "foo";
-    private final String expectedPropertyValue = "bar";
+    private String propertyName = "foo";
+    private String expectedPropertyValue = "bar";
 
     @Test
     public void testSetExchangePropertyMidRoute() throws Exception {

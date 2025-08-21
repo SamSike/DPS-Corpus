@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package org.springframework.expression;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Instances of a type comparator should be able to compare pairs of objects for equality.
@@ -40,11 +40,10 @@ public interface TypeComparator {
 	 * Compare two given objects.
 	 * @param firstObject the first object
 	 * @param secondObject the second object
-	 * @return 0 if they are equal, a negative integer if the first is smaller than
-	 * the second, or a positive integer if the first is larger than the second
+	 * @return 0 if they are equal, <0 if the first is smaller than the second,
+	 * or >0 if the first is larger than the second
 	 * @throws EvaluationException if a problem occurs during comparison
 	 * (or if they are not comparable in the first place)
-	 * @see Comparable#compareTo
 	 */
 	int compare(@Nullable Object firstObject, @Nullable Object secondObject) throws EvaluationException;
 

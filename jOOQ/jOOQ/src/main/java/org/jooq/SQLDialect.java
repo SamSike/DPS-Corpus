@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,17 +38,13 @@
 
 package org.jooq;
 
-import java.sql.DatabaseMetaData;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.concurrent.locks.Condition;
-import java.util.regex.Pattern;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.ApiStatus.Experimental;
 
 /**
  * Dialects and dialect families as supported by jOOQ.
@@ -77,7 +73,7 @@ import org.jetbrains.annotations.ApiStatus.Experimental;
  * Edition, you may be using the wrong edition, e.g. because of a transitive
  * dependency introduced by Spring Boot. See this article about how to exclude
  * such transitive dependencies from your classpath <a href=
- * "https://blog.jooq.org/how-to-use-jooqs-commercial-distributions-with-spring-boot/">https://blog.jooq.org/how-to-use-jooqs-commercial-distributions-with-spring-boot/</a>.
+ * "https://blog.jooq.org/2019/06/26/how-to-use-jooqs-commercial-distributions-with-spring-boot/">https://blog.jooq.org/2019/06/26/how-to-use-jooqs-commercial-distributions-with-spring-boot/</a>.
  *
  * @author Lukas Eder
  */
@@ -97,21 +93,6 @@ public enum SQLDialect {
     // -------------------------------------------------------------------------
 
     /**
-     * The ClickHouse dialect family.
-     * <p>
-     * This dialect is in EXPERIMENTAL state. The dialect works very differently
-     * from most more standards compliant dialects, and we're still exploring
-     * how much we should tweak generated SQL to make ClickHouse behave more.
-     * The main difference is in how <code>NULL</code> values are handled. While
-     * <code>NOT NULL</code> being the default modifier on a type is a
-     * reasonable choice, auto-converting all <code>NULL</code> values to the
-     * type's default (e.g. <code>0</code> for <code>INTEGER</code>) seems like
-     * a stretch, and hard to prevent via jOOQ's standardisation.
-     */
-    @Experimental
-    CLICKHOUSE("ClickHouse", false, true),
-
-    /**
      * The CUBRID dialect family.
      *
      * @deprecated - [#9403] - 3.13.0 - This dialect is hardly used by anyone
@@ -119,7 +100,7 @@ public enum SQLDialect {
      *             future.
      */
     @Deprecated(forRemoval = true, since = "3.13")
-    CUBRID("CUBRID", false, true, SQLDialectCategory.MYSQL),
+    CUBRID("CUBRID", false, true),
 
     /**
      * The Apache Derby dialect family.
@@ -127,22 +108,11 @@ public enum SQLDialect {
     DERBY("Derby", false, true),
 
     /**
-     * The DuckDB dialect family.
-     */
-    DUCKDB("DuckDB", false, true),
-
-    /**
      * The Firebird dialect family.
      * <p>
      * This family behaves like the versioned dialect {@link #FIREBIRD_3_0}.
      */
-    FIREBIRD("Firebird", false, true, new RequiredVersion(4, null, null)),
-
-
-
-
-
-
+    FIREBIRD("Firebird", false, true),
 
 
 
@@ -173,35 +143,7 @@ public enum SQLDialect {
     /**
      * The H2 dialect family.
      */
-    H2("H2", false, true, new RequiredVersion(2, 2, 220)),
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    H2("H2", false, true),
 
 
 
@@ -251,15 +193,7 @@ public enum SQLDialect {
      * <p>
      * This family behaves like the versioned dialect {@link #MARIADB_10_5}.
      */
-    MARIADB("MariaDB", false, true, new RequiredVersion(10, 7, null), SQLDialectCategory.MYSQL),
-
-
-
-
-
-
-
-
+    MARIADB("MariaDB", false, true),
 
 
 
@@ -332,17 +266,9 @@ public enum SQLDialect {
     /**
      * The MySQL dialect family.
      * <p>
-     * This family behaves like the versioned dialect {@link #MYSQL_8_0_31}.
+     * This family behaves like the versioned dialect {@link #MYSQL_8_0_20}.
      */
-    MYSQL("MySQL", false, true, new RequiredVersion(8, 0, 31), SQLDialectCategory.MYSQL),
-
-
-
-
-
-
-
-
+    MYSQL("MySQL", false, true),
 
 
 
@@ -389,49 +315,13 @@ public enum SQLDialect {
     /**
      * The PostgreSQL dialect family.
      * <p>
-     * This family behaves like the versioned dialect {@link #POSTGRES_17}.
+     * This family behaves like the versioned dialect {@link #POSTGRES_13}.
      * <p>
      * While this family (and its dialects) have been observed to work to some
      * extent on Amazon RedShift as well, we strongly suggest you use the
      * official {@link #REDSHIFT} support, instead.
      */
-    POSTGRES("Postgres", false, true, new RequiredVersion(17, null, null), SQLDialectCategory.POSTGRES),
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    POSTGRES("Postgres", false, true),
 
 
 
@@ -534,9 +424,9 @@ public enum SQLDialect {
     /**
      * The SQLite dialect family.
      * <p>
-     * This family behaves like the versioned dialect {@link #SQLITE_3_40}.
+     * This family behaves like the versioned dialect {@link #SQLITE_3_38}.
      */
-    SQLITE("SQLite", false, true, new RequiredVersion(3, 40, null)),
+    SQLITE("SQLite", false, true),
 
 
 
@@ -572,42 +462,11 @@ public enum SQLDialect {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * The Trino dialect family.
-     */
-    TRINO("Trino", false, true),
 
     /**
      * The YugabyteDB dialect family.
-     * <p>
-     * This family behaves like the versioned dialect {@link #YUGABYTEDB_2_25}.
      */
-    YUGABYTEDB("YugabyteDB", false, true, new RequiredVersion(2, 25, null), SQLDialectCategory.POSTGRES),
-
-
-
-
-
-
-
-
+    YUGABYTEDB("YugabyteDB", false, true),
 
 
 
@@ -624,105 +483,6 @@ public enum SQLDialect {
     // -------------------------------------------------------------------------
     // SQL dialects for commercial usage
     // -------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1143,9 +903,7 @@ public enum SQLDialect {
     private final String                  name;
     private final boolean                 commercial;
     private final boolean                 supported;
-    private final RequiredVersion         requiredVersion;
     private final SQLDialect              family;
-    private final SQLDialectCategory      category;
     private SQLDialect                    predecessor;
     private transient EnumSet<SQLDialect> predecessors;
     private final ThirdParty              thirdParty;
@@ -1172,7 +930,7 @@ public enum SQLDialect {
         for (SQLDialect dialect : dialects)
             result.addAll(dialect.predecessors());
 
-        return result;
+        return Collections.unmodifiableSet(result);
     }
 
     /**
@@ -1213,7 +971,7 @@ public enum SQLDialect {
     public static final Set<SQLDialect> supportedBy(SQLDialect dialect) {
         EnumSet<SQLDialect> result = EnumSet.noneOf(SQLDialect.class);
         addSupportedBy(dialect, result);
-        return result;
+        return Collections.unmodifiableSet(result);
     }
 
     /**
@@ -1231,7 +989,7 @@ public enum SQLDialect {
         for (SQLDialect dialect : dialects)
             addSupportedBy(dialect, result);
 
-        return result;
+        return Collections.unmodifiableSet(result);
     }
 
     private static final void addSupportedBy(SQLDialect dialect, EnumSet<SQLDialect> supported) {
@@ -1245,36 +1003,18 @@ public enum SQLDialect {
     }
 
     private SQLDialect(String name, boolean commercial, boolean supported) {
-        this(name, commercial, supported, (RequiredVersion) null);
+        this(name, commercial, supported, null, null);
     }
 
-    private SQLDialect(String name, boolean commercial, boolean supported, SQLDialectCategory category) {
-        this(name, commercial, supported, null, category);
+    private SQLDialect(String name, boolean commercial, boolean supported, SQLDialect family) {
+        this(name, commercial, supported, family, null);
     }
 
-    private SQLDialect(String name, boolean commercial, boolean supported, RequiredVersion requiredVersion) {
-        this(name, commercial, supported, requiredVersion, SQLDialectCategory.OTHER, null, null);
-    }
-
-    private SQLDialect(String name, boolean commercial, boolean supported, RequiredVersion requiredVersion, SQLDialectCategory category) {
-        this(name, commercial, supported, requiredVersion, category, null, null);
-    }
-
-    private SQLDialect(String name, boolean commercial, boolean supported, RequiredVersion requiredVersion, SQLDialect family) {
-        this(name, commercial, supported, requiredVersion, family, null);
-    }
-
-    private SQLDialect(String name, boolean commercial, boolean supported, RequiredVersion requiredVersion, SQLDialect family, SQLDialect predecessor) {
-        this(name, commercial, supported, requiredVersion, family.category(), family, predecessor);
-    }
-
-    private SQLDialect(String name, boolean commercial, boolean supported, RequiredVersion requiredVersion, SQLDialectCategory category, SQLDialect family, SQLDialect predecessor) {
+    private SQLDialect(String name, boolean commercial, boolean supported, SQLDialect family, SQLDialect predecessor) {
         this.name = name;
         this.commercial = commercial;
         this.supported = supported;
-        this.requiredVersion = requiredVersion;
         this.family = family == null ? this : family;
-        this.category = category == null ? this.family.category() : category;
         this.predecessor = predecessor == null ? this : predecessor;
 
         if (family != null)
@@ -1297,6 +1037,7 @@ public enum SQLDialect {
      * <ul>
      * <li>{@link #DEFAULT}: A hypothetical dialect used for
      * {@link QueryPart#toString()} calls of unattached query parts.</li>
+     * <li>{@link #POSTGRESPLUS}: A not yet supported dialect.</li>
      * </ul>
      */
     public final boolean supported() {
@@ -1307,23 +1048,15 @@ public enum SQLDialect {
      * The dialect family.
      * <p>
      * This returns the dialect itself, if it has no "parent family". E.g.
-     * <pre><code>
+     * <code><pre>
      * SQLSERVER == SQLSERVER2012.family();
      * SQLSERVER == SQLSERVER2008.family();
      * SQLSERVER == SQLSERVER.family();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     public final SQLDialect family() {
         return family;
-    }
-
-    /**
-     * The dialect category.
-     */
-    @NotNull
-    public final SQLDialectCategory category() {
-        return category;
     }
 
     /**
@@ -1338,7 +1071,7 @@ public enum SQLDialect {
      * dialects.
      */
     public final boolean isVersioned() {
-        return requiredVersion != null;
+        return family().predecessor() != family();
     }
 
     /**
@@ -1399,7 +1132,7 @@ public enum SQLDialect {
      * </ul>
      * <p>
      * This is useful to see if some feature is supported by <em>"at least"</em>
-     * a given dialect version. Example: <pre><code>
+     * a given dialect version. Example: <code><pre>
      * // Do this block only if the chosen dialect supports PostgreSQL 9.4+ features
      * if (POSTGRES_9_4.precedes(dialect)) {
      * }
@@ -1411,53 +1144,13 @@ public enum SQLDialect {
      * // Fall back to pre-PostgreSQL 9.3 behaviour
      * else {
      * }
-     * </code></pre>
+     * </pre></code>
      */
     public final boolean precedes(SQLDialect other) {
         if (family != other.family)
             return false;
 
         return other.predecessors().contains(this);
-    }
-
-    /**
-     * Whether this dialect strictly precedes an other dialect from the same
-     * family.
-     * <p>
-     * This returns:
-     * <ul>
-     * <li><code>false</code> if this dialect is the same as the other
-     * dialect</li>
-     * <li><code>true</code> if this dialect precedes the other dialect via any
-     * number of calls to {@link #predecessor()}</li>
-     * </ul>
-     * The above also implies that:
-     * <ul>
-     * <li><code>false</code> if the two dialects do not belong to the same
-     * family</li>
-     * </ul>
-     * <p>
-     * This is useful to see if some feature is supported by <em>"at least"</em>
-     * a given dialect version. Example:
-     *
-     * <pre>
-     * <code>
-     * // Do this block only if the chosen dialect was before PostgreSQL 9.3-
-     * if (dialect.precedesStrictly(POSTGRES)) {
-     * }
-     *
-     * // Do this block only if the chosen dialect was before PostgreSQL 9.4-
-     * else if (dialect.precedesStrictly(POSTGRES)) {
-     * }
-     *
-     * // Fall back to post-PostgreSQL 9.4+ behaviour
-     * else {
-     * }
-     * </code>
-     * </pre>
-     */
-    public final boolean precedesStrictly(SQLDialect other) {
-        return precedes(other) && this != other;
     }
 
     /**
@@ -1504,45 +1197,6 @@ public enum SQLDialect {
 
             if (candidate == (candidate = candidate.predecessor()))
                 return false;
-        }
-    }
-
-    /**
-     * Check if this {@link SQLDialect} supports a JDBC
-     * {@link DatabaseMetaData#getDatabaseMajorVersion()},
-     * {@link DatabaseMetaData#getDatabaseMinorVersion()}, patch version.
-     */
-    public final boolean supportsDatabaseVersion(
-        int majorVersion,
-        int minorVersion,
-        String productVersion
-    ) {
-        return requiredVersion == null
-            || requiredVersion.major == null
-            || requiredVersion.major < majorVersion
-            || requiredVersion.major == majorVersion && (
-                   requiredVersion.minor == null
-                || requiredVersion.minor < minorVersion
-                || requiredVersion.minor == minorVersion && (
-                       requiredVersion.patch == null
-                    || requiredVersion.patch <= patchVersion(productVersion)
-            )
-        );
-    }
-
-    private static final Pattern P_PATCH_VERSION_MYSQL = Pattern.compile("^\\d+\\.\\d+\\.(\\d+).*$");
-
-    private final int patchVersion(String productVersion) {
-        if (productVersion == null)
-            return Integer.MAX_VALUE;
-
-        switch (family()) {
-            case H2:
-                return Integer.parseInt(productVersion.split(" ")[0].split("\\.")[2]);
-            case MYSQL:
-                return Integer.parseInt(P_PATCH_VERSION_MYSQL.matcher(productVersion).replaceFirst("$1"));
-            default:
-                return Integer.MAX_VALUE;
         }
     }
 
@@ -1654,7 +1308,7 @@ public enum SQLDialect {
          */
         @Nullable
         public final String hibernateDialect() {
-            switch (SQLDialect.this.family()) {
+            switch (SQLDialect.this) {
 
 
 
@@ -1687,43 +1341,35 @@ public enum SQLDialect {
 
 
 
-
-
-
-
-
-
-                case CUBRID:
-                    return "org.hibernate.dialect.CUBRIDDialect";
-                case DERBY:
-                    return "org.hibernate.dialect.DerbyTenSevenDialect";
-                case FIREBIRD:
-                    return "org.hibernate.dialect.FirebirdDialect";
-                case H2:
-                    return "org.hibernate.dialect.H2Dialect";
-                case HSQLDB:
-                    return "org.hibernate.dialect.HSQLDialect";
+                case CUBRID:        return "org.hibernate.dialect.CUBRIDDialect";
+                case DERBY:         return "org.hibernate.dialect.DerbyTenSevenDialect";
+                case FIREBIRD:      return "org.hibernate.dialect.FirebirdDialect";
+                case H2:            return "org.hibernate.dialect.H2Dialect";
+                case HSQLDB:        return "org.hibernate.dialect.HSQLDialect";
                 case MARIADB:
 
-                case MYSQL:
-                    return "org.hibernate.dialect.MySQL5Dialect";
+
+
+
+
+
+
+
+
+
+                case MYSQL:         return "org.hibernate.dialect.MySQL5Dialect";
+
+
+
+
+
+
                 case POSTGRES:
+                case YUGABYTEDB:    return "org.hibernate.dialect.PostgreSQL94Dialect";
+                case SQLITE:        return null;
 
-
-
-
-
-                        return "org.hibernate.dialect.PostgreSQL94Dialect";
-                case YUGABYTEDB:
-                    return "org.hibernate.dialect.PostgreSQL94Dialect";
-                case SQLITE:
-                    return null;
-
-                default:
-                    return null;
+                default:            return null;
             }
         }
     }
-
-    static final record RequiredVersion(Integer major, Integer minor, Integer patch) {}
 }

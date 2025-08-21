@@ -16,7 +16,6 @@
  */
 package org.apache.camel.main.download;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.camel.CamelContext;
@@ -26,44 +25,35 @@ import org.apache.camel.catalog.DefaultCamelCatalog;
 import org.apache.camel.component.platform.http.PlatformHttpComponent;
 import org.apache.camel.component.stub.StubComponent;
 import org.apache.camel.impl.engine.DefaultComponentResolver;
+import org.apache.camel.main.http.VertxHttpServer;
 import org.apache.camel.main.util.SuggestSimilarHelper;
 import org.apache.camel.tooling.model.ComponentModel;
-import org.apache.camel.tooling.model.OtherModel;
 
 /**
  * Auto downloaded needed JARs when resolving components.
  */
 public final class DependencyDownloaderComponentResolver extends DefaultComponentResolver {
 
-    private static final String[] ACCEPTED_STUB_NAMES = {
-            "stub", "bean", "class", "direct", "kamelet", "log", "platform-http", "rest", "seda"
-    };
-
-    private static final String[] ACCEPTED_TRANSFORM_NAMES = {
-            "stub", "direct", "kamelet", "log", "seda"
-    };
+    private static final String ACCEPTED_STUB_NAMES = "stub,bean,class,kamelet,rest,rest-api,platform-http,vertx-http";
 
     private final CamelCatalog catalog = new DefaultCamelCatalog();
     private final CamelContext camelContext;
     private final DependencyDownloader downloader;
-    private final String stubPattern;
-    private final boolean silent;
-    private final boolean transform;
+    private final boolean stub;
 
-    public DependencyDownloaderComponentResolver(CamelContext camelContext, String stubPattern, boolean silent,
-                                                 boolean transform) {
+    public DependencyDownloaderComponentResolver(CamelContext camelContext, boolean stub) {
         this.camelContext = camelContext;
         this.downloader = camelContext.hasService(DependencyDownloader.class);
-        this.stubPattern = stubPattern;
-        this.silent = silent;
-        this.transform = transform;
+        this.stub = stub;
     }
 
     @Override
     public Component resolveComponent(String name, CamelContext context) {
         ComponentModel model = catalog.componentModel(name);
-        if (model != null) {
-            downloadLoader(model.getGroupId(), model.getArtifactId(), model.getVersion());
+        if (model != null && !downloader.alreadyOnClasspath(model.getGroupId(), model.getArtifactId(),
+                model.getVersion())) {
+            downloader.downloadDependency(model.getGroupId(), model.getArtifactId(),
+                    model.getVersion());
         }
 
         Component answer;
@@ -73,48 +63,15 @@ public final class DependencyDownloaderComponentResolver extends DefaultComponen
         } else {
             answer = super.resolveComponent("stub", context);
         }
-        if ((silent || transform || stubPattern != null) && answer instanceof StubComponent) {
+        if (stub && answer instanceof StubComponent) {
             StubComponent sc = (StubComponent) answer;
             // enable shadow mode on stub component
             sc.setShadow(true);
-            sc.setShadowPattern(stubPattern);
         }
         if (answer instanceof PlatformHttpComponent) {
-            MainHttpServerFactory.setupHttpServer(camelContext, silent);
-        }
-        if ("rest".equals(name)) {
-            // include direct component when using rest-dsl
-            ComponentModel direct = catalog.componentModel("direct");
-            if (direct != null) {
-                downloadLoader(direct.getGroupId(), direct.getArtifactId(), direct.getVersion());
-            }
-        }
-        if ("rest-openapi".equals(name)) {
-            // include camel-openapi-java when using rest-dsl with openapi contract-first
-            OtherModel oa = catalog.otherModel("openapi-java");
-            if (oa != null) {
-                downloadLoader(oa.getGroupId(), oa.getArtifactId(), oa.getVersion());
-            }
-            // include producer component
-            ComponentModel http = catalog.componentModel("vertx-http");
-            if (http != null) {
-                downloadLoader(http.getGroupId(), http.getArtifactId(), http.getVersion());
-            }
-        }
-        if ("cron".equals(name)) {
-            // include camel-quartz when using cron
-            ComponentModel quartz = catalog.componentModel("quartz");
-            if (quartz != null) {
-                downloadLoader(quartz.getGroupId(), quartz.getArtifactId(), quartz.getVersion());
-            }
-        }
-        if ("activemq".equals(name) || "activemq6".equals(name)) {
-            // need to include JMS connection-pool (trigger class loader to download correct JAR)
-            try {
-                camelContext.getClassResolver().resolveClass("org.messaginghub.pooled.jms.JmsPoolConnectionFactory");
-            } catch (Exception e) {
-                // ignore
-            }
+            // setup a default http server on port 8080 if not already done
+            VertxHttpServer.setPlatformHttpComponent((PlatformHttpComponent) answer);
+            VertxHttpServer.registerServer(camelContext, stub);
         }
         if (answer == null) {
             List<String> suggestion = SuggestSimilarHelper.didYouMean(catalog.findComponentNames(), name);
@@ -126,22 +83,14 @@ public final class DependencyDownloaderComponentResolver extends DefaultComponen
         return answer;
     }
 
-    private void downloadLoader(String groupId, String artifactId, String version) {
-        if (!downloader.alreadyOnClasspath(groupId, artifactId, version)) {
-            downloader.downloadDependency(groupId, artifactId, version);
-        }
-    }
-
     private boolean accept(String name) {
-        if (transform) {
-            return Arrays.stream(ACCEPTED_TRANSFORM_NAMES).anyMatch(n -> n.equals(name));
-        }
-        if (stubPattern == null) {
+        // kamelet component must not be stubbed
+        if (!stub) {
             return true;
         }
 
         // we are stubbing but need to accept the following
-        return Arrays.stream(ACCEPTED_STUB_NAMES).anyMatch(n -> n.equals(name));
+        return ACCEPTED_STUB_NAMES.contains(name);
     }
 
 }

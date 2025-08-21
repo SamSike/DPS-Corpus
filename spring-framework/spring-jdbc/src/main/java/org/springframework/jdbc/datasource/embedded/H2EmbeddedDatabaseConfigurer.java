@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,7 @@ package org.springframework.jdbc.datasource.embedded;
 
 import java.sql.Driver;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -34,7 +33,8 @@ import org.springframework.util.ClassUtils;
  */
 final class H2EmbeddedDatabaseConfigurer extends AbstractEmbeddedDatabaseConfigurer {
 
-	private static @Nullable H2EmbeddedDatabaseConfigurer instance;
+	@Nullable
+	private static H2EmbeddedDatabaseConfigurer instance;
 
 	private final Class<? extends Driver> driverClass;
 

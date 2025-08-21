@@ -20,6 +20,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.AvailablePortFinder;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -47,7 +48,8 @@ public class MultipCometdProducerConsumerTest extends CamelTestSupport {
     }
 
     @Override
-    public void doPreSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
         port1 = AvailablePortFinder.getNextAvailable();
         port2 = AvailablePortFinder.getNextAvailable();
         uri1 = "cometd://127.0.0.1:" + port1 + "/service/test?baseResource=file:./target/test-classes/webapp&"
@@ -55,6 +57,7 @@ public class MultipCometdProducerConsumerTest extends CamelTestSupport {
 
         uri2 = "cometd://127.0.0.1:" + port2 + "/service/test?baseResource=file:./target/test-classes/webapp&"
                + "timeout=240000&interval=0&maxInterval=30000&multiFrameInterval=1500&jsonCommented=true&logLevel=2";
+        super.setUp();
     }
 
     @Override

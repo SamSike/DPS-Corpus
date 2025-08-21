@@ -120,7 +120,7 @@ public class ReactiveStreamsJMXTest extends BaseReactiveTest {
                         .delayer(1)
                         .to("mock:unbounded-endpoint");
 
-                from("timer:tick?includeMetadata=true")
+                from("timer:tick")
                         .setBody().simple("Hello world ${header.CamelTimerCounter}")
                         .to("reactive-streams:strings");
 

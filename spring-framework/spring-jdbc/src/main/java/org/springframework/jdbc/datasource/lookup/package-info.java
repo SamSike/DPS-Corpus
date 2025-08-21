@@ -1,7 +1,9 @@
 /**
  * Provides a strategy for looking up JDBC DataSources by name.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jdbc.datasource.lookup;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

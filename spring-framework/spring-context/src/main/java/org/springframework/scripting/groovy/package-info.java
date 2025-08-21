@@ -1,9 +1,11 @@
 /**
  * Package providing integration of
- * <a href="https://www.groovy-lang.org/">Groovy</a>
+ * <a href="http://www.groovy-lang.org/">Groovy</a>
  * into Spring's scripting infrastructure.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.scripting.groovy;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -35,7 +35,7 @@ public class FileConsumerMoveFailureOnCompletionTest extends ContextTestSupport 
 
         template.sendBodyAndHeader(fileUri(), "Kaboom", Exchange.FILE_NAME, "bye.txt");
 
-        mock.assertIsSatisfied(1000);
+        assertMockEndpointsSatisfied();
     }
 
     @Test
@@ -50,18 +50,18 @@ public class FileConsumerMoveFailureOnCompletionTest extends ContextTestSupport 
         template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
         template.sendBodyAndHeader(fileUri(), "Kaboom", Exchange.FILE_NAME, "bye.txt");
 
-        mock.assertIsSatisfied(1000);
+        assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?initialDelay=0&delay=10&moveFailed=error/${file:name.noext}-error.txt"))
                         .onCompletion().onFailureOnly().to("mock:failed").end()
                         .process(new Processor() {
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 String body = exchange.getIn().getBody(String.class);
                                 if ("Kaboom".equals(body)) {
                                     throw new IllegalArgumentException("Forced");

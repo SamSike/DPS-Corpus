@@ -57,6 +57,11 @@ public class SkipLastByteInputStream extends BufferedInputStream {
     }
 
     @Override
+    public void close() throws IOException {
+        super.close();
+    }
+
+    @Override
     public int read(byte[] buffer, int off, int len) throws IOException {
         final int count = super.read(buffer, off, len);
         if (count < 0) {
@@ -87,17 +92,17 @@ public class SkipLastByteInputStream extends BufferedInputStream {
     }
 
     @Override
-    public long skip(long n) {
+    public synchronized long skip(long n) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void mark(int readlimit) {
+    public synchronized void mark(int readlimit) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void reset() {
+    public synchronized void reset() {
         throw new UnsupportedOperationException();
     }
 

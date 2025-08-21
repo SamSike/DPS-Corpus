@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,8 +39,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
- * Tests for {@link RSocketStrategies}.
- *
+ * Unit tests for {@link RSocketStrategies}.
  * @author Rossen Stoyanchev
  * @since 5.2
  */
@@ -109,8 +108,9 @@ class DefaultRSocketStrategiesTests {
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	void applyMetadataExtractors() {
-		Consumer<MetadataExtractorRegistry> consumer = mock();
+		Consumer<MetadataExtractorRegistry> consumer = mock(Consumer.class);
 		RSocketStrategies.builder().metadataExtractorRegistry(consumer).build();
 		verify(consumer, times(1)).accept(any());
 	}

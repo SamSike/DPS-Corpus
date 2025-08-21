@@ -30,7 +30,6 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
 import org.apache.camel.spi.DataFormat;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.apache.camel.util.StopWatch;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -168,7 +167,7 @@ public class DataFormatConcurrentTest extends CamelTestSupport {
 
         final ByteArrayInputStream[] payloads = createPayloads(testCycleCount);
         ExecutorService pool = Executors.newFixedThreadPool(20);
-        StopWatch watch = new StopWatch();
+        long start = System.currentTimeMillis();
         for (int i = 0; i < payloads.length; i++) {
             final int finalI = i;
             pool.execute(new Runnable() {
@@ -179,10 +178,10 @@ public class DataFormatConcurrentTest extends CamelTestSupport {
         }
 
         latch.await();
-        long duration = watch.taken();
+        long end = System.currentTimeMillis();
 
         LOG.info("Sending {} messages to {} took {} ms",
-                payloads.length, template.getDefaultEndpoint().getEndpointUri(), duration);
+                new Object[] { payloads.length, template.getDefaultEndpoint().getEndpointUri(), end - start });
     }
 
     public void marshal(final CountDownLatch latch) throws Exception {
@@ -194,7 +193,7 @@ public class DataFormatConcurrentTest extends CamelTestSupport {
 
         final Foo[] payloads = createFoo(testCycleCount);
         ExecutorService pool = Executors.newFixedThreadPool(20);
-        StopWatch watch = new StopWatch();
+        long start = System.currentTimeMillis();
         for (int i = 0; i < payloads.length; i++) {
             final int finalI = i;
             pool.execute(new Runnable() {
@@ -205,15 +204,15 @@ public class DataFormatConcurrentTest extends CamelTestSupport {
         }
 
         latch.await();
-        long duration = watch.taken();
+        long end = System.currentTimeMillis();
 
         LOG.info("Sending {} messages to {} took {} ms",
-                payloads.length, template.getDefaultEndpoint().getEndpointUri(), duration);
+                new Object[] { payloads.length, template.getDefaultEndpoint().getEndpointUri(), end - start });
     }
 
     /**
      * the individual size of one record is: fooBarSize = 1 -> 104 bytes fooBarSize = 50 -> 2046 bytes
-     *
+     * 
      * @return the payloads used for this stress test
      */
     public Foo[] createFoo(int testCount) {
@@ -235,7 +234,7 @@ public class DataFormatConcurrentTest extends CamelTestSupport {
 
     /**
      * the individual size of one record is: fooBarSize = 1 -> 104 bytes fooBarSize = 50 -> 2046 bytes
-     *
+     * 
      * @return           the payloads used for this stress test
      * @throws Exception
      */

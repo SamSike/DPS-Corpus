@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,10 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.SpringProperties;
 import org.springframework.core.convert.support.ConfigurableConversionService;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -42,12 +42,11 @@ import org.springframework.util.StringUtils;
  * add by default. {@code AbstractEnvironment} adds none. Subclasses should contribute
  * property sources through the protected {@link #customizePropertySources(MutablePropertySources)}
  * hook, while clients should customize using {@link ConfigurableEnvironment#getPropertySources()}
- * and work against the {@link MutablePropertySources} API.
+ * and working against the {@link MutablePropertySources} API.
  * See {@link ConfigurableEnvironment} javadoc for usage examples.
  *
  * @author Chris Beams
  * @author Juergen Hoeller
- * @author Phillip Webb
  * @since 3.1
  * @see ConfigurableEnvironment
  * @see StandardEnvironment
@@ -58,7 +57,7 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	 * System property that instructs Spring to ignore system environment variables,
 	 * i.e. to never attempt to retrieve such a variable via {@link System#getenv()}.
 	 * <p>The default is "false", falling back to system environment variable checks if a
-	 * Spring environment property (for example, a placeholder in a configuration String) isn't
+	 * Spring environment property (e.g. a placeholder in a configuration String) isn't
 	 * resolvable otherwise. Consider switching this flag to "true" if you experience
 	 * log warnings from {@code getenv} calls coming from Spring.
 	 * @see #suppressGetenvAccess()
@@ -66,38 +65,38 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	public static final String IGNORE_GETENV_PROPERTY_NAME = "spring.getenv.ignore";
 
 	/**
-	 * Name of the property to specify active profiles: {@value}.
-	 * <p>The value may be comma delimited.
+	 * Name of property to set to specify active profiles: {@value}. Value may be comma
+	 * delimited.
 	 * <p>Note that certain shell environments such as Bash disallow the use of the period
 	 * character in variable names. Assuming that Spring's {@link SystemEnvironmentPropertySource}
-	 * is in use, this property may be specified as an environment variable named
+	 * is in use, this property may be specified as an environment variable as
 	 * {@code SPRING_PROFILES_ACTIVE}.
 	 * @see ConfigurableEnvironment#setActiveProfiles
 	 */
 	public static final String ACTIVE_PROFILES_PROPERTY_NAME = "spring.profiles.active";
 
 	/**
-	 * Name of the property to specify profiles that are active by default: {@value}.
-	 * <p>The value may be comma delimited.
+	 * Name of property to set to specify profiles active by default: {@value}. Value may
+	 * be comma delimited.
 	 * <p>Note that certain shell environments such as Bash disallow the use of the period
 	 * character in variable names. Assuming that Spring's {@link SystemEnvironmentPropertySource}
-	 * is in use, this property may be specified as an environment variable named
+	 * is in use, this property may be specified as an environment variable as
 	 * {@code SPRING_PROFILES_DEFAULT}.
 	 * @see ConfigurableEnvironment#setDefaultProfiles
 	 */
 	public static final String DEFAULT_PROFILES_PROPERTY_NAME = "spring.profiles.default";
 
 	/**
-	 * Name of the reserved default profile name: {@value}.
-	 * <p>If no default profile names are explicitly set and no active profile names
-	 * are explicitly set, this profile will automatically be activated by default.
+	 * Name of reserved default profile name: {@value}. If no default profile names are
+	 * explicitly and no active profile names are explicitly set, this profile will
+	 * automatically be activated by default.
 	 * @see #getReservedDefaultProfiles
 	 * @see ConfigurableEnvironment#setDefaultProfiles
 	 * @see ConfigurableEnvironment#setActiveProfiles
 	 * @see AbstractEnvironment#DEFAULT_PROFILES_PROPERTY_NAME
 	 * @see AbstractEnvironment#ACTIVE_PROFILES_PROPERTY_NAME
 	 */
-	public static final String RESERVED_DEFAULT_PROFILE_NAME = "default";
+	protected static final String RESERVED_DEFAULT_PROFILE_NAME = "default";
 
 
 	protected final Log logger = LogFactory.getLog(getClass());
@@ -128,7 +127,6 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	 * {@link #customizePropertySources(MutablePropertySources)} during
 	 * construction to allow subclasses to contribute or manipulate
 	 * {@link PropertySource} instances as appropriate.
-	 * @param propertySources property sources to use
 	 * @since 5.3.4
 	 * @see #customizePropertySources(MutablePropertySources)
 	 */
@@ -141,7 +139,7 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 
 	/**
 	 * Factory method used to create the {@link ConfigurablePropertyResolver}
-	 * used by this {@code Environment}.
+	 * instance used by the Environment.
 	 * @since 5.3.4
 	 * @see #getPropertyResolver()
 	 */
@@ -150,7 +148,8 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	}
 
 	/**
-	 * Return the {@link ConfigurablePropertyResolver} used by the {@code Environment}.
+	 * Return the {@link ConfigurablePropertyResolver} being used by the
+	 * {@link Environment}.
 	 * @since 5.3.4
 	 * @see #createPropertyResolver(MutablePropertySources)
 	 */
@@ -167,7 +166,6 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	 * sources using {@link MutablePropertySources#addLast(PropertySource)} such that
 	 * further subclasses may call {@code super.customizePropertySources()} with
 	 * predictable results. For example:
-	 *
 	 * <pre class="code">
 	 * public class Level1Environment extends AbstractEnvironment {
 	 *     &#064;Override
@@ -187,13 +185,11 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	 *     }
 	 * }
 	 * </pre>
-	 *
-	 * <p>In this arrangement, properties will be resolved against sources A, B, C, D in that
+	 * In this arrangement, properties will be resolved against sources A, B, C, D in that
 	 * order. That is to say that property source "A" has precedence over property source
 	 * "D". If the {@code Level2Environment} subclass wished to give property sources C
 	 * and D higher precedence than A and B, it could simply call
 	 * {@code super.customizePropertySources} after, rather than before adding its own:
-	 *
 	 * <pre class="code">
 	 * public class Level2Environment extends Level1Environment {
 	 *     &#064;Override
@@ -204,10 +200,9 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	 *     }
 	 * }
 	 * </pre>
+	 * The search order is now C, D, A, B as desired.
 	 *
-	 * <p>The search order is now C, D, A, B as desired.
-	 *
-	 * <p>Beyond these recommendations, subclasses may use any of the {@code add*},
+	 * <p>Beyond these recommendations, subclasses may use any of the {@code add&#42;},
 	 * {@code remove}, or {@code replace} methods exposed by {@link MutablePropertySources}
 	 * in order to create the exact arrangement of property sources desired.
 	 *
@@ -217,14 +212,13 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	 * property sources via the {@link #getPropertySources()} accessor, typically within
 	 * an {@link org.springframework.context.ApplicationContextInitializer
 	 * ApplicationContextInitializer}. For example:
-	 *
 	 * <pre class="code">
 	 * ConfigurableEnvironment env = new StandardEnvironment();
 	 * env.getPropertySources().addLast(new PropertySourceX(...));
 	 * </pre>
 	 *
 	 * <h2>A warning about instance variable access</h2>
-	 * <p>Instance variables declared in subclasses and having default initial values should
+	 * Instance variables declared in subclasses and having default initial values should
 	 * <em>not</em> be accessed from within this method. Due to Java object creation
 	 * lifecycle constraints, any initial value will not yet be assigned when this
 	 * callback is invoked by the {@link #AbstractEnvironment()} constructor, which may
@@ -233,6 +227,7 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	 * property source manipulation and instance variable access directly within the
 	 * subclass constructor. Note that <em>assigning</em> values to instance variables is
 	 * not problematic; it is only attempting to read default values that must be avoided.
+	 *
 	 * @see MutablePropertySources
 	 * @see PropertySourcesPropertyResolver
 	 * @see org.springframework.context.ApplicationContextInitializer
@@ -287,7 +282,8 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	 * @since 5.3.4
 	 * @see #ACTIVE_PROFILES_PROPERTY_NAME
 	 */
-	protected @Nullable String doGetActiveProfilesProperty() {
+	@Nullable
+	protected String doGetActiveProfilesProperty() {
 		return getProperty(ACTIVE_PROFILES_PROPERTY_NAME);
 	}
 
@@ -295,7 +291,7 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	public void setActiveProfiles(String... profiles) {
 		Assert.notNull(profiles, "Profile array must not be null");
 		if (logger.isDebugEnabled()) {
-			logger.debug("Activating profiles " + Arrays.toString(profiles));
+			logger.debug("Activating profiles " + Arrays.asList(profiles));
 		}
 		synchronized (this.activeProfiles) {
 			this.activeProfiles.clear();
@@ -318,6 +314,7 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 		}
 	}
 
+
 	@Override
 	public String[] getDefaultProfiles() {
 		return StringUtils.toStringArray(doGetDefaultProfiles());
@@ -325,7 +322,7 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 
 	/**
 	 * Return the set of default profiles explicitly set via
-	 * {@link #setDefaultProfiles(String...)}, or if the current set of default profiles
+	 * {@link #setDefaultProfiles(String...)} or if the current set of default profiles
 	 * consists only of {@linkplain #getReservedDefaultProfiles() reserved default
 	 * profiles}, then check for the presence of {@link #doGetActiveProfilesProperty()}
 	 * and assign its value (if any) to the set of default profiles.
@@ -352,7 +349,8 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	 * @since 5.3.4
 	 * @see #DEFAULT_PROFILES_PROPERTY_NAME
 	 */
-	protected @Nullable String doGetDefaultProfilesProperty() {
+	@Nullable
+	protected String doGetDefaultProfilesProperty() {
 		return getProperty(DEFAULT_PROFILES_PROPERTY_NAME);
 	}
 
@@ -377,7 +375,7 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	}
 
 	@Override
-	@Deprecated(since = "5.1")
+	@Deprecated
 	public boolean acceptsProfiles(String... profiles) {
 		Assert.notEmpty(profiles, "Must specify at least one profile");
 		for (String profile : profiles) {
@@ -416,7 +414,7 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	 * active or default profiles.
 	 * <p>Subclasses may override to impose further restrictions on profile syntax.
 	 * @throws IllegalArgumentException if the profile is null, empty, whitespace-only or
-	 * begins with the profile NOT operator (!)
+	 * begins with the profile NOT operator (!).
 	 * @see #acceptsProfiles
 	 * @see #addActiveProfile
 	 * @see #setDefaultProfiles
@@ -518,11 +516,6 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	}
 
 	@Override
-	public void setEscapeCharacter(@Nullable Character escapeCharacter) {
-		this.propertyResolver.setEscapeCharacter(escapeCharacter);
-	}
-
-	@Override
 	public void setIgnoreUnresolvableNestedPlaceholders(boolean ignoreUnresolvableNestedPlaceholders) {
 		this.propertyResolver.setIgnoreUnresolvableNestedPlaceholders(ignoreUnresolvableNestedPlaceholders);
 	}
@@ -548,7 +541,8 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	}
 
 	@Override
-	public @Nullable String getProperty(String key) {
+	@Nullable
+	public String getProperty(String key) {
 		return this.propertyResolver.getProperty(key);
 	}
 
@@ -558,7 +552,8 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	}
 
 	@Override
-	public <T> @Nullable T getProperty(String key, Class<T> targetType) {
+	@Nullable
+	public <T> T getProperty(String key, Class<T> targetType) {
 		return this.propertyResolver.getProperty(key, targetType);
 	}
 

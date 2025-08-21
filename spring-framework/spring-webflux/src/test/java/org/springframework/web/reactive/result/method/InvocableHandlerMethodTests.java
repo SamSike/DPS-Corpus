@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,16 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.reactive.BindingContext;
 import org.springframework.web.reactive.HandlerResult;
@@ -53,12 +51,12 @@ import static org.mockito.Mockito.mock;
 import static org.springframework.web.testfixture.http.server.reactive.MockServerHttpRequest.get;
 
 /**
- * Tests for {@link InvocableHandlerMethod}.
+ * Unit tests for {@link InvocableHandlerMethod}.
  *
  * @author Rossen Stoyanchev
  * @author Juergen Hoeller
  */
-class InvocableHandlerMethodTests {
+public class InvocableHandlerMethodTests {
 
 	private static final Duration TIMEOUT = Duration.ofSeconds(5);
 
@@ -69,7 +67,7 @@ class InvocableHandlerMethodTests {
 
 
 	@Test
-	void resolveArg() {
+	public void resolveArg() {
 		this.resolvers.add(stubResolver("value1"));
 		Method method = ResolvableMethod.on(TestController.class).mockCall(o -> o.singleArg(null)).method();
 		Mono<HandlerResult> mono = invoke(new TestController(), method);
@@ -78,16 +76,7 @@ class InvocableHandlerMethodTests {
 	}
 
 	@Test
-	void resolveArgOnSchedulerThread() {
-		this.resolvers.add(stubResolver(Mono.<Object>just("success").publishOn(Schedulers.newSingle("wrong"))));
-		Method method = ResolvableMethod.on(TestController.class).mockCall(o -> o.singleArgThread(null)).method();
-		Mono<HandlerResult> mono = invokeOnScheduler(Schedulers.newSingle("good"), new TestController(), method);
-
-		assertHandlerResultValue(mono, "success on thread: good-", false);
-	}
-
-	@Test
-	void resolveNoArgValue() {
+	public void resolveNoArgValue() {
 		this.resolvers.add(stubResolver(Mono.empty()));
 		Method method = ResolvableMethod.on(TestController.class).mockCall(o -> o.singleArg(null)).method();
 		Mono<HandlerResult> mono = invoke(new TestController(), method);
@@ -96,33 +85,23 @@ class InvocableHandlerMethodTests {
 	}
 
 	@Test
-	void resolveNoArgs() {
+	public void resolveNoArgs() {
 		Method method = ResolvableMethod.on(TestController.class).mockCall(TestController::noArgs).method();
 		Mono<HandlerResult> mono = invoke(new TestController(), method);
-
 		assertHandlerResultValue(mono, "success");
 	}
 
 	@Test
-	void resolveNoArgsOnSchedulerThread() {
-		Method method = ResolvableMethod.on(TestController.class).mockCall(TestController::noArgsThread).method();
-		Mono<HandlerResult> mono = invokeOnScheduler(Schedulers.newSingle("good"), new TestController(), method);
-
-		assertHandlerResultValue(mono, "on thread: good-", false);
-	}
-
-	@Test
-	void cannotResolveArg() {
+	public void cannotResolveArg() {
 		Method method = ResolvableMethod.on(TestController.class).mockCall(o -> o.singleArg(null)).method();
 		Mono<HandlerResult> mono = invoke(new TestController(), method);
-
-		assertThatIllegalStateException()
-			.isThrownBy(mono::block)
-			.withMessage("Could not resolve parameter [0] in %s: No suitable resolver", method.toGenericString());
+		assertThatIllegalStateException().isThrownBy(
+				mono::block)
+			.withMessage("Could not resolve parameter [0] in " + method.toGenericString() + ": No suitable resolver");
 	}
 
 	@Test
-	void resolveProvidedArg() {
+	public void resolveProvidedArg() {
 		Method method = ResolvableMethod.on(TestController.class).mockCall(o -> o.singleArg(null)).method();
 		Mono<HandlerResult> mono = invoke(new TestController(), method, "value1");
 
@@ -130,7 +109,7 @@ class InvocableHandlerMethodTests {
 	}
 
 	@Test
-	void resolveProvidedArgFirst() {
+	public void resolveProvidedArgFirst() {
 		this.resolvers.add(stubResolver("value1"));
 		Method method = ResolvableMethod.on(TestController.class).mockCall(o -> o.singleArg(null)).method();
 		Mono<HandlerResult> mono = invoke(new TestController(), method, "value2");
@@ -139,24 +118,23 @@ class InvocableHandlerMethodTests {
 	}
 
 	@Test
-	void exceptionInResolvingArg() {
+	public void exceptionInResolvingArg() {
 		this.resolvers.add(stubResolver(Mono.error(new UnsupportedMediaTypeStatusException("boo"))));
 		Method method = ResolvableMethod.on(TestController.class).mockCall(o -> o.singleArg(null)).method();
 		Mono<HandlerResult> mono = invoke(new TestController(), method);
 
-		assertThatExceptionOfType(UnsupportedMediaTypeStatusException.class)
-			.isThrownBy(mono::block)
+		assertThatExceptionOfType(UnsupportedMediaTypeStatusException.class).isThrownBy(
+				mono::block)
 			.withMessage("415 UNSUPPORTED_MEDIA_TYPE \"boo\"");
 	}
 
 	@Test
-	void illegalArgumentException() {
+	public void illegalArgumentException() {
 		this.resolvers.add(stubResolver(1));
 		Method method = ResolvableMethod.on(TestController.class).mockCall(o -> o.singleArg(null)).method();
 		Mono<HandlerResult> mono = invoke(new TestController(), method);
-
-		assertThatIllegalStateException()
-			.isThrownBy(mono::block)
+		assertThatIllegalStateException().isThrownBy(
+				mono::block)
 			.withCauseInstanceOf(IllegalArgumentException.class)
 			.withMessageContaining("Controller [")
 			.withMessageContaining("Method [")
@@ -165,17 +143,17 @@ class InvocableHandlerMethodTests {
 	}
 
 	@Test
-	void invocationTargetException() {
+	public void invocationTargetException() {
 		Method method = ResolvableMethod.on(TestController.class).mockCall(TestController::exceptionMethod).method();
 		Mono<HandlerResult> mono = invoke(new TestController(), method);
 
-		assertThatIllegalStateException()
-			.isThrownBy(mono::block)
+		assertThatIllegalStateException().isThrownBy(
+				mono::block)
 			.withMessage("boo");
 	}
 
 	@Test
-	void responseStatusAnnotation() {
+	public void responseStatusAnnotation() {
 		Method method = ResolvableMethod.on(TestController.class).mockCall(TestController::created).method();
 		Mono<HandlerResult> mono = invoke(new TestController(), method);
 
@@ -184,7 +162,7 @@ class InvocableHandlerMethodTests {
 	}
 
 	@Test
-	void voidMethodWithResponseArg() {
+	public void voidMethodWithResponseArg() {
 		ServerHttpResponse response = this.exchange.getResponse();
 		this.resolvers.add(stubResolver(response));
 		Method method = ResolvableMethod.on(TestController.class).mockCall(c -> c.response(response)).method();
@@ -195,7 +173,7 @@ class InvocableHandlerMethodTests {
 	}
 
 	@Test
-	void voidMonoMethodWithResponseArg() {
+	public void voidMonoMethodWithResponseArg() {
 		ServerHttpResponse response = this.exchange.getResponse();
 		this.resolvers.add(stubResolver(response));
 		Method method = ResolvableMethod.on(TestController.class).mockCall(c -> c.responseMonoVoid(response)).method();
@@ -206,7 +184,7 @@ class InvocableHandlerMethodTests {
 	}
 
 	@Test
-	void voidMethodWithExchangeArg() {
+	public void voidMethodWithExchangeArg() {
 		this.resolvers.add(stubResolver(this.exchange));
 		Method method = ResolvableMethod.on(TestController.class).mockCall(c -> c.exchange(exchange)).method();
 		HandlerResult result = invokeForResult(new TestController(), method);
@@ -216,7 +194,7 @@ class InvocableHandlerMethodTests {
 	}
 
 	@Test
-	void voidMonoMethodWithExchangeArg() {
+	public void voidMonoMethodWithExchangeArg() {
 		this.resolvers.add(stubResolver(this.exchange));
 		Method method = ResolvableMethod.on(TestController.class).mockCall(c -> c.exchangeMonoVoid(exchange)).method();
 		HandlerResult result = invokeForResult(new TestController(), method);
@@ -226,7 +204,7 @@ class InvocableHandlerMethodTests {
 	}
 
 	@Test
-	void checkNotModified() {
+	public void checkNotModified() {
 		MockServerHttpRequest request = MockServerHttpRequest.get("/").ifModifiedSince(10 * 1000 * 1000).build();
 		ServerWebExchange exchange = MockServerWebExchange.from(request);
 		this.resolvers.add(stubResolver(exchange));
@@ -237,7 +215,8 @@ class InvocableHandlerMethodTests {
 	}
 
 
-	private @Nullable HandlerResult invokeForResult(Object handler, Method method, Object... providedArgs) {
+	@Nullable
+	private HandlerResult invokeForResult(Object handler, Method method, Object... providedArgs) {
 		return invoke(handler, method, providedArgs).block(Duration.ofSeconds(5));
 	}
 
@@ -247,38 +226,20 @@ class InvocableHandlerMethodTests {
 		return invocable.invoke(this.exchange, new BindingContext(), providedArgs);
 	}
 
-	private Mono<HandlerResult> invokeOnScheduler(Scheduler scheduler, Object handler, Method method, Object... providedArgs) {
-		InvocableHandlerMethod invocable = new InvocableHandlerMethod(handler, method);
-		invocable.setArgumentResolvers(this.resolvers);
-		invocable.setInvocationScheduler(scheduler);
-		return invocable.invoke(this.exchange, new BindingContext(), providedArgs);
-	}
-
-	private HandlerMethodArgumentResolver stubResolver(Object stubValue) {
+	private <T> HandlerMethodArgumentResolver stubResolver(Object stubValue) {
 		return stubResolver(Mono.just(stubValue));
 	}
 
-	private HandlerMethodArgumentResolver stubResolver(Mono<Object> stubValue) {
-		HandlerMethodArgumentResolver resolver = mock();
+	private <T> HandlerMethodArgumentResolver stubResolver(Mono<Object> stubValue) {
+		HandlerMethodArgumentResolver resolver = mock(HandlerMethodArgumentResolver.class);
 		given(resolver.supportsParameter(any())).willReturn(true);
 		given(resolver.resolveArgument(any(), any(), any())).willReturn(stubValue);
 		return resolver;
 	}
 
 	private void assertHandlerResultValue(Mono<HandlerResult> mono, String expected) {
-		this.assertHandlerResultValue(mono, expected, true);
-	}
-
-	private void assertHandlerResultValue(Mono<HandlerResult> mono, String expected, boolean strict) {
 		StepVerifier.create(mono)
-				.assertNext(result -> {
-					if (strict) {
-						assertThat(result.getReturnValue()).isEqualTo(expected);
-					}
-					else {
-						assertThat(String.valueOf(result.getReturnValue())).startsWith(expected);
-					}
-				})
+				.consumeNextWith(result -> assertThat(result.getReturnValue()).isEqualTo(expected))
 				.expectComplete()
 				.verify();
 	}
@@ -293,14 +254,6 @@ class InvocableHandlerMethodTests {
 
 		String noArgs() {
 			return "success";
-		}
-
-		String singleArgThread(String q) {
-			return q + " on thread: " + Thread.currentThread().getName();
-		}
-
-		String noArgsThread() {
-			return "on thread: " + Thread.currentThread().getName();
 		}
 
 		void exceptionMethod() {
@@ -330,7 +283,8 @@ class InvocableHandlerMethodTests {
 					.thenEmpty(Mono.defer(() -> exchange.getResponse().writeWith(getBody("body"))));
 		}
 
-		@Nullable String notModified(ServerWebExchange exchange) {
+		@Nullable
+		String notModified(ServerWebExchange exchange) {
 			if (exchange.checkNotModified(Instant.ofEpochMilli(1000 * 1000))) {
 				return null;
 			}

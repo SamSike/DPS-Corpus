@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.lang.instrument.ClassFileTransformer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.DisposableBean;
@@ -31,6 +30,7 @@ import org.springframework.instrument.classloading.ReflectiveLoadTimeWeaver;
 import org.springframework.instrument.classloading.glassfish.GlassFishLoadTimeWeaver;
 import org.springframework.instrument.classloading.jboss.JBossLoadTimeWeaver;
 import org.springframework.instrument.classloading.tomcat.TomcatLoadTimeWeaver;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -57,7 +57,8 @@ public class DefaultContextLoadTimeWeaver implements LoadTimeWeaver, BeanClassLo
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	private @Nullable LoadTimeWeaver loadTimeWeaver;
+	@Nullable
+	private LoadTimeWeaver loadTimeWeaver;
 
 
 	public DefaultContextLoadTimeWeaver() {
@@ -98,12 +99,13 @@ public class DefaultContextLoadTimeWeaver implements LoadTimeWeaver, BeanClassLo
 	}
 
 	/*
-	 * This method never fails, allowing to try other possible ways to use a
+	 * This method never fails, allowing to try other possible ways to use an
 	 * server-agnostic weaver. This non-failure logic is required since
 	 * determining a load-time weaver based on the ClassLoader name alone may
 	 * legitimately fail due to other mismatches.
 	 */
-	protected @Nullable LoadTimeWeaver createServerSpecificLoadTimeWeaver(ClassLoader classLoader) {
+	@Nullable
+	protected LoadTimeWeaver createServerSpecificLoadTimeWeaver(ClassLoader classLoader) {
 		String name = classLoader.getClass().getName();
 		try {
 			if (name.startsWith("org.apache.catalina")) {
@@ -126,12 +128,12 @@ public class DefaultContextLoadTimeWeaver implements LoadTimeWeaver, BeanClassLo
 
 	@Override
 	public void destroy() {
-		if (this.loadTimeWeaver instanceof InstrumentationLoadTimeWeaver iltw) {
+		if (this.loadTimeWeaver instanceof InstrumentationLoadTimeWeaver) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Removing all registered transformers for class loader: " +
 						this.loadTimeWeaver.getInstrumentableClassLoader().getClass().getName());
 			}
-			iltw.removeTransformers();
+			((InstrumentationLoadTimeWeaver) this.loadTimeWeaver).removeTransformers();
 		}
 	}
 

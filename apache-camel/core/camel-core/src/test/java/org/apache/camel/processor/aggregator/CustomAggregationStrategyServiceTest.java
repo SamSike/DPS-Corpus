@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CustomAggregationStrategyServiceTest extends ContextTestSupport {
 
-    private final MyCustomStrategy strategy = new MyCustomStrategy();
+    private MyCustomStrategy strategy = new MyCustomStrategy();
 
     @Test
     public void testCustomAggregationStrategy() throws Exception {
@@ -53,16 +53,16 @@ public class CustomAggregationStrategyServiceTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(strategy).header("id").completionSize(3).to("mock:result");
             }
         };
     }
 
-    public static final class MyCustomStrategy extends ServiceSupport implements AggregationStrategy {
+    public final class MyCustomStrategy extends ServiceSupport implements AggregationStrategy {
 
         public boolean stop;
         public boolean start;
@@ -73,13 +73,13 @@ public class CustomAggregationStrategyServiceTest extends ContextTestSupport {
         }
 
         @Override
-        protected void doStart() {
+        protected void doStart() throws Exception {
             start = true;
             stop = false;
         }
 
         @Override
-        protected void doStop() {
+        protected void doStop() throws Exception {
             stop = true;
             start = false;
         }

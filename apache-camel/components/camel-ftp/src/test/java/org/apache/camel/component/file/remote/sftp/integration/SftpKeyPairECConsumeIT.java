@@ -20,7 +20,6 @@ import java.io.ByteArrayOutputStream;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 
-import com.jcraft.jsch.JSch;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -85,7 +84,7 @@ public class SftpKeyPairECConsumeIT extends SftpServerTestSupport {
         //   83:d=1  hl=3 l= 137 cons:  cont [ 1 ]
         //   86:d=2  hl=3 l= 134 prim:   BIT STRING
         // and a key with "-----BEGIN EC PRIVATE KEY-----"
-        com.jcraft.jsch.KeyPair kp = com.jcraft.jsch.KeyPair.genKeyPair(new JSch(), com.jcraft.jsch.KeyPair.ECDSA, 521);
+        com.jcraft.jsch.KeyPair kp = com.jcraft.jsch.KeyPair.genKeyPair(null, com.jcraft.jsch.KeyPair.ECDSA, 521);
         kp.writePrivateKey(PRIVATE_KEY);
     }
 
@@ -116,8 +115,8 @@ public class SftpKeyPairECConsumeIT extends SftpServerTestSupport {
             public void configure() {
                 from("sftp://localhost:{{ftp.server.port}}/{{ftp.root.dir}}"
                      + "?username=admin&knownHosts=#knownHosts&privateKey=#privateKey&delay=10000&strictHostKeyChecking=yes&useUserKnownHostsFile=false&disconnect=true")
-                        .routeId("foo").noAutoStartup()
-                        .to("mock:result");
+                             .routeId("foo").noAutoStartup()
+                             .to("mock:result");
             }
         };
     }

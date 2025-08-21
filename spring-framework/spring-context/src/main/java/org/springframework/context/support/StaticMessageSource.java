@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -41,7 +40,8 @@ public class StaticMessageSource extends AbstractMessageSource {
 
 
 	@Override
-	protected @Nullable String resolveCodeWithoutArguments(String code, Locale locale) {
+	@Nullable
+	protected String resolveCodeWithoutArguments(String code, Locale locale) {
 		Map<Locale, MessageHolder> localeMap = this.messageMap.get(code);
 		if (localeMap == null) {
 			return null;
@@ -54,7 +54,8 @@ public class StaticMessageSource extends AbstractMessageSource {
 	}
 
 	@Override
-	protected @Nullable MessageFormat resolveCode(String code, Locale locale) {
+	@Nullable
+	protected MessageFormat resolveCode(String code, Locale locale) {
 		Map<Locale, MessageHolder> localeMap = this.messageMap.get(code);
 		if (localeMap == null) {
 			return null;
@@ -106,7 +107,8 @@ public class StaticMessageSource extends AbstractMessageSource {
 
 		private final Locale locale;
 
-		private volatile @Nullable MessageFormat cachedFormat;
+		@Nullable
+		private volatile MessageFormat cachedFormat;
 
 		public MessageHolder(String message, Locale locale) {
 			this.message = message;

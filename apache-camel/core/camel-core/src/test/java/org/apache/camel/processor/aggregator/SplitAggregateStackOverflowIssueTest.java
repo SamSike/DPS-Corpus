@@ -43,7 +43,7 @@ public class SplitAggregateStackOverflowIssueTest extends ContextTestSupport {
 
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < size; i++) {
-            sb.append("Line #").append(i);
+            sb.append("Line #" + i);
             sb.append("\n");
         }
 
@@ -57,10 +57,10 @@ public class SplitAggregateStackOverflowIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
 
                 from("direct:start")
                         .split().tokenize("\n").streaming()

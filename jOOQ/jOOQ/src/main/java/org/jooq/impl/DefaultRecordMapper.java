@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -52,47 +52,47 @@ import static org.jooq.impl.Tools.getMatchingMembers;
 import static org.jooq.impl.Tools.getMatchingSetters;
 import static org.jooq.impl.Tools.getPropertyName;
 import static org.jooq.impl.Tools.hasColumnAnnotations;
+import static org.jooq.impl.Tools.map;
 import static org.jooq.impl.Tools.newRecord;
 import static org.jooq.impl.Tools.recordType;
 import static org.jooq.impl.Tools.row0;
 import static org.jooq.tools.reflect.Reflect.accessible;
 
+import java.beans.ConstructorProperties;
+import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
-import java.lang.reflect.RecordComponent;
+// ...
 import java.lang.reflect.Type;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import jakarta.persistence.Column;
+
 import org.jooq.Attachable;
 import org.jooq.Configuration;
-import org.jooq.ConstructorPropertiesProvider;
-import org.jooq.Converter;
-import org.jooq.ConverterProvider;
 import org.jooq.Field;
-import org.jooq.JSON;
-import org.jooq.JSONB;
 import org.jooq.Record;
+import org.jooq.Record1;
 import org.jooq.RecordMapper;
 import org.jooq.RecordMapperProvider;
 import org.jooq.RecordType;
@@ -100,13 +100,11 @@ import org.jooq.Result;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableRecord;
-import org.jooq.XML;
 import org.jooq.conf.Settings;
 import org.jooq.exception.MappingException;
 import org.jooq.tools.StringUtils;
 import org.jooq.tools.reflect.Reflect;
 import org.jooq.tools.reflect.ReflectException;
-
 
 /**
  * This is the default implementation for <code>RecordMapper</code> types, which
@@ -123,13 +121,26 @@ import org.jooq.tools.reflect.ReflectException;
  * specific arrays fails, a {@link MappingException} is thrown, wrapping
  * conversion exceptions.
  * <p>
- * <h5>If the supplied type is an interface or an abstract class</h5>
+ * <h5>If <code>&lt;E&gt;</code> is a field "value type" and
+ * <code>&lt;R extends Record1&lt;?&gt;&gt;</code>, i.e. it has exactly one
+ * column:</h5>
  * <p>
- * Abstract types are instantiated using Java reflection {@link Proxy}
- * mechanisms. The returned proxy will wrap a {@link HashMap} containing
- * properties mapped by getters and setters of the supplied type. Methods (even
- * JPA-annotated ones) other than standard POJO getters and setters are not
- * supported. Details can be seen in {@link Reflect#as(Class)}.
+ * Any Java type available from {@link SQLDataType} qualifies as a well-known
+ * "value type" that can be converted from a single-field {@link Record1}. The
+ * following rules apply:
+ * <p>
+ * <ul>
+ * <li>If <code>&lt;E&gt;</code> is a reference type like {@link String},
+ * {@link Integer}, {@link Long}, {@link Timestamp}, etc., then converting from
+ * <code>&lt;R&gt;</code> to <code>&lt;E&gt;</code> is mere convenience for
+ * calling {@link Record#getValue(int, Class)} with
+ * <code>fieldIndex = 0</code></li>
+ * <li>If <code>&lt;E&gt;</code> is a primitive type, the mapping result will be
+ * the corresponding wrapper type. <code>null</code> will map to the primitive
+ * type's initialisation value, e.g. <code>0</code> for <code>int</code>,
+ * <code>0.0</code> for <code>double</code>, <code>false</code> for
+ * <code>boolean</code>.</li>
+ * </ul>
  * <p>
  * <h5>If <code>&lt;E&gt;</code> is a {@link TableRecord} type (e.g. from a
  * generated record), then its meta data are used:</h5>
@@ -140,65 +151,42 @@ import org.jooq.tools.reflect.ReflectException;
  * the source table via {@link Table#indexOf(Field)} and their values are
  * mapped. Excess source values and missing target values are ignored.
  * <p>
- * <h5>If <code>&lt;E&gt;</code> is a field "value type" and
- * <code>&lt;R extends Record1&lt;T1&gt;&gt;</code>, i.e. it has exactly one
- * column:</h5>
- * <p>
- * The configured {@link ConverterProvider} is used to look up a
- * {@link Converter} between <code>T1</code> and <code>E</code>. By default, the
- * {@link DefaultConverterProvider} is used, which can (among other things):
- * <ul>
- * <li>Map between built-in types</li>
- * <li>Map between {@link Record} types and custom types by delegating to the
- * {@link Record}'s attached {@link RecordMapperProvider}</li>
- * <li>Map between {@link JSON} or {@link JSONB} and custom types by delegating
- * to Jackson or Gson (if found on the classpath)</li>
- * <li>Map between {@link XML} and custom types by delegating to JAXB (if found
- * on the classpath)</li>
- * </ul>
- * If such a {@link Converter} is found, that one is used to map to
- * <code>E</code>.
- * <p>
- * <h5>If a default constructor is available and any JPA
- * {@link jakarta.persistence.Column} annotations are found on the provided
- * <code>&lt;E&gt;</code> type, and the <code>jOOQ-jpa-extensions</code> module
- * is found on the classpath and configured in
- * {@link Configuration#annotatedPojoMemberProvider()}, only those are
+ * <h5>If a default constructor is available and any JPA {@link Column}
+ * annotations are found on the provided <code>&lt;E&gt;</code>, only those are
  * used:</h5>
  * <p>
  * <ul>
  * <li>If <code>&lt;E&gt;</code> contains single-argument instance methods of
- * any visibility annotated with <code>jakarta.persistence.Column</code>, those
- * methods are invoked</li>
+ * any visibility annotated with <code>Column</code>, those methods are
+ * invoked</li>
  * <li>If <code>&lt;E&gt;</code> contains no-argument instance methods of any
  * visibility starting with <code>getXXX</code> or <code>isXXX</code>, annotated
- * with <code>jakarta.persistence.Column</code>, then matching
- * <code>setXXX()</code> instance methods of any visibility are invoked</li>
+ * with <code>Column</code>, then matching <code>setXXX()</code> instance
+ * methods of any visibility are invoked</li>
  * <li>If <code>&lt;E&gt;</code> contains instance member fields of any
- * visibility annotated with <code>jakarta.persistence.Column</code>, those
- * members are set</li>
+ * visibility annotated with <code>Column</code>, those members are set</li>
  * </ul>
  * Additional rules:
  * <ul>
  * <li>The same annotation can be re-used for several methods/members</li>
- * <li>{@link jakarta.persistence.Column#name()} must match
- * {@link Field#getName()}. All other annotation attributes are ignored</li>
+ * <li>{@link Column#name()} must match {@link Field#getName()}. All other
+ * annotation attributes are ignored</li>
  * <li>Static methods / member fields are ignored</li>
  * <li>Final member fields are ignored</li>
  * </ul>
  * <p>
  * <h5>If a default constructor is available and if there are no JPA
- * <code>jakarta.persistence.Column</code> annotations, or jOOQ can't find the
+ * <code>Column</code> annotations, or jOOQ can't find the
  * <code>jakarta.persistence</code> API on the classpath, jOOQ will map
  * <code>Record</code> values by naming convention:</h5>
  * <p>
  * If {@link Field#getName()} is <code>MY_field</code> (case-sensitive!), then
  * this field's value will be set on all of these (regardless of visibility):
  * <ul>
- * <li>Single-argument instance method <code>MY_field(…)</code></li>
- * <li>Single-argument instance method <code>myField(…)</code></li>
- * <li>Single-argument instance method <code>setMY_field(…)</code></li>
- * <li>Single-argument instance method <code>setMyField(…)</code></li>
+ * <li>Single-argument instance method <code>MY_field(...)</code></li>
+ * <li>Single-argument instance method <code>myField(...)</code></li>
+ * <li>Single-argument instance method <code>setMY_field(...)</code></li>
+ * <li>Single-argument instance method <code>setMyField(...)</code></li>
  * <li>Non-final instance member field <code>MY_field</code></li>
  * <li>Non-final instance member field <code>myField</code></li>
  * </ul>
@@ -208,10 +196,10 @@ import org.jooq.tools.reflect.ReflectException;
  * <code>MY_nested_field</code>, which is set on a nested POJO that is passed to
  * all of these (regardless of visibility):
  * <ul>
- * <li>Single-argument instance method <code>MY_field(…)</code></li>
- * <li>Single-argument instance method <code>myField(…)</code></li>
- * <li>Single-argument instance method <code>setMY_field(…)</code></li>
- * <li>Single-argument instance method <code>setMyField(…)</code></li>
+ * <li>Single-argument instance method <code>MY_field(...)</code></li>
+ * <li>Single-argument instance method <code>myField(...)</code></li>
+ * <li>Single-argument instance method <code>setMY_field(...)</code></li>
+ * <li>Single-argument instance method <code>setMyField(...)</code></li>
  * <li>Non-final instance member field <code>MY_field</code></li>
  * <li>Non-final instance member field <code>myField</code></li>
  * </ul>
@@ -221,19 +209,14 @@ import org.jooq.tools.reflect.ReflectException;
  * used</h5>
  * <p>
  * <ul>
- * <li>The standard JavaBeans {@link java.beans.ConstructorProperties}
- * annotation is used to match constructor arguments against POJO members or
- * getters, if the default {@link ConstructorPropertiesProvider} can look up the
- * implementation from the <code>jOOQ-mapper-extensions-beans</code> module, or
- * if you provide your own.</li>
+ * <li>The standard JavaBeans {@link ConstructorProperties} annotation is used
+ * to match constructor arguments against POJO members or getters.</li>
  * <li>If the property names provided to the constructor match the record's
  * columns via the aforementioned naming conventions, that information is used.
  * </li>
- * <li>If those POJO members or getters have JPA annotations, and the
- * <code>jOOQ-jpa-extensions</code> module is found on the classpath and
- * configured in {@link Configuration#annotatedPojoMemberProvider()}, those will
- * be used according to the aforementioned rules, in order to map
- * <code>Record</code> values onto constructor arguments.</li>
+ * <li>If those POJO members or getters have JPA annotations, those will be used
+ * according to the aforementioned rules, in order to map <code>Record</code>
+ * values onto constructor arguments.</li>
  * <li>If those POJO members or getters don't have JPA annotations, the
  * aforementioned naming conventions will be used, in order to map
  * <code>Record</code> values onto constructor arguments.</li>
@@ -283,6 +266,14 @@ import org.jooq.tools.reflect.ReflectException;
  * <li>When invoking that constructor, values are converted onto constructor
  * argument types</li>
  * </ul>
+ * <p>
+ * <h5>If the supplied type is an interface or an abstract class</h5>
+ * <p>
+ * Abstract types are instantiated using Java reflection {@link Proxy}
+ * mechanisms. The returned proxy will wrap a {@link HashMap} containing
+ * properties mapped by getters and setters of the supplied type. Methods (even
+ * JPA-annotated ones) other than standard POJO getters and setters are not
+ * supported. Details can be seen in {@link Reflect#as(Class)}.
  * <p>
  * <h5>Other restrictions</h5>
  * <p>
@@ -387,37 +378,33 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
             return;
         }
 
-        if (instance == null) {
-            if (Stream.class.isAssignableFrom(type)) {
-                delegate = r -> (E) Stream.of(((FieldsImpl<R>) rowType).mapper(configuration, Object[].class).map(r));
-                return;
-            }
+        if (Stream.class.isAssignableFrom(type)) {
+            delegate = r -> (E) Stream.of(((FieldsImpl<R>) rowType).mapper(configuration, Object[].class).map(r));
+            return;
+        }
 
-            // [#1470] Return a proxy if the supplied type is an interface
-            // [#10071] [#11148] Primitive types are abstract! They're mapped by a ConverterProvider only later
-            if (Modifier.isAbstract(type.getModifiers()) && !type.isPrimitive()) {
-                delegate = new ProxyMapper();
-                return;
-            }
+        // [#1470] Return a proxy if the supplied type is an interface
+        // [#10071] [#11148] Primitive types are abstract! They're mapped by a ConverterProvider only later
+        if (Modifier.isAbstract(type.getModifiers()) && !type.isPrimitive()) {
+            delegate = new ProxyMapper();
+            return;
         }
 
         // [#2989] [#2836] Records are mapped
         if (AbstractRecord.class.isAssignableFrom(type)) {
-            delegate = (RecordMapper<R, E>) new RecordToRecordMapper<>((AbstractRecord) instance);
+            delegate = (RecordMapper<R, E>) new RecordToRecordMapper();
             return;
         }
 
         // [#10071] Single-field Record1 types can be mapped if there is a ConverterProvider allowing for this mapping
-        if ((debugVTFL = fields.length == 1) && instance == null && (debugVTCP = Tools.converter(configuration, instance, (Class) fields[0].getType(), type) != null)) {
+        if ((debugVTFL = fields.length == 1) && (debugVTCP = Tools.converter(configuration, instance, (Class) fields[0].getType(), type) != null)) {
             delegate = new ValueTypeMapper();
             return;
         }
 
         // [#1340] Allow for using non-public default constructors
         try {
-            MutablePOJOMapper m = instance != null
-                ? new MutablePOJOMapper(null, instance)
-                : new MutablePOJOMapper(new ConstructorCall<>(accessible(type.getDeclaredConstructor())), null);
+            MutablePOJOMapper m = new MutablePOJOMapper(new ConstructorCall<>(accessible(type.getDeclaredConstructor())), instance);
 
             // [#10194] Check if the POJO is really mutable. There might as well
             //          be a no-args constructor for other reasons, e.g. when
@@ -442,39 +429,37 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
         // [#1837] [#10349] [#11123] If any java.beans.ConstructorProperties annotations are
         // present use those rather than matching constructors by the number of arguments
         if (debugCPSettings = !FALSE.equals(configuration.settings().isMapConstructorPropertiesParameterNames())) {
-            ConstructorPropertiesProvider cpp = configuration.constructorPropertiesProvider();
-
             for (Constructor<E> constructor : constructors) {
-                String[] properties = cpp.properties(constructor);
+                ConstructorProperties properties = constructor.getAnnotation(ConstructorProperties.class);
 
                 if (properties != null) {
-                    delegate = new ImmutablePOJOMapper(constructor, constructor.getParameterTypes(), Arrays.asList(properties), true);
+                    delegate = new ImmutablePOJOMapper(constructor, constructor.getParameterTypes(), Arrays.asList(properties.value()), true);
                     return;
                 }
             }
         }
 
 
-        // [#11778] Java 16 record types expose their component names
-        if ((debugRCSettings = TRUE.equals(configuration.settings().isMapRecordComponentParameterNames())) && (debugRC = type.isRecord())) {
-            RecordComponent[] rc = type.getRecordComponents();
-            List<?> types = Tools.map(rc, RecordComponent::getType);
 
-            for (Constructor<E> constructor : constructors) {
-                Class<?>[] parameterTypes = constructor.getParameterTypes();
 
-                if (types.equals(Arrays.asList(parameterTypes))) {
-                    delegate = new ImmutablePOJOMapper(
-                        constructor,
-                        parameterTypes,
-                        Tools.map(rc, RecordComponent::getName),
-                        true
-                    );
 
-                    return;
-                }
-            }
-        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         // [#7324] Map immutable Kotlin classes by parameter names if kotlin-reflect is on the classpath
@@ -500,24 +485,6 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
                         Reflect parameter = Reflect.on(parameters.get(i));
                         Object typeClassifier = parameter.call("getType").call("getClassifier").get();
                         String name = parameter.call("getName").get();
-
-                        // [#14283] Unnest @JvmInline value classes
-                        try {
-                            while (Reflect.on(typeClassifier).call("isValue").<Boolean>get()) {
-                                typeClassifier = kClasses
-                                    .call("getPrimaryConstructor", typeClassifier)
-                                    .call("getParameters")
-
-                                    // kotlin value classes are required to have exactly 1 parameter
-                                    .call("get", 0)
-                                    .call("getType")
-                                    .call("getClassifier")
-                                    .get();
-                            }
-                        }
-
-                        // [#14283] KClass.isValue() was added in kotlin 1.5 only
-                        catch (ReflectException ignore) {}
 
                         // [#8578] If the constructor parameter is a KTypeParameter, we need an additional step to
                         //         extract the first upper bounds' classifier, which (hopefully) is a KClass
@@ -601,22 +568,22 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
         debugStaticNestedClass = type.isMemberClass() && Modifier.isStatic(type.getModifiers());
 
         throw new MappingException(
-            """
-            No DefaultRecordMapper strategy applies to type $type for row type $rowType. Attempted strategies include (in this order):
-            - Is type an array (false)?
-            - Is type a Stream (false)?
-            - Does row type have only 1 column ($debugVTFL) and did ConverterProvider provide a Converter for type ($debugVTCP)?
-            - Is type abstract (false)?
-            - Is type a org.jooq.Record (false)?
-            - Is type a mutable POJO (a POJO with setters or non-final members: $debugMutable) and has a no-args constructor ($debugMutableConstructors)?
-            - Does type have a @ConstructorProperties annotated constructor (false) and is Settings.mapConstructorPropertiesParameterNames enabled ($debugCPSettings)?
-            - Is type a java.lang.Record ($debugRC) and is Settings.mapRecordComponentParameterNames enabled ($debugRCSettings)?
-            - Is type a kotlin class ($debugKClass) and is Settings.mapConstructorParameterNamesInKotlin enabled ($debugKSettings)?
-            - Is there a constructor that matches row type's degrees with nested fields ($debugMatchDegreeNested) or flat fields ($debugMatchDegreeFlat)
-            - Is the type a top level class ($debugTopLevelClass) or static nested class ($debugStaticNestedClass)?
-            -   (Inner classes cannot be created via reflection)
-            - Is Settings.mapConstructorParameterNames enabled ($debugMatchNames)
-            """.replace("$type", type.toString())
+            ("" +
+            "No DefaultRecordMapper strategy applies to type $type for row type $rowType. Attempted strategies include (in this order):\n" +
+            "- Is type an array (false)?\n" +
+            "- Is type a Stream (false)?\n" +
+            "- Does row type have only 1 column ($debugVTFL) and did ConverterProvider provide a Converter for type ($debugVTCP)?\n" +
+            "- Is type abstract (false)?\n" +
+            "- Is type a org.jooq.Record (false)?\n" +
+            "- Is type a mutable POJO (a POJO with setters or non-final members: $debugMutable) and has a no-args constructor ($debugMutableConstructors)?\n" +
+            "- Does type have a @ConstructorProperties annotated constructor (false) and is Settings.mapConstructorPropertiesParameterNames enabled ($debugCPSettings)?\n" +
+            "- Is type a java.lang.Record ($debugRC) and is Settings.mapRecordComponentParameterNames enabled ($debugRCSettings)?\n" +
+            "- Is type a kotlin class ($debugKClass) and is Settings.mapConstructorParameterNamesInKotlin enabled ($debugKSettings)?\n" +
+            "- Is there a constructor that matches row type's degrees with nested fields ($debugMatchDegreeNested) or flat fields ($debugMatchDegreeFlat)\n" +
+            "- Is the type a top level class ($debugTopLevelClass) or static nested class ($debugStaticNestedClass)?\n" +
+            "-   (Inner classes cannot be created via reflection)\n" +
+            "- Is Settings.mapConstructorParameterNames enabled ($debugMatchNames)\n" +
+            "").replace("$type", type.toString())
                .replace("$rowType", rowType.toString())
                .replace("$debugVTFL", debug(debugVTFL))
                .replace("$debugVTCP", debug(debugVTCP))
@@ -639,7 +606,7 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
         return debug == null ? "check skipped" : debug.toString();
     }
 
-    private static final List<String> collectParameterNames(Parameter[] parameters) {
+    private List<String> collectParameterNames(Parameter[] parameters) {
         return Arrays.stream(parameters).map(Parameter::getName).collect(Collectors.toList());
     }
 
@@ -660,7 +627,7 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
 
         // All other reflection exceptions are intercepted
         catch (Exception e) {
-            throw new MappingException("An error occurred when mapping record to " + type, e);
+            throw new MappingException("An error ocurred when mapping record to " + type, e);
         }
     }
 
@@ -726,48 +693,78 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
      */
     private class ProxyMapper extends AbstractDelegateMapper<R, E> {
 
+        private Constructor<Lookup>     constructor;
         private final MutablePOJOMapper pojomapper;
 
         ProxyMapper() {
-            this.pojomapper = new MutablePOJOMapper(() -> Reflect.on(new HashMap<>()).as(type), null);
+            this.pojomapper = new MutablePOJOMapper(() -> proxy(), null);
         }
 
         @Override
         public final E map(R record) {
             return pojomapper.map(record);
         }
+
+        private E proxy() {
+            final Object[] result = new Object[1];
+            final Map<String, Object> map = new HashMap<>();
+            final InvocationHandler handler = (proxy, method, args) -> {
+                String name = method.getName();
+
+                int length = (args == null ? 0 : args.length);
+
+                if (length == 0 && name.startsWith("get"))
+                    return map.get(name.substring(3));
+                else if (length == 0 && name.startsWith("is"))
+                    return map.get(name.substring(2));
+                else if (length == 1 && name.startsWith("set"))
+                    map.put(name.substring(3), args[0]);
+
+                // [#5442] Default methods should be invoked to run client implementation
+                else if (method.isDefault())
+                    try {
+                        if (constructor == null)
+                            constructor = accessible(Lookup.class.getDeclaredConstructor(Class.class, int.class));
+
+                        Class<?> declaringClass = method.getDeclaringClass();
+                        return constructor
+                            .newInstance(declaringClass, Lookup.PRIVATE)
+                            .unreflectSpecial(method, declaringClass)
+                            .bindTo(result[0])
+                            .invokeWithArguments(args);
+                    }
+                    catch (Throwable e) {
+                        throw new MappingException("Cannot invoke default method", e);
+                    }
+
+                return null;
+            };
+
+            result[0] = Proxy.newProxyInstance(type.getClassLoader(), new Class[] { type }, handler);
+            return (E) result[0];
+        }
     }
 
     /**
      * Convert a record into another record type.
      */
-    private class RecordToRecordMapper<E extends AbstractRecord> extends AbstractDelegateMapper<R, AbstractRecord> {
-
-        private final E instance;
-
-        RecordToRecordMapper(E instance) {
-            this.instance = instance;
-        }
+    private class RecordToRecordMapper extends AbstractDelegateMapper<R, AbstractRecord> {
 
         @Override
         public final AbstractRecord map(R record) {
             try {
-                if (record instanceof AbstractRecord a) {
-                    if (instance != null)
-                        return a.intoRecord(instance);
-                    else
-                        return a.intoRecord((Class<AbstractRecord>) type);
-                }
+                if (record instanceof AbstractRecord)
+                    return ((AbstractRecord) record).intoRecord((Class<AbstractRecord>) type);
 
                 throw new MappingException("Cannot map record " + record + " to type " + type);
             }
             catch (Exception e) {
-                throw new MappingException("An error occurred when mapping record to " + type, e);
+                throw new MappingException("An error ocurred when mapping record to " + type, e);
             }
         }
     }
 
-    private static final record ConstructorCall<E>(Constructor<? extends E> constructor) implements Callable<E> {
+    private static final /* record */ class ConstructorCall<E> implements Callable<E> { private final Constructor<? extends E> constructor; public ConstructorCall(Constructor<? extends E> constructor) { this.constructor = constructor; } public Constructor<? extends E> constructor() { return constructor; } @Override public boolean equals(Object o) { if (!(o instanceof ConstructorCall)) return false; ConstructorCall other = (ConstructorCall) o; if (!java.util.Objects.equals(this.constructor, other.constructor)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.constructor); } @Override public String toString() { return new StringBuilder("ConstructorCall[").append("constructor=").append(this.constructor).append("]").toString(); }
         @Override
         public E call() throws Exception {
             return constructor.newInstance();
@@ -845,7 +842,7 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
                 nestedMappedFields.forEach((prefix, list) -> {
                     NestedMappingInfo nestedMappingInfo = nestedMappingInfos.get(prefix);
                     nestedMappingInfo.row = Tools.row0(list);
-                    nestedMappingInfo.recordDelegate = newRecord(true, configuration, recordType(nestedMappingInfo.row.size()), nestedMappingInfo.row);
+                    nestedMappingInfo.recordDelegate = newRecord(true, recordType(nestedMappingInfo.row.size()), nestedMappingInfo.row, configuration);
 
                     for (java.lang.reflect.Field member : getMatchingMembers(configuration, type, prefix, true))
                         nestedMappingInfo.mappers.add(
@@ -890,11 +887,11 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
                         Object value = record.get(i, mType);
 
                         // [#3082] [#10910] Try mapping nested collection types
-                        Object list = tryConvertToListOrSet(value, mType, method.getGenericParameterTypes()[0]);
+                        Object list = tryConvertToList(value, mType, method.getGenericParameterTypes()[0]);
                         if (list != null)
                             method.invoke(result, list);
                         else
-                            method.invoke(result, value);
+                            method.invoke(result, record.get(i, mType));
                     }
                 }
 
@@ -926,7 +923,7 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
                 return result;
             }
             catch (Exception e) {
-                throw new MappingException("An error occurred when mapping record to " + type, e);
+                throw new MappingException("An error ocurred when mapping record to " + type, e);
             }
         }
 
@@ -956,7 +953,7 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
                 Object value = record.get(index, mType);
 
                 // [#3082] [#10910] [#11213] Try mapping nested collection types
-                Object list = tryConvertToListOrSet(value, mType, member.getGenericType());
+                Object list = tryConvertToList(value, mType, member.getGenericType());
                 if (list != null)
                     member.set(result, list);
                 else
@@ -964,21 +961,13 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
             }
         }
 
-        private final Collection<?> tryConvertToListOrSet(Object value, Class<?> mType, Type genericType) {
-            if (value instanceof Collection<?> c) {
-                if (genericType instanceof ParameterizedType p) {
-                    Class<?> componentType = (Class<?>) p.getActualTypeArguments()[0];
-
-                    if (mType == List.class || mType == ArrayList.class)
-                        return Convert.convert(c, componentType);
-                    else if (mType == Set.class || mType == LinkedHashSet.class)
-                        return new LinkedHashSet<>(Convert.convert(c, componentType));
-                    else if (mType == HashSet.class)
-                        return new HashSet<>(Convert.convert(c, componentType));
-                }
+        private final List<?> tryConvertToList(Object value, Class<?> mType, Type genericType) {
+            if (value instanceof Collection && (mType == List.class || mType == ArrayList.class) && genericType instanceof ParameterizedType) {
+                Class<?> componentType = (Class<?>) ((ParameterizedType) genericType).getActualTypeArguments()[0];
+                return Convert.convert((Collection<?>) value, componentType);
             }
-
-            return null;
+            else
+                return null;
         }
 
         private final void map(Object value, Object result, java.lang.reflect.Field member) throws IllegalAccessException {
@@ -1128,7 +1117,7 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
 
                     if (nestedMappedFields[i] != null) {
                         nestedMappingInfo[i].row = row0(nestedMappedFields[i].toArray(EMPTY_FIELD));
-                        nestedMappingInfo[i].recordDelegate = newRecord(true, configuration, recordType(nestedMappingInfo[i].row.size()), nestedMappingInfo[i].row);
+                        nestedMappingInfo[i].recordDelegate = newRecord(true, recordType(nestedMappingInfo[i].row.size()), nestedMappingInfo[i].row, configuration);
                         nestedMappingInfo[i].mappers.add(
                             nestedMappingInfo[i].row.fields.mapper(configuration, parameterTypes[propertyIndexes[nestedMappingInfo[i].indexLookup.get(0)]])
                         );
@@ -1145,7 +1134,7 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
                 return constructor.newInstance(nested ? mapNested(record) : mapNonnested(record));
             }
             catch (Exception e) {
-                throw new MappingException("An error occurred when mapping record to " + type, e);
+                throw new MappingException("An error ocurred when mapping record to " + type, e);
             }
         }
 
@@ -1215,12 +1204,12 @@ public class DefaultRecordMapper<R extends Record, E> implements RecordMapper<R,
         }
     }
 
-    private static final <E> E attach(E attachable, Record record) {
+    private static <E> E attach(E attachable, Record record) {
         // [#2869] Attach the mapped outcome if it is Attachable and if the context's
         // Settings.attachRecords flag is set
-        if (attachable instanceof Attachable a)
+        if (attachable instanceof Attachable)
             if (Tools.attachRecords(record.configuration()))
-                a.attach(record.configuration());
+                ((Attachable) attachable).attach(record.configuration());
 
         return attachable;
     }

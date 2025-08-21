@@ -31,6 +31,8 @@ import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
 import org.apache.camel.spi.UriPath;
 
+import static org.apache.camel.component.azure.storage.blob.CredentialType.AZURE_IDENTITY;
+
 @UriParams
 public class BlobConfiguration implements Cloneable {
 
@@ -39,10 +41,7 @@ public class BlobConfiguration implements Cloneable {
     @UriPath
     private String containerName;
     @UriParam
-    @Metadata(autowired = true)
     private StorageSharedKeyCredential credentials;
-    @UriParam
-    private String sasToken;
     @UriParam
     @Metadata(autowired = true)
     private BlobServiceClient serviceClient;
@@ -100,13 +99,9 @@ public class BlobConfiguration implements Cloneable {
     private String regex;
     @UriParam(label = "security", secret = true)
     private String sourceBlobAccessKey;
-    @UriParam(label = "common", enums = "SHARED_ACCOUNT_KEY,SHARED_KEY_CREDENTIAL,AZURE_IDENTITY,AZURE_SAS",
+    @UriParam(label = "common", enums = "SHARED_ACCOUNT_KEY,SHARED_KEY_CREDENTIAL,AZURE_IDENTITY",
               defaultValue = "AZURE_IDENTITY")
-    private CredentialType credentialType;
-    @UriParam(label = "common")
-    private boolean leaseBlob;
-    @UriParam(label = "common", defaultValue = "60")
-    private Integer leaseDurationInSeconds = 60;
+    private CredentialType credentialType = AZURE_IDENTITY;
 
     /**
      * Azure account name to be used for authentication with azure blob services
@@ -456,51 +451,6 @@ public class BlobConfiguration implements Cloneable {
      */
     public void setSourceBlobAccessKey(String sourceBlobAccessKey) {
         this.sourceBlobAccessKey = sourceBlobAccessKey;
-    }
-
-    public String getSasToken() {
-        return sasToken;
-    }
-
-    /**
-     * In case of usage of Shared Access Signature we'll need to set a SAS Token
-     */
-    public void setSasToken(String sasToken) {
-        this.sasToken = sasToken;
-    }
-
-    /**
-     * Gets whether a lease should be acquired when accessing the blob. When enabled, a lease is acquired before
-     * performing blob operations that require exclusive access (e.g., uploading or deleting).
-     *
-     * @return true if a lease should be used; false otherwise
-     */
-    public boolean isLeaseBlob() {
-        return leaseBlob;
-    }
-
-    /**
-     * Sets whether a lease should be acquired when accessing the blob. When set to true, the component will acquire a
-     * lease before performing blob operations that require exclusive access.
-     *
-     * @param leaseBlob true to acquire a lease before blob operations; false otherwise
-     */
-    public void setLeaseBlob(boolean leaseBlob) {
-        this.leaseBlob = leaseBlob;
-    }
-
-    /**
-     * Gets the lease duration in seconds. Valid values are between 15 and 60 for fixed leases, or -1 for infinite.
-     */
-    public Integer getLeaseDurationInSeconds() {
-        return leaseDurationInSeconds;
-    }
-
-    /**
-     * Sets the lease duration in seconds. Use -1 for infinite or a value between 15 and 60 for fixed leases.
-     */
-    public void setLeaseDurationInSeconds(Integer leaseDurationInSeconds) {
-        this.leaseDurationInSeconds = leaseDurationInSeconds;
     }
 
     // *************************************************

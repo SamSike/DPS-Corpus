@@ -17,6 +17,7 @@
 package org.apache.camel.issues;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.camel.CamelExecutionException;
@@ -26,14 +27,14 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class SplitterUsingBeanReturningCloseableIteratorTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("mySplitter", new MyOtherSplitterBean());
         return jndi;
     }
@@ -45,19 +46,21 @@ public class SplitterUsingBeanReturningCloseableIteratorTest extends ContextTest
     }
 
     @Test
-    public void testCloseableIterator() {
-        CamelExecutionException e = assertThrows(CamelExecutionException.class,
-                () -> template.sendBody("direct:start", "Hello,World"),
-                "Exception should have been thrown");
-
-        assertTrue(MyCloseableIterator.getInstance().isClosed(), "MyCloseableIterator.close() was not invoked");
+    public void testCloseableIterator() throws Exception {
+        try {
+            template.sendBody("direct:start", "Hello,World");
+        } catch (CamelExecutionException e) {
+            assertTrue(MyCloseableIterator.getInstance().isClosed(), "MyCloseableIterator.close() was not invoked");
+            return;
+        }
+        fail("Exception should have been thrown");
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").split().method("mySplitter").to("log:foo", "mock:result");
             }
         };
@@ -79,7 +82,7 @@ final class MyCloseableIterator implements Iterator<String>, Closeable {
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
         closed = true;
     }
 

@@ -25,8 +25,8 @@ public abstract class DefaultKafkaManualCommit implements KafkaManualCommit {
     protected final KafkaManualCommitFactory.CamelExchangePayload camelExchangePayload;
     protected final KafkaManualCommitFactory.KafkaRecordPayload kafkaRecordPayload;
 
-    protected DefaultKafkaManualCommit(KafkaManualCommitFactory.CamelExchangePayload camelExchangePayload,
-                                       KafkaManualCommitFactory.KafkaRecordPayload kafkaRecordPayload) {
+    public DefaultKafkaManualCommit(KafkaManualCommitFactory.CamelExchangePayload camelExchangePayload,
+                                    KafkaManualCommitFactory.KafkaRecordPayload kafkaRecordPayload) {
         this.camelExchangePayload = camelExchangePayload;
         this.kafkaRecordPayload = kafkaRecordPayload;
     }
@@ -66,6 +66,8 @@ public abstract class DefaultKafkaManualCommit implements KafkaManualCommit {
 
     /**
      * Gets the Camel Exchange payload
+     * 
+     * @return
      */
     public KafkaManualCommitFactory.CamelExchangePayload getCamelExchangePayload() {
         return camelExchangePayload;
@@ -73,14 +75,10 @@ public abstract class DefaultKafkaManualCommit implements KafkaManualCommit {
 
     /**
      * Gets the Kafka record payload
+     * 
+     * @return
      */
     public KafkaManualCommitFactory.KafkaRecordPayload getKafkaRecordPayload() {
         return kafkaRecordPayload;
     }
-
-    @Override
-    public String toString() {
-        return "KafkaManualCommit[topic=" + getTopicName() + ", offset=" + getRecordOffset() + "]";
-    }
-
 }

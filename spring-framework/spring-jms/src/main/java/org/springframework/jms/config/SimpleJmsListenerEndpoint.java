@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 package org.springframework.jms.config;
 
 import jakarta.jms.MessageListener;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.jms.listener.MessageListenerContainer;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -31,7 +31,8 @@ import org.springframework.util.Assert;
  */
 public class SimpleJmsListenerEndpoint extends AbstractJmsListenerEndpoint {
 
-	private @Nullable MessageListener messageListener;
+	@Nullable
+	private MessageListener messageListener;
 
 
 	/**
@@ -46,7 +47,8 @@ public class SimpleJmsListenerEndpoint extends AbstractJmsListenerEndpoint {
 	 * Return the {@link MessageListener} to invoke when a message matching
 	 * the endpoint is received.
 	 */
-	public @Nullable MessageListener getMessageListener() {
+	@Nullable
+	public MessageListener getMessageListener() {
 		return this.messageListener;
 	}
 

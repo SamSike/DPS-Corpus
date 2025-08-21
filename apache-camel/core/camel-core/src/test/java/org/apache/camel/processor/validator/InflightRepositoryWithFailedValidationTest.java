@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class InflightRepositoryWithFailedValidationTest extends ContextTestSupport {
 
     @Test
-    public void testInflight() {
+    public void testInflight() throws Exception {
         assertEquals(0, context.getInflightRepository().size());
 
         Exception e = null;
@@ -42,10 +42,10 @@ public class InflightRepositoryWithFailedValidationTest extends ContextTestSuppo
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 validator().type("simple").withExpression(bodyAs(String.class).contains("valid"));
 
                 from("direct:start").routeId("first").to("direct:validation");

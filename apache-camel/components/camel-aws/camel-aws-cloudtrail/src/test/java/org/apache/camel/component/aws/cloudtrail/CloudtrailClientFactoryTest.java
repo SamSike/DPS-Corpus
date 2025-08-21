@@ -19,7 +19,6 @@ package org.apache.camel.component.aws.cloudtrail;
 import org.apache.camel.component.aws.cloudtrail.client.CloudtrailClientFactory;
 import org.apache.camel.component.aws.cloudtrail.client.CloudtrailInternalClient;
 import org.apache.camel.component.aws.cloudtrail.client.impl.CloudtrailClientIAMOptimizedImpl;
-import org.apache.camel.component.aws.cloudtrail.client.impl.CloudtrailClientSessionTokenImpl;
 import org.apache.camel.component.aws.cloudtrail.client.impl.CloudtrailClientStandardImpl;
 import org.junit.jupiter.api.Test;
 
@@ -48,13 +47,5 @@ public class CloudtrailClientFactoryTest {
         cloudtrailConf.setUseDefaultCredentialsProvider(true);
         CloudtrailInternalClient cloudtrailClient = CloudtrailClientFactory.getCloudtrailClient(cloudtrailConf);
         assertTrue(cloudtrailClient instanceof CloudtrailClientIAMOptimizedImpl);
-    }
-
-    @Test
-    public void getIAMSessionTokenCloudtrailClient() {
-        CloudtrailConfiguration cloudtrailConf = new CloudtrailConfiguration();
-        cloudtrailConf.setUseSessionCredentials(true);
-        CloudtrailInternalClient cloudtrailClient = CloudtrailClientFactory.getCloudtrailClient(cloudtrailConf);
-        assertTrue(cloudtrailClient instanceof CloudtrailClientSessionTokenImpl);
     }
 }

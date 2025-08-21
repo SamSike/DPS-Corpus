@@ -40,7 +40,8 @@ public class XmlRestParseTest extends XmlTestSupport {
 
     protected RestDefinition assertOneRest(String uri) throws JAXBException {
         RestContainer context = assertParseRestAsJaxb(uri);
-        return assertOneElement(context.getRests());
+        RestDefinition rest = assertOneElement(context.getRests());
+        return rest;
     }
 
 }

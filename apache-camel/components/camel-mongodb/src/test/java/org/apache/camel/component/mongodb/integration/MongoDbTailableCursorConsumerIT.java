@@ -17,46 +17,26 @@
 package org.apache.camel.component.mongodb.integration;
 
 import java.util.Calendar;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.CreateCollectionOptions;
-import org.apache.camel.CamelContext;
 import org.apache.camel.ServiceStatus;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.component.mongodb.MongoDbTailTrackingConfig;
-import org.apache.camel.test.infra.core.annotations.RouteFixture;
-import org.apache.camel.test.infra.core.api.ConfigurableRoute;
 import org.awaitility.Awaitility;
 import org.bson.Document;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestMethodOrder;
 
 import static com.mongodb.client.model.Filters.eq;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class MongoDbTailableCursorConsumerIT extends AbstractMongoDbITSupport implements ConfigurableRoute {
+public class MongoDbTailableCursorConsumerIT extends AbstractMongoDbITSupport {
 
     private MongoCollection<Document> cappedTestCollection;
     private String cappedTestCollectionName;
-    private CreateCollectionOptions createCollectionOptions;
-    private ExecutorService executorService = Executors.newCachedThreadPool();
-
-    @BeforeEach
-    void checkDocuments() {
-        Assumptions.assumeTrue(0 == cappedTestCollection.countDocuments(), "The collection should have no documents");
-    }
 
     @Test
     public void testThousandRecordsWithoutReadPreference() throws Exception {
@@ -70,11 +50,19 @@ public class MongoDbTailableCursorConsumerIT extends AbstractMongoDbITSupport im
 
     @Test
     public void testNoRecords() throws Exception {
-        MockEndpoint mock = contextExtension.getMockEndpoint("mock:test");
+        assertEquals(0, cappedTestCollection.countDocuments());
+        MockEndpoint mock = getMockEndpoint("mock:test");
         mock.expectedMessageCount(0);
-
+        // DocumentBuilder.start().add("capped", true).add("size",
+        // 1000000000).add("max", 1000).get()
+        // create a capped collection with max = 1000
+        CreateCollectionOptions collectionOptions
+                = new CreateCollectionOptions().capped(true).sizeInBytes(1000000000).maxDocuments(1000);
+        db.createCollection(cappedTestCollectionName, collectionOptions);
+        cappedTestCollection = db.getCollection(cappedTestCollectionName, Document.class);
         assertEquals(0, cappedTestCollection.countDocuments());
 
+        addTestRoutes();
         context.getRouteController().startRoute("tailableCursorConsumer1");
         Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> mock.assertIsSatisfied());
         context.getRouteController().stopRoute("tailableCursorConsumer1");
@@ -83,80 +71,126 @@ public class MongoDbTailableCursorConsumerIT extends AbstractMongoDbITSupport im
 
     @Test
     public void testMultipleBursts() throws Exception {
-        MockEndpoint mock = contextExtension.getMockEndpoint("mock:test");
+        assertEquals(0, cappedTestCollection.countDocuments());
+        MockEndpoint mock = getMockEndpoint("mock:test");
         mock.expectedMessageCount(5000);
-
+        // DocumentBuilder.start().add("capped", true).add("size",
+        // 1000000000).add("max", 1000).get()
+        // create a capped collection with max = 1000
+        CreateCollectionOptions createCollectionOptions
+                = new CreateCollectionOptions().capped(true).sizeInBytes(1000000000).maxDocuments(1000);
+        db.createCollection(cappedTestCollectionName, createCollectionOptions);
+        cappedTestCollection = db.getCollection(cappedTestCollectionName, Document.class);
+        addTestRoutes();
         context.getRouteController().startRoute("tailableCursorConsumer1");
 
-        Executors.newSingleThreadExecutor().submit(this::doInsert).get();
+        // pump 5 bursts of 1000 records each with 500ms pause between burst and
+        // burst
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < 5000; i++) {
+                    if (i % 1000 == 0) {
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            return;
+                        }
+                    }
+                    cappedTestCollection.insertOne(new Document("increasing", i).append("string", "value" + i));
+                }
+
+            }
+        });
+
+        // start the data pumping
+        t.start();
+        // before we assert, wait for the data pumping to end
+        t.join();
 
         mock.assertIsSatisfied();
         context.getRouteController().stopRoute("tailableCursorConsumer1");
-    }
 
-    // pump 5 bursts of 1000 records each with 500ms pause between burst and
-    // burst
-    private void doInsert() {
-        for (int i = 0; i < 5000; i++) {
-            if (i % 1000 == 0) {
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    return;
-                }
-            }
-            cappedTestCollection.insertOne(new Document("increasing", i).append("string", "value" + i));
-        }
     }
 
     @Test
     public void testHundredThousandRecords() throws Exception {
-        final MockEndpoint mock = contextExtension.getMockEndpoint("mock:test");
+        assertEquals(0, cappedTestCollection.countDocuments());
+        final MockEndpoint mock = getMockEndpoint("mock:test");
         mock.expectedMessageCount(1000);
 
+        // create a capped collection with max = 1000
+        // DocumentBuilder.start().add("capped", true).add("size",
+        // 1000000000).add("max", 1000).get())
+        db.createCollection(cappedTestCollectionName,
+                new CreateCollectionOptions().capped(true).sizeInBytes(1000000000).maxDocuments(1000));
+        cappedTestCollection = db.getCollection(cappedTestCollectionName, Document.class);
+        addTestRoutes();
         context.getRouteController().startRoute("tailableCursorConsumer1");
 
         // continuous pump of 100000 records, asserting incrementally to reduce
         // overhead on the mock endpoint
-        Executors.newSingleThreadExecutor().submit(() -> doLongerInsert(mock)).get();
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 1; i <= 100000; i++) {
+                    cappedTestCollection.insertOne(new Document("increasing", i).append("string", "value" + i));
+
+                    // incrementally assert, as the mock endpoint stores all
+                    // messages and otherwise the test would be sluggish
+                    if (i % 1000 == 0) {
+                        try {
+                            MongoDbTailableCursorConsumerIT.this.assertAndResetMockEndpoint(mock);
+                        } catch (Exception e) {
+                            return;
+                        }
+                    }
+                }
+            }
+        });
+
+        // start the data pumping
+        t.start();
+        // before we stop the route, wait for the data pumping to end
+        t.join();
 
         context.getRouteController().stopRoute("tailableCursorConsumer1");
 
-    }
-
-    private void doLongerInsert(MockEndpoint mock) {
-        for (int i = 1; i <= 100000; i++) {
-            cappedTestCollection.insertOne(new Document("increasing", i).append("string", "value" + i));
-
-            // incrementally assert, as the mock endpoint stores all
-            // messages and otherwise the test would be sluggish
-            if (i % 1000 == 0) {
-                try {
-                    MongoDbTailableCursorConsumerIT.this.assertAndResetMockEndpoint(mock);
-                } catch (Exception e) {
-                    return;
-                }
-            }
-        }
     }
 
     @Test
     public void testPersistentTailTrack() throws Exception {
         assertEquals(0, cappedTestCollection.countDocuments());
-        final MockEndpoint mock = contextExtension.getMockEndpoint("mock:test");
+        final MockEndpoint mock = getMockEndpoint("mock:test");
 
         // drop the tracking collection
         db.getCollection(MongoDbTailTrackingConfig.DEFAULT_COLLECTION).drop();
-
+        // create a capped collection with max = 1000
+        // DocumentBuilder.start().add("capped", true).add("size",
+        // 1000000000).add("max", 1000).get()
+        db.createCollection(cappedTestCollectionName,
+                new CreateCollectionOptions().capped(true).sizeInBytes(1000000000).maxDocuments(1000));
         cappedTestCollection = db.getCollection(cappedTestCollectionName, Document.class);
         cappedTestCollection.createIndex(new Document("increasing", 1));
 
+        addTestRoutes();
         context.getRouteController().startRoute("tailableCursorConsumer2");
 
         mock.expectedMessageCount(300);
         // pump 300 records
-        Executors.newSingleThreadExecutor().submit(() -> doQuickInsert(1, 300)).get();
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 1; i <= 300; i++) {
+                    cappedTestCollection.insertOne(new Document("increasing", i).append("string", "value" + i));
+                }
+            }
+        });
 
+        // start the data pumping
+        t.start();
+        // before we continue wait for the data pump to end
+        t.join();
         mock.assertIsSatisfied();
         mock.reset();
         context.getRouteController().stopRoute("tailableCursorConsumer2");
@@ -167,8 +201,18 @@ public class MongoDbTailableCursorConsumerIT extends AbstractMongoDbITSupport im
         // expect 300 messages and not 600
         mock.expectedMessageCount(300);
         // pump 300 records
-        executorService.submit(() -> doQuickInsert(301, 600)).get();
-
+        t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 301; i <= 600; i++) {
+                    cappedTestCollection.insertOne(new Document("increasing", i).append("string", "value" + i));
+                }
+            }
+        });
+        // start the data pumping
+        t.start();
+        // before we continue wait for the data pump to end
+        t.join();
         mock.assertIsSatisfied();
 
         // check that the first message received in this second batch
@@ -190,16 +234,10 @@ public class MongoDbTailableCursorConsumerIT extends AbstractMongoDbITSupport im
 
     }
 
-    private void doQuickInsert(int initial, int limit) {
-        for (int i = initial; i <= limit; i++) {
-            cappedTestCollection.insertOne(new Document("increasing", i).append("string", "value" + i));
-        }
-    }
-
     @Test
     public void testPersistentTailTrackIncreasingDateField() throws Exception {
         assertEquals(0, cappedTestCollection.countDocuments());
-        final MockEndpoint mock = contextExtension.getMockEndpoint("mock:test");
+        final MockEndpoint mock = getMockEndpoint("mock:test");
         final Calendar startTimestamp = Calendar.getInstance();
 
         // get default tracking collection
@@ -207,6 +245,13 @@ public class MongoDbTailableCursorConsumerIT extends AbstractMongoDbITSupport im
         trackingCol.drop();
         trackingCol = db.getCollection(MongoDbTailTrackingConfig.DEFAULT_COLLECTION, Document.class);
 
+        // create a capped collection with max = 1000
+        // DocumentBuilder.start().add("capped", true).add("size",
+        // 1000000000).add("max", 1000).get()
+        db.createCollection(cappedTestCollectionName,
+                new CreateCollectionOptions().capped(true).sizeInBytes(1000000000).maxDocuments(1000));
+        cappedTestCollection = db.getCollection(cappedTestCollectionName, Document.class);
+        addTestRoutes();
         context.getRouteController().startRoute("tailableCursorConsumer2");
 
         mock.expectedMessageCount(300);
@@ -271,7 +316,7 @@ public class MongoDbTailableCursorConsumerIT extends AbstractMongoDbITSupport im
     @Test
     public void testCustomTailTrackLocation() throws Exception {
         assertEquals(0, cappedTestCollection.countDocuments());
-        final MockEndpoint mock = contextExtension.getMockEndpoint("mock:test");
+        final MockEndpoint mock = getMockEndpoint("mock:test");
 
         // get the custom tracking collection and drop it
         // (tailTrackDb=einstein&tailTrackCollection=curie&tailTrackField=newton)
@@ -279,6 +324,13 @@ public class MongoDbTailableCursorConsumerIT extends AbstractMongoDbITSupport im
         trackingCol.drop();
         trackingCol = mongo.getDatabase("einstein").getCollection("curie", Document.class);
 
+        // create a capped collection with max = 1000
+        // DocumentBuilder.start().add("capped", true).add("size",
+        // 1000000000).add("max", 1000).get()
+        db.createCollection(cappedTestCollectionName,
+                new CreateCollectionOptions().capped(true).sizeInBytes(1000000000).maxDocuments(1000));
+        cappedTestCollection = db.getCollection(cappedTestCollectionName, Document.class);
+        addTestRoutes();
         context.getRouteController().startRoute("tailableCursorConsumer3");
 
         mock.expectedMessageCount(300);
@@ -286,7 +338,9 @@ public class MongoDbTailableCursorConsumerIT extends AbstractMongoDbITSupport im
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-                doQuickInsert(1, 300);
+                for (int i = 1; i <= 300; i++) {
+                    cappedTestCollection.insertOne(new Document("increasing", i).append("string", "value" + i));
+                }
             }
         });
 
@@ -310,7 +364,9 @@ public class MongoDbTailableCursorConsumerIT extends AbstractMongoDbITSupport im
         t = new Thread(new Runnable() {
             @Override
             public void run() {
-                doQuickInsert(301, 600);
+                for (int i = 301; i <= 600; i++) {
+                    cappedTestCollection.insertOne(new Document("increasing", i).append("string", "value" + i));
+                }
             }
         });
         // start the data pumping
@@ -337,43 +393,36 @@ public class MongoDbTailableCursorConsumerIT extends AbstractMongoDbITSupport im
 
     private void testThousandRecordsWithRouteId(String routeId) throws Exception {
         assertEquals(0, cappedTestCollection.countDocuments());
-        MockEndpoint mock = contextExtension.getMockEndpoint("mock:test");
+        MockEndpoint mock = getMockEndpoint("mock:test");
         mock.expectedMessageCount(1000);
 
+        // create a capped collection with max = 1000
+        // DocumentBuilder.start().add("capped", true).add("size",
+        // 1000000000).add("max", 1000).get()
+        db.createCollection(cappedTestCollectionName,
+                new CreateCollectionOptions().capped(true).sizeInBytes(1000000000).maxDocuments(1000));
+        cappedTestCollection = db.getCollection(cappedTestCollectionName, Document.class);
         for (int i = 0; i < 1000; i++) {
             cappedTestCollection.insertOne(new Document("increasing", i).append("string", "value" + i));
         }
         assertEquals(1000, cappedTestCollection.countDocuments());
+
+        addTestRoutes();
         context.getRouteController().startRoute(routeId);
         Awaitility.await().atMost(1, TimeUnit.SECONDS).untilAsserted(() -> mock.assertIsSatisfied());
         context.getRouteController().stopRoute(routeId);
     }
 
-    /*
-     * NOTE: in the case of this test, we *DO* want to recreate everything after the test has executed, so that when
-     * we manually start the routes, the collection is present.
-     *
-     * TODO: in the future, this test should be broken in so that it does not depend on complex behaviors after the test
-     *  execution
-     */
-    @AfterEach
-    protected void doPostSetup() {
+    @Override
+    public void doPostSetup() {
         super.doPostSetup();
-
         // drop the capped collection and let each test create what it needs
         cappedTestCollectionName = "camelTestCapped";
-
         cappedTestCollection = db.getCollection(cappedTestCollectionName, Document.class);
         cappedTestCollection.drop();
-
-        createCollectionOptions = new CreateCollectionOptions().capped(true).sizeInBytes(1000000000).maxDocuments(1000);
-        db.createCollection(cappedTestCollectionName, createCollectionOptions);
-        cappedTestCollection = db.getCollection(cappedTestCollectionName, Document.class);
     }
 
-    @RouteFixture
-    @Override
-    public void createRouteBuilder(CamelContext context) throws Exception {
+    protected void addTestRoutes() throws Exception {
         context.addRoutes(new RouteBuilder() {
 
             @Override
@@ -388,8 +437,8 @@ public class MongoDbTailableCursorConsumerIT extends AbstractMongoDbITSupport im
 
                 from("mongodb:myDb?database={{mongodb.testDb}}&collection={{mongodb.cappedTestCollection}}&tailTrackIncreasingField=increasing&"
                      + "persistentTailTracking=true&persistentId=darwin&tailTrackDb=einstein&tailTrackCollection=curie&tailTrackField=newton")
-                        .id("tailableCursorConsumer3")
-                        .autoStartup(false).to("mock:test");
+                             .id("tailableCursorConsumer3")
+                             .autoStartup(false).to("mock:test");
 
                 from("mongodb:myDb?database={{mongodb.testDb}}&collection={{mongodb.cappedTestCollection}}&tailTrackIncreasingField=increasing")// &readPreference=primary")
                         .id("tailableCursorConsumer1.readPreference").autoStartup(false).to("mock:test");
@@ -397,4 +446,5 @@ public class MongoDbTailableCursorConsumerIT extends AbstractMongoDbITSupport im
             }
         });
     }
+
 }

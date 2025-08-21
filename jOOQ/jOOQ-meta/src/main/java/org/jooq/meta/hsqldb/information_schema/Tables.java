@@ -17,22 +17,19 @@ import org.jooq.meta.hsqldb.information_schema.tables.Schemata;
 import org.jooq.meta.hsqldb.information_schema.tables.Sequences;
 import org.jooq.meta.hsqldb.information_schema.tables.SystemColumns;
 import org.jooq.meta.hsqldb.information_schema.tables.SystemIndexinfo;
-import org.jooq.meta.hsqldb.information_schema.tables.SystemSynonyms;
 import org.jooq.meta.hsqldb.information_schema.tables.SystemTables;
 import org.jooq.meta.hsqldb.information_schema.tables.TableConstraints;
-import org.jooq.meta.hsqldb.information_schema.tables.Triggers;
 import org.jooq.meta.hsqldb.information_schema.tables.Views;
 
 
 /**
  * Convenience access to all tables in INFORMATION_SCHEMA.
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Tables {
 
     /**
-     * one row for each domain constraint, table check constraint, and
-     * assertion.
+     * one row for each domain constraint, table check constraint, and assertion.
      */
     public static final CheckConstraints CHECK_CONSTRAINTS = CheckConstraints.CHECK_CONSTRAINTS;
 
@@ -92,15 +89,9 @@ public class Tables {
     public static final SystemColumns SYSTEM_COLUMNS = SystemColumns.SYSTEM_COLUMNS;
 
     /**
-     * information about the indices of each accessible table defined within
-     * this database
+     * information about the indices of each accessible table defined within this database
      */
     public static final SystemIndexinfo SYSTEM_INDEXINFO = SystemIndexinfo.SYSTEM_INDEXINFO;
-
-    /**
-     * the synonyms for tables and other objects defined in this database
-     */
-    public static final SystemSynonyms SYSTEM_SYNONYMS = SystemSynonyms.SYSTEM_SYNONYMS;
 
     /**
      * the accessible tables defined within this database
@@ -116,11 +107,6 @@ public class Tables {
      * one row for each table or view
      */
     public static final org.jooq.meta.hsqldb.information_schema.tables.Tables TABLES = org.jooq.meta.hsqldb.information_schema.tables.Tables.TABLES;
-
-    /**
-     * one row for each trigger definition
-     */
-    public static final Triggers TRIGGERS = Triggers.TRIGGERS;
 
     /**
      * the view descriptors of the accessible views defined within this database

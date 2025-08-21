@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,6 @@ import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
@@ -35,9 +33,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractGenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.lang.Nullable;
 
 /**
- * Common base class for plain JSON converters, for example, Gson and JSON-B.
+ * Common base class for plain JSON converters, e.g. Gson and JSON-B.
  *
  * <p>Note that the Jackson converters have a dedicated class hierarchy
  * due to their multi-format support.
@@ -56,7 +55,8 @@ public abstract class AbstractJsonHttpMessageConverter extends AbstractGenericHt
 	 */
 	public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
-	private @Nullable String jsonPrefix;
+	@Nullable
+	private String jsonPrefix;
 
 
 	public AbstractJsonHttpMessageConverter() {
@@ -127,13 +127,14 @@ public abstract class AbstractJsonHttpMessageConverter extends AbstractGenericHt
 		catch (Exception ex) {
 			throw new HttpMessageNotWritableException("Could not write JSON: " + ex.getMessage(), ex);
 		}
+		writer.flush();
 	}
 
 
 	/**
 	 * Template method that reads the JSON-bound object from the given {@link Reader}.
 	 * @param resolvedType the resolved generic type
-	 * @param reader the {@code Reader} to use
+	 * @param reader the {@code} Reader to use
 	 * @return the JSON-bound object
 	 * @throws Exception in case of read/parse failures
 	 */
@@ -143,7 +144,7 @@ public abstract class AbstractJsonHttpMessageConverter extends AbstractGenericHt
 	 * Template method that writes the JSON-bound object to the given {@link Writer}.
 	 * @param object the object to write to the output message
 	 * @param type the type of object to write (may be {@code null})
-	 * @param writer the {@code Writer} to use
+	 * @param writer the {@code} Writer to use
 	 * @throws Exception in case of write failures
 	 */
 	protected abstract void writeInternal(Object object, @Nullable Type type, Writer writer) throws Exception;

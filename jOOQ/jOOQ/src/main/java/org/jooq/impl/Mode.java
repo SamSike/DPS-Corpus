@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,8 +38,6 @@
 package org.jooq.impl;
 
 // ...
-// ...
-import static org.jooq.SQLDialect.DUCKDB;
 import static org.jooq.SQLDialect.H2;
 // ...
 import static org.jooq.SQLDialect.POSTGRES;
@@ -51,22 +49,17 @@ import static org.jooq.impl.Names.N_STATS_MODE;
 
 import java.util.Set;
 
+import org.jooq.AggregateFunction;
 import org.jooq.Context;
 import org.jooq.Field;
 import org.jooq.Function1;
-// ...
 import org.jooq.SQLDialect;
 
 /**
  * @author Lukas Eder
  */
 final class Mode<T> extends AbstractAggregateFunction<T> implements QOM.Mode<T> {
-
-
-
-
-
-    private static final Set<SQLDialect> EMULATE_AS_ORDERED_SET_AGG = SQLDialect.supportedBy(DUCKDB, H2, POSTGRES, YUGABYTEDB);
+    private static final Set<SQLDialect> EMULATE_AS_ORDERED_SET_AGG = SQLDialect.supportedBy(H2, POSTGRES, YUGABYTEDB);
 
     Mode(Field<T> arg) {
         super(false, N_MODE, arg.getDataType(), arg);
@@ -97,7 +90,7 @@ final class Mode<T> extends AbstractAggregateFunction<T> implements QOM.Mode<T> 
     }
 
     @Override
-    public final Function1<? super Field<T>, ? extends QOM.Mode<T>> $constructor() {
+    public final Function1<? super Field<T>, ? extends AggregateFunction<T>> $constructor() {
         return f -> new Mode<>(f);
     }
 }

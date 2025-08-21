@@ -40,8 +40,7 @@ public final class LazyStartProducer extends DefaultAsyncProducer implements Del
         try {
             // create and start producer lazy
             if (delegate == null) {
-                lock.lock();
-                try {
+                synchronized (lock) {
                     if (delegate == null) {
                         AsyncProducer newDelegate = AsyncProcessorConverterHelper.convert(getEndpoint().createProducer());
                         if (!ServiceHelper.isStarted(newDelegate)) {
@@ -49,11 +48,9 @@ public final class LazyStartProducer extends DefaultAsyncProducer implements Del
                         }
                         delegate = newDelegate;
                     }
-                } finally {
-                    lock.unlock();
                 }
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             // error creating or starting delegated failed, so allow to re-create on next call
             delegate = null;
             exchange.setException(e);
@@ -73,27 +70,37 @@ public final class LazyStartProducer extends DefaultAsyncProducer implements Del
     }
 
     @Override
-    protected void doStart() {
+    protected void doBuild() throws Exception {
         // noop as we dont want to start the delegate but its started on the first message processed
     }
 
     @Override
-    protected void doStop() {
+    protected void doInit() throws Exception {
+        // noop as we dont want to start the delegate but its started on the first message processed
+    }
+
+    @Override
+    protected void doStart() throws Exception {
+        // noop as we dont want to start the delegate but its started on the first message processed
+    }
+
+    @Override
+    protected void doStop() throws Exception {
         ServiceHelper.stopService(delegate);
     }
 
     @Override
-    protected void doSuspend() {
+    protected void doSuspend() throws Exception {
         ServiceHelper.suspendService(delegate);
     }
 
     @Override
-    protected void doResume() {
+    protected void doResume() throws Exception {
         ServiceHelper.resumeService(delegate);
     }
 
     @Override
-    protected void doShutdown() {
+    protected void doShutdown() throws Exception {
         ServiceHelper.stopAndShutdownService(delegate);
     }
 

@@ -33,15 +33,6 @@ public class StopDefinition extends NoOutputDefinition<StopDefinition> {
     public StopDefinition() {
     }
 
-    protected StopDefinition(StopDefinition source) {
-        super(source);
-    }
-
-    @Override
-    public StopDefinition copyDefinition() {
-        return new StopDefinition(this);
-    }
-
     @Override
     public String getShortName() {
         return "stop";

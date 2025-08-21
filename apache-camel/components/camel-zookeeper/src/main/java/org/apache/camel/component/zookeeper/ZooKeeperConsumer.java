@@ -139,7 +139,6 @@ public class ZooKeeperConsumer extends DefaultConsumer {
                         LOG.trace(String.format("Processing '%s' operation", current.getClass().getSimpleName()));
                     }
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
                     continue;
                 }
                 String node = current.getNode();
@@ -152,10 +151,6 @@ public class ZooKeeperConsumer extends DefaultConsumer {
                         getProcessor().process(createExchange(node, result, watchedEvent));
                         watchedEvent = null;
                     }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    handleException(e);
-                    backoffAndThenRestart();
                 } catch (Exception e) {
                     handleException(e);
                     backoffAndThenRestart();
@@ -177,8 +172,6 @@ public class ZooKeeperConsumer extends DefaultConsumer {
                     Thread.sleep(configuration.getBackoff());
                     initializeConsumer();
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
             } catch (Exception e) {
                 // ignore
             }

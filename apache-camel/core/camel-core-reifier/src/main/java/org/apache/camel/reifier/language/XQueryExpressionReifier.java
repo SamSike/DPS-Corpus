@@ -19,15 +19,26 @@ package org.apache.camel.reifier.language;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Expression;
 import org.apache.camel.Predicate;
+import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.model.language.ExpressionDefinition;
 import org.apache.camel.model.language.XQueryExpression;
 import org.apache.camel.spi.Language;
 import org.apache.camel.spi.NamespaceAware;
 
-public class XQueryExpressionReifier extends SingleInputTypedExpressionReifier<XQueryExpression> {
+public class XQueryExpressionReifier extends ExpressionReifier<XQueryExpression> {
 
     public XQueryExpressionReifier(CamelContext camelContext, ExpressionDefinition definition) {
-        super(camelContext, definition);
+        super(camelContext, (XQueryExpression) definition);
+    }
+
+    @Override
+    protected Expression createExpression(Language language, String exp) {
+        return language.createExpression(exp, createProperties());
+    }
+
+    @Override
+    protected Predicate createPredicate(Language language, String exp) {
+        return language.createPredicate(exp, createProperties());
     }
 
     @Override
@@ -41,21 +52,38 @@ public class XQueryExpressionReifier extends SingleInputTypedExpressionReifier<X
     }
 
     protected void configureNamespaceAware(Object builder) {
-        if (definition.getNamespaces() != null && builder instanceof NamespaceAware namespaceAware) {
+        if (definition.getNamespaces() != null && builder instanceof NamespaceAware) {
+            NamespaceAware namespaceAware = (NamespaceAware) builder;
             namespaceAware.setNamespaces(definition.getNamespaces());
         }
     }
 
     protected Object[] createProperties() {
         Object[] properties = new Object[3];
-        properties[0] = asResultType();
-        properties[1] = parseString(definition.getSource());
-        properties[2] = definition.getNamespaces();
+        properties[0] = definition.getResultType();
+        properties[1] = parseString(definition.getHeaderName());
+        properties[2] = parseString(definition.getPropertyName());
         return properties;
     }
 
     @Override
     protected void configureLanguage(Language language) {
+        if (definition.getResultType() == null && definition.getResultTypeName() != null) {
+            try {
+                Class<?> clazz = camelContext.getClassResolver().resolveMandatoryClass(definition.getResultTypeName());
+                definition.setResultType(clazz);
+            } catch (ClassNotFoundException e) {
+                throw RuntimeCamelException.wrapRuntimeException(e);
+            }
+        }
+        if (definition.getResultType() == null && definition.getType() != null) {
+            try {
+                Class<?> clazz = camelContext.getClassResolver().resolveMandatoryClass(definition.getType());
+                definition.setResultType(clazz);
+            } catch (ClassNotFoundException e) {
+                throw RuntimeCamelException.wrapRuntimeException(e);
+            }
+        }
         if (definition.getConfiguration() == null && definition.getConfigurationRef() != null) {
             definition.setConfiguration(mandatoryLookup(definition.getConfigurationRef(), Object.class));
         }

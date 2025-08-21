@@ -17,7 +17,6 @@
 package org.apache.camel.tracing;
 
 import org.apache.camel.Exchange;
-import org.apache.camel.ExchangePropertyKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -27,12 +26,9 @@ import org.slf4j.MDC;
  */
 public final class ActiveSpanManager {
 
-    @Deprecated
-    // Use specific MDC instrumentation provided by your tracing/telemetry SDK instead
     public static final String MDC_TRACE_ID = "trace_id";
-    @Deprecated
-    // Use specific MDC instrumentation provided by your tracing/telemetry SDK instead
     public static final String MDC_SPAN_ID = "span_id";
+    private static final String ACTIVE_SPAN_PROPERTY = "OpenTracing.activeSpan";
     private static final Logger LOG = LoggerFactory.getLogger(ActiveSpanManager.class);
 
     private ActiveSpanManager() {
@@ -45,7 +41,7 @@ public final class ActiveSpanManager {
      * @return          The current active span, or null if none exists
      */
     public static SpanAdapter getSpan(Exchange exchange) {
-        Holder holder = exchange.getProperty(ExchangePropertyKey.OTEL_ACTIVE_SPAN, Holder.class);
+        Holder holder = (Holder) exchange.getProperty(ACTIVE_SPAN_PROPERTY);
         if (holder != null) {
             return holder.getSpan();
         }
@@ -60,18 +56,11 @@ public final class ActiveSpanManager {
      * @param span     The span
      */
     public static void activate(Exchange exchange, SpanAdapter span) {
-        if (exchange.getProperty(ExchangePropertyKey.OTEL_CLOSE_CLIENT_SCOPE, Boolean.FALSE, Boolean.class)) {
-            //Check if we need to close the CLIENT scope created by
-            //DirectProducer in async mode before we create a new INTERNAL scope
-            //for the next DirectConsumer
-            endScope(exchange);
-            exchange.removeProperty(ExchangePropertyKey.OTEL_CLOSE_CLIENT_SCOPE);
-        }
-        exchange.setProperty(ExchangePropertyKey.OTEL_ACTIVE_SPAN,
-                new Holder(exchange.getProperty(ExchangePropertyKey.OTEL_ACTIVE_SPAN, Holder.class), span));
-        if (Boolean.TRUE.equals(exchange.getContext().isUseMDCLogging())) {
-            MDC.put(MDC_TRACE_ID, span.traceId());
-            MDC.put(MDC_SPAN_ID, span.spanId());
+        exchange.setProperty(ACTIVE_SPAN_PROPERTY,
+                new Holder((Holder) exchange.getProperty(ACTIVE_SPAN_PROPERTY), span));
+        if (exchange.getContext().isUseMDCLogging()) {
+            MDC.put(MDC_TRACE_ID, "" + span.traceId());
+            MDC.put(MDC_SPAN_ID, "" + span.spanId());
         }
     }
 
@@ -83,17 +72,17 @@ public final class ActiveSpanManager {
      * @param exchange The exchange
      */
     public static void deactivate(Exchange exchange) {
-        Holder holder = exchange.getProperty(ExchangePropertyKey.OTEL_ACTIVE_SPAN, Holder.class);
+        Holder holder = (Holder) exchange.getProperty(ACTIVE_SPAN_PROPERTY);
         if (holder != null) {
-            Holder parent = holder.getParent();
-            exchange.setProperty(ExchangePropertyKey.OTEL_ACTIVE_SPAN, parent);
+            exchange.setProperty(ACTIVE_SPAN_PROPERTY, holder.getParent());
 
             holder.closeScope();
-            if (Boolean.TRUE.equals(exchange.getContext().isUseMDCLogging())) {
+            if (exchange.getContext().isUseMDCLogging()) {
+                Holder parent = holder.getParent();
                 if (parent != null) {
-                    SpanAdapter span = parent.getSpan();
-                    MDC.put(MDC_TRACE_ID, span.traceId());
-                    MDC.put(MDC_SPAN_ID, span.spanId());
+                    SpanAdapter span = holder.getParent().getSpan();
+                    MDC.put(MDC_TRACE_ID, "" + span.traceId());
+                    MDC.put(MDC_SPAN_ID, "" + span.spanId());
                 } else {
                     MDC.remove(MDC_TRACE_ID);
                     MDC.remove(MDC_SPAN_ID);
@@ -103,14 +92,14 @@ public final class ActiveSpanManager {
     }
 
     /**
-     * If the underlying span is active, closes its scope without ending the span. This method should be called after
-     * async execution is started on the same thread on which span was activated. ExchangeAsyncStartedEvent is used to
-     * notify about it.
+     * If underlying span is active, closes its scope without ending the span. This methods should be called after async
+     * execution is started on the same thread on which span was activated. ExchangeAsyncStartedEvent is used to notify
+     * about it.
      *
      * @param exchange The exchange
      */
     public static void endScope(Exchange exchange) {
-        Holder holder = exchange.getProperty(ExchangePropertyKey.OTEL_ACTIVE_SPAN, Holder.class);
+        Holder holder = (Holder) exchange.getProperty(ACTIVE_SPAN_PROPERTY);
         if (holder != null) {
             holder.closeScope();
         }
@@ -118,21 +107,19 @@ public final class ActiveSpanManager {
 
     /**
      * Simple holder for the currently active span and an optional reference to the parent holder. This will be used to
-     * maintain a stack for spans, built up during the execution of multiple chained camel exchanges, and then unwound
-     * when the responses are processed.
+     * maintain a stack for spans, built up during the execution of a series of chained camel exchanges, and then
+     * unwound when the responses are processed.
+     *
      */
     public static class Holder {
-        private final Holder parent;
-        private final SpanAdapter span;
-        private final AutoCloseable scope;
+        private Holder parent;
+        private SpanAdapter span;
+        private AutoCloseable scope;
 
-        Holder(Holder parent, SpanAdapter span) {
+        public Holder(Holder parent, SpanAdapter span) {
             this.parent = parent;
             this.span = span;
-            this.scope = span.makeCurrent();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Tracing: started scope: {}", this.scope);
-            }
+            this.scope = new ScopeWrapper(span.makeCurrent(), Thread.currentThread().getId());
         }
 
         public Holder getParent() {
@@ -144,13 +131,39 @@ public final class ActiveSpanManager {
         }
 
         private void closeScope() {
-            try {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Tracing: closing scope: {}", this.scope);
+            if (scope != null) {
+                try {
+                    scope.close();
+                } catch (Exception e) {
+                    LOG.debug("Failed to close span scope", e);
                 }
-                scope.close();
-            } catch (Exception e) {
-                LOG.debug("Failed to close span scope. This exception is ignored.", e);
+                this.scope = null;
+            }
+        }
+    }
+
+    /**
+     * Makes closing scopes idempotent and prevents restoring scope on the wrong thread: Should be removed if
+     * https://github.com/open-telemetry/opentelemetry-java/issues/5055 is fixed.
+     */
+    private static class ScopeWrapper implements AutoCloseable {
+        private final long startThreadId;
+        private final AutoCloseable inner;
+        private boolean closed;
+
+        public ScopeWrapper(AutoCloseable inner, long startThreadId) {
+            this.startThreadId = startThreadId;
+            this.inner = inner;
+        }
+
+        @Override
+        public void close() throws Exception {
+            if (!closed && Thread.currentThread().getId() == startThreadId) {
+                closed = true;
+                inner.close();
+            } else {
+                LOG.debug("not closing scope, closed - {}, started on thread - '{}', current thread - '{}'",
+                        closed, startThreadId, Thread.currentThread().getId());
             }
         }
     }

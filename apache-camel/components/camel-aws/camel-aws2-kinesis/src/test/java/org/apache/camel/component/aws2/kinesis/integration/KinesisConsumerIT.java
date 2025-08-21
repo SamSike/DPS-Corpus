@@ -17,12 +17,14 @@
 
 package org.apache.camel.component.aws2.kinesis.integration;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.EndpointInject;
+import org.apache.camel.Exchange;
 import org.apache.camel.Message;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.aws2.kinesis.Kinesis2Constants;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -32,7 +34,6 @@ import org.apache.camel.test.infra.aws2.clients.AWSSDKClientUtils;
 import org.apache.camel.test.infra.aws2.services.AWSServiceFactory;
 import org.apache.camel.test.infra.common.TestUtils;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.apache.camel.util.ObjectHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,17 +45,15 @@ import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 import static org.apache.camel.test.infra.aws2.clients.KinesisUtils.createStream;
 import static org.apache.camel.test.infra.aws2.clients.KinesisUtils.putRecords;
-import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 public class KinesisConsumerIT extends CamelTestSupport {
     private static class KinesisData {
         private String partition;
         private String body;
-        private String shardId;
 
         @Override
         public String toString() {
@@ -66,7 +65,7 @@ public class KinesisConsumerIT extends CamelTestSupport {
     }
 
     @RegisterExtension
-    public static AWSService awsService = AWSServiceFactory.createSingletonKinesisService();
+    public static AWSService awsService = AWSServiceFactory.createKinesisService();
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisProducerIT.class);
 
@@ -76,7 +75,7 @@ public class KinesisConsumerIT extends CamelTestSupport {
     private KinesisClient client;
     private String streamName = AWSCommon.KINESIS_STREAM_BASE_NAME + "-cons-" + TestUtils.randomWithRange(0, 100);
     private final int messageCount = 20;
-    private List<KinesisData> receivedMessages = new CopyOnWriteArrayList<>();
+    private List<KinesisData> receivedMessages = new ArrayList<>();
 
     @Override
     protected RouteBuilder createRouteBuilder() {
@@ -90,18 +89,20 @@ public class KinesisConsumerIT extends CamelTestSupport {
                 String kinesisEndpointUri = "aws2-kinesis://%s?amazonKinesisClient=#amazonKinesisClient";
 
                 fromF(kinesisEndpointUri, streamName)
-                        .process(exchange -> {
-                            KinesisData data = new KinesisData();
+                        .process(new Processor() {
+                            @Override
+                            public void process(Exchange exchange) {
+                                KinesisData data = new KinesisData();
 
-                            final Message message = exchange.getMessage();
+                                final Message message = exchange.getMessage();
 
-                            if (message != null) {
-                                data.body = message.getBody(String.class);
-                                data.partition = message.getHeader(Kinesis2Constants.PARTITION_KEY, String.class);
-                                data.shardId = message.getHeader(Kinesis2Constants.SHARD_ID, String.class);
+                                if (message != null) {
+                                    data.body = message.getBody(String.class);
+                                    data.partition = message.getHeader(Kinesis2Constants.PARTITION_KEY, String.class);
+                                }
+
+                                receivedMessages.add(data);
                             }
-
-                            receivedMessages.add(data);
                         })
                         .to("mock:result");
             }
@@ -110,7 +111,7 @@ public class KinesisConsumerIT extends CamelTestSupport {
 
     @BeforeEach
     public void prepareEnvironment() {
-        createStream(client, streamName, 2);
+        createStream(client, streamName);
 
         putRecords(client, streamName, messageCount);
     }
@@ -125,9 +126,8 @@ public class KinesisConsumerIT extends CamelTestSupport {
                 .untilAsserted(() -> result.assertIsSatisfied());
 
         assertEquals(messageCount, receivedMessages.size());
-        String partitionKey = null;
         for (KinesisData data : receivedMessages) {
-            ObjectHelper.notNull(data, "data");
+            assert data != null; // should never happen
             assertNotNull(data.body, "The body should not be null");
             assertNotNull(data.partition, "The partition should not be null");
             /*
@@ -135,9 +135,6 @@ public class KinesisConsumerIT extends CamelTestSupport {
              and so on. This is just testing that the code is not mixing things up.
              */
             assertTrue(data.partition.endsWith(data.body), "The data/partition mismatch for record: " + data);
-            assertNotEquals(partitionKey, data.partition);
-            partitionKey = data.partition;
-            assertNotNull(data.shardId);
         }
     }
 }

@@ -21,8 +21,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.BindToRegistry;
+import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.kafka.integration.common.KafkaTestUtil;
+import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.spi.StateRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -31,13 +32,21 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class KafkaConsumerRebalanceIT extends BaseKafkaTestSupport {
+public class KafkaConsumerRebalanceIT extends BaseEmbeddedKafkaTestSupport {
     private static final String TOPIC = "offset-rebalance";
 
-    private final CountDownLatch messagesLatch = new CountDownLatch(1);
+    @EndpointInject("mock:result")
+    private MockEndpoint result;
 
     @BindToRegistry("offset")
-    private final OffsetStateRepository offsetStateRepository = new OffsetStateRepository(messagesLatch);
+    private OffsetStateRepository stateRepository;
+    private CountDownLatch messagesLatch;
+
+    @Override
+    protected void doPreSetup() {
+        messagesLatch = new CountDownLatch(1);
+        stateRepository = new OffsetStateRepository(messagesLatch);
+    }
 
     @Test
     public void offsetGetStateMustHaveBeenCalledTwice() throws Exception {
@@ -53,21 +62,21 @@ public class KafkaConsumerRebalanceIT extends BaseKafkaTestSupport {
         kafkaAdminClient.deleteTopics(Collections.singletonList(TOPIC));
     }
 
+    @Override
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override
             public void configure() {
                 from("kafka:" + TOPIC + "?groupId=" + TOPIC + "_GROUP" + "&autoCommitIntervalMs=1000"
                      + "&autoOffsetReset=latest" + "&consumersCount=1"
-                     + "&offsetRepository=#offset").routeId("consumer-rebalance-route")
-                        .to(KafkaTestUtil.MOCK_RESULT);
+                     + "&offsetRepository=#offset").routeId("consumer-rebalance-route").to("mock:result");
             }
         };
     }
 
     public static class OffsetStateRepository implements StateRepository<String, String> {
         private static final Logger LOG = LoggerFactory.getLogger(OffsetStateRepository.class);
-        final CountDownLatch messagesLatch;
+        CountDownLatch messagesLatch;
 
         public OffsetStateRepository(CountDownLatch messagesLatch) {
             this.messagesLatch = messagesLatch;

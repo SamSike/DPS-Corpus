@@ -25,29 +25,27 @@ import org.apache.camel.support.LifecycleStrategySupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  *
  */
 public class VetoCamelContextStartTest extends ContextTestSupport {
 
-    private final LifecycleStrategy veto = new MyVeto();
+    private LifecycleStrategy veto = new MyVeto();
 
     @Test
-    public void testVetoCamelContextStart() {
-        // context is veto'ed and appears as stopped
-        assertFalse(context.getStatus().isStarted());
-        assertTrue(context.getStatus().isStopped());
+    public void testVetoCamelContextStart() throws Exception {
+        // context is veto'ed but appears as started
+        assertEquals(false, context.getStatus().isStarted());
+        assertEquals(true, context.getStatus().isStopped());
         assertEquals(0, context.getRoutes().size());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("mock:result");
             }
         };
@@ -60,10 +58,10 @@ public class VetoCamelContextStartTest extends ContextTestSupport {
         return context;
     }
 
-    private static class MyVeto extends LifecycleStrategySupport {
+    private class MyVeto extends LifecycleStrategySupport {
 
         @Override
-        public void onContextStarting(CamelContext context) throws VetoCamelContextStartException {
+        public void onContextStart(CamelContext context) throws VetoCamelContextStartException {
             // we just want camel context to not startup, but do not rethrow
             // exception
             throw new VetoCamelContextStartException("Forced", context, false);

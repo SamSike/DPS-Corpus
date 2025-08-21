@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,33 +42,21 @@ import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.groupingBy;
 import static org.jooq.Log.Level.ERROR;
-// ...
 import static org.jooq.SQLDialect.CUBRID;
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.SQLITE;
-// ...
-import static org.jooq.impl.DSL.concat;
 import static org.jooq.impl.DSL.count;
 import static org.jooq.impl.DSL.falseCondition;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.inline;
-import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.one;
 import static org.jooq.impl.DSL.partitionBy;
 import static org.jooq.impl.DSL.rowNumber;
-import static org.jooq.impl.DSL.substring;
-import static org.jooq.impl.DSL.table;
-import static org.jooq.impl.DSL.trim;
-import static org.jooq.impl.DSL.upper;
 import static org.jooq.impl.DSL.when;
 import static org.jooq.meta.AbstractTypedElementDefinition.customType;
 import static org.jooq.tools.StringUtils.defaultIfBlank;
 import static org.jooq.tools.StringUtils.defaultIfEmpty;
 import static org.jooq.tools.StringUtils.defaultIfNull;
 import static org.jooq.tools.StringUtils.isBlank;
-import static org.jooq.tools.StringUtils.isEmpty;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,26 +64,21 @@ import java.io.StringReader;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -112,28 +95,21 @@ import org.jooq.Meta;
 import org.jooq.MetaProvider;
 import org.jooq.Name;
 import org.jooq.Param;
-import org.jooq.Parser;
 // ...
 import org.jooq.Query;
 import org.jooq.Record;
-import org.jooq.Record14;
-import org.jooq.Record6;
 import org.jooq.SQLDialect;
 import org.jooq.Schema;
 import org.jooq.Select;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions.TableType;
-// ...
-// ...
-// ...
 import org.jooq.conf.ParseWithMetaLookups;
 import org.jooq.conf.RenderQuotedNames;
 import org.jooq.exception.DataAccessException;
 import org.jooq.exception.DetachedException;
 import org.jooq.impl.DSL;
-import org.jooq.impl.ParserException;
-import org.jooq.impl.QOM;
+import org.jooq.impl.DefaultExecuteListener;
 import org.jooq.impl.SQLDataType;
 import org.jooq.meta.jaxb.CatalogMappingType;
 import org.jooq.meta.jaxb.CommentType;
@@ -149,26 +125,20 @@ import org.jooq.meta.jaxb.RegexFlag;
 import org.jooq.meta.jaxb.SchemaMappingType;
 import org.jooq.meta.jaxb.SyntheticColumnType;
 import org.jooq.meta.jaxb.SyntheticDaoType;
-import org.jooq.meta.jaxb.SyntheticDefaultType;
-import org.jooq.meta.jaxb.SyntheticEnumType;
 import org.jooq.meta.jaxb.SyntheticForeignKeyType;
 import org.jooq.meta.jaxb.SyntheticIdentityType;
 import org.jooq.meta.jaxb.SyntheticObjectsType;
 import org.jooq.meta.jaxb.SyntheticPrimaryKeyType;
 import org.jooq.meta.jaxb.SyntheticReadonlyColumnType;
 import org.jooq.meta.jaxb.SyntheticReadonlyRowidType;
-import org.jooq.meta.jaxb.SyntheticSynonymType;
 import org.jooq.meta.jaxb.SyntheticUniqueKeyType;
 import org.jooq.meta.jaxb.SyntheticViewType;
 // ...
-import org.jooq.tools.ClassUtils;
 import org.jooq.tools.JooqLogger;
 import org.jooq.tools.StopWatch;
 import org.jooq.tools.StringUtils;
 import org.jooq.tools.csv.CSVReader;
 import org.jooq.tools.jdbc.JDBCUtils;
-
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 /**
  * A base implementation for all types of databases.
@@ -177,194 +147,156 @@ import org.jetbrains.annotations.ApiStatus.Internal;
  */
 public abstract class AbstractDatabase implements Database {
 
-    private static final JooqLogger                                              log                                  = JooqLogger.getLogger(AbstractDatabase.class);
-    private static final Set<SQLDialect>                                         NO_SUPPORT_SCHEMATA                  = SQLDialect.supportedBy(CUBRID, FIREBIRD, SQLITE);
+    private static final JooqLogger                                          log                                  = JooqLogger.getLogger(AbstractDatabase.class);
+    private static final Set<SQLDialect>                                     NO_SUPPORT_SCHEMATA                  = SQLDialect.supportedBy(CUBRID, FIREBIRD, SQLITE);
 
     // -------------------------------------------------------------------------
     // Configuration elements
     // -------------------------------------------------------------------------
 
-    private Properties                                                           properties;
-    private String                                                               basedir;
-    private SQLDialect                                                           dialect;
-    private Connection                                                           connection;
-    private boolean                                                              regexMatchesPartialQualification;
-    private boolean                                                              sqlMatchesPartialQualification;
-    private OnError                                                              onError                                 = OnError.FAIL;
-    private OnError                                                              onDeprecated                            = OnError.LOG;
-    private OnError                                                              onExperimental                          = OnError.FAIL;
-    private OnError                                                              onMisconfiguration                      = OnError.FAIL;
-    private OnError                                                              onMetadataProblem                       = OnError.LOG;
-    private OnError                                                              onPerformanceProblem                    = OnError.LOG;
-    private List<Filter>                                                         filters;
-    private String[]                                                             excludes;
-    private String[]                                                             excludesResult;
-    private String                                                               excludeSql;
-    private String[]                                                             includes;
-    private String[]                                                             includesResult;
-    private String                                                               includeSql;
-    private boolean                                                              includeExcludeColumns                   = false;
-    private boolean                                                              includeExcludePackageRoutines           = false;
-    private boolean                                                              includeInvisibleColumns                 = true;
-    private boolean                                                              invisibleColumnsAsHidden                = true;
-    private boolean                                                              includeXMLSchemaCollections             = true;
-    private boolean                                                              includeTables                           = true;
-    private boolean                                                              includeEmbeddables                      = true;
-    private boolean                                                              includeRoutines                         = true;
-    private boolean                                                              includeTriggerRoutines                  = false;
-    private boolean                                                              includePackages                         = true;
-    private boolean                                                              includePackageRoutines                  = true;
-    private boolean                                                              includePackageUDTs                      = true;
-    private boolean                                                              includePackageConstants                 = true;
-    private boolean                                                              includeUDTs                             = true;
-    private boolean                                                              includeDomains                          = true;
-
-
-
-
-    private boolean                                                              includeSequences                        = true;
-    private boolean                                                              includeIndexes                          = true;
-    private boolean                                                              includeCheckConstraints                 = true;
-    private boolean                                                              includeSystemTables                     = false;
-    private boolean                                                              includeSystemIndexes                    = false;
-    private boolean                                                              includeSystemCheckConstraints           = false;
-    private boolean                                                              includeSystemSequences                  = false;
-    private boolean                                                              includeSystemUDTs                       = false;
-    private boolean                                                              includePrimaryKeys                      = true;
-    private boolean                                                              includeUniqueKeys                       = true;
-    private boolean                                                              includeForeignKeys                      = true;
-    private boolean                                                              forceIntegerTypesOnZeroScaleDecimals    = true;
-    private String[]                                                             recordVersionFields;
-    private String[]                                                             recordTimestampFields;
-    private String                                                               embeddablePrimaryKeys                   = null;
-    private String                                                               embeddableUniqueKeys                    = null;
-    private String                                                               embeddableDomains                       = null;
-    private boolean                                                              readonlyIdentities                      = false;
-    private boolean                                                              readonlyComputedColumns                 = true;
-    private boolean                                                              readonlyNonUpdatableColumns             = true;
-    private boolean                                                              supportsUnsignedTypes;
-    private boolean                                                              integerDisplayWidths;
-    private boolean                                                              ignoreProcedureReturnValues;
-    private boolean                                                              dateAsTimestamp;
-    private boolean                                                              javaTimeTypes                           = true;
-    private List<CatalogMappingType>                                             configuredCatalogs                      = new ArrayList<>();
-    private List<SchemaMappingType>                                              configuredSchemata                      = new ArrayList<>();
-    private List<CustomType>                                                     configuredCustomTypes                   = new ArrayList<>();
-    private List<EnumType>                                                       configuredEnumTypes                     = new ArrayList<>();
-    private boolean                                                              forcedTypesForBuiltinDataTypeExtensions = true;
-    private boolean                                                              forcedTypesForXMLSchemaCollections      = true;
-    private boolean                                                              builtInForcedTypesInitialised           = false;
-    private List<ForcedType>                                                     configuredForcedTypes;
-    private Set<ForcedType>                                                      unusedForcedTypes                       = new HashSet<>();
-    private List<EmbeddableDefinitionType>                                       configuredEmbeddables                   = new ArrayList<>();
-    private Set<EmbeddableDefinitionType>                                        unusedEmbeddables                       = new HashSet<>();
-    private List<CommentType>                                                    configuredComments                      = new ArrayList<>();
-    private Set<CommentType>                                                     unusedComments                          = new HashSet<>();
-    private List<SyntheticColumnType>                                            configuredSyntheticColumns              = new ArrayList<>();
-    private Set<SyntheticColumnType>                                             unusedSyntheticColumns                  = new HashSet<>();
-    private List<SyntheticReadonlyColumnType>                                    configuredSyntheticReadonlyColumns      = new ArrayList<>();
-    private Set<SyntheticReadonlyColumnType>                                     unusedSyntheticReadonlyColumns          = new HashSet<>();
-    private List<SyntheticReadonlyRowidType>                                     configuredSyntheticReadonlyRowids       = new ArrayList<>();
-    private Set<SyntheticReadonlyRowidType>                                      unusedSyntheticReadonlyRowids           = new HashSet<>();
-    private List<SyntheticIdentityType>                                          configuredSyntheticIdentities           = new ArrayList<>();
-    private Set<SyntheticIdentityType>                                           unusedSyntheticIdentities               = new HashSet<>();
-    private List<SyntheticDefaultType>                                           configuredSyntheticDefaults             = new ArrayList<>();
-    private Set<SyntheticDefaultType>                                            unusedSyntheticDefaults                 = new HashSet<>();
-    private List<SyntheticEnumType>                                              configuredSyntheticEnums                = new ArrayList<>();
-    private Set<SyntheticEnumType>                                               unusedSyntheticEnums                    = new HashSet<>();
-    private List<SyntheticPrimaryKeyType>                                        configuredSyntheticPrimaryKeys          = new ArrayList<>();
-    private Set<SyntheticPrimaryKeyType>                                         unusedSyntheticPrimaryKeys              = new HashSet<>();
-    private List<SyntheticUniqueKeyType>                                         configuredSyntheticUniqueKeys           = new ArrayList<>();
-    private Set<SyntheticUniqueKeyType>                                          unusedSyntheticUniqueKeys               = new HashSet<>();
-    private List<SyntheticForeignKeyType>                                        configuredSyntheticForeignKeys          = new ArrayList<>();
-    private Set<SyntheticForeignKeyType>                                         unusedSyntheticForeignKeys              = new HashSet<>();
-    private List<SyntheticSynonymType>                                           configuredSyntheticSynonyms             = new ArrayList<>();
-    private Set<SyntheticSynonymType>                                            unusedSyntheticSynonyms                 = new HashSet<>();
-    private List<SyntheticViewType>                                              configuredSyntheticViews                = new ArrayList<>();
-    private Set<SyntheticViewType>                                               unusedSyntheticViews                    = new HashSet<>();
-    private List<SyntheticDaoType>                                               configuredSyntheticDaos                 = new ArrayList<>();
-    private SchemaVersionProvider                                                schemaVersionProvider;
-    private CatalogVersionProvider                                               catalogVersionProvider;
-    private Comparator<Definition>                                               orderProvider;
-    private boolean                                                              includeRelations                        = true;
-    private boolean                                                              tableValuedFunctions                    = true;
-    private boolean                                                              tableValuedFunctionsAsRoutines          = true;
-    private boolean                                                              tableValuedFunctionsAsTables            = true;
-    private int                                                                  logSlowQueriesAfterSeconds;
-    private int                                                                  logSlowResultsAfterSeconds;
+    private Properties                                                       properties;
+    private String                                                           basedir;
+    private SQLDialect                                                       dialect;
+    private Connection                                                       connection;
+    private boolean                                                          regexMatchesPartialQualification;
+    private boolean                                                          sqlMatchesPartialQualification;
+    private OnError                                                          onError                                 = OnError.FAIL;
+    private List<Filter>                                                     filters;
+    private String[]                                                         excludes;
+    private String[]                                                         includes                                = { ".*" };
+    private boolean                                                          includeExcludeColumns                   = false;
+    private boolean                                                          includeExcludePackageRoutines           = false;
+    private boolean                                                          includeInvisibleColumns                 = true;
+    private boolean                                                          includeTables                           = true;
+    private boolean                                                          includeEmbeddables                      = true;
+    private boolean                                                          includeRoutines                         = true;
+    private boolean                                                          includeTriggerRoutines                  = false;
+    private boolean                                                          includePackages                         = true;
+    private boolean                                                          includePackageRoutines                  = true;
+    private boolean                                                          includePackageUDTs                      = true;
+    private boolean                                                          includePackageConstants                 = true;
+    private boolean                                                          includeUDTs                             = true;
+    private boolean                                                          includeDomains                          = true;
+    private boolean                                                          includeSequences                        = true;
+    private boolean                                                          includeIndexes                          = true;
+    private boolean                                                          includeCheckConstraints                 = true;
+    private boolean                                                          includeSystemTables                     = false;
+    private boolean                                                          includeSystemIndexes                    = false;
+    private boolean                                                          includeSystemCheckConstraints           = false;
+    private boolean                                                          includeSystemSequences                  = false;
+    private boolean                                                          includeSystemUDTs                       = false;
+    private boolean                                                          includePrimaryKeys                      = true;
+    private boolean                                                          includeUniqueKeys                       = true;
+    private boolean                                                          includeForeignKeys                      = true;
+    private boolean                                                          forceIntegerTypesOnZeroScaleDecimals    = true;
+    private String[]                                                         recordVersionFields;
+    private String[]                                                         recordTimestampFields;
+    private String                                                           embeddablePrimaryKeys                   = null;
+    private String                                                           embeddableUniqueKeys                    = null;
+    private String                                                           embeddableDomains                       = null;
+    private boolean                                                          readonlyIdentities                      = false;
+    private boolean                                                          readonlyComputedColumns                 = true;
+    private boolean                                                          readonlyNonUpdatableColumns             = true;
+    private boolean                                                          supportsUnsignedTypes;
+    private boolean                                                          integerDisplayWidths;
+    private boolean                                                          ignoreProcedureReturnValues;
+    private boolean                                                          dateAsTimestamp;
+    private boolean                                                          javaTimeTypes                           = true;
+    private List<CatalogMappingType>                                         configuredCatalogs                      = new ArrayList<>();
+    private List<SchemaMappingType>                                          configuredSchemata                      = new ArrayList<>();
+    private List<CustomType>                                                 configuredCustomTypes                   = new ArrayList<>();
+    private List<EnumType>                                                   configuredEnumTypes                     = new ArrayList<>();
+    private boolean                                                          forcedTypesForBuiltinDataTypeExtensions = true;
+    private boolean                                                          builtInForcedTypesInitialised           = false;
+    private List<ForcedType>                                                 configuredForcedTypes;
+    private Set<ForcedType>                                                  unusedForcedTypes                       = new HashSet<>();
+    private List<EmbeddableDefinitionType>                                   configuredEmbeddables                   = new ArrayList<>();
+    private Set<EmbeddableDefinitionType>                                    unusedEmbeddables                       = new HashSet<>();
+    private List<CommentType>                                                configuredComments                      = new ArrayList<>();
+    private Set<CommentType>                                                 unusedComments                          = new HashSet<>();
+    private List<SyntheticColumnType>                                        configuredSyntheticColumns              = new ArrayList<>();
+    private Set<SyntheticColumnType>                                         unusedSyntheticColumns                  = new HashSet<>();
+    private List<SyntheticReadonlyColumnType>                                configuredSyntheticReadonlyColumns      = new ArrayList<>();
+    private Set<SyntheticReadonlyColumnType>                                 unusedSyntheticReadonlyColumns          = new HashSet<>();
+    private List<SyntheticReadonlyRowidType>                                 configuredSyntheticReadonlyRowids       = new ArrayList<>();
+    private Set<SyntheticReadonlyRowidType>                                  unusedSyntheticReadonlyRowids           = new HashSet<>();
+    private List<SyntheticIdentityType>                                      configuredSyntheticIdentities           = new ArrayList<>();
+    private Set<SyntheticIdentityType>                                       unusedSyntheticIdentities               = new HashSet<>();
+    private List<SyntheticPrimaryKeyType>                                    configuredSyntheticPrimaryKeys          = new ArrayList<>();
+    private Set<SyntheticPrimaryKeyType>                                     unusedSyntheticPrimaryKeys              = new HashSet<>();
+    private List<SyntheticUniqueKeyType>                                     configuredSyntheticUniqueKeys           = new ArrayList<>();
+    private Set<SyntheticUniqueKeyType>                                      unusedSyntheticUniqueKeys               = new HashSet<>();
+    private List<SyntheticForeignKeyType>                                    configuredSyntheticForeignKeys          = new ArrayList<>();
+    private Set<SyntheticForeignKeyType>                                     unusedSyntheticForeignKeys              = new HashSet<>();
+    private List<SyntheticViewType>                                          configuredSyntheticViews                = new ArrayList<>();
+    private Set<SyntheticViewType>                                           unusedSyntheticViews                    = new HashSet<>();
+    private List<SyntheticDaoType>                                           configuredSyntheticDaos                 = new ArrayList<>();
+    private SchemaVersionProvider                                            schemaVersionProvider;
+    private CatalogVersionProvider                                           catalogVersionProvider;
+    private Comparator<Definition>                                           orderProvider;
+    private boolean                                                          includeRelations                        = true;
+    private boolean                                                          tableValuedFunctions                    = true;
+    private int                                                              logSlowQueriesAfterSeconds;
+    private int                                                              logSlowResultsAfterSeconds;
 
     // -------------------------------------------------------------------------
     // Loaded definitions
     // -------------------------------------------------------------------------
 
-    private Map<Definition, String>                                              sources;
-    private Map<Definition, String>                                              comments;
-    private List<String>                                                         inputCatalogs;
-    private List<String>                                                         inputSchemata;
-    private Map<String, List<String>>                                            inputSchemataPerCatalog;
-    private List<CatalogDefinition>                                              catalogs;
-    private List<SchemaDefinition>                                               schemata;
-    private List<SequenceDefinition>                                             sequences;
-    private List<IdentityDefinition>                                             identities;
-    private List<IndexDefinition>                                                indexes;
-    private List<UniqueKeyDefinition>                                            primaryKeys;
-    private List<UniqueKeyDefinition>                                            uniqueKeys;
-    private List<UniqueKeyDefinition>                                            keys;
-    private List<ForeignKeyDefinition>                                           foreignKeys;
-    private List<CheckConstraintDefinition>                                      checkConstraints;
-    private List<TableDefinition>                                                tables;
-    private List<EmbeddableDefinition>                                           embeddables;
-    private List<EnumDefinition>                                                 enums;
-    private List<DomainDefinition>                                               domains;
+    private Map<Definition, String>                                          sources;
+    private List<String>                                                     inputCatalogs;
+    private List<String>                                                     inputSchemata;
+    private Map<String, List<String>>                                        inputSchemataPerCatalog;
+    private List<CatalogDefinition>                                          catalogs;
+    private List<SchemaDefinition>                                           schemata;
+    private List<SequenceDefinition>                                         sequences;
+    private List<IdentityDefinition>                                         identities;
+    private List<IndexDefinition>                                            indexes;
+    private List<UniqueKeyDefinition>                                        primaryKeys;
+    private List<UniqueKeyDefinition>                                        uniqueKeys;
+    private List<UniqueKeyDefinition>                                        keys;
+    private List<ForeignKeyDefinition>                                       foreignKeys;
+    private List<CheckConstraintDefinition>                                  checkConstraints;
+    private List<TableDefinition>                                            tables;
+    private List<EmbeddableDefinition>                                       embeddables;
+    private List<EnumDefinition>                                             enums;
+    private List<DomainDefinition>                                           domains;
+    private List<UDTDefinition>                                              udts;
+    private List<ArrayDefinition>                                            arrays;
+    private List<RoutineDefinition>                                          routines;
+    private List<PackageDefinition>                                          packages;
+    private Relations                                                        relations;
 
-
-
-
-    private List<XMLSchemaCollectionDefinition>                                  xmlSchemaCollections;
-    private List<UDTDefinition>                                                  udts;
-    private List<ArrayDefinition>                                                arrays;
-    private List<RoutineDefinition>                                              routines;
-    private List<PackageDefinition>                                              packages;
-    private Relations                                                            relations;
-
-    private transient Map<SchemaDefinition, List<SequenceDefinition>>            sequencesBySchema;
-    private transient Map<SchemaDefinition, List<IdentityDefinition>>            identitiesBySchema;
-    private transient Map<SchemaDefinition, List<IndexDefinition>>               indexesBySchema;
-    private transient Map<TableDefinition, List<IndexDefinition>>                indexesByTable;
-    private transient Map<SchemaDefinition, List<UniqueKeyDefinition>>           primaryKeysBySchema;
-    private transient Map<SchemaDefinition, List<UniqueKeyDefinition>>           uniqueKeysBySchema;
-    private transient Map<SchemaDefinition, List<UniqueKeyDefinition>>           keysBySchema;
-    private transient Map<SchemaDefinition, List<ForeignKeyDefinition>>          foreignKeysBySchema;
-    private transient Map<SchemaDefinition, List<CheckConstraintDefinition>>     checkConstraintsBySchema;
-    private transient Map<SchemaDefinition, List<TableDefinition>>               tablesBySchema;
-    private transient Map<SchemaDefinition, List<EmbeddableDefinition>>          embeddablesByDefiningSchema;
-    private transient Map<TableDefinition, List<EmbeddableDefinition>>           embeddablesByDefiningTable;
-    private transient Map<TableDefinition, List<EmbeddableDefinition>>           embeddablesByReferencingTable;
-    private transient Map<SchemaDefinition, List<EnumDefinition>>                enumsBySchema;
-    private transient Map<SchemaDefinition, List<DomainDefinition>>              domainsBySchema;
-
-
-
-
-
-    private transient Map<SchemaDefinition, List<XMLSchemaCollectionDefinition>> xmlSchemaCollectionsBySchema;
-    private transient Map<SchemaDefinition, List<UDTDefinition>>                 udtsBySchema;
-    private transient Map<PackageDefinition, List<UDTDefinition>>                udtsByPackage;
-    private transient Map<UDTDefinition, List<UDTDefinition>>                    subtypesByUdt;
-    private transient Map<SchemaDefinition, List<ArrayDefinition>>               arraysBySchema;
-    private transient Map<SchemaDefinition, List<RoutineDefinition>>             routinesBySchema;
-    private transient Map<SchemaDefinition, List<PackageDefinition>>             packagesBySchema;
-    private transient boolean                                                    initialised;
+    private transient Map<SchemaDefinition, List<SequenceDefinition>>        sequencesBySchema;
+    private transient Map<SchemaDefinition, List<IdentityDefinition>>        identitiesBySchema;
+    private transient Map<SchemaDefinition, List<IndexDefinition>>           indexesBySchema;
+    private transient Map<TableDefinition, List<IndexDefinition>>            indexesByTable;
+    private transient Map<SchemaDefinition, List<UniqueKeyDefinition>>       primaryKeysBySchema;
+    private transient Map<SchemaDefinition, List<UniqueKeyDefinition>>       uniqueKeysBySchema;
+    private transient Map<SchemaDefinition, List<UniqueKeyDefinition>>       keysBySchema;
+    private transient Map<SchemaDefinition, List<ForeignKeyDefinition>>      foreignKeysBySchema;
+    private transient Map<SchemaDefinition, List<CheckConstraintDefinition>> checkConstraintsBySchema;
+    private transient Map<SchemaDefinition, List<TableDefinition>>           tablesBySchema;
+    private transient Map<SchemaDefinition, List<EmbeddableDefinition>>      embeddablesByDefiningSchema;
+    private transient Map<TableDefinition, List<EmbeddableDefinition>>       embeddablesByDefiningTable;
+    private transient Map<TableDefinition, List<EmbeddableDefinition>>       embeddablesByReferencingTable;
+    private transient Map<SchemaDefinition, List<EnumDefinition>>            enumsBySchema;
+    private transient Map<SchemaDefinition, List<DomainDefinition>>          domainsBySchema;
+    private transient Map<SchemaDefinition, List<UDTDefinition>>             udtsBySchema;
+    private transient Map<PackageDefinition, List<UDTDefinition>>            udtsByPackage;
+    private transient Map<SchemaDefinition, List<ArrayDefinition>>           arraysBySchema;
+    private transient Map<SchemaDefinition, List<RoutineDefinition>>         routinesBySchema;
+    private transient Map<SchemaDefinition, List<PackageDefinition>>         packagesBySchema;
+    private transient boolean                                                initialised;
 
     // Other caches
-    private final List<Definition>                                               all;
-    private final List<Definition>                                               included;
-    private final List<Definition>                                               excluded;
-    private final Map<Table<?>, Boolean>                                         existTables;
-    private final Map<TableField<?, ?>, Boolean>                                 existFields;
-    private final Patterns                                                       patterns;
-    private final Statements                                                     statements;
-    private final Set<Object>                                                    doOnce;
+    private final List<Definition>                                           all;
+    private final List<Definition>                                           included;
+    private final List<Definition>                                           excluded;
+    private final Map<Table<?>, Boolean>                                     existTables;
+    private final Map<TableField<?, ?>, Boolean>                             existFields;
+    private final Patterns                                                   patterns;
+    private final Statements                                                 statements;
 
     protected AbstractDatabase() {
         existTables = new HashMap<>();
@@ -376,13 +308,6 @@ public abstract class AbstractDatabase implements Database {
         included = new ArrayList<>();
         excluded = new ArrayList<>();
         orderProvider = new DefaultOrderProvider();
-        doOnce = new HashSet<>();
-    }
-
-    @Override
-    public final void doOnce(Object key, Runnable runnable) {
-        if (doOnce.add(key))
-            runnable.run();
     }
 
     @Override
@@ -443,20 +368,6 @@ public abstract class AbstractDatabase implements Database {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         }
 
         // [#6226] This is mostly due to a wrong Maven groupId
@@ -471,14 +382,6 @@ public abstract class AbstractDatabase implements Database {
         //         integration tests, or when looking for identifiers matching
         //         [A-Za-z_$#][A-Za-z0-9_$#]+ in generated jOOQ-meta code.
         configuration.settings().setRenderQuotedNames(getRenderQuotedNames());
-
-        // [#252] We're not quoting identifiers. Hence the default name path
-        //        separator is illegal
-        configuration.settings().setNamePathSeparator("__");
-
-        // [#15934] The parser might expose dialect specific behaviour, e.g.
-        //          when parsing defaults.
-        configuration.settings().setParseDialect(configuration.dialect());
 
         if (muteExceptions) {
             return DSL.using(configuration);
@@ -523,25 +426,15 @@ public abstract class AbstractDatabase implements Database {
                     if (watch.split() > TimeUnit.SECONDS.toNanos(s)) {
                         watch.splitWarn("Slow SQL");
 
-                        Logging.log(
-                            onPerformanceProblem(), () ->
-                            """
-                            Slow SQL
-
-                            jOOQ Meta executed a slow query (slower than {s} seconds, configured by configuration/generator/database/logSlowQueriesAfterSeconds).
-                            In some RDBMS, this can be caused by outdated statistics on the information schema / dictionary / meta data views.
-                            {oracleComment}
-
-                            If you think this is a bug in jOOQ, please report it here: https://jooq.org/bug
-
-                            ```sql
-                            {query}
-                            ```
-                            """.replace("{s}", "" + s)
-                               .replace("{query}", formatted(ctx.query()))
-                               .replace("{oracleComment}", "" ),
-                            new SQLPerformanceWarning()
-                        );
+                        log.warn(
+                            "Slow SQL",
+                            "jOOQ Meta executed a slow query (slower than " + s + " seconds, configured by configuration/generator/database/logSlowQueriesAfterSeconds)"
+                          + "\n\n"
+                          + "If you think this is a bug in jOOQ, please report it here: https://github.com/jOOQ/jOOQ/issues/new"
+                          + "\n\n```sql\n"
+                          + formatted(ctx.query())
+                          + "```\n",
+                            new SQLPerformanceWarning());
                     }
                 }
 
@@ -561,22 +454,15 @@ public abstract class AbstractDatabase implements Database {
                     if (watch.split() > TimeUnit.SECONDS.toNanos(s)) {
                         watch.splitWarn("Slow Result Fetching");
 
-                        Logging.log(
-                            onPerformanceProblem(), () ->
-                            """
-                            Slow Result Fetching
-
-                            jOOQ Meta fetched a slow result (slower than {s} seconds, configured by configuration/generator/database/logSlowResultsAfterSeconds).
-
-                            If you think this is a bug in jOOQ, please report it here: https://jooq.org/bug
-
-                            ```sql
-                            {query}
-                            ```
-                            """.replace("{s}", "" + s)
-                               .replace("{query}", formatted(ctx.query())),
-                            new SQLPerformanceWarning()
-                        );
+                        log.warn(
+                            "Slow Result Fetching",
+                            "jOOQ Meta fetched a slow result (slower than " + s + " seconds, configured by configuration/generator/database/logSlowResultsAfterSeconds)"
+                          + "\n\n"
+                          + "If you think this is a bug in jOOQ, please report it here: https://github.com/jOOQ/jOOQ/issues/new"
+                          + "\n\n```sql\n"
+                          + formatted(ctx.query())
+                          + "```\n",
+                            new SQLPerformanceWarning());
                     }
                 }
 
@@ -591,7 +477,7 @@ public abstract class AbstractDatabase implements Database {
                       ? ctx.exception().getMessage()
                       : "No exception available")
                       + "\n\n"
-                      + "If you think this is a bug in jOOQ, please report it here: https://jooq.org/bug"
+                      + "If you think this is a bug in jOOQ, please report it here: https://github.com/jOOQ/jOOQ/issues/new"
                       + "\n\n"
                       + "Note you can mute some exceptions using the configuration/onError flag"
                       + "\n\n```sql\n"
@@ -739,22 +625,6 @@ public abstract class AbstractDatabase implements Database {
         return Stream.of(t).allMatch(this::exists);
     }
 
-    @Internal
-    protected Field<String> prependCreateView(Field<String> tableName, Field<String> viewDefinition, char quote) {
-        return
-            when(upper(substring(trim(viewDefinition), inline(1), inline(1))).eq(substring(trim(viewDefinition), inline(1), inline(1))),
-                concat(inline("CREATE VIEW " + quote), tableName, inline(quote + " AS "), viewDefinition))
-            .else_(concat(inline("create view " + quote), tableName, inline(quote + " as "), viewDefinition));
-    }
-
-    @Internal
-    protected Field<String> prependCreateMaterializedView(Field<String> tableName, Field<String> viewDefinition, char quote) {
-        return
-            when(upper(substring(trim(viewDefinition), inline(1), inline(1))).eq(substring(trim(viewDefinition), inline(1), inline(1))),
-                concat(inline("CREATE MATERIALIZED VIEW " + quote), tableName, inline(quote + " AS "), viewDefinition))
-            .else_(concat(inline("create materialized view " + quote), tableName, inline(quote + " as "), viewDefinition));
-    }
-
     final boolean matches(Pattern pattern, Definition definition) {
         if (pattern == null)
             return false;
@@ -763,8 +633,10 @@ public abstract class AbstractDatabase implements Database {
             return pattern.matcher(definition.getName()).matches()
                 || pattern.matcher(definition.getQualifiedName()).matches();
 
-        for (String partiallyQualifiedName : definition.getPartiallyQualifiedNames())
-            if (pattern.matcher(partiallyQualifiedName).matches())
+        List<Name> parts = Arrays.asList(definition.getQualifiedNamePart().parts());
+
+        for (int i = parts.size() - 1; i >= 0; i--)
+            if (pattern.matcher(DSL.name(parts.subList(i, parts.size()).toArray(new Name[0])).unquotedName().toString()).matches())
                 return true;
 
         return false;
@@ -778,8 +650,10 @@ public abstract class AbstractDatabase implements Database {
             return set.contains(definition.getName())
                 || set.contains(definition.getQualifiedName());
 
-        for (String partiallyQualifiedName : definition.getPartiallyQualifiedNames())
-            if (set.contains(partiallyQualifiedName))
+        List<Name> parts = Arrays.asList(definition.getQualifiedNamePart().parts());
+
+        for (int i = parts.size() - 1; i >= 0; i--)
+            if (set.contains(DSL.name(parts.subList(i, parts.size()).toArray(new Name[0])).unquotedName().toString()))
                 return true;
 
         return false;
@@ -791,24 +665,11 @@ public abstract class AbstractDatabase implements Database {
             sources = new LinkedHashMap<>();
             onError(ERROR, "Could not load sources", () -> {
                 sources = getSources0();
-                log.info("Sources fetched", fetchedSize(sources.values(), sources.values()));
+                log.info("Sequences fetched", fetchedSize(sources.values(), sources.values()));
             });
         }
 
         return sources;
-    }
-
-    @Override
-    public final Map<Definition, String> getComments() {
-        if (comments == null) {
-            comments = new LinkedHashMap<>();
-            onError(ERROR, "Could not load comments", () -> {
-                comments = getComments0();
-                log.info("Comments fetched", fetchedSize(comments.values(), comments.values()));
-            });
-        }
-
-        return comments;
     }
 
     @Override
@@ -832,11 +693,13 @@ public abstract class AbstractDatabase implements Database {
 
             if (catalogs.isEmpty())
                 if (onlyDefaultCatalog)
-                    Logging.log(onMetadataProblem(),
-                        () -> "No catalogs were loaded: Your database reported only a default catalog, which was filtered out by your <inputCatalog/> configurations. jOOQ does not support catalogs for all databases, in case of which <inputCatalog/> configurations will not work. E.g. a catalog works on SQL Server to qualify tables as [catalog].[schema].[table]. Perhaps you meant to configure an <inputSchema/> instead?");
+                    log.warn(
+                        "No catalogs were loaded",
+                        "Your database reported only a default catalog, which was filtered by your <inputCatalog/> configurations. jOOQ does not support catalogs for all databases, in case of which <inputCatalog/> configurations will not work.");
                 else
-                    Logging.log(onMetadataProblem(),
-                        () -> "No catalogs were loaded: Please check your connection settings, and whether your database (and your database version!) is really supported by jOOQ. Also, check the case-sensitivity in your configured <inputCatalog/> elements.");
+                    log.warn(
+                        "No catalogs were loaded",
+                        "Please check your connection settings, and whether your database (and your database version!) is really supported by jOOQ. Also, check the case-sensitivity in your configured <inputCatalog/> elements.");
         }
 
         return catalogs;
@@ -856,18 +719,16 @@ public abstract class AbstractDatabase implements Database {
         if (schemata == null) {
             schemata = new ArrayList<>();
 
-            // [#17672] Eager initialise the input schemata in case getSchemata0() doesn't return any.
-            getInputSchemata();
             onError(ERROR, "Could not load schemata", () -> schemata = sort(getSchemata0()));
             schemata.removeIf(schema -> !getInputSchemata().contains(schema.getName()));
 
             if (schemata.isEmpty()) {
-                Logging.log(onMetadataProblem(),
-                    () -> "No schemata were loaded: Please check your connection settings, and whether your database (and your database version!) is really supported by jOOQ. Also, check the case-sensitivity in your configured <inputSchema/> elements : " + inputSchemataPerCatalog);
+                log.warn(
+                    "No schemata were loaded",
+                    "Please check your connection settings, and whether your database (and your database version!) is really supported by jOOQ. Also, check the case-sensitivity in your configured <inputSchema/> elements : " + inputSchemataPerCatalog);
 
                 if (NO_SUPPORT_SCHEMATA.contains(getDialect().family()))
-                    Logging.log(onMetadataProblem(),
-                        () -> "No schemata were loaded: The database you're using (" + getClass().getName() + ") does not support schemata. Consider removing all <inputSchema/> and related configuration : " + inputSchemataPerCatalog);
+                    log.warn("No schemata were loaded", "The database you're using (" + getClass().getName() + ") does not support schemata. Consider removing all <inputSchema/> and related configuration : " + inputSchemataPerCatalog);
             }
         }
 
@@ -888,58 +749,10 @@ public abstract class AbstractDatabase implements Database {
     @Override
     public final SchemaDefinition getSchema(String inputName) {
         for (SchemaDefinition schema : getSchemata())
-            if (schema.getName().equals(defaultIfNull(inputName, "")))
+            if (schema.getName().equals(inputName))
                 return schema;
 
         return null;
-    }
-
-    @Override
-    public final List<XMLSchemaCollectionDefinition> getXMLSchemaCollections() {
-        if (xmlSchemaCollections == null) {
-            xmlSchemaCollections = new ArrayList<>();
-
-            if (getIncludeXMLSchemaCollections()) {
-                onError(ERROR, "Error while fetching XML schema collections", () -> {
-                    List<XMLSchemaCollectionDefinition> sc = getXMLSchemaCollections0();
-
-                    xmlSchemaCollections = sort(filterExcludeInclude(sc));
-                    log.info("XML schema collections fetched", fetchedSize(sc, xmlSchemaCollections));
-                });
-            }
-            else
-                log.info("XML schema collections excluded");
-        }
-
-        return xmlSchemaCollections;
-    }
-
-    @Override
-    public final List<XMLSchemaCollectionDefinition> getXMLSchemaCollections(SchemaDefinition schema) {
-        if (xmlSchemaCollectionsBySchema == null)
-            xmlSchemaCollectionsBySchema = new LinkedHashMap<>();
-
-        return filterSchema(getXMLSchemaCollections(), schema, xmlSchemaCollectionsBySchema);
-    }
-
-    @Override
-    public final XMLSchemaCollectionDefinition getXMLSchemaCollection(SchemaDefinition schema, String inputName) {
-        for (XMLSchemaCollectionDefinition sc : getXMLSchemaCollections(schema))
-            if (sc.getName().equals(inputName))
-                return sc;
-
-        return null;
-    }
-
-    @Internal
-    protected List<Entry<String, String>> getInputCatalogsAndSchemata() {
-        List<Entry<String, String>> result = new ArrayList<>();
-
-        for (String catalog : getInputCatalogs())
-            for (String schema : getInputSchemata(catalog))
-                result.add(new SimpleImmutableEntry<>(catalog, schema));
-
-        return result;
     }
 
     @Override
@@ -1130,56 +943,6 @@ public abstract class AbstractDatabase implements Database {
     }
 
     @Override
-    public final void setOnDeprecated(OnError onError) {
-        this.onDeprecated = onError;
-    }
-
-    @Override
-    public final OnError onDeprecated() {
-        return onDeprecated == null ? OnError.LOG : onDeprecated;
-    }
-
-    @Override
-    public final void setOnExperimental(OnError onError) {
-        this.onExperimental = onError;
-    }
-
-    @Override
-    public final OnError onExperimental() {
-        return onExperimental == null ? OnError.FAIL : onExperimental;
-    }
-
-    @Override
-    public final void setOnMisconfiguration(OnError onError) {
-        this.onMisconfiguration = onError;
-    }
-
-    @Override
-    public final OnError onMisconfiguration() {
-        return onMisconfiguration == null ? OnError.FAIL : onMisconfiguration;
-    }
-
-    @Override
-    public final void setOnMetadataProblem(OnError onError) {
-        this.onMetadataProblem = onError;
-    }
-
-    @Override
-    public final OnError onMetadataProblem() {
-        return onMetadataProblem == null ? OnError.LOG : onMetadataProblem;
-    }
-
-    @Override
-    public final void setOnPerformanceProblem(OnError onError) {
-        this.onPerformanceProblem = onError;
-    }
-
-    @Override
-    public final OnError onPerformanceProblem() {
-        return onPerformanceProblem == null ? OnError.LOG : onPerformanceProblem;
-    }
-
-    @Override
     public final List<Filter> getFilters() {
         if (filters == null)
             filters = new ArrayList<>();
@@ -1206,20 +969,7 @@ public abstract class AbstractDatabase implements Database {
         if (excludes == null)
             excludes = new String[0];
 
-        if (excludesResult == null)
-            excludesResult = includeExcludeResult(excludes, excludeSql);
-
-        return excludesResult;
-    }
-
-    @Override
-    public final void setExcludeSql(String sql) {
-        this.excludeSql = sql;
-    }
-
-    @Override
-    public final String getExcludeSql() {
-        return excludeSql;
+        return excludes;
     }
 
     @Override
@@ -1232,29 +982,7 @@ public abstract class AbstractDatabase implements Database {
         if (includes == null)
             includes = new String[0];
 
-        if (includesResult == null)
-            includesResult = includeExcludeResult(includes, includeSql);
-
-        return includesResult;
-    }
-
-    @Override
-    public final void setIncludeSql(String sql) {
-        this.includeSql = sql;
-    }
-
-    @Override
-    public final String getIncludeSql() {
-        return includeSql;
-    }
-
-    private final String[] includeExcludeResult(String[] a, String sql) {
-        List<String> list = new ArrayList<>(Arrays.asList(a));
-
-        if (!StringUtils.isBlank(sql))
-            list.addAll(statements.fetchSet(sql, String.class));
-
-        return list.toArray(new String[0]);
+        return includes;
     }
 
     @Override
@@ -1285,16 +1013,6 @@ public abstract class AbstractDatabase implements Database {
     @Override
     public final boolean getIncludeInvisibleColumns() {
         return includeInvisibleColumns;
-    }
-
-    @Override
-    public final void setInvisibleColumnsAsHidden(boolean invisibleColumnsAsHidden) {
-        this.invisibleColumnsAsHidden = invisibleColumnsAsHidden;
-    }
-
-    @Override
-    public final boolean getInvisibleColumnsAsHidden() {
-        return invisibleColumnsAsHidden;
     }
 
     @Override
@@ -1378,16 +1096,6 @@ public abstract class AbstractDatabase implements Database {
     }
 
     @Override
-    public final boolean getIncludeXMLSchemaCollections() {
-        return includeXMLSchemaCollections;
-    }
-
-    @Override
-    public final void setIncludeXMLSchemaCollections(boolean includeXMLSchemaCollections) {
-        this.includeXMLSchemaCollections = includeXMLSchemaCollections;
-    }
-
-    @Override
     public final boolean getIncludeUDTs() {
         return includeUDTs;
     }
@@ -1406,30 +1114,6 @@ public abstract class AbstractDatabase implements Database {
     public final void setIncludeDomains(boolean includeDomains) {
         this.includeDomains = includeDomains;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public final boolean getIncludeSequences() {
@@ -1603,9 +1287,7 @@ public abstract class AbstractDatabase implements Database {
         if (syntheticPrimaryKeys != null) {
             for (String syntheticPrimaryKey : syntheticPrimaryKeys) {
                 if (!StringUtils.isBlank(syntheticPrimaryKey)) {
-                    Logging.log(onDeprecated(),
-                        () -> "The <syntheticPrimaryKeys/> configuration element has been deprecated in jOOQ 3.14. Use <syntheticObjects/> only, instead.");
-
+                    log.warn("DEPRECATION", "The <syntheticPrimaryKeys/> configuration element has been deprecated in jOOQ 3.14. Use <syntheticObjects/> only, instead.");
                     getConfiguredSyntheticPrimaryKeys().add(new SyntheticPrimaryKeyType().withFields(syntheticPrimaryKey));
                 }
             }
@@ -1615,9 +1297,7 @@ public abstract class AbstractDatabase implements Database {
     @Override
     @Deprecated
     public String[] getSyntheticPrimaryKeys() {
-        Logging.log(onDeprecated(),
-            () -> "The <syntheticPrimaryKeys/> configuration element has been deprecated in jOOQ 3.14. Use <syntheticObjects/> only, instead.");
-
+        log.warn("DEPRECATION", "The <syntheticPrimaryKeys/> configuration element has been deprecated in jOOQ 3.14. Use <syntheticObjects/> only, instead.");
         return new String[0];
     }
 
@@ -1627,9 +1307,7 @@ public abstract class AbstractDatabase implements Database {
         if (overridePrimaryKeys != null) {
             for (String overridePrimaryKey : overridePrimaryKeys) {
                 if (!StringUtils.isBlank(overridePrimaryKey)) {
-                    Logging.log(onDeprecated(),
-                        () -> "The <overridePrimaryKeys/> configuration element has been deprecated in jOOQ 3.14. Use <syntheticObjects/> only, instead.");
-
+                    log.warn("DEPRECATION", "The <overridePrimaryKeys/> configuration element has been deprecated in jOOQ 3.14. Use <syntheticObjects/> only, instead.");
                     getConfiguredSyntheticPrimaryKeys().add(new SyntheticPrimaryKeyType().withKey(overridePrimaryKey));
                 }
             }
@@ -1639,9 +1317,7 @@ public abstract class AbstractDatabase implements Database {
     @Override
     @Deprecated
     public String[] getOverridePrimaryKeys() {
-        Logging.log(onDeprecated(),
-            () -> "The <overridePrimaryKeys/> configuration element has been deprecated in jOOQ 3.14. Use <syntheticObjects/> only, instead.");
-
+        log.warn("DEPRECATION", "The <overridePrimaryKeys/> configuration element has been deprecated in jOOQ 3.14. Use <syntheticObjects/> only, instead.");
         return new String[0];
     }
 
@@ -1651,9 +1327,7 @@ public abstract class AbstractDatabase implements Database {
         if (syntheticIdentities != null) {
             for (String syntheticIdentity : syntheticIdentities) {
                 if (!StringUtils.isBlank(syntheticIdentity)) {
-                    Logging.log(onDeprecated(),
-                        () -> "The <syntheticIdentities/> configuration element has been deprecated in jOOQ 3.14. Use <syntheticObjects/> only, instead.");
-
+                    log.warn("DEPRECATION", "The <syntheticIdentities/> configuration element has been deprecated in jOOQ 3.14. Use <syntheticObjects/> only, instead.");
                     getConfiguredSyntheticIdentities().add(new SyntheticIdentityType().withFields(syntheticIdentity));
                 }
             }
@@ -1663,9 +1337,7 @@ public abstract class AbstractDatabase implements Database {
     @Override
     @Deprecated
     public final String[] getSyntheticIdentities() {
-        Logging.log(onDeprecated(),
-            () -> "The <syntheticIdentities/> configuration element has been deprecated in jOOQ 3.14. Use <syntheticObjects/> only, instead.");
-
+        log.warn("DEPRECATION", "The <syntheticIdentities/> configuration element has been deprecated in jOOQ 3.14. Use <syntheticObjects/> only, instead.");
         return new String[0];
     }
 
@@ -1686,8 +1358,7 @@ public abstract class AbstractDatabase implements Database {
     @Deprecated
     public final void setConfiguredCustomTypes(List<CustomType> configuredCustomTypes) {
         if (!configuredCustomTypes.isEmpty())
-            Logging.log(onDeprecated(),
-                () -> "The <customTypes/> configuration element has been deprecated in jOOQ 3.10. Use <forcedTypes/> only, instead.");
+            log.warn("DEPRECATION", "The <customTypes/> configuration element has been deprecated in jOOQ 3.10. Use <forcedTypes/> only, instead.");
 
         this.configuredCustomTypes = configuredCustomTypes;
     }
@@ -1715,9 +1386,7 @@ public abstract class AbstractDatabase implements Database {
             CustomType type = it1.next();
 
             if (type == null || (type.getName() == null && type.getType() == null)) {
-                Logging.log(onMisconfiguration(),
-                    () -> "Invalid custom type encountered (either <name/> or <type/> must be specified): " + type);
-
+                log.warn("Invalid custom type encountered: " + type);
                 it1.remove();
                 continue;
             }
@@ -1727,9 +1396,94 @@ public abstract class AbstractDatabase implements Database {
             }
         }
 
-        for (ForcedType type : configuredForcedTypes)
-            if (type.getUserType() != null && StringUtils.equals(type.getUserType(), typeName))
+        Iterator<ForcedType> it2 = configuredForcedTypes.iterator();
+
+        while (it2.hasNext()) {
+            ForcedType type = it2.next();
+
+            if (type.getExpressions() != null) {
+                type.setIncludeExpression(type.getExpressions());
+                type.setExpressions(null);
+                log.warn("DEPRECATED", "The <expressions/> element in <forcedType/> is deprecated. Use <includeExpression/> instead: " + type);
+            }
+
+            if (type.getExpression() != null) {
+                type.setIncludeExpression(type.getExpression());
+                type.setExpression(null);
+                log.warn("DEPRECATED", "The <expression/> element in <forcedType/> is deprecated. Use <includeExpression/> instead: " + type);
+            }
+
+            if (type.getTypes() != null) {
+                type.setIncludeTypes(type.getTypes());
+                type.setTypes(null);
+                log.warn("DEPRECATED", "The <types/> element in <forcedType/> is deprecated. Use <includeTypes/> instead: " + type);
+            }
+
+            if (StringUtils.isBlank(type.getName())) {
+                if (StringUtils.isBlank(type.getUserType())) {
+                    if (type.getVisibilityModifier() == null
+                            && StringUtils.isBlank(type.getGenerator())
+                            && !TRUE.equals(type.isAuditInsertTimestamp())
+                            && !TRUE.equals(type.isAuditInsertUser())
+                            && !TRUE.equals(type.isAuditUpdateTimestamp())
+                            && !TRUE.equals(type.isAuditUpdateUser())) {
+                        log.warn("Bad configuration for <forcedType/>. Any of <name/>, <userType/>, <generator/>, <auditInsertTimestamp/>, <auditInsertUser/>, <auditUpdateTimestamp/>, <auditUpdateUser/>, or <visibilityModifier/> is required: " + type);
+
+                        it2.remove();
+                        continue;
+                    }
+                    else if (!commercial()) {
+                        log.warn("<generator/>, <auditInsertTimestamp/>, <auditInsertUser/>, <auditUpdateTimestamp/>, <auditUpdateUser/>, and <visibilityModifier/> are commercial only features. Please upgrade to the jOOQ Professional Edition or jOOQ Enterprise Edition: " + type);
+
+                        it2.remove();
+                        continue;
+                    }
+                }
+
+                if (StringUtils.isBlank(type.getBinding())
+                    && StringUtils.isBlank(type.getConverter())
+                    && StringUtils.isBlank(type.getGenerator())
+                    && !TRUE.equals(type.isAuditInsertTimestamp())
+                    && !TRUE.equals(type.isAuditInsertUser())
+                    && !TRUE.equals(type.isAuditUpdateTimestamp())
+                    && !TRUE.equals(type.isAuditUpdateUser())
+                    && type.getVisibilityModifier() == null
+                    && !Boolean.TRUE.equals(type.isEnumConverter())
+                    && type.getLambdaConverter() == null
+                ) {
+                    log.warn("Bad configuration for <forcedType/>. Either <binding/>, <converter/>, <enumConverter/>, <lambdaConverter/>, or <generator/> is required: " + type);
+
+                    it2.remove();
+                    continue;
+                }
+            }
+            else {
+                if (!StringUtils.isBlank(type.getUserType())) {
+                    log.warn("Bad configuration for <forcedType/>. <userType/> is not allowed when <name/> is provided: " + type);
+                    type.setUserType(null);
+                }
+                if (!StringUtils.isBlank(type.getBinding())) {
+                    log.warn("Bad configuration for <forcedType/>. <binding/> is not allowed when <name/> is provided: " + type);
+                    type.setBinding(null);
+                }
+                if (!StringUtils.isBlank(type.getConverter())) {
+                    log.warn("Bad configuration for <forcedType/>. <converter/> is not allowed when <name/> is provided: " + type);
+                    type.setConverter(null);
+                }
+                if (Boolean.TRUE.equals(type.isEnumConverter())) {
+                    log.warn("Bad configuration for <forcedType/>. <enumConverter/> is not allowed when <name/> is provided: " + type);
+                    type.setEnumConverter(null);
+                }
+                if (type.getLambdaConverter() != null) {
+                    log.warn("Bad configuration for <forcedType/>. <lambdaConverter/> is not allowed when <name/> is provided: " + type);
+                    type.setLambdaConverter(null);
+                }
+            }
+
+            if (type.getUserType() != null && StringUtils.equals(type.getUserType(), typeName)) {
                 return customType(this, type);
+            }
+        }
 
         return null;
     }
@@ -1751,87 +1505,7 @@ public abstract class AbstractDatabase implements Database {
         //         a forced type programmatically, so we must not set the list but
         //         append it.
         getConfiguredForcedTypes().addAll(configuredForcedTypes);
-
-        // [#15918] This logic used to be delayed until we look up forced types, but that would mean
-        //          that hashCode() and equals() behaviour is inconsistent when adding the forced
-        //          types to unusedForcedTypes.
-        patchConfiguredForcedTypes();
-        unusedForcedTypes.addAll(getConfiguredForcedTypes());
-    }
-
-    private final void patchConfiguredForcedTypes() {
-        Iterator<ForcedType> it = configuredForcedTypes.iterator();
-
-        while (it.hasNext()) {
-            ForcedType type = it.next();
-
-            if (type.getExpressions() != null) {
-                type.setIncludeExpression(type.getExpressions());
-                type.setExpressions(null);
-
-                Logging.log(onDeprecated(),
-                    () -> "The <expressions/> element in <forcedType/> is deprecated. Use <includeExpression/> instead: " + type);
-            }
-
-            if (type.getExpression() != null) {
-                type.setIncludeExpression(type.getExpression());
-                type.setExpression(null);
-
-                Logging.log(onDeprecated(),
-                    () -> "The <expression/> element in <forcedType/> is deprecated. Use <includeExpression/> instead: " + type);
-            }
-
-            if (type.getTypes() != null) {
-                type.setIncludeTypes(type.getTypes());
-                type.setTypes(null);
-
-                Logging.log(onDeprecated(),
-                    () -> "The <types/> element in <forcedType/> is deprecated. Use <includeTypes/> instead: " + type);
-            }
-
-
-            boolean commercialFlags =
-                   type.getVisibilityModifier() != null
-                || !StringUtils.isBlank(type.getGenerator())
-                || TRUE.equals(type.isHidden())
-                || TRUE.equals(type.isRedacted())
-                || TRUE.equals(type.isAuditInsertTimestamp())
-                || TRUE.equals(type.isAuditInsertUser())
-                || TRUE.equals(type.isAuditUpdateTimestamp())
-                || TRUE.equals(type.isAuditUpdateUser());
-
-            if (StringUtils.isBlank(type.getUserType())
-                    && StringUtils.isBlank(type.getName())
-                    && !commercialFlags) {
-                Logging.log(onMisconfiguration(),
-                    () -> "Bad configuration for <forcedType/>. Any of <name/>, <userType/>, <generator/>, <auditInsertTimestamp/>, <auditInsertUser/>, <auditUpdateTimestamp/>, <auditUpdateUser/>, or <visibilityModifier/> is required: " + type);
-
-                it.remove();
-                continue;
-            }
-            else if (commercialFlags && !commercial()) {
-                Logging.log(onMisconfiguration(),
-                    () -> "<generator/>, <hidden/>, <redacted/>, <auditInsertTimestamp/>, <auditInsertUser/>, <auditUpdateTimestamp/>, <auditUpdateUser/>, and <visibilityModifier/> are commercial only features. Please upgrade to the jOOQ Professional Edition or jOOQ Enterprise Edition: " + type);
-
-                it.remove();
-                continue;
-            }
-
-            if (StringUtils.isBlank(type.getBinding())
-                && StringUtils.isBlank(type.getConverter())
-                && !commercialFlags
-                && !Boolean.TRUE.equals(type.isAutoConverter())
-                && !Boolean.TRUE.equals(type.isEnumConverter())
-                && !Boolean.TRUE.equals(type.isXmlConverter())
-                && !Boolean.TRUE.equals(type.isJsonConverter())
-                && type.getLambdaConverter() == null
-            ) {
-                type.setAutoConverter(true);
-
-                if (log.isDebugEnabled())
-                    log.debug("<autoConverter/> is implicit for <forcedType/>: " + type);
-            }
-        }
+        unusedForcedTypes.addAll(configuredForcedTypes);
     }
 
     @Override
@@ -1850,16 +1524,6 @@ public abstract class AbstractDatabase implements Database {
     @Override
     public void setForcedTypesForBuiltinDataTypeExtensions(boolean forcedTypesForBuiltinDataTypeExtensions) {
         this.forcedTypesForBuiltinDataTypeExtensions = forcedTypesForBuiltinDataTypeExtensions;
-    }
-
-    @Override
-    public boolean getForcedTypesForXMLSchemaCollections() {
-        return this.forcedTypesForXMLSchemaCollections;
-    }
-
-    @Override
-    public void setForcedTypesForXMLSchemaCollections(boolean forcedTypesForXMLSchemaCollections) {
-        this.forcedTypesForXMLSchemaCollections = forcedTypesForXMLSchemaCollections;
     }
 
     @Override
@@ -1983,35 +1647,13 @@ public abstract class AbstractDatabase implements Database {
     }
 
     @Override
-    @Deprecated
     public final void setTableValuedFunctions(boolean tableValuedFunctions) {
         this.tableValuedFunctions = tableValuedFunctions;
     }
 
     @Override
-    @Deprecated
     public final boolean tableValuedFunctions() {
         return tableValuedFunctions;
-    }
-
-    @Override
-    public void setTableValuedFunctionsAsRoutines(boolean tableValuedFunctionsAsRoutines) {
-        this.tableValuedFunctionsAsRoutines = tableValuedFunctionsAsRoutines;
-    }
-
-    @Override
-    public boolean tableValuedFunctionsAsRoutines() {
-        return tableValuedFunctionsAsRoutines;
-    }
-
-    @Override
-    public void setTableValuedFunctionsAsTables(boolean tableValuedFunctionsAsTables) {
-        this.tableValuedFunctionsAsTables = tableValuedFunctionsAsTables;
-    }
-
-    @Override
-    public boolean tableValuedFunctionsAsTables() {
-        return tableValuedFunctionsAsTables;
     }
 
     @Override
@@ -2040,26 +1682,6 @@ public abstract class AbstractDatabase implements Database {
             sequencesBySchema = new LinkedHashMap<>();
 
         return filterSchema(getSequences(), schema, sequencesBySchema);
-    }
-
-    @Override
-    public final SequenceDefinition getSequence(SchemaDefinition schema, String name) {
-        return getSequence(schema, name, false);
-    }
-
-    @Override
-    public final SequenceDefinition getSequence(SchemaDefinition schema, String name, boolean ignoreCase) {
-        return getDefinition(getSequences(schema), name, ignoreCase);
-    }
-
-    @Override
-    public final SequenceDefinition getSequence(SchemaDefinition schema, Name name) {
-        return getSequence(schema, name, false);
-    }
-
-    @Override
-    public final SequenceDefinition getSequence(SchemaDefinition schema, Name name, boolean ignoreCase) {
-        return getDefinition(getSequences(schema), name, ignoreCase);
     }
 
     @Override
@@ -2260,20 +1882,6 @@ public abstract class AbstractDatabase implements Database {
                 enums = sort(filterExcludeInclude(e));
                 enums.addAll(getConfiguredEnums());
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                 log.info("Enums fetched", fetchedSize(e, enums));
             });
         }
@@ -2283,119 +1891,6 @@ public abstract class AbstractDatabase implements Database {
 
         return filterSchema(enums, schema, enumsBySchema);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private final List<EnumDefinition> getConfiguredEnums() {
         List<EnumDefinition> result = new ArrayList<>(getConfiguredEnumTypes().size());
@@ -2472,211 +1967,188 @@ public abstract class AbstractDatabase implements Database {
     }
 
     private void initBuiltinForcedTypes() {
-        if (!builtInForcedTypesInitialised) {
+        if (forcedTypesForBuiltinDataTypeExtensions && !builtInForcedTypesInitialised) {
             builtInForcedTypesInitialised = true;
 
-            if (forcedTypesForBuiltinDataTypeExtensions) {
-                try {
-                    ClassUtils.loadClass("org.jooq.postgres.extensions.types.Hstore");
+            try {
+                ClassUtils.loadClass("org.jooq.postgres.extensions.types.Hstore");
+
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("java.lang.String")
+                    .withBinding("org.jooq.postgres.extensions.bindings.CitextBinding")
+                    .withIncludeTypes("citext")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("java.lang.String[]")
+                    .withBinding("org.jooq.postgres.extensions.bindings.CitextArrayBinding")
+                    .withIncludeTypes("_citext")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.Ltree")
+                    .withBinding("org.jooq.postgres.extensions.bindings.LtreeBinding")
+                    .withIncludeTypes("ltree")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.Ltree[]")
+                    .withBinding("org.jooq.postgres.extensions.bindings.LtreeArrayBinding")
+                    .withIncludeTypes("_ltree")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.Hstore")
+                    .withBinding("org.jooq.postgres.extensions.bindings.HstoreBinding")
+                    .withIncludeTypes("hstore")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.Hstore[]")
+                    .withBinding("org.jooq.postgres.extensions.bindings.HstoreArrayBinding")
+                    .withIncludeTypes("_hstore")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.Inet")
+                    .withBinding("org.jooq.postgres.extensions.bindings.InetBinding")
+                    .withIncludeTypes("inet")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.Inet[]")
+                    .withBinding("org.jooq.postgres.extensions.bindings.InetArrayBinding")
+                    .withIncludeTypes("_inet")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.Cidr")
+                    .withBinding("org.jooq.postgres.extensions.bindings.CidrBinding")
+                    .withIncludeTypes("cidr")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.Cidr[]")
+                    .withBinding("org.jooq.postgres.extensions.bindings.CidrArrayBinding")
+                    .withIncludeTypes("_cidr")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.IntegerRange")
+                    .withBinding("org.jooq.postgres.extensions.bindings.IntegerRangeBinding")
+                    .withIncludeTypes("int4range")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.IntegerRange[]")
+                    .withBinding("org.jooq.postgres.extensions.bindings.IntegerRangeArrayBinding")
+                    .withIncludeTypes("_int4range")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.LongRange")
+                    .withBinding("org.jooq.postgres.extensions.bindings.LongRangeBinding")
+                    .withIncludeTypes("int8range")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.LongRange[]")
+                    .withBinding("org.jooq.postgres.extensions.bindings.LongRangeArrayBinding")
+                    .withIncludeTypes("_int8range")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.BigDecimalRange")
+                    .withBinding("org.jooq.postgres.extensions.bindings.BigDecimalRangeBinding")
+                    .withIncludeTypes("numrange")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.BigDecimalRange[]")
+                    .withBinding("org.jooq.postgres.extensions.bindings.BigDecimalRangeArrayBinding")
+                    .withIncludeTypes("_numrange")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+
+                if (javaTimeTypes()) {
+                    getConfiguredForcedTypes().add(new ForcedType()
+                        .withUserType("org.jooq.postgres.extensions.types.LocalDateRange")
+                        .withBinding("org.jooq.postgres.extensions.bindings.LocalDateRangeBinding")
+                        .withIncludeTypes("daterange")
+                        .withPriority(Integer.MIN_VALUE)
+                    );
+                    getConfiguredForcedTypes().add(new ForcedType()
+                        .withUserType("org.jooq.postgres.extensions.types.LocalDateRange[]")
+                        .withBinding("org.jooq.postgres.extensions.bindings.LocalDateRangeArrayBinding")
+                        .withIncludeTypes("_daterange")
+                        .withPriority(Integer.MIN_VALUE)
+                    );
 
                     getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("java.lang.String")
-                        .withBinding("org.jooq.postgres.extensions.bindings.CitextBinding")
-                        .withIncludeTypes("citext")
+                        .withUserType("org.jooq.postgres.extensions.types.LocalDateTimeRange")
+                        .withBinding("org.jooq.postgres.extensions.bindings.LocalDateTimeRangeBinding")
+                        .withIncludeTypes("tsrange")
                         .withPriority(Integer.MIN_VALUE)
                     );
                     getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("java.lang.String[]")
-                        .withBinding("org.jooq.postgres.extensions.bindings.CitextArrayBinding")
-                        .withIncludeTypes("_citext")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.Ltree")
-                        .withBinding("org.jooq.postgres.extensions.bindings.LtreeBinding")
-                        .withIncludeTypes("ltree")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.Ltree[]")
-                        .withBinding("org.jooq.postgres.extensions.bindings.LtreeArrayBinding")
-                        .withIncludeTypes("_ltree")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.Hstore")
-                        .withBinding("org.jooq.postgres.extensions.bindings.HstoreBinding")
-                        .withIncludeTypes("hstore")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.Hstore[]")
-                        .withBinding("org.jooq.postgres.extensions.bindings.HstoreArrayBinding")
-                        .withIncludeTypes("_hstore")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.Inet")
-                        .withBinding("org.jooq.postgres.extensions.bindings.InetBinding")
-                        .withIncludeTypes("inet")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.Inet[]")
-                        .withBinding("org.jooq.postgres.extensions.bindings.InetArrayBinding")
-                        .withIncludeTypes("_inet")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.Cidr")
-                        .withBinding("org.jooq.postgres.extensions.bindings.CidrBinding")
-                        .withIncludeTypes("cidr")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.Cidr[]")
-                        .withBinding("org.jooq.postgres.extensions.bindings.CidrArrayBinding")
-                        .withIncludeTypes("_cidr")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.IntegerRange")
-                        .withBinding("org.jooq.postgres.extensions.bindings.IntegerRangeBinding")
-                        .withIncludeTypes("int4range")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.IntegerRange[]")
-                        .withBinding("org.jooq.postgres.extensions.bindings.IntegerRangeArrayBinding")
-                        .withIncludeTypes("_int4range")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.LongRange")
-                        .withBinding("org.jooq.postgres.extensions.bindings.LongRangeBinding")
-                        .withIncludeTypes("int8range")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.LongRange[]")
-                        .withBinding("org.jooq.postgres.extensions.bindings.LongRangeArrayBinding")
-                        .withIncludeTypes("_int8range")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.BigDecimalRange")
-                        .withBinding("org.jooq.postgres.extensions.bindings.BigDecimalRangeBinding")
-                        .withIncludeTypes("numrange")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.BigDecimalRange[]")
-                        .withBinding("org.jooq.postgres.extensions.bindings.BigDecimalRangeArrayBinding")
-                        .withIncludeTypes("_numrange")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-
-                    if (javaTimeTypes()) {
-                        getConfiguredForcedTypes().add(new ForcedType()
-                            .withUserType("org.jooq.postgres.extensions.types.LocalDateRange")
-                            .withBinding("org.jooq.postgres.extensions.bindings.LocalDateRangeBinding")
-                            .withIncludeTypes("daterange")
-                            .withPriority(Integer.MIN_VALUE)
-                        );
-                        getConfiguredForcedTypes().add(new ForcedType()
-                            .withUserType("org.jooq.postgres.extensions.types.LocalDateRange[]")
-                            .withBinding("org.jooq.postgres.extensions.bindings.LocalDateRangeArrayBinding")
-                            .withIncludeTypes("_daterange")
-                            .withPriority(Integer.MIN_VALUE)
-                        );
-
-                        getConfiguredForcedTypes().add(new ForcedType()
-                            .withUserType("org.jooq.postgres.extensions.types.LocalDateTimeRange")
-                            .withBinding("org.jooq.postgres.extensions.bindings.LocalDateTimeRangeBinding")
-                            .withIncludeTypes("tsrange")
-                            .withPriority(Integer.MIN_VALUE)
-                        );
-                        getConfiguredForcedTypes().add(new ForcedType()
-                            .withUserType("org.jooq.postgres.extensions.types.LocalDateTimeRange[]")
-                            .withBinding("org.jooq.postgres.extensions.bindings.LocalDateTimeRangeArrayBinding")
-                            .withIncludeTypes("_tsrange")
-                            .withPriority(Integer.MIN_VALUE)
-                        );
-                    }
-                    else {
-                        getConfiguredForcedTypes().add(new ForcedType()
-                            .withUserType("org.jooq.postgres.extensions.types.DateRange")
-                            .withBinding("org.jooq.postgres.extensions.bindings.DateRangeBinding")
-                            .withIncludeTypes("daterange")
-                            .withPriority(Integer.MIN_VALUE)
-                        );
-                        getConfiguredForcedTypes().add(new ForcedType()
-                            .withUserType("org.jooq.postgres.extensions.types.DateRange[]")
-                            .withBinding("org.jooq.postgres.extensions.bindings.DateRangeArrayBinding")
-                            .withIncludeTypes("_daterange")
-                            .withPriority(Integer.MIN_VALUE)
-                        );
-
-                        getConfiguredForcedTypes().add(new ForcedType()
-                            .withUserType("org.jooq.postgres.extensions.types.TimestampRange")
-                            .withBinding("org.jooq.postgres.extensions.bindings.TimestampRangeBinding")
-                            .withIncludeTypes("tsrange")
-                            .withPriority(Integer.MIN_VALUE)
-                        );
-                        getConfiguredForcedTypes().add(new ForcedType()
-                            .withUserType("org.jooq.postgres.extensions.types.TimestampRange[]")
-                            .withBinding("org.jooq.postgres.extensions.bindings.TimestampRangeArrayBinding")
-                            .withIncludeTypes("_tsrange")
-                            .withPriority(Integer.MIN_VALUE)
-                        );
-                    }
-
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.OffsetDateTimeRange")
-                        .withBinding("org.jooq.postgres.extensions.bindings.OffsetDateTimeRangeBinding")
-                        .withIncludeTypes("tstzrange")
-                        .withPriority(Integer.MIN_VALUE)
-                    );
-                    getConfiguredForcedTypes().add(new ForcedType()
-                        .withUserType("org.jooq.postgres.extensions.types.OffsetDateTimeRange[]")
-                        .withBinding("org.jooq.postgres.extensions.bindings.OffsetDateTimeRangeArrayBinding")
-                        .withIncludeTypes("_tstzrange")
+                        .withUserType("org.jooq.postgres.extensions.types.LocalDateTimeRange[]")
+                        .withBinding("org.jooq.postgres.extensions.bindings.LocalDateTimeRangeArrayBinding")
+                        .withIncludeTypes("_tsrange")
                         .withPriority(Integer.MIN_VALUE)
                     );
                 }
-                catch (ClassNotFoundException ignore) {
-                    log.debug("Built in data types", "org.jooq.postgres.extensions.types.Hstore not found on classpath, ignoring built in data type extensions");
+                else {
+                    getConfiguredForcedTypes().add(new ForcedType()
+                        .withUserType("org.jooq.postgres.extensions.types.DateRange")
+                        .withBinding("org.jooq.postgres.extensions.bindings.DateRangeBinding")
+                        .withIncludeTypes("daterange")
+                        .withPriority(Integer.MIN_VALUE)
+                    );
+                    getConfiguredForcedTypes().add(new ForcedType()
+                        .withUserType("org.jooq.postgres.extensions.types.DateRange[]")
+                        .withBinding("org.jooq.postgres.extensions.bindings.DateRangeArrayBinding")
+                        .withIncludeTypes("_daterange")
+                        .withPriority(Integer.MIN_VALUE)
+                    );
+
+                    getConfiguredForcedTypes().add(new ForcedType()
+                        .withUserType("org.jooq.postgres.extensions.types.TimestampRange")
+                        .withBinding("org.jooq.postgres.extensions.bindings.TimestampRangeBinding")
+                        .withIncludeTypes("tsrange")
+                        .withPriority(Integer.MIN_VALUE)
+                    );
+                    getConfiguredForcedTypes().add(new ForcedType()
+                        .withUserType("org.jooq.postgres.extensions.types.TimestampRange[]")
+                        .withBinding("org.jooq.postgres.extensions.bindings.TimestampRangeArrayBinding")
+                        .withIncludeTypes("_tsrange")
+                        .withPriority(Integer.MIN_VALUE)
+                    );
                 }
+
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.OffsetDateTimeRange")
+                    .withBinding("org.jooq.postgres.extensions.bindings.OffsetDateTimeRangeBinding")
+                    .withIncludeTypes("tstzrange")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+                getConfiguredForcedTypes().add(new ForcedType()
+                    .withUserType("org.jooq.postgres.extensions.types.OffsetDateTimeRange[]")
+                    .withBinding("org.jooq.postgres.extensions.bindings.OffsetDateTimeRangeArrayBinding")
+                    .withIncludeTypes("_tstzrange")
+                    .withPriority(Integer.MIN_VALUE)
+                );
+            }
+            catch (ClassNotFoundException ignore) {
+                log.debug("Built in data types", "org.jooq.postgres.extensions.types.Hstore not found on classpath, ignoring built in data type extensions");
             }
         }
-    }
-
-    @SuppressWarnings("unused")
-    @Override
-    public final SyntheticEnumType getConfiguredSyntheticEnum(Definition definition) {
-        SyntheticEnumType result = null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        return result;
     }
 
     private boolean typeMatchesExcludeInclude(DataTypeDefinition type, String exclude, String include) {
@@ -2855,9 +2327,7 @@ public abstract class AbstractDatabase implements Database {
                     continue embeddableLoop;
 
                 if (embeddable.getFields().isEmpty()) {
-                    Logging.log(onMisconfiguration(),
-                        () -> "Illegal embeddable: An embeddable definition must have at least one field declaration");
-
+                    log.warn("Illegal embeddable", "An embeddable definition must have at least one field declaration");
                     continue embeddableLoop;
                 }
 
@@ -2870,8 +2340,7 @@ public abstract class AbstractDatabase implements Database {
                     for (ColumnDefinition column : table.getColumns())
                         if (matches(patterns.pattern(embeddableField.getExpression()), column))
                             if (matched)
-                                Logging.log(onMetadataProblem(),
-                                    () -> "EmbeddableField configuration matched several columns in table " + table + ": " + embeddableField);
+                                log.warn("EmbeddableField configuration matched several columns in table " + table + ": " + embeddableField);
                             else
                                 matched = columns.add(column) && names.add(defaultIfEmpty(embeddableField.getName(), column.getName()));
                 }
@@ -2891,9 +2360,7 @@ public abstract class AbstractDatabase implements Database {
 
                     Name key = table.getQualifiedNamePart().append(referencingName);
                     if (result.containsKey(key)) {
-                        if (!TRUE.equals(embeddable.isIgnoreUnused()))
-                            Logging.log(onMetadataProblem(),
-                                () -> "Table " + table + " already has embeddable by the same referencingName " + embeddable);
+                        log.warn("Embeddable configuration", "Table " + table + " already has embeddable by the same referencingName " + embeddable);
                     }
                     else {
                         result.put(
@@ -3027,20 +2494,6 @@ public abstract class AbstractDatabase implements Database {
 
 
 
-        // [#14991] Make sure shared embeddables have updated data types that
-        //          match all the referencing columns, e.g. to ensure correct
-        //          nullability.
-        result
-            .values()
-            .stream()
-            .collect(groupingBy(e -> e.getQualifiedInputNamePart()))
-            .forEach((n, l) -> {
-                for (EmbeddableDefinition e1 : l)
-                    for (EmbeddableDefinition e2 : l)
-                        if (e1 != e2)
-                            e1.merge(e2);
-            });
-
         return new ArrayList<>(result.values());
     }
 
@@ -3111,137 +2564,6 @@ public abstract class AbstractDatabase implements Database {
     public final DomainDefinition getDomain(SchemaDefinition schema, Name name, boolean ignoreCase) {
         return getDefinition(getDomains(schema), name, ignoreCase);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public final List<ArrayDefinition> getArrays(SchemaDefinition schema) {
@@ -3343,14 +2665,6 @@ public abstract class AbstractDatabase implements Database {
     }
 
     @Override
-    public List<UDTDefinition> getSubtypes(UDTDefinition udt) {
-        if (subtypesByUdt == null)
-            subtypesByUdt = new LinkedHashMap<>();
-
-        return filterSupertype(getUDTs(), udt, subtypesByUdt);
-    }
-
-    @Override
     public final Relations getRelations() {
         if (relations == null) {
             relations = new DefaultRelations();
@@ -3393,26 +2707,16 @@ public abstract class AbstractDatabase implements Database {
         if (indexesByTable == null)
             indexesByTable = new HashMap<>();
 
-        return getTableObjects(table, indexesByTable, this::getIndexes, IndexDefinition::getTable);
-    }
-
-    private final <D extends Definition> List<D> getTableObjects(
-        TableDefinition table,
-        Map<TableDefinition, List<D>> map,
-        Function<? super SchemaDefinition, ? extends List<D>> f,
-        Function<? super D, ? extends TableDefinition> t
-    ) {
-        List<D> list = map.get(table);
-
+        List<IndexDefinition> list = indexesByTable.get(table);
         if (list == null) {
-            map.put(table, list = new ArrayList<>());
+            indexesByTable.put(table, list = new ArrayList<>());
 
             for (TableDefinition otherTable : getTables(table.getSchema()))
-                if (!map.containsKey(otherTable))
-                    map.put(otherTable, new ArrayList<>());
+                if (!indexesByTable.containsKey(otherTable))
+                    indexesByTable.put(otherTable, new ArrayList<>());
 
-            for (D d : f.apply(table.getSchema()))
-                map.computeIfAbsent(t.apply(d), k -> new ArrayList<>()).add(d);
+            for (IndexDefinition index : getIndexes(table.getSchema()))
+                indexesByTable.computeIfAbsent(index.getTable(), k -> new ArrayList<>()).add(index);
         }
 
         return list;
@@ -3439,26 +2743,6 @@ public abstract class AbstractDatabase implements Database {
             routinesBySchema = new LinkedHashMap<>();
 
         return filterSchema(routines, schema, routinesBySchema);
-    }
-
-    @Override
-    public final RoutineDefinition getRoutine(SchemaDefinition schema, String name) {
-        return getRoutine(schema, name, false);
-    }
-
-    @Override
-    public final RoutineDefinition getRoutine(SchemaDefinition schema, String name, boolean ignoreCase) {
-        return getDefinition(getRoutines(schema), name, ignoreCase);
-    }
-
-    @Override
-    public final RoutineDefinition getRoutine(SchemaDefinition schema, Name name) {
-        return getRoutine(schema, name, false);
-    }
-
-    @Override
-    public final RoutineDefinition getRoutine(SchemaDefinition schema, Name name, boolean ignoreCase) {
-        return getDefinition(getRoutines(schema), name, ignoreCase);
     }
 
     @Override
@@ -3553,23 +2837,6 @@ public abstract class AbstractDatabase implements Database {
         return result;
     }
 
-    final List<UDTDefinition> filterSupertype(List<UDTDefinition> definitions, UDTDefinition supertype, Map<UDTDefinition, List<UDTDefinition>> cache) {
-        return cache.computeIfAbsent(supertype, u -> filterSupertype(definitions, u));
-    }
-
-    final List<UDTDefinition> filterSupertype(List<UDTDefinition> definitions, UDTDefinition u) {
-        if (u == null)
-            return definitions;
-
-        List<UDTDefinition> result = new ArrayList<>();
-
-        for (UDTDefinition definition : definitions)
-            if (definition.getSupertype() != null && definition.getSupertype().equals(u))
-                result.add(definition);
-
-        return result;
-    }
-
     protected final <T extends TableElementDefinition> List<T> filterTable(List<T> definitions, TableDefinition table, Map<TableDefinition, List<T>> cache) {
         List<T> result = cache.get(table);
 
@@ -3620,7 +2887,7 @@ public abstract class AbstractDatabase implements Database {
 
     @Override
     public final <T extends Definition> List<T> filterExcludeInclude(List<T> definitions) {
-        List<T> result = filterExcludeInclude(definitions, getExcludes(), getIncludes(), filters);
+        List<T> result = filterExcludeInclude(definitions, excludes, includes, filters);
 
         this.all.addAll(definitions);
         this.included.addAll(result);
@@ -3666,17 +2933,12 @@ public abstract class AbstractDatabase implements Database {
         return result;
     }
 
-    @Override
-    public final <T extends Definition> List<T> filterExcludeInclude(List<T> definitions, String e, String i) {
+    protected final <T extends Definition> List<T> filterExcludeInclude(List<T> definitions, String e, String i) {
         return filterExcludeInclude(definitions, new String[] { e }, new String[] { i != null ? i : ".*" }, emptyList());
     }
 
     protected final <T extends Definition> List<T> filterExcludeInclude(List<T> definitions, String[] e, String[] i, List<Filter> f) {
         List<T> result = new ArrayList<>();
-
-        // [#6489] By default, exclude nothing and include everything
-        if (i == null || i.length == 0)
-            i = new String[] { ".*" };
 
         definitionsLoop: for (T definition : definitions) {
             if (e != null) {
@@ -3772,17 +3034,13 @@ public abstract class AbstractDatabase implements Database {
 
 
 
-            case CLICKHOUSE:
-            case TRINO:
-                return upper.startsWith("ARRAY(");
 
 
 
-            case DUCKDB:
             case H2:
             case POSTGRES:
             case YUGABYTEDB:
-                return "ARRAY".equals(upper) || dataType.endsWith("[]") || upper.endsWith(" ARRAY") || upper.equals("ANYARRAY");
+                return "ARRAY".equals(upper) || upper.endsWith(" ARRAY") || upper.equals("ANYARRAY");
 
 
             case HSQLDB:
@@ -3844,12 +3102,9 @@ public abstract class AbstractDatabase implements Database {
             getConfiguredSyntheticReadonlyColumns().addAll(configuredSyntheticObjects.getReadonlyColumns());
             getConfiguredSyntheticReadonlyRowids().addAll(configuredSyntheticObjects.getReadonlyRowids());
             getConfiguredSyntheticIdentities().addAll(configuredSyntheticObjects.getIdentities());
-            getConfiguredSyntheticDefaults().addAll(configuredSyntheticObjects.getDefaults());
-            getConfiguredSyntheticEnums().addAll(configuredSyntheticObjects.getEnums());
             getConfiguredSyntheticPrimaryKeys().addAll(configuredSyntheticObjects.getPrimaryKeys());
             getConfiguredSyntheticUniqueKeys().addAll(configuredSyntheticObjects.getUniqueKeys());
             getConfiguredSyntheticForeignKeys().addAll(configuredSyntheticObjects.getForeignKeys());
-            getConfiguredSyntheticSynonyms().addAll(configuredSyntheticObjects.getSynonyms());
             getConfiguredSyntheticViews().addAll(configuredSyntheticObjects.getViews());
             getConfiguredSyntheticDaos().addAll(configuredSyntheticObjects.getDaos());
 
@@ -3857,12 +3112,9 @@ public abstract class AbstractDatabase implements Database {
             unusedSyntheticReadonlyColumns.addAll(configuredSyntheticObjects.getReadonlyColumns());
             unusedSyntheticReadonlyRowids.addAll(configuredSyntheticObjects.getReadonlyRowids());
             unusedSyntheticIdentities.addAll(configuredSyntheticObjects.getIdentities());
-            unusedSyntheticDefaults.addAll(configuredSyntheticObjects.getDefaults());
-            unusedSyntheticEnums.addAll(configuredSyntheticObjects.getEnums());
             unusedSyntheticPrimaryKeys.addAll(configuredSyntheticObjects.getPrimaryKeys());
             unusedSyntheticUniqueKeys.addAll(configuredSyntheticObjects.getUniqueKeys());
             unusedSyntheticForeignKeys.addAll(configuredSyntheticObjects.getForeignKeys());
-            unusedSyntheticSynonyms.addAll(configuredSyntheticObjects.getSynonyms());
             unusedSyntheticViews.addAll(configuredSyntheticObjects.getViews());
 
 
@@ -3872,10 +3124,6 @@ public abstract class AbstractDatabase implements Database {
 
             if (!configuredSyntheticObjects.getColumns().isEmpty())
                 log.info("Commercial feature", "Synthetic columns are a commercial only feature. Please upgrade to the jOOQ Professional Edition");
-            if (!configuredSyntheticObjects.getDefaults().isEmpty())
-                log.info("Commercial feature", "Synthetic defaults are a commercial only feature. Please upgrade to the jOOQ Professional Edition");
-            if (!configuredSyntheticObjects.getEnums().isEmpty())
-                log.info("Commercial feature", "Synthetic enums are a commercial only feature. Please upgrade to the jOOQ Professional Edition");
             if (!configuredSyntheticObjects.getReadonlyColumns().isEmpty())
                 log.info("Commercial feature", "Synthetic read only columns are a commercial only feature. Please upgrade to the jOOQ Professional Edition");
             if (!configuredSyntheticObjects.getReadonlyRowids().isEmpty())
@@ -3884,8 +3132,6 @@ public abstract class AbstractDatabase implements Database {
                 log.info("Commercial feature", "Synthetic unique keys are a commercial only feature. Please upgrade to the jOOQ Professional Edition");
             if (!configuredSyntheticObjects.getForeignKeys().isEmpty())
                 log.info("Commercial feature", "Synthetic foreign keys are a commercial only feature. Please upgrade to the jOOQ Professional Edition");
-            if (!configuredSyntheticObjects.getSynonyms().isEmpty())
-                log.info("Commercial feature", "Synthetic synonyms are a commercial only feature. Please upgrade to the jOOQ Professional Edition");
         }
     }
 
@@ -3922,22 +3168,6 @@ public abstract class AbstractDatabase implements Database {
     }
 
     @Override
-    public List<SyntheticDefaultType> getConfiguredSyntheticDefaults() {
-        if (configuredSyntheticDefaults == null)
-            configuredSyntheticDefaults = new ArrayList<>();
-
-        return configuredSyntheticDefaults;
-    }
-
-    @Override
-    public List<SyntheticEnumType> getConfiguredSyntheticEnums() {
-        if (configuredSyntheticEnums == null)
-            configuredSyntheticEnums = new ArrayList<>();
-
-        return configuredSyntheticEnums;
-    }
-
-    @Override
     public List<SyntheticPrimaryKeyType> getConfiguredSyntheticPrimaryKeys() {
         if (configuredSyntheticPrimaryKeys == null)
             configuredSyntheticPrimaryKeys = new ArrayList<>();
@@ -3959,14 +3189,6 @@ public abstract class AbstractDatabase implements Database {
             configuredSyntheticForeignKeys = new ArrayList<>();
 
         return configuredSyntheticForeignKeys;
-    }
-
-    @Override
-    public List<SyntheticSynonymType> getConfiguredSyntheticSynonyms() {
-        if (configuredSyntheticSynonyms == null)
-            configuredSyntheticSynonyms = new ArrayList<>();
-
-        return configuredSyntheticSynonyms;
     }
 
     @Override
@@ -4006,16 +3228,6 @@ public abstract class AbstractDatabase implements Database {
     }
 
     @Override
-    public void markUsed(SyntheticDefaultType default_) {
-        unusedSyntheticDefaults.remove(default_);
-    }
-
-    @Override
-    public void markUsed(SyntheticEnumType e) {
-        unusedSyntheticEnums.remove(e);
-    }
-
-    @Override
     public void markUsed(SyntheticPrimaryKeyType primaryKey) {
         unusedSyntheticPrimaryKeys.remove(primaryKey);
     }
@@ -4028,11 +3240,6 @@ public abstract class AbstractDatabase implements Database {
     @Override
     public void markUsed(SyntheticForeignKeyType foreignKey) {
         unusedSyntheticForeignKeys.remove(foreignKey);
-    }
-
-    @Override
-    public void markUsed(SyntheticSynonymType synonym) {
-        unusedSyntheticSynonyms.remove(synonym);
     }
 
     @Override
@@ -4061,16 +3268,6 @@ public abstract class AbstractDatabase implements Database {
     }
 
     @Override
-    public List<SyntheticDefaultType> getUnusedSyntheticDefaults() {
-        return new ArrayList<>(unusedSyntheticDefaults);
-    }
-
-    @Override
-    public List<SyntheticEnumType> getUnusedSyntheticEnums() {
-        return new ArrayList<>(unusedSyntheticEnums);
-    }
-
-    @Override
     public List<SyntheticPrimaryKeyType> getUnusedSyntheticPrimaryKeys() {
         return new ArrayList<>(unusedSyntheticPrimaryKeys);
     }
@@ -4083,11 +3280,6 @@ public abstract class AbstractDatabase implements Database {
     @Override
     public List<SyntheticForeignKeyType> getUnusedSyntheticForeignKeys() {
         return new ArrayList<>(unusedSyntheticForeignKeys);
-    }
-
-    @Override
-    public List<SyntheticSynonymType> getUnusedSyntheticSynonyms() {
-        return new ArrayList<>(unusedSyntheticSynonyms);
     }
 
     @Override
@@ -4134,51 +3326,6 @@ public abstract class AbstractDatabase implements Database {
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -4359,209 +3506,8 @@ public abstract class AbstractDatabase implements Database {
      * Retrieve ALL source code from the database.
      */
     protected Map<Definition, String> getSources0() throws SQLException {
-        Map<Definition, String> result = new LinkedHashMap<>();
-
-        if (this instanceof ResultQueryDatabase d) {
-            Optional
-                .ofNullable(d.sources(getInputSchemata()))
-                .ifPresent(q -> q.forEach(r -> {
-                    SchemaDefinition schema = getSchema(r.value2());
-
-                    if (schema != null) {
-                        String name = r.value3();
-                        Definition view = getTable(schema, name);
-
-                        if (view != null) {
-                            String source = r.value4();
-
-
-
-
-
-
-
-
-                            result.put(view, source);
-                        }
-                    }
-            }));
-        }
-
-        return result;
+        return new LinkedHashMap<>();
     }
-
-    /**
-     * Retrieve ALL comments from the database.
-     */
-    protected Map<Definition, String> getComments0() throws SQLException {
-        Map<Definition, String> result = new LinkedHashMap<>();
-
-        if (this instanceof ResultQueryDatabase d) {
-            Optional
-                .ofNullable(d.comments(getInputSchemata()))
-                .ifPresent(q -> q.fetch().forEach(r -> {
-                    SchemaDefinition schema = getSchema(r.value2());
-
-                    if (schema != null) {
-                        String name = r.value3();
-                        Definition o = null;
-
-                        if (isEmpty(name)) {
-                            o = schema;
-                        }
-                        else {
-                            o = getTable(schema, name);
-
-                            if (o != null && !isEmpty(r.value4())) {
-                                o = ((TableDefinition) o).getColumn(r.value4());
-                            }
-                            else {
-                                if (o == null)
-                                    o = getDomain(schema, name);
-                                if (o == null)
-                                    o = getRoutine(schema, name);
-                                if (o == null)
-                                    o = getSequence(schema, name);
-                                if (o == null)
-                                    o = getUDT(schema, name);
-                            }
-                        }
-
-                        if (o != null)
-                            result.put(o, r.value5());
-                    }
-            }));
-        }
-
-        return result;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Retrieve ALL indexes from the database
@@ -4640,12 +3586,6 @@ public abstract class AbstractDatabase implements Database {
     protected abstract List<DomainDefinition> getDomains0() throws SQLException;
 
     /**
-     * Retrieve ALL XML schema collections from the database. This will be
-     * filtered in {@link #getXMLSchemaCollections()}
-     */
-    protected abstract List<XMLSchemaCollectionDefinition> getXMLSchemaCollections0() throws SQLException;
-
-    /**
      * Retrieve ALL UDTs from the database. This will be filtered in
      * {@link #getEnums(SchemaDefinition)}
      */
@@ -4694,22 +3634,6 @@ public abstract class AbstractDatabase implements Database {
                     log.log(level, message, e);
                     break;
                 case FAIL:
-                    log.log(ERROR, "Code generation error",
-                        """
-                        An error was encountered during code generation. This can have various reasons:
-
-                        - There's a bug in jOOQ. Please report it here: https://jooq.org/bug
-                        - Your database user doesn't have the necessary privileges to access a metadata table
-                        - The database connection suffered a failure
-
-                        There are other reasons. If the error can be ignored, you can either:
-
-                        - Turn off the relevant feature in the code generator to avoid running into the error
-                        - Avoid fetching the relevant meta data by excluding the object from code generation
-                        - Use the <onError/> code generation configuration to specify the severity of such errors (for all errors!)
-
-                        See https://www.jooq.org/doc/latest/manual/code-generation/codegen-advanced/codegen-config-onerror/
-                        """);
                     throw new RuntimeException(e);
             }
         }

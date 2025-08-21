@@ -23,16 +23,13 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Expression;
 import org.apache.camel.ExpressionFactory;
 import org.apache.camel.PredicateFactory;
-import org.apache.camel.model.ExpressionNodeHelper;
 import org.apache.camel.model.language.CSimpleExpression;
 import org.apache.camel.model.language.ConstantExpression;
 import org.apache.camel.model.language.DatasonnetExpression;
 import org.apache.camel.model.language.ExchangePropertyExpression;
-import org.apache.camel.model.language.ExpressionDefinition;
 import org.apache.camel.model.language.GroovyExpression;
 import org.apache.camel.model.language.HeaderExpression;
 import org.apache.camel.model.language.Hl7TerserExpression;
-import org.apache.camel.model.language.JavaExpression;
 import org.apache.camel.model.language.JavaScriptExpression;
 import org.apache.camel.model.language.JoorExpression;
 import org.apache.camel.model.language.JqExpression;
@@ -46,8 +43,6 @@ import org.apache.camel.model.language.RefExpression;
 import org.apache.camel.model.language.SimpleExpression;
 import org.apache.camel.model.language.SpELExpression;
 import org.apache.camel.model.language.TokenizerExpression;
-import org.apache.camel.model.language.VariableExpression;
-import org.apache.camel.model.language.WasmExpression;
 import org.apache.camel.model.language.XMLTokenizerExpression;
 import org.apache.camel.model.language.XPathExpression;
 import org.apache.camel.model.language.XQueryExpression;
@@ -65,7 +60,7 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
     // which ensures that the route model dumped as XML uses these types, eg
     // <header> instead of <language name="header"> etc.
 
-    private final T result;
+    private T result;
     private Expression expressionValue;
     private ExpressionFactory expressionType;
     private PredicateFactory predicateType;
@@ -81,26 +76,18 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      * Specify an {@link org.apache.camel.Expression} instance
      */
     public T expression(Expression expression) {
-        if (!tryExpressionOrPredicate(expression)) {
+        if (expression instanceof ExpressionFactory || expression instanceof PredicateFactory) {
+            // it can be both an expression and predicate
+            if (expression instanceof ExpressionFactory) {
+                setExpressionType((ExpressionFactory) expression);
+            }
+            if (expression instanceof PredicateFactory) {
+                setPredicateType((PredicateFactory) expression);
+            }
+        } else {
             setExpressionValue(expression);
         }
         return result;
-    }
-
-    private boolean tryExpressionOrPredicate(Expression expression) {
-        boolean match = false;
-
-        // it can be both an expression and predicate
-        if (expression instanceof ExpressionFactory expressionFactory) {
-            setExpressionType(expressionFactory);
-            match = true;
-        }
-        if (expression instanceof PredicateFactory predicateFactory) {
-            setPredicateType(predicateFactory);
-            match = true;
-        }
-
-        return match;
     }
 
     /**
@@ -116,13 +103,10 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      * during starting up the route, do not use this if you want dynamic values during routing.
      */
     public T constant(Object value) {
-        if (value instanceof String str) {
-            return expression(new ConstantExpression(str));
+        if (value instanceof String) {
+            return expression(new ConstantExpression((String) value));
         } else {
-            ConstantExpression ce = new ConstantExpression();
-            ce.setExpressionType(new ExpressionDefinition(ExpressionBuilder.constantExpression(value)));
-            ce.setExpression(String.valueOf(value));
-            return expression(ce);
+            return expression(ExpressionBuilder.constantExpression(value));
         }
     }
 
@@ -141,16 +125,12 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      * during starting up the route, do not use this if you want dynamic values during routing.
      */
     public T constant(Object value, boolean trim) {
-        if (value instanceof String str) {
-            ConstantExpression ce = new ConstantExpression(str);
+        if (value instanceof String) {
+            ConstantExpression ce = new ConstantExpression((String) value);
             ce.setTrim(trim ? "true" : "false");
             return expression(ce);
         } else {
-            ConstantExpression ce = new ConstantExpression();
-            ce.setExpressionType(ExpressionNodeHelper.toExpressionDefinition(ExpressionBuilder.constantExpression(value)));
-            ce.setExpression(String.valueOf(value));
-            ce.setTrim(trim ? "true" : "false");
-            return expression(ce);
+            return expression(ExpressionBuilder.constantExpression(value));
         }
     }
 
@@ -217,13 +197,6 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      */
     public T exchangeProperties() {
         return expression(ExpressionBuilder.exchangePropertiesExpression());
-    }
-
-    /**
-     * An expression of a variable with the given name
-     */
-    public T variable(String name) {
-        return expression(new VariableExpression(name));
     }
 
     // Languages
@@ -407,7 +380,6 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      * @param  text the expression to be evaluated
      * @return      the builder to continue processing the DSL
      */
-    @Deprecated(since = "4.3.0")
     public T joor(String text) {
         return expression(new JoorExpression(text));
     }
@@ -419,32 +391,8 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      * @param  resultType the return type expected by the expression
      * @return            the builder to continue processing the DSL
      */
-    @Deprecated(since = "4.3.0")
     public T joor(String text, Class<?> resultType) {
         JoorExpression exp = new JoorExpression(text);
-        exp.setResultType(resultType);
-        return expression(exp);
-    }
-
-    /**
-     * Evaluates an Java expression
-     *
-     * @param  text the expression to be evaluated
-     * @return      the builder to continue processing the DSL
-     */
-    public T java(String text) {
-        return expression(new JavaExpression(text));
-    }
-
-    /**
-     * Evaluates an Java expression
-     *
-     * @param  text       the expression to be evaluated
-     * @param  resultType the return type expected by the expression
-     * @return            the builder to continue processing the DSL
-     */
-    public T java(String text, Class<?> resultType) {
-        JavaExpression exp = new JavaExpression(text);
         exp.setResultType(resultType);
         return expression(exp);
     }
@@ -469,6 +417,68 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
     public T jq(String text, Class<?> resultType) {
         JqExpression exp = new JqExpression(text);
         exp.setResultType(resultType);
+        return expression(exp);
+    }
+
+    /**
+     * Evaluates <a href="http://camel.apache.org/jq.html">JQ expression</a>
+     *
+     * @param  text                 the expression to be evaluated
+     * @param  headerOrPropertyName the name of the header or the property to apply the expression to
+     * @return                      the builder to continue processing the DSL
+     */
+    public T jq(String text, String headerOrPropertyName) {
+        JqExpression exp = new JqExpression(text);
+        exp.setHeaderName(headerOrPropertyName);
+        exp.setPropertyName(headerOrPropertyName);
+        return expression(exp);
+    }
+
+    /**
+     * Evaluates <a href="http://camel.apache.org/jq.html">JQ expression</a>
+     *
+     * @param  text         the expression to be evaluated
+     * @param  headerName   the name of the header to apply the expression to
+     * @param  propertyName the name of the propertyName to apply the expression to
+     * @return              the builder to continue processing the DSL
+     */
+    public T jq(String text, String headerName, String propertyName) {
+        JqExpression exp = new JqExpression(text);
+        exp.setHeaderName(headerName);
+        exp.setPropertyName(propertyName);
+        return expression(exp);
+    }
+
+    /**
+     * Evaluates <a href="http://camel.apache.org/jq.html">JQ expression</a>
+     *
+     * @param  text                 the expression to be evaluated
+     * @param  resultType           the return type expected by the expression
+     * @param  headerOrPropertyName the name of the header or the property to apply the expression to
+     * @return                      the builder to continue processing the DSL
+     */
+    public T jq(String text, Class<?> resultType, String headerOrPropertyName) {
+        JqExpression exp = new JqExpression(text);
+        exp.setResultType(resultType);
+        exp.setHeaderName(headerOrPropertyName);
+        exp.setPropertyName(headerOrPropertyName);
+        return expression(exp);
+    }
+
+    /**
+     * Evaluates <a href="http://camel.apache.org/jq.html">JQ expression</a>
+     *
+     * @param  text         the expression to be evaluated
+     * @param  resultType   the return type expected by the expression
+     * @param  headerName   the name of the header to apply the expression to
+     * @param  propertyName the name of the propertyName to apply the expression to
+     * @return              the builder to continue processing the DSL
+     */
+    public T jq(String text, Class<?> resultType, String headerName, String propertyName) {
+        JqExpression exp = new JqExpression(text);
+        exp.setResultType(resultType);
+        exp.setHeaderName(headerName);
+        exp.setPropertyName(propertyName);
         return expression(exp);
     }
 
@@ -501,9 +511,7 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      */
     public T jsonpath(String text, boolean suppressExceptions) {
         JsonPathExpression expression = new JsonPathExpression(text);
-        if (suppressExceptions) {
-            expression.setSuppressExceptions("true");
-        }
+        expression.setSuppressExceptions(Boolean.toString(suppressExceptions));
         return expression(expression);
     }
 
@@ -517,12 +525,8 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      */
     public T jsonpath(String text, boolean suppressExceptions, boolean allowSimple) {
         JsonPathExpression expression = new JsonPathExpression(text);
-        if (suppressExceptions) {
-            expression.setSuppressExceptions("true");
-        }
-        if (allowSimple) {
-            expression.setAllowSimple("true");
-        }
+        expression.setSuppressExceptions(Boolean.toString(suppressExceptions));
+        expression.setAllowSimple(Boolean.toString(allowSimple));
         return expression(expression);
     }
 
@@ -550,9 +554,7 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      */
     public T jsonpath(String text, boolean suppressExceptions, Class<?> resultType) {
         JsonPathExpression expression = new JsonPathExpression(text);
-        if (suppressExceptions) {
-            expression.setSuppressExceptions("true");
-        }
+        expression.setSuppressExceptions(Boolean.toString(suppressExceptions));
         expression.setResultType(resultType);
         expression(expression);
         return result;
@@ -569,13 +571,29 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      */
     public T jsonpath(String text, boolean suppressExceptions, boolean allowSimple, Class<?> resultType) {
         JsonPathExpression expression = new JsonPathExpression(text);
-        if (suppressExceptions) {
-            expression.setSuppressExceptions("true");
-        }
-        if (allowSimple) {
-            expression.setAllowSimple("true");
-        }
+        expression.setSuppressExceptions(Boolean.toString(suppressExceptions));
+        expression.setAllowSimple(Boolean.toString(allowSimple));
         expression.setResultType(resultType);
+        expression(expression);
+        return result;
+    }
+
+    /**
+     * Evaluates a <a href="http://camel.apache.org/jsonpath.html">Json Path expression</a>
+     *
+     * @param  text               the expression to be evaluated
+     * @param  suppressExceptions whether to suppress exceptions such as PathNotFoundException
+     * @param  allowSimple        whether to allow in inlined simple exceptions in the json path expression
+     * @param  resultType         the return type expected by the expression
+     * @param  headerName         the name of the header to apply the expression to
+     * @return                    the builder to continue processing the DSL
+     */
+    public T jsonpath(String text, boolean suppressExceptions, boolean allowSimple, Class<?> resultType, String headerName) {
+        JsonPathExpression expression = new JsonPathExpression(text);
+        expression.setSuppressExceptions(Boolean.toString(suppressExceptions));
+        expression.setAllowSimple(Boolean.toString(allowSimple));
+        expression.setResultType(resultType);
+        expression.setHeaderName(headerName);
         expression(expression);
         return result;
     }
@@ -610,10 +628,8 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      */
     public T jsonpathWriteAsString(String text, boolean suppressExceptions) {
         JsonPathExpression expression = new JsonPathExpression(text);
-        expression.setWriteAsString("true");
-        if (suppressExceptions) {
-            expression.setSuppressExceptions("true");
-        }
+        expression.setWriteAsString(Boolean.toString(true));
+        expression.setSuppressExceptions(Boolean.toString(suppressExceptions));
         return expression(expression);
     }
 
@@ -627,10 +643,8 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      */
     public T jsonpathWriteAsString(String text, boolean suppressExceptions, Class<?> resultType) {
         JsonPathExpression expression = new JsonPathExpression(text);
-        expression.setWriteAsString("true");
-        if (suppressExceptions) {
-            expression.setSuppressExceptions("true");
-        }
+        expression.setWriteAsString(Boolean.toString(true));
+        expression.setSuppressExceptions(Boolean.toString(suppressExceptions));
         expression.setResultType(resultType);
         return expression(expression);
     }
@@ -645,13 +659,48 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      */
     public T jsonpathWriteAsString(String text, boolean suppressExceptions, boolean allowSimple) {
         JsonPathExpression expression = new JsonPathExpression(text);
-        expression.setWriteAsString("true");
-        if (suppressExceptions) {
-            expression.setSuppressExceptions("true");
-        }
-        if (allowSimple) {
-            expression.setAllowSimple("true");
-        }
+        expression.setWriteAsString(Boolean.toString(true));
+        expression.setSuppressExceptions(Boolean.toString(suppressExceptions));
+        expression.setAllowSimple(Boolean.toString(allowSimple));
+        return expression(expression);
+    }
+
+    /**
+     * Evaluates a <a href="http://camel.apache.org/jsonpath.html">Json Path expression</a> with writeAsString enabled.
+     *
+     * @param  text               the expression to be evaluated
+     * @param  suppressExceptions whether to suppress exceptions such as PathNotFoundException
+     * @param  allowSimple        whether to allow in inlined simple exceptions in the json path expression
+     * @param  headerName         the name of the header to apply the expression to
+     * @return                    the builder to continue processing the DSL
+     */
+    public T jsonpathWriteAsString(String text, boolean suppressExceptions, boolean allowSimple, String headerName) {
+        JsonPathExpression expression = new JsonPathExpression(text);
+        expression.setWriteAsString(Boolean.toString(true));
+        expression.setSuppressExceptions(Boolean.toString(suppressExceptions));
+        expression.setAllowSimple(Boolean.toString(allowSimple));
+        expression.setHeaderName(headerName);
+        return expression(expression);
+    }
+
+    /**
+     * Evaluates a <a href="http://camel.apache.org/jsonpath.html">Json Path expression</a> with writeAsString enabled.
+     *
+     * @param  text               the expression to be evaluated
+     * @param  suppressExceptions whether to suppress exceptions such as PathNotFoundException
+     * @param  allowSimple        whether to allow in inlined simple exceptions in the json path expression
+     * @param  headerName         the name of the header to apply the expression to
+     * @param  resultType         the return type expected by the expression
+     * @return                    the builder to continue processing the DSL
+     */
+    public T jsonpathWriteAsString(
+            String text, boolean suppressExceptions, boolean allowSimple, String headerName, Class<?> resultType) {
+        JsonPathExpression expression = new JsonPathExpression(text);
+        expression.setWriteAsString(Boolean.toString(true));
+        expression.setSuppressExceptions(Boolean.toString(suppressExceptions));
+        expression.setAllowSimple(Boolean.toString(allowSimple));
+        expression.setHeaderName(headerName);
+        expression.setResultType(resultType);
         return expression(expression);
     }
 
@@ -665,7 +714,7 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      */
     public T jsonpathUnpack(String text, Class<?> resultType) {
         JsonPathExpression expression = new JsonPathExpression(text);
-        expression.setUnpackArray("true");
+        expression.setUnpackArray(Boolean.toString(true));
         expression.setResultType(resultType);
         return expression(expression);
     }
@@ -798,7 +847,7 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      * @return       the builder to continue processing the DSL
      */
     public T tokenize(String token) {
-        return tokenize(token, false);
+        return tokenize(token, null, false);
     }
 
     /**
@@ -809,7 +858,7 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      * @return       the builder to continue processing the DSL
      */
     public T tokenize(String token, int group) {
-        return tokenize(token, false, group);
+        return tokenize(token, null, false, group);
     }
 
     /**
@@ -821,12 +870,7 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      * @return           the builder to continue processing the DSL
      */
     public T tokenize(String token, int group, boolean skipFirst) {
-        TokenizerExpression expression = new TokenizerExpression();
-        expression.setToken(token);
-        expression.setSkipFirst(Boolean.toString(skipFirst));
-        expression.setGroup(Integer.toString(group));
-        expression(expression);
-        return result;
+        return tokenize(token, null, false, group, skipFirst);
     }
 
     /**
@@ -837,11 +881,7 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      * @return       the builder to continue processing the DSL
      */
     public T tokenize(String token, boolean regex) {
-        TokenizerExpression expression = new TokenizerExpression();
-        expression.setToken(token);
-        expression.setRegex(Boolean.toString(regex));
-        expression(expression);
-        return result;
+        return tokenize(token, null, regex);
     }
 
     /**
@@ -853,49 +893,115 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      * @return       the builder to continue processing the DSL
      */
     public T tokenize(String token, boolean regex, int group) {
+        return tokenize(token, null, regex, group);
+    }
+
+    /**
+     * Evaluates a token expression on the given header
+     *
+     * @param  token      the token
+     * @param  headerName name of header to tokenize
+     * @return            the builder to continue processing the DSL
+     */
+    public T tokenize(String token, String headerName) {
+        return tokenize(token, headerName, false);
+    }
+
+    /**
+     * Evaluates a token expression on the given header
+     *
+     * @param  token      the token
+     * @param  headerName name of header to tokenize
+     * @param  regex      whether the token is a regular expression or not
+     * @return            the builder to continue processing the DSL
+     */
+    public T tokenize(String token, String headerName, boolean regex) {
         TokenizerExpression expression = new TokenizerExpression();
         expression.setToken(token);
+        expression.setHeaderName(headerName);
         expression.setRegex(Boolean.toString(regex));
-        expression.setGroup(Integer.toString(group));
         expression(expression);
         return result;
     }
 
     /**
-     * Evaluates a token expression on the message body
+     * Evaluates a token expression on the given header
      *
-     * @param  token     the token
-     * @param  regex     whether the token is a regular expression or not
-     * @param  group     to group by the given number
-     * @param  skipFirst whether to skip the very first element
-     * @return           the builder to continue processing the DSL
+     * @param  token      the token
+     * @param  headerName name of header to tokenize
+     * @param  regex      whether the token is a regular expression or not
+     * @param  group      to group by number of parts
+     * @return            the builder to continue processing the DSL
      */
-    public T tokenize(String token, boolean regex, int group, boolean skipFirst) {
+    public T tokenize(String token, String headerName, boolean regex, int group) {
+        return tokenize(token, headerName, regex, group, false);
+    }
+
+    /**
+     * Evaluates a token expression on the given header
+     *
+     * @param  token      the token
+     * @param  headerName name of header to tokenize
+     * @param  regex      whether the token is a regular expression or not
+     * @param  skipFirst  whether to skip the very first element
+     * @return            the builder to continue processing the DSL
+     */
+    public T tokenize(String token, String headerName, boolean regex, boolean skipFirst) {
         TokenizerExpression expression = new TokenizerExpression();
         expression.setToken(token);
+        expression.setHeaderName(headerName);
         expression.setRegex(Boolean.toString(regex));
-        expression.setSkipFirst(Boolean.toString(skipFirst));
-        expression.setGroup(Integer.toString(group));
         expression.setSkipFirst(Boolean.toString(skipFirst));
         expression(expression);
         return result;
     }
 
     /**
-     * Evaluates a token expression on the message body
+     * Evaluates a token expression on the given header
      *
-     * @param  token     the token
-     * @param  regex     whether the token is a regular expression or not
-     * @param  group     to group by the given number
-     * @param  skipFirst whether to skip the very first element
-     * @return           the builder to continue processing the DSL
+     * @param  token      the token
+     * @param  headerName name of header to tokenize
+     * @param  regex      whether the token is a regular expression or not
+     * @param  group      to group by number of parts
+     * @param  skipFirst  whether to skip the very first element
+     * @return            the builder to continue processing the DSL
      */
-    public T tokenize(String token, boolean regex, String group, boolean skipFirst) {
+    public T tokenize(String token, String headerName, boolean regex, int group, boolean skipFirst) {
+        return tokenize(token, headerName, regex, "" + group, skipFirst);
+    }
+
+    /**
+     * Evaluates a token expression on the given header
+     *
+     * @param  token      the token
+     * @param  headerName name of header to tokenize
+     * @param  regex      whether the token is a regular expression or not
+     * @param  group      to group by number of parts
+     * @param  skipFirst  whether to skip the very first element
+     * @return            the builder to continue processing the DSL
+     */
+    public T tokenize(String token, String headerName, boolean regex, String group, boolean skipFirst) {
+        return tokenize(token, headerName, regex, group, null, skipFirst);
+    }
+
+    /**
+     * Evaluates a token expression on the given header
+     *
+     * @param  token          the token
+     * @param  headerName     name of header to tokenize
+     * @param  regex          whether the token is a regular expression or not
+     * @param  group          to group by number of parts
+     * @param  groupDelimiter delimiter to use when grouping
+     * @param  skipFirst      whether to skip the very first element
+     * @return                the builder to continue processing the DSL
+     */
+    public T tokenize(String token, String headerName, boolean regex, String group, String groupDelimiter, boolean skipFirst) {
         TokenizerExpression expression = new TokenizerExpression();
         expression.setToken(token);
+        expression.setHeaderName(headerName);
         expression.setRegex(Boolean.toString(regex));
-        expression.setSkipFirst(Boolean.toString(skipFirst));
         expression.setGroup(group);
+        expression.setGroupDelimiter(groupDelimiter);
         expression.setSkipFirst(Boolean.toString(skipFirst));
         expression(expression);
         return result;
@@ -927,7 +1033,7 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      * @return                         the builder to continue processing the DSL
      */
     public T tokenizeXMLPair(String tagName, String inheritNamespaceTagName, int group) {
-        return tokenizeXMLPair(tagName, inheritNamespaceTagName, Integer.toString(group));
+        return tokenizeXMLPair(tagName, inheritNamespaceTagName, "" + group);
     }
 
     /**
@@ -981,6 +1087,20 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
     }
 
     /**
+     * Evaluates an <a href="http://camel.apache.org/xpath.html">XPath expression</a> on the supplied header name's
+     * contents
+     *
+     * @param  text       the expression to be evaluated
+     * @param  headerName the name of the header to apply the expression to
+     * @return            the builder to continue processing the DSL
+     */
+    public T xpath(String text, String headerName) {
+        XPathExpression expression = new XPathExpression(text);
+        expression.setHeaderName(headerName);
+        return expression(expression);
+    }
+
+    /**
      * Evaluates an <a href="http://camel.apache.org/xpath.html">XPath expression</a> with the specified result type
      *
      * @param  text       the expression to be evaluated
@@ -990,6 +1110,23 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
     public T xpath(String text, Class<?> resultType) {
         XPathExpression expression = new XPathExpression(text);
         expression.setResultType(resultType);
+        expression(expression);
+        return result;
+    }
+
+    /**
+     * Evaluates an <a href="http://camel.apache.org/xpath.html">XPath expression</a> with the specified result type on
+     * the supplied header name's contents
+     *
+     * @param  text       the expression to be evaluated
+     * @param  resultType the return type expected by the expression
+     * @param  headerName the name of the header to apply the expression to
+     * @return            the builder to continue processing the DSL
+     */
+    public T xpath(String text, Class<?> resultType, String headerName) {
+        XPathExpression expression = new XPathExpression(text);
+        expression.setResultType(resultType);
+        expression.setHeaderName(headerName);
         expression(expression);
         return result;
     }
@@ -1005,6 +1142,25 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      */
     public T xpath(String text, Class<?> resultType, Namespaces namespaces) {
         return xpath(text, resultType, namespaces.getNamespaces());
+    }
+
+    /**
+     * Evaluates an <a href="http://camel.apache.org/xpath.html">XPath expression</a> with the specified result type and
+     * set of namespace prefixes and URIs on the supplied header name's contents
+     *
+     * @param  text       the expression to be evaluated
+     * @param  resultType the return type expected by the expression
+     * @param  namespaces the namespace prefix and URIs to use
+     * @param  headerName the name of the header to apply the expression to
+     * @return            the builder to continue processing the DSL
+     */
+    public T xpath(String text, Class<?> resultType, Namespaces namespaces, String headerName) {
+        XPathExpression expression = new XPathExpression(text);
+        expression.setResultType(resultType);
+        expression.setNamespaces(namespaces.getNamespaces());
+        expression.setHeaderName(headerName);
+        expression(expression);
+        return result;
     }
 
     /**
@@ -1062,6 +1218,19 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
     }
 
     /**
+     * Evaluates an <a href="http://camel.apache.org/xquery.html">XQuery expression</a>
+     *
+     * @param  text       the expression to be evaluated
+     * @param  headerName the name of the header to apply the expression to
+     * @return            the builder to continue processing the DSL
+     */
+    public T xquery(String text, String headerName) {
+        XQueryExpression expression = new XQueryExpression(text);
+        expression.setHeaderName(headerName);
+        return expression(expression);
+    }
+
+    /**
      * Evaluates an <a href="http://camel.apache.org/xquery.html">XQuery expression</a> with the specified result type
      *
      * @param  text       the expression to be evaluated
@@ -1077,6 +1246,22 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
 
     /**
      * Evaluates an <a href="http://camel.apache.org/xquery.html">XQuery expression</a> with the specified result type
+     *
+     * @param  text       the expression to be evaluated
+     * @param  resultType the return type expected by the expression
+     * @param  headerName the name of the header to apply the expression to
+     * @return            the builder to continue processing the DSL
+     */
+    public T xquery(String text, Class<?> resultType, String headerName) {
+        XQueryExpression expression = new XQueryExpression(text);
+        expression.setResultType(resultType);
+        expression.setHeaderName(headerName);
+        expression(expression);
+        return result;
+    }
+
+    /**
+     * Evaluates an <a href="http://camel.apache.org/xquery.html">XQuery expression</a> with the specified result type
      * and set of namespace prefixes and URIs
      *
      * @param  text       the expression to be evaluated
@@ -1086,6 +1271,25 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
      */
     public T xquery(String text, Class<?> resultType, Namespaces namespaces) {
         return xquery(text, resultType, namespaces.getNamespaces());
+    }
+
+    /**
+     * Evaluates an <a href="http://camel.apache.org/xquery.html">XQuery expression</a> with the specified result type
+     * and set of namespace prefixes and URIs
+     *
+     * @param  text       the expression to be evaluated
+     * @param  resultType the return type expected by the expression
+     * @param  namespaces the namespace prefix and URIs to use
+     * @param  headerName the name of the header to apply the expression to
+     * @return            the builder to continue processing the DSL
+     */
+    public T xquery(String text, Class<?> resultType, Namespaces namespaces, String headerName) {
+        XQueryExpression expression = new XQueryExpression(text);
+        expression.setResultType(resultType);
+        expression.setNamespaces(namespaces.getNamespaces());
+        expression.setHeaderName(headerName);
+        expression(expression);
+        return result;
     }
 
     /**
@@ -1130,31 +1334,6 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
         expression.setNamespaces(namespaces);
         expression(expression);
         return result;
-    }
-
-    /**
-     * Evaluates <a href="http://camel.apache.org/wasm.html">Wasm expression</a>
-     *
-     * @param  functionName the name of the Wasm function to be evaluated
-     * @param  module       the Wasm module providing the expression function
-     * @return              the builder to continue processing the DSL
-     */
-    public T wasm(String functionName, String module) {
-        return expression(new WasmExpression(functionName, module));
-    }
-
-    /**
-     * Evaluates <a href="http://camel.apache.org/wasm.html">Wasm expression</a>
-     *
-     * @param  functionName the name of the Wasm function to be evaluated
-     * @param  module       the Wasm module providing the expression function
-     * @param  resultType   the return type expected by the expression
-     * @return              the builder to continue processing the DSL
-     */
-    public T wasm(String functionName, String module, Class<?> resultType) {
-        WasmExpression exp = new WasmExpression(functionName, module);
-        exp.setResultType(resultType);
-        return expression(exp);
     }
 
     /**
@@ -1217,4 +1396,9 @@ public class ExpressionClauseSupport<T> implements ExpressionFactoryAware, Predi
         }
         return getExpressionValue();
     }
+
+    protected void configureExpression(CamelContext camelContext, Expression expression) {
+        // noop
+    }
+
 }

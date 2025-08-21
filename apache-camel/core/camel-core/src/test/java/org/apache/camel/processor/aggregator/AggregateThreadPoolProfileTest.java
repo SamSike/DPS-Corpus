@@ -37,10 +37,10 @@ public class AggregateThreadPoolProfileTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // create and register thread pool profile
                 ThreadPoolProfile profile = new ThreadPoolProfile("myProfile");
                 profile.setPoolSize(2);

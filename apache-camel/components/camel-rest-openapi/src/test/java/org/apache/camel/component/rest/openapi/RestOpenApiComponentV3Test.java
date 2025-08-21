@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Marshaller;
@@ -36,7 +35,7 @@ import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.rest.RestEndpoint;
 import org.apache.camel.converter.jaxb.JaxbDataFormat;
-import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,11 +54,13 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class RestOpenApiComponentV3Test extends ManagedCamelTestSupport {
+public class RestOpenApiComponentV3Test extends CamelTestSupport {
 
     public static WireMockServer petstore = new WireMockServer(wireMockConfig().dynamicPort());
 
     static final Object NO_BODY = null;
+
+    public String componentName;
 
     @BeforeAll
     public static void startWireMockServer() {
@@ -71,66 +72,75 @@ public class RestOpenApiComponentV3Test extends ManagedCamelTestSupport {
         petstore.stop();
     }
 
+    @Override
+    public void setUp() {
+    }
+
     @BeforeEach
     public void resetWireMock() {
         petstore.resetRequests();
     }
 
+    public void doSetUp(String componentName) throws Exception {
+        this.componentName = componentName;
+        super.setUp();
+    }
+
     @ParameterizedTest
     @MethodSource("knownProducers")
     public void shouldBeAddingPets(String componentName) throws Exception {
-        initializeContextForComponent(componentName);
+        doSetUp(componentName);
 
         final Pet pet = new Pet();
-        pet.setName("Jean-Luc Picard");
+        pet.name = "Jean-Luc Picard";
 
         final Pet created = template.requestBody("direct:addPet", pet, Pet.class);
 
         assertNotNull(created);
 
-        assertEquals(14, created.getId());
+        assertEquals(Integer.valueOf(14), created.id);
 
         petstore.verify(
-                postRequestedFor(urlEqualTo("/api/v3/pet")).withHeader("Accept", equalTo("application/xml,application/json"))
+                postRequestedFor(urlEqualTo("/api/v3/pet")).withHeader("Accept", equalTo("application/xml, application/json"))
                         .withHeader("Content-Type", equalTo("application/xml")));
     }
 
     @ParameterizedTest
     @MethodSource("knownProducers")
     public void shouldBeGettingPetsById(String componentName) throws Exception {
-        initializeContextForComponent(componentName);
+        doSetUp(componentName);
 
         final Pet pet = template.requestBodyAndHeader("direct:getPetById", NO_BODY, "petId", 14, Pet.class);
 
         assertNotNull(pet);
 
-        assertEquals(14, pet.getId());
-        assertEquals("Olafur Eliason Arnalds", pet.getName());
+        assertEquals(Integer.valueOf(14), pet.id);
+        assertEquals("Olafur Eliason Arnalds", pet.name);
 
         petstore.verify(getRequestedFor(urlEqualTo("/api/v3/pet/14")).withHeader("Accept",
-                equalTo("application/xml,application/json")));
+                equalTo("application/xml, application/json")));
     }
 
     @ParameterizedTest
     @MethodSource("knownProducers")
     public void shouldBeGettingPetsByIdSpecifiedInEndpointParameters(String componentName) throws Exception {
-        initializeContextForComponent(componentName);
+        doSetUp(componentName);
 
         final Pet pet = template.requestBody("direct:getPetByIdWithEndpointParams", NO_BODY, Pet.class);
 
         assertNotNull(pet);
 
-        assertEquals(14, pet.getId());
-        assertEquals("Olafur Eliason Arnalds", pet.getName());
+        assertEquals(Integer.valueOf(14), pet.id);
+        assertEquals("Olafur Eliason Arnalds", pet.name);
 
         petstore.verify(getRequestedFor(urlEqualTo("/api/v3/pet/14")).withHeader("Accept",
-                equalTo("application/xml,application/json")));
+                equalTo("application/xml, application/json")));
     }
 
     @ParameterizedTest
     @MethodSource("knownProducers")
     public void shouldBeGettingPetsByIdWithApiKeysInHeader(String componentName) throws Exception {
-        initializeContextForComponent(componentName);
+        doSetUp(componentName);
 
         final Map<String, Object> headers = new HashMap<>();
         headers.put("petId", 14);
@@ -139,18 +149,18 @@ public class RestOpenApiComponentV3Test extends ManagedCamelTestSupport {
 
         assertNotNull(pet);
 
-        assertEquals(14, pet.getId());
-        assertEquals("Olafur Eliason Arnalds", pet.getName());
+        assertEquals(Integer.valueOf(14), pet.id);
+        assertEquals("Olafur Eliason Arnalds", pet.name);
 
         petstore.verify(
-                getRequestedFor(urlEqualTo("/api/v3/pet/14")).withHeader("Accept", equalTo("application/xml,application/json"))
+                getRequestedFor(urlEqualTo("/api/v3/pet/14")).withHeader("Accept", equalTo("application/xml, application/json"))
                         .withHeader("api_key", equalTo("dolphins")));
     }
 
     @ParameterizedTest
     @MethodSource("knownProducers")
     public void shouldBeGettingPetsByIdWithApiKeysInQueryParameter(String componentName) throws Exception {
-        initializeContextForComponent(componentName);
+        doSetUp(componentName);
 
         final Map<String, Object> headers = new HashMap<>();
         headers.put("petId", 14);
@@ -159,17 +169,17 @@ public class RestOpenApiComponentV3Test extends ManagedCamelTestSupport {
 
         assertNotNull(pet);
 
-        assertEquals(14, pet.getId());
-        assertEquals("Olafur Eliason Arnalds", pet.getName());
+        assertEquals(Integer.valueOf(14), pet.id);
+        assertEquals("Olafur Eliason Arnalds", pet.name);
 
         petstore.verify(getRequestedFor(urlEqualTo("/api/v3/pet/14?api_key=dolphins")).withHeader("Accept",
-                equalTo("application/xml,application/json")));
+                equalTo("application/xml, application/json")));
     }
 
     @ParameterizedTest
     @MethodSource("knownProducers")
     public void shouldBeGettingPetsByStatus(String componentName) throws Exception {
-        initializeContextForComponent(componentName);
+        doSetUp(componentName);
 
         final Pets pets = template.requestBodyAndHeader("direct:findPetsByStatus", NO_BODY, "status", "available",
                 Pets.class);
@@ -180,25 +190,24 @@ public class RestOpenApiComponentV3Test extends ManagedCamelTestSupport {
 
         petstore.verify(
                 getRequestedFor(urlPathEqualTo("/api/v3/pet/findByStatus")).withQueryParam("status", equalTo("available"))
-                        .withHeader("Accept", equalTo("application/xml,application/json")));
+                        .withHeader("Accept", equalTo("application/xml, application/json")));
     }
 
     @Override
-    protected CamelContext createCamelContext(String componentName) {
-        final CamelContext camelContext = new DefaultCamelContext();
+    protected CamelContext createCamelContext() throws Exception {
+        final CamelContext camelContext = super.createCamelContext();
 
         final RestOpenApiComponent component = new RestOpenApiComponent();
         component.setComponentName(componentName);
         component.setHost("http://localhost:" + petstore.port());
-        component.setSpecificationUri(
-                Objects.requireNonNull(RestOpenApiComponentV3Test.class.getResource("/openapi-v3.json")).toString());
+        component.setSpecificationUri(RestOpenApiComponentV3Test.class.getResource("/openapi-v3.json").toURI());
 
         camelContext.addComponent("petStore", component);
 
         final RestOpenApiComponent altPetStore = new RestOpenApiComponent();
         altPetStore.setComponentName(componentName);
         altPetStore.setHost("http://localhost:" + petstore.port());
-        altPetStore.setSpecificationUri(RestOpenApiComponentV3Test.class.getResource("/alt-openapi.json").toString());
+        altPetStore.setSpecificationUri(RestOpenApiComponentV3Test.class.getResource("/alt-openapi.json").toURI());
 
         camelContext.addComponent("altPetStore", altPetStore);
 

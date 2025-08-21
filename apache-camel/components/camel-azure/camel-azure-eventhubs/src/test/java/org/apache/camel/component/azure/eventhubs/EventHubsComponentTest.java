@@ -118,7 +118,6 @@ class EventHubsComponentTest extends CamelTestSupport {
                 = context.getEndpoint("azure-eventhubs:name/hubName?tokenCredential=#tokenCredential", EventHubsEndpoint.class);
 
         assertSame(tokenCredential, endpoint2.getConfiguration().getTokenCredential());
-        assertEquals(CredentialType.AZURE_IDENTITY, endpoint2.getConfiguration().getCredentialType());
     }
 
     @Test
@@ -135,24 +134,6 @@ class EventHubsComponentTest extends CamelTestSupport {
         assertEquals("testConsumer", endpoint.getConfiguration().getConsumerGroupName());
         assertEquals("DummyAccessKeyName", endpoint.getConfiguration().getSharedAccessName());
         assertEquals("DummyKey", endpoint.getConfiguration().getSharedAccessKey());
-        assertEquals(100, endpoint.getConfiguration().getPrefetchCount());
-        assertEquals(100, endpoint.getConfiguration().getCheckpointBatchSize());
-        assertEquals(1000, endpoint.getConfiguration().getCheckpointBatchTimeout());
-        assertEquals(CredentialType.CONNECTION_STRING, endpoint.getConfiguration().getCredentialType());
-    }
-
-    @Test
-    public void testCreateEndpointWithConfigAzureIdentity() {
-        final String uri = "azure-eventhubs:namespace/hubName?consumerGroupName=testConsumer&prefetchCount=100"
-                           + "&checkpointBatchSize=100&checkpointBatchTimeout=1000"
-                           + "&credentialType=AZURE_IDENTITY";
-
-        final EventHubsEndpoint endpoint = context.getEndpoint(uri, EventHubsEndpoint.class);
-
-        assertEquals("namespace", endpoint.getConfiguration().getNamespace());
-        assertEquals("hubName", endpoint.getConfiguration().getEventHubName());
-        assertEquals("testConsumer", endpoint.getConfiguration().getConsumerGroupName());
-        assertEquals(CredentialType.AZURE_IDENTITY, endpoint.getConfiguration().getCredentialType());
         assertEquals(100, endpoint.getConfiguration().getPrefetchCount());
         assertEquals(100, endpoint.getConfiguration().getCheckpointBatchSize());
         assertEquals(1000, endpoint.getConfiguration().getCheckpointBatchTimeout());

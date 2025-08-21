@@ -22,17 +22,17 @@ import org.apache.camel.spi.Registry;
 public class DataFormatServiceCustomRefTest extends DataFormatServiceTest {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myCustomDataFormat", my);
         return jndi;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:a")
                         // myCustomDataFormat refers to the data format from the

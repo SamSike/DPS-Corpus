@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -122,17 +122,5 @@ final class Cache {
     /**
      * A 2-value key for caching.
      */
-    private static record Key2(Object key1, Object key2) implements Serializable {}
-
-    /**
-     * Create a single-value or multi-value key for caching.
-     */
-    static final Object key(Object key1, Object key2, Object key3) {
-        return new Key3(key1, key2, key3);
-    }
-
-    /**
-     * A 3-value key for caching.
-     */
-    private static record Key3(Object key1, Object key2, Object key3) implements Serializable {}
+    private static final /* record */ class Key2 implements Serializable { private final Object key1; private final Object key2; public Key2(Object key1, Object key2) { this.key1 = key1; this.key2 = key2; } public Object key1() { return key1; } public Object key2() { return key2; } @Override public boolean equals(Object o) { if (!(o instanceof Key2)) return false; Key2 other = (Key2) o; if (!java.util.Objects.equals(this.key1, other.key1)) return false; if (!java.util.Objects.equals(this.key2, other.key2)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.key1, this.key2); } @Override public String toString() { return new StringBuilder("Key2[").append("key1=").append(this.key1).append(", key2=").append(this.key2).append("]").toString(); } }
 }

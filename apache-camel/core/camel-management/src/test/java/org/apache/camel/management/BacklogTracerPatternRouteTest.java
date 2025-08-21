@@ -22,8 +22,8 @@ import javax.management.Attribute;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import org.apache.camel.api.management.mbean.BacklogTracerEventMessage;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.spi.BacklogTracerEventMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -47,7 +47,7 @@ public class BacklogTracerPatternRouteTest extends ManagementTestSupport {
         assertEquals(Boolean.FALSE, enabled, "Should not be enabled");
 
         Integer size = (Integer) mbeanServer.getAttribute(on, "BacklogSize");
-        assertEquals(100, size.intValue(), "Should be 100");
+        assertEquals(1000, size.intValue(), "Should be 1000");
 
         // set the pattern to match only coolRoute
         mbeanServer.setAttribute(on, new Attribute("TracePattern", "coolRoute"));
@@ -83,12 +83,12 @@ public class BacklogTracerPatternRouteTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setUseBreadcrumb(false);
-                context.setBacklogTracingStandby(true);
+                context.setBacklogTracing(true);
 
                 from("direct:start").routeId("coolRoute")
                         .to("direct:beer")

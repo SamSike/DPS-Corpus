@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -31,15 +30,15 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
 
 /**
- * {@link MessageHeaderAccessor} subclass that supports storage and access of
+ * {@link MessageHeaderAccessor} sub-class that supports storage and access of
  * headers from an external source such as a message broker. Headers from the
  * external source are kept separate from other headers, in a sub-map under the
  * key {@link #NATIVE_HEADERS}. This allows separating processing headers from
  * headers that need to be sent to or received from the external source.
  *
- * <p>This class is likely to be used indirectly through a protocol-specific
- * subclass that also provides factory methods to translate message headers
- * to and from an external messaging source.
+ * <p>This class is likely to be used through indirectly through a protocol
+ * specific sub-class that also provide factory methods to translate
+ * message headers to an from an external messaging source.
  *
  * @author Rossen Stoyanchev
  * @since 4.0
@@ -88,7 +87,8 @@ public class NativeMessageHeaderAccessor extends MessageHeaderAccessor {
 	 * Subclasses can use this method to access the "native" headers sub-map.
 	 */
 	@SuppressWarnings("unchecked")
-	protected @Nullable Map<String, List<String>> getNativeHeaders() {
+	@Nullable
+	protected Map<String, List<String>> getNativeHeaders() {
 		return (Map<String, List<String>>) getHeader(NATIVE_HEADERS);
 	}
 
@@ -158,7 +158,8 @@ public class NativeMessageHeaderAccessor extends MessageHeaderAccessor {
 	 * @param headerName the name of the header
 	 * @return the associated values, or {@code null} if none
 	 */
-	public @Nullable List<String> getNativeHeader(String headerName) {
+	@Nullable
+	public List<String> getNativeHeader(String headerName) {
 		Map<String, List<String>> map = getNativeHeaders();
 		return (map != null ? map.get(headerName) : null);
 	}
@@ -168,7 +169,8 @@ public class NativeMessageHeaderAccessor extends MessageHeaderAccessor {
 	 * @param headerName the name of the header
 	 * @return the associated value, or {@code null} if none
 	 */
-	public @Nullable String getFirstNativeHeader(String headerName) {
+	@Nullable
+	public String getFirstNativeHeader(String headerName) {
 		Map<String, List<String>> map = getNativeHeaders();
 		if (map != null) {
 			List<String> values = map.get(headerName);
@@ -270,7 +272,8 @@ public class NativeMessageHeaderAccessor extends MessageHeaderAccessor {
 	 * @param headerName the name of the header
 	 * @return the associated values, or {@code null} if the header was not present
 	 */
-	public @Nullable List<String> removeNativeHeader(String headerName) {
+	@Nullable
+	public List<String> removeNativeHeader(String headerName) {
 		Assert.state(isMutable(), "Already immutable");
 		Map<String, List<String>> nativeHeaders = getNativeHeaders();
 		if (CollectionUtils.isEmpty(nativeHeaders)) {
@@ -288,7 +291,8 @@ public class NativeMessageHeaderAccessor extends MessageHeaderAccessor {
 	 * @return the associated value, or {@code null} if none
 	 */
 	@SuppressWarnings("unchecked")
-	public static @Nullable String getFirstNativeHeader(String headerName, Map<String, Object> headers) {
+	@Nullable
+	public static String getFirstNativeHeader(String headerName, Map<String, Object> headers) {
 		Map<String, List<String>> map = (Map<String, List<String>>) headers.get(NATIVE_HEADERS);
 		if (map != null) {
 			List<String> values = map.get(headerName);

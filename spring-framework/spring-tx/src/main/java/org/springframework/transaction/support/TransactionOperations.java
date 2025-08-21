@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,7 @@ package org.springframework.transaction.support;
 
 import java.util.function.Consumer;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionStatus;
 
@@ -46,7 +45,8 @@ public interface TransactionOperations {
 	 * @throws RuntimeException if thrown by the TransactionCallback
 	 * @see #executeWithoutResult(Consumer)
 	 */
-	<T> @Nullable T execute(TransactionCallback<T> action) throws TransactionException;
+	@Nullable
+	<T> T execute(TransactionCallback<T> action) throws TransactionException;
 
 	/**
 	 * Execute the action specified by the given {@link Runnable} within a transaction.

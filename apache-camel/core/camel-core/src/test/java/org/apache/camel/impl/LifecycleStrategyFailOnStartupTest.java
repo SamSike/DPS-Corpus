@@ -18,16 +18,17 @@ package org.apache.camel.impl;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.TestSupport;
+import org.apache.camel.VetoCamelContextStartException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class LifecycleStrategyFailOnStartupTest extends TestSupport {
 
-    private final MyLifecycleStrategy dummy1 = new MyLifecycleStrategy();
+    private MyLifecycleStrategy dummy1 = new MyLifecycleStrategy();
 
-    protected CamelContext createCamelContext() {
+    protected CamelContext createCamelContext() throws Exception {
         CamelContext context = new DefaultCamelContext();
         context.addLifecycleStrategy(dummy1);
         return context;
@@ -36,14 +37,18 @@ public class LifecycleStrategyFailOnStartupTest extends TestSupport {
     @Test
     public void testLifecycleStrategyFailOnStartup() throws Exception {
         CamelContext context = createCamelContext();
-        Exception e = assertThrows(Exception.class, context::start, "Should have thrown exception");
-        assertEquals("Forced", e.getMessage());
+        try {
+            context.start();
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            assertEquals("Forced", e.getMessage());
+        }
     }
 
     private static class MyLifecycleStrategy extends DummyLifecycleStrategy {
 
         @Override
-        public void onContextStarting(CamelContext context) {
+        public void onContextStart(CamelContext context) throws VetoCamelContextStartException {
             throw new IllegalArgumentException("Forced");
         }
     }

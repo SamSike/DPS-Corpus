@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 @Disabled
 public class ExcludeCipherSuitesTest extends BaseJettyTest {
 
-    protected final String pwd = "changeit";
+    protected String pwd = "changeit";
 
     private SSLContextParameters createSslContextParameters() {
         KeyStoreParameters ksp = new KeyStoreParameters();
@@ -61,7 +61,7 @@ public class ExcludeCipherSuitesTest extends BaseJettyTest {
     @Override
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 JettyHttpComponent jetty = getContext().getComponent("jetty", JettyHttpComponent.class);
                 jetty.setSslContextParameters(createSslContextParameters());
 

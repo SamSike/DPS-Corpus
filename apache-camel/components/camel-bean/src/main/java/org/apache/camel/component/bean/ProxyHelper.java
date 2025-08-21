@@ -19,8 +19,8 @@ package org.apache.camel.component.bean;
 import java.lang.reflect.Proxy;
 
 import org.apache.camel.Endpoint;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Producer;
-import org.apache.camel.support.PluginHelper;
 
 /**
  * A helper class for creating proxies which delegate to Camel
@@ -59,7 +59,7 @@ public final class ProxyHelper {
     public static <T> T createProxy(
             Endpoint endpoint, boolean binding, ClassLoader cl, Class<T>[] interfaceClasses, MethodInfoCache methodCache)
             throws Exception {
-        Producer producer = PluginHelper.getDeferServiceFactory(endpoint.getCamelContext())
+        Producer producer = endpoint.getCamelContext().adapt(ExtendedCamelContext.class).getDeferServiceFactory()
                 .createProducer(endpoint);
         return createProxyObject(endpoint, binding, producer, cl, interfaceClasses, methodCache);
     }
@@ -112,14 +112,14 @@ public final class ProxyHelper {
      * Returns the class loader of the first interface or throws {@link IllegalArgumentException} if there are no
      * interfaces specified
      */
-    private static ClassLoader getClassLoader(Class<?>... interfaces) {
+    protected static ClassLoader getClassLoader(Class<?>... interfaces) {
         if (interfaces == null || interfaces.length < 1) {
             throw new IllegalArgumentException("You must provide at least 1 interface class.");
         }
         return interfaces[0].getClassLoader();
     }
 
-    private static MethodInfoCache createMethodInfoCache(Endpoint endpoint) {
+    protected static MethodInfoCache createMethodInfoCache(Endpoint endpoint) {
         return new MethodInfoCache(endpoint.getCamelContext());
     }
 

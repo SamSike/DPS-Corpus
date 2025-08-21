@@ -65,7 +65,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
     @Metadata(label = "advanced")
     protected String lineSeparator;
     @XmlAttribute
-    @Metadata(label = "advanced")
+    @Metadata(label = "advanced", defaultValue = "\\n")
     protected String normalizedLineSeparator;
     @XmlAttribute
     @Metadata(label = "advanced", defaultValue = "#")
@@ -79,24 +79,6 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
 
     protected UniVocityAbstractDataFormat() {
         // This constructor is needed by jaxb for schema generation
-    }
-
-    protected UniVocityAbstractDataFormat(UniVocityAbstractDataFormat source) {
-        super(source);
-        this.nullValue = source.nullValue;
-        this.skipEmptyLines = source.skipEmptyLines;
-        this.ignoreTrailingWhitespaces = source.ignoreTrailingWhitespaces;
-        this.ignoreLeadingWhitespaces = source.ignoreLeadingWhitespaces;
-        this.headersDisabled = source.headersDisabled;
-        this.headers = source.headers;
-        this.headerExtractionEnabled = source.headerExtractionEnabled;
-        this.numberOfRecordsToRead = source.numberOfRecordsToRead;
-        this.emptyValue = source.emptyValue;
-        this.lineSeparator = source.lineSeparator;
-        this.normalizedLineSeparator = source.normalizedLineSeparator;
-        this.comment = source.comment;
-        this.lazyLoad = source.lazyLoad;
-        this.asMap = source.asMap;
     }
 
     protected UniVocityAbstractDataFormat(String dataFormatName) {
@@ -203,7 +185,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
     }
 
     /**
-     * Whether or not the header must be read in the first line of the test document.
+     * Whether or not the header must be read in the first line of the test document
      * <p/>
      * The default value is false
      */
@@ -227,7 +209,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
     }
 
     /**
-     * The String representation of an empty value.
+     * The String representation of an empty value
      */
     public void setEmptyValue(String emptyValue) {
         this.emptyValue = emptyValue;
@@ -238,7 +220,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
     }
 
     /**
-     * The line separator of the files.
+     * The line separator of the files
      * <p/>
      * The default value is to use the JVM platform line separator
      */
@@ -251,7 +233,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
     }
 
     /**
-     * The normalized line separator of the files.
+     * The normalized line separator of the files
      * <p/>
      * The default value is a new line character.
      */
@@ -278,7 +260,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
 
     /**
      * Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must be
-     * read at once.
+     * read at one.
      * <p/>
      * The default value is false
      */
@@ -305,7 +287,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
      */
     @XmlTransient
     @SuppressWarnings("unchecked")
-    protected abstract static class AbstractBuilder<T extends AbstractBuilder<T, F>, F extends UniVocityAbstractDataFormat>
+    abstract static class AbstractBuilder<T extends AbstractBuilder<T, F>, F extends UniVocityAbstractDataFormat>
             implements DataFormatBuilder<F> {
 
         private String nullValue;
@@ -424,7 +406,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
         }
 
         /**
-         * Whether or not the header must be read in the first line of the test document.
+         * Whether or not the header must be read in the first line of the test document
          * <p/>
          * The default value is false
          */
@@ -434,7 +416,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
         }
 
         /**
-         * Whether or not the header must be read in the first line of the test document.
+         * Whether or not the header must be read in the first line of the test document
          * <p/>
          * The default value is false
          */
@@ -460,7 +442,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
         }
 
         /**
-         * The String representation of an empty value.
+         * The String representation of an empty value
          */
         public T emptyValue(String emptyValue) {
             this.emptyValue = emptyValue;
@@ -468,7 +450,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
         }
 
         /**
-         * The line separator of the files.
+         * The line separator of the files
          * <p/>
          * The default value is to use the JVM platform line separator
          */
@@ -478,7 +460,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
         }
 
         /**
-         * The normalized line separator of the files.
+         * The normalized line separator of the files
          * <p/>
          * The default value is a new line character.
          */
@@ -499,7 +481,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
 
         /**
          * Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must
-         * be read at once.
+         * be read at one.
          * <p/>
          * The default value is false
          */
@@ -510,7 +492,7 @@ public abstract class UniVocityAbstractDataFormat extends DataFormatDefinition {
 
         /**
          * Whether the unmarshalling should produce an iterator that reads the lines on the fly or if all the lines must
-         * be read at once.
+         * be read at one.
          * <p/>
          * The default value is false
          */

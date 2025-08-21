@@ -28,8 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class OnExceptionOccurredProcessorTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myProcessor", new MyProcessor());
         return jndi;
     }
@@ -48,18 +48,18 @@ public class OnExceptionOccurredProcessorTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 MyProcessor myProcessor = context.getRegistry().lookupByNameAndType("myProcessor", MyProcessor.class);
 
                 errorHandler(deadLetterChannel("mock:dead").maximumRedeliveries(3).redeliveryDelay(0)
                         .onExceptionOccurred(myProcessor));
 
-                from("direct:start").routeId("start").to("log:a").to("direct:foo").to("log:b");
+                from("direct:start").to("log:a").to("direct:foo").to("log:b");
 
-                from("direct:foo").routeId("foo").throwException(new IllegalArgumentException("Forced"));
+                from("direct:foo").throwException(new IllegalArgumentException("Forced"));
             }
         };
     }
@@ -69,10 +69,8 @@ public class OnExceptionOccurredProcessorTest extends ContextTestSupport {
         private int invoked;
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             invoked++;
-            String rid = exchange.getProperty(Exchange.FAILURE_ROUTE_ID, String.class);
-            assertEquals("foo", rid);
         }
 
         public int getInvoked() {

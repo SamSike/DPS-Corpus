@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,38 +21,34 @@ import java.nio.charset.Charset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
-import io.micrometer.observation.Observation;
-import io.micrometer.observation.ObservationRegistry;
-import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.SignalType;
+import reactor.util.context.Context;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ClientHttpRequest;
 import org.springframework.http.client.reactive.ClientHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.ApiVersionInserter;
 import org.springframework.web.reactive.function.BodyExtractor;
 import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -60,85 +56,47 @@ import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriBuilderFactory;
 
 /**
- * The default implementation of {@link WebClient},
- * as created by the static factory methods.
+ * Default implementation of {@link WebClient}.
  *
  * @author Rossen Stoyanchev
  * @author Brian Clozel
  * @author Sebastien Deleuze
  * @since 5.0
- * @see WebClient#create()
- * @see WebClient#create(String)
  */
-final class DefaultWebClient implements WebClient {
-
-	// Copy of CoExchangeFilterFunction.COROUTINE_CONTEXT_ATTRIBUTE value to avoid compilation errors in Eclipse
-	private static final String COROUTINE_CONTEXT_ATTRIBUTE = "org.springframework.web.reactive.function.client.CoExchangeFilterFunction.context";
+class DefaultWebClient implements WebClient {
 
 	private static final String URI_TEMPLATE_ATTRIBUTE = WebClient.class.getName() + ".uriTemplate";
 
 	private static final Mono<ClientResponse> NO_HTTP_CLIENT_RESPONSE_ERROR = Mono.error(
-			() -> new IllegalStateException("The underlying HTTP client completed without emitting a response."));
-
-	private static final DefaultClientRequestObservationConvention DEFAULT_OBSERVATION_CONVENTION =
-			new DefaultClientRequestObservationConvention();
+			new IllegalStateException("The underlying HTTP client completed without emitting a response."));
 
 
 	private final ExchangeFunction exchangeFunction;
 
-	private final @Nullable ExchangeFilterFunction filterFunctions;
-
 	private final UriBuilderFactory uriBuilderFactory;
 
-	private final @Nullable HttpHeaders defaultHeaders;
+	@Nullable
+	private final HttpHeaders defaultHeaders;
 
-	private final @Nullable MultiValueMap<String, String> defaultCookies;
+	@Nullable
+	private final MultiValueMap<String, String> defaultCookies;
 
-	private final @Nullable Object defaultApiVersion;
-
-	private final @Nullable ApiVersionInserter apiVersionInserter;
-
-	private final @Nullable Consumer<RequestHeadersSpec<?>> defaultRequest;
-
-	private final List<DefaultResponseSpec.StatusHandler> defaultStatusHandlers;
-
-	private final ObservationRegistry observationRegistry;
-
-	private final @Nullable ClientRequestObservationConvention observationConvention;
+	@Nullable
+	private final Consumer<RequestHeadersSpec<?>> defaultRequest;
 
 	private final DefaultWebClientBuilder builder;
 
 
-	DefaultWebClient(ExchangeFunction exchangeFunction, @Nullable ExchangeFilterFunction filterFunctions,
-			UriBuilderFactory uriBuilderFactory, @Nullable HttpHeaders defaultHeaders,
-			@Nullable MultiValueMap<String, String> defaultCookies,
-			@Nullable Object defaultApiVersion, @Nullable ApiVersionInserter apiVersionInserter,
-			@Nullable Consumer<RequestHeadersSpec<?>> defaultRequest,
-			@Nullable Map<Predicate<HttpStatusCode>, Function<ClientResponse, Mono<? extends Throwable>>> statusHandlerMap,
-			ObservationRegistry observationRegistry, @Nullable ClientRequestObservationConvention observationConvention,
-			DefaultWebClientBuilder builder) {
+	DefaultWebClient(ExchangeFunction exchangeFunction, UriBuilderFactory uriBuilderFactory,
+			@Nullable HttpHeaders defaultHeaders, @Nullable MultiValueMap<String, String> defaultCookies,
+			@Nullable Consumer<RequestHeadersSpec<?>> defaultRequest, DefaultWebClientBuilder builder) {
 
 		this.exchangeFunction = exchangeFunction;
-		this.filterFunctions = filterFunctions;
 		this.uriBuilderFactory = uriBuilderFactory;
 		this.defaultHeaders = defaultHeaders;
 		this.defaultCookies = defaultCookies;
-		this.defaultApiVersion = defaultApiVersion;
-		this.apiVersionInserter = apiVersionInserter;
 		this.defaultRequest = defaultRequest;
-		this.defaultStatusHandlers = initStatusHandlers(statusHandlerMap);
-		this.observationRegistry = observationRegistry;
-		this.observationConvention = observationConvention;
 		this.builder = builder;
-	}
-
-	private static List<DefaultResponseSpec.StatusHandler> initStatusHandlers(
-			@Nullable Map<Predicate<HttpStatusCode>, Function<ClientResponse, Mono<? extends Throwable>>> handlerMap) {
-
-		return (CollectionUtils.isEmpty(handlerMap) ? Collections.emptyList() :
-				handlerMap.entrySet().stream()
-						.map(entry -> new DefaultResponseSpec.StatusHandler(entry.getKey(), entry.getValue()))
-						.toList());
 	}
 
 
@@ -183,11 +141,7 @@ final class DefaultWebClient implements WebClient {
 	}
 
 	private RequestBodyUriSpec methodInternal(HttpMethod httpMethod) {
-		DefaultRequestBodyUriSpec spec = new DefaultRequestBodyUriSpec(httpMethod);
-		if (this.defaultRequest != null) {
-			this.defaultRequest.accept(spec);
-		}
-		return spec;
+		return new DefaultRequestBodyUriSpec(httpMethod);
 	}
 
 	@Override
@@ -196,11 +150,11 @@ final class DefaultWebClient implements WebClient {
 	}
 
 	private static Mono<Void> releaseIfNotConsumed(ClientResponse response) {
-		return response.releaseBody().onErrorComplete();
+		return response.releaseBody().onErrorResume(ex2 -> Mono.empty());
 	}
 
 	private static <T> Mono<T> releaseIfNotConsumed(ClientResponse response, Throwable ex) {
-		return response.releaseBody().onErrorComplete().then(Mono.error(ex));
+		return response.releaseBody().onErrorResume(ex2 -> Mono.empty()).then(Mono.error(ex));
 	}
 
 
@@ -208,43 +162,48 @@ final class DefaultWebClient implements WebClient {
 
 		private final HttpMethod httpMethod;
 
-		private @Nullable URI uri;
+		@Nullable
+		private URI uri;
 
-		private @Nullable HttpHeaders headers;
+		@Nullable
+		private HttpHeaders headers;
 
-		private @Nullable MultiValueMap<String, String> cookies;
+		@Nullable
+		private MultiValueMap<String, String> cookies;
 
-		private @Nullable Object apiVersion;
-
-		private @Nullable BodyInserter<?, ? super ClientHttpRequest> inserter;
+		@Nullable
+		private BodyInserter<?, ? super ClientHttpRequest> inserter;
 
 		private final Map<String, Object> attributes = new LinkedHashMap<>(4);
 
-		private @Nullable Consumer<ClientHttpRequest> httpRequestConsumer;
+		@Nullable
+		private Function<Context, Context> contextModifier;
+
+		@Nullable
+		private Consumer<ClientHttpRequest> httpRequestConsumer;
+
 
 		DefaultRequestBodyUriSpec(HttpMethod httpMethod) {
 			this.httpMethod = httpMethod;
 		}
 
+
 		@Override
-		public RequestBodySpec uri(String uriTemplate, @Nullable Object... uriVariables) {
-			UriBuilder uriBuilder = uriBuilderFactory.uriString(uriTemplate);
-			attribute(URI_TEMPLATE_ATTRIBUTE, uriBuilder.toUriString());
-			return uri(uriBuilder.build(uriVariables));
+		public RequestBodySpec uri(String uriTemplate, Object... uriVariables) {
+			attribute(URI_TEMPLATE_ATTRIBUTE, uriTemplate);
+			return uri(uriBuilderFactory.expand(uriTemplate, uriVariables));
 		}
 
 		@Override
 		public RequestBodySpec uri(String uriTemplate, Map<String, ?> uriVariables) {
-			UriBuilder uriBuilder = uriBuilderFactory.uriString(uriTemplate);
-			attribute(URI_TEMPLATE_ATTRIBUTE, uriBuilder.toUriString());
-			return uri(uriBuilder.build(uriVariables));
+			attribute(URI_TEMPLATE_ATTRIBUTE, uriTemplate);
+			return uri(uriBuilderFactory.expand(uriTemplate, uriVariables));
 		}
 
 		@Override
 		public RequestBodySpec uri(String uriTemplate, Function<UriBuilder, URI> uriFunction) {
-			UriBuilder uriBuilder = uriBuilderFactory.uriString(uriTemplate);
-			attribute(URI_TEMPLATE_ATTRIBUTE, uriBuilder.toUriString());
-			return uri(uriFunction.apply(uriBuilder));
+			attribute(URI_TEMPLATE_ATTRIBUTE, uriTemplate);
+			return uri(uriFunction.apply(uriBuilderFactory.uriString(uriTemplate)));
 		}
 
 		@Override
@@ -335,12 +294,6 @@ final class DefaultWebClient implements WebClient {
 		}
 
 		@Override
-		public DefaultRequestBodyUriSpec apiVersion(Object version) {
-			this.apiVersion = version;
-			return this;
-		}
-
-		@Override
 		public RequestBodySpec attribute(String name, Object value) {
 			this.attributes.put(name, value);
 			return this;
@@ -349,6 +302,14 @@ final class DefaultWebClient implements WebClient {
 		@Override
 		public RequestBodySpec attributes(Consumer<Map<String, Object>> attributesConsumer) {
 			attributesConsumer.accept(this.attributes);
+			return this;
+		}
+
+		@Override
+		@SuppressWarnings("deprecation")
+		public RequestBodySpec context(Function<Context, Context> contextModifier) {
+			this.contextModifier = (this.contextModifier != null ?
+					this.contextModifier.andThen(contextModifier) : contextModifier);
 			return this;
 		}
 
@@ -362,12 +323,6 @@ final class DefaultWebClient implements WebClient {
 		@Override
 		public RequestHeadersSpec<?> bodyValue(Object body) {
 			this.inserter = BodyInserters.fromValue(body);
-			return this;
-		}
-
-		@Override
-		public <T> RequestHeadersSpec<?> bodyValue(T body, ParameterizedTypeReference<T> bodyType) {
-			this.inserter = BodyInserters.fromValue(body, bodyType);
 			return this;
 		}
 
@@ -403,9 +358,38 @@ final class DefaultWebClient implements WebClient {
 		}
 
 		@Override
+		@Deprecated
+		public RequestHeadersSpec<?> syncBody(Object body) {
+			return bodyValue(body);
+		}
+
+		@Override
 		public ResponseSpec retrieve() {
-			return new DefaultResponseSpec(
-					this.httpMethod, initUri(), exchange(), DefaultWebClient.this.defaultStatusHandlers);
+			return new DefaultResponseSpec(exchange(), this::createRequest);
+		}
+
+		private HttpRequest createRequest() {
+			return new HttpRequest() {
+				private final URI uri = initUri();
+				private final HttpHeaders headers = initHeaders();
+
+				@Override
+				public HttpMethod getMethod() {
+					return httpMethod;
+				}
+				@Override
+				public String getMethodValue() {
+					return httpMethod.name();
+				}
+				@Override
+				public URI getURI() {
+					return this.uri;
+				}
+				@Override
+				public HttpHeaders getHeaders() {
+					return this.headers;
+				}
+			};
 		}
 
 		@Override
@@ -437,95 +421,68 @@ final class DefaultWebClient implements WebClient {
 			});
 		}
 
-		private Mono<ClientResponse> exchange() {
-			ClientRequest.Builder requestBuilder = initRequestBuilder();
-			return Mono.deferContextual(contextView -> {
-				Observation observation = ClientHttpObservationDocumentation.HTTP_REACTIVE_CLIENT_EXCHANGES.observation(observationConvention,
-						DEFAULT_OBSERVATION_CONVENTION, () -> new ClientRequestObservationContext(requestBuilder), observationRegistry);
-				observation
-						.parentObservation(contextView.getOrDefault(ObservationThreadLocalAccessor.KEY, null))
-						.start();
-				ExchangeFilterFunction filterFunction = new ObservationFilterFunction(observation.getContext());
-				if (filterFunctions != null) {
-					filterFunction = filterFunctions.andThen(filterFunction);
-				}
-				contextView.getOrEmpty(COROUTINE_CONTEXT_ATTRIBUTE)
-						.ifPresent(context -> requestBuilder.attribute(COROUTINE_CONTEXT_ATTRIBUTE, context));
-				ClientRequest request = requestBuilder.build();
-				if (observation.getContext() instanceof ClientRequestObservationContext observationContext) {
-					observationContext.setUriTemplate((String) request.attribute(URI_TEMPLATE_ATTRIBUTE).orElse(null));
-					observationContext.setRequest(request);
-				}
-				final ExchangeFilterFunction finalFilterFunction = filterFunction;
-				Mono<ClientResponse> responseMono = Mono.defer(
-								() -> finalFilterFunction.apply(exchangeFunction).exchange(request))
-						.checkpoint("Request to " +
-								WebClientUtils.getRequestDescription(request.method(), request.url()) +
-								" [DefaultWebClient]")
+		@Override
+		@SuppressWarnings("deprecation")
+		public Mono<ClientResponse> exchange() {
+			ClientRequest request = (this.inserter != null ?
+					initRequestBuilder().body(this.inserter).build() :
+					initRequestBuilder().build());
+			return Mono.defer(() -> {
+				Mono<ClientResponse> responseMono = exchangeFunction.exchange(request)
+						.checkpoint("Request to " + this.httpMethod.name() + " " + this.uri + " [DefaultWebClient]")
 						.switchIfEmpty(NO_HTTP_CLIENT_RESPONSE_ERROR);
-				final AtomicBoolean responseReceived = new AtomicBoolean();
-				return responseMono
-						.doOnNext(response -> responseReceived.set(true))
-						.doOnError(observation::error)
-						.doFinally(signalType -> {
-							if (signalType == SignalType.CANCEL && !responseReceived.get() &&
-									observation.getContext() instanceof ClientRequestObservationContext observationContext) {
-								observationContext.setAborted(true);
-							}
-							observation.stop();
-						})
-						.contextWrite(context -> context.put(ObservationThreadLocalAccessor.KEY, observation));
+				if (this.contextModifier != null) {
+					responseMono = responseMono.contextWrite(this.contextModifier);
+				}
+				return responseMono;
 			});
 		}
 
 		private ClientRequest.Builder initRequestBuilder() {
+			if (defaultRequest != null) {
+				defaultRequest.accept(this);
+			}
 			ClientRequest.Builder builder = ClientRequest.create(this.httpMethod, initUri())
-					.headers(this::initHeaders)
-					.cookies(this::initCookies)
+					.headers(headers -> headers.addAll(initHeaders()))
+					.cookies(cookies -> cookies.addAll(initCookies()))
 					.attributes(attributes -> attributes.putAll(this.attributes));
 			if (this.httpRequestConsumer != null) {
 				builder.httpRequest(this.httpRequestConsumer);
-			}
-			if (this.inserter != null) {
-				builder.body(this.inserter);
 			}
 			return builder;
 		}
 
 		private URI initUri() {
-			URI uriToUse = (this.uri != null ? this.uri : uriBuilderFactory.expand(""));
-			Object version = getApiVersionOrDefault();
-			if (version != null) {
-				Assert.state(apiVersionInserter != null, "No ApiVersionInserter configured");
-				uriToUse = apiVersionInserter.insertVersion(version, uriToUse);
-			}
-			return uriToUse;
+			return (this.uri != null ? this.uri : uriBuilderFactory.expand(""));
 		}
 
-		private @Nullable Object getApiVersionOrDefault() {
-			return (this.apiVersion != null ? this.apiVersion : DefaultWebClient.this.defaultApiVersion);
-		}
-
-		private void initHeaders(HttpHeaders out) {
-			if (defaultHeaders != null && !defaultHeaders.isEmpty()) {
-				out.putAll(defaultHeaders);
+		private HttpHeaders initHeaders() {
+			if (CollectionUtils.isEmpty(this.headers)) {
+				return (defaultHeaders != null ? defaultHeaders : new HttpHeaders());
 			}
-			if (this.headers != null && !this.headers.isEmpty()) {
-				out.putAll(this.headers);
+			else if (CollectionUtils.isEmpty(defaultHeaders)) {
+				return this.headers;
 			}
-			Object version = getApiVersionOrDefault();
-			if (version != null) {
-				Assert.state(apiVersionInserter != null, "No ApiVersionInserter configured");
-				apiVersionInserter.insertVersion(version, out);
+			else {
+				HttpHeaders result = new HttpHeaders();
+				result.putAll(defaultHeaders);
+				result.putAll(this.headers);
+				return result;
 			}
 		}
 
-		private void initCookies(MultiValueMap<String, String> out) {
-			if (!CollectionUtils.isEmpty(defaultCookies)) {
-				out.putAll(defaultCookies);
+		private MultiValueMap<String, String> initCookies() {
+			if (CollectionUtils.isEmpty(this.cookies)) {
+				return (defaultCookies != null ? defaultCookies : new LinkedMultiValueMap<>());
 			}
-			if (!CollectionUtils.isEmpty(this.cookies)) {
-				out.putAll(this.cookies);
+			else if (CollectionUtils.isEmpty(defaultCookies)) {
+				return this.cookies;
+			}
+			else {
+				MultiValueMap<String, String> result = new LinkedMultiValueMap<>();
+				result.putAll(defaultCookies);
+				result.putAll(this.cookies);
+				return result;
 			}
 		}
 	}
@@ -533,51 +490,48 @@ final class DefaultWebClient implements WebClient {
 
 	private static class DefaultResponseSpec implements ResponseSpec {
 
+		private static final IntPredicate STATUS_CODE_ERROR = (value -> value >= 400);
+
 		private static final StatusHandler DEFAULT_STATUS_HANDLER =
-				new StatusHandler(code -> code.value() >= 400, ClientResponse::createException);
-
-
-		private final HttpMethod httpMethod;
-
-		private final URI uri;
+				new StatusHandler(STATUS_CODE_ERROR, ClientResponse::createException);
 
 		private final Mono<ClientResponse> responseMono;
 
+		private final Supplier<HttpRequest> requestSupplier;
+
 		private final List<StatusHandler> statusHandlers = new ArrayList<>(1);
 
-		private final int defaultStatusHandlerCount;
 
-		DefaultResponseSpec(HttpMethod httpMethod, URI uri, Mono<ClientResponse> responseMono,
-				List<StatusHandler> defaultStatusHandlers) {
-
-			this.httpMethod = httpMethod;
-			this.uri = uri;
+		DefaultResponseSpec(Mono<ClientResponse> responseMono, Supplier<HttpRequest> requestSupplier) {
 			this.responseMono = responseMono;
-			this.statusHandlers.addAll(defaultStatusHandlers);
+			this.requestSupplier = requestSupplier;
 			this.statusHandlers.add(DEFAULT_STATUS_HANDLER);
-			this.defaultStatusHandlerCount = this.statusHandlers.size();
 		}
 
+
 		@Override
-		public ResponseSpec onStatus(Predicate<HttpStatusCode> statusCodePredicate,
+		public ResponseSpec onStatus(Predicate<HttpStatus> statusPredicate,
 				Function<ClientResponse, Mono<? extends Throwable>> exceptionFunction) {
 
-			Assert.notNull(statusCodePredicate, "StatusCodePredicate must not be null");
-			Assert.notNull(exceptionFunction, "Function must not be null");
-			int index = this.statusHandlers.size() - this.defaultStatusHandlerCount;  // Default handlers always last
-			this.statusHandlers.add(index, new StatusHandler(statusCodePredicate, exceptionFunction));
-			return this;
+			return onRawStatus(toIntPredicate(statusPredicate), exceptionFunction);
+		}
+
+		private static IntPredicate toIntPredicate(Predicate<HttpStatus> predicate) {
+			return value -> {
+				HttpStatus status = HttpStatus.resolve(value);
+				return (status != null && predicate.test(status));
+			};
 		}
 
 		@Override
 		public ResponseSpec onRawStatus(IntPredicate statusCodePredicate,
 				Function<ClientResponse, Mono<? extends Throwable>> exceptionFunction) {
 
-			return onStatus(toStatusCodePredicate(statusCodePredicate), exceptionFunction);
-		}
-
-		private static Predicate<HttpStatusCode> toStatusCodePredicate(IntPredicate predicate) {
-			return value -> predicate.test(value.value());
+			Assert.notNull(statusCodePredicate, "IntPredicate must not be null");
+			Assert.notNull(exceptionFunction, "Function must not be null");
+			int index = this.statusHandlers.size() - 1;  // Default handler always last
+			this.statusHandlers.add(index, new StatusHandler(statusCodePredicate, exceptionFunction));
+			return this;
 		}
 
 		@Override
@@ -658,9 +612,7 @@ final class DefaultWebClient implements WebClient {
 		public Mono<ResponseEntity<Void>> toBodilessEntity() {
 			return this.responseMono.flatMap(response ->
 					WebClientUtils.mapToEntity(response, handleBodyMono(response, Mono.<Void>empty()))
-							.flatMap(entity -> response.releaseBody()
-									.onErrorResume(WebClientUtils.WRAP_EXCEPTION_PREDICATE, exceptionWrappingFunction(response))
-									.thenReturn(entity))
+							.flatMap(entity -> response.releaseBody().thenReturn(entity))
 			);
 		}
 
@@ -676,11 +628,11 @@ final class DefaultWebClient implements WebClient {
 			return (result != null ? result.flux().switchIfEmpty(body) : body);
 		}
 
-		private <T> Mono<? extends ResponseEntity<Flux<T>>> handlerEntityFlux(ClientResponse response, Flux<T> body) {
+		private  <T> Mono<? extends ResponseEntity<Flux<T>>> handlerEntityFlux(ClientResponse response, Flux<T> body) {
 			ResponseEntity<Flux<T>> entity = new ResponseEntity<>(
 					body.onErrorResume(WebClientUtils.WRAP_EXCEPTION_PREDICATE, exceptionWrappingFunction(response)),
 					response.headers().asHttpHeaders(),
-					response.statusCode());
+					response.rawStatusCode());
 
 			Mono<ResponseEntity<Flux<T>>> result = applyStatusHandlers(response);
 			return (result != null ? result.defaultIfEmpty(entity) : Mono.just(entity));
@@ -690,8 +642,9 @@ final class DefaultWebClient implements WebClient {
 			return t -> response.createException().flatMap(ex -> Mono.error(ex.initCause(t)));
 		}
 
-		private <T> @Nullable Mono<T> applyStatusHandlers(ClientResponse response) {
-			HttpStatusCode statusCode = response.statusCode();
+		@Nullable
+		private <T> Mono<T> applyStatusHandlers(ClientResponse response) {
+			int statusCode = response.rawStatusCode();
 			for (StatusHandler handler : this.statusHandlers) {
 				if (handler.test(statusCode)) {
 					Mono<? extends Throwable> exMono;
@@ -704,54 +657,41 @@ final class DefaultWebClient implements WebClient {
 						exMono = releaseIfNotConsumed(response, ex2);
 					}
 					Mono<T> result = exMono.flatMap(Mono::error);
-					return result.checkpoint(statusCode + " from " +
-							WebClientUtils.getRequestDescription(this.httpMethod, this.uri) +
-							" [DefaultWebClient]");
+					HttpRequest request = this.requestSupplier.get();
+					return insertCheckpoint(result, statusCode, request);
 				}
 			}
 			return null;
 		}
 
+		private <T> Mono<T> insertCheckpoint(Mono<T> result, int statusCode, HttpRequest request) {
+			String httpMethod = request.getMethodValue();
+			URI uri = request.getURI();
+			String description = statusCode + " from " + httpMethod + " " + uri + " [DefaultWebClient]";
+			return result.checkpoint(description);
+		}
+
 
 		private static class StatusHandler {
 
-			private final Predicate<HttpStatusCode> predicate;
+			private final IntPredicate predicate;
 
 			private final Function<ClientResponse, Mono<? extends Throwable>> exceptionFunction;
 
-			public StatusHandler(Predicate<HttpStatusCode> predicate,
+			public StatusHandler(IntPredicate predicate,
 					Function<ClientResponse, Mono<? extends Throwable>> exceptionFunction) {
 
 				this.predicate = predicate;
 				this.exceptionFunction = exceptionFunction;
 			}
 
-			public boolean test(HttpStatusCode status) {
+			public boolean test(int status) {
 				return this.predicate.test(status);
 			}
 
 			public Mono<? extends Throwable> apply(ClientResponse response) {
 				return this.exceptionFunction.apply(response);
 			}
-		}
-	}
-
-
-	private static class ObservationFilterFunction implements ExchangeFilterFunction {
-
-		private final Observation.Context observationContext;
-
-		ObservationFilterFunction(Observation.Context observationContext) {
-			this.observationContext = observationContext;
-		}
-
-		@Override
-		public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
-			Mono<ClientResponse> exchange = next.exchange(request);
-			if (this.observationContext instanceof ClientRequestObservationContext clientContext) {
-				exchange = exchange.doOnNext(clientContext::setResponse);
-			}
-			return exchange;
 		}
 	}
 

@@ -18,12 +18,12 @@ package org.apache.camel.parser.helper;
 
 import java.io.InputStream;
 import java.io.StringReader;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -46,14 +46,14 @@ import org.apache.camel.RuntimeCamelException;
  * An XML parser that uses SAX to include line and column number for each XML element in the parsed Document.
  * <p/>
  * The line number and column number can be obtained from a Node/Element using
- *
+ * 
  * <pre>
  * String lineNumber = (String) node.getUserData(XmlLineNumberParser.LINE_NUMBER);
  * String lineNumberEnd = (String) node.getUserData(XmlLineNumberParser.LINE_NUMBER_END);
  * String columnNumber = (String) node.getUserData(XmlLineNumberParser.COLUMN_NUMBER);
  * String columnNumberEnd = (String) node.getUserData(XmlLineNumberParser.COLUMN_NUMBER_END);
  * </pre>
- *
+ * 
  * Mind that start and end numbers are the same for single-level XML tags.
  */
 public final class XmlLineNumberParser {
@@ -121,7 +121,7 @@ public final class XmlLineNumberParser {
             final DocumentBuilder docBuilder = dbf.newDocumentBuilder();
             doc = docBuilder.newDocument();
 
-            final ArrayDeque<Element> elementStack = new ArrayDeque<>();
+            final Stack<Element> elementStack = new Stack<>();
             final StringBuilder textBuffer = new StringBuilder();
             final DefaultHandler handler = getDefaultHandler(rootNames, forceNamespace, doc, elementStack, textBuffer);
             parser.parse(is, handler);
@@ -133,7 +133,7 @@ public final class XmlLineNumberParser {
     }
 
     private static DefaultHandler getDefaultHandler(
-            String rootNames, String forceNamespace, Document doc, ArrayDeque<Element> elementStack, StringBuilder textBuffer) {
+            String rootNames, String forceNamespace, Document doc, Stack<Element> elementStack, StringBuilder textBuffer) {
         return new DefaultHandler() {
             private Locator locator;
             private boolean found;
@@ -247,7 +247,7 @@ public final class XmlLineNumberParser {
             }
 
             @Override
-            public void characters(final char[] ch, final int start, final int length) {
+            public void characters(final char ch[], final int start, final int length) {
                 textBuffer.append(ch, start, length);
             }
 

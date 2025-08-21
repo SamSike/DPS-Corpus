@@ -36,6 +36,7 @@ import org.apache.cxf.ext.logging.LoggingInInterceptor;
 import org.apache.cxf.ext.logging.LoggingOutInterceptor;
 import org.apache.cxf.frontend.ClientProxy;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -43,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CxfSchemaValidationTest extends CamelTestSupport {
 
     protected static final String PORT_NAME_PROP = "portName={http://camel.apache.org/wsdl-first}soap";
@@ -123,7 +125,7 @@ public class CxfSchemaValidationTest extends CamelTestSupport {
 
         /*
             Generate a personId string that should cause a validation error:
-
+        
         <simpleType name="MyStringType">
             <restriction base="string">
                 <maxLength value="30" />
@@ -131,7 +133,7 @@ public class CxfSchemaValidationTest extends CamelTestSupport {
         </simpleType>
         ......
         <xsd:element name="personId" type="tns:MyStringType"/>
-
+        
         */
         try {
             invokeService(serviceAddressValidationEnabled, RandomStringUtils.random(40, true, true));

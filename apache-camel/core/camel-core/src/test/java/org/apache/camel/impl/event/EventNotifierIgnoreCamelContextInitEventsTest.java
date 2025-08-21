@@ -34,34 +34,36 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class EventNotifierIgnoreCamelContextInitEventsTest {
 
-    private final List<CamelEvent> events = new ArrayList<>();
+    private static List<CamelEvent> events = new ArrayList<>();
 
     private CamelContext context;
+    private ProducerTemplate template;
 
     @BeforeEach
     public void setUp() throws Exception {
+        events.clear();
         context = createCamelContext();
         context.addRoutes(createRouteBuilder());
-        ProducerTemplate template = context.createProducerTemplate();
+        template = context.createProducerTemplate();
         context.start();
     }
 
     @AfterEach
-    public void tearDown() {
+    public void tearDown() throws Exception {
         if (context != null) {
             context.stop();
         }
     }
 
-    protected CamelContext createCamelContext() {
+    protected CamelContext createCamelContext() throws Exception {
         DefaultCamelContext context = new DefaultCamelContext();
         context.getManagementStrategy().addEventNotifier(new EventNotifierSupport() {
-            public void notify(CamelEvent event) {
+            public void notify(CamelEvent event) throws Exception {
                 events.add(event);
             }
 
             @Override
-            protected void doBuild() {
+            protected void doBuild() throws Exception {
                 setIgnoreCamelContextInitEvents(true);
             }
         });
@@ -69,7 +71,7 @@ public class EventNotifierIgnoreCamelContextInitEventsTest {
     }
 
     @Test
-    public void testIgnoreInitEvents() {
+    public void testIgnoreInitEvents() throws Exception {
         assertEquals(10, events.size());
         assertIsInstanceOf(CamelContextStartingEvent.class, events.get(0));
         assertIsInstanceOf(CamelContextRoutesStartingEvent.class, events.get(1));
@@ -97,10 +99,10 @@ public class EventNotifierIgnoreCamelContextInitEventsTest {
         assertIsInstanceOf(CamelContextStoppedEvent.class, events.get(19));
     }
 
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("log:foo").to("mock:result");
 
                 from("direct:fail").throwException(new IllegalArgumentException("Damn"));

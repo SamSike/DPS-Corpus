@@ -18,8 +18,10 @@ package org.apache.camel.component.http;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.component.http.handler.BasicValidationHandler;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.http.HttpMethods.GET;
@@ -30,24 +32,28 @@ public class HttpSquareBracketTest extends BaseHttpTest {
 
     private String baseUrl;
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+    public void setUp() throws Exception {
+        super.setUp();
+
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext())
-                .register("/",
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext())
+                .registerHandler("/",
                         new BasicValidationHandler(
                                 GET.name(), "country=dk&filter[end-date]=2022-12-31&filter[start-date]=2022-01-01", null,
                                 getExpectedContent()))
                 .create();
         localServer.start();
 
-        baseUrl = "http://localhost:" + localServer.getLocalPort();
+        baseUrl = "http://" + localServer.getInetAddress().getHostName() + ":" + localServer.getLocalPort();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() throws Exception {
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (localServer != null) {
             localServer.stop();
@@ -55,7 +61,7 @@ public class HttpSquareBracketTest extends BaseHttpTest {
     }
 
     @Test
-    public void httpSquare() {
+    public void httpSquare() throws Exception {
         Exchange exchange = template.request(baseUrl + "/?country=dk&filter[start-date]=2022-01-01&filter[end-date]=2022-12-31",
                 exchange1 -> {
                 });

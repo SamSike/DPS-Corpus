@@ -40,10 +40,10 @@ public class ContextScopedOnExceptionCorrectRouteContextTest extends ContextTest
     public void testContextScopedOnExceptionLogRouteBarFail() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).log("Error due ${exception.message}").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         String routeId = exchange.getUnitOfWork().getRoute().getRouteId();
                         assertEquals("bar", routeId);
                     }
@@ -76,10 +76,10 @@ public class ContextScopedOnExceptionCorrectRouteContextTest extends ContextTest
     public void testContextScopedOnExceptionLogRouteFooFail() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).log("Error due ${exception.message}").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         String routeId = exchange.getUnitOfWork().getRoute().getRouteId();
                         assertEquals("foo", routeId);
                     }

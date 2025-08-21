@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -69,7 +69,7 @@ import org.jetbrains.annotations.ApiStatus.Experimental;
  * <p>
  * <strong>Example:</strong>
  * <p>
- * <pre><code>
+ * <code><pre>
  * // Assuming import static org.jooq.impl.DSL.*;
  *
  * // The bind value is the first operand of an expression, in case of which it
@@ -86,7 +86,7 @@ import org.jetbrains.annotations.ApiStatus.Experimental;
  *    .columns(ACTOR.FIRST_NAME, ACTOR.LAST_NAME, ACTOR.LAST_UPDATE)
  *    .values(val("John"), val("Doe"), currentTimestamp())
  *    .execute();
- * </code></pre>
+ * </pre></code>
  * <p>
  * Instances can be created using {@link DSL#param(String, Object)},
  * {@link DSL#val(Object)}, {@link DSL#inline(Object)} and respective overloads.
@@ -94,7 +94,7 @@ import org.jetbrains.annotations.ApiStatus.Experimental;
  * @author Lukas Eder
  * @see DSL#param(String, Object)
  */
-public interface Param<T> extends ParamOrVariable<T> {
+public /* non-sealed */ interface Param<T> extends ParamOrVariable<T> {
 
     /**
      * The parameter name. This name is useful for two things:
@@ -151,13 +151,7 @@ public interface Param<T> extends ParamOrVariable<T> {
     void setInline(boolean inline);
 
     /**
-     * A flag on the bind value to force it to be inlined in rendered SQL.
-     * <p>
-     * Please note that despite this flag returning <code>false</code>, jOOQ
-     * internals may decide to inline a {@link Param} at their own discretion,
-     * e.g. because of a limitation in the dialect's syntactic capabilities
-     * (e.g. some functions may require literals as arguments), or of the JDBC
-     * driver.
+     * A flag on the bind value to force it to be inlined in rendered SQL
      */
     boolean isInline();
 

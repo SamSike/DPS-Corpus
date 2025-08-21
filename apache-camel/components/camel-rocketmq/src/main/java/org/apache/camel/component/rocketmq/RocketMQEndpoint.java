@@ -23,7 +23,6 @@ import org.apache.camel.Consumer;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
@@ -36,7 +35,7 @@ import org.apache.camel.support.DefaultMessage;
  */
 @UriEndpoint(firstVersion = "3.20.0", scheme = "rocketmq", syntax = "rocketmq:topicName", title = "RocketMQ",
              category = Category.MESSAGING, headersClass = RocketMQConstants.class)
-public class RocketMQEndpoint extends DefaultEndpoint implements AsyncEndpoint, EndpointServiceLocation {
+public class RocketMQEndpoint extends DefaultEndpoint implements AsyncEndpoint {
 
     @UriPath
     @Metadata(required = true)
@@ -45,12 +44,8 @@ public class RocketMQEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
     private String producerGroup;
     @UriParam(label = "consumer")
     private String consumerGroup;
-    @UriParam(label = "consumer", defaultValue = "tag", enums = "tag,sql")
-    private String messageSelectorType = "tag";
     @UriParam(label = "consumer", defaultValue = "*")
     private String subscribeTags = "*";
-    @UriParam(label = "consumer", defaultValue = "1 = 1")
-    private String subscribeSql = "1 = 1";
     @UriParam(label = "producer")
     private String sendTag = "";
     @UriParam(label = "producer")
@@ -59,17 +54,11 @@ public class RocketMQEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
     private String replyToConsumerGroup;
     @UriParam(label = "common", defaultValue = "localhost:9876")
     private String namesrvAddr = "localhost:9876";
-    @UriParam(label = "common")
-    private String namespace;
-    @UriParam(label = "common")
-    private boolean enableTrace;
-    @UriParam(label = "common", defaultValue = "LOCAL", enums = "LOCAL,CLOUD")
-    private String accessChannel = "LOCAL";
     @UriParam(label = "advanced", defaultValue = "10000")
     private long requestTimeoutMillis = 10000L;
     @UriParam(label = "advanced", defaultValue = "1000")
     private long requestTimeoutCheckerIntervalMillis = 1000L;
-    @UriParam(label = "producer")
+    @UriParam(label = "producer", defaultValue = "false")
     private boolean waitForSendResult;
     @UriParam(label = "security", secret = true)
     private String accessKey;
@@ -81,16 +70,6 @@ public class RocketMQEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
 
     public RocketMQEndpoint(String endpointUri, RocketMQComponent component) {
         super(endpointUri, component);
-    }
-
-    @Override
-    public String getServiceUrl() {
-        return namesrvAddr;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "rocketmq";
     }
 
     @Override
@@ -124,29 +103,6 @@ public class RocketMQEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
         this.topicName = topicName;
     }
 
-    public String getMessageSelectorType() {
-        return messageSelectorType;
-    }
-
-    /**
-     * Message Selector Type, TAG or SQL [TAG] by default
-     */
-    public void setMessageSelectorType(String messageSelectorType) {
-        this.messageSelectorType = messageSelectorType;
-    }
-
-    public String getSubscribeSql() {
-        return subscribeSql;
-    }
-
-    /**
-     * Subscribe SQL of consumer. See
-     * https://rocketmq.apache.org/docs/featureBehavior/07messagefilter/#attribute-based-sql-filtering for more details.
-     */
-    public void setSubscribeSql(String subscribeSql) {
-        this.subscribeSql = subscribeSql;
-    }
-
     public String getSubscribeTags() {
         return subscribeTags;
     }
@@ -178,39 +134,6 @@ public class RocketMQEndpoint extends DefaultEndpoint implements AsyncEndpoint, 
      */
     public void setNamesrvAddr(String namesrvAddr) {
         this.namesrvAddr = namesrvAddr;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    /**
-     * Namespace of RocketMQ cluster. You need to specify this if you are using serverless version of RocketMQ.
-     */
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
-    }
-
-    public boolean isEnableTrace() {
-        return enableTrace;
-    }
-
-    /**
-     * Whether to enable trace.
-     */
-    public void setEnableTrace(boolean enableTrace) {
-        this.enableTrace = enableTrace;
-    }
-
-    public String getAccessChannel() {
-        return accessChannel;
-    }
-
-    /**
-     * Access channel of RocketMQ cluster. LOCAL or CLOUD, [LOCAL] by default
-     */
-    public void setAccessChannel(String accessChannel) {
-        this.accessChannel = accessChannel;
     }
 
     public String getProducerGroup() {

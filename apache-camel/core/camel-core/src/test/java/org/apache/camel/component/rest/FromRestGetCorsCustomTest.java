@@ -30,8 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class FromRestGetCorsCustomTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("dummy-rest", new DummyRestConsumerFactory());
         return jndi;
     }
@@ -44,7 +44,7 @@ public class FromRestGetCorsCustomTest extends ContextTestSupport {
 
         Exchange out = template.request("seda:post-say-bye", new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("I was here");
             }
         });
@@ -61,10 +61,10 @@ public class FromRestGetCorsCustomTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 restConfiguration().host("localhost");
                 restConfiguration().enableCORS(true).corsHeaderProperty("Access-Control-Allow-Origin", "myserver");
                 restConfiguration().enableCORS(true).corsHeaderProperty("Access-Control-Max-Age", "180");

@@ -51,8 +51,4 @@ public abstract class ArtifactModel<O extends BaseOptionModel> extends BaseModel
         this.version = version;
     }
 
-    public String toGav() {
-        return groupId + ":" + artifactId + ":" + version;
-    }
-
 }

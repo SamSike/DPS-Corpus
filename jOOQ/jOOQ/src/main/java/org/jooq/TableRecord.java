@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,7 +39,6 @@ package org.jooq;
 
 import java.util.Collection;
 
-import org.jooq.conf.RecordDirtyTracking;
 import org.jooq.conf.Settings;
 import org.jooq.exception.DataAccessException;
 
@@ -69,11 +68,9 @@ public interface TableRecord<R extends TableRecord<R>> extends QualifiedRecord<R
      * Store this record to the database using an <code>INSERT</code> statement.
      * <p>
      * If you want to enforce re-insertion this record's values, regardless if
-     * the values in this record were {@link #modified()}, you can explicitly
-     * set the touched flags for all values with {@link #touched(boolean)} or
-     * for single values with {@link #touched(Field, boolean)}, prior to
-     * insertion, if {@link Settings#getRecordDirtyTracking()} is set to
-     * {@link RecordDirtyTracking#TOUCHED}
+     * the values in this record were changed, you can explicitly set the
+     * changed flags for all values with {@link #changed(boolean)} or for single
+     * values with {@link #changed(Field, boolean)}, prior to insertion.
      *
      * @return <code>1</code> if the record was stored to the database. <code>0
      *         </code> if storing was not necessary and

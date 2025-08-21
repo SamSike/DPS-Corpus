@@ -30,7 +30,9 @@ import org.apache.camel.Exchange;
 import org.apache.camel.support.ObjectHelper;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.camel.util.CastUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.jvnet.mock_javamail.Mailbox;
 
 import static org.apache.camel.test.junit5.TestSupport.assertIsInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -82,10 +84,12 @@ public class MailMessageTest extends CamelTestSupport {
     }
 
     @Override
-    public void doPostSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
         Mailbox.clearAll();
 
-        endpoint = checkEndpoint("pop3://someone@myhost:30/subject");
+        endpoint = resolveMandatoryEndpoint("pop3://someone@myhost:30/subject");
 
         Properties properties = new Properties();
         properties.put("mail.smtp.host", "localhost");
@@ -95,7 +99,8 @@ public class MailMessageTest extends CamelTestSupport {
         mimeMessage.setText(body);
     }
 
-    protected MailEndpoint checkEndpoint(String uri) {
+    @Override
+    protected MailEndpoint resolveMandatoryEndpoint(String uri) {
         Endpoint endpoint = super.resolveMandatoryEndpoint(uri);
         return assertIsInstanceOf(MailEndpoint.class, endpoint);
     }

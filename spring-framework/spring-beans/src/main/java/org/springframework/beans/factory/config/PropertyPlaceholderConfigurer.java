@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,13 @@
 
 package org.springframework.beans.factory.config;
 
-import java.util.Map;
 import java.util.Properties;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeansException;
+import org.springframework.core.Constants;
 import org.springframework.core.SpringProperties;
 import org.springframework.core.env.AbstractEnvironment;
-import org.springframework.util.Assert;
+import org.springframework.lang.Nullable;
 import org.springframework.util.PropertyPlaceholderHelper;
 import org.springframework.util.PropertyPlaceholderHelper.PlaceholderResolver;
 import org.springframework.util.StringValueResolver;
@@ -47,18 +45,15 @@ import org.springframework.util.StringValueResolver;
  *
  * @author Juergen Hoeller
  * @author Chris Beams
- * @author Sam Brannen
  * @since 02.10.2003
  * @see #setSystemPropertiesModeName
  * @see PlaceholderConfigurerSupport
  * @see PropertyOverrideConfigurer
- * @deprecated as of 5.2, to be removed in 8.0;
- * use {@code org.springframework.context.support.PropertySourcesPlaceholderConfigurer}
- * instead which is more flexible through taking advantage of the
- * {@link org.springframework.core.env.Environment} and
- * {@link org.springframework.core.env.PropertySource} mechanisms.
+ * @deprecated as of 5.2; use {@code org.springframework.context.support.PropertySourcesPlaceholderConfigurer}
+ * instead which is more flexible through taking advantage of the {@link org.springframework.core.env.Environment}
+ * and {@link org.springframework.core.env.PropertySource} mechanisms.
  */
-@Deprecated(since = "5.2", forRemoval = true)
+@Deprecated
 public class PropertyPlaceholderConfigurer extends PlaceholderConfigurerSupport {
 
 	/** Never check system properties. */
@@ -77,16 +72,7 @@ public class PropertyPlaceholderConfigurer extends PlaceholderConfigurerSupport 
 	public static final int SYSTEM_PROPERTIES_MODE_OVERRIDE = 2;
 
 
-	/**
-	 * Map of constant names to constant values for the system properties mode
-	 * constants defined in this class.
-	 */
-	private static final Map<String, Integer> constants = Map.of(
-			"SYSTEM_PROPERTIES_MODE_NEVER", SYSTEM_PROPERTIES_MODE_NEVER,
-			"SYSTEM_PROPERTIES_MODE_FALLBACK", SYSTEM_PROPERTIES_MODE_FALLBACK,
-			"SYSTEM_PROPERTIES_MODE_OVERRIDE", SYSTEM_PROPERTIES_MODE_OVERRIDE
-		);
-
+	private static final Constants constants = new Constants(PropertyPlaceholderConfigurer.class);
 
 	private int systemPropertiesMode = SYSTEM_PROPERTIES_MODE_FALLBACK;
 
@@ -96,15 +82,12 @@ public class PropertyPlaceholderConfigurer extends PlaceholderConfigurerSupport 
 
 	/**
 	 * Set the system property mode by the name of the corresponding constant,
-	 * for example, "SYSTEM_PROPERTIES_MODE_OVERRIDE".
+	 * e.g. "SYSTEM_PROPERTIES_MODE_OVERRIDE".
 	 * @param constantName name of the constant
 	 * @see #setSystemPropertiesMode
 	 */
 	public void setSystemPropertiesModeName(String constantName) throws IllegalArgumentException {
-		Assert.hasText(constantName, "'constantName' must not be null or blank");
-		Integer mode = constants.get(constantName);
-		Assert.notNull(mode, "Only system properties mode constants allowed");
-		this.systemPropertiesMode = mode;
+		this.systemPropertiesMode = constants.asNumber(constantName).intValue();
 	}
 
 	/**
@@ -156,7 +139,8 @@ public class PropertyPlaceholderConfigurer extends PlaceholderConfigurerSupport 
 	 * @see System#getProperty
 	 * @see #resolvePlaceholder(String, java.util.Properties)
 	 */
-	protected @Nullable String resolvePlaceholder(String placeholder, Properties props, int systemPropertiesMode) {
+	@Nullable
+	protected String resolvePlaceholder(String placeholder, Properties props, int systemPropertiesMode) {
 		String propVal = null;
 		if (systemPropertiesMode == SYSTEM_PROPERTIES_MODE_OVERRIDE) {
 			propVal = resolveSystemProperty(placeholder);
@@ -183,7 +167,8 @@ public class PropertyPlaceholderConfigurer extends PlaceholderConfigurerSupport 
 	 * @return the resolved value, of {@code null} if none
 	 * @see #setSystemPropertiesMode
 	 */
-	protected @Nullable String resolvePlaceholder(String placeholder, Properties props) {
+	@Nullable
+	protected String resolvePlaceholder(String placeholder, Properties props) {
 		return props.getProperty(placeholder);
 	}
 
@@ -196,7 +181,8 @@ public class PropertyPlaceholderConfigurer extends PlaceholderConfigurerSupport 
 	 * @see System#getProperty(String)
 	 * @see System#getenv(String)
 	 */
-	protected @Nullable String resolveSystemProperty(String key) {
+	@Nullable
+	protected String resolveSystemProperty(String key) {
 		try {
 			String value = System.getProperty(key);
 			if (value == null && this.searchSystemEnvironment) {
@@ -234,13 +220,13 @@ public class PropertyPlaceholderConfigurer extends PlaceholderConfigurerSupport 
 
 		public PlaceholderResolvingStringValueResolver(Properties props) {
 			this.helper = new PropertyPlaceholderHelper(
-					placeholderPrefix, placeholderSuffix, valueSeparator,
-					escapeCharacter, ignoreUnresolvablePlaceholders);
+					placeholderPrefix, placeholderSuffix, valueSeparator, ignoreUnresolvablePlaceholders);
 			this.resolver = new PropertyPlaceholderConfigurerResolver(props);
 		}
 
 		@Override
-		public @Nullable String resolveStringValue(String strVal) throws BeansException {
+		@Nullable
+		public String resolveStringValue(String strVal) throws BeansException {
 			String resolved = this.helper.replacePlaceholders(strVal, this.resolver);
 			if (trimValues) {
 				resolved = resolved.trim();
@@ -259,7 +245,8 @@ public class PropertyPlaceholderConfigurer extends PlaceholderConfigurerSupport 
 		}
 
 		@Override
-		public @Nullable String resolvePlaceholder(String placeholderName) {
+		@Nullable
+		public String resolvePlaceholder(String placeholderName) {
 			return PropertyPlaceholderConfigurer.this.resolvePlaceholder(placeholderName,
 					this.props, systemPropertiesMode);
 		}

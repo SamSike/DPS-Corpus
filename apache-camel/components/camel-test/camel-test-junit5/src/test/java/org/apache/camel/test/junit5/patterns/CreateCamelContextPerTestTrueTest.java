@@ -16,6 +16,8 @@
  */
 package org.apache.camel.test.junit5.patterns;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.camel.CamelContext;
@@ -25,7 +27,8 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.junit.jupiter.api.BeforeEach;
+import org.apache.camel.util.StopWatch;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
@@ -39,6 +42,8 @@ public class CreateCamelContextPerTestTrueTest extends CamelTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(CreateCamelContextPerTestTrueTest.class);
 
     private static final AtomicInteger CREATED_CONTEXTS = new AtomicInteger();
+    private static final AtomicInteger POST_TEAR_DOWN = new AtomicInteger();
+    private static final CountDownLatch LATCH = new CountDownLatch(1);
 
     @EndpointInject("mock:result")
     protected MockEndpoint resultEndpoint;
@@ -53,9 +58,12 @@ public class CreateCamelContextPerTestTrueTest extends CamelTestSupport {
         return super.createCamelContext();
     }
 
-    @BeforeEach
-    void resetEndpoint() {
-        resultEndpoint.reset();
+    @Override
+    protected void doPostTearDown() throws Exception {
+        LOG.info("doPostTearDown()");
+        POST_TEAR_DOWN.incrementAndGet();
+        super.doPostTearDown();
+        LATCH.await(5, TimeUnit.SECONDS);
     }
 
     @Test
@@ -69,6 +77,7 @@ public class CreateCamelContextPerTestTrueTest extends CamelTestSupport {
         resultEndpoint.assertIsSatisfied();
 
         assertEquals(1, CREATED_CONTEXTS.get(), "Should only create 1 CamelContext per test class");
+        assertEquals(0, POST_TEAR_DOWN.get(), "Should not call postTearDown yet");
     }
 
     @Test
@@ -82,6 +91,7 @@ public class CreateCamelContextPerTestTrueTest extends CamelTestSupport {
         resultEndpoint.assertIsSatisfied();
 
         assertEquals(1, CREATED_CONTEXTS.get(), "Should only create 1 CamelContext per test class");
+        assertEquals(0, POST_TEAR_DOWN.get(), "Should not call postTearDown yet");
     }
 
     @Test
@@ -93,6 +103,38 @@ public class CreateCamelContextPerTestTrueTest extends CamelTestSupport {
         resultEndpoint.assertIsSatisfied();
 
         assertEquals(1, CREATED_CONTEXTS.get(), "Should only create 1 CamelContext per test class");
+        assertEquals(0, POST_TEAR_DOWN.get(), "Should not call postTearDown yet");
+    }
+
+    @AfterAll
+    public static void shouldTearDown() {
+        // we are called before doPostTearDown so lets wait for that to be
+        // called
+        Runnable r = () -> {
+            try {
+                StopWatch watch = new StopWatch();
+                while (watch.taken() < 5000) {
+                    LOG.debug("Checking for tear down called correctly");
+                    if (POST_TEAR_DOWN.get() == 1) {
+                        LATCH.countDown();
+                        break;
+                    } else {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            break;
+                        }
+                    }
+                }
+            } finally {
+                LOG.info("Should only call postTearDown 1 time per test class, called: " + POST_TEAR_DOWN.get());
+                assertEquals(1, POST_TEAR_DOWN.get(), "Should only call postTearDown 1 time per test class");
+            }
+        };
+        Thread t = new Thread(r);
+        t.setDaemon(false);
+        t.setName("shouldTearDown checker");
+        t.start();
     }
 
     @Override

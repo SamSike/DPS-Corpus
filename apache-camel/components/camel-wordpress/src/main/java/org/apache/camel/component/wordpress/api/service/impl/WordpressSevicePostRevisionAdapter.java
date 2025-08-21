@@ -23,6 +23,8 @@ import org.apache.camel.component.wordpress.api.model.PostRevision;
 import org.apache.camel.component.wordpress.api.service.WordpressServicePostRevision;
 import org.apache.camel.component.wordpress.api.service.spi.PostRevisionsSPI;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public class WordpressSevicePostRevisionAdapter extends AbstractWordpressServiceAdapter<PostRevisionsSPI>
         implements WordpressServicePostRevision {
 
@@ -37,31 +39,21 @@ public class WordpressSevicePostRevisionAdapter extends AbstractWordpressService
 
     @Override
     public void delete(Integer postId, Integer revisionId) {
-        if (!(postId > 0)) {
-            throw new IllegalArgumentException("Please define a post id");
-        }
-        if (!(revisionId > 0)) {
-            throw new IllegalArgumentException("Please define a revision id");
-        }
+        checkArgument(postId > 0, "Please define a post id");
+        checkArgument(revisionId > 0, "Please define a revision id");
         this.getSpi().delete(this.getApiVersion(), postId, revisionId);
     }
 
     @Override
     public PostRevision retrieve(Integer postId, Integer revisionId, Context context) {
-        if (!(postId > 0)) {
-            throw new IllegalArgumentException("Please define a post id");
-        }
-        if (!(revisionId > 0)) {
-            throw new IllegalArgumentException("Please define a revision id");
-        }
+        checkArgument(postId > 0, "Please define a post id");
+        checkArgument(revisionId > 0, "Please define a revision id");
         return this.getSpi().retrieveRevision(this.getApiVersion(), postId, revisionId, context);
     }
 
     @Override
     public List<PostRevision> list(Integer postId, Context context) {
-        if (!(postId > 0)) {
-            throw new IllegalArgumentException("Please define a post id");
-        }
+        checkArgument(postId > 0, "Please define a post id");
         return this.getSpi().list(this.getApiVersion(), postId, context);
     }
 

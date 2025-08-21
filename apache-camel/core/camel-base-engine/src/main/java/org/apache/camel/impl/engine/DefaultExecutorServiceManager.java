@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NamedNode;
 import org.apache.camel.spi.IdAware;
 import org.apache.camel.spi.NodeIdFactory;
@@ -50,12 +51,13 @@ public class DefaultExecutorServiceManager extends BaseExecutorServiceManager {
     }
 
     protected Object forceId(Object source) {
-        if (source instanceof NamedNode node && source instanceof IdAware idAware) {
-            NodeIdFactory factory = getCamelContext().getCamelContextExtension().getContextPlugin(NodeIdFactory.class);
+        if (source instanceof NamedNode && source instanceof IdAware) {
+            NamedNode node = (NamedNode) source;
+            NodeIdFactory factory = getCamelContext().adapt(ExtendedCamelContext.class).getNodeIdFactory();
             if (node.getId() == null) {
                 String id = factory.createId(node);
                 // we auto generated an id to be assigned
-                idAware.setGeneratedId(id);
+                ((IdAware) source).setGeneratedId(id);
             }
         }
         return source;

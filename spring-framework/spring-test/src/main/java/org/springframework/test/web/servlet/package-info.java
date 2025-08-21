@@ -2,7 +2,9 @@
  * Contains server-side support for testing Spring MVC applications.
  * @see org.springframework.test.web.servlet.MockMvc
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.test.web.servlet;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

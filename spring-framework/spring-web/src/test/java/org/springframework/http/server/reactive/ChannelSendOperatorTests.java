@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,13 +43,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Rossen Stoyanchev
  * @author Stephane Maldini
  */
-class ChannelSendOperatorTests {
+public class ChannelSendOperatorTests {
 
 	private final OneByOneAsyncWriter writer = new OneByOneAsyncWriter();
 
 
 	@Test
-	void errorBeforeFirstItem() {
+	public void errorBeforeFirstItem() throws Exception {
 		IllegalStateException error = new IllegalStateException("boo");
 		Mono<Void> completion = Mono.<String>error(error).as(this::sendOperator);
 		Signal<Void> signal = completion.materialize().block();
@@ -59,32 +59,33 @@ class ChannelSendOperatorTests {
 	}
 
 	@Test
-	void completionBeforeFirstItem() {
+	public void completionBeforeFirstItem() throws Exception {
 		Mono<Void> completion = Flux.<String>empty().as(this::sendOperator);
 		Signal<Void> signal = completion.materialize().block();
 
 		assertThat(signal).isNotNull();
 		assertThat(signal.isOnComplete()).as("Unexpected signal: " + signal).isTrue();
 
-		assertThat(this.writer.items).isEmpty();
+		assertThat(this.writer.items.size()).isEqualTo(0);
 		assertThat(this.writer.completed).isTrue();
 	}
 
 	@Test
-	void writeOneItem() {
+	public void writeOneItem() throws Exception {
 		Mono<Void> completion = Flux.just("one").as(this::sendOperator);
 		Signal<Void> signal = completion.materialize().block();
 
 		assertThat(signal).isNotNull();
 		assertThat(signal.isOnComplete()).as("Unexpected signal: " + signal).isTrue();
 
-		assertThat(this.writer.items).containsExactly("one");
+		assertThat(this.writer.items.size()).isEqualTo(1);
+		assertThat(this.writer.items.get(0)).isEqualTo("one");
 		assertThat(this.writer.completed).isTrue();
 	}
 
 
 	@Test
-	void writeMultipleItems() {
+	public void writeMultipleItems() {
 		List<String> items = Arrays.asList("one", "two", "three");
 		Mono<Void> completion = Flux.fromIterable(items).as(this::sendOperator);
 		Signal<Void> signal = completion.materialize().block();
@@ -92,12 +93,15 @@ class ChannelSendOperatorTests {
 		assertThat(signal).isNotNull();
 		assertThat(signal.isOnComplete()).as("Unexpected signal: " + signal).isTrue();
 
-		assertThat(this.writer.items).containsExactly("one", "two", "three");
+		assertThat(this.writer.items.size()).isEqualTo(3);
+		assertThat(this.writer.items.get(0)).isEqualTo("one");
+		assertThat(this.writer.items.get(1)).isEqualTo("two");
+		assertThat(this.writer.items.get(2)).isEqualTo("three");
 		assertThat(this.writer.completed).isTrue();
 	}
 
 	@Test
-	void errorAfterMultipleItems() {
+	public void errorAfterMultipleItems() {
 		IllegalStateException error = new IllegalStateException("boo");
 		Flux<String> publisher = Flux.generate(() -> 0, (idx , subscriber) -> {
 			int i = ++idx;
@@ -113,17 +117,20 @@ class ChannelSendOperatorTests {
 		assertThat(signal).isNotNull();
 		assertThat(signal.getThrowable()).as("Unexpected signal: " + signal).isSameAs(error);
 
-		assertThat(this.writer.items).containsExactly("1", "2", "3");
+		assertThat(this.writer.items.size()).isEqualTo(3);
+		assertThat(this.writer.items.get(0)).isEqualTo("1");
+		assertThat(this.writer.items.get(1)).isEqualTo("2");
+		assertThat(this.writer.items.get(2)).isEqualTo("3");
 		assertThat(this.writer.error).isSameAs(error);
 	}
 
 	@Test // gh-22720
-	void cancelWhileItemCached() {
+	public void cancelWhileItemCached() {
 		LeakAwareDataBufferFactory bufferFactory = new LeakAwareDataBufferFactory();
 
 		ChannelSendOperator<DataBuffer> operator = new ChannelSendOperator<>(
 				Mono.fromCallable(() -> {
-					DataBuffer dataBuffer = bufferFactory.allocateBuffer(256);
+					DataBuffer dataBuffer = bufferFactory.allocateBuffer();
 					dataBuffer.write("foo", StandardCharsets.UTF_8);
 					return dataBuffer;
 				}),
@@ -133,7 +140,7 @@ class ChannelSendOperatorTests {
 					return Mono.never();
 				});
 
-		BaseSubscriber<Void> subscriber = new BaseSubscriber<>() {};
+		BaseSubscriber<Void> subscriber = new BaseSubscriber<Void>() {};
 		operator.subscribe(subscriber);
 		subscriber.cancel();
 
@@ -141,7 +148,7 @@ class ChannelSendOperatorTests {
 	}
 
 	@Test // gh-22720
-	void errorFromWriteSourceWhileItemCached() {
+	public void errorFromWriteSourceWhileItemCached() {
 
 		// 1. First item received
 		// 2. writeFunction applied and writeCompletionBarrier subscribed to it
@@ -152,7 +159,7 @@ class ChannelSendOperatorTests {
 
 		ChannelSendOperator<DataBuffer> operator = new ChannelSendOperator<>(
 				Flux.create(sink -> {
-					DataBuffer dataBuffer = bufferFactory.allocateBuffer(256);
+					DataBuffer dataBuffer = bufferFactory.allocateBuffer();
 					dataBuffer.write("foo", StandardCharsets.UTF_8);
 					sink.next(dataBuffer);
 					sink.error(new IllegalStateException("err"));
@@ -162,9 +169,10 @@ class ChannelSendOperatorTests {
 					return Mono.never();
 				});
 
-		operator.subscribe(new BaseSubscriber<>() {});
+
+		operator.subscribe(new BaseSubscriber<Void>() {});
 		try {
-			writeSubscriber.signalDemand(1);  // Let cached signals ("foo" and error) be published
+			writeSubscriber.signalDemand(1);  // Let cached signals ("foo" and error) be published..
 		}
 		catch (Throwable ex) {
 			assertThat(ex.getCause()).isNotNull();
@@ -175,17 +183,17 @@ class ChannelSendOperatorTests {
 	}
 
 	@Test // gh-22720
-	void errorFromWriteFunctionWhileItemCached() {
+	public void errorFromWriteFunctionWhileItemCached() {
 
 		// 1. First item received
 		// 2. writeFunction applied and writeCompletionBarrier subscribed to it
-		// 3. writeFunction fails, for example, to flush status and headers, before request(n) from server
+		// 3. writeFunction fails, e.g. to flush status and headers, before request(n) from server
 
 		LeakAwareDataBufferFactory bufferFactory = new LeakAwareDataBufferFactory();
 
 		ChannelSendOperator<DataBuffer> operator = new ChannelSendOperator<>(
 				Flux.create(sink -> {
-					DataBuffer dataBuffer = bufferFactory.allocateBuffer(256);
+					DataBuffer dataBuffer = bufferFactory.allocateBuffer();
 					dataBuffer.write("foo", StandardCharsets.UTF_8);
 					sink.next(dataBuffer);
 				}),
@@ -199,7 +207,7 @@ class ChannelSendOperatorTests {
 	}
 
 	@Test // gh-23175
-	void errorInWriteFunction() {
+	public void errorInWriteFunction() {
 
 		StepVerifier
 				.create(new ChannelSendOperator<>(Mono.just("one"), p -> {
@@ -217,7 +225,7 @@ class ChannelSendOperatorTests {
 	}
 
 
-	private Mono<Void> sendOperator(Publisher<String> source){
+	private <T> Mono<Void> sendOperator(Publisher<String> source){
 		return new ChannelSendOperator<>(source, writer::send);
 	}
 
@@ -243,7 +251,7 @@ class ChannelSendOperatorTests {
 
 			private final Subscriber<? super Void> subscriber;
 
-			WriteSubscriber(Subscriber<? super Void> subscriber) {
+			public WriteSubscriber(Subscriber<? super Void> subscriber) {
 				this.subscriber = subscriber;
 			}
 
@@ -275,6 +283,7 @@ class ChannelSendOperatorTests {
 
 
 	private static class ZeroDemandSubscriber extends BaseSubscriber<DataBuffer> {
+
 
 		@Override
 		protected void hookOnSubscribe(Subscription subscription) {

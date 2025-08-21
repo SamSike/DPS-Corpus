@@ -16,9 +16,10 @@
  */
 package org.apache.camel.component.google.sheets.stream;
 
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
+import com.google.api.services.sheets.v4.SheetsScopes;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriParam;
@@ -31,11 +32,13 @@ import org.apache.camel.spi.UriPath;
 @UriParams
 public class GoogleSheetsStreamConfiguration implements Cloneable {
 
+    private static final List<String> DEFAULT_SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS);
+
     @UriPath
     @Metadata(required = true)
     private String spreadsheetId;
     @UriParam
-    private String scopes;
+    private List<String> scopes = DEFAULT_SCOPES;
     @UriParam
     private String clientId;
     @UriParam(label = "security", secret = true)
@@ -102,8 +105,8 @@ public class GoogleSheetsStreamConfiguration implements Cloneable {
     }
 
     /**
-     * OAuth 2 refresh token. Using this, the Google Sheets component can obtain a new accessToken whenever the current
-     * one expires - a necessity if the application is long-lived.
+     * OAuth 2 refresh token. Using this, the Google Calendar component can obtain a new accessToken whenever the
+     * current one expires - a necessity if the application is long-lived.
      */
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
@@ -114,32 +117,21 @@ public class GoogleSheetsStreamConfiguration implements Cloneable {
     }
 
     /**
-     * Google Sheets application name. Example would be "camel-google-sheets/1.0"
+     * Google sheets application name. Example would be "camel-google-sheets/1.0"
      */
     public void setApplicationName(String applicationName) {
         this.applicationName = applicationName;
     }
 
-    public String getScopes() {
+    public List<String> getScopes() {
         return scopes;
-    }
-
-    public Collection<String> getScopesAsList() {
-        if (scopes != null) {
-            return List.of(scopes.split(","));
-        } else {
-            return null;
-        }
     }
 
     /**
      * Specifies the level of permissions you want a sheets application to have to a user account. See
-     * https://developers.google.com/identity/protocols/googlescopes for more info. Multiple scopes can be separated by
-     * comma.
-     *
-     * @see com.google.api.services.sheets.v4.SheetsScopes
+     * https://developers.google.com/identity/protocols/googlescopes for more info.
      */
-    public void setScopes(String scopes) {
+    public void setScopes(List<String> scopes) {
         this.scopes = scopes;
     }
 
@@ -229,7 +221,7 @@ public class GoogleSheetsStreamConfiguration implements Cloneable {
 
     /**
      * Sets "*.json" file with credentials for Service account
-     *
+     * 
      * @param serviceAccountKey String file, classpath, or http url
      */
     public void setServiceAccountKey(String serviceAccountKey) {

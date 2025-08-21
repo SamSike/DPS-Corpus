@@ -45,7 +45,7 @@ public final class RouteCoverageDumper {
             String name = testClassName + "-" + testName + ".xml";
 
             ManagedCamelContext managedCamelContext
-                    = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
+                    = context.getExtension(ManagedCamelContext.class);
             if (managedCamelContext == null) {
                 LOG.warn(
                         "Cannot dump route coverage to file as JMX is not enabled."
@@ -60,7 +60,10 @@ public final class RouteCoverageDumper {
 
                 File file = new File(dir);
                 // ensure dir exists
-                file.mkdirs();
+                boolean result = file.mkdirs();
+                if (!result) {
+                    LOG.error("mkdirs() failed for {}", file);
+                }
                 file = new File(dir, name);
 
                 LOG.info("Dumping route coverage to file: {}", file);
@@ -79,7 +82,7 @@ public final class RouteCoverageDumper {
      * Gathers test details as xml
      */
     private static String gatherTestDetailsAsXml(String testClassName, String testName) {
-        StringBuilder sb = new StringBuilder(512);
+        StringBuilder sb = new StringBuilder();
         sb.append("<test>\n");
         sb.append("  <class>").append(testClassName).append("</class>\n");
         sb.append("  <method>").append(testName).append("</method>\n");

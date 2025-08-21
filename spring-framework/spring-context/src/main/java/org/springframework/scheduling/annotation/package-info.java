@@ -1,7 +1,9 @@
 /**
- * Annotation support for asynchronous method execution.
+ * Java 5 annotation for asynchronous method execution.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.scheduling.annotation;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

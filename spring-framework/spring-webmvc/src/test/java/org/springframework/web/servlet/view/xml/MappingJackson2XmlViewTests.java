@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,8 +52,7 @@ import static org.mockito.Mockito.mock;
  * @author Sebastien Deleuze
  * @author Sam Brannen
  */
-@SuppressWarnings("removal")
-class MappingJackson2XmlViewTests {
+public class MappingJackson2XmlViewTests {
 
 	private MappingJackson2XmlView view = new MappingJackson2XmlView();
 
@@ -67,12 +66,12 @@ class MappingJackson2XmlViewTests {
 
 
 	@Test
-	void isExposePathVars() {
-		assertThat(view.isExposePathVariables()).as("Must not expose path variables").isFalse();
+	public void isExposePathVars() {
+		assertThat(view.isExposePathVariables()).as("Must not expose path variables").isEqualTo(false);
 	}
 
 	@Test
-	void renderSimpleMap() throws Exception {
+	public void renderSimpleMap() throws Exception {
 		Map<String, Object> model = new HashMap<>();
 		model.put("bindingResult", mock(BindingResult.class, "binding_result"));
 		model.put("foo", "bar");
@@ -86,14 +85,14 @@ class MappingJackson2XmlViewTests {
 		assertThat(mediaType.isCompatibleWith(MediaType.parseMediaType(MappingJackson2XmlView.DEFAULT_CONTENT_TYPE))).isTrue();
 
 		String jsonResult = response.getContentAsString();
-		assertThat(jsonResult).isNotEmpty();
+		assertThat(jsonResult.length() > 0).isTrue();
 		assertThat(response.getContentLength()).isEqualTo(jsonResult.length());
 
 		validateResult();
 	}
 
 	@Test
-	void renderWithSelectedContentType() throws Exception {
+	public void renderWithSelectedContentType() throws Exception {
 		Map<String, Object> model = new HashMap<>();
 		model.put("foo", "bar");
 
@@ -109,7 +108,7 @@ class MappingJackson2XmlViewTests {
 	}
 
 	@Test
-	void renderCaching() throws Exception {
+	public void renderCaching() throws Exception {
 		view.setDisableCaching(false);
 
 		Map<String, Object> model = new HashMap<>();
@@ -122,7 +121,7 @@ class MappingJackson2XmlViewTests {
 	}
 
 	@Test
-	void renderSimpleBean() throws Exception {
+	public void renderSimpleBean() throws Exception {
 		Object bean = new TestBeanSimple();
 		Map<String, Object> model = new HashMap<>();
 		model.put("bindingResult", mock(BindingResult.class, "binding_result"));
@@ -131,28 +130,28 @@ class MappingJackson2XmlViewTests {
 		view.setUpdateContentLength(true);
 		view.render(model, request, response);
 
-		assertThat(response.getContentAsString()).isNotEmpty();
+		assertThat(response.getContentAsString().length() > 0).isTrue();
 		assertThat(response.getContentLength()).isEqualTo(response.getContentAsString().length());
 
 		validateResult();
 	}
 
 	@Test
-	void renderWithCustomSerializerLocatedByAnnotation() throws Exception {
+	public void renderWithCustomSerializerLocatedByAnnotation() throws Exception {
 		Object bean = new TestBeanSimpleAnnotated();
 		Map<String, Object> model = new HashMap<>();
 		model.put("foo", bean);
 
 		view.render(model, request, response);
 
-		assertThat(response.getContentAsString()).isNotEmpty();
-		assertThat(response.getContentAsString()).contains("<testBeanSimple>custom</testBeanSimple>");
+		assertThat(response.getContentAsString().length() > 0).isTrue();
+		assertThat(response.getContentAsString().contains("<testBeanSimple>custom</testBeanSimple>")).isTrue();
 
 		validateResult();
 	}
 
 	@Test
-	void renderWithCustomSerializerLocatedByFactory() throws Exception {
+	public void renderWithCustomSerializerLocatedByFactory() throws Exception {
 		SerializerFactory factory = new DelegatingSerializerFactory(null);
 		XmlMapper mapper = new XmlMapper();
 		mapper.setSerializerFactory(factory);
@@ -165,14 +164,14 @@ class MappingJackson2XmlViewTests {
 		view.render(model, request, response);
 
 		String result = response.getContentAsString();
-		assertThat(result).isNotEmpty();
-		assertThat(result).contains("custom</testBeanSimple>");
+		assertThat(result.length() > 0).isTrue();
+		assertThat(result.contains("custom</testBeanSimple>")).isTrue();
 
 		validateResult();
 	}
 
 	@Test
-	void renderOnlySpecifiedModelKey() throws Exception {
+	public void renderOnlySpecifiedModelKey() throws Exception {
 
 		view.setModelKey("bar");
 		Map<String, Object> model = new HashMap<>();
@@ -183,16 +182,16 @@ class MappingJackson2XmlViewTests {
 		view.render(model, request, response);
 
 		String result = response.getContentAsString();
-		assertThat(result).isNotEmpty();
-		assertThat(result).doesNotContain("foo");
-		assertThat(result).contains("bar");
-		assertThat(result).doesNotContain("baz");
+		assertThat(result.length() > 0).isTrue();
+		assertThat(result.contains("foo")).isFalse();
+		assertThat(result.contains("bar")).isTrue();
+		assertThat(result.contains("baz")).isFalse();
 
 		validateResult();
 	}
 
 	@Test
-	void renderModelWithMultipleKeys() {
+	public void renderModelWithMultipleKeys() throws Exception {
 		Map<String, Object> model = new TreeMap<>();
 		model.put("foo", "foo");
 		model.put("bar", "bar");
@@ -202,7 +201,7 @@ class MappingJackson2XmlViewTests {
 	}
 
 	@Test
-	void renderSimpleBeanWithJsonView() throws Exception {
+	public void renderSimpleBeanWithJsonView() throws Exception {
 		Object bean = new TestBeanSimple();
 		Map<String, Object> model = new HashMap<>();
 		model.put("bindingResult", mock(BindingResult.class, "binding_result"));
@@ -213,11 +212,11 @@ class MappingJackson2XmlViewTests {
 		view.render(model, request, response);
 
 		String content = response.getContentAsString();
-		assertThat(content).isNotEmpty();
+		assertThat(content.length() > 0).isTrue();
 		assertThat(response.getContentLength()).isEqualTo(content.length());
-		assertThat(content).contains("foo");
-		assertThat(content).doesNotContain("boo");
-		assertThat(content).doesNotContain(JsonView.class.getName());
+		assertThat(content.contains("foo")).isTrue();
+		assertThat(content.contains("boo")).isFalse();
+		assertThat(content.contains(JsonView.class.getName())).isFalse();
 	}
 
 	private void validateResult() throws Exception {

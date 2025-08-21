@@ -29,7 +29,7 @@ public class StepCompletedEvent extends AbstractStepEvent implements CamelEvent.
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return "Step completed: " + getStepId();
     }
 }

@@ -20,12 +20,12 @@ import java.io.IOException;
 
 import org.apache.camel.component.as2.api.AS2ClientManager;
 import org.apache.camel.component.as2.api.AS2Header;
-import org.apache.hc.core5.http.EntityDetails;
-import org.apache.hc.core5.http.HttpException;
-import org.apache.hc.core5.http.HttpRequest;
-import org.apache.hc.core5.http.HttpRequestInterceptor;
-import org.apache.hc.core5.http.protocol.HttpContext;
-import org.apache.hc.core5.http.protocol.HttpCoreContext;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpCoreContext;
+import org.apache.http.util.CharArrayBuffer;
 
 public class RequestMDN implements HttpRequestInterceptor {
 
@@ -33,7 +33,7 @@ public class RequestMDN implements HttpRequestInterceptor {
             = "signed-receipt-protocol=optional, pkcs7-signature; signed-receipt-micalg=optional";
 
     @Override
-    public void process(HttpRequest request, EntityDetails entity, HttpContext context) throws HttpException, IOException {
+    public void process(HttpRequest request, HttpContext context) throws HttpException, IOException {
 
         HttpCoreContext coreContext = HttpCoreContext.adapt(context);
 
@@ -42,15 +42,19 @@ public class RequestMDN implements HttpRequestInterceptor {
         if (dispositionNotificationTo != null) {
             request.addHeader(AS2Header.DISPOSITION_NOTIFICATION_TO, dispositionNotificationTo);
 
-            String micAlgorithms = coreContext.getAttribute(AS2ClientManager.SIGNED_RECEIPT_MIC_ALGORITHMS, String.class);
+            String[] micAlgorithms = coreContext.getAttribute(AS2ClientManager.SIGNED_RECEIPT_MIC_ALGORITHMS, String[].class);
             if (micAlgorithms == null) {
                 // requesting unsigned receipt: indicate by not setting Disposition-Notification-Options header
             } else {
-                StringBuilder sb = new StringBuilder();
-                sb.append(SIGNED_RECEIPT_PREFIX);
-                sb.append(",");
-                sb.append(micAlgorithms);
-                request.addHeader(AS2Header.DISPOSITION_NOTIFICATION_OPTIONS, sb.toString());
+
+                CharArrayBuffer options = new CharArrayBuffer(
+                        SIGNED_RECEIPT_PREFIX.length() + 5 * micAlgorithms.length);
+                options.append(SIGNED_RECEIPT_PREFIX);
+                for (String micAlgorithm : micAlgorithms) {
+                    options.append("," + micAlgorithm);
+                }
+
+                request.addHeader(AS2Header.DISPOSITION_NOTIFICATION_OPTIONS, options.toString());
             }
         }
 

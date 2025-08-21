@@ -16,15 +16,11 @@
  */
 package org.apache.camel.routepolicy.quartz;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-
-import static org.apache.camel.test.junit5.TestSupport.executeSlowly;
 
 public class SpringMultiplePoliciesOnRouteTest extends CamelSpringTestSupport {
     private String url = "seda:foo?concurrentConsumers=20";
@@ -36,7 +32,10 @@ public class SpringMultiplePoliciesOnRouteTest extends CamelSpringTestSupport {
         // when we get graceful shutdown support we can prevent this
         getMockEndpoint("mock:success").expectedMinimumMessageCount(size - 10);
 
-        executeSlowly(size, 3, TimeUnit.MILLISECONDS, (i) -> template.sendBody(url, "Message " + i));
+        for (int i = 0; i < size; i++) {
+            template.sendBody(url, "Message " + i);
+            Thread.sleep(3);
+        }
 
         MockEndpoint.assertIsSatisfied(context);
     }

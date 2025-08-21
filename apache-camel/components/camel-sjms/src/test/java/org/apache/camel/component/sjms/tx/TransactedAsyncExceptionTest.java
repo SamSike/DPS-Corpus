@@ -42,13 +42,13 @@ public class TransactedAsyncExceptionTest extends CamelTestSupport {
     private static final int TRANSACTION_REDELIVERY_COUNT = 10;
 
     @RegisterExtension
-    public static ArtemisService service = ArtemisServiceFactory.createSingletonVMService();
+    public ArtemisService service = ArtemisServiceFactory.createSingletonVMService();
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
     @Test
     public void testRouteWithThread() throws Exception {
-        String destination = "sjms:queue:async.exception.queue.TransactedAsyncExceptionTest";
+        String destination = "sjms:queue:async.exception";
 
         context.addRoutes(new RouteBuilder() {
             @Override

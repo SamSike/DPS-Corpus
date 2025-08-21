@@ -17,12 +17,5 @@
 package org.apache.camel.tracing;
 
 public interface InjectAdapter {
-
-    /**
-     * Inject a tag into the current tracing span, for context propagation.
-     *
-     * @param key   the tag key
-     * @param value the tag value
-     */
     void put(String key, String value);
 }

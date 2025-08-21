@@ -28,10 +28,6 @@ import org.apache.camel.util.CollectionHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.StringHelper;
 
-/**
- * @deprecated since 4.7
- */
-@Deprecated(since = "4.7")
 public class DefaultServiceDefinition implements ServiceDefinition {
     private static final ServiceHealth DEFAULT_SERVICE_HEALTH = new DefaultServiceHealth();
 
@@ -161,7 +157,7 @@ public class DefaultServiceDefinition implements ServiceDefinition {
                     String servicePort = StringHelper.after(part, ":");
 
                     if (ObjectHelper.isNotEmpty(serviceHost) && ObjectHelper.isNotEmpty(servicePort)) {
-                        return new DefaultServiceDefinition(serviceId, serviceName, serviceHost, Integer.parseInt(servicePort));
+                        return new DefaultServiceDefinition(serviceId, serviceName, serviceHost, Integer.valueOf(servicePort));
                     }
 
                     return null;

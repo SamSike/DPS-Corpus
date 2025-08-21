@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package org.springframework.core.annotation;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Inherited;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Proxy;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -28,9 +29,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.annotation.MergedAnnotations.SearchStrategy;
+import org.springframework.lang.Nullable;
 
 /**
  * A single merged annotation returned from a {@link MergedAnnotations}
@@ -134,7 +134,8 @@ public interface MergedAnnotation<A extends Annotation> {
 	 * {@link #getRoot() root}.
 	 * @return the source, or {@code null}
 	 */
-	@Nullable Object getSource();
+	@Nullable
+	Object getSource();
 
 	/**
 	 * Get the source of the meta-annotation, or {@code null} if the
@@ -144,7 +145,8 @@ public interface MergedAnnotation<A extends Annotation> {
 	 * @return the meta-annotation source or {@code null}
 	 * @see #getRoot()
 	 */
-	@Nullable MergedAnnotation<?> getMetaSource();
+	@Nullable
+	MergedAnnotation<?> getMetaSource();
 
 	/**
 	 * Get the root annotation, i.e. the {@link #getDistance() distance} {@code 0}
@@ -348,7 +350,7 @@ public interface MergedAnnotation<A extends Annotation> {
 	 * Get a required enum attribute value from the annotation.
 	 * @param attributeName the attribute name
 	 * @param type the enum type
-	 * @return the value as an enum
+	 * @return the value as a enum
 	 * @throws NoSuchElementException if there is no matching attribute
 	 */
 	<E extends Enum<E>> E getEnum(String attributeName, Class<E> type) throws NoSuchElementException;
@@ -357,7 +359,7 @@ public interface MergedAnnotation<A extends Annotation> {
 	 * Get a required enum array attribute value from the annotation.
 	 * @param attributeName the attribute name
 	 * @param type the enum type
-	 * @return the value as an enum array
+	 * @return the value as a enum array
 	 * @throws NoSuchElementException if there is no matching attribute
 	 */
 	<E extends Enum<E>> E[] getEnumArray(String attributeName, Class<E> type) throws NoSuchElementException;
@@ -479,17 +481,16 @@ public interface MergedAnnotation<A extends Annotation> {
 	/**
 	 * Create a type-safe synthesized version of this merged annotation that can
 	 * be used directly in code.
-	 * <p>The result is synthesized using a JDK {@link java.lang.reflect.Proxy Proxy}
-	 * and as a result may incur a computational cost when first invoked.
-	 * <p>If this merged annotation was created {@linkplain #of(AnnotatedElement, Class, Map)
-	 * from} a map of annotation attributes or default attribute values, those
-	 * attributes will always be synthesized into an annotation instance.
+	 * <p>The result is synthesized using a JDK {@link Proxy} and as a result may
+	 * incur a computational cost when first invoked.
 	 * <p>If this merged annotation was created {@linkplain #from(Annotation) from}
 	 * an annotation instance, that annotation will be returned unmodified if it is
 	 * not <em>synthesizable</em>. An annotation is considered synthesizable if
-	 * it has not already been synthesized and one of the following is true.
+	 * one of the following is true.
 	 * <ul>
 	 * <li>The annotation declares attributes annotated with {@link AliasFor @AliasFor}.</li>
+	 * <li>The annotation is a composed annotation that relies on convention-based
+	 * annotation attribute overrides in meta-annotations.</li>
 	 * <li>The annotation declares attributes that are annotations or arrays of
 	 * annotations that are themselves synthesizable.</li>
 	 * </ul>
@@ -502,8 +503,8 @@ public interface MergedAnnotation<A extends Annotation> {
 	/**
 	 * Optionally create a type-safe synthesized version of this annotation based
 	 * on a condition predicate.
-	 * <p>The result is synthesized using a JDK {@link java.lang.reflect.Proxy Proxy}
-	 * and as a result may incur a computational cost when first invoked.
+	 * <p>The result is synthesized using a JDK {@link Proxy} and as a result may
+	 * incur a computational cost when first invoked.
 	 * <p>Consult the documentation for {@link #synthesize()} for an explanation
 	 * of what is considered synthesizable.
 	 * @param condition the test to determine if the annotation can be synthesized

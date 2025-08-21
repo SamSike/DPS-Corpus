@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,25 +39,22 @@ package org.jooq.codegen;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
-import static org.jooq.codegen.GenerationUtil.ExpressionType.CONSTRUCTOR_REFERENCE;
-import static org.jooq.codegen.GenerationUtil.ExpressionType.EXPRESSION;
 import static org.jooq.codegen.Language.JAVA;
 import static org.jooq.codegen.Language.KOTLIN;
 import static org.jooq.codegen.Language.SCALA;
-import static org.jooq.codegen.Language.SCALA_3;
+import static org.jooq.codegen.GenerationUtil.ExpressionType.CONSTRUCTOR_REFERENCE;
+import static org.jooq.codegen.GenerationUtil.ExpressionType.EXPRESSION;
+import static org.jooq.impl.DSL.name;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.jooq.Name;
 import org.jooq.SQLDialect;
-import org.jooq.meta.DataTypeDefinition;
-import org.jooq.meta.DefaultDataTypeDefinition;
-import org.jooq.meta.jaxb.OnError;
-import org.jooq.tools.JooqLogger;
+import org.jooq.exception.SQLDialectNotSupportedException;
+import org.jooq.util.h2.H2DataType;
 
 /**
  * @author Lukas Eder
@@ -65,9 +62,9 @@ import org.jooq.tools.JooqLogger;
  */
 class GenerationUtil {
 
-    static final Pattern             TYPE_REFERENCE_PATTERN     = Pattern.compile("^((?:[\\p{L}_$][\\p{L}\\p{N}_$]*\\.)*[\\p{L}_$][\\p{L}\\p{N}_$]*)((?:<.*>|\\[.*])*)$");
-    static final Pattern             PLAIN_GENERIC_TYPE_PATTERN = Pattern.compile("[<\\[]((?:[\\p{L}_$][\\p{L}\\p{N}_$]*\\.)*[\\p{L}_$][\\p{L}\\p{N}_$]*)[>\\]]");
-    static final Pattern             UNDERSCORE_PATTERN         = Pattern.compile("_+");
+    static final Pattern       TYPE_REFERENCE_PATTERN     = Pattern.compile("^((?:[\\p{L}_$][\\p{L}\\p{N}_$]*\\.)*[\\p{L}_$][\\p{L}\\p{N}_$]*)((?:<.*>|\\[.*])*)$");
+    static final Pattern       PLAIN_GENERIC_TYPE_PATTERN = Pattern.compile("[<\\[]((?:[\\p{L}_$][\\p{L}\\p{N}_$]*\\.)*[\\p{L}_$][\\p{L}\\p{N}_$]*)[>\\]]");
+    static final Pattern       UNDERSCORE_PATTERN         = Pattern.compile("_+");
 
 
 
@@ -111,9 +108,6 @@ class GenerationUtil {
         "protected",
         "public",
         "return",
-        // [#12180] Sealed isn't a keyword in most Java contexts, but the scalac 3 compiler doesn't
-        //          seem to implement this correctly
-        "sealed",
         "short",
         "static",
         "strictfp",
@@ -162,8 +156,8 @@ class GenerationUtil {
         "this",
         "throw",
         "trait",
-        "true",
         "try",
+        "true",
         "type",
         "val",
         "var",
@@ -181,23 +175,6 @@ class GenerationUtil {
         "#",
         "@"*/
     )));
-
-    private static final Set<String> SCALA3_KEYWORDS;
-
-    static {
-        // See https://docs.scala-lang.org/scala3/reference/syntax.html
-        Set<String> k = new HashSet<>(asList(
-            "enum",
-            "export",
-            "given",
-            "then"/*,
-            "=>>",
-            "?=>"*/
-        ));
-
-        k.addAll(SCALA_KEYWORDS);
-        SCALA3_KEYWORDS = unmodifiableSet(k);
-    }
 
     private static final Set<String> KOTLIN_KEYWORDS = unmodifiableSet(new HashSet<>(asList(
 
@@ -377,37 +354,19 @@ class GenerationUtil {
      * Check if a character can be used in a kotlin identifier.
      * <p>
      * See <a href=
-     * "https://kotlinlang.org/docs/reference/grammar.html#Identifier">https://kotlinlang.org/docs/reference/grammar.html#Identifier</a>
+     * "https://kotlinlang.org/spec/syntax-and-grammar.html#grammar-rule-QuotedSymbol">https://kotlinlang.org/spec/syntax-and-grammar.html#grammar-rule-QuotedSymbol</a>
      */
     private static boolean isKotlinIdentifierPart(char c) {
-        switch (c) {
-            case '\r':
-            case '\n':
-            case '`':
-            case '.':
-            case ';':
-            case ':':
-            case '\\':
-            case '/':
-            case '[':
-            case ']':
-            // [#17099] These used to be listed, but aren't actually forbidden:
-            // case '(':
-            // case ')':
-            // case '{':
-            // case '}':
-            case '<':
-            case '>':
-
-            // [#18641] OS forbidden characters: https://stackoverflow.com/q/1976007/521799
-            case '*':
-            case '?':
-            case '|':
-                return false;
-
-            default:
-                return true;
-        }
+        return c != '\r'
+            && c != '\n'
+            && c != '`'
+            && c != '('
+            && c != ')'
+            && c != '{'
+            && c != '}'
+            && c != '['
+            && c != ']'
+            && c != '.';
     }
 
     /**
@@ -450,15 +409,13 @@ class GenerationUtil {
             return literal + "_";
         if (language == SCALA && SCALA_KEYWORDS.contains(literal))
             return "`" + literal + "`";
-        if (language == SCALA_3 && SCALA3_KEYWORDS.contains(literal))
-            return "`" + literal + "`";
         if (language == KOTLIN && KOTLIN_KEYWORDS.contains(literal))
             return "`" + literal + "`";
 
         StringBuilder sb = new StringBuilder();
 
         if ("".equals(literal))
-            if (language.isScala())
+            if (language == SCALA)
                 return "`_`";
             else if (language == KOTLIN)
                 return "`_`";
@@ -469,13 +426,13 @@ class GenerationUtil {
             char c = literal.charAt(i);
 
             // [#5424] Scala setters, by convention, end in "property_=", where "=" is an operator and "_" precedes it
-            if (language.isScala() && i == literal.length() - 1 && literal.length() >= 2 && literal.charAt(i - 1) == '_' && isScalaOperator(c))
+            if (language == SCALA && i == literal.length() - 1 && literal.length() >= 2 && literal.charAt(i - 1) == '_' && isScalaOperator(c))
                 sb.append(c);
-            else if (language.isScala() && !isScalaIdentifierPart(c))
+            else if (language == SCALA && !isScalaIdentifierPart(c))
                 sb.append(escape(c));
             else if (language == JAVA && !Character.isJavaIdentifierPart(c))
                 sb.append(escape(c));
-            else if (language.isScala() && i == 0 && !isScalaIdentifierStart(c))
+            else if (language == SCALA && i == 0 && !isScalaIdentifierStart(c))
                 sb.append("_").append(c);
             else if (language == JAVA && i == 0 && !Character.isJavaIdentifierStart(c))
                 sb.append("_").append(c);
@@ -484,24 +441,17 @@ class GenerationUtil {
             else if (language == KOTLIN && !isKotlinIdentifierPart(c))
                 sb.append(escape(c));
 
+            // TODO: Should we do this for Scala as well?
+            else if (language == KOTLIN && !Character.isJavaIdentifierPart(c))
+                return "`" + literal + "`";
+            else if (language == KOTLIN && i == 0 && !Character.isJavaIdentifierStart(c))
+                return "`" + literal + "`";
+
+            // [#10867] The $ character is not allowed in Kotlin unquoted identifiers
+            else if (language == KOTLIN && c == '$')
+                return "`" + literal + "`";
             else
                 sb.append(c);
-        }
-
-        // TODO: Should we do this for Scala as well?
-        if (language == KOTLIN) {
-            for (int i = 0; i < sb.length(); i++) {
-                char c = sb.charAt(i);
-
-                if (!Character.isJavaIdentifierPart(c))
-                    return "`" + sb + "`";
-                else if (i == 0 && !Character.isJavaIdentifierStart(c))
-                    return "`" + sb + "`";
-
-                // [#10867] The $ character is not allowed in Kotlin unquoted identifiers
-                else if (c == '$')
-                    return "`" + sb + "`";
-            }
         }
 
         return sb.toString();
@@ -515,30 +465,12 @@ class GenerationUtil {
         return convertToIdentifier(literal, Language.JAVA);
     }
 
-    static String escape(char c) {
+    private static String escape(char c) {
         if (c == ' ' || c == '-' || c == '.')
             return "_";
         else
             return "_" + Integer.toHexString(c);
     }
-
-    static String escapeString0(Language language, String string) {
-        if (string == null)
-            return null;
-
-        // [#3450] Escape also the escape sequence, among other things that break Java strings.
-        String result = string.replace("\\", "\\\\")
-                              .replace("\"", "\\\"")
-                              .replace("\n", "\\n")
-                              .replace("\r", "\\r");
-
-        // [#10869] Prevent string interpolation in Kotlin
-        if (language.isKotlin())
-            result = result.replace("$", "\\$");
-
-        return result;
-    }
-
 
     /**
      * Take a qualified Java type and make it a simple type
@@ -552,40 +484,10 @@ class GenerationUtil {
         return qualifiedJavaType.replaceAll(".*\\.", "");
     }
 
-    static DataTypeDefinition getArrayBaseType(SQLDialect dialect, DataTypeDefinition type) {
-        BaseType bt = getArrayBaseType(dialect, type.getType(), type.getQualifiedUserType());
-
-        if (bt.t().equals(type.getType()))
-            return type;
-
-        return new DefaultDataTypeDefinition(
-            type.getDatabase(),
-            type.getSchema(),
-            bt.t(),
-            type.getLength(),
-            type.getPrecision(),
-            type.getScale(),
-            type.isNullable(),
-            type.isHidden(),
-            type.isRedacted(),
-            type.isReadonly(),
-            type.getGeneratedAlwaysAs(),
-            type.getDefaultValue(),
-            type.isIdentity(),
-            bt.u(),
-            type.getGenerator(),
-            type.getConverter(),
-            type.getBinding(),
-            type.getJavaType()
-        );
-    }
-
-    static final record BaseType(String t, Name u) {}
-
     /**
      * Gets the base type for an array type, depending on the RDBMS dialect
      */
-    static BaseType getArrayBaseType(SQLDialect dialect, String t, Name u) {
+    static Name getArrayBaseType(SQLDialect dialect, String t, Name u) {
 
         // [#4388] TODO: Improve array handling
         switch (dialect.family()) {
@@ -607,49 +509,42 @@ class GenerationUtil {
 
 
 
-            case DUCKDB:
-                return new BaseType(t.replaceFirst("(?i:array)|\\[\\]", ""), u);
-
-
             case POSTGRES:
-            case YUGABYTEDB:
-                return getPGArrayBaseType(t, u);
+            case YUGABYTEDB: {
 
-            case CLICKHOUSE:
-            case TRINO:
-                return new BaseType(t.replaceFirst("(?i:array\\((.*?)\\))", "$1"), u);
+                // The convention is to prepend a "_" to a type to get an array type
+                if (u != null) {
+                    if (u.last().startsWith("_")) {
+                        String[] name = u.getName();
+                        name[name.length - 1] = name[name.length - 1].substring(1);
+                        return name(name);
+                    }
+                    else if (u.last().toUpperCase().endsWith(" ARRAY")) {
+                        String[] name = u.getName();
+                        name[name.length - 1] = name[name.length - 1].replaceFirst("(?i: ARRAY)", "");
+                        return name(name);
+                    }
+                }
+
+                // But there are also arrays with a "vector" suffix
+                return u;
+            }
 
             case H2:
 
             case HSQLDB:
-            default:
+            default: {
 
                 // In HSQLDB 2.2.5, there has been an incompatible INFORMATION_SCHEMA change around the
                 // ELEMENT_TYPES view. Arrays are now described much more explicitly
                 if ("ARRAY".equalsIgnoreCase(t))
-                    return new BaseType("OTHER", u);
+                    return name("OTHER");
 
                 // This is for backwards compatibility
                 else
-                    return new BaseType(t.replaceFirst("(?i: ARRAY)", ""), u);
+                    return name(t.replaceFirst("(?i: ARRAY)", ""));
+            }
         }
-    }
-
-    private static final BaseType getPGArrayBaseType(String t, Name u) {
-        // The convention is to prepend a "_" to a type to get an array type
-        if (u != null) {
-            if (u.last().startsWith("_"))
-                return new BaseType(u.last().substring(1), u);
-            else if (u.last().toUpperCase().endsWith(" ARRAY"))
-                return new BaseType(u.last().replaceFirst("(?i: ARRAY)", ""), u);
-        }
-
-        if (t.toUpperCase().endsWith(" ARRAY"))
-            return new BaseType(t.replaceFirst("(?i: ARRAY)", ""), u);
-
-        // But there are also arrays with a "vector" suffix
-        else
-            return new BaseType(t, u);
     }
 
     static ExpressionType expressionType(String expression) {

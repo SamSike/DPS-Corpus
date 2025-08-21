@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,7 +38,6 @@
 
 package org.jooq.impl;
 
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.DERBY;
 import static org.jooq.SQLDialect.H2;
@@ -46,9 +45,7 @@ import static org.jooq.SQLDialect.H2;
 import static org.jooq.SQLDialect.MARIADB;
 import static org.jooq.SQLDialect.MYSQL;
 // ...
-// ...
 import static org.jooq.impl.Names.N_T;
-import static org.jooq.impl.SubqueryCharacteristics.DERIVED_TABLE;
 import static org.jooq.impl.Tools.visitSubquery;
 
 import java.util.Set;
@@ -68,41 +65,41 @@ import org.jooq.TableOptions;
  */
 class DerivedTable<R extends Record> extends AbstractTable<R> implements QOM.DerivedTable<R> {
 
-    static final Set<SQLDialect>  NO_SUPPORT_CORRELATED_DERIVED_TABLE = SQLDialect.supportedUntil(CLICKHOUSE, DERBY, H2, MARIADB);
-    private final Lazy<Select<R>> query;
+    static final Set<SQLDialect> NO_SUPPORT_CORRELATED_DERIVED_TABLE = SQLDialect.supportedUntil(DERBY, H2, MARIADB);
+    private final Select<R>      query;
 
     DerivedTable(Select<R> query) {
-        this(Lazy.of(() -> query), N_T);
+        this(query, N_T);
     }
 
-    DerivedTable(Lazy<Select<R>> query, Name name) {
+    DerivedTable(Select<R> query, Name name) {
         super(TableOptions.expression(), name);
 
         this.query = query;
     }
 
     final Select<R> query() {
-        return query.get();
+        return query;
     }
 
     @Override
     public final Table<R> as(Name alias) {
-        return new TableAlias<>(this, alias, true);
+        return new TableAlias<>(this, alias, c -> true);
     }
 
     @Override
     public final Table<R> as(Name alias, Name... fieldAliases) {
-        return new TableAlias<>(this, alias, fieldAliases, true);
+        return new TableAlias<>(this, alias, fieldAliases, c -> true);
     }
 
     @Override
     /* non-final */ FieldsImpl<R> fields0() {
-        return new FieldsImpl<>(query().getSelect());
+        return new FieldsImpl<>(query.getSelect());
     }
 
     @Override
     public final Class<? extends R> getRecordType() {
-        return query().getRecordType();
+        return query.getRecordType();
     }
 
     @Override
@@ -111,13 +108,7 @@ class DerivedTable<R extends Record> extends AbstractTable<R> implements QOM.Der
 
 
 
-
-
-
-
-
-
-        visitSubquery(ctx, query(), DERIVED_TABLE, false);
+        visitSubquery(ctx, query, true, false, false, false);
     }
 
     @Override // Avoid AbstractTable implementation
@@ -130,12 +121,12 @@ class DerivedTable<R extends Record> extends AbstractTable<R> implements QOM.Der
     // -------------------------------------------------------------------------
 
     @Override
-    public final Function1<? super Select<R>, ? extends QOM.DerivedTable<R>> $constructor() {
+    public final Function1<? super Select<R>, ? extends Table<R>> $constructor() {
         return t -> new DerivedTable<>(t);
     }
 
     @Override
     public final Select<R> $arg1() {
-        return query();
+        return query;
     }
 }

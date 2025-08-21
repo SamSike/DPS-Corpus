@@ -16,20 +16,19 @@
  */
 package org.apache.camel.generator.openapi;
 
-import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.processing.Filer;
 
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.servers.Server;
-import io.swagger.v3.oas.models.servers.ServerVariable;
-import io.swagger.v3.parser.OpenAPIV3Parser;
-import org.apache.camel.CamelContext;
+import io.apicurio.datamodels.core.models.common.Server;
+import io.apicurio.datamodels.core.models.common.ServerVariable;
+import io.apicurio.datamodels.openapi.models.OasDocument;
+import io.apicurio.datamodels.openapi.v2.models.Oas20Document;
+import io.apicurio.datamodels.openapi.v3.models.Oas30Document;
+import io.apicurio.datamodels.openapi.v3.models.Oas30Server;
 import org.apache.camel.model.rest.RestsDefinition;
 
 import static org.apache.camel.util.ObjectHelper.notNull;
@@ -41,61 +40,82 @@ import static org.apache.camel.util.ObjectHelper.notNull;
 public abstract class RestDslGenerator<G> {
 
     String apiContextPath;
-    DestinationGenerator destinationGenerator;
-    String destinationToSyntax;
-    OpenAPI document;
-    OperationFilter filter = new OperationFilter();
-    String restComponent;
-    String restContextPath;
-    boolean clientRequestValidation;
-    boolean springBootProject;
-    boolean springComponent;
-    String basePath;
-    String dtoPackageName;
 
-    RestDslGenerator(final OpenAPI document) {
+    DestinationGenerator destinationGenerator;
+
+    String destinationToSyntax;
+
+    final OasDocument document;
+
+    OperationFilter filter = new OperationFilter();
+
+    String restComponent;
+
+    String restContextPath;
+
+    boolean clientRequestValidation;
+
+    boolean springBootProject;
+
+    boolean springComponent;
+
+    String basePath;
+
+    RestDslGenerator(final OasDocument document) {
         this.document = notNull(document, "document");
     }
 
     public G asSpringBootProject() {
         this.springBootProject = true;
+
         @SuppressWarnings("unchecked")
         final G that = (G) this;
+
         return that;
     }
 
     public G asSpringComponent() {
         this.springComponent = true;
+
         @SuppressWarnings("unchecked")
         final G that = (G) this;
+
         return that;
     }
 
     public G withApiContextPath(final String contextPath) {
         this.apiContextPath = contextPath;
+
         @SuppressWarnings("unchecked")
         final G that = (G) this;
+
         return that;
     }
 
     public G withClientRequestValidation() {
         this.clientRequestValidation = true;
+
         @SuppressWarnings("unchecked")
         final G that = (G) this;
+
         return that;
     }
 
     public G withBasePath(final String basePath) {
         this.basePath = basePath;
+
         @SuppressWarnings("unchecked")
         final G that = (G) this;
+
         return that;
     }
 
     public G withDestinationGenerator(final DestinationGenerator destinationGenerator) {
         this.destinationGenerator = destinationGenerator;
+
         @SuppressWarnings("unchecked")
         final G that = (G) this;
+
         return that;
     }
 
@@ -106,43 +126,46 @@ public abstract class RestDslGenerator<G> {
      */
     public G withDestinationToSyntax(final String destinationToSyntax) {
         this.destinationToSyntax = destinationToSyntax;
+
         @SuppressWarnings("unchecked")
         final G that = (G) this;
+
         return that;
     }
 
     public G withOperationFilter(final OperationFilter filter) {
         this.filter = filter;
+
         @SuppressWarnings("unchecked")
         final G that = (G) this;
+
         return that;
     }
 
     public G withOperationFilter(final String include) {
         this.filter.setIncludes(include);
+
         @SuppressWarnings("unchecked")
         final G that = (G) this;
+
         return that;
     }
 
     public G withRestComponent(final String restComponent) {
         this.restComponent = restComponent;
+
         @SuppressWarnings("unchecked")
         final G that = (G) this;
+
         return that;
     }
 
     public G withRestContextPath(final String contextPath) {
         this.restContextPath = contextPath;
-        @SuppressWarnings("unchecked")
-        final G that = (G) this;
-        return that;
-    }
 
-    public G withDtoPackageName(final String dtoPackageName) {
-        this.dtoPackageName = dtoPackageName;
         @SuppressWarnings("unchecked")
         final G that = (G) this;
+
         return that;
     }
 
@@ -154,42 +177,52 @@ public abstract class RestDslGenerator<G> {
         return destinationGenerator;
     }
 
-    public static String determineBasePathFrom(final String parameter, final OpenAPI document) {
+    public static String determineBasePathFrom(final String parameter, final OasDocument document) {
         return parameter != null
                 ? determineBasePathFrom(parameter) : determineBasePathFrom(document);
     }
 
     public static String determineBasePathFrom(final String parameter) {
         Objects.requireNonNull(parameter, "parameter");
+
         return prepareBasePath(parameter.trim());
     }
 
-    public static String determineBasePathFrom(final OpenAPI document) {
+    public static String determineBasePathFrom(final OasDocument document) {
         Objects.requireNonNull(document, "document");
 
-        final List<Server> servers = document.getServers();
+        if (document instanceof Oas20Document) {
+            return ((Oas20Document) document).basePath;
+        } else if (document instanceof Oas30Document) {
+            final Oas30Document oas30Document = (Oas30Document) document;
+            final List<Server> servers = oas30Document.getServers();
 
-        if (servers == null || servers.isEmpty()) {
-            return "";
+            if (servers == null || servers.get(0) == null) {
+                return "";
+            }
+
+            final Oas30Server firstServer = (Oas30Server) servers.get(0);
+            final URI serverUrl = URI.create(resolveVariablesIn(firstServer.url, firstServer));
+            return prepareBasePath(serverUrl.getPath());
         }
 
-        final Server firstServer = servers.get(0);
-        final URI serverUrl = URI.create(resolveVariablesIn(firstServer.getUrl(), firstServer));
-        return prepareBasePath(serverUrl.getPath());
+        throw new IllegalArgumentException("Unsupported document type: " + document.getClass().getName());
     }
 
     private static String prepareBasePath(String basePath) {
-        if (basePath == null || basePath.isEmpty()) {
+        if (basePath == null || basePath.length() == 0) {
             return "";
         }
 
         if (basePath.charAt(0) != '/') {
             basePath = "/" + basePath;
         }
+
         if (basePath.indexOf("//") == 0) {
             // strip off the first "/" if double "/" exists
             basePath = basePath.substring(1);
         }
+
         if ("/".equals(basePath)) {
             basePath = "";
         }
@@ -197,59 +230,59 @@ public abstract class RestDslGenerator<G> {
         return basePath;
     }
 
-    public static String determineHostFrom(final OpenAPI document) {
-        final List<Server> servers = document.getServers();
-        if (servers == null || servers.isEmpty()) {
-            return "";
+    public static String determineHostFrom(final OasDocument document) {
+        if (document instanceof Oas20Document) {
+            return ((Oas20Document) document).host;
+        } else if (document instanceof Oas30Document) {
+            final Oas30Document oas30Document = (Oas30Document) document;
+            final List<Server> servers = oas30Document.getServers();
+
+            if (servers == null || servers.get(0) == null) {
+                return "";
+            }
+
+            final Oas30Server firstServer = (Oas30Server) servers.get(0);
+
+            final URI serverUrl = URI.create(resolveVariablesIn(firstServer.url, firstServer));
+
+            return serverUrl.getHost();
         }
-        final Server firstServer = servers.get(0);
-        final URI serverUrl = URI.create(resolveVariablesIn(firstServer.getUrl(), firstServer));
-        return serverUrl.getHost();
+
+        throw new IllegalArgumentException("Unsupported document type: " + document.getClass().getName());
     }
 
-    public static String resolveVariablesIn(final String url, final Server server) {
-        final Map<String, ServerVariable> variables = Objects.requireNonNull(server, "server").getVariables();
+    public static String resolveVariablesIn(final String url, final Oas30Server server) {
+        final List<ServerVariable> variables = Objects.requireNonNull(server, "server").getServerVariables();
         String withoutPlaceholders = url;
-        if (variables != null) {
-            for (Map.Entry<String, ServerVariable> entry : variables.entrySet()) {
-                final String name = "{" + entry.getKey() + "}";
-                withoutPlaceholders = withoutPlaceholders.replace(name, entry.getValue().getDefault());
-            }
+        for (final ServerVariable variable : variables) {
+            final String name = "{" + variable.getName() + "}";
+            withoutPlaceholders = withoutPlaceholders.replace(name, variable.default_);
         }
+
         return withoutPlaceholders;
     }
 
-    public static RestDslSourceCodeGenerator<Appendable> toAppendable(final OpenAPI document) {
+    public static RestDslSourceCodeGenerator<Appendable> toAppendable(final OasDocument document) {
         return new AppendableGenerator(document);
     }
 
-    public static RestDslDefinitionGenerator toDefinition(final OpenAPI document) {
+    public static RestDslDefinitionGenerator toDefinition(final OasDocument document) {
         return new RestDslDefinitionGenerator(document);
     }
 
-    public static RestDslSourceCodeGenerator<Filer> toFiler(final OpenAPI document) {
+    public static RestDslSourceCodeGenerator<Filer> toFiler(final OasDocument document) {
         return new FilerGenerator(document);
     }
 
-    public static RestDslSourceCodeGenerator<Path> toPath(final OpenAPI document) {
+    public static RestDslSourceCodeGenerator<Path> toPath(final OasDocument document) {
         return new PathGenerator(document);
     }
 
-    public static RestDslXmlGenerator toXml(final OpenAPI document) {
+    public static RestDslXmlGenerator toXml(final OasDocument document) {
         return new RestDslXmlGenerator(document);
     }
 
-    public static RestDslYamlGenerator toYaml(final OpenAPI document) {
+    public static RestDslYamlGenerator toYaml(final OasDocument document) {
         return new RestDslYamlGenerator(document);
-    }
-
-    public static RestDslYamlGenerator toYaml(File path) {
-        OpenAPIV3Parser parser = new OpenAPIV3Parser();
-        OpenAPI document = parser.read(path.getAbsolutePath());
-        return new RestDslYamlGenerator(document);
-    }
-
-    public static String generateToYaml(CamelContext camelContext, File path) throws Exception {
-        return toYaml(path).generate(camelContext);
     }
 }

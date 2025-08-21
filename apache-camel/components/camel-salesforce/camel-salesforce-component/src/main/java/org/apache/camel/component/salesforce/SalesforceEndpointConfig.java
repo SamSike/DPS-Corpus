@@ -23,14 +23,12 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.salesforce.eventbus.protobuf.ReplayPreset;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.component.salesforce.api.dto.analytics.reports.ReportMetadata;
 import org.apache.camel.component.salesforce.api.dto.approval.ApprovalRequest;
 import org.apache.camel.component.salesforce.api.dto.approval.ApprovalRequest.Action;
 import org.apache.camel.component.salesforce.api.dto.bulk.ContentType;
 import org.apache.camel.component.salesforce.internal.PayloadFormat;
-import org.apache.camel.component.salesforce.internal.dto.EventSchemaFormatEnum;
 import org.apache.camel.component.salesforce.internal.dto.NotifyForFieldsEnum;
 import org.apache.camel.component.salesforce.internal.dto.NotifyForOperationsEnum;
 import org.apache.camel.spi.UriParam;
@@ -68,9 +66,6 @@ public class SalesforceEndpointConfig implements Cloneable {
     public static final String COMPOSITE_METHOD = "compositeMethod";
     public static final String LIMIT = "limit";
     public static final String ALL_OR_NONE = "allOrNone";
-    public static final String EVENT_NAME = "eventName";
-    public static final String EVENT_SCHEMA_ID = "eventSchemaId";
-    public static final String EVENT_SCHEMA_FORMAT = "eventSchemaFormat";
 
     // prefix for parameters in headers
     public static final String APEX_QUERY_PARAM_PREFIX = "apexQueryParam.";
@@ -100,11 +95,6 @@ public class SalesforceEndpointConfig implements Cloneable {
     public static final String INITIAL_REPLAY_ID_MAP = "initialReplayIdMap";
     public static final long REPLAY_FROM_TIP = -1L;
 
-    // parameters for Pub/Sub API
-    public static final String REPLAY_PRESET = "replayPreset";
-    public static final String PUB_SUB_DESERIALIZE_TYPE = "pubSubDeserializeType";
-    public static final String PUB_SUB_POJO_CLASS = "pubSubPojoClass";
-
     // parameters for Approval API
     public static final String APPROVAL = "approval";
 
@@ -123,8 +113,6 @@ public class SalesforceEndpointConfig implements Cloneable {
     public static final long DEFAULT_MAX_BACKOFF = 30000L;
 
     public static final String NOT_FOUND_BEHAVIOUR = "notFoundBehaviour";
-
-    public static final String FALL_BACK_TO_LATEST_REPLAY_ID = "fallbackToLatestReplayId";
 
     // general properties
     @UriParam(defaultValue = DEFAULT_VERSION)
@@ -157,12 +145,6 @@ public class SalesforceEndpointConfig implements Cloneable {
     private String sObjectSearch;
     @UriParam
     private String apexMethod;
-    @UriParam(displayName = "Event Name", label = "producer")
-    private String eventName;
-    @UriParam(displayName = "Event Schema Format", label = "producer")
-    private EventSchemaFormatEnum eventSchemaFormat;
-    @UriParam(displayName = "Event Schema Id", label = "producer")
-    private String eventSchemaId;
     @UriParam(label = "producer")
     private String compositeMethod;
     @UriParam(label = "producer", defaultValue = "false", description = "Composite API option to indicate" +
@@ -212,24 +194,6 @@ public class SalesforceEndpointConfig implements Cloneable {
     private Boolean notifyForOperationDelete;
     @UriParam
     private Boolean notifyForOperationUndelete;
-
-    // Pub/Sub API properties
-    @UriParam(label = "consumer", defaultValue = "100",
-              description = "Max number of events to receive in a batch from the Pub/Sub API.")
-    private int pubSubBatchSize = 100;
-
-    @UriParam(label = "consumer", defaultValue = "AVRO",
-              description = "How to deserialize events consume from the Pub/Sub API. AVRO will try a " +
-                            "SpecificRecord subclass if found, otherwise GenericRecord.",
-              enums = "AVRO,SPECIFIC_RECORD,GENERIC_RECORD,POJO,JSON")
-    private PubSubDeserializeType pubSubDeserializeType = PubSubDeserializeType.AVRO;
-
-    @UriParam(label = "consumer", description = "Replay preset for Pub/Sub API.", defaultValue = "LATEST",
-              enums = "LATEST,EARLIEST,CUSTOM")
-    private ReplayPreset replayPreset = ReplayPreset.LATEST;
-
-    @UriParam(label = "consumer", description = "Fully qualified class name to deserialize Pub/Sub API event to.")
-    private String pubSubPojoClass;
 
     // Analytics API properties
     @UriParam
@@ -288,18 +252,12 @@ public class SalesforceEndpointConfig implements Cloneable {
     @UriParam(defaultValue = "EXCEPTION")
     private NotFoundBehaviour notFoundBehaviour = NotFoundBehaviour.EXCEPTION;
 
-    @UriParam(label = "consumer",
-              description = "Whether the pub/sub consumer needs to fallback to the latest replay id when the provided id is not valid. "
-                            + "If set to false, the component will keep retrying; in order to treat this as an exception you can "
-                            + "use BridgeExceptionHandlerToErrorHandler and handle the exception in the route.",
-              defaultValue = "false")
-    private boolean fallbackToLatestReplayId;
-
     public SalesforceEndpointConfig copy() {
         try {
+            final SalesforceEndpointConfig copy = (SalesforceEndpointConfig) super.clone();
             // nothing to deep copy, getApexQueryParams() is readonly, so no
             // need to deep copy
-            return (SalesforceEndpointConfig) super.clone();
+            return copy;
         } catch (CloneNotSupportedException ex) {
             throw new RuntimeCamelException(ex);
         }
@@ -832,13 +790,10 @@ public class SalesforceEndpointConfig implements Cloneable {
         valueMap.put(SOBJECT_SEARCH, sObjectSearch);
         valueMap.put(APEX_METHOD, apexMethod);
         valueMap.put(APEX_URL, apexUrl);
-        // apexQueryParams are handled explicitly in AbstractRestProcessor
         valueMap.put(COMPOSITE_METHOD, compositeMethod);
         valueMap.put(LIMIT, limit);
         valueMap.put(APPROVAL, approval);
-        valueMap.put(EVENT_NAME, eventName);
-        valueMap.put(EVENT_SCHEMA_FORMAT, eventSchemaFormat);
-        valueMap.put(EVENT_SCHEMA_ID, eventSchemaId);
+        // apexQueryParams are handled explicitly in AbstractRestProcessor
 
         // add bulk API properties
         if (contentType != null) {
@@ -847,15 +802,6 @@ public class SalesforceEndpointConfig implements Cloneable {
         valueMap.put(JOB_ID, jobId);
         valueMap.put(BATCH_ID, batchId);
         valueMap.put(RESULT_ID, resultId);
-        if (locator != null) {
-            valueMap.put(LOCATOR, locator);
-        }
-        if (maxRecords != null) {
-            valueMap.put(MAX_RECORDS, maxRecords);
-        }
-        if (queryLocator != null) {
-            valueMap.put(QUERY_LOCATOR, queryLocator);
-        }
 
         // add analytics API properties
         valueMap.put(REPORT_ID, reportId);
@@ -868,19 +814,12 @@ public class SalesforceEndpointConfig implements Cloneable {
         valueMap.put(FALL_BACK_REPLAY_ID, fallBackReplayId);
         valueMap.put(INITIAL_REPLAY_ID_MAP, initialReplayIdMap);
 
-        // add Pub/Sub API properties
-        valueMap.put(REPLAY_PRESET, initialReplayIdMap);
-        valueMap.put(PUB_SUB_DESERIALIZE_TYPE, pubSubDeserializeType);
-        valueMap.put(PUB_SUB_POJO_CLASS, pubSubPojoClass);
-
         valueMap.put(NOT_FOUND_BEHAVIOUR, notFoundBehaviour);
 
         valueMap.put(RAW_PATH, rawPath);
         valueMap.put(RAW_METHOD, rawMethod);
         valueMap.put(RAW_HTTP_HEADERS, rawHttpHeaders);
         valueMap.put(RAW_QUERY_PARAMETERS, rawQueryParameters);
-
-        valueMap.put(FALL_BACK_TO_LATEST_REPLAY_ID, fallbackToLatestReplayId);
 
         return Collections.unmodifiableMap(valueMap);
     }
@@ -891,7 +830,7 @@ public class SalesforceEndpointConfig implements Cloneable {
 
     /**
      * Default replayId setting if no value is found in {@link #initialReplayIdMap}
-     *
+     * 
      * @param defaultReplayId
      */
     public void setDefaultReplayId(Long defaultReplayId) {
@@ -920,50 +859,13 @@ public class SalesforceEndpointConfig implements Cloneable {
         this.fallBackReplayId = fallBackReplayId;
     }
 
-    /**
-     * ReplayPreset for Pub/Sub API
-     */
-    public ReplayPreset getReplayPreset() {
-        return replayPreset;
-    }
-
-    public void setReplayPreset(ReplayPreset replayPreset) {
-        this.replayPreset = replayPreset;
-    }
-
-    /**
-     * Type of deserialization for Pub/Sub API events
-     *
-     * @return
-     */
-    public PubSubDeserializeType getPubSubDeserializeType() {
-        return pubSubDeserializeType;
-    }
-
-    public void setPubSubDeserializeType(PubSubDeserializeType pubSubDeserializeType) {
-        this.pubSubDeserializeType = pubSubDeserializeType;
-    }
-
-    /**
-     * Class to deserialize Pub/Sub API events to
-     *
-     * @return
-     */
-    public String getPubSubPojoClass() {
-        return pubSubPojoClass;
-    }
-
-    public void setPubSubPojoClass(String pubSubPojoClass) {
-        this.pubSubPojoClass = pubSubPojoClass;
-    }
-
     public Integer getLimit() {
         return limit;
     }
 
     /**
      * Limit on number of returned records. Applicable to some of the API, check the Salesforce documentation.
-     *
+     * 
      * @param limit
      */
     public void setLimit(final Integer limit) {
@@ -1119,8 +1021,8 @@ public class SalesforceEndpointConfig implements Cloneable {
 
     /**
      * Determines whether to evaluate the entry criteria for the process (true) or not (false) if the process definition
-     * name or ID isn't null. If the process definition name or ID isn't specified, this argument is ignored, and
-     * standard evaluation is followed based on process order. By default, the entry criteria isn't skipped if it's not
+     * name or ID isn’t null. If the process definition name or ID isn’t specified, this argument is ignored, and
+     * standard evaluation is followed based on process order. By default, the entry criteria isn’t skipped if it’s not
      * set by this request.
      *
      * @param skipEntryCriteria
@@ -1152,7 +1054,7 @@ public class SalesforceEndpointConfig implements Cloneable {
 
     /**
      * The portion of the endpoint URL after the domain name. E.g., " + "'/services/data/v52.0/sobjects/Account/'
-     *
+     * 
      * @param rawPath the path
      */
     public void setRawPath(String rawPath) {
@@ -1165,7 +1067,7 @@ public class SalesforceEndpointConfig implements Cloneable {
 
     /**
      * HTTP method to use for the Raw operation
-     *
+     * 
      * @param rawMethod http method
      */
     public void setRawMethod(String rawMethod) {
@@ -1179,7 +1081,7 @@ public class SalesforceEndpointConfig implements Cloneable {
     /**
      * Comma separated list of message headers to include as query parameters for Raw operation. Do not url-encode
      * values as this will be done automatically.
-     *
+     * 
      * @param rawQueryParameters
      */
     public void setRawQueryParameters(String rawQueryParameters) {
@@ -1192,68 +1094,10 @@ public class SalesforceEndpointConfig implements Cloneable {
 
     /**
      * Comma separated list of message headers to include as HTTP parameters for Raw operation.
-     *
+     * 
      * @param
      */
     public void setRawHttpHeaders(String rawHttpHeaders) {
         this.rawHttpHeaders = rawHttpHeaders;
     }
-
-    public int getPubSubBatchSize() {
-        return pubSubBatchSize;
-    }
-
-    public void setPubSubBatchSize(int pubSubBatchSize) {
-        this.pubSubBatchSize = pubSubBatchSize;
-    }
-
-    public String getEventName() {
-        return eventName;
-    }
-
-    /**
-     * Name of Platform Event, Change Data Capture Event, custom event, etc.
-     *
-     * @param eventName
-     */
-    public void setEventName(String eventName) {
-        this.eventName = eventName;
-    }
-
-    public EventSchemaFormatEnum getEventSchemaFormat() {
-        return eventSchemaFormat;
-    }
-
-    /**
-     * EXPANDED: Apache Avro format but doesn't strictly adhere to the record complex type. COMPACT: Apache Avro,
-     * adheres to the specification for the record complex type. This parameter is available in API version 43.0 and
-     * later.
-     *
-     * @param eventSchemaFormat
-     */
-    public void setEventSchemaFormat(EventSchemaFormatEnum eventSchemaFormat) {
-        this.eventSchemaFormat = eventSchemaFormat;
-    }
-
-    public String getEventSchemaId() {
-        return eventSchemaId;
-    }
-
-    /**
-     * The ID of the event schema.
-     *
-     * @param eventSchemaId
-     */
-    public void setEventSchemaId(String eventSchemaId) {
-        this.eventSchemaId = eventSchemaId;
-    }
-
-    public boolean isFallbackToLatestReplayId() {
-        return fallbackToLatestReplayId;
-    }
-
-    public void setFallbackToLatestReplayId(boolean fallbackToLatestReplayId) {
-        this.fallbackToLatestReplayId = fallbackToLatestReplayId;
-    }
-
 }

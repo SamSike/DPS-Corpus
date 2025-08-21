@@ -26,7 +26,7 @@ public final class ServiceBusTypeConverter {
     private ServiceBusTypeConverter() {
     }
 
-    @Converter(allowNull = true)
+    @Converter
     public static String toString(final BinaryData binaryData) {
         if (ObjectHelper.isNotEmpty(binaryData)) {
             return binaryData.toString();
@@ -34,7 +34,7 @@ public final class ServiceBusTypeConverter {
         return null;
     }
 
-    @Converter(allowNull = true)
+    @Converter
     public static BinaryData toBinaryData(final String data) {
         if (ObjectHelper.isNotEmpty(data)) {
             return BinaryData.fromString(data);

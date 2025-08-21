@@ -16,19 +16,30 @@
  */
 package org.apache.camel.coap;
 
+import java.io.IOException;
+import java.net.URI;
+import java.security.GeneralSecurityException;
+
+import javax.net.ssl.SSLContext;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.support.DefaultProducer;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.CoapResponse;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
+import org.eclipse.californium.core.network.CoapEndpoint;
+import org.eclipse.californium.core.network.config.NetworkConfig;
+import org.eclipse.californium.elements.tcp.netty.TcpClientConnector;
+import org.eclipse.californium.elements.tcp.netty.TlsClientConnector;
+import org.eclipse.californium.scandium.DTLSConnector;
 
 /**
  * The CoAP producer.
  */
 public class CoAPProducer extends DefaultProducer {
     private final CoAPEndpoint endpoint;
-    private volatile CoapClient client;
+    private CoapClient client;
 
     public CoAPProducer(CoAPEndpoint endpoint) {
         super(endpoint);
@@ -37,8 +48,7 @@ public class CoAPProducer extends DefaultProducer {
 
     @Override
     public void process(Exchange exchange) throws Exception {
-        initClient();
-
+        CoapClient client = getClient(exchange);
         String ct = exchange.getIn().getHeader(CoAPConstants.CONTENT_TYPE, String.class);
         if (ct == null) {
             // ?default?
@@ -71,7 +81,11 @@ public class CoAPProducer extends DefaultProducer {
         }
 
         if (response != null) {
-            CoAPHelper.convertCoapResponseToMessage(response, exchange.getOut());
+            Message resp = exchange.getOut();
+            String mt = MediaTypeRegistry.toString(response.getOptions().getContentFormat());
+            resp.setHeader(CoAPConstants.CONTENT_TYPE, mt);
+            resp.setHeader(CoAPConstants.COAP_RESPONSE_CODE, response.getCode().toString());
+            resp.setBody(response.getPayload());
         }
 
         if (method.equalsIgnoreCase(CoAPConstants.METHOD_PING)) {
@@ -80,22 +94,43 @@ public class CoAPProducer extends DefaultProducer {
         }
     }
 
-    protected void initClient() throws Exception {
-        lock.lock();
-        try {
-            if (client == null) {
-                client = endpoint.createCoapClient(endpoint.getUri());
+    private synchronized CoapClient getClient(Exchange exchange) throws IOException, GeneralSecurityException {
+        if (client == null) {
+            URI uri = exchange.getIn().getHeader(CoAPConstants.COAP_URI, URI.class);
+            if (uri == null) {
+                uri = endpoint.getUri();
             }
-        } finally {
-            lock.unlock();
-        }
-    }
+            client = new CoapClient(uri);
 
-    @Override
-    protected void doStop() throws Exception {
-        if (client != null) {
-            client.shutdown();
-            client = null;
+            // Configure TLS and / or TCP
+            if (CoAPEndpoint.enableDTLS(uri)) {
+                DTLSConnector connector = endpoint.createDTLSConnector(null, true);
+                CoapEndpoint.Builder coapBuilder = new CoapEndpoint.Builder();
+                coapBuilder.setConnector(connector);
+
+                client.setEndpoint(coapBuilder.build());
+            } else if (CoAPEndpoint.enableTCP(endpoint.getUri())) {
+                NetworkConfig config = NetworkConfig.createStandardWithoutFile();
+                int tcpThreads = config.getInt(NetworkConfig.Keys.TCP_WORKER_THREADS);
+                int tcpConnectTimeout = config.getInt(NetworkConfig.Keys.TCP_CONNECT_TIMEOUT);
+                int tcpIdleTimeout = config.getInt(NetworkConfig.Keys.TCP_CONNECTION_IDLE_TIMEOUT);
+                TcpClientConnector tcpConnector = null;
+
+                // TLS + TCP
+                if (endpoint.getUri().getScheme().startsWith("coaps")) {
+                    SSLContext sslContext = endpoint.getSslContextParameters().createSSLContext(endpoint.getCamelContext());
+                    tcpConnector = new TlsClientConnector(sslContext, tcpThreads, tcpConnectTimeout, tcpIdleTimeout);
+                } else {
+                    tcpConnector = new TcpClientConnector(tcpThreads, tcpConnectTimeout, tcpIdleTimeout);
+                }
+
+                CoapEndpoint.Builder tcpBuilder = new CoapEndpoint.Builder();
+                tcpBuilder.setConnector(tcpConnector);
+
+                client.setEndpoint(tcpBuilder.build());
+            }
+
         }
+        return client;
     }
 }

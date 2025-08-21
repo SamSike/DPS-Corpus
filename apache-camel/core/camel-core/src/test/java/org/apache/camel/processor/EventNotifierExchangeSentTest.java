@@ -30,7 +30,7 @@ public class EventNotifierExchangeSentTest extends ContextTestSupport {
     private final MySentEventNotifier notifier = new MySentEventNotifier();
 
     @Override
-    protected CamelContext createCamelContext() {
+    protected CamelContext createCamelContext() throws Exception {
         DefaultCamelContext context = new DefaultCamelContext();
         context.getManagementStrategy().addEventNotifier(notifier);
         return context;
@@ -59,10 +59,10 @@ public class EventNotifierExchangeSentTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("direct:bar").to("mock:result");
 
                 from("direct:bar").to("mock:bar");

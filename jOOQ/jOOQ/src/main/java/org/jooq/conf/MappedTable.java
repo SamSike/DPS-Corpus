@@ -27,10 +27,10 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 })
 public class MappedTable
     extends SettingsBase
-    implements Serializable, Cloneable, MappedSchemaObject, XMLAppendable
+    implements Serializable, Cloneable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32100L;
+    private final static long serialVersionUID = 31700L;
     protected String input;
     @XmlElement(type = String.class)
     @XmlJavaTypeAdapter(RegexAdapter.class)

@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AggregateCompletionOnlyOneTest extends ContextTestSupport {
 
-    private final MyRepo repo = new MyRepo();
+    private MyRepo repo = new MyRepo();
 
     @Test
     public void testOnlyOne() throws Exception {
@@ -59,17 +59,17 @@ public class AggregateCompletionOnlyOneTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(header("id"), new BodyInAggregatingStrategy()).aggregationRepository(repo)
                         .completionSize(1).to("mock:aggregated");
             }
         };
     }
 
-    private static class MyRepo implements AggregationRepository {
+    private class MyRepo implements AggregationRepository {
 
         private int add;
         private int get;

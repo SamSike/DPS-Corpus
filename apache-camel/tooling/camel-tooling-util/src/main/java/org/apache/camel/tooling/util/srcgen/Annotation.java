@@ -82,7 +82,7 @@ public class Annotation {
             char c = value.charAt(i);
             if (c == '"' || c == '\\') {
                 if (sb == null) {
-                    sb = new StringBuilder(value.length() + 8);
+                    sb = new StringBuilder();
                     sb.append("\"");
                     sb.append("\\");
                     sb.append(c);

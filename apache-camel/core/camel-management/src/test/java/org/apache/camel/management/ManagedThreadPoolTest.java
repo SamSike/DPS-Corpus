@@ -28,17 +28,12 @@ import javax.management.ReflectionException;
 import org.apache.camel.builder.RouteBuilder;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 import static org.apache.camel.management.DefaultManagementObjectNameStrategy.TYPE_THREAD_POOL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisabledIfSystemProperty(named = "camel.threads.virtual.enabled", matches = "true",
-                          disabledReason = "In case of Virtual Threads, the created thread pools don't have all these attributes")
 @DisabledOnOs(OS.AIX)
 public class ManagedThreadPoolTest extends ManagementTestSupport {
 
@@ -49,7 +44,7 @@ public class ManagedThreadPoolTest extends ManagementTestSupport {
         ObjectName on = getCamelObjectName(TYPE_THREAD_POOL, "mythreads(threads)");
 
         Boolean shutdown = (Boolean) mbeanServer.getAttribute(on, "Shutdown");
-        assertFalse(shutdown.booleanValue());
+        assertEquals(false, shutdown.booleanValue());
 
         Integer corePoolSize = (Integer) mbeanServer.getAttribute(on, "CorePoolSize");
         assertEquals(15, corePoolSize.intValue());
@@ -64,7 +59,7 @@ public class ManagedThreadPoolTest extends ManagementTestSupport {
         assertEquals(60, keepAlive.intValue());
 
         Boolean allow = (Boolean) mbeanServer.getAttribute(on, "AllowCoreThreadTimeout");
-        assertTrue(allow.booleanValue());
+        assertEquals(true, allow.booleanValue());
 
         getMockEndpoint("mock:result").expectedMessageCount(1);
         template.sendBody("direct:start", "Hello World");
@@ -84,7 +79,7 @@ public class ManagedThreadPoolTest extends ManagementTestSupport {
         assertEquals(0, size.intValue());
 
         Boolean empty = (Boolean) mbeanServer.getAttribute(on, "TaskQueueEmpty");
-        assertTrue(empty.booleanValue());
+        assertEquals(true, empty.booleanValue());
 
         int remainingCapacity = (Integer) mbeanServer.invoke(on, "getTaskQueueRemainingCapacity", null, null);
         assertEquals(200, remainingCapacity, "remainingCapacity");
@@ -98,10 +93,10 @@ public class ManagedThreadPoolTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").threads(15, 30).id("mythreads").maxQueueSize(200).to("mock:result");
             }
         };

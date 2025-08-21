@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -68,17 +67,8 @@ public class CompositeCacheOperationSource implements CacheOperationSource, Seri
 	}
 
 	@Override
-	public boolean hasCacheOperations(Method method, @Nullable Class<?> targetClass) {
-		for (CacheOperationSource source : this.cacheOperationSources) {
-			if (source.hasCacheOperations(method, targetClass)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	@Override
-	public @Nullable Collection<CacheOperation> getCacheOperations(Method method, @Nullable Class<?> targetClass) {
+	@Nullable
+	public Collection<CacheOperation> getCacheOperations(Method method, @Nullable Class<?> targetClass) {
 		Collection<CacheOperation> ops = null;
 		for (CacheOperationSource source : this.cacheOperationSources) {
 			Collection<CacheOperation> cacheOperations = source.getCacheOperations(method, targetClass);

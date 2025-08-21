@@ -38,10 +38,10 @@ public class SedaInOutMEPTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         // force MEP back to InOnly as we want the next to define the MEP as InOut
                         .setExchangePattern(ExchangePattern.InOnly)

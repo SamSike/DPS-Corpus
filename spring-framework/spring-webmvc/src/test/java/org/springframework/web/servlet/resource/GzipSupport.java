@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.springframework.web.servlet.resource;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,6 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
+import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.ExtensionContext.Store;
@@ -40,13 +40,21 @@ import org.springframework.util.FileCopyUtils;
 
 /**
  * @author Andy Wilkinson
- * @author Sam Brannen
  * @since 5.2.2
  */
-class GzipSupport implements ParameterResolver {
+class GzipSupport implements AfterEachCallback, ParameterResolver {
 
 	private static final Namespace namespace = Namespace.create(GzipSupport.class);
 
+	@Override
+	public void afterEach(ExtensionContext context) throws Exception {
+		GzippedFiles gzippedFiles = getStore(context).remove(GzippedFiles.class, GzippedFiles.class);
+		if (gzippedFiles != null) {
+			for (File gzippedFile: gzippedFiles.created) {
+				gzippedFile.delete();
+			}
+		}
+	}
 
 	@Override
 	public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
@@ -62,14 +70,13 @@ class GzipSupport implements ParameterResolver {
 		return extensionContext.getStore(namespace);
 	}
 
-
-	static class GzippedFiles implements AutoCloseable {
+	static class GzippedFiles {
 
 		private final Set<File> created = new HashSet<>();
 
 		void create(String filePath) {
 			try {
-				Resource location = new ClassPathResource("test/", getClass());
+				Resource location = new ClassPathResource("test/", EncodedResourceResolverTests.class);
 				Resource resource = new FileSystemResource(location.createRelative(filePath).getFile());
 
 				Path gzFilePath = Paths.get(resource.getFile().getAbsolutePath() + ".gz");
@@ -78,19 +85,13 @@ class GzipSupport implements ParameterResolver {
 				File gzFile = Files.createFile(gzFilePath).toFile();
 				GZIPOutputStream out = new GZIPOutputStream(new FileOutputStream(gzFile));
 				FileCopyUtils.copy(resource.getInputStream(), out);
-				this.created.add(gzFile);
+				created.add(gzFile);
 			}
 			catch (IOException ex) {
-				throw new UncheckedIOException(ex);
+				throw new RuntimeException(ex);
 			}
 		}
 
-		@Override
-		public void close() {
-			for (File file: this.created) {
-				file.delete();
-			}
-		}
 	}
 
 }

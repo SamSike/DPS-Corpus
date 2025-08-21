@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,12 +42,10 @@ package org.jooq.impl;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
@@ -60,7 +58,6 @@ import static org.jooq.SQLDialect.MARIADB;
 // ...
 import static org.jooq.SQLDialect.MYSQL;
 // ...
-// ...
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
@@ -69,7 +66,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.conf.Transformation.WHEN_NEEDED;
@@ -91,12 +87,10 @@ import org.jooq.conf.Transformation;
  */
 final class Transformations {
 
-    static final Set<SQLDialect> NO_SUPPORT_IN_LIMIT              = SQLDialect.supportedBy(MARIADB, MYSQL);
-    static final Set<SQLDialect> SUPPORT_MISSING_TABLE_REFERENCES = SQLDialect.supportedBy();
-    static final Set<SQLDialect> EMULATE_QUALIFY                  = SQLDialect.supportedBy(CUBRID, FIREBIRD, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB);
-    static final Set<SQLDialect> EMULATE_ROWNUM                   = SQLDialect.supportedBy(CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB);
-    static final Set<SQLDialect> EMULATE_GROUP_BY_COLUMN_INDEX    = SQLDialect.supportedBy(CUBRID, DERBY, H2, HSQLDB, IGNITE);
-    static final Set<SQLDialect> NO_SUPPORT_CTE                   = SQLDialect.supportedUntil(CUBRID, DERBY);
+    private static final Set<SQLDialect> NO_SUPPORT_IN_LIMIT              = SQLDialect.supportedBy(MARIADB, MYSQL);
+    private static final Set<SQLDialect> SUPPORT_MISSING_TABLE_REFERENCES = SQLDialect.supportedBy();
+    private static final Set<SQLDialect> EMULATE_QUALIFY                  = SQLDialect.supportedBy(CUBRID, FIREBIRD, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB);
+    private static final Set<SQLDialect> EMULATE_ROWNUM                   = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB);
 
     static final SelectQueryImpl<?> subqueryWithLimit(QueryPart source) {
         SelectQueryImpl<?> s;
@@ -109,15 +103,6 @@ final class Transformations {
             "Settings.transformInConditionSubqueryWithLimitToDerivedTable",
             configuration.settings().getTransformInConditionSubqueryWithLimitToDerivedTable(),
             c -> NO_SUPPORT_IN_LIMIT.contains(c.dialect())
-        );
-    }
-
-    static final boolean transformInlineCTE(Configuration configuration) {
-        return transform(
-            configuration,
-            "Settings.transformInlineCTE",
-            configuration.settings().getTransformInlineCTE(),
-            c -> NO_SUPPORT_CTE.contains(c.dialect())
         );
     }
 
@@ -145,15 +130,6 @@ final class Transformations {
             "Settings.transformAppendMissingTableReferences",
             configuration.settings().getParseAppendMissingTableReferences(),
             c -> SUPPORT_MISSING_TABLE_REFERENCES.contains(c.settings().getParseDialect())
-        );
-    }
-
-    static final boolean transformGroupByColumnIndex(Configuration configuration) {
-        return transform(
-            configuration,
-            "Settings.transformGroupByColumnIndex",
-            configuration.settings().getTransformGroupByColumnIndex(),
-            c -> EMULATE_GROUP_BY_COLUMN_INDEX.contains(c.dialect())
         );
     }
 

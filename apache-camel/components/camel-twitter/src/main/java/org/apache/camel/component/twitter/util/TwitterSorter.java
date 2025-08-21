@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.camel.Exchange;
-import twitter4j.v1.Status;
+import twitter4j.Status;
 
 /**
  * To sort tweets.
@@ -31,7 +31,7 @@ public final class TwitterSorter {
     }
 
     /**
-     * Sorts the tweets status id
+     * Sorts the tweets by {@link Status#getId()}.
      */
     public static List<Exchange> sortByStatusId(List<Exchange> exchanges) {
         return exchanges.stream().sorted((e1, e2) -> {

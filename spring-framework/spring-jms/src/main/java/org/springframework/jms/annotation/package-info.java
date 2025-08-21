@@ -1,7 +1,9 @@
 /**
  * Annotations and support classes for declarative JMS listener endpoints.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jms.annotation;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

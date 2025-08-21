@@ -16,31 +16,27 @@
  */
 package org.apache.camel.component.file;
 
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 /**
  * Unit test for writing done files
  */
 public class FilerConsumerDoneFileNameDeleteTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello" + UUID.randomUUID() + ".txt";
 
     @Test
     public void testDoneFile() throws Exception {
         getMockEndpoint("mock:result").expectedMessageCount(0);
 
-        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         // wait a bit and it should not pickup the written file as there are no
         // done file
-        Awaitility.await().pollDelay(50, TimeUnit.MILLISECONDS).untilAsserted(() -> assertMockEndpointsSatisfied());
+        Thread.sleep(50);
 
+        assertMockEndpointsSatisfied();
         resetMocks();
         oneExchangeDone.reset();
 
@@ -56,14 +52,14 @@ public class FilerConsumerDoneFileNameDeleteTest extends ContextTestSupport {
         assertFileNotExists(testFile("done"));
 
         // as well the original file should be deleted
-        assertFileNotExists(testFile(TEST_FILE_NAME));
+        assertFileNotExists(testFile("hello.txt"));
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?doneFileName=done&delete=true&initialDelay=0&delay=10")).to("mock:result");
             }
         };

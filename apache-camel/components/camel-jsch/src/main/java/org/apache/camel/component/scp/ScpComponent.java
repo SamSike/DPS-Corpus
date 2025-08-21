@@ -25,7 +25,6 @@ import org.apache.camel.component.file.GenericFileEndpoint;
 import org.apache.camel.component.file.remote.RemoteFileComponent;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.util.StringHelper;
 
 /**
  * Component providing secure messaging using JSch
@@ -46,8 +45,8 @@ public class ScpComponent extends RemoteFileComponent<ScpFile> {
     @Override
     protected GenericFileEndpoint<ScpFile> buildFileEndpoint(String uri, String remaining, Map<String, Object> parameters)
             throws Exception {
-        String tmp = StringHelper.before(uri, "?", uri);
-        return new ScpEndpoint(uri, this, new ScpConfiguration(new URI(tmp)));
+        int query = uri.indexOf('?');
+        return new ScpEndpoint(uri, this, new ScpConfiguration(new URI(query >= 0 ? uri.substring(0, query) : uri)));
     }
 
     @Override

@@ -35,42 +35,39 @@ import org.slf4j.LoggerFactory;
  * Communicate with Salesforce using Java DTOs.
  */
 @UriEndpoint(firstVersion = "2.12.0", scheme = "salesforce", title = "Salesforce",
-             syntax = "salesforce:operationName:topicName", category = { Category.CLOUD, Category.SAAS },
+             syntax = "salesforce:operationName:topicName", category = { Category.CLOUD, Category.API, Category.CRM },
              headersClass = SalesforceConstants.class)
 public class SalesforceEndpoint extends DefaultEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesforceEndpoint.class);
 
-    @UriPath(label = "common", description = "The operation to use", enums = "getVersions,"
-                                                                             + "getResources,getGlobalObjects,getBasicInfo,getDescription,getSObject,createSObject,"
-                                                                             + "updateSObject,deleteSObject,getSObjectWithId,upsertSObject,deleteSObjectWithId,"
-                                                                             + "getBlobField,query,queryMore,queryAll,search,apexCall,recent,getEventSchema,createJob,"
-                                                                             + "getJob,closeJob,abortJob,createBatch,getBatch,getAllBatches,getRequest,getResults,"
-                                                                             + "createBatchQuery,getQueryResultIds,getQueryResult,getRecentReports,"
-                                                                             + "getReportDescription,executeSyncReport,executeAsyncReport,getReportInstances,"
-                                                                             + "getReportResults,limits,approval,approvals,composite-tree,composite-batch,composite,"
-                                                                             + "compositeRetrieveSObjectCollections,compositeCreateSObjectCollections,"
-                                                                             + "compositeUpdateSObjectCollections,compositeUpsertSObjectCollections,"
-                                                                             + "compositeDeleteSObjectCollections,"
-                                                                             + "bulk2GetAllJobs,bulk2CreateJob,bulk2GetJob,bulk2CreateBatch,bulk2CloseJob,"
-                                                                             + "bulk2AbortJob,bulk2DeleteJob,bulk2GetSuccessfulResults,bulk2GetFailedResults,"
-                                                                             + "bulk2GetUnprocessedRecords,bulk2CreateQueryJob,bulk2GetQueryJob,"
-                                                                             + "bulk2GetAllQueryJobs,bulk2GetQueryJobResults,bulk2AbortQueryJob,bulk2DeleteQueryJob,"
-                                                                             + "raw,subscribe,pubSubSubscribe,pubSubPublish")
+    //CHECKSTYLE:OFF
+    @UriPath( label = "common", description = "The operation to use", enums = "getVersions,"
+            + "getResources,getGlobalObjects,getBasicInfo,getDescription,getSObject,createSObject,"
+            + "updateSObject,deleteSObject,getSObjectWithId,upsertSObject,deleteSObjectWithId,"
+            + "getBlobField,query,queryMore,queryAll,search,apexCall,recent,createJob,getJob,"
+            + "closeJob,abortJob,createBatch,getBatch,getAllBatches,getRequest,getResults,"
+            + "createBatchQuery,getQueryResultIds,getQueryResult,getRecentReports,"
+            + "getReportDescription,executeSyncReport,executeAsyncReport,getReportInstances,"
+            + "getReportResults,limits,approval,approvals,composite-tree,composite-batch,composite,"
+            + "compositeRetrieveSObjectCollections,compositeCreateSObjectCollections,"
+            + "compositeUpdateSObjectCollections,compositeUpsertSObjectCollections,"
+            + "compositeDeleteSObjectCollections,"
+            + "bulk2GetAllJobs,bulk2CreateJob,bulk2GetJob,bulk2CreateBatch,bulk2CloseJob,"
+            + "bulk2AbortJob,bulk2DeleteJob,bulk2GetSuccessfulResults,bulk2GetFailedResults,"
+            + "bulk2GetUnprocessedRecords,bulk2CreateQueryJob,bulk2GetQueryJob,"
+            + "bulk2GetAllQueryJobs,bulk2GetQueryJobResults,bulk2AbortQueryJob,bulk2DeleteQueryJob,"
+            + "raw,subscribe")
     @Metadata(required = true)
     private final OperationName operationName;
-
-    @UriPath(label = "consumer,producer", description = "The name of the topic/channel to use")
+    //CHECKSTYLE:ON
+    @UriPath(label = "consumer", description = "The name of the topic/channel to use")
     private final String topicName;
-
     @UriParam
     private final SalesforceEndpointConfig configuration;
 
-    @UriParam(label = "consumer", description = "The replayId value to use when subscribing to the Streaming API.")
+    @UriParam(label = "consumer", description = "The replayId value to use when subscribing")
     private Long replayId;
-
-    @UriParam(label = "consumer", description = "The replayId value to use when subscribing to the Pub/Sub API.")
-    private String pubSubReplayId;
 
     public SalesforceEndpoint(String uri, SalesforceComponent salesforceComponent, SalesforceEndpointConfig configuration,
                               OperationName operationName, String topicName) {
@@ -94,16 +91,8 @@ public class SalesforceEndpoint extends DefaultEndpoint {
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
-        Consumer consumer = null;
-        switch (operationName) {
-            case SUBSCRIBE -> {
-                final SubscriptionHelper subscriptionHelper = getComponent().getSubscriptionHelper();
-                consumer = new StreamingApiConsumer(this, processor, subscriptionHelper);
-            }
-            case PUBSUB_SUBSCRIBE -> {
-                consumer = new PubSubApiConsumer(this, processor);
-            }
-        }
+        final SubscriptionHelper subscriptionHelper = getComponent().getSubscriptionHelper();
+        final SalesforceConsumer consumer = new SalesforceConsumer(this, processor, subscriptionHelper);
         configureConsumer(consumer);
         return consumer;
     }
@@ -131,14 +120,6 @@ public class SalesforceEndpoint extends DefaultEndpoint {
 
     public Long getReplayId() {
         return replayId;
-    }
-
-    public String getPubSubReplayId() {
-        return pubSubReplayId;
-    }
-
-    public void setPubSubReplayId(String pubSubReplayId) {
-        this.pubSubReplayId = pubSubReplayId;
     }
 
     @Override

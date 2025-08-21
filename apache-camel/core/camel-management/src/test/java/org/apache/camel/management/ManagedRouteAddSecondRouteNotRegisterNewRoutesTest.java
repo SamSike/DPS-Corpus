@@ -37,13 +37,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class ManagedRouteAddSecondRouteNotRegisterNewRoutesTest extends ManagementTestSupport {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         // do not register new routes
         context.getManagementStrategy().getManagementAgent().setRegisterNewRoutes(false);
 
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo").to("mock:result");
             }
         };
@@ -62,7 +62,7 @@ public class ManagedRouteAddSecondRouteNotRegisterNewRoutesTest extends Manageme
         // add a 2nd route
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:bar").routeId("bar").to("mock:bar");
             }
         });

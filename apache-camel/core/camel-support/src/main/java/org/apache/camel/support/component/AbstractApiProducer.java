@@ -77,7 +77,7 @@ public abstract class AbstractApiProducer<E extends Enum<E> & ApiName, T>
         }
 
         // create a runnable invocation task to be submitted on a background thread pool
-        // this way we avoid blocking the current thread for long-running methods
+        // this way we avoid blocking the current thread for long running methods
         Runnable invocation = new Runnable() {
             @Override
             public void run() {
@@ -93,7 +93,7 @@ public abstract class AbstractApiProducer<E extends Enum<E> & ApiName, T>
 
                     interceptResult(result, exchange);
 
-                } catch (Exception t) {
+                } catch (Throwable t) {
                     exchange.setException(RuntimeCamelException.wrapRuntimeCamelException(t));
                 } finally {
                     callback.done(false);
@@ -112,14 +112,13 @@ public abstract class AbstractApiProducer<E extends Enum<E> & ApiName, T>
 
     /**
      * Invoke the API method. Derived classes can override, but MUST call super.doInvokeMethod().
-     *
+     * 
      * @param  method                API method to invoke.
      * @param  properties            method arguments from endpoint properties and exchange In headers.
      * @return                       API method invocation result.
      * @throws RuntimeCamelException on error. Exceptions thrown by API method are wrapped.
      */
-    protected Object doInvokeMethod(ApiMethod method, Map<String, Object> properties)
-            throws RuntimeCamelException {
+    protected Object doInvokeMethod(ApiMethod method, Map<String, Object> properties) throws RuntimeCamelException {
         return ApiMethodHelper.invokeMethod(endpoint.getApiProxy(method, properties), method, properties);
     }
 
@@ -176,7 +175,8 @@ public abstract class AbstractApiProducer<E extends Enum<E> & ApiName, T>
                 try {
                     // attempt to find out type via configurer so we avoid using reflection
                     PropertyConfigurer configurer = endpoint.getComponent().getEndpointPropertyConfigurer();
-                    if (configurer instanceof PropertyConfigurerGetter getter) {
+                    if (configurer instanceof PropertyConfigurerGetter) {
+                        PropertyConfigurerGetter getter = (PropertyConfigurerGetter) configurer;
                         Class<?> type = getter.getOptionType(inBodyProperty, true);
                         if (type != null) {
                             value = endpoint.getCamelContext().getTypeConverter().mandatoryConvertTo(type, exchange, value);

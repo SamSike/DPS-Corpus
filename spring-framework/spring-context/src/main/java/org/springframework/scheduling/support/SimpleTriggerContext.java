@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,9 @@
 package org.springframework.scheduling.support;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.util.Date;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.TriggerContext;
 
 /**
@@ -34,11 +32,14 @@ public class SimpleTriggerContext implements TriggerContext {
 
 	private final Clock clock;
 
-	private volatile @Nullable Instant lastScheduledExecution;
+	@Nullable
+	private volatile Date lastScheduledExecutionTime;
 
-	private volatile @Nullable Instant lastActualExecution;
+	@Nullable
+	private volatile Date lastActualExecutionTime;
 
-	private volatile @Nullable Instant lastCompletion;
+	@Nullable
+	private volatile Date lastCompletionTime;
 
 
 	/**
@@ -55,33 +56,12 @@ public class SimpleTriggerContext implements TriggerContext {
 	 * @param lastScheduledExecutionTime last <i>scheduled</i> execution time
 	 * @param lastActualExecutionTime last <i>actual</i> execution time
 	 * @param lastCompletionTime last completion time
-	 * @deprecated as of 6.0, in favor of {@link #SimpleTriggerContext(Instant, Instant, Instant)}
 	 */
-	@Deprecated(since = "6.0")
-	public SimpleTriggerContext(@Nullable Date lastScheduledExecutionTime, @Nullable Date lastActualExecutionTime,
-			@Nullable Date lastCompletionTime) {
-
-		this(toInstant(lastScheduledExecutionTime), toInstant(lastActualExecutionTime), toInstant(lastCompletionTime));
-	}
-
-	private static @Nullable Instant toInstant(@Nullable Date date) {
-		return (date != null ? date.toInstant() : null);
-	}
-
-	/**
-	 * Create a SimpleTriggerContext with the given time values,
-	 * exposing the system clock for the default time zone.
-	 * @param lastScheduledExecution last <i>scheduled</i> execution time
-	 * @param lastActualExecution last <i>actual</i> execution time
-	 * @param lastCompletion last completion time
-	 */
-	public SimpleTriggerContext(@Nullable Instant lastScheduledExecution, @Nullable Instant lastActualExecution,
-			@Nullable Instant lastCompletion) {
-
+	public SimpleTriggerContext(Date lastScheduledExecutionTime, Date lastActualExecutionTime, Date lastCompletionTime) {
 		this();
-		this.lastScheduledExecution = lastScheduledExecution;
-		this.lastActualExecution = lastActualExecution;
-		this.lastCompletion = lastCompletion;
+		this.lastScheduledExecutionTime = lastScheduledExecutionTime;
+		this.lastActualExecutionTime = lastActualExecutionTime;
+		this.lastCompletionTime = lastCompletionTime;
 	}
 
 	/**
@@ -89,7 +69,7 @@ public class SimpleTriggerContext implements TriggerContext {
 	 * exposing the given clock.
 	 * @param clock the clock to use for trigger calculation
 	 * @since 5.3
-	 * @see #update(Instant, Instant, Instant)
+	 * @see #update(Date, Date, Date)
 	 */
 	public SimpleTriggerContext(Clock clock) {
 		this.clock = clock;
@@ -101,27 +81,11 @@ public class SimpleTriggerContext implements TriggerContext {
  	 * @param lastScheduledExecutionTime last <i>scheduled</i> execution time
 	 * @param lastActualExecutionTime last <i>actual</i> execution time
 	 * @param lastCompletionTime last completion time
-	 * @deprecated as of 6.0, in favor of {@link #update(Instant, Instant, Instant)}
 	 */
-	@Deprecated(since = "6.0")
-	public void update(@Nullable Date lastScheduledExecutionTime, @Nullable Date lastActualExecutionTime,
-			@Nullable Date lastCompletionTime) {
-
-		update(toInstant(lastScheduledExecutionTime), toInstant(lastActualExecutionTime), toInstant(lastCompletionTime));
-	}
-
-	/**
-	 * Update this holder's state with the latest time values.
- 	 * @param lastScheduledExecution last <i>scheduled</i> execution time
-	 * @param lastActualExecution last <i>actual</i> execution time
-	 * @param lastCompletion last completion time
-	 */
-	public void update(@Nullable Instant lastScheduledExecution, @Nullable Instant lastActualExecution,
-			@Nullable Instant lastCompletion) {
-
-		this.lastScheduledExecution = lastScheduledExecution;
-		this.lastActualExecution = lastActualExecution;
-		this.lastCompletion = lastCompletion;
+	public void update(Date lastScheduledExecutionTime, Date lastActualExecutionTime, Date lastCompletionTime) {
+		this.lastScheduledExecutionTime = lastScheduledExecutionTime;
+		this.lastActualExecutionTime = lastActualExecutionTime;
+		this.lastCompletionTime = lastCompletionTime;
 	}
 
 
@@ -131,18 +95,21 @@ public class SimpleTriggerContext implements TriggerContext {
 	}
 
 	@Override
-	public @Nullable Instant lastScheduledExecution() {
-		return this.lastScheduledExecution;
+	@Nullable
+	public Date lastScheduledExecutionTime() {
+		return this.lastScheduledExecutionTime;
 	}
 
 	@Override
-	public @Nullable Instant lastActualExecution() {
-		return this.lastActualExecution;
+	@Nullable
+	public Date lastActualExecutionTime() {
+		return this.lastActualExecutionTime;
 	}
 
 	@Override
-	public @Nullable Instant lastCompletion() {
-		return this.lastCompletion;
+	@Nullable
+	public Date lastCompletionTime() {
+		return this.lastCompletionTime;
 	}
 
 }

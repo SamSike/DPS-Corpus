@@ -63,10 +63,10 @@ public class CharlesSplitUseBeanAsErrorHandlerIssueTest extends ContextTestSuppo
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").split(body().tokenize(",")).stopOnException().doTry().process(new MyProcessor())
                         .to("mock:split").doCatch(IllegalArgumentException.class)
                         .bean(new MyLoggerBean()).bean(new MyErrorHandlerBean()).to("mock:ile").doCatch(Exception.class)

@@ -16,25 +16,20 @@
  */
 package org.apache.camel.component.jacksonxml;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -43,7 +38,6 @@ import com.fasterxml.jackson.module.jakarta.xmlbind.JakartaXmlBindAnnotationModu
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.Exchange;
-import org.apache.camel.WrappedFile;
 import org.apache.camel.spi.DataFormat;
 import org.apache.camel.spi.DataFormatContentTypeHeader;
 import org.apache.camel.spi.DataFormatName;
@@ -87,13 +81,12 @@ public class JacksonXMLDataFormat extends ServiceSupport
     private boolean allowUnmarshallType;
     private boolean contentTypeHeader = true;
     private TimeZone timezone;
-    private int maxStringLength;
 
     /**
      * Use the default Jackson {@link XmlMapper} and {@link Map}
      */
     public JacksonXMLDataFormat() {
-        this(LinkedHashMap.class);
+        this(HashMap.class);
     }
 
     /**
@@ -180,11 +173,7 @@ public class JacksonXMLDataFormat extends ServiceSupport
 
     @Override
     public Object unmarshal(Exchange exchange, InputStream stream) throws Exception {
-        return unmarshal(exchange, (Object) stream);
-    }
 
-    @Override
-    public Object unmarshal(Exchange exchange, Object body) throws Exception {
         // is there a header with the unmarshal type?
         Class<?> clazz = unmarshalType;
         String type = null;
@@ -197,37 +186,12 @@ public class JacksonXMLDataFormat extends ServiceSupport
         if (type != null) {
             clazz = exchange.getContext().getClassResolver().resolveMandatoryClass(type);
         }
-
-        ObjectReader reader;
         if (collectionType != null) {
             CollectionType collType = xmlMapper.getTypeFactory().constructCollectionType(collectionType, clazz);
-            reader = this.xmlMapper.readerFor(collType);
+            return this.xmlMapper.readValue(stream, collType);
         } else {
-            reader = this.xmlMapper.reader().forType(clazz);
+            return this.xmlMapper.readValue(stream, clazz);
         }
-
-        // unwrap file (such as from camel-file)
-        if (body instanceof WrappedFile<?>) {
-            body = ((WrappedFile<?>) body).getBody();
-        }
-        Object answer;
-        if (body instanceof String b) {
-            answer = reader.readValue(b);
-        } else if (body instanceof byte[] arr) {
-            answer = reader.readValue(arr);
-        } else if (body instanceof Reader r) {
-            answer = reader.readValue(r);
-        } else if (body instanceof File f) {
-            answer = reader.readValue(f);
-        } else if (body instanceof JsonNode n) {
-            answer = reader.readValue(n);
-        } else {
-            // fallback to input stream
-            InputStream is = exchange.getContext().getTypeConverter().mandatoryConvertTo(InputStream.class, exchange, body);
-            answer = reader.readValue(is);
-        }
-
-        return answer;
     }
 
     // Properties
@@ -377,11 +341,11 @@ public class JacksonXMLDataFormat extends ServiceSupport
     }
 
     /**
-     * Uses {@link java.util.LinkedHashMap} when unmarshalling.
+     * Uses {@link java.util.HashMap} when unmarshalling.
      */
     public void useMap() {
         setCollectionType(null);
-        setUnmarshalType(LinkedHashMap.class);
+        setUnmarshalType(HashMap.class);
     }
 
     /**
@@ -443,14 +407,6 @@ public class JacksonXMLDataFormat extends ServiceSupport
      */
     public void setTimezone(TimeZone timezone) {
         this.timezone = timezone;
-    }
-
-    public int getMaxStringLength() {
-        return maxStringLength;
-    }
-
-    public void setMaxStringLength(int maxStringLength) {
-        this.maxStringLength = maxStringLength;
     }
 
     public String getEnableFeatures() {
@@ -541,19 +497,9 @@ public class JacksonXMLDataFormat extends ServiceSupport
         }
     }
 
-    protected XmlMapper createNewXmlMapper() {
-        XmlMapper xm = new XmlMapper();
-        int len = getMaxStringLength();
-        if (len > 0) {
-            LOG.debug("Creating XmlMapper with maxStringLength: {}", len);
-            xm.getFactory().setStreamReadConstraints(StreamReadConstraints.builder().maxStringLength(len).build());
-        }
-        return xm;
-    }
-
     @Override
     protected void doInit() throws Exception {
-        if (unmarshalTypeName != null && (unmarshalType == null || unmarshalType == LinkedHashMap.class)) {
+        if (unmarshalTypeName != null && (unmarshalType == null || unmarshalType == HashMap.class)) {
             unmarshalType = camelContext.getClassResolver().resolveClass(unmarshalTypeName);
         }
         if (jsonViewTypeName != null && jsonView == null) {
@@ -568,7 +514,7 @@ public class JacksonXMLDataFormat extends ServiceSupport
     @Override
     protected void doStart() throws Exception {
         if (xmlMapper == null) {
-            xmlMapper = createNewXmlMapper();
+            xmlMapper = new XmlMapper();
         }
 
         if (enableJaxbAnnotationModule) {

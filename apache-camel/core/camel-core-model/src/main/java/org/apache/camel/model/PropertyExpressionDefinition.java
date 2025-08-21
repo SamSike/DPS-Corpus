@@ -34,31 +34,19 @@ import org.apache.camel.spi.Metadata;
 @Metadata(label = "configuration")
 @XmlRootElement(name = "propertyExpression")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class PropertyExpressionDefinition implements HasExpressionType {
+public class PropertyExpressionDefinition {
 
     @XmlAttribute(required = true)
     private String key;
     @XmlElementRef
-    @Metadata(required = true)
     private ExpressionDefinition expression;
 
     public PropertyExpressionDefinition() {
     }
 
-    protected PropertyExpressionDefinition(PropertyExpressionDefinition source) {
-        this.key = source.key;
-        this.expression = source.expression != null ? source.expression.copyDefinition() : null;
-    }
-
     public PropertyExpressionDefinition(String key, Expression expression) {
         this.key = key;
-        if (expression != null) {
-            setExpression(ExpressionNodeHelper.toExpressionDefinition(expression));
-        }
-    }
-
-    public PropertyExpressionDefinition copyDefinition() {
-        return new PropertyExpressionDefinition(this);
+        this.expression = new ExpressionDefinition(expression);
     }
 
     /**
@@ -81,15 +69,5 @@ public class PropertyExpressionDefinition implements HasExpressionType {
      */
     public void setExpression(ExpressionDefinition expression) {
         this.expression = expression;
-    }
-
-    @Override
-    public ExpressionDefinition getExpressionType() {
-        return getExpression();
-    }
-
-    @Override
-    public void setExpressionType(ExpressionDefinition expressionType) {
-        setExpression(expressionType);
     }
 }

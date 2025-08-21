@@ -18,7 +18,6 @@ package org.apache.camel.dsl.jbang.core.commands.process;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import com.github.freva.asciitable.AsciiTable;
@@ -34,26 +33,10 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 @Command(name = "vault",
-         description = "List secrets from security vaults", sortOptions = false, showDefaultValues = true)
+         description = "List secrets from security vaults used by running Camel integrations")
 public class ListVault extends ProcessWatchCommand {
 
-    public static class PidNameCompletionCandidates implements Iterable<String> {
-
-        public PidNameCompletionCandidates() {
-        }
-
-        @Override
-        public Iterator<String> iterator() {
-            return List.of("pid", "name").iterator();
-        }
-
-    }
-
-    @CommandLine.Parameters(description = "Name or pid of running Camel integration",
-                            arity = "0..1")
-    String name = "*";
-
-    @CommandLine.Option(names = { "--sort" }, completionCandidates = PidNameCompletionCandidates.class,
+    @CommandLine.Option(names = { "--sort" },
                         description = "Sort by pid, name", defaultValue = "pid")
     String sort;
 
@@ -62,17 +45,17 @@ public class ListVault extends ProcessWatchCommand {
     }
 
     @Override
-    public Integer doProcessWatchCall() throws Exception {
+    public Integer doCall() throws Exception {
         List<Row> rows = new ArrayList<>();
 
-        List<Long> pids = findPids(name);
+        List<Long> pids = findPids("*");
         ProcessHandle.allProcesses()
                 .filter(ph -> pids.contains(ph.pid()))
                 .forEach(ph -> {
                     JsonObject root = loadStatus(ph.pid());
                     if (root != null) {
                         Row row = new Row();
-                        row.pid = Long.toString(ph.pid());
+                        row.pid = "" + ph.pid();
                         JsonObject context = (JsonObject) root.get("context");
                         if (context == null) {
                             return;
@@ -90,7 +73,7 @@ public class ListVault extends ProcessWatchCommand {
                                 row.lastCheck = aws.getLongOrDefault("lastCheckTimestamp", 0);
                                 row.lastReload = aws.getLongOrDefault("lastReloadTimestamp", 0);
                                 JsonArray arr = (JsonArray) aws.get("secrets");
-                                for (int i = 0; arr != null && i < arr.size(); i++) {
+                                for (int i = 0; i < arr.size(); i++) {
                                     if (i > 0) {
                                         // create a copy for 2+ secrets
                                         row = row.copy();
@@ -107,7 +90,7 @@ public class ListVault extends ProcessWatchCommand {
                                 row.lastCheck = gcp.getLongOrDefault("lastCheckTimestamp", 0);
                                 row.lastReload = gcp.getLongOrDefault("lastReloadTimestamp", 0);
                                 JsonArray arr = (JsonArray) gcp.get("secrets");
-                                for (int i = 0; arr != null && i < arr.size(); i++) {
+                                for (int i = 0; i < arr.size(); i++) {
                                     if (i > 0) {
                                         // create a copy for 2+ secrets
                                         row = row.copy();
@@ -124,53 +107,9 @@ public class ListVault extends ProcessWatchCommand {
                                 row.lastCheck = azure.getLongOrDefault("lastCheckTimestamp", 0);
                                 row.lastReload = azure.getLongOrDefault("lastReloadTimestamp", 0);
                                 JsonArray arr = (JsonArray) azure.get("secrets");
-                                for (int i = 0; arr != null && i < arr.size(); i++) {
+                                for (int i = 0; i < arr.size(); i++) {
                                     if (i > 0) {
                                         // create a copy for 2+ secrets
-                                        row = row.copy();
-                                    }
-                                    JsonObject jo = (JsonObject) arr.get(i);
-                                    row.secret = jo.getString("name");
-                                    row.timestamp = jo.getLongOrDefault("timestamp", 0);
-                                    rows.add(row);
-                                }
-                            }
-
-                            JsonObject kubernetes = (JsonObject) vaults.get("kubernetes-secrets");
-                            if (kubernetes != null) {
-                                row.vault = "Kubernetes";
-                                row.lastCheck = kubernetes.getLongOrDefault("startCheckTimestamp", 0);
-                                row.lastReload = kubernetes.getLongOrDefault("lastReloadTimestamp", 0);
-                                JsonArray arr = (JsonArray) kubernetes.get("secrets");
-                                for (int i = 0; arr != null && i < arr.size(); i++) {
-                                    if (i > 0) {
-                                        // create a copy for 2+ secrets
-                                        row = row.copy();
-                                    }
-                                    JsonObject jo = (JsonObject) arr.get(i);
-                                    row.secret = jo.getString("name");
-                                    row.timestamp = jo.getLongOrDefault("timestamp", 0);
-                                    rows.add(row);
-                                }
-                            }
-
-                            JsonObject hashicorp = (JsonObject) vaults.get("hashicorp-secrets");
-                            if (hashicorp != null) {
-                                row.vault = "Hashicorp";
-                                row.lastCheck = hashicorp.getLongOrDefault("startCheckTimestamp", 0);
-                                row.lastReload = hashicorp.getLongOrDefault("lastReloadTimestamp", 0);
-                                rows.add(row);
-                            }
-
-                            JsonObject cmKubernetes = (JsonObject) vaults.get("kubernetes-configmaps");
-                            if (cmKubernetes != null) {
-                                row.vault = "Kubernetes-cm";
-                                row.lastCheck = cmKubernetes.getLongOrDefault("startCheckTimestamp", 0);
-                                row.lastReload = cmKubernetes.getLongOrDefault("lastReloadTimestamp", 0);
-                                JsonArray arr = (JsonArray) cmKubernetes.get("configmap");
-                                for (int i = 0; arr != null && i < arr.size(); i++) {
-                                    if (i > 0) {
-                                        // create a copy for 2+ configmap
                                         row = row.copy();
                                     }
                                     JsonObject jo = (JsonObject) arr.get(i);
@@ -187,7 +126,7 @@ public class ListVault extends ProcessWatchCommand {
         rows.sort(this::sortRow);
 
         if (!rows.isEmpty()) {
-            printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
+            System.out.println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
                     new Column().header("PID").headerAlign(HorizontalAlign.CENTER).with(r -> r.pid),
                     new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).maxWidth(40, OverflowBehaviour.ELLIPSIS_RIGHT)
                             .with(r -> r.name),

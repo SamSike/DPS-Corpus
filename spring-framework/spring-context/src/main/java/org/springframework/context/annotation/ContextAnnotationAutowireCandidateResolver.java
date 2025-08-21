@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package org.springframework.context.annotation;
 
-import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -26,16 +25,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.QualifierAnnotationAutowireCandidateResolver;
 import org.springframework.beans.factory.config.DependencyDescriptor;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * Complete implementation of the
@@ -49,13 +49,9 @@ import org.springframework.core.annotation.AnnotationUtils;
 public class ContextAnnotationAutowireCandidateResolver extends QualifierAnnotationAutowireCandidateResolver {
 
 	@Override
-	public @Nullable Object getLazyResolutionProxyIfNecessary(DependencyDescriptor descriptor, @Nullable String beanName) {
+	@Nullable
+	public Object getLazyResolutionProxyIfNecessary(DependencyDescriptor descriptor, @Nullable String beanName) {
 		return (isLazy(descriptor) ? buildLazyResolutionProxy(descriptor, beanName) : null);
-	}
-
-	@Override
-	public @Nullable Class<?> getLazyResolutionProxyClass(DependencyDescriptor descriptor, @Nullable String beanName) {
-		return (isLazy(descriptor) ? (Class<?>) buildLazyResolutionProxy(descriptor, beanName, true) : null);
 	}
 
 	protected boolean isLazy(DependencyDescriptor descriptor) {
@@ -78,18 +74,52 @@ public class ContextAnnotationAutowireCandidateResolver extends QualifierAnnotat
 		return false;
 	}
 
-	protected Object buildLazyResolutionProxy(DependencyDescriptor descriptor, @Nullable String beanName) {
-		return buildLazyResolutionProxy(descriptor, beanName, false);
-	}
+	protected Object buildLazyResolutionProxy(final DependencyDescriptor descriptor, final @Nullable String beanName) {
+		BeanFactory beanFactory = getBeanFactory();
+		Assert.state(beanFactory instanceof DefaultListableBeanFactory,
+				"BeanFactory needs to be a DefaultListableBeanFactory");
+		final DefaultListableBeanFactory dlbf = (DefaultListableBeanFactory) beanFactory;
 
-	private Object buildLazyResolutionProxy(
-			DependencyDescriptor descriptor, @Nullable String beanName, boolean classOnly) {
-
-		if (!(getBeanFactory() instanceof DefaultListableBeanFactory dlbf)) {
-			throw new IllegalStateException("Lazy resolution only supported with DefaultListableBeanFactory");
-		}
-
-		TargetSource ts = new LazyDependencyTargetSource(dlbf, descriptor, beanName);
+		TargetSource ts = new TargetSource() {
+			@Override
+			public Class<?> getTargetClass() {
+				return descriptor.getDependencyType();
+			}
+			@Override
+			public boolean isStatic() {
+				return false;
+			}
+			@Override
+			public Object getTarget() {
+				Set<String> autowiredBeanNames = (beanName != null ? new LinkedHashSet<>(1) : null);
+				Object target = dlbf.doResolveDependency(descriptor, beanName, autowiredBeanNames, null);
+				if (target == null) {
+					Class<?> type = getTargetClass();
+					if (Map.class == type) {
+						return Collections.emptyMap();
+					}
+					else if (List.class == type) {
+						return Collections.emptyList();
+					}
+					else if (Set.class == type || Collection.class == type) {
+						return Collections.emptySet();
+					}
+					throw new NoSuchBeanDefinitionException(descriptor.getResolvableType(),
+							"Optional dependency not present for lazy injection point");
+				}
+				if (autowiredBeanNames != null) {
+					for (String autowiredBeanName : autowiredBeanNames) {
+						if (dlbf.containsBean(autowiredBeanName)) {
+							dlbf.registerDependentBean(autowiredBeanName, beanName);
+						}
+					}
+				}
+				return target;
+			}
+			@Override
+			public void releaseTarget(Object target) {
+			}
+		};
 
 		ProxyFactory pf = new ProxyFactory();
 		pf.setTargetSource(ts);
@@ -97,97 +127,7 @@ public class ContextAnnotationAutowireCandidateResolver extends QualifierAnnotat
 		if (dependencyType.isInterface()) {
 			pf.addInterface(dependencyType);
 		}
-		ClassLoader classLoader = dlbf.getBeanClassLoader();
-		return (classOnly ? pf.getProxyClass(classLoader) : pf.getProxy(classLoader));
-	}
-
-
-	@SuppressWarnings("serial")
-	private static class LazyDependencyTargetSource implements TargetSource, Serializable {
-
-		private final DefaultListableBeanFactory beanFactory;
-
-		private final DependencyDescriptor descriptor;
-
-		private final @Nullable String beanName;
-
-		private transient volatile @Nullable Object cachedTarget;
-
-		public LazyDependencyTargetSource(DefaultListableBeanFactory beanFactory,
-				DependencyDescriptor descriptor, @Nullable String beanName) {
-
-			this.beanFactory = beanFactory;
-			this.descriptor = descriptor;
-			this.beanName = beanName;
-		}
-
-		@Override
-		public Class<?> getTargetClass() {
-			return this.descriptor.getDependencyType();
-		}
-
-		@Override
-		public Object getTarget() {
-			Object cachedTarget = this.cachedTarget;
-			if (cachedTarget != null) {
-				return cachedTarget;
-			}
-
-			Set<String> autowiredBeanNames = new LinkedHashSet<>(2);
-			Object target = this.beanFactory.doResolveDependency(
-					this.descriptor, this.beanName, autowiredBeanNames, null);
-
-			if (target == null) {
-				Class<?> type = getTargetClass();
-				if (Map.class == type) {
-					target = Collections.emptyMap();
-				}
-				else if (List.class == type) {
-					target = Collections.emptyList();
-				}
-				else if (Set.class == type || Collection.class == type) {
-					target = Collections.emptySet();
-				}
-				else {
-					throw new NoSuchBeanDefinitionException(this.descriptor.getResolvableType(),
-							"Optional dependency not present for lazy injection point");
-				}
-			}
-			else {
-				if (target instanceof Map<?, ?> map && Map.class == getTargetClass()) {
-					target = Collections.unmodifiableMap(map);
-				}
-				else if (target instanceof List<?> list && List.class == getTargetClass()) {
-					target = Collections.unmodifiableList(list);
-				}
-				else if (target instanceof Set<?> set && Set.class == getTargetClass()) {
-					target = Collections.unmodifiableSet(set);
-				}
-				else if (target instanceof Collection<?> coll && Collection.class == getTargetClass()) {
-					target = Collections.unmodifiableCollection(coll);
-				}
-			}
-
-			boolean cacheable = true;
-			for (String autowiredBeanName : autowiredBeanNames) {
-				if (!this.beanFactory.containsBean(autowiredBeanName)) {
-					cacheable = false;
-				}
-				else {
-					if (this.beanName != null) {
-						this.beanFactory.registerDependentBean(autowiredBeanName, this.beanName);
-					}
-					if (!this.beanFactory.isSingleton(autowiredBeanName)) {
-						cacheable = false;
-					}
-				}
-				if (cacheable) {
-					this.cachedTarget = target;
-				}
-			}
-
-			return target;
-		}
+		return pf.getProxy(dlbf.getBeanClassLoader());
 	}
 
 }

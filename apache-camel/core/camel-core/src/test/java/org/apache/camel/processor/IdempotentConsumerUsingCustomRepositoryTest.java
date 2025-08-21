@@ -36,13 +36,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class IdempotentConsumerUsingCustomRepositoryTest extends ContextTestSupport {
     protected Endpoint startEndpoint;
     protected MockEndpoint resultEndpoint;
-    protected final IdempotentRepository customRepo = new MyRepo();
+    protected IdempotentRepository customRepo = new MyRepo();
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").idempotentConsumer(header("messageId"), customRepo).to("mock:result");
             }
         };

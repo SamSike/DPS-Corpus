@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,25 +18,23 @@ package org.springframework.core.convert.support;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
-
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalGenericConverter;
-import org.springframework.util.CollectionUtils;
+import org.springframework.lang.Nullable;
 
 /**
- * Convert an Object to a {@code java.util.Optional<T>}, if necessary using the
+ * Convert an Object to {@code java.util.Optional<T>} if necessary using the
  * {@code ConversionService} to convert the source Object to the generic type
  * of Optional when known.
  *
  * @author Rossen Stoyanchev
  * @author Juergen Hoeller
  * @since 4.1
- * @see OptionalToObjectConverter
  */
 final class ObjectToOptionalConverter implements ConditionalGenericConverter {
 
@@ -50,7 +48,7 @@ final class ObjectToOptionalConverter implements ConditionalGenericConverter {
 
 	@Override
 	public Set<ConvertiblePair> getConvertibleTypes() {
-		Set<ConvertiblePair> convertibleTypes = CollectionUtils.newLinkedHashSet(3);
+		Set<ConvertiblePair> convertibleTypes = new LinkedHashSet<>(4);
 		convertibleTypes.add(new ConvertiblePair(Collection.class, Optional.class));
 		convertibleTypes.add(new ConvertiblePair(Object[].class, Optional.class));
 		convertibleTypes.add(new ConvertiblePair(Object.class, Optional.class));
@@ -78,7 +76,7 @@ final class ObjectToOptionalConverter implements ConditionalGenericConverter {
 		else if (targetType.getResolvableType().hasGenerics()) {
 			Object target = this.conversionService.convert(source, sourceType, new GenericTypeDescriptor(targetType));
 			if (target == null || (target.getClass().isArray() && Array.getLength(target) == 0) ||
-						(target instanceof Collection<?> collection && collection.isEmpty())) {
+						(target instanceof Collection && ((Collection<?>) target).isEmpty())) {
 				return Optional.empty();
 			}
 			return Optional.of(target);

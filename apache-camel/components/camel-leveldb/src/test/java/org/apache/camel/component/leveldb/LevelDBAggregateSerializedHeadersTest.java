@@ -39,9 +39,10 @@ public class LevelDBAggregateSerializedHeadersTest extends LevelDBTestSupport {
 
     @BeforeEach
     @Override
-    public void doPreSetup() throws Exception {
+    public void setUp() throws Exception {
         deleteDirectory("target/data");
         getRepo().setAllowSerializedHeaders(true);
+        super.setUp();
     }
 
     @Test
@@ -50,7 +51,7 @@ public class LevelDBAggregateSerializedHeadersTest extends LevelDBTestSupport {
         mock.expectedMinimumMessageCount(1);
         mock.setResultWaitTime(50 * 1000);
 
-        LOG.info("Starting to send {} messages.", SIZE);
+        LOG.info("Staring to send " + SIZE + " messages.");
 
         for (int i = 0; i < SIZE; i++) {
             final int value = 1;
@@ -62,7 +63,7 @@ public class LevelDBAggregateSerializedHeadersTest extends LevelDBTestSupport {
             template.sendBodyAndHeaders("seda:start?size=" + SIZE, value, headers);
         }
 
-        LOG.info("Sending all {} message done. Now waiting for aggregation to complete.", SIZE);
+        LOG.info("Sending all " + SIZE + " message done. Now waiting for aggregation to complete.");
 
         MockEndpoint.assertIsSatisfied(context);
     }

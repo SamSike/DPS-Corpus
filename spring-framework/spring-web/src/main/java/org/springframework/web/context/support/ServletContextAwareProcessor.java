@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@ package org.springframework.web.context.support;
 
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletContext;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.lang.Nullable;
 import org.springframework.web.context.ServletConfigAware;
 import org.springframework.web.context.ServletContextAware;
 
@@ -41,9 +41,11 @@ import org.springframework.web.context.ServletContextAware;
  */
 public class ServletContextAwareProcessor implements BeanPostProcessor {
 
-	private @Nullable ServletContext servletContext;
+	@Nullable
+	private ServletContext servletContext;
 
-	private @Nullable ServletConfig servletConfig;
+	@Nullable
+	private ServletConfig servletConfig;
 
 
 	/**
@@ -82,7 +84,8 @@ public class ServletContextAwareProcessor implements BeanPostProcessor {
 	 * can be overridden by subclasses when a context is obtained after the post-processor
 	 * has been registered.
 	 */
-	protected @Nullable ServletContext getServletContext() {
+	@Nullable
+	protected ServletContext getServletContext() {
 		if (this.servletContext == null && getServletConfig() != null) {
 			return getServletConfig().getServletContext();
 		}
@@ -94,17 +97,18 @@ public class ServletContextAwareProcessor implements BeanPostProcessor {
 	 * can be overridden by subclasses when a context is obtained after the post-processor
 	 * has been registered.
 	 */
-	protected @Nullable ServletConfig getServletConfig() {
+	@Nullable
+	protected ServletConfig getServletConfig() {
 		return this.servletConfig;
 	}
 
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-		if (getServletContext() != null && bean instanceof ServletContextAware servletContextAware) {
-			servletContextAware.setServletContext(getServletContext());
+		if (getServletContext() != null && bean instanceof ServletContextAware) {
+			((ServletContextAware) bean).setServletContext(getServletContext());
 		}
-		if (getServletConfig() != null && bean instanceof ServletConfigAware servletConfigAware) {
-			servletConfigAware.setServletConfig(getServletConfig());
+		if (getServletConfig() != null && bean instanceof ServletConfigAware) {
+			((ServletConfigAware) bean).setServletConfig(getServletConfig());
 		}
 		return bean;
 	}

@@ -34,10 +34,4 @@ public final class RabbitMQServiceFactory {
                 .addRemoteMapping(RabbitMQRemoteService::new)
                 .build();
     }
-
-    public static class RabbitMQLocalContainerService extends RabbitMQLocalContainerInfraService implements RabbitMQService {
-    }
-
-    public static class RabbitMQRemoteService extends RabbitMQRemoteInfraService implements RabbitMQService {
-    }
 }

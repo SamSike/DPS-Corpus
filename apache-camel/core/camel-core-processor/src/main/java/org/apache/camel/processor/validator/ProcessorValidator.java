@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A {@link Validator} implementation which leverages {@link Processor} to perform validation.
- *
+ * 
  * {@see Validator}
  */
 public class ProcessorValidator extends Validator {
@@ -68,8 +68,8 @@ public class ProcessorValidator extends Validator {
                 ExchangeHelper.copyResults(exchange, copy);
             }
         } catch (Exception e) {
-            if (e instanceof ValidationException validationException) {
-                throw validationException;
+            if (e instanceof ValidationException) {
+                throw (ValidationException) e;
             } else {
                 throw new ValidationException(String.format("Validation failed for '%s'", type), exchange, e);
             }

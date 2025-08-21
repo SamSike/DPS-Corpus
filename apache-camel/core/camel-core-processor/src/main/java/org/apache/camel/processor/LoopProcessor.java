@@ -23,6 +23,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.Expression;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NoTypeConversionAvailableException;
 import org.apache.camel.Predicate;
 import org.apache.camel.Processor;
@@ -49,21 +50,21 @@ public class LoopProcessor extends DelegateAsyncProcessor implements Traceable, 
     private String id;
     private String routeId;
     private boolean shutdownPending;
+    private final CamelContext camelContext;
     private final ReactiveExecutor reactiveExecutor;
     private final Expression expression;
     private final Predicate predicate;
-    private final Processor onPrepare;
     private final boolean copy;
     private final boolean breakOnShutdown;
     private final LongAdder taskCount = new LongAdder();
 
     public LoopProcessor(CamelContext camelContext, Processor processor, Expression expression, Predicate predicate,
-                         Processor onPrepare, boolean copy, boolean breakOnShutdown) {
+                         boolean copy, boolean breakOnShutdown) {
         super(processor);
-        this.reactiveExecutor = camelContext.getCamelContextExtension().getReactiveExecutor();
+        this.camelContext = camelContext;
+        this.reactiveExecutor = camelContext.adapt(ExtendedCamelContext.class).getReactiveExecutor();
         this.expression = expression;
         this.predicate = predicate;
-        this.onPrepare = onPrepare;
         this.copy = copy;
         this.breakOnShutdown = breakOnShutdown;
     }
@@ -162,33 +163,15 @@ public class LoopProcessor extends DelegateAsyncProcessor implements Traceable, 
                     if (LOG.isTraceEnabled()) {
                         LOG.trace("Processing complete for exchangeId: {} >>> {}", exchange.getExchangeId(), exchange);
                     }
-                    if (!cont && expression != null) {
-                        // if we should stop due to an exception etc, then make sure to dec task count
-                        int gap = count - index;
-                        while (gap-- > 0) {
-                            taskCount.decrement();
-                        }
-                    }
                     callback.done(false);
                 }
             } catch (Exception e) {
-                handleException(e);
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("Processing failed for exchangeId: {} >>> {}", exchange.getExchangeId(), e.getMessage());
+                }
+                exchange.setException(e);
                 callback.done(false);
             }
-        }
-
-        private void handleException(Exception e) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Processing failed for exchangeId: {} >>> {}", exchange.getExchangeId(), e.getMessage());
-            }
-            if (expression != null) {
-                // if we should stop due to an exception etc, then make sure to dec task count
-                int gap = count - index;
-                while (gap-- > 0) {
-                    taskCount.decrement();
-                }
-            }
-            exchange.setException(e);
         }
 
         @Override
@@ -204,19 +187,15 @@ public class LoopProcessor extends DelegateAsyncProcessor implements Traceable, 
      * @param  index    the index of the next iteration
      * @return          the exchange to use
      */
-    protected Exchange prepareExchange(Exchange exchange, int index) throws Exception {
-        Exchange answer = exchange;
+    protected Exchange prepareExchange(Exchange exchange, int index) {
         if (copy) {
             // use a copy but let it reuse the same exchange id so it appear as one exchange
             // use the original exchange rather than the looping exchange (esp. with the async routing engine)
-            answer = ExchangeHelper.createCopy(exchange, true);
+            return ExchangeHelper.createCopy(exchange, true);
         } else {
             ExchangeHelper.prepareOutToIn(exchange);
+            return exchange;
         }
-        if (onPrepare != null) {
-            onPrepare.process(answer);
-        }
-        return answer;
     }
 
     public Expression getExpression() {
@@ -229,10 +208,6 @@ public class LoopProcessor extends DelegateAsyncProcessor implements Traceable, 
 
     public boolean isCopy() {
         return copy;
-    }
-
-    public boolean isBreakOnShutdown() {
-        return breakOnShutdown;
     }
 
     @Override

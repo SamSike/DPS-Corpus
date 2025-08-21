@@ -53,10 +53,10 @@ public class RouteIdTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).handled(true).to("mock:error").end();
 
                 from("direct:start").onException(IOException.class).redeliveryDelay(0).maximumRedeliveries(5).end()

@@ -172,7 +172,7 @@ public class BindyFixedLengthFactory extends BindyAbstractFactory implements Bin
         String delimiter;
         Field field;
 
-        final UnicodeHelper unicodeHelper = new UnicodeHelper(
+        final UnicodeHelper record = new UnicodeHelper(
                 recordStr, (this.countGrapheme) ? UnicodeHelper.Method.GRAPHEME : UnicodeHelper.Method.CODEPOINTS);
 
         // Iterate through the list of positions
@@ -211,19 +211,19 @@ public class BindyFixedLengthFactory extends BindyAbstractFactory implements Bin
             }
 
             if (length > 0) {
-                if (unicodeHelper.length() < offset) {
+                if (record.length() < offset) {
                     token = "";
                 } else {
                     int endIndex = offset + length - 1;
-                    if (endIndex > unicodeHelper.length()) {
-                        endIndex = unicodeHelper.length();
+                    if (endIndex > record.length()) {
+                        endIndex = record.length();
                     }
-                    token = unicodeHelper.substring(offset - 1, endIndex);
+                    token = record.substring(offset - 1, endIndex);
                 }
                 offset += length;
-            } else if (!delimiter.isEmpty()) {
+            } else if (!delimiter.equals("")) {
                 final UnicodeHelper tempToken = new UnicodeHelper(
-                        unicodeHelper.substring(offset - 1, unicodeHelper.length()),
+                        record.substring(offset - 1, record.length()),
                         (this.countGrapheme) ? UnicodeHelper.Method.GRAPHEME : UnicodeHelper.Method.CODEPOINTS);
                 token = tempToken.substring(0, tempToken.indexOf(delimiter));
                 // include the delimiter in the offset calculation
@@ -246,7 +246,7 @@ public class BindyFixedLengthFactory extends BindyAbstractFactory implements Bin
 
                 // Check if content of the field is empty
                 // This is not possible for mandatory fields
-                if (token.isEmpty()) {
+                if (token.equals("")) {
                     throw new IllegalArgumentException(
                             "The mandatory field defined at the position " + pos
                                                        + " is empty for the line: " + line);
@@ -272,12 +272,12 @@ public class BindyFixedLengthFactory extends BindyAbstractFactory implements Bin
             Object modelField = model.get(field.getDeclaringClass().getName());
 
             // format the data received
-            Object value;
+            Object value = null;
 
-            if (token.isEmpty()) {
+            if ("".equals(token)) {
                 token = dataField.defaultValue();
             }
-            if (!token.isEmpty()) {
+            if (!"".equals(token)) {
                 try {
                     value = format.parse(token);
                 } catch (FormatException ie) {
@@ -306,8 +306,8 @@ public class BindyFixedLengthFactory extends BindyAbstractFactory implements Bin
                 Method m = ReflectionHelper.findMethod(clazz, methodName, field.getType());
                 if (m != null) {
                     // this method must be static and return type
-                    // must be the same as the datafield and
-                    // must receive only the datafield value
+                    // must be the same as the datafield and 
+                    // must receive only the datafield value 
                     // as the method argument
                     value = ObjectHelper.invokeMethod(m, null, value);
                 } else {
@@ -324,7 +324,7 @@ public class BindyFixedLengthFactory extends BindyAbstractFactory implements Bin
         }
 
         // check for unmapped non-whitespace data at the end of the line
-        if (offset <= unicodeHelper.length() && !(unicodeHelper.substring(offset - 1, unicodeHelper.length())).isBlank()
+        if (offset <= record.length() && !(record.substring(offset - 1, record.length())).trim().equals("")
                 && !isIgnoreTrailingChars()) {
             throw new IllegalArgumentException(
                     "Unexpected / unmapped characters found at the end of the fixed-length record at line : " + line);
@@ -380,7 +380,7 @@ public class BindyFixedLengthFactory extends BindyAbstractFactory implements Bin
     @Override
     public String unbind(CamelContext camelContext, Map<String, Object> model) throws Exception {
 
-        StringBuilder buffer = new StringBuilder(256);
+        StringBuilder buffer = new StringBuilder();
         Map<Integer, List<String>> results = new HashMap<>();
 
         for (Class<?> clazz : models) {
@@ -467,13 +467,13 @@ public class BindyFixedLengthFactory extends BindyAbstractFactory implements Bin
                         fieldLength = Integer.parseInt(resultVals.get(0));
                     }
 
-                    if (fieldLength <= 0 && datafield.delimiter().isEmpty() && datafield.lengthPos() == 0) {
+                    if (fieldLength <= 0 && datafield.delimiter().equals("") && datafield.lengthPos() == 0) {
                         throw new IllegalArgumentException(
                                 "Either a delimiter value or length for the field: "
                                                            + field.getName() + " is mandatory.");
                     }
 
-                    if (!datafield.delimiter().isEmpty()) {
+                    if (!datafield.delimiter().equals("")) {
                         result = result + datafield.delimiter();
                     } else {
                         // Get length of the field, alignment (LEFT or RIGHT), pad
@@ -553,9 +553,13 @@ public class BindyFixedLengthFactory extends BindyAbstractFactory implements Bin
     }
 
     private String generatePaddingChars(char pad, int lengthField, int lengthString) {
+        StringBuilder buffer = new StringBuilder();
         int size = lengthField - lengthString;
 
-        return Character.toString(pad).repeat(size);
+        for (int i = 0; i < size; i++) {
+            buffer.append(Character.toString(pad));
+        }
+        return buffer.toString();
     }
 
     /**
@@ -566,62 +570,62 @@ public class BindyFixedLengthFactory extends BindyAbstractFactory implements Bin
         for (Class<?> cl : models) {
 
             // Get annotation @FixedLengthRecord from the class
-            FixedLengthRecord fixedLengthRecord = cl.getAnnotation(FixedLengthRecord.class);
+            FixedLengthRecord record = cl.getAnnotation(FixedLengthRecord.class);
 
-            if (fixedLengthRecord != null) {
-                LOG.debug("Fixed length record: {}", fixedLengthRecord);
+            if (record != null) {
+                LOG.debug("Fixed length record: {}", record);
 
                 // Get carriage return parameter
-                crlf = fixedLengthRecord.crlf();
+                crlf = record.crlf();
                 LOG.debug("Carriage return defined for the CSV: {}", crlf);
 
-                eol = fixedLengthRecord.eol();
+                eol = record.eol();
                 LOG.debug("EOL(end-of-line) defined for the CSV: {}", eol);
 
                 // Get header parameter
-                header = fixedLengthRecord.header();
+                header = record.header();
                 LOG.debug("Header: {}", header);
                 hasHeader = header != void.class;
                 LOG.debug("Has Header: {}", hasHeader);
 
                 // Get skipHeader parameter
-                skipHeader = fixedLengthRecord.skipHeader();
+                skipHeader = record.skipHeader();
                 LOG.debug("Skip Header: {}", skipHeader);
 
                 // Get footer parameter
-                footer = fixedLengthRecord.footer();
+                footer = record.footer();
                 LOG.debug("Footer: {}", footer);
-                hasFooter = fixedLengthRecord.footer() != void.class;
+                hasFooter = record.footer() != void.class;
                 LOG.debug("Has Footer: {}", hasFooter);
 
                 // Get skipFooter parameter
-                skipFooter = fixedLengthRecord.skipFooter();
+                skipFooter = record.skipFooter();
                 LOG.debug("Skip Footer: {}", skipFooter);
 
                 // Get isHeader parameter
-                isHeader = hasHeader && cl.equals(header);
+                isHeader = hasHeader ? cl.equals(header) : false;
                 LOG.debug("Is Header: {}", isHeader);
 
                 // Get isFooter parameter
-                isFooter = hasFooter && cl.equals(footer);
+                isFooter = hasFooter ? cl.equals(footer) : false;
                 LOG.debug("Is Footer: {}", isFooter);
 
                 // Get padding character
-                paddingChar = fixedLengthRecord.paddingChar();
+                paddingChar = record.paddingChar();
                 LOG.debug("Padding char: {}", paddingChar);
 
                 // Get length of the record
-                recordLength = fixedLengthRecord.length();
+                recordLength = record.length();
                 LOG.debug("Length of the record: {}", recordLength);
 
                 // Get flag for ignore trailing characters
-                ignoreTrailingChars = fixedLengthRecord.ignoreTrailingChars();
+                ignoreTrailingChars = record.ignoreTrailingChars();
                 LOG.debug("Ignore trailing chars: {}", ignoreTrailingChars);
 
-                ignoreMissingChars = fixedLengthRecord.ignoreMissingChars();
+                ignoreMissingChars = record.ignoreMissingChars();
                 LOG.debug("Enable ignore missing chars: {}", ignoreMissingChars);
 
-                countGrapheme = fixedLengthRecord.countGrapheme();
+                countGrapheme = record.countGrapheme();
                 LOG.debug("Enable grapheme counting instead of codepoints: {}", countGrapheme);
             }
         }

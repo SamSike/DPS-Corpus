@@ -16,13 +16,7 @@
  */
 package org.apache.camel.processor.resequencer;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Timer;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Predicate;
 
 import org.apache.camel.util.concurrent.ThreadHelper;
 
@@ -66,7 +60,7 @@ public class ResequencerEngine<E> {
     /**
      * A sequence of elements for sorting purposes.
      */
-    private final Sequence<Element<E>> sequence;
+    private Sequence<Element<E>> sequence;
 
     /**
      * A timer for scheduling timeout notifications.
@@ -83,14 +77,6 @@ public class ResequencerEngine<E> {
      * message is received.
      */
     private Boolean rejectOld;
-
-    /**
-     * List containing wait conditions to be evaluated whenever the sequence is modified. Access to this field should be
-     * done inside a lock block.
-     */
-    private final Map<CountDownLatch, Predicate<Sequence<?>>> waitConditions = new HashMap<>();
-
-    private final Lock lock = new ReentrantLock();
 
     /**
      * Creates a new resequencer instance with a default timeout of 2000 milliseconds.
@@ -120,50 +106,8 @@ public class ResequencerEngine<E> {
      *
      * @return the number of elements currently maintained by this resequencer.
      */
-    public int size() {
-        lock.lock();
-        try {
-            return sequence.size();
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    /**
-     * Wait for the following condition to happen. Do not call this method while holding a lock on the resequencer
-     * engine, as it will deadlock. The predicate will be evaluated while holding a lock on the resequencer engine.
-     *
-     * @param  pred                 the condition to wait for
-     * @throws InterruptedException if the thread is interrupted
-     */
-    public void waitUntil(Predicate<Sequence<?>> pred) throws InterruptedException {
-        CountDownLatch latch;
-        lock.lock();
-        try {
-            if (pred.test(sequence)) {
-                return;
-            }
-            latch = new CountDownLatch(1);
-            waitConditions.put(latch, pred);
-        } finally {
-            lock.unlock();
-        }
-        latch.await();
-    }
-
-    private void evaluateConditions() {
-        lock.lock();
-        try {
-            for (var it = waitConditions.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<CountDownLatch, Predicate<Sequence<?>>> e = it.next();
-                if (e.getValue().test(sequence)) {
-                    e.getKey().countDown();
-                    it.remove();
-                }
-            }
-        } finally {
-            lock.unlock();
-        }
+    public synchronized int size() {
+        return sequence.size();
     }
 
     /**
@@ -238,45 +182,41 @@ public class ResequencerEngine<E> {
      * @param  o                        an element.
      * @throws IllegalArgumentException if the element cannot be used with this resequencer engine
      */
-    public void insert(E o) {
-        lock.lock();
-        try {
-            // wrap object into internal element
-            Element<E> element = new Element<>(o);
+    public synchronized void insert(E o) {
+        // wrap object into internal element
+        Element<E> element = new Element<>(o);
 
-            // validate the exchange has no problem
-            if (!sequence.seqComparator().isValid(element)) {
-                throw new IllegalArgumentException("Element cannot be used in comparator: " + sequence.seqComparator());
-            }
+        // validate the exchange has no problem
+        if (!sequence.comparator().isValid(element)) {
+            throw new IllegalArgumentException("Element cannot be used in comparator: " + sequence.comparator());
+        }
 
-            // validate the exchange shouldn't be 'rejected' (if applicable)
-            if (rejectOld != null && rejectOld && beforeLastDelivered(element)) {
-                throw new MessageRejectedException(
-                        "rejecting message [" + element.getObject()
-                                                   + "], it should have been sent before the last delivered message ["
-                                                   + lastDelivered.getObject() + "]");
-            }
+        // validate the exchange shouldn't be 'rejected' (if applicable)
+        if (rejectOld != null && rejectOld.booleanValue() && beforeLastDelivered(element)) {
+            throw new MessageRejectedException(
+                    "rejecting message [" + element.getObject()
+                                               + "], it should have been sent before the last delivered message ["
+                                               + lastDelivered.getObject() + "]");
+        }
 
-            // add element to sequence in proper order
-            sequence.add(element);
+        // add element to sequence in proper order
+        sequence.add(element);
 
-            Element<E> successor = sequence.successor(element);
+        Element<E> successor = sequence.successor(element);
 
-            // check if there is an immediate successor and cancel
-            // timer task (no need to wait any more for timeout)
-            if (successor != null) {
-                successor.cancel();
-            }
+        // check if there is an immediate successor and cancel
+        // timer task (no need to wait any more for timeout)
+        if (successor != null) {
+            successor.cancel();
+        }
 
-            // start delivery if current element is successor of last delivered element
-            if (!successorOfLastDelivered(element) && sequence.predecessor(element) == null) {
-                element.schedule(defineTimeout());
-            }
-
-            // evaluate wait conditions
-            evaluateConditions();
-        } finally {
-            lock.unlock();
+        // start delivery if current element is successor of last delivered element
+        if (successorOfLastDelivered(element)) {
+            // nothing to schedule
+        } else if (sequence.predecessor(element) != null) {
+            // nothing to schedule
+        } else {
+            element.schedule(defineTimeout());
         }
     }
 
@@ -287,15 +227,9 @@ public class ResequencerEngine<E> {
      *
      * @see              ResequencerEngine#deliverNext()
      */
-    @SuppressWarnings("StatementWithEmptyBody")
-    public void deliver() throws Exception {
-        lock.lock();
-        try {
-            while (deliverNext()) {
-                // do nothing here
-            }
-        } finally {
-            lock.unlock();
+    public synchronized void deliver() throws Exception {
+        while (deliverNext()) {
+            // do nothing here
         }
     }
 
@@ -310,36 +244,28 @@ public class ResequencerEngine<E> {
      *
      */
     public boolean deliverNext() throws Exception {
-        lock.lock();
-        try {
-            if (sequence.isEmpty()) {
-                return false;
-            }
-            // inspect element with the lowest sequence value
-            Element<E> element = sequence.first();
-
-            // if element is scheduled do not deliver and return
-            if (element.scheduled()) {
-                return false;
-            }
-
-            // remove deliverable element from sequence
-            sequence.remove(element);
-
-            // set the delivered element to last delivered element
-            lastDelivered = element;
-
-            // deliver the sequence element
-            sequenceSender.sendElement(element.getObject());
-
-            // evaluate wait conditions
-            evaluateConditions();
-
-            // element has been delivered
-            return true;
-        } finally {
-            lock.unlock();
+        if (sequence.isEmpty()) {
+            return false;
         }
+        // inspect element with the lowest sequence value
+        Element<E> element = sequence.first();
+
+        // if element is scheduled do not deliver and return
+        if (element.scheduled()) {
+            return false;
+        }
+
+        // remove deliverable element from sequence
+        sequence.remove(element);
+
+        // set the delivered element to last delivered element
+        lastDelivered = element;
+
+        // deliver the sequence element
+        sequenceSender.sendElement(element.getObject());
+
+        // element has been delivered
+        return true;
     }
 
     /**
@@ -352,7 +278,7 @@ public class ResequencerEngine<E> {
         if (lastDelivered == null) {
             return false;
         }
-        if (sequence.seqComparator().successor(element, lastDelivered)) {
+        if (sequence.comparator().successor(element, lastDelivered)) {
             return true;
         }
         return false;
@@ -368,7 +294,7 @@ public class ResequencerEngine<E> {
         if (lastDelivered == null) {
             return false;
         }
-        if (sequence.seqComparator().compare(element, lastDelivered) < 0) {
+        if (sequence.comparator().compare(element, lastDelivered) < 0) {
             return true;
         }
         return false;

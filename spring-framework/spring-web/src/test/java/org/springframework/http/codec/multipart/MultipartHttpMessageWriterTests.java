@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
@@ -51,12 +50,12 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests for {@link MultipartHttpMessageWriter}.
+ * Unit tests for {@link MultipartHttpMessageWriter}.
  *
  * @author Sebastien Deleuze
  * @author Rossen Stoyanchev
  */
-class MultipartHttpMessageWriterTests extends AbstractLeakCheckingTests {
+public class MultipartHttpMessageWriterTests extends AbstractLeakCheckingTests {
 
 	private final MultipartHttpMessageWriter writer =
 			new MultipartHttpMessageWriter(ClientCodecConfigurer.create().getWriters());
@@ -65,7 +64,7 @@ class MultipartHttpMessageWriterTests extends AbstractLeakCheckingTests {
 
 
 	@Test
-	void canWrite() {
+	public void canWrite() {
 		assertThat(this.writer.canWrite(
 				ResolvableType.forClassWithGenerics(MultiValueMap.class, String.class, Object.class),
 				MediaType.MULTIPART_FORM_DATA)).isTrue();
@@ -88,7 +87,7 @@ class MultipartHttpMessageWriterTests extends AbstractLeakCheckingTests {
 	}
 
 	@Test
-	void writeMultipartFormData() throws Exception {
+	public void writeMultipartFormData() throws Exception {
 		Resource logo = new ClassPathResource("/org/springframework/http/converter/logo.jpg");
 		Resource utf8 = new ClassPathResource("/org/springframework/http/converter/logo.jpg") {
 			@Override
@@ -103,7 +102,7 @@ class MultipartHttpMessageWriterTests extends AbstractLeakCheckingTests {
 				this.bufferFactory.wrap("Bb".getBytes(StandardCharsets.UTF_8)),
 				this.bufferFactory.wrap("Cc".getBytes(StandardCharsets.UTF_8))
 		);
-		FilePart mockPart = mock();
+		FilePart mockPart = mock(FilePart.class);
 		HttpHeaders partHeaders = new HttpHeaders();
 		partHeaders.setContentType(MediaType.TEXT_PLAIN);
 		partHeaders.setContentDispositionFormData("foo", "file.txt");
@@ -127,33 +126,33 @@ class MultipartHttpMessageWriterTests extends AbstractLeakCheckingTests {
 				.block(Duration.ofSeconds(5));
 
 		MultiValueMap<String, Part> requestParts = parse(this.response, hints);
-		assertThat(requestParts).hasSize(7);
+		assertThat(requestParts.size()).isEqualTo(7);
 
 		Part part = requestParts.getFirst("name 1");
-		assertThat(part).isInstanceOf(FormFieldPart.class);
+		assertThat(part instanceof FormFieldPart).isTrue();
 		assertThat(part.name()).isEqualTo("name 1");
 		assertThat(((FormFieldPart) part).value()).isEqualTo("value 1");
 
 		List<Part> parts2 = requestParts.get("name 2");
-		assertThat(parts2).hasSize(2);
+		assertThat(parts2.size()).isEqualTo(2);
 		part = parts2.get(0);
-		assertThat(part).isInstanceOf(FormFieldPart.class);
+		assertThat(part instanceof FormFieldPart).isTrue();
 		assertThat(part.name()).isEqualTo("name 2");
 		assertThat(((FormFieldPart) part).value()).isEqualTo("value 2+1");
 		part = parts2.get(1);
-		assertThat(part).isInstanceOf(FormFieldPart.class);
+		assertThat(part instanceof FormFieldPart).isTrue();
 		assertThat(part.name()).isEqualTo("name 2");
 		assertThat(((FormFieldPart) part).value()).isEqualTo("value 2+2");
 
 		part = requestParts.getFirst("logo");
-		assertThat(part).isInstanceOf(FilePart.class);
+		assertThat(part instanceof FilePart).isTrue();
 		assertThat(part.name()).isEqualTo("logo");
 		assertThat(((FilePart) part).filename()).isEqualTo("logo.jpg");
 		assertThat(part.headers().getContentType()).isEqualTo(MediaType.IMAGE_JPEG);
 		assertThat(part.headers().getContentLength()).isEqualTo(logo.getFile().length());
 
 		part = requestParts.getFirst("utf8");
-		assertThat(part).isInstanceOf(FilePart.class);
+		assertThat(part instanceof FilePart).isTrue();
 		assertThat(part.name()).isEqualTo("utf8");
 		assertThat(((FilePart) part).filename()).isEqualTo("Hall\u00F6le.jpg");
 		assertThat(part.headers().getContentType()).isEqualTo(MediaType.IMAGE_JPEG);
@@ -175,7 +174,7 @@ class MultipartHttpMessageWriterTests extends AbstractLeakCheckingTests {
 		part = requestParts.getFirst("filePublisher");
 		assertThat(part).isNotNull();
 		assertThat(part.name()).isEqualTo("filePublisher");
-		assertThat(part.headers().hasHeaderValues("foo", Collections.singletonList("bar"))).isTrue();
+		assertThat(part.headers()).containsEntry("foo", Collections.singletonList("bar"));
 		assertThat(((FilePart) part).filename()).isEqualTo("file.txt");
 		value = decodeToString(part);
 		assertThat(value).isEqualTo("AaBbCc");
@@ -202,7 +201,7 @@ class MultipartHttpMessageWriterTests extends AbstractLeakCheckingTests {
 		assertThat(contentType.getParameter("charset")).isNull();
 
 		MultiValueMap<String, Part> requestParts = parse(this.response, hints);
-		assertThat(requestParts).hasSize(2);
+		assertThat(requestParts.size()).isEqualTo(2);
 		assertThat(requestParts.getFirst("name 1").name()).isEqualTo("name 1");
 		assertThat(requestParts.getFirst("name 2").name()).isEqualTo("name 2");
 	}
@@ -229,11 +228,11 @@ class MultipartHttpMessageWriterTests extends AbstractLeakCheckingTests {
 		this.writer.write(result, null, MediaType.MULTIPART_FORM_DATA, this.response, hints).block();
 
 		MultiValueMap<String, Part> requestParts = parse(this.response, hints);
-		assertThat(requestParts).hasSize(1);
+		assertThat(requestParts.size()).isEqualTo(1);
 
 		Part part = requestParts.getFirst("logo");
 		assertThat(part.name()).isEqualTo("logo");
-		assertThat(part).isInstanceOf(FilePart.class);
+		assertThat(part instanceof FilePart).isTrue();
 		assertThat(((FilePart) part).filename()).isEqualTo("logo.jpg");
 		assertThat(part.headers().getContentType()).isEqualTo(MediaType.IMAGE_JPEG);
 		assertThat(part.headers().getContentLength()).isEqualTo(logo.getFile().length());
@@ -241,13 +240,12 @@ class MultipartHttpMessageWriterTests extends AbstractLeakCheckingTests {
 
 	@Test // SPR-16402
 	public void singleSubscriberWithStrings() {
-		AtomicBoolean subscribed = new AtomicBoolean();
-		Flux<String> publisher = Flux.just("foo", "bar", "baz")
-				.doOnSubscribe(subscription ->
-						assertThat(subscribed.compareAndSet(false, true)).isTrue());
+		@SuppressWarnings("deprecation")
+		reactor.core.publisher.UnicastProcessor<String> processor = reactor.core.publisher.UnicastProcessor.create();
+		Flux.just("foo", "bar", "baz").subscribe(processor);
 
 		MultipartBodyBuilder bodyBuilder = new MultipartBodyBuilder();
-		bodyBuilder.asyncPart("name", publisher, String.class);
+		bodyBuilder.asyncPart("name", processor, String.class);
 
 		Mono<MultiValueMap<String, HttpEntity<?>>> result = Mono.just(bodyBuilder.build());
 
@@ -281,15 +279,15 @@ class MultipartHttpMessageWriterTests extends AbstractLeakCheckingTests {
 				this.response, hints).block();
 
 		MultiValueMap<String, Part> requestParts = parse(this.response, hints);
-		assertThat(requestParts).hasSize(2);
+		assertThat(requestParts.size()).isEqualTo(2);
 
 		Part part = requestParts.getFirst("resource");
-		assertThat(part).isInstanceOf(FilePart.class);
+		assertThat(part instanceof FilePart).isTrue();
 		assertThat(((FilePart) part).filename()).isEqualTo("spring.jpg");
 		assertThat(part.headers().getContentLength()).isEqualTo(logo.getFile().length());
 
 		part = requestParts.getFirst("buffers");
-		assertThat(part).isInstanceOf(FilePart.class);
+		assertThat(part instanceof FilePart).isTrue();
 		assertThat(((FilePart) part).filename()).isEqualTo("buffers.jpg");
 		assertThat(part.headers().getContentLength()).isEqualTo(logo.getFile().length());
 	}

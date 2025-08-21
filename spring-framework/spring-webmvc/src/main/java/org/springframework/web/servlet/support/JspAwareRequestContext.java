@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.jsp.PageContext;
 import jakarta.servlet.jsp.jstl.core.Config;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * JSP-aware (and JSTL-aware) subclass of RequestContext, allowing for
@@ -39,7 +40,7 @@ import org.jspecify.annotations.Nullable;
  */
 public class JspAwareRequestContext extends RequestContext {
 
-	private final PageContext pageContext;
+	private PageContext pageContext;
 
 
 	/**
@@ -94,7 +95,7 @@ public class JspAwareRequestContext extends RequestContext {
 	 * request, session or application scope; if not found, returns {@code null}.
 	 */
 	@Override
-	protected @Nullable TimeZone getFallbackTimeZone() {
+	protected TimeZone getFallbackTimeZone() {
 		if (jstlPresent) {
 			TimeZone timeZone = JstlPageLocaleResolver.getJstlTimeZone(getPageContext());
 			if (timeZone != null) {
@@ -111,14 +112,16 @@ public class JspAwareRequestContext extends RequestContext {
 	 */
 	private static class JstlPageLocaleResolver {
 
-		public static @Nullable Locale getJstlLocale(PageContext pageContext) {
+		@Nullable
+		public static Locale getJstlLocale(PageContext pageContext) {
 			Object localeObject = Config.find(pageContext, Config.FMT_LOCALE);
-			return (localeObject instanceof Locale locale ? locale : null);
+			return (localeObject instanceof Locale ? (Locale) localeObject : null);
 		}
 
-		public static @Nullable TimeZone getJstlTimeZone(PageContext pageContext) {
+		@Nullable
+		public static TimeZone getJstlTimeZone(PageContext pageContext) {
 			Object timeZoneObject = Config.find(pageContext, Config.FMT_TIME_ZONE);
-			return (timeZoneObject instanceof TimeZone timeZone ? timeZone : null);
+			return (timeZoneObject instanceof TimeZone ? (TimeZone) timeZoneObject : null);
 		}
 	}
 

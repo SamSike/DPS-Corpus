@@ -20,8 +20,10 @@ import org.apache.camel.Exchange;
 import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http.handler.DrinkValidationHandler;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.http.HttpMethods.GET;
@@ -31,18 +33,22 @@ public class HttpSendDynamicAwarePathHeaderTest extends BaseHttpTest {
 
     private HttpServer localServer;
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+    public void setUp() throws Exception {
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext())
-                .register("/mybar", new DrinkValidationHandler(GET.name(), null, null, "drink")).create();
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext())
+                .registerHandler("/mybar", new DrinkValidationHandler(GET.name(), null, null, "drink")).create();
         localServer.start();
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() throws Exception {
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (localServer != null) {
             localServer.stop();
@@ -50,10 +56,10 @@ public class HttpSendDynamicAwarePathHeaderTest extends BaseHttpTest {
     }
 
     @Override
-    protected RoutesBuilder createRouteBuilder() {
+    protected RoutesBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:moes")
                         .toD("http://localhost:" + localServer.getLocalPort()
                              + "?throwExceptionOnFailure=false&drink=${header.drink}");
@@ -62,7 +68,7 @@ public class HttpSendDynamicAwarePathHeaderTest extends BaseHttpTest {
     }
 
     @Test
-    public void testEmptyPath() {
+    public void testEmptyPath() throws Exception {
         String out = fluentTemplate.to("direct:moes")
                 .withHeader(Exchange.HTTP_PATH, "mybar")
                 .withHeader("drink", "beer").request(String.class);

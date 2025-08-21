@@ -17,9 +17,10 @@
 package org.apache.camel.component.http.handler;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.http.HttpRequest;
 
 /**
  * Similar to {@link BasicValidationHandler} but validates the raw query instead.
@@ -32,9 +33,9 @@ public class BasicRawQueryValidationHandler extends BasicValidationHandler {
     }
 
     @Override
-    protected boolean validateQuery(ClassicHttpRequest request) throws IOException {
+    protected boolean validateQuery(HttpRequest request) throws IOException {
         try {
-            String query = request.getUri().getRawQuery();
+            String query = new URI(request.getRequestLine().getUri()).getRawQuery();
             if (expectedQuery != null && !expectedQuery.equals(query)) {
                 return false;
             }

@@ -4,7 +4,9 @@
  * a {@code HandlerResultHandler} that supports {@code ServerResponse}s, and
  * a {@code ServerRequest} wrapper to adapt a request.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.reactive.function.server.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,16 @@
 package org.springframework.aop.aspectj;
 
 import org.aopalliance.aop.Advice;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.aop.Pointcut;
 import org.springframework.aop.PointcutAdvisor;
 import org.springframework.core.Ordered;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * {@code AspectJPointcutAdvisor} adapts an {@link AbstractAspectJAdvice} to the
- * {@link PointcutAdvisor} interface.
+ * AspectJPointcutAdvisor that adapts an {@link AbstractAspectJAdvice}
+ * to the {@link org.springframework.aop.PointcutAdvisor} interface.
  *
  * @author Adrian Colyer
  * @author Juergen Hoeller
@@ -38,7 +38,8 @@ public class AspectJPointcutAdvisor implements PointcutAdvisor, Ordered {
 
 	private final Pointcut pointcut;
 
-	private @Nullable Integer order;
+	@Nullable
+	private Integer order;
 
 
 	/**
@@ -67,6 +68,11 @@ public class AspectJPointcutAdvisor implements PointcutAdvisor, Ordered {
 	}
 
 	@Override
+	public boolean isPerInstance() {
+		return true;
+	}
+
+	@Override
 	public Advice getAdvice() {
 		return this.advice;
 	}
@@ -88,8 +94,14 @@ public class AspectJPointcutAdvisor implements PointcutAdvisor, Ordered {
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof AspectJPointcutAdvisor that &&
-				this.advice.equals(that.advice)));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof AspectJPointcutAdvisor)) {
+			return false;
+		}
+		AspectJPointcutAdvisor otherAdvisor = (AspectJPointcutAdvisor) other;
+		return this.advice.equals(otherAdvisor.advice);
 	}
 
 	@Override

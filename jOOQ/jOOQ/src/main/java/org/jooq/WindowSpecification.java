@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -55,15 +55,15 @@ import org.jetbrains.annotations.ApiStatus.Experimental;
  * <code>OVER</code> clause of window functions. This makes window
  * specifications highly reusable across several queries.
  * <p>
- * Example: <pre><code>
+ * Example: <code><pre>
  * WindowSpecification spec =
  * DSL.partitionBy(BOOK.AUTHOR_ID)
  *    .orderBy(BOOK.ID)
  *    .rowsBetweenUnboundedPreceding()
  *    .andCurrentRow();
- * </code></pre>
+ * </pre></code>
  * <p>
- * Instances can be created using {@link DSL#partitionBy(GroupField...)},
+ * Instances can be created using {@link DSL#partitionBy(Field...)},
  * {@link DSL#orderBy(OrderField...)}, and overloads as well as rows / range /
  * groups related methods in {@link DSL}.
  *
@@ -87,7 +87,7 @@ public interface WindowSpecification extends QueryPart {
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @NotNull UnmodifiableList<? extends GroupField> $partitionBy();
+    @NotNull UnmodifiableList<? extends Field<?>> $partitionBy();
 
     /**
      * Experimental query object model accessor method, see also {@link QOM}.

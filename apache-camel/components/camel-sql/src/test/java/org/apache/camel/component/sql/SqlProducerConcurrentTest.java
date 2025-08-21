@@ -28,6 +28,8 @@ import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
@@ -64,7 +66,7 @@ public class SqlProducerConcurrentTest extends CamelTestSupport {
             Future<List<?>> out = executor.submit(new Callable<List<?>>() {
                 public List<?> call() {
                     int id = (index % 3) + 1;
-                    return template.requestBody("direct:simple", Integer.toString(id), List.class);
+                    return template.requestBody("direct:simple", "" + id, List.class);
                 }
             });
             responses.put(index, out);
@@ -88,17 +90,20 @@ public class SqlProducerConcurrentTest extends CamelTestSupport {
     }
 
     @Override
-
-    public void doPreSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
         db = new EmbeddedDatabaseBuilder()
                 .setName(getClass().getSimpleName())
                 .setType(EmbeddedDatabaseType.H2)
                 .addScript("sql/createAndPopulateDatabase.sql").build();
 
+        super.setUp();
     }
 
     @Override
-    public void doPostTearDown() throws Exception {
+    @AfterEach
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (db != null) {
             db.shutdown();

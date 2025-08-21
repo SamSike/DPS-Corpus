@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,23 +38,19 @@
 
 package org.jooq.meta.mariadb;
 
-import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.nullif;
-import static org.jooq.impl.DSL.selectOne;
 import static org.jooq.impl.SQLDataType.BIGINT;
 import static org.jooq.impl.SQLDataType.BOOLEAN;
-import static org.jooq.impl.SQLDataType.VARCHAR;
-import static org.jooq.meta.mysql.information_schema.Tables.*;
+import static org.jooq.meta.mysql.information_schema.Tables.TABLES;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
@@ -62,14 +58,11 @@ import org.jooq.Record12;
 import org.jooq.ResultQuery;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
-import org.jooq.impl.SQLDataType;
 import org.jooq.meta.DefaultDataTypeDefinition;
 import org.jooq.meta.DefaultSequenceDefinition;
 import org.jooq.meta.SchemaDefinition;
 import org.jooq.meta.SequenceDefinition;
 import org.jooq.meta.mysql.MySQLDatabase;
-import org.jooq.meta.mysql.information_schema.tables.CheckConstraints;
-import org.jooq.meta.mysql.information_schema.tables.TableConstraints;
 
 /**
  * @author Lukas Eder
@@ -138,17 +131,5 @@ public class MariaDBDatabase extends MySQLDatabase {
         }
 
         return result;
-    }
-
-    @Override
-    protected Condition jsonCheck(Field<String> schemaName, Field<String> tableName, Field<String> fieldName) {
-        CheckConstraints cc = CHECK_CONSTRAINTS.as("cc");
-
-        return DSL.exists(selectOne()
-            .from(cc)
-            .where(cc.CONSTRAINT_SCHEMA.eq(schemaName))
-            .and(field("{0}.TABLE_NAME", VARCHAR, cc).eq(tableName))
-            .and(cc.CHECK_CLAUSE.eq(inline("json_valid(`").concat(fieldName).concat(inline("`)"))))
-        );
     }
 }

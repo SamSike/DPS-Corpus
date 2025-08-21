@@ -22,10 +22,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.camel.CamelContext;
 import org.apache.camel.NamedNode;
 import org.apache.camel.spi.Resource;
-import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.util.FileUtil;
 
@@ -151,14 +149,14 @@ public final class ProcessorDefinitionHelper {
             return null;
         }
 
-        NamedNode def = node;
+        ProcessorDefinition<?> def = (ProcessorDefinition) node;
         // drill to the top
         while (def != null && def.getParent() != null) {
             def = def.getParent();
         }
 
-        if (def instanceof RouteDefinition rd) {
-            return rd;
+        if (def instanceof RouteDefinition) {
+            return (RouteDefinition) def;
         } else {
             // not found
             return null;
@@ -204,7 +202,7 @@ public final class ProcessorDefinitionHelper {
 
         // add ourselves
         if (node.getId() != null) {
-            if (!onlyCustomId || node.hasCustomIdAssigned()) {
+            if (!onlyCustomId || node.hasCustomIdAssigned() && onlyCustomId) {
                 set.add(node.getId());
             }
         }
@@ -283,13 +281,16 @@ public final class ProcessorDefinitionHelper {
         for (ProcessorDefinition out : outputs) {
 
             // send is much common
-            if (out instanceof SendDefinition send) {
+            if (out instanceof SendDefinition) {
+                SendDefinition send = (SendDefinition) out;
                 List<ProcessorDefinition<?>> children = send.getOutputs();
                 doFindType(children, type, found, ++current, maxDeep);
             }
 
             // special for choice
-            if (out instanceof ChoiceDefinition choice) {
+            if (out instanceof ChoiceDefinition) {
+                ChoiceDefinition choice = (ChoiceDefinition) out;
+
                 // ensure to add ourself if we match also
                 if (type.isInstance(choice)) {
                     found.add((T) choice);
@@ -318,7 +319,9 @@ public final class ProcessorDefinitionHelper {
             }
 
             // special for try ... catch ... finally
-            if (out instanceof TryDefinition doTry) {
+            if (out instanceof TryDefinition) {
+                TryDefinition doTry = (TryDefinition) out;
+
                 // ensure to add ourself if we match also
                 if (type.isInstance(doTry)) {
                     found.add((T) doTry);
@@ -332,20 +335,11 @@ public final class ProcessorDefinitionHelper {
 
                     List<CatchDefinition> doTryCatch = doTry.getCatchClauses();
                     for (CatchDefinition doCatch : doTryCatch) {
-                        // ensure to add ourself if we match also
-                        if (type.isInstance(doCatch)) {
-                            found.add((T) doCatch);
-                        }
                         doFindType(doCatch.getOutputs(), type, found, ++current, maxDeep);
                     }
 
                     if (doTry.getFinallyClause() != null) {
-                        // ensure to add ourself if we match also
-                        FinallyDefinition doFinally = doTry.getFinallyClause();
-                        if (type.isInstance(doFinally)) {
-                            found.add((T) doFinally);
-                        }
-                        doFindType(doFinally.getOutputs(), type, found, ++current, maxDeep);
+                        doFindType(doTry.getFinallyClause().getOutputs(), type, found, ++current, maxDeep);
                     }
                 }
 
@@ -354,7 +348,9 @@ public final class ProcessorDefinitionHelper {
             }
 
             // special for some types which has special outputs
-            if (out instanceof OutputDefinition outDef) {
+            if (out instanceof OutputDefinition) {
+                OutputDefinition outDef = (OutputDefinition) out;
+
                 // ensure to add ourself if we match also
                 if (type.isInstance(outDef)) {
                     found.add((T) outDef);
@@ -388,7 +384,7 @@ public final class ProcessorDefinitionHelper {
             node.setLocation(resource.getLocation());
 
             String ext = FileUtil.onlyExt(resource.getLocation(), true);
-            if ("groovy".equals(ext) || "js".equals(ext)) {
+            if ("groovy".equals(ext) || "js".equals(ext) || "jsh".equals(ext)) {
                 // we cannot get line number for groovy/java-script/java-shell
                 return;
             }
@@ -403,9 +399,6 @@ public final class ProcessorDefinitionHelper {
                 StackTraceElement e = st[i];
                 if (!e.getClassName().startsWith("org.apache.camel.model") &&
                         !e.getClassName().startsWith("org.apache.camel.builder.RouteBuilder") &&
-                        !e.getClassName().startsWith("org.apache.camel.reifier.RouteReifier") &&
-                        !e.getClassName().startsWith("org.apache.camel.impl") &&
-                        !e.getClassName().startsWith("org.apache.camel.support") &&
                         !e.getClassName().startsWith("org.apache.camel.dsl")) {
                     // when we are no longer in model/RouteBuilder, we have found the location:line-number
                     node.setLineNumber(e.getLineNumber());
@@ -457,78 +450,6 @@ public final class ProcessorDefinitionHelper {
             node = node.getParent();
         }
         return null;
-    }
-
-    /**
-     * Performs a depp copy of the list of model classes
-     *
-     * @param  models list of model classes
-     * @return        a new list containing a deep copy of the model classes
-     */
-    public static List deepCopyDefinitions(List models) {
-        var answer = new ArrayList();
-        if (models != null) {
-            for (var def : models) {
-                if (def instanceof CopyableDefinition<?> copy) {
-                    def = copy.copyDefinition();
-                }
-                answer.add(def);
-            }
-        }
-        return answer;
-    }
-
-    /**
-     * Whether the model should be wrapped in an error handler or not.
-     *
-     * Some EIPs like try/catch, circuit breaker, multicast, and kamelets have impact on whether the model should be
-     * wrapped or not.
-     */
-    public static boolean shouldWrapInErrorHandler(
-            CamelContext context, ProcessorDefinition<?> definition,
-            ProcessorDefinition<?> child, Boolean inheritErrorHandler) {
-        boolean wrap = false;
-
-        // set the error handler, must be done after init as we can set the
-        // error handler as first in the chain
-        if (definition instanceof TryDefinition || definition instanceof CatchDefinition
-                || definition instanceof FinallyDefinition) {
-            // do not use error handler for try .. catch .. finally blocks as it
-            // will handle errors itself
-        } else if (ProcessorDefinitionHelper.isParentOfType(TryDefinition.class, definition, true)
-                || ProcessorDefinitionHelper.isParentOfType(CatchDefinition.class, definition, true)
-                || ProcessorDefinitionHelper.isParentOfType(FinallyDefinition.class, definition, true)) {
-            // do not use error handler for try .. catch .. finally blocks as it
-            // will handle errors itself
-            // by checking that any of our parent(s) is not a try .. catch or
-            // finally type
-        } else if (definition instanceof OnExceptionDefinition
-                || ProcessorDefinitionHelper.isParentOfType(OnExceptionDefinition.class, definition, true)) {
-            // do not use error handler for onExceptions blocks as it will
-            // handle errors itself
-        } else if (definition instanceof CircuitBreakerDefinition
-                || ProcessorDefinitionHelper.isParentOfType(CircuitBreakerDefinition.class, definition, true)) {
-            // do not use error handler for circuit breaker
-            // however if inherit error handler is enabled, we need to wrap an error handler on the parent
-            if (inheritErrorHandler != null && inheritErrorHandler && child == null) {
-                // only wrap the parent (not the children of the circuit breaker)
-                wrap = true;
-            }
-        } else if (definition instanceof MulticastDefinition def) {
-            // do not use error handler for multicast as it offers fine-grained
-            // error handlers for its outputs
-            // however if share unit of work is enabled, we need to wrap an
-            // error handler on the multicast parent
-            Boolean isShareUnitOfWork = CamelContextHelper.parseBoolean(context, def.getShareUnitOfWork());
-            if (isShareUnitOfWork != null && isShareUnitOfWork && child == null) {
-                // only wrap the parent (not the children of the multicast)
-                wrap = true;
-            }
-        } else {
-            // use error handler by default or if configured to do so
-            wrap = true;
-        }
-        return wrap;
     }
 
 }

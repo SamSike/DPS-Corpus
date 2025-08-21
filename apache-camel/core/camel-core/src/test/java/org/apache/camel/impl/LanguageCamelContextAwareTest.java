@@ -32,17 +32,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 public class LanguageCamelContextAwareTest extends ContextTestSupport {
 
-    private final MyLanguage my = new MyLanguage();
+    private MyLanguage my = new MyLanguage();
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry registry = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry registry = super.createRegistry();
         registry.bind("my", my);
         return registry;
     }
 
     @Test
-    public void testLanguageCamelContextAware() {
+    public void testLanguageCamelContextAware() throws Exception {
         Language lan = context.resolveLanguage("my");
         assertNotNull(lan);
 

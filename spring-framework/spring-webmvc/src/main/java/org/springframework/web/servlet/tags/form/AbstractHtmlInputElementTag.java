@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@
 package org.springframework.web.servlet.tags.form;
 
 import jakarta.servlet.jsp.JspException;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Base class for databinding-aware JSP tags that render HTML form input element.
@@ -64,13 +65,17 @@ public abstract class AbstractHtmlInputElementTag extends AbstractHtmlElementTag
 	public static final String READONLY_ATTRIBUTE = "readonly";
 
 
-	private @Nullable String onfocus;
+	@Nullable
+	private String onfocus;
 
-	private @Nullable String onblur;
+	@Nullable
+	private String onblur;
 
-	private @Nullable String onchange;
+	@Nullable
+	private String onchange;
 
-	private @Nullable String accesskey;
+	@Nullable
+	private String accesskey;
 
 	private boolean disabled;
 
@@ -88,7 +93,8 @@ public abstract class AbstractHtmlInputElementTag extends AbstractHtmlElementTag
 	/**
 	 * Get the value of the '{@code onfocus}' attribute.
 	 */
-	protected @Nullable String getOnfocus() {
+	@Nullable
+	protected String getOnfocus() {
 		return this.onfocus;
 	}
 
@@ -103,7 +109,8 @@ public abstract class AbstractHtmlInputElementTag extends AbstractHtmlElementTag
 	/**
 	 * Get the value of the '{@code onblur}' attribute.
 	 */
-	protected @Nullable String getOnblur() {
+	@Nullable
+	protected String getOnblur() {
 		return this.onblur;
 	}
 
@@ -118,7 +125,8 @@ public abstract class AbstractHtmlInputElementTag extends AbstractHtmlElementTag
 	/**
 	 * Get the value of the '{@code onchange}' attribute.
 	 */
-	protected @Nullable String getOnchange() {
+	@Nullable
+	protected String getOnchange() {
 		return this.onchange;
 	}
 
@@ -133,7 +141,8 @@ public abstract class AbstractHtmlInputElementTag extends AbstractHtmlElementTag
 	/**
 	 * Get the value of the '{@code accesskey}' attribute.
 	 */
-	protected @Nullable String getAccesskey() {
+	@Nullable
+	protected String getAccesskey() {
 		return this.accesskey;
 	}
 

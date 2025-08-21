@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,12 +41,9 @@ import org.jetbrains.annotations.*;
 
 
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
-// ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
 import static org.jooq.SQLDialect.HSQLDB;
-import static org.jooq.SQLDialect.MARIADB;
 // ...
 import static org.jooq.SQLDialect.MYSQL;
 
@@ -77,51 +74,51 @@ import static org.jooq.SQLDialect.MYSQL;
 public interface AlterTableAddStep extends AlterTableFinalStep {
 
     /**
-     * Add a <code>FIRST</code> clause to <code>ALTER TABLE … ADD …</code>.
+     * Add a <code>FIRST</code> clause to <code>ALTER TABLE .. ADD ..</code>.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL })
+    @Support({ FIREBIRD, H2, MYSQL })
     AlterTableFinalStep first();
 
     /**
-     * Add a <code>BEFORE</code> clause to <code>ALTER TABLE … ADD …</code>.
+     * Add a <code>BEFORE</code> clause to <code>ALTER TABLE .. ADD ..</code>.
      */
     @NotNull @CheckReturnValue
     @Support({ H2, HSQLDB })
     AlterTableFinalStep before(String columnName);
 
     /**
-     * Add a <code>BEFORE</code> clause to <code>ALTER TABLE … ADD …</code>.
+     * Add a <code>BEFORE</code> clause to <code>ALTER TABLE .. ADD ..</code>.
      */
     @NotNull @CheckReturnValue
     @Support({ H2, HSQLDB })
     AlterTableFinalStep before(Name columnName);
 
     /**
-     * Add a <code>BEFORE</code> clause to <code>ALTER TABLE … ADD …</code>.
+     * Add a <code>BEFORE</code> clause to <code>ALTER TABLE .. ADD ..</code>.
      */
     @NotNull @CheckReturnValue
     @Support({ H2, HSQLDB })
     AlterTableFinalStep before(Field<?> columnName);
 
     /**
-     * Add a <code>AFTER</code> clause to <code>ALTER TABLE … ADD …</code>.
+     * Add a <code>AFTER</code> clause to <code>ALTER TABLE .. ADD ..</code>.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, H2, MARIADB, MYSQL })
+    @Support({ H2, MYSQL })
     AlterTableFinalStep after(String columnName);
 
     /**
-     * Add a <code>AFTER</code> clause to <code>ALTER TABLE … ADD …</code>.
+     * Add a <code>AFTER</code> clause to <code>ALTER TABLE .. ADD ..</code>.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, H2, MARIADB, MYSQL })
+    @Support({ H2, MYSQL })
     AlterTableFinalStep after(Name columnName);
 
     /**
-     * Add a <code>AFTER</code> clause to <code>ALTER TABLE … ADD …</code>.
+     * Add a <code>AFTER</code> clause to <code>ALTER TABLE .. ADD ..</code>.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, H2, MARIADB, MYSQL })
+    @Support({ H2, MYSQL })
     AlterTableFinalStep after(Field<?> columnName);
 }

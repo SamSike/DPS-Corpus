@@ -17,7 +17,6 @@
 package org.apache.camel.component.google.mail;
 
 import java.util.Collection;
-import java.util.List;
 
 import org.apache.camel.component.google.mail.internal.GoogleMailApiName;
 import org.apache.camel.spi.Configurer;
@@ -54,7 +53,7 @@ public class GoogleMailConfiguration {
     @UriParam
     private String delegate;
     @UriParam
-    private String scopes;
+    private Collection<String> scopes;
 
     public GoogleMailApiName getApiName() {
         return apiName;
@@ -116,8 +115,8 @@ public class GoogleMailConfiguration {
     }
 
     /**
-     * OAuth 2 refresh token. Using this, the Google Mail component can obtain a new accessToken whenever the current
-     * one expires - a necessity if the application is long-lived.
+     * OAuth 2 refresh token. Using this, the Google Calendar component can obtain a new accessToken whenever the
+     * current one expires - a necessity if the application is long-lived.
      */
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
@@ -159,26 +158,16 @@ public class GoogleMailConfiguration {
         this.delegate = delegate;
     }
 
-    public String getScopes() {
+    public Collection<String> getScopes() {
         return scopes;
     }
 
-    public Collection<String> getScopesAsList() {
-        if (scopes != null) {
-            return List.of(scopes.split(","));
-        } else {
-            return null;
-        }
-    }
-
     /**
-     * Specifies the level of permissions you want a calendar application to have to a user account. See
-     * https://developers.google.com/identity/protocols/googlescopes for more info. Multiple scopes can be separated by
-     * comma.
-     *
+     * GMail scopes
+     * 
      * @see com.google.api.services.gmail.GmailScopes
      */
-    public void setScopes(String scopes) {
+    public void setScopes(Collection<String> scopes) {
         this.scopes = scopes;
     }
 }

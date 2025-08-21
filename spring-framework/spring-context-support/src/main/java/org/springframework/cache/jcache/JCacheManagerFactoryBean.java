@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,11 @@ import java.util.Properties;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link FactoryBean} for a JCache {@link CacheManager javax.cache.CacheManager},
@@ -44,13 +43,17 @@ import org.springframework.beans.factory.InitializingBean;
 public class JCacheManagerFactoryBean
 		implements FactoryBean<CacheManager>, BeanClassLoaderAware, InitializingBean, DisposableBean {
 
-	private @Nullable URI cacheManagerUri;
+	@Nullable
+	private URI cacheManagerUri;
 
-	private @Nullable Properties cacheManagerProperties;
+	@Nullable
+	private Properties cacheManagerProperties;
 
-	private @Nullable ClassLoader beanClassLoader;
+	@Nullable
+	private ClassLoader beanClassLoader;
 
-	private @Nullable CacheManager cacheManager;
+	@Nullable
+	private CacheManager cacheManager;
 
 
 	/**
@@ -83,7 +86,8 @@ public class JCacheManagerFactoryBean
 
 
 	@Override
-	public @Nullable CacheManager getObject() {
+	@Nullable
+	public CacheManager getObject() {
 		return this.cacheManager;
 	}
 

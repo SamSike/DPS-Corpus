@@ -29,20 +29,18 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class FromRestGetTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("dummy-rest", new DummyRestConsumerFactory());
         return jndi;
     }
 
     protected int getExpectedNumberOfRoutes() {
-        // routes are inlined
-        return 3;
+        return 2 + 3;
     }
 
     @Test
@@ -84,7 +82,7 @@ public class FromRestGetTest extends ContextTestSupport {
         assertEquals("1", rest.getVerbs().get(0).getParams().get(0).getDefaultValue());
         assertEquals("b", rest.getVerbs().get(0).getParams().get(1).getDefaultValue());
 
-        assertNull(rest.getVerbs().get(0).getParams().get(0).getCollectionFormat());
+        assertEquals(null, rest.getVerbs().get(0).getParams().get(0).getCollectionFormat());
         assertEquals(CollectionFormat.multi, rest.getVerbs().get(0).getParams().get(1).getCollectionFormat());
 
         assertEquals("header_count", rest.getVerbs().get(0).getParams().get(0).getName());
@@ -122,10 +120,10 @@ public class FromRestGetTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.getPropertiesComponent().addInitialProperty("mySpecialId", "scott");
 
                 restConfiguration().host("localhost");

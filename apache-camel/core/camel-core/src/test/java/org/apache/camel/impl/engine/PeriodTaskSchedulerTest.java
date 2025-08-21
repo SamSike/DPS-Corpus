@@ -20,8 +20,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.PeriodTaskScheduler;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.TimerListenerManager;
 import org.apache.camel.support.service.ServiceSupport;
 import org.awaitility.Awaitility;
@@ -38,13 +38,13 @@ public class PeriodTaskSchedulerTest extends ContextTestSupport {
     }
 
     @Test
-    public void testScheduler() {
+    public void testScheduler() throws Exception {
         counter.set(0);
 
-        PeriodTaskScheduler scheduler = PluginHelper.getPeriodTaskScheduler(context);
-        if (scheduler instanceof TimerListenerManager timerListenerManager) {
+        PeriodTaskScheduler scheduler = context.adapt(ExtendedCamelContext.class).getPeriodTaskScheduler();
+        if (scheduler instanceof TimerListenerManager) {
             // speedup unit test
-            timerListenerManager.setInterval(10);
+            ((TimerListenerManager) scheduler).setInterval(10);
         }
         scheduler.schedulePeriodTask(counter::incrementAndGet, 10);
         context.start();
@@ -53,15 +53,15 @@ public class PeriodTaskSchedulerTest extends ContextTestSupport {
     }
 
     @Test
-    public void testSchedulerLifecycle() {
+    public void testSchedulerLifecycle() throws Exception {
         counter.set(0);
 
         MyTask task = new MyTask();
 
-        PeriodTaskScheduler scheduler = PluginHelper.getPeriodTaskScheduler(context);
-        if (scheduler instanceof TimerListenerManager timerListenerManager) {
+        PeriodTaskScheduler scheduler = context.adapt(ExtendedCamelContext.class).getPeriodTaskScheduler();
+        if (scheduler instanceof TimerListenerManager) {
             // speedup unit test
-            timerListenerManager.setInterval(10);
+            ((TimerListenerManager) scheduler).setInterval(10);
         }
         scheduler.schedulePeriodTask(task, 10);
         context.start();
@@ -85,12 +85,12 @@ public class PeriodTaskSchedulerTest extends ContextTestSupport {
         }
 
         @Override
-        protected void doStart() {
+        protected void doStart() throws Exception {
             event += "start";
         }
 
         @Override
-        protected void doStop() {
+        protected void doStop() throws Exception {
             event += "stop";
         }
 
@@ -99,33 +99,6 @@ public class PeriodTaskSchedulerTest extends ContextTestSupport {
             counter.incrementAndGet();
             event += "run";
         }
-    }
-
-    @Test
-    public void testSchedulerRun() {
-        final AtomicInteger taskCounter = new AtomicInteger();
-        counter.set(0);
-
-        PeriodTaskScheduler scheduler = PluginHelper.getPeriodTaskScheduler(context);
-        if (scheduler instanceof TimerListenerManager timerListenerManager) {
-            // speedup unit test
-            timerListenerManager.setInterval(10);
-        }
-        // this task is only executed once (it can keep looping forever if needed)
-        scheduler.scheduledTask(() -> {
-            counter.incrementAndGet();
-            for (int i = 0; i < 10; i++) {
-                try {
-                    Thread.sleep(10);
-                } catch (Exception e) {
-                    // ignore
-                }
-                taskCounter.incrementAndGet();
-            }
-        });
-        context.start();
-
-        Awaitility.waitAtMost(5, TimeUnit.SECONDS).until(() -> counter.get() == 1 && taskCounter.get() == 10);
     }
 
 }

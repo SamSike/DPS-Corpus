@@ -79,7 +79,7 @@ public class SedaConcurrentTest extends ContextTestSupport {
         for (int i = 0; i < 20; i++) {
             final int num = i;
             Object out = executors.submit(new Callable<Object>() {
-                public Object call() {
+                public Object call() throws Exception {
                     return template.requestBody("seda:bar", "Message " + num);
                 }
             });
@@ -126,10 +126,10 @@ public class SedaConcurrentTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo?concurrentConsumers=10").to("mock:before").delay(500).to("mock:result");
 
                 from("seda:bar?concurrentConsumers=10").to("mock:before").delay(500).transform(body().prepend("Bye "))

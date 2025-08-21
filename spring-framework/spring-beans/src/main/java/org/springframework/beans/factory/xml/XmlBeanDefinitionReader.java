@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,10 @@ package org.springframework.beans.factory.xml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.jspecify.annotations.Nullable;
 import org.w3c.dom.Document;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
@@ -42,11 +40,13 @@ import org.springframework.beans.factory.parsing.ReaderEventListener;
 import org.springframework.beans.factory.parsing.SourceExtractor;
 import org.springframework.beans.factory.support.AbstractBeanDefinitionReader;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.core.Constants;
 import org.springframework.core.NamedThreadLocal;
 import org.springframework.core.io.DescriptiveResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.EncodedResource;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.xml.SimpleSaxErrorHandler;
 import org.springframework.util.xml.XmlValidationModeDetector;
@@ -68,7 +68,6 @@ import org.springframework.util.xml.XmlValidationModeDetector;
  * @author Juergen Hoeller
  * @author Rob Harrop
  * @author Chris Beams
- * @author Sam Brannen
  * @since 26.11.2003
  * @see #setDocumentReaderClass
  * @see BeanDefinitionDocumentReader
@@ -100,16 +99,8 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	public static final int VALIDATION_XSD = XmlValidationModeDetector.VALIDATION_XSD;
 
 
-	/**
-	 * Map of constant names to constant values for the validation constants defined
-	 * in this class.
-	 */
-	private static final Map<String, Integer> constants = Map.of(
-			"VALIDATION_NONE", VALIDATION_NONE,
-			"VALIDATION_AUTO", VALIDATION_AUTO,
-			"VALIDATION_DTD", VALIDATION_DTD,
-			"VALIDATION_XSD", VALIDATION_XSD
-		);
+	/** Constants instance for this class. */
+	private static final Constants constants = new Constants(XmlBeanDefinitionReader.class);
 
 	private int validationMode = VALIDATION_AUTO;
 
@@ -124,18 +115,25 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 
 	private SourceExtractor sourceExtractor = new NullSourceExtractor();
 
-	private @Nullable NamespaceHandlerResolver namespaceHandlerResolver;
+	@Nullable
+	private NamespaceHandlerResolver namespaceHandlerResolver;
 
 	private DocumentLoader documentLoader = new DefaultDocumentLoader();
 
-	private @Nullable EntityResolver entityResolver;
+	@Nullable
+	private EntityResolver entityResolver;
 
 	private ErrorHandler errorHandler = new SimpleSaxErrorHandler(logger);
 
 	private final XmlValidationModeDetector validationModeDetector = new XmlValidationModeDetector();
 
-	private final ThreadLocal<Set<EncodedResource>> resourcesCurrentlyBeingLoaded = NamedThreadLocal.withInitial(
-			"XML bean definition resources currently being loaded", () -> new HashSet<>(4));
+	private final ThreadLocal<Set<EncodedResource>> resourcesCurrentlyBeingLoaded =
+			new NamedThreadLocal<Set<EncodedResource>>("XML bean definition resources currently being loaded"){
+				@Override
+				protected Set<EncodedResource> initialValue() {
+					return new HashSet<>(4);
+				}
+			};
 
 
 	/**
@@ -165,10 +163,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 * @see #setValidationMode
 	 */
 	public void setValidationModeName(String validationModeName) {
-		Assert.hasText(validationModeName, "'validationModeName' must not be null or blank");
-		Integer validationMode = constants.get(validationModeName);
-		Assert.notNull(validationMode, "Only validation mode constants allowed");
-		this.validationMode = validationMode;
+		setValidationMode(constants.asNumber(validationModeName).intValue());
 	}
 
 	/**
@@ -178,8 +173,6 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 * activate schema namespace support explicitly: see {@link #setNamespaceAware}.
 	 */
 	public void setValidationMode(int validationMode) {
-		Assert.isTrue(constants.containsValue(validationMode),
-				"Only values of validation mode constants allowed");
 		this.validationMode = validationMode;
 	}
 
@@ -191,7 +184,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	}
 
 	/**
-	 * Set whether the XML parser should be XML namespace aware.
+	 * Set whether or not the XML parser should be XML namespace aware.
 	 * Default is "false".
 	 * <p>This is typically not needed when schema validation is active.
 	 * However, without validation, this has to be switched to "true"
@@ -202,7 +195,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	}
 
 	/**
-	 * Return whether the XML parser should be XML namespace aware.
+	 * Return whether or not the XML parser should be XML namespace aware.
 	 */
 	public boolean isNamespaceAware() {
 		return this.namespaceAware;
@@ -554,8 +547,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 * @see DefaultNamespaceHandlerResolver#DefaultNamespaceHandlerResolver(ClassLoader)
 	 */
 	protected NamespaceHandlerResolver createDefaultNamespaceHandlerResolver() {
-		ResourceLoader resourceLoader = getResourceLoader();
-		ClassLoader cl = (resourceLoader != null ? resourceLoader.getClassLoader() : getBeanClassLoader());
+		ClassLoader cl = (getResourceLoader() != null ? getResourceLoader().getClassLoader() : getBeanClassLoader());
 		return new DefaultNamespaceHandlerResolver(cl);
 	}
 

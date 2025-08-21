@@ -59,7 +59,7 @@ public class CxfRsProducerHttpMethodHeaderTest extends CamelTestSupport {
         Response response = (Response) exchange.getMessage().getBody();
 
         // check the response code on the Response object as set by the "HttpProcess"
-        assertEquals(204, response.getStatus());
+        assertEquals(200, response.getStatus());
 
         Exchange e1 = getMockEndpoint("mock:result").getReceivedExchanges().get(0);
         // should not contain CXF headers
@@ -72,9 +72,9 @@ public class CxfRsProducerHttpMethodHeaderTest extends CamelTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                fromF("undertow://http://localhost:%s/CxfRsProducerHttpMethodHeaderTest/?matchOnUriPrefix=true",
+                fromF("jetty://http://localhost:%s/CxfRsProducerHttpMethodHeaderTest/?matchOnUriPrefix=true",
                         CXFTestSupport.getPort7())
-                        .to("mock:result");
+                                .to("mock:result");
             }
         };
     }

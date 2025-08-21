@@ -38,8 +38,12 @@ public class BeanComponent extends DefaultComponent {
 
     // use an internal soft cache for BeanInfo as they are costly to introspect
     // for example the bean language using OGNL expression runs much faster reusing the BeanInfo from this cache
-    private Map<BeanInfoCacheKey, BeanInfo> beanInfoCache;
+    @SuppressWarnings("unchecked")
+    private final Map<BeanInfoCacheKey, BeanInfo> beanInfoCache = LRUCacheFactory.newLRUSoftCache(1000);
 
+    @Deprecated
+    @Metadata(defaultValue = "true", description = "Use singleton option instead.")
+    private Boolean cache;
     @Metadata(defaultValue = "Singleton", description = "Scope of bean."
                                                         + " When using singleton scope (default) the bean is created or looked up only once and reused for the lifetime of the endpoint."
                                                         + " The bean should be thread-safe in case concurrent threads is calling the bean at the same time."
@@ -51,21 +55,7 @@ public class BeanComponent extends DefaultComponent {
                                                         + " so when using prototype then this depends on the delegated registry.")
     private BeanScope scope = BeanScope.Singleton;
 
-    @Metadata(label = "advanced", defaultValue = "1000",
-              description = "Maximum cache size of internal cache for bean introspection. Setting a value of 0 or negative will disable the cache.")
-    private int beanInfoCacheSize = 1000;
-
     public BeanComponent() {
-    }
-
-    @Override
-    protected void doInit() throws Exception {
-        super.doInit();
-
-        if (beanInfoCache == null && beanInfoCacheSize > 0) {
-            LOG.debug("Creating BeanInfo with maximum cache size: {}", beanInfoCacheSize);
-            beanInfoCache = LRUCacheFactory.newLRUSoftCache(beanInfoCacheSize);
-        }
     }
 
     // Implementation methods
@@ -74,6 +64,9 @@ public class BeanComponent extends DefaultComponent {
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         BeanEndpoint endpoint = new BeanEndpoint(uri, this);
         endpoint.setBeanName(remaining);
+        if (cache != null) {
+            endpoint.setCache(cache);
+        }
         endpoint.setScope(scope);
         setProperties(endpoint, parameters);
 
@@ -84,27 +77,34 @@ public class BeanComponent extends DefaultComponent {
     }
 
     BeanInfo getBeanInfoFromCache(BeanInfoCacheKey key) {
-        if (beanInfoCache != null) {
-            return beanInfoCache.get(key);
-        } else {
-            return null;
-        }
+        return beanInfoCache.get(key);
     }
 
     void addBeanInfoToCache(BeanInfoCacheKey key, BeanInfo beanInfo) {
-        if (beanInfoCache != null && beanInfo != null) {
-            beanInfoCache.put(key, beanInfo);
-        }
+        beanInfoCache.put(key, beanInfo);
     }
 
     @Override
     protected void doShutdown() throws Exception {
-        if (LOG.isDebugEnabled() && beanInfoCache instanceof LRUCache<BeanInfoCacheKey, BeanInfo> cache) {
+        if (LOG.isDebugEnabled() && beanInfoCache instanceof LRUCache) {
+            LRUCache cache = (LRUCache) this.beanInfoCache;
             LOG.debug("Clearing BeanInfo cache[size={}, hits={}, misses={}, evicted={}]", cache.size(), cache.getHits(),
                     cache.getMisses(), cache.getEvicted());
         }
-        if (beanInfoCache != null) {
-            beanInfoCache.clear();
+        beanInfoCache.clear();
+    }
+
+    @Deprecated
+    public Boolean getCache() {
+        return scope == BeanScope.Singleton;
+    }
+
+    @Deprecated
+    public void setCache(Boolean cache) {
+        if (Boolean.TRUE.equals(cache)) {
+            scope = BeanScope.Singleton;
+        } else {
+            scope = BeanScope.Prototype;
         }
     }
 
@@ -114,13 +114,5 @@ public class BeanComponent extends DefaultComponent {
 
     public void setScope(BeanScope scope) {
         this.scope = scope;
-    }
-
-    public int getBeanInfoCacheSize() {
-        return beanInfoCacheSize;
-    }
-
-    public void setBeanInfoCacheSize(int beanInfoCacheSize) {
-        this.beanInfoCacheSize = beanInfoCacheSize;
     }
 }

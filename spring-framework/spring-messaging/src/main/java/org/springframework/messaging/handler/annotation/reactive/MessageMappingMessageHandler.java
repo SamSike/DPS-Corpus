@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -40,6 +39,7 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.codec.Decoder;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.CompositeMessageCondition;
 import org.springframework.messaging.handler.DestinationPatternsMessageCondition;
@@ -65,7 +65,7 @@ import org.springframework.validation.Validator;
 /**
  * Extension of {@link AbstractMethodMessageHandler} for reactive, non-blocking
  * handling of messages via {@link MessageMapping @MessageMapping} methods.
- * By default, such methods are detected in {@code @Controller} Spring beans but
+ * By default such methods are detected in {@code @Controller} Spring beans but
  * that can be changed via {@link #setHandlerPredicate(Predicate)}.
  *
  * <p>Payloads for incoming messages are decoded through the configured
@@ -74,7 +74,7 @@ import org.springframework.validation.Validator;
  *
  * <p>There is no default handling for return values but
  * {@link #setReturnValueHandlerConfigurer} can be used to configure custom
- * return value handlers. Subclasses may also override
+ * return value handlers. Sub-classes may also override
  * {@link #initReturnValueHandlers()} to set up default return value handlers.
  *
  * @author Rossen Stoyanchev
@@ -86,13 +86,16 @@ public class MessageMappingMessageHandler extends AbstractMethodMessageHandler<C
 
 	private final List<Decoder<?>> decoders = new ArrayList<>();
 
-	private @Nullable Validator validator;
+	@Nullable
+	private Validator validator;
 
-	private @Nullable RouteMatcher routeMatcher;
+	@Nullable
+	private RouteMatcher routeMatcher;
 
 	private ConversionService conversionService = new DefaultFormattingConversionService();
 
-	private @Nullable StringValueResolver valueResolver;
+	@Nullable
+	private StringValueResolver valueResolver;
 
 
 	public MessageMappingMessageHandler() {
@@ -127,7 +130,8 @@ public class MessageMappingMessageHandler extends AbstractMethodMessageHandler<C
 	/**
 	 * Return the configured Validator instance.
 	 */
-	public @Nullable Validator getValidator() {
+	@Nullable
+	public Validator getValidator() {
 		return this.validator;
 	}
 
@@ -147,7 +151,8 @@ public class MessageMappingMessageHandler extends AbstractMethodMessageHandler<C
 	 * Return the {@code RouteMatcher} used to map messages to handlers.
 	 * May be {@code null} before the component is initialized.
 	 */
-	public @Nullable RouteMatcher getRouteMatcher() {
+	@Nullable
+	public RouteMatcher getRouteMatcher() {
 		return this.routeMatcher;
 	}
 
@@ -165,7 +170,7 @@ public class MessageMappingMessageHandler extends AbstractMethodMessageHandler<C
 
 	/**
 	 * Configure a {@link ConversionService} to use for type conversion of
-	 * String based values, for example, in destination variables or headers.
+	 * String based values, e.g. in destination variables or headers.
 	 * <p>By default {@link DefaultFormattingConversionService} is used.
 	 * @param conversionService the conversion service to use
 	 */
@@ -195,7 +200,7 @@ public class MessageMappingMessageHandler extends AbstractMethodMessageHandler<C
 	 * {@code @ControllerAdvice} bean. You can use the following adapter code
 	 * to register {@code @ControllerAdvice} beans here:
 	 * <pre>
-	 * ControllerAdviceBean.findAnnotatedBeans(context).forEach(bean -&gt;
+	 * ControllerAdviceBean.findAnnotatedBeans(context).forEach(bean ->
 	 *         messageHandler.registerMessagingAdvice(new ControllerAdviceWrapper(bean));
 	 *
 	 * public class ControllerAdviceWrapper implements MessagingAdviceBean {
@@ -203,6 +208,7 @@ public class MessageMappingMessageHandler extends AbstractMethodMessageHandler<C
 	 *     // delegate all methods
 	 * }
 	 * </pre>
+	 *
 	 * @param bean the bean to check for {@code @MessageExceptionHandler} methods
 	 * @since 5.3.5
 	 */
@@ -237,8 +243,8 @@ public class MessageMappingMessageHandler extends AbstractMethodMessageHandler<C
 		List<HandlerMethodArgumentResolver> resolvers = new ArrayList<>();
 
 		ApplicationContext context = getApplicationContext();
-		ConfigurableBeanFactory beanFactory = (context instanceof ConfigurableApplicationContext cac ?
-				cac.getBeanFactory() : null);
+		ConfigurableBeanFactory beanFactory = (context instanceof ConfigurableApplicationContext ?
+				((ConfigurableApplicationContext) context).getBeanFactory() : null);
 
 		// Annotation-based resolvers
 		resolvers.add(new HeaderMethodArgumentResolver(this.conversionService, beanFactory));
@@ -267,7 +273,7 @@ public class MessageMappingMessageHandler extends AbstractMethodMessageHandler<C
 
 
 	@Override
-	protected @Nullable CompositeMessageCondition getMappingForMethod(Method method, Class<?> handlerType) {
+	protected CompositeMessageCondition getMappingForMethod(Method method, Class<?> handlerType) {
 		CompositeMessageCondition methodCondition = getCondition(method);
 		if (methodCondition != null) {
 			CompositeMessageCondition typeCondition = getCondition(handlerType);
@@ -283,7 +289,8 @@ public class MessageMappingMessageHandler extends AbstractMethodMessageHandler<C
 	 * @param element the element to check
 	 * @return the condition, or {@code null}
 	 */
-	protected @Nullable CompositeMessageCondition getCondition(AnnotatedElement element) {
+	@Nullable
+	protected CompositeMessageCondition getCondition(AnnotatedElement element) {
 		MessageMapping ann = AnnotatedElementUtils.findMergedAnnotation(element, MessageMapping.class);
 		if (ann == null || ann.value().length == 0) {
 			return null;
@@ -319,13 +326,13 @@ public class MessageMappingMessageHandler extends AbstractMethodMessageHandler<C
 	}
 
 	@Override
-	protected RouteMatcher.@Nullable Route getDestination(Message<?> message) {
+	protected RouteMatcher.Route getDestination(Message<?> message) {
 		return (RouteMatcher.Route) message.getHeaders()
 				.get(DestinationPatternsMessageCondition.LOOKUP_DESTINATION_HEADER);
 	}
 
 	@Override
-	protected @Nullable CompositeMessageCondition getMatchingMapping(CompositeMessageCondition mapping, Message<?> message) {
+	protected CompositeMessageCondition getMatchingMapping(CompositeMessageCondition mapping, Message<?> message) {
 		return mapping.getMatchingCondition(message);
 	}
 

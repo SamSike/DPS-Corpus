@@ -41,17 +41,11 @@ public class RestBindingDefinition extends OptionalIdentifiedDefinition<RestBind
     @XmlTransient
     private Map<String, String> defaultValues;
     @XmlTransient
-    private Map<String, String> allowedValues;
-    @XmlTransient
     private Boolean requiredBody;
     @XmlTransient
     private Set<String> requiredHeaders;
     @XmlTransient
     private Set<String> requiredQueryParameters;
-    @XmlTransient
-    private Map<String, String> responseCodes;
-    @XmlTransient
-    private Set<String> responseHeaders;
 
     @XmlAttribute
     private String consumes;
@@ -78,13 +72,7 @@ public class RestBindingDefinition extends OptionalIdentifiedDefinition<RestBind
     private String clientRequestValidation;
     @XmlAttribute
     @Metadata(label = "advanced", javaType = "java.lang.Boolean", defaultValue = "false")
-    private String clientResponseValidation;
-    @XmlAttribute
-    @Metadata(label = "advanced", javaType = "java.lang.Boolean", defaultValue = "false")
     private String enableCORS;
-    @XmlAttribute
-    @Metadata(label = "advanced", javaType = "java.lang.Boolean", defaultValue = "false")
-    private String enableNoContentResponse;
     @XmlAttribute
     @Metadata(label = "advanced")
     private String component;
@@ -115,19 +103,6 @@ public class RestBindingDefinition extends OptionalIdentifiedDefinition<RestBind
     }
 
     /**
-     * Adds allowed value(s) for the query parameter
-     *
-     * @param paramName    query parameter name
-     * @param allowedValue the allowed value (separate by comma)
-     */
-    public void addAllowedValue(String paramName, String allowedValue) {
-        if (allowedValues == null) {
-            allowedValues = new HashMap<>();
-        }
-        allowedValues.put(paramName, allowedValue);
-    }
-
-    /**
      * Adds a required query parameter
      *
      * @param paramName query parameter name
@@ -141,38 +116,6 @@ public class RestBindingDefinition extends OptionalIdentifiedDefinition<RestBind
 
     public Set<String> getRequiredQueryParameters() {
         return requiredQueryParameters;
-    }
-
-    /**
-     * Adds a response code
-     */
-    public void addResponseCode(String code, String contentType) {
-        if (responseCodes == null) {
-            responseCodes = new HashMap<>();
-        }
-        responseCodes.put(code, contentType);
-    }
-
-    public Map<String, String> getResponseCodes() {
-        return responseCodes;
-    }
-
-    /**
-     * Adds a response code
-     */
-    public void addResponseHeader(String headerName) {
-        // content-type header should be skipped
-        if ("content-type".equalsIgnoreCase(headerName)) {
-            return;
-        }
-        if (responseHeaders == null) {
-            responseHeaders = new HashSet<>();
-        }
-        responseHeaders.add(headerName);
-    }
-
-    public Set<String> getResponseHeaders() {
-        return responseHeaders;
     }
 
     /**
@@ -204,13 +147,6 @@ public class RestBindingDefinition extends OptionalIdentifiedDefinition<RestBind
      */
     public Map<String, String> getDefaultValues() {
         return defaultValues;
-    }
-
-    /**
-     * Gets the registered allowed values for query parameters
-     */
-    public Map<String, String> getAllowedValues() {
-        return allowedValues;
     }
 
     /**
@@ -335,21 +271,6 @@ public class RestBindingDefinition extends OptionalIdentifiedDefinition<RestBind
         this.clientRequestValidation = clientRequestValidation;
     }
 
-    public String getClientResponseValidation() {
-        return clientResponseValidation;
-    }
-
-    /**
-     * Whether to check what Camel is returning as response to the client:
-     *
-     * 1) Status-code and Content-Type matches Rest DSL response messages. 2) Check whether expected headers is included
-     * according to the Rest DSL repose message headers. 3) If the response body is JSon then check whether its valid
-     * JSon. Returns 500 if validation error detected.
-     */
-    public void setClientResponseValidation(String clientResponseValidation) {
-        this.clientResponseValidation = clientResponseValidation;
-    }
-
     public String getEnableCORS() {
         return enableCORS;
     }
@@ -361,19 +282,6 @@ public class RestBindingDefinition extends OptionalIdentifiedDefinition<RestBind
      */
     public void setEnableCORS(String enableCORS) {
         this.enableCORS = enableCORS;
-    }
-
-    public String getEnableNoContentResponse() {
-        return enableNoContentResponse;
-    }
-
-    /**
-     * Whether to return HTTP 204 with an empty body when a response contains an empty JSON object or XML root object.
-     * <p/>
-     * The default value is false.
-     */
-    public void setEnableNoContentResponse(String enableNoContentResponse) {
-        this.enableNoContentResponse = enableNoContentResponse;
     }
 
     @Override

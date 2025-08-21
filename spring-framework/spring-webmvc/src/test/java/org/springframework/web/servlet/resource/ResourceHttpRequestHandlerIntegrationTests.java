@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,9 @@ package org.springframework.web.servlet.resource;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.stream.Stream;
 
 import jakarta.servlet.ServletException;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -31,22 +29,17 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.UrlResource;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.web.testfixture.servlet.MockHttpServletRequest;
 import org.springframework.web.testfixture.servlet.MockHttpServletResponse;
 import org.springframework.web.testfixture.servlet.MockServletConfig;
 import org.springframework.web.testfixture.servlet.MockServletContext;
 import org.springframework.web.util.UriUtils;
-import org.springframework.web.util.UrlPathHelper;
 import org.springframework.web.util.pattern.PathPatternParser;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,7 +50,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
  *
  * @author Rossen Stoyanchev
  */
-class ResourceHttpRequestHandlerIntegrationTests {
+public class ResourceHttpRequestHandlerIntegrationTests {
 
 	private final MockServletContext servletContext = new MockServletContext();
 
@@ -66,35 +59,23 @@ class ResourceHttpRequestHandlerIntegrationTests {
 
 	public static Stream<Arguments> argumentSource() {
 		return Stream.of(
-				// PathPattern
-				arguments(true, true, "/cp"),
-				arguments(true, true, "/fs"),
-				arguments(true, true, "/url"),
-
-				arguments(true, false, "/cp"),
-				arguments(true, false, "/fs"),
-				arguments(true, false, "/url"),
-
-				// PathMatcher
-				arguments(false, true, "/cp"),
-				arguments(false, true, "/fs"),
-				arguments(false, true, "/url"),
-
-				arguments(false, false, "/cp"),
-				arguments(false, false, "/fs"),
-				arguments(false, false, "/url")
+				arguments(true, "/cp"),
+				arguments(true, "/fs"),
+				arguments(true, "/url"),
+				arguments(false, "/cp"),
+				arguments(false, "/fs"),
+				arguments(false, "/url")
 		);
 	}
 
 
 	@ParameterizedTest
 	@MethodSource("argumentSource")
-	void cssFile(boolean usePathPatterns, boolean decodingUrlPathHelper, String pathPrefix) throws Exception {
-
+	void cssFile(boolean usePathPatterns, String pathPrefix) throws Exception {
 		MockHttpServletRequest request = initRequest(pathPrefix + "/test/foo.css");
 		MockHttpServletResponse response = new MockHttpServletResponse();
 
-		DispatcherServlet servlet = initDispatcherServlet(usePathPatterns, decodingUrlPathHelper, WebConfig.class);
+		DispatcherServlet servlet = initDispatcherServlet(usePathPatterns, WebConfig.class);
 		servlet.service(request, response);
 
 		String description = "usePathPattern=" + usePathPatterns + ", prefix=" + pathPrefix;
@@ -104,14 +85,12 @@ class ResourceHttpRequestHandlerIntegrationTests {
 	}
 
 	@ParameterizedTest
-	@MethodSource("argumentSource") // gh-26775
-	void classpathLocationWithEncodedPath(
-			boolean usePathPatterns, boolean decodingUrlPathHelper, String pathPrefix) throws Exception {
-
+	@MethodSource("argumentSource")
+	void classpathLocationWithEncodedPath(boolean usePathPatterns, String pathPrefix) throws Exception {
 		MockHttpServletRequest request = initRequest(pathPrefix + "/test/foo with spaces.css");
 		MockHttpServletResponse response = new MockHttpServletResponse();
 
-		DispatcherServlet servlet = initDispatcherServlet(usePathPatterns, decodingUrlPathHelper, WebConfig.class);
+		DispatcherServlet servlet = initDispatcherServlet(usePathPatterns, WebConfig.class);
 		servlet.service(request, response);
 
 		String description = "usePathPattern=" + usePathPatterns + ", prefix=" + pathPrefix;
@@ -120,46 +99,14 @@ class ResourceHttpRequestHandlerIntegrationTests {
 		assertThat(response.getContentAsString()).as(description).isEqualTo("h1 { color:red; }");
 	}
 
-	@Test
-	void testNoResourceFoundException() throws Exception {
-		AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
-		context.setServletConfig(this.servletConfig);
-		context.register(WebConfig.class);
-		context.register(GlobalExceptionHandler.class);
-		context.refresh();
-
-		DispatcherServlet servlet = new DispatcherServlet();
-		servlet.setApplicationContext(context);
-		servlet.init(this.servletConfig);
-
-		MockHttpServletRequest request = initRequest("/cp/non-existing");
-		MockHttpServletResponse response = new MockHttpServletResponse();
-
-		servlet.service(request, response);
-
-		assertThat(response.getStatus()).isEqualTo(404);
-		assertThat(response.getContentType()).isEqualTo("application/problem+json");
-		assertThat(response.getContentAsString()).isEqualTo("""
-				{\
-				"detail":"No static resource non-existing.",\
-				"instance":"\\/cp\\/non-existing",\
-				"status":404,\
-				"title":"Not Found",\
-				"type":"about:blank"\
-				}\
-				""");
-	}
-
-	private DispatcherServlet initDispatcherServlet(
-			boolean usePathPatterns, boolean decodingUrlPathHelper, Class<?>... configClasses) throws ServletException {
+	private DispatcherServlet initDispatcherServlet(boolean usePathPatterns, Class<?>... configClasses)
+			throws ServletException {
 
 		AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
 		context.register(configClasses);
 		if (usePathPatterns) {
 			context.register(PathPatternParserConfig.class);
 		}
-		context.register(decodingUrlPathHelper ?
-				DecodingUrlPathHelperConfig.class : NonDecodingUrlPathHelperConfig.class);
 		context.setServletConfig(this.servletConfig);
 		context.refresh();
 
@@ -182,41 +129,40 @@ class ResourceHttpRequestHandlerIntegrationTests {
 
 		@Override
 		public void addResourceHandlers(ResourceHandlerRegistry registry) {
-
 			ClassPathResource classPathLocation = new ClassPathResource("", getClass());
 			String path = getPath(classPathLocation);
 
-			registry.addResourceHandler("/cp/**").addResourceLocations(classPathLocation);
-			registry.addResourceHandler("/fs/**").addResourceLocations(new FileSystemResource(path));
-			registry.addResourceHandler("/url/**").addResourceLocations(urlResource(path));
+			registerClasspathLocation("/cp/**", classPathLocation, registry);
+			registerFileSystemLocation("/fs/**", path, registry);
+			registerUrlLocation("/url/**", "file:" + path, registry);
 		}
 
-		private String getPath(ClassPathResource resource) {
-			try {
-				return resource.getFile().getCanonicalPath()
-						.replace('\\', '/')
-						.replace("classes/java", "resources") + "/";
-			}
-			catch (IOException ex) {
-				throw new IllegalStateException(ex);
-			}
+		protected void registerClasspathLocation(String pattern, ClassPathResource resource, ResourceHandlerRegistry registry) {
+			registry.addResourceHandler(pattern).addResourceLocations(resource);
 		}
 
-		private UrlResource urlResource(String path) {
-			UrlResource urlResource;
+		protected void registerFileSystemLocation(String pattern, String path, ResourceHandlerRegistry registry) {
+			FileSystemResource fileSystemLocation = new FileSystemResource(path);
+			registry.addResourceHandler(pattern).addResourceLocations(fileSystemLocation);
+		}
+
+		protected void registerUrlLocation(String pattern, String path, ResourceHandlerRegistry registry) {
 			try {
-				urlResource = new UrlResource("file:" + path);
+				UrlResource urlLocation = new UrlResource(path);
+				registry.addResourceHandler(pattern).addResourceLocations(urlLocation);
 			}
 			catch (MalformedURLException ex) {
 				throw new IllegalStateException(ex);
 			}
-			return urlResource;
 		}
 
-		@Override
-		@SuppressWarnings("removal")
-		public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-			converters.add(new JacksonJsonHttpMessageConverter());
+		private String getPath(ClassPathResource resource) {
+			try {
+				return resource.getFile().getCanonicalPath().replace('\\', '/').replace("classes/java", "resources") + "/";
+			}
+			catch (IOException ex) {
+				throw new IllegalStateException(ex);
+			}
 		}
 	}
 
@@ -227,35 +173,6 @@ class ResourceHttpRequestHandlerIntegrationTests {
 		public void configurePathMatch(PathMatchConfigurer configurer) {
 			configurer.setPatternParser(new PathPatternParser());
 		}
-	}
-
-
-	static class DecodingUrlPathHelperConfig implements WebMvcConfigurer {
-
-		@SuppressWarnings("removal")
-		@Override
-		public void configurePathMatch(PathMatchConfigurer configurer) {
-			UrlPathHelper helper = new UrlPathHelper();
-			helper.setUrlDecode(true);
-			configurer.setUrlPathHelper(helper);
-		}
-	}
-
-
-	static class NonDecodingUrlPathHelperConfig implements WebMvcConfigurer {
-
-		@SuppressWarnings("removal")
-		@Override
-		public void configurePathMatch(PathMatchConfigurer configurer) {
-			UrlPathHelper helper = new UrlPathHelper();
-			helper.setUrlDecode(false);
-			configurer.setUrlPathHelper(helper);
-		}
-	}
-
-
-	@ControllerAdvice
-	private static class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 }

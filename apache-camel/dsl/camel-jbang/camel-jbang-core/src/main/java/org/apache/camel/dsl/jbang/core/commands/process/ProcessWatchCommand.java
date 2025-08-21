@@ -16,11 +16,7 @@
  */
 package org.apache.camel.dsl.jbang.core.commands.process;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
-import org.apache.camel.dsl.jbang.core.commands.CommandHelper;
-import org.apache.camel.util.StopWatch;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 import picocli.CommandLine;
@@ -34,51 +30,32 @@ abstract class ProcessWatchCommand extends ProcessBaseCommand {
                         description = "Execute periodically and showing output fullscreen")
     boolean watch;
 
-    private CommandHelper.ReadConsoleTask waitUserTask;
-
     public ProcessWatchCommand(CamelJBangMain main) {
         super(main);
     }
 
     @Override
-    public Integer doCall() throws Exception {
+    public Integer call() throws Exception {
         int exit;
-        final AtomicBoolean running = new AtomicBoolean(true);
         if (watch) {
-            Thread t = new Thread(() -> {
-                waitUserTask = new CommandHelper.ReadConsoleTask(() -> running.set(false));
-                waitUserTask.run();
-            }, "WaitForUser");
-            t.start();
             do {
-                autoClearScreen();
-                exit = doProcessWatchCall();
+                clearScreen();
+                exit = doCall();
                 if (exit == 0) {
                     // use 2-sec delay in watch mode
-                    try {
-                        StopWatch watch = new StopWatch();
-                        while (running.get() && watch.taken() < 2000) {
-                            Thread.sleep(100);
-                        }
-                    } catch (Exception e) {
-                        running.set(false);
-                    }
+                    Thread.sleep(2000);
                 }
-            } while (exit == 0 && running.get());
+            } while (exit == 0);
         } else {
-            exit = doProcessWatchCall();
+            exit = doCall();
         }
         return exit;
-    }
-
-    protected void autoClearScreen() {
-        clearScreen();
     }
 
     protected void clearScreen() {
         AnsiConsole.out().print(Ansi.ansi().eraseScreen().cursor(1, 1));
     }
 
-    protected abstract Integer doProcessWatchCall() throws Exception;
+    protected abstract Integer doCall() throws Exception;
 
 }

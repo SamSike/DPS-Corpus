@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,36 +37,36 @@
  */
 package org.jooq.codegen;
 
-import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.jooq.tools.StringUtils.defaultIfEmpty;
 
 import java.util.List;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.jooq.meta.AttributeDefinition;
 import org.jooq.meta.CatalogDefinition;
 import org.jooq.meta.ColumnDefinition;
 import org.jooq.meta.Definition;
 import org.jooq.meta.EmbeddableDefinition;
 import org.jooq.meta.EnumDefinition;
-import org.jooq.meta.ForeignKeyDefinition;
-import org.jooq.meta.IndexDefinition;
-import org.jooq.meta.InverseForeignKeyDefinition;
-import org.jooq.meta.ManyToManyKeyDefinition;
 import org.jooq.meta.Patterns;
 import org.jooq.meta.RoutineDefinition;
 import org.jooq.meta.SchemaDefinition;
 import org.jooq.meta.SequenceDefinition;
 import org.jooq.meta.TableDefinition;
-import org.jooq.meta.UDTDefinition;
-import org.jooq.meta.UniqueKeyDefinition;
-import org.jooq.meta.jaxb.*;
+import org.jooq.meta.jaxb.MatcherRule;
+import org.jooq.meta.jaxb.MatcherTransformType;
+import org.jooq.meta.jaxb.Matchers;
+import org.jooq.meta.jaxb.MatchersCatalogType;
+import org.jooq.meta.jaxb.MatchersEmbeddableType;
+import org.jooq.meta.jaxb.MatchersEnumType;
+import org.jooq.meta.jaxb.MatchersFieldType;
+import org.jooq.meta.jaxb.MatchersRoutineType;
+import org.jooq.meta.jaxb.MatchersSchemaType;
+import org.jooq.meta.jaxb.MatchersSequenceType;
+import org.jooq.meta.jaxb.MatchersTableType;
 import org.jooq.tools.StringUtils;
 
 /**
@@ -99,25 +99,6 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
 
     /**
      * Take a {@link Definition}, try to match its name or qualified name
-     * against an expression.
-     */
-    private final boolean match(Definition definition, String expression) {
-        return match(definition.getName(), expression)
-            || match(definition.getQualifiedName(), expression);
-    }
-
-    private final boolean match(String name, String expression) {
-        return matcher(name, expression) != null;
-    }
-
-    private final Matcher matcher(String name, String expression) {
-        Pattern p = patterns.pattern(defaultIfEmpty(expression, "^.*$").trim());
-        Matcher m = p.matcher(name);
-        return m.matches() ? m : null;
-    }
-
-    /**
-     * Take a {@link Definition}, try to match its name or qualified name
      * against an expression, and apply a rule upon match.
      */
     private final String match(Definition definition, String expression, MatcherRule rule) {
@@ -127,10 +108,6 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
         return null;
     }
 
-    /**
-     * Take a {@link Definition}, try to match its name or qualified name
-     * against an expression, and apply a rule upon match.
-     */
     private final String match(String name, String expression, MatcherRule rule) {
         if (rule != null)
             return match(name, expression, rule.getExpression(), rule.getTransform());
@@ -154,14 +131,14 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
     private final String match(String name, String expression, String ruleExpression, MatcherTransformType ruleTransformType) {
         // [#3734] If users forget to specify the rule's expression but they use
         // a transformer (e.g. PASCAL), we should assume the "default" replacement
-        // [#15464] The default for Path classes is generated elsewhere
         if (ruleTransformType != null && ruleExpression == null)
             ruleExpression = "$0";
 
         if (ruleExpression != null) {
-            Matcher m = matcher(name, expression);
+            Pattern p = patterns.pattern(defaultIfEmpty(expression, "^.*$").trim());
+            Matcher m = p.matcher(name);
 
-            if (m != null)
+            if (m.matches())
                 return transform(m.replaceAll(ruleExpression), ruleTransformType);
         }
 
@@ -214,50 +191,6 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
         return emptyList();
     }
 
-    private final List<MatchersIndexType> indexes(Definition definition) {
-        if (definition instanceof IndexDefinition)
-            return matchers.getIndexes();
-
-        return emptyList();
-    }
-
-    private final List<MatchersPrimaryKeyType> primaryKeys(Definition definition) {
-        if (definition instanceof UniqueKeyDefinition u)
-            if (u.isPrimaryKey())
-                return matchers.getPrimaryKeys();
-
-        return emptyList();
-    }
-
-    private final List<MatchersUniqueKeyType> uniqueKeys(Definition definition) {
-        if (definition instanceof UniqueKeyDefinition u)
-            if (!u.isPrimaryKey())
-                return matchers.getUniqueKeys();
-
-        return emptyList();
-    }
-
-    private final List<MatchersForeignKeyType> foreignKeys(Definition definition) {
-        if (definition instanceof ForeignKeyDefinition)
-            return matchers.getForeignKeys();
-
-        return emptyList();
-    }
-
-    private final List<MatchersForeignKeyType> inverseForeignKeys(Definition definition) {
-        if (definition instanceof InverseForeignKeyDefinition)
-            return matchers.getForeignKeys();
-
-        return emptyList();
-    }
-
-    private final List<MatchersForeignKeyType> manyToManyKeys(Definition definition) {
-        if (definition instanceof ManyToManyKeyDefinition)
-            return matchers.getForeignKeys();
-
-        return emptyList();
-    }
-
     private final List<MatchersFieldType> fields(Definition definition) {
         if (definition instanceof ColumnDefinition)
             return matchers.getFields();
@@ -289,20 +222,6 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
     private final List<MatchersEmbeddableType> embeddables(Definition definition) {
         if (definition instanceof EmbeddableDefinition)
             return matchers.getEmbeddables();
-
-        return emptyList();
-    }
-
-    private final List<MatchersUDTType> udts(Definition definition) {
-        if (definition instanceof UDTDefinition)
-            return matchers.getUdts();
-
-        return emptyList();
-    }
-
-    private final List<MatchersAttributeType> attributes(Definition definition) {
-        if (definition instanceof AttributeDefinition)
-            return matchers.getAttributes();
 
         return emptyList();
     }
@@ -343,48 +262,6 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
                 return result;
         }
 
-        for (MatchersIndexType index : indexes(definition)) {
-            String result = match(definition, index.getExpression(), index.getKeyIdentifier());
-            if (result != null)
-                return result;
-        }
-
-        for (MatchersPrimaryKeyType primaryKey : primaryKeys(definition)) {
-            String result = match(definition, primaryKey.getExpression(), primaryKey.getKeyIdentifier());
-            if (result != null)
-                return result;
-        }
-
-        for (MatchersUniqueKeyType uniqueKey : uniqueKeys(definition)) {
-            String result = match(definition, uniqueKey.getExpression(), uniqueKey.getKeyIdentifier());
-            if (result != null)
-                return result;
-        }
-
-        for (MatchersForeignKeyType foreignKey : foreignKeys(definition)) {
-            String result = match(definition, foreignKey.getExpression(), foreignKey.getKeyIdentifier());
-            if (result != null)
-                return result;
-        }
-
-        for (MatchersForeignKeyType foreignKey : inverseForeignKeys(definition)) {
-            String result = match(definition, foreignKey.getExpression(), foreignKey.getKeyIdentifier());
-            if (result != null)
-                return result;
-        }
-
-        for (MatchersUDTType udt : udts(definition)) {
-            String result = match(definition, udt.getExpression(), udt.getUdtIdentifier());
-            if (result != null)
-                return result;
-        }
-
-        for (MatchersAttributeType attribute : attributes(definition)) {
-            String result = match(definition, attribute.getExpression(), attribute.getAttributeIdentifier());
-            if (result != null)
-                return result;
-        }
-
         // Default to standard behaviour
         return super.getJavaIdentifier(definition);
     }
@@ -397,46 +274,8 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
                 return result;
         }
 
-        for (MatchersAttributeType attribute : attributes(definition)) {
-            String result = match(definition, attribute.getExpression(), attribute.getAttributeSetter());
-            if (result != null)
-                return result;
-        }
-
         // Default to standard behaviour
         return super.getJavaSetterName(definition, mode);
-    }
-
-    @Override
-    public boolean getJavaSetterOverride(Definition definition, Mode mode) {
-        switch (mode) {
-            case RECORD:
-                return getJavaOverride0(definition,
-                    MatchersFieldType::isRecordSetterOverride,
-                    MatchersAttributeType::isRecordSetterOverride,
-                    () -> super.getJavaMemberOverride(definition, mode)
-                );
-            case RECORD_TYPE:
-                return getJavaOverride0(definition,
-                    field -> false,
-                    MatchersAttributeType::isRecordTypeSetterOverride,
-                    () -> super.getJavaMemberOverride(definition, mode)
-                );
-            case INTERFACE:
-                return getJavaOverride0(definition,
-                    MatchersFieldType::isInterfaceSetterOverride,
-                    MatchersAttributeType::isInterfaceSetterOverride,
-                    () -> super.getJavaMemberOverride(definition, mode)
-                );
-            case POJO:
-                return getJavaOverride0(definition,
-                    MatchersFieldType::isPojoSetterOverride,
-                    MatchersAttributeType::isPojoSetterOverride,
-                    () -> super.getJavaMemberOverride(definition, mode)
-                );
-        }
-
-        return super.getJavaMemberOverride(definition, mode);
     }
 
     @Override
@@ -447,46 +286,8 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
                 return result;
         }
 
-        for (MatchersAttributeType attribute : attributes(definition)) {
-            String result = match(definition, attribute.getExpression(), attribute.getAttributeGetter());
-            if (result != null)
-                return result;
-        }
-
         // Default to standard behaviour
         return super.getJavaGetterName(definition, mode);
-    }
-
-    @Override
-    public boolean getJavaGetterOverride(Definition definition, Mode mode) {
-        switch (mode) {
-            case RECORD:
-                return getJavaOverride0(definition,
-                    MatchersFieldType::isRecordGetterOverride,
-                    MatchersAttributeType::isRecordGetterOverride,
-                    () -> super.getJavaMemberOverride(definition, mode)
-                );
-            case RECORD_TYPE:
-                return getJavaOverride0(definition,
-                    field -> false,
-                    MatchersAttributeType::isRecordTypeGetterOverride,
-                    () -> super.getJavaMemberOverride(definition, mode)
-                );
-            case INTERFACE:
-                return getJavaOverride0(definition,
-                    MatchersFieldType::isInterfaceGetterOverride,
-                    MatchersAttributeType::isInterfaceGetterOverride,
-                    () -> super.getJavaMemberOverride(definition, mode)
-                );
-            case POJO:
-                return getJavaOverride0(definition,
-                    MatchersFieldType::isPojoGetterOverride,
-                    MatchersAttributeType::isPojoGetterOverride,
-                    () -> super.getJavaMemberOverride(definition, mode)
-                );
-        }
-
-        return super.getJavaMemberOverride(definition, mode);
     }
 
     @Override
@@ -498,56 +299,17 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
                 return result;
         }
 
-        for (MatchersForeignKeyType foreignKeys : foreignKeys(definition)) {
-            String result = match(definition, foreignKeys.getExpression(), foreignKeys.getPathMethodName());
-
-            if (result != null)
-                return result;
-        }
-
-        for (MatchersForeignKeyType inverseForeignKeys : inverseForeignKeys(definition)) {
-            String result = match(definition, inverseForeignKeys.getExpression(), inverseForeignKeys.getPathMethodNameInverse());
-
-            if (result != null)
-                return result;
-        }
-
-        for (MatchersForeignKeyType manyToManyKeys : manyToManyKeys(definition)) {
-            String result = match(definition, manyToManyKeys.getExpression(), manyToManyKeys.getPathMethodNameManyToMany());
-
-            if (result != null)
-                return result;
-        }
-
         // Default to standard behaviour
         return super.getJavaMethodName(definition, mode);
     }
 
     @Override
     public String getJavaClassExtends(Definition definition, Mode mode) {
-        for (MatchersCatalogType catalogs : catalogs(definition)) {
-            String result = match(definition, catalogs.getExpression(), catalogs.getCatalogExtends());
-
-            if (result != null)
-                return result;
-        }
-
-        for (MatchersSchemaType schemas : schemas(definition)) {
-            String result = match(definition, schemas.getExpression(), schemas.getSchemaExtends());
-
-            if (result != null)
-                return result;
-        }
-
         for (MatchersTableType tables : tables(definition)) {
             String result = null;
 
             switch (mode) {
-                case POJO:    result = match(definition, tables.getExpression(), tables.getPojoExtends());   break;
-                case RECORD:  result = match(definition, tables.getExpression(), tables.getRecordExtends()); break;
-                case DAO:     result = match(definition, tables.getExpression(), tables.getDaoExtends());    break;
-                case PATH:    result = match(definition, tables.getExpression(), tables.getPathExtends());   break;
-                case DEFAULT: result = match(definition, tables.getExpression(), tables.getTableExtends());  break;
+                case POJO: result = match(definition, tables.getExpression(), tables.getPojoExtends()); break;
             }
 
             if (result != null)
@@ -559,29 +321,7 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
 
             switch (mode) {
                 case POJO: result = match(definition, embeddables.getExpression(), embeddables.getPojoExtends()); break;
-                case RECORD: result = match(definition, embeddables.getExpression(), embeddables.getRecordExtends()); break;
             }
-
-            if (result != null)
-                return result;
-        }
-
-        for (MatchersUDTType udt : udts(definition)) {
-            String result = null;
-
-            switch (mode) {
-                case POJO:    result = match(definition, udt.getExpression(), udt.getPojoExtends());   break;
-                case RECORD:  result = match(definition, udt.getExpression(), udt.getRecordExtends()); break;
-                case PATH:    result = match(definition, udt.getExpression(), udt.getPathExtends());   break;
-                case DEFAULT: result = match(definition, udt.getExpression(), udt.getUdtExtends());    break;
-            }
-
-            if (result != null)
-                return result;
-        }
-
-        for (MatchersRoutineType routine : routines(definition)) {
-            String result = match(definition, routine.getExpression(), routine.getRoutineExtends());
 
             if (result != null)
                 return result;
@@ -616,7 +356,6 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
                 case INTERFACE: result = match(definition, tables.getExpression(), tables.getInterfaceImplements()); break;
                 case POJO:      result = match(definition, tables.getExpression(), tables.getPojoImplements());      break;
                 case RECORD:    result = match(definition, tables.getExpression(), tables.getRecordImplements());    break;
-                case PATH:      result = match(definition, tables.getExpression(), tables.getTableImplements());     break;
             }
 
             if (result != null)
@@ -631,22 +370,6 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
                 case POJO:      result = match(definition, embeddables.getExpression(), embeddables.getPojoImplements());      break;
                 case RECORD:
                 case DEFAULT:   result = match(definition, embeddables.getExpression(), embeddables.getRecordImplements());    break;
-            }
-
-            if (result != null)
-                return split(result);
-        }
-
-        for (MatchersUDTType udt : udts(definition)) {
-            String result = null;
-
-            switch (mode) {
-                case DEFAULT:     result = match(definition, udt.getExpression(), udt.getUdtImplements());        break;
-                case INTERFACE:   result = match(definition, udt.getExpression(), udt.getInterfaceImplements());  break;
-                case POJO:        result = match(definition, udt.getExpression(), udt.getPojoImplements());       break;
-                case RECORD:      result = match(definition, udt.getExpression(), udt.getRecordImplements());     break;
-                case RECORD_TYPE: result = match(definition, udt.getExpression(), udt.getRecordTypeImplements()); break;
-                case PATH:        result = match(definition, udt.getExpression(), udt.getPathImplements());       break;
             }
 
             if (result != null)
@@ -691,12 +414,11 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
             String result = null;
 
             switch (mode) {
-                case DEFAULT:   result = match(definition, tables.getExpression(), tables.getTableClass());             break;
-                case DAO:       result = match(definition, tables.getExpression(), tables.getDaoClass());               break;
-                case INTERFACE: result = match(definition, tables.getExpression(), tables.getInterfaceClass());         break;
-                case POJO:      result = match(definition, tables.getExpression(), tables.getPojoClass());              break;
-                case RECORD:    result = match(definition, tables.getExpression(), tables.getRecordClass());            break;
-                case PATH:      result = match(definition, tables.getExpression(), pathDefault(tables.getPathClass())); break;
+                case DEFAULT:   result = match(definition, tables.getExpression(), tables.getTableClass());     break;
+                case DAO:       result = match(definition, tables.getExpression(), tables.getDaoClass());       break;
+                case INTERFACE: result = match(definition, tables.getExpression(), tables.getInterfaceClass()); break;
+                case POJO:      result = match(definition, tables.getExpression(), tables.getPojoClass());      break;
+                case RECORD:    result = match(definition, tables.getExpression(), tables.getRecordClass());    break;
             }
 
             if (result != null)
@@ -711,22 +433,6 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
                 case POJO:      result = match(definition, embeddables.getExpression(), embeddables.getPojoClass());      break;
                 case RECORD:
                 case DEFAULT:   result = match(definition, embeddables.getExpression(), embeddables.getRecordClass());    break;
-            }
-
-            if (result != null)
-                return result;
-        }
-
-        for (MatchersUDTType udt : udts(definition)) {
-            String result = null;
-
-            switch (mode) {
-                case DEFAULT:     result = match(definition, udt.getExpression(), udt.getUdtClass());               break;
-                case INTERFACE:   result = match(definition, udt.getExpression(), udt.getInterfaceClass());         break;
-                case POJO:        result = match(definition, udt.getExpression(), udt.getPojoClass());              break;
-                case RECORD:      result = match(definition, udt.getExpression(), udt.getRecordClass());            break;
-                case RECORD_TYPE: result = match(definition, udt.getExpression(), udt.getRecordTypeClass());        break;
-                case PATH:        result = match(definition, udt.getExpression(), udt.getPathClass());              break;
             }
 
             if (result != null)
@@ -749,21 +455,6 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
 
         // Default to standard behaviour
         return super.getJavaClassName(definition, mode);
-    }
-
-    private final MatcherRule pathDefault(MatcherRule rule) {
-        if (rule == null)
-            return null;
-
-        if (!StringUtils.isBlank(rule.getExpression()))
-            return rule;
-
-        MatcherTransformType transform = rule.getTransform();
-
-        if (transform != null)
-            return new MatcherRule().withTransform(transform).withExpression("$0_PATH");
-        else
-            return rule;
     }
 
     @Override
@@ -790,20 +481,7 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
     @Override
     public String getJavaMemberName(Definition definition, Mode mode) {
         for (MatchersFieldType fields : fields(definition)) {
-            String result = null;
-
-            switch (mode) {
-                case DAO:     result = match(definition, fields.getExpression(), fields.getDaoMember()); break;
-                case DEFAULT:
-                default:      result = match(definition, fields.getExpression(), fields.getFieldMember()); break;
-            }
-
-            if (result != null)
-                return result;
-        }
-
-        for (MatchersAttributeType attribute : attributes(definition)) {
-            String result = match(definition, attribute.getExpression(), attribute.getAttributeMember());
+            String result = match(definition, fields.getExpression(), fields.getFieldMember());
 
             if (result != null)
                 return result;
@@ -811,56 +489,6 @@ public class MatcherStrategy extends DefaultGeneratorStrategy {
 
         // Default to standard behaviour
         return super.getJavaMemberName(definition, mode);
-    }
-
-    private boolean getJavaOverride0(
-        Definition definition,
-        Function<? super MatchersFieldType, ? extends Boolean> isFieldOverride,
-        Function<? super MatchersAttributeType, ? extends Boolean> isAttributeOverride,
-        Supplier<? extends Boolean> defaultOverride
-    ) {
-        for (MatchersFieldType field : fields(definition))
-            if (match(definition, field.getExpression()) && TRUE.equals(isFieldOverride.apply(field)))
-                return true;
-
-        for (MatchersAttributeType attribute : attributes(definition))
-            if (match(definition, attribute.getExpression()) && TRUE.equals(isAttributeOverride.apply(attribute)))
-                return true;
-
-        // Default to standard behaviour
-        return defaultOverride.get();
-    }
-
-    @Override
-    public boolean getJavaMemberOverride(Definition definition, Mode mode) {
-        switch (mode) {
-            case RECORD:
-                return getJavaOverride0(definition,
-                    MatchersFieldType::isRecordMemberOverride,
-                    MatchersAttributeType::isRecordMemberOverride,
-                    () -> super.getJavaMemberOverride(definition, mode)
-                );
-            case RECORD_TYPE:
-                return getJavaOverride0(definition,
-                    field -> false,
-                    MatchersAttributeType::isRecordTypeMemberOverride,
-                    () -> super.getJavaMemberOverride(definition, mode)
-                );
-            case INTERFACE:
-                return getJavaOverride0(definition,
-                    MatchersFieldType::isInterfaceMemberOverride,
-                    MatchersAttributeType::isInterfaceMemberOverride,
-                    () -> super.getJavaMemberOverride(definition, mode)
-                );
-            case POJO:
-                return getJavaOverride0(definition,
-                    MatchersFieldType::isPojoMemberOverride,
-                    MatchersAttributeType::isPojoMemberOverride,
-                    () -> super.getJavaMemberOverride(definition, mode)
-                );
-        }
-
-        return super.getJavaMemberOverride(definition, mode);
     }
 
     @Override

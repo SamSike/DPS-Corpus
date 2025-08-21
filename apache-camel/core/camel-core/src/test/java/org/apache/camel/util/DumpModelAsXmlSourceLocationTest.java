@@ -18,8 +18,8 @@ package org.apache.camel.util;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +36,8 @@ public class DumpModelAsXmlSourceLocationTest extends ContextTestSupport {
 
     @Test
     public void testDumpModelAsXml() throws Exception {
-        String xml = PluginHelper.getModelToXMLDumper(context).dumpModelAsXml(context, context.getRouteDefinition("myRoute"));
+        ExtendedCamelContext ecc = context.adapt(ExtendedCamelContext.class);
+        String xml = ecc.getModelToXMLDumper().dumpModelAsXml(context, context.getRouteDefinition("myRoute"));
         assertNotNull(xml);
         log.info(xml);
 
@@ -46,21 +47,22 @@ public class DumpModelAsXmlSourceLocationTest extends ContextTestSupport {
 
     @Test
     public void testDumpModelAsXmlExternal() throws Exception {
-        String xml = PluginHelper.getModelToXMLDumper(context).dumpModelAsXml(context, context.getRouteDefinition("cool"));
+        ExtendedCamelContext ecc = context.adapt(ExtendedCamelContext.class);
+        String xml = ecc.getModelToXMLDumper().dumpModelAsXml(context, context.getRouteDefinition("cool"));
         assertNotNull(xml);
         log.info(xml);
 
         Assertions.assertTrue(xml.contains(
-                "sourceLineNumber=\"25\" sourceLocation=\"MyCoolRoute.java\" uri=\"direct:cool\"/>"));
+                "<from sourceLineNumber=\"25\" sourceLocation=\"MyCoolRoute.java\" uri=\"direct:cool\"/>"));
         Assertions.assertTrue(xml.contains("sourceLineNumber=\"26\" sourceLocation=\"MyCoolRoute.java\""));
     }
 
     @Override
-    protected RouteBuilder[] createRouteBuilders() {
+    protected RouteBuilder[] createRouteBuilders() throws Exception {
         return new RouteBuilder[] {
                 new RouteBuilder() {
                     @Override
-                    public void configure() {
+                    public void configure() throws Exception {
                         from("direct:start").routeId("myRoute")
                                 .filter(simple("${body} > 10"))
                                 .to("mock:result");

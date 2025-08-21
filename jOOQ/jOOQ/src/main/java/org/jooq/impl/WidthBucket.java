@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -111,26 +108,12 @@ implements
 
 
 
+            case POSTGRES:
+            case YUGABYTEDB:
+                ctx.visit(N_WIDTH_BUCKET).sql('(').visit(field).sql(", ").visit(low).sql(", ").visit(high).sql(", ").visit(buckets).sql(')');
+                break;
 
-
-
-
-
-
-
-
-
-
-            case CUBRID:
-            case DERBY:
-            case DUCKDB:
-            case FIREBIRD:
-            case H2:
-            case HSQLDB:
-            case IGNITE:
-            case MARIADB:
-            case MYSQL:
-            case SQLITE:
+            default:
                 ctx.visit(
                     DSL.when(field.lt(low), zero())
                        .when(field.ge(high), iadd(buckets, one()))
@@ -142,10 +125,6 @@ implements
                            one()
                        ))
                 );
-                break;
-
-            default:
-                ctx.visit(N_WIDTH_BUCKET).sql('(').visit(field).sql(", ").visit(low).sql(", ").visit(high).sql(", ").visit(buckets).sql(')');
                 break;
         }
     }
@@ -172,49 +151,75 @@ implements
     // -------------------------------------------------------------------------
 
     @Override
-    public final Field<T> $arg1() {
+    public final Field<T> $field() {
         return field;
     }
 
     @Override
-    public final Field<T> $arg2() {
+    public final Field<T> $low() {
         return low;
     }
 
     @Override
-    public final Field<T> $arg3() {
+    public final Field<T> $high() {
         return high;
     }
 
     @Override
-    public final Field<Integer> $arg4() {
+    public final Field<Integer> $buckets() {
         return buckets;
     }
 
     @Override
-    public final QOM.WidthBucket<T> $arg1(Field<T> newValue) {
-        return $constructor().apply(newValue, $arg2(), $arg3(), $arg4());
+    public final QOM.WidthBucket<T> $field(Field<T> newValue) {
+        return $constructor().apply(newValue, $low(), $high(), $buckets());
     }
 
     @Override
-    public final QOM.WidthBucket<T> $arg2(Field<T> newValue) {
-        return $constructor().apply($arg1(), newValue, $arg3(), $arg4());
+    public final QOM.WidthBucket<T> $low(Field<T> newValue) {
+        return $constructor().apply($field(), newValue, $high(), $buckets());
     }
 
     @Override
-    public final QOM.WidthBucket<T> $arg3(Field<T> newValue) {
-        return $constructor().apply($arg1(), $arg2(), newValue, $arg4());
+    public final QOM.WidthBucket<T> $high(Field<T> newValue) {
+        return $constructor().apply($field(), $low(), newValue, $buckets());
     }
 
     @Override
-    public final QOM.WidthBucket<T> $arg4(Field<Integer> newValue) {
-        return $constructor().apply($arg1(), $arg2(), $arg3(), newValue);
+    public final QOM.WidthBucket<T> $buckets(Field<Integer> newValue) {
+        return $constructor().apply($field(), $low(), $high(), newValue);
     }
 
-    @Override
     public final Function4<? super Field<T>, ? super Field<T>, ? super Field<T>, ? super Field<Integer>, ? extends QOM.WidthBucket<T>> $constructor() {
         return (a1, a2, a3, a4) -> new WidthBucket<>(a1, a2, a3, a4);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // -------------------------------------------------------------------------
     // XXX: The Object API
@@ -222,7 +227,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.WidthBucket<?> o) {
+        if (that instanceof QOM.WidthBucket) { QOM.WidthBucket<?> o = (QOM.WidthBucket<?>) that;
             return
                 StringUtils.equals($field(), o.$field()) &&
                 StringUtils.equals($low(), o.$low()) &&

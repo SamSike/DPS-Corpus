@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class RouteTemplateTest extends ContextTestSupport {
 
     @Test
-    public void testDefineRouteTemplate() {
+    public void testDefineRouteTemplate() throws Exception {
         assertEquals(1, context.getRouteTemplateDefinitions().size());
 
         RouteTemplateDefinition routeTemplate = context.getRouteTemplateDefinition("myTemplate");
@@ -136,7 +136,7 @@ public class RouteTemplateTest extends ContextTestSupport {
     public void testCreateRouteFromRouteTemplateAutoAssignedRouteIdClash() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // use a route id that can clash with auto assigned
                 from("direct:hello").to("mock:hello").routeId("route1");
             }
@@ -178,19 +178,19 @@ public class RouteTemplateTest extends ContextTestSupport {
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("foo", "one");
-
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
-                () -> context.addRouteFromTemplate(null, "myTemplate", parameters),
-                "Should throw exception");
-
-        assertEquals("Route template myTemplate the following mandatory parameters must be provided: bar", e.getMessage());
+        try {
+            context.addRouteFromTemplate(null, "myTemplate", parameters);
+            fail("Should throw exception");
+        } catch (IllegalArgumentException e) {
+            assertEquals("Route template myTemplate the following mandatory parameters must be provided: bar", e.getMessage());
+        }
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 routeTemplate("myTemplate").templateParameter("foo").templateParameter("bar")
                         .from("direct:{{foo}}")
                         .to("mock:{{bar}}");

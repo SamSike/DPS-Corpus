@@ -27,7 +27,6 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.component.file.GenericFile;
 import org.apache.camel.component.file.GenericFileEndpoint;
 import org.apache.camel.component.file.GenericFileExclusiveReadLockStrategy;
-import org.apache.camel.component.file.GenericFileHelper;
 import org.apache.camel.component.file.GenericFileOperations;
 import org.apache.camel.spi.CamelLogger;
 import org.apache.camel.spi.IdempotentRepository;
@@ -86,13 +85,13 @@ public class FileIdempotentChangedRepositoryReadLockStrategy extends ServiceSupp
         }
 
         // check if we can begin on this file
-        String key = asKey(exchange, file);
+        String key = asKey(file);
         boolean answer = false;
         try {
             answer = idempotentRepository.add(exchange, key);
         } catch (Exception e) {
             if (LOG.isTraceEnabled()) {
-                LOG.trace("Cannot acquire read lock due to {}. Will skip the file: {}", e.getMessage(), file, e);
+                LOG.trace("Cannot acquire read lock due to " + e.getMessage() + ". Will skip the file: " + file, e);
             }
         }
         if (!answer) {
@@ -122,7 +121,7 @@ public class FileIdempotentChangedRepositoryReadLockStrategy extends ServiceSupp
     public void releaseExclusiveReadLockOnRollback(
             GenericFileOperations<File> operations, GenericFile<File> file, Exchange exchange)
             throws Exception {
-        String key = asKey(exchange, file);
+        String key = asKey(file);
         Runnable r = () -> {
             if (removeOnRollback) {
                 idempotentRepository.remove(exchange, key);
@@ -138,10 +137,6 @@ public class FileIdempotentChangedRepositoryReadLockStrategy extends ServiceSupp
             }
         };
 
-        delayOrScheduleLockRelease(r);
-    }
-
-    private void delayOrScheduleLockRelease(Runnable r) throws InterruptedException {
         if (readLockIdempotentReleaseDelay > 0 && readLockIdempotentReleaseExecutorService != null) {
             LOG.debug("Scheduling read lock release task to run asynchronous delayed after {} millis",
                     readLockIdempotentReleaseDelay);
@@ -159,7 +154,7 @@ public class FileIdempotentChangedRepositoryReadLockStrategy extends ServiceSupp
     public void releaseExclusiveReadLockOnCommit(
             GenericFileOperations<File> operations, GenericFile<File> file, Exchange exchange)
             throws Exception {
-        String key = asKey(exchange, file);
+        String key = asKey(file);
         Runnable r = () -> {
             if (removeOnCommit) {
                 idempotentRepository.remove(exchange, key);
@@ -175,7 +170,17 @@ public class FileIdempotentChangedRepositoryReadLockStrategy extends ServiceSupp
             }
         };
 
-        delayOrScheduleLockRelease(r);
+        if (readLockIdempotentReleaseDelay > 0 && readLockIdempotentReleaseExecutorService != null) {
+            LOG.debug("Scheduling read lock release task to run asynchronous delayed after {} millis",
+                    readLockIdempotentReleaseDelay);
+            readLockIdempotentReleaseExecutorService.schedule(r, readLockIdempotentReleaseDelay, TimeUnit.MILLISECONDS);
+        } else if (readLockIdempotentReleaseDelay > 0) {
+            LOG.debug("Delaying read lock release task {} millis", readLockIdempotentReleaseDelay);
+            Thread.sleep(readLockIdempotentReleaseDelay);
+            r.run();
+        } else {
+            r.run();
+        }
     }
 
     @Override
@@ -312,12 +317,12 @@ public class FileIdempotentChangedRepositoryReadLockStrategy extends ServiceSupp
         this.readLockIdempotentReleaseExecutorService = readLockIdempotentReleaseExecutorService;
     }
 
-    protected String asKey(Exchange exchange, GenericFile<File> file) {
+    protected String asKey(GenericFile<File> file) {
         // use absolute file path as default key, but evaluate if an expression
         // key was configured
         String key = file.getAbsoluteFilePath();
         if (endpoint.getIdempotentKey() != null) {
-            Exchange dummy = GenericFileHelper.createDummy(endpoint, exchange, () -> file);
+            Exchange dummy = endpoint.createExchange(file);
             key = endpoint.getIdempotentKey().evaluate(dummy, String.class);
         }
         return key;

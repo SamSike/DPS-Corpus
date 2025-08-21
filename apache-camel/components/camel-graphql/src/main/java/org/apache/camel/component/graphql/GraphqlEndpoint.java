@@ -19,7 +19,6 @@ package org.apache.camel.component.graphql;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.Map;
 
 import org.apache.camel.Category;
 import org.apache.camel.Component;
@@ -27,7 +26,6 @@ import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.RuntimeCamelException;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
@@ -36,23 +34,24 @@ import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.json.JsonObject;
-import org.apache.hc.client5.http.auth.AuthScope;
-import org.apache.hc.client5.http.auth.CredentialsStore;
-import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
-import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.HttpHeaders;
-import org.apache.hc.core5.http.HttpHost;
-import org.apache.hc.core5.http.message.BasicHeader;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.utils.HttpClientUtils;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 
 /**
  * Send GraphQL queries and mutations to external systems.
  */
 @UriEndpoint(firstVersion = "3.0.0", scheme = "graphql", title = "GraphQL", syntax = "graphql:httpUri",
-             category = { Category.API }, producerOnly = true, lenientProperties = true)
-public class GraphqlEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
+             category = { Category.API }, producerOnly = true)
+public class GraphqlEndpoint extends DefaultEndpoint {
 
     @UriPath
     @Metadata(required = true)
@@ -87,31 +86,8 @@ public class GraphqlEndpoint extends DefaultEndpoint implements EndpointServiceL
     }
 
     @Override
-    public String getServiceUrl() {
-        if (httpUri != null) {
-            return httpUri.toString();
-        }
-        return null;
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        if (username != null) {
-            return Map.of("username", username);
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "rest";
-    }
-
-    @Override
     protected void doStop() throws Exception {
-        if (httpClient != null) {
-            httpClient.close();
-        }
+        HttpClientUtils.closeQuietly(this.httpClient);
     }
 
     @Override
@@ -148,10 +124,8 @@ public class GraphqlEndpoint extends DefaultEndpoint implements EndpointServiceL
                     Arrays.asList(new BasicHeader(HttpHeaders.AUTHORIZATION, authType + " " + accessToken)));
         }
         if (username != null && password != null) {
-            CredentialsStore credentialsProvider = new BasicCredentialsProvider();
-            credentialsProvider.setCredentials(
-                    new AuthScope(null, -1),
-                    new UsernamePasswordCredentials(username, password.toCharArray()));
+            CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
             httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
         }
         return httpClientBuilder.build();
@@ -302,10 +276,5 @@ public class GraphqlEndpoint extends DefaultEndpoint implements EndpointServiceL
 
     public void setHttpClient(CloseableHttpClient httpClient) {
         this.httpClient = httpClient;
-    }
-
-    @Override
-    public boolean isLenientProperties() {
-        return true;
     }
 }

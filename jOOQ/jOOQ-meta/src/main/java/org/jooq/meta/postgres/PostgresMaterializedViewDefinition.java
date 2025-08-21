@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -44,9 +44,7 @@ import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.not;
 import static org.jooq.impl.DSL.nvl;
-import static org.jooq.impl.DSL.substring;
 import static org.jooq.impl.DSL.when;
-import static org.jooq.impl.SQLDataType.BIGINT;
 import static org.jooq.meta.postgres.information_schema.Tables.COLUMNS;
 import static org.jooq.meta.postgres.pg_catalog.Tables.PG_ATTRDEF;
 import static org.jooq.meta.postgres.pg_catalog.Tables.PG_ATTRIBUTE;
@@ -56,13 +54,12 @@ import static org.jooq.meta.postgres.pg_catalog.Tables.PG_DESCRIPTION;
 import static org.jooq.meta.postgres.pg_catalog.Tables.PG_NAMESPACE;
 import static org.jooq.meta.postgres.pg_catalog.Tables.PG_TYPE;
 import static org.jooq.tools.StringUtils.defaultString;
+import static org.jooq.util.postgres.PostgresDSL.oid;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jooq.Condition;
-import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.TableOptions.TableType;
 import org.jooq.meta.AbstractTableDefinition;
@@ -108,39 +105,29 @@ public class PostgresMaterializedViewDefinition extends AbstractTableDefinition 
         PgNamespace nbt = PG_NAMESPACE.as("nbt");
         PgNamespace nco = PG_NAMESPACE.as("nco");
 
-        // [#8478] [#15414] CockroachDB can't use information_schema.sql_identifier
-        Field<String> udtName = field("({0})::varchar", col.UDT_NAME.getDataType(), nvl(bt.TYPNAME, t.TYPNAME));
-        Condition c1 = t.TYPTYPE.eq(inline("d"));
-        Condition c1array = bt.TYPELEM.ne(inline(0L)).and(bt.TYPLEN.eq(inline((short) -1)));
-        Condition c0array = t.TYPELEM.ne(inline(0L)).and(t.TYPLEN.eq(inline((short) -1)));
-
         for (Record record : create().select(
-                field("({0})::varchar", col.COLUMN_NAME.getDataType(), a.ATTNAME).as(col.COLUMN_NAME),
-                field("({0})::int", col.ORDINAL_POSITION.getDataType(), a.ATTNUM).as(col.ORDINAL_POSITION),
-                field("({0})::varchar", col.DATA_TYPE.getDataType(),
-                    when(c1,
-                        when(c1array, substring(udtName, inline(2)).concat(inline(" ARRAY")))
+                field("({0})::information_schema.sql_identifier", col.COLUMN_NAME.getDataType(), a.ATTNAME).as(col.COLUMN_NAME),
+                field("({0})::information_schema.cardinal_number", col.ORDINAL_POSITION.getDataType(), a.ATTNUM).as(col.ORDINAL_POSITION),
+                field("({0})::information_schema.character_data", col.DATA_TYPE.getDataType(),
+                    when(t.TYPTYPE.eq(inline("d")),
+                        when(bt.TYPELEM.ne(inline(0L)).and(bt.TYPLEN.eq(inline((short) -1))), inline("ARRAY"))
                        .when(nbt.NSPNAME.eq(inline("pg_catalog")), field("format_type({0}, NULL::integer)", String.class, t.TYPBASETYPE))
                        .otherwise(inline("USER-DEFINED")))
                    .otherwise(
-                        when(c0array, substring(udtName, inline(2)).concat(inline(" ARRAY")))
+                        when(t.TYPELEM.ne(inline(0L)).and(t.TYPLEN.eq(inline((short) -1))), inline("ARRAY"))
                        .when(nt.NSPNAME.eq(inline("pg_catalog")), field("format_type({0}, NULL::integer)", String.class, a.ATTTYPID))
-
-                       // [#18738] Just like in PostgresTableDefinition
-                       .when(udtName.eq(inline("geometry")), inline("geometry"))
                        .otherwise(inline("USER-DEFINED")))).as(col.DATA_TYPE),
-                field("(information_schema._pg_char_max_length(information_schema._pg_truetypid(a.*, t.*), information_schema._pg_truetypmod(a.*, t.*)))::integer", col.CHARACTER_MAXIMUM_LENGTH.getDataType()).as(col.CHARACTER_MAXIMUM_LENGTH),
-                field("(information_schema._pg_numeric_precision(information_schema._pg_truetypid(a.*, t.*), information_schema._pg_truetypmod(a.*, t.*)))::integer", col.NUMERIC_PRECISION.getDataType()).as(col.NUMERIC_PRECISION),
-                field("(information_schema._pg_numeric_scale(information_schema._pg_truetypid(a.*, t.*), information_schema._pg_truetypmod(a.*, t.*)))::integer", col.NUMERIC_SCALE.getDataType()).as(col.NUMERIC_SCALE),
-                field("({0})::varchar", col.IS_NULLABLE.getDataType(),
+                field("(information_schema._pg_char_max_length(information_schema._pg_truetypid(a.*, t.*), information_schema._pg_truetypmod(a.*, t.*)))::information_schema.cardinal_number", col.CHARACTER_MAXIMUM_LENGTH.getDataType()).as(col.CHARACTER_MAXIMUM_LENGTH),
+                field("(information_schema._pg_numeric_precision(information_schema._pg_truetypid(a.*, t.*), information_schema._pg_truetypmod(a.*, t.*)))::information_schema.cardinal_number", col.NUMERIC_PRECISION.getDataType()).as(col.NUMERIC_PRECISION),
+                field("(information_schema._pg_numeric_scale(information_schema._pg_truetypid(a.*, t.*), information_schema._pg_truetypmod(a.*, t.*)))::information_schema.cardinal_number", col.NUMERIC_SCALE.getDataType()).as(col.NUMERIC_SCALE),
+                field("({0})::information_schema.yes_or_no", col.IS_NULLABLE.getDataType(),
                     when(condition(a.ATTNOTNULL).or(t.TYPTYPE.eq(inline("d")).and(t.TYPNOTNULL)), inline("NO"))
                    .otherwise(inline("YES"))).as(col.IS_NULLABLE),
-                field("(pg_get_expr({0}, {1}))::varchar", col.COLUMN_DEFAULT.getDataType(), ad.ADBIN, ad.ADRELID).as(col.COLUMN_DEFAULT),
-                field("({0})::varchar", col.UDT_SCHEMA.getDataType(),
+                field("(pg_get_expr({0}, {1}))::information_schema.character_data", col.COLUMN_DEFAULT.getDataType(), ad.ADBIN, ad.ADRELID).as(col.COLUMN_DEFAULT),
+                field("({0})::information_schema.sql_identifier", col.UDT_SCHEMA.getDataType(),
                     nvl(nbt.NSPNAME, nt.NSPNAME)).as(col.UDT_SCHEMA),
-                when(c1.and(c1array).or(not(c1).and(c0array)), substring(udtName, inline(2)))
-                    .else_(udtName)
-                    .as(col.UDT_NAME),
+                field("({0})::information_schema.sql_identifier", col.UDT_NAME.getDataType(),
+                    nvl(bt.TYPNAME, t.TYPNAME)).as(col.UDT_NAME),
                 PG_DESCRIPTION.DESCRIPTION)
             .from(a
                 .leftJoin(ad)
@@ -166,7 +153,6 @@ public class PostgresMaterializedViewDefinition extends AbstractTableDefinition 
                     ))
                 .leftJoin(PG_DESCRIPTION)
                     .on(PG_DESCRIPTION.OBJOID.eq(c.OID))
-                    .and(PG_DESCRIPTION.CLASSOID.eq(field("'pg_class'::regclass", BIGINT)))
                     .and(PG_DESCRIPTION.OBJSUBID.eq(a.ATTNUM.coerce(PG_DESCRIPTION.OBJSUBID)))
             .where(
                 not(condition("pg_is_other_temp_schema({0})", nc.OID))
@@ -175,8 +161,7 @@ public class PostgresMaterializedViewDefinition extends AbstractTableDefinition 
                 .and(c.RELKIND.eq(inline("m")))
                 .and(nc.NSPNAME.in(getSchema().getName()))
                 .and(c.RELNAME.eq(getName())))
-            .orderBy(a.ATTNUM)
-        ) {
+            .orderBy(a.ATTNUM)) {
 
             SchemaDefinition typeSchema = null;
 

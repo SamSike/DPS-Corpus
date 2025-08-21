@@ -145,14 +145,11 @@ public class CamelSpringTestContextLoader extends AbstractContextLoader {
         }
 
         // Post CamelContext(s) instantiation but pre CamelContext(s) start setup
-        CamelAnnotationsHandler.handleRouteCoverageEnable(context, testClass, s -> getTestMethod().getName());
-        CamelAnnotationsHandler.handleRouteDumpEnable(context, testClass, s -> getTestMethod().getName());
+        CamelAnnotationsHandler.handleRouteCoverage(context, testClass, s -> getTestMethod().getName());
         CamelAnnotationsHandler.handleProvidesBreakpoint(context, testClass);
         CamelAnnotationsHandler.handleShutdownTimeout(context, testClass);
         CamelAnnotationsHandler.handleMockEndpoints(context, testClass);
         CamelAnnotationsHandler.handleMockEndpointsAndSkip(context, testClass);
-        CamelAnnotationsHandler.handleStubEndpoints(context, testClass);
-        CamelAnnotationsHandler.handleAutoStartupExclude(context, testClass);
 
         // CamelContext(s) startup
         CamelAnnotationsHandler.handleCamelContextStartup(context, testClass);
@@ -236,8 +233,9 @@ public class CamelSpringTestContextLoader extends AbstractContextLoader {
     }
 
     /**
-     * Returns the class under test to enable inspection of annotations while the Spring context is being created.
-     *
+     * Returns the class under test in order to enable inspection of annotations while the Spring context is being
+     * created.
+     * 
      * @return the test class that is being executed
      * @see    CamelSpringTestHelper
      */

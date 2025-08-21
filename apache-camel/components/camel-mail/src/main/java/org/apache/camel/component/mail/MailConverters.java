@@ -33,13 +33,13 @@ import jakarta.mail.Multipart;
 import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.search.SearchTerm;
 
+import com.sun.mail.imap.SortTerm;
 import org.apache.camel.Converter;
 import org.apache.camel.Exchange;
 import org.apache.camel.TypeConverter;
 import org.apache.camel.spi.TypeConverterRegistry;
 import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.util.TimeUtils;
-import org.eclipse.angus.mail.imap.SortTerm;
 
 /**
  * JavaMail specific converters.
@@ -80,30 +80,21 @@ public final class MailConverters {
      */
     @Converter
     public static String toString(Multipart multipart) throws MessagingException, IOException {
-        try {
-            int size = multipart.getCount();
-            for (int i = 0; i < size; i++) {
-                BodyPart part = multipart.getBodyPart(i);
-                Object content = part.getContent();
-                while (content instanceof MimeMultipart) {
-                    if (multipart.getCount() < 1) {
-                        break;
-                    }
-                    part = ((MimeMultipart) content).getBodyPart(0);
-                    content = part.getContent();
+        int size = multipart.getCount();
+        for (int i = 0; i < size; i++) {
+            BodyPart part = multipart.getBodyPart(i);
+            Object content = part.getContent();
+            while (content instanceof MimeMultipart) {
+                if (multipart.getCount() < 1) {
+                    break;
                 }
-                // Perform a case-insensitive "startsWith" check that works for different locales
-                String prefix = "text";
-                if (part.getContentType().regionMatches(true, 0, prefix, 0, prefix.length())) {
-                    return part.getContent().toString();
-                }
+                part = ((MimeMultipart) content).getBodyPart(0);
+                content = part.getContent();
             }
-        } catch (MessagingException e) {
-            Throwable cause = e.getCause();
-            if (cause != null && "Folder is not Open".equals(cause.getMessage())) {
-                // ignore if folder is not open and we cannot read the mail
-            } else {
-                throw e;
+            // Perform a case insensitive "startsWith" check that works for different locales
+            String prefix = "text";
+            if (part.getContentType().regionMatches(true, 0, prefix, 0, prefix.length())) {
+                return part.getContent().toString();
             }
         }
         return null;
@@ -258,7 +249,7 @@ public final class MailConverters {
             }
         }
         if (!result.isEmpty()) {
-            return result.toArray(new SortTerm[0]);
+            return result.toArray(new SortTerm[result.size()]);
         } else {
             return null;
         }

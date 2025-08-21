@@ -37,7 +37,7 @@ public class InfinispanEmbeddedClusteredRoutePolicyTest extends AbstractInfinisp
 
         try (DefaultCamelContext context = new DefaultCamelContext()) {
             context.disableJMX();
-            context.getCamelContextExtension().setName("context-" + id);
+            context.setName("context-" + id);
             context.addService(clusterService);
             context.addRoutes(new RouteBuilder() {
                 @Override

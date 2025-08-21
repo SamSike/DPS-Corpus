@@ -1,7 +1,9 @@
 /**
  * Formatters for {@code java.util.Date} properties.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.format.datetime;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

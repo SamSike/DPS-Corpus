@@ -19,11 +19,9 @@ package org.apache.camel.component.http;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.camel.support.service.ServiceHelper;
-import org.apache.camel.support.service.ServiceSupport;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
 
-public class CompositeHttpConfigurer extends ServiceSupport implements HttpClientConfigurer {
+public class CompositeHttpConfigurer implements HttpClientConfigurer {
 
     private final List<HttpClientConfigurer> configurers = new ArrayList<>();
 
@@ -31,6 +29,10 @@ public class CompositeHttpConfigurer extends ServiceSupport implements HttpClien
         if (configurer != null) {
             configurers.add(configurer);
         }
+    }
+
+    public void removeConfigurer(HttpClientConfigurer configurer) {
+        configurers.remove(configurer);
     }
 
     @Override
@@ -42,9 +44,9 @@ public class CompositeHttpConfigurer extends ServiceSupport implements HttpClien
 
     public static CompositeHttpConfigurer combineConfigurers(
             HttpClientConfigurer oldConfigurer, HttpClientConfigurer newConfigurer) {
-        if (oldConfigurer instanceof CompositeHttpConfigurer compositeHttpConfigurer) {
-            compositeHttpConfigurer.addConfigurer(newConfigurer);
-            return compositeHttpConfigurer;
+        if (oldConfigurer instanceof CompositeHttpConfigurer) {
+            ((CompositeHttpConfigurer) oldConfigurer).addConfigurer(newConfigurer);
+            return (CompositeHttpConfigurer) oldConfigurer;
         } else {
             CompositeHttpConfigurer answer = new CompositeHttpConfigurer();
             answer.addConfigurer(newConfigurer);
@@ -53,15 +55,4 @@ public class CompositeHttpConfigurer extends ServiceSupport implements HttpClien
         }
     }
 
-    @Override
-    protected void doStart() throws Exception {
-        super.doStart();
-        ServiceHelper.startService(configurers);
-    }
-
-    @Override
-    protected void doStop() throws Exception {
-        super.doStop();
-        ServiceHelper.stopService(configurers);
-    }
 }

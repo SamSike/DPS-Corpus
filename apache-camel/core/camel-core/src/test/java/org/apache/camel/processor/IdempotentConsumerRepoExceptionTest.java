@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 
 public class IdempotentConsumerRepoExceptionTest extends ContextTestSupport {
 
-    private final IdempotentRepository myRepo = new MyRepo();
+    private IdempotentRepository myRepo = new MyRepo();
 
     @Test
     public void testRepoException() throws Exception {
@@ -43,10 +43,10 @@ public class IdempotentConsumerRepoExceptionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead"));
 
                 from("direct:start").idempotentConsumer(header("messageId"), myRepo).to("mock:result");
@@ -55,7 +55,7 @@ public class IdempotentConsumerRepoExceptionTest extends ContextTestSupport {
         };
     }
 
-    private static class MyRepo extends MemoryIdempotentRepository {
+    private class MyRepo extends MemoryIdempotentRepository {
         @Override
         public boolean add(String key) {
             if ("999".equals(key)) {

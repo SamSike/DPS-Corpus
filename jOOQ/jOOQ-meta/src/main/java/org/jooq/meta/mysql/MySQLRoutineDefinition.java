@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -59,6 +59,8 @@ import org.jooq.tools.StringUtils;
  */
 public class MySQLRoutineDefinition extends AbstractRoutineDefinition {
 
+    private static Boolean is55;
+
     private final String   params;
     private final String   returns;
     private final ProcType procType;
@@ -81,7 +83,7 @@ public class MySQLRoutineDefinition extends AbstractRoutineDefinition {
 
     @Override
     protected void init0() {
-        if (((MySQLDatabase) getDatabase()).is5_5())
+        if (is55())
             init55();
         else
             init54();
@@ -113,9 +115,12 @@ public class MySQLRoutineDefinition extends AbstractRoutineDefinition {
             String inOut = record.get(PARAMETERS.PARAMETER_MODE);
             String dataType = record.get(PARAMETERS.DATA_TYPE);
 
-            if (asList("tinyint", "smallint", "mediumint", "int", "bigint").contains(dataType.toLowerCase())) {
-                if (record.get(PARAMETERS.DTD_IDENTIFIER).toLowerCase().contains("unsigned")) {
-                    dataType += "unsigned";
+            // [#519] Some types have unsigned versions
+            if (getDatabase().supportsUnsignedTypes()) {
+                if (asList("tinyint", "smallint", "mediumint", "int", "bigint").contains(dataType.toLowerCase())) {
+                    if (record.get(PARAMETERS.DTD_IDENTIFIER).toLowerCase().contains("unsigned")) {
+                        dataType += "unsigned";
+                    }
                 }
             }
 
@@ -202,5 +207,21 @@ public class MySQLRoutineDefinition extends AbstractRoutineDefinition {
         );
 
         return new DefaultParameterDefinition(this, paramName, columnIndex, type);
+    }
+
+    private boolean is55() {
+
+        // Check if this is a MySQL 5.5 or later database
+        if (is55 == null) {
+            try {
+                create().selectOne().from(PARAMETERS).limit(1).fetchOne();
+                is55 = true;
+            }
+            catch (Exception e) {
+                is55 = false;
+            }
+        }
+
+        return is55;
     }
 }

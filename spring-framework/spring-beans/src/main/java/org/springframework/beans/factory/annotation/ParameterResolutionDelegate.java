@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,14 +22,13 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Parameter;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.beans.factory.config.DependencyDescriptor;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.SynthesizingMethodParameter;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -47,7 +46,8 @@ public final class ParameterResolutionDelegate {
 
 	private static final AnnotatedElement EMPTY_ANNOTATED_ELEMENT = new AnnotatedElement() {
 		@Override
-		public <T extends Annotation> @Nullable T getAnnotation(Class<T> annotationClass) {
+		@Nullable
+		public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
 			return null;
 		}
 		@Override
@@ -116,7 +116,8 @@ public final class ParameterResolutionDelegate {
 	 * @see SynthesizingMethodParameter#forExecutable(Executable, int)
 	 * @see AutowireCapableBeanFactory#resolveDependency(DependencyDescriptor, String)
 	 */
-	public static @Nullable Object resolveDependency(
+	@Nullable
+	public static Object resolveDependency(
 			Parameter parameter, int parameterIndex, Class<?> containingClass, AutowireCapableBeanFactory beanFactory)
 			throws BeansException {
 
@@ -139,8 +140,6 @@ public final class ParameterResolutionDelegate {
 	 * Due to a bug in {@code javac} on JDK versions prior to JDK 9, looking up
 	 * annotations directly on a {@link Parameter} will fail for inner class
 	 * constructors.
-	 * <p>Note: Since Spring 6 may still encounter user code compiled with
-	 * {@code javac 8}, this workaround is kept in place for the time being.
 	 * <h4>Bug in javac in JDK &lt; 9</h4>
 	 * <p>The parameter annotations array in the compiled byte code excludes an entry
 	 * for the implicit <em>enclosing instance</em> parameter for an inner class
@@ -152,7 +151,7 @@ public final class ParameterResolutionDelegate {
 	 * an empty {@code AnnotatedElement}.
 	 * <h4>WARNING</h4>
 	 * <p>The {@code AnnotatedElement} returned by this method should never be cast and
-	 * treated as a {@code Parameter} since the metadata (for example, {@link Parameter#getName()},
+	 * treated as a {@code Parameter} since the metadata (e.g., {@link Parameter#getName()},
 	 * {@link Parameter#getType()}, etc.) will not match those for the declared parameter
 	 * at the given index in an inner class constructor.
 	 * @return the supplied {@code parameter} or the <em>effective</em> {@code Parameter}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,28 +29,22 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
-import java.util.AbstractCollection;
-import java.util.AbstractMap;
-import java.util.AbstractSet;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedCaseInsensitiveMap;
 import org.springframework.util.StringUtils;
-import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * {@link ServerHttpRequest} implementation that is based on a {@link HttpServletRequest}.
@@ -62,19 +56,21 @@ import org.springframework.web.util.UriComponentsBuilder;
  */
 public class ServletServerHttpRequest implements ServerHttpRequest {
 
+	protected static final String FORM_CONTENT_TYPE = "application/x-www-form-urlencoded";
+
 	protected static final Charset FORM_CHARSET = StandardCharsets.UTF_8;
 
 
 	private final HttpServletRequest servletRequest;
 
-	private @Nullable URI uri;
+	@Nullable
+	private URI uri;
 
-	private @Nullable HttpHeaders headers;
+	@Nullable
+	private HttpHeaders headers;
 
-	private @Nullable Map<String, Object> attributes;
-
-
-	private @Nullable ServerHttpAsyncRequestControl asyncRequestControl;
+	@Nullable
+	private ServerHttpAsyncRequestControl asyncRequestControl;
 
 
 	/**
@@ -96,58 +92,48 @@ public class ServletServerHttpRequest implements ServerHttpRequest {
 	}
 
 	@Override
+	@Nullable
 	public HttpMethod getMethod() {
-		return HttpMethod.valueOf(this.servletRequest.getMethod());
+		return HttpMethod.resolve(this.servletRequest.getMethod());
+	}
+
+	@Override
+	public String getMethodValue() {
+		return this.servletRequest.getMethod();
 	}
 
 	@Override
 	public URI getURI() {
 		if (this.uri == null) {
-			this.uri = initURI(this.servletRequest);
-		}
-		return this.uri;
-	}
-
-	/**
-	 * Initialize a URI from the given Servlet request.
-	 * @param servletRequest the request
-	 * @return the initialized URI
-	 * @since 6.1
-	 */
-	public static URI initURI(HttpServletRequest servletRequest) {
-		String urlString = null;
-		String query = null;
-		boolean hasQuery = false;
-		try {
-			StringBuffer requestURL = servletRequest.getRequestURL();
-			query = servletRequest.getQueryString();
-			hasQuery = StringUtils.hasText(query);
-			if (hasQuery) {
-				requestURL.append('?').append(query);
+			String urlString = null;
+			boolean hasQuery = false;
+			try {
+				StringBuffer url = this.servletRequest.getRequestURL();
+				String query = this.servletRequest.getQueryString();
+				hasQuery = StringUtils.hasText(query);
+				if (hasQuery) {
+					url.append('?').append(query);
+				}
+				urlString = url.toString();
+				this.uri = new URI(urlString);
 			}
-			urlString = requestURL.toString();
-			return new URI(urlString);
-		}
-		catch (URISyntaxException ex) {
-			if (hasQuery) {
+			catch (URISyntaxException ex) {
+				if (!hasQuery) {
+					throw new IllegalStateException(
+							"Could not resolve HttpServletRequest as URI: " + urlString, ex);
+				}
+				// Maybe a malformed query string... try plain request URL
 				try {
-					// Maybe malformed query, try to parse and encode it
-					query = UriComponentsBuilder.fromUriString("?" + query).build().toUri().getRawQuery();
-					return new URI(servletRequest.getRequestURL().toString() + "?" + query);
+					urlString = this.servletRequest.getRequestURL().toString();
+					this.uri = new URI(urlString);
 				}
 				catch (URISyntaxException ex2) {
-					try {
-						// Try leaving it out
-						return new URI(servletRequest.getRequestURL().toString());
-					}
-					catch (URISyntaxException ex3) {
-						// ignore
-					}
+					throw new IllegalStateException(
+							"Could not resolve HttpServletRequest as URI: " + urlString, ex2);
 				}
 			}
-			throw new IllegalStateException(
-					"Could not resolve HttpServletRequest as URI: " + urlString, ex);
 		}
+		return this.uri;
 	}
 
 	@Override
@@ -172,9 +158,7 @@ public class ServletServerHttpRequest implements ServerHttpRequest {
 					String requestContentType = this.servletRequest.getContentType();
 					if (StringUtils.hasLength(requestContentType)) {
 						contentType = MediaType.parseMediaType(requestContentType);
-						if (contentType.isConcrete()) {
-							this.headers.setContentType(contentType);
-						}
+						this.headers.setContentType(contentType);
 					}
 				}
 				if (contentType != null && contentType.getCharset() == null) {
@@ -205,13 +189,13 @@ public class ServletServerHttpRequest implements ServerHttpRequest {
 	}
 
 	@Override
-	public @Nullable Principal getPrincipal() {
+	public Principal getPrincipal() {
 		return this.servletRequest.getUserPrincipal();
 	}
 
 	@Override
 	public InetSocketAddress getLocalAddress() {
-		return new InetSocketAddress(this.servletRequest.getLocalAddr(), this.servletRequest.getLocalPort());
+		return new InetSocketAddress(this.servletRequest.getLocalName(), this.servletRequest.getLocalPort());
 	}
 
 	@Override
@@ -220,18 +204,8 @@ public class ServletServerHttpRequest implements ServerHttpRequest {
 	}
 
 	@Override
-	public Map<String, Object> getAttributes() {
-		Map<String, Object> attributes = this.attributes;
-		if (attributes == null) {
-			attributes = new AttributesMap();
-			this.attributes = attributes;
-		}
-		return attributes;
-	}
-
-	@Override
 	public InputStream getBody() throws IOException {
-		if (isFormPost(this.servletRequest) && this.servletRequest.getQueryString() == null) {
+		if (isFormPost(this.servletRequest)) {
 			return getBodyFromServletRequestParameters(this.servletRequest);
 		}
 		else {
@@ -242,10 +216,11 @@ public class ServletServerHttpRequest implements ServerHttpRequest {
 	@Override
 	public ServerHttpAsyncRequestControl getAsyncRequestControl(ServerHttpResponse response) {
 		if (this.asyncRequestControl == null) {
-			if (!(response instanceof ServletServerHttpResponse servletServerResponse)) {
+			if (!(response instanceof ServletServerHttpResponse)) {
 				throw new IllegalArgumentException(
 						"Response must be a ServletServerHttpResponse: " + response.getClass());
 			}
+			ServletServerHttpResponse servletServerResponse = (ServletServerHttpResponse) response;
 			this.asyncRequestControl = new ServletServerHttpAsyncRequestControl(this, servletServerResponse);
 		}
 		return this.asyncRequestControl;
@@ -254,7 +229,7 @@ public class ServletServerHttpRequest implements ServerHttpRequest {
 
 	private static boolean isFormPost(HttpServletRequest request) {
 		String contentType = request.getContentType();
-		return (contentType != null && contentType.contains(MediaType.APPLICATION_FORM_URLENCODED_VALUE) &&
+		return (contentType != null && contentType.contains(FORM_CONTENT_TYPE) &&
 				HttpMethod.POST.matches(request.getMethod()));
 	}
 
@@ -264,192 +239,33 @@ public class ServletServerHttpRequest implements ServerHttpRequest {
 	 * from the body, which can fail if any other code has used the ServletRequest
 	 * to access a parameter, thus causing the input stream to be "consumed".
 	 */
-	private InputStream getBodyFromServletRequestParameters(HttpServletRequest request) throws IOException {
+	private static InputStream getBodyFromServletRequestParameters(HttpServletRequest request) throws IOException {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream(1024);
-		Charset charset = getFormCharset();
-		Writer writer = new OutputStreamWriter(bos, charset);
+		Writer writer = new OutputStreamWriter(bos, FORM_CHARSET);
 
 		Map<String, String[]> form = request.getParameterMap();
-		for (Iterator<Map.Entry<String, String[]>> entryItr = form.entrySet().iterator(); entryItr.hasNext();) {
-			Map.Entry<String, String[]> entry = entryItr.next();
+		for (Iterator<Map.Entry<String, String[]>> entryIterator = form.entrySet().iterator(); entryIterator.hasNext();) {
+			Map.Entry<String, String[]> entry = entryIterator.next();
+			String name = entry.getKey();
 			List<String> values = Arrays.asList(entry.getValue());
-			for (Iterator<String> valueItr = values.iterator(); valueItr.hasNext();) {
-				String value = valueItr.next();
-				writer.write(URLEncoder.encode(entry.getKey(), charset));
+			for (Iterator<String> valueIterator = values.iterator(); valueIterator.hasNext();) {
+				String value = valueIterator.next();
+				writer.write(URLEncoder.encode(name, FORM_CHARSET.name()));
 				if (value != null) {
 					writer.write('=');
-					writer.write(URLEncoder.encode(value, charset));
-					if (valueItr.hasNext()) {
+					writer.write(URLEncoder.encode(value, FORM_CHARSET.name()));
+					if (valueIterator.hasNext()) {
 						writer.write('&');
 					}
 				}
 			}
-			if (entryItr.hasNext()) {
+			if (entryIterator.hasNext()) {
 				writer.append('&');
 			}
 		}
 		writer.flush();
 
-		byte[] bytes = bos.toByteArray();
-		if (bytes.length > 0 && getHeaders().containsHeader(HttpHeaders.CONTENT_LENGTH)) {
-			getHeaders().setContentLength(bytes.length);
-		}
-
-		return new ByteArrayInputStream(bytes);
+		return new ByteArrayInputStream(bos.toByteArray());
 	}
 
-	private Charset getFormCharset() {
-		try {
-			MediaType contentType = getHeaders().getContentType();
-			if (contentType != null && contentType.getCharset() != null) {
-				return contentType.getCharset();
-			}
-		}
-		catch (Exception ex) {
-			// ignore
-		}
-		return FORM_CHARSET;
-	}
-
-
-	private final class AttributesMap extends AbstractMap<String, Object> {
-
-		private @Nullable transient Set<String> keySet;
-
-		private @Nullable transient Collection<Object> values;
-
-		private @Nullable transient Set<Entry<String, Object>> entrySet;
-
-
-		@Override
-		public int size() {
-			int size = 0;
-			for (Enumeration<?> names = servletRequest.getAttributeNames(); names.hasMoreElements(); names.nextElement()) {
-				size++;
-			}
-			return size;
-		}
-
-		@Override
-		public @Nullable Object get(Object key) {
-			if (key instanceof String name) {
-				return servletRequest.getAttribute(name);
-			}
-			else {
-				return null;
-			}
-		}
-
-		@Override
-		public @Nullable Object put(String key, Object value) {
-			Object old = get(key);
-			servletRequest.setAttribute(key, value);
-			return old;
-		}
-
-		@Override
-		public @Nullable Object remove(Object key) {
-			if (key instanceof String name) {
-				Object old = get(key);
-				servletRequest.removeAttribute(name);
-				return old;
-			}
-			else {
-				return null;
-			}
-		}
-
-		@Override
-		public void clear() {
-			for (Enumeration<String> names = servletRequest.getAttributeNames(); names.hasMoreElements(); ) {
-				String name = names.nextElement();
-				servletRequest.removeAttribute(name);
-			}
-		}
-
-		@Override
-		public Set<String> keySet() {
-			Set<String> keySet = this.keySet;
-			if (keySet == null) {
-				keySet = new AbstractSet<>() {
-					@Override
-					public Iterator<String> iterator() {
-						return servletRequest.getAttributeNames().asIterator();
-					}
-
-					@Override
-					public int size() {
-						return AttributesMap.this.size();
-					}
-				};
-				this.keySet = keySet;
-			}
-			return keySet;
-		}
-
-		@Override
-		public Collection<Object> values() {
-			Collection<Object> values = this.values;
-			if (values == null) {
-				values = new AbstractCollection<>() {
-					@Override
-					public Iterator<Object> iterator() {
-						Enumeration<String> e = servletRequest.getAttributeNames();
-						return new Iterator<>() {
-							@Override
-							public boolean hasNext() {
-								return e.hasMoreElements();
-							}
-
-							@Override
-							public Object next() {
-								String name = e.nextElement();
-								return servletRequest.getAttribute(name);
-							}
-						};
-					}
-
-					@Override
-					public int size() {
-						return AttributesMap.this.size();
-					}
-				};
-				this.values = values;
-			}
-			return values;
-		}
-
-		@Override
-		public Set<Entry<String, Object>> entrySet() {
-			Set<Entry<String, Object>> entrySet = this.entrySet;
-			if (entrySet == null) {
-				entrySet = new AbstractSet<>() {
-					@Override
-					public Iterator<Entry<String, Object>> iterator() {
-						Enumeration<String> e = servletRequest.getAttributeNames();
-						return new Iterator<>() {
-							@Override
-							public boolean hasNext() {
-								return e.hasMoreElements();
-							}
-
-							@Override
-							public Entry<String, Object> next() {
-								String name = e.nextElement();
-								Object value = servletRequest.getAttribute(name);
-								return new SimpleImmutableEntry<>(name, value);
-							}
-						};
-					}
-
-					@Override
-					public int size() {
-						return AttributesMap.this.size();
-					}
-				};
-				this.entrySet = entrySet;
-			}
-			return entrySet;
-		}
-	}
 }

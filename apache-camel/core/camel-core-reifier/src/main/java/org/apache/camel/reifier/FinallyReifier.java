@@ -37,12 +37,7 @@ public class FinallyReifier extends ProcessorReifier<FinallyDefinition> {
         }
 
         // do finally does mandate a child processor
-        FinallyProcessor processor = new FinallyProcessor(this.createChildProcessor(false));
-        // inject id
-        String id = getId(definition);
-        processor.setId(id);
-        processor.setRouteId(route.getRouteId());
-        return wrapProcessor(processor);
+        return new FinallyProcessor(this.createChildProcessor(false));
     }
 
 }

@@ -73,7 +73,7 @@ public final class CxfUtilsTestHelper {
         String decUri = writer.getNamespaceContext().getNamespaceURI(prefix);
         boolean declareNamespace = decUri == null || !decUri.equals(ns);
 
-        if (ns == null || ns.isEmpty()) {
+        if (ns == null || ns.length() == 0) {
             writer.writeStartElement(localName);
             if (StringUtils.isEmpty(decUri)) {
                 declareNamespace = false;
@@ -101,7 +101,7 @@ public final class CxfUtilsTestHelper {
                     declareNamespace = false;
                 }
             } else {
-                if ("xmlns".equals(name) && attrPrefix.isEmpty()) {
+                if ("xmlns".equals(name) && "".equals(attrPrefix)) {
                     writer.writeNamespace("", attr.getNodeValue());
                     if (attr.getNodeValue().equals(ns)) {
                         declareNamespace = false;
@@ -112,9 +112,9 @@ public final class CxfUtilsTestHelper {
                 } else {
                     String attns = attr.getNamespaceURI();
                     String value = attr.getNodeValue();
-                    if (attns == null || attns.isEmpty()) {
+                    if (attns == null || attns.length() == 0) {
                         writer.writeAttribute(name, value);
-                    } else if (attrPrefix == null || attrPrefix.isEmpty()) {
+                    } else if (attrPrefix == null || attrPrefix.length() == 0) {
                         writer.writeAttribute(attns, name, value);
                     } else {
                         writer.writeAttribute(attrPrefix, attns, name, value);

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,15 +39,11 @@ package org.jooq.impl;
 
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
-import static org.jooq.SQLDialect.DUCKDB;
 import static org.jooq.SQLDialect.MYSQL;
 // ...
 import static org.jooq.SQLDialect.POSTGRES;
 import static org.jooq.SQLDialect.SQLITE;
-// ...
-import static org.jooq.SQLDialect.TRINO;
 import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.Keywords.K_FIRST;
@@ -64,7 +60,7 @@ import java.util.Set;
 
 import org.jooq.Context;
 import org.jooq.DataType;
-import org.jooq.GroupField;
+import org.jooq.Field;
 import org.jooq.Name;
 import org.jooq.OrderField;
 // ...
@@ -98,10 +94,9 @@ implements
     WindowRowsStep<T>,
     WindowRowsAndStep<T>,
     WindowExcludeStep<T>,
-    WindowFunction<T>,
-    ScopeMappable
+    WindowFunction<T>
 {
-    private static final Set<SQLDialect> SUPPORT_NO_PARENS_WINDOW_REFERENCE = SQLDialect.supportedBy(CLICKHOUSE, DUCKDB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB);
+    private static final Set<SQLDialect> SUPPORT_NO_PARENS_WINDOW_REFERENCE          = SQLDialect.supportedBy(MYSQL, POSTGRES, SQLITE, YUGABYTEDB);
 
     // Other attributes
     WindowSpecificationImpl              windowSpecification;
@@ -134,15 +129,15 @@ implements
     @SuppressWarnings("unchecked")
     final QueryPart window(Context<?> ctx) {
         if (windowSpecification != null)
-            return CustomQueryPart.of(c -> c.sql('(').visit(windowSpecification).sql(')'));
+            return DSL.sql("({0})", windowSpecification);
 
         // [#3727] Referenced WindowDefinitions that contain a frame clause
         // shouldn't be referenced from within parentheses (in MySQL and PostgreSQL)
         if (windowDefinition != null)
-            if (SUPPORT_NO_PARENS_WINDOW_REFERENCE.contains(ctx.dialect()) && !NO_SUPPORT_WINDOW_CLAUSE.contains(ctx.dialect()))
+            if (SUPPORT_NO_PARENS_WINDOW_REFERENCE.contains(ctx.dialect()))
                 return windowDefinition;
             else
-                return CustomQueryPart.of(c -> c.sql('(').visit(windowDefinition).sql(')'));
+                return DSL.sql("({0})", windowDefinition);
 
         // [#531] Inline window specifications if the WINDOW clause is not supported
         if (windowName != null) {
@@ -154,7 +149,7 @@ implements
             if (windows != null) {
                 for (WindowDefinition window : windows)
                     if (((WindowDefinitionImpl) window).getName().equals(windowName))
-                        return CustomQueryPart.of(c -> c.sql('(').visit(window).sql(')'));
+                        return DSL.sql("({0})", window);
             }
 
             // [#3162] If a window specification is missing from the query's WINDOW clause,
@@ -217,18 +212,16 @@ implements
 
 
 
-    final void acceptNullTreatmentAsArgumentKeywords(Context<?> ctx) {
-        switch (ctx.family()) {
 
 
 
-            case DUCKDB:
-                if (nullTreatment == NullTreatment.IGNORE_NULLS)
-                    ctx.sql(' ').visit(K_IGNORE_NULLS);
 
-                break;
-        }
-    }
+
+
+
+
+
+
 
     final void acceptNullTreatment(Context<?> ctx) {
         switch (ctx.family()) {
@@ -246,9 +239,6 @@ implements
 
 
 
-            case DUCKDB:
-                break;
-
             default:
                 acceptNullTreatmentStandard(ctx);
                 break;
@@ -259,8 +249,8 @@ implements
         switch (ctx.family()) {
 
 
-            case DUCKDB:
-                break;
+
+
 
             default:
                 if (nullTreatment == NullTreatment.IGNORE_NULLS)
@@ -330,8 +320,8 @@ implements
 
     @Override
     public final WindowFinalStep<T> over(WindowSpecification specification) {
-        this.windowSpecification = specification instanceof WindowSpecificationImpl w
-            ? w
+        this.windowSpecification = specification instanceof WindowSpecificationImpl
+            ? (WindowSpecificationImpl) specification
             : new WindowSpecificationImpl((WindowDefinitionImpl) specification);
 
         return this;
@@ -355,14 +345,21 @@ implements
     }
 
     @Override
-    public final WindowOrderByStep<T> partitionBy(GroupField... fields) {
+    public final WindowOrderByStep<T> partitionBy(Field<?>... fields) {
         windowSpecification.partitionBy(fields);
         return this;
     }
 
     @Override
-    public final WindowOrderByStep<T> partitionBy(Collection<? extends GroupField> fields) {
+    public final WindowOrderByStep<T> partitionBy(Collection<? extends Field<?>> fields) {
         windowSpecification.partitionBy(fields);
+        return this;
+    }
+
+    @Override
+    @Deprecated
+    public final WindowOrderByStep<T> partitionByOne() {
+        windowSpecification.partitionByOne();
         return this;
     }
 

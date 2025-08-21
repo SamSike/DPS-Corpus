@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,9 +37,7 @@
  */
 package org.jooq.meta.firebird;
 
-import static org.jooq.impl.DSL.bitOr;
 import static org.jooq.impl.DSL.inline;
-import static org.jooq.impl.DSL.nvl;
 import static org.jooq.impl.DSL.trim;
 import static org.jooq.meta.firebird.FirebirdDatabase.CHARACTER_LENGTH;
 import static org.jooq.meta.firebird.FirebirdDatabase.FIELD_SCALE;
@@ -92,7 +90,7 @@ public class FirebirdTableDefinition extends AbstractTableDefinition {
                     trim(r.RDB$FIELD_NAME).as(r.RDB$FIELD_NAME),
                     r.RDB$DESCRIPTION,
                     r.RDB$DEFAULT_VALUE,
-                    bitOr(nvl(r.RDB$NULL_FLAG, inline((short) 0)), nvl(f.RDB$NULL_FLAG, inline((short) 0))).as(r.RDB$NULL_FLAG),
+                    DSL.bitOr(r.RDB$NULL_FLAG.nvl(inline((short) 0)), f.RDB$NULL_FLAG.nvl(inline((short) 0))).as(r.RDB$NULL_FLAG),
                     r.RDB$DEFAULT_SOURCE,
                     f.RDB$COMPUTED_SOURCE,
                     r.RDB$FIELD_POSITION,

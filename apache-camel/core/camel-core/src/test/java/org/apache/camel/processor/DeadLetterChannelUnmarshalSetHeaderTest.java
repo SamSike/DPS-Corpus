@@ -45,10 +45,10 @@ public class DeadLetterChannelUnmarshalSetHeaderTest extends ContextTestSupport 
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 MyDataFormat df = new MyDataFormat();
 
                 from("direct:start").errorHandler(deadLetterChannel("direct:error")).unmarshal(df);
@@ -58,16 +58,26 @@ public class DeadLetterChannelUnmarshalSetHeaderTest extends ContextTestSupport 
         };
     }
 
-    private static class MyDataFormat extends ServiceSupport implements DataFormat {
+    private class MyDataFormat extends ServiceSupport implements DataFormat {
 
         @Override
-        public void marshal(Exchange exchange, Object graph, OutputStream stream) {
+        public void marshal(Exchange exchange, Object graph, OutputStream stream) throws Exception {
             // noop
         }
 
         @Override
-        public Object unmarshal(Exchange exchange, InputStream stream) {
+        public Object unmarshal(Exchange exchange, InputStream stream) throws Exception {
             throw new IllegalArgumentException("Damn");
+        }
+
+        @Override
+        protected void doStart() throws Exception {
+            // noop
+        }
+
+        @Override
+        protected void doStop() throws Exception {
+            // noop
         }
     }
 }

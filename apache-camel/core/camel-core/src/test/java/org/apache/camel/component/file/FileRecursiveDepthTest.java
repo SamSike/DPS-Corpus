@@ -73,10 +73,10 @@ public class FileRecursiveDepthTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
 
                 from(fileUri("depth?initialDelay=0&delay=10&recursive=true&minDepth=2&maxDepth=2"))
                         .convertBodyTo(String.class).to("mock:result");

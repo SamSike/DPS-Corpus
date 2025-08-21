@@ -33,7 +33,6 @@ import org.junit.jupiter.api.condition.OS;
 import static org.apache.camel.management.DefaultManagementObjectNameStrategy.TYPE_PROCESSOR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisabledOnOs(OS.AIX)
 public class ManagedFailoverLoadBalancerTest extends ManagementTestSupport {
@@ -71,10 +70,10 @@ public class ManagedFailoverLoadBalancerTest extends ManagementTestSupport {
         assertEquals(2, size.intValue());
 
         Boolean roundRobin = (Boolean) mbeanServer.getAttribute(on, "RoundRobin");
-        assertTrue(roundRobin.booleanValue());
+        assertEquals(true, roundRobin.booleanValue());
 
         Boolean sticky = (Boolean) mbeanServer.getAttribute(on, "Sticky");
-        assertTrue(sticky.booleanValue());
+        assertEquals(true, sticky.booleanValue());
 
         Integer attempts = (Integer) mbeanServer.getAttribute(on, "MaximumFailoverAttempts");
         assertEquals(3, attempts.intValue());
@@ -85,16 +84,16 @@ public class ManagedFailoverLoadBalancerTest extends ManagementTestSupport {
         String id = (String) mbeanServer.getAttribute(on, "LastGoodProcessorId");
         assertEquals("bar", id);
 
-        TabularData data = (TabularData) mbeanServer.invoke(on, "extendedInformation", null, null);
+        TabularData data = (TabularData) mbeanServer.invoke(on, "exceptionStatistics", null, null);
         assertNotNull(data);
         assertEquals(2, data.size());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .loadBalance().failover(3, false, true, true, IOException.class, SQLException.class).id("mysend")
                         .to("mock:foo").id("foo").to("mock:bar").id("bar");

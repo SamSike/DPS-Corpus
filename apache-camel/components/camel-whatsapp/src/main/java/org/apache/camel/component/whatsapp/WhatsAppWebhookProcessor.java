@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.AsyncProcessor;
@@ -49,8 +50,10 @@ public class WhatsAppWebhookProcessor extends AsyncProcessorSupport implements A
     @Override
     public boolean process(Exchange exchange, AsyncCallback callback) {
         String content;
+        AtomicBoolean isGet = new AtomicBoolean(false);
 
         if ("GET".equalsIgnoreCase(exchange.getIn().getHeader(Exchange.HTTP_METHOD).toString())) {
+            isGet.set(true);
             // Parse params from the webhook verification request
             Map<String, String> queryParams = parseQueryParam(exchange);
 
@@ -72,6 +75,7 @@ public class WhatsAppWebhookProcessor extends AsyncProcessorSupport implements A
                 exchange.getMessage().setHeader(Exchange.HTTP_RESPONSE_CODE, 400);
             }
         } else {
+            isGet.set(false);
             InputStream body = exchange.getIn().getBody(InputStream.class);
 
             try {
@@ -86,7 +90,12 @@ public class WhatsAppWebhookProcessor extends AsyncProcessorSupport implements A
         exchange.getMessage().setBody(content);
 
         return next.process(exchange, doneSync -> {
-            exchange.getMessage().setBody(content);
+            // No response data expected
+            if (!isGet.get()) {
+                exchange.getMessage().setBody(content);
+            } else {
+                exchange.getMessage().setBody("");
+            }
 
             callback.done(doneSync);
         });

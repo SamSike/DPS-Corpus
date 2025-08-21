@@ -16,12 +16,13 @@
  */
 package org.apache.camel.builder;
 
-import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 import java.util.List;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.impl.engine.AbstractCamelContext;
+import org.apache.camel.util.ReflectionHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -46,9 +47,8 @@ public class AddRoutesAtRuntimeTest extends ContextTestSupport {
         assertEquals(2, context.getRoutes().size());
 
         // use reflection to test that we do not leak bootstraps when dynamic adding routes
-        Method m = AbstractCamelContext.class.getDeclaredMethod("getBootstraps");
-        m.setAccessible(true);
-        Assertions.assertEquals(0, ((List<?>) m.invoke(context)).size());
+        Field f = AbstractCamelContext.class.getDeclaredField("bootstraps");
+        Assertions.assertEquals(0, ((List) ReflectionHelper.getField(f, context)).size());
 
         getMockEndpoint("mock:bar").expectedMessageCount(1);
         context.addRoutes(new MyDynamcRouteBuilder(context, "direct:bar", "mock:bar"));
@@ -57,14 +57,14 @@ public class AddRoutesAtRuntimeTest extends ContextTestSupport {
         assertEquals(3, context.getRoutes().size());
 
         // use reflection to test that we do not leak bootstraps when dynamic adding routes
-        Assertions.assertEquals(0, ((List<?>) m.invoke(context)).size());
+        Assertions.assertEquals(0, ((List) ReflectionHelper.getField(f, context)).size());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // here is an existing route
                 from("direct:start").to("mock:start");
             }
@@ -85,7 +85,7 @@ public class AddRoutesAtRuntimeTest extends ContextTestSupport {
         }
 
         @Override
-        public void configure() {
+        public void configure() throws Exception {
             from(from).to(to);
         }
     }

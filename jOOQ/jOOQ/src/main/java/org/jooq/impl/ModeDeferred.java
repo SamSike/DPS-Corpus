@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,9 +41,9 @@ import static org.jooq.impl.Names.N_MODE;
 
 import org.jooq.AggregateFilterStep;
 import org.jooq.DataType;
+import org.jooq.Field;
 import org.jooq.OrderField;
 import org.jooq.OrderedAggregateFunctionOfDeferredType;
-import org.jooq.SortField;
 
 /**
  * @author Lukas Eder
@@ -53,10 +53,10 @@ final class ModeDeferred implements OrderedAggregateFunctionOfDeferredType {
     @SuppressWarnings("unchecked")
     @Override
     public final <T> AggregateFilterStep<T> withinGroupOrderBy(OrderField<T> field) {
-        DataType<T> type = field instanceof SortField<T> s
-            ? s.$field().getDataType()
-            : field instanceof AbstractField<T> f
-            ? f.getDataType()
+        DataType<T> type = field instanceof SortFieldImpl
+            ? ((SortFieldImpl<T>) field).getField().getDataType()
+            : field instanceof AbstractField
+            ? ((AbstractField<T>) field).getDataType()
             : (DataType<T>) SQLDataType.NUMERIC;
 
         return new DefaultAggregateFunction<>(N_MODE, type).withinGroupOrderBy(field);

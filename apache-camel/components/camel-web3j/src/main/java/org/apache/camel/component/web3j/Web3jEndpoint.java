@@ -22,7 +22,6 @@ import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
@@ -45,8 +44,8 @@ import org.web3j.quorum.Quorum;
  * Interact with Ethereum nodes using web3j client API.
  */
 @UriEndpoint(firstVersion = "2.22.0", scheme = "web3j", title = "Web3j Ethereum Blockchain", syntax = "web3j:nodeAddress",
-             category = { Category.BLOCKCHAIN }, headersClass = Web3jConstants.class)
-public class Web3jEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
+             category = { Category.BITCOIN, Category.BLOCKCHAIN, Category.API }, headersClass = Web3jConstants.class)
+public class Web3jEndpoint extends DefaultEndpoint {
     private static final Logger LOG = LoggerFactory.getLogger(Web3jEndpoint.class);
 
     private Web3j web3j;
@@ -56,22 +55,12 @@ public class Web3jEndpoint extends DefaultEndpoint implements EndpointServiceLoc
     private String nodeAddress;
 
     @UriParam
-    private final Web3jConfiguration configuration;
+    private Web3jConfiguration configuration;
 
     public Web3jEndpoint(String uri, String remaining, Web3jComponent component, Web3jConfiguration configuration) {
         super(uri, component);
         this.configuration = configuration;
         this.nodeAddress = remaining;
-    }
-
-    @Override
-    public String getServiceUrl() {
-        return nodeAddress;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "json-rpc";
     }
 
     @Override
@@ -101,14 +90,14 @@ public class Web3jEndpoint extends DefaultEndpoint implements EndpointServiceLoc
     }
 
     private Web3j buildService(String clientAddress, Web3jConfiguration configuration) {
-        LOG.info("Building service for endpoint: {}, {}", clientAddress, configuration);
+        LOG.info("Building service for endpoint: {}", clientAddress + configuration);
 
         if (configuration.getWeb3j() != null) {
             return configuration.getWeb3j();
         }
 
         Web3jService web3jService;
-        if (clientAddress == null || clientAddress.isEmpty()) {
+        if (clientAddress == null || clientAddress.equals("")) {
             web3jService = new HttpService();
         } else if (clientAddress.startsWith("http")) {
             web3jService = new HttpService(clientAddress);
@@ -149,7 +138,7 @@ public class Web3jEndpoint extends DefaultEndpoint implements EndpointServiceLoc
         return filter;
     }
 
-    private static void addTopics(Filter<?> filter, List<String> topics) {
+    private static void addTopics(Filter filter, List<String> topics) {
         if (topics != null) {
             for (String topic : topics) {
                 if (topic != null && topic.length() > 0) {

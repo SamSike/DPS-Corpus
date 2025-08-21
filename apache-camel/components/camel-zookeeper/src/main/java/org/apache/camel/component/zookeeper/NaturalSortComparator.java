@@ -34,7 +34,7 @@ public class NaturalSortComparator implements Comparator<CharSequence> {
         Ascending(1),
         Descending(-1);
 
-        final int direction;
+        int direction;
 
         Order(int direction) {
             this.direction = direction;

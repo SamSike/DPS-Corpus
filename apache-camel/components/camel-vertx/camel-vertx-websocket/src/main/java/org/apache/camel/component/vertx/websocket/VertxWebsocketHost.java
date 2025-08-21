@@ -16,14 +16,12 @@
  */
 package org.apache.camel.component.vertx.websocket;
 
-import java.net.URI;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.regex.Pattern;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpHeaders;
@@ -47,12 +45,11 @@ import org.slf4j.LoggerFactory;
  */
 public class VertxWebsocketHost {
     private static final Logger LOG = LoggerFactory.getLogger(VertxWebsocketHost.class);
-    private static final Pattern PATH_PARAMETER_PATTERN = Pattern.compile("\\{([^/}]+)\\}");
 
     private final VertxWebsocketHostConfiguration hostConfiguration;
     private final VertxWebsocketHostKey hostKey;
     private final Map<String, Route> routeRegistry = new HashMap<>();
-    private final List<VertxWebsocketPeer> connectedPeers = new CopyOnWriteArrayList<>(); // thread-safe
+    private final Map<String, ServerWebSocket> connectedPeers = new ConcurrentHashMap<>();
     private final CamelContext camelContext;
     private HttpServer server;
     private int port = VertxWebsocketConstants.DEFAULT_VERTX_SERVER_PORT;
@@ -71,16 +68,12 @@ public class VertxWebsocketHost {
         VertxWebsocketEndpoint endpoint = consumer.getEndpoint();
         VertxWebsocketConfiguration configuration = endpoint.getConfiguration();
 
-        URI websocketURI = configuration.getWebsocketURI();
-
-        // Transform from the Camel path param syntax /path/{key} to Vert.x web /path/:key
-        String path = PATH_PARAMETER_PATTERN.matcher(websocketURI.getPath()).replaceAll(":$1");
+        LOG.info("Connected consumer for path {}", configuration.getPath());
         Router router = hostConfiguration.getRouter();
-        Route route = router.route(path);
-        LOG.info("Connected consumer for path {}", path);
+        Route route = router.route(configuration.getPath());
 
         if (!ObjectHelper.isEmpty(configuration.getAllowedOriginPattern())) {
-            CorsHandler corsHandler = CorsHandler.create().addRelativeOrigin(configuration.getAllowedOriginPattern());
+            CorsHandler corsHandler = CorsHandler.create(configuration.getAllowedOriginPattern());
             route.handler(corsHandler);
         }
 
@@ -110,41 +103,27 @@ public class VertxWebsocketHost {
                         SocketAddress socketAddress = webSocket.localAddress();
                         SocketAddress remote = webSocket.remoteAddress();
 
-                        VertxWebsocketPeer peer = new VertxWebsocketPeer(webSocket, websocketURI.getPath());
-                        connectedPeers.add(peer);
+                        String connectionKey = UUID.randomUUID().toString();
+                        connectedPeers.put(connectionKey, webSocket);
 
                         if (LOG.isDebugEnabled()) {
                             if (socketAddress != null) {
-                                LOG.debug("WebSocket peer {} connected from {}", peer.getConnectionKey(), socketAddress.host());
+                                LOG.debug("WebSocket peer {} connected from {}", connectionKey, socketAddress.host());
                             }
                         }
 
-                        webSocket.textMessageHandler(
-                                message -> consumer.onMessage(peer.getConnectionKey(), message, remote, routingContext));
+                        webSocket.textMessageHandler(message -> consumer.onMessage(connectionKey, message, remote));
                         webSocket
-                                .binaryMessageHandler(
-                                        message -> consumer.onMessage(peer.getConnectionKey(), message.getBytes(), remote,
-                                                routingContext));
-                        webSocket.exceptionHandler(
-                                exception -> consumer.onException(peer.getConnectionKey(), exception, remote, routingContext));
+                                .binaryMessageHandler(message -> consumer.onMessage(connectionKey, message.getBytes(), remote));
+                        webSocket.exceptionHandler(exception -> consumer.onException(connectionKey, exception, remote));
                         webSocket.closeHandler(closeEvent -> {
                             if (LOG.isDebugEnabled()) {
                                 if (socketAddress != null) {
-                                    LOG.debug("WebSocket peer {} disconnected from {}", peer.getConnectionKey(),
-                                            socketAddress.host());
+                                    LOG.debug("WebSocket peer {} disconnected from {}", connectionKey, socketAddress.host());
                                 }
                             }
-
-                            if (configuration.isFireWebSocketConnectionEvents()) {
-                                consumer.onClose(peer.getConnectionKey(), remote, routingContext);
-                            }
-
-                            connectedPeers.remove(peer);
+                            connectedPeers.remove(connectionKey);
                         });
-
-                        if (configuration.isFireWebSocketConnectionEvents()) {
-                            consumer.onOpen(peer.getConnectionKey(), remote, routingContext, webSocket);
-                        }
                     } else {
                         // the upgrade failed
                         routingContext.fail(toWebSocket.cause());
@@ -153,7 +132,7 @@ public class VertxWebsocketHost {
             }
         });
 
-        routeRegistry.put(websocketURI.getPath(), route);
+        routeRegistry.put(configuration.getPath(), route);
     }
 
     /**
@@ -211,7 +190,7 @@ public class VertxWebsocketHost {
     }
 
     /**
-     * Stops a previously started Vert.x HTTP server
+     * Starts a previously started Vert.x HTTP server
      */
     public void stop() throws ExecutionException, InterruptedException {
         if (server != null) {
@@ -239,18 +218,8 @@ public class VertxWebsocketHost {
     /**
      * Gets all WebSocket peers connected to the Vert.x HTTP sever together with their associated connection key
      */
-    public List<VertxWebsocketPeer> getConnectedPeers() {
+    public Map<String, ServerWebSocket> getConnectedPeers() {
         return connectedPeers;
-    }
-
-    /**
-     * Gets a connected peer for the given connection key
-     */
-    public VertxWebsocketPeer getConnectedPeer(String connectionKey) {
-        return getConnectedPeers().stream()
-                .filter(peer -> peer.getConnectionKey().equals(connectionKey))
-                .findFirst()
-                .orElse(null);
     }
 
     /**
@@ -259,19 +228,5 @@ public class VertxWebsocketHost {
      */
     public int getPort() {
         return port;
-    }
-
-    /**
-     * Determines whether the specified host name is one that is managed by this host.
-     */
-    public boolean isManagedHost(String host) {
-        return hostKey.getHost().equals(host);
-    }
-
-    /**
-     * Determines whether the specified port is one that is managed by this host.
-     */
-    public boolean isManagedPort(int port) {
-        return getPort() == port;
     }
 }

@@ -19,10 +19,10 @@ package org.apache.camel.impl;
 import org.apache.camel.BindToRegistry;
 import org.apache.camel.Consume;
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.spi.CamelBeanPostProcessor;
-import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -61,18 +61,18 @@ public class DefaultCamelBeanPostProcessorTest extends ContextTestSupport {
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        postProcessor = PluginHelper.getBeanPostProcessor(context);
+        postProcessor = context.adapt(ExtendedCamelContext.class).getBeanPostProcessor();
     }
 
     @BindToRegistry
-    public static class FooService {
+    public class FooService {
 
         private String fooEndpoint;
         private String barEndpoint;
         @Produce
         private ProducerTemplate bar;
         @BindToRegistry("myCoolBean")
-        private final MySerialBean myBean = new MySerialBean();
+        private MySerialBean myBean = new MySerialBean();
 
         @BindToRegistry
         public FooBar doSomething() {

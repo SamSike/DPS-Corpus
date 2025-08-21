@@ -19,21 +19,13 @@ package org.apache.camel.component.mail;
 import jakarta.mail.Message;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mail.Mailbox.MailboxUser;
-import org.apache.camel.component.mail.Mailbox.Protocol;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
+import org.jvnet.mock_javamail.Mailbox;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MailToMultipleEndpointsTest extends CamelTestSupport {
-    private static final MailboxUser james2 = Mailbox.getOrCreateUser("james2", "secret");
-    private static final MailboxUser james = Mailbox.getOrCreateUser("james", "secret");
-    private static final MailboxUser admin = Mailbox.getOrCreateUser("admin", "secret");
-
-    private static final MailboxUser a = Mailbox.getOrCreateUser("a", "secret");
-    private static final MailboxUser b = Mailbox.getOrCreateUser("b", "secret");
-    private static final MailboxUser c = Mailbox.getOrCreateUser("c", "secret");
 
     @Test
     public void testMultipleEndpoints() throws Exception {
@@ -43,20 +35,20 @@ public class MailToMultipleEndpointsTest extends CamelTestSupport {
         template.sendBodyAndHeader("direct:b", "Bye World", "Subject", "Hello b");
         template.sendBodyAndHeader("direct:c", "Hi World", "Subject", "Hello c");
 
-        Mailbox boxA = a.getInbox();
-        assertEquals(1, boxA.getMessageCount());
+        Mailbox boxA = Mailbox.get("a@a.com");
+        assertEquals(1, boxA.size());
         assertEquals("Hello a", boxA.get(0).getSubject());
         assertEquals("Hello World", boxA.get(0).getContent());
         assertEquals("me@me.com", boxA.get(0).getFrom()[0].toString());
 
-        Mailbox boxB = b.getInbox();
-        assertEquals(1, boxB.getMessageCount());
+        Mailbox boxB = Mailbox.get("b@b.com");
+        assertEquals(1, boxB.size());
         assertEquals("Hello b", boxB.get(0).getSubject());
         assertEquals("Bye World", boxB.get(0).getContent());
         assertEquals("you@you.com", boxB.get(0).getFrom()[0].toString());
 
-        Mailbox boxC = c.getInbox();
-        assertEquals(1, boxC.getMessageCount());
+        Mailbox boxC = Mailbox.get("c@c.com");
+        assertEquals(1, boxC.size());
         assertEquals("Hello c", boxC.get(0).getSubject());
         assertEquals("Hi World", boxC.get(0).getContent());
         assertEquals("me@me.com", boxC.get(0).getFrom()[0].toString());
@@ -69,13 +61,12 @@ public class MailToMultipleEndpointsTest extends CamelTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() {
-                from("direct:a").to(james2.uriPrefix(Protocol.smtp) + "&to=" + a.getEmail() + "&from=me@me.com");
+                from("direct:a").to("smtp://localhost?username=james2&password=secret&to=a@a.com&from=me@me.com");
 
-                from("direct:b").to(james.uriPrefix(Protocol.smtp) + "&to=" + b.getEmail() + "&from=you@you.com");
+                from("direct:b").to("smtp://localhost?username=james&password=secret&to=b@b.com&from=you@you.com");
 
                 from("direct:c").to(
-                        admin.uriPrefix(Protocol.smtp) + "&to=" + c.getEmail()
-                                    + "&from=me@me.com&cc=you@you.com,them@them.com");
+                        "smtp://localhost?username=admin&password=secret&to=c@c.com&from=me@me.com&cc=you@you.com,them@them.com");
             }
         };
     }

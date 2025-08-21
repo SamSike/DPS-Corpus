@@ -40,13 +40,13 @@ public class FileConsumerMoveAndMoveFailureTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?move=moved&initialDelay=0&delay=10&moveFailed=error/${file:name.noext}-error.txt"))
                         .process(new Processor() {
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 String body = exchange.getIn().getBody(String.class);
                                 if ("Kaboom".equals(body)) {
                                     throw new IllegalArgumentException("Forced");

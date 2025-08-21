@@ -41,24 +41,14 @@ import org.apache.camel.language.simple.types.TokenType;
  */
 public abstract class BaseSimpleParser {
 
-    /**
-     * Marker used for start of generated code for csimple
-     */
-    public static final String CODE_START = "\"@@code[[";
-
-    /**
-     * Marker used for end of generated code for csimple
-     */
-    public static final String CODE_END = "]]code@@\"";
-
-    protected final CamelContext camelContext;
+    protected CamelContext camelContext;
     protected final String expression;
     protected final List<SimpleToken> tokens = new ArrayList<>();
     protected final List<SimpleNode> nodes = new ArrayList<>();
     protected SimpleToken token;
     protected int previousIndex;
     protected int index;
-    protected final boolean allowEscape;
+    protected boolean allowEscape;
 
     protected BaseSimpleParser(CamelContext camelContext, String expression, boolean allowEscape) {
         this.camelContext = camelContext;
@@ -116,7 +106,7 @@ public abstract class BaseSimpleParser {
     }
 
     /**
-     * Prepares blocks, such as functions, single or double-quoted texts.
+     * Prepares blocks, such as functions, single or double quoted texts.
      * <p/>
      * This process prepares the {@link Block}s in the AST. This is done by linking child {@link SimpleNode nodes} which
      * are within the start and end of the blocks, as child to the given block. This is done to have the AST graph
@@ -131,9 +121,9 @@ public abstract class BaseSimpleParser {
         Deque<Block> stack = new ArrayDeque<>();
 
         for (SimpleNode token : nodes) {
-            if (token instanceof BlockStart blockStart) {
+            if (token instanceof BlockStart) {
                 // a new block is started, so push on the stack
-                stack.push(blockStart);
+                stack.push((Block) token);
             } else if (token instanceof BlockEnd) {
                 // end block is just an abstract mode, so we should not add it
                 if (stack.isEmpty()) {
@@ -143,30 +133,36 @@ public abstract class BaseSimpleParser {
 
                 Block top = stack.pop();
                 // if there is a block on the stack then it should accept the child token
-                acceptOrAdd(answer, stack, top);
+                Block block = stack.isEmpty() ? null : stack.peek();
+                if (block != null) {
+                    if (!block.acceptAndAddNode(top)) {
+                        throw new SimpleParserException(
+                                block.getToken().getType() + " cannot accept " + token.getToken().getType(),
+                                token.getToken().getIndex());
+                    }
+                } else {
+                    // no block, so add to answer
+                    answer.add(top);
+                }
             } else {
                 // if there is a block on the stack then it should accept the child token
-                acceptOrAdd(answer, stack, token);
+                Block block = stack.isEmpty() ? null : stack.peek();
+                if (block != null) {
+                    if (!block.acceptAndAddNode(token)) {
+                        throw new SimpleParserException(
+                                block.getToken().getType() + " cannot accept " + token.getToken().getType(),
+                                token.getToken().getIndex());
+                    }
+                } else {
+                    // no block, so add to answer
+                    answer.add(token);
+                }
             }
         }
 
         // replace nodes from the stack
         nodes.clear();
         nodes.addAll(answer);
-    }
-
-    private static void acceptOrAdd(List<SimpleNode> answer, Deque<Block> stack, SimpleNode token) {
-        Block block = stack.isEmpty() ? null : stack.peek();
-        if (block != null) {
-            if (!block.acceptAndAddNode(token)) {
-                throw new SimpleParserException(
-                        block.getToken().getType() + " cannot accept " + token.getToken().getType(),
-                        token.getToken().getIndex());
-            }
-        } else {
-            // no block, so add to answer
-            answer.add(token);
-        }
     }
 
     /**
@@ -183,7 +179,9 @@ public abstract class BaseSimpleParser {
         Deque<SimpleNode> stack = new ArrayDeque<>();
 
         for (SimpleNode node : nodes) {
-            if (node instanceof UnaryExpression token) {
+            if (node instanceof UnaryExpression) {
+                UnaryExpression token = (UnaryExpression) node;
+
                 // remember the logical operator
                 String operator = token.getOperator().toString();
 

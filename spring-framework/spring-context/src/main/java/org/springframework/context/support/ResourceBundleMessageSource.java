@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,9 +31,8 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.BeanClassLoaderAware;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -77,9 +76,11 @@ import org.springframework.util.ClassUtils;
  */
 public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSource implements BeanClassLoaderAware {
 
-	private @Nullable ClassLoader bundleClassLoader;
+	@Nullable
+	private ClassLoader bundleClassLoader;
 
-	private @Nullable ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
+	@Nullable
+	private ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
 
 	/**
 	 * Cache to hold loaded ResourceBundles.
@@ -102,7 +103,8 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	private final Map<ResourceBundle, Map<String, Map<Locale, MessageFormat>>> cachedBundleMessageFormats =
 			new ConcurrentHashMap<>();
 
-	private volatile @Nullable MessageSourceControl control = new MessageSourceControl();
+	@Nullable
+	private volatile MessageSourceControl control = new MessageSourceControl();
 
 
 	public ResourceBundleMessageSource() {
@@ -127,7 +129,8 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * <p>Default is the containing BeanFactory's bean ClassLoader.
 	 * @see #setBundleClassLoader
 	 */
-	protected @Nullable ClassLoader getBundleClassLoader() {
+	@Nullable
+	protected ClassLoader getBundleClassLoader() {
 		return (this.bundleClassLoader != null ? this.bundleClassLoader : this.beanClassLoader);
 	}
 
@@ -142,7 +145,7 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * returning the value found in the bundle as-is (without MessageFormat parsing).
 	 */
 	@Override
-	protected @Nullable String resolveCodeWithoutArguments(String code, Locale locale) {
+	protected String resolveCodeWithoutArguments(String code, Locale locale) {
 		Set<String> basenames = getBasenameSet();
 		for (String basename : basenames) {
 			ResourceBundle bundle = getResourceBundle(basename, locale);
@@ -161,7 +164,8 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * using a cached MessageFormat instance per message code.
 	 */
 	@Override
-	protected @Nullable MessageFormat resolveCode(String code, Locale locale) {
+	@Nullable
+	protected MessageFormat resolveCode(String code, Locale locale) {
 		Set<String> basenames = getBasenameSet();
 		for (String basename : basenames) {
 			ResourceBundle bundle = getResourceBundle(basename, locale);
@@ -184,7 +188,8 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * @return the resulting ResourceBundle, or {@code null} if none
 	 * found for the given basename and Locale
 	 */
-	protected @Nullable ResourceBundle getResourceBundle(String basename, Locale locale) {
+	@Nullable
+	protected ResourceBundle getResourceBundle(String basename, Locale locale) {
 		if (getCacheMillis() >= 0) {
 			// Fresh ResourceBundle.getBundle call in order to let ResourceBundle
 			// do its native caching, at the expense of more extensive lookup steps.
@@ -237,12 +242,12 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 				return ResourceBundle.getBundle(basename, locale, classLoader, control);
 			}
 			catch (UnsupportedOperationException ex) {
-				// Probably in a Java Module System environment on JDK 9+
+				// Probably in a Jigsaw environment on JDK 9+
 				this.control = null;
 				String encoding = getDefaultEncoding();
 				if (encoding != null && logger.isInfoEnabled()) {
 					logger.info("ResourceBundleMessageSource is configured to read resources with encoding '" +
-							encoding + "' but ResourceBundle.Control is not supported in current system environment: " +
+							encoding + "' but ResourceBundle.Control not supported in current system environment: " +
 							ex.getMessage() + " - falling back to plain ResourceBundle.getBundle retrieval with the " +
 							"platform default encoding. Consider setting the 'defaultEncoding' property to 'null' " +
 							"for participating in the platform default and therefore avoiding this log message.");
@@ -305,7 +310,8 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * defined for the given code
 	 * @throws MissingResourceException if thrown by the ResourceBundle
 	 */
-	protected @Nullable MessageFormat getMessageFormat(ResourceBundle bundle, String code, Locale locale)
+	@Nullable
+	protected MessageFormat getMessageFormat(ResourceBundle bundle, String code, Locale locale)
 			throws MissingResourceException {
 
 		Map<String, Map<Locale, MessageFormat>> codeMap = this.cachedBundleMessageFormats.get(bundle);
@@ -350,7 +356,8 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	 * @see ResourceBundle#getString(String)
 	 * @see ResourceBundle#containsKey(String)
 	 */
-	protected @Nullable String getStringOrNull(ResourceBundle bundle, String key) {
+	@Nullable
+	protected String getStringOrNull(ResourceBundle bundle, String key) {
 		if (bundle.containsKey(key)) {
 			try {
 				return bundle.getString(key);
@@ -380,7 +387,8 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 	private class MessageSourceControl extends ResourceBundle.Control {
 
 		@Override
-		public @Nullable ResourceBundle newBundle(String baseName, Locale locale, String format, ClassLoader loader, boolean reload)
+		@Nullable
+		public ResourceBundle newBundle(String baseName, Locale locale, String format, ClassLoader loader, boolean reload)
 				throws IllegalAccessException, InstantiationException, IOException {
 
 			// Special handling of default encoding
@@ -427,7 +435,8 @@ public class ResourceBundleMessageSource extends AbstractResourceBasedMessageSou
 		}
 
 		@Override
-		public @Nullable Locale getFallbackLocale(String baseName, Locale locale) {
+		@Nullable
+		public Locale getFallbackLocale(String baseName, Locale locale) {
 			Locale defaultLocale = getDefaultLocale();
 			return (defaultLocale != null && !defaultLocale.equals(locale) ? defaultLocale : null);
 		}

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -134,8 +131,6 @@ implements
 
 
 
-
-
                 case SQLITE:
                     ctx.visit(function(N_RTRIM, getDataType(), string, characters));
                     break;
@@ -167,29 +162,51 @@ implements
     // -------------------------------------------------------------------------
 
     @Override
-    public final Field<String> $arg1() {
+    public final Field<String> $string() {
         return string;
     }
 
     @Override
-    public final Field<String> $arg2() {
+    public final Field<String> $characters() {
         return characters;
     }
 
     @Override
-    public final QOM.Rtrim $arg1(Field<String> newValue) {
-        return $constructor().apply(newValue, $arg2());
+    public final QOM.Rtrim $string(Field<String> newValue) {
+        return $constructor().apply(newValue, $characters());
     }
 
     @Override
-    public final QOM.Rtrim $arg2(Field<String> newValue) {
-        return $constructor().apply($arg1(), newValue);
+    public final QOM.Rtrim $characters(Field<String> newValue) {
+        return $constructor().apply($string(), newValue);
     }
 
-    @Override
     public final Function2<? super Field<String>, ? super Field<String>, ? extends QOM.Rtrim> $constructor() {
         return (a1, a2) -> new Rtrim(a1, a2);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // -------------------------------------------------------------------------
     // XXX: The Object API
@@ -197,7 +214,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.Rtrim o) {
+        if (that instanceof QOM.Rtrim) { QOM.Rtrim o = (QOM.Rtrim) that;
             return
                 StringUtils.equals($string(), o.$string()) &&
                 StringUtils.equals($characters(), o.$characters())

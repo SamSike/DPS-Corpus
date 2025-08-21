@@ -54,7 +54,7 @@ abstract class AbstractInfinispanEmbeddedClusteredTest {
                         logger.debug("Node {} is shutting down", id);
                         results.add(id);
                     } catch (Exception e) {
-                        logger.warn("{}", e.getMessage(), e);
+                        logger.warn("", e);
                     } finally {
                         latch.countDown();
                     }

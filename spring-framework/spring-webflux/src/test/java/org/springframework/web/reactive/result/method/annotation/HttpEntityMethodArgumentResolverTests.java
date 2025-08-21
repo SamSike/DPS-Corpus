@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,14 +53,14 @@ import static org.springframework.http.MediaType.TEXT_PLAIN;
 import static org.springframework.web.testfixture.http.server.reactive.MockServerHttpRequest.post;
 
 /**
- * Tests for {@link HttpEntityMethodArgumentResolver}.When adding a test also
+ * Unit tests for {@link HttpEntityMethodArgumentResolver}.When adding a test also
  * consider whether the logic under test is in a parent class, then see:
  * {@link MessageReaderArgumentResolverTests}.
  *
  * @author Rossen Stoyanchev
  * @author Sebastien Deleuze
  */
-class HttpEntityMethodArgumentResolverTests {
+public class HttpEntityMethodArgumentResolverTests {
 
 	private final HttpEntityMethodArgumentResolver resolver = createResolver();
 
@@ -75,7 +75,7 @@ class HttpEntityMethodArgumentResolverTests {
 
 
 	@Test
-	void supports() {
+	public void supports() throws Exception {
 		testSupports(this.testMethod.arg(httpEntityType(String.class)));
 		testSupports(this.testMethod.arg(httpEntityType(Mono.class, String.class)));
 		testSupports(this.testMethod.arg(httpEntityType(Single.class, String.class)));
@@ -92,7 +92,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void doesNotSupport() {
+	public void doesNotSupport() {
 		assertThat(this.resolver.supportsParameter(this.testMethod.arg(Mono.class, String.class))).isFalse();
 		assertThat(this.resolver.supportsParameter(this.testMethod.arg(String.class))).isFalse();
 		assertThatIllegalStateException().isThrownBy(() ->
@@ -101,7 +101,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void emptyBodyWithString() {
+	public void emptyBodyWithString() {
 		ResolvableType type = httpEntityType(String.class);
 		HttpEntity<Object> entity = resolveValueWithEmptyBody(type);
 
@@ -109,7 +109,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void emptyBodyWithMono() {
+	public void emptyBodyWithMono() {
 		ResolvableType type = httpEntityType(Mono.class, String.class);
 		HttpEntity<Mono<String>> entity = resolveValueWithEmptyBody(type);
 
@@ -117,7 +117,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void emptyBodyWithFlux() {
+	public void emptyBodyWithFlux() {
 		ResolvableType type = httpEntityType(Flux.class, String.class);
 		HttpEntity<Flux<String>> entity = resolveValueWithEmptyBody(type);
 
@@ -125,7 +125,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void emptyBodyWithSingle() {
+	public void emptyBodyWithSingle() {
 		ResolvableType type = httpEntityType(Single.class, String.class);
 		HttpEntity<Single<String>> entity = resolveValueWithEmptyBody(type);
 
@@ -136,7 +136,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void emptyBodyWithMaybe() {
+	public void emptyBodyWithMaybe() {
 		ResolvableType type = httpEntityType(Maybe.class, String.class);
 		HttpEntity<Maybe<String>> entity = resolveValueWithEmptyBody(type);
 
@@ -147,7 +147,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void emptyBodyWithObservable() {
+	public void emptyBodyWithObservable() {
 		ResolvableType type = httpEntityType(Observable.class, String.class);
 		HttpEntity<Observable<String>> entity = resolveValueWithEmptyBody(type);
 
@@ -158,7 +158,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void emptyBodyWithFlowable() {
+	public void emptyBodyWithFlowable() {
 		ResolvableType type = httpEntityType(Flowable.class, String.class);
 		HttpEntity<Flowable<String>> entity = resolveValueWithEmptyBody(type);
 
@@ -169,7 +169,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void emptyBodyWithCompletableFuture() {
+	public void emptyBodyWithCompletableFuture() {
 		ResolvableType type = httpEntityType(CompletableFuture.class, String.class);
 		HttpEntity<CompletableFuture<String>> entity = resolveValueWithEmptyBody(type);
 
@@ -180,7 +180,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void httpEntityWithStringBody() {
+	public void httpEntityWithStringBody() {
 		ServerWebExchange exchange = postExchange("line1");
 		ResolvableType type = httpEntityType(String.class);
 		HttpEntity<String> httpEntity = resolveValue(exchange, type);
@@ -190,7 +190,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void httpEntityWithMonoBody() {
+	public void httpEntityWithMonoBody() {
 		ServerWebExchange exchange = postExchange("line1");
 		ResolvableType type = httpEntityType(Mono.class, String.class);
 		HttpEntity<Mono<String>> httpEntity = resolveValue(exchange, type);
@@ -200,7 +200,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void httpEntityWithSingleBody() {
+	public void httpEntityWithSingleBody() {
 		ServerWebExchange exchange = postExchange("line1");
 		ResolvableType type = httpEntityType(Single.class, String.class);
 		HttpEntity<Single<String>> httpEntity = resolveValue(exchange, type);
@@ -210,7 +210,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void httpEntityWithMaybeBody() {
+	public void httpEntityWithMaybeBody() {
 		ServerWebExchange exchange = postExchange("line1");
 		ResolvableType type = httpEntityType(Maybe.class, String.class);
 		HttpEntity<Maybe<String>> httpEntity = resolveValue(exchange, type);
@@ -220,7 +220,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void httpEntityWithCompletableFutureBody() throws Exception {
+	public void httpEntityWithCompletableFutureBody() throws Exception {
 		ServerWebExchange exchange = postExchange("line1");
 		ResolvableType type = httpEntityType(CompletableFuture.class, String.class);
 		HttpEntity<CompletableFuture<String>> httpEntity = resolveValue(exchange, type);
@@ -230,7 +230,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void httpEntityWithFluxBody() {
+	public void httpEntityWithFluxBody() {
 		ServerWebExchange exchange = postExchange("line1\nline2\nline3\n");
 		ResolvableType type = httpEntityType(Flux.class, String.class);
 		HttpEntity<Flux<String>> httpEntity = resolveValue(exchange, type);
@@ -245,7 +245,7 @@ class HttpEntityMethodArgumentResolverTests {
 	}
 
 	@Test
-	void requestEntity() {
+	public void requestEntity() {
 		ServerWebExchange exchange = postExchange("line1");
 		ResolvableType type = forClassWithGenerics(RequestEntity.class, String.class);
 		RequestEntity<String> requestEntity = resolveValue(exchange, type);

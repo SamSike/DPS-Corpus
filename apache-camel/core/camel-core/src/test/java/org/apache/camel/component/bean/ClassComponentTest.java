@@ -33,10 +33,10 @@ public class ClassComponentTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("class:org.apache.camel.component.bean.MyFooBean").to("mock:result");
             }
         };

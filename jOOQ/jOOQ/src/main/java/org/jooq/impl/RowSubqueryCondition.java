@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -48,13 +48,11 @@ import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.notExists;
 import static org.jooq.impl.DSL.row;
 import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.QOM.Quantifier.ALL;
-import static org.jooq.impl.QOM.Quantifier.ANY;
-import static org.jooq.impl.SubqueryCharacteristics.PREDICAND;
+import static org.jooq.impl.Quantifier.ALL;
+import static org.jooq.impl.Quantifier.ANY;
 import static org.jooq.impl.Tools.embeddedFieldsRow;
 import static org.jooq.impl.Tools.fieldNames;
 import static org.jooq.impl.Tools.fieldsByName;
-import static org.jooq.impl.Tools.quantify;
 import static org.jooq.impl.Tools.visitSubquery;
 import static org.jooq.impl.Transformations.transformInConditionSubqueryWithLimitToDerivedTable;
 import static org.jooq.impl.Transformations.subqueryWithLimit;
@@ -74,7 +72,6 @@ import org.jooq.Row;
 import org.jooq.SQLDialect;
 import org.jooq.Select;
 import org.jooq.SelectOrderByStep;
-import org.jooq.impl.QOM.Quantifier;
 import org.jooq.impl.QOM.UNotYetImplemented;
 import org.jooq.impl.QOM.UTransient;
 import org.jooq.impl.Tools.BooleanDataKey;
@@ -84,8 +81,8 @@ import org.jooq.impl.Tools.BooleanDataKey;
  */
 final class RowSubqueryCondition extends AbstractCondition implements UNotYetImplemented {
     private static final Clause[]        CLAUSES                                    = { CONDITION, CONDITION_COMPARISON };
-    private static final Set<SQLDialect> NO_SUPPORT_NATIVE                          = SQLDialect.supportedBy(CUBRID, DERBY, DUCKDB, FIREBIRD);
-    private static final Set<SQLDialect> NO_SUPPORT_QUANTIFIED                      = SQLDialect.supportedBy(DERBY, DUCKDB, FIREBIRD, SQLITE);
+    private static final Set<SQLDialect> NO_SUPPORT_NATIVE                          = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD);
+    private static final Set<SQLDialect> NO_SUPPORT_QUANTIFIED                      = SQLDialect.supportedBy(DERBY, FIREBIRD, SQLITE);
     // See https://bugs.mysql.com/bug.php?id=103494
     private static final Set<SQLDialect> NO_SUPPORT_QUANTIFIED_OTHER_THAN_IN_NOT_IN = SQLDialect.supportedBy(MARIADB, MYSQL);
 
@@ -171,16 +168,11 @@ final class RowSubqueryCondition extends AbstractCondition implements UNotYetImp
 
         else if (NO_SUPPORT_NATIVE.contains(ctx.dialect()))
             return emulationUsingExists(ctx, left, right,
-                   comparator == GREATER
-                || comparator == GREATER_OR_EQUAL
-                || comparator == LESS
-                || comparator == LESS_OR_EQUAL
-                || comparator == IS_DISTINCT_FROM
-                || comparator == IS_NOT_DISTINCT_FROM
-                 ? comparator
-                 : EQUALS,
-                   comparator == NOT_IN
-                || comparator == NOT_EQUALS
+                comparator == GREATER
+             || comparator == GREATER_OR_EQUAL
+             || comparator == LESS
+             || comparator == LESS_OR_EQUAL ? comparator : EQUALS,
+                comparator == NOT_IN || comparator == NOT_EQUALS
             );
         else
             return new Native();
@@ -192,7 +184,7 @@ final class RowSubqueryCondition extends AbstractCondition implements UNotYetImp
     }
 
     private static final SelectOrderByStep<Record> emulatedSubselect(Context<?> ctx, Row row, Select<?> s, Comparator c) {
-        RenderContext render = ctx instanceof RenderContext r ? r : null;
+        RenderContext render = ctx instanceof RenderContext ? (RenderContext) ctx : null;
         Row l = embeddedFieldsRow(row);
         Name table = name(render == null ? "t" : render.nextAlias());
         Name[] names = fieldNames(l.size());
@@ -213,21 +205,18 @@ final class RowSubqueryCondition extends AbstractCondition implements UNotYetImp
             if ((comparator == IN || comparator == NOT_IN)
                     && right != null
                     && (s = subqueryWithLimit(right)) != null
-                    && Transformations.NO_SUPPORT_IN_LIMIT.contains(ctx.dialect())) {
-                ctx.visit(new RowSubqueryCondition(left, select(asterisk()).from(s.asTable("t")), comparator));
+                    && transformInConditionSubqueryWithLimitToDerivedTable(ctx.configuration())) {
+
+
+
             }
             else if ((comparator == EQUALS || comparator == NOT_EQUALS)
                     && rightQuantified != null
                     && (s = subqueryWithLimit(rightQuantified)) != null
-                    && Transformations.NO_SUPPORT_IN_LIMIT.contains(ctx.dialect())) {
-                ctx.visit(new RowSubqueryCondition(
-                    left,
-                    quantify(
-                        ((QuantifiedSelectImpl<?>) rightQuantified).quantifier,
-                        select(asterisk()).from(s.asTable("t"))
-                    ),
-                    comparator
-                ));
+                    && transformInConditionSubqueryWithLimitToDerivedTable(ctx.configuration())) {
+
+
+
             }
             else
                 accept0(ctx);
@@ -262,7 +251,7 @@ final class RowSubqueryCondition extends AbstractCondition implements UNotYetImp
                         boolean extraParentheses = false ;
 
                         ctx.sql(extraParentheses ? "((" : "(")
-                           .data(BooleanDataKey.DATA_ROW_VALUE_EXPRESSION_PREDICATE_SUBQUERY, true, c -> visitSubquery(c, right, PREDICAND, false))
+                           .data(BooleanDataKey.DATA_ROW_VALUE_EXPRESSION_PREDICATE_SUBQUERY, true, c -> visitSubquery(c, right, false, false, true, false))
                            .sql(extraParentheses ? "))" : ")");
                     }
 

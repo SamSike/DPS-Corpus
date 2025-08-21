@@ -4,16 +4,18 @@
 package org.jooq.meta.firebird.rdb.tables;
 
 
-import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.ForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
+import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+import org.jooq.meta.firebird.rdb.DefaultSchema;
 
 
 /**
@@ -40,7 +42,7 @@ public class Rdb$functionArguments extends TableImpl<Record> {
     /**
      * The column <code>RDB$FUNCTION_ARGUMENTS.RDB$FUNCTION_NAME</code>.
      */
-    public final TableField<Record, String> RDB$FUNCTION_NAME = createField(DSL.name("RDB$FUNCTION_NAME"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$FUNCTION_NAME = createField(DSL.name("RDB$FUNCTION_NAME"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$FUNCTION_ARGUMENTS.RDB$ARGUMENT_POSITION</code>.
@@ -90,17 +92,17 @@ public class Rdb$functionArguments extends TableImpl<Record> {
     /**
      * The column <code>RDB$FUNCTION_ARGUMENTS.RDB$PACKAGE_NAME</code>.
      */
-    public final TableField<Record, String> RDB$PACKAGE_NAME = createField(DSL.name("RDB$PACKAGE_NAME"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$PACKAGE_NAME = createField(DSL.name("RDB$PACKAGE_NAME"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$FUNCTION_ARGUMENTS.RDB$ARGUMENT_NAME</code>.
      */
-    public final TableField<Record, String> RDB$ARGUMENT_NAME = createField(DSL.name("RDB$ARGUMENT_NAME"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$ARGUMENT_NAME = createField(DSL.name("RDB$ARGUMENT_NAME"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$FUNCTION_ARGUMENTS.RDB$FIELD_SOURCE</code>.
      */
-    public final TableField<Record, String> RDB$FIELD_SOURCE = createField(DSL.name("RDB$FIELD_SOURCE"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$FIELD_SOURCE = createField(DSL.name("RDB$FIELD_SOURCE"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$FUNCTION_ARGUMENTS.RDB$DEFAULT_VALUE</code>.
@@ -130,12 +132,12 @@ public class Rdb$functionArguments extends TableImpl<Record> {
     /**
      * The column <code>RDB$FUNCTION_ARGUMENTS.RDB$FIELD_NAME</code>.
      */
-    public final TableField<Record, String> RDB$FIELD_NAME = createField(DSL.name("RDB$FIELD_NAME"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$FIELD_NAME = createField(DSL.name("RDB$FIELD_NAME"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$FUNCTION_ARGUMENTS.RDB$RELATION_NAME</code>.
      */
-    public final TableField<Record, String> RDB$RELATION_NAME = createField(DSL.name("RDB$RELATION_NAME"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$RELATION_NAME = createField(DSL.name("RDB$RELATION_NAME"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$FUNCTION_ARGUMENTS.RDB$SYSTEM_FLAG</code>.
@@ -148,11 +150,11 @@ public class Rdb$functionArguments extends TableImpl<Record> {
     public final TableField<Record, String> RDB$DESCRIPTION = createField(DSL.name("RDB$DESCRIPTION"), SQLDataType.CLOB, this, "");
 
     private Rdb$functionArguments(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Rdb$functionArguments(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private Rdb$functionArguments(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -176,6 +178,15 @@ public class Rdb$functionArguments extends TableImpl<Record> {
         this(DSL.name("RDB$FUNCTION_ARGUMENTS"), null);
     }
 
+    public <O extends Record> Rdb$functionArguments(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, RDB$FUNCTION_ARGUMENTS);
+    }
+
+    @Override
+    public Schema getSchema() {
+        return aliased() ? null : DefaultSchema.DEFAULT_SCHEMA;
+    }
+
     @Override
     public Rdb$functionArguments as(String alias) {
         return new Rdb$functionArguments(DSL.name(alias), this);
@@ -186,8 +197,19 @@ public class Rdb$functionArguments extends TableImpl<Record> {
         return new Rdb$functionArguments(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public Rdb$functionArguments as(Table<?> alias) {
-        return new Rdb$functionArguments(alias.getQualifiedName(), this);
+    public Rdb$functionArguments rename(String name) {
+        return new Rdb$functionArguments(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public Rdb$functionArguments rename(Name name) {
+        return new Rdb$functionArguments(name, null);
     }
 }

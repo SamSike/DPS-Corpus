@@ -17,8 +17,6 @@
 package org.apache.camel.support.jndi;
 
 import java.util.Hashtable;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
@@ -33,7 +31,6 @@ import javax.naming.NamingException;
 public class CamelSingletonInitialContextFactory extends CamelInitialContextFactory {
 
     private static volatile Context context;
-    private final Lock lock = new ReentrantLock();
 
     /**
      * Gets or creates the context with the given environment.
@@ -45,15 +42,10 @@ public class CamelSingletonInitialContextFactory extends CamelInitialContextFact
      * @throws javax.naming.NamingException is thrown if creation failed.
      */
     @Override
-    public Context getInitialContext(Hashtable<?, ?> environment) throws NamingException {
-        lock.lock();
-        try {
-            if (context == null) {
-                context = super.getInitialContext(environment);
-            }
-            return context;
-        } finally {
-            lock.unlock();
+    public synchronized Context getInitialContext(Hashtable<?, ?> environment) throws NamingException {
+        if (context == null) {
+            context = super.getInitialContext(environment);
         }
+        return context;
     }
 }

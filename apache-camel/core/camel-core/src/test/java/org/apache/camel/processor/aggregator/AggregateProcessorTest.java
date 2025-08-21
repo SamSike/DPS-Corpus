@@ -37,12 +37,10 @@ import org.apache.camel.support.DefaultExchange;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
-import org.junit.jupiter.api.parallel.Isolated;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DisabledIfSystemProperty(named = "ci.env.name", matches = ".*", disabledReason = "Flaky on Github CI")
-@Isolated
+@DisabledIfSystemProperty(named = "ci.env.name", matches = "github.com", disabledReason = "Flaky on Github CI")
 public class AggregateProcessorTest extends ContextTestSupport {
 
     private ExecutorService executorService;
@@ -513,7 +511,7 @@ public class AggregateProcessorTest extends ContextTestSupport {
         };
 
         doTestAggregateLogFailedExchange(myHandler);
-        assertTrue(tested.get());
+        assertEquals(true, tested.get());
     }
 
     private void doTestAggregateLogFailedExchange(ExceptionHandler handler) throws Exception {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,13 @@ package org.springframework.beans.factory.config;
 
 import java.lang.reflect.Field;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.FactoryBeanNotInitializedException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
@@ -59,20 +58,27 @@ import org.springframework.util.StringUtils;
 public class FieldRetrievingFactoryBean
 		implements FactoryBean<Object>, BeanNameAware, BeanClassLoaderAware, InitializingBean {
 
-	private @Nullable Class<?> targetClass;
+	@Nullable
+	private Class<?> targetClass;
 
-	private @Nullable Object targetObject;
+	@Nullable
+	private Object targetObject;
 
-	private @Nullable String targetField;
+	@Nullable
+	private String targetField;
 
-	private @Nullable String staticField;
+	@Nullable
+	private String staticField;
 
-	private @Nullable String beanName;
+	@Nullable
+	private String beanName;
 
-	private @Nullable ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
+	@Nullable
+	private ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
 
 	// the field we will retrieve
-	private @Nullable Field fieldObject;
+	@Nullable
+	private Field fieldObject;
 
 
 	/**
@@ -89,7 +95,8 @@ public class FieldRetrievingFactoryBean
 	/**
 	 * Return the target class on which the field is defined.
 	 */
-	public @Nullable Class<?> getTargetClass() {
+	@Nullable
+	public Class<?> getTargetClass() {
 		return this.targetClass;
 	}
 
@@ -107,7 +114,8 @@ public class FieldRetrievingFactoryBean
 	/**
 	 * Return the target object on which the field is defined.
 	 */
-	public @Nullable Object getTargetObject() {
+	@Nullable
+	public Object getTargetObject() {
 		return this.targetObject;
 	}
 
@@ -125,13 +133,14 @@ public class FieldRetrievingFactoryBean
 	/**
 	 * Return the name of the field to be retrieved.
 	 */
-	public @Nullable String getTargetField() {
+	@Nullable
+	public String getTargetField() {
 		return this.targetField;
 	}
 
 	/**
 	 * Set a fully qualified static field name to retrieve,
-	 * for example, "example.MyExampleClass.MY_EXAMPLE_FIELD".
+	 * e.g. "example.MyExampleClass.MY_EXAMPLE_FIELD".
 	 * Convenient alternative to specifying targetClass and targetField.
 	 * @see #setTargetClass
 	 * @see #setTargetField
@@ -158,7 +167,6 @@ public class FieldRetrievingFactoryBean
 
 
 	@Override
-	@SuppressWarnings("NullAway") // Dataflow analysis limitation
 	public void afterPropertiesSet() throws ClassNotFoundException, NoSuchFieldException {
 		if (this.targetClass != null && this.targetObject != null) {
 			throw new IllegalArgumentException("Specify either targetClass or targetObject, not both");
@@ -181,7 +189,7 @@ public class FieldRetrievingFactoryBean
 			if (lastDotIndex == -1 || lastDotIndex == this.staticField.length()) {
 				throw new IllegalArgumentException(
 						"staticField must be a fully qualified class plus static field name: " +
-						"for example, 'example.MyExampleClass.MY_EXAMPLE_FIELD'");
+						"e.g. 'example.MyExampleClass.MY_EXAMPLE_FIELD'");
 			}
 			String className = this.staticField.substring(0, lastDotIndex);
 			String fieldName = this.staticField.substring(lastDotIndex + 1);
@@ -201,7 +209,8 @@ public class FieldRetrievingFactoryBean
 
 
 	@Override
-	public @Nullable Object getObject() throws IllegalAccessException {
+	@Nullable
+	public Object getObject() throws IllegalAccessException {
 		if (this.fieldObject == null) {
 			throw new FactoryBeanNotInitializedException();
 		}
@@ -217,7 +226,7 @@ public class FieldRetrievingFactoryBean
 	}
 
 	@Override
-	public @Nullable Class<?> getObjectType() {
+	public Class<?> getObjectType() {
 		return (this.fieldObject != null ? this.fieldObject.getType() : null);
 	}
 

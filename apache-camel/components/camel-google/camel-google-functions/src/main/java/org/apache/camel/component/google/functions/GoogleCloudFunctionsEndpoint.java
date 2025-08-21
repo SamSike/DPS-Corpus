@@ -21,15 +21,13 @@ import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.DefaultEndpoint;
-import org.apache.camel.util.ObjectHelper;
 
 /**
  * Manage and invoke Google Cloud Functions
- *
+ * 
  * Google Functions Endpoint definition represents a function within the GCP and contains configuration to customize the
  * behavior of Producer.
  */
@@ -37,7 +35,7 @@ import org.apache.camel.util.ObjectHelper;
              syntax = "google-functions:functionName", category = {
                      Category.CLOUD },
              producerOnly = true, headersClass = GoogleCloudFunctionsConstants.class)
-public class GoogleCloudFunctionsEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
+public class GoogleCloudFunctionsEndpoint extends DefaultEndpoint {
 
     @UriParam
     private GoogleCloudFunctionsConfiguration configuration;
@@ -92,18 +90,4 @@ public class GoogleCloudFunctionsEndpoint extends DefaultEndpoint implements End
         return cloudFunctionsClient;
     }
 
-    @Override
-    public String getServiceUrl() {
-        if (ObjectHelper.isNotEmpty(configuration.getFunctionName()) && ObjectHelper.isNotEmpty(
-                ObjectHelper.isNotEmpty(configuration.getProject()) && ObjectHelper.isNotEmpty(configuration.getLocation()))) {
-            return getServiceProtocol() + ":" + configuration.getProject() + ":" + configuration.getFunctionName() + ":"
-                   + configuration.getLocation();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "functions";
-    }
 }

@@ -31,13 +31,14 @@ public class MulticastMixOriginalMessageBodyAndEnrichedHeadersTest extends Conte
     public void testMulticastMixOriginalAndHeaders() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setAllowUseOriginalMessage(true);
 
                 onException(Exception.class).handled(true)
                         // we want to preserve the real original message body and
-                        // then include other headers that have been set later during routing
-                        .transform(simple("${originalBody}"))
+                        // then include other headers that have been
+                        // set later during routing
+                        .transform(simple("${exchangeProperty[CamelParentUnitOfWork].getOriginalInMessage().getBody()}"))
                         .to("mock:b");
 
                 from("direct:start").setBody(constant("Changed body")).setHeader("foo", constant("bar")).multicast()

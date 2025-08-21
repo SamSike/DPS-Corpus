@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,15 +42,12 @@ import static org.jooq.Name.Quoted.QUOTED;
 import static org.jooq.Name.Quoted.SYSTEM;
 import static org.jooq.Name.Quoted.UNQUOTED;
 // ...
-import static org.jooq.impl.Tools.EMPTY_NAME;
-import static org.jooq.impl.Tools.EMPTY_STRING;
 import static org.jooq.impl.Tools.stringLiteral;
-import static org.jooq.tools.StringUtils.defaultIfNull;
+
+import java.util.Arrays;
 
 import org.jooq.Context;
 import org.jooq.Name;
-import org.jooq.Scope;
-import org.jooq.conf.InterpreterQuotedNames;
 import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.SettingsTools;
 import org.jooq.tools.StringUtils;
@@ -92,31 +89,18 @@ final class UnqualifiedName extends AbstractName {
 
 
 
+        RenderQuotedNames q = SettingsTools.getRenderQuotedNames(ctx.settings());
+
         boolean previous = ctx.quote();
+        boolean current = quoted != SYSTEM && (
+             q == RenderQuotedNames.ALWAYS
+          || q == RenderQuotedNames.EXPLICIT_DEFAULT_QUOTED && (quoted == DEFAULT || quoted == QUOTED)
+          || q == RenderQuotedNames.EXPLICIT_DEFAULT_UNQUOTED && quoted == QUOTED
+        );
 
-        ctx.quote(quoted(ctx));
-        DefaultRenderContext.literal(ctx, defaultIfNull(name, ""));
+        ctx.quote(current);
+        ctx.literal(name);
         ctx.quote(previous);
-    }
-
-    final boolean quoted(Scope ctx) {
-        return quoted(SettingsTools.getRenderQuotedNames(ctx.settings()), quoted);
-    }
-
-    static final boolean quoted(RenderQuotedNames q, Quoted quoted) {
-        return quoted != SYSTEM && (
-              q == RenderQuotedNames.ALWAYS
-           || q == RenderQuotedNames.EXPLICIT_DEFAULT_QUOTED && (quoted == DEFAULT || quoted == QUOTED)
-           || q == RenderQuotedNames.EXPLICIT_DEFAULT_UNQUOTED && quoted == QUOTED
-        );
-    }
-
-    static final boolean quoted(InterpreterQuotedNames q, Quoted quoted) {
-        return quoted != SYSTEM && (
-              q == InterpreterQuotedNames.ALWAYS
-           || q == InterpreterQuotedNames.EXPLICIT_DEFAULT_QUOTED && (quoted == DEFAULT || quoted == QUOTED)
-           || q == InterpreterQuotedNames.EXPLICIT_DEFAULT_UNQUOTED && quoted == QUOTED
-        );
     }
 
     @Override
@@ -171,12 +155,12 @@ final class UnqualifiedName extends AbstractName {
 
     @Override
     public final String[] getName() {
-        return empty() ? EMPTY_STRING : new String[] { name };
+        return new String[] { name };
     }
 
     @Override
     public final Name[] parts() {
-        return empty() ? EMPTY_NAME : new Name[] { this };
+        return new Name[] { this };
     }
 
     // ------------------------------------------------------------------------
@@ -188,6 +172,9 @@ final class UnqualifiedName extends AbstractName {
 
         // [#13499] Since QualifiedName and UnqualifiedName can be equal, both
         //          need the same hashCode() computation
-        return 31 * 1 + StringUtils.defaultIfNull(name, "").hashCode();
+        if (name == null)
+            return 0;
+        else
+            return 31 * 1 + name.hashCode();
     }
 }

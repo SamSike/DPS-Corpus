@@ -1,7 +1,9 @@
 /**
  * Support package for annotation-driven bean configuration.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.beans.factory.annotation;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

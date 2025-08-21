@@ -35,7 +35,7 @@ public class PipelineTest extends ContextTestSupport {
      */
     private static final class InToOut implements Processor {
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             exchange.getMessage().copyFrom(exchange.getIn());
             Integer counter = exchange.getIn().getHeader("copy-counter", Integer.class);
             if (counter == null) {
@@ -66,7 +66,7 @@ public class PipelineTest extends ContextTestSupport {
     }
 
     @Test
-    public void testResultsReturned() {
+    public void testResultsReturned() throws Exception {
         Exchange exchange = template.request("direct:b", new Processor() {
             public void process(Exchange exchange) {
                 exchange.getIn().setBody("Hello World");

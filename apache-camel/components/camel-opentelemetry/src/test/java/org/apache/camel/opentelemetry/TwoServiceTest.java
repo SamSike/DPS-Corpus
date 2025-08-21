@@ -16,7 +16,6 @@
  */
 package org.apache.camel.opentelemetry;
 
-import io.opentelemetry.api.trace.SpanKind;
 import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
@@ -26,13 +25,7 @@ class TwoServiceTest extends CamelOpenTelemetryTestSupport {
     private static SpanTestData[] testdata = {
             new SpanTestData().setLabel("ServiceB server").setUri("direct://ServiceB").setOperation("ServiceB")
                     .setParentId(1),
-            new SpanTestData().setLabel("ServiceB server").setUri("direct://ServiceB").setOperation("ServiceB")
-                    .setParentId(2)
-                    .setKind(SpanKind.CLIENT),
             new SpanTestData().setLabel("ServiceA server").setUri("direct://ServiceA").setOperation("ServiceA")
-                    .setParentId(3),
-            new SpanTestData().setLabel("ServiceA server").setUri("direct://ServiceA").setOperation("ServiceA")
-                    .setKind(SpanKind.CLIENT)
     };
 
     TwoServiceTest() {

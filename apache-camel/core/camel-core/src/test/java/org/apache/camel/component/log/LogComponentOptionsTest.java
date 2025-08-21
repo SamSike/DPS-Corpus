@@ -17,7 +17,7 @@
 package org.apache.camel.component.log;
 
 import org.apache.camel.ContextTestSupport;
-import org.apache.camel.support.PluginHelper;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.support.PropertyBindingSupport;
 import org.apache.camel.support.processor.DefaultExchangeFormatter;
 import org.junit.jupiter.api.Test;
@@ -32,10 +32,10 @@ public class LogComponentOptionsTest extends ContextTestSupport {
     }
 
     @Test
-    public void testFastLogComponentOptions() {
+    public void testFastLogComponentOptions() throws Exception {
         context.start();
 
-        long before = PluginHelper.getBeanIntrospection(context).getInvokedCounter();
+        long before = context.adapt(ExtendedCamelContext.class).getBeanIntrospection().getInvokedCounter();
 
         DefaultExchangeFormatter myFormatter = new DefaultExchangeFormatter();
 
@@ -48,16 +48,16 @@ public class LogComponentOptionsTest extends ContextTestSupport {
 
         assertSame(myFormatter, log.getExchangeFormatter());
 
-        long after = PluginHelper.getBeanIntrospection(context).getInvokedCounter();
+        long after = context.adapt(ExtendedCamelContext.class).getBeanIntrospection().getInvokedCounter();
 
         assertEquals(before, after, "Should not use Java reflection");
     }
 
     @Test
-    public void testFastLogComponentNestedOptions() {
+    public void testFastLogComponentNestedOptions() throws Exception {
         context.start();
 
-        long before = PluginHelper.getBeanIntrospection(context).getInvokedCounter();
+        long before = context.adapt(ExtendedCamelContext.class).getBeanIntrospection().getInvokedCounter();
 
         DefaultExchangeFormatter myFormatter = new DefaultExchangeFormatter();
 
@@ -71,16 +71,16 @@ public class LogComponentOptionsTest extends ContextTestSupport {
 
         assertSame(myFormatter, log.getExchangeFormatter());
 
-        long after = PluginHelper.getBeanIntrospection(context).getInvokedCounter();
+        long after = context.adapt(ExtendedCamelContext.class).getBeanIntrospection().getInvokedCounter();
 
-        assertEquals(before, after, "Should not use Java reflection");
+        assertTrue(after > before, "Should use Java reflection");
     }
 
     @Test
-    public void testFastLogComponentOptionsLookupRegistry() {
+    public void testFastLogComponentOptionsLookupRegistry() throws Exception {
         context.start();
 
-        long before = PluginHelper.getBeanIntrospection(context).getInvokedCounter();
+        long before = context.adapt(ExtendedCamelContext.class).getBeanIntrospection().getInvokedCounter();
 
         DefaultExchangeFormatter myFormatter = new DefaultExchangeFormatter();
         context.getRegistry().bind("myGreatFormatter", myFormatter);
@@ -96,16 +96,16 @@ public class LogComponentOptionsTest extends ContextTestSupport {
 
         assertSame(myFormatter, log.getExchangeFormatter());
 
-        long after = PluginHelper.getBeanIntrospection(context).getInvokedCounter();
+        long after = context.adapt(ExtendedCamelContext.class).getBeanIntrospection().getInvokedCounter();
 
         assertEquals(before, after, "Should not use Java reflection");
     }
 
     @Test
-    public void testSlowLogComponentOptions() {
+    public void testSlowLogComponentOptions() throws Exception {
         context.start();
 
-        long before = PluginHelper.getBeanIntrospection(context).getInvokedCounter();
+        long before = context.adapt(ExtendedCamelContext.class).getBeanIntrospection().getInvokedCounter();
 
         DefaultExchangeFormatter myFormatter = new DefaultExchangeFormatter();
 
@@ -119,16 +119,16 @@ public class LogComponentOptionsTest extends ContextTestSupport {
         assertSame(myFormatter, log.getExchangeFormatter());
         assertTrue(myFormatter.isShowExchangeId());
 
-        long after = PluginHelper.getBeanIntrospection(context).getInvokedCounter();
+        long after = context.adapt(ExtendedCamelContext.class).getBeanIntrospection().getInvokedCounter();
 
         assertTrue(after > before, "Should use reflection");
     }
 
     @Test
-    public void testSlowLogComponentOptionsLookupRegistry() {
+    public void testSlowLogComponentOptionsLookupRegistry() throws Exception {
         context.start();
 
-        long before = PluginHelper.getBeanIntrospection(context).getInvokedCounter();
+        long before = context.adapt(ExtendedCamelContext.class).getBeanIntrospection().getInvokedCounter();
 
         DefaultExchangeFormatter myFormatter = new DefaultExchangeFormatter();
         context.getRegistry().bind("myGreatFormatter", myFormatter);
@@ -145,7 +145,7 @@ public class LogComponentOptionsTest extends ContextTestSupport {
         assertSame(myFormatter, log.getExchangeFormatter());
         assertTrue(myFormatter.isShowExchangeId());
 
-        long after = PluginHelper.getBeanIntrospection(context).getInvokedCounter();
+        long after = context.adapt(ExtendedCamelContext.class).getBeanIntrospection().getInvokedCounter();
 
         assertTrue(after > before, "Should use reflection");
     }

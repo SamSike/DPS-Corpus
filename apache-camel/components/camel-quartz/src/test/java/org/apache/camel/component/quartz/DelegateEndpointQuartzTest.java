@@ -78,9 +78,7 @@ public class DelegateEndpointQuartzTest extends CamelTestSupport {
                 childUri = childUri + "?" + URISupport.createQueryString(parameters);
             }
             // need to clean the parameters to avoid default component verify parameter complain
-            if (parameters != null) {
-                parameters.clear();
-            }
+            parameters.clear();
             Endpoint childEndpoint = context.getEndpoint(childUri);
             return new MyEndpoint(uri, childEndpoint);
         }

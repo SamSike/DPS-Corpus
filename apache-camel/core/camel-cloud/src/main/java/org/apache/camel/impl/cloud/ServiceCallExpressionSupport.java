@@ -22,10 +22,6 @@ import org.apache.camel.cloud.ServiceCallConstants;
 import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.ExpressionAdapter;
 
-/**
- * @deprecated since 4.7
- */
-@Deprecated(since = "4.7")
 public abstract class ServiceCallExpressionSupport extends ExpressionAdapter {
     private String hostHeader;
     private String portHeader;

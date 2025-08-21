@@ -46,7 +46,7 @@ public class StatisticMaximum extends Statistic {
 
     @Override
     public String toString() {
-        return Long.toString(value.get());
+        return "" + value.get();
     }
 
     @Override

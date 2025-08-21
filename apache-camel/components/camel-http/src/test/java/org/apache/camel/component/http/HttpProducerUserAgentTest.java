@@ -16,13 +16,12 @@
  */
 package org.apache.camel.component.http;
 
-import java.nio.charset.StandardCharsets;
-
 import org.apache.camel.Exchange;
-import org.apache.hc.core5.http.HttpStatus;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
-import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,38 +35,40 @@ public class HttpProducerUserAgentTest extends BaseHttpTest {
 
     private String endpointUrl;
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+    public void setUp() throws Exception {
+        super.setUp();
+
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext())
-                .register("/agent", (request, response, context) -> {
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext())
+                .registerHandler("/agent", (request, response, context) -> {
                     String agent = request.getFirstHeader("User-Agent").getValue();
                     assertEquals("MyAgent", agent);
-                    response.setEntity(new StringEntity(agent, StandardCharsets.US_ASCII));
-                    response.setCode(HttpStatus.SC_OK);
+                    response.setEntity(new StringEntity(agent, "ASCII"));
+                    response.setStatusCode(HttpStatus.SC_OK);
                 }).create();
         localServer.start();
 
-        endpointUrl = "http://localhost:" + localServer.getLocalPort();
-    }
+        endpointUrl = "http://" + localServer.getInetAddress().getHostName() + ":" + localServer.getLocalPort();
 
-    @BeforeEach
-    void setupUserAgent() {
         HttpComponent http = context.getComponent("http", HttpComponent.class);
         http.setUserAgent("MyAgent");
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() throws Exception {
+    public void tearDown() throws Exception {
+        super.tearDown();
+
         if (localServer != null) {
             localServer.stop();
         }
     }
 
     @Test
-    public void testUserAgent() {
+    public void testUserAgent() throws Exception {
         Exchange out = template.request(endpointUrl + "/agent", exchange -> {
             exchange.getIn().setBody("Hello World");
         });

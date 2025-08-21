@@ -1,7 +1,9 @@
 /**
  * Configuration support for WebSocket messaging using higher level messaging protocols.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.messaging.simp.config;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -119,41 +116,11 @@ implements
 
 
 
-    private static final Set<SQLDialect> NO_SUPPORT        = SQLDialect.supportedBy(CLICKHOUSE, DERBY, DUCKDB, HSQLDB, IGNITE, MARIADB, MYSQL, SQLITE, TRINO);
-
-
-
-
-    private static final Set<SQLDialect> SUPPORT_INSERT    = SQLDialect.supportedBy(H2, MARIADB, MYSQL);
+    private static final Set<SQLDialect> NO_SUPPORT     = SQLDialect.supportedBy(DERBY, HSQLDB, IGNITE, MARIADB, MYSQL, SQLITE);
+    private static final Set<SQLDialect> SUPPORT_INSERT = SQLDialect.supportedBy(H2, MARIADB, MYSQL);
 
     @Override
     public final void accept(Context<?> ctx) {
-
-
-
-
-
-
-
-
-        accept0(ctx,
-            in, placing, startIndex, length,
-            DSL::length, (f1, f2) -> DSL.concat(f1, f2), DSL::substring, DSL::substring
-        );
-    }
-
-    static final <T> void accept0(
-        Context<?> ctx,
-        Field<T> in,
-        Field<T> placing,
-        Field<? extends Number> startIndex,
-        Field<? extends Number> length,
-        Function1<? super Field<T>, ? extends Field<? extends Number>> fLength,
-        Function2<? super Field<T>, ? super Field<T>, ? extends Field<T>> fConcat,
-        Function2<? super Field<T>, ? super Field<? extends Number>, ? extends Field<T>> fSubstring2,
-        Function3<? super Field<T>, ? super Field<? extends Number>, ? super Field<? extends Number>, ? extends Field<T>> fSubstring3
-    ) {
-
         Field<? extends Number> l = length;
 
 
@@ -162,61 +129,38 @@ implements
 
 
 
+
+
+
+
         if (l != null) {
-            if (SUPPORT_INSERT.contains(ctx.dialect())) {
-                ctx.visit(function(N_INSERT, in.getDataType(), in, startIndex, l, placing));
-            }
-            else if (
-
-
-
-                NO_SUPPORT.contains(ctx.dialect())
-            ) {
-
-                // [#16101] TODO: Use binaryConcat() if necessary
+            if (SUPPORT_INSERT.contains(ctx.dialect()))
+                ctx.visit(function(N_INSERT, getDataType(), in, startIndex, l, placing));
+            else if (NO_SUPPORT.contains(ctx.dialect()))
                 ctx.visit(
-                    fConcat.apply(
-                        fConcat.apply(
-                            fSubstring3.apply(in, inline(1), isub(startIndex, inline(1))),
-                            placing
-                        ),
-                        fSubstring2.apply(in, iadd(startIndex, l))
-                    )
+                    DSL.substring(in, inline(1), isub(startIndex, inline(1)))
+                       .concat(placing)
+                       .concat(DSL.substring(in, iadd(startIndex, l)))
                 );
-            }
-            else {
+            else
                 ctx.visit(N_OVERLAY).sql('(').visit(in).sql(' ')
                    .visit(K_PLACING).sql(' ').visit(placing).sql(' ')
                    .visit(K_FROM).sql(' ').visit(startIndex).sql(' ')
                    .visit(K_FOR).sql(' ').visit(l).sql(')');
-            }
         }
         else {
-            if (SUPPORT_INSERT.contains(ctx.dialect())) {
-                ctx.visit(function(N_INSERT, in.getDataType(), in, startIndex, fLength.apply(placing), placing));
-            }
-            else if (
-
-
-
-                NO_SUPPORT.contains(ctx.dialect())
-            ) {
-
+            if (SUPPORT_INSERT.contains(ctx.dialect()))
+                ctx.visit(function(N_INSERT, getDataType(), in, startIndex, DSL.length(placing), placing));
+            else if (NO_SUPPORT.contains(ctx.dialect()))
                 ctx.visit(
-                    fConcat.apply(
-                        fConcat.apply(
-                            fSubstring3.apply(in, inline(1), isub(startIndex, inline(1))),
-                            placing
-                        ),
-                        fSubstring2.apply(in, iadd(startIndex, fLength.apply(placing)))
-                    )
+                    DSL.substring(in, inline(1), isub(startIndex, inline(1)))
+                       .concat(placing)
+                       .concat(DSL.substring(in, iadd(startIndex, DSL.length(placing))))
                 );
-            }
-            else {
+            else
                 ctx.visit(N_OVERLAY).sql('(').visit(in).sql(' ')
                    .visit(K_PLACING).sql(' ').visit(placing).sql(' ')
                    .visit(K_FROM).sql(' ').visit(startIndex).sql(')');
-            }
         }
     }
 
@@ -242,49 +186,75 @@ implements
     // -------------------------------------------------------------------------
 
     @Override
-    public final Field<String> $arg1() {
+    public final Field<String> $in() {
         return in;
     }
 
     @Override
-    public final Field<String> $arg2() {
+    public final Field<String> $placing() {
         return placing;
     }
 
     @Override
-    public final Field<? extends Number> $arg3() {
+    public final Field<? extends Number> $startIndex() {
         return startIndex;
     }
 
     @Override
-    public final Field<? extends Number> $arg4() {
+    public final Field<? extends Number> $length() {
         return length;
     }
 
     @Override
-    public final QOM.Overlay $arg1(Field<String> newValue) {
-        return $constructor().apply(newValue, $arg2(), $arg3(), $arg4());
+    public final QOM.Overlay $in(Field<String> newValue) {
+        return $constructor().apply(newValue, $placing(), $startIndex(), $length());
     }
 
     @Override
-    public final QOM.Overlay $arg2(Field<String> newValue) {
-        return $constructor().apply($arg1(), newValue, $arg3(), $arg4());
+    public final QOM.Overlay $placing(Field<String> newValue) {
+        return $constructor().apply($in(), newValue, $startIndex(), $length());
     }
 
     @Override
-    public final QOM.Overlay $arg3(Field<? extends Number> newValue) {
-        return $constructor().apply($arg1(), $arg2(), newValue, $arg4());
+    public final QOM.Overlay $startIndex(Field<? extends Number> newValue) {
+        return $constructor().apply($in(), $placing(), newValue, $length());
     }
 
     @Override
-    public final QOM.Overlay $arg4(Field<? extends Number> newValue) {
-        return $constructor().apply($arg1(), $arg2(), $arg3(), newValue);
+    public final QOM.Overlay $length(Field<? extends Number> newValue) {
+        return $constructor().apply($in(), $placing(), $startIndex(), newValue);
     }
 
-    @Override
     public final Function4<? super Field<String>, ? super Field<String>, ? super Field<? extends Number>, ? super Field<? extends Number>, ? extends QOM.Overlay> $constructor() {
         return (a1, a2, a3, a4) -> new Overlay(a1, a2, a3, a4);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // -------------------------------------------------------------------------
     // XXX: The Object API
@@ -292,7 +262,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.Overlay o) {
+        if (that instanceof QOM.Overlay) { QOM.Overlay o = (QOM.Overlay) that;
             return
                 StringUtils.equals($in(), o.$in()) &&
                 StringUtils.equals($placing(), o.$placing()) &&

@@ -19,6 +19,7 @@ package org.apache.camel.component.azure.storage.queue.client;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.azure.core.http.rest.Response;
 import com.azure.core.util.Context;
@@ -62,11 +63,11 @@ public class QueueClientWrapper {
 
     public List<QueueMessageItem> receiveMessages(Integer maxMessages, Duration visibilityTimeout, Duration timeout) {
         return client.receiveMessages(maxMessages, visibilityTimeout, timeout, Context.NONE).stream()
-                .toList();
+                .collect(Collectors.toList());
     }
 
     public List<PeekedMessageItem> peekMessages(Integer maxMessages, Duration timeout) {
-        return client.peekMessages(maxMessages, timeout, Context.NONE).stream().toList();
+        return client.peekMessages(maxMessages, timeout, Context.NONE).stream().collect(Collectors.toList());
     }
 
     public Response<UpdateMessageResult> updateMessage(

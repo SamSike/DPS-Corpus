@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.jms.listener.SessionAwareMessageListener;
 import org.springframework.jms.support.JmsHeaderMapper;
@@ -40,6 +39,7 @@ import org.springframework.jms.support.converter.SimpleMessageConverter;
 import org.springframework.jms.support.converter.SmartMessageConverter;
 import org.springframework.jms.support.destination.DestinationResolver;
 import org.springframework.jms.support.destination.DynamicDestinationResolver;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.util.Assert;
 
@@ -59,15 +59,18 @@ public abstract class AbstractAdaptableMessageListener
 	/** Logger available to subclasses. */
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	private @Nullable Object defaultResponseDestination;
+	@Nullable
+	private Object defaultResponseDestination;
 
 	private DestinationResolver destinationResolver = new DynamicDestinationResolver();
 
-	private @Nullable MessageConverter messageConverter = new SimpleMessageConverter();
+	@Nullable
+	private MessageConverter messageConverter = new SimpleMessageConverter();
 
 	private final MessagingMessageConverterAdapter messagingMessageConverter = new MessagingMessageConverterAdapter();
 
-	private @Nullable QosSettings responseQosSettings;
+	@Nullable
+	private QosSettings responseQosSettings;
 
 
 	/**
@@ -148,7 +151,8 @@ public abstract class AbstractAdaptableMessageListener
 	 * listener method arguments, and objects returned from listener
 	 * methods back to JMS messages.
 	 */
-	protected @Nullable MessageConverter getMessageConverter() {
+	@Nullable
+	protected MessageConverter getMessageConverter() {
 		return this.messageConverter;
 	}
 
@@ -186,7 +190,8 @@ public abstract class AbstractAdaptableMessageListener
 	 * or {@code null} if the defaults should be used.
 	 * @since 5.0
 	 */
-	protected @Nullable QosSettings getResponseQosSettings() {
+	@Nullable
+	protected QosSettings getResponseQosSettings() {
 		return this.responseQosSettings;
 	}
 
@@ -238,7 +243,7 @@ public abstract class AbstractAdaptableMessageListener
 	 * as an argument
 	 * @throws MessageConversionException if the message could not be extracted
 	 */
-	protected Object extractMessage(Message message) {
+	protected Object extractMessage(Message message)  {
 		try {
 			MessageConverter converter = getMessageConverter();
 			if (converter != null) {
@@ -298,8 +303,8 @@ public abstract class AbstractAdaptableMessageListener
 	 * @see #setMessageConverter
 	 */
 	protected Message buildMessage(Session session, Object result) throws JMSException {
-		Object content = preProcessResponse(result instanceof JmsResponse<?> jmsResponse ?
-				jmsResponse.getResponse() : result);
+		Object content = preProcessResponse(result instanceof JmsResponse
+				? ((JmsResponse<?>) result).getResponse() : result);
 
 		MessageConverter converter = getMessageConverter();
 		if (converter != null) {
@@ -311,11 +316,11 @@ public abstract class AbstractAdaptableMessageListener
 			}
 		}
 
-		if (!(content instanceof Message message)) {
+		if (!(content instanceof Message)) {
 			throw new MessageConversionException(
 					"No MessageConverter specified - cannot handle message [" + content + "]");
 		}
-		return message;
+		return (Message) content;
 	}
 
 	/**
@@ -350,7 +355,8 @@ public abstract class AbstractAdaptableMessageListener
 	private Destination getResponseDestination(Message request, Message response, Session session, Object result)
 			throws JMSException {
 
-		if (result instanceof JmsResponse<?> jmsResponse) {
+		if (result instanceof JmsResponse) {
+			JmsResponse<?> jmsResponse = (JmsResponse<?>) result;
 			Destination destination = jmsResponse.resolveDestination(getDestinationResolver(), session);
 			if (destination != null) {
 				return destination;
@@ -400,11 +406,13 @@ public abstract class AbstractAdaptableMessageListener
 	 * @see #setDefaultResponseTopicName
 	 * @see #setDestinationResolver
 	 */
-	protected @Nullable Destination resolveDefaultResponseDestination(Session session) throws JMSException {
-		if (this.defaultResponseDestination instanceof Destination destination) {
-			return destination;
+	@Nullable
+	protected Destination resolveDefaultResponseDestination(Session session) throws JMSException {
+		if (this.defaultResponseDestination instanceof Destination) {
+			return (Destination) this.defaultResponseDestination;
 		}
-		if (this.defaultResponseDestination instanceof DestinationNameHolder nameHolder) {
+		if (this.defaultResponseDestination instanceof DestinationNameHolder) {
+			DestinationNameHolder nameHolder = (DestinationNameHolder) this.defaultResponseDestination;
 			return getDestinationResolver().resolveDestinationName(session, nameHolder.name, nameHolder.isTopic);
 		}
 		return null;
@@ -464,11 +472,11 @@ public abstract class AbstractAdaptableMessageListener
 		@Override
 		protected Object extractPayload(Message message) throws JMSException {
 			Object payload = extractMessage(message);
-			if (message instanceof BytesMessage bytesMessage) {
+			if (message instanceof BytesMessage) {
 				try {
 					// In case the BytesMessage is going to be received as a user argument:
 					// reset it, otherwise it would appear empty to such processing code...
-					bytesMessage.reset();
+					((BytesMessage) message).reset();
 				}
 				catch (JMSException ex) {
 					// Continue since the BytesMessage typically won't be used any further.
@@ -486,8 +494,8 @@ public abstract class AbstractAdaptableMessageListener
 			if (converter == null) {
 				throw new IllegalStateException("No message converter, cannot handle '" + payload + "'");
 			}
-			if (converter instanceof SmartMessageConverter smartMessageConverter) {
-				return smartMessageConverter.toMessage(payload, session, conversionHint);
+			if (converter instanceof SmartMessageConverter) {
+				return ((SmartMessageConverter) converter).toMessage(payload, session, conversionHint);
 
 			}
 			return converter.toMessage(payload, session);
@@ -498,9 +506,11 @@ public abstract class AbstractAdaptableMessageListener
 
 			private final jakarta.jms.Message message;
 
-			private @Nullable Object payload;
+			@Nullable
+			private Object payload;
 
-			private @Nullable MessageHeaders headers;
+			@Nullable
+			private MessageHeaders headers;
 
 			public LazyResolutionMessage(jakarta.jms.Message message) {
 				this.message = message;
@@ -529,8 +539,8 @@ public abstract class AbstractAdaptableMessageListener
 			@SuppressWarnings("rawtypes")
 			private Object unwrapPayload() throws JMSException {
 				Object payload = extractPayload(this.message);
-				if (payload instanceof org.springframework.messaging.Message springMessage) {
-					return springMessage.getPayload();
+				if (payload instanceof org.springframework.messaging.Message) {
+					return ((org.springframework.messaging.Message) payload).getPayload();
 				}
 				return payload;
 			}
@@ -542,29 +552,6 @@ public abstract class AbstractAdaptableMessageListener
 				}
 				return this.headers;
 			}
-
-			@Override
-			public String toString() {
-				StringBuilder sb = new StringBuilder(getClass().getSimpleName());
-				if (this.payload == null) {
-					sb.append(" [rawMessage=").append(this.message);
-				}
-				else {
-					sb.append(" [payload=");
-					if (this.payload instanceof byte[] bytes) {
-						sb.append("byte[").append(bytes.length).append(']');
-					}
-					else {
-						sb.append(this.payload);
-					}
-				}
-				if (this.headers != null) {
-					sb.append(", headers=").append(this.headers);
-				}
-				sb.append(']');
-				return sb.toString();
-			}
-
 		}
 	}
 

@@ -32,11 +32,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SplitterWithCustomThreadPoolExecutorTest extends ContextTestSupport {
 
-    protected final ThreadPoolExecutor customThreadPoolExecutor
+    protected ThreadPoolExecutor customThreadPoolExecutor
             = new ThreadPoolExecutor(8, 16, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 
     @Test
-    public void testSplitterWithCustomThreadPoolExecutor() {
+    public void testSplitterWithCustomThreadPoolExecutor() throws Exception {
         ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) getSplitter().getExecutorServiceBean();
         if (threadPoolExecutor == null) {
             threadPoolExecutor = context.getRegistry().lookupByNameAndType(getSplitter().getExecutorService(),
@@ -68,8 +68,8 @@ public class SplitterWithCustomThreadPoolExecutorTest extends ContextTestSupport
         SplitDefinition result = null;
 
         for (ProcessorDefinition<?> processorType : outputs) {
-            if (processorType instanceof SplitDefinition splitDefinition) {
-                result = splitDefinition;
+            if (processorType instanceof SplitDefinition) {
+                result = (SplitDefinition) processorType;
             } else {
                 result = firstSplitterType(processorType.getOutputs());
             }

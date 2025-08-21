@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,9 @@ import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 import org.springframework.oxm.Marshaller;
 import org.springframework.oxm.Unmarshaller;
 import org.springframework.oxm.XmlMappingException;
@@ -52,9 +52,11 @@ import org.springframework.util.Assert;
  */
 public class MarshallingMessageConverter implements MessageConverter, InitializingBean {
 
-	private @Nullable Marshaller marshaller;
+	@Nullable
+	private Marshaller marshaller;
 
-	private @Nullable Unmarshaller unmarshaller;
+	@Nullable
+	private Unmarshaller unmarshaller;
 
 	private MessageType targetType = MessageType.BYTES;
 
@@ -62,7 +64,7 @@ public class MarshallingMessageConverter implements MessageConverter, Initializi
 	/**
 	 * Construct a new {@code MarshallingMessageConverter} with no {@link Marshaller}
 	 * or {@link Unmarshaller} set. The marshaller must be set after construction by invoking
-	 * {@link #setMarshaller(Marshaller)} and {@link #setUnmarshaller(Unmarshaller)}.
+	 * {@link #setMarshaller(Marshaller)} and {@link #setUnmarshaller(Unmarshaller)} .
 	 */
 	public MarshallingMessageConverter() {
 	}
@@ -79,7 +81,7 @@ public class MarshallingMessageConverter implements MessageConverter, Initializi
 	 */
 	public MarshallingMessageConverter(Marshaller marshaller) {
 		Assert.notNull(marshaller, "Marshaller must not be null");
-		if (!(marshaller instanceof Unmarshaller _unmarshaller)) {
+		if (!(marshaller instanceof Unmarshaller)) {
 			throw new IllegalArgumentException(
 					"Marshaller [" + marshaller + "] does not implement the Unmarshaller " +
 					"interface. Please set an Unmarshaller explicitly by using the " +
@@ -87,7 +89,7 @@ public class MarshallingMessageConverter implements MessageConverter, Initializi
 		}
 		else {
 			this.marshaller = marshaller;
-			this.unmarshaller = _unmarshaller;
+			this.unmarshaller = (Unmarshaller) marshaller;
 		}
 	}
 
@@ -153,11 +155,14 @@ public class MarshallingMessageConverter implements MessageConverter, Initializi
 	public Message toMessage(Object object, Session session) throws JMSException, MessageConversionException {
 		Assert.state(this.marshaller != null, "No Marshaller set");
 		try {
-			return switch (this.targetType) {
-				case TEXT -> marshalToTextMessage(object, session, this.marshaller);
-				case BYTES -> marshalToBytesMessage(object, session, this.marshaller);
-				default -> marshalToMessage(object, session, this.marshaller, this.targetType);
-			};
+			switch (this.targetType) {
+				case TEXT:
+					return marshalToTextMessage(object, session, this.marshaller);
+				case BYTES:
+					return marshalToBytesMessage(object, session, this.marshaller);
+				default:
+					return marshalToMessage(object, session, this.marshaller, this.targetType);
+			}
 		}
 		catch (XmlMappingException | IOException ex) {
 			throw new MessageConversionException("Could not marshal [" + object + "]", ex);
@@ -173,10 +178,12 @@ public class MarshallingMessageConverter implements MessageConverter, Initializi
 	public Object fromMessage(Message message) throws JMSException, MessageConversionException {
 		Assert.state(this.unmarshaller != null, "No Unmarshaller set");
 		try {
-			if (message instanceof TextMessage textMessage) {
+			if (message instanceof TextMessage) {
+				TextMessage textMessage = (TextMessage) message;
 				return unmarshalFromTextMessage(textMessage, this.unmarshaller);
 			}
-			else if (message instanceof BytesMessage bytesMessage) {
+			else if (message instanceof BytesMessage) {
+				BytesMessage bytesMessage = (BytesMessage) message;
 				return unmarshalFromBytesMessage(bytesMessage, this.unmarshaller);
 			}
 			else {

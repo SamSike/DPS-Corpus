@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Rossen Stoyanchev
  * @author Juergen Hoeller
  */
-class ServletServerHttpResponseTests {
+public class ServletServerHttpResponseTests {
 
 	private ServletServerHttpResponse response;
 
@@ -76,19 +76,6 @@ class ServletServerHttpResponseTests {
 	}
 
 	@Test
-	void getHeadersWithNoContentType() {
-		this.response = new ServletServerHttpResponse(this.mockResponse);
-		assertThat(this.response.getHeaders().get(HttpHeaders.CONTENT_TYPE)).isNull();
-	}
-
-	@Test
-	void getHeadersWithContentType() {
-		this.mockResponse.setContentType(MediaType.TEXT_PLAIN_VALUE);
-		this.response = new ServletServerHttpResponse(this.mockResponse);
-		assertThat(this.response.getHeaders().get(HttpHeaders.CONTENT_TYPE)).containsExactly(MediaType.TEXT_PLAIN_VALUE);
-	}
-
-	@Test
 	void preExistingHeadersFromHttpServletResponse() {
 		String headerName = "Access-Control-Allow-Origin";
 		String headerValue = "localhost:8080";
@@ -99,7 +86,7 @@ class ServletServerHttpResponseTests {
 
 		assertThat(this.response.getHeaders().getFirst(headerName)).isEqualTo(headerValue);
 		assertThat(this.response.getHeaders().get(headerName)).containsExactly(headerValue);
-		assertThat(this.response.getHeaders().containsHeader(headerName)).isTrue();
+		assertThat(this.response.getHeaders()).containsKey(headerName);
 		assertThat(this.response.getHeaders().getAccessControlAllowOrigin()).isEqualTo(headerValue);
 	}
 

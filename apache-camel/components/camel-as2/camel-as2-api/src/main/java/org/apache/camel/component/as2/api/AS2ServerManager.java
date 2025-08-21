@@ -16,8 +16,8 @@
  */
 package org.apache.camel.component.as2.api;
 
-import org.apache.hc.core5.http.io.HttpRequestHandler;
-import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpRequestHandler;
 
 /**
  * Receives EDI Messages over HTTP
@@ -51,6 +51,10 @@ public class AS2ServerManager {
 
     public void listen(String requestUriPattern, HttpRequestHandler handler) {
         as2ServerConnection.listen(requestUriPattern, handler);
+    }
+
+    public void stopListening(String requestUri) {
+        as2ServerConnection.stopListening(requestUri);
     }
 
     public void handleMDNResponse(

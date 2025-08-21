@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,14 +40,12 @@ package org.jooq.impl;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.stream.Collectors.joining;
-import static org.jooq.JSONFormat.NullFormat.ABSENT_ON_NULL;
 import static org.jooq.XMLFormat.RecordFormat.COLUMN_NAME_ELEMENTS;
 import static org.jooq.XMLFormat.RecordFormat.VALUE_ELEMENTS_WITH_FIELD_ATTRIBUTE;
 import static org.jooq.conf.SettingsTools.renderLocale;
 import static org.jooq.impl.DSL.insertInto;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.table;
-import static org.jooq.impl.Tools.recordDirtyTrackingPredicate;
 import static org.jooq.tools.StringUtils.abbreviate;
 import static org.jooq.tools.StringUtils.leftPad;
 import static org.jooq.tools.StringUtils.rightPad;
@@ -73,12 +71,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.jooq.CSVFormat;
 import org.jooq.ChartFormat;
 import org.jooq.ChartFormat.Display;
-import org.jooq.JSONFormat.NullFormat;
 import org.jooq.Configuration;
 import org.jooq.Constants;
 import org.jooq.Cursor;
 import org.jooq.DSLContext;
-import org.jooq.Data;
 import org.jooq.EnumType;
 import org.jooq.Field;
 import org.jooq.Formattable;
@@ -97,7 +93,6 @@ import org.jooq.TableField;
 import org.jooq.TableRecord;
 import org.jooq.XML;
 import org.jooq.XMLFormat;
-import org.jooq.conf.Redact;
 import org.jooq.exception.IOException;
 import org.jooq.tools.StringUtils;
 import org.jooq.tools.json.JSONValue;
@@ -166,11 +161,6 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
             int size = fields.size();
             final int[] decimalPlaces = new int[size];
             final int[] widths = new int[size];
-            ObjIntPredicate<Record> dirty = recordDirtyTrackingPredicate(this);
-
-
-
-
 
             for (int index = 0; index < size; index++) {
                 if (Number.class.isAssignableFrom(fields.field(index).getType())) {
@@ -181,7 +171,7 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
 
                     // Collect all decimal places for the column values
                     for (R record : buffer)
-                        decimalPlacesList.add(decimalPlaces(format0(record.get(index), dirty.test(record, index), true)));
+                        decimalPlacesList.add(decimalPlaces(format0(record.get(index), record.changed(index), true)));
 
                     // Find max
                     decimalPlaces[index] = Collections.max(decimalPlacesList);
@@ -191,10 +181,9 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
             // Get max column widths
             int colMaxWidth;
             for (int index = 0; index < size; index++) {
-                Field<?> field = fields.field(index);
 
                 // Is number column?
-                boolean isNumCol = Number.class.isAssignableFrom(field.getType());
+                boolean isNumCol = Number.class.isAssignableFrom(fields.field(index).getType());
 
                 colMaxWidth = isNumCol ? NUM_COL_MAX_WIDTH : format.maxColWidth();
 
@@ -202,17 +191,11 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                 List<Integer> widthList = new ArrayList<>(1 + buffer.size());
 
                 // Add column name width first
-                widthList.add(min(colMaxWidth, max(format.minColWidth(), fp.width(field.getName()))));
-
-
-
-
-
-
+                widthList.add(min(colMaxWidth, max(format.minColWidth(), fp.width(fields.field(index).getName()))));
 
                 // Add column values width
                 for (R record : buffer) {
-                    String value = format0(record.get(index), dirty.test(record, index), true);
+                    String value = format0(record.get(index), record.changed(index), true);
 
                     // Align number values before width is calculated
                     if (isNumCol)
@@ -244,11 +227,10 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                         writer.append(' ');
 
                 String padded;
-                Field<?> field = fields.field(index);
-                String name = field.getName();
+                String name = fields.field(index).getName();
                 int width = fp.width(name);
 
-                if (Number.class.isAssignableFrom(field.getType()))
+                if (Number.class.isAssignableFrom(fields.field(index).getType()))
                     padded = leftPad(name, width, widths[index]);
                 else
                     padded = rightPad(name, width, widths[index]);
@@ -295,23 +277,17 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                         else
                             writer.append(' ');
 
-                    Field<?> field = fields.field(index);
-                    String value;
-
-
-
-
-
-                        value = StringUtils.replace(
+                    String value =
+                        StringUtils.replace(
                             StringUtils.replace(
                                 StringUtils.replace(
-                                    format0(record.get(index), dirty.test(record, index), true), "\n", "{lf}"
+                                    format0(record.get(index), record.changed(index), true), "\n", "{lf}"
                                 ), "\r", "{cr}"
                             ), "\t", "{tab}"
                         );
 
                     String padded;
-                    if (Number.class.isAssignableFrom(field.getType()))
+                    if (Number.class.isAssignableFrom(fields.field(index).getType()))
                         padded = leftPad(alignNumberValue(decimalPlaces[index], value), widths[index]);
                     else
                         padded = rightPad(value, fp.width(value), widths[index]);
@@ -410,11 +386,6 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
     @Override
     public final void formatCSV(Writer writer, CSVFormat format) {
         try {
-
-
-
-
-
             if (format.header()) {
                 String sep1 = "";
                 for (Field<?> field : fields.fields.fields) {
@@ -434,12 +405,6 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                 int size = fields.size();
                 for (int index = 0; index < size; index++) {
                     writer.append(sep2);
-
-
-
-
-
-
                     writer.append(formatCSV0(record.getValue(index), format));
 
                     sep2 = format.delimiter();
@@ -466,8 +431,8 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
             return format.emptyString();
 
         // [#7802] Nested records should generate nested CSV data structures
-        String result = value instanceof Formattable f
-            ? f.formatCSV(format)
+        String result = value instanceof Formattable
+            ? ((Formattable) value).formatCSV(format)
             : format0(value, false, false);
 
         switch (format.quote()) {
@@ -525,7 +490,7 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                     if (format.format())
                         writer.append(format.newline()).append(format.indentString(3));
 
-                    if (field instanceof TableField<?, ?> f) {
+                    if (field instanceof TableField) { TableField<?, ?> f = (TableField<?, ?>) field;
                         Table<?> table = f.getTable();
 
                         if (table != null) {
@@ -563,20 +528,17 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                         writer.append(' ');
 
                     JSONValue.writeJSONString(field.getName(), writer);
+                    writer.append(',');
 
-                    if (!field.getDataType().getQualifiedName().empty()) {
-                        writer.append(',');
+                    if (format.format())
+                        writer.append(format.newline()).append(format.indentString(3));
 
-                        if (format.format())
-                            writer.append(format.newline()).append(format.indentString(3));
+                    writer.append("\"type\":");
 
-                        writer.append("\"type\":");
+                    if (format.format())
+                        writer.append(' ');
 
-                        if (format.format())
-                            writer.append(' ');
-
-                        JSONValue.writeJSONString(formatTypeName(field), writer);
-                    }
+                    JSONValue.writeJSONString(formatTypeName(field), writer);
 
                     if (format.format())
                         writer.append(format.newline()).append(format.indentString(2));
@@ -598,9 +560,6 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
             switch (format.recordFormat()) {
                 case ARRAY:
                     for (Record record : this) {
-                        if (record == null && format.arrayNulls() == ABSENT_ON_NULL)
-                            continue;
-
                         hasRecords = true;
                         writer.append(separator);
 
@@ -614,9 +573,6 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                     break;
                 case OBJECT:
                     for (Record record : this) {
-                        if (record == null && format.objectNulls() == ABSENT_ON_NULL)
-                            continue;
-
                         hasRecords = true;
                         writer.append(separator);
 
@@ -664,40 +620,39 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
     static final void formatJSON0(Object value, Writer writer, JSONFormat format) throws java.io.IOException {
 
         // [#2741] TODO: This logic will be externalised in new SPI
-        if (value instanceof byte[] a) {
+        if (value instanceof byte[]) { byte[] a = (byte[]) value;
             JSONValue.writeJSONString(Base64.getEncoder().encodeToString(a), writer);
         }
 
         // [#6563] Arrays can be serialised natively in JSON
-        else if (value instanceof Object[] array) {
+        else if (value instanceof Object[]) { Object[] array = (Object[]) value;
             writer.append('[');
 
-            boolean first = true;
-            for (Object o : array) {
-                if (o == null && format.arrayNulls() == ABSENT_ON_NULL)
-                    continue;
-
-                if (!first)
+            for (int i = 0; i < array.length; i++) {
+                if (i > 0)
                     writer.append(',');
 
-                formatJSON0(o, writer, format);
-                first = false;
+                formatJSON0(array[i], writer, format);
             }
 
             writer.append(']');
         }
 
         // [#7782] Nested records should generate nested JSON data structures
-        else if (value instanceof Formattable f)
+        else if (value instanceof Formattable) { Formattable f = (Formattable) value;
             f.formatJSON(writer, format);
+        }
 
-        // [#10744] TODO: Possibly parse and format JSON and JSONB content as well
-        else if (value instanceof JSON && !format.quoteNested())
+        else if (value instanceof JSON && !format.quoteNested()) {
             writer.write(((JSON) value).data());
-        else if (value instanceof JSONB && !format.quoteNested())
+        }
+        else if (value instanceof JSONB && !format.quoteNested()) {
             writer.write(((JSONB) value).data());
-        else
+        }
+
+        else {
             JSONValue.writeJSONString(value, writer);
+        }
     }
 
     static final void formatJSONMap0(
@@ -716,29 +671,10 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
         int size = fields.size();
         boolean wrapRecords = format.wrapSingleColumnRecords() || size > 1;
 
-
-
-
-
         if (wrapRecords)
             writer.append('{');
 
         for (int index = 0; index < size; index++) {
-            Object value;
-
-
-
-
-
-
-
-            {
-                value = record.get(index);
-
-                if (value == null && format.objectNulls() == ABSENT_ON_NULL)
-                    continue;
-            }
-
             writer.append(separator);
 
             if (format.format())
@@ -756,7 +692,7 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
             }
 
             int previous = format.globalIndent();
-            formatJSON0(value, writer, format.globalIndent(format.globalIndent() + format.indent() * (recordLevel + 1)));
+            formatJSON0(record.get(index), writer, format.globalIndent(format.globalIndent() + format.indent() * (recordLevel + 1)));
             format.globalIndent(previous);
 
             if (format.format() && format.wrapSingleColumnRecords() && size == 1)
@@ -788,29 +724,10 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
         int size = fields.size();
         boolean wrapRecords = format.wrapSingleColumnRecords() || size > 1;
 
-
-
-
-
         if (wrapRecords)
             writer.append('[');
 
         for (int index = 0; index < size; index++) {
-            Object value;
-
-
-
-
-
-
-
-            {
-                value = record.get(index);
-
-                if (value == null && format.arrayNulls() == ABSENT_ON_NULL)
-                    continue;
-            }
-
             writer.append(separator);
 
             if (format.format())
@@ -820,7 +737,7 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                     writer.append(' ');
 
             int previous = format.globalIndent();
-            formatJSON0(value, writer, format.globalIndent(format.globalIndent() + format.indent() * (recordLevel + 1)));
+            formatJSON0(record.get(index), writer, format.globalIndent(format.globalIndent() + format.indent() * (recordLevel + 1)));
             format.globalIndent(previous);
 
             if (format.format() && format.wrapSingleColumnRecords() && size == 1)
@@ -862,7 +779,7 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                 for (Field<?> field : fields.fields.fields) {
                     writer.append(newline).append(format.indentString(2)).append("<field");
 
-                    if (field instanceof TableField<?, ?> f) {
+                    if (field instanceof TableField) { TableField<?, ?> f = (TableField<?, ?>) field;
                         Table<?> table = f.getTable();
 
                         if (table != null) {
@@ -883,14 +800,9 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                     writer.append(" name=\"");
                     writer.append(escapeXML(field.getName()));
                     writer.append("\"");
-
-                    if (!field.getDataType().getQualifiedName().empty()) {
-                        writer.append(" type=\"");
-                        writer.append(escapeXML(formatTypeName(field)));
-                        writer.append("\"");
-                    }
-
-                    writer.append("/>");
+                    writer.append(" type=\"");
+                    writer.append(escapeXML(formatTypeName(field)));
+                    writer.append("\"/>");
                 }
 
                 writer.append(newline).append(format.indentString(1)).append("</fields>");
@@ -923,10 +835,6 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
     throws java.io.IOException {
         String newline = format.newline();
 
-
-
-
-
         writer.append("<record");
         if (format.xmlns()) {
             format = format.xmlns(false);
@@ -942,25 +850,17 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
 
         int size = fields.size();
         for (int index = 0; index < size; index++) {
-            Field<?> field = fields.field(index);
-            Object value;
-
-
-
-
-
-
-            value = record.get(index);
+            Object value = record.get(index);
 
             writer.append(newline).append(format.indentString(recordLevel + 1));
             String tag = format.recordFormat() == COLUMN_NAME_ELEMENTS
-                ? escapeXML(field.getName())
+                ? escapeXML(fields.field(index).getName())
                 : "value";
 
             writer.append("<" + tag);
             if (format.recordFormat() == VALUE_ELEMENTS_WITH_FIELD_ATTRIBUTE) {
                 writer.append(" field=\"");
-                writer.append(escapeXML(field.getName()));
+                writer.append(escapeXML(fields.field(index).getName()));
                 writer.append("\"");
             }
 
@@ -970,7 +870,7 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
             else {
                 writer.append(">");
 
-                if (value instanceof Formattable f) {
+                if (value instanceof Formattable) { Formattable f = (Formattable) value;
                     writer.append(newline).append(format.indentString(recordLevel + 2));
                     int previous = format.globalIndent();
                     f.formatXML(writer, format.globalIndent(format.globalIndent() + format.indent() * (recordLevel + 2)));
@@ -1192,8 +1092,8 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
         try {
             for (R record : this) {
                 if (table == null)
-                    if (record instanceof TableRecord<?> r)
-                        table = r.getTable();
+                    if (record instanceof TableRecord)
+                        table = ((TableRecord<?>) record).getTable();
                     else
                         table = table(name("UNKNOWN_TABLE"));
 
@@ -1211,12 +1111,6 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
     @Override
     public final void formatHTML(Writer writer) {
         try {
-
-
-
-
-
-
             writer.append("<table>");
             writer.append("<thead>");
             writer.append("<tr>");
@@ -1238,12 +1132,6 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                 int size = fields.size();
                 for (int index = 0; index < size; index++) {
                     writer.append("<td>");
-
-
-
-
-
-
                     writer.append(escapeXML(format0(record.getValue(index), false, true)));
                     writer.append("</td>");
                 }
@@ -1283,7 +1171,7 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                 for (Field<?> field : fields.fields.fields) {
                     Element eField = document.createElement("field");
 
-                    if (field instanceof TableField<?, ?> f) {
+                    if (field instanceof TableField) { TableField<?, ?> f = (TableField<?, ?>) field;
                         Table<?> table = f.getTable();
 
                         if (table != null) {
@@ -1298,10 +1186,7 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                     }
 
                     eField.setAttribute("name", field.getName());
-
-                    if (!field.getDataType().getQualifiedName().empty())
-                        eField.setAttribute("type", formatTypeName(field));
-
+                    eField.setAttribute("type", formatTypeName(field));
                     eFields.appendChild(eField);
                 }
 
@@ -1320,7 +1205,7 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                     Object value = record.get(index);
 
                     String tag = format.recordFormat() == COLUMN_NAME_ELEMENTS
-                        ? escapeXML(field.getName())
+                        ? escapeXML(fields.field(index).getName())
                         : "value";
 
                     Element eValue = document.createElement(tag);
@@ -1415,7 +1300,7 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
             for (Field<?> field : fields.fields.fields) {
                 AttributesImpl attrs = new AttributesImpl();
 
-                if (field instanceof TableField<?, ?> f) {
+                if (field instanceof TableField) { TableField<?, ?> f = (TableField<?, ?>) field;
                     Table<?> table = f.getTable();
 
                     if (table != null) {
@@ -1430,9 +1315,7 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                 }
 
                 attrs.addAttribute("", "", "name", "CDATA", field.getName());
-
-                if (!field.getDataType().getQualifiedName().empty())
-                    attrs.addAttribute("", "", "type", "CDATA", formatTypeName(field));
+                attrs.addAttribute("", "", "type", "CDATA", formatTypeName(field));
 
                 handler.startElement("", "", "field", attrs);
                 handler.endElement("", "", "field");
@@ -1451,7 +1334,7 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
                 Object value = record.get(index);
 
                 String tag = format.recordFormat() == COLUMN_NAME_ELEMENTS
-                    ? escapeXML(field.getName())
+                    ? escapeXML(fields.field(index).getName())
                     : "value";
 
                 AttributesImpl attrs = new AttributesImpl();
@@ -1487,43 +1370,40 @@ abstract class AbstractResult<R extends Record> extends AbstractFormattable impl
      * @param visual Whether the formatted output is to be consumed visually
      *            (HTML, TEXT) or by a machine (CSV, JSON, XML)
      */
-    static final String format0(Object value, boolean touched, boolean visual) {
+    static final String format0(Object value, boolean changed, boolean visual) {
 
         // [#2741] TODO: This logic will be externalised in new SPI
-        String formatted = touched && visual ? "*" : "";
+        String formatted = changed && visual ? "*" : "";
 
         if (value == null) {
             formatted += visual ? "{null}" : null;
         }
-        else if (value instanceof byte[] a) {
+        else if (value instanceof byte[]) { byte[] a = (byte[]) value;
             formatted += Base64.getEncoder().encodeToString(a);
         }
-        else if (value instanceof Object[] a) {
+        else if (value instanceof Object[]) { Object[] a = (Object[]) value;
             // [#6545] Nested arrays are handled recursively
             formatted += Arrays.stream(a).map(f -> format0(f, false, visual)).collect(joining(", ", "[", "]"));
         }
-        else if (value instanceof Data d) {
-            formatted += d.data();
-        }
-        else if (value instanceof EnumType e) {
+        else if (value instanceof EnumType) { EnumType e = (EnumType) value;
             formatted += e.getLiteral();
         }
-        else if (value instanceof List<?> l) {
+        else if (value instanceof List) { List<?> l = (List<?>) value;
             formatted += l.stream().map(f -> format0(f, false, visual)).collect(joining(", ", "[", "]"));
         }
-        else if (value instanceof Record r) {
+        else if (value instanceof Record) { Record r = (Record) value;
             formatted += Arrays
                 .stream(r.intoArray())
                 .map(f -> format0(f, false, visual))
                 .collect(joining(", ", "(", ")"));
         }
         // [#6080] Support formatting of nested ROWs
-        else if (value instanceof Param<?> p) {
+        else if (value instanceof Param) { Param<?> p = (Param<?>) value;
             formatted += format0(p.getValue(), false, visual);
         }
 
         // [#5238] Oracle DATE is really a TIMESTAMP(0)...
-        else if (value instanceof Date d) {
+        else if (value instanceof Date) { Date d = (Date) value;
             String date = value.toString();
 
             if (Date.valueOf(date).equals(value))

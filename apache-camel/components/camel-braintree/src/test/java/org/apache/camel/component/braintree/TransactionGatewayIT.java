@@ -31,6 +31,7 @@ import com.braintreegateway.TransactionRequest;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.braintree.internal.BraintreeApiCollection;
 import org.apache.camel.component.braintree.internal.TransactionGatewayApiMethod;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -65,7 +66,8 @@ public class TransactionGatewayIT extends AbstractBraintreeTestSupport {
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() {
         if (this.gateway != null) {
             for (String token : this.transactionIds) {
                 // TODO: cleanup
@@ -393,7 +395,7 @@ public class TransactionGatewayIT extends AbstractBraintreeTestSupport {
         final com.braintreegateway.Result result = requestBody("direct://CANCELRELEASE", null);
 
         assertNotNull(result, "cancelRelease result");
-        LOG.debug("cancelRelease: {}", result);
+        LOG.debug("cancelRelease: " + result);
     }
 
     // TODO provide parameter values for credit
@@ -404,7 +406,7 @@ public class TransactionGatewayIT extends AbstractBraintreeTestSupport {
         final com.braintreegateway.Result result = requestBody("direct://CREDIT", null);
 
         assertNotNull(result, "credit result");
-        LOG.debug("credit: {}", result);
+        LOG.debug("credit: " + result);
     }
 
     // TODO provide parameter values for holdInEscrow
@@ -415,7 +417,7 @@ public class TransactionGatewayIT extends AbstractBraintreeTestSupport {
         final com.braintreegateway.Result result = requestBody("direct://HOLDINESCROW", null);
 
         assertNotNull(result, "holdInEscrow result");
-        LOG.debug("holdInEscrow: {}", result);
+        LOG.debug("holdInEscrow: " + result);
     }
 
     // TODO provide parameter values for releaseFromEscrow
@@ -426,7 +428,7 @@ public class TransactionGatewayIT extends AbstractBraintreeTestSupport {
         final com.braintreegateway.Result result = requestBody("direct://RELEASEFROMESCROW", null);
 
         assertNotNull(result, "releaseFromEscrow result");
-        LOG.debug("releaseFromEscrow: {}", result);
+        LOG.debug("releaseFromEscrow: " + result);
     }
 
     // TODO provide parameter values for search
@@ -437,7 +439,7 @@ public class TransactionGatewayIT extends AbstractBraintreeTestSupport {
         final com.braintreegateway.ResourceCollection result = requestBody("direct://SEARCH", null);
 
         assertNotNull(result, "search result");
-        LOG.debug("search: {}", result);
+        LOG.debug("search: " + result);
     }
 
     // TODO provide parameter values for submitForPartialSettlement
@@ -453,7 +455,7 @@ public class TransactionGatewayIT extends AbstractBraintreeTestSupport {
         final com.braintreegateway.Result result = requestBodyAndHeaders("direct://SUBMITFORPARTIALSETTLEMENT", null, headers);
 
         assertNotNull(result, "submitForPartialSettlement result");
-        LOG.debug("submitForPartialSettlement: {}", result);
+        LOG.debug("submitForPartialSettlement: " + result);
     }
 
     // TODO provide parameter values for voidTransaction
@@ -464,7 +466,7 @@ public class TransactionGatewayIT extends AbstractBraintreeTestSupport {
         final com.braintreegateway.Result result = requestBody("direct://VOIDTRANSACTION", null);
 
         assertNotNull(result, "voidTransaction result");
-        LOG.debug("voidTransaction: {}", result);
+        LOG.debug("voidTransaction: " + result);
     }
 
     // *************************************************************************

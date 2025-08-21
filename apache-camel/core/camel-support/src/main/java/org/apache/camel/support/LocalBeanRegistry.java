@@ -16,9 +16,7 @@
  */
 package org.apache.camel.support;
 
-import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,13 +27,7 @@ import java.util.Set;
  */
 public final class LocalBeanRegistry extends SupplierRegistry {
 
-    private final Map<String, String> destroyMethods = new HashMap<>();
-
     public LocalBeanRegistry() {
-    }
-
-    public void registerDestroyMethod(String id, String method) {
-        destroyMethods.put(id, method);
     }
 
     /**
@@ -51,20 +43,20 @@ public final class LocalBeanRegistry extends SupplierRegistry {
         return Collections.unmodifiableSet(keySet());
     }
 
-    @Override
-    public void close() throws IOException {
-        // stop all beans that has destroy method
-        destroyMethods.forEach((id, method) -> {
-            Object bean = lookupByName(id);
-            if (bean != null) {
-                try {
-                    org.apache.camel.support.ObjectHelper.invokeMethodSafe(method, bean);
-                } catch (Exception e) {
-                    // ignore
-                }
-            }
-        });
-        destroyMethods.clear();
-        super.close();
+    /**
+     * Swaps the key which is used when this local registry have a number of bound beans that would clash with global
+     * registry or endpoint registry in Camel. Then there is a check that validates for clashes and then re-assign key
+     * names.
+     *
+     * @param      oldKey the old key name
+     * @param      newKey the new key name
+     * @deprecated        not in use
+     */
+    @Deprecated
+    public void swapKey(String oldKey, String newKey) {
+        Map<Class<?>, Object> value = remove(oldKey);
+        if (value != null) {
+            put(newKey, value);
+        }
     }
 }

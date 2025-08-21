@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -35,13 +36,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class EventNotifierEventsTest {
 
-    private final List<CamelEvent> events = new ArrayList<>();
+    private static List<CamelEvent> events = new ArrayList<>();
 
     private CamelContext context;
     private ProducerTemplate template;
 
     @BeforeEach
     public void setUp() throws Exception {
+        events.clear();
         context = createCamelContext();
         context.addRoutes(createRouteBuilder());
         template = context.createProducerTemplate();
@@ -49,16 +51,16 @@ public class EventNotifierEventsTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    public void tearDown() throws Exception {
         if (context != null) {
             context.stop();
         }
     }
 
-    protected CamelContext createCamelContext() {
+    protected CamelContext createCamelContext() throws Exception {
         DefaultCamelContext context = new DefaultCamelContext();
         context.getManagementStrategy().addEventNotifier(new EventNotifierSupport() {
-            public void notify(CamelEvent event) {
+            public void notify(CamelEvent event) throws Exception {
                 events.add(event);
             }
         });
@@ -68,7 +70,7 @@ public class EventNotifierEventsTest {
     @Test
     public void testExchangeDone() throws Exception {
         // not optimized as this requires exchange events
-        assertTrue(context.getCamelContextExtension().isEventNotificationApplicable());
+        assertTrue(context.adapt(ExtendedCamelContext.class).isEventNotificationApplicable());
 
         MockEndpoint mock = context.getEndpoint("mock:result", MockEndpoint.class);
         mock.expectedMessageCount(1);
@@ -116,15 +118,17 @@ public class EventNotifierEventsTest {
     }
 
     @Test
-    public void testExchangeFailed() {
+    public void testExchangeFailed() throws Exception {
         // not optimized as this requires exchange events
-        assertTrue(context.getCamelContextExtension().isEventNotificationApplicable());
+        assertTrue(context.adapt(ExtendedCamelContext.class).isEventNotificationApplicable());
 
-        Exception e = assertThrows(Exception.class,
-                () -> template.sendBody("direct:fail", "Hello World"),
-                "Should have thrown an exception");
-
-        assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
+        try {
+            template.sendBody("direct:fail", "Hello World");
+            fail("Should have thrown an exception");
+        } catch (Exception e) {
+            // expected
+            assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
+        }
 
         assertEquals(16, events.size());
         assertIsInstanceOf(CamelEvent.CamelContextInitializingEvent.class, events.get(0));
@@ -162,9 +166,9 @@ public class EventNotifierEventsTest {
     }
 
     @Test
-    public void testSuspendResume() {
+    public void testSuspendResume() throws Exception {
         // not optimized as this requires exchange events
-        assertTrue(context.getCamelContextExtension().isEventNotificationApplicable());
+        assertTrue(context.adapt(ExtendedCamelContext.class).isEventNotificationApplicable());
 
         assertEquals(12, events.size());
         assertIsInstanceOf(CamelEvent.CamelContextInitializingEvent.class, events.get(0));
@@ -194,10 +198,10 @@ public class EventNotifierEventsTest {
         assertIsInstanceOf(CamelContextResumedEvent.class, events.get(15));
     }
 
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("log:foo").to("mock:result");
 
                 from("direct:fail").throwException(new IllegalArgumentException("Damn"));

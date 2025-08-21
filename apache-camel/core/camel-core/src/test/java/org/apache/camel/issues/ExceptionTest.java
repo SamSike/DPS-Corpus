@@ -17,12 +17,13 @@
 package org.apache.camel.issues;
 
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class ExceptionTest extends ContextTestSupport {
 
@@ -58,9 +59,12 @@ public class ExceptionTest extends ContextTestSupport {
         exceptionEndpoint.expectedBodiesReceived("<exception/>");
         resultEndpoint.expectedMessageCount(0);
 
-        assertThrows(Exception.class,
-                () -> template.sendBody("direct:start", "<body/>"),
-                "Should have thrown exception");
+        try {
+            template.sendBody("direct:start", "<body/>");
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // expected
+        }
 
         assertMockEndpointsSatisfied();
     }
@@ -75,9 +79,12 @@ public class ExceptionTest extends ContextTestSupport {
         exceptionEndpoint.expectedBodiesReceived("<not-handled/>");
         resultEndpoint.expectedMessageCount(0);
 
-        assertThrows(Exception.class,
-                () -> template.sendBody("direct:start", "<body/>"),
-                "Should have thrown exception");
+        try {
+            template.sendBody("direct:start", "<body/>");
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // expected
+        }
 
         assertMockEndpointsSatisfied();
     }
@@ -92,18 +99,23 @@ public class ExceptionTest extends ContextTestSupport {
         exceptionEndpoint.expectedBodiesReceived("<exception/>");
         resultEndpoint.expectedMessageCount(0);
 
-        assertThrows(Exception.class,
-                () -> template.sendBody("direct:start2", "<body/>"),
-                "Should have thrown exception");
+        try {
+            template.sendBody("direct:start2", "<body/>");
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // expected
+        }
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
-        final Processor exceptionThrower = exchange -> {
-            exchange.getIn().setBody("<exception/>");
-            throw new IllegalArgumentException("Exception thrown intentionally.");
+    protected RouteBuilder createRouteBuilder() throws Exception {
+        final Processor exceptionThrower = new Processor() {
+            public void process(Exchange exchange) throws Exception {
+                exchange.getIn().setBody("<exception/>");
+                throw new IllegalArgumentException("Exception thrown intentionally.");
+            }
         };
 
         return new RouteBuilder() {

@@ -25,6 +25,7 @@ import org.apache.camel.spi.BrowsableEndpoint;
 import org.apache.camel.support.processor.idempotent.MemoryIdempotentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import static org.apache.camel.test.junit5.TestSupport.assertFileExists;
 import static org.apache.camel.test.junit5.TestSupport.createDirectory;
@@ -32,6 +33,7 @@ import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class FtpBrowsableEndpointIT extends FtpServerTestSupport {
 
     private Path browseDir;

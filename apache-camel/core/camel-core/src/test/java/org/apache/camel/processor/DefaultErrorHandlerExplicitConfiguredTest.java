@@ -26,15 +26,15 @@ import org.apache.camel.builder.RouteBuilder;
 public class DefaultErrorHandlerExplicitConfiguredTest extends DefaultErrorHandlerTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // use default error handler
                 errorHandler(defaultErrorHandler());
 
                 from("direct:start").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         String body = exchange.getIn().getBody(String.class);
                         if ("Kaboom".equals(body)) {
                             throw new IllegalArgumentException("Boom");

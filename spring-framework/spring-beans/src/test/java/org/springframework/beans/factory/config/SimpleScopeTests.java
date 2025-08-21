@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,13 +37,13 @@ import static org.springframework.core.testfixture.io.ResourceTestUtils.qualifie
  * @author Juergen Hoeller
  * @author Chris Beams
  */
-class SimpleScopeTests {
+public class SimpleScopeTests {
 
 	private DefaultListableBeanFactory beanFactory;
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		beanFactory = new DefaultListableBeanFactory();
 		Scope scope = new NoOpScope() {
 			private int index;
@@ -63,7 +63,7 @@ class SimpleScopeTests {
 		beanFactory.registerScope("myScope", scope);
 
 		String[] scopeNames = beanFactory.getRegisteredScopeNames();
-		assertThat(scopeNames).hasSize(1);
+		assertThat(scopeNames.length).isEqualTo(1);
 		assertThat(scopeNames[0]).isEqualTo("myScope");
 		assertThat(beanFactory.getRegisteredScope("myScope")).isSameAs(scope);
 
@@ -73,7 +73,7 @@ class SimpleScopeTests {
 
 
 	@Test
-	void testCanGetScopedObject() {
+	public void testCanGetScopedObject() {
 		TestBean tb1 = (TestBean) beanFactory.getBean("usesScope");
 		TestBean tb2 = (TestBean) beanFactory.getBean("usesScope");
 		assertThat(tb2).isNotSameAs(tb1);

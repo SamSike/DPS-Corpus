@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SplitIteratorNullTest extends ContextTestSupport {
 
-    private final MyIterator myIterator = new MyIterator();
+    private MyIterator myIterator = new MyIterator();
 
     @Test
     public void testSplitIteratorNull() throws Exception {
@@ -42,16 +42,16 @@ public class SplitIteratorNullTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").split(constant(myIterator)).to("mock:line");
             }
         };
     }
 
-    private static class MyIterator implements Iterator<String> {
+    private class MyIterator implements Iterator<String> {
 
         private int count = 4;
         private boolean nullReturned;

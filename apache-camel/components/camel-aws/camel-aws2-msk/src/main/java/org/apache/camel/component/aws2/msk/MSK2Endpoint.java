@@ -22,7 +22,8 @@ import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.component.aws2.msk.client.MSK2ClientFactory;
-import org.apache.camel.spi.EndpointServiceLocation;
+import org.apache.camel.health.HealthCheckHelper;
+import org.apache.camel.impl.health.ComponentsHealthCheckRepository;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.ScheduledPollEndpoint;
@@ -30,13 +31,15 @@ import org.apache.camel.util.ObjectHelper;
 import software.amazon.awssdk.services.kafka.KafkaClient;
 
 /**
- * Manage AWS MSK instances.
+ * Manage AWS MSK instances using AWS SDK version 2.x.
  */
 @UriEndpoint(firstVersion = "3.1.0", scheme = "aws2-msk", title = "AWS Managed Streaming for Apache Kafka (MSK)",
              syntax = "aws2-msk:label", producerOnly = true, category = { Category.CLOUD, Category.MANAGEMENT },
              headersClass = MSK2Constants.class)
-public class MSK2Endpoint extends ScheduledPollEndpoint implements EndpointServiceLocation {
+public class MSK2Endpoint extends ScheduledPollEndpoint {
 
+    private ComponentsHealthCheckRepository healthCheckRepository;
+    private MSK2HealthCheck clientHealthCheck;
     private KafkaClient mskClient;
 
     @UriParam
@@ -58,17 +61,20 @@ public class MSK2Endpoint extends ScheduledPollEndpoint implements EndpointServi
     }
 
     @Override
-    public MSK2Component getComponent() {
-        return (MSK2Component) super.getComponent();
-    }
-
-    @Override
     public void doStart() throws Exception {
         super.doStart();
 
         mskClient = configuration.getMskClient() != null
                 ? configuration.getMskClient()
                 : MSK2ClientFactory.getKafkaClient(configuration).getKafkaClient();
+        healthCheckRepository = HealthCheckHelper.getHealthCheckRepository(getCamelContext(),
+                ComponentsHealthCheckRepository.REPOSITORY_ID, ComponentsHealthCheckRepository.class);
+
+        if (healthCheckRepository != null) {
+            clientHealthCheck = new MSK2HealthCheck(this, getId());
+            healthCheckRepository.addHealthCheck(clientHealthCheck);
+        }
+
     }
 
     @Override
@@ -78,6 +84,11 @@ public class MSK2Endpoint extends ScheduledPollEndpoint implements EndpointServi
                 mskClient.close();
             }
         }
+        if (healthCheckRepository != null && clientHealthCheck != null) {
+            healthCheckRepository.removeHealthCheck(clientHealthCheck);
+            clientHealthCheck = null;
+        }
+
         super.doStop();
     }
 
@@ -87,22 +98,5 @@ public class MSK2Endpoint extends ScheduledPollEndpoint implements EndpointServi
 
     public KafkaClient getMskClient() {
         return mskClient;
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (!configuration.isOverrideEndpoint()) {
-            if (ObjectHelper.isNotEmpty(configuration.getRegion())) {
-                return configuration.getRegion();
-            }
-        } else if (ObjectHelper.isNotEmpty(configuration.getUriEndpointOverride())) {
-            return configuration.getUriEndpointOverride();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "msk";
     }
 }

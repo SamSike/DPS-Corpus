@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.builder.NotifyBuilder;
 import org.apache.camel.builder.RouteBuilder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.test.junit5.TestSupport.createDirectory;
@@ -32,13 +33,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class NettyHttpStreamCacheFileResponseTest extends BaseNettyTest {
 
-    private final String body = "12345678901234567890123456789012345678901234567890";
-    private final String body2 = "Bye " + body;
+    private String body = "12345678901234567890123456789012345678901234567890";
+    private String body2 = "Bye " + body;
 
     @Override
-    public void doPreSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
         deleteDirectory("target/cachedir");
         createDirectory("target/cachedir");
+        super.setUp();
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.core.convert.support;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
@@ -28,10 +29,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.DecoratingProxy;
 import org.springframework.core.ResolvableType;
+import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.ConverterNotFoundException;
@@ -43,6 +43,7 @@ import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.ConverterRegistry;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ConcurrentReferenceHashMap;
@@ -84,8 +85,8 @@ public class GenericConversionService implements ConfigurableConversionService {
 	@Override
 	public void addConverter(Converter<?, ?> converter) {
 		ResolvableType[] typeInfo = getRequiredTypeInfo(converter.getClass(), Converter.class);
-		if (typeInfo == null && converter instanceof DecoratingProxy decoratingProxy) {
-			typeInfo = getRequiredTypeInfo(decoratingProxy.getDecoratedClass(), Converter.class);
+		if (typeInfo == null && converter instanceof DecoratingProxy) {
+			typeInfo = getRequiredTypeInfo(((DecoratingProxy) converter).getDecoratedClass(), Converter.class);
 		}
 		if (typeInfo == null) {
 			throw new IllegalArgumentException("Unable to determine source type <S> and target type <T> for your " +
@@ -109,8 +110,8 @@ public class GenericConversionService implements ConfigurableConversionService {
 	@Override
 	public void addConverterFactory(ConverterFactory<?, ?> factory) {
 		ResolvableType[] typeInfo = getRequiredTypeInfo(factory.getClass(), ConverterFactory.class);
-		if (typeInfo == null && factory instanceof DecoratingProxy decoratingProxy) {
-			typeInfo = getRequiredTypeInfo(decoratingProxy.getDecoratedClass(), ConverterFactory.class);
+		if (typeInfo == null && factory instanceof DecoratingProxy) {
+			typeInfo = getRequiredTypeInfo(((DecoratingProxy) factory).getDecoratedClass(), ConverterFactory.class);
 		}
 		if (typeInfo == null) {
 			throw new IllegalArgumentException("Unable to determine source type <S> and target type <T> for your " +
@@ -139,7 +140,11 @@ public class GenericConversionService implements ConfigurableConversionService {
 	@Override
 	public boolean canConvert(@Nullable TypeDescriptor sourceType, TypeDescriptor targetType) {
 		Assert.notNull(targetType, "Target type to convert to cannot be null");
-		return (sourceType == null || getConverter(sourceType, targetType) != null);
+		if (sourceType == null) {
+			return true;
+		}
+		GenericConverter converter = getConverter(sourceType, targetType);
+		return (converter != null);
 	}
 
 	/**
@@ -155,18 +160,24 @@ public class GenericConversionService implements ConfigurableConversionService {
 	 */
 	public boolean canBypassConvert(@Nullable TypeDescriptor sourceType, TypeDescriptor targetType) {
 		Assert.notNull(targetType, "Target type to convert to cannot be null");
-		return (sourceType == null || getConverter(sourceType, targetType) == NO_OP_CONVERTER);
+		if (sourceType == null) {
+			return true;
+		}
+		GenericConverter converter = getConverter(sourceType, targetType);
+		return (converter == NO_OP_CONVERTER);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public <T> @Nullable T convert(@Nullable Object source, Class<T> targetType) {
+	@SuppressWarnings("unchecked")
+	@Nullable
+	public <T> T convert(@Nullable Object source, Class<T> targetType) {
 		Assert.notNull(targetType, "Target type to convert to cannot be null");
 		return (T) convert(source, TypeDescriptor.forObject(source), TypeDescriptor.valueOf(targetType));
 	}
 
 	@Override
-	public @Nullable Object convert(@Nullable Object source, @Nullable TypeDescriptor sourceType, TypeDescriptor targetType) {
+	@Nullable
+	public Object convert(@Nullable Object source, @Nullable TypeDescriptor sourceType, TypeDescriptor targetType) {
 		Assert.notNull(targetType, "Target type to convert to cannot be null");
 		if (sourceType == null) {
 			Assert.isTrue(source == null, "Source must be [null] if source type == [null]");
@@ -182,6 +193,24 @@ public class GenericConversionService implements ConfigurableConversionService {
 			return handleResult(sourceType, targetType, result);
 		}
 		return handleConverterNotFound(source, sourceType, targetType);
+	}
+
+	/**
+	 * Convenience operation for converting a source object to the specified targetType,
+	 * where the target type is a descriptor that provides additional conversion context.
+	 * Simply delegates to {@link #convert(Object, TypeDescriptor, TypeDescriptor)} and
+	 * encapsulates the construction of the source type descriptor using
+	 * {@link TypeDescriptor#forObject(Object)}.
+	 * @param source the source object
+	 * @param targetType the target type
+	 * @return the converted value
+	 * @throws ConversionException if a conversion exception occurred
+	 * @throws IllegalArgumentException if targetType is {@code null},
+	 * or sourceType is {@code null} but source is not {@code null}
+	 */
+	@Nullable
+	public Object convert(@Nullable Object source, TypeDescriptor targetType) {
+		return convert(source, TypeDescriptor.forObject(source), targetType);
 	}
 
 	@Override
@@ -202,7 +231,8 @@ public class GenericConversionService implements ConfigurableConversionService {
 	 * @param targetType the target type to convert to
 	 * @return the converted null object
 	 */
-	protected @Nullable Object convertNullSource(@Nullable TypeDescriptor sourceType, TypeDescriptor targetType) {
+	@Nullable
+	protected Object convertNullSource(@Nullable TypeDescriptor sourceType, TypeDescriptor targetType) {
 		if (targetType.getObjectType() == Optional.class) {
 			return Optional.empty();
 		}
@@ -210,7 +240,7 @@ public class GenericConversionService implements ConfigurableConversionService {
 	}
 
 	/**
-	 * Hook method to look up the converter for a given sourceType/targetType pair.
+	 * Hook method to lookup the converter for a given sourceType/targetType pair.
 	 * First queries this ConversionService's converter cache.
 	 * On a cache miss, then performs an exhaustive search for a matching converter.
 	 * If no converter matches, returns the default converter.
@@ -220,7 +250,8 @@ public class GenericConversionService implements ConfigurableConversionService {
 	 * or {@code null} if no suitable converter was found
 	 * @see #getDefaultConverter(TypeDescriptor, TypeDescriptor)
 	 */
-	protected @Nullable GenericConverter getConverter(TypeDescriptor sourceType, TypeDescriptor targetType) {
+	@Nullable
+	protected GenericConverter getConverter(TypeDescriptor sourceType, TypeDescriptor targetType) {
 		ConverterCacheKey key = new ConverterCacheKey(sourceType, targetType);
 		GenericConverter converter = this.converterCache.get(key);
 		if (converter != null) {
@@ -249,14 +280,16 @@ public class GenericConversionService implements ConfigurableConversionService {
 	 * @param targetType the target type to convert to
 	 * @return the default generic converter that will perform the conversion
 	 */
-	protected @Nullable GenericConverter getDefaultConverter(TypeDescriptor sourceType, TypeDescriptor targetType) {
+	@Nullable
+	protected GenericConverter getDefaultConverter(TypeDescriptor sourceType, TypeDescriptor targetType) {
 		return (sourceType.isAssignableTo(targetType) ? NO_OP_CONVERTER : null);
 	}
 
 
 	// Internal helpers
 
-	private ResolvableType @Nullable [] getRequiredTypeInfo(Class<?> converterClass, Class<?> genericIfc) {
+	@Nullable
+	private ResolvableType[] getRequiredTypeInfo(Class<?> converterClass, Class<?> genericIfc) {
 		ResolvableType resolvableType = ResolvableType.forClass(converterClass).as(genericIfc);
 		ResolvableType[] generics = resolvableType.getGenerics();
 		if (generics.length < 2) {
@@ -274,7 +307,8 @@ public class GenericConversionService implements ConfigurableConversionService {
 		this.converterCache.clear();
 	}
 
-	private @Nullable Object handleConverterNotFound(
+	@Nullable
+	private Object handleConverterNotFound(
 			@Nullable Object source, @Nullable TypeDescriptor sourceType, TypeDescriptor targetType) {
 
 		if (source == null) {
@@ -288,7 +322,8 @@ public class GenericConversionService implements ConfigurableConversionService {
 		throw new ConverterNotFoundException(sourceType, targetType);
 	}
 
-	private @Nullable Object handleResult(@Nullable TypeDescriptor sourceType, TypeDescriptor targetType, @Nullable Object result) {
+	@Nullable
+	private Object handleResult(@Nullable TypeDescriptor sourceType, TypeDescriptor targetType, @Nullable Object result) {
 		if (result == null) {
 			assertNotPrimitiveTargetType(sourceType, targetType);
 		}
@@ -334,22 +369,17 @@ public class GenericConversionService implements ConfigurableConversionService {
 			}
 			// Full check for complex generic type match required?
 			ResolvableType rt = targetType.getResolvableType();
-			if (!(rt.getType() instanceof Class) && !rt.isAssignableFromResolvedPart(this.targetType)) {
+			if (!(rt.getType() instanceof Class) && !rt.isAssignableFrom(this.targetType) &&
+					!this.targetType.hasUnresolvableGenerics()) {
 				return false;
 			}
-			return !(this.converter instanceof ConditionalConverter conditionalConverter) ||
-					conditionalConverter.matches(sourceType, targetType);
-		}
-
-		public boolean matchesFallback(TypeDescriptor sourceType, TypeDescriptor targetType) {
-			return (this.typeInfo.getTargetType() == targetType.getObjectType() &&
-					this.targetType.hasUnresolvableGenerics() &&
-					(!(this.converter instanceof ConditionalConverter conditionalConverter) ||
-							conditionalConverter.matches(sourceType, targetType)));
+			return !(this.converter instanceof ConditionalConverter) ||
+					((ConditionalConverter) this.converter).matches(sourceType, targetType);
 		}
 
 		@Override
-		public @Nullable Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
+		@Nullable
+		public Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
 			if (source == null) {
 				return convertNullSource(sourceType, targetType);
 			}
@@ -358,7 +388,7 @@ public class GenericConversionService implements ConfigurableConversionService {
 
 		@Override
 		public String toString() {
-			return this.typeInfo + " : " + this.converter;
+			return (this.typeInfo + " : " + this.converter);
 		}
 	}
 
@@ -386,20 +416,21 @@ public class GenericConversionService implements ConfigurableConversionService {
 		@Override
 		public boolean matches(TypeDescriptor sourceType, TypeDescriptor targetType) {
 			boolean matches = true;
-			if (this.converterFactory instanceof ConditionalConverter conditionalConverter) {
-				matches = conditionalConverter.matches(sourceType, targetType);
+			if (this.converterFactory instanceof ConditionalConverter) {
+				matches = ((ConditionalConverter) this.converterFactory).matches(sourceType, targetType);
 			}
 			if (matches) {
 				Converter<?, ?> converter = this.converterFactory.getConverter(targetType.getType());
-				if (converter instanceof ConditionalConverter conditionalConverter) {
-					matches = conditionalConverter.matches(sourceType, targetType);
+				if (converter instanceof ConditionalConverter) {
+					matches = ((ConditionalConverter) converter).matches(sourceType, targetType);
 				}
 			}
 			return matches;
 		}
 
 		@Override
-		public @Nullable Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
+		@Nullable
+		public Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
 			if (source == null) {
 				return convertNullSource(sourceType, targetType);
 			}
@@ -408,7 +439,7 @@ public class GenericConversionService implements ConfigurableConversionService {
 
 		@Override
 		public String toString() {
-			return this.typeInfo + " : " + this.converterFactory;
+			return (this.typeInfo + " : " + this.converterFactory);
 		}
 	}
 
@@ -429,19 +460,26 @@ public class GenericConversionService implements ConfigurableConversionService {
 
 		@Override
 		public boolean equals(@Nullable Object other) {
-			return (this == other || (other instanceof ConverterCacheKey that &&
-					this.sourceType.equals(that.sourceType)) &&
-					this.targetType.equals(that.targetType));
+			if (this == other) {
+				return true;
+			}
+			if (!(other instanceof ConverterCacheKey)) {
+				return false;
+			}
+			ConverterCacheKey otherKey = (ConverterCacheKey) other;
+			return (this.sourceType.equals(otherKey.sourceType)) &&
+					this.targetType.equals(otherKey.targetType);
 		}
 
 		@Override
 		public int hashCode() {
-			return this.sourceType.hashCode() * 29 + this.targetType.hashCode();
+			return (this.sourceType.hashCode() * 29 + this.targetType.hashCode());
 		}
 
 		@Override
 		public String toString() {
-			return "ConverterCacheKey [sourceType = " + this.sourceType + ", targetType = " + this.targetType + "]";
+			return ("ConverterCacheKey [sourceType = " + this.sourceType +
+					", targetType = " + this.targetType + "]");
 		}
 
 		@Override
@@ -496,7 +534,8 @@ public class GenericConversionService implements ConfigurableConversionService {
 		 * @param targetType the target type
 		 * @return a matching {@link GenericConverter}, or {@code null} if none found
 		 */
-		public @Nullable GenericConverter find(TypeDescriptor sourceType, TypeDescriptor targetType) {
+		@Nullable
+		public GenericConverter find(TypeDescriptor sourceType, TypeDescriptor targetType) {
 			// Search the full type hierarchy
 			List<Class<?>> sourceCandidates = getClassHierarchy(sourceType.getType());
 			List<Class<?>> targetCandidates = getClassHierarchy(targetType.getType());
@@ -512,7 +551,8 @@ public class GenericConversionService implements ConfigurableConversionService {
 			return null;
 		}
 
-		private @Nullable GenericConverter getRegisteredConverter(TypeDescriptor sourceType,
+		@Nullable
+		private GenericConverter getRegisteredConverter(TypeDescriptor sourceType,
 				TypeDescriptor targetType, ConvertiblePair convertiblePair) {
 
 			// Check specifically registered converters
@@ -546,7 +586,7 @@ public class GenericConversionService implements ConfigurableConversionService {
 			int i = 0;
 			while (i < hierarchy.size()) {
 				Class<?> candidate = hierarchy.get(i);
-				candidate = (array ? candidate.componentType() : ClassUtils.resolvePrimitiveIfNecessary(candidate));
+				candidate = (array ? candidate.getComponentType() : ClassUtils.resolvePrimitiveIfNecessary(candidate));
 				Class<?> superclass = candidate.getSuperclass();
 				if (superclass != null && superclass != Object.class && superclass != Enum.class) {
 					addToClassHierarchy(i + 1, candidate.getSuperclass(), array, hierarchy, visited);
@@ -556,8 +596,9 @@ public class GenericConversionService implements ConfigurableConversionService {
 			}
 
 			if (Enum.class.isAssignableFrom(type)) {
+				addToClassHierarchy(hierarchy.size(), Enum.class, array, hierarchy, visited);
 				addToClassHierarchy(hierarchy.size(), Enum.class, false, hierarchy, visited);
-				addInterfacesToClassHierarchy(Enum.class, false, hierarchy, visited);
+				addInterfacesToClassHierarchy(Enum.class, array, hierarchy, visited);
 			}
 
 			addToClassHierarchy(hierarchy.size(), Object.class, array, hierarchy, visited);
@@ -577,7 +618,7 @@ public class GenericConversionService implements ConfigurableConversionService {
 				List<Class<?>> hierarchy, Set<Class<?>> visited) {
 
 			if (asArray) {
-				type = type.arrayType();
+				type = Array.newInstance(type, 0).getClass();
 			}
 			if (visited.add(type)) {
 				hierarchy.add(index, type);
@@ -616,18 +657,11 @@ public class GenericConversionService implements ConfigurableConversionService {
 			this.converters.addFirst(converter);
 		}
 
-		public @Nullable GenericConverter getConverter(TypeDescriptor sourceType, TypeDescriptor targetType) {
-			// Look for proper match among all converters (taking full generics into account)
+		@Nullable
+		public GenericConverter getConverter(TypeDescriptor sourceType, TypeDescriptor targetType) {
 			for (GenericConverter converter : this.converters) {
-				if (!(converter instanceof ConditionalGenericConverter genericConverter) ||
-						genericConverter.matches(sourceType, targetType)) {
-					return converter;
-				}
-			}
-			// Fallback to pre-6.2.3 behavior: accept Class match for unresolvable generics
-			for (GenericConverter converter : this.converters) {
-				if (converter instanceof ConverterAdapter converterAdapter &&
-						converterAdapter.matchesFallback(sourceType, targetType)) {
+				if (!(converter instanceof ConditionalGenericConverter) ||
+						((ConditionalGenericConverter) converter).matches(sourceType, targetType)) {
 					return converter;
 				}
 			}
@@ -653,12 +687,14 @@ public class GenericConversionService implements ConfigurableConversionService {
 		}
 
 		@Override
-		public @Nullable Set<ConvertiblePair> getConvertibleTypes() {
+		@Nullable
+		public Set<ConvertiblePair> getConvertibleTypes() {
 			return null;
 		}
 
 		@Override
-		public @Nullable Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
+		@Nullable
+		public Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
 			return source;
 		}
 

@@ -1,7 +1,9 @@
 /**
  * Mock implementations of reactive HTTP server contracts.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.mock.http.server.reactive;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

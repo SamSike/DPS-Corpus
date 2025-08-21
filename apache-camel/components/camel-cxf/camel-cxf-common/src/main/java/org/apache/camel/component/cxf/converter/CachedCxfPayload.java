@@ -46,16 +46,9 @@ import org.apache.cxf.staxutils.StaxUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * {@link org.apache.camel.StreamCache} implementation for CXF payload.
- * <p/>
- * <b>Important:</b> All the classes from the Camel release that implements {@link StreamCache} is NOT intended for end
- * users to create as instances, but they are part of Camels
- * <a href="https://camel.apache.org/manual/stream-caching.html">stream-caching</a> functionality.
- */
 public class CachedCxfPayload<T> extends CxfPayload<T> implements StreamCache {
     private static final Logger LOG = LoggerFactory.getLogger(CachedCxfPayload.class);
-    private static final String DEFAULT_CHARSET = ObjectHelper.getSystemProperty("org.apache.camel.default.charset", "UTF-8");
+    private static String defaultCharset = ObjectHelper.getSystemProperty("org.apache.camel.default.charset", "UTF-8");
 
     public CachedCxfPayload(CxfPayload<T> orig, Exchange exchange) {
         super(orig.getHeaders(), new ArrayList<>(orig.getBodySources()), orig.getNsMap());
@@ -63,8 +56,8 @@ public class CachedCxfPayload<T> extends CxfPayload<T> implements StreamCache {
         while (li.hasNext()) {
             Source source = li.next();
             XMLStreamReader reader = null;
-            // namespace definitions that are on the SOAP envelope can get lost, if this is
-            // not a DOM (there is special coding on the CXFPayload.getBody().get() method for
+            // namespace definitions that are on the SOAP envelope can get lost, if this is 
+            // not a DOM (there is special coding on the CXFPayload.getBody().get() method for 
             // this, that only works on DOM nodes.
             // We have to do some delegation on the XMLStreamReader for StAXSource and StaxSource
             // that re-injects the missing namespaces into the XMLStreamReader.
@@ -86,13 +79,20 @@ public class CachedCxfPayload<T> extends CxfPayload<T> implements StreamCache {
                     // this worked so continue
                     continue;
                 } catch (Exception e) {
-                    if (tryUsingReader(cos, source, li)) {
+                    // fallback to trying to read the reader using another way
+                    StreamResult sr = new StreamResult(cos);
+                    try {
+                        toResult(source, sr);
+                        li.set(new StreamSourceCache(cos.newStreamCache()));
+                        // this worked so continue
                         continue;
+                    } catch (Exception e2) {
+                        // ignore did not work so we will fallback to DOM mode
+                        // this can happens in some rare cases such as reported by CAMEL-11681
+                        LOG.debug(
+                                "Error during parsing XMLStreamReader from StaxSource/StAXSource. Will fallback to using DOM mode. This exception is ignored",
+                                e2);
                     }
-                    //tryUsingReader returns false so we will fallback to DOM mode
-                    LOG.debug(
-                            "Error during parsing XMLStreamReader from StaxSource/StAXSource. Will fallback to using DOM mode. This exception is ignored",
-                            e);
                 }
             }
             // fallback to using DOM
@@ -102,24 +102,6 @@ public class CachedCxfPayload<T> extends CxfPayload<T> implements StreamCache {
             }
         }
         orig.setBodySources(getBodySources());
-    }
-
-    private static boolean tryUsingReader(CachedOutputStream cos, Source source, ListIterator<Source> li) {
-        // fallback to trying to read the reader using another way
-        StreamResult sr = new StreamResult(cos);
-        try {
-            toResult(source, sr);
-            li.set(new StreamSourceCache(cos.newStreamCache()));
-            // this worked so continue
-            return true;
-        } catch (Exception e2) {
-            // ignore did not work so we will fallback to DOM mode
-            // this can happens in some rare cases such as reported by CAMEL-11681
-            LOG.debug(
-                    "Error during parsing XMLStreamReader from StaxSource/StAXSource. Will fallback to using DOM mode. This exception is ignored",
-                    e2);
-        }
-        return false;
     }
 
     private CachedCxfPayload(CachedCxfPayload<T> orig, Exchange exchange) throws IOException {
@@ -142,7 +124,7 @@ public class CachedCxfPayload<T> extends CxfPayload<T> implements StreamCache {
                 throw new TransformerException("Could not create a transformer - JAXP is misconfigured!");
             } else {
                 Properties outputProperties = new Properties();
-                outputProperties.put("encoding", DEFAULT_CHARSET);
+                outputProperties.put("encoding", defaultCharset);
                 outputProperties.put("omit-xml-declaration", "yes");
 
                 transformer.setOutputProperties(outputProperties);
@@ -192,11 +174,6 @@ public class CachedCxfPayload<T> extends CxfPayload<T> implements StreamCache {
     @Override
     public long length() {
         return 0;
-    }
-
-    @Override
-    public long position() {
-        return -1;
     }
 
     @Override

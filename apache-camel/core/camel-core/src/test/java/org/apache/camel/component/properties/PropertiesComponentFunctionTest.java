@@ -52,7 +52,7 @@ public class PropertiesComponentFunctionTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("log:{{sys:os.name}}").to("{{beer:FOO}}").to("{{beer:BAR}}");
             }
         });

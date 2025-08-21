@@ -18,6 +18,7 @@ package org.apache.camel.component.micrometer;
 
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import org.apache.camel.Producer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,7 +49,7 @@ public class TimerEndpointTest {
 
     @BeforeEach
     public void setUp() {
-        endpoint = new MicrometerEndpoint(null, null, registry, Meter.Type.TIMER, METRICS_NAME);
+        endpoint = new MicrometerEndpoint(null, null, registry, Meter.Type.TIMER, METRICS_NAME, Tags.empty());
         inOrder = Mockito.inOrder(registry);
     }
 

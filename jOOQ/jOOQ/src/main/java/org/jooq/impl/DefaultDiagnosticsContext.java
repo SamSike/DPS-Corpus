@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -50,7 +50,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.jooq.Configuration;
 import org.jooq.DiagnosticsContext;
 import org.jooq.QueryPart;
 import org.jooq.tools.JooqLogger;
@@ -58,12 +57,11 @@ import org.jooq.tools.JooqLogger;
 /**
  * @author Lukas Eder
  */
-final class DefaultDiagnosticsContext extends AbstractScope implements DiagnosticsContext {
+final class DefaultDiagnosticsContext implements DiagnosticsContext {
 
     private static final JooqLogger log = JooqLogger.getLogger(DefaultDiagnosticsContext.class);
 
     final QueryPart                 part;
-    final QueryPart                 transformedPart;
     final String                    message;
     ResultSet                       resultSet;
     DiagnosticsResultSet            resultSetWrapper;
@@ -71,7 +69,6 @@ final class DefaultDiagnosticsContext extends AbstractScope implements Diagnosti
     int                             resultSetFetchedColumnCount;
     int                             resultSetConsumedColumnCount;
     int                             resultSetFetchedRows;
-    boolean                         resultSetFetchedRowsComputed;
     int                             resultSetConsumedRows;
     final String                    actualStatement;
     final String                    normalisedStatement;
@@ -82,55 +79,43 @@ final class DefaultDiagnosticsContext extends AbstractScope implements Diagnosti
     int                             resultSetColumnIndex;
     final Throwable                 exception;
 
-    DefaultDiagnosticsContext(Configuration configuration, String message, String actualStatement) {
-        this(configuration, message, actualStatement, null);
+    DefaultDiagnosticsContext(String message, String actualStatement) {
+        this(message, actualStatement, null);
     }
 
-    DefaultDiagnosticsContext(Configuration configuration, String message, String actualStatement, Throwable exception) {
+    DefaultDiagnosticsContext(String message, String actualStatement, Throwable exception) {
         this(
-            configuration,
             message,
             actualStatement,
             actualStatement,
             singleton(actualStatement),
             singletonList(actualStatement),
             null,
-            null,
             exception
         );
     }
 
     DefaultDiagnosticsContext(
-        Configuration configuration,
         String message,
         String actualStatement,
         String normalisedStatement,
         Set<String> duplicateStatements,
         List<String> repeatedStatements,
         QueryPart part,
-        QueryPart transformedPart,
         Throwable exception
     ) {
-        super(configuration);
-
         this.message = message;
         this.actualStatement = actualStatement;
         this.normalisedStatement = normalisedStatement;
         this.duplicateStatements = duplicateStatements == null ? emptySet() : duplicateStatements;
         this.repeatedStatements = repeatedStatements == null ? emptyList() : repeatedStatements;
         this.part = part;
-        this.transformedPart = transformedPart;
         this.exception = exception;
     }
 
     @Override
     public final QueryPart part() {
         return part;
-    }
-
-    @Override
-    public final QueryPart transformedPart() {
-        return transformedPart;
     }
 
     @Override
@@ -153,21 +138,15 @@ final class DefaultDiagnosticsContext extends AbstractScope implements Diagnosti
         if (resultSet == null)
             return -1;
 
-        // [#14191] Compute this value only once, in order to produce the same
-        //          value for all DiagnosticsListeners
-        if (!resultSetFetchedRowsComputed) {
-            resultSetFetchedRowsComputed = true;
+        try {
+            if (resultSetClosing || resultSet.getType() != ResultSet.TYPE_FORWARD_ONLY) {
+                while (resultSet.next())
+                    resultSetFetchedRows++;
 
-            try {
-                if (resultSetClosing || resultSet.getType() != ResultSet.TYPE_FORWARD_ONLY) {
-                    while (resultSet.next())
-                        resultSetFetchedRows++;
-
-                    resultSet.absolute(resultSetConsumedRows);
-                }
+                resultSet.absolute(resultSetConsumedRows);
             }
-            catch (SQLException ignore) {}
         }
+        catch (SQLException ignore) {}
 
         return resultSetFetchedRows;
     }
@@ -197,13 +176,11 @@ final class DefaultDiagnosticsContext extends AbstractScope implements Diagnosti
 
         if (resultSet != null) {
             try {
-                if (!resultSet.isClosed()) {
-                    ResultSetMetaData meta = resultSet.getMetaData();
+                ResultSetMetaData meta = resultSet.getMetaData();
 
-                    for (int i = 1; i <= meta.getColumnCount(); i++)
-                        if (fetched || resultSetWrapper.read.get(i - 1))
-                            result.add(meta.getColumnLabel(i));
-                }
+                for (int i = 1; i <= meta.getColumnCount(); i++)
+                    if (fetched || resultSetWrapper.read.get(i - 1))
+                        result.add(meta.getColumnLabel(i));
             }
             catch (SQLException e) {
                 log.info(e);

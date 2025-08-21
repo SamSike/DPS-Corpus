@@ -104,10 +104,10 @@ public class AggregateDiscardOnFailureTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start").aggregate(header("id"), new MyAggregationStrategy()).completionSize(3)
                         .completionTimeout(2000)
@@ -119,7 +119,7 @@ public class AggregateDiscardOnFailureTest extends ContextTestSupport {
         };
     }
 
-    private static class MyAggregationStrategy implements AggregationStrategy {
+    private class MyAggregationStrategy implements AggregationStrategy {
 
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {

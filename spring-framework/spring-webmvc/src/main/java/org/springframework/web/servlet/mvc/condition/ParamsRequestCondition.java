@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,15 +23,14 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.jspecify.annotations.Nullable;
 
-import org.springframework.util.CollectionUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.util.WebUtils;
 
 /**
- * A logical conjunction ({@code ' && '}) request condition that matches a request against
+ * A logical conjunction (' && ') request condition that matches a request against
  * a set parameter expressions with syntax defined in {@link RequestMapping#params()}.
  *
  * @author Arjen Poutsma
@@ -56,7 +55,7 @@ public final class ParamsRequestCondition extends AbstractRequestCondition<Param
 		if (ObjectUtils.isEmpty(params)) {
 			return Collections.emptySet();
 		}
-		Set<ParamExpression> expressions = CollectionUtils.newLinkedHashSet(params.length);
+		Set<ParamExpression> expressions = new LinkedHashSet<>(params.length);
 		for (String param : params) {
 			expressions.add(new ParamExpression(param));
 		}
@@ -91,7 +90,10 @@ public final class ParamsRequestCondition extends AbstractRequestCondition<Param
 	 */
 	@Override
 	public ParamsRequestCondition combine(ParamsRequestCondition other) {
-		if (other.isEmpty()) {
+		if (isEmpty() && other.isEmpty()) {
+			return this;
+		}
+		else if (other.isEmpty()) {
 			return this;
 		}
 		else if (isEmpty()) {
@@ -107,7 +109,8 @@ public final class ParamsRequestCondition extends AbstractRequestCondition<Param
 	 * or {@code null} otherwise.
 	 */
 	@Override
-	public @Nullable ParamsRequestCondition getMatchingCondition(HttpServletRequest request) {
+	@Nullable
+	public ParamsRequestCondition getMatchingCondition(HttpServletRequest request) {
 		for (ParamExpression expression : this.expressions) {
 			if (!expression.match(request)) {
 				return null;

@@ -21,8 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.camel.component.debezium.db2.DebeziumDb2Component;
-import org.apache.camel.component.debezium.db2.configuration.Db2ConnectorEmbeddedDebeziumConfiguration;
+import org.apache.camel.component.debezium.configuration.Db2ConnectorEmbeddedDebeziumConfiguration;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.junit.jupiter.api.Test;
 
@@ -38,14 +37,14 @@ public class DebeziumDb2ComponentTest {
         params.put("databaseHostname", "localhost");
         params.put("databaseUser", "dbz");
         params.put("databasePassword", "pwd");
-        params.put("topicPrefix", "test");
+        params.put("databaseServerName", "test");
         params.put("databaseServerId", 1234);
-        params.put("schemaHistoryInternalFileFilename", "/db_history_file_test");
+        params.put("databaseHistoryFileFilename", "/db_history_file_test");
 
         final String remaining = "test_name";
         final String uri = "debezium?name=test_name&offsetStorageFileName=/test&"
                            + "databaseHostname=localhost&databaseServerId=1234&databaseUser=dbz&databasePassword=pwd&"
-                           + "topicPrefix=test&schemaHistoryInternalFileFilename=/test";
+                           + "databaseServerName=test&databaseHistoryFileFilename=/test";
 
         try (final DebeziumComponent debeziumComponent = new DebeziumDb2Component(new DefaultCamelContext())) {
             debeziumComponent.start();
@@ -61,8 +60,8 @@ public class DebeziumDb2ComponentTest {
             assertEquals("localhost", configuration.getDatabaseHostname());
             assertEquals("dbz", configuration.getDatabaseUser());
             assertEquals("pwd", configuration.getDatabasePassword());
-            assertEquals("test", configuration.getTopicPrefix());
-            assertEquals("/db_history_file_test", configuration.getSchemaHistoryInternalFileFilename());
+            assertEquals("test", configuration.getDatabaseServerName());
+            assertEquals("/db_history_file_test", configuration.getDatabaseHistoryFileFilename());
         }
     }
 
@@ -74,7 +73,7 @@ public class DebeziumDb2ComponentTest {
         configuration.setDatabaseUser("test_db");
         configuration.setDatabasePassword("pwd");
         configuration.setOffsetStorageFileName("/offset/file");
-        configuration.setTopicPrefix("test");
+        configuration.setDatabaseServerName("test");
 
         final String uri = "debezium:dummy";
         try (final DebeziumComponent debeziumComponent = new DebeziumDb2Component(new DefaultCamelContext())) {

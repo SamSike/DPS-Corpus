@@ -17,7 +17,6 @@
 package org.apache.camel.component.jira;
 
 import java.net.URI;
-import java.util.Map;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
@@ -25,7 +24,6 @@ import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.component.jira.consumer.AbstractJiraConsumer;
 import org.apache.camel.component.jira.consumer.NewCommentsConsumer;
 import org.apache.camel.component.jira.consumer.NewIssuesConsumer;
 import org.apache.camel.component.jira.consumer.WatchUpdatesConsumer;
@@ -42,13 +40,12 @@ import org.apache.camel.component.jira.producer.FetchIssueProducer;
 import org.apache.camel.component.jira.producer.TransitionIssueProducer;
 import org.apache.camel.component.jira.producer.UpdateIssueProducer;
 import org.apache.camel.component.jira.producer.WatcherProducer;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
-import org.apache.camel.support.ScheduledPollEndpoint;
+import org.apache.camel.support.DefaultEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,10 +74,12 @@ import static org.apache.camel.component.jira.JiraConstants.JIRA_REST_CLIENT_FAC
  * publicly accessible where a webhook would fail
  */
 @UriEndpoint(firstVersion = "3.0", scheme = "jira", title = "Jira", syntax = "jira:type",
-             category = { Category.DOCUMENT }, headersClass = JiraConstants.class)
-public class JiraEndpoint extends ScheduledPollEndpoint implements EndpointServiceLocation {
+             category = { Category.API, Category.REPORTING }, headersClass = JiraConstants.class)
+public class JiraEndpoint extends DefaultEndpoint {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JiraEndpoint.class);
+    private static final transient Logger LOG = LoggerFactory.getLogger(JiraEndpoint.class);
+
+    private final Object lock = new Object();
 
     @UriPath
     @Metadata(required = true)
@@ -103,24 +102,6 @@ public class JiraEndpoint extends ScheduledPollEndpoint implements EndpointServi
         this.configuration = configuration;
     }
 
-    @Override
-    public String getServiceUrl() {
-        return configuration.getJiraUrl();
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "rest";
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        if (configuration.getUsername() != null) {
-            return Map.of("username", configuration.getUsername());
-        }
-        return null;
-    }
-
     public JiraConfiguration getConfiguration() {
         return configuration;
     }
@@ -138,76 +119,82 @@ public class JiraEndpoint extends ScheduledPollEndpoint implements EndpointServi
     }
 
     public void connect() {
-        lock.lock();
-        try {
-            if (client == null) {
-                Registry registry = getCamelContext().getRegistry();
-                JiraRestClientFactory factory
-                        = registry.lookupByNameAndType(JIRA_REST_CLIENT_FACTORY, JiraRestClientFactory.class);
-                if (factory == null) {
-                    factory = new OAuthAsynchronousJiraRestClientFactory();
-                }
-                final URI jiraServerUri = URI.create(configuration.getJiraUrl());
-                if (configuration.getUsername() != null) {
-                    LOG.debug("Connecting to JIRA with Basic authentication with username/password");
-                    client = factory.createWithBasicHttpAuthentication(jiraServerUri, configuration.getUsername(),
-                            configuration.getPassword());
-                } else if (configuration.getAccessToken() != null
-                        && configuration.getVerificationCode() == null
-                        && configuration.getPrivateKey() == null
-                        && configuration.getConsumerKey() == null) {
-                    client = factory.create(jiraServerUri, builder -> {
-                        builder.setHeader("Authorization", "Bearer " + configuration.getAccessToken());
-                    });
-                } else {
-                    LOG.debug("Connecting to JIRA with OAuth authentication");
-                    JiraOAuthAuthenticationHandler oAuthHandler = new JiraOAuthAuthenticationHandler(
-                            configuration.getConsumerKey(),
-                            configuration.getVerificationCode(), configuration.getPrivateKey(),
-                            configuration.getAccessToken(),
-                            configuration.getJiraUrl());
-                    client = factory.create(jiraServerUri, oAuthHandler);
+        if (client == null) {
+            synchronized (lock) {
+                if (client == null) {
+                    Registry registry = getCamelContext().getRegistry();
+                    JiraRestClientFactory factory
+                            = registry.lookupByNameAndType(JIRA_REST_CLIENT_FACTORY, JiraRestClientFactory.class);
+                    if (factory == null) {
+                        factory = new OAuthAsynchronousJiraRestClientFactory();
+                    }
+                    final URI jiraServerUri = URI.create(configuration.getJiraUrl());
+                    if (configuration.getUsername() != null) {
+                        LOG.debug("Connecting to JIRA with Basic authentication with username/password");
+                        client = factory.createWithBasicHttpAuthentication(jiraServerUri, configuration.getUsername(),
+                                configuration.getPassword());
+                    } else if (configuration.getAccessToken() != null
+                            && configuration.getVerificationCode() == null
+                            && configuration.getPrivateKey() == null
+                            && configuration.getConsumerKey() == null) {
+                        client = factory.create(jiraServerUri, builder -> {
+                            builder.setHeader("Authorization", "Bearer " + configuration.getAccessToken());
+                        });
+                    } else {
+                        LOG.debug("Connecting to JIRA with OAuth authentication");
+                        JiraOAuthAuthenticationHandler oAuthHandler = new JiraOAuthAuthenticationHandler(
+                                configuration.getConsumerKey(),
+                                configuration.getVerificationCode(), configuration.getPrivateKey(),
+                                configuration.getAccessToken(),
+                                configuration.getJiraUrl());
+                        client = factory.create(jiraServerUri, oAuthHandler);
+                    }
                 }
             }
-        } finally {
-            lock.unlock();
         }
     }
 
     public void disconnect() throws Exception {
-        lock.lock();
-        try {
-            if (client != null) {
-                LOG.debug("Disconnecting from JIRA");
-                client.close();
-                client = null;
-            }
-        } finally {
-            lock.unlock();
+        if (client != null) {
+            LOG.debug("Disconnecting from JIRA");
+            client.close();
+            client = null;
         }
     }
 
     @Override
     public Producer createProducer() {
-        return switch (type) {
-            case ADDISSUE -> new AddIssueProducer(this);
-            case ATTACH -> new AttachFileProducer(this);
-            case ADDCOMMENT -> new AddCommentProducer(this);
-            case WATCHERS -> new WatcherProducer(this);
-            case DELETEISSUE -> new DeleteIssueProducer(this);
-            case UPDATEISSUE -> new UpdateIssueProducer(this);
-            case TRANSITIONISSUE -> new TransitionIssueProducer(this);
-            case ADDISSUELINK -> new AddIssueLinkProducer(this);
-            case ADDWORKLOG -> new AddWorkLogProducer(this);
-            case FETCHISSUE -> new FetchIssueProducer(this);
-            case FETCHCOMMENTS -> new FetchCommentsProducer(this);
-            default -> throw new IllegalArgumentException("Producer does not support type: " + type);
-        };
+        switch (type) {
+            case ADDISSUE:
+                return new AddIssueProducer(this);
+            case ATTACH:
+                return new AttachFileProducer(this);
+            case ADDCOMMENT:
+                return new AddCommentProducer(this);
+            case WATCHERS:
+                return new WatcherProducer(this);
+            case DELETEISSUE:
+                return new DeleteIssueProducer(this);
+            case UPDATEISSUE:
+                return new UpdateIssueProducer(this);
+            case TRANSITIONISSUE:
+                return new TransitionIssueProducer(this);
+            case ADDISSUELINK:
+                return new AddIssueLinkProducer(this);
+            case ADDWORKLOG:
+                return new AddWorkLogProducer(this);
+            case FETCHISSUE:
+                return new FetchIssueProducer(this);
+            case FETCHCOMMENTS:
+                return new FetchCommentsProducer(this);
+            default:
+                throw new IllegalArgumentException("Producer does not support type: " + type);
+        }
     }
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
-        AbstractJiraConsumer consumer;
+        Consumer consumer;
         if (type == JiraType.NEWCOMMENTS) {
             consumer = new NewCommentsConsumer(this, processor);
         } else if (type == JiraType.NEWISSUES) {
@@ -217,7 +204,6 @@ public class JiraEndpoint extends ScheduledPollEndpoint implements EndpointServi
         } else {
             throw new IllegalArgumentException("Consumer does not support type: " + type);
         }
-        consumer.setMaxMessagesPerPoll(getMaxResults());
         configureConsumer(consumer);
         return consumer;
     }
@@ -248,7 +234,7 @@ public class JiraEndpoint extends ScheduledPollEndpoint implements EndpointServi
         this.jql = jql;
     }
 
-    public long getDelay() {
+    public int getDelay() {
         return configuration.getDelay();
     }
 

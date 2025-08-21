@@ -1,7 +1,9 @@
 /**
  * Support for the RSocket protocol.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.messaging.rsocket;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

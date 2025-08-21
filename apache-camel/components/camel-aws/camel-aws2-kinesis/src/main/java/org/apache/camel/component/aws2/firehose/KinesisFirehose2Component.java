@@ -36,6 +36,8 @@ public class KinesisFirehose2Component extends DefaultComponent {
 
     public KinesisFirehose2Component(CamelContext context) {
         super(context);
+
+        registerExtension(new KinesisFirehose2ComponentVerifierExtension());
     }
 
     @Override
@@ -45,11 +47,10 @@ public class KinesisFirehose2Component extends DefaultComponent {
         configuration.setStreamName(remaining);
         KinesisFirehose2Endpoint endpoint = new KinesisFirehose2Endpoint(uri, configuration, this);
         setProperties(endpoint, parameters);
-        if (!configuration.isUseDefaultCredentialsProvider() && !configuration.isUseSessionCredentials()
-                && !configuration.isUseProfileCredentialsProvider() && configuration.getAmazonKinesisFirehoseClient() == null
+        if (!configuration.isUseDefaultCredentialsProvider() && configuration.getAmazonKinesisFirehoseClient() == null
                 && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
             throw new IllegalArgumentException(
-                    "useDefaultCredentialsProvider is set to false, useProfileCredentialsProvider is set to false, AmazonKinesisFirehoseClient or accessKey and secretKey must be specified");
+                    "useDefaultCredentialsProvider is set to false, AmazonKinesisFirehoseClient or accessKey and secretKey must be specified");
         }
         return endpoint;
     }

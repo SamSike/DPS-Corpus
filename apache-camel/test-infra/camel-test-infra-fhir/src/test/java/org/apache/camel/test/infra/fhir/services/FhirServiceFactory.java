@@ -34,17 +34,14 @@ public final class FhirServiceFactory {
     public static FhirService createService() {
         return builder()
                 .addLocalMapping(FhirLocalContainerService::new)
-                .addRemoteMapping(FhirRemoteTestService::new)
+                .addRemoteMapping(FhirRemoteService::new)
                 .build();
     }
 
     public static FhirService createSingletonService() {
         return builder()
                 .addLocalMapping(() -> new FhirLocalSingletonContainerService())
-                .addRemoteMapping(FhirRemoteTestService::new)
+                .addRemoteMapping(FhirRemoteService::new)
                 .build();
-    }
-
-    public static class FhirRemoteTestService extends FhirRemoteInfraService implements FhirService {
     }
 }

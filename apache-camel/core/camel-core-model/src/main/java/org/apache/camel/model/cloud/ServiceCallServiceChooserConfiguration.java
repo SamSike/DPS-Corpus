@@ -24,6 +24,7 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NoFactoryAvailableException;
 import org.apache.camel.cloud.ServiceChooser;
 import org.apache.camel.cloud.ServiceChooserFactory;
@@ -38,7 +39,7 @@ import org.apache.camel.util.ObjectHelper;
 @XmlRootElement(name = "serviceChooserConfiguration")
 @XmlAccessorType(XmlAccessType.FIELD)
 @Configurer(extended = true)
-@Deprecated(since = "3.19.0")
+@Deprecated
 public class ServiceCallServiceChooserConfiguration extends ServiceCallConfiguration implements ServiceChooserFactory {
     @XmlTransient
     private final ServiceCallDefinition parent;
@@ -92,7 +93,7 @@ public class ServiceCallServiceChooserConfiguration extends ServiceCallConfigura
             Class<?> type;
             try {
                 // Then use Service factory.
-                type = camelContext.getCamelContextExtension()
+                type = camelContext.adapt(ExtendedCamelContext.class)
                         .getFactoryFinder(ServiceCallDefinitionConstants.RESOURCE_PATH).findClass(factoryKey).orElse(null);
             } catch (Exception e) {
                 throw new NoFactoryAvailableException(ServiceCallDefinitionConstants.RESOURCE_PATH + factoryKey, e);
@@ -113,12 +114,12 @@ public class ServiceCallServiceChooserConfiguration extends ServiceCallConfigura
                 Map<String, Object> parameters = getConfiguredOptions(camelContext, this);
 
                 parameters.replaceAll((k, v) -> {
-                    if (v instanceof String str) {
+                    if (v instanceof String) {
                         try {
-                            v = camelContext.resolvePropertyPlaceholders(str);
+                            v = camelContext.resolvePropertyPlaceholders((String) v);
                         } catch (Exception e) {
                             throw new IllegalArgumentException(
-                                    String.format("Exception while resolving %s (%s)", k, v), e);
+                                    String.format("Exception while resolving %s (%s)", k, v.toString()), e);
                         }
                     }
 

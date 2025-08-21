@@ -25,7 +25,7 @@ import org.apache.camel.spi.annotations.DevConsole;
 import org.apache.camel.support.console.AbstractDevConsole;
 import org.apache.camel.util.json.JsonObject;
 
-@DevConsole(name = "platform-http", displayName = "Platform HTTP", description = "Embedded HTTP Server")
+@DevConsole("platform-http")
 public class PlatformHttpConsole extends AbstractDevConsole {
 
     public PlatformHttpConsole() {
@@ -36,9 +36,7 @@ public class PlatformHttpConsole extends AbstractDevConsole {
     protected String doCallText(Map<String, Object> options) {
         StringBuilder sb = new StringBuilder();
 
-        // do not auto-create as during bootstrap then this component in Spring Boot may
-        // currently be creating which can lead to a dead-lock in Spring Boot
-        PlatformHttpComponent http = (PlatformHttpComponent) getCamelContext().hasComponent("platform-http");
+        PlatformHttpComponent http = getCamelContext().getComponent("platform-http", PlatformHttpComponent.class);
         if (http != null) {
             String server = "http://0.0.0.0";
             int port = http.getEngine().getServerPort();
@@ -62,9 +60,7 @@ public class PlatformHttpConsole extends AbstractDevConsole {
     protected JsonObject doCallJson(Map<String, Object> options) {
         JsonObject root = new JsonObject();
 
-        // do not auto-create as during bootstrap then this component in Spring Boot may
-        // currently be creating which can lead to a dead-lock in Spring Boot
-        PlatformHttpComponent http = (PlatformHttpComponent) getCamelContext().hasComponent("platform-http");
+        PlatformHttpComponent http = getCamelContext().getComponent("platform-http", PlatformHttpComponent.class);
         if (http != null) {
             String server = "http://0.0.0.0";
             int port = http.getEngine().getServerPort();
@@ -73,37 +69,26 @@ public class PlatformHttpConsole extends AbstractDevConsole {
             }
             root.put("server", server);
 
-            final List<JsonObject> list = buildEndpointList(http, server);
+            Set<HttpEndpointModel> models = http.getHttpEndpoints();
+            List<JsonObject> list = new ArrayList<>();
+            for (HttpEndpointModel model : models) {
+                JsonObject jo = new JsonObject();
+                String uri = model.getUri();
+                if (!uri.startsWith("/")) {
+                    uri = "/" + uri;
+                }
+                jo.put("url", server + uri);
+                jo.put("path", model.getUri());
+                if (model.getVerbs() != null) {
+                    jo.put("verbs", model.getVerbs());
+                }
+                list.add(jo);
+            }
             if (!list.isEmpty()) {
                 root.put("endpoints", list);
             }
         }
 
         return root;
-    }
-
-    private static List<JsonObject> buildEndpointList(PlatformHttpComponent http, String server) {
-        Set<HttpEndpointModel> models = http.getHttpEndpoints();
-        List<JsonObject> list = new ArrayList<>();
-        for (HttpEndpointModel model : models) {
-            JsonObject jo = new JsonObject();
-            String uri = model.getUri();
-            if (!uri.startsWith("/")) {
-                uri = "/" + uri;
-            }
-            jo.put("url", server + uri);
-            jo.put("path", model.getUri());
-            if (model.getVerbs() != null) {
-                jo.put("verbs", model.getVerbs());
-            }
-            if (model.getConsumes() != null) {
-                jo.put("consumes", model.getConsumes());
-            }
-            if (model.getProduces() != null) {
-                jo.put("produces", model.getProduces());
-            }
-            list.add(jo);
-        }
-        return list;
     }
 }

@@ -33,12 +33,4 @@ public final class MicroprofileLRAServiceFactory {
                 .addRemoteMapping(MicroprofileLRARemoteService::new)
                 .build();
     }
-
-    public static class MicroprofileLRALocalContainerService extends MicroprofileLRALocalContainerInfraService
-            implements MicroprofileLRAService {
-    }
-
-    public static class MicroprofileLRARemoteService extends MicroprofileLRARemoteInfraService
-            implements MicroprofileLRAService {
-    }
 }

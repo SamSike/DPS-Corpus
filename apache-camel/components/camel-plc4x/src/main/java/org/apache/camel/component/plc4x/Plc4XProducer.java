@@ -25,17 +25,19 @@ import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.support.DefaultAsyncProducer;
+import org.apache.plc4x.java.api.PlcConnection;
 import org.apache.plc4x.java.api.exceptions.PlcConnectionException;
 import org.apache.plc4x.java.api.exceptions.PlcException;
-import org.apache.plc4x.java.api.exceptions.PlcInvalidTagException;
+import org.apache.plc4x.java.api.exceptions.PlcInvalidFieldException;
 import org.apache.plc4x.java.api.messages.PlcWriteRequest;
 import org.apache.plc4x.java.api.messages.PlcWriteResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Plc4XProducer extends DefaultAsyncProducer {
-    protected AtomicInteger openRequests;
     private final Logger log = LoggerFactory.getLogger(Plc4XProducer.class);
+    private PlcConnection plcConnection;
+    private AtomicInteger openRequests;
     private final Plc4XEndpoint plc4XEndpoint;
 
     public Plc4XProducer(Plc4XEndpoint endpoint) {
@@ -47,47 +49,43 @@ public class Plc4XProducer extends DefaultAsyncProducer {
     @Override
     protected void doStart() throws Exception {
         super.doStart();
-        try {
-            plc4XEndpoint.setupConnection();
-            if (plc4XEndpoint.isConnected() && !plc4XEndpoint.canWrite()) {
-                throw new PlcException("This connection (" + plc4XEndpoint.getUri() + ") doesn't support writing.");
-            }
-        } catch (PlcConnectionException e) {
-            if (log.isTraceEnabled()) {
-                log.error("Connection setup failed, stopping producer", e);
-            } else {
-                log.error("Connection setup failed, stopping producer");
-            }
-            doStop();
+        this.plcConnection = plc4XEndpoint.getConnection();
+        if (!plcConnection.isConnected()) {
+            plc4XEndpoint.reconnect();
+        }
+        if (!plcConnection.getMetadata().canWrite()) {
+            throw new PlcException("This connection (" + plc4XEndpoint.getUri() + ") doesn't support writing.");
         }
     }
 
     @Override
     public void process(Exchange exchange) throws Exception {
-        try {
-            plc4XEndpoint.reconnectIfNeeded();
-            if (plc4XEndpoint.isConnected() && !plc4XEndpoint.canWrite()) {
-                throw new PlcException("This connection (" + plc4XEndpoint.getUri() + ") doesn't support writing.");
-            }
-        } catch (PlcConnectionException e) {
-            if (log.isTraceEnabled()) {
+        if (plc4XEndpoint.isAutoReconnect() && !plcConnection.isConnected()) {
+            try {
+                plc4XEndpoint.reconnect();
+                log.debug("Successfully reconnected");
+            } catch (PlcConnectionException e) {
                 log.warn("Unable to reconnect, skipping request", e);
-            } else {
-                log.warn("Unable to reconnect, skipping request");
+                return;
             }
-            return;
         }
-
         Message in = exchange.getIn();
         Object body = in.getBody();
-        PlcWriteRequest plcWriteRequest;
+        PlcWriteRequest.Builder builder = plcConnection.writeRequestBuilder();
         if (body instanceof Map) { //Check if we have a Map
             Map<String, Map<String, Object>> tags = (Map<String, Map<String, Object>>) body;
-            plcWriteRequest = plc4XEndpoint.buildPlcWriteRequest(tags);
+            for (Map.Entry<String, Map<String, Object>> entry : tags.entrySet()) {
+                //Tags are stored like this --> Map<Tagname,Map<Query,Value>> for writing
+                String name = entry.getKey();
+                String query = entry.getValue().keySet().iterator().next();
+                Object value = entry.getValue().get(query);
+                builder.addItem(name, query, value);
+            }
         } else {
-            throw new PlcInvalidTagException("The body must contain a Map<String,Map<String,Object>");
+            throw new PlcInvalidFieldException("The body must contain a Map<String,Map<String,Object>");
         }
-        CompletableFuture<? extends PlcWriteResponse> completableFuture = plcWriteRequest.execute();
+
+        CompletableFuture<? extends PlcWriteResponse> completableFuture = builder.build().execute();
         int currentlyOpenRequests = openRequests.incrementAndGet();
         try {
             log.debug("Currently open requests including {}:{}", exchange, currentlyOpenRequests);

@@ -30,8 +30,8 @@ import org.junit.jupiter.api.Test;
 public class DeadLetterChannelRestartFromBeginningTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("retryBean", new RetryBean());
         return jndi;
     }
@@ -51,10 +51,10 @@ public class DeadLetterChannelRestartFromBeginningTest extends ContextTestSuppor
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // use the DLQ and let the retryBean handle this
                 errorHandler(deadLetterChannel("bean:retryBean").useOriginalMessage());
 
@@ -64,7 +64,7 @@ public class DeadLetterChannelRestartFromBeginningTest extends ContextTestSuppor
                     private int counter;
 
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         // fail the first 3 times
                         if (counter++ <= 3) {
                             throw new IllegalArgumentException("Damn");

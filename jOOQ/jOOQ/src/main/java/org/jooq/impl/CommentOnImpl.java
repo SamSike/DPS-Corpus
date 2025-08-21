@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,18 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.impl.QOM.CommentObjectType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -74,89 +70,61 @@ extends
     AbstractDDLQuery
 implements
     QOM.CommentOn,
-    CommentOnRoutineParametersStep,
     CommentOnIsStep,
     CommentOnFinalStep
 {
 
-    final CommentObjectType                         objectType;
-    final Table<?>                                  table;
-    final Field<?>                                  field;
-    final Name                                      function;
-    final Name                                      procedure;
-          QueryPartListView<? extends Parameter<?>> parameters;
-          Comment                                   comment;
+    final Table<?> table;
+    final boolean  isView;
+    final Field<?> field;
+          Comment  comment;
 
     CommentOnImpl(
         Configuration configuration,
-        CommentObjectType objectType,
         Table<?> table,
-        Field<?> field,
-        Name function,
-        Name procedure
+        boolean isView,
+        Field<?> field
     ) {
         this(
             configuration,
-            objectType,
             table,
+            isView,
             field,
-            function,
-            procedure,
-            null,
             null
         );
     }
 
     CommentOnImpl(
         Configuration configuration,
-        CommentObjectType objectType,
-        Table<?> table
+        Table<?> table,
+        boolean isView
     ) {
         this(
             configuration,
-            objectType,
             table,
-            null,
-            null,
+            isView,
             null
         );
     }
 
     CommentOnImpl(
         Configuration configuration,
-        CommentObjectType objectType,
         Table<?> table,
+        boolean isView,
         Field<?> field,
-        Name function,
-        Name procedure,
-        Collection<? extends Parameter<?>> parameters,
         Comment comment
     ) {
         super(configuration);
 
-        this.objectType = objectType;
         this.table = table;
+        this.isView = isView;
         this.field = field;
-        this.function = function;
-        this.procedure = procedure;
-        this.parameters = new QueryPartList<>(parameters);
         this.comment = comment;
     }
 
     // -------------------------------------------------------------------------
     // XXX: DSL API
     // -------------------------------------------------------------------------
-
-    @Override
-    public final CommentOnImpl parameters(Parameter<?>... parameters) {
-        return parameters(Arrays.asList(parameters));
-    }
-
-    @Override
-    public final CommentOnImpl parameters(Collection<? extends Parameter<?>> parameters) {
-        this.parameters = new QueryPartList<>(parameters);
-        return this;
-    }
 
     @Override
     public final CommentOnImpl is(String comment) {
@@ -175,8 +143,7 @@ implements
 
 
 
-    private static final Set<SQLDialect> NO_SUPPORT_COMMENT_ON_VIEW              = SQLDialect.supportedBy(CLICKHOUSE, CUBRID, DERBY, DUCKDB, H2, HSQLDB, IGNITE, MARIADB, MYSQL, SQLITE);
-    private static final Set<SQLDialect> NO_SUPPORT_COMMENT_ON_MATERIALIZED_VIEW = SQLDialect.supportedBy(CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, SQLITE, TRINO);
+    private static final Set<SQLDialect> SUPPORTS_COMMENT_ON_VIEW = SQLDialect.supportedBy(FIREBIRD, POSTGRES, YUGABYTEDB);
 
     @Override
     public final void accept(Context<?> ctx) {
@@ -197,35 +164,12 @@ implements
 
 
 
-
-
-
-
-
-
-
-
             case MARIADB:
             case MYSQL: {
                 if (table != null)
                     acceptMySQL(ctx);
-
-
-
-
                 else
                     acceptDefault(ctx);
-
-                break;
-            }
-
-            case CLICKHOUSE: {
-                if (table != null)
-                    ctx.visit(K_ALTER_TABLE).sql(' ').visit(table).sql(' ')
-                       .visit(K_MODIFY).sql(' ').visit(K_COMMENT).sql(' ').visit(comment);
-                else
-                    ctx.visit(K_ALTER_TABLE).sql(' ').visit(table(field.getQualifiedName().qualifier())).sql(' ')
-                       .visit(K_COMMENT).sql(' ').visit(K_COLUMN).sql(' ').visit(DSL.field(field.getUnqualifiedName())).sql(' ').visit(comment);
 
                 break;
             }
@@ -296,64 +240,19 @@ implements
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private final void acceptMySQL(Context<?> ctx) {
-        if (table != null)
-            ctx.visit(K_ALTER_TABLE).sql(' ').visit(table).sql(' ').visit(K_COMMENT).sql(" = ").visit(comment);
-
-
-
-
-
-
+        ctx.visit(K_ALTER_TABLE).sql(' ').visit(table).sql(' ').visit(K_COMMENT).sql(" = ").visit(comment);
     }
 
     private final void acceptDefault(Context<?> ctx) {
         ctx.visit(K_COMMENT).sql(' ').visit(K_ON).sql(' ');
 
-        if (table != null) {
-            if (objectType == CommentObjectType.VIEW && !NO_SUPPORT_COMMENT_ON_VIEW.contains(ctx.dialect()))
-                ctx.visit(K_VIEW).sql(' ');
-            else if (objectType == CommentObjectType.MATERIALIZED_VIEW && !NO_SUPPORT_COMMENT_ON_MATERIALIZED_VIEW.contains(ctx.dialect()))
-                ctx.visit(K_MATERIALIZED).sql(' ').visit(K_VIEW).sql(' ');
-
-
-
-
-            else
-                ctx.visit(K_TABLE).sql(' ');
-
-            ctx.visit(table);
-        }
-        else if (field != null) {
+        if (table != null)
+            ctx.visit(isView && SUPPORTS_COMMENT_ON_VIEW.contains(ctx.dialect()) ? K_VIEW : K_TABLE)
+               .sql(' ')
+               .visit(table);
+        else if (field != null)
             ctx.visit(K_COLUMN).sql(' ').visit(field);
-        }
-
-
-
-
-
-
-
-
-
-
-
-
         else
             throw new IllegalStateException();
 
@@ -367,13 +266,13 @@ implements
     // -------------------------------------------------------------------------
 
     @Override
-    public final CommentObjectType $objectType() {
-        return objectType;
+    public final Table<?> $table() {
+        return table;
     }
 
     @Override
-    public final Table<?> $table() {
-        return table;
+    public final boolean $isView() {
+        return isView;
     }
 
     @Override
@@ -382,89 +281,33 @@ implements
     }
 
     @Override
-    public final Name $function() {
-        return function;
-    }
-
-    @Override
-    public final Name $procedure() {
-        return procedure;
-    }
-
-    @Override
-    public final boolean $isView() {
-        return $objectType() == CommentObjectType.VIEW;
-    }
-
-    @Override
-    public final boolean $isMaterializedView() {
-        return $objectType() == CommentObjectType.MATERIALIZED_VIEW;
-    }
-
-    @Override
-    public final QOM.UnmodifiableList<? extends Parameter<?>> $parameters() {
-        return QOM.unmodifiable(parameters);
-    }
-
-    @Override
     public final Comment $comment() {
         return comment;
     }
 
     @Override
-    public final QOM.CommentOn $objectType(CommentObjectType newValue) {
-        return $constructor().apply(newValue, $table(), $field(), $function(), $procedure(), $parameters(), $comment());
-    }
-
-    @Override
     public final QOM.CommentOn $table(Table<?> newValue) {
-        return $constructor().apply($objectType(), newValue, $field(), $function(), $procedure(), $parameters(), $comment());
-    }
-
-    @Override
-    public final QOM.CommentOn $field(Field<?> newValue) {
-        return $constructor().apply($objectType(), $table(), newValue, $function(), $procedure(), $parameters(), $comment());
-    }
-
-    @Override
-    public final QOM.CommentOn $function(Name newValue) {
-        return $constructor().apply($objectType(), $table(), $field(), newValue, $procedure(), $parameters(), $comment());
-    }
-
-    @Override
-    public final QOM.CommentOn $procedure(Name newValue) {
-        return $constructor().apply($objectType(), $table(), $field(), $function(), newValue, $parameters(), $comment());
-    }
-
-    @Override
-    public final QOM.CommentOn $parameters(Collection<? extends Parameter<?>> newValue) {
-        return $constructor().apply($objectType(), $table(), $field(), $function(), $procedure(), newValue, $comment());
-    }
-
-    @Override
-    public final QOM.CommentOn $comment(Comment newValue) {
-        return $constructor().apply($objectType(), $table(), $field(), $function(), $procedure(), $parameters(), newValue);
+        return $constructor().apply(newValue, $isView(), $field(), $comment());
     }
 
     @Override
     public final QOM.CommentOn $isView(boolean newValue) {
-        return $objectType(newValue ? CommentObjectType.VIEW : null);
+        return $constructor().apply($table(), newValue, $field(), $comment());
     }
 
     @Override
-    public final QOM.CommentOn $isMaterializedView(boolean newValue) {
-        return $objectType(newValue ? CommentObjectType.MATERIALIZED_VIEW : CommentObjectType.TABLE);
+    public final QOM.CommentOn $field(Field<?> newValue) {
+        return $constructor().apply($table(), $isView(), newValue, $comment());
     }
 
-    public final Function7<? super CommentObjectType, ? super Table<?>, ? super Field<?>, ? super Name, ? super Name, ? super Collection<? extends Parameter<?>>, ? super Comment, ? extends QOM.CommentOn> $constructor() {
-        return (a1, a2, a3, a4, a5, a6, a7) -> new CommentOnImpl(configuration(), a1, a2, a3, a4, a5, (Collection<? extends Parameter<?>>) a6, a7);
+    @Override
+    public final QOM.CommentOn $comment(Comment newValue) {
+        return $constructor().apply($table(), $isView(), $field(), newValue);
     }
 
-
-
-
-
-
+    public final Function4<? super Table<?>, ? super Boolean, ? super Field<?>, ? super Comment, ? extends QOM.CommentOn> $constructor() {
+        return (a1, a2, a3, a4) -> new CommentOnImpl(configuration(), a1, a2, a3, a4);
+    }
 
 
 

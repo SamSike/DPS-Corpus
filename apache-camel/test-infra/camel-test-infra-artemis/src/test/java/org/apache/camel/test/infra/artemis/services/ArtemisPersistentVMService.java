@@ -16,22 +16,46 @@
  */
 package org.apache.camel.test.infra.artemis.services;
 
+import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.core.config.Configuration;
-import org.apache.camel.test.infra.artemis.common.ArtemisRunException;
+import org.apache.activemq.artemis.core.server.JournalType;
+import org.apache.activemq.artemis.core.settings.impl.AddressSettings;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
-public class ArtemisPersistentVMService extends ArtemisPersistentVMInfraService implements ArtemisService {
+public class ArtemisPersistentVMService extends AbstractArtemisEmbeddedService {
+
+    private String brokerURL;
 
     @Override
-    protected Configuration configure(Configuration configuration, int port, int brokerId) {
-        Configuration config = null;
-        try {
-            config = super.configure(configuration, port, brokerId);
-        } catch (ArtemisRunException e) {
-            fail(e.getMessage());
-        }
+    protected Configuration getConfiguration(Configuration configuration, int port) {
+        final int brokerId = super.BROKER_COUNT.intValue();
+        brokerURL = "vm://" + brokerId;
 
-        return config;
+        configuration.setPersistenceEnabled(true);
+        configuration.setJournalType(JournalType.NIO);
+
+        try {
+            configuration.addAcceptorConfiguration("in-vm", brokerURL);
+        } catch (Exception e) {
+            LOG.warn(e.getMessage(), e);
+            fail("vm acceptor cannot be configured");
+        }
+        configuration.addAddressSetting("#",
+                new AddressSettings()
+                        .setDeadLetterAddress(SimpleString.toSimpleString("DLQ"))
+                        .setExpiryAddress(SimpleString.toSimpleString("ExpiryQueue")));
+
+        return configuration;
+    }
+
+    @Override
+    public String serviceAddress() {
+        return brokerURL;
+    }
+
+    @Override
+    public int brokerPort() {
+        return 0;
     }
 }

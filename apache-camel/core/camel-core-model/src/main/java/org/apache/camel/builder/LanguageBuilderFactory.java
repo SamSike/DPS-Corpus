@@ -23,7 +23,6 @@ import org.apache.camel.model.language.ExchangePropertyExpression;
 import org.apache.camel.model.language.GroovyExpression;
 import org.apache.camel.model.language.HeaderExpression;
 import org.apache.camel.model.language.Hl7TerserExpression;
-import org.apache.camel.model.language.JavaExpression;
 import org.apache.camel.model.language.JavaScriptExpression;
 import org.apache.camel.model.language.JoorExpression;
 import org.apache.camel.model.language.JqExpression;
@@ -37,8 +36,6 @@ import org.apache.camel.model.language.RefExpression;
 import org.apache.camel.model.language.SimpleExpression;
 import org.apache.camel.model.language.SpELExpression;
 import org.apache.camel.model.language.TokenizerExpression;
-import org.apache.camel.model.language.VariableExpression;
-import org.apache.camel.model.language.WasmExpression;
 import org.apache.camel.model.language.XMLTokenizerExpression;
 import org.apache.camel.model.language.XPathExpression;
 import org.apache.camel.model.language.XQueryExpression;
@@ -56,28 +53,10 @@ public final class LanguageBuilderFactory {
     }
 
     /**
-     * Uses the Constant language
-     */
-    public ConstantExpression.Builder constant(Object value) {
-        var builder = constant();
-        builder.value(value);
-        return builder;
-    }
-
-    /**
      * Uses the CSimple language
      */
     public CSimpleExpression.Builder csimple() {
         return new CSimpleExpression.Builder();
-    }
-
-    /**
-     * Uses the CSimple language
-     */
-    public CSimpleExpression.Builder csimple(String expression) {
-        var builder = csimple();
-        builder.expression(expression);
-        return builder;
     }
 
     /**
@@ -88,28 +67,10 @@ public final class LanguageBuilderFactory {
     }
 
     /**
-     * Uses the Datasonnet language
-     */
-    public DatasonnetExpression.Builder datasonnet(String expression) {
-        var builder = datasonnet();
-        builder.expression(expression);
-        return builder;
-    }
-
-    /**
      * Uses the ExchangeProperty language
      */
     public ExchangePropertyExpression.Builder exchangeProperty() {
         return new ExchangePropertyExpression.Builder();
-    }
-
-    /**
-     * Uses the ExchangeProperty language
-     */
-    public ExchangePropertyExpression.Builder exchangeProperty(String name) {
-        var builder = exchangeProperty();
-        builder.expression(name);
-        return builder;
     }
 
     /**
@@ -120,28 +81,10 @@ public final class LanguageBuilderFactory {
     }
 
     /**
-     * Uses the Groovy language
-     */
-    public GroovyExpression.Builder groovy(String expression) {
-        var builder = groovy();
-        builder.expression(expression);
-        return builder;
-    }
-
-    /**
      * Uses the Header language
      */
     public HeaderExpression.Builder header() {
         return new HeaderExpression.Builder();
-    }
-
-    /**
-     * Uses the Header language
-     */
-    public HeaderExpression.Builder header(String name) {
-        var builder = header();
-        builder.expression(name);
-        return builder;
     }
 
     /**
@@ -152,15 +95,6 @@ public final class LanguageBuilderFactory {
     }
 
     /**
-     * Uses the Hl7Terser language
-     */
-    public Hl7TerserExpression.Builder hl7terser(String expression) {
-        var builder = hl7terser();
-        builder.expression(expression);
-        return builder;
-    }
-
-    /**
      * Uses the JavaScript language
      */
     public JavaScriptExpression.Builder js() {
@@ -168,52 +102,17 @@ public final class LanguageBuilderFactory {
     }
 
     /**
-     * Uses the JavaScript language
+     * Uses the Joor language
      */
-    public JavaScriptExpression.Builder js(String expression) {
-        var builder = js();
-        builder.expression(expression);
-        return builder;
-    }
-
-    /**
-     * Uses the Java language
-     */
-    public JavaExpression.Builder java() {
-        return new JavaExpression.Builder();
-    }
-
-    /**
-     * Uses the Java language
-     */
-    public JavaExpression.Builder java(String expression) {
-        var builder = java();
-        builder.expression(expression);
-        return builder;
-    }
-
-    /**
-     * Uses the JOOR language
-     */
-    @Deprecated(since = "4.3.0")
     public JoorExpression.Builder joor() {
         return new JoorExpression.Builder();
     }
 
     /**
-     * Uses the JQ language
+     * Uses the Jq language
      */
     public JqExpression.Builder jq() {
         return new JqExpression.Builder();
-    }
-
-    /**
-     * Uses the JQ language
-     */
-    public JqExpression.Builder jq(String expression) {
-        var builder = jq();
-        builder.expression(expression);
-        return builder;
     }
 
     /**
@@ -224,15 +123,6 @@ public final class LanguageBuilderFactory {
     }
 
     /**
-     * Uses the JsonPath language
-     */
-    public JsonPathExpression.Builder jsonpath(String expression) {
-        var builder = jsonpath();
-        builder.expression(expression);
-        return builder;
-    }
-
-    /**
      * Uses a custom language
      */
     public LanguageExpression.Builder language() {
@@ -240,80 +130,24 @@ public final class LanguageBuilderFactory {
     }
 
     /**
-     * Uses a custom language
-     */
-    public LanguageExpression.Builder language(String language, String expression) {
-        var builder = language();
-        builder.language(language);
-        builder.expression(expression);
-        return builder;
-    }
-
-    /**
-     * Uses the bean language
+     * Uses the MethodCall language
      */
     public MethodCallExpression.Builder bean() {
         return new MethodCallExpression.Builder();
     }
 
     /**
-     * Uses the bean language
-     */
-    public MethodCallExpression.Builder bean(String ref) {
-        var builder = bean();
-        builder.ref(ref);
-        return builder;
-    }
-
-    /**
-     * Uses the bean language
-     */
-    public MethodCallExpression.Builder bean(Class<?> beanType) {
-        var builder = bean();
-        builder.beanType(beanType);
-        return builder;
-    }
-
-    /**
-     * Uses the bean language
-     */
-    public MethodCallExpression.Builder bean(Object instance) {
-        var builder = bean();
-        builder.instance(instance);
-        return builder;
-    }
-
-    /**
-     * Uses the MVEL language
+     * Uses the Mvel language
      */
     public MvelExpression.Builder mvel() {
         return new MvelExpression.Builder();
     }
 
     /**
-     * Uses the MVEL language
-     */
-    public MvelExpression.Builder mvel(String expression) {
-        var builder = mvel();
-        builder.expression(expression);
-        return builder;
-
-    }
-
-    /**
-     * Uses the OGNL language
+     * Uses the Ognl language
      */
     public OgnlExpression.Builder ognl() {
         return new OgnlExpression.Builder();
-    }
-
-    /**
-     * Uses the OGNL language
-     */
-    public OgnlExpression.Builder ognl(String expression) {
-        var builder = ognl();
-        builder.expression(expression);
-        return builder;
     }
 
     /**
@@ -324,28 +158,10 @@ public final class LanguageBuilderFactory {
     }
 
     /**
-     * Uses the Python language
-     */
-    public PythonExpression.Builder python(String expression) {
-        var builder = python();
-        builder.expression(expression);
-        return builder;
-    }
-
-    /**
      * Uses the Ref language
      */
     public RefExpression.Builder ref() {
         return new RefExpression.Builder();
-    }
-
-    /**
-     * Uses the Ref language
-     */
-    public RefExpression.Builder ref(String ref) {
-        var builder = ref();
-        builder.expression(ref);
-        return builder;
     }
 
     /**
@@ -356,28 +172,10 @@ public final class LanguageBuilderFactory {
     }
 
     /**
-     * Uses the Simple language
-     */
-    public SimpleExpression.Builder simple(String expression) {
-        var builder = simple();
-        builder.expression(expression);
-        return builder;
-    }
-
-    /**
      * Uses the SpEL language
      */
     public SpELExpression.Builder spel() {
         return new SpELExpression.Builder();
-    }
-
-    /**
-     * Uses the SpEL language
-     */
-    public SpELExpression.Builder spel(String expression) {
-        var builder = spel();
-        builder.expression(expression);
-        return builder;
     }
 
     /**
@@ -388,44 +186,10 @@ public final class LanguageBuilderFactory {
     }
 
     /**
-     * Uses the Tokenizer language
-     */
-    public TokenizerExpression.Builder tokenize(String expression) {
-        var builder = tokenize();
-        builder.expression(expression);
-        return builder;
-    }
-
-    /**
-     * Uses the Variable language
-     */
-    public VariableExpression.Builder variable() {
-        return new VariableExpression.Builder();
-    }
-
-    /**
-     * Uses the Variable language
-     */
-    public VariableExpression.Builder variable(String name) {
-        var builder = variable();
-        builder.expression(name);
-        return builder;
-    }
-
-    /**
      * Uses the XMLTokenizer language
      */
     public XMLTokenizerExpression.Builder xtokenize() {
         return new XMLTokenizerExpression.Builder();
-    }
-
-    /**
-     * Uses the XMLTokenizer language
-     */
-    public XMLTokenizerExpression.Builder xtokenize(String expression) {
-        var builder = xtokenize();
-        builder.expression(expression);
-        return builder;
     }
 
     /**
@@ -436,44 +200,9 @@ public final class LanguageBuilderFactory {
     }
 
     /**
-     * Uses the XPath language
-     */
-    public XPathExpression.Builder xpath(String expression) {
-        var builder = xpath();
-        builder.expression(expression);
-        return builder;
-    }
-
-    /**
      * Uses the XQuery language
      */
     public XQueryExpression.Builder xquery() {
         return new XQueryExpression.Builder();
-    }
-
-    /**
-     * Uses the XQuery language
-     */
-    public XQueryExpression.Builder xquery(String expression) {
-        var builder = xquery();
-        builder.expression(expression);
-        return builder;
-    }
-
-    /**
-     * Uses the Wasm language
-     */
-    public WasmExpression.Builder wasm() {
-        return new WasmExpression.Builder();
-    }
-
-    /**
-     * Uses the Wasm language
-     */
-    public WasmExpression.Builder wasm(String module, String expression) {
-        var builder = wasm();
-        builder.module(module);
-        builder.expression(expression);
-        return builder;
     }
 }

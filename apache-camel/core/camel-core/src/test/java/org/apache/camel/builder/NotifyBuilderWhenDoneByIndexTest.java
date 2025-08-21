@@ -24,17 +24,15 @@ import org.apache.camel.Processor;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class NotifyBuilderWhenDoneByIndexTest extends ContextTestSupport {
 
     @Test
-    public void testDoneByIndex() {
+    public void testDoneByIndex() throws Exception {
         final AtomicInteger counter = new AtomicInteger();
         getMockEndpoint("mock:split").whenAnyExchangeReceived(new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 counter.incrementAndGet();
             }
         });
@@ -42,20 +40,20 @@ public class NotifyBuilderWhenDoneByIndexTest extends ContextTestSupport {
         // notify when the 1st exchange is done (by index)
         NotifyBuilder notify = new NotifyBuilder(context).whenDoneByIndex(0).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("seda:foo", "A,B,C");
 
-        assertTrue(notify.matchesWaitTime());
+        assertEquals(true, notify.matchesWaitTime());
 
         assertEquals(3, counter.get());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo").routeId("foo").delay(500).split(body().tokenize(",")).to("mock:split").end().to("mock:foo");
             }
         };

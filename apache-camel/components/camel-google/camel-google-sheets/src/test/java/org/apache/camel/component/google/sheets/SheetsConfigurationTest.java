@@ -36,7 +36,7 @@ public class SheetsConfigurationTest extends CamelTestSupport {
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        final CamelContext context = new DefaultCamelContext();
+        final CamelContext context = new DefaultCamelContext(createCamelRegistry());
 
         // add GoogleSheetsComponent to Camel context but don't set up configuration
         final GoogleSheetsComponent component = new GoogleSheetsComponent(context);
@@ -46,7 +46,7 @@ public class SheetsConfigurationTest extends CamelTestSupport {
     }
 
     @Test
-    public void testComponentConfiguration() {
+    public void testConfiguration() {
         GoogleSheetsEndpoint endpoint = getMandatoryEndpoint(TEST_URI, GoogleSheetsEndpoint.class);
         GoogleSheetsConfiguration configuration = endpoint.getConfiguration();
         assertNotNull(configuration);

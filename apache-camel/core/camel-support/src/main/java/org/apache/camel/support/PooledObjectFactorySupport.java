@@ -134,7 +134,7 @@ public abstract class PooledObjectFactorySupport<T> extends ServiceSupport imple
     /**
      * Represents utilization statistics
      */
-    protected static final class UtilizationStatistics implements PooledObjectFactory.Statistics {
+    protected final class UtilizationStatistics implements PooledObjectFactory.Statistics {
 
         public final LongAdder created = new LongAdder();
         public final LongAdder acquired = new LongAdder();

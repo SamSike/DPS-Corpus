@@ -41,6 +41,7 @@ import org.apache.cxf.ext.logging.LoggingOutInterceptor;
 import org.apache.cxf.frontend.ClientProxy;
 import org.apache.cxf.staxutils.StaxUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -50,6 +51,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Unit test to verify CxfConsumer to generate SOAP fault in PAYLOAD mode
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CxfConsumerPayloadFaultTest extends CamelTestSupport {
     protected static final String PORT_NAME_PROP = "portName={http://camel.apache.org/wsdl-first}soap";
     protected static final String SERVICE_NAME = "{http://camel.apache.org/wsdl-first}PersonService";

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -61,7 +61,8 @@ public abstract class AbstractVersionStrategy implements VersionStrategy {
 
 
 	@Override
-	public @Nullable String extractVersion(String requestPath) {
+	@Nullable
+	public String extractVersion(String requestPath) {
 		return this.pathStrategy.extractVersion(requestPath);
 	}
 
@@ -78,7 +79,7 @@ public abstract class AbstractVersionStrategy implements VersionStrategy {
 
 	/**
 	 * A prefix-based {@code VersionPathStrategy},
-	 * for example, {@code "{version}/path/foo.js"}.
+	 * e.g. {@code "{version}/path/foo.js"}.
 	 */
 	protected static class PrefixVersionPathStrategy implements VersionPathStrategy {
 
@@ -90,7 +91,8 @@ public abstract class AbstractVersionStrategy implements VersionStrategy {
 		}
 
 		@Override
-		public @Nullable String extractVersion(String requestPath) {
+		@Nullable
+		public String extractVersion(String requestPath) {
 			return (requestPath.startsWith(this.prefix) ? this.prefix : null);
 		}
 
@@ -114,14 +116,15 @@ public abstract class AbstractVersionStrategy implements VersionStrategy {
 
 	/**
 	 * File name-based {@code VersionPathStrategy},
-	 * for example, {@code "path/foo-{version}.css"}.
+	 * e.g. {@code "path/foo-{version}.css"}.
 	 */
 	protected static class FileNameVersionPathStrategy implements VersionPathStrategy {
 
 		private static final Pattern pattern = Pattern.compile("-(\\S*)\\.");
 
 		@Override
-		public @Nullable String extractVersion(String requestPath) {
+		@Nullable
+		public String extractVersion(String requestPath) {
 			Matcher matcher = pattern.matcher(requestPath);
 			if (matcher.find()) {
 				String match = matcher.group(1);

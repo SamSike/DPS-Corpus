@@ -55,10 +55,10 @@ public class ErrorHandlerOnExceptionRedeliveryAndHandledTest extends ContextTest
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(defaultErrorHandler().maximumRedeliveries(5).redeliveryDelay(0));
 
                 onException(IOException.class).maximumRedeliveries(3).handled(true).process(new Processor() {

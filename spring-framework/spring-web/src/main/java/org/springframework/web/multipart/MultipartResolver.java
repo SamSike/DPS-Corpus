@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,12 @@ import jakarta.servlet.http.HttpServletRequest;
  * Implementations are typically usable both within an application context
  * and standalone.
  *
- * <p>Spring provides the following concrete implementation:
+ * <p>There are two concrete implementations included in Spring, as of Spring 3.1:
  * <ul>
+ * <li>{@link org.springframework.web.multipart.commons.CommonsMultipartResolver}
+ * for Apache Commons FileUpload
  * <li>{@link org.springframework.web.multipart.support.StandardServletMultipartResolver}
- * for the Servlet Part API
+ * for the Servlet 3.0+ Part API
  * </ul>
  *
  * <p>There is no default resolver implementation used for Spring
@@ -75,6 +77,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * @since 29.09.2003
  * @see MultipartHttpServletRequest
  * @see MultipartFile
+ * @see org.springframework.web.multipart.commons.CommonsMultipartResolver
  * @see org.springframework.web.multipart.support.ByteArrayMultipartFileEditor
  * @see org.springframework.web.multipart.support.StringMultipartFileEditor
  * @see org.springframework.web.servlet.DispatcherServlet
@@ -110,9 +113,9 @@ public interface MultipartResolver {
 	MultipartHttpServletRequest resolveMultipart(HttpServletRequest request) throws MultipartException;
 
 	/**
-	 * Clean up any resources used for the multipart handling,
+	 * Cleanup any resources used for the multipart handling,
 	 * like a storage for the uploaded files.
-	 * @param request the request to clean up resources for
+	 * @param request the request to cleanup resources for
 	 */
 	void cleanupMultipart(MultipartHttpServletRequest request);
 

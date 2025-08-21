@@ -1,7 +1,9 @@
 /**
  * Contains (un)marshallers optimized to store binary data in MIME attachments.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.oxm.mime;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

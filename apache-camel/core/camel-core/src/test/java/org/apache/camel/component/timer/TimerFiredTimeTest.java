@@ -40,15 +40,15 @@ public class TimerFiredTimeTest extends ContextTestSupport {
         Exchange exchange = mock.getExchanges().get(0);
         assertEquals("hello", exchange.getProperty(Exchange.TIMER_NAME));
         assertNotNull(exchange.getProperty(Exchange.TIMER_FIRED_TIME));
-        assertNotNull(exchange.getIn().getHeader(Exchange.TIMER_FIRED_TIME));
+        assertNotNull(exchange.getIn().getHeader("firedTime"));
         assertEquals(Long.valueOf(1), exchange.getProperty(Exchange.TIMER_COUNTER));
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
-                from("timer://hello?period=10&delay=10&includeMetadata=true").to("mock:result");
+            public void configure() throws Exception {
+                from("timer://hello?period=10&delay=10").to("mock:result");
             }
         };
     }

@@ -32,8 +32,8 @@ public class DeadLetterChannelAlwaysHandledTest extends ContextTestSupport {
     private static final AtomicBoolean CALLLED = new AtomicBoolean();
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myHandler", new MyExceptionHandler());
         return jndi;
     }
@@ -53,10 +53,10 @@ public class DeadLetterChannelAlwaysHandledTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead"));
 
                 from("seda:foo?exceptionHandler=#myHandler").routeId("foo").to("mock:foo").to("direct:bar")
@@ -69,7 +69,7 @@ public class DeadLetterChannelAlwaysHandledTest extends ContextTestSupport {
         };
     }
 
-    private static final class MyExceptionHandler implements ExceptionHandler {
+    private final class MyExceptionHandler implements ExceptionHandler {
 
         @Override
         public void handleException(Throwable exception) {

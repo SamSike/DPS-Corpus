@@ -26,13 +26,6 @@ import org.apache.camel.dataformat.bindy.annotation.KeyValuePairField;
  */
 public final class ConverterUtils {
 
-    private static final byte[] WINDOWS_RETURN_BYTES = { 13, 10 };
-    private static final byte[] UNIX_RETURN_BYTES = { 10 };
-    private static final byte[] MAC_RETURN_BYTES = { 13 };
-    private static final String CRLF = "\r\n";
-    private static final String LINE_BREAK = "\n";
-    private static final String CARRIAGE_RETURN = "\r";
-
     private ConverterUtils() {
         // helper class
     }
@@ -51,11 +44,11 @@ public final class ConverterUtils {
 
     public static byte[] getByteReturn(String returnCharacter) {
         if (returnCharacter.equals("WINDOWS")) {
-            return WINDOWS_RETURN_BYTES;
+            return new byte[] { 13, 10 };
         } else if (returnCharacter.equals("UNIX")) {
-            return UNIX_RETURN_BYTES;
+            return new byte[] { 10 };
         } else if (returnCharacter.equals("MAC")) {
-            return MAC_RETURN_BYTES;
+            return new byte[] { 13 };
         } else {
             return returnCharacter.getBytes();
         }
@@ -63,11 +56,11 @@ public final class ConverterUtils {
 
     public static String getStringCarriageReturn(String returnCharacter) {
         if (returnCharacter.equals("WINDOWS")) {
-            return CRLF;
+            return "\r\n";
         } else if (returnCharacter.equals("UNIX")) {
-            return LINE_BREAK;
+            return "\n";
         } else if (returnCharacter.equals("MAC")) {
-            return CARRIAGE_RETURN;
+            return "\r";
         } else {
             return returnCharacter;
         }

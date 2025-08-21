@@ -57,11 +57,10 @@ public class RedeliveryPolicyDefinition extends IdentifiedType implements Clonea
     @Metadata(javaType = "java.time.Duration", defaultValue = "60000")
     private String maximumRedeliveryDelay;
     @XmlAttribute
-    @Metadata(label = "advanced", javaType = "org.apache.camel.LoggingLevel", defaultValue = "ERROR",
-              enums = "TRACE,DEBUG,INFO,WARN,ERROR,OFF")
+    @Metadata(label = "advanced", javaType = "org.apache.camel.LoggingLevel", defaultValue = "ERROR")
     private String retriesExhaustedLogLevel;
     @XmlAttribute
-    @Metadata(javaType = "org.apache.camel.LoggingLevel", defaultValue = "DEBUG", enums = "TRACE,DEBUG,INFO,WARN,ERROR,OFF")
+    @Metadata(javaType = "org.apache.camel.LoggingLevel", defaultValue = "DEBUG")
     private String retryAttemptedLogLevel;
     @XmlAttribute
     @Metadata(label = "advanced", javaType = "java.lang.Integer", defaultValue = "1")
@@ -111,47 +110,12 @@ public class RedeliveryPolicyDefinition extends IdentifiedType implements Clonea
         return "RedeliveryPolicy[maximumRedeliveries: " + maximumRedeliveries + "]";
     }
 
-    public RedeliveryPolicyDefinition() {
-    }
-
-    protected RedeliveryPolicyDefinition(RedeliveryPolicyDefinition source) {
-        this.maximumRedeliveries = source.maximumRedeliveries;
-        this.redeliveryDelay = source.redeliveryDelay;
-        this.asyncDelayedRedelivery = source.asyncDelayedRedelivery;
-        this.backOffMultiplier = source.backOffMultiplier;
-        this.useExponentialBackOff = source.useExponentialBackOff;
-        this.collisionAvoidanceFactor = source.collisionAvoidanceFactor;
-        this.useCollisionAvoidance = source.useCollisionAvoidance;
-        this.maximumRedeliveryDelay = source.maximumRedeliveryDelay;
-        this.retriesExhaustedLogLevel = source.retriesExhaustedLogLevel;
-        this.retryAttemptedLogLevel = source.retryAttemptedLogLevel;
-        this.retryAttemptedLogInterval = source.retryAttemptedLogInterval;
-        this.logRetryAttempted = source.logRetryAttempted;
-        this.logStackTrace = source.logStackTrace;
-        this.logRetryStackTrace = source.logRetryStackTrace;
-        this.logHandled = source.logHandled;
-        this.logNewException = source.logNewException;
-        this.logContinued = source.logContinued;
-        this.logExhausted = source.logExhausted;
-        this.logExhaustedMessageHistory = source.logExhaustedMessageHistory;
-        this.logExhaustedMessageBody = source.logExhaustedMessageBody;
-        this.disableRedelivery = source.disableRedelivery;
-        this.delayPattern = source.delayPattern;
-        this.allowRedeliveryWhileStopping = source.allowRedeliveryWhileStopping;
-        this.exchangeFormatterRef = source.exchangeFormatterRef;
-    }
-
-    @Deprecated
     public RedeliveryPolicyDefinition copy() {
         try {
             return (RedeliveryPolicyDefinition) clone();
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException("Could not clone: " + e, e);
         }
-    }
-
-    public RedeliveryPolicyDefinition copyDefinition() {
-        return new RedeliveryPolicyDefinition(this);
     }
 
     // Fluent API
@@ -567,7 +531,7 @@ public class RedeliveryPolicyDefinition extends IdentifiedType implements Clonea
     }
 
     /**
-     * Turn on exponential back off
+     * Turn on exponential backk off
      *
      * @return the builder
      */

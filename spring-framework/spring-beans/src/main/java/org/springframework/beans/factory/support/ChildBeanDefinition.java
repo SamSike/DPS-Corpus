@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,9 @@
 
 package org.springframework.beans.factory.support;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -47,7 +46,8 @@ import org.springframework.util.ObjectUtils;
 @SuppressWarnings("serial")
 public class ChildBeanDefinition extends AbstractBeanDefinition {
 
-	private @Nullable String parentName;
+	@Nullable
+	private String parentName;
 
 
 	/**
@@ -136,7 +136,8 @@ public class ChildBeanDefinition extends AbstractBeanDefinition {
 	}
 
 	@Override
-	public @Nullable String getParentName() {
+	@Nullable
+	public String getParentName() {
 		return this.parentName;
 	}
 
@@ -156,8 +157,14 @@ public class ChildBeanDefinition extends AbstractBeanDefinition {
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof ChildBeanDefinition that &&
-				ObjectUtils.nullSafeEquals(this.parentName, that.parentName) && super.equals(other)));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof ChildBeanDefinition)) {
+			return false;
+		}
+		ChildBeanDefinition that = (ChildBeanDefinition) other;
+		return (ObjectUtils.nullSafeEquals(this.parentName, that.parentName) && super.equals(other));
 	}
 
 	@Override

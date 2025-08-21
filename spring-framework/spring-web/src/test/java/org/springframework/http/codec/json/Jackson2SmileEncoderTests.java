@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,26 +42,27 @@ import static org.springframework.core.io.buffer.DataBufferUtils.release;
 import static org.springframework.http.MediaType.APPLICATION_XML;
 
 /**
- * Tests for {@link Jackson2SmileEncoder}.
+ * Unit tests for {@link Jackson2SmileEncoder}.
  *
  * @author Sebastien Deleuze
  */
-@SuppressWarnings("removal")
-class Jackson2SmileEncoderTests extends AbstractEncoderTests<Jackson2SmileEncoder> {
+public class Jackson2SmileEncoderTests extends AbstractEncoderTests<Jackson2SmileEncoder> {
 
-	private static final MimeType SMILE_MIME_TYPE = new MimeType("application", "x-jackson-smile");
-	private static final MimeType STREAM_SMILE_MIME_TYPE = new MimeType("application", "stream+x-jackson-smile");
+	private final static MimeType SMILE_MIME_TYPE = new MimeType("application", "x-jackson-smile");
+	private final static MimeType STREAM_SMILE_MIME_TYPE = new MimeType("application", "stream+x-jackson-smile");
+
+	private final Jackson2SmileEncoder encoder = new Jackson2SmileEncoder();
 
 	private final ObjectMapper mapper = Jackson2ObjectMapperBuilder.smile().build();
 
-	Jackson2SmileEncoderTests() {
+	public Jackson2SmileEncoderTests() {
 		super(new Jackson2SmileEncoder());
 
 	}
 
 	@Override
 	@Test
-	protected void canEncode() {
+	public void canEncode() {
 		ResolvableType pojoType = ResolvableType.forClass(Pojo.class);
 		assertThat(this.encoder.canEncode(pojoType, SMILE_MIME_TYPE)).isTrue();
 		assertThat(this.encoder.canEncode(pojoType, STREAM_SMILE_MIME_TYPE)).isTrue();
@@ -72,7 +73,7 @@ class Jackson2SmileEncoderTests extends AbstractEncoderTests<Jackson2SmileEncode
 	}
 
 	@Test
-	void canNotEncode() {
+	public void canNotEncode() {
 		assertThat(this.encoder.canEncode(ResolvableType.forClass(String.class), null)).isFalse();
 		assertThat(this.encoder.canEncode(ResolvableType.forClass(Pojo.class), APPLICATION_XML)).isFalse();
 
@@ -82,7 +83,7 @@ class Jackson2SmileEncoderTests extends AbstractEncoderTests<Jackson2SmileEncode
 
 	@Override
 	@Test
-	protected void encode() {
+	public void encode() {
 		List<Pojo> list = Arrays.asList(
 				new Pojo("foo", "bar"),
 				new Pojo("foofoo", "barbar"),
@@ -107,13 +108,17 @@ class Jackson2SmileEncoderTests extends AbstractEncoderTests<Jackson2SmileEncode
 	}
 
 	@Test
-	void encodeError() {
+	public void encodeError() throws Exception {
 		Mono<Pojo> input = Mono.error(new InputException());
-		testEncode(input, Pojo.class, step -> step.expectError(InputException.class).verify());
+
+		testEncode(input, Pojo.class, step -> step
+				.expectError(InputException.class)
+				.verify());
+
 	}
 
 	@Test
-	void encodeAsStream() {
+	public void encodeAsStream() throws Exception {
 		Pojo pojo1 = new Pojo("foo", "bar");
 		Pojo pojo2 = new Pojo("foofoo", "barbar");
 		Pojo pojo3 = new Pojo("foofoofoo", "barbarbar");

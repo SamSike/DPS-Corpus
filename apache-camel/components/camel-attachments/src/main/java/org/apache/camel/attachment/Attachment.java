@@ -38,15 +38,15 @@ public interface Attachment {
     /**
      * Get all the headers for this header name. Returns null if no headers for this header name are available.
      *
-     * @param  name the name of this header
-     * @return      a comma separated list of all header values
+     * @param  headerName he name of this header
+     * @return            a comma separated list of all header values
      */
-    String getHeader(String name);
+    String getHeader(String headerName);
 
     /**
      * Get all the headers for this header name. Returns null if no headers for this header name are available.
      *
-     * @param  name the name of this header
+     * @param  name The name of this header
      * @return      a list of all header values
      */
     List<String> getHeaderAsList(String name);
@@ -59,25 +59,25 @@ public interface Attachment {
     Collection<String> getHeaderNames();
 
     /**
-     * Set the value for this header. Replaces any existing header with the same name.
-     *
-     * @param name  the name of this header
-     * @param value the value for this header
+     * Set the value for this headerName. Replaces all existing header values with this new value.
+     * 
+     * @param headerName  the name of this header
+     * @param headerValue the value for this header
      */
-    void setHeader(String name, String value);
+    void setHeader(String headerName, String headerValue);
 
     /**
-     * Add this value to the existing values for this header.
-     *
-     * @param name  the name of this header
-     * @param value the value for this header
+     * Add this value to the existing values for this headerName.
+     * 
+     * @param headerName  the name of this header
+     * @param headerValue the value for this header
      */
-    void addHeader(String name, String value);
+    void addHeader(String headerName, String headerValue);
 
     /**
      * Remove all headers with this name.
-     *
-     * @param name the name of this header
+     * 
+     * @param headerName the name of this header
      */
-    void removeHeader(String name);
+    void removeHeader(String headerName);
 }

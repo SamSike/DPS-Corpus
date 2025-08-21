@@ -65,7 +65,9 @@ public class DefaultFactoryFinder implements FactoryFinder {
 
     @Override
     public Optional<Class<?>> findClass(String key) {
-        Class<?> clazz = addToClassMap(key, () -> {
+        final String classKey = key;
+
+        Class<?> clazz = addToClassMap(classKey, () -> {
             Properties prop = doFindFactoryProperties(key);
             if (prop != null) {
                 return doNewInstance(prop, true).orElse(null);
@@ -78,7 +80,9 @@ public class DefaultFactoryFinder implements FactoryFinder {
 
     @Override
     public Optional<Class<?>> findOptionalClass(String key) {
-        Class<?> clazz = addToClassMap(key, () -> {
+        final String classKey = key;
+
+        Class<?> clazz = addToClassMap(classKey, () -> {
             Properties prop = doFindFactoryProperties(key);
             if (prop != null) {
                 return doNewInstance(prop, false).orElse(null);
@@ -87,19 +91,6 @@ public class DefaultFactoryFinder implements FactoryFinder {
             }
         });
         return Optional.ofNullable(clazz);
-    }
-
-    @Override
-    public void clear() {
-        if (classMap != null) {
-            classMap.clear();
-        }
-        if (classesNotFound != null) {
-            classesNotFound.clear();
-        }
-        if (classesNotFoundExceptions != null) {
-            classesNotFoundExceptions.clear();
-        }
     }
 
     private Object doNewInstance(String key) {
@@ -155,7 +146,7 @@ public class DefaultFactoryFinder implements FactoryFinder {
             }
         }
 
-        Class<?> suppliedClass = classMap.computeIfAbsent(key, new Function<>() {
+        Class<?> suppliedClass = classMap.computeIfAbsent(key, new Function<String, Class<?>>() {
             @Override
             public Class<?> apply(String classKey) {
                 try {

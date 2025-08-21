@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.beans.factory.config;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -30,7 +29,8 @@ public class BeanExpressionContext {
 
 	private final ConfigurableBeanFactory beanFactory;
 
-	private final @Nullable Scope scope;
+	@Nullable
+	private final Scope scope;
 
 
 	public BeanExpressionContext(ConfigurableBeanFactory beanFactory, @Nullable Scope scope) {
@@ -43,7 +43,8 @@ public class BeanExpressionContext {
 		return this.beanFactory;
 	}
 
-	public final @Nullable Scope getScope() {
+	@Nullable
+	public final Scope getScope() {
 		return this.scope;
 	}
 
@@ -53,7 +54,8 @@ public class BeanExpressionContext {
 				(this.scope != null && this.scope.resolveContextualObject(key) != null));
 	}
 
-	public @Nullable Object getObject(String key) {
+	@Nullable
+	public Object getObject(String key) {
 		if (this.beanFactory.containsBean(key)) {
 			return this.beanFactory.getBean(key);
 		}
@@ -68,8 +70,14 @@ public class BeanExpressionContext {
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof BeanExpressionContext that &&
-				this.beanFactory == that.beanFactory && this.scope == that.scope));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof BeanExpressionContext)) {
+			return false;
+		}
+		BeanExpressionContext otherContext = (BeanExpressionContext) other;
+		return (this.beanFactory == otherContext.beanFactory && this.scope == otherContext.scope);
 	}
 
 	@Override

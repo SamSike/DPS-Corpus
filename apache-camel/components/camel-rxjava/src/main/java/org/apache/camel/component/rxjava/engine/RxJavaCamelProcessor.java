@@ -20,8 +20,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
@@ -41,7 +39,6 @@ final class RxJavaCamelProcessor implements Closeable {
     private final RxJavaStreamsService service;
     private final AtomicReference<FlowableEmitter<Exchange>> camelEmitter;
     private final FlowableProcessor<Exchange> publisher;
-    private final Lock lock = new ReentrantLock();
     private ReactiveStreamsProducer camelProducer;
 
     RxJavaCamelProcessor(RxJavaStreamsService service, String name) {
@@ -61,50 +58,40 @@ final class RxJavaCamelProcessor implements Closeable {
         return publisher;
     }
 
-    void attach(ReactiveStreamsProducer producer) {
-        lock.lock();
-        try {
-            Objects.requireNonNull(producer, "producer cannot be null, use the detach method");
+    synchronized void attach(ReactiveStreamsProducer producer) {
+        Objects.requireNonNull(producer, "producer cannot be null, use the detach method");
 
-            if (this.camelProducer != null) {
-                throw new IllegalStateException("A producer is already attached to the stream '" + name + "'");
+        if (this.camelProducer != null) {
+            throw new IllegalStateException("A producer is already attached to the stream '" + name + "'");
+        }
+
+        if (this.camelProducer != producer) {
+            detach();
+
+            ReactiveStreamsBackpressureStrategy strategy = producer.getEndpoint().getBackpressureStrategy();
+            Flowable<Exchange> flow = Flowable.create(camelEmitter::set, BackpressureStrategy.MISSING);
+
+            if (ObjectHelper.equal(strategy, ReactiveStreamsBackpressureStrategy.OLDEST)) {
+                flow.onBackpressureDrop(this::onBackPressure)
+                        .doAfterNext(this::onItemEmitted)
+                        .subscribe(this.publisher);
+            } else if (ObjectHelper.equal(strategy, ReactiveStreamsBackpressureStrategy.LATEST)) {
+                flow.doAfterNext(this::onItemEmitted)
+                        .onBackpressureLatest()
+                        .subscribe(this.publisher);
+            } else {
+                flow.doAfterNext(this::onItemEmitted)
+                        .onBackpressureBuffer()
+                        .subscribe(this.publisher);
             }
 
-            if (this.camelProducer != producer) {
-                detach();
-
-                ReactiveStreamsBackpressureStrategy strategy = producer.getEndpoint().getBackpressureStrategy();
-                Flowable<Exchange> flow = Flowable.create(camelEmitter::set, BackpressureStrategy.MISSING);
-
-                if (ObjectHelper.equal(strategy, ReactiveStreamsBackpressureStrategy.OLDEST)) {
-                    flow.onBackpressureDrop(this::onBackPressure)
-                            .doAfterNext(this::onItemEmitted)
-                            .subscribe(this.publisher);
-                } else if (ObjectHelper.equal(strategy, ReactiveStreamsBackpressureStrategy.LATEST)) {
-                    flow.doAfterNext(this::onItemEmitted)
-                            .onBackpressureLatest()
-                            .subscribe(this.publisher);
-                } else {
-                    flow.doAfterNext(this::onItemEmitted)
-                            .onBackpressureBuffer()
-                            .subscribe(this.publisher);
-                }
-
-                camelProducer = producer;
-            }
-        } finally {
-            lock.unlock();
+            camelProducer = producer;
         }
     }
 
-    void detach() {
-        lock.lock();
-        try {
-            this.camelProducer = null;
-            this.camelEmitter.set(null);
-        } finally {
-            lock.unlock();
-        }
+    synchronized void detach() {
+        this.camelProducer = null;
+        this.camelEmitter.set(null);
     }
 
     void send(Exchange exchange) {

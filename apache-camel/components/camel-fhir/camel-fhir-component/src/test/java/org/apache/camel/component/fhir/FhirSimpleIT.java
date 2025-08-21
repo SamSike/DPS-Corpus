@@ -19,9 +19,12 @@ package org.apache.camel.component.fhir;
 import java.util.UUID;
 
 import ca.uhn.fhir.rest.api.MethodOutcome;
+import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.fhir.internal.FhirApiCollection;
 import org.apache.camel.component.fhir.internal.FhirCreateApiMethod;
+import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.spi.Registry;
 import org.hl7.fhir.r4.model.HumanName;
 import org.hl7.fhir.r4.model.Patient;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,6 +56,19 @@ public class FhirSimpleIT extends AbstractFhirTestSupport {
 
         assertNotNull(result, "resource result");
         assertTrue(result.getCreated());
+    }
+
+    @Override
+    protected CamelContext createCamelContext() throws Exception {
+        Registry registry = this.createCamelRegistry();
+        DefaultCamelContext retContext;
+        if (registry != null) {
+            retContext = new DefaultCamelContext(registry);
+        } else {
+            retContext = new DefaultCamelContext();
+        }
+
+        return retContext;
     }
 
     @Override

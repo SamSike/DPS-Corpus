@@ -100,4 +100,14 @@ public class PredicateValidatingProcessor extends ServiceSupport implements Proc
     public String getTraceLabel() {
         return "validate[" + predicate + "]";
     }
+
+    @Override
+    protected void doStart() throws Exception {
+        // noop
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        // noop
+    }
 }

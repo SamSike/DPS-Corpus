@@ -18,7 +18,6 @@ package org.apache.camel.dsl.jbang.core.commands.process;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import com.github.freva.asciitable.AsciiTable;
@@ -34,25 +33,13 @@ import org.apache.camel.util.json.JsonObject;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
-@Command(name = "endpoint", description = "Get usage of Camel endpoints", sortOptions = false, showDefaultValues = true)
+@Command(name = "endpoint", description = "Get usage of Camel endpoints")
 public class ListEndpoint extends ProcessWatchCommand {
-
-    public static class PidNameAgeTotalCompletionCandidates implements Iterable<String> {
-
-        public PidNameAgeTotalCompletionCandidates() {
-        }
-
-        @Override
-        public Iterator<String> iterator() {
-            return List.of("pid", "name", "age", "total").iterator();
-        }
-
-    }
 
     @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
     String name = "*";
 
-    @CommandLine.Option(names = { "--sort" }, completionCandidates = PidNameAgeTotalCompletionCandidates.class,
+    @CommandLine.Option(names = { "--sort" },
                         description = "Sort by pid, name, age or total", defaultValue = "pid")
     String sort;
 
@@ -76,16 +63,12 @@ public class ListEndpoint extends ProcessWatchCommand {
                         description = "List endpoint URI without query parameters (short)")
     boolean shortUri;
 
-    @CommandLine.Option(names = { "--wide-uri" },
-                        description = "List endpoint URI in full details")
-    boolean wideUri;
-
     public ListEndpoint(CamelJBangMain main) {
         super(main);
     }
 
     @Override
-    public Integer doProcessWatchCall() throws Exception {
+    public Integer doCall() throws Exception {
         List<Row> rows = new ArrayList<>();
 
         // make it easier to filter
@@ -110,10 +93,8 @@ public class ListEndpoint extends ProcessWatchCommand {
                                 if ("CamelJBang".equals(row.name)) {
                                     row.name = ProcessHelper.extractName(root, ph);
                                 }
-                                row.pid = Long.toString(ph.pid());
+                                row.pid = "" + ph.pid();
                                 row.endpoint = o.getString("uri");
-                                row.stub = o.getBooleanOrDefault("stub", false);
-                                row.remote = o.getBooleanOrDefault("remote", true);
                                 row.direction = o.getString("direction");
                                 row.total = o.getString("hits");
                                 row.uptime = extractSince(ph);
@@ -161,20 +142,14 @@ public class ListEndpoint extends ProcessWatchCommand {
     }
 
     protected void printTable(List<Row> rows) {
-        printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
+        System.out.println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
                 new Column().header("PID").headerAlign(HorizontalAlign.CENTER).with(r -> r.pid),
                 new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).maxWidth(30, OverflowBehaviour.ELLIPSIS_RIGHT)
                         .with(r -> r.name),
                 new Column().header("AGE").headerAlign(HorizontalAlign.CENTER).with(r -> r.age),
                 new Column().header("DIR").with(r -> r.direction),
                 new Column().header("TOTAL").with(r -> r.total),
-                new Column().header("STUB").dataAlign(HorizontalAlign.CENTER).with(r -> r.stub ? "x" : ""),
-                new Column().header("REMOTE").dataAlign(HorizontalAlign.CENTER).with(r -> r.remote ? "x" : ""),
-                new Column().header("URI").visible(!wideUri).dataAlign(HorizontalAlign.LEFT)
-                        .maxWidth(90, OverflowBehaviour.ELLIPSIS_RIGHT)
-                        .with(this::getUri),
-                new Column().header("URI").visible(wideUri).dataAlign(HorizontalAlign.LEFT)
-                        .maxWidth(140, OverflowBehaviour.NEWLINE)
+                new Column().header("URI").dataAlign(HorizontalAlign.LEFT).maxWidth(90, OverflowBehaviour.ELLIPSIS_RIGHT)
                         .with(this::getUri))));
     }
 
@@ -218,8 +193,6 @@ public class ListEndpoint extends ProcessWatchCommand {
         String endpoint;
         String direction;
         String total;
-        boolean stub;
-        boolean remote;
     }
 
 }

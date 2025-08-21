@@ -37,7 +37,10 @@ public class SagaProducer extends DefaultAsyncProducer {
 
         CamelSagaService sagaService = endpoint.getCamelContext().hasService(CamelSagaService.class);
         if (sagaService == null) {
-            sagaService = CamelContextHelper.mandatoryFindSingleByType(endpoint.getCamelContext(), CamelSagaService.class);
+            sagaService = CamelContextHelper.findSingleByType(endpoint.getCamelContext(), CamelSagaService.class);
+        }
+        if (sagaService == null) {
+            throw new IllegalStateException("Cannot find saga service: saga producers can only be used within a saga");
         }
         this.camelSagaService = sagaService;
     }
@@ -59,9 +62,9 @@ public class SagaProducer extends DefaultAsyncProducer {
             return coordinator;
         }).thenCompose(coordinator -> {
             if (success) {
-                return coordinator.complete(exchange);
+                return coordinator.complete();
             } else {
-                return coordinator.compensate(exchange);
+                return coordinator.compensate();
             }
         }).whenComplete((res, ex) -> {
             if (ex != null) {

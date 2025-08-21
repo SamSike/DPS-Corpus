@@ -16,11 +16,10 @@
  */
 package org.apache.camel.component.cxf.jaxws;
 
-import java.nio.charset.StandardCharsets;
-
 import org.w3c.dom.Node;
 
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
@@ -30,12 +29,14 @@ import org.apache.camel.converter.stream.CachedOutputStream;
 import org.apache.camel.spi.Synchronization;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 //Modified from https://issues.apache.org/jira/secure/attachment/12730161/0001-CAMEL-8419-Camel-StreamCache-does-not-work-with-CXF-.patch
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CxfConsumerStreamCacheTest extends CamelTestSupport {
 
     protected static final String REQUEST_MESSAGE
@@ -68,11 +69,11 @@ public class CxfConsumerStreamCacheTest extends CamelTestSupport {
                         Node node = in.getBody(Node.class);
                         assertNotNull(node);
                         CachedOutputStream cos = new CachedOutputStream(exchange);
-                        cos.write(RESPONSE.getBytes(StandardCharsets.UTF_8));
+                        cos.write(RESPONSE.getBytes("UTF-8"));
                         cos.close();
                         exchange.getMessage().setBody(cos.newStreamCache());
 
-                        exchange.getExchangeExtension().addOnCompletion(new Synchronization() {
+                        exchange.adapt(ExtendedExchange.class).addOnCompletion(new Synchronization() {
                             @Override
                             public void onComplete(Exchange exchange) {
                                 template.sendBody("mock:onComplete", "");

@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class ComponentUseRawUriTest extends ContextTestSupport {
 
     public static class MyEndpoint extends DefaultEndpoint {
-        final String remaining;
+        String remaining;
         String foo;
         String bar;
 
@@ -48,12 +48,12 @@ public class ComponentUseRawUriTest extends ContextTestSupport {
         }
 
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
@@ -83,7 +83,7 @@ public class ComponentUseRawUriTest extends ContextTestSupport {
         }
     }
 
-    static class MyComponent extends DefaultComponent {
+    class MyComponent extends DefaultComponent {
 
         @Override
         protected Endpoint createEndpoint(final String uri, final String remaining, final Map<String, Object> parameters)

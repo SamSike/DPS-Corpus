@@ -23,6 +23,7 @@ import org.apache.camel.builder.NotifyBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.TestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -31,12 +32,10 @@ public class FileConsumeCharsetTest extends BaseEndpointDslTest {
     private static final String TEST_DATA_DIR = BaseEndpointDslTest.generateUniquePath(FileConsumeCharsetTest.class);
 
     @Override
-    public void doPreSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
         TestSupport.deleteDirectory(TEST_DATA_DIR);
-    }
-
-    @Override
-    protected void doPostSetup() {
+        super.setUp();
         template.sendBodyAndHeader("file://" + TEST_DATA_DIR + "?charset=UTF-8", "Hello World \u4f60\u597d", Exchange.FILE_NAME,
                 "report.txt");
     }

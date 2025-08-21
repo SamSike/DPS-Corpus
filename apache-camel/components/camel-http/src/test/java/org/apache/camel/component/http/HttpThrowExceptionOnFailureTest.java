@@ -22,9 +22,11 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.component.http.handler.BasicValidationHandler;
 import org.apache.camel.http.base.HttpOperationFailedException;
-import org.apache.hc.core5.http.HttpStatus;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.HttpStatus;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.http.HttpMethods.GET;
@@ -39,27 +41,32 @@ public class HttpThrowExceptionOnFailureTest extends BaseHttpTest {
 
     private String baseUrl;
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+    public void setUp() throws Exception {
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext())
-                .register("/", new BasicValidationHandler(GET.name(), null, null, getExpectedContent())).create();
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext())
+                .registerHandler("/", new BasicValidationHandler(GET.name(), null, null, getExpectedContent())).create();
         localServer.start();
 
-        baseUrl = "http://localhost:" + localServer.getLocalPort();
+        baseUrl = "http://" + localServer.getInetAddress().getHostName() + ":" + localServer.getLocalPort();
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() {
+    public void tearDown() throws Exception {
+        super.tearDown();
+
         if (localServer != null) {
             localServer.stop();
         }
     }
 
     @Test
-    public void httpGetWhichReturnsHttp501() {
+    public void httpGetWhichReturnsHttp501() throws Exception {
         Exchange exchange = template.request(baseUrl + "/XXX?throwExceptionOnFailure=false", exchange1 -> {
         });
 
@@ -74,7 +81,7 @@ public class HttpThrowExceptionOnFailureTest extends BaseHttpTest {
     }
 
     @Test
-    public void httpGetWhichReturnsHttp501ShouldThrowAnException() {
+    public void httpGetWhichReturnsHttp501ShouldThrowAnException() throws Exception {
         Exchange reply = template.request(baseUrl + "/XXX?throwExceptionOnFailure=true", exchange -> {
         });
 
@@ -82,16 +89,10 @@ public class HttpThrowExceptionOnFailureTest extends BaseHttpTest {
         assertNotNull(e, "Should have thrown an exception");
         HttpOperationFailedException cause = assertIsInstanceOf(HttpOperationFailedException.class, e);
         assertEquals(501, cause.getStatusCode());
-
-        Message out = reply.getMessage();
-        assertNotNull(out);
-        Map<String, Object> headers = out.getHeaders();
-        assertEquals(HttpStatus.SC_NOT_IMPLEMENTED, headers.get(Exchange.HTTP_RESPONSE_CODE));
-        assertEquals("Not Implemented", headers.get(Exchange.HTTP_RESPONSE_TEXT));
     }
 
     @Test
-    public void httpGetWhichReturnsHttp501WithIgnoreResponseBody() {
+    public void httpGetWhichReturnsHttp501WithIgnoreResponseBody() throws Exception {
         Exchange exchange
                 = template.request(baseUrl + "/XXX?throwExceptionOnFailure=false&ignoreResponseBody=true", exchange1 -> {
                 });
@@ -108,7 +109,7 @@ public class HttpThrowExceptionOnFailureTest extends BaseHttpTest {
     }
 
     @Test
-    public void httpGetWhichReturnsHttp501ShouldThrowAnExceptionWithIgnoreResponseBody() {
+    public void httpGetWhichReturnsHttp501ShouldThrowAnExceptionWithIgnoreResponseBody() throws Exception {
         Exchange reply = template.request(baseUrl + "/XXX?throwExceptionOnFailure=true&ignoreResponseBody=true", exchange -> {
         });
 

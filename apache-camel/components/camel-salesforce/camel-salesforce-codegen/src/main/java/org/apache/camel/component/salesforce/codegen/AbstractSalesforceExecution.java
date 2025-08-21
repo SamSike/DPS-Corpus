@@ -30,21 +30,19 @@ import org.apache.camel.component.salesforce.api.SalesforceException;
 import org.apache.camel.component.salesforce.api.utils.SecurityUtils;
 import org.apache.camel.component.salesforce.internal.SalesforceSession;
 import org.apache.camel.component.salesforce.internal.client.DefaultRestClient;
-import org.apache.camel.component.salesforce.internal.client.PubSubApiClient;
 import org.apache.camel.component.salesforce.internal.client.RestClient;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.support.PropertyBindingSupport;
-import org.apache.camel.support.jsse.KeyStoreParameters;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.StringHelper;
-import org.eclipse.jetty.client.Authentication;
-import org.eclipse.jetty.client.BasicAuthentication;
-import org.eclipse.jetty.client.DigestAuthentication;
 import org.eclipse.jetty.client.HttpProxy;
 import org.eclipse.jetty.client.Origin;
 import org.eclipse.jetty.client.ProxyConfiguration;
 import org.eclipse.jetty.client.Socks4Proxy;
+import org.eclipse.jetty.client.api.Authentication;
+import org.eclipse.jetty.client.util.BasicAuthentication;
+import org.eclipse.jetty.client.util.DigestAuthentication;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 
@@ -132,16 +130,6 @@ public abstract class AbstractSalesforceExecution {
     String loginUrl;
 
     /**
-     * Salesforce JWT Audience.
-     */
-    String jwtAudience;
-
-    /**
-     * Salesforce KeystoreParameters.
-     */
-    KeyStoreParameters keyStoreParameters;
-
-    /**
      * Salesforce password.
      */
     String password;
@@ -163,18 +151,12 @@ public abstract class AbstractSalesforceExecution {
 
     private long responseTimeout;
 
-    private SalesforceHttpClient httpClient;
-    private SalesforceSession session;
-    private RestClient restClient;
-    private PubSubApiClient pubSubApiClient;
-    private String pubSubHost;
-    private int pubSubPort;
-
     public final void execute() throws Exception {
         setup();
-        login();
+
+        final RestClient restClient = connectToSalesforce();
         try {
-            executeWithClient();
+            executeWithClient(restClient);
         } finally {
             disconnectFromSalesforce(restClient);
         }
@@ -184,34 +166,24 @@ public abstract class AbstractSalesforceExecution {
         return responseTimeout;
     }
 
-    private void login() {
+    private RestClient connectToSalesforce() throws Exception {
+        RestClient restClient = null;
         try {
-            httpClient = createHttpClient();
+            final SalesforceHttpClient httpClient = createHttpClient();
 
             // connect to Salesforce
             getLog().info("Logging in to Salesforce");
-            session = httpClient.getSession();
+            final SalesforceSession session = httpClient.getSession();
             try {
                 session.login(null);
-
             } catch (final SalesforceException e) {
                 final String msg = "Salesforce login error " + e.getMessage();
                 throw new RuntimeException(msg, e);
             }
             getLog().info("Salesforce login successful");
-        } catch (final Exception e) {
-            final String msg = "Error connecting to Salesforce: " + e.getMessage();
-            ServiceHelper.stopAndShutdownServices(session, httpClient);
-            throw new RuntimeException(msg, e);
-        }
-    }
 
-    protected RestClient getRestClient() {
-        if (restClient != null) {
-            return restClient;
-        }
-        try {
-            login();
+            // create rest client
+
             restClient = new DefaultRestClient(httpClient, version, session, new SalesforceLoginConfig());
             // remember to start the active client object
             ((DefaultRestClient) restClient).start();
@@ -222,15 +194,6 @@ public abstract class AbstractSalesforceExecution {
             disconnectFromSalesforce(restClient);
             throw new RuntimeException(msg, e);
         }
-    }
-
-    protected PubSubApiClient getPubSubApiClient() {
-        if (pubSubApiClient != null) {
-            return pubSubApiClient;
-        }
-        pubSubApiClient = new PubSubApiClient(session, new SalesforceLoginConfig(), pubSubHost, pubSubPort, 0, 0, true);
-        pubSubApiClient.start();
-        return pubSubApiClient;
     }
 
     private SalesforceHttpClient createHttpClient() throws Exception {
@@ -246,7 +209,9 @@ public abstract class AbstractSalesforceExecution {
             SecurityUtils.adaptToIBMCipherNames(sslContextFactory);
 
             httpClient = new SalesforceHttpClient(sslContextFactory);
-        } catch (GeneralSecurityException | IOException e) {
+        } catch (final GeneralSecurityException e) {
+            throw new RuntimeException("Error creating default SSL context: " + e.getMessage(), e);
+        } catch (final IOException e) {
             throw new RuntimeException("Error creating default SSL context: " + e.getMessage(), e);
         }
 
@@ -285,7 +250,7 @@ public abstract class AbstractSalesforceExecution {
             if (httpProxyExcludedAddresses != null && !httpProxyExcludedAddresses.isEmpty()) {
                 proxy.getExcludedAddresses().addAll(httpProxyExcludedAddresses);
             }
-            httpClient.getProxyConfiguration().addProxy(proxy);
+            httpClient.getProxyConfiguration().getProxies().add(proxy);
         }
         if (httpProxyUsername != null && httpProxyPassword != null) {
             StringHelper.notEmpty(httpProxyAuthUri, "httpProxyAuthUri");
@@ -305,7 +270,7 @@ public abstract class AbstractSalesforceExecution {
         // set session before calling start()
         final SalesforceSession session = new SalesforceSession(
                 new DefaultCamelContext(), httpClient, httpClient.getTimeout(),
-                getSalesforceLoginSession());
+                new SalesforceLoginConfig(loginUrl, clientId, clientSecret, userName, password, false));
         httpClient.setSession(session);
 
         try {
@@ -315,17 +280,6 @@ public abstract class AbstractSalesforceExecution {
         }
 
         return httpClient;
-    }
-
-    private SalesforceLoginConfig getSalesforceLoginSession() {
-        if (keyStoreParameters != null) {
-            SalesforceLoginConfig salesforceLoginConfig
-                    = new SalesforceLoginConfig(loginUrl, clientId, userName, keyStoreParameters, false);
-            salesforceLoginConfig.setJwtAudience(jwtAudience);
-
-            return salesforceLoginConfig;
-        }
-        return new SalesforceLoginConfig(loginUrl, clientId, clientSecret, userName, password, false);
     }
 
     private void disconnectFromSalesforce(final RestClient restClient) {
@@ -405,14 +359,6 @@ public abstract class AbstractSalesforceExecution {
         this.password = password;
     }
 
-    public void setJwtAudience(String jwtAudience) {
-        this.jwtAudience = jwtAudience;
-    }
-
-    public void setKeyStoreParameters(KeyStoreParameters keyStoreParameters) {
-        this.keyStoreParameters = keyStoreParameters;
-    }
-
     public void setUserName(String userName) {
         this.userName = userName;
     }
@@ -425,15 +371,7 @@ public abstract class AbstractSalesforceExecution {
         this.version = version;
     }
 
-    public void setPubSubHost(String pubSubHost) {
-        this.pubSubHost = pubSubHost;
-    }
-
-    public void setPubSubPort(int pubSubPort) {
-        this.pubSubPort = pubSubPort;
-    }
-
-    protected abstract void executeWithClient() throws Exception;
+    protected abstract void executeWithClient(RestClient client) throws Exception;
 
     protected abstract Logger getLog();
 

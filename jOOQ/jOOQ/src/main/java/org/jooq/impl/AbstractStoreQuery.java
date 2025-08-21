@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,8 +37,6 @@
  */
 package org.jooq.impl;
 
-import static org.jooq.impl.Tools.recordDirtyTrackingPredicate;
-
 import java.util.Map;
 
 import org.jooq.Configuration;
@@ -50,7 +48,6 @@ import org.jooq.FieldOrRowOrSelect;
 import org.jooq.Record;
 import org.jooq.StoreQuery;
 import org.jooq.Table;
-import org.jooq.impl.QOM.UEmpty;
 import org.jooq.impl.QOM.UTransient;
 
 /**
@@ -74,10 +71,8 @@ implements
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public final void setRecord(R record) {
-        ObjIntPredicate<Record> dirty = recordDirtyTrackingPredicate(this);
-
         for (int i = 0; i < record.size(); i++)
-            if (dirty.test(record, i))
+            if (record.changed(i))
                 addValue((Field) record.field(i), record.get(i));
     }
 
@@ -111,7 +106,7 @@ implements
             getValues().put((K) field, (V) Tools.field(value, field));
     }
 
-    static class UnknownField<T> extends AbstractField<T> implements UEmpty {
+    static class UnknownField<T> extends AbstractField<T> implements UTransient {
         private final int index;
 
         @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -133,8 +128,8 @@ implements
 
         @Override
         public boolean equals(Object that) {
-            if (that instanceof UnknownField<?> f)
-                return index == f.index;
+            if (that instanceof UnknownField)
+                return index == ((UnknownField<?>) that).index;
             else
                 return false;
         }

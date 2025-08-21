@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,7 +43,7 @@ import org.jetbrains.annotations.NotNull;
  * This type is used for the {@link Select}'s DSL API when selecting generic
  * {@link Record} types.
  * <p>
- * Example: <pre><code>
+ * Example: <code><pre>
  * -- get all authors' first and last names, and the number
  * -- of books they've written in German, if they have written
  * -- more than five books in German in the last three years
@@ -63,7 +63,7 @@ import org.jetbrains.annotations.NotNull;
  *      FOR UPDATE
  *       OF FIRST_NAME, LAST_NAME
  *       NO WAIT
- * </code></pre> Its equivalent in jOOQ <pre><code>
+ * </pre></code> Its equivalent in jOOQ <code><pre>
  * create.select(TAuthor.FIRST_NAME, TAuthor.LAST_NAME, create.count())
  *       .from(T_AUTHOR)
  *       .join(T_BOOK).on(TBook.AUTHOR_ID.equal(TAuthor.ID))
@@ -77,7 +77,7 @@ import org.jetbrains.annotations.NotNull;
  *       .forUpdate()
  *       .of(TAuthor.FIRST_NAME, TAuthor.LAST_NAME)
  *       .noWait();
- * </code></pre> Refer to the manual for more details
+ * </pre></code> Refer to the manual for more details
  *
  * @author Lukas Eder
  */
@@ -99,31 +99,28 @@ public interface SelectSeekStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7, 
      * inserted or data being deleted while paging through pages.</li>
      * </ol>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSL.using(configuration)
      *    .selectFrom(TABLE)
      *    .orderBy(ID, CODE)
      *    .seek(3, "abc")
      *    .fetch();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The above query will render the following SQL statement:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT table.col1, table.col2, ... FROM table
      * WHERE (id, code) &gt; (3, 'abc')
      * ORDER BY id ASC, code ASC
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The actual row value expression predicate may be expanded into this
      * equivalent predicate:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * WHERE (id &gt; 3) OR (id = 3 AND code &gt; 'abc')
-     * </code></pre>
-     * <p>
-     * The seek column list length must match the <code>ORDER BY</code> expression
-     * list length.
+     * </pre></code>
      * <p>
      * The <code>SEEK AFTER</code> method currently does not support seeking
      * <code>NULL</code> values, or operating with <code>NULLS FIRST</code>,
@@ -132,7 +129,7 @@ public interface SelectSeekStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7, 
      * @see <a
      *      href="http://use-the-index-luke.com/sql/partial-results/fetch-next-page">http://use-the-index-luke.com/sql/partial-results/fetch-next-page</a>
      * @see <a
-     *      href="https://blog.jooq.org/faster-sql-paging-with-jooq-using-the-seek-method/">https://blog.jooq.org/faster-sql-paging-with-jooq-using-the-seek-method</a>
+     *      href="http://blog.jooq.org/2013/10/26/faster-sql-paging-with-jooq-using-the-seek-method/">http://blog.jooq.org/2013/10/26/faster-sql-paging-with-jooq-using-the-seek-method</a>
      * @see #seekAfter(Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object)
      */
     @NotNull @CheckReturnValue
@@ -155,31 +152,28 @@ public interface SelectSeekStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7, 
      * inserted or data being deleted while paging through pages.</li>
      * </ol>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSL.using(configuration)
      *    .selectFrom(TABLE)
      *    .orderBy(ID, CODE)
      *    .seek(3, "abc")
      *    .fetch();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The above query will render the following SQL statement:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT table.col1, table.col2, ... FROM table
      * WHERE (id, code) &gt; (3, 'abc')
      * ORDER BY id ASC, code ASC
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The actual row value expression predicate may be expanded into this
      * equivalent predicate:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * WHERE (id &gt; 3) OR (id = 3 AND code &gt; 'abc')
-     * </code></pre>
-     * <p>
-     * The seek column list length must match the <code>ORDER BY</code> expression
-     * list length.
+     * </pre></code>
      * <p>
      * The <code>SEEK AFTER</code> method currently does not support seeking
      * <code>NULL</code> values, or operating with <code>NULLS FIRST</code>,
@@ -188,7 +182,7 @@ public interface SelectSeekStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7, 
      * @see <a
      *      href="http://use-the-index-luke.com/sql/partial-results/fetch-next-page">http://use-the-index-luke.com/sql/partial-results/fetch-next-page</a>
      * @see <a
-     *      href="https://blog.jooq.org/faster-sql-paging-with-jooq-using-the-seek-method/">https://blog.jooq.org/faster-sql-paging-with-jooq-using-the-seek-method</a>
+     *      href="http://blog.jooq.org/2013/10/26/faster-sql-paging-with-jooq-using-the-seek-method/">http://blog.jooq.org/2013/10/26/faster-sql-paging-with-jooq-using-the-seek-method</a>
      * @see #seekAfter(Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)
      */
     @NotNull @CheckReturnValue
@@ -211,31 +205,28 @@ public interface SelectSeekStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7, 
      * inserted or data being deleted while paging through pages.</li>
      * </ol>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSL.using(configuration)
      *    .selectFrom(TABLE)
      *    .orderBy(ID, CODE)
      *    .seekAfter(3, "abc")
      *    .fetch();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The above query will render the following SQL statement:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT table.col1, table.col2, ... FROM table
      * WHERE (id, code) &gt; (3, 'abc')
      * ORDER BY id ASC, code ASC
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The actual row value expression predicate may be expanded into this
      * equivalent predicate:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * WHERE (id &gt; 3) OR (id = 3 AND code &gt; 'abc')
-     * </code></pre>
-     * <p>
-     * The seek column list length must match the <code>ORDER BY</code> expression
-     * list length.
+     * </pre></code>
      * <p>
      * The <code>SEEK AFTER</code> method currently does not support seeking
      * <code>NULL</code> values, or operating with <code>NULLS FIRST</code>,
@@ -244,7 +235,7 @@ public interface SelectSeekStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7, 
      * @see <a
      *      href="http://use-the-index-luke.com/sql/partial-results/fetch-next-page">http://use-the-index-luke.com/sql/partial-results/fetch-next-page</a>
      * @see <a
-     *      href="https://blog.jooq.org/faster-sql-paging-with-jooq-using-the-seek-method/">https://blog.jooq.org/faster-sql-paging-with-jooq-using-the-seek-method</a>
+     *      href="http://blog.jooq.org/2013/10/26/faster-sql-paging-with-jooq-using-the-seek-method/">http://blog.jooq.org/2013/10/26/faster-sql-paging-with-jooq-using-the-seek-method</a>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -266,31 +257,28 @@ public interface SelectSeekStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7, 
      * inserted or data being deleted while paging through pages.</li>
      * </ol>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSL.using(configuration)
      *    .selectFrom(TABLE)
      *    .orderBy(ID, CODE)
      *    .seekAfter(3, "abc")
      *    .fetch();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The above query will render the following SQL statement:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT table.col1, table.col2, ... FROM table
      * WHERE (id, code) &gt; (3, 'abc')
      * ORDER BY id ASC, code ASC
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The actual row value expression predicate may be expanded into this
      * equivalent predicate:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * WHERE (id &gt; 3) OR (id = 3 AND code &gt; 'abc')
-     * </code></pre>
-     * <p>
-     * The seek column list length must match the <code>ORDER BY</code> expression
-     * list length.
+     * </pre></code>
      * <p>
      * The <code>SEEK AFTER</code> method currently does not support seeking
      * <code>NULL</code> values, or operating with <code>NULLS FIRST</code>,
@@ -299,7 +287,7 @@ public interface SelectSeekStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7, 
      * @see <a
      *      href="http://use-the-index-luke.com/sql/partial-results/fetch-next-page">http://use-the-index-luke.com/sql/partial-results/fetch-next-page</a>
      * @see <a
-     *      href="https://blog.jooq.org/faster-sql-paging-with-jooq-using-the-seek-method/">https://blog.jooq.org/faster-sql-paging-with-jooq-using-the-seek-method</a>
+     *      href="http://blog.jooq.org/2013/10/26/faster-sql-paging-with-jooq-using-the-seek-method/">http://blog.jooq.org/2013/10/26/faster-sql-paging-with-jooq-using-the-seek-method</a>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -321,31 +309,28 @@ public interface SelectSeekStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7, 
      * inserted or data being deleted while paging through pages.</li>
      * </ol>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSL.using(configuration)
      *    .selectFrom(TABLE)
      *    .orderBy(ID, CODE)
      *    .seekBefore(3, "abc")
      *    .fetch();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The above query will render the following SQL statement:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT table.col1, table.col2, ... FROM table
      * WHERE (id, code) &lt; (3, 'abc')
      * ORDER BY id ASC, code ASC
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The actual row value expression predicate may be expanded into this
      * equivalent predicate:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * WHERE (id &lt; 3) OR (id = 3 AND code &lt; 'abc')
-     * </code></pre>
-     * <p>
-     * The seek column list length must match the <code>ORDER BY</code> expression
-     * list length.
+     * </pre></code>
      * <p>
      * The <code>SEEK BEFORE</code> method currently does not support seeking
      * <code>NULL</code> values, or operating with <code>NULLS FIRST</code>,
@@ -354,7 +339,7 @@ public interface SelectSeekStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7, 
      * @see <a
      *      href="http://use-the-index-luke.com/sql/partial-results/fetch-next-page">http://use-the-index-luke.com/sql/partial-results/fetch-next-page</a>
      * @see <a
-     *      href="https://blog.jooq.org/faster-sql-paging-with-jooq-using-the-seek-method/">https://blog.jooq.org/faster-sql-paging-with-jooq-using-the-seek-method</a>
+     *      href="http://blog.jooq.org/2013/10/26/faster-sql-paging-with-jooq-using-the-seek-method/">http://blog.jooq.org/2013/10/26/faster-sql-paging-with-jooq-using-the-seek-method</a>
      * @deprecated - [#7461] - SEEK BEFORE is not implemented correctly
      */
     @Deprecated
@@ -378,31 +363,28 @@ public interface SelectSeekStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7, 
      * inserted or data being deleted while paging through pages.</li>
      * </ol>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSL.using(configuration)
      *    .selectFrom(TABLE)
      *    .orderBy(ID, CODE)
      *    .seekBefore(3, "abc")
      *    .fetch();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The above query will render the following SQL statement:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT table.col1, table.col2, ... FROM table
      * WHERE (id, code) &lt; (3, 'abc')
      * ORDER BY id ASC, code ASC
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The actual row value expression predicate may be expanded into this
      * equivalent predicate:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * WHERE (id &lt; 3) OR (id = 3 AND code &lt; 'abc')
-     * </code></pre>
-     * <p>
-     * The seek column list length must match the <code>ORDER BY</code> expression
-     * list length.
+     * </pre></code>
      * <p>
      * The <code>SEEK BEFORE</code> method currently does not support seeking
      * <code>NULL</code> values, or operating with <code>NULLS FIRST</code>,
@@ -411,7 +393,7 @@ public interface SelectSeekStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7, 
      * @see <a
      *      href="http://use-the-index-luke.com/sql/partial-results/fetch-next-page">http://use-the-index-luke.com/sql/partial-results/fetch-next-page</a>
      * @see <a
-     *      href="https://blog.jooq.org/faster-sql-paging-with-jooq-using-the-seek-method/">https://blog.jooq.org/faster-sql-paging-with-jooq-using-the-seek-method</a>
+     *      href="http://blog.jooq.org/2013/10/26/faster-sql-paging-with-jooq-using-the-seek-method/">http://blog.jooq.org/2013/10/26/faster-sql-paging-with-jooq-using-the-seek-method</a>
      * @deprecated - [#7461] - SEEK BEFORE is not implemented correctly
      */
     @Deprecated

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests for {@link ScheduledTaskRegistrar}.
+ * Unit tests for {@link ScheduledTaskRegistrar}.
  *
  * @author Tobias Montagna-Hay
  * @author Juergen Hoeller
@@ -50,28 +50,28 @@ class ScheduledTaskRegistrarTests {
 
 	@Test
 	void getTriggerTasks() {
-		TriggerTask mockTriggerTask = mock();
+		TriggerTask mockTriggerTask = mock(TriggerTask.class);
 		this.taskRegistrar.setTriggerTasksList(Collections.singletonList(mockTriggerTask));
 		assertThat(this.taskRegistrar.getTriggerTaskList()).containsExactly(mockTriggerTask);
 	}
 
 	@Test
 	void getCronTasks() {
-		CronTask mockCronTask = mock();
+		CronTask mockCronTask = mock(CronTask.class);
 		this.taskRegistrar.setCronTasksList(Collections.singletonList(mockCronTask));
 		assertThat(this.taskRegistrar.getCronTaskList()).containsExactly(mockCronTask);
 	}
 
 	@Test
 	void getFixedRateTasks() {
-		IntervalTask mockFixedRateTask = mock();
+		IntervalTask mockFixedRateTask = mock(IntervalTask.class);
 		this.taskRegistrar.setFixedRateTasksList(Collections.singletonList(mockFixedRateTask));
 		assertThat(this.taskRegistrar.getFixedRateTaskList()).containsExactly(mockFixedRateTask);
 	}
 
 	@Test
 	void getFixedDelayTasks() {
-		IntervalTask mockFixedDelayTask = mock();
+		IntervalTask mockFixedDelayTask = mock(IntervalTask.class);
 		this.taskRegistrar.setFixedDelayTasksList(Collections.singletonList(mockFixedDelayTask));
 		assertThat(this.taskRegistrar.getFixedDelayTaskList()).containsExactly(mockFixedDelayTask);
 	}

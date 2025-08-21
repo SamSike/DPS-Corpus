@@ -20,6 +20,7 @@ package org.apache.camel.component.couchbase.integration;
 import java.time.Duration;
 import java.util.Collections;
 
+import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.manager.bucket.BucketSettings;
 import com.couchbase.client.java.manager.bucket.BucketType;
@@ -37,7 +38,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CouchbaseIntegrationTestBase extends CamelTestSupport {
     @RegisterExtension
-    public static CouchbaseService service = CouchbaseServiceFactory.createService();
+    public static CouchbaseService service = CouchbaseServiceFactory.createSingletonService();
 
     protected static String bucketName;
     protected static Cluster cluster;
@@ -50,7 +51,7 @@ public class CouchbaseIntegrationTestBase extends CamelTestSupport {
         cluster.buckets().createBucket(
                 BucketSettings.create(bucketName).bucketType(BucketType.COUCHBASE).flushEnabled(true));
 
-        cluster.bucket(bucketName);
+        Bucket bucket = cluster.bucket(bucketName);
         DesignDocument designDoc = new DesignDocument(
                 bucketName,
                 Collections.singletonMap(bucketName, new View("function (doc, meta) {  emit(meta.id, doc);}")));

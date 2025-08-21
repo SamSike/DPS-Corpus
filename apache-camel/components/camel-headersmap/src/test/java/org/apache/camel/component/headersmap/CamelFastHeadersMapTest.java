@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.headersmap;
 
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.spi.HeadersMapFactory;
@@ -36,7 +37,7 @@ public class CamelFastHeadersMapTest extends CamelTestSupport {
         MockEndpoint.assertIsSatisfied(context);
 
         // should have detected custom and use that
-        HeadersMapFactory factory = context.getCamelContextExtension().getHeadersMapFactory();
+        HeadersMapFactory factory = context.adapt(ExtendedCamelContext.class).getHeadersMapFactory();
         assertIsInstanceOf(FastHeadersMapFactory.class, factory);
     }
 

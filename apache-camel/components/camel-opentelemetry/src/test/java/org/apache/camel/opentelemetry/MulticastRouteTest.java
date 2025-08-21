@@ -16,7 +16,6 @@
  */
 package org.apache.camel.opentelemetry;
 
-import io.opentelemetry.api.trace.SpanKind;
 import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
@@ -25,24 +24,12 @@ class MulticastRouteTest extends CamelOpenTelemetryTestSupport {
 
     private static SpanTestData[] testdata = {
             new SpanTestData().setLabel("seda:b server").setUri("seda://b").setOperation("b")
-                    .setParentId(1),
-            new SpanTestData().setLabel("seda:b server").setUri("seda://b").setOperation("b")
-                    .setKind(SpanKind.CLIENT)
-                    .setParentId(4),
+                    .setParentId(2),
             new SpanTestData().setLabel("seda:c server").setUri("seda://c").setOperation("c")
+                    .setParentId(2),
+            new SpanTestData().setLabel("seda:a server").setUri("seda://a").setOperation("a")
                     .setParentId(3),
-            new SpanTestData().setLabel("seda:c server").setUri("seda://c").setOperation("c")
-                    .setKind(SpanKind.CLIENT)
-                    .setParentId(4),
-            new SpanTestData().setLabel("seda:a server").setUri("seda://a").setOperation("a")
-                    .setParentId(5),
-            new SpanTestData().setLabel("seda:a server").setUri("seda://a").setOperation("a")
-                    .setKind(SpanKind.CLIENT)
-                    .setParentId(6),
             new SpanTestData().setLabel("direct:start server").setUri("direct://start").setOperation("start")
-                    .setParentId(7),
-            new SpanTestData().setLabel("direct:start server").setUri("direct://start").setOperation("start")
-                    .setKind(SpanKind.CLIENT)
     };
 
     MulticastRouteTest() {

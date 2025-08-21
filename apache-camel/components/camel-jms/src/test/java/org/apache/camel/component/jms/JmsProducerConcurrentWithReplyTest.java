@@ -20,36 +20,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.ConsumerTemplate;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.api.parallel.Isolated;
 
 import static org.apache.camel.test.junit5.TestSupport.body;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Timeout(60)
-@Isolated("Creates multiple threads")
 public class JmsProducerConcurrentWithReplyTest extends AbstractJMSTest {
 
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
-    protected CamelContext context;
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
     private ExecutorService executor;
 
     @AfterEach
@@ -57,12 +42,12 @@ public class JmsProducerConcurrentWithReplyTest extends AbstractJMSTest {
         executor.shutdownNow();
     }
 
-    @RepeatedTest(50)
+    @Test
     public void testNoConcurrentProducers() throws Exception {
         doSendMessages(1, 1);
     }
 
-    @RepeatedTest(50)
+    @Test
     public void testConcurrentProducers() throws Exception {
         doSendMessages(200, 5);
     }
@@ -72,19 +57,18 @@ public class JmsProducerConcurrentWithReplyTest extends AbstractJMSTest {
         getMockEndpoint("mock:result").expectsNoDuplicates(body());
 
         executor = Executors.newFixedThreadPool(poolSize);
-        final List<String> data = new ArrayList<>(files);
+        final List<Future<String>> futures = new ArrayList<>();
         for (int i = 0; i < files; i++) {
             final int index = i;
-            executor.submit(() -> {
-                String out = template.requestBody("direct:start", "Message " + index, String.class);
-                data.add(index, out);
-            });
+            Future<String> out = executor.submit(() -> template.requestBody("direct:start", "Message " + index, String.class));
+            futures.add(out);
         }
 
         MockEndpoint.assertIsSatisfied(context, 20, TimeUnit.SECONDS);
 
-        for (int i = 0; i < data.size(); i++) {
-            assertEquals("Bye Message " + i, data.get(i));
+        for (int i = 0; i < futures.size(); i++) {
+            Object out = futures.get(i).get(5, TimeUnit.SECONDS);
+            assertEquals("Bye Message " + i, out);
         }
 
     }
@@ -107,15 +91,4 @@ public class JmsProducerConcurrentWithReplyTest extends AbstractJMSTest {
         };
     }
 
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        context = camelContextExtension.getContext();
-        template = camelContextExtension.getProducerTemplate();
-        consumer = camelContextExtension.getConsumerTemplate();
-    }
 }

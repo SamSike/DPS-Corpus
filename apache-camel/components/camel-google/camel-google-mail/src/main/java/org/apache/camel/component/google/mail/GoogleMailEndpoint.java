@@ -27,13 +27,11 @@ import org.apache.camel.component.google.mail.internal.GoogleMailApiCollection;
 import org.apache.camel.component.google.mail.internal.GoogleMailApiName;
 import org.apache.camel.component.google.mail.internal.GoogleMailConstants;
 import org.apache.camel.component.google.mail.internal.GoogleMailPropertiesHelper;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.component.AbstractApiEndpoint;
 import org.apache.camel.support.component.ApiMethod;
 import org.apache.camel.support.component.ApiMethodPropertiesHelper;
-import org.apache.camel.util.ObjectHelper;
 
 /**
  * Manage messages in Google Mail.
@@ -45,8 +43,7 @@ import org.apache.camel.util.ObjectHelper;
              apiSyntax = "apiName/methodName",
              consumerPrefix = "consumer",
              category = { Category.CLOUD, Category.API, Category.MAIL })
-public class GoogleMailEndpoint extends AbstractApiEndpoint<GoogleMailApiName, GoogleMailConfiguration>
-        implements EndpointServiceLocation {
+public class GoogleMailEndpoint extends AbstractApiEndpoint<GoogleMailApiName, GoogleMailConfiguration> {
 
     private Object apiProxy;
 
@@ -131,27 +128,5 @@ public class GoogleMailEndpoint extends AbstractApiEndpoint<GoogleMailApiName, G
 
     public void setClientFactory(GoogleMailClientFactory clientFactory) {
         ((GoogleMailComponent) getComponent()).setClientFactory(clientFactory);
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (ObjectHelper.isNotEmpty(ObjectHelper.isNotEmpty(configuration.getApiName())
-                && ObjectHelper.isNotEmpty(configuration.getMethodName()))) {
-            return getServiceProtocol() + ":" + configuration.getApiName() + ":" + configuration.getMethodName();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "mail";
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        if (configuration.getApplicationName() != null) {
-            return Map.of("applicationName", configuration.getApplicationName());
-        }
-        return null;
     }
 }

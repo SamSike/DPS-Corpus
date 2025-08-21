@@ -17,7 +17,6 @@
 package org.apache.camel.component.aws2.kinesis.integration;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -53,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class KinesisProducerIT extends CamelTestSupport {
     @RegisterExtension
-    public static AWSService awsService = AWSServiceFactory.createSingletonKinesisService();
+    public static AWSService awsService = AWSServiceFactory.createKinesisService();
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisProducerIT.class);
 
@@ -106,22 +105,14 @@ public class KinesisProducerIT extends CamelTestSupport {
             exchange.getIn().setBody("Kinesis Event 2.");
         });
 
-        template.send("direct:start", ExchangePattern.InOut, exchange -> {
-            exchange.getIn().setHeader(Kinesis2Constants.PARTITION_KEY, "partition-1");
-            exchange.getIn().setBody(Arrays.asList("Kinesis Event 3.", "Kinesis Event 4.".getBytes(StandardCharsets.UTF_8)));
-        });
-
+        List<Record> records;
         Awaitility.await().atMost(5, TimeUnit.SECONDS)
-                .untilAsserted(() -> assertEquals(4, consumeMessages()));
+                .untilAsserted(() -> assertEquals(2, consumeMessages()));
 
         assertEquals("Kinesis Event 1.", recordList.get(0).data().asString(StandardCharsets.UTF_8));
         assertEquals("partition-1", recordList.get(0).partitionKey());
         assertEquals("Kinesis Event 2.", recordList.get(1).data().asString(StandardCharsets.UTF_8));
         assertEquals("partition-1", recordList.get(1).partitionKey());
-        assertEquals("Kinesis Event 3.", recordList.get(2).data().asString(StandardCharsets.UTF_8));
-        assertEquals("partition-1", recordList.get(2).partitionKey());
-        assertEquals("Kinesis Event 4.", recordList.get(3).data().asString(StandardCharsets.UTF_8));
-        assertEquals("partition-1", recordList.get(3).partitionKey());
     }
 
     @Override

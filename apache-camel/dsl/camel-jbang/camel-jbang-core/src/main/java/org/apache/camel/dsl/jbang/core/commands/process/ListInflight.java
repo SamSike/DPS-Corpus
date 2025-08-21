@@ -19,14 +19,12 @@ package org.apache.camel.dsl.jbang.core.commands.process;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.github.freva.asciitable.AsciiTable;
 import com.github.freva.asciitable.Column;
 import com.github.freva.asciitable.HorizontalAlign;
 import com.github.freva.asciitable.OverflowBehaviour;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
-import org.apache.camel.dsl.jbang.core.common.PidNameAgeCompletionCandidates;
 import org.apache.camel.dsl.jbang.core.common.ProcessHelper;
 import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.json.JsonArray;
@@ -35,13 +33,13 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 @Command(name = "inflight",
-         description = "Get inflight messages of Camel integrations", sortOptions = false, showDefaultValues = true)
+         description = "Get inflight messages of Camel integrations")
 public class ListInflight extends ProcessWatchCommand {
 
     @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
     String name = "*";
 
-    @CommandLine.Option(names = { "--sort" }, completionCandidates = PidNameAgeCompletionCandidates.class,
+    @CommandLine.Option(names = { "--sort" },
                         description = "Sort by pid, name or age", defaultValue = "pid")
     String sort;
 
@@ -50,10 +48,9 @@ public class ListInflight extends ProcessWatchCommand {
     }
 
     @Override
-    public Integer doProcessWatchCall() throws Exception {
+    public Integer doCall() throws Exception {
         List<Row> rows = new ArrayList<>();
 
-        AtomicBoolean remoteVisible = new AtomicBoolean();
         List<Long> pids = findPids(name);
         ProcessHandle.allProcesses()
                 .filter(ph -> pids.contains(ph.pid()))
@@ -70,7 +67,7 @@ public class ListInflight extends ProcessWatchCommand {
                         if ("CamelJBang".equals(row.name)) {
                             row.name = ProcessHelper.extractName(root, ph);
                         }
-                        row.pid = Long.toString(ph.pid());
+                        row.pid = "" + ph.pid();
                         row.uptime = extractSince(ph);
                         row.age = TimeUtils.printSince(row.uptime);
 
@@ -83,12 +80,6 @@ public class ListInflight extends ProcessWatchCommand {
                                     jo = (JsonObject) arr.get(i);
                                     row.exchangeId = jo.getString("exchangeId");
                                     row.fromRouteId = jo.getString("fromRouteId");
-                                    Boolean bool = jo.getBoolean("fromRemoteEndpoint");
-                                    if (bool != null) {
-                                        // older camel versions does not include this information
-                                        remoteVisible.set(true);
-                                        row.fromRemoteEndpoint = bool;
-                                    }
                                     row.atRouteId = jo.getString("atRouteId");
                                     row.nodeId = jo.getString("nodeId");
                                     row.elapsed = jo.getLong("elapsed");
@@ -104,13 +95,11 @@ public class ListInflight extends ProcessWatchCommand {
         rows.sort(this::sortRow);
 
         if (!rows.isEmpty()) {
-            printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
+            System.out.println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
                     new Column().header("PID").headerAlign(HorizontalAlign.CENTER).with(r -> r.pid),
                     new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).maxWidth(30, OverflowBehaviour.ELLIPSIS_RIGHT)
                             .with(r -> r.name),
                     new Column().header("EXCHANGE-ID").dataAlign(HorizontalAlign.LEFT).with(r -> r.exchangeId),
-                    new Column().header("REMOTE").visible(remoteVisible.get()).dataAlign(HorizontalAlign.CENTER)
-                            .with(this::getRemote),
                     new Column().header("ROUTE").dataAlign(HorizontalAlign.LEFT).maxWidth(25, OverflowBehaviour.ELLIPSIS_RIGHT)
                             .with(r -> r.atRouteId),
                     new Column().header("ID").dataAlign(HorizontalAlign.LEFT).maxWidth(25, OverflowBehaviour.ELLIPSIS_RIGHT)
@@ -149,10 +138,6 @@ public class ListInflight extends ProcessWatchCommand {
         return TimeUtils.printDuration(r.elapsed);
     }
 
-    private String getRemote(Row r) {
-        return r.fromRemoteEndpoint ? "x" : "";
-    }
-
     private static class Row implements Cloneable {
         String pid;
         String name;
@@ -160,7 +145,6 @@ public class ListInflight extends ProcessWatchCommand {
         long uptime;
         String exchangeId;
         String fromRouteId;
-        boolean fromRemoteEndpoint;
         String atRouteId;
         String nodeId;
         long elapsed;

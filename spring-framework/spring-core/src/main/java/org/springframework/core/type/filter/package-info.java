@@ -1,7 +1,9 @@
 /**
- * Core support package for type filtering (for example, for classpath scanning).
+ * Core support package for type filtering (e.g. for classpath scanning).
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.core.type.filter;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

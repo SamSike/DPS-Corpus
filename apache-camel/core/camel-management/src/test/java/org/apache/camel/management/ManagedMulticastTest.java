@@ -27,7 +27,6 @@ import org.junit.jupiter.api.condition.OS;
 import static org.apache.camel.management.DefaultManagementObjectNameStrategy.TYPE_ENDPOINT;
 import static org.apache.camel.management.DefaultManagementObjectNameStrategy.TYPE_PROCESSOR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @DisabledOnOs(OS.AIX)
 public class ManagedMulticastTest extends ManagementTestSupport {
@@ -46,11 +45,11 @@ public class ManagedMulticastTest extends ManagementTestSupport {
         MBeanServer mbeanServer = getMBeanServer();
 
         ObjectName name = getCamelObjectName(TYPE_ENDPOINT, "mock://a");
-        Integer queueSize = (Integer) mbeanServer.invoke(name, "queueSize", null, null);
+        Long queueSize = (Long) mbeanServer.invoke(name, "queueSize", null, null);
         assertEquals(3, queueSize.intValue());
 
         name = getCamelObjectName(TYPE_ENDPOINT, "mock://b");
-        queueSize = (Integer) mbeanServer.invoke(name, "queueSize", null, null);
+        queueSize = (Long) mbeanServer.invoke(name, "queueSize", null, null);
         assertEquals(3, queueSize.intValue());
 
         name = getCamelObjectName(TYPE_PROCESSOR, "myMulticast");
@@ -60,14 +59,14 @@ public class ManagedMulticastTest extends ManagementTestSupport {
         assertEquals(3, total.intValue());
 
         Boolean parallel = (Boolean) mbeanServer.getAttribute(name, "ParallelProcessing");
-        assertFalse(parallel.booleanValue());
+        assertEquals(false, parallel.booleanValue());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo")
                         .multicast().id("myMulticast")
                         .to("mock:a").to("mock:b");

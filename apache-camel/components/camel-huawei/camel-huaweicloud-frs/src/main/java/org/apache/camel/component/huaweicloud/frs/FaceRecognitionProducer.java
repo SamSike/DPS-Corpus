@@ -63,6 +63,11 @@ public class FaceRecognitionProducer extends DefaultProducer {
         this.endpoint = endpoint;
     }
 
+    @Override
+    protected void doStart() throws Exception {
+        super.doStart();
+    }
+
     public void process(Exchange exchange) {
         ClientConfigurations clientConfigurations = initializeConfigurations(endpoint);
         if (frsClient == null) {

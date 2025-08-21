@@ -17,13 +17,14 @@
 package org.apache.camel.component.wordpress.api.service.impl;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.camel.component.wordpress.api.model.Context;
 import org.apache.camel.component.wordpress.api.model.Tag;
 import org.apache.camel.component.wordpress.api.model.TagSearchCriteria;
 import org.apache.camel.component.wordpress.api.service.WordpressServiceTags;
 import org.apache.camel.component.wordpress.api.service.spi.TagsSPI;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class WordpressServiceTagsAdapter extends AbstractWordpressCrudServiceAdapter<TagsSPI, Tag, TagSearchCriteria>
         implements WordpressServiceTags {
@@ -40,7 +41,7 @@ public class WordpressServiceTagsAdapter extends AbstractWordpressCrudServiceAda
     // @formatter:off
     @Override
     public List<Tag> list(TagSearchCriteria criteria) {
-        Objects.requireNonNull(criteria, "The search criteria must be defined");
+        checkNotNull(criteria, "The search criteria must be defined");
         return this.getSpi().list(this.getApiVersion(), criteria.getContext(), criteria.getPage(), criteria.getPerPage(),
                 criteria.getSearch(), criteria.getExclude(), criteria.getInclude(),
                 criteria.getOffset(), criteria.getOrder(), criteria.getOrderBy(), criteria.isHideEmpty(), criteria.getPostId(),

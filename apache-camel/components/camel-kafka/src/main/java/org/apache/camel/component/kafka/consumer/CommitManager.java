@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.camel.component.kafka.consumer;
 
 import org.apache.camel.Exchange;
@@ -22,8 +23,7 @@ import org.apache.kafka.common.TopicPartition;
 
 public interface CommitManager {
 
-    KafkaManualCommit getManualCommit(
-            Exchange exchange, TopicPartition partition, ConsumerRecord<Object, Object> consumerRecord);
+    KafkaManualCommit getManualCommit(Exchange exchange, TopicPartition partition, ConsumerRecord<Object, Object> record);
 
     /**
      * Commits everything that has been cached
@@ -32,14 +32,14 @@ public interface CommitManager {
 
     /**
      * Commits the offsets of the given partition
-     *
+     * 
      * @param partition the partition to commit the offsets
      */
     void commit(TopicPartition partition);
 
     /**
      * Forcefully commits the offset of the given partition
-     *
+     * 
      * @param partition           the partition to commit the offsets
      * @param partitionLastOffset the last offset to commit
      */
@@ -47,7 +47,7 @@ public interface CommitManager {
 
     /**
      * Record the last processed offset for future commit
-     *
+     * 
      * @param partition           the partition to commit the offsets
      * @param partitionLastOffset the last offset to commit
      */

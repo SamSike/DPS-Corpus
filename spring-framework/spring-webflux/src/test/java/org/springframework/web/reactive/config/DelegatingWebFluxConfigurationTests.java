@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,11 +35,8 @@ import org.springframework.http.codec.HttpMessageWriter;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.validation.Validator;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.support.ConfigurableWebBindingInitializer;
-import org.springframework.web.reactive.accept.RequestedContentTypeResolver;
 import org.springframework.web.reactive.accept.RequestedContentTypeResolverBuilder;
-import org.springframework.web.reactive.result.method.annotation.ResponseBodyResultHandler;
 import org.springframework.web.reactive.socket.server.WebSocketService;
 import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter;
 
@@ -74,7 +71,7 @@ public class DelegatingWebFluxConfigurationTests {
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		delegatingConfig = new DelegatingWebFluxConfiguration();
 		delegatingConfig.setApplicationContext(new StaticApplicationContext());
 		given(webFluxConfigurer.getValidator()).willReturn(null);
@@ -84,10 +81,9 @@ public class DelegatingWebFluxConfigurationTests {
 
 
 	@Test
-	void requestMappingHandlerMapping() {
+	public void requestMappingHandlerMapping() {
 		delegatingConfig.setConfigurers(Collections.singletonList(webFluxConfigurer));
-		delegatingConfig.requestMappingHandlerMapping(
-				delegatingConfig.webFluxContentTypeResolver(), delegatingConfig.mvcApiVersionStrategy());
+		delegatingConfig.requestMappingHandlerMapping(delegatingConfig.webFluxContentTypeResolver());
 
 		verify(webFluxConfigurer).configureContentTypeResolver(any(RequestedContentTypeResolverBuilder.class));
 		verify(webFluxConfigurer).addCorsMappings(any(CorsRegistry.class));
@@ -95,17 +91,16 @@ public class DelegatingWebFluxConfigurationTests {
 	}
 
 	@Test
-	void requestMappingHandlerAdapter() {
+	public void requestMappingHandlerAdapter() {
 		delegatingConfig.setConfigurers(Collections.singletonList(webFluxConfigurer));
 		ReactiveAdapterRegistry reactiveAdapterRegistry = delegatingConfig.webFluxAdapterRegistry();
 		ServerCodecConfigurer serverCodecConfigurer = delegatingConfig.serverCodecConfigurer();
 		FormattingConversionService formattingConversionService = delegatingConfig.webFluxConversionService();
-		RequestedContentTypeResolver requestedContentTypeResolver = delegatingConfig.webFluxContentTypeResolver();
 		Validator validator = delegatingConfig.webFluxValidator();
 
 		ConfigurableWebBindingInitializer initializer = (ConfigurableWebBindingInitializer)
 				this.delegatingConfig.requestMappingHandlerAdapter(reactiveAdapterRegistry, serverCodecConfigurer,
-						formattingConversionService, requestedContentTypeResolver, validator).getWebBindingInitializer();
+						formattingConversionService, validator).getWebBindingInitializer();
 
 		verify(webFluxConfigurer).configureHttpMessageCodecs(codecsConfigurer.capture());
 		verify(webFluxConfigurer).getValidator();
@@ -117,15 +112,15 @@ public class DelegatingWebFluxConfigurationTests {
 		boolean condition = initializer.getValidator() instanceof LocalValidatorFactoryBean;
 		assertThat(condition).isTrue();
 		assertThat(initializer.getConversionService()).isSameAs(formatterRegistry.getValue());
-		assertThat(codecsConfigurer.getValue().getReaders()).hasSize(15);
+		assertThat(codecsConfigurer.getValue().getReaders().size()).isEqualTo(14);
 	}
 
 	@Test
-	void resourceHandlerMapping() {
+	public void resourceHandlerMapping() {
 		delegatingConfig.setConfigurers(Collections.singletonList(webFluxConfigurer));
 		willAnswer(invocation -> {
 			ResourceHandlerRegistry registry = invocation.getArgument(0);
-			registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/");
+			registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static");
 			return null;
 		}).given(webFluxConfigurer).addResourceHandlers(any(ResourceHandlerRegistry.class));
 
@@ -137,7 +132,7 @@ public class DelegatingWebFluxConfigurationTests {
 
 	@Test
 	void webSocketService() {
-		WebSocketService service = mock();
+		WebSocketService service = mock(WebSocketService.class);
 		given(webFluxConfigurer.getWebSocketService()).willReturn(service);
 
 		delegatingConfig.setConfigurers(Collections.singletonList(webFluxConfigurer));
@@ -147,7 +142,7 @@ public class DelegatingWebFluxConfigurationTests {
 	}
 
 	@Test
-	void responseBodyResultHandler() {
+	public void responseBodyResultHandler() {
 		delegatingConfig.setConfigurers(Collections.singletonList(webFluxConfigurer));
 		delegatingConfig.responseBodyResultHandler(
 				delegatingConfig.webFluxAdapterRegistry(),
@@ -159,26 +154,7 @@ public class DelegatingWebFluxConfigurationTests {
 	}
 
 	@Test
-	void addErrorResponseInterceptors() {
-		ErrorResponse.Interceptor interceptor = (detail, errorResponse) -> {};
-		WebFluxConfigurer configurer = new WebFluxConfigurer() {
-			@Override
-			public void addErrorResponseInterceptors(List<ErrorResponse.Interceptor> interceptors) {
-				interceptors.add(interceptor);
-			}
-		};
-		delegatingConfig.setConfigurers(Collections.singletonList(configurer));
-
-		ResponseBodyResultHandler resultHandler = delegatingConfig.responseBodyResultHandler(
-				delegatingConfig.webFluxAdapterRegistry(),
-				delegatingConfig.serverCodecConfigurer(),
-				delegatingConfig.webFluxContentTypeResolver());
-
-		assertThat(resultHandler.getErrorResponseInterceptors()).containsExactly(interceptor);
-	}
-
-	@Test
-	void viewResolutionResultHandler() {
+	public void viewResolutionResultHandler() {
 		delegatingConfig.setConfigurers(Collections.singletonList(webFluxConfigurer));
 		delegatingConfig.viewResolutionResultHandler(delegatingConfig.webFluxAdapterRegistry(),
 				delegatingConfig.webFluxContentTypeResolver());

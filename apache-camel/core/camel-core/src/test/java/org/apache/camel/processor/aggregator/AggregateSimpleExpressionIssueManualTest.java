@@ -21,7 +21,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.LongAdder;
 
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.ContextTestSupport;
@@ -40,8 +39,8 @@ public class AggregateSimpleExpressionIssueManualTest extends ContextTestSupport
     private static final Logger LOG = LoggerFactory.getLogger(AggregateSimpleExpressionIssueManualTest.class);
     private static final String DATA = "100,200,1,123456,2010-03-01T12:13:14,100,USD,Best Buy,5045,Santa Monica,CA,Type\n";
 
-    private final MyBean myBean = new MyBean();
-    private final AggStrategy aggStrategy = new AggStrategy();
+    private MyBean myBean = new MyBean();
+    private AggStrategy aggStrategy = new AggStrategy();
 
     @Test
     public void testAggregateSimpleExpression() throws Exception {
@@ -50,7 +49,7 @@ public class AggregateSimpleExpressionIssueManualTest extends ContextTestSupport
         int rows = 100000;
         int batches = rows / 1000;
         int total = files + (files * rows) + (files * batches);
-        LOG.info("There are {} exchanges", total);
+        LOG.info("There are " + total + " exchanges");
         NotifyBuilder notify = new NotifyBuilder(context).whenDone(total).create();
 
         LOG.info("Writing 10 files with 100000 rows in each file");
@@ -69,17 +68,17 @@ public class AggregateSimpleExpressionIssueManualTest extends ContextTestSupport
 
         LOG.info("Waiting to process all the files");
         boolean matches = notify.matches(3, TimeUnit.MINUTES);
-        LOG.info("Should process all files {}", matches);
+        LOG.info("Should process all files " + matches);
 
-        LOG.info("Time taken {} ms", watch.taken());
+        LOG.info("Time taken " + watch.taken() + " ms");
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
-                from(fileUri()).routeId("foo").autoStartup(false).log("Picked up ${file:name}").split()
+            public void configure() throws Exception {
+                from(fileUri()).routeId("foo").noAutoStartup().log("Picked up ${file:name}").split()
                         .tokenize("\n").streaming()
                         .aggregate(constant(true), aggStrategy).completionSize(simple("1000")).completionTimeout(simple("500"))
                         .bean(myBean).end().end();
@@ -88,15 +87,16 @@ public class AggregateSimpleExpressionIssueManualTest extends ContextTestSupport
     }
 
     public static final class MyBean {
-        private final LongAdder cnt = new LongAdder();
+        private volatile int cnt;
 
         public void invoke(final List<String> strList) {
-            cnt.increment();
-            LOG.info("Batch {}", cnt.intValue());
+            LOG.info("Batch " + (++cnt));
         }
     }
 
     public static final class AggStrategy implements AggregationStrategy {
+
+        private final int batchSize = 1000;
 
         @Override
         @SuppressWarnings("unchecked")
@@ -104,7 +104,6 @@ public class AggregateSimpleExpressionIssueManualTest extends ContextTestSupport
             String str = newExchange.getIn().getBody(String.class);
 
             if (oldExchange == null) {
-                int batchSize = 1000;
                 List<String> list = new ArrayList<>(batchSize);
                 list.add(str);
                 newExchange.getIn().setBody(list);

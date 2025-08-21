@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
@@ -29,12 +30,10 @@ public class FileDelayTest extends BaseEndpointDslTest {
     private static final String TEST_DATA_DIR = BaseEndpointDslTest.generateUniquePath(BaseEndpointDslTest.class);
 
     @Override
-    public void doPreSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
         deleteDirectory(TEST_DATA_DIR);
-    }
-
-    @Override
-    public void doPostSetup() {
+        super.setUp();
         template.sendBodyAndHeader("file://" + TEST_DATA_DIR, "Hello World", Exchange.FILE_NAME, "hello.txt");
         template.sendBodyAndHeader("file://" + TEST_DATA_DIR, "Bye World", Exchange.FILE_NAME, "bye.txt");
     }

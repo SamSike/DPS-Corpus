@@ -25,7 +25,6 @@ import org.apache.camel.spi.annotations.CloudServiceFactory;
 
 @CloudServiceFactory("dns-service-discovery")
 @Configurer
-@Deprecated
 public class DnsServiceDiscoveryFactory implements ServiceDiscoveryFactory {
     private final DnsConfiguration configuration;
 

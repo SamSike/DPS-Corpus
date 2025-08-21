@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,8 +39,6 @@ package org.jooq.impl;
 
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static org.jooq.Clause.ALTER_TABLE;
 import static org.jooq.Clause.ALTER_TABLE_ADD;
 import static org.jooq.Clause.ALTER_TABLE_ALTER;
@@ -54,13 +52,37 @@ import static org.jooq.Clause.ALTER_TABLE_RENAME_INDEX;
 import static org.jooq.Clause.ALTER_TABLE_TABLE;
 import static org.jooq.Nullability.NOT_NULL;
 import static org.jooq.Nullability.NULL;
-import static org.jooq.SQLDialect.*;
+// ...
+// ...
+// ...
+// ...
+// ...
+// ...
+import static org.jooq.SQLDialect.CUBRID;
+// ...
+import static org.jooq.SQLDialect.DERBY;
+// ...
+import static org.jooq.SQLDialect.FIREBIRD;
+import static org.jooq.SQLDialect.H2;
+// ...
+import static org.jooq.SQLDialect.HSQLDB;
+// ...
+import static org.jooq.SQLDialect.MARIADB;
+// ...
+import static org.jooq.SQLDialect.MYSQL;
+// ...
+import static org.jooq.SQLDialect.POSTGRES;
+// ...
+// ...
+// ...
+// ...
+import static org.jooq.SQLDialect.YUGABYTEDB;
+import static org.jooq.impl.QOM.Cascade.CASCADE;
+import static org.jooq.impl.QOM.Cascade.RESTRICT;
 import static org.jooq.impl.ConstraintType.FOREIGN_KEY;
 import static org.jooq.impl.ConstraintType.PRIMARY_KEY;
 import static org.jooq.impl.ConstraintType.UNIQUE;
-import static org.jooq.impl.DSL.alterTable;
 import static org.jooq.impl.DSL.begin;
-import static org.jooq.impl.DSL.commentOnColumn;
 import static org.jooq.impl.DSL.commentOnTable;
 import static org.jooq.impl.DSL.condition;
 import static org.jooq.impl.DSL.constraint;
@@ -80,9 +102,7 @@ import static org.jooq.impl.Keywords.K_ALTER;
 import static org.jooq.impl.Keywords.K_ALTER_COLUMN;
 import static org.jooq.impl.Keywords.K_ALTER_CONSTRAINT;
 import static org.jooq.impl.Keywords.K_ALTER_TABLE;
-import static org.jooq.impl.Keywords.K_AS;
 import static org.jooq.impl.Keywords.K_BEFORE;
-import static org.jooq.impl.Keywords.K_BY;
 import static org.jooq.impl.Keywords.K_CASCADE;
 import static org.jooq.impl.Keywords.K_CHANGE;
 import static org.jooq.impl.Keywords.K_CHANGE_COLUMN;
@@ -102,8 +122,6 @@ import static org.jooq.impl.Keywords.K_EXCEPTION;
 import static org.jooq.impl.Keywords.K_EXEC;
 import static org.jooq.impl.Keywords.K_FIRST;
 import static org.jooq.impl.Keywords.K_FOREIGN_KEY;
-import static org.jooq.impl.Keywords.K_GENERATED;
-import static org.jooq.impl.Keywords.K_IDENTITY;
 import static org.jooq.impl.Keywords.K_IF;
 import static org.jooq.impl.Keywords.K_IF_EXISTS;
 import static org.jooq.impl.Keywords.K_IF_NOT_EXISTS;
@@ -114,7 +132,6 @@ import static org.jooq.impl.Keywords.K_NULL;
 import static org.jooq.impl.Keywords.K_POSITION;
 import static org.jooq.impl.Keywords.K_PRIMARY_KEY;
 import static org.jooq.impl.Keywords.K_RAISE;
-import static org.jooq.impl.Keywords.K_REMOVE;
 import static org.jooq.impl.Keywords.K_RENAME;
 import static org.jooq.impl.Keywords.K_RENAME_COLUMN;
 import static org.jooq.impl.Keywords.K_RENAME_CONSTRAINT;
@@ -123,7 +140,7 @@ import static org.jooq.impl.Keywords.K_RENAME_OBJECT;
 import static org.jooq.impl.Keywords.K_RENAME_TABLE;
 import static org.jooq.impl.Keywords.K_RENAME_TO;
 import static org.jooq.impl.Keywords.K_REPLACE;
-import static org.jooq.impl.Keywords.K_SET;
+import static org.jooq.impl.Keywords.K_RESTRICT;
 import static org.jooq.impl.Keywords.K_SET_DATA_TYPE;
 import static org.jooq.impl.Keywords.K_SET_DEFAULT;
 import static org.jooq.impl.Keywords.K_SET_NOT_NULL;
@@ -133,24 +150,18 @@ import static org.jooq.impl.Keywords.K_TYPE;
 import static org.jooq.impl.Keywords.K_USING_INDEX;
 import static org.jooq.impl.Keywords.K_WHEN;
 import static org.jooq.impl.Keywords.K_WITH_NO_DATACOPY;
-import static org.jooq.impl.QOM.Cascade.CASCADE;
-import static org.jooq.impl.QOM.Cascade.RESTRICT;
 import static org.jooq.impl.SQLDataType.VARCHAR;
-import static org.jooq.impl.Tools.NO_SUPPORT_DEFAULT_DATETIME_LITERAL_PREFIX;
 import static org.jooq.impl.Tools.begin;
 import static org.jooq.impl.Tools.beginExecuteImmediate;
 import static org.jooq.impl.Tools.endExecuteImmediate;
-import static org.jooq.impl.Tools.executeImmediateIf;
+import static org.jooq.impl.Tools.executeImmediate;
 import static org.jooq.impl.Tools.fieldsByName;
-import static org.jooq.impl.Tools.filter;
-import static org.jooq.impl.Tools.map;
 import static org.jooq.impl.Tools.toSQLDDLTypeDeclaration;
 import static org.jooq.impl.Tools.toSQLDDLTypeDeclarationForAddition;
 import static org.jooq.impl.Tools.toSQLDDLTypeDeclarationIdentityAfterNull;
 import static org.jooq.impl.Tools.toSQLDDLTypeDeclarationIdentityBeforeNull;
 import static org.jooq.impl.Tools.tryCatch;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_CONSTRAINT_REFERENCE;
-import static org.jooq.impl.Tools.ExtendedDataKey.DATA_OMIT_DATETIME_LITERAL_PREFIX;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -161,7 +172,6 @@ import java.util.Set;
 import org.jooq.AlterTableAddStep;
 import org.jooq.AlterTableAlterConstraintStep;
 import org.jooq.AlterTableAlterStep;
-import org.jooq.AlterTableChangeStep;
 import org.jooq.AlterTableDropStep;
 import org.jooq.AlterTableFinalStep;
 import org.jooq.AlterTableRenameColumnToStep;
@@ -177,23 +187,22 @@ import org.jooq.Context;
 import org.jooq.DSLContext;
 import org.jooq.DataType;
 import org.jooq.Field;
+import org.jooq.FieldOrConstraint;
 import org.jooq.Index;
 import org.jooq.Keyword;
 import org.jooq.Name;
 import org.jooq.Nullability;
 // ...
 import org.jooq.Query;
+import org.jooq.QueryPart;
 import org.jooq.Record1;
 import org.jooq.SQLDialect;
 import org.jooq.Select;
 import org.jooq.Table;
 import org.jooq.TableElement;
 // ...
-import org.jooq.conf.RenderQuotedNames;
 import org.jooq.impl.QOM.Cascade;
-import org.jooq.impl.QOM.GenerationMode;
 import org.jooq.impl.QOM.UNotYetImplemented;
-import org.jooq.impl.Tools.ExtendedDataKey;
 
 /**
  * @author Lukas Eder
@@ -208,7 +217,6 @@ implements
     AlterTableDropStep,
     AlterTableAlterStep,
     AlterTableAlterConstraintStep,
-    AlterTableChangeStep<Object>,
     AlterTableUsingIndexStep,
     AlterTableRenameColumnToStep,
     AlterTableRenameIndexToStep,
@@ -216,27 +224,18 @@ implements
     UNotYetImplemented
 {
 
-    private static final Clause[] CLAUSES                               = { ALTER_TABLE };
-    static final Set<SQLDialect>  NO_SUPPORT_IF_EXISTS                  = SQLDialect.supportedUntil(CUBRID, DERBY, FIREBIRD, MARIADB, MYSQL);
-    static final Set<SQLDialect>  NO_SUPPORT_IF_EXISTS_COLUMN           = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD);
-    static final Set<SQLDialect>  NO_SUPPORT_IF_EXISTS_COLUMN_ALTER     = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, MYSQL, POSTGRES, YUGABYTEDB);
-    static final Set<SQLDialect>  NO_SUPPORT_IF_EXISTS_COLUMN_RENAME    = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, MYSQL, POSTGRES, YUGABYTEDB);
-    static final Set<SQLDialect>  NO_SUPPORT_IF_EXISTS_CONSTRAINT       = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, YUGABYTEDB);
-    static final Set<SQLDialect>  NO_SUPPORT_IF_NOT_EXISTS_COLUMN       = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD);
-    static final Set<SQLDialect>  SUPPORT_RENAME_COLUMN                 = SQLDialect.supportedBy(DERBY);
-    static final Set<SQLDialect>  SUPPORT_RENAME_TABLE                  = SQLDialect.supportedBy(CLICKHOUSE, DERBY);
-    static final Set<SQLDialect>  NO_SUPPORT_RENAME_QUALIFIED_TABLE     = SQLDialect.supportedBy(DERBY, DUCKDB, POSTGRES, YUGABYTEDB);
-    static final Set<SQLDialect>  NO_SUPPORT_ALTER_TYPE_AND_NULL        = SQLDialect.supportedBy(CLICKHOUSE, POSTGRES, YUGABYTEDB);
-    static final Set<SQLDialect>  NO_SUPPORT_DROP_CONSTRAINT            = SQLDialect.supportedBy(MARIADB, MYSQL);
-    static final Set<SQLDialect>  NO_SUPPORT_CHANGE_COLUMN              = SQLDialect.supportedBy(CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, POSTGRES, SQLITE, TRINO, YUGABYTEDB);
-    static final Set<SQLDialect>  REQUIRE_REPEAT_ADD_ON_MULTI_ALTER     = SQLDialect.supportedBy(CLICKHOUSE, FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB);
-    static final Set<SQLDialect>  REQUIRE_REPEAT_DROP_ON_MULTI_ALTER    = SQLDialect.supportedBy(CLICKHOUSE, FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB);
-
-
-
-
-
-
+    private static final Clause[]        CLAUSES                               = { ALTER_TABLE };
+    private static final Set<SQLDialect> NO_SUPPORT_IF_EXISTS                  = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, MARIADB);
+    private static final Set<SQLDialect> NO_SUPPORT_IF_EXISTS_COLUMN           = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD);
+    private static final Set<SQLDialect> NO_SUPPORT_IF_EXISTS_CONSTRAINT       = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD);
+    private static final Set<SQLDialect> NO_SUPPORT_IF_NOT_EXISTS_COLUMN       = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD);
+    private static final Set<SQLDialect> SUPPORT_RENAME_COLUMN                 = SQLDialect.supportedBy(DERBY);
+    private static final Set<SQLDialect> SUPPORT_RENAME_TABLE                  = SQLDialect.supportedBy(DERBY);
+    private static final Set<SQLDialect> NO_SUPPORT_RENAME_QUALIFIED_TABLE     = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
+    private static final Set<SQLDialect> NO_SUPPORT_ALTER_TYPE_AND_NULL        = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
+    private static final Set<SQLDialect> NO_SUPPORT_DROP_CONSTRAINT            = SQLDialect.supportedBy(MARIADB, MYSQL);
+    private static final Set<SQLDialect> REQUIRE_REPEAT_ADD_ON_MULTI_ALTER     = SQLDialect.supportedBy(FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB);
+    private static final Set<SQLDialect> REQUIRE_REPEAT_DROP_ON_MULTI_ALTER    = SQLDialect.supportedBy(FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB);
 
 
 
@@ -281,11 +280,6 @@ implements
     private DataType<?>                  alterColumnType;
     private Field<?>                     alterColumnDefault;
     private boolean                      alterColumnDropDefault;
-    private GenerationMode               alterColumnSetIdentity;
-    private boolean                      alterColumnDropIdentity;
-    private Field<?>                     changeColumnFrom;
-    private Field<?>                     changeColumnTo;
-    private DataType<?>                  changeColumnType;
     private QueryPartList<Field<?>>      dropColumns;
     private Constraint                   dropConstraint;
     private ConstraintType               dropConstraintType;
@@ -319,13 +313,8 @@ implements
     final DataType<?>              $alterColumnType()         { return alterColumnType; }
     final Field<?>                 $alterColumnDefault()      { return alterColumnDefault; }
     final boolean                  $alterColumnDropDefault()  { return alterColumnDropDefault; }
-    final GenerationMode           $alterColumnSetIdentity()  { return alterColumnSetIdentity; }
-    final boolean                  $alterColumnDropIdentity() { return alterColumnDropIdentity; }
     final Constraint               $alterConstraint()         { return alterConstraint; }
     final boolean                  $alterConstraintEnforced() { return alterConstraintEnforced; }
-    final Field<?>                 $changeColumnFrom()        { return changeColumnFrom; }
-    final Field<?>                 $changeColumnTo()          { return changeColumnTo; }
-    final DataType<?>              $changeColumnType()        { return changeColumnType; }
     final Table<?>                 $renameTo()                { return renameTo; }
     final Field<?>                 $renameColumn()            { return renameColumn; }
     final Field<?>                 $renameColumnTo()          { return renameColumnTo; }
@@ -381,22 +370,6 @@ implements
     @Override
     public final AlterTableImpl renameColumn(String oldName) {
         return renameColumn(name(oldName));
-    }
-
-    @Override
-    public final AlterTableImpl renameColumnIfExists(Field<?> oldName) {
-        ifExistsColumn = true;
-        return renameColumn(oldName);
-    }
-
-    @Override
-    public final AlterTableImpl renameColumnIfExists(Name oldName) {
-        return renameColumnIfExists(field(oldName));
-    }
-
-    @Override
-    public final AlterTableImpl renameColumnIfExists(String oldName) {
-        return renameColumnIfExists(name(oldName));
     }
 
     @Override
@@ -485,11 +458,6 @@ implements
     }
 
     @Override
-    public final AlterTableImpl add(TableElement field) {
-        return add(Arrays.asList(field));
-    }
-
-    @Override
     public final AlterTableImpl add(TableElement... fields) {
         return add(Arrays.asList(fields));
     }
@@ -501,11 +469,11 @@ implements
         if (fields.size() == 1) {
             TableElement first = fields.iterator().next();
 
-            if (first instanceof Field<?> f)
-                return add(f);
-            else if (first instanceof Constraint c)
-                return add(c);
-            else if (first instanceof Index i)
+            if (first instanceof Field)
+                return add((Field<?>) first);
+            else if (first instanceof Constraint)
+                return add((Constraint) first);
+            else if (first instanceof Index)
                 throw new UnsupportedOperationException("ALTER TABLE .. ADD INDEX not yet supported, see https://github.com/jOOQ/jOOQ/issues/13006");
         }
 
@@ -672,21 +640,6 @@ implements
     }
 
     @Override
-    public final <T> AlterTableImpl alterIfExists(Field<T> field) {
-        return alterColumnIfExists(field);
-    }
-
-    @Override
-    public final AlterTableImpl alterIfExists(Name field) {
-        return alterColumnIfExists(field);
-    }
-
-    @Override
-    public final AlterTableImpl alterIfExists(String field) {
-        return alterColumnIfExists(field);
-    }
-
-    @Override
     public final AlterTableImpl alterColumn(Name field) {
         return alterColumn(field(field));
     }
@@ -700,85 +653,6 @@ implements
     public final <T> AlterTableImpl alterColumn(Field<T> field) {
         alterColumn = field;
         return this;
-    }
-
-    @Override
-    public final AlterTableImpl alterColumnIfExists(Name field) {
-        return alterColumnIfExists(field(field));
-    }
-
-    @Override
-    public final AlterTableImpl alterColumnIfExists(String field) {
-        return alterColumnIfExists(name(field));
-    }
-
-    @Override
-    public final <T> AlterTableImpl alterColumnIfExists(Field<T> field) {
-        ifExistsColumn = true;
-        return alterColumn(field);
-    }
-
-    @Override
-    public final <T> AlterTableChangeStep<T> change(Field<?> oldName, Field<T> newName) {
-        return changeColumn(oldName, newName);
-    }
-
-    @Override
-    public final AlterTableChangeStep<Object> change(Name oldName, Name newName) {
-        return changeColumn(oldName, newName);
-    }
-
-    @Override
-    public final AlterTableChangeStep<Object> change(String oldName, String newName) {
-        return changeColumn(oldName, newName);
-    }
-
-    @Override
-    public final <T> AlterTableChangeStep<T> changeIfExists(Field<?> oldName, Field<T> newName) {
-        return changeColumnIfExists(oldName, newName);
-    }
-
-    @Override
-    public final AlterTableChangeStep<Object> changeIfExists(Name oldName, Name newName) {
-        return changeColumnIfExists(oldName, newName);
-    }
-
-    @Override
-    public final AlterTableChangeStep<Object> changeIfExists(String oldName, String newName) {
-        return changeColumnIfExists(oldName, newName);
-    }
-
-    @Override
-    public final AlterTableChangeStep<Object> changeColumn(Name oldName, Name newName) {
-        return changeColumn(field(oldName), field(newName));
-    }
-
-    @Override
-    public final AlterTableChangeStep<Object> changeColumn(String oldName, String newName) {
-        return changeColumn(name(oldName), name(newName));
-    }
-
-    @Override
-    public final <T> AlterTableChangeStep<T> changeColumn(Field<?> oldName, Field<T> newName) {
-        changeColumnFrom = oldName;
-        changeColumnTo = newName;
-        return (AlterTableChangeStep<T>) this;
-    }
-
-    @Override
-    public final AlterTableChangeStep<Object> changeColumnIfExists(Name oldName, Name newName) {
-        return changeColumnIfExists(field(oldName), field(newName));
-    }
-
-    @Override
-    public final AlterTableChangeStep<Object> changeColumnIfExists(String oldName, String newName) {
-        return changeColumnIfExists(name(oldName), name(newName));
-    }
-
-    @Override
-    public final <T> AlterTableChangeStep<T> changeColumnIfExists(Field<?> oldName, Field<T> newName) {
-        ifExistsColumn = true;
-        return changeColumn(oldName, newName);
     }
 
     @Override
@@ -816,11 +690,7 @@ implements
 
     @Override
     public final AlterTableImpl set(DataType type) {
-        if (changeColumnFrom != null)
-            changeColumnType = type;
-        else
-            alterColumnType = type;
-
+        alterColumnType = type;
         return this;
     }
 
@@ -870,18 +740,6 @@ implements
     @Override
     public final AlterTableImpl dropDefault() {
         alterColumnDropDefault = true;
-        return this;
-    }
-
-    @Override
-    public final AlterTableImpl setGeneratedByDefaultAsIdentity() {
-        alterColumnSetIdentity = GenerationMode.BY_DEFAULT;
-        return this;
-    }
-
-    @Override
-    public final AlterTableImpl dropIdentity() {
-        alterColumnDropIdentity = true;
         return this;
     }
 
@@ -1115,32 +973,13 @@ implements
         return !NO_SUPPORT_IF_EXISTS_COLUMN.contains(ctx.dialect());
     }
 
-    private final boolean supportsIfExistsColumnAlter(Context<?> ctx) {
-        return !NO_SUPPORT_IF_EXISTS_COLUMN_ALTER.contains(ctx.dialect());
-    }
-
-    private final boolean supportsIfExistsColumnRename(Context<?> ctx) {
-        return !NO_SUPPORT_IF_EXISTS_COLUMN_RENAME.contains(ctx.dialect());
-    }
-
-    private final boolean supportsIfExistsConstraint(Context<?> ctx) {
-        return !NO_SUPPORT_IF_EXISTS_CONSTRAINT.contains(ctx.dialect());
-    }
-
     private final boolean supportsIfNotExistsColumn(Context<?> ctx) {
         return !NO_SUPPORT_IF_NOT_EXISTS_COLUMN.contains(ctx.dialect());
     }
 
     @Override
     public final void accept(Context<?> ctx) {
-        if ((ifExists && !supportsIfExists(ctx))
-            || (ifExistsColumn && dropColumns  != null && !supportsIfExistsColumn(ctx))
-            || (ifExistsColumn && alterColumn  != null && !supportsIfExistsColumnAlter(ctx))
-            || (ifExistsColumn && changeColumnFrom != null && !supportsIfExistsColumnAlter(ctx))
-            || (ifExistsColumn && renameColumn != null && !supportsIfExistsColumnRename(ctx))
-            || (ifExistsConstraint && !supportsIfExistsConstraint(ctx))
-            || (ifNotExistsColumn && !supportsIfNotExistsColumn(ctx))
-        ) {
+        if ((ifExists && !supportsIfExists(ctx)) || ((ifExistsColumn || ifExistsConstraint || ifNotExistsColumn) && !supportsIfExistsColumn(ctx)))
             tryCatch(
                 ctx,
                 DDLStatementType.ALTER_TABLE,
@@ -1148,36 +987,12 @@ implements
                 ifExistsColumn || ifExistsConstraint ? TRUE : ifNotExistsColumn ? FALSE : null,
                 c -> accept0(c)
             );
-        }
         else
             accept0(ctx);
     }
 
     private final void accept0(Context<?> ctx) {
         SQLDialect family = ctx.family();
-
-        if (changeColumnFrom != null && NO_SUPPORT_CHANGE_COLUMN.contains(ctx.dialect())) {
-            if (changeColumnFrom.getUnqualifiedName().equals(changeColumnTo.getUnqualifiedName())) {
-                if (ifExistsColumn)
-                    ctx.visit(alterTable(table).alterIfExists(changeColumnFrom).set(changeColumnType));
-                else
-                    ctx.visit(alterTable(table).alter(changeColumnFrom).set(changeColumnType));
-            }
-            else if (ifExistsColumn) {
-                ctx.visit(begin(
-                    alterTable(table).renameColumnIfExists(changeColumnFrom).to(changeColumnTo),
-                    alterTable(table).alterIfExists(changeColumnTo).set(changeColumnType)
-                ));
-            }
-            else {
-                ctx.visit(begin(
-                    alterTable(table).renameColumn(changeColumnFrom).to(changeColumnTo),
-                    alterTable(table).alter(changeColumnTo).set(changeColumnType)
-                ));
-            }
-
-            return;
-        }
 
         if (comment != null) {
             switch (family) {
@@ -1196,9 +1011,9 @@ implements
         if (family == FIREBIRD) {
             if (addFirst) {
                 begin(ctx, c1 -> {
-                    Tools.executeImmediate(c1, c2 -> accept1(c2));
+                    executeImmediate(c1, c2 -> accept1(c2));
                     c1.formatSeparator();
-                    Tools.executeImmediate(c1, c2 -> {
+                    executeImmediate(c1, c2 -> {
                         c2.visit(K_ALTER_TABLE).sql(' ').visit(table).sql(' ').visit(K_ALTER).sql(' ').visit(addColumn).sql(' ').visit(K_POSITION).sql(" 1");
                     });
                 });
@@ -1315,41 +1130,7 @@ implements
 
 
 
-        if (CreateTableImpl.EMULATE_COLUMN_COMMENT_IN_BLOCK.contains(ctx.dialect())) {
-            List<Field<?>> comments = addColumnComments();
-
-            if (!comments.isEmpty()) {
-                begin(ctx, c1 -> {
-                    executeImmediateIf(
-                        CreateTableImpl.REQUIRE_EXECUTE_IMMEDIATE.contains(c1.dialect()),
-                        c1,
-                        c2 -> accept1(c2)
-                    );
-
-                    c1.formatSeparator();
-
-                    for (Field<?> c : comments) {
-                        executeImmediateIf(CreateTableImpl.REQUIRE_EXECUTE_IMMEDIATE.contains(ctx.dialect()), c1,
-                            c2 -> c2.visit(commentOnColumn(table.getQualifiedName().append(c.getUnqualifiedName())).is(c.getComment()))
-                        );
-                    }
-                });
-                return;
-            }
-        }
-
         accept1(ctx);
-    }
-
-    private final List<Field<?>> addColumnComments() {
-        if (addColumn != null) {
-            if (!addColumn.getComment().isEmpty())
-                return asList(addColumn);
-        }
-        else if (add != null)
-            return map(filter(add, c -> c instanceof Field<?> && !c.getComment().isEmpty()), c -> (Field<?>) c);
-
-        return emptyList();
     }
 
     private final void accept1(Context<?> ctx) {
@@ -1372,8 +1153,10 @@ implements
             if (ifExists && supportsIfExists(ctx))
                 ctx.sql(' ').visit(K_IF_EXISTS);
 
-            ctx.sql(' ').visit(table).sql(' ')
-               .end(ALTER_TABLE_TABLE);
+            ctx.sql(' ').visit(table)
+               .end(ALTER_TABLE_TABLE)
+               .formatIndentStart()
+               .formatSeparator();
         }
 
         if (comment != null) {
@@ -1381,26 +1164,16 @@ implements
         }
         else if (renameTo != null) {
             boolean qualify = ctx.qualify();
-            boolean unqualify = unqualifyRenameTo(ctx);
 
             ctx.start(ALTER_TABLE_RENAME);
 
-            if (unqualify)
+            if (NO_SUPPORT_RENAME_QUALIFIED_TABLE.contains(ctx.dialect()))
                 ctx.qualify(false);
 
-            Keyword renameToKeyword = K_RENAME_TO;
-
-            if (renameObject || renameTable)
-                renameToKeyword = K_TO;
-
-
-
-
-
-            ctx.visit(renameToKeyword).sql(' ')
+            ctx.visit(renameObject || renameTable ? K_TO : K_RENAME_TO).sql(' ')
                .visit(renameTo);
 
-            if (unqualify)
+            if (NO_SUPPORT_RENAME_QUALIFIED_TABLE.contains(ctx.dialect()))
                 ctx.qualify(qualify);
 
             ctx.end(ALTER_TABLE_RENAME);
@@ -1412,28 +1185,36 @@ implements
 
 
                 case DERBY:
-                    ctx.visit(K_RENAME_COLUMN).sql(' ').visit(renameColumn).sql(' ')
-                       .visit(K_TO).sql(' ').qualify(false, c -> c.visit(renameColumnTo));
+                    ctx.visit(K_RENAME_COLUMN).sql(' ')
+                       .visit(renameColumn)
+                       .formatSeparator()
+                       .visit(K_TO).sql(' ')
+                       .qualify(false, c -> c.visit(renameColumnTo));
 
                     break;
 
                 case H2:
                 case HSQLDB:
-                    ctx.visit(K_ALTER_COLUMN).sql(' ');
-
-                    if (ifExistsColumn && supportsIfExistsColumnRename(ctx))
-                        ctx.visit(K_IF_EXISTS).sql(' ');
-
-                    ctx.qualify(false, c -> c.visit(renameColumn)).sql(' ')
-                       .visit(K_RENAME_TO).sql(' ').qualify(false, c -> c.visit(renameColumnTo));
+                    ctx.visit(K_ALTER_COLUMN).sql(' ')
+                       .qualify(false, c -> c.visit(renameColumn))
+                       .formatSeparator()
+                       .visit(K_RENAME_TO).sql(' ')
+                       .qualify(false, c -> c.visit(renameColumnTo));
 
                     break;
 
                 case FIREBIRD:
-                    ctx.visit(K_ALTER_COLUMN).sql(' ').qualify(false, c -> c.visit(renameColumn)).sql(' ')
-                       .visit(K_TO).sql(' ').qualify(false, c -> c.visit(renameColumnTo));
+                    ctx.visit(K_ALTER_COLUMN).sql(' ')
+                       .qualify(false, c -> c.visit(renameColumn))
+                       .formatSeparator()
+                       .visit(K_TO).sql(' ')
+                       .qualify(false, c -> c.visit(renameColumnTo));
 
                     break;
+
+
+
+
 
 
 
@@ -1452,13 +1233,11 @@ implements
 
 
                 default:
-                    ctx.visit(K_RENAME_COLUMN).sql(' ');
-
-                    if (ifExistsColumn && supportsIfExistsColumnRename(ctx))
-                        ctx.visit(K_IF_EXISTS).sql(' ');
-
-                    ctx.qualify(false, c -> c.visit(renameColumn)).sql(' ')
-                       .visit(K_TO).sql(' ').qualify(false, c -> c.visit(renameColumnTo));
+                    ctx.visit(K_RENAME_COLUMN).sql(' ')
+                       .qualify(false, c -> c.visit(renameColumn))
+                       .formatSeparator()
+                       .visit(K_TO).sql(' ')
+                       .qualify(false, c -> c.visit(renameColumnTo));
 
                     break;
             }
@@ -1467,20 +1246,28 @@ implements
         }
         else if (renameIndex != null) {
             ctx.start(ALTER_TABLE_RENAME_INDEX)
-               .visit(K_RENAME_INDEX).sql(' ').qualify(false, c -> c.visit(renameIndex)).sql(' ')
-               .visit(K_TO).sql(' ').qualify(false, c -> c.visit(renameIndexTo))
+               .visit(K_RENAME_INDEX).sql(' ')
+               .qualify(false, c -> c.visit(renameIndex))
+               .formatSeparator()
+               .visit(K_TO).sql(' ')
+               .qualify(false, c -> c.visit(renameIndexTo))
                .end(ALTER_TABLE_RENAME_INDEX);
         }
         else if (renameConstraint != null) {
             ctx.start(ALTER_TABLE_RENAME_CONSTRAINT);
             ctx.data(DATA_CONSTRAINT_REFERENCE, true, c1 -> {
                 if (family == HSQLDB)
-                    c1.visit(K_ALTER_CONSTRAINT).sql(' ').qualify(false, c2 -> c2.visit(renameConstraint)).sql(' ')
-                      .visit(K_RENAME_TO).sql(' ').qualify(false, c2 -> c2.visit(renameConstraintTo));
+                    c1.visit(K_ALTER_CONSTRAINT).sql(' ')
+                      .qualify(false, c2 -> c2.visit(renameConstraint))
+                      .formatSeparator()
+                      .visit(K_RENAME_TO).sql(' ')
+                      .qualify(false, c2 -> c2.visit(renameConstraintTo));
                 else
                     c1.visit( K_RENAME_CONSTRAINT).sql(' ')
-                      .qualify(false, c2 -> c2.visit(renameConstraint)).sql(' ')
-                      .visit(K_TO).sql(' ').qualify(false, c2 -> c2.visit(renameConstraintTo));
+                      .qualify(false, c2 -> c2.visit(renameConstraint))
+                      .formatSeparator()
+                      .visit(K_TO).sql(' ')
+                      .qualify(false, c2 -> c2.visit(renameConstraintTo));
             });
 
             ctx.end(ALTER_TABLE_RENAME_CONSTRAINT);
@@ -1512,12 +1299,11 @@ implements
                 }
 
                 TableElement part = add.get(i);
-                ctx.qualify(false, c -> c.visit(Tools.uncollate(part)));
+                ctx.qualify(false, c -> c.visit(part));
 
-                if (part instanceof Field<?> f) {
+                if (part instanceof Field) { Field<?> f = (Field<?>) part;
                     ctx.sql(' ');
-                    toSQLDDLTypeDeclarationForAddition(ctx, table, f.getDataType());
-                    CreateTableImpl.acceptColumnComment(ctx, f);
+                    toSQLDDLTypeDeclarationForAddition(ctx, f.getDataType());
                 }
             }
 
@@ -1525,16 +1311,8 @@ implements
                 ctx.formatIndentEnd()
                    .formatNewLine();
 
-
-
-
-
-
             if (parens)
                 ctx.sql(')');
-
-
-
 
             acceptFirstBeforeAfter(ctx);
             ctx.end(ALTER_TABLE_ADD);
@@ -1551,16 +1329,15 @@ implements
 
 
 
-            ctx.qualify(false, c -> c.visit(Tools.uncollate(addColumn))).sql(' ');
-            toSQLDDLTypeDeclarationForAddition(ctx, table, addColumnType);
-            CreateTableImpl.acceptColumnComment(ctx, addColumn);
+            ctx.qualify(false, c -> c.visit(addColumn)).sql(' ');
+            toSQLDDLTypeDeclarationForAddition(ctx, addColumnType);
+
+
+
+
+
+
             acceptFirstBeforeAfter(ctx);
-
-
-
-
-
-
             ctx.end(ALTER_TABLE_ADD);
         }
         else if (addConstraint != null) {
@@ -1604,38 +1381,18 @@ implements
                 }
 
                 ctx.sql(' ').visit(K_CONSTRAINT).sql(' ').visit(alterConstraint);
-                AbstractConstraint.acceptEnforced(ctx, alterConstraintEnforced);
+                ConstraintImpl.acceptEnforced(ctx, alterConstraintEnforced);
             });
 
             ctx.end(ALTER_TABLE_ALTER);
         }
 
-        else if (changeColumnFrom != null) {
-            ctx.start(ALTER_TABLE_ALTER);
-
-            switch (family) {
-
-                case MARIADB:
-                case MYSQL:
-                default:
-                    ctx.visit(K_CHANGE_COLUMN);
-
-                    if (ifExistsColumn && supportsIfExistsColumnAlter(ctx))
-                        ctx.sql(' ').visit(K_IF_EXISTS);
-
-                    ctx.sql(' ').qualify(false, c -> c.visit(changeColumnFrom));
-                    ctx.sql(' ').qualify(false, c -> c.visit(changeColumnTo));
-                    ctx.sql(' ');
-                    acceptColumnType(ctx, table, changeColumnType);
-                    break;
-            }
-
-            ctx.end(ALTER_TABLE_ALTER);
-        }
         else if (alterColumn != null) {
             ctx.start(ALTER_TABLE_ALTER);
 
             switch (family) {
+
+
 
 
 
@@ -1671,45 +1428,16 @@ implements
                 case MYSQL: {
 
                     // MySQL's CHANGE COLUMN clause has a mandatory RENAMING syntax...
-                    boolean change = alterColumnDefault == null && !alterColumnDropDefault;
-
-                    if (change)
-                        ctx.visit(K_CHANGE_COLUMN);
+                    if (alterColumnDefault == null && !alterColumnDropDefault)
+                        ctx.visit(K_CHANGE_COLUMN).sql(' ').qualify(false, c -> c.visit(alterColumn));
                     else
                         ctx.visit(K_ALTER_COLUMN);
-
-                    if (ifExistsColumn && supportsIfExistsColumnAlter(ctx))
-                        ctx.sql(' ').visit(K_IF_EXISTS);
-
-                    if (change)
-                        ctx.sql(' ').qualify(false, c -> c.visit(alterColumn));
 
                     break;
                 }
 
-                case CLICKHOUSE:
-                    ctx.visit(K_MODIFY).sql(' ').visit(K_COLUMN);
-
-                    if (ifExistsColumn && supportsIfExistsColumnAlter(ctx))
-                        ctx.sql(' ').visit(K_IF_EXISTS);
-
-                    break;
-
-
-
-
-
-
-                case TRINO:
-                    ctx.visit(K_ALTER_COLUMN);
-                    break;
-
                 default:
                     ctx.visit(K_ALTER);
-
-                    if (ifExistsColumn && supportsIfExistsColumnAlter(ctx))
-                        ctx.sql(' ').visit(K_IF_EXISTS);
-
                     break;
             }
 
@@ -1726,11 +1454,8 @@ implements
 
 
                     case DERBY:
-                    case DUCKDB:
-                    case TRINO:
                         ctx.sql(' ').visit(K_SET_DATA_TYPE);
                         break;
-
 
 
 
@@ -1742,7 +1467,24 @@ implements
                 }
 
                 ctx.sql(' ');
-                acceptColumnType(ctx, table, alterColumnType);
+                toSQLDDLTypeDeclaration(ctx, alterColumnType);
+                toSQLDDLTypeDeclarationIdentityBeforeNull(ctx, alterColumnType);
+
+                // [#3805] Some databases cannot change the type and the NOT NULL constraint in a single statement
+                if (!NO_SUPPORT_ALTER_TYPE_AND_NULL.contains(ctx.dialect())) {
+                    switch (alterColumnType.nullability()) {
+                        case NULL:
+                            ctx.sql(' ').visit(K_NULL);
+                            break;
+                        case NOT_NULL:
+                            ctx.sql(' ').visit(K_NOT_NULL);
+                            break;
+                        case DEFAULT:
+                            break;
+                    }
+                }
+
+                toSQLDDLTypeDeclarationIdentityAfterNull(ctx, alterColumnType);
             }
             else if (alterColumnDefault != null) {
                 ctx.start(ALTER_TABLE_ALTER_DEFAULT);
@@ -1756,20 +1498,13 @@ implements
 
 
 
-
                     default:
                         ctx.sql(' ').visit(K_SET_DEFAULT);
                         break;
                 }
 
-                ctx.sql(' ');
-
-                if (NO_SUPPORT_DEFAULT_DATETIME_LITERAL_PREFIX.contains(ctx.dialect()) && alterColumnDefault.getDataType().isDateTime())
-                    ctx.data(DATA_OMIT_DATETIME_LITERAL_PREFIX, true, c -> c.visit(alterColumnDefault));
-                else
-                    ctx.visit(alterColumnDefault);
-
-                ctx.end(ALTER_TABLE_ALTER_DEFAULT);
+                ctx.sql(' ').visit(alterColumnDefault)
+                   .end(ALTER_TABLE_ALTER_DEFAULT);
             }
             else if (alterColumnDropDefault) {
                 ctx.start(ALTER_TABLE_ALTER_DEFAULT);
@@ -1792,53 +1527,12 @@ implements
                         ctx.sql(' ').visit(K_SET_DEFAULT).sql(' ').visit(K_NULL);
                         break;
 
-                    case CLICKHOUSE:
-                        ctx.sql(' ').visit(K_REMOVE).sql(' ').visit(K_DEFAULT);
-                        break;
-
                     default:
                         ctx.sql(' ').visit(K_DROP_DEFAULT);
                         break;
                 }
 
                 ctx.end(ALTER_TABLE_ALTER_DEFAULT);
-            }
-            else if (alterColumnSetIdentity != null) {
-                switch (ctx.family()) {
-
-
-
-
-
-
-
-
-                    case POSTGRES:
-                    case YUGABYTEDB:
-                        ctx.sql(' ').visit(K_ADD).sql(' ').visit(K_GENERATED).sql(' ').visit(K_BY).sql(' ').visit(K_DEFAULT).sql(' ').visit(K_AS).sql(' ').visit(K_IDENTITY);
-                        break;
-
-                    case H2:
-                        ctx.sql(' ').visit(K_SET).sql(' ').visit(K_GENERATED).sql(' ').visit(K_BY).sql(' ').visit(K_DEFAULT);
-                        break;
-
-                    default:
-                        ctx.sql(' ').visit(K_SET).sql(' ').visit(K_GENERATED).sql(' ').visit(K_BY).sql(' ').visit(K_DEFAULT).sql(' ').visit(K_AS).sql(' ').visit(K_IDENTITY);
-                        break;
-                }
-            }
-            else if (alterColumnDropIdentity) {
-                switch (ctx.family()) {
-
-
-
-
-
-
-                    default:
-                        ctx.sql(' ').visit(K_DROP).sql(' ').visit(K_IDENTITY);
-                        break;
-                }
             }
             else if (alterColumnNullability != null) {
                 ctx.start(ALTER_TABLE_ALTER_NULL);
@@ -1850,16 +1544,6 @@ implements
 
 
 
-
-                    // [#18043] Assuming users provide explicit data types of the existing column, we can reference it again
-
-
-                    case MARIADB:
-                    case MYSQL:
-                        ctx.sql(' ');
-                        toSQLDDLTypeDeclaration(ctx, alterColumn.getDataType());
-                        ctx.sql(' ').visit(alterColumnNullability.nullable() ? K_NULL : K_NOT_NULL);
-                        break;
 
                     default:
                         ctx.sql(' ').visit(alterColumnNullability.nullable() ? K_DROP_NOT_NULL : K_SET_NOT_NULL);
@@ -1913,7 +1597,6 @@ implements
 
 
 
-
                 ctx.sql(' ');
                 ctx.qualify(false, c -> c.visit(dropColumns));
 
@@ -1929,6 +1612,7 @@ implements
 
 
 
+
             ctx.end(ALTER_TABLE_DROP);
         }
         else if (dropConstraint != null) {
@@ -1939,7 +1623,7 @@ implements
                      .sql(' ')
                      .visit(dropConstraint);
                 }
-                else if (dropConstraintType == PRIMARY_KEY && NO_SUPPORT_DROP_CONSTRAINT.contains(c.dialect()) || AbstractConstraint.NO_SUPPORT_NAMED_PK.contains(c.dialect())) {
+                else if (dropConstraintType == PRIMARY_KEY && NO_SUPPORT_DROP_CONSTRAINT.contains(c.dialect())) {
                     c.visit(K_DROP).sql(' ').visit(K_PRIMARY_KEY);
                 }
                 else {
@@ -1964,48 +1648,18 @@ implements
             ctx.visit(K_DROP).sql(' ').visit(K_PRIMARY_KEY);
             ctx.end(ALTER_TABLE_DROP);
         }
-    }
 
-    private static final void acceptColumnType(Context<?> ctx, Table<?> table, DataType<?> type) {
-        toSQLDDLTypeDeclaration(ctx, type);
-        toSQLDDLTypeDeclarationIdentityBeforeNull(ctx, table, type);
-
-        // [#3805] Some databases cannot change the type and the NOT NULL constraint in a single statement
-        if (!NO_SUPPORT_ALTER_TYPE_AND_NULL.contains(ctx.dialect())) {
-            switch (type.nullability()) {
-                case NULL:
-                    ctx.sql(' ').visit(K_NULL);
-                    break;
-                case NOT_NULL:
-                    ctx.sql(' ').visit(K_NOT_NULL);
-                    break;
-                case DEFAULT:
-                    break;
-            }
-        }
-
-        toSQLDDLTypeDeclarationIdentityAfterNull(ctx, table, type);
-    }
-
-    private final boolean unqualifyRenameTo(Context<?> ctx) {
-        return NO_SUPPORT_RENAME_QUALIFIED_TABLE.contains(ctx.dialect())
-            && renameTo.getQualifiedName().qualified()
-
-            // [#10234] Omit qualification only for same-schema qualified renames
-            && renameTo.getQualifiedName().qualifier().equals(table.getQualifiedName().qualifier());
+        if (!omitAlterTable)
+            ctx.formatIndentEnd();
     }
 
     private final Keyword addColumnKeyword(Context<?> ctx) {
-        switch (ctx.family()) {
 
 
-            case CLICKHOUSE:
-            case TRINO:
-                return K_ADD_COLUMN;
 
-            default:
-                return K_ADD;
-        }
+
+
+        return K_ADD;
     }
 
     private final void acceptCascade(Context<?> ctx) {
@@ -2061,20 +1715,12 @@ implements
 
 
 
-            case CLICKHOUSE:
-            case TRINO:
-                ctx.visit(K_DROP_COLUMN);
-                break;
 
             default:
                 ctx.visit(K_DROP);
                 break;
         }
     }
-
-
-
-
 
 
 

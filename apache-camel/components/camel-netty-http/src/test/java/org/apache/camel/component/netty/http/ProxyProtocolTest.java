@@ -22,6 +22,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -154,7 +155,7 @@ public class ProxyProtocolTest {
         final ShutdownStrategy shutdownStrategy = context.getShutdownStrategy();
         shutdownStrategy.setTimeout(100);
         shutdownStrategy.setTimeUnit(TimeUnit.MILLISECONDS);
-        shutdownStrategy.shutdownForced(context, context.getCamelContextExtension().getRouteStartupOrder());
+        shutdownStrategy.shutdownForced(context, context.getRouteStartupOrder());
 
         context.stop();
     }
@@ -231,7 +232,7 @@ public class ProxyProtocolTest {
         }
     }
 
-    private static InputStream request(final String url) throws IOException {
+    private static InputStream request(final String url) throws IOException, MalformedURLException {
         final Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", PROXY_PORT));
 
         final HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection(proxy);
@@ -245,7 +246,7 @@ public class ProxyProtocolTest {
     }
 
     private static InputStream request(final String url, final String payload, final String contentType)
-            throws IOException {
+            throws IOException, MalformedURLException {
         final Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("localhost", PROXY_PORT));
 
         final HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection(proxy);

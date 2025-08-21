@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,6 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.target.AbstractLazyCreationTargetSource;
@@ -36,6 +34,7 @@ import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -56,19 +55,24 @@ import org.springframework.util.CollectionUtils;
 public class MBeanServerConnectionFactoryBean
 		implements FactoryBean<MBeanServerConnection>, BeanClassLoaderAware, InitializingBean, DisposableBean {
 
-	private @Nullable JMXServiceURL serviceUrl;
+	@Nullable
+	private JMXServiceURL serviceUrl;
 
-	private final Map<String, Object> environment = new HashMap<>();
+	private Map<String, Object> environment = new HashMap<>();
 
 	private boolean connectOnStartup = true;
 
-	private @Nullable ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
+	@Nullable
+	private ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
 
-	private @Nullable JMXConnector connector;
+	@Nullable
+	private JMXConnector connector;
 
-	private @Nullable MBeanServerConnection connection;
+	@Nullable
+	private MBeanServerConnection connection;
 
-	private @Nullable JMXConnectorLazyInitTargetSource connectorTargetSource;
+	@Nullable
+	private JMXConnectorLazyInitTargetSource connectorTargetSource;
 
 
 	/**
@@ -155,7 +159,8 @@ public class MBeanServerConnectionFactoryBean
 
 
 	@Override
-	public @Nullable MBeanServerConnection getObject() {
+	@Nullable
+	public MBeanServerConnection getObject() {
 		return this.connection;
 	}
 

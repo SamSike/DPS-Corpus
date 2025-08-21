@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,8 @@ package org.springframework.jdbc.datasource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.NamedThreadLocal;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -49,7 +48,7 @@ import org.springframework.util.StringUtils;
  *   &lt;property name="targetDataSource" ref="myTargetDataSource"/&gt;
  *   &lt;property name="username" value="myusername"/&gt;
  *   &lt;property name="password" value="mypassword"/&gt;
- * &lt;/bean&gt;</pre>
+ * &lt;/bean></pre>
  *
  * <p>If the "username" is empty, this proxy will simply delegate to the
  * standard {@code getConnection()} method of the target DataSource.
@@ -63,13 +62,17 @@ import org.springframework.util.StringUtils;
  */
 public class UserCredentialsDataSourceAdapter extends DelegatingDataSource {
 
-	private @Nullable String username;
+	@Nullable
+	private String username;
 
-	private @Nullable String password;
+	@Nullable
+	private String password;
 
-	private @Nullable String catalog;
+	@Nullable
+	private String catalog;
 
-	private @Nullable String schema;
+	@Nullable
+	private String schema;
 
 	private final ThreadLocal<JdbcUserCredentials> threadBoundCredentials =
 			new NamedThreadLocal<>("Current JDBC user credentials");
@@ -119,7 +122,7 @@ public class UserCredentialsDataSourceAdapter extends DelegatingDataSource {
 
 
 	/**
-	 * Set user credentials for this proxy and the current thread.
+	 * Set user credententials for this proxy and the current thread.
 	 * The given username and password will be applied to all subsequent
 	 * {@code getConnection()} calls on this DataSource proxy.
 	 * <p>This will override any statically specified user credentials,

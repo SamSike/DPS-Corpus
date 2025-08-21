@@ -17,8 +17,6 @@
 package org.apache.camel.component.cassandra;
 
 import java.net.InetSocketAddress;
-import java.util.Arrays;
-import java.util.Map;
 
 import com.datastax.oss.driver.api.core.ConsistencyLevel;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -35,26 +33,20 @@ import org.apache.camel.Consumer;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.ScheduledPollEndpoint;
-import org.apache.camel.util.ObjectHelper;
-import org.apache.camel.utils.cassandra.CassandraExtraCodecs;
 import org.apache.camel.utils.cassandra.CassandraSessionHolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Integrate with Cassandra 2.0+ using the CQL3 API (not the Thrift API). Based on Cassandra Java Driver provided by
  * DataStax.
  */
 @UriEndpoint(firstVersion = "2.15.0", scheme = "cql", title = "Cassandra CQL", syntax = "cql:beanRef:hosts:port/keyspace",
-             category = { Category.DATABASE, Category.BIGDATA }, headersClass = CassandraConstants.class)
-public class CassandraEndpoint extends ScheduledPollEndpoint implements EndpointServiceLocation {
-    private static final Logger LOG = LoggerFactory.getLogger(CassandraEndpoint.class);
+             category = { Category.DATABASE, Category.NOSQL }, headersClass = CassandraConstants.class)
+public class CassandraEndpoint extends ScheduledPollEndpoint {
 
     private volatile CassandraSessionHolder sessionHolder;
 
@@ -74,19 +66,18 @@ public class CassandraEndpoint extends ScheduledPollEndpoint implements Endpoint
     private boolean prepareStatements = true;
     @UriParam
     private String clusterName;
-    @UriParam(label = "security", secret = true)
+    @UriParam
     private String username;
-    @UriParam(label = "security", secret = true)
+    @UriParam
     private String password;
-    @UriParam(label = "advanced")
+    @UriParam
     private CqlSession session;
+    @UriParam
     private DefaultConsistencyLevel consistencyLevel;
-    @UriParam(label = "advanced")
+    @UriParam
     private String loadBalancingPolicyClass;
-    @UriParam(label = "advanced")
+    @UriParam
     private ResultSetConversionStrategy resultSetConversionStrategy = ResultSetConversionStrategies.all();
-    @UriParam(label = "advanced")
-    private String extraTypeCodecs;
 
     public CassandraEndpoint(String endpointUri, Component component) {
         super(endpointUri, component);
@@ -96,29 +87,6 @@ public class CassandraEndpoint extends ScheduledPollEndpoint implements Endpoint
         super(uri, component);
         this.session = session;
         this.keyspace = keyspace;
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (hosts != null && port != null) {
-            return hosts + ":" + port;
-        } else if (hosts != null) {
-            return hosts;
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "cql";
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        if (username != null) {
-            return Map.of("username", username);
-        }
-        return null;
     }
 
     @Override
@@ -189,20 +157,6 @@ public class CassandraEndpoint extends ScheduledPollEndpoint implements Endpoint
         ClassLoader classLoader = getCamelContext().getApplicationContextClassLoader();
         if (classLoader != null) {
             sessionBuilder.withClassLoader(classLoader);
-        }
-
-        if (extraTypeCodecs != null) {
-            String[] c = extraTypeCodecs.split(",");
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(Arrays.toString(c));
-            }
-
-            for (String codec : c) {
-                if (ObjectHelper.isNotEmpty(CassandraExtraCodecs.valueOf(codec))) {
-                    sessionBuilder.addTypeCodecs(CassandraExtraCodecs.valueOf(codec).codec());
-                }
-            }
         }
 
         return sessionBuilder;
@@ -401,18 +355,4 @@ public class CassandraEndpoint extends ScheduledPollEndpoint implements Endpoint
         this.loadBalancingPolicyClass = loadBalancingPolicyClass;
     }
 
-    /**
-     * To use a specific comma separated list of Extra Type codecs. Possible values are: BLOB_TO_ARRAY,
-     * BOOLEAN_LIST_TO_ARRAY, BYTE_LIST_TO_ARRAY, SHORT_LIST_TO_ARRAY, INT_LIST_TO_ARRAY, LONG_LIST_TO_ARRAY,
-     * FLOAT_LIST_TO_ARRAY, DOUBLE_LIST_TO_ARRAY, TIMESTAMP_UTC, TIMESTAMP_MILLIS_SYSTEM, TIMESTAMP_MILLIS_UTC,
-     * ZONED_TIMESTAMP_SYSTEM, ZONED_TIMESTAMP_UTC, ZONED_TIMESTAMP_PERSISTED, LOCAL_TIMESTAMP_SYSTEM and
-     * LOCAL_TIMESTAMP_UTC
-     */
-    public String getExtraTypeCodecs() {
-        return extraTypeCodecs;
-    }
-
-    public void setExtraTypeCodecs(String extraTypeCodecs) {
-        this.extraTypeCodecs = extraTypeCodecs;
-    }
 }

@@ -186,6 +186,16 @@ public abstract class RoutePolicySupport extends ServiceSupport implements Route
         }
     }
 
+    @Override
+    protected void doStart() throws Exception {
+        // noop
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        // noop
+    }
+
     public ExceptionHandler getExceptionHandler() {
         return exceptionHandler;
     }

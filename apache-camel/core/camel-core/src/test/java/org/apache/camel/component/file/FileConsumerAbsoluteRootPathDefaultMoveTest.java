@@ -30,7 +30,7 @@ public class FileConsumerAbsoluteRootPathDefaultMoveTest extends ContextTestSupp
 
     // run this test manually
 
-    private final String base = "/tmp/mytemp";
+    private String base = "/tmp/mytemp";
 
     @Test
     @Disabled
@@ -47,10 +47,10 @@ public class FileConsumerAbsoluteRootPathDefaultMoveTest extends ContextTestSupp
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
-                from("file:" + base + "?initialDelay=0&delay=10").routeId("foo").autoStartup(false).convertBodyTo(String.class)
+            public void configure() throws Exception {
+                from("file:" + base + "?initialDelay=0&delay=10").routeId("foo").noAutoStartup().convertBodyTo(String.class)
                         .to("mock:report");
             }
         };

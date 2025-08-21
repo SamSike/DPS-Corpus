@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -53,7 +53,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author Lukas Eder
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({ "unchecked" })
 final class RecordImpl2<T1, T2> extends AbstractRecord implements InternalRecord, Record2<T1, T2> {
 
     RecordImpl2(AbstractRow<?> row) {
@@ -65,23 +65,23 @@ final class RecordImpl2<T1, T2> extends AbstractRecord implements InternalRecord
     // ------------------------------------------------------------------------
 
     @Override
-    public RowImpl2 fieldsRow() {
-        return new RowImpl2(field1(), field2());
+    public RowImpl2<T1, T2> fieldsRow() {
+        return new RowImpl2<>(field1(), field2());
     }
 
     @Override
-    public final RowImpl2 valuesRow() {
-        return new RowImpl2(Tools.field(value1(), field1()), Tools.field(value2(), field2()));
+    public final RowImpl2<T1, T2> valuesRow() {
+        return new RowImpl2<>(Tools.field(value1(), field1()), Tools.field(value2(), field2()));
     }
 
     @Override
-    public final Field field1() {
-        return (@NotNull Field) fields.field(0);
+    public final Field<T1> field1() {
+        return (@NotNull Field<T1>) fields.field(0);
     }
 
     @Override
-    public final Field field2() {
-        return (@NotNull Field) fields.field(1);
+    public final Field<T2> field2() {
+        return (@NotNull Field<T2>) fields.field(1);
     }
 
     @Override
@@ -107,20 +107,20 @@ final class RecordImpl2<T1, T2> extends AbstractRecord implements InternalRecord
     }
 
     @Override
-    public final Record2 values(T1 t1, T2 t2) {
+    public final Record2<T1, T2> values(T1 t1, T2 t2) {
         set(0, t1);
         set(1, t2);
         return this;
     }
 
     @Override
-    public <T> Record2 with(Field<T> field, T value) {
-        return (Record2) super.with(field, value);
+    public <T> Record2<T1, T2> with(Field<T> field, T value) {
+        return (Record2<T1, T2>) super.with(field, value);
     }
 
     @Override
-    public <T, U> Record2 with(Field<T> field, U value, Converter<? extends T, ? super U> converter) {
-        return (Record2) super.with(field, value, converter);
+    public <T, U> Record2<T1, T2> with(Field<T> field, U value, Converter<? extends T, ? super U> converter) {
+        return (Record2<T1, T2>) super.with(field, value, converter);
     }
 
     @Override

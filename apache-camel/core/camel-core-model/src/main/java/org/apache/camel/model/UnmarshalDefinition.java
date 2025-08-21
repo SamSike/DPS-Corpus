@@ -24,25 +24,22 @@ import jakarta.xml.bind.annotation.XmlElements;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
 import org.apache.camel.model.dataformat.ASN1DataFormat;
+import org.apache.camel.model.dataformat.Any23DataFormat;
 import org.apache.camel.model.dataformat.AvroDataFormat;
 import org.apache.camel.model.dataformat.BarcodeDataFormat;
 import org.apache.camel.model.dataformat.Base64DataFormat;
-import org.apache.camel.model.dataformat.BeanioDataFormat;
 import org.apache.camel.model.dataformat.BindyDataFormat;
 import org.apache.camel.model.dataformat.CBORDataFormat;
 import org.apache.camel.model.dataformat.CryptoDataFormat;
 import org.apache.camel.model.dataformat.CsvDataFormat;
 import org.apache.camel.model.dataformat.CustomDataFormat;
-import org.apache.camel.model.dataformat.DfdlDataFormat;
 import org.apache.camel.model.dataformat.FhirJsonDataFormat;
 import org.apache.camel.model.dataformat.FhirXmlDataFormat;
 import org.apache.camel.model.dataformat.FlatpackDataFormat;
-import org.apache.camel.model.dataformat.ForyDataFormat;
 import org.apache.camel.model.dataformat.GrokDataFormat;
 import org.apache.camel.model.dataformat.GzipDeflaterDataFormat;
 import org.apache.camel.model.dataformat.HL7DataFormat;
 import org.apache.camel.model.dataformat.IcalDataFormat;
-import org.apache.camel.model.dataformat.Iso8583DataFormat;
 import org.apache.camel.model.dataformat.JacksonXMLDataFormat;
 import org.apache.camel.model.dataformat.JaxbDataFormat;
 import org.apache.camel.model.dataformat.JsonApiDataFormat;
@@ -50,10 +47,8 @@ import org.apache.camel.model.dataformat.JsonDataFormat;
 import org.apache.camel.model.dataformat.LZFDataFormat;
 import org.apache.camel.model.dataformat.MimeMultipartDataFormat;
 import org.apache.camel.model.dataformat.PGPDataFormat;
-import org.apache.camel.model.dataformat.ParquetAvroDataFormat;
 import org.apache.camel.model.dataformat.ProtobufDataFormat;
 import org.apache.camel.model.dataformat.RssDataFormat;
-import org.apache.camel.model.dataformat.SmooksDataFormat;
 import org.apache.camel.model.dataformat.SoapDataFormat;
 import org.apache.camel.model.dataformat.SwiftMtDataFormat;
 import org.apache.camel.model.dataformat.SwiftMxDataFormat;
@@ -73,42 +68,37 @@ import org.apache.camel.spi.Metadata;
 /**
  * Converts the message data received from the wire into a format that Apache Camel processors can consume
  */
-@Metadata(label = "eip,dataformat,transformation")
+@Metadata(label = "dataformat,transformation")
 @XmlRootElement(name = "unmarshal")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class UnmarshalDefinition extends NoOutputDefinition<UnmarshalDefinition> implements DataFormatDefinitionAware {
 
     @XmlElements({
+            @XmlElement(name = "any23", type = Any23DataFormat.class),
             @XmlElement(name = "asn1", type = ASN1DataFormat.class),
             @XmlElement(name = "avro", type = AvroDataFormat.class),
             @XmlElement(name = "barcode", type = BarcodeDataFormat.class),
             @XmlElement(name = "base64", type = Base64DataFormat.class),
-            @XmlElement(name = "beanio", type = BeanioDataFormat.class),
             @XmlElement(name = "bindy", type = BindyDataFormat.class),
             @XmlElement(name = "cbor", type = CBORDataFormat.class),
             @XmlElement(name = "crypto", type = CryptoDataFormat.class),
             @XmlElement(name = "csv", type = CsvDataFormat.class),
             @XmlElement(name = "custom", type = CustomDataFormat.class),
-            @XmlElement(name = "dfdl", type = DfdlDataFormat.class),
             @XmlElement(name = "fhirJson", type = FhirJsonDataFormat.class),
             @XmlElement(name = "fhirXml", type = FhirXmlDataFormat.class),
             @XmlElement(name = "flatpack", type = FlatpackDataFormat.class),
-            @XmlElement(name = "fory", type = ForyDataFormat.class),
             @XmlElement(name = "grok", type = GrokDataFormat.class),
             @XmlElement(name = "gzipDeflater", type = GzipDeflaterDataFormat.class),
             @XmlElement(name = "hl7", type = HL7DataFormat.class),
             @XmlElement(name = "ical", type = IcalDataFormat.class),
-            @XmlElement(name = "iso8583", type = Iso8583DataFormat.class),
             @XmlElement(name = "jacksonXml", type = JacksonXMLDataFormat.class),
             @XmlElement(name = "jaxb", type = JaxbDataFormat.class),
             @XmlElement(name = "json", type = JsonDataFormat.class),
             @XmlElement(name = "jsonApi", type = JsonApiDataFormat.class),
             @XmlElement(name = "lzf", type = LZFDataFormat.class),
             @XmlElement(name = "mimeMultipart", type = MimeMultipartDataFormat.class),
-            @XmlElement(name = "parquetAvro", type = ParquetAvroDataFormat.class),
             @XmlElement(name = "protobuf", type = ProtobufDataFormat.class),
             @XmlElement(name = "rss", type = RssDataFormat.class),
-            @XmlElement(name = "smooks", type = SmooksDataFormat.class),
             @XmlElement(name = "soap", type = SoapDataFormat.class),
             @XmlElement(name = "swiftMt", type = SwiftMtDataFormat.class),
             @XmlElement(name = "swiftMx", type = SwiftMxDataFormat.class),
@@ -126,31 +116,14 @@ public class UnmarshalDefinition extends NoOutputDefinition<UnmarshalDefinition>
             @XmlElement(name = "zipFile", type = ZipFileDataFormat.class) })
     private DataFormatDefinition dataFormatType;
     @XmlAttribute
-    private String variableSend;
-    @XmlAttribute
-    private String variableReceive;
-    @XmlAttribute
-    @Metadata(label = "advanced", javaType = "java.lang.Boolean", defaultValue = "false")
+    @Metadata(javaType = "java.lang.Boolean", defaultValue = "false")
     private String allowNullBody;
 
     public UnmarshalDefinition() {
     }
 
-    protected UnmarshalDefinition(UnmarshalDefinition source) {
-        super(source);
-        this.variableSend = source.variableSend;
-        this.variableReceive = source.variableReceive;
-        this.allowNullBody = source.allowNullBody;
-        this.dataFormatType = source.dataFormatType != null ? source.dataFormatType.copyDefinition() : null;
-    }
-
     public UnmarshalDefinition(DataFormatDefinition dataFormatType) {
         this.dataFormatType = dataFormatType;
-    }
-
-    @Override
-    public UnmarshalDefinition copyDefinition() {
-        return new UnmarshalDefinition(this);
     }
 
     @Override
@@ -189,22 +162,6 @@ public class UnmarshalDefinition extends NoOutputDefinition<UnmarshalDefinition>
         this.dataFormatType = dataFormatType;
     }
 
-    public String getVariableSend() {
-        return variableSend;
-    }
-
-    public void setVariableSend(String variableSend) {
-        this.variableSend = variableSend;
-    }
-
-    public String getVariableReceive() {
-        return variableReceive;
-    }
-
-    public void setVariableReceive(String variableReceive) {
-        this.variableReceive = variableReceive;
-    }
-
     public String getAllowNullBody() {
         return allowNullBody;
     }
@@ -218,31 +175,6 @@ public class UnmarshalDefinition extends NoOutputDefinition<UnmarshalDefinition>
 
     // Fluent API
     // -------------------------------------------------------------------------
-
-    /**
-     * To use a variable to store the received message body (only body, not headers). This makes it handy to use
-     * variables for user data and to easily control what data to use for sending and receiving.
-     *
-     * Important: When using receive variable then the received body is stored only in this variable and not on the
-     * current message.
-     */
-    public UnmarshalDefinition variableReceive(String variableReceive) {
-        setVariableReceive(variableReceive);
-        return this;
-    }
-
-    /**
-     * To use a variable as the source for the message body to send. This makes it handy to use variables for user data
-     * and to easily control what data to use for sending and receiving.
-     *
-     * Important: When using send variable then the message body is taken from this variable instead of the current
-     * message, however the headers from the message will still be used as well. In other words, the variable is used
-     * instead of the message body, but everything else is as usual.
-     */
-    public UnmarshalDefinition variableSend(String variableSend) {
-        setVariableSend(variableSend);
-        return this;
-    }
 
     /**
      * Indicates whether {@code null} is allowed as value of a body to unmarshall.

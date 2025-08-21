@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -48,6 +48,7 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -69,14 +70,14 @@ public abstract class GeneratorWriter<W extends GeneratorWriter<W>> {
      * A pattern to be used with "list" expressions
      */
     private static final Pattern PATTERN_LIST = Pattern.compile(
-        """
-        \\[
-           (?:\\[before=([^]]+)])?
-           (?:\\[separator=([^]]+)])?
-           (?:\\[after=([^]]+)])?
-           (?:\\[(.*)])
-        ]
-        """,
+        ("" +
+        "\\[\n" +
+        "   (?:\\[before=([^]]+)])?\n" +
+        "   (?:\\[separator=([^]]+)])?\n" +
+        "   (?:\\[after=([^]]+)])?\n" +
+        "   (?:\\[(.*)])\n" +
+        "]\n" +
+        ""),
         Pattern.DOTALL | Pattern.COMMENTS
     );
 
@@ -176,15 +177,7 @@ public abstract class GeneratorWriter<W extends GeneratorWriter<W>> {
             blockComment = false;
 
         if (indentTabsAllLines < 0 && !Boolean.getBoolean("mute-indentation-error"))
-            new IllegalStateException("""
-                A formatting error has been produced
-
-                This is most likely due to a mismatch of opening and closing brackets, e.g. [], {}, ().
-                The problematic file is {file}
-
-                See also https://github.com/jOOQ/jOOQ/issues/10196
-                """.replace("{file}", "" + file)
-            ).printStackTrace(System.err);
+            new IllegalStateException("A formatting error has been produced by https://github.com/jOOQ/jOOQ/issues/10196").printStackTrace(System.err);
 
         int indentTabsThisLine0 = indentTabsThisLine;
         StringBuilder indent = new StringBuilder();
@@ -261,20 +254,11 @@ public abstract class GeneratorWriter<W extends GeneratorWriter<W>> {
                 if (!string.contains("[["))
                     break;
 
-                // [#10014] If there's nothing left to be translated
-                if (originals.equals(translated))
-                    break;
-
                 originals = translated;
                 translated = new ArrayList<>();
             }
 
-            try {
-                appendWrapped(String.format(string, translated.toArray()), indent.toString());
-            }
-            catch (Exception e) {
-                throw new RuntimeException("Error when formatting " + string + " with args " + Arrays.asList(args) + " in file " + file, e);
-            }
+            appendWrapped(String.format(string, translated.toArray()), indent.toString());
         }
         else
             appendWrapped(string, indent.toString());
@@ -497,32 +481,16 @@ public abstract class GeneratorWriter<W extends GeneratorWriter<W>> {
 
     protected String beforeClose(String string) {
         if (indentTabsAllLines > 0 && !Boolean.getBoolean("mute-indentation-error"))
-            new IllegalStateException(
-                """
-                A formatting error has been produced
-
-                This is most likely due to a mismatch of opening and closing brackets, e.g. [], {}, ().
-                The problematic file is {file}
-
-                See also https://github.com/jOOQ/jOOQ/issues/10196
-                """.replace("{file}", "" + file)
-            ).printStackTrace(System.err);
+            new IllegalStateException("A formatting error has been produced by https://github.com/jOOQ/jOOQ/issues/10196").printStackTrace(System.err);
 
         return string;
-    }
-
-    /**
-     * Get a reference to a {@link Enum} literal.
-     */
-    public String ref(Enum<?> literal) {
-        return literal == null ? null : ref(literal.getClass()) + "." + literal;
     }
 
     /**
      * Get a reference to a {@link Class}.
      */
     public String ref(Class<?> clazz) {
-        return clazz == null ? null : ref(clazz.getName().replace("$", "."));
+        return clazz == null ? null : ref(clazz.getName());
     }
 
     /**

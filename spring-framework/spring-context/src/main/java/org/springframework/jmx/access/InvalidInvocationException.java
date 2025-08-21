@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package org.springframework.jmx.access;
 
 import javax.management.JMRuntimeException;
 
-import org.jspecify.annotations.Nullable;
-
 /**
  * Thrown when trying to invoke an operation on a proxy that is not exposed
  * by the proxied MBean resource's management interface.
@@ -37,7 +35,7 @@ public class InvalidInvocationException extends JMRuntimeException {
 	 * error message.
 	 * @param msg the detail message
 	 */
-	public InvalidInvocationException(@Nullable String msg) {
+	public InvalidInvocationException(String msg) {
 		super(msg);
 	}
 

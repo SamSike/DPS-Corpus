@@ -23,7 +23,7 @@ import com.univocity.parsers.common.processor.RowProcessor;
  * This class is used by the unmarshaller in order to retrieve the headers.
  */
 final class HeaderRowProcessor implements RowProcessor {
-    private final static ThreadLocal<String[]> headers = new ThreadLocal<>();
+    private String[] headers;
 
     /**
      * Called when the processing starts, it clears the headers
@@ -32,7 +32,7 @@ final class HeaderRowProcessor implements RowProcessor {
      */
     @Override
     public void processStarted(ParsingContext context) {
-        headers.set(null);
+        headers = null;
     }
 
     /**
@@ -43,8 +43,8 @@ final class HeaderRowProcessor implements RowProcessor {
      */
     @Override
     public void rowProcessed(String[] row, ParsingContext context) {
-        if (headers.get() == null) {
-            headers.set(context.headers());
+        if (headers == null) {
+            headers = context.headers();
         }
     }
 
@@ -55,7 +55,7 @@ final class HeaderRowProcessor implements RowProcessor {
      */
     @Override
     public void processEnded(ParsingContext context) {
-        headers.set(null);
+        headers = null;
     }
 
     /**
@@ -64,6 +64,6 @@ final class HeaderRowProcessor implements RowProcessor {
      * @return the headers
      */
     public String[] getHeaders() {
-        return headers.get();
+        return headers;
     }
 }

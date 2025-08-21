@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,15 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.Principal;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.concurrent.SettableListenableFuture;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketHandler;
@@ -39,15 +39,12 @@ import org.springframework.web.socket.sockjs.frame.SockJsMessageCodec;
 
 /**
  * Base class for SockJS client implementations of {@link WebSocketSession}.
- *
- * <p>Provides processing of incoming SockJS message frames and delegates lifecycle
+ * Provides processing of incoming SockJS message frames and delegates lifecycle
  * events and messages to the (application) {@link WebSocketHandler}.
- *
- * <p>Subclasses implement actual send as well as disconnect logic.
+ * Sub-classes implement actual send as well as disconnect logic.
  *
  * @author Rossen Stoyanchev
  * @author Juergen Hoeller
- * @author Sebastien Deleuze
  * @since 4.1
  */
 public abstract class AbstractClientSockJsSession implements WebSocketSession {
@@ -58,17 +55,19 @@ public abstract class AbstractClientSockJsSession implements WebSocketSession {
 
 	private final WebSocketHandler webSocketHandler;
 
-	private final CompletableFuture<WebSocketSession> connectFuture;
+	private final SettableListenableFuture<WebSocketSession> connectFuture;
 
 	private final Map<String, Object> attributes = new ConcurrentHashMap<>();
 
-	private volatile @Nullable State state = State.NEW;
+	@Nullable
+	private volatile State state = State.NEW;
 
-	private volatile @Nullable CloseStatus closeStatus;
+	@Nullable
+	private volatile CloseStatus closeStatus;
 
 
 	protected AbstractClientSockJsSession(TransportRequest request, WebSocketHandler handler,
-			CompletableFuture<WebSocketSession> connectFuture) {
+			SettableListenableFuture<WebSocketSession> connectFuture) {
 
 		Assert.notNull(request, "'request' is required");
 		Assert.notNull(handler, "'handler' is required");
@@ -100,7 +99,7 @@ public abstract class AbstractClientSockJsSession implements WebSocketSession {
 	}
 
 	@Override
-	public @Nullable Principal getPrincipal() {
+	public Principal getPrincipal() {
 		return this.request.getUser();
 	}
 
@@ -145,14 +144,14 @@ public abstract class AbstractClientSockJsSession implements WebSocketSession {
 
 	@Override
 	public final void sendMessage(WebSocketMessage<?> message) throws IOException {
-		if (!(message instanceof TextMessage textMessage)) {
+		if (!(message instanceof TextMessage)) {
 			throw new IllegalArgumentException(this + " supports text messages only.");
 		}
 		if (this.state != State.OPEN) {
 			throw new IllegalStateException(this + " is not open: current state " + this.state);
 		}
 
-		String payload = textMessage.getPayload();
+		String payload = ((TextMessage) message).getPayload();
 		payload = getMessageCodec().encode(payload);
 		payload = payload.substring(1);  // the client-side doesn't need message framing (letter "a")
 
@@ -176,7 +175,7 @@ public abstract class AbstractClientSockJsSession implements WebSocketSession {
 			throw new IllegalArgumentException("Invalid close status: " + status);
 		}
 		if (logger.isDebugEnabled()) {
-			logger.debug("Closing session with " + status + " in " + this);
+			logger.debug("Closing session with " +  status + " in " + this);
 		}
 		closeInternal(status);
 	}
@@ -219,14 +218,19 @@ public abstract class AbstractClientSockJsSession implements WebSocketSession {
 	public void handleFrame(String payload) {
 		SockJsFrame frame = new SockJsFrame(payload);
 		switch (frame.getType()) {
-			case OPEN -> handleOpenFrame();
-			case HEARTBEAT -> {
+			case OPEN:
+				handleOpenFrame();
+				break;
+			case HEARTBEAT:
 				if (logger.isTraceEnabled()) {
 					logger.trace("Received heartbeat in " + this);
 				}
-			}
-			case MESSAGE -> handleMessageFrame(frame);
-			case CLOSE -> handleCloseFrame(frame);
+				break;
+			case MESSAGE:
+				handleMessageFrame(frame);
+				break;
+			case CLOSE:
+				handleCloseFrame(frame);
 		}
 	}
 
@@ -238,7 +242,7 @@ public abstract class AbstractClientSockJsSession implements WebSocketSession {
 			this.state = State.OPEN;
 			try {
 				this.webSocketHandler.afterConnectionEstablished(this);
-				this.connectFuture.complete(this);
+				this.connectFuture.set(this);
 			}
 			catch (Exception ex) {
 				if (logger.isErrorEnabled()) {
@@ -269,7 +273,7 @@ public abstract class AbstractClientSockJsSession implements WebSocketSession {
 			try {
 				messages = getMessageCodec().decode(frameData);
 			}
-			catch (RuntimeException | IOException ex) {
+			catch (IOException ex) {
 				if (logger.isErrorEnabled()) {
 					logger.error("Failed to decode data for SockJS \"message\" frame: " + frame + " in " + this, ex);
 				}

@@ -47,6 +47,7 @@ import org.apache.camel.component.netty.http.InboundStreamHttpRequest;
 import org.apache.camel.component.netty.http.NettyHttpConfiguration;
 import org.apache.camel.component.netty.http.NettyHttpConstants;
 import org.apache.camel.component.netty.http.NettyHttpConsumer;
+import org.apache.camel.component.netty.http.NettyHttpHelper;
 import org.apache.camel.component.netty.http.NettyHttpSecurityConfiguration;
 import org.apache.camel.component.netty.http.SecurityAuthenticator;
 import org.apache.camel.spi.CamelLogger;
@@ -67,7 +68,8 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  */
 public class HttpServerChannelHandler extends ServerChannelHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HttpServerChannelHandler.class);
+    // use NettyHttpConsumer as logger to make it easier to read the logs as this is part of the consumer
+    private static final Logger LOG = LoggerFactory.getLogger(NettyHttpConsumer.class);
     private final NettyHttpConsumer consumer;
 
     public HttpServerChannelHandler(NettyHttpConsumer consumer) {
@@ -158,7 +160,18 @@ public class HttpServerChannelHandler extends ServerChannelHandler {
 
             // we need the relative path without the hostname and port
             URI uri = new URI(request.uri());
-            final String target = extractTarget(uri);
+            String target = uri.getPath();
+
+            // strip the starting endpoint path so the target is relative to the endpoint uri
+            String path = consumer.getConfiguration().getPath();
+            if (path != null && target.startsWith(path)) {
+                // need to match by lower case as we want to ignore case on context-path
+                path = path.toLowerCase(Locale.US);
+                String match = target.toLowerCase(Locale.US);
+                if (match.startsWith(path)) {
+                    target = target.substring(path.length());
+                }
+            }
 
             // is it a restricted resource?
             String roles;
@@ -210,22 +223,6 @@ public class HttpServerChannelHandler extends ServerChannelHandler {
 
         // let Camel process this message
         super.channelRead0(ctx, msg);
-    }
-
-    private String extractTarget(URI uri) {
-        String target = uri.getPath();
-
-        // strip the starting endpoint path so the target is relative to the endpoint uri
-        String path = consumer.getConfiguration().getPath();
-        if (path != null && target.startsWith(path)) {
-            // need to match by lower case as we want to ignore case on context-path
-            path = path.toLowerCase(Locale.US);
-            String match = target.toLowerCase(Locale.US);
-            if (match.startsWith(path)) {
-                target = target.substring(path.length());
-            }
-        }
-        return target;
     }
 
     protected boolean matchesRoles(String roles, String userRoles) {
@@ -364,7 +361,7 @@ public class HttpServerChannelHandler extends ServerChannelHandler {
 
         // honor the character encoding
         String contentType = in.getHeader(NettyHttpConstants.CONTENT_TYPE, String.class);
-        String charset = org.apache.camel.support.http.HttpUtil.getCharsetFromContentType(contentType);
+        String charset = NettyHttpHelper.getCharsetFromContentType(contentType);
         if (charset != null) {
             exchange.setProperty(ExchangePropertyKey.CHARSET_NAME, charset);
             in.setHeader(NettyHttpConstants.HTTP_CHARACTER_ENCODING, charset);

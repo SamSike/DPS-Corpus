@@ -7,17 +7,14 @@ package org.jooq.meta.mysql.information_schema.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
-import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
@@ -31,11 +28,10 @@ import org.jooq.meta.mysql.information_schema.Keys;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class CheckConstraints extends TableImpl<Record> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 968376920;
 
     /**
-     * The reference instance of
-     * <code>information_schema.CHECK_CONSTRAINTS</code>
+     * The reference instance of <code>information_schema.CHECK_CONSTRAINTS</code>
      */
     public static final CheckConstraints CHECK_CONSTRAINTS = new CheckConstraints();
 
@@ -48,104 +44,70 @@ public class CheckConstraints extends TableImpl<Record> {
     }
 
     /**
-     * The column
-     * <code>information_schema.CHECK_CONSTRAINTS.CONSTRAINT_CATALOG</code>.
+     * The column <code>information_schema.CHECK_CONSTRAINTS.CONSTRAINT_CATALOG</code>.
      */
     public final TableField<Record, String> CONSTRAINT_CATALOG = createField(DSL.name("CONSTRAINT_CATALOG"), SQLDataType.VARCHAR(64).nullable(false), this, "");
 
     /**
-     * The column
-     * <code>information_schema.CHECK_CONSTRAINTS.CONSTRAINT_SCHEMA</code>.
+     * The column <code>information_schema.CHECK_CONSTRAINTS.CONSTRAINT_SCHEMA</code>.
      */
     public final TableField<Record, String> CONSTRAINT_SCHEMA = createField(DSL.name("CONSTRAINT_SCHEMA"), SQLDataType.VARCHAR(64).nullable(false), this, "");
 
     /**
-     * The column
-     * <code>information_schema.CHECK_CONSTRAINTS.CONSTRAINT_NAME</code>.
+     * The column <code>information_schema.CHECK_CONSTRAINTS.CONSTRAINT_NAME</code>.
      */
     public final TableField<Record, String> CONSTRAINT_NAME = createField(DSL.name("CONSTRAINT_NAME"), SQLDataType.VARCHAR(64).nullable(false), this, "");
 
     /**
-     * The column
-     * <code>information_schema.CHECK_CONSTRAINTS.CHECK_CLAUSE</code>.
+     * The column <code>information_schema.CHECK_CONSTRAINTS.CHECK_CLAUSE</code>.
      */
     public final TableField<Record, String> CHECK_CLAUSE = createField(DSL.name("CHECK_CLAUSE"), SQLDataType.CLOB.nullable(false), this, "");
 
     private CheckConstraints(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private CheckConstraints(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private CheckConstraints(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
-     * Create an aliased <code>information_schema.CHECK_CONSTRAINTS</code> table
-     * reference
+     * Create an aliased <code>information_schema.CHECK_CONSTRAINTS</code> table reference
      */
     public CheckConstraints(String alias) {
         this(DSL.name(alias), CHECK_CONSTRAINTS);
     }
 
     /**
-     * Create an aliased <code>information_schema.CHECK_CONSTRAINTS</code> table
-     * reference
+     * Create an aliased <code>information_schema.CHECK_CONSTRAINTS</code> table reference
      */
     public CheckConstraints(Name alias) {
         this(alias, CHECK_CONSTRAINTS);
     }
 
     /**
-     * Create a <code>information_schema.CHECK_CONSTRAINTS</code> table
-     * reference
+     * Create a <code>information_schema.CHECK_CONSTRAINTS</code> table reference
      */
     public CheckConstraints() {
         this(DSL.name("CHECK_CONSTRAINTS"), null);
     }
 
-    public <O extends Record> CheckConstraints(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, CHECK_CONSTRAINTS);
+    public <O extends Record> CheckConstraints(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, CHECK_CONSTRAINTS);
     }
 
     @Override
     public Schema getSchema() {
-        return aliased() ? null : InformationSchema.INFORMATION_SCHEMA;
-    }
-
-    @Override
-    public UniqueKey<Record> getPrimaryKey() {
-        return Keys.SYNTHETIC_PK_CHECK_CONSTRAINTS;
+        return InformationSchema.INFORMATION_SCHEMA;
     }
 
     @Override
     public List<ForeignKey<Record, ?>> getReferences() {
-        return Arrays.asList(Keys.SYNTHETIC_FK_CHECK_CONSTRAINTS__SYNTHETIC_PK_TABLE_CONSTRAINTS, Keys.SYNTHETIC_FK_CHECK_CONSTRAINTS__SYNTHETIC_PK_SCHEMATA);
+        return Arrays.<ForeignKey<Record, ?>>asList(Keys.SYNTHETIC_FK_CHECK_CONSTRAINTS__SYNTHETIC_PK_TABLE_CONSTRAINTS);
     }
 
-    private transient TableConstraints _tableConstraints;
-
-    /**
-     * Get the implicit join path to the
-     * <code>information_schema.TABLE_CONSTRAINTS</code> table.
-     */
     public TableConstraints tableConstraints() {
-        if (_tableConstraints == null)
-            _tableConstraints = new TableConstraints(this, Keys.SYNTHETIC_FK_CHECK_CONSTRAINTS__SYNTHETIC_PK_TABLE_CONSTRAINTS, null);
-
-        return _tableConstraints;
-    }
-
-    private transient Schemata _schemata;
-
-    /**
-     * Get the implicit join path to the
-     * <code>information_schema.SCHEMATA</code> table.
-     */
-    public Schemata schemata() {
-        if (_schemata == null)
-            _schemata = new Schemata(this, Keys.SYNTHETIC_FK_CHECK_CONSTRAINTS__SYNTHETIC_PK_SCHEMATA, null);
-
-        return _schemata;
+        return new TableConstraints(this, Keys.SYNTHETIC_FK_CHECK_CONSTRAINTS__SYNTHETIC_PK_TABLE_CONSTRAINTS);
     }
 
     @Override
@@ -158,8 +120,19 @@ public class CheckConstraints extends TableImpl<Record> {
         return new CheckConstraints(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public CheckConstraints as(Table<?> alias) {
-        return new CheckConstraints(alias.getQualifiedName(), this);
+    public CheckConstraints rename(String name) {
+        return new CheckConstraints(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public CheckConstraints rename(Name name) {
+        return new CheckConstraints(name, null);
     }
 }

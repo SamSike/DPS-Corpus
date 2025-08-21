@@ -40,13 +40,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisabledOnOs(OS.AIX)
 public class ManagedRouteAddRemoveTest extends ManagementTestSupport {
 
-    private static final int SERVICES = 17;
+    private static final int SERVICES = 14;
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo").to("mock:result");
             }
         };
@@ -76,7 +76,7 @@ public class ManagedRouteAddRemoveTest extends ManagementTestSupport {
         // add a 2nd route
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:bar").routeId("bar").to("mock:bar");
             }
         });
@@ -137,7 +137,7 @@ public class ManagedRouteAddRemoveTest extends ManagementTestSupport {
         // add a 2nd route
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:bar").routeId("bar").recipientList(header("bar"));
             }
         });
@@ -198,7 +198,7 @@ public class ManagedRouteAddRemoveTest extends ManagementTestSupport {
         // add a 2nd route
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:bar").routeId("bar").routingSlip(header("bar"));
             }
         });
@@ -254,7 +254,7 @@ public class ManagedRouteAddRemoveTest extends ManagementTestSupport {
         // add a 2nd route
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:bar").routeId("bar")
                         .onException(Exception.class)
                         .handled(true)
@@ -313,7 +313,7 @@ public class ManagedRouteAddRemoveTest extends ManagementTestSupport {
         // add a 2nd route
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class)
                         .handled(true)
                         .recipientList(header("error"))
@@ -373,7 +373,7 @@ public class ManagedRouteAddRemoveTest extends ManagementTestSupport {
         // add a 2nd route
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:bar").routeId("bar")
                         .onCompletion()
                         .recipientList(header("done"))
@@ -431,7 +431,7 @@ public class ManagedRouteAddRemoveTest extends ManagementTestSupport {
         // add a 2nd route
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onCompletion()
                         .recipientList(header("done"))
                         .end();

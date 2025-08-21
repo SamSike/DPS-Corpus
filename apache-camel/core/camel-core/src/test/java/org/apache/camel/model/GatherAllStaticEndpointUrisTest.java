@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class GatherAllStaticEndpointUrisTest extends ContextTestSupport {
 
     @Test
-    public void testGatherAllStaticEndpointUris() {
+    public void testGatherAllStaticEndpointUris() throws Exception {
         RouteDefinition route = context.getRouteDefinition("foo");
         Set<String> uris = RouteDefinitionHelper.gatherAllStaticEndpointUris(context, route, true, true);
         assertNotNull(uris);
@@ -45,10 +45,10 @@ public class GatherAllStaticEndpointUrisTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").routeId("foo").to("seda:bar").log("Hello World").wireTap("mock:tap").to("mock:foo")
                         .enrich("seda:stuff");
 

@@ -50,7 +50,7 @@ public class ManagedHealthCheckTest extends ManagementTestSupport {
         registry.setCamelContext(context);
         Object hc = registry.resolveById("context");
         registry.register(hc);
-        context.getCamelContextExtension().addContextPlugin(HealthCheckRegistry.class, registry);
+        context.setExtension(HealthCheckRegistry.class, registry);
 
         return context;
     }
@@ -87,14 +87,13 @@ public class ManagedHealthCheckTest extends ManagementTestSupport {
         template.sendBody("direct:start", "Hello World");
         assertMockEndpointsSatisfied();
 
-        context.getCamelContextExtension().getContextPlugin(HealthCheckRegistry.class)
-                .register(new AbstractHealthCheck("custom", "myCheck") {
-                    @Override
-                    protected void doCall(HealthCheckResultBuilder builder, Map<String, Object> options) {
-                        // make it always down
-                        builder.down();
-                    }
-                });
+        context.getExtension(HealthCheckRegistry.class).register(new AbstractHealthCheck("custom", "myCheck") {
+            @Override
+            protected void doCall(HealthCheckResultBuilder builder, Map<String, Object> options) {
+                // make it always down
+                builder.down();
+            }
+        });
 
         MBeanServer mbeanServer = getMBeanServer();
         ObjectName on = getCamelObjectName(TYPE_HEALTH, "DefaultHealthCheck");
@@ -118,10 +117,10 @@ public class ManagedHealthCheckTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("mock:result");
             }
         };

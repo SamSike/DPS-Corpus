@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,6 +51,8 @@ import java.util.regex.Pattern;
 
 import org.jooq.DataType;
 // ...
+import org.jooq.exception.SQLDialectNotSupportedException;
+import org.jooq.impl.DefaultDataType;
 import org.jooq.impl.ParserException;
 import org.jooq.impl.SQLDataType;
 import org.jooq.meta.jaxb.SyntheticColumnType;
@@ -74,7 +76,6 @@ extends AbstractDefinition {
     private static final JooqLogger log             = JooqLogger.getLogger(AbstractElementContainerDefinition.class);
 
     private List<E>                 elements;
-    private List<E>                 elementsIncludingHidden;
 
     public AbstractElementContainerDefinition(SchemaDefinition schema, String name, String comment) {
         this(schema, null, name, comment);
@@ -92,17 +93,15 @@ extends AbstractDefinition {
     protected final List<E> getElements() {
         if (elements == null) {
             elements = new ArrayList<>();
-            elementsIncludingHidden = new ArrayList<>();
 
             try {
                 AbstractDatabase db = (AbstractDatabase) getDatabase();
                 List<E> e = getElements0();
 
                 // [#5335] Warn if a table definition contains several identity columns
-                if (this instanceof TableDefinition t) {
+                if (this instanceof TableDefinition) { TableDefinition t = (TableDefinition) this;
                     if (e.stream().map(c -> (ColumnDefinition) c).filter(ColumnDefinition::isIdentity).count() > 1)
-                        Logging.log(getDatabase().onMetadataProblem(),
-                            () -> "Table " + getOutputName() + " has multiple identity columns. Only the first one is considered.");
+                        log.warn("Multiple identities", "Table " + getOutputName() + " has multiple identity columns. Only the first one is considered.");
 
 
 
@@ -152,18 +151,13 @@ extends AbstractDefinition {
 
                 // [#2603] Filter exclude / include also for table columns
                 if (this instanceof TableDefinition && db.getIncludeExcludeColumns()) {
-                    elementsIncludingHidden = db.filterExcludeInclude(e);
+                    elements = db.filterExcludeInclude(e);
                     log.info("Columns fetched", fetchedSize(e, elements));
                 }
                 else
-                    elementsIncludingHidden = e;
+                    elements = e;
 
-                db.sort(elementsIncludingHidden);
-                elements.addAll(elementsIncludingHidden);
-
-
-
-
+                db.sort(elements);
             }
             catch (Exception e) {
                 log.error("Error while initialising type", e);
@@ -171,11 +165,6 @@ extends AbstractDefinition {
         }
 
         return elements;
-    }
-
-    protected final List<E> getElementsIncludingHidden() {
-        getElements();
-        return elementsIncludingHidden;
     }
 
 
@@ -231,8 +220,11 @@ extends AbstractDefinition {
         if (typeName.contains("(")) {
             Matcher m = PRECISION_SCALE.matcher(typeName);
 
-            if (m.find() && !StringUtils.isBlank(m.group(1)))
-                return Integer.valueOf(m.group(1));
+            if (m.find()) {
+                if (!StringUtils.isBlank(m.group(1))) {
+                    return Integer.valueOf(m.group(1));
+                }
+            }
         }
 
         return 0;
@@ -242,8 +234,11 @@ extends AbstractDefinition {
         if (typeName.contains("(")) {
             Matcher m = PRECISION_SCALE.matcher(typeName);
 
-            if (m.find() && !StringUtils.isBlank(m.group(2)))
-                return Integer.valueOf(m.group(2));
+            if (m.find()) {
+                if (!StringUtils.isBlank(m.group(2))) {
+                    return Integer.valueOf(m.group(2));
+                }
+            }
         }
 
         return 0;

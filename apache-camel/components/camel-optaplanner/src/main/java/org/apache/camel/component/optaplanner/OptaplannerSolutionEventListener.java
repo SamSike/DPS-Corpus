@@ -18,7 +18,6 @@ package org.apache.camel.component.optaplanner;
 
 import java.util.EventListener;
 
-@FunctionalInterface
 public interface OptaplannerSolutionEventListener extends EventListener {
     void bestSolutionChanged(OptaplannerSolutionEvent event);
 }

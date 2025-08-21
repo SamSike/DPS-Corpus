@@ -72,10 +72,10 @@ public class DefaultExceptionPolicyStrategyUsingWhenTest extends ContextTestSupp
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             // START SNIPPET e1
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:error").redeliveryDelay(0).maximumRedeliveries(3));
 
                 // here we define our onException to catch MyUserException when

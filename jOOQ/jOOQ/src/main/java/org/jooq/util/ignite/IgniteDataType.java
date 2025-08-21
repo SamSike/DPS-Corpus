@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,7 +42,6 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.time.Year;
 import java.util.UUID;
 
 import org.jooq.DataType;
@@ -90,14 +89,14 @@ public class IgniteDataType {
     public static final DataType<Time>            TIME                 = new BuiltInDataType<>(FAMILY, SQLDataType.TIME, "time(p)");
     public static final DataType<Date>            DATE                 = new BuiltInDataType<>(FAMILY, SQLDataType.DATE, "date");
     public static final DataType<Timestamp>       TIMESTAMP            = new BuiltInDataType<>(FAMILY, SQLDataType.TIMESTAMP, "timestamp(p)");
-    public static final DataType<byte[]>          BINARY               = new BuiltInDataType<>(FAMILY, SQLDataType.BINARY, "binary(l)");
-    public static final DataType<byte[]>          VARBINARY            = new BuiltInDataType<>(FAMILY, SQLDataType.VARBINARY, "binary(l)");
-    public static final DataType<byte[]>          LONGVARBINARY        = new BuiltInDataType<>(FAMILY, SQLDataType.LONGVARBINARY, "binary(l)");
-    public static final DataType<byte[]>          BLOB                 = new BuiltInDataType<>(FAMILY, SQLDataType.BLOB, "binary");
-    public static final DataType<Object>          OTHER                = new BuiltInDataType<>(FAMILY, SQLDataType.OTHER, "other");
-    public static final DataType<String>          VARCHAR              = new BuiltInDataType<>(FAMILY, SQLDataType.VARCHAR, "varchar(l)");
-    public static final DataType<String>          CHAR                 = new BuiltInDataType<>(FAMILY, SQLDataType.CHAR, "char(l)");
-    public static final DataType<String>          CLOB                 = new BuiltInDataType<>(FAMILY, SQLDataType.CLOB, "varchar");
+    public static final DataType<byte[]>         BINARY                = new BuiltInDataType<>(FAMILY, SQLDataType.BINARY, "binary(l)");
+    public static final DataType<byte[]>         VARBINARY             = new BuiltInDataType<>(FAMILY, SQLDataType.VARBINARY, "binary(l)");
+    public static final DataType<byte[]>         LONGVARBINARY         = new BuiltInDataType<>(FAMILY, SQLDataType.LONGVARBINARY, "binary(l)");
+    public static final DataType<byte[]>         BLOB                  = new BuiltInDataType<>(FAMILY, SQLDataType.BLOB, "binary");
+    public static final DataType<Object>         OTHER                 = new BuiltInDataType<>(FAMILY, SQLDataType.OTHER, "other");
+    public static final DataType<String>         VARCHAR               = new BuiltInDataType<>(FAMILY, SQLDataType.VARCHAR, "varchar(l)");
+    public static final DataType<String>         CHAR                  = new BuiltInDataType<>(FAMILY, SQLDataType.CHAR, "char(l)");
+    public static final DataType<String>         CLOB                  = new BuiltInDataType<>(FAMILY, SQLDataType.CLOB, "varchar");
 
     // -------------------------------------------------------------------------
     // Compatibility types for supported Java types
@@ -108,7 +107,6 @@ public class IgniteDataType {
     protected static final DataType<UShort>     __SMALLINTUNSIGNED = new BuiltInDataType<>(FAMILY, SQLDataType.SMALLINTUNSIGNED, "int");
     protected static final DataType<UInteger>   __INTEGERUNSIGNED  = new BuiltInDataType<>(FAMILY, SQLDataType.INTEGERUNSIGNED, "bigint");
     protected static final DataType<ULong>      __BIGINTUNSIGNED   = new BuiltInDataType<>(FAMILY, SQLDataType.BIGINTUNSIGNED, "number(p, s)");
-    protected static final DataType<Year>       __YEAR             = new BuiltInDataType<>(FAMILY, SQLDataType.YEAR, "smallint");
 
     // -------------------------------------------------------------------------
     // Dialect-specific data types and synonyms thereof

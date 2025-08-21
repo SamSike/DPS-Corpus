@@ -38,10 +38,10 @@ import org.jsmpp.bean.RegisteredDelivery;
 import org.jsmpp.bean.ReplaceIfPresentFlag;
 import org.jsmpp.bean.SMSCDeliveryReceipt;
 import org.jsmpp.bean.SubmitMulti;
+import org.jsmpp.bean.SubmitMultiResult;
 import org.jsmpp.bean.TypeOfNumber;
 import org.jsmpp.bean.UnsuccessDelivery;
 import org.jsmpp.session.SMPPSession;
-import org.jsmpp.session.SubmitMultiResult;
 
 public class SmppSubmitMultiCommand extends SmppSmCommand {
 
@@ -264,12 +264,12 @@ public class SmppSubmitMultiCommand extends SmppSmCommand {
         Map<java.lang.Short, Object> optinalParamater = in.getHeader(SmppConstants.OPTIONAL_PARAMETER, Map.class);
         if (optinalParamater != null) {
             List<OptionalParameter> optParams = createOptionalParametersByCode(optinalParamater);
-            submitMulti.setOptionalParameters(optParams.toArray(new OptionalParameter[0]));
+            submitMulti.setOptionalParameters(optParams.toArray(new OptionalParameter[optParams.size()]));
         } else {
             Map<String, String> optinalParamaters = in.getHeader(SmppConstants.OPTIONAL_PARAMETERS, Map.class);
             if (optinalParamaters != null) {
                 List<OptionalParameter> optParams = createOptionalParametersByName(optinalParamaters);
-                submitMulti.setOptionalParameters(optParams.toArray(new OptionalParameter[0]));
+                submitMulti.setOptionalParameters(optParams.toArray(new OptionalParameter[optParams.size()]));
             } else {
                 submitMulti.setOptionalParameters(new OptionalParameter[] {});
             }

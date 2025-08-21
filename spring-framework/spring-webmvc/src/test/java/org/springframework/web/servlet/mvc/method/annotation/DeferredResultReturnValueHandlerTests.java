@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.util.concurrent.ListenableFuture;
+import org.springframework.util.concurrent.SettableListenableFuture;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.async.AsyncWebRequest;
@@ -36,11 +38,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.web.testfixture.method.ResolvableMethod.on;
 
 /**
- * Tests for {@link DeferredResultMethodReturnValueHandler}.
+ * Unit tests for {@link DeferredResultMethodReturnValueHandler}.
  *
  * @author Rossen Stoyanchev
  */
-class DeferredResultReturnValueHandlerTests {
+public class DeferredResultReturnValueHandlerTests {
 
 	private DeferredResultMethodReturnValueHandler handler;
 
@@ -50,7 +52,7 @@ class DeferredResultReturnValueHandlerTests {
 
 
 	@BeforeEach
-	void setup() throws Exception {
+	public void setup() throws Exception {
 		this.handler = new DeferredResultMethodReturnValueHandler();
 		this.request = new MockHttpServletRequest();
 		MockHttpServletResponse response = new MockHttpServletResponse();
@@ -68,35 +70,51 @@ class DeferredResultReturnValueHandlerTests {
 				on(TestController.class).resolveReturnType(DeferredResult.class, String.class))).isTrue();
 
 		assertThat(this.handler.supportsReturnType(
+				on(TestController.class).resolveReturnType(ListenableFuture.class, String.class))).isTrue();
+
+		assertThat(this.handler.supportsReturnType(
 				on(TestController.class).resolveReturnType(CompletableFuture.class, String.class))).isTrue();
 	}
 
 	@Test
-	void doesNotSupportReturnType() {
+	public void doesNotSupportReturnType() throws Exception {
 		assertThat(this.handler.supportsReturnType(on(TestController.class).resolveReturnType(String.class))).isFalse();
 	}
 
 	@Test
-	void deferredResult() throws Exception {
+	public void deferredResult() throws Exception {
 		DeferredResult<String> result = new DeferredResult<>();
 		IllegalStateException ex = new IllegalStateException();
 		testHandle(result, DeferredResult.class, () -> result.setErrorResult(ex), ex);
 	}
 
 	@Test
-	void completableFuture() throws Exception {
+	public void listenableFuture() throws Exception {
+		SettableListenableFuture<String> future = new SettableListenableFuture<>();
+		testHandle(future, ListenableFuture.class, () -> future.set("foo"), "foo");
+	}
+
+	@Test
+	public void completableFuture() throws Exception {
 		CompletableFuture<String> future = new CompletableFuture<>();
 		testHandle(future, CompletableFuture.class, () -> future.complete("foo"), "foo");
 	}
 
 	@Test
-	void deferredResultWithError() throws Exception {
+	public void deferredResultWithError() throws Exception {
 		DeferredResult<String> result = new DeferredResult<>();
 		testHandle(result, DeferredResult.class, () -> result.setResult("foo"), "foo");
 	}
 
 	@Test
-	void completableFutureWithError() throws Exception {
+	public void listenableFutureWithError() throws Exception {
+		SettableListenableFuture<String> future = new SettableListenableFuture<>();
+		IllegalStateException ex = new IllegalStateException();
+		testHandle(future, ListenableFuture.class, () -> future.setException(ex), ex);
+	}
+
+	@Test
+	public void completableFutureWithError() throws Exception {
 		CompletableFuture<String> future = new CompletableFuture<>();
 		IllegalStateException ex = new IllegalStateException();
 		testHandle(future, CompletableFuture.class, () -> future.completeExceptionally(ex), ex);
@@ -126,6 +144,8 @@ class DeferredResultReturnValueHandlerTests {
 		String handleString() { return null; }
 
 		DeferredResult<String> handleDeferredResult() { return null; }
+
+		ListenableFuture<String> handleListenableFuture() { return null; }
 
 		CompletableFuture<String> handleCompletableFuture() { return null; }
 	}

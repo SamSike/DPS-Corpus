@@ -26,7 +26,6 @@ import org.apache.camel.Expression;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.spi.Language;
 import org.apache.camel.support.DefaultExchange;
-import org.apache.camel.tooling.maven.MavenGav;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
@@ -93,7 +92,7 @@ public class AutoConfigureDownloadListener implements DownloadListener, CamelCon
 
     protected void autoConfigure(String artifactId) {
         // is there any special auto configuration scripts?
-        InputStream is = getClass().getResourceAsStream("/auto-configure/" + artifactId + ".java");
+        InputStream is = getClass().getResourceAsStream("/auto-configure/" + artifactId + ".joor");
         if (is != null) {
             try {
                 // ensure java-joor is downloaded
@@ -102,7 +101,7 @@ public class AutoConfigureDownloadListener implements DownloadListener, CamelCon
                 downloader.downloadHiddenDependency("org.apache.camel", "camel-joor", camelContext.getVersion());
                 // execute script via java-joor
                 String script = IOHelper.loadText(is);
-                Language lan = camelContext.resolveLanguage("java");
+                Language lan = camelContext.resolveLanguage("joor");
                 Expression exp = lan.createExpression(script);
                 Object out = exp.evaluate(new DefaultExchange(camelContext), Object.class);
                 if (ObjectHelper.isNotEmpty(out)) {

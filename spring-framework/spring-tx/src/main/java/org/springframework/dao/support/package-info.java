@@ -2,7 +2,9 @@
  * Support classes for DAO implementations,
  * providing miscellaneous utility methods.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.dao.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,11 @@ package org.springframework.core.env;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Stream;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * The default implementation of the {@link PropertySources} interface.
@@ -68,7 +69,7 @@ public class MutablePropertySources implements PropertySources {
 
 	@Override
 	public Spliterator<PropertySource<?>> spliterator() {
-		return this.propertySourceList.spliterator();
+		return Spliterators.spliterator(this.propertySourceList, 0);
 	}
 
 	@Override
@@ -87,7 +88,8 @@ public class MutablePropertySources implements PropertySources {
 	}
 
 	@Override
-	public @Nullable PropertySource<?> get(String name) {
+	@Nullable
+	public PropertySource<?> get(String name) {
 		for (PropertySource<?> propertySource : this.propertySourceList) {
 			if (propertySource.getName().equals(name)) {
 				return propertySource;
@@ -98,7 +100,7 @@ public class MutablePropertySources implements PropertySources {
 
 
 	/**
-	 * Add the given property source object with the highest precedence.
+	 * Add the given property source object with highest precedence.
 	 */
 	public void addFirst(PropertySource<?> propertySource) {
 		synchronized (this.propertySourceList) {
@@ -108,7 +110,7 @@ public class MutablePropertySources implements PropertySources {
 	}
 
 	/**
-	 * Add the given property source object with the lowest precedence.
+	 * Add the given property source object with lowest precedence.
 	 */
 	public void addLast(PropertySource<?> propertySource) {
 		synchronized (this.propertySourceList) {
@@ -154,7 +156,8 @@ public class MutablePropertySources implements PropertySources {
 	 * Remove and return the property source with the given name, {@code null} if not found.
 	 * @param name the name of the property source to find and remove
 	 */
-	public @Nullable PropertySource<?> remove(String name) {
+	@Nullable
+	public PropertySource<?> remove(String name) {
 		synchronized (this.propertySourceList) {
 			int index = this.propertySourceList.indexOf(PropertySource.named(name));
 			return (index != -1 ? this.propertySourceList.remove(index) : null);

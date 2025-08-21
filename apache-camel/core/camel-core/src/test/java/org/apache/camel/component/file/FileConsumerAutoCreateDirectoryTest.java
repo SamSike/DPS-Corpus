@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.file;
 
+import java.io.FileNotFoundException;
 import java.nio.file.Files;
 
 import org.apache.camel.Consumer;
@@ -26,8 +27,8 @@ import org.apache.camel.Processor;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class FileConsumerAutoCreateDirectoryTest extends ContextTestSupport {
 
@@ -35,7 +36,7 @@ public class FileConsumerAutoCreateDirectoryTest extends ContextTestSupport {
     public void testCreateDirectory() throws Exception {
         Endpoint endpoint = context.getEndpoint(fileUri("foo"));
         Consumer consumer = endpoint.createConsumer(new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 // noop
             }
         });
@@ -55,7 +56,7 @@ public class FileConsumerAutoCreateDirectoryTest extends ContextTestSupport {
 
         Endpoint endpoint = context.getEndpoint("file://" + base);
         Consumer consumer = endpoint.createConsumer(new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 // noop
             }
         });
@@ -72,7 +73,7 @@ public class FileConsumerAutoCreateDirectoryTest extends ContextTestSupport {
     public void testDoNotCreateDirectory() throws Exception {
         Endpoint endpoint = context.getEndpoint(fileUri("foo?autoCreate=false"));
         Consumer consumer = endpoint.createConsumer(new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 // noop
             }
         });
@@ -88,7 +89,7 @@ public class FileConsumerAutoCreateDirectoryTest extends ContextTestSupport {
     public void testAutoCreateDirectoryWithDot() throws Exception {
         Endpoint endpoint = context.getEndpoint(fileUri("foo.bar?autoCreate=true"));
         Consumer consumer = endpoint.createConsumer(new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 // noop
             }
         });
@@ -102,18 +103,18 @@ public class FileConsumerAutoCreateDirectoryTest extends ContextTestSupport {
     }
 
     @Test
-    public void testStartingDirectoryMustExistDirectory() {
+    public void testStartingDirectoryMustExistDirectory() throws Exception {
         Endpoint endpoint = context.getEndpoint(fileUri("foo?autoCreate=false&startingDirectoryMustExist=true"));
-
-        Exception e = assertThrows(Exception.class,
-                () -> {
-                    Consumer c = endpoint.createConsumer(exchange -> {
-                        // noop
-                    });
-                    c.start();
-                }, "Should have thrown an exception");
-
-        assertTrue(e.getCause().getMessage().startsWith("Starting directory does not exist"));
+        try {
+            endpoint.createConsumer(new Processor() {
+                public void process(Exchange exchange) throws Exception {
+                    // noop
+                }
+            });
+            fail("Should have thrown an exception");
+        } catch (FileNotFoundException e) {
+            assertTrue(e.getMessage().startsWith("Starting directory does not exist"));
+        }
 
         // the directory should NOT exists
         assertFalse(Files.exists(testDirectory("foo")), "Directory should NOT be created");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -34,14 +33,13 @@ import org.springframework.util.Assert;
  * @since 4.0
  * @param <T> the type of this {@code Future}
  * @param <S> the type of the adaptee's {@code Future}
- * @deprecated as of 6.0, with no concrete replacement
  */
-@Deprecated(since = "6.0")
 public abstract class FutureAdapter<T, S> implements Future<T> {
 
 	private final Future<S> adaptee;
 
-	private @Nullable Object result;
+	@Nullable
+	private Object result;
 
 	private State state = State.NEW;
 
@@ -81,30 +79,33 @@ public abstract class FutureAdapter<T, S> implements Future<T> {
 	}
 
 	@Override
-	public @Nullable T get() throws InterruptedException, ExecutionException {
+	@Nullable
+	public T get() throws InterruptedException, ExecutionException {
 		return adaptInternal(this.adaptee.get());
 	}
 
 	@Override
-	public @Nullable T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+	@Nullable
+	public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
 		return adaptInternal(this.adaptee.get(timeout, unit));
 	}
 
 	@SuppressWarnings("unchecked")
-	final @Nullable T adaptInternal(S adapteeResult) throws ExecutionException {
+	@Nullable
+	final T adaptInternal(S adapteeResult) throws ExecutionException {
 		synchronized (this.mutex) {
-			return switch (this.state) {
-				case SUCCESS -> (T) this.result;
-				case FAILURE -> {
+			switch (this.state) {
+				case SUCCESS:
+					return (T) this.result;
+				case FAILURE:
 					Assert.state(this.result instanceof ExecutionException, "Failure without exception");
 					throw (ExecutionException) this.result;
-				}
-				case NEW -> {
+				case NEW:
 					try {
 						T adapted = adapt(adapteeResult);
 						this.result = adapted;
 						this.state = State.SUCCESS;
-						yield adapted;
+						return adapted;
 					}
 					catch (ExecutionException ex) {
 						this.result = ex;
@@ -117,8 +118,9 @@ public abstract class FutureAdapter<T, S> implements Future<T> {
 						this.state = State.FAILURE;
 						throw execEx;
 					}
-				}
-			};
+				default:
+					throw new IllegalStateException();
+			}
 		}
 	}
 
@@ -126,7 +128,8 @@ public abstract class FutureAdapter<T, S> implements Future<T> {
 	 * Adapts the given adaptee's result into T.
 	 * @return the adapted result
 	 */
-	protected abstract @Nullable T adapt(S adapteeResult) throws ExecutionException;
+	@Nullable
+	protected abstract T adapt(S adapteeResult) throws ExecutionException;
 
 
 	private enum State {NEW, SUCCESS, FAILURE}

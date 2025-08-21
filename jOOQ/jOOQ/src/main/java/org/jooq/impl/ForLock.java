@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,17 +41,11 @@ package org.jooq.impl;
 // ...
 // ...
 // ...
-// ...
-// ...
-import static org.jooq.SQLDialect.CUBRID;
-// ...
 import static org.jooq.SQLDialect.DERBY;
-// ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
 // ...
 import static org.jooq.SQLDialect.HSQLDB;
-import static org.jooq.SQLDialect.IGNITE;
 import static org.jooq.SQLDialect.MARIADB;
 // ...
 // ...
@@ -60,16 +54,10 @@ import static org.jooq.SQLDialect.MYSQL;
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
-// ...
-import static org.jooq.SQLDialect.SQLITE;
-// ...
-// ...
-// ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.sql;
 import static org.jooq.impl.Keywords.K_FOR;
-import static org.jooq.impl.Keywords.K_HOLDLOCK;
 import static org.jooq.impl.Keywords.K_LOCK_IN_SHARE_MODE;
 import static org.jooq.impl.Keywords.K_NOWAIT;
 import static org.jooq.impl.Keywords.K_OF;
@@ -82,10 +70,10 @@ import static org.jooq.impl.Names.N_LOCK_TIMEOUT;
 import static org.jooq.impl.QueryPartCollectionView.wrap;
 import static org.jooq.impl.Tools.appendSQL;
 import static org.jooq.impl.Tools.prependSQL;
+import static org.jooq.impl.Tools.BooleanDataKey.DATA_GROUP_CONCAT_MAX_LEN_SET;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_LOCK_WAIT_TIMEOUT_SET;
 
 import java.util.Set;
-import java.util.function.Function;
 
 import org.jooq.Context;
 import org.jooq.Field;
@@ -96,6 +84,7 @@ import org.jooq.SQLDialect;
 import org.jooq.Select;
 import org.jooq.Table;
 import org.jooq.impl.QOM.UNotYetImplemented;
+import org.jooq.impl.Tools.BooleanDataKey;
 import org.jooq.impl.Tools.ExtendedDataKey;
 
 /**
@@ -107,8 +96,6 @@ import org.jooq.impl.Tools.ExtendedDataKey;
 final class ForLock extends AbstractQueryPart implements UNotYetImplemented {
     private static final Set<SQLDialect> NO_SUPPORT_FOR_UPDATE_QUALIFIED = SQLDialect.supportedBy(DERBY, FIREBIRD, H2, HSQLDB);
     private static final Set<SQLDialect> NO_SUPPORT_STANDARD_FOR_SHARE   = SQLDialect.supportedUntil(MARIADB);
-
-
 
 
 
@@ -212,23 +199,6 @@ final class ForLock extends AbstractQueryPart implements UNotYetImplemented {
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

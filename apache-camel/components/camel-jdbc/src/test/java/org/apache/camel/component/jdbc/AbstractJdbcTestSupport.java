@@ -18,6 +18,8 @@ package org.apache.camel.component.jdbc;
 
 import org.apache.camel.BindToRegistry;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
@@ -30,16 +32,22 @@ public abstract class AbstractJdbcTestSupport extends CamelTestSupport {
     @BindToRegistry("testdb")
     protected EmbeddedDatabase db;
 
+    @BeforeEach
     @Override
-    public void setupResources() {
+    public void setUp() throws Exception {
         db = new EmbeddedDatabaseBuilder()
                 .setName(getClass().getSimpleName())
                 .setType(EmbeddedDatabaseType.DERBY)
                 .addScript("sql/init.sql").build();
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() {
+    public void tearDown() throws Exception {
+        super.tearDown();
+
         db.shutdown();
     }
 }

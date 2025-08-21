@@ -27,8 +27,8 @@ public class DestinationNameParserTest {
 
     @Test
     public void testIsTopic() {
-        assertTrue(DestinationNameParser.isTopic("topic:foo.DestinationNameParserTest"));
-        assertFalse(DestinationNameParser.isTopic("queue:bar.DestinationNameParserTest"));
+        assertTrue(DestinationNameParser.isTopic("topic:foo"));
+        assertFalse(DestinationNameParser.isTopic("queue:bar"));
         assertFalse(DestinationNameParser.isTopic("bar"));
     }
 
@@ -40,9 +40,8 @@ public class DestinationNameParserTest {
 
     @Test
     public void testGetShortName() {
-        assertEquals("foo.DestinationNameParserTest",
-                DestinationNameParser.getShortName("topic:foo.DestinationNameParserTest"));
-        assertFalse(DestinationNameParser.isTopic("queue:bar.DestinationNameParserTest"), "bar");
+        assertEquals("foo", DestinationNameParser.getShortName("topic:foo"));
+        assertFalse(DestinationNameParser.isTopic("queue:bar"), "bar");
         assertFalse(DestinationNameParser.isTopic("bar"), "bar");
     }
 

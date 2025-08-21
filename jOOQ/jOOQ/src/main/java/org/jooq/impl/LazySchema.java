@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,6 +38,8 @@
 package org.jooq.impl;
 
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.jooq.Catalog;
@@ -45,19 +47,18 @@ import org.jooq.Comment;
 import org.jooq.Context;
 import org.jooq.Domain;
 import org.jooq.ForeignKey;
+import org.jooq.Function1;
 import org.jooq.Index;
 import org.jooq.Internal;
 import org.jooq.Name;
-import org.jooq.QueryPart;
-// ...
 import org.jooq.Schema;
 import org.jooq.Sequence;
-// ...
 import org.jooq.Table;
-// ...
 // ...
 import org.jooq.UDT;
 import org.jooq.UniqueKey;
+import org.jooq.QueryPart;
+// ...
 
 /**
  * A schema that references a lazy initialisable {@link Schema} singleton, for
@@ -213,40 +214,6 @@ public final class LazySchema extends AbstractNamed implements Schema {
         return schema().getDomain(name);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @Override
     public final List<Sequence<?>> getSequences() {
         return schema().getSequences();
@@ -296,20 +263,6 @@ public final class LazySchema extends AbstractNamed implements Schema {
     public final Stream<Domain<?>> domainStream() {
         return schema().domainStream();
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public final Stream<Sequence<?>> sequenceStream() {

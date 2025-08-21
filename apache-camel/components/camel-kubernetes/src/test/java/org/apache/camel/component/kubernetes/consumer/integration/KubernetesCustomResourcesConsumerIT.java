@@ -102,7 +102,7 @@ public class KubernetesCustomResourcesConsumerIT extends KubernetesTestSupport {
                 .endSpec()
                 .build();
 
-        CLIENT.resource(crd).serverSideApply();
+        CLIENT.resource(crd).createOrReplace();
     }
 
     @AfterAll
@@ -170,7 +170,7 @@ public class KubernetesCustomResourcesConsumerIT extends KubernetesTestSupport {
                 fromF("kubernetes-custom-resources://%s/?oauthToken=%s&namespace=default" +
                       "&crdName=cameltests.camel.apache.org&crdGroup=camel.apache.org&crdScope=Namespaced&crdVersion=v1&crdPlural=cameltests",
                         host, authToken)
-                        .process(new KubernetesProcessor()).to(mockResultEndpoint);
+                                .process(new KubernetesProcessor()).to(mockResultEndpoint);
             }
         };
     }
@@ -181,8 +181,8 @@ public class KubernetesCustomResourcesConsumerIT extends KubernetesTestSupport {
             Message in = exchange.getIn();
             String json = exchange.getIn().getBody(String.class);
 
-            log.info("Got event with custom resource instance: {} and action {}", json,
-                    in.getHeader(KubernetesConstants.KUBERNETES_EVENT_ACTION));
+            log.info("Got event with custom resource instance: " + json + " and action "
+                     + in.getHeader(KubernetesConstants.KUBERNETES_EVENT_ACTION));
         }
     }
 }

@@ -21,7 +21,6 @@ import java.io.IOError;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -31,19 +30,14 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-
 import org.apache.camel.tooling.model.ComponentModel;
 import org.apache.camel.tooling.model.JsonMapper;
-import org.apache.camel.tooling.util.PackageHelper;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProjectHelper;
-import org.codehaus.plexus.build.BuildContext;
 
 import static org.apache.camel.tooling.util.PackageHelper.loadText;
 
@@ -66,9 +60,7 @@ public class GenerateEndpointUriFactoryMojo extends AbstractGeneratorMojo {
     @Parameter(defaultValue = "${project.basedir}/src/generated/resources")
     protected File resourcesOutputDir;
 
-    @Inject
-    public GenerateEndpointUriFactoryMojo(MavenProjectHelper projectHelper, BuildContext buildContext) {
-        super(projectHelper, buildContext);
+    public GenerateEndpointUriFactoryMojo() {
     }
 
     @Override
@@ -175,17 +167,11 @@ public class GenerateEndpointUriFactoryMojo extends AbstractGeneratorMojo {
 
         String psn = "org.apache.camel.support.component.EndpointUriFactorySupport";
 
-        Map<String, Object> ctx = new HashMap<>();
-        ctx.put("generatorClass", getClass().getName());
-        ctx.put("package", pn);
-        ctx.put("className", cn);
-        ctx.put("psn", psn);
-        ctx.put("model", model);
-        ctx.put("mojo", this);
-        String source = velocity("velocity/endpoint-uri-factory.vm", ctx);
+        String source = EndpointUriFactoryGenerator.generateEndpointUriFactory(pn, cn, psn, model);
 
         String fileName = pn.replace('.', '/') + "/" + cn + ".java";
-        boolean updated = updateResource(outputDir.toPath(), fileName, source);
+        outputDir.mkdirs();
+        boolean updated = updateResource(buildContext, outputDir.toPath().resolve(fileName), source);
         if (updated) {
             getLog().info("Updated " + fileName);
         }
@@ -205,7 +191,7 @@ public class GenerateEndpointUriFactoryMojo extends AbstractGeneratorMojo {
 
     protected static String loadJsonOfType(Map<File, Supplier<String>> jsonFiles, String modelName, String type) {
         for (Map.Entry<File, Supplier<String>> entry : jsonFiles.entrySet()) {
-            if (entry.getKey().getName().equals(modelName + PackageHelper.JSON_SUFIX)) {
+            if (entry.getKey().getName().equals(modelName + ".json")) {
                 String json = entry.getValue().get();
                 if (json.contains("\"kind\": \"" + type + "\"")) {
                     return json;

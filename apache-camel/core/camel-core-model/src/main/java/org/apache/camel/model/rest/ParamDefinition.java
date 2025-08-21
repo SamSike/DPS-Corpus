@@ -104,7 +104,7 @@ public class ParamDefinition {
     }
 
     public String getDescription() {
-        return description;
+        return description != null ? description : "";
     }
 
     /**
@@ -118,7 +118,7 @@ public class ParamDefinition {
      * Sets the parameter default value.
      */
     public String getDefaultValue() {
-        return defaultValue;
+        return defaultValue != null ? defaultValue : "";
     }
 
     public void setDefaultValue(String defaultValue) {
@@ -159,7 +159,7 @@ public class ParamDefinition {
     }
 
     public String getDataType() {
-        return dataType;
+        return dataType != null ? dataType : "string";
     }
 
     /**
@@ -356,10 +356,6 @@ public class ParamDefinition {
             }
             return answer;
         }
-    }
-
-    public String getAllowableValuesAsCommaString() {
-        return String.join(",", getAllowableValuesAsStringList());
     }
 
 }

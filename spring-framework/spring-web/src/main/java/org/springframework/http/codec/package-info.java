@@ -7,7 +7,9 @@
  * {@link org.springframework.http.codec.HttpMessageWriter} for reading and
  * writing the body of HTTP requests and responses.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.http.codec;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

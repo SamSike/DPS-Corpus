@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -50,69 +50,28 @@ import java.util.Set;
  */
 public final class DDLExportConfiguration {
 
-    /**
-     * Whether to inline foreign key constraint definitions with the table
-     * definition.
-     */
-    public enum InlineForeignKeyConstraints {
+    private final EnumSet<DDLFlag> flags;
 
-        /**
-         * Always inline the foreign key constraint definitions.
-         */
-        ALWAYS,
+    private final boolean          createSchemaIfNotExists;
+    private final boolean          createTableIfNotExists;
+    private final boolean          createIndexIfNotExists;
+    private final boolean          createDomainIfNotExists;
+    private final boolean          createSequenceIfNotExists;
+    private final boolean          createViewIfNotExists;
+    private final boolean          createOrReplaceView;
 
-        /**
-         * Inline foreign key constraint definitions only when needed.
-         * <p>
-         * This can be necessary if {@link AlterTableStep#add(Constraint)} isn't
-         * supported, such as in SQLite, see [#16470]. This is the default.
-         */
-        WHEN_NEEDED,
+    private final boolean          respectCatalogOrder;
+    private final boolean          respectSchemaOrder;
+    private final boolean          respectTableOrder;
+    private final boolean          respectColumnOrder;
+    private final boolean          respectConstraintOrder;
+    private final boolean          respectIndexOrder;
+    private final boolean          respectDomainOrder;
+    private final boolean          respectSequenceOrder;
 
-        /**
-         * Never inline foreign key constraint definitions.
-         */
-        NEVER
-    }
+    private final boolean          defaultSequenceFlags;
 
-    private final EnumSet<DDLFlag>            flags;
-
-    private final boolean                     createSchemaIfNotExists;
-    private final boolean                     createTableIfNotExists;
-    private final boolean                     createIndexIfNotExists;
-    private final boolean                     createUDTIfNotExists;
-    private final boolean                     createDomainIfNotExists;
-    private final boolean                     createSequenceIfNotExists;
-    private final boolean                     createViewIfNotExists;
-    private final boolean                     createMaterializedViewIfNotExists;
-    private final boolean                     createOrReplaceView;
-    private final boolean                     createOrReplaceMaterializedView;
-
-
-
-
-
-    private final boolean                     respectCatalogOrder;
-    private final boolean                     respectSchemaOrder;
-    private final boolean                     respectTableOrder;
-    private final boolean                     respectColumnOrder;
-    private final boolean                     respectConstraintOrder;
-    private final boolean                     respectIndexOrder;
-    private final boolean                     respectUDTOrder;
-    private final boolean                     respectDomainOrder;
-    private final boolean                     respectSequenceOrder;
-
-
-
-
-
-    private final boolean                     defaultSequenceFlags;
-
-    private final boolean                     includeConstraintsOnViews;
-    private final boolean                     inlinePrimaryKeyConstraints;
-    private final boolean                     inlineUniqueConstraints;
-    private final boolean                     inlineCheckConstraints;
-    private final InlineForeignKeyConstraints inlineForeignKeyConstraints;
+    private final boolean          includeConstraintsOnViews;
 
     /**
      * Create a new default export configuration instance.
@@ -128,13 +87,6 @@ public final class DDLExportConfiguration {
             false,
             false,
             false,
-            false,
-            false,
-            false,
-
-
-
-
 
             false,
             false,
@@ -144,19 +96,10 @@ public final class DDLExportConfiguration {
             false,
             false,
             false,
-            false,
-
-
-
-
 
             false,
 
-            false,
-            true,
-            true,
-            true,
-            InlineForeignKeyConstraints.WHEN_NEEDED
+            false
         );
     }
 
@@ -166,17 +109,10 @@ public final class DDLExportConfiguration {
         boolean createSchemaIfNotExists,
         boolean createTableIfNotExists,
         boolean createIndexIfNotExists,
-        boolean createUDTIfNotExists,
         boolean createDomainIfNotExists,
         boolean createSequenceIfNotExists,
         boolean createViewIfNotExists,
-        boolean createMaterializedViewIfNotExists,
         boolean createOrReplaceView,
-        boolean createOrReplaceMaterializedView,
-
-
-
-
 
         boolean respectCatalogOrder,
         boolean respectSchemaOrder,
@@ -184,38 +120,22 @@ public final class DDLExportConfiguration {
         boolean respectColumnOrder,
         boolean respectConstraintOrder,
         boolean respectIndexOrder,
-        boolean respectUDTOrder,
         boolean respectDomainOrder,
         boolean respectSequenceOrder,
 
-
-
-
-
         boolean defaultSequenceFlags,
 
-        boolean includeConstraintsOnViews,
-        boolean inlinePrimaryKeyConstraints,
-        boolean inlineUniqueConstraints,
-        boolean inlineCheckConstraints,
-        InlineForeignKeyConstraints inlineForeignKeyConstraints
+        boolean includeConstraintsOnViews
     ) {
         this.flags = EnumSet.copyOf(flags);
 
         this.createSchemaIfNotExists = createSchemaIfNotExists;
         this.createTableIfNotExists = createTableIfNotExists;
         this.createIndexIfNotExists = createIndexIfNotExists;
-        this.createUDTIfNotExists = createUDTIfNotExists;
         this.createDomainIfNotExists = createDomainIfNotExists;
         this.createSequenceIfNotExists = createSequenceIfNotExists;
         this.createViewIfNotExists = createViewIfNotExists;
-        this.createMaterializedViewIfNotExists = createMaterializedViewIfNotExists;
         this.createOrReplaceView = createOrReplaceView;
-        this.createOrReplaceMaterializedView = createOrReplaceMaterializedView;
-
-
-
-
 
         this.respectCatalogOrder = respectCatalogOrder;
         this.respectSchemaOrder = respectSchemaOrder;
@@ -223,21 +143,12 @@ public final class DDLExportConfiguration {
         this.respectColumnOrder = respectColumnOrder;
         this.respectConstraintOrder = respectConstraintOrder;
         this.respectIndexOrder = respectIndexOrder;
-        this.respectUDTOrder = respectUDTOrder;
         this.respectDomainOrder = respectDomainOrder;
         this.respectSequenceOrder = respectSequenceOrder;
-
-
-
-
 
         this.defaultSequenceFlags = defaultSequenceFlags;
 
         this.includeConstraintsOnViews = includeConstraintsOnViews;
-        this.inlinePrimaryKeyConstraints = inlinePrimaryKeyConstraints;
-        this.inlineUniqueConstraints = inlineUniqueConstraints;
-        this.inlineCheckConstraints = inlineCheckConstraints;
-        this.inlineForeignKeyConstraints = inlineForeignKeyConstraints;
     }
 
     /**
@@ -263,36 +174,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -316,36 +211,20 @@ public final class DDLExportConfiguration {
             newCreateSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -369,36 +248,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             newCreateTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -422,89 +285,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             newCreateIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
-        );
-    }
-
-    /**
-     * Whether to generate <code>CREATE TYPE IF NOT EXISTS</code> statements.
-     * <p>
-     * Not all RDBMS support this flag. Check
-     * {@link DSLContext#createTypeIfNotExists(Type)} to see if your
-     * {@link SQLDialect} supports the clause.
-     */
-    public final boolean createUDTIfNotExists() {
-        return createUDTIfNotExists;
-    }
-
-    /**
-     * Whether to generate <code>CREATE TYPE IF NOT EXISTS</code> statements.
-     */
-    public final DDLExportConfiguration createUDTIfNotExists(boolean newCreateUDTIfNotExists) {
-        return new DDLExportConfiguration(
-            flags,
-            createSchemaIfNotExists,
-            createTableIfNotExists,
-            createIndexIfNotExists,
-            newCreateUDTIfNotExists,
-            createDomainIfNotExists,
-            createSequenceIfNotExists,
-            createViewIfNotExists,
-            createMaterializedViewIfNotExists,
-            createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
-            respectCatalogOrder,
-            respectSchemaOrder,
-            respectTableOrder,
-            respectColumnOrder,
-            respectConstraintOrder,
-            respectIndexOrder,
-            respectUDTOrder,
-            respectDomainOrder,
-            respectSequenceOrder,
-
-
-
-
-            defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -528,36 +322,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             newCreateDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -581,36 +359,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             newCreateSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -634,89 +396,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             newCreateViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
-        );
-    }
-
-    /**
-     * Whether to generate <code>CREATE MATERIALIZED VIEW IF NOT EXISTS</code> statements.
-     * <p>
-     * Not all RDBMS support this flag. Check
-     * {@link DSLContext#createMaterializedViewIfNotExists(Table, Field...)} to see if your
-     * {@link SQLDialect} supports the clause.
-     */
-    public final boolean createMaterializedViewIfNotExists() {
-        return createMaterializedViewIfNotExists;
-    }
-
-    /**
-     * Whether to generate <code>CREATE MATERIALIZED VIEW IF NOT EXISTS</code> statements.
-     */
-    public final DDLExportConfiguration createMaterializedViewIfNotExists(boolean newCreateMaterializedViewIfNotExists) {
-        return new DDLExportConfiguration(
-            flags,
-            createSchemaIfNotExists,
-            createTableIfNotExists,
-            createIndexIfNotExists,
-            createUDTIfNotExists,
-            createDomainIfNotExists,
-            createSequenceIfNotExists,
-            createViewIfNotExists,
-            newCreateMaterializedViewIfNotExists,
-            createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
-            respectCatalogOrder,
-            respectSchemaOrder,
-            respectTableOrder,
-            respectColumnOrder,
-            respectConstraintOrder,
-            respectIndexOrder,
-            respectUDTOrder,
-            respectDomainOrder,
-            respectSequenceOrder,
-
-
-
-
-            defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -740,197 +433,22 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             newCreateOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
-
-    /**
-     * Whether to generate <code>CREATE OR REPLACE MATERIALIZED VIEW</code> statements.
-     * <p>
-     * Not all RDBMS support this flag. Check
-     * {@link DSLContext#createOrReplaceMaterializedView(Table, Field...)} to see if your
-     * {@link SQLDialect} supports the clause.
-     */
-    public final boolean createOrReplaceMaterializedView() {
-        return createOrReplaceMaterializedView;
-    }
-
-    /**
-     * Whether to generate <code>CREATE OR REPLACE MATERIALIZED VIEW</code> statements.
-     */
-    public final DDLExportConfiguration createOrReplaceMaterializedView(boolean newCreateOrReplaceMaterializedView) {
-        return new DDLExportConfiguration(
-            flags,
-            createSchemaIfNotExists,
-            createTableIfNotExists,
-            createIndexIfNotExists,
-            createUDTIfNotExists,
-            createDomainIfNotExists,
-            createSequenceIfNotExists,
-            createViewIfNotExists,
-            createMaterializedViewIfNotExists,
-            createOrReplaceView,
-            newCreateOrReplaceMaterializedView,
-
-
-
-
-            respectCatalogOrder,
-            respectSchemaOrder,
-            respectTableOrder,
-            respectColumnOrder,
-            respectConstraintOrder,
-            respectIndexOrder,
-            respectUDTOrder,
-            respectDomainOrder,
-            respectSequenceOrder,
-
-
-
-
-            defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
-        );
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Whether to respect the catalog order produced by the {@link Meta} source
@@ -950,36 +468,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             newRespectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -1001,36 +503,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             newRespectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -1052,36 +538,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             newRespectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -1103,36 +573,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             newRespectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -1154,36 +608,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             newRespectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -1205,87 +643,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             newRespectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
-        );
-    }
-
-    /**
-     * Whether to respect the UDT order produced by the {@link Meta} source when
-     * generated domain DDL.
-     */
-    public final boolean respectUDTOrder() {
-        return respectUDTOrder;
-    }
-
-    /**
-     * Whether to respect the UDT order produced by the {@link Meta} source
-     * when generated sequence DDL.
-     */
-    public final DDLExportConfiguration respectUDTOrder(boolean newRespectUDTOrder) {
-        return new DDLExportConfiguration(
-            flags,
-            createSchemaIfNotExists,
-            createTableIfNotExists,
-            createIndexIfNotExists,
-            createUDTIfNotExists,
-            createDomainIfNotExists,
-            createSequenceIfNotExists,
-            createViewIfNotExists,
-            createMaterializedViewIfNotExists,
-            createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
-            respectCatalogOrder,
-            respectSchemaOrder,
-            respectTableOrder,
-            respectColumnOrder,
-            respectConstraintOrder,
-            respectIndexOrder,
-            newRespectUDTOrder,
-            respectDomainOrder,
-            respectSequenceOrder,
-
-
-
-
-            defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -1298,7 +669,7 @@ public final class DDLExportConfiguration {
     }
 
     /**
-     * Whether to respect the domain order produced by the {@link Meta} source
+     * Whether to respect the sequence order produced by the {@link Meta} source
      * when generated sequence DDL.
      */
     public final DDLExportConfiguration respectDomainOrder(boolean newRespectDomainOrder) {
@@ -1307,36 +678,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             newRespectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -1358,140 +713,22 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             newRespectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Whether to explicitly produce defaults for all sequence flags, when
@@ -1511,36 +748,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             newDefaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
+            includeConstraintsOnViews
         );
     }
 
@@ -1560,240 +781,20 @@ public final class DDLExportConfiguration {
             createSchemaIfNotExists,
             createTableIfNotExists,
             createIndexIfNotExists,
-            createUDTIfNotExists,
             createDomainIfNotExists,
             createSequenceIfNotExists,
             createViewIfNotExists,
-            createMaterializedViewIfNotExists,
             createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
             respectCatalogOrder,
             respectSchemaOrder,
             respectTableOrder,
             respectColumnOrder,
             respectConstraintOrder,
             respectIndexOrder,
-            respectUDTOrder,
             respectDomainOrder,
             respectSequenceOrder,
-
-
-
-
             defaultSequenceFlags,
-            newIncludeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
-        );
-    }
-
-    /**
-     * Whether to inline primary key constraint definitions with the table
-     * definition.
-     */
-    public final boolean inlinePrimaryKeyConstraints() {
-        return inlinePrimaryKeyConstraints;
-    }
-
-    /**
-     * Whether to inline foreign key constraint definitions with the table
-     * definition.
-     */
-    public final DDLExportConfiguration inlinePrimaryKeyConstraints(boolean newInlinePrimaryKeyConstraints) {
-        return new DDLExportConfiguration(
-            flags,
-            createSchemaIfNotExists,
-            createTableIfNotExists,
-            createIndexIfNotExists,
-            createUDTIfNotExists,
-            createDomainIfNotExists,
-            createSequenceIfNotExists,
-            createViewIfNotExists,
-            createMaterializedViewIfNotExists,
-            createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
-            respectCatalogOrder,
-            respectSchemaOrder,
-            respectTableOrder,
-            respectColumnOrder,
-            respectConstraintOrder,
-            respectIndexOrder,
-            respectUDTOrder,
-            respectDomainOrder,
-            respectSequenceOrder,
-
-
-
-
-            defaultSequenceFlags,
-            includeConstraintsOnViews,
-            newInlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
-        );
-    }
-
-    /**
-     * Whether to inline unique constraint definitions with the table
-     * definition.
-     */
-    public final boolean inlineUniqueConstraints() {
-        return inlineUniqueConstraints;
-    }
-
-    /**
-     * Whether to inline unique constraint definitions with the table
-     * definition.
-     */
-    public final DDLExportConfiguration inlineUniqueConstraints(boolean newInlineUniqueConstraints) {
-        return new DDLExportConfiguration(
-            flags,
-            createSchemaIfNotExists,
-            createTableIfNotExists,
-            createIndexIfNotExists,
-            createUDTIfNotExists,
-            createDomainIfNotExists,
-            createSequenceIfNotExists,
-            createViewIfNotExists,
-            createMaterializedViewIfNotExists,
-            createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
-            respectCatalogOrder,
-            respectSchemaOrder,
-            respectTableOrder,
-            respectColumnOrder,
-            respectConstraintOrder,
-            respectIndexOrder,
-            respectUDTOrder,
-            respectDomainOrder,
-            respectSequenceOrder,
-
-
-
-
-            defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            newInlineUniqueConstraints,
-            inlineCheckConstraints,
-            inlineForeignKeyConstraints
-        );
-    }
-
-    /**
-     * Whether to inline check constraint definitions with the table
-     * definition.
-     */
-    public final boolean inlineCheckConstraints() {
-        return inlineCheckConstraints;
-    }
-
-    /**
-     * Whether to inline check constraint definitions with the table
-     * definition.
-     */
-    public final DDLExportConfiguration inlineCheckConstraints(boolean newInlineCheckConstraints) {
-        return new DDLExportConfiguration(
-            flags,
-            createSchemaIfNotExists,
-            createTableIfNotExists,
-            createIndexIfNotExists,
-            createUDTIfNotExists,
-            createDomainIfNotExists,
-            createSequenceIfNotExists,
-            createViewIfNotExists,
-            createMaterializedViewIfNotExists,
-            createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
-            respectCatalogOrder,
-            respectSchemaOrder,
-            respectTableOrder,
-            respectColumnOrder,
-            respectConstraintOrder,
-            respectIndexOrder,
-            respectUDTOrder,
-            respectDomainOrder,
-            respectSequenceOrder,
-
-
-
-
-            defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            newInlineCheckConstraints,
-            inlineForeignKeyConstraints
-        );
-    }
-
-    /**
-     * Whether to inline foreign key constraint definitions with the table
-     * definition.
-     */
-    public final InlineForeignKeyConstraints inlineForeignKeyConstraints() {
-        return inlineForeignKeyConstraints;
-    }
-
-    /**
-     * Whether to inline foreign key constraint definitions with the table
-     * definition.
-     */
-    public final DDLExportConfiguration inlineForeignKeyConstraints(InlineForeignKeyConstraints newInlineForeignKeyConstraints) {
-        return new DDLExportConfiguration(
-            flags,
-            createSchemaIfNotExists,
-            createTableIfNotExists,
-            createIndexIfNotExists,
-            createUDTIfNotExists,
-            createDomainIfNotExists,
-            createSequenceIfNotExists,
-            createViewIfNotExists,
-            createMaterializedViewIfNotExists,
-            createOrReplaceView,
-            createOrReplaceMaterializedView,
-
-
-
-
-            respectCatalogOrder,
-            respectSchemaOrder,
-            respectTableOrder,
-            respectColumnOrder,
-            respectConstraintOrder,
-            respectIndexOrder,
-            respectUDTOrder,
-            respectDomainOrder,
-            respectSequenceOrder,
-
-
-
-
-            defaultSequenceFlags,
-            includeConstraintsOnViews,
-            inlinePrimaryKeyConstraints,
-            inlineUniqueConstraints,
-            inlineCheckConstraints,
-            newInlineForeignKeyConstraints
+            newIncludeConstraintsOnViews
         );
     }
 }

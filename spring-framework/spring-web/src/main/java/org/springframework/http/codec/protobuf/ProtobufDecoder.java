@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import java.util.function.Function;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.Message;
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -39,6 +38,7 @@ import org.springframework.core.codec.DecodingException;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferLimitException;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.MimeType;
@@ -151,9 +151,8 @@ public class ProtobufDecoder extends ProtobufCodecSupport implements Decoder<Mes
 
 		try {
 			Message.Builder builder = getMessageBuilder(targetType.toClass());
-			ByteBuffer byteBuffer = ByteBuffer.allocate(dataBuffer.readableByteCount());
-			dataBuffer.toByteBuffer(byteBuffer);
-			builder.mergeFrom(CodedInputStream.newInstance(byteBuffer), this.extensionRegistry);
+			ByteBuffer buffer = dataBuffer.asByteBuffer();
+			builder.mergeFrom(CodedInputStream.newInstance(buffer), this.extensionRegistry);
 			return builder.build();
 		}
 		catch (IOException ex) {
@@ -193,7 +192,8 @@ public class ProtobufDecoder extends ProtobufCodecSupport implements Decoder<Mes
 
 		private final int maxMessageSize;
 
-		private @Nullable DataBuffer output;
+		@Nullable
+		private DataBuffer output;
 
 		private int messageBytesToRead;
 
@@ -236,9 +236,7 @@ public class ProtobufDecoder extends ProtobufCodecSupport implements Decoder<Mes
 					this.messageBytesToRead -= chunkBytesToRead;
 
 					if (this.messageBytesToRead == 0) {
-						ByteBuffer byteBuffer = ByteBuffer.allocate(this.output.readableByteCount());
-						this.output.toByteBuffer(byteBuffer);
-						CodedInputStream stream = CodedInputStream.newInstance(byteBuffer);
+						CodedInputStream stream = CodedInputStream.newInstance(this.output.asByteBuffer());
 						DataBufferUtils.release(this.output);
 						this.output = null;
 						Message message = getMessageBuilder(this.elementType.toClass())
@@ -267,7 +265,8 @@ public class ProtobufDecoder extends ProtobufCodecSupport implements Decoder<Mes
 		 * Parse message size as a varint from the input stream, updating {@code messageBytesToRead} and
 		 * {@code offset} fields if needed to allow processing of upcoming chunks.
 		 * Inspired from {@link CodedInputStream#readRawVarint32(int, java.io.InputStream)}
-		 * @return {@code true} when the message size is parsed successfully, {@code false} when the message size is
+		 *
+		 * @return {code true} when the message size is parsed successfully, {code false} when the message size is
 		 * truncated
 		 * @see <a href="https://developers.google.com/protocol-buffers/docs/encoding#varints">Base 128 Varints</a>
 		 */
@@ -291,7 +290,7 @@ public class ProtobufDecoder extends ProtobufCodecSupport implements Decoder<Mes
 						return false;
 					}
 					final int b = input.read();
-					this.messageBytesToRead |= (b & 0x7f) << this.offset;
+					this.messageBytesToRead |= (b & 0x7f) << offset;
 					if ((b & 0x80) == 0) {
 						this.offset = 0;
 						return true;

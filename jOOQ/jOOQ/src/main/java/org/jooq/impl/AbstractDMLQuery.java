@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,23 +38,22 @@
 package org.jooq.impl;
 
 import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 // ...
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
-import static org.jooq.SQLDialect.CUBRID;
 // ...
 // ...
 import static org.jooq.SQLDialect.DERBY;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
+// ...
 import static org.jooq.SQLDialect.H2;
 // ...
 // ...
 import static org.jooq.SQLDialect.HSQLDB;
 import static org.jooq.SQLDialect.IGNITE;
-// ...
 // ...
 import static org.jooq.SQLDialect.MARIADB;
 // ...
@@ -63,20 +62,15 @@ import static org.jooq.SQLDialect.MARIADB;
 import static org.jooq.SQLDialect.MYSQL;
 // ...
 // ...
+import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.SQLITE;
 // ...
-// ...
-// ...
-// ...
-import static org.jooq.SQLDialect.TRINO;
-// ...
+import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.conf.SettingsTools.renderLocale;
 import static org.jooq.impl.CommonTableExpressionList.markTopLevelCteAndAccept;
-import static org.jooq.impl.DSL.function;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.unquotedName;
@@ -98,27 +92,15 @@ import static org.jooq.impl.Keywords.K_SQL;
 import static org.jooq.impl.Keywords.K_TABLE;
 import static org.jooq.impl.Names.N_DELETED;
 import static org.jooq.impl.Names.N_INSERTED;
-import static org.jooq.impl.Names.N_JSON;
-import static org.jooq.impl.SQLDataType.JSON;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
 import static org.jooq.impl.Tools.EMPTY_STRING;
 import static org.jooq.impl.Tools.anyMatch;
 import static org.jooq.impl.Tools.autoAlias;
-import static org.jooq.impl.Tools.converterContext;
 import static org.jooq.impl.Tools.flattenCollection;
 import static org.jooq.impl.Tools.increment;
 import static org.jooq.impl.Tools.map;
-import static org.jooq.impl.Tools.newRecord;
-import static org.jooq.impl.Tools.reference;
-import static org.jooq.impl.Tools.removeGenerator;
-import static org.jooq.impl.Tools.row0;
-import static org.jooq.impl.Tools.selectQueryImpl;
-import static org.jooq.impl.Tools.setValue;
-import static org.jooq.impl.Tools.unalias;
-import static org.jooq.impl.Tools.updateQueryImpl;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_UNALIAS_ALIASED_EXPRESSIONS;
 import static org.jooq.impl.Tools.SimpleDataKey.DATA_DML_TARGET_TABLE;
-import static org.jooq.impl.Tools.SimpleDataKey.DATA_DML_USING_TABLES;
 import static org.jooq.impl.Tools.SimpleDataKey.DATA_RENDERING_DATA_CHANGE_DELTA_TABLE;
 import static org.jooq.impl.Tools.SimpleDataKey.DATA_TOP_LEVEL_CTE;
 import static org.jooq.tools.StringUtils.defaultIfNull;
@@ -126,6 +108,7 @@ import static org.jooq.util.sqlite.SQLiteDSL.rowid;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -133,13 +116,12 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.jooq.Asterisk;
 import org.jooq.Binding;
@@ -147,7 +129,6 @@ import org.jooq.CommonTableExpression;
 import org.jooq.Condition;
 import org.jooq.Configuration;
 import org.jooq.Context;
-import org.jooq.ConverterContext;
 import org.jooq.DMLQuery;
 import org.jooq.DSLContext;
 import org.jooq.DataType;
@@ -165,25 +146,25 @@ import org.jooq.QualifiedAsterisk;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.Row;
+import org.jooq.RowId;
 import org.jooq.SQLDialect;
 import org.jooq.Scope;
 import org.jooq.Select;
 import org.jooq.SelectFieldOrAsterisk;
 import org.jooq.Table;
 import org.jooq.TableField;
-// ...
-// ...
 import org.jooq.UniqueKey;
 import org.jooq.Update;
 import org.jooq.conf.ExecuteWithoutWhere;
-import org.jooq.conf.FetchTriggerValuesAfterReturning;
 import org.jooq.conf.RenderNameCase;
 import org.jooq.conf.SettingsTools;
 import org.jooq.exception.DataAccessException;
+import org.jooq.impl.DefaultUnwrapperProvider.DefaultUnwrapper;
 import org.jooq.impl.QOM.ResultOption;
 import org.jooq.impl.Tools.BooleanDataKey;
 import org.jooq.impl.Tools.SimpleDataKey;
 import org.jooq.tools.JooqLogger;
+import org.jooq.tools.jdbc.BatchedPreparedStatement;
 import org.jooq.tools.jdbc.JDBCUtils;
 
 
@@ -194,14 +175,13 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
 
     private static final JooqLogger              log                                    = JooqLogger.getLogger(AbstractQuery.class);
 
-    private static final Set<SQLDialect>         NO_NATIVE_SUPPORT_INSERT_RETURNING     = SQLDialect.supportedUntil(CLICKHOUSE, CUBRID, DERBY, H2, HSQLDB, IGNITE, MYSQL, TRINO);
-    private static final Set<SQLDialect>         NO_NATIVE_SUPPORT_UPDATE_RETURNING     = SQLDialect.supportedUntil(CLICKHOUSE, CUBRID, DERBY, H2, HSQLDB, IGNITE, MYSQL, TRINO);
-    private static final Set<SQLDialect>         NO_NATIVE_SUPPORT_DELETE_RETURNING     = SQLDialect.supportedUntil(CLICKHOUSE, CUBRID, DERBY, H2, HSQLDB, IGNITE, MYSQL, TRINO);
+    private static final Set<SQLDialect>         NO_SUPPORT_INSERT_ALIASED_TABLE        = SQLDialect.supportedBy(DERBY, FIREBIRD, H2, MARIADB, MYSQL);
+    private static final Set<SQLDialect>         NATIVE_SUPPORT_INSERT_RETURNING        = SQLDialect.supportedBy(FIREBIRD, MARIADB, POSTGRES, YUGABYTEDB);
+    private static final Set<SQLDialect>         NATIVE_SUPPORT_UPDATE_RETURNING        = SQLDialect.supportedBy(FIREBIRD, POSTGRES, YUGABYTEDB);
+    private static final Set<SQLDialect>         NATIVE_SUPPORT_DELETE_RETURNING        = SQLDialect.supportedBy(FIREBIRD, MARIADB, POSTGRES, YUGABYTEDB);
     private static final Set<SQLDialect>         NATIVE_SUPPORT_DATA_CHANGE_DELTA_TABLE = SQLDialect.supportedBy(H2);
-    private static final Set<SQLDialect>         NO_SUPPORT_FETCHING_KEYS               = SQLDialect.supportedBy(CLICKHOUSE, IGNITE, TRINO);
+    private static final Set<SQLDialect>         NO_SUPPORT_FETCHING_KEYS               = SQLDialect.supportedBy(IGNITE);
     private static final Set<SQLDialect>         NO_SUPPORT_RETURNING_ASTERISK          = SQLDialect.supportedUntil(MARIADB);
-
-
 
 
 
@@ -216,7 +196,6 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
     final Table<R>                               table;
     final SelectFieldList<SelectFieldOrAsterisk> returning;
     final List<Field<?>>                         returningResolvedAsterisks;
-    boolean                                      forceResolveAsterisks;
     Result<Record>                               returnedResult;
     Result<R>                                    returned;
 
@@ -227,7 +206,6 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
         this.table = table;
         this.returning = new SelectFieldList<>();
         this.returningResolvedAsterisks = new ArrayList<>();
-        this.forceResolveAsterisks = false;
     }
 
     // ------------------------------------------------------------------------
@@ -255,36 +233,20 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
         returning.clear();
         returning.addAll(fields.isEmpty() ? Arrays.asList(table.fields()) : fields);
 
-        forceResolveAsterisks = false;
         returningResolvedAsterisks.clear();
-        for (SelectFieldOrAsterisk s : returning) {
-            if (s instanceof Field<?> f) {
-                returningResolvedAsterisks.add(f);
-            }
-            else if (s instanceof QualifiedAsterisk a) {
-
-
-
-
-                returningResolvedAsterisks.addAll(Arrays.asList(a.qualifier().fields()));
-            }
-            else if (s instanceof Asterisk) {
-
-
-
-
+        for (SelectFieldOrAsterisk s : returning)
+            if (s instanceof Field)
+                returningResolvedAsterisks.add((Field<?>) s);
+            else if (s instanceof QualifiedAsterisk)
+                returningResolvedAsterisks.addAll(Arrays.asList(((QualifiedAsterisk) s).qualifier().fields()));
+            else if (s instanceof Asterisk)
                 returningResolvedAsterisks.addAll(Arrays.asList(table.fields()));
-            }
-            else if (s instanceof Row r) {
-                returningResolvedAsterisks.add(new RowAsField<>(r));
-            }
-            else if (s instanceof Table<?> t) {
-                returningResolvedAsterisks.add(new TableAsField<>(t));
-            }
-            else {
+            else if (s instanceof Row)
+                returningResolvedAsterisks.add(new RowAsField<>((Row) s));
+            else if (s instanceof Table)
+                returningResolvedAsterisks.add(new TableAsField<>((Table<?>) s));
+            else
                 throw new UnsupportedOperationException("Type not supported: " + s);
-            }
-        }
     }
 
     // @Override
@@ -325,7 +287,7 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
         return table;
     }
 
-    final Table<?> table(Scope ctx) {
+    final Table<?> table(Context<?> ctx) {
 
 
 
@@ -353,7 +315,11 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
 
 
 
-        return table();
+        // [#8382] [#8384] Table might be aliased and dialect doesn't like that
+        if (NO_SUPPORT_INSERT_ALIASED_TABLE.contains(ctx.dialect()) && this instanceof Insert)
+            return defaultIfNull(Tools.aliased(table()), table());
+        else
+            return table();
     }
 
     // @Override
@@ -368,27 +334,12 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
     // XXX: QueryPart API
     // ------------------------------------------------------------------------
 
-    final void accept0(Context<?> ctx) {
+    @Override
+    public final void accept(Context<?> ctx) {
         WithImpl w = with;
 
-        ctx.data(DATA_DML_TARGET_TABLE, table);
-        ctx.data(DATA_DML_USING_TABLES, this instanceof DeleteQueryImpl<?> d ? d.$using() : null);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        ctx.scopeStart()
+           .data(DATA_DML_TARGET_TABLE, table);
 
 
 
@@ -422,7 +373,7 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
             && ctx.data(DATA_RENDERING_DATA_CHANGE_DELTA_TABLE) == null
         ) {
             increment(ctx.data(), DATA_RENDERING_DATA_CHANGE_DELTA_TABLE, () -> {
-                ctx.visit(select(returningOrResolvedAsterisks(ctx)).from(
+                ctx.visit(select(returning).from(
                     new DataChangeDeltaTable<>(this instanceof Delete ? ResultOption.OLD : ResultOption.FINAL, this).as(table().getUnqualifiedName())
                 ));
             });
@@ -698,62 +649,16 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         else
-            accept1(ctx);
+            accept0(ctx);
 
 
 
 
 
 
-        ctx.data().remove(DATA_DML_USING_TABLES);
         ctx.data().remove(DATA_DML_TARGET_TABLE);
-    }
-
-    final boolean fetchTriggerValuesAfterReturning(Scope ctx) {
-        if (this instanceof Delete)
-            return false;
-
-        if (FALSE.equals(ctx.settings().isFetchTriggerValuesAfterSQLServerOutput()))
-            return false;
-
-        switch (defaultIfNull(ctx.settings().getFetchTriggerValuesAfterReturning(), FetchTriggerValuesAfterReturning.WHEN_NEEDED)) {
-            case ALWAYS:
-                return true;
-            case NEVER:
-                return false;
-            case WHEN_NEEDED:
-                if (ctx.configuration().commercial()) {
-
-
-
-                }
-
-                return true;
-            default:
-                throw new IllegalStateException("Unsupported value: " + ctx.settings().getFetchTriggerValuesAfterReturning());
-        }
+        ctx.scopeEnd();
     }
 
 
@@ -834,33 +739,7 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    abstract void accept1(Context<?> ctx);
+    abstract void accept0(Context<?> ctx);
 
     /**
      * [#6771] Handle the case where a statement is executed without a WHERE clause.
@@ -940,39 +819,6 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     final void toSQLReturning(Context<?> ctx) {
         if (!returning.isEmpty()) {
             // Other dialects don't render a RETURNING clause, but
@@ -988,7 +834,14 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
                 ctx.formatSeparator()
                    .visit(K_RETURNING)
                    .sql(' ')
-                   .declareFields(true, c -> c.visit(returningOrResolvedAsterisks(c)));
+                   .declareFields(true, c -> c.visit(
+
+                       // Firebird didn't support asterisks at all here until version 4.0
+                       // MariaDB doesn't support qualified asterisks: https://jira.mariadb.org/browse/MDEV-23178
+                       NO_SUPPORT_RETURNING_ASTERISK.contains(c.dialect())
+                     ? new SelectFieldList<>(returningResolvedAsterisks)
+                     : returning
+                   ));
 
                 if (unqualify)
                     ctx.qualify(qualify);
@@ -996,24 +849,10 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
         }
     }
 
-    private SelectFieldList<?> returningOrResolvedAsterisks(Context<?> c){
-
-        // Firebird didn't support asterisks at all here until version 4.0
-        // MariaDB doesn't support qualified asterisks: https://jira.mariadb.org/browse/MDEV-23178
-        return NO_SUPPORT_RETURNING_ASTERISK.contains(c.dialect()) || forceResolveAsterisks
-            ? new SelectFieldList<>(returningResolvedAsterisks)
-            : returning;
-    }
-
     final boolean nativeSupportReturning(Scope ctx) {
-
-        // [#15316] The historic RETURNING emulation of SQLite was available for INSERT only, using
-        //          _rowid_ = last_insert_rowid() checks, which obviously doesn't work for UPDATE and DELETE
-        return !(ctx.family() == SQLITE && this instanceof Insert && fetchTriggerValuesAfterReturning(ctx))
-
-            && (this instanceof Insert && !NO_NATIVE_SUPPORT_INSERT_RETURNING.contains(ctx.dialect())
-            ||  this instanceof Update && !NO_NATIVE_SUPPORT_UPDATE_RETURNING.contains(ctx.dialect())
-            ||  this instanceof Delete && !NO_NATIVE_SUPPORT_DELETE_RETURNING.contains(ctx.dialect()));
+        return this instanceof Insert && NATIVE_SUPPORT_INSERT_RETURNING.contains(ctx.dialect())
+            || this instanceof Update && NATIVE_SUPPORT_UPDATE_RETURNING.contains(ctx.dialect())
+            || this instanceof Delete && NATIVE_SUPPORT_DELETE_RETURNING.contains(ctx.dialect());
     }
 
     final boolean nativeSupportReturningOrDataChangeDeltaTable(Scope ctx) {
@@ -1135,36 +974,29 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
         }
         // Column stores don't seem support fetching generated keys
         else if (NO_SUPPORT_FETCHING_KEYS.contains(ctx.dialect())) {
-            log.debug("RETURNING was set on query, but dialect doesn't support fetching generated keys: " + ctx.dialect());
             return super.execute(ctx, listener);
         }
         else {
-            int result = 0;
+            int result = 1;
+            ResultSet rs;
             switch (ctx.family()) {
 
                 // SQLite can select _rowid_ after the insert
                 case SQLITE: {
-                    if (!nativeSupportReturning(ctx)) {
-                        listener.executeStart(ctx);
-                        result = executeImmediate(ctx.statement()).executeUpdate();
-                        ctx.rows(result);
-                        listener.executeEnd(ctx);
+                    listener.executeStart(ctx);
+                    result = executeImmediate(ctx.statement()).executeUpdate();
+                    ctx.rows(result);
+                    listener.executeEnd(ctx);
 
-                        DSLContext create = ctx.dsl();
-                        returnedResult =
-                        create.select(returning)
-                              .from(table)
-                              .where(rowid().eq(DSL.field("last_insert_rowid()", rowid().getDataType())))
-                              .fetch();
+                    DSLContext create = ctx.dsl();
+                    returnedResult =
+                    create.select(returning)
+                          .from(table)
+                          .where(rowid().equal(rowid().getDataType().convert(create.lastID())))
+                          .fetch();
 
-                        returnedResult.attach(((DefaultExecuteContext) ctx).originalConfiguration());
-                        logOnEmptyReturned(ctx);
-                        return result;
-                    }
-                    else
-                        executeReturningQuery(ctx, listener);
-
-                    break;
+                    returnedResult.attach(((DefaultExecuteContext) ctx).originalConfiguration());
+                    return result;
                 }
 
 
@@ -1225,7 +1057,7 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
                     if (!nativeSupportReturning(ctx))
                         return executeReturningGeneratedKeysFetchAdditionalRows(ctx, listener);
 
-                    executeReturningQuery(ctx, listener);
+                    rs = executeReturningQuery(ctx, listener);
                     break;
                 }
 
@@ -1236,7 +1068,7 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
 
 
 
-                    executeReturningQuery(ctx, listener);
+                    rs = executeReturningQuery(ctx, listener);
                     break;
 
 
@@ -1248,11 +1080,10 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
                 // Firebird and Postgres can execute the INSERT .. RETURNING
                 // clause like a select clause. JDBC support is not implemented
                 // in the Postgres JDBC driver
-                case DUCKDB:
                 case FIREBIRD:
                 case POSTGRES:
                 case YUGABYTEDB: {
-                    executeReturningQuery(ctx, listener);
+                    rs = executeReturningQuery(ctx, listener);
                     break;
                 }
 
@@ -1336,20 +1167,18 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
 
 
 
-
-
-
-
-
-
                 case HSQLDB:
                 default: {
-                    result = executeReturningGeneratedKeys(ctx, listener);
+                    rs = executeReturningGeneratedKeys(ctx, listener);
                     break;
                 }
             }
 
-            returnedResult = new CursorImpl<>(ctx, listener, returningResolvedAsterisks.toArray(EMPTY_FIELD), false, false).fetch();
+            ExecuteContext ctx2 = new DefaultExecuteContext(((DefaultExecuteContext) ctx).originalConfiguration());
+            ExecuteListener listener2 = ExecuteListeners.getAndStart(ctx2);
+
+            ctx2.resultSet(rs);
+            returnedResult = new CursorImpl<>(ctx2, listener2, returningResolvedAsterisks.toArray(EMPTY_FIELD), null, false, true).fetch();
 
             // [#5366] HSQLDB currently doesn't support fetching updated records in UPDATE statements.
             // [#5408] Other dialects may fall through the switch above (PostgreSQL, Firebird, Oracle) and must
@@ -1359,8 +1188,7 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
                 // [#13574] The DML statement itself may have produced a rowcount
                 //          but the returned results might be empty, so keep the
                 //          higher value of the two
-                // [#14571] The DML rowcount may have already been set to ctx.rows()
-                result = Math.max(Math.max(result, ctx.rows()), returnedResult.size());
+                result = Math.max(result, returnedResult.size());
                 ctx.rows(result);
             }
 
@@ -1368,25 +1196,24 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
         }
     }
 
-    private final void logOnEmptyReturned(Scope ctx) {
-        if (estimatedRowCount(ctx) == 1)
-            log.debug("RETURNING was set on query, but no rows were returned. This is likely due to a missing identity column (or an identity column unknown to jOOQ).");
+    /**
+     * Make sure a {@link PreparedStatement}, which may be a
+     * {@link BatchedPreparedStatement}, is executed immediately, not batched.
+     */
+    private final PreparedStatement executeImmediate(PreparedStatement s) throws SQLException {
+        if (DefaultUnwrapper.isWrapperFor(s, BatchedPreparedStatement.class))
+            s.unwrap(BatchedPreparedStatement.class).setExecuteImmediate(true);
+
+        return s;
     }
 
-    /**
-     * The estimated number of affected rows, {@link Integer#MAX_VALUE}, if
-     * unknown.
-     */
-    abstract int estimatedRowCount(Scope ctx);
-
-    private final int executeReturningGeneratedKeys(ExecuteContext ctx, ExecuteListener listener) throws SQLException {
+    private final ResultSet executeReturningGeneratedKeys(ExecuteContext ctx, ExecuteListener listener) throws SQLException {
         listener.executeStart(ctx);
         int result = executeImmediate(ctx.statement()).executeUpdate();
         ctx.rows(result);
-        ctx.resultSet(ctx.statement().getGeneratedKeys());
         listener.executeEnd(ctx);
 
-        return result;
+        return ctx.statement().getGeneratedKeys();
     }
 
     private final int executeReturningGeneratedKeysFetchAdditionalRows(ExecuteContext ctx, ExecuteListener listener) throws SQLException {
@@ -1433,10 +1260,12 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
         }
     }
 
-    private final void executeReturningQuery(ExecuteContext ctx, ExecuteListener listener) throws SQLException {
+    private final ResultSet executeReturningQuery(ExecuteContext ctx, ExecuteListener listener) throws SQLException {
         listener.executeStart(ctx);
-        ctx.resultSet(ctx.statement().executeQuery());
+        ResultSet rs = ctx.statement().executeQuery();
         listener.executeEnd(ctx);
+
+        return rs;
     }
 
     /**
@@ -1465,9 +1294,9 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
                         ((Result) getResult()).add(
                         Tools.newRecord(
                                 true,
-                                originalConfiguration,
                                 AbstractRecord.class,
-                                fields)
+                                fields,
+                                originalConfiguration)
                              .operate(record -> {
                                 record.values[0] = id;
                                 record.originals[0] = id;
@@ -1485,17 +1314,13 @@ abstract class AbstractDMLQuery<R extends Record> extends AbstractRowCountQuery 
                                         .from(table)
 
                                         // [#5050] [#9946] Table.getIdentity() doesn't produce aliased fields yet
-                                        // [#14771] A plain SQL table doesn't list its fields, but that isn't necessary
-                                        //          if users provide the correct identity column.
-                                        .where(defaultIfNull(table.field(returnIdentity), returnIdentity).in(ids))
+                                        .where(table.field(returnIdentity).in(ids))
                                         .fetch();
 
                     returnedResult.attach(originalConfiguration);
                 }
             }
         }
-        else
-            logOnEmptyReturned(derivedConfiguration.dsl());
     }
 
     private final Field<?> returnedIdentity() {

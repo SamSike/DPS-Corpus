@@ -23,17 +23,20 @@ import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.api.core.session.Request;
 import com.datastax.oss.driver.api.core.session.Session;
 import com.datastax.oss.driver.internal.core.loadbalancing.DefaultLoadBalancingPolicy;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 public class MockLoadBalancingPolicy extends DefaultLoadBalancingPolicy {
 
     public static boolean used;
 
-    public MockLoadBalancingPolicy(DriverContext context, String profileName) {
+    public MockLoadBalancingPolicy(@NonNull DriverContext context, @NonNull String profileName) {
         super(context, profileName);
     }
 
+    @NonNull
     @Override
-    public Queue<Node> newQueryPlan(Request request, Session session) {
+    public Queue<Node> newQueryPlan(@Nullable Request request, @Nullable Session session) {
         MockLoadBalancingPolicy.used = true;
         return super.newQueryPlan(request, session);
     }

@@ -45,8 +45,6 @@ public class ElasticsearchComponent extends DefaultComponent {
     private int maxRetryTimeout = ElasticsearchConstants.MAX_RETRY_TIMEOUT;
     @Metadata(defaultValue = "" + ElasticsearchConstants.DEFAULT_CONNECTION_TIMEOUT)
     private int connectionTimeout = ElasticsearchConstants.DEFAULT_CONNECTION_TIMEOUT;
-    @Metadata(defaultValue = "false")
-    private boolean enableDocumentOnlyMode;
     @Metadata(label = "security", secret = true)
     private String user;
     @Metadata(label = "security", secret = true)
@@ -68,6 +66,7 @@ public class ElasticsearchComponent extends DefaultComponent {
 
     public ElasticsearchComponent(CamelContext context) {
         super(context);
+        registerExtension(new ElasticsearchComponentVerifierExtension());
     }
 
     @Override
@@ -85,7 +84,6 @@ public class ElasticsearchComponent extends DefaultComponent {
         config.setSnifferInterval(this.getSnifferInterval());
         config.setSniffAfterFailureDelay(this.getSniffAfterFailureDelay());
         config.setClusterName(remaining);
-        config.setEnableDocumentOnlyMode(this.isEnableDocumentOnlyMode());
 
         Endpoint endpoint = new ElasticsearchEndpoint(uri, this, config, client);
         setProperties(endpoint, parameters);
@@ -119,8 +117,8 @@ public class ElasticsearchComponent extends DefaultComponent {
     }
 
     /**
-     * To use an existing configured Elasticsearch client, instead of creating a client per endpoint. This allows
-     * customizing the client with specific settings.
+     * To use an existing configured Elasticsearch client, instead of creating a client per endpoint. This allow to
+     * customize the client with specific settings.
      */
     public void setClient(RestClient client) {
         this.client = client;
@@ -139,7 +137,7 @@ public class ElasticsearchComponent extends DefaultComponent {
     }
 
     /**
-     * The timeout in ms to wait before the socket will time out.
+     * The timeout in ms to wait before the socket will timeout.
      */
     public int getSocketTimeout() {
         return socketTimeout;
@@ -150,7 +148,7 @@ public class ElasticsearchComponent extends DefaultComponent {
     }
 
     /**
-     * The time in ms to wait before connection will time out.
+     * The time in ms to wait before connection will timeout.
      */
     public int getConnectionTimeout() {
         return connectionTimeout;
@@ -172,7 +170,7 @@ public class ElasticsearchComponent extends DefaultComponent {
     }
 
     /**
-     * Password for authenticating
+     * Password for authenticate
      */
     public String getPassword() {
         return password;
@@ -205,21 +203,6 @@ public class ElasticsearchComponent extends DefaultComponent {
     }
 
     /**
-     * Indicates whether the body of the message contains only documents. By default, it is set to false to be able to
-     * do the same requests as what the Document API supports (see
-     * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs.html for more details). To ease the
-     * migration of routes based on the legacy component camel-elasticsearch-rest, you should consider enabling the
-     * mode, especially if your routes do update operations.
-     */
-    public boolean isEnableDocumentOnlyMode() {
-        return enableDocumentOnlyMode;
-    }
-
-    public void setEnableDocumentOnlyMode(boolean enableDocumentOnlyMode) {
-        this.enableDocumentOnlyMode = enableDocumentOnlyMode;
-    }
-
-    /**
      * The time in ms before retry
      */
     public int getMaxRetryTimeout() {
@@ -236,7 +219,7 @@ public class ElasticsearchComponent extends DefaultComponent {
 
     /**
      * Enable automatically discover nodes from a running Elasticsearch cluster. If this option is used in conjunction
-     * with Spring Boot, then it's managed by the Spring Boot configuration (see: Disable Sniffer in Spring Boot).
+     * with Spring Boot then it's managed by the Spring Boot configuration (see: Disable Sniffer in Spring Boot).
      */
     public void setEnableSniffer(boolean enableSniffer) {
         this.enableSniffer = enableSniffer;

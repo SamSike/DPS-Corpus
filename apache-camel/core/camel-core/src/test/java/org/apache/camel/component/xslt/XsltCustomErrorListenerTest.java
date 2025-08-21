@@ -33,9 +33,9 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class XsltCustomErrorListenerTest extends TestSupport {
 
-    private final MyErrorListener listener = new MyErrorListener();
+    private MyErrorListener listener = new MyErrorListener();
 
-    private static class MyErrorListener implements ErrorListener {
+    private class MyErrorListener implements ErrorListener {
 
         private boolean warning;
         private boolean error;
@@ -82,9 +82,9 @@ public class XsltCustomErrorListenerTest extends TestSupport {
         assertTrue(listener.isFatalError(), "My error listener should been invoked");
     }
 
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:a").to("xslt:org/apache/camel/builder/xml/example-with-errors.xsl?errorListener=#myListener");
             }
         };

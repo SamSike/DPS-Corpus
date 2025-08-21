@@ -35,10 +35,6 @@ public class SimpleExpression extends TypedExpressionDefinition {
     public SimpleExpression() {
     }
 
-    protected SimpleExpression(SimpleExpression source) {
-        super(source);
-    }
-
     public SimpleExpression(String expression) {
         super(expression);
     }
@@ -49,11 +45,6 @@ public class SimpleExpression extends TypedExpressionDefinition {
 
     private SimpleExpression(Builder builder) {
         super(builder);
-    }
-
-    @Override
-    public SimpleExpression copyDefinition() {
-        return new SimpleExpression(this);
     }
 
     @Override

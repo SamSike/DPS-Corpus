@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,14 +111,14 @@ public class UndertowTestServer implements WebSocketTestServer {
 	}
 
 	@Override
-	public void start() {
+	public void start() throws Exception {
 		this.server.start();
 		Undertow.ListenerInfo info = this.server.getListenerInfo().get(0);
 		this.port = ((InetSocketAddress) info.getAddress()).getPort();
 	}
 
 	@Override
-	public void stop() {
+	public void stop() throws Exception {
 		this.server.stop();
 		this.port = 0;
 	}
@@ -143,8 +143,8 @@ public class UndertowTestServer implements WebSocketTestServer {
 		}
 
 		@Override
-		public InstanceHandle<Servlet> createInstance() {
-			return new InstanceHandle<>() {
+		public InstanceHandle<Servlet> createInstance() throws InstantiationException {
+			return new InstanceHandle<Servlet>() {
 				@Override
 				public Servlet getInstance() {
 					return new DispatcherServlet(wac);
@@ -166,8 +166,8 @@ public class UndertowTestServer implements WebSocketTestServer {
 		}
 
 		@Override
-		public InstanceHandle<Filter> createInstance() {
-			return new InstanceHandle<>() {
+		public InstanceHandle<Filter> createInstance() throws InstantiationException {
+			return new InstanceHandle<Filter>() {
 				@Override
 				public Filter getInstance() {
 					return filter;

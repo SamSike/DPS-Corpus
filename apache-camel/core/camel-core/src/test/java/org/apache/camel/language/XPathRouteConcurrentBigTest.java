@@ -18,7 +18,6 @@ package org.apache.camel.language;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.util.StopWatch;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,12 +45,12 @@ public class XPathRouteConcurrentBigTest extends ContextTestSupport {
     }
 
     private void doSendMessages(int messageCount) throws Exception {
-        LOG.info("Sending {} messages", messageCount);
+        LOG.info("Sending " + messageCount + " messages");
 
         int forResult = (messageCount * 2 / 3) + messageCount % 3;
         int forOther = messageCount - forResult;
 
-        StopWatch watch = new StopWatch();
+        long now = System.currentTimeMillis();
 
         // give more time on slow servers
         getMockEndpoint("mock:result").setResultWaitTime(30000);
@@ -76,18 +75,18 @@ public class XPathRouteConcurrentBigTest extends ContextTestSupport {
             }
         }
 
-        LOG.info("Sent {} messages in {} ms", messageCount, watch.taken());
+        LOG.info("Sent {} messages in {} ms", messageCount, System.currentTimeMillis() - now);
 
         assertMockEndpointsSatisfied();
 
-        LOG.info("Processed {} messages in {} ms", messageCount, watch.taken());
+        LOG.info("Processed {} messages in {} ms", messageCount, System.currentTimeMillis() - now);
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo?concurrentConsumers=50&size=250000").choice().when()
                         .xpath("//messageType = 'AAA' or " + "//messageType = 'AAB' or " + "//messageType = 'AAC' or "
                                + "//messageType = 'AAD' or " + "//messageType = 'AAE' or "

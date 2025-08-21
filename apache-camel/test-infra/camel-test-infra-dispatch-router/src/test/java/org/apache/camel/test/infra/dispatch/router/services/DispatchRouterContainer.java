@@ -17,35 +17,31 @@
 
 package org.apache.camel.test.infra.dispatch.router.services;
 
+import org.apache.camel.test.infra.common.TestUtils;
 import org.apache.camel.test.infra.messaging.services.MessagingContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 
 public class DispatchRouterContainer extends GenericContainer<DispatchRouterContainer> implements MessagingContainer {
     private static final int DEFAULT_AMQP_PORT = 5672;
-    private static final String IMAGE_NAME = "quay.io/interconnectedcloud/qdrouterd:latest";
+    private static final String FROM_IMAGE_NAME = "fedora:37";
+    private static final String FROM_IMAGE_ARG = "FROMIMAGE";
 
     public DispatchRouterContainer() {
-        super(IMAGE_NAME);
+        super(new ImageFromDockerfile("localhost/qpid-dispatch:camel", false)
+                .withFileFromClasspath("Dockerfile",
+                        "org/apache/camel/test/infra/dispatch/router/services/Dockerfile")
+                .withBuildArg(FROM_IMAGE_ARG, TestUtils.prependHubImageNamePrefixIfNeeded(FROM_IMAGE_NAME)));
 
-        withExposedPorts(DEFAULT_AMQP_PORT)
-                .waitingFor(Wait.forListeningPort());
-    }
+        withExposedPorts(DEFAULT_AMQP_PORT);
 
-    public DispatchRouterContainer(String imageName, int amqpPort) {
-        super(imageName);
-
-        withExposedPorts(amqpPort)
-                .waitingFor(Wait.forListeningPort());
-    }
-
-    public DispatchRouterContainer(String imageName) {
-        this(imageName, DEFAULT_AMQP_PORT);
+        waitingFor(Wait.forListeningPort());
     }
 
     /**
      * Gets the port number used for exchanging messages using the AMQP protocol
-     *
+     * 
      * @return the port number
      */
     public int getAMQPPort() {
@@ -54,7 +50,7 @@ public class DispatchRouterContainer extends GenericContainer<DispatchRouterCont
 
     /**
      * Gets the end point URL used exchanging messages using the AMQP protocol (ie.: tcp://host:${amqp.port})
-     *
+     * 
      * @return the end point URL as a string
      */
     public String getAMQPEndpoint() {

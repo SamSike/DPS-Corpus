@@ -59,10 +59,10 @@ public class SimpleResultTypeRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo")
                         // set using builder support
                         .setHeader("cool", simple("true", Boolean.class)).setHeader("fail", simple("true")).to("mock:foo");

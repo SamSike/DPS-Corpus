@@ -61,9 +61,6 @@ public class XmppPrivateChatProducer extends DefaultProducer {
             if (!connection.isConnected()) {
                 this.reconnect();
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeCamelException("Interrupted while connecting to XMPP server.", e);
         } catch (Exception e) {
             throw new RuntimeCamelException("Could not connect to XMPP server.", e);
         }
@@ -91,12 +88,6 @@ public class XmppPrivateChatProducer extends DefaultProducer {
                 LOG.debug("Sending XMPP message to {} from {} : {}", participant, endpoint.getUser(), message.getBody());
             }
             chat.send(message);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeExchangeException(
-                    "Interrupted while sending XMPP message to " + participant + " from " + endpoint.getUser() + " : " + message
-                                               + " to: " + XmppEndpoint.getConnectionMessage(connection),
-                    exchange, e);
         } catch (Exception e) {
             throw new RuntimeExchangeException(
                     "Could not send XMPP message to " + participant + " from " + endpoint.getUser() + " : " + message
@@ -110,17 +101,12 @@ public class XmppPrivateChatProducer extends DefaultProducer {
         return chatManager.chatWith(JidCreate.entityBareFrom(participant));
     }
 
-    private void reconnect() throws InterruptedException, IOException, SmackException, XMPPException {
-        lock.lock();
-        try {
-            if (!connection.isConnected()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Reconnecting to: {}", XmppEndpoint.getConnectionMessage(connection));
-                }
-                connection.connect();
+    private synchronized void reconnect() throws InterruptedException, IOException, SmackException, XMPPException {
+        if (!connection.isConnected()) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Reconnecting to: {}", XmppEndpoint.getConnectionMessage(connection));
             }
-        } finally {
-            lock.unlock();
+            connection.connect();
         }
     }
 

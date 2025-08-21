@@ -7,10 +7,11 @@ package org.jooq.meta.firebird.rdb.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.ForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
+import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
@@ -18,6 +19,7 @@ import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+import org.jooq.meta.firebird.rdb.DefaultSchema;
 import org.jooq.meta.firebird.rdb.Keys;
 
 
@@ -45,12 +47,12 @@ public class Rdb$fields extends TableImpl<Record> {
     /**
      * The column <code>RDB$FIELDS.RDB$FIELD_NAME</code>.
      */
-    public final TableField<Record, String> RDB$FIELD_NAME = createField(DSL.name("RDB$FIELD_NAME"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$FIELD_NAME = createField(DSL.name("RDB$FIELD_NAME"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$FIELDS.RDB$QUERY_NAME</code>.
      */
-    public final TableField<Record, String> RDB$QUERY_NAME = createField(DSL.name("RDB$QUERY_NAME"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$QUERY_NAME = createField(DSL.name("RDB$QUERY_NAME"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$FIELDS.RDB$VALIDATION_BLR</code>.
@@ -185,19 +187,19 @@ public class Rdb$fields extends TableImpl<Record> {
     /**
      * The column <code>RDB$FIELDS.RDB$SECURITY_CLASS</code>.
      */
-    public final TableField<Record, String> RDB$SECURITY_CLASS = createField(DSL.name("RDB$SECURITY_CLASS"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$SECURITY_CLASS = createField(DSL.name("RDB$SECURITY_CLASS"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$FIELDS.RDB$OWNER_NAME</code>.
      */
-    public final TableField<Record, String> RDB$OWNER_NAME = createField(DSL.name("RDB$OWNER_NAME"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$OWNER_NAME = createField(DSL.name("RDB$OWNER_NAME"), SQLDataType.CHAR(31), this, "");
 
     private Rdb$fields(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Rdb$fields(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private Rdb$fields(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -221,6 +223,15 @@ public class Rdb$fields extends TableImpl<Record> {
         this(DSL.name("RDB$FIELDS"), null);
     }
 
+    public <O extends Record> Rdb$fields(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, RDB$FIELDS);
+    }
+
+    @Override
+    public Schema getSchema() {
+        return aliased() ? null : DefaultSchema.DEFAULT_SCHEMA;
+    }
+
     @Override
     public List<UniqueKey<Record>> getUniqueKeys() {
         return Arrays.asList(Keys.RDB$INDEX_2);
@@ -236,8 +247,19 @@ public class Rdb$fields extends TableImpl<Record> {
         return new Rdb$fields(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public Rdb$fields as(Table<?> alias) {
-        return new Rdb$fields(alias.getQualifiedName(), this);
+    public Rdb$fields rename(String name) {
+        return new Rdb$fields(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public Rdb$fields rename(Name name) {
+        return new Rdb$fields(name, null);
     }
 }

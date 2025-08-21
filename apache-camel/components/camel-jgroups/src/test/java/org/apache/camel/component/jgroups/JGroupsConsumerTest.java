@@ -22,7 +22,7 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.jgroups.JChannel;
 import org.jgroups.Message;
-import org.jgroups.ObjectMessage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.jgroups.JGroupsConstants.HEADER_JGROUPS_ORIGINAL_MESSAGE;
@@ -62,8 +62,10 @@ public class JGroupsConsumerTest extends CamelTestSupport {
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
         channel.close();
+        super.tearDown();
     }
 
     // Tests
@@ -75,7 +77,7 @@ public class JGroupsConsumerTest extends CamelTestSupport {
         mockEndpoint.expectedBodiesReceived(message);
 
         // When
-        Message msg = new ObjectMessage(null, message);
+        Message msg = new Message(null, message);
         msg.setSrc(null);
         channel.send(msg);
 
@@ -90,7 +92,7 @@ public class JGroupsConsumerTest extends CamelTestSupport {
         mockEndpoint.message(0).header(HEADER_JGROUPS_ORIGINAL_MESSAGE).isInstanceOf(Message.class);
 
         // When
-        Message msg = new ObjectMessage(null, message);
+        Message msg = new Message(null, message);
         msg.setSrc(null);
         channel.send(msg);
 

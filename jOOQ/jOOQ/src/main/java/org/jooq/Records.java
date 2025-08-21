@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,26 +41,18 @@ import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toCollection;
 
 import java.lang.reflect.Array;
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.jooq.exception.InvalidResultException;
 import org.jooq.impl.Internal;
-
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Common utilities related to {@link Record} types and constructing
@@ -70,14 +62,14 @@ import org.jetbrains.annotations.Nullable;
  * {@link Record} types and constructors of known degree, such as in this
  * example:
  * <p>
- * <pre><code>
+ * <code><pre>
  * record Actor (int id, String firstName, String lastName) {}
  *
  * List&lt;Actor&gt; actors =
  * ctx.select(ACTOR.ID, ACTOR.FIRST_NAME, ACTOR.LAST_NAME)
  *    .from(ACTOR)
  *    .fetch(mapping(Actor::new));
- * </code></pre>
+ * </pre></code>
  *
  * @author Lukas Eder
  */
@@ -89,22 +81,22 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String[] titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoArray(new String[0]));
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following, but allows for omitting repeating the
      * <code>BOOK.TITLE</code> column:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String[] titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .fetchArray(BOOK.TITLE);
-     * </code></pre>
+     * </pre></code>
      */
     public static final <E, R extends Record1<E>> Collector<R, ?, E[]> intoArray(E[] a) {
         return intoArray(a, Record1::value1);
@@ -116,21 +108,21 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String[] titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoArray(new String[0], r -&gt; r.get(BOOK.TITLE)));
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String[] titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .fetchArray(BOOK.TITLE);
-     * </code></pre>
+     * </pre></code>
      */
     public static final <E, R extends Record1<E>> Collector<R, ?, E[]> intoArray(Class<? extends E> componentType) {
         return intoArray(componentType, Record1::value1);
@@ -142,21 +134,21 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String[] titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoArray(new String[0], r -&gt; r.get(BOOK.TITLE)));
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String[] titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .fetchArray(BOOK.TITLE);
-     * </code></pre>
+     * </pre></code>
      */
     public static final <E, R extends Record> Collector<R, ?, E[]> intoArray(E[] a, Function<? super R, ? extends E> function) {
         return collectingAndThen(Collectors.mapping(function, toCollection(ArrayList::new)), l -> l.toArray(a));
@@ -168,21 +160,21 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String[] titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoArray(new String[0], r -&gt; r.get(BOOK.TITLE)));
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * String[] titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .fetchArray(BOOK.TITLE);
-     * </code></pre>
+     * </pre></code>
      */
     @SuppressWarnings("unchecked")
     public static final <E, R extends Record> Collector<R, ?, E[]> intoArray(Class<? extends E> componentType, Function<? super R, ? extends E> function) {
@@ -196,22 +188,22 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * List&lt;String&gt; titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoList());
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following, but allows for omitting repeating the
      * <code>BOOK.TITLE</code> column:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * List&lt;String&gt; titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .fetch(BOOK.TITLE);
-     * </code></pre>
+     * </pre></code>
      */
     public static final <E, R extends Record1<E>> Collector<R, ?, List<E>> intoList() {
         return Collectors.mapping(Record1::value1, Collectors.toCollection(ArrayList::new));
@@ -223,21 +215,21 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * List&lt;String&gt; titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoList(r -&gt; r.get(BOOK.TITLE)));
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * List&lt;String&gt; titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .fetch(BOOK.TITLE);
-     * </code></pre>
+     * </pre></code>
      */
     public static final <E, R extends Record> Collector<R, ?, List<E>> intoList(Function<? super R, ? extends E> function) {
         return Collectors.mapping(function, Collectors.toCollection(ArrayList::new));
@@ -250,22 +242,22 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Set&lt;String&gt; titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoSet());
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following, but allows for omitting repeating the
      * <code>BOOK.TITLE</code> column:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * List&lt;String&gt; titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .fetchSet(BOOK.TITLE);
-     * </code></pre>
+     * </pre></code>
      */
     public static final <E, R extends Record1<E>> Collector<R, ?, Set<E>> intoSet() {
         return intoSet(Record1::value1);
@@ -277,21 +269,21 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Set&lt;String&gt; titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoSet(r -&gt; r.get(BOOK.TITLE)));
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * List&lt;String&gt; titles =
      * ctx.select(BOOK.TITLE)
      *    .from(BOOK)
      *    .fetchSet(BOOK.TITLE);
-     * </code></pre>
+     * </pre></code>
      */
     public static final <E, R extends Record> Collector<R, ?, Set<E>> intoSet(Function<? super R, ? extends E> function) {
         return Collectors.mapping(function, Collectors.toCollection(LinkedHashSet::new));
@@ -307,22 +299,22 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, String&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoMap());
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following, but allows for omitting repeating the
      * <code>BOOK.ID</code> and <code>BOOK.TITLE</code> columns:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, String&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .fetchMap(BOOK.ID, BOOK.TITLE);
-     * </code></pre>
+     * </pre></code>
      */
     public static final <K, V, R extends Record2<K, V>> Collector<R, ?, Map<K, V>> intoMap() {
         return intoMap(Record2::value1, Record2::value2);
@@ -338,21 +330,21 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, Record2&lt;Integer, String&gt;&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoMap(r -&gt; r.get(BOOK.ID)));
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, Record2&lt;Integer, String&gt;&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .fetchMap(BOOK.ID);
-     * </code></pre>
+     * </pre></code>
      */
     public static final <K, R extends Record> Collector<R, ?, Map<K, R>> intoMap(Function<? super R, ? extends K> keyMapper) {
         return intoMap(keyMapper, r -> r);
@@ -369,21 +361,21 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, String&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoMap(r -&gt; r.get(BOOK.ID), r -&gt; r.get(BOOK.TITLE)));
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, String&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .fetchMap(BOOK.ID, BOOK.TITLE);
-     * </code></pre>
+     * </pre></code>
      */
     public static final <K, V, R extends Record> Collector<R, ?, Map<K, V>> intoMap(
         Function<? super R, ? extends K> keyMapper,
@@ -415,22 +407,22 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, List&lt;String&gt;&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoGroups());
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following, but allows for omitting repeating the
      * <code>BOOK.ID</code> and <code>BOOK.TITLE</code> columns:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, List&lt;String&gt;&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .fetchGroups(BOOK.ID, BOOK.TITLE);
-     * </code></pre>
+     * </pre></code>
      */
     public static final <K, V, R extends Record2<K, V>> Collector<R, ?, Map<K, List<V>>> intoGroups() {
         return intoGroups(Record2::value1, Record2::value2);
@@ -444,21 +436,21 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, List&lt;Record2&lt;Integer, String&gt;&gt;&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoGroups(r -&gt; r.get(BOOK.ID)));
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, List&lt;Record2&lt;Integer, String&gt;&gt;&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .fetchGroups(BOOK.ID);
-     * </code></pre>
+     * </pre></code>
      */
     public static final <K, R extends Record> Collector<R, ?, Map<K, List<R>>> intoGroups(Function<? super R, ? extends K> keyMapper) {
         return intoGroups(keyMapper, r -> r);
@@ -472,21 +464,21 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, List&lt;String&gt;&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoGroups(r -&gt; r.get(BOOK.ID), r -&gt; r.get(BOOK.TITLE)));
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, List&lt;String&gt;&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .fetchGroups(BOOK.ID, BOOK.TITLE);
-     * </code></pre>
+     * </pre></code>
      */
     public static final <K, V, R extends Record> Collector<R, ?, Map<K, List<V>>> intoGroups(
         Function<? super R, ? extends K> keyMapper,
@@ -510,21 +502,21 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, Result&lt;Record2&lt;Integer, String&gt;&gt;&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoResultGroups(r -&gt; r.get(BOOK.ID)));
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, Result&lt;Record2&lt;Integer, String&gt;&gt;&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .fetchGroups(BOOK.ID);
-     * </code></pre>
+     * </pre></code>
      */
     public static final <K, R extends Record> Collector<R, ?, Map<K, Result<R>>> intoResultGroups(Function<? super R, ? extends K> keyMapper) {
         return intoResultGroups(keyMapper, r -> r);
@@ -538,21 +530,21 @@ public final class Records {
      * <p>
      * For example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, Result&lt;Record1&lt;String&gt;&gt;&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .collect(intoResultGroups(r -&gt; r.get(BOOK.ID), r -&gt; r.get(BOOK.TITLE)));
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This is the same as the following:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * Map&lt;Integer, Result&lt;Record1&lt;String&gt;&gt;&gt; books =
      * ctx.select(BOOK.ID, BOOK.TITLE)
      *    .from(BOOK)
      *    .fetchGroups(BOOK.ID, BOOK.TITLE);
-     * </code></pre>
+     * </pre></code>
      */
     @SuppressWarnings("unchecked")
     public static final <K, V extends Record, R extends Record> Collector<R, ?, Map<K, Result<V>>> intoResultGroups(
@@ -581,108 +573,6 @@ public final class Records {
         );
     }
 
-    /**
-     * Create a collector that can collect {@link Record} resulting from a
-     * {@link ResultQuery} into a hierarchy of custom data types.
-     * <p>
-     * For example:
-     * <p>
-     *
-     * <pre>
-     * <code>
-     * record File(String name, List&lt;File&gt; contents) {}
-     *
-     * List&lt;File&gt; files =
-     * ctx.select(FILE.ID, FILE.PARENT_ID, FILE.NAME)
-     *    .from(FILE)
-     *    .collect(intoHierarchy(
-     *        r -&gt; r.value1(),
-     *        r -&gt; r.value2(),
-     *        r -&gt; new File(r.value3(), new ArrayList<>()),
-     *        (p, c) -&gt; p.contents().add(c)
-     *    ));
-     * </code>
-     * </pre>
-     *
-     * @param <K> The key type (e.g. an <code>ID</code>)
-     * @param <E> The value type (e.g. a POJO)
-     * @param <R> The record type
-     * @param keyMapper A function that extract a key from a record
-     * @param parentKeyMapper A function that extracts the parent key from a
-     *            record.
-     * @param nodeMapper A function that maps a record to a new value type.
-     * @param parentChildAppender A (parent, child) consumer that adds the child
-     *            to its parent.
-     */
-    public static final <K, E, R extends Record> Collector<R, ?, List<E>> intoHierarchy(
-        Function<? super R, ? extends K> keyMapper,
-        Function<? super R, ? extends K> parentKeyMapper,
-        Function<? super R, ? extends E> nodeMapper,
-        BiConsumer<? super E, ? super E> parentChildAppender
-    ) {
-        return collectingAndThen(
-            intoMap(keyMapper, r -> new SimpleImmutableEntry<R, E>(r, nodeMapper.apply(r))),
-            m -> {
-                List<E> r = new ArrayList<>();
-
-                m.forEach((k, v) -> {
-                    Entry<R, E> parent = m.get(parentKeyMapper.apply(v.getKey()));
-
-                    if (parent != null)
-                        parentChildAppender.accept(parent.getValue(), v.getValue());
-                    else
-                        r.add(v.getValue());
-                });
-
-                return r;
-            }
-        );
-    }
-
-    /**
-     * Create a {@link RecordMapper} that turns {@link Record} values containing
-     * all <code>null</code> values into a <code>null</code> record value.
-     * <p>
-     * This is useful, for example, when nesting records from implicit path
-     * joins following optional foreign keys, where a
-     * <code>(NULL, NULL, …, NULL)</code> record isn't so useful.
-     */
-    public static final <R extends Record> RecordMapper<R, @Nullable R> nullOnAllNull() {
-        return r -> {
-            if (r == null)
-                return null;
-
-            int size = r.size();
-            for (int i = 0; i < size; i++)
-                if (r.get(i) != null)
-                    return r;
-
-            return null;
-        };
-    }
-
-    /**
-     * Create a {@link RecordMapper} that turns {@link Record} values containing
-     * any <code>null</code> value into a <code>null</code> record value.
-     * <p>
-     * This is useful, for example, when nesting records from implicit path
-     * joins following optional foreign keys, where a
-     * <code>(NULL, NULL, …, NULL)</code> record isn't so useful.
-     */
-    public static final <R extends Record> RecordMapper<R, @Nullable R> nullOnAnyNull() {
-        return r -> {
-            if (r == null)
-                return null;
-
-            int size = r.size();
-            for (int i = 0; i < size; i++)
-                if (r.get(i) == null)
-                    return null;
-
-            return r;
-        };
-    }
-
 
 
     /**
@@ -696,7 +586,7 @@ public final class Records {
     public static final <T1, R extends Record1<T1>, U> RecordMapper<R, U> mapping(
         Function1<? super T1, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1());
+        return r -> function.apply(r.value1());
     }
 
     /**
@@ -710,7 +600,7 @@ public final class Records {
     public static final <T1, T2, R extends Record2<T1, T2>, U> RecordMapper<R, U> mapping(
         Function2<? super T1, ? super T2, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2());
+        return r -> function.apply(r.value1(), r.value2());
     }
 
     /**
@@ -724,7 +614,7 @@ public final class Records {
     public static final <T1, T2, T3, R extends Record3<T1, T2, T3>, U> RecordMapper<R, U> mapping(
         Function3<? super T1, ? super T2, ? super T3, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3());
+        return r -> function.apply(r.value1(), r.value2(), r.value3());
     }
 
     /**
@@ -738,7 +628,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, R extends Record4<T1, T2, T3, T4>, U> RecordMapper<R, U> mapping(
         Function4<? super T1, ? super T2, ? super T3, ? super T4, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4());
     }
 
     /**
@@ -752,7 +642,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, R extends Record5<T1, T2, T3, T4, T5>, U> RecordMapper<R, U> mapping(
         Function5<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5());
     }
 
     /**
@@ -766,7 +656,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, R extends Record6<T1, T2, T3, T4, T5, T6>, U> RecordMapper<R, U> mapping(
         Function6<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6());
     }
 
     /**
@@ -780,7 +670,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, R extends Record7<T1, T2, T3, T4, T5, T6, T7>, U> RecordMapper<R, U> mapping(
         Function7<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7());
     }
 
     /**
@@ -794,7 +684,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, R extends Record8<T1, T2, T3, T4, T5, T6, T7, T8>, U> RecordMapper<R, U> mapping(
         Function8<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8());
     }
 
     /**
@@ -808,7 +698,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, T9, R extends Record9<T1, T2, T3, T4, T5, T6, T7, T8, T9>, U> RecordMapper<R, U> mapping(
         Function9<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9());
     }
 
     /**
@@ -822,7 +712,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, R extends Record10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>, U> RecordMapper<R, U> mapping(
         Function10<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? super T10, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10());
     }
 
     /**
@@ -836,7 +726,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, R extends Record11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>, U> RecordMapper<R, U> mapping(
         Function11<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? super T10, ? super T11, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11());
     }
 
     /**
@@ -850,7 +740,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, R extends Record12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>, U> RecordMapper<R, U> mapping(
         Function12<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? super T10, ? super T11, ? super T12, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12());
     }
 
     /**
@@ -864,7 +754,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, R extends Record13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>, U> RecordMapper<R, U> mapping(
         Function13<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? super T10, ? super T11, ? super T12, ? super T13, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13());
     }
 
     /**
@@ -878,7 +768,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, R extends Record14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>, U> RecordMapper<R, U> mapping(
         Function14<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? super T10, ? super T11, ? super T12, ? super T13, ? super T14, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14());
     }
 
     /**
@@ -892,7 +782,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, R extends Record15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>, U> RecordMapper<R, U> mapping(
         Function15<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? super T10, ? super T11, ? super T12, ? super T13, ? super T14, ? super T15, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15());
     }
 
     /**
@@ -906,7 +796,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, R extends Record16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>, U> RecordMapper<R, U> mapping(
         Function16<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? super T10, ? super T11, ? super T12, ? super T13, ? super T14, ? super T15, ? super T16, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15(), r.value16());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15(), r.value16());
     }
 
     /**
@@ -920,7 +810,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, R extends Record17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>, U> RecordMapper<R, U> mapping(
         Function17<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? super T10, ? super T11, ? super T12, ? super T13, ? super T14, ? super T15, ? super T16, ? super T17, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15(), r.value16(), r.value17());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15(), r.value16(), r.value17());
     }
 
     /**
@@ -934,7 +824,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, R extends Record18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>, U> RecordMapper<R, U> mapping(
         Function18<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? super T10, ? super T11, ? super T12, ? super T13, ? super T14, ? super T15, ? super T16, ? super T17, ? super T18, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15(), r.value16(), r.value17(), r.value18());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15(), r.value16(), r.value17(), r.value18());
     }
 
     /**
@@ -948,7 +838,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, R extends Record19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>, U> RecordMapper<R, U> mapping(
         Function19<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? super T10, ? super T11, ? super T12, ? super T13, ? super T14, ? super T15, ? super T16, ? super T17, ? super T18, ? super T19, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15(), r.value16(), r.value17(), r.value18(), r.value19());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15(), r.value16(), r.value17(), r.value18(), r.value19());
     }
 
     /**
@@ -962,7 +852,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, R extends Record20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>, U> RecordMapper<R, U> mapping(
         Function20<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? super T10, ? super T11, ? super T12, ? super T13, ? super T14, ? super T15, ? super T16, ? super T17, ? super T18, ? super T19, ? super T20, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15(), r.value16(), r.value17(), r.value18(), r.value19(), r.value20());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15(), r.value16(), r.value17(), r.value18(), r.value19(), r.value20());
     }
 
     /**
@@ -976,7 +866,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, R extends Record21<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>, U> RecordMapper<R, U> mapping(
         Function21<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? super T10, ? super T11, ? super T12, ? super T13, ? super T14, ? super T15, ? super T16, ? super T17, ? super T18, ? super T19, ? super T20, ? super T21, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15(), r.value16(), r.value17(), r.value18(), r.value19(), r.value20(), r.value21());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15(), r.value16(), r.value17(), r.value18(), r.value19(), r.value20(), r.value21());
     }
 
     /**
@@ -990,7 +880,7 @@ public final class Records {
     public static final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22, R extends Record22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22>, U> RecordMapper<R, U> mapping(
         Function22<? super T1, ? super T2, ? super T3, ? super T4, ? super T5, ? super T6, ? super T7, ? super T8, ? super T9, ? super T10, ? super T11, ? super T12, ? super T13, ? super T14, ? super T15, ? super T16, ? super T17, ? super T18, ? super T19, ? super T20, ? super T21, ? super T22, ? extends U> function
     ) {
-        return r -> r == null ? null : function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15(), r.value16(), r.value17(), r.value18(), r.value19(), r.value20(), r.value21(), r.value22());
+        return r -> function.apply(r.value1(), r.value2(), r.value3(), r.value4(), r.value5(), r.value6(), r.value7(), r.value8(), r.value9(), r.value10(), r.value11(), r.value12(), r.value13(), r.value14(), r.value15(), r.value16(), r.value17(), r.value18(), r.value19(), r.value20(), r.value21(), r.value22());
     }
 
 

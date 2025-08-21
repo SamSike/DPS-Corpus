@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
  * @author Arjen Poutsma
  * @author Rossen Stoyanchev
  */
-class CookieValueMethodArgumentResolverTests {
+public class CookieValueMethodArgumentResolverTests {
 
 	private AbstractCookieValueMethodArgumentResolver resolver;
 
@@ -56,7 +56,7 @@ class CookieValueMethodArgumentResolverTests {
 
 
 	@BeforeEach
-	void setUp() throws Exception {
+	public void setUp() throws Exception {
 		resolver = new TestCookieValueMethodArgumentResolver();
 
 		Method method = getClass().getMethod("params", Cookie.class, String.class, String.class);
@@ -70,14 +70,14 @@ class CookieValueMethodArgumentResolverTests {
 
 
 	@Test
-	void supportsParameter() {
+	public void supportsParameter() {
 		assertThat(resolver.supportsParameter(paramNamedCookie)).as("Cookie parameter not supported").isTrue();
 		assertThat(resolver.supportsParameter(paramNamedDefaultValueString)).as("Cookie string parameter not supported").isTrue();
 		assertThat(resolver.supportsParameter(paramString)).as("non-@CookieValue parameter supported").isFalse();
 	}
 
 	@Test
-	void resolveCookieDefaultValue() throws Exception {
+	public void resolveCookieDefaultValue() throws Exception {
 		Object result = resolver.resolveArgument(paramNamedDefaultValueString, null, webRequest, null);
 
 		boolean condition = result instanceof String;
@@ -86,7 +86,7 @@ class CookieValueMethodArgumentResolverTests {
 	}
 
 	@Test
-	void notFound() {
+	public void notFound() throws Exception {
 		assertThatExceptionOfType(ServletRequestBindingException.class).isThrownBy(() ->
 			resolver.resolveArgument(paramNamedCookie, null, webRequest, null));
 	}
@@ -98,7 +98,7 @@ class CookieValueMethodArgumentResolverTests {
 		}
 
 		@Override
-		protected Object resolveName(String name, MethodParameter parameter, NativeWebRequest request) {
+		protected Object resolveName(String name, MethodParameter parameter, NativeWebRequest request) throws Exception {
 			return null;
 		}
 	}

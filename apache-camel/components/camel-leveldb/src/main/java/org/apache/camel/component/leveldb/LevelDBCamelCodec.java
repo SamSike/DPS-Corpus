@@ -21,6 +21,7 @@ import java.io.IOException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.component.leveldb.serializer.DefaultLevelDBSerializer;
 
 public final class LevelDBCamelCodec {
@@ -57,7 +58,7 @@ public final class LevelDBCamelCodec {
         if (fromEndpointUri != null) {
             Endpoint fromEndpoint = camelContext.hasEndpoint(fromEndpointUri);
             if (fromEndpoint != null) {
-                answer.getExchangeExtension().setFromEndpoint(fromEndpoint);
+                answer.adapt(ExtendedExchange.class).setFromEndpoint(fromEndpoint);
             }
         }
         return answer;

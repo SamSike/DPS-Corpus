@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package org.springframework.web.reactive.function.client;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
@@ -24,8 +23,8 @@ import java.util.function.Function;
 
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelOption;
-import mockwebserver3.MockResponse;
-import mockwebserver3.MockWebServer;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
@@ -39,8 +38,8 @@ import org.springframework.core.testfixture.io.buffer.AbstractDataBufferAllocati
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ReactorResourceFactory;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.http.client.reactive.ReactorResourceFactory;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
@@ -72,10 +71,9 @@ class WebClientDataBufferAllocatingTests extends AbstractDataBufferAllocatingTes
 		this.factory.destroy();
 	}
 
-	private void setUp(DataBufferFactory bufferFactory) throws IOException {
+	private void setUp(DataBufferFactory bufferFactory) {
 		super.bufferFactory = bufferFactory;
 		this.server = new MockWebServer();
-		this.server.start();
 		this.webClient = WebClient
 				.builder()
 				.clientConnector(initConnector())
@@ -86,8 +84,8 @@ class WebClientDataBufferAllocatingTests extends AbstractDataBufferAllocatingTes
 	private ReactorClientHttpConnector initConnector() {
 		assertThat(super.bufferFactory).isNotNull();
 
-		if (super.bufferFactory instanceof NettyDataBufferFactory nettyDataBufferFactory) {
-			ByteBufAllocator allocator = nettyDataBufferFactory.getByteBufAllocator();
+		if (super.bufferFactory instanceof NettyDataBufferFactory) {
+			ByteBufAllocator allocator = ((NettyDataBufferFactory) super.bufferFactory).getByteBufAllocator();
 			return new ReactorClientHttpConnector(this.factory,
 					client -> client.option(ChannelOption.ALLOCATOR, allocator));
 		}
@@ -98,14 +96,13 @@ class WebClientDataBufferAllocatingTests extends AbstractDataBufferAllocatingTes
 
 
 	@ParameterizedDataBufferAllocatingTest
-	void bodyToMonoVoid(DataBufferFactory bufferFactory) throws IOException {
+	void bodyToMonoVoid(String displayName, DataBufferFactory bufferFactory) {
 		setUp(bufferFactory);
 
-		this.server.enqueue(new MockResponse.Builder().
-				code(201)
+		this.server.enqueue(new MockResponse()
+				.setResponseCode(201)
 				.setHeader("Content-Type", "application/json")
-				.chunkedBody("{\"foo\" : {\"bar\" : \"123\", \"baz\" : \"456\"}}", 5)
-				.build());
+				.setChunkedBody("{\"foo\" : {\"bar\" : \"123\", \"baz\" : \"456\"}}", 5));
 
 		Mono<Void> mono = this.webClient.get()
 				.uri("/json").accept(MediaType.APPLICATION_JSON)
@@ -117,25 +114,24 @@ class WebClientDataBufferAllocatingTests extends AbstractDataBufferAllocatingTes
 	}
 
 	@ParameterizedDataBufferAllocatingTest // SPR-17482
-	void bodyToMonoVoidWithoutContentType(DataBufferFactory bufferFactory) throws IOException {
+	void bodyToMonoVoidWithoutContentType(String displayName, DataBufferFactory bufferFactory) {
 		setUp(bufferFactory);
 
-		this.server.enqueue(new MockResponse.Builder()
-				.code(HttpStatus.ACCEPTED.value())
-				.chunkedBody("{\"foo\" : \"123\",  \"baz\" : \"456\", \"baz\" : \"456\"}", 5)
-				.build());
+		this.server.enqueue(new MockResponse()
+				.setResponseCode(HttpStatus.ACCEPTED.value())
+				.setChunkedBody("{\"foo\" : \"123\",  \"baz\" : \"456\", \"baz\" : \"456\"}", 5));
 
 		Mono<Map<String, String>> mono = this.webClient.get()
 				.uri("/sample").accept(MediaType.APPLICATION_JSON)
 				.retrieve()
-				.bodyToMono(new ParameterizedTypeReference<>() {});
+				.bodyToMono(new ParameterizedTypeReference<Map<String, String>>() {});
 
 		StepVerifier.create(mono).expectError(WebClientResponseException.class).verify(Duration.ofSeconds(3));
 		assertThat(this.server.getRequestCount()).isEqualTo(1);
 	}
 
 	@ParameterizedDataBufferAllocatingTest
-	void onStatusWithBodyNotConsumed(DataBufferFactory bufferFactory) throws IOException {
+	void onStatusWithBodyNotConsumed(String displayName, DataBufferFactory bufferFactory) {
 		setUp(bufferFactory);
 
 		RuntimeException ex = new RuntimeException("response error");
@@ -143,7 +139,7 @@ class WebClientDataBufferAllocatingTests extends AbstractDataBufferAllocatingTes
 	}
 
 	@ParameterizedDataBufferAllocatingTest
-	void onStatusWithBodyConsumed(DataBufferFactory bufferFactory) throws IOException {
+	void onStatusWithBodyConsumed(String displayName, DataBufferFactory bufferFactory) {
 		setUp(bufferFactory);
 
 		RuntimeException ex = new RuntimeException("response error");
@@ -151,7 +147,7 @@ class WebClientDataBufferAllocatingTests extends AbstractDataBufferAllocatingTes
 	}
 
 	@ParameterizedDataBufferAllocatingTest // SPR-17473
-	void onStatusWithMonoErrorAndBodyNotConsumed(DataBufferFactory bufferFactory) throws IOException {
+	void onStatusWithMonoErrorAndBodyNotConsumed(String displayName, DataBufferFactory bufferFactory) {
 		setUp(bufferFactory);
 
 		RuntimeException ex = new RuntimeException("response error");
@@ -159,7 +155,7 @@ class WebClientDataBufferAllocatingTests extends AbstractDataBufferAllocatingTes
 	}
 
 	@ParameterizedDataBufferAllocatingTest
-	void onStatusWithMonoErrorAndBodyConsumed(DataBufferFactory bufferFactory) throws IOException {
+	void onStatusWithMonoErrorAndBodyConsumed(String displayName, DataBufferFactory bufferFactory) {
 		setUp(bufferFactory);
 
 		RuntimeException ex = new RuntimeException("response error");
@@ -167,7 +163,7 @@ class WebClientDataBufferAllocatingTests extends AbstractDataBufferAllocatingTes
 	}
 
 	@ParameterizedDataBufferAllocatingTest // gh-23230
-	void onStatusWithImmediateErrorAndBodyNotConsumed(DataBufferFactory bufferFactory) throws IOException {
+	void onStatusWithImmediateErrorAndBodyNotConsumed(String displayName, DataBufferFactory bufferFactory) {
 		setUp(bufferFactory);
 
 		RuntimeException ex = new RuntimeException("response error");
@@ -177,16 +173,15 @@ class WebClientDataBufferAllocatingTests extends AbstractDataBufferAllocatingTes
 	}
 
 	@ParameterizedDataBufferAllocatingTest
-	void releaseBody(DataBufferFactory bufferFactory) throws IOException {
+	void releaseBody(String displayName, DataBufferFactory bufferFactory) {
 		setUp(bufferFactory);
 
-		this.server.enqueue(new MockResponse.Builder()
-				.code(200)
+		this.server.enqueue(new MockResponse()
+				.setResponseCode(200)
 				.setHeader("Content-Type", "text/plain")
-				.body("foo bar")
-				.build());
+				.setBody("foo bar"));
 
-		Mono<Void> result = this.webClient.get()
+		Mono<Void> result  = this.webClient.get()
 				.exchangeToMono(ClientResponse::releaseBody);
 
 		StepVerifier.create(result)
@@ -195,22 +190,21 @@ class WebClientDataBufferAllocatingTests extends AbstractDataBufferAllocatingTes
 	}
 
 	@ParameterizedDataBufferAllocatingTest
-	void exchangeToBodilessEntity(DataBufferFactory bufferFactory) throws IOException {
+	void exchangeToBodilessEntity(String displayName, DataBufferFactory bufferFactory) {
 		setUp(bufferFactory);
 
-		this.server.enqueue(new MockResponse.Builder()
-				.code(201)
+		this.server.enqueue(new MockResponse()
+				.setResponseCode(201)
 				.setHeader("Foo", "bar")
-				.body("foo bar")
-				.build());
+				.setBody("foo bar"));
 
-		Mono<ResponseEntity<Void>> result = this.webClient.get()
+		Mono<ResponseEntity<Void>> result  = this.webClient.get()
 				.exchangeToMono(ClientResponse::toBodilessEntity);
 
 		StepVerifier.create(result)
 				.assertNext(entity -> {
 					assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-					assertThat(entity.getHeaders().hasHeaderValues("Foo", Collections.singletonList("bar"))).isTrue();
+					assertThat(entity.getHeaders()).containsEntry("Foo", Collections.singletonList("bar"));
 					assertThat(entity.getBody()).isNull();
 				})
 				.expectComplete()
@@ -223,11 +217,10 @@ class WebClientDataBufferAllocatingTests extends AbstractDataBufferAllocatingTes
 
 		HttpStatus errorStatus = HttpStatus.BAD_GATEWAY;
 
-		this.server.enqueue(new MockResponse.Builder()
-				.code(errorStatus.value())
+		this.server.enqueue(new MockResponse()
+				.setResponseCode(errorStatus.value())
 				.setHeader("Content-Type", "application/json")
-				.chunkedBody("{\"error\" : {\"status\" : 502, \"message\" : \"Bad gateway.\"}}", 5)
-				.build());
+				.setChunkedBody("{\"error\" : {\"status\" : 502, \"message\" : \"Bad gateway.\"}}", 5));
 
 		Mono<String> mono = this.webClient.get()
 				.uri("/json").accept(MediaType.APPLICATION_JSON)

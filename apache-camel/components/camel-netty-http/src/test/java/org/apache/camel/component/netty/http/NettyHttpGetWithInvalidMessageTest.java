@@ -40,10 +40,10 @@ public class NettyHttpGetWithInvalidMessageTest extends CamelTestSupport {
     private int port1;
 
     @BindToRegistry("string-decoder")
-    private final StringDecoder stringDecoder = new StringDecoder();
+    private StringDecoder stringDecoder = new StringDecoder();
 
     @BindToRegistry("string-encoder")
-    private final StringEncoder stringEncoder = new StringEncoder();
+    private StringEncoder stringEncoder = new StringEncoder();
 
     @BindToRegistry("encoders")
     public List<ChannelHandler> addEncoders() {

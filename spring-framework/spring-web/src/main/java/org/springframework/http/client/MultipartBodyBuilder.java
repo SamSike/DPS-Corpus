@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 
 import org.springframework.core.ParameterizedTypeReference;
@@ -32,6 +31,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.Part;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -43,7 +44,7 @@ import org.springframework.util.MultiValueMap;
  * others registered in the
  * {@link org.springframework.core.ReactiveAdapterRegistry ReactiveAdapterRegistry}.
  *
- * <p>This builder is intended to POST {@code multipart/form-data} using the reactive
+ * <p>This builder is intended for use with the reactive
  * {@link org.springframework.web.reactive.function.client.WebClient WebClient}.
  * For multipart requests with the {@code RestTemplate}, simply create and
  * populate a {@code MultiValueMap<String, HttpEntity>} as shown in the Javadoc for
@@ -62,7 +63,7 @@ import org.springframework.util.MultiValueMap;
  * Resource image = new ClassPathResource("image.jpg");
  * builder.part("image", image).header("foo", "bar");
  *
- * // Add content (for example, JSON)
+ * // Add content (e.g. JSON)
  * Account account = ...
  * builder.part("account", account).header("foo", "bar");
  *
@@ -75,14 +76,13 @@ import org.springframework.util.MultiValueMap;
  *
  * Mono&lt;Void&gt; result = webClient.post()
  *     .uri("...")
- *     .bodyValue(multipartBody)
+ *     .body(multipartBody)
  *     .retrieve()
  *     .bodyToMono(Void.class)
  * </pre>
  *
  * @author Arjen Poutsma
  * @author Rossen Stoyanchev
- * @author Sam Brannen
  * @since 5.0.2
  * @see <a href="https://tools.ietf.org/html/rfc7578">RFC 7578</a>
  */
@@ -103,7 +103,7 @@ public final class MultipartBodyBuilder {
 	 * <ul>
 	 * <li>String -- form field
 	 * <li>{@link org.springframework.core.io.Resource Resource} -- file part
-	 * <li>Object -- content to be encoded (for example, to JSON).
+	 * <li>Object -- content to be encoded (e.g. to JSON)
 	 * <li>{@link HttpEntity} -- part content and headers although generally it's
 	 * easier to add headers through the returned builder
 	 * <li>{@link Part} -- a part from a server request
@@ -127,7 +127,8 @@ public final class MultipartBodyBuilder {
 		Assert.hasLength(name, "'name' must not be empty");
 		Assert.notNull(part, "'part' must not be null");
 
-		if (part instanceof Part partObject) {
+		if (part instanceof Part) {
+			Part partObject = (Part) part;
 			PartBuilder builder = asyncPart(name, partObject.content(), DataBuffer.class);
 			if (!partObject.headers().isEmpty()) {
 				builder.headers(headers -> {
@@ -143,8 +144,8 @@ public final class MultipartBodyBuilder {
 			return builder;
 		}
 
-		if (part instanceof PublisherEntity<?,?> publisherEntity) {
-			PublisherPartBuilder<?, ?> builder = new PublisherPartBuilder<>(name, publisherEntity);
+		if (part instanceof PublisherEntity<?,?>) {
+			PublisherPartBuilder<?, ?> builder = new PublisherPartBuilder<>(name, (PublisherEntity<?, ?>) part);
 			if (contentType != null) {
 				builder.contentType(contentType);
 			}
@@ -154,20 +155,20 @@ public final class MultipartBodyBuilder {
 
 		Object partBody;
 		HttpHeaders partHeaders = null;
-		if (part instanceof HttpEntity<?> httpEntity) {
-			partBody = httpEntity.getBody();
+		if (part instanceof HttpEntity) {
+			partBody = ((HttpEntity<?>) part).getBody();
 			partHeaders = new HttpHeaders();
-			partHeaders.putAll(httpEntity.getHeaders());
+			partHeaders.putAll(((HttpEntity<?>) part).getHeaders());
 		}
 		else {
 			partBody = part;
 		}
 
 		if (partBody instanceof Publisher) {
-			throw new IllegalArgumentException("""
-					Use asyncPart(String, Publisher, Class) \
-					or asyncPart(String, Publisher, ParameterizedTypeReference) \
-					or MultipartBodyBuilder.PublisherEntity""");
+			throw new IllegalArgumentException(
+					"Use asyncPart(String, Publisher, Class)" +
+							" or asyncPart(String, Publisher, ParameterizedTypeReference) or" +
+							" or MultipartBodyBuilder.PublisherEntity");
 		}
 
 		DefaultPartBuilder builder = new DefaultPartBuilder(name, partHeaders, partBody);
@@ -275,9 +276,11 @@ public final class MultipartBodyBuilder {
 
 		private final String name;
 
-		protected @Nullable HttpHeaders headers;
+		@Nullable
+		protected HttpHeaders headers;
 
-		protected final @Nullable Object body;
+		@Nullable
+		protected final Object body;
 
 		public DefaultPartBuilder(String name, @Nullable HttpHeaders headers, @Nullable Object body) {
 			this.name = name;
@@ -361,12 +364,12 @@ public final class MultipartBodyBuilder {
 	 * @param <P> the publisher
 	 */
 	static final class PublisherEntity<T, P extends Publisher<T>> extends HttpEntity<P>
-			implements ResolvableTypeProvider {
+			implements ResolvableTypeProvider  {
 
 		private final ResolvableType resolvableType;
 
 		PublisherEntity(
-				@Nullable HttpHeaders headers, P publisher, ResolvableType resolvableType) {
+				@Nullable MultiValueMap<String, String> headers, P publisher, ResolvableType resolvableType) {
 
 			super(publisher, headers);
 			Assert.notNull(publisher, "'publisher' must not be null");
@@ -378,6 +381,7 @@ public final class MultipartBodyBuilder {
 		 * Return the element type for the {@code Publisher} body.
 		 */
 		@Override
+		@NonNull
 		public ResolvableType getResolvableType() {
 			return this.resolvableType;
 		}

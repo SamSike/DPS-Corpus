@@ -30,11 +30,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.support.cluster.ClusterServiceHelper.lookupService;
 import static org.apache.camel.support.cluster.ClusterServiceHelper.mandatoryLookupService;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ClusterServiceSelectorTest {
 
@@ -55,7 +51,6 @@ public class ClusterServiceSelectorTest {
         } finally {
             if (context != null) {
                 context.stop();
-                assertTrue(context.isStopped());
             }
         }
     }
@@ -75,7 +70,6 @@ public class ClusterServiceSelectorTest {
         } finally {
             if (context != null) {
                 context.stop();
-                assertTrue(context.isStopped());
             }
         }
     }
@@ -98,7 +92,6 @@ public class ClusterServiceSelectorTest {
         } finally {
             if (context != null) {
                 context.stop();
-                assertTrue(context.isStopped());
             }
         }
     }
@@ -119,7 +112,6 @@ public class ClusterServiceSelectorTest {
         } finally {
             if (context != null) {
                 context.stop();
-                assertTrue(context.isStopped());
             }
         }
     }
@@ -140,7 +132,6 @@ public class ClusterServiceSelectorTest {
         } finally {
             if (context != null) {
                 context.stop();
-                assertTrue(context.isStopped());
             }
         }
     }
@@ -161,7 +152,6 @@ public class ClusterServiceSelectorTest {
         } finally {
             if (context != null) {
                 context.stop();
-                assertTrue(context.isStopped());
             }
         }
     }
@@ -197,7 +187,6 @@ public class ClusterServiceSelectorTest {
         } finally {
             if (context != null) {
                 context.stop();
-                assertTrue(context.isStopped());
             }
         }
     }
@@ -226,7 +215,6 @@ public class ClusterServiceSelectorTest {
         } finally {
             if (context != null) {
                 context.stop();
-                assertTrue(context.isStopped());
             }
         }
     }
@@ -257,7 +245,6 @@ public class ClusterServiceSelectorTest {
         } finally {
             if (context != null) {
                 context.stop();
-                assertTrue(context.isStopped());
             }
         }
     }
@@ -280,7 +267,6 @@ public class ClusterServiceSelectorTest {
         } finally {
             if (context != null) {
                 context.stop();
-                assertTrue(context.isStopped());
             }
         }
     }
@@ -302,13 +288,12 @@ public class ClusterServiceSelectorTest {
         } finally {
             if (context != null) {
                 context.stop();
-                assertTrue(context.isStopped());
             }
         }
     }
 
     @Test
-    public void testMandatoryLookupFailure() {
+    public void testMandatoryLookupFailure() throws Exception {
         CamelContext context = null;
 
         try {
@@ -318,13 +303,12 @@ public class ClusterServiceSelectorTest {
         } finally {
             if (context != null) {
                 context.stop();
-                assertTrue(context.isStopped());
             }
         }
     }
 
     @Test
-    public void testMandatoryLookupFailureWithoutSelector() {
+    public void testMandatoryLookupFailureWithoutSelector() throws Exception {
         CamelContext context = null;
 
         try {
@@ -334,7 +318,6 @@ public class ClusterServiceSelectorTest {
         } finally {
             if (context != null) {
                 context.stop();
-                assertTrue(context.isStopped());
             }
         }
     }
@@ -343,27 +326,27 @@ public class ClusterServiceSelectorTest {
     // Helpers
     // **************************************
 
-    private static final class DummyClusterService1 extends AbstractCamelClusterService {
+    private final class DummyClusterService1 extends AbstractCamelClusterService {
         public DummyClusterService1() {
         }
 
         @Override
-        protected CamelClusterView createView(String namespace) {
+        protected CamelClusterView createView(String namespace) throws Exception {
             return new DummyClusterServiceView(this, namespace);
         }
     }
 
-    private static final class DummyClusterService2 extends AbstractCamelClusterService {
+    private final class DummyClusterService2 extends AbstractCamelClusterService {
         public DummyClusterService2() {
         }
 
         @Override
-        protected CamelClusterView createView(String namespace) {
+        protected CamelClusterView createView(String namespace) throws Exception {
             return new DummyClusterServiceView(this, namespace);
         }
     }
 
-    private static final class DummyClusterServiceView extends AbstractCamelClusterView {
+    private final class DummyClusterServiceView extends AbstractCamelClusterView {
 
         public DummyClusterServiceView(CamelClusterService cluster, String namespace) {
             super(cluster, namespace);
@@ -382,6 +365,14 @@ public class ClusterServiceSelectorTest {
         @Override
         public List<CamelClusterMember> getMembers() {
             return Collections.emptyList();
+        }
+
+        @Override
+        protected void doStart() throws Exception {
+        }
+
+        @Override
+        protected void doStop() throws Exception {
         }
 
         private final class DummyClusterServiceMember implements CamelClusterMember {

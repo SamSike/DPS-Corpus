@@ -20,10 +20,7 @@ import org.apache.camel.component.extension.ComponentVerifierExtension;
 import org.apache.camel.component.extension.ComponentVerifierExtension.VerificationError;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ComponentVerifierTest {
 
@@ -44,27 +41,32 @@ public class ComponentVerifierTest {
 
     @Test
     public void testNullCode() {
-
-        IllegalArgumentException exp = assertThrows(IllegalArgumentException.class,
-                () -> VerificationError.asCode(null), "Code must not be null");
-
-        assertTrue(exp.getMessage().contains("null"));
+        try {
+            VerificationError.asCode(null);
+            fail("Code must not be null");
+        } catch (IllegalArgumentException exp) {
+            assertTrue(exp.getMessage().contains("null"));
+        }
     }
 
     @Test
     public void testNullAttribute() {
-
-        IllegalArgumentException exp = assertThrows(IllegalArgumentException.class,
-                () -> VerificationError.asAttribute(null), "Attribute must not be null");
-
-        assertTrue(exp.getMessage().contains("null"));
+        try {
+            VerificationError.asAttribute(null);
+            fail("Attribute must not be null");
+        } catch (IllegalArgumentException exp) {
+            assertTrue(exp.getMessage().contains("null"));
+        }
     }
 
     @Test
     public void testScopeFromString() {
         assertEquals(ComponentVerifierExtension.Scope.PARAMETERS, ComponentVerifierExtension.Scope.fromString("PaRaMeTeRS"));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> ComponentVerifierExtension.Scope.fromString("unknown"));
+        try {
+            ComponentVerifierExtension.Scope.fromString("unknown");
+            fail();
+        } catch (IllegalArgumentException exp) {
+        }
     }
 }

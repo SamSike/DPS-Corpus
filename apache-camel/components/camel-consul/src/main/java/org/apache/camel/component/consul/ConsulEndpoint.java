@@ -18,6 +18,7 @@ package org.apache.camel.component.consul;
 
 import java.util.Optional;
 
+import com.orbitz.consul.Consul;
 import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
@@ -28,7 +29,6 @@ import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.util.ObjectHelper;
-import org.kiwiproject.consul.Consul;
 
 /**
  * Integrate with <a href="https://www.consul.io/">Consul</a> service discovery and configuration store.
@@ -91,18 +91,13 @@ public class ConsulEndpoint extends DefaultEndpoint {
         return this.apiEndpoint;
     }
 
-    public Consul getConsul() throws Exception {
-        lock.lock();
-        try {
-            if (consul == null && ObjectHelper.isEmpty(getConfiguration().getConsulClient())) {
-                consul = configuration.createConsulClient(getCamelContext());
-            } else if (ObjectHelper.isNotEmpty(getConfiguration().getConsulClient())) {
-                consul = getConfiguration().getConsulClient();
-            }
-
-            return consul;
-        } finally {
-            lock.unlock();
+    public synchronized Consul getConsul() throws Exception {
+        if (consul == null && ObjectHelper.isEmpty(getConfiguration().getConsulClient())) {
+            consul = configuration.createConsulClient(getCamelContext());
+        } else if (ObjectHelper.isNotEmpty(getConfiguration().getConsulClient())) {
+            consul = getConfiguration().getConsulClient();
         }
+
+        return consul;
     }
 }

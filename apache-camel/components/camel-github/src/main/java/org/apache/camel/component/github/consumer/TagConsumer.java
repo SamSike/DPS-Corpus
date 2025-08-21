@@ -16,10 +16,9 @@
  */
 package org.apache.camel.component.github.consumer;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
+import java.util.Stack;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -29,10 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TagConsumer extends AbstractGitHubConsumer {
+    private static final transient Logger LOG = LoggerFactory.getLogger(TagConsumer.class);
 
-    private static final Logger LOG = LoggerFactory.getLogger(TagConsumer.class);
-
-    private final List<String> tagNames = new ArrayList<>();
+    private List<String> tagNames = new ArrayList<>();
 
     public TagConsumer(GitHubEndpoint endpoint, Processor processor) throws Exception {
         super(endpoint, processor);
@@ -48,7 +46,7 @@ public class TagConsumer extends AbstractGitHubConsumer {
     protected int poll() throws Exception {
         List<RepositoryTag> tags = getRepositoryService().getTags(getRepository());
         // In the end, we want tags oldest to newest.
-        ArrayDeque<RepositoryTag> newTags = new ArrayDeque<>();
+        Stack<RepositoryTag> newTags = new Stack<>();
         for (RepositoryTag tag : tags) {
             if (!tagNames.contains(tag.getName())) {
                 newTags.push(tag);
@@ -56,13 +54,12 @@ public class TagConsumer extends AbstractGitHubConsumer {
             }
         }
 
-        Queue<Object> exchanges = new ArrayDeque<>();
-        while (!newTags.isEmpty()) {
+        while (!newTags.empty()) {
             RepositoryTag newTag = newTags.pop();
             Exchange e = createExchange(true);
             e.getIn().setBody(newTag);
-            exchanges.add(e);
+            getProcessor().process(e);
         }
-        return processBatch(exchanges);
+        return newTags.size();
     }
 }

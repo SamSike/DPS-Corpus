@@ -23,17 +23,7 @@ import jakarta.xml.bind.annotation.XmlType;
 @XmlEnum
 public enum ParseUnknownFunctions {
 
-
-    /**
-     * Functions have to be known by the parser, or by the catalog.
-     * 
-     */
     FAIL,
-
-    /**
-     * Unknown functions (parser or catalog) will be passed on as plain SQL.
-     * 
-     */
     IGNORE;
 
     public String value() {

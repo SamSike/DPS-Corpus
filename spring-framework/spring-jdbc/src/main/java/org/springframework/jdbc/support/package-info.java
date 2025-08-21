@@ -6,7 +6,9 @@
  * <p>Can be used independently, for example in custom JDBC access code,
  * or in JDBC-based O/R mapping layers.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jdbc.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

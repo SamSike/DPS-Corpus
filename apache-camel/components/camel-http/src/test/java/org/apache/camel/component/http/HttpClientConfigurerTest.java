@@ -26,14 +26,14 @@ public class HttpClientConfigurerTest extends CamelTestSupport {
     private HttpClientConfigurer configurer;
 
     @Test
-    public void testHttpClientConfigurer() {
+    public void testHttpClientConfigurer() throws Exception {
         HttpClientConfigurer gotConfigurer
                 = getMandatoryEndpoint("http://www.google.com/search", HttpEndpoint.class).getHttpClientConfigurer();
         assertSame(configurer, gotConfigurer);
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             public void configure() {
                 // add configurer to http component

@@ -18,8 +18,10 @@ package org.apache.camel.component.http;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.component.http.handler.BasicValidationHandler;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.http.HttpMethods.GET;
@@ -37,24 +39,28 @@ public class HttpProducerSelectMethodTest extends BaseHttpTest {
 
     private Exchange exchange;
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+    public void setUp() throws Exception {
+        super.setUp();
+
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext())
-                .register("/myget", new BasicValidationHandler(GET.name(), null, null, getExpectedContent()))
-                .register("/mypost", new BasicValidationHandler(POST.name(), null, null, getExpectedContent()))
-                .register("/myget2", new BasicValidationHandler(GET.name(), "q=Camel", null, getExpectedContent()))
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext())
+                .registerHandler("/myget", new BasicValidationHandler(GET.name(), null, null, getExpectedContent()))
+                .registerHandler("/mypost", new BasicValidationHandler(POST.name(), null, null, getExpectedContent()))
+                .registerHandler("/myget2", new BasicValidationHandler(GET.name(), "q=Camel", null, getExpectedContent()))
                 .create();
         localServer.start();
 
-        baseUrl = "http://localhost:" + localServer.getLocalPort();
+        baseUrl = "http://" + localServer.getInetAddress().getHostName() + ":" + localServer.getLocalPort();
 
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() throws Exception {
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (localServer != null) {
             localServer.stop();

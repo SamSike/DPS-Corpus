@@ -46,10 +46,10 @@ public class AggregateShouldSkipFilteredExchangesTest extends ContextTestSupport
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 Predicate goodWord = body().contains("World");
 
                 from("direct:start").filter(goodWord).to("mock:filtered").aggregate(header("id"), new MyAggregationStrategy())

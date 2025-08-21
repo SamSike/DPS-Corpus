@@ -119,11 +119,6 @@ public class STS2Producer extends DefaultProducer {
             } else {
                 throw new IllegalArgumentException("Role Session Name needs to be specified for assumeRole operation");
             }
-            if (ObjectHelper.isNotEmpty(exchange.getIn().getHeader(STS2Constants.ASSUME_ROLE_DURATION_SECONDS))) {
-                Integer durationInSeconds
-                        = exchange.getIn().getHeader(STS2Constants.ASSUME_ROLE_DURATION_SECONDS, Integer.class);
-                builder.durationSeconds(durationInSeconds);
-            }
             AssumeRoleResponse result;
             try {
                 result = stsClient.assumeRole(builder.build());

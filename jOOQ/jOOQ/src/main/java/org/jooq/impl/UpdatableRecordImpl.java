@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -59,12 +59,10 @@ import static org.jooq.impl.RecordDelegate.RecordLifecycleType.REFRESH;
 import static org.jooq.impl.RecordDelegate.RecordLifecycleType.STORE;
 import static org.jooq.impl.RecordDelegate.RecordLifecycleType.UPDATE;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
-import static org.jooq.impl.Tools.recordDirtyTrackingPredicate;
 import static org.jooq.impl.Tools.settings;
 
 import java.math.BigInteger;
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -86,10 +84,8 @@ import org.jooq.TableRecord;
 import org.jooq.UniqueKey;
 import org.jooq.UpdatableRecord;
 import org.jooq.conf.UpdateUnchangedRecords;
-import org.jooq.exception.ControlFlowSignal;
 import org.jooq.exception.DataChangedException;
 import org.jooq.exception.NoDataFoundException;
-import org.jooq.impl.BatchCRUD.QueryCollectorSignal;
 import org.jooq.tools.JooqLogger;
 import org.jooq.tools.StringUtils;
 
@@ -101,12 +97,7 @@ import org.jooq.tools.StringUtils;
  * @author Lukas Eder
  */
 @org.jooq.Internal
-public class UpdatableRecordImpl<R extends UpdatableRecord<R>>
-extends TableRecordImpl<R>
-implements
-    UpdatableRecord<R>
-{
-
+public class UpdatableRecordImpl<R extends UpdatableRecord<R>> extends TableRecordImpl<R> implements UpdatableRecord<R> {
     private static final JooqLogger      log                        = JooqLogger.getLogger(UpdatableRecordImpl.class);
     private static final Set<SQLDialect> NO_SUPPORT_FOR_UPDATE      = SQLDialect.supportedBy(SQLITE);
     private static final Set<SQLDialect> NO_SUPPORT_MERGE_RETURNING = SQLDialect.supportedBy(DERBY, IGNITE);
@@ -117,13 +108,7 @@ implements
 
     @Override
     public Record key() {
-        AbstractRecord result = Tools.newRecord(
-            fetched,
-            configuration(),
-            AbstractRecord.class,
-            (AbstractRow<AbstractRecord>) Tools.row0(getPrimaryKey().getFieldsArray())
-        ).operate(null);
-
+        AbstractRecord result = Tools.newRecord(fetched, AbstractRecord.class, (AbstractRow<AbstractRecord>) Tools.row0(getPrimaryKey().getFieldsArray())).operate(null);
         result.setValues(result.fields.fields.fields, this);
         return result;
     }
@@ -147,10 +132,7 @@ implements
 
     @Override
     final UniqueKey<R> getPrimaryKey() {
-        if (getTable() instanceof AbstractTable<R> t)
-            return t.getPrimaryKeyWithEmbeddables();
-        else
-            return getTable().getPrimaryKey();
+        return getTable().getPrimaryKey();
     }
 
     @Override
@@ -216,11 +198,10 @@ implements
             executeUpdate = fetched;
         }
         else {
-            ObjIntPredicate<Record> dirty = recordDirtyTrackingPredicate(this);
             for (TableField<R, ?> field : keys) {
 
-                // If any primary key value is null or touched
-                if (dirty.test(this, indexOf(field)) ||
+                // If any primary key value is null or changed
+                if (changed(field) ||
 
                 // [#3237] or if a NOT NULL primary key value is null, then execute an INSERT
                    (field.getDataType().nullable() == false && get(field) == null)) {
@@ -307,13 +288,13 @@ implements
         Q query,
         boolean merge
     ) {
-        List<Field<?>> touchedFields = addTouchedValues(storeFields, query, merge);
+        List<Field<?>> changedFields = addChangedValues(storeFields, query, merge);
 
         // [#11552] These conditions should be omitted in the MERGE case
         if (!merge)
             Tools.addConditions(query, this, keys);
 
-        if (touchedFields.isEmpty()) {
+        if (changedFields.isEmpty()) {
             switch (StringUtils.defaultIfNull(create().settings().getUpdateUnchangedRecords(), UpdateUnchangedRecords.NEVER)) {
 
                 // Don't store records if no value was set by client code
@@ -339,9 +320,9 @@ implements
                 case SET_NON_PRIMARY_KEY_TO_RECORD_VALUES:
                     for (Field<?> field : storeFields)
                         if (!asList(keys).contains(field))
-                            touched(field, true);
+                            changed(field, true);
 
-                    addTouchedValues(storeFields, query, merge);
+                    addChangedValues(storeFields, query, merge);
                     break;
             }
         }
@@ -370,27 +351,18 @@ implements
             ? null
             : setReturningIfNeeded(query);
 
-        try {
-            int result = query.execute();
-            checkIfChanged(result, version, timestamp);
+        int result = query.execute();
+        checkIfChanged(result, version, timestamp);
 
-            if (result > 0) {
-                for (Field<?> touchedField : touchedFields)
-                    touched(touchedField, false);
+        if (result > 0) {
+            for (Field<?> changedField : changedFields)
+                changed(changedField, false);
 
-                // [#1859] If an update was successful try fetching the generated
-                getReturningIfNeeded(query, key);
-            }
-
-            return result;
+            // [#1859] If an update was successful try fetching the generated
+            getReturningIfNeeded(query, key);
         }
 
-        // [#8283] Pass optimistic locking information on to BatchCRUD, if applicable
-        catch (QueryCollectorSignal e) {
-            e.version = version;
-            e.timestamp = timestamp;
-            throw e;
-        }
+        return result;
     }
 
     @Override
@@ -408,7 +380,6 @@ implements
 
     private final int delete0() {
         TableField<R, ?>[] keys = getPrimaryKey().getFieldsArray();
-        Throwable t = null;
 
         try {
             DeleteQuery<R> delete1 = create().deleteQuery(getTable());
@@ -431,21 +402,11 @@ implements
             return result;
         }
 
-        catch (Throwable t0) {
-            t = t0;
-            throw t0;
-        }
-
         // [#673] [#3363] If store() is called after delete(), a new INSERT should
         // be executed and the record should be recreated
         finally {
-
-            // [#18261] These state changes must happen only on successful deletion
-            if (t == null || t instanceof ControlFlowSignal) {
-                touched(true);
-                asList(originals).replaceAll(e -> null);
-                fetched = false;
-            }
+            changed(true);
+            fetched = false;
         }
     }
 
@@ -487,7 +448,7 @@ implements
         // [#3359] The "fetched" flag must be set to false to enforce INSERT statements on
         // subsequent store() calls - when Settings.updatablePrimaryKeys is set.
         // R vs Record casting is needed in Java 8 it seems
-        return (R) Tools.newRecord(false, configuration(), (Table<Record>) (Table) getTable())
+        return (R) Tools.newRecord(false, (Table<Record>) (Table) getTable(), configuration())
                     .operate((Record copy) -> {
 
                         // Copy all fields. This marks them all as isChanged, which is important
@@ -543,10 +504,7 @@ implements
             Object thatObject = record.original(field);
 
             if (!StringUtils.equals(thisObject, thatObject))
-                if (thisObject == null && !fetched)
-                    throw new DataChangedException("Cannot detect whether unversioned record has been changed. Either make sure the record is fetched from the database, or use a version or timestamp column to version the record.");
-                else
-                    throw new DataChangedException("Database record has been changed");
+                throw new DataChangedException("Database record has been changed");
         }
     }
 

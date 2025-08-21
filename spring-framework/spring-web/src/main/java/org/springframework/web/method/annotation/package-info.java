@@ -1,7 +1,9 @@
 /**
  * Support classes for annotation-based handler method processing.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.method.annotation;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

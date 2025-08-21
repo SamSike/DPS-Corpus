@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,10 +30,10 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 /**
  * @author Rob Harrop
  */
-class SchemaValidationTests {
+public class SchemaValidationTests {
 
 	@Test
-	void withAutodetection() {
+	public void withAutodetection() throws Exception {
 		DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(bf);
 		assertThatExceptionOfType(BeansException.class).isThrownBy(() ->
@@ -42,7 +42,7 @@ class SchemaValidationTests {
 	}
 
 	@Test
-	void withExplicitValidationMode() {
+	public void withExplicitValidationMode() throws Exception {
 		DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(bf);
 		reader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);
@@ -52,7 +52,7 @@ class SchemaValidationTests {
 	}
 
 	@Test
-	void loadDefinitions() {
+	public void loadDefinitions() throws Exception {
 		DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(bf);
 		reader.setValidationMode(XmlBeanDefinitionReader.VALIDATION_XSD);

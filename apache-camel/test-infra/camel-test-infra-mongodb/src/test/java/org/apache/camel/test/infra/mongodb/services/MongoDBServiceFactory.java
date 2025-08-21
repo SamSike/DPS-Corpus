@@ -19,11 +19,22 @@ package org.apache.camel.test.infra.mongodb.services;
 
 import org.apache.camel.test.infra.common.services.SimpleTestServiceBuilder;
 import org.apache.camel.test.infra.common.services.SingletonService;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 public final class MongoDBServiceFactory {
     static class SingletonMongoDBService extends SingletonService<MongoDBService> implements MongoDBService {
         public SingletonMongoDBService(MongoDBService service, String name) {
             super(service, name);
+        }
+
+        @Override
+        public void beforeAll(ExtensionContext extensionContext) {
+            addToStore(extensionContext);
+        }
+
+        @Override
+        public void afterAll(ExtensionContext extensionContext) {
+            // NO-OP
         }
 
         @Override
@@ -36,6 +47,9 @@ public final class MongoDBServiceFactory {
             return getService().getConnectionAddress();
         }
     }
+
+    private static SimpleTestServiceBuilder<MongoDBService> instance;
+    private static MongoDBService service;
 
     private MongoDBServiceFactory() {
 
@@ -53,20 +67,16 @@ public final class MongoDBServiceFactory {
     }
 
     public static MongoDBService createSingletonService() {
-        return SingletonServiceHolder.INSTANCE;
-    }
+        if (service == null) {
+            if (instance == null) {
+                instance = builder();
+                instance.addLocalMapping(() -> new SingletonMongoDBService(new MongoDBLocalContainerService(), "mongo-db"))
+                        .addRemoteMapping(MongoDBRemoteService::new);
+            }
 
-    private static class SingletonServiceHolder {
-        static final MongoDBService INSTANCE;
-        static {
-            SimpleTestServiceBuilder<MongoDBService> instance = builder();
-            instance.addLocalMapping(() -> new SingletonMongoDBService(new MongoDBLocalContainerService(), "mongo-db"))
-                    .addRemoteMapping(MongoDBRemoteService::new);
-
-            INSTANCE = instance.build();
+            service = instance.build();
         }
-    }
 
-    public static class MongoDBRemoteService extends MongoDBRemoteInfraService implements MongoDBService {
+        return service;
     }
 }

@@ -27,16 +27,6 @@ public class RobotFrameworkArguments {
 
     private final List<String> arguments = new ArrayList<>();
 
-    public void addFileToArguments(String name, String flag) {
-        if (name != null) {
-            File file = new File(name);
-            if (isFileValid(file)) {
-                String path = !file.getName().equalsIgnoreCase("NONE") ? file.getPath() : file.getName();
-                add(flag, path);
-            }
-        }
-    }
-
     public void addFileToArguments(File file, String flag) {
         if (isFileValid(file)) {
             String path = !file.getName().equalsIgnoreCase("NONE") ? file.getPath() : file.getName();
@@ -45,7 +35,7 @@ public class RobotFrameworkArguments {
     }
 
     protected boolean isFileValid(File file) {
-        return file != null && file.getPath() != null && !file.getPath().isEmpty();
+        return file != null && file.getPath() != null && !file.getPath().equals("");
     }
 
     public void addNonEmptyStringToArguments(String variableToAdd, String flag) {
@@ -97,7 +87,7 @@ public class RobotFrameworkArguments {
     }
 
     public String[] toArray() {
-        return arguments.toArray(new String[0]);
+        return arguments.toArray(new String[arguments.size()]);
     }
 
 }

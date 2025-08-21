@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,10 +36,10 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
  * @author Juergen Hoeller
  * @author Chris Beams
  */
-class FactoryMethodTests {
+public class FactoryMethodTests {
 
 	@Test
-	void testFactoryMethodsSingletonOnTargetClass() {
+	public void testFactoryMethodsSingletonOnTargetClass() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -73,7 +73,7 @@ class FactoryMethodTests {
 	}
 
 	@Test
-	void testFactoryMethodsWithInvalidDestroyMethod() {
+	public void testFactoryMethodsWithInvalidDestroyMethod() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -82,7 +82,7 @@ class FactoryMethodTests {
 	}
 
 	@Test
-	void testFactoryMethodsWithNullInstance() {
+	public void testFactoryMethodsWithNullInstance() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -93,29 +93,29 @@ class FactoryMethodTests {
 	}
 
 	@Test
-	void testFactoryMethodsWithNullValue() {
+	public void testFactoryMethodsWithNullValue() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
 
 		FactoryMethods fm = (FactoryMethods) xbf.getBean("fullWithNull");
 		assertThat(fm.getNum()).isEqualTo(27);
-		assertThat(fm.getName()).isNull();
+		assertThat(fm.getName()).isEqualTo(null);
 		assertThat(fm.getTestBean().getName()).isEqualTo("Juergen");
 
 		fm = (FactoryMethods) xbf.getBean("fullWithGenericNull");
 		assertThat(fm.getNum()).isEqualTo(27);
-		assertThat(fm.getName()).isNull();
+		assertThat(fm.getName()).isEqualTo(null);
 		assertThat(fm.getTestBean().getName()).isEqualTo("Juergen");
 
 		fm = (FactoryMethods) xbf.getBean("fullWithNamedNull");
 		assertThat(fm.getNum()).isEqualTo(27);
-		assertThat(fm.getName()).isNull();
+		assertThat(fm.getName()).isEqualTo(null);
 		assertThat(fm.getTestBean().getName()).isEqualTo("Juergen");
 	}
 
 	@Test
-	void testFactoryMethodsWithAutowire() {
+	public void testFactoryMethodsWithAutowire() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -127,7 +127,7 @@ class FactoryMethodTests {
 	}
 
 	@Test
-	void testProtectedFactoryMethod() {
+	public void testProtectedFactoryMethod() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -137,7 +137,7 @@ class FactoryMethodTests {
 	}
 
 	@Test
-	void testPrivateFactoryMethod() {
+	public void testPrivateFactoryMethod() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -147,7 +147,7 @@ class FactoryMethodTests {
 	}
 
 	@Test
-	void testFactoryMethodsPrototypeOnTargetClass() {
+	public void testFactoryMethodsPrototypeOnTargetClass() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -191,7 +191,7 @@ class FactoryMethodTests {
 	 * Tests where the static factory method is on a different class.
 	 */
 	@Test
-	void testFactoryMethodsOnExternalClass() {
+	public void testFactoryMethodsOnExternalClass() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -199,8 +199,8 @@ class FactoryMethodTests {
 		assertThat(xbf.getType("externalFactoryMethodWithoutArgs")).isEqualTo(TestBean.class);
 		assertThat(xbf.getType("externalFactoryMethodWithArgs")).isEqualTo(TestBean.class);
 		String[] names = xbf.getBeanNamesForType(TestBean.class);
-		assertThat(Arrays.asList(names)).contains("externalFactoryMethodWithoutArgs");
-		assertThat(Arrays.asList(names)).contains("externalFactoryMethodWithArgs");
+		assertThat(Arrays.asList(names).contains("externalFactoryMethodWithoutArgs")).isTrue();
+		assertThat(Arrays.asList(names).contains("externalFactoryMethodWithArgs")).isTrue();
 
 		TestBean tb = (TestBean) xbf.getBean("externalFactoryMethodWithoutArgs");
 		assertThat(tb.getAge()).isEqualTo(2);
@@ -212,12 +212,12 @@ class FactoryMethodTests {
 		assertThat(xbf.getType("externalFactoryMethodWithoutArgs")).isEqualTo(TestBean.class);
 		assertThat(xbf.getType("externalFactoryMethodWithArgs")).isEqualTo(TestBean.class);
 		names = xbf.getBeanNamesForType(TestBean.class);
-		assertThat(Arrays.asList(names)).contains("externalFactoryMethodWithoutArgs");
-		assertThat(Arrays.asList(names)).contains("externalFactoryMethodWithArgs");
+		assertThat(Arrays.asList(names).contains("externalFactoryMethodWithoutArgs")).isTrue();
+		assertThat(Arrays.asList(names).contains("externalFactoryMethodWithArgs")).isTrue();
 	}
 
 	@Test
-	void testInstanceFactoryMethodWithoutArgs() {
+	public void testInstanceFactoryMethodWithoutArgs() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -235,7 +235,7 @@ class FactoryMethodTests {
 	}
 
 	@Test
-	void testFactoryMethodNoMatchingStaticMethod() {
+	public void testFactoryMethodNoMatchingStaticMethod() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -244,7 +244,7 @@ class FactoryMethodTests {
 	}
 
 	@Test
-	void testNonExistingFactoryMethod() {
+	public void testNonExistingFactoryMethod() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -254,7 +254,7 @@ class FactoryMethodTests {
 	}
 
 	@Test
-	void testFactoryMethodArgumentsForNonExistingMethod() {
+	public void testFactoryMethodArgumentsForNonExistingMethod() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -264,7 +264,7 @@ class FactoryMethodTests {
 	}
 
 	@Test
-	void testCanSpecifyFactoryMethodArgumentsOnFactoryMethodPrototype() {
+	public void testCanSpecifyFactoryMethodArgumentsOnFactoryMethodPrototype() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -282,7 +282,7 @@ class FactoryMethodTests {
 		FactoryMethods fm2 = (FactoryMethods) xbf.getBean("testBeanOnlyPrototype", tbArg2);
 		assertThat(fm2.getTestBean().getName()).isEqualTo("arg2");
 		assertThat(fm2.getNum()).isEqualTo(fm1.getNum());
-		assertThat(fm2.getStringValue()).isEqualTo("testBeanOnlyPrototypeDISetterString");
+		assertThat("testBeanOnlyPrototypeDISetterString").isEqualTo(fm2.getStringValue());
 		assertThat(fm2.getStringValue()).isEqualTo(fm2.getStringValue());
 		// The TestBean reference is resolved to a prototype in the factory
 		assertThat(fm2.getTestBean()).isSameAs(fm2.getTestBean());
@@ -300,7 +300,7 @@ class FactoryMethodTests {
 	}
 
 	@Test
-	void testCanSpecifyFactoryMethodArgumentsOnSingleton() {
+	public void testCanSpecifyFactoryMethodArgumentsOnSingleton() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -315,7 +315,7 @@ class FactoryMethodTests {
 	}
 
 	@Test
-	void testCannotSpecifyFactoryMethodArgumentsOnSingletonAfterCreation() {
+	public void testCannotSpecifyFactoryMethodArgumentsOnSingletonAfterCreation() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -329,7 +329,7 @@ class FactoryMethodTests {
 	}
 
 	@Test
-	void testFactoryMethodWithDifferentReturnType() {
+	public void testFactoryMethodWithDifferentReturnType() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));
@@ -337,22 +337,24 @@ class FactoryMethodTests {
 		// Check that listInstance is not considered a bean of type FactoryMethods.
 		assertThat(List.class.isAssignableFrom(xbf.getType("listInstance"))).isTrue();
 		String[] names = xbf.getBeanNamesForType(FactoryMethods.class);
-		assertThat(Arrays.asList(names)).doesNotContain("listInstance");
+		boolean condition1 = !Arrays.asList(names).contains("listInstance");
+		assertThat(condition1).isTrue();
 		names = xbf.getBeanNamesForType(List.class);
-		assertThat(Arrays.asList(names)).contains("listInstance");
+		assertThat(Arrays.asList(names).contains("listInstance")).isTrue();
 
 		xbf.preInstantiateSingletons();
 		assertThat(List.class.isAssignableFrom(xbf.getType("listInstance"))).isTrue();
 		names = xbf.getBeanNamesForType(FactoryMethods.class);
-		assertThat(Arrays.asList(names)).doesNotContain("listInstance");
+		boolean condition = !Arrays.asList(names).contains("listInstance");
+		assertThat(condition).isTrue();
 		names = xbf.getBeanNamesForType(List.class);
-		assertThat(Arrays.asList(names)).contains("listInstance");
+		assertThat(Arrays.asList(names).contains("listInstance")).isTrue();
 		List<?> list = (List<?>) xbf.getBean("listInstance");
 		assertThat(list).isEqualTo(Collections.EMPTY_LIST);
 	}
 
 	@Test
-	void testFactoryMethodForJavaMailSession() {
+	public void testFactoryMethodForJavaMailSession() {
 		DefaultListableBeanFactory xbf = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(xbf);
 		reader.loadBeanDefinitions(new ClassPathResource("factory-methods.xml", getClass()));

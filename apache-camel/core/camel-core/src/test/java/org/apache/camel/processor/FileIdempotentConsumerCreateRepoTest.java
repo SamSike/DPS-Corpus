@@ -46,7 +46,7 @@ public class FileIdempotentConsumerCreateRepoTest extends TestSupport {
         assertStoreExists(store);
     }
 
-    private void assertStoreExists(File store) {
+    private void assertStoreExists(File store) throws Exception {
         // Given
         IdempotentRepository repo = fileIdempotentRepository(store);
 

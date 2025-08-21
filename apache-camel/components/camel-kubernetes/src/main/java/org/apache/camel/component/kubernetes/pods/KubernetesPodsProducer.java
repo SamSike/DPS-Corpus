@@ -73,8 +73,8 @@ public class KubernetesPodsProducer extends DefaultProducer {
                 doCreatePod(exchange);
                 break;
 
-            case KubernetesOperations.UPDATE_POD_OPERATION:
-                doUpdatePod(exchange);
+            case KubernetesOperations.REPLACE_POD_OPERATION:
+                doReplacePod(exchange);
                 break;
 
             case KubernetesOperations.DELETE_POD_OPERATION:
@@ -87,33 +87,28 @@ public class KubernetesPodsProducer extends DefaultProducer {
     }
 
     protected void doList(Exchange exchange) {
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
         PodList podList;
-
-        if (ObjectHelper.isEmpty(namespace)) {
-            podList = getEndpoint().getKubernetesClient().pods().inAnyNamespace().list();
+        String namespaceName = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
+        if (ObjectHelper.isNotEmpty(namespaceName)) {
+            podList = getEndpoint().getKubernetesClient().pods().inNamespace(namespaceName).list();
         } else {
-            podList = getEndpoint().getKubernetesClient().pods().inNamespace(namespace).list();
+            podList = getEndpoint().getKubernetesClient().pods().inAnyNamespace().list();
         }
-
         prepareOutboundMessage(exchange, podList.getItems());
     }
 
     protected void doListPodsByLabel(Exchange exchange) {
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
         Map<String, String> labels = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_PODS_LABELS, Map.class);
-        PodList podList;
-
         if (ObjectHelper.isEmpty(labels)) {
             LOG.error("Get pods by labels require specify a labels set");
             throw new IllegalArgumentException("Get pods by labels require specify a labels set");
         }
 
-        if (ObjectHelper.isEmpty(namespace)) {
-            podList = getEndpoint().getKubernetesClient().pods().inAnyNamespace().withLabels(labels).list();
-        } else {
-            podList = getEndpoint().getKubernetesClient().pods().inNamespace(namespace).withLabels(labels).list();
-        }
+        PodList podList = getEndpoint().getKubernetesClient()
+                .pods()
+                .inAnyNamespace()
+                .withLabels(labels)
+                .list();
 
         prepareOutboundMessage(exchange, podList.getItems());
     }
@@ -134,8 +129,8 @@ public class KubernetesPodsProducer extends DefaultProducer {
         prepareOutboundMessage(exchange, pod);
     }
 
-    protected void doUpdatePod(Exchange exchange) {
-        doCreateOrUpdatePod(exchange, "Update", Resource::update);
+    protected void doReplacePod(Exchange exchange) {
+        doCreateOrUpdatePod(exchange, "Replace", Resource::replace);
     }
 
     protected void doCreatePod(Exchange exchange) {

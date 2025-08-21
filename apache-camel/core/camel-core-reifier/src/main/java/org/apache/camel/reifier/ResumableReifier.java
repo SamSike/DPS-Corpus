@@ -19,6 +19,7 @@ package org.apache.camel.reifier;
 import java.util.Optional;
 
 import org.apache.camel.CamelContextAware;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
@@ -44,8 +45,8 @@ public class ResumableReifier extends ProcessorReifier<ResumableDefinition> {
         ResumeStrategy resumeStrategy = resolveResumeStrategy();
         ObjectHelper.notNull(resumeStrategy, ResumeStrategy.DEFAULT_NAME, definition);
 
-        if (resumeStrategy instanceof CamelContextAware camelContextAware) {
-            camelContextAware.setCamelContext(camelContext);
+        if (resumeStrategy instanceof CamelContextAware) {
+            ((CamelContextAware) resumeStrategy).setCamelContext(camelContext);
         }
 
         route.setResumeStrategy(resumeStrategy);
@@ -64,13 +65,13 @@ public class ResumableReifier extends ProcessorReifier<ResumableDefinition> {
                 strategy = mandatoryLookup(ref, ResumeStrategy.class);
             } else {
                 final FactoryFinder factoryFinder
-                        = camelContext.getCamelContextExtension().getFactoryFinder(FactoryFinder.DEFAULT_PATH);
+                        = camelContext.adapt(ExtendedCamelContext.class).getFactoryFinder(FactoryFinder.DEFAULT_PATH);
 
                 final ResumeStrategyConfiguration resumeStrategyConfiguration = definition.getResumeStrategyConfiguration();
                 Optional<ResumeStrategy> resumeStrategyOptional = factoryFinder.newInstance(
                         resumeStrategyConfiguration.resumeStrategyService(), ResumeStrategy.class);
 
-                if (resumeStrategyOptional.isEmpty()) {
+                if (!resumeStrategyOptional.isPresent()) {
                     throw new RuntimeCamelException("Cannot find a resume strategy class in the classpath or the registry");
                 }
 

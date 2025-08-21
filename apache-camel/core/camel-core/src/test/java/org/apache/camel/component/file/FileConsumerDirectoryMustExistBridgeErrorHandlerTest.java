@@ -19,10 +19,7 @@ package org.apache.camel.component.file;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledOnOs;
 
-@DisabledOnOs(architectures = { "s390x" },
-              disabledReason = "This test does not run reliably on s390x (see CAMEL-21438)")
 public class FileConsumerDirectoryMustExistBridgeErrorHandlerTest extends ContextTestSupport {
 
     @Test
@@ -36,17 +33,16 @@ public class FileConsumerDirectoryMustExistBridgeErrorHandlerTest extends Contex
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead"));
 
-                from(fileUri(testDirectory("new", false), "?initialDelay=1&delay=1"
-                                                          + "&autoCreate=false&directoryMustExist=true&bridgeErrorHandler=true"))
-                        .routeId("foo")
-                        .autoStartup(false)
-                        .to("mock:result");
+                from(fileUri("?initialDelay=1&delay=1"
+                             + "&autoCreate=false&directoryMustExist=true&bridgeErrorHandler=true")).routeId("foo")
+                                     .noAutoStartup()
+                                     .to("mock:result");
             }
         };
     }

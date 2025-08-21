@@ -71,16 +71,16 @@ public class AsyncNestedTripleChoiceIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.addComponent("async", new MyAsyncComponent());
 
                 from("direct:start").choice().when(header("foo").isGreaterThan(1)).to("async:bye:camel").choice()
                         .when(header("foo").isGreaterThan(5)).to("async:bye:camel2")
-                        .choice().when(header("foo").isGreaterThan(7)).to("mock:verybig").otherwise().to("mock:big").end().endChoice()
-                        .otherwise().to("mock:med").end().endChoice().otherwise()
+                        .choice().when(header("foo").isGreaterThan(7)).to("mock:verybig").otherwise().to("mock:big").endChoice()
+                        .otherwise().to("mock:med").endChoice().otherwise()
                         .to("mock:low").end();
             }
         };

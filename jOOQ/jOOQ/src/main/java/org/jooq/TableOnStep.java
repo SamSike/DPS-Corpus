@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -163,7 +163,7 @@ public interface TableOnStep<R extends Record> {
     TableOnConditionStep<R> on(String sql, QueryPart... parts);
 
     /**
-     * Join a table with the <code>USING(column [, column…])</code> syntax.
+     * Join a table with the <code>USING(column [, column...])</code> syntax.
      * <p>
      * If this is not supported by your RDBMS, then jOOQ will try to emulate
      * this behaviour using the information provided in this query.
@@ -173,7 +173,7 @@ public interface TableOnStep<R extends Record> {
     Table<Record> using(Field<?>... fields);
 
     /**
-     * Join a table with the <code>USING(column [, column…])</code> syntax.
+     * Join a table with the <code>USING(column [, column...])</code> syntax.
      * <p>
      * If this is not supported by your RDBMS, then jOOQ will try to emulate
      * this behaviour using the information provided in this query.
@@ -190,10 +190,7 @@ public interface TableOnStep<R extends Record> {
      *
      * @see #onKey(ForeignKey)
      * @throws DataAccessException If there is no non-ambiguous key definition
-     *             known to jOOQ. <em>Please note that if you evolve your
-     *             schema, a previously non-ambiguous <code>ON KEY</code> clause
-     *             can suddenly become ambiguous on an existing query, so use
-     *             this clause with care.</em>
+     *             known to jOOQ
      */
     @NotNull
     @Support
@@ -207,10 +204,7 @@ public interface TableOnStep<R extends Record> {
      *
      * @see #onKey(ForeignKey)
      * @throws DataAccessException If there is no non-ambiguous key definition
-     *             known to jOOQ. <em>Please note that if you evolve your
-     *             schema, a previously non-ambiguous <code>ON KEY</code> clause
-     *             can suddenly become ambiguous on an existing query, so use
-     *             this clause with care.</em>
+     *             known to jOOQ
      */
     @NotNull
     @Support
@@ -220,7 +214,7 @@ public interface TableOnStep<R extends Record> {
      * Join the table on a non-ambiguous foreign key relationship between the
      * two joined tables.
      * <p>
-     * An example: <pre><code>
+     * An example: <code><pre>
      * // There is a single foreign key relationship between A and B and it can
      * // be obtained by A.getReferencesTo(B) or vice versa. The order of A and
      * // B is not important
@@ -234,7 +228,7 @@ public interface TableOnStep<R extends Record> {
      * // There are several foreign key relationships between A and B. In order
      * // to disambiguate, you can provide any non-ambiguous foreign key column
      * A.join(B).onKey(B.A_ID);
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support

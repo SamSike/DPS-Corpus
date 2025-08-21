@@ -29,11 +29,9 @@ import org.apache.camel.support.SimpleRegistry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Timeout(30)
 public class JpaProducerWithQueryTest {
 
     protected DefaultCamelContext camelContext;
@@ -123,7 +121,7 @@ public class JpaProducerWithQueryTest {
         params.put("custName", "${body}");
         // bind the params
         registry.bind("params", params);
-        camelContext.getCamelContextExtension().setRegistry(registry);
+        camelContext.setRegistry(registry);
 
         camelContext.addRoutes(new RouteBuilder() {
             @Override

@@ -30,11 +30,9 @@ import org.apache.camel.support.ResourceHelper;
 @Component("mvel")
 public class MvelComponent extends DefaultComponent {
 
-    @Metadata(defaultValue = "true", description = "Sets whether to use resource content cache or not")
-    private boolean contentCache = true;
-    @Metadata
+    @Metadata(defaultValue = "false")
     private boolean allowTemplateFromHeader;
-    @Metadata
+    @Metadata(defaultValue = "false")
     private boolean allowContextMapAll;
 
     public MvelComponent() {
@@ -42,7 +40,7 @@ public class MvelComponent extends DefaultComponent {
 
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        boolean cache = getAndRemoveParameter(parameters, "contentCache", Boolean.class, contentCache);
+        boolean cache = getAndRemoveParameter(parameters, "contentCache", Boolean.class, Boolean.TRUE);
 
         MvelEndpoint answer = new MvelEndpoint(uri, this, remaining);
         answer.setContentCache(cache);
@@ -58,17 +56,6 @@ public class MvelComponent extends DefaultComponent {
         }
 
         return answer;
-    }
-
-    public boolean isContentCache() {
-        return contentCache;
-    }
-
-    /**
-     * Sets whether to use resource content cache or not
-     */
-    public void setContentCache(boolean contentCache) {
-        this.contentCache = contentCache;
     }
 
     public boolean isAllowTemplateFromHeader() {

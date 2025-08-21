@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.jdbc.config;
 
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
 import org.w3c.dom.Element;
 
 import org.springframework.beans.BeanMetadataElement;
@@ -28,6 +27,7 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.ManagedList;
 import org.springframework.jdbc.datasource.init.CompositeDatabasePopulator;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 
@@ -48,7 +48,7 @@ abstract class DatabasePopulatorConfigUtils {
 		}
 	}
 
-	private static @Nullable BeanDefinition createDatabasePopulator(Element element, List<Element> scripts, String execution) {
+	private static BeanDefinition createDatabasePopulator(Element element, List<Element> scripts, String execution) {
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CompositeDatabasePopulator.class);
 
 		boolean ignoreFailedDrops = element.getAttribute("ignore-failures").equals("DROPS");
@@ -80,16 +80,13 @@ abstract class DatabasePopulatorConfigUtils {
 			}
 			delegates.add(delegate.getBeanDefinition());
 		}
-
-		if (delegates.isEmpty()) {
-			return null;
-		}
-
 		builder.addPropertyValue("populators", delegates);
+
 		return builder.getBeanDefinition();
 	}
 
-	private static @Nullable String getSeparator(Element element, Element scriptElement) {
+	@Nullable
+	private static String getSeparator(Element element, Element scriptElement) {
 		String scriptSeparator = scriptElement.getAttribute("separator");
 		if (StringUtils.hasLength(scriptSeparator)) {
 			return scriptSeparator;

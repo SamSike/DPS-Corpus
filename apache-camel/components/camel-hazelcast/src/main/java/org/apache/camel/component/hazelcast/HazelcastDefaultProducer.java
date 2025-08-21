@@ -20,7 +20,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.support.DefaultProducer;
 
 public abstract class HazelcastDefaultProducer extends DefaultProducer {
-    protected HazelcastDefaultProducer(HazelcastDefaultEndpoint endpoint) {
+    public HazelcastDefaultProducer(HazelcastDefaultEndpoint endpoint) {
         super(endpoint);
     }
 

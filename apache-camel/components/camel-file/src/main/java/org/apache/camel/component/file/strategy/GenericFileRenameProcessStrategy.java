@@ -45,8 +45,9 @@ public class GenericFileRenameProcessStrategy<T> extends GenericFileProcessStrat
         if (beginRenamer != null) {
             GenericFile<T> newName = beginRenamer.renameFile(operations, exchange, file);
             GenericFile<T> to = renameFile(operations, file, newName);
-
-            if (endpoint instanceof FileEndpoint fe) {
+            FileEndpoint fe;
+            if (endpoint instanceof FileEndpoint) {
+                fe = (FileEndpoint) endpoint;
                 if (to != null) {
                     to.bindToExchange(exchange, fe.isProbeContentType());
                 }
@@ -72,7 +73,9 @@ public class GenericFileRenameProcessStrategy<T> extends GenericFileProcessStrat
                 // create a copy and bind the file to the exchange to be used by
                 // the renamer to evaluate the file name
                 Exchange copy = ExchangeHelper.createCopy(exchange, true);
-                if (endpoint instanceof FileEndpoint fe) {
+                FileEndpoint fe;
+                if (endpoint instanceof FileEndpoint) {
+                    fe = (FileEndpoint) endpoint;
                     file.bindToExchange(copy, fe.isProbeContentType());
                 } else {
                     file.bindToExchange(copy);
@@ -103,7 +106,9 @@ public class GenericFileRenameProcessStrategy<T> extends GenericFileProcessStrat
                 // create a copy and bind the file to the exchange to be used by
                 // the renamer to evaluate the file name
                 Exchange copy = ExchangeHelper.createCopy(exchange, true);
-                if (endpoint instanceof FileEndpoint fe) {
+                FileEndpoint fe;
+                if (endpoint instanceof FileEndpoint) {
+                    fe = (FileEndpoint) endpoint;
                     file.bindToExchange(copy, fe.isProbeContentType());
                 } else {
                     file.bindToExchange(copy);

@@ -20,7 +20,7 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
-import static org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy.Abort;
+import static org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy.DiscardOldest;
 
 public class ThreadsRejectedPolicyTest extends ContextTestSupport {
 
@@ -43,15 +43,15 @@ public class ThreadsRejectedPolicyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
-                from("direct:start").threads(5, 10).rejectedPolicy(Abort).to("mock:result");
+            public void configure() throws Exception {
+                from("direct:start").threads(5, 10).rejectedPolicy(DiscardOldest).to("mock:result");
 
                 from("direct:foo")
                         // using the builder style
-                        .threads().poolSize(5).maxPoolSize(10).rejectedPolicy(Abort).threadName("myPool")
+                        .threads().poolSize(5).maxPoolSize(10).rejectedPolicy(DiscardOldest).threadName("myPool")
                         .to("mock:result");
             }
         };

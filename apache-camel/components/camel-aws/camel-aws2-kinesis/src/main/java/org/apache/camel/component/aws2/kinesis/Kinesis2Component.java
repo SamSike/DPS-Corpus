@@ -22,16 +22,13 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.support.HealthCheckComponent;
-import org.apache.camel.util.IOHelper;
+import org.apache.camel.support.DefaultComponent;
 
 @Component("aws2-kinesis")
-public class Kinesis2Component extends HealthCheckComponent {
+public class Kinesis2Component extends DefaultComponent {
 
     @Metadata
     private Kinesis2Configuration configuration = new Kinesis2Configuration();
-
-    private KinesisConnection connection = new KinesisConnection();
 
     public Kinesis2Component() {
         this(null);
@@ -48,13 +45,10 @@ public class Kinesis2Component extends HealthCheckComponent {
         configuration.setStreamName(remaining);
         Kinesis2Endpoint endpoint = new Kinesis2Endpoint(uri, configuration, this);
         setProperties(endpoint, parameters);
-        if (!configuration.isUseDefaultCredentialsProvider() && !configuration.isUseProfileCredentialsProvider()
-                && !configuration.isUseSessionCredentials()
-                && configuration.getAmazonKinesisClient() == null
-                && configuration.getAmazonKinesisAsyncClient() == null
+        if (!configuration.isUseDefaultCredentialsProvider() && configuration.getAmazonKinesisClient() == null
                 && (configuration.getAccessKey() == null || configuration.getSecretKey() == null)) {
             throw new IllegalArgumentException(
-                    "useDefaultCredentialsProvider is set to false, useProfileCredentialsProvider is set to false, useSessionCredentials is set to false, AmazonKinesisClient or accessKey and secretKey must be specified");
+                    "useDefaultCredentialsProvider is set to false, AmazonKinesisClient or accessKey and secretKey must be specified");
         }
         return endpoint;
     }
@@ -68,20 +62,5 @@ public class Kinesis2Component extends HealthCheckComponent {
      */
     public void setConfiguration(Kinesis2Configuration configuration) {
         this.configuration = configuration;
-    }
-
-    @Override
-    protected void doStart() throws Exception {
-        // use pre-configured client (if any)
-        connection.setKinesisClient(configuration.getAmazonKinesisClient());
-    }
-
-    @Override
-    protected void doStop() throws Exception {
-        IOHelper.close(connection);
-    }
-
-    public KinesisConnection getConnection() {
-        return connection;
     }
 }

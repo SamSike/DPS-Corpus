@@ -18,8 +18,6 @@ package org.apache.camel.component.aws2.translate.client;
 
 import org.apache.camel.component.aws2.translate.Translate2Configuration;
 import org.apache.camel.component.aws2.translate.client.impl.Translate2ClientIAMOptimized;
-import org.apache.camel.component.aws2.translate.client.impl.Translate2ClientIAMProfileOptimized;
-import org.apache.camel.component.aws2.translate.client.impl.Translate2ClientSessionTokenImpl;
 import org.apache.camel.component.aws2.translate.client.impl.Translate2ClientStandardImpl;
 
 /**
@@ -32,19 +30,12 @@ public final class Translate2ClientFactory {
 
     /**
      * Return the correct aws Translate client (based on remote vs local).
-     *
+     * 
      * @param  configuration configuration
      * @return               TranslateClient
      */
     public static Translate2InternalClient getTranslateClient(Translate2Configuration configuration) {
-        if (Boolean.TRUE.equals(configuration.isUseDefaultCredentialsProvider())) {
-            return new Translate2ClientIAMOptimized(configuration);
-        } else if (Boolean.TRUE.equals(configuration.isUseProfileCredentialsProvider())) {
-            return new Translate2ClientIAMProfileOptimized(configuration);
-        } else if (Boolean.TRUE.equals(configuration.isUseSessionCredentials())) {
-            return new Translate2ClientSessionTokenImpl(configuration);
-        } else {
-            return new Translate2ClientStandardImpl(configuration);
-        }
+        return Boolean.TRUE.equals(configuration.isUseDefaultCredentialsProvider())
+                ? new Translate2ClientIAMOptimized(configuration) : new Translate2ClientStandardImpl(configuration);
     }
 }

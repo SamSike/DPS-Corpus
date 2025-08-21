@@ -24,7 +24,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -39,7 +38,7 @@ public final class PackageHelper {
 
     /**
      * Loads the entire stream into memory as a String and returns it.
-     *
+     * <p/>
      * Warning, don't use for crazy big streams :)
      */
     public static String loadText(InputStream in) throws IOException {
@@ -51,9 +50,7 @@ public final class PackageHelper {
     }
 
     public static String loadText(Path file) throws IOException {
-        try (InputStream is = Files.newInputStream(file)) {
-            return loadText(is);
-        }
+        return loadText(Files.newInputStream(file));
     }
 
     public static void writeText(File file, String text) throws IOException {
@@ -69,7 +66,7 @@ public final class PackageHelper {
 
     /**
      * Parses the text as a map (eg key=value)
-     *
+     * 
      * @param  data the data
      * @return      the map
      */
@@ -92,12 +89,8 @@ public final class PackageHelper {
     }
 
     public static Set<File> findJsonFiles(File rootDir, Set<File> files) {
-        return findJsonFiles(rootDir, files, (f) -> true);
-    }
-
-    public static Set<File> findJsonFiles(File rootDir, Set<File> files, Predicate<File> filter) {
         try (Stream<Path> stream = findJsonFiles(rootDir.toPath())) {
-            stream.map(Path::toFile).filter(filter).forEach(files::add);
+            stream.forEach(p -> files.add(p.toFile()));
         }
         return files;
     }

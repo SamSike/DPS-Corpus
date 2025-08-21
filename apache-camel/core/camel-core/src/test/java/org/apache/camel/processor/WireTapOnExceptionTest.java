@@ -17,6 +17,7 @@
 package org.apache.camel.processor;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.Component;
 import org.apache.camel.Consumer;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
@@ -43,7 +44,7 @@ public class WireTapOnExceptionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
@@ -59,22 +60,22 @@ public class WireTapOnExceptionTest extends ContextTestSupport {
 
     public static final class MyProducerFailEndpoint extends DefaultEndpoint {
         private MyProducerFailEndpoint(String endpointUri, CamelContext camelContext) {
-            super(endpointUri, null);
+            super(endpointUri, (Component) null);
             setCamelContext(camelContext);
         }
 
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             return new DefaultProducer(this) {
                 @Override
-                public void process(Exchange exchange) {
+                public void process(Exchange exchange) throws Exception {
                     throw new IllegalArgumentException("Forced");
                 }
             };
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             return null;
         }
 

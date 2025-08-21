@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -114,6 +114,7 @@ import org.jooq.Table;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.R2DBC.BlockingRecordSubscription;
 import org.jooq.impl.R2DBC.QuerySubscription;
+import org.jooq.impl.R2DBC.ResultSubscriber;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -366,7 +367,7 @@ extends
         ConnectionFactory cf = configuration().connectionFactory();
 
         if (!(cf instanceof NoConnectionFactory))
-            subscriber.onSubscribe(new QuerySubscription<>(this, subscriber, R2DBC::resultSubscriber));
+            subscriber.onSubscribe(new QuerySubscription<>(this, subscriber, ResultSubscriber::new));
         else
             subscriber.onSubscribe(new BlockingRecordSubscription<>(this, subscriber));
     }
@@ -1279,10 +1280,10 @@ extends
         Class<? extends R> recordType;
 
         // TODO [#3185] Pull up getRecordType()
-        if (this instanceof AbstractResultQuery<R> a)
-            recordType = a.getRecordType();
-        else if (this instanceof SelectImpl s)
-            recordType = s.getRecordType();
+        if (this instanceof AbstractResultQuery)
+            recordType = ((AbstractResultQuery<R>) this).getRecordType();
+        else if (this instanceof SelectImpl)
+            recordType = ((SelectImpl) this).getRecordType();
         else
             throw new DataAccessException("Attempt to call fetchArray() on " + getClass());
 
@@ -1465,7 +1466,7 @@ extends
     }
 
     default boolean hasLimit1() {
-        if (this instanceof Select<?> q) {
+        if (this instanceof Select) { Select<?> q = (Select<?>) this;
             SelectQueryImpl<?> s = Tools.selectQueryImpl(q);
 
             if (s != null) {

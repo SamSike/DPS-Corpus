@@ -22,7 +22,6 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 
-import org.apache.camel.Expression;
 import org.apache.camel.spi.Metadata;
 
 /**
@@ -34,38 +33,23 @@ import org.apache.camel.spi.Metadata;
 public class XMLTokenizerExpression extends NamespaceAwareExpression {
 
     @XmlAttribute
-    @Metadata(defaultValue = "i", enums = "i,w,u,t")
+    @Metadata(label = "advanced", enums = "i,w,u,t")
     private String mode;
     @XmlAttribute
-    @Metadata(javaType = "java.lang.Integer")
+    @Metadata(label = "advanced", javaType = "java.lang.Integer")
     private String group;
 
     public XMLTokenizerExpression() {
-    }
-
-    protected XMLTokenizerExpression(XMLTokenizerExpression source) {
-        super(source);
-        this.mode = source.mode;
-        this.group = source.group;
     }
 
     public XMLTokenizerExpression(String expression) {
         super(expression);
     }
 
-    public XMLTokenizerExpression(Expression expression) {
-        setExpressionValue(expression);
-    }
-
     private XMLTokenizerExpression(Builder builder) {
         super(builder);
         this.mode = builder.mode;
         this.group = builder.group;
-    }
-
-    @Override
-    public XMLTokenizerExpression copyDefinition() {
-        return new XMLTokenizerExpression(this);
     }
 
     @Override
@@ -125,14 +109,6 @@ public class XMLTokenizerExpression extends NamespaceAwareExpression {
         }
 
         /**
-         * The extraction mode.
-         */
-        public Builder mode(Mode mode) {
-            this.mode = mode == null ? null : mode.value;
-            return this;
-        }
-
-        /**
          * To group N parts together
          */
         public Builder group(String group) {
@@ -151,23 +127,6 @@ public class XMLTokenizerExpression extends NamespaceAwareExpression {
         @Override
         public XMLTokenizerExpression end() {
             return new XMLTokenizerExpression(this);
-        }
-    }
-
-    /**
-     * {@code Mode} defines the possible extraction modes that can be used.
-     */
-    @XmlTransient
-    public enum Mode {
-        INJECTING_CONTEXTUAL_NAMESPACE_BINDINGS("i"),
-        WRAPPING_EXTRACTED_TOKEN("w"),
-        UNWRAPPING_EXTRACTED_TOKEN("u"),
-        EXTRACTING_TEXT_CONTENT("t");
-
-        private final String value;
-
-        Mode(String value) {
-            this.value = value;
         }
     }
 }

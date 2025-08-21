@@ -16,12 +16,12 @@
  */
 package org.apache.camel.util;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
-import org.apache.camel.ExchangePattern;
 import org.apache.camel.Message;
 import org.apache.camel.StreamCache;
 import org.apache.camel.impl.DefaultCamelContext;
@@ -40,10 +40,10 @@ import static org.junit.jupiter.api.Assertions.*;
 public class MessageHelperTest {
 
     private Message message;
-    private final CamelContext camelContext = new DefaultCamelContext();
+    private CamelContext camelContext = new DefaultCamelContext();
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         message = new DefaultMessage(camelContext);
     }
 
@@ -51,7 +51,7 @@ public class MessageHelperTest {
      * Tests the {@link MessageHelper#resetStreamCache(Message)} method
      */
     @Test
-    public void testResetStreamCache() {
+    public void testResetStreamCache() throws Exception {
         // should not throw exceptions when Message or message body is null
         MessageHelper.resetStreamCache(null);
         MessageHelper.resetStreamCache(message);
@@ -63,11 +63,11 @@ public class MessageHelperTest {
                 reset.set(true);
             }
 
-            public void writeTo(OutputStream os) {
+            public void writeTo(OutputStream os) throws IOException {
                 // noop
             }
 
-            public StreamCache copy(Exchange exchange) {
+            public StreamCache copy(Exchange exchange) throws IOException {
                 return null;
             }
 
@@ -79,30 +79,25 @@ public class MessageHelperTest {
             public long length() {
                 return 0;
             }
-
-            @Override
-            public long position() {
-                return 0;
-            }
         });
         MessageHelper.resetStreamCache(message);
         assertTrue(reset.get(), "Should have reset the stream cache");
     }
 
     @Test
-    public void testGetContentType() {
+    public void testGetContentType() throws Exception {
         message.setHeader(Exchange.CONTENT_TYPE, "text/xml");
         assertEquals("text/xml", MessageHelper.getContentType(message));
     }
 
     @Test
-    public void testGetContentEncpding() {
+    public void testGetContentEncpding() throws Exception {
         message.setHeader(Exchange.CONTENT_ENCODING, "iso-8859-1");
         assertEquals("iso-8859-1", MessageHelper.getContentEncoding(message));
     }
 
     @Test
-    public void testCopyHeaders() {
+    public void testCopyHeaders() throws Exception {
         Message source = message;
         Message target = new DefaultMessage(camelContext);
 
@@ -117,7 +112,7 @@ public class MessageHelperTest {
     }
 
     @Test
-    public void testCopyHeadersOverride() {
+    public void testCopyHeadersOverride() throws Exception {
         Message source = message;
         Message target = new DefaultMessage(camelContext);
 
@@ -132,7 +127,7 @@ public class MessageHelperTest {
     }
 
     @Test
-    public void testCopyHeadersWithHeaderFilterStrategy() {
+    public void testCopyHeadersWithHeaderFilterStrategy() throws Exception {
         CamelContext context = new DefaultCamelContext();
         context.start();
 
@@ -150,13 +145,13 @@ public class MessageHelperTest {
 
         MessageHelper.copyHeaders(source, target, headerFilterStrategy, true);
 
-        assertNull(target.getHeader("foo"));
+        assertEquals(null, target.getHeader("foo"));
         assertEquals(456, target.getHeader("bar"));
         context.stop();
     }
 
     @Test
-    public void testDumpAsXmlPlainBody() {
+    public void testDumpAsXmlPlainBody() throws Exception {
         CamelContext context = new DefaultCamelContext();
         context.start();
 
@@ -173,7 +168,7 @@ public class MessageHelperTest {
     }
 
     @Test
-    public void testDumpAsXmlBody() {
+    public void testDumpAsXmlBody() throws Exception {
         CamelContext context = new DefaultCamelContext();
         context.start();
 
@@ -193,7 +188,7 @@ public class MessageHelperTest {
     }
 
     @Test
-    public void testDumpAsXmlNoBody() {
+    public void testDumpAsXmlNoBody() throws Exception {
         CamelContext context = new DefaultCamelContext();
         context.start();
 
@@ -205,8 +200,7 @@ public class MessageHelperTest {
 
         String out = MessageHelper.dumpAsXml(message, false);
 
-        assertEquals("<message exchangeId=\"" + message.getExchange().getExchangeId()
-                     + "\" exchangePattern=\"InOnly\" exchangeType=\"org.apache.camel.support.DefaultExchange\" messageType=\"org.apache.camel.support.DefaultMessage\">"
+        assertEquals("<message exchangeId=\"" + message.getExchange().getExchangeId() + "\">"
                      + "\n  <headers>\n    <header key=\"foo\" type=\"java.lang.Integer\">123</header>\n  </headers>\n</message>",
                 out);
 
@@ -214,11 +208,11 @@ public class MessageHelperTest {
     }
 
     @Test
-    public void testDumpAsXmlNoBodyIndent() {
+    public void testDumpAsXmlNoBodyIndent() throws Exception {
         CamelContext context = new DefaultCamelContext();
         context.start();
 
-        message = new DefaultExchange(context, ExchangePattern.InOut).getIn();
+        message = new DefaultExchange(context).getIn();
 
         // xml message body
         message.setBody("Hello World");
@@ -226,8 +220,7 @@ public class MessageHelperTest {
 
         String out = MessageHelper.dumpAsXml(message, false, 2);
 
-        assertEquals("  <message exchangeId=\"" + message.getExchange().getExchangeId()
-                     + "\" exchangePattern=\"InOut\" exchangeType=\"org.apache.camel.support.DefaultExchange\" messageType=\"org.apache.camel.support.DefaultMessage\">"
+        assertEquals("  <message exchangeId=\"" + message.getExchange().getExchangeId() + "\">"
                      + "\n    <headers>\n      <header key=\"foo\" type=\"java.lang.Integer\">123</header>\n    </headers>\n  </message>",
                 out);
 
@@ -235,7 +228,7 @@ public class MessageHelperTest {
     }
 
     @Test
-    public void testMessageDumpBody() {
+    public void testMessageDumpBody() throws Exception {
         CamelContext context = new DefaultCamelContext();
         context.start();
 
@@ -246,56 +239,6 @@ public class MessageHelperTest {
         message.setHeader("foo", 123);
 
         String out = MessageHelper.dumpAsXml(message, true);
-        assertNotNull(out);
-        assertTrue(out.contains("Hello World"));
-    }
-
-    @Test
-    public void testMessageDumpBodyJSon() {
-        CamelContext context = new DefaultCamelContext();
-        context.start();
-
-        message = new DefaultExchange(context).getIn();
-
-        // xml message body
-        message.setBody("Hello World");
-        message.setHeader("foo", 123);
-
-        String out = MessageHelper.dumpAsJSon(message, true);
-        assertNotNull(out);
-        assertTrue(out.contains("Hello World"));
-    }
-
-    @Test
-    public void testDumpAsXmlBodyJSon() {
-        CamelContext context = new DefaultCamelContext();
-        context.start();
-
-        message = new DefaultExchange(context).getIn();
-
-        // xml message body
-        message.setBody("<?xml version=\"1.0\"?><hi>Hello World</hi>");
-        message.setHeader("foo", 123);
-
-        String out = MessageHelper.dumpAsJSon(message);
-        // xml is escaped in json output
-        assertTrue(out.contains(message.getExchange().getExchangeId()), "Should contain exchangeId");
-
-        context.stop();
-    }
-
-    @Test
-    public void testMessageDumpBodyIndentJSon() {
-        CamelContext context = new DefaultCamelContext();
-        context.start();
-
-        message = new DefaultExchange(context).getIn();
-
-        // xml message body
-        message.setBody("Hello World");
-        message.setHeader("foo", 123);
-
-        String out = MessageHelper.dumpAsJSon(message, true, 4);
         assertNotNull(out);
         assertTrue(out.contains("Hello World"));
     }

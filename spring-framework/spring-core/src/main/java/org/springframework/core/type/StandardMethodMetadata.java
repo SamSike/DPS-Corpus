@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.core.annotation.MergedAnnotations.SearchStrategy;
 import org.springframework.core.annotation.RepeatableContainers;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.MultiValueMap;
 
@@ -52,9 +51,9 @@ public class StandardMethodMetadata implements MethodMetadata {
 	/**
 	 * Create a new StandardMethodMetadata wrapper for the given Method.
 	 * @param introspectedMethod the Method to introspect
-	 * @deprecated in favor of obtaining instances via {@link AnnotationMetadata}
+	 * @deprecated since 5.2 in favor of obtaining instances via {@link AnnotationMetadata}
 	 */
-	@Deprecated(since = "5.2")
+	@Deprecated
 	public StandardMethodMetadata(Method introspectedMethod) {
 		this(introspectedMethod, false);
 	}
@@ -69,8 +68,10 @@ public class StandardMethodMetadata implements MethodMetadata {
 	 * {@link org.springframework.core.annotation.AnnotationAttributes} for compatibility
 	 * with ASM-based {@link AnnotationMetadata} implementations
 	 * @since 3.1.1
+	 * @deprecated since 5.2 in favor of obtaining instances via {@link AnnotationMetadata}
 	 */
-	StandardMethodMetadata(Method introspectedMethod, boolean nestedAnnotationsAsMap) {
+	@Deprecated
+	public StandardMethodMetadata(Method introspectedMethod, boolean nestedAnnotationsAsMap) {
 		Assert.notNull(introspectedMethod, "Method must not be null");
 		this.introspectedMethod = introspectedMethod;
 		this.nestedAnnotationsAsMap = nestedAnnotationsAsMap;
@@ -131,7 +132,8 @@ public class StandardMethodMetadata implements MethodMetadata {
 	}
 
 	@Override
-	public @Nullable Map<String, @Nullable Object> getAnnotationAttributes(String annotationName, boolean classValuesAsString) {
+	@Nullable
+	public Map<String, Object> getAnnotationAttributes(String annotationName, boolean classValuesAsString) {
 		if (this.nestedAnnotationsAsMap) {
 			return MethodMetadata.super.getAnnotationAttributes(annotationName, classValuesAsString);
 		}
@@ -140,8 +142,8 @@ public class StandardMethodMetadata implements MethodMetadata {
 	}
 
 	@Override
-	@SuppressWarnings("NullAway") // Null-safety of Java super method not yet managed
-	public @Nullable MultiValueMap<String, @Nullable Object> getAllAnnotationAttributes(String annotationName, boolean classValuesAsString) {
+	@Nullable
+	public MultiValueMap<String, Object> getAllAnnotationAttributes(String annotationName, boolean classValuesAsString) {
 		if (this.nestedAnnotationsAsMap) {
 			return MethodMetadata.super.getAllAnnotationAttributes(annotationName, classValuesAsString);
 		}
@@ -149,11 +151,10 @@ public class StandardMethodMetadata implements MethodMetadata {
 				annotationName, classValuesAsString, false);
 	}
 
-
 	@Override
-	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof StandardMethodMetadata that &&
-				this.introspectedMethod.equals(that.introspectedMethod)));
+	public boolean equals(@Nullable Object obj) {
+		return ((this == obj) || ((obj instanceof StandardMethodMetadata) &&
+				this.introspectedMethod.equals(((StandardMethodMetadata) obj).introspectedMethod)));
 	}
 
 	@Override
@@ -164,11 +165,6 @@ public class StandardMethodMetadata implements MethodMetadata {
 	@Override
 	public String toString() {
 		return this.introspectedMethod.toString();
-	}
-
-
-	static MethodMetadata from(Method introspectedMethod) {
-		return new StandardMethodMetadata(introspectedMethod, true);
 	}
 
 }

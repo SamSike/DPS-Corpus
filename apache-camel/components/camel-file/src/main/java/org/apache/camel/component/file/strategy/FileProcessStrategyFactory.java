@@ -23,7 +23,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Expression;
 import org.apache.camel.LoggingLevel;
-import org.apache.camel.component.file.FileConstants;
 import org.apache.camel.component.file.GenericFileExclusiveReadLockStrategy;
 import org.apache.camel.component.file.GenericFileProcessStrategy;
 import org.apache.camel.component.file.GenericFileProcessStrategyFactory;
@@ -45,77 +44,59 @@ public final class FileProcessStrategyFactory implements GenericFileProcessStrat
         boolean isMove = moveExpression != null || preMoveExpression != null || moveFailedExpression != null;
 
         if (isDelete) {
-            return newGenericFileDeleteProcessStrategy(params, preMoveExpression, moveFailedExpression);
+            GenericFileDeleteProcessStrategy<File> strategy = new GenericFileDeleteProcessStrategy<>();
+            strategy.setExclusiveReadLockStrategy(getExclusiveReadLockStrategy(params));
+            if (preMoveExpression != null) {
+                GenericFileExpressionRenamer<File> renamer = new GenericFileExpressionRenamer<>();
+                renamer.setExpression(preMoveExpression);
+                strategy.setBeginRenamer(renamer);
+            }
+            if (moveFailedExpression != null) {
+                GenericFileExpressionRenamer<File> renamer = new GenericFileExpressionRenamer<>();
+                renamer.setExpression(moveFailedExpression);
+                strategy.setFailureRenamer(renamer);
+            }
+            return strategy;
         } else if (isMove || isNoop) {
-            return newGenericFileRenameProcessStrategy(context, params, isNoop, moveExpression, preMoveExpression,
-                    moveFailedExpression);
+            GenericFileRenameProcessStrategy<File> strategy = new GenericFileRenameProcessStrategy<>();
+            strategy.setExclusiveReadLockStrategy(getExclusiveReadLockStrategy(params));
+            if (!isNoop) {
+                // move on commit is only possible if not noop
+                if (moveExpression != null) {
+                    GenericFileExpressionRenamer<File> renamer = new GenericFileExpressionRenamer<>();
+                    renamer.setExpression(moveExpression);
+                    strategy.setCommitRenamer(renamer);
+                } else {
+                    strategy.setCommitRenamer(getDefaultCommitRenamer(context));
+                }
+            }
+            // both move and noop supports pre move
+            if (preMoveExpression != null) {
+                GenericFileExpressionRenamer<File> renamer = new GenericFileExpressionRenamer<>();
+                renamer.setExpression(preMoveExpression);
+                strategy.setBeginRenamer(renamer);
+            }
+            // both move and noop supports move failed
+            if (moveFailedExpression != null) {
+                GenericFileExpressionRenamer<File> renamer = new GenericFileExpressionRenamer<>();
+                renamer.setExpression(moveFailedExpression);
+                strategy.setFailureRenamer(renamer);
+            }
+            return strategy;
         } else {
             // default strategy will move files in a .camel/ subfolder where the
             // file was consumed
-            return newGenericFileRenameProcessStrategy(context, params);
+            GenericFileRenameProcessStrategy<File> strategy = new GenericFileRenameProcessStrategy<>();
+            strategy.setExclusiveReadLockStrategy(getExclusiveReadLockStrategy(params));
+            strategy.setCommitRenamer(getDefaultCommitRenamer(context));
+            return strategy;
         }
-    }
-
-    private static GenericFileRenameProcessStrategy<File> newGenericFileRenameProcessStrategy(
-            CamelContext context, Map<String, Object> params) {
-        GenericFileRenameProcessStrategy<File> strategy = new GenericFileRenameProcessStrategy<>();
-        strategy.setExclusiveReadLockStrategy(getExclusiveReadLockStrategy(params));
-        strategy.setCommitRenamer(getDefaultCommitRenamer(context));
-        return strategy;
-    }
-
-    private static GenericFileRenameProcessStrategy<File> newGenericFileRenameProcessStrategy(
-            CamelContext context, Map<String, Object> params, boolean isNoop, Expression moveExpression,
-            Expression preMoveExpression, Expression moveFailedExpression) {
-        GenericFileRenameProcessStrategy<File> strategy = new GenericFileRenameProcessStrategy<>();
-        strategy.setExclusiveReadLockStrategy(getExclusiveReadLockStrategy(params));
-        if (!isNoop) {
-            // move on commit is only possible if not noop
-            if (moveExpression != null) {
-                GenericFileExpressionRenamer<File> renamer = new GenericFileExpressionRenamer<>();
-                renamer.setExpression(moveExpression);
-                strategy.setCommitRenamer(renamer);
-            } else {
-                strategy.setCommitRenamer(getDefaultCommitRenamer(context));
-            }
-        }
-        // both move and noop supports pre move
-        if (preMoveExpression != null) {
-            GenericFileExpressionRenamer<File> renamer = new GenericFileExpressionRenamer<>();
-            renamer.setExpression(preMoveExpression);
-            strategy.setBeginRenamer(renamer);
-        }
-        // both move and noop supports move failed
-        if (moveFailedExpression != null) {
-            GenericFileExpressionRenamer<File> renamer = new GenericFileExpressionRenamer<>();
-            renamer.setExpression(moveFailedExpression);
-            strategy.setFailureRenamer(renamer);
-        }
-        return strategy;
-    }
-
-    private static GenericFileDeleteProcessStrategy<File> newGenericFileDeleteProcessStrategy(
-            Map<String, Object> params, Expression preMoveExpression, Expression moveFailedExpression) {
-        GenericFileDeleteProcessStrategy<File> strategy = new GenericFileDeleteProcessStrategy<>();
-        strategy.setExclusiveReadLockStrategy(getExclusiveReadLockStrategy(params));
-        if (preMoveExpression != null) {
-            GenericFileExpressionRenamer<File> renamer = new GenericFileExpressionRenamer<>();
-            renamer.setExpression(preMoveExpression);
-            strategy.setBeginRenamer(renamer);
-        }
-        if (moveFailedExpression != null) {
-            GenericFileExpressionRenamer<File> renamer = new GenericFileExpressionRenamer<>();
-            renamer.setExpression(moveFailedExpression);
-            strategy.setFailureRenamer(renamer);
-        }
-        return strategy;
     }
 
     private static GenericFileExpressionRenamer<File> getDefaultCommitRenamer(CamelContext context) {
         // use context to lookup language to let it be loose coupled
         Language language = context.resolveLanguage("file");
-        Expression expression
-                = language.createExpression("${file:parent}/" + FileConstants.DEFAULT_SUB_FOLDER + "/${file:onlyname}");
+        Expression expression = language.createExpression("${file:parent}/.camel/${file:onlyname}");
         return new GenericFileExpressionRenamer<>(expression);
     }
 
@@ -128,12 +109,6 @@ public final class FileProcessStrategyFactory implements GenericFileProcessStrat
         }
 
         // no explicit strategy set then fallback to readLock option
-        return fallbackToReadLock(params);
-    }
-
-    private static GenericFileExclusiveReadLockStrategy<File> fallbackToReadLock(
-            Map<String, Object> params) {
-        GenericFileExclusiveReadLockStrategy<File> strategy = null;
         String readLock = (String) params.get("readLock");
         if (ObjectHelper.isNotEmpty(readLock)) {
             if ("none".equals(readLock) || "false".equals(readLock)) {
@@ -145,163 +120,131 @@ public final class FileProcessStrategyFactory implements GenericFileProcessStrat
             } else if ("rename".equals(readLock)) {
                 strategy = new FileRenameExclusiveReadLockStrategy();
             } else if ("changed".equals(readLock)) {
-                strategy = newStrategyForChanged(params);
+                FileChangedExclusiveReadLockStrategy readLockStrategy = new FileChangedExclusiveReadLockStrategy();
+                Long minLength = (Long) params.get("readLockMinLength");
+                if (minLength != null) {
+                    readLockStrategy.setMinLength(minLength);
+                }
+                Long minAge = (Long) params.get("readLockMinAge");
+                if (null != minAge) {
+                    readLockStrategy.setMinAge(minAge);
+                }
+                strategy = readLockStrategy;
             } else if ("idempotent".equals(readLock)) {
-                strategy = newStrategyForIdempotent(params);
+                FileIdempotentRepositoryReadLockStrategy readLockStrategy = new FileIdempotentRepositoryReadLockStrategy();
+                Boolean readLockRemoveOnRollback = (Boolean) params.get("readLockRemoveOnRollback");
+                if (readLockRemoveOnRollback != null) {
+                    readLockStrategy.setRemoveOnRollback(readLockRemoveOnRollback);
+                }
+                Boolean readLockRemoveOnCommit = (Boolean) params.get("readLockRemoveOnCommit");
+                if (readLockRemoveOnCommit != null) {
+                    readLockStrategy.setRemoveOnCommit(readLockRemoveOnCommit);
+                }
+                IdempotentRepository repo = (IdempotentRepository) params.get("readLockIdempotentRepository");
+                if (repo != null) {
+                    readLockStrategy.setIdempotentRepository(repo);
+                }
+                Integer readLockIdempotentReleaseDelay = (Integer) params.get("readLockIdempotentReleaseDelay");
+                if (readLockIdempotentReleaseDelay != null) {
+                    readLockStrategy.setReadLockIdempotentReleaseDelay(readLockIdempotentReleaseDelay);
+                }
+                Boolean readLockIdempotentReleaseAsync = (Boolean) params.get("readLockIdempotentReleaseAsync");
+                if (readLockIdempotentReleaseAsync != null) {
+                    readLockStrategy.setReadLockIdempotentReleaseAsync(readLockIdempotentReleaseAsync);
+                }
+                Integer readLockIdempotentReleaseAsyncPoolSize = (Integer) params.get("readLockIdempotentReleaseAsyncPoolSize");
+                if (readLockIdempotentReleaseAsyncPoolSize != null) {
+                    readLockStrategy.setReadLockIdempotentReleaseAsyncPoolSize(readLockIdempotentReleaseAsyncPoolSize);
+                }
+                ScheduledExecutorService readLockIdempotentReleaseExecutorService
+                        = (ScheduledExecutorService) params.get("readLockIdempotentReleaseExecutorService");
+                if (readLockIdempotentReleaseExecutorService != null) {
+                    readLockStrategy.setReadLockIdempotentReleaseExecutorService(readLockIdempotentReleaseExecutorService);
+                }
+                strategy = readLockStrategy;
             } else if ("idempotent-changed".equals(readLock)) {
-                strategy = newStrategyForIdempotentChanged(params);
+                FileIdempotentChangedRepositoryReadLockStrategy readLockStrategy
+                        = new FileIdempotentChangedRepositoryReadLockStrategy();
+                Boolean readLockRemoveOnRollback = (Boolean) params.get("readLockRemoveOnRollback");
+                if (readLockRemoveOnRollback != null) {
+                    readLockStrategy.setRemoveOnRollback(readLockRemoveOnRollback);
+                }
+                Boolean readLockRemoveOnCommit = (Boolean) params.get("readLockRemoveOnCommit");
+                if (readLockRemoveOnCommit != null) {
+                    readLockStrategy.setRemoveOnCommit(readLockRemoveOnCommit);
+                }
+                IdempotentRepository repo = (IdempotentRepository) params.get("readLockIdempotentRepository");
+                if (repo != null) {
+                    readLockStrategy.setIdempotentRepository(repo);
+                }
+                Long minLength = (Long) params.get("readLockMinLength");
+                if (minLength != null) {
+                    readLockStrategy.setMinLength(minLength);
+                }
+                Long minAge = (Long) params.get("readLockMinAge");
+                if (null != minAge) {
+                    readLockStrategy.setMinAge(minAge);
+                }
+                Integer readLockIdempotentReleaseDelay = (Integer) params.get("readLockIdempotentReleaseDelay");
+                if (readLockIdempotentReleaseDelay != null) {
+                    readLockStrategy.setReadLockIdempotentReleaseDelay(readLockIdempotentReleaseDelay);
+                }
+                Boolean readLockIdempotentReleaseAsync = (Boolean) params.get("readLockIdempotentReleaseAsync");
+                if (readLockIdempotentReleaseAsync != null) {
+                    readLockStrategy.setReadLockIdempotentReleaseAsync(readLockIdempotentReleaseAsync);
+                }
+                Integer readLockIdempotentReleaseAsyncPoolSize = (Integer) params.get("readLockIdempotentReleaseAsyncPoolSize");
+                if (readLockIdempotentReleaseAsyncPoolSize != null) {
+                    readLockStrategy.setReadLockIdempotentReleaseAsyncPoolSize(readLockIdempotentReleaseAsyncPoolSize);
+                }
+                ScheduledExecutorService readLockIdempotentReleaseExecutorService
+                        = (ScheduledExecutorService) params.get("readLockIdempotentReleaseExecutorService");
+                if (readLockIdempotentReleaseExecutorService != null) {
+                    readLockStrategy.setReadLockIdempotentReleaseExecutorService(readLockIdempotentReleaseExecutorService);
+                }
+                strategy = readLockStrategy;
             } else if ("idempotent-rename".equals(readLock)) {
-                strategy = newStrategyForIdempotentRename(params);
+                FileIdempotentRenameRepositoryReadLockStrategy readLockStrategy
+                        = new FileIdempotentRenameRepositoryReadLockStrategy();
+                Boolean readLockRemoveOnRollback = (Boolean) params.get("readLockRemoveOnRollback");
+                if (readLockRemoveOnRollback != null) {
+                    readLockStrategy.setRemoveOnRollback(readLockRemoveOnRollback);
+                }
+                Boolean readLockRemoveOnCommit = (Boolean) params.get("readLockRemoveOnCommit");
+                if (readLockRemoveOnCommit != null) {
+                    readLockStrategy.setRemoveOnCommit(readLockRemoveOnCommit);
+                }
+                IdempotentRepository repo = (IdempotentRepository) params.get("readLockIdempotentRepository");
+                if (repo != null) {
+                    readLockStrategy.setIdempotentRepository(repo);
+                }
+                strategy = readLockStrategy;
             }
 
             if (strategy != null) {
-                setupStrategy(params, strategy);
+                Long timeout = (Long) params.get("readLockTimeout");
+                if (timeout != null) {
+                    strategy.setTimeout(timeout);
+                }
+                Long checkInterval = (Long) params.get("readLockCheckInterval");
+                if (checkInterval != null) {
+                    strategy.setCheckInterval(checkInterval);
+                }
+                LoggingLevel readLockLoggingLevel = (LoggingLevel) params.get("readLockLoggingLevel");
+                if (readLockLoggingLevel != null) {
+                    strategy.setReadLockLoggingLevel(readLockLoggingLevel);
+                }
+                Boolean readLockMarkerFile = (Boolean) params.get("readLockMarkerFile");
+                if (readLockMarkerFile != null) {
+                    strategy.setMarkerFiler(readLockMarkerFile);
+                }
+                Boolean readLockDeleteOrphanLockFiles = (Boolean) params.get("readLockDeleteOrphanLockFiles");
+                if (readLockDeleteOrphanLockFiles != null) {
+                    strategy.setDeleteOrphanLockFiles(readLockDeleteOrphanLockFiles);
+                }
             }
         }
 
-        return strategy;
-    }
-
-    private static void setupStrategy(Map<String, Object> params, GenericFileExclusiveReadLockStrategy<File> strategy) {
-        Long timeout = (Long) params.get("readLockTimeout");
-        if (timeout != null) {
-            strategy.setTimeout(timeout);
-        }
-        Long checkInterval = (Long) params.get("readLockCheckInterval");
-        if (checkInterval != null) {
-            strategy.setCheckInterval(checkInterval);
-        }
-        LoggingLevel readLockLoggingLevel = (LoggingLevel) params.get("readLockLoggingLevel");
-        if (readLockLoggingLevel != null) {
-            strategy.setReadLockLoggingLevel(readLockLoggingLevel);
-        }
-        Boolean readLockMarkerFile = (Boolean) params.get("readLockMarkerFile");
-        if (readLockMarkerFile != null) {
-            strategy.setMarkerFiler(readLockMarkerFile);
-        }
-        Boolean readLockDeleteOrphanLockFiles = (Boolean) params.get("readLockDeleteOrphanLockFiles");
-        if (readLockDeleteOrphanLockFiles != null) {
-            strategy.setDeleteOrphanLockFiles(readLockDeleteOrphanLockFiles);
-        }
-    }
-
-    private static GenericFileExclusiveReadLockStrategy<File> newStrategyForChanged(
-            Map<String, Object> params) {
-        GenericFileExclusiveReadLockStrategy<File> strategy;
-        FileChangedExclusiveReadLockStrategy readLockStrategy = new FileChangedExclusiveReadLockStrategy();
-        Long minLength = (Long) params.get("readLockMinLength");
-        if (minLength != null) {
-            readLockStrategy.setMinLength(minLength);
-        }
-        Long minAge = (Long) params.get("readLockMinAge");
-        if (null != minAge) {
-            readLockStrategy.setMinAge(minAge);
-        }
-        strategy = readLockStrategy;
-        return strategy;
-    }
-
-    private static GenericFileExclusiveReadLockStrategy<File> newStrategyForIdempotentRename(
-            Map<String, Object> params) {
-        GenericFileExclusiveReadLockStrategy<File> strategy;
-        FileIdempotentRenameRepositoryReadLockStrategy readLockStrategy
-                = new FileIdempotentRenameRepositoryReadLockStrategy();
-        Boolean readLockRemoveOnRollback = (Boolean) params.get("readLockRemoveOnRollback");
-        if (readLockRemoveOnRollback != null) {
-            readLockStrategy.setRemoveOnRollback(readLockRemoveOnRollback);
-        }
-        Boolean readLockRemoveOnCommit = (Boolean) params.get("readLockRemoveOnCommit");
-        if (readLockRemoveOnCommit != null) {
-            readLockStrategy.setRemoveOnCommit(readLockRemoveOnCommit);
-        }
-        IdempotentRepository repo = (IdempotentRepository) params.get("readLockIdempotentRepository");
-        if (repo != null) {
-            readLockStrategy.setIdempotentRepository(repo);
-        }
-        strategy = readLockStrategy;
-        return strategy;
-    }
-
-    private static GenericFileExclusiveReadLockStrategy<File> newStrategyForIdempotentChanged(
-            Map<String, Object> params) {
-        GenericFileExclusiveReadLockStrategy<File> strategy;
-        FileIdempotentChangedRepositoryReadLockStrategy readLockStrategy
-                = new FileIdempotentChangedRepositoryReadLockStrategy();
-        Boolean readLockRemoveOnRollback = (Boolean) params.get("readLockRemoveOnRollback");
-        if (readLockRemoveOnRollback != null) {
-            readLockStrategy.setRemoveOnRollback(readLockRemoveOnRollback);
-        }
-        Boolean readLockRemoveOnCommit = (Boolean) params.get("readLockRemoveOnCommit");
-        if (readLockRemoveOnCommit != null) {
-            readLockStrategy.setRemoveOnCommit(readLockRemoveOnCommit);
-        }
-        IdempotentRepository repo = (IdempotentRepository) params.get("readLockIdempotentRepository");
-        if (repo != null) {
-            readLockStrategy.setIdempotentRepository(repo);
-        }
-        Long minLength = (Long) params.get("readLockMinLength");
-        if (minLength != null) {
-            readLockStrategy.setMinLength(minLength);
-        }
-        Long minAge = (Long) params.get("readLockMinAge");
-        if (null != minAge) {
-            readLockStrategy.setMinAge(minAge);
-        }
-        Integer readLockIdempotentReleaseDelay = (Integer) params.get("readLockIdempotentReleaseDelay");
-        if (readLockIdempotentReleaseDelay != null) {
-            readLockStrategy.setReadLockIdempotentReleaseDelay(readLockIdempotentReleaseDelay);
-        }
-        Boolean readLockIdempotentReleaseAsync = (Boolean) params.get("readLockIdempotentReleaseAsync");
-        if (readLockIdempotentReleaseAsync != null) {
-            readLockStrategy.setReadLockIdempotentReleaseAsync(readLockIdempotentReleaseAsync);
-        }
-        Integer readLockIdempotentReleaseAsyncPoolSize = (Integer) params.get("readLockIdempotentReleaseAsyncPoolSize");
-        if (readLockIdempotentReleaseAsyncPoolSize != null) {
-            readLockStrategy.setReadLockIdempotentReleaseAsyncPoolSize(readLockIdempotentReleaseAsyncPoolSize);
-        }
-        ScheduledExecutorService readLockIdempotentReleaseExecutorService
-                = (ScheduledExecutorService) params.get("readLockIdempotentReleaseExecutorService");
-        if (readLockIdempotentReleaseExecutorService != null) {
-            readLockStrategy.setReadLockIdempotentReleaseExecutorService(readLockIdempotentReleaseExecutorService);
-        }
-        strategy = readLockStrategy;
-        return strategy;
-    }
-
-    private static GenericFileExclusiveReadLockStrategy<File> newStrategyForIdempotent(
-            Map<String, Object> params) {
-        GenericFileExclusiveReadLockStrategy<File> strategy;
-        FileIdempotentRepositoryReadLockStrategy readLockStrategy = new FileIdempotentRepositoryReadLockStrategy();
-        Boolean readLockRemoveOnRollback = (Boolean) params.get("readLockRemoveOnRollback");
-        if (readLockRemoveOnRollback != null) {
-            readLockStrategy.setRemoveOnRollback(readLockRemoveOnRollback);
-        }
-        Boolean readLockRemoveOnCommit = (Boolean) params.get("readLockRemoveOnCommit");
-        if (readLockRemoveOnCommit != null) {
-            readLockStrategy.setRemoveOnCommit(readLockRemoveOnCommit);
-        }
-        IdempotentRepository repo = (IdempotentRepository) params.get("readLockIdempotentRepository");
-        if (repo != null) {
-            readLockStrategy.setIdempotentRepository(repo);
-        }
-        Integer readLockIdempotentReleaseDelay = (Integer) params.get("readLockIdempotentReleaseDelay");
-        if (readLockIdempotentReleaseDelay != null) {
-            readLockStrategy.setReadLockIdempotentReleaseDelay(readLockIdempotentReleaseDelay);
-        }
-        Boolean readLockIdempotentReleaseAsync = (Boolean) params.get("readLockIdempotentReleaseAsync");
-        if (readLockIdempotentReleaseAsync != null) {
-            readLockStrategy.setReadLockIdempotentReleaseAsync(readLockIdempotentReleaseAsync);
-        }
-        Integer readLockIdempotentReleaseAsyncPoolSize = (Integer) params.get("readLockIdempotentReleaseAsyncPoolSize");
-        if (readLockIdempotentReleaseAsyncPoolSize != null) {
-            readLockStrategy.setReadLockIdempotentReleaseAsyncPoolSize(readLockIdempotentReleaseAsyncPoolSize);
-        }
-        ScheduledExecutorService readLockIdempotentReleaseExecutorService
-                = (ScheduledExecutorService) params.get("readLockIdempotentReleaseExecutorService");
-        if (readLockIdempotentReleaseExecutorService != null) {
-            readLockStrategy.setReadLockIdempotentReleaseExecutorService(readLockIdempotentReleaseExecutorService);
-        }
-        strategy = readLockStrategy;
         return strategy;
     }
 }

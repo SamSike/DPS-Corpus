@@ -23,7 +23,7 @@ import java.io.ObjectOutputStream;
 
 import org.apache.camel.TypeConverter;
 import org.apache.camel.impl.converter.DefaultTypeConverter;
-import org.apache.camel.support.scan.DefaultPackageScanClassResolver;
+import org.apache.camel.impl.engine.DefaultPackageScanClassResolver;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.ReflectionInjector;
 import org.apache.camel.util.xml.StringSource;
@@ -35,11 +35,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class StringSourceTest {
     protected TypeConverter converter = new DefaultTypeConverter(
-            new DefaultPackageScanClassResolver(), new ReflectionInjector(), false, false);
+            new DefaultPackageScanClassResolver(), new ReflectionInjector(), false);
     protected String expectedBody = "<hello>world!</hello>";
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         ServiceHelper.startService(converter);
     }
 

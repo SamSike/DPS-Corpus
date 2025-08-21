@@ -23,11 +23,11 @@ import jakarta.mail.internet.MimeMessage;
 
 import org.apache.camel.ShutdownRunningTask;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mail.Mailbox.MailboxUser;
-import org.apache.camel.component.mail.Mailbox.Protocol;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.jvnet.mock_javamail.Mailbox;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,11 +35,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Unit test for shutdown.
  */
 public class MailShutdownCompleteCurrentTaskOnlyTest extends CamelTestSupport {
-    private static final MailboxUser jones = Mailbox.getOrCreateUser("jones", "secret");
 
     @Override
-    public void doPreSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
         prepareMailbox();
+        super.setUp();
     }
 
     @Test
@@ -64,8 +65,8 @@ public class MailShutdownCompleteCurrentTaskOnlyTest extends CamelTestSupport {
         // connect to mailbox
         Mailbox.clearAll();
         JavaMailSender sender = new DefaultJavaMailSender();
-        Store store = sender.getSession().getStore("imap");
-        store.connect("localhost", Mailbox.getPort(Protocol.imap), jones.getLogin(), jones.getPassword());
+        Store store = sender.getSession().getStore("pop3");
+        store.connect("localhost", 25, "jones", "secret");
         Folder folder = store.getFolder("INBOX");
         folder.open(Folder.READ_WRITE);
         folder.expunge();
@@ -75,7 +76,7 @@ public class MailShutdownCompleteCurrentTaskOnlyTest extends CamelTestSupport {
         for (int i = 0; i < 5; i++) {
             messages[i] = new MimeMessage(sender.getSession());
             messages[i].setText("Message " + i);
-            messages[i].setHeader("Message-ID", Integer.toString(i));
+            messages[i].setHeader("Message-ID", "" + i);
         }
         folder.appendMessages(messages);
         folder.close(true);
@@ -85,7 +86,7 @@ public class MailShutdownCompleteCurrentTaskOnlyTest extends CamelTestSupport {
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
-                from(jones.uriPrefix(Protocol.pop3) + "&initialDelay=100&delay=100").routeId("route1")
+                from("pop3://jones@localhost?password=secret&initialDelay=100&delay=100").routeId("route1")
                         // let it complete only current task so we shutdown faster
                         .shutdownRunningTask(ShutdownRunningTask.CompleteCurrentTaskOnly)
                         .delay(1000).to("seda:foo");

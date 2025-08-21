@@ -47,8 +47,8 @@ public class ManagedBrowsableEndpointTest extends ManagementTestSupport {
         String uri = (String) mbeanServer.getAttribute(name, "EndpointUri");
         assertEquals("mock://result", uri);
 
-        Integer size = (Integer) mbeanServer.invoke(name, "queueSize", null, null);
-        assertEquals(2, size.intValue());
+        Long size = (Long) mbeanServer.invoke(name, "queueSize", null, null);
+        assertEquals(2, size.longValue());
 
         String out
                 = (String) mbeanServer.invoke(name, "browseExchange", new Object[] { 0 }, new String[] { "java.lang.Integer" });
@@ -67,10 +67,10 @@ public class ManagedBrowsableEndpointTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("log:foo").to("mock:result");
             }
         };

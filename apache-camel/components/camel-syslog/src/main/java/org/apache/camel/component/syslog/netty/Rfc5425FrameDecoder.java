@@ -36,7 +36,7 @@ public class Rfc5425FrameDecoder extends ByteToMessageDecoder implements Channel
             int index = indexOf(in, Unpooled.wrappedBuffer(new byte[] { ' ' }));
 
             // Read part until the first space, if we have found one
-            StringBuilder lengthbuffer = new StringBuilder();
+            StringBuffer lengthbuffer = new StringBuffer();
             if (index > -1) {
                 ByteBuf byteBuf = in.readBytes(index);
                 byte[] dest = new byte[byteBuf.readableBytes()];

@@ -27,6 +27,7 @@ import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
 import org.apache.camel.util.IOHelper;
 import org.apache.hello_world_soap_http.Greeter;
 import org.apache.hello_world_soap_http.NoSuchCodeLitFault;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -58,8 +59,11 @@ public abstract class AbstractCXFGreeterRouterTest extends CamelSpringTestSuppor
     }
 
     @Override
-    public void cleanupResources() {
+    @AfterEach
+    public void tearDown() throws Exception {
+
         IOHelper.close(applicationContext);
+        super.tearDown();
     }
 
     @Test

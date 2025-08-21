@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,16 @@
 
 package org.springframework.scheduling.quartz;
 
-import org.jspecify.annotations.Nullable;
 import org.quartz.SchedulerContext;
 import org.quartz.spi.TriggerFiredBundle;
 
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.PropertyAccessorFactory;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.lang.Nullable;
 
 /**
  * Subclass of {@link AdaptableJobFactory} that also supports Spring-style
@@ -46,11 +47,14 @@ import org.springframework.context.ApplicationContextAware;
 public class SpringBeanJobFactory extends AdaptableJobFactory
 		implements ApplicationContextAware, SchedulerContextAware {
 
-	private String @Nullable [] ignoredUnknownProperties;
+	@Nullable
+	private String[] ignoredUnknownProperties;
 
-	private @Nullable ApplicationContext applicationContext;
+	@Nullable
+	private ApplicationContext applicationContext;
 
-	private @Nullable SchedulerContext schedulerContext;
+	@Nullable
+	private SchedulerContext schedulerContext;
 
 
 	/**
@@ -83,7 +87,8 @@ public class SpringBeanJobFactory extends AdaptableJobFactory
 	@Override
 	protected Object createJobInstance(TriggerFiredBundle bundle) throws Exception {
 		Object job = (this.applicationContext != null ?
-				this.applicationContext.getAutowireCapableBeanFactory().createBean(bundle.getJobDetail().getJobClass()) :
+				this.applicationContext.getAutowireCapableBeanFactory().createBean(
+						bundle.getJobDetail().getJobClass(), AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR, false) :
 				super.createJobInstance(bundle));
 
 		if (isEligibleForPropertyPopulation(job)) {

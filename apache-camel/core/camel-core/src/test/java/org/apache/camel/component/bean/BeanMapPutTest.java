@@ -28,17 +28,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BeanMapPutTest extends ContextTestSupport {
 
-    private final Map<String, String> myMap = new HashMap<>();
+    private Map<String, String> myMap = new HashMap<>();
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myMap", myMap);
         return jndi;
     }
 
     @Test
-    public void testMapPut() {
+    public void testMapPut() throws Exception {
         assertEquals(0, myMap.size());
 
         template.sendBody("direct:start", "Hello World");
@@ -48,10 +48,10 @@ public class BeanMapPutTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").bean("myMap", "put('isMaster','true')");
             }
         };

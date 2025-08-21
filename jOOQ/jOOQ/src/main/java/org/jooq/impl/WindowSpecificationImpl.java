@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,8 +40,8 @@ package org.jooq.impl;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.MIN_VALUE;
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
+import static org.jooq.SQLDialect.CUBRID;
 // ...
 // ...
 import static org.jooq.SQLDialect.H2;
@@ -50,15 +50,16 @@ import static org.jooq.SQLDialect.H2;
 // ...
 import static org.jooq.SQLDialect.MARIADB;
 // ...
+import static org.jooq.SQLDialect.MYSQL;
 // ...
 // ...
 // ...
+import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
+// ...
 // ...
 import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.one;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.Keywords.K_AND;
@@ -78,7 +79,6 @@ import static org.jooq.impl.QOM.FrameExclude.TIES;
 import static org.jooq.impl.QOM.FrameUnits.GROUPS;
 import static org.jooq.impl.QOM.FrameUnits.RANGE;
 import static org.jooq.impl.QOM.FrameUnits.ROWS;
-import static org.jooq.impl.SQLDataType.INTEGER;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
 import static org.jooq.impl.Tools.EMPTY_SORTFIELD;
 import static org.jooq.impl.Tools.isEmpty;
@@ -88,10 +88,12 @@ import static org.jooq.tools.StringUtils.defaultIfNull;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 import org.jooq.Context;
 import org.jooq.Field;
-import org.jooq.GroupField;
+import org.jooq.Function1;
 import org.jooq.OrderField;
 // ...
 import org.jooq.QueryPart;
@@ -122,9 +124,10 @@ implements
     WindowSpecificationExcludeStep
 {
 
-    private static final Set<SQLDialect> REQUIRES_DEFAULT_FRAME_IN_LEAD_LAG_ORDER_BY = SQLDialect.supportedBy(CLICKHOUSE);
-    private static final Set<SQLDialect> REQUIRES_ORDER_BY_IN_LEAD_LAG               = SQLDialect.supportedBy(H2, MARIADB, TRINO);
-    private static final Set<SQLDialect> REQUIRES_ORDER_BY_IN_NTILE                  = SQLDialect.supportedBy(CLICKHOUSE, H2);
+    private static final Set<SQLDialect> OMIT_PARTITION_BY_ONE                       = SQLDialect.supportedBy(CUBRID, MYSQL, SQLITE);
+
+    private static final Set<SQLDialect> REQUIRES_ORDER_BY_IN_LEAD_LAG               = SQLDialect.supportedBy(H2, MARIADB);
+    private static final Set<SQLDialect> REQUIRES_ORDER_BY_IN_NTILE                  = SQLDialect.supportedBy(H2);
     private static final Set<SQLDialect> REQUIRES_ORDER_BY_IN_RANK_DENSE_RANK        = SQLDialect.supportedBy(H2, MARIADB);
     private static final Set<SQLDialect> REQUIRES_ORDER_BY_IN_PERCENT_RANK_CUME_DIST = SQLDialect.supportedBy(MARIADB);
 
@@ -142,6 +145,7 @@ implements
     private Integer                      frameEnd;
     private FrameUnits                   frameUnits;
     private FrameExclude                 exclude;
+    private boolean                      partitionByOne;
 
     WindowSpecificationImpl() {
         this(null);
@@ -161,6 +165,7 @@ implements
         copy.frameEnd = this.frameEnd;
         copy.frameUnits = this.frameUnits;
         copy.exclude = this.exclude;
+        copy.partitionByOne = this.partitionByOne;
         return copy;
     }
 
@@ -204,8 +209,6 @@ implements
 
 
 
-
-
                     default:
                         constant = field(select(one())); break;
                 }
@@ -215,16 +218,10 @@ implements
             }
         }
 
-        boolean requiresDefaultFrame =
-              w instanceof Lead && REQUIRES_DEFAULT_FRAME_IN_LEAD_LAG_ORDER_BY.contains(ctx.dialect())
-           || w instanceof Lag && REQUIRES_DEFAULT_FRAME_IN_LEAD_LAG_ORDER_BY.contains(ctx.dialect())
-        ;
-
         boolean hasWindowDefinitions = windowDefinition != null;
         boolean hasPartitionBy = !partitionBy.isEmpty();
         boolean hasOrderBy = !o.isEmpty();
         boolean hasFrame = frameStart != null
-            || hasOrderBy && requiresDefaultFrame
 
 
 
@@ -253,11 +250,19 @@ implements
             ctx.declareWindows(false, c -> c.visit(windowDefinition));
 
         if (hasPartitionBy) {
-            if (hasWindowDefinitions)
-                ctx.formatSeparator();
 
-            ctx.visit(K_PARTITION_BY).separatorRequired(true)
-               .visit(partitionBy);
+            // Ignore PARTITION BY 1 clause. These databases erroneously map the
+            // 1 literal onto the column index (CUBRID, Sybase), or do not support
+            // constant expressions in the PARTITION BY clause (HANA)
+            if (partitionByOne && OMIT_PARTITION_BY_ONE.contains(ctx.dialect())) {
+            }
+            else {
+                if (hasWindowDefinitions)
+                    ctx.formatSeparator();
+
+                ctx.visit(K_PARTITION_BY).separatorRequired(true)
+                   .visit(partitionBy);
+            }
         }
 
         if (hasOrderBy) {
@@ -276,12 +281,6 @@ implements
             Integer s = frameStart;
             Integer e = frameEnd;
 
-            if (s == null) {
-                if (requiresDefaultFrame) {
-                    u = FrameUnits.RANGE;
-                    s = Integer.MIN_VALUE;
-                    e = Integer.MAX_VALUE;
-                }
 
 
 
@@ -313,7 +312,6 @@ implements
 
 
 
-            }
 
             ctx.visit(u.keyword).sql(' ');
 
@@ -412,13 +410,21 @@ implements
     }
 
     @Override
-    public final WindowSpecificationPartitionByStep partitionBy(GroupField... fields) {
+    public final WindowSpecificationPartitionByStep partitionBy(Field<?>... fields) {
         return partitionBy(Arrays.asList(fields));
     }
 
     @Override
-    public final WindowSpecificationPartitionByStep partitionBy(Collection<? extends GroupField> fields) {
+    public final WindowSpecificationPartitionByStep partitionBy(Collection<? extends Field<?>> fields) {
         partitionBy.addAll(fields);
+        return this;
+    }
+
+    @Override
+    @Deprecated
+    public final WindowSpecificationOrderByStep partitionByOne() {
+        partitionByOne = true;
+        partitionBy.add(one());
         return this;
     }
 

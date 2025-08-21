@@ -16,7 +16,7 @@
  */
 package org.apache.camel.component.google.calendar.stream;
 
-import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.api.services.calendar.CalendarScopes;
@@ -31,13 +31,13 @@ import org.apache.camel.spi.UriPath;
  */
 @UriParams
 public class GoogleCalendarStreamConfiguration implements Cloneable {
-    private static final String DEFAULT_SCOPES = CalendarScopes.CALENDAR;
+    private static final List<String> DEFAULT_SCOPES = Collections.singletonList(CalendarScopes.CALENDAR);
 
     @UriPath
     @Metadata(required = true)
     private String index;
     @UriParam
-    private String scopes = DEFAULT_SCOPES;
+    private List<String> scopes = DEFAULT_SCOPES;
     @UriParam
     private String clientId;
     @UriParam
@@ -139,27 +139,16 @@ public class GoogleCalendarStreamConfiguration implements Cloneable {
         this.applicationName = applicationName;
     }
 
-    public String getScopes() {
+    public List<String> getScopes() {
         return scopes;
     }
 
     /**
      * Specifies the level of permissions you want a calendar application to have to a user account. See
-     * https://developers.google.com/identity/protocols/googlescopes for more info. Multiple scopes can be separated by
-     * comma.
-     *
-     * @see com.google.api.services.calendar.CalendarScopes
+     * https://developers.google.com/calendar/auth for more info.
      */
-    public void setScopes(String scopes) {
+    public void setScopes(List<String> scopes) {
         this.scopes = scopes;
-    }
-
-    public Collection<String> getScopesAsList() {
-        if (scopes != null) {
-            return List.of(scopes.split(","));
-        } else {
-            return null;
-        }
     }
 
     public String getIndex() {

@@ -16,7 +16,9 @@
  */
 package org.apache.camel.processor.loadbalancer;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class WeightedLoadBalancer extends QueueLoadBalancer {
     protected final List<DistributionRatio> ratios;
@@ -26,9 +28,10 @@ public abstract class WeightedLoadBalancer extends QueueLoadBalancer {
     transient int lastIndex = -1;
 
     public WeightedLoadBalancer(List<Integer> distributionRatios) {
-        this.ratios = distributionRatios.stream()
+        List<DistributionRatio> ratios = distributionRatios.stream()
                 .map(DistributionRatio::new)
-                .toList();
+                .collect(Collectors.toList());
+        this.ratios = Collections.unmodifiableList(ratios);
         this.distributionRatioSum = ratios.stream()
                 .mapToInt(DistributionRatio::getDistributionWeight).sum();
         this.runtimeRatioSum = distributionRatioSum;

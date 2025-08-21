@@ -43,7 +43,7 @@ public class MinioConfiguration implements Cloneable {
     private boolean secure;
     @UriParam(label = "common")
     private String region;
-    @UriParam(label = "advanced")
+    @UriParam(label = "common")
     private OkHttpClient customHttpClient;
 
     @UriParam(label = "security", secret = true)
@@ -57,9 +57,9 @@ public class MinioConfiguration implements Cloneable {
     private boolean objectLock;
     @UriParam(label = "common")
     private String policy;
-    @UriParam(label = "security")
+    @UriParam(label = "common")
     private ServerSideEncryptionCustomerKey serverSideEncryptionCustomerKey;
-    @UriParam(label = "security")
+    @UriParam(label = "common")
     private ServerSideEncryption serverSideEncryption;
     @UriParam(label = "common")
     @Metadata(autowired = true)
@@ -73,19 +73,19 @@ public class MinioConfiguration implements Cloneable {
     private String objectName;
     @UriParam(label = "consumer")
     private String delimiter;
-    @UriParam(label = "consumer")
+    @UriParam(label = "consumer", defaultValue = "false")
     private boolean includeUserMetadata;
-    @UriParam(label = "consumer")
+    @UriParam(label = "consumer", defaultValue = "false")
     private boolean includeVersions;
     @UriParam(label = "consumer")
     private String prefix;
-    @UriParam(label = "consumer")
+    @UriParam(label = "consumer", defaultValue = "false")
     private boolean recursive;
     @UriParam(label = "consumer")
     private String startAfter;
-    @UriParam(label = "consumer")
+    @UriParam(label = "consumer", defaultValue = "false")
     private boolean useVersion1;
-    @UriParam(label = "consumer")
+    @UriParam(label = "consumer", defaultValue = "false")
     private boolean includeFolders;
     @UriParam(label = "consumer")
     private long offset;
@@ -123,9 +123,9 @@ public class MinioConfiguration implements Cloneable {
     @UriParam(label = "producer")
     private String storageClass;
     @UriParam(label = "producer",
-              enums = "copyObject,listObjects,deleteObject,deleteObjects,deleteBucket,listBuckets,getObject,getObjectRange,createDownloadLink,createUploadLink")
+              enums = "copyObject,listObjects,deleteObject,deleteObjects,deleteBucket,listBuckets,getObject,getObjectRange")
     private MinioOperations operation;
-    @UriParam(label = "producer")
+    @UriParam(label = "producer", defaultValue = "false")
     private boolean pojoRequest;
 
     public String getEndpoint() {

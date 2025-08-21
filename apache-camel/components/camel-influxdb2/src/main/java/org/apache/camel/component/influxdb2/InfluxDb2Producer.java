@@ -75,24 +75,24 @@ public class InfluxDb2Producer extends DefaultProducer {
             throws InvalidPayloadException {
         Object body = exchange.getIn().getBody();
         if (body instanceof Point) {
-            insertPoint(exchange, orgName, bucketName);
+            insertPoint(exchange, orgName, bucketName, writePrecision);
         } else if (body instanceof Measurement) {
             insertMeasurement(exchange, orgName, bucketName, writePrecision);
         } else if (body instanceof Record) {
             insertRecord(exchange, orgName, bucketName, writePrecision);
         } else if (body instanceof Points) {
-            insertPoints(exchange, orgName, bucketName);
+            insertPoints(exchange, orgName, bucketName, writePrecision);
         } else if (body instanceof Measurements) {
             insertMeasurements(exchange, orgName, bucketName, writePrecision);
         } else if (body instanceof Records) {
             insertRecords(exchange, orgName, bucketName, writePrecision);
         } else {
             // default insert as point
-            insertPoint(exchange, orgName, bucketName);
+            insertPoint(exchange, orgName, bucketName, writePrecision);
         }
     }
 
-    private void insertPoint(Exchange exchange, String orgName, String bucketName)
+    private void insertPoint(Exchange exchange, String orgName, String bucketName, WritePrecision writePrecision)
             throws InvalidPayloadException {
         Point point = exchange.getIn().getMandatoryBody(Point.class);
         try {
@@ -120,18 +120,18 @@ public class InfluxDb2Producer extends DefaultProducer {
 
     private void insertRecord(Exchange exchange, String orgName, String bucketName, WritePrecision writePrecision)
             throws InvalidPayloadException {
-        Record recordObj = exchange.getIn().getMandatoryBody(Record.class);
+        Record record = exchange.getIn().getMandatoryBody(Record.class);
         try {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Writing record {}", recordObj);
+                LOG.debug("Writing record {}", record);
             }
-            writeApi.writeRecord(bucketName, orgName, writePrecision, recordObj.getInfluxRecord());
+            writeApi.writeRecord(bucketName, orgName, writePrecision, record.getInfluxRecord());
         } catch (Exception ex) {
             exchange.setException(new CamelInfluxDb2Exception(ex));
         }
     }
 
-    private void insertPoints(Exchange exchange, String orgName, String bucketName)
+    private void insertPoints(Exchange exchange, String orgName, String bucketName, WritePrecision writePrecision)
             throws InvalidPayloadException {
         @SuppressWarnings("unchecked")
         Points points = exchange.getIn().getMandatoryBody(Points.class);

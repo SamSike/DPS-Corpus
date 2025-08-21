@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,10 +41,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Juergen Hoeller
  */
-class WebRequestDataBinderTests {
+public class WebRequestDataBinderTests {
 
 	@Test
-	void testBindingWithNestedObjectCreation() {
+	public void testBindingWithNestedObjectCreation() throws Exception {
 		TestBean tb = new TestBean();
 
 		WebRequestDataBinder binder = new WebRequestDataBinder(tb, "person");
@@ -65,7 +65,7 @@ class WebRequestDataBinderTests {
 	}
 
 	@Test
-	void testBindingWithNestedObjectCreationThroughAutoGrow() {
+	public void testBindingWithNestedObjectCreationThroughAutoGrow() throws Exception {
 		TestBean tb = new TestBeanWithConcreteSpouse();
 
 		WebRequestDataBinder binder = new WebRequestDataBinder(tb, "person");
@@ -80,7 +80,7 @@ class WebRequestDataBinderTests {
 	}
 
 	@Test
-	void testFieldPrefixCausesFieldReset() {
+	public void testFieldPrefixCausesFieldReset() throws Exception {
 		TestBean target = new TestBean();
 		WebRequestDataBinder binder = new WebRequestDataBinder(target);
 
@@ -96,7 +96,7 @@ class WebRequestDataBinderTests {
 	}
 
 	@Test
-	void testFieldPrefixCausesFieldResetWithIgnoreUnknownFields() {
+	public void testFieldPrefixCausesFieldResetWithIgnoreUnknownFields() throws Exception {
 		TestBean target = new TestBean();
 		WebRequestDataBinder binder = new WebRequestDataBinder(target);
 		binder.setIgnoreUnknownFields(false);
@@ -125,7 +125,7 @@ class WebRequestDataBinderTests {
 	}
 
 	@Test
-	void testFieldDefault() {
+	public void testFieldDefault() throws Exception {
 		TestBean target = new TestBean();
 		WebRequestDataBinder binder = new WebRequestDataBinder(target);
 
@@ -142,7 +142,7 @@ class WebRequestDataBinderTests {
 
 	// SPR-13502
 	@Test
-	void testCollectionFieldsDefault() {
+	public void testCollectionFieldsDefault() throws Exception {
 		TestBean target = new TestBean();
 		target.setSomeSet(null);
 		target.setSomeList(null);
@@ -155,13 +155,13 @@ class WebRequestDataBinderTests {
 		request.addParameter("_someMap", "visible");
 
 		binder.bind(new ServletWebRequest(request));
-		assertThat(target.getSomeSet()).isInstanceOf(Set.class);
-		assertThat(target.getSomeList()).isInstanceOf(List.class);
-		assertThat(target.getSomeMap()).isInstanceOf(Map.class);
+		assertThat(target.getSomeSet()).isNotNull().isInstanceOf(Set.class);
+		assertThat(target.getSomeList()).isNotNull().isInstanceOf(List.class);
+		assertThat(target.getSomeMap()).isNotNull().isInstanceOf(Map.class);
 	}
 
 	@Test
-	void testFieldDefaultPreemptsFieldMarker() {
+	public void testFieldDefaultPreemptsFieldMarker() throws Exception {
 		TestBean target = new TestBean();
 		WebRequestDataBinder binder = new WebRequestDataBinder(target);
 
@@ -182,7 +182,7 @@ class WebRequestDataBinderTests {
 	}
 
 	@Test
-	void testFieldDefaultWithNestedProperty() {
+	public void testFieldDefaultWithNestedProperty() throws Exception {
 		TestBean target = new TestBean();
 		target.setSpouse(new TestBean());
 		WebRequestDataBinder binder = new WebRequestDataBinder(target);
@@ -204,7 +204,7 @@ class WebRequestDataBinderTests {
 	}
 
 	@Test
-	void testFieldDefaultNonBoolean() {
+	public void testFieldDefaultNonBoolean() throws Exception {
 		TestBean target = new TestBean();
 		WebRequestDataBinder binder = new WebRequestDataBinder(target);
 
@@ -220,7 +220,7 @@ class WebRequestDataBinderTests {
 	}
 
 	@Test
-	void testWithCommaSeparatedStringArray() {
+	public void testWithCommaSeparatedStringArray() throws Exception {
 		TestBean target = new TestBean();
 		WebRequestDataBinder binder = new WebRequestDataBinder(target);
 
@@ -238,7 +238,7 @@ class WebRequestDataBinderTests {
 	}
 
 	@Test
-	void testEnumBinding() {
+	public void testEnumBinding() {
 		EnumHolder target = new EnumHolder();
 		WebRequestDataBinder binder = new WebRequestDataBinder(target);
 
@@ -249,7 +249,7 @@ class WebRequestDataBinderTests {
 	}
 
 	@Test
-	void testMultipartFileAsString() {
+	public void testMultipartFileAsString() {
 		TestBean target = new TestBean();
 		WebRequestDataBinder binder = new WebRequestDataBinder(target);
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
@@ -261,7 +261,7 @@ class WebRequestDataBinderTests {
 	}
 
 	@Test
-	void testMultipartFileAsStringArray() {
+	public void testMultipartFileAsStringArray() {
 		TestBean target = new TestBean();
 		WebRequestDataBinder binder = new WebRequestDataBinder(target);
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
@@ -269,12 +269,12 @@ class WebRequestDataBinderTests {
 		MockMultipartHttpServletRequest request = new MockMultipartHttpServletRequest();
 		request.addFile(new MockMultipartFile("stringArray", "Juergen".getBytes()));
 		binder.bind(new ServletWebRequest(request));
-		assertThat(target.getStringArray()).hasSize(1);
+		assertThat(target.getStringArray().length).isEqualTo(1);
 		assertThat(target.getStringArray()[0]).isEqualTo("Juergen");
 	}
 
 	@Test
-	void testMultipartFilesAsStringArray() {
+	public void testMultipartFilesAsStringArray() {
 		TestBean target = new TestBean();
 		WebRequestDataBinder binder = new WebRequestDataBinder(target);
 		binder.registerCustomEditor(String.class, new StringMultipartFileEditor());
@@ -283,13 +283,13 @@ class WebRequestDataBinderTests {
 		request.addFile(new MockMultipartFile("stringArray", "Juergen".getBytes()));
 		request.addFile(new MockMultipartFile("stringArray", "Eva".getBytes()));
 		binder.bind(new ServletWebRequest(request));
-		assertThat(target.getStringArray()).hasSize(2);
+		assertThat(target.getStringArray().length).isEqualTo(2);
 		assertThat(target.getStringArray()[0]).isEqualTo("Juergen");
 		assertThat(target.getStringArray()[1]).isEqualTo("Eva");
 	}
 
 	@Test
-	void testNoPrefix() {
+	public void testNoPrefix() throws Exception {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		request.addParameter("forname", "Tony");
 		request.addParameter("surname", "Blair");
@@ -300,7 +300,7 @@ class WebRequestDataBinderTests {
 	}
 
 	@Test
-	void testPrefix() {
+	public void testPrefix() throws Exception {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		request.addParameter("test_forname", "Tony");
 		request.addParameter("test_surname", "Blair");
@@ -318,8 +318,8 @@ class WebRequestDataBinderTests {
 	/**
 	 * Must contain: forname=Tony surname=Blair age=50
 	 */
-	protected void doTestTony(PropertyValues pvs) {
-		assertThat(pvs.getPropertyValues().length).as("Contains 3").isEqualTo(3);
+	protected void doTestTony(PropertyValues pvs) throws Exception {
+		assertThat(pvs.getPropertyValues().length == 3).as("Contains 3").isTrue();
 		assertThat(pvs.contains("forname")).as("Contains forname").isTrue();
 		assertThat(pvs.contains("surname")).as("Contains surname").isTrue();
 		assertThat(pvs.contains("age")).as("Contains age").isTrue();
@@ -333,30 +333,30 @@ class WebRequestDataBinderTests {
 		m.put("age", "50");
 		for (PropertyValue pv : pvArray) {
 			Object val = m.get(pv.getName());
-			assertThat(val).as("Can't have unexpected value").isNotNull();
+			assertThat(val != null).as("Can't have unexpected value").isTrue();
 			boolean condition = val instanceof String;
 			assertThat(condition).as("Val i string").isTrue();
 			assertThat(val.equals(pv.getValue())).as("val matches expected").isTrue();
 			m.remove(pv.getName());
 		}
-		assertThat(m.size()).as("Map size is 0").isEqualTo(0);
+		assertThat(m.size() == 0).as("Map size is 0").isTrue();
 	}
 
 	@Test
-	void testNoParameters() {
+	public void testNoParameters() throws Exception {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		ServletRequestParameterPropertyValues pvs = new ServletRequestParameterPropertyValues(request);
-		assertThat(pvs.getPropertyValues().length).as("Found no parameters").isEqualTo(0);
+		assertThat(pvs.getPropertyValues().length == 0).as("Found no parameters").isTrue();
 	}
 
 	@Test
-	void testMultipleValuesForParameter() {
+	public void testMultipleValuesForParameter() throws Exception {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		String[] original = new String[] {"Tony", "Rod"};
 		request.addParameter("forname", original);
 
 		ServletRequestParameterPropertyValues pvs = new ServletRequestParameterPropertyValues(request);
-		assertThat(pvs.getPropertyValues().length).as("Found 1 parameter").isEqualTo(1);
+		assertThat(pvs.getPropertyValues().length == 1).as("Found 1 parameter").isTrue();
 		boolean condition = pvs.getPropertyValue("forname").getValue() instanceof String[];
 		assertThat(condition).as("Found array value").isTrue();
 		String[] values = (String[]) pvs.getPropertyValue("forname").getValue();

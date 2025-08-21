@@ -79,8 +79,8 @@ public class KubernetesDeploymentsProducer extends DefaultProducer {
                 doCreateDeployment(exchange);
                 break;
 
-            case KubernetesOperations.UPDATE_DEPLOYMENT:
-                doUpdateDeployment(exchange);
+            case KubernetesOperations.REPLACE_DEPLOYMENT:
+                doReplaceDeployment(exchange);
                 break;
 
             case KubernetesOperations.SCALE_DEPLOYMENT:
@@ -93,14 +93,7 @@ public class KubernetesDeploymentsProducer extends DefaultProducer {
     }
 
     protected void doList(Exchange exchange) {
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
-        DeploymentList deploymentsList;
-
-        if (ObjectHelper.isEmpty(namespace)) {
-            deploymentsList = getEndpoint().getKubernetesClient().apps().deployments().inAnyNamespace().list();
-        } else {
-            deploymentsList = getEndpoint().getKubernetesClient().apps().deployments().inNamespace(namespace).list();
-        }
+        DeploymentList deploymentsList = getEndpoint().getKubernetesClient().apps().deployments().list();
 
         prepareOutboundMessage(exchange, deploymentsList.getItems());
     }
@@ -111,37 +104,18 @@ public class KubernetesDeploymentsProducer extends DefaultProducer {
         MixedOperation<Deployment, DeploymentList, RollableScalableResource<Deployment>> deployments = getEndpoint()
                 .getKubernetesClient().apps().deployments();
 
-        if (ObjectHelper.isEmpty(labels)) {
-            LOG.error("Listing Deployments by labels requires specifying labels");
-            throw new IllegalArgumentException("Listing Deployments by labels requires specifying labels");
-        }
+        DeploymentList deploymentList = deployments.withLabels(labels).list();
 
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
-        DeploymentList deploymentsList;
-
-        if (ObjectHelper.isNotEmpty(namespace)) {
-            deploymentsList = deployments.inNamespace(namespace).withLabels(labels).list();
-        } else {
-            deploymentsList = deployments.inAnyNamespace().withLabels(labels).list();
-        }
-
-        prepareOutboundMessage(exchange, deploymentsList.getItems());
+        prepareOutboundMessage(exchange, deploymentList.getItems());
     }
 
     protected void doGetDeployment(Exchange exchange) {
         String deploymentName = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_DEPLOYMENT_NAME, String.class);
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
         if (ObjectHelper.isEmpty(deploymentName)) {
             LOG.error("Get a specific Deployment require specify a Deployment name");
             throw new IllegalArgumentException("Get a specific Deployment require specify a Deployment name");
         }
-        Deployment deployment;
-        if (ObjectHelper.isNotEmpty(namespace)) {
-            deployment = getEndpoint().getKubernetesClient().apps().deployments()
-                    .inNamespace(namespace).withName(deploymentName).get();
-        } else {
-            deployment = getEndpoint().getKubernetesClient().apps().deployments().withName(deploymentName).get();
-        }
+        Deployment deployment = getEndpoint().getKubernetesClient().apps().deployments().withName(deploymentName).get();
 
         prepareOutboundMessage(exchange, deployment);
     }
@@ -165,8 +139,8 @@ public class KubernetesDeploymentsProducer extends DefaultProducer {
         prepareOutboundMessage(exchange, deploymentDeleted);
     }
 
-    protected void doUpdateDeployment(Exchange exchange) {
-        doCreateOrUpdateDeployment(exchange, "Update", Resource::update);
+    protected void doReplaceDeployment(Exchange exchange) {
+        doCreateOrUpdateDeployment(exchange, "Replace", Resource::replace);
     }
 
     protected void doCreateDeployment(Exchange exchange) {
@@ -195,20 +169,11 @@ public class KubernetesDeploymentsProducer extends DefaultProducer {
                     String.format("%s a specific Deployment require specify a Deployment spec bean", operationName));
         }
         Map<String, String> labels = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_DEPLOYMENTS_LABELS, Map.class);
-        Map<String, String> annotations
-                = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_DEPLOYMENTS_ANNOTATIONS, Map.class);
-        DeploymentBuilder deploymentCreating;
-        if (ObjectHelper.isEmpty(annotations)) {
-            deploymentCreating = new DeploymentBuilder().withNewMetadata().withName(deploymentName).withLabels(labels)
-                    .endMetadata().withSpec(deSpec);
-        } else {
-            deploymentCreating = new DeploymentBuilder().withNewMetadata().withName(deploymentName).withLabels(labels)
-                    .withAnnotations(annotations)
-                    .endMetadata().withSpec(deSpec);
-        }
+        Deployment deploymentCreating = new DeploymentBuilder().withNewMetadata().withName(deploymentName).withLabels(labels)
+                .endMetadata().withSpec(deSpec).build();
         Deployment deployment
                 = operation.apply(getEndpoint().getKubernetesClient().apps().deployments().inNamespace(namespaceName)
-                        .resource(deploymentCreating.build()));
+                        .resource(deploymentCreating));
 
         prepareOutboundMessage(exchange, deployment);
     }
@@ -230,7 +195,7 @@ public class KubernetesDeploymentsProducer extends DefaultProducer {
             throw new IllegalArgumentException("Scale a specific deployment require specify a replicas number");
         }
         Deployment deploymentScaled = getEndpoint().getKubernetesClient().apps().deployments().inNamespace(namespaceName)
-                .withName(deploymentName).scale(replicasNumber);
+                .withName(deploymentName).scale(replicasNumber, false);
 
         prepareOutboundMessage(exchange, deploymentScaled.getStatus().getReplicas());
     }

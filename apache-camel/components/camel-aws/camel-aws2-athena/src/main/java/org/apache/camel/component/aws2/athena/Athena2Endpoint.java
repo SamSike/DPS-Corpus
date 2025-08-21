@@ -16,15 +16,14 @@
  */
 package org.apache.camel.component.aws2.athena;
 
-import java.util.Map;
-
 import org.apache.camel.Category;
 import org.apache.camel.Component;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.component.aws2.athena.client.Athena2ClientFactory;
-import org.apache.camel.spi.EndpointServiceLocation;
+import org.apache.camel.health.HealthCheckHelper;
+import org.apache.camel.health.WritableHealthCheckRepository;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.DefaultEndpoint;
@@ -32,13 +31,16 @@ import org.apache.camel.util.ObjectHelper;
 import software.amazon.awssdk.services.athena.AthenaClient;
 
 /**
- * Access AWS Athena.
+ * Access AWS Athena service using AWS SDK version 2.x.
  */
 @UriEndpoint(firstVersion = "3.4.0", scheme = "aws2-athena", title = "AWS Athena", syntax = "aws2-athena:label",
              producerOnly = true, category = { Category.CLOUD, Category.DATABASE }, headersClass = Athena2Constants.class)
-public class Athena2Endpoint extends DefaultEndpoint implements EndpointServiceLocation {
+public class Athena2Endpoint extends DefaultEndpoint {
 
     private AthenaClient athenaClient;
+
+    private WritableHealthCheckRepository healthCheckRepository;
+    private Athena2ClientHealthCheck clientHealthCheck;
 
     @UriParam
     private Athena2Configuration configuration;
@@ -59,11 +61,6 @@ public class Athena2Endpoint extends DefaultEndpoint implements EndpointServiceL
     }
 
     @Override
-    public Athena2Component getComponent() {
-        return (Athena2Component) super.getComponent();
-    }
-
-    @Override
     public void doInit() throws Exception {
         super.doInit();
 
@@ -71,10 +68,25 @@ public class Athena2Endpoint extends DefaultEndpoint implements EndpointServiceL
                 ? configuration.getAmazonAthenaClient()
                 : Athena2ClientFactory.getAWSAthenaClient(configuration).getAthenaClient();
 
+        // health-check is optional so discover and resolve
+        healthCheckRepository = HealthCheckHelper.getHealthCheckRepository(
+                getCamelContext(),
+                "components",
+                WritableHealthCheckRepository.class);
+
+        if (healthCheckRepository != null) {
+            clientHealthCheck = new Athena2ClientHealthCheck(this, getId());
+            healthCheckRepository.addHealthCheck(clientHealthCheck);
+        }
     }
 
     @Override
     public void doStop() throws Exception {
+        if (healthCheckRepository != null && clientHealthCheck != null) {
+            healthCheckRepository.removeHealthCheck(clientHealthCheck);
+            clientHealthCheck = null;
+        }
+
         if (ObjectHelper.isEmpty(configuration.getAmazonAthenaClient())) {
             if (athenaClient != null) {
                 athenaClient.close();
@@ -97,26 +109,5 @@ public class Athena2Endpoint extends DefaultEndpoint implements EndpointServiceL
 
     public void setAthenaClient(AthenaClient athenaClient) {
         this.athenaClient = athenaClient;
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (ObjectHelper.isNotEmpty(configuration.getRegion())) {
-            return configuration.getRegion();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "athena";
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        if (configuration.getDatabase() != null) {
-            return Map.of("database", configuration.getDatabase());
-        }
-        return null;
     }
 }

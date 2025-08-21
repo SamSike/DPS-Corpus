@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package org.springframework.test.web.servlet.samples.client.context;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +27,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
-import org.springframework.test.context.aot.DisabledInAotMode;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.Person;
@@ -42,7 +42,6 @@ import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 
 /**
  * {@link MockMvcWebTestClient} equivalent of the MockMvc
@@ -56,7 +55,6 @@ import static org.mockito.Mockito.mock;
 	@ContextConfiguration(classes = JavaConfigTests.RootConfig.class),
 	@ContextConfiguration(classes = JavaConfigTests.WebConfig.class)
 })
-@DisabledInAotMode("@ContextHierarchy is not supported in AOT")
 class JavaConfigTests {
 
 	@Autowired
@@ -90,7 +88,7 @@ class JavaConfigTests {
 
 		@Bean
 		PersonDao personDao() {
-			return mock();
+			return Mockito.mock(PersonDao.class);
 		}
 	}
 

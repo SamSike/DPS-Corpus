@@ -33,6 +33,7 @@ import javax.management.modelmbean.ModelMBeanNotificationInfo;
 import javax.management.modelmbean.ModelMBeanOperationInfo;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Service;
 import org.apache.camel.api.management.ManagedAttribute;
 import org.apache.camel.api.management.ManagedNotification;
@@ -42,7 +43,6 @@ import org.apache.camel.api.management.ManagedResource;
 import org.apache.camel.spi.BeanIntrospection;
 import org.apache.camel.support.LRUCache;
 import org.apache.camel.support.LRUCacheFactory;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.StringHelper;
 import org.slf4j.Logger;
@@ -60,25 +60,27 @@ public class MBeanInfoAssembler implements Service {
     private final BeanIntrospection beanIntrospection;
 
     // use a cache to speedup gathering JMX MBeanInfo for known classes
-    // use a soft cache as we don't want the cache to keep around as it reference classes
+    // use a weak cache as we dont want the cache to keep around as it reference classes
     // which could prevent classloader to unload classes if being referenced from this cache
     private Map<Class<?>, MBeanAttributesAndOperations> cache;
 
     public MBeanInfoAssembler(CamelContext camelContext) {
-        this.beanIntrospection = PluginHelper.getBeanIntrospection(camelContext);
+        ExtendedCamelContext ecc = camelContext.adapt(ExtendedCamelContext.class);
+        this.beanIntrospection = ecc.getBeanIntrospection();
     }
 
     @Override
     public void start() {
-        cache = LRUCacheFactory.newLRUSoftCache(1000);
+        cache = LRUCacheFactory.newLRUWeakCache(1000);
     }
 
     @Override
     public void stop() {
         if (cache != null) {
-            if (LOG.isDebugEnabled() && cache instanceof LRUCache<Class<?>, MBeanAttributesAndOperations> lruCache) {
-                LOG.debug("Clearing cache[size={}, hits={}, misses={}, evicted={}]", lruCache.size(), lruCache.getHits(),
-                        lruCache.getMisses(), lruCache.getEvicted());
+            if (LOG.isDebugEnabled() && cache instanceof LRUCache) {
+                LRUCache cache = (LRUCache) this.cache;
+                LOG.debug("Clearing cache[size={}, hits={}, misses={}, evicted={}]", cache.size(), cache.getHits(),
+                        cache.getMisses(), cache.getEvicted());
             }
             cache.clear();
         }
@@ -122,28 +124,28 @@ public class MBeanInfoAssembler implements Service {
         // extract details from default managed bean
         if (defaultManagedBean != null) {
             extractAttributesAndOperations(camelContext, defaultManagedBean.getClass(), attributes, operations);
-            extractMbeanAttributes(attributes, mBeanAttributes, mBeanOperations);
-            extractMbeanOperations(operations, mBeanOperations);
+            extractMbeanAttributes(defaultManagedBean, attributes, mBeanAttributes, mBeanOperations);
+            extractMbeanOperations(defaultManagedBean, operations, mBeanOperations);
             extractMbeanNotifications(defaultManagedBean, mBeanNotifications);
         }
 
         // extract details from custom managed bean
         if (customManagedBean != null) {
             extractAttributesAndOperations(camelContext, customManagedBean.getClass(), attributes, operations);
-            extractMbeanAttributes(attributes, mBeanAttributes, mBeanOperations);
-            extractMbeanOperations(operations, mBeanOperations);
+            extractMbeanAttributes(customManagedBean, attributes, mBeanAttributes, mBeanOperations);
+            extractMbeanOperations(customManagedBean, operations, mBeanOperations);
             extractMbeanNotifications(customManagedBean, mBeanNotifications);
         }
 
         // create the ModelMBeanInfo
-        String name = getName(customManagedBean != null ? customManagedBean : defaultManagedBean);
+        String name = getName(customManagedBean != null ? customManagedBean : defaultManagedBean, objectName);
         String description = getDescription(customManagedBean != null ? customManagedBean : defaultManagedBean, objectName);
         ModelMBeanAttributeInfo[] arrayAttributes
-                = mBeanAttributes.toArray(new ModelMBeanAttributeInfo[0]);
+                = mBeanAttributes.toArray(new ModelMBeanAttributeInfo[mBeanAttributes.size()]);
         ModelMBeanOperationInfo[] arrayOperations
-                = mBeanOperations.toArray(new ModelMBeanOperationInfo[0]);
+                = mBeanOperations.toArray(new ModelMBeanOperationInfo[mBeanOperations.size()]);
         ModelMBeanNotificationInfo[] arrayNotifications
-                = mBeanNotifications.toArray(new ModelMBeanNotificationInfo[0]);
+                = mBeanNotifications.toArray(new ModelMBeanNotificationInfo[mBeanNotifications.size()]);
 
         ModelMBeanInfo info
                 = new ModelMBeanInfoSupport(name, description, arrayAttributes, null, arrayOperations, arrayNotifications);
@@ -156,7 +158,7 @@ public class MBeanInfoAssembler implements Service {
             Set<ManagedOperationInfo> operations) {
         MBeanAttributesAndOperations cached = cache.get(managedClass);
         if (cached == null) {
-            doExtractAttributesAndOperations(managedClass, attributes, operations);
+            doExtractAttributesAndOperations(camelContext, managedClass, attributes, operations);
             cached = new MBeanAttributesAndOperations();
             cached.attributes = new LinkedHashMap<>(attributes);
             cached.operations = new LinkedHashSet<>(operations);
@@ -174,10 +176,10 @@ public class MBeanInfoAssembler implements Service {
     }
 
     private void doExtractAttributesAndOperations(
-            Class<?> managedClass, Map<String, ManagedAttributeInfo> attributes,
+            CamelContext camelContext, Class<?> managedClass, Map<String, ManagedAttributeInfo> attributes,
             Set<ManagedOperationInfo> operations) {
         // extract the class
-        doDoExtractAttributesAndOperations(managedClass, attributes, operations);
+        doDoExtractAttributesAndOperations(camelContext, managedClass, attributes, operations);
 
         // and then any sub classes
         if (managedClass.getSuperclass() != null) {
@@ -185,24 +187,26 @@ public class MBeanInfoAssembler implements Service {
             // skip any JDK classes
             if (!clazz.getName().startsWith("java")) {
                 LOG.trace("Extracting attributes and operations from sub class: {}", clazz);
-                doExtractAttributesAndOperations(clazz, attributes, operations);
+                doExtractAttributesAndOperations(camelContext, clazz, attributes, operations);
             }
         }
 
         // and then any additional interfaces (as interfaces can be annotated as well)
-        for (Class<?> clazz : managedClass.getInterfaces()) {
-            // recursive as there may be multiple interfaces
-            if (clazz.getName().startsWith("java")) {
-                // skip any JDK classes
-                continue;
+        if (managedClass.getInterfaces() != null) {
+            for (Class<?> clazz : managedClass.getInterfaces()) {
+                // recursive as there may be multiple interfaces
+                if (clazz.getName().startsWith("java")) {
+                    // skip any JDK classes
+                    continue;
+                }
+                LOG.trace("Extracting attributes and operations from implemented interface: {}", clazz);
+                doExtractAttributesAndOperations(camelContext, clazz, attributes, operations);
             }
-            LOG.trace("Extracting attributes and operations from implemented interface: {}", clazz);
-            doExtractAttributesAndOperations(clazz, attributes, operations);
         }
     }
 
     private void doDoExtractAttributesAndOperations(
-            Class<?> managedClass, Map<String, ManagedAttributeInfo> attributes,
+            CamelContext camelContext, Class<?> managedClass, Map<String, ManagedAttributeInfo> attributes,
             Set<ManagedOperationInfo> operations) {
         LOG.trace("Extracting attributes and operations from class: {}", managedClass);
 
@@ -267,7 +271,7 @@ public class MBeanInfoAssembler implements Service {
     }
 
     private void extractMbeanAttributes(
-            Map<String, ManagedAttributeInfo> attributes,
+            Object managedBean, Map<String, ManagedAttributeInfo> attributes,
             Set<ModelMBeanAttributeInfo> mBeanAttributes, Set<ModelMBeanOperationInfo> mBeanOperations)
             throws IntrospectionException {
 
@@ -302,11 +306,11 @@ public class MBeanInfoAssembler implements Service {
     }
 
     private void extractMbeanOperations(
-            Set<ManagedOperationInfo> operations, Set<ModelMBeanOperationInfo> mBeanOperations) {
+            Object managedBean, Set<ManagedOperationInfo> operations, Set<ModelMBeanOperationInfo> mBeanOperations) {
         for (ManagedOperationInfo info : operations) {
-            ModelMBeanOperationInfo mbean = new ModelMBeanOperationInfo(info.description(), info.operation());
+            ModelMBeanOperationInfo mbean = new ModelMBeanOperationInfo(info.getDescription(), info.getOperation());
             Descriptor opDesc = mbean.getDescriptor();
-            opDesc.setField("mask", info.mask() ? "true" : "false");
+            opDesc.setField("mask", info.isMask() ? "true" : "false");
             mbean.setDescriptor(opDesc);
             mBeanOperations.add(mbean);
             LOG.trace("Assembled operation: {}", mbean);
@@ -330,13 +334,13 @@ public class MBeanInfoAssembler implements Service {
         return mr != null ? mr.description() : "";
     }
 
-    private String getName(Object managedBean) {
+    private String getName(Object managedBean, String objectName) {
         return managedBean.getClass().getName();
     }
 
     private static final class ManagedAttributeInfo {
-        private final String key;
-        private final String description;
+        private String key;
+        private String description;
         private Method getter;
         private Method setter;
         private boolean mask;
@@ -384,7 +388,28 @@ public class MBeanInfoAssembler implements Service {
         }
     }
 
-    private record ManagedOperationInfo(String description, Method operation, boolean mask) {
+    private static final class ManagedOperationInfo {
+        private final String description;
+        private final Method operation;
+        private final boolean mask;
+
+        private ManagedOperationInfo(String description, Method operation, boolean mask) {
+            this.description = description;
+            this.operation = operation;
+            this.mask = mask;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public Method getOperation() {
+            return operation;
+        }
+
+        public boolean isMask() {
+            return mask;
+        }
 
         @Override
         public String toString() {

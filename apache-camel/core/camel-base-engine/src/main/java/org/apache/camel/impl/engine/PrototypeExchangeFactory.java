@@ -19,6 +19,7 @@ package org.apache.camel.impl.engine;
 import org.apache.camel.Consumer;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.ExchangeFactory;
 import org.apache.camel.spi.ExchangeFactoryManager;
 import org.apache.camel.support.DefaultExchange;
@@ -49,7 +50,14 @@ public class PrototypeExchangeFactory extends PooledObjectFactorySupport<Exchang
     @Override
     protected void doBuild() throws Exception {
         super.doBuild();
-        this.exchangeFactoryManager = camelContext.getCamelContextExtension().getExchangeFactoryManager();
+        this.exchangeFactoryManager = camelContext.adapt(ExtendedCamelContext.class).getExchangeFactoryManager();
+        // force creating and load the class during build time so the JVM does not
+        // load the class on first exchange to be created
+        DefaultExchange dummy = new DefaultExchange(camelContext);
+        // force message init to load classes
+        dummy.getIn();
+        dummy.getIn().getHeaders();
+        LOG.trace("Warming up PrototypeExchangeFactory loaded class: {}", dummy.getClass().getName());
     }
 
     @Override
@@ -94,7 +102,7 @@ public class PrototypeExchangeFactory extends PooledObjectFactorySupport<Exchang
         if (statisticsEnabled) {
             statistics.created.increment();
         }
-        return DefaultExchange.newFromEndpoint(fromEndpoint);
+        return new DefaultExchange(fromEndpoint);
     }
 
     @Override

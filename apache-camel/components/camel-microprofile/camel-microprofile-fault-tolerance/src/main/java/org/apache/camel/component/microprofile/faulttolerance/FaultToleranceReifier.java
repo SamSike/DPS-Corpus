@@ -21,8 +21,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
-import io.smallrye.faulttolerance.api.TypedGuard;
-import org.apache.camel.Exchange;
+import io.smallrye.faulttolerance.core.circuit.breaker.CircuitBreaker;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
 import org.apache.camel.model.CircuitBreakerDefinition;
@@ -33,7 +33,6 @@ import org.apache.camel.reifier.ProcessorReifier;
 import org.apache.camel.spi.BeanIntrospection;
 import org.apache.camel.spi.ExtendedPropertyConfigurerGetter;
 import org.apache.camel.spi.PropertyConfigurer;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.PropertyBindingSupport;
 import org.apache.camel.util.function.Suppliers;
 
@@ -48,8 +47,8 @@ public class FaultToleranceReifier extends ProcessorReifier<CircuitBreakerDefini
         // create the regular and fallback processors
         Processor processor = createChildProcessor(true);
         Processor fallback = null;
-        if (definition.getOnFallback() != null && !definition.getOnFallback().getOutputs().isEmpty()) {
-            fallback = createOutputsProcessor(definition.getOnFallback().getOutputs());
+        if (definition.getOnFallback() != null) {
+            fallback = createProcessor(definition.getOnFallback());
         }
         boolean fallbackViaNetwork
                 = definition.getOnFallback() != null && parseBoolean(definition.getOnFallback().getFallbackViaNetwork(), false);
@@ -65,11 +64,11 @@ public class FaultToleranceReifier extends ProcessorReifier<CircuitBreakerDefini
 
         FaultToleranceProcessor answer = new FaultToleranceProcessor(configuration, processor, fallback);
         // using any existing circuit breakers?
-        if (config.getTypedGuard() != null) {
-            TypedGuard<Exchange> cb = mandatoryLookup(parseString(config.getTypedGuard()), TypedGuard.class);
-            answer.setTypedGuard(cb);
+        if (config.getCircuitBreaker() != null) {
+            CircuitBreaker cb = mandatoryLookup(parseString(config.getCircuitBreaker()), CircuitBreaker.class);
+            answer.setCircuitBreaker(cb);
         }
-        configureExecutorService(answer, config);
+        configureBulkheadExecutorService(answer, config);
         return answer;
     }
 
@@ -90,7 +89,12 @@ public class FaultToleranceReifier extends ProcessorReifier<CircuitBreakerDefini
     }
 
     private void configureTimeLimiter(FaultToleranceConfigurationCommon config, FaultToleranceConfiguration target) {
-        target.setTimeoutEnabled(parseBoolean(config.getTimeoutEnabled(), false));
+        if (!parseBoolean(config.getTimeoutEnabled(), false)) {
+            target.setTimeoutEnabled(false);
+        } else {
+            target.setTimeoutEnabled(true);
+        }
+
         target.setTimeoutDuration(parseDuration(config.getTimeoutDuration(), 1000));
         target.setTimeoutPoolSize(parseInt(config.getTimeoutPoolSize(), 10));
     }
@@ -99,13 +103,18 @@ public class FaultToleranceReifier extends ProcessorReifier<CircuitBreakerDefini
         if (!parseBoolean(config.getBulkheadEnabled(), false)) {
             return;
         }
+
         target.setBulkheadMaxConcurrentCalls(parseInt(config.getBulkheadMaxConcurrentCalls(), 10));
         target.setBulkheadWaitingTaskQueue(parseInt(config.getBulkheadWaitingTaskQueue(), 10));
     }
 
-    private void configureExecutorService(FaultToleranceProcessor processor, FaultToleranceConfigurationCommon config) {
-        if (config.getThreadOffloadExecutorService() != null) {
-            String ref = config.getThreadOffloadExecutorService();
+    private void configureBulkheadExecutorService(FaultToleranceProcessor processor, FaultToleranceConfigurationCommon config) {
+        if (!parseBoolean(config.getBulkheadEnabled(), false)) {
+            return;
+        }
+
+        if (config.getBulkheadExecutorService() != null) {
+            String ref = config.getBulkheadExecutorService();
             boolean shutdownThreadPool = false;
             ExecutorService executorService = lookupByNameAndType(ref, ExecutorService.class);
             if (executorService == null) {
@@ -124,14 +133,14 @@ public class FaultToleranceReifier extends ProcessorReifier<CircuitBreakerDefini
     FaultToleranceConfigurationDefinition buildFaultToleranceConfiguration() throws Exception {
         Map<String, Object> properties = new HashMap<>();
 
-        final PropertyConfigurer configurer = PluginHelper.getConfigurerResolver(camelContext)
+        final PropertyConfigurer configurer = camelContext.adapt(ExtendedCamelContext.class)
+                .getConfigurerResolver()
                 .resolvePropertyConfigurer(FaultToleranceConfigurationDefinition.class.getName(), camelContext);
 
         // Extract properties from default configuration, the one configured on
         // camel context takes the precedence over those in the registry
         loadProperties(properties, Suppliers.firstNotNull(
-                () -> camelContext.getCamelContextExtension().getContextPlugin(Model.class)
-                        .getFaultToleranceConfiguration(null),
+                () -> camelContext.getExtension(Model.class).getFaultToleranceConfiguration(null),
                 () -> lookupByNameAndType(FaultToleranceConstants.DEFAULT_FAULT_TOLERANCE_CONFIGURATION_ID,
                         FaultToleranceConfigurationDefinition.class)),
                 configurer);
@@ -140,9 +149,9 @@ public class FaultToleranceReifier extends ProcessorReifier<CircuitBreakerDefini
         // on camel context takes the precedence over those in the registry
         if (definition.getConfiguration() != null) {
             final String ref = parseString(definition.getConfiguration());
+
             loadProperties(properties, Suppliers.firstNotNull(
-                    () -> camelContext.getCamelContextExtension().getContextPlugin(Model.class)
-                            .getFaultToleranceConfiguration(ref),
+                    () -> camelContext.getExtension(Model.class).getFaultToleranceConfiguration(ref),
                     () -> mandatoryLookup(ref, FaultToleranceConfigurationDefinition.class)),
                     configurer);
         }
@@ -154,7 +163,6 @@ public class FaultToleranceReifier extends ProcessorReifier<CircuitBreakerDefini
         FaultToleranceConfigurationDefinition config = new FaultToleranceConfigurationDefinition();
         PropertyBindingSupport.build()
                 .withCamelContext(camelContext)
-                .withIgnoreCase(true)
                 .withConfigurer(configurer)
                 .withProperties(properties)
                 .withTarget(config)
@@ -164,7 +172,7 @@ public class FaultToleranceReifier extends ProcessorReifier<CircuitBreakerDefini
     }
 
     private void loadProperties(Map<String, Object> properties, Optional<?> optional, PropertyConfigurer configurer) {
-        BeanIntrospection beanIntrospection = PluginHelper.getBeanIntrospection(camelContext);
+        BeanIntrospection beanIntrospection = camelContext.adapt(ExtendedCamelContext.class).getBeanIntrospection();
         optional.ifPresent(bean -> {
             if (configurer instanceof ExtendedPropertyConfigurerGetter) {
                 ExtendedPropertyConfigurerGetter getter = (ExtendedPropertyConfigurerGetter) configurer;

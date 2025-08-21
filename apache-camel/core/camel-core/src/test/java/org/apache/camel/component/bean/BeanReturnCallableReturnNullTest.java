@@ -40,16 +40,16 @@ public class BeanReturnCallableReturnNullTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("myBean", new MyBean());
         return answer;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:in").setHeader("foo", constant("bar")).to("bean:myBean").to("mock:result");
             }
         };
@@ -57,13 +57,16 @@ public class BeanReturnCallableReturnNullTest extends ContextTestSupport {
 
     public static class MyBean {
 
-        public Callable<Object> doSomething(final Exchange exchange) {
-            return () -> {
-                String body = exchange.getIn().getBody(String.class);
-                exchange.getIn().setHeader("user", "admin");
-                exchange.getIn().setBody(body + "MyBean");
-                // return null as we have set changes already
-                return null;
+        public Callable doSomething(final Exchange exchange) {
+            return new Callable() {
+                @Override
+                public Object call() throws Exception {
+                    String body = exchange.getIn().getBody(String.class);
+                    exchange.getIn().setHeader("user", "admin");
+                    exchange.getIn().setBody(body + "MyBean");
+                    // return null as we have set changes already
+                    return null;
+                }
             };
         }
     }

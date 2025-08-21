@@ -16,8 +16,6 @@
  */
 package org.apache.camel.processor;
 
-import java.util.Map;
-
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.CamelContext;
@@ -27,8 +25,9 @@ import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.Expression;
+import org.apache.camel.ExtendedCamelContext;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.spi.EndpointUtilizationStatistics;
-import org.apache.camel.spi.HeadersMapFactory;
 import org.apache.camel.spi.IdAware;
 import org.apache.camel.spi.ProcessorExchangeFactory;
 import org.apache.camel.spi.RouteIdAware;
@@ -56,23 +55,17 @@ public class Enricher extends AsyncProcessorSupport implements IdAware, RouteIdA
     private String id;
     private String routeId;
     private final Expression expression;
-    private final String uri;
-    private String variableSend;
-    private String variableReceive;
     private AggregationStrategy aggregationStrategy;
     private boolean aggregateOnException;
     private boolean shareUnitOfWork;
     private int cacheSize;
     private boolean ignoreInvalidEndpoint;
     private boolean allowOptimisedComponents = true;
-    private boolean autoStartupComponents = true;
-    private HeadersMapFactory headersMapFactory;
     private ProcessorExchangeFactory processorExchangeFactory;
     private SendDynamicProcessor sendDynamicProcessor;
 
-    public Enricher(Expression expression, String uri) {
+    public Enricher(Expression expression) {
         this.expression = expression;
-        this.uri = uri;
     }
 
     @Override
@@ -111,22 +104,6 @@ public class Enricher extends AsyncProcessorSupport implements IdAware, RouteIdA
 
     public EndpointUtilizationStatistics getEndpointUtilizationStatistics() {
         return sendDynamicProcessor.getEndpointUtilizationStatistics();
-    }
-
-    public String getVariableSend() {
-        return variableSend;
-    }
-
-    public void setVariableSend(String variableSend) {
-        this.variableSend = variableSend;
-    }
-
-    public String getVariableReceive() {
-        return variableReceive;
-    }
-
-    public void setVariableReceive(String variableReceive) {
-        this.variableReceive = variableReceive;
     }
 
     public void setAggregationStrategy(AggregationStrategy aggregationStrategy) {
@@ -177,42 +154,15 @@ public class Enricher extends AsyncProcessorSupport implements IdAware, RouteIdA
         this.allowOptimisedComponents = allowOptimisedComponents;
     }
 
-    public boolean isAutoStartupComponents() {
-        return autoStartupComponents;
-    }
-
-    public void setAutoStartupComponents(boolean autoStartupComponents) {
-        this.autoStartupComponents = autoStartupComponents;
-    }
-
     @Override
     public boolean process(final Exchange exchange, final AsyncCallback callback) {
         final Exchange resourceExchange = createResourceExchange(exchange, ExchangePattern.InOut);
-
-        // if we should store the received message body in a variable,
-        // then we need to preserve the original message body
-        Object body = null;
-        Map<String, Object> headers = null;
-        if (variableReceive != null) {
-            try {
-                body = exchange.getMessage().getBody();
-                // do a defensive copy of the headers
-                headers = headersMapFactory.newMap(exchange.getMessage().getHeaders());
-            } catch (Exception throwable) {
-                exchange.setException(throwable);
-                callback.done(true);
-                return true;
-            }
-        }
-        final Object originalBody = body;
-        final Map<String, Object> originalHeaders = headers;
-
         return sendDynamicProcessor.process(resourceExchange, new AsyncCallback() {
             @Override
             public void done(boolean doneSync) {
                 if (!isAggregateOnException() && resourceExchange.isFailed()) {
                     // copy resource exchange onto original exchange (preserving pattern)
-                    copyResultsWithoutCorrelationId(exchange, resourceExchange);
+                    copyResultsPreservePattern(exchange, resourceExchange);
                 } else {
                     prepareResult(exchange);
                     try {
@@ -222,21 +172,14 @@ public class Enricher extends AsyncProcessorSupport implements IdAware, RouteIdA
 
                         Exchange aggregatedExchange = aggregationStrategy.aggregate(exchange, resourceExchange);
                         if (aggregatedExchange != null) {
-                            if (ExchangeHelper.shouldSetVariableResult(aggregatedExchange, variableReceive)) {
-                                // result should be stored in variable instead of message body
-                                ExchangeHelper.setVariableFromMessageBodyAndHeaders(aggregatedExchange, variableReceive,
-                                        aggregatedExchange.getMessage());
-                                aggregatedExchange.getMessage().setBody(originalBody);
-                                aggregatedExchange.getMessage().setHeaders(originalHeaders);
-                            }
                             // copy aggregation result onto original exchange (preserving pattern)
-                            copyResultsWithoutCorrelationId(exchange, aggregatedExchange);
+                            copyResultsPreservePattern(exchange, aggregatedExchange);
                             // handover any synchronization (if unit of work is not shared)
                             if (resourceExchange != null && !isShareUnitOfWork()) {
-                                resourceExchange.getExchangeExtension().handoverCompletions(exchange);
+                                resourceExchange.adapt(ExtendedExchange.class).handoverCompletions(exchange);
                             }
                         }
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         // if the aggregationStrategy threw an exception, set it on the original exchange
                         exchange.setException(new CamelExchangeException("Error occurred during aggregation", exchange, e));
                     }
@@ -265,8 +208,9 @@ public class Enricher extends AsyncProcessorSupport implements IdAware, RouteIdA
 
         // if we share unit of work, we need to prepare the resource exchange
         if (isShareUnitOfWork()) {
+            target.setProperty(ExchangePropertyKey.PARENT_UNIT_OF_WORK, source.getUnitOfWork());
             // and then share the unit of work
-            target.getExchangeExtension().setUnitOfWork(source.getUnitOfWork());
+            target.adapt(ExtendedExchange.class).setUnitOfWork(source.getUnitOfWork());
         }
         return target;
     }
@@ -289,16 +233,14 @@ public class Enricher extends AsyncProcessorSupport implements IdAware, RouteIdA
     @Override
     protected void doBuild() throws Exception {
         // use send dynamic to send to endpoint
-        this.sendDynamicProcessor = new SendDynamicProcessor(uri, expression);
+        this.sendDynamicProcessor = new SendDynamicProcessor(null, getExpression());
         this.sendDynamicProcessor.setCamelContext(camelContext);
         this.sendDynamicProcessor.setCacheSize(cacheSize);
         this.sendDynamicProcessor.setIgnoreInvalidEndpoint(ignoreInvalidEndpoint);
         this.sendDynamicProcessor.setAllowOptimisedComponents(allowOptimisedComponents);
-        this.sendDynamicProcessor.setAutoStartupComponents(autoStartupComponents);
-        this.sendDynamicProcessor.setVariableSend(variableSend);
 
         // create a per processor exchange factory
-        this.processorExchangeFactory = getCamelContext().getCamelContextExtension()
+        this.processorExchangeFactory = getCamelContext().adapt(ExtendedCamelContext.class)
                 .getProcessorExchangeFactory().newProcessorExchangeFactory(this);
         this.processorExchangeFactory.setRouteId(getRouteId());
         this.processorExchangeFactory.setId(getId());
@@ -311,11 +253,6 @@ public class Enricher extends AsyncProcessorSupport implements IdAware, RouteIdA
     }
 
     @Override
-    protected void doInit() throws Exception {
-        headersMapFactory = camelContext.getCamelContextExtension().getHeadersMapFactory();
-    }
-
-    @Override
     protected void doStart() throws Exception {
         ServiceHelper.startService(processorExchangeFactory, aggregationStrategy, sendDynamicProcessor);
     }
@@ -325,20 +262,12 @@ public class Enricher extends AsyncProcessorSupport implements IdAware, RouteIdA
         ServiceHelper.stopService(aggregationStrategy, processorExchangeFactory, sendDynamicProcessor);
     }
 
-    private static void copyResultsWithoutCorrelationId(Exchange target, Exchange source) {
-        Object correlationId = target.removeProperty(ExchangePropertyKey.CORRELATION_ID);
-        copyResultsPreservePattern(target, source);
-        if (correlationId != null) {
-            target.setProperty(ExchangePropertyKey.CORRELATION_ID, correlationId);
-        }
-    }
-
     private static class CopyAggregationStrategy implements AggregationStrategy {
 
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
             if (newExchange != null) {
-                copyResultsWithoutCorrelationId(oldExchange, newExchange);
+                copyResultsPreservePattern(oldExchange, newExchange);
             }
             return oldExchange;
         }

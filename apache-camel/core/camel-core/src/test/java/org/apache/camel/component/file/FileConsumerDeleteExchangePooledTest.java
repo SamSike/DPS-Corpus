@@ -34,22 +34,21 @@ public class FileConsumerDeleteExchangePooledTest extends ContextTestSupport {
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        CamelContext context = super.createCamelContext();
-        ExtendedCamelContext extendedCamelContext = context.getCamelContextExtension();
+        ExtendedCamelContext context = (ExtendedCamelContext) super.createCamelContext();
 
-        extendedCamelContext.getExchangeFactoryManager().setStatisticsEnabled(true);
+        context.getExchangeFactoryManager().setStatisticsEnabled(true);
 
         PooledExchangeFactory pef = new PooledExchangeFactory();
-        extendedCamelContext.setExchangeFactory(pef);
+        context.setExchangeFactory(pef);
 
-        extendedCamelContext.getExchangeFactory().setStatisticsEnabled(true);
-        extendedCamelContext.getProcessorExchangeFactory().setStatisticsEnabled(true);
+        context.getExchangeFactory().setStatisticsEnabled(true);
+        context.getProcessorExchangeFactory().setStatisticsEnabled(true);
         return context;
     }
 
     @Test
     public void testDelete() throws Exception {
-        ExtendedCamelContext ecc = context.getCamelContextExtension();
+        ExtendedCamelContext ecc = (ExtendedCamelContext) context;
         assertEquals(0, ecc.getExchangeFactoryManager().getStatistics().getReleasedCounter());
 
         MockEndpoint mock = getMockEndpoint("mock:result");
@@ -65,10 +64,10 @@ public class FileConsumerDeleteExchangePooledTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?delete=true&initialDelay=0&delay=10"))
                         .to("mock:result");
             }

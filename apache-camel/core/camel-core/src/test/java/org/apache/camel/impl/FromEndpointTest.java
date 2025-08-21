@@ -29,11 +29,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class FromEndpointTest extends ContextTestSupport {
-    private final Object expectedBody = "<hello>world!</hello>";
+    private MockEndpoint results;
+    private Object expectedBody = "<hello>world!</hello>";
 
     @Test
     public void testReceivedMessageHasFromEndpointSet() throws Exception {
-        MockEndpoint results = getMockEndpoint("mock:results");
+        results = getMockEndpoint("mock:results");
         results.expectedBodiesReceived(expectedBody);
 
         template.sendBody("direct:start", expectedBody);
@@ -47,10 +48,10 @@ public class FromEndpointTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("mock:results");
             }
         };

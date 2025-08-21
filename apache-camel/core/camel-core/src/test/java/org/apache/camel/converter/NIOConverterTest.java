@@ -19,7 +19,6 @@ package org.apache.camel.converter;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.UUID;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
@@ -29,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class NIOConverterTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello" + UUID.randomUUID() + ".txt";
 
     @Test
     public void testToByteArray() {
@@ -96,9 +94,9 @@ public class NIOConverterTest extends ContextTestSupport {
 
     @Test
     public void testToByteBufferFile() throws Exception {
-        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
 
-        ByteBuffer bb = NIOConverter.toByteBuffer(testFile(TEST_FILE_NAME).toFile());
+        ByteBuffer bb = NIOConverter.toByteBuffer(testFile("hello.txt").toFile());
         assertNotNull(bb);
 
         assertEquals("Hello World", NIOConverter.toString(bb, null));

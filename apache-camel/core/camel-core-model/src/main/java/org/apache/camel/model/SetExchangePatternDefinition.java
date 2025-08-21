@@ -33,15 +33,10 @@ import org.apache.camel.spi.Metadata;
 public class SetExchangePatternDefinition extends NoOutputDefinition<SetExchangePatternDefinition> {
 
     @XmlAttribute(required = true)
-    @Metadata(required = true, javaType = "org.apache.camel.ExchangePattern", enums = "InOnly,InOut")
+    @Metadata(required = true, javaType = "org.apache.camel.ExchangePattern", enums = "InOnly,InOut,InOptionalOut")
     private String pattern;
 
     public SetExchangePatternDefinition() {
-    }
-
-    protected SetExchangePatternDefinition(SetExchangePatternDefinition source) {
-        super(source);
-        this.pattern = source.pattern;
     }
 
     public SetExchangePatternDefinition(ExchangePattern pattern) {
@@ -50,11 +45,6 @@ public class SetExchangePatternDefinition extends NoOutputDefinition<SetExchange
 
     public SetExchangePatternDefinition(String pattern) {
         this.pattern = pattern;
-    }
-
-    @Override
-    public SetExchangePatternDefinition copyDefinition() {
-        return new SetExchangePatternDefinition(this);
     }
 
     public SetExchangePatternDefinition pattern(ExchangePattern pattern) {

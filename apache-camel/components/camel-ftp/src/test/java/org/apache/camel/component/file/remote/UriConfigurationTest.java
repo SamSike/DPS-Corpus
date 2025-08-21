@@ -21,10 +21,8 @@ import org.apache.camel.test.junit5.TestSupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UriConfigurationTest extends CamelTestSupport {
 
@@ -38,7 +36,7 @@ public class UriConfigurationTest extends CamelTestSupport {
         assertEquals(21, config.getPort());
         assertNull(config.getUsername());
         assertNull(config.getPassword());
-        assertFalse(config.isBinary());
+        assertEquals(false, config.isBinary());
         assertEquals(RemoteFileConfiguration.PathSeparator.UNIX, config.getSeparator());
     }
 
@@ -52,7 +50,7 @@ public class UriConfigurationTest extends CamelTestSupport {
         assertEquals(22, config.getPort());
         assertNull(config.getUsername());
         assertNull(config.getPassword());
-        assertFalse(config.isBinary());
+        assertEquals(false, config.isBinary());
         assertEquals(RemoteFileConfiguration.PathSeparator.UNIX, config.getSeparator());
     }
 
@@ -66,8 +64,8 @@ public class UriConfigurationTest extends CamelTestSupport {
         assertEquals(21, config.getPort());
         assertNull(config.getUsername());
         assertNull(config.getPassword());
-        assertFalse(config.isBinary());
-        assertFalse(config.isImplicit());
+        assertEquals(false, config.isBinary());
+        assertEquals(false, config.isImplicit());
         assertEquals("TLSv1.3", config.getSecurityProtocol());
         assertEquals(RemoteFileConfiguration.PathSeparator.UNIX, config.getSeparator());
     }
@@ -82,8 +80,8 @@ public class UriConfigurationTest extends CamelTestSupport {
         assertEquals(990, config.getPort());
         assertNull(config.getUsername());
         assertNull(config.getPassword());
-        assertFalse(config.isBinary());
-        assertTrue(config.isImplicit());
+        assertEquals(false, config.isBinary());
+        assertEquals(true, config.isImplicit());
         assertEquals("TLSv1.3", config.getSecurityProtocol());
     }
 
@@ -98,7 +96,7 @@ public class UriConfigurationTest extends CamelTestSupport {
         assertEquals(1021, config.getPort());
         assertEquals("user", config.getUsername());
         assertEquals("secret", config.getPassword());
-        assertTrue(config.isBinary());
+        assertEquals(true, config.isBinary());
     }
 
     @Test
@@ -112,7 +110,7 @@ public class UriConfigurationTest extends CamelTestSupport {
         assertEquals(1021, config.getPort());
         assertEquals("user", config.getUsername());
         assertEquals("secret", config.getPassword());
-        assertTrue(config.isBinary());
+        assertEquals(true, config.isBinary());
     }
 
     @Test
@@ -127,8 +125,8 @@ public class UriConfigurationTest extends CamelTestSupport {
         assertEquals(1021, config.getPort());
         assertEquals("user", config.getUsername());
         assertEquals("secret", config.getPassword());
-        assertTrue(config.isBinary());
-        assertTrue(config.isImplicit());
+        assertEquals(true, config.isBinary());
+        assertEquals(true, config.isImplicit());
         assertEquals("SSL", config.getSecurityProtocol());
     }
 
@@ -188,7 +186,7 @@ public class UriConfigurationTest extends CamelTestSupport {
         assertEquals(1021, config.getPort());
         assertEquals("user", config.getUsername());
         assertEquals("secret", config.getPassword());
-        assertTrue(config.isBinary());
+        assertEquals(true, config.isBinary());
         assertEquals("/home/janstey/.ssh/known_hosts", config.getKnownHostsFile());
     }
 

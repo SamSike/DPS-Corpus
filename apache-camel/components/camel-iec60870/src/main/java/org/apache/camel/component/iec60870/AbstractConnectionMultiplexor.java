@@ -16,10 +16,8 @@
  */
 package org.apache.camel.component.iec60870;
 
-import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.camel.RuntimeCamelException;
 import org.slf4j.Logger;
@@ -40,63 +38,48 @@ public abstract class AbstractConnectionMultiplexor {
         }
     }
 
-    private final Lock lock = new ReentrantLock();
-    private final Set<HandleImplementation> handles = new HashSet<>();
+    private final Set<HandleImplementation> handles = new CopyOnWriteArraySet<>();
 
-    public Handle register() throws Exception {
-        lock.lock();
-        try {
-            final HandleImplementation handle = new HandleImplementation();
+    public synchronized Handle register() throws Exception {
+        final HandleImplementation handle = new HandleImplementation();
 
-            final boolean needStart = this.handles.isEmpty();
-            this.handles.add(handle);
+        final boolean needStart = this.handles.isEmpty();
+        this.handles.add(handle);
 
-            if (needStart) {
-                LOG.info("Calling performStart()");
-                performStart();
-            }
+        if (needStart) {
+            LOG.info("Calling performStart()");
+            performStart();
+        }
 
-            return handle;
-        } finally {
-            lock.unlock();
+        return handle;
+    }
+
+    private synchronized void unregister(final HandleImplementation handle) throws Exception {
+        if (!this.handles.remove(handle)) {
+            return;
+        }
+
+        if (this.handles.isEmpty()) {
+            LOG.info("Calling performStop()");
+            performStop();
         }
     }
 
-    private void unregister(final HandleImplementation handle) throws Exception {
-        lock.lock();
-        try {
-            if (!this.handles.remove(handle)) {
-                return;
-            }
+    public synchronized void dispose() {
 
-            if (this.handles.isEmpty()) {
-                LOG.info("Calling performStop()");
-                performStop();
-            }
-        } finally {
-            lock.unlock();
+        LOG.info("Disposing");
+        if (this.handles.isEmpty()) {
+            LOG.debug("Disposing - not started");
+            return;
         }
-    }
 
-    public void dispose() {
-        lock.lock();
+        LOG.debug("Disposing - calling performStop()");
+
+        this.handles.clear();
         try {
-            LOG.info("Disposing");
-            if (this.handles.isEmpty()) {
-                LOG.debug("Disposing - not started");
-                return;
-            }
-
-            LOG.debug("Disposing - calling performStop()");
-
-            this.handles.clear();
-            try {
-                performStop();
-            } catch (final Exception e) {
-                throw new RuntimeCamelException("Failed to stop on dispose", e);
-            }
-        } finally {
-            lock.unlock();
+            performStop();
+        } catch (final Exception e) {
+            throw new RuntimeCamelException("Failed to stop on dispose", e);
         }
     }
 

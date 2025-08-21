@@ -17,22 +17,12 @@
 package org.apache.camel.dsl.yaml.deserializers;
 
 import org.apache.camel.dsl.yaml.common.YamlDeserializerResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.snakeyaml.engine.v2.api.ConstructNode;
 
 public class CustomResolver implements YamlDeserializerResolver {
-    public static final Logger LOG = LoggerFactory.getLogger(CustomResolver.class);
-
     @Override
     public int getOrder() {
         return YamlDeserializerResolver.ORDER_DEFAULT;
-    }
-
-    private final BeansDeserializer beansDeserializer;
-
-    public CustomResolver(BeansDeserializer beansDeserializer) {
-        this.beansDeserializer = beansDeserializer;
     }
 
     @Override
@@ -48,15 +38,24 @@ public class CustomResolver implements YamlDeserializerResolver {
             case "route":
             case "org.apache.camel.model.RouteDefinition":
                 return new RouteDefinitionDeserializer();
+            case "route-configuration":
             case "routeConfiguration":
             case "org.apache.camel.model.RouteConfigurationDefinition":
                 return new RouteConfigurationDefinitionDeserializer();
+            case "route-template":
             case "routeTemplate":
             case "org.apache.camel.model.RouteTemplateDefinition":
                 return new RouteTemplateDefinitionDeserializer();
+            case "templated-route":
             case "templatedRoute":
             case "org.apache.camel.model.TemplatedRouteDefinition":
                 return new TemplatedRouteDefinitionDeserializer();
+            case "org.apache.camel.model.RouteTemplateBeanDefinition":
+                return new RouteTemplateBeanDefinitionDeserializer();
+            case "org.apache.camel.model.TemplatedRouteBeanDefinition":
+                return new TemplatedRouteBeanDefinitionDeserializer();
+            case "org.apache.camel.dsl.yaml.deserializers.NamedBeanDefinition":
+                return new NamedBeanDeserializer();
             case "org.apache.camel.dsl.yaml.deserializers.OutputAwareFromDefinition":
                 return new OutputAwareFromDefinitionDeserializer();
 
@@ -64,6 +63,7 @@ public class CustomResolver implements YamlDeserializerResolver {
             // Expression
             //
             case "expression":
+            case "org.apache.camel.model.PropertyExpressionDefinition":
             case "org.apache.camel.model.language.ExpressionDefinition":
                 return new ExpressionDeserializers.ExpressionDefinitionDeserializers();
             case "org.apache.camel.model.ExpressionSubElementDefinition":
@@ -73,14 +73,10 @@ public class CustomResolver implements YamlDeserializerResolver {
             // Misc
             //
             case "beans":
-                return beansDeserializer;
-            case "dataFormats":
-                return new DataFormatsDefinitionDeserializer();
-            case "org.apache.camel.model.ErrorHandlerDefinition":
-                return new ErrorHandlerDeserializer();
+                return new BeansDeserializer();
+            case "error-handler":
             case "errorHandler":
-                // must be a global error handler
-                return new ErrorHandlerDeserializer(true);
+                return new ErrorHandlerBuilderDeserializer();
             case "org.apache.camel.model.ProcessorDefinition":
                 return new ProcessorDefinitionDeserializer();
             case "kamelet":

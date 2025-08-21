@@ -34,8 +34,11 @@ public class FtpProducerFileExistFailIT extends FtpServerTestSupport {
         return "ftp://admin@localhost:{{ftp.server.port}}/exist?password=admin&delay=2000&noop=true&fileExist=Fail";
     }
 
+    @Override
     @BeforeEach
-    public void sendMessages() {
+    public void setUp() throws Exception {
+        super.setUp();
+
         template.sendBodyAndHeader(getFtpUrl(), "Hello World", Exchange.FILE_NAME, "hello.txt");
     }
 

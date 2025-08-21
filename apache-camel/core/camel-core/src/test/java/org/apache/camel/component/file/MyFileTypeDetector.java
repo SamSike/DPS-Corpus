@@ -16,13 +16,14 @@
  */
 package org.apache.camel.component.file;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.spi.FileTypeDetector;
 
 public class MyFileTypeDetector extends FileTypeDetector {
 
     @Override
-    public String probeContentType(Path path) {
+    public String probeContentType(Path path) throws IOException {
         // Just return a content-type without checking the path
         return "txt";
     }

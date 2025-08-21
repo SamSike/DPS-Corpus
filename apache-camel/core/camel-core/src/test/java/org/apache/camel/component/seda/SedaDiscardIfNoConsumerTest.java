@@ -18,13 +18,13 @@ package org.apache.camel.component.seda;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.support.SynchronizationAdapter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SedaDiscardIfNoConsumerTest extends ContextTestSupport {
 
@@ -53,9 +53,9 @@ public class SedaDiscardIfNoConsumerTest extends ContextTestSupport {
 
         template.send("direct:start", new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("Hello World");
-                exchange.getExchangeExtension().addOnCompletion(myCompletion);
+                exchange.adapt(ExtendedExchange.class).addOnCompletion(myCompletion);
             }
         });
 
@@ -63,14 +63,14 @@ public class SedaDiscardIfNoConsumerTest extends ContextTestSupport {
 
         assertEquals(0, bar.getCurrentQueueSize());
 
-        assertTrue(myCompletion.isCalled());
+        assertEquals(true, myCompletion.isCalled());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("seda:bar?discardIfNoConsumers=true").to("mock:result");
             }
         };

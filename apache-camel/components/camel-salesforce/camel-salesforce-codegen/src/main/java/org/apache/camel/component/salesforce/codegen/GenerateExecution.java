@@ -23,7 +23,6 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Stack;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BinaryOperator;
@@ -47,8 +47,8 @@ import org.apache.camel.component.salesforce.api.dto.AbstractSObjectBase;
 import org.apache.camel.component.salesforce.api.dto.PickListValue;
 import org.apache.camel.component.salesforce.api.dto.SObjectDescription;
 import org.apache.camel.component.salesforce.api.dto.SObjectField;
-import org.apache.camel.impl.engine.DefaultBeanIntrospection;
-import org.apache.camel.spi.BeanIntrospection;
+import org.apache.camel.component.salesforce.internal.client.RestClient;
+import org.apache.camel.support.IntrospectionSupport;
 import org.apache.camel.util.StringHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
@@ -67,9 +67,8 @@ public class GenerateExecution extends AbstractSalesforceExecution {
 
     public class GeneratorUtility {
 
-        private ArrayDeque<String> stack;
+        private Stack<String> stack;
         private final Map<String, AtomicInteger> varNames = new HashMap<>();
-        private final BeanIntrospection bi = new DefaultBeanIntrospection();
 
         public String current() {
             return stack.peek();
@@ -260,7 +259,7 @@ public class GenerateExecution extends AbstractSalesforceExecution {
 
         public Set<Map.Entry<String, Object>> propertiesOf(final Object object) {
             final Map<String, Object> properties = new TreeMap<>();
-            bi.getProperties(object, properties, null, false);
+            IntrospectionSupport.getProperties(object, properties, null, false);
 
             final Function<Map.Entry<String, Object>, String> keyMapper = e -> StringUtils.capitalize(e.getKey());
             final Function<Map.Entry<String, Object>, Object> valueMapper = Map.Entry::getValue;
@@ -277,7 +276,7 @@ public class GenerateExecution extends AbstractSalesforceExecution {
         }
 
         public void start(final String initial) {
-            stack = new ArrayDeque<>();
+            stack = new Stack<>();
             stack.push(initial);
             varNames.clear();
         }
@@ -481,9 +480,9 @@ public class GenerateExecution extends AbstractSalesforceExecution {
     }
 
     @Override
-    protected void executeWithClient() throws Exception {
+    protected void executeWithClient(final RestClient client) throws Exception {
         descriptions = new ObjectDescriptions(
-                getRestClient(), getResponseTimeout(), includes, includePattern, excludes, excludePattern, getLog());
+                client, getResponseTimeout(), includes, includePattern, excludes, excludePattern, getLog());
 
         // make sure we can load both templates
         if (!engine.resourceExists(SOBJECT_POJO_VM) || !engine.resourceExists(SOBJECT_QUERY_RECORDS_VM)
@@ -541,11 +540,12 @@ public class GenerateExecution extends AbstractSalesforceExecution {
     private VelocityEngine createVelocityEngine() {
         // initialize velocity to load resources from class loader and use Log4J
         final Properties velocityProperties = new Properties();
-        velocityProperties.setProperty(RuntimeConstants.RESOURCE_LOADERS, "cloader");
-        velocityProperties.setProperty("resource.loader.cloader.class", ClasspathResourceLoader.class.getName());
+        velocityProperties.setProperty(RuntimeConstants.RESOURCE_LOADER, "cloader");
+        velocityProperties.setProperty("cloader.resource.loader.class", ClasspathResourceLoader.class.getName());
         velocityProperties.setProperty(RuntimeConstants.RUNTIME_LOG_NAME, LOG.getName());
+        final VelocityEngine engine = new VelocityEngine(velocityProperties);
 
-        return new VelocityEngine(velocityProperties);
+        return engine;
     }
 
     private static Set<String> defineBaseFields() {

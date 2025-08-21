@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -104,28 +101,7 @@ implements
 
 
 
-        Eq.acceptCompareCondition(ctx,
-            this,
-            arg1,
-            org.jooq.Comparator.EQUALS,
-            arg2,
-            RowN::eq,
-            RowN::eq,
-            (c, a1, a2) -> {
-                switch (c.family()) {
-
-
-
-
-
-
-
-
-                    default:
-                        return c.visit(a1).sql(" = ").visit(a2);
-                }
-            }
-        );
+        Eq.acceptCompareCondition(ctx, this, arg1, org.jooq.Comparator.EQUALS, arg2, RowN::eq, RowN::eq, (c, a1, a2) -> c.visit(a1).sql(" = ").visit(a2));
     }
 
     @Override
@@ -143,25 +119,27 @@ implements
         Field<T> arg1,
         org.jooq.Comparator op,
         Field<T> arg2,
-        Function2<RowN, Select<?>, Condition> compareRowSubquery,
-        Function2<RowN, RowN, Condition> compareRowRow,
-        Function3<? super Context<?>, ? super Field<?>, ? super Field<?>, ? extends Context<?>> acceptDefault
+        BiFunction<RowN, Select<?>, Condition> compareRowSubquery,
+        BiFunction<RowN, RowN, Condition> compareRowRow,
+        Function3<? super Context<?>, ? super Field<T>, ? super Field<T>, ? extends Context<?>> acceptDefault
     ) {
-        DataType<T> t1 = arg1.getDataType();
-        DataType<T> t2 = arg2.getDataType();
-        boolean field1Embeddable = t1.isEmbeddable();
+        boolean field1Embeddable = arg1.getDataType().isEmbeddable();
         SelectQueryImpl<?> s;
 
         if (field1Embeddable && arg2 instanceof ScalarSubquery)
             ctx.visit(compareRowSubquery.apply(row(embeddedFields(arg1)), ((ScalarSubquery<?>) arg2).query));
-        else if (field1Embeddable && t2.isEmbeddable())
+        else if (field1Embeddable && arg2.getDataType().isEmbeddable())
             ctx.visit(compareRowRow.apply(row(embeddedFields(arg1)), row(embeddedFields(arg2))));
         else if ((op == org.jooq.Comparator.IN || op == org.jooq.Comparator.NOT_IN)
             && (s = Transformations.subqueryWithLimit(arg2)) != null
-            && Transformations.NO_SUPPORT_IN_LIMIT.contains(ctx.dialect())) {
-            ctx.visit(arg1.compare(op, (Select) select(asterisk()).from(s.asTable("t"))));
+            && Transformations.transformInConditionSubqueryWithLimitToDerivedTable(ctx.configuration())) {
+
+
+
         }
-        else if (t1.isMultiset() && t2.isMultiset() && !Boolean.TRUE.equals(ctx.data(DATA_MULTISET_CONDITION)))
+        else if (arg1.getDataType().isMultiset()
+                && arg2.getDataType().isMultiset()
+                && !Boolean.TRUE.equals(ctx.data(DATA_MULTISET_CONDITION)))
             ctx.data(DATA_MULTISET_CONDITION, true, c -> c.visit(condition));
 
 
@@ -175,15 +153,6 @@ implements
 
 
 
-
-
-
-
-
-        else if (arg1 instanceof Array && ((Array<?>) arg1).fields.fields.length == 0)
-            ctx.data(ExtendedDataKey.DATA_EMPTY_ARRAY_BASE_TYPE, t2.getArrayComponentDataType(), c -> acceptDefault.apply(c, arg1, arg2));
-        else if (arg2 instanceof Array && ((Array<?>) arg2).fields.fields.length == 0)
-            ctx.data(ExtendedDataKey.DATA_EMPTY_ARRAY_BASE_TYPE, t1.getArrayComponentDataType(), c -> acceptDefault.apply(c, arg1, arg2));
         else
             acceptDefault.apply(ctx, arg1, arg2);
     }
@@ -255,7 +224,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.Eq<?> o) {
+        if (that instanceof QOM.Eq) { QOM.Eq<?> o = (QOM.Eq<?>) that;
             return
                 StringUtils.equals($arg1(), o.$arg1()) &&
                 StringUtils.equals($arg2(), o.$arg2())

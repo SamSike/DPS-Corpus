@@ -24,23 +24,8 @@ import jakarta.xml.bind.annotation.XmlType;
 @XmlEnum
 public enum GeneratedSerialVersionUID {
 
-
-    /**
-     * The generated serialVersionUID should be based on a hash code taken from the generated content.
-     * 
-     */
     HASH,
-
-    /**
-     * The generated serialVersionUID should be constant.
-     * 
-     */
     CONSTANT,
-
-    /**
-     * No serialVersionUID should be generated.
-     * 
-     */
     OFF;
 
     public String value() {

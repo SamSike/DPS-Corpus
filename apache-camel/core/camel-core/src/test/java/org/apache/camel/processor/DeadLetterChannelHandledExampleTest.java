@@ -63,9 +63,9 @@ public class DeadLetterChannelHandledExampleTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 // we do special error handling for when OrderFailedException is
                 // thrown
@@ -124,7 +124,7 @@ public class DeadLetterChannelHandledExampleTest extends ContextTestSupport {
 
         /**
          * This method creates the response to the caller if the order could not be processed
-         *
+         * 
          * @param  headers the in headers
          * @param  payload the in payload
          * @return         the out payload

@@ -28,7 +28,7 @@ public class AdviceWithCBRRouteIdTest extends ContextTestSupport {
     public void testAdviceCBR() throws Exception {
         AdviceWith.adviceWith("myRoute", context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 weaveById("foo").after().to("mock:foo2");
                 weaveById("bar").after().to("mock:bar2");
             }
@@ -52,7 +52,7 @@ public class AdviceWithCBRRouteIdTest extends ContextTestSupport {
         // pick first route from index 0
         AdviceWith.adviceWith(0, context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 weaveByToString("To[mock:foo]").after().to("mock:foo2");
                 weaveByToString("To[mock:bar]").after().to("mock:bar2");
             }
@@ -72,10 +72,10 @@ public class AdviceWithCBRRouteIdTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("myRoute")
                         .choice().when(header("foo")).to("mock:foo").id("foo").when(header("bar")).to("mock:bar")
                         .id("bar").otherwise().to("mock:baz").id("baz");

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -48,10 +48,8 @@ import java.util.stream.Collector;
 import org.jooq.conf.Settings;
 import org.jooq.conf.StatementType;
 import org.jooq.exception.DataAccessException;
-import org.jooq.impl.CustomQueryPart;
 import org.jooq.impl.DSL;
 
-import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -72,22 +70,6 @@ import org.jetbrains.annotations.Nullable;
  * @see ExecuteListener
  */
 public interface ExecuteContext extends Scope {
-
-    /**
-     * Get a {@link ConverterContext} for the scope of this
-     * {@link ExecuteContext}.
-     */
-    ConverterContext converterContext();
-
-
-
-
-
-
-
-
-
-
 
     /**
      * The connection to be used in this execute context.
@@ -113,62 +95,15 @@ public interface ExecuteContext extends Scope {
     ExecuteType type();
 
     /**
-     * The jOOQ {@link Query} that is being executed, or <code>null</code> if
-     * the query is unknown, if it is a batch query, or if there was no jOOQ
+     * The jOOQ {@link Query} that is being executed or <code>null</code> if the
+     * query is unknown, if it is a batch query, or if there was no jOOQ
      * <code>Query</code>.
-     * <p>
-     * This corresponds to {@link #transformedQuery()}.
      *
      * @see #routine()
      * @see #batchQueries()
      */
     @Nullable
     Query query();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * The batch execution mode.
-     */
-    @NotNull
-    BatchMode batchMode();
 
     /**
      * The jOOQ {@link Query} objects that are being executed in batch mode, or
@@ -177,10 +112,6 @@ public interface ExecuteContext extends Scope {
      * If a single <code>Query</code> is executed in non-batch mode, this will
      * return an array of length <code>1</code>, containing that
      * <code>Query</code>
-     * <p>
-     * Refer to {@link #batchMode()} to decide how to interpret this content.
-     * <p>
-     * This corresponds to {@link #transformedBatchQueries()}.
      *
      * @see #query()
      * @see #routine()
@@ -189,44 +120,6 @@ public interface ExecuteContext extends Scope {
      */
     @NotNull
     Query @NotNull [] batchQueries();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * The jOOQ {@link Routine} that is being executed or <code>null</code> if
@@ -253,47 +146,6 @@ public interface ExecuteContext extends Scope {
      * @see ExecuteListener#prepareStart(ExecuteContext)
      */
     void sql(String sql);
-
-    /**
-     * The bind values that are being bound to the {@link PreparedStatement}.
-     */
-    Param<?> @NotNull [] params();
-
-    /**
-     * Override the bind values that are being bound to the
-     * {@link PreparedStatement}.
-     * <p>
-     * This may have no effect, if called at the wrong moment.
-     *
-     * @see ExecuteListener#renderEnd(ExecuteContext)
-     * @see ExecuteListener#prepareStart(ExecuteContext)
-     */
-    void params(Param<?>[] params);
-
-    /**
-     * The number of user defined update counts that are going to be skipped
-     * when a statement batch is executed.
-     * <p>
-     * This is in <em>addition</em> to any skips added during the rendering of a
-     * {@link QueryPart} by jOOQ's internals or by user-defined query parts,
-     * such as {@link CustomQueryPart}.
-     */
-    int skipUpdateCounts();
-
-    /**
-     * Override the number of update counts that are going to be skipped when a
-     * statement batch is executed.
-     * <p>
-     * This is in <em>addition</em> to any skips added during the rendering of a
-     * {@link QueryPart} by jOOQ's internals or by user-defined query parts,
-     * such as {@link CustomQueryPart}.
-     * <p>
-     * This may have no effect, if called at the wrong moment.
-     *
-     * @see ExecuteListener#renderEnd(ExecuteContext)
-     * @see ExecuteListener#prepareStart(ExecuteContext)
-     */
-    void skipUpdateCounts(int skip);
 
     /**
      * The generated SQL statements that are being executed in batch mode, or
@@ -323,8 +175,8 @@ public interface ExecuteContext extends Scope {
      * The {@link PreparedStatement} that is being executed or <code>null</code>
      * if the statement is unknown or if there was no statement.
      * <p>
-     * This can be any of the following: <br>
-     * <br>
+     * This can be any of the following: <br/>
+     * <br/>
      * <ul>
      * <li>A <code>java.sql.PreparedStatement</code> from your JDBC driver when
      * a jOOQ <code>Query</code> is being executed as
@@ -386,7 +238,7 @@ public interface ExecuteContext extends Scope {
      * result events are triggered via
      * {@link ExecuteListener#resultStart(ExecuteContext)} and
      * {@link ExecuteListener#resultEnd(ExecuteContext)}, e.g. in the presence
-     * of {@link DSL#multiset(TableLike)}.
+     * of {@link DSL#multiset(Select)}.
      */
     int recordLevel();
 
@@ -398,11 +250,8 @@ public interface ExecuteContext extends Scope {
     Record record();
 
     /**
-     * Set the last record that was fetched from the result set.
-     * <p>
-     * Users shouldn't call this method, it is used by jOOQ internally.
+     * Calling this has no effect. It is used by jOOQ internally.
      */
-    @Internal
     void record(Record record);
 
     /**
@@ -420,11 +269,8 @@ public interface ExecuteContext extends Scope {
     int rows();
 
     /**
-     * Set the number of rows that were affected by the last statement.
-     * <p>
-     * Users shouldn't call this method, it is used by jOOQ internally.
+     * Calling this has no effect. It is used by jOOQ internally.
      */
-    @Internal
     void rows(int rows);
 
     /**
@@ -448,7 +294,7 @@ public interface ExecuteContext extends Scope {
      * result events are triggered via
      * {@link ExecuteListener#resultStart(ExecuteContext)} and
      * {@link ExecuteListener#resultEnd(ExecuteContext)}, e.g. in the presence
-     * of {@link DSL#multiset(TableLike)}.
+     * of {@link DSL#multiset(Select)}.
      */
     int resultLevel();
 
@@ -463,11 +309,8 @@ public interface ExecuteContext extends Scope {
     Result<?> result();
 
     /**
-     * Set the last result that was fetched from the result set.
-     * <p>
-     * Users shouldn't call this method, it is used by jOOQ internally.
+     * Calling this has no effect. It is used by jOOQ internally.
      */
-    @Internal
     void result(Result<?> result);
 
     /**
@@ -534,29 +377,4 @@ public interface ExecuteContext extends Scope {
      * <code>{@link Settings#getFetchServerOutputSize()} &gt; 0</code>.
      */
     void serverOutput(String[] output);
-
-    /**
-     * The batch mode, which helps interpret the contents of
-     * {@link ExecuteContext#batchQueries()}.
-     */
-    enum BatchMode {
-
-        /**
-         * No {@link Batch} is being executed, but a single
-         * {@link ExecuteContext#query()} or a {@link ExecuteContext#routine()}.
-         */
-        NONE,
-
-        /**
-         * A {@link Batch} with a single {@link PreparedStatement} and multiple
-         * bind variable sets is being executed.
-         */
-        SINGLE,
-
-        /**
-         * A {@link Batch} with multiple static {@link Statement} and no bind
-         * variables is being executed.
-         */
-        MULTIPLE
-    }
 }

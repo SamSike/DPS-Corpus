@@ -1,7 +1,9 @@
 /**
  * Provides a comprehensive HttpMessageConverter variant for form handling.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.http.converter.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,11 @@ package org.springframework.aop.framework;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.aop.Advisor;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.beans.factory.config.SmartInstantiationAwareBeanPostProcessor;
 import org.springframework.core.SmartClassLoader;
+import org.springframework.lang.Nullable;
 
 /**
  * Base class for {@link BeanPostProcessor} implementations that apply a
@@ -35,10 +33,10 @@ import org.springframework.core.SmartClassLoader;
  * @since 3.2
  */
 @SuppressWarnings("serial")
-public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSupport
-		implements SmartInstantiationAwareBeanPostProcessor {
+public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSupport implements BeanPostProcessor {
 
-	protected @Nullable Advisor advisor;
+	@Nullable
+	protected Advisor advisor;
 
 	protected boolean beforeExistingAdvisors = false;
 
@@ -60,28 +58,8 @@ public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSu
 
 
 	@Override
-	public Class<?> determineBeanType(Class<?> beanClass, String beanName) {
-		if (this.advisor != null && isEligible(beanClass)) {
-			ProxyFactory proxyFactory = new ProxyFactory();
-			proxyFactory.copyFrom(this);
-			proxyFactory.setTargetClass(beanClass);
-
-			if (!proxyFactory.isProxyTargetClass()) {
-				evaluateProxyInterfaces(beanClass, proxyFactory);
-			}
-			proxyFactory.addAdvisor(this.advisor);
-			customizeProxyFactory(proxyFactory);
-
-			// Use original ClassLoader if bean class not locally loaded in overriding class loader
-			ClassLoader classLoader = getProxyClassLoader();
-			if (classLoader instanceof SmartClassLoader smartClassLoader &&
-					classLoader != beanClass.getClassLoader()) {
-				classLoader = smartClassLoader.getOriginalClassLoader();
-			}
-			return proxyFactory.getProxyClass(classLoader);
-		}
-
-		return beanClass;
+	public Object postProcessBeforeInitialization(Object bean, String beanName) {
+		return bean;
 	}
 
 	@Override
@@ -91,17 +69,12 @@ public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSu
 			return bean;
 		}
 
-		if (bean instanceof Advised advised) {
+		if (bean instanceof Advised) {
+			Advised advised = (Advised) bean;
 			if (!advised.isFrozen() && isEligible(AopUtils.getTargetClass(bean))) {
-				// Add our local Advisor to the existing proxy's Advisor chain.
+				// Add our local Advisor to the existing proxy's Advisor chain...
 				if (this.beforeExistingAdvisors) {
 					advised.addAdvisor(0, this.advisor);
-				}
-				else if (advised.getTargetSource() == AdvisedSupport.EMPTY_TARGET_SOURCE &&
-						advised.getAdvisorCount() > 0) {
-					// No target, leave last Advisor in place and add new Advisor right before.
-					advised.addAdvisor(advised.getAdvisorCount() - 1, this.advisor);
-					return bean;
 				}
 				else {
 					advised.addAdvisor(this.advisor);
@@ -120,9 +93,8 @@ public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSu
 
 			// Use original ClassLoader if bean class not locally loaded in overriding class loader
 			ClassLoader classLoader = getProxyClassLoader();
-			if (classLoader instanceof SmartClassLoader smartClassLoader &&
-					classLoader != bean.getClass().getClassLoader()) {
-				classLoader = smartClassLoader.getOriginalClassLoader();
+			if (classLoader instanceof SmartClassLoader && classLoader != bean.getClass().getClassLoader()) {
+				classLoader = ((SmartClassLoader) classLoader).getOriginalClassLoader();
 			}
 			return proxyFactory.getProxy(classLoader);
 		}
@@ -135,7 +107,7 @@ public abstract class AbstractAdvisingBeanPostProcessor extends ProxyProcessorSu
 	 * Check whether the given bean is eligible for advising with this
 	 * post-processor's {@link Advisor}.
 	 * <p>Delegates to {@link #isEligible(Class)} for target class checking.
-	 * Can be overridden, for example, to specifically exclude certain beans by name.
+	 * Can be overridden e.g. to specifically exclude certain beans by name.
 	 * <p>Note: Only called for regular bean instances but not for existing
 	 * proxy instances which implement {@link Advised} and allow for adding
 	 * the local {@link Advisor} to the existing proxy's {@link Advisor} chain.

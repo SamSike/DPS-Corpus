@@ -16,16 +16,16 @@
  */
 package org.apache.camel.dsl.jbang.core.commands.action;
 
-import java.nio.file.Path;
+import java.io.File;
 import java.util.List;
 
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
-import org.apache.camel.dsl.jbang.core.common.PathUtils;
+import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.json.JsonObject;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "gc",
-                     description = "Trigger Java Memory Garbage Collector", sortOptions = false, showDefaultValues = true)
+                     description = "Trigger Java Memory Garbage Collector")
 public class CamelGCAction extends ActionBaseCommand {
 
     @CommandLine.Parameters(description = "Name or pid of running Camel integration. (default selects all)", arity = "0..1")
@@ -36,13 +36,13 @@ public class CamelGCAction extends ActionBaseCommand {
     }
 
     @Override
-    public Integer doCall() throws Exception {
+    public Integer call() throws Exception {
         List<Long> pids = findPids(name);
         for (long pid : pids) {
             JsonObject root = new JsonObject();
             root.put("action", "gc");
-            Path f = getActionFile(Long.toString(pid));
-            PathUtils.writeTextSafely(root.toJson(), f);
+            File f = getActionFile("" + pid);
+            IOHelper.writeText(root.toJson(), f);
         }
 
         return 0;

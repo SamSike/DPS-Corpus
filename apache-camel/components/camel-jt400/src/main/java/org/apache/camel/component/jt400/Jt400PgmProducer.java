@@ -89,9 +89,6 @@ public class Jt400PgmProducer extends DefaultProducer {
             } else {
                 throw new Jt400PgmCallException(getOutputMessages(pgmCall));
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new Jt400PgmCallException(e);
         } catch (Exception e) {
             throw new Jt400PgmCallException(e);
         } finally {
@@ -216,11 +213,11 @@ public class Jt400PgmProducer extends DefaultProducer {
         for (int i = 0; i < messageList.length; ++i) {
             // Load additional message information.
             messageList[i].load();
-            outputMsg.append(i).append(") ");
+            outputMsg.append(i + ") ");
             outputMsg.append(messageList[i].getText());
             outputMsg.append(" - ");
             outputMsg.append(messageList[i].getHelp());
-            outputMsg.append('\n');
+            outputMsg.append("\n");
         }
         return outputMsg.toString();
     }

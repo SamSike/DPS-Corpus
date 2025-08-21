@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,10 +38,8 @@
 package org.jooq.impl;
 
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
-// ...
 // ...
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
@@ -58,9 +56,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-// ...
-// ...
-import static org.jooq.SQLDialect.TRINO;
 import static org.jooq.conf.ParamType.INLINED;
 import static org.jooq.impl.DSL.function;
 import static org.jooq.impl.DSL.inline;
@@ -69,23 +64,19 @@ import static org.jooq.impl.DSL.one;
 // ...
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.table;
-import static org.jooq.impl.DSL.unquotedName;
 import static org.jooq.impl.DSL.withRecursive;
 import static org.jooq.impl.Internal.iadd;
 import static org.jooq.impl.Internal.idiv;
 import static org.jooq.impl.Internal.imul;
 import static org.jooq.impl.Internal.isub;
 import static org.jooq.impl.Keywords.K_TABLE;
-import static org.jooq.impl.Names.N_EXPLODE;
 import static org.jooq.impl.Names.N_GENERATE_ARRAY;
 import static org.jooq.impl.Names.N_GENERATE_SERIES;
 import static org.jooq.impl.Names.N_GENERATOR;
-import static org.jooq.impl.Names.N_NUMBERS;
-import static org.jooq.impl.Names.N_SEQUENCE;
 import static org.jooq.impl.Names.N_SYSTEM_RANGE;
 import static org.jooq.impl.Names.N_UNNEST;
 import static org.jooq.impl.SQLDataType.INTEGER;
-import static org.jooq.impl.SubqueryCharacteristics.DERIVED_TABLE;
+import static org.jooq.impl.Tools.apply;
 import static org.jooq.impl.Tools.visitSubquery;
 
 import java.util.Set;
@@ -108,15 +99,12 @@ final class GenerateSeries
 extends
     AbstractTable<Record1<Integer>>
 implements
-    AutoAlias<Table<Record1<Integer>>>,
+    AutoAliasTable<Record1<Integer>>,
     QOM.GenerateSeries<Integer>
 {
 
-    private static final Set<SQLDialect> EMULATE_WITH_RECURSIVE = SQLDialect.supportedUntil(FIREBIRD, HSQLDB, MARIADB, MYSQL, SQLITE, TRINO);
+    private static final Set<SQLDialect> EMULATE_WITH_RECURSIVE = SQLDialect.supportedBy(FIREBIRD, HSQLDB, MARIADB, MYSQL, SQLITE);
     private static final Set<SQLDialect> EMULATE_SYSTEM_RANGE   = SQLDialect.supportedBy(H2);
-    private static final Set<SQLDialect> EMULATE_NUMBERS        = SQLDialect.supportedBy(CLICKHOUSE);
-
-
 
 
 
@@ -169,7 +157,9 @@ implements
                 withRecursive(name, name)
                     .as(select(from).unionAll(select(iadd(f, step == null ? inline(1) : step)).from(name).where(f.lt(to))))
                     .select(f).from(name),
-                DERIVED_TABLE
+                true,
+                false,
+                false
             );
         }
         else if (EMULATE_SYSTEM_RANGE.contains(ctx.dialect())) {
@@ -184,28 +174,6 @@ implements
                 ctx.sql(')');
             }
         }
-        else if (EMULATE_NUMBERS.contains(ctx.dialect())) {
-            visitSubquery(
-                ctx,
-                step == null
-                    ? select(DSL.field(unquotedName("number"), INTEGER).cast(INTEGER).as(name))
-                        .from(table("{0}({1}, {2})", N_NUMBERS, from, iadd(to, one())))
-                    : select(DSL.field(unquotedName("number"), INTEGER).cast(INTEGER).as(name))
-                        .from(table("{0}({1}, {2}, {3})", N_NUMBERS, from, iadd(to, one()), step)),
-                DERIVED_TABLE
-            );
-        }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -274,15 +242,11 @@ implements
     }
 
     @Override
-    public final Table<Record1<Integer>> autoAlias(Context<?> ctx, Table<Record1<Integer>> t) {
+    public final Table<Record1<Integer>> autoAlias(Context<?> ctx) {
         if (EMULATE_WITH_RECURSIVE.contains(ctx.dialect()))
-            return t.as(name);
+            return as(name);
         else if (EMULATE_SYSTEM_RANGE.contains(ctx.dialect()))
-            return t.as(name, name);
-        else if (EMULATE_NUMBERS.contains(ctx.dialect()))
-            return t.as(name, name);
-
-
+            return as(name, name);
 
 
 
@@ -315,7 +279,7 @@ implements
     }
 
     @Override
-    public final Function3<? super Field<Integer>, ? super Field<Integer>, ? super Field<Integer>, ? extends QOM.GenerateSeries<Integer>> $constructor() {
+    public final Function3<? super Field<Integer>, ? super Field<Integer>, ? super Field<Integer>, ? extends Table<Record1<Integer>>> $constructor() {
         return (f1, f2, f3) -> new GenerateSeries(f1, f2, f3, name);
     }
 }

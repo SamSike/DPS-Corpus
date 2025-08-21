@@ -3,7 +3,9 @@
  * Provides an extended JavaMailSender interface and a MimeMessageHelper
  * class for convenient population of a JavaMail MimeMessage.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.mail.javamail;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

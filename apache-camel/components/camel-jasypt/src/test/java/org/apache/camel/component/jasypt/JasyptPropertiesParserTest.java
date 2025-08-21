@@ -31,17 +31,16 @@ public class JasyptPropertiesParserTest {
 
     private static final String KEY = "somekey";
 
-    protected String knownPassword = "secret";
-    protected String knownEncrypted = "ENC(bsW9uV37gQ0QHFu7KO03Ww==)";
-    protected String knowDecrypted = "tiger";
+    private static final String KNOWN_PASSWORD = "secret";
+    private static final String KNOWN_ENCRYPTED = "ENC(bsW9uV37gQ0QHFu7KO03Ww==)";
+    private static final String KNOW_DECRYPTED = "tiger";
 
-    protected JasyptPropertiesParser jasyptPropertiesParser = new JasyptPropertiesParser();
-    protected StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
+    private JasyptPropertiesParser jasyptPropertiesParser = new JasyptPropertiesParser();
+    private StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
 
     @BeforeEach
     public void before() {
-        encryptor.setPassword(knownPassword);
-
+        encryptor.setPassword(KNOWN_PASSWORD);
         jasyptPropertiesParser.setEncryptor(encryptor);
     }
 
@@ -96,19 +95,19 @@ public class JasyptPropertiesParserTest {
     @Test
     public void testUsesProvidedPasswordIfEncryptorIsNotSet() {
         jasyptPropertiesParser.setEncryptor(null);
-        jasyptPropertiesParser.setPassword(knownPassword);
+        jasyptPropertiesParser.setPassword(KNOWN_PASSWORD);
 
-        assertEquals(knowDecrypted, jasyptPropertiesParser.parseProperty(KEY, knownEncrypted, null));
+        assertEquals(KNOW_DECRYPTED, jasyptPropertiesParser.parseProperty(KEY, KNOWN_ENCRYPTED, null));
     }
 
     @Test
     public void testUsesProvidedPasswordFromSystemPropertyIfEncryptorIsNotSet() {
-        System.setProperty("myfoo", knownPassword);
+        System.setProperty("myfoo", KNOWN_PASSWORD);
 
         jasyptPropertiesParser.setEncryptor(null);
         jasyptPropertiesParser.setPassword("sys:myfoo");
 
-        assertEquals(knowDecrypted, jasyptPropertiesParser.parseProperty(KEY, knownEncrypted, null));
+        assertEquals(KNOW_DECRYPTED, jasyptPropertiesParser.parseProperty(KEY, KNOWN_ENCRYPTED, null));
 
         System.clearProperty("myfoo");
     }

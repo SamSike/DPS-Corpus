@@ -41,7 +41,7 @@ public class AsyncQueueProducerTest extends CamelTestSupport {
     private static String route = "";
 
     @RegisterExtension
-    public static ArtemisService service = ArtemisServiceFactory.createSingletonVMService();
+    public ArtemisService service = ArtemisServiceFactory.createSingletonVMService();
 
     @Test
     public void testAsyncJmsProducerEndpoint() throws Exception {
@@ -49,7 +49,7 @@ public class AsyncQueueProducerTest extends CamelTestSupport {
         getMockEndpoint("mock:after").expectedBodiesReceived("Bye Camel");
         getMockEndpoint("mock:result").expectedBodiesReceived("Bye Camel");
 
-        template.sendBody("direct:start.AsyncQueueProducerTest", "Hello Camel");
+        template.sendBody("direct:start", "Hello Camel");
         // we should run before the async processor that sets B
         route += "A";
 
@@ -82,7 +82,7 @@ public class AsyncQueueProducerTest extends CamelTestSupport {
             public void configure() {
                 context.addComponent("async", new MyAsyncComponent());
 
-                from("direct:start.AsyncQueueProducerTest")
+                from("direct:start")
                         .to("mock:before")
                         .to("log:before")
                         .process(new Processor() {
@@ -96,9 +96,9 @@ public class AsyncQueueProducerTest extends CamelTestSupport {
                                 afterThreadName = Thread.currentThread().getName();
                             }
                         })
-                        .to("sjms:queue:foo.AsyncQueueProducerTest");
+                        .to("sjms:queue:foo");
 
-                from("sjms:queue:foo.AsyncQueueProducerTest?asyncConsumer=true")
+                from("sjms:queue:foo?asyncConsumer=true")
                         .to("mock:after")
                         .to("log:after")
                         .delay(1000)

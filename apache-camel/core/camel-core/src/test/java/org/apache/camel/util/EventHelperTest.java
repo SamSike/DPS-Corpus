@@ -37,7 +37,7 @@ public class EventHelperTest {
 
         CamelContext camelContext = new DefaultCamelContext();
         camelContext.addRoutes(new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("route-1").to("mock:end");
             }
 
@@ -67,7 +67,7 @@ public class EventHelperTest {
 
         CamelContext camelContext = new DefaultCamelContext();
         camelContext.addRoutes(new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("route-1").to("mock:end");
             }
 
@@ -97,7 +97,7 @@ public class EventHelperTest {
 
         CamelContext camelContext = new DefaultCamelContext();
         camelContext.addRoutes(new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("route-1").to("mock:end");
             }
 
@@ -120,12 +120,12 @@ public class EventHelperTest {
 
     static class MyEventNotifier extends EventNotifierSupport {
 
-        final AtomicInteger routeStartedEvent = new AtomicInteger();
-        final AtomicInteger routeStoppedEvent = new AtomicInteger();
-        final AtomicInteger camelContextStoppingEvent = new AtomicInteger();
+        AtomicInteger routeStartedEvent = new AtomicInteger();
+        AtomicInteger routeStoppedEvent = new AtomicInteger();
+        AtomicInteger camelContextStoppingEvent = new AtomicInteger();
 
         @Override
-        public void notify(CamelEvent event) {
+        public void notify(CamelEvent event) throws Exception {
             if (event.getType() == Type.RouteStarted) {
                 routeStartedEvent.incrementAndGet();
             } else if (event.getType() == Type.RouteStopped) {
@@ -138,6 +138,14 @@ public class EventHelperTest {
         @Override
         public boolean isEnabled(CamelEvent event) {
             return true;
+        }
+
+        @Override
+        protected void doStart() throws Exception {
+        }
+
+        @Override
+        protected void doStop() throws Exception {
         }
     }
 }

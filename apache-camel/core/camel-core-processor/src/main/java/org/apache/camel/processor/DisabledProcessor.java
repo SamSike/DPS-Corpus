@@ -74,4 +74,14 @@ public class DisabledProcessor extends AsyncProcessorSupport implements IdAware,
         this.nodeType = nodeType;
     }
 
+    @Override
+    protected void doStart() throws Exception {
+        // noop
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        // noop
+    }
+
 }

@@ -17,11 +17,8 @@
 package org.apache.camel.model;
 
 import org.apache.camel.ContextTestSupport;
-import org.apache.camel.FailedToCreateRouteException;
 import org.apache.camel.Route;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,7 +34,7 @@ public class RoutePropertiesTest extends ContextTestSupport {
     public void testRouteProperties() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("route-id").routeProperty("key1", "val1").routeProperty("key2", "val2")
                         .to("mock:output");
             }
@@ -56,18 +53,20 @@ public class RoutePropertiesTest extends ContextTestSupport {
         assertEquals("val2", route.getProperties().get("key2"));
     }
 
-    @DisplayName("Checks that trying to use a reserved property leads to failure")
     @Test
-    public void testRoutePropertiesFailure() throws Exception {
-        context.addRoutes(new RouteBuilder() {
-            @Override
-            public void configure() {
-                from("direct:start").routeId("route-id").routeProperty(Route.ID_PROPERTY, "the id").to("mock:output");
-            }
-        });
+    public void testRoutePropertiesFailuer() throws Exception {
+        try {
+            context.addRoutes(new RouteBuilder() {
+                @Override
+                public void configure() throws Exception {
+                    from("direct:start").routeId("route-id").routeProperty(Route.ID_PROPERTY, "the id").to("mock:output");
+                }
+            });
 
-        Assertions.assertThrows(FailedToCreateRouteException.class, () -> context.start(),
-                "Should have prevented setting a property with a reserved name");
+            context.start();
 
+            fail("");
+        } catch (Exception e) {
+        }
     }
 }

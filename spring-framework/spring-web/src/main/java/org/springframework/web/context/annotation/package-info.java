@@ -1,7 +1,9 @@
 /**
  * Provides convenience annotations for web scopes.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.context.annotation;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

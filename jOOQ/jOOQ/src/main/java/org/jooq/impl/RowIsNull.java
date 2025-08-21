@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,18 +37,14 @@
  */
 package org.jooq.impl;
 
-import static java.util.Arrays.asList;
 // ...
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 // ...
@@ -65,7 +61,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.impl.Keywords.K_IS_NULL;
 import static org.jooq.impl.Tools.allNull;
@@ -73,6 +68,7 @@ import static org.jooq.impl.Tools.allNull;
 import java.util.Set;
 
 import org.jooq.Clause;
+import org.jooq.Condition;
 import org.jooq.Context;
 import org.jooq.Function1;
 import org.jooq.Row;
@@ -85,7 +81,7 @@ final class RowIsNull extends AbstractCondition implements QOM.RowIsNull {
 
     // Currently not yet supported in SQLite:
     // https://www.sqlite.org/rowvalue.html
-    static final Set<SQLDialect> EMULATE_NULL_ROW   = SQLDialect.supportedBy(CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, HSQLDB, MARIADB, MYSQL, SQLITE, TRINO);
+    static final Set<SQLDialect> EMULATE_NULL_ROW   = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, HSQLDB, MARIADB, MYSQL, SQLITE);
 
     private final Row            row;
 
@@ -107,7 +103,7 @@ final class RowIsNull extends AbstractCondition implements QOM.RowIsNull {
 
 
         if (EMULATE_NULL_ROW.contains(ctx.dialect()))
-            ctx.visit(allNull(asList(row.fields())));
+            ctx.visit(allNull(row.fields()));
         else
             acceptStandard(ctx);
     }
@@ -144,7 +140,7 @@ final class RowIsNull extends AbstractCondition implements QOM.RowIsNull {
     }
 
     @Override
-    public final Function1<? super Row, ? extends QOM.RowIsNull> $constructor() {
+    public final Function1<? super Row, ? extends Condition> $constructor() {
         return r -> new RowIsNull(r);
     }
 }

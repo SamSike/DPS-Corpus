@@ -16,8 +16,6 @@
  */
 package org.apache.camel;
 
-import static org.apache.camel.util.URISupport.sanitizeUri;
-
 /**
  * A runtime exception thrown if a routing processor such as a recipient list is unable to resolve an {@link Endpoint}
  * from a URI.
@@ -27,15 +25,15 @@ public class NoSuchEndpointException extends RuntimeCamelException {
     private final String uri;
 
     public NoSuchEndpointException(String uri) {
-        super("No endpoint could be found for: " + sanitizeUri(uri)
+        super("No endpoint could be found for: " + uri
               + ", please check your classpath contains the needed Camel component jar.");
-        this.uri = sanitizeUri(uri);
+        this.uri = uri;
     }
 
     public NoSuchEndpointException(String uri, String resolveMethod) {
-        super("No endpoint could be found for: " + sanitizeUri(uri)
+        super("No endpoint could be found for: " + uri
               + ", please " + resolveMethod);
-        this.uri = sanitizeUri(uri);
+        this.uri = uri;
     }
 
     public String getUri() {

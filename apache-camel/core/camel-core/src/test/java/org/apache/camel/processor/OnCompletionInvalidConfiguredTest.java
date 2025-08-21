@@ -35,7 +35,7 @@ public class OnCompletionInvalidConfiguredTest extends ContextTestSupport {
         try {
             context.addRoutes(new RouteBuilder() {
                 @Override
-                public void configure() {
+                public void configure() throws Exception {
                     onCompletion().onFailureOnly().onCompleteOnly().to("mock:foo");
 
                     from("direct:start").to("mock:result");

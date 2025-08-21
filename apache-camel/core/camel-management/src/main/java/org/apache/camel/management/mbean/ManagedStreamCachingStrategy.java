@@ -26,27 +26,11 @@ public class ManagedStreamCachingStrategy extends ManagedService implements Mana
 
     private final CamelContext camelContext;
     private final StreamCachingStrategy streamCachingStrategy;
-    private final String[] allowClasses;
-    private final String[] denyClasses;
 
     public ManagedStreamCachingStrategy(CamelContext camelContext, StreamCachingStrategy streamCachingStrategy) {
         super(camelContext, streamCachingStrategy);
         this.camelContext = camelContext;
         this.streamCachingStrategy = streamCachingStrategy;
-        if (streamCachingStrategy.getAllowClasses() != null) {
-            this.allowClasses = streamCachingStrategy.getAllowClasses()
-                    .stream().map(Class::getName)
-                    .toArray(String[]::new);
-        } else {
-            this.allowClasses = null;
-        }
-        if (streamCachingStrategy.getDenyClasses() != null) {
-            this.denyClasses = streamCachingStrategy.getDenyClasses()
-                    .stream().map(Class::getName)
-                    .toArray(String[]::new);
-        } else {
-            this.denyClasses = null;
-        }
     }
 
     public CamelContext getCamelContext() {
@@ -60,16 +44,6 @@ public class ManagedStreamCachingStrategy extends ManagedService implements Mana
     @Override
     public boolean isEnabled() {
         return streamCachingStrategy.isEnabled();
-    }
-
-    @Override
-    public String[] getAllowClasses() {
-        return allowClasses;
-    }
-
-    @Override
-    public String[] getDenyClasses() {
-        return denyClasses;
     }
 
     @Override
@@ -117,10 +91,16 @@ public class ManagedStreamCachingStrategy extends ManagedService implements Mana
         if (limit == null) {
             l = null;
         } else {
-            l = switch (limit) {
-                case Committed -> StreamCachingStrategy.SpoolUsedHeapMemoryLimit.Committed;
-                case Max -> StreamCachingStrategy.SpoolUsedHeapMemoryLimit.Max;
-            };
+            switch (limit) {
+                case Committed:
+                    l = StreamCachingStrategy.SpoolUsedHeapMemoryLimit.Committed;
+                    break;
+                case Max:
+                    l = StreamCachingStrategy.SpoolUsedHeapMemoryLimit.Max;
+                    break;
+                default:
+                    throw new IllegalStateException();
+            }
         }
         streamCachingStrategy.setSpoolUsedHeapMemoryLimit(l);
     }
@@ -131,10 +111,14 @@ public class ManagedStreamCachingStrategy extends ManagedService implements Mana
         if (l == null) {
             return null;
         } else {
-            return switch (l) {
-                case Committed -> SpoolUsedHeapMemoryLimit.Committed;
-                case Max -> SpoolUsedHeapMemoryLimit.Max;
-            };
+            switch (l) {
+                case Committed:
+                    return SpoolUsedHeapMemoryLimit.Committed;
+                case Max:
+                    return SpoolUsedHeapMemoryLimit.Max;
+                default:
+                    throw new IllegalStateException();
+            }
         }
     }
 

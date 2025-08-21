@@ -190,10 +190,8 @@ public final class CxfHeaderHelper {
             String camelHeaderName = CXF_TO_CAMEL_HEADERS.getOrDefault(entry.getKey(), entry.getKey());
 
             LOG.trace("Populate external header: {}={} as {}", entry.getKey(), entry.getValue(), camelHeaderName);
-            if (!camelHeaderName.startsWith(":")) {
-                ///* Ignore HTTP/2 pseudo headers such as :status */
-                camelHeaders.put(camelHeaderName, entry.getValue().get(0));
-            }
+
+            camelHeaders.put(camelHeaderName, entry.getValue().get(0));
         });
     }
 

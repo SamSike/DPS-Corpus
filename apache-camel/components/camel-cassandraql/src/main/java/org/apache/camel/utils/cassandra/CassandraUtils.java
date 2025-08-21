@@ -103,25 +103,18 @@ public final class CassandraUtils {
      */
     public static Insert generateInsert(String table, String[] columns, boolean ifNotExists, Integer ttl) {
         InsertInto into = insertInto(table);
-        final RegularInsert regularInsert = createRegularInsert(columns, into);
-
-        Insert insert = null;
-        if (ifNotExists && regularInsert != null) {
-            insert = regularInsert.ifNotExists();
-        }
-        if (ttl != null && insert != null) {
-            insert = (insert != null ? insert : regularInsert).usingTtl(ttl);
-        }
-        return insert != null ? insert : regularInsert;
-    }
-
-    private static RegularInsert createRegularInsert(String[] columns, InsertInto into) {
         RegularInsert regularInsert = null;
-
+        Insert insert = null;
         for (String column : columns) {
             regularInsert = (regularInsert != null ? regularInsert : into).value(column, bindMarker());
         }
-        return regularInsert;
+        if (ifNotExists) {
+            insert = regularInsert.ifNotExists();
+        }
+        if (ttl != null) {
+            insert = (insert != null ? insert : regularInsert).usingTtl(ttl);
+        }
+        return insert != null ? insert : regularInsert;
     }
 
     /**
@@ -144,6 +137,9 @@ public final class CassandraUtils {
             select = from.all();
         }
         if (isWhereClause(whereColumns, whereColumnsMaxIndex)) {
+            // this should never happen: isWhereClause already checks for the nullity of the whereColumns
+            assert whereColumns != null;
+
             for (int i = 0; i < whereColumns.length && i < whereColumnsMaxIndex; i++) {
                 select = select.whereColumn(whereColumns[i]).isEqualTo(bindMarker());
             }
@@ -177,7 +173,7 @@ public final class CassandraUtils {
                                                + "To delete all records, use Truncate");
         }
 
-        if (ifExists && delete != null) {
+        if (ifExists) {
             delete = delete.ifExists();
         }
         return delete;
@@ -191,7 +187,8 @@ public final class CassandraUtils {
      * Generate delete where columns = ? CQL.
      */
     public static Truncate generateTruncate(String table) {
-        return QueryBuilder.truncate(table);
+        Truncate truncate = QueryBuilder.truncate(table);
+        return truncate;
     }
 
     /**

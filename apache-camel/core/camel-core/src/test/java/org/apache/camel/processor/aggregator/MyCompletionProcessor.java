@@ -29,7 +29,7 @@ public class MyCompletionProcessor implements Processor {
     }
 
     @Override
-    public void process(Exchange exchange) {
+    public void process(Exchange exchange) throws Exception {
         aggregationCount.incrementAndGet();
     }
 

@@ -20,38 +20,27 @@ import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.DefaultPollingEndpoint;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.http.client.utils.HttpClientUtils;
 
 /**
  * Poll the weather information from Open Weather Map.
  */
 @UriEndpoint(firstVersion = "2.12.0", scheme = "weather", title = "Weather", syntax = "weather:name",
              category = { Category.API }, headersClass = WeatherConstants.class)
-public class WeatherEndpoint extends DefaultPollingEndpoint implements EndpointServiceLocation {
+public class WeatherEndpoint extends DefaultPollingEndpoint {
 
     @UriParam
-    private final WeatherConfiguration configuration;
+    private WeatherConfiguration configuration;
 
-    private final WeatherQuery weatherQuery;
+    private WeatherQuery weatherQuery;
 
     public WeatherEndpoint(String uri, WeatherComponent component, WeatherConfiguration properties) {
         super(uri, component);
         this.configuration = properties;
         this.weatherQuery = new WeatherQuery(getConfiguration());
-    }
-
-    @Override
-    public String getServiceUrl() {
-        return "http://api.openweathermap.org/data/2.5";
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "http";
     }
 
     @Override
@@ -82,10 +71,7 @@ public class WeatherEndpoint extends DefaultPollingEndpoint implements EndpointS
     protected void doStop() throws Exception {
         super.doStop();
 
-        CloseableHttpClient client = getConfiguration().getHttpClient();
-        if (client != null) {
-            client.close();
-        }
+        HttpClientUtils.closeQuietly(getConfiguration().getHttpClient());
     }
 
 }

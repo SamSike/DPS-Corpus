@@ -118,10 +118,10 @@ public class ManagedRouteRemoveRouteAndContextScopedErrorHandlerTest extends Man
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // context scoped error handler
                 errorHandler(deadLetterChannel("log:global"));
 

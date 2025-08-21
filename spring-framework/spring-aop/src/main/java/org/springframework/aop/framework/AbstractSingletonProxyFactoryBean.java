@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package org.springframework.aop.framework;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.adapter.AdvisorAdapterRegistry;
 import org.springframework.aop.framework.adapter.GlobalAdvisorAdapterRegistry;
@@ -26,6 +24,7 @@ import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.FactoryBeanNotInitializedException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -43,20 +42,26 @@ import org.springframework.util.ClassUtils;
 public abstract class AbstractSingletonProxyFactoryBean extends ProxyConfig
 		implements FactoryBean<Object>, BeanClassLoaderAware, InitializingBean {
 
-	private @Nullable Object target;
+	@Nullable
+	private Object target;
 
-	private Class<?> @Nullable [] proxyInterfaces;
+	@Nullable
+	private Class<?>[] proxyInterfaces;
 
-	private Object @Nullable [] preInterceptors;
+	@Nullable
+	private Object[] preInterceptors;
 
-	private Object @Nullable [] postInterceptors;
+	@Nullable
+	private Object[] postInterceptors;
 
 	/** Default is global AdvisorAdapterRegistry. */
 	private AdvisorAdapterRegistry advisorAdapterRegistry = GlobalAdvisorAdapterRegistry.getInstance();
 
-	private transient @Nullable ClassLoader proxyClassLoader;
+	@Nullable
+	private transient ClassLoader proxyClassLoader;
 
-	private @Nullable Object proxy;
+	@Nullable
+	private Object proxy;
 
 
 	/**
@@ -86,7 +91,7 @@ public abstract class AbstractSingletonProxyFactoryBean extends ProxyConfig
 
 	/**
 	 * Set additional interceptors (or advisors) to be applied before the
-	 * implicit transaction interceptor, for example, a PerformanceMonitorInterceptor.
+	 * implicit transaction interceptor, e.g. a PerformanceMonitorInterceptor.
 	 * <p>You may specify any AOP Alliance MethodInterceptors or other
 	 * Spring AOP Advices, as well as Spring AOP Advisors.
 	 * @see org.springframework.aop.interceptor.PerformanceMonitorInterceptor
@@ -189,8 +194,8 @@ public abstract class AbstractSingletonProxyFactoryBean extends ProxyConfig
 	 * @return a TargetSource for this object
 	 */
 	protected TargetSource createTargetSource(Object target) {
-		if (target instanceof TargetSource targetSource) {
-			return targetSource;
+		if (target instanceof TargetSource) {
+			return (TargetSource) target;
 		}
 		else {
 			return new SingletonTargetSource(target);
@@ -216,15 +221,16 @@ public abstract class AbstractSingletonProxyFactoryBean extends ProxyConfig
 	}
 
 	@Override
-	public @Nullable Class<?> getObjectType() {
+	@Nullable
+	public Class<?> getObjectType() {
 		if (this.proxy != null) {
 			return this.proxy.getClass();
 		}
 		if (this.proxyInterfaces != null && this.proxyInterfaces.length == 1) {
 			return this.proxyInterfaces[0];
 		}
-		if (this.target instanceof TargetSource targetSource) {
-			return targetSource.getTargetClass();
+		if (this.target instanceof TargetSource) {
+			return ((TargetSource) this.target).getTargetClass();
 		}
 		if (this.target != null) {
 			return this.target.getClass();

@@ -19,15 +19,21 @@ package org.apache.camel.model.validator;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
-import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 
 import org.apache.camel.spi.Metadata;
+import org.apache.camel.spi.Validator;
 
 /**
- * To use a Camel endpoint to perform validation on the route level.
+ * Represents an endpoint {@link Validator} which leverages camel validator component such as
+ * <a href="http://camel.apache.org/validation.html">Validator Component</a> and
+ * <a href="http://camel.apache.org/bean-validation.html">Bean Validator Component</a> to perform content validation. A
+ * {@link org.apache.camel.processor.validator.ProcessorValidator} will be created internally with a
+ * {@link org.apache.camel.processor.SendProcessor} which forwards the message to the validator Endpoint.
+ * {@see ValidatorDefinition} {@see Validator}
  */
 @Metadata(label = "validation")
-@XmlRootElement(name = "endpointValidator")
+@XmlType(name = "endpointValidator")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class EndpointValidatorDefinition extends ValidatorDefinition {
 
@@ -35,20 +41,6 @@ public class EndpointValidatorDefinition extends ValidatorDefinition {
     private String ref;
     @XmlAttribute
     private String uri;
-
-    public EndpointValidatorDefinition() {
-    }
-
-    public EndpointValidatorDefinition(EndpointValidatorDefinition source) {
-        super(source);
-        this.ref = source.ref;
-        this.uri = source.ref;
-    }
-
-    @Override
-    public EndpointValidatorDefinition copyDefinition() {
-        return new EndpointValidatorDefinition(this);
-    }
 
     public String getRef() {
         return ref;

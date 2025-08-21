@@ -29,7 +29,7 @@ import org.apache.camel.spi.Metadata;
 /**
  * Encode and decode SWIFT MX messages.
  */
-@Metadata(firstVersion = "3.20.0", label = "dataformat,transformation,finance", title = "SWIFT MX")
+@Metadata(firstVersion = "3.20.0", label = "dataformat,transformation,swift", title = "SWIFT MX")
 @XmlRootElement(name = "swiftMx")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class SwiftMxDataFormat extends DataFormatDefinition {
@@ -53,16 +53,6 @@ public class SwiftMxDataFormat extends DataFormatDefinition {
 
     public SwiftMxDataFormat() {
         super("swiftMx");
-    }
-
-    protected SwiftMxDataFormat(SwiftMxDataFormat source) {
-        super(source);
-        this.writeConfigRef = source.writeConfigRef;
-        this.writeConfig = source.writeConfig;
-        this.writeInJson = source.writeInJson;
-        this.readMessageId = source.readMessageId;
-        this.readConfigRef = source.readConfigRef;
-        this.readConfig = source.readConfig;
     }
 
     public SwiftMxDataFormat(boolean writeInJson) {
@@ -104,11 +94,6 @@ public class SwiftMxDataFormat extends DataFormatDefinition {
         this.readMessageId = builder.readMessageId;
         this.readConfigRef = builder.readConfigRef;
         this.readConfig = builder.readConfig;
-    }
-
-    @Override
-    public SwiftMxDataFormat copyDefinition() {
-        return new SwiftMxDataFormat(this);
     }
 
     public Object getWriteConfig() {

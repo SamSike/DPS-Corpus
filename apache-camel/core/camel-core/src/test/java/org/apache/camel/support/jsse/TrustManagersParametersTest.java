@@ -27,13 +27,9 @@ import javax.net.ssl.X509TrustManager;
 import org.apache.camel.CamelContext;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
-import org.junit.jupiter.api.parallel.Isolated;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DisabledIfSystemProperty(named = "ci.env.name", matches = ".*", disabledReason = "Flaky on Github CI")
-@Isolated("This test is regularly flaky")
 public class TrustManagersParametersTest extends AbstractJsseParametersTest {
 
     protected KeyStoreParameters createMinimalKeyStoreParameters() {
@@ -63,7 +59,7 @@ public class TrustManagersParametersTest extends AbstractJsseParametersTest {
         ksp.setType("{{keyStoreParameters.type}}");
         ksp.setProvider("{{keyStoreParameters.provider}}");
         ksp.setResource("{{keyStoreParameters.resource}}");
-        ksp.setPassword("{{keyStoreParameters.password}}");
+        ksp.setPassword("{{keyStoreParamerers.password}}");
 
         TrustManagersParameters tmp = new TrustManagersParameters();
         tmp.setCamelContext(context);

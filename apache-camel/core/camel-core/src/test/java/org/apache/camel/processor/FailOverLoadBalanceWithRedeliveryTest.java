@@ -46,10 +46,10 @@ public class FailOverLoadBalanceWithRedeliveryTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
 
                 errorHandler(defaultErrorHandler().maximumRedeliveries(2).redeliveryDelay(0));
 
@@ -73,7 +73,7 @@ public class FailOverLoadBalanceWithRedeliveryTest extends ContextTestSupport {
                         // but we use mock for unit testing so no error handler here
                         // please
                         .errorHandler(noErrorHandler()).to("mock:b").process(new Processor() {
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 // fail on the first try but succeed on the 2nd try
                                 if (counter++ < 1) {
                                     throw new IllegalArgumentException("I can still not do this");

@@ -18,7 +18,6 @@ package org.apache.camel.dsl.jbang.core.commands.process;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -28,35 +27,19 @@ import com.github.freva.asciitable.HorizontalAlign;
 import com.github.freva.asciitable.OverflowBehaviour;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
 import org.apache.camel.dsl.jbang.core.common.ProcessHelper;
-import org.apache.camel.dsl.jbang.core.common.VersionHelper;
 import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.json.JsonObject;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
-import static org.apache.camel.dsl.jbang.core.common.CamelCommandHelper.extractState;
-
 @Command(name = "context",
-         description = "Top status of Camel integrations",
-         sortOptions = false, showDefaultValues = true)
+         description = "Top status of Camel integrations")
 public class CamelContextTop extends ProcessWatchCommand {
-
-    public static class PidNameMemAgeCompletionCandidates implements Iterable<String> {
-
-        public PidNameMemAgeCompletionCandidates() {
-        }
-
-        @Override
-        public Iterator<String> iterator() {
-            return List.of("pid", "name", "mem", "age").iterator();
-        }
-
-    }
 
     @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
     String name = "*";
 
-    @CommandLine.Option(names = { "--sort" }, completionCandidates = PidNameMemAgeCompletionCandidates.class,
+    @CommandLine.Option(names = { "--sort" },
                         description = "Sort by pid, name, mem, or age", defaultValue = "mem")
     String sort;
 
@@ -65,7 +48,7 @@ public class CamelContextTop extends ProcessWatchCommand {
     }
 
     @Override
-    public Integer doProcessWatchCall() throws Exception {
+    public Integer doCall() throws Exception {
         List<Row> rows = new ArrayList<>();
 
         List<Long> pids = findPids(name);
@@ -85,13 +68,12 @@ public class CamelContextTop extends ProcessWatchCommand {
                         if ("CamelJBang".equals(row.name)) {
                             row.name = ProcessHelper.extractName(root, ph);
                         }
-                        row.pid = Long.toString(ph.pid());
+                        row.pid = "" + ph.pid();
                         row.uptime = extractSince(ph);
                         row.ago = TimeUtils.printSince(row.uptime);
                         JsonObject runtime = (JsonObject) root.get("runtime");
                         row.platform = extractPlatform(ph, runtime);
-                        row.platformVersion = extractPlatformVersion(row.platform,
-                                runtime != null ? runtime.getString("platformVersion") : null);
+                        row.platformVersion = runtime != null ? runtime.getString("platformVersion") : null;
                         row.javaVersion = runtime != null ? runtime.getString("javaVersion") : null;
                         row.state = context.getInteger("phase");
                         row.camelVersion = context.getString("version");
@@ -144,7 +126,7 @@ public class CamelContextTop extends ProcessWatchCommand {
         rows.sort(this::sortRow);
 
         if (!rows.isEmpty()) {
-            printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
+            System.out.println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
                     new Column().header("PID").headerAlign(HorizontalAlign.CENTER).with(r -> r.pid),
                     new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).maxWidth(30, OverflowBehaviour.ELLIPSIS_RIGHT)
                             .with(r -> r.name),
@@ -175,15 +157,6 @@ public class CamelContextTop extends ProcessWatchCommand {
             }
         }
         return answer;
-    }
-
-    private String extractPlatformVersion(String platform, String platformVersion) {
-        if (platformVersion == null) {
-            if ("JBang".equals(platform)) {
-                platformVersion = VersionHelper.getJBangVersion();
-            }
-        }
-        return platformVersion;
     }
 
     protected int sortRow(Row o1, Row o2) {

@@ -24,19 +24,15 @@ import jakarta.mail.internet.MimeMessage;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mail.Mailbox.MailboxUser;
-import org.apache.camel.component.mail.Mailbox.Protocol;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
+import org.jvnet.mock_javamail.Mailbox;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class MailProducerTest extends CamelTestSupport {
-    private static final MailboxUser camel = Mailbox.getOrCreateUser("camel", "secret");
-    private static final MailboxUser someone = Mailbox.getOrCreateUser("someone", "secret");
-    private static final MailboxUser recipient2 = Mailbox.getOrCreateUser("recipient2", "secret");
 
     @Test
     public void testProducer() throws Exception {
@@ -49,8 +45,8 @@ public class MailProducerTest extends CamelTestSupport {
         Exchange exchange = getMockEndpoint("mock:result").getExchanges().get(0);
         assertNotNull(exchange.getIn().getHeader(MailConstants.MAIL_MESSAGE_ID), "The message id should not be null");
 
-        Mailbox box = someone.getInbox();
-        assertEquals(1, box.getMessageCount());
+        Mailbox box = Mailbox.get("someone@localhost");
+        assertEquals(1, box.size());
     }
 
     @Test
@@ -59,8 +55,8 @@ public class MailProducerTest extends CamelTestSupport {
         getMockEndpoint("mock:result").expectedMessageCount(1);
 
         Address from = new InternetAddress("fromCamelTest@localhost");
-        Address to = new InternetAddress(recipient2.getEmail());
-        Session session = Mailbox.getSmtpSession();
+        Address to = new InternetAddress("recipient2@localhost");
+        Session session = Session.getDefaultInstance(System.getProperties(), new DefaultAuthenticator("camel", "localhost"));
         MimeMessage mimeMessage = new MimeMessage(session);
         mimeMessage.setFrom(from);
         mimeMessage.addRecipient(RecipientType.TO, to);
@@ -73,12 +69,12 @@ public class MailProducerTest extends CamelTestSupport {
         Exchange exchange = getMockEndpoint("mock:result").getExchanges().get(0);
         assertNotNull(exchange.getIn().getHeader(MailConstants.MAIL_MESSAGE_ID), "The message id should not be null");
 
-        Mailbox box = someone.getInbox();
-        assertEquals(0, box.getMessageCount());
+        Mailbox box = Mailbox.get("someone@localhost");
+        assertEquals(0, box.size());
 
         // Check if the mimeMessagea has override body and headers
-        Mailbox box2 = recipient2.getInbox();
-        assertEquals(1, box2.getMessageCount());
+        Mailbox box2 = Mailbox.get("recipient2@localhost");
+        assertEquals(1, box2.size());
     }
 
     @Override
@@ -86,7 +82,7 @@ public class MailProducerTest extends CamelTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() {
-                from("direct:start").to(camel.uriPrefix(Protocol.smtp), "mock:result");
+                from("direct:start").to("smtp://camel@localhost", "mock:result");
             }
         };
     }

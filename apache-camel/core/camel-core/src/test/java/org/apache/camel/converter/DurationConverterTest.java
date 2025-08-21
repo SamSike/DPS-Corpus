@@ -25,12 +25,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class DurationConverterTest extends ContextTestSupport {
 
     @Test
-    public void testToMillis() {
+    public void testToMillis() throws Exception {
         Duration duration = Duration.parse("PT2H6M20.31S");
 
         Long millis = context.getTypeConverter().convertTo(long.class, duration);
@@ -39,18 +39,18 @@ public class DurationConverterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testToMillisOverflow() {
+    public void testToMillisOverflow() throws Exception {
         Duration duration = Duration.parse("P60000000000000D");
-
-        TypeConversionException e = assertThrows(TypeConversionException.class,
-                () -> context.getTypeConverter().convertTo(long.class, duration),
-                "Should throw exception");
-
-        assertIsInstanceOf(ArithmeticException.class, e.getCause());
+        try {
+            context.getTypeConverter().convertTo(long.class, duration);
+            fail("Should throw exception");
+        } catch (TypeConversionException e) {
+            assertIsInstanceOf(ArithmeticException.class, e.getCause());
+        }
     }
 
     @Test
-    public void testFromString() {
+    public void testFromString() throws Exception {
         String durationAsString = "PT2H6M20.31S";
 
         Duration duration = context.getTypeConverter().convertTo(Duration.class, durationAsString);
@@ -59,7 +59,7 @@ public class DurationConverterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testToString() {
+    public void testToString() throws Exception {
         Duration duration = Duration.parse("PT2H6M20.31S");
 
         String durationAsString = context.getTypeConverter().convertTo(String.class, duration);

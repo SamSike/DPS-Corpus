@@ -23,7 +23,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class AdviceWithErrorHandlerRemoveTest extends ContextTestSupport {
 
@@ -44,17 +44,19 @@ public class AdviceWithErrorHandlerRemoveTest extends ContextTestSupport {
 
         AdviceWith.adviceWith(context.getRouteDefinition("foo"), context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 getOriginalRoute().errorHandler(noErrorHandler());
             }
         });
 
         context.start();
 
-        Exception e = assertThrows(Exception.class, () -> template.sendBody("direct:foo", "Hello World"),
-                "Should throw exception");
-
-        assertEquals("Forced", e.getCause().getMessage());
+        try {
+            template.sendBody("direct:foo", "Hello World");
+            fail("Should throw exception");
+        } catch (Exception e) {
+            assertEquals("Forced", e.getCause().getMessage());
+        }
 
         assertMockEndpointsSatisfied();
     }
@@ -72,7 +74,7 @@ public class AdviceWithErrorHandlerRemoveTest extends ContextTestSupport {
 
         AdviceWith.adviceWith(context.getRouteDefinition("foo"), context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // override errorHandler by using on exception
                 weaveAddFirst().onException(Exception.class).handled(true).to("mock:dead2");
             }
@@ -86,10 +88,10 @@ public class AdviceWithErrorHandlerRemoveTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:bar").routeId("bar").to("mock:c").to("mock:d");
 
                 from("direct:foo").routeId("foo").errorHandler(deadLetterChannel("mock:dead")).to("mock:a")

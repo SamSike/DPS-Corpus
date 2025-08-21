@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.TimeZone;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.format.annotation.DateTimeFormat.ISO;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -47,15 +46,20 @@ import org.springframework.util.StringUtils;
  */
 public class DateTimeFormatterFactory {
 
-	private @Nullable String pattern;
+	@Nullable
+	private String pattern;
 
-	private @Nullable ISO iso;
+	@Nullable
+	private ISO iso;
 
-	private @Nullable FormatStyle dateStyle;
+	@Nullable
+	private FormatStyle dateStyle;
 
-	private @Nullable FormatStyle timeStyle;
+	@Nullable
+	private FormatStyle timeStyle;
 
-	private @Nullable TimeZone timeZone;
+	@Nullable
+	private TimeZone timeZone;
 
 
 	/**
@@ -112,7 +116,7 @@ public class DateTimeFormatterFactory {
 	}
 
 	/**
-	 * Set the two characters to use to format date values.
+	 * Set the two characters to use to format date values, in Joda-Time style.
 	 * <p>The first character is used for the date style; the second is for
 	 * the time style. Supported characters are:
 	 * <ul>
@@ -122,9 +126,9 @@ public class DateTimeFormatterFactory {
 	 * <li>'F' = Full</li>
 	 * <li>'-' = Omitted</li>
 	 * </ul>
-	 * <p>Note that JSR-310 natively favors {@link java.time.format.FormatStyle}
-	 * as used for {@link #setDateStyle}, {@link #setTimeStyle}, and
-	 * {@link #setDateTimeStyle}.
+	 * <p>This method mimics the styles supported by Joda-Time. Note that
+	 * JSR-310 natively favors {@link java.time.format.FormatStyle} as used for
+	 * {@link #setDateStyle}, {@link #setTimeStyle} and {@link #setDateTimeStyle}.
 	 * @param style two characters from the set {"S", "M", "L", "F", "-"}
 	 */
 	public void setStylePattern(String style) {
@@ -133,15 +137,16 @@ public class DateTimeFormatterFactory {
 		this.timeStyle = convertStyleCharacter(style.charAt(1));
 	}
 
-	private @Nullable FormatStyle convertStyleCharacter(char c) {
-		return switch (c) {
-			case 'S' -> FormatStyle.SHORT;
-			case 'M' -> FormatStyle.MEDIUM;
-			case 'L' -> FormatStyle.LONG;
-			case 'F' -> FormatStyle.FULL;
-			case '-' -> null;
-			default -> throw new IllegalArgumentException("Invalid style character '" + c + "'");
-		};
+	@Nullable
+	private FormatStyle convertStyleCharacter(char c) {
+		switch (c) {
+			case 'S': return FormatStyle.SHORT;
+			case 'M': return FormatStyle.MEDIUM;
+			case 'L': return FormatStyle.LONG;
+			case 'F': return FormatStyle.FULL;
+			case '-': return null;
+			default: throw new IllegalArgumentException("Invalid style character '" + c + "'");
+		}
 	}
 
 	/**
@@ -178,12 +183,19 @@ public class DateTimeFormatterFactory {
 			dateTimeFormatter = DateTimeFormatterUtils.createStrictDateTimeFormatter(this.pattern);
 		}
 		else if (this.iso != null && this.iso != ISO.NONE) {
-			dateTimeFormatter = switch (this.iso) {
-				case DATE -> DateTimeFormatter.ISO_DATE;
-				case TIME -> DateTimeFormatter.ISO_TIME;
-				case DATE_TIME -> DateTimeFormatter.ISO_DATE_TIME;
-				default -> throw new IllegalStateException("Unsupported ISO format: " + this.iso);
-			};
+			switch (this.iso) {
+				case DATE:
+					dateTimeFormatter = DateTimeFormatter.ISO_DATE;
+					break;
+				case TIME:
+					dateTimeFormatter = DateTimeFormatter.ISO_TIME;
+					break;
+				case DATE_TIME:
+					dateTimeFormatter = DateTimeFormatter.ISO_DATE_TIME;
+					break;
+				default:
+					throw new IllegalStateException("Unsupported ISO format: " + this.iso);
+			}
 		}
 		else if (this.dateStyle != null && this.timeStyle != null) {
 			dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(this.dateStyle, this.timeStyle);

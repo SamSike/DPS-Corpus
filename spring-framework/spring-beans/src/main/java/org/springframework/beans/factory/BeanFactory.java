@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,9 @@
 
 package org.springframework.beans.factory;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeansException;
 import org.springframework.core.ResolvableType;
+import org.springframework.lang.Nullable;
 
 /**
  * The root interface for accessing a Spring bean container.
@@ -37,7 +36,7 @@ import org.springframework.core.ResolvableType;
  * singleton in the scope of the factory). Which type of instance will be returned
  * depends on the bean factory configuration: the API is the same. Since Spring
  * 2.0, further scopes are available depending on the concrete application
- * context (for example, "request" and "session" scopes in a web environment).
+ * context (e.g. "request" and "session" scopes in a web environment).
  *
  * <p>The point of this approach is that the BeanFactory is a central registry
  * of application components, and centralizes configuration of application
@@ -125,15 +124,8 @@ public interface BeanFactory {
 	 * beans <i>created</i> by the FactoryBean. For example, if the bean named
 	 * {@code myJndiObject} is a FactoryBean, getting {@code &myJndiObject}
 	 * will return the factory, not the instance returned by the factory.
-	 * @see #FACTORY_BEAN_PREFIX_CHAR
 	 */
 	String FACTORY_BEAN_PREFIX = "&";
-
-	/**
-	 * Character variant of {@link #FACTORY_BEAN_PREFIX}.
-	 * @since 6.2.6
-	 */
-	char FACTORY_BEAN_PREFIX_CHAR = '&';
 
 
 	/**
@@ -144,10 +136,7 @@ public interface BeanFactory {
 	 * <p>Translates aliases back to the corresponding canonical bean name.
 	 * <p>Will ask the parent factory if the bean cannot be found in this factory instance.
 	 * @param name the name of the bean to retrieve
-	 * @return an instance of the bean.
-	 * Note that the return value will never be {@code null} but possibly a stub for
-	 * {@code null} returned from a factory method, to be checked via {@code equals(null)}.
-	 * Consider using {@link #getBeanProvider(Class)} for resolving optional dependencies.
+	 * @return an instance of the bean
 	 * @throws NoSuchBeanDefinitionException if there is no bean with the specified name
 	 * @throws BeansException if the bean could not be obtained
 	 */
@@ -163,11 +152,7 @@ public interface BeanFactory {
 	 * <p>Will ask the parent factory if the bean cannot be found in this factory instance.
 	 * @param name the name of the bean to retrieve
 	 * @param requiredType type the bean must match; can be an interface or superclass
-	 * @return an instance of the bean.
-	 * Note that the return value will never be {@code null}. In case of a stub for
-	 * {@code null} from a factory method having been resolved for the requested bean, a
-	 * {@code BeanNotOfRequiredTypeException} against the NullBean stub will be raised.
-	 * Consider using {@link #getBeanProvider(Class)} for resolving optional dependencies.
+	 * @return an instance of the bean
 	 * @throws NoSuchBeanDefinitionException if there is no such bean definition
 	 * @throws BeanNotOfRequiredTypeException if the bean is not of the required type
 	 * @throws BeansException if the bean could not be created
@@ -178,8 +163,6 @@ public interface BeanFactory {
 	 * Return an instance, which may be shared or independent, of the specified bean.
 	 * <p>Allows for specifying explicit constructor arguments / factory method arguments,
 	 * overriding the specified default arguments (if any) in the bean definition.
-	 * Note that the provided arguments need to match a specific candidate constructor /
-	 * factory method in the order of declared parameters.
 	 * @param name the name of the bean to retrieve
 	 * @param args arguments to use when creating a bean instance using explicit arguments
 	 * (only applied when creating a new instance as opposed to retrieving an existing one)
@@ -190,7 +173,7 @@ public interface BeanFactory {
 	 * @throws BeansException if the bean could not be created
 	 * @since 2.5
 	 */
-	Object getBean(String name, @Nullable Object @Nullable ... args) throws BeansException;
+	Object getBean(String name, Object... args) throws BeansException;
 
 	/**
 	 * Return the bean instance that uniquely matches the given object type, if any.
@@ -212,8 +195,6 @@ public interface BeanFactory {
 	 * Return an instance, which may be shared or independent, of the specified bean.
 	 * <p>Allows for specifying explicit constructor arguments / factory method arguments,
 	 * overriding the specified default arguments (if any) in the bean definition.
-	 * Note that the provided arguments need to match a specific candidate constructor /
-	 * factory method in the order of declared parameters.
 	 * <p>This method goes into {@link ListableBeanFactory} by-type lookup territory
 	 * but may also be translated into a conventional by-name lookup based on the name
 	 * of the given type. For more extensive retrieval operations across sets of beans,
@@ -228,12 +209,11 @@ public interface BeanFactory {
 	 * @throws BeansException if the bean could not be created
 	 * @since 4.1
 	 */
-	<T> T getBean(Class<T> requiredType, @Nullable Object @Nullable ... args) throws BeansException;
+	<T> T getBean(Class<T> requiredType, Object... args) throws BeansException;
 
 	/**
 	 * Return a provider for the specified bean, allowing for lazy on-demand retrieval
 	 * of instances, including availability and uniqueness options.
-	 * <p>For matching a generic type, consider {@link #getBeanProvider(ResolvableType)}.
 	 * @param requiredType type the bean must match; can be an interface or superclass
 	 * @return a corresponding provider handle
 	 * @since 5.1
@@ -243,20 +223,13 @@ public interface BeanFactory {
 
 	/**
 	 * Return a provider for the specified bean, allowing for lazy on-demand retrieval
-	 * of instances, including availability and uniqueness options. This variant allows
-	 * for specifying a generic type to match, similar to reflective injection points
-	 * with generic type declarations in method/constructor parameters.
-	 * <p>Note that collections of beans are not supported here, in contrast to reflective
+	 * of instances, including availability and uniqueness options.
+	 * @param requiredType type the bean must match; can be a generic type declaration.
+	 * Note that collection types are not supported here, in contrast to reflective
 	 * injection points. For programmatically retrieving a list of beans matching a
 	 * specific type, specify the actual bean type as an argument here and subsequently
 	 * use {@link ObjectProvider#orderedStream()} or its lazy streaming/iteration options.
-	 * <p>Also, generics matching is strict here, as per the Java assignment rules.
-	 * For lenient fallback matching with unchecked semantics (similar to the 'unchecked'
-	 * Java compiler warning), consider calling {@link #getBeanProvider(Class)} with the
-	 * raw type as a second step if no full generic match is
-	 * {@link ObjectProvider#getIfAvailable() available} with this variant.
 	 * @return a corresponding provider handle
-	 * @param requiredType type the bean must match; can be a generic type declaration
 	 * @since 5.1
 	 * @see ObjectProvider#iterator()
 	 * @see ObjectProvider#stream()
@@ -365,7 +338,8 @@ public interface BeanFactory {
 	 * @see #getBean
 	 * @see #isTypeMatch
 	 */
-	@Nullable Class<?> getType(String name) throws NoSuchBeanDefinitionException;
+	@Nullable
+	Class<?> getType(String name) throws NoSuchBeanDefinitionException;
 
 	/**
 	 * Determine the type of the bean with the given name. More specifically,
@@ -385,7 +359,8 @@ public interface BeanFactory {
 	 * @see #getBean
 	 * @see #isTypeMatch
 	 */
-	@Nullable Class<?> getType(String name, boolean allowFactoryBeanInit) throws NoSuchBeanDefinitionException;
+	@Nullable
+	Class<?> getType(String name, boolean allowFactoryBeanInit) throws NoSuchBeanDefinitionException;
 
 	/**
 	 * Return the aliases for the given bean name, if any.

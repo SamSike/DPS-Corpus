@@ -37,7 +37,6 @@ import org.apache.camel.support.ExchangeHelper;
 import org.apache.cxf.message.MessageContentsList;
 
 import static org.apache.camel.TypeConverter.MISS_VALUE;
-import static org.apache.camel.component.cxf.converter.CxfConverter.tryCoerceFirstArrayElement;
 
 /**
  * The <a href="http://camel.apache.org/type-converter.html">Type Converters</a> for CXF related types' converting .
@@ -68,7 +67,7 @@ public final class CxfConverter {
         if (object instanceof Collection) {
             return ((Collection<?>) object).toArray();
         } else {
-            Object[] answer;
+            Object answer[];
             if (object == null) {
                 answer = new Object[0];
             } else {
@@ -92,7 +91,8 @@ public final class CxfConverter {
             throws SOAPException, IOException {
         CachedOutputStream cos = new CachedOutputStream(exchange);
         soapMessage.writeTo(cos);
-        return cos.getInputStream();
+        InputStream in = cos.getInputStream();
+        return in;
     }
 
     @Converter
@@ -100,7 +100,7 @@ public final class CxfConverter {
         return DataFormat.valueOf(name.toUpperCase());
     }
 
-    @Converter(allowNull = true)
+    @Converter
     public static InputStream toInputStream(Response response, Exchange exchange) {
         Object obj = response.getEntity();
 
@@ -127,7 +127,7 @@ public final class CxfConverter {
      * Use a fallback type converter so we can convert the embedded list element if the value is MessageContentsList.
      * The algorithm of this converter finds the first non-null list element from the list and applies conversion to the
      * list element.
-     *
+     * 
      * @param  type     the desired type to be converted to
      * @param  exchange optional exchange which can be null
      * @param  value    the object to be converted
@@ -145,7 +145,34 @@ public final class CxfConverter {
             MessageContentsList list = (MessageContentsList) value;
 
             // try to turn the first array element into the object that we want
-            return tryCoerceFirstArrayElement(type, exchange, registry, list);
+            for (Object embedded : list) {
+                if (embedded != null) {
+                    if (type.isInstance(embedded)) {
+                        return type.cast(embedded);
+                    } else {
+                        TypeConverter tc = registry.lookup(type, embedded.getClass());
+                        if (tc == null) {
+                            // maybe one of its interface fits
+                            for (Class<?> clazz : embedded.getClass().getInterfaces()) {
+                                tc = registry.lookup(type, clazz);
+                                if (tc != null) {
+                                    break;
+                                }
+                            }
+                        }
+                        if (tc != null) {
+                            Object result = tc.convertTo(type, exchange, embedded);
+                            if (result != null) {
+                                return (T) result;
+                            }
+                            // there is no suitable result will be return
+                            break;
+                        }
+                    }
+                }
+            }
+            // return void to indicate its not possible to convert at this time
+            return (T) MISS_VALUE;
         }
 
         // CXF-RS Response class

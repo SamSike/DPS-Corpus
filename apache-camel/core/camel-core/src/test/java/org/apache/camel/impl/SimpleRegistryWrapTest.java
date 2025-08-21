@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SimpleRegistryWrapTest {
 
-    private final SimpleRegistry registry = new SimpleRegistry() {
+    private SimpleRegistry registry = new SimpleRegistry() {
 
         @Override
         public Object wrap(Object value) {
@@ -40,7 +40,7 @@ public class SimpleRegistryWrapTest {
     };
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         registry.bind("a", "123");
         registry.bind("b", "456");
     }

@@ -41,10 +41,10 @@ public class OnExceptionLoadBalancerDoubleIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).handled(true).to("direct:error");
                 from("direct:error").loadBalance().roundRobin().id("round").to("mock:error", "mock:error2", "mock:error3");
 

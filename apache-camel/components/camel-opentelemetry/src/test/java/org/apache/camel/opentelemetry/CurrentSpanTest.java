@@ -46,10 +46,10 @@ import org.apache.camel.support.DefaultConsumer;
 import org.apache.camel.support.DefaultProducer;
 import org.apache.camel.tracing.ActiveSpanManager;
 import org.apache.camel.util.StopWatch;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -75,17 +75,17 @@ class CurrentSpanTest extends CamelOpenTelemetryTestSupport {
         SpanTestData[] expectedSpans = {
                 new SpanTestData().setLabel("syncmock:result").setUri("syncmock://result").setOperation("syncmock")
                         .setKind(SpanKind.CLIENT),
-                new SpanTestData().setLabel("direct:bar").setUri("direct://bar").setOperation("bar"),
-                new SpanTestData().setLabel("direct:bar").setUri("direct://bar").setOperation("bar").setKind(SpanKind.CLIENT)
+                new SpanTestData().setLabel("direct:bar").setUri("direct://bar").setOperation("bar")
         };
 
         // sync pipeline
         template.sendBody("direct:bar", "Hello World");
 
-        awaitInvalidSpanContext();
-
         List<SpanData> spans = verify(expectedSpans, false);
         assertEquals(spans.get(0).getParentSpanId(), spans.get(1).getSpanId());
+
+        // validates that span was active in async producer's processor
+        assertFalse(Span.current().getSpanContext().isValid());
     }
 
     @Test
@@ -93,38 +93,17 @@ class CurrentSpanTest extends CamelOpenTelemetryTestSupport {
         SpanTestData[] expectedSpans = {
                 new SpanTestData().setLabel("asyncmock1:result").setUri("asyncmock1://result").setOperation("asyncmock1")
                         .setKind(SpanKind.CLIENT),
-                new SpanTestData().setLabel("direct:foo").setUri("direct://foo").setOperation("foo"),
-                new SpanTestData().setLabel("direct:foo").setUri("direct://foo").setOperation("foo").setKind(SpanKind.CLIENT)
+                new SpanTestData().setLabel("direct:foo").setUri("direct://foo").setOperation("foo")
         };
 
         // sync to async pipeline
         template.sendBody("direct:foo", "Hello World");
-        awaitInvalidSpanContext();
 
         List<SpanData> spans = verify(expectedSpans, false);
         assertEquals(spans.get(0).getParentSpanId(), spans.get(1).getSpanId());
 
-    }
-
-    @Test
-    void testDirectToDirectToAsync() {
-        SpanTestData[] expectedSpans = {
-                new SpanTestData().setLabel("asyncmock1:result").setUri("asyncmock1://result").setOperation("asyncmock1")
-                        .setKind(SpanKind.CLIENT),
-                new SpanTestData().setLabel("direct:foo2").setUri("direct://foo2").setOperation("foo2"),
-                new SpanTestData().setLabel("direct:foo2").setUri("direct://foo2").setOperation("foo2")
-                        .setKind(SpanKind.CLIENT),
-                new SpanTestData().setLabel("direct:foo1").setUri("direct://foo1").setOperation("foo1"),
-                new SpanTestData().setLabel("direct:foo1").setUri("direct://foo1").setOperation("foo1").setKind(SpanKind.CLIENT)
-        };
-
-        // direct to direct to async pipeline
-        template.sendBody("direct:foo1", "Hello World");
-        awaitInvalidSpanContext();
-
-        List<SpanData> spans = verify(expectedSpans, false);
-        assertEquals(spans.get(0).getParentSpanId(), spans.get(1).getSpanId());
-
+        // context is cleaned up
+        assertFalse(Span.current().getSpanContext().isValid());
     }
 
     @Test
@@ -140,10 +119,10 @@ class CurrentSpanTest extends CamelOpenTelemetryTestSupport {
 
         // sync pipeline
         template.sendBody("asyncmock1:start", "Hello World");
-        awaitInvalidSpanContext();
 
         List<SpanData> spans = verify(expectedSpans, false);
         assertEquals(spans.get(0).getParentSpanId(), spans.get(1).getSpanId());
+        assertFalse(Span.current().getSpanContext().isValid());
     }
 
     @Test
@@ -158,10 +137,10 @@ class CurrentSpanTest extends CamelOpenTelemetryTestSupport {
 
         // async pipeline
         template.sendBody("asyncmock2:start", "Hello World");
-        awaitInvalidSpanContext();
 
         List<SpanData> spans = verify(expectedSpans, false);
         assertEquals(spans.get(0).getParentSpanId(), spans.get(1).getSpanId());
+        assertFalse(Span.current().getSpanContext().isValid());
     }
 
     @Test
@@ -173,7 +152,7 @@ class CurrentSpanTest extends CamelOpenTelemetryTestSupport {
         };
 
         assertThrows(CamelExecutionException.class, () -> template.sendBody("asyncmock:fail", "Hello World"));
-        awaitInvalidSpanContext();
+        assertFalse(Span.current().getSpanContext().isValid());
 
         List<SpanData> spans = verify(expectedSpans, false);
         assertEquals(spans.get(0).getParentSpanId(), spans.get(1).getSpanId());
@@ -192,29 +171,27 @@ class CurrentSpanTest extends CamelOpenTelemetryTestSupport {
                         .setKind(SpanKind.CLIENT),
                 new SpanTestData().setLabel("syncmock:result").setUri("syncmock://result").setOperation("syncmock")
                         .setKind(SpanKind.CLIENT),
-                new SpanTestData().setLabel("direct:start").setUri("direct://start").setOperation("start"),
                 new SpanTestData().setLabel("direct:start").setUri("direct://start").setOperation("start")
-                        .setKind(SpanKind.CLIENT)
         };
 
         // sync pipeline
         template.sendBody("direct:start", "Hello World");
-        awaitInvalidSpanContext();
 
         List<SpanData> spans = verify(expectedSpans, false);
         assertEquals(spans.get(0).getParentSpanId(), spans.get(3).getSpanId());
         assertEquals(spans.get(1).getParentSpanId(), spans.get(3).getSpanId());
         assertEquals(spans.get(2).getParentSpanId(), spans.get(3).getSpanId());
+        assertFalse(Span.current().getSpanContext().isValid());
     }
 
     @Test
     void testContextDoesNotLeak() {
         for (int i = 0; i < 30; i++) {
             template.sendBody("asyncmock3:start", String.valueOf(i));
-            awaitInvalidSpanContext();
+            assertFalse(Span.current().getSpanContext().isValid());
         }
 
-        verifyTraceSpanNumbers(30, 11);
+        verifyTraceSpanNumbers(30, 10);
     }
 
     @Override
@@ -222,10 +199,6 @@ class CurrentSpanTest extends CamelOpenTelemetryTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() {
-                // direct to direct to async pipeline
-                from("direct:foo1").to("direct:foo2");
-                from("direct:foo2").to("asyncmock1:result");
-
                 // sync pipeline
                 from("direct:bar").to("syncmock:result");
 
@@ -279,12 +252,7 @@ class CurrentSpanTest extends CamelOpenTelemetryTestSupport {
 
         }
 
-        Awaitility.await()
-                .alias(errorMessage)
-                .atMost(5, TimeUnit.SECONDS)
-                .pollInterval(10, TimeUnit.MILLISECONDS)
-                .pollDelay(0, TimeUnit.MILLISECONDS)
-                .until(() -> !Span.current().getSpanContext().isValid());
+        assertFalse(Span.current().getSpanContext().isValid(), errorMessage);
     }
 
     private static class AsyncMockComponent extends MockComponent {
@@ -383,14 +351,4 @@ class CurrentSpanTest extends CamelOpenTelemetryTestSupport {
     private static void assertCurrentSpan(Exchange exchange) {
         assertEquals(Span.current().getSpanContext().getSpanId(), ActiveSpanManager.getSpan(exchange).spanId());
     }
-
-    private void awaitInvalidSpanContext() {
-        Awaitility.await()
-                .alias("Span.current().getSpanContext().isValid() should eventually return false")
-                .atMost(5, TimeUnit.SECONDS)
-                .pollInterval(10, TimeUnit.MILLISECONDS)
-                .pollDelay(0, TimeUnit.MILLISECONDS)
-                .until(() -> !Span.current().getSpanContext().isValid());
-    }
-
 }

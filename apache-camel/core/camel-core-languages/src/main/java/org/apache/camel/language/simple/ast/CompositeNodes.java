@@ -69,15 +69,15 @@ public class CompositeNodes extends BaseSimpleNode {
     }
 
     @Override
-    public String createCode(CamelContext camelContext, String expression) throws SimpleParserException {
+    public String createCode(String expression) throws SimpleParserException {
         if (children.isEmpty()) {
             return null;
         } else if (children.size() == 1) {
-            return children.get(0).createCode(camelContext, expression);
+            return children.get(0).createCode(expression);
         } else {
-            StringBuilder sb = new StringBuilder(256);
+            StringBuilder sb = new StringBuilder();
             for (SimpleNode child : children) {
-                String code = child.createCode(camelContext, expression);
+                String code = child.createCode(expression);
                 if (code != null) {
                     sb.append(code);
                 }

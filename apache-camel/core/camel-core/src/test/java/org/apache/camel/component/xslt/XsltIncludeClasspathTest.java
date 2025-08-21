@@ -37,10 +37,10 @@ public class XsltIncludeClasspathTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("file:src/test/data/?fileName=staff.xml&noop=true&initialDelay=0&delay=10")
                         .to("xslt:org/apache/camel/component/xslt/staff_include_classpath.xsl")
                         .to("log:foo").to("mock:result");

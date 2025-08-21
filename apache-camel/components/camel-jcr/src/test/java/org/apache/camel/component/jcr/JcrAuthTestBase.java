@@ -30,7 +30,7 @@ import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.TransientRepository;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
 import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
 
@@ -44,15 +44,19 @@ public abstract class JcrAuthTestBase extends CamelTestSupport {
 
     protected static final String REPO_PATH = "target/repository";
 
-    private static Repository repository = new TransientRepository(new File(REPO_PATH));
+    private Repository repository;
 
-    @BeforeAll
-    public static void cleanupDirectory() {
+    @Override
+    @BeforeEach
+    public void setUp() throws Exception {
         deleteDirectory(REPO_PATH);
+        super.setUp();
     }
 
     @Override
     protected void bindToRegistry(Registry registry) throws Exception {
+        repository = new TransientRepository(new File(REPO_PATH));
+
         // set up a user to authenticate
         SessionImpl session = (SessionImpl) repository
                 .login(new SimpleCredentials("admin", "admin".toCharArray()));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,17 +18,17 @@ package org.springframework.aop.support.annotation;
 
 import java.lang.annotation.Annotation;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.aop.ClassFilter;
 import org.springframework.aop.MethodMatcher;
 import org.springframework.aop.Pointcut;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * Simple {@link Pointcut} that looks for a specific annotation being present on a
- * {@linkplain #forClassAnnotation class} or {@linkplain #forMethodAnnotation method}.
+ * Simple Pointcut that looks for a specific Java 5 annotation
+ * being present on a {@link #forClassAnnotation class} or
+ * {@link #forMethodAnnotation method}.
  *
  * @author Juergen Hoeller
  * @author Sam Brannen
@@ -88,7 +88,6 @@ public class AnnotationMatchingPointcut implements Pointcut {
 	 * @see AnnotationClassFilter#AnnotationClassFilter(Class, boolean)
 	 * @see AnnotationMethodMatcher#AnnotationMethodMatcher(Class, boolean)
 	 */
-	@SuppressWarnings("NullAway") // Dataflow analysis limitation
 	public AnnotationMatchingPointcut(@Nullable Class<? extends Annotation> classAnnotationType,
 			@Nullable Class<? extends Annotation> methodAnnotationType, boolean checkInherited) {
 
@@ -123,9 +122,15 @@ public class AnnotationMatchingPointcut implements Pointcut {
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof AnnotationMatchingPointcut otherPointcut &&
-				this.classFilter.equals(otherPointcut.classFilter) &&
-				this.methodMatcher.equals(otherPointcut.methodMatcher)));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof AnnotationMatchingPointcut)) {
+			return false;
+		}
+		AnnotationMatchingPointcut otherPointcut = (AnnotationMatchingPointcut) other;
+		return (this.classFilter.equals(otherPointcut.classFilter) &&
+				this.methodMatcher.equals(otherPointcut.methodMatcher));
 	}
 
 	@Override
@@ -180,9 +185,15 @@ public class AnnotationMatchingPointcut implements Pointcut {
 		}
 
 		@Override
-		public boolean equals(@Nullable Object other) {
-			return (this == other || (other instanceof AnnotationCandidateClassFilter that &&
-					this.annotationType.equals(that.annotationType)));
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof AnnotationCandidateClassFilter)) {
+				return false;
+			}
+			AnnotationCandidateClassFilter that = (AnnotationCandidateClassFilter) obj;
+			return this.annotationType.equals(that.annotationType);
 		}
 
 		@Override

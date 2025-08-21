@@ -74,18 +74,18 @@ public class BeanLifecycleTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("statefulInstanceInRegistry", statefulInstanceInRegistry);
         jndi.bind("statefulInstanceInRegistryNoCache", statefulInstanceInRegistryNoCache);
         return jndi;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").routeId("foo").bean(statefulInstance, "doSomething", BeanScope.Prototype)
                         .bean(MyStatefulBean.class, "doSomething")
                         .bean(MyStatefulBean.class.getName(), "doSomething", BeanScope.Singleton)
@@ -97,7 +97,6 @@ public class BeanLifecycleTest extends ContextTestSupport {
         };
     }
 
-    @SuppressWarnings("Unused")
     public static class MyBean implements Service {
         private String status;
 

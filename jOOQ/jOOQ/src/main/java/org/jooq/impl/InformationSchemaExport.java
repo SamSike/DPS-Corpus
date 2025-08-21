@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,7 +40,6 @@ package org.jooq.impl;
 import static org.jooq.impl.QOM.GenerationOption.STORED;
 import static org.jooq.impl.QOM.GenerationOption.VIRTUAL;
 import static org.jooq.tools.StringUtils.isBlank;
-import static org.jooq.util.xml.XmlUtils.foreignKeyRule;
 import static org.jooq.util.xml.jaxb.TableConstraintType.CHECK;
 import static org.jooq.util.xml.jaxb.TableConstraintType.FOREIGN_KEY;
 import static org.jooq.util.xml.jaxb.TableConstraintType.PRIMARY_KEY;
@@ -60,19 +59,15 @@ import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Index;
 import org.jooq.Key;
-import org.jooq.Meta;
 import org.jooq.Param;
 import org.jooq.Qualified;
 import org.jooq.Schema;
 import org.jooq.Sequence;
 import org.jooq.SortField;
 import org.jooq.SortOrder;
-// ...
 import org.jooq.Table;
-import org.jooq.UDT;
 import org.jooq.UniqueKey;
-import org.jooq.util.xml.XmlUtils;
-import org.jooq.util.xml.jaxb.Attribute;
+import org.jooq.impl.QOM.GenerationOption;
 import org.jooq.util.xml.jaxb.CheckConstraint;
 import org.jooq.util.xml.jaxb.Column;
 import org.jooq.util.xml.jaxb.IndexColumnUsage;
@@ -82,7 +77,6 @@ import org.jooq.util.xml.jaxb.ReferentialConstraint;
 import org.jooq.util.xml.jaxb.TableConstraint;
 import org.jooq.util.xml.jaxb.TableConstraintType;
 import org.jooq.util.xml.jaxb.TableType;
-import org.jooq.util.xml.jaxb.UserDefinedTypeCategory;
 
 /**
  * @author Lukas Eder
@@ -148,17 +142,6 @@ final class InformationSchemaExport {
         return result;
     }
 
-    static final InformationSchema export(Configuration configuration, Meta meta) {
-        InformationSchema result = exportCatalogs(configuration, meta.getCatalogs());
-
-
-
-
-
-
-        return result;
-    }
-
     static final InformationSchema exportCatalogs(Configuration configuration, List<Catalog> catalogs) {
         InformationSchema result = new InformationSchema();
 
@@ -177,72 +160,15 @@ final class InformationSchemaExport {
                 for (Domain<?> d : s.getDomains())
                     exportDomain0(configuration, result, d);
 
-                for (UDT<?> u : s.getUDTs())
-                    exportUDT0(configuration, result, u);
-
                 for (Table<?> t : s.getTables())
                     exportTable0(configuration, result, t, includedTables);
 
                 for (Sequence<?> q : s.getSequences())
                     exportSequence0(configuration, result, q);
-
-
-
-
-
             }
         }
 
         return result;
-    }
-
-    private static final void exportUDT0(Configuration configuration, InformationSchema result, UDT<?> u) {
-        org.jooq.util.xml.jaxb.UserDefinedType is = new org.jooq.util.xml.jaxb.UserDefinedType();
-        String catalogName = catalogName(u);
-        String schemaName = schemaName(u);
-
-        if (!isBlank(catalogName))
-            is.setUserDefinedTypeCatalog(catalogName);
-
-        if (!isBlank(schemaName))
-            is.setUserDefinedTypeSchema(schemaName);
-
-        is.setUserDefinedTypeCategory(UserDefinedTypeCategory.STRUCTURED);
-        is.setUserDefinedTypeName(u.getName());
-        is.setComment(u.getComment());
-        result.getUserDefinedTypes().add(is);
-
-        Field<?>[] fields = u.fields();
-        for (int i = 0; i < fields.length; i++) {
-            Field<?> f = fields[i];
-            DataType<?> type = f.getDataType();
-            Attribute ia = new Attribute();
-
-            if (!isBlank(catalogName))
-                ia.setUdtCatalog(catalogName);
-
-            if (!isBlank(schemaName))
-                ia.setUdtSchema(schemaName);
-
-            ia.setUdtName(u.getName());
-            ia.setAttributeName(f.getName());
-            ia.setComment(f.getComment());
-            ia.setDataType(type.getTypeName(configuration));
-
-            if (type.lengthDefined())
-                ia.setCharacterMaximumLength(type.length());
-
-            if (type.precisionDefined())
-                ia.setNumericPrecision(type.precision());
-
-            if (type.scaleDefined())
-                ia.setNumericScale(type.scale());
-
-            ia.setAttributeDefault(DSL.using(configuration).render(type.defaultValue()));
-            ia.setOrdinalPosition(i + 1);
-
-            result.getAttributes().add(ia);
-        }
     }
 
     private static final void exportDomain0(Configuration configuration, InformationSchema result, Domain<?> d) {
@@ -259,7 +185,6 @@ final class InformationSchemaExport {
             id.setDomainSchema(schemaName);
 
         id.setDomainName(domainName);
-        id.setComment(d.getComment());
         id.setDataType(d.getDataType().getTypeName(configuration));
 
         if (d.getDataType().lengthDefined())
@@ -312,7 +237,6 @@ final class InformationSchemaExport {
             iq.setSequenceSchema(schemaName);
 
         iq.setSequenceName(q.getName());
-        iq.setComment(q.getComment());
         iq.setDataType(q.getDataType().getTypeName(configuration));
 
         if (q.getDataType().lengthDefined())
@@ -325,56 +249,19 @@ final class InformationSchemaExport {
             iq.setNumericScale(q.getDataType().scale());
 
         if (q.getStartWith() != null)
-            iq.setStartValue(Convert.convert(q.getStartWith() instanceof Param<?> p ? p.getValue() : q.getStartWith().toString(), BigInteger.class));
+            iq.setStartValue(Convert.convert(q.getStartWith() instanceof Param ? ((Param<?>) q.getStartWith()).getValue() : q.getStartWith().toString(), BigInteger.class));
         if (q.getIncrementBy() != null)
-            iq.setIncrement(Convert.convert(q.getIncrementBy() instanceof Param<?> p ? p.getValue() : q.getIncrementBy().toString(), BigInteger.class));
+            iq.setIncrement(Convert.convert(q.getIncrementBy() instanceof Param ? ((Param<?>) q.getIncrementBy()).getValue() : q.getIncrementBy().toString(), BigInteger.class));
         if (q.getMinvalue() != null)
-            iq.setMinimumValue(Convert.convert(q.getMinvalue() instanceof Param<?> p ? p.getValue() : q.getMinvalue().toString(), BigInteger.class));
+            iq.setMinimumValue(Convert.convert(q.getMinvalue() instanceof Param ? ((Param<?>) q.getMinvalue()).getValue() : q.getMinvalue().toString(), BigInteger.class));
         if (q.getMaxvalue() != null)
-            iq.setMaximumValue(Convert.convert(q.getMaxvalue() instanceof Param<?> p ? p.getValue() : q.getMaxvalue().toString(), BigInteger.class));
+            iq.setMaximumValue(Convert.convert(q.getMaxvalue() instanceof Param ? ((Param<?>) q.getMaxvalue()).getValue() : q.getMaxvalue().toString(), BigInteger.class));
         iq.setCycleOption(q.getCycle());
         if (q.getCache() != null)
-            iq.setCache(Convert.convert(q.getCache() instanceof Param<?> p ? p.getValue() : q.getCache().toString(), BigInteger.class));
+            iq.setCache(Convert.convert(q.getCache() instanceof Param ? ((Param<?>) q.getCache()).getValue() : q.getCache().toString(), BigInteger.class));
 
         result.getSequences().add(iq);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private static final void exportCatalog0(InformationSchema result, Catalog c) {
         org.jooq.util.xml.jaxb.Catalog ic = new org.jooq.util.xml.jaxb.Catalog();
@@ -414,11 +301,9 @@ final class InformationSchemaExport {
             it.setTableSchema(schemaName);
 
         switch (t.getOptions().type()) {
-            case MATERIALIZED_VIEW: it.setTableType(TableType.MATERIALIZED_VIEW); break;
+            case MATERIALIZED_VIEW:
             case VIEW:              it.setTableType(TableType.VIEW); break;
-            case TEMPORARY:
-            case GLOBAL_TEMPORARY:  it.setTableType(TableType.GLOBAL_TEMPORARY); break;
-            case LOCAL_TEMPORARY:   it.setTableType(TableType.LOCAL_TEMPORARY); break;
+            case TEMPORARY:         it.setTableType(TableType.GLOBAL_TEMPORARY); break;
             case FUNCTION:
             case TABLE:
             case EXPRESSION:
@@ -444,7 +329,7 @@ final class InformationSchemaExport {
             result.getViews().add(iv);
         }
 
-        Field<?>[] fields = t.fieldsIncludingHidden().fields();
+        Field<?>[] fields = t.fields();
         for (int i = 0; i < fields.length; i++) {
             Field<?> f = fields[i];
             DataType<?> type = f.getDataType();
@@ -473,7 +358,6 @@ final class InformationSchemaExport {
             ic.setColumnDefault(DSL.using(configuration).render(type.defaultValue()));
             ic.setIsNullable(type.nullable());
             ic.setOrdinalPosition(i + 1);
-            ic.setHidden(type.hidden());
             ic.setReadonly(type.readonly());
 
             if (type.computed()) {
@@ -589,9 +473,9 @@ final class InformationSchemaExport {
             result.getKeyColumnUsages().add(kc);
         }
 
-        if (key instanceof ForeignKey<?, ?> fk) {
+        if (constraintType == FOREIGN_KEY) {
             ReferentialConstraint rc = new ReferentialConstraint();
-            UniqueKey<?> uk = fk.getKey();
+            UniqueKey<?> uk = ((ForeignKey<?, ?>) key).getKey();
             String ukCatalogName = catalogName(uk.getTable());
             String ukSchemaName = schemaName(uk.getTable());
 
@@ -609,8 +493,6 @@ final class InformationSchemaExport {
 
             rc.setConstraintName(key.getName());
             rc.setUniqueConstraintName(uk.getName());
-            rc.setDeleteRule(foreignKeyRule(fk.getDeleteRule()));
-            rc.setUpdateRule(foreignKeyRule(fk.getUpdateRule()));
 
             result.getReferentialConstraints().add(rc);
         }

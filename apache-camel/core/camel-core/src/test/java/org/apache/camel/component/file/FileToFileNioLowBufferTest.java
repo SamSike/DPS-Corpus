@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.file;
 
-import java.util.UUID;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
@@ -25,25 +23,24 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
 
 public class FileToFileNioLowBufferTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello" + UUID.randomUUID() + ".txt";
 
     @Test
     public void testFileToFileNioLowBuffer() throws Exception {
         String body = "1234567890123456789012345678901234567890";
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(1);
-        mock.expectedFileExists(testFile("out/" + TEST_FILE_NAME), body);
+        mock.expectedFileExists(testFile("out/hello.txt"), body);
 
-        template.sendBodyAndHeader(fileUri("in"), body, Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader(fileUri("in"), body, Exchange.FILE_NAME, "hello.txt");
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("in?initialDelay=0&delay=10")).convertBodyTo(String.class)
                         .to(fileUri("out?bufferSize=4")).to("mock:result");
             }

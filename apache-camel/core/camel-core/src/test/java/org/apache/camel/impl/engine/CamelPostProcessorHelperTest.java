@@ -18,11 +18,7 @@ package org.apache.camel.impl.engine;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.BeanConfigInject;
@@ -32,6 +28,7 @@ import org.apache.camel.Consume;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.FluentProducerTemplate;
 import org.apache.camel.NoSuchBeanException;
 import org.apache.camel.NoSuchEndpointException;
@@ -56,16 +53,16 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class CamelPostProcessorHelperTest extends ContextTestSupport {
 
-    private final MySynchronization mySynchronization = new MySynchronization();
-    private final Properties myProp = new Properties();
+    private MySynchronization mySynchronization = new MySynchronization();
+    private Properties myProp = new Properties();
 
     @Override
-    protected Registry createCamelRegistry() {
+    protected Registry createRegistry() throws Exception {
         Registry jndi = new DefaultRegistry();
         jndi.bind("myProp", myProp);
         jndi.bind("foo", new FooBar());
@@ -116,13 +113,14 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
 
         MyPrivateConsumeBean my = new MyPrivateConsumeBean();
         Method method = my.getClass().getDeclaredMethod("consumeSomethingPrivate", String.class);
-        RuntimeCamelException e = assertThrows(RuntimeCamelException.class,
-                () -> helper.consumerInjection(method, my, "foo"),
-                "Should have thrown exception");
-
-        IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
-        assertTrue(iae.getMessage().startsWith("The method private void"));
-        assertTrue(iae.getMessage().endsWith("(for example the method must be public)"));
+        try {
+            helper.consumerInjection(method, my, "foo");
+            fail("Should have thrown exception");
+        } catch (RuntimeCamelException e) {
+            IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
+            assertTrue(iae.getMessage().startsWith("The method private void"));
+            assertTrue(iae.getMessage().endsWith("(for example the method must be public)"));
+        }
     }
 
     @Test
@@ -335,15 +333,15 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         Class<?> type = field.getType();
         String propertyName = "producer";
 
-        ResolveEndpointFailedException e = assertThrows(ResolveEndpointFailedException.class,
-                () -> helper.getInjectionValue(type, endpointInject.value(), endpointInject.property(), propertyName, bean,
-                        "foo"),
-                "Should throw exception");
-
-        assertEquals("ref://unknown", e.getUri());
-        NoSuchBeanException nsbe = assertIsInstanceOf(NoSuchBeanException.class, e.getCause());
-        assertEquals("No bean could be found in the registry for: unknown of type: org.apache.camel.Endpoint",
-                nsbe.getMessage());
+        try {
+            helper.getInjectionValue(type, endpointInject.value(), endpointInject.property(), propertyName, bean, "foo");
+            fail("Should throw exception");
+        } catch (ResolveEndpointFailedException e) {
+            assertEquals("ref://unknown", e.getUri());
+            NoSuchBeanException nsbe = assertIsInstanceOf(NoSuchBeanException.class, e.getCause());
+            assertEquals("No bean could be found in the registry for: unknown of type: org.apache.camel.Endpoint",
+                    nsbe.getMessage());
+        }
     }
 
     @Test
@@ -357,10 +355,12 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         Class<?> type = field.getType();
         String propertyName = "producer";
 
-        assertThrows(NoSuchEndpointException.class,
-                () -> helper.getInjectionValue(type, endpointInject.value(), endpointInject.property(), propertyName, bean,
-                        "foo"),
-                "Should throw exception");
+        try {
+            helper.getInjectionValue(type, endpointInject.value(), endpointInject.property(), propertyName, bean, "foo");
+            fail("Should throw exception");
+        } catch (NoSuchEndpointException e) {
+            // expected
+        }
     }
 
     @Test
@@ -375,13 +375,13 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         Field field = bean.getClass().getField("timeout");
         PropertyInject propertyInject = field.getAnnotation(PropertyInject.class);
         Class<?> type = field.getType();
-        Object value = helper.getInjectionPropertyValue(type, null, propertyInject.value(), "", "");
-        assertEquals(Integer.valueOf(2000), (Object) Integer.valueOf(String.valueOf(value)));
+        Object value = helper.getInjectionPropertyValue(type, propertyInject.value(), "", "timeout", bean, "foo");
+        assertEquals(Integer.valueOf("2000"), (Object) Integer.valueOf("" + value));
 
         field = bean.getClass().getField("greeting");
         propertyInject = field.getAnnotation(PropertyInject.class);
         type = field.getType();
-        value = helper.getInjectionPropertyValue(type, null, propertyInject.value(), "", "");
+        value = helper.getInjectionPropertyValue(type, propertyInject.value(), "", "greeting", bean, "foo");
         assertEquals("Hello Camel", value);
     }
 
@@ -396,98 +396,14 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         Field field = bean.getClass().getField("timeout");
         PropertyInject propertyInject = field.getAnnotation(PropertyInject.class);
         Class<?> type = field.getType();
-        Object value = helper.getInjectionPropertyValue(type, null, propertyInject.value(), "5000", "");
-        assertEquals(Integer.valueOf(5000), (Object) Integer.valueOf(String.valueOf(value)));
+        Object value = helper.getInjectionPropertyValue(type, propertyInject.value(), "5000", "timeout", bean, "foo");
+        assertEquals(Integer.valueOf("5000"), (Object) Integer.valueOf("" + value));
 
         field = bean.getClass().getField("greeting");
         propertyInject = field.getAnnotation(PropertyInject.class);
         type = field.getType();
-        value = helper.getInjectionPropertyValue(type, null, propertyInject.value(), "", "");
+        value = helper.getInjectionPropertyValue(type, propertyInject.value(), "", "greeting", bean, "foo");
         assertEquals("Hello Camel", value);
-    }
-
-    @Test
-    public void testPropertyFieldSeparatorArrayInject() throws Exception {
-        myProp.put("serverPorts", "4444;5555"); // test with semicolon as separator
-        myProp.put("hosts", "serverA , serverB"); // test with whitespace noise
-
-        CamelPostProcessorHelper helper = new CamelPostProcessorHelper(context);
-
-        MyPropertyFieldSeparatorArrayBean bean = new MyPropertyFieldSeparatorArrayBean();
-
-        Field field = bean.getClass().getField("ports");
-        PropertyInject propertyInject = field.getAnnotation(PropertyInject.class);
-        Class<?> type = field.getType();
-        Object value
-                = helper.getInjectionPropertyValue(type, null, propertyInject.value(), "", propertyInject.separator());
-        assertIsInstanceOf(int[].class, value);
-        int[] arr = (int[]) value;
-        assertEquals(2, arr.length);
-        assertEquals(4444, arr[0]);
-        assertEquals(5555, arr[1]);
-
-        field = bean.getClass().getField("hosts");
-        propertyInject = field.getAnnotation(PropertyInject.class);
-        type = field.getType();
-        value = helper.getInjectionPropertyValue(type, null, propertyInject.value(), "", propertyInject.separator());
-        assertIsInstanceOf(String[].class, value);
-        String[] arr2 = (String[]) value;
-        assertEquals(2, arr2.length);
-        assertEquals("serverA", arr2[0]);
-        assertEquals("serverB", arr2[1]);
-    }
-
-    @Test
-    public void testPropertyFieldSeparatorListInject() throws Exception {
-        myProp.put("serverPorts", "4444;5555"); // test with semicolon as separator
-        myProp.put("hosts", "serverA , serverB"); // test with whitespace noise
-
-        CamelPostProcessorHelper helper = new CamelPostProcessorHelper(context);
-
-        MyPropertyFieldSeparatorListBean bean = new MyPropertyFieldSeparatorListBean();
-
-        Field field = bean.getClass().getField("ports");
-        PropertyInject propertyInject = field.getAnnotation(PropertyInject.class);
-        Class<?> type = field.getType();
-        Object value = helper.getInjectionPropertyValue(type, field.getGenericType(),
-                propertyInject.value(), "", propertyInject.separator());
-        assertIsInstanceOf(List.class, value);
-        List arr = (List) value;
-        assertEquals(2, arr.size());
-        assertEquals(4444, arr.get(0));
-        assertEquals(5555, arr.get(1));
-
-        field = bean.getClass().getField("hosts");
-        propertyInject = field.getAnnotation(PropertyInject.class);
-        type = field.getType();
-        value = helper.getInjectionPropertyValue(type, field.getGenericType(),
-                propertyInject.value(), "", propertyInject.separator());
-        assertIsInstanceOf(Set.class, value);
-        Set arr2 = (Set) value;
-        assertEquals(2, arr.size());
-        Iterator it = arr2.iterator();
-        assertEquals("serverA", it.next());
-        assertEquals("serverB", it.next());
-    }
-
-    @Test
-    public void testPropertyFieldSeparatorMapInject() throws Exception {
-        myProp.put("servers", "serverA = 4444 ; serverB=5555"); // test with semicolon as separator and whitespace
-
-        CamelPostProcessorHelper helper = new CamelPostProcessorHelper(context);
-
-        MyPropertyFieldSeparatorMapBean bean = new MyPropertyFieldSeparatorMapBean();
-
-        Field field = bean.getClass().getField("servers");
-        PropertyInject propertyInject = field.getAnnotation(PropertyInject.class);
-        Class<?> type = field.getType();
-        Object value = helper.getInjectionPropertyValue(type, field.getGenericType(),
-                propertyInject.value(), "", propertyInject.separator());
-        assertIsInstanceOf(Map.class, value);
-        Map arr = (Map) value;
-        assertEquals(2, arr.size());
-        assertEquals(4444, arr.get("serverA"));
-        assertEquals(5555, arr.get("serverB"));
     }
 
     @Test
@@ -502,13 +418,13 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         Method method = bean.getClass().getMethod("setTimeout", int.class);
         PropertyInject propertyInject = method.getAnnotation(PropertyInject.class);
         Class<?> type = method.getParameterTypes()[0];
-        Object value = helper.getInjectionPropertyValue(type, null, propertyInject.value(), "", "");
-        assertEquals(Integer.valueOf(2000), (Object) Integer.valueOf(String.valueOf(value)));
+        Object value = helper.getInjectionPropertyValue(type, propertyInject.value(), "", "timeout", bean, "foo");
+        assertEquals(Integer.valueOf("2000"), (Object) Integer.valueOf("" + value));
 
         method = bean.getClass().getMethod("setGreeting", String.class);
         propertyInject = method.getAnnotation(PropertyInject.class);
         type = method.getParameterTypes()[0];
-        value = helper.getInjectionPropertyValue(type, null, propertyInject.value(), "", "");
+        value = helper.getInjectionPropertyValue(type, propertyInject.value(), "", "greeting", bean, "foo");
         assertEquals("Hello Camel", value);
     }
 
@@ -536,13 +452,14 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         Field field = bean.getClass().getField("foo");
 
         Class<?> type = field.getType();
-        NoSuchBeanException e = assertThrows(NoSuchBeanException.class,
-                () -> helper.getInjectionBeanValue(type, "bar"),
-                "Should have thrown exception");
-
-        assertEquals("No bean could be found in the registry for: bar of type: org.apache.camel.impl.FooBar",
-                e.getMessage());
-        assertEquals("bar", e.getName());
+        try {
+            helper.getInjectionBeanValue(type, "bar");
+            fail("Should have thrown exception");
+        } catch (NoSuchBeanException e) {
+            assertEquals("No bean could be found in the registry for: bar of type: org.apache.camel.impl.FooBar",
+                    e.getMessage());
+            assertEquals("bar", e.getName());
+        }
     }
 
     @Test
@@ -627,7 +544,7 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
 
     }
 
-    public static class NoBeanInjectionTestClass {
+    public class NoBeanInjectionTestClass {
         @EndpointInject
         public FluentProducerTemplate fluentProducerTemplate;
 
@@ -649,7 +566,7 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
 
         @Consume("seda:foo")
         public void consumeSomething(String body, Exchange exchange) {
-            exchange.getExchangeExtension().addOnCompletion(mySynchronization);
+            exchange.adapt(ExtendedExchange.class).addOnCompletion(mySynchronization);
             assertEquals("Hello World", body);
             template.sendBody("mock:result", body);
         }
@@ -664,7 +581,7 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
             assertEquals("Hello World", body);
 
             Exchange exchange = producer.getEndpoint().createExchange();
-            exchange.getExchangeExtension().addOnCompletion(mySynchronization);
+            exchange.adapt(ExtendedExchange.class).addOnCompletion(mySynchronization);
             exchange.getIn().setBody(body);
             producer.process(exchange);
         }
@@ -688,7 +605,7 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         }
     }
 
-    public static class MyEndpointInjectBeanProducerTemplate {
+    public class MyEndpointInjectBeanProducerTemplate {
 
         private ProducerTemplate producer;
 
@@ -706,7 +623,7 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         }
     }
 
-    public static class MyEndpointBeanProducer {
+    public class MyEndpointBeanProducer {
 
         private Producer producer;
 
@@ -725,7 +642,7 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
 
     }
 
-    public static class MyEndpointBeanPollingConsumer {
+    public class MyEndpointBeanPollingConsumer {
 
         private PollingConsumer consumer;
 
@@ -738,62 +655,62 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
             return consumer;
         }
 
-        public Exchange consume() {
+        public Exchange consume() throws Exception {
             return consumer.receive(1000);
         }
 
     }
 
-    public static class MyEndpointInjectProducerTemplate {
+    public class MyEndpointInjectProducerTemplate {
 
         @EndpointInject("mock:result")
         public ProducerTemplate producer;
 
-        public void send(Exchange exchange) {
+        public void send(Exchange exchange) throws Exception {
             producer.send(exchange);
         }
 
     }
 
-    public static class MyEndpointInjectFluentProducerTemplate {
+    public class MyEndpointInjectFluentProducerTemplate {
 
         @EndpointInject("mock:result")
         public FluentProducerTemplate producer;
 
-        public void send(Exchange exchange) {
+        public void send(Exchange exchange) throws Exception {
             producer.withExchange(exchange).send();
         }
 
     }
 
-    public static class MyEndpointInjectProducerTemplateNoDefaultEndpoint {
+    public class MyEndpointInjectProducerTemplateNoDefaultEndpoint {
 
         @EndpointInject()
         public ProducerTemplate producer;
 
-        public void send(Exchange exchange) {
+        public void send(Exchange exchange) throws Exception {
             producer.send("mock:result", exchange);
         }
 
     }
 
-    public static class MyEndpointInjectProducerTemplateNameUnknown {
+    public class MyEndpointInjectProducerTemplateNameUnknown {
 
         @EndpointInject("ref:unknown")
         public ProducerTemplate producer;
 
-        public void send(Exchange exchange) {
+        public void send(Exchange exchange) throws Exception {
             producer.send(exchange);
         }
 
     }
 
-    public static class MyEndpointInjectProducerTemplateUrlUnknown {
+    public class MyEndpointInjectProducerTemplateUrlUnknown {
 
         @EndpointInject("xxx:foo")
         public ProducerTemplate producer;
 
-        public void send(Exchange exchange) {
+        public void send(Exchange exchange) throws Exception {
             producer.send(exchange);
         }
 
@@ -808,7 +725,7 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         }
     }
 
-    public static class MyPropertyFieldBean {
+    public class MyPropertyFieldBean {
 
         @PropertyInject("myTimeout")
         public int timeout;
@@ -821,7 +738,7 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         }
     }
 
-    public static class MyPropertyFieldDefaultValueBean {
+    public class MyPropertyFieldDefaultValueBean {
 
         @PropertyInject(value = "myTimeout", defaultValue = "5000")
         public int timeout;
@@ -834,44 +751,7 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         }
     }
 
-    public static class MyPropertyFieldSeparatorArrayBean {
-
-        @PropertyInject(value = "serverPorts", separator = ";")
-        public int[] ports;
-
-        @PropertyInject(value = "hosts", separator = ",")
-        public String[] hosts;
-
-        public String doSomething(String body) {
-            return String.format("%s:%d %s:%d with body: %s", hosts[0], ports[0], hosts[1], ports[1], body);
-        }
-    }
-
-    public static class MyPropertyFieldSeparatorListBean {
-
-        @PropertyInject(value = "serverPorts", separator = ";")
-        public List<Integer> ports;
-
-        @PropertyInject(value = "hosts", separator = ",")
-        public Set<String> hosts;
-
-        public String doSomething(String body) {
-            Iterator<String> it = hosts.iterator();
-            return String.format("%s:%d %s:%d with body: %s", it.next(), ports.get(0), it.next(), ports.get(1), body);
-        }
-    }
-
-    public static class MyPropertyFieldSeparatorMapBean {
-
-        @PropertyInject(value = "servers", separator = ";")
-        public Map<String, Integer> servers;
-
-        public String doSomething(String body) {
-            return null;
-        }
-    }
-
-    public static class MyPropertyMethodBean {
+    public class MyPropertyMethodBean {
 
         private int timeout;
         private String greeting;
@@ -899,7 +779,7 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         }
     }
 
-    public static class MyBeanInjectBean {
+    public class MyBeanInjectBean {
 
         @BeanInject("foo")
         public FooBar foo;
@@ -909,7 +789,7 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         }
     }
 
-    public static class MyBeanInjectByTypeBean {
+    public class MyBeanInjectByTypeBean {
 
         @BeanInject
         public FooBar foo;
@@ -919,7 +799,7 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         }
     }
 
-    public static class MyBeanConfigInjectByTypeBean {
+    public class MyBeanConfigInjectByTypeBean {
 
         @BeanConfigInject("foobar")
         public FooBarConfig config;
@@ -931,7 +811,7 @@ public class CamelPostProcessorHelperTest extends ContextTestSupport {
         }
     }
 
-    public static class MyBeanConfigInjectByMethod {
+    public class MyBeanConfigInjectByMethod {
 
         public FooBar fooBar;
 

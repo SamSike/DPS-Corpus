@@ -38,12 +38,4 @@ public class TestEntityNameGenerator implements SharedNameGenerator {
     public String getName() {
         return testClass + testName;
     }
-
-    public String getClazz() {
-        return testClass;
-    }
-
-    public String getMethod() {
-        return testName;
-    }
 }

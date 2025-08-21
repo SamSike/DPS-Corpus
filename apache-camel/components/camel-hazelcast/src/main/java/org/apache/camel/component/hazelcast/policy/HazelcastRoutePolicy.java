@@ -104,23 +104,13 @@ public class HazelcastRoutePolicy extends RoutePolicySupport implements CamelCon
     }
 
     @Override
-    public void onStop(Route route) {
-        lock.lock();
-        try {
-            suspendedRoutes.remove(route);
-        } finally {
-            lock.unlock();
-        }
+    public synchronized void onStop(Route route) {
+        suspendedRoutes.remove(route);
     }
 
     @Override
-    public void onSuspend(Route route) {
-        lock.lock();
-        try {
-            suspendedRoutes.remove(route);
-        } finally {
-            lock.unlock();
-        }
+    public synchronized void onSuspend(Route route) {
+        suspendedRoutes.remove(route);
     }
 
     @Override
@@ -175,8 +165,7 @@ public class HazelcastRoutePolicy extends RoutePolicySupport implements CamelCon
         }
     }
 
-    private void stopConsumer(Route route) {
-        lock.lock();
+    private synchronized void stopConsumer(Route route) {
         try {
             if (!suspendedRoutes.contains(route)) {
                 LOGGER.debug("Stopping consumer for {} ({})", route.getId(), route.getConsumer());
@@ -185,13 +174,10 @@ public class HazelcastRoutePolicy extends RoutePolicySupport implements CamelCon
             }
         } catch (Exception e) {
             handleException(e);
-        } finally {
-            lock.unlock();
         }
     }
 
-    private void startAllStoppedConsumers() {
-        lock.lock();
+    private synchronized void startAllStoppedConsumers() {
         try {
             for (Route route : suspendedRoutes) {
                 LOGGER.debug("Starting consumer for {} ({})", route.getId(), route.getConsumer());
@@ -201,8 +187,6 @@ public class HazelcastRoutePolicy extends RoutePolicySupport implements CamelCon
             suspendedRoutes.clear();
         } catch (Exception e) {
             handleException(e);
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -314,7 +298,7 @@ public class HazelcastRoutePolicy extends RoutePolicySupport implements CamelCon
                             tryLockTimeoutUnit.name());
                 }
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                // ignore
             } catch (Exception e) {
                 getExceptionHandler().handleException(e);
             } finally {

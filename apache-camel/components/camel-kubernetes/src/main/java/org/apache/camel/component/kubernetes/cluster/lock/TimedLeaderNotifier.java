@@ -109,8 +109,7 @@ public class TimedLeaderNotifier implements Service {
             try {
                 executor.awaitTermination(1, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
-                LOG.info("Interrupted while waiting for thread termination");
-                Thread.currentThread().interrupt();
+                // ignore
             }
         }
     }

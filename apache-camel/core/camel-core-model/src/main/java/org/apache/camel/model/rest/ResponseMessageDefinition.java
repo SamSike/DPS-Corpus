@@ -43,8 +43,6 @@ public class ResponseMessageDefinition {
     @XmlAttribute
     @Metadata(defaultValue = "200")
     private String code;
-    @XmlAttribute
-    private String contentType;
     @XmlAttribute(required = true)
     private String message;
     @XmlAttribute
@@ -72,16 +70,8 @@ public class ResponseMessageDefinition {
         this.code = code;
     }
 
-    public String getContentType() {
-        return contentType;
-    }
-
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-
     public String getResponseModel() {
-        return responseModel;
+        return responseModel != null ? responseModel : "";
     }
 
     public void setResponseModel(String responseModel) {
@@ -119,7 +109,7 @@ public class ResponseMessageDefinition {
      * The response code such as a HTTP status code
      */
     public ResponseMessageDefinition code(int code) {
-        setCode(Integer.toString(code));
+        setCode("" + code);
         return this;
     }
 
@@ -129,14 +119,6 @@ public class ResponseMessageDefinition {
      */
     public ResponseMessageDefinition code(String code) {
         setCode(code);
-        return this;
-    }
-
-    /**
-     * The response content-type such as application/json.
-     */
-    public ResponseMessageDefinition contentType(String contentType) {
-        setContentType(contentType);
         return this;
     }
 

@@ -42,7 +42,7 @@ class WithUseJMXTest extends CamelMainTestSupport {
     @Test
     void shouldFindTheManagedCamelContext() {
         assertNotNull(context);
-        ManagedCamelContext mc = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class);
+        ManagedCamelContext mc = context.getExtension(ManagedCamelContext.class);
         assertNotNull(mc);
         ManagedCamelContextMBean managedCamelContext = mc.getManagedCamelContext();
         assertNotNull(managedCamelContext);

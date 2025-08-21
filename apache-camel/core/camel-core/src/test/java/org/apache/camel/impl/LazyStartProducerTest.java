@@ -71,7 +71,7 @@ public class LazyStartProducerTest extends ContextTestSupport {
     }
 
     @Test
-    public void lazyStartProducerGlobal() {
+    public void lazyStartProducerGlobal() throws Exception {
         context.getGlobalEndpointConfiguration().setLazyStartProducer(true);
 
         MockEndpoint mock = getMockEndpoint("mock:result");
@@ -82,7 +82,7 @@ public class LazyStartProducerTest extends ContextTestSupport {
     }
 
     @Test
-    public void lazyStartProducerComponent() {
+    public void lazyStartProducerComponent() throws Exception {
         context.getComponent("log", LogComponent.class).setLazyStartProducer(true);
 
         LogEndpoint log = getMandatoryEndpoint("log:foo", LogEndpoint.class);

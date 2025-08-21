@@ -17,14 +17,16 @@
 package org.apache.camel.processor;
 
 import org.apache.camel.builder.RouteBuilder;
+import org.junit.jupiter.api.parallel.ResourceLock;
 
+@ResourceLock("VmComponent")
 public class RecipientListExchangePatternOptionTest extends SendExchangePatternOptionTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").recipientList(constant("stub:foo?exchangePattern=InOnly")).to("mock:result");
 
                 from("stub:foo").to("mock:stub");

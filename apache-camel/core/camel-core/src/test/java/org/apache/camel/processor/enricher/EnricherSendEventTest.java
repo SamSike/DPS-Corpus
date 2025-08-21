@@ -35,10 +35,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class EnricherSendEventTest extends ContextTestSupport {
-    private final MyEventNotifier en = new MyEventNotifier();
+    private MyEventNotifier en = new MyEventNotifier();
 
     @Test
-    public void testAsyncEnricher() {
+    public void testAsyncEnricher() throws Exception {
 
         template.sendBody("direct:start1", "test");
         assertEquals(3, en.exchangeSendingEvent.get(), "Get a wrong sending event number");
@@ -46,7 +46,7 @@ public class EnricherSendEventTest extends ContextTestSupport {
     }
 
     @Test
-    public void testSyncEnricher() {
+    public void testSyncEnricher() throws Exception {
         template.sendBody("direct:start2", "test");
         assertEquals(3, en.exchangeSendingEvent.get(), "Get a wrong sending event number");
         assertEquals(3, en.exchangeSentEvent.get(), "Get a wrong sent event number");
@@ -70,9 +70,9 @@ public class EnricherSendEventTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start1")
                         // using the async utility component to ensure that the
                         // async routing engine kicks in
@@ -87,11 +87,11 @@ public class EnricherSendEventTest extends ContextTestSupport {
 
     static class MyEventNotifier extends EventNotifierSupport {
 
-        final AtomicInteger exchangeSendingEvent = new AtomicInteger();
-        final AtomicInteger exchangeSentEvent = new AtomicInteger();
+        AtomicInteger exchangeSendingEvent = new AtomicInteger();
+        AtomicInteger exchangeSentEvent = new AtomicInteger();
 
         @Override
-        public void notify(CamelEvent event) {
+        public void notify(CamelEvent event) throws Exception {
 
             if (event instanceof ExchangeSendingEvent) {
                 exchangeSendingEvent.incrementAndGet();

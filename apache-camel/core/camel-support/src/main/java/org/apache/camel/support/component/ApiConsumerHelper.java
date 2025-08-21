@@ -38,7 +38,7 @@ public final class ApiConsumerHelper {
 
     /**
      * Utility method to find matching API Method for supplied endpoint's configuration properties.
-     *
+     * 
      * @param  endpoint                 endpoint for configuration properties.
      * @param  propertyNamesInterceptor names interceptor for adapting property names, usually the consumer class
      *                                  itself.
@@ -69,8 +69,8 @@ public final class ApiConsumerHelper {
             result = filteredMethods.get(0);
         } else {
             result = ApiMethodHelper.getHighestPriorityMethod(filteredMethods);
-            LOG.warn("Using highest priority operation {} from operations {} for endpoint {}", result, filteredMethods,
-                    endpoint.getEndpointUri());
+            LOG.warn(String.format("Using highest priority operation %s from operations %s for endpoint %s",
+                    result, filteredMethods, endpoint.getEndpointUri()));
         }
 
         return result;
@@ -78,7 +78,7 @@ public final class ApiConsumerHelper {
 
     /**
      * Utility method for Consumers to process API method invocation result.
-     *
+     * 
      * @param  consumer    Consumer that wants to process results.
      * @param  result      result of API method invocation.
      * @param  splitResult true if the Consumer wants to split result using
@@ -110,10 +110,10 @@ public final class ApiConsumerHelper {
                     }
 
                     return size;
-                } else if (results instanceof Iterable<?> iterable) {
+                } else if (results instanceof Iterable) {
                     // Optimized for iterable
                     int size = 0;
-                    for (Object singleResult : iterable) {
+                    for (Object singleResult : (Iterable<?>) results) {
                         processResult(consumer, result, singleResult);
                         size++;
                     }

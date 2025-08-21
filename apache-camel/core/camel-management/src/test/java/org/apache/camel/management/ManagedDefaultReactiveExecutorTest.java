@@ -21,6 +21,7 @@ import javax.management.ObjectName;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ public class ManagedDefaultReactiveExecutorTest extends ManagementTestSupport {
     @Override
     protected CamelContext createCamelContext() throws Exception {
         CamelContext context = super.createCamelContext();
-        context.getCamelContextExtension().getReactiveExecutor().setStatisticsEnabled(true);
+        context.adapt(ExtendedCamelContext.class).getReactiveExecutor().setStatisticsEnabled(true);
         return context;
     }
 
@@ -51,10 +52,10 @@ public class ManagedDefaultReactiveExecutorTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:start")
                         .to("log:foo")
                         .process(new Processor() {

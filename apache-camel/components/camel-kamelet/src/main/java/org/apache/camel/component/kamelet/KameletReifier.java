@@ -20,8 +20,6 @@ import org.apache.camel.Processor;
 import org.apache.camel.Route;
 import org.apache.camel.model.KameletDefinition;
 import org.apache.camel.reifier.ProcessorReifier;
-import org.apache.camel.spi.NodeIdFactory;
-import org.apache.camel.support.PluginHelper;
 
 public class KameletReifier extends ProcessorReifier<KameletDefinition> {
 
@@ -36,16 +34,6 @@ public class KameletReifier extends ProcessorReifier<KameletDefinition> {
             // use an empty noop processor, as there should be a single processor
             processor = new NoopProcessor();
         }
-        // wrap in uow
-        String outputId = definition.idOrCreate(camelContext.getCamelContextExtension().getContextPlugin(NodeIdFactory.class));
-        camelContext.getCamelContextExtension().createProcessor(outputId);
-        try {
-            Processor target = new KameletProcessor(camelContext, parseString(definition.getName()), processor);
-            target = PluginHelper.getInternalProcessorFactory(camelContext)
-                    .addUnitOfWorkProcessorAdvice(camelContext, target, null);
-            return target;
-        } finally {
-            camelContext.getCamelContextExtension().createProcessor(null);
-        }
+        return new KameletProcessor(camelContext, parseString(definition.getName()), processor);
     }
 }

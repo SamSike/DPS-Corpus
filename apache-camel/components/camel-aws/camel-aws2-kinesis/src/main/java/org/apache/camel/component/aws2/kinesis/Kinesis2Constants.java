@@ -32,9 +32,6 @@ public interface Kinesis2Constants {
     @Metadata(description = "The timestamp of the message", javaType = "long")
     String MESSAGE_TIMESTAMP = Exchange.MESSAGE_TIMESTAMP;
 
-    @Metadata(label = "consumer", description = "The resume action to execute when resuming.", javaType = "String")
-    String RESUME_ACTION = "CamelKinesisDbResumeAction";
-
     /**
      * in a Kinesis Record object, the shard ID is used on writes to indicate where the data was stored
      */

@@ -61,7 +61,18 @@ public class HttpSendDynamicAware extends SendDynamicAwareSupport {
         if (path != null || !entry.getLenientProperties().isEmpty()) {
             // the context path can be dynamic or any lenient properties
             // and therefore build a new static uri without path or lenient options
-            final Map<String, Object> params = getParams(entry, path);
+            Map<String, Object> params = entry.getProperties();
+            for (String k : entry.getLenientProperties().keySet()) {
+                params.remove(k);
+            }
+            if (path != null) {
+                params.remove("httpUri");
+                params.remove("httpURI");
+                if ("netty-http".equals(getScheme())) {
+                    // the netty-http stores host,port etc in other fields than httpURI so we can just remove the path parameter
+                    params.remove("path");
+                }
+            }
 
             // build static url with the known parameters
             String url;
@@ -79,22 +90,6 @@ public class HttpSendDynamicAware extends SendDynamicAwareSupport {
             // no need for optimisation
             return null;
         }
-    }
-
-    private Map<String, Object> getParams(DynamicAwareEntry entry, String path) {
-        Map<String, Object> params = entry.getProperties();
-        for (String k : entry.getLenientProperties().keySet()) {
-            params.remove(k);
-        }
-        if (path != null) {
-            params.remove("httpUri");
-            params.remove("httpURI");
-            if ("netty-http".equals(getScheme())) {
-                // the netty-http stores host,port etc in other fields than httpURI so we can just remove the path parameter
-                params.remove("path");
-            }
-        }
-        return params;
     }
 
     @Override
@@ -139,7 +134,13 @@ public class HttpSendDynamicAware extends SendDynamicAwareSupport {
         boolean httpComponent = "http".equals(getScheme()) || "https".equals(getScheme());
         boolean vertxHttpComponent = "vertx-http".equals(getScheme());
         if (!httpComponent && !vertxHttpComponent) {
-            u = parseDefaultUri(u);
+            String prefix = getScheme() + "://";
+            String prefix2 = getScheme() + ":";
+            if (u.startsWith(prefix)) {
+                u = u.substring(prefix.length());
+            } else if (u.startsWith(prefix2)) {
+                u = u.substring(prefix2.length());
+            }
         }
 
         // remove query parameters
@@ -148,7 +149,12 @@ public class HttpSendDynamicAware extends SendDynamicAwareSupport {
         }
 
         if (vertxHttpComponent && u.startsWith("vertx-http:")) {
-            u = parseVertexUri(u);
+            u = u.substring(11);
+            // must include http prefix
+            String scheme = ResourceHelper.getScheme(u);
+            if (scheme == null) {
+                u = "http://" + u;
+            }
         }
 
         // must include :// in scheme to be parsable via java.net.URI
@@ -198,27 +204,6 @@ public class HttpSendDynamicAware extends SendDynamicAwareSupport {
 
         // no context path
         return new String[] { u, null, null };
-    }
-
-    private String parseDefaultUri(String u) {
-        String prefix = getScheme() + "://";
-        String prefix2 = getScheme() + ":";
-        if (u.startsWith(prefix)) {
-            u = u.substring(prefix.length());
-        } else if (u.startsWith(prefix2)) {
-            u = u.substring(prefix2.length());
-        }
-        return u;
-    }
-
-    private static String parseVertexUri(String u) {
-        u = u.substring(11);
-        // must include http prefix
-        String scheme = ResourceHelper.getScheme(u);
-        if (scheme == null) {
-            u = "http://" + u;
-        }
-        return u;
     }
 
 }

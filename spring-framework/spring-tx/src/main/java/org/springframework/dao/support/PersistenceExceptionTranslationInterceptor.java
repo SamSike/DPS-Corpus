@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,13 @@ package org.springframework.dao.support;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanCreationNotAllowedException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
@@ -46,11 +45,13 @@ import org.springframework.util.ReflectionUtils;
 public class PersistenceExceptionTranslationInterceptor
 		implements MethodInterceptor, BeanFactoryAware, InitializingBean {
 
-	private volatile @Nullable PersistenceExceptionTranslator persistenceExceptionTranslator;
+	@Nullable
+	private volatile PersistenceExceptionTranslator persistenceExceptionTranslator;
 
 	private boolean alwaysTranslate = false;
 
-	private @Nullable ListableBeanFactory beanFactory;
+	@Nullable
+	private ListableBeanFactory beanFactory;
 
 
 	/**
@@ -98,7 +99,7 @@ public class PersistenceExceptionTranslationInterceptor
 	 * raw exception when declared, i.e. when the originating method signature's exception
 	 * declarations allow for the raw exception to be thrown ("false").
 	 * <p>Default is "false". Switch this flag to "true" in order to always translate
-	 * applicable exceptions, independent of the originating method signature.
+	 * applicable exceptions, independent from the originating method signature.
 	 * <p>Note that the originating method does not have to declare the specific exception.
 	 * Any base class will do as well, even {@code throws Exception}: As long as the
 	 * originating method does explicitly declare compatible exceptions, the raw exception
@@ -113,11 +114,11 @@ public class PersistenceExceptionTranslationInterceptor
 	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
 		if (this.persistenceExceptionTranslator == null) {
 			// No explicit exception translator specified - perform autodetection.
-			if (!(beanFactory instanceof ListableBeanFactory lbf)) {
+			if (!(beanFactory instanceof ListableBeanFactory)) {
 				throw new IllegalArgumentException(
 						"Cannot use PersistenceExceptionTranslator autodetection without ListableBeanFactory");
 			}
-			this.beanFactory = lbf;
+			this.beanFactory = (ListableBeanFactory) beanFactory;
 		}
 	}
 
@@ -130,7 +131,8 @@ public class PersistenceExceptionTranslationInterceptor
 
 
 	@Override
-	public @Nullable Object invoke(MethodInvocation mi) throws Throwable {
+	@Nullable
+	public Object invoke(MethodInvocation mi) throws Throwable {
 		try {
 			return mi.proceed();
 		}
@@ -144,14 +146,7 @@ public class PersistenceExceptionTranslationInterceptor
 				if (translator == null) {
 					Assert.state(this.beanFactory != null,
 							"Cannot use PersistenceExceptionTranslator autodetection without ListableBeanFactory");
-					try {
-						translator = detectPersistenceExceptionTranslators(this.beanFactory);
-					}
-					catch (BeanCreationNotAllowedException ex2) {
-						// Cannot create PersistenceExceptionTranslator bean on shutdown:
-						// fall back to rethrowing original exception without translation
-						throw ex;
-					}
+					translator = detectPersistenceExceptionTranslators(this.beanFactory);
 					this.persistenceExceptionTranslator = translator;
 				}
 				throw DataAccessUtils.translateIfNecessary(ex, translator);

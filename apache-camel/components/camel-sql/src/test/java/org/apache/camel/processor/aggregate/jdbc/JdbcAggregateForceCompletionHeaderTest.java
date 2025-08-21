@@ -81,8 +81,6 @@ public class JdbcAggregateForceCompletionHeaderTest extends AbstractJdbcAggregat
         return new RouteBuilder() {
             @Override
             public void configure() {
-                configureJdbcAggregationRepository();
-
                 // here is the Camel route where we aggregate
                 from("direct:start")
                         .aggregate(header("id"), new MyAggregationStrategy())

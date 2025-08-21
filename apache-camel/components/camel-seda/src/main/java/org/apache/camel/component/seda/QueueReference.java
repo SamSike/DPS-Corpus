@@ -19,8 +19,6 @@ package org.apache.camel.component.seda;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.camel.Exchange;
 
@@ -36,8 +34,7 @@ public final class QueueReference {
     private Integer size;
     private Boolean multipleConsumers;
 
-    private final Lock lock = new ReentrantLock();
-    private final List<SedaEndpoint> endpoints = new LinkedList<>();
+    private List<SedaEndpoint> endpoints = new LinkedList<>();
 
     QueueReference(BlockingQueue<Exchange> queue, Integer size, Boolean multipleConsumers) {
         this.queue = queue;
@@ -45,40 +42,27 @@ public final class QueueReference {
         this.multipleConsumers = multipleConsumers;
     }
 
-    void addReference(SedaEndpoint endpoint) {
-        lock.lock();
-        try {
-            if (!endpoints.contains(endpoint)) {
-                endpoints.add(endpoint);
-                // update the multipleConsumers setting if need
-                if (endpoint.isMultipleConsumers()) {
-                    multipleConsumers = true;
-                }
+    synchronized void addReference(SedaEndpoint endpoint) {
+        if (!endpoints.contains(endpoint)) {
+            endpoints.add(endpoint);
+            // update the multipleConsumers setting if need
+            if (endpoint.isMultipleConsumers()) {
+                multipleConsumers = true;
             }
-        } finally {
-            lock.unlock();
         }
     }
 
-    void removeReference(SedaEndpoint endpoint) {
-        lock.lock();
-        try {
+    synchronized void removeReference(SedaEndpoint endpoint) {
+        if (endpoints.contains(endpoint)) {
             endpoints.remove(endpoint);
-        } finally {
-            lock.unlock();
         }
     }
 
     /**
      * Gets the reference counter
      */
-    public int getCount() {
-        lock.lock();
-        try {
-            return endpoints.size();
-        } finally {
-            lock.unlock();
-        }
+    public synchronized int getCount() {
+        return endpoints.size();
     }
 
     /**
@@ -101,18 +85,13 @@ public final class QueueReference {
         return queue;
     }
 
-    public boolean hasConsumers() {
-        lock.lock();
-        try {
-            for (SedaEndpoint endpoint : endpoints) {
-                if (!endpoint.getConsumers().isEmpty()) {
-                    return true;
-                }
+    public synchronized boolean hasConsumers() {
+        for (SedaEndpoint endpoint : endpoints) {
+            if (!endpoint.getConsumers().isEmpty()) {
+                return true;
             }
-
-            return false;
-        } finally {
-            lock.unlock();
         }
+
+        return false;
     }
 }

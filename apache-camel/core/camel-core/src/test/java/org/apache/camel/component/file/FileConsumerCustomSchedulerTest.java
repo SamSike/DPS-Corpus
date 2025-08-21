@@ -18,7 +18,6 @@ package org.apache.camel.component.file;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.atomic.LongAdder;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Consumer;
@@ -30,22 +29,21 @@ import org.apache.camel.spi.ScheduledPollConsumerScheduler;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FileConsumerCustomSchedulerTest extends ContextTestSupport {
 
-    private final MyScheduler scheduler = new MyScheduler();
+    private MyScheduler scheduler = new MyScheduler();
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myScheduler", scheduler);
         return jndi;
     }
 
     @Test
     public void testCustomScheduler() throws Exception {
-        getMockEndpoint("mock:result").expectedMinimumMessageCount(1);
+        getMockEndpoint("mock:result").expectedMessageCount(1);
 
         template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
 
@@ -54,18 +52,17 @@ public class FileConsumerCustomSchedulerTest extends ContextTestSupport {
         assertMockEndpointsSatisfied();
 
         // the scheduler is only run once, and we can configure its properties
-        // (camel may run the scheduler once during startup so the value is +1)
-        assertTrue(scheduler.getCounter() <= 2);
+        assertEquals(1, scheduler.getCounter());
         assertEquals("bar", scheduler.getFoo());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?scheduler=#myScheduler&scheduler.foo=bar&initialDelay=0&delay=10"))
-                        .routeId("foo").autoStartup(false).to("mock:result");
+                        .routeId("foo").noAutoStartup().to("mock:result");
             }
         };
     }
@@ -73,8 +70,9 @@ public class FileConsumerCustomSchedulerTest extends ContextTestSupport {
     private static final class MyScheduler implements ScheduledPollConsumerScheduler {
 
         private CamelContext camelContext;
+        private Timer timer;
         private TimerTask timerTask;
-        private final LongAdder counter = new LongAdder();
+        private volatile int counter;
         private String foo;
 
         @Override
@@ -87,7 +85,7 @@ public class FileConsumerCustomSchedulerTest extends ContextTestSupport {
             this.timerTask = new TimerTask() {
                 @Override
                 public void run() {
-                    counter.increment();
+                    counter++;
                     task.run();
                 }
             };
@@ -99,7 +97,7 @@ public class FileConsumerCustomSchedulerTest extends ContextTestSupport {
         }
 
         public int getCounter() {
-            return counter.intValue();
+            return counter;
         }
 
         public String getFoo() {
@@ -112,7 +110,7 @@ public class FileConsumerCustomSchedulerTest extends ContextTestSupport {
 
         @Override
         public void startScheduler() {
-            Timer timer = new Timer();
+            timer = new Timer();
             timer.schedule(timerTask, 10);
         }
 

@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.spi.ClassResolver;
 import org.apache.camel.spi.Resource;
@@ -61,7 +62,7 @@ public class JsseParameters implements CamelContextAware {
      *
      * @param  value                 the string to replace property tokens in
      * @return                       the value
-     *
+     * 
      * @throws RuntimeCamelException if property placeholders were used and there was an error resolving them
      *
      * @see                          #setCamelContext(CamelContext)
@@ -84,7 +85,7 @@ public class JsseParameters implements CamelContextAware {
      *
      * @param  values                the list of strings to replace property tokens in
      * @return                       the list of strings
-     *
+     * 
      * @throws RuntimeCamelException if property placeholders were used and there was an error resolving them
      *
      * @see                          #parsePropertyValue(String)
@@ -106,7 +107,7 @@ public class JsseParameters implements CamelContextAware {
      * treating the resource as a file path, a class path resource, a URL, and using the Camel Context's
      * {@link ResourceLoader} if a context is available in that order. An exception is thrown if the resource cannot be
      * resolved to readable input stream using any of the above methods.
-     *
+     * 
      * @param  resource    the resource location
      * @return             the input stream for the resource
      * @throws IOException if the resource cannot be resolved using any of the above methods
@@ -114,9 +115,8 @@ public class JsseParameters implements CamelContextAware {
     protected InputStream resolveResource(String resource) throws IOException {
         ObjectHelper.notNull(getCamelContext(), "CamelContext", this);
 
-        Resource res
-                = getCamelContext().getCamelContextExtension().getContextPlugin(ResourceLoader.class).resolveResource(resource);
-        if (res == null || !res.exists()) {
+        Resource res = getCamelContext().adapt(ExtendedCamelContext.class).getResourceLoader().resolveResource(resource);
+        if (res == null) {
             throw new IOException("Could not open " + resource + " as a file, class path resource, or URL.");
         }
         return res.getInputStream();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,15 +19,12 @@ package org.springframework.web.servlet.config.annotation;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.format.FormatterRegistry;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.HttpMessageConverters;
+import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.validation.MessageCodesResolver;
 import org.springframework.validation.Validator;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.HandlerMethodReturnValueHandler;
 import org.springframework.web.servlet.HandlerExceptionResolver;
@@ -61,13 +58,6 @@ class WebMvcConfigurerComposite implements WebMvcConfigurer {
 	public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
 		for (WebMvcConfigurer delegate : this.delegates) {
 			delegate.configureContentNegotiation(configurer);
-		}
-	}
-
-	@Override
-	public void configureApiVersioning(ApiVersionConfigurer configurer) {
-		for (WebMvcConfigurer delegate : this.delegates) {
-			delegate.configureApiVersioning(configurer);
 		}
 	}
 
@@ -142,15 +132,6 @@ class WebMvcConfigurerComposite implements WebMvcConfigurer {
 	}
 
 	@Override
-	public void configureMessageConverters(HttpMessageConverters.ServerBuilder builder) {
-		for (WebMvcConfigurer delegate : this.delegates) {
-			delegate.configureMessageConverters(builder);
-		}
-	}
-
-	@Override
-	@Deprecated(since = "7.0", forRemoval = true)
-	@SuppressWarnings("removal")
 	public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
 		for (WebMvcConfigurer delegate : this.delegates) {
 			delegate.configureMessageConverters(converters);
@@ -158,8 +139,6 @@ class WebMvcConfigurerComposite implements WebMvcConfigurer {
 	}
 
 	@Override
-	@Deprecated(since = "7.0", forRemoval = true)
-	@SuppressWarnings("removal")
 	public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
 		for (WebMvcConfigurer delegate : this.delegates) {
 			delegate.extendMessageConverters(converters);
@@ -181,14 +160,7 @@ class WebMvcConfigurerComposite implements WebMvcConfigurer {
 	}
 
 	@Override
-	public void addErrorResponseInterceptors(List<ErrorResponse.Interceptor> interceptors) {
-		for (WebMvcConfigurer delegate : this.delegates) {
-			delegate.addErrorResponseInterceptors(interceptors);
-		}
-	}
-
-	@Override
-	public @Nullable Validator getValidator() {
+	public Validator getValidator() {
 		Validator selected = null;
 		for (WebMvcConfigurer configurer : this.delegates) {
 			Validator validator = configurer.getValidator();
@@ -204,7 +176,8 @@ class WebMvcConfigurerComposite implements WebMvcConfigurer {
 	}
 
 	@Override
-	public @Nullable MessageCodesResolver getMessageCodesResolver() {
+	@Nullable
+	public MessageCodesResolver getMessageCodesResolver() {
 		MessageCodesResolver selected = null;
 		for (WebMvcConfigurer configurer : this.delegates) {
 			MessageCodesResolver messageCodesResolver = configurer.getMessageCodesResolver();

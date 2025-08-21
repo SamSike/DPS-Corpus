@@ -30,9 +30,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class InOnlyTopicProducerTest extends JmsTestSupport {
 
-    private static final String TEST_DESTINATION_NAME = "test.foo.topic.InOnlyTopicProducerTest";
+    private static final String TEST_DESTINATION_NAME = "test.foo.topic";
 
     public InOnlyTopicProducerTest() {
+    }
+
+    @Override
+    protected boolean useJmx() {
+        return false;
     }
 
     @Test

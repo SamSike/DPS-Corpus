@@ -50,15 +50,4 @@ public interface PropertiesParser {
      * @return            the value to use
      */
     String parseProperty(String key, String value, PropertiesLookup properties);
-
-    /**
-     * Allow custom providers to attempt to lookup the property
-     *
-     * @param  key the key
-     * @return     the value if found or <tt>null</tt> if none found
-     */
-    default String customLookup(String key) {
-        return null;
-    }
-
 }

@@ -35,7 +35,7 @@ public class AdviceWithTransactedTest extends ContextTestSupport {
 
         AdviceWith.adviceWith(context.getRouteDefinitions().get(0), context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 weaveAddFirst().to("mock:advice");
             }
         });
@@ -46,10 +46,10 @@ public class AdviceWithTransactedTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:advice")
                         // use policy instead of transacted (but its similar)
                         .policy(new MyDummyPolicy()).log("Advice ${body}").to("mock:result");

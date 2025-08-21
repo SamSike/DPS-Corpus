@@ -29,11 +29,7 @@ import org.apache.camel.converter.stream.ReaderCache;
 import org.apache.camel.util.IOHelper;
 
 /**
- * A {@link org.apache.camel.StreamCache} for {@link javax.xml.transform.stream.StreamSource}s.
- * <p/>
- * <b>Important:</b> All the classes from the Camel release that implements {@link StreamCache} is NOT intended for end
- * users to create as instances, but they are part of Camels
- * <a href="https://camel.apache.org/manual/stream-caching.html">stream-caching</a> functionality.
+ * A {@link org.apache.camel.StreamCache} for {@link javax.xml.transform.stream.StreamSource}s
  */
 public final class StreamSourceCache extends StreamSource implements StreamCache {
 
@@ -62,11 +58,11 @@ public final class StreamSourceCache extends StreamSource implements StreamCache
 
     public StreamSourceCache(StreamCache streamCache) {
         this.streamCache = streamCache;
-        if (streamCache instanceof InputStream inputStream) {
-            setInputStream(inputStream);
+        if (streamCache instanceof InputStream) {
+            setInputStream((InputStream) streamCache);
             this.readCache = null;
-        } else if (streamCache instanceof ReaderCache readerCache) {
-            this.readCache = readerCache;
+        } else if (streamCache instanceof ReaderCache) {
+            this.readCache = (ReaderCache) streamCache;
             setReader((java.io.Reader) streamCache);
         } else {
             this.readCache = null;
@@ -127,13 +123,4 @@ public final class StreamSourceCache extends StreamSource implements StreamCache
         }
     }
 
-    @Override
-    public long position() {
-        return -1;
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return length() == 0;
-    }
 }

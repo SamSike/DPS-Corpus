@@ -16,6 +16,10 @@
  */
 package org.apache.camel.catalog.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
 import org.apache.camel.CamelContext;
 import org.apache.camel.catalog.RuntimeCamelCatalog;
 import org.apache.camel.spi.annotations.JdkService;
@@ -25,23 +29,17 @@ import org.apache.camel.tooling.model.EipModel;
 import org.apache.camel.tooling.model.LanguageModel;
 import org.apache.camel.tooling.model.MainModel;
 import org.apache.camel.tooling.model.OtherModel;
-import org.apache.camel.tooling.model.TransformerModel;
 
 /**
  * Default {@link RuntimeCamelCatalog}.
  */
 @JdkService(RuntimeCamelCatalog.FACTORY)
-public class DefaultRuntimeCamelCatalog extends AbstractCachingCamelCatalog implements RuntimeCamelCatalog {
+public class DefaultRuntimeCamelCatalog extends AbstractCamelCatalog implements RuntimeCamelCatalog {
 
     private CamelContext camelContext;
-
-    public DefaultRuntimeCamelCatalog() {
-        this(true);
-    }
-
-    public DefaultRuntimeCamelCatalog(boolean caching) {
-        super(caching);
-    }
+    // cache of operation -> result
+    private final Map<String, Object> cache = new HashMap<>();
+    private boolean caching = true;
 
     @Override
     public CamelContext getCamelContext() {
@@ -61,7 +59,7 @@ public class DefaultRuntimeCamelCatalog extends AbstractCachingCamelCatalog impl
 
     @Override
     public void stop() {
-        super.clearCache();
+        cache.clear();
     }
 
     @Override
@@ -105,16 +103,6 @@ public class DefaultRuntimeCamelCatalog extends AbstractCachingCamelCatalog impl
     }
 
     @Override
-    public String transformerJSonSchema(String name) {
-        return cache("transformer-" + name, name, super::transformerJSonSchema);
-    }
-
-    @Override
-    public TransformerModel transformerModel(String name) {
-        return cache("transformer-model-" + name, name, super::transformerModel);
-    }
-
-    @Override
     public String otherJSonSchema(String name) {
         return cache("other-" + name, name, super::otherJSonSchema);
     }
@@ -133,4 +121,21 @@ public class DefaultRuntimeCamelCatalog extends AbstractCachingCamelCatalog impl
     public MainModel mainModel() {
         return cache("main-model", "main-model", k -> super.mainModel());
     }
+
+    @SuppressWarnings("unchecked")
+    private <T> T cache(String key, String name, Function<String, T> loader) {
+        if (caching) {
+            T t = (T) cache.get(key);
+            if (t == null) {
+                t = loader.apply(name);
+                if (t != null) {
+                    cache.put(key, t);
+                }
+            }
+            return t;
+        } else {
+            return loader.apply(name);
+        }
+    }
+
 }

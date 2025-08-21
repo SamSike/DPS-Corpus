@@ -31,12 +31,12 @@ public class DummyDataformat extends ServiceSupport implements DataFormat, DataF
     private String version;
 
     @Override
-    public void marshal(Exchange exchange, Object graph, OutputStream stream) {
+    public void marshal(Exchange exchange, Object graph, OutputStream stream) throws Exception {
 
     }
 
     @Override
-    public Object unmarshal(Exchange exchange, InputStream stream) {
+    public Object unmarshal(Exchange exchange, InputStream stream) throws Exception {
         return null;
     }
 

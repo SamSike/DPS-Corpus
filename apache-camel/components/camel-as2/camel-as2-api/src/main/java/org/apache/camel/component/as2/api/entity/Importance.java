@@ -20,7 +20,7 @@ public enum Importance {
     REQUIRED("required"),
     OPTIONAL("optional");
 
-    private final String importance;
+    private String importance;
 
     private Importance(String importance) {
         this.importance = importance;

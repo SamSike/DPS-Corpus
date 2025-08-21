@@ -1,7 +1,9 @@
 /**
  * SpEL's standard parser implementation.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.expression.spel.standard;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

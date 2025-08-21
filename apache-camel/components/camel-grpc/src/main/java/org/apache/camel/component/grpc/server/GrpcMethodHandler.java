@@ -105,8 +105,6 @@ public class GrpcMethodHandler {
             requestObserver = new GrpcRequestAggregationStreamObserver(endpoint, consumer, responseObserver, grcpHeaders);
         } else if (consumer.getConfiguration().getConsumerStrategy() == GrpcConsumerStrategy.PROPAGATION) {
             requestObserver = new GrpcRequestPropagationStreamObserver(endpoint, consumer, responseObserver, grcpHeaders);
-        } else if (consumer.getConfiguration().getConsumerStrategy() == GrpcConsumerStrategy.DELEGATION) {
-            requestObserver = new GrpcRequestDelegationStreamObserver(endpoint, consumer, responseObserver, grcpHeaders);
         } else {
             throw new IllegalArgumentException(
                     "gRPC processing strategy not implemented " + consumer.getConfiguration().getConsumerStrategy());

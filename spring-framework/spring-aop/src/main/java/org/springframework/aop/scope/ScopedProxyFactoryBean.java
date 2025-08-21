@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package org.springframework.aop.scope;
 
 import java.lang.reflect.Modifier;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.aop.framework.AopInfrastructureBean;
 import org.springframework.aop.framework.ProxyConfig;
 import org.springframework.aop.framework.ProxyFactory;
@@ -30,6 +28,7 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.FactoryBeanNotInitializedException;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -60,10 +59,12 @@ public class ScopedProxyFactoryBean extends ProxyConfig
 	private final SimpleBeanTargetSource scopedTargetSource = new SimpleBeanTargetSource();
 
 	/** The name of the target bean. */
-	private @Nullable String targetBeanName;
+	@Nullable
+	private String targetBeanName;
 
 	/** The cached singleton proxy. */
-	private @Nullable Object proxy;
+	@Nullable
+	private Object proxy;
 
 
 	/**
@@ -84,9 +85,11 @@ public class ScopedProxyFactoryBean extends ProxyConfig
 
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) {
-		if (!(beanFactory instanceof ConfigurableBeanFactory cbf)) {
+		if (!(beanFactory instanceof ConfigurableBeanFactory)) {
 			throw new IllegalStateException("Not running in a ConfigurableBeanFactory: " + beanFactory);
 		}
+		ConfigurableBeanFactory cbf = (ConfigurableBeanFactory) beanFactory;
+
 		this.scopedTargetSource.setBeanFactory(beanFactory);
 
 		ProxyFactory pf = new ProxyFactory();
@@ -116,7 +119,7 @@ public class ScopedProxyFactoryBean extends ProxyConfig
 
 
 	@Override
-	public @Nullable Object getObject() {
+	public Object getObject() {
 		if (this.proxy == null) {
 			throw new FactoryBeanNotInitializedException();
 		}
@@ -124,7 +127,7 @@ public class ScopedProxyFactoryBean extends ProxyConfig
 	}
 
 	@Override
-	public @Nullable Class<?> getObjectType() {
+	public Class<?> getObjectType() {
 		if (this.proxy != null) {
 			return this.proxy.getClass();
 		}

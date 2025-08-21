@@ -20,6 +20,7 @@ import java.security.Provider;
 import java.security.Security;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.camel.spi.Configurer;
 import org.apache.camel.spi.annotations.DevConsole;
@@ -27,8 +28,8 @@ import org.apache.camel.support.console.AbstractDevConsole;
 import org.apache.camel.util.json.JsonArray;
 import org.apache.camel.util.json.JsonObject;
 
-@DevConsole(name = "java-security", description = "Displays Java Security (JSSE) information")
-@Configurer(extended = true)
+@DevConsole("java-security")
+@Configurer(bootstrap = true)
 public class JavaSecurityDevConsole extends AbstractDevConsole {
 
     public JavaSecurityDevConsole() {
@@ -50,7 +51,7 @@ public class JavaSecurityDevConsole extends AbstractDevConsole {
                 }
                 List<Provider.Service> services = p.getServices().stream()
                         .sorted(JavaSecurityDevConsole::compare)
-                        .toList();
+                        .collect(Collectors.toList());
                 for (Provider.Service s : services) {
                     sb.append(String.format("\n        %s: %s (%s)", s.getType(), s.getAlgorithm(), s.getClassName()));
                 }
@@ -80,7 +81,7 @@ public class JavaSecurityDevConsole extends AbstractDevConsole {
                 }
                 List<Provider.Service> services = p.getServices().stream()
                         .sorted(JavaSecurityDevConsole::compare)
-                        .toList();
+                        .collect(Collectors.toList());
                 if (!services.isEmpty()) {
                     JsonArray arr2 = new JsonArray();
                     jo.put("services", arr2);

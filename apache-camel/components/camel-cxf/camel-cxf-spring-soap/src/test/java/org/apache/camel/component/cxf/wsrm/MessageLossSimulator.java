@@ -50,7 +50,7 @@ public class MessageLossSimulator extends AbstractPhaseInterceptor<Message> {
         try {
             Object o = map.getClass().getMethod("getAction").invoke(map);
             return (String) o.getClass().getMethod("getValue").invoke(o);
-        } catch (Exception t) {
+        } catch (Throwable t) {
             throw new Fault(t);
         }
     }

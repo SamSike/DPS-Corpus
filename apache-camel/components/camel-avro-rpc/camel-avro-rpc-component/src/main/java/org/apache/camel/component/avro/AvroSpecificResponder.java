@@ -21,7 +21,7 @@ import org.apache.avro.ipc.specific.SpecificResponder;
 import org.apache.avro.specific.SpecificData;
 
 public class AvroSpecificResponder extends SpecificResponder {
-    private final AvroListener listener;
+    private AvroListener listener;
 
     public AvroSpecificResponder(Protocol protocol, AvroListener listener) {
         super(protocol, listener);

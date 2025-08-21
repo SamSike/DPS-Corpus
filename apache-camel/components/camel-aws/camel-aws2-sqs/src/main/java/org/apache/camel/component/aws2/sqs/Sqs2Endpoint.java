@@ -19,19 +19,20 @@ package org.apache.camel.component.aws2.sqs;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.clock.Clock;
 import org.apache.camel.component.aws2.sqs.client.Sqs2ClientFactory;
-import org.apache.camel.spi.*;
-import org.apache.camel.support.MonotonicClock;
+import org.apache.camel.spi.HeaderFilterStrategy;
+import org.apache.camel.spi.HeaderFilterStrategyAware;
+import org.apache.camel.spi.Metadata;
+import org.apache.camel.spi.UriEndpoint;
+import org.apache.camel.spi.UriParam;
+import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.support.ScheduledPollEndpoint;
 import org.apache.camel.util.FileUtil;
@@ -53,19 +54,17 @@ import software.amazon.awssdk.services.sqs.model.SetQueueAttributesRequest;
 import software.amazon.awssdk.services.sqs.model.SqsException;
 
 /**
- * Send and receive messages to/from AWS SQS.
+ * Send and receive messages to/from AWS SQS service using AWS SDK version 2.x.
  */
 @UriEndpoint(firstVersion = "3.1.0", scheme = "aws2-sqs", title = "AWS Simple Queue Service (SQS)",
              syntax = "aws2-sqs:queueNameOrArn", category = { Category.CLOUD, Category.MESSAGING },
              headersClass = Sqs2Constants.class)
-public class Sqs2Endpoint extends ScheduledPollEndpoint implements HeaderFilterStrategyAware, EndpointServiceLocation {
+public class Sqs2Endpoint extends ScheduledPollEndpoint implements HeaderFilterStrategyAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(Sqs2Endpoint.class);
 
     private SqsClient client;
     private String queueUrl;
-    private boolean queueUrlInitialized;
-    private Clock clock = new MonotonicClock();
 
     @UriPath(description = "Queue name or ARN")
     @Metadata(required = true)
@@ -106,11 +105,6 @@ public class Sqs2Endpoint extends ScheduledPollEndpoint implements HeaderFilterS
         configureConsumer(consumer);
         consumer.setMaxMessagesPerPoll(maxMessagesPerPoll);
         return consumer;
-    }
-
-    @Override
-    public Sqs2Component getComponent() {
-        return (Sqs2Component) super.getComponent();
     }
 
     private boolean isDefaultAwsHost() {
@@ -157,7 +151,6 @@ public class Sqs2Endpoint extends ScheduledPollEndpoint implements HeaderFilterS
 
         if (configuration.getQueueUrl() != null) {
             queueUrl = configuration.getQueueUrl();
-            queueUrlInitialized = true;
         } else {
             // If both region and Account ID is provided the queue URL can be
             // built manually.
@@ -166,16 +159,39 @@ public class Sqs2Endpoint extends ScheduledPollEndpoint implements HeaderFilterS
             if (configuration.getRegion() != null && configuration.getQueueOwnerAWSAccountId() != null) {
                 queueUrl = getAwsEndpointUri() + "/" + configuration.getQueueOwnerAWSAccountId() + "/"
                            + configuration.getQueueName();
-                queueUrlInitialized = true;
             } else if (configuration.getQueueOwnerAWSAccountId() != null) {
                 GetQueueUrlRequest.Builder getQueueUrlRequest = GetQueueUrlRequest.builder();
                 getQueueUrlRequest.queueName(configuration.getQueueName());
                 getQueueUrlRequest.queueOwnerAWSAccountId(configuration.getQueueOwnerAWSAccountId());
                 GetQueueUrlResponse getQueueUrlResult = client.getQueueUrl(getQueueUrlRequest.build());
                 queueUrl = getQueueUrlResult.queueUrl();
-                queueUrlInitialized = true;
             } else {
-                initQueueUrl();
+                // check whether the queue already exists
+                String queueNamePath = "/" + configuration.getQueueName();
+                ListQueuesRequest.Builder listQueuesRequestBuilder
+                        = ListQueuesRequest.builder().maxResults(1000).queueNamePrefix(configuration.getQueueName());
+
+                for (;;) {
+                    ListQueuesResponse listQueuesResult = client.listQueues(listQueuesRequestBuilder.build());
+                    for (String url : listQueuesResult.queueUrls()) {
+                        if (url.endsWith(queueNamePath)) {
+                            queueUrl = url;
+                            LOG.trace("Queue available at '{}'.", queueUrl);
+                            break;
+                        }
+                    }
+
+                    if (queueUrl != null) {
+                        break;
+                    }
+
+                    String token = listQueuesResult.nextToken();
+                    if (token == null) {
+                        break;
+                    }
+
+                    listQueuesRequestBuilder = listQueuesRequestBuilder.nextToken(token);
+                }
             }
         }
 
@@ -184,36 +200,6 @@ public class Sqs2Endpoint extends ScheduledPollEndpoint implements HeaderFilterS
         } else {
             LOG.debug("Using Amazon SQS queue url: {}", queueUrl);
             updateQueueAttributes(client);
-        }
-    }
-
-    private void initQueueUrl() {
-        // check whether the queue already exists
-        String queueNamePath = "/" + configuration.getQueueName();
-        ListQueuesRequest.Builder listQueuesRequestBuilder
-                = ListQueuesRequest.builder().maxResults(1000).queueNamePrefix(configuration.getQueueName());
-
-        for (;;) {
-            ListQueuesResponse listQueuesResult = client.listQueues(listQueuesRequestBuilder.build());
-            for (String url : listQueuesResult.queueUrls()) {
-                if (url.endsWith(queueNamePath)) {
-                    queueUrl = url;
-                    LOG.trace("Queue available at '{}'.", queueUrl);
-                    break;
-                }
-            }
-
-            if (queueUrl != null) {
-                queueUrlInitialized = true;
-                break;
-            }
-
-            String token = listQueuesResult.nextToken();
-            if (token == null) {
-                break;
-            }
-
-            listQueuesRequestBuilder = listQueuesRequestBuilder.nextToken(token);
         }
     }
 
@@ -246,7 +232,7 @@ public class Sqs2Endpoint extends ScheduledPollEndpoint implements HeaderFilterS
 
         // creates a new queue, or returns the URL of an existing one
         CreateQueueRequest.Builder request = CreateQueueRequest.builder().queueName(configuration.getQueueName());
-        Map<QueueAttributeName, String> attributes = new EnumMap<>(QueueAttributeName.class);
+        Map<QueueAttributeName, String> attributes = new HashMap<QueueAttributeName, String>();
         if (getConfiguration().isFifoQueue()) {
             attributes.put(QueueAttributeName.FIFO_QUEUE, String.valueOf(true));
             boolean useContentBasedDeduplication
@@ -309,7 +295,7 @@ public class Sqs2Endpoint extends ScheduledPollEndpoint implements HeaderFilterS
 
     private void updateQueueAttributes(SqsClient client) throws IOException {
         SetQueueAttributesRequest.Builder request = SetQueueAttributesRequest.builder().queueUrl(queueUrl);
-        Map<QueueAttributeName, String> attributes = new EnumMap<>(QueueAttributeName.class);
+        Map<QueueAttributeName, String> attributes = new HashMap<QueueAttributeName, String>();
         if (getConfiguration().getDefaultVisibilityTimeout() != null) {
             attributes.put(QueueAttributeName.VISIBILITY_TIMEOUT,
                     String.valueOf(getConfiguration().getDefaultVisibilityTimeout()));
@@ -380,15 +366,7 @@ public class Sqs2Endpoint extends ScheduledPollEndpoint implements HeaderFilterS
         this.client = client;
     }
 
-    /**
-     * If queue does not exist during endpoint initialization, the queueUrl has to be initialized again. See
-     * https://issues.apache.org/jira/browse/CAMEL-18968 for more details.
-     */
     protected String getQueueUrl() {
-        if (!queueUrlInitialized) {
-            LOG.trace("Queue url was not initialized during the start of the component. Initializing again.");
-            initQueueUrl();
-        }
         return queueUrl;
     }
 
@@ -405,39 +383,4 @@ public class Sqs2Endpoint extends ScheduledPollEndpoint implements HeaderFilterS
         this.maxMessagesPerPoll = maxMessagesPerPoll;
     }
 
-    @Override
-    public String getServiceUrl() {
-        if (!configuration.isOverrideEndpoint()) {
-            if (ObjectHelper.isNotEmpty(configuration.getRegion())) {
-                return configuration.getRegion();
-            }
-        } else if (ObjectHelper.isNotEmpty(configuration.getUriEndpointOverride())) {
-            return configuration.getUriEndpointOverride();
-        } else if (ObjectHelper.isNotEmpty(configuration.getQueueUrl())) {
-            return configuration.getQueueUrl();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "sqs";
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        HashMap<String, String> metadata = new HashMap<>();
-        if (configuration.getQueueName() != null) {
-            metadata.put("queueName", configuration.getQueueName());
-        }
-        return metadata;
-    }
-
-    Clock getClock() {
-        return clock;
-    }
-
-    void setClock(Clock clock) {
-        this.clock = Objects.requireNonNull(clock);
-    }
 }

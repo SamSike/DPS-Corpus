@@ -23,7 +23,6 @@ import org.apache.camel.Consumer;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
@@ -40,7 +39,7 @@ import org.snmp4j.security.SecurityLevel;
  */
 @UriEndpoint(firstVersion = "2.1.0", scheme = "snmp", title = "SNMP", syntax = "snmp:host:port",
              category = { Category.MONITORING })
-public class SnmpEndpoint extends DefaultPollingEndpoint implements EndpointServiceLocation {
+public class SnmpEndpoint extends DefaultPollingEndpoint {
 
     public static final String DEFAULT_COMMUNITY = "public";
     public static final int DEFAULT_SNMP_VERSION = SnmpConstants.version1;
@@ -49,7 +48,7 @@ public class SnmpEndpoint extends DefaultPollingEndpoint implements EndpointServ
 
     private static final Logger LOG = LoggerFactory.getLogger(SnmpEndpoint.class);
 
-    private transient String serverAddress;
+    private transient String address;
 
     @UriPath(description = "Hostname of the SNMP enabled device")
     @Metadata(required = true)
@@ -69,8 +68,7 @@ public class SnmpEndpoint extends DefaultPollingEndpoint implements EndpointServ
     private String snmpCommunity = DEFAULT_COMMUNITY;
     @UriParam
     private SnmpActionType type;
-    @UriParam(label = "consumer", defaultValue = "60000", javaType = "java.time.Duration",
-              description = "Milliseconds before the next poll.")
+    @UriParam(label = "consumer", defaultValue = "60000", javaType = "java.time.Duration")
     private long delay = 60000;
     @UriParam(defaultValue = "" + SecurityLevel.AUTH_PRIV, enums = "1,2,3", label = "security")
     private int securityLevel = SecurityLevel.AUTH_PRIV;
@@ -101,28 +99,14 @@ public class SnmpEndpoint extends DefaultPollingEndpoint implements EndpointServ
      */
     public SnmpEndpoint(String uri, SnmpComponent component) {
         super(uri, component);
-        super.setDelay(60000);
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (port != null) {
-            return host + ":" + port;
-        } else {
-            return host;
-        }
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "snmp";
     }
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         if (this.type == SnmpActionType.TRAP) {
+            SnmpTrapConsumer answer = new SnmpTrapConsumer(this, processor);
             // As the SnmpTrapConsumer is not a polling consumer we don't need to call the configureConsumer here.
-            return new SnmpTrapConsumer(this, processor);
+            return answer;
         } else if (this.type == SnmpActionType.POLL) {
             SnmpOIDPoller answer = new SnmpOIDPoller(this, processor);
             configureConsumer(answer);
@@ -165,6 +149,21 @@ public class SnmpEndpoint extends DefaultPollingEndpoint implements EndpointServ
         // noop
     }
 
+    @Override
+    public long getDelay() {
+        return delay;
+    }
+
+    /**
+     * Sets update rate in seconds
+     *
+     * @param updateEvery the update rate in seconds
+     */
+    @Override
+    public void setDelay(long updateEvery) {
+        this.delay = updateEvery;
+    }
+
     public SnmpActionType getType() {
         return this.type;
     }
@@ -189,12 +188,12 @@ public class SnmpEndpoint extends DefaultPollingEndpoint implements EndpointServ
         this.oids = oids;
     }
 
-    public String getServerAddress() {
-        return this.serverAddress;
+    public String getAddress() {
+        return this.address;
     }
 
-    public void setServerAddress(String serverAddress) {
-        this.serverAddress = serverAddress;
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public int getRetries() {
@@ -261,7 +260,7 @@ public class SnmpEndpoint extends DefaultPollingEndpoint implements EndpointServ
         URI uri = URI.create(getEndpointUri());
         String host = uri.getHost();
         int port = uri.getPort();
-        if (host == null || host.isBlank()) {
+        if (host == null || host.trim().length() < 1) {
             host = "127.0.0.1";
         }
         if (port == -1) {
@@ -275,7 +274,7 @@ public class SnmpEndpoint extends DefaultPollingEndpoint implements EndpointServ
         // set the address
         String address = String.format("%s:%s/%d", getProtocol(), host, port);
         LOG.debug("Using snmp address {}", address);
-        setServerAddress(address);
+        setAddress(address);
     }
 
     public int getSecurityLevel() {
@@ -393,6 +392,6 @@ public class SnmpEndpoint extends DefaultPollingEndpoint implements EndpointServ
     @Override
     public String toString() {
         // only show address to avoid user and password details to be shown
-        return "snmp://" + serverAddress;
+        return "snmp://" + address;
     }
 }

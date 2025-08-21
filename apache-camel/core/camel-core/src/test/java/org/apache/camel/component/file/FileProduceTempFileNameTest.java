@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.file;
 
-import java.util.UUID;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
@@ -29,75 +27,71 @@ import org.junit.jupiter.api.Test;
  */
 public class FileProduceTempFileNameTest extends ContextTestSupport {
 
-    private static final String TEST_FILE_NAME = "hello" + UUID.randomUUID() + ".txt";
-    private static final String TEST_FILE_NAME_CLAUS = "claus" + UUID.randomUUID(); //noext
-
-    public static final String FILE_URL_QUERY = "tempandrename?tempFileName=inprogress-${file:name.noext}.tmp";
-    public static final String PARENT_FILE_URL_QUERY = "tempandrename?tempFileName=../work/${file:name.noext}.tmp";
-    public static final String CHILD_FILE_URL_QUERY = "tempandrename?tempFileName=work/${file:name.noext}.tmp";
+    private String fileUrl = fileUri("tempandrename?tempFileName=inprogress-${file:name.noext}.tmp");
+    private String parentFileUrl = fileUri("tempandrename?tempFileName=../work/${file:name.noext}.tmp");
+    private String childFileUrl = fileUri("tempandrename?tempFileName=work/${file:name.noext}.tmp");
 
     @Test
     public void testCreateTempFileName() throws Exception {
-        Endpoint endpoint = context.getEndpoint(fileUri(FILE_URL_QUERY));
+        Endpoint endpoint = context.getEndpoint(fileUrl);
         GenericFileProducer<?> producer = (GenericFileProducer<?>) endpoint.createProducer();
         Exchange exchange = endpoint.createExchange();
-        exchange.getIn().setHeader(Exchange.FILE_NAME, TEST_FILE_NAME_CLAUS + ".txt");
+        exchange.getIn().setHeader(Exchange.FILE_NAME, "claus.txt");
 
-        String tempFileName = producer.createTempFileName(exchange, testFile(TEST_FILE_NAME_CLAUS + ".txt").toString());
-        assertDirectoryEquals(testFile("inprogress-" + TEST_FILE_NAME_CLAUS + ".tmp").toString(), tempFileName);
+        String tempFileName = producer.createTempFileName(exchange, testFile("claus.txt").toString());
+        assertDirectoryEquals(testFile("inprogress-claus.tmp").toString(), tempFileName);
     }
 
     @Test
     public void testNoPathCreateTempFileName() throws Exception {
-        Endpoint endpoint = context.getEndpoint(fileUri(FILE_URL_QUERY));
+        Endpoint endpoint = context.getEndpoint(fileUrl);
         GenericFileProducer<?> producer = (GenericFileProducer<?>) endpoint.createProducer();
         Exchange exchange = endpoint.createExchange();
-        exchange.getIn().setHeader(Exchange.FILE_NAME, TEST_FILE_NAME_CLAUS + ".txt");
+        exchange.getIn().setHeader(Exchange.FILE_NAME, "claus.txt");
 
         String tempFileName = producer.createTempFileName(exchange, ".");
-        assertDirectoryEquals("inprogress-" + TEST_FILE_NAME_CLAUS + ".tmp", tempFileName);
+        assertDirectoryEquals("inprogress-claus.tmp", tempFileName);
     }
 
     @Test
-    public void testTempFileName() {
-        template.sendBodyAndHeader("direct:a", "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+    public void testTempFileName() throws Exception {
+        template.sendBodyAndHeader("direct:a", "Hello World", Exchange.FILE_NAME, "hello.txt");
 
-        assertFileExists(testFile("tempandrename/" + TEST_FILE_NAME));
+        assertFileExists(testFile("tempandrename/hello.txt"));
     }
 
     @Test
-    public void testParentTempFileName() {
-        template.sendBodyAndHeader("direct:b", "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+    public void testParentTempFileName() throws Exception {
+        template.sendBodyAndHeader("direct:b", "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         assertDirectoryExists(testDirectory("work"));
     }
 
     @Test
-    public void testChildTempFileName() {
-        template.sendBodyAndHeader("direct:c", "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+    public void testChildTempFileName() throws Exception {
+        template.sendBodyAndHeader("direct:c", "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         assertDirectoryExists(testDirectory("tempandrename/work"));
     }
 
     @Test
     public void testCreateParentTempFileName() throws Exception {
-        Endpoint endpoint = context.getEndpoint(fileUri(PARENT_FILE_URL_QUERY));
+        Endpoint endpoint = context.getEndpoint(parentFileUrl);
         GenericFileProducer<?> producer = (GenericFileProducer<?>) endpoint.createProducer();
         Exchange exchange = endpoint.createExchange();
-        exchange.getIn().setHeader(Exchange.FILE_NAME, TEST_FILE_NAME_CLAUS + ".txt");
+        exchange.getIn().setHeader(Exchange.FILE_NAME, "claus.txt");
 
-        String tempFileName
-                = producer.createTempFileName(exchange, testFile("tempandrename/" + TEST_FILE_NAME_CLAUS + ".txt").toString());
-        assertDirectoryEquals(testDirectory("work/" + TEST_FILE_NAME_CLAUS + ".tmp").toString(), tempFileName);
+        String tempFileName = producer.createTempFileName(exchange, testFile("tempandrename/claus.txt").toString());
+        assertDirectoryEquals(testDirectory("work/claus.tmp").toString(), tempFileName);
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
-                from("direct:a").to(fileUri(FILE_URL_QUERY));
-                from("direct:b").to(fileUri(PARENT_FILE_URL_QUERY));
-                from("direct:c").to(fileUri(CHILD_FILE_URL_QUERY));
+            public void configure() throws Exception {
+                from("direct:a").to(fileUrl);
+                from("direct:b").to(parentFileUrl);
+                from("direct:c").to(childFileUrl);
             }
         };
     }

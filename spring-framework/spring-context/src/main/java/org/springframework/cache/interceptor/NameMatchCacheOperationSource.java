@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.PatternMatchUtils;
 
@@ -47,12 +47,12 @@ public class NameMatchCacheOperationSource implements CacheOperationSource, Seri
 
 
 	/** Keys are method names; values are TransactionAttributes. */
-	private final Map<String, Collection<CacheOperation>> nameMap = new LinkedHashMap<>();
+	private Map<String, Collection<CacheOperation>> nameMap = new LinkedHashMap<>();
 
 
 	/**
 	 * Set a name/attribute map, consisting of method names
-	 * (for example, "myMethod") and CacheOperation instances
+	 * (e.g. "myMethod") and CacheOperation instances
 	 * (or Strings to be converted to CacheOperation instances).
 	 * @see CacheOperation
 	 */
@@ -75,7 +75,8 @@ public class NameMatchCacheOperationSource implements CacheOperationSource, Seri
 	}
 
 	@Override
-	public @Nullable Collection<CacheOperation> getCacheOperations(Method method, @Nullable Class<?> targetClass) {
+	@Nullable
+	public Collection<CacheOperation> getCacheOperations(Method method, @Nullable Class<?> targetClass) {
 		// look for direct name match
 		String methodName = method.getName();
 		Collection<CacheOperation> ops = this.nameMap.get(methodName);
@@ -84,8 +85,8 @@ public class NameMatchCacheOperationSource implements CacheOperationSource, Seri
 			// Look for most specific name match.
 			String bestNameMatch = null;
 			for (String mappedName : this.nameMap.keySet()) {
-				if (isMatch(methodName, mappedName) &&
-						(bestNameMatch == null || bestNameMatch.length() <= mappedName.length())) {
+				if (isMatch(methodName, mappedName)
+						&& (bestNameMatch == null || bestNameMatch.length() <= mappedName.length())) {
 					ops = this.nameMap.get(mappedName);
 					bestNameMatch = mappedName;
 				}
@@ -110,8 +111,14 @@ public class NameMatchCacheOperationSource implements CacheOperationSource, Seri
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof NameMatchCacheOperationSource otherCos &&
-				ObjectUtils.nullSafeEquals(this.nameMap, otherCos.nameMap)));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof NameMatchCacheOperationSource)) {
+			return false;
+		}
+		NameMatchCacheOperationSource otherTas = (NameMatchCacheOperationSource) other;
+		return ObjectUtils.nullSafeEquals(this.nameMap, otherTas.nameMap);
 	}
 
 	@Override
@@ -123,5 +130,4 @@ public class NameMatchCacheOperationSource implements CacheOperationSource, Seri
 	public String toString() {
 		return getClass().getName() + ": " + this.nameMap;
 	}
-
 }

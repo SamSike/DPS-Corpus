@@ -31,7 +31,10 @@ import org.apache.camel.component.pulsar.utils.message.PulsarMessageUtils;
 import org.apache.camel.support.DefaultAsyncProducer;
 import org.apache.camel.util.CastUtils;
 import org.apache.camel.util.ObjectHelper;
-import org.apache.pulsar.client.api.*;
+import org.apache.pulsar.client.api.Producer;
+import org.apache.pulsar.client.api.ProducerBuilder;
+import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.client.api.TypedMessageBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +42,7 @@ public class PulsarProducer extends DefaultAsyncProducer {
 
     private static final Logger LOG = LoggerFactory.getLogger(PulsarProducer.class);
 
+    private final Object mutex = new Object();
     private final PulsarEndpoint pulsarEndpoint;
     private volatile Producer<byte[]> producer;
 
@@ -69,16 +73,6 @@ public class PulsarProducer extends DefaultAsyncProducer {
             Long eventTime = exchange.getIn().getHeader(PulsarMessageHeaders.EVENT_TIME_OUT, Long.class);
             if (eventTime != null) {
                 messageBuilder.eventTime(eventTime);
-            }
-
-            Long deliverAt = exchange.getIn().getHeader(PulsarMessageHeaders.DELIVER_AT_OUT, Long.class);
-            if (deliverAt != null) {
-                messageBuilder.deliverAt(deliverAt);
-            }
-
-            Long deliverAfter = exchange.getIn().getHeader(PulsarMessageHeaders.DELIVER_AFTER, Long.class);
-            if (deliverAfter != null) {
-                messageBuilder.deliverAfter(deliverAfter, TimeUnit.MILLISECONDS);
             }
 
             messageBuilder.sendAsync()
@@ -124,8 +118,7 @@ public class PulsarProducer extends DefaultAsyncProducer {
     }
 
     private void createProducer() throws PulsarClientException {
-        lock.lock();
-        try {
+        synchronized (mutex) {
             if (producer == null) {
                 final String topicUri = pulsarEndpoint.getUri();
                 PulsarConfiguration configuration = pulsarEndpoint.getPulsarConfiguration();
@@ -140,7 +133,6 @@ public class PulsarProducer extends DefaultAsyncProducer {
                         .enableBatching(configuration.isBatchingEnabled()).batcherBuilder(configuration.getBatcherBuilder())
                         .initialSequenceId(configuration.getInitialSequenceId())
                         .compressionType(configuration.getCompressionType())
-                        .hashingScheme(HashingScheme.valueOf(configuration.getHashingScheme()))
                         .enableChunking(configuration.isChunkingEnabled());
                 if (ObjectHelper.isNotEmpty(configuration.getMessageRouter())) {
                     producerBuilder.messageRouter(configuration.getMessageRouter());
@@ -152,8 +144,6 @@ public class PulsarProducer extends DefaultAsyncProducer {
                 }
                 producer = producerBuilder.create();
             }
-        } finally {
-            lock.unlock();
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,20 +31,20 @@ import static org.mockito.Mockito.mock;
 /**
  * @author Stephane Nicoll
  */
-class JmsResponseTests {
+public class JmsResponseTests {
 
 	@Test
-	void destinationDoesNotUseDestinationResolver() throws JMSException {
-		Destination destination = mock();
+	public void destinationDoesNotUseDestinationResolver() throws JMSException {
+		Destination destination = mock(Destination.class);
 		Destination actual = JmsResponse.forDestination("foo", destination).resolveDestination(null, null);
 		assertThat(actual).isSameAs(destination);
 	}
 
 	@Test
-	void resolveDestinationForQueue() throws JMSException {
-		Session session = mock();
-		DestinationResolver destinationResolver = mock();
-		Destination destination = mock();
+	public void resolveDestinationForQueue() throws JMSException {
+		Session session = mock(Session.class);
+		DestinationResolver destinationResolver = mock(DestinationResolver.class);
+		Destination destination = mock(Destination.class);
 
 		given(destinationResolver.resolveDestinationName(session, "myQueue", false)).willReturn(destination);
 		JmsResponse<String> jmsResponse = JmsResponse.forQueue("foo", "myQueue");
@@ -53,25 +53,25 @@ class JmsResponseTests {
 	}
 
 	@Test
-	void createWithNullResponse() {
+	public void createWithNullResponse() {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				JmsResponse.forQueue(null, "myQueue"));
 	}
 
 	@Test
-	void createWithNullQueueName() {
+	public void createWithNullQueueName() {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				JmsResponse.forQueue("foo", null));
 	}
 
 	@Test
-	void createWithNullTopicName() {
+	public void createWithNullTopicName() {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				JmsResponse.forTopic("foo", null));
 	}
 
 	@Test
-	void createWithNulDestination() {
+	public void createWithNulDestination() {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				JmsResponse.forDestination("foo", null));
 	}

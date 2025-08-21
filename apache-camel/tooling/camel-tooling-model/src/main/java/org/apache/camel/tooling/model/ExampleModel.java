@@ -24,7 +24,6 @@ public class ExampleModel {
     protected String description = "";
     protected String readmeFileName = "readme.md";
     protected String deprecated;
-    protected String middleFolder;
 
     public String getFileName() {
         return fileName;
@@ -74,18 +73,7 @@ public class ExampleModel {
         this.deprecated = deprecated;
     }
 
-    public String getMiddleFolder() {
-        return middleFolder;
-    }
-
-    public void setMiddleFolder(String middleFolder) {
-        this.middleFolder = middleFolder;
-    }
-
     public String getDocLink() {
-        if (middleFolder == null) {
-            return fileName + "/" + readmeFileName;
-        }
-        return middleFolder + "/" + fileName + "/" + readmeFileName;
+        return fileName + "/" + readmeFileName;
     }
 }

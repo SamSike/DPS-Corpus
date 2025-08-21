@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.function.Consumer;
 
 import jakarta.validation.ClockProvider;
 import jakarta.validation.Configuration;
@@ -43,15 +42,16 @@ import jakarta.validation.ValidatorFactory;
 import jakarta.validation.bootstrap.GenericBootstrap;
 import jakarta.validation.bootstrap.ProviderSpecificBootstrap;
 import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.MessageSource;
+import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ReflectionUtils;
@@ -73,7 +73,6 @@ import org.springframework.util.ReflectionUtils;
  * {@code jakarta.validation} API being present but no explicit Validator having been configured.
  *
  * @author Juergen Hoeller
- * @author Sebastien Deleuze
  * @since 3.0
  * @see jakarta.validation.ValidatorFactory
  * @see jakarta.validation.Validator
@@ -84,27 +83,34 @@ public class LocalValidatorFactoryBean extends SpringValidatorAdapter
 		implements ValidatorFactory, ApplicationContextAware, InitializingBean, DisposableBean {
 
 	@SuppressWarnings("rawtypes")
-	private @Nullable Class providerClass;
+	@Nullable
+	private Class providerClass;
 
-	private @Nullable ValidationProviderResolver validationProviderResolver;
+	@Nullable
+	private ValidationProviderResolver validationProviderResolver;
 
-	private @Nullable MessageInterpolator messageInterpolator;
+	@Nullable
+	private MessageInterpolator messageInterpolator;
 
-	private @Nullable TraversableResolver traversableResolver;
+	@Nullable
+	private TraversableResolver traversableResolver;
 
-	private @Nullable ConstraintValidatorFactory constraintValidatorFactory;
+	@Nullable
+	private ConstraintValidatorFactory constraintValidatorFactory;
 
-	private @Nullable ParameterNameDiscoverer parameterNameDiscoverer;
+	@Nullable
+	private ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
 
-	private Resource @Nullable [] mappingLocations;
+	@Nullable
+	private Resource[] mappingLocations;
 
 	private final Map<String, String> validationPropertyMap = new HashMap<>();
 
-	private @Nullable Consumer<Configuration<?>> configurationInitializer;
+	@Nullable
+	private ApplicationContext applicationContext;
 
-	private @Nullable ApplicationContext applicationContext;
-
-	private @Nullable ValidatorFactory validatorFactory;
+	@Nullable
+	private ValidatorFactory validatorFactory;
 
 
 	/**
@@ -178,9 +184,7 @@ public class LocalValidatorFactoryBean extends SpringValidatorAdapter
 	/**
 	 * Set the ParameterNameDiscoverer to use for resolving method and constructor
 	 * parameter names if needed for message interpolation.
-	 * <p>Default is Hibernate Validator's own internal use of standard Java reflection.
-	 * This may be overridden with a custom subclass or a Spring-controlled
-	 * {@link org.springframework.core.DefaultParameterNameDiscoverer} if necessary.
+	 * <p>Default is a {@link org.springframework.core.DefaultParameterNameDiscoverer}.
 	 */
 	public void setParameterNameDiscoverer(ParameterNameDiscoverer parameterNameDiscoverer) {
 		this.parameterNameDiscoverer = parameterNameDiscoverer;
@@ -223,18 +227,6 @@ public class LocalValidatorFactoryBean extends SpringValidatorAdapter
 		return this.validationPropertyMap;
 	}
 
-	/**
-	 * Specify a callback for customizing the Bean Validation {@code Configuration} instance,
-	 * as an alternative to overriding the {@link #postProcessConfiguration(Configuration)}
-	 * method in custom {@code LocalValidatorFactoryBean} subclasses.
-	 * <p>This enables convenient customizations for application purposes. Infrastructure
-	 * extensions may keep overriding the {@link #postProcessConfiguration} template method.
-	 * @since 5.3.19
-	 */
-	public void setConfigurationInitializer(Consumer<Configuration<?>> configurationInitializer) {
-		this.configurationInitializer = configurationInitializer;
-	}
-
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
@@ -266,8 +258,8 @@ public class LocalValidatorFactoryBean extends SpringValidatorAdapter
 				Method eclMethod = configuration.getClass().getMethod("externalClassLoader", ClassLoader.class);
 				ReflectionUtils.invokeMethod(eclMethod, configuration, this.applicationContext.getClassLoader());
 			}
-			catch (NoSuchMethodException ignored) {
-				// no Hibernate Validator 5.2+ or similar provider
+			catch (NoSuchMethodException ex) {
+				// Ignore - no Hibernate Validator 5.2+ or similar provider
 			}
 		}
 
@@ -313,9 +305,6 @@ public class LocalValidatorFactoryBean extends SpringValidatorAdapter
 		this.validationPropertyMap.forEach(configuration::addProperty);
 
 		// Allow for custom post-processing before we actually build the ValidatorFactory.
-		if (this.configurationInitializer != null) {
-			this.configurationInitializer.accept(configuration);
-		}
 		postProcessConfiguration(configuration);
 
 		try {
@@ -332,13 +321,13 @@ public class LocalValidatorFactoryBean extends SpringValidatorAdapter
 		configuration.parameterNameProvider(new ParameterNameProvider() {
 			@Override
 			public List<String> getParameterNames(Constructor<?> constructor) {
-				@Nullable String[] paramNames = discoverer.getParameterNames(constructor);
+				String[] paramNames = discoverer.getParameterNames(constructor);
 				return (paramNames != null ? Arrays.asList(paramNames) :
 						defaultProvider.getParameterNames(constructor));
 			}
 			@Override
 			public List<String> getParameterNames(Method method) {
-				@Nullable String[] paramNames = discoverer.getParameterNames(method);
+				String[] paramNames = discoverer.getParameterNames(method);
 				return (paramNames != null ? Arrays.asList(paramNames) :
 						defaultProvider.getParameterNames(method));
 			}
@@ -370,43 +359,43 @@ public class LocalValidatorFactoryBean extends SpringValidatorAdapter
 
 	@Override
 	public Validator getValidator() {
-		Assert.state(this.validatorFactory != null, "No target ValidatorFactory set");
+		Assert.notNull(this.validatorFactory, "No target ValidatorFactory set");
 		return this.validatorFactory.getValidator();
 	}
 
 	@Override
 	public ValidatorContext usingContext() {
-		Assert.state(this.validatorFactory != null, "No target ValidatorFactory set");
+		Assert.notNull(this.validatorFactory, "No target ValidatorFactory set");
 		return this.validatorFactory.usingContext();
 	}
 
 	@Override
 	public MessageInterpolator getMessageInterpolator() {
-		Assert.state(this.validatorFactory != null, "No target ValidatorFactory set");
+		Assert.notNull(this.validatorFactory, "No target ValidatorFactory set");
 		return this.validatorFactory.getMessageInterpolator();
 	}
 
 	@Override
 	public TraversableResolver getTraversableResolver() {
-		Assert.state(this.validatorFactory != null, "No target ValidatorFactory set");
+		Assert.notNull(this.validatorFactory, "No target ValidatorFactory set");
 		return this.validatorFactory.getTraversableResolver();
 	}
 
 	@Override
 	public ConstraintValidatorFactory getConstraintValidatorFactory() {
-		Assert.state(this.validatorFactory != null, "No target ValidatorFactory set");
+		Assert.notNull(this.validatorFactory, "No target ValidatorFactory set");
 		return this.validatorFactory.getConstraintValidatorFactory();
 	}
 
 	@Override
 	public ParameterNameProvider getParameterNameProvider() {
-		Assert.state(this.validatorFactory != null, "No target ValidatorFactory set");
+		Assert.notNull(this.validatorFactory, "No target ValidatorFactory set");
 		return this.validatorFactory.getParameterNameProvider();
 	}
 
 	@Override
 	public ClockProvider getClockProvider() {
-		Assert.state(this.validatorFactory != null, "No target ValidatorFactory set");
+		Assert.notNull(this.validatorFactory, "No target ValidatorFactory set");
 		return this.validatorFactory.getClockProvider();
 	}
 
@@ -417,8 +406,8 @@ public class LocalValidatorFactoryBean extends SpringValidatorAdapter
 			try {
 				return super.unwrap(type);
 			}
-			catch (ValidationException ignored) {
-				// we'll try ValidatorFactory unwrapping next
+			catch (ValidationException ex) {
+				// Ignore - we'll try ValidatorFactory unwrapping next
 			}
 		}
 		if (this.validatorFactory != null) {

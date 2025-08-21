@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
@@ -44,12 +43,12 @@ import org.springframework.util.StringUtils;
  * strongly typed accessors for specific headers, the ability to leave headers
  * in a {@link Message} mutable, and the option to suppress automatic generation
  * of {@link MessageHeaders#ID id} and {@link MessageHeaders#TIMESTAMP
- * timestamp} headers. Subclasses such as {@link NativeMessageHeaderAccessor}
+ * timesteamp} headers. Sub-classes such as {@link NativeMessageHeaderAccessor}
  * and others provide support for managing processing vs external source headers
  * as well as protocol specific headers.
  *
  * <p>Below is a workflow to initialize headers via {@code MessageHeaderAccessor},
- * or one of its subclasses, then create a {@link Message}, and then re-obtain
+ * or one of its sub-classes, then create a {@link Message}, and then re-obtain
  * the accessor possibly from a different component:
  * <pre class="code">
  * // Create a message with headers
@@ -121,14 +120,15 @@ public class MessageHeaderAccessor {
 
 	private boolean enableTimestamp = false;
 
-	private @Nullable IdGenerator idGenerator;
+	@Nullable
+	private IdGenerator idGenerator;
 
 
 	/**
 	 * A constructor to create new headers.
 	 */
 	public MessageHeaderAccessor() {
-		this((MessageHeaders) null);
+		this(null);
 	}
 
 	/**
@@ -136,11 +136,7 @@ public class MessageHeaderAccessor {
 	 * @param message a message to copy the headers from, or {@code null} if none
 	 */
 	public MessageHeaderAccessor(@Nullable Message<?> message) {
-		this(message != null ? message.getHeaders() : null);
-	}
-
-	private MessageHeaderAccessor(@Nullable MessageHeaders headers) {
-		this.headers = new MutableMessageHeaders(headers);
+		this.headers = new MutableMessageHeaders(message != null ? message.getHeaders() : null);
 	}
 
 
@@ -157,7 +153,7 @@ public class MessageHeaderAccessor {
 	// Configuration properties
 
 	/**
-	 * By default, when {@link #getMessageHeaders()} is called, {@code "this"}
+	 * By default when {@link #getMessageHeaders()} is called, {@code "this"}
 	 * {@code MessageHeaderAccessor} instance can no longer be used to modify the
 	 * underlying message headers and the returned {@code MessageHeaders} is immutable.
 	 * <p>However when this is set to {@code true}, the returned (underlying)
@@ -168,7 +164,7 @@ public class MessageHeaderAccessor {
 	 * <p>When modifications are complete use {@link #setImmutable()} to prevent
 	 * further changes. The intended use case for this mechanism is initialization
 	 * of a Message within a single thread.
-	 * <p>By default, this is set to {@code false}.
+	 * <p>By default this is set to {@code false}.
 	 * @since 4.1
 	 */
 	public void setLeaveMutable(boolean leaveMutable) {
@@ -177,7 +173,7 @@ public class MessageHeaderAccessor {
 	}
 
 	/**
-	 * By default, when {@link #getMessageHeaders()} is called, {@code "this"}
+	 * By default when {@link #getMessageHeaders()} is called, {@code "this"}
 	 * {@code MessageHeaderAccessor} instance can no longer be used to modify the
 	 * underlying message headers. However if {@link #setLeaveMutable(boolean)}
 	 * is used, this method is necessary to indicate explicitly when the
@@ -280,7 +276,8 @@ public class MessageHeaderAccessor {
 	 * @param headerName the name of the header
 	 * @return the associated value, or {@code null} if none found
 	 */
-	public @Nullable Object getHeader(String headerName) {
+	@Nullable
+	public Object getHeader(String headerName) {
 		return this.headers.get(headerName);
 	}
 
@@ -312,7 +309,7 @@ public class MessageHeaderAccessor {
 	protected void verifyType(@Nullable String headerName, @Nullable Object headerValue) {
 		if (headerName != null && headerValue != null) {
 			if (MessageHeaders.ERROR_CHANNEL.equals(headerName) ||
-					MessageHeaders.REPLY_CHANNEL.equals(headerName)) {
+					MessageHeaders.REPLY_CHANNEL.endsWith(headerName)) {
 				if (!(headerValue instanceof MessageChannel || headerValue instanceof String)) {
 					throw new IllegalArgumentException(
 							"'" + headerName + "' header value must be a MessageChannel or String");
@@ -413,32 +410,35 @@ public class MessageHeaderAccessor {
 
 	// Specific header accessors
 
-	public @Nullable UUID getId() {
+	@Nullable
+	public UUID getId() {
 		Object value = getHeader(MessageHeaders.ID);
 		if (value == null) {
 			return null;
 		}
-		return (value instanceof UUID uuid ? uuid : UUID.fromString(value.toString()));
+		return (value instanceof UUID ? (UUID) value : UUID.fromString(value.toString()));
 	}
 
-	public @Nullable Long getTimestamp() {
+	@Nullable
+	public Long getTimestamp() {
 		Object value = getHeader(MessageHeaders.TIMESTAMP);
 		if (value == null) {
 			return null;
 		}
-		return (value instanceof Long num ? num : Long.parseLong(value.toString()));
+		return (value instanceof Long ? (Long) value : Long.parseLong(value.toString()));
 	}
 
 	public void setContentType(MimeType contentType) {
 		setHeader(MessageHeaders.CONTENT_TYPE, contentType);
 	}
 
-	public @Nullable MimeType getContentType() {
+	@Nullable
+	public MimeType getContentType() {
 		Object value = getHeader(MessageHeaders.CONTENT_TYPE);
 		if (value == null) {
 			return null;
 		}
-		return (value instanceof MimeType mimeType ? mimeType : MimeType.valueOf(value.toString()));
+		return (value instanceof MimeType ? (MimeType) value : MimeType.valueOf(value.toString()));
 	}
 
 	private Charset getCharset() {
@@ -455,7 +455,8 @@ public class MessageHeaderAccessor {
 		setHeader(MessageHeaders.REPLY_CHANNEL, replyChannel);
 	}
 
-	public @Nullable Object getReplyChannel() {
+	@Nullable
+	public Object getReplyChannel() {
 		return getHeader(MessageHeaders.REPLY_CHANNEL);
 	}
 
@@ -467,7 +468,8 @@ public class MessageHeaderAccessor {
 		setHeader(MessageHeaders.ERROR_CHANNEL, errorChannel);
 	}
 
-	public @Nullable Object getErrorChannel() {
+	@Nullable
+	public Object getErrorChannel() {
 		return getHeader(MessageHeaders.ERROR_CHANNEL);
 	}
 
@@ -493,12 +495,14 @@ public class MessageHeaderAccessor {
 	}
 
 	protected String getShortPayloadLogMessage(Object payload) {
-		if (payload instanceof String payloadText) {
+		if (payload instanceof String) {
+			String payloadText = (String) payload;
 			return (payloadText.length() < 80) ?
 				" payload=" + payloadText :
 				" payload=" + payloadText.substring(0, 80) + "...(truncated)";
 		}
-		else if (payload instanceof byte[] bytes) {
+		else if (payload instanceof byte[]) {
+			byte[] bytes = (byte[]) payload;
 			if (isReadableContentType()) {
 				return (bytes.length < 80) ?
 						" payload=" + new String(bytes, getCharset()) :
@@ -520,7 +524,8 @@ public class MessageHeaderAccessor {
 		if (payload instanceof String) {
 			return " payload=" + payload;
 		}
-		else if (payload instanceof byte[] bytes) {
+		else if (payload instanceof byte[]) {
+			byte[] bytes = (byte[]) payload;
 			if (isReadableContentType()) {
 				return " payload=" + new String(bytes, getCharset());
 			}
@@ -552,33 +557,17 @@ public class MessageHeaderAccessor {
 	// Static factory methods
 
 	/**
-	 * Create an instance from a plain {@link Map}.
-	 * @param map the raw headers
-	 * @since 6.2
-	 */
-	public static MessageHeaderAccessor fromMap(@Nullable Map<String, Object> map) {
-		return fromMessageHeaders(new MessageHeaders(map));
-	}
-
-	/**
-	 * Create an instance from an existing {@link MessageHeaders} instance.
-	 * @param headers the headers
-	 * @since 6.2
-	 */
-	public static MessageHeaderAccessor fromMessageHeaders(@Nullable MessageHeaders headers) {
-		return new MessageHeaderAccessor(headers);
-	}
-
-	/**
 	 * Return the original {@code MessageHeaderAccessor} used to create the headers
-	 * of the given {@code Message}, or {@code null} if that's not available.
+	 * of the given {@code Message}, or {@code null} if that's not available or if
+	 * its type does not match the required type.
 	 * <p>This is for cases where the existence of an accessor is strongly expected
 	 * (followed up with an assertion) or where an accessor will be created otherwise.
 	 * @param message the message to get an accessor for
 	 * @return an accessor instance of the specified type, or {@code null} if none
 	 * @since 5.1.19
 	 */
-	public static @Nullable MessageHeaderAccessor getAccessor(Message<?> message) {
+	@Nullable
+	public static MessageHeaderAccessor getAccessor(Message<?> message) {
 		return getAccessor(message.getHeaders(), null);
 	}
 
@@ -593,7 +582,8 @@ public class MessageHeaderAccessor {
 	 * @return an accessor instance of the specified type, or {@code null} if none
 	 * @since 4.1
 	 */
-	public static <T extends MessageHeaderAccessor> @Nullable T getAccessor(Message<?> message, @Nullable Class<T> requiredType) {
+	@Nullable
+	public static <T extends MessageHeaderAccessor> T getAccessor(Message<?> message, @Nullable Class<T> requiredType) {
 		return getAccessor(message.getHeaders(), requiredType);
 	}
 
@@ -607,12 +597,14 @@ public class MessageHeaderAccessor {
 	 * @since 4.1
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends MessageHeaderAccessor> @Nullable T getAccessor(
+	@Nullable
+	public static <T extends MessageHeaderAccessor> T getAccessor(
 			MessageHeaders messageHeaders, @Nullable Class<T> requiredType) {
 
-		if (messageHeaders instanceof MutableMessageHeaders mutableHeaders) {
+		if (messageHeaders instanceof MutableMessageHeaders) {
+			MutableMessageHeaders mutableHeaders = (MutableMessageHeaders) messageHeaders;
 			MessageHeaderAccessor headerAccessor = mutableHeaders.getAccessor();
-			if (requiredType == null || requiredType.isInstance(headerAccessor)) {
+			if (requiredType == null || requiredType.isInstance(headerAccessor))  {
 				return (T) headerAccessor;
 			}
 		}
@@ -629,7 +621,8 @@ public class MessageHeaderAccessor {
 	 * @since 4.1
 	 */
 	public static MessageHeaderAccessor getMutableAccessor(Message<?> message) {
-		if (message.getHeaders() instanceof MutableMessageHeaders mutableHeaders) {
+		if (message.getHeaders() instanceof MutableMessageHeaders) {
+			MutableMessageHeaders mutableHeaders = (MutableMessageHeaders) message.getHeaders();
 			MessageHeaderAccessor accessor = mutableHeaders.getAccessor();
 			return (accessor.isMutable() ? accessor : accessor.createAccessor(message));
 		}

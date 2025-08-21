@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,7 @@ import java.util.List;
 
 import javax.net.ssl.SSLSession;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -35,9 +34,11 @@ import org.springframework.util.Assert;
  */
 final class DefaultSslInfo implements SslInfo {
 
-	private final @Nullable String sessionId;
+	@Nullable
+	private final String sessionId;
 
-	private final X509Certificate @Nullable [] peerCertificates;
+	@Nullable
+	private final X509Certificate[] peerCertificates;
 
 
 	DefaultSslInfo(@Nullable String sessionId, X509Certificate[] peerCertificates) {
@@ -54,17 +55,20 @@ final class DefaultSslInfo implements SslInfo {
 
 
 	@Override
-	public @Nullable String getSessionId() {
+	@Nullable
+	public String getSessionId() {
 		return this.sessionId;
 	}
 
 	@Override
-	public X509Certificate @Nullable [] getPeerCertificates() {
+	@Nullable
+	public X509Certificate[] getPeerCertificates() {
 		return this.peerCertificates;
 	}
 
 
-	private static @Nullable String initSessionId(SSLSession session) {
+	@Nullable
+	private static String initSessionId(SSLSession session) {
 		byte [] bytes = session.getId();
 		if (bytes == null) {
 			return null;
@@ -84,7 +88,8 @@ final class DefaultSslInfo implements SslInfo {
 		return sb.toString();
 	}
 
-	private static X509Certificate @Nullable [] initCertificates(SSLSession session) {
+	@Nullable
+	private static X509Certificate[] initCertificates(SSLSession session) {
 		Certificate[] certificates;
 		try {
 			certificates = session.getPeerCertificates();
@@ -95,8 +100,8 @@ final class DefaultSslInfo implements SslInfo {
 
 		List<X509Certificate> result = new ArrayList<>(certificates.length);
 		for (Certificate certificate : certificates) {
-			if (certificate instanceof X509Certificate x509Certificate) {
-				result.add(x509Certificate);
+			if (certificate instanceof X509Certificate) {
+				result.add((X509Certificate) certificate);
 			}
 		}
 		return (!result.isEmpty() ? result.toArray(new X509Certificate[0]) : null);

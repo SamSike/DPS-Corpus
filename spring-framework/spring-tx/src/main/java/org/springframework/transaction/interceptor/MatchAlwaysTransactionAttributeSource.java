@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,7 @@ package org.springframework.transaction.interceptor;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
@@ -50,23 +49,30 @@ public class MatchAlwaysTransactionAttributeSource implements TransactionAttribu
 	 * @see org.springframework.transaction.interceptor.TransactionAttributeEditor
 	 */
 	public void setTransactionAttribute(TransactionAttribute transactionAttribute) {
-		if (transactionAttribute instanceof DefaultTransactionAttribute dta) {
-			dta.resolveAttributeStrings(null);
+		if (transactionAttribute instanceof DefaultTransactionAttribute) {
+			((DefaultTransactionAttribute) transactionAttribute).resolveAttributeStrings(null);
 		}
 		this.transactionAttribute = transactionAttribute;
 	}
 
 
 	@Override
-	public @Nullable TransactionAttribute getTransactionAttribute(Method method, @Nullable Class<?> targetClass) {
+	@Nullable
+	public TransactionAttribute getTransactionAttribute(Method method, @Nullable Class<?> targetClass) {
 		return (ClassUtils.isUserLevelMethod(method) ? this.transactionAttribute : null);
 	}
 
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof MatchAlwaysTransactionAttributeSource that &&
-				ObjectUtils.nullSafeEquals(this.transactionAttribute, that.transactionAttribute)));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof MatchAlwaysTransactionAttributeSource)) {
+			return false;
+		}
+		MatchAlwaysTransactionAttributeSource otherTas = (MatchAlwaysTransactionAttributeSource) other;
+		return ObjectUtils.nullSafeEquals(this.transactionAttribute, otherTas.transactionAttribute);
 	}
 
 	@Override

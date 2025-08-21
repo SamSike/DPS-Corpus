@@ -25,15 +25,11 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.BooleanNode;
-import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Converter;
@@ -59,7 +55,7 @@ import org.slf4j.LoggerFactory;
 public final class JacksonTypeConverters {
     private static final Logger LOG = LoggerFactory.getLogger(JacksonTypeConverters.class);
 
-    private final Lock lock;
+    private final Object lock;
     private volatile ObjectMapper defaultMapper;
 
     private boolean init;
@@ -68,7 +64,7 @@ public final class JacksonTypeConverters {
     private String moduleClassNames;
 
     public JacksonTypeConverters() {
-        this.lock = new ReentrantLock();
+        this.lock = new Object();
     }
 
     @Converter
@@ -138,7 +134,7 @@ public final class JacksonTypeConverters {
     @Converter
     public Map<String, Object> toMap(JsonNode node, Exchange exchange) throws Exception {
         ObjectMapper mapper = resolveObjectMapper(exchange.getContext());
-        return mapper.convertValue(node, new TypeReference<>() {
+        return mapper.convertValue(node, new TypeReference<Map<String, Object>>() {
         });
     }
 
@@ -148,75 +144,29 @@ public final class JacksonTypeConverters {
         return new InputStreamReader(is);
     }
 
-    @Converter
-    public Integer toInteger(JsonNode node, Exchange exchange) throws Exception {
-        if (node instanceof NumericNode) {
-            NumericNode nn = (NumericNode) node;
-            if (nn.canConvertToInt()) {
-                return nn.asInt();
-            }
-        }
-        String text = node.asText();
-        return Integer.valueOf(text);
-    }
-
-    @Converter
-    public Long toLong(JsonNode node, Exchange exchange) throws Exception {
-        if (node instanceof NumericNode) {
-            NumericNode nn = (NumericNode) node;
-            if (nn.canConvertToLong()) {
-                return nn.asLong();
-            }
-        }
-        String text = node.asText();
-        return Long.valueOf(text);
-    }
-
-    @Converter
-    public Boolean toBoolean(BooleanNode node, Exchange exchange) throws Exception {
-        return node.asBoolean();
-    }
-
-    @Converter
-    public Boolean toBoolean(JsonNode node, Exchange exchange) throws Exception {
-        if (node instanceof BooleanNode) {
-            BooleanNode bn = (BooleanNode) node;
-            return bn.asBoolean();
-        }
-        String text = node.asText();
-        return org.apache.camel.util.ObjectHelper.toBoolean(text);
-    }
-
-    @Converter
-    public Double toDouble(JsonNode node, Exchange exchange) throws Exception {
-        if (node instanceof NumericNode) {
-            NumericNode nn = (NumericNode) node;
-            if (nn.isFloatingPointNumber()) {
-                return nn.asDouble();
-            }
-        }
-        String text = node.asText();
-        return Double.valueOf(text);
-    }
-
-    @Converter
-    public Float toFloat(JsonNode node, Exchange exchange) throws Exception {
-        if (node instanceof NumericNode) {
-            NumericNode nn = (NumericNode) node;
-            if (nn.isFloat()) {
-                return nn.floatValue();
-            }
-        }
-        String text = node.asText();
-        return Float.valueOf(text);
-    }
-
     @Converter(fallback = true)
     public <T> T convertTo(Class<T> type, Exchange exchange, Object value, TypeConverterRegistry registry) throws Exception {
 
         // only do this if enabled (disabled by default)
         if (!init && exchange != null) {
-            initialize(exchange);
+            Map<String, String> globalOptions = exchange.getContext().getGlobalOptions();
+
+            // init to see if this is enabled
+            String text = globalOptions.get(JacksonConstants.ENABLE_TYPE_CONVERTER);
+            if (text != null) {
+                text = exchange.getContext().resolvePropertyPlaceholders(text);
+                enabled = "true".equalsIgnoreCase(text);
+            }
+
+            // pojoOnly is disabled by default
+            text = globalOptions.get(JacksonConstants.TYPE_CONVERTER_TO_POJO);
+            if (text != null) {
+                text = exchange.getContext().resolvePropertyPlaceholders(text);
+                toPojo = "true".equalsIgnoreCase(text);
+            }
+
+            moduleClassNames = globalOptions.get(JacksonConstants.TYPE_CONVERTER_MODULE_CLASS_NAMES);
+            init = true;
         }
 
         if (!enabled) {
@@ -268,27 +218,6 @@ public final class JacksonTypeConverters {
         return null;
     }
 
-    private void initialize(Exchange exchange) {
-        Map<String, String> globalOptions = exchange.getContext().getGlobalOptions();
-
-        // init to see if this is enabled
-        String text = globalOptions.get(JacksonConstants.ENABLE_TYPE_CONVERTER);
-        if (text != null) {
-            text = exchange.getContext().resolvePropertyPlaceholders(text);
-            enabled = Boolean.parseBoolean(text);
-        }
-
-        // pojoOnly is disabled by default
-        text = globalOptions.get(JacksonConstants.TYPE_CONVERTER_TO_POJO);
-        if (text != null) {
-            text = exchange.getContext().resolvePropertyPlaceholders(text);
-            toPojo = Boolean.parseBoolean(text);
-        }
-
-        moduleClassNames = globalOptions.get(JacksonConstants.TYPE_CONVERTER_MODULE_CLASS_NAMES);
-        init = true;
-    }
-
     /**
      * Whether the type is NOT a pojo type but only a set of simple types such as String and numbers.
      */
@@ -308,8 +237,7 @@ public final class JacksonTypeConverters {
         }
 
         if (defaultMapper == null) {
-            lock.lock();
-            try {
+            synchronized (lock) {
                 if (defaultMapper == null) {
                     ObjectMapper mapper = new ObjectMapper();
                     if (moduleClassNames != null) {
@@ -325,8 +253,6 @@ public final class JacksonTypeConverters {
 
                     defaultMapper = mapper;
                 }
-            } finally {
-                lock.unlock();
             }
         }
 

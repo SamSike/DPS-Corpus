@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,13 +43,10 @@ package org.jooq;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 // ...
@@ -75,7 +72,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
@@ -86,7 +82,6 @@ import java.util.function.Function;
 
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
-import org.jooq.impl.SQLDataType;
 import org.jooq.types.Interval;
 // ...
 
@@ -109,7 +104,7 @@ import org.jetbrains.annotations.Nullable;
  * {@link SelectGroupByStep#groupBy(GroupField...)} (every {@link Field} is a
  * subtype of {@link GroupField})</li>
  * <li><code>HAVING</code> clause, e.g. through
- * {@link SelectHavingStep#having(Field)}</li>
+ * {@link SelectHavingStep#having(Field)}<code></li>
  * <li><code>ORDER BY</code> clause, e.g. through
  * {@link SelectOrderByStep#orderBy(OrderField)} (every {@link Field} is a
  * subtype of {@link OrderField})</li>
@@ -121,9 +116,7 @@ import org.jetbrains.annotations.Nullable;
  * <p>
  * <strong>Example:</strong>
  * <p>
- *
- * <pre>
- * <code>
+ * <code><pre>
  * // Assuming import static org.jooq.impl.DSL.*;
  *
  * using(configuration)
@@ -132,8 +125,7 @@ import org.jetbrains.annotations.Nullable;
  *    .groupBy(ACTOR.LAST_NAME) // Field reference
  *    .orderBy(ACTOR.LAST_NAME) // Field reference
  *    .fetch();
- * </code>
- * </pre>
+ * </pre></code>
  * <p>
  * Instances can be created using a variety of ways, including:
  * <ul>
@@ -153,12 +145,13 @@ import org.jetbrains.annotations.Nullable;
  * @param <T> The field type
  * @author Lukas Eder
  */
-public interface Field<T>
+public /* non-sealed */ interface Field<T>
 extends
     SelectField<T>,
     GroupField,
     OrderField<T>,
     FieldOrRow,
+    FieldOrRowOrSelect,
     FieldOrConstraint,
     TableElement
 {
@@ -206,15 +199,15 @@ extends
      * provided by a function. This is useful, for instance, to prefix all
      * columns with a common prefix (on {@link Table#as(String, Function)}):
      * <p>
-     * <pre><code>
+     * <code><pre>
      * MY_TABLE.as("t1", f -&gt; "prefix_" + f.getName());
-     * </code></pre>
+     * </pre></code>
      * <p>
      * And then to use the same function also for individual fields:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * MY_TABLE.MY_COLUMN.as(f -&gt; "prefix_" + f.getName());
-     * </code></pre>
+     * </pre></code>
      *
      * @deprecated - 3.14.0 - [#10156] - These methods will be removed without
      *             replacement from a future jOOQ. They offer convenience that
@@ -292,36 +285,14 @@ extends
     <U> Field<U> convertTo(Function<? super U, ? extends T> to);
 
     // ------------------------------------------------------------------------
-    // DDL API
-    // ------------------------------------------------------------------------
-
-    /**
-     * Attach a {@link Comment} to this field, for use in DDL statements, such
-     * as {@link DSLContext#createTable(Table)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    Field<T> comment(String comment);
-
-    /**
-     * Attach a {@link Comment} to this field, for use in DDL statements, such
-     * as {@link DSLContext#createTable(Table)}.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    Field<T> comment(Comment comment);
-
-    // ------------------------------------------------------------------------
     // Type casts
     // ------------------------------------------------------------------------
 
     /**
      * Cast this field to the type of another field.
      * <p>
-     * Casting converts expressions between data types directly in SQL using SQL
-     * <code>CAST</code> expressions or similar. If you want to convert data
-     * types only in jOOQ without any effect on generated SQL, you can use
-     * {@link Field#coerce(Field)} instead.
+     * This results in the same as casting this field to
+     * {@link DataType#getCastTypeName()}
      *
      * @param <Z> The generic type of the cast field
      * @param field The field whose type is used for the cast
@@ -334,11 +305,6 @@ extends
 
     /**
      * Cast this field to a dialect-specific data type.
-     * <p>
-     * Casting converts expressions between data types directly in SQL using SQL
-     * <code>CAST</code> expressions or similar. If you want to convert data
-     * types only in jOOQ without any effect on generated SQL, you can use
-     * {@link Field#coerce(DataType)} instead.
      *
      * @param <Z> The generic type of the cast field
      * @param type The data type that is used for the cast
@@ -351,21 +317,9 @@ extends
     /**
      * Cast this field to another type.
      * <p>
-     * Casting converts expressions between data types directly in SQL using SQL
-     * <code>CAST</code> expressions or similar. If you want to convert data
-     * types only in jOOQ without any effect on generated SQL, you can use
-     * {@link Field#coerce(Class)} instead.
-     * <p>
      * The actual cast may not be accurate as the {@link DataType} has to be
      * "guessed" from the jOOQ-configured data types. Use
      * {@link #cast(DataType)} for more accurate casts.
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #cast(DataType)}.
      *
      * @param <Z> The generic type of the cast field
      * @param type The type that is used for the cast
@@ -383,36 +337,24 @@ extends
     /**
      * Coerce this field to the type of another field.
      * <p>
-     * Unlike with {@link Field#cast(Field)}, coercing doesn't affect the
-     * way the database sees a <code>Field</code>'s type. This is how coercing
-     * affects your SQL:
-     * <p>
-     * <h3>Bind values</h3>
-     *
-     * <pre>
-     * <code>
-     * // This binds an int value to a JDBC PreparedStatement,
-     * // where a String is expected
-     * DSL.val(1).coerce(VARCHAR);
+     * Unlike with casting, coercing doesn't affect the way the database sees a
+     * <code>Field</code>'s type. This is how coercing affects your SQL:
+     * <h3>Bind values</h3> <code><pre>
+     * // This binds an int value to a JDBC PreparedStatement
+     * DSL.val(1).coerce(String.class);
      *
      * // This binds an int value to a JDBC PreparedStatement
      * // and casts it to VARCHAR in SQL
-     * DSL.val(1).cast(VARCHAR);
-     * </code>
-     * </pre>
-     *
-     * <h3>Other Field types</h3>
-     *
-     * <pre>
-     * <code>
+     * DSL.val(1).cast(String.class);
+     * </pre></code>
+     * <h3>Other Field types</h3> <code><pre>
      * // This fetches a String value for the BOOK.ID field from JDBC
-     * BOOK.ID.coerce(VARCHAR);
+     * BOOK.ID.coerce(String.class);
      *
      * // This fetches a String value for the BOOK.ID field from JDBC
      * // after casting it to VARCHAR in the database
-     * BOOK.ID.cast(VARCHAR);
-     * </code>
-     * </pre>
+     * BOOK.ID.cast(String.class);
+     * </pre></code>
      *
      * @param <Z> The generic type of the coerced field
      * @param field The field whose type is used for the coercion
@@ -427,36 +369,24 @@ extends
     /**
      * Coerce this field to a dialect-specific data type.
      * <p>
-     * Unlike with {@link Field#cast(DataType)}, coercing doesn't affect the
-     * way the database sees a <code>Field</code>'s type. This is how coercing
-     * affects your SQL:
-     * <p>
-     * <h3>Bind values</h3>
-     *
-     * <pre>
-     * <code>
-     * // This binds an int value to a JDBC PreparedStatement,
-     * // where a String is expected
-     * DSL.val(1).coerce(VARCHAR);
+     * Unlike with casting, coercing doesn't affect the way the database sees a
+     * <code>Field</code>'s type. This is how coercing affects your SQL:
+     * <h3>Bind values</h3> <code><pre>
+     * // This binds an int value to a JDBC PreparedStatement
+     * DSL.val(1).coerce(String.class);
      *
      * // This binds an int value to a JDBC PreparedStatement
      * // and casts it to VARCHAR in SQL
-     * DSL.val(1).cast(VARCHAR);
-     * </code>
-     * </pre>
-     *
-     * <h3>Other Field types</h3>
-     *
-     * <pre>
-     * <code>
+     * DSL.val(1).cast(String.class);
+     * </pre></code>
+     * <h3>Other Field types</h3> <code><pre>
      * // This fetches a String value for the BOOK.ID field from JDBC
-     * BOOK.ID.coerce(VARCHAR);
+     * BOOK.ID.coerce(String.class);
      *
      * // This fetches a String value for the BOOK.ID field from JDBC
      * // after casting it to VARCHAR in the database
-     * BOOK.ID.cast(VARCHAR);
-     * </code>
-     * </pre>
+     * BOOK.ID.cast(String.class);
+     * </pre></code>
      *
      * @param <Z> The generic type of the coerced field
      * @param type The data type that is used for the coercion
@@ -470,43 +400,24 @@ extends
     /**
      * Coerce this field to another type.
      * <p>
-     * Unlike with {@link Field#cast(Class)}, coercing doesn't affect the
-     * way the database sees a <code>Field</code>'s type. This is how coercing
-     * affects your SQL:
-     * <p>
-     * <h3>Bind values</h3>
-     *
-     * <pre>
-     * <code>
-     * // This binds an int value to a JDBC PreparedStatement,
-     * // where a String is expected
-     * DSL.val(1).coerce(VARCHAR);
+     * Unlike with casting, coercing doesn't affect the way the database sees a
+     * <code>Field</code>'s type. This is how coercing affects your SQL:
+     * <h3>Bind values</h3> <code><pre>
+     * // This binds an int value to a JDBC PreparedStatement
+     * DSL.val(1).coerce(String.class);
      *
      * // This binds an int value to a JDBC PreparedStatement
      * // and casts it to VARCHAR in SQL
-     * DSL.val(1).cast(VARCHAR);
-     * </code>
-     * </pre>
-     *
-     * <h3>Other Field types</h3>
-     *
-     * <pre>
-     * <code>
+     * DSL.val(1).cast(String.class);
+     * </pre></code>
+     * <h3>Other Field types</h3> <code><pre>
      * // This fetches a String value for the BOOK.ID field from JDBC
-     * BOOK.ID.coerce(VARCHAR);
+     * BOOK.ID.coerce(String.class);
      *
      * // This fetches a String value for the BOOK.ID field from JDBC
      * // after casting it to VARCHAR in the database
-     * BOOK.ID.cast(VARCHAR);
-     * </code>
-     * </pre>
-     * <p>
-     * <b>NOTE [#15286]</b>: It is strongly recommended to pass only
-     * {@link Class} references of types supported by jOOQ internally, i.e.
-     * types from {@link SQLDataType}. If you're using any custom data types by
-     * means of a {@link Converter} or {@link Binding}, it's better to pass that
-     * converted {@link DataType} reference explicitly to
-     * {@link #coerce(DataType)}.
+     * BOOK.ID.cast(String.class);
+     * </pre></code>
      *
      * @param <Z> The generic type of the coerced field
      * @param type The type that is used for the coercion
@@ -571,14 +482,14 @@ extends
     /**
      * Create an indirected sort field.
      * <p>
-     * Create a sort field of the form <pre><code>
+     * Create a sort field of the form <code><pre>
      * CASE [this] WHEN [sortList.get(0)] THEN 0
      *             WHEN [sortList.get(1)] THEN 1
      *             ...
      *             WHEN [sortList.get(n)] THEN n
      *                                    ELSE null
      * END ASC
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note: You can use this in combination with {@link SortField#nullsFirst()}
      * or {@link SortField#nullsLast()} to specify whether the default should
@@ -594,14 +505,14 @@ extends
     /**
      * Create an indirected sort field.
      * <p>
-     * Create a sort field of the form <pre><code>
+     * Create a sort field of the form <code><pre>
      * CASE [this] WHEN [sortList[0]] THEN 0
      *             WHEN [sortList[1]] THEN 1
      *             ...
      *             WHEN [sortList[n]] THEN n
      *                                ELSE null
      * END ASC
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note: You can use this in combination with {@link SortField#nullsFirst()}
      * or {@link SortField#nullsLast()} to specify whether the default should
@@ -617,14 +528,14 @@ extends
     /**
      * Create an indirected sort field.
      * <p>
-     * Create a sort field of the form <pre><code>
+     * Create a sort field of the form <code><pre>
      * CASE [this] WHEN [sortList.get(0)] THEN 0
      *             WHEN [sortList.get(1)] THEN 1
      *             ...
      *             WHEN [sortList.get(n)] THEN n
      *                                    ELSE null
      * END DESC
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note: You can use this in combination with {@link SortField#nullsFirst()}
      * or {@link SortField#nullsLast()} to specify whether the default should
@@ -640,14 +551,14 @@ extends
     /**
      * Create an indirected sort field.
      * <p>
-     * Create a sort field of the form <pre><code>
+     * Create a sort field of the form <code><pre>
      * CASE [this] WHEN [sortList[0]] THEN 0
      *             WHEN [sortList[1]] THEN 1
      *             ...
      *             WHEN [sortList[n]] THEN n
      *                                    ELSE null
      * END DESC
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note: You can use this in combination with {@link SortField#nullsFirst()}
      * or {@link SortField#nullsLast()} to specify whether the default should
@@ -663,14 +574,14 @@ extends
     /**
      * Create an indirected sort field.
      * <p>
-     * Create a sort field of the form (in pseudo code)<pre><code>
+     * Create a sort field of the form (in pseudo code)<code><pre>
      * CASE [this] WHEN [sortMap.key(0)] THEN sortMap.value(0)
      *             WHEN [sortMap.key(1)] THEN sortMap.value(1)
      *             ...
      *             WHEN [sortMap.key(n)] THEN sortMap.value(n)
      *                                   ELSE null
      * END DESC
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note: You can use this in combination with {@link SortField#nullsFirst()}
      * or {@link SortField#nullsLast()} to specify whether the default should
@@ -683,54 +594,11 @@ extends
     @Support
     <Z> SortField<Z> sort(Map<T, Z> sortMap);
 
-    /**
-     * Convenience method for {@link #sortDefault()} and then
-     * {@link SortField#nullsFirst()}.
-     */
-    @NotNull
-    @Support
-    SortField<T> nullsFirst();
-
-    /**
-     * Convenience method for {@link #sortDefault()} and then
-     * {@link SortField#nullsLast()}.
-     */
-    @NotNull
-    @Support
-    SortField<T> nullsLast();
-
 
 
     // -------------------------------------------------------------------------
     // Generic predicates
     // -------------------------------------------------------------------------
-
-    /**
-     * The <code>BINARY_LIKE</code> operator.
-     * <p>
-     * The LIKE operator for binary strings
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    Condition binaryLike(byte[] pattern);
-
-    /**
-     * The <code>BINARY_LIKE</code> operator.
-     * <p>
-     * The LIKE operator for binary strings
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    Condition binaryLike(Field<byte[]> pattern);
-
-    /**
-     * The <code>BINARY_LIKE</code> operator.
-     * <p>
-     * The LIKE operator for binary strings
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    Condition binaryLike(org.jooq.QuantifiedSelect<? extends Record1<byte[]>> pattern);
 
     /**
      * The <code>EQ</code> operator.
@@ -754,13 +622,6 @@ extends
     Condition eq(Field<T> arg2);
 
     /**
-     * The <code>EQ</code> operator.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    Condition eq(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2);
-
-    /**
      * The <code>EQUAL</code> operator, an alias for the <code>EQ</code> operator.
      */
     @NotNull
@@ -780,13 +641,6 @@ extends
     @NotNull
     @Support
     Condition equal(Field<T> arg2);
-
-    /**
-     * The <code>EQUAL</code> operator, an alias for the <code>EQ</code> operator.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    Condition equal(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2);
 
     /**
      * The <code>GE</code> operator.
@@ -810,13 +664,6 @@ extends
     Condition ge(Field<T> arg2);
 
     /**
-     * The <code>GE</code> operator.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    Condition ge(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2);
-
-    /**
      * The <code>GREATER_OR_EQUAL</code> operator, an alias for the <code>GE</code> operator.
      */
     @NotNull
@@ -836,13 +683,6 @@ extends
     @NotNull
     @Support
     Condition greaterOrEqual(Field<T> arg2);
-
-    /**
-     * The <code>GREATER_OR_EQUAL</code> operator, an alias for the <code>GE</code> operator.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    Condition greaterOrEqual(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2);
 
     /**
      * The <code>GREATER_THAN</code> operator, an alias for the <code>GT</code> operator.
@@ -866,13 +706,6 @@ extends
     Condition greaterThan(Field<T> arg2);
 
     /**
-     * The <code>GREATER_THAN</code> operator, an alias for the <code>GT</code> operator.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    Condition greaterThan(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2);
-
-    /**
      * The <code>GT</code> operator.
      */
     @NotNull
@@ -892,13 +725,6 @@ extends
     @NotNull
     @Support
     Condition gt(Field<T> arg2);
-
-    /**
-     * The <code>GT</code> operator.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    Condition gt(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2);
 
     /**
      * The <code>IN</code> operator.
@@ -1007,13 +833,6 @@ extends
     Condition le(Field<T> arg2);
 
     /**
-     * The <code>LE</code> operator.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    Condition le(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2);
-
-    /**
      * The <code>LESS_OR_EQUAL</code> operator, an alias for the <code>LE</code> operator.
      */
     @NotNull
@@ -1033,13 +852,6 @@ extends
     @NotNull
     @Support
     Condition lessOrEqual(Field<T> arg2);
-
-    /**
-     * The <code>LESS_OR_EQUAL</code> operator, an alias for the <code>LE</code> operator.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    Condition lessOrEqual(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2);
 
     /**
      * The <code>LESS_THAN</code> operator, an alias for the <code>LT</code> operator.
@@ -1063,16 +875,9 @@ extends
     Condition lessThan(Field<T> arg2);
 
     /**
-     * The <code>LESS_THAN</code> operator, an alias for the <code>LT</code> operator.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    Condition lessThan(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2);
-
-    /**
      * The <code>LIKE</code> operator.
      *
-     * @param pattern is wrapped as {@link DSL#val(Object)}.
+     * @param pattern is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1086,23 +891,16 @@ extends
     LikeEscapeStep like(Field<String> pattern);
 
     /**
-     * The <code>LIKE</code> operator.
-     */
-    @NotNull
-    @Support
-    LikeEscapeStep like(org.jooq.QuantifiedSelect<? extends Record1<String>> pattern);
-
-    /**
      * The <code>LIKE_IGNORE_CASE</code> operator.
      * <p>
      * Create a condition to case-insensitively pattern-check this field against
      * a value.
      * <p>
-     * This translates to <code>this ilike value</code> in
+     * This translates to <code>this not ilike value</code> in
      * {@link SQLDialect#POSTGRES}, or to
-     * <code>lower(this) like lower(value)</code> in all other dialects.
+     * <code>lower(this) not like lower(value)</code> in all other dialects.
      *
-     * @param pattern is wrapped as {@link DSL#val(Object)}.
+     * @param pattern is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1114,9 +912,9 @@ extends
      * Create a condition to case-insensitively pattern-check this field against
      * a value.
      * <p>
-     * This translates to <code>this ilike value</code> in
+     * This translates to <code>this not ilike value</code> in
      * {@link SQLDialect#POSTGRES}, or to
-     * <code>lower(this) like lower(value)</code> in all other dialects.
+     * <code>lower(this) not like lower(value)</code> in all other dialects.
      */
     @NotNull
     @Support
@@ -1144,13 +942,6 @@ extends
     Condition lt(Field<T> arg2);
 
     /**
-     * The <code>LT</code> operator.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    Condition lt(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2);
-
-    /**
      * The <code>NE</code> operator.
      */
     @NotNull
@@ -1170,40 +961,6 @@ extends
     @NotNull
     @Support
     Condition ne(Field<T> arg2);
-
-    /**
-     * The <code>NE</code> operator.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    Condition ne(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2);
-
-    /**
-     * The <code>NOT_BINARY_LIKE</code> operator.
-     * <p>
-     * The NOT LIKE operator for binary strings
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    Condition notBinaryLike(byte[] pattern);
-
-    /**
-     * The <code>NOT_BINARY_LIKE</code> operator.
-     * <p>
-     * The NOT LIKE operator for binary strings
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    Condition notBinaryLike(Field<byte[]> pattern);
-
-    /**
-     * The <code>NOT_BINARY_LIKE</code> operator.
-     * <p>
-     * The NOT LIKE operator for binary strings
-     */
-    @NotNull
-    @Support({ POSTGRES, YUGABYTEDB })
-    Condition notBinaryLike(org.jooq.QuantifiedSelect<? extends Record1<byte[]>> pattern);
 
     /**
      * The <code>NOT_EQUAL</code> operator, an alias for the <code>NE</code> operator.
@@ -1227,13 +984,6 @@ extends
     Condition notEqual(Field<T> arg2);
 
     /**
-     * The <code>NOT_EQUAL</code> operator, an alias for the <code>NE</code> operator.
-     */
-    @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    Condition notEqual(org.jooq.QuantifiedSelect<? extends Record1<T>> arg2);
-
-    /**
      * The <code>NOT_IN</code> operator.
      * <p>
      * The subquery must return exactly one field. This is not checked
@@ -1251,7 +1001,7 @@ extends
     /**
      * The <code>NOT_LIKE</code> operator.
      *
-     * @param pattern is wrapped as {@link DSL#val(Object)}.
+     * @param pattern is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1265,13 +1015,6 @@ extends
     LikeEscapeStep notLike(Field<String> pattern);
 
     /**
-     * The <code>NOT_LIKE</code> operator.
-     */
-    @NotNull
-    @Support
-    LikeEscapeStep notLike(org.jooq.QuantifiedSelect<? extends Record1<String>> pattern);
-
-    /**
      * The <code>NOT_LIKE_IGNORE_CASE</code> operator.
      * <p>
      * Create a condition to case-insensitively pattern-check this field against
@@ -1281,7 +1024,7 @@ extends
      * {@link SQLDialect#POSTGRES}, or to
      * <code>lower(this) not like lower(value)</code> in all other dialects.
      *
-     * @param pattern is wrapped as {@link DSL#val(Object)}.
+     * @param pattern is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1304,48 +1047,34 @@ extends
     /**
      * The <code>NOT_SIMILAR_TO</code> operator.
      *
-     * @param pattern is wrapped as {@link DSL#val(Object)}.
+     * @param pattern is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CUBRID, DUCKDB, FIREBIRD, IGNITE, POSTGRES, YUGABYTEDB })
+    @Support
     LikeEscapeStep notSimilarTo(@Stringly.Param String pattern);
 
     /**
      * The <code>NOT_SIMILAR_TO</code> operator.
      */
     @NotNull
-    @Support({ CUBRID, DUCKDB, FIREBIRD, IGNITE, POSTGRES, YUGABYTEDB })
+    @Support
     LikeEscapeStep notSimilarTo(Field<String> pattern);
-
-    /**
-     * The <code>NOT_SIMILAR_TO</code> operator.
-     */
-    @NotNull
-    @Support({ CUBRID, DUCKDB, FIREBIRD, IGNITE, POSTGRES, YUGABYTEDB })
-    LikeEscapeStep notSimilarTo(org.jooq.QuantifiedSelect<? extends Record1<String>> pattern);
 
     /**
      * The <code>SIMILAR_TO</code> operator.
      *
-     * @param pattern is wrapped as {@link DSL#val(Object)}.
+     * @param pattern is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CUBRID, DUCKDB, FIREBIRD, IGNITE, POSTGRES, YUGABYTEDB })
+    @Support
     LikeEscapeStep similarTo(@Stringly.Param String pattern);
 
     /**
      * The <code>SIMILAR_TO</code> operator.
      */
     @NotNull
-    @Support({ CUBRID, DUCKDB, FIREBIRD, IGNITE, POSTGRES, YUGABYTEDB })
+    @Support
     LikeEscapeStep similarTo(Field<String> pattern);
-
-    /**
-     * The <code>SIMILAR_TO</code> operator.
-     */
-    @NotNull
-    @Support({ CUBRID, DUCKDB, FIREBIRD, IGNITE, POSTGRES, YUGABYTEDB })
-    LikeEscapeStep similarTo(org.jooq.QuantifiedSelect<? extends Record1<String>> pattern);
 
     // -------------------------------------------------------------------------
     // XML predicates
@@ -1379,7 +1108,7 @@ extends
      * Create a condition to check if this field contains JSON data.
      */
     @NotNull
-    @Support({ DUCKDB, MARIADB, MYSQL })
+    @Support({ MYSQL })
     Condition isJson();
 
     /**
@@ -1388,7 +1117,7 @@ extends
      * Create a condition to check if this field does not contain JSON data.
      */
     @NotNull
-    @Support({ DUCKDB, MARIADB, MYSQL })
+    @Support({ MYSQL })
     Condition isNotJson();
 
     // -------------------------------------------------------------------------
@@ -1398,110 +1127,110 @@ extends
     /**
      * The <code>BIT_AND</code> operator.
      *
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> bitAnd(T arg2);
 
     /**
      * The <code>BIT_AND</code> operator.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> bitAnd(Field<T> arg2);
 
     /**
      * The <code>BIT_NAND</code> operator.
      *
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> bitNand(T arg2);
 
     /**
      * The <code>BIT_NAND</code> operator.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> bitNand(Field<T> arg2);
 
     /**
      * The <code>BIT_NOR</code> operator.
      *
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> bitNor(T arg2);
 
     /**
      * The <code>BIT_NOR</code> operator.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> bitNor(Field<T> arg2);
 
     /**
      * The <code>BIT_NOT</code> operator.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> bitNot();
 
     /**
      * The <code>BIT_OR</code> operator.
      *
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> bitOr(T arg2);
 
     /**
      * The <code>BIT_OR</code> operator.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> bitOr(Field<T> arg2);
 
     /**
      * The <code>BIT_XNOR</code> operator.
      *
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> bitXNor(T arg2);
 
     /**
      * The <code>BIT_XNOR</code> operator.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> bitXNor(Field<T> arg2);
 
     /**
      * The <code>BIT_XOR</code> operator.
      *
-     * @param arg2 is wrapped as {@link DSL#val(Object)}.
+     * @param arg2 is wrapped as {@link #val(Object)}.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> bitXor(T arg2);
 
     /**
      * The <code>BIT_XOR</code> operator.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> bitXor(Field<T> arg2);
 
     /**
      * The <code>MOD</code> operator.
      *
-     * @param divisor is wrapped as {@link DSL#val(Object)}.
+     * @param divisor is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1517,7 +1246,7 @@ extends
     /**
      * The <code>MODULO</code> operator, an alias for the <code>MOD</code> operator.
      *
-     * @param divisor is wrapped as {@link DSL#val(Object)}.
+     * @param divisor is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1533,7 +1262,7 @@ extends
     /**
      * The <code>REM</code> operator, an alias for the <code>MOD</code> operator.
      *
-     * @param divisor is wrapped as {@link DSL#val(Object)}.
+     * @param divisor is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1549,7 +1278,7 @@ extends
     /**
      * The <code>POWER</code> operator.
      *
-     * @param exponent is wrapped as {@link DSL#val(Object)}.
+     * @param exponent is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1565,7 +1294,7 @@ extends
     /**
      * The <code>POW</code> operator, an alias for the <code>POWER</code> operator.
      *
-     * @param exponent is wrapped as {@link DSL#val(Object)}.
+     * @param exponent is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1587,7 +1316,7 @@ extends
      * @param count The number of bits to shift.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> shl(Number count);
 
     /**
@@ -1599,7 +1328,7 @@ extends
      * @param count The number of bits to shift.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> shl(Field<? extends Number> count);
 
     /**
@@ -1611,7 +1340,7 @@ extends
      * @param count The number of bits to shift.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> shr(Number count);
 
     /**
@@ -1623,7 +1352,7 @@ extends
      * @param count The number of bits to shift.
      */
     @NotNull
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Field<T> shr(Field<? extends Number> count);
 
     // -------------------------------------------------------------------------
@@ -1633,7 +1362,7 @@ extends
     /**
      * The <code>CONTAINS</code> operator.
      * <p>
-     * Convenience method for {@link Field#like(String, char)} including proper
+     * Convenience method for {@link #like(String, char)} including proper
      * adding of wildcards and escaping.
      * <p>
      * SQL: <code>this like ('%' || escape(value, '\') || '%') escape '\'</code>
@@ -1642,18 +1371,18 @@ extends
      * <code>val(1133).contains(13)</code>
      * <p>
      * If you're using {@link SQLDialect#POSTGRES}, then you can use this method
-     * also to express the "ARRAY contains" operator. For example: <pre><code>
+     * also to express the "ARRAY contains" operator. For example: <code><pre>
      * // Use this expression
      * val(new Integer[] { 1, 2, 3 }).contains(new Integer[] { 1, 2 })
      *
      * // ... to render this SQL
      * ARRAY[1, 2, 3] @&gt; ARRAY[1, 2]
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note, this does not correspond to the Oracle Text <code>CONTAINS()</code>
      * function. Refer to {@link OracleDSL#contains(Field, String)} instead.
      *
-     * @param content is wrapped as {@link DSL#val(Object)}.
+     * @param content is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1662,7 +1391,7 @@ extends
     /**
      * The <code>CONTAINS</code> operator.
      * <p>
-     * Convenience method for {@link Field#like(String, char)} including proper
+     * Convenience method for {@link #like(String, char)} including proper
      * adding of wildcards and escaping.
      * <p>
      * SQL: <code>this like ('%' || escape(value, '\') || '%') escape '\'</code>
@@ -1671,13 +1400,13 @@ extends
      * <code>val(1133).contains(13)</code>
      * <p>
      * If you're using {@link SQLDialect#POSTGRES}, then you can use this method
-     * also to express the "ARRAY contains" operator. For example: <pre><code>
+     * also to express the "ARRAY contains" operator. For example: <code><pre>
      * // Use this expression
      * val(new Integer[] { 1, 2, 3 }).contains(new Integer[] { 1, 2 })
      *
      * // ... to render this SQL
      * ARRAY[1, 2, 3] @&gt; ARRAY[1, 2]
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note, this does not correspond to the Oracle Text <code>CONTAINS()</code>
      * function. Refer to {@link OracleDSL#contains(Field, String)} instead.
@@ -1689,16 +1418,16 @@ extends
     /**
      * The <code>CONTAINS_IGNORE_CASE</code> operator.
      * <p>
-     * Convenience method for {@link Field#likeIgnoreCase(String, char)} including
+     * Convenience method for {@link #likeIgnoreCase(String, char)} including
      * proper adding of wildcards and escaping.
      * <p>
      * This translates to
      * <code>this ilike ('%' || escape(value, '\') || '%') escape '\'</code> in
      * {@link SQLDialect#POSTGRES}, or to
-     * <code>lower(this) like lower(('%' || escape(value, '\') || '%') escape '\')</code>
+     * <code>lower(this) not like lower(('%' || escape(value, '\') || '%') escape '\')</code>
      * in all other dialects.
      *
-     * @param content is wrapped as {@link DSL#val(Object)}.
+     * @param content is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1707,13 +1436,13 @@ extends
     /**
      * The <code>CONTAINS_IGNORE_CASE</code> operator.
      * <p>
-     * Convenience method for {@link Field#likeIgnoreCase(String, char)} including
+     * Convenience method for {@link #likeIgnoreCase(String, char)} including
      * proper adding of wildcards and escaping.
      * <p>
      * This translates to
      * <code>this ilike ('%' || escape(value, '\') || '%') escape '\'</code> in
      * {@link SQLDialect#POSTGRES}, or to
-     * <code>lower(this) like lower(('%' || escape(value, '\') || '%') escape '\')</code>
+     * <code>lower(this) not like lower(('%' || escape(value, '\') || '%') escape '\')</code>
      * in all other dialects.
      */
     @NotNull
@@ -1723,7 +1452,7 @@ extends
     /**
      * The <code>ENDS_WITH</code> operator.
      * <p>
-     * Convenience method for {@link Field#like(String, char)} including proper
+     * Convenience method for {@link #like(String, char)} including proper
      * adding of wildcards and escaping.
      * <p>
      * SQL: <code>this like ('%' || escape(value, '\')) escape '\'</code>
@@ -1731,7 +1460,7 @@ extends
      * Note: This also works with numbers, for instance
      * <code>val(1133).endsWith(33)</code>
      *
-     * @param suffix is wrapped as {@link DSL#val(Object)}.
+     * @param suffix is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1740,7 +1469,7 @@ extends
     /**
      * The <code>ENDS_WITH</code> operator.
      * <p>
-     * Convenience method for {@link Field#like(String, char)} including proper
+     * Convenience method for {@link #like(String, char)} including proper
      * adding of wildcards and escaping.
      * <p>
      * SQL: <code>this like ('%' || escape(value, '\')) escape '\'</code>
@@ -1755,7 +1484,7 @@ extends
     /**
      * The <code>ENDS_WITH_IGNORE_CASE</code> operator.
      * <p>
-     * Convenience method for {@link Field#like(String, char)} including proper
+     * Convenience method for {@link #like(String, char)} including proper
      * adding of wildcards and escaping.
      * <p>
      * SQL: <code>lower(this) like ('%' || lower(escape(value, '\'))) escape '\'</code>
@@ -1763,7 +1492,7 @@ extends
      * Note: This also works with numbers, for instance
      * <code>val(1133).endsWithIgnoreCase(33)</code>
      *
-     * @param suffix is wrapped as {@link DSL#val(Object)}.
+     * @param suffix is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1772,7 +1501,7 @@ extends
     /**
      * The <code>ENDS_WITH_IGNORE_CASE</code> operator.
      * <p>
-     * Convenience method for {@link Field#like(String, char)} including proper
+     * Convenience method for {@link #like(String, char)} including proper
      * adding of wildcards and escaping.
      * <p>
      * SQL: <code>lower(this) like ('%' || lower(escape(value, '\'))) escape '\'</code>
@@ -1787,7 +1516,7 @@ extends
     /**
      * The <code>STARTS_WITH</code> operator.
      * <p>
-     * Convenience method for {@link Field#like(String, char)} including proper
+     * Convenience method for {@link #like(String, char)} including proper
      * adding of wildcards and escaping.
      * <p>
      * SQL: <code>this like (escape(value, '\') || '%') escape '\'</code>
@@ -1795,7 +1524,7 @@ extends
      * Note: This also works with numbers, for instance
      * <code>val(1133).startsWith(11)</code>
      *
-     * @param prefix is wrapped as {@link DSL#val(Object)}.
+     * @param prefix is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1804,7 +1533,7 @@ extends
     /**
      * The <code>STARTS_WITH</code> operator.
      * <p>
-     * Convenience method for {@link Field#like(String, char)} including proper
+     * Convenience method for {@link #like(String, char)} including proper
      * adding of wildcards and escaping.
      * <p>
      * SQL: <code>this like (escape(value, '\') || '%') escape '\'</code>
@@ -1819,7 +1548,7 @@ extends
     /**
      * The <code>STARTS_WITH_IGNORE_CASE</code> operator.
      * <p>
-     * Convenience method for {@link Field#like(String, char)} including proper
+     * Convenience method for {@link #like(String, char)} including proper
      * adding of wildcards and escaping.
      * <p>
      * SQL: <code>lower(this) like (lower(escape(value, '\')) || '%') escape '\'</code>
@@ -1827,7 +1556,7 @@ extends
      * Note: This also works with numbers, for instance
      * <code>val(1133).startsWithIgnoreCase(11)</code>
      *
-     * @param prefix is wrapped as {@link DSL#val(Object)}.
+     * @param prefix is wrapped as {@link #val(Object)}.
      */
     @NotNull
     @Support
@@ -1836,7 +1565,7 @@ extends
     /**
      * The <code>STARTS_WITH_IGNORE_CASE</code> operator.
      * <p>
-     * Convenience method for {@link Field#like(String, char)} including proper
+     * Convenience method for {@link #like(String, char)} including proper
      * adding of wildcards and escaping.
      * <p>
      * SQL: <code>lower(this) like (lower(escape(value, '\')) || '%') escape '\'</code>
@@ -1891,7 +1620,7 @@ extends
     /**
      * Negate this field to get its negative value.
      * <p>
-     * This renders the same on all dialects: <pre><code>-[this]</code></pre>
+     * This renders the same on all dialects: <code><pre>-[this]</pre></code>
      */
     @NotNull
     @Support
@@ -2184,13 +1913,13 @@ extends
      * Create a condition to regex-pattern-check this field against a pattern.
      * <p>
      * The SQL:2008 standard specifies a <code>&lt;regex like predicate&gt;</code>
-     * of the following form: <pre><code>
+     * of the following form: <code><pre>
      * &lt;regex like predicate&gt; ::=
      *   &lt;row value predicand&gt; &lt;regex like predicate part 2&gt;
      *
      * &lt;regex like predicate part 2&gt; ::=
      *  [ NOT ] LIKE_REGEX &lt;XQuery pattern&gt; [ FLAG &lt;XQuery option flag&gt; ]
-     * </code></pre>
+     * </pre></code>
      * <p>
      * This particular <code>LIKE_REGEX</code> operator comes in several
      * flavours for various databases. jOOQ supports regular expressions as
@@ -2296,7 +2025,7 @@ extends
      * @see #likeRegex(String)
      */
     @NotNull
-    @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Condition likeRegex(String pattern);
 
     /**
@@ -2307,7 +2036,7 @@ extends
      * @see #likeRegex(String)
      */
     @NotNull
-    @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Condition likeRegex(Field<String> pattern);
 
     /**
@@ -2318,7 +2047,7 @@ extends
      * @see #likeRegex(String)
      */
     @NotNull
-    @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Condition notLikeRegex(String pattern);
 
     /**
@@ -2329,7 +2058,7 @@ extends
      * @see #likeRegex(Field)
      */
     @NotNull
-    @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Condition notLikeRegex(Field<String> pattern);
 
     // ------------------------------------------------------------------------
@@ -2392,7 +2121,7 @@ extends
      * @see LikeEscapeStep#escape(char)
      */
     @NotNull
-    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     Condition like(Field<String> value, char escape);
 
     /**
@@ -2403,8 +2132,28 @@ extends
      * @see LikeEscapeStep#escape(char)
      */
     @NotNull
-    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     Condition like(String value, char escape);
+
+    /**
+     * Create a condition to pattern-check this field against a quantified select.
+     * <p>
+     * For example a query like {@code field.like(any("a%", "b%"))} translates into
+     * the SQL {@code (field like 'a%' or field like 'b%')}.
+     *
+     * @see DSL#all(Field)
+     * @see DSL#all(Field...)
+     * @see DSL#all(Select)
+     * @see DSL#all(Object...)
+     * @see DSL#any(Field)
+     * @see DSL#any(Field...)
+     * @see DSL#any(Select)
+     * @see DSL#any(Object...)
+     * @see LikeEscapeStep#escape(char)
+     */
+    @NotNull
+    @Support
+    LikeEscapeStep like(QuantifiedSelect<Record1<String>> query);
 
     /**
      * Create a condition to case-insensitively pattern-check this field against
@@ -2417,7 +2166,7 @@ extends
      * @see LikeEscapeStep#escape(char)
      */
     @NotNull
-    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     Condition likeIgnoreCase(Field<String> field, char escape);
 
     /**
@@ -2431,7 +2180,7 @@ extends
      * @see LikeEscapeStep#escape(char)
      */
     @NotNull
-    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     Condition likeIgnoreCase(String value, char escape);
 
     /**
@@ -2442,7 +2191,7 @@ extends
      * @see LikeEscapeStep#escape(char)
      */
     @NotNull
-    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     Condition notLike(Field<String> field, char escape);
 
     /**
@@ -2453,8 +2202,28 @@ extends
      * @see LikeEscapeStep#escape(char)
      */
     @NotNull
-    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     Condition notLike(String value, char escape);
+
+    /**
+     * Create a condition to pattern-check this field against a quantified select.
+     * <p>
+     * For example a query like {@code field.notLike(any("a%", "b%"))} translates into
+     * the SQL {@code (field not like 'a%' or field not like 'b%')}.
+     *
+     * @see DSL#all(Field)
+     * @see DSL#all(Field...)
+     * @see DSL#all(Select)
+     * @see DSL#all(Object...)
+     * @see DSL#any(Field)
+     * @see DSL#any(Field...)
+     * @see DSL#any(Select)
+     * @see DSL#any(Object...)
+     * @see LikeEscapeStep#escape(char)
+     */
+    @NotNull
+    @Support
+    LikeEscapeStep notLike(QuantifiedSelect<Record1<String>> query);
 
     /**
      * Create a condition to case-insensitively pattern-check this field against
@@ -2467,7 +2236,7 @@ extends
      * @see LikeEscapeStep#escape(char)
      */
     @NotNull
-    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     Condition notLikeIgnoreCase(Field<String> field, char escape);
 
     /**
@@ -2481,7 +2250,7 @@ extends
      * @see LikeEscapeStep#escape(char)
      */
     @NotNull
-    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     Condition notLikeIgnoreCase(String value, char escape);
 
     /**
@@ -2495,21 +2264,21 @@ extends
      * Inverse of {@link #contains(Field)}.
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Condition notContains(Field<T> value);
 
     /**
      * Inverse of {@link #containsIgnoreCase(Object)}
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Condition notContainsIgnoreCase(T value);
 
     /**
      * Inverse of {@link #containsIgnoreCase(Field)}
      */
     @NotNull
-    @Support
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     Condition notContainsIgnoreCase(Field<T> value);
 
     // ------------------------------------------------------------------------
@@ -2519,7 +2288,7 @@ extends
     /**
      * Create a condition to check this field against several values.
      * <p>
-     * SQL: <code>this in (values…)</code>
+     * SQL: <code>this in (values...)</code>
      * <p>
      * Note that generating dynamic SQL with arbitrary-length <code>IN</code>
      * predicates can cause cursor cache contention in some databases that use
@@ -2542,7 +2311,7 @@ extends
      * Create a condition to check this field against several values from a
      * previous query.
      * <p>
-     * SQL: <code>this in (values…)</code>
+     * SQL: <code>this in (values...)</code>
      * <p>
      * Note that generating dynamic SQL with arbitrary-length <code>IN</code>
      * predicates can cause cursor cache contention in some databases that use
@@ -2564,7 +2333,7 @@ extends
     /**
      * Create a condition to check this field against several values.
      * <p>
-     * SQL: <code>this in (values…)</code>
+     * SQL: <code>this in (values...)</code>
      * <p>
      * Note that generating dynamic SQL with arbitrary-length <code>IN</code>
      * predicates can cause cursor cache contention in some databases that use
@@ -2586,7 +2355,7 @@ extends
     /**
      * Create a condition to check this field against several values.
      * <p>
-     * SQL: <code>this in (values…)</code>
+     * SQL: <code>this in (values...)</code>
      */
     @NotNull
     @Support
@@ -2599,7 +2368,7 @@ extends
      * condition will be <code>NULL</code> (or <code>false</code>, depending on
      * the dialect) as well. This is standard SQL behaviour.
      * <p>
-     * SQL: <code>this not in (values…)</code>
+     * SQL: <code>this not in (values...)</code>
      * <p>
      * Note that generating dynamic SQL with arbitrary-length
      * <code>NOT IN</code> predicates can cause cursor cache contention in some
@@ -2626,7 +2395,7 @@ extends
      * condition will be <code>NULL</code> (or <code>false</code>, depending on
      * the dialect) as well. This is standard SQL behaviour.
      * <p>
-     * SQL: <code>this in (values…)</code>
+     * SQL: <code>this in (values...)</code>
      * <p>
      * Note that generating dynamic SQL with arbitrary-length
      * <code>NOT IN</code> predicates can cause cursor cache contention in some
@@ -2652,7 +2421,7 @@ extends
      * condition will be <code>NULL</code> (or <code>false</code>, depending on
      * the dialect) as well. This is standard SQL behaviour.
      * <p>
-     * SQL: <code>this not in (values…)</code>
+     * SQL: <code>this not in (values...)</code>
      * <p>
      * Note that generating dynamic SQL with arbitrary-length
      * <code>NOT IN</code> predicates can cause cursor cache contention in some
@@ -2678,7 +2447,7 @@ extends
      * condition will be <code>NULL</code> (or <code>false</code>, depending on
      * the dialect) as well. This is standard SQL behaviour.
      * <p>
-     * SQL: <code>this not in (values…)</code>
+     * SQL: <code>this not in (values...)</code>
      */
     @NotNull
     @Support
@@ -2916,6 +2685,174 @@ extends
     // ------------------------------------------------------------------------
     // Comparison predicates
     // ------------------------------------------------------------------------
+
+    /**
+     * <code>this = [quantifier] (Select&lt;?&gt; ...)</code>.
+     *
+     * @see DSL#all(Field)
+     * @see DSL#all(Select)
+     * @see DSL#all(Object...)
+     * @see DSL#any(Field)
+     * @see DSL#any(Select)
+     * @see DSL#any(Object...)
+     */
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    Condition equal(QuantifiedSelect<? extends Record1<T>> query);
+
+    /**
+     * <code>this = [quantifier] (Select&lt;?&gt; ...)</code>.
+     *
+     * @see DSL#all(Field)
+     * @see DSL#all(Select)
+     * @see DSL#all(Object...)
+     * @see DSL#any(Field)
+     * @see DSL#any(Select)
+     * @see DSL#any(Object...)
+     */
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    Condition eq(QuantifiedSelect<? extends Record1<T>> query);
+
+    /**
+     * <code>this != [quantifier] (Select&lt;?&gt; ...)</code>.
+     *
+     * @see DSL#all(Field)
+     * @see DSL#all(Select)
+     * @see DSL#all(Object...)
+     * @see DSL#any(Field)
+     * @see DSL#any(Select)
+     * @see DSL#any(Object...)
+     */
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    Condition notEqual(QuantifiedSelect<? extends Record1<T>> query);
+
+    /**
+     * <code>this != [quantifier] (Select&lt;?&gt; ...)</code>.
+     *
+     * @see DSL#all(Field)
+     * @see DSL#all(Select)
+     * @see DSL#all(Object...)
+     * @see DSL#any(Field)
+     * @see DSL#any(Select)
+     * @see DSL#any(Object...)
+     */
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    Condition ne(QuantifiedSelect<? extends Record1<T>> query);
+
+    /**
+     * <code>this &lt; [quantifier] (Select&lt;?&gt; ...)</code>.
+     *
+     * @see DSL#all(Field)
+     * @see DSL#all(Select)
+     * @see DSL#all(Object...)
+     * @see DSL#any(Field)
+     * @see DSL#any(Select)
+     * @see DSL#any(Object...)
+     */
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    Condition lessThan(QuantifiedSelect<? extends Record1<T>> query);
+
+    /**
+     * <code>this &lt; [quantifier] (Select&lt;?&gt; ...)</code>.
+     *
+     * @see DSL#all(Field)
+     * @see DSL#all(Select)
+     * @see DSL#all(Object...)
+     * @see DSL#any(Field)
+     * @see DSL#any(Select)
+     * @see DSL#any(Object...)
+     */
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    Condition lt(QuantifiedSelect<? extends Record1<T>> query);
+
+    /**
+     * <code>this &lt;= [quantifier] (Select&lt;?&gt; ...)</code>.
+     *
+     * @see DSL#all(Field)
+     * @see DSL#all(Select)
+     * @see DSL#all(Object...)
+     * @see DSL#any(Field)
+     * @see DSL#any(Select)
+     * @see DSL#any(Object...)
+     */
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    Condition lessOrEqual(QuantifiedSelect<? extends Record1<T>> query);
+
+    /**
+     * <code>this &lt;= [quantifier] (Select&lt;?&gt; ...)</code>.
+     *
+     * @see DSL#all(Field)
+     * @see DSL#all(Select)
+     * @see DSL#all(Object...)
+     * @see DSL#any(Field)
+     * @see DSL#any(Select)
+     * @see DSL#any(Object...)
+     */
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    Condition le(QuantifiedSelect<? extends Record1<T>> query);
+
+    /**
+     * <code>this &gt; [quantifier] (Select&lt;?&gt; ...)</code>.
+     *
+     * @see DSL#all(Field)
+     * @see DSL#all(Select)
+     * @see DSL#all(Object...)
+     * @see DSL#any(Field)
+     * @see DSL#any(Select)
+     * @see DSL#any(Object...)
+     */
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    Condition greaterThan(QuantifiedSelect<? extends Record1<T>> query);
+
+    /**
+     * <code>this &gt; [quantifier] (Select&lt;?&gt; ...)</code>.
+     *
+     * @see DSL#all(Field)
+     * @see DSL#all(Select)
+     * @see DSL#all(Object...)
+     * @see DSL#any(Field)
+     * @see DSL#any(Select)
+     * @see DSL#any(Object...)
+     */
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    Condition gt(QuantifiedSelect<? extends Record1<T>> query);
+
+    /**
+     * <code>this &gt;= [quantifier] (Select&lt;?&gt; ...)</code>.
+     *
+     * @see DSL#all(Field)
+     * @see DSL#all(Select)
+     * @see DSL#all(Object...)
+     * @see DSL#any(Field)
+     * @see DSL#any(Select)
+     * @see DSL#any(Object...)
+     */
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    Condition greaterOrEqual(QuantifiedSelect<? extends Record1<T>> query);
+
+    /**
+     * <code>this &gt;= [quantifier] (Select&lt;?&gt; ...)</code>.
+     *
+     * @see DSL#all(Field)
+     * @see DSL#all(Select)
+     * @see DSL#all(Object...)
+     * @see DSL#any(Field)
+     * @see DSL#any(Select)
+     * @see DSL#any(Object...)
+     */
+    @NotNull
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    Condition ge(QuantifiedSelect<? extends Record1<T>> query);
 
     /**
      * Create a condition to check this field against known string literals for
@@ -3304,7 +3241,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ CUBRID, FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowPartitionByStep<Integer> countOver();
 
     /**
@@ -3314,7 +3251,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ CUBRID, FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowPartitionByStep<T> maxOver();
 
     /**
@@ -3324,7 +3261,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ CUBRID, FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowPartitionByStep<T> minOver();
 
     /**
@@ -3334,7 +3271,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ CUBRID, FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowPartitionByStep<BigDecimal> sumOver();
 
     /**
@@ -3344,7 +3281,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ CUBRID, FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowPartitionByStep<BigDecimal> avgOver();
 
     /**
@@ -3354,7 +3291,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ CUBRID, FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowIgnoreNullsStep<T> firstValue();
 
     /**
@@ -3364,7 +3301,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ CUBRID, FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowIgnoreNullsStep<T> lastValue();
 
     /**
@@ -3374,7 +3311,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowIgnoreNullsStep<T> lead();
 
     /**
@@ -3384,7 +3321,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowIgnoreNullsStep<T> lead(int offset);
 
     /**
@@ -3394,7 +3331,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowIgnoreNullsStep<T> lead(int offset, T defaultValue);
 
     /**
@@ -3404,7 +3341,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowIgnoreNullsStep<T> lead(int offset, Field<T> defaultValue);
 
     /**
@@ -3414,7 +3351,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowIgnoreNullsStep<T> lag();
 
     /**
@@ -3424,7 +3361,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowIgnoreNullsStep<T> lag(int offset);
 
     /**
@@ -3434,7 +3371,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowIgnoreNullsStep<T> lag(int offset, T defaultValue);
 
     /**
@@ -3444,7 +3381,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ FIREBIRD, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, POSTGRES, YUGABYTEDB })
     WindowIgnoreNullsStep<T> lag(int offset, Field<T> defaultValue);
 
     /**
@@ -3454,7 +3391,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ CUBRID, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, POSTGRES, YUGABYTEDB })
     WindowPartitionByStep<BigDecimal> stddevPopOver();
 
     /**
@@ -3464,7 +3401,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ CUBRID, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, POSTGRES, YUGABYTEDB })
     WindowPartitionByStep<BigDecimal> stddevSampOver();
 
     /**
@@ -3474,7 +3411,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ CUBRID, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, POSTGRES, YUGABYTEDB })
     WindowPartitionByStep<BigDecimal> varPopOver();
 
     /**
@@ -3484,7 +3421,7 @@ extends
      */
     @Deprecated(forRemoval = true, since = "3.11")
     @NotNull
-    @Support({ CUBRID, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, POSTGRES, YUGABYTEDB })
     WindowPartitionByStep<BigDecimal> varSampOver();
 
     /**
@@ -4154,13 +4091,13 @@ extends
      * <p>
      * This method can be used in its method reference form conveniently on a
      * generated table, for instance, when mapping records in a stream:
-     * <pre><code>
+     * <code><pre>
      * DSL.using(configuration)
      *    .fetch("select * from t")
      *    .stream()
      *    .map(MY_TABLE.ID::get)
      *    .forEach(System.out::println);
-     * </code></pre>
+     * </pre></code>
      */
     @Nullable
     T get(Record record);
@@ -4170,13 +4107,13 @@ extends
      * <p>
      * This method can be used in its method reference form conveniently on a
      * generated table, for instance, when mapping records in a stream:
-     * <pre><code>
+     * <code><pre>
      * DSL.using(configuration)
      *    .fetch("select * from t")
      *    .stream()
      *    .map(MY_TABLE.ID::getValue)
      *    .forEach(System.out::println);
-     * </code></pre>
+     * </pre></code>
      */
     @Nullable
     T getValue(Record record);
@@ -4186,13 +4123,13 @@ extends
      * <p>
      * This method can be used in its method reference form conveniently on a
      * generated table, for instance, when mapping records in a stream:
-     * <pre><code>
+     * <code><pre>
      * DSL.using(configuration)
      *    .fetch("select * from t")
      *    .stream()
      *    .map(MY_TABLE.ID::original)
      *    .forEach(System.out::println);
-     * </code></pre>
+     * </pre></code>
      */
     @Nullable
     T original(Record record);
@@ -4202,45 +4139,27 @@ extends
      * <p>
      * This method can be used in its method reference form conveniently on a
      * generated table, for instance, when mapping records in a stream:
-     * <pre><code>
+     * <code><pre>
      * DSL.using(configuration)
      *    .fetch("select * from t")
      *    .stream()
      *    .map(MY_TABLE.ID::changed)
      *    .forEach(System.out::println);
-     * </code></pre>
-     *
-     * @deprecated - [#12494] - 3.20.0 - Use {@link #touched(Record)} instead.
+     * </pre></code>
      */
-    @Deprecated(forRemoval = true)
     boolean changed(Record record);
-
-    /**
-     * The inverse operation of {@link Record#touched(Field)}.
-     * <p>
-     * This method can be used in its method reference form conveniently on a
-     * generated table, for instance, when mapping records in a stream:
-     * <pre><code>
-     * DSL.using(configuration)
-     *    .fetch("select * from t")
-     *    .stream()
-     *    .map(MY_TABLE.ID::touched)
-     *    .forEach(System.out::println);
-     * </code></pre>
-     */
-    boolean touched(Record record);
 
     /**
      * The inverse operation of {@link Record#reset(Field)}.
      * <p>
      * This method can be used in its method reference form conveniently on a
      * generated table, for instance, when mapping records in a stream:
-     * <pre><code>
+     * <code><pre>
      * DSL.using(configuration)
      *    .fetch("select * from t")
      *    .stream()
      *    .forEach(MY_TABLE.ID::reset);
-     * </code></pre>
+     * </pre></code>
      */
     void reset(Record record);
 
@@ -4249,13 +4168,13 @@ extends
      * <p>
      * This method can be used in its method reference form conveniently on a
      * generated table, for instance, when mapping records in a stream:
-     * <pre><code>
+     * <code><pre>
      * DSL.using(configuration)
      *    .fetch("select * from t")
      *    .stream()
      *    .map(MY_TABLE.ID::from)
      *    .forEach(System.out::println);
-     * </code></pre>
+     * </pre></code>
      */
     @Nullable
     Record1<T> from(Record record);

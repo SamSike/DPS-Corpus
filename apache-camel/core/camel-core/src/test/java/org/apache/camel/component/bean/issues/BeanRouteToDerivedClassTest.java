@@ -23,11 +23,10 @@ import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class BeanRouteToDerivedClassTest extends ContextTestSupport {
 
-    private final DerivedClass derived = new DerivedClass();
+    private DerivedClass derived = new DerivedClass();
 
     @Override
     public boolean isUseRouteBuilder() {
@@ -38,7 +37,7 @@ public class BeanRouteToDerivedClassTest extends ContextTestSupport {
     public void testDerivedClassCalled() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("bean:derived?method=process");
             }
         });
@@ -56,7 +55,7 @@ public class BeanRouteToDerivedClassTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("bean:derived?method=process");
 
                 from("direct:other").to("bean:derived");
@@ -69,11 +68,11 @@ public class BeanRouteToDerivedClassTest extends ContextTestSupport {
         assertEquals("Hello World", out.toString());
 
         out = template.requestBody("direct:other", new MyMessage("Hello World"));
-        assertNull(derived.getAndClearBody(), "Derived class should NOT have been invoked");
+        assertEquals(null, derived.getAndClearBody(), "Derived class should NOT have been invoked");
         assertEquals("Bye World", out.toString());
 
         out = template.requestBody("direct:other", new MyMessage("Hello Again"));
-        assertNull(derived.getAndClearBody(), "Derived class should NOT have been invoked");
+        assertEquals(null, derived.getAndClearBody(), "Derived class should NOT have been invoked");
         assertEquals("Bye World", out.toString());
     }
 
@@ -84,7 +83,7 @@ public class BeanRouteToDerivedClassTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // Explicit method name given so always call this
                 from("direct:start").to("bean:derived?method=process");
 
@@ -99,17 +98,17 @@ public class BeanRouteToDerivedClassTest extends ContextTestSupport {
         assertEquals("Hello World", out.toString());
 
         out = template.requestBody("direct:other", new MyMessage("Hello World"));
-        assertNull(derived.getAndClearBody(), "Derived class should NOT have been invoked");
+        assertEquals(null, derived.getAndClearBody(), "Derived class should NOT have been invoked");
         assertEquals("Bye World", out.toString());
 
         out = template.requestBody("direct:other", new MyMessage("Hello Again"));
-        assertNull(derived.getAndClearBody(), "Derived class should NOT have been invoked");
+        assertEquals(null, derived.getAndClearBody(), "Derived class should NOT have been invoked");
         assertEquals("Bye World", out.toString());
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("derived", derived);
         return jndi;
     }

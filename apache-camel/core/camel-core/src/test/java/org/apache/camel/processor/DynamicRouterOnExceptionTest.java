@@ -44,13 +44,13 @@ public class DynamicRouterOnExceptionTest extends ContextTestSupport {
         MockEndpoint route = getMockEndpoint("mock:route");
         route.whenExchangeReceived(1, new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.setException(new IllegalArgumentException("Forced"));
             }
         });
         route.whenExchangeReceived(2, new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("Bye World");
             }
         });
@@ -68,25 +68,25 @@ public class DynamicRouterOnExceptionTest extends ContextTestSupport {
         MockEndpoint route = getMockEndpoint("mock:route");
         route.whenExchangeReceived(1, new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.setException(new IllegalArgumentException("Forced"));
             }
         });
         route.whenExchangeReceived(2, new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("Bye World");
             }
         });
         route.whenExchangeReceived(3, new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.setException(new IllegalArgumentException("Forced"));
             }
         });
         route.whenExchangeReceived(4, new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("Bye World");
             }
         });
@@ -99,10 +99,10 @@ public class DynamicRouterOnExceptionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(IllegalArgumentException.class)
                         // setting delay to zero is just to make unit testing faster
                         .redeliveryDelay(0).maximumRedeliveries(5);

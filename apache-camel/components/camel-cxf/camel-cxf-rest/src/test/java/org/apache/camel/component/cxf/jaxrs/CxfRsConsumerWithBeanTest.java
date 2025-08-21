@@ -18,17 +18,15 @@ package org.apache.camel.component.cxf.jaxrs;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.cxf.common.CXFTestSupport;
-import org.apache.camel.component.cxf.jaxrs.testbean.CustomerServiceResource;
 import org.apache.camel.component.cxf.jaxrs.testbean.ServiceUtil;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.apache.hc.client5.http.classic.methods.HttpPut;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,16 +39,10 @@ public class CxfRsConsumerWithBeanTest extends CamelTestSupport {
     private static final String CXF_RS_ENDPOINT_URI_2
             = "cxfrs://http://localhost:" + CXT
               + "/rest2?resourceClasses=org.apache.camel.component.cxf.jaxrs.testbean.CustomerServiceResource";
-    private static final String CXF_RS_BEAN_ENDPOINT_URI = "cxfrs:bean:myEndpoint";
 
     @Override
     protected void bindToRegistry(Registry registry) throws Exception {
         registry.bind("service", new ServiceUtil());
-
-        CxfRsEndpoint cxfRsEndpoint = new CxfRsEndpoint();
-        cxfRsEndpoint.addResourceClass(CustomerServiceResource.class);
-        cxfRsEndpoint.setAddress("http://localhost:" + CXT + "/rest3");
-        registry.bind("myEndpoint", cxfRsEndpoint);
     }
 
     @Override
@@ -59,7 +51,6 @@ public class CxfRsConsumerWithBeanTest extends CamelTestSupport {
             public void configure() {
                 from(CXF_RS_ENDPOINT_URI).to("bean://service?method=invoke(${body[0]}, ${body[1]})");
                 from(CXF_RS_ENDPOINT_URI_2).bean(ServiceUtil.class, "invoke(${body[0]}, ${body[1]})");
-                from(CXF_RS_BEAN_ENDPOINT_URI).to("bean://service?method=invoke(${body[0]}, ${body[1]})");
             }
         };
     }
@@ -68,18 +59,21 @@ public class CxfRsConsumerWithBeanTest extends CamelTestSupport {
     public void testPutConsumer() throws Exception {
         sendPutRequest("http://localhost:" + CXT + "/rest/customerservice/c20");
         sendPutRequest("http://localhost:" + CXT + "/rest2/customerservice/c20");
-        sendPutRequest("http://localhost:" + CXT + "/rest3/customerservice/c20");
     }
 
     private void sendPutRequest(String uri) throws Exception {
         HttpPut put = new HttpPut(uri);
-        StringEntity entity = new StringEntity("string", ContentType.TEXT_PLAIN);
+        StringEntity entity = new StringEntity("string");
+        entity.setContentType("text/plain");
         put.setEntity(entity);
+        CloseableHttpClient httpclient = HttpClientBuilder.create().build();
 
-        try (CloseableHttpClient httpclient = HttpClientBuilder.create().build();
-             CloseableHttpResponse response = httpclient.execute(put)) {
-            assertEquals(200, response.getCode());
+        try {
+            HttpResponse response = httpclient.execute(put);
+            assertEquals(200, response.getStatusLine().getStatusCode());
             assertEquals("c20string", EntityUtils.toString(response.getEntity()));
+        } finally {
+            httpclient.close();
         }
     }
 }

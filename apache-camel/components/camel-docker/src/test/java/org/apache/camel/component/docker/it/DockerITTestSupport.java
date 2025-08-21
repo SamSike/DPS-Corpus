@@ -25,7 +25,6 @@ import org.apache.camel.component.docker.DockerComponent;
 import org.apache.camel.component.docker.DockerConfiguration;
 import org.apache.camel.support.PropertyBindingSupport;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.apache.camel.test.junit5.TestSupport;
 
 public class DockerITTestSupport extends CamelTestSupport {
 
@@ -36,7 +35,8 @@ public class DockerITTestSupport extends CamelTestSupport {
         CamelContext context = super.createCamelContext();
 
         // Read Docker component configuration properties
-        Properties properties = TestSupport.loadExternalProperties(getClass(), TEST_OPTIONS_PROPERTIES);
+        Properties properties = new Properties();
+        properties.load(getClass().getResourceAsStream(TEST_OPTIONS_PROPERTIES));
 
         Map<String, Object> options = new HashMap<>();
         properties.entrySet().forEach(e -> options.put(e.getKey().toString(), e.getValue()));

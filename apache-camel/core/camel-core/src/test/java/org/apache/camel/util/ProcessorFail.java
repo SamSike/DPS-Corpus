@@ -22,7 +22,7 @@ import org.apache.camel.Processor;
 public class ProcessorFail implements Processor {
 
     @Override
-    public void process(Exchange exchange) {
+    public void process(Exchange exchange) throws Exception {
         throw new LinkageError("Cannot do this");
     }
 }

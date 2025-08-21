@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NonManagedService;
 import org.apache.camel.StaticService;
 import org.apache.camel.spi.FactoryFinder;
@@ -116,7 +117,7 @@ public class DefaultPropertiesFunctionResolver extends ServiceSupport
 
     private Class<?> findFactory(String name, CamelContext context) {
         if (factoryFinder == null) {
-            factoryFinder = context.getCamelContextExtension().getFactoryFinder(RESOURCE_PATH);
+            factoryFinder = context.adapt(ExtendedCamelContext.class).getFactoryFinder(RESOURCE_PATH);
         }
         return factoryFinder.findClass(name).orElse(null);
     }

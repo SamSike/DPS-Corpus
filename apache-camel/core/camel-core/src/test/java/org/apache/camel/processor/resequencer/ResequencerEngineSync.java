@@ -16,9 +16,6 @@
  */
 package org.apache.camel.processor.resequencer;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 /**
  * Synchronization facade for {@link ResequencerEngine} for testing purposes only. This facade is used for both
  * exclusion purposes and for visibility of changes performed by different threads in unit tests. This facade is
@@ -27,109 +24,53 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class ResequencerEngineSync<E> {
 
-    private final Lock lock = new ReentrantLock();
-    private final ResequencerEngine<E> resequencer;
+    private ResequencerEngine<E> resequencer;
 
     public ResequencerEngineSync(ResequencerEngine<E> resequencer) {
         this.resequencer = resequencer;
     }
 
-    public void stop() {
-        lock.lock();
-        try {
-            resequencer.stop();
-        } finally {
-            lock.unlock();
-        }
+    public synchronized void stop() {
+        resequencer.stop();
     }
 
-    public int size() {
-        lock.lock();
-        try {
-            return resequencer.size();
-        } finally {
-            lock.unlock();
-        }
+    public synchronized int size() {
+        return resequencer.size();
     }
 
-    public long getTimeout() {
-        lock.lock();
-        try {
-            return resequencer.getTimeout();
-        } finally {
-            lock.unlock();
-        }
+    public synchronized long getTimeout() {
+        return resequencer.getTimeout();
     }
 
-    public void setTimeout(long timeout) {
-        lock.lock();
-        try {
-            resequencer.setTimeout(timeout);
-        } finally {
-            lock.unlock();
-        }
+    public synchronized void setTimeout(long timeout) {
+        resequencer.setTimeout(timeout);
     }
 
-    public SequenceSender<E> getSequenceSender() {
-        lock.lock();
-        try {
-            return resequencer.getSequenceSender();
-        } finally {
-            lock.unlock();
-        }
+    public synchronized SequenceSender<E> getSequenceSender() {
+        return resequencer.getSequenceSender();
     }
 
-    public void setSequenceSender(SequenceSender<E> sequenceSender) {
-        lock.lock();
-        try {
-            resequencer.setSequenceSender(sequenceSender);
-        } finally {
-            lock.unlock();
-        }
+    public synchronized void setSequenceSender(SequenceSender<E> sequenceSender) {
+        resequencer.setSequenceSender(sequenceSender);
     }
 
-    E getLastDelivered() {
-        lock.lock();
-        try {
-            return resequencer.getLastDelivered();
-        } finally {
-            lock.unlock();
-        }
+    synchronized E getLastDelivered() {
+        return resequencer.getLastDelivered();
     }
 
-    void setLastDelivered(E o) {
-        lock.lock();
-        try {
-            resequencer.setLastDelivered(o);
-        } finally {
-            lock.unlock();
-        }
+    synchronized void setLastDelivered(E o) {
+        resequencer.setLastDelivered(o);
     }
 
-    public void insert(E o) {
-        lock.lock();
-        try {
-            resequencer.insert(o);
-        } finally {
-            lock.unlock();
-        }
+    public synchronized void insert(E o) {
+        resequencer.insert(o);
     }
 
-    public void deliver() throws Exception {
-        lock.lock();
-        try {
-            resequencer.deliver();
-        } finally {
-            lock.unlock();
-        }
+    public synchronized void deliver() throws Exception {
+        resequencer.deliver();
     }
 
-    public boolean deliverNext() throws Exception {
-        lock.lock();
-        try {
-            return resequencer.deliverNext();
-        } finally {
-            lock.unlock();
-        }
+    public synchronized boolean deliverNext() throws Exception {
+        return resequencer.deliverNext();
     }
 }

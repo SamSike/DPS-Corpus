@@ -22,7 +22,7 @@ import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class FromRestDuplicateTest extends ContextTestSupport {
 
@@ -32,35 +32,37 @@ public class FromRestDuplicateTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("dummy-rest", new DummyRestConsumerFactory());
         return jndi;
     }
 
     @Test
-    public void testDuplicateGet() {
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
+    public void testDuplicateGet() throws Exception {
+        try {
             context.addRoutes(new RouteBuilder() {
                 @Override
-                public void configure() {
+                public void configure() throws Exception {
                     restConfiguration().host("localhost");
 
                     rest("/users").get("{id}").to("log:foo").post().to("log:foo").get("").to("log:foo").get("{id}")
                             .to("log:foo");
+
                 }
             });
-        }, "Should throw exception");
-
-        assertEquals("Duplicate verb detected in rest-dsl: get:{id}", e.getMessage());
+            fail("Should throw exception");
+        } catch (IllegalArgumentException e) {
+            assertEquals("Duplicate verb detected in rest-dsl: get:{id}", e.getMessage());
+        }
     }
 
     @Test
-    public void testDuplicatePost() {
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
+    public void testDuplicatePost() throws Exception {
+        try {
             context.addRoutes(new RouteBuilder() {
                 @Override
-                public void configure() {
+                public void configure() throws Exception {
                     restConfiguration().host("localhost");
 
                     rest("/users").get("{id}").to("log:foo").post().to("log:foo").get("").to("log:foo").put().to("log:foo")
@@ -68,9 +70,10 @@ public class FromRestDuplicateTest extends ContextTestSupport {
 
                 }
             });
-        }, "Should throw exception");
-
-        assertEquals("Duplicate verb detected in rest-dsl: post", e.getMessage());
+            fail("Should throw exception");
+        } catch (IllegalArgumentException e) {
+            assertEquals("Duplicate verb detected in rest-dsl: post", e.getMessage());
+        }
     }
 
 }

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,20 +37,19 @@
  */
 package org.jooq.impl;
 
-import static org.jooq.SQLDialect.DUCKDB;
 import static org.jooq.impl.Keywords.K_EXCEPT;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 import org.jooq.Context;
 import org.jooq.Field;
+import org.jooq.Function1;
 import org.jooq.Name;
 import org.jooq.QualifiedAsterisk;
 import org.jooq.QueryPart;
 // ...
-import org.jooq.SQLDialect;
 import org.jooq.Table;
 // ...
 import org.jooq.impl.QOM.UnmodifiableList;
@@ -60,10 +59,8 @@ import org.jooq.impl.QOM.UnmodifiableList;
  */
 final class QualifiedAsteriskImpl extends AbstractQueryPart implements QualifiedAsterisk {
 
-    private static final Set<SQLDialect> NO_SUPPORT_FULLY_QUALIFIED_ASTERISKS = SQLDialect.supportedBy(DUCKDB);
-
-    private final Table<?>               table;
-    final QueryPartList<Field<?>>        fields;
+    private final Table<?>        table;
+    final QueryPartList<Field<?>> fields;
 
     QualifiedAsteriskImpl(Table<?> table) {
         this(table, null);
@@ -88,22 +85,12 @@ final class QualifiedAsteriskImpl extends AbstractQueryPart implements Qualified
 
 
             default:
-                if (NO_SUPPORT_FULLY_QUALIFIED_ASTERISKS.contains(ctx.dialect()))
-                    ctx.qualify(false, c -> c.visit(table));
-                else
-                    ctx.visit(table);
-
-                ctx.sql('.').visit(AsteriskImpl.INSTANCE.get());
+                ctx.visit(table).sql('.').visit(AsteriskImpl.INSTANCE);
 
                 // [#7921] H2 has native support for EXCEPT. Emulations are implemented
                 //         in SelectQueryImpl
                 if (!fields.isEmpty())
-
-
-
-
-
-                        ctx.sql(' ').visit(AsteriskImpl.keyword(ctx)).sql(" (").visit(fields).sql(')');
+                    ctx.sql(' ').visit(K_EXCEPT).sql(" (").visit(fields).sql(')');
 
                 break;
         }
@@ -126,15 +113,10 @@ final class QualifiedAsteriskImpl extends AbstractQueryPart implements Qualified
 
     @Override
     public final QualifiedAsterisk except(Field<?>... f) {
-        return except(Arrays.asList(f));
-    }
-
-    @Override
-    public final QualifiedAsterisk except(Collection<? extends Field<?>> f) {
         QueryPartList<Field<?>> list = new QueryPartList<>();
 
         list.addAll(fields);
-        list.addAll(f);
+        list.addAll(Arrays.asList(f));
 
         return new QualifiedAsteriskImpl(table, list);
     }

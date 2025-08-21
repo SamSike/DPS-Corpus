@@ -18,11 +18,9 @@ package org.apache.camel.component.pubnub;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.pubnub.api.PNConfiguration;
 import com.pubnub.api.PubNub;
-import com.pubnub.api.UserId;
 import com.pubnub.api.enums.PNLogVerbosity;
-import com.pubnub.api.java.v2.PNConfiguration;
-import com.pubnub.internal.java.PubNubForJavaImpl;
 import org.apache.camel.BindToRegistry;
 import org.apache.camel.test.AvailablePortFinder;
 import org.apache.camel.test.junit5.CamelTestSupport;
@@ -39,13 +37,11 @@ public class PubNubTestBase extends CamelTestSupport {
 
     private WireMockServer wireMockServer = new WireMockServer(options().port(port));
 
-    @Override
     protected void setupResources() {
         wireMockServer.start();
         WireMock.configureFor("localhost", wireMockServer.port());
     }
 
-    @Override
     protected void cleanupResources() {
         wireMockServer.stop();
         pubnub.destroy();
@@ -56,20 +52,16 @@ public class PubNubTestBase extends CamelTestSupport {
     }
 
     private PubNub createPubNubInstance() {
-        PNConfiguration config;
-        try {
-            config = PNConfiguration.builder(new UserId("myUUID"), "mySubscribeKey")
-                    .publishKey("myPublishKey")
-                    .secure(false)
-                    .origin("localhost" + ":" + port)
-                    .logVerbosity(PNLogVerbosity.NONE)
-                    .heartbeatNotificationOptions(NONE)
-                    .build();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        PNConfiguration pnConfiguration = new PNConfiguration();
 
-        class MockedTimePubNub extends PubNubForJavaImpl {
+        pnConfiguration.setOrigin("localhost" + ":" + port);
+        pnConfiguration.setSecure(false);
+        pnConfiguration.setSubscribeKey("mySubscribeKey");
+        pnConfiguration.setPublishKey("myPublishKey");
+        pnConfiguration.setUuid("myUUID");
+        pnConfiguration.setLogVerbosity(PNLogVerbosity.NONE);
+        pnConfiguration.setHeartbeatNotificationOptions(NONE);
+        class MockedTimePubNub extends PubNub {
 
             MockedTimePubNub(PNConfiguration initialConfig) {
                 super(initialConfig);
@@ -85,8 +77,18 @@ public class PubNubTestBase extends CamelTestSupport {
                 return "suchJava";
             }
 
+            @Override
+            public String getInstanceId() {
+                return "PubNubInstanceId";
+            }
+
+            @Override
+            public String getRequestId() {
+                return "PubNubRequestId";
+            }
+
         }
 
-        return new MockedTimePubNub(config);
+        return new MockedTimePubNub(pnConfiguration);
     }
 }

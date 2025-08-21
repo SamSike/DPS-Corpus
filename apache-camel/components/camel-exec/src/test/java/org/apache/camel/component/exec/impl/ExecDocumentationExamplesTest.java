@@ -195,9 +195,7 @@ public class ExecDocumentationExamplesTest extends CamelTestSupport {
         StringBuilder builder = new StringBuilder();
         builder.append("<project name=\"TestExec\" default=\"test\" basedir=\".\">");
         builder.append("<target name=\"test\">");
-        builder.append("<echo message=\"")
-                .append(TEST_MSG)
-                .append("\"/>");
+        builder.append("<echo message=\"" + TEST_MSG + "\"/>");
         builder.append("</target>");
         builder.append("</project>");
         return builder.toString();

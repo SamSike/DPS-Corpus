@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,14 @@
 
 package org.springframework.web.servlet.mvc.method.annotation;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.MethodParameter;
-import org.springframework.core.ResolvableType;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -49,7 +46,7 @@ import org.springframework.web.multipart.support.RequestPartServletServerHttpReq
  * <ul>
  * <li>Annotated with @{@link RequestPart}
  * <li>Of type {@link MultipartFile} in conjunction with Spring's {@link MultipartResolver} abstraction
- * <li>Of type {@code jakarta.servlet.http.Part} in conjunction with Servlet multipart requests
+ * <li>Of type {@code jakarta.servlet.http.Part} in conjunction with Servlet 3.0 multipart requests
  * </ul>
  *
  * <p>When a parameter is annotated with {@code @RequestPart}, the content of the part is
@@ -95,7 +92,7 @@ public class RequestPartMethodArgumentResolver extends AbstractMessageConverterM
 
 	/**
 	 * Whether the given {@linkplain MethodParameter method parameter} is
-	 * supported as multipart. Supports the following method parameters:
+	 * supported as multi-part. Supports the following method parameters:
 	 * <ul>
 	 * <li>annotated with {@code @RequestPart}
 	 * <li>of type {@link MultipartFile} unless annotated with {@code @RequestParam}
@@ -117,7 +114,8 @@ public class RequestPartMethodArgumentResolver extends AbstractMessageConverterM
 	}
 
 	@Override
-	public @Nullable Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer,
+	@Nullable
+	public Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer,
 			NativeWebRequest request, @Nullable WebDataBinderFactory binderFactory) throws Exception {
 
 		HttpServletRequest servletRequest = request.getNativeRequest(HttpServletRequest.class);
@@ -139,8 +137,7 @@ public class RequestPartMethodArgumentResolver extends AbstractMessageConverterM
 				HttpInputMessage inputMessage = new RequestPartServletServerHttpRequest(servletRequest, name);
 				arg = readWithMessageConverters(inputMessage, parameter, parameter.getNestedGenericParameterType());
 				if (binderFactory != null) {
-					ResolvableType type = ResolvableType.forMethodParameter(parameter);
-					WebDataBinder binder = binderFactory.createBinder(request, arg, name, type);
+					WebDataBinder binder = binderFactory.createBinder(request, arg, name);
 					if (arg != null) {
 						validateIfApplicable(binder, parameter);
 						if (binder.getBindingResult().hasErrors() && isBindExceptionRequired(binder, parameter)) {
@@ -181,18 +178,6 @@ public class RequestPartMethodArgumentResolver extends AbstractMessageConverterM
 			}
 		}
 		return partName;
-	}
-
-	@Override
-	void closeStreamIfNecessary(InputStream body) {
-		// RequestPartServletServerHttpRequest exposes individual part streams,
-		// potentially from temporary files -> explicit close call after resolution
-		// in order to prevent file descriptor leaks.
-		try {
-			body.close();
-		}
-		catch (IOException ignored) {
-		}
 	}
 
 }

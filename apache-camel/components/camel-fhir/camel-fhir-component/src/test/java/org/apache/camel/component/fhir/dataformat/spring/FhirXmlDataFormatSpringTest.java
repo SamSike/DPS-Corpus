@@ -28,6 +28,7 @@ import org.hl7.fhir.r4.model.Address;
 import org.hl7.fhir.r4.model.Base;
 import org.hl7.fhir.r4.model.HumanName;
 import org.hl7.fhir.r4.model.Patient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -44,7 +45,9 @@ public class FhirXmlDataFormatSpringTest extends CamelSpringTestSupport {
     private MockEndpoint mockEndpoint;
 
     @Override
-    public void doPostSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
         mockEndpoint = resolveMandatoryEndpoint("mock:result", MockEndpoint.class);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,14 +26,14 @@ import org.springframework.transaction.ReactiveTransaction;
  *
  * <p>Typically used to assemble various calls to transaction-unaware data access
  * services into a higher-level service method with transaction demarcation. As an
- * alternative, consider the use of declarative transaction demarcation (for example, through
+ * alternative, consider the use of declarative transaction demarcation (e.g. through
  * Spring's {@link org.springframework.transaction.annotation.Transactional} annotation).
  *
  * @author Mark Paluch
  * @author Juergen Hoeller
  * @since 5.2
- * @param <T> the result type
  * @see TransactionalOperator
+ * @param <T> the result type
  */
 @FunctionalInterface
 public interface TransactionCallback<T> {
@@ -42,7 +42,7 @@ public interface TransactionCallback<T> {
 	 * Gets called by {@link TransactionalOperator} within a transactional context.
 	 * Does not need to care about transactions itself, although it can retrieve and
 	 * influence the status of the current transaction via the given status object,
-	 * for example, setting rollback-only.
+	 * e.g. setting rollback-only.
 	 * @param status associated transaction status
 	 * @return a result publisher
 	 * @see TransactionalOperator#transactional

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.messaging.converter;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
@@ -38,13 +39,13 @@ import static org.xmlunit.diff.DifferenceEvaluators.downgradeDifferencesToEqual;
 /**
  * @author Arjen Poutsma
  */
-class MarshallingMessageConverterTests {
+public class MarshallingMessageConverterTests {
 
 	private MarshallingMessageConverter converter;
 
 
 	@BeforeEach
-	void createMarshaller() throws Exception {
+	public void createMarshaller() throws Exception {
 		Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
 		marshaller.setClassesToBeBound(MyBean.class);
 		marshaller.afterPropertiesSet();
@@ -54,7 +55,7 @@ class MarshallingMessageConverterTests {
 
 
 	@Test
-	void fromMessage() {
+	public void fromMessage() throws Exception {
 		String payload = "<myBean><name>Foo</name></myBean>";
 		Message<?> message = MessageBuilder.withPayload(payload.getBytes(StandardCharsets.UTF_8)).build();
 		MyBean actual = (MyBean) this.converter.fromMessage(message, MyBean.class);
@@ -64,7 +65,7 @@ class MarshallingMessageConverterTests {
 	}
 
 	@Test
-	void fromMessageInvalidXml() {
+	public void fromMessageInvalidXml() throws Exception {
 		String payload = "<myBean><name>Foo</name><myBean>";
 		Message<?> message = MessageBuilder.withPayload(payload.getBytes(StandardCharsets.UTF_8)).build();
 		assertThatExceptionOfType(MessageConversionException.class).isThrownBy(() ->
@@ -72,7 +73,7 @@ class MarshallingMessageConverterTests {
 	}
 
 	@Test
-	void fromMessageValidXmlWithUnknownProperty() {
+	public void fromMessageValidXmlWithUnknownProperty() throws IOException {
 		String payload = "<myBean><age>42</age><myBean>";
 		Message<?> message = MessageBuilder.withPayload(payload.getBytes(StandardCharsets.UTF_8)).build();
 		assertThatExceptionOfType(MessageConversionException.class).isThrownBy(() ->
@@ -80,7 +81,7 @@ class MarshallingMessageConverterTests {
 	}
 
 	@Test
-	void toMessage() {
+	public void toMessage() throws Exception {
 		MyBean payload = new MyBean();
 		payload.setName("Foo");
 

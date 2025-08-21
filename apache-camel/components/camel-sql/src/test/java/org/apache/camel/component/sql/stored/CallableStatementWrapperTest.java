@@ -22,6 +22,7 @@ import java.util.Map;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.sql.stored.template.TemplateParser;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessException;
@@ -41,18 +42,19 @@ public class CallableStatementWrapperTest extends CamelTestSupport {
     private CallableStatementWrapperFactory factory;
 
     @Override
-
-    public void doPreSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
         db = new EmbeddedDatabaseBuilder()
                 .setName(getClass().getSimpleName())
                 .setType(EmbeddedDatabaseType.DERBY)
                 .addScript("sql/storedProcedureTest.sql").build();
         jdbcTemplate = new JdbcTemplate(db);
-
+        super.setUp();
     }
 
-    @BeforeEach
-    void setupTest() {
+    @Override
+    protected void startCamelContext() throws Exception {
+        super.startCamelContext();
         templateParser = new TemplateParser(context().getClassResolver());
         this.factory = new CallableStatementWrapperFactory(jdbcTemplate, templateParser, false);
     }
@@ -122,7 +124,9 @@ public class CallableStatementWrapperTest extends CamelTestSupport {
     }
 
     @Override
-    public void doPostTearDown() throws Exception {
+    @AfterEach
+    public void tearDown() throws Exception {
+        super.tearDown();
         if (db != null) {
             db.shutdown();
         }

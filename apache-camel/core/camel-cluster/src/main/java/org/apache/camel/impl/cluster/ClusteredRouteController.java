@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.NamedNode;
@@ -168,7 +169,7 @@ public class ClusteredRouteController extends DefaultRouteController {
 
     @Override
     public Collection<Route> getControlledRoutes() {
-        return this.routes.stream().map(getCamelContext()::getRoute).filter(Objects::nonNull).toList();
+        return this.routes.stream().map(getCamelContext()::getRoute).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     @Override

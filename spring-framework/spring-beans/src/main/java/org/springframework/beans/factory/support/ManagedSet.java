@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,12 @@
 
 package org.springframework.beans.factory.support;
 
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeanMetadataElement;
 import org.springframework.beans.Mergeable;
+import org.springframework.lang.Nullable;
 
 /**
  * Tag collection class used to hold managed Set values, which may
@@ -31,17 +29,17 @@ import org.springframework.beans.Mergeable;
  *
  * @author Juergen Hoeller
  * @author Rob Harrop
- * @author Stephane Nicoll
- * @author Sam Brannen
  * @since 21.01.2004
  * @param <E> the element type
  */
 @SuppressWarnings("serial")
 public class ManagedSet<E> extends LinkedHashSet<E> implements Mergeable, BeanMetadataElement {
 
-	private @Nullable Object source;
+	@Nullable
+	private Object source;
 
-	private @Nullable String elementTypeName;
+	@Nullable
+	private String elementTypeName;
 
 	private boolean mergeEnabled;
 
@@ -55,21 +53,6 @@ public class ManagedSet<E> extends LinkedHashSet<E> implements Mergeable, BeanMe
 
 
 	/**
-	 * Create a new instance containing an arbitrary number of elements.
-	 * @param elements the elements to be contained in the set
-	 * @param <E> the {@code Set}'s element type
-	 * @return a {@code ManagedSet} containing the specified elements
-	 * @since 5.3.16
-	 */
-	@SafeVarargs
-	@SuppressWarnings("varargs")
-	public static <E> ManagedSet<E> of(E... elements) {
-		ManagedSet<E> set = new ManagedSet<>();
-		Collections.addAll(set, elements);
-		return set;
-	}
-
-	/**
 	 * Set the configuration source {@code Object} for this metadata element.
 	 * <p>The exact type of the object will depend on the configuration mechanism used.
 	 */
@@ -78,7 +61,8 @@ public class ManagedSet<E> extends LinkedHashSet<E> implements Mergeable, BeanMe
 	}
 
 	@Override
-	public @Nullable Object getSource() {
+	@Nullable
+	public Object getSource() {
 		return this.source;
 	}
 
@@ -92,7 +76,8 @@ public class ManagedSet<E> extends LinkedHashSet<E> implements Mergeable, BeanMe
 	/**
 	 * Return the default element type name (class name) to be used for this set.
 	 */
-	public @Nullable String getElementTypeName() {
+	@Nullable
+	public String getElementTypeName() {
 		return this.elementTypeName;
 	}
 

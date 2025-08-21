@@ -27,6 +27,13 @@ import org.apache.camel.spi.Resource;
 public interface ModelineParser {
 
     /**
+     * Adds the {@link Trait} to the parser
+     *
+     * @param trait the trait
+     */
+    void addTrait(Trait trait);
+
+    /**
      * Is the given source code line a modeline?
      *
      * @param  line the source code line
@@ -35,7 +42,7 @@ public interface ModelineParser {
     boolean isModeline(String line);
 
     /**
-     * Parses the resource to detect modelines
+     * Parses the resource to detect modelines and process them via {@link Trait}s
      *
      * @param  resource  the source code resource
      * @return           list of {@link CamelContextCustomizer} customizers that processes the modelines
@@ -43,4 +50,13 @@ public interface ModelineParser {
      */
     List<CamelContextCustomizer> parse(Resource resource) throws Exception;
 
+    /**
+     * A modeline was detected while parsing
+     *
+     * @param  resource the resource
+     * @param  key      the mode line key
+     * @param  value    the mode line value
+     * @return          the trait that handles the detected modeline
+     */
+    Trait parseModeline(Resource resource, String key, String value);
 }

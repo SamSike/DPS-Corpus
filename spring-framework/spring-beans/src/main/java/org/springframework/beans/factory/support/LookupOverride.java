@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,8 @@ package org.springframework.beans.factory.support;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.ResolvableType;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -42,13 +41,15 @@ import org.springframework.util.ObjectUtils;
  */
 public class LookupOverride extends MethodOverride {
 
-	private final @Nullable String beanName;
+	@Nullable
+	private final String beanName;
 
-	private @Nullable Method method;
+	@Nullable
+	private Method method;
 
 
 	/**
-	 * Construct a new {@code LookupOverride}.
+	 * Construct a new LookupOverride.
 	 * @param methodName the name of the method to override
 	 * @param beanName the name of the bean in the current {@code BeanFactory} that the
 	 * overridden method should return (may be {@code null} for type-based bean retrieval)
@@ -59,7 +60,7 @@ public class LookupOverride extends MethodOverride {
 	}
 
 	/**
-	 * Construct a new {@code LookupOverride}.
+	 * Construct a new LookupOverride.
 	 * @param method the method declaration to override
 	 * @param beanName the name of the bean in the current {@code BeanFactory} that the
 	 * overridden method should return (may be {@code null} for type-based bean retrieval)
@@ -72,9 +73,10 @@ public class LookupOverride extends MethodOverride {
 
 
 	/**
-	 * Return the name of the bean that should be returned by this {@code LookupOverride}.
+	 * Return the name of the bean that should be returned by this method.
 	 */
-	public @Nullable String getBeanName() {
+	@Nullable
+	public String getBeanName() {
 		return this.beanName;
 	}
 
@@ -100,14 +102,17 @@ public class LookupOverride extends MethodOverride {
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (other instanceof LookupOverride that && super.equals(other) &&
-				ObjectUtils.nullSafeEquals(this.method, that.method) &&
+		if (!(other instanceof LookupOverride) || !super.equals(other)) {
+			return false;
+		}
+		LookupOverride that = (LookupOverride) other;
+		return (ObjectUtils.nullSafeEquals(this.method, that.method) &&
 				ObjectUtils.nullSafeEquals(this.beanName, that.beanName));
 	}
 
 	@Override
 	public int hashCode() {
-		return super.hashCode() * 29 + ObjectUtils.nullSafeHashCode(this.beanName);
+		return (29 * super.hashCode() + ObjectUtils.nullSafeHashCode(this.beanName));
 	}
 
 	@Override

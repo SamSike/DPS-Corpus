@@ -71,12 +71,10 @@ public class SmppProducer extends DefaultProducer {
                 configuration.getSessionStateListener().onStateChange(newState, oldState, source);
             }
 
-            if (newState.equals(SessionState.UNBOUND) || newState.equals(SessionState.CLOSED)) {
-                LOG.warn(newState.equals(SessionState.UNBOUND)
-                        ? "Session to {} was unbound - trying to reconnect" : "Lost connection to: {} - trying to reconnect...",
-                        getEndpoint().getConnectionString());
+            if (newState.equals(SessionState.CLOSED)) {
+                LOG.warn("Lost connection to: {} - trying to reconnect...", getEndpoint().getConnectionString());
                 closeSession();
-                reconnect();
+                reconnect(configuration.getInitialReconnectDelay());
             }
         };
     }
@@ -125,8 +123,7 @@ public class SmppProducer extends DefaultProducer {
                         this.configuration.getSystemType(),
                         TypeOfNumber.valueOf(configuration.getTypeOfNumber()),
                         NumberingPlanIndicator.valueOf(configuration.getNumberingPlanIndicator()),
-                        "",
-                        configuration.getInterfaceVersionByte()));
+                        ""));
 
         LOG.info("Connected to: {}", getEndpoint().getConnectionString());
 
@@ -135,7 +132,7 @@ public class SmppProducer extends DefaultProducer {
 
     /**
      * Factory method to easily instantiate a mock SMPPSession
-     *
+     * 
      * @return the SMPPSession
      */
     SMPPSession createSMPPSession() {
@@ -175,7 +172,7 @@ public class SmppProducer extends DefaultProducer {
             }
         }
 
-        // only possible by trying to reconnect
+        // only possible by trying to reconnect 
         if (this.session == null) {
             throw new IOException("Lost connection to " + getEndpoint().getConnectionString() + " and yet not reconnected");
         }
@@ -205,14 +202,13 @@ public class SmppProducer extends DefaultProducer {
         }
     }
 
-    private void reconnect() {
+    private void reconnect(final long initialReconnectDelay) {
         if (connectLock.tryLock()) {
-            BlockingTask task = newReconnectTask(reconnectService, RECONNECT_TASK_NAME,
-                    configuration.getInitialReconnectDelay(),
+            BlockingTask task = newReconnectTask(reconnectService, RECONNECT_TASK_NAME, initialReconnectDelay,
                     configuration.getReconnectDelay(), configuration.getMaxReconnect());
 
             try {
-                task.run(getEndpoint().getCamelContext(), this::doReconnect);
+                task.run(this::doReconnect);
             } finally {
                 connectLock.unlock();
             }
@@ -262,7 +258,7 @@ public class SmppProducer extends DefaultProducer {
 
     /**
      * Returns the smppConfiguration for this producer
-     *
+     * 
      * @return the configuration
      */
     public SmppConfiguration getConfiguration() {

@@ -25,11 +25,11 @@ import org.apache.camel.AsyncProcessor;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Navigate;
 import org.apache.camel.Processor;
 import org.apache.camel.Traceable;
 import org.apache.camel.spi.IdAware;
-import org.apache.camel.spi.InterceptableProcessor;
 import org.apache.camel.spi.ReactiveExecutor;
 import org.apache.camel.spi.RouteIdAware;
 import org.apache.camel.support.AsyncProcessorConverterHelper;
@@ -42,8 +42,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Implements try/catch/finally type processing
  */
-public class TryProcessor extends AsyncProcessorSupport
-        implements Navigate<Processor>, Traceable, IdAware, RouteIdAware, InterceptableProcessor {
+public class TryProcessor extends AsyncProcessorSupport implements Navigate<Processor>, Traceable, IdAware, RouteIdAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(TryProcessor.class);
 
@@ -58,7 +57,7 @@ public class TryProcessor extends AsyncProcessorSupport
     public TryProcessor(CamelContext camelContext, Processor tryProcessor, List<Processor> catchClauses,
                         Processor finallyProcessor) {
         this.camelContext = camelContext;
-        this.reactiveExecutor = camelContext.getCamelContextExtension().getReactiveExecutor();
+        this.reactiveExecutor = camelContext.adapt(ExtendedCamelContext.class).getReactiveExecutor();
         this.tryProcessor = tryProcessor;
         this.catchClauses = catchClauses;
         this.finallyProcessor = finallyProcessor;
@@ -72,11 +71,6 @@ public class TryProcessor extends AsyncProcessorSupport
     @Override
     public String getTraceLabel() {
         return "doTry";
-    }
-
-    @Override
-    public boolean canIntercept() {
-        return false;
     }
 
     @Override
@@ -150,14 +144,6 @@ public class TryProcessor extends AsyncProcessorSupport
         ServiceHelper.stopService(tryProcessor, catchClauses, finallyProcessor);
     }
 
-    public List<Processor> getCatchClauses() {
-        return catchClauses;
-    }
-
-    public Processor getFinallyProcessor() {
-        return finallyProcessor;
-    }
-
     @Override
     public List<Processor> next() {
         if (!hasNext()) {
@@ -167,7 +153,7 @@ public class TryProcessor extends AsyncProcessorSupport
         if (tryProcessor != null) {
             answer.add(tryProcessor);
         }
-        if (catchClauses != null && !catchClauses.isEmpty()) {
+        if (catchClauses != null) {
             answer.addAll(catchClauses);
         }
         if (finallyProcessor != null) {

@@ -43,20 +43,8 @@ public class RollbackDefinition extends NoOutputDefinition<RollbackDefinition> {
     public RollbackDefinition() {
     }
 
-    protected RollbackDefinition(RollbackDefinition source) {
-        super(source);
-        this.message = source.message;
-        this.markRollbackOnly = source.markRollbackOnly;
-        this.markRollbackOnlyLast = source.markRollbackOnlyLast;
-    }
-
     public RollbackDefinition(String message) {
         this.message = message;
-    }
-
-    @Override
-    public RollbackDefinition copyDefinition() {
-        return new RollbackDefinition(this);
     }
 
     @Override

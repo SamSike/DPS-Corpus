@@ -20,18 +20,15 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
-import org.apache.camel.component.as2.api.AS2Header;
 import org.apache.camel.component.as2.api.entity.Importance;
-import org.apache.camel.util.ObjectHelper;
-import org.apache.hc.core5.http.Header;
-import org.apache.hc.core5.http.HeaderElement;
-import org.apache.hc.core5.http.HttpMessage;
-import org.apache.hc.core5.http.NameValuePair;
-import org.apache.hc.core5.http.message.BasicHeader;
-import org.apache.hc.core5.http.message.MessageSupport;
-import org.apache.hc.core5.http.message.ParserCursor;
-import org.apache.hc.core5.http.message.TokenParser;
-import org.apache.hc.core5.util.CharArrayBuffer;
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.message.ParserCursor;
+import org.apache.http.message.TokenParser;
+import org.apache.http.util.Args;
+import org.apache.http.util.CharArrayBuffer;
 
 public final class AS2HeaderUtils {
 
@@ -41,7 +38,7 @@ public final class AS2HeaderUtils {
         private final String[] values;
 
         public Parameter(String attribute, String importance, String[] values) {
-            this.attribute = ObjectHelper.notNull(attribute, "attribute");
+            this.attribute = Args.notNull(attribute, "attribute");
             this.importance = Importance.get(importance);
             this.values = values;
         }
@@ -63,11 +60,11 @@ public final class AS2HeaderUtils {
             StringBuilder sb = new StringBuilder();
             sb.append(attribute);
             if (importance != null) {
-                sb.append('=').append(importance);
+                sb.append("=" + importance.toString());
             }
             if (values != null) {
                 for (String value : values) {
-                    sb.append(',').append(value);
+                    sb.append("," + value);
                 }
             }
             return sb.toString();
@@ -102,15 +99,16 @@ public final class AS2HeaderUtils {
             }
             sb.append(element[0]);
             if (element.length > 1) {
-                sb.append(NAME_VALUE_DELIMITER).append(element[1]);
+                sb.append(NAME_VALUE_DELIMITER + element[1]);
             }
         }
-        return new BasicHeader(headerName, sb.toString());
+        BasicHeader header = new BasicHeader(headerName, sb.toString());
+        return header;
     }
 
     public static Parameter parseParameter(final CharArrayBuffer buffer, final ParserCursor cursor) {
-        ObjectHelper.notNull(buffer, "Char array buffer");
-        ObjectHelper.notNull(cursor, "Parser cursor");
+        Args.notNull(buffer, "Char array buffer");
+        Args.notNull(cursor, "Parser cursor");
 
         final String name = TOKEN_PARSER.parseToken(buffer, cursor, TOKEN_DELIMS);
         if (cursor.atEnd()) {
@@ -144,15 +142,15 @@ public final class AS2HeaderUtils {
             }
         }
 
-        return new Parameter(name, importance, values.toArray(new String[0]));
+        return new Parameter(name, importance, values.toArray(new String[values.size()]));
     }
 
     public static String getParameterValue(Header[] headers, String headerName, String parameterName) {
-        ObjectHelper.notNull(headers, "headers");
-        ObjectHelper.notNull(headerName, "headerName");
+        Args.notNull(headers, "headers");
+        Args.notNull(headerName, "headerName");
         for (Header header : headers) {
             if (header.getName().equalsIgnoreCase(headerName)) {
-                for (HeaderElement headerElement : MessageSupport.parse(header)) {
+                for (HeaderElement headerElement : header.getElements()) {
                     for (NameValuePair nameValuePair : headerElement.getParameters()) {
                         if (nameValuePair.getName().equalsIgnoreCase(parameterName)) {
                             return nameValuePair.getValue();
@@ -164,12 +162,4 @@ public final class AS2HeaderUtils {
         return null;
     }
 
-    public static void addAuthorizationHeader(HttpMessage message, String userName, String password, String accessToken) {
-        if (userName != null && password != null) {
-            message.addHeader(AS2Header.AUTHORIZATION,
-                    ("Basic " + java.util.Base64.getEncoder().encodeToString((userName + ":" + password).getBytes())));
-        } else if (accessToken != null) {
-            message.addHeader(AS2Header.AUTHORIZATION, "Bearer " + accessToken);
-        }
-    }
 }

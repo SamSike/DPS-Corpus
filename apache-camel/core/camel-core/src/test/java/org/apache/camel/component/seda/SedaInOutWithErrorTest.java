@@ -22,7 +22,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class SedaInOutWithErrorTest extends ContextTestSupport {
 
@@ -30,20 +30,22 @@ public class SedaInOutWithErrorTest extends ContextTestSupport {
     public void testInOutWithError() throws Exception {
         getMockEndpoint("mock:result").expectedMessageCount(0);
 
-        CamelExecutionException e = assertThrows(CamelExecutionException.class,
-                () -> template.requestBody("direct:start", "Hello World", String.class),
-                "Should have thrown an exception");
+        try {
+            template.requestBody("direct:start", "Hello World", String.class);
+            fail("Should have thrown an exception");
+        } catch (CamelExecutionException e) {
+            assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
+            assertEquals("Damn I cannot do this", e.getCause().getMessage());
+        }
 
-        assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
-        assertEquals("Damn I cannot do this", e.getCause().getMessage());
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("seda:foo");
 
                 from("seda:foo").transform(constant("Bye World"))

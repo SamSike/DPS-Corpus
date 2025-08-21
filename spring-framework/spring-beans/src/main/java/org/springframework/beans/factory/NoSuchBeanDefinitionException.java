@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,9 @@
 
 package org.springframework.beans.factory;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeansException;
 import org.springframework.core.ResolvableType;
+import org.springframework.lang.Nullable;
 
 /**
  * Exception thrown when a {@code BeanFactory} is asked for a bean instance for which it
@@ -36,9 +35,11 @@ import org.springframework.core.ResolvableType;
 @SuppressWarnings("serial")
 public class NoSuchBeanDefinitionException extends BeansException {
 
-	private final @Nullable String beanName;
+	@Nullable
+	private final String beanName;
 
-	private final @Nullable ResolvableType resolvableType;
+	@Nullable
+	private final ResolvableType resolvableType;
 
 
 	/**
@@ -106,7 +107,8 @@ public class NoSuchBeanDefinitionException extends BeansException {
 	/**
 	 * Return the name of the missing bean, if it was a lookup <em>by name</em> that failed.
 	 */
-	public @Nullable String getBeanName() {
+	@Nullable
+	public String getBeanName() {
 		return this.beanName;
 	}
 
@@ -114,7 +116,8 @@ public class NoSuchBeanDefinitionException extends BeansException {
 	 * Return the required type of the missing bean, if it was a lookup <em>by type</em>
 	 * that failed.
 	 */
-	public @Nullable Class<?> getBeanType() {
+	@Nullable
+	public Class<?> getBeanType() {
 		return (this.resolvableType != null ? this.resolvableType.resolve() : null);
 	}
 
@@ -123,7 +126,8 @@ public class NoSuchBeanDefinitionException extends BeansException {
 	 * <em>by type</em> that failed.
 	 * @since 4.3.4
 	 */
-	public @Nullable ResolvableType getResolvableType() {
+	@Nullable
+	public ResolvableType getResolvableType() {
 		return this.resolvableType;
 	}
 

@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TimerRouteTest extends ContextTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(TimerRouteTest.class);
-    private final MyBean bean = new MyBean();
+    private MyBean bean = new MyBean();
 
     @Test
     public void testTimerInvokesBeanMethod() throws Exception {
@@ -43,7 +43,7 @@ public class TimerRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             public void configure() {
                 from("timer://foo?fixedRate=true&delay=0&period=10").log("Fired timer").to("bean:myBean", "mock:result");
@@ -52,14 +52,14 @@ public class TimerRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("myBean", bean);
         return answer;
     }
 
     public static class MyBean {
-        public final AtomicInteger counter = new AtomicInteger();
+        public AtomicInteger counter = new AtomicInteger();
 
         public void someMethod() {
             LOG.debug("Invoked someMethod()");

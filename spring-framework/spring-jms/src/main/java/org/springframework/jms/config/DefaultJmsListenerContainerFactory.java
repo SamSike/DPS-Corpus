@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,8 @@ package org.springframework.jms.config;
 
 import java.util.concurrent.Executor;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.backoff.BackOff;
 
@@ -28,8 +27,8 @@ import org.springframework.util.backoff.BackOff;
  * A {@link JmsListenerContainerFactory} implementation to build a regular
  * {@link DefaultMessageListenerContainer}.
  *
- * <p>This should be the default for most users and a good transition path
- * for those who are used to building such a container definition manually.
+ * <p>This should be the default for most users and a good transition paths
+ * for those that are used to build such container definition manually.
  *
  * @author Stephane Nicoll
  * @since 4.1
@@ -37,85 +36,94 @@ import org.springframework.util.backoff.BackOff;
 public class DefaultJmsListenerContainerFactory
 		extends AbstractJmsListenerContainerFactory<DefaultMessageListenerContainer> {
 
-	private @Nullable Executor taskExecutor;
+	@Nullable
+	private Executor taskExecutor;
 
-	private @Nullable PlatformTransactionManager transactionManager;
+	@Nullable
+	private PlatformTransactionManager transactionManager;
 
-	private @Nullable Integer cacheLevel;
+	@Nullable
+	private Integer cacheLevel;
 
-	private @Nullable String cacheLevelName;
+	@Nullable
+	private String cacheLevelName;
 
-	private @Nullable String concurrency;
+	@Nullable
+	private String concurrency;
 
-	private @Nullable Integer maxMessagesPerTask;
+	@Nullable
+	private Integer maxMessagesPerTask;
 
-	private @Nullable Long receiveTimeout;
+	@Nullable
+	private Long receiveTimeout;
 
-	private @Nullable Long recoveryInterval;
+	@Nullable
+	private Long recoveryInterval;
 
-	private @Nullable BackOff backOff;
+	@Nullable
+	private BackOff backOff;
 
 
 	/**
 	 * @see DefaultMessageListenerContainer#setTaskExecutor
 	 */
-	public void setTaskExecutor(@Nullable Executor taskExecutor) {
+	public void setTaskExecutor(Executor taskExecutor) {
 		this.taskExecutor = taskExecutor;
 	}
 
 	/**
 	 * @see DefaultMessageListenerContainer#setTransactionManager
 	 */
-	public void setTransactionManager(@Nullable PlatformTransactionManager transactionManager) {
+	public void setTransactionManager(PlatformTransactionManager transactionManager) {
 		this.transactionManager = transactionManager;
 	}
 
 	/**
 	 * @see DefaultMessageListenerContainer#setCacheLevel
 	 */
-	public void setCacheLevel(@Nullable Integer cacheLevel) {
+	public void setCacheLevel(Integer cacheLevel) {
 		this.cacheLevel = cacheLevel;
 	}
 
 	/**
 	 * @see DefaultMessageListenerContainer#setCacheLevelName
 	 */
-	public void setCacheLevelName(@Nullable String cacheLevelName) {
+	public void setCacheLevelName(String cacheLevelName) {
 		this.cacheLevelName = cacheLevelName;
 	}
 
 	/**
 	 * @see DefaultMessageListenerContainer#setConcurrency
 	 */
-	public void setConcurrency(@Nullable String concurrency) {
+	public void setConcurrency(String concurrency) {
 		this.concurrency = concurrency;
 	}
 
 	/**
 	 * @see DefaultMessageListenerContainer#setMaxMessagesPerTask
 	 */
-	public void setMaxMessagesPerTask(@Nullable Integer maxMessagesPerTask) {
+	public void setMaxMessagesPerTask(Integer maxMessagesPerTask) {
 		this.maxMessagesPerTask = maxMessagesPerTask;
 	}
 
 	/**
 	 * @see DefaultMessageListenerContainer#setReceiveTimeout
 	 */
-	public void setReceiveTimeout(@Nullable Long receiveTimeout) {
+	public void setReceiveTimeout(Long receiveTimeout) {
 		this.receiveTimeout = receiveTimeout;
 	}
 
 	/**
 	 * @see DefaultMessageListenerContainer#setRecoveryInterval
 	 */
-	public void setRecoveryInterval(@Nullable Long recoveryInterval) {
+	public void setRecoveryInterval(Long recoveryInterval) {
 		this.recoveryInterval = recoveryInterval;
 	}
 
 	/**
 	 * @see DefaultMessageListenerContainer#setBackOff
 	 */
-	public void setBackOff(@Nullable BackOff backOff) {
+	public void setBackOff(BackOff backOff) {
 		this.backOff = backOff;
 	}
 

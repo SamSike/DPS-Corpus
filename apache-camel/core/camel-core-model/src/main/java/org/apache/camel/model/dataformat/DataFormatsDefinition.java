@@ -25,14 +25,9 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElements;
 import jakarta.xml.bind.annotation.XmlRootElement;
-import jakarta.xml.bind.annotation.XmlTransient;
 
-import org.apache.camel.model.CopyableDefinition;
 import org.apache.camel.model.DataFormatDefinition;
-import org.apache.camel.model.ProcessorDefinitionHelper;
 import org.apache.camel.spi.Metadata;
-import org.apache.camel.spi.Resource;
-import org.apache.camel.spi.ResourceAware;
 
 /**
  * Configure data formats.
@@ -40,15 +35,15 @@ import org.apache.camel.spi.ResourceAware;
 @Metadata(label = "dataformat,transformation", title = "Data formats")
 @XmlRootElement(name = "dataFormats")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DataFormatsDefinition implements CopyableDefinition<DataFormatsDefinition>, ResourceAware {
+public class DataFormatsDefinition {
 
     // cannot use @XmlElementRef as it doesn't allow optional properties
     @XmlElements({
+            @XmlElement(name = "any23", type = Any23DataFormat.class),
             @XmlElement(name = "asn1", type = ASN1DataFormat.class),
             @XmlElement(name = "avro", type = AvroDataFormat.class),
             @XmlElement(name = "barcode", type = BarcodeDataFormat.class),
             @XmlElement(name = "base64", type = Base64DataFormat.class),
-            @XmlElement(name = "beanio", type = BeanioDataFormat.class),
             @XmlElement(name = "bindy", type = BindyDataFormat.class),
             @XmlElement(name = "cbor", type = CBORDataFormat.class),
             @XmlElement(name = "crypto", type = CryptoDataFormat.class),
@@ -57,23 +52,18 @@ public class DataFormatsDefinition implements CopyableDefinition<DataFormatsDefi
             @XmlElement(name = "fhirJson", type = FhirJsonDataFormat.class),
             @XmlElement(name = "fhirXml", type = FhirXmlDataFormat.class),
             @XmlElement(name = "flatpack", type = FlatpackDataFormat.class),
-            @XmlElement(name = "fory", type = ForyDataFormat.class),
             @XmlElement(name = "grok", type = GrokDataFormat.class),
             @XmlElement(name = "gzipDeflater", type = GzipDeflaterDataFormat.class),
             @XmlElement(name = "hl7", type = HL7DataFormat.class),
             @XmlElement(name = "ical", type = IcalDataFormat.class),
-            @XmlElement(name = "iso8583", type = Iso8583DataFormat.class),
             @XmlElement(name = "jacksonXml", type = JacksonXMLDataFormat.class),
             @XmlElement(name = "jaxb", type = JaxbDataFormat.class),
             @XmlElement(name = "json", type = JsonDataFormat.class),
             @XmlElement(name = "jsonApi", type = JsonApiDataFormat.class),
             @XmlElement(name = "lzf", type = LZFDataFormat.class),
             @XmlElement(name = "mimeMultipart", type = MimeMultipartDataFormat.class),
-            @XmlElement(name = "parquetAvro", type = ParquetAvroDataFormat.class),
-            @XmlElement(name = "pgp", type = PGPDataFormat.class),
             @XmlElement(name = "protobuf", type = ProtobufDataFormat.class),
             @XmlElement(name = "rss", type = RssDataFormat.class),
-            @XmlElement(name = "smooks", type = SmooksDataFormat.class),
             @XmlElement(name = "soap", type = SoapDataFormat.class),
             @XmlElement(name = "swiftMt", type = SwiftMtDataFormat.class),
             @XmlElement(name = "swiftMx", type = SwiftMxDataFormat.class),
@@ -85,24 +75,11 @@ public class DataFormatsDefinition implements CopyableDefinition<DataFormatsDefi
             @XmlElement(name = "univocityFixed", type = UniVocityFixedDataFormat.class),
             @XmlElement(name = "univocityTsv", type = UniVocityTsvDataFormat.class),
             @XmlElement(name = "xmlSecurity", type = XMLSecurityDataFormat.class),
+            @XmlElement(name = "pgp", type = PGPDataFormat.class),
             @XmlElement(name = "yaml", type = YAMLDataFormat.class),
             @XmlElement(name = "zipDeflater", type = ZipDeflaterDataFormat.class),
             @XmlElement(name = "zipFile", type = ZipFileDataFormat.class) })
     private List<DataFormatDefinition> dataFormats;
-    @XmlTransient
-    private Resource resource;
-
-    public DataFormatsDefinition() {
-    }
-
-    protected DataFormatsDefinition(DataFormatsDefinition source) {
-        this.dataFormats = ProcessorDefinitionHelper.deepCopyDefinitions(source.dataFormats);
-    }
-
-    @Override
-    public DataFormatsDefinition copyDefinition() {
-        return new DataFormatsDefinition(this);
-    }
 
     /**
      * A list holding the configured data formats
@@ -124,15 +101,5 @@ public class DataFormatsDefinition implements CopyableDefinition<DataFormatsDefi
             dataFormatsAsMap.put(dataFormatType.getId(), dataFormatType);
         }
         return dataFormatsAsMap;
-    }
-
-    @Override
-    public Resource getResource() {
-        return resource;
-    }
-
-    @Override
-    public void setResource(Resource resource) {
-        this.resource = resource;
     }
 }

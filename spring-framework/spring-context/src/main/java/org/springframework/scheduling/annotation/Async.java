@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.aot.hint.annotation.Reflective;
-
 /**
  * Annotation that marks a method as a candidate for <i>asynchronous</i> execution.
- *
- * <p>Can also be used at the type level, in which case all the type's methods are
+ * Can also be used at the type level, in which case all of the type's methods are
  * considered as asynchronous. Note, however, that {@code @Async} is not supported
  * on methods declared within a
  * {@link org.springframework.context.annotation.Configuration @Configuration} class.
@@ -35,18 +32,17 @@ import org.springframework.aot.hint.annotation.Reflective;
  * <p>In terms of target method signatures, any parameter types are supported.
  * However, the return type is constrained to either {@code void} or
  * {@link java.util.concurrent.Future}. In the latter case, you may declare the
- * more specific {@link java.util.concurrent.CompletableFuture} type which allows
- * for richer interaction with the asynchronous task and for immediate composition
- * with further processing steps.
+ * more specific {@link org.springframework.util.concurrent.ListenableFuture} or
+ * {@link java.util.concurrent.CompletableFuture} types which allow for richer
+ * interaction with the asynchronous task and for immediate composition with
+ * further processing steps.
  *
  * <p>A {@code Future} handle returned from the proxy will be an actual asynchronous
- * {@code (Completable)Future} that can be used to track the result of the
- * asynchronous method execution. However, since the target method needs to implement
- * the same signature, it will have to return a temporary {@code Future} handle that
- * just passes a value after computation in the execution thread: typically through
- * {@link java.util.concurrent.CompletableFuture#completedFuture(Object)}. The
- * provided value will be exposed to the caller through the actual asynchronous
- * {@code Future} handle at runtime.
+ * {@code Future} that can be used to track the result of the asynchronous method
+ * execution. However, since the target method needs to implement the same signature,
+ * it will have to return a temporary {@code Future} handle that just passes a value
+ * through: e.g. Spring's {@link AsyncResult}, EJB 3.1's {@link jakarta.ejb.AsyncResult},
+ * or {@link java.util.concurrent.CompletableFuture#completedFuture(Object)}.
  *
  * @author Juergen Hoeller
  * @author Chris Beams
@@ -57,7 +53,6 @@ import org.springframework.aot.hint.annotation.Reflective;
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Reflective
 public @interface Async {
 
 	/**
@@ -67,13 +62,9 @@ public @interface Async {
 	 * name) of a specific {@link java.util.concurrent.Executor Executor} or
 	 * {@link org.springframework.core.task.TaskExecutor TaskExecutor}
 	 * bean definition.
-	 * <p>When specified in a class-level {@code @Async} annotation, indicates that the
+	 * <p>When specified on a class-level {@code @Async} annotation, indicates that the
 	 * given executor should be used for all methods within the class. Method-level use
-	 * of {@code Async#value} always overrides any qualifier value configured at
-	 * the class level.
-	 * <p>The qualifier value will be resolved dynamically if supplied as a SpEL
-	 * expression (for example, {@code "#{environment['myExecutor']}"}) or a
-	 * property placeholder (for example, {@code "${my.app.myExecutor}"}).
+	 * of {@code Async#value} always overrides any value set at the class level.
 	 * @since 3.1.2
 	 */
 	String value() default "";

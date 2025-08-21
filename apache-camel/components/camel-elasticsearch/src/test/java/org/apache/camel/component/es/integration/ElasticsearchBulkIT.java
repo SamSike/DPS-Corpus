@@ -35,7 +35,6 @@ import co.elastic.clients.elasticsearch.core.bulk.DeleteOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import co.elastic.clients.elasticsearch.core.bulk.UpdateAction;
 import co.elastic.clients.elasticsearch.core.bulk.UpdateOperation;
-import co.elastic.clients.json.JsonData;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
@@ -221,10 +220,10 @@ class ElasticsearchBulkIT extends ElasticsearchTestSupport {
                 .index("twitter").id(indexId)
                 .action(
                         new UpdateAction.Builder<>()
-                                .doc(JsonData.from(
+                                .withJson(
                                         new StringReader(
-                                                String.format("{\"%skey2\": \"%svalue2\"}",
-                                                        createPrefix(), createPrefix()))))
+                                                String.format("{ \"doc\": {\"%skey2\": \"%svalue2\"}}",
+                                                        createPrefix(), createPrefix())))
                                 .build());
         @SuppressWarnings("unchecked")
         List<BulkResponseItem> response = template.requestBody("direct:bulk", List.of(builder), List.class);

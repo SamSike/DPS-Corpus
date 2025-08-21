@@ -31,17 +31,12 @@ import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.Search;
 import org.infinispan.client.hotrod.event.ClientEvent;
-import org.infinispan.client.hotrod.exceptions.RemoteCacheManagerNotStartedException;
 import org.infinispan.query.api.continuous.ContinuousQuery;
 import org.infinispan.query.api.continuous.ContinuousQueryListener;
 import org.infinispan.query.dsl.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class InfinispanRemoteConsumer
         extends InfinispanConsumer<RemoteCacheManager, InfinispanRemoteManager, InfinispanRemoteConfiguration> {
-    private static final Logger LOG = LoggerFactory.getLogger(InfinispanRemoteConsumer.class);
-
     private Service handler;
 
     public InfinispanRemoteConsumer(
@@ -146,15 +141,7 @@ public class InfinispanRemoteConsumer
         @SuppressWarnings("unchecked")
         @Override
         public void doStop() {
-            final RemoteCache cache = getCache(RemoteCache.class);
-            if (cache != null) {
-                try {
-                    cache.removeClientListener(listener);
-                } catch (RemoteCacheManagerNotStartedException e) {
-                    LOG.debug("Cannot remote the listener because the cache manager is not started: {}", e.getMessage(), e);
-                }
-            }
-
+            getCache(RemoteCache.class).removeClientListener(listener);
         }
 
     }

@@ -35,10 +35,10 @@ public class DynamicRouter4Test extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start-1").dynamicRouter().exchange(DynamicRouter4Test::slip);
             }
         };

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Rossen Stoyanchev
@@ -44,8 +44,9 @@ public class TestSimpUser implements SimpUser {
 		return name;
 	}
 
+	@Nullable
 	@Override
-	public @Nullable Principal getPrincipal() {
+	public Principal getPrincipal() {
 		return null;
 	}
 
@@ -73,7 +74,7 @@ public class TestSimpUser implements SimpUser {
 
 
 	@Override
-	public boolean equals(@Nullable Object other) {
+	public boolean equals(Object other) {
 		return (this == other || (other instanceof SimpUser && this.name.equals(((SimpUser) other).getName())));
 	}
 

@@ -38,7 +38,7 @@ public class AggregationStrategyGroupedBodyTest extends ContextTestSupport {
 
         assertMockEndpointsSatisfied();
 
-        List<?> list = (List<?>) getMockEndpoint("mock:result").getExchanges().get(0).getMessage().getBody();
+        List list = (List) getMockEndpoint("mock:result").getExchanges().get(0).getMessage().getBody();
         assertNotNull(list);
         assertEquals(3, list.size());
         assertEquals("A", list.get(0));
@@ -47,10 +47,10 @@ public class AggregationStrategyGroupedBodyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .aggregate(constant(true), AggregationStrategies.groupedBody()).completionSize(3)
                         .to("mock:result");

@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Represents time-based clauses for setting expectations on the mocks. Such as time constrains for the received
+ * Represents time based clauses for setting expectations on the mocks. Such as time constrains for the received
  * messages.
  */
 public class TimeClause implements BinaryPredicate {
@@ -53,8 +53,8 @@ public class TimeClause implements BinaryPredicate {
     public class TimeClassUnit {
 
         private final TimeClause clause;
-        private final int from;
-        private final int to;
+        private int from;
+        private int to;
 
         public TimeClassUnit(TimeClause clause, int to) {
             this(clause, -1, to);
@@ -93,11 +93,13 @@ public class TimeClause implements BinaryPredicate {
     // -------------------------------------------------------------------------
 
     public TimeClassUnit noLaterThan(int period) {
-        return new TimeClassUnit(this, period);
+        TimeClassUnit unit = new TimeClassUnit(this, period);
+        return unit;
     }
 
     public TimeClassUnit between(int from, int to) {
-        return new TimeClassUnit(this, from, to);
+        TimeClassUnit unit = new TimeClassUnit(this, from, to);
+        return unit;
     }
 
     public void beforeNext() {
@@ -128,7 +130,7 @@ public class TimeClause implements BinaryPredicate {
 
     @Override
     public String matchesReturningFailureMessage(Exchange exchange) {
-        // we must not store any state, so we can be thread-safe,
+        // we must not store any state, so we can be thread safe
         // and thus we offer this method which returns a failure message if
         // we did not match
         String answer = null;
@@ -153,38 +155,6 @@ public class TimeClause implements BinaryPredicate {
 
         Date currentDate = exchange.getProperty(Exchange.RECEIVED_TIMESTAMP, Date.class);
 
-        final Date otherDate = getOtherDate(leftValue, rightValue);
-
-        // if we could not grab the value, we hit a boundary (i.e., either 0 message or last message)
-        if (otherDate == null) {
-            return true;
-        }
-
-        // compute if we were within the allowed time range
-        Time current = new Time(currentDate.getTime(), TimeUnit.MILLISECONDS);
-        Time other = new Time(otherDate.getTime(), TimeUnit.MILLISECONDS);
-        // must absolute delta as when we hit the boundaries, the delta would negative
-        long delta = Math.abs(other.toMillis() - current.toMillis());
-        was = "delta: " + delta + " millis";
-
-        if (timeFrom != null) {
-            long from = timeFrom.toMillis();
-            answer = delta >= from;
-        }
-        if (answer) {
-            long to = timeTo.toMillis();
-            answer = delta <= to;
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Evaluated time clause [{}] with current: {}, other: {} -> {}", this, currentDate, otherDate,
-                    answer);
-        }
-
-        return answer;
-    }
-
-    private Date getOtherDate(Object leftValue, Object rightValue) {
         // the other date is either the previous or the next
         Date otherDate;
         if (beforeNext) {
@@ -204,7 +174,34 @@ public class TimeClause implements BinaryPredicate {
                 otherDate = (Date) leftValue;
             }
         }
-        return otherDate;
+
+        // if we could not grab the value, we hit a boundary (ie. either 0 message or last message)
+        if (otherDate == null) {
+            return true;
+        }
+
+        // compute if we were within the allowed time range
+        Time current = new Time(currentDate.getTime(), TimeUnit.MILLISECONDS);
+        Time other = new Time(otherDate.getTime(), TimeUnit.MILLISECONDS);
+        // must absolute delta as when we hit the boundaries the delta would negative
+        long delta = Math.abs(other.toMillis() - current.toMillis());
+        was = "delta: " + delta + " millis";
+
+        if (timeFrom != null) {
+            long from = timeFrom.toMillis();
+            answer = delta >= from;
+        }
+        if (answer) {
+            long to = timeTo.toMillis();
+            answer = delta <= to;
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Evaluated time clause [{}] with current: {}, other: {} -> {}", this, currentDate, otherDate,
+                    answer);
+        }
+
+        return answer;
     }
 
     @Override

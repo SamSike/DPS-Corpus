@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class RegistryLookupTypeClassCastExceptionTest {
 
     @Test
-    public void testLookupOk() {
+    public void testLookupOk() throws Exception {
         Registry registry = new DefaultRegistry();
 
         MyClass my = new MyClass();
@@ -43,7 +43,7 @@ public class RegistryLookupTypeClassCastExceptionTest {
     }
 
     @Test
-    public void testCamelContextLookupOk() {
+    public void testCamelContextLookupOk() throws Exception {
         CamelContext context = new DefaultCamelContext();
 
         MyClass my = new MyClass();
@@ -57,7 +57,7 @@ public class RegistryLookupTypeClassCastExceptionTest {
     }
 
     @Test
-    public void testCamelContextLookupClassCast() {
+    public void testCamelContextLookupClassCast() throws Exception {
         CamelContext context = new DefaultCamelContext();
 
         MyClass my = new MyClass();

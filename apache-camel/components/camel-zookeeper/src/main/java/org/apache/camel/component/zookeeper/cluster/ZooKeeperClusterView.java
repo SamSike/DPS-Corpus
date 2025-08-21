@@ -120,7 +120,7 @@ final class ZooKeeperClusterView extends AbstractCamelClusterView {
     protected void doStop() throws Exception {
         if (leaderSelector != null) {
             leaderSelector.interruptLeadership();
-            fireLeadershipChangedEvent(getLeader().orElse(null));
+            fireLeadershipChangedEvent(getLeader());
         }
     }
 
@@ -142,7 +142,7 @@ final class ZooKeeperClusterView extends AbstractCamelClusterView {
     private final class CamelLeaderElectionListener extends LeaderSelectorListenerAdapter {
         @Override
         public void takeLeadership(CuratorFramework curatorFramework) throws Exception {
-            fireLeadershipChangedEvent(localMember);
+            fireLeadershipChangedEvent(Optional.of(localMember));
 
             BlockingTask task = Tasks.foregroundTask().withBudget(Budgets.iterationBudget()
                     .withMaxIterations(IterationBoundedBudget.UNLIMITED_ITERATIONS)
@@ -150,16 +150,16 @@ final class ZooKeeperClusterView extends AbstractCamelClusterView {
                     .build())
                     .build();
 
-            task.run(getCamelContext(), () -> !isRunAllowed());
+            task.run(() -> !isRunAllowed());
 
-            fireLeadershipChangedEvent(getLeader().orElse(null));
+            fireLeadershipChangedEvent(getLeader());
         }
     }
 
     private final class CuratorLocalMember implements CamelClusterMember {
         @Override
         public boolean isLeader() {
-            return leaderSelector != null && leaderSelector.hasLeadership();
+            return leaderSelector != null ? leaderSelector.hasLeadership() : false;
         }
 
         @Override
@@ -187,7 +187,9 @@ final class ZooKeeperClusterView extends AbstractCamelClusterView {
 
         @Override
         public boolean isLocal() {
-            return participant.getId() != null && ObjectHelper.equal(participant.getId(), localMember.getId());
+            return (participant.getId() != null)
+                    ? ObjectHelper.equal(participant.getId(), localMember.getId())
+                    : false;
         }
 
         @Override
@@ -195,7 +197,7 @@ final class ZooKeeperClusterView extends AbstractCamelClusterView {
             try {
                 return leaderSelector.getLeader().equals(this.participant);
             } catch (Exception e) {
-                LOGGER.debug("{}", e.getMessage(), e);
+                LOGGER.debug("", e);
                 return false;
             }
         }

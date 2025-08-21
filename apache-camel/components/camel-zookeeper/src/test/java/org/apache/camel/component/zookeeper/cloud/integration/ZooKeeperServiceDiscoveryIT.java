@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.camel.cloud.ServiceDefinition;
 import org.apache.camel.component.zookeeper.ZooKeeperCuratorConfiguration;
 import org.apache.camel.component.zookeeper.ZooKeeperCuratorHelper;
-import org.apache.camel.component.zookeeper.cloud.MetaData;
 import org.apache.camel.component.zookeeper.cloud.ZooKeeperServiceDiscovery;
 import org.apache.camel.test.AvailablePortFinder;
 import org.apache.camel.test.infra.zookeeper.services.ZooKeeperService;
@@ -55,21 +54,21 @@ class ZooKeeperServiceDiscoveryIT {
             configuration.setBasePath("/camel");
             configuration.setCuratorFramework(curatorFramework);
 
-            try (ServiceDiscovery<MetaData> zkDiscovery
+            try (ServiceDiscovery<ZooKeeperServiceDiscovery.MetaData> zkDiscovery
                     = ZooKeeperCuratorHelper.createServiceDiscovery(
                             configuration,
                             curatorFramework,
-                            MetaData.class)) {
+                            ZooKeeperServiceDiscovery.MetaData.class)) {
 
                 curatorFramework.start();
                 zkDiscovery.start();
 
-                List<ServiceInstance<MetaData>> instances = new ArrayList<>();
+                List<ServiceInstance<ZooKeeperServiceDiscovery.MetaData>> instances = new ArrayList<>();
                 for (int i = 0; i < 3; i++) {
-                    ServiceInstance<MetaData> instance
-                            = ServiceInstance.<MetaData> builder()
+                    ServiceInstance<ZooKeeperServiceDiscovery.MetaData> instance
+                            = ServiceInstance.<ZooKeeperServiceDiscovery.MetaData> builder()
                                     .address("127.0.0.1")
-                                    .port(AvailablePortFinder.getNextRandomAvailable())
+                                    .port(AvailablePortFinder.getNextAvailable())
                                     .name("my-service")
                                     .id("service-" + i)
                                     .build();

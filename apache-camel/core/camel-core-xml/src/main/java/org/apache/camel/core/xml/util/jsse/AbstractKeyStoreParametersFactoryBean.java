@@ -16,41 +16,33 @@
  */
 package org.apache.camel.core.xml.util.jsse;
 
-import java.security.KeyStore;
-
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlTransient;
 
 import org.apache.camel.spi.Metadata;
-import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.jsse.KeyStoreParameters;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public abstract class AbstractKeyStoreParametersFactoryBean extends AbstractJsseUtilFactoryBean<KeyStoreParameters> {
 
     @XmlAttribute
-    @Metadata(description = "The keystore to load. The keystore is by default loaded from classpath. If you must load from file system, then use file: as prefix."
-                            + " file:nameOfFile (to refer to the file system)"
-                            + " classpath:nameOfFile (to refer to the classpath; default)"
-                            + " http:uri (to load the resource using HTTP)"
-                            + " ref:nameOfBean (to lookup an existing KeyStore instance from the registry, for example for testing and development)")
-    protected String resource;
-    @XmlAttribute
-    @Metadata(description = "The password for reading/opening/verifying the key store")
-    protected String password;
-    @XmlAttribute
-    @Metadata(label = "advanced", description = "The type of the key store to create and load."
-                                                + " See https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html")
+    @Metadata(description = "The optional type of the key store to load."
+                            + " See Appendix A in the Java Cryptography Architecture Standard Algorithm Name Documentation for more information on standard names.")
     protected String type;
+
     @XmlAttribute
-    @Metadata(label = "advanced", description = "The provider identifier for instantiating the key store")
+    @Metadata(description = "The optional password for reading/opening/verifying the key store")
+    protected String password;
+
+    @XmlAttribute
+    @Metadata(description = "The optional provider identifier for instantiating the key store")
     protected String provider;
+
     @XmlAttribute
-    @Metadata(label = "advanced",
-              description = "To lookup an existing KeyStore instance from the registry, for example for testing and development")
-    protected String keyStore;
+    @Metadata(description = "The optional file path, class path resource, or URL of the resource used to load the key store")
+    protected String resource;
 
     @XmlTransient
     private KeyStoreParameters instance;
@@ -87,14 +79,6 @@ public abstract class AbstractKeyStoreParametersFactoryBean extends AbstractJsse
         this.resource = value;
     }
 
-    public String getKeyStore() {
-        return keyStore;
-    }
-
-    public void setKeyStore(String keyStore) {
-        this.keyStore = keyStore;
-    }
-
     @Override
     public KeyStoreParameters getObject() throws Exception {
         if (this.isSingleton()) {
@@ -109,15 +93,13 @@ public abstract class AbstractKeyStoreParametersFactoryBean extends AbstractJsse
 
     protected KeyStoreParameters createInstance() {
         KeyStoreParameters newInstance = new KeyStoreParameters();
-        newInstance.setCamelContext(getCamelContext());
-        newInstance.setType(this.type);
+
         newInstance.setPassword(this.password);
         newInstance.setProvider(this.provider);
         newInstance.setResource(this.resource);
-        if (keyStore != null) {
-            KeyStore ks = CamelContextHelper.mandatoryLookup(getCamelContext(), keyStore, KeyStore.class);
-            newInstance.setKeyStore(ks);
-        }
+        newInstance.setType(this.type);
+        newInstance.setCamelContext(getCamelContext());
+
         return newInstance;
     }
 

@@ -41,7 +41,7 @@ public class AdviceWithOnCompletionRemoveTest extends ContextTestSupport {
 
         AdviceWith.adviceWith(context.getRouteDefinition("foo"), context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 weaveById("myCompletion").remove();
             }
         });
@@ -66,7 +66,7 @@ public class AdviceWithOnCompletionRemoveTest extends ContextTestSupport {
 
         AdviceWith.adviceWith(context.getRouteDefinition("foo"), context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 weaveById("myCompletion").replace().onCompletion().to("mock:done2");
             }
         });
@@ -79,10 +79,10 @@ public class AdviceWithOnCompletionRemoveTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onCompletion().id("myCompletion").transform(constant("Bye World")).to("mock:done");
 
                 from("direct:bar").routeId("bar").to("mock:c").to("mock:d");

@@ -16,8 +16,12 @@
  */
 package org.apache.camel.impl.engine;
 
+import java.io.IOException;
+
 import org.apache.camel.CamelContext;
 import org.apache.camel.Component;
+import org.apache.camel.ExtendedCamelContext;
+import org.apache.camel.NoFactoryAvailableException;
 import org.apache.camel.spi.ComponentResolver;
 import org.apache.camel.spi.FactoryFinder;
 import org.slf4j.Logger;
@@ -46,6 +50,8 @@ public class DefaultComponentResolver implements ComponentResolver {
                 // not found
                 return null;
             }
+        } catch (NoFactoryAvailableException e) {
+            return null;
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid URI, no Component registered for scheme: " + name, e);
         }
@@ -63,9 +69,9 @@ public class DefaultComponentResolver implements ComponentResolver {
         }
     }
 
-    private Class<?> findComponent(String name, CamelContext context) {
+    private Class<?> findComponent(String name, CamelContext context) throws IOException {
         if (factoryFinder == null) {
-            factoryFinder = context.getCamelContextExtension().getFactoryFinder(RESOURCE_PATH);
+            factoryFinder = context.adapt(ExtendedCamelContext.class).getFactoryFinder(RESOURCE_PATH);
         }
         return factoryFinder.findClass(name).orElse(null);
     }

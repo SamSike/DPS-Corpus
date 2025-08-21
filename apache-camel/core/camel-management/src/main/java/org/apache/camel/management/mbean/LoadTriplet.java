@@ -16,20 +16,16 @@
  */
 package org.apache.camel.management.mbean;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 /**
- * Holds the loads (inflight messages, not cpu) averaged over 1min, 5min, and 15min.
+ * Holds the loads averaged over 1min, 5min, and 15min.
  */
 public final class LoadTriplet {
 
     // Exponents for EWMA: exp(-INTERVAL / WINDOW) (in seconds)
-    private static final double EXP_1 = Math.exp(-1 / (60.0));
+    private static final double EXP_1 = Math.exp(-1 / (60.0 * 1.0));
     private static final double EXP_5 = Math.exp(-1 / (60.0 * 5.0));
     private static final double EXP_15 = Math.exp(-1 / (60.0 * 15.0));
 
-    private static final Lock LOCK = new ReentrantLock();
     private double load01 = Double.NaN;
     private double load05 = Double.NaN;
     private double load15 = Double.NaN;
@@ -40,14 +36,9 @@ public final class LoadTriplet {
      * @param currentReading the current reading
      */
     public void update(int currentReading) {
-        LOCK.lock();
-        try {
-            load01 = updateLoad(currentReading, EXP_1, load01);
-            load05 = updateLoad(currentReading, EXP_5, load05);
-            load15 = updateLoad(currentReading, EXP_15, load15);
-        } finally {
-            LOCK.unlock();
-        }
+        load01 = updateLoad(currentReading, EXP_1, load01);
+        load05 = updateLoad(currentReading, EXP_5, load05);
+        load15 = updateLoad(currentReading, EXP_15, load15);
     }
 
     private double updateLoad(int reading, double exp, double recentLoad) {
@@ -55,41 +46,21 @@ public final class LoadTriplet {
     }
 
     public double getLoad1() {
-        LOCK.lock();
-        try {
-            return load01;
-        } finally {
-            LOCK.unlock();
-        }
+        return load01;
     }
 
     public double getLoad5() {
-        LOCK.lock();
-        try {
-            return load05;
-        } finally {
-            LOCK.unlock();
-        }
+        return load05;
     }
 
     public double getLoad15() {
-        LOCK.lock();
-        try {
-            return load15;
-        } finally {
-            LOCK.unlock();
-        }
+        return load15;
     }
 
     public void reset() {
-        LOCK.lock();
-        try {
-            load01 = Double.NaN;
-            load05 = Double.NaN;
-            load15 = Double.NaN;
-        } finally {
-            LOCK.unlock();
-        }
+        load01 = Double.NaN;
+        load05 = Double.NaN;
+        load15 = Double.NaN;
     }
 
     @Override

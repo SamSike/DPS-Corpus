@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,7 @@ package org.springframework.beans.propertyeditors;
 import java.beans.PropertyEditorSupport;
 import java.util.StringJoiner;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -39,7 +38,8 @@ import org.springframework.util.StringUtils;
  */
 public class ClassArrayEditor extends PropertyEditorSupport {
 
-	private final @Nullable ClassLoader classLoader;
+	@Nullable
+	private final ClassLoader classLoader;
 
 
 	/**

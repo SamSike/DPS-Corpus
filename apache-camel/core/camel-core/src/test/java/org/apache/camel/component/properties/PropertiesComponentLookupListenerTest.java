@@ -33,7 +33,7 @@ public class PropertiesComponentLookupListenerTest extends ContextTestSupport {
     private final MyListener myListener = new MyListener();
 
     @Test
-    public void testListener() {
+    public void testListener() throws Exception {
         assertTrue(myListener.hasName("greeting"));
         assertEquals("Hello World", myListener.getValue("greeting"));
         assertEquals("InitialProperties", myListener.getSource("greeting"));
@@ -45,10 +45,10 @@ public class PropertiesComponentLookupListenerTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .setBody(constant("{{greeting}}"))
                         .to("{{cool.end}}");
@@ -65,9 +65,9 @@ public class PropertiesComponentLookupListenerTest extends ContextTestSupport {
         return context;
     }
 
-    private static class MyListener implements PropertiesLookupListener {
+    private class MyListener implements PropertiesLookupListener {
 
-        private final Map<String, String[]> map = new HashMap<>();
+        private Map<String, String[]> map = new HashMap<>();
 
         @Override
         public void onLookup(String name, String value, String defaultValue, String source) {

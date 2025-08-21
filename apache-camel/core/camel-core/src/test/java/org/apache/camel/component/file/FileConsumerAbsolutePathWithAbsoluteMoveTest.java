@@ -39,9 +39,9 @@ public class FileConsumerAbsolutePathWithAbsoluteMoveTest extends ContextTestSup
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?initialDelay=0&delay=10&move=" + testDirectory() + "/done/${file:onlyname}"))
                         .convertBodyTo(String.class).to("mock:report");
             }

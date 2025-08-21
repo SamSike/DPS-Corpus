@@ -44,24 +44,23 @@ public class BatchConsumerPooledExchangeTest extends ContextTestSupport {
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        CamelContext camelContext = super.createCamelContext();
-        ExtendedCamelContext ecc = camelContext.getCamelContextExtension();
+        ExtendedCamelContext ecc = (ExtendedCamelContext) super.createCamelContext();
 
         ecc.setExchangeFactory(new PooledExchangeFactory());
         ecc.setProcessorExchangeFactory(new PooledProcessorExchangeFactory());
         ecc.getExchangeFactory().setStatisticsEnabled(true);
         ecc.getProcessorExchangeFactory().setStatisticsEnabled(true);
 
-        return camelContext;
+        return ecc;
     }
 
     @Override
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        template.sendBodyAndHeader(fileUri(), "aaa", Exchange.FILE_NAME, "aaa.BatchConsumerPooledExchangeTest.txt");
-        template.sendBodyAndHeader(fileUri(), "bbb", Exchange.FILE_NAME, "bbb.BatchConsumerPooledExchangeTest.txt");
-        template.sendBodyAndHeader(fileUri(), "ccc", Exchange.FILE_NAME, "ccc.BatchConsumerPooledExchangeTest.txt");
+        template.sendBodyAndHeader(fileUri(), "aaa", Exchange.FILE_NAME, "aaa.txt");
+        template.sendBodyAndHeader(fileUri(), "bbb", Exchange.FILE_NAME, "bbb.txt");
+        template.sendBodyAndHeader(fileUri(), "ccc", Exchange.FILE_NAME, "ccc.txt");
     }
 
     @Test
@@ -80,7 +79,7 @@ public class BatchConsumerPooledExchangeTest extends ContextTestSupport {
 
         Awaitility.waitAtMost(2, TimeUnit.SECONDS).untilAsserted(() -> {
             PooledObjectFactory.Statistics stat
-                    = context.getCamelContextExtension().getExchangeFactoryManager().getStatistics();
+                    = context.adapt(ExtendedCamelContext.class).getExchangeFactoryManager().getStatistics();
             assertEquals(1, stat.getCreatedCounter());
             assertEquals(2, stat.getAcquiredCounter());
             assertEquals(3, stat.getReleasedCounter());
@@ -89,17 +88,17 @@ public class BatchConsumerPooledExchangeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // maxMessagesPerPoll=1 to force polling 3 times to use pooled exchanges
-                from(fileUri("?initialDelay=0&delay=10&maxMessagesPerPoll=1")).autoStartup(false)
+                from(fileUri("?initialDelay=0&delay=10&maxMessagesPerPoll=1")).noAutoStartup()
                         .setProperty("myprop", counter::incrementAndGet)
                         .setHeader("myheader", counter::incrementAndGet)
                         .process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 // should be same exchange instance as its pooled
                                 Exchange old = ref.get();
                                 if (old == null) {

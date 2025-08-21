@@ -31,8 +31,7 @@ public class SftpSimpleProduceDisconnectIT extends SftpServerTestSupport {
     @Test
     public void testSftpSimpleProduce() throws Exception {
         template.sendBodyAndHeader(
-                "sftp://localhost:{{ftp.server.port}}/{{ftp.root.dir}}?username=admin&password=admin&knownHostsFile="
-                                   + service.getKnownHostsFile(),
+                "sftp://localhost:{{ftp.server.port}}/{{ftp.root.dir}}?username=admin&password=admin",
                 "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         File file = ftpFile("hello.txt").toFile();
@@ -44,8 +43,7 @@ public class SftpSimpleProduceDisconnectIT extends SftpServerTestSupport {
         service.setUpServer();
 
         template.sendBodyAndHeader(
-                "sftp://localhost:{{ftp.server.port}}/{{ftp.root.dir}}?username=admin&password=admin&knownHostsFile="
-                                   + service.getKnownHostsFile(),
+                "sftp://localhost:{{ftp.server.port}}/{{ftp.root.dir}}?username=admin&password=admin",
                 "Hello World", Exchange.FILE_NAME, "hello1.txt");
 
         file = ftpFile("hello1.txt").toFile();

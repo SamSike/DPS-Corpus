@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.EndpointUriFactory;
 import org.apache.camel.support.component.EndpointUriFactorySupport;
 import org.junit.jupiter.api.Assertions;
@@ -59,7 +60,7 @@ public class CustomEndpointUriFactoryTest extends ContextTestSupport {
         params.put("port", 4444);
         params.put("verbose", true);
 
-        assembler = context.getCamelContextExtension().getEndpointUriFactory("acme");
+        assembler = context.adapt(ExtendedCamelContext.class).getEndpointUriFactory("acme");
         String uri = assembler.buildUri("acme", params);
         Assertions.assertEquals("acme:foo:4444?amount=123&verbose=true", uri);
     }
@@ -80,7 +81,7 @@ public class CustomEndpointUriFactoryTest extends ContextTestSupport {
     }
 
     @Test
-    public void testCustomAssembleNoMandatory() {
+    public void testCustomAssembleNoMandatory() throws Exception {
         EndpointUriFactory assembler = new MyAssembler();
         assembler.setCamelContext(context);
 
@@ -89,11 +90,13 @@ public class CustomEndpointUriFactoryTest extends ContextTestSupport {
         params.put("port", 4444);
         params.put("amount", "123");
 
-        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class,
-                () -> assembler.buildUri("acme", params),
-                "Should have thrown an exception");
-        Assertions.assertEquals("Option name is required when creating endpoint uri with syntax acme:name:port",
-                e.getMessage());
+        try {
+            assembler.buildUri("acme", params);
+            Assertions.fail();
+        } catch (IllegalArgumentException e) {
+            Assertions.assertEquals("Option name is required when creating endpoint uri with syntax acme:name:port",
+                    e.getMessage());
+        }
     }
 
     @Test

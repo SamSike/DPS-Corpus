@@ -24,8 +24,6 @@ import org.apache.camel.Message;
 import org.apache.camel.support.DefaultProducer;
 import org.apache.sshd.client.SshClient;
 
-import static org.apache.camel.component.ssh.SshUtils.*;
-
 public class SshProducer extends DefaultProducer {
     private SshEndpoint endpoint;
     private SshClient client;
@@ -37,13 +35,7 @@ public class SshProducer extends DefaultProducer {
 
     @Override
     protected void doStart() throws Exception {
-        if (this.endpoint.getConfiguration() == null || this.endpoint.getConfiguration().getClientBuilder() == null) {
-            client = SshClient.setUpDefaultClient();
-        } else {
-            client = this.endpoint.getConfiguration().getClientBuilder().build(true);
-        }
-        SshConfiguration configuration = endpoint.getConfiguration();
-        configureAlgorithms(configuration, client);
+        client = SshClient.setUpDefaultClient();
         client.start();
 
         super.doStart();
@@ -80,11 +72,6 @@ public class SshProducer extends DefaultProducer {
                         endpoint.isFailOnUnknownHost()));
             }
             SshResult result = SshHelper.sendExecCommand(headers, command, endpoint, client);
-
-            // propagate headers
-            exchange.getOut().getHeaders().putAll(in.getHeaders());
-
-            // store result
             exchange.getOut().setBody(result.getStdout());
             exchange.getOut().setHeader(SshConstants.EXIT_VALUE, result.getExitValue());
             exchange.getOut().setHeader(SshConstants.STDERR, result.getStderr());
@@ -92,5 +79,7 @@ public class SshProducer extends DefaultProducer {
             throw new CamelExchangeException("Cannot execute command: " + command, exchange, e);
         }
 
+        // propagate headers
+        exchange.getOut().getHeaders().putAll(in.getHeaders());
     }
 }

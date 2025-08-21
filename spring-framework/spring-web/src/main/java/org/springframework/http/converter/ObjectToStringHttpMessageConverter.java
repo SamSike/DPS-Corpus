@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,11 @@ package org.springframework.http.converter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -39,11 +38,11 @@ import org.springframework.util.Assert;
  * <p>A usage example:
  *
  * <pre class="code">
- * &lt;bean class="org.springframework.http.converter.ObjectToStringHttpMessageConverter"&gt;
- *   &lt;constructor-arg&gt;
- *     &lt;bean class="org.springframework.context.support.ConversionServiceFactoryBean"/&gt;
- *   &lt;/constructor-arg&gt;
- * &lt;/bean&gt;
+ * &lt;bean class="org.springframework.http.converter.ObjectToStringHttpMessageConverter">
+ *   &lt;constructor-arg>
+ *     &lt;bean class="org.springframework.context.support.ConversionServiceFactoryBean"/>
+ *   &lt;/constructor-arg>
+ * &lt;/bean>
  * </pre>
  *
  * @author <a href="mailto:dmitry.katsubo@gmail.com">Dmitry Katsubo</a>
@@ -136,8 +135,4 @@ public class ObjectToStringHttpMessageConverter extends AbstractHttpMessageConve
 		return this.stringHttpMessageConverter.getContentLength(value, contentType);
 	}
 
-	@Override
-	protected boolean supportsRepeatableWrites(Object o) {
-		return true;
-	}
 }

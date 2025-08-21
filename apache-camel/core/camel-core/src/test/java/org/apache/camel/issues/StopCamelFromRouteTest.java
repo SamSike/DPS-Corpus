@@ -69,13 +69,13 @@ public class StopCamelFromRouteTest {
     // END SNIPPET: e1
 
     // START SNIPPET: e2
-    public RouteBuilder createMyRoutes() {
+    public RouteBuilder createMyRoutes() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("myRoute").to("mock:start").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         // stop Camel by signalling to the latch
                         latch.countDown();
                     }

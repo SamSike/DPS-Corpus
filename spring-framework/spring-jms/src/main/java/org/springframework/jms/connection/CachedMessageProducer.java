@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,8 @@ import jakarta.jms.Queue;
 import jakarta.jms.QueueSender;
 import jakarta.jms.Topic;
 import jakarta.jms.TopicPublisher;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * JMS MessageProducer decorator that adapts calls to a shared MessageProducer
@@ -38,11 +39,14 @@ class CachedMessageProducer implements MessageProducer, QueueSender, TopicPublis
 
 	private final MessageProducer target;
 
-	private @Nullable Boolean originalDisableMessageID;
+	@Nullable
+	private Boolean originalDisableMessageID;
 
-	private @Nullable Boolean originalDisableMessageTimestamp;
+	@Nullable
+	private Boolean originalDisableMessageTimestamp;
 
-	private @Nullable Long originalDeliveryDelay;
+	@Nullable
+	private Long originalDeliveryDelay;
 
 	private int deliveryMode;
 

@@ -31,7 +31,7 @@ public class SedaConfigureTest extends ContextTestSupport {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testBlockingQueueConfigured() {
+    public void testBlockingQueueConfigured() throws Exception {
         SedaEndpoint endpoint = resolveMandatoryEndpoint("seda:foo?size=2000", SedaEndpoint.class);
         BlockingQueue<Exchange> queue = endpoint.getQueue();
 

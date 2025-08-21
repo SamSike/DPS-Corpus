@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,38 +40,38 @@ package org.jooq.meta.h2;
 import static org.jooq.impl.DSL.any;
 import static org.jooq.impl.DSL.choose;
 import static org.jooq.impl.DSL.coalesce;
+import static org.jooq.impl.DSL.concat;
 import static org.jooq.impl.DSL.condition;
-import static org.jooq.impl.DSL.decode;
+import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.noCondition;
+import static org.jooq.impl.DSL.nvl;
 import static org.jooq.impl.DSL.when;
 import static org.jooq.impl.SQLDataType.BOOLEAN;
+import static org.jooq.impl.SQLDataType.INTEGER;
 import static org.jooq.meta.h2.information_schema.Tables.COLUMNS;
+import static org.jooq.meta.hsqldb.information_schema.Tables.ELEMENT_TYPES;
 import static org.jooq.tools.StringUtils.defaultString;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.jooq.Field;
 import org.jooq.Name;
 import org.jooq.Param;
 import org.jooq.Record;
+import org.jooq.Table;
 import org.jooq.TableOptions.TableType;
 import org.jooq.meta.AbstractTableDefinition;
 import org.jooq.meta.ColumnDefinition;
 import org.jooq.meta.DataTypeDefinition;
+import org.jooq.meta.Database;
 import org.jooq.meta.DefaultColumnDefinition;
 import org.jooq.meta.DefaultDataTypeDefinition;
 import org.jooq.meta.SchemaDefinition;
-import org.jooq.meta.h2.H2Database.ElementType;
-import org.jooq.meta.h2.H2Database.ElementTypeLookupKey;
 import org.jooq.meta.hsqldb.information_schema.Tables;
-
-import org.jetbrains.annotations.NotNull;
 
 /**
  * H2 table definition
@@ -105,28 +105,24 @@ public class H2TableDefinition extends AbstractTableDefinition {
         List<ColumnDefinition> result = new ArrayList<>();
 
         H2Database db = (H2Database) getDatabase();
-        Field<Boolean> visible = COLUMNS.IS_VISIBLE.coerce(BOOLEAN);
 
-
-        // [#252] While recursing on ELEMENT_TYPES to detect multi dimensional
-        //        arrays looks like the cleanest approach, H2's recursive SQL
-        //        has been troubled by a ton of bugs in the past. Hard-coded
-        //        left joins are an ugly option, which is why we opt for doing
-        //        this calculation in Java, for once.
-        //        See also: https://github.com/jOOQ/jOOQ/issues/252#issuecomment-1240484853
         for (Record record : create().select(
                 COLUMNS.COLUMN_NAME,
                 COLUMNS.ORDINAL_POSITION,
 
+                // [#13302] Use explicit NULL check to prevent side-effects from H2's compatibility run modes
+                when(ELEMENT_TYPES.DATA_TYPE.isNotNull(), concat(ELEMENT_TYPES.DATA_TYPE, inline(" ARRAY")))
                 // [#2230] [#11733] Translate INTERVAL_TYPE to supported types
-                when(COLUMNS.INTERVAL_TYPE.like(any(inline("%YEAR%"), inline("%MONTH%"))), inline("INTERVAL YEAR TO MONTH"))
+                .when(COLUMNS.INTERVAL_TYPE.like(any(inline("%YEAR%"), inline("%MONTH%"))), inline("INTERVAL YEAR TO MONTH"))
                 .when(COLUMNS.INTERVAL_TYPE.like(any(inline("%DAY%"), inline("%HOUR%"), inline("%MINUTE%"), inline("%SECOND%"))), inline("INTERVAL DAY TO SECOND"))
                 .else_(Tables.COLUMNS.DATA_TYPE).as(COLUMNS.TYPE_NAME),
-                COLUMNS.CHARACTER_MAXIMUM_LENGTH,
+                nvl(ELEMENT_TYPES.CHARACTER_MAXIMUM_LENGTH, COLUMNS.CHARACTER_MAXIMUM_LENGTH).as(COLUMNS.CHARACTER_MAXIMUM_LENGTH),
                 coalesce(
-                    COLUMNS.DATETIME_PRECISION.coerce(COLUMNS.NUMERIC_PRECISION),
+                    ELEMENT_TYPES.DATETIME_PRECISION,
+                    ELEMENT_TYPES.NUMERIC_PRECISION,
+                    COLUMNS.DATETIME_PRECISION,
                     COLUMNS.NUMERIC_PRECISION).as(COLUMNS.NUMERIC_PRECISION),
-                COLUMNS.NUMERIC_SCALE,
+                nvl(ELEMENT_TYPES.NUMERIC_SCALE, COLUMNS.NUMERIC_SCALE).as(COLUMNS.NUMERIC_SCALE),
                 COLUMNS.IS_NULLABLE,
                 Tables.COLUMNS.IS_GENERATED.eq(inline("ALWAYS")).as(COLUMNS.IS_COMPUTED),
                 Tables.COLUMNS.GENERATION_EXPRESSION,
@@ -134,11 +130,13 @@ public class H2TableDefinition extends AbstractTableDefinition {
                 COLUMNS.REMARKS,
                 Tables.COLUMNS.IS_IDENTITY.eq(inline("YES")).as(Tables.COLUMNS.IS_IDENTITY),
                 COLUMNS.DOMAIN_SCHEMA,
-                COLUMNS.DOMAIN_NAME,
-                Tables.COLUMNS.DTD_IDENTIFIER,
-                visible
+                COLUMNS.DOMAIN_NAME
             )
             .from(COLUMNS)
+                .leftJoin(ELEMENT_TYPES)
+                .on(Tables.COLUMNS.TABLE_SCHEMA.equal(ELEMENT_TYPES.OBJECT_SCHEMA))
+                .and(Tables.COLUMNS.TABLE_NAME.equal(ELEMENT_TYPES.OBJECT_NAME))
+                .and(Tables.COLUMNS.DTD_IDENTIFIER.equal(ELEMENT_TYPES.COLLECTION_TYPE_IDENTIFIER))
             .where(COLUMNS.TABLE_SCHEMA.equal(getSchema().getName()))
             .and(COLUMNS.TABLE_NAME.equal(getName()))
             .and(!getDatabase().getIncludeInvisibleColumns()
@@ -165,27 +163,17 @@ public class H2TableDefinition extends AbstractTableDefinition {
                 ? getDatabase().getSchema(record.get(COLUMNS.DOMAIN_SCHEMA))
                 : getSchema();
 
-            ElementType et = db.elementTypeLookup(new ElementTypeLookupKey(getSchema().getName(), getName(), record.get(Tables.COLUMNS.DTD_IDENTIFIER)));
-
-            if (et == null)
-                et = new ElementType(record.get(COLUMNS.TYPE_NAME), record.get(COLUMNS.CHARACTER_MAXIMUM_LENGTH), record.get(COLUMNS.NUMERIC_PRECISION), record.get(COLUMNS.NUMERIC_SCALE), null, 0);
-
-            DefaultDataTypeDefinition type = new DefaultDataTypeDefinition(
+            DataTypeDefinition type = new DefaultDataTypeDefinition(
                 getDatabase(),
                 typeSchema == null ? getSchema() : typeSchema,
-                et.dataType() + IntStream.range(0, et.dimension()).mapToObj(i -> " ARRAY").collect(Collectors.joining()),
-                et.length(),
-                et.precision(),
-                et.scale(),
+                record.get(COLUMNS.TYPE_NAME),
+                record.get(COLUMNS.CHARACTER_MAXIMUM_LENGTH),
+                record.get(COLUMNS.NUMERIC_PRECISION),
+                record.get(COLUMNS.NUMERIC_SCALE),
                 record.get(COLUMNS.IS_NULLABLE, boolean.class),
                 isIdentity || isComputed ? null : record.get(COLUMNS.COLUMN_DEFAULT),
                 userType
             ).generatedAlwaysAs(isComputed ? record.get(Tables.COLUMNS.GENERATION_EXPRESSION) : null);
-
-
-
-
-
 
             result.add(new DefaultColumnDefinition(
                 getDatabase().getTable(getSchema(), getName()),
@@ -225,8 +213,8 @@ public class H2TableDefinition extends AbstractTableDefinition {
                 ).as(COLUMNS.TYPE_NAME),
                 choose().when(COLUMNS.NUMERIC_PRECISION.eq(maxP).and(COLUMNS.NUMERIC_SCALE.eq(maxS)), inline(0L))
                         .otherwise(COLUMNS.CHARACTER_MAXIMUM_LENGTH).as(COLUMNS.CHARACTER_MAXIMUM_LENGTH),
-                decode(COLUMNS.NUMERIC_PRECISION, maxP, inline(0L), COLUMNS.NUMERIC_PRECISION).as(COLUMNS.NUMERIC_PRECISION),
-                decode(COLUMNS.NUMERIC_SCALE, maxS, inline(0L), COLUMNS.NUMERIC_SCALE).as(COLUMNS.NUMERIC_SCALE),
+                COLUMNS.NUMERIC_PRECISION.decode(maxP, inline(0L), COLUMNS.NUMERIC_PRECISION).as(COLUMNS.NUMERIC_PRECISION),
+                COLUMNS.NUMERIC_SCALE.decode(maxS, inline(0L), COLUMNS.NUMERIC_SCALE).as(COLUMNS.NUMERIC_SCALE),
                 COLUMNS.IS_NULLABLE,
                 COLUMNS.IS_COMPUTED.as(COLUMNS.IS_COMPUTED),
                 COLUMNS.COLUMN_DEFAULT.as("GENERATION_EXPRESSION"),

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.web.reactive.socket.server.support;
 
 import java.util.function.BiPredicate;
 
-import org.springframework.http.HttpMethod;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.server.ServerWebExchange;
 
@@ -36,9 +35,9 @@ public class WebSocketUpgradeHandlerPredicate implements BiPredicate<Object, Ser
 	@Override
 	public boolean test(Object handler, ServerWebExchange exchange) {
 		if (handler instanceof WebSocketHandler) {
-			HttpMethod method = exchange.getRequest().getMethod();
+			String method = exchange.getRequest().getMethodValue();
 			String header = exchange.getRequest().getHeaders().getUpgrade();
-			return (HttpMethod.GET.equals(method) && header != null && header.equalsIgnoreCase("websocket"));
+			return (method.equals("GET") && header != null && header.equalsIgnoreCase("websocket"));
 		}
 		return true;
 	}

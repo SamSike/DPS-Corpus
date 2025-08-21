@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,14 +26,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import javax.sql.DataSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -48,17 +46,17 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.JdbcUtils;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * Abstract class to provide base functionality for easy (batch) inserts
+ * Abstract class to provide base functionality for easy inserts
  * based on configuration options and database meta-data.
  *
- * <p>This class provides the processing arrangement for {@link SimpleJdbcInsert}.
+ * <p>This class provides the base SPI for {@link SimpleJdbcInsert}.
  *
  * @author Thomas Risberg
  * @author Juergen Hoeller
- * @author Sam Brannen
  * @since 2.5
  */
 public abstract class AbstractJdbcInsert {
@@ -93,7 +91,7 @@ public abstract class AbstractJdbcInsert {
 
 	/**
 	 * Constructor to be used when initializing using a {@link DataSource}.
-	 * @param dataSource the {@code DataSource} to be used
+	 * @param dataSource the DataSource to be used
 	 */
 	protected AbstractJdbcInsert(DataSource dataSource) {
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
@@ -101,7 +99,7 @@ public abstract class AbstractJdbcInsert {
 
 	/**
 	 * Constructor to be used when initializing using a {@link JdbcTemplate}.
-	 * @param jdbcTemplate the {@code JdbcTemplate} to use
+	 * @param jdbcTemplate the JdbcTemplate to use
 	 */
 	protected AbstractJdbcInsert(JdbcTemplate jdbcTemplate) {
 		Assert.notNull(jdbcTemplate, "JdbcTemplate must not be null");
@@ -131,7 +129,8 @@ public abstract class AbstractJdbcInsert {
 	/**
 	 * Get the name of the table for this insert.
 	 */
-	public @Nullable String getTableName() {
+	@Nullable
+	public String getTableName() {
 		return this.tableMetaDataContext.getTableName();
 	}
 
@@ -146,7 +145,8 @@ public abstract class AbstractJdbcInsert {
 	/**
 	 * Get the name of the schema for this insert.
 	 */
-	public @Nullable String getSchemaName() {
+	@Nullable
+	public String getSchemaName() {
 		return this.tableMetaDataContext.getSchemaName();
 	}
 
@@ -161,7 +161,8 @@ public abstract class AbstractJdbcInsert {
 	/**
 	 * Get the name of the catalog for this insert.
 	 */
-	public @Nullable String getCatalogName() {
+	@Nullable
+	public String getCatalogName() {
 		return this.tableMetaDataContext.getCatalogName();
 	}
 
@@ -206,7 +207,7 @@ public abstract class AbstractJdbcInsert {
 
 	/**
 	 * Specify whether the parameter meta-data for the call should be used.
-	 * <p>The default is {@code true}.
+	 * The default is {@code true}.
 	 */
 	public void setAccessTableColumnMetaData(boolean accessTableColumnMetaData) {
 		this.tableMetaDataContext.setAccessTableColumnMetaData(accessTableColumnMetaData);
@@ -214,7 +215,7 @@ public abstract class AbstractJdbcInsert {
 
 	/**
 	 * Specify whether the default for including synonyms should be changed.
-	 * <p>The default is {@code false}.
+	 * The default is {@code false}.
 	 */
 	public void setOverrideIncludeSynonymsDefault(boolean override) {
 		this.tableMetaDataContext.setOverrideIncludeSynonymsDefault(override);
@@ -234,28 +235,6 @@ public abstract class AbstractJdbcInsert {
 		return this.insertTypes;
 	}
 
-	/**
-	 * Specify whether SQL identifiers should be quoted.
-	 * <p>Defaults to {@code false}. If set to {@code true}, the identifier
-	 * quote string for the underlying database will be used to quote SQL
-	 * identifiers in generated SQL statements.
-	 * @param quoteIdentifiers whether identifiers should be quoted
-	 * @since 6.1
-	 * @see java.sql.DatabaseMetaData#getIdentifierQuoteString()
-	 */
-	public void setQuoteIdentifiers(boolean quoteIdentifiers) {
-		this.tableMetaDataContext.setQuoteIdentifiers(quoteIdentifiers);
-	}
-
-	/**
-	 * Get the {@code quoteIdentifiers} flag.
-	 * @since 6.1
-	 * @see #setQuoteIdentifiers(boolean)
-	 */
-	public boolean isQuoteIdentifiers() {
-		return this.tableMetaDataContext.isQuoteIdentifiers();
-	}
-
 
 	//-------------------------------------------------------------------------
 	// Methods handling compilation issues
@@ -272,10 +251,6 @@ public abstract class AbstractJdbcInsert {
 		if (!isCompiled()) {
 			if (getTableName() == null) {
 				throw new InvalidDataAccessApiUsageException("Table name is required");
-			}
-			if (isQuoteIdentifiers() && this.declaredColumns.isEmpty()) {
-				throw new InvalidDataAccessApiUsageException(
-						"Explicit column names must be provided when using quoted identifiers");
 			}
 			try {
 				this.jdbcTemplate.afterPropertiesSet();
@@ -434,7 +409,7 @@ public abstract class AbstractJdbcInsert {
 	/**
 	 * Delegate method to execute the insert, generating a single key.
 	 */
-	private Number executeInsertAndReturnKeyInternal(List<?> values) {
+	private Number executeInsertAndReturnKeyInternal(final List<?> values) {
 		KeyHolder kh = executeInsertAndReturnKeyHolderInternal(values);
 		if (kh.getKey() != null) {
 			return kh.getKey();
@@ -448,12 +423,11 @@ public abstract class AbstractJdbcInsert {
 	/**
 	 * Delegate method to execute the insert, generating any number of keys.
 	 */
-	@SuppressWarnings("NullAway") // See https://github.com/uber/NullAway/issues/1075
-	private KeyHolder executeInsertAndReturnKeyHolderInternal(List<?> values) {
+	private KeyHolder executeInsertAndReturnKeyHolderInternal(final List<?> values) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("The following parameters are used for call " + getInsertString() + " with: " + values);
 		}
-		KeyHolder keyHolder = new GeneratedKeyHolder();
+		final KeyHolder keyHolder = new GeneratedKeyHolder();
 
 		if (this.tableMetaDataContext.isGetGeneratedKeysSupported()) {
 			getJdbcTemplate().update(
@@ -477,11 +451,11 @@ public abstract class AbstractJdbcInsert {
 			if (getGeneratedKeyNames().length > 1) {
 				throw new InvalidDataAccessApiUsageException(
 						"Current database only supports retrieving the key for a single column. There are " +
-						getGeneratedKeyNames().length + " columns specified: " + Arrays.toString(getGeneratedKeyNames()));
+						getGeneratedKeyNames().length  + " columns specified: " + Arrays.asList(getGeneratedKeyNames()));
 			}
 
 			Assert.state(getTableName() != null, "No table name set");
-			String keyQuery = this.tableMetaDataContext.getSimpleQueryForGetGeneratedKey(
+			final String keyQuery = this.tableMetaDataContext.getSimpleQueryForGetGeneratedKey(
 					getTableName(), getGeneratedKeyNames()[0]);
 			Assert.state(keyQuery != null, "Query for simulating get generated keys must not be null");
 
@@ -489,7 +463,7 @@ public abstract class AbstractJdbcInsert {
 			// get generated keys feature. HSQL is one, PostgreSQL is another. Postgres uses a RETURNING
 			// clause while HSQL uses a second query that has to be executed with the same connection.
 
-			if (keyQuery.toUpperCase(Locale.ROOT).startsWith("RETURNING")) {
+			if (keyQuery.toUpperCase().startsWith("RETURNING")) {
 				Long key = getJdbcTemplate().queryForObject(
 						getInsertString() + " " + keyQuery, Long.class, values.toArray());
 				Map<String, Object> keys = new HashMap<>(2);
@@ -497,7 +471,7 @@ public abstract class AbstractJdbcInsert {
 				keyHolder.getKeyList().add(keys);
 			}
 			else {
-				getJdbcTemplate().execute((ConnectionCallback<@Nullable Object>) con -> {
+				getJdbcTemplate().execute((ConnectionCallback<Object>) con -> {
 					// Do the insert
 					PreparedStatement ps = null;
 					try {
@@ -561,8 +535,8 @@ public abstract class AbstractJdbcInsert {
 
 	/**
 	 * Delegate method that executes a batch insert using the passed-in Maps of parameters.
-	 * @param batch maps with parameter names and values to be used in the batch insert
-	 * @return an array of number of rows affected
+	 * @param batch array of Maps with parameter names and values to be used in batch insert
+	 * @return array of number of rows affected
 	 */
 	@SuppressWarnings("unchecked")
 	protected int[] doExecuteBatch(Map<String, ?>... batch) {
@@ -575,10 +549,9 @@ public abstract class AbstractJdbcInsert {
 	}
 
 	/**
-	 * Delegate method that executes a batch insert using the passed-in
-	 * {@link SqlParameterSource SqlParameterSources}.
-	 * @param batch parameter sources with names and values to be used in the batch insert
-	 * @return an array of number of rows affected
+	 * Delegate method that executes a batch insert using the passed-in {@link SqlParameterSource SqlParameterSources}.
+	 * @param batch array of SqlParameterSource with parameter names and values to be used in insert
+	 * @return array of number of rows affected
 	 */
 	protected int[] doExecuteBatch(SqlParameterSource... batch) {
 		checkCompiled();
@@ -614,7 +587,7 @@ public abstract class AbstractJdbcInsert {
 	 * @param preparedStatement the PreparedStatement
 	 * @param values the values to be set
 	 */
-	private void setParameterValues(PreparedStatement preparedStatement, List<?> values, int @Nullable ... columnTypes)
+	private void setParameterValues(PreparedStatement preparedStatement, List<?> values, @Nullable int... columnTypes)
 			throws SQLException {
 
 		int colIndex = 0;
@@ -633,7 +606,7 @@ public abstract class AbstractJdbcInsert {
 	 * Match the provided in parameter values with registered parameters and parameters
 	 * defined via meta-data processing.
 	 * @param parameterSource the parameter values provided as a {@link SqlParameterSource}
-	 * @return a List of values
+	 * @return a Map with parameter names and values
 	 */
 	protected List<Object> matchInParameterValuesWithInsertColumns(SqlParameterSource parameterSource) {
 		return this.tableMetaDataContext.matchInParameterValuesWithInsertColumns(parameterSource);
@@ -642,8 +615,8 @@ public abstract class AbstractJdbcInsert {
 	/**
 	 * Match the provided in parameter values with registered parameters and parameters
 	 * defined via meta-data processing.
-	 * @param args the parameter values provided as a Map
-	 * @return a List of values
+	 * @param args the parameter values provided in a Map
+	 * @return a Map with parameter names and values
 	 */
 	protected List<Object> matchInParameterValuesWithInsertColumns(Map<String, ?> args) {
 		return this.tableMetaDataContext.matchInParameterValuesWithInsertColumns(args);

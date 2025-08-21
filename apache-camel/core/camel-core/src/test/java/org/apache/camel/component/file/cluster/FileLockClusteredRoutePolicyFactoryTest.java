@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.file.cluster;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -24,14 +23,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import org.apache.camel.TestSupport;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.cluster.ClusteredRoutePolicyFactory;
-import org.awaitility.Awaitility;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,13 +39,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public final class FileLockClusteredRoutePolicyFactoryTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileLockClusteredRoutePolicyFactoryTest.class);
-    private static final List<String> CLIENTS = List.of("0", "1", "2");
+    private static final List<String> CLIENTS = IntStream.range(0, 3).mapToObj(Integer::toString).collect(Collectors.toList());
     private static final List<String> RESULTS = new ArrayList<>();
     private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(CLIENTS.size());
     private static final CountDownLatch LATCH = new CountDownLatch(CLIENTS.size());
-
-    @TempDir
-    private static Path tempDir;
 
     // ************************************
     // Test
@@ -58,7 +54,7 @@ public final class FileLockClusteredRoutePolicyFactoryTest {
             SCHEDULER.submit(() -> run(id));
         }
 
-        LATCH.await(20, TimeUnit.SECONDS);
+        LATCH.await(1, TimeUnit.MINUTES);
         SCHEDULER.shutdownNow();
 
         assertEquals(CLIENTS.size(), RESULTS.size());
@@ -76,31 +72,29 @@ public final class FileLockClusteredRoutePolicyFactoryTest {
 
             FileLockClusterService service = new FileLockClusterService();
             service.setId("node-" + id);
-            service.setRoot(tempDir.toString());
-            service.setAcquireLockDelay(100, TimeUnit.MILLISECONDS);
-            service.setAcquireLockInterval(100, TimeUnit.MILLISECONDS);
+            service.setRoot(TestSupport.testDirectory(FileLockClusteredRoutePolicyTest.class, true).toString());
+            service.setAcquireLockDelay(1, TimeUnit.SECONDS);
+            service.setAcquireLockInterval(1, TimeUnit.SECONDS);
 
             DefaultCamelContext context = new DefaultCamelContext();
             context.disableJMX();
-            context.getCamelContextExtension().setName("context-" + id);
+            context.setName("context-" + id);
             context.addService(service);
             context.addRoutePolicyFactory(ClusteredRoutePolicyFactory.forNamespace("my-ns"));
             context.addRoutes(new RouteBuilder() {
                 @Override
-                public void configure() {
-                    from("timer:file-lock?delay=10&period=100").routeId("route-" + id).log("From ${routeId}")
+                public void configure() throws Exception {
+                    from("timer:file-lock?delay=1000&period=1000").routeId("route-" + id).log("From ${routeId}")
                             .process(e -> contextLatch.countDown());
                 }
             });
 
             // Start the context after some random time so the startup order
             // changes for each test.
-            Awaitility.await().pollDelay(ThreadLocalRandom.current().nextInt(500), TimeUnit.MILLISECONDS)
-                    .untilAsserted(() -> Assertions.assertDoesNotThrow(context::start));
-
+            Thread.sleep(ThreadLocalRandom.current().nextInt(500));
             context.start();
 
-            contextLatch.await(10, TimeUnit.SECONDS);
+            contextLatch.await();
 
             LOGGER.debug("Shutting down node {}", id);
             RESULTS.add(id);
@@ -109,7 +103,7 @@ public final class FileLockClusteredRoutePolicyFactoryTest {
 
             LATCH.countDown();
         } catch (Exception e) {
-            LOGGER.warn("{}", e.getMessage(), e);
+            LOGGER.warn("", e);
         }
     }
 }

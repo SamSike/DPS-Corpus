@@ -27,7 +27,6 @@ import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.xmlunit.assertj3.XmlAssert;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -52,8 +51,7 @@ public class XMLTokenExpressionIteratorTest {
                                              + "<c:child some_attr='f' anotherAttr='f'/>"
                                              + "</c:parent>"
                                              + "</grandparent>"
-                                             + "</g:greatgrandparent>")
-            .getBytes();
+                                             + "</g:greatgrandparent>").getBytes();
 
     // mixing a default namespace with an explicit namespace for child
     private static final byte[] TEST_BODY_NS_MIXED = ("<?xml version='1.0' encoding='UTF-8'?>"
@@ -67,8 +65,7 @@ public class XMLTokenExpressionIteratorTest {
                                                       + "<c:child some_attr='d' anotherAttr='d'/>"
                                                       + "</c:parent>"
                                                       + "</grandparent>"
-                                                      + "</g:greatgrandparent>")
-            .getBytes();
+                                                      + "</g:greatgrandparent>").getBytes();
 
     // mixing a no namespace with an explicit namespace for child
     private static final byte[] TEST_BODY_NO_NS_MIXED = ("<?xml version='1.0' encoding='UTF-8'?>"
@@ -82,8 +79,7 @@ public class XMLTokenExpressionIteratorTest {
                                                          + "<c:child some_attr='d' anotherAttr='d'/>"
                                                          + "</c:parent>"
                                                          + "</grandparent>"
-                                                         + "</g:greatgrandparent>")
-            .getBytes();
+                                                         + "</g:greatgrandparent>").getBytes();
 
     // mixing different namespaces within a tag
     private static final byte[] TEST_BODY_MIXED_CHILDREN = ("<?xml version='1.0' encoding='UTF-8'?>"
@@ -110,8 +106,7 @@ public class XMLTokenExpressionIteratorTest {
                                                             + "<c:child some_attr='f' anotherAttr='f' />"
                                                             + "</c:parent>"
                                                             + "</grandparent>"
-                                                            + "</greatgrandparent>")
-            .getBytes();
+                                                            + "</greatgrandparent>").getBytes();
 
     private static final String RESULTS_CW1 = "<?xml version='1.0' encoding='UTF-8'?>"
                                               + "<g:greatgrandparent xmlns:g='urn:g'><grandparent><uncle/><aunt>emma</aunt>"
@@ -491,12 +486,7 @@ public class XMLTokenExpressionIteratorTest {
 
         assertEquals(expected.length, results.size(), "token count");
         for (int i = 0; i < expected.length; i++) {
-            String expectedToken = expected[i];
-            if (expectedToken.startsWith("<")) {
-                XmlAssert.assertThat(results.get(i)).and(expectedToken).areIdentical();
-            } else {
-                assertEquals(expectedToken, results.get(i), "mismatch [" + i + "]");
-            }
+            assertEquals(expected[i], results.get(i), "mismatch [" + i + "]");
         }
     }
 

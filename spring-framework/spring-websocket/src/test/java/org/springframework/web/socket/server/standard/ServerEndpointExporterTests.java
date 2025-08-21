@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,35 +34,40 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 /**
- * Tests for {@link ServerEndpointExporter}.
+ * Test fixture for {@link ServerEndpointExporter}.
  *
  * @author Rossen Stoyanchev
  * @author Juergen Hoeller
  */
-class ServerEndpointExporterTests {
+public class ServerEndpointExporterTests {
 
-	private ServerContainer serverContainer = mock();
+	private ServerContainer serverContainer;
 
-	private ServletContext servletContext = new MockServletContext();
-
-	private ServerEndpointExporter exporter = new ServerEndpointExporter();
+	private ServletContext servletContext;
 
 	private AnnotationConfigWebApplicationContext webAppContext;
 
+	private ServerEndpointExporter exporter;
+
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
+		this.serverContainer = mock(ServerContainer.class);
+
+		this.servletContext = new MockServletContext();
 		this.servletContext.setAttribute("jakarta.websocket.server.ServerContainer", this.serverContainer);
 
 		this.webAppContext = new AnnotationConfigWebApplicationContext();
 		this.webAppContext.register(Config.class);
 		this.webAppContext.setServletContext(this.servletContext);
 		this.webAppContext.refresh();
+
+		this.exporter = new ServerEndpointExporter();
 	}
 
 
 	@Test
-	void addAnnotatedEndpointClasses() throws Exception {
+	public void addAnnotatedEndpointClasses() throws Exception {
 		this.exporter.setAnnotatedEndpointClasses(AnnotatedDummyEndpoint.class);
 		this.exporter.setApplicationContext(this.webAppContext);
 		this.exporter.afterPropertiesSet();
@@ -73,7 +78,7 @@ class ServerEndpointExporterTests {
 	}
 
 	@Test
-	void addAnnotatedEndpointClassesWithServletContextOnly() throws Exception {
+	public void addAnnotatedEndpointClassesWithServletContextOnly() throws Exception {
 		this.exporter.setAnnotatedEndpointClasses(AnnotatedDummyEndpoint.class, AnnotatedDummyEndpointBean.class);
 		this.exporter.setServletContext(this.servletContext);
 		this.exporter.afterPropertiesSet();
@@ -84,7 +89,7 @@ class ServerEndpointExporterTests {
 	}
 
 	@Test
-	void addAnnotatedEndpointClassesWithExplicitServerContainerOnly() throws Exception {
+	public void addAnnotatedEndpointClassesWithExplicitServerContainerOnly() throws Exception {
 		this.exporter.setAnnotatedEndpointClasses(AnnotatedDummyEndpoint.class, AnnotatedDummyEndpointBean.class);
 		this.exporter.setServerContainer(this.serverContainer);
 		this.exporter.afterPropertiesSet();
@@ -95,7 +100,7 @@ class ServerEndpointExporterTests {
 	}
 
 	@Test
-	void addServerEndpointConfigBean() throws Exception {
+	public void addServerEndpointConfigBean() throws Exception {
 		ServerEndpointRegistration endpointRegistration = new ServerEndpointRegistration("/dummy", new DummyEndpoint());
 		this.webAppContext.getBeanFactory().registerSingleton("dummyEndpoint", endpointRegistration);
 
@@ -107,7 +112,7 @@ class ServerEndpointExporterTests {
 	}
 
 	@Test
-	void addServerEndpointConfigBeanWithExplicitServletContext() throws Exception {
+	public void addServerEndpointConfigBeanWithExplicitServletContext() throws Exception {
 		ServerEndpointRegistration endpointRegistration = new ServerEndpointRegistration("/dummy", new DummyEndpoint());
 		this.webAppContext.getBeanFactory().registerSingleton("dummyEndpoint", endpointRegistration);
 
@@ -120,7 +125,7 @@ class ServerEndpointExporterTests {
 	}
 
 	@Test
-	void addServerEndpointConfigBeanWithExplicitServerContainer() throws Exception {
+	public void addServerEndpointConfigBeanWithExplicitServerContainer() throws Exception {
 		ServerEndpointRegistration endpointRegistration = new ServerEndpointRegistration("/dummy", new DummyEndpoint());
 		this.webAppContext.getBeanFactory().registerSingleton("dummyEndpoint", endpointRegistration);
 		this.servletContext.removeAttribute("jakarta.websocket.server.ServerContainer");
@@ -156,7 +161,7 @@ class ServerEndpointExporterTests {
 	static class Config {
 
 		@Bean
-		AnnotatedDummyEndpointBean annotatedEndpoint1() {
+		public AnnotatedDummyEndpointBean annotatedEndpoint1() {
 			return new AnnotatedDummyEndpointBean();
 		}
 	}

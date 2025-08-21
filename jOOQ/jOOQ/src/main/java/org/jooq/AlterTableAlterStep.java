@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -45,14 +45,9 @@ import org.jetbrains.annotations.*;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
-// ...
-// ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 // ...
@@ -70,7 +65,6 @@ import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
@@ -106,7 +100,7 @@ public interface AlterTableAlterStep<T> {
      * This is an alias for {@link #default_(Object)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableFinalStep defaultValue(T literal);
 
     /**
@@ -115,42 +109,42 @@ public interface AlterTableAlterStep<T> {
      * This is an alias for {@link #default_(Field)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableFinalStep defaultValue(Field<T> expression);
 
     /**
      * Specify a new column <code>DEFAULT</code>.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableFinalStep default_(T literal);
 
     /**
      * Specify a new column <code>DEFAULT</code>.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableFinalStep default_(Field<T> expression);
 
     /**
      * Specify a new column <code>DEFAULT</code>.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableFinalStep setDefault(T literal);
 
     /**
      * Specify a new column <code>DEFAULT</code>.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableFinalStep setDefault(Field<T> expression);
 
     /**
      * Drop the column <code>DEFAULT</code>.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableFinalStep dropDefault();
 
     /**
@@ -161,35 +155,20 @@ public interface AlterTableAlterStep<T> {
      * support this).
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableFinalStep set(DataType<?> type);
 
     /**
      * Make the column <code>NOT NULL</code>.
      */
     @NotNull @CheckReturnValue
-    @Support({ DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     AlterTableFinalStep setNotNull();
 
     /**
      * Make the column nullable.
      */
     @NotNull @CheckReturnValue
-    @Support({ DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     AlterTableFinalStep dropNotNull();
-
-    /**
-     * Make the column an <code>IDENTITY</code> column.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ H2, HSQLDB, POSTGRES, YUGABYTEDB })
-    AlterTableFinalStep setGeneratedByDefaultAsIdentity();
-
-    /**
-     * Drop the <code>IDENTITY</code> property from the column.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
-    AlterTableFinalStep dropIdentity();
-
 }

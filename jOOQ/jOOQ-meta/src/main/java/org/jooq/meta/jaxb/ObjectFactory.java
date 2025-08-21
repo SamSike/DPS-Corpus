@@ -102,38 +102,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link MatchersIndexType }
-     * 
-     */
-    public MatchersIndexType createMatchersIndexType() {
-        return new MatchersIndexType();
-    }
-
-    /**
-     * Create an instance of {@link MatchersPrimaryKeyType }
-     * 
-     */
-    public MatchersPrimaryKeyType createMatchersPrimaryKeyType() {
-        return new MatchersPrimaryKeyType();
-    }
-
-    /**
-     * Create an instance of {@link MatchersUniqueKeyType }
-     * 
-     */
-    public MatchersUniqueKeyType createMatchersUniqueKeyType() {
-        return new MatchersUniqueKeyType();
-    }
-
-    /**
-     * Create an instance of {@link MatchersForeignKeyType }
-     * 
-     */
-    public MatchersForeignKeyType createMatchersForeignKeyType() {
-        return new MatchersForeignKeyType();
-    }
-
-    /**
      * Create an instance of {@link MatchersFieldType }
      * 
      */
@@ -171,22 +139,6 @@ public class ObjectFactory {
      */
     public MatchersEmbeddableType createMatchersEmbeddableType() {
         return new MatchersEmbeddableType();
-    }
-
-    /**
-     * Create an instance of {@link MatchersUDTType }
-     * 
-     */
-    public MatchersUDTType createMatchersUDTType() {
-        return new MatchersUDTType();
-    }
-
-    /**
-     * Create an instance of {@link MatchersAttributeType }
-     * 
-     */
-    public MatchersAttributeType createMatchersAttributeType() {
-        return new MatchersAttributeType();
     }
 
     /**
@@ -254,22 +206,6 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link SyntheticDefaultType }
-     * 
-     */
-    public SyntheticDefaultType createSyntheticDefaultType() {
-        return new SyntheticDefaultType();
-    }
-
-    /**
-     * Create an instance of {@link SyntheticEnumType }
-     * 
-     */
-    public SyntheticEnumType createSyntheticEnumType() {
-        return new SyntheticEnumType();
-    }
-
-    /**
      * Create an instance of {@link SyntheticPrimaryKeyType }
      * 
      */
@@ -291,14 +227,6 @@ public class ObjectFactory {
      */
     public SyntheticForeignKeyType createSyntheticForeignKeyType() {
         return new SyntheticForeignKeyType();
-    }
-
-    /**
-     * Create an instance of {@link SyntheticSynonymType }
-     * 
-     */
-    public SyntheticSynonymType createSyntheticSynonymType() {
-        return new SyntheticSynonymType();
     }
 
     /**

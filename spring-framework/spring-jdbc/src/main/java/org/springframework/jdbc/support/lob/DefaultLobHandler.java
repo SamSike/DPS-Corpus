@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,8 @@ import java.sql.SQLException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Default implementation of the {@link LobHandler} interface.
@@ -79,10 +80,7 @@ import org.jspecify.annotations.Nullable;
  * @see java.sql.PreparedStatement#setString
  * @see java.sql.PreparedStatement#setAsciiStream
  * @see java.sql.PreparedStatement#setCharacterStream
- * @deprecated as of 6.2, in favor of {@link org.springframework.jdbc.core.support.SqlBinaryValue}
- * and {@link org.springframework.jdbc.core.support.SqlCharacterValue}
  */
-@Deprecated(since = "6.2")
 public class DefaultLobHandler extends AbstractLobHandler {
 
 	protected final Log logger = LogFactory.getLog(getClass());
@@ -101,7 +99,7 @@ public class DefaultLobHandler extends AbstractLobHandler {
 	 * <p>Default is "false", using the common JDBC 2.0 {@code setBinaryStream}
 	 * / {@code setCharacterStream} method for setting the content. Switch this
 	 * to "true" for explicit Blob / Clob wrapping against JDBC drivers that
-	 * are known to require such wrapping (for example, PostgreSQL's for access to OID
+	 * are known to require such wrapping (e.g. PostgreSQL's for access to OID
 	 * columns, whereas BYTEA columns need to be accessed the standard way).
 	 * <p>This setting affects byte array / String arguments as well as stream
 	 * arguments, unless {@link #setStreamAsLob "streamAsLob"} overrides this
@@ -120,7 +118,7 @@ public class DefaultLobHandler extends AbstractLobHandler {
 	 * <p>Default is "false", using the common JDBC 2.0 {@code setBinaryStream}
 	 * / {@code setCharacterStream} method for setting the content.
 	 * Switch this to "true" for explicit JDBC 4.0 streaming, provided that your
-	 * JDBC driver actually supports those JDBC 4.0 operations (for example, Derby's).
+	 * JDBC driver actually supports those JDBC 4.0 operations (e.g. Derby's).
 	 * <p>This setting affects stream arguments as well as byte array / String
 	 * arguments, requiring JDBC 4.0 support. For supporting LOB content against
 	 * JDBC 3.0, check out the {@link #setWrapAsLob "wrapAsLob"} setting.
@@ -150,7 +148,8 @@ public class DefaultLobHandler extends AbstractLobHandler {
 
 
 	@Override
-	public byte @Nullable [] getBlobAsBytes(ResultSet rs, int columnIndex) throws SQLException {
+	@Nullable
+	public byte[] getBlobAsBytes(ResultSet rs, int columnIndex) throws SQLException {
 		logger.debug("Returning BLOB as bytes");
 		if (this.wrapAsLob) {
 			Blob blob = rs.getBlob(columnIndex);
@@ -162,7 +161,8 @@ public class DefaultLobHandler extends AbstractLobHandler {
 	}
 
 	@Override
-	public @Nullable InputStream getBlobAsBinaryStream(ResultSet rs, int columnIndex) throws SQLException {
+	@Nullable
+	public InputStream getBlobAsBinaryStream(ResultSet rs, int columnIndex) throws SQLException {
 		logger.debug("Returning BLOB as binary stream");
 		if (this.wrapAsLob) {
 			Blob blob = rs.getBlob(columnIndex);
@@ -174,7 +174,8 @@ public class DefaultLobHandler extends AbstractLobHandler {
 	}
 
 	@Override
-	public @Nullable String getClobAsString(ResultSet rs, int columnIndex) throws SQLException {
+	@Nullable
+	public String getClobAsString(ResultSet rs, int columnIndex) throws SQLException {
 		logger.debug("Returning CLOB as string");
 		if (this.wrapAsLob) {
 			Clob clob = rs.getClob(columnIndex);
@@ -222,7 +223,7 @@ public class DefaultLobHandler extends AbstractLobHandler {
 	protected class DefaultLobCreator implements LobCreator {
 
 		@Override
-		public void setBlobAsBytes(PreparedStatement ps, int paramIndex, byte @Nullable [] content)
+		public void setBlobAsBytes(PreparedStatement ps, int paramIndex, @Nullable byte[] content)
 				throws SQLException {
 
 			if (streamAsLob) {

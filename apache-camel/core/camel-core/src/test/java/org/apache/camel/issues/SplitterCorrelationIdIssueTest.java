@@ -34,7 +34,7 @@ public class SplitterCorrelationIdIssueTest extends ContextTestSupport {
         mock.expectedMessageCount(3);
 
         Exchange exchange = template.send("direct:start", new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("A,B,C");
             }
         });
@@ -63,10 +63,10 @@ public class SplitterCorrelationIdIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").split(body().tokenize(",")).to("mock:split");
             }
         };

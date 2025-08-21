@@ -51,6 +51,7 @@ import org.apache.camel.language.simple.types.SimpleToken;
 import org.apache.camel.language.simple.types.TokenType;
 import org.apache.camel.support.ExpressionToPredicateAdapter;
 import org.apache.camel.support.builder.PredicateBuilder;
+import org.apache.camel.util.StringHelper;
 
 import static org.apache.camel.support.ObjectHelper.isFloatingNumber;
 import static org.apache.camel.support.ObjectHelper.isNumber;
@@ -61,7 +62,7 @@ import static org.apache.camel.support.ObjectHelper.isNumber;
 public class SimplePredicateParser extends BaseSimpleParser {
 
     // use caches to avoid re-parsing the same expressions over and over again
-    private final Map<String, Expression> cacheExpression;
+    private Map<String, Expression> cacheExpression;
 
     public SimplePredicateParser(CamelContext camelContext, String expression, boolean allowEscape,
                                  Map<String, Expression> cacheExpression) {
@@ -106,6 +107,7 @@ public class SimplePredicateParser extends BaseSimpleParser {
         nextToken();
         while (!token.getType().isEol()) {
             // predicate supports quotes, functions, operators and whitespaces
+            //CHECKSTYLE:OFF
             if (!singleQuotedLiteralWithFunctionsText()
                     && !doubleQuotedLiteralWithFunctionsText()
                     && !functionText()
@@ -119,6 +121,7 @@ public class SimplePredicateParser extends BaseSimpleParser {
                 // use the previous index as that is where the problem is
                 throw new SimpleParserException("Unexpected token " + token, previousIndex);
             }
+            //CHECKSTYLE:ON
             // take the next token
             nextToken();
         }
@@ -163,15 +166,45 @@ public class SimplePredicateParser extends BaseSimpleParser {
      * Second step parsing into code
      */
     protected String doParseCode() {
-        StringBuilder sb = new StringBuilder(256);
+        StringBuilder sb = new StringBuilder();
         for (SimpleNode node : nodes) {
-            String exp = node.createCode(camelContext, expression);
-            SimpleExpressionParser.parseLiteralNode(sb, node, exp);
+            String exp = node.createCode(expression);
+            if (node instanceof LiteralNode) {
+                exp = StringHelper.removeLeadingAndEndingQuotes(exp);
+                sb.append("\"");
+                // " should be escaped to \"
+                exp = escapeQuotes(exp);
+                // \n \t \r should be escaped
+                exp = exp.replaceAll("\n", "\\\\n");
+                exp = exp.replaceAll("\t", "\\\\t");
+                exp = exp.replaceAll("\r", "\\\\r");
+                if (exp.endsWith("\\") && !exp.endsWith("\\\\")) {
+                    // there is a single trailing slash which we need to escape
+                    exp += "\\";
+                }
+                sb.append(exp);
+                sb.append("\"");
+            } else {
+                sb.append(exp);
+            }
         }
-        String code = sb.toString();
-        code = code.replace(BaseSimpleParser.CODE_START, "");
-        code = code.replace(BaseSimpleParser.CODE_END, "");
-        return code;
+        return sb.toString();
+    }
+
+    private static String escapeQuotes(String text) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char prev = i > 0 ? text.charAt(i - 1) : 0;
+            char ch = text.charAt(i);
+
+            if (ch == '"' && (i == 0 || prev != '\\')) {
+                sb.append('\\');
+                sb.append('"');
+            } else {
+                sb.append(ch);
+            }
+        }
+        return sb.toString();
     }
 
     /**
@@ -239,22 +272,18 @@ public class SimplePredicateParser extends BaseSimpleParser {
 
         // validate the single, double quote pairs and functions is in balance
         if (startSingle.get()) {
-            int index = evalIndex(lastSingle);
+            int index = lastSingle != null ? lastSingle.getToken().getIndex() : 0;
             throw new SimpleParserException("single quote has no ending quote", index);
         }
         if (startDouble.get()) {
-            int index = evalIndex(lastDouble);
+            int index = lastDouble != null ? lastDouble.getToken().getIndex() : 0;
             throw new SimpleParserException("double quote has no ending quote", index);
         }
         if (startFunction.get()) {
             // we have a start function, but no ending function
-            int index = evalIndex(lastFunction);
+            int index = lastFunction != null ? lastFunction.getToken().getIndex() : 0;
             throw new SimpleParserException("function has no ending token", index);
         }
-    }
-
-    private static int evalIndex(SimpleNode node) {
-        return node != null ? node.getToken().getIndex() : 0;
     }
 
     private void addImageToken(LiteralNode imageToken) {
@@ -309,9 +338,27 @@ public class SimplePredicateParser extends BaseSimpleParser {
 
         // okay so far we also want to support quotes
         if (token.getType().isSingleQuote()) {
-            return createSingleQuoted(token, startSingle);
+            SimpleNode answer;
+            boolean start = startSingle.get();
+            if (!start) {
+                answer = new SingleQuoteStart(token);
+            } else {
+                answer = new SingleQuoteEnd(token);
+            }
+            // flip state on start/end flag
+            startSingle.set(!start);
+            return answer;
         } else if (token.getType().isDoubleQuote()) {
-            return createDoubleQuoted(token, startDouble);
+            SimpleNode answer;
+            boolean start = startDouble.get();
+            if (!start) {
+                answer = new DoubleQuoteStart(token);
+            } else {
+                answer = new DoubleQuoteEnd(token);
+            }
+            // flip state on start/end flag
+            startDouble.set(!start);
+            return answer;
         }
 
         // if we are inside a quote, then we do not support any further kind of tokens
@@ -336,32 +383,6 @@ public class SimplePredicateParser extends BaseSimpleParser {
 
         // by returning null, we will let the parser determine what to do
         return null;
-    }
-
-    private static SimpleNode createDoubleQuoted(SimpleToken token, AtomicBoolean startDouble) {
-        SimpleNode answer;
-        boolean start = startDouble.get();
-        if (!start) {
-            answer = new DoubleQuoteStart(token);
-        } else {
-            answer = new DoubleQuoteEnd(token);
-        }
-        // flip state on start/end flag
-        startDouble.set(!start);
-        return answer;
-    }
-
-    private static SimpleNode createSingleQuoted(SimpleToken token, AtomicBoolean startSingle) {
-        SimpleNode answer;
-        boolean start = startSingle.get();
-        if (!start) {
-            answer = new SingleQuoteStart(token);
-        } else {
-            answer = new SingleQuoteEnd(token);
-        }
-        // flip state on start/end flag
-        startSingle.set(!start);
-        return answer;
     }
 
     /**
@@ -412,7 +433,9 @@ public class SimplePredicateParser extends BaseSimpleParser {
             SimpleNode token = nodes.get(i);
             SimpleNode right = i < nodes.size() - 1 ? nodes.get(i + 1) : null;
 
-            if (token instanceof BinaryExpression binary) {
+            if (token instanceof BinaryExpression) {
+                BinaryExpression binary = (BinaryExpression) token;
+
                 // remember the binary operator
                 String operator = binary.getOperator().toString();
 
@@ -475,7 +498,9 @@ public class SimplePredicateParser extends BaseSimpleParser {
             SimpleNode token = nodes.get(i);
             SimpleNode right = i < nodes.size() - 1 ? nodes.get(i + 1) : null;
 
-            if (token instanceof LogicalExpression logical) {
+            if (token instanceof LogicalExpression) {
+                LogicalExpression logical = (LogicalExpression) token;
+
                 // remember the logical operator
                 String operator = logical.getOperator().toString();
 
@@ -656,13 +681,13 @@ public class SimplePredicateParser extends BaseSimpleParser {
 
             // based on the parameter types the binary operator support, we need to set this state into
             // the following booleans so we know how to proceed in the grammar
-            boolean literalWithFunctionsSupported;
-            boolean literalSupported;
-            boolean functionSupported;
-            boolean numericSupported;
-            boolean booleanSupported;
-            boolean nullSupported;
-            boolean minusSupported;
+            boolean literalWithFunctionsSupported = false;
+            boolean literalSupported = false;
+            boolean functionSupported = false;
+            boolean numericSupported = false;
+            boolean booleanSupported = false;
+            boolean nullSupported = false;
+            boolean minusSupported = false;
             if (types == null || types.length == 0) {
                 literalWithFunctionsSupported = true;
                 // favor literal with functions over literals without functions
@@ -673,13 +698,6 @@ public class SimplePredicateParser extends BaseSimpleParser {
                 nullSupported = true;
                 minusSupported = true;
             } else {
-                literalWithFunctionsSupported = false;
-                literalSupported = false;
-                functionSupported = false;
-                numericSupported = false;
-                booleanSupported = false;
-                nullSupported = false;
-                minusSupported = false;
                 for (BinaryOperatorType.ParameterType parameterType : types) {
                     literalSupported |= parameterType.isLiteralSupported();
                     literalWithFunctionsSupported |= parameterType.isLiteralWithFunctionSupport();
@@ -692,6 +710,7 @@ public class SimplePredicateParser extends BaseSimpleParser {
             }
 
             // then we proceed in the grammar according to the parameter types supported by the given binary operator
+            //CHECKSTYLE:OFF
             if ((literalWithFunctionsSupported && singleQuotedLiteralWithFunctionsText())
                     || (literalWithFunctionsSupported && doubleQuotedLiteralWithFunctionsText())
                     || (literalSupported && singleQuotedLiteralText())
@@ -707,9 +726,9 @@ public class SimplePredicateParser extends BaseSimpleParser {
                     expect(TokenType.whiteSpace);
                 }
             } else {
-                throw new SimpleParserException(
-                        "Binary operator " + operatorType + " does not support token " + token, token.getIndex());
+                throw new SimpleParserException("Binary operator " + operatorType + " does not support token " + token, token.getIndex());
             }
+            //CHECKSTYLE:ON
             return true;
         }
         return false;

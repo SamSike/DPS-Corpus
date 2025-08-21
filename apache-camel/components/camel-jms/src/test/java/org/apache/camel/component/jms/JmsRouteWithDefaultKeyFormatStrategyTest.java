@@ -19,29 +19,14 @@ package org.apache.camel.component.jms;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.ConsumerTemplate;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.ResolveEndpointFailedException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class JmsRouteWithDefaultKeyFormatStrategyTest extends AbstractJMSTest {
-
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
-    protected CamelContext context;
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
 
     protected String getUri() {
         return "activemq:queue:JmsRouteWithDefaultKeyFormatStrategyTest?jmsKeyFormatStrategy=default";
@@ -84,12 +69,12 @@ public class JmsRouteWithDefaultKeyFormatStrategyTest extends AbstractJMSTest {
         mock.expectedBodiesReceived("Hello World");
         mock.expectedHeaderReceived("foo", "cheese");
         mock.expectedHeaderReceived("Content-Type", "text/plain");
-        mock.expectedHeaderReceived("org.foo.MyKey", "foo");
+        mock.expectedHeaderReceived("org.apache.camel.MyKey", "foo");
 
         Map<String, Object> headers = new HashMap<>();
         headers.put("foo", "cheese");
         headers.put("Content-Type", "text/plain");
-        headers.put("org.foo.MyKey", "foo");
+        headers.put("org.apache.camel.MyKey", "foo");
 
         template.sendBodyAndHeaders("direct:start", "Hello World", headers);
 
@@ -111,17 +96,5 @@ public class JmsRouteWithDefaultKeyFormatStrategyTest extends AbstractJMSTest {
                 from(getUri()).to("mock:result");
             }
         };
-    }
-
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        context = camelContextExtension.getContext();
-        template = camelContextExtension.getProducerTemplate();
-        consumer = camelContextExtension.getConsumerTemplate();
     }
 }

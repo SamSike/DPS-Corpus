@@ -20,13 +20,10 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.TypeConversionException;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.support.DefaultExchange;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class EnumConverterTest extends ContextTestSupport {
 
@@ -60,14 +57,20 @@ public class EnumConverterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testMandatoryConvertFailed() {
-        assertThrows(TypeConversionException.class, () -> {
+    public void testMandatoryConvertFailed() throws Exception {
+        try {
             LoggingLevel level = context.getTypeConverter().convertTo(LoggingLevel.class, "XXX");
-        }, "Should have thrown an exception");
+            fail("Should have thrown an exception");
+        } catch (TypeConversionException e) {
+            // expected
+        }
 
-        assertThrows(TypeConversionException.class,
-                () -> context.getTypeConverter().mandatoryConvertTo(LoggingLevel.class, "XXX"),
-                "Should have thrown an exception");
+        try {
+            context.getTypeConverter().mandatoryConvertTo(LoggingLevel.class, "XXX");
+            fail("Should have thrown an exception");
+        } catch (TypeConversionException e) {
+            // expected
+        }
     }
 
     @Test
@@ -90,48 +93,6 @@ public class EnumConverterTest extends ContextTestSupport {
 
         level = context.getTypeConverter().mandatoryConvertTo(MyEnum.class, exchange, "Get-Users-By-Topic");
         assertEquals(MyEnum.GET_USERS_BY_TOPIC, level);
-    }
-
-    @Test
-    public void testConvertEnumWithToStringOverride() throws Exception {
-        Exchange exchange = new DefaultExchange(context);
-
-        MyTypeEnum type = context.getTypeConverter().mandatoryConvertTo(MyTypeEnum.class, exchange, "TYPE1");
-        assertSame(MyTypeEnum.TYPE1, type);
-
-        type = context.getTypeConverter().mandatoryConvertTo(MyTypeEnum.class, exchange, "TYPE2");
-        assertSame(MyTypeEnum.TYPE2, type);
-
-        type = context.getTypeConverter().mandatoryConvertTo(MyTypeEnum.class, exchange, "TYPE3");
-        assertSame(MyTypeEnum.TYPE3, type);
-    }
-
-    @Test
-    public void testEnumWithToStringOverrideRouteSimple() throws Exception {
-        context.addRoutes(new RouteBuilder() {
-            @Override
-            public void configure() {
-                from("direct:start")
-                        .choice()
-                        .when(simple("${header.type} == ${type:org.apache.camel.converter.MyTypeEnum.TYPE1}")).to("mock:type1")
-                        .when(simple("${header.type} == ${type:org.apache.camel.converter.MyTypeEnum.TYPE2}")).to("mock:type2")
-                        .when(simple("${header.type} == ${type:org.apache.camel.converter.MyTypeEnum.TYPE3}")).to("mock:type3")
-                        .otherwise().to("mock:other");
-            }
-        });
-        context.start();
-
-        getMockEndpoint("mock:type1").expectedBodiesReceived("C");
-        getMockEndpoint("mock:type2").expectedBodiesReceived("A");
-        getMockEndpoint("mock:type3").expectedBodiesReceived("B");
-
-        template.sendBodyAndHeader("direct:start", "A", "type", MyTypeEnum.TYPE2);
-        template.sendBodyAndHeader("direct:start", "B", "type", MyTypeEnum.TYPE3);
-        template.sendBodyAndHeader("direct:start", "C", "type", MyTypeEnum.TYPE1);
-
-        assertMockEndpointsSatisfied();
-
-        context.stop();
     }
 
     public enum MyEnum {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import org.springframework.web.multipart.MultipartResolver;
  *
  * <p>Supported method argument types include {@link MultipartFile} in conjunction with
  * Spring's {@link MultipartResolver} abstraction, {@code jakarta.servlet.http.Part} in
- * conjunction with Servlet multipart requests, or otherwise for any other method
+ * conjunction with Servlet 3.0 multipart requests, or otherwise for any other method
  * argument, the content of the part is passed through an {@link HttpMessageConverter}
  * taking into consideration the 'Content-Type' header of the request part. This is
  * analogous to what @{@link RequestBody} does to resolve an argument based on the
@@ -50,7 +50,7 @@ import org.springframework.web.multipart.MultipartResolver;
  * taking into consideration the 'Content-Type' header of the request part.
  * {@link RequestParam} is likely to be used with name-value form fields while
  * {@link RequestPart} is likely to be used with parts containing more complex content
- * for example, JSON, XML).
+ * e.g. JSON, XML).
  *
  * @author Rossen Stoyanchev
  * @author Arjen Poutsma

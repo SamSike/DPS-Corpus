@@ -25,10 +25,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.hc.core5.http.HttpStatus;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
-import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,26 +41,30 @@ public class HttpConcurrentTest extends BaseHttpTest {
 
     private HttpServer localServer;
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+    public void setUp() throws Exception {
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext())
-                .register("/", (request, response, context) -> {
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext())
+                .registerHandler("/", (request, response, context) -> {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         // ignore
                     }
-                    response.setCode(HttpStatus.SC_OK);
-                    response.setEntity(new StringEntity(Integer.toString(counter.incrementAndGet())));
+                    response.setStatusCode(HttpStatus.SC_OK);
+                    response.setEntity(new StringEntity("" + counter.incrementAndGet()));
                 }).create();
         localServer.start();
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() throws Exception {
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (localServer != null) {
             localServer.stop();
@@ -82,7 +88,7 @@ public class HttpConcurrentTest extends BaseHttpTest {
         Map<Integer, Future<String>> responses = new HashMap<>();
         for (int i = 0; i < files; i++) {
             Future<String> out = executor.submit(() -> template.requestBody(
-                    "http://localhost:" + localServer.getLocalPort(), null,
+                    "http://" + localServer.getInetAddress().getHostName() + ":" + localServer.getLocalPort(), null,
                     String.class));
             responses.put(i, out);
         }

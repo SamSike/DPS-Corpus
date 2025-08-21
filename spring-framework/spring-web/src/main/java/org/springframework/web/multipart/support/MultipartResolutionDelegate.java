@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,13 @@ package org.springframework.web.multipart.support;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.Part;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
+import org.springframework.lang.Nullable;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -52,7 +51,8 @@ public final class MultipartResolutionDelegate {
 	}
 
 
-	public static @Nullable MultipartRequest resolveMultipartRequest(NativeWebRequest webRequest) {
+	@Nullable
+	public static MultipartRequest resolveMultipartRequest(NativeWebRequest webRequest) {
 		MultipartRequest multipartRequest = webRequest.getNativeRequest(MultipartRequest.class);
 		if (multipartRequest != null) {
 			return multipartRequest;
@@ -71,7 +71,7 @@ public final class MultipartResolutionDelegate {
 
 	private static boolean isMultipartContent(HttpServletRequest request) {
 		String contentType = request.getContentType();
-		return (contentType != null && contentType.toLowerCase(Locale.ROOT).startsWith("multipart/"));
+		return (contentType != null && contentType.toLowerCase().startsWith("multipart/"));
 	}
 
 	static MultipartHttpServletRequest asMultipartHttpServletRequest(HttpServletRequest request) {
@@ -90,7 +90,8 @@ public final class MultipartResolutionDelegate {
 				(Part.class == paramType || isPartCollection(parameter) || isPartArray(parameter)));
 	}
 
-	public static @Nullable Object resolveMultipartArgument(String name, MethodParameter parameter, HttpServletRequest request)
+	@Nullable
+	public static Object resolveMultipartArgument(String name, MethodParameter parameter, HttpServletRequest request)
 			throws Exception {
 
 		MultipartHttpServletRequest multipartRequest =
@@ -156,7 +157,7 @@ public final class MultipartResolutionDelegate {
 	}
 
 	private static boolean isMultipartFileArray(MethodParameter methodParam) {
-		return (MultipartFile.class == methodParam.getNestedParameterType().componentType());
+		return (MultipartFile.class == methodParam.getNestedParameterType().getComponentType());
 	}
 
 	private static boolean isPartCollection(MethodParameter methodParam) {
@@ -164,10 +165,11 @@ public final class MultipartResolutionDelegate {
 	}
 
 	private static boolean isPartArray(MethodParameter methodParam) {
-		return (Part.class == methodParam.getNestedParameterType().componentType());
+		return (Part.class == methodParam.getNestedParameterType().getComponentType());
 	}
 
-	private static @Nullable Class<?> getCollectionParameterType(MethodParameter methodParam) {
+	@Nullable
+	private static Class<?> getCollectionParameterType(MethodParameter methodParam) {
 		Class<?> paramType = methodParam.getNestedParameterType();
 		if (Collection.class == paramType || List.class.isAssignableFrom(paramType)){
 			Class<?> valueType = ResolvableType.forMethodParameter(methodParam).asCollection().resolveGeneric();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ package org.springframework.web.server;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
-
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
@@ -48,27 +48,32 @@ public class MethodNotAllowedException extends ResponseStatusException {
 	}
 
 	public MethodNotAllowedException(String method, @Nullable Collection<HttpMethod> supportedMethods) {
-		super(HttpStatus.METHOD_NOT_ALLOWED, "Request method '" + method + "' is not supported.",
-				null, null, new Object[] {method, supportedMethods});
-
+		super(HttpStatus.METHOD_NOT_ALLOWED, "Request method '" + method + "' not supported");
 		Assert.notNull(method, "'method' is required");
 		if (supportedMethods == null) {
 			supportedMethods = Collections.emptySet();
 		}
 		this.method = method;
 		this.httpMethods = Collections.unmodifiableSet(new LinkedHashSet<>(supportedMethods));
-		if (!this.httpMethods.isEmpty()) {
-			setDetail("Supported methods: " + this.httpMethods);
-		}
 	}
 
 
 	/**
-	 * Return HttpHeaders with an "Allow" header that documents the allowed
-	 * HTTP methods for this URL, if available, or an empty instance otherwise.
+	 * Return a Map with an "Allow" header.
+	 * @since 5.1.11
+	 */
+	@SuppressWarnings("deprecation")
+	@Override
+	public Map<String, String> getHeaders() {
+		return getResponseHeaders().toSingleValueMap();
+	}
+
+	/**
+	 * Return HttpHeaders with an "Allow" header.
+	 * @since 5.1.13
 	 */
 	@Override
-	public HttpHeaders getHeaders() {
+	public HttpHeaders getResponseHeaders() {
 		if (CollectionUtils.isEmpty(this.httpMethods)) {
 			return HttpHeaders.EMPTY;
 		}

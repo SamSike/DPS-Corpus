@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ConsumerCacheOneCapacityTest extends ContextTestSupport {
 
     @Test
-    public void testConsumerCacheOneCapacity() {
+    public void testConsumerCacheOneCapacity() throws Exception {
         DefaultConsumerCache cache = new DefaultConsumerCache(this, context, 1);
         cache.start();
 

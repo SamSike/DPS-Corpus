@@ -22,10 +22,10 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.support.HealthCheckComponent;
+import org.apache.camel.support.DefaultComponent;
 
 @Component("jira")
-public class JiraComponent extends HealthCheckComponent {
+public class JiraComponent extends DefaultComponent {
 
     @Metadata(label = "advanced")
     private JiraConfiguration configuration = new JiraConfiguration();
@@ -36,6 +36,7 @@ public class JiraComponent extends HealthCheckComponent {
 
     public JiraComponent(CamelContext context) {
         super(context);
+        registerExtension(new JiraVerifierExtension());
     }
 
     @Override

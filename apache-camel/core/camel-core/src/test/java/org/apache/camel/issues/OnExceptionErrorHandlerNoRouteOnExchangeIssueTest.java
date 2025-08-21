@@ -27,28 +27,28 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class OnExceptionErrorHandlerNoRouteOnExchangeIssueTest extends ContextTestSupport {
 
     @Test
-    public void testOk() {
+    public void testOk() throws Exception {
         String out = template.requestBody("direct:hello", null, String.class);
         assertEquals("Hello World", out);
     }
 
     @Test
-    public void testNormalError() {
+    public void testNormalError() throws Exception {
         String out = template.requestBody("direct:normalError", null, String.class);
         assertEquals("general exception was properly handled", out);
     }
 
     @Test
-    public void testBug() {
+    public void testBug() throws Exception {
         String out = template.requestBody("direct:bug", null, String.class);
         assertEquals("general exception was properly handled", out);
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class)
                         .handled(true)
                         .log(LoggingLevel.ERROR, "error", "${messageHistory} \n ${exchange} \n ${exception.stacktrace}")

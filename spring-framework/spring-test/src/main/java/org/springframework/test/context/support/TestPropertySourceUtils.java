@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,12 +26,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.core.annotation.MergedAnnotations;
@@ -39,19 +38,15 @@ import org.springframework.core.annotation.MergedAnnotations.SearchStrategy;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.PropertySources;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.support.DefaultPropertySourceFactory;
-import org.springframework.core.io.support.EncodedResource;
-import org.springframework.core.io.support.PropertySourceDescriptor;
-import org.springframework.core.io.support.PropertySourceFactory;
-import org.springframework.core.io.support.ResourcePatternResolver;
-import org.springframework.core.io.support.ResourcePatternUtils;
+import org.springframework.core.io.support.ResourcePropertySource;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.TestContextAnnotationUtils;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.util.TestContextResourceUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -77,11 +72,6 @@ public abstract class TestPropertySourceUtils {
 	 */
 	public static final String INLINED_PROPERTIES_PROPERTY_SOURCE_NAME = "Inlined Test Properties";
 
-	private static final PropertySourceFactory defaultPropertySourceFactory = new DefaultPropertySourceFactory();
-
-	private static final Comparator<MergedAnnotation<? extends Annotation>> reversedMetaDistance =
-			Comparator.<MergedAnnotation<? extends Annotation>> comparingInt(MergedAnnotation::getDistance).reversed();
-
 	private static final Log logger = LogFactory.getLog(TestPropertySourceUtils.class);
 
 
@@ -90,15 +80,15 @@ public abstract class TestPropertySourceUtils {
 
 		TestPropertySourceAttributes previousAttributes = null;
 		// Iterate over all aggregate levels, where each level is represented by
-		// a list of merged annotations found at that level (for example, on a test
+		// a list of merged annotations found at that level (e.g., on a test
 		// class in the class hierarchy).
 		for (List<MergedAnnotation<TestPropertySource>> aggregatedAnnotations :
 				findRepeatableAnnotations(testClass, TestPropertySource.class)) {
 
-			// Convert all the merged annotations for the current aggregate
+			// Convert all of the merged annotations for the current aggregate
 			// level to a list of TestPropertySourceAttributes.
 			List<TestPropertySourceAttributes> aggregatedAttributesList =
-					aggregatedAnnotations.stream().map(TestPropertySourceAttributes::new).toList();
+					aggregatedAnnotations.stream().map(TestPropertySourceAttributes::new).collect(Collectors.toList());
 			// Merge all TestPropertySourceAttributes instances for the current
 			// aggregate level into a single TestPropertySourceAttributes instance.
 			TestPropertySourceAttributes mergedAttributes = mergeTestPropertySourceAttributes(aggregatedAttributesList);
@@ -116,7 +106,8 @@ public abstract class TestPropertySourceUtils {
 		return new MergedTestPropertySources(mergeLocations(attributesList), mergeProperties(attributesList));
 	}
 
-	private static @Nullable TestPropertySourceAttributes mergeTestPropertySourceAttributes(
+	@Nullable
+	private static TestPropertySourceAttributes mergeTestPropertySourceAttributes(
 			List<TestPropertySourceAttributes> aggregatedAttributesList) {
 
 		TestPropertySourceAttributes mergedAttributes = null;
@@ -134,15 +125,14 @@ public abstract class TestPropertySourceUtils {
 		return mergedAttributes;
 	}
 
-	@SuppressWarnings("NullAway") // Dataflow analysis limitation
 	private static boolean duplicationDetected(TestPropertySourceAttributes currentAttributes,
 			@Nullable TestPropertySourceAttributes previousAttributes) {
 
 		boolean duplicationDetected =
 				(currentAttributes.equals(previousAttributes) && !currentAttributes.isEmpty());
 
-		if (duplicationDetected && logger.isTraceEnabled()) {
-			logger.trace(String.format("Ignoring duplicate %s declaration on %s since it is also declared on %s",
+		if (duplicationDetected && logger.isDebugEnabled()) {
+			logger.debug(String.format("Ignoring duplicate %s declaration on %s since it is also declared on %s",
 					currentAttributes, currentAttributes.getDeclaringClass().getName(),
 					previousAttributes.getDeclaringClass().getName()));
 		}
@@ -150,25 +140,27 @@ public abstract class TestPropertySourceUtils {
 		return duplicationDetected;
 	}
 
-	private static List<PropertySourceDescriptor> mergeLocations(List<TestPropertySourceAttributes> attributesList) {
-		List<PropertySourceDescriptor> descriptors = new ArrayList<>();
+	private static String[] mergeLocations(List<TestPropertySourceAttributes> attributesList) {
+		List<String> locations = new ArrayList<>();
 		for (TestPropertySourceAttributes attrs : attributesList) {
 			if (logger.isTraceEnabled()) {
-				logger.trace("Processing locations for " + attrs);
+				logger.trace(String.format("Processing locations for TestPropertySource attributes %s", attrs));
 			}
-			descriptors.addAll(0, attrs.getPropertySourceDescriptors());
+			String[] locationsArray = TestContextResourceUtils.convertToClasspathResourcePaths(
+					attrs.getDeclaringClass(), true, attrs.getLocations());
+			locations.addAll(0, Arrays.asList(locationsArray));
 			if (!attrs.isInheritLocations()) {
 				break;
 			}
 		}
-		return descriptors;
+		return StringUtils.toStringArray(locations);
 	}
 
 	private static String[] mergeProperties(List<TestPropertySourceAttributes> attributesList) {
 		List<String> properties = new ArrayList<>();
 		for (TestPropertySourceAttributes attrs : attributesList) {
 			if (logger.isTraceEnabled()) {
-				logger.trace("Processing inlined properties for " + attrs);
+				logger.trace(String.format("Processing inlined properties for TestPropertySource attributes %s", attrs));
 			}
 			String[] attrProps = attrs.getProperties();
 			properties.addAll(0, Arrays.asList(attrProps));
@@ -182,7 +174,7 @@ public abstract class TestPropertySourceUtils {
 	/**
 	 * Add the {@link Properties} files from the given resource {@code locations}
 	 * to the {@link Environment} of the supplied {@code context}.
-	 * <p>This method delegates to
+	 * <p>This method simply delegates to
 	 * {@link #addPropertiesFilesToEnvironment(ConfigurableEnvironment, ResourceLoader, String...)}.
 	 * @param context the application context whose environment should be updated;
 	 * never {@code null}
@@ -190,10 +182,9 @@ public abstract class TestPropertySourceUtils {
 	 * to the environment; potentially empty but never {@code null}
 	 * @throws IllegalStateException if an error occurs while processing a properties file
 	 * @since 4.1.5
-	 * @see org.springframework.core.io.support.ResourcePropertySource
+	 * @see ResourcePropertySource
 	 * @see TestPropertySource#locations
 	 * @see #addPropertiesFilesToEnvironment(ConfigurableEnvironment, ResourceLoader, String...)
-	 * @see #addPropertySourcesToEnvironment(ConfigurableApplicationContext, List)
 	 */
 	public static void addPropertiesFilesToEnvironment(ConfigurableApplicationContext context, String... locations) {
 		Assert.notNull(context, "'context' must not be null");
@@ -207,12 +198,9 @@ public abstract class TestPropertySourceUtils {
 	 * <p>Property placeholders in resource locations (i.e., <code>${...}</code>)
 	 * will be {@linkplain Environment#resolveRequiredPlaceholders(String) resolved}
 	 * against the {@code Environment}.
-	 * <p>A {@link ResourcePatternResolver} will be used to resolve resource
-	 * location patterns into multiple resource locations.
-	 * <p>Each properties file will be converted to a
-	 * {@link org.springframework.core.io.support.ResourcePropertySource ResourcePropertySource}
+	 * <p>Each properties file will be converted to a {@link ResourcePropertySource}
 	 * that will be added to the {@link PropertySources} of the environment with
-	 * the highest precedence.
+	 * highest precedence.
 	 * @param environment the environment to update; never {@code null}
 	 * @param resourceLoader the {@code ResourceLoader} to use to load each resource;
 	 * never {@code null}
@@ -220,96 +208,21 @@ public abstract class TestPropertySourceUtils {
 	 * to the environment; potentially empty but never {@code null}
 	 * @throws IllegalStateException if an error occurs while processing a properties file
 	 * @since 4.3
-	 * @see org.springframework.core.io.support.ResourcePropertySource
+	 * @see ResourcePropertySource
 	 * @see TestPropertySource#locations
 	 * @see #addPropertiesFilesToEnvironment(ConfigurableApplicationContext, String...)
-	 * @see #addPropertySourcesToEnvironment(ConfigurableApplicationContext, List)
 	 */
 	public static void addPropertiesFilesToEnvironment(ConfigurableEnvironment environment,
 			ResourceLoader resourceLoader, String... locations) {
 
-		Assert.notNull(locations, "'locations' must not be null");
-		addPropertySourcesToEnvironment(environment, resourceLoader,
-				List.of(new PropertySourceDescriptor(locations)));
-	}
-
-	/**
-	 * Add property sources for the given {@code descriptors} to the
-	 * {@link Environment} of the supplied {@code context}.
-	 * <p>This method delegates to
-	 * {@link #addPropertySourcesToEnvironment(ConfigurableEnvironment, ResourceLoader, List)}.
-	 * @param context the application context whose environment should be updated;
-	 * never {@code null}
-	 * @param descriptors the property source descriptors to process; potentially
-	 * empty but never {@code null}
-	 * @throws IllegalStateException if an error occurs while processing the
-	 * descriptors and registering property sources
-	 * @since 6.1
-	 * @see TestPropertySource#locations
-	 * @see TestPropertySource#encoding
-	 * @see TestPropertySource#factory
-	 * @see PropertySourceFactory
-	 * @see #addPropertySourcesToEnvironment(ConfigurableEnvironment, ResourceLoader, List)
-	 */
-	public static void addPropertySourcesToEnvironment(ConfigurableApplicationContext context,
-			List<PropertySourceDescriptor> descriptors) {
-
-		Assert.notNull(context, "'context' must not be null");
-		Assert.notNull(descriptors, "'descriptors' must not be null");
-		addPropertySourcesToEnvironment(context.getEnvironment(), context, descriptors);
-	}
-
-	/**
-	 * Add property sources for the given {@code descriptors} to the supplied
-	 * {@link ConfigurableEnvironment environment}.
-	 * <p>Property placeholders in resource locations (i.e., <code>${...}</code>)
-	 * will be {@linkplain Environment#resolveRequiredPlaceholders(String) resolved}
-	 * against the {@code Environment}.
-	 * <p>A {@link ResourcePatternResolver} will be used to resolve resource
-	 * location patterns into multiple resource locations.
-	 * <p>Each {@link PropertySource} will be created via the configured
-	 * {@link PropertySourceDescriptor#propertySourceFactory() PropertySourceFactory}
-	 * (or the {@link DefaultPropertySourceFactory} if no factory is configured)
-	 * and added to the {@link PropertySources} of the environment with the highest
-	 * precedence.
-	 * @param environment the environment to update; never {@code null}
-	 * @param resourceLoader the {@code ResourceLoader} to use to load resources;
-	 * never {@code null}
-	 * @param descriptors the property source descriptors to process; potentially
-	 * empty but never {@code null}
-	 * @throws IllegalStateException if an error occurs while processing the
-	 * descriptors and registering property sources
-	 * @since 6.1
-	 * @see TestPropertySource#locations
-	 * @see TestPropertySource#encoding
-	 * @see TestPropertySource#factory
-	 * @see PropertySourceFactory
-	 */
-	public static void addPropertySourcesToEnvironment(ConfigurableEnvironment environment,
-			ResourceLoader resourceLoader, List<PropertySourceDescriptor> descriptors) {
-
 		Assert.notNull(environment, "'environment' must not be null");
 		Assert.notNull(resourceLoader, "'resourceLoader' must not be null");
-		Assert.notNull(descriptors, "'descriptors' must not be null");
-		ResourcePatternResolver resourcePatternResolver =
-				ResourcePatternUtils.getResourcePatternResolver(resourceLoader);
-		MutablePropertySources propertySources = environment.getPropertySources();
+		Assert.notNull(locations, "'locations' must not be null");
 		try {
-			for (PropertySourceDescriptor descriptor : descriptors) {
-				if (!descriptor.locations().isEmpty()) {
-					Class<? extends PropertySourceFactory> factoryClass = descriptor.propertySourceFactory();
-					PropertySourceFactory factory = (factoryClass != null ?
-							BeanUtils.instantiateClass(factoryClass) : defaultPropertySourceFactory);
-
-					for (String location : descriptor.locations()) {
-						String resolvedLocation = environment.resolveRequiredPlaceholders(location);
-						for (Resource resource : resourcePatternResolver.getResources(resolvedLocation)) {
-							PropertySource<?> propertySource = factory.createPropertySource(descriptor.name(),
-									new EncodedResource(resource, descriptor.encoding()));
-							propertySources.addFirst(propertySource);
-						}
-					}
-				}
+			for (String location : locations) {
+				String resolvedLocation = environment.resolveRequiredPlaceholders(location);
+				Resource resource = resourceLoader.getResource(resolvedLocation);
+				environment.getPropertySources().addFirst(new ResourcePropertySource(resource));
 			}
 		}
 		catch (IOException ex) {
@@ -356,8 +269,8 @@ public abstract class TestPropertySourceUtils {
 		Assert.notNull(environment, "'environment' must not be null");
 		Assert.notNull(inlinedProperties, "'inlinedProperties' must not be null");
 		if (!ObjectUtils.isEmpty(inlinedProperties)) {
-			if (logger.isTraceEnabled()) {
-				logger.trace("Adding inlined properties to environment: " +
+			if (logger.isDebugEnabled()) {
+				logger.debug("Adding inlined properties to environment: " +
 						ObjectUtils.nullSafeToString(inlinedProperties));
 			}
 			MapPropertySource ps = (MapPropertySource)
@@ -372,40 +285,44 @@ public abstract class TestPropertySourceUtils {
 
 	/**
 	 * Convert the supplied <em>inlined properties</em> (in the form of <em>key-value</em>
-	 * pairs) into a map keyed by property name.
-	 * <p>Parsing of the key-value pairs is achieved by converting all supplied
-	 * strings into <em>virtual</em> properties files in memory and delegating to
+	 * pairs) into a map keyed by property name, preserving the ordering of property names
+	 * in the returned map.
+	 * <p>Parsing of the key-value pairs is achieved by converting all pairs
+	 * into <em>virtual</em> properties files in memory and delegating to
 	 * {@link Properties#load(java.io.Reader)} to parse each virtual file.
-	 * <p>The ordering of property names will be preserved in the returned map,
-	 * analogous to the order in which the key-value pairs are supplied to this
-	 * method. This also applies if a single string contains multiple key-value
-	 * pairs separated by newlines &mdash; for example, when supplied by a user
-	 * via a <em>text block</em>.
 	 * <p>For a full discussion of <em>inlined properties</em>, consult the Javadoc
 	 * for {@link TestPropertySource#properties}.
 	 * @param inlinedProperties the inlined properties to convert; potentially empty
 	 * but never {@code null}
 	 * @return a new, ordered map containing the converted properties
-	 * @throws IllegalStateException if a given key-value pair cannot be parsed
+	 * @throws IllegalStateException if a given key-value pair cannot be parsed, or if
+	 * a given inlined property contains multiple key-value pairs
 	 * @since 4.1.5
 	 * @see #addInlinedPropertiesToEnvironment(ConfigurableEnvironment, String[])
 	 */
 	public static Map<String, Object> convertInlinedPropertiesToMap(String... inlinedProperties) {
 		Assert.notNull(inlinedProperties, "'inlinedProperties' must not be null");
+		Map<String, Object> map = new LinkedHashMap<>();
+		Properties props = new Properties();
 
-		SequencedProperties sequencedProperties = new SequencedProperties();
-		for (String input : inlinedProperties) {
-			if (!StringUtils.hasText(input)) {
+		for (String pair : inlinedProperties) {
+			if (!StringUtils.hasText(pair)) {
 				continue;
 			}
 			try {
-				sequencedProperties.load(new StringReader(input));
+				props.load(new StringReader(pair));
 			}
 			catch (Exception ex) {
-				throw new IllegalStateException("Failed to load test environment properties from [" + input + "]", ex);
+				throw new IllegalStateException("Failed to load test environment property from [" + pair + "]", ex);
 			}
+			Assert.state(props.size() == 1, () -> "Failed to load exactly one test environment property from [" + pair + "]");
+			for (String name : props.stringPropertyNames()) {
+				map.put(name, props.getProperty(name));
+			}
+			props.clear();
 		}
-		return sequencedProperties.getSequencedMap();
+
+		return map;
 	}
 
 	private static <T extends Annotation> List<List<MergedAnnotation<T>>> findRepeatableAnnotations(
@@ -426,7 +343,7 @@ public abstract class TestPropertySourceUtils {
 
 		MergedAnnotations.from(clazz, SearchStrategy.DIRECT)
 			.stream(annotationType)
-			.sorted(reversedMetaDistance)
+			.sorted(highMetaDistancesFirst())
 			.forEach(annotation -> listOfLists.get(aggregateIndex[0]).add(0, annotation));
 
 		aggregateIndex[0]++;
@@ -448,29 +365,8 @@ public abstract class TestPropertySourceUtils {
 		}
 	}
 
-	/**
-	 * Extension of {@link Properties} that mimics a {@code SequencedMap} by tracking
-	 * all added properties with a {@link String} key in a {@link LinkedHashMap}.
-	 * @since 6.1
-	 */
-	@SuppressWarnings("serial")
-	private static class SequencedProperties extends Properties {
-
-		private final LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-
-		@Override
-		public @Nullable Object put(Object key, Object value) {
-			if (key instanceof String str) {
-				return this.map.put(str, value);
-			}
-			// No need to invoke super.put(key, value);
-			return null;
-		}
-
-		public Map<String, Object> getSequencedMap() {
-			return this.map;
-		}
-
+	private static <A extends Annotation> Comparator<MergedAnnotation<A>> highMetaDistancesFirst() {
+		return Comparator.<MergedAnnotation<A>> comparingInt(MergedAnnotation::getDistance).reversed();
 	}
 
 }

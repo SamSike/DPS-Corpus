@@ -42,7 +42,9 @@ public class QuartzManuallyTriggerJobTest extends BaseQuartzTest {
         // collect all jobKeys of this route (ideally only one).
         ArrayList<JobKey> jobKeys = new ArrayList<>();
         for (String group : scheduler.getJobGroupNames()) {
-            jobKeys.addAll(scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group)));
+            for (JobKey jobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group))) {
+                jobKeys.add(jobKey);
+            }
         }
 
         JobDataMap jobDataMap = scheduler.getJobDetail(jobKeys.get(0)).getJobDataMap();

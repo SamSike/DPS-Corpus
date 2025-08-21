@@ -16,33 +16,24 @@
  */
 package org.apache.camel.component.jslt;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.Serializable;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
-import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.schibsted.spt.data.jslt.Expression;
 import com.schibsted.spt.data.jslt.Function;
 import com.schibsted.spt.data.jslt.JsltException;
 import com.schibsted.spt.data.jslt.Parser;
-import com.schibsted.spt.data.jslt.filters.DefaultJsonFilter;
 import com.schibsted.spt.data.jslt.filters.JsonFilter;
 import org.apache.camel.Category;
 import org.apache.camel.Exchange;
@@ -59,21 +50,13 @@ import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
 
 /**
- * Query or transform JSON payloads using JSLT.
+ * Query or transform JSON payloads using an JSLT.
  */
 @UriEndpoint(firstVersion = "3.1.0", scheme = "jslt", title = "JSLT", syntax = "jslt:resourceUri", producerOnly = true,
-             remote = false, category = { Category.TRANSFORMATION }, headersClass = JsltConstants.class)
+             category = { Category.TRANSFORMATION }, headersClass = JsltConstants.class)
 public class JsltEndpoint extends ResourceEndpoint {
 
-    private static final ObjectMapper OBJECT_MAPPER;
-    private static final JsonFilter DEFAULT_JSON_FILTER = new DefaultJsonFilter();
-
-    static {
-        OBJECT_MAPPER = new ObjectMapper();
-        OBJECT_MAPPER.setSerializerFactory(OBJECT_MAPPER.getSerializerFactory().withSerializerModifier(
-                new SafeTypesOnlySerializerModifier()));
-    }
-
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private Expression transform;
 
     @UriParam(defaultValue = "false")
@@ -93,17 +76,6 @@ public class JsltEndpoint extends ResourceEndpoint {
     }
 
     @Override
-    public boolean isRemote() {
-        return false;
-    }
-
-    @Override
-    public void clearContentCache() {
-        super.clearContentCache();
-        this.transform = null;
-    }
-
-    @Override
     public ExchangePattern getExchangePattern() {
         return ExchangePattern.InOut;
     }
@@ -113,68 +85,44 @@ public class JsltEndpoint extends ResourceEndpoint {
         return "jslt:" + getResourceUri();
     }
 
-    private Expression getTransform(Message msg) throws Exception {
-        getInternalLock().lock();
-        try {
+    private synchronized Expression getTransform(Message msg) throws Exception {
+        if (transform == null) {
+            if (log.isDebugEnabled()) {
+                String path = getResourceUri();
+                log.debug("Jslt content read from resource {} with resourceUri: {} for endpoint {}", getResourceUri(), path,
+                        getEndpointUri());
+            }
 
-            final String jsltStringFromHeader
+            String jsltStringFromHeader
                     = allowTemplateFromHeader ? msg.getHeader(JsltConstants.HEADER_JSLT_STRING, String.class) : null;
+            Collection<Function> functions = ((JsltComponent) getComponent()).getFunctions();
+            JsonFilter objectFilter = ((JsltComponent) getComponent()).getObjectFilter();
 
-            final boolean useTemplateFromUri = jsltStringFromHeader == null;
-
-            if (useTemplateFromUri && transform != null) {
-                return transform;
-            }
-
-            final Collection<Function> functions = Objects.requireNonNullElse(
-                    ((JsltComponent) getComponent()).getFunctions(),
-                    Collections.emptyList());
-
-            final JsonFilter objectFilter = Objects.requireNonNullElse(
-                    ((JsltComponent) getComponent()).getObjectFilter(),
-                    DEFAULT_JSON_FILTER);
-
-            final String transformSource;
-            final InputStream stream;
-
-            if (useTemplateFromUri) {
-                transformSource = getResourceUri();
-
-                if (log.isDebugEnabled()) {
-                    log.debug("Jslt content read from resource {} with resourceUri: {} for endpoint {}",
-                            transformSource,
-                            transformSource,
-                            getEndpointUri());
-                }
-
-                stream = ResourceHelper.resolveMandatoryResourceAsInputStream(getCamelContext(), transformSource);
-                if (stream == null) {
-                    throw new JsltException("Cannot load resource '" + transformSource + "': not found");
-                }
-            } else { // use template from header
-                stream = new ByteArrayInputStream(jsltStringFromHeader.getBytes(StandardCharsets.UTF_8));
-                transformSource = "<inline>";
-            }
-
-            final Expression transform;
+            Parser parser;
+            InputStream stream = null;
             try {
-                transform = new Parser(new InputStreamReader(stream))
-                        .withFunctions(functions)
-                        .withObjectFilter(objectFilter)
-                        .withSource(transformSource)
-                        .compile();
+                if (jsltStringFromHeader != null) {
+                    parser = new Parser(new StringReader(jsltStringFromHeader)).withSource("<inline>");
+                } else {
+                    stream = ResourceHelper.resolveMandatoryResourceAsInputStream(getCamelContext(), getResourceUri());
+                    if (stream == null) {
+                        throw new JsltException("Cannot load resource '" + getResourceUri() + "': not found");
+                    }
+                    Reader reader = new InputStreamReader(stream, StandardCharsets.UTF_8);
+                    parser = new Parser(reader).withSource(getResourceUri());
+                }
+                if (functions != null) {
+                    parser = parser.withFunctions(functions);
+                }
+                if (objectFilter != null) {
+                    parser = parser.withObjectFilter(objectFilter);
+                }
+                this.transform = parser.compile();
             } finally {
-                // the stream is consumed only on .compile(), cannot be closed before
                 IOHelper.close(stream);
             }
-
-            if (useTemplateFromUri) {
-                this.transform = transform;
-            }
-            return transform;
-        } finally {
-            getInternalLock().unlock();
         }
+        return transform;
     }
 
     public JsltEndpoint findOrCreateEndpoint(String uri, String newResourceUri) {
@@ -248,9 +196,6 @@ public class JsltEndpoint extends ResourceEndpoint {
         if (variableMap.containsKey("headers")) {
             serializedVariableMap.put("headers", serializeMapToJsonNode((Map<String, Object>) variableMap.get("headers")));
         }
-        if (variableMap.containsKey("variables")) {
-            serializedVariableMap.put("variables", serializeMapToJsonNode((Map<String, Object>) variableMap.get("variables")));
-        }
         if (variableMap.containsKey("exchange")) {
             Exchange ex = (Exchange) variableMap.get("exchange");
             ObjectNode exchangeNode = OBJECT_MAPPER.createObjectNode();
@@ -323,33 +268,5 @@ public class JsltEndpoint extends ResourceEndpoint {
      */
     public void setObjectMapper(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-    }
-
-    private static class SafeTypesOnlySerializerModifier extends BeanSerializerModifier {
-        // Serialize only safe types: primitives, records, serializable objects and
-        // collections/maps/arrays of them. To avoid serializing something like Response object.
-        // Types that are not safe are serialized as their toString() value.
-        @Override
-        public JsonSerializer<?> modifySerializer(
-                SerializationConfig config, BeanDescription beanDesc,
-                JsonSerializer<?> serializer) {
-            final Class<?> beanClass = beanDesc.getBeanClass();
-
-            if (Collection.class.isAssignableFrom(beanClass)
-                    || Map.class.isAssignableFrom(beanClass)
-                    || beanClass.isArray()
-                    || beanClass.isPrimitive()
-                    || isRecord(beanClass)
-                    || Serializable.class.isAssignableFrom(beanClass)) {
-                return serializer;
-            }
-
-            return ToStringSerializer.instance;
-        }
-
-        private static boolean isRecord(Class<?> clazz) {
-            final Class<?> parent = clazz.getSuperclass();
-            return parent != null && parent.getName().equals("java.lang.Record");
-        }
     }
 }

@@ -2,7 +2,9 @@
  * Support classes for XSLT,
  * providing a View implementation for XSLT stylesheets.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.servlet.view.xslt;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

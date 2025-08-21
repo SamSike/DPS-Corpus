@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,15 @@ package org.springframework.core.annotation;
 
 import java.lang.annotation.Annotation;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Callback interface used to process annotations.
  *
- * @author Phillip Webb
- * @since 5.2
  * @param <C> the context type
  * @param <R> the result type
+ * @author Phillip Webb
+ * @since 5.2
  * @see AnnotationsScanner
  * @see TypeMappedAnnotations
  */
@@ -40,7 +40,8 @@ interface AnnotationsProcessor<C, R> {
 	 * @param aggregateIndex the aggregate index about to be processed
 	 * @return a {@code non-null} result if no further processing is required
 	 */
-	default @Nullable R doWithAggregate(C context, int aggregateIndex) {
+	@Nullable
+	default R doWithAggregate(C context, int aggregateIndex) {
 		return null;
 	}
 
@@ -54,7 +55,8 @@ interface AnnotationsProcessor<C, R> {
 	 * {@code null} elements)
 	 * @return a {@code non-null} result if no further processing is required
 	 */
-	@Nullable R doWithAnnotations(C context, int aggregateIndex, @Nullable Object source, @Nullable Annotation[] annotations);
+	@Nullable
+	R doWithAnnotations(C context, int aggregateIndex, @Nullable Object source, Annotation[] annotations);
 
 	/**
 	 * Get the final result to be returned. By default this method returns
@@ -62,7 +64,8 @@ interface AnnotationsProcessor<C, R> {
 	 * @param result the last early exit result, or {@code null} if none
 	 * @return the final result to be returned to the caller
 	 */
-	default @Nullable R finish(@Nullable R result) {
+	@Nullable
+	default R finish(@Nullable R result) {
 		return result;
 	}
 

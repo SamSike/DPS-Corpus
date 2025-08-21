@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,41 +20,38 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.function.Function;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.core.AttributeAccessor;
+import org.springframework.lang.Nullable;
 import org.springframework.test.annotation.DirtiesContext.HierarchyMode;
 
 /**
  * {@code TestContext} encapsulates the context in which a test is executed,
  * agnostic of the actual testing framework in use.
  *
- * <p>Concrete implementations are highly encouraged to implement a <em>copy
- * constructor</em> in order to allow the immutable state and attributes of a
- * {@code TestContext} to be used as a template for additional contexts created
- * for parallel test execution. The copy constructor must accept a single argument
- * of the type of the concrete implementation. Any implementation that does not
- * provide a copy constructor will likely fail in an environment that executes
- * tests concurrently.
- *
- * <p>As of Spring Framework 6.1, concrete implementations are highly encouraged to
- * override {@link #setMethodInvoker(MethodInvoker)} and {@link #getMethodInvoker()}.
+ * <p>As of Spring Framework 5.0, concrete implementations are highly encouraged
+ * to implement a <em>copy constructor</em> in order to allow the immutable state
+ * and attributes of a {@code TestContext} to be used as a template for additional
+ * contexts created for parallel test execution. The copy constructor must accept a
+ * single argument of the type of the concrete implementation. Any implementation
+ * that does not provide a copy constructor will likely fail in an environment
+ * that executes tests concurrently.
  *
  * @author Sam Brannen
  * @since 2.5
  * @see TestContextManager
  * @see TestExecutionListener
  */
+// Suppression required due to bug in javac in Java 8: presence of default method in a Serializable interface
+@SuppressWarnings("serial")
 public interface TestContext extends AttributeAccessor, Serializable {
 
 	/**
 	 * Determine if the {@linkplain ApplicationContext application context} for
 	 * this test context is known to be available.
 	 * <p>If this method returns {@code true}, a subsequent invocation of
-	 * {@link #getApplicationContext()} or {@link #markApplicationContextUnused()}
-	 * should succeed.
+	 * {@link #getApplicationContext()} should succeed.
 	 * <p>The default implementation of this method always returns {@code false}.
 	 * Custom {@code TestContext} implementations are therefore highly encouraged
 	 * to override this method with a more meaningful implementation. Note that
@@ -63,7 +60,6 @@ public interface TestContext extends AttributeAccessor, Serializable {
 	 * @return {@code true} if the application context has already been loaded
 	 * @since 5.2
 	 * @see #getApplicationContext()
-	 * @see #markApplicationContextUnused()
 	 */
 	default boolean hasApplicationContext() {
 		return false;
@@ -79,7 +75,6 @@ public interface TestContext extends AttributeAccessor, Serializable {
 	 * @throws IllegalStateException if an error occurs while retrieving the
 	 * application context
 	 * @see #hasApplicationContext()
-	 * @see #markApplicationContextUnused()
 	 */
 	ApplicationContext getApplicationContext();
 
@@ -129,25 +124,8 @@ public interface TestContext extends AttributeAccessor, Serializable {
 	 * @return the exception that was thrown, or {@code null} if no exception was thrown
 	 * @see #updateState(Object, Method, Throwable)
 	 */
-	@Nullable Throwable getTestException();
-
-	/**
-	 * Call this method to signal that the {@linkplain #getTestClass() test class}
-	 * is no longer using the {@linkplain ApplicationContext application context}
-	 * associated with this test context.
-	 * <p>This informs the context cache that the application context can be
-	 * safely {@linkplain org.springframework.context.Lifecycle#stop() stopped}
-	 * if no other test classes are actively using the same application context.
-	 * <p>This method is intended to be invoked after execution of the test class
-	 * has ended and should not be invoked unless the application context for this
-	 * test context is known to be {@linkplain #hasApplicationContext() available}.
-	 * <p>This feature is primarily intended for use within the framework.
-	 * @since 7.0
-	 * @see TestContextManager#afterTestClass()
-	 */
-	default void markApplicationContextUnused() {
-		/* no-op */
-	}
+	@Nullable
+	Throwable getTestException();
 
 	/**
 	 * Call this method to signal that the {@linkplain ApplicationContext application
@@ -173,29 +151,5 @@ public interface TestContext extends AttributeAccessor, Serializable {
 	 * or {@code null} if no exception was thrown
 	 */
 	void updateState(@Nullable Object testInstance, @Nullable Method testMethod, @Nullable Throwable testException);
-
-	/**
-	 * Set the {@link MethodInvoker} to use.
-	 * <p>By default, this method does nothing.
-	 * <p>Concrete implementations should track the supplied {@code MethodInvoker}
-	 * and return it from {@link #getMethodInvoker()}. Note that the standard
-	 * {@code TestContext} implementation in Spring overrides this method appropriately.
-	 * @since 6.1
-	 */
-	default void setMethodInvoker(MethodInvoker methodInvoker) {
-		/* no-op */
-	}
-
-	/**
-	 * Get the {@link MethodInvoker} to use.
-	 * <p>By default, this method returns {@link MethodInvoker#DEFAULT_INVOKER}.
-	 * <p>Concrete implementations should return the {@code MethodInvoker} supplied
-	 * to {@link #setMethodInvoker(MethodInvoker)}. Note that the standard
-	 * {@code TestContext} implementation in Spring overrides this method appropriately.
-	 * @since 6.1
-	 */
-	default MethodInvoker getMethodInvoker() {
-		return MethodInvoker.DEFAULT_INVOKER;
-	}
 
 }

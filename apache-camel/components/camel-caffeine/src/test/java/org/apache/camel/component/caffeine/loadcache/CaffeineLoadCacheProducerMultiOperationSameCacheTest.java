@@ -16,6 +16,9 @@
  */
 package org.apache.camel.component.caffeine.loadcache;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.caffeine.CaffeineConstants;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -27,6 +30,8 @@ public class CaffeineLoadCacheProducerMultiOperationSameCacheTest extends Caffei
 
     @Test
     void testSameCachePutAndGet() throws Exception {
+        final Map<String, String> map = new HashMap<>();
+        map.put("1", "1");
 
         fluentTemplate().withBody("1").to("direct://start").send();
 

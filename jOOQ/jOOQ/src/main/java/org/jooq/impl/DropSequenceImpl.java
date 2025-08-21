@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -97,7 +94,7 @@ implements
 
 
     private static final Clause[]        CLAUSES              = { Clause.DROP_SEQUENCE };
-    private static final Set<SQLDialect> NO_SUPPORT_IF_EXISTS = SQLDialect.supportedUntil(DERBY, FIREBIRD);
+    private static final Set<SQLDialect> NO_SUPPORT_IF_EXISTS = SQLDialect.supportedBy(DERBY, FIREBIRD);
 
     private final boolean supportsIfExists(Context<?> ctx) {
         return !NO_SUPPORT_IF_EXISTS.contains(ctx.dialect());
@@ -115,17 +112,25 @@ implements
         ctx.start(Clause.DROP_SEQUENCE_SEQUENCE)
            .visit(K_DROP)
            .sql(' ')
-           .visit(ctx.family() == CUBRID ? K_SERIAL : K_SEQUENCE);
+           .visit(ctx.family() == CUBRID ? K_SERIAL : K_SEQUENCE)
+           .sql(' ');
 
         if (ifExists && supportsIfExists(ctx))
-            ctx.sql(' ').visit(K_IF_EXISTS);
+            ctx.visit(K_IF_EXISTS).sql(' ');
+
+        switch (ctx.family()) {
 
 
 
 
 
 
-        ctx.sql(' ').visit(sequence);
+
+            default: {
+                ctx.visit(sequence);
+                break;
+            }
+        }
 
         if (ctx.family() == DERBY)
             ctx.sql(' ').visit(K_RESTRICT);

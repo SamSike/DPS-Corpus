@@ -16,18 +16,14 @@
  */
 package org.apache.camel.component.azure.eventhubs;
 
-import java.util.Map;
-
 import org.apache.camel.Category;
 import org.apache.camel.Component;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.DefaultEndpoint;
-import org.apache.camel.util.ObjectHelper;
 
 /**
  * Send and receive events to/from Azure Event Hubs using AMQP protocol.
@@ -36,7 +32,7 @@ import org.apache.camel.util.ObjectHelper;
              syntax = "azure-eventhubs:namespace/eventHubName", category = {
                      Category.CLOUD, Category.MESSAGING },
              headersClass = EventHubsConstants.class)
-public class EventHubsEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
+public class EventHubsEndpoint extends DefaultEndpoint {
 
     @UriParam
     private EventHubsConfiguration configuration;
@@ -68,27 +64,6 @@ public class EventHubsEndpoint extends DefaultEndpoint implements EndpointServic
 
     public void setConfiguration(EventHubsConfiguration configuration) {
         this.configuration = configuration;
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (ObjectHelper.isNotEmpty(configuration.getEventHubName())) {
-            return configuration.getEventHubName();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "eventhubs";
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        if (configuration.getNamespace() != null) {
-            return Map.of("namespace", configuration.getNamespace());
-        }
-        return null;
     }
 
 }

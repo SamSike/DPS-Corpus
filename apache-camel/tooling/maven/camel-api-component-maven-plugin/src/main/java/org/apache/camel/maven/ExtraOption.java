@@ -23,16 +23,14 @@ public class ExtraOption {
 
     private String type;
     private String name;
-    private String includeMethods;
     private String description;
 
     public ExtraOption() {
     }
 
-    public ExtraOption(String type, String name, String includeMethods, String description) {
+    public ExtraOption(String type, String name, String description) {
         this.type = type;
         this.name = name;
-        this.includeMethods = includeMethods;
         this.description = description;
     }
 
@@ -54,14 +52,6 @@ public class ExtraOption {
 
     public String getDescription() {
         return description;
-    }
-
-    public String getIncludeMethods() {
-        return includeMethods;
-    }
-
-    public void setIncludeMethods(String includeMethods) {
-        this.includeMethods = includeMethods;
     }
 
     public void setDescription(String description) {

@@ -247,9 +247,9 @@ public class TomcatReactiveExecutor extends ServiceSupport implements ReactiveEx
                                 LOG.trace("Worker #{} running: {}", number, polled);
                             }
                             polled.run();
-                        } catch (Exception e) {
+                        } catch (Throwable t) {
                             LOG.warn("Error executing reactive work due to {}. This exception is ignored.",
-                                    e.getMessage(), e);
+                                    t.getMessage(), t);
                         }
                     }
                 } finally {
@@ -278,9 +278,9 @@ public class TomcatReactiveExecutor extends ServiceSupport implements ReactiveEx
                     LOG.trace("Running: {}", polled);
                 }
                 polled.run();
-            } catch (Exception e) {
+            } catch (Throwable t) {
                 // should not happen
-                LOG.warn("Error executing reactive work due to {}. This exception is ignored.", e.getMessage(), e);
+                LOG.warn("Error executing reactive work due to {}. This exception is ignored.", t.getMessage(), t);
             }
             return true;
         }

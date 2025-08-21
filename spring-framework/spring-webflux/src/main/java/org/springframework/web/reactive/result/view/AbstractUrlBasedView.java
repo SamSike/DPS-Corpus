@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,8 @@ package org.springframework.web.reactive.result.view;
 
 import java.util.Locale;
 
-import org.jspecify.annotations.Nullable;
-import reactor.core.publisher.Mono;
-
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 
 /**
  * Abstract base class for URL-based views. Provides a consistent way of
@@ -32,7 +30,8 @@ import org.springframework.beans.factory.InitializingBean;
  */
 public abstract class AbstractUrlBasedView extends AbstractView implements InitializingBean {
 
-	private @Nullable String url;
+	@Nullable
+	private String url;
 
 
 	/**
@@ -60,7 +59,8 @@ public abstract class AbstractUrlBasedView extends AbstractView implements Initi
 	/**
 	 * Return the URL of the resource that this view wraps.
 	 */
-	public @Nullable String getUrl() {
+	@Nullable
+	public String getUrl() {
 		return this.url;
 	}
 
@@ -77,21 +77,9 @@ public abstract class AbstractUrlBasedView extends AbstractView implements Initi
 	 * @param locale the desired Locale that we're looking for
 	 * @return {@code false} if the resource exists
 	 * {@code false} if we know that it does not exist
-	 * @throws Exception if the resource exists but is invalid (for example, could not be parsed)
+	 * @throws Exception if the resource exists but is invalid (e.g. could not be parsed)
 	 */
 	public abstract boolean checkResourceExists(Locale locale) throws Exception;
-
-	/**
-	 * Deferred check whether the resource for the configured URL actually exists.
-	 * <p>The default implementation calls {@link #checkResourceExists(Locale)}.
-	 * @param locale the desired Locale that we're looking for
-	 * @return {@code false} if the resource exists
-	 * {@code false} if we know that it does not exist
-	 * @since 6.1
-	 */
-	public Mono<Boolean> resourceExists(Locale locale) {
-		return Mono.fromCallable(() -> checkResourceExists(locale));
-	}
 
 
 	@Override

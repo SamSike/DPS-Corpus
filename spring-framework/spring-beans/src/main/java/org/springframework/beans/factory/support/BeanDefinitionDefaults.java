@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.beans.factory.support;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -30,15 +29,18 @@ import org.springframework.util.StringUtils;
  */
 public class BeanDefinitionDefaults {
 
-	private @Nullable Boolean lazyInit;
+	@Nullable
+	private Boolean lazyInit;
 
 	private int autowireMode = AbstractBeanDefinition.AUTOWIRE_NO;
 
 	private int dependencyCheck = AbstractBeanDefinition.DEPENDENCY_CHECK_NONE;
 
-	private @Nullable String initMethodName;
+	@Nullable
+	private String initMethodName;
 
-	private @Nullable String destroyMethodName;
+	@Nullable
+	private String destroyMethodName;
 
 
 	/**
@@ -57,7 +59,7 @@ public class BeanDefinitionDefaults {
 	 * @return whether to apply lazy-init semantics ({@code false} by default)
 	 */
 	public boolean isLazyInit() {
-		return (this.lazyInit != null && this.lazyInit);
+		return (this.lazyInit != null && this.lazyInit.booleanValue());
 	}
 
 	/**
@@ -66,7 +68,8 @@ public class BeanDefinitionDefaults {
 	 * @return the lazy-init flag if explicitly set, or {@code null} otherwise
 	 * @since 5.2
 	 */
-	public @Nullable Boolean getLazyInit() {
+	@Nullable
+	public Boolean getLazyInit() {
 		return this.lazyInit;
 	}
 
@@ -121,7 +124,8 @@ public class BeanDefinitionDefaults {
 	/**
 	 * Return the name of the default initializer method.
 	 */
-	public @Nullable String getInitMethodName() {
+	@Nullable
+	public String getInitMethodName() {
 		return this.initMethodName;
 	}
 
@@ -139,7 +143,8 @@ public class BeanDefinitionDefaults {
 	/**
 	 * Return the name of the default destroy method.
 	 */
-	public @Nullable String getDestroyMethodName() {
+	@Nullable
+	public String getDestroyMethodName() {
 		return this.destroyMethodName;
 	}
 

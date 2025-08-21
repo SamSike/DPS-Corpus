@@ -88,7 +88,7 @@ public class MDCClearingTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
             public void configure() {
@@ -113,7 +113,7 @@ public class MDCClearingTest extends ContextTestSupport {
         }
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             LOG.info(msg);
             assertEquals(MY_BREADCRUMB, MDC.get(CAMEL_BREADCRUMB_ID));
         }

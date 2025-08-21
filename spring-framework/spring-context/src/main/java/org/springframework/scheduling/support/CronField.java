@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,37 +18,27 @@ package org.springframework.scheduling.support;
 
 import java.time.DateTimeException;
 import java.time.temporal.ChronoField;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.time.temporal.ValueRange;
-import java.util.Locale;
 import java.util.function.BiFunction;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
  * Single field in a cron pattern. Created using the {@code parse*} methods,
- * the main and only entry point is {@link #nextOrSame(Temporal)}.
- *
- * <p>Supports a Quartz day-of-month/week field with an L/# expression. Follows
- * common cron conventions in every other respect, including 0-6 for SUN-SAT
- * (plus 7 for SUN as well). Note that Quartz deviates from the day-of-week
- * convention in cron through 1-7 for SUN-SAT whereas Spring strictly follows
- * cron even in combination with the optional Quartz-specific L/# expressions.
+ * main and only entry point is {@link #nextOrSame(Temporal)}.
  *
  * @author Arjen Poutsma
  * @since 5.3
  */
 abstract class CronField {
 
-	private static final String[] MONTHS = new String[]
-			{"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
+	private static final String[] MONTHS = new String[]{"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP",
+			"OCT", "NOV", "DEC"};
 
-	private static final String[] DAYS = new String[]
-			{"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
+	private static final String[] DAYS = new String[]{"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
 
 	private final Type type;
 
@@ -57,12 +47,11 @@ abstract class CronField {
 		this.type = type;
 	}
 
-
 	/**
-	 * Return a {@code CronField} enabled for 0 nanoseconds.
+	 * Return a {@code CronField} enabled for 0 nano seconds.
 	 */
 	public static CronField zeroNanos() {
-		return BitsCronField.ZERO_NANOS;
+		return BitsCronField.zeroNanos();
 	}
 
 	/**
@@ -80,7 +69,7 @@ abstract class CronField {
 	}
 
 	/**
-	 * Parse the given value into an hours {@code CronField}, the third entry of a cron expression.
+	 * Parse the given value into a hours {@code CronField}, the third entry of a cron expression.
 	 */
 	public static CronField parseHours(String value) {
 		return BitsCronField.parseHours(value);
@@ -145,7 +134,7 @@ abstract class CronField {
 	}
 
 	private static String replaceOrdinals(String value, String[] list) {
-		value = value.toUpperCase(Locale.ROOT);
+		value = value.toUpperCase();
 		for (int i = 0; i < list.length; i++) {
 			String replacement = Integer.toString(i + 1);
 			value = StringUtils.replace(value, list[i], replacement);
@@ -160,7 +149,8 @@ abstract class CronField {
 	 * @param temporal the seed value
 	 * @return the next or same temporal matching the pattern
 	 */
-	public abstract <T extends Temporal & Comparable<? super T>> @Nullable T nextOrSame(T temporal);
+	@Nullable
+	public abstract <T extends Temporal & Comparable<? super T>> T nextOrSame(T temporal);
 
 
 	protected Type type() {
@@ -178,26 +168,25 @@ abstract class CronField {
 	 * day-of-month, month, day-of-week.
 	 */
 	protected enum Type {
+		NANO(ChronoField.NANO_OF_SECOND),
+		SECOND(ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND),
+		MINUTE(ChronoField.MINUTE_OF_HOUR, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND),
+		HOUR(ChronoField.HOUR_OF_DAY, ChronoField.MINUTE_OF_HOUR, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND),
+		DAY_OF_MONTH(ChronoField.DAY_OF_MONTH, ChronoField.HOUR_OF_DAY, ChronoField.MINUTE_OF_HOUR, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND),
+		MONTH(ChronoField.MONTH_OF_YEAR, ChronoField.DAY_OF_MONTH, ChronoField.HOUR_OF_DAY, ChronoField.MINUTE_OF_HOUR, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND),
+		DAY_OF_WEEK(ChronoField.DAY_OF_WEEK, ChronoField.HOUR_OF_DAY, ChronoField.MINUTE_OF_HOUR, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND);
 
-		NANO(ChronoField.NANO_OF_SECOND, ChronoUnit.SECONDS),
-		SECOND(ChronoField.SECOND_OF_MINUTE, ChronoUnit.MINUTES, ChronoField.NANO_OF_SECOND),
-		MINUTE(ChronoField.MINUTE_OF_HOUR, ChronoUnit.HOURS, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND),
-		HOUR(ChronoField.HOUR_OF_DAY, ChronoUnit.DAYS, ChronoField.MINUTE_OF_HOUR, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND),
-		DAY_OF_MONTH(ChronoField.DAY_OF_MONTH, ChronoUnit.MONTHS, ChronoField.HOUR_OF_DAY, ChronoField.MINUTE_OF_HOUR, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND),
-		MONTH(ChronoField.MONTH_OF_YEAR, ChronoUnit.YEARS, ChronoField.DAY_OF_MONTH, ChronoField.HOUR_OF_DAY, ChronoField.MINUTE_OF_HOUR, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND),
-		DAY_OF_WEEK(ChronoField.DAY_OF_WEEK, ChronoUnit.WEEKS, ChronoField.HOUR_OF_DAY, ChronoField.MINUTE_OF_HOUR, ChronoField.SECOND_OF_MINUTE, ChronoField.NANO_OF_SECOND);
 
 		private final ChronoField field;
 
-		private final ChronoUnit higherOrder;
-
 		private final ChronoField[] lowerOrders;
 
-		Type(ChronoField field, ChronoUnit higherOrder, ChronoField... lowerOrders) {
+
+		Type(ChronoField field, ChronoField... lowerOrders) {
 			this.field = field;
-			this.higherOrder = higherOrder;
 			this.lowerOrders = lowerOrders;
 		}
+
 
 		/**
 		 * Return the value of this type for the given temporal.
@@ -208,7 +197,7 @@ abstract class CronField {
 		}
 
 		/**
-		 * Return the general range of this type. For instance, this method
+		 * Return the general range of this type. For instance, this methods
 		 * will return 0-31 for {@link #MONTH}.
 		 * @return the range of this field
 		 */
@@ -277,9 +266,10 @@ abstract class CronField {
 		 * @return the rolled forward temporal
 		 */
 		public <T extends Temporal & Comparable<? super T>> T rollForward(T temporal) {
-			T result = this.higherOrder.addTo(temporal, 1);
-			ValueRange range = result.range(this.field);
-			return this.field.adjustInto(result, range.getMinimum());
+			int current = get(temporal);
+			ValueRange range = temporal.range(this.field);
+			long amount = range.getMaximum() - current + 1;
+			return this.field.getBaseUnit().addTo(temporal, amount);
 		}
 
 		/**

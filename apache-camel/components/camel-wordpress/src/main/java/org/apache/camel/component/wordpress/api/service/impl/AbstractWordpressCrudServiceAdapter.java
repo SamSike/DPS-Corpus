@@ -16,16 +16,17 @@
  */
 package org.apache.camel.component.wordpress.api.service.impl;
 
-import java.util.Objects;
-
 import org.apache.camel.component.wordpress.api.model.Context;
 import org.apache.camel.component.wordpress.api.model.DeletedModel;
 import org.apache.camel.component.wordpress.api.model.SearchCriteria;
 import org.apache.camel.component.wordpress.api.service.WordpressCrudService;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Base service adapter implementation with CRUD commons operations.
- *
+ * 
  * @param <A>
  * @param <T>
  */
@@ -38,7 +39,7 @@ abstract class AbstractWordpressCrudServiceAdapter<A, T, S extends SearchCriteri
 
     @Override
     public final T create(T object) {
-        Objects.requireNonNull(object, "Please define an object to create");
+        checkNotNull(object, "Please define an object to create");
         return this.doCreate(object);
     }
 
@@ -46,17 +47,13 @@ abstract class AbstractWordpressCrudServiceAdapter<A, T, S extends SearchCriteri
 
     @Override
     public final T delete(Integer id) {
-        if (!(id > 0)) {
-            throw new IllegalArgumentException("The id is mandatory");
-        }
+        checkArgument(id > 0, "The id is mandatory");
         return this.doDelete(id);
     }
 
     @Override
     public final DeletedModel<T> forceDelete(Integer id) {
-        if (!(id > 0)) {
-            throw new IllegalArgumentException("The id is mandatory");
-        }
+        checkArgument(id > 0, "The id is mandatory");
         return this.doForceDelete(id);
     }
 
@@ -73,10 +70,8 @@ abstract class AbstractWordpressCrudServiceAdapter<A, T, S extends SearchCriteri
 
     @Override
     public final T update(Integer id, T object) {
-        Objects.requireNonNull(object, "Please define an object to update");
-        if (!(id > 0)) {
-            throw new IllegalArgumentException("The id is mandatory");
-        }
+        checkNotNull(object, "Please define an object to update");
+        checkArgument(id > 0, "The id is mandatory");
         return this.doUpdate(id, object);
     }
 
@@ -89,10 +84,8 @@ abstract class AbstractWordpressCrudServiceAdapter<A, T, S extends SearchCriteri
 
     @Override
     public final T retrieve(Integer entityID, Context context) {
-        if (!(entityID > 0)) {
-            throw new IllegalArgumentException("Please provide a non zero id");
-        }
-        Objects.requireNonNull(context, "Provide a context");
+        checkArgument(entityID > 0, "Please provide a non zero id");
+        checkNotNull(context, "Provide a context");
         // return this.getSpi().retrieve(getApiVersion(), entityID, context);
         return doRetrieve(entityID, context);
     }

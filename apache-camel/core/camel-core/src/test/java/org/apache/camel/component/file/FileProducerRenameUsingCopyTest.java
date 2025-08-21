@@ -16,43 +16,34 @@
  */
 package org.apache.camel.component.file;
 
-import java.util.UUID;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Isolated;
 
-@Isolated("This test is regularly flaky")
 public class FileProducerRenameUsingCopyTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello" + UUID.randomUUID() + ".txt";
 
     @Test
     public void testMove() throws Exception {
         final String body = "Hello Camel";
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(1);
-        mock.expectedFileExists(testFile("done/" + TEST_FILE_NAME), body);
+        mock.expectedFileExists(testFile("done/hello.txt"), body);
 
-        template.sendBodyAndHeader(fileUri(), body, Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader(fileUri(), body, Exchange.FILE_NAME, "hello.txt");
 
-        // wait a bit for the file move to be completed
         assertMockEndpointsSatisfied();
 
-        Awaitility.await().untilAsserted(() -> {
-            assertFileExists(testFile("done/" + TEST_FILE_NAME));
-            assertFileNotExists(testFile(TEST_FILE_NAME));
-        });
+        assertFileExists(testFile("done/hello.txt"));
+        assertFileNotExists(testFile("hello.txt"));
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?renameUsingCopy=true&move=done")).convertBodyTo(String.class).to("mock:result");
             }
         };

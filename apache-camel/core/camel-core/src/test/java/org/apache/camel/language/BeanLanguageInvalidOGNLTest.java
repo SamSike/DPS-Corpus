@@ -27,7 +27,7 @@ import org.apache.camel.component.bean.MethodNotFoundException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class BeanLanguageInvalidOGNLTest extends ContextTestSupport {
 
@@ -35,21 +35,22 @@ public class BeanLanguageInvalidOGNLTest extends ContextTestSupport {
     public void testBeanLanguageInvalidOGNL() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").transform().method(MyReallyCoolBean.class, "getOther[xx");
             }
         });
-
-        Exception e = assertThrows(Exception.class, () -> context.start(),
-                "Should have thrown exception");
-
-        RuntimeCamelException rce = assertIsInstanceOf(RuntimeCamelException.class, e);
-        MethodNotFoundException mnfe = assertIsInstanceOf(MethodNotFoundException.class, rce.getCause());
-        assertEquals("getOther[xx", mnfe.getMethodName());
-        ExpressionIllegalSyntaxException cause
-                = assertIsInstanceOf(ExpressionIllegalSyntaxException.class, mnfe.getCause());
-        assertEquals("Illegal syntax: getOther[xx", cause.getMessage());
-        assertEquals("getOther[xx", cause.getExpression());
+        try {
+            context.start();
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            RuntimeCamelException rce = assertIsInstanceOf(RuntimeCamelException.class, e);
+            MethodNotFoundException mnfe = assertIsInstanceOf(MethodNotFoundException.class, rce.getCause());
+            assertEquals("getOther[xx", mnfe.getMethodName());
+            ExpressionIllegalSyntaxException cause
+                    = assertIsInstanceOf(ExpressionIllegalSyntaxException.class, mnfe.getCause());
+            assertEquals("Illegal syntax: getOther[xx", cause.getMessage());
+            assertEquals("getOther[xx", cause.getExpression());
+        }
     }
 
     @Override
@@ -59,7 +60,7 @@ public class BeanLanguageInvalidOGNLTest extends ContextTestSupport {
 
     public static class MyReallyCoolBean {
 
-        private final Map<?, ?> map = new LinkedHashMap<>();
+        private Map<?, ?> map = new LinkedHashMap<>();
 
         public Map<?, ?> getOther() {
             return map;

@@ -49,7 +49,7 @@ import org.apache.camel.util.ObjectHelper;
  * Parse fixed width and delimited files using the FlatPack library.
  */
 @UriEndpoint(firstVersion = "1.4.0", scheme = "flatpack", title = "Flatpack", syntax = "flatpack:type:resourceUri",
-             remote = false, category = { Category.TRANSFORMATION }, headersClass = FlatpackConstants.class)
+             category = { Category.TRANSFORMATION }, headersClass = FlatpackConstants.class)
 public class FlatpackEndpoint extends DefaultPollingEndpoint {
 
     private LoadBalancer loadBalancer = new RoundRobinLoadBalancer();
@@ -59,7 +59,7 @@ public class FlatpackEndpoint extends DefaultPollingEndpoint {
     @Metadata(required = false, defaultValue = "delim")
     private FlatpackType type;
     @UriPath
-    @Metadata(required = true, supportFileReference = true)
+    @Metadata(required = true)
     private String resourceUri;
 
     @UriParam(defaultValue = "true")
@@ -83,11 +83,6 @@ public class FlatpackEndpoint extends DefaultPollingEndpoint {
     public FlatpackEndpoint(String endpointUri, Component component, String resourceUri) {
         super(endpointUri, component);
         this.resourceUri = resourceUri;
-    }
-
-    @Override
-    public boolean isRemote() {
-        return false;
     }
 
     @Override

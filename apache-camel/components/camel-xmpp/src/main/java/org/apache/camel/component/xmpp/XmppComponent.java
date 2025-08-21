@@ -98,6 +98,7 @@ public class XmppComponent extends DefaultComponent {
 
     private String extractCacheKeyFromUri(String uri) throws URISyntaxException {
         URI u = new URI(uri);
-        return u.getScheme() + "://" + u.getHost() + u.getPort() + u.getQuery();
+        String result = u.getScheme() + "://" + u.getHost() + u.getPort() + u.getQuery();
+        return result;
     }
 }

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,7 +40,6 @@ package org.jooq.impl;
 import static java.util.Comparator.comparing;
 import static org.jooq.SortOrder.ASC;
 import static org.jooq.SortOrder.DEFAULT;
-import static org.jooq.TableOptions.TableType.TABLE;
 import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.tools.StringUtils.defaultIfNull;
 
@@ -54,7 +53,6 @@ import org.jooq.Key;
 import org.jooq.Named;
 import org.jooq.SortField;
 import org.jooq.SortOrder;
-import org.jooq.Table;
 
 /**
  * Commonly used comparators and related utilities.
@@ -64,8 +62,6 @@ import org.jooq.Table;
 final class Comparators {
 
     static final Comparator<Named>            NAMED_COMP       = comparing(Named::getQualifiedName);
-    static final Comparator<Named>            UNQUALIFIED_COMP = comparing(Named::getUnqualifiedName);
-    static final Comparator<Table<?>>         TABLE_VIEW_COMP  = comparing(t -> t.getTableType() == TABLE ? 0 : 1);
     static final Comparator<Key<?>>           KEY_COMP         = new KeyComparator();
     static final Comparator<ForeignKey<?, ?>> FOREIGN_KEY_COMP = new ForeignKeyComparator();
     static final Comparator<Check<?>>         CHECK_COMP       = comparing(c -> c.condition().toString());

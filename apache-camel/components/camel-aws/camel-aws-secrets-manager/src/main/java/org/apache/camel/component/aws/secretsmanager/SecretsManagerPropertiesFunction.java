@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.aws.secretsmanager;
 
-import java.net.URI;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,7 +32,6 @@ import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.StringHelper;
 import org.apache.camel.vault.AwsVaultConfiguration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
@@ -52,8 +50,6 @@ import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerExcept
  * <li><tt>CAMEL_VAULT_AWS_SECRET_KEY</tt></li>
  * <li><tt>CAMEL_VAULT_AWS_REGION</tt></li>
  * <li><tt>CAMEL_VAULT_AWS_USE_DEFAULT_CREDENTIALS_PROVIDER</tt></li>
- * <li><tt>CAMEL_VAULT_AWS_USE_PROFILE_CREDENTIALS_PROVIDER</tt></li>
- * <li><tt>CAMEL_AWS_VAULT_PROFILE_NAME</tt></li>
  * </ul>
  * <p/>
  *
@@ -63,9 +59,7 @@ import software.amazon.awssdk.services.secretsmanager.model.SecretsManagerExcept
  * <li><tt>camel.vault.aws.accessKey</tt></li>
  * <li><tt>camel.vault.aws.secretKey</tt></li>
  * <li><tt>camel.vault.aws.region</tt></li>
- * <li><tt>camel.vault.aws.defaultCredentialsProvider</tt></li>
- * <li><tt>camel.vault.aws.profileCredentialsProvider</tt></li>
- * <li><tt>camel.vault.aws.profileName</tt></li>
+ * <li><tt>camel.vault.aws.useDefaultCredentialsProvider</tt></li>
  * </ul>
  * <p/>
  *
@@ -88,18 +82,6 @@ public class SecretsManagerPropertiesFunction extends ServiceSupport implements 
     private static final String CAMEL_AWS_VAULT_REGION_ENV = "CAMEL_VAULT_AWS_REGION";
     private static final String CAMEL_AWS_VAULT_USE_DEFAULT_CREDENTIALS_PROVIDER_ENV
             = "CAMEL_VAULT_AWS_USE_DEFAULT_CREDENTIALS_PROVIDER";
-
-    private static final String CAMEL_AWS_VAULT_USE_PROFILE_CREDENTIALS_PROVIDER_ENV
-            = "CAMEL_VAULT_AWS_USE_PROFILE_CREDENTIALS_PROVIDER";
-
-    private static final String CAMEL_AWS_VAULT_PROFILE_NAME_ENV
-            = "CAMEL_AWS_VAULT_PROFILE_NAME";
-
-    private static final String CAMEL_AWS_VAULT_IS_OVERRIDE_ENDPOINT
-            = "CAMEL_AWS_VAULT_IS_OVERRIDE_ENDPOINT";
-
-    private static final String CAMEL_AWS_VAULT_URI_ENDPOINT_OVERRIDE = "CAMEL_AWS_VAULT_URI_ENDPOINT_OVERRIDE";
-
     private CamelContext camelContext;
     private SecretsManagerClient client;
 
@@ -107,23 +89,6 @@ public class SecretsManagerPropertiesFunction extends ServiceSupport implements 
 
     private String region;
     private boolean defaultCredentialsProvider;
-
-    private boolean profleCredentialsProvider;
-
-    private String profileName;
-
-    private boolean isOverrideEndpoint;
-
-    private String uriEndpointOverride;
-
-    public SecretsManagerPropertiesFunction() {
-        super();
-    }
-
-    public SecretsManagerPropertiesFunction(SecretsManagerClient client) {
-        super();
-        this.client = client;
-    }
 
     @Override
     protected void doStart() throws Exception {
@@ -134,11 +99,6 @@ public class SecretsManagerPropertiesFunction extends ServiceSupport implements 
         String region = System.getenv(CAMEL_AWS_VAULT_REGION_ENV);
         boolean useDefaultCredentialsProvider
                 = Boolean.parseBoolean(System.getenv(CAMEL_AWS_VAULT_USE_DEFAULT_CREDENTIALS_PROVIDER_ENV));
-        boolean useProfileCredentialsProvider
-                = Boolean.parseBoolean(System.getenv(CAMEL_AWS_VAULT_USE_PROFILE_CREDENTIALS_PROVIDER_ENV));
-        String profileName = System.getenv(CAMEL_AWS_VAULT_PROFILE_NAME_ENV);
-        boolean isOverrideEndpoint = Boolean.parseBoolean(System.getenv(CAMEL_AWS_VAULT_IS_OVERRIDE_ENDPOINT));
-        String uriEndpointOverride = System.getenv(CAMEL_AWS_VAULT_URI_ENDPOINT_OVERRIDE);
         if (ObjectHelper.isEmpty(accessKey) && ObjectHelper.isEmpty(secretKey) && ObjectHelper.isEmpty(region)) {
             AwsVaultConfiguration awsVaultConfiguration = getCamelContext().getVaultConfiguration().aws();
             if (ObjectHelper.isNotEmpty(awsVaultConfiguration)) {
@@ -146,10 +106,6 @@ public class SecretsManagerPropertiesFunction extends ServiceSupport implements 
                 secretKey = awsVaultConfiguration.getSecretKey();
                 region = awsVaultConfiguration.getRegion();
                 useDefaultCredentialsProvider = awsVaultConfiguration.isDefaultCredentialsProvider();
-                useProfileCredentialsProvider = awsVaultConfiguration.isProfileCredentialsProvider();
-                profileName = awsVaultConfiguration.getProfileName();
-                isOverrideEndpoint = awsVaultConfiguration.isOverrideEndpoint();
-                uriEndpointOverride = awsVaultConfiguration.getUriEndpointOverride();
             }
         }
         this.region = region;
@@ -158,33 +114,11 @@ public class SecretsManagerPropertiesFunction extends ServiceSupport implements 
             AwsBasicCredentials cred = AwsBasicCredentials.create(accessKey, secretKey);
             clientBuilder = clientBuilder.credentialsProvider(StaticCredentialsProvider.create(cred));
             clientBuilder.region(Region.of(region));
-            if (isOverrideEndpoint) {
-                if (ObjectHelper.isNotEmpty(uriEndpointOverride)) {
-                    clientBuilder.endpointOverride(URI.create(uriEndpointOverride));
-                }
-            }
             client = clientBuilder.build();
         } else if (useDefaultCredentialsProvider && ObjectHelper.isNotEmpty(region)) {
             this.defaultCredentialsProvider = true;
             SecretsManagerClientBuilder clientBuilder = SecretsManagerClient.builder();
             clientBuilder.region(Region.of(region));
-            if (isOverrideEndpoint) {
-                if (ObjectHelper.isNotEmpty(uriEndpointOverride)) {
-                    clientBuilder.endpointOverride(URI.create(uriEndpointOverride));
-                }
-            }
-            client = clientBuilder.build();
-        } else if (useProfileCredentialsProvider && ObjectHelper.isNotEmpty(profileName)) {
-            this.profleCredentialsProvider = true;
-            this.profileName = profileName;
-            SecretsManagerClientBuilder clientBuilder = SecretsManagerClient.builder();
-            clientBuilder.credentialsProvider(ProfileCredentialsProvider.create(profileName));
-            clientBuilder.region(Region.of(region));
-            if (isOverrideEndpoint) {
-                if (ObjectHelper.isNotEmpty(uriEndpointOverride)) {
-                    clientBuilder.endpointOverride(URI.create(uriEndpointOverride));
-                }
-            }
             client = clientBuilder.build();
         } else {
             throw new RuntimeCamelException(
@@ -218,9 +152,9 @@ public class SecretsManagerPropertiesFunction extends ServiceSupport implements 
         String returnValue = null;
         String defaultValue = null;
         String version = null;
-        if (remainder.contains("#")) {
-            key = StringHelper.before(remainder, "#");
-            subkey = StringHelper.after(remainder, "#");
+        if (remainder.contains("/")) {
+            key = StringHelper.before(remainder, "/");
+            subkey = StringHelper.after(remainder, "/");
             defaultValue = StringHelper.after(subkey, ":");
             if (ObjectHelper.isNotEmpty(defaultValue)) {
                 if (defaultValue.contains("@")) {
@@ -252,9 +186,8 @@ public class SecretsManagerPropertiesFunction extends ServiceSupport implements 
         if (key != null) {
             try {
                 returnValue = getSecretFromSource(key, subkey, defaultValue, version);
-            } catch (Exception e) {
-                throw new RuntimeCamelException(
-                        "Error getting secret from vault using key: " + key + " due to: " + e.getMessage(), e);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeCamelException("Something went wrong while recovering " + key + " from vault");
             }
         }
 
@@ -331,23 +264,9 @@ public class SecretsManagerPropertiesFunction extends ServiceSupport implements 
     }
 
     /**
-     * Whether login is using default credentials provider
+     * Whether login is using default credentials provider, or access/secret keys
      */
     public boolean isDefaultCredentialsProvider() {
         return defaultCredentialsProvider;
-    }
-
-    /**
-     * Whether login is using default profile credentials provider
-     */
-    public boolean isProfleCredentialsProvider() {
-        return profleCredentialsProvider;
-    }
-
-    /**
-     * The profile name to use when using the profile credentials provider
-     */
-    public String getProfileName() {
-        return profileName;
     }
 }

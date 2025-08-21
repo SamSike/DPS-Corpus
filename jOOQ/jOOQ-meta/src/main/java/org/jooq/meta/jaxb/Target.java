@@ -28,7 +28,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class Target implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlElement(defaultValue = "org.jooq.generated")
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String packageName = "org.jooq.generated";
@@ -126,7 +126,7 @@ public class Target implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether the target package should be cleaned to contain only generated code after a generation run.
+     * Sets the value of the clean property.
      * 
      * @param value
      *     allowed object is
@@ -176,10 +176,6 @@ public class Target implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Whether the target package should be cleaned to contain only generated code after a generation run.
-     * 
-     */
     public Target withClean(Boolean value) {
         setClean(value);
         return this;

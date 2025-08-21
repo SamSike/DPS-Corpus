@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,8 @@ package org.springframework.test.web.client;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.http.client.ClientHttpRequest;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -39,7 +38,8 @@ import org.springframework.util.Assert;
 public class SimpleRequestExpectationManager extends AbstractRequestExpectationManager {
 
 	/** Expectations in the order of declaration (count may be > 1). */
-	private @Nullable Iterator<RequestExpectation> expectationIterator;
+	@Nullable
+	private Iterator<RequestExpectation> expectationIterator;
 
 	/** Track expectations that have a remaining count. */
 	private final RequestExpectationGroup repeatExpectations = new RequestExpectationGroup();

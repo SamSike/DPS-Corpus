@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,10 @@ package org.springframework.web.reactive.function;
 import java.util.Collections;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.NestedRuntimeException;
 import org.springframework.core.ResolvableType;
 import org.springframework.http.MediaType;
+import org.springframework.lang.Nullable;
 
 /**
  * Exception thrown to indicate that a {@code Content-Type} is not supported.
@@ -34,11 +33,13 @@ import org.springframework.http.MediaType;
 @SuppressWarnings("serial")
 public class UnsupportedMediaTypeException extends NestedRuntimeException {
 
-	private final @Nullable MediaType contentType;
+	@Nullable
+	private final MediaType contentType;
 
 	private final List<MediaType> supportedMediaTypes;
 
-	private final @Nullable ResolvableType bodyType;
+	@Nullable
+	private final ResolvableType bodyType;
 
 
 	/**
@@ -81,7 +82,8 @@ public class UnsupportedMediaTypeException extends NestedRuntimeException {
 	 * Return the request Content-Type header if it was parsed successfully,
 	 * or {@code null} otherwise.
 	 */
-	public @Nullable MediaType getContentType() {
+	@Nullable
+	public MediaType getContentType() {
 		return this.contentType;
 	}
 
@@ -100,7 +102,8 @@ public class UnsupportedMediaTypeException extends NestedRuntimeException {
 	 * @return the body type, or {@code null} if not available
 	 * @since 5.1
 	 */
-	public @Nullable ResolvableType getBodyType() {
+	@Nullable
+	public ResolvableType getBodyType() {
 		return this.bodyType;
 	}
 

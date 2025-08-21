@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,11 @@ import java.util.Map;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.aop.ProxyMethodInvocation;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.core.BridgeMethodResolver;
+import org.springframework.lang.Nullable;
 
 /**
  * Spring's implementation of the AOP Alliance
@@ -47,7 +47,7 @@ import org.springframework.core.BridgeMethodResolver;
  *
  * <p><b>NOTE:</b> This class is considered internal and should not be
  * directly accessed. The sole reason for it being public is compatibility
- * with existing framework integrations (for example, Pitchfork). For any other
+ * with existing framework integrations (e.g. Pitchfork). For any other
  * purposes, use the {@link ProxyMethodInvocation} interface instead.
  *
  * @author Rod Johnson
@@ -63,18 +63,21 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 
 	protected final Object proxy;
 
-	protected final @Nullable Object target;
+	@Nullable
+	protected final Object target;
 
 	protected final Method method;
 
-	protected @Nullable Object[] arguments;
+	protected Object[] arguments;
 
-	private final @Nullable Class<?> targetClass;
+	@Nullable
+	private final Class<?> targetClass;
 
 	/**
 	 * Lazily initialized map of user-specific attributes for this invocation.
 	 */
-	private @Nullable Map<String, Object> userAttributes;
+	@Nullable
+	private Map<String, Object> userAttributes;
 
 	/**
 	 * List of MethodInterceptor and InterceptorAndDynamicMethodMatcher
@@ -121,7 +124,8 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	}
 
 	@Override
-	public final @Nullable Object getThis() {
+	@Nullable
+	public final Object getThis() {
 		return this.target;
 	}
 
@@ -141,18 +145,19 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	}
 
 	@Override
-	public final @Nullable Object[] getArguments() {
+	public final Object[] getArguments() {
 		return this.arguments;
 	}
 
 	@Override
-	public void setArguments(@Nullable Object... arguments) {
+	public void setArguments(Object... arguments) {
 		this.arguments = arguments;
 	}
 
 
 	@Override
-	public @Nullable Object proceed() throws Throwable {
+	@Nullable
+	public Object proceed() throws Throwable {
 		// We start with an index of -1 and increment early.
 		if (this.currentInterceptorIndex == this.interceptorsAndDynamicMethodMatchers.size() - 1) {
 			return invokeJoinpoint();
@@ -160,12 +165,14 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 
 		Object interceptorOrInterceptionAdvice =
 				this.interceptorsAndDynamicMethodMatchers.get(++this.currentInterceptorIndex);
-		if (interceptorOrInterceptionAdvice instanceof InterceptorAndDynamicMethodMatcher dm) {
+		if (interceptorOrInterceptionAdvice instanceof InterceptorAndDynamicMethodMatcher) {
 			// Evaluate dynamic method matcher here: static part will already have
 			// been evaluated and found to match.
+			InterceptorAndDynamicMethodMatcher dm =
+					(InterceptorAndDynamicMethodMatcher) interceptorOrInterceptionAdvice;
 			Class<?> targetClass = (this.targetClass != null ? this.targetClass : this.method.getDeclaringClass());
-			if (dm.matcher().matches(this.method, targetClass, this.arguments)) {
-				return dm.interceptor().invoke(this);
+			if (dm.methodMatcher.matches(this.method, targetClass, this.arguments)) {
+				return dm.interceptor.invoke(this);
 			}
 			else {
 				// Dynamic matching failed.
@@ -186,7 +193,8 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	 * @return the return value of the joinpoint
 	 * @throws Throwable if invoking the joinpoint resulted in an exception
 	 */
-	protected @Nullable Object invokeJoinpoint() throws Throwable {
+	@Nullable
+	protected Object invokeJoinpoint() throws Throwable {
 		return AopUtils.invokeJoinpointUsingReflection(this.target, this.method, this.arguments);
 	}
 
@@ -201,7 +209,7 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	 */
 	@Override
 	public MethodInvocation invocableClone() {
-		@Nullable Object[] cloneArguments = this.arguments;
+		Object[] cloneArguments = this.arguments;
 		if (this.arguments.length > 0) {
 			// Build an independent copy of the arguments array.
 			cloneArguments = this.arguments.clone();
@@ -218,7 +226,7 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	 * @see java.lang.Object#clone()
 	 */
 	@Override
-	public MethodInvocation invocableClone(@Nullable Object... arguments) {
+	public MethodInvocation invocableClone(Object... arguments) {
 		// Force initialization of the user attributes Map,
 		// for having a shared Map reference in the clone.
 		if (this.userAttributes == null) {
@@ -254,7 +262,8 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 	}
 
 	@Override
-	public @Nullable Object getUserAttribute(String key) {
+	@Nullable
+	public Object getUserAttribute(String key) {
 		return (this.userAttributes != null ? this.userAttributes.get(key) : null);
 	}
 

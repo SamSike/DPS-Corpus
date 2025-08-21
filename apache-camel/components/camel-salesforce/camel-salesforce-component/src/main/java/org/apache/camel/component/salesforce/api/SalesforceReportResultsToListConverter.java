@@ -478,7 +478,7 @@ public final class SalesforceReportResultsToListConverter {
             }
         }
 
-        return columnNames.toArray(new String[0]);
+        return columnNames.toArray(new String[columnNames.size()]);
     }
 
     private static void addColumnHeaders(

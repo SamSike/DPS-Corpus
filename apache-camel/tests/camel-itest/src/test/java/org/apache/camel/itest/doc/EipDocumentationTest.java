@@ -42,7 +42,7 @@ public class EipDocumentationTest extends CamelTestSupport {
     @Test
     void testDocumentation() throws Exception {
         try (CamelContext context = new DefaultCamelContext()) {
-            String json = ((CatalogCamelContext) context).getEipParameterJsonSchema("from");
+            String json = context.adapt(CatalogCamelContext.class).getEipParameterJsonSchema("from");
             LOG.info(json);
             assertNotNull(json, "Should have found json for from");
 
@@ -55,9 +55,9 @@ public class EipDocumentationTest extends CamelTestSupport {
     @Test
     void testSplitDocumentation() throws Exception {
         try (CamelContext context = new DefaultCamelContext()) {
-            String json = ((CatalogCamelContext) context).getEipParameterJsonSchema("split");
+            String json = context.adapt(CatalogCamelContext.class).getEipParameterJsonSchema("split");
             LOG.info(json);
-            assertNotNull(json, "Should have found json for split");
+            assertNotNull("Should have found json for split", json);
 
             assertTrue(json.contains("\"name\": \"split\""));
             // there should be javadoc included
@@ -71,9 +71,9 @@ public class EipDocumentationTest extends CamelTestSupport {
     @Test
     void testSimpleDocumentation() throws Exception {
         try (CamelContext context = new DefaultCamelContext()) {
-            String json = ((CatalogCamelContext) context).getEipParameterJsonSchema("simple");
+            String json = context.adapt(CatalogCamelContext.class).getEipParameterJsonSchema("simple");
             LOG.info(json);
-            assertNotNull(json, "Should have found json for simple");
+            assertNotNull("Should have found json for simple", json);
 
             assertTrue(json.contains("\"label\": \"language,core,java\""));
             assertTrue(json.contains("\"name\": \"simple\""));
@@ -83,9 +83,9 @@ public class EipDocumentationTest extends CamelTestSupport {
     @Test
     void testFailOverDocumentation() throws Exception {
         try (CamelContext context = new DefaultCamelContext()) {
-            String json = ((CatalogCamelContext) context).getEipParameterJsonSchema("failover");
+            String json = context.adapt(CatalogCamelContext.class).getEipParameterJsonSchema("failover");
             LOG.info(json);
-            assertNotNull(json, "Should have found json for failover");
+            assertNotNull("Should have found json for failover", json);
 
             assertTrue(json.contains("\"name\": \"failover\""));
             assertTrue(json.contains(
@@ -97,7 +97,7 @@ public class EipDocumentationTest extends CamelTestSupport {
     @Test
     void testNotFound() throws Exception {
         try (CamelContext context = new DefaultCamelContext()) {
-            String json = ((CatalogCamelContext) context).getEipParameterJsonSchema("unknown");
+            String json = context.adapt(CatalogCamelContext.class).getEipParameterJsonSchema("unknown");
             assertNull(json, "Should not have found json for unknown");
         }
     }

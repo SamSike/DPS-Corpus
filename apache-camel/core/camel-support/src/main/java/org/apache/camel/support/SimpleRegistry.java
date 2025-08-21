@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import org.apache.camel.NoSuchBeanException;
-import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.spi.Registry;
 
 /**
@@ -65,7 +64,7 @@ public class SimpleRegistry extends LinkedHashMap<String, Map<Class<?>, Object>>
         try {
             answer = unwrap(answer);
             return type.cast(answer);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             String msg = "Found bean: " + name + " in SimpleRegistry: " + this
                          + " of type: " + answer.getClass().getName() + " expected type was: " + type;
             throw new NoSuchBeanException(name, msg, e);
@@ -108,19 +107,7 @@ public class SimpleRegistry extends LinkedHashMap<String, Map<Class<?>, Object>>
     }
 
     @Override
-    public void bind(String id, Class<?> type, Object bean, String initMethod, String destroyMethod)
-            throws RuntimeCamelException {
-        throw new UnsupportedOperationException("Use DefaultRegistry");
-    }
-
-    @Override
     public void bind(String id, Class<?> type, Supplier<Object> bean) {
-        throw new UnsupportedOperationException("Use SupplierRegistry");
-    }
-
-    @Override
-    public void bind(String id, Class<?> type, Supplier<Object> bean, String initMethod, String destroyMethod)
-            throws RuntimeCamelException {
         throw new UnsupportedOperationException("Use SupplierRegistry");
     }
 

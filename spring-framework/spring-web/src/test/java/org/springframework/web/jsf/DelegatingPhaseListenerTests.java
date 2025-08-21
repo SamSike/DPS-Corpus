@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Colin Sampaleanu
  * @author Juergen Hoeller
  */
-class DelegatingPhaseListenerTests {
+public class DelegatingPhaseListenerTests {
 
 	private final MockFacesContext facesContext = new MockFacesContext();
 
@@ -45,13 +45,12 @@ class DelegatingPhaseListenerTests {
 		}
 	};
 
-	@SuppressWarnings("unchecked")
 	@Test
-	void beforeAndAfterPhaseWithSingleTarget() {
+	public void beforeAndAfterPhaseWithSingleTarget() {
 		TestListener target = new TestListener();
 		beanFactory.addBean("testListener", target);
 
-		assertThat(delPhaseListener.getPhaseId()).isEqualTo(PhaseId.ANY_PHASE);
+		assertThat((Object) delPhaseListener.getPhaseId()).isEqualTo(PhaseId.ANY_PHASE);
 		PhaseEvent event = new PhaseEvent(facesContext, PhaseId.INVOKE_APPLICATION, new MockLifecycle());
 
 		delPhaseListener.beforePhase(event);
@@ -61,15 +60,14 @@ class DelegatingPhaseListenerTests {
 		assertThat(target.afterCalled).isTrue();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Test
-	void beforeAndAfterPhaseWithMultipleTargets() {
+	public void beforeAndAfterPhaseWithMultipleTargets() {
 		TestListener target1 = new TestListener();
 		TestListener target2 = new TestListener();
 		beanFactory.addBean("testListener1", target1);
 		beanFactory.addBean("testListener2", target2);
 
-		assertThat(delPhaseListener.getPhaseId()).isEqualTo(PhaseId.ANY_PHASE);
+		assertThat((Object) delPhaseListener.getPhaseId()).isEqualTo(PhaseId.ANY_PHASE);
 		PhaseEvent event = new PhaseEvent(facesContext, PhaseId.INVOKE_APPLICATION, new MockLifecycle());
 
 		delPhaseListener.beforePhase(event);

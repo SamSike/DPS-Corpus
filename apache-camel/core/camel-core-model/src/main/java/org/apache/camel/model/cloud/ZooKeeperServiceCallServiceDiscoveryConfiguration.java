@@ -28,7 +28,7 @@ import org.apache.camel.spi.Metadata;
 @XmlRootElement(name = "zookeeperServiceDiscovery")
 @XmlAccessorType(XmlAccessType.FIELD)
 @Configurer(extended = true)
-@Deprecated(since = "3.19.0")
+@Deprecated
 public class ZooKeeperServiceCallServiceDiscoveryConfiguration extends ServiceCallServiceDiscoveryConfiguration {
     @XmlAttribute(required = true)
     private String nodes;

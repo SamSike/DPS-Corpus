@@ -29,14 +29,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class FileConsumeTemplateTest extends ContextTestSupport {
 
     @Test
-    public void testConsumeFileWithTemplate() {
+    public void testConsumeFileWithTemplate() throws Exception {
         template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
         template.sendBodyAndHeader(fileUri(), "Bye World", Exchange.FILE_NAME, "bye.txt");
 
-        Exchange out = consumer.receive(fileUri("?sortBy=file:name&eagerMaxMessagesPerPoll=false"));
+        Exchange out = consumer.receive(fileUri("?sortBy=file:name"));
         assertNotNull(out);
 
-        Exchange out2 = consumer.receive(fileUri("?sortBy=file:name&eagerMaxMessagesPerPoll=false"));
+        Exchange out2 = consumer.receive(fileUri("?sortBy=file:name"));
         assertNotNull(out2);
 
         String body = out.getIn().getBody(String.class);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.web.servlet.tags.form;
 
+import jakarta.servlet.jsp.JspException;
 import jakarta.servlet.jsp.tagext.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -35,6 +36,7 @@ class HiddenInputTagTests extends AbstractFormTagTests {
 	private TestBean bean;
 
 	@Override
+	@SuppressWarnings("serial")
 	protected void onSetUp() {
 		this.tag = new HiddenInputTag() {
 			@Override
@@ -81,7 +83,7 @@ class HiddenInputTagTests extends AbstractFormTagTests {
 	}
 
 	@Test
-	void dynamicTypeAttribute() {
+	void dynamicTypeAttribute() throws JspException {
 		assertThatIllegalArgumentException().isThrownBy(() ->
 				this.tag.setDynamicAttribute(null, "type", "email"))
 			.withMessage("Attribute type=\"email\" is not allowed");
@@ -118,11 +120,11 @@ class HiddenInputTagTests extends AbstractFormTagTests {
 	}
 
 	private void assertTagClosed(String output) {
-		assertThat(output).endsWith("/>");
+		assertThat(output.endsWith("/>")).isTrue();
 	}
 
 	private void assertTagOpened(String output) {
-		assertThat(output).startsWith("<input ");
+		assertThat(output.startsWith("<input ")).isTrue();
 	}
 
 	@Override

@@ -7,10 +7,8 @@ package org.jooq.meta.postgres.pg_catalog.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -19,7 +17,6 @@ import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
-import org.jooq.impl.DefaultDataType;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 import org.jooq.meta.postgres.pg_catalog.Keys;
@@ -201,7 +198,7 @@ public class PgType extends TableImpl<Record> {
      * configuration.
      */
     @Deprecated
-    public final TableField<Record, Object> TYPDEFAULTBIN = createField(DSL.name("typdefaultbin"), DefaultDataType.getDefaultDataType("\"pg_catalog\".\"pg_node_tree\""), this, "");
+    public final TableField<Record, Object> TYPDEFAULTBIN = createField(DSL.name("typdefaultbin"), org.jooq.impl.DefaultDataType.getDefaultDataType("\"pg_catalog\".\"pg_node_tree\""), this, "");
 
     /**
      * The column <code>pg_catalog.pg_type.typdefault</code>.
@@ -211,14 +208,14 @@ public class PgType extends TableImpl<Record> {
     /**
      * The column <code>pg_catalog.pg_type.typacl</code>.
      */
-    public final TableField<Record, String[]> TYPACL = createField(DSL.name("typacl"), SQLDataType.VARCHAR.array(), this, "");
+    public final TableField<Record, String[]> TYPACL = createField(DSL.name("typacl"), SQLDataType.VARCHAR.getArrayDataType(), this, "");
 
     private PgType(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private PgType(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private PgType(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -242,8 +239,8 @@ public class PgType extends TableImpl<Record> {
         this(DSL.name("pg_type"), null);
     }
 
-    public <O extends Record> PgType(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, PG_TYPE);
+    public <O extends Record> PgType(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, PG_TYPE);
     }
 
     @Override
@@ -274,61 +271,9 @@ public class PgType extends TableImpl<Record> {
      */
     public PgNamespace pgNamespace() {
         if (_pgNamespace == null)
-            _pgNamespace = new PgNamespace(this, Keys.PG_TYPE__SYNTHETIC_FK_PG_TYPE__SYNTHETIC_PK_PG_NAMESPACE, null);
+            _pgNamespace = new PgNamespace(this, Keys.PG_TYPE__SYNTHETIC_FK_PG_TYPE__SYNTHETIC_PK_PG_NAMESPACE);
 
         return _pgNamespace;
-    }
-
-    private transient PgAttribute _pgAttribute;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>pg_catalog.pg_attribute</code> table
-     */
-    public PgAttribute pgAttribute() {
-        if (_pgAttribute == null)
-            _pgAttribute = new PgAttribute(this, null, Keys.PG_ATTRIBUTE__SYNTHETIC_FK_PG_ATTRIBUTE__SYNTHETIC_PK_PG_TYPE.getInverseKey());
-
-        return _pgAttribute;
-    }
-
-    private transient PgEnum _pgEnum;
-
-    /**
-     * Get the implicit to-many join path to the <code>pg_catalog.pg_enum</code>
-     * table
-     */
-    public PgEnum pgEnum() {
-        if (_pgEnum == null)
-            _pgEnum = new PgEnum(this, null, Keys.PG_ENUM__SYNTHETIC_FK_PG_ENUM__SYNTHETIC_PK_PG_TYPE.getInverseKey());
-
-        return _pgEnum;
-    }
-
-    private transient PgProc _pgProc;
-
-    /**
-     * Get the implicit to-many join path to the <code>pg_catalog.pg_proc</code>
-     * table
-     */
-    public PgProc pgProc() {
-        if (_pgProc == null)
-            _pgProc = new PgProc(this, null, Keys.PG_PROC__SYNTHETIC_FK_PG_PROC__SYNTHETIC_PK_PG_TYPE.getInverseKey());
-
-        return _pgProc;
-    }
-
-    private transient PgSequence _pgSequence;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>pg_catalog.pg_sequence</code> table
-     */
-    public PgSequence pgSequence() {
-        if (_pgSequence == null)
-            _pgSequence = new PgSequence(this, null, Keys.PG_SEQUENCE__SYNTHETIC_FK_PG_SEQUENCE__SYNTHETIC_PK_PG_TYPE.getInverseKey());
-
-        return _pgSequence;
     }
 
     @Override
@@ -341,8 +286,19 @@ public class PgType extends TableImpl<Record> {
         return new PgType(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public PgType as(Table<?> alias) {
-        return new PgType(alias.getQualifiedName(), this);
+    public PgType rename(String name) {
+        return new PgType(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public PgType rename(Name name) {
+        return new PgType(name, null);
     }
 }

@@ -16,7 +16,6 @@
  */
 package org.apache.camel.impl.event;
 
-import java.io.Serial;
 import java.util.EventObject;
 
 import org.apache.camel.Exchange;
@@ -26,7 +25,7 @@ import org.apache.camel.spi.CamelEvent.ExchangeEvent;
  * Base class for {@link Exchange} events.
  */
 public abstract class AbstractExchangeEvent extends EventObject implements ExchangeEvent {
-    private static final @Serial long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     private final Exchange exchange;
     private long timestamp;
 

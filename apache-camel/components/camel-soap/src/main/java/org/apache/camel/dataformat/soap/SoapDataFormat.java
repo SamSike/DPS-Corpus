@@ -39,8 +39,6 @@ import org.apache.camel.spi.annotations.Dataformat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.camel.dataformat.soap.SoapConstants.SOAP_METHOD_NAME;
-
 /**
  * Data format supporting SOAP 1.1 and 1.2.
  */
@@ -98,7 +96,7 @@ public class SoapDataFormat extends JaxbDataFormat {
     /**
      * Marshal inputObjects to SOAP xml. If the exchange or message has an EXCEPTION_CAUGTH property or header then
      * instead of the object the exception is marshaled.
-     *
+     * 
      * To determine the name of the top level xml elements the elementNameStrategy is used.
      */
     @Override
@@ -112,14 +110,18 @@ public class SoapDataFormat extends JaxbDataFormat {
 
     /**
      * Create body content from a non Exception object. So the interface should be in doc lit bare style.
-     *
-     * @param  inputObject object to be put into the SOAP body
-     * @param  soapAction  for name resolution
-     * @return             JAXBElement for the body content
+     * 
+     * @param  inputObject    object to be put into the SOAP body
+     * @param  soapAction     for name resolution
+     * @param  headerElements in/out parameter used to capture header content if present
+     * 
+     * @return                JAXBElement for the body content
      */
     protected List<Object> createContentFromObject(
-            final Object inputObject, String soapAction) {
+            final Object inputObject, String soapAction,
+            List<Object> headerElements) {
         List<Object> bodyParts = new ArrayList<>();
+        List<Object> headerParts = new ArrayList<>();
         bodyParts.add(inputObject);
 
         List<Object> bodyElements = new ArrayList<>();
@@ -127,8 +129,22 @@ public class SoapDataFormat extends JaxbDataFormat {
             QName name = elementNameStrategy.findQNameForSoapActionOrType(soapAction, bodyObj.getClass());
             if (name == null) {
                 LOG.warn("Could not find QName for class {}", bodyObj.getClass().getName());
+                continue;
             } else {
                 bodyElements.add(getElement(bodyObj, name));
+            }
+        }
+
+        for (Object headerObj : headerParts) {
+            QName name = elementNameStrategy.findQNameForSoapActionOrType(soapAction, headerObj.getClass());
+            if (name == null) {
+                LOG.warn("Could not find QName for class {}", headerObj.getClass().getName());
+                continue;
+            } else {
+                JAXBElement<?> headerElem = getElement(headerObj, name);
+                if (null != headerElem) {
+                    headerElements.add(headerElem);
+                }
             }
         }
 
@@ -160,14 +176,14 @@ public class SoapDataFormat extends JaxbDataFormat {
      * Unmarshal a given SOAP xml stream and return the content of the SOAP body
      */
     @Override
-    public Object unmarshal(Exchange exchange, Object body) throws Exception {
+    public Object unmarshal(Exchange exchange, InputStream stream) throws IOException {
         String soapAction = getSoapActionFromExchange(exchange);
 
         // Determine the method name for an eventual BeanProcessor in the route
         if (soapAction != null && elementNameStrategy instanceof ServiceInterfaceStrategy) {
             ServiceInterfaceStrategy strategy = (ServiceInterfaceStrategy) elementNameStrategy;
             String methodName = strategy.getMethodForSoapAction(soapAction);
-            exchange.getOut().setHeader(SOAP_METHOD_NAME, methodName);
+            exchange.getOut().setHeader(Exchange.BEAN_METHOD_NAME, methodName);
         }
 
         // Store soap action for an eventual later marshal step.
@@ -176,10 +192,9 @@ public class SoapDataFormat extends JaxbDataFormat {
             exchange.setProperty(Exchange.SOAP_ACTION, soapAction);
         }
 
-        Object unmarshalledObject = super.unmarshal(exchange, body);
+        Object unmarshalledObject = super.unmarshal(exchange, stream);
         Object rootObject = JAXBIntrospector.getValue(unmarshalledObject);
 
-        InputStream stream = exchange.getContext().getTypeConverter().mandatoryConvertTo(InputStream.class, exchange, body);
         return adapter.doUnmarshal(exchange, stream, rootObject);
     }
 

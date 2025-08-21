@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,8 @@ package org.springframework.messaging.core;
 
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.MessagingException;
 import org.springframework.util.Assert;
 
 /**
@@ -44,7 +42,8 @@ public abstract class AbstractDestinationResolvingMessagingTemplate<D> extends A
 		DestinationResolvingMessageReceivingOperations<D>,
 		DestinationResolvingMessageRequestReplyOperations<D> {
 
-	private @Nullable DestinationResolver<D> destinationResolver;
+	@Nullable
+	private DestinationResolver<D> destinationResolver;
 
 
 	/**
@@ -61,98 +60,98 @@ public abstract class AbstractDestinationResolvingMessagingTemplate<D> extends A
 	/**
 	 * Return the configured destination resolver.
 	 */
-	public @Nullable DestinationResolver<D> getDestinationResolver() {
+	@Nullable
+	public DestinationResolver<D> getDestinationResolver() {
 		return this.destinationResolver;
-	}
-
-	protected final D resolveDestination(String destinationName) throws DestinationResolutionException {
-		Assert.state(this.destinationResolver != null,
-				"DestinationResolver is required to resolve destination names");
-		return this.destinationResolver.resolveDestination(destinationName);
 	}
 
 
 	@Override
-	public void send(String destinationName, Message<?> message) throws MessagingException {
+	public void send(String destinationName, Message<?> message) {
 		D destination = resolveDestination(destinationName);
 		doSend(destination, message);
 	}
 
+	protected final D resolveDestination(String destinationName) {
+
+		Assert.state(this.destinationResolver != null, "DestinationResolver is required to resolve destination names");
+		return this.destinationResolver.resolveDestination(destinationName);
+	}
+
 	@Override
-	public <T> void convertAndSend(String destinationName, T payload) throws MessagingException {
+	public <T> void convertAndSend(String destinationName, T payload) {
 		convertAndSend(destinationName, payload, null, null);
 	}
 
 	@Override
-	public <T> void convertAndSend(String destinationName, T payload, @Nullable Map<String, Object> headers)
-			throws MessagingException {
-
+	public <T> void convertAndSend(String destinationName, T payload, @Nullable Map<String, Object> headers) {
 		convertAndSend(destinationName, payload, headers, null);
 	}
 
 	@Override
-	public <T> void convertAndSend(String destinationName, T payload, @Nullable MessagePostProcessor postProcessor)
-			throws MessagingException {
-
+	public <T> void convertAndSend(String destinationName, T payload, @Nullable MessagePostProcessor postProcessor) {
 		convertAndSend(destinationName, payload, null, postProcessor);
 	}
 
 	@Override
-	public <T> void convertAndSend(String destinationName, T payload, @Nullable Map<String, Object> headers,
-			@Nullable MessagePostProcessor postProcessor) throws MessagingException {
+	public <T> void convertAndSend(String destinationName, T payload,
+			@Nullable Map<String, Object> headers, @Nullable MessagePostProcessor postProcessor) {
 
 		D destination = resolveDestination(destinationName);
 		super.convertAndSend(destination, payload, headers, postProcessor);
 	}
 
 	@Override
-	public @Nullable Message<?> receive(String destinationName) throws MessagingException {
+	@Nullable
+	public Message<?> receive(String destinationName) {
 		D destination = resolveDestination(destinationName);
 		return super.receive(destination);
 	}
 
 	@Override
-	public <T> @Nullable T receiveAndConvert(String destinationName, Class<T> targetClass) throws MessagingException {
+	@Nullable
+	public <T> T receiveAndConvert(String destinationName, Class<T> targetClass) {
 		D destination = resolveDestination(destinationName);
 		return super.receiveAndConvert(destination, targetClass);
 	}
 
 	@Override
-	public @Nullable Message<?> sendAndReceive(String destinationName, Message<?> requestMessage)
-			throws MessagingException {
-
+	@Nullable
+	public Message<?> sendAndReceive(String destinationName, Message<?> requestMessage) {
 		D destination = resolveDestination(destinationName);
 		return super.sendAndReceive(destination, requestMessage);
 	}
 
 	@Override
-	public <T> @Nullable T convertSendAndReceive(String destinationName, Object request, Class<T> targetClass)
-			throws MessagingException {
-
+	@Nullable
+	public <T> T convertSendAndReceive(String destinationName, Object request, Class<T> targetClass) {
 		D destination = resolveDestination(destinationName);
 		return super.convertSendAndReceive(destination, request, targetClass);
 	}
 
 	@Override
-	public <T> @Nullable T convertSendAndReceive(String destinationName, Object request,
-			@Nullable Map<String, Object> headers, Class<T> targetClass) throws MessagingException {
+	@Nullable
+	public <T> T convertSendAndReceive(String destinationName, Object request,
+			@Nullable Map<String, Object> headers, Class<T> targetClass) {
 
 		D destination = resolveDestination(destinationName);
 		return super.convertSendAndReceive(destination, request, headers, targetClass);
 	}
 
 	@Override
-	public <T> @Nullable T convertSendAndReceive(String destinationName, Object request, Class<T> targetClass,
-			@Nullable MessagePostProcessor postProcessor) throws MessagingException {
+	@Nullable
+	public <T> T convertSendAndReceive(String destinationName, Object request, Class<T> targetClass,
+			@Nullable MessagePostProcessor postProcessor) {
 
 		D destination = resolveDestination(destinationName);
 		return super.convertSendAndReceive(destination, request, targetClass, postProcessor);
 	}
 
 	@Override
-	public <T> @Nullable T convertSendAndReceive(String destinationName, Object request,
+	@Nullable
+	public <T> T convertSendAndReceive(String destinationName, Object request,
 			@Nullable Map<String, Object> headers, Class<T> targetClass,
-			@Nullable MessagePostProcessor postProcessor) throws MessagingException {
+			@Nullable MessagePostProcessor postProcessor) {
 
 		D destination = resolveDestination(destinationName);
 		return super.convertSendAndReceive(destination, request, headers, targetClass, postProcessor);

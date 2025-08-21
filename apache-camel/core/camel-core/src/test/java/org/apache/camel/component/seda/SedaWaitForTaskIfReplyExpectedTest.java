@@ -24,7 +24,6 @@ import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class SedaWaitForTaskIfReplyExpectedTest extends ContextTestSupport {
 
@@ -43,7 +42,7 @@ public class SedaWaitForTaskIfReplyExpectedTest extends ContextTestSupport {
         getMockEndpoint("mock:result").expectedBodiesReceived("Bye World");
 
         Exchange out = template.send("direct:start", new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("Hello World");
                 exchange.setPattern(ExchangePattern.InOnly);
             }
@@ -51,16 +50,16 @@ public class SedaWaitForTaskIfReplyExpectedTest extends ContextTestSupport {
         // we do not expecy a reply and thus do no wait so we just get our own
         // input back
         assertEquals("Hello World", out.getIn().getBody());
-        assertNull(out.getOut().getBody());
+        assertEquals(null, out.getOut().getBody());
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("seda:foo?waitForTaskToComplete=IfReplyExpected");
 
                 from("seda:foo?waitForTaskToComplete=IfReplyExpected").transform(constant("Bye World")).to("mock:result");

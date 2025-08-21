@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,18 @@
 
 package org.springframework.test.web.servlet.setup;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.web.context.WebApplicationContext;
 
 /**
  * Contract for customizing a {@code ConfigurableMockMvcBuilder} in some
- * specific way, for example, a 3rd party library that wants to provide shortcuts for
+ * specific way, e.g. a 3rd party library that wants to provide shortcuts for
  * setting up a MockMvc.
  *
  * <p>An implementation of this interface can be plugged in via
  * {@link ConfigurableMockMvcBuilder#apply} with instances of this type likely
- * created via static methods, for example:
+ * created via static methods, e.g.:
  *
  * <pre class="code">
  * import static org.example.ExampleSetup.mySetup;
@@ -61,7 +60,8 @@ public interface MockMvcConfigurer {
 	 * @return a post processor to be applied to every request performed
 	 * through the {@code MockMvc} instance.
 	 */
-	default @Nullable RequestPostProcessor beforeMockMvcCreated(
+	@Nullable
+	default RequestPostProcessor beforeMockMvcCreated(
 			ConfigurableMockMvcBuilder<?> builder, WebApplicationContext context) {
 
 		return null;

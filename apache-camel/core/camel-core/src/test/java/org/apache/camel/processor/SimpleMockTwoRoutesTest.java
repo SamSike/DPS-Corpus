@@ -53,15 +53,15 @@ public class SimpleMockTwoRoutesTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo")
                         .to("log:foo")
                         .process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 assertEquals("foo", exchange.getUnitOfWork().getRoute().getRouteId());
                             }
                         })
@@ -69,7 +69,7 @@ public class SimpleMockTwoRoutesTest extends ContextTestSupport {
                         .to("direct:bar")
                         .process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 assertEquals("foo", exchange.getUnitOfWork().getRoute().getRouteId());
                             }
                         })
@@ -79,7 +79,7 @@ public class SimpleMockTwoRoutesTest extends ContextTestSupport {
                         .to("log:bar")
                         .process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 assertEquals("bar", exchange.getUnitOfWork().getRoute().getRouteId());
                             }
                         })

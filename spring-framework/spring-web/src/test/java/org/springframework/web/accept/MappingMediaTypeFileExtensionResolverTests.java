@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,22 +33,23 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Rossen Stoyanchev
  * @author Melissa Hartsock
  */
-class MappingMediaTypeFileExtensionResolverTests {
+public class MappingMediaTypeFileExtensionResolverTests {
 
 	private static final Map<String, MediaType> DEFAULT_MAPPINGS =
 			Collections.singletonMap("json", MediaType.APPLICATION_JSON);
 
 
 	@Test
-	void resolveExtensions() {
+	public void resolveExtensions() {
 		List<String> extensions = new MappingMediaTypeFileExtensionResolver(DEFAULT_MAPPINGS)
 				.resolveFileExtensions(MediaType.APPLICATION_JSON);
 
-		assertThat(extensions).containsExactly("json");
+		assertThat(extensions).hasSize(1);
+		assertThat(extensions.get(0)).isEqualTo("json");
 	}
 
 	@Test
-	void resolveExtensionsNoMatch() {
+	public void resolveExtensionsNoMatch() {
 		assertThat(new MappingMediaTypeFileExtensionResolver(DEFAULT_MAPPINGS)
 				.resolveFileExtensions(MediaType.TEXT_HTML)).isEmpty();
 	}
@@ -60,7 +61,7 @@ class MappingMediaTypeFileExtensionResolverTests {
 	}
 
 	@Test
-	void allFileExtensions() {
+	public void allFileExtensions() {
 		Map<String, MediaType> mappings = new HashMap<>();
 		mappings.put("json", MediaType.APPLICATION_JSON);
 		mappings.put("JsOn", MediaType.APPLICATION_JSON);

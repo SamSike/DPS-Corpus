@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,16 +40,13 @@ package org.jooq.impl;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static org.jooq.ContextConverter.scoped;
 import static org.jooq.conf.SettingsTools.updatablePrimaryKeys;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
-import static org.jooq.impl.Tools.anyMatch;
 import static org.jooq.impl.Tools.converterOrFail;
-import static org.jooq.impl.Tools.converterContext;
 import static org.jooq.impl.Tools.embeddedFields;
 import static org.jooq.impl.Tools.indexFail;
 import static org.jooq.impl.Tools.indexOrFail;
-import static org.jooq.impl.Tools.nonReplacingEmbeddable;
+import static org.jooq.impl.Tools.resetChangedOnNotNull;
 import static org.jooq.impl.Tools.settings;
 
 import java.io.Writer;
@@ -68,11 +65,9 @@ import org.jooq.Attachable;
 import org.jooq.CSVFormat;
 import org.jooq.ChartFormat;
 import org.jooq.Converter;
-import org.jooq.ConverterContext;
 import org.jooq.DataType;
 import org.jooq.EmbeddableRecord;
 import org.jooq.Field;
-import org.jooq.Fields;
 import org.jooq.JSONFormat;
 import org.jooq.Name;
 import org.jooq.Record;
@@ -102,15 +97,14 @@ import org.jooq.RecordMapper;
 import org.jooq.Result;
 import org.jooq.TXTFormat;
 import org.jooq.Table;
-import org.jooq.UDTRecord;
 import org.jooq.UniqueKey;
 import org.jooq.XMLFormat;
 import org.jooq.exception.IOException;
 import org.jooq.exception.InvalidResultException;
 import org.jooq.exception.MappingException;
+import org.jooq.tools.JooqLogger;
 import org.jooq.tools.StringUtils;
 
-import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.xml.sax.ContentHandler;
@@ -122,18 +116,12 @@ import org.xml.sax.SAXException;
  * @author Lukas Eder
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-abstract class AbstractRecord
-extends
-    AbstractStore
-implements
-    Record,
-    FieldsTrait
-{
+abstract class AbstractRecord extends AbstractStore implements Record {
 
     final AbstractRow<? extends AbstractRecord> fields;
     final Object[]                              values;
     final Object[]                              originals;
-    final BitSet                                touched;
+    final BitSet                                changed;
     boolean                                     fetched;
 
     /**
@@ -158,7 +146,7 @@ implements
         this.fields = (AbstractRow<? extends AbstractRecord>) fields;
         this.values = new Object[size];
         this.originals = new Object[size];
-        this.touched = new BitSet(size);
+        this.changed = new BitSet(size);
     }
 
     // ------------------------------------------------------------------------
@@ -171,7 +159,7 @@ implements
 
         int size = size();
         for (int i = 0; i < size; i++) {
-            if (values[i] instanceof Attachable a) {
+            if (values[i] instanceof Attachable) { Attachable a = (Attachable) values[i];
                 if (result == null)
                     result = new ArrayList<>();
 
@@ -187,9 +175,138 @@ implements
     // ------------------------------------------------------------------------
 
     @Override
-    @Internal
-    public final Fields internalFieldsRow() {
-        return fields;
+    public final Field<?>[] fields() {
+        return fields.fields();
+    }
+
+    @Override
+    public final Stream<Field<?>> fieldStream() {
+        return fields.fieldStream();
+    }
+
+    @Override
+    public final <T> Field<T> field(Field<T> field) {
+        return fields.field(field);
+    }
+
+    @Override
+    public final Field<?> field(String name) {
+        return fields.field(name);
+    }
+
+    @Override
+    public final <T> Field<T> field(String name, Class<T> type) {
+        return fields.field(name, type);
+    }
+
+    @Override
+    public final <T> Field<T> field(String name, DataType<T> dataType) {
+        return fields.field(name, dataType);
+    }
+
+    @Override
+    public final Field<?> field(Name name) {
+        return fields.field(name);
+    }
+
+    @Override
+    public final <T> Field<T> field(Name name, Class<T> type) {
+        return fields.field(name, type);
+    }
+
+    @Override
+    public final <T> Field<T> field(Name name, DataType<T> dataType) {
+        return fields.field(name, dataType);
+    }
+
+    @Override
+    public final Field<?> field(int index) {
+        return index >= 0 && index < fields.size() ? fields.field(index) : null;
+    }
+
+    @Override
+    public final <T> Field<T> field(int index, Class<T> type) {
+        return fields.field(index, type);
+    }
+
+    @Override
+    public final <T> Field<T> field(int index, DataType<T> dataType) {
+        return fields.field(index, dataType);
+    }
+
+    @Override
+    public final Field<?>[] fields(Field<?>... f) {
+        return fields.fields(f);
+    }
+
+    @Override
+    public final Field<?>[] fields(String... fieldNames) {
+        return fields.fields(fieldNames);
+    }
+
+    @Override
+    public final Field<?>[] fields(Name... fieldNames) {
+        return fields.fields(fieldNames);
+    }
+
+    @Override
+    public final Field<?>[] fields(int... fieldIndexes) {
+        return fields.fields(fieldIndexes);
+    }
+
+    @Override
+    public final int indexOf(Field<?> field) {
+        return fields.indexOf(field);
+    }
+
+    @Override
+    public final int indexOf(String fieldName) {
+        return fields.indexOf(fieldName);
+    }
+
+    @Override
+    public final int indexOf(Name fieldName) {
+        return fields.indexOf(fieldName);
+    }
+
+    @Override
+    public final Class<?>[] types() {
+        return fields.types();
+    }
+
+    @Override
+    public final Class<?> type(int fieldIndex) {
+        return fields.type(fieldIndex);
+    }
+
+    @Override
+    public final Class<?> type(String fieldName) {
+        return fields.type(fieldName);
+    }
+
+    @Override
+    public final Class<?> type(Name fieldName) {
+        return fields.type(fieldName);
+    }
+
+    @Override
+    public final DataType<?>[] dataTypes() {
+        return fields.dataTypes();
+    }
+
+    @Override
+    public final DataType<?> dataType(int fieldIndex) {
+        return fields.dataType(fieldIndex);
+    }
+
+    @Override
+    public final DataType<?> dataType(String fieldName) {
+        return fields.dataType(fieldName);
+    }
+
+    @Override
+    public final DataType<?> dataType(Name fieldName) {
+        return fields.dataType(fieldName);
     }
 
     // ------------------------------------------------------------------------
@@ -207,9 +324,9 @@ implements
 
         if (index >= 0)
             return (T) get(index);
-        else if (nonReplacingEmbeddable(field))
+        else if (Tools.nonReplacingEmbeddable(field))
             return (T) Tools
-                .newRecord(fetched, configuration(), ((EmbeddableTableField<?, ?>) field).recordType)
+                .newRecord(fetched, ((EmbeddableTableField<?, ?>) field).recordType)
                 .operate(new TransferRecordState<>(embeddedFields(field)));
         else
             throw Tools.indexFail(fields, field);
@@ -218,12 +335,12 @@ implements
     @Override
     public final <U> U get(Field<?> field, Class<? extends U> type) {
         Object t = get(field);
-        return (U) converterOrFail(this, t, (Class) field.getType(), type).from(t, converterContext(this));
+        return (U) converterOrFail(this, t, (Class) field.getType(), type).from(t);
     }
 
     @Override
     public final <T, U> U get(Field<T> field, Converter<? super T, ? extends U> converter) {
-        return scoped(converter).from(get(field), converterContext(this));
+        return converter.from(get(field));
     }
 
     @Override
@@ -234,7 +351,7 @@ implements
     @Override
     public final <U> U get(int index, Class<? extends U> type) {
         Object t = get(index);
-        return (U) converterOrFail(this, t, (Class) field(safeIndex(index)).getType(), type).from(t, converterContext(this));
+        return (U) converterOrFail(this, t, (Class) field(safeIndex(index)).getType(), type).from(t);
     }
 
     @Override
@@ -297,10 +414,10 @@ implements
     final <T> void set(Field<T> field, int index, T value) {
         if (index >= 0)
             set(index, field, value);
-        else if (nonReplacingEmbeddable(field)) {
+        else if (Tools.nonReplacingEmbeddable(field)) {
             Field<?>[] f = embeddedFields(field);
-            Object[] v = value instanceof EmbeddableRecord e
-                ? e.intoArray()
+            Object[] v = value instanceof EmbeddableRecord
+                ? ((EmbeddableRecord) value).intoArray()
                 : new Object[f.length];
 
             for (int i = 0; i < f.length; i++)
@@ -321,34 +438,35 @@ implements
 
         // Normal fields' changed flag is always set to true
         if (key == null || !key.getFields().contains(field)) {
-            touched.set(index);
+            changed.set(index);
         }
 
         // The primary key's changed flag might've been set previously
-        else if (touched.get(index)) {
-            touched.set(index);
+        else if (changed.get(index)) {
+            changed.set(index);
         }
 
         // [#2764] Users may override updatability of primary key values
         else if (updatablePrimaryKeys(settings(this))) {
-            touched.set(index);
+            changed.set(index);
         }
 
         // [#2698] If the primary key has not yet been set
         else if (originals[index] == null) {
-            touched.set(index);
+            changed.set(index);
         }
 
-        // [#979] If the primary key is being touched, all other fields' flags
+        // [#979] If the primary key is being changed, all other fields' flags
         // need to be set to true for in case this record is stored again, an
         // INSERT statement will thus be issued
         else {
 
-            // [#945] Be sure that touched is never reset to false
-            touched.set(index, touched.get(index) || !StringUtils.equals(values[index], value));
+            // [#945] Be sure that changed is never reset to false
+            changed.set(index, changed.get(index) || !StringUtils.equals(values[index], value));
 
-            if (touched.get(index))
-                touched(true);
+            if (changed.get(index)) {
+                changed(true);
+            }
         }
 
         values[index] = value;
@@ -356,7 +474,7 @@ implements
 
     @Override
     public final <T, U> void set(Field<T> field, U value, Converter<? extends T, ? super U> converter) {
-        set(field, scoped(converter).to(value, converterContext(this)));
+        set(field, converter.to(value));
     }
 
     @Override
@@ -380,7 +498,16 @@ implements
 
             values[targetIndex] = record.get(sourceIndex);
             originals[targetIndex] = record.original(sourceIndex);
-            touched.set(targetIndex, record.touched(sourceIndex));
+            changed.set(targetIndex, record.changed(sourceIndex));
+        }
+    }
+
+    final void intern0(int fieldIndex) {
+        safeIndex(fieldIndex);
+
+        if (field(fieldIndex).getType() == String.class) {
+            values[fieldIndex] = intern((String) values[fieldIndex]);
+            originals[fieldIndex] = intern((String) originals[fieldIndex]);
         }
     }
 
@@ -388,7 +515,11 @@ implements
         if (index >= 0 && index < values.length)
             return index;
 
-        throw indexFail(fields, index);
+        throw new IllegalArgumentException("No field at index " + index + " in Record type " + fields);
+    }
+
+    final String intern(String string) {
+        return string == null ? null : string.intern();
     }
 
     /**
@@ -403,7 +534,7 @@ implements
      */
     @Override
     public Record original() {
-        return Tools.newRecord(fetched, configuration(), (Class<AbstractRecord>) getClass(), fields)
+        return Tools.newRecord(fetched, (Class<AbstractRecord>) getClass(), fields, configuration())
                     .operate(record -> {
                         for (int i = 0; i < originals.length; i++)
                             record.values[i] = record.originals[i] = originals[i];
@@ -414,16 +545,7 @@ implements
 
     @Override
     public final <T> T original(Field<T> field) {
-        int index = fields.indexOf(field);
-
-        if (index >= 0)
-            return (T) original(index);
-        else if (nonReplacingEmbeddable(field))
-            return (T) Tools
-                .newRecord(fetched, configuration(), ((EmbeddableTableField<?, ?>) field).recordType)
-                .operate(((AbstractRecord) original()).new TransferRecordState<>(embeddedFields(field)));
-        else
-            throw Tools.indexFail(fields, field);
+        return (T) original(indexOrFail(fields, field));
     }
 
     @Override
@@ -442,125 +564,51 @@ implements
     }
 
     @Override
-    @Deprecated
     public final boolean changed() {
-        return touched();
+        return !changed.isEmpty();
     }
 
     @Override
-    @Deprecated
     public final boolean changed(Field<?> field) {
-        return touched(field);
+        return changed(indexOrFail(fields, field));
     }
 
     @Override
-    @Deprecated
     public final boolean changed(int fieldIndex) {
-        return touched(fieldIndex);
+        return changed.get(safeIndex(fieldIndex));
     }
 
     @Override
-    @Deprecated
     public final boolean changed(String fieldName) {
-        return touched(fieldName);
+        return changed(indexOrFail(fields, fieldName));
     }
 
     @Override
-    @Deprecated
     public final boolean changed(Name fieldName) {
-        return touched(fieldName);
+        return changed(indexOrFail(fields, fieldName));
     }
 
     @Override
-    @Deprecated
     public final void changed(boolean c) {
-        touched(c);
-    }
-
-    @Override
-    @Deprecated
-    public final void changed(Field<?> field, boolean c) {
-        touched(field, c);
-    }
-
-    @Override
-    @Deprecated
-    public final void changed(int fieldIndex, boolean c) {
-        touched(fieldIndex, c);
-    }
-
-    @Override
-    @Deprecated
-    public final void changed(String fieldName, boolean c) {
-        touched(fieldName, c);
-    }
-
-    @Override
-    @Deprecated
-    public final void changed(Name fieldName, boolean c) {
-        touched(fieldName, c);
-    }
-
-    @Override
-    public final boolean touched() {
-        return !touched.isEmpty();
-    }
-
-    @Override
-    public final boolean touched(Field<?> field) {
-        int index = fields.indexOf(field);
-
-        if (index >= 0)
-            return touched(index);
-        else if (nonReplacingEmbeddable(field))
-            return anyMatch(embeddedFields(field), f -> touched(f));
-        else
-            throw Tools.indexFail(fields, field);
-    }
-
-    @Override
-    public final boolean touched(int fieldIndex) {
-        return touched.get(safeIndex(fieldIndex));
-    }
-
-    @Override
-    public final boolean touched(String fieldName) {
-        return touched(indexOrFail(fields, fieldName));
-    }
-
-    @Override
-    public final boolean touched(Name fieldName) {
-        return touched(indexOrFail(fields, fieldName));
-    }
-
-    @Override
-    public final void touched(boolean c) {
-        touched.set(0, values.length, c);
+        changed.set(0, values.length, c);
 
         // [#1995] If a value is meant to be "unchanged", the "original" should
         // match the supposedly "unchanged" value.
-        if (!c)
+        if (!c) {
             System.arraycopy(values, 0, originals, 0, values.length);
+        }
     }
 
     @Override
-    public final void touched(Field<?> field, boolean c) {
-        int index = fields.indexOf(field);
-
-        if (index >= 0)
-            touched(index, c);
-        else if (nonReplacingEmbeddable(field))
-            for (Field<?> f : embeddedFields(field))
-                touched(f, c);
-        else
-            throw Tools.indexFail(fields, field);
+    public final void changed(Field<?> field, boolean c) {
+        changed(indexOrFail(fields, field), c);
     }
 
     @Override
-    public final void touched(int fieldIndex, boolean c) {
+    public final void changed(int fieldIndex, boolean c) {
         safeIndex(fieldIndex);
 
-        touched.set(fieldIndex, c);
+        changed.set(fieldIndex, c);
 
         // [#1995] If a value is meant to be "unchanged", the "original" should
         // match the supposedly "unchanged" value.
@@ -569,78 +617,32 @@ implements
     }
 
     @Override
-    public final void touched(String fieldName, boolean c) {
-        touched(indexOrFail(fields, fieldName), c);
+    public final void changed(String fieldName, boolean c) {
+        changed(indexOrFail(fields, fieldName), c);
     }
 
     @Override
-    public final void touched(Name fieldName, boolean c) {
-        touched(indexOrFail(fields, fieldName), c);
-    }
-
-    @Override
-    public final boolean modified() {
-        for (int i = 0; i < size(); i++)
-            if (modified(i))
-                return true;
-
-
-        return false;
-    }
-
-    @Override
-    public final boolean modified(Field<?> field) {
-        int index = fields.indexOf(field);
-
-        if (index >= 0)
-            return modified(index);
-        else if (nonReplacingEmbeddable(field))
-            return anyMatch(embeddedFields(field), f -> modified(f));
-        else
-            throw Tools.indexFail(fields, field);
-    }
-
-    @Override
-    public final boolean modified(int fieldIndex) {
-        int i = safeIndex(fieldIndex);
-        return touched.get(i) && !deepEqual(values[i], originals[i]);
-    }
-
-    @Override
-    public final boolean modified(String fieldName) {
-        return modified(indexOrFail(fields, fieldName));
-    }
-
-    @Override
-    public final boolean modified(Name fieldName) {
-        return modified(indexOrFail(fields, fieldName));
+    public final void changed(Name fieldName, boolean c) {
+        changed(indexOrFail(fields, fieldName), c);
     }
 
     @Override
     public final void reset() {
-        touched.clear();
+        changed.clear();
 
         System.arraycopy(originals, 0, values, 0, originals.length);
     }
 
     @Override
     public final void reset(Field<?> field) {
-        int index = fields.indexOf(field);
-
-        if (index >= 0)
-            reset(index);
-        else if (nonReplacingEmbeddable(field))
-            for (Field<?> f : embeddedFields(field))
-                reset(f);
-        else
-            throw Tools.indexFail(fields, field);
+        reset(indexOrFail(fields, field));
     }
 
     @Override
     public final void reset(int fieldIndex) {
         safeIndex(fieldIndex);
 
-        touched.clear(fieldIndex);
+        changed.clear(fieldIndex);
         values[fieldIndex] = originals[fieldIndex];
     }
 
@@ -687,7 +689,7 @@ implements
 
     @Override
     public final Record into(Field<?>... f) {
-        return Tools.newRecord(fetched, configuration(), Record.class, Tools.row0(f)).operate(new TransferRecordState<Record>(f));
+        return Tools.newRecord(fetched, Record.class, Tools.row0(f), configuration()).operate(new TransferRecordState<Record>(f));
     }
 
 
@@ -810,7 +812,8 @@ implements
     }
 
     // [#10191] Java and Kotlin can produce overloads for this method despite
-    // generic type erasure, but Scala cannot
+    // generic type erasure, but Scala cannot, see
+    // https://twitter.com/lukaseder/status/1262652304773259264
     @Override
     public /* final */ <E> E into(E object) {
         if (object == null)
@@ -829,31 +832,25 @@ implements
 
         // All other reflection exceptions are intercepted
         catch (Exception e) {
-            throw new MappingException("An error occurred when mapping record to " + type, e);
+            throw new MappingException("An error ocurred when mapping record to " + type, e);
         }
     }
 
     @Override
     public final <R extends Record> R into(Table<R> table) {
-        return Tools.newRecord(fetched, configuration(), table).operate(new TransferRecordState<>(table.fields()));
-    }
-
-    final <R extends Record> R intoRecord(R record) {
-        return Tools.newRecord(fetched, configuration(), () -> record).operate(new TransferRecordState<>(null));
+        return Tools.newRecord(fetched, table, configuration()).operate(new TransferRecordState<>(table.fields()));
     }
 
     final <R extends Record> R intoRecord(Class<R> type) {
-        return (R) Tools.newRecord(fetched, configuration(), type, fields).operate(new TransferRecordState<>(null));
+        return (R) Tools.newRecord(fetched, type, fields, configuration()).operate(new TransferRecordState<>(null));
     }
 
     class TransferRecordState<R extends Record> implements ThrowingFunction<R, R, MappingException> {
 
-        final ConverterContext converterContext;
-        final Field<?>[]       targetFields;
+        private final Field<?>[] targetFields;
 
         TransferRecordState(Field<?>[] targetFields) {
             this.targetFields = targetFields;
-            this.converterContext = converterContext(AbstractRecord.this);
         }
 
         @Override
@@ -863,7 +860,7 @@ implements
             try {
 
                 // [#1522] [#2989] If possible the complete state of this record should be copied onto the other record
-                if (target instanceof AbstractRecord t) {
+                if (target instanceof AbstractRecord) { AbstractRecord t = (AbstractRecord) target;
 
                     // Iterate over target fields, to avoid ambiguities when two source fields share the same name.
                     // [#3634] If external targetFields are provided, use those instead of the target record's fields.
@@ -877,7 +874,7 @@ implements
 
                             t.values[targetIndex] = targetType.convert(values[sourceIndex]);
                             t.originals[targetIndex] = targetType.convert(originals[sourceIndex]);
-                            t.touched.set(targetIndex, touched.get(sourceIndex));
+                            t.changed.set(targetIndex, changed.get(sourceIndex));
                         }
                     }
                 }
@@ -887,7 +884,7 @@ implements
                         Field<?> sourceField = field(targetField);
 
                         if (sourceField != null)
-                            Tools.setValue(target, targetField, source, sourceField, converterContext);
+                            Tools.setValue(target, targetField, source, sourceField);
                     }
                 }
 
@@ -896,7 +893,7 @@ implements
 
             // All reflection exceptions are intercepted
             catch (Exception e) {
-                throw new MappingException("An error occurred when mapping record to " + target, e);
+                throw new MappingException("An error ocurred when mapping record to " + target, e);
             }
         }
     }
@@ -922,24 +919,7 @@ implements
 
         // [#2700] [#3582] If a POJO attribute is NULL, but the column is NOT NULL
         // then we should let the database apply DEFAULT values
-        Tools.resetTouchedOnNotNull(this);
-    }
-
-    /**
-     * Generated subclasses may call this method.
-     *
-     * @deprecated - [#12494] - 3.20.0 - Please re-generate your code
-     */
-    @Deprecated
-    protected /* non-final */ void resetChangedOnNotNull() {
-        resetTouchedOnNotNull();
-    }
-
-    /**
-     * Generated subclasses may call this method.
-     */
-    protected /* non-final */ void resetTouchedOnNotNull() {
-        Tools.resetTouchedOnNotNull(this);
+        resetChangedOnNotNull(this);
     }
 
     private final Object prepareArrayOrIterableForUnmap(Object source, int[] targetIndexMapping) {
@@ -1048,16 +1028,15 @@ implements
     }
 
     /**
-     * Load {@link UDTRecord} content into this record, e.g. after member procedure calls.
+     * This method was implemented with [#799]. It may be useful to make it
+     * public for broader use...?
      */
     protected final void from(Record source) {
-        ConverterContext cc = Tools.converterContext(this);
-
         for (Field<?> field : fields.fields.fields) {
             Field<?> sourceField = source.field(field);
 
-            if (sourceField != null && source.touched(sourceField))
-                Tools.setValue(this, field, source, sourceField, cc);
+            if (sourceField != null && source.changed(sourceField))
+                Tools.setValue(this, field, source, sourceField);
         }
     }
 
@@ -1069,7 +1048,7 @@ implements
             int j = indexMapping == null ? i : indexMapping[i];
 
             // [#12697] Don't re-apply data type conversion, assuming it already happened
-            if (source.field(j) != null && source.touched(j))
+            if (source.field(j) != null && source.changed(j))
                 set((Field) field(j), j, source.get(j));
         }
     }
@@ -1269,16 +1248,17 @@ implements
         return array1.length - array2.length;
     }
 
-    final int compare0(Object o1, Object o2) {
-        return o1 == o2
+    /**
+     * Compare two uncomparable objects
+     */
+    final int compare0(Object object1, Object object2) {
+        return object1 == object2
              ? 0
-             : o1 == null
+             : object1 == null
              ? -1
-             : o2 == null
+             : object2 == null
              ? 1
-             : o1 instanceof Comparable<?> && o1.getClass() == o2.getClass()
-             ? ((Comparable) o1).compareTo(o2)
-             : o1.hashCode() - o2.hashCode();
+             : object1.hashCode() - object2.hashCode();
     }
 
     // -------------------------------------------------------------------------

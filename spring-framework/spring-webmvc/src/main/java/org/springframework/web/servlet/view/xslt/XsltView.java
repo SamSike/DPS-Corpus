@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.Enumeration;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
@@ -40,13 +39,13 @@ import javax.xml.transform.stream.StreamSource;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.jspecify.annotations.Nullable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ReflectionUtils;
@@ -77,23 +76,29 @@ import org.springframework.web.util.WebUtils;
  */
 public class XsltView extends AbstractUrlBasedView {
 
-	private @Nullable Class<? extends TransformerFactory> transformerFactoryClass;
+	@Nullable
+	private Class<? extends TransformerFactory> transformerFactoryClass;
 
-	private @Nullable String sourceKey;
+	@Nullable
+	private String sourceKey;
 
-	private @Nullable URIResolver uriResolver;
+	@Nullable
+	private URIResolver uriResolver;
 
 	private ErrorListener errorListener = new SimpleTransformErrorListener(logger);
 
 	private boolean indent = true;
 
-	private @Nullable Properties outputProperties;
+	@Nullable
+	private Properties outputProperties;
 
 	private boolean cacheTemplates = true;
 
-	private @Nullable TransformerFactory transformerFactory;
+	@Nullable
+	private TransformerFactory transformerFactory;
 
-	private @Nullable Templates cachedTemplates;
+	@Nullable
+	private Templates cachedTemplates;
 
 
 	/**
@@ -210,9 +215,6 @@ public class XsltView extends AbstractUrlBasedView {
 			}
 		}
 		else {
-			// This transformer is used for local XSLT views only.
-			// As a result, attackers would need complete write access to application configuration
-			// to leverage XXE attacks. This does not qualify as privilege escalation.
 			return TransformerFactory.newInstance();
 		}
 	}
@@ -277,7 +279,8 @@ public class XsltView extends AbstractUrlBasedView {
 	 * @see #setSourceKey
 	 * @see #convertSource
 	 */
-	protected @Nullable Source locateSource(Map<String, Object> model) throws Exception {
+	@Nullable
+	protected Source locateSource(Map<String, Object> model) throws Exception {
 		if (this.sourceKey != null) {
 			return convertSource(model.get(this.sourceKey));
 		}
@@ -299,31 +302,32 @@ public class XsltView extends AbstractUrlBasedView {
 	/**
 	 * Convert the supplied {@link Object} into an XSLT {@link Source} if the
 	 * {@link Object} type is {@link #getSourceTypes() supported}.
-	 * @param sourceObject the original source object
+	 * @param source the original source object
 	 * @return the adapted XSLT Source
 	 * @throws IllegalArgumentException if the given Object is not of a supported type
 	 */
-	protected Source convertSource(@Nullable Object sourceObject) throws Exception {
-		if (sourceObject instanceof Source source) {
-			return source;
+	protected Source convertSource(Object source) throws Exception {
+		if (source instanceof Source) {
+			return (Source) source;
 		}
-		else if (sourceObject instanceof Document document) {
-			return new DOMSource(document.getDocumentElement());
+		else if (source instanceof Document) {
+			return new DOMSource(((Document) source).getDocumentElement());
 		}
-		else if (sourceObject instanceof Node node) {
-			return new DOMSource(node);
+		else if (source instanceof Node) {
+			return new DOMSource((Node) source);
 		}
-		else if (sourceObject instanceof Reader reader) {
-			return new StreamSource(reader);
+		else if (source instanceof Reader) {
+			return new StreamSource((Reader) source);
 		}
-		else if (sourceObject instanceof InputStream inputStream) {
-			return new StreamSource(inputStream);
+		else if (source instanceof InputStream) {
+			return new StreamSource((InputStream) source);
 		}
-		else if (sourceObject instanceof Resource resource) {
+		else if (source instanceof Resource) {
+			Resource resource = (Resource) source;
 			return new StreamSource(resource.getInputStream(), resource.getURI().toASCIIString());
 		}
 		else {
-			throw new IllegalArgumentException("Value '" + sourceObject + "' cannot be converted to XSLT Source");
+			throw new IllegalArgumentException("Value '" + source + "' cannot be converted to XSLT Source");
 		}
 	}
 
@@ -411,7 +415,7 @@ public class XsltView extends AbstractUrlBasedView {
 		}
 		if (StringUtils.hasText(encoding)) {
 			// Only apply encoding if content type is specified but does not contain charset clause already.
-			if (contentType != null && !contentType.toLowerCase(Locale.ROOT).contains(WebUtils.CONTENT_TYPE_CHARSET_PREFIX)) {
+			if (contentType != null && !contentType.toLowerCase().contains(WebUtils.CONTENT_TYPE_CHARSET_PREFIX)) {
 				contentType = contentType + WebUtils.CONTENT_TYPE_CHARSET_PREFIX + encoding;
 			}
 		}
@@ -477,7 +481,8 @@ public class XsltView extends AbstractUrlBasedView {
 	 * @param source the XSLT Source to close (may be {@code null})
 	 */
 	private void closeSourceIfNecessary(@Nullable Source source) {
-		if (source instanceof StreamSource streamSource) {
+		if (source instanceof StreamSource) {
+			StreamSource streamSource = (StreamSource) source;
 			if (streamSource.getReader() != null) {
 				try {
 					streamSource.getReader().close();

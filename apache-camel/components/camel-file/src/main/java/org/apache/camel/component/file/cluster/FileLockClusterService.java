@@ -18,7 +18,6 @@ package org.apache.camel.component.file.cluster;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.support.cluster.AbstractCamelClusterService;
@@ -126,21 +125,15 @@ public class FileLockClusterService extends AbstractCamelClusterService<FileLock
         }
     }
 
-    ScheduledExecutorService getExecutor() {
-        Lock internalLock = getInternalLock();
-        internalLock.lock();
-        try {
-            if (executor == null) {
-                // Camel context should be set at this stage.
-                final CamelContext context = ObjectHelper.notNull(getCamelContext(), "CamelContext");
+    synchronized ScheduledExecutorService getExecutor() {
+        if (executor == null) {
+            // Camel context should be set at this stage.
+            final CamelContext context = ObjectHelper.notNull(getCamelContext(), "CamelContext");
 
-                executor = context.getExecutorServiceManager()
-                        .newSingleThreadScheduledExecutor(this, "FileLockClusterService-" + getId());
-            }
-
-            return executor;
-        } finally {
-            internalLock.unlock();
+            executor = context.getExecutorServiceManager().newSingleThreadScheduledExecutor(this,
+                    "FileLockClusterService-" + getId());
         }
+
+        return executor;
     }
 }

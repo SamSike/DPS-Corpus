@@ -21,6 +21,12 @@ import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.orbitz.consul.Consul;
+import com.orbitz.consul.EventClient;
+import com.orbitz.consul.async.EventResponseCallback;
+import com.orbitz.consul.model.EventResponse;
+import com.orbitz.consul.model.event.Event;
+import com.orbitz.consul.option.QueryOptions;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
@@ -28,12 +34,6 @@ import org.apache.camel.component.consul.ConsulConfiguration;
 import org.apache.camel.component.consul.ConsulConstants;
 import org.apache.camel.component.consul.ConsulEndpoint;
 import org.apache.camel.spi.ExecutorServiceManager;
-import org.kiwiproject.consul.Consul;
-import org.kiwiproject.consul.EventClient;
-import org.kiwiproject.consul.async.EventResponseCallback;
-import org.kiwiproject.consul.model.EventResponse;
-import org.kiwiproject.consul.model.event.Event;
-import org.kiwiproject.consul.option.QueryOptions;
 import org.slf4j.LoggerFactory;
 
 public final class ConsulEventConsumer extends AbstractConsulConsumer<EventClient> {
@@ -78,9 +78,13 @@ public final class ConsulEventConsumer extends AbstractConsulConsumer<EventClien
 
         @Override
         public void watch(final EventClient client) {
-            Runnable runnable = () -> client.listEvents(key,
-                    QueryOptions.blockSeconds(configuration.getBlockSeconds(), index.get()).build(), EventWatcher.this);
-            scheduledExecutorService.schedule(runnable, configuration.getBlockSeconds(), TimeUnit.SECONDS);
+            scheduledExecutorService.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    client.listEvents(key, QueryOptions.blockSeconds(configuration.getBlockSeconds(), index.get()).build(),
+                            EventWatcher.this);
+                }
+            }, configuration.getBlockSeconds(), TimeUnit.SECONDS);
         }
 
         @Override

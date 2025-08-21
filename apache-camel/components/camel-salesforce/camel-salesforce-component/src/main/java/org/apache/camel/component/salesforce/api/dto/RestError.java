@@ -21,6 +21,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonSetter;
 
+//CHECKSTYLE:OFF
 public class RestError extends AbstractDTOBase {
 
     private String errorCode;
@@ -80,10 +81,9 @@ public class RestError extends AbstractDTOBase {
             return false;
         }
 
-        final RestError other = (RestError) obj;
+        final RestError other = (RestError)obj;
 
-        return Objects.equals(errorCode, other.errorCode) && Objects.equals(message, other.message)
-                && Objects.equals(fields, other.fields);
+        return Objects.equals(errorCode, other.errorCode) && Objects.equals(message, other.message) && Objects.equals(fields, other.fields);
     }
 
     @Override
@@ -97,3 +97,4 @@ public class RestError extends AbstractDTOBase {
     }
 
 }
+//CHECKSTYLE:ON

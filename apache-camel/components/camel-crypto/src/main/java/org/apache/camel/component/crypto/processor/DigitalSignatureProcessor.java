@@ -34,7 +34,7 @@ public abstract class DigitalSignatureProcessor implements Processor {
 
     protected DigitalSignatureConfiguration config;
 
-    protected DigitalSignatureProcessor(DigitalSignatureConfiguration configuration) {
+    public DigitalSignatureProcessor(DigitalSignatureConfiguration configuration) {
         this.config = configuration;
     }
 
@@ -78,7 +78,8 @@ public abstract class DigitalSignatureProcessor implements Processor {
     protected Signature createSignatureService() throws NoSuchAlgorithmException, NoSuchProviderException {
         String algorithm = config.getAlgorithm();
         String provider = config.getProvider();
-        return provider == null ? Signature.getInstance(algorithm) : Signature.getInstance(algorithm, provider);
+        Signature signer = provider == null ? Signature.getInstance(algorithm) : Signature.getInstance(algorithm, provider);
+        return signer;
     }
 
     protected void clearMessageHeaders(Message in) {

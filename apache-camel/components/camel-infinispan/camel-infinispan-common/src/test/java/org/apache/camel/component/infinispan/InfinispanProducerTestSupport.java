@@ -19,7 +19,6 @@ package org.apache.camel.component.infinispan;
 import java.security.SecureRandom;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.FluentProducerTemplate;
@@ -661,18 +660,18 @@ public interface InfinispanProducerTestSupport {
     }
 
     @Test
-    default void replaceAValueByKeyAsyncWithOldValue() throws ExecutionException, InterruptedException {
+    default void replaceAValueByKeyAsyncWithOldValue() {
         getCache().put(KEY_ONE, VALUE_ONE);
 
-        CompletableFuture<Boolean> result = fluentTemplate()
+        Boolean result = fluentTemplate()
                 .to("direct:start")
                 .withHeader(InfinispanConstants.KEY, KEY_ONE)
                 .withHeader(InfinispanConstants.VALUE, VALUE_TWO)
                 .withHeader(InfinispanConstants.OLD_VALUE, VALUE_ONE)
                 .withHeader(InfinispanConstants.OPERATION, InfinispanOperation.REPLACEASYNC)
-                .request(CompletableFuture.class);
+                .request(Boolean.class);
 
-        assertEquals(Boolean.TRUE, result.get());
+        assertTrue(result);
         assertEquals(VALUE_TWO, getCache().get(KEY_ONE));
     }
 

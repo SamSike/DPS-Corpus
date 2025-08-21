@@ -17,7 +17,6 @@
 package org.apache.camel.component.file;
 
 import java.nio.file.Files;
-import java.util.UUID;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
@@ -29,20 +28,19 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FileConsumerPreMoveNoopTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello." + UUID.randomUUID() + ".txt";
 
     @Test
     public void testPreMoveNoop() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(1);
 
-        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         assertMockEndpointsSatisfied();
 
         oneExchangeDone.matchesWaitTime();
 
-        assertTrue(Files.exists(testFile("work/" + TEST_FILE_NAME)), "Pre move file should exist");
+        assertTrue(Files.exists(testFile("work/hello.txt")), "Pre move file should exist");
     }
 
     @Test
@@ -50,7 +48,7 @@ public class FileConsumerPreMoveNoopTest extends ContextTestSupport {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedBodiesReceived("Hello World");
 
-        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         assertMockEndpointsSatisfied();
         oneExchangeDone.matchesWaitTime();
@@ -60,19 +58,19 @@ public class FileConsumerPreMoveNoopTest extends ContextTestSupport {
         oneExchangeDone.reset();
         mock.expectedBodiesReceived("Hello Again World");
 
-        template.sendBodyAndHeader(fileUri(), "Hello Again World", Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader(fileUri(), "Hello Again World", Exchange.FILE_NAME, "hello.txt");
 
         assertMockEndpointsSatisfied();
         oneExchangeDone.matchesWaitTime();
 
-        assertTrue(Files.exists(testFile("work/" + TEST_FILE_NAME)), "Pre move file should exist");
+        assertTrue(Files.exists(testFile("work/hello.txt")), "Pre move file should exist");
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?preMove=work&noop=true&idempotent=false&initialDelay=0&delay=10"))
                         .process(new MyPreMoveCheckerProcessor()).to("mock:result");
             }
@@ -82,8 +80,8 @@ public class FileConsumerPreMoveNoopTest extends ContextTestSupport {
     public class MyPreMoveCheckerProcessor implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
-            assertTrue(Files.exists(testFile("work/" + TEST_FILE_NAME)), "Pre move file should exist");
+        public void process(Exchange exchange) throws Exception {
+            assertTrue(Files.exists(testFile("work/hello.txt")), "Pre move file should exist");
         }
     }
 }

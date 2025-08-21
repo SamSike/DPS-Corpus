@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -76,14 +76,14 @@ public class DefaultCloseableDSLContext extends DefaultDSLContext implements Clo
         ConnectionProvider cp = configuration().connectionProvider();
         ConnectionFactory cf = configuration().connectionFactory();
 
-        if (cp instanceof DefaultCloseableConnectionProvider dcp) {
+        if (cp instanceof DefaultCloseableConnectionProvider) { DefaultCloseableConnectionProvider dcp = (DefaultCloseableConnectionProvider) cp;
             JDBCUtils.safeClose(dcp.connection);
             dcp.connection = null;
         }
 
-        if (cf instanceof DefaultConnectionFactory dcf) {
+        if (cf instanceof DefaultConnectionFactory) { DefaultConnectionFactory dcf = (DefaultConnectionFactory) cf;
             if (dcf.finalize) {
-                R2DBC.blockWrappingExceptions(dcf.connection.close());
+                R2DBC.block(dcf.connection.close());
                 dcf.connection = null;
             }
         }

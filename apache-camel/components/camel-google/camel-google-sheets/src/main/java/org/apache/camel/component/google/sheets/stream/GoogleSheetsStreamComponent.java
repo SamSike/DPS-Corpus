@@ -23,13 +23,14 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.component.google.sheets.BatchGoogleSheetsClientFactory;
 import org.apache.camel.component.google.sheets.GoogleSheetsClientFactory;
+import org.apache.camel.component.google.sheets.GoogleSheetsVerifierExtension;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.support.HealthCheckComponent;
+import org.apache.camel.support.DefaultComponent;
 
 @Metadata(label = "verifiers", enums = "parameters,connectivity")
 @Component("google-sheets-stream")
-public class GoogleSheetsStreamComponent extends HealthCheckComponent {
+public class GoogleSheetsStreamComponent extends DefaultComponent {
 
     @Metadata
     private GoogleSheetsStreamConfiguration configuration;
@@ -44,6 +45,7 @@ public class GoogleSheetsStreamComponent extends HealthCheckComponent {
 
     public GoogleSheetsStreamComponent(CamelContext context) {
         super(context);
+        registerExtension(new GoogleSheetsVerifierExtension("google-sheets-stream", context));
         this.configuration = new GoogleSheetsStreamConfiguration();
     }
 
@@ -51,11 +53,11 @@ public class GoogleSheetsStreamComponent extends HealthCheckComponent {
         if (client == null) {
             if (config.getClientId() != null && config.getClientSecret() != null) {
                 client = getClientFactory().makeClient(config.getClientId(),
-                        config.getClientSecret(), config.getScopesAsList(),
+                        config.getClientSecret(), config.getScopes(),
                         config.getApplicationName(), config.getRefreshToken(), config.getAccessToken());
             } else if (config.getServiceAccountKey() != null) {
                 client = getClientFactory().makeClient(getCamelContext(), config.getServiceAccountKey(),
-                        config.getScopesAsList(), config.getApplicationName(), config.getDelegate());
+                        config.getScopes(), config.getApplicationName(), config.getDelegate());
             } else {
                 throw new IllegalArgumentException(
                         "(clientId and clientSecret) or serviceAccountKey are required to create Gmail client");

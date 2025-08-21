@@ -81,17 +81,17 @@ public class KeyValueHolderIterator implements Iterator<KeyValueHolder<Object, P
                         msgTopic, null, null, null, body, propagatedHeadersProvider.getDefaultHeaders()));
     }
 
-    private Message getInnerMessage(Object object) {
-        if (object instanceof Exchange exchange) {
-            return exchange.getIn();
+    private Message getInnerMessage(Object body) {
+        if (body instanceof Exchange) {
+            return ((Exchange) body).getIn();
         }
 
-        return (Message) object;
+        return (Message) body;
     }
 
-    private Exchange getInnerExchange(Object object) {
-        if (object instanceof Exchange exchange) {
-            return exchange;
+    private Exchange getInnerExchange(Object body) {
+        if (body instanceof Exchange) {
+            return (Exchange) body;
         }
 
         return null;

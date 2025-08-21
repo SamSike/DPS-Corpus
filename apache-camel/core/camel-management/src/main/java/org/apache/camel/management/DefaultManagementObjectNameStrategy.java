@@ -41,7 +41,6 @@ import org.apache.camel.management.mbean.ManagedClusterService;
 import org.apache.camel.management.mbean.ManagedComponent;
 import org.apache.camel.management.mbean.ManagedConsumer;
 import org.apache.camel.management.mbean.ManagedDataFormat;
-import org.apache.camel.management.mbean.ManagedDumpRouteStrategy;
 import org.apache.camel.management.mbean.ManagedEndpoint;
 import org.apache.camel.management.mbean.ManagedEventNotifier;
 import org.apache.camel.management.mbean.ManagedProcessor;
@@ -59,7 +58,6 @@ import org.apache.camel.spi.ManagementObjectNameStrategy;
 import org.apache.camel.spi.RouteController;
 import org.apache.camel.util.InetAddressUtil;
 import org.apache.camel.util.ObjectHelper;
-import org.apache.camel.util.StringHelper;
 import org.apache.camel.util.URISupport;
 
 /**
@@ -120,48 +118,65 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
             return null;
         }
         ObjectName objectName = null;
-        if (managedObject instanceof ManagedCamelContext mcc) {
+        if (managedObject instanceof ManagedCamelContext) {
+            ManagedCamelContext mcc = (ManagedCamelContext) managedObject;
             objectName = getObjectNameForCamelContext(mcc.getContext());
-        } else if (managedObject instanceof ManagedCamelHealth mch) {
+        } else if (managedObject instanceof ManagedCamelHealth) {
+            ManagedCamelHealth mch = (ManagedCamelHealth) managedObject;
             objectName = getObjectNameForCamelHealth(mch.getContext());
-        } else if (managedObject instanceof ManagedRouteController mrc) {
+        } else if (managedObject instanceof ManagedRouteController) {
+            ManagedRouteController mrc = (ManagedRouteController) managedObject;
             objectName = getObjectNameForRouteController(mrc.getContext(), mrc.getRouteController());
-        } else if (managedObject instanceof ManagedSupervisingRouteController mrc) {
+        } else if (managedObject instanceof ManagedSupervisingRouteController) {
+            ManagedSupervisingRouteController mrc = (ManagedSupervisingRouteController) managedObject;
             objectName = getObjectNameForRouteController(mrc.getContext(), mrc.getRouteController());
-        } else if (managedObject instanceof ManagedComponent mc) {
+        } else if (managedObject instanceof ManagedComponent) {
+            ManagedComponent mc = (ManagedComponent) managedObject;
             objectName = getObjectNameForComponent(mc.getComponent(), mc.getComponentName());
-        } else if (managedObject instanceof ManagedDataFormat md) {
+        } else if (managedObject instanceof ManagedDataFormat) {
+            ManagedDataFormat md = (ManagedDataFormat) managedObject;
             objectName = getObjectNameForDataFormat(md.getContext(), md.getDataFormat());
-        } else if (managedObject instanceof ManagedEndpoint me) {
+        } else if (managedObject instanceof ManagedEndpoint) {
+            ManagedEndpoint me = (ManagedEndpoint) managedObject;
             objectName = getObjectNameForEndpoint(me.getEndpoint());
-        } else if (managedObject instanceof Endpoint endpoint) {
-            objectName = getObjectNameForEndpoint(endpoint);
-        } else if (managedObject instanceof ManagedRoute mr) {
+        } else if (managedObject instanceof Endpoint) {
+            objectName = getObjectNameForEndpoint((Endpoint) managedObject);
+        } else if (managedObject instanceof ManagedRoute) {
+            ManagedRoute mr = (ManagedRoute) managedObject;
             objectName = getObjectNameForRoute(mr.getRoute());
-        } else if (managedObject instanceof ManagedStep mp) {
+        } else if (managedObject instanceof ManagedStep) {
+            ManagedStep mp = (ManagedStep) managedObject;
             objectName = getObjectNameForStep(mp.getContext(), mp.getProcessor(), mp.getDefinition());
-        } else if (managedObject instanceof ManagedProcessor mp) {
+        } else if (managedObject instanceof ManagedProcessor) {
+            ManagedProcessor mp = (ManagedProcessor) managedObject;
             objectName = getObjectNameForProcessor(mp.getContext(), mp.getProcessor(), mp.getDefinition());
-        } else if (managedObject instanceof ManagedConsumer ms) {
+        } else if (managedObject instanceof ManagedConsumer) {
+            ManagedConsumer ms = (ManagedConsumer) managedObject;
             objectName = getObjectNameForConsumer(ms.getContext(), ms.getConsumer());
-        } else if (managedObject instanceof ManagedProducer ms) {
+        } else if (managedObject instanceof ManagedProducer) {
+            ManagedProducer ms = (ManagedProducer) managedObject;
             objectName = getObjectNameForProducer(ms.getContext(), ms.getProducer());
-        } else if (managedObject instanceof ManagedBacklogTracer mt) {
+        } else if (managedObject instanceof ManagedBacklogTracer) {
+            ManagedBacklogTracer mt = (ManagedBacklogTracer) managedObject;
             objectName = getObjectNameForTracer(mt.getContext(), mt.getBacklogTracer());
-        } else if (managedObject instanceof ManagedBacklogDebugger md) {
+        } else if (managedObject instanceof ManagedBacklogDebugger) {
+            ManagedBacklogDebugger md = (ManagedBacklogDebugger) managedObject;
             objectName = getObjectNameForTracer(md.getContext(), md.getBacklogDebugger());
-        } else if (managedObject instanceof ManagedDumpRouteStrategy md) {
-            objectName = getObjectNameForService(md.getContext(), md.getDumpRoutesStrategy());
-        } else if (managedObject instanceof ManagedEventNotifier men) {
+        } else if (managedObject instanceof ManagedEventNotifier) {
+            ManagedEventNotifier men = (ManagedEventNotifier) managedObject;
             objectName = getObjectNameForEventNotifier(men.getContext(), men.getEventNotifier());
-        } else if (managedObject instanceof ManagedTracer mt) {
+        } else if (managedObject instanceof ManagedTracer) {
+            ManagedTracer mt = (ManagedTracer) managedObject;
             objectName = getObjectNameForTracer(mt.getContext(), mt.getTracer());
-        } else if (managedObject instanceof ManagedThreadPool mes) {
+        } else if (managedObject instanceof ManagedThreadPool) {
+            ManagedThreadPool mes = (ManagedThreadPool) managedObject;
             objectName = getObjectNameForThreadPool(mes.getContext(), mes.getThreadPool(), mes.getId(), mes.getSourceId());
-        } else if (managedObject instanceof ManagedClusterService mcs) {
+        } else if (managedObject instanceof ManagedClusterService) {
+            ManagedClusterService mcs = (ManagedClusterService) managedObject;
             objectName = getObjectNameForClusterService(mcs.getContext(), mcs.getService());
-        } else if (managedObject instanceof ManagedService ms) {
+        } else if (managedObject instanceof ManagedService) {
             // check for managed service should be last
+            ManagedService ms = (ManagedService) managedObject;
             // skip endpoints as they are already managed
             if (ms.getService() instanceof Endpoint) {
                 return null;
@@ -176,9 +191,9 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
     public ObjectName getObjectNameForCamelContext(String managementName, String name) throws MalformedObjectNameException {
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(managementName)).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_CONTEXT).append(",");
-        buffer.append(KEY_NAME).append("=").append(ObjectName.quote(name));
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(managementName)).append(",");
+        buffer.append(KEY_TYPE + "=" + TYPE_CONTEXT + ",");
+        buffer.append(KEY_NAME + "=").append(ObjectName.quote(name));
         return createObjectName(buffer);
     }
 
@@ -203,9 +218,9 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
 
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(managementName)).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_HEALTH).append(",");
-        buffer.append(KEY_NAME).append("=").append("DefaultHealthCheck");
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(managementName)).append(",");
+        buffer.append(KEY_TYPE + "=" + TYPE_HEALTH + ",");
+        buffer.append(KEY_NAME + "=").append("DefaultHealthCheck");
 
         return createObjectName(buffer);
     }
@@ -221,9 +236,9 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
 
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(managementName)).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_SERVICE).append(",");
-        buffer.append(KEY_NAME).append("=").append(routeController.getClass().getSimpleName());
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(managementName)).append(",");
+        buffer.append(KEY_TYPE + "=" + TYPE_SERVICE + ",");
+        buffer.append(KEY_NAME + "=").append(routeController.getClass().getSimpleName());
 
         return createObjectName(buffer);
     }
@@ -232,9 +247,9 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
     public ObjectName getObjectNameForEndpoint(Endpoint endpoint) throws MalformedObjectNameException {
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(endpoint.getCamelContext())).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_ENDPOINT).append(",");
-        buffer.append(KEY_NAME).append("=").append(ObjectName.quote(getEndpointId(endpoint)));
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(endpoint.getCamelContext())).append(",");
+        buffer.append(KEY_TYPE + "=" + TYPE_ENDPOINT + ",");
+        buffer.append(KEY_NAME + "=").append(ObjectName.quote(getEndpointId(endpoint)));
         return createObjectName(buffer);
     }
 
@@ -243,9 +258,9 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
             throws MalformedObjectNameException {
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(context)).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_DATAFORMAT).append(",");
-        buffer.append(KEY_NAME).append("=").append(dataFormat.getClass().getSimpleName());
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(context)).append(",");
+        buffer.append(KEY_TYPE + "=" + TYPE_DATAFORMAT + ",");
+        buffer.append(KEY_NAME + "=").append(dataFormat.getClass().getSimpleName());
         if (!(dataFormat instanceof StaticService)) {
             buffer.append("(").append(ObjectHelper.getIdentityHashCode(dataFormat)).append(")");
         }
@@ -256,9 +271,9 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
     public ObjectName getObjectNameForComponent(Component component, String name) throws MalformedObjectNameException {
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(component.getCamelContext())).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_COMPONENT).append(",");
-        buffer.append(KEY_NAME).append("=").append(ObjectName.quote(name));
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(component.getCamelContext())).append(",");
+        buffer.append(KEY_TYPE + "=" + TYPE_COMPONENT + ",");
+        buffer.append(KEY_NAME + "=").append(ObjectName.quote(name));
         return createObjectName(buffer);
     }
 
@@ -267,14 +282,9 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
             throws MalformedObjectNameException {
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(context)).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_PROCESSOR).append(",");
-        String id = definition.getId();
-        String prefix = definition.getNodePrefixId();
-        if (prefix != null) {
-            id = prefix + id;
-        }
-        buffer.append(KEY_NAME).append("=").append(ObjectName.quote(id));
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(context)).append(",");
+        buffer.append(KEY_TYPE + "=").append(TYPE_PROCESSOR).append(",");
+        buffer.append(KEY_NAME + "=").append(ObjectName.quote(definition.getId()));
         return createObjectName(buffer);
     }
 
@@ -283,14 +293,9 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
             throws MalformedObjectNameException {
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(context)).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_STEP).append(",");
-        String id = definition.getId();
-        String prefix = definition.getNodePrefixId();
-        if (prefix != null) {
-            id = prefix + id;
-        }
-        buffer.append(KEY_NAME).append("=").append(ObjectName.quote(id));
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(context)).append(",");
+        buffer.append(KEY_TYPE + "=").append(TYPE_STEP).append(",");
+        buffer.append(KEY_NAME + "=").append(ObjectName.quote(definition.getId()));
         return createObjectName(buffer);
     }
 
@@ -298,14 +303,14 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
     public ObjectName getObjectNameForConsumer(CamelContext context, Consumer consumer) throws MalformedObjectNameException {
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(context)).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_CONSUMER).append(",");
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(context)).append(",");
+        buffer.append(KEY_TYPE + "=").append(TYPE_CONSUMER).append(",");
 
         String name = consumer.getClass().getSimpleName();
         if (ObjectHelper.isEmpty(name)) {
             name = "Consumer";
         }
-        buffer.append(KEY_NAME).append("=")
+        buffer.append(KEY_NAME + "=")
                 .append(name)
                 .append("(").append(ObjectHelper.getIdentityHashCode(consumer)).append(")");
         return createObjectName(buffer);
@@ -315,8 +320,8 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
     public ObjectName getObjectNameForProducer(CamelContext context, Producer producer) throws MalformedObjectNameException {
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(context)).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_PRODUCER).append(",");
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(context)).append(",");
+        buffer.append(KEY_TYPE + "=").append(TYPE_PRODUCER).append(",");
 
         String name = producer.getClass().getSimpleName();
         if (ObjectHelper.isEmpty(name)) {
@@ -332,18 +337,12 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
     public ObjectName getObjectNameForTracer(CamelContext context, Service tracer) throws MalformedObjectNameException {
         // use the simple name of the class as the mbean name (eg Tracer, BacklogTracer, BacklogDebugger)
         String name = tracer.getClass().getSimpleName();
-        // backwards compatible names
-        if ("DefaultBacklogDebugger".equals(name)) {
-            name = "BacklogDebugger";
-        } else if ("DefaultBacklogTracer".equals(name)) {
-            name = "BacklogTracer";
-        }
 
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(context)).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_TRACER).append(",");
-        buffer.append(KEY_NAME).append("=").append(name);
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(context)).append(",");
+        buffer.append(KEY_TYPE + "=" + TYPE_TRACER + ",");
+        buffer.append(KEY_NAME + "=").append(name);
         return createObjectName(buffer);
     }
 
@@ -352,15 +351,15 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
             throws MalformedObjectNameException {
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(context)).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_EVENT_NOTIFIER).append(",");
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(context)).append(",");
+        buffer.append(KEY_TYPE + "=" + TYPE_EVENT_NOTIFIER + ",");
 
         if (eventNotifier instanceof JmxNotificationEventNotifier) {
             // JMX notifier shall have an easy to use name
-            buffer.append(KEY_NAME).append("=").append("JmxEventNotifier");
+            buffer.append(KEY_NAME + "=").append("JmxEventNotifier");
         } else {
             // others can be per instance
-            buffer.append(KEY_NAME).append("=")
+            buffer.append(KEY_NAME + "=")
                     .append("EventNotifier")
                     .append("(").append(ObjectHelper.getIdentityHashCode(eventNotifier)).append(")");
         }
@@ -371,9 +370,9 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
     public ObjectName getObjectNameForRoute(org.apache.camel.Route route) throws MalformedObjectNameException {
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(route.getCamelContext())).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_ROUTE).append(",");
-        buffer.append(KEY_NAME).append("=").append(ObjectName.quote(route.getId()));
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(route.getCamelContext())).append(",");
+        buffer.append(KEY_TYPE + "=" + TYPE_ROUTE + ",");
+        buffer.append(KEY_NAME + "=").append(ObjectName.quote(route.getId()));
         return createObjectName(buffer);
     }
 
@@ -381,9 +380,9 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
     public ObjectName getObjectNameForService(CamelContext context, Service service) throws MalformedObjectNameException {
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(context)).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_SERVICE).append(",");
-        buffer.append(KEY_NAME).append("=").append(service.getClass().getSimpleName());
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(context)).append(",");
+        buffer.append(KEY_TYPE + "=" + TYPE_SERVICE + ",");
+        buffer.append(KEY_NAME + "=").append(service.getClass().getSimpleName());
         if (!(service instanceof StaticService)) {
             buffer.append("(").append(ObjectHelper.getIdentityHashCode(service)).append(")");
         }
@@ -395,9 +394,9 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
             throws MalformedObjectNameException {
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(context)).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_HA).append(",");
-        buffer.append(KEY_NAME).append("=").append(service.getClass().getSimpleName());
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(context)).append(",");
+        buffer.append(KEY_TYPE + "=" + TYPE_HA + ",");
+        buffer.append(KEY_NAME + "=").append(service.getClass().getSimpleName());
         if (!(service instanceof StaticService)) {
             buffer.append("(").append(ObjectHelper.getIdentityHashCode(service)).append(")");
         }
@@ -410,15 +409,15 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
             throws MalformedObjectNameException {
         StringBuilder buffer = new StringBuilder();
         buffer.append(domainName).append(":");
-        buffer.append(KEY_CONTEXT).append("=").append(getContextId(context)).append(",");
-        buffer.append(KEY_TYPE).append("=").append(TYPE_THREAD_POOL).append(",");
+        buffer.append(KEY_CONTEXT + "=").append(getContextId(context)).append(",");
+        buffer.append(KEY_TYPE + "=" + TYPE_THREAD_POOL + ",");
 
         String name = id;
         if (sourceId != null) {
             // provide source id if we know it, this helps end user to know where the pool is used
             name = name + "(" + sourceId + ")";
         }
-        buffer.append(KEY_NAME).append("=").append(ObjectName.quote(name));
+        buffer.append(KEY_NAME + "=").append(ObjectName.quote(name));
         return createObjectName(buffer);
     }
 
@@ -473,7 +472,8 @@ public class DefaultManagementObjectNameStrategy implements ManagementObjectName
         } else {
             // non singleton then add hashcoded id
             String uri = ep.getEndpointKey();
-            String id = StringHelper.before(uri, "?", uri);
+            int pos = uri.indexOf('?');
+            String id = (pos == -1) ? uri : uri.substring(0, pos);
             id += "?id=" + ObjectHelper.getIdentityHashCode(ep);
             return id;
         }

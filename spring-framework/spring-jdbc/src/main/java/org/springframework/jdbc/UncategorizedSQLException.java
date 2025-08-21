@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,8 @@ package org.springframework.jdbc;
 
 import java.sql.SQLException;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.dao.UncategorizedDataAccessException;
+import org.springframework.lang.Nullable;
 
 /**
  * Exception thrown when we can't classify an SQLException into
@@ -33,7 +32,8 @@ import org.springframework.dao.UncategorizedDataAccessException;
 public class UncategorizedSQLException extends UncategorizedDataAccessException {
 
 	/** SQL that led to the problem. */
-	private final @Nullable String sql;
+	@Nullable
+	private final String sql;
 
 
 	/**
@@ -53,14 +53,15 @@ public class UncategorizedSQLException extends UncategorizedDataAccessException 
 	/**
 	 * Return the underlying SQLException.
 	 */
-	public @Nullable SQLException getSQLException() {
+	public SQLException getSQLException() {
 		return (SQLException) getCause();
 	}
 
 	/**
 	 * Return the SQL that led to the problem (if known).
 	 */
-	public @Nullable String getSql() {
+	@Nullable
+	public String getSql() {
 		return this.sql;
 	}
 

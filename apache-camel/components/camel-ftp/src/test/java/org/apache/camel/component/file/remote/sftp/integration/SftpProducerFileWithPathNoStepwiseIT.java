@@ -30,8 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SftpProducerFileWithPathNoStepwiseIT extends SftpServerTestSupport {
 
     private String getFtpUrl() {
-        return "sftp://admin@localhost:{{ftp.server.port}}/{{ftp.root.dir}}?password=admin&stepwise=false&knownHostsFile="
-               + service.getKnownHostsFile();
+        return "sftp://admin@localhost:{{ftp.server.port}}/{{ftp.root.dir}}?password=admin&stepwise=false";
     }
 
     @Test

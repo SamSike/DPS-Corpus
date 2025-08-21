@@ -23,24 +23,27 @@ import java.util.Map;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.component.http.handler.HeaderValidationHandler;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class HttpProducerBridgeEndpointTest extends BaseHttpTest {
 
     private static final Instant INSTANT = Instant.parse("2021-06-10T14:42:00Z");
     private static final String STRING = "text";
-    private static final Integer INTEGER = 1;
-    private static final Long LONG = 999999999999999L;
+    private static final Integer INTEGER = Integer.valueOf(1);
+    private static final Long LONG = Long.valueOf(999999999999999L);
     private static final Boolean BOOLEAN = true;
     private static final String QUERY
             = "qp1=" + INSTANT + "&qp2=" + STRING + "&qp3=" + INTEGER + "&qp4=" + LONG + "&qp5=" + BOOLEAN;
 
     private HttpServer localServer;
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
+    public void setUp() throws Exception {
         String[] absentHeaders = new String[] { "qp1", "qp2", "qp3", "qp4", "qp5" };
         Map<String, String> noBridgeExpectedHeaders = new HashMap<>();
         noBridgeExpectedHeaders.put("qp1", INSTANT.toString());
@@ -49,11 +52,10 @@ public class HttpProducerBridgeEndpointTest extends BaseHttpTest {
         noBridgeExpectedHeaders.put("qp4", LONG.toString());
         noBridgeExpectedHeaders.put("qp5", BOOLEAN.toString());
 
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext())
-                .register("/bridged",
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext())
+                .registerHandler("/bridged",
                         new HeaderValidationHandler(
                                 "GET",
                                 QUERY,
@@ -61,7 +63,7 @@ public class HttpProducerBridgeEndpointTest extends BaseHttpTest {
                                 getExpectedContent(),
                                 null,
                                 Arrays.asList(absentHeaders)))
-                .register("/notbridged",
+                .registerHandler("/notbridged",
                         new HeaderValidationHandler(
                                 "GET",
                                 QUERY,
@@ -71,10 +73,14 @@ public class HttpProducerBridgeEndpointTest extends BaseHttpTest {
                 .create();
 
         localServer.start();
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() throws Exception {
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (localServer != null) {
             localServer.stop();
@@ -88,7 +94,8 @@ public class HttpProducerBridgeEndpointTest extends BaseHttpTest {
         component.setConnectionTimeToLive(1000L);
 
         HttpEndpoint endpoint = (HttpEndpoint) component
-                .createEndpoint("http://localhost:" + localServer.getLocalPort() + "/bridged?bridgeEndpoint=true");
+                .createEndpoint("http://" + localServer.getInetAddress().getHostName() + ":"
+                                + localServer.getLocalPort() + "/bridged?bridgeEndpoint=true");
         HttpProducer producer = new HttpProducer(endpoint);
 
         Exchange exchange = producer.createExchange();
@@ -114,7 +121,8 @@ public class HttpProducerBridgeEndpointTest extends BaseHttpTest {
         component.setConnectionTimeToLive(1000L);
 
         HttpEndpoint endpoint = (HttpEndpoint) component
-                .createEndpoint("http://localhost:" + localServer.getLocalPort() + "/notbridged");
+                .createEndpoint("http://" + localServer.getInetAddress().getHostName() + ":"
+                                + localServer.getLocalPort() + "/notbridged");
         HttpProducer producer = new HttpProducer(endpoint);
 
         Exchange exchange = producer.createExchange();

@@ -35,10 +35,10 @@ public class BeanByteArrayBodyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").log("Body is ${body} and of type ${in.body.getClass.getCanonicalName}")
                         .setHeader("foo", simple("${in.body.length}")).to("mock:result");
             }

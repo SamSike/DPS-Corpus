@@ -24,7 +24,6 @@ import org.apache.camel.DelegateEndpoint;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.RestConsumerFactory;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
@@ -38,9 +37,6 @@ import org.slf4j.LoggerFactory;
  */
 @UriEndpoint(firstVersion = "3.0.0", scheme = "webhook", title = "Webhook", syntax = "webhook:endpointUri", consumerOnly = true,
              category = { Category.CLOUD }, lenientProperties = true)
-@Metadata(annotations = {
-        "protocol=http",
-})
 public class WebhookEndpoint extends DefaultEndpoint implements DelegateEndpoint, AfterPropertiesConfigured {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebhookEndpoint.class);

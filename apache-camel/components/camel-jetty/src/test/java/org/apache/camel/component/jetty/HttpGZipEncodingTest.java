@@ -25,15 +25,14 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.ExpressionBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.http.HttpClientConfigurer;
-import org.apache.camel.http.common.HttpMessage;
 import org.apache.camel.spi.Registry;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Disabled("TODO: investigate for Camel 3.0.  The test actually works fine, but the "
+@Disabled("TODO: investigate for Camel 3.0.  The test actally works fine, but the "
           + "test needs to be verified as http supports gzip by default, so some tests may "
           + "have to be changed to stay meaningful.")
 public class HttpGZipEncodingTest extends BaseJettyTest {
@@ -87,7 +86,8 @@ public class HttpGZipEncodingTest extends BaseJettyTest {
                 from("jetty:http://localhost:" + port1 + "/gzip").process(new Processor() {
                     public void process(Exchange exchange) {
                         // check the request method
-                        HttpServletRequest request = exchange.getMessage(HttpMessage.class).getRequest();
+                        HttpServletRequest request
+                                = exchange.getIn().getHeader(Exchange.HTTP_SERVLET_REQUEST, HttpServletRequest.class);
                         if ("POST".equals(request.getMethod())) {
                             String requestBody = exchange.getIn().getBody(String.class);
                             assertEquals("<Hello>World</Hello>", requestBody, "Get a wrong request string");
@@ -95,7 +95,7 @@ public class HttpGZipEncodingTest extends BaseJettyTest {
                         exchange.getMessage().setHeader(Exchange.CONTENT_ENCODING, "gzip");
                         // check the Accept Encoding header
                         String header = exchange.getIn().getHeader("Accept-Encoding", String.class);
-                        if (header != null && header.contains("gzip")) {
+                        if (header != null && header.indexOf("gzip") > -1) {
                             exchange.getMessage().setBody("<b>Hello World for gzip</b>");
                         } else {
                             exchange.getMessage().setBody("<b>Hello World</b>");

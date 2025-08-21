@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.messaging.handler.invocation.reactive;
 
 import java.util.function.Function;
 
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -31,6 +30,7 @@ import reactor.util.context.Context;
 
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -68,8 +68,9 @@ class ChannelSendOperator<T> extends Mono<Void> implements Scannable {
 
 
 	@Override
+	@Nullable
 	@SuppressWarnings("rawtypes")
-	public @Nullable Object scanUnsafe(Attr key) {
+	public Object scanUnsafe(Attr key) {
 		if (key == Attr.PREFETCH) {
 			return Integer.MAX_VALUE;
 		}
@@ -106,7 +107,7 @@ class ChannelSendOperator<T> extends Mono<Void> implements Scannable {
 		 * The write subscriber has subscribed, and cached signals have been
 		 * emitted to it; we're ready to switch to a simple pass-through mode
 		 * for all remaining signals.
-		 */
+		 **/
 		READY_TO_WRITE
 
 	}
@@ -133,13 +134,16 @@ class ChannelSendOperator<T> extends Mono<Void> implements Scannable {
 		private final WriteCompletionBarrier writeCompletionBarrier;
 
 		/* Upstream write source subscription */
-		private @Nullable Subscription subscription;
+		@Nullable
+		private Subscription subscription;
 
 		/** Cached data item before readyToWrite. */
-		private @Nullable T item;
+		@Nullable
+		private T item;
 
 		/** Cached error signal before readyToWrite. */
-		private @Nullable Throwable error;
+		@Nullable
+		private Throwable error;
 
 		/** Cached onComplete signal before readyToWrite. */
 		private boolean completed = false;
@@ -151,7 +155,8 @@ class ChannelSendOperator<T> extends Mono<Void> implements Scannable {
 		private State state = State.NEW;
 
 		/** The actual writeSubscriber from the HTTP server adapter. */
-		private @Nullable Subscriber<? super T> writeSubscriber;
+		@Nullable
+		private Subscriber<? super T> writeSubscriber;
 
 
 		WriteBarrier(CoreSubscriber<? super Void> completionSubscriber) {
@@ -176,7 +181,7 @@ class ChannelSendOperator<T> extends Mono<Void> implements Scannable {
 				requiredWriteSubscriber().onNext(item);
 				return;
 			}
-			// FIXME revisit in case of reentrant sync deadlock
+			//FIXME revisit in case of reentrant sync deadlock
 			synchronized (this) {
 				if (this.state == State.READY_TO_WRITE) {
 					requiredWriteSubscriber().onNext(item);
@@ -276,10 +281,6 @@ class ChannelSendOperator<T> extends Mono<Void> implements Scannable {
 				return;
 			}
 			synchronized (this) {
-				if (this.state == State.READY_TO_WRITE) {
-					s.request(n);
-					return;
-				}
 				if (this.writeSubscriber != null) {
 					if (this.state == State.EMITTING_CACHED_SIGNALS) {
 						this.demandBeforeReadyToWrite = n;
@@ -304,10 +305,9 @@ class ChannelSendOperator<T> extends Mono<Void> implements Scannable {
 		}
 
 		private boolean emitCachedSignals() {
-			Throwable error = this.error;
-			if (error != null) {
+			if (this.error != null) {
 				try {
-					requiredWriteSubscriber().onError(error);
+					requiredWriteSubscriber().onError(this.error);
 				}
 				finally {
 					releaseCachedItem();
@@ -343,8 +343,8 @@ class ChannelSendOperator<T> extends Mono<Void> implements Scannable {
 		private void releaseCachedItem() {
 			synchronized (this) {
 				Object item = this.item;
-				if (item instanceof DataBuffer dataBuffer) {
-					DataBufferUtils.release(dataBuffer);
+				if (item instanceof DataBuffer) {
+					DataBufferUtils.release((DataBuffer) item);
 				}
 				this.item = null;
 			}
@@ -386,7 +386,8 @@ class ChannelSendOperator<T> extends Mono<Void> implements Scannable {
 
 		private final WriteBarrier writeBarrier;
 
-		private @Nullable Subscription subscription;
+		@Nullable
+		private Subscription subscription;
 
 
 		public WriteCompletionBarrier(CoreSubscriber<? super Void> subscriber, WriteBarrier writeBarrier) {

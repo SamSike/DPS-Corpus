@@ -21,7 +21,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
+import com.orbitz.consul.Consul;
+import com.orbitz.consul.model.catalog.CatalogService;
+import com.orbitz.consul.model.health.ServiceHealth;
+import com.orbitz.consul.option.ImmutableQueryOptions;
+import com.orbitz.consul.option.QueryOptions;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.cloud.ServiceDefinition;
 import org.apache.camel.component.consul.ConsulConfiguration;
@@ -30,15 +36,9 @@ import org.apache.camel.impl.cloud.DefaultServiceDiscovery;
 import org.apache.camel.impl.cloud.DefaultServiceHealth;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.function.Suppliers;
-import org.kiwiproject.consul.Consul;
-import org.kiwiproject.consul.model.catalog.CatalogService;
-import org.kiwiproject.consul.model.health.ServiceHealth;
-import org.kiwiproject.consul.option.ImmutableQueryOptions;
-import org.kiwiproject.consul.option.QueryOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Deprecated
 public final class ConsulServiceDiscovery extends DefaultServiceDiscovery {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsulServiceDiscovery.class);
 
@@ -53,7 +53,7 @@ public final class ConsulServiceDiscovery extends DefaultServiceDiscovery {
 
         ImmutableQueryOptions.Builder builder = ImmutableQueryOptions.builder();
         ObjectHelper.ifNotEmpty(configuration.getDatacenter(), builder::datacenter);
-        ObjectHelper.ifNotEmpty(configuration.getTagAsSet(), builder::tag);
+        ObjectHelper.ifNotEmpty(configuration.getTags(), builder::tag);
 
         queryOptions = builder.build();
     }
@@ -64,7 +64,7 @@ public final class ConsulServiceDiscovery extends DefaultServiceDiscovery {
             List<CatalogService> services = client.get().catalogClient().getService(name, queryOptions).getResponse();
             List<ServiceHealth> healths = client.get().healthClient().getAllServiceInstances(name, queryOptions).getResponse();
 
-            return services.stream().map(service -> newService(name, service, healths)).toList();
+            return services.stream().map(service -> newService(name, service, healths)).collect(Collectors.toList());
         } catch (Exception e) {
             LOGGER.warn("Error getting '{}' services from consul.", name, e);
             return Collections.emptyList();

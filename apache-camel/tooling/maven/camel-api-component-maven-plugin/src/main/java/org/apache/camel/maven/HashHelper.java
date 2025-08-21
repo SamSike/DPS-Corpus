@@ -40,7 +40,7 @@ public class HashHelper {
             } else if (f instanceof Boolean) {
                 hasher.putBoolean((Boolean) f);
             } else if (f instanceof Iterable) {
-                for (Object a : (Iterable<?>) f) {
+                for (Object a : (Iterable<? extends Object>) f) {
                     hash(a);
                 }
             } else if (f instanceof ApiMethodAlias) {

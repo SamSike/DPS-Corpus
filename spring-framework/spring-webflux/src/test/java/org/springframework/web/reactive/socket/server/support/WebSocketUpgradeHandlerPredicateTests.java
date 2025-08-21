@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.web.reactive.socket.server.support;
 
 import java.util.Collections;
@@ -32,15 +31,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests for and related to the use of {@link WebSocketUpgradeHandlerPredicate}.
+ * Unit tests for and related to the use of {@link WebSocketUpgradeHandlerPredicate}.
  *
  * @author Rossen Stoyanchev
  */
-class WebSocketUpgradeHandlerPredicateTests {
+public class WebSocketUpgradeHandlerPredicateTests {
 
 	private final WebSocketUpgradeHandlerPredicate predicate = new WebSocketUpgradeHandlerPredicate();
 
-	private final WebSocketHandler webSocketHandler = mock();
+	private final WebSocketHandler webSocketHandler = mock(WebSocketHandler.class);
 
 	ServerWebExchange httpGetExchange =
 			MockServerWebExchange.from(MockServerHttpRequest.get("/path"));

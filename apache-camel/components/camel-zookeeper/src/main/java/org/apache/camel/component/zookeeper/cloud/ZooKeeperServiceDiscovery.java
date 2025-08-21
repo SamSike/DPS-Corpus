@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonRootName;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.cloud.ServiceDefinition;
 import org.apache.camel.component.zookeeper.ZooKeeperCuratorConfiguration;
@@ -35,7 +36,6 @@ import org.apache.curator.x.discovery.ServiceDiscovery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Deprecated
 public class ZooKeeperServiceDiscovery extends DefaultServiceDiscovery {
     private static final Logger LOGGER = LoggerFactory.getLogger(ZooKeeperServiceDiscovery.class);
 
@@ -135,4 +135,7 @@ public class ZooKeeperServiceDiscovery extends DefaultServiceDiscovery {
     // Helpers
     // *********************************************
 
+    @JsonRootName("meta")
+    public static final class MetaData extends HashMap<String, String> {
+    }
 }

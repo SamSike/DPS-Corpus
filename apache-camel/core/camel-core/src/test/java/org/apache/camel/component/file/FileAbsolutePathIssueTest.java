@@ -16,9 +16,6 @@
  */
 package org.apache.camel.component.file;
 
-import java.io.File;
-import java.util.UUID;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
@@ -27,8 +24,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class FileAbsolutePathIssueTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello" + UUID.randomUUID() + ".txt";
-    private static final String FILE_SEPARATOR = File.separator;
 
     private String uri;
     private String start;
@@ -39,7 +34,7 @@ public class FileAbsolutePathIssueTest extends ContextTestSupport {
     public void setUp() throws Exception {
         start = testDirectory("issue").toAbsolutePath().toString();
         done = testDirectory("done").toAbsolutePath().toString();
-        uri = "file:" + start + "?initialDelay=0&delay=10&move=" + done + FILE_SEPARATOR + "${file:name}";
+        uri = "file:" + start + "?initialDelay=0&delay=10&move=" + done + "/${file:name}";
         super.setUp();
     }
 
@@ -47,18 +42,18 @@ public class FileAbsolutePathIssueTest extends ContextTestSupport {
     public void testMoveAbsolute() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(1);
-        mock.expectedFileExists(done + FILE_SEPARATOR + TEST_FILE_NAME);
+        mock.expectedFileExists(done + "/hello.txt");
 
-        template.sendBodyAndHeader("file:" + start, "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader("file:" + start, "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(uri).to("mock:result");
             }
         };

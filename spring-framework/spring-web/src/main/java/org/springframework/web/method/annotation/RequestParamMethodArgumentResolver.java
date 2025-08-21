@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import java.util.Optional;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.Part;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -32,6 +31,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -53,7 +53,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * Resolves method arguments annotated with @{@link RequestParam}, arguments of
  * type {@link MultipartFile} in conjunction with Spring's {@link MultipartResolver}
  * abstraction, and arguments of type {@code jakarta.servlet.http.Part} in conjunction
- * with Servlet multipart requests. This resolver can also be created in default
+ * with Servlet 3.0 multipart requests. This resolver can also be created in default
  * resolution mode in which simple types (int, long, etc.) not annotated with
  * {@link RequestParam @RequestParam} are also treated as request parameters with
  * the parameter name derived from the argument name.
@@ -158,7 +158,8 @@ public class RequestParamMethodArgumentResolver extends AbstractNamedValueMethod
 	}
 
 	@Override
-	protected @Nullable Object resolveName(String name, MethodParameter parameter, NativeWebRequest request) throws Exception {
+	@Nullable
+	protected Object resolveName(String name, MethodParameter parameter, NativeWebRequest request) throws Exception {
 		HttpServletRequest servletRequest = request.getNativeRequest(HttpServletRequest.class);
 
 		if (servletRequest != null) {
@@ -178,9 +179,6 @@ public class RequestParamMethodArgumentResolver extends AbstractNamedValueMethod
 		}
 		if (arg == null) {
 			String[] paramValues = request.getParameterValues(name);
-			if (paramValues == null) {
-				paramValues = request.getParameterValues(name + "[]");
-			}
 			if (paramValues != null) {
 				arg = (paramValues.length == 1 ? paramValues[0] : paramValues);
 			}
@@ -216,7 +214,8 @@ public class RequestParamMethodArgumentResolver extends AbstractNamedValueMethod
 			}
 		}
 		else {
-			throw new MissingServletRequestParameterException(name, parameter, missingAfterConversion);
+			throw new MissingServletRequestParameterException(name,
+					parameter.getNestedParameterType().getSimpleName(), missingAfterConversion);
 		}
 	}
 
@@ -235,8 +234,8 @@ public class RequestParamMethodArgumentResolver extends AbstractNamedValueMethod
 		Assert.state(name != null, "Unresolvable parameter name");
 
 		parameter = parameter.nestedIfOptional();
-		if (value instanceof Optional<?> optional) {
-			value = optional.orElse(null);
+		if (value instanceof Optional) {
+			value = ((Optional<?>) value).orElse(null);
 		}
 
 		if (value == null) {
@@ -246,8 +245,8 @@ public class RequestParamMethodArgumentResolver extends AbstractNamedValueMethod
 			}
 			builder.queryParam(name);
 		}
-		else if (value instanceof Collection<?> elements) {
-			for (Object element : elements) {
+		else if (value instanceof Collection) {
+			for (Object element : (Collection<?>) value) {
 				element = formatUriValue(conversionService, TypeDescriptor.nested(parameter, 1), element);
 				builder.queryParam(name, element);
 			}
@@ -257,14 +256,15 @@ public class RequestParamMethodArgumentResolver extends AbstractNamedValueMethod
 		}
 	}
 
-	protected @Nullable String formatUriValue(
+	@Nullable
+	protected String formatUriValue(
 			@Nullable ConversionService cs, @Nullable TypeDescriptor sourceType, @Nullable Object value) {
 
 		if (value == null) {
 			return null;
 		}
-		else if (value instanceof String string) {
-			return string;
+		else if (value instanceof String) {
+			return (String) value;
 		}
 		else if (cs != null) {
 			return (String) cs.convert(value, sourceType, STRING_TYPE_DESCRIPTOR);

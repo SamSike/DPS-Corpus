@@ -32,16 +32,16 @@ public abstract class NumberPatternFormat<T> implements PatternFormat<T> {
     private int precision;
     private String rounding;
 
-    protected NumberPatternFormat() {
+    public NumberPatternFormat() {
     }
 
-    protected NumberPatternFormat(String pattern, Locale locale) {
+    public NumberPatternFormat(String pattern, Locale locale) {
         this.pattern = pattern;
         this.locale = locale;
     }
 
-    protected NumberPatternFormat(String pattern, Locale locale, int precision, String rounding, String decimalSeparator,
-                                  String groupingSeparator) {
+    public NumberPatternFormat(String pattern, Locale locale, int precision, String rounding, String decimalSeparator,
+                               String groupingSeparator) {
         this.pattern = pattern;
         this.locale = locale;
         this.decimalSeparator = decimalSeparator;

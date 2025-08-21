@@ -34,21 +34,12 @@ public class JqExpression extends SingleInputTypedExpressionDefinition {
     public JqExpression() {
     }
 
-    protected JqExpression(JqExpression source) {
-        super(source);
-    }
-
     public JqExpression(String expression) {
         super(expression);
     }
 
     private JqExpression(Builder builder) {
         super(builder);
-    }
-
-    @Override
-    public JqExpression copyDefinition() {
-        return new JqExpression(this);
     }
 
     @Override

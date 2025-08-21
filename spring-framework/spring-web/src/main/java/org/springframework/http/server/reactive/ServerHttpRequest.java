@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,14 +20,13 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.function.Consumer;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.ReactiveHttpInputMessage;
 import org.springframework.http.server.RequestPath;
+import org.springframework.lang.Nullable;
 import org.springframework.util.MultiValueMap;
 
 /**
@@ -51,7 +50,7 @@ public interface ServerHttpRequest extends HttpRequest, ReactiveHttpInputMessage
 	/**
 	 * Returns a structured representation of the full request path up to but
 	 * not including the {@link #getQueryParams() query}.
-	 * <p>The returned path is subdivided into a
+	 * <p>The returned path is sub-divided into a
 	 * {@link RequestPath#contextPath()} portion and the remaining
 	 * {@link RequestPath#pathWithinApplication() pathWithinApplication} portion.
 	 * The latter can be passed into methods of
@@ -74,14 +73,16 @@ public interface ServerHttpRequest extends HttpRequest, ReactiveHttpInputMessage
 	 * Return the local address the request was accepted on, if available.
 	 * @since 5.2.3
 	 */
-	default @Nullable InetSocketAddress getLocalAddress() {
+	@Nullable
+	default InetSocketAddress getLocalAddress() {
 		return null;
 	}
 
 	/**
 	 * Return the remote address where this request is connected to, if available.
 	 */
-	default @Nullable InetSocketAddress getRemoteAddress() {
+	@Nullable
+	default InetSocketAddress getRemoteAddress() {
 		return null;
 	}
 
@@ -91,7 +92,8 @@ public interface ServerHttpRequest extends HttpRequest, ReactiveHttpInputMessage
 	 * @return the session information, or {@code null} if none available
 	 * @since 5.0.2
 	 */
-	default @Nullable SslInfo getSslInfo() {
+	@Nullable
+	default SslInfo getSslInfo() {
 		return null;
 	}
 
@@ -164,7 +166,7 @@ public interface ServerHttpRequest extends HttpRequest, ReactiveHttpInputMessage
 		 * Manipulate request headers. The provided {@code HttpHeaders} contains
 		 * current request headers, so that the {@code Consumer} can
 		 * {@linkplain HttpHeaders#set(String, String) overwrite} or
-		 * {@linkplain HttpHeaders#remove(String) remove} existing values, or
+		 * {@linkplain HttpHeaders#remove(Object) remove} existing values, or
 		 * use any other {@link HttpHeaders} methods.
 		 * @see #header(String, String...)
 		 */

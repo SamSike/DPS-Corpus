@@ -19,20 +19,12 @@ package org.apache.camel.component.jms;
 import java.io.File;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.ConsumerTemplate;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.infra.artemis.services.ArtemisService;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.TransientCamelContextExtension;
-import org.apache.camel.test.infra.core.annotations.ContextFixture;
 import org.apache.camel.util.FileUtil;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -40,21 +32,15 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.apache.camel.test.junit5.TestSupport.assertIsInstanceOf;
 import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@ResourceLock("src/test/data")
+@ResourceLock("target/stream/JmsStreamMessageTypeNoStreamCachingTest")
 public class JmsStreamMessageTypeNoStreamCachingTest extends AbstractJMSTest {
 
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new TransientCamelContextExtension();
-    protected CamelContext context;
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
-
-    @AfterEach
+    @Override
+    @BeforeEach
     public void setUp() throws Exception {
         deleteDirectory("target/stream/JmsStreamMessageTypeNoStreamCachingTest");
+        super.setUp();
     }
 
     @Override
@@ -70,9 +56,12 @@ public class JmsStreamMessageTypeNoStreamCachingTest extends AbstractJMSTest {
         return component;
     }
 
-    @ContextFixture
-    public void setupStreamCaching(CamelContext context) {
-        context.setStreamCaching(false);
+    @Override
+    protected CamelContext createCamelContext() throws Exception {
+        CamelContext camelContext = super.createCamelContext();
+        camelContext.setStreamCaching(false);
+
+        return camelContext;
     }
 
     @ParameterizedTest
@@ -92,20 +81,15 @@ public class JmsStreamMessageTypeNoStreamCachingTest extends AbstractJMSTest {
         Object body = getMockEndpoint("mock:resultJmsStreamMessageTypeNoStreamCachingTest").getReceivedExchanges().get(0)
                 .getIn().getBody();
         StreamMessageInputStream is = assertIsInstanceOf(StreamMessageInputStream.class, body);
-        assertNotNull(is);
 
         // no more bytes should be available on the input stream
         assertEquals(0, is.available());
 
         // assert on the content of input versus output file
         String srcContent = context.getTypeConverter().mandatoryConvertTo(String.class, baseFile);
-
-        String targetName
-                = FileUtil.stripPath(new File("target/stream/JmsStreamMessageTypeNoStreamCachingTest/out/").list()[0]);
-
         String dstContent
                 = context.getTypeConverter().mandatoryConvertTo(String.class,
-                        new File("target/stream/JmsStreamMessageTypeNoStreamCachingTest/out/", targetName));
+                        new File("target/stream/JmsStreamMessageTypeNoStreamCachingTest/out/", filename));
         assertEquals(srcContent, dstContent, "both the source and destination files should have the same content");
     }
 
@@ -124,15 +108,4 @@ public class JmsStreamMessageTypeNoStreamCachingTest extends AbstractJMSTest {
         };
     }
 
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        context = camelContextExtension.getContext();
-        template = camelContextExtension.getProducerTemplate();
-        consumer = camelContextExtension.getConsumerTemplate();
-    }
 }

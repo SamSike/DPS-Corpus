@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @author Stephane Nicoll
- * @author Yanming Zhou
  */
 class BeanDefinitionBuilderTests {
 
@@ -124,12 +123,6 @@ class BeanDefinitionBuilderTests {
 	void builderWithPrimary() {
 		assertThat(BeanDefinitionBuilder.rootBeanDefinition(TestBean.class)
 				.setPrimary(true).getBeanDefinition().isPrimary()).isTrue();
-	}
-
-	@Test
-	void builderWithFallback() {
-		assertThat(BeanDefinitionBuilder.rootBeanDefinition(TestBean.class)
-				.setFallback(true).getBeanDefinition().isFallback()).isTrue();
 	}
 
 	@Test

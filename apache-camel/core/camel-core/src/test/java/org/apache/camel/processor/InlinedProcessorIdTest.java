@@ -28,12 +28,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class InlinedProcessorIdTest extends ContextTestSupport {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo").to("log:foo").id("log").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         exchange.getIn().setHeader("foo", 123);
                     }
                 }).id("inlined").to("mock:result").id("result");

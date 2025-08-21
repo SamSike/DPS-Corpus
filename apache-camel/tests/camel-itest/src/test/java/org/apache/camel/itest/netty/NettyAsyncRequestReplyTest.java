@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -71,12 +72,14 @@ public class NettyAsyncRequestReplyTest extends CamelTestSupport {
         Map<Integer, Future<String>> responses = new HashMap<>();
         for (int i = 0; i < size; i++) {
             final int index = i;
-            Future<String> out = executor.submit(() -> {
-                String reply = template.requestBody("netty:tcp://localhost:" + port + "?textline=true&sync=true", index,
-                        String.class);
-                LOG.info("Sent {} received {}", index, reply);
-                assertEquals("Bye " + index, reply);
-                return reply;
+            Future<String> out = executor.submit(new Callable<String>() {
+                public String call() throws Exception {
+                    String reply = template.requestBody("netty:tcp://localhost:" + port + "?textline=true&sync=true", index,
+                            String.class);
+                    LOG.info("Sent {} received {}", index, reply);
+                    assertEquals("Bye " + index, reply);
+                    return reply;
+                }
             });
             responses.put(index, out);
         }
@@ -85,7 +88,7 @@ public class NettyAsyncRequestReplyTest extends CamelTestSupport {
         Set<String> unique = new HashSet<>();
         for (Future<String> future : responses.values()) {
             String reply = future.get(120, TimeUnit.SECONDS);
-            assertNotNull(reply, "Should get a reply");
+            assertNotNull("Should get a reply", reply);
             unique.add(reply);
         }
 

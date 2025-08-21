@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 
 public class AggregationStrategyBeanAdapterPollEnrichAllowNullNewExchangeTest extends ContextTestSupport {
 
-    private final MyBodyAppender appender = new MyBodyAppender();
+    private MyBodyAppender appender = new MyBodyAppender();
     private AggregationStrategyBeanAdapter myStrategy;
 
     @Test
@@ -36,10 +36,10 @@ public class AggregationStrategyBeanAdapterPollEnrichAllowNullNewExchangeTest ex
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 myStrategy = new AggregationStrategyBeanAdapter(appender, "append");
                 myStrategy.setAllowNullNewExchange(true);
 

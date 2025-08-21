@@ -28,7 +28,6 @@ import org.apache.camel.support.jsse.SSLContextParameters;
 public class ThriftConfiguration {
 
     @UriPath
-    @Metadata(required = true)
     private String host;
 
     @UriPath

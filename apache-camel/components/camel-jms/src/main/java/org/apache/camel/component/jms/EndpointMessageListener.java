@@ -16,9 +16,6 @@
  */
 package org.apache.camel.component.jms;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
@@ -48,7 +45,6 @@ import static org.apache.camel.RuntimeCamelException.wrapRuntimeCamelException;
  */
 public class EndpointMessageListener implements SessionAwareMessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(EndpointMessageListener.class);
-    private final Lock lock = new ReentrantLock();
     private final JmsConsumer consumer;
     private final JmsEndpoint endpoint;
     private final AsyncProcessor processor;
@@ -111,7 +107,7 @@ public class EndpointMessageListener implements SessionAwareMessageListener {
                 exchange.getIn().getHeaders();
             }
 
-            String correlationId = JmsMessageHelper.getJMSCorrelationID(message);
+            String correlationId = message.getJMSCorrelationID();
             if (correlationId != null) {
                 LOG.debug("Received Message has JMSCorrelationID [{}]", correlationId);
             }
@@ -233,8 +229,8 @@ public class EndpointMessageListener implements SessionAwareMessageListener {
             // send back reply if there was no error and we are supposed to send back a reply
             if (rce == null && sendReply && (body != null || cause != null)) {
                 LOG.trace("onMessage.sendReply START");
-                if (replyDestination instanceof Destination destination) {
-                    sendReply(destination, message, exchange, body, cause);
+                if (replyDestination instanceof Destination) {
+                    sendReply((Destination) replyDestination, message, exchange, body, cause);
                 } else {
                     sendReply((String) replyDestination, message, exchange, body, cause);
                 }
@@ -269,7 +265,8 @@ public class EndpointMessageListener implements SessionAwareMessageListener {
 
         // reuse existing jms message if pooled
         org.apache.camel.Message msg = exchange.getIn();
-        if (msg instanceof JmsMessage jm) {
+        if (msg instanceof JmsMessage) {
+            JmsMessage jm = (JmsMessage) msg;
             jm.init(exchange, message, session, getBinding());
         } else {
             exchange.setIn(new JmsMessage(exchange, message, session, getBinding()));
@@ -319,16 +316,11 @@ public class EndpointMessageListener implements SessionAwareMessageListener {
         this.eagerPoisonBody = eagerPoisonBody;
     }
 
-    public JmsOperations getTemplate() {
-        lock.lock();
-        try {
-            if (template == null) {
-                template = endpoint.createInOnlyTemplate();
-            }
-            return template;
-        } finally {
-            lock.unlock();
+    public synchronized JmsOperations getTemplate() {
+        if (template == null) {
+            template = endpoint.createInOnlyTemplate();
         }
+        return template;
     }
 
     public void setTemplate(JmsOperations template) {
@@ -386,12 +378,11 @@ public class EndpointMessageListener implements SessionAwareMessageListener {
      */
     protected String determineCorrelationId(final Message message) throws JMSException {
         final String messageId = message.getJMSMessageID();
+        final String correlationId = message.getJMSCorrelationID();
+
         if (endpoint.getConfiguration().isUseMessageIDAsCorrelationID()) {
             return messageId;
-        }
-
-        final String correlationId = JmsMessageHelper.getJMSCorrelationID(message);
-        if (ObjectHelper.isEmpty(correlationId)) {
+        } else if (ObjectHelper.isEmpty(correlationId)) {
             // correlation id is empty so fallback to message id
             return messageId;
         } else {

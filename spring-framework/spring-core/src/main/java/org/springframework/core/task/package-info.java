@@ -2,7 +2,9 @@
  * This package defines Spring's core TaskExecutor abstraction,
  * and provides SyncTaskExecutor and SimpleAsyncTaskExecutor implementations.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.core.task;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

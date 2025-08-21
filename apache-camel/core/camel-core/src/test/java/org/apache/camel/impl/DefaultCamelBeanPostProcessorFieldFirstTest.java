@@ -20,9 +20,9 @@ import java.util.Properties;
 
 import org.apache.camel.BindToRegistry;
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.PropertyInject;
 import org.apache.camel.spi.CamelBeanPostProcessor;
-import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -57,24 +57,20 @@ public class DefaultCamelBeanPostProcessorFieldFirstTest extends ContextTestSupp
     @BeforeEach
     public void setUp() throws Exception {
         super.setUp();
-        postProcessor = PluginHelper.getBeanPostProcessor(context);
+        postProcessor = context.adapt(ExtendedCamelContext.class).getBeanPostProcessor();
     }
 
     @BindToRegistry
-    public static class FooService {
+    public class FooService {
 
         // should inject simple types first such as this property
         @PropertyInject("foo")
         private String foo;
 
-        // should inject simple types first such as this property
-        @PropertyInject(value = "number", defaultValue = "123")
-        private Integer number;
-
         @BindToRegistry("myCoolBean")
         public MySerialBean myBean() {
             MySerialBean myBean = new MySerialBean();
-            myBean.setId(number);
+            myBean.setId(123);
             myBean.setName(foo);
             return myBean;
         }

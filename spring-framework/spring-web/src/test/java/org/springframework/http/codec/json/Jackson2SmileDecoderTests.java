@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,15 +35,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 /**
- * Tests for {@link Jackson2SmileDecoder}.
+ * Unit tests for {@link Jackson2SmileDecoder}.
  *
  * @author Sebastien Deleuze
  */
-@SuppressWarnings("removal")
-class Jackson2SmileDecoderTests extends AbstractDecoderTests<Jackson2SmileDecoder> {
+public class Jackson2SmileDecoderTests extends AbstractDecoderTests<Jackson2SmileDecoder> {
 
-	private static final MimeType SMILE_MIME_TYPE = new MimeType("application", "x-jackson-smile");
-	private static final MimeType STREAM_SMILE_MIME_TYPE = new MimeType("application", "stream+x-jackson-smile");
+	private final static MimeType SMILE_MIME_TYPE = new MimeType("application", "x-jackson-smile");
+	private final static MimeType STREAM_SMILE_MIME_TYPE = new MimeType("application", "stream+x-jackson-smile");
 
 	private Pojo pojo1 = new Pojo("f1", "b1");
 
@@ -57,7 +56,7 @@ class Jackson2SmileDecoderTests extends AbstractDecoderTests<Jackson2SmileDecode
 
 	@Override
 	@Test
-	protected void canDecode() {
+	public void canDecode() {
 		assertThat(decoder.canDecode(ResolvableType.forClass(Pojo.class), SMILE_MIME_TYPE)).isTrue();
 		assertThat(decoder.canDecode(ResolvableType.forClass(Pojo.class), STREAM_SMILE_MIME_TYPE)).isTrue();
 		assertThat(decoder.canDecode(ResolvableType.forClass(Pojo.class), null)).isTrue();
@@ -68,7 +67,7 @@ class Jackson2SmileDecoderTests extends AbstractDecoderTests<Jackson2SmileDecode
 
 	@Override
 	@Test
-	protected void decode() {
+	public void decode() {
 		Flux<DataBuffer> input = Flux.just(this.pojo1, this.pojo2)
 				.map(this::writeObject)
 				.flatMap(this::dataBuffer);
@@ -92,7 +91,7 @@ class Jackson2SmileDecoderTests extends AbstractDecoderTests<Jackson2SmileDecode
 
 	@Override
 	@Test
-	protected void decodeToMono() {
+	public void decodeToMono() {
 		List<Pojo> expected = Arrays.asList(pojo1, pojo2);
 
 		Flux<DataBuffer> input = Flux.just(expected)

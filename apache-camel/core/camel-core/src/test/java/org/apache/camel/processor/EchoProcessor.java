@@ -22,7 +22,7 @@ import org.apache.camel.Processor;
 public class EchoProcessor implements Processor {
 
     @Override
-    public void process(Exchange exchange) {
+    public void process(Exchange exchange) throws Exception {
         String s = exchange.getMessage().getBody(String.class);
         exchange.getMessage().setBody(s + s);
     }

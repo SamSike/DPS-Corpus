@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -85,7 +85,6 @@ public final class FilePattern {
     private final Sort              sort;
     private final Comparator<File>  comparator;
     private final File              basedir;
-    private transient File          basedirCanonical;
     private final String            pattern;
     private final String            encoding;
     private final Pattern           regexForMatches;
@@ -168,11 +167,7 @@ public final class FilePattern {
         );
     }
 
-    public final Comparator<File> fileComparator() {
-        return fileComparator(sort());
-    }
-
-    public static final Comparator<File> fileComparator(Sort sort) {
+    private static final Comparator<File> fileComparator(Sort sort) {
         if (sort == null)
             sort = SEMANTIC;
 
@@ -195,45 +190,6 @@ public final class FilePattern {
      */
     public final boolean matches(String path) {
         return regexForMatches.matcher(path.replace("\\", "/")).matches();
-    }
-
-    /**
-     * Get the path of a {@link File} relative to this pattern's
-     * {@link #basedir()}, or <code>null</code> if the file doesn't match this
-     * pattern, or isn't in {@link #basedir()}.
-     */
-    public final String path(File file) {
-        try {
-            if (basedirCanonical == null)
-                basedirCanonical = basedir.getCanonicalFile();
-
-            String b = basedirCanonical.getPath();
-            String f = file.getCanonicalPath();
-
-            if (f.startsWith(b)) {
-                String path = f.substring(b.length()).replace('\\', '/');
-
-                if (path.startsWith("/"))
-                    path = path.substring(1);
-
-                if (matches(path))
-                    return path;
-            }
-
-            return null;
-        }
-        catch (java.io.IOException e) {
-            throw new IOException("Error while reading path of a file", e);
-        }
-    }
-
-    /**
-     * Get the path of a {@link File} relative to this pattern's
-     * {@link #basedir()}, or <code>null</code> if the file doesn't match this
-     * pattern, or isn't in {@link #basedir()}.
-     */
-    public final File pathFile(File file) {
-        return new File(path(file));
     }
 
     /**
@@ -330,15 +286,12 @@ public final class FilePattern {
     ) throws java.io.IOException {
         if (file.isFile()) {
             if (regex == null || regex.matcher(file.getCanonicalPath().replace("\\", "/")).matches()) {
-                if (log.isDebugEnabled())
-                    log.debug("Reading from: " + file + " [*]");
-
+                log.info("Reading from: " + file + " [*]");
                 load0(file, loader);
             }
         }
         else if (file.isDirectory()) {
-            if (log.isDebugEnabled())
-                log.debug("Reading from: " + file);
+            log.info("Reading from: " + file);
 
             File[] files = file.listFiles();
 

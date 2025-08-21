@@ -48,23 +48,12 @@ public class ValidateDefinition extends ExpressionNode {
     public ValidateDefinition() {
     }
 
-    protected ValidateDefinition(ValidateDefinition source) {
-        super(source);
-        this.factory = source.factory;
-        this.predicateExceptionFactory = source.predicateExceptionFactory;
-    }
-
     public ValidateDefinition(Expression expression) {
         super(expression);
     }
 
     public ValidateDefinition(Predicate predicate) {
         super(predicate);
-    }
-
-    @Override
-    public ValidateDefinition copyDefinition() {
-        return new ValidateDefinition(this);
     }
 
     @Override

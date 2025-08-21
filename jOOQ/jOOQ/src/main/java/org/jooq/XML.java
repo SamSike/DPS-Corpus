@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,6 +37,8 @@
  */
 package org.jooq;
 
+import java.io.Serializable;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,7 +51,7 @@ import org.jetbrains.annotations.Nullable;
  * consistent with jOOQ's general way of returning <code>NULL</code> from
  * {@link Result} and {@link Record} methods.
  */
-public final class XML implements Data {
+public final class XML implements Serializable {
 
     private final String data;
 
@@ -57,7 +59,6 @@ public final class XML implements Data {
         this.data = String.valueOf(data);
     }
 
-    @Override
     @NotNull
     public final String data() {
         return data;
@@ -100,8 +101,8 @@ public final class XML implements Data {
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (obj instanceof XML x)
-            return data.equals(x.data);
+        if (obj instanceof XML)
+            return data.equals(((XML) obj).data);
         return false;
 
     }

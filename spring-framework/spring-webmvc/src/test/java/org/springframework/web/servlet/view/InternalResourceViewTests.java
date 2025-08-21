@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package org.springframework.web.servlet.view;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,19 +37,23 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 /**
- * Tests for {@link InternalResourceView}.
+ * Unit tests for {@link InternalResourceView}.
  *
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @author Sam Brannen
  */
-class InternalResourceViewTests {
+public class InternalResourceViewTests {
 
-	private static final Map<String, Object> model = Map.of("foo", "bar", "I", 1L);
+	@SuppressWarnings("serial")
+	private static final Map<String, Object> model = Collections.unmodifiableMap(new HashMap<String, Object>() {{
+		put("foo", "bar");
+		put("I", 1L);
+	}});
 
 	private static final String url = "forward-to";
 
-	private final HttpServletRequest request = mock();
+	private final HttpServletRequest request = mock(HttpServletRequest.class);
 
 	private final MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -58,13 +64,13 @@ class InternalResourceViewTests {
 	 * If the url property isn't supplied, view initialization should fail.
 	 */
 	@Test
-	void rejectsNullUrl() {
+	public void rejectsNullUrl() throws Exception {
 		assertThatIllegalArgumentException().isThrownBy(
 				view::afterPropertiesSet);
 	}
 
 	@Test
-	void forward() throws Exception {
+	public void forward() throws Exception {
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/myservlet/handler.do");
 		request.setContextPath("/mycontext");
 		request.setServletPath("/myservlet");
@@ -82,12 +88,12 @@ class InternalResourceViewTests {
 		view.render(model, request, response);
 		assertThat(response.getForwardedUrl()).isEqualTo(url);
 
-		model.forEach((key, value) -> assertThat(request.getAttribute(key))
-				.as("Values for model key '%s' must match", key).isEqualTo(value));
+		model.forEach((key, value) -> assertThat(request.getAttribute(key)).as("Values for model key '" + key
+						+ "' must match").isEqualTo(value));
 	}
 
 	@Test
-	void alwaysInclude() throws Exception {
+	public void alwaysInclude() throws Exception {
 		given(request.getAttribute(View.PATH_VARIABLES)).willReturn(null);
 		given(request.getRequestDispatcher(url)).willReturn(new MockRequestDispatcher(url));
 
@@ -102,7 +108,7 @@ class InternalResourceViewTests {
 	}
 
 	@Test
-	void includeOnAttribute() throws Exception {
+	public void includeOnAttribute() throws Exception {
 		given(request.getAttribute(View.PATH_VARIABLES)).willReturn(null);
 		given(request.getAttribute(WebUtils.INCLUDE_REQUEST_URI_ATTRIBUTE)).willReturn("somepath");
 		given(request.getRequestDispatcher(url)).willReturn(new MockRequestDispatcher(url));
@@ -117,7 +123,7 @@ class InternalResourceViewTests {
 	}
 
 	@Test
-	void includeOnCommitted() throws Exception {
+	public void includeOnCommitted() throws Exception {
 		given(request.getAttribute(View.PATH_VARIABLES)).willReturn(null);
 		given(request.getAttribute(WebUtils.INCLUDE_REQUEST_URI_ATTRIBUTE)).willReturn(null);
 		given(request.getRequestDispatcher(url)).willReturn(new MockRequestDispatcher(url));

@@ -23,7 +23,6 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.ironmq.IronMQConstants;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.apache.camel.util.StopWatch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -55,11 +54,11 @@ public class ConcurrentConsumerLoadManualTest extends CamelTestSupport {
     public void prepareQueue() throws InterruptedException {
         // make sure the queue is empty before test
         template.sendBodyAndHeader(ironMQEndpoint, null, IronMQConstants.OPERATION, IronMQConstants.CLEARQUEUE);
-        StopWatch watch = new StopWatch();
+        long start = System.currentTimeMillis();
         int noOfBlocks = 0;
         ArrayList<String> list = new ArrayList<>();
         for (int i = 1; i <= NO_OF_MESSAGES; i++) {
-            String payloadToSend = PAYLOAD.replace("#", Integer.toString(i));
+            String payloadToSend = PAYLOAD.replace("#", "" + i);
             list.add(payloadToSend);
             if (i % 100 == 0) {
                 noOfBlocks++;
@@ -73,23 +72,25 @@ public class ConcurrentConsumerLoadManualTest extends CamelTestSupport {
             LOGGER.info("Waiting for queue to fill up. Current size is " + mockEndpoint.getReceivedCounter() * 100);
             Thread.sleep(1000);
         }
-        int seconds = (int) watch.taken() / 1000;
+        long delta = System.currentTimeMillis() - start;
+        int seconds = (int) delta / 1000;
         int msgPrSec = NO_OF_MESSAGES / seconds;
         LOGGER.info("IronMQPerformanceTest: Took: " + seconds + " seconds to produce " + NO_OF_MESSAGES + " messages. Which is "
-                    + msgPrSec + " messages per second");
+                    + msgPrSec + " messages pr. second");
     }
 
     @Test
     public void testConcurrentConsumers() throws Exception {
-        StopWatch watch = new StopWatch();
+        long start = System.currentTimeMillis();
         context.getRouteController().startRoute("iron");
         MockEndpoint endpoint = getMockEndpoint("mock:result");
         endpoint.expectedMessageCount(NO_OF_MESSAGES);
         MockEndpoint.assertIsSatisfied(context, 4, TimeUnit.MINUTES);
-        int seconds = (int) watch.taken() / 1000;
+        long delta = System.currentTimeMillis() - start;
+        int seconds = (int) delta / 1000;
         int msgPrSec = NO_OF_MESSAGES / seconds;
         LOGGER.info("IronmqPerformanceTest: Took: " + seconds + " seconds to consume " + NO_OF_MESSAGES + " messages. Which is "
-                    + msgPrSec + " messages per second");
+                    + msgPrSec + " messages pr. second");
     }
 
     @Override

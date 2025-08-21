@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -92,7 +89,7 @@ implements
 
 
 
-    public static final Set<SQLDialect> NO_SUPPORT_NATIVE = SQLDialect.supportedUntil(CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, SQLITE, TRINO, YUGABYTEDB);
+    public static final Set<SQLDialect> NO_SUPPORT_NATIVE = SQLDialect.supportedUntil(CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, SQLITE, YUGABYTEDB);
 
     @Override
     public final void accept(Context<?> ctx) {
@@ -100,7 +97,7 @@ implements
             Field<?> field = getArguments().get(0);
 
             // TODO: Is 2's complement implemented correctly?
-            if (field.getDataType().getFromType() == Byte.class) {
+            if (field.getType() == Byte.class) {
                 Field<Byte> f = (Field<Byte>) field;
                 Field<Byte> b0 = inline((byte) 0);
                 Field<Byte> b2 = inline((byte) 2);
@@ -116,7 +113,7 @@ implements
                     .plus(when(o(DSL.count().filterWhere(bitCheck(f, (byte) 0x80))).mod(b2).eq(one()), inline((byte) 0x80)).else_(b0))
                 );
             }
-            else if (field.getDataType().getFromType() == Short.class) {
+            else if (field.getType() == Short.class) {
                 Field<Short> f = (Field<Short>) field;
                 Field<Short> s0 = inline((short) 0);
                 Field<Short> s2 = inline((short) 2);
@@ -140,7 +137,7 @@ implements
                     .plus(when(o(DSL.count().filterWhere(bitCheck(f, (short) 0x8000))).mod(s2).eq(one()), inline((short) 0x8000)).else_(s0))
                 );
             }
-            else if (field.getDataType().getFromType() == Integer.class) {
+            else if (field.getType() == Integer.class) {
                 Field<Integer> f = (Field<Integer>) field;
                 Field<Integer> i0 = inline(0);
                 Field<Integer> i2 = inline(2);
@@ -180,7 +177,7 @@ implements
                     .plus(when(o(DSL.count().filterWhere(bitCheck(f, 0x80000000))).mod(i2).eq(one()), inline(0x80000000)).else_(i0))
                 );
             }
-            else if (field.getDataType().getFromType() == Long.class) {
+            else if (field.getType() == Long.class) {
                 Field<Long> f = (Field<Long>) field;
                 Field<Long> l0 = inline(0L);
                 Field<Long> l2 = inline(2L);
@@ -256,18 +253,6 @@ implements
             else
                 super.accept(ctx);
         }
-
-
-
-
-
-
-
-
-
-
-
-
         else
             super.accept(ctx);
     }
@@ -286,8 +271,6 @@ implements
 
 
 
-
-            case DUCKDB:
             case IGNITE:
             case MARIADB:
             case MYSQL:
@@ -302,10 +285,6 @@ implements
 
 
                 ctx.visit(N_BIT_XOR_AGG);
-                break;
-
-            case CLICKHOUSE:
-                ctx.visit(N_groupBitXor);
                 break;
 
             default:
@@ -323,7 +302,7 @@ implements
     @SuppressWarnings("unchecked")
     @Override
     public final Field<T> $value() {
-        return (Field<T>) getArgument(0);
+        return (Field<T>) getArguments().get(0);
     }
 
     @Override
@@ -363,7 +342,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.BitXorAgg<?> o) {
+        if (that instanceof QOM.BitXorAgg) { QOM.BitXorAgg<?> o = (QOM.BitXorAgg<?>) that;
             return
                 StringUtils.equals($value(), o.$value())
             ;

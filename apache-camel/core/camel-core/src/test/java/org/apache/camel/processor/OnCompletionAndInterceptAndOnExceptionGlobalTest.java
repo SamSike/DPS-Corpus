@@ -65,10 +65,10 @@ public class OnCompletionAndInterceptAndOnExceptionGlobalTest extends ContextTes
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // context.setTracing(true);
 
                 intercept().to("mock:intercept");
@@ -91,7 +91,7 @@ public class OnCompletionAndInterceptAndOnExceptionGlobalTest extends ContextTes
         }
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             if ("Kaboom".equals(exchange.getIn().getBody())) {
                 throw new IllegalArgumentException("Kaboom");
             }

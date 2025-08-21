@@ -33,10 +33,10 @@ public class PropertiesComponentOnExceptionDelayPatternTest extends ContextTestS
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).delayPattern("{{myDelayPattern}}").maximumRedeliveries(1).handled(true)
                         .to("mock:dead");
 

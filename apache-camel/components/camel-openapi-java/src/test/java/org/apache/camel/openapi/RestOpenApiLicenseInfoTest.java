@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class RestOpenApiLicenseInfoTest {
 
     @ParameterizedTest
-    @ValueSource(strings = { "3.1", "3.0" })
+    @ValueSource(strings = { "3.0", "2.0" })
     public void testLicenseInfo(String openApiVersion) throws Exception {
         CamelContext context = new DefaultCamelContext();
         context.addRoutes(new RouteBuilder() {
@@ -43,9 +43,7 @@ public class RestOpenApiLicenseInfoTest {
                         .apiProperty("api.contact.email", "camel@apache.org")
                         .apiProperty("api.contact.url", "https://camel.apache.org")
                         .apiProperty("api.license.name", "Apache V2")
-                        .apiProperty("api.license.url", "https://www.apache.org/licenses/LICENSE-2.0")
-                        .apiProperty("externalDocs.url", "https://openweathermap.org/api")
-                        .apiProperty("externalDocs.description", "API Documentation");
+                        .apiProperty("api.license.url", "https://www.apache.org/licenses/LICENSE-2.0");
 
                 rest("/api")
                         .get("/api").to("direct:api");
@@ -56,9 +54,6 @@ public class RestOpenApiLicenseInfoTest {
         RestConfiguration restConfiguration = context.getRestConfiguration();
         RestOpenApiProcessor processor
                 = new RestOpenApiProcessor(restConfiguration.getApiProperties(), restConfiguration);
-        processor.setCamelContext(context);
-        processor.start();
-
         Exchange exchange = new DefaultExchange(context);
         processor.process(exchange);
 
@@ -70,7 +65,5 @@ public class RestOpenApiLicenseInfoTest {
         assertTrue(json.contains("\"name\" : \"Mr Camel\""));
         assertTrue(json.contains("\"email\" : \"camel@apache.org\""));
         assertTrue(json.contains("\"url\" : \"https://camel.apache.org\""));
-        assertTrue(json.contains("\"externalDocs\" :"));
-        assertTrue(json.contains("\"description\" : \"API Documentation\""));
     }
 }

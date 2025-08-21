@@ -28,8 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class OnExceptionOccurredProcessorOnExceptionTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myProcessor", new MyProcessor());
         return jndi;
     }
@@ -48,10 +48,10 @@ public class OnExceptionOccurredProcessorOnExceptionTest extends ContextTestSupp
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 MyProcessor myProcessor = context.getRegistry().lookupByNameAndType("myProcessor", MyProcessor.class);
 
                 errorHandler(deadLetterChannel("mock:dead"));
@@ -68,7 +68,7 @@ public class OnExceptionOccurredProcessorOnExceptionTest extends ContextTestSupp
         private int invoked;
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             invoked++;
         }
 

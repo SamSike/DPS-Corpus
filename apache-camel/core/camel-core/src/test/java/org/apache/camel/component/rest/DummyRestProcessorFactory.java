@@ -30,10 +30,11 @@ public class DummyRestProcessorFactory implements RestApiProcessorFactory {
     public Processor createApiProcessor(
             CamelContext camelContext, String contextPath,
             RestConfiguration configuration,
-            Map<String, Object> parameters) {
+            Map<String, Object> parameters)
+            throws Exception {
         return new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 // noop
             }
         };

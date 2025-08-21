@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,7 +37,6 @@
  */
 package org.jooq.impl;
 
-import static org.jooq.impl.Tools.converterContext;
 import static org.jooq.impl.Tools.getAnnotatedGetter;
 import static org.jooq.impl.Tools.getAnnotatedMembers;
 import static org.jooq.impl.Tools.getMatchingGetter;
@@ -45,19 +44,15 @@ import static org.jooq.impl.Tools.getMatchingMembers;
 import static org.jooq.impl.Tools.hasColumnAnnotations;
 
 import java.lang.reflect.Method;
-import java.sql.SQLException;
-import java.sql.Struct;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.jooq.Configuration;
-import org.jooq.ConverterContext;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.RecordType;
 import org.jooq.RecordUnmapper;
-import org.jooq.exception.DataAccessException;
 import org.jooq.exception.MappingException;
 
 /**
@@ -76,23 +71,17 @@ import org.jooq.exception.MappingException;
  */
 public class DefaultRecordUnmapper<E, R extends Record> implements RecordUnmapper<E, R> {
 
-    private final Class<? extends E>              type;
-    private final RecordType<R>                   rowType;
-    private final AbstractRow<R>                  row;
-    private final Class<? extends AbstractRecord> recordType;
-    private final Field<?>[]                      fields;
-    private final Configuration                   configuration;
-    private final ConverterContext                converterContext;
-    private RecordUnmapper<E, R>                  delegate;
+    private final Class<? extends E> type;
+    private final RecordType<R>      rowType;
+    private final Field<?>[]         fields;
+    private final Configuration      configuration;
+    private RecordUnmapper<E, R>     delegate;
 
     public DefaultRecordUnmapper(Class<? extends E> type, RecordType<R> rowType, Configuration configuration) {
         this.type = type;
         this.rowType = rowType;
-        this.row = Tools.row0((FieldsImpl<R>) rowType);
-        this.recordType = Tools.recordType(rowType.size());
         this.fields = rowType.fields();
         this.configuration = configuration;
-        this.converterContext = converterContext(configuration);
 
         init();
     }
@@ -104,8 +93,6 @@ public class DefaultRecordUnmapper<E, R extends Record> implements RecordUnmappe
             delegate = new MapUnmapper();
         else if (Iterable.class.isAssignableFrom(type))
             delegate = new IterableUnmapper();
-        else if (Struct.class.isAssignableFrom(type))
-            delegate = new StructUnmapper();
         else
             delegate = new PojoUnmapper();
     }
@@ -116,34 +103,34 @@ public class DefaultRecordUnmapper<E, R extends Record> implements RecordUnmappe
     }
 
     private final Record newRecord() {
-        return Tools.newRecord(false, configuration, recordType, row).operate(null);
+        return DSL.using(configuration).newRecord(rowType.fields());
     }
 
-    private static final void setValue(Record record, Object source, java.lang.reflect.Field member, Field<?> field, ConverterContext converterContext)
+    private static final void setValue(Record record, Object source, java.lang.reflect.Field member, Field<?> field)
         throws IllegalAccessException {
 
         Class<?> mType = member.getType();
 
         if (mType.isPrimitive()) {
             if (mType == byte.class)
-                Tools.setValue(record, field, member.getByte(source), converterContext);
+                Tools.setValue(record, field, member.getByte(source));
             else if (mType == short.class)
-                Tools.setValue(record, field, member.getShort(source), converterContext);
+                Tools.setValue(record, field, member.getShort(source));
             else if (mType == int.class)
-                Tools.setValue(record, field, member.getInt(source), converterContext);
+                Tools.setValue(record, field, member.getInt(source));
             else if (mType == long.class)
-                Tools.setValue(record, field, member.getLong(source), converterContext);
+                Tools.setValue(record, field, member.getLong(source));
             else if (mType == float.class)
-                Tools.setValue(record, field, member.getFloat(source), converterContext);
+                Tools.setValue(record, field, member.getFloat(source));
             else if (mType == double.class)
-                Tools.setValue(record, field, member.getDouble(source), converterContext);
+                Tools.setValue(record, field, member.getDouble(source));
             else if (mType == boolean.class)
-                Tools.setValue(record, field, member.getBoolean(source), converterContext);
+                Tools.setValue(record, field, member.getBoolean(source));
             else if (mType == char.class)
-                Tools.setValue(record, field, member.getChar(source), converterContext);
+                Tools.setValue(record, field, member.getChar(source));
         }
         else
-            Tools.setValue(record, field, member.get(source), converterContext);
+            Tools.setValue(record, field, member.get(source));
     }
 
     private final class ArrayUnmapper implements RecordUnmapper<E, R> {
@@ -151,12 +138,12 @@ public class DefaultRecordUnmapper<E, R extends Record> implements RecordUnmappe
         @SuppressWarnings({ "unchecked" })
         @Override
         public final R unmap(E source) {
-            if (source instanceof Object[] array) {
+            if (source instanceof Object[]) { Object[] array = (Object[]) source;
                 int size = rowType.size();
                 AbstractRecord record = (AbstractRecord) newRecord();
 
                 for (int i = 0; i < size && i < array.length; i++)
-                    Tools.setValue(record, rowType.field(i), i, array[i], converterContext);
+                    Tools.setValue(record, rowType.field(i), i, array[i]);
 
                 return (R) record;
             }
@@ -170,38 +157,18 @@ public class DefaultRecordUnmapper<E, R extends Record> implements RecordUnmappe
         @SuppressWarnings({ "unchecked" })
         @Override
         public final R unmap(E source) {
-            if (source instanceof Iterable<?> iterable) {
+            if (source instanceof Iterable) { Iterable<?> iterable = (Iterable<?>) source;
                 Iterator<?> it = iterable.iterator();
                 int size = rowType.size();
                 AbstractRecord record = (AbstractRecord) newRecord();
 
                 for (int i = 0; i < size && it.hasNext(); i++)
-                    Tools.setValue(record, rowType.field(i), i, it.next(), converterContext);
+                    Tools.setValue(record, rowType.field(i), i, it.next());
 
                 return (R) record;
             }
 
             throw new MappingException("Iterable expected. Got: " + klass(source));
-        }
-    }
-
-    private final class StructUnmapper implements RecordUnmapper<E, R> {
-
-        final ArrayUnmapper a = new ArrayUnmapper();
-
-        @SuppressWarnings({ "unchecked" })
-        @Override
-        public final R unmap(E source) {
-            if (source instanceof Struct s) {
-                try {
-                    return a.unmap((E) s.getAttributes());
-                }
-                catch (SQLException e) {
-                    throw new DataAccessException("Error while reading Struct", e);
-                }
-            }
-
-            throw new MappingException("Struct expected. Got: " + klass(source));
         }
     }
 
@@ -213,7 +180,7 @@ public class DefaultRecordUnmapper<E, R extends Record> implements RecordUnmappe
 
             // [#1987] Distinguish between various types to load data from
             // Maps are loaded using a {field-name -> value} convention
-            if (source instanceof Map<?, ?> map) {
+            if (source instanceof Map) { Map<?, ?> map = (Map<?, ?>) source;
                 Record record = newRecord();
 
                 for (int i = 0; i < fields.length; i++) {
@@ -221,7 +188,7 @@ public class DefaultRecordUnmapper<E, R extends Record> implements RecordUnmappe
 
                     // Set only those values contained in the map
                     if (map.containsKey(name))
-                        Tools.setValue(record, fields[i], map.get(name), converterContext);
+                        Tools.setValue(record, fields[i], map.get(name));
                 }
 
                 return (R) record;
@@ -259,9 +226,9 @@ public class DefaultRecordUnmapper<E, R extends Record> implements RecordUnmappe
 
                     // Use only the first applicable method or member
                     if (method != null)
-                        Tools.setValue(record, field, method.invoke(source), converterContext);
+                        Tools.setValue(record, field, method.invoke(source));
                     else if (members.size() > 0)
-                        setValue(record, source, members.get(0), field, converterContext);
+                        setValue(record, source, members.get(0), field);
                 }
 
                 return (R) record;
@@ -269,7 +236,7 @@ public class DefaultRecordUnmapper<E, R extends Record> implements RecordUnmappe
 
             // All reflection exceptions are intercepted
             catch (Exception e) {
-                throw new MappingException("An error occurred when mapping record from " + type, e);
+                throw new MappingException("An error ocurred when mapping record from " + type, e);
             }
         }
     }

@@ -16,6 +16,8 @@
  */
 package org.apache.camel.component.gson;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import org.apache.camel.Exchange;
@@ -39,6 +41,7 @@ public class GsonDataFormatTest {
 
     @BeforeEach
     public void setup() {
+        when(message.getHeader(Exchange.CHARSET_NAME, String.class)).thenReturn(StandardCharsets.UTF_8.name());
         when(exchange.getIn()).thenReturn(message);
     }
 
@@ -61,7 +64,9 @@ public class GsonDataFormatTest {
         Object unmarshalled;
         try (GsonDataFormat gsonDataFormat = new GsonDataFormat()) {
             gsonDataFormat.doStart();
-            unmarshalled = gsonDataFormat.unmarshal(exchange, json);
+            try (InputStream in = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))) {
+                unmarshalled = gsonDataFormat.unmarshal(exchange, in);
+            }
             assertEquals(expected, unmarshalled);
         }
     }

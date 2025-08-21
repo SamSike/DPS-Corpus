@@ -35,7 +35,7 @@ import org.apache.camel.support.DefaultEndpoint;
  * Perform caching operations using Caffeine Cache.
  */
 @UriEndpoint(firstVersion = "2.20.0", scheme = "caffeine-cache", title = "Caffeine Cache",
-             remote = false, syntax = "caffeine-cache:cacheName", category = { Category.CACHE, Category.CLUSTERING },
+             syntax = "caffeine-cache:cacheName", category = { Category.CACHE, Category.DATAGRID, Category.CLUSTERING },
              producerOnly = true, headersClass = CaffeineConstants.class)
 public class CaffeineCacheEndpoint extends DefaultEndpoint {
 
@@ -47,15 +47,10 @@ public class CaffeineCacheEndpoint extends DefaultEndpoint {
 
     private volatile Cache<?, ?> cache;
 
-    public CaffeineCacheEndpoint(String uri, Component component, String cacheName, CaffeineConfiguration configuration) {
+    CaffeineCacheEndpoint(String uri, Component component, String cacheName, CaffeineConfiguration configuration) {
         super(uri, component);
         this.cacheName = cacheName;
         this.configuration = configuration;
-    }
-
-    @Override
-    public boolean isRemote() {
-        return false;
     }
 
     @Override
@@ -80,6 +75,11 @@ public class CaffeineCacheEndpoint extends DefaultEndpoint {
                         "Cache instance '" + cacheName + "' not found and createCacheIfNotExist is set to false");
             }
         }
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        super.doStop();
     }
 
     CaffeineConfiguration getConfiguration() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,11 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
-import org.springframework.core.SpringProperties;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.PropertyPlaceholderHelper;
@@ -38,58 +37,20 @@ import org.springframework.util.SystemPropertyUtils;
  *
  * @author Chris Beams
  * @author Juergen Hoeller
- * @author Sam Brannen
  * @since 3.1
  */
 public abstract class AbstractPropertyResolver implements ConfigurablePropertyResolver {
 
-	/**
-	 * JVM system property used to change the <em>default</em> escape character
-	 * for property placeholder support: {@value}.
-	 * <p>To configure a custom escape character, supply a string containing a
-	 * single character (other than {@link Character#MIN_VALUE}). For example,
-	 * supplying the following JVM system property via the command line sets the
-	 * default escape character to {@code '@'}.
-	 * <pre style="code">-Dspring.placeholder.escapeCharacter.default=@</pre>
-	 * <p>To disable escape character support, set the value to an empty string
-	 * &mdash; for example, by supplying the following JVM system property via
-	 * the command line.
-	 * <pre style="code">-Dspring.placeholder.escapeCharacter.default=</pre>
-	 * <p>If the property is not set, {@code '\'} will be used as the default
-	 * escape character.
-	 * <p>May alternatively be configured via a
-	 * {@link org.springframework.core.SpringProperties spring.properties} file
-	 * in the root of the classpath.
-	 * @since 6.2.7
-	 * @see #getDefaultEscapeCharacter()
-	 */
-	public static final String DEFAULT_PLACEHOLDER_ESCAPE_CHARACTER_PROPERTY_NAME =
-			"spring.placeholder.escapeCharacter.default";
-
-	/**
-	 * Since {@code null} is a valid value for {@link #defaultEscapeCharacter},
-	 * this constant provides a way to represent an undefined (or not yet set)
-	 * value. Consequently, {@link #getDefaultEscapeCharacter()} prevents the use
-	 * of {@link Character#MIN_VALUE} as the actual escape character.
-	 * @since 6.2.7
-	 */
-	static final Character UNDEFINED_ESCAPE_CHARACTER = Character.MIN_VALUE;
-
-
-	/**
-	 * Cached value for the default escape character.
-	 * @since 6.2.7
-	 */
-	static volatile @Nullable Character defaultEscapeCharacter = UNDEFINED_ESCAPE_CHARACTER;
-
-
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	private volatile @Nullable ConfigurableConversionService conversionService;
+	@Nullable
+	private volatile ConfigurableConversionService conversionService;
 
-	private @Nullable PropertyPlaceholderHelper nonStrictHelper;
+	@Nullable
+	private PropertyPlaceholderHelper nonStrictHelper;
 
-	private @Nullable PropertyPlaceholderHelper strictHelper;
+	@Nullable
+	private PropertyPlaceholderHelper strictHelper;
 
 	private boolean ignoreUnresolvableNestedPlaceholders = false;
 
@@ -97,9 +58,8 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 
 	private String placeholderSuffix = SystemPropertyUtils.PLACEHOLDER_SUFFIX;
 
-	private @Nullable String valueSeparator = SystemPropertyUtils.VALUE_SEPARATOR;
-
-	private @Nullable Character escapeCharacter = getDefaultEscapeCharacter();
+	@Nullable
+	private String valueSeparator = SystemPropertyUtils.VALUE_SEPARATOR;
 
 	private final Set<String> requiredProperties = new LinkedHashSet<>();
 
@@ -128,9 +88,9 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 	}
 
 	/**
-	 * {@inheritDoc}
-	 * <p>The default is <code>"${"</code>.
-	 * @see SystemPropertyUtils#PLACEHOLDER_PREFIX
+	 * Set the prefix that placeholders replaced by this resolver must begin with.
+	 * <p>The default is "${".
+	 * @see org.springframework.util.SystemPropertyUtils#PLACEHOLDER_PREFIX
 	 */
 	@Override
 	public void setPlaceholderPrefix(String placeholderPrefix) {
@@ -139,9 +99,9 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 	}
 
 	/**
-	 * {@inheritDoc}
-	 * <p>The default is <code>"}"</code>.
-	 * @see SystemPropertyUtils#PLACEHOLDER_SUFFIX
+	 * Set the suffix that placeholders replaced by this resolver must end with.
+	 * <p>The default is "}".
+	 * @see org.springframework.util.SystemPropertyUtils#PLACEHOLDER_SUFFIX
 	 */
 	@Override
 	public void setPlaceholderSuffix(String placeholderSuffix) {
@@ -150,23 +110,15 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 	}
 
 	/**
-	 * {@inheritDoc}
-	 * <p>The default is {@code ":"}.
-	 * @see SystemPropertyUtils#VALUE_SEPARATOR
+	 * Specify the separating character between the placeholders replaced by this
+	 * resolver and their associated default value, or {@code null} if no such
+	 * special character should be processed as a value separator.
+	 * <p>The default is ":".
+	 * @see org.springframework.util.SystemPropertyUtils#VALUE_SEPARATOR
 	 */
 	@Override
 	public void setValueSeparator(@Nullable String valueSeparator) {
 		this.valueSeparator = valueSeparator;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * <p>The default is determined by {@link #getDefaultEscapeCharacter()}.
-	 * @since 6.2
-	 */
-	@Override
-	public void setEscapeCharacter(@Nullable Character escapeCharacter) {
-		this.escapeCharacter = escapeCharacter;
 	}
 
 	/**
@@ -192,7 +144,7 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 	public void validateRequiredProperties() {
 		MissingRequiredPropertiesException ex = new MissingRequiredPropertiesException();
 		for (String key : this.requiredProperties) {
-			if (getProperty(key) == null) {
+			if (this.getProperty(key) == null) {
 				ex.addMissingRequiredProperty(key);
 			}
 		}
@@ -207,7 +159,8 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 	}
 
 	@Override
-	public @Nullable String getProperty(String key) {
+	@Nullable
+	public String getProperty(String key) {
 		return getProperty(key, String.class);
 	}
 
@@ -279,7 +232,7 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 
 	private PropertyPlaceholderHelper createPlaceholderHelper(boolean ignoreUnresolvablePlaceholders) {
 		return new PropertyPlaceholderHelper(this.placeholderPrefix, this.placeholderSuffix,
-				this.valueSeparator, this.escapeCharacter, ignoreUnresolvablePlaceholders);
+				this.valueSeparator, ignoreUnresolvablePlaceholders);
 	}
 
 	private String doResolvePlaceholders(String text, PropertyPlaceholderHelper helper) {
@@ -295,7 +248,8 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 	 * @since 4.3.5
 	 */
 	@SuppressWarnings("unchecked")
-	protected <T> @Nullable T convertValueIfNecessary(Object value, @Nullable Class<T> targetType) {
+	@Nullable
+	protected <T> T convertValueIfNecessary(Object value, @Nullable Class<T> targetType) {
 		if (targetType == null) {
 			return (T) value;
 		}
@@ -318,61 +272,7 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 	 * @param key the property name to resolve
 	 * @return the property value or {@code null} if none found
 	 */
-	protected abstract @Nullable String getPropertyAsRawString(String key);
-
-
-	/**
-	 * Get the default {@linkplain #setEscapeCharacter(Character) escape character}
-	 * to use when parsing strings for property placeholder resolution.
-	 * <p>This method attempts to retrieve the default escape character configured
-	 * via the {@value #DEFAULT_PLACEHOLDER_ESCAPE_CHARACTER_PROPERTY_NAME} JVM system
-	 * property or Spring property.
-	 * <p>Falls back to {@code '\'} if the property has not been set.
-	 * @return the configured default escape character, {@code null} if escape character
-	 * support has been disabled, or {@code '\'} if the property has not been set
-	 * @throws IllegalArgumentException if the property is configured with an
-	 * invalid value, such as {@link Character#MIN_VALUE} or a string containing
-	 * more than one character
-	 * @since 6.2.7
-	 * @see #DEFAULT_PLACEHOLDER_ESCAPE_CHARACTER_PROPERTY_NAME
-	 * @see SystemPropertyUtils#ESCAPE_CHARACTER
-	 * @see SpringProperties
-	 */
-	public static @Nullable Character getDefaultEscapeCharacter() throws IllegalArgumentException {
-		Character escapeCharacter = defaultEscapeCharacter;
-		if (UNDEFINED_ESCAPE_CHARACTER.equals(escapeCharacter)) {
-			String value = SpringProperties.getProperty(DEFAULT_PLACEHOLDER_ESCAPE_CHARACTER_PROPERTY_NAME);
-			if (value != null) {
-				if (value.isEmpty()) {
-					// Disable escape character support by default.
-					escapeCharacter = null;
-				}
-				else if (value.length() == 1) {
-					try {
-						// Use custom default escape character.
-						escapeCharacter = value.charAt(0);
-					}
-					catch (Exception ex) {
-						throw new IllegalArgumentException("Failed to process value [%s] for property [%s]: %s"
-								.formatted(value, DEFAULT_PLACEHOLDER_ESCAPE_CHARACTER_PROPERTY_NAME, ex.getMessage()), ex);
-					}
-					Assert.isTrue(!escapeCharacter.equals(Character.MIN_VALUE),
-							() -> "Value for property [%s] must not be Character.MIN_VALUE"
-									.formatted(DEFAULT_PLACEHOLDER_ESCAPE_CHARACTER_PROPERTY_NAME));
-				}
-				else {
-					throw new IllegalArgumentException(
-							"Value [%s] for property [%s] must be a single character or an empty string"
-									.formatted(value, DEFAULT_PLACEHOLDER_ESCAPE_CHARACTER_PROPERTY_NAME));
-				}
-			}
-			else {
-				// Use standard default value for the escape character.
-				escapeCharacter = SystemPropertyUtils.ESCAPE_CHARACTER;
-			}
-			defaultEscapeCharacter = escapeCharacter;
-		}
-		return escapeCharacter;
-	}
+	@Nullable
+	protected abstract String getPropertyAsRawString(String key);
 
 }

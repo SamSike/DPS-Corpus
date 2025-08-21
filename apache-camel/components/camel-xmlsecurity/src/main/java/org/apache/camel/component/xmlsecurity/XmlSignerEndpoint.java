@@ -36,7 +36,7 @@ import static org.apache.camel.component.xmlsecurity.api.XmlSignatureConstants.S
  */
 @UriEndpoint(firstVersion = "2.12.0", scheme = SCHEME_SIGN, title = "XML Security Sign",
              syntax = "xmlsecurity-sign:name", producerOnly = true, category = { Category.SECURITY, Category.TRANSFORMATION },
-             remote = false, headersClass = XmlSignatureConstants.class)
+             headersClass = XmlSignatureConstants.class)
 public class XmlSignerEndpoint extends DefaultEndpoint {
 
     @UriPath
@@ -48,11 +48,6 @@ public class XmlSignerEndpoint extends DefaultEndpoint {
     public XmlSignerEndpoint(String uri, XmlSignerComponent component, XmlSignerConfiguration configuration) {
         super(uri, component);
         this.configuration = configuration;
-    }
-
-    @Override
-    public boolean isRemote() {
-        return false;
     }
 
     public String getName() {

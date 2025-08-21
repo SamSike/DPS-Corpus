@@ -43,10 +43,10 @@ public class ManagedEndpointBaseUriTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .to("log:foo?groupDelay=2000&groupSize=5&level=WARN")
                         .to("mock:result");

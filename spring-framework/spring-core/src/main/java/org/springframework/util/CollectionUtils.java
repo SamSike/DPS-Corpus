@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,21 +22,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
-import org.jspecify.annotations.Nullable;
-
-import org.springframework.lang.Contract;
+import org.springframework.lang.Nullable;
 
 /**
  * Miscellaneous collection utility methods.
@@ -45,7 +39,6 @@ import org.springframework.lang.Contract;
  * @author Juergen Hoeller
  * @author Rob Harrop
  * @author Arjen Poutsma
- * @author Sam Brannen
  * @since 1.1.3
  */
 public abstract class CollectionUtils {
@@ -64,8 +57,7 @@ public abstract class CollectionUtils {
 	 * @param collection the Collection to check
 	 * @return whether the given Collection is empty
 	 */
-	@Contract("null -> true")
-	public static boolean isEmpty(@Nullable Collection<? extends @Nullable Object> collection) {
+	public static boolean isEmpty(@Nullable Collection<?> collection) {
 		return (collection == null || collection.isEmpty());
 	}
 
@@ -75,8 +67,7 @@ public abstract class CollectionUtils {
 	 * @param map the Map to check
 	 * @return whether the given Map is empty
 	 */
-	@Contract("null -> true")
-	public static boolean isEmpty(@Nullable Map<?, ? extends @Nullable Object> map) {
+	public static boolean isEmpty(@Nullable Map<?, ?> map) {
 		return (map == null || map.isEmpty());
 	}
 
@@ -94,7 +85,7 @@ public abstract class CollectionUtils {
 	 * @see #newLinkedHashMap(int)
 	 */
 	public static <K, V> HashMap<K, V> newHashMap(int expectedSize) {
-		return new HashMap<>(computeInitialCapacity(expectedSize), DEFAULT_LOAD_FACTOR);
+		return new HashMap<>((int) (expectedSize / DEFAULT_LOAD_FACTOR), DEFAULT_LOAD_FACTOR);
 	}
 
 	/**
@@ -104,44 +95,14 @@ public abstract class CollectionUtils {
 	 * <p>This differs from the regular {@link LinkedHashMap} constructor
 	 * which takes an initial capacity relative to a load factor but is
 	 * aligned with Spring's own {@link LinkedCaseInsensitiveMap} and
-	 * {@link LinkedMultiValueMap} constructor semantics.
+	 * {@link LinkedMultiValueMap} constructor semantics as of 5.3.
 	 * @param expectedSize the expected number of elements (with a corresponding
 	 * capacity to be derived so that no resize/rehash operations are needed)
 	 * @since 5.3
 	 * @see #newHashMap(int)
 	 */
-	public static <K, V extends @Nullable Object> LinkedHashMap<K, V> newLinkedHashMap(int expectedSize) {
-		return new LinkedHashMap<>(computeInitialCapacity(expectedSize), DEFAULT_LOAD_FACTOR);
-	}
-
-	/**
-	 * Instantiate a new {@link HashSet} with an initial capacity that can
-	 * accommodate the specified number of elements without any immediate
-	 * resize/rehash operations to be expected.
-	 * @param expectedSize the expected number of elements (with a corresponding
-	 * capacity to be derived so that no resize/rehash operations are needed)
-	 * @since 6.2
-	 * @see #newLinkedHashSet(int)
-	 */
-	public static <E> HashSet<E> newHashSet(int expectedSize) {
-		return new HashSet<>(computeInitialCapacity(expectedSize), DEFAULT_LOAD_FACTOR);
-	}
-
-	/**
-	 * Instantiate a new {@link LinkedHashSet} with an initial capacity that can
-	 * accommodate the specified number of elements without any immediate
-	 * resize/rehash operations to be expected.
-	 * @param expectedSize the expected number of elements (with a corresponding
-	 * capacity to be derived so that no resize/rehash operations are needed)
-	 * @since 6.2
-	 * @see #newHashSet(int)
-	 */
-	public static <E> LinkedHashSet<E> newLinkedHashSet(int expectedSize) {
-		return new LinkedHashSet<>(computeInitialCapacity(expectedSize), DEFAULT_LOAD_FACTOR);
-	}
-
-	private static int computeInitialCapacity(int expectedSize) {
-		return (int) Math.ceil(expectedSize / (double) DEFAULT_LOAD_FACTOR);
+	public static <K, V> LinkedHashMap<K, V> newLinkedHashMap(int expectedSize) {
+		return new LinkedHashMap<>((int) (expectedSize / DEFAULT_LOAD_FACTOR), DEFAULT_LOAD_FACTOR);
 	}
 
 	/**
@@ -168,7 +129,9 @@ public abstract class CollectionUtils {
 	@SuppressWarnings("unchecked")
 	public static <E> void mergeArrayIntoCollection(@Nullable Object array, Collection<E> collection) {
 		Object[] arr = ObjectUtils.toObjectArray(array);
-		Collections.addAll(collection, (E[])arr);
+		for (Object elem : arr) {
+			collection.add((E) elem);
+		}
 	}
 
 	/**
@@ -196,15 +159,12 @@ public abstract class CollectionUtils {
 
 
 	/**
-	 * Check whether the given {@link Iterator} contains the given element.
-	 * @param iterator the {@code Iterator} to check
+	 * Check whether the given Iterator contains the given element.
+	 * @param iterator the Iterator to check
 	 * @param element the element to look for
 	 * @return {@code true} if found, {@code false} otherwise
 	 */
-	@Contract("null, _ -> false")
-	public static boolean contains(@Nullable Iterator<? extends @Nullable Object> iterator,
-			@Nullable Object element) {
-
+	public static boolean contains(@Nullable Iterator<?> iterator, Object element) {
 		if (iterator != null) {
 			while (iterator.hasNext()) {
 				Object candidate = iterator.next();
@@ -217,15 +177,12 @@ public abstract class CollectionUtils {
 	}
 
 	/**
-	 * Check whether the given {@link Enumeration} contains the given element.
-	 * @param enumeration the {@code Enumeration} to check
+	 * Check whether the given Enumeration contains the given element.
+	 * @param enumeration the Enumeration to check
 	 * @param element the element to look for
 	 * @return {@code true} if found, {@code false} otherwise
 	 */
-	@Contract("null, _ -> false")
-	public static boolean contains(@Nullable Enumeration<? extends @Nullable Object> enumeration,
-			@Nullable Object element) {
-
+	public static boolean contains(@Nullable Enumeration<?> enumeration, Object element) {
 		if (enumeration != null) {
 			while (enumeration.hasMoreElements()) {
 				Object candidate = enumeration.nextElement();
@@ -238,17 +195,14 @@ public abstract class CollectionUtils {
 	}
 
 	/**
-	 * Check whether the given {@link Collection} contains the given element instance.
+	 * Check whether the given Collection contains the given element instance.
 	 * <p>Enforces the given instance to be present, rather than returning
 	 * {@code true} for an equal element as well.
-	 * @param collection the {@code Collection} to check
+	 * @param collection the Collection to check
 	 * @param element the element to look for
 	 * @return {@code true} if found, {@code false} otherwise
 	 */
-	@Contract("null, _ -> false")
-	public static boolean containsInstance(@Nullable Collection<? extends @Nullable Object> collection,
-			@Nullable Object element) {
-
+	public static boolean containsInstance(@Nullable Collection<?> collection, Object element) {
 		if (collection != null) {
 			for (Object candidate : collection) {
 				if (candidate == element) {
@@ -262,22 +216,12 @@ public abstract class CollectionUtils {
 	/**
 	 * Return {@code true} if any element in '{@code candidates}' is
 	 * contained in '{@code source}'; otherwise returns {@code false}.
-	 * @param source the source {@link Collection}
+	 * @param source the source Collection
 	 * @param candidates the candidates to search for
 	 * @return whether any of the candidates has been found
 	 */
-	public static boolean containsAny(Collection<? extends @Nullable Object> source,
-			Collection<? extends @Nullable Object> candidates) {
-
-		if (isEmpty(source) || isEmpty(candidates)) {
-			return false;
-		}
-		for (Object candidate : candidates) {
-			if (source.contains(candidate)) {
-				return true;
-			}
-		}
-		return false;
+	public static boolean containsAny(Collection<?> source, Collection<?> candidates) {
+		return findFirstMatch(source, candidates) != null;
 	}
 
 	/**
@@ -289,13 +233,15 @@ public abstract class CollectionUtils {
 	 * @param candidates the candidates to search for
 	 * @return the first present object, or {@code null} if not found
 	 */
-	public static <E> @Nullable E findFirstMatch(Collection<?> source, Collection<E> candidates) {
+	@SuppressWarnings("unchecked")
+	@Nullable
+	public static <E> E findFirstMatch(Collection<?> source, Collection<E> candidates) {
 		if (isEmpty(source) || isEmpty(candidates)) {
 			return null;
 		}
-		for (E candidate : candidates) {
+		for (Object candidate : candidates) {
 			if (source.contains(candidate)) {
-				return candidate;
+				return (E) candidate;
 			}
 		}
 		return null;
@@ -309,8 +255,8 @@ public abstract class CollectionUtils {
 	 * or {@code null} if none or more than one such value found
 	 */
 	@SuppressWarnings("unchecked")
-	@Contract("null, _ -> null")
-	public static <T> @Nullable T findValueOfType(@Nullable Collection<?> collection, @Nullable Class<T> type) {
+	@Nullable
+	public static <T> T findValueOfType(Collection<?> collection, @Nullable Class<T> type) {
 		if (isEmpty(collection)) {
 			return null;
 		}
@@ -336,7 +282,8 @@ public abstract class CollectionUtils {
 	 * @return a value of one of the given types found if there is a clear match,
 	 * or {@code null} if none or more than one such value found
 	 */
-	public static @Nullable Object findValueOfType(Collection<?> collection, Class<?>[] types) {
+	@Nullable
+	public static Object findValueOfType(Collection<?> collection, Class<?>[] types) {
 		if (isEmpty(collection) || ObjectUtils.isEmpty(types)) {
 			return null;
 		}
@@ -379,7 +326,8 @@ public abstract class CollectionUtils {
 	 * @return the common element type, or {@code null} if no clear
 	 * common type has been found (or the collection was empty)
 	 */
-	public static @Nullable Class<?> findCommonElementType(Collection<?> collection) {
+	@Nullable
+	public static Class<?> findCommonElementType(Collection<?> collection) {
 		if (isEmpty(collection)) {
 			return null;
 		}
@@ -407,13 +355,13 @@ public abstract class CollectionUtils {
 	 * @see LinkedHashMap#keySet()
 	 * @see java.util.LinkedHashSet
 	 */
-	@Contract("null -> null")
-	public static <T> @Nullable T firstElement(@Nullable Set<T> set) {
+	@Nullable
+	public static <T> T firstElement(@Nullable Set<T> set) {
 		if (isEmpty(set)) {
 			return null;
 		}
-		if (set instanceof SortedSet<T> sortedSet) {
-			return sortedSet.first();
+		if (set instanceof SortedSet) {
+			return ((SortedSet<T>) set).first();
 		}
 
 		Iterator<T> it = set.iterator();
@@ -430,8 +378,8 @@ public abstract class CollectionUtils {
 	 * @return the first element, or {@code null} if none
 	 * @since 5.2.3
 	 */
-	@Contract("null -> null")
-	public static <T> @Nullable T firstElement(@Nullable List<T> list) {
+	@Nullable
+	public static <T> T firstElement(@Nullable List<T> list) {
 		if (isEmpty(list)) {
 			return null;
 		}
@@ -448,13 +396,13 @@ public abstract class CollectionUtils {
 	 * @see LinkedHashMap#keySet()
 	 * @see java.util.LinkedHashSet
 	 */
-	@Contract("null -> null")
-	public static <T> @Nullable T lastElement(@Nullable Set<T> set) {
+	@Nullable
+	public static <T> T lastElement(@Nullable Set<T> set) {
 		if (isEmpty(set)) {
 			return null;
 		}
-		if (set instanceof SortedSet<T> sortedSet) {
-			return sortedSet.last();
+		if (set instanceof SortedSet) {
+			return ((SortedSet<T>) set).last();
 		}
 
 		// Full iteration necessary...
@@ -472,8 +420,8 @@ public abstract class CollectionUtils {
 	 * @return the last element, or {@code null} if none
 	 * @since 5.0.3
 	 */
-	@Contract("null -> null")
-	public static <T> @Nullable T lastElement(@Nullable List<T> list) {
+	@Nullable
+	public static <T> T lastElement(@Nullable List<T> list) {
 		if (isEmpty(list)) {
 			return null;
 		}
@@ -499,7 +447,7 @@ public abstract class CollectionUtils {
 	 * @return the adapted {@code Iterator}
 	 */
 	public static <E> Iterator<E> toIterator(@Nullable Enumeration<E> enumeration) {
-		return (enumeration != null ? enumeration.asIterator() : Collections.emptyIterator());
+		return (enumeration != null ? new EnumerationIterator<>(enumeration) : Collections.emptyIterator());
 	}
 
 	/**
@@ -523,54 +471,42 @@ public abstract class CollectionUtils {
 			MultiValueMap<? extends K, ? extends V> targetMap) {
 
 		Assert.notNull(targetMap, "'targetMap' must not be null");
-		if (targetMap instanceof UnmodifiableMultiValueMap) {
-			return (MultiValueMap<K, V>) targetMap;
+		Map<K, List<V>> result = newLinkedHashMap(targetMap.size());
+		targetMap.forEach((key, value) -> {
+			List<? extends V> values = Collections.unmodifiableList(value);
+			result.put(key, (List<V>) values);
+		});
+		Map<K, List<V>> unmodifiableMap = Collections.unmodifiableMap(result);
+		return toMultiValueMap(unmodifiableMap);
+	}
+
+
+	/**
+	 * Iterator wrapping an Enumeration.
+	 */
+	private static class EnumerationIterator<E> implements Iterator<E> {
+
+		private final Enumeration<E> enumeration;
+
+		public EnumerationIterator(Enumeration<E> enumeration) {
+			this.enumeration = enumeration;
 		}
-		return new UnmodifiableMultiValueMap<>(targetMap);
+
+		@Override
+		public boolean hasNext() {
+			return this.enumeration.hasMoreElements();
+		}
+
+		@Override
+		public E next() {
+			return this.enumeration.nextElement();
+		}
+
+		@Override
+		public void remove() throws UnsupportedOperationException {
+			throw new UnsupportedOperationException("Not supported");
+		}
 	}
 
-	/**
-	 * Return a (partially unmodifiable) map that combines the provided two
-	 * maps. Invoking {@link Map#put(Object, Object)} or {@link Map#putAll(Map)}
-	 * on the returned map results in an {@link UnsupportedOperationException}.
-	 * <p>In the case of a key collision, {@code first} takes precedence over
-	 * {@code second}. In other words, entries in {@code second} with a key
-	 * that is also mapped by {@code first} are effectively ignored.
-	 * @param first the first map to compose
-	 * @param second the second map to compose
-	 * @return a new map that composes the given two maps
-	 * @since 6.2
-	 */
-	public static <K, V> Map<K, V> compositeMap(Map<K,V> first, Map<K,V> second) {
-		return new CompositeMap<>(first, second);
-	}
-
-	/**
-	 * Return a map that combines the provided maps. Invoking
-	 * {@link Map#put(Object, Object)} on the returned map will apply
-	 * {@code putFunction}, or will throw an
-	 * {@link UnsupportedOperationException} {@code putFunction} is
-	 * {@code null}. The same applies to {@link Map#putAll(Map)} and
-	 * {@code putAllFunction}.
-	 * <p>In the case of a key collision, {@code first} takes precedence over
-	 * {@code second}. In other words, entries in {@code second} with a key
-	 * that is also mapped by {@code first} are effectively ignored.
-	 * @param first the first map to compose
-	 * @param second the second map to compose
-	 * @param putFunction applied when {@code Map::put} is invoked. If
-	 * {@code null}, {@code Map::put} throws an
-	 * {@code UnsupportedOperationException}.
-	 * @param putAllFunction applied when {@code Map::putAll} is invoked. If
-	 * {@code null}, {@code Map::putAll} throws an
-	 * {@code UnsupportedOperationException}.
-	 * @return a new map that composes the give maps
-	 * @since 6.2
-	 */
-	public static <K, V> Map<K, V> compositeMap(Map<K,V> first, Map<K,V> second,
-			@Nullable BiFunction<K, V, V> putFunction,
-			@Nullable Consumer<Map<K, V>> putAllFunction) {
-
-		return new CompositeMap<>(first, second, putFunction, putAllFunction);
-	}
 
 }

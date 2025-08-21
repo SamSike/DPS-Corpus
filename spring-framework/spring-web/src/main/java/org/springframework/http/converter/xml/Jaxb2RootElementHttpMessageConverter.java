@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,7 @@
 package org.springframework.http.converter.xml;
 
 import java.io.StringReader;
-import java.nio.charset.Charset;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
@@ -36,7 +32,6 @@ import jakarta.xml.bind.UnmarshalException;
 import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
-import org.jspecify.annotations.Nullable;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -46,6 +41,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConversionException;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -62,7 +58,6 @@ import org.springframework.util.ClassUtils;
  * @author Arjen Poutsma
  * @author Sebastien Deleuze
  * @author Rossen Stoyanchev
- * @author Juergen Hoeller
  * @since 3.0
  * @see MarshallingHttpMessageConverter
  */
@@ -72,8 +67,6 @@ public class Jaxb2RootElementHttpMessageConverter extends AbstractJaxb2HttpMessa
 
 	private boolean processExternalEntities = false;
 
-	private volatile @Nullable SAXParserFactory sourceParserFactory;
-
 
 	/**
 	 * Indicate whether DTD parsing should be supported.
@@ -81,7 +74,6 @@ public class Jaxb2RootElementHttpMessageConverter extends AbstractJaxb2HttpMessa
 	 */
 	public void setSupportDtd(boolean supportDtd) {
 		this.supportDtd = supportDtd;
-		this.sourceParserFactory = null;
 	}
 
 	/**
@@ -102,7 +94,6 @@ public class Jaxb2RootElementHttpMessageConverter extends AbstractJaxb2HttpMessa
 		if (processExternalEntities) {
 			this.supportDtd = true;
 		}
-		this.sourceParserFactory = null;
 	}
 
 	/**
@@ -121,9 +112,7 @@ public class Jaxb2RootElementHttpMessageConverter extends AbstractJaxb2HttpMessa
 
 	@Override
 	public boolean canWrite(Class<?> clazz, @Nullable MediaType mediaType) {
-		boolean supportedType = (JAXBElement.class.isAssignableFrom(clazz) ||
-				AnnotationUtils.findAnnotation(clazz, XmlRootElement.class) != null);
-		return (supportedType && canWrite(mediaType));
+		return (AnnotationUtils.findAnnotation(clazz, XmlRootElement.class) != null && canWrite(mediaType));
 	}
 
 	@Override
@@ -135,7 +124,7 @@ public class Jaxb2RootElementHttpMessageConverter extends AbstractJaxb2HttpMessa
 	@Override
 	protected Object readFromSource(Class<?> clazz, HttpHeaders headers, Source source) throws Exception {
 		try {
-			source = processSource(source, detectCharset(headers));
+			source = processSource(source);
 			Unmarshaller unmarshaller = createUnmarshaller(clazz);
 			if (clazz.isAnnotationPresent(XmlRootElement.class)) {
 				return unmarshaller.unmarshal(source);
@@ -160,40 +149,22 @@ public class Jaxb2RootElementHttpMessageConverter extends AbstractJaxb2HttpMessa
 		}
 	}
 
-	/**
-	 * Process {@code source} with {@code charset}.
-	 * @param source source to process
-	 * @param charset charset to use
-	 * @return source
-	 * @since 6.2.8
-	 */
-	protected Source processSource(Source source, @Nullable Charset charset) {
-		if (source instanceof StreamSource streamSource) {
+	@SuppressWarnings("deprecation")
+	protected Source processSource(Source source) {
+		if (source instanceof StreamSource) {
+			StreamSource streamSource = (StreamSource) source;
 			InputSource inputSource = new InputSource(streamSource.getInputStream());
-			if (charset != null) {
-				inputSource.setEncoding(charset.name());
-			}
 			try {
-				// By default, Spring will prevent the processing of external entities.
-				// This is a mitigation against XXE attacks.
-				SAXParserFactory saxParserFactory = this.sourceParserFactory;
-				if (saxParserFactory == null) {
-					saxParserFactory = SAXParserFactory.newInstance();
-					saxParserFactory.setNamespaceAware(true);
-					saxParserFactory.setFeature(
-							"http://apache.org/xml/features/disallow-doctype-decl", !isSupportDtd());
-					saxParserFactory.setFeature(
-							"http://xml.org/sax/features/external-general-entities", isProcessExternalEntities());
-					this.sourceParserFactory = saxParserFactory;
-				}
-				SAXParser saxParser = saxParserFactory.newSAXParser();
-				XMLReader xmlReader = saxParser.getXMLReader();
+				XMLReader xmlReader = org.xml.sax.helpers.XMLReaderFactory.createXMLReader();
+				xmlReader.setFeature("http://apache.org/xml/features/disallow-doctype-decl", !isSupportDtd());
+				String featureName = "http://xml.org/sax/features/external-general-entities";
+				xmlReader.setFeature(featureName, isProcessExternalEntities());
 				if (!isProcessExternalEntities()) {
 					xmlReader.setEntityResolver(NO_OP_ENTITY_RESOLVER);
 				}
 				return new SAXSource(xmlReader, inputSource);
 			}
-			catch (SAXException | ParserConfigurationException ex) {
+			catch (SAXException ex) {
 				logger.warn("Processing of external entities could not be disabled", ex);
 				return source;
 			}
@@ -204,12 +175,12 @@ public class Jaxb2RootElementHttpMessageConverter extends AbstractJaxb2HttpMessa
 	}
 
 	@Override
-	protected void writeToResult(Object value, HttpHeaders headers, Result result) throws Exception {
+	protected void writeToResult(Object o, HttpHeaders headers, Result result) throws Exception {
 		try {
-			Class<?> clazz = getMarshallerType(value);
+			Class<?> clazz = ClassUtils.getUserClass(o);
 			Marshaller marshaller = createMarshaller(clazz);
 			setCharset(headers.getContentType(), marshaller);
-			marshaller.marshal(value, result);
+			marshaller.marshal(o, result);
 		}
 		catch (MarshalException ex) {
 			throw ex;
@@ -219,24 +190,10 @@ public class Jaxb2RootElementHttpMessageConverter extends AbstractJaxb2HttpMessa
 		}
 	}
 
-	private static Class<?> getMarshallerType(Object value) {
-		if (value instanceof JAXBElement<?> jaxbElement) {
-			return jaxbElement.getDeclaredType();
-		}
-		else {
-			return ClassUtils.getUserClass(value);
-		}
-	}
-
 	private void setCharset(@Nullable MediaType contentType, Marshaller marshaller) throws PropertyException {
 		if (contentType != null && contentType.getCharset() != null) {
 			marshaller.setProperty(Marshaller.JAXB_ENCODING, contentType.getCharset().name());
 		}
-	}
-
-	@Override
-	protected boolean supportsRepeatableWrites(Object o) {
-		return true;
 	}
 
 

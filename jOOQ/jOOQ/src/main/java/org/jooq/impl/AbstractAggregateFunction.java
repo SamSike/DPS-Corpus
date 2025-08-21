@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,7 +42,6 @@ import static java.util.function.Function.identity;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.*;
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
 import static org.jooq.SQLDialect.HSQLDB;
@@ -111,22 +110,20 @@ implements
 
 
 
+    static final Set<SQLDialect>  SUPPORT_FILTER       = SQLDialect.supportedBy(FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE, YUGABYTEDB);
+    static final Set<SQLDialect>  SUPPORT_DISTINCT_RVE = SQLDialect.supportedBy(H2, POSTGRES);
 
-    static final Set<SQLDialect>      NO_SUPPORT_FILTER          = SQLDialect.supportedUntil(CUBRID, DERBY, IGNITE, MARIADB, MYSQL);
-    static final Set<SQLDialect>      NO_SUPPORT_WINDOW_FILTER   = SQLDialect.supportedBy(TRINO);
-    static final Set<SQLDialect>      REQUIRE_DISTINCT_RVE       = SQLDialect.supportedBy(DUCKDB, H2, POSTGRES);
-
-    static final Lazy<Field<Integer>> ASTERISK                   = Lazy.of(() -> DSL.field(DSL.raw("*"), Integer.class));
+    static final Field<Integer>   ASTERISK             = DSL.field("*", Integer.class);
 
     // Other attributes
-    final QueryPartList<Field<?>>     arguments;
-    final boolean                     distinct;
-    final ConditionProviderImpl       filter;
+    final QueryPartList<Field<?>> arguments;
+    final boolean                 distinct;
+    final ConditionProviderImpl   filter;
 
     // Other attributes
-    SortFieldList                     withinGroupOrderBy;
-    SortFieldList                     keepDenseRankOrderBy;
-    boolean                           first;
+    SortFieldList                 withinGroupOrderBy;
+    SortFieldList                 keepDenseRankOrderBy;
+    boolean                       first;
 
 
     AbstractAggregateFunction(String name, DataType<T> type, Field<?>... arguments) {
@@ -142,14 +139,6 @@ implements
     }
 
     AbstractAggregateFunction(boolean distinct, Name name, DataType<T> type, Field<?>... arguments) {
-        this(distinct, name, type, Arrays.asList(arguments));
-    }
-
-    AbstractAggregateFunction(boolean distinct, String name, DataType<T> type, Collection<? extends Field<?>> arguments) {
-        this(distinct, DSL.unquotedName(name), type, arguments);
-    }
-
-    AbstractAggregateFunction(boolean distinct, Name name, DataType<T> type, Collection<? extends Field<?>> arguments) {
         super(name, type);
 
         this.distinct = distinct;
@@ -171,9 +160,9 @@ implements
     }
 
     /**
-     * Render <code>KEEP (DENSE_RANK [FIRST | LAST] ORDER BY {…})</code> clause
+     * Render <code>KEEP (DENSE_RANK [FIRST | LAST] ORDER BY {...})</code> clause
      */
-    final void acceptKeepDenseRankOrderByClause(Context<?> ctx) {
+    private final void acceptKeepDenseRankOrderByClause(Context<?> ctx) {
         if (!Tools.isEmpty(keepDenseRankOrderBy)) {
 
             switch (ctx.family()) {
@@ -196,7 +185,7 @@ implements
     }
 
     /**
-     * Render <code>WITHIN GROUP (ORDER BY …)</code> clause
+     * Render <code>WITHIN GROUP (ORDER BY ..)</code> clause
      */
     final void acceptWithinGroupClause(Context<?> ctx) {
         if (withinGroupOrderBy != null) {
@@ -208,18 +197,11 @@ implements
 
 
                 default:
-
-
-
-
-
                     ctx.sql(' ').visit(K_WITHIN_GROUP)
                        .sql(" (").visit(K_ORDER_BY).sql(' ');
 
                     if (withinGroupOrderBy.isEmpty())
                         ctx.visit(K_NULL);
-                    else if (filter.hasWhere() && !supportsFilter(ctx) && applyFilterToWithinGroup(ctx))
-                        ctx.visit(wrap(withinGroupOrderBy).map((arg, i) -> DSL.when(filter, arg.$field()).sort(arg.$sortOrder())));
                     else
                         ctx.visit(withinGroupOrderBy);
 
@@ -232,7 +214,7 @@ implements
     /**
      * Render function arguments and argument modifiers
      */
-    final void toSQLArguments(Context<?> ctx) {
+    private final void toSQLArguments(Context<?> ctx) {
         acceptFunctionName(ctx);
         ctx.sql('(');
         acceptArguments0(ctx);
@@ -268,6 +250,8 @@ implements
 
 
 
+
+
         acceptArguments1(ctx, arguments);
     }
 
@@ -278,50 +262,36 @@ implements
 
             // [#2883][#9109] PostgreSQL and H2 can use the DISTINCT keyword with formal row value expressions.
             // [#13415] ListAgg is a special case, where the second argument is the separator
-            if (parens |= (args.size() > 1 && REQUIRE_DISTINCT_RVE.contains(ctx.dialect()) && !(this instanceof ListAgg) && !(this instanceof BinaryListAgg)))
+            if (parens |= (args.size() > 1 && SUPPORT_DISTINCT_RVE.contains(ctx.dialect()) && !(this instanceof ListAgg)))
                 ctx.sql('(');
         }
 
-        acceptArguments2(ctx, args);
+        if (!args.isEmpty())
+            acceptArguments2(ctx, args);
 
         if (parens)
             ctx.sql(')');
     }
 
     final void acceptArguments2(Context<?> ctx, QueryPartCollectionView<Field<?>> args) {
-        acceptArguments3(ctx, args, f -> applyMap(ctx, f));
+        acceptArguments3(ctx, args, identity());
     }
 
     final void acceptArguments3(Context<?> ctx, QueryPartCollectionView<Field<?>> args, Function<? super Field<?>, ? extends Field<?>> fun) {
-        if (args.isEmpty() && this instanceof Count)
-
-            // [#7539] Work around https://github.com/ClickHouse/ClickHouse/issues/61004
-            if (ctx.family() == CLICKHOUSE && filter.hasWhere())
-                args = QueryPartListView.wrap();
-            else
-                args = QueryPartListView.wrap(ASTERISK.get());
-
-        if (!filter.hasWhere() || supportsFilter(ctx))
+        if (!filter.hasWhere() || SUPPORT_FILTER.contains(ctx.dialect()))
             ctx.visit(wrap(args).map(fun));
 
 
 
 
         else
-            ctx.visit(wrap(args).map((arg, i) -> applyFilterToArgument(ctx, arg, i) ? DSL.when(filter, arg == ASTERISK.get() ? one() : arg) : arg).map(fun));
+            ctx.visit(wrap(args).map((arg, i) -> applyFilter(arg, i) ? DSL.when(filter, arg == ASTERISK ? one() : arg) : arg).map(fun));
     }
 
-    /* non-final */ Field<?> applyMap(Context<?> ctx, Field<?> arg) {
-        return arg;
-    }
-
-    /* non-final */ boolean applyFilterToArgument(Context<?> ctx, Field<?> arg, int i) {
+    boolean applyFilter(Field<?> arg, int i) {
         return true;
     }
 
-    /* non-final */ boolean applyFilterToWithinGroup(Context<?> ctx) {
-        return false;
-    }
 
 
 
@@ -340,7 +310,7 @@ implements
             acceptFilterClause(ctx, filter);
     }
 
-    final void acceptFilterClause(Context<?> ctx, Condition f) {
+    static final void acceptFilterClause(Context<?> ctx, Condition filter) {
         switch (ctx.family()) {
 
 
@@ -349,31 +319,20 @@ implements
 
 
             default:
-                if (supportsFilter(ctx))
+                if (SUPPORT_FILTER.contains(ctx.dialect()))
                     ctx.sql(' ')
                        .visit(K_FILTER)
                        .sql(" (")
                        .visit(K_WHERE)
                        .sql(' ')
-                       .visit(f)
+                       .visit(filter)
                        .sql(')');
                 break;
         }
     }
 
-    /* non-final */ boolean supportsFilter(Context<?> ctx) {
-        return !(
-             NO_SUPPORT_FILTER.contains(ctx.dialect())
-          || NO_SUPPORT_WINDOW_FILTER.contains(ctx.dialect()) && isWindow()
-        );
-    }
-
     final void acceptOrderBy(Context<?> ctx) {
-        acceptOrderBy(ctx, withinGroupOrderBy);
-    }
-
-    static final void acceptOrderBy(Context<?> ctx, SortFieldList orderBy) {
-        if (!Tools.isEmpty(orderBy)) {
+        if (!Tools.isEmpty(withinGroupOrderBy)) {
             switch (ctx.family()) {
 
 
@@ -382,7 +341,7 @@ implements
 
 
                 default:
-                    ctx.sql(' ').visit(K_ORDER_BY).sql(' ').visit(orderBy);
+                    ctx.sql(' ').visit(K_ORDER_BY).sql(' ').visit(withinGroupOrderBy);
                     break;
             }
         }
@@ -391,10 +350,6 @@ implements
     // -------------------------------------------------------------------------
     // XXX Aggregate function API
     // -------------------------------------------------------------------------
-
-    final Field<?> getArgument(int index) {
-        return index < arguments.size() ? arguments.get(index) : null;
-    }
 
     final QueryPartList<Field<?>> getArguments() {
         return arguments;
@@ -534,16 +489,8 @@ implements
      * Apply this aggregate function's <code>FILTER</code> and <code>OVER</code>
      * clauses to an argument aggregate function.
      */
-    final <U> Field<U> fo(AggregateFilterStep<U> function) {
+    final <U> Field<U> fo(AggregateFunction<U> function) {
         return o(filter.hasWhere() ? function.filterWhere(filter) : function);
-    }
-
-    /**
-     * Apply this aggregate function's <code>FILTER</code> and <code>OVER</code>
-     * clauses to an argument aggregate function.
-     */
-    final <U> Field<U> fo(AggregateFilterStep<U> function, Condition condition) {
-        return o(function.filterWhere(f(condition)));
     }
 
     /**
@@ -566,7 +513,7 @@ implements
      * emulations.
      */
     final <U extends Number> Field<U> x(Field<U> x, Field<? extends Number> y) {
-        return DSL.nvl2(y, x, DSL.inline(null, x.getDataType()));
+        return DSL.nvl2(y, x, DSL.NULL(x.getDataType()));
     }
 
     /**
@@ -574,7 +521,7 @@ implements
      * emulations.
      */
     final <U extends Number> Field<U> y(Field<? extends Number> x, Field<U> y) {
-        return DSL.nvl2(x, y, DSL.inline(null, y.getDataType()));
+        return DSL.nvl2(x, y, DSL.NULL(y.getDataType()));
     }
 
     /**
@@ -589,7 +536,6 @@ implements
             case FIREBIRD:
             case HSQLDB:
             case SQLITE:
-            case TRINO:
                 return DOUBLE;
 
             default:

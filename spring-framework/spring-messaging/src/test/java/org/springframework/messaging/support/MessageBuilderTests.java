@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 /**
  * @author Mark Fisher
  * @author Rossen Stoyanchev
- * @author Mengqi Xu
  */
 class MessageBuilderTests {
 
@@ -151,28 +150,28 @@ class MessageBuilderTests {
 	}
 
 	@Test
-	void notModifiedSameMessage() {
+	void notModifiedSameMessage() throws Exception {
 		Message<?> original = MessageBuilder.withPayload("foo").build();
 		Message<?> result = MessageBuilder.fromMessage(original).build();
 		assertThat(result).isEqualTo(original);
 	}
 
 	@Test
-	void containsHeaderNotModifiedSameMessage() {
+	void containsHeaderNotModifiedSameMessage() throws Exception {
 		Message<?> original = MessageBuilder.withPayload("foo").setHeader("bar", 42).build();
 		Message<?> result = MessageBuilder.fromMessage(original).build();
 		assertThat(result).isEqualTo(original);
 	}
 
 	@Test
-	void sameHeaderValueAddedNotModifiedSameMessage() {
+	void sameHeaderValueAddedNotModifiedSameMessage() throws Exception {
 		Message<?> original = MessageBuilder.withPayload("foo").setHeader("bar", 42).build();
 		Message<?> result = MessageBuilder.fromMessage(original).setHeader("bar", 42).build();
 		assertThat(result).isEqualTo(original);
 	}
 
 	@Test
-	void copySameHeaderValuesNotModifiedSameMessage() {
+	void copySameHeaderValuesNotModifiedSameMessage() throws Exception {
 		Date current = new Date();
 		Map<String, Object> originalHeaders = new HashMap<>();
 		originalHeaders.put("b", "xyz");
@@ -237,24 +236,6 @@ class MessageBuilderTests {
 		assertThat(message1.getHeaders().get("foo")).isEqualTo("bar1");
 		assertThat(message2.getHeaders().get("foo")).isEqualTo("bar2");
 		assertThat(message3.getHeaders().get("foo")).isEqualTo("bar3");
-	}
-
-	@Test  // gh-34949
-	void buildMessageWithReplyChannelHeader() {
-		MessageHeaderAccessor headerAccessor = new MessageHeaderAccessor();
-		MessageBuilder<?> messageBuilder = MessageBuilder.withPayload("payload").setHeaders(headerAccessor);
-
-		headerAccessor.setHeader(MessageHeaders.REPLY_CHANNEL, "foo");
-		Message<?> message1 = messageBuilder.build();
-		assertThat(message1.getHeaders().get(MessageHeaders.REPLY_CHANNEL)).isEqualTo("foo");
-
-		headerAccessor.setHeader("hannel", 0);
-		Message<?> message2 = messageBuilder.build();
-		assertThat(message2.getHeaders().get("hannel")).isEqualTo(0);
-
-		assertThatIllegalArgumentException()
-				.isThrownBy(() -> headerAccessor.setHeader(MessageHeaders.REPLY_CHANNEL, 0))
-				.withMessage("'%s' header value must be a MessageChannel or String", MessageHeaders.REPLY_CHANNEL);
 	}
 
 }

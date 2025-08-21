@@ -25,7 +25,6 @@ import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Unit test testing the Removr.
@@ -43,7 +42,7 @@ public class JoltRemovrTest extends CamelTestSupport {
         });
 
         assertEquals(2, exchange.getMessage().getBody(Map.class).size());
-        assertNull(exchange.getMessage().getBody(Map.class).get("removeMe"));
+        assertEquals(null, exchange.getMessage().getBody(Map.class).get("removeMe"));
         assertEquals("World", exchange.getMessage().getBody(Map.class).get("Hello"));
     }
 

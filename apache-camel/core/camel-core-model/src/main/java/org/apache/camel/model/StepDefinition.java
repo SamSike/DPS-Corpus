@@ -36,15 +36,6 @@ public class StepDefinition extends OutputDefinition<StepDefinition> {
     public StepDefinition() {
     }
 
-    public StepDefinition(StepDefinition source) {
-        super(source);
-    }
-
-    @Override
-    public StepDefinition copyDefinition() {
-        return new StepDefinition(this);
-    }
-
     @Override
     public List<ProcessorDefinition<?>> getOutputs() {
         return super.getOutputs();
@@ -65,4 +56,5 @@ public class StepDefinition extends OutputDefinition<StepDefinition> {
     public String getLabel() {
         return "step";
     }
+
 }

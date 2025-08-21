@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
 
 /**
@@ -32,13 +31,17 @@ import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
  */
 public class WebSocketTransportRegistration {
 
-	private @Nullable Integer messageSizeLimit;
+	@Nullable
+	private Integer messageSizeLimit;
 
-	private @Nullable Integer sendTimeLimit;
+	@Nullable
+	private Integer sendTimeLimit;
 
-	private @Nullable Integer sendBufferSizeLimit;
+	@Nullable
+	private Integer sendBufferSizeLimit;
 
-	private @Nullable Integer timeToFirstMessage;
+	@Nullable
+	private Integer timeToFirstMessage;
 
 	private final List<WebSocketHandlerDecoratorFactory> decoratorFactories = new ArrayList<>(2);
 
@@ -59,7 +62,8 @@ public class WebSocketTransportRegistration {
 	/**
 	 * Protected accessor for internal use.
 	 */
-	protected @Nullable Integer getMessageSizeLimit() {
+	@Nullable
+	protected Integer getMessageSizeLimit() {
 		return this.messageSizeLimit;
 	}
 
@@ -83,7 +87,7 @@ public class WebSocketTransportRegistration {
 	 * <p><strong>NOTE</strong> that closing the session may not succeed in
 	 * actually closing the physical socket and may also hang. This is true
 	 * especially when using blocking IO such as the BIO connector in Tomcat
-	 * that is used by default on Tomcat 7. Therefore, it is recommended to ensure
+	 * that is used by default on Tomcat 7. Therefore it is recommended to ensure
 	 * the server is using non-blocking IO such as Tomcat's NIO connector that
 	 * is used by default on Tomcat 8. If you must use blocking IO consider
 	 * customizing OS-level TCP settings, for example
@@ -100,7 +104,8 @@ public class WebSocketTransportRegistration {
 	/**
 	 * Protected accessor for internal use.
 	 */
-	protected @Nullable Integer getSendTimeLimit() {
+	@Nullable
+	protected Integer getSendTimeLimit() {
 		return this.sendTimeLimit;
 	}
 
@@ -118,7 +123,7 @@ public class WebSocketTransportRegistration {
 	 * <p><strong>NOTE</strong> that closing the session may not succeed in
 	 * actually closing the physical socket and may also hang. This is true
 	 * especially when using blocking IO such as the BIO connector in Tomcat
-	 * configured by default on Tomcat 7. Therefore, it is recommended to ensure
+	 * configured by default on Tomcat 7. Therefore it is recommended to ensure
 	 * the server is using non-blocking IO such as Tomcat's NIO connector used
 	 * by default on Tomcat 8. If you must use blocking IO consider customizing
 	 * OS-level TCP settings, for example {@code /proc/sys/net/ipv4/tcp_retries2}
@@ -136,7 +141,8 @@ public class WebSocketTransportRegistration {
 	/**
 	 * Protected accessor for internal use.
 	 */
-	protected @Nullable Integer getSendBufferSizeLimit() {
+	@Nullable
+	protected Integer getSendBufferSizeLimit() {
 		return this.sendBufferSizeLimit;
 	}
 
@@ -145,7 +151,7 @@ public class WebSocketTransportRegistration {
 	 * is established and before the first sub-protocol message is received.
 	 * <p>This handler is for WebSocket connections that use a sub-protocol.
 	 * Therefore, we expect the client to send at least one sub-protocol message
-	 * in the beginning, or else we assume the connection isn't doing well, for example,
+	 * in the beginning, or else we assume the connection isn't doing well, e.g.
 	 * proxy issue, slow network, and can be closed.
 	 * <p>By default this is set to {@code 60,000} (1 minute).
 	 * @param timeToFirstMessage the maximum time allowed in milliseconds
@@ -159,7 +165,8 @@ public class WebSocketTransportRegistration {
 	/**
 	 * Protected accessor for internal use.
 	 */
-	protected @Nullable Integer getTimeToFirstMessage() {
+	@Nullable
+	protected Integer getTimeToFirstMessage() {
 		return this.timeToFirstMessage;
 	}
 

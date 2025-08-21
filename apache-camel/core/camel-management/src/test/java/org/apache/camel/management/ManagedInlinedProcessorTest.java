@@ -45,17 +45,16 @@ public class ManagedInlinedProcessorTest extends ManagementTestSupport {
         Long counter = (Long) mbeanServer.getAttribute(on, "ExchangesCompleted");
         assertEquals(1L, counter.longValue());
 
-        ManagedProcessorMBean mb
-                = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class).getManagedProcessor("custom");
+        ManagedProcessorMBean mb = context.getExtension(ManagedCamelContext.class).getManagedProcessor("custom");
         assertNotNull(mb);
         assertEquals(1L, mb.getExchangesCompleted());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo")
                         .process(exchange -> exchange.getMessage().setBody("Bye World")).id("custom")
                         .to("mock:result");

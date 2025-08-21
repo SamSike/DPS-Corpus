@@ -17,7 +17,6 @@
 package org.apache.camel.component.aws2.sts;
 
 import software.amazon.awssdk.services.sts.StsClient;
-import software.amazon.awssdk.services.sts.StsServiceClientConfiguration;
 import software.amazon.awssdk.services.sts.model.AssumeRoleRequest;
 import software.amazon.awssdk.services.sts.model.AssumeRoleResponse;
 import software.amazon.awssdk.services.sts.model.AssumedRoleUser;
@@ -42,11 +41,6 @@ public class AmazonSTSClientMock implements StsClient {
         return GetSessionTokenResponse.builder()
                 .credentials(Credentials.builder().accessKeyId("xxx").secretAccessKey("yyy").sessionToken("test").build())
                 .build();
-    }
-
-    @Override
-    public StsServiceClientConfiguration serviceClientConfiguration() {
-        return null;
     }
 
     @Override

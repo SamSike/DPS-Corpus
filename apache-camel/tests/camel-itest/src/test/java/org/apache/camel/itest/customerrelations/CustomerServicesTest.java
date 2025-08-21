@@ -66,11 +66,12 @@ public class CustomerServicesTest {
             Customer customer = customerService.getCustomer("12345");
             assertNotNull(customer, "We should get Customer here");
         } finally {
+            // we're done so let's properly close the application contexts
             IOHelper.close(clientContext, serverContext);
         }
     }
 
-    static class HeaderChecker extends AbstractPhaseInterceptor<Message> {
+    class HeaderChecker extends AbstractPhaseInterceptor<Message> {
 
         HeaderChecker(String phase) {
             super(phase);

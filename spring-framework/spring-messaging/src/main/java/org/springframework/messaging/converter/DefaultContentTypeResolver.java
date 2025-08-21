@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.messaging.converter;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.util.MimeType;
 
@@ -33,7 +32,8 @@ import org.springframework.util.MimeType;
  */
 public class DefaultContentTypeResolver implements ContentTypeResolver {
 
-	private @Nullable MimeType defaultMimeType;
+	@Nullable
+	private MimeType defaultMimeType;
 
 
 	/**
@@ -49,13 +49,15 @@ public class DefaultContentTypeResolver implements ContentTypeResolver {
 	 * Return the default MIME type to use if no
 	 * {@link MessageHeaders#CONTENT_TYPE} header is present.
 	 */
-	public @Nullable MimeType getDefaultMimeType() {
+	@Nullable
+	public MimeType getDefaultMimeType() {
 		return this.defaultMimeType;
 	}
 
 
 	@Override
-	public @Nullable MimeType resolve(@Nullable MessageHeaders headers) {
+	@Nullable
+	public MimeType resolve(@Nullable MessageHeaders headers) {
 		if (headers == null || headers.get(MessageHeaders.CONTENT_TYPE) == null) {
 			return this.defaultMimeType;
 		}
@@ -63,11 +65,11 @@ public class DefaultContentTypeResolver implements ContentTypeResolver {
 		if (value == null) {
 			return null;
 		}
-		else if (value instanceof MimeType mimeType) {
-			return mimeType;
+		else if (value instanceof MimeType) {
+			return (MimeType) value;
 		}
-		else if (value instanceof String text) {
-			return MimeType.valueOf(text);
+		else if (value instanceof String) {
+			return MimeType.valueOf((String) value);
 		}
 		else {
 			throw new IllegalArgumentException(

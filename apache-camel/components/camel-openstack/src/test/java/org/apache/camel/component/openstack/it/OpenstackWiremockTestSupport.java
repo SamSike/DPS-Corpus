@@ -18,6 +18,7 @@ package org.apache.camel.component.openstack.it;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,6 +32,7 @@ public class OpenstackWiremockTestSupport extends CamelTestSupport {
     @BeforeAll
     public static void startServer() {
         WireMockConfiguration configuration = options().dynamicPort();
+        configuration.extensions(new ResponseTemplateTransformer(false));
 
         server = new WireMockServer(configuration);
         server.start();

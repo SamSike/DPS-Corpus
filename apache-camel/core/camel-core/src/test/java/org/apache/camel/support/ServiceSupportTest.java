@@ -25,45 +25,53 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ServiceSupportTest extends TestSupport {
 
     private static class MyService extends ServiceSupport {
+
+        @Override
+        protected void doStart() throws Exception {
+        }
+
+        @Override
+        protected void doStop() throws Exception {
+        }
     }
 
     @Test
-    public void testServiceSupport() {
+    public void testServiceSupport() throws Exception {
         MyService service = new MyService();
         service.start();
 
-        assertTrue(service.isStarted());
-        assertFalse(service.isStarting());
-        assertFalse(service.isStopped());
-        assertFalse(service.isStopping());
+        assertEquals(true, service.isStarted());
+        assertEquals(false, service.isStarting());
+        assertEquals(false, service.isStopped());
+        assertEquals(false, service.isStopping());
 
         service.stop();
 
-        assertTrue(service.isStopped());
-        assertFalse(service.isStopping());
-        assertFalse(service.isStarted());
-        assertFalse(service.isStarting());
+        assertEquals(true, service.isStopped());
+        assertEquals(false, service.isStopping());
+        assertEquals(false, service.isStarted());
+        assertEquals(false, service.isStarting());
     }
 
     @Test
-    public void testServiceSupportIsRunAllowed() {
+    public void testServiceSupportIsRunAllowed() throws Exception {
         MyService service = new MyService();
-        assertFalse(service.isRunAllowed());
+        assertEquals(false, service.isRunAllowed());
 
         service.start();
-        assertTrue(service.isRunAllowed());
+        assertEquals(true, service.isRunAllowed());
 
         // we are allowed to run while suspending/suspended
         service.suspend();
-        assertTrue(service.isRunAllowed());
+        assertEquals(true, service.isRunAllowed());
         service.resume();
-        assertTrue(service.isRunAllowed());
+        assertEquals(true, service.isRunAllowed());
 
         // but if we are stopped then we are not
         service.stop();
-        assertFalse(service.isRunAllowed());
+        assertEquals(false, service.isRunAllowed());
         service.shutdown();
-        assertFalse(service.isRunAllowed());
+        assertEquals(false, service.isRunAllowed());
     }
 
     private static class MyShutdownService extends ServiceSupport {
@@ -71,7 +79,15 @@ public class ServiceSupportTest extends TestSupport {
         private boolean shutdown;
 
         @Override
-        protected void doShutdown() {
+        protected void doStart() throws Exception {
+        }
+
+        @Override
+        protected void doStop() throws Exception {
+        }
+
+        @Override
+        protected void doShutdown() throws Exception {
             shutdown = true;
         }
 
@@ -82,44 +98,44 @@ public class ServiceSupportTest extends TestSupport {
     }
 
     @Test
-    public void testServiceSupportShutdown() {
+    public void testServiceSupportShutdown() throws Exception {
         MyShutdownService service = new MyShutdownService();
         service.start();
 
-        assertTrue(service.isStarted());
-        assertFalse(service.isStarting());
-        assertFalse(service.isStopped());
-        assertFalse(service.isStopping());
-        assertFalse(service.isShutdown());
+        assertEquals(true, service.isStarted());
+        assertEquals(false, service.isStarting());
+        assertEquals(false, service.isStopped());
+        assertEquals(false, service.isStopping());
+        assertEquals(false, service.isShutdown());
 
         service.shutdown();
 
-        assertTrue(service.isStopped());
-        assertFalse(service.isStopping());
-        assertFalse(service.isStarted());
-        assertFalse(service.isStarting());
+        assertEquals(true, service.isStopped());
+        assertEquals(false, service.isStopping());
+        assertEquals(false, service.isStarted());
+        assertEquals(false, service.isStarting());
 
-        assertTrue(service.isShutdown());
+        assertEquals(true, service.isShutdown());
     }
 
     @Test
-    public void testExceptionOnStart() {
+    public void testExceptionOnStart() throws Exception {
         ServiceSupportTestExOnStart service = new ServiceSupportTestExOnStart();
         // forced not being stopped at start
-        assertFalse(service.isStopped());
+        assertEquals(false, service.isStopped());
         try {
             service.start();
             fail("RuntimeException expected");
         } catch (RuntimeException e) {
-            assertTrue(service.isStopped());
-            assertFalse(service.isStopping());
-            assertFalse(service.isStarted());
-            assertFalse(service.isStarting());
+            assertEquals(true, service.isStopped());
+            assertEquals(false, service.isStopping());
+            assertEquals(false, service.isStarted());
+            assertEquals(false, service.isStarting());
         }
     }
 
     @Test
-    public void testServiceBuild() {
+    public void testServiceBuild() throws Exception {
         MyService service = new MyService();
         assertTrue(service.isNew());
         service.build();
@@ -127,17 +143,17 @@ public class ServiceSupportTest extends TestSupport {
         assertFalse(service.isInit());
         service.start();
 
-        assertTrue(service.isStarted());
-        assertFalse(service.isStarting());
-        assertFalse(service.isStopped());
-        assertFalse(service.isStopping());
+        assertEquals(true, service.isStarted());
+        assertEquals(false, service.isStarting());
+        assertEquals(false, service.isStopped());
+        assertEquals(false, service.isStopping());
 
         service.stop();
 
-        assertTrue(service.isStopped());
-        assertFalse(service.isStopping());
-        assertFalse(service.isStarted());
-        assertFalse(service.isStarting());
+        assertEquals(true, service.isStopped());
+        assertEquals(false, service.isStopping());
+        assertEquals(false, service.isStarted());
+        assertEquals(false, service.isStarting());
     }
 
     public static class ServiceSupportTestExOnStart extends ServiceSupport {
@@ -148,8 +164,13 @@ public class ServiceSupportTest extends TestSupport {
         }
 
         @Override
-        protected void doStart() {
+        protected void doStart() throws Exception {
             throw new RuntimeException("This service throws an exception when starting");
         }
+
+        @Override
+        protected void doStop() throws Exception {
+        }
+
     }
 }

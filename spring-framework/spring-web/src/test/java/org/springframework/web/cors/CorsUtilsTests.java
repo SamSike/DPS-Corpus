@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,23 +29,23 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Sebastien Deleuze
  */
-class CorsUtilsTests {
+public class CorsUtilsTests {
 
 	@Test
-	void isCorsRequest() {
+	public void isCorsRequest() {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		request.addHeader(HttpHeaders.ORIGIN, "https://domain.com");
 		assertThat(CorsUtils.isCorsRequest(request)).isTrue();
 	}
 
 	@Test
-	void isNotCorsRequest() {
+	public void isNotCorsRequest() {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		assertThat(CorsUtils.isCorsRequest(request)).isFalse();
 	}
 
 	@Test
-	void isPreFlightRequest() {
+	public void isPreFlightRequest() {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		request.setMethod(HttpMethod.OPTIONS.name());
 		request.addHeader(HttpHeaders.ORIGIN, "https://domain.com");
@@ -54,7 +54,7 @@ class CorsUtilsTests {
 	}
 
 	@Test
-	void isNotPreFlightRequest() {
+	public void isNotPreFlightRequest() {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		assertThat(CorsUtils.isPreFlightRequest(request)).isFalse();
 

@@ -38,10 +38,10 @@ public class OnExceptionNotHandledNoFailureProcessorTest extends ContextTestSupp
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:error"));
 
                 // NOT handle runtime exception, and let the regular error
@@ -51,7 +51,7 @@ public class OnExceptionNotHandledNoFailureProcessorTest extends ContextTestSupp
 
                 from("direct:start").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         throw new RuntimeException("FAIL!");
                     }
                 }).to("mock:end");

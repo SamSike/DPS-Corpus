@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NameClassPair;
+import javax.naming.NameNotFoundException;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 
@@ -37,14 +38,14 @@ import org.apache.camel.spi.BeanRepository;
 public class JndiBeanRepository implements BeanRepository {
 
     private Context context;
-    private Map<?, ?> environment;
+    private Map environment;
     private final boolean standalone;
 
     public JndiBeanRepository() {
         this.standalone = false;
     }
 
-    public JndiBeanRepository(Map<?, ?> environment) {
+    public JndiBeanRepository(Map environment) {
         this.environment = environment;
         this.standalone = false;
     }
@@ -74,7 +75,7 @@ public class JndiBeanRepository implements BeanRepository {
         try {
             answer = unwrap(answer);
             return type.cast(answer);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             String msg = "Found bean: " + name + " in JNDI Context: " + context
                          + " of type: " + answer.getClass().getName() + " expected type was: " + type;
             throw new NoSuchBeanException(name, msg, e);
@@ -85,6 +86,8 @@ public class JndiBeanRepository implements BeanRepository {
     public Object lookupByName(String name) {
         try {
             return unwrap(getContext().lookup(name));
+        } catch (NameNotFoundException e) {
+            return null;
         } catch (NamingException e) {
             return null;
         }

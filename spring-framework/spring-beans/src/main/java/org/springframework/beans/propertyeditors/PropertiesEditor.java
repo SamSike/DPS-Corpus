@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Custom {@link java.beans.PropertyEditor} for {@link Properties} objects.
@@ -68,9 +68,9 @@ public class PropertiesEditor extends PropertyEditorSupport {
 	 */
 	@Override
 	public void setValue(Object value) {
-		if (!(value instanceof Properties) && value instanceof Map<?, ?> map) {
+		if (!(value instanceof Properties) && value instanceof Map) {
 			Properties props = new Properties();
-			props.putAll(map);
+			props.putAll((Map<?, ?>) value);
 			super.setValue(props);
 		}
 		else {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,35 +22,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalLong;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.ResolvableType;
-import org.springframework.core.codec.Decoder;
 import org.springframework.core.codec.Hints;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ClientHttpResponse;
-import org.springframework.http.codec.DecoderHttpMessageReader;
 import org.springframework.http.codec.HttpMessageReader;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.util.Assert;
 import org.springframework.util.MimeType;
 import org.springframework.util.MultiValueMap;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.reactive.function.BodyExtractor;
 import org.springframework.web.reactive.function.BodyExtractors;
 
@@ -115,8 +106,13 @@ class DefaultClientResponse implements ClientResponse {
 	}
 
 	@Override
-	public HttpStatusCode statusCode() {
+	public HttpStatus statusCode() {
 		return this.response.getStatusCode();
+	}
+
+	@Override
+	public int rawStatusCode() {
+		return this.response.getRawStatusCode();
 	}
 
 	@Override
@@ -134,11 +130,11 @@ class DefaultClientResponse implements ClientResponse {
 	public <T> T body(BodyExtractor<T, ? super ClientHttpResponse> extractor) {
 		T result = extractor.extract(this.response, this.bodyExtractorContext);
 		String description = "Body from " + this.requestDescription + " [DefaultClientResponse]";
-		if (result instanceof Mono<?> mono) {
-			return (T) mono.checkpoint(description);
+		if (result instanceof Mono) {
+			return (T) ((Mono<?>) result).checkpoint(description);
 		}
-		else if (result instanceof Flux<?> flux) {
-			return (T) flux.checkpoint(description);
+		else if (result instanceof Flux) {
+			return (T) ((Flux<?>) result).checkpoint(description);
 		}
 		else {
 			return result;
@@ -199,19 +195,22 @@ class DefaultClientResponse implements ClientResponse {
 
 	@Override
 	public Mono<WebClientResponseException> createException() {
-		return bodyToMono(byte[].class)
+		return DataBufferUtils.join(body(BodyExtractors.toDataBuffers()))
+				.map(dataBuffer -> {
+					byte[] bytes = new byte[dataBuffer.readableByteCount()];
+					dataBuffer.read(bytes);
+					DataBufferUtils.release(dataBuffer);
+					return bytes;
+				})
 				.defaultIfEmpty(EMPTY)
-				.onErrorReturn(ex -> !(ex instanceof Error), EMPTY)
+				.onErrorReturn(IllegalStateException.class::isInstance, EMPTY)
 				.map(bodyBytes -> {
-
 					HttpRequest request = this.requestSupplier.get();
-					Optional<MediaType> mediaType = headers().contentType();
-					Charset charset = mediaType.map(MimeType::getCharset).orElse(null);
-					HttpStatusCode statusCode = statusCode();
-
-					WebClientResponseException exception;
-					if (statusCode instanceof HttpStatus httpStatus) {
-						exception = WebClientResponseException.create(
+					Charset charset = headers().contentType().map(MimeType::getCharset).orElse(null);
+					int statusCode = rawStatusCode();
+					HttpStatus httpStatus = HttpStatus.resolve(statusCode);
+					if (httpStatus != null) {
+						return WebClientResponseException.create(
 								statusCode,
 								httpStatus.getReasonPhrase(),
 								headers().asHttpHeaders(),
@@ -220,41 +219,14 @@ class DefaultClientResponse implements ClientResponse {
 								request);
 					}
 					else {
-						exception = new UnknownHttpStatusCodeException(
+						return new UnknownHttpStatusCodeException(
 								statusCode,
 								headers().asHttpHeaders(),
 								bodyBytes,
 								charset,
 								request);
 					}
-					exception.setBodyDecodeFunction(initDecodeFunction(bodyBytes, mediaType.orElse(null)));
-					return exception;
 				});
-	}
-
-	private Function<ResolvableType, @Nullable Object> initDecodeFunction(byte[] body, @Nullable MediaType contentType) {
-		return targetType -> {
-			if (ObjectUtils.isEmpty(body)) {
-				return null;
-			}
-			Decoder<?> decoder = null;
-			for (HttpMessageReader<?> reader : strategies().messageReaders()) {
-				if (reader.canRead(targetType, contentType)) {
-					if (reader instanceof DecoderHttpMessageReader<?> decoderReader) {
-						decoder = decoderReader.getDecoder();
-						break;
-					}
-				}
-			}
-			Assert.state(decoder != null, "No suitable decoder");
-			DataBuffer buffer = DefaultDataBufferFactory.sharedInstance.wrap(body);
-			return decoder.decode(buffer, targetType, null, Collections.emptyMap());
-		};
-	}
-
-	@Override
-	public <T> Mono<T> createError() {
-		return createException().flatMap(Mono::error);
 	}
 
 	@Override
@@ -262,8 +234,8 @@ class DefaultClientResponse implements ClientResponse {
 		return this.logPrefix;
 	}
 
-	@Override
-	public HttpRequest request() {
+	// Used by DefaultClientResponseBuilder
+	HttpRequest request() {
 		return this.requestSupplier.get();
 	}
 

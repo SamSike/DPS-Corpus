@@ -61,7 +61,7 @@ public abstract class ScheduledPollEndpoint extends DefaultEndpoint {
     @UriParam(label = "consumer,advanced",
               description = "A pluggable org.apache.camel.PollingConsumerPollingStrategy allowing you to provide your custom implementation"
                             + " to control error handling usually occurred during the poll operation before an Exchange have been created and being routed in Camel.")
-    private PollingConsumerPollStrategy pollStrategy;
+    private PollingConsumerPollStrategy pollStrategy = new DefaultPollingConsumerPollStrategy();
     @UriParam(defaultValue = "TRACE", label = "consumer,scheduler",
               description = "The consumer logs a start/complete log line when it polls. This option allows you to configure the logging level for that.")
     private LoggingLevel runLoggingLevel = LoggingLevel.TRACE;
@@ -153,15 +153,16 @@ public abstract class ScheduledPollEndpoint extends DefaultEndpoint {
                             e);
                 }
             } else if (!"none".equals(schedulerKey)) {
-                if (schedulerKey instanceof String str) {
+                if (schedulerKey instanceof String) {
+                    String str = schedulerKey.toString();
                     // must refer to a custom scheduler by the given name
                     if (EndpointHelper.isReferenceParameter(str)) {
                         str = str.substring(1);
                     }
                     consumerScheduler = CamelContextHelper.mandatoryLookup(getCamelContext(), str,
                             ScheduledPollConsumerScheduler.class);
-                } else if (schedulerKey instanceof ScheduledPollConsumerScheduler scheduler) {
-                    consumerScheduler = scheduler;
+                } else if (schedulerKey instanceof ScheduledPollConsumerScheduler) {
+                    consumerScheduler = (ScheduledPollConsumerScheduler) schedulerKey;
                 } else {
                     throw new IllegalArgumentException(
                             "Scheduler must either be a reference to a custom scheduler or an ScheduledPollConsumerScheduler type, was: "
@@ -172,7 +173,8 @@ public abstract class ScheduledPollEndpoint extends DefaultEndpoint {
     }
 
     protected void doConfigureConsumer(Consumer consumer) {
-        if (consumer instanceof ScheduledPollConsumer spc) {
+        if (consumer instanceof ScheduledPollConsumer) {
+            ScheduledPollConsumer spc = (ScheduledPollConsumer) consumer;
             spc.setBackoffErrorThreshold(backoffErrorThreshold);
             spc.setBackoffIdleThreshold(backoffIdleThreshold);
             spc.setBackoffMultiplier(backoffMultiplier);
@@ -206,6 +208,18 @@ public abstract class ScheduledPollEndpoint extends DefaultEndpoint {
             spc.setScheduler(consumerScheduler);
             spc.setSchedulerProperties(schedulerProperties);
         }
+    }
+
+    @Override
+    protected void doStart() throws Exception {
+        super.doStart();
+        // noop
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        super.doStop();
+        // noop
     }
 
     public boolean isStartScheduler() {

@@ -72,10 +72,8 @@ public class CronScheduledRoutePolicyTest {
 
             Awaitility.await().atMost(5, TimeUnit.SECONDS)
                     .untilAsserted(
-                            () -> {
-                                assertSame(ServiceStatus.Started, context.getRouteController().getRouteStatus("test1"));
-                                assertSame(ServiceStatus.Started, context.getRouteController().getRouteStatus("test2"));
-                            });
+                            () -> assertSame(ServiceStatus.Started, context.getRouteController().getRouteStatus("test1")));
+            assertSame(ServiceStatus.Started, context.getRouteController().getRouteStatus("test2"));
             template.sendBody("direct:start1", "Ready or not, Here, I come");
             template.sendBody("direct:start2", "Ready or not, Here, I come");
 
@@ -113,10 +111,8 @@ public class CronScheduledRoutePolicyTest {
 
             Awaitility.await().atMost(5, TimeUnit.SECONDS)
                     .untilAsserted(
-                            () -> {
-                                assertSame(ServiceStatus.Stopped, context.getRouteController().getRouteStatus("test1"));
-                                assertSame(ServiceStatus.Stopped, context.getRouteController().getRouteStatus("test2"));
-                            });
+                            () -> assertSame(ServiceStatus.Stopped, context.getRouteController().getRouteStatus("test1")));
+            assertSame(ServiceStatus.Stopped, context.getRouteController().getRouteStatus("test2"));
         }
     }
 

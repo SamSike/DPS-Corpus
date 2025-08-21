@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,36 +38,34 @@
 package org.jooq.impl;
 
 import static java.lang.Boolean.TRUE;
-import static org.jooq.ExecuteType.DDL;
 // ...
+import static org.jooq.SQLDialect.SQLITE;
 import static org.jooq.conf.ParamType.INLINED;
-import static org.jooq.conf.SettingsTools.executePreparedStatements;
 import static org.jooq.conf.SettingsTools.renderLocale;
 import static org.jooq.impl.Identifiers.QUOTES;
 import static org.jooq.impl.Identifiers.QUOTE_END_DELIMITER;
 import static org.jooq.impl.Identifiers.QUOTE_END_DELIMITER_ESCAPED;
 import static org.jooq.impl.Identifiers.QUOTE_START_DELIMITER;
-import static org.jooq.impl.JoinTable.NO_SUPPORT_NESTED_JOIN;
-import static org.jooq.impl.Tools.EMPTY_PARAM;
+import static org.jooq.impl.Tools.DATAKEY_RESET_IN_SUBQUERY_SCOPE;
+import static org.jooq.impl.Tools.lazy;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_COUNT_BIND_VALUES;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_FORCE_STATIC_STATEMENT;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_RENDER_IMPLICIT_JOIN;
 import static org.jooq.impl.Tools.SimpleDataKey.DATA_APPEND_SQL;
 import static org.jooq.impl.Tools.SimpleDataKey.DATA_PREPEND_SQL;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.jooq.BindContext;
 import org.jooq.Configuration;
 import org.jooq.Constants;
-import org.jooq.Context;
-import org.jooq.ExecuteContext;
-import org.jooq.ExecuteContext.BatchMode;
 import org.jooq.Field;
+import org.jooq.ForeignKey;
 import org.jooq.Param;
 import org.jooq.Query;
 import org.jooq.QueryPart;
@@ -84,8 +82,9 @@ import org.jooq.conf.Settings;
 import org.jooq.conf.SettingsTools;
 import org.jooq.exception.ControlFlowSignal;
 import org.jooq.exception.DataAccessException;
+import org.jooq.impl.AbstractContext.ScopeStackElement;
 import org.jooq.impl.ScopeMarker.ScopeContent;
-import org.jooq.impl.Tools.ExtendedDataKey;
+import org.jooq.impl.Tools.DataKey;
 import org.jooq.tools.JooqLogger;
 import org.jooq.tools.StringUtils;
 
@@ -95,7 +94,10 @@ import org.jooq.tools.StringUtils;
 class DefaultRenderContext extends AbstractContext<RenderContext> implements RenderContext {
 
     private static final JooqLogger       log                = JooqLogger.getLogger(DefaultRenderContext.class);
+
+    private static final Pattern          IDENTIFIER_PATTERN = Pattern.compile("[A-Za-z][A-Za-z0-9_]*");
     private static final Pattern          NEWLINE            = Pattern.compile("[\\n\\r]");
+    private static final Set<String>      SQLITE_KEYWORDS;
 
     final StringBuilder                   sql;
     private final QueryPartList<Param<?>> bindValues;
@@ -105,6 +107,7 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
     private boolean                       separatorRequired;
     private boolean                       separator;
     private boolean                       newline;
+    private Boolean                       isQuery;
 
     // [#1632] Cached values from Settings
     RenderKeywordCase                     cachedRenderKeywordCase;
@@ -118,8 +121,8 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
     String                                cachedNewline;
     int                                   cachedPrintMargin;
 
-    DefaultRenderContext(Configuration configuration, ExecuteContext ctx) {
-        super(configuration, ctx, null);
+    DefaultRenderContext(Configuration configuration) {
+        super(configuration, null);
 
         Settings settings = configuration.settings();
 
@@ -145,15 +148,13 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
     }
 
     DefaultRenderContext(RenderContext context, boolean copyLocalState) {
-        this(context.configuration(), context.executeContext());
+        this(context.configuration());
 
         paramType(context.paramType());
-        qualify(context.qualify());
         qualifyCatalog(context.qualifyCatalog());
         qualifySchema(context.qualifySchema());
         quote(context.quote());
         castMode(context.castMode());
-        topLevelForLanguageContext(context.topLevelForLanguageContext());
 
         if (copyLocalState) {
             data().putAll(context.data());
@@ -221,22 +222,6 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
     }
 
     @Override
-    public RenderContext scopeHide(QueryPart part) {
-        if (scopeStack.inScope())
-            scopeStack.hide(part);
-
-        return this;
-    }
-
-    @Override
-    public RenderContext scopeShow(QueryPart part) {
-        if (scopeStack.inScope())
-            scopeStack.show(part);
-
-        return this;
-    }
-
-    @Override
     public RenderContext scopeRegister(QueryPart part, boolean forceNew, QueryPart mapped) {
         if (scopeStack.inScope()) {
             ScopeStackElement e;
@@ -244,28 +229,33 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
             if (part instanceof TableImpl) {
                 Table<?> root = (Table<?>) part;
                 Table<?> child = root;
-                List<TableImpl<?>> tables = new ArrayList<>();
+                List<Table<?>> tables = new ArrayList<>();
 
-                // [#14985] Traverse paths only when referencing paths (!forceNew),
-                //          not when declaring them in FROM or USING (forceNew)
-                if (!forceNew) {
-                    while ((child = TableImpl.path(root)) != null) {
-
-                        // [#14985] If a subpath has been declared in FROM, join
-                        //          to that, instead of the root.
-                        if (scopeStack.get(root) != null)
-                            break;
-
-                        tables.add((TableImpl<?>) root);
-                        root = child;
-                    }
+                while (root instanceof TableImpl && (child = ((TableImpl<?>) root).child) != null) {
+                    tables.add(root);
+                    root = child;
                 }
 
                 e = forceNew
                     ? scopeStack.create(root)
                     : scopeStack.getOrCreate(root);
 
-                e.joinNode = JoinNode.create(this, e.joinNode, root, tables);
+                if (e.joinNode == null)
+                    e.joinNode = new JoinNode(configuration(), root);
+
+                JoinNode childNode = e.joinNode;
+                for (int i = tables.size() - 1; i >= 0; i--) {
+                    Table<?> t = tables.get(i);
+                    ForeignKey<?, ?> k = ((TableImpl<?>) t).childPath;
+
+                    JoinNode next = childNode.children.get(k);
+                    if (next == null) {
+                        next = new JoinNode(configuration(), t);
+                        childNode.children.put(k, next);
+                    }
+
+                    childNode = next;
+                }
             }
             else if (forceNew)
                 e = scopeStack.create(part);
@@ -315,37 +305,19 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
 
             // [#11367] TODO: Move this logic into a ScopeMarker as well
             //          TODO: subqueryLevel() is lower than scopeLevel if we use implicit join in procedural logic
-            else if (e1.joinNode != null && e1.joinNode.hasJoinPaths()) {
-                DefaultRenderContext ctx = new DefaultRenderContext(this, false);
-                boolean noNesting = !NO_SUPPORT_NESTED_JOIN.contains(ctx.dialect());
-
-                ctx.data(DATA_RENDER_IMPLICIT_JOIN, true);
-                ctx.declareTables(true);
-
-                if (noNesting)
-                    ctx.sql('(')
-                       .formatIndentStart(e1.indent)
-                       .formatIndentStart()
-                       .formatNewLine();
-
-                Table<?> tree = e1.joinNode.joinTree();
-
-
-
-
-
-
-
-
-
-                ctx.visit(tree);
-
-                if (noNesting)
-                    ctx.formatNewLine()
-                       .sql(')');
-
-                replacedSQL = ctx.render();
-                insertedBindValues = ctx.bindValues();
+            else if (e1.joinNode != null && !e1.joinNode.children.isEmpty()) {
+                replacedSQL = configuration
+                    .dsl()
+                    .renderContext()
+                    .declareTables(true)
+                    .sql('(')
+                    .formatIndentStart(e1.indent)
+                    .formatIndentStart()
+                    .formatNewLine()
+                    .visit(e1.joinNode.joinTree())
+                    .formatNewLine()
+                    .sql(')')
+                    .render();
             }
             else {
 
@@ -416,7 +388,7 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
         String prepend = null;
         String append = null;
 
-        if (topLevel instanceof Query) {
+        if (TRUE.equals(isQuery)) {
             prepend = (String) data(DATA_PREPEND_SQL);
             append = (String) data(DATA_APPEND_SQL);
         }
@@ -437,6 +409,11 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
     @Override
     public final String render(QueryPart part) {
         return new DefaultRenderContext(this).visit(part).render();
+    }
+
+    @Override
+    public final RenderContext keyword(String keyword) {
+        return visit(DSL.keyword(keyword));
     }
 
     @Override
@@ -665,17 +642,34 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
         return this;
     }
 
-    static final void literal(Context<?> ctx, String literal) {
-
+    @Override
+    public final RenderContext literal(String literal) {
         // Literal usually originates from NamedQueryPart.getName(). This could
         // be null for CustomTable et al.
         if (literal == null)
-            return;
+            return this;
 
-        SQLDialect family = ctx.family();
+        SQLDialect family = family();
 
-        if (ctx instanceof AbstractContext<?> c)
-            literal = c.applyNameCase(literal);
+        // Quoting is needed when explicitly requested...
+        boolean needsQuote =
+
+            // [#2367] ... but in SQLite, quoting "normal" literals is generally
+            // asking for trouble, as SQLite bends the rules here, see
+            // http://www.sqlite.org/lang_keywords.html for details ...
+            (family != SQLITE && quote())
+
+        ||
+
+            // [#2367] ... yet, do quote when an identifier is a SQLite keyword
+            (family == SQLITE && SQLITE_KEYWORDS.contains(literal.toUpperCase(renderLocale(configuration().settings()))))
+
+        ||
+
+            // [#1982] [#3360] ... yet, do quote when an identifier contains special characters
+            (family == SQLITE && !IDENTIFIER_PATTERN.matcher(literal).matches());
+
+        literal = applyNameCase(literal);
 
 
 
@@ -683,26 +677,28 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
 
 
 
-        if (ctx.quote()) {
+        if (needsQuote) {
             char[][][] quotes = QUOTES.get(family);
 
             char start = quotes[QUOTE_START_DELIMITER][0][0];
             char end = quotes[QUOTE_END_DELIMITER][0][0];
 
-            ctx.sql(start);
+            sql(start);
 
             // [#4922] This micro optimisation does seem to have a significant
             //         effect as the replace call can be avoided in almost all
             //         situations
             if (literal.indexOf(end) > -1)
-                ctx.sql(StringUtils.replace(literal, new String(quotes[QUOTE_END_DELIMITER][0]), new String(quotes[QUOTE_END_DELIMITER_ESCAPED][0])), true);
+                sql(StringUtils.replace(literal, new String(quotes[QUOTE_END_DELIMITER][0]), new String(quotes[QUOTE_END_DELIMITER_ESCAPED][0])), true);
             else
-                ctx.sql(literal, true);
+                sql(literal, true);
 
-            ctx.sql(end);
+            sql(end);
         }
         else
-            ctx.sql(literal, true);
+            sql(literal, true);
+
+        return this;
     }
 
     @Override
@@ -719,6 +715,15 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
 
     @Override
     protected final void visit0(QueryPartInternal internal) {
+        if (isQuery == null) {
+            isQuery = internal instanceof Query;
+
+            if (TRUE.equals(settings().isTransformPatterns()) && configuration().requireCommercial(() -> "SQL transformations are a commercial only feature. Please consider upgrading to the jOOQ Professional Edition or jOOQ Enterprise Edition.")) {
+
+
+
+            }
+        }
 
 
 
@@ -740,13 +745,10 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
         //         collected the bind variable. The same is true if custom data
         //         type bindings use Context.visit(Param), in case of which we
         //         must not collect the current Param
-        if (after == before && paramType != INLINED && internal instanceof AbstractParam) {
-            AbstractParam<?> param = (AbstractParam<?>) internal;
+        if (after == before && paramType != INLINED && internal instanceof Param) {
+            Param<?> param = (Param<?>) internal;
 
-            if (!param.isInline(this)) {
-
-                // [#16340] Increment index even if we don't need it internally, while rendering
-                nextIndex();
+            if (!param.isInline()) {
                 bindValues.add(param);
 
                 Integer threshold = settings().getInlineThreshold();
@@ -755,14 +757,6 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
                 }
                 else {
                     switch (family()) {
-
-
-
-
-
-
-
-
 
 
 
@@ -832,6 +826,152 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
     // ------------------------------------------------------------------------
 
     static {
+        SQLITE_KEYWORDS = new HashSet<>();
+
+        // [#2367] Taken from http://www.sqlite.org/lang_keywords.html
+        SQLITE_KEYWORDS.addAll(Arrays.asList(
+            "ABORT",
+            "ACTION",
+            "ADD",
+            "AFTER",
+            "ALL",
+            "ALTER",
+            "ANALYZE",
+            "AND",
+            "AS",
+            "ASC",
+            "ATTACH",
+            "AUTOINCREMENT",
+            "BEFORE",
+            "BEGIN",
+            "BETWEEN",
+            "BY",
+            "CASCADE",
+            "CASE",
+            "CAST",
+            "CHECK",
+            "COLLATE",
+            "COLUMN",
+            "COMMIT",
+            "CONFLICT",
+            "CONSTRAINT",
+            "CREATE",
+            "CROSS",
+            "CURRENT",
+            "CURRENT_DATE",
+            "CURRENT_TIME",
+            "CURRENT_TIMESTAMP",
+            "DATABASE",
+            "DEFAULT",
+            "DEFERRABLE",
+            "DEFERRED",
+            "DELETE",
+            "DESC",
+            "DETACH",
+            "DISTINCT",
+            "DO",
+            "DROP",
+            "EACH",
+            "ELSE",
+            "END",
+            "ESCAPE",
+            "EXCEPT",
+            "EXCLUDE",
+            "EXCLUSIVE",
+            "EXISTS",
+            "EXPLAIN",
+            "FAIL",
+            "FILTER",
+            "FOLLOWING",
+            "FOR",
+            "FOREIGN",
+            "FROM",
+            "FULL",
+            "GLOB",
+            "GROUP",
+            "GROUPS",
+            "HAVING",
+            "IF",
+            "IGNORE",
+            "IMMEDIATE",
+            "IN",
+            "INDEX",
+            "INDEXED",
+            "INITIALLY",
+            "INNER",
+            "INSERT",
+            "INSTEAD",
+            "INTERSECT",
+            "INTO",
+            "IS",
+            "ISNULL",
+            "JOIN",
+            "KEY",
+            "LEFT",
+            "LIKE",
+            "LIMIT",
+            "MATCH",
+            "NATURAL",
+            "NO",
+            "NOT",
+            "NOTHING",
+            "NOTNULL",
+            "NULL",
+            "OF",
+            "OFFSET",
+            "ON",
+            "OR",
+            "ORDER",
+            "OTHERS",
+            "OUTER",
+            "OVER",
+            "PARTITION",
+            "PLAN",
+            "PRAGMA",
+            "PRECEDING",
+            "PRIMARY",
+            "QUERY",
+            "RAISE",
+            "RANGE",
+            "RECURSIVE",
+            "REFERENCES",
+            "REGEXP",
+            "REINDEX",
+            "RELEASE",
+            "RENAME",
+            "REPLACE",
+            "RESTRICT",
+            "RIGHT",
+            "ROLLBACK",
+            "ROW",
+            "ROWS",
+            "SAVEPOINT",
+            "SELECT",
+            "SET",
+            "TABLE",
+            "TEMP",
+            "TEMPORARY",
+            "THEN",
+            "TIES",
+            "TO",
+            "TRANSACTION",
+            "TRIGGER",
+            "UNBOUNDED",
+            "UNION",
+            "UNIQUE",
+            "UPDATE",
+            "USING",
+            "VACUUM",
+            "VALUES",
+            "VIEW",
+            "VIRTUAL",
+            "WHEN",
+            "WHERE",
+            "WINDOW",
+            "WITH",
+            "WITHOUT"
+        ));
+
 
 
         /*
@@ -852,6 +992,16 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
          *
          * Hint: While a) - c) work, d) is the right answer :-)
          *
+         * But before you do any of a) - c), consider this. We give away this awesome software for free,
+         * and we'd love to continue giving it away for free, so all we would like to ask you is to
+         * continue to show your love and our brand to everyone involved in your software simply in the
+         * log files when you load jOOQ. Please don't remove our logo.
+         *
+         * Thank you very much! If you absolutely must remove this logo, and can live with the guilt
+         * and shame, below is the system property that deactivates it.
+         *
+         * Cheers from the jOOQ Team.
+         *
          * --------------------------------------------------
          * DEAR USER, PLEASE READ THE ABOVE BEFORE PROCEEDING
          */
@@ -859,7 +1009,7 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
             JooqLogger l = JooqLogger.getLogger(Constants.class);
             String message;
 
-            message = "Thank you for using jOOQ " + Constants.FULL_VERSION + " (Build date: " + Constants.BUILD_DATE + ")";
+            message = "Thank you for using jOOQ " + Constants.FULL_VERSION;
 
 
 
@@ -922,46 +1072,6 @@ class DefaultRenderContext extends AbstractContext<RenderContext> implements Ren
             this.sql = sql;
             this.bindValues = bindValues;
             this.skipUpdateCounts = skipUpdateCounts;
-        }
-
-        static Rendered rendered(
-            Configuration c,
-            DefaultExecuteContext ctx,
-            Query query,
-            boolean countBindValues,
-            boolean forceStaticStatement
-        ) {
-
-            // [#3542] [#4977] Some dialects do not support bind values in DDL statements
-            // [#6474] [#6929] Can this be communicated in a leaner way?
-            if (ctx.type() == DDL) {
-                ctx.data(DATA_FORCE_STATIC_STATEMENT, true);
-                DefaultRenderContext render = new DefaultRenderContext(c, ctx);
-                return new Rendered(render.paramType(INLINED).visit(query).render(), null, render.skipUpdateCounts());
-            }
-            else if (executePreparedStatements(c.settings()) && !forceStaticStatement) {
-                try {
-                    DefaultRenderContext render = new DefaultRenderContext(c, ctx);
-                    render.data(DATA_COUNT_BIND_VALUES, countBindValues);
-                    return new Rendered(render.visit(query).render(), render.bindValues(), render.skipUpdateCounts());
-                }
-                catch (DefaultRenderContext.ForceInlineSignal e) {
-                    ctx.data(DATA_FORCE_STATIC_STATEMENT, true);
-                    DefaultRenderContext render = new DefaultRenderContext(c, ctx);
-                    return new Rendered(render.paramType(INLINED).visit(query).render(), null, render.skipUpdateCounts());
-                }
-            }
-            else {
-                DefaultRenderContext render = new DefaultRenderContext(c, ctx);
-                return new Rendered(render.paramType(INLINED).visit(query).render(), null, render.skipUpdateCounts());
-            }
-        }
-
-        final void setSQLAndParams(DefaultExecuteContext ctx) {
-            ctx.sql(sql);
-
-            if (bindValues != null)
-                ctx.params(bindValues.toArray(EMPTY_PARAM));
         }
 
         @Override

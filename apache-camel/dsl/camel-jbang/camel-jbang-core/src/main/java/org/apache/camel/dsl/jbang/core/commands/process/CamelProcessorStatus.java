@@ -18,7 +18,6 @@ package org.apache.camel.dsl.jbang.core.commands.process;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -28,42 +27,22 @@ import com.github.freva.asciitable.HorizontalAlign;
 import com.github.freva.asciitable.OverflowBehaviour;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
 import org.apache.camel.dsl.jbang.core.common.ProcessHelper;
-import org.apache.camel.support.PatternHelper;
-import org.apache.camel.tooling.model.Strings;
 import org.apache.camel.util.StringHelper;
-import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.json.JsonArray;
 import org.apache.camel.util.json.JsonObject;
 import org.apache.camel.util.json.Jsoner;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
-@Command(name = "processor", description = "Get status of Camel processors",
-         sortOptions = false, showDefaultValues = true)
+@Command(name = "processor", description = "Get status of Camel processors")
 public class CamelProcessorStatus extends ProcessWatchCommand {
-
-    public static class PidNameCompletionCandidates implements Iterable<String> {
-
-        public PidNameCompletionCandidates() {
-        }
-
-        @Override
-        public Iterator<String> iterator() {
-            return List.of("pid", "name").iterator();
-        }
-
-    }
 
     @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
     String name = "*";
 
-    @CommandLine.Option(names = { "--sort" }, completionCandidates = PidNameCompletionCandidates.class,
+    @CommandLine.Option(names = { "--sort" },
                         description = "Sort by pid or name", defaultValue = "pid")
     String sort;
-
-    @CommandLine.Option(names = { "--remote" },
-                        description = "Break down counters into remote/total pairs")
-    boolean remote;
 
     @CommandLine.Option(names = { "--source" },
                         description = "Prefer to display source filename/code instead of IDs")
@@ -77,28 +56,12 @@ public class CamelProcessorStatus extends ProcessWatchCommand {
                         description = "Filter processors that must be slower than the given time (ms)")
     long mean;
 
-    @CommandLine.Option(names = { "--filter" },
-                        description = "Filter processors by id")
-    String[] filter;
-
-    @CommandLine.Option(names = { "--group" },
-                        description = "Filter processors by group")
-    String[] group;
-
-    @CommandLine.Option(names = { "--description" },
-                        description = "Include description in the ID column (if available)")
-    boolean description;
-
-    @CommandLine.Option(names = { "--show-group" },
-                        description = "Include group column")
-    boolean showGroup;
-
     public CamelProcessorStatus(CamelJBangMain main) {
         super(main);
     }
 
     @Override
-    public Integer doProcessWatchCall() throws Exception {
+    public Integer doCall() throws Exception {
         List<Row> rows = new ArrayList<>();
 
         List<Long> pids = findPids(name);
@@ -119,31 +82,16 @@ public class CamelProcessorStatus extends ProcessWatchCommand {
                             if ("CamelJBang".equals(row.name)) {
                                 row.name = ProcessHelper.extractName(root, ph);
                             }
-                            row.pid = Long.toString(ph.pid());
+                            row.pid = "" + ph.pid();
                             row.routeId = o.getString("routeId");
-                            row.group = o.getString("group");
-                            row.description = o.getString("description");
-                            row.nodePrefixId = o.getString("nodePrefixId");
                             row.processor = o.getString("from");
                             row.source = o.getString("source");
                             row.state = o.getString("state");
                             Map<String, ?> stats = o.getMap("statistics");
                             if (stats != null) {
                                 row.total = stats.get("exchangesTotal").toString();
-                                Object num = stats.get("remoteExchangesTotal");
-                                if (num != null) {
-                                    row.totalRemote = num.toString();
-                                }
                                 row.inflight = stats.get("exchangesInflight").toString();
-                                num = stats.get("remoteExchangesInflight");
-                                if (num != null) {
-                                    row.inflightRemote = num.toString();
-                                }
                                 row.failed = stats.get("exchangesFailed").toString();
-                                num = stats.get("remoteExchangesFailed");
-                                if (num != null) {
-                                    row.failedRemote = num.toString();
-                                }
                                 row.mean = stats.get("meanProcessingTime").toString();
                                 if ("-1".equals(row.mean)) {
                                     row.mean = null;
@@ -158,20 +106,17 @@ public class CamelProcessorStatus extends ProcessWatchCommand {
                                 if (last != null) {
                                     row.delta = last.toString();
                                 }
-                                last = stats.get("lastCreatedExchangeTimestamp");
+                                last = stats.get("sinceLastCreatedExchange");
                                 if (last != null) {
-                                    long time = Long.parseLong(last.toString());
-                                    row.sinceLastStarted = TimeUtils.printSince(time);
+                                    row.sinceLastStarted = last.toString();
                                 }
-                                last = stats.get("lastCompletedExchangeTimestamp");
+                                last = stats.get("sinceLastCompletedExchange");
                                 if (last != null) {
-                                    long time = Long.parseLong(last.toString());
-                                    row.sinceLastCompleted = TimeUtils.printSince(time);
+                                    row.sinceLastCompleted = last.toString();
                                 }
-                                last = stats.get("lastFailedExchangeTimestamp");
+                                last = stats.get("sinceLastFailedExchange");
                                 if (last != null) {
-                                    long time = Long.parseLong(last.toString());
-                                    row.sinceLastFailed = TimeUtils.printSince(time);
+                                    row.sinceLastFailed = last.toString();
                                 }
                             }
 
@@ -193,29 +138,6 @@ public class CamelProcessorStatus extends ProcessWatchCommand {
                     }
                 });
 
-        // filter rows
-        if (filter != null || group != null) {
-            rows.removeIf(r -> {
-                boolean keep = true;
-                if (filter != null) {
-                    keep = PatternHelper.matchPatterns(r.processorId, filter);
-                }
-                if (!keep && filter != null) {
-                    for (String f : filter) {
-                        if (!keep) {
-                            String w = f.endsWith("*") ? f : f + "*"; // use wildcard in matching processor
-                            keep = PatternHelper.matchPattern(r.processor, w);
-                        }
-                    }
-                }
-                // group take precedence
-                if (keep && group != null) {
-                    keep = PatternHelper.matchPatterns(r.group, group);
-                }
-                return !keep;
-            });
-        }
-
         // sort rows
         rows.sort(this::sortRow);
 
@@ -232,12 +154,9 @@ public class CamelProcessorStatus extends ProcessWatchCommand {
             row.pid = route.pid;
             row.name = route.name;
             row.routeId = route.routeId;
-            row.group = route.group;
             rows.add(row);
             row.processorId = o.getString("id");
-            row.nodePrefixId = o.getString("nodePrefixId");
             row.processor = o.getString("processor");
-            row.description = o.getString("description");
             row.level = o.getIntegerOrDefault("level", 0);
             row.source = o.getString("source");
             Map<String, ?> stats = o.getMap("statistics");
@@ -259,15 +178,13 @@ public class CamelProcessorStatus extends ProcessWatchCommand {
                 if (last != null) {
                     row.delta = last.toString();
                 }
-                last = stats.get("lastCompletedExchangeTimestamp");
+                last = stats.get("sinceLastCompletedExchange");
                 if (last != null) {
-                    long time = Long.parseLong(last.toString());
-                    row.sinceLastCompleted = TimeUtils.printSince(time);
+                    row.sinceLastCompleted = last.toString();
                 }
-                last = stats.get("lastFailedExchangeTimestamp");
+                last = stats.get("sinceLastFailedExchange");
                 if (last != null) {
-                    long time = Long.parseLong(last.toString());
-                    row.sinceLastFailed = TimeUtils.printSince(time);
+                    row.sinceLastFailed = last.toString();
                 }
             }
             if (source) {
@@ -288,25 +205,18 @@ public class CamelProcessorStatus extends ProcessWatchCommand {
     }
 
     protected void printTable(List<Row> rows) {
-        printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
+        System.out.println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
                 new Column().header("PID").headerAlign(HorizontalAlign.CENTER).with(this::getPid),
                 new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).maxWidth(30, OverflowBehaviour.ELLIPSIS_RIGHT)
                         .with(this::getName),
-                new Column().header("GROUP").visible(showGroup).dataAlign(HorizontalAlign.LEFT)
-                        .maxWidth(20, OverflowBehaviour.ELLIPSIS_RIGHT)
-                        .with(this::getGroup),
-                new Column().header("ID").visible(!description).dataAlign(HorizontalAlign.LEFT)
-                        .maxWidth(40, OverflowBehaviour.ELLIPSIS_RIGHT)
+                new Column().header("ID").dataAlign(HorizontalAlign.LEFT).maxWidth(40, OverflowBehaviour.ELLIPSIS_RIGHT)
                         .with(this::getId),
-                new Column().header("ID").visible(description).dataAlign(HorizontalAlign.LEFT)
-                        .maxWidth(60, OverflowBehaviour.NEWLINE)
-                        .with(this::getIdAndDescription),
                 new Column().header("PROCESSOR").dataAlign(HorizontalAlign.LEFT).minWidth(25)
                         .maxWidth(45, OverflowBehaviour.ELLIPSIS_RIGHT)
                         .with(this::getProcessor),
-                new Column().header("TOTAL").with(this::getTotal),
-                new Column().header("FAIL").with(this::getFailed),
-                new Column().header("INFLIGHT").with(this::getInflight),
+                new Column().header("TOTAL").with(r -> r.total),
+                new Column().header("FAIL").with(r -> r.failed),
+                new Column().header("INFLIGHT").with(r -> r.inflight),
                 new Column().header("MEAN").with(r -> r.mean),
                 new Column().header("MIN").with(r -> r.min),
                 new Column().header("MAX").with(r -> r.max),
@@ -352,33 +262,8 @@ public class CamelProcessorStatus extends ProcessWatchCommand {
         return r.delta;
     }
 
-    protected String getTotal(Row r) {
-        if (remote && r.totalRemote != null) {
-            return r.totalRemote + "/" + r.total;
-        }
-        return r.total;
-    }
-
-    protected String getFailed(Row r) {
-        if (remote && r.failedRemote != null) {
-            return r.failedRemote + "/" + r.failed;
-        }
-        return r.failed;
-    }
-
-    protected String getInflight(Row r) {
-        if (remote && r.inflightRemote != null) {
-            return r.inflightRemote + "/" + r.inflight;
-        }
-        return r.inflight;
-    }
-
     protected String getName(Row r) {
         return r.processorId == null ? r.name : "";
-    }
-
-    protected String getGroup(Row r) {
-        return r.group;
     }
 
     protected String getId(Row r) {
@@ -386,28 +271,9 @@ public class CamelProcessorStatus extends ProcessWatchCommand {
         if (source && r.source != null) {
             answer = sourceLocLine(r.source);
         } else {
-            if (r.processorId == null) {
-                answer = r.routeId;
-            } else {
-                answer = r.processorId;
-                if (r.nodePrefixId != null && answer.startsWith(r.nodePrefixId)) {
-                    answer = answer.substring(r.nodePrefixId.length());
-                }
-            }
+            answer = r.processorId != null ? r.processorId : r.routeId;
         }
         return answer;
-    }
-
-    protected String getIdAndDescription(Row r) {
-        String id = getId(r);
-        if (description && r.description != null) {
-            if (id != null) {
-                id = id + "\n  " + Strings.wrapWords(r.description, " ", "\n  ", 55, true);
-            } else {
-                id = r.description;
-            }
-        }
-        return id;
     }
 
     protected String getPid(Row r) {
@@ -436,20 +302,14 @@ public class CamelProcessorStatus extends ProcessWatchCommand {
         String name;
         long uptime;
         String routeId;
-        String group;
-        String nodePrefixId;
         String processorId;
         String processor;
-        String description;
         int level;
         String source;
         String state;
         String total;
-        String totalRemote;
         String failed;
-        String failedRemote;
         String inflight;
-        String inflightRemote;
         String mean;
         String max;
         String min;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,8 @@ package org.springframework.scheduling.annotation;
 
 import java.util.concurrent.Executor;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
+import org.springframework.lang.Nullable;
 
 /**
  * A convenience {@link AsyncConfigurer} that implements all methods
@@ -29,18 +28,17 @@ import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
  *
  * @author Stephane Nicoll
  * @since 4.1
- * @deprecated as of 6.0 in favor of implementing {@link AsyncConfigurer} directly
  */
-@Deprecated(since = "6.0")
 public class AsyncConfigurerSupport implements AsyncConfigurer {
 
 	@Override
-	public @Nullable Executor getAsyncExecutor() {
+	public Executor getAsyncExecutor() {
 		return null;
 	}
 
 	@Override
-	public @Nullable AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
+	@Nullable
+	public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
 		return null;
 	}
 

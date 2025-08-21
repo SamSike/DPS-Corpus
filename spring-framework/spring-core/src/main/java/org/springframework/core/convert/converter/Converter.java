@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.core.convert.converter;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -42,7 +41,8 @@ public interface Converter<S, T> {
 	 * @return the converted object, which must be an instance of {@code T} (potentially {@code null})
 	 * @throws IllegalArgumentException if the source cannot be converted to the desired target type
 	 */
-	@Nullable T convert(S source);
+	@Nullable
+	T convert(S source);
 
 	/**
 	 * Construct a composed {@link Converter} that first applies this {@link Converter}
@@ -57,7 +57,7 @@ public interface Converter<S, T> {
 	 * @since 5.3
 	 */
 	default <U> Converter<S, U> andThen(Converter<? super T, ? extends U> after) {
-		Assert.notNull(after, "'after' Converter must not be null");
+		Assert.notNull(after, "After Converter must not be null");
 		return (S s) -> {
 			T initialResult = convert(s);
 			return (initialResult != null ? after.convert(initialResult) : null);

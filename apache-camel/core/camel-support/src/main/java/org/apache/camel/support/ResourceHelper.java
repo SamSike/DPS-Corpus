@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.ResourceLoader;
 import org.apache.camel.util.AntPathMatcher;
@@ -191,7 +192,8 @@ public final class ResourceHelper {
      * @return              the {@link Resource}. Or <tt>null</tt> if not found
      */
     public static Resource resolveResource(CamelContext camelContext, String uri) {
-        final ResourceLoader loader = PluginHelper.getResourceLoader(camelContext);
+        final ExtendedCamelContext ecc = camelContext.adapt(ExtendedCamelContext.class);
+        final ResourceLoader loader = ecc.getResourceLoader();
         return loader.resolveResource(uri);
     }
 
@@ -256,13 +258,12 @@ public final class ResourceHelper {
     }
 
     /**
-     * Find resources from the file system using Ant-style path patterns (skips hidden files, or files from hidden
-     * folders).
+     * Find resources from the file system using Ant-style path patterns.
      *
      * @param  root      the starting file
      * @param  pattern   the Ant pattern
-     * @return           set of files matching the given pattern
-     * @throws Exception is thrown if IO error
+     * @return           a list of files matching the given pattern
+     * @throws Exception
      */
     public static Set<Path> findInFileSystem(Path root, String pattern) throws Exception {
         try (Stream<Path> path = Files.walk(root)) {
@@ -272,15 +273,9 @@ public final class ResourceHelper {
                         Path relative = root.relativize(entry);
                         String str = relative.toString().replaceAll(Pattern.quote(File.separator),
                                 AntPathMatcher.DEFAULT_PATH_SEPARATOR);
-                        // skip files in hidden folders
-                        boolean hidden = str.startsWith(".") || str.contains(AntPathMatcher.DEFAULT_PATH_SEPARATOR + ".");
-                        if (!hidden) {
-                            boolean match = AntPathMatcher.INSTANCE.match(pattern, str);
-                            LOG.debug("Found resource: {} matching pattern: {} -> {}", entry, pattern, match);
-                            return match;
-                        } else {
-                            return false;
-                        }
+                        boolean match = AntPathMatcher.INSTANCE.match(pattern, str);
+                        LOG.debug("Found resource: {} matching pattern: {} -> {}", entry, pattern, match);
+                        return match;
                     })
                     .collect(Collectors.toCollection(LinkedHashSet::new));
         }
@@ -301,7 +296,7 @@ public final class ResourceHelper {
             }
 
             @Override
-            public InputStream getInputStream() {
+            public InputStream getInputStream() throws IOException {
                 return new ByteArrayInputStream(content);
             }
         };

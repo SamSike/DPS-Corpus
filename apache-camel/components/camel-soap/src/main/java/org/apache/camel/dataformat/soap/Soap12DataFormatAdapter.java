@@ -92,7 +92,7 @@ public class Soap12DataFormatAdapter implements SoapDataFormatAdapter {
                     headerContent.addAll(inboundSoapHeaders);
                 }
             }
-            bodyContent = getDataFormat().createContentFromObject(inputObject, soapAction);
+            bodyContent = getDataFormat().createContentFromObject(inputObject, soapAction, headerContent);
         }
 
         for (Object elem : bodyContent) {
@@ -106,13 +106,14 @@ public class Soap12DataFormatAdapter implements SoapDataFormatAdapter {
             envelope.setHeader(header);
         }
         envelope.setBody(body);
-        return objectFactory.createEnvelope(envelope);
+        JAXBElement<Envelope> envelopeEl = objectFactory.createEnvelope(envelope);
+        return envelopeEl;
     }
 
     /**
      * Creates a SOAP fault from the exception and populates the message as well as the detail. The detail object is
      * read from the method getFaultInfo of the throwable if present
-     *
+     * 
      * @param  exception the cause exception
      * @return           SOAP fault from given Throwable
      */
@@ -198,7 +199,7 @@ public class Soap12DataFormatAdapter implements SoapDataFormatAdapter {
      * Creates an exception and eventually an embedded bean that contains the fault detail. The exception class is
      * determined by using the elementNameStrategy. The qName of the fault detail should match the WebFault annotation
      * of the Exception class. If no fault detail is set a {@link jakarta.xml.ws.soap.SOAPFaultException} is created.
-     *
+     * 
      * @param  fault Soap fault
      * @return       created Exception
      */

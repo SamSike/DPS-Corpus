@@ -1,7 +1,9 @@
 /**
  * Support classes for annotation-driven tests.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.test.annotation;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

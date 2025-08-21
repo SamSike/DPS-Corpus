@@ -39,26 +39,20 @@ public final class SqlHelper {
             try (InputStream is = ResourceHelper.resolveMandatoryResourceAsInputStream(camelContext, query)) {
                 answer = camelContext.getTypeConverter().mandatoryConvertTo(String.class, is);
             }
-            answer = resolvePlaceholders(answer, placeholder);
-        }
-        return answer;
-    }
-
-    public static String resolvePlaceholders(String query, String placeholder) {
-        String answer = query;
-        if (placeholder != null) {
-            answer = answer.replaceAll(placeholder, "?");
-        }
-        // skip lines with comments
-        StringJoiner sj = new StringJoiner("\n");
-        String[] lines = answer.split("\n");
-        for (String line : lines) {
-            String trim = line.trim();
-            if (!trim.isEmpty() && !trim.startsWith("--")) {
-                sj.add(line);
+            if (placeholder != null) {
+                answer = answer.replaceAll(placeholder, "?");
             }
+            // skip lines with comments
+            StringJoiner sj = new StringJoiner("\n");
+            String[] lines = answer.split("\n");
+            for (String line : lines) {
+                String trim = line.trim();
+                if (!trim.isEmpty() && !trim.startsWith("--")) {
+                    sj.add(line);
+                }
+            }
+            answer = sj.toString();
         }
-        answer = sj.toString();
         return answer;
     }
 }

@@ -32,10 +32,10 @@ public class StartupListenerComponentFromRegistryTest extends ContextTestSupport
     private MyComponent my;
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
+    protected Registry createRegistry() throws Exception {
         my = new MyComponent();
 
-        Registry jndi = super.createCamelRegistry();
+        Registry jndi = super.createRegistry();
         jndi.bind("my", my);
         return jndi;
     }
@@ -60,7 +60,7 @@ public class StartupListenerComponentFromRegistryTest extends ContextTestSupport
         private int invoked;
 
         @Override
-        public void onCamelContextStarted(CamelContext context, boolean alreadyStarted) {
+        public void onCamelContextStarted(CamelContext context, boolean alreadyStarted) throws Exception {
             invoked++;
 
             // the routes should not have been started as they start afterwards
@@ -74,10 +74,10 @@ public class StartupListenerComponentFromRegistryTest extends ContextTestSupport
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").routeId("foo").to("my:bar");
                 from("my:bar").routeId("bar").to("mock:result");
             }

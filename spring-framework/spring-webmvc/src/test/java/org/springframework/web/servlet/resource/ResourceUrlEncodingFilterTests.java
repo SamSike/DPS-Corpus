@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.web.servlet.resource;
 
 import java.io.IOException;
@@ -37,11 +36,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Tests for {@link ResourceUrlEncodingFilter}.
+ * Unit tests for {@code ResourceUrlEncodingFilter}.
  *
  * @author Brian Clozel
  */
-class ResourceUrlEncodingFilterTests {
+public class ResourceUrlEncodingFilterTests {
 
 	private ResourceUrlEncodingFilter filter;
 
@@ -49,7 +48,7 @@ class ResourceUrlEncodingFilterTests {
 
 
 	@BeforeEach
-	void createFilter() {
+	public void createFilter() {
 		VersionResourceResolver versionResolver = new VersionResourceResolver();
 		versionResolver.setStrategyMap(Collections.singletonMap("/**", new ContentVersionStrategy()));
 		PathResourceResolver pathResolver = new PathResourceResolver();
@@ -74,13 +73,13 @@ class ResourceUrlEncodingFilterTests {
 
 
 	@Test
-	void encodeURL() throws Exception {
+	public void encodeURL() throws Exception {
 		testEncodeUrl(new MockHttpServletRequest("GET", "/"),
 				"/resources/bar.css", "/resources/bar-11e16cf79faee7ac698c805cf28248d2.css");
 	}
 
 	@Test
-	void encodeUrlWithContext() throws Exception {
+	public void encodeUrlWithContext() throws Exception {
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/context/foo");
 		request.setContextPath("/context");
 
@@ -90,7 +89,7 @@ class ResourceUrlEncodingFilterTests {
 
 
 	@Test
-	void encodeUrlWithContextAndForwardedRequest() throws Exception {
+	public void encodeUrlWithContextAndForwardedRequest() throws Exception {
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/context/foo");
 		request.setContextPath("/context");
 
@@ -113,7 +112,7 @@ class ResourceUrlEncodingFilterTests {
 	}
 
 	@Test
-	void encodeContextPathUrlWithSuffix() throws Exception {
+	public void encodeContextPathUrlWithSuffix() throws Exception {
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/context/");
 		request.setContextPath("/context");
 

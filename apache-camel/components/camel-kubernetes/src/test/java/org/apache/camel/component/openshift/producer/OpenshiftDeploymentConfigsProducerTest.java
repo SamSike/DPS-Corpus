@@ -104,7 +104,7 @@ public class OpenshiftDeploymentConfigsProducerTest extends KubernetesTestSuppor
     }
 
     @Test
-    void updateDeploymentConfig() {
+    void replaceDeploymentConfig() {
         Map<String, String> labels = Map.of("my.label.key", "my.label.value");
         DeploymentConfigSpec spec = new DeploymentConfigSpecBuilder().withReplicas(13).build();
         DeploymentConfig de1
@@ -116,7 +116,7 @@ public class OpenshiftDeploymentConfigsProducerTest extends KubernetesTestSuppor
         server.expect().put().withPath("/apis/apps.openshift.io/v1/namespaces/test/deploymentconfigs/de1").andReturn(200, de1)
                 .once();
 
-        Exchange ex = template.request("direct:update", exchange -> {
+        Exchange ex = template.request("direct:replace", exchange -> {
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test");
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_DEPLOYMENTS_LABELS, labels);
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_DEPLOYMENT_NAME, "de1");
@@ -160,10 +160,10 @@ public class OpenshiftDeploymentConfigsProducerTest extends KubernetesTestSuppor
         server.expect().withPath("/apis/apps.openshift.io/v1/namespaces/test/deploymentconfigs/dc1")
                 .andReturn(200, new DeploymentConfigBuilder().withNewMetadata().withName("dc1")
                         .withResourceVersion("1").endMetadata().withNewSpec().withReplicas(5).endSpec().withNewStatus()
-                        .withReplicas(5).endStatus().build())
+                        .withReplicas(1).endStatus().build())
                 .once();
 
-        server.expect().withPath("/apis/apps.openshift.io/v1/namespaces/test/deploymentconfigs/dc1/scale")
+        server.expect().withPath("/apis/apps.openshift.io/v1/namespaces/test/deploymentconfigs/dc1")
                 .andReturn(200, new DeploymentConfigBuilder().withNewMetadata().withName("dc1")
                         .withResourceVersion("1").endMetadata().withNewSpec().withReplicas(5).endSpec().withNewStatus()
                         .withReplicas(5).endStatus().build())
@@ -191,8 +191,8 @@ public class OpenshiftDeploymentConfigsProducerTest extends KubernetesTestSuppor
                         .toF("openshift-deploymentconfigs:///?kubernetesClient=#kubernetesClient&operation=listDeploymentConfigsByLabels");
                 from("direct:create")
                         .toF("openshift-deploymentconfigs:///?kubernetesClient=#kubernetesClient&operation=createDeploymentConfig");
-                from("direct:update")
-                        .toF("openshift-deploymentconfigs:///?kubernetesClient=#kubernetesClient&operation=updateDeploymentConfig");
+                from("direct:replace")
+                        .toF("openshift-deploymentconfigs:///?kubernetesClient=#kubernetesClient&operation=replaceDeploymentConfig");
                 from("direct:delete")
                         .toF("openshift-deploymentconfigs:///?kubernetesClient=#kubernetesClient&operation=deleteDeploymentConfig");
                 from("direct:scale")

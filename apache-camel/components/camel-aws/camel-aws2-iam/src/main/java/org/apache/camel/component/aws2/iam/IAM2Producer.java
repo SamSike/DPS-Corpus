@@ -20,9 +20,6 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.InvalidPayloadException;
 import org.apache.camel.Message;
-import org.apache.camel.health.HealthCheck;
-import org.apache.camel.health.HealthCheckHelper;
-import org.apache.camel.health.WritableHealthCheckRepository;
 import org.apache.camel.support.DefaultProducer;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.URISupport;
@@ -64,11 +61,7 @@ import software.amazon.awssdk.services.iam.model.UpdateAccessKeyResponse;
 public class IAM2Producer extends DefaultProducer {
 
     private static final Logger LOG = LoggerFactory.getLogger(IAM2Producer.class);
-    public static final String MISSING_GROUP_NAME = "Group Name must be specified";
-    public static final String MISSING_USER_NAME = "User Name must be specified";
     private transient String iamProducerToString;
-    private HealthCheck producerHealthCheck;
-    private WritableHealthCheckRepository healthCheckRepository;
 
     public IAM2Producer(Endpoint endpoint) {
         super(endpoint);
@@ -198,7 +191,7 @@ public class IAM2Producer extends DefaultProducer {
                 String userName = exchange.getIn().getHeader(IAM2Constants.USERNAME, String.class);
                 builder.userName(userName);
             } else {
-                throw new IllegalArgumentException(MISSING_USER_NAME);
+                throw new IllegalArgumentException("User Name must be specified");
             }
             CreateUserResponse result;
             try {
@@ -232,7 +225,7 @@ public class IAM2Producer extends DefaultProducer {
                 String userName = exchange.getIn().getHeader(IAM2Constants.USERNAME, String.class);
                 builder.userName(userName);
             } else {
-                throw new IllegalArgumentException(MISSING_USER_NAME);
+                throw new IllegalArgumentException("User Name must be specified");
             }
             DeleteUserResponse result;
             try {
@@ -266,7 +259,7 @@ public class IAM2Producer extends DefaultProducer {
                 String userName = exchange.getIn().getHeader(IAM2Constants.USERNAME, String.class);
                 builder.userName(userName);
             } else {
-                throw new IllegalArgumentException(MISSING_USER_NAME);
+                throw new IllegalArgumentException("User Name must be specified");
             }
             GetUserResponse result;
             try {
@@ -441,7 +434,7 @@ public class IAM2Producer extends DefaultProducer {
                 String groupName = exchange.getIn().getHeader(IAM2Constants.GROUP_NAME, String.class);
                 builder.groupName(groupName);
             } else {
-                throw new IllegalArgumentException(MISSING_GROUP_NAME);
+                throw new IllegalArgumentException("Group Name must be specified");
             }
             if (ObjectHelper.isNotEmpty(exchange.getIn().getHeader(IAM2Constants.GROUP_PATH))) {
                 String groupPath = exchange.getIn().getHeader(IAM2Constants.GROUP_PATH, String.class);
@@ -479,7 +472,7 @@ public class IAM2Producer extends DefaultProducer {
                 String groupName = exchange.getIn().getHeader(IAM2Constants.GROUP_NAME, String.class);
                 builder.groupName(groupName);
             } else {
-                throw new IllegalArgumentException(MISSING_GROUP_NAME);
+                throw new IllegalArgumentException("Group Name must be specified");
             }
             DeleteGroupResponse result;
             try {
@@ -540,13 +533,13 @@ public class IAM2Producer extends DefaultProducer {
                 String groupName = exchange.getIn().getHeader(IAM2Constants.GROUP_NAME, String.class);
                 builder.groupName(groupName);
             } else {
-                throw new IllegalArgumentException(MISSING_GROUP_NAME);
+                throw new IllegalArgumentException("Group Name must be specified");
             }
             if (ObjectHelper.isNotEmpty(exchange.getIn().getHeader(IAM2Constants.USERNAME))) {
                 String userName = exchange.getIn().getHeader(IAM2Constants.USERNAME, String.class);
                 builder.userName(userName);
             } else {
-                throw new IllegalArgumentException(MISSING_USER_NAME);
+                throw new IllegalArgumentException("User Name must be specified");
             }
             AddUserToGroupResponse result;
             try {
@@ -580,13 +573,13 @@ public class IAM2Producer extends DefaultProducer {
                 String groupName = exchange.getIn().getHeader(IAM2Constants.GROUP_NAME, String.class);
                 builder.groupName(groupName);
             } else {
-                throw new IllegalArgumentException(MISSING_GROUP_NAME);
+                throw new IllegalArgumentException("Group Name must be specified");
             }
             if (ObjectHelper.isNotEmpty(exchange.getIn().getHeader(IAM2Constants.USERNAME))) {
                 String userName = exchange.getIn().getHeader(IAM2Constants.USERNAME, String.class);
                 builder.userName(userName);
             } else {
-                throw new IllegalArgumentException(MISSING_USER_NAME);
+                throw new IllegalArgumentException("User Name must be specified");
             }
             RemoveUserFromGroupResponse result;
             try {
@@ -603,29 +596,4 @@ public class IAM2Producer extends DefaultProducer {
     public static Message getMessageForResponse(final Exchange exchange) {
         return exchange.getMessage();
     }
-
-    @Override
-    protected void doStart() throws Exception {
-        // health-check is optional so discover and resolve
-        healthCheckRepository = HealthCheckHelper.getHealthCheckRepository(
-                getEndpoint().getCamelContext(),
-                "producers",
-                WritableHealthCheckRepository.class);
-
-        if (healthCheckRepository != null) {
-            String id = getEndpoint().getId();
-            producerHealthCheck = new IAM2ProducerHealthCheck(getEndpoint(), id);
-            producerHealthCheck.setEnabled(getEndpoint().getComponent().isHealthCheckProducerEnabled());
-            healthCheckRepository.addHealthCheck(producerHealthCheck);
-        }
-    }
-
-    @Override
-    protected void doStop() throws Exception {
-        if (healthCheckRepository != null && producerHealthCheck != null) {
-            healthCheckRepository.removeHealthCheck(producerHealthCheck);
-            producerHealthCheck = null;
-        }
-    }
-
 }

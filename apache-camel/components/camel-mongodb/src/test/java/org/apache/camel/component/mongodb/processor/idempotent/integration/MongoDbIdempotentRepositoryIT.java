@@ -26,7 +26,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MongoDbIdempotentRepositoryIT extends AbstractMongoDbITSupport {
@@ -39,10 +38,10 @@ public class MongoDbIdempotentRepositoryIT extends AbstractMongoDbITSupport {
         testCollection.deleteMany(new Document());
     }
 
-    @BeforeEach
-    public void setupIdempotentRepository() {
+    @Override
+    public void doPostSetup() {
+        super.doPostSetup();
         repo = new MongoDbIdempotentRepository(mongo, testCollectionName, dbName);
-        repo.start();
     }
 
     @Test
@@ -85,7 +84,7 @@ public class MongoDbIdempotentRepositoryIT extends AbstractMongoDbITSupport {
         assertEquals(1, testCollection.countDocuments());
 
         boolean added = repo.add(randomUUIDString);
-        assertFalse(added, "Duplicated entry was not added");
+        assertTrue(!added, "Duplicated entry was not added");
         assertEquals(1, testCollection.countDocuments());
     }
 
@@ -94,14 +93,14 @@ public class MongoDbIdempotentRepositoryIT extends AbstractMongoDbITSupport {
         String randomUUIDString = UUID.randomUUID().toString();
         assertEquals(0, testCollection.countDocuments());
         boolean removed = repo.remove(randomUUIDString);
-        assertFalse(removed, "Non exisint uid returns false");
+        assertTrue(!removed, "Non exisint uid returns false");
     }
 
     @Test
     public void containsMissingReturnsFalse() {
         String randomUUIDString = UUID.randomUUID().toString();
         boolean found = repo.contains(randomUUIDString);
-        assertFalse(found, "Non existing item is not found");
+        assertTrue(!found, "Non existing item is not found");
     }
 
     @Test
@@ -113,4 +112,5 @@ public class MongoDbIdempotentRepositoryIT extends AbstractMongoDbITSupport {
         found = repo.confirm(null);
         assertTrue(found, "Confirm always returns true, even with null");
     }
+
 }

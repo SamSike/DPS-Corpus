@@ -46,10 +46,10 @@ public class NotAllowRedeliveryWhileStoppingTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(
                         defaultErrorHandler().maximumRedeliveries(5).redeliveryDelay(5000).allowRedeliveryWhileStopping(false));
 

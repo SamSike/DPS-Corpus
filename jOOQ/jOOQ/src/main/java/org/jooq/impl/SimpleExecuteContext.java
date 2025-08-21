@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,15 +42,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.time.Instant;
 import java.util.Map;
 
 import org.jooq.Configuration;
 import org.jooq.ConnectionProvider;
-import org.jooq.ConverterContext;
 import org.jooq.ExecuteContext;
 import org.jooq.ExecuteType;
-import org.jooq.Param;
-// ...
 import org.jooq.Query;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -70,20 +68,6 @@ final class SimpleExecuteContext extends AbstractScope implements ExecuteContext
     }
 
     @Override
-    public final ConverterContext converterContext() {
-        return Tools.converterContext(configuration);
-    }
-
-
-
-
-
-
-
-
-
-
-    @Override
     public final Connection connection() {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -98,53 +82,10 @@ final class SimpleExecuteContext extends AbstractScope implements ExecuteContext
         throw new UnsupportedOperationException("Not implemented");
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
-    public final BatchMode batchMode() {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
     @Override
     public final Query[] batchQueries() {
         throw new UnsupportedOperationException("Not implemented");
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public final Routine<?> routine() {
@@ -158,26 +99,6 @@ final class SimpleExecuteContext extends AbstractScope implements ExecuteContext
 
     @Override
     public final void sql(String sql) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public final Param<?>[] params() {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public final void params(Param<?>[] params) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public final int skipUpdateCounts() {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public final void skipUpdateCounts(int skip) {
         throw new UnsupportedOperationException("Not implemented");
     }
 

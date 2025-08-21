@@ -24,10 +24,10 @@ import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
+import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.component.platform.http.PlatformHttpConstants;
 import org.apache.camel.component.platform.http.PlatformHttpEndpoint;
-import org.apache.camel.component.platform.http.spi.PlatformHttpConsumer;
 import org.apache.camel.component.platform.http.spi.PlatformHttpEngine;
 import org.apache.camel.spi.annotations.JdkService;
 import org.apache.camel.support.CamelContextHelper;
@@ -68,14 +68,6 @@ public class VertxPlatformHttpEngine extends ServiceSupport implements PlatformH
     }
 
     @Override
-    protected void doInit() throws Exception {
-        super.doInit();
-
-        // register this so we can find it
-        camelContext.getRegistry().bind(PlatformHttpConstants.PLATFORM_HTTP_ENGINE_NAME, PlatformHttpEngine.class, this);
-    }
-
-    @Override
     protected void doStart() throws Exception {
         // no-op
     }
@@ -86,12 +78,11 @@ public class VertxPlatformHttpEngine extends ServiceSupport implements PlatformH
     }
 
     @Override
-    public PlatformHttpConsumer createConsumer(PlatformHttpEndpoint endpoint, Processor processor) {
+    public Consumer createConsumer(PlatformHttpEndpoint endpoint, Processor processor) {
         return new VertxPlatformHttpConsumer(
                 endpoint,
                 processor,
-                handlers,
-                VertxPlatformHttpRouter.getRouterNameFromPort(getServerPort()));
+                handlers);
     }
 
     @Override
@@ -109,19 +100,12 @@ public class VertxPlatformHttpEngine extends ServiceSupport implements PlatformH
                 }
             }
             if (port == 0) {
-                VertxPlatformHttpRouter router
-                        = CamelContextHelper.findSingleByType(camelContext, VertxPlatformHttpRouter.class);
+                VertxPlatformHttpRouter router = VertxPlatformHttpRouter.lookup(camelContext);
                 if (router != null && router.getServer() != null && router.getServer().getServer() != null) {
                     port = router.getServer().getServer().actualPort();
                 }
             }
-
-            if (port == 0) {
-                //fallback to default
-                return VertxPlatformHttpServerConfiguration.DEFAULT_BIND_PORT;
-            }
         }
-
         return port;
     }
 }

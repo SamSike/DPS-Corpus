@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.web.reactive.accept;
 
 import java.util.ArrayList;
@@ -31,7 +30,7 @@ import org.springframework.web.server.NotAcceptableStatusException;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
- * Resolver that checks a query parameter and uses it to look up a matching
+ * Resolver that checks a query parameter and uses it to lookup a matching
  * MediaType. Lookup keys can be registered or as a fallback
  * {@link MediaTypeFactory} can be used to perform a lookup.
  *
@@ -40,7 +39,7 @@ import org.springframework.web.server.ServerWebExchange;
  */
 public class ParameterContentTypeResolver implements RequestedContentTypeResolver {
 
-	/** Primary lookup for media types by key (for example, "json" -> "application/json"). */
+	/** Primary lookup for media types by key (e.g. "json" -> "application/json") */
 	private final Map<String, MediaType> mediaTypes = new ConcurrentHashMap<>(64);
 
 	private String parameterName = "format";
@@ -51,7 +50,7 @@ public class ParameterContentTypeResolver implements RequestedContentTypeResolve
 	}
 
 	private static String formatKey(String key) {
-		return key.toLowerCase(Locale.ROOT);
+		return key.toLowerCase(Locale.ENGLISH);
 	}
 
 

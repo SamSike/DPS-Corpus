@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,15 +43,11 @@ import static java.util.Arrays.asList;
 // ...
 import static org.jooq.SQLDialect.DERBY;
 import static org.jooq.SQLDialect.H2;
-// ...
-import static org.jooq.SQLDialect.HSQLDB;
 import static org.jooq.SQLDialect.MARIADB;
 // ...
 import static org.jooq.SQLDialect.MYSQL;
 // ...
 // ...
-import static org.jooq.conf.SettingsTools.returnAnyNonIdentityOnUpdatableRecord;
-import static org.jooq.conf.SettingsTools.returnAnyOnUpdatableRecord;
 import static org.jooq.conf.SettingsTools.updatablePrimaryKeys;
 import static org.jooq.conf.WriteIfReadonly.IGNORE;
 import static org.jooq.conf.WriteIfReadonly.THROW;
@@ -59,13 +55,9 @@ import static org.jooq.conf.WriteIfReadonly.WRITE;
 import static org.jooq.impl.RecordDelegate.delegate;
 import static org.jooq.impl.RecordDelegate.RecordLifecycleType.INSERT;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
-import static org.jooq.impl.Tools.anyMatch;
 import static org.jooq.impl.Tools.collect;
 import static org.jooq.impl.Tools.filter;
 import static org.jooq.impl.Tools.indexOrFail;
-import static org.jooq.impl.Tools.isEmpty;
-import static org.jooq.impl.Tools.let;
-import static org.jooq.impl.Tools.recordDirtyTrackingPredicate;
 import static org.jooq.impl.Tools.settings;
 import static org.jooq.tools.StringUtils.defaultIfNull;
 
@@ -77,10 +69,8 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 
 import org.jooq.Configuration;
-import org.jooq.Converter;
 import org.jooq.DSLContext;
 import org.jooq.DataType;
 import org.jooq.Field;
@@ -90,7 +80,6 @@ import org.jooq.Insert;
 import org.jooq.InsertQuery;
 // ...
 import org.jooq.Record;
-import org.jooq.Row;
 import org.jooq.SQLDialect;
 import org.jooq.StoreQuery;
 import org.jooq.Table;
@@ -100,11 +89,10 @@ import org.jooq.UniqueKey;
 import org.jooq.UpdatableRecord;
 import org.jooq.Update;
 import org.jooq.conf.Settings;
-import org.jooq.conf.SettingsTools;
 import org.jooq.conf.WriteIfReadonly;
 import org.jooq.exception.DataTypeException;
-import org.jooq.impl.BatchCRUD.QueryCollectorSignal;
 import org.jooq.tools.JooqLogger;
+import org.jooq.tools.StringUtils;
 
 /**
  * A record implementation for a record originating from a single table
@@ -114,34 +102,12 @@ import org.jooq.tools.JooqLogger;
  * @author Lukas Eder
  */
 @org.jooq.Internal
-public class TableRecordImpl<R extends TableRecord<R>>
-extends
-    AbstractQualifiedRecord<R>
-implements
-    TableRecord<R>
-{
-
-    private static final JooqLogger      log                              = JooqLogger.getLogger(TableRecordImpl.class);
-    private static final Set<SQLDialect> REFRESH_GENERATED_KEYS           = SQLDialect.supportedBy(DERBY, H2, MARIADB, MYSQL);
-    private static final Set<SQLDialect> REFRESH_GENERATED_KEYS_ON_UPDATE = SQLDialect.supportedBy(HSQLDB);
+public class TableRecordImpl<R extends TableRecord<R>> extends AbstractQualifiedRecord<R> implements TableRecord<R> {
+    private static final JooqLogger      log                    = JooqLogger.getLogger(TableRecordImpl.class);
+    private static final Set<SQLDialect> REFRESH_GENERATED_KEYS = SQLDialect.supportedBy(DERBY, H2, MARIADB, MYSQL);
 
     public TableRecordImpl(Table<R> table) {
         super(table);
-    }
-
-    // [#8489] [#18033] [#12180] these overrides are necessary due to a Scala compiler bug (versions 2.10, 2.11, 3.5, 3.6)
-    // See:
-    // - https://github.com/scala/bug/issues/7936
-    // - https://github.com/scala/scala3/issues/22628
-
-    @Override
-    public /* non-final */ Row fieldsRow() {
-        return super.fieldsRow();
-    }
-
-    @Override
-    public /* non-final */ Row valuesRow() {
-        return super.valuesRow();
     }
 
     @Override
@@ -197,14 +163,9 @@ implements
     final int storeInsert0(Field<?>[] storeFields) {
         DSLContext create = create();
         InsertQuery<R> insert = create.insertQuery(getTable());
-        List<Field<?>> changedFields = addTouchedValues(storeFields, insert, false);
+        List<Field<?>> changedFields = addChangedValues(storeFields, insert, false);
 
-        // [#1596] Set timestamp and/or version columns to appropriate values
-        BigInteger version = addRecordVersion(insert, false);
-        Timestamp timestamp = addRecordTimestamp(insert, false);
-
-        // [#17708] DEFAULT VALUES applies only if we're not generating timestamp and/or version values!
-        if (changedFields.isEmpty() && version == null && timestamp == null) {
+        if (changedFields.isEmpty()) {
 
             // Don't store records if no value was set by client code
             if (FALSE.equals(create.settings().isInsertUnchangedRecords())) {
@@ -218,39 +179,34 @@ implements
                 insert.setDefaultValues();
         }
 
+        // [#1596] Set timestamp and/or version columns to appropriate values
+        BigInteger version = addRecordVersion(insert, false);
+        Timestamp timestamp = addRecordTimestamp(insert, false);
+
         // [#814] Refresh identity and/or main unique key values
         // [#1002] Consider also identity columns of non-updatable records
         // [#1537] Avoid refreshing identity columns on batch inserts
         Collection<Field<?>> key = setReturningIfNeeded(insert);
-        try {
-            int result = insert.execute();
+        int result = insert.execute();
 
-            if (result > 0) {
-                for (Field<?> changedField : changedFields)
-                    touched(changedField, false);
+        if (result > 0) {
+            for (Field<?> changedField : changedFields)
+                changed(changedField, false);
 
-                // [#1596] If insert was successful, update timestamp and/or version columns
-                setRecordVersionAndTimestamp(version, timestamp);
+            // [#1596] If insert was successful, update timestamp and/or version columns
+            setRecordVersionAndTimestamp(version, timestamp);
 
-                // [#1859] If an insert was successful try fetching the generated values.
-                getReturningIfNeeded(insert, key);
+            // [#1859] If an insert was successful try fetching the generated values.
+            getReturningIfNeeded(insert, key);
 
-                fetched = true;
-            }
-
-            return result;
+            fetched = true;
         }
 
-        // [#8283] Pass optimistic locking information on to BatchCRUD, if applicable
-        catch (QueryCollectorSignal e) {
-            e.version = version;
-            e.timestamp = timestamp;
-            throw e;
-        }
+        return result;
     }
 
     final void getReturningIfNeeded(StoreQuery<R> query, Collection<Field<?>> key) {
-        if (!isEmpty(key)) {
+        if (key != null && !key.isEmpty()) {
             R record = query.getReturnedRecord();
 
             if (record != null) {
@@ -264,13 +220,8 @@ implements
             }
 
             // [#1859] In some databases, not all fields can be fetched via getGeneratedKeys()
-            Configuration c = configuration();
-            if (returnAnyNonIdentityOnUpdatableRecord(c.settings())
-
-                    // [#11620] Refresh only if the RETURNING clause didn't run
-                    //          E.g. in MySQL when there was no identity column
-                    && (REFRESH_GENERATED_KEYS.contains(c.dialect()) && record == null
-                    || REFRESH_GENERATED_KEYS_ON_UPDATE.contains(c.dialect()) && query instanceof Update
+            if (TRUE.equals(configuration().settings().isReturnAllOnUpdatableRecord())
+                    && (REFRESH_GENERATED_KEYS.contains(configuration().dialect())
 
 
 
@@ -285,12 +236,21 @@ implements
     final Collection<Field<?>> setReturningIfNeeded(StoreQuery<R> query) {
         Collection<Field<?>> key = null;
 
-        if (configuration() != null && returnAnyOnUpdatableRecord(configuration().settings())) {
-            key = getReturning(query);
+        if (configuration() != null)
 
-            if (!isEmpty(key))
-                query.setReturning(key);
-        }
+            // [#7966] Allow users to turning off the returning clause entirely
+            if (!FALSE.equals(configuration().settings().isReturnIdentityOnUpdatableRecord()))
+
+                // [#1859] Return also non-key columns
+                if (TRUE.equals(configuration().settings().isReturnAllOnUpdatableRecord()))
+                    key = Arrays.asList(fields());
+
+                // [#5940] Getting the primary key mostly doesn't make sense on UPDATE statements
+                else if (query instanceof InsertQuery || updatablePrimaryKeys(settings(this)))
+                    key = getReturning();
+
+        if (key != null)
+            query.setReturning(key);
 
         return key;
     }
@@ -307,7 +267,7 @@ implements
 
             values[fieldIndex] = value;
             originals[fieldIndex] = value;
-            touched.clear(fieldIndex);
+            changed.clear(fieldIndex);
         }
         if (timestamp != null) {
             TableField<R, ?> field = getTable().getRecordTimestamp();
@@ -316,20 +276,19 @@ implements
 
             values[fieldIndex] = value;
             originals[fieldIndex] = value;
-            touched.clear(fieldIndex);
+            changed.clear(fieldIndex);
         }
     }
 
     /**
-     * Set all touched values of this record to a store query.
+     * Set all changed values of this record to a store query.
      */
-    final List<Field<?>> addTouchedValues(Field<?>[] storeFields, StoreQuery<R> query, boolean forUpdate) {
+    final List<Field<?>> addChangedValues(Field<?>[] storeFields, StoreQuery<R> query, boolean forUpdate) {
         FieldsImpl<Record> f = new FieldsImpl<>(storeFields);
         List<Field<?>> result = new ArrayList<>();
-        ObjIntPredicate<Record> dirty = recordDirtyTrackingPredicate(query);
 
         for (Field<?> field : fields.fields.fields) {
-            if (dirty.test(this, indexOf(field)) && f.field(field) != null && writable(field, forUpdate)) {
+            if (changed(field) && f.field(field) != null && writable(field, forUpdate)) {
                 addValue(query, field, forUpdate);
                 result.add(field);
             }
@@ -464,53 +423,17 @@ implements
             || getTable().getRecordVersion() != null && isUpdateRecordVersion();
     }
 
-    final Collection<Field<?>> getReturning(StoreQuery<R> query) {
-        Settings s = configuration().settings();
-
-        // [#1859] Returning all columns if requested explicitly
-        if (TRUE.equals(s.isReturnAllOnUpdatableRecord()))
-            return asList(fields());
-
+    final Collection<Field<?>> getReturning() {
         Collection<Field<?>> result = new LinkedHashSet<>();
 
-        // [#7966] Allow users to turning off the returning clause entirely
-        if (!FALSE.equals(s.isReturnIdentityOnUpdatableRecord())
+        Identity<R, ?> identity = getTable().getIdentity();
+        if (identity != null)
+            result.add(identity.getField());
 
-            // [#5940] Getting the primary key mostly doesn't make sense on UPDATE statements
-            && (query instanceof InsertQuery || updatablePrimaryKeys(s))
-        ) {
-            let(getTable().getIdentity(), i -> result.add(i.getField()));
-            let(getPrimaryKey(), k -> result.addAll(k.getFields()));
-        }
-
-        // [#14573] Return also non-key columns
-        if (TRUE.equals(s.isReturnDefaultOnUpdatableRecord()))
-            for (Field<?> f : fields())
-                if (isType(f, DataType::defaulted))
-                    result.add(f);
-
-        if (TRUE.equals(s.isReturnComputedOnUpdatableRecord()))
-            for (Field<?> f : fields())
-                if (isType(f, DataType::computed))
-                    result.add(f);
+        UniqueKey<?> key = getPrimaryKey();
+        if (key != null)
+            result.addAll(key.getFields());
 
         return result;
-    }
-
-    private static final boolean isType(Field<?> f, Predicate<? super DataType<?>> predicate) {
-        DataType<?> t = f.getDataType();
-        return predicate.test(t) || t.isEmbeddable() && anyMatch(t.getRow().fields(), x -> predicate.test(x.getDataType()));
-    }
-
-    // [#12180] scalac 3 requires overriding this method to work around an interoperability regression
-    @Override
-    public /* non-final */ <T> R with(Field<T> field, T value) {
-        return super.with(field, value);
-    }
-
-    // [#12180] scalac 3 requires overriding this method to work around an interoperability regression
-    @Override
-    public /* non-final */ <T, U> R with(Field<T> field, U value, Converter<? extends T, ? super U> converter) {
-        return super.with(field, value, converter);
     }
 }

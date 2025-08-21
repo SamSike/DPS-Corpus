@@ -21,10 +21,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class ToDynamicFluentTest extends ToDynamicTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .toD().cacheSize(5).allowOptimisedComponents(false).uri("mock:${header.foo}");
             }

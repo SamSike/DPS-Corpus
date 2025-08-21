@@ -25,7 +25,6 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.component.file.GenericFile;
 import org.apache.camel.component.file.GenericFileEndpoint;
 import org.apache.camel.component.file.GenericFileExclusiveReadLockStrategy;
-import org.apache.camel.component.file.GenericFileHelper;
 import org.apache.camel.component.file.GenericFileOperations;
 import org.apache.camel.spi.CamelLogger;
 import org.apache.camel.spi.IdempotentRepository;
@@ -78,13 +77,13 @@ public class FileIdempotentRenameRepositoryReadLockStrategy extends ServiceSuppo
         }
 
         // check if we can begin on this file
-        String key = asKey(exchange, file);
+        String key = asKey(file);
         boolean answer = false;
         try {
             answer = idempotentRepository.add(exchange, key);
         } catch (Exception e) {
             if (LOG.isTraceEnabled()) {
-                LOG.trace("Cannot acquire read lock due to {}. Will skip the file: {}", e.getMessage(), file, e);
+                LOG.trace("Cannot acquire read lock due to " + e.getMessage() + ". Will skip the file: " + file, e);
             }
         }
         if (!answer) {
@@ -114,7 +113,7 @@ public class FileIdempotentRenameRepositoryReadLockStrategy extends ServiceSuppo
     public void releaseExclusiveReadLockOnRollback(
             GenericFileOperations<File> operations, GenericFile<File> file, Exchange exchange)
             throws Exception {
-        String key = asKey(exchange, file);
+        String key = asKey(file);
         if (removeOnRollback) {
             idempotentRepository.remove(exchange, key);
         } else {
@@ -129,7 +128,7 @@ public class FileIdempotentRenameRepositoryReadLockStrategy extends ServiceSuppo
     public void releaseExclusiveReadLockOnCommit(
             GenericFileOperations<File> operations, GenericFile<File> file, Exchange exchange)
             throws Exception {
-        String key = asKey(exchange, file);
+        String key = asKey(file);
         if (removeOnCommit) {
             idempotentRepository.remove(exchange, key);
         } else {
@@ -226,12 +225,12 @@ public class FileIdempotentRenameRepositoryReadLockStrategy extends ServiceSuppo
         this.removeOnCommit = removeOnCommit;
     }
 
-    protected String asKey(Exchange exchange, GenericFile<File> file) {
+    protected String asKey(GenericFile<File> file) {
         // use absolute file path as default key, but evaluate if an expression
         // key was configured
         String key = file.getAbsoluteFilePath();
         if (endpoint.getIdempotentKey() != null) {
-            Exchange dummy = GenericFileHelper.createDummy(endpoint, exchange, () -> file);
+            Exchange dummy = endpoint.createExchange(file);
             key = endpoint.getIdempotentKey().evaluate(dummy, String.class);
         }
         return key;

@@ -27,17 +27,17 @@ import org.junit.jupiter.api.Test;
  */
 public class RedeliveryPolicyOnExceptionWhileRedeliveringIssueTest extends ContextTestSupport {
 
-    private static class FirstException extends Exception {
+    private class FirstException extends Exception {
 
         private static final long serialVersionUID = 1L;
     }
 
-    private static class SecondException extends Exception {
+    private class SecondException extends Exception {
 
         private static final long serialVersionUID = 1L;
     }
 
-    private static class ExceptionThrowingProcessor implements Processor {
+    private class ExceptionThrowingProcessor implements Processor {
 
         @Override
         public void process(Exchange exchange) throws Exception {
@@ -68,10 +68,10 @@ public class RedeliveryPolicyOnExceptionWhileRedeliveringIssueTest extends Conte
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:source").onException(FirstException.class).redeliveryDelay(0).maximumRedeliveries(-1).handled(true)
                         .end().onException(SecondException.class)
                         .handled(true).to("mock:error").end().process(new ExceptionThrowingProcessor()).to("mock:destination");

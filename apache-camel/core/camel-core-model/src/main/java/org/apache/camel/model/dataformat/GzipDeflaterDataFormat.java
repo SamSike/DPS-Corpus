@@ -34,15 +34,6 @@ public class GzipDeflaterDataFormat extends DataFormatDefinition {
         super("gzipDeflater");
     }
 
-    protected GzipDeflaterDataFormat(GzipDeflaterDataFormat source) {
-        super(source);
-    }
-
-    @Override
-    public GzipDeflaterDataFormat copyDefinition() {
-        return new GzipDeflaterDataFormat(this);
-    }
-
     /**
      * {@code Builder} is a specific builder for {@link GzipDeflaterDataFormat}.
      */

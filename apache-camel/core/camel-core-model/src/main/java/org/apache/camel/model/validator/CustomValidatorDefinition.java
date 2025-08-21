@@ -19,16 +19,17 @@ package org.apache.camel.model.validator;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
-import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.Validator;
 
 /**
- * To use a custom validator on the route level.
+ * Represents a CustomValidator. One of the bean reference (ref) or fully qualified class name (className) of the custom
+ * {@link Validator} needs to be specified. {@see ValidatorDefinition} {@see Validator}
  */
 @Metadata(label = "validation")
-@XmlRootElement(name = "customValidator")
+@XmlType(name = "customValidator")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CustomValidatorDefinition extends ValidatorDefinition {
 
@@ -36,20 +37,6 @@ public class CustomValidatorDefinition extends ValidatorDefinition {
     private String ref;
     @XmlAttribute
     private String className;
-
-    public CustomValidatorDefinition() {
-    }
-
-    protected CustomValidatorDefinition(CustomValidatorDefinition source) {
-        super(source);
-        this.ref = source.ref;
-        this.className = source.className;
-    }
-
-    @Override
-    public CustomValidatorDefinition copyDefinition() {
-        return null;
-    }
 
     public String getRef() {
         return ref;

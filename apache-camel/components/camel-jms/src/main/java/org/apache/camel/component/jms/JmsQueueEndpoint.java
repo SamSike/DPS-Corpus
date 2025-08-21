@@ -18,8 +18,6 @@ package org.apache.camel.component.jms;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.api.management.ManagedAttribute;
@@ -82,42 +80,13 @@ public class JmsQueueEndpoint extends JmsEndpoint implements JmsBrowsableEndpoin
     }
 
     @Override
-    public int getBrowseLimit() {
-        return maximumBrowseSize;
-    }
-
-    @Override
-    public void setBrowseLimit(int browseLimit) {
-        this.maximumBrowseSize = browseLimit;
-    }
-
-    @Override
     public List<Exchange> getExchanges() {
-        return getExchanges(maximumBrowseSize, null);
-    }
-
-    @Override
-    public BrowseStatus getBrowseStatus(int limit) {
-        if (queueBrowseStrategy == null) {
-            return new BrowseStatus(0, 0, 0);
-        }
-        String queue = getDestinationName();
-        JmsOperations template = getConfiguration().createInOnlyTemplate(this, false, queue);
-        return queueBrowseStrategy.browseStatus(template, queue, this, limit);
-    }
-
-    @Override
-    public List<Exchange> getExchanges(int limit, Predicate filter) {
         if (queueBrowseStrategy == null) {
             return Collections.emptyList();
         }
         String queue = getDestinationName();
         JmsOperations template = getConfiguration().createInOnlyTemplate(this, false, queue);
-        List<Exchange> list = queueBrowseStrategy.browse(template, queue, this, limit);
-        if (filter != null) {
-            list = (List<Exchange>) list.stream().filter(filter).collect(Collectors.toList());
-        }
-        return list;
+        return queueBrowseStrategy.browse(template, queue, this);
     }
 
     protected QueueBrowseStrategy createQueueBrowseStrategy() {

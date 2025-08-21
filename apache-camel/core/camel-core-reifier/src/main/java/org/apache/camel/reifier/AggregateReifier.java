@@ -22,6 +22,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.apache.camel.AggregationStrategy;
 import org.apache.camel.AsyncProcessor;
 import org.apache.camel.Expression;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Predicate;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
@@ -33,7 +34,6 @@ import org.apache.camel.processor.aggregate.AggregateProcessor;
 import org.apache.camel.processor.aggregate.OptimisticLockRetryPolicy;
 import org.apache.camel.spi.AggregationRepository;
 import org.apache.camel.spi.ExecutorServiceManager;
-import org.apache.camel.support.PluginHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,13 +54,8 @@ public class AggregateReifier extends ProcessorReifier<AggregateDefinition> {
         Processor childProcessor = this.createChildProcessor(true);
 
         // wrap the aggregate route in a unit of work processor
-        AsyncProcessor target = PluginHelper.getInternalProcessorFactory(camelContext)
+        AsyncProcessor target = camelContext.adapt(ExtendedCamelContext.class).getInternalProcessorFactory()
                 .addUnitOfWorkProcessorAdvice(camelContext, childProcessor, route);
-
-        // correlation expression is required
-        if (definition.getExpression() == null) {
-            throw new IllegalArgumentException("CorrelationExpression must be set on " + definition);
-        }
 
         Expression correlation = createExpression(definition.getExpression());
         AggregationStrategy strategy = getConfiguredAggregationStrategy(definition);
@@ -132,11 +127,11 @@ public class AggregateReifier extends ProcessorReifier<AggregateDefinition> {
         if (definition.getCompletionPredicate() != null) {
             Predicate predicate = createPredicate(definition.getCompletionPredicate());
             answer.setCompletionPredicate(predicate);
-        } else if (strategy instanceof Predicate predicate) {
+        } else if (strategy instanceof Predicate) {
             // if aggregation strategy implements predicate and was not
             // configured then use as fallback
             LOG.debug("Using AggregationStrategy as completion predicate: {}", strategy);
-            answer.setCompletionPredicate(predicate);
+            answer.setCompletionPredicate((Predicate) strategy);
         }
         if (definition.getCompletionTimeoutExpression() != null) {
             Expression expression = createExpression(definition.getCompletionTimeoutExpression());

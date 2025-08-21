@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-present the original author or authors.
+ * Copyright 2003-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,9 +41,9 @@ import static org.mockito.Mockito.verify;
  */
 class DatabaseStartupValidatorTests {
 
-	private final DataSource dataSource = mock();
+	private final DataSource dataSource = mock(DataSource.class);
 
-	private final Connection connection = mock();
+	private final Connection connection = mock(Connection.class);
 
 	private final DatabaseStartupValidator validator = new DatabaseStartupValidator();
 
@@ -80,7 +80,7 @@ class DatabaseStartupValidatorTests {
 	}
 
 	@Test
-	void shouldCallValidationTwiceWhenNotValid() throws Exception {
+	void shouldCallValidatonTwiceWhenNotValid() throws Exception {
 		given(connection.isValid(1)).willReturn(false, true);
 
 		validator.afterPropertiesSet();
@@ -90,7 +90,7 @@ class DatabaseStartupValidatorTests {
 	}
 
 	@Test
-	void shouldCallValidationTwiceInCaseOfException() throws Exception {
+	void shouldCallValidatonTwiceInCaseOfException() throws Exception {
 		given(connection.isValid(1)).willThrow(new SQLException("Test")).willReturn(true);
 
 		validator.afterPropertiesSet();
@@ -103,7 +103,7 @@ class DatabaseStartupValidatorTests {
 	@SuppressWarnings("deprecation")
 	void useValidationQueryInsteadOfIsValid() throws Exception {
 		String validationQuery = "SELECT NOW() FROM DUAL";
-		Statement statement = mock();
+		Statement statement = mock(Statement.class);
 		given(connection.createStatement()).willReturn(statement);
 		given(statement.execute(validationQuery)).willReturn(true);
 
@@ -118,9 +118,9 @@ class DatabaseStartupValidatorTests {
 
 	@Test
 	@SuppressWarnings("deprecation")
-	void shouldExecuteValidationTwiceOnError() throws Exception {
+	void shouldExecuteValidatonTwiceOnError() throws Exception {
 		String validationQuery = "SELECT NOW() FROM DUAL";
-		Statement statement = mock();
+		Statement statement = mock(Statement.class);
 		given(connection.createStatement()).willReturn(statement);
 		given(statement.execute(validationQuery))
 				.willThrow(new SQLException("Test"))

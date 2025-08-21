@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,7 @@ package org.springframework.test.context.support;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.List;
-import java.util.stream.Stream;
+import java.util.Map;
 
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
@@ -27,12 +26,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.annotation.AnnotationConfigurationException;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
-import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.io.support.PropertySourceDescriptor;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.mock.env.MockPropertySource;
 import org.springframework.test.context.TestPropertySource;
@@ -41,18 +37,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
-import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
-import static org.springframework.test.context.support.TestPropertySourceUtils.INLINED_PROPERTIES_PROPERTY_SOURCE_NAME;
 import static org.springframework.test.context.support.TestPropertySourceUtils.addInlinedPropertiesToEnvironment;
 import static org.springframework.test.context.support.TestPropertySourceUtils.addPropertiesFilesToEnvironment;
 import static org.springframework.test.context.support.TestPropertySourceUtils.buildMergedTestPropertySources;
 import static org.springframework.test.context.support.TestPropertySourceUtils.convertInlinedPropertiesToMap;
 
 /**
- * Tests for {@link TestPropertySourceUtils}.
+ * Unit tests for {@link TestPropertySourceUtils}.
  *
  * @author Sam Brannen
  * @since 4.1
@@ -61,20 +55,19 @@ class TestPropertySourceUtilsTests {
 
 	private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
-	private static final String[] KEY_VALUE_PAIR = {"key = value"};
+	private static final String[] KEY_VALUE_PAIR = new String[] {"key = value"};
 
-	private static final String[] FOO_LOCATIONS = {"classpath:/foo.properties"};
+	private static final String[] FOO_LOCATIONS = new String[] {"classpath:/foo.properties"};
 
 
 	@Test
 	void emptyAnnotation() {
 		assertThatIllegalStateException()
 			.isThrownBy(() -> buildMergedTestPropertySources(EmptyPropertySources.class))
-			.withMessageContainingAll(
-					"Could not detect default properties file for test class",
-					"class path resource",
-					"does not exist",
-					"EmptyPropertySources.properties");
+			.withMessageStartingWith("Could not detect default properties file for test class")
+			.withMessageContaining("class path resource")
+			.withMessageContaining("does not exist")
+			.withMessageContaining("EmptyPropertySources.properties");
 	}
 
 	@Test
@@ -184,7 +177,7 @@ class TestPropertySourceUtilsTests {
 	@Test
 	void addPropertiesFilesToEnvironmentWithNullContext() {
 		assertThatIllegalArgumentException()
-			.isThrownBy(() -> addPropertiesFilesToEnvironment(null, FOO_LOCATIONS))
+			.isThrownBy(() -> addPropertiesFilesToEnvironment((ConfigurableApplicationContext) null, FOO_LOCATIONS))
 			.withMessageContaining("'context' must not be null");
 	}
 
@@ -198,7 +191,7 @@ class TestPropertySourceUtilsTests {
 	@Test
 	void addPropertiesFilesToEnvironmentWithNullEnvironment() {
 		assertThatIllegalArgumentException()
-			.isThrownBy(() -> addPropertiesFilesToEnvironment(null, mock(), FOO_LOCATIONS))
+			.isThrownBy(() -> addPropertiesFilesToEnvironment((ConfigurableEnvironment) null, mock(ResourceLoader.class), FOO_LOCATIONS))
 			.withMessageContaining("'environment' must not be null");
 	}
 
@@ -212,7 +205,7 @@ class TestPropertySourceUtilsTests {
 	@Test
 	void addPropertiesFilesToEnvironmentWithEnvironmentAndNullLocations() {
 		assertThatIllegalArgumentException()
-			.isThrownBy(() -> addPropertiesFilesToEnvironment(new MockEnvironment(), mock(), (String[]) null))
+			.isThrownBy(() -> addPropertiesFilesToEnvironment(new MockEnvironment(), mock(ResourceLoader.class), (String[]) null))
 			.withMessageContaining("'locations' must not be null");
 	}
 
@@ -222,15 +215,15 @@ class TestPropertySourceUtilsTests {
 
 		MutablePropertySources propertySources = environment.getPropertySources();
 		propertySources.remove(MockPropertySource.MOCK_PROPERTIES_PROPERTY_SOURCE_NAME);
-		assertThat(propertySources).isEmpty();
+		assertThat(propertySources.size()).isEqualTo(0);
 
 		String pair = "key = value";
 		ByteArrayResource resource = new ByteArrayResource(pair.getBytes(), "from inlined property: " + pair);
-		ResourceLoader resourceLoader = mock();
+		ResourceLoader resourceLoader = mock(ResourceLoader.class);
 		given(resourceLoader.getResource(anyString())).willReturn(resource);
 
 		addPropertiesFilesToEnvironment(environment, resourceLoader, FOO_LOCATIONS);
-		assertThat(propertySources).hasSize(1);
+		assertThat(propertySources.size()).isEqualTo(1);
 		assertThat(environment.getProperty("key")).isEqualTo("value");
 	}
 
@@ -264,39 +257,28 @@ class TestPropertySourceUtilsTests {
 
 	@Test
 	void addInlinedPropertiesToEnvironmentWithMalformedUnicodeInValue() {
-		String properties = "key = \\uZZZZ";
 		assertThatIllegalStateException()
-			.isThrownBy(() -> addInlinedPropertiesToEnvironment(new MockEnvironment(), properties))
-			.withMessageContaining("Failed to load test environment properties from [%s]", properties);
+			.isThrownBy(() -> addInlinedPropertiesToEnvironment(new MockEnvironment(), asArray("key = \\uZZZZ")))
+			.withMessageContaining("Failed to load test environment property");
 	}
 
 	@Test
 	void addInlinedPropertiesToEnvironmentWithMultipleKeyValuePairsInSingleInlinedProperty() {
-		ConfigurableEnvironment environment = new MockEnvironment();
-		MutablePropertySources propertySources = environment.getPropertySources();
-		propertySources.remove(MockPropertySource.MOCK_PROPERTIES_PROPERTY_SOURCE_NAME);
-		assertThat(propertySources).isEmpty();
-		addInlinedPropertiesToEnvironment(environment, """
-				a=b
-				x=y
-				""");
-		assertThat(propertySources).hasSize(1);
-		PropertySource<?> propertySource = propertySources.get(INLINED_PROPERTIES_PROPERTY_SOURCE_NAME);
-		assertThat(propertySource).isInstanceOf(MapPropertySource.class);
-		assertThat(((MapPropertySource) propertySource).getSource()).containsExactly(entry("a", "b"), entry("x", "y"));
+		assertThatIllegalStateException()
+			.isThrownBy(() -> addInlinedPropertiesToEnvironment(new MockEnvironment(), asArray("a=b\nx=y")))
+			.withMessageContaining("Failed to load exactly one test environment property");
 	}
 
 	@Test
+	@SuppressWarnings("rawtypes")
 	void addInlinedPropertiesToEnvironmentWithEmptyProperty() {
 		ConfigurableEnvironment environment = new MockEnvironment();
 		MutablePropertySources propertySources = environment.getPropertySources();
 		propertySources.remove(MockPropertySource.MOCK_PROPERTIES_PROPERTY_SOURCE_NAME);
-		assertThat(propertySources).isEmpty();
-		addInlinedPropertiesToEnvironment(environment, "  ");
-		assertThat(propertySources).hasSize(1);
-		PropertySource<?> propertySource = propertySources.get(INLINED_PROPERTIES_PROPERTY_SOURCE_NAME);
-		assertThat(propertySource).isInstanceOfSatisfying(MapPropertySource.class,
-				mps -> assertThat(mps.getSource()).isEmpty());
+		assertThat(propertySources.size()).isEqualTo(0);
+		addInlinedPropertiesToEnvironment(environment, asArray("  "));
+		assertThat(propertySources.size()).isEqualTo(1);
+		assertThat(((Map) propertySources.iterator().next().getSource()).size()).isEqualTo(0);
 	}
 
 	@Test
@@ -313,9 +295,7 @@ class TestPropertySourceUtilsTests {
 		MergedTestPropertySources mergedPropertySources = buildMergedTestPropertySources(testClass);
 		SoftAssertions.assertSoftly(softly -> {
 			softly.assertThat(mergedPropertySources).isNotNull();
-			Stream<String> locations = mergedPropertySources.getPropertySourceDescriptors().stream()
-					.map(PropertySourceDescriptor::locations).flatMap(List::stream);
-			softly.assertThat(locations).containsExactly(expectedLocations);
+			softly.assertThat(mergedPropertySources.getLocations()).isEqualTo(expectedLocations);
 			softly.assertThat(mergedPropertySources.getProperties()).isEqualTo(expectedProperties);
 		});
 	}

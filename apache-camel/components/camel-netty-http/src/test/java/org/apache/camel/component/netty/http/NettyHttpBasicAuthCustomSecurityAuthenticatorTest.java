@@ -74,7 +74,7 @@ public class NettyHttpBasicAuthCustomSecurityAuthenticatorTest extends BaseNetty
         };
     }
 
-    private static final class MyAuthenticator implements SecurityAuthenticator {
+    private final class MyAuthenticator implements SecurityAuthenticator {
 
         @Override
         public void setName(String name) {

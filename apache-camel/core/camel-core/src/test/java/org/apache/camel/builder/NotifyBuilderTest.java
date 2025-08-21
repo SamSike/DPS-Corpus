@@ -22,22 +22,24 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class NotifyBuilderTest extends ContextTestSupport {
 
     @Test
-    public void testMustBeCreated() {
+    public void testMustBeCreated() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenDone(1);
 
-        Exception e = assertThrows(IllegalStateException.class, notify::matches, "Should have thrown an exception");
-        assertEquals("NotifyBuilder has not been created. Invoke the create() method before matching.", e.getMessage());
+        try {
+            notify.matches();
+            fail("Should have thrown an exception");
+        } catch (IllegalStateException e) {
+            assertEquals("NotifyBuilder has not been created. Invoke the create() method before matching.", e.getMessage());
+        }
     }
 
     @Test
-    public void testDestroyUnregistersBuilder() {
+    public void testDestroyUnregistersBuilder() throws Exception {
         // Given:
         NotifyBuilder notify = new NotifyBuilder(context).whenDone(1).create();
         // When:
@@ -49,90 +51,98 @@ public class NotifyBuilderTest extends ContextTestSupport {
     }
 
     @Test
-    public void testDestroyResetsBuilder() {
-        // Given:
-        NotifyBuilder notify = new NotifyBuilder(context).whenDone(1).create();
-        // When:
-        notify.destroy();
-        //Then
-        Exception e = assertThrows(IllegalStateException.class, notify::matches, "Should have thrown an exception");
-        assertEquals("NotifyBuilder has not been created. Invoke the create() method before matching.", e.getMessage());
-    }
-
-    @Test
-    public void testDestroyedBuilderCannotBeRecreated() {
+    public void testDestroyResetsBuilder() throws Exception {
         // Given:
         NotifyBuilder notify = new NotifyBuilder(context).whenDone(1).create();
         // When:
         notify.destroy();
         // Then:
-        Exception e = assertThrows(IllegalStateException.class, notify::create, "Should have thrown an exception");
-        assertEquals("A destroyed NotifyBuilder cannot be re-created.", e.getMessage());
+        try {
+            notify.matches();
+            fail("Should have thrown an exception");
+        } catch (IllegalStateException e) {
+            assertEquals("NotifyBuilder has not been created. Invoke the create() method before matching.", e.getMessage());
+        }
     }
 
     @Test
-    public void testDirectWhenExchangeDoneSimple() {
+    public void testDestroyedBuilderCannotBeRecreated() throws Exception {
+        // Given:
+        NotifyBuilder notify = new NotifyBuilder(context).whenDone(1).create();
+        // When:
+        notify.destroy();
+        // Then:
+        try {
+            notify.create();
+            fail("Should have thrown an exception");
+        } catch (IllegalStateException e) {
+            assertEquals("A destroyed NotifyBuilder cannot be re-created.", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testDirectWhenExchangeDoneSimple() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).from("direct:foo").whenDone(1).create();
 
         assertEquals("from(direct:foo).whenDone(1)", notify.toString());
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "A");
 
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testDirectBeerWhenExchangeDoneSimple() {
+    public void testDirectBeerWhenExchangeDoneSimple() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).from("direct:beer").whenDone(1).create();
 
         assertEquals("from(direct:beer).whenDone(1)", notify.toString());
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:beer", "A");
 
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testDirectFromRoute() {
+    public void testDirectFromRoute() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).fromRoute("foo").whenDone(1).create();
 
         assertEquals("fromRoute(foo).whenDone(1)", notify.toString());
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "A");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "B");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testDirectFromRouteReceived() {
+    public void testDirectFromRouteReceived() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).fromRoute("foo").whenReceived(1).create();
 
         assertEquals("fromRoute(foo).whenReceived(1)", notify.toString());
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "A");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "B");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWhenExchangeDone() {
+    public void testWhenExchangeDone() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).from("direct:foo").whenDone(5).create();
 
         assertEquals("from(direct:foo).whenDone(5)", notify.toString());
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "A");
         template.sendBody("direct:foo", "B");
@@ -141,25 +151,25 @@ public class NotifyBuilderTest extends ContextTestSupport {
         template.sendBody("direct:bar", "D");
         template.sendBody("direct:bar", "E");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "F");
         template.sendBody("direct:bar", "G");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "H");
         template.sendBody("direct:bar", "I");
 
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWhenExchangeDoneAnd() {
+    public void testWhenExchangeDoneAnd() throws Exception {
         NotifyBuilder notify
                 = new NotifyBuilder(context).from("direct:foo").whenDone(5).and().from("direct:bar").whenDone(7).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "A");
         template.sendBody("direct:foo", "B");
@@ -168,31 +178,31 @@ public class NotifyBuilderTest extends ContextTestSupport {
         template.sendBody("direct:bar", "D");
         template.sendBody("direct:bar", "E");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "F");
         template.sendBody("direct:bar", "G");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "H");
         template.sendBody("direct:bar", "I");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "J");
         template.sendBody("direct:bar", "K");
         template.sendBody("direct:bar", "L");
 
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testFromRouteWhenExchangeDoneAnd() {
+    public void testFromRouteWhenExchangeDoneAnd() throws Exception {
         NotifyBuilder notify
                 = new NotifyBuilder(context).fromRoute("foo").whenDone(5).and().fromRoute("bar").whenDone(7).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "A");
         template.sendBody("direct:foo", "B");
@@ -201,56 +211,56 @@ public class NotifyBuilderTest extends ContextTestSupport {
         template.sendBody("direct:bar", "D");
         template.sendBody("direct:bar", "E");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "F");
         template.sendBody("direct:bar", "G");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "H");
         template.sendBody("direct:bar", "I");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "J");
         template.sendBody("direct:bar", "K");
         template.sendBody("direct:bar", "L");
 
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testFromRouteAndNot() {
+    public void testFromRouteAndNot() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).fromRoute("foo").whenDone(2).and().fromRoute("bar").whenReceived(1)
                 .not().fromRoute("cake").whenDone(1).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "A");
         template.sendBody("direct:foo", "B");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "C");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:foo", "D");
         template.sendBody("direct:bar", "E");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         // and now the cake to make it false
         template.sendBody("direct:cake", "F");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
     }
 
     @Test
-    public void testWhenExchangeDoneOr() {
+    public void testWhenExchangeDoneOr() throws Exception {
         NotifyBuilder notify
                 = new NotifyBuilder(context).from("direct:foo").whenDone(5).or().from("direct:bar").whenDone(7).create();
 
         assertEquals("from(direct:foo).whenDone(5).or().from(direct:bar).whenDone(7)", notify.toString());
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "A");
         template.sendBody("direct:foo", "B");
@@ -259,72 +269,77 @@ public class NotifyBuilderTest extends ContextTestSupport {
         template.sendBody("direct:bar", "D");
         template.sendBody("direct:bar", "E");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "G");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "I");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "J");
         template.sendBody("direct:bar", "K");
         template.sendBody("direct:bar", "L");
 
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWhenExchangeDoneNot() {
+    public void testWhenExchangeDoneNot() throws Exception {
         NotifyBuilder notify
                 = new NotifyBuilder(context).from("direct:foo").whenDone(5).not().from("direct:bar").whenDone(1).create();
 
         assertEquals("from(direct:foo).whenDone(5).not().from(direct:bar).whenDone(1)", notify.toString());
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "A");
         template.sendBody("direct:foo", "B");
         template.sendBody("direct:foo", "C");
         template.sendBody("direct:foo", "D");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
         template.sendBody("direct:foo", "E");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:foo", "F");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:bar", "G");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
     }
 
     @Test
-    public void testWhenExchangeDoneOrFailure() {
+    public void testWhenExchangeDoneOrFailure() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenDone(5).or().whenFailed(1).create();
 
         assertEquals("whenDone(5).or().whenFailed(1)", notify.toString());
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "A");
         template.sendBody("direct:foo", "B");
         template.sendBody("direct:foo", "D");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
-        assertThrows(Exception.class, () -> template.sendBody("direct:fail", "E"), "Should have thrown exception");
+        try {
+            template.sendBody("direct:fail", "E");
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // ignore
+        }
 
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWhenExchangeDoneNotFailure() {
+    public void testWhenExchangeDoneNotFailure() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenDone(5).not().whenFailed(1).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "A");
         template.sendBody("direct:foo", "B");
@@ -332,324 +347,354 @@ public class NotifyBuilderTest extends ContextTestSupport {
         template.sendBody("direct:bar", "E");
         template.sendBody("direct:bar", "F");
 
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
-        assertThrows(Exception.class, () -> template.sendBody("direct:fail", "G"), "Should have thrown exception");
+        try {
+            template.sendBody("direct:fail", "G");
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // ignore
+        }
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
     }
 
     @Test
-    public void testFilterWhenExchangeDone() {
+    public void testFilterWhenExchangeDone() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).filter(body().contains("World")).whenDone(3).create();
 
         assertEquals("filter(body contains World).whenDone(3)", notify.toString());
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hello World");
         template.sendBody("direct:foo", "Hi World");
         template.sendBody("direct:foo", "A");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "B");
         template.sendBody("direct:bar", "C");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "Bye World");
 
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:foo", "D");
         template.sendBody("direct:bar", "Hey World");
 
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testFromFilterWhenExchangeDone() {
+    public void testFromFilterWhenExchangeDone() throws Exception {
         NotifyBuilder notify
                 = new NotifyBuilder(context).from("direct:foo").filter(body().contains("World")).whenDone(3).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hello World");
         template.sendBody("direct:foo", "Hi World");
         template.sendBody("direct:foo", "A");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "B");
         template.sendBody("direct:foo", "C");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "Bye World");
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "D");
         template.sendBody("direct:foo", "Hey World");
 
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:bar", "E");
         template.sendBody("direct:foo", "Hi Again World");
 
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testFromFilterBuilderWhenExchangeDone() {
+    public void testFromFilterBuilderWhenExchangeDone() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).filter().xpath("/person[@name='James']").whenDone(1).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "<person name='Claus'/>");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "<person name='Jonathan'/>");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "<person name='James'/>");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:foo", "<person name='Hadrian'/>");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWhenExchangeCompleted() {
+    public void testWhenExchangeCompleted() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenCompleted(5).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "A");
         template.sendBody("direct:foo", "B");
         template.sendBody("direct:bar", "C");
 
-        assertThrows(Exception.class, () -> template.sendBody("direct:fail", "D"), "Should have thrown exception");
-        assertThrows(Exception.class, () -> template.sendBody("direct:fail", "E"), "Should have thrown exception");
+        try {
+            template.sendBody("direct:fail", "D");
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        try {
+            template.sendBody("direct:fail", "E");
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // ignore
+        }
 
         // should NOT be completed as it only counts successful exchanges
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "F");
         template.sendBody("direct:foo", "G");
         template.sendBody("direct:bar", "H");
 
         // now it should match
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWhenExchangeExactlyDone() {
+    public void testWhenExchangeExactlyDone() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenExactlyDone(5).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "A");
         template.sendBody("direct:foo", "B");
         template.sendBody("direct:foo", "C");
 
         template.sendBody("direct:bar", "D");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "E");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:foo", "F");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
     }
 
     @Test
-    public void testWhenExchangeExactlyComplete() {
+    public void testWhenExchangeExactlyComplete() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenExactlyCompleted(5).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "A");
         template.sendBody("direct:foo", "B");
         template.sendBody("direct:foo", "C");
 
         template.sendBody("direct:bar", "D");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "E");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:foo", "F");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
     }
 
     @Test
-    public void testWhenExchangeExactlyFailed() {
+    public void testWhenExchangeExactlyFailed() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenExactlyFailed(2).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "A");
         template.sendBody("direct:foo", "B");
         template.sendBody("direct:foo", "C");
 
-        assertThrows(Exception.class, () -> template.sendBody("direct:fail", "D"), "Should have thrown exception");
+        try {
+            template.sendBody("direct:fail", "D");
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // ignore
+        }
 
         template.sendBody("direct:bar", "E");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
-        assertThrows(Exception.class, () -> template.sendBody("direct:fail", "F"), "Should have thrown exception");
-
-        assertTrue(notify.matches());
+        try {
+            template.sendBody("direct:fail", "F");
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:bar", "G");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
-        assertThrows(Exception.class, () -> template.sendBody("direct:fail", "H"), "Should have thrown exception");
-        assertFalse(notify.matches());
+        try {
+            template.sendBody("direct:fail", "H");
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // ignore
+        }
+        assertEquals(false, notify.matches());
     }
 
     @Test
-    public void testWhenAnyReceivedMatches() {
+    public void testWhenAnyReceivedMatches() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenAnyReceivedMatches(body().contains("Camel")).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hello World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Bye World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "Hello Camel");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWhenAllReceivedMatches() {
+    public void testWhenAllReceivedMatches() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenAllReceivedMatches(body().contains("Camel")).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hello Camel");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:foo", "Bye Camel");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:bar", "Hello World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
     }
 
     @Test
-    public void testWhenAnyDoneMatches() {
+    public void testWhenAnyDoneMatches() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenAnyDoneMatches(body().contains("Bye")).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hi World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:cake", "Camel");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:foo", "Damn World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWhenAllDoneMatches() {
+    public void testWhenAllDoneMatches() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenAllDoneMatches(body().contains("Bye")).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:cake", "Camel");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:cake", "World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:foo", "Hi World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
     }
 
     @Test
-    public void testWhenBodiesReceived() {
+    public void testWhenBodiesReceived() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenBodiesReceived("Hi World", "Hello World").create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hi World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hello World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         // should keep being true
         template.sendBody("direct:foo", "Bye World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:foo", "Damn World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWhenBodiesDone() {
+    public void testWhenBodiesDone() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenBodiesDone("Bye World", "Bye Camel").create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.requestBody("direct:cake", "World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:cake", "Camel");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         // should keep being true
         template.sendBody("direct:foo", "Damn World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWhenExactBodiesReceived() {
+    public void testWhenExactBodiesReceived() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenExactBodiesReceived("Hi World", "Hello World").create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hi World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hello World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         // should not keep being true
         template.sendBody("direct:foo", "Bye World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Damn World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
     }
 
     @Test
-    public void testWhenExactBodiesDone() {
+    public void testWhenExactBodiesDone() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenExactBodiesDone("Bye World", "Bye Camel").create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.requestBody("direct:cake", "World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:cake", "Camel");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         // should NOT keep being true
         template.sendBody("direct:foo", "Damn World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
     }
 
     @Test
-    public void testWhenReceivedSatisfied() {
+    public void testWhenReceivedSatisfied() throws Exception {
         // lets use a mock to set the expressions as it got many great
         // assertions for that
         // notice we use mock:assert which does NOT exist in the route, its just
@@ -659,25 +704,25 @@ public class NotifyBuilderTest extends ContextTestSupport {
 
         NotifyBuilder notify = new NotifyBuilder(context).from("direct:foo").whenDoneSatisfied(mock).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Bye World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hello World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         // the notify is based on direct:foo so sending to bar should not
         // trigger match
         template.sendBody("direct:bar", "Hi World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hi World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWhenReceivedSatisfiedFalse() {
+    public void testWhenReceivedSatisfiedFalse() throws Exception {
         // lets use a mock to set the expressions as it got many great
         // assertions for that
         // notice we use mock:assert which does NOT exist in the route, its just
@@ -687,25 +732,25 @@ public class NotifyBuilderTest extends ContextTestSupport {
 
         NotifyBuilder notify = new NotifyBuilder(context).from("direct:foo").whenDoneSatisfied(mock).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Bye World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hello World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         // the notify is based on direct:foo so sending to bar should not
         // trigger match
         template.sendBody("direct:bar", "Hi World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hi World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
     }
 
     @Test
-    public void testWhenReceivedNotSatisfied() {
+    public void testWhenReceivedNotSatisfied() throws Exception {
         // lets use a mock to set the expressions as it got many great
         // assertions for that
         // notice we use mock:assert which does NOT exist in the route, its just
@@ -717,17 +762,17 @@ public class NotifyBuilderTest extends ContextTestSupport {
         NotifyBuilder notify = new NotifyBuilder(context).from("direct:foo").whenReceivedNotSatisfied(mock).create();
 
         // is always false to start with
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Bye World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:foo", "Hello Camel");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
     }
 
     @Test
-    public void testWhenNotSatisfiedUsingSatisfied() {
+    public void testWhenNotSatisfiedUsingSatisfied() throws Exception {
         // lets use a mock to set the expressions as it got many great
         // assertions for that
         // notice we use mock:assert which does NOT exist in the route, its just
@@ -738,17 +783,17 @@ public class NotifyBuilderTest extends ContextTestSupport {
 
         NotifyBuilder notify = new NotifyBuilder(context).from("direct:foo").whenReceivedSatisfied(mock).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Bye World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hello Camel");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testComplexOrCamel() {
+    public void testComplexOrCamel() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:assert");
         mock.expectedBodiesReceivedInAnyOrder("Hello World", "Bye World", "Hi World");
 
@@ -756,33 +801,33 @@ public class NotifyBuilderTest extends ContextTestSupport {
                 .from("direct:bar").whenExactlyDone(5)
                 .whenAnyReceivedMatches(body().contains("Camel")).create();
 
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Bye World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hello World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         // the notify is based on direct:foo so sending to bar should not
         // trigger match
         template.sendBody("direct:bar", "Hi World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hi World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "Hi Camel");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "A");
         template.sendBody("direct:bar", "B");
         template.sendBody("direct:bar", "C");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWhenDoneSatisfied() {
+    public void testWhenDoneSatisfied() throws Exception {
         // lets use a mock to set the expressions as it got many great
         // assertions for that
         // notice we use mock:assert which does NOT exist in the route, its just
@@ -793,21 +838,21 @@ public class NotifyBuilderTest extends ContextTestSupport {
         NotifyBuilder notify = new NotifyBuilder(context).whenDoneSatisfied(mock).create();
 
         // is always false to start with
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.requestBody("direct:cake", "World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.requestBody("direct:cake", "Camel");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.requestBody("direct:cake", "Damn");
         // will still be true as the mock has been completed
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWhenDoneNotSatisfied() {
+    public void testWhenDoneNotSatisfied() throws Exception {
         // lets use a mock to set the expressions as it got many great
         // assertions for that
         // notice we use mock:assert which does NOT exist in the route, its just
@@ -818,176 +863,182 @@ public class NotifyBuilderTest extends ContextTestSupport {
         NotifyBuilder notify = new NotifyBuilder(context).whenDoneNotSatisfied(mock).create();
 
         // is always false to start with
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.requestBody("direct:cake", "World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.requestBody("direct:cake", "Camel");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.requestBody("direct:cake", "Damn");
         // will still be false as the mock has been completed
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
     }
 
     @Test
-    public void testReset() {
+    public void testReset() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenExactlyDone(1).create();
 
         template.sendBody("direct:foo", "Hello World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:foo", "Bye World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         // reset
         notify.reset();
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hello World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         template.sendBody("direct:foo", "Bye World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
     }
 
     @Test
-    public void testResetBodiesReceived() {
+    public void testResetBodiesReceived() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenBodiesReceived("Hello World", "Bye World").create();
 
         template.sendBody("direct:foo", "Hello World");
         template.sendBody("direct:foo", "Bye World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
 
         // reset
         notify.reset();
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hello World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Bye World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testOneNonAbstractPredicate() {
-        Exception e = assertThrows(IllegalArgumentException.class, () -> new NotifyBuilder(context)
-                .wereSentTo("mock:foo")
-                .create(), "Should throw exception");
-        assertEquals("NotifyBuilder must contain at least one non-abstract predicate (such as whenDone)", e.getMessage());
+    public void testOneNonAbstractPredicate() throws Exception {
+        try {
+            new NotifyBuilder(context).wereSentTo("mock:foo").create();
+            fail("Should throw exception");
+        } catch (IllegalArgumentException e) {
+            assertEquals("NotifyBuilder must contain at least one non-abstract predicate (such as whenDone)", e.getMessage());
+        }
     }
 
     @Test
-    public void testWereSentTo() {
+    public void testWereSentTo() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).wereSentTo("mock:foo").whenDone(1).create();
 
         template.sendBody("direct:bar", "Hello World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Bye World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testTwoWereSentTo() {
+    public void testTwoWereSentTo() throws Exception {
         // sent to both endpoints
         NotifyBuilder notify = new NotifyBuilder(context).wereSentTo("log:beer").wereSentTo("mock:beer").whenDone(1).create();
 
         template.sendBody("direct:bar", "Hello World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:beer", "Bye World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWhenDoneWereSentTo() {
+    public void testWhenDoneWereSentTo() throws Exception {
         // only match when two are done and were sent to mock:beer
         NotifyBuilder notify = new NotifyBuilder(context).whenDone(2).wereSentTo("mock:beer").create();
 
         template.sendBody("direct:bar", "A");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:beer", "B");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "C");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "D");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:cake", "E");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:beer", "F");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testWereSentToWhenDone() {
+    public void testWereSentToWhenDone() throws Exception {
         // like the other test, but ordering of wereSentTo does not matter
         NotifyBuilder notify = new NotifyBuilder(context).wereSentTo("mock:beer").whenDone(2).create();
 
         template.sendBody("direct:bar", "A");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:beer", "B");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "C");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "D");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:cake", "E");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:beer", "F");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testTwoWereSentToRegExp() {
+    public void testTwoWereSentToRegExp() throws Exception {
         // send to any endpoint with beer in the uri
         NotifyBuilder notify = new NotifyBuilder(context).wereSentTo(".*beer.*").whenDone(1).create();
 
         template.sendBody("direct:bar", "Hello World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:beer", "Bye World");
-        assertTrue(notify.matches());
+        assertEquals(true, notify.matches());
     }
 
     @Test
-    public void testTwoWereSentToDoneAndFailed() {
+    public void testTwoWereSentToDoneAndFailed() throws Exception {
         // we expect 2+ done messages which were sent to mock:bar
         // and 1+ failed message which were sent to mock:fail
         NotifyBuilder notify = new NotifyBuilder(context).whenDone(2).wereSentTo("mock:bar").and().whenFailed(1)
                 .wereSentTo("mock:fail").create();
 
         template.sendBody("direct:bar", "Hello World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:bar", "Hello World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
         template.sendBody("direct:foo", "Hello World");
-        assertFalse(notify.matches());
+        assertEquals(false, notify.matches());
 
-        assertThrows(CamelExecutionException.class, () -> template.sendBody("direct:fail", "Bye World"),
-                "Should have thrown exception");
-        assertTrue(notify.matches());
+        try {
+            template.sendBody("direct:fail", "Bye World");
+            fail("Should have thrown exception");
+        } catch (CamelExecutionException e) {
+            // expected
+        }
+        assertEquals(true, notify.matches());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").routeId("foo").to("mock:foo");
 
                 from("direct:bar").routeId("bar").to("log:bar").to("mock:bar");

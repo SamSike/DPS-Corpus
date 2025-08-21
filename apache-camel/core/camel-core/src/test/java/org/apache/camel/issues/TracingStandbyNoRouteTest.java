@@ -41,7 +41,7 @@ public class TracingStandbyNoRouteTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:bye")
                         .to("mock:bye");
             }

@@ -43,9 +43,11 @@ import org.apache.cxf.staxutils.StaxUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CxfMixedModeRouterTest extends CamelTestSupport {
     protected static int port1 = CXFTestSupport.getPort1();
     protected static int port2 = CXFTestSupport.getPort2();
@@ -102,7 +104,7 @@ public class CxfMixedModeRouterTest extends CamelTestSupport {
                         exchange.getIn().setBody(params);
 
                         // if you need to change the operation name
-                        //exchange.getIn().setHeader(CxfConstants.OPERATION_NAME, GREET_ME_OPERATION);
+                        //exchange.getIn().setHeader(CxfConstants.OPERATION_NAME, GREET_ME_OPERATION);      
 
                     }
 

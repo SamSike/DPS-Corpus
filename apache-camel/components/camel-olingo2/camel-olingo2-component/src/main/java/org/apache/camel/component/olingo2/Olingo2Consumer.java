@@ -46,7 +46,8 @@ public class Olingo2Consumer extends AbstractApiConsumer<Olingo2ApiName, Olingo2
     @Override
     protected int poll() throws Exception {
         // invoke the consumer method
-        final Map<String, Object> args = new HashMap<>(endpoint.getEndpointProperties());
+        final Map<String, Object> args = new HashMap<>();
+        args.putAll(endpoint.getEndpointProperties());
 
         // let the endpoint and the Consumer intercept properties
         endpoint.interceptProperties(args);
@@ -99,12 +100,11 @@ public class Olingo2Consumer extends AbstractApiConsumer<Olingo2ApiName, Olingo2
             if (result[0] == null || result[0] instanceof ODataFeed && (((ODataFeed) result[0]).getEntries().isEmpty())) {
                 return 0;
             } else {
-                return ApiConsumerHelper.getResultsProcessed(this, result[0], isSplitResult());
+                int processed = ApiConsumerHelper.getResultsProcessed(this, result[0], isSplitResult());
+                return processed;
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw RuntimeCamelException.wrapRuntimeCamelException(e);
-        } catch (Exception t) {
+
+        } catch (Throwable t) {
             throw RuntimeCamelException.wrapRuntimeCamelException(t);
         }
     }

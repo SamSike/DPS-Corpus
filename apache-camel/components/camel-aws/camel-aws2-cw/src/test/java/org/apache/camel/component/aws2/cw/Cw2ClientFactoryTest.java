@@ -19,7 +19,6 @@ package org.apache.camel.component.aws2.cw;
 import org.apache.camel.component.aws2.cw.client.Cw2ClientFactory;
 import org.apache.camel.component.aws2.cw.client.Cw2InternalClient;
 import org.apache.camel.component.aws2.cw.client.impl.Cw2ClientIAMOptimizedImpl;
-import org.apache.camel.component.aws2.cw.client.impl.Cw2ClientSessionTokenImpl;
 import org.apache.camel.component.aws2.cw.client.impl.Cw2ClientStandardImpl;
 import org.junit.jupiter.api.Test;
 
@@ -28,14 +27,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class Cw2ClientFactoryTest {
 
     @Test
-    public void getStandardCWClientDefault() {
+    public void getStandardS3ClientDefault() {
         Cw2Configuration cw2Configuration = new Cw2Configuration();
         Cw2InternalClient cwClient = Cw2ClientFactory.getCloudWatchClient(cw2Configuration);
         assertTrue(cwClient instanceof Cw2ClientStandardImpl);
     }
 
     @Test
-    public void getStandardCWClient() {
+    public void getStandardS3Client() {
         Cw2Configuration cw2Configuration = new Cw2Configuration();
         cw2Configuration.setUseDefaultCredentialsProvider(false);
         Cw2InternalClient cwClient = Cw2ClientFactory.getCloudWatchClient(cw2Configuration);
@@ -43,18 +42,10 @@ public class Cw2ClientFactoryTest {
     }
 
     @Test
-    public void getIAMOptimizedCWClient() {
+    public void getIAMOptimizedS3Client() {
         Cw2Configuration cw2Configuration = new Cw2Configuration();
         cw2Configuration.setUseDefaultCredentialsProvider(true);
         Cw2InternalClient cwClient = Cw2ClientFactory.getCloudWatchClient(cw2Configuration);
         assertTrue(cwClient instanceof Cw2ClientIAMOptimizedImpl);
-    }
-
-    @Test
-    public void getSessionTokenCwClient() {
-        Cw2Configuration cw2Configuration = new Cw2Configuration();
-        cw2Configuration.setUseSessionCredentials(true);
-        Cw2InternalClient cwClient = Cw2ClientFactory.getCloudWatchClient(cw2Configuration);
-        assertTrue(cwClient instanceof Cw2ClientSessionTokenImpl);
     }
 }

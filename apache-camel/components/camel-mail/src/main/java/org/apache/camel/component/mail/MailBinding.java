@@ -149,7 +149,7 @@ public class MailBinding {
                 replyToAddresses
                         .add(asEncodedInternetAddress(reply.trim(), determineCharSet(endpoint.getConfiguration(), exchange)));
             }
-            mimeMessage.setReplyTo(replyToAddresses.toArray(new InternetAddress[0]));
+            mimeMessage.setReplyTo(replyToAddresses.toArray(new InternetAddress[replyToAddresses.size()]));
         }
 
         // must have at least one recipients otherwise we do not know where to send the mail
@@ -399,7 +399,7 @@ public class MailBinding {
                     LOG.trace("Part #{}: LineCount: {}", i, part.getLineCount());
                 }
 
-                if (validDisposition(disposition, fileName) || (fileName != null && !fileName.isEmpty())) {
+                if (validDisposition(disposition, fileName)) {
                     LOG.debug("Mail contains file attachment: {}", fileName);
                     if (handleDuplicateAttachmentNames != null) {
                         if (handleDuplicateAttachmentNames
@@ -449,7 +449,7 @@ public class MailBinding {
 
     /**
      * Updates already existing filenames in the map and prefixes the current filename
-     *
+     * 
      * @param  map
      * @param  fileName
      * @return
@@ -835,7 +835,7 @@ public class MailBinding {
         }
 
         mimeMessage.addRecipients(asRecipientType(type),
-                recipientsAddresses.toArray(new InternetAddress[0]));
+                recipientsAddresses.toArray(new InternetAddress[recipientsAddresses.size()]));
     }
 
     private static String[] splitRecipients(String recipients) {

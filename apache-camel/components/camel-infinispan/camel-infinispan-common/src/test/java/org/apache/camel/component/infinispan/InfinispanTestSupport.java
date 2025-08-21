@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.infinispan;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.infinispan.commons.api.BasicCache;
 import org.junit.jupiter.api.MethodOrderer;
@@ -25,14 +23,14 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public abstract class InfinispanTestSupport extends CamelTestSupport {
-    private static final String TEST_CACHE = "mycache" + ThreadLocalRandom.current().nextInt(1, 100);
+    public static final String TEST_CACHE = "mycache";
 
     protected BasicCache<Object, Object> getCache() {
         return getCache(getCacheName());
     }
 
     protected String getCacheName() {
-        return TEST_CACHE + "-" + getClass().getSimpleName();
+        return TEST_CACHE;
     }
 
     protected abstract BasicCache<Object, Object> getCache(String name);

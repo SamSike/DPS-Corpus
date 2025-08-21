@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,10 +32,10 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
  * @author Juergen Hoeller
  * @author Arjen Poutsma
  */
-class SimplePropertyNamespaceHandlerTests {
+public class SimplePropertyNamespaceHandlerTests {
 
 	@Test
-	void simpleBeanConfigured() {
+	public void simpleBeanConfigured() throws Exception {
 		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
 		new XmlBeanDefinitionReader(beanFactory).loadBeanDefinitions(
 				new ClassPathResource("simplePropertyNamespaceHandlerTests.xml", getClass()));
@@ -47,7 +47,7 @@ class SimplePropertyNamespaceHandlerTests {
 	}
 
 	@Test
-	void innerBeanConfigured() {
+	public void innerBeanConfigured() throws Exception {
 		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
 		new XmlBeanDefinitionReader(beanFactory).loadBeanDefinitions(
 				new ClassPathResource("simplePropertyNamespaceHandlerTests.xml", getClass()));
@@ -59,7 +59,7 @@ class SimplePropertyNamespaceHandlerTests {
 	}
 
 	@Test
-	void withPropertyDefinedTwice() {
+	public void withPropertyDefinedTwice() throws Exception {
 		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
 		assertThatExceptionOfType(BeanDefinitionStoreException.class).isThrownBy(() ->
 				new XmlBeanDefinitionReader(beanFactory).loadBeanDefinitions(
@@ -67,7 +67,7 @@ class SimplePropertyNamespaceHandlerTests {
 	}
 
 	@Test
-	void propertyWithNameEndingInRef() {
+	public void propertyWithNameEndingInRef() throws Exception {
 		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
 		new XmlBeanDefinitionReader(beanFactory).loadBeanDefinitions(
 				new ClassPathResource("simplePropertyNamespaceHandlerTests.xml", getClass()));

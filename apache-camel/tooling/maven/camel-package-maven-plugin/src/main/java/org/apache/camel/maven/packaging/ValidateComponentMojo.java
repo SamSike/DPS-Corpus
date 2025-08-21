@@ -19,9 +19,8 @@ package org.apache.camel.maven.packaging;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.inject.Inject;
 
 import org.apache.camel.tooling.util.PackageHelper;
 import org.apache.camel.tooling.util.Strings;
@@ -29,8 +28,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProjectHelper;
-import org.codehaus.plexus.build.BuildContext;
 
 /**
  * Validate a Camel component analyzing if the meta-data files for
@@ -46,21 +43,16 @@ public class ValidateComponentMojo extends AbstractGeneratorMojo {
 
     /**
      * Whether to validate if the components, data formats, and languages are properly documented and have all the
-     * necessary details.
+     * needed details.
      */
     @Parameter(defaultValue = "true")
     protected Boolean validate;
 
     /**
-     * The output directory for the generated component files
+     * The output directory for generated components file
      */
     @Parameter(defaultValue = "${project.build.outputDirectory}")
     protected File outDir;
-
-    @Inject
-    public ValidateComponentMojo(MavenProjectHelper projectHelper, BuildContext buildContext) {
-        super(projectHelper, buildContext);
-    }
 
     /**
      * Execute goal.
@@ -82,7 +74,7 @@ public class ValidateComponentMojo extends AbstractGeneratorMojo {
         } else {
             List<Path> jsonFiles;
             try (Stream<Path> stream = PackageHelper.findJsonFiles(outDir.toPath())) {
-                jsonFiles = stream.toList();
+                jsonFiles = stream.collect(Collectors.toList());
             }
             boolean failed = false;
 

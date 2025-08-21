@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,14 +39,13 @@ import static org.springframework.core.io.buffer.DataBufferUtils.release;
 import static org.springframework.http.MediaType.APPLICATION_XML;
 
 /**
- * Tests for {@link Jackson2CborEncoder}.
+ * Unit tests for {@link Jackson2CborEncoder}.
  *
  * @author Sebastien Deleuze
  */
-@SuppressWarnings("removal")
-class Jackson2CborEncoderTests extends AbstractLeakCheckingTests {
+public class Jackson2CborEncoderTests extends AbstractLeakCheckingTests {
 
-	private static final MimeType CBOR_MIME_TYPE = new MimeType("application", "cbor");
+	private final static MimeType CBOR_MIME_TYPE = new MimeType("application", "cbor");
 
 	private final ObjectMapper mapper = Jackson2ObjectMapperBuilder.cbor().build();
 
@@ -67,7 +66,7 @@ class Jackson2CborEncoderTests extends AbstractLeakCheckingTests {
 	}
 
 	@Test
-	void canEncode() {
+	public void canEncode() {
 		ResolvableType pojoType = ResolvableType.forClass(Pojo.class);
 		assertThat(this.encoder.canEncode(pojoType, CBOR_MIME_TYPE)).isTrue();
 		assertThat(this.encoder.canEncode(pojoType, null)).isTrue();
@@ -77,7 +76,7 @@ class Jackson2CborEncoderTests extends AbstractLeakCheckingTests {
 	}
 
 	@Test
-	void canNotEncode() {
+	public void canNotEncode() {
 		assertThat(this.encoder.canEncode(ResolvableType.forClass(String.class), null)).isFalse();
 		assertThat(this.encoder.canEncode(ResolvableType.forClass(Pojo.class), APPLICATION_XML)).isFalse();
 
@@ -86,14 +85,14 @@ class Jackson2CborEncoderTests extends AbstractLeakCheckingTests {
 	}
 
 	@Test
-	void encode() {
+	public void encode() {
 		Pojo value = new Pojo("foo", "bar");
 		DataBuffer result = encoder.encodeValue(value, this.bufferFactory, ResolvableType.forClass(Pojo.class), CBOR_MIME_TYPE, null);
 		pojoConsumer(value).accept(result);
 	}
 
 	@Test
-	void encodeStream() {
+	public void encodeStream() {
 		Pojo pojo1 = new Pojo("foo", "bar");
 		Pojo pojo2 = new Pojo("foofoo", "barbar");
 		Pojo pojo3 = new Pojo("foofoofoo", "barbarbar");

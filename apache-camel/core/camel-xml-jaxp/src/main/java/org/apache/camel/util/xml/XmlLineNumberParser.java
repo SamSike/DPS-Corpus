@@ -19,7 +19,7 @@ package org.apache.camel.util.xml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.util.ArrayDeque;
+import java.util.Stack;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -43,7 +43,7 @@ import org.apache.camel.util.ObjectHelper;
  * An XML parser that uses SAX to include line and column number for each XML element in the parsed Document.
  * <p>
  * The line number and column number can be obtained from a Node/Element using
- *
+ * 
  * <pre>
  * String lineNumber = (String) node.getUserData(XmlLineNumberParser.LINE_NUMBER);
  * String lineNumberEnd = (String) node.getUserData(XmlLineNumberParser.LINE_NUMBER_END);
@@ -141,8 +141,8 @@ public final class XmlLineNumberParser {
         final DocumentBuilder docBuilder = dbf.newDocumentBuilder();
         doc = docBuilder.newDocument();
 
-        final ArrayDeque<Element> elementStack = new ArrayDeque<>();
-        final StringBuilder textBuffer = new StringBuilder(256);
+        final Stack<Element> elementStack = new Stack<>();
+        final StringBuilder textBuffer = new StringBuilder();
         final DefaultHandler handler = new DefaultHandler() {
             private Locator locator;
             private boolean found;
@@ -232,7 +232,7 @@ public final class XmlLineNumberParser {
 
             // Outputs text accumulated under the current node
             private void addTextIfNeeded() {
-                if (!textBuffer.isEmpty()) {
+                if (textBuffer.length() > 0) {
                     final Element el = elementStack.isEmpty() ? null : elementStack.peek();
                     if (el != null) {
                         final Node textNode = doc.createTextNode(textBuffer.toString());

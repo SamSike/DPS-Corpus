@@ -90,7 +90,8 @@ public class MainIoCBeanConfigInjectConfigurerTest {
 
         @Override
         public boolean configure(CamelContext camelContext, Object target, String name, Object value, boolean ignoreCase) {
-            if (target instanceof MyBarConfig config) {
+            if (target instanceof MyBarConfig) {
+                MyBarConfig config = (MyBarConfig) target;
                 if ("name".equals(name)) {
                     // ensure the configurer was in use by prefix
                     config.setName("The " + value.toString());
@@ -115,7 +116,7 @@ public class MainIoCBeanConfigInjectConfigurerTest {
         }
 
         @Override
-        public void configure() {
+        public void configure() throws Exception {
             from("direct:start").bean("bar").to("mock:results");
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,11 @@
 package org.springframework.beans.factory.support;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.BeanMetadataElement;
 import org.springframework.beans.Mergeable;
+import org.springframework.lang.Nullable;
 
 /**
  * Tag collection class used to hold managed List elements, which may
@@ -32,17 +30,17 @@ import org.springframework.beans.Mergeable;
  * @author Rod Johnson
  * @author Rob Harrop
  * @author Juergen Hoeller
- * @author Stephane Nicoll
- * @author Sam Brannen
  * @since 27.05.2003
  * @param <E> the element type
  */
 @SuppressWarnings("serial")
 public class ManagedList<E> extends ArrayList<E> implements Mergeable, BeanMetadataElement {
 
-	private @Nullable Object source;
+	@Nullable
+	private Object source;
 
-	private @Nullable String elementTypeName;
+	@Nullable
+	private String elementTypeName;
 
 	private boolean mergeEnabled;
 
@@ -56,21 +54,6 @@ public class ManagedList<E> extends ArrayList<E> implements Mergeable, BeanMetad
 
 
 	/**
-	 * Create a new instance containing an arbitrary number of elements.
-	 * @param elements the elements to be contained in the list
-	 * @param <E> the {@code List}'s element type
-	 * @return a {@code ManagedList} containing the specified elements
-	 * @since 5.3.16
-	 */
-	@SafeVarargs
-	@SuppressWarnings("varargs")
-	public static <E> ManagedList<E> of(E... elements) {
-		ManagedList<E> list = new ManagedList<>();
-		Collections.addAll(list, elements);
-		return list;
-	}
-
-	/**
 	 * Set the configuration source {@code Object} for this metadata element.
 	 * <p>The exact type of the object will depend on the configuration mechanism used.
 	 */
@@ -79,7 +62,8 @@ public class ManagedList<E> extends ArrayList<E> implements Mergeable, BeanMetad
 	}
 
 	@Override
-	public @Nullable Object getSource() {
+	@Nullable
+	public Object getSource() {
 		return this.source;
 	}
 
@@ -93,7 +77,8 @@ public class ManagedList<E> extends ArrayList<E> implements Mergeable, BeanMetad
 	/**
 	 * Return the default element type name (class name) to be used for this list.
 	 */
-	public @Nullable String getElementTypeName() {
+	@Nullable
+	public String getElementTypeName() {
 		return this.elementTypeName;
 	}
 

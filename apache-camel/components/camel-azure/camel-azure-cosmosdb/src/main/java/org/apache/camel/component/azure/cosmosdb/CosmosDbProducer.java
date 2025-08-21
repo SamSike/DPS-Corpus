@@ -16,7 +16,7 @@
  */
 package org.apache.camel.component.azure.cosmosdb;
 
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -50,8 +50,7 @@ public class CosmosDbProducer extends DefaultAsyncProducer {
 
     private CosmosAsyncClientWrapper clientWrapper;
     private CosmosDbConfigurationOptionsProxy configurationOptionsProxy;
-    private final Map<CosmosDbOperationsDefinition, BiConsumer<Exchange, AsyncCallback>> operations
-            = new EnumMap<>(CosmosDbOperationsDefinition.class);
+    private final Map<CosmosDbOperationsDefinition, BiConsumer<Exchange, AsyncCallback>> operations = new HashMap<>();
 
     {
         bind(CosmosDbOperationsDefinition.listDatabases, listDatabases());
@@ -178,8 +177,7 @@ public class CosmosDbProducer extends DefaultAsyncProducer {
             final Mono<CosmosContainerResponse> operation = getDatabaseOperations(exchange)
                     .createContainer(configurationOptionsProxy.getContainerName(exchange),
                             configurationOptionsProxy.getContainerPartitionKeyPath(exchange),
-                            configurationOptionsProxy.getThroughputProperties(exchange),
-                            configurationOptionsProxy.getIndexingPolicy(exchange));
+                            configurationOptionsProxy.getThroughputProperties(exchange));
 
             subscribeToMono(operation, exchange, setCosmosContainerResponseOnExchange(exchange), callback);
         };
@@ -342,7 +340,6 @@ public class CosmosDbProducer extends DefaultAsyncProducer {
                 .withContainerName(configurationOptionsProxy.getContainerName(exchange))
                 .withContainerPartitionKeyPath(configurationOptionsProxy.getContainerPartitionKeyPath(exchange))
                 .withCreateContainerIfNotExist(configurationOptionsProxy.isCreateContainerIfNotExist(exchange))
-                .withIndexingPolicy(configurationOptionsProxy.getIndexingPolicy(exchange))
                 .buildContainerOperations();
     }
 

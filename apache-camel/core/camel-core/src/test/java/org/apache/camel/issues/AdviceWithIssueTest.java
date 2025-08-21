@@ -26,7 +26,7 @@ import org.apache.camel.model.RouteDefinition;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class AdviceWithIssueTest extends ContextTestSupport {
 
@@ -35,27 +35,31 @@ public class AdviceWithIssueTest extends ContextTestSupport {
         getMockEndpoint("mock:result").expectedBodiesReceived("Hello World");
 
         template.sendBody("direct:start", "World");
-
-        assertThrows(Exception.class, () -> template.sendBody("direct:start", "Kaboom"),
-                "Should have thrown exception");
+        try {
+            template.sendBody("direct:start", "Kaboom");
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // expected
+        }
 
         assertMockEndpointsSatisfied();
     }
 
     @Test
-    public void testAdviceWithErrorHandler() {
+    public void testAdviceWithErrorHandler() throws Exception {
         RouteDefinition route = context.getRouteDefinitions().get(0);
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> {
+        try {
             AdviceWith.adviceWith(route, context, new AdviceWithRouteBuilder() {
                 @Override
-                public void configure() {
+                public void configure() throws Exception {
                     errorHandler(deadLetterChannel("mock:dead"));
                 }
             });
-        }, "Should have thrown exception");
-
-        assertEquals("You can not advice with error handlers. Remove the error handlers from the route builder.",
-                e.getMessage());
+            fail("Should have thrown exception");
+        } catch (IllegalArgumentException e) {
+            assertEquals("You can not advice with error handlers. Remove the error handlers from the route builder.",
+                    e.getMessage());
+        }
     }
 
     @Test
@@ -63,7 +67,7 @@ public class AdviceWithIssueTest extends ContextTestSupport {
         RouteDefinition route = context.getRouteDefinitions().get(0);
         AdviceWith.adviceWith(route, context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(IllegalArgumentException.class).handled(true).to("mock:error");
             }
         });
@@ -82,14 +86,14 @@ public class AdviceWithIssueTest extends ContextTestSupport {
         RouteDefinition route = context.getRouteDefinitions().get(0);
         AdviceWith.adviceWith(route, context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 interceptFrom().to("mock:from");
             }
         });
 
         getMockEndpoint("mock:result").expectedBodiesReceived("Hello World");
         getMockEndpoint("mock:from").expectedBodiesReceived("World");
-        getMockEndpoint("mock:from").expectedPropertyReceived(Exchange.INTERCEPTED_ENDPOINT, "direct://start");
+        getMockEndpoint("mock:from").expectedHeaderReceived(Exchange.INTERCEPTED_ENDPOINT, "direct://start");
 
         template.sendBody("direct:start", "World");
 
@@ -101,14 +105,14 @@ public class AdviceWithIssueTest extends ContextTestSupport {
         RouteDefinition route = context.getRouteDefinitions().get(0);
         AdviceWith.adviceWith(route, context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 interceptSendToEndpoint("mock:result").to("mock:to");
             }
         });
 
         getMockEndpoint("mock:result").expectedBodiesReceived("Hello World");
         getMockEndpoint("mock:to").expectedBodiesReceived("Hello World");
-        getMockEndpoint("mock:to").expectedPropertyReceived(Exchange.INTERCEPTED_ENDPOINT, "mock://result");
+        getMockEndpoint("mock:to").expectedHeaderReceived(Exchange.INTERCEPTED_ENDPOINT, "mock://result");
 
         template.sendBody("direct:start", "World");
 
@@ -120,7 +124,7 @@ public class AdviceWithIssueTest extends ContextTestSupport {
         RouteDefinition route = context.getRouteDefinitions().get(0);
         AdviceWith.adviceWith(route, context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onCompletion().to("mock:done");
             }
         });
@@ -134,10 +138,10 @@ public class AdviceWithIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").process(new MyProcessor()).to("mock:result");
             }
         };
@@ -146,7 +150,7 @@ public class AdviceWithIssueTest extends ContextTestSupport {
     private static final class MyProcessor implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             String body = exchange.getIn().getBody(String.class);
             if ("Kaboom".equals(body)) {
                 throw new IllegalArgumentException("Kaboom");

@@ -60,10 +60,11 @@ public class ScheduledPollConsumerHealthCheck implements HealthCheck {
         final HealthCheckResultBuilder builder = HealthCheckResultBuilder.on(this);
 
         // set initial state
-        builder.state(initialState);
+        builder.state(registry.getInitialState());
 
         // ensure to sanitize uri, so we do not show sensitive information such as passwords
         builder.detail(ENDPOINT_URI, sanitizedUri);
+        builder.detail(FAILURE_ENDPOINT_URI, sanitizedUri);
 
         // what kind of check is this
         HealthCheck.Kind kind;
@@ -83,13 +84,13 @@ public class ScheduledPollConsumerHealthCheck implements HealthCheck {
         }
 
         long ec = consumer.getErrorCounter();
-        boolean ready = consumer.isConsumerReady();
+        boolean first = consumer.isFirstPollDone();
         Throwable cause = consumer.getLastError();
 
         boolean healthy = ec == 0;
         boolean readiness = kind.equals(Kind.READINESS);
-        if (readiness && !ready) {
-            // special for readiness check before first poll is done or not yet ready
+        if (readiness && !first) {
+            // special for readiness check before first poll is done
             // if initial state is UP or UNKNOWN then return that
             // otherwise we are DOWN
             boolean down = builder.state().equals(State.DOWN);

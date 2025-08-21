@@ -56,9 +56,6 @@ public class CreateOperation extends ZooKeeperOperation<String> {
             }
             // for consistency with other operations return an empty stats set.
             return new OperationResult<>(created, new Stat());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return new OperationResult<>(e);
         } catch (Exception e) {
             return new OperationResult<>(e);
         }

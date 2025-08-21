@@ -40,10 +40,10 @@ public class CBRHeaderPredicateTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 bindToRegistry("cbrBean", new MyCBRBean());
 
                 from("direct:start").choice().when().method("cbrBean", "checkHeader").to("mock:foo").otherwise().to("mock:bar")

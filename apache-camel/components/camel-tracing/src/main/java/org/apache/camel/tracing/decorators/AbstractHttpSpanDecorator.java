@@ -20,14 +20,14 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.tracing.SpanAdapter;
-import org.apache.camel.tracing.TagConstants;
+import org.apache.camel.tracing.Tag;
 
 public abstract class AbstractHttpSpanDecorator extends AbstractSpanDecorator {
 
     public static final String POST_METHOD = "POST";
     public static final String GET_METHOD = "GET";
 
-    public String getHttpMethod(Exchange exchange, Endpoint endpoint) {
+    public static String getHttpMethod(Exchange exchange, Endpoint endpoint) {
         // 1. Use method provided in header.
         Object method = exchange.getIn().getHeader(Exchange.HTTP_METHOD);
         if (method instanceof String) {
@@ -69,9 +69,9 @@ public abstract class AbstractHttpSpanDecorator extends AbstractSpanDecorator {
 
         String httpUrl = getHttpURL(exchange, endpoint);
         if (httpUrl != null) {
-            span.setTag(TagConstants.HTTP_URL, httpUrl);
+            span.setTag(Tag.HTTP_URL, httpUrl);
         }
-        span.setTag(TagConstants.HTTP_METHOD, getHttpMethod(exchange, endpoint));
+        span.setTag(Tag.HTTP_METHOD, getHttpMethod(exchange, endpoint));
     }
 
     protected String getHttpURL(Exchange exchange, Endpoint endpoint) {
@@ -101,9 +101,8 @@ public abstract class AbstractHttpSpanDecorator extends AbstractSpanDecorator {
         if (message != null) {
             Integer responseCode = message.getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class);
             if (responseCode != null) {
-                span.setTag(TagConstants.HTTP_STATUS, responseCode);
+                span.setTag(Tag.HTTP_STATUS, responseCode);
             }
         }
     }
-
 }

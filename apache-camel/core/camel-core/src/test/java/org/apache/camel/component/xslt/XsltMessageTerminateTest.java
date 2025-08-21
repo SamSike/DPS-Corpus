@@ -47,10 +47,10 @@ public class XsltMessageTerminateTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead"));
 
                 from("file:src/test/data/?fileName=terminate.xml&noop=true&initialDelay=0&delay=10")

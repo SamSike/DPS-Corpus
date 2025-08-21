@@ -42,7 +42,7 @@ public class JdbcAggregateLoadAndRecoverTest extends AbstractJdbcAggregationTest
         mock.expectedMessageCount(SIZE / 10);
         mock.setResultWaitTime(5_000);
 
-        LOG.info("Starting to send {} messages.", SIZE);
+        LOG.info("Staring to send " + SIZE + " messages.");
 
         for (int i = 0; i < SIZE; i++) {
             final int value = 1;
@@ -56,7 +56,7 @@ public class JdbcAggregateLoadAndRecoverTest extends AbstractJdbcAggregationTest
             Thread.sleep(3);
         }
 
-        LOG.info("Sending all {} message done. Now waiting for aggregation to complete.", SIZE);
+        LOG.info("Sending all " + SIZE + " message done. Now waiting for aggregation to complete.");
 
         MockEndpoint.assertIsSatisfied(context);
 
@@ -75,8 +75,6 @@ public class JdbcAggregateLoadAndRecoverTest extends AbstractJdbcAggregationTest
         return new RouteBuilder() {
             @Override
             public void configure() {
-                configureJdbcAggregationRepository();
-
                 onException(IllegalStateException.class)
                         .maximumRedeliveries(3)
                         .redeliveryDelay(100L);

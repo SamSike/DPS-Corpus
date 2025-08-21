@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,20 +41,16 @@ package org.jooq.impl;
 import static org.jooq.conf.ParamType.INLINED;
 import static org.jooq.impl.DSL.val;
 import static org.jooq.impl.DefaultBinding.DefaultRecordBinding.REQUIRE_RECORD_CAST;
-import static org.jooq.impl.Keywords.K_NULL;
 import static org.jooq.impl.Keywords.K_ROW;
-import static org.jooq.impl.Tools.getMappedQualifier;
 import static org.jooq.impl.Tools.getMappedUDTName;
 
 import org.jooq.BindContext;
 import org.jooq.Context;
 import org.jooq.Field;
 import org.jooq.QualifiedRecord;
-import org.jooq.RecordQualifier;
 import org.jooq.RenderContext;
 import org.jooq.conf.ParamType;
 import org.jooq.exception.SQLDialectNotSupportedException;
-import org.jooq.impl.DefaultBinding.DefaultRecordBinding;
 import org.jooq.impl.QOM.UNotYetImplemented;
 
 /**
@@ -62,12 +58,8 @@ import org.jooq.impl.QOM.UNotYetImplemented;
  */
 final class QualifiedRecordConstant<R extends QualifiedRecord<R>> extends AbstractParam<R> implements UNotYetImplemented {
 
-    final RecordQualifier<R> qualifier;
-
-    QualifiedRecordConstant(R value, RecordQualifier<R> qualifier) {
-        super(value, qualifier.getDataType());
-
-        this.qualifier = qualifier;
+    QualifiedRecordConstant(R value) {
+        super(value, value.getQualifier().getDataType());
     }
 
     @Override
@@ -84,7 +76,6 @@ final class QualifiedRecordConstant<R extends QualifiedRecord<R>> extends Abstra
             ctx.paramType(INLINED);
 
         switch (ctx.family()) {
-
 
 
 
@@ -138,77 +129,39 @@ final class QualifiedRecordConstant<R extends QualifiedRecord<R>> extends Abstra
             ctx.paramType(paramType);
     }
 
-    @Override
-    final boolean isInline(Context<?> ctx) {
-        switch (ctx.family()) {
-
-
-
-
-
-
-
-            // [#18274] NULL values are inlined, not bound in these dialects
-
-
-            case POSTGRES:
-            case YUGABYTEDB:
-            default:
-                return value == null
-                    || super.isInline(ctx);
-        }
-    }
-
     private final void toSQLInline(RenderContext ctx) {
         Cast.renderCastIf(ctx,
             c -> {
-
-                // [#18274] NULL values are inlined, not bound in these dialects
-                if (value == null) {
-                    c.visit(K_NULL);
-                }
-                else {
-                    switch (c.family()) {
+                switch (c.family()) {
 
 
+                    case POSTGRES:
+                    case YUGABYTEDB:
+                        c.visit(K_ROW);
+                        break;
 
-                        case DUCKDB:
-                        case POSTGRES:
-                        case YUGABYTEDB:
-                            c.visit(K_ROW);
-                            break;
-
-                        default: {
-                            c.visit(mappedQualifier(ctx));
-                            break;
-                        }
+                    default: {
+                        c.visit(value.getQualifier());
+                        break;
                     }
-
-                    c.sql('(');
-
-                    String separator = "";
-                    for (Field<?> field : value.fields()) {
-                        c.sql(separator);
-                        c.visit(val(value.get(field), field));
-                        separator = ", ";
-                    }
-
-                    c.sql(')');
                 }
+
+                c.sql('(');
+
+                String separator = "";
+                for (Field<?> field : value.fields()) {
+                    c.sql(separator);
+                    c.visit(val(value.get(field), field));
+                    separator = ", ";
+                }
+
+                c.sql(')');
             },
 
             // [#13174] Need to cast inline UDT ROW expressions to the UDT type
-            c -> c.visit(mappedQualifier(ctx)),
+            c -> c.visit(value.getQualifier()),
             () -> REQUIRE_RECORD_CAST.contains(ctx.dialect())
-
-
-
         );
-    }
-
-    private final RecordQualifier<?> mappedQualifier(RenderContext ctx) {
-        RecordQualifier<?> mapped = getMappedQualifier(ctx, qualifier);
-        return mapped != null ? mapped : qualifier;
     }
 
     @Deprecated
@@ -216,7 +169,6 @@ final class QualifiedRecordConstant<R extends QualifiedRecord<R>> extends Abstra
         switch (ctx.family()) {
 
 
-            case DUCKDB:
             case POSTGRES:
             case YUGABYTEDB:
                 return "ROW";
@@ -244,12 +196,10 @@ final class QualifiedRecordConstant<R extends QualifiedRecord<R>> extends Abstra
 
             // Postgres cannot bind a complete structured type. The type is
             // inlined instead: ROW(.., .., ..)
-            case DUCKDB:
             case POSTGRES:
             case YUGABYTEDB:  {
-                if (value != null)
-                    for (Field<?> field : value.fields())
-                        ctx.visit(val(value.get(field), field.getDataType()));
+                for (Field<?> field : value.fields())
+                    ctx.visit(val(value.get(field)));
 
                 break;
             }

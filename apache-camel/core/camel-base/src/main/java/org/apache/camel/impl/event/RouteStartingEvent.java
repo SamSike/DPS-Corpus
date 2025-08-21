@@ -16,13 +16,11 @@
  */
 package org.apache.camel.impl.event;
 
-import java.io.Serial;
-
 import org.apache.camel.Route;
 import org.apache.camel.spi.CamelEvent;
 
 public class RouteStartingEvent extends AbstractRouteEvent implements CamelEvent.RouteStartingEvent {
-    private static final @Serial long serialVersionUID = 1330257282431407329L;
+    private static final long serialVersionUID = 1330257282431407329L;
 
     public RouteStartingEvent(Route source) {
         super(source);

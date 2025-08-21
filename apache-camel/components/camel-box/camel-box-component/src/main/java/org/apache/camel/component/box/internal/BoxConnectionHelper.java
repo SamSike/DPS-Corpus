@@ -36,7 +36,7 @@ import com.box.sdk.InMemoryLRUAccessTokenCache;
 import com.box.sdk.JWTEncryptionPreferences;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.component.box.BoxConfiguration;
-import org.apache.hc.core5.http.HttpHost;
+import org.apache.http.HttpHost;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -119,7 +119,8 @@ public final class BoxConnectionHelper {
             passwordField.val(configuration.getUserPassword());
 
             //submit loginPage
-            final Map<String, String> cookies = new HashMap<>(loginPageResponse.cookies());
+            final Map<String, String> cookies = new HashMap<>();
+            cookies.putAll(loginPageResponse.cookies());
 
             Connection.Response response = addProxy(loginForm.submit(), proxy)
                     .cookies(cookies)
@@ -245,7 +246,7 @@ public final class BoxConnectionHelper {
         }
 
         try {
-            return BoxDeveloperEditionAPIConnection.getUserConnection(configuration.getUserId(),
+            return BoxDeveloperEditionAPIConnection.getAppUserConnection(configuration.getUserId(),
                     configuration.getClientId(), configuration.getClientSecret(), encryptionPref, accessTokenCache);
         } catch (BoxAPIException e) {
             throw new RuntimeCamelException(

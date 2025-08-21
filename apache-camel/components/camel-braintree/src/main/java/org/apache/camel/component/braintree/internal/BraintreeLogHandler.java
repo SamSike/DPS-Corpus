@@ -50,46 +50,46 @@ public final class BraintreeLogHandler extends Handler {
     }
 
     @Override
-    public void publish(LogRecord logRecord) {
-        if (logRecord != null) {
-            final Logger logger = getLogger(logRecord);
-            final String message = formatMessage(logRecord);
+    public void publish(LogRecord record) {
+        if (record != null) {
+            final Logger logger = getLogger(record);
+            final String message = formatMessage(record);
 
-            int level = logRecord.getLevel().intValue();
+            int level = record.getLevel().intValue();
             if (level <= TRACE_LEVEL_THRESHOLD) {
-                logger.trace(message, logRecord.getThrown());
+                logger.trace(message, record.getThrown());
             } else if (level <= DEBUG_LEVEL_THRESHOLD) {
-                logger.debug(message, logRecord.getThrown());
+                logger.debug(message, record.getThrown());
             } else if (level <= INFO_LEVEL_THRESHOLD) {
-                logger.info(message, logRecord.getThrown());
+                logger.info(message, record.getThrown());
             } else if (level <= WARN_LEVEL_THRESHOLD) {
-                logger.warn(message, logRecord.getThrown());
+                logger.warn(message, record.getThrown());
             } else {
-                logger.error(message, logRecord.getThrown());
+                logger.error(message, record.getThrown());
             }
         }
     }
 
-    private Logger getLogger(LogRecord logRecord) {
-        String name = logRecord.getLoggerName();
+    private Logger getLogger(LogRecord record) {
+        String name = record.getLoggerName();
         if (name == null) {
             name = DEFAULT_LOGGER_NAME;
         }
         return LoggerFactory.getLogger(name);
     }
 
-    private String formatMessage(LogRecord logRecord) {
-        String message = logRecord.getMessage();
+    private String formatMessage(LogRecord record) {
+        String message = record.getMessage();
         if (message != null) {
 
-            ResourceBundle bundle = logRecord.getResourceBundle();
+            ResourceBundle bundle = record.getResourceBundle();
             if (bundle != null) {
                 try {
                     message = bundle.getString(message);
                 } catch (MissingResourceException e) {
                 }
             }
-            Object[] params = logRecord.getParameters();
+            Object[] params = record.getParameters();
             // avoid formatting when there are no or 0 parameters. see also
             // http://jira.qos.ch/browse/SLF4J-203
             if (params != null && params.length > 0) {

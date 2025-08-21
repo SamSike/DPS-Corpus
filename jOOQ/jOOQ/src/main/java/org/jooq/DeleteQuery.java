@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,25 +43,15 @@ package org.jooq;
 // ...
 // ...
 // ...
-// ...
-import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
-// ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
-// ...
-import static org.jooq.SQLDialect.HSQLDB;
-// ...
 import static org.jooq.SQLDialect.MARIADB;
 // ...
-// ...
 import static org.jooq.SQLDialect.MYSQL;
-// ...
 // ...
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
-import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
@@ -89,19 +79,19 @@ public interface DeleteQuery<R extends Record> extends ConditionProvider, Delete
     /**
      * Add tables to the <code>USING</code> clause.
      */
-    @Support
+    @Support({ MARIADB, MYSQL, POSTGRES })
     void addUsing(TableLike<?> table);
 
     /**
      * Add tables to the <code>USING</code> clause.
      */
-    @Support
+    @Support({ MARIADB, MYSQL, POSTGRES })
     void addUsing(TableLike<?>... tables);
 
     /**
      * Add tables to the <code>USING</code> clause.
      */
-    @Support
+    @Support({ MARIADB, MYSQL, POSTGRES })
     void addUsing(Collection<? extends TableLike<?>> tables);
 
     // ------------------------------------------------------------------------
@@ -174,7 +164,7 @@ public interface DeleteQuery<R extends Record> extends ConditionProvider, Delete
      *
      * @see #getReturnedRecords()
      */
-    @Support({ FIREBIRD, H2, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, POSTGRES, YUGABYTEDB })
     void setReturning();
 
     /**
@@ -184,7 +174,7 @@ public interface DeleteQuery<R extends Record> extends ConditionProvider, Delete
      * @param fields Fields to be returned
      * @see #getReturnedRecords()
      */
-    @Support({ FIREBIRD, H2, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, POSTGRES, YUGABYTEDB })
     void setReturning(SelectFieldOrAsterisk... fields);
 
     /**
@@ -194,7 +184,7 @@ public interface DeleteQuery<R extends Record> extends ConditionProvider, Delete
      * @param fields Fields to be returned
      * @see #getReturnedRecords()
      */
-    @Support({ FIREBIRD, H2, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, POSTGRES, YUGABYTEDB })
     void setReturning(Collection<? extends SelectFieldOrAsterisk> fields);
 
     /**
@@ -207,7 +197,7 @@ public interface DeleteQuery<R extends Record> extends ConditionProvider, Delete
      * This implemented differently for every dialect:
      * <ul>
      * <li>Firebird and Postgres have native support for
-     * <code>DELETE … RETURNING</code> clauses</li>
+     * <code>DELETE .. RETURNING</code> clauses</li>
      * </ul>
      *
      * @return The returned value as specified by any of the
@@ -217,7 +207,7 @@ public interface DeleteQuery<R extends Record> extends ConditionProvider, Delete
      * @see #getReturnedRecords()
      */
     @Nullable
-    @Support({ FIREBIRD, H2, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, POSTGRES, YUGABYTEDB })
     R getReturnedRecord();
 
     /**
@@ -230,7 +220,7 @@ public interface DeleteQuery<R extends Record> extends ConditionProvider, Delete
      * This implemented differently for every dialect:
      * <ul>
      * <li>Firebird and Postgres have native support for
-     * <code>DELETE … RETURNING</code> clauses</li>
+     * <code>DELETE .. RETURNING</code> clauses</li>
      * </ul>
      *
      * @return The returned values as specified by any of the
@@ -243,7 +233,7 @@ public interface DeleteQuery<R extends Record> extends ConditionProvider, Delete
      *         </ul>
      */
     @NotNull
-    @Support({ FIREBIRD, H2, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, POSTGRES, YUGABYTEDB })
     Result<R> getReturnedRecords();
 
 }

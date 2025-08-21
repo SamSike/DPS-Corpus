@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
@@ -52,7 +51,8 @@ public class WebMvcStompWebSocketEndpointRegistration implements StompWebSocketE
 
 	private final TaskScheduler sockJsTaskScheduler;
 
-	private @Nullable HandshakeHandler handshakeHandler;
+	@Nullable
+	private HandshakeHandler handshakeHandler;
 
 	private final List<HandshakeInterceptor> interceptors = new ArrayList<>();
 
@@ -60,7 +60,8 @@ public class WebMvcStompWebSocketEndpointRegistration implements StompWebSocketE
 
 	private final List<String> allowedOriginPatterns = new ArrayList<>();
 
-	private @Nullable SockJsServiceRegistration registration;
+	@Nullable
+	private SockJsServiceRegistration registration;
 
 
 	public WebMvcStompWebSocketEndpointRegistration(

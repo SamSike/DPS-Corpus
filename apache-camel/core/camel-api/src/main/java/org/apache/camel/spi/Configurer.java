@@ -47,9 +47,4 @@ public @interface Configurer {
      */
     boolean bootstrap() default false;
 
-    /**
-     * Whether to only include fields that are have @Metadata annotations.
-     */
-    boolean metadataOnly() default false;
-
 }

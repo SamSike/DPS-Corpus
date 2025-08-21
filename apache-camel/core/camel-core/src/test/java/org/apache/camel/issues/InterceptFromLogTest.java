@@ -41,9 +41,9 @@ public class InterceptFromLogTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 interceptFrom().to("log:foo").to("mock:foo");
                 interceptFrom().to("log:bar").to("mock:bar");
 

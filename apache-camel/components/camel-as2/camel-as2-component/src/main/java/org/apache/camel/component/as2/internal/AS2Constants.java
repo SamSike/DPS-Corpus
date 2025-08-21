@@ -22,11 +22,11 @@ package org.apache.camel.component.as2.internal;
 public interface AS2Constants {
 
     // suffix for parameters when passed as exchange header properties
-    String PROPERTY_PREFIX = "CamelAs2.";
+    String PROPERTY_PREFIX = "CamelAS2.";
 
     // thread profile name for this component
-    String THREAD_PROFILE_NAME = "CamelAs2";
+    String THREAD_PROFILE_NAME = "CamelAS2";
 
-    // header property containing the AS2 Interchange.
+    // header property containing the AS2 Interchange. 
     String AS2_INTERCHANGE = PROPERTY_PREFIX + "interchange";
 }

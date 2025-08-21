@@ -95,7 +95,7 @@ public class PropertiesComponentReloadPropertiesTest extends ContextTestSupport 
     }
 
     @Test
-    public void testReloadNotMatch() {
+    public void testReloadNotMatch() throws Exception {
         context.start();
 
         org.apache.camel.spi.PropertiesComponent pc = context.getPropertiesComponent();

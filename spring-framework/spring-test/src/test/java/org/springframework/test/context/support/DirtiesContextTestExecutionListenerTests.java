@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 
-import org.springframework.core.annotation.AliasFor;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.annotation.DirtiesContext.HierarchyMode;
@@ -48,7 +47,7 @@ import static org.springframework.test.context.NestedTestConfiguration.Enclosing
 import static org.springframework.test.context.NestedTestConfiguration.EnclosingConfiguration.OVERRIDE;
 
 /**
- * Tests for {@link DirtiesContextBeforeModesTestExecutionListener}.
+ * Unit tests for {@link DirtiesContextBeforeModesTestExecutionListener}.
  * and {@link DirtiesContextTestExecutionListener}
  *
  * @author Sam Brannen
@@ -59,7 +58,7 @@ class DirtiesContextTestExecutionListenerTests {
 
 	private final TestExecutionListener beforeListener = new DirtiesContextBeforeModesTestExecutionListener();
 	private final TestExecutionListener afterListener = new DirtiesContextTestExecutionListener();
-	private final TestContext testContext = mock();
+	private final TestContext testContext = mock(TestContext.class);
 
 
 	@Nested
@@ -249,7 +248,7 @@ class DirtiesContextTestExecutionListenerTests {
 
 		@Test
 		void declaredViaMetaAnnotationWithOverriddenAttributes() throws Exception {
-			assertAfterClass(DirtiesContextViaMetaAnnotationWithOverriddenAttributes.class);
+			assertAfterClass(DirtiesContextViaMetaAnnotationWithOverridenAttributes.class);
 		}
 	}
 
@@ -325,7 +324,7 @@ class DirtiesContextTestExecutionListenerTests {
 		verify(testContext, times(1)).markApplicationContextDirty(EXHAUSTIVE);
 	}
 
-	private void assertAfterMethod(Class<?> clazz) throws Exception {
+	private void assertAfterMethod(Class<?> clazz) throws NoSuchMethodException, Exception {
 		BDDMockito.<Class<?>> given(testContext.getTestClass()).willReturn(clazz);
 		given(testContext.getTestMethod()).willReturn(clazz.getDeclaredMethod("test"));
 		beforeListener.beforeTestMethod(testContext);
@@ -404,10 +403,8 @@ class DirtiesContextTestExecutionListenerTests {
 	@Retention(RetentionPolicy.RUNTIME)
 	@interface MetaDirtyWithOverrides {
 
-		@AliasFor(annotation = DirtiesContext.class)
 		ClassMode classMode() default AFTER_EACH_TEST_METHOD;
 
-		@AliasFor(annotation = DirtiesContext.class)
 		HierarchyMode hierarchyMode() default HierarchyMode.CURRENT_LEVEL;
 	}
 
@@ -447,7 +444,7 @@ class DirtiesContextTestExecutionListenerTests {
 	}
 
 	@MetaDirtyWithOverrides(classMode = AFTER_CLASS, hierarchyMode = EXHAUSTIVE)
-	static class DirtiesContextViaMetaAnnotationWithOverriddenAttributes {
+	static class DirtiesContextViaMetaAnnotationWithOverridenAttributes {
 
 		void test() {
 		}

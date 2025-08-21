@@ -79,13 +79,13 @@ public class CxfHeaderFilterStrategy extends DefaultHeaderFilterStrategy {
         // we need to filter this header of this name.
         getOutFilter().add("Content-Type".toLowerCase());
 
-        // Filter out Content-Length since it can fool Jetty (HttpGenerator) to
+        // Filter out Content-Length since it can fool Jetty (HttpGenerator) to 
         // close response output stream prematurely.  (It occurs when the
-        // message size (e.g. with attachment) is large and response content length
+        // message size (e.g. with attachment) is large and response content length 
         // is bigger than request content length.)
         getOutFilter().add("Content-Length".toLowerCase());
 
-        // Filter Content-Length as it will cause some trouble when the message
+        // Filter Content-Length as it will cause some trouble when the message 
         // is passed to the other endpoint
         getInFilter().add("content-length".toLowerCase());
 
@@ -96,7 +96,7 @@ public class CxfHeaderFilterStrategy extends DefaultHeaderFilterStrategy {
         addToMessageHeaderFilterMap(new SoapMessageHeaderFilter());
 
         // filter headers begin with "Camel" or "org.apache.camel"
-        setOutFilterStartsWith(CAMEL_FILTER_STARTS_WITH);
+        setOutFilterPattern(CAMEL_FILTER_PATTERN);
     }
 
     @SuppressWarnings("unchecked")
@@ -130,7 +130,7 @@ public class CxfHeaderFilterStrategy extends DefaultHeaderFilterStrategy {
             messageHeaderfilter.filter(direction, (List<Header>) value);
         } catch (Exception t) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Failed to cast value to Header<List> due to {}", t.getMessage(), t);
+                LOG.debug("Failed to cast value to Header<List> due to {}", t.toString(), t);
             }
         }
 

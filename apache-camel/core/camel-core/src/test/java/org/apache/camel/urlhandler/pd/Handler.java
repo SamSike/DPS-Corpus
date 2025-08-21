@@ -17,6 +17,7 @@
 package org.apache.camel.urlhandler.pd;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -69,7 +70,7 @@ public class Handler extends ResourceResolverSupport {
             }
 
             @Override
-            public InputStream getInputStream() {
+            public InputStream getInputStream() throws IOException {
                 if (counter.getAndIncrement() == 0) {
                     LOG.info("resolved XSD1");
                     return new ByteArrayInputStream(XSD_TEMPLATE_1.getBytes(StandardCharsets.UTF_8));

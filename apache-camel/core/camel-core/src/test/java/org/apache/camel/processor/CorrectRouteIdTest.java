@@ -34,10 +34,10 @@ public class CorrectRouteIdTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").routeId("foo").setHeader("foo").simple("${routeId}").to("mock:foo").to("seda:bar")
                         .to("mock:result");
 

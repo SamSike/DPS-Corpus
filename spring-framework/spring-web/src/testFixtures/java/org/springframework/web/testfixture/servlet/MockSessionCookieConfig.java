@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,9 @@
 
 package org.springframework.web.testfixture.servlet;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import jakarta.servlet.SessionCookieConfig;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Mock implementation of the {@link jakarta.servlet.SessionCookieConfig} interface.
@@ -32,21 +29,23 @@ import org.jspecify.annotations.Nullable;
  */
 public class MockSessionCookieConfig implements SessionCookieConfig {
 
-	private @Nullable String name;
+	@Nullable
+	private String name;
 
-	private @Nullable String domain;
+	@Nullable
+	private String domain;
 
-	private @Nullable String path;
+	@Nullable
+	private String path;
 
-	private @Nullable String comment;
+	@Nullable
+	private String comment;
 
 	private boolean httpOnly;
 
 	private boolean secure;
 
 	private int maxAge = -1;
-
-	private Map<String, String> attributes = new LinkedHashMap<>();
 
 
 	@Override
@@ -55,7 +54,8 @@ public class MockSessionCookieConfig implements SessionCookieConfig {
 	}
 
 	@Override
-	public @Nullable String getName() {
+	@Nullable
+	public String getName() {
 		return this.name;
 	}
 
@@ -65,7 +65,8 @@ public class MockSessionCookieConfig implements SessionCookieConfig {
 	}
 
 	@Override
-	public @Nullable String getDomain() {
+	@Nullable
+	public String getDomain() {
 		return this.domain;
 	}
 
@@ -75,19 +76,19 @@ public class MockSessionCookieConfig implements SessionCookieConfig {
 	}
 
 	@Override
-	public @Nullable String getPath() {
+	@Nullable
+	public String getPath() {
 		return this.path;
 	}
 
-	@SuppressWarnings("removal")
 	@Override
 	public void setComment(@Nullable String comment) {
 		this.comment = comment;
 	}
 
-	@SuppressWarnings("removal")
 	@Override
-	public @Nullable String getComment() {
+	@Nullable
+	public String getComment() {
 		return this.comment;
 	}
 
@@ -119,21 +120,6 @@ public class MockSessionCookieConfig implements SessionCookieConfig {
 	@Override
 	public int getMaxAge() {
 		return this.maxAge;
-	}
-
-	@Override
-	public void setAttribute(String name, String value) {
-		this.attributes.put(name, value);
-	}
-
-	@Override
-	public String getAttribute(String name) {
-		return this.attributes.get(name);
-	}
-
-	@Override
-	public Map<String, String> getAttributes() {
-		return Collections.unmodifiableMap(this.attributes);
 	}
 
 }

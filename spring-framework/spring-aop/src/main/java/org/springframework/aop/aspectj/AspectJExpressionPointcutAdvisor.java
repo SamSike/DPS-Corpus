@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,11 @@
 
 package org.springframework.aop.aspectj;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.aop.Pointcut;
 import org.springframework.aop.support.AbstractGenericPointcutAdvisor;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.lang.Nullable;
 
 /**
  * Spring AOP Advisor that can be used for any AspectJ pointcut expression.
@@ -39,7 +38,8 @@ public class AspectJExpressionPointcutAdvisor extends AbstractGenericPointcutAdv
 		this.pointcut.setExpression(expression);
 	}
 
-	public @Nullable String getExpression() {
+	@Nullable
+	public String getExpression() {
 		return this.pointcut.getExpression();
 	}
 
@@ -47,7 +47,8 @@ public class AspectJExpressionPointcutAdvisor extends AbstractGenericPointcutAdv
 		this.pointcut.setLocation(location);
 	}
 
-	public @Nullable String getLocation() {
+	@Nullable
+	public String getLocation() {
 		return this.pointcut.getLocation();
 	}
 

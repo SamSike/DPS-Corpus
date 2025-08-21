@@ -60,7 +60,7 @@ public class XmlConverterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testToBytesSource() {
+    public void testToBytesSource() throws Exception {
         XmlConverter conv = new XmlConverter();
         BytesSource bs = conv.toBytesSource("<foo>bar</foo>".getBytes());
         assertNotNull(bs);
@@ -73,7 +73,7 @@ public class XmlConverterTest extends ContextTestSupport {
 
         Source source = null;
         String out = conv.toString(source, null);
-        assertNull(out);
+        assertEquals(null, out);
     }
 
     @Test
@@ -124,7 +124,7 @@ public class XmlConverterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testToSourceUsingTypeConverter() {
+    public void testToSourceUsingTypeConverter() throws Exception {
         Source source = context.getTypeConverter().convertTo(Source.class, "<foo>bar</foo>");
         String out = context.getTypeConverter().convertTo(String.class, source);
         assertEquals("<foo>bar</foo>", out);
@@ -554,7 +554,7 @@ public class XmlConverterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testToInputSource() {
+    public void testToInputSource() throws Exception {
         XmlConverter conv = new XmlConverter();
 
         InputStream is = context.getTypeConverter().convertTo(InputStream.class, "<foo>bar</foo>");
@@ -591,7 +591,7 @@ public class XmlConverterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testNodeListToNode() {
+    public void testNodeListToNode() throws Exception {
         Document document = context.getTypeConverter().convertTo(Document.class,
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + "<foo><hello>Hello World</hello></foo>");
 

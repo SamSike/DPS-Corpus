@@ -7,10 +7,8 @@ package org.jooq.meta.postgres.pg_catalog.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -19,7 +17,6 @@ import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
-import org.jooq.impl.DefaultDataType;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 import org.jooq.meta.postgres.pg_catalog.Keys;
@@ -140,37 +137,32 @@ public class PgConstraint extends TableImpl<Record> {
     /**
      * The column <code>pg_catalog.pg_constraint.conkey</code>.
      */
-    public final TableField<Record, Short[]> CONKEY = createField(DSL.name("conkey"), SQLDataType.SMALLINT.array(), this, "");
+    public final TableField<Record, Short[]> CONKEY = createField(DSL.name("conkey"), SQLDataType.SMALLINT.getArrayDataType(), this, "");
 
     /**
      * The column <code>pg_catalog.pg_constraint.confkey</code>.
      */
-    public final TableField<Record, Short[]> CONFKEY = createField(DSL.name("confkey"), SQLDataType.SMALLINT.array(), this, "");
+    public final TableField<Record, Short[]> CONFKEY = createField(DSL.name("confkey"), SQLDataType.SMALLINT.getArrayDataType(), this, "");
 
     /**
      * The column <code>pg_catalog.pg_constraint.conpfeqop</code>.
      */
-    public final TableField<Record, Long[]> CONPFEQOP = createField(DSL.name("conpfeqop"), SQLDataType.BIGINT.array(), this, "");
+    public final TableField<Record, Long[]> CONPFEQOP = createField(DSL.name("conpfeqop"), SQLDataType.BIGINT.getArrayDataType(), this, "");
 
     /**
      * The column <code>pg_catalog.pg_constraint.conppeqop</code>.
      */
-    public final TableField<Record, Long[]> CONPPEQOP = createField(DSL.name("conppeqop"), SQLDataType.BIGINT.array(), this, "");
+    public final TableField<Record, Long[]> CONPPEQOP = createField(DSL.name("conppeqop"), SQLDataType.BIGINT.getArrayDataType(), this, "");
 
     /**
      * The column <code>pg_catalog.pg_constraint.conffeqop</code>.
      */
-    public final TableField<Record, Long[]> CONFFEQOP = createField(DSL.name("conffeqop"), SQLDataType.BIGINT.array(), this, "");
-
-    /**
-     * The column <code>pg_catalog.pg_constraint.confdelsetcols</code>.
-     */
-    public final TableField<Record, Short[]> CONFDELSETCOLS = createField(DSL.name("confdelsetcols"), SQLDataType.SMALLINT.array(), this, "");
+    public final TableField<Record, Long[]> CONFFEQOP = createField(DSL.name("conffeqop"), SQLDataType.BIGINT.getArrayDataType(), this, "");
 
     /**
      * The column <code>pg_catalog.pg_constraint.conexclop</code>.
      */
-    public final TableField<Record, Long[]> CONEXCLOP = createField(DSL.name("conexclop"), SQLDataType.BIGINT.array(), this, "");
+    public final TableField<Record, Long[]> CONEXCLOP = createField(DSL.name("conexclop"), SQLDataType.BIGINT.getArrayDataType(), this, "");
 
     /**
      * @deprecated Unknown data type. If this is a qualified, user-defined type,
@@ -181,14 +173,14 @@ public class PgConstraint extends TableImpl<Record> {
      * configuration.
      */
     @Deprecated
-    public final TableField<Record, Object> CONBIN = createField(DSL.name("conbin"), DefaultDataType.getDefaultDataType("\"pg_catalog\".\"pg_node_tree\""), this, "");
+    public final TableField<Record, Object> CONBIN = createField(DSL.name("conbin"), org.jooq.impl.DefaultDataType.getDefaultDataType("\"pg_catalog\".\"pg_node_tree\""), this, "");
 
     private PgConstraint(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private PgConstraint(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private PgConstraint(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -212,8 +204,8 @@ public class PgConstraint extends TableImpl<Record> {
         this(DSL.name("pg_constraint"), null);
     }
 
-    public <O extends Record> PgConstraint(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, PG_CONSTRAINT);
+    public <O extends Record> PgConstraint(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, PG_CONSTRAINT);
     }
 
     @Override
@@ -237,6 +229,7 @@ public class PgConstraint extends TableImpl<Record> {
     }
 
     private transient PgNamespace _pgNamespace;
+    private transient PgClass _pgClass;
 
     /**
      * Get the implicit join path to the <code>pg_catalog.pg_namespace</code>
@@ -244,19 +237,17 @@ public class PgConstraint extends TableImpl<Record> {
      */
     public PgNamespace pgNamespace() {
         if (_pgNamespace == null)
-            _pgNamespace = new PgNamespace(this, Keys.PG_CONSTRAINT__SYNTHETIC_FK_PG_CONSTRAINT__SYNTHETIC_PK_PG_NAMESPACE, null);
+            _pgNamespace = new PgNamespace(this, Keys.PG_CONSTRAINT__SYNTHETIC_FK_PG_CONSTRAINT__SYNTHETIC_PK_PG_NAMESPACE);
 
         return _pgNamespace;
     }
-
-    private transient PgClass _pgClass;
 
     /**
      * Get the implicit join path to the <code>pg_catalog.pg_class</code> table.
      */
     public PgClass pgClass() {
         if (_pgClass == null)
-            _pgClass = new PgClass(this, Keys.PG_CONSTRAINT__SYNTHETIC_FK_PG_CONSTRAINT__SYNTHETIC_PK_PG_CLASS, null);
+            _pgClass = new PgClass(this, Keys.PG_CONSTRAINT__SYNTHETIC_FK_PG_CONSTRAINT__SYNTHETIC_PK_PG_CLASS);
 
         return _pgClass;
     }
@@ -271,8 +262,19 @@ public class PgConstraint extends TableImpl<Record> {
         return new PgConstraint(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public PgConstraint as(Table<?> alias) {
-        return new PgConstraint(alias.getQualifiedName(), this);
+    public PgConstraint rename(String name) {
+        return new PgConstraint(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public PgConstraint rename(Name name) {
+        return new PgConstraint(name, null);
     }
 }

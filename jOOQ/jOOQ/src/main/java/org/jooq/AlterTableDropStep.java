@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,13 +42,11 @@ import org.jetbrains.annotations.*;
 
 // ...
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
+import static org.jooq.SQLDialect.H2;
 import static org.jooq.SQLDialect.HSQLDB;
 // ...
 import static org.jooq.SQLDialect.POSTGRES;
-// ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
 /**
@@ -79,7 +77,7 @@ public interface AlterTableDropStep extends AlterTableFinalStep {
 
     /**
      * Add a <code>CASCADE</code> clause to the
-     * <code>ALTER TABLE … DROP</code> statement.
+     * <code>ALTER TABLE .. DROP</code> statement.
      */
     @NotNull @CheckReturnValue
     @Support({ DERBY, HSQLDB, POSTGRES, YUGABYTEDB })
@@ -87,9 +85,9 @@ public interface AlterTableDropStep extends AlterTableFinalStep {
 
     /**
      * Add a <code>RESTRICT</code> clause to the
-     * <code>ALTER TABLE … DROP</code> statement.
+     * <code>ALTER TABLE .. DROP</code> statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ DERBY, DUCKDB, HSQLDB, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, HSQLDB, POSTGRES, YUGABYTEDB })
     AlterTableFinalStep restrict();
 }

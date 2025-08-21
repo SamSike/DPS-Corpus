@@ -51,10 +51,10 @@ public class CatalogLSResourceResolver implements LSResourceResolver {
     }
 
     class LSInputSource implements LSInput {
-        private final InputSource inputSource;
+        private InputSource inputSource;
         private String publicId;
-        private final String systemId;
-        private final String baseURI;
+        private String systemId;
+        private String baseURI;
 
         LSInputSource(String namespaceURI, String publicId, String systemId, String baseURI) {
             if (publicId == null) {

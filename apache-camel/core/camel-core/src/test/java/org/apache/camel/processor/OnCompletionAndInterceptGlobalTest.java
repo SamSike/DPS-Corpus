@@ -63,10 +63,10 @@ public class OnCompletionAndInterceptGlobalTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 intercept().to("mock:intercept");
 
                 // define a global on completion that is invoked when the
@@ -86,7 +86,7 @@ public class OnCompletionAndInterceptGlobalTest extends ContextTestSupport {
         }
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             if ("Kaboom".equals(exchange.getIn().getBody())) {
                 throw new IllegalArgumentException("Kaboom");
             }

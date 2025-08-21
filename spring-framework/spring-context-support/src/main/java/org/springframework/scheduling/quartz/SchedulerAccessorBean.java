@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package org.springframework.scheduling.quartz;
 
-import org.jspecify.annotations.Nullable;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.SchedulerRepository;
@@ -25,6 +24,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -40,18 +40,21 @@ import org.springframework.util.Assert;
  */
 public class SchedulerAccessorBean extends SchedulerAccessor implements BeanFactoryAware, InitializingBean {
 
-	private @Nullable String schedulerName;
+	@Nullable
+	private String schedulerName;
 
-	private @Nullable Scheduler scheduler;
+	@Nullable
+	private Scheduler scheduler;
 
-	private @Nullable BeanFactory beanFactory;
+	@Nullable
+	private BeanFactory beanFactory;
 
 
 	/**
 	 * Specify the Quartz {@link Scheduler} to operate on via its scheduler name in the Spring
 	 * application context or also in the Quartz {@link org.quartz.impl.SchedulerRepository}.
 	 * <p>Schedulers can be registered in the repository through custom bootstrapping,
-	 * for example, via the {@link org.quartz.impl.StdSchedulerFactory} or
+	 * e.g. via the {@link org.quartz.impl.StdSchedulerFactory} or
 	 * {@link org.quartz.impl.DirectSchedulerFactory} factory classes.
 	 * However, in general, it's preferable to use Spring's {@link SchedulerFactoryBean}
 	 * which includes the job/trigger/listener capabilities of this accessor as well.
@@ -96,7 +99,8 @@ public class SchedulerAccessorBean extends SchedulerAccessor implements BeanFact
 	}
 
 	protected Scheduler findScheduler(String schedulerName) throws SchedulerException {
-		if (this.beanFactory instanceof ListableBeanFactory lbf) {
+		if (this.beanFactory instanceof ListableBeanFactory) {
+			ListableBeanFactory lbf = (ListableBeanFactory) this.beanFactory;
 			String[] beanNames = lbf.getBeanNamesForType(Scheduler.class);
 			for (String beanName : beanNames) {
 				Scheduler schedulerBean = (Scheduler) lbf.getBean(beanName);

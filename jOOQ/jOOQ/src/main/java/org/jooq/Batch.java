@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,18 +51,18 @@ import org.jetbrains.annotations.NotNull;
  * A wrapper for a JDBC batch operation. It has two modes:
  * <p>
  * <ol>
- * <li><b>Execute several queries without bind values</b><pre><code>
+ * <li><b>Execute several queries without bind values</b><code><pre>
  * create.batch(query1,
  *              query2,
  *              query3)
  *       .execute();
- * </code></pre></li>
- * <li><b>Execute one query several times with bind values</b><pre><code>
+ * </pre></code></li>
+ * <li><b>Execute one query several times with bind values</b><code><pre>
  * create.batch(query)
  *       .bind(valueA1, valueA2)
  *       .bind(valueB1, valueB2)
  *       .execute();
- * </code></pre></li>
+ * </pre></code></li>
  * </ol>
  *
  * @author Lukas Eder

@@ -37,9 +37,9 @@ public class InterceptFromEndpointRefUriTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 context.getRegistry().bind("start", context.getEndpoint("direct:start"));
                 context.getRegistry().bind("bar", context.getEndpoint("seda:bar"));
 

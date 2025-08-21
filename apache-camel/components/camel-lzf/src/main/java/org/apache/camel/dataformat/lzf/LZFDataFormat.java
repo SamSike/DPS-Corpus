@@ -35,8 +35,7 @@ import org.apache.camel.util.IOHelper;
  */
 @Dataformat("lzf")
 public class LZFDataFormat extends ServiceSupport implements DataFormat, DataFormatName {
-
-    private boolean usingParallelCompression;
+    private boolean parallelCompression;
 
     @Override
     public String getDataFormatName() {
@@ -46,7 +45,7 @@ public class LZFDataFormat extends ServiceSupport implements DataFormat, DataFor
     @Override
     public void marshal(final Exchange exchange, final Object graph, final OutputStream stream) throws Exception {
         InputStream is = exchange.getContext().getTypeConverter().mandatoryConvertTo(InputStream.class, exchange, graph);
-        OutputStream compressedOutput = usingParallelCompression ? new PLZFOutputStream(stream) : new LZFOutputStream(stream);
+        OutputStream compressedOutput = parallelCompression ? new PLZFOutputStream(stream) : new LZFOutputStream(stream);
         try {
             IOHelper.copy(is, compressedOutput);
         } finally {
@@ -71,11 +70,11 @@ public class LZFDataFormat extends ServiceSupport implements DataFormat, DataFor
     }
 
     public boolean isUsingParallelCompression() {
-        return usingParallelCompression;
+        return parallelCompression;
     }
 
     public void setUsingParallelCompression(boolean parallelCompression) {
-        this.usingParallelCompression = parallelCompression;
+        this.parallelCompression = parallelCompression;
     }
 
     @Override

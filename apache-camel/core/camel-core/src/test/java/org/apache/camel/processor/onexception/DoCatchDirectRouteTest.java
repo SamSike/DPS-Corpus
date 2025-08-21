@@ -33,10 +33,10 @@ public class DoCatchDirectRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").doTry().to("direct:a").doCatch(Exception.class).to("direct:b").end();
 
                 from("direct:a").to("mock:a").throwException(new IllegalArgumentException("Forced"));

@@ -41,18 +41,18 @@ public final class HttpConverter {
 
     @Converter
     public static HttpServletRequest toServletRequest(Message message) {
-        if (message instanceof HttpMessage hm) {
-            return hm.getRequest();
+        if (message == null) {
+            return null;
         }
-        return null;
+        return message.getHeader(Exchange.HTTP_SERVLET_REQUEST, HttpServletRequest.class);
     }
 
     @Converter
     public static HttpServletResponse toServletResponse(Message message) {
-        if (message instanceof HttpMessage hm) {
-            return hm.getResponse();
+        if (message == null) {
+            return null;
         }
-        return null;
+        return message.getHeader(Exchange.HTTP_SERVLET_RESPONSE, HttpServletResponse.class);
     }
 
     @Converter

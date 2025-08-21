@@ -1,7 +1,9 @@
 /**
  * Server-side abstractions for WebSocket interactions.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.socket.server;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

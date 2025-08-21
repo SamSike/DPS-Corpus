@@ -33,11 +33,12 @@ import org.junit.jupiter.api.Test;
 @Disabled("Manual test")
 public class SplitterParallelBigFileManualTest extends ContextTestSupport {
 
+    private int lines = 20000;
+
     @Test
     public void testSplitParallelBigFile() throws Exception {
         Path dir = testDirectory();
         Files.createDirectories(dir);
-        int lines = 20000;
         try (OutputStream fos = Files.newOutputStream(testFile("bigfile.txt"))) {
             for (int i = 0; i < lines; i++) {
                 String line = "line-" + i + LS;
@@ -50,7 +51,7 @@ public class SplitterParallelBigFileManualTest extends ContextTestSupport {
         NotifyBuilder builder = new NotifyBuilder(context).whenDone(lines + 1).create();
         boolean done = builder.matches(120, TimeUnit.SECONDS);
 
-        log.info("Took {}", TimeUtils.printDuration(watch.taken(), true));
+        log.info("Took " + TimeUtils.printDuration(watch.taken(), true));
 
         if (!done) {
             throw new CamelException("Could not split file in 2 minutes");
@@ -61,10 +62,10 @@ public class SplitterParallelBigFileManualTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // lower max pool to 10 for less number of concurrent threads
                 // context.getExecutorServiceStrategy().getDefaultThreadPoolProfile().setMaxPoolSize(10);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,9 @@ package org.springframework.format.datetime.standard;
 
 import java.time.format.DateTimeFormatter;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link FactoryBean} that creates a JSR-310 {@link java.time.format.DateTimeFormatter}.
@@ -38,7 +37,8 @@ import org.springframework.beans.factory.InitializingBean;
 public class DateTimeFormatterFactoryBean extends DateTimeFormatterFactory
 		implements FactoryBean<DateTimeFormatter>, InitializingBean {
 
-	private @Nullable DateTimeFormatter dateTimeFormatter;
+	@Nullable
+	private DateTimeFormatter dateTimeFormatter;
 
 
 	@Override
@@ -47,7 +47,8 @@ public class DateTimeFormatterFactoryBean extends DateTimeFormatterFactory
 	}
 
 	@Override
-	public @Nullable DateTimeFormatter getObject() {
+	@Nullable
+	public DateTimeFormatter getObject() {
 		return this.dateTimeFormatter;
 	}
 

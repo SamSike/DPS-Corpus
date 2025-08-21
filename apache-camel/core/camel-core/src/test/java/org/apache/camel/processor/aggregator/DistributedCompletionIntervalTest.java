@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
  */
 public class DistributedCompletionIntervalTest extends AbstractDistributedTest {
 
-    private final MemoryAggregationRepository sharedAggregationRepository = new MemoryAggregationRepository(true);
+    private MemoryAggregationRepository sharedAggregationRepository = new MemoryAggregationRepository(true);
 
     @Test
     public void testCamelContext1Wins() throws Exception {
@@ -71,10 +71,10 @@ public class DistributedCompletionIntervalTest extends AbstractDistributedTest {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start").aggregate(header("id"), new UseLatestAggregationStrategy())
                         .aggregationRepository(sharedAggregationRepository).optimisticLocking()
@@ -86,10 +86,10 @@ public class DistributedCompletionIntervalTest extends AbstractDistributedTest {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder2() {
+    protected RouteBuilder createRouteBuilder2() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start").aggregate(header("id"), new UseLatestAggregationStrategy())
                         .aggregationRepository(sharedAggregationRepository).optimisticLocking()

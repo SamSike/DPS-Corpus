@@ -2,7 +2,9 @@
  * Holds implementations of
  * {@link org.springframework.web.reactive.socket.server.RequestUpgradeStrategy}.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.reactive.socket.server.upgrade;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,32 +42,24 @@ import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.comparingInt;
-import static org.jooq.impl.DSL.comment;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.QOM.GenerationOption.STORED;
 import static org.jooq.impl.QOM.GenerationOption.VIRTUAL;
 import static org.jooq.impl.Tools.EMPTY_CHECK;
 import static org.jooq.impl.Tools.EMPTY_SORTFIELD;
 import static org.jooq.tools.StringUtils.defaultIfNull;
-import static org.jooq.util.xml.XmlUtils.foreignKeyRule;
 import static org.jooq.util.xml.jaxb.TableConstraintType.PRIMARY_KEY;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.function.Predicate;
 
 import org.jooq.Catalog;
 import org.jooq.Check;
-import org.jooq.Comment;
-import org.jooq.Condition;
 import org.jooq.Configuration;
 import org.jooq.DataType;
 import org.jooq.Domain;
@@ -75,28 +67,18 @@ import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Index;
 import org.jooq.Name;
-// ...
 import org.jooq.Record;
 import org.jooq.Schema;
 import org.jooq.Sequence;
 import org.jooq.SortField;
-import org.jooq.Statement;
-// ...
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.TableOptions.TableType;
-// ...
-// ...
-// ...
-// ...
-import org.jooq.UDT;
 import org.jooq.UniqueKey;
 import org.jooq.exception.SQLDialectNotSupportedException;
-import org.jooq.impl.QOM.ForeignKeyRule;
 import org.jooq.impl.QOM.GenerationOption;
 import org.jooq.tools.StringUtils;
-import org.jooq.util.xml.jaxb.Attribute;
 import org.jooq.util.xml.jaxb.CheckConstraint;
 import org.jooq.util.xml.jaxb.Column;
 import org.jooq.util.xml.jaxb.IndexColumnUsage;
@@ -104,7 +86,6 @@ import org.jooq.util.xml.jaxb.InformationSchema;
 import org.jooq.util.xml.jaxb.KeyColumnUsage;
 import org.jooq.util.xml.jaxb.ReferentialConstraint;
 import org.jooq.util.xml.jaxb.TableConstraint;
-import org.jooq.util.xml.jaxb.TriggerActionOrientation;
 
 /**
  * @author Lukas Eder
@@ -119,9 +100,6 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
     private final List<InformationSchemaTable>                  tables;
     private final Map<Name, InformationSchemaTable>             tablesByName;
     private final Map<Schema, List<InformationSchemaTable>>     tablesPerSchema;
-    private final List<InformationSchemaUDT>                    udts;
-    private final Map<Name, InformationSchemaUDT>               udtsByName;
-    private final Map<Schema, List<InformationSchemaUDT>>       udtsPerSchema;
     private final List<InformationSchemaDomain<?>>              domains;
     private final Map<Name, InformationSchemaDomain<?>>         domainsByName;
     private final Map<Schema, List<InformationSchemaDomain<?>>> domainsPerSchema;
@@ -129,18 +107,8 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
     private final Map<Schema, List<Sequence<?>>>                sequencesPerSchema;
     private final List<UniqueKeyImpl<Record>>                   primaryKeys;
     private final Map<Name, UniqueKeyImpl<Record>>              keysByName;
-    private final Map<Name, ReferentialKey>                     referentialKeys;
+    private final Map<Name, Name>                               referentialKeys;
     private final Map<Name, IndexImpl>                          indexesByName;
-
-
-
-
-
-
-
-
-
-
 
     InformationSchemaMetaImpl(Configuration configuration, InformationSchema source) {
         super(configuration);
@@ -153,9 +121,6 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
         this.tables = new ArrayList<>();
         this.tablesByName = new HashMap<>();
         this.tablesPerSchema = new HashMap<>();
-        this.udts = new ArrayList<>();
-        this.udtsByName = new HashMap<>();
-        this.udtsPerSchema = new HashMap<>();
         this.domains = new ArrayList<>();
         this.domainsByName = new HashMap<>();
         this.domainsPerSchema = new HashMap<>();
@@ -166,22 +131,7 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
         this.referentialKeys = new HashMap<>();
         this.indexesByName = new HashMap<>();
 
-
-
-
-
-
-
-
-
-
-
         init(source);
-    }
-
-    @Override
-    final AbstractMeta filtered0(Predicate<? super Catalog> catalogFilter, Predicate<? super Schema> schemaFilter) {
-        return this;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -226,70 +176,6 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
             schemasByName.put(name(xs.getCatalogName(), xs.getSchemaName()), is);
         }
 
-        // UDTs
-        // -------------------------------------------------------------------------------------------------------------
-        udtLoop:
-        for (org.jooq.util.xml.jaxb.UserDefinedType u : meta.getUserDefinedTypes()) {
-            Name schemaName = name(u.getUserDefinedTypeCatalog(), u.getUserDefinedTypeSchema());
-            Schema schema = schemasByName.get(schemaName);
-
-            if (schema == null) {
-                errors.add("Schema " + schemaName + " not defined for UDT " + u.getUserDefinedTypeName());
-                continue udtLoop;
-            }
-
-            Name udtName = name(u.getUserDefinedTypeCatalog(), u.getUserDefinedTypeSchema(), u.getUserDefinedTypeName());
-
-            InformationSchemaUDT udt = new InformationSchemaUDT(
-                name(u.getUserDefinedTypeName()),
-                schema,
-                comment(u.getComment())
-            );
-            udts.add(udt);
-            udtsByName.put(udtName, udt);
-        }
-
-        // Attributes
-        // -------------------------------------------------------------------------------------------------------------
-        List<Attribute> attributes = new ArrayList<>(meta.getAttributes());
-        attributes.sort((o1, o2) -> {
-            Integer p1 = o1.getOrdinalPosition();
-            Integer p2 = o2.getOrdinalPosition();
-
-            if (Objects.equals(p1, p2))
-                return 0;
-            if (p1 == null)
-                return -1;
-            if (p2 == null)
-                return 1;
-
-            return p1.compareTo(p2);
-        });
-
-        attributeLoop:
-        for (Attribute xa : attributes) {
-            String typeName = xa.getDataType();
-            int length = xa.getCharacterMaximumLength() == null ? 0 : xa.getCharacterMaximumLength();
-            int precision = xa.getNumericPrecision() == null ? 0 : xa.getNumericPrecision();
-            int scale = xa.getNumericScale() == null ? 0 : xa.getNumericScale();
-
-            // TODO: Exception handling should be moved inside SQLDataType
-            Name udtName = name(xa.getUdtCatalog(), xa.getUdtSchema(), xa.getUdtName());
-            InformationSchemaUDT udt = udtsByName.get(udtName);
-
-            if (udt == null) {
-                errors.add("UDT " + udtName + " not defined for column " + xa.getAttributeName());
-                continue attributeLoop;
-            }
-
-            UDTImpl.createField(
-                name(xa.getAttributeName()),
-                type(typeName, length, precision, scale, null, null, null, null, null),
-                udt,
-                xa.getComment()
-            );
-        }
-
         // Domains
         // -------------------------------------------------------------------------------------------------------------
         domainLoop:
@@ -324,13 +210,13 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
             InformationSchemaDomain<?> id = new InformationSchemaDomain<Object>(
                 schema,
                 name(d.getDomainName()),
-                comment(d.getComment()),
-                (DataType) type(d.getDataType(), length, precision, scale, nullable, false, false, null, null),
+                (DataType) type(d.getDataType(), length, precision, scale, nullable, false, null, null),
                 checks.toArray(EMPTY_CHECK)
             );
             domains.add(id);
             domainsByName.put(domainName, id);
         }
+
 
         // Tables
         // -------------------------------------------------------------------------------------------------------------
@@ -347,8 +233,7 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
             TableType tableType;
 
             switch (xt.getTableType()) {
-                case GLOBAL_TEMPORARY: tableType = TableType.GLOBAL_TEMPORARY; break;
-                case LOCAL_TEMPORARY:  tableType = TableType.LOCAL_TEMPORARY; break;
+                case GLOBAL_TEMPORARY: tableType = TableType.TEMPORARY; break;
                 case VIEW:             tableType = TableType.VIEW; break;
                 case BASE_TABLE:
                 default:               tableType = TableType.TABLE; break;
@@ -399,7 +284,6 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
             int precision = xc.getNumericPrecision() == null ? 0 : xc.getNumericPrecision();
             int scale = xc.getNumericScale() == null ? 0 : xc.getNumericScale();
             boolean nullable = !FALSE.equals(xc.isIsNullable());
-            boolean hidden = TRUE.equals(xc.isHidden());
             boolean readonly = TRUE.equals(xc.isReadonly());
             Field<?> generatedAlwaysAs = TRUE.equals(xc.isIsGenerated())
                 ? DSL.field(xc.getGenerationExpression())
@@ -423,7 +307,7 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
 
             AbstractTable.createField(
                 name(xc.getColumnName()),
-                type(typeName, length, precision, scale, nullable, hidden, readonly, generatedAlwaysAs, generationOption),
+                type(typeName, length, precision, scale, nullable, readonly, generatedAlwaysAs, generationOption),
                 table,
                 xc.getComment()
             );
@@ -549,15 +433,9 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
         }
 
         for (ReferentialConstraint xr : meta.getReferentialConstraints()) {
-            Name fk = name(xr.getConstraintCatalog(), xr.getConstraintSchema(), xr.getConstraintName());
             referentialKeys.put(
-                fk,
-                new ReferentialKey(
-                    fk,
-                    name(xr.getUniqueConstraintCatalog(), xr.getUniqueConstraintSchema(), xr.getUniqueConstraintName()),
-                    foreignKeyRule(xr.getDeleteRule()),
-                    foreignKeyRule(xr.getUpdateRule())
-                )
+                name(xr.getConstraintCatalog(), xr.getConstraintSchema(), xr.getConstraintName()),
+                name(xr.getUniqueConstraintCatalog(), xr.getUniqueConstraintSchema(), xr.getUniqueConstraintName())
             );
         }
 
@@ -581,23 +459,14 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
                         continue tableConstraintLoop;
                     }
 
-                    ReferentialKey fk = referentialKeys.get(constraintName);
-                    UniqueKeyImpl<Record> uniqueKey = keysByName.get(fk.uk());
+                    UniqueKeyImpl<Record> uniqueKey = keysByName.get(referentialKeys.get(constraintName));
 
                     if (uniqueKey == null) {
                         errors.add("No unique key defined for foreign key " + constraintName);
                         continue tableConstraintLoop;
                     }
 
-                    ForeignKey<Record, Record> key = Internal.createForeignKey(
-                        uniqueKey,
-                        table,
-                        xc.getConstraintName(),
-                        c.toArray(new TableField[0]),
-                        !FALSE.equals(xc.isEnforced()),
-                        fk.deleteRule(),
-                        fk.updateRule()
-                    );
+                    ForeignKey<Record, Record> key = Internal.createForeignKey(uniqueKey, table, xc.getConstraintName(), c.toArray(new TableField[0]));
                     table.foreignKeys.add(key);
                     break;
                 }
@@ -657,8 +526,7 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
             InformationSchemaSequence is = new InformationSchemaSequence(
                 xs.getSequenceName(),
                 schema,
-                comment(xs.getComment()),
-                type(typeName, length, precision, scale, nullable, false, false, null, null),
+                type(typeName, length, precision, scale, nullable, false, null, null),
                 startWith,
                 incrementBy,
                 minvalue,
@@ -670,106 +538,10 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
             sequences.add(is);
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         // Lookups
         // -------------------------------------------------------------------------------------------------------------
         for (Schema s : schemas)
             initLookup(schemasPerCatalog, s.getCatalog(), s);
-
-        for (InformationSchemaUDT u : udts)
-            initLookup(udtsPerSchema, u.getSchema(), u);
 
         for (InformationSchemaDomain<?> d : domains)
             initLookup(domainsPerSchema, d.getSchema(), d);
@@ -777,16 +549,8 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
         for (InformationSchemaTable t : tables)
             initLookup(tablesPerSchema, t.getSchema(), t);
 
-        for (Sequence<?> s : sequences)
-            initLookup(sequencesPerSchema, s.getSchema(), s);
-
-
-
-
-
-
-
-
+        for (Sequence<?> q : sequences)
+            initLookup(sequencesPerSchema, q.getSchema(), q);
 
         if (!errors.isEmpty())
             throw new IllegalArgumentException(errors.toString());
@@ -802,9 +566,8 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
         int length,
         int precision,
         int scale,
-        Boolean nullable,
-        Boolean hidden,
-        Boolean readonly,
+        boolean nullable,
+        boolean readonly,
         Field<?> generatedAlwaysAs,
         GenerationOption generationOption
     ) {
@@ -812,13 +575,8 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
 
         try {
             type = DefaultDataType.getDataType(configuration.family(), typeName);
-
-            if (nullable != null)
-                type = type.nullable(nullable);
-            if (hidden != null)
-                type = type.hidden(hidden);
-            if (readonly != null)
-                type = type.readonly(readonly);
+            type = type.nullable(nullable);
+            type = type.readonly(readonly);
 
             if (length != 0)
                 type = type.length(length);
@@ -855,37 +613,9 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    final List<UDT<?>> getUDTs0() {
-        return (List) udts;
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Override
     final List<Domain<?>> getDomains0() {
         return (List) domains;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
@@ -912,11 +642,6 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
         }
 
         @Override
-        public final List<UDT<?>> getUDTs() {
-            return InformationSchemaMetaImpl.unmodifiableList(udtsPerSchema.get(this));
-        }
-
-        @Override
         public final List<Domain<?>> getDomains() {
             return InformationSchemaMetaImpl.unmodifiableList(domainsPerSchema.get(this));
         }
@@ -930,20 +655,6 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
         public final List<Sequence<?>> getSequences() {
             return InformationSchemaMetaImpl.unmodifiableList(sequencesPerSchema.get(this));
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 
     private static final class InformationSchemaTable extends TableImpl<Record> {
@@ -984,65 +695,20 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
         }
     }
 
-    private static final class InformationSchemaUDT extends UDTImpl<UDTRecordN> {
-
-        InformationSchemaUDT(Name name, Schema schema, Comment comment) {
-            super(name, schema, null, comment, false);
-        }
-    }
-
     private static final class InformationSchemaDomain<T> extends DomainImpl<T> {
 
-        InformationSchemaDomain(Schema schema, Name name, Comment comment, DataType<T> type, Check<?>[] checks) {
-            super(schema, name, comment, type, checks);
+        InformationSchemaDomain(Schema schema, Name name, DataType<T> type, Check<?>[] checks) {
+            super(schema, name, type, checks);
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private static final class InformationSchemaSequence<N extends Number> extends SequenceImpl<N> {
 
-        InformationSchemaSequence(String name, Schema schema, Comment comment, DataType<N> type, Number startWith, Number incrementBy, Number minvalue, Number maxvalue, Boolean cycle, Number cache) {
+        InformationSchemaSequence(String name, Schema schema, DataType<N> type, Number startWith, Number incrementBy, Number minvalue, Number maxvalue, Boolean cycle, Number cache) {
             super(DSL.name(name),
                 schema,
-                comment,
                 type,
+                false,
                 startWith != null ? Tools.field(startWith, type) : null,
                 incrementBy != null ? Tools.field(incrementBy, type) : null,
                 minvalue != null ? Tools.field(minvalue, type) : null,
@@ -1056,6 +722,4 @@ final class InformationSchemaMetaImpl extends AbstractMeta {
     private static final <T> List<T> unmodifiableList(List<? extends T> list) {
         return list == null ? emptyList() : Collections.unmodifiableList(list);
     }
-
-    private static final record ReferentialKey(Name fk, Name uk, ForeignKeyRule deleteRule, ForeignKeyRule updateRule) {}
 }

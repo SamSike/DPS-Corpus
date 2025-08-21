@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,7 +37,7 @@
  */
 package org.jooq.impl;
 
-import static org.jooq.impl.FieldsImpl.internalFieldsRow0;
+import static org.jooq.impl.FieldsImpl.fieldsRow0;
 
 import java.util.stream.Stream;
 
@@ -45,8 +45,6 @@ import org.jooq.DataType;
 import org.jooq.Field;
 import org.jooq.Fields;
 import org.jooq.Name;
-
-import org.jetbrains.annotations.ApiStatus.Internal;
 
 /**
  * An internal base implementation of {@link Fields}, implementing all the
@@ -56,29 +54,19 @@ import org.jetbrains.annotations.ApiStatus.Internal;
  */
 interface FieldsTrait extends Fields {
 
-    @Internal
-    default Fields internalFieldsRow() {
-        return fieldsRow();
-    }
-
-    @Override
-    default Fields fieldsIncludingHidden() {
-        return internalFieldsRow().fieldsIncludingHidden();
-    }
-
     @Override
     default Field<?>[] fields() {
-        return internalFieldsRow().fields();
+        return fieldsRow().fields();
     }
 
     @Override
     default Stream<Field<?>> fieldStream() {
-        return internalFieldsRow().fieldStream();
+        return fieldsRow().fieldStream();
     }
 
     @Override
     default <T> Field<T> field(Field<T> field) {
-        return internalFieldsRow().field(field);
+        return fieldsRow().field(field);
     }
 
     /**
@@ -87,7 +75,7 @@ interface FieldsTrait extends Fields {
     @Deprecated
     @Override
     default Field<?> field(String name) {
-        return internalFieldsRow().field(name);
+        return fieldsRow().field(name);
     }
 
     /**
@@ -96,7 +84,7 @@ interface FieldsTrait extends Fields {
     @Deprecated
     @Override
     default <T> Field<T> field(String name, Class<T> type) {
-        return internalFieldsRow().field(name, type);
+        return fieldsRow().field(name, type);
     }
 
 
@@ -106,7 +94,7 @@ interface FieldsTrait extends Fields {
     @Deprecated
     @Override
     default <T> Field<T> field(String name, DataType<T> dataType) {
-        return internalFieldsRow().field(name, dataType);
+        return fieldsRow().field(name, dataType);
     }
 
     /**
@@ -115,7 +103,7 @@ interface FieldsTrait extends Fields {
     @Deprecated
     @Override
     default Field<?> field(Name name) {
-        return internalFieldsRow().field(name);
+        return fieldsRow().field(name);
     }
 
     /**
@@ -124,7 +112,7 @@ interface FieldsTrait extends Fields {
     @Deprecated
     @Override
     default <T> Field<T> field(Name name, Class<T> type) {
-        return internalFieldsRow().field(name, type);
+        return fieldsRow().field(name, type);
     }
 
     /**
@@ -133,96 +121,96 @@ interface FieldsTrait extends Fields {
     @Deprecated
     @Override
     default <T> Field<T> field(Name name, DataType<T> dataType) {
-        return internalFieldsRow().field(name, dataType);
+        return fieldsRow().field(name, dataType);
     }
 
     @Override
     default Field<?> field(int index) {
-        return internalFieldsRow().field(index);
+        return fieldsRow().field(index);
     }
 
     @Override
     default <T> Field<T> field(int index, Class<T> type) {
-        return internalFieldsRow().field(index, type);
+        return fieldsRow().field(index, type);
     }
 
     @Override
     default <T> Field<T> field(int index, DataType<T> dataType) {
-        return internalFieldsRow().field(index, dataType);
+        return fieldsRow().field(index, dataType);
     }
 
     @Override
     default Field<?>[] fields(Field<?>... fields) {
-        return internalFieldsRow().fields(fields);
+        return fieldsRow().fields(fields);
     }
 
     @Override
     default Field<?>[] fields(String... names) {
-        return internalFieldsRow().fields(names);
+        return fieldsRow().fields(names);
     }
 
     @Override
     default Field<?>[] fields(Name... names) {
-        return internalFieldsRow().fields(names);
+        return fieldsRow().fields(names);
     }
 
     @Override
     default Field<?>[] fields(int... indexes) {
-        return internalFieldsRow().fields(indexes);
+        return fieldsRow().fields(indexes);
     }
 
     @Override
     default int indexOf(Field<?> field) {
-        return internalFieldsRow().indexOf(field);
+        return fieldsRow().indexOf(field);
     }
 
     @Override
     default int indexOf(String name) {
-        return internalFieldsRow().indexOf(name);
+        return fieldsRow().indexOf(name);
     }
 
     @Override
     default int indexOf(Name name) {
-        return internalFieldsRow().indexOf(name);
+        return fieldsRow().indexOf(name);
     }
 
     @Override
     default Class<?>[] types() {
-        return internalFieldsRow0(this).types();
+        return fieldsRow0(this).types();
     }
 
     @Override
     default Class<?> type(int index) {
-        return internalFieldsRow0(this).type(index);
+        return fieldsRow0(this).type(index);
     }
 
     @Override
     default Class<?> type(String name) {
-        return internalFieldsRow0(this).type(name);
+        return fieldsRow0(this).type(name);
     }
 
     @Override
     default Class<?> type(Name name) {
-        return internalFieldsRow0(this).type(name);
+        return fieldsRow0(this).type(name);
     }
 
     @Override
     default DataType<?>[] dataTypes() {
-        return internalFieldsRow0(this).dataTypes();
+        return fieldsRow0(this).dataTypes();
     }
 
     @Override
     default DataType<?> dataType(int index) {
-        return internalFieldsRow0(this).dataType(index);
+        return fieldsRow0(this).dataType(index);
     }
 
     @Override
     default DataType<?> dataType(String name) {
-        return internalFieldsRow0(this).dataType(name);
+        return fieldsRow0(this).dataType(name);
     }
 
     @Override
     default DataType<?> dataType(Name name) {
-        return internalFieldsRow0(this).dataType(name);
+        return fieldsRow0(this).dataType(name);
     }
 }

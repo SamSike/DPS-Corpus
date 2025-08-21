@@ -30,7 +30,6 @@ public enum ExchangePropertyKey {
     AGGREGATION_COMPLETE_ALL_GROUPS(Exchange.AGGREGATION_COMPLETE_ALL_GROUPS),
     AGGREGATION_COMPLETE_CURRENT_GROUP(Exchange.AGGREGATION_COMPLETE_CURRENT_GROUP),
     AGGREGATION_STRATEGY(Exchange.AGGREGATION_STRATEGY),
-    ATTACHMENTS_SIZE(Exchange.ATTACHMENTS_SIZE),
     BATCH_COMPLETE(Exchange.BATCH_COMPLETE),
     BATCH_INDEX(Exchange.BATCH_INDEX),
     BATCH_SIZE(Exchange.BATCH_SIZE),
@@ -40,8 +39,6 @@ public enum ExchangePropertyKey {
     CIRCUIT_BREAKER_RESPONSE_SHORT_CIRCUITED(CircuitBreakerConstants.RESPONSE_SHORT_CIRCUITED),
     CIRCUIT_BREAKER_RESPONSE_TIMED_OUT(CircuitBreakerConstants.RESPONSE_TIMED_OUT),
     CIRCUIT_BREAKER_RESPONSE_REJECTED(CircuitBreakerConstants.RESPONSE_REJECTED),
-    CIRCUIT_BREAKER_RESPONSE_IGNORED(CircuitBreakerConstants.RESPONSE_IGNORED),
-    CIRCUIT_BREAKER_RESPONSE_STATE(CircuitBreakerConstants.RESPONSE_STATE),
     CLAIM_CHECK_REPOSITORY(Exchange.CLAIM_CHECK_REPOSITORY),
     CORRELATION_ID(Exchange.CORRELATION_ID),
     DUPLICATE_MESSAGE(Exchange.DUPLICATE_MESSAGE),
@@ -54,12 +51,7 @@ public enum ExchangePropertyKey {
     FAILURE_HANDLED(Exchange.FAILURE_HANDLED),
     FAILURE_ROUTE_ID(Exchange.FAILURE_ROUTE_ID),
     FATAL_FALLBACK_ERROR_HANDLER(Exchange.FATAL_FALLBACK_ERROR_HANDLER),
-    FILE_EXCHANGE_FILE(Exchange.FILE_EXCHANGE_FILE),
     GROUPED_EXCHANGE(Exchange.GROUPED_EXCHANGE),
-    INTERCEPTED_ENDPOINT(Exchange.INTERCEPTED_ENDPOINT),
-    INTERCEPTED_NODE_ID(Exchange.INTERCEPTED_NODE_ID),
-    INTERCEPTED_ROUTE_ENDPOINT_URI(Exchange.INTERCEPTED_ROUTE_ENDPOINT_URI),
-    INTERCEPTED_ROUTE_ID(Exchange.INTERCEPTED_ROUTE_ID),
     INTERCEPT_SEND_TO_ENDPOINT_WHEN_MATCHED(Exchange.INTERCEPT_SEND_TO_ENDPOINT_WHEN_MATCHED),
     LOOP_INDEX(Exchange.LOOP_INDEX),
     LOOP_SIZE(Exchange.LOOP_SIZE),
@@ -69,7 +61,6 @@ public enum ExchangePropertyKey {
     ON_COMPLETION(Exchange.ON_COMPLETION),
     ON_COMPLETION_ROUTE_IDS(Exchange.ON_COMPLETION_ROUTE_IDS),
     PARENT_UNIT_OF_WORK(Exchange.PARENT_UNIT_OF_WORK),
-    RECEIVED_TIMESTAMP(Exchange.RECEIVED_TIMESTAMP),
     RECIPIENT_LIST_ENDPOINT(Exchange.RECIPIENT_LIST_ENDPOINT),
     SLIP_ENDPOINT(Exchange.SLIP_ENDPOINT),
     SLIP_PRODUCER(Exchange.SLIP_PRODUCER),
@@ -80,10 +71,7 @@ public enum ExchangePropertyKey {
     STREAM_CACHE_UNIT_OF_WORK(Exchange.STREAM_CACHE_UNIT_OF_WORK),
     TO_ENDPOINT(Exchange.TO_ENDPOINT),
     TRY_ROUTE_BLOCK(Exchange.TRY_ROUTE_BLOCK),
-    UNIT_OF_WORK_EXHAUSTED(Exchange.UNIT_OF_WORK_EXHAUSTED),
-    // special for camel-tracing/open-telemetry
-    OTEL_ACTIVE_SPAN(Exchange.OTEL_ACTIVE_SPAN),
-    OTEL_CLOSE_CLIENT_SCOPE(Exchange.OTEL_CLOSE_CLIENT_SCOPE);
+    UNIT_OF_WORK_EXHAUSTED(Exchange.UNIT_OF_WORK_EXHAUSTED);
 
     private final String name;
 
@@ -95,6 +83,7 @@ public enum ExchangePropertyKey {
         return name;
     }
 
+    // CHECKSTYLE:OFF
     public static ExchangePropertyKey asExchangePropertyKey(String name) {
         switch (name) {
             case Exchange.AGGREGATED_COMPLETED_BY:
@@ -111,8 +100,6 @@ public enum ExchangePropertyKey {
                 return AGGREGATION_COMPLETE_CURRENT_GROUP;
             case Exchange.AGGREGATION_STRATEGY:
                 return AGGREGATION_STRATEGY;
-            case Exchange.ATTACHMENTS_SIZE:
-                return ATTACHMENTS_SIZE;
             case Exchange.BATCH_COMPLETE:
                 return BATCH_COMPLETE;
             case Exchange.BATCH_INDEX:
@@ -131,10 +118,6 @@ public enum ExchangePropertyKey {
                 return CIRCUIT_BREAKER_RESPONSE_TIMED_OUT;
             case CircuitBreakerConstants.RESPONSE_REJECTED:
                 return CIRCUIT_BREAKER_RESPONSE_REJECTED;
-            case CircuitBreakerConstants.RESPONSE_IGNORED:
-                return CIRCUIT_BREAKER_RESPONSE_IGNORED;
-            case CircuitBreakerConstants.RESPONSE_STATE:
-                return CIRCUIT_BREAKER_RESPONSE_STATE;
             case Exchange.CLAIM_CHECK_REPOSITORY:
                 return CLAIM_CHECK_REPOSITORY;
             case Exchange.CORRELATION_ID:
@@ -153,22 +136,14 @@ public enum ExchangePropertyKey {
                 return EXCEPTION_HANDLED;
             case Exchange.FAILURE_ENDPOINT:
                 return FAILURE_ENDPOINT;
+            case Exchange.FAILURE_HANDLED:
+                return FAILURE_HANDLED;
             case Exchange.FAILURE_ROUTE_ID:
                 return FAILURE_ROUTE_ID;
             case Exchange.FATAL_FALLBACK_ERROR_HANDLER:
                 return FATAL_FALLBACK_ERROR_HANDLER;
-            case Exchange.FILE_EXCHANGE_FILE:
-                return FILE_EXCHANGE_FILE;
             case Exchange.GROUPED_EXCHANGE:
                 return GROUPED_EXCHANGE;
-            case Exchange.INTERCEPTED_ENDPOINT:
-                return INTERCEPTED_ENDPOINT;
-            case Exchange.INTERCEPTED_NODE_ID:
-                return INTERCEPTED_NODE_ID;
-            case Exchange.INTERCEPTED_ROUTE_ENDPOINT_URI:
-                return INTERCEPTED_ROUTE_ENDPOINT_URI;
-            case Exchange.INTERCEPTED_ROUTE_ID:
-                return INTERCEPTED_ROUTE_ID;
             case Exchange.INTERCEPT_SEND_TO_ENDPOINT_WHEN_MATCHED:
                 return INTERCEPT_SEND_TO_ENDPOINT_WHEN_MATCHED;
             case Exchange.LOOP_INDEX:
@@ -187,8 +162,6 @@ public enum ExchangePropertyKey {
                 return ON_COMPLETION_ROUTE_IDS;
             case Exchange.PARENT_UNIT_OF_WORK:
                 return PARENT_UNIT_OF_WORK;
-            case Exchange.RECEIVED_TIMESTAMP:
-                return RECEIVED_TIMESTAMP;
             case Exchange.RECIPIENT_LIST_ENDPOINT:
                 return RECIPIENT_LIST_ENDPOINT;
             case Exchange.SLIP_ENDPOINT:
@@ -211,12 +184,9 @@ public enum ExchangePropertyKey {
                 return TRY_ROUTE_BLOCK;
             case Exchange.UNIT_OF_WORK_EXHAUSTED:
                 return UNIT_OF_WORK_EXHAUSTED;
-            case Exchange.OTEL_ACTIVE_SPAN:
-                return OTEL_ACTIVE_SPAN;
-            case Exchange.OTEL_CLOSE_CLIENT_SCOPE:
-                return OTEL_CLOSE_CLIENT_SCOPE;
             default:
                 return null;
         }
     }
+    // CHECKSTYLE:ON
 }

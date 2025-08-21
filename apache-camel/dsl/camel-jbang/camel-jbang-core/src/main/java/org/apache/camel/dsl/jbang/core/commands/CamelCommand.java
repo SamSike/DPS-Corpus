@@ -16,18 +16,10 @@
  */
 package org.apache.camel.dsl.jbang.core.commands;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.io.File;
 import java.util.Stack;
 import java.util.concurrent.Callable;
 
-import org.apache.camel.dsl.jbang.core.common.CommandLineHelper;
-import org.apache.camel.dsl.jbang.core.common.Printer;
-import org.apache.camel.dsl.jbang.core.common.RuntimeUtil;
-import org.apache.camel.util.StringHelper;
 import picocli.CommandLine;
 import picocli.CommandLine.IParameterConsumer;
 import picocli.CommandLine.Model.ArgSpec;
@@ -40,9 +32,12 @@ public abstract class CamelCommand implements Callable<Integer> {
     CommandLine.Model.CommandSpec spec;
 
     private final CamelJBangMain main;
+    private File camelDir;
 
+    //CHECKSTYLE:OFF
     @CommandLine.Option(names = { "-h", "--help" }, usageHelp = true, description = "Display the help and sub-commands")
     private boolean helpRequested = false;
+    //CHECKSTYLE:ON
 
     public CamelCommand(CamelJBangMain main) {
         this.main = main;
@@ -52,106 +47,32 @@ public abstract class CamelCommand implements Callable<Integer> {
         return main;
     }
 
-    protected void configureLoggingOff() throws Exception {
-        RuntimeUtil.configureLog("off", false, false, false, false, null, null);
-    }
-
-    protected boolean disarrangeLogging() {
-        return true;
-    }
-
-    @Override
-    public Integer call() throws Exception {
-        if (disarrangeLogging()) {
-            configureLoggingOff();
+    public File getStatusFile(String pid) {
+        if (camelDir == null) {
+            camelDir = new File(System.getProperty("user.home"), ".camel");
         }
-
-        replacePlaceholders();
-
-        return doCall();
+        return new File(camelDir, pid + "-status.json");
     }
 
-    private void replacePlaceholders() throws Exception {
-        if (spec != null) {
-            for (CommandLine.Model.ArgSpec argSpec : spec.args()) {
-                var provider = spec.defaultValueProvider();
-                String defaultValue = provider != null ? provider.defaultValue(argSpec) : null;
-                if (defaultValue != null &&
-                        argSpec instanceof CommandLine.Model.OptionSpec optionSpec) {
-                    for (String name : optionSpec.names()) {
-                        String placeholder = "#" + StringHelper.after(name, "--");
-                        Object v = argSpec.getValue();
-                        if (v != null &&
-                                v.toString().contains(placeholder)) {
-                            argSpec.setValue(v.toString().replace(placeholder, defaultValue));
-                        }
-                    }
-                }
-            }
+    public File getActionFile(String pid) {
+        if (camelDir == null) {
+            camelDir = new File(System.getProperty("user.home"), ".camel");
         }
+        return new File(camelDir, pid + "-action.json");
     }
 
-    public abstract Integer doCall() throws Exception;
-
-    public Path getStatusFile(String pid) {
-        return CommandLineHelper.getCamelDir().resolve(pid + "-status.json");
-    }
-
-    public Path getActionFile(String pid) {
-        return CommandLineHelper.getCamelDir().resolve(pid + "-action.json");
-    }
-
-    public Path getOutputFile(String pid) {
-        return CommandLineHelper.getCamelDir().resolve(pid + "-output.json");
-    }
-
-    public Path getTraceFile(String pid) {
-        return CommandLineHelper.getCamelDir().resolve(pid + "-trace.json");
-    }
-
-    public Path getReceiveFile(String pid) {
-        return CommandLineHelper.getCamelDir().resolve(pid + "-receive.json");
-    }
-
-    public Path getDebugFile(String pid) {
-        return CommandLineHelper.getCamelDir().resolve(pid + "-debug.json");
-    }
-
-    public Path getRunBackgroundLogFile(String uuid) {
-        return CommandLineHelper.getCamelDir().resolve(uuid + "-run.log");
-    }
-
-    protected Printer printer() {
-        var out = getMain().getOut();
-        CommandHelper.setPrinter(out);
-        return out;
-    }
-
-    protected void printConfigurationValues(String header) {
-        if (spec != null) {
-            final Properties configProperties = new Properties();
-            CommandLineHelper.loadProperties(configProperties::putAll);
-            List<String> lines = new ArrayList<>();
-            spec.options().forEach(opt -> {
-                if (Arrays.stream(opt.names()).anyMatch(name ->
-                // name starts with --
-                configProperties.containsKey(name.substring(2)))) {
-                    lines.add(String.format("    %s=%s",
-                            opt.longestName(), opt.getValue().toString()));
-                }
-            });
-            if (!lines.isEmpty()) {
-                printer().println(header);
-                lines.forEach(printer()::println);
-            }
+    public File getOutputFile(String pid) {
+        if (camelDir == null) {
+            camelDir = new File(System.getProperty("user.home"), ".camel");
         }
+        return new File(camelDir, pid + "-output.json");
     }
 
     protected abstract static class ParameterConsumer<T> implements IParameterConsumer {
 
         @Override
         public void consumeParameters(Stack<String> args, ArgSpec argSpec, CommandSpec cmdSpec) {
-            if (failIfEmptyArgs() && args.isEmpty()) {
+            if (args.isEmpty()) {
                 throw new ParameterException(cmdSpec.commandLine(), "Error: missing required parameter");
             }
             T cmd = (T) cmdSpec.userObject();
@@ -159,10 +80,6 @@ public abstract class CamelCommand implements Callable<Integer> {
         }
 
         protected abstract void doConsumeParameters(Stack<String> args, T cmd);
-
-        protected boolean failIfEmptyArgs() {
-            return true;
-        }
     }
 
 }

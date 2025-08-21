@@ -30,7 +30,7 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public abstract class KafkaConsumerIdempotentTestSupport extends BaseKafkaTestSupport {
+public abstract class KafkaConsumerIdempotentTestSupport extends BaseEmbeddedKafkaTestSupport {
 
     protected void doSend(int size, String topic) {
         Properties props = getDefaultProperties();

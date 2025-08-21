@@ -16,62 +16,36 @@
  */
 package org.apache.camel.component.amqp;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.camel.CamelContext;
-import org.apache.camel.ProducerTemplate;
+import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.infra.artemis.services.ArtemisService;
-import org.apache.camel.test.infra.artemis.services.ArtemisServiceFactory;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.apache.camel.test.infra.core.annotations.ContextFixture;
-import org.apache.camel.test.infra.core.annotations.RouteFixture;
 import org.apache.qpid.jms.JmsConnectionFactory;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.apache.camel.component.amqp.AMQPComponent.amqpComponent;
 import static org.apache.camel.component.amqp.AMQPConnectionDetails.discoverAMQP;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AMQPRouteTraceFrameTest extends AMQPTestSupport {
 
-    @RegisterExtension
-    protected static ArtemisService service = ArtemisServiceFactory.createSingletonAMQPService();
+    @EndpointInject("mock:result")
+    MockEndpoint resultEndpoint;
 
-    @RegisterExtension
-    protected static CamelContextExtension contextExtension = new DefaultCamelContextExtension();
-
-    private MockEndpoint resultEndpoint;
-
-    private final String expectedBody = "Hello there!";
-    private ProducerTemplate template;
-    private final CountDownLatch latch = new CountDownLatch(1);
-
-    @BeforeEach
-    void setupTemplate() {
-        resultEndpoint = contextExtension.getMockEndpoint("mock:result");
-        template = contextExtension.getProducerTemplate();
-    }
+    String expectedBody = "Hello there!";
 
     @Test
     public void testTraceFrame() throws Exception {
         resultEndpoint.expectedMessageCount(1);
         resultEndpoint.message(0).header("cheese").isEqualTo(123);
-
-        template.sendBodyAndHeader("amqp-with-trace:queue:ping", expectedBody, "cheese", 123);
-        assertTrue(latch.await(30, TimeUnit.SECONDS));
+        template.sendBodyAndHeader("amqp-customized:queue:ping", expectedBody, "cheese", 123);
         resultEndpoint.assertIsSatisfied();
     }
 
-    @ContextFixture
-    public void configureContext(CamelContext context) {
-        System.setProperty(AMQPConnectionDetails.AMQP_PORT, String.valueOf(service.brokerPort()));
-        context.getRegistry().bind("amqpConnection", discoverAMQP(context));
+    @Override
+    protected CamelContext createCamelContext() throws Exception {
+        CamelContext camelContext = super.createCamelContext();
+
+        camelContext.getRegistry().bind("amqpConnection", discoverAMQP(camelContext));
 
         JmsConnectionFactory connectionFactory
                 = new JmsConnectionFactory(service.serviceAddress() + "?amqp.traceFrames=true");
@@ -79,18 +53,18 @@ public class AMQPRouteTraceFrameTest extends AMQPTestSupport {
         AMQPComponent amqp = amqpComponent(service.serviceAddress());
         amqp.getConfiguration().setConnectionFactory(connectionFactory);
 
-        context.addComponent("amqp-with-trace", amqp);
+        camelContext.addComponent("amqp-customized", amqp);
+        return camelContext;
     }
 
-    @RouteFixture
-    public void createRouteBuilder(CamelContext context) throws Exception {
-        context.addRoutes(new RouteBuilder() {
+    @Override
+    protected RouteBuilder createRouteBuilder() {
+        return new RouteBuilder() {
             public void configure() {
-                from("amqp-with-trace:queue:ping")
-                        .process(exchange -> latch.countDown())
+                from("amqp-customized:queue:ping")
                         .to("log:routing")
                         .to("mock:result");
             }
-        });
+        };
     }
 }

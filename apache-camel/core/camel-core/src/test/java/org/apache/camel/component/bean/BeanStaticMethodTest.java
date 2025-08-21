@@ -32,10 +32,10 @@ public class BeanStaticMethodTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .setBody()
                         .simple("The host is ${bean:type:org.apache.camel.util.InetAddressUtil?method=getLocalHostNameSafe}")

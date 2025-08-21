@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,8 @@
 package org.springframework.beans.propertyeditors;
 
 import java.beans.PropertyEditorSupport;
-import java.util.HexFormat;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -32,7 +30,7 @@ import org.springframework.util.StringUtils;
  * {@link org.springframework.beans.BeanWrapperImpl} will register this
  * editor by default.
  *
- * <p>Also supports conversion from a Unicode character sequence; for example,
+ * <p>Also supports conversion from a Unicode character sequence; e.g.
  * {@code u0041} ('A').
  *
  * @author Juergen Hoeller
@@ -98,12 +96,13 @@ public class CharacterEditor extends PropertyEditorSupport {
 		return (value != null ? value.toString() : "");
 	}
 
-	private static boolean isUnicodeCharacterSequence(String sequence) {
+
+	private boolean isUnicodeCharacterSequence(String sequence) {
 		return (sequence.startsWith(UNICODE_PREFIX) && sequence.length() == UNICODE_LENGTH);
 	}
 
 	private void setAsUnicode(String text) {
-		int code = HexFormat.fromHexDigits(text, UNICODE_PREFIX.length(), text.length());
+		int code = Integer.parseInt(text.substring(UNICODE_PREFIX.length()), 16);
 		setValue((char) code);
 	}
 

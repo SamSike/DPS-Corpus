@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@code jmxremote_optional.jar} into your classpath, for example in the {@code lib/ext}
  * folder of your JVM.
  *
- * <p>See also: <a href="https://jira.spring.io/browse/SPR-8093">SPR-8093</a>
+ * <p>See also:
+ * <ul>
+ * <li><a href="https://jira.spring.io/browse/SPR-8093">SPR-8093</a></li>
+ * <li><a href="https://issuetracker.springsource.com/browse/EBR-349">EBR-349</a></li>
+ * </ul>
  *
  * @author Rob Harrop
  * @author Juergen Hoeller
@@ -73,12 +77,12 @@ public abstract class AbstractMBeanServerTests {
 	}
 
 	@AfterEach
-	protected void tearDown() throws Exception {
+	public void tearDown() throws Exception {
 		releaseServer();
 		onTearDown();
 	}
 
-	private void releaseServer() {
+	private void releaseServer() throws Exception {
 		try {
 			MBeanServerFactory.releaseMBeanServer(getServer());
 		}
@@ -101,7 +105,7 @@ public abstract class AbstractMBeanServerTests {
 	protected void onSetUp() throws Exception {
 	}
 
-	protected void onTearDown() {
+	protected void onTearDown() throws Exception {
 	}
 
 	protected final MBeanServer getServer() {

@@ -42,19 +42,9 @@ public class IcalDataFormat extends DataFormatDefinition {
         super("ical");
     }
 
-    protected IcalDataFormat(IcalDataFormat source) {
-        super(source);
-        this.validating = source.validating;
-    }
-
     private IcalDataFormat(Builder builder) {
         this();
         this.validating = builder.validating;
-    }
-
-    @Override
-    public IcalDataFormat copyDefinition() {
-        return new IcalDataFormat(this);
     }
 
     public String getValidating() {

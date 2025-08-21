@@ -7,10 +7,8 @@ package org.jooq.meta.postgres.information_schema.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -91,17 +89,16 @@ public class Views extends TableImpl<Record> {
     public final TableField<Record, String> IS_TRIGGER_DELETABLE = createField(DSL.name("is_trigger_deletable"), SQLDataType.VARCHAR(3), this, "");
 
     /**
-     * The column
-     * <code>information_schema.views.is_trigger_insertable_into</code>.
+     * The column <code>information_schema.views.is_trigger_insertable_into</code>.
      */
     public final TableField<Record, String> IS_TRIGGER_INSERTABLE_INTO = createField(DSL.name("is_trigger_insertable_into"), SQLDataType.VARCHAR(3), this, "");
 
     private Views(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Views(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view(), where);
+    private Views(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view());
     }
 
     /**
@@ -125,44 +122,22 @@ public class Views extends TableImpl<Record> {
         this(DSL.name("views"), null);
     }
 
-    public <O extends Record> Views(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, VIEWS);
+    public <O extends Record> Views(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, VIEWS);
     }
 
     @Override
     public Schema getSchema() {
-        return aliased() ? null : InformationSchema.INFORMATION_SCHEMA;
+        return InformationSchema.INFORMATION_SCHEMA;
     }
 
     @Override
     public List<ForeignKey<Record, ?>> getReferences() {
-        return Arrays.asList(Keys.VIEWS__SYNTHETIC_FK_VIEWS__SYNTHETIC_PK_SCHEMATA, Keys.VIEWS__SYNTHETIC_FK_VIEWS__SYNTHETIC_PK_TABLES);
+        return Arrays.<ForeignKey<Record, ?>>asList(Keys.VIEWS__SYNTHETIC_FK_VIEWS__SYNTHETIC_PK_TABLES);
     }
 
-    private transient Schemata _schemata;
-
-    /**
-     * Get the implicit join path to the
-     * <code>information_schema.schemata</code> table.
-     */
-    public Schemata schemata() {
-        if (_schemata == null)
-            _schemata = new Schemata(this, Keys.VIEWS__SYNTHETIC_FK_VIEWS__SYNTHETIC_PK_SCHEMATA, null);
-
-        return _schemata;
-    }
-
-    private transient Tables _tables;
-
-    /**
-     * Get the implicit join path to the <code>information_schema.tables</code>
-     * table.
-     */
     public Tables tables() {
-        if (_tables == null)
-            _tables = new Tables(this, Keys.VIEWS__SYNTHETIC_FK_VIEWS__SYNTHETIC_PK_TABLES, null);
-
-        return _tables;
+        return new Tables(this, Keys.VIEWS__SYNTHETIC_FK_VIEWS__SYNTHETIC_PK_TABLES);
     }
 
     @Override
@@ -175,8 +150,19 @@ public class Views extends TableImpl<Record> {
         return new Views(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public Views as(Table<?> alias) {
-        return new Views(alias.getQualifiedName(), this);
+    public Views rename(String name) {
+        return new Views(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public Views rename(Name name) {
+        return new Views(name, null);
     }
 }

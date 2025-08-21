@@ -1,7 +1,9 @@
 /**
- * Client-side classes for use with standard Jakarta WebSocket endpoints.
+ * Client-side classes for use with standard Java WebSocket endpoints.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.socket.client.standard;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

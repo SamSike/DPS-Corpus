@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.core.ReactiveAdapter;
 import org.springframework.core.ReactiveAdapterRegistry;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.HandlerMethod;
 import org.springframework.messaging.handler.invocation.MethodArgumentResolutionException;
@@ -53,7 +54,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 	private static final Object NO_ARG_VALUE = new Object();
 
 
-	private final HandlerMethodArgumentResolverComposite resolvers = new HandlerMethodArgumentResolverComposite();
+	private HandlerMethodArgumentResolverComposite resolvers = new HandlerMethodArgumentResolverComposite();
 
 	private ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
 
@@ -76,7 +77,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 
 
 	/**
-	 * Configure the argument resolvers to use for resolving method
+	 * Configure the argument resolvers to use to use for resolving method
 	 * argument values against a {@code ServerWebExchange}.
 	 */
 	public void setArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
@@ -92,7 +93,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 
 	/**
 	 * Set the ParameterNameDiscoverer for resolving parameter names when needed
-	 * (for example, default request attribute name).
+	 * (e.g. default request attribute name).
 	 * <p>Default is a {@link DefaultParameterNameDiscoverer}.
 	 */
 	public void setParameterNameDiscoverer(ParameterNameDiscoverer nameDiscoverer) {
@@ -152,7 +153,7 @@ public class InvocableHandlerMethod extends HandlerMethod {
 			MethodParameter returnType = getReturnType();
 			Class<?> reactiveType = (isSuspendingFunction ? value.getClass() : returnType.getParameterType());
 			ReactiveAdapter adapter = this.reactiveAdapterRegistry.getAdapter(reactiveType);
-			return (adapter != null && isAsyncVoidReturnType(returnType, adapter) ?
+			return (isAsyncVoidReturnType(returnType, adapter) ?
 					Mono.from(adapter.toPublisher(value)) : Mono.justOrEmpty(value));
 		});
 	}
@@ -199,21 +200,20 @@ public class InvocableHandlerMethod extends HandlerMethod {
 		}
 	}
 
-	private boolean isAsyncVoidReturnType(MethodParameter returnType, ReactiveAdapter reactiveAdapter) {
-		if (reactiveAdapter.supportsEmpty()) {
+	private boolean isAsyncVoidReturnType(MethodParameter returnType, @Nullable ReactiveAdapter reactiveAdapter) {
+		if (reactiveAdapter != null && reactiveAdapter.supportsEmpty()) {
 			if (reactiveAdapter.isNoValue()) {
 				return true;
 			}
-		}
-		Type parameterType = returnType.getGenericParameterType();
-		if (parameterType instanceof ParameterizedType type) {
-			if (type.getActualTypeArguments().length == 1) {
-				return Void.class.equals(type.getActualTypeArguments()[0]);
+			Type parameterType = returnType.getGenericParameterType();
+			if (parameterType instanceof ParameterizedType) {
+				ParameterizedType type = (ParameterizedType) parameterType;
+				if (type.getActualTypeArguments().length == 1) {
+					return Void.class.equals(type.getActualTypeArguments()[0]);
+				}
 			}
 		}
-		Method method = returnType.getMethod();
-		return method != null && KotlinDetector.isSuspendingFunction(method) &&
-				(returnType.getParameterType() == void.class);
+		return false;
 	}
 
 }

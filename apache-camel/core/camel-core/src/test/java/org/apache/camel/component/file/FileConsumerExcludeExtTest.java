@@ -37,10 +37,10 @@ public class FileConsumerExcludeExtTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?initialDelay=0&delay=10&excludeExt=XML,dat"))
                         .to("mock:txt");
             }

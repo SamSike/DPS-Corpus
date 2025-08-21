@@ -43,10 +43,10 @@ public class LoopDoWhileTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:simple").loopDoWhile(simple("${body.length} <= 5")).to("mock:loop").transform(body().append("A"))
                         .end().to("mock:result");
                 from("direct:functional").loopDoWhile().body(String.class, b -> b.length() <= 5).to("mock:loop").transform()

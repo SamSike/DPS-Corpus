@@ -18,7 +18,6 @@ package org.apache.camel.processor;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
-import org.apache.camel.Exchange;
 import org.apache.camel.builder.AggregationStrategies;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spi.CamelEvent;
@@ -27,12 +26,11 @@ import org.apache.camel.support.EventNotifierSupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class SplitterUseOriginalNotPropagateExceptionTest extends ContextTestSupport {
 
-    private final MyEventNotifier notifier = new MyEventNotifier();
+    private MyEventNotifier notifier = new MyEventNotifier();
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
@@ -42,7 +40,7 @@ public class SplitterUseOriginalNotPropagateExceptionTest extends ContextTestSup
     }
 
     @Test
-    public void testUseOriginalNotPropagateException() throws Exception {
+    public void testUseOriginalNotPropgateException() throws Exception {
         assertEquals(0, notifier.getErrors());
 
         getMockEndpoint("mock:line").expectedBodiesReceived("Hello", "World");
@@ -62,18 +60,11 @@ public class SplitterUseOriginalNotPropagateExceptionTest extends ContextTestSup
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
-                from("direct:start")
-                        .onCompletion().process(e -> {
-                            Exception caught = e.getException();
-                            assertNull(caught);
-                            caught = e.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class);
-                            assertNull(caught);
-                        }).end()
-                        .split(body()).aggregationStrategy(AggregationStrategies.useOriginal(false))
+            public void configure() throws Exception {
+                from("direct:start").split(body()).aggregationStrategy(AggregationStrategies.useOriginal(false))
                         .filter(simple("${body} == 'Kaboom'"))
                         .throwException(new IllegalArgumentException("Forced error")).end().to("mock:line").end()
                         .to("mock:result");
@@ -86,7 +77,7 @@ public class SplitterUseOriginalNotPropagateExceptionTest extends ContextTestSup
         private int errors;
 
         @Override
-        public void notify(CamelEvent event) {
+        public void notify(CamelEvent event) throws Exception {
             errors++;
         }
 

@@ -39,9 +39,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class InOutQueueProducerTest extends JmsTestSupport {
 
-    private static final String TEST_DESTINATION_NAME = "in.out.queue.producer.test.InOutQueueProducerTest";
+    private static final String TEST_DESTINATION_NAME = "in.out.queue.producer.test";
 
     public InOutQueueProducerTest() {
+    }
+
+    @Override
+    protected boolean useJmx() {
+        return false;
     }
 
     @Test
@@ -96,9 +101,9 @@ public class InOutQueueProducerTest extends JmsTestSupport {
 
     /*
      * @see org.apache.camel.test.junit5.CamelTestSupport#createRouteBuilder()
-     *
+     * 
      * @return
-     *
+     * 
      * @throws Exception
      */
     @Override

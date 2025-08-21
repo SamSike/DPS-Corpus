@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.netty;
 
-import java.util.concurrent.TimeUnit;
-
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -37,7 +35,6 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,16 +65,15 @@ public class NettyConsumerClientModeReconnectTest extends BaseNettyTest {
             LOG.info(">>> starting Camel route while Netty server is not ready");
             context.getRouteController().startRoute("client");
 
-            Awaitility.await().atMost(5, TimeUnit.SECONDS)
-                    .until(receive::isStarted);
+            Thread.sleep(500);
+
             LOG.info(">>> starting Netty server");
             startNettyServer();
 
+            MockEndpoint.assertIsSatisfied(context);
             LOG.info(">>> routing done");
 
-            Awaitility.await().atMost(5, TimeUnit.SECONDS)
-                    .untilAsserted(() -> MockEndpoint.assertIsSatisfied(context));
-
+            Thread.sleep(500);
         } finally {
             LOG.info(">>> shutting down Netty server");
             shutdownServer();

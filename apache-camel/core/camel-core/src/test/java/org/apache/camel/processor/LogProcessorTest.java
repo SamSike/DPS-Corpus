@@ -69,10 +69,10 @@ public class LogProcessorTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").routeId("foo").log("Got ${body}").to("mock:foo");
 
                 from("direct:bar").routeId("bar").log(LoggingLevel.WARN, "Also got ${body}").to("mock:bar");

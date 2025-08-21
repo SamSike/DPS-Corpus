@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,9 @@
 
 package org.springframework.validation;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.ConfigurablePropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
+import org.springframework.lang.Nullable;
 
 /**
  * Special implementation of the Errors and BindingResult interfaces,
@@ -37,15 +36,17 @@ import org.springframework.beans.PropertyAccessorFactory;
 @SuppressWarnings("serial")
 public class DirectFieldBindingResult extends AbstractPropertyBindingResult {
 
-	private final @Nullable Object target;
+	@Nullable
+	private final Object target;
 
 	private final boolean autoGrowNestedPaths;
 
-	private transient @Nullable ConfigurablePropertyAccessor directFieldAccessor;
+	@Nullable
+	private transient ConfigurablePropertyAccessor directFieldAccessor;
 
 
 	/**
-	 * Create a new {@code DirectFieldBindingResult} for the given target.
+	 * Create a new DirectFieldBindingResult instance.
 	 * @param target the target object to bind onto
 	 * @param objectName the name of the target object
 	 */
@@ -54,7 +55,7 @@ public class DirectFieldBindingResult extends AbstractPropertyBindingResult {
 	}
 
 	/**
-	 * Create a new {@code DirectFieldBindingResult} for the given target.
+	 * Create a new DirectFieldBindingResult instance.
 	 * @param target the target object to bind onto
 	 * @param objectName the name of the target object
 	 * @param autoGrowNestedPaths whether to "auto-grow" a nested path that contains a null value
@@ -67,7 +68,8 @@ public class DirectFieldBindingResult extends AbstractPropertyBindingResult {
 
 
 	@Override
-	public final @Nullable Object getTarget() {
+	@Nullable
+	public final Object getTarget() {
 		return this.target;
 	}
 

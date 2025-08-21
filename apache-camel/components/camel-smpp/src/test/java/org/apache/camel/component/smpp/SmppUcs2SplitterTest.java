@@ -17,7 +17,6 @@
 package org.apache.camel.component.smpp;
 
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +28,7 @@ public class SmppUcs2SplitterTest {
     @Test
     public void splitShortMessageWith70Character() {
         String message = "1234567890123456789012345678901234567890123456789012345678901234567890";
-        Charset charset = StandardCharsets.UTF_16BE;
+        Charset charset = Charset.forName("UTF-16BE");
 
         SmppUcs2Splitter splitter = new SmppUcs2Splitter(message.length());
         SmppSplitter.resetCurrentReferenceNumber();
@@ -50,7 +49,7 @@ public class SmppUcs2SplitterTest {
     @Test
     public void splitShortMessageWith71Character() {
         String message = "12345678901234567890123456789012345678901234567890123456789012345678901";
-        final Charset charset = StandardCharsets.UTF_16BE;
+        Charset charset = Charset.forName("UTF-16BE");
 
         SmppUcs2Splitter splitter = new SmppUcs2Splitter(message.length());
         SmppSplitter.resetCurrentReferenceNumber();

@@ -21,7 +21,6 @@ import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class JiraComponentConfigurationTest extends CamelTestSupport {
 
@@ -91,10 +90,10 @@ public class JiraComponentConfigurationTest extends CamelTestSupport {
 
         assertEquals("updateissue", endpoint.getType().name().toLowerCase());
         assertEquals(JIRA_URL_VALUE, endpoint.getConfiguration().getJiraUrl());
-        assertNull(endpoint.getConfiguration().getVerificationCode());
+        assertEquals(null, endpoint.getConfiguration().getVerificationCode());
         assertEquals(ACCESS_TOKEN_VALUE, endpoint.getConfiguration().getAccessToken());
-        assertNull(endpoint.getConfiguration().getConsumerKey());
-        assertNull(endpoint.getConfiguration().getPrivateKey());
+        assertEquals(null, endpoint.getConfiguration().getConsumerKey());
+        assertEquals(null, endpoint.getConfiguration().getPrivateKey());
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,14 @@
 
 package org.springframework.web.servlet.view.script;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import jakarta.servlet.ServletContext;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,45 +36,47 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests for ERB templates running on JRuby.
+ * Unit tests for ERB templates running on JRuby.
  *
  * @author Sebastien Deleuze
- * @author Sam Brannen
  */
-class JRubyScriptTemplateTests {
+@Disabled("JRuby not compatible with JDK 9 yet")
+public class JRubyScriptTemplateTests {
 
-	private WebApplicationContext webAppContext = mock();
+	private WebApplicationContext webAppContext;
 
-	private ServletContext servletContext = new MockServletContext();
+	private ServletContext servletContext;
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
+		this.webAppContext = mock(WebApplicationContext.class);
+		this.servletContext = new MockServletContext();
 		this.servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, this.webAppContext);
 	}
 
 	@Test
-	void renderTemplate() throws Exception {
-		Map<String, Object> model = Map.of(
-			"title", "Layout example",
-			"body", "This is the body"
-		);
+	public void renderTemplate() throws Exception {
+		Map<String, Object> model = new HashMap<>();
+		model.put("title", "Layout example");
+		model.put("body", "This is the body");
 		String url = "org/springframework/web/servlet/view/script/jruby/template.erb";
 		MockHttpServletResponse response = render(url, model);
-		assertThat(response.getContentAsString())
-			.isEqualTo("<html><head><title>Layout example</title></head><body><p>This is the body</p></body></html>");
+		assertThat(response.getContentAsString()).isEqualTo("<html><head><title>Layout example</title></head><body><p>This is the body</p></body></html>");
 	}
 
-	private static MockHttpServletResponse render(String viewUrl, Map<String, Object> model) throws Exception {
+	private MockHttpServletResponse render(String viewUrl, Map<String, Object> model) throws Exception {
 		ScriptTemplateView view = createViewWithUrl(viewUrl);
-		MockHttpServletRequest request = new MockHttpServletRequest();
 		MockHttpServletResponse response = new MockHttpServletResponse();
+		MockHttpServletRequest request = new MockHttpServletRequest();
 		view.renderMergedOutputModel(model, request, response);
 		return response;
 	}
 
-	private static ScriptTemplateView createViewWithUrl(String viewUrl) throws Exception {
-		ApplicationContext ctx = new AnnotationConfigApplicationContext(ScriptTemplatingConfiguration.class);
+	private ScriptTemplateView createViewWithUrl(String viewUrl) throws Exception {
+		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
+		ctx.register(ScriptTemplatingConfiguration.class);
+		ctx.refresh();
 
 		ScriptTemplateView view = new ScriptTemplateView();
 		view.setApplicationContext(ctx);
@@ -87,7 +90,7 @@ class JRubyScriptTemplateTests {
 	static class ScriptTemplatingConfiguration {
 
 		@Bean
-		ScriptTemplateConfigurer jRubyConfigurer() {
+		public ScriptTemplateConfigurer jRubyConfigurer() {
 			ScriptTemplateConfigurer configurer = new ScriptTemplateConfigurer();
 			configurer.setScripts("org/springframework/web/servlet/view/script/jruby/render.rb");
 			configurer.setEngineName("jruby");

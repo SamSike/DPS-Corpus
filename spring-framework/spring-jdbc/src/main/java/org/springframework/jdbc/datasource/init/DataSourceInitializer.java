@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,9 @@ package org.springframework.jdbc.datasource.init;
 
 import javax.sql.DataSource;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -36,11 +35,14 @@ import org.springframework.util.Assert;
  */
 public class DataSourceInitializer implements InitializingBean, DisposableBean {
 
-	private @Nullable DataSource dataSource;
+	@Nullable
+	private DataSource dataSource;
 
-	private @Nullable DatabasePopulator databasePopulator;
+	@Nullable
+	private DatabasePopulator databasePopulator;
 
-	private @Nullable DatabasePopulator databaseCleaner;
+	@Nullable
+	private DatabasePopulator databaseCleaner;
 
 	private boolean enabled = true;
 
@@ -56,22 +58,21 @@ public class DataSourceInitializer implements InitializingBean, DisposableBean {
 	}
 
 	/**
-	 * Set the {@link DatabasePopulator} to execute during the bean initialization phase,
-	 * if any.
+	 * Set the {@link DatabasePopulator} to execute during the bean initialization phase.
 	 * @param databasePopulator the {@code DatabasePopulator} to use during initialization
 	 * @see #setDatabaseCleaner
 	 */
-	public void setDatabasePopulator(@Nullable DatabasePopulator databasePopulator) {
+	public void setDatabasePopulator(DatabasePopulator databasePopulator) {
 		this.databasePopulator = databasePopulator;
 	}
 
 	/**
-	 * Set the {@link DatabasePopulator} to execute during the bean destruction phase,
-	 * if any, cleaning up the database and leaving it in a known state for others.
+	 * Set the {@link DatabasePopulator} to execute during the bean destruction
+	 * phase, cleaning up the database and leaving it in a known state for others.
 	 * @param databaseCleaner the {@code DatabasePopulator} to use during destruction
 	 * @see #setDatabasePopulator
 	 */
-	public void setDatabaseCleaner(@Nullable DatabasePopulator databaseCleaner) {
+	public void setDatabaseCleaner(DatabasePopulator databaseCleaner) {
 		this.databaseCleaner = databaseCleaner;
 	}
 

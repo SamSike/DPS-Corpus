@@ -49,7 +49,7 @@ public class ManagedRouteStopTest extends ManagementTestSupport {
         ObjectName on = set.iterator().next();
 
         boolean registered = mbeanServer.isRegistered(on);
-        assertTrue(registered, "Should be registered");
+        assertEquals(true, registered, "Should be registered");
 
         String uri = (String) mbeanServer.getAttribute(on, "EndpointUri");
         // the route has this starting endpoint uri
@@ -69,7 +69,7 @@ public class ManagedRouteStopTest extends ManagementTestSupport {
         mbeanServer.invoke(on, "stop", null, null);
 
         registered = mbeanServer.isRegistered(on);
-        assertTrue(registered, "Should be registered");
+        assertEquals(true, registered, "Should be registered");
 
         // should be stopped, eg its removed
         state = (String) mbeanServer.getAttribute(on, "State");
@@ -83,10 +83,10 @@ public class ManagedRouteStopTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").delayer(10).to("log:foo").to("mock:result");
             }
         };

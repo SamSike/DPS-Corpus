@@ -1,7 +1,9 @@
 /**
  * Provides extensible support for creating embedded database instances.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jdbc.datasource.embedded;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

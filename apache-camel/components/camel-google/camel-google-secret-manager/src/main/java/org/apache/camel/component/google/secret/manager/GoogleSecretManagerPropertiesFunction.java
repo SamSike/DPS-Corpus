@@ -86,16 +86,6 @@ public class GoogleSecretManagerPropertiesFunction extends ServiceSupport implem
     private String projectId;
     private final Set<String> secrets = new HashSet<>();
 
-    public GoogleSecretManagerPropertiesFunction() {
-        super();
-    }
-
-    public GoogleSecretManagerPropertiesFunction(SecretManagerServiceClient client, String projectId) {
-        super();
-        this.client = client;
-        this.projectId = projectId;
-    }
-
     @Override
     protected void doStart() throws Exception {
         super.doStart();
@@ -148,9 +138,9 @@ public class GoogleSecretManagerPropertiesFunction extends ServiceSupport implem
         String returnValue = null;
         String defaultValue = null;
         String version = null;
-        if (remainder.contains("#")) {
-            key = StringHelper.before(remainder, "#");
-            subkey = StringHelper.after(remainder, "#");
+        if (remainder.contains("/")) {
+            key = StringHelper.before(remainder, "/");
+            subkey = StringHelper.after(remainder, "/");
             defaultValue = StringHelper.after(subkey, ":");
             if (ObjectHelper.isNotEmpty(defaultValue)) {
                 if (defaultValue.contains("@")) {
@@ -183,8 +173,7 @@ public class GoogleSecretManagerPropertiesFunction extends ServiceSupport implem
             try {
                 returnValue = getSecretFromSource(key, subkey, defaultValue, version);
             } catch (JsonProcessingException e) {
-                throw new RuntimeCamelException(
-                        "Error getting secret from vault using key: " + key + " due to: " + e.getMessage(), e);
+                throw new RuntimeCamelException("Something went wrong while recovering " + key + " from vault");
             }
         }
 

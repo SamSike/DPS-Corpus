@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,11 +34,11 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
@@ -48,12 +48,11 @@ import org.springframework.util.StringUtils;
 
 /**
  * Miscellaneous utilities for web applications.
- * <p>Used by various framework classes.
+ * Used by various framework classes.
  *
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @author Sebastien Deleuze
- * @author Sam Brannen
  */
 public abstract class WebUtils {
 
@@ -264,7 +263,7 @@ public abstract class WebUtils {
 		Assert.notNull(servletContext, "ServletContext must not be null");
 		String param = servletContext.getInitParameter(WEB_APP_ROOT_KEY_PARAM);
 		String key = (param != null ? param : DEFAULT_WEB_APP_ROOT_KEY);
-		System.clearProperty(key);
+		System.getProperties().remove(key);
 	}
 
 	/**
@@ -278,7 +277,8 @@ public abstract class WebUtils {
 	 * @return whether default HTML escaping is enabled for the given application
 	 * ({@code null} = no explicit default)
 	 */
-	public static @Nullable Boolean getDefaultHtmlEscape(@Nullable ServletContext servletContext) {
+	@Nullable
+	public static Boolean getDefaultHtmlEscape(@Nullable ServletContext servletContext) {
 		if (servletContext == null) {
 			return null;
 		}
@@ -300,7 +300,8 @@ public abstract class WebUtils {
 	 * ({@code null} = no explicit default)
 	 * @since 4.1.2
 	 */
-	public static @Nullable Boolean getResponseEncodedHtmlEscape(@Nullable ServletContext servletContext) {
+	@Nullable
+	public static Boolean getResponseEncodedHtmlEscape(@Nullable ServletContext servletContext) {
 		if (servletContext == null) {
 			return null;
 		}
@@ -352,7 +353,8 @@ public abstract class WebUtils {
 	 * @param request current HTTP request
 	 * @return the session id, or {@code null} if none
 	 */
-	public static @Nullable String getSessionId(HttpServletRequest request) {
+	@Nullable
+	public static String getSessionId(HttpServletRequest request) {
 		Assert.notNull(request, "Request must not be null");
 		HttpSession session = request.getSession(false);
 		return (session != null ? session.getId() : null);
@@ -366,7 +368,8 @@ public abstract class WebUtils {
 	 * @param name the name of the session attribute
 	 * @return the value of the session attribute, or {@code null} if not found
 	 */
-	public static @Nullable Object getSessionAttribute(HttpServletRequest request, String name) {
+	@Nullable
+	public static Object getSessionAttribute(HttpServletRequest request, String name) {
 		Assert.notNull(request, "Request must not be null");
 		HttpSession session = request.getSession(false);
 		return (session != null ? session.getAttribute(name) : null);
@@ -451,13 +454,14 @@ public abstract class WebUtils {
 	 * of that type is available
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> @Nullable T getNativeRequest(ServletRequest request, @Nullable Class<T> requiredType) {
+	@Nullable
+	public static <T> T getNativeRequest(ServletRequest request, @Nullable Class<T> requiredType) {
 		if (requiredType != null) {
 			if (requiredType.isInstance(request)) {
 				return (T) request;
 			}
-			else if (request instanceof ServletRequestWrapper wrapper) {
-				return getNativeRequest(wrapper.getRequest(), requiredType);
+			else if (request instanceof ServletRequestWrapper) {
+				return getNativeRequest(((ServletRequestWrapper) request).getRequest(), requiredType);
 			}
 		}
 		return null;
@@ -472,13 +476,14 @@ public abstract class WebUtils {
 	 * of that type is available
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> @Nullable T getNativeResponse(ServletResponse response, @Nullable Class<T> requiredType) {
+	@Nullable
+	public static <T> T getNativeResponse(ServletResponse response, @Nullable Class<T> requiredType) {
 		if (requiredType != null) {
 			if (requiredType.isInstance(response)) {
 				return (T) response;
 			}
-			else if (response instanceof ServletResponseWrapper wrapper) {
-				return getNativeResponse(wrapper.getResponse(), requiredType);
+			else if (response instanceof ServletResponseWrapper) {
+				return getNativeResponse(((ServletResponseWrapper) response).getResponse(), requiredType);
 			}
 		}
 		return null;
@@ -534,7 +539,7 @@ public abstract class WebUtils {
 	 * @param name the name of the attribute
 	 * @param value the suggested value of the attribute
 	 */
-	private static void exposeRequestAttributeIfNotPresent(ServletRequest request, String name, @Nullable Object value) {
+	private static void exposeRequestAttributeIfNotPresent(ServletRequest request, String name, Object value) {
 		if (request.getAttribute(name) == null) {
 			request.setAttribute(name, value);
 		}
@@ -567,7 +572,8 @@ public abstract class WebUtils {
 	 * @param name cookie name
 	 * @return the first cookie with the given name, or {@code null} if none is found
 	 */
-	public static @Nullable Cookie getCookie(HttpServletRequest request, String name) {
+	@Nullable
+	public static Cookie getCookie(HttpServletRequest request, String name) {
 		Assert.notNull(request, "Request must not be null");
 		Cookie[] cookies = request.getCookies();
 		if (cookies != null) {
@@ -611,7 +617,8 @@ public abstract class WebUtils {
 	 * @return the value of the parameter, or {@code null}
 	 * if the parameter does not exist in given request
 	 */
-	public static @Nullable String findParameterValue(ServletRequest request, String name) {
+	@Nullable
+	public static String findParameterValue(ServletRequest request, String name) {
 		return findParameterValue(request.getParameterMap(), name);
 	}
 
@@ -621,27 +628,29 @@ public abstract class WebUtils {
 	 * following algorithm:
 	 * <ol>
 	 * <li>Try to get the parameter value using just the given <i>logical</i> name.
-	 * This handles parameters of the form {@code logicalName = value}. For normal
-	 * parameters, for example, submitted using a hidden HTML form field, this will return
+	 * This handles parameters of the form <tt>logicalName = value</tt>. For normal
+	 * parameters, e.g. submitted using a hidden HTML form field, this will return
 	 * the requested value.</li>
 	 * <li>Try to obtain the parameter value from the parameter name, where the
-	 * parameter name in the request is of the form {@code logicalName_value = xyz}
+	 * parameter name in the request is of the form <tt>logicalName_value = xyz</tt>
 	 * with "_" being the configured delimiter. This deals with parameter values
 	 * submitted using an HTML form submit button.</li>
 	 * <li>If the value obtained in the previous step has a ".x" or ".y" suffix,
 	 * remove that. This handles cases where the value was submitted using an
 	 * HTML form image button. In this case the parameter in the request would
-	 * actually be of the form {@code logicalName_value.x = 123}.</li>
+	 * actually be of the form <tt>logicalName_value.x = 123</tt>. </li>
 	 * </ol>
 	 * @param parameters the available parameter map
 	 * @param name the <i>logical</i> name of the request parameter
 	 * @return the value of the parameter, or {@code null}
 	 * if the parameter does not exist in given request
 	 */
-	public static @Nullable String findParameterValue(Map<String, ?> parameters, String name) {
+	@Nullable
+	public static String findParameterValue(Map<String, ?> parameters, String name) {
 		// First try to get it as a normal name=value parameter
 		Object value = parameters.get(name);
-		if (value instanceof String[] values) {
+		if (value instanceof String[]) {
+			String[] values = (String[]) value;
 			return (values.length > 0 ? values[0] : null);
 		}
 		else if (value != null) {
@@ -748,6 +757,7 @@ public abstract class WebUtils {
 	 * {@code "Forwarded"} and {@code "X-Forwarded-*"} headers that specify the
 	 * client-originated address. Consider using the {@code ForwardedHeaderFilter}
 	 * to extract and use, or to discard such headers.
+	 *
 	 * @return {@code true} if the request origin is valid, {@code false} otherwise
 	 * @since 4.1.5
 	 * @see <a href="https://tools.ietf.org/html/rfc6454">RFC 6454: The Web Origin Concept</a>
@@ -792,9 +802,9 @@ public abstract class WebUtils {
 		String scheme;
 		String host;
 		int port;
-		if (request instanceof ServletServerHttpRequest servletServerHttpRequest) {
+		if (request instanceof ServletServerHttpRequest) {
 			// Build more efficiently if we can: we only need scheme, host, port for origin comparison
-			HttpServletRequest servletRequest = servletServerHttpRequest.getServletRequest();
+			HttpServletRequest servletRequest = ((ServletServerHttpRequest) request).getServletRequest();
 			scheme = servletRequest.getScheme();
 			host = servletRequest.getServerName();
 			port = servletRequest.getServerPort();
@@ -806,7 +816,7 @@ public abstract class WebUtils {
 			port = uri.getPort();
 		}
 
-		UriComponents originUrl = UriComponentsBuilder.fromUriString(origin).build();
+		UriComponents originUrl = UriComponentsBuilder.fromOriginHeader(origin).build();
 		return (ObjectUtils.nullSafeEquals(scheme, originUrl.getScheme()) &&
 				ObjectUtils.nullSafeEquals(host, originUrl.getHost()) &&
 				getPort(scheme, port) == getPort(originUrl.getScheme(), originUrl.getPort()));

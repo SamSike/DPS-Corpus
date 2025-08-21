@@ -3,7 +3,9 @@
  * annotations, component-scanning, and Java-based metadata for creating
  * Spring-managed objects.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.context.annotation;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

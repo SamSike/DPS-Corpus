@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -117,8 +114,8 @@ implements
 
 
 
-    private static final Set<SQLDialect> REQUIRES_CAST_ON_LIKE = SQLDialect.supportedBy(DERBY, DUCKDB, POSTGRES, TRINO, YUGABYTEDB);
-    private static final Set<SQLDialect> NO_SUPPORT_ILIKE      = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, HSQLDB, MARIADB, MYSQL, SQLITE, TRINO);
+    private static final Set<SQLDialect> REQUIRES_CAST_ON_LIKE = SQLDialect.supportedBy(DERBY, POSTGRES, YUGABYTEDB);
+    private static final Set<SQLDialect> NO_SUPPORT_ILIKE      = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, HSQLDB, MARIADB, MYSQL, SQLITE);
 
     @Override
     public final void accept(Context<?> ctx) {
@@ -162,44 +159,40 @@ implements
 
     static final void accept0(Context<?> ctx, Field<?> arg1, org.jooq.Comparator op, Field<?> arg2, Character escape) {
 
-        // [#16101] BinaryLike needs a cast in all dialects
-        if (arg2.getDataType().isBinary()) {
-            if (arg1.getDataType().isString())
-                arg1 = arg1.cast(VARBINARY);
-            else if (!arg1.getDataType().isBinary())
-                arg1 = arg1.cast(VARCHAR).cast(VARBINARY);
+        // [#1159] [#1725] Some dialects cannot auto-convert the LHS operand to a
+        // VARCHAR when applying a LIKE predicate
+        switch (op) {
+            case LIKE:
+            case SIMILAR_TO:
+            case NOT_LIKE:
+            case NOT_SIMILAR_TO:
+                if (arg1.getType() != String.class && REQUIRES_CAST_ON_LIKE.contains(ctx.dialect()))
+                    arg1 = castIfNeeded(arg1, String.class);
+                if (arg2.getType() != String.class && REQUIRES_CAST_ON_LIKE.contains(ctx.dialect()))
+                    arg2 = castIfNeeded(arg2, String.class);
+
+                break;
+
+            case LIKE_IGNORE_CASE:
+            case NOT_LIKE_IGNORE_CASE:
+                if (arg1.getType() != String.class)
+                    arg1 = castIfNeeded(arg1, String.class);
+                if (arg2.getType() != String.class)
+                    arg2 = castIfNeeded(arg2, String.class);
+
+                break;
         }
-        else {
 
-            // [#1159] [#1725] Some dialects cannot auto-convert the LHS operand to a
-            // VARCHAR when applying a LIKE predicate
-            switch (op) {
-                case LIKE:
-                case SIMILAR_TO:
-                case NOT_LIKE:
-                case NOT_SIMILAR_TO:
-                    arg1 = requiresStringCastOnLike(ctx, arg1);
-                    arg2 = requiresStringCastOnLike(ctx, arg2);
-                    break;
-
-                case LIKE_IGNORE_CASE:
-                case NOT_LIKE_IGNORE_CASE:
-                    arg1 = requiresStringCast(arg1);
-                    arg2 = requiresStringCast(arg2);
-                    break;
-            }
-
-            // [#1423] [#9889] PostgreSQL and H2 support ILIKE natively. Other dialects
-            // need to emulate this as LOWER(lhs) LIKE LOWER(rhs)
-            switch (op) {
-                case LIKE_IGNORE_CASE:
-                case NOT_LIKE_IGNORE_CASE:
-                    if (NO_SUPPORT_ILIKE.contains(ctx.dialect())) {
-                        arg1 = DSL.lower((Field) arg1);
-                        arg2 = DSL.lower((Field) arg2);
-                        op = (op == org.jooq.Comparator.LIKE_IGNORE_CASE ? org.jooq.Comparator.LIKE : org.jooq.Comparator.NOT_LIKE);
-                    }
-            }
+        // [#1423] [#9889] PostgreSQL and H2 support ILIKE natively. Other dialects
+        // need to emulate this as LOWER(lhs) LIKE LOWER(rhs)
+        switch (op) {
+            case LIKE_IGNORE_CASE:
+            case NOT_LIKE_IGNORE_CASE:
+                if (NO_SUPPORT_ILIKE.contains(ctx.dialect())) {
+                    arg1 = DSL.lower((Field) arg1);
+                    arg2 = DSL.lower((Field) arg2);
+                    op = (op == org.jooq.Comparator.LIKE_IGNORE_CASE ? org.jooq.Comparator.LIKE : org.jooq.Comparator.NOT_LIKE);
+                }
         }
 
         boolean castRhs = castRhs(ctx, arg2);
@@ -218,20 +211,6 @@ implements
             ctx.sql(' ').visit(K_ESCAPE).sql(' ')
                .visit(inline(escape));
         }
-    }
-
-    static final Field<String> requiresStringCastOnLike(Context<?> ctx, Field<?> arg1) {
-        if (!arg1.getDataType().isString() && REQUIRES_CAST_ON_LIKE.contains(ctx.dialect()))
-            arg1 = castIfNeeded(arg1, String.class);
-
-        return (Field<String>) arg1;
-    }
-
-    static final Field<String> requiresStringCast(Field<?> arg1) {
-        if (!arg1.getDataType().isString())
-            arg1 = castIfNeeded(arg1, String.class);
-
-        return (Field<String>) arg1;
     }
 
 
@@ -290,7 +269,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.Like o) {
+        if (that instanceof QOM.Like) { QOM.Like o = (QOM.Like) that;
             return
                 StringUtils.equals($value(), o.$value()) &&
                 StringUtils.equals($pattern(), o.$pattern()) &&

@@ -26,8 +26,7 @@ import org.quartz.Calendar;
 import org.quartz.Scheduler;
 import org.quartz.impl.calendar.HolidayCalendar;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This test a timer endpoint in a route with Custom calendar.
@@ -47,8 +46,8 @@ public class QuartzCustomCalendarFireTest extends BaseQuartzTest {
         java.util.Calendar tomorrow = java.util.Calendar.getInstance();
         tomorrow.setTime(now);
         tomorrow.add(java.util.Calendar.DAY_OF_MONTH, 1);
-        assertFalse(c.isTimeIncluded(tomorrow.getTimeInMillis()));
-        assertTrue(c.isTimeIncluded(now.getTime()));
+        assertEquals(false, c.isTimeIncluded(tomorrow.getTimeInMillis()));
+        assertEquals(true, c.isTimeIncluded(now.getTime()));
         MockEndpoint.assertIsSatisfied(context);
     }
 

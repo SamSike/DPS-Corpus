@@ -28,8 +28,8 @@ import org.junit.jupiter.api.Test;
 public class BeanMethodWithStringParameterTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myBean", new MyBean());
         return jndi;
     }
@@ -53,10 +53,10 @@ public class BeanMethodWithStringParameterTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("bean:myBean?method=doSomething('Hello World', 2)").to("mock:result");
 
                 from("direct:other").to("bean:myBean?method=doSomethingWithExchange('Bye')").to("mock:result");

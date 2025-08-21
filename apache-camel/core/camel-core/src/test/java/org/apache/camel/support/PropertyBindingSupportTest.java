@@ -22,7 +22,6 @@ import java.util.Properties;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
-import org.apache.camel.NoSuchBeanException;
 import org.apache.camel.PropertyBindingException;
 import org.apache.camel.spi.Injector;
 import org.apache.camel.spi.PropertiesComponent;
@@ -53,7 +52,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testProperties() {
+    public void testProperties() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> prop = new HashMap<>();
@@ -77,7 +76,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testProperty() {
+    public void testProperty() throws Exception {
         PropertiesComponent pc = context.getPropertiesComponent();
         Properties prop = new Properties();
         prop.setProperty("customerName", "James");
@@ -113,7 +112,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testWithFluentBuilder() {
+    public void testWithFluentBuilder() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> prop = new HashMap<>();
@@ -138,7 +137,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testPropertiesNoReflection() {
+    public void testPropertiesNoReflection() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> prop = new HashMap<>();
@@ -155,7 +154,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testPropertiesIgnoreCase() {
+    public void testPropertiesIgnoreCase() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> prop = new HashMap<>();
@@ -179,7 +178,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testPropertiesDash() {
+    public void testPropertiesDash() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> prop = new HashMap<>();
@@ -203,7 +202,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testBindPropertiesWithOptionPrefix() {
+    public void testBindPropertiesWithOptionPrefix() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> prop = new HashMap<>();
@@ -228,7 +227,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testBindPropertiesWithOptionPrefixIgnoreCase() {
+    public void testBindPropertiesWithOptionPrefixIgnoreCase() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> prop = new HashMap<>();
@@ -253,7 +252,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testNested() {
+    public void testNested() throws Exception {
         Foo foo = new Foo();
 
         PropertyBindingSupport.build().bind(context, foo, "name", "James");
@@ -272,7 +271,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testNestedReference() {
+    public void testNestedReference() throws Exception {
         Foo foo = new Foo();
 
         PropertyBindingSupport.build().bind(context, foo, "name", "James");
@@ -290,7 +289,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testNestedReferenceId() {
+    public void testNestedReferenceId() throws Exception {
         Foo foo = new Foo();
 
         PropertyBindingSupport.build().bind(context, foo, "name", "James");
@@ -308,7 +307,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testNestedType() {
+    public void testNestedType() throws Exception {
         Foo foo = new Foo();
 
         PropertyBindingSupport.build().bind(context, foo, "name", "James");
@@ -326,7 +325,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testNestedClass() {
+    public void testNestedClass() throws Exception {
         Foo foo = new Foo();
 
         PropertyBindingSupport.build().bind(context, foo, "name", "James");
@@ -341,11 +340,11 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
         assertTrue(foo.getBar().isGoldCustomer());
         // a new class was created so its empty
         assertEquals(0, foo.getBar().getWork().getId());
-        assertNull(foo.getBar().getWork().getName());
+        assertEquals(null, foo.getBar().getWork().getName());
     }
 
     @Test
-    public void testAutowired() {
+    public void testAutowired() throws Exception {
         Foo foo = new Foo();
 
         PropertyBindingSupport.build().bind(context, foo, "name", "James");
@@ -363,7 +362,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testMandatory() {
+    public void testMandatory() throws Exception {
         Foo foo = new Foo();
 
         PropertyBindingSupport.build().withMandatory(true).bind(context, foo, "name", "James");
@@ -381,7 +380,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testDoesNotExistClass() {
+    public void testDoesNotExistClass() throws Exception {
         Foo foo = new Foo();
 
         PropertyBindingSupport.build().bind(context, foo, "name", "James");
@@ -394,7 +393,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testNullInjectorClass() {
+    public void testNullInjectorClass() throws Exception {
         Foo foo = new Foo();
 
         context.setInjector(new Injector() {
@@ -405,11 +404,6 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
 
             @Override
             public <T> T newInstance(Class<T> type, String factoryMethod) {
-                return null;
-            }
-
-            @Override
-            public <T> T newInstance(Class<T> type, Class<?> factoryClass, String factoryMethod) {
                 return null;
             }
 
@@ -434,7 +428,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testNestedClassConstructorParameterOneParameter() {
+    public void testNestedClassConstructorParameterOneParameter() throws Exception {
         Foo foo = new Foo();
 
         PropertyBindingSupport.build().bind(context, foo, "name", "James");
@@ -443,11 +437,11 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
 
         assertEquals("James", foo.getName());
         assertEquals("Tony Tiger", foo.getAnimal().getName());
-        assertTrue(foo.getAnimal().isDangerous());
+        assertEquals(true, foo.getAnimal().isDangerous());
     }
 
     @Test
-    public void testNestedClassConstructorParameterPlaceholder() {
+    public void testNestedClassConstructorParameterPlaceholder() throws Exception {
         Foo foo = new Foo();
 
         PropertyBindingSupport.build().bind(context, foo, "name", "James");
@@ -456,11 +450,11 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
 
         assertEquals("James", foo.getName());
         assertEquals("Acme", foo.getAnimal().getName());
-        assertFalse(foo.getAnimal().isDangerous());
+        assertEquals(false, foo.getAnimal().isDangerous());
     }
 
     @Test
-    public void testNestedClassConstructorParameterTwoParameter() {
+    public void testNestedClassConstructorParameterTwoParameter() throws Exception {
         Foo foo = new Foo();
 
         PropertyBindingSupport.build().bind(context, foo, "name", "James");
@@ -469,35 +463,11 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
 
         assertEquals("James", foo.getName());
         assertEquals("Donald Duck", foo.getAnimal().getName());
-        assertFalse(foo.getAnimal().isDangerous());
+        assertEquals(false, foo.getAnimal().isDangerous());
     }
 
     @Test
-    public void testNestedClassConstructorParameterMandatoryBean() {
-        Foo foo = new Foo();
-
-        PropertyBindingSupport.build().bind(context, foo, "name", "James");
-        try {
-            PropertyBindingSupport.build().bind(context, foo, "animal",
-                    "#class:org.apache.camel.support.Animal('#bean:myName', false)");
-            fail("Should have thrown exception");
-        } catch (PropertyBindingException e) {
-            NoSuchBeanException nsb = assertIsInstanceOf(NoSuchBeanException.class, e.getCause());
-            assertEquals("myName", nsb.getName());
-        }
-
-        // add bean and try again
-        context.getRegistry().bind("myName", "Acme");
-        PropertyBindingSupport.build().bind(context, foo, "animal",
-                "#class:org.apache.camel.support.Animal('#bean:myName', false)");
-
-        assertEquals("James", foo.getName());
-        assertEquals("Acme", foo.getAnimal().getName());
-        assertFalse(foo.getAnimal().isDangerous());
-    }
-
-    @Test
-    public void testNestedClassFactoryParameterOneParameter() {
+    public void testNestedClassFactoryParameterOneParameter() throws Exception {
         Foo foo = new Foo();
 
         PropertyBindingSupport.build().bind(context, foo, "name", "James");
@@ -506,11 +476,11 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
 
         assertEquals("James", foo.getName());
         assertEquals("Tiger", foo.getAnimal().getName());
-        assertTrue(foo.getAnimal().isDangerous());
+        assertEquals(true, foo.getAnimal().isDangerous());
     }
 
     @Test
-    public void testNestedClassFactoryParameterTwoParameter() {
+    public void testNestedClassFactoryParameterTwoParameter() throws Exception {
         Foo foo = new Foo();
 
         PropertyBindingSupport.build().bind(context, foo, "name", "James");
@@ -519,11 +489,11 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
 
         assertEquals("James", foo.getName());
         assertEquals("Donald Duck", foo.getAnimal().getName());
-        assertFalse(foo.getAnimal().isDangerous());
+        assertEquals(false, foo.getAnimal().isDangerous());
     }
 
     @Test
-    public void testNestedClassFactoryParameterPlaceholder() {
+    public void testNestedClassFactoryParameterPlaceholder() throws Exception {
         Foo foo = new Foo();
 
         PropertyBindingSupport.build().bind(context, foo, "name", "James");
@@ -532,11 +502,11 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
 
         assertEquals("James", foo.getName());
         assertEquals("Acme", foo.getAnimal().getName());
-        assertFalse(foo.getAnimal().isDangerous());
+        assertEquals(false, foo.getAnimal().isDangerous());
     }
 
     @Test
-    public void testPropertiesOptionalKey() {
+    public void testPropertiesOptionalKey() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> prop = new HashMap<>();
@@ -567,7 +537,7 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
     }
 
     @Test
-    public void testPropertiesOptionalKeyMandatory() {
+    public void testPropertiesOptionalKeyMandatory() throws Exception {
         Foo foo = new Foo();
 
         Map<String, Object> prop = new HashMap<>();
@@ -609,30 +579,6 @@ public class PropertyBindingSupportTest extends ContextTestSupport {
         } catch (PropertyBindingException e) {
             assertEquals("unknown", e.getPropertyName());
         }
-    }
-
-    @Test
-    public void testConvert() {
-        Foo foo = new Foo();
-
-        Map<String, Object> prop = new HashMap<>();
-        prop.put("name", "James");
-        prop.put("bar.age", "#valueAs(Integer):33");
-        prop.put("bar.rider", "#valueAs(boolean):true");
-        prop.put("bar.gold-customer", "#valueAs(boolean):true");
-        prop.put("bar.work.id", "#valueAs(int):123");
-        prop.put("bar.work.name", "{{companyName}}");
-
-        PropertyBindingSupport.bindProperties(context, foo, prop);
-
-        assertEquals("James", foo.getName());
-        assertEquals(33, foo.getBar().getAge());
-        assertTrue(foo.getBar().isRider());
-        assertTrue(foo.getBar().isGoldCustomer());
-        assertEquals(123, foo.getBar().getWork().getId());
-        assertEquals("Acme", foo.getBar().getWork().getName());
-
-        assertTrue(prop.isEmpty(), "Should bind all properties");
     }
 
     public static class Foo {

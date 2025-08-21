@@ -18,7 +18,6 @@ package org.apache.camel.component.file;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
@@ -30,17 +29,15 @@ import org.junit.jupiter.api.Test;
  * Unit test to verify the writeFileName option
  */
 public class FileProduceOverruleExpressionTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello." + UUID.randomUUID() + ".txt";
-    private static final String TEST_FILE_OVERRULED = "overruled." + UUID.randomUUID() + ".txt";
 
     @Test
     public void testNoOverrule() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(1);
-        mock.expectedHeaderReceived(Exchange.FILE_NAME, TEST_FILE_NAME);
-        mock.expectedFileExists(testFile("copy-of-" + TEST_FILE_NAME), "Hello World");
+        mock.expectedHeaderReceived(Exchange.FILE_NAME, "hello.txt");
+        mock.expectedFileExists(testFile("copy-of-hello.txt"), "Hello World");
 
-        template.sendBodyAndHeader("direct:start", "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader("direct:start", "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         assertMockEndpointsSatisfied();
     }
@@ -49,14 +46,14 @@ public class FileProduceOverruleExpressionTest extends ContextTestSupport {
     public void testOverrule() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(1);
-        mock.expectedHeaderReceived(Exchange.FILE_NAME, TEST_FILE_NAME);
+        mock.expectedHeaderReceived(Exchange.FILE_NAME, "hello.txt");
         mock.message(0).header(Exchange.OVERRULE_FILE_NAME).isNull();
-        mock.expectedFileExists(testFile("copy-of-" + TEST_FILE_OVERRULED), "Hello World");
+        mock.expectedFileExists(testFile("copy-of-overruled.txt"), "Hello World");
 
         Map<String, Object> map = new HashMap<>();
-        map.put(Exchange.FILE_NAME, TEST_FILE_NAME);
+        map.put(Exchange.FILE_NAME, "hello.txt");
         // this header should overrule the endpoint configuration
-        map.put(Exchange.OVERRULE_FILE_NAME, TEST_FILE_OVERRULED);
+        map.put(Exchange.OVERRULE_FILE_NAME, "overruled.txt");
 
         template.sendBodyAndHeaders("direct:start", "Hello World", map);
 

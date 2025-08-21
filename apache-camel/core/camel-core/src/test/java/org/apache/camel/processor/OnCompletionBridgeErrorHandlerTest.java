@@ -53,10 +53,10 @@ public class OnCompletionBridgeErrorHandlerTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 getContext().addComponent("my", new MyComponent());
                 errorHandler(noErrorHandler());
 
@@ -72,7 +72,7 @@ public class OnCompletionBridgeErrorHandlerTest extends ContextTestSupport {
     public static class MyComponent extends DefaultComponent {
 
         @Override
-        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) {
+        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
             return new MyEndpoint(uri, this);
         }
     }
@@ -84,7 +84,7 @@ public class OnCompletionBridgeErrorHandlerTest extends ContextTestSupport {
         }
 
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             return null;
         }
 
@@ -108,7 +108,7 @@ public class OnCompletionBridgeErrorHandlerTest extends ContextTestSupport {
         }
 
         @Override
-        protected int poll() {
+        protected int poll() throws Exception {
             throw new IllegalArgumentException("Simulated");
         }
     }

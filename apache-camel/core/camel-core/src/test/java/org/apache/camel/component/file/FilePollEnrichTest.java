@@ -17,7 +17,6 @@
 package org.apache.camel.component.file;
 
 import java.nio.file.Files;
-import java.util.UUID;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
@@ -28,28 +27,27 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class FilePollEnrichTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello" + UUID.randomUUID() + ".txt";
 
     @Test
     public void testFilePollEnrich() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedBodiesReceived("Hello World");
-        mock.expectedFileExists(testFile("done/" + TEST_FILE_NAME));
+        mock.expectedFileExists(testFile("done/hello.txt"));
 
-        template.sendBodyAndHeader("file:" + testDirectory(), "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader("file:" + testDirectory(), "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         assertMockEndpointsSatisfied();
         oneExchangeDone.matchesWaitTime();
 
         // file should be moved
-        assertFalse(Files.exists(testFile(TEST_FILE_NAME)), "File should have been moved");
+        assertFalse(Files.exists(testFile("hello.txt")), "File should have been moved");
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("timer:foo?period=1000").routeId("foo").log("Trigger timer foo")
                         .pollEnrich(fileUri("?move=done"), 5000).convertBodyTo(String.class)
                         .log("Polled filed ${file:name}").to("mock:result");

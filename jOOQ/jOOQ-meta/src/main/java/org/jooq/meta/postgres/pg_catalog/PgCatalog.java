@@ -7,6 +7,7 @@ package org.jooq.meta.postgres.pg_catalog;
 import java.util.Arrays;
 import java.util.List;
 
+import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
 import org.jooq.meta.postgres.pg_catalog.tables.PgAttrdef;
@@ -113,6 +114,12 @@ public class PgCatalog extends SchemaImpl {
      */
     private PgCatalog() {
         super("pg_catalog", null);
+    }
+
+
+    @Override
+    public Catalog getCatalog() {
+        return DefaultCatalog.DEFAULT_CATALOG;
     }
 
     @Override

@@ -26,7 +26,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.Expression;
 import org.apache.camel.Predicate;
-import org.apache.camel.language.simple.BaseSimpleParser;
 import org.apache.camel.language.simple.types.BinaryOperatorType;
 import org.apache.camel.language.simple.types.SimpleIllegalSyntaxException;
 import org.apache.camel.language.simple.types.SimpleParserException;
@@ -139,35 +138,27 @@ public class BinaryExpression extends BaseSimpleNode {
         return new Expression() {
             @Override
             public <T> T evaluate(Exchange exchange, Class<T> type) {
-
+                Predicate predicate;
                 String name = rightExp.evaluate(exchange, String.class);
                 if (name == null || "null".equals(name)) {
-                    throwMissingClass();
+                    throw new SimpleIllegalSyntaxException(
+                            expression, right.getToken().getIndex(),
+                            operator + " operator cannot accept null. A class type must be provided.");
                 }
                 Class<?> rightType = camelContext.getClassResolver().resolveClass(name);
                 if (rightType == null) {
-                    throwClassNotFound(name);
+                    throw new SimpleIllegalSyntaxException(
+                            expression, right.getToken().getIndex(),
+                            operator + " operator cannot find class with name: " + name);
                 }
 
-                Predicate predicate = PredicateBuilder.isInstanceOf(leftExp, rightType);
+                predicate = PredicateBuilder.isInstanceOf(leftExp, rightType);
                 if (operator == BinaryOperatorType.NOT_IS) {
                     predicate = PredicateBuilder.not(predicate);
                 }
                 boolean answer = predicate.matches(exchange);
 
                 return camelContext.getTypeConverter().convertTo(type, answer);
-            }
-
-            private void throwClassNotFound(String name) {
-                throw new SimpleIllegalSyntaxException(
-                        expression, right.getToken().getIndex(),
-                        operator + " operator cannot find class with name: " + name);
-            }
-
-            private void throwMissingClass() {
-                throw new SimpleIllegalSyntaxException(
-                        expression, right.getToken().getIndex(),
-                        operator + " operator cannot accept null. A class type must be provided.");
             }
 
             @Override
@@ -282,16 +273,12 @@ public class BinaryExpression extends BaseSimpleNode {
     }
 
     @Override
-    public String createCode(CamelContext camelContext, String expression) throws SimpleParserException {
-        return BaseSimpleParser.CODE_START + doCreateCode(camelContext, expression) + BaseSimpleParser.CODE_END;
-    }
-
-    private String doCreateCode(CamelContext camelContext, String expression) throws SimpleParserException {
+    public String createCode(String expression) throws SimpleParserException {
         org.apache.camel.util.ObjectHelper.notNull(left, "left node", this);
         org.apache.camel.util.ObjectHelper.notNull(right, "right node", this);
 
-        final String leftExp = left.createCode(camelContext, expression);
-        final String rightExp = right.createCode(camelContext, expression);
+        final String leftExp = left.createCode(expression);
+        final String rightExp = right.createCode(expression);
 
         if (operator == BinaryOperatorType.EQ) {
             return "isEqualTo(exchange, " + leftExp + ", " + rightExp + ")";

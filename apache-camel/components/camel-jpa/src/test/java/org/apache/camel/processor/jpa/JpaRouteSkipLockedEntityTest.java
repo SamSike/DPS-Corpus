@@ -109,8 +109,10 @@ public class JpaRouteSkipLockedEntityTest extends AbstractJpaTest {
         }
     }
 
+    @Override
     @BeforeEach
-    public void setupTimeout() throws SQLException {
+    public void setUp() throws Exception {
+        super.setUp();
         setLockTimeout(0);
     }
 

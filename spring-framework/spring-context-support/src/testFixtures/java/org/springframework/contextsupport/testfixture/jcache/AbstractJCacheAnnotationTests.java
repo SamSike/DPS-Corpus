@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	protected abstract ApplicationContext getApplicationContext();
 
 	@BeforeEach
-	protected void setUp(TestInfo testInfo) {
+	public void setUp(TestInfo testInfo) {
 		this.keyItem = testInfo.getTestMethod().get().getName();
 		this.ctx = getApplicationContext();
 		this.service = this.ctx.getBean(JCacheableService.class);
@@ -62,14 +62,14 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void cache() {
+	public void cache() {
 		Object first = service.cache(this.keyItem);
 		Object second = service.cache(this.keyItem);
 		assertThat(second).isSameAs(first);
 	}
 
 	@Test
-	protected void cacheNull() {
+	public void cacheNull() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		assertThat(cache.get(this.keyItem)).isNull();
@@ -85,7 +85,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void cacheException() {
+	public void cacheException() {
 		Cache cache = getCache(EXCEPTION_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -100,7 +100,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void cacheExceptionVetoed() {
+	public void cacheExceptionVetoed() {
 		Cache cache = getCache(EXCEPTION_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -112,7 +112,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void cacheCheckedException() {
+	public void cacheCheckedException() {
 		Cache cache = getCache(EXCEPTION_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -128,7 +128,7 @@ public abstract class AbstractJCacheAnnotationTests {
 
 	@SuppressWarnings("ThrowableResultOfMethodCallIgnored")
 	@Test
-	protected void cacheExceptionRewriteCallStack() {
+	public void cacheExceptionRewriteCallStack() {
 		long ref = service.exceptionInvocations();
 		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() ->
 				service.cacheWithException(this.keyItem, true))
@@ -151,14 +151,14 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void cacheAlwaysInvoke() {
+	public void cacheAlwaysInvoke() {
 		Object first = service.cacheAlwaysInvoke(this.keyItem);
 		Object second = service.cacheAlwaysInvoke(this.keyItem);
 		assertThat(second).isNotSameAs(first);
 	}
 
 	@Test
-	protected void cacheWithPartialKey() {
+	public void cacheWithPartialKey() {
 		Object first = service.cacheWithPartialKey(this.keyItem, true);
 		Object second = service.cacheWithPartialKey(this.keyItem, false);
 		// second argument not used, see config
@@ -166,7 +166,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void cacheWithCustomCacheResolver() {
+	public void cacheWithCustomCacheResolver() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -177,7 +177,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void cacheWithCustomKeyGenerator() {
+	public void cacheWithCustomKeyGenerator() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -187,7 +187,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void put() {
+	public void put() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -202,7 +202,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void putWithException() {
+	public void putWithException() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -218,7 +218,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void putWithExceptionVetoPut() {
+	public void putWithExceptionVetoPut() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -231,7 +231,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void earlyPut() {
+	public void earlyPut() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -246,7 +246,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void earlyPutWithException() {
+	public void earlyPutWithException() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -262,7 +262,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void earlyPutWithExceptionVetoPut() {
+	public void earlyPutWithExceptionVetoPut() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -277,7 +277,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void remove() {
+	public void remove() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -290,7 +290,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void removeWithException() {
+	public void removeWithException() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -304,7 +304,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void removeWithExceptionVetoRemove() {
+	public void removeWithExceptionVetoRemove() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -319,7 +319,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void earlyRemove() {
+	public void earlyRemove() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -332,7 +332,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void earlyRemoveWithException() {
+	public void earlyRemoveWithException() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -345,7 +345,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void earlyRemoveWithExceptionVetoRemove() {
+	public void earlyRemoveWithExceptionVetoRemove() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -354,12 +354,12 @@ public abstract class AbstractJCacheAnnotationTests {
 
 		assertThatNullPointerException().isThrownBy(() ->
 				service.earlyRemoveWithException(this.keyItem, false));
-		// This will be removed anyway as the earlyRemove has removed the cache before
+		// This will be remove anyway as the earlyRemove has removed the cache before
 		assertThat(cache.get(key)).isNull();
 	}
 
 	@Test
-	protected void removeAll() {
+	public void removeAll() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -371,7 +371,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void removeAllWithException() {
+	public void removeAllWithException() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -384,7 +384,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void removeAllWithExceptionVetoRemove() {
+	public void removeAllWithExceptionVetoRemove() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -396,7 +396,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void earlyRemoveAll() {
+	public void earlyRemoveAll() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -408,7 +408,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void earlyRemoveAllWithException() {
+	public void earlyRemoveAllWithException() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -420,7 +420,7 @@ public abstract class AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	protected void earlyRemoveAllWithExceptionVetoRemove() {
+	public void earlyRemoveAllWithExceptionVetoRemove() {
 		Cache cache = getCache(DEFAULT_CACHE);
 
 		Object key = createKey(this.keyItem);
@@ -428,7 +428,7 @@ public abstract class AbstractJCacheAnnotationTests {
 
 		assertThatNullPointerException().isThrownBy(() ->
 				service.earlyRemoveAllWithException(false));
-		// This will be removed anyway as the earlyRemove has removed the cache before
+		// This will be remove anyway as the earlyRemove has removed the cache before
 		assertThat(isEmpty(cache)).isTrue();
 	}
 

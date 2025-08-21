@@ -43,8 +43,11 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import org.apache.commons.io.IOUtils;
 import org.skyscreamer.jsonassert.JSONAssert;
-import org.xmlunit.assertj3.XmlAssert;
+import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.builder.Input;
+import org.xmlunit.diff.Diff;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 final class XJTestUtils {
 
@@ -158,8 +161,10 @@ final class XJTestUtils {
 
         final String expected = IOUtils.toString(referenceFile, StandardCharsets.UTF_8.name());
         final String result = byteArrayOutputStream.toString(StandardCharsets.UTF_8.name());
-        XmlAssert.assertThat(Input.fromString(expected))
-                .and(Input.fromString(result))
+
+        final Diff diff = DiffBuilder
+                .compare(Input.fromString(expected))
+                .withTest(Input.fromString(result))
                 .ignoreElementContentWhitespace()
                 .withNodeFilter(toTest -> {
                     if (toTest instanceof Comment) {
@@ -171,6 +176,9 @@ final class XJTestUtils {
 
                     return true;
                 })
-                .areIdentical();
+                .checkForIdentical()
+                .build();
+
+        assertFalse(diff.hasDifferences(), "\nExpected: " + expected + "\n\nGot: " + result + "\n\nDiff: " + diff.toString());
     }
 }

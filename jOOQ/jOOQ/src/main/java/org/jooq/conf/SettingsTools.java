@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,8 +37,6 @@
  */
 package org.jooq.conf;
 
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
 import static org.jooq.conf.FetchIntermediateResult.WHEN_EXECUTE_LISTENERS_PRESENT;
 import static org.jooq.conf.FetchIntermediateResult.WHEN_RESULT_REQUESTED;
 import static org.jooq.conf.ParamType.INDEXED;
@@ -56,7 +54,6 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 import org.jooq.Configuration;
-import org.jooq.UpdatableRecord;
 import org.jooq.tools.JooqLogger;
 import org.jooq.tools.StringUtils;
 import org.jooq.util.jaxb.tools.MiniJAXB;
@@ -236,16 +233,6 @@ public final class SettingsTools {
     }
 
     /**
-     * Lazy access to {@link RenderTable}.
-     */
-    public static final RenderTable getRenderTable(Settings settings) {
-        if (settings.getRenderTable() == null)
-            settings.setRenderTable(RenderTable.ALWAYS);
-
-        return settings.getRenderTable();
-    }
-
-    /**
      * Lazy access to {@link RenderMapping}.
      */
     public static final RenderMapping getRenderMapping(Settings settings) {
@@ -376,14 +363,8 @@ public final class SettingsTools {
 
         if (result.renderFormatting != null)
             result.renderFormatting = (RenderFormatting) result.renderFormatting.clone();
-        if (result.renderMapping != null)
-            result.renderMapping = (RenderMapping) result.renderMapping.clone();
         if (result.parseSearchPath != null)
             result.parseSearchPath = new ArrayList<>(result.parseSearchPath);
-        if (result.interpreterSearchPath != null)
-            result.interpreterSearchPath = new ArrayList<>(result.interpreterSearchPath);
-        if (result.migrationHistorySchema != null)
-            result.migrationHistorySchema = (MigrationSchema) result.migrationHistorySchema.clone();
         if (result.migrationSchemata != null)
             result.migrationSchemata = new ArrayList<>(result.migrationSchemata);
 
@@ -473,24 +454,5 @@ public final class SettingsTools {
              : settings.getFetchServerOutputSize() != null
              ? settings.getFetchServerOutputSize()
              : 0;
-    }
-
-    /**
-     * Whether any value should be returned on an {@link UpdatableRecord}
-     * operation.
-     */
-    public static final boolean returnAnyOnUpdatableRecord(Settings settings) {
-        return !FALSE.equals(settings.isReturnIdentityOnUpdatableRecord())
-            || returnAnyNonIdentityOnUpdatableRecord(settings);
-    }
-
-    /**
-     * Whether any non-identity value should be returned on an
-     * {@link UpdatableRecord} operation.
-     */
-    public static final boolean returnAnyNonIdentityOnUpdatableRecord(Settings settings) {
-        return TRUE.equals(settings.isReturnAllOnUpdatableRecord())
-            || TRUE.equals(settings.isReturnDefaultOnUpdatableRecord())
-            || TRUE.equals(settings.isReturnComputedOnUpdatableRecord());
     }
 }

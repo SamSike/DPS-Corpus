@@ -20,11 +20,11 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Based on user forum issue
@@ -33,7 +33,8 @@ public class TwoDoTryAndThrowInInnerCatchIssueTest extends ContextTestSupport {
 
     @Test
     public void testSendThatIsCaught() throws Exception {
-        String xml = PluginHelper.getModelToXMLDumper(context).dumpModelAsXml(context, context.getRouteDefinition("myroute"));
+        ExtendedCamelContext ecc = context.adapt(ExtendedCamelContext.class);
+        String xml = ecc.getModelToXMLDumper().dumpModelAsXml(context, context.getRouteDefinition("myroute"));
         log.info(xml);
 
         getMockEndpoint("mock:catch1").expectedMessageCount(0);
@@ -42,17 +43,20 @@ public class TwoDoTryAndThrowInInnerCatchIssueTest extends ContextTestSupport {
         getMockEndpoint("mock:catch4").expectedMessageCount(1);
         getMockEndpoint("mock:catch5").expectedMessageCount(1);
 
-        assertDoesNotThrow(() -> template.requestBody("direct:test", "test", String.class),
-                "Should not fail");
+        try {
+            template.requestBody("direct:test", "test", String.class);
+        } catch (Exception e) {
+            fail("Should not fail");
+        }
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(noErrorHandler());
 
                 from("direct:test").routeId("myroute")

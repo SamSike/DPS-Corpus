@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -65,10 +65,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.impl.Keywords.K_AS;
-import static org.jooq.impl.Keywords.K_CAST;
-import static org.jooq.impl.Keywords.K_ROW;
-import static org.jooq.impl.Tools.unalias;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_LIST_ALREADY_INDENTED;
 
 import java.util.Set;
@@ -94,7 +90,9 @@ implements
     ScopeMappableWrapper<TableAsField<R>, Table<R>>
 {
 
-    final Table<R> table;
+    static final Set<SQLDialect> NO_NATIVE_SUPPORT = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, SQLITE);
+
+    final Table<R>               table;
 
     TableAsField(Table<R> table) {
         this(table, table.getQualifiedName());
@@ -123,21 +121,24 @@ implements
 
     @Override
     final void acceptDefault(Context<?> ctx) {
-        if (RowAsField.NO_NATIVE_SUPPORT.contains(ctx.dialect()))
-            ctx.data(DATA_LIST_ALREADY_INDENTED, true, c -> c.visit(new SelectFieldList<>(emulatedFields(ctx.configuration()).fields.fields)));
+        if (NO_NATIVE_SUPPORT.contains(ctx.dialect()))
 
 
 
 
-        // [#4727] [#13664] [#14100] In the first versions of jOOQ 3.17, there
-        // used to be native implementations for this feature here, but they
-        // produced a significant amount of problems, most importantly #14100,
-        // where we relied on code generation column order to match production
-        // metadata column order, something which we should never rely upon.
-        // Hence, even in the presence of native support (e.g. PostgreSQL), we
-        // are now emulating the feature.
+
+
+
+
+                ctx.data(DATA_LIST_ALREADY_INDENTED, true, c -> c.visit(new SelectFieldList<>(emulatedFields(ctx.configuration()).fields.fields)));
+
+
+
+
+
+
         else
-            ctx.visit(new RowAsField<>(table.fieldsRow(), getQualifiedName()));
+            ctx.qualify(false, c -> c.visit(table));
     }
 
     @Override
@@ -148,16 +149,6 @@ implements
     // -------------------------------------------------------------------------
     // XXX: Query Object Model
     // -------------------------------------------------------------------------
-
-    @Override
-    public final Field<?> $aliased() {
-        return new TableAsField<>(table);
-    }
-
-    @Override
-    public final Name $alias() {
-        return getQualifiedName();
-    }
 
     @Override
     public final Table<R> $table() {

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -60,13 +60,13 @@ import org.jetbrains.annotations.NotNull;
  * Some databases support raising several errors or exceptions per statement
  * batch (e.g. {@link SQLDialect#SQLSERVER}):
  * <p>
- * <pre><code>
+ * <code><pre>
  * INSERT INTO t VALUES (1),(2),(3);
  * RAISERROR('message 1', 16, 2, 3);
  * RAISERROR('message 2', 16, 2, 3);
  * SELECT * FROM t;
  * RAISERROR('message 3', 16, 2, 3);
- * </code></pre>
+ * </pre></code>
  * <p>
  * The above batch will produce:
  * <ul>
@@ -104,14 +104,14 @@ public interface Results extends List<Result<Record>>, Attachable {
      * includes update counts that may have occurred between two results.
      * <p>
      * It can be safely assumed that:
-     * <pre><code>
+     * <code><pre>
      * result.resultsOrRows()
      *       .stream()
      *       .filter(r -&gt; r.result() != null)
      *       .map(r -&gt; r.result())
      *       .collect(Collectors.toList())
      *       .equals(result);
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     List<ResultOrRows> resultsOrRows();

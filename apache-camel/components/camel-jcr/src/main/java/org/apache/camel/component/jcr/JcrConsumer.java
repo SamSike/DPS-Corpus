@@ -60,100 +60,90 @@ public class JcrConsumer extends DefaultConsumer {
     }
 
     protected JcrEndpoint getJcrEndpoint() {
-        return (JcrEndpoint) getEndpoint();
+        JcrEndpoint endpoint = (JcrEndpoint) getEndpoint();
+        return endpoint;
     }
 
-    private void createSessionAndRegisterListener() throws RepositoryException {
-        lock.lock();
-        try {
-            LOG.trace("createSessionAndRegisterListener START");
+    private synchronized void createSessionAndRegisterListener() throws RepositoryException {
+        LOG.trace("createSessionAndRegisterListener START");
 
-            if (ObjectHelper.isEmpty(getJcrEndpoint().getWorkspaceName())) {
-                session = getJcrEndpoint().getRepository().login(getJcrEndpoint().getCredentials());
-            } else {
-                session = getJcrEndpoint().getRepository().login(getJcrEndpoint().getCredentials(),
-                        getJcrEndpoint().getWorkspaceName());
-            }
-
-            int eventTypes = getJcrEndpoint().getEventTypes();
-            String absPath = getJcrEndpoint().getBase();
-
-            if (absPath == null) {
-                absPath = "/";
-            } else if (!absPath.startsWith("/")) {
-                absPath = "/" + absPath;
-            }
-
-            boolean isDeep = getJcrEndpoint().isDeep();
-            String[] uuid = null;
-            String uuids = getJcrEndpoint().getUuids();
-
-            if (uuids != null) {
-                uuids = uuids.trim();
-
-                if (!uuids.isEmpty()) {
-                    uuid = uuids.split(",");
-                }
-            }
-
-            String[] nodeTypeName = null;
-            String nodeTypeNames = getJcrEndpoint().getNodeTypeNames();
-
-            if (nodeTypeNames != null) {
-                nodeTypeNames = nodeTypeNames.trim();
-
-                if (!nodeTypeNames.isEmpty()) {
-                    nodeTypeName = nodeTypeNames.split(",");
-                }
-            }
-
-            boolean noLocal = getJcrEndpoint().isNoLocal();
-
-            eventListener = new EndpointEventListener(this, getJcrEndpoint(), getProcessor());
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(
-                        "Adding JCR Event Listener, {}, on {}. eventTypes={}, isDeep={}, uuid={}, nodeTypeName={}, noLocal={}",
-                        eventListener, absPath, eventTypes, isDeep, Arrays.toString(uuid), Arrays.toString(nodeTypeName),
-                        noLocal);
-            }
-
-            session.getWorkspace().getObservationManager()
-                    .addEventListener(eventListener, eventTypes, absPath, isDeep, uuid, nodeTypeName, noLocal);
-
-            LOG.trace("createSessionAndRegisterListener END");
-        } finally {
-            lock.unlock();
+        if (ObjectHelper.isEmpty(getJcrEndpoint().getWorkspaceName())) {
+            session = getJcrEndpoint().getRepository().login(getJcrEndpoint().getCredentials());
+        } else {
+            session = getJcrEndpoint().getRepository().login(getJcrEndpoint().getCredentials(),
+                    getJcrEndpoint().getWorkspaceName());
         }
+
+        int eventTypes = getJcrEndpoint().getEventTypes();
+        String absPath = getJcrEndpoint().getBase();
+
+        if (absPath == null) {
+            absPath = "/";
+        } else if (!absPath.startsWith("/")) {
+            absPath = "/" + absPath;
+        }
+
+        boolean isDeep = getJcrEndpoint().isDeep();
+        String[] uuid = null;
+        String uuids = getJcrEndpoint().getUuids();
+
+        if (uuids != null) {
+            uuids = uuids.trim();
+
+            if (!"".equals(uuids)) {
+                uuid = uuids.split(",");
+            }
+        }
+
+        String[] nodeTypeName = null;
+        String nodeTypeNames = getJcrEndpoint().getNodeTypeNames();
+
+        if (nodeTypeNames != null) {
+            nodeTypeNames = nodeTypeNames.trim();
+
+            if (!"".equals(nodeTypeNames)) {
+                nodeTypeName = nodeTypeNames.split(",");
+            }
+        }
+
+        boolean noLocal = getJcrEndpoint().isNoLocal();
+
+        eventListener = new EndpointEventListener(this, getJcrEndpoint(), getProcessor());
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Adding JCR Event Listener, {}, on {}. eventTypes={}, isDeep={}, uuid={}, nodeTypeName={}, noLocal={}",
+                    eventListener, absPath, eventTypes, isDeep, Arrays.toString(uuid), Arrays.toString(nodeTypeName),
+                    noLocal);
+        }
+
+        session.getWorkspace().getObservationManager()
+                .addEventListener(eventListener, eventTypes, absPath, isDeep, uuid, nodeTypeName, noLocal);
+
+        LOG.trace("createSessionAndRegisterListener END");
     }
 
-    private void unregisterListenerAndLogoutSession() throws RepositoryException {
-        lock.lock();
-        try {
-            LOG.trace("unregisterListenerAndLogoutSession START");
+    private synchronized void unregisterListenerAndLogoutSession() throws RepositoryException {
+        LOG.trace("unregisterListenerAndLogoutSession START");
 
-            if (session != null) {
-                try {
-                    if (!session.isLive()) {
-                        LOG.info("Session was is no more live.");
-                    } else {
-                        if (eventListener != null) {
-                            session.getWorkspace().getObservationManager().removeEventListener(eventListener);
-                            eventListener = null;
-                        }
-
-                        session.logout();
+        if (session != null) {
+            try {
+                if (!session.isLive()) {
+                    LOG.info("Session was is no more live.");
+                } else {
+                    if (eventListener != null) {
+                        session.getWorkspace().getObservationManager().removeEventListener(eventListener);
+                        eventListener = null;
                     }
-                } finally {
-                    eventListener = null;
-                    session = null;
-                }
-            }
 
-            LOG.trace("unregisterListenerAndLogoutSession END");
-        } finally {
-            lock.unlock();
+                    session.logout();
+                }
+            } finally {
+                eventListener = null;
+                session = null;
+            }
         }
+
+        LOG.trace("unregisterListenerAndLogoutSession END");
     }
 
     private void cancelSessionListenerChecker() {
@@ -181,8 +171,7 @@ public class JcrConsumer extends DefaultConsumer {
 
             boolean isSessionLive = false;
 
-            lock.lock();
-            try {
+            synchronized (this) {
                 if (JcrConsumer.this.session != null) {
                     try {
                         isSessionLive = JcrConsumer.this.session.isLive();
@@ -190,8 +179,6 @@ public class JcrConsumer extends DefaultConsumer {
                         LOG.debug("Exception while checking jcr session", e);
                     }
                 }
-            } finally {
-                lock.unlock();
             }
 
             if (!isSessionLive) {

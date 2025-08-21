@@ -36,16 +36,13 @@ public class Settings
     implements Serializable, Cloneable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32100L;
+    private final static long serialVersionUID = 31700L;
     @XmlElement(defaultValue = "true")
     protected Boolean forceIntegerTypesOnZeroScaleDecimals = true;
     @XmlElement(defaultValue = "true")
     protected Boolean renderCatalog = true;
     @XmlElement(defaultValue = "true")
     protected Boolean renderSchema = true;
-    @XmlElement(defaultValue = "ALWAYS")
-    @XmlSchemaType(name = "string")
-    protected RenderTable renderTable = RenderTable.ALWAYS;
     protected RenderMapping renderMapping;
     @XmlElement(defaultValue = "EXPLICIT_DEFAULT_QUOTED")
     @XmlSchemaType(name = "string")
@@ -70,11 +67,6 @@ public class Settings
     @XmlElement(defaultValue = "false")
     protected Boolean renderFormatted = false;
     protected RenderFormatting renderFormatting;
-    @XmlElement(defaultValue = "false")
-    protected Boolean renderNullifEmptyStringForBindValues = false;
-    @XmlElement(defaultValue = "NEVER")
-    @XmlSchemaType(name = "string")
-    protected AutoAliasExpressions renderAutoAliasedDerivedTableExpressions = AutoAliasExpressions.NEVER;
     @XmlElement(defaultValue = "DEFAULT")
     @XmlSchemaType(name = "string")
     protected RenderOptionalKeyword renderOptionalAssociativityParentheses = RenderOptionalKeyword.DEFAULT;
@@ -98,9 +90,6 @@ public class Settings
     @XmlElement(defaultValue = "DEFAULT")
     @XmlSchemaType(name = "string")
     protected RenderImplicitJoinType renderImplicitJoinType = RenderImplicitJoinType.DEFAULT;
-    @XmlElement(defaultValue = "DEFAULT")
-    @XmlSchemaType(name = "string")
-    protected RenderImplicitJoinType renderImplicitJoinToManyType = RenderImplicitJoinType.DEFAULT;
     @XmlElement(defaultValue = "IMPLICIT_NULL")
     @XmlSchemaType(name = "string")
     protected RenderDefaultNullability renderDefaultNullability = RenderDefaultNullability.IMPLICIT_NULL;
@@ -114,82 +103,23 @@ public class Settings
     protected Boolean renderGroupConcatMaxLenSessionVariable = true;
     @XmlElement(defaultValue = "false")
     protected Boolean renderParenthesisAroundSetOperationQueries = false;
-    @XmlElement(defaultValue = "true")
-    protected Boolean renderVariablesInDerivedTablesForEmulations = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean renderRowConditionForSeekClause = true;
-    @XmlElement(defaultValue = "false")
-    protected Boolean renderRedundantConditionForSeekClause = false;
-    @XmlElement(defaultValue = "false")
-    protected Boolean renderPlainSQLTemplatesAsRaw = false;
-    @XmlElement(defaultValue = "")
-    protected String renderDollarQuotedStringToken = "";
     @XmlElement(defaultValue = ".")
     protected String namePathSeparator = ".";
     @XmlElement(defaultValue = "false")
     protected Boolean bindOffsetDateTimeType = false;
     @XmlElement(defaultValue = "false")
     protected Boolean bindOffsetTimeType = false;
-    @XmlElement(defaultValue = "false")
-    protected Boolean fetchTrimmedCharValues = false;
     @XmlElement(defaultValue = "true")
     protected Boolean fetchTriggerValuesAfterSQLServerOutput = true;
-    @XmlElement(defaultValue = "WHEN_NEEDED")
-    @XmlSchemaType(name = "string")
-    protected FetchTriggerValuesAfterReturning fetchTriggerValuesAfterReturning = FetchTriggerValuesAfterReturning.WHEN_NEEDED;
     @XmlElement(defaultValue = "WHEN_RESULT_REQUESTED")
     @XmlSchemaType(name = "string")
     protected FetchIntermediateResult fetchIntermediateResult = FetchIntermediateResult.WHEN_RESULT_REQUESTED;
-    @XmlElement(defaultValue = "true")
-    protected Boolean diagnosticsDuplicateStatements = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean diagnosticsDuplicateStatementsUsingTransformPatterns = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean diagnosticsMissingWasNullCall = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean diagnosticsRepeatedStatements = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean diagnosticsConsecutiveAggregation = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean diagnosticsConcatenationInPredicate = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean diagnosticsPossiblyWrongExpression = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean diagnosticsTooManyColumnsFetched = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean diagnosticsTooManyRowsFetched = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean diagnosticsUnnecessaryWasNullCall = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean diagnosticsPatterns = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean diagnosticsTrivialCondition = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean diagnosticsNullCondition = true;
     @XmlElement(defaultValue = "false")
     protected Boolean transformPatterns = false;
     @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsLogging = true;
     @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsUnnecessaryDistinct = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsUnnecessaryScalarSubquery = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsUnnecessaryInnerJoin = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsUnnecessaryGroupByExpressions = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsUnnecessaryOrderByExpressions = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsUnnecessaryExistsSubqueryClauses = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsCountConstant = true;
-    @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsTrim = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsNotAnd = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsNotOr = true;
     @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsNotNot = true;
     @XmlElement(defaultValue = "true")
@@ -197,15 +127,11 @@ public class Settings
     @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsNotNotDistinct = true;
     @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsDistinctFromNull = true;
-    @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsNormaliseAssociativeOps = true;
     @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsNormaliseInListSingleElementToComparison = true;
     @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsNormaliseFieldCompareValue = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsNormaliseCoalesceToNvl = true;
     @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsOrEqToIn = true;
     @XmlElement(defaultValue = "true")
@@ -221,39 +147,9 @@ public class Settings
     @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsMergeBetweenSymmetricPredicates = true;
     @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsCaseSearchedToCaseSimple = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsCaseElseNull = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsUnreachableCaseClauses = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsUnreachableDecodeClauses = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsCaseDistinctToDecode = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsCaseMergeWhenWhen = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsCaseMergeWhenElse = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsCaseToCaseAbbreviation = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsSimplifyCaseAbbreviation = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsFlattenCaseAbbreviation = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsFlattenDecode = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsFlattenCase = true;
-    @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsTrivialCaseAbbreviation = true;
     @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsTrivialPredicates = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsTrivialBitwiseOperations = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsBitSet = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsBitGet = true;
     @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsScalarSubqueryCountAsteriskGtZero = true;
     @XmlElement(defaultValue = "true")
@@ -271,11 +167,7 @@ public class Settings
     @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsBitNotBitXNor = true;
     @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsNullOnNullInput = true;
-    @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsIdempotentFunctionRepetition = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean transformPatternsArithmeticComparisons = true;
     @XmlElement(defaultValue = "true")
     protected Boolean transformPatternsArithmeticExpressions = true;
     @XmlElement(defaultValue = "true")
@@ -304,12 +196,6 @@ public class Settings
     @XmlElement(defaultValue = "NEVER")
     @XmlSchemaType(name = "string")
     protected TransformUnneededArithmeticExpressions transformUnneededArithmeticExpressions = TransformUnneededArithmeticExpressions.NEVER;
-    @XmlElement(defaultValue = "WHEN_NEEDED")
-    @XmlSchemaType(name = "string")
-    protected Transformation transformGroupByColumnIndex = Transformation.WHEN_NEEDED;
-    @XmlElement(defaultValue = "WHEN_NEEDED")
-    @XmlSchemaType(name = "string")
-    protected Transformation transformInlineCTE = Transformation.WHEN_NEEDED;
     @XmlElement(defaultValue = "DEFAULT")
     @XmlSchemaType(name = "string")
     protected BackslashEscaping backslashEscaping = BackslashEscaping.DEFAULT;
@@ -357,13 +243,6 @@ public class Settings
     @XmlElement(defaultValue = "true")
     protected Boolean executeLogging = true;
     @XmlElement(defaultValue = "true")
-    protected Boolean executeLoggingSQLExceptions = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean diagnosticsLogging = true;
-    @XmlElement(defaultValue = "DEFAULT")
-    @XmlSchemaType(name = "string")
-    protected DiagnosticsConnection diagnosticsConnection = DiagnosticsConnection.DEFAULT;
-    @XmlElement(defaultValue = "true")
     protected Boolean updateRecordVersion = true;
     @XmlElement(defaultValue = "true")
     protected Boolean updateRecordTimestamp = true;
@@ -378,9 +257,6 @@ public class Settings
     @XmlElement(defaultValue = "NEVER")
     @XmlSchemaType(name = "string")
     protected UpdateUnchangedRecords updateUnchangedRecords = UpdateUnchangedRecords.NEVER;
-    @XmlElement(defaultValue = "TOUCHED")
-    @XmlSchemaType(name = "string")
-    protected RecordDirtyTracking recordDirtyTracking = RecordDirtyTracking.TOUCHED;
     @XmlElement(defaultValue = "false")
     protected Boolean updatablePrimaryKeys = false;
     @XmlElement(defaultValue = "true")
@@ -391,10 +267,6 @@ public class Settings
     protected Boolean cacheParsingConnection = true;
     @XmlElement(defaultValue = "8192")
     protected Integer cacheParsingConnectionLRUCacheSize = 8192;
-    @XmlElement(defaultValue = "8192")
-    protected Integer cacheRecordMappersLRUCacheSize = 8192;
-    @XmlElement(defaultValue = "32768")
-    protected Integer reflectionCacheLRUCacheSize = 32768;
     @XmlElement(defaultValue = "true")
     protected Boolean cachePreparedStatementInLoader = true;
     @XmlElement(defaultValue = "THROW_ALL")
@@ -406,10 +278,6 @@ public class Settings
     protected Integer fetchServerOutputSize = 0;
     @XmlElement(defaultValue = "true")
     protected Boolean returnIdentityOnUpdatableRecord = true;
-    @XmlElement(defaultValue = "false")
-    protected Boolean returnDefaultOnUpdatableRecord = false;
-    @XmlElement(defaultValue = "false")
-    protected Boolean returnComputedOnUpdatableRecord = false;
     @XmlElement(defaultValue = "false")
     protected Boolean returnAllOnUpdatableRecord = false;
     @XmlElement(defaultValue = "true")
@@ -448,14 +316,6 @@ public class Settings
     @XmlElement(defaultValue = "DEFAULT")
     @XmlSchemaType(name = "string")
     protected NestedCollectionEmulation emulateMultiset = NestedCollectionEmulation.DEFAULT;
-    @XmlElement(defaultValue = "false")
-    protected Boolean emulateNestedRecordProjectionsUsingMultisetEmulation = false;
-    @XmlElement(defaultValue = "false")
-    protected Boolean emulateComputedColumns = false;
-    @XmlElement(defaultValue = "true")
-    protected Boolean computedOnClientVirtual = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean computedOnClientStored = true;
     @XmlElement(defaultValue = "LOG_DEBUG")
     @XmlSchemaType(name = "string")
     protected ExecuteWithoutWhere executeUpdateWithoutWhere = ExecuteWithoutWhere.LOG_DEBUG;
@@ -468,54 +328,25 @@ public class Settings
     @XmlElement(defaultValue = "DEFAULT")
     @XmlSchemaType(name = "string")
     protected InterpreterNameLookupCaseSensitivity interpreterNameLookupCaseSensitivity = InterpreterNameLookupCaseSensitivity.DEFAULT;
-    @XmlElement(defaultValue = "EXPLICIT_DEFAULT_QUOTED")
-    @XmlSchemaType(name = "string")
-    protected InterpreterQuotedNames interpreterQuotedNames = InterpreterQuotedNames.EXPLICIT_DEFAULT_QUOTED;
     @XmlElement(type = String.class)
     @XmlJavaTypeAdapter(LocaleAdapter.class)
     protected Locale interpreterLocale;
     @XmlElement(defaultValue = "false")
     protected Boolean interpreterDelayForeignKeyDeclarations = false;
-    @XmlElement(defaultValue = "THROW_ON_FAILURE")
-    @XmlSchemaType(name = "string")
-    protected InterpreterWithMetaLookups interpreterWithMetaLookups = InterpreterWithMetaLookups.THROW_ON_FAILURE;
     @XmlElement(defaultValue = "false")
     protected Boolean metaIncludeSystemIndexes = false;
     @XmlElement(defaultValue = "false")
     protected Boolean metaIncludeSystemSequences = false;
-    protected MigrationSchema migrationHistorySchema;
     @XmlElement(defaultValue = "false")
-    protected Boolean migrationHistorySchemaCreateSchemaIfNotExists = false;
-    protected MigrationSchema migrationDefaultSchema;
-    @XmlElement(defaultValue = "false")
-    protected Boolean migrationSchemataCreateSchemaIfNotExists = false;
-    @XmlElement(defaultValue = "INCREMENT")
-    @XmlSchemaType(name = "string")
-    protected MigrationDefaultContentType migrationDefaultContentType = MigrationDefaultContentType.INCREMENT;
-    @XmlElement(defaultValue = "false")
-    protected Boolean migrationAllowUndo = false;
-    @XmlElement(defaultValue = "false")
-    protected Boolean migrationAllowInvalidCommits = false;
-    @XmlElement(defaultValue = "true")
-    protected Boolean migrationAllowRename = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean migrationAllowRenameConstraints = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean migrationAllowRenameIndexes = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean migrationAllowRenameTables = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean migrationAllowRenameColumns = true;
+    protected Boolean migrationAllowsUndo = false;
     @XmlElement(defaultValue = "false")
     protected Boolean migrationRevertUntracked = false;
+    @XmlElement(defaultValue = "false")
+    protected Boolean migrationAutoBaseline = false;
     @XmlElement(defaultValue = "true")
-    protected Boolean migrationAutoVerification = true;
+    protected Boolean migrationAutoValidation = true;
     @XmlElement(defaultValue = "true")
     protected Boolean migrationIgnoreDefaultTimestampPrecisionDiffs = true;
-    @XmlElement(defaultValue = "false")
-    protected Boolean migrationIgnoreUnnamedConstraintDiffs = false;
-    @XmlElement(defaultValue = "true")
-    protected Boolean migrationIgnoreImplicitPrimaryKeyNotNullConstraints = true;
     @XmlElement(type = String.class)
     @XmlJavaTypeAdapter(LocaleAdapter.class)
     protected Locale locale;
@@ -557,26 +388,9 @@ public class Settings
     @XmlElement(defaultValue = "[jooq ignore stop]")
     protected String parseIgnoreCommentStop = "[jooq ignore stop]";
     @XmlElement(defaultValue = "false")
-    protected Boolean parsePlainSQLTemplateComments = false;
-    @XmlElement(defaultValue = "[jooq template start]")
-    protected String parsePlainSQLTemplateCommentStart = "[jooq template start]";
-    @XmlElement(defaultValue = "[jooq template stop]")
-    protected String parsePlainSQLTemplateCommentStop = "[jooq template stop]";
-    @XmlElement(defaultValue = "false")
-    protected Boolean parseRawSQLComments = false;
-    @XmlElement(defaultValue = "[jooq raw start]")
-    protected String parseRawSQLCommentStart = "[jooq raw start]";
-    @XmlElement(defaultValue = "[jooq raw stop]")
-    protected String parseRawSQLCommentStop = "[jooq raw stop]";
-    @XmlElement(defaultValue = "false")
     protected Boolean parseRetainCommentsBetweenQueries = false;
     @XmlElement(defaultValue = "true")
     protected Boolean parseMetaDefaultExpressions = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean parseMetaViewSources = true;
-    @XmlElement(defaultValue = "TEXT_ONLY")
-    @XmlSchemaType(name = "string")
-    protected Redact redact = Redact.TEXT_ONLY;
     @XmlElement(defaultValue = "IGNORE")
     @XmlSchemaType(name = "string")
     protected WriteIfReadonly readonlyTableRecordInsert = WriteIfReadonly.IGNORE;
@@ -591,9 +405,6 @@ public class Settings
     protected WriteIfReadonly readonlyUpdate = WriteIfReadonly.IGNORE;
     @XmlElement(defaultValue = "true")
     protected Boolean applyWorkaroundFor7962 = true;
-    @XmlElement(defaultValue = "LOG_WARN")
-    @XmlSchemaType(name = "string")
-    protected Warning warnOnStaticTypeRegistryAccess = Warning.LOG_WARN;
     @XmlElementWrapper(name = "interpreterSearchPath")
     @XmlElement(name = "schema")
     protected List<InterpreterSearchSchema> interpreterSearchPath;
@@ -617,7 +428,7 @@ public class Settings
     }
 
     /**
-     * Historically, zero-scale decimal types are generated as their most appropriate, corresponding integer type (e.g. NUMBER(2, 0) and less: Byte). The same behaviour is replicated in the {@link org.jooq.Meta} API. This flag allows for turning off this feature.
+     * Sets the value of the forceIntegerTypesOnZeroScaleDecimals property.
      * 
      * @param value
      *     allowed object is
@@ -644,10 +455,7 @@ public class Settings
     }
 
     /**
-     * Whether any catalog name should be rendered at all.
-     * <p>
-     * Use this for single-catalog environments, or when all objects are made
-     * available using synonyms
+     * Sets the value of the renderCatalog property.
      * 
      * @param value
      *     allowed object is
@@ -676,12 +484,7 @@ public class Settings
     }
 
     /**
-     * Whether any schema name should be rendered at all.
-     * <p>
-     * Setting this to false also implicitly sets "renderCatalog" to false.
-     * <p>
-     * Use this for single-schema environments, or when all objects are made
-     * available using synonyms
+     * Sets the value of the renderSchema property.
      * 
      * @param value
      *     allowed object is
@@ -690,46 +493,6 @@ public class Settings
      */
     public void setRenderSchema(Boolean value) {
         this.renderSchema = value;
-    }
-
-    /**
-     * Whether any table name qualification should be rendered at all on columns.
-     * <p>
-     * Setting when tables aren't rendered, then implicitly, schemas and catalogs aren't rendered either.
-     * <p>
-     * The following values are available:
-     * <ul>
-     * <li>{@link RenderTable#ALWAYS}: The default, which should always be preferred. Columns are always qualified with their tables, where possible.</li>
-     * <li>{@link RenderTable#WHEN_MULTIPLE_TABLES}: The simplest option to reduce generated query verbosity, avoiding table qualification only in queries with a single table in the <code>FROM</code> clause.</li>
-     * <li>{@link RenderTable#WHEN_AMBIGUOUS_COLUMNS}: A much more expensive to compute option that checks the <code>FROM</code> clause for ambiguous column names, in case of which columns are qualified.</li>
-     * <li>{@link RenderTable#NEVER}: Always turn off table qualification.</li>
-     * </ul>
-     * <p>
-     * Use this when verbosity of rendered SQL is a problem.
-     * 
-     */
-    public RenderTable getRenderTable() {
-        return renderTable;
-    }
-
-    /**
-     * Whether any table name qualification should be rendered at all on columns.
-     * <p>
-     * Setting when tables aren't rendered, then implicitly, schemas and catalogs aren't rendered either.
-     * <p>
-     * The following values are available:
-     * <ul>
-     * <li>{@link RenderTable#ALWAYS}: The default, which should always be preferred. Columns are always qualified with their tables, where possible.</li>
-     * <li>{@link RenderTable#WHEN_MULTIPLE_TABLES}: The simplest option to reduce generated query verbosity, avoiding table qualification only in queries with a single table in the <code>FROM</code> clause.</li>
-     * <li>{@link RenderTable#WHEN_AMBIGUOUS_COLUMNS}: A much more expensive to compute option that checks the <code>FROM</code> clause for ambiguous column names, in case of which columns are qualified.</li>
-     * <li>{@link RenderTable#NEVER}: Always turn off table qualification.</li>
-     * </ul>
-     * <p>
-     * Use this when verbosity of rendered SQL is a problem.
-     * 
-     */
-    public void setRenderTable(RenderTable value) {
-        this.renderTable = value;
     }
 
     /**
@@ -753,6 +516,8 @@ public class Settings
     /**
      * Whether rendered schema, table, column names, etc should be quoted.
      * <p>
+     * This only affects names created through {@link org.jooq.impl.DSL#name(String)} methods (including those that are implicitly created through this method), not {@link org.jooq.impl.DSL#quotedName(String)} or {@link org.jooq.impl.DSL#unquotedName(String)}, whose behaviour cannot be overridden.
+     * <p>
      * This setting does not affect any plain SQL usage.
      * 
      */
@@ -762,6 +527,8 @@ public class Settings
 
     /**
      * Whether rendered schema, table, column names, etc should be quoted.
+     * <p>
+     * This only affects names created through {@link org.jooq.impl.DSL#name(String)} methods (including those that are implicitly created through this method), not {@link org.jooq.impl.DSL#quotedName(String)} or {@link org.jooq.impl.DSL#unquotedName(String)}, whose behaviour cannot be overridden.
      * <p>
      * This setting does not affect any plain SQL usage.
      * 
@@ -921,7 +688,7 @@ public class Settings
     }
 
     /**
-     * Whether rendered SQL should be pretty-printed.
+     * Sets the value of the renderFormatted property.
      * 
      * @param value
      *     allowed object is
@@ -946,54 +713,6 @@ public class Settings
      */
     public void setRenderFormatting(RenderFormatting value) {
         this.renderFormatting = value;
-    }
-
-    /**
-     * Whether to wrap String typed bind values with NULLIF(?, '') for Oracle compatibility.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isRenderNullifEmptyStringForBindValues() {
-        return renderNullifEmptyStringForBindValues;
-    }
-
-    /**
-     * Whether to wrap String typed bind values with NULLIF(?, '') for Oracle compatibility.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setRenderNullifEmptyStringForBindValues(Boolean value) {
-        this.renderNullifEmptyStringForBindValues = value;
-    }
-
-    /**
-     * Whether to auto-alias expressions in derived tables.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public AutoAliasExpressions getRenderAutoAliasedDerivedTableExpressions() {
-        return renderAutoAliasedDerivedTableExpressions;
-    }
-
-    /**
-     * Whether to auto-alias expressions in derived tables.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public void setRenderAutoAliasedDerivedTableExpressions(AutoAliasExpressions value) {
-        this.renderAutoAliasedDerivedTableExpressions = value;
     }
 
     /**
@@ -1108,10 +827,7 @@ public class Settings
     }
 
     /**
-     * Whether stored function calls should be wrapped in scalar subqueries.
-     * <p>
-     * Oracle 11g (and potentially, other databases too) implements scalar subquery caching. With this flag
-     * set to true, users can automatically profit from this feature in all SQL statements.
+     * Sets the value of the renderScalarSubqueriesForStoredFunctions property.
      * 
      * @param value
      *     allowed object is
@@ -1123,11 +839,7 @@ public class Settings
     }
 
     /**
-     * The join type to be generated by implicit joins for to-one paths in {@link org.jooq.Select} queries.
-     * <p>
-     * The <code>DEFAULT</code> is dependent on the nullability of the foreign key (<code>LEFT_JOIN</code>
-     * for nullable foreign keys and <code>INNER_JOIN</code> for non-nullable foreign keys). In DML statements,
-     * it is always <code>SCALAR_SUBQUERY</code>, unless DML joins are supported.
+     * The join type to be generated by implicit joins.
      * 
      */
     public RenderImplicitJoinType getRenderImplicitJoinType() {
@@ -1135,41 +847,11 @@ public class Settings
     }
 
     /**
-     * The join type to be generated by implicit joins for to-one paths in {@link org.jooq.Select} queries.
-     * <p>
-     * The <code>DEFAULT</code> is dependent on the nullability of the foreign key (<code>LEFT_JOIN</code>
-     * for nullable foreign keys and <code>INNER_JOIN</code> for non-nullable foreign keys). In DML statements,
-     * it is always <code>SCALAR_SUBQUERY</code>, unless DML joins are supported.
+     * The join type to be generated by implicit joins.
      * 
      */
     public void setRenderImplicitJoinType(RenderImplicitJoinType value) {
         this.renderImplicitJoinType = value;
-    }
-
-    /**
-     * The join type to be generated by implicit joins for to-many paths in {@link org.jooq.Select} queries.
-     * <p>
-     * The <code>DEFAULT</code> is <code>SCALAR_SUBQUERY</code> if the join path is implicit only, i.e. absent from
-     * the <code>FROM</code> clause, to prevent accidental cartesian products, or <code>LEFT_JOIN</code> if declared
-     * explicitly in the <code>FROM</code> clause. In DML statements, it is always <code>SCALAR_SUBQUERY</code>,
-     * unless DML joins are supported.
-     * 
-     */
-    public RenderImplicitJoinType getRenderImplicitJoinToManyType() {
-        return renderImplicitJoinToManyType;
-    }
-
-    /**
-     * The join type to be generated by implicit joins for to-many paths in {@link org.jooq.Select} queries.
-     * <p>
-     * The <code>DEFAULT</code> is <code>SCALAR_SUBQUERY</code> if the join path is implicit only, i.e. absent from
-     * the <code>FROM</code> clause, to prevent accidental cartesian products, or <code>LEFT_JOIN</code> if declared
-     * explicitly in the <code>FROM</code> clause. In DML statements, it is always <code>SCALAR_SUBQUERY</code>,
-     * unless DML joins are supported.
-     * 
-     */
-    public void setRenderImplicitJoinToManyType(RenderImplicitJoinType value) {
-        this.renderImplicitJoinToManyType = value;
     }
 
     /**
@@ -1189,10 +871,10 @@ public class Settings
     }
 
     /**
-     * Whether string concatenation operands should be coalesced to empty strings.
+     * Whether stored function calls should be wrapped in scalar subqueries.
      * <p>
-     * Some dialects treat <code>NULL</code> values as empty strings when concatenating strings (e.g. Oracle). For
-     * compatibility reasons, this flag allows for replicating this behaviour also elsewhere.
+     * Oracle 11g (and potentially, other databases too) implements scalar subquery caching. With this flag
+     * set to true, users can automatically profit from this feature in all SQL statements.
      * <p>
      * This feature is available in the commercial distribution only.
      * 
@@ -1206,12 +888,7 @@ public class Settings
     }
 
     /**
-     * Whether string concatenation operands should be coalesced to empty strings.
-     * <p>
-     * Some dialects treat <code>NULL</code> values as empty strings when concatenating strings (e.g. Oracle). For
-     * compatibility reasons, this flag allows for replicating this behaviour also elsewhere.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the renderCoalesceToEmptyStringInConcat property.
      * 
      * @param value
      *     allowed object is
@@ -1245,17 +922,7 @@ public class Settings
     }
 
     /**
-     * Whether an additional <code>ORDER BY rn</code> clause should be rendered on emulated paginated queries.
-     * <p>
-     * Older databases did not support OFFSET .. FETCH pagination, so jOOQ emulates it using derived
-     * tables and <code>ROWNUM</code> (Oracle 11g and older) or <code>ROW_NUMBER()</code> (e.g. DB2, 
-     * SQL Server, etc.) filtering. While these subqueries are ordered, the ordering is not 
-     * <em>guaranteed</em> to be stable in the outer most queries. It may be stable (and e.g. in Oracle, 
-     * it mostly is, if queries are not parallel, or joined to other queries, etc.), so the excess 
-     * <code>ORDER BY</code> clause may add some additional performance overhead. This setting forces 
-     * jOOQ to not generate the additional <code>ORDER BY</code> clause.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/7609">https://github.com/jOOQ/jOOQ/issues/7609</a>.
+     * Sets the value of the renderOrderByRownumberForEmulatedPagination property.
      * 
      * @param value
      *     allowed object is
@@ -1276,7 +943,7 @@ public class Settings
      * is only supported for single row inserts.
      * <p>
      * This <code>OUTPUT</code> clause does not support fetching trigger generated values. In order
-     * to fetch trigger generated values, {@link #fetchTriggerValuesAfterReturning} needs to
+     * to fetch trigger generated values, {@link #fetchTriggerValuesAfterSQLServerOutput} needs to
      * be enabled as well.
      * <p>
      * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/4498">https://github.com/jOOQ/jOOQ/issues/4498</a>.
@@ -1291,19 +958,7 @@ public class Settings
     }
 
     /**
-     * Whether the jOOQ <code>RETURNING</code> clause should map to SQL Server's <code>OUTPUT</code> clause.
-     * <p>
-     * SQL Server supports an <code>OUTPUT</code> clause in most DML statements, whose behaviour
-     * is almost identical to <code>RETURNING</code> in Firebird, Oracle, PostgreSQL. Users who
-     * want to prevent jOOQ from rendering this <code>OUTPUT</code> clause can deactivate this flag
-     * to revert to jOOQ calling {@code java.sql.Statement#getGeneratedKeys()} instead, which
-     * is only supported for single row inserts.
-     * <p>
-     * This <code>OUTPUT</code> clause does not support fetching trigger generated values. In order
-     * to fetch trigger generated values, {@link #fetchTriggerValuesAfterReturning} needs to
-     * be enabled as well.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/4498">https://github.com/jOOQ/jOOQ/issues/4498</a>.
+     * Sets the value of the renderOutputForSQLServerReturningClause property.
      * 
      * @param value
      *     allowed object is
@@ -1334,14 +989,7 @@ public class Settings
     }
 
     /**
-     * Whether the jOOQ <code>GROUP_CONCAT</code> function should be overflow-protected by setting the <code>@@group_concat_max_len</code> session variable in MySQL style database systems.
-     * <p>
-     * MySQL truncates <code>GROUP_CONCAT</code> results after a certain length, which may be way
-     * too small for jOOQ's usage, especially when using the <code>MULTISET</code> emulation. By
-     * default, jOOQ sets a session variable to the highest possible value prior to executing a
-     * query containing <code>GROUP_CONCAT</code>. This flag can be used to opt out of this.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/12092">https://github.com/jOOQ/jOOQ/issues/12092</a>.
+     * Sets the value of the renderGroupConcatMaxLenSessionVariable property.
      * 
      * @param value
      *     allowed object is
@@ -1372,14 +1020,7 @@ public class Settings
     }
 
     /**
-     * Whether queries combined with set operators (e.g. UNION and UNION ALL) should always be surrounded by a parenthesis pair.
-     * <p>
-     * By default (i.e. when this setting is set to <code>false</code> jOOQ will only render parenthesis pairs around queries combined with set operators when required.
-     * This is for example the case when set operators are nested, when non-associative operators like EXCEPT are used, or when the queries are rendered as derived tables.
-     * <p>
-     * When this setting is set to <code>true</code> the queries combined with set operators will always be surrounded by a parenthesis pair.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/3676">https://github.com/jOOQ/jOOQ/issues/3676</a> and <a href="https://github.com/jOOQ/jOOQ/issues/9751">https://github.com/jOOQ/jOOQ/issues/9751</a>.
+     * Sets the value of the renderParenthesisAroundSetOperationQueries property.
      * 
      * @param value
      *     allowed object is
@@ -1391,146 +1032,16 @@ public class Settings
     }
 
     /**
-     * Whether emulations that require repeating expressions should render variables for those expressions in derived tables.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/14065">https://github.com/jOOQ/jOOQ/issues/14065</a>.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isRenderVariablesInDerivedTablesForEmulations() {
-        return renderVariablesInDerivedTablesForEmulations;
-    }
-
-    /**
-     * Whether emulations that require repeating expressions should render variables for those expressions in derived tables.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/14065">https://github.com/jOOQ/jOOQ/issues/14065</a>.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setRenderVariablesInDerivedTablesForEmulations(Boolean value) {
-        this.renderVariablesInDerivedTablesForEmulations = value;
-    }
-
-    /**
-     * Whether a <code>(a, b) < (:a, :b)</code> row predicate should be rendered for the <code>SEEK</code> clause.
-     * <p>
-     * Some RDBMS may support <code>(a, b) < (:a, :b)</code> row predicate syntax, which is very convenient for <code>SEEK</code> clause implementations, but fail to optimise this predicate as could be expected.
-     * This flag allows for expanding the predicate to the much more verbose, but equivalent <code>(a < :a) OR (a = :a AND b < :b)</code>. Dialects without native support for row predicates aren't affected
-     * by this flag.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isRenderRowConditionForSeekClause() {
-        return renderRowConditionForSeekClause;
-    }
-
-    /**
-     * Whether a <code>(a, b) < (:a, :b)</code> row predicate should be rendered for the <code>SEEK</code> clause.
-     * <p>
-     * Some RDBMS may support <code>(a, b) < (:a, :b)</code> row predicate syntax, which is very convenient for <code>SEEK</code> clause implementations, but fail to optimise this predicate as could be expected.
-     * This flag allows for expanding the predicate to the much more verbose, but equivalent <code>(a < :a) OR (a = :a AND b < :b)</code>. Dialects without native support for row predicates aren't affected
-     * by this flag.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setRenderRowConditionForSeekClause(Boolean value) {
-        this.renderRowConditionForSeekClause = value;
-    }
-
-    /**
-     * Whether a redundant <code>(a <= :a)</code> predicate should be rendered for a <code>(a, b) < (:a, :b)</code> predicate for the <code>SEEK</code> clause.
-     * <p>
-     * Some RDBMS may not be able to properly optimise <code>(a, b) < ('a', 'b')</code> or <code>(a < 'a') OR (a = 'a' AND b < 'b')</code>, and choose an appropriate index. By adding an additional redundant predicate,
-     * jOOQ may help the optimiser, e.g. <code>(a <= :a) AND (a, b) < ('a', 'b')</code> or <code>(a <= :a) AND ((a < 'a') OR (a = 'a' AND b < 'b'))</code>
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isRenderRedundantConditionForSeekClause() {
-        return renderRedundantConditionForSeekClause;
-    }
-
-    /**
-     * Whether a redundant <code>(a <= :a)</code> predicate should be rendered for a <code>(a, b) < (:a, :b)</code> predicate for the <code>SEEK</code> clause.
-     * <p>
-     * Some RDBMS may not be able to properly optimise <code>(a, b) < ('a', 'b')</code> or <code>(a < 'a') OR (a = 'a' AND b < 'b')</code>, and choose an appropriate index. By adding an additional redundant predicate,
-     * jOOQ may help the optimiser, e.g. <code>(a <= :a) AND (a, b) < ('a', 'b')</code> or <code>(a <= :a) AND ((a < 'a') OR (a = 'a' AND b < 'b'))</code>
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setRenderRedundantConditionForSeekClause(Boolean value) {
-        this.renderRedundantConditionForSeekClause = value;
-    }
-
-    /**
-     * Whether plain SQL templates ({@link org.jooq.SQL}) are rendered as raw string content.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isRenderPlainSQLTemplatesAsRaw() {
-        return renderPlainSQLTemplatesAsRaw;
-    }
-
-    /**
-     * Whether plain SQL templates ({@link org.jooq.SQL}) are rendered as raw string content.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setRenderPlainSQLTemplatesAsRaw(Boolean value) {
-        this.renderPlainSQLTemplatesAsRaw = value;
-    }
-
-    /**
-     * The token to place between the <code>$$</code> signs of a PostgreSQL dollar quoted string generated by jOOQ.
-     * 
-     */
-    public String getRenderDollarQuotedStringToken() {
-        return renderDollarQuotedStringToken;
-    }
-
-    /**
-     * The token to place between the <code>$$</code> signs of a PostgreSQL dollar quoted string generated by jOOQ.
-     * 
-     */
-    public void setRenderDollarQuotedStringToken(String value) {
-        this.renderDollarQuotedStringToken = value;
-    }
-
-    /**
      * The character(s) to be used as a separator in paths encoded in a {@link Name}
      * <p>
      * A few hierarchical mapping features work with paths encoded in names (specifically field aliases), such as the reflective mapping of nested values when aliasing fields as:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT 
      *   a.first_name AS "book.author.firstName"
      *   a.last_name AS "book.author.lastName"
      * FROM ...
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Not all dialects support "." in identifiers. This setting allows for specifying an alternative String to use as separator, e.g. "__".
      * 
@@ -1544,12 +1055,12 @@ public class Settings
      * <p>
      * A few hierarchical mapping features work with paths encoded in names (specifically field aliases), such as the reflective mapping of nested values when aliasing fields as:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT 
      *   a.first_name AS "book.author.firstName"
      *   a.last_name AS "book.author.lastName"
      * FROM ...
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Not all dialects support "." in identifiers. This setting allows for specifying an alternative String to use as separator, e.g. "__".
      * 
@@ -1577,13 +1088,7 @@ public class Settings
     }
 
     /**
-     * Whether the <code>java.time</code> (JSR 310) type {@link java.time.OffsetDateTime} should be bound natively to JDBC.
-     * <p>
-     * Historically, jOOQ encoded the <code>java.time</code> types as strings to offer better compatibility with older JDBC drivers. By now, most drivers should support the <code>java.time</code> types. Using them may produce better performance both on the server and on the client side.
-     * <p>
-     * This flag allows for reverting to pre-jOOQ 3.14 behaviour, where the default is to bind these types natively.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/9902">https://github.com/jOOQ/jOOQ/issues/9902</a>.
+     * Sets the value of the bindOffsetDateTimeType property.
      * 
      * @param value
      *     allowed object is
@@ -1613,13 +1118,7 @@ public class Settings
     }
 
     /**
-     * Whether the <code>java.time</code> (JSR 310) type {@link java.time.OffsetTime} should be bound natively to JDBC.
-     * <p>
-     * Historically, jOOQ encoded the <code>java.time</code> types as strings to offer better compatibility with older JDBC drivers. By now, most drivers should support the <code>java.time</code> types. Using them may produce better performance both on the server and on the client side.
-     * <p>
-     * This flag allows for reverting to pre-jOOQ 3.14 behaviour, where the default is to bind these types natively.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/9902">https://github.com/jOOQ/jOOQ/issues/9902</a>.
+     * Sets the value of the bindOffsetTimeType property.
      * 
      * @param value
      *     allowed object is
@@ -1631,40 +1130,6 @@ public class Settings
     }
 
     /**
-     * Whether right trim fetched <code>CHAR</code> typed strings from JDBC {@link java.sql.ResultSet}.
-     * <p>
-     * By default, jOOQ's internal {@link String} data type {@link org.jooq.Binding} fetched strings
-     * as returned by JDBC. With this flag enabled, jOOQ will always right-trim <code>CHAR</code> 
-     * typed strings, which can be useful in database products that will often use this historic
-     * fixed length string type, especially in dictionary views.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isFetchTrimmedCharValues() {
-        return fetchTrimmedCharValues;
-    }
-
-    /**
-     * Whether right trim fetched <code>CHAR</code> typed strings from JDBC {@link java.sql.ResultSet}.
-     * <p>
-     * By default, jOOQ's internal {@link String} data type {@link org.jooq.Binding} fetched strings
-     * as returned by JDBC. With this flag enabled, jOOQ will always right-trim <code>CHAR</code> 
-     * typed strings, which can be useful in database products that will often use this historic
-     * fixed length string type, especially in dictionary views.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setFetchTrimmedCharValues(Boolean value) {
-        this.fetchTrimmedCharValues = value;
-    }
-
-    /**
      * Fetch trigger values after SQL Server <code>OUTPUT</code> clause.
      * <p>
      * SQL Server <code>OUTPUT</code> statements do not support fetching trigger generated values.
@@ -1673,75 +1138,26 @@ public class Settings
      * included in the <code>OUTPUT</code> clause.
      * <p>
      * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/4498">https://github.com/jOOQ/jOOQ/issues/4498</a>.
-     * <p>
-     * @deprecated - 3.18.0 - [#13912] [#15316] - Use {@link #fetchTriggerValuesAfterReturning} instead.
      * 
      * @return
      *     possible object is
      *     {@link Boolean }
      *     
      */
-    @Deprecated
     public Boolean isFetchTriggerValuesAfterSQLServerOutput() {
         return fetchTriggerValuesAfterSQLServerOutput;
     }
 
     /**
-     * Fetch trigger values after SQL Server <code>OUTPUT</code> clause.
-     * <p>
-     * SQL Server <code>OUTPUT</code> statements do not support fetching trigger generated values.
-     * This is a limitation of the {@link #renderOutputForSQLServerReturningClause}. An additional
-     * <code>MERGE</code> statement can run a second query if (and only if) the primary key has been
-     * included in the <code>OUTPUT</code> clause.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/4498">https://github.com/jOOQ/jOOQ/issues/4498</a>.
-     * <p>
-     * @deprecated - 3.18.0 - [#13912] [#15316] - Use {@link #fetchTriggerValuesAfterReturning} instead.
+     * Sets the value of the fetchTriggerValuesAfterSQLServerOutput property.
      * 
      * @param value
      *     allowed object is
      *     {@link Boolean }
      *     
      */
-    @Deprecated
     public void setFetchTriggerValuesAfterSQLServerOutput(Boolean value) {
         this.fetchTriggerValuesAfterSQLServerOutput = value;
-    }
-
-    /**
-     * Fetch trigger values after a <code>RETURNING</code> clause in dialects that don't have native support for this.
-     * <p>
-     * SQL Server <code>OUTPUT</code> clauses do not support fetching trigger generated values.
-     * Neither do SQLite <code>RETURNING</code> clauses. An additional
-     * <code>MERGE</code> statement can run a second query if (and only if) the primary key has been
-     * included in the <code>OUTPUT</code> clause.
-     * <p>
-     * Trigger meta data is only available in jOOQ's commercial editions. If setting this flag to
-     * <code>WHEN_NEEDED</code> in the jOOQ Open Source Edition, jOOQ will assume triggers are present.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/4498">https://github.com/jOOQ/jOOQ/issues/4498</a>.
-     * 
-     */
-    public FetchTriggerValuesAfterReturning getFetchTriggerValuesAfterReturning() {
-        return fetchTriggerValuesAfterReturning;
-    }
-
-    /**
-     * Fetch trigger values after a <code>RETURNING</code> clause in dialects that don't have native support for this.
-     * <p>
-     * SQL Server <code>OUTPUT</code> clauses do not support fetching trigger generated values.
-     * Neither do SQLite <code>RETURNING</code> clauses. An additional
-     * <code>MERGE</code> statement can run a second query if (and only if) the primary key has been
-     * included in the <code>OUTPUT</code> clause.
-     * <p>
-     * Trigger meta data is only available in jOOQ's commercial editions. If setting this flag to
-     * <code>WHEN_NEEDED</code> in the jOOQ Open Source Edition, jOOQ will assume triggers are present.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/4498">https://github.com/jOOQ/jOOQ/issues/4498</a>.
-     * 
-     */
-    public void setFetchTriggerValuesAfterReturning(FetchTriggerValuesAfterReturning value) {
-        this.fetchTriggerValuesAfterReturning = value;
     }
 
     /**
@@ -1779,440 +1195,6 @@ public class Settings
     }
 
     /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#duplicateStatements(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDiagnosticsDuplicateStatements() {
-        return diagnosticsDuplicateStatements;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#duplicateStatements(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDiagnosticsDuplicateStatements(Boolean value) {
-        this.diagnosticsDuplicateStatements = value;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#duplicateStatements(org.jooq.DiagnosticsContext)} diagnostic with the {@link #transformPatterns} feature activated.
-     * <p>
-     * When transforming patterns, many more complex, duplicate SQL statements can be recognised than if simply
-     * parsing and re-rendering the statement. This flag turns on all transformation patterns, independently of their
-     * individual settings.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDiagnosticsDuplicateStatementsUsingTransformPatterns() {
-        return diagnosticsDuplicateStatementsUsingTransformPatterns;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#duplicateStatements(org.jooq.DiagnosticsContext)} diagnostic with the {@link #transformPatterns} feature activated.
-     * <p>
-     * When transforming patterns, many more complex, duplicate SQL statements can be recognised than if simply
-     * parsing and re-rendering the statement. This flag turns on all transformation patterns, independently of their
-     * individual settings.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDiagnosticsDuplicateStatementsUsingTransformPatterns(Boolean value) {
-        this.diagnosticsDuplicateStatementsUsingTransformPatterns = value;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#missingWasNullCall(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDiagnosticsMissingWasNullCall() {
-        return diagnosticsMissingWasNullCall;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#missingWasNullCall(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDiagnosticsMissingWasNullCall(Boolean value) {
-        this.diagnosticsMissingWasNullCall = value;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#repeatedStatements(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDiagnosticsRepeatedStatements() {
-        return diagnosticsRepeatedStatements;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#repeatedStatements(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDiagnosticsRepeatedStatements(Boolean value) {
-        this.diagnosticsRepeatedStatements = value;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#consecutiveAggregation(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDiagnosticsConsecutiveAggregation() {
-        return diagnosticsConsecutiveAggregation;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#consecutiveAggregation(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDiagnosticsConsecutiveAggregation(Boolean value) {
-        this.diagnosticsConsecutiveAggregation = value;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#concatenationInPredicate(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDiagnosticsConcatenationInPredicate() {
-        return diagnosticsConcatenationInPredicate;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#concatenationInPredicate(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDiagnosticsConcatenationInPredicate(Boolean value) {
-        this.diagnosticsConcatenationInPredicate = value;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#possiblyWrongExpression(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDiagnosticsPossiblyWrongExpression() {
-        return diagnosticsPossiblyWrongExpression;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#possiblyWrongExpression(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDiagnosticsPossiblyWrongExpression(Boolean value) {
-        this.diagnosticsPossiblyWrongExpression = value;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#tooManyColumnsFetched(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDiagnosticsTooManyColumnsFetched() {
-        return diagnosticsTooManyColumnsFetched;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#tooManyColumnsFetched(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDiagnosticsTooManyColumnsFetched(Boolean value) {
-        this.diagnosticsTooManyColumnsFetched = value;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#tooManyRowsFetched(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDiagnosticsTooManyRowsFetched() {
-        return diagnosticsTooManyRowsFetched;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#tooManyRowsFetched(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDiagnosticsTooManyRowsFetched(Boolean value) {
-        this.diagnosticsTooManyRowsFetched = value;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#unnecessaryWasNullCall(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDiagnosticsUnnecessaryWasNullCall() {
-        return diagnosticsUnnecessaryWasNullCall;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#unnecessaryWasNullCall(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDiagnosticsUnnecessaryWasNullCall(Boolean value) {
-        this.diagnosticsUnnecessaryWasNullCall = value;
-    }
-
-    /**
-     * Whether to run the various pattern transformation diagnostics.
-     * <p>
-     * {@link #transformPatterns} allows for applying numerous pattern transformations, which can be turned on separately when running
-     * diagnostics. This flag overrides the {@link #transformPatterns} flag in the diagnostics context. Individual pattern flags
-     * still allow to enable / disable the pattern for diagnostics. 
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDiagnosticsPatterns() {
-        return diagnosticsPatterns;
-    }
-
-    /**
-     * Whether to run the various pattern transformation diagnostics.
-     * <p>
-     * {@link #transformPatterns} allows for applying numerous pattern transformations, which can be turned on separately when running
-     * diagnostics. This flag overrides the {@link #transformPatterns} flag in the diagnostics context. Individual pattern flags
-     * still allow to enable / disable the pattern for diagnostics. 
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDiagnosticsPatterns(Boolean value) {
-        this.diagnosticsPatterns = value;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#trivialCondition(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDiagnosticsTrivialCondition() {
-        return diagnosticsTrivialCondition;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#trivialCondition(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDiagnosticsTrivialCondition(Boolean value) {
-        this.diagnosticsTrivialCondition = value;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#nullConditoin(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDiagnosticsNullCondition() {
-        return diagnosticsNullCondition;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#nullConditoin(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDiagnosticsNullCondition(Boolean value) {
-        this.diagnosticsNullCondition = value;
-    }
-
-    /**
      * Transform various syntax patterns to better versions, if possible.
      * <p>
      * This flag enables the pattern transformation feature, which consists of several sub-flags that are
@@ -2232,14 +1214,7 @@ public class Settings
     }
 
     /**
-     * Transform various syntax patterns to better versions, if possible.
-     * <p>
-     * This flag enables the pattern transformation feature, which consists of several sub-flags that are
-     * all prefixed with "transformPatterns", e.g. {@link #transformPatternsTrim}. While the sub-flags default
-     * to being enabled, and can be disabled on an individual basis, the global feature itself is disabled by
-     * default.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatterns property.
      * 
      * @param value
      *     allowed object is
@@ -2263,7 +1238,7 @@ public class Settings
     }
 
     /**
-     * Activate debug logging of the {@link #transformPatterns} feature.
+     * Sets the value of the transformPatternsLogging property.
      * 
      * @param value
      *     allowed object is
@@ -2272,278 +1247,6 @@ public class Settings
      */
     public void setTransformPatternsLogging(Boolean value) {
         this.transformPatternsLogging = value;
-    }
-
-    /**
-     * Transform <code>SELECT DISTINCT a, b FROM t GROUP BY a, b</code> to <code>SELECT a, b FROM t GROUP BY a, b</code>.
-     * <p>
-     * The <code>GROUP BY</code> clause already removes duplicates, so if the <code>DISTINCT</code> clause
-     * contains at least all the columns from <code>GROUP BY</code> then it can be removed.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsUnnecessaryDistinct() {
-        return transformPatternsUnnecessaryDistinct;
-    }
-
-    /**
-     * Transform <code>SELECT DISTINCT a, b FROM t GROUP BY a, b</code> to <code>SELECT a, b FROM t GROUP BY a, b</code>.
-     * <p>
-     * The <code>GROUP BY</code> clause already removes duplicates, so if the <code>DISTINCT</code> clause
-     * contains at least all the columns from <code>GROUP BY</code> then it can be removed.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsUnnecessaryDistinct(Boolean value) {
-        this.transformPatternsUnnecessaryDistinct = value;
-    }
-
-    /**
-     * Transform <code>SELECT (SELECT 1)</code> to <code>SELECT 1</code>.
-     * <p>
-     * Scalar subqueries that don't have any content other than a <code>SELECT</code> clause are unnecessary
-     * and can be removed.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsUnnecessaryScalarSubquery() {
-        return transformPatternsUnnecessaryScalarSubquery;
-    }
-
-    /**
-     * Transform <code>SELECT (SELECT 1)</code> to <code>SELECT 1</code>.
-     * <p>
-     * Scalar subqueries that don't have any content other than a <code>SELECT</code> clause are unnecessary
-     * and can be removed.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsUnnecessaryScalarSubquery(Boolean value) {
-        this.transformPatternsUnnecessaryScalarSubquery = value;
-    }
-
-    /**
-     * Transform <code>SELECT * FROM t INNER JOIN u ON TRUE</code> to <code>SELECT * FROM t CROSS JOIN u</code>.
-     * <p>
-     * Some <code>INNER JOIN</code> expressions can be proven to be unnecessary.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsUnnecessaryInnerJoin() {
-        return transformPatternsUnnecessaryInnerJoin;
-    }
-
-    /**
-     * Transform <code>SELECT * FROM t INNER JOIN u ON TRUE</code> to <code>SELECT * FROM t CROSS JOIN u</code>.
-     * <p>
-     * Some <code>INNER JOIN</code> expressions can be proven to be unnecessary.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsUnnecessaryInnerJoin(Boolean value) {
-        this.transformPatternsUnnecessaryInnerJoin = value;
-    }
-
-    /**
-     * Transform <code>SELECT a, b FROM t GROUP BY a, a, b</code> to <code>SELECT a, b FROM t GROUP BY a, b</code>.
-     * <p>
-     * Duplicate <code>GROUP BY</code> expressions can be removed.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsUnnecessaryGroupByExpressions() {
-        return transformPatternsUnnecessaryGroupByExpressions;
-    }
-
-    /**
-     * Transform <code>SELECT a, b FROM t GROUP BY a, a, b</code> to <code>SELECT a, b FROM t GROUP BY a, b</code>.
-     * <p>
-     * Duplicate <code>GROUP BY</code> expressions can be removed.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsUnnecessaryGroupByExpressions(Boolean value) {
-        this.transformPatternsUnnecessaryGroupByExpressions = value;
-    }
-
-    /**
-     * Transform <code>SELECT a, b FROM t ORDER BY a, a, b</code> to <code>SELECT a, b FROM t ORDER BY a, b</code>.
-     * <p>
-     * Duplicate <code>ORDER BY</code> expressions can be removed.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsUnnecessaryOrderByExpressions() {
-        return transformPatternsUnnecessaryOrderByExpressions;
-    }
-
-    /**
-     * Transform <code>SELECT a, b FROM t ORDER BY a, a, b</code> to <code>SELECT a, b FROM t ORDER BY a, b</code>.
-     * <p>
-     * Duplicate <code>ORDER BY</code> expressions can be removed.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsUnnecessaryOrderByExpressions(Boolean value) {
-        this.transformPatternsUnnecessaryOrderByExpressions = value;
-    }
-
-    /**
-     * Transform <code>[ NOT ] EXISTS (SELECT DISTINCT a, b FROM t ORDER BY c LIMIT d)</code> to <code>[ NOT ] EXISTS (SELECT 1 FROM t)</code>.
-     * <p>
-     * In <code>EXISTS</code> subqueries, quite a few <code>SELECT</code> clauses are meaningless, and can
-     * thus be removed. These include:
-     * <ul>
-     * <li><code>SELECT</code> (any projection can be ignored)</li>
-     * <li><code>DISTINCT</code></li>
-     * <li><code>ORDER BY</code></li>
-     * <li><code>LIMIT</code> (except <code>LIMIT 0</code>, in case of which {@link #transformPatternsTrivialPredicates} applies).</li>
-     * </ul>
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsUnnecessaryExistsSubqueryClauses() {
-        return transformPatternsUnnecessaryExistsSubqueryClauses;
-    }
-
-    /**
-     * Transform <code>[ NOT ] EXISTS (SELECT DISTINCT a, b FROM t ORDER BY c LIMIT d)</code> to <code>[ NOT ] EXISTS (SELECT 1 FROM t)</code>.
-     * <p>
-     * In <code>EXISTS</code> subqueries, quite a few <code>SELECT</code> clauses are meaningless, and can
-     * thus be removed. These include:
-     * <ul>
-     * <li><code>SELECT</code> (any projection can be ignored)</li>
-     * <li><code>DISTINCT</code></li>
-     * <li><code>ORDER BY</code></li>
-     * <li><code>LIMIT</code> (except <code>LIMIT 0</code>, in case of which {@link #transformPatternsTrivialPredicates} applies).</li>
-     * </ul>
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsUnnecessaryExistsSubqueryClauses(Boolean value) {
-        this.transformPatternsUnnecessaryExistsSubqueryClauses = value;
-    }
-
-    /**
-     * Transform <code>COUNT(1)</code> or any other <code>COUNT(const)</code> to <code>COUNT(*)</code>.
-     * <p>
-     * There is no benefit to counting a constant expression. In fact, in some RDBMS, it might even be slightly
-     * slower, at least in benchmarks.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsCountConstant() {
-        return transformPatternsCountConstant;
-    }
-
-    /**
-     * Transform <code>COUNT(1)</code> or any other <code>COUNT(const)</code> to <code>COUNT(*)</code>.
-     * <p>
-     * There is no benefit to counting a constant expression. In fact, in some RDBMS, it might even be slightly
-     * slower, at least in benchmarks.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsCountConstant(Boolean value) {
-        this.transformPatternsCountConstant = value;
     }
 
     /**
@@ -2567,15 +1270,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>LTRIM(RTRIM(x))</code> or <code>RTRIM(LTRIM(x))</code> to <code>TRIM(x)</code>.
-     * <p>
-     * Historically, a few dialects did not implement <code>TRIM(x)</code> or <code>TRIM(BOTH FROM x)</code>,
-     * so users worked around this by wrapping <code>LTRIM()</code> and <code>RTRIM()</code> with each other.
-     * Maintaining this is usually undesirable, so this transformation helps remove the unwanted wrapping.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsTrim property.
      * 
      * @param value
      *     allowed object is
@@ -2584,78 +1279,6 @@ public class Settings
      */
     public void setTransformPatternsTrim(Boolean value) {
         this.transformPatternsTrim = value;
-    }
-
-    /**
-     * Transform <code>NOT(p AND q)</code> to <code>NOT(p) OR NOT(q)</code>.
-     * <p>
-     * This transformation normalises a predicate using De Morgan's rules.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsNotAnd() {
-        return transformPatternsNotAnd;
-    }
-
-    /**
-     * Transform <code>NOT(p AND q)</code> to <code>NOT(p) OR NOT(q)</code>.
-     * <p>
-     * This transformation normalises a predicate using De Morgan's rules.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsNotAnd(Boolean value) {
-        this.transformPatternsNotAnd = value;
-    }
-
-    /**
-     * Transform <code>NOT(p OR q)</code> to <code>NOT(p) AND NOT(q)</code>.
-     * <p>
-     * This transformation normalises a predicate using De Morgan's rules.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsNotOr() {
-        return transformPatternsNotOr;
-    }
-
-    /**
-     * Transform <code>NOT(p OR q)</code> to <code>NOT(p) AND NOT(q)</code>.
-     * <p>
-     * This transformation normalises a predicate using De Morgan's rules.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsNotOr(Boolean value) {
-        this.transformPatternsNotOr = value;
     }
 
     /**
@@ -2677,13 +1300,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>NOT(NOT(x))</code> to <code>x</code>.
-     * <p>
-     * This transformation removes a redundant logic negation.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsNotNot property.
      * 
      * @param value
      *     allowed object is
@@ -2695,7 +1312,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>NOT (a != b)</code> to <code>a = b</code>, and similar comparisons.
+     * Transform <code>NOT (a != b)</code> to <code>a = b/code>, and similar comparisons.
      * <p>
      * This transformation removes a redundant logical negation from the <code>DISTINCT</code> predicate.
      * <p>
@@ -2713,13 +1330,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>NOT (a != b)</code> to <code>a = b</code>, and similar comparisons.
-     * <p>
-     * This transformation removes a redundant logical negation from the <code>DISTINCT</code> predicate.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsNotComparison property.
      * 
      * @param value
      *     allowed object is
@@ -2749,13 +1360,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>NOT (a IS NOT DISTINCT FROM b)</code> to <code>a IS DISTINCT FROM b</code>.
-     * <p>
-     * This transformation removes a redundant logical negation from the <code>DISTINCT</code> predicate.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsNotNotDistinct property.
      * 
      * @param value
      *     allowed object is
@@ -2764,42 +1369,6 @@ public class Settings
      */
     public void setTransformPatternsNotNotDistinct(Boolean value) {
         this.transformPatternsNotNotDistinct = value;
-    }
-
-    /**
-     * Transform <code>a IS [ NOT ] DISTINCT FROM NULL</code> to <code>a IS [ NOT ] NULL</code>.
-     * <p>
-     * This simplifies the much more verbose <code>DISTINCT</code> predicate.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsDistinctFromNull() {
-        return transformPatternsDistinctFromNull;
-    }
-
-    /**
-     * Transform <code>a IS [ NOT ] DISTINCT FROM NULL</code> to <code>a IS [ NOT ] NULL</code>.
-     * <p>
-     * This simplifies the much more verbose <code>DISTINCT</code> predicate.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsDistinctFromNull(Boolean value) {
-        this.transformPatternsDistinctFromNull = value;
     }
 
     /**
@@ -2822,14 +1391,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>(a + b) + (c + d)</code> to <code>((a + b) + c) + d</code>.
-     * <p>
-     * This transformation turns trees into lists, which greatly simplifies other tree traversal transformations.
-     * Some of those other transformations currently rely on this flag to be active.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsNormaliseAssociativeOps property.
      * 
      * @param value
      *     allowed object is
@@ -2857,11 +1419,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>x IN (a)</code> to <code>x = a</code> and <code>x NOT IN (a)</code> to <code>x != a</code>.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsNormaliseInListSingleElementToComparison property.
      * 
      * @param value
      *     allowed object is
@@ -2891,13 +1449,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>1 = a</code> to <code>a = 1</code>.
-     * <p>
-     * This transformation inverses {@link TableField} [op] {@link org.jooq.impl.QOM.Val} comparisons, if they're not in that order.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsNormaliseFieldCompareValue property.
      * 
      * @param value
      *     allowed object is
@@ -2906,38 +1458,6 @@ public class Settings
      */
     public void setTransformPatternsNormaliseFieldCompareValue(Boolean value) {
         this.transformPatternsNormaliseFieldCompareValue = value;
-    }
-
-    /**
-     * Transform 2 argument <code>COALESCE(a, b)</code> to <code>NVL(a, b)</code>.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsNormaliseCoalesceToNvl() {
-        return transformPatternsNormaliseCoalesceToNvl;
-    }
-
-    /**
-     * Transform 2 argument <code>COALESCE(a, b)</code> to <code>NVL(a, b)</code>.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsNormaliseCoalesceToNvl(Boolean value) {
-        this.transformPatternsNormaliseCoalesceToNvl = value;
     }
 
     /**
@@ -2959,13 +1479,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>x = c1 OR x = c2</code> to <code>x IN (c1, c2)</code>.
-     * <p>
-     * This transformation simplifies verbose <code>OR</code> predicates into simpler <code>IN</code> predicates.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsOrEqToIn property.
      * 
      * @param value
      *     allowed object is
@@ -2995,13 +1509,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>x != c1 AND x != c2</code> to <code>x NOT IN (c1, c2)</code>.
-     * <p>
-     * This transformation simplifies verbose <code>AND</code> predicates into simpler <code>NOT IN</code> predicates.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsAndNeToNotIn property.
      * 
      * @param value
      *     allowed object is
@@ -3031,13 +1539,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>x = a OR x > a</code> to <code>x >= a</code>.
-     * <p>
-     * This transformation merges multiple <code>OR</code> connected comparisons to a single comparison using a simpler operator.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsMergeOrComparison property.
      * 
      * @param value
      *     allowed object is
@@ -3067,13 +1569,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>x >= a AND x <= a</code> to <code>x = a</code>.
-     * <p>
-     * This transformation merges multiple <code>AND</code> connected comparisons to a single comparison using a simpler operator.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsMergeAndComparison property.
      * 
      * @param value
      *     allowed object is
@@ -3103,13 +1599,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>x IN (a, b, c) AND x IN (b, c, d)</code> to <code>x IN (b, c)</code>.
-     * <p>
-     * This transformation merges multiple <code>OR</code> connected comparisons to a single comparison using a simpler operator.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsMergeInLists property.
      * 
      * @param value
      *     allowed object is
@@ -3139,13 +1629,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>x >= a AND x <= b</code> to <code>x BETWEEN a AND b</code>.
-     * <p>
-     * This transformation merges multiple <code>AND</code> connected range predicates to a single comparison using <code>BETWEEN</code>.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsMergeRangePredicates property.
      * 
      * @param value
      *     allowed object is
@@ -3175,13 +1659,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>x BETWEEN a AND b OR x BETWEEN b AND a</code> to <code>x BETWEEN SYMMETRIC a AND b</code>.
-     * <p>
-     * This transformation merges multiple <code>OR</code> connected <code>BETWEEN</code> predicates to a single comparison using <code>BETWEEN SYMMETRIC</code>.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsMergeBetweenSymmetricPredicates property.
      * 
      * @param value
      *     allowed object is
@@ -3190,448 +1668,6 @@ public class Settings
      */
     public void setTransformPatternsMergeBetweenSymmetricPredicates(Boolean value) {
         this.transformPatternsMergeBetweenSymmetricPredicates = value;
-    }
-
-    /**
-     * Transform a searched <code>CASE WHEN x = .. WHEN x = ..</code> to a simple <code>CASE x WHEN … WHEN …</code> expression.
-     * <p>
-     * When a searched <code>CASE</code> expression always compares the same column to a value, then it can be simplified, possibly
-     * unlocking further transformations that are available only to the simple <code>CASE</code> expression.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsCaseSearchedToCaseSimple() {
-        return transformPatternsCaseSearchedToCaseSimple;
-    }
-
-    /**
-     * Transform a searched <code>CASE WHEN x = .. WHEN x = ..</code> to a simple <code>CASE x WHEN … WHEN …</code> expression.
-     * <p>
-     * When a searched <code>CASE</code> expression always compares the same column to a value, then it can be simplified, possibly
-     * unlocking further transformations that are available only to the simple <code>CASE</code> expression.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsCaseSearchedToCaseSimple(Boolean value) {
-        this.transformPatternsCaseSearchedToCaseSimple = value;
-    }
-
-    /**
-     * Transform <code>CASE … ELSE NULL</code> removing the <code>ELSE</code> clause.
-     * <p>
-     * <code>CASE WHEN x THEN y ELSE NULL END</code> is equivalent to <code>CASE WHEN x THEN y END</code>.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsCaseElseNull() {
-        return transformPatternsCaseElseNull;
-    }
-
-    /**
-     * Transform <code>CASE … ELSE NULL</code> removing the <code>ELSE</code> clause.
-     * <p>
-     * <code>CASE WHEN x THEN y ELSE NULL END</code> is equivalent to <code>CASE WHEN x THEN y END</code>.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsCaseElseNull(Boolean value) {
-        this.transformPatternsCaseElseNull = value;
-    }
-
-    /**
-     * Transform <code>CASE</code> by removing unreachable clauses.
-     * <p>
-     * Case clauses can be proven to be unreachable, and thus removed:
-     * <ul>
-     * <li><code>CASE WHEN p THEN 1 WHEN TRUE THEN 2 WHEN q … ELSE … END</code> is equivalent to <code>CASE WHEN p THEN 1 ELSE 2 END</code></li>
-     * <li><code>CASE WHEN p THEN 1 WHEN FALSE THEN 2 WHEN q .. ELSE .. END</code> is equivalent to <code>CASE WHEN p THEN 1 WHEN q … ELSE … END</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsUnreachableCaseClauses() {
-        return transformPatternsUnreachableCaseClauses;
-    }
-
-    /**
-     * Transform <code>CASE</code> by removing unreachable clauses.
-     * <p>
-     * Case clauses can be proven to be unreachable, and thus removed:
-     * <ul>
-     * <li><code>CASE WHEN p THEN 1 WHEN TRUE THEN 2 WHEN q … ELSE … END</code> is equivalent to <code>CASE WHEN p THEN 1 ELSE 2 END</code></li>
-     * <li><code>CASE WHEN p THEN 1 WHEN FALSE THEN 2 WHEN q .. ELSE .. END</code> is equivalent to <code>CASE WHEN p THEN 1 WHEN q … ELSE … END</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsUnreachableCaseClauses(Boolean value) {
-        this.transformPatternsUnreachableCaseClauses = value;
-    }
-
-    /**
-     * Transform <code>DECODE</code> by removing unreachable clauses.
-     * <p>
-     * DECODE clauses can be proven to be unreachable, and thus removed:
-     * <ul>
-     * <li><code>DECODE(a, b, 1, c, 2, b, 3)</code> is equivalent to <code>DECODE(a, b, 1, c, 2)</code></li>
-     * <li><code>DECODE(a, b, 1, c, 2, b, 3, 4)</code> is equivalent to <code>DECODE(a, b, 1, c, 2, 4)</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsUnreachableDecodeClauses() {
-        return transformPatternsUnreachableDecodeClauses;
-    }
-
-    /**
-     * Transform <code>DECODE</code> by removing unreachable clauses.
-     * <p>
-     * DECODE clauses can be proven to be unreachable, and thus removed:
-     * <ul>
-     * <li><code>DECODE(a, b, 1, c, 2, b, 3)</code> is equivalent to <code>DECODE(a, b, 1, c, 2)</code></li>
-     * <li><code>DECODE(a, b, 1, c, 2, b, 3, 4)</code> is equivalent to <code>DECODE(a, b, 1, c, 2, 4)</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsUnreachableDecodeClauses(Boolean value) {
-        this.transformPatternsUnreachableDecodeClauses = value;
-    }
-
-    /**
-     * Transform <code>CASE WHEN a IS NOT DISTINCT FROM b …</code> to an equivalent <code>DECODE</code> function.
-     * <p>
-     * When all <code>WHEN</code> clauses of a <code>CASE</code> expression use the <code>DISTINCT</code> predicate, then the
-     * <code>CASE</code> expression can be transformed into a <code>DECODE</code> function call:
-     * <ul>
-     * <li><code>CASE WHEN a IS NOT DISTINCT FROM b THEN 1 END</code> is equivalent to <code>DECODE(a, b, 1)</code></li>
-     * <li><code>CASE WHEN a IS NOT DISTINCT FROM b THEN 1 ELSE 2 END</code> is equivalent to <code>DECODE(a, b, 1, 2)</code></li>
-     * <li><code>CASE WHEN a IS NOT DISTINCT FROM b THEN 1 WHEN a IS NOT DISTINCT FROM c THEN 2 END</code> is equivalent to <code>DECODE(a, b, 1, c, 2)</code></li>
-     * <li><code>CASE WHEN a IS NOT DISTINCT FROM b THEN 1 WHEN a IS NOT DISTINCT FROM c THEN 2 ELSE 3 END</code> is equivalent to <code>DECODE(a, b, 1, c, 2, 3)</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsCaseDistinctToDecode() {
-        return transformPatternsCaseDistinctToDecode;
-    }
-
-    /**
-     * Transform <code>CASE WHEN a IS NOT DISTINCT FROM b …</code> to an equivalent <code>DECODE</code> function.
-     * <p>
-     * When all <code>WHEN</code> clauses of a <code>CASE</code> expression use the <code>DISTINCT</code> predicate, then the
-     * <code>CASE</code> expression can be transformed into a <code>DECODE</code> function call:
-     * <ul>
-     * <li><code>CASE WHEN a IS NOT DISTINCT FROM b THEN 1 END</code> is equivalent to <code>DECODE(a, b, 1)</code></li>
-     * <li><code>CASE WHEN a IS NOT DISTINCT FROM b THEN 1 ELSE 2 END</code> is equivalent to <code>DECODE(a, b, 1, 2)</code></li>
-     * <li><code>CASE WHEN a IS NOT DISTINCT FROM b THEN 1 WHEN a IS NOT DISTINCT FROM c THEN 2 END</code> is equivalent to <code>DECODE(a, b, 1, c, 2)</code></li>
-     * <li><code>CASE WHEN a IS NOT DISTINCT FROM b THEN 1 WHEN a IS NOT DISTINCT FROM c THEN 2 ELSE 3 END</code> is equivalent to <code>DECODE(a, b, 1, c, 2, 3)</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsCaseDistinctToDecode(Boolean value) {
-        this.transformPatternsCaseDistinctToDecode = value;
-    }
-
-    /**
-     * Transform <code>CASE WHEN a THEN x WHEN b THEN x END</code> to <code>CASE WHEN a OR b THEN x END</code>.
-     * <p>
-     * Two consecutive <code>WHEN</code> clauses can be merged, if their respective <code>THEN</code> clause is identical.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsCaseMergeWhenWhen() {
-        return transformPatternsCaseMergeWhenWhen;
-    }
-
-    /**
-     * Transform <code>CASE WHEN a THEN x WHEN b THEN x END</code> to <code>CASE WHEN a OR b THEN x END</code>.
-     * <p>
-     * Two consecutive <code>WHEN</code> clauses can be merged, if their respective <code>THEN</code> clause is identical.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsCaseMergeWhenWhen(Boolean value) {
-        this.transformPatternsCaseMergeWhenWhen = value;
-    }
-
-    /**
-     * Transform <code>CASE WHEN a THEN x WHEN b THEN y ELSE y END</code> to <code>CASE WHEN a THEN x ELSE y END</code>.
-     * <p>
-     * The ultimate <code>WHEN</code> clause can be merged with the <code>ELSE</code>, if their respective result is identical.
-     * If the <code>WHEN</code> clause is the only <code>WHEN</code> clause, then the entire <code>CASE</code> expression can
-     * be replaced by the <code>ELSE</code> clause content.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsCaseMergeWhenElse() {
-        return transformPatternsCaseMergeWhenElse;
-    }
-
-    /**
-     * Transform <code>CASE WHEN a THEN x WHEN b THEN y ELSE y END</code> to <code>CASE WHEN a THEN x ELSE y END</code>.
-     * <p>
-     * The ultimate <code>WHEN</code> clause can be merged with the <code>ELSE</code>, if their respective result is identical.
-     * If the <code>WHEN</code> clause is the only <code>WHEN</code> clause, then the entire <code>CASE</code> expression can
-     * be replaced by the <code>ELSE</code> clause content.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsCaseMergeWhenElse(Boolean value) {
-        this.transformPatternsCaseMergeWhenElse = value;
-    }
-
-    /**
-     * Transform <code>CASE</code> expressions to their respective abbreviations.
-     * <p>
-     * Some <code>CASE</code> expressions have a shorter abbreviated form, such as <code>COALESCE()</code> or <code>NULLIF()</code>.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsCaseToCaseAbbreviation() {
-        return transformPatternsCaseToCaseAbbreviation;
-    }
-
-    /**
-     * Transform <code>CASE</code> expressions to their respective abbreviations.
-     * <p>
-     * Some <code>CASE</code> expressions have a shorter abbreviated form, such as <code>COALESCE()</code> or <code>NULLIF()</code>.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsCaseToCaseAbbreviation(Boolean value) {
-        this.transformPatternsCaseToCaseAbbreviation = value;
-    }
-
-    /**
-     * Transform complex predicates into simpler <code>CASE</code> abbreviations.
-     * <p>
-     * Some predicates can be simplified into case abbreviations, such as, for example
-     * <ul>
-     * <li><code>a IS NULL OR COALESCE(a = b, FALSE)</code> to <code>NULLIF(a, b) IS NULL</code></li>
-     * <li><code>a IS NOT NULL AND COALESCE(a != b, TRUE)</code> to <code>NULLIF(a, b) IS NOT NULL</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsSimplifyCaseAbbreviation() {
-        return transformPatternsSimplifyCaseAbbreviation;
-    }
-
-    /**
-     * Transform complex predicates into simpler <code>CASE</code> abbreviations.
-     * <p>
-     * Some predicates can be simplified into case abbreviations, such as, for example
-     * <ul>
-     * <li><code>a IS NULL OR COALESCE(a = b, FALSE)</code> to <code>NULLIF(a, b) IS NULL</code></li>
-     * <li><code>a IS NOT NULL AND COALESCE(a != b, TRUE)</code> to <code>NULLIF(a, b) IS NOT NULL</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsSimplifyCaseAbbreviation(Boolean value) {
-        this.transformPatternsSimplifyCaseAbbreviation = value;
-    }
-
-    /**
-     * Flatten nested <code>CASE</code> abbreviations such as <code>NVL</code> or <code>CASE</code>.
-     * <p>
-     * Nested <code>CASE</code> abbreviations can be flattened, as such:
-     * <ul>
-     * <li><code>NVL(NVL(a, b), c)</code> to <code>COALESCE(a, b, c)</code></li>
-     * <li><code>COALESCE(a, ..., COALESCE(b, ..., c), ..., d)</code> to <code>COALESCE(a, …, b, …, c, ..., d)</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsFlattenCaseAbbreviation() {
-        return transformPatternsFlattenCaseAbbreviation;
-    }
-
-    /**
-     * Flatten nested <code>CASE</code> abbreviations such as <code>NVL</code> or <code>CASE</code>.
-     * <p>
-     * Nested <code>CASE</code> abbreviations can be flattened, as such:
-     * <ul>
-     * <li><code>NVL(NVL(a, b), c)</code> to <code>COALESCE(a, b, c)</code></li>
-     * <li><code>COALESCE(a, ..., COALESCE(b, ..., c), ..., d)</code> to <code>COALESCE(a, …, b, …, c, ..., d)</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsFlattenCaseAbbreviation(Boolean value) {
-        this.transformPatternsFlattenCaseAbbreviation = value;
-    }
-
-    /**
-     * Flatten nested <code>DECODE</code> functions.
-     * <p>
-     * Nested <code>DECODE</code> functions can be flattened, as such:
-     * <ul>
-     * <li><code>DECODE(a, b, c, DECODE(a, d, e))</code> to <code>DECODE(a, b, c, d, e)</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsFlattenDecode() {
-        return transformPatternsFlattenDecode;
-    }
-
-    /**
-     * Flatten nested <code>DECODE</code> functions.
-     * <p>
-     * Nested <code>DECODE</code> functions can be flattened, as such:
-     * <ul>
-     * <li><code>DECODE(a, b, c, DECODE(a, d, e))</code> to <code>DECODE(a, b, c, d, e)</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsFlattenDecode(Boolean value) {
-        this.transformPatternsFlattenDecode = value;
-    }
-
-    /**
-     * Transform <code>CASE … ELSE CASE …</code> by flattening the nested <code>CASE</code>.
-     * <p>
-     * <code>CASE WHEN a THEN b ELSE CASE WHEN c THEN d END END</code> is equivalent to <code>CASE WHEN a THEN b WHEN c THEN d END</code>.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsFlattenCase() {
-        return transformPatternsFlattenCase;
-    }
-
-    /**
-     * Transform <code>CASE … ELSE CASE …</code> by flattening the nested <code>CASE</code>.
-     * <p>
-     * <code>CASE WHEN a THEN b ELSE CASE WHEN c THEN d END END</code> is equivalent to <code>CASE WHEN a THEN b WHEN c THEN d END</code>.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsFlattenCase(Boolean value) {
-        this.transformPatternsFlattenCase = value;
     }
 
     /**
@@ -3652,12 +1688,7 @@ public class Settings
     }
 
     /**
-     * Transform trivial case abbreviations like <code>NVL(NULL, a)</code> to <code>a</code>.
-     * <p>
-     * This transformation removes any trivial case abbreviations, such as <code>NVL()</code>,
-     * <code>COALESCE()</code>, <code>NULLIF()</code>, etc.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsTrivialCaseAbbreviation property.
      * 
      * @param value
      *     allowed object is
@@ -3685,11 +1716,7 @@ public class Settings
     }
 
     /**
-     * Transform trivial predicates like <code>1 = 1</code> to <code>TRUE</code>.
-     * <p>
-     * This transformation removes any trivial predicates.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsTrivialPredicates property.
      * 
      * @param value
      *     allowed object is
@@ -3701,95 +1728,7 @@ public class Settings
     }
 
     /**
-     * Transform trivial bitwise comparisons like <code>BIT_OR(a, 0)</code> to <code>a</code>.
-     * <p>
-     * This transformation removes any trivial predicates.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsTrivialBitwiseOperations() {
-        return transformPatternsTrivialBitwiseOperations;
-    }
-
-    /**
-     * Transform trivial bitwise comparisons like <code>BIT_OR(a, 0)</code> to <code>a</code>.
-     * <p>
-     * This transformation removes any trivial predicates.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsTrivialBitwiseOperations(Boolean value) {
-        this.transformPatternsTrivialBitwiseOperations = value;
-    }
-
-    /**
-     * Transform bitwise operations to an equivalent <code>BIT_SET(a, b)</code> or <code>BIT_SET(a, b, c)</code> expression.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsBitSet() {
-        return transformPatternsBitSet;
-    }
-
-    /**
-     * Transform bitwise operations to an equivalent <code>BIT_SET(a, b)</code> or <code>BIT_SET(a, b, c)</code> expression.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsBitSet(Boolean value) {
-        this.transformPatternsBitSet = value;
-    }
-
-    /**
-     * Transform bitwise operations to an equivalent <code>BIT_GET(a, b)</code> expression.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsBitGet() {
-        return transformPatternsBitGet;
-    }
-
-    /**
-     * Transform bitwise operations to an equivalent <code>BIT_GET(a, b)</code> expression.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsBitGet(Boolean value) {
-        this.transformPatternsBitGet = value;
-    }
-
-    /**
-     * Transform predicates comparing scalar subqueries with a count <code>(SELECT COUNT(*) …) > 0</code> to equivalent <code>EXISTS (SELECT 1 …)</code>.
+     * Transform predicates comparing scalar subqueries with a count <code>(SELECT COUNT(*) ..) > 0</code> to equivalent <code>EXISTS (SELECT 1 ..)</code>.
      * <p>
      * Scalar subqueries that count rows and whose count is compared to 0 can be transformed into equivalent, but likely cheaper to execute EXISTS queries.
      * <p>
@@ -3805,11 +1744,7 @@ public class Settings
     }
 
     /**
-     * Transform predicates comparing scalar subqueries with a count <code>(SELECT COUNT(*) …) > 0</code> to equivalent <code>EXISTS (SELECT 1 …)</code>.
-     * <p>
-     * Scalar subqueries that count rows and whose count is compared to 0 can be transformed into equivalent, but likely cheaper to execute EXISTS queries.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsScalarSubqueryCountAsteriskGtZero property.
      * 
      * @param value
      *     allowed object is
@@ -3821,7 +1756,7 @@ public class Settings
     }
 
     /**
-     * Transform predicates comparing scalar subqueries with a count <code>(SELECT COUNT(expr) …) > 0</code> to equivalent <code>EXISTS (SELECT 1 … WHERE expr IS NOT NULL)</code>.
+     * Transform predicates comparing scalar subqueries with a count <code>(SELECT COUNT(expr) ..) > 0</code> to equivalent <code>EXISTS (SELECT 1 .. WHERE expr IS NOT NULL)</code>.
      * <p>
      * Scalar subqueries that count non-null expressions and whose count is compared to 0 can be transformed into equivalent, but likely cheaper to execute EXISTS queries.
      * <p>
@@ -3837,11 +1772,7 @@ public class Settings
     }
 
     /**
-     * Transform predicates comparing scalar subqueries with a count <code>(SELECT COUNT(expr) …) > 0</code> to equivalent <code>EXISTS (SELECT 1 … WHERE expr IS NOT NULL)</code>.
-     * <p>
-     * Scalar subqueries that count non-null expressions and whose count is compared to 0 can be transformed into equivalent, but likely cheaper to execute EXISTS queries.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsScalarSubqueryCountExpressionGtZero property.
      * 
      * @param value
      *     allowed object is
@@ -3869,11 +1800,7 @@ public class Settings
     }
 
     /**
-     * Transform empty scalar subqueries like <code>(SELECT 1 WHERE FALSE)</code> to <code>NULL</code>.
-     * <p>
-     * Scalar subqueries that are guaranteed to produce no results can be replaced by a <code>NULL</code> value.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsEmptyScalarSubquery property.
      * 
      * @param value
      *     allowed object is
@@ -3903,13 +1830,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>-(-(x))</code> to <code>x</code>
-     * <p>
-     * This transformation removes a redundant arithmetic negation.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsNegNeg property.
      * 
      * @param value
      *     allowed object is
@@ -3939,13 +1860,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>~(~(x))</code> to <code>x</code>.
-     * <p>
-     * This transformation removes a redundant bitwise negation.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsBitNotBitNot property.
      * 
      * @param value
      *     allowed object is
@@ -3975,13 +1890,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>~(bitnand(x, y))</code> to <code>bitand(x, y)</code> and <code>~(bitand(x, y)</code> to <code>bitnand(x, y)</code>.
-     * <p>
-     * This transformation removes a redundant bitwise negation.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsBitNotBitNand property.
      * 
      * @param value
      *     allowed object is
@@ -4011,13 +1920,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>~(bitnor(x, y))</code> to <code>bitor(x, y)</code> and <code>~(bitor(x, y)</code> to <code>bitnor(x, y)</code>.
-     * <p>
-     * This transformation removes a redundant bitwise negation.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsBitNotBitNor property.
      * 
      * @param value
      *     allowed object is
@@ -4047,13 +1950,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>~(bitxnor(x, y))</code> to <code>bitxor(x, y)</code> and <code>~(bitxor(x, y)</code> to <code>bitxnor(x, y)</code>.
-     * <p>
-     * This transformation removes a redundant bitwise negation.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsBitNotBitXNor property.
      * 
      * @param value
      *     allowed object is
@@ -4062,52 +1959,6 @@ public class Settings
      */
     public void setTransformPatternsBitNotBitXNor(Boolean value) {
         this.transformPatternsBitNotBitXNor = value;
-    }
-
-    /**
-     * Any {org.jooq.impl.QOM.UReturnsNullOnNullInput} function or expression with <code>NULL</code> arguments can be replaced by <code>NULL</code>.
-     * <p>
-     * There are many built-in SQL functions and operators with a <code>RETURNS NULL ON NULL INPUT</code> property, e.g.
-     * <ul>
-     * <li><code>ABS(NULL)</code></li>
-     * <li><code>MOD(NULL, 1)</code></li>
-     * <li><code>NULL + 1</code></li>
-     * </ul>
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsNullOnNullInput() {
-        return transformPatternsNullOnNullInput;
-    }
-
-    /**
-     * Any {org.jooq.impl.QOM.UReturnsNullOnNullInput} function or expression with <code>NULL</code> arguments can be replaced by <code>NULL</code>.
-     * <p>
-     * There are many built-in SQL functions and operators with a <code>RETURNS NULL ON NULL INPUT</code> property, e.g.
-     * <ul>
-     * <li><code>ABS(NULL)</code></li>
-     * <li><code>MOD(NULL, 1)</code></li>
-     * <li><code>NULL + 1</code></li>
-     * </ul>
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsNullOnNullInput(Boolean value) {
-        this.transformPatternsNullOnNullInput = value;
     }
 
     /**
@@ -4139,23 +1990,7 @@ public class Settings
     }
 
     /**
-     * Transform all repetitions of idempotent functions, such as <code>UPPER(UPPER(s))</code> to <code>UPPER(s)</code>.
-     * <p>
-     * Idempotent functions that are covered so far, include:
-     * <ul>
-     * <li><code>LTRIM(LTRIM(s))</code> to <code>LTRIM(s)</code></li>
-     * <li><code>LTRIM(TRIM(s))</code> to <code>TRIM(s)</code></li>
-     * <li><code>RTRIM(RTRIM(s))</code> to <code>RTRIM(s)</code></li>
-     * <li><code>RTRIM(TRIM(s))</code> to <code>TRIM(s)</code></li>
-     * <li><code>TRIM(LTRIM(s))</code> to <code>TRIM(s)</code></li>
-     * <li><code>TRIM(RTRIM(s))</code> to <code>TRIM(s)</code></li>
-     * <li><code>UPPER(UPPER(s))</code> to <code>UPPER(s)</code></li>
-     * <li><code>LOWER(LOWER(s))</code> to <code>LOWER(s)</code></li>
-     * </ul>
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsIdempotentFunctionRepetition property.
      * 
      * @param value
      *     allowed object is
@@ -4164,46 +1999,6 @@ public class Settings
      */
     public void setTransformPatternsIdempotentFunctionRepetition(Boolean value) {
         this.transformPatternsIdempotentFunctionRepetition = value;
-    }
-
-    /**
-     * Transform <code>a + 1 = 2</code> to <code>a = 2 - 1</code>, and other transformations.
-     * <p>
-     * It is usually best to compare single columns with constants or expressions to
-     * encourage index usage. While function based indexes are possible in some RDBMS,
-     * ordinary indexes are more reusable and should be preferred.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTransformPatternsArithmeticComparisons() {
-        return transformPatternsArithmeticComparisons;
-    }
-
-    /**
-     * Transform <code>a + 1 = 2</code> to <code>a = 2 - 1</code>, and other transformations.
-     * <p>
-     * It is usually best to compare single columns with constants or expressions to
-     * encourage index usage. While function based indexes are possible in some RDBMS,
-     * ordinary indexes are more reusable and should be preferred.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTransformPatternsArithmeticComparisons(Boolean value) {
-        this.transformPatternsArithmeticComparisons = value;
     }
 
     /**
@@ -4225,13 +2020,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>1 / y * x</code> to <code>x / y</code>, and other transformations.
-     * <p>
-     * This transformation simplifies arithmetic expressions.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsArithmeticExpressions property.
      * 
      * @param value
      *     allowed object is
@@ -4261,13 +2050,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>SIN(x) / COS(x)</code> to <code>TAN(x)</code>, and other transformations.
-     * <p>
-     * This transformation turns expanded trignonometric function definitions into their shorter equivalents.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsTrigonometricFunctions property.
      * 
      * @param value
      *     allowed object is
@@ -4297,13 +2080,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>LN(value) / LN(base)</code> to <code>LOG(base, value)</code>, and other transformations.
-     * <p>
-     * This transformation turns expanded logarithmic function definitions into their shorter equivalents.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsLogarithmicFunctions property.
      * 
      * @param value
      *     allowed object is
@@ -4333,13 +2110,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>(EXP(x) - EXP(-x)) / 2</code> to <code>SINH(x)</code>, and other transformations.
-     * <p>
-     * This transformation turns expanded hyperbolic function definitions into their shorter equivalents.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsHyperbolicFunctions property.
      * 
      * @param value
      *     allowed object is
@@ -4369,13 +2140,7 @@ public class Settings
     }
 
     /**
-     * Transform <code>LN(x + SQRT(SQUARE(x) + 1))</code> to <code>ASINH(x)</code>, and other transformations.
-     * <p>
-     * This transformation turns expanded inverse hyperbolic function definitions into their shorter equivalents.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformPatternsInverseHyperbolicFunctions property.
      * 
      * @param value
      *     allowed object is
@@ -4411,19 +2176,7 @@ public class Settings
     }
 
     /**
-     * Transform {@link org.jooq.impl.QOM.CompareCondition} and a few other types of condition to inline their bind values, in case they match
-     *          
-     * <p>
-     * Historically, prior to ANSI join syntax, joins were implemented by listing tables in 
-     * the FROM clause and providing join predicates in the WHERE clause, possibly using vendor specific
-     * operators like <code>(+)</code> (Oracle, DB2) or <code>*=</code> (SQL Server) for outer join
-     * support. For backwards compatibility with older RDBMS versions, ANSI joins in jOOQ code may be
-     * converted to equivalent table lists in generated SQL using this flag.
-     * <p>
-     * This flag has a limited implementation that supports inner joins (in most cases) and outer joins
-     * (only for simple comparison predicates).
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformInlineBindValuesForFieldComparisons property.
      * 
      * @param value
      *     allowed object is
@@ -4458,18 +2211,7 @@ public class Settings
     }
 
     /**
-     * Transform ANSI join to table lists if possible.
-     * <p>
-     * Historically, prior to ANSI join syntax, joins were implemented by listing tables in 
-     * the FROM clause and providing join predicates in the WHERE clause, possibly using vendor specific
-     * operators like <code>(+)</code> (Oracle, DB2) or <code>*=</code> (SQL Server) for outer join
-     * support. For backwards compatibility with older RDBMS versions, ANSI joins in jOOQ code may be
-     * converted to equivalent table lists in generated SQL using this flag.
-     * <p>
-     * This flag has a limited implementation that supports inner joins (in most cases) and outer joins
-     * (only for simple comparison predicates).
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformAnsiJoinToTableLists property.
      * 
      * @param value
      *     allowed object is
@@ -4486,12 +2228,8 @@ public class Settings
      * This transformation works around a known MySQL limitation "ERROR 1235 (42000): This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'"
      * <p>
      * This feature is available in the commercial distribution only.
-     * <p>
-     * @deprecated - 3.18.0 - [#14634] - The configuration of this transformation is deprecated. It will no longer be commercially available only, but apply also to the jOOQ Open Source Edition, when required.
-     *               
      * 
      */
-    @Deprecated
     public Transformation getTransformInConditionSubqueryWithLimitToDerivedTable() {
         return transformInConditionSubqueryWithLimitToDerivedTable;
     }
@@ -4502,12 +2240,8 @@ public class Settings
      * This transformation works around a known MySQL limitation "ERROR 1235 (42000): This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'"
      * <p>
      * This feature is available in the commercial distribution only.
-     * <p>
-     * @deprecated - 3.18.0 - [#14634] - The configuration of this transformation is deprecated. It will no longer be commercially available only, but apply also to the jOOQ Open Source Edition, when required.
-     *               
      * 
      */
-    @Deprecated
     public void setTransformInConditionSubqueryWithLimitToDerivedTable(Transformation value) {
         this.transformInConditionSubqueryWithLimitToDerivedTable = value;
     }
@@ -4553,15 +2287,7 @@ public class Settings
     }
 
     /**
-     * Transform table lists to ANSI join if possible.
-     * <p>
-     * (Very) historically, prior to ANSI join syntax, joins were implemented by listing tables in 
-     * the FROM clause and providing join predicates in the WHERE clause, possibly using vendor specific
-     * operators like <code>(+)</code> (Oracle, DB2) or <code>*=</code> (SQL Server) for outer join
-     * support. Migrating such join syntax is tedious. The jOOQ parser can parse the old syntax and
-     * this flag enables the transformation to ANSI join syntax.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the transformTableListsToAnsiJoin property.
      * 
      * @param value
      *     allowed object is
@@ -4626,60 +2352,6 @@ public class Settings
      */
     public void setTransformUnneededArithmeticExpressions(TransformUnneededArithmeticExpressions value) {
         this.transformUnneededArithmeticExpressions = value;
-    }
-
-    /**
-     * Transform <code>GROUP BY [column index]</code> clauses by substituting the column index.
-     * <p>
-     * Not all dialects support grouping by column index, which is a convenient but also a bit confusing feature of
-     * some dialects. jOOQ can transform the syntax into an equivalent syntax where the referenced <code>SELECT</code>
-     * expression is duplicated into the <code>GROUP BY</code> clause.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Transformation getTransformGroupByColumnIndex() {
-        return transformGroupByColumnIndex;
-    }
-
-    /**
-     * Transform <code>GROUP BY [column index]</code> clauses by substituting the column index.
-     * <p>
-     * Not all dialects support grouping by column index, which is a convenient but also a bit confusing feature of
-     * some dialects. jOOQ can transform the syntax into an equivalent syntax where the referenced <code>SELECT</code>
-     * expression is duplicated into the <code>GROUP BY</code> clause.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public void setTransformGroupByColumnIndex(Transformation value) {
-        this.transformGroupByColumnIndex = value;
-    }
-
-    /**
-     * Transform Common Table Expressions (CTE) by inlining their <code>WITH</code> clause definition to wherever they're referenced.
-     * <p>
-     * Non-recursive CTE are just syntax sugar for inline views (derived tables). When they're not supported natively,
-     * jOOQ can simply inline their definition to wherever they're referenced.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Transformation getTransformInlineCTE() {
-        return transformInlineCTE;
-    }
-
-    /**
-     * Transform Common Table Expressions (CTE) by inlining their <code>WITH</code> clause definition to wherever they're referenced.
-     * <p>
-     * Non-recursive CTE are just syntax sugar for inline views (derived tables). When they're not supported natively,
-     * jOOQ can simply inline their definition to wherever they're referenced.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public void setTransformInlineCTE(Transformation value) {
-        this.transformInlineCTE = value;
     }
 
     /**
@@ -4770,13 +2442,11 @@ public class Settings
      * The maximum number of allowed bind variables before inlining all values where <code>0</code> uses the dialect defaults: <ul>
      * <li>{@link org.jooq.SQLDialect#ACCESS} : 768</li>
      * <li>{@link org.jooq.SQLDialect#ASE} : 2000</li>
-     * <li>{@link org.jooq.SQLDialect#DATABRICKS} : 256</li>
      * <li>{@link org.jooq.SQLDialect#INGRES} : 1024</li>
      * <li>{@link org.jooq.SQLDialect#ORACLE} : 32767</li>
      * <li>{@link org.jooq.SQLDialect#POSTGRES} : 32767</li>
      * <li>{@link org.jooq.SQLDialect#SQLITE} : 999</li>
      * <li>{@link org.jooq.SQLDialect#SQLSERVER} : 2100</li>
-     * <li>{@link org.jooq.SQLDialect#TERADATA} : 2536</li>
      * </ul>
      * 
      */
@@ -4788,13 +2458,11 @@ public class Settings
      * The maximum number of allowed bind variables before inlining all values where <code>0</code> uses the dialect defaults: <ul>
      * <li>{@link org.jooq.SQLDialect#ACCESS} : 768</li>
      * <li>{@link org.jooq.SQLDialect#ASE} : 2000</li>
-     * <li>{@link org.jooq.SQLDialect#DATABRICKS} : 256</li>
      * <li>{@link org.jooq.SQLDialect#INGRES} : 1024</li>
      * <li>{@link org.jooq.SQLDialect#ORACLE} : 32767</li>
      * <li>{@link org.jooq.SQLDialect#POSTGRES} : 32767</li>
      * <li>{@link org.jooq.SQLDialect#SQLITE} : 999</li>
      * <li>{@link org.jooq.SQLDialect#SQLSERVER} : 2100</li>
-     * <li>{@link org.jooq.SQLDialect#TERADATA} : 2536</li>
      * </ul>
      * 
      */
@@ -4963,7 +2631,7 @@ public class Settings
     }
 
     /**
-     * When set to true, this will add jOOQ's default {@link org.jooq.tools.LoggerListener} for debug logging. This is meant for use in development only.
+     * When set to true, this will add jOOQ's default logging ExecuteListeners.
      * 
      * @return
      *     possible object is
@@ -4975,7 +2643,7 @@ public class Settings
     }
 
     /**
-     * When set to true, this will add jOOQ's default {@link org.jooq.tools.LoggerListener} for debug logging. This is meant for use in development only.
+     * Sets the value of the executeLogging property.
      * 
      * @param value
      *     allowed object is
@@ -4984,70 +2652,6 @@ public class Settings
      */
     public void setExecuteLogging(Boolean value) {
         this.executeLogging = value;
-    }
-
-    /**
-     * [#14420] Whether constraint violations and other {@link java.sql.SQLException} should produce additional log information about the column name and data causing the problem. Unlike {@link #executeLogging}, this is meant for use in production as well as development. This feature is available only in commercial distributions.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isExecuteLoggingSQLExceptions() {
-        return executeLoggingSQLExceptions;
-    }
-
-    /**
-     * [#14420] Whether constraint violations and other {@link java.sql.SQLException} should produce additional log information about the column name and data causing the problem. Unlike {@link #executeLogging}, this is meant for use in production as well as development. This feature is available only in commercial distributions.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setExecuteLoggingSQLExceptions(Boolean value) {
-        this.executeLoggingSQLExceptions = value;
-    }
-
-    /**
-     * When set to true, this will add jOOQ's default logging DiagnosticsListeners.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDiagnosticsLogging() {
-        return diagnosticsLogging;
-    }
-
-    /**
-     * When set to true, this will add jOOQ's default logging DiagnosticsListeners.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDiagnosticsLogging(Boolean value) {
-        this.diagnosticsLogging = value;
-    }
-
-    /**
-     * Whether to activate the DiagnosticsConnection, explicit by <code>DEFAULT</code>, implicit if <code>ON</code>, or turned <code>OFF</code> entirely.
-     * 
-     */
-    public DiagnosticsConnection getDiagnosticsConnection() {
-        return diagnosticsConnection;
-    }
-
-    /**
-     * Whether to activate the DiagnosticsConnection, explicit by <code>DEFAULT</code>, implicit if <code>ON</code>, or turned <code>OFF</code> entirely.
-     * 
-     */
-    public void setDiagnosticsConnection(DiagnosticsConnection value) {
-        this.diagnosticsConnection = value;
     }
 
     /**
@@ -5063,7 +2667,7 @@ public class Settings
     }
 
     /**
-     * Whether store(), insert(), and update() methods should update the record version prior to the operation, for use with {@link #executeWithOptimisticLocking}.
+     * Sets the value of the updateRecordVersion property.
      * 
      * @param value
      *     allowed object is
@@ -5087,7 +2691,7 @@ public class Settings
     }
 
     /**
-     * Whether store(), insert(), and update() methods should update the record timestamp prior to the operation, for use with {@link #executeWithOptimisticLocking}.
+     * Sets the value of the updateRecordTimestamp property.
      * 
      * @param value
      *     allowed object is
@@ -5111,7 +2715,7 @@ public class Settings
     }
 
     /**
-     * Whether store() and delete() methods should be executed with optimistic locking.
+     * Sets the value of the executeWithOptimisticLocking property.
      * 
      * @param value
      *     allowed object is
@@ -5138,10 +2742,7 @@ public class Settings
     }
 
     /**
-     * Whether store() and delete() methods should be executed with optimistic locking also on "unversioned" tables,
-     * i.e. on tables that do not have a version and/or timestamp column.
-     * <p>
-     * This flag has no effect when "executeWithOptimisticLocking" is turned off.
+     * Sets the value of the executeWithOptimisticLockingExcludeUnversioned property.
      * 
      * @param value
      *     allowed object is
@@ -5165,7 +2766,7 @@ public class Settings
     }
 
     /**
-     * Whether fetched records should be attached to the fetching configuration.
+     * Sets the value of the attachRecords property.
      * 
      * @param value
      *     allowed object is
@@ -5189,7 +2790,7 @@ public class Settings
     }
 
     /**
-     * Whether {@link org.jooq.TableRecord#insert()} calls should be executed if the record is unchanged. This also affects the <code>INSERT</code> part of {@link org.jooq.UpdatableRecord#store()} and {@link org.jooq.UpdatableRecord#merge()} calls.
+     * Sets the value of the insertUnchangedRecords property.
      * 
      * @param value
      *     allowed object is
@@ -5217,22 +2818,6 @@ public class Settings
     }
 
     /**
-     * Whether {@link org.jooq.UpdatableRecord#store()} and related calls should be based on {@link org.jooq.Record#touched()} or {@link org.jooq.Record#modified()} semantics. This also affects copying records into explicit statements.
-     * 
-     */
-    public RecordDirtyTracking getRecordDirtyTracking() {
-        return recordDirtyTracking;
-    }
-
-    /**
-     * Whether {@link org.jooq.UpdatableRecord#store()} and related calls should be based on {@link org.jooq.Record#touched()} or {@link org.jooq.Record#modified()} semantics. This also affects copying records into explicit statements.
-     * 
-     */
-    public void setRecordDirtyTracking(RecordDirtyTracking value) {
-        this.recordDirtyTracking = value;
-    }
-
-    /**
      * Whether primary key values are deemed to be "updatable" in jOOQ.
      * <p>
      * Setting this to "true" will allow for updating primary key values through
@@ -5248,10 +2833,7 @@ public class Settings
     }
 
     /**
-     * Whether primary key values are deemed to be "updatable" in jOOQ.
-     * <p>
-     * Setting this to "true" will allow for updating primary key values through
-     * UpdatableRecord.store() and UpdatableRecord.update().
+     * Sets the value of the updatablePrimaryKeys property.
      * 
      * @param value
      *     allowed object is
@@ -5275,7 +2857,7 @@ public class Settings
     }
 
     /**
-     * Whether reflection information should be cached in the configuration.
+     * Sets the value of the reflectionCaching property.
      * 
      * @param value
      *     allowed object is
@@ -5299,7 +2881,7 @@ public class Settings
     }
 
     /**
-     * Whether record mappers should be cached in the configuration.
+     * Sets the value of the cacheRecordMappers property.
      * 
      * @param value
      *     allowed object is
@@ -5323,7 +2905,7 @@ public class Settings
     }
 
     /**
-     * Whether parsing connection translations should be cached in the configuration.
+     * Sets the value of the cacheParsingConnection property.
      * 
      * @param value
      *     allowed object is
@@ -5335,7 +2917,7 @@ public class Settings
     }
 
     /**
-     * The default value of the ParsingConnection cache's LRU cache size.
+     * The default implementation of the ParsingConnection cache's LRU cache size.
      * 
      */
     public Integer getCacheParsingConnectionLRUCacheSize() {
@@ -5343,43 +2925,11 @@ public class Settings
     }
 
     /**
-     * The default value of the ParsingConnection cache's LRU cache size.
+     * The default implementation of the ParsingConnection cache's LRU cache size.
      * 
      */
     public void setCacheParsingConnectionLRUCacheSize(Integer value) {
         this.cacheParsingConnectionLRUCacheSize = value;
-    }
-
-    /**
-     * The default value of the RecordMapper cache's LRU cache size.
-     * 
-     */
-    public Integer getCacheRecordMappersLRUCacheSize() {
-        return cacheRecordMappersLRUCacheSize;
-    }
-
-    /**
-     * The default value of the RecordMapper cache's LRU cache size.
-     * 
-     */
-    public void setCacheRecordMappersLRUCacheSize(Integer value) {
-        this.cacheRecordMappersLRUCacheSize = value;
-    }
-
-    /**
-     * The default value of the reflection cache's LRU cache size.
-     * 
-     */
-    public Integer getReflectionCacheLRUCacheSize() {
-        return reflectionCacheLRUCacheSize;
-    }
-
-    /**
-     * The default value of the reflection cache's LRU cache size.
-     * 
-     */
-    public void setReflectionCacheLRUCacheSize(Integer value) {
-        this.reflectionCacheLRUCacheSize = value;
     }
 
     /**
@@ -5395,7 +2945,7 @@ public class Settings
     }
 
     /**
-     * Whether JDBC {@link java.sql.PreparedStatement} instances should be cached in loader API.
+     * Sets the value of the cachePreparedStatementInLoader property.
      * 
      * @param value
      *     allowed object is
@@ -5435,7 +2985,7 @@ public class Settings
     }
 
     /**
-     * Whether warnings should be fetched after each query execution.
+     * Sets the value of the fetchWarnings property.
      * 
      * @param value
      *     allowed object is
@@ -5475,7 +3025,7 @@ public class Settings
     }
 
     /**
-     * Whether calls to store(), insert() and update() should return the identity column.
+     * Sets the value of the returnIdentityOnUpdatableRecord property.
      * 
      * @param value
      *     allowed object is
@@ -5484,54 +3034,6 @@ public class Settings
      */
     public void setReturnIdentityOnUpdatableRecord(Boolean value) {
         this.returnIdentityOnUpdatableRecord = value;
-    }
-
-    /**
-     * Whether calls to store(), insert() and update() should return values for columns that are {@link org.jooq.DataType#defaulted()}.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isReturnDefaultOnUpdatableRecord() {
-        return returnDefaultOnUpdatableRecord;
-    }
-
-    /**
-     * Whether calls to store(), insert() and update() should return values for columns that are {@link org.jooq.DataType#defaulted()}.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setReturnDefaultOnUpdatableRecord(Boolean value) {
-        this.returnDefaultOnUpdatableRecord = value;
-    }
-
-    /**
-     * Whether calls to store(), insert() and update() should return values for columns that are {@link org.jooq.DataType#computed()}.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isReturnComputedOnUpdatableRecord() {
-        return returnComputedOnUpdatableRecord;
-    }
-
-    /**
-     * Whether calls to store(), insert() and update() should return values for columns that are {@link org.jooq.DataType#computed()}.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setReturnComputedOnUpdatableRecord(Boolean value) {
-        this.returnComputedOnUpdatableRecord = value;
     }
 
     /**
@@ -5550,10 +3052,7 @@ public class Settings
     }
 
     /**
-     * Whether calls to store(), insert() and update() should return all columns, not just identity columns.
-     * <p>
-     * Do note that only few databases support this feature. It is supported only in case the INSERT's or UPDATE's
-     * RETURNING clause is fully supported, also for non-IDENTITY columns.
+     * Sets the value of the returnAllOnUpdatableRecord property.
      * 
      * @param value
      *     allowed object is
@@ -5567,7 +3066,7 @@ public class Settings
     /**
      * Whether calls to store(), insert(), update(), and delete() that are called on an UpdatableRecord
      * that is created from a POJO (e.g. in a DAO) should return all Record values to the POJO, including
-     * IDENTITY values, and if {@link #returnAllOnUpdatableRecord} is active, also other values.
+     * IDENTITY values, and if <returnAllOnUpdatableRecord/> is active, also other values.
      * 
      * @return
      *     possible object is
@@ -5579,9 +3078,7 @@ public class Settings
     }
 
     /**
-     * Whether calls to store(), insert(), update(), and delete() that are called on an UpdatableRecord
-     * that is created from a POJO (e.g. in a DAO) should return all Record values to the POJO, including
-     * IDENTITY values, and if {@link #returnAllOnUpdatableRecord} is active, also other values.
+     * Sets the value of the returnRecordToPojo property.
      * 
      * @param value
      *     allowed object is
@@ -5593,7 +3090,7 @@ public class Settings
     }
 
     /**
-     * Whether JPA annotations should be considered by the {@link org.jooq.impl.DefaultRecordMapper}, assuming the <code>jOOQ-jpa-extensions</code> is on the classpath.
+     * Whether JPA annotations should be considered by the DefaultRecordMapper.
      * 
      * @return
      *     possible object is
@@ -5605,7 +3102,7 @@ public class Settings
     }
 
     /**
-     * Whether JPA annotations should be considered by the {@link org.jooq.impl.DefaultRecordMapper}, assuming the <code>jOOQ-jpa-extensions</code> is on the classpath.
+     * Sets the value of the mapJPAAnnotations property.
      * 
      * @param value
      *     allowed object is
@@ -5629,7 +3126,7 @@ public class Settings
     }
 
     /**
-     * Whether constructor parameter names obtained from the {@link java.lang.Record} component names should be considered by the DefaultRecordMapper.
+     * Sets the value of the mapRecordComponentParameterNames property.
      * 
      * @param value
      *     allowed object is
@@ -5641,7 +3138,7 @@ public class Settings
     }
 
     /**
-     * Whether constructor parameter names obtained from the {@link org.jooq.ConstructorPropertiesProvider} SPI (default implementation in the <code>jOOQ-beans-extensions</code> module) should be considered by the DefaultRecordMapper.
+     * Whether constructor parameter names obtained from the {@link java.beans.ConstructorProperties} annotation should be considered by the DefaultRecordMapper.
      * 
      * @return
      *     possible object is
@@ -5653,7 +3150,7 @@ public class Settings
     }
 
     /**
-     * Whether constructor parameter names obtained from the {@link org.jooq.ConstructorPropertiesProvider} SPI (default implementation in the <code>jOOQ-beans-extensions</code> module) should be considered by the DefaultRecordMapper.
+     * Sets the value of the mapConstructorPropertiesParameterNames property.
      * 
      * @param value
      *     allowed object is
@@ -5677,7 +3174,7 @@ public class Settings
     }
 
     /**
-     * Whether constructor parameter names obtained via reflection in Java 8+ should be considered by the DefaultRecordMapper. This flag has no effect in Java 6 or 7.
+     * Sets the value of the mapConstructorParameterNames property.
      * 
      * @param value
      *     allowed object is
@@ -5701,7 +3198,7 @@ public class Settings
     }
 
     /**
-     * Whether constructor parameter names obtained via reflection in Kotlin should be considered by the DefaultRecordMapper. This flag has no effect in Java.
+     * Sets the value of the mapConstructorParameterNamesInKotlin property.
      * 
      * @param value
      *     allowed object is
@@ -5813,7 +3310,7 @@ public class Settings
     }
 
     /**
-     * [#5570] Whether exception stack traces should be enhanced with additional debug information.
+     * Sets the value of the debugInfoOnStackTrace property.
      * 
      * @param value
      *     allowed object is
@@ -5837,7 +3334,7 @@ public class Settings
     }
 
     /**
-     * [#5600] Whether IN lists in IN predicates should be padded to powers of inListPadBase (default 2).
+     * Sets the value of the inListPadding property.
      * 
      * @param value
      *     allowed object is
@@ -5893,7 +3390,7 @@ public class Settings
     }
 
     /**
-     * [#6462] Use only the primary key to emulate MySQL's INSERT .. ON DUPLICATE KEY UPDATE statement. In MySQL, the statement considers all unique keys for duplicates to apply an update rather than an insert. Earlier versions of jOOQ considered only the PRIMARY KEY. This flag can be turned on to maintain backwards compatibility.
+     * Sets the value of the emulateOnDuplicateKeyUpdateOnPrimaryKeyOnly property.
      * 
      * @param value
      *     allowed object is
@@ -5918,108 +3415,6 @@ public class Settings
      */
     public void setEmulateMultiset(NestedCollectionEmulation value) {
         this.emulateMultiset = value;
-    }
-
-    /**
-     * [#13598] Whether nested record projections at the top level should be emulated using the <code>MULTISET</code> emulation rather than the flattening emulation, if supported by the dialect.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isEmulateNestedRecordProjectionsUsingMultisetEmulation() {
-        return emulateNestedRecordProjectionsUsingMultisetEmulation;
-    }
-
-    /**
-     * [#13598] Whether nested record projections at the top level should be emulated using the <code>MULTISET</code> emulation rather than the flattening emulation, if supported by the dialect.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setEmulateNestedRecordProjectionsUsingMultisetEmulation(Boolean value) {
-        this.emulateNestedRecordProjectionsUsingMultisetEmulation = value;
-    }
-
-    /**
-     * [#13418] Whether computed columns should be emulated in the client.
-     * <p>
-     * This can be useful if a schema was generated using a dialect that supports computed columns, but it is
-     * deployed on an RDBMS that does not.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isEmulateComputedColumns() {
-        return emulateComputedColumns;
-    }
-
-    /**
-     * [#13418] Whether computed columns should be emulated in the client.
-     * <p>
-     * This can be useful if a schema was generated using a dialect that supports computed columns, but it is
-     * deployed on an RDBMS that does not.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setEmulateComputedColumns(Boolean value) {
-        this.emulateComputedColumns = value;
-    }
-
-    /**
-     * Whether <code>VIRTUAL</code> client side computed columns should be applied to queries. This feature is available only in commercial distributions.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isComputedOnClientVirtual() {
-        return computedOnClientVirtual;
-    }
-
-    /**
-     * Whether <code>VIRTUAL</code> client side computed columns should be applied to queries. This feature is available only in commercial distributions.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setComputedOnClientVirtual(Boolean value) {
-        this.computedOnClientVirtual = value;
-    }
-
-    /**
-     * Whether <code>STORED</code> client side computed columns should be applied to queries (including audit columns). This feature is available only in commercial distributions.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isComputedOnClientStored() {
-        return computedOnClientStored;
-    }
-
-    /**
-     * Whether <code>STORED</code> client side computed columns should be applied to queries (including audit columns). This feature is available only in commercial distributions.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setComputedOnClientStored(Boolean value) {
-        this.computedOnClientStored = value;
     }
 
     /**
@@ -6087,26 +3482,6 @@ public class Settings
     }
 
     /**
-     * Whether interpreted schema, table, column names, etc should be quoted.
-     * <p>
-     * This setting does not affect any plain SQL usage.
-     * 
-     */
-    public InterpreterQuotedNames getInterpreterQuotedNames() {
-        return interpreterQuotedNames;
-    }
-
-    /**
-     * Whether interpreted schema, table, column names, etc should be quoted.
-     * <p>
-     * This setting does not affect any plain SQL usage.
-     * 
-     */
-    public void setInterpreterQuotedNames(InterpreterQuotedNames value) {
-        this.interpreterQuotedNames = value;
-    }
-
-    /**
      * The Locale to be used with any interpreter locale dependent logic, defaulting to {@link #getLocale()}.
      * 
      */
@@ -6135,7 +3510,7 @@ public class Settings
     }
 
     /**
-     * Using this flag, the interpreter will be able to delay the addition of foreign key declarations until the end of the interpretation run.
+     * Sets the value of the interpreterDelayForeignKeyDeclarations property.
      * 
      * @param value
      *     allowed object is
@@ -6144,22 +3519,6 @@ public class Settings
      */
     public void setInterpreterDelayForeignKeyDeclarations(Boolean value) {
         this.interpreterDelayForeignKeyDeclarations = value;
-    }
-
-    /**
-     * [#18500] Whether the interpreter should perform meta lookups in the already interpreted meta data.
-     * 
-     */
-    public InterpreterWithMetaLookups getInterpreterWithMetaLookups() {
-        return interpreterWithMetaLookups;
-    }
-
-    /**
-     * [#18500] Whether the interpreter should perform meta lookups in the already interpreted meta data.
-     * 
-     */
-    public void setInterpreterWithMetaLookups(InterpreterWithMetaLookups value) {
-        this.interpreterWithMetaLookups = value;
     }
 
     /**
@@ -6175,7 +3534,7 @@ public class Settings
     }
 
     /**
-     * The {@link org.jooq.Meta} implementation that is backed by {@link java.sql.DatabaseMetaData} does not produce system generated indexes on constraints, by default.
+     * Sets the value of the metaIncludeSystemIndexes property.
      * 
      * @param value
      *     allowed object is
@@ -6199,7 +3558,7 @@ public class Settings
     }
 
     /**
-     * The {@link org.jooq.Meta} implementation that is backed by {@link java.sql.DatabaseMetaData} does not produce system generated sequences, by default.
+     * Sets the value of the metaIncludeSystemSequences property.
      * 
      * @param value
      *     allowed object is
@@ -6211,102 +3570,6 @@ public class Settings
     }
 
     /**
-     * The database schema where the migration history is located.
-     * 
-     */
-    public MigrationSchema getMigrationHistorySchema() {
-        return migrationHistorySchema;
-    }
-
-    /**
-     * The database schema where the migration history is located.
-     * 
-     */
-    public void setMigrationHistorySchema(MigrationSchema value) {
-        this.migrationHistorySchema = value;
-    }
-
-    /**
-     * Whether {@link #getMigrationHistorySchema()} should be created if it doesn't exist.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isMigrationHistorySchemaCreateSchemaIfNotExists() {
-        return migrationHistorySchemaCreateSchemaIfNotExists;
-    }
-
-    /**
-     * Whether {@link #getMigrationHistorySchema()} should be created if it doesn't exist.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setMigrationHistorySchemaCreateSchemaIfNotExists(Boolean value) {
-        this.migrationHistorySchemaCreateSchemaIfNotExists = value;
-    }
-
-    /**
-     * The default schema whose unqualified objects that are included in the migration.
-     * 
-     */
-    public MigrationSchema getMigrationDefaultSchema() {
-        return migrationDefaultSchema;
-    }
-
-    /**
-     * The default schema whose unqualified objects that are included in the migration.
-     * 
-     */
-    public void setMigrationDefaultSchema(MigrationSchema value) {
-        this.migrationDefaultSchema = value;
-    }
-
-    /**
-     * Whether {@link #getMigrationSchemata()} should be created if they don't exist.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isMigrationSchemataCreateSchemaIfNotExists() {
-        return migrationSchemataCreateSchemaIfNotExists;
-    }
-
-    /**
-     * Whether {@link #getMigrationSchemata()} should be created if they don't exist.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setMigrationSchemataCreateSchemaIfNotExists(Boolean value) {
-        this.migrationSchemataCreateSchemaIfNotExists = value;
-    }
-
-    /**
-     * The default {@link org.jooq.ContentType} that is used when loading migrations.
-     * 
-     */
-    public MigrationDefaultContentType getMigrationDefaultContentType() {
-        return migrationDefaultContentType;
-    }
-
-    /**
-     * The default {@link org.jooq.ContentType} that is used when loading migrations.
-     * 
-     */
-    public void setMigrationDefaultContentType(MigrationDefaultContentType value) {
-        this.migrationDefaultContentType = value;
-    }
-
-    /**
      * Whether migrations are allowed to be executed in inverse order.<p><strong>This is a potentially destructive feature, which should not be turned on in production</strong>. It is useful mostly to quickly switch between branches in a development environment. This feature is available only in commercial distributions.
      * 
      * @return
@@ -6314,164 +3577,20 @@ public class Settings
      *     {@link Boolean }
      *     
      */
-    public Boolean isMigrationAllowUndo() {
-        return migrationAllowUndo;
+    public Boolean isMigrationAllowsUndo() {
+        return migrationAllowsUndo;
     }
 
     /**
-     * Whether migrations are allowed to be executed in inverse order.<p><strong>This is a potentially destructive feature, which should not be turned on in production</strong>. It is useful mostly to quickly switch between branches in a development environment. This feature is available only in commercial distributions.
+     * Sets the value of the migrationAllowsUndo property.
      * 
      * @param value
      *     allowed object is
      *     {@link Boolean }
      *     
      */
-    public void setMigrationAllowUndo(Boolean value) {
-        this.migrationAllowUndo = value;
-    }
-
-    /**
-     * Whether migrations to invalid commits ({@link org.jooq.Commit#valid()}) are allowed. <p><strong>This is a potentially destructive feature, which should not be turned on in production</strong>. It is useful mostly to quickly test uncommited or inconsistent changes in development.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isMigrationAllowInvalidCommits() {
-        return migrationAllowInvalidCommits;
-    }
-
-    /**
-     * Whether migrations to invalid commits ({@link org.jooq.Commit#valid()}) are allowed. <p><strong>This is a potentially destructive feature, which should not be turned on in production</strong>. It is useful mostly to quickly test uncommited or inconsistent changes in development.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setMigrationAllowInvalidCommits(Boolean value) {
-        this.migrationAllowInvalidCommits = value;
-    }
-
-    /**
-     * Whether migrations are allowed to rename objects based on heuristics. <p><strong>Turning this flag off is potentially destructive. Please always check your generated migration output with integration tests!</strong>
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isMigrationAllowRename() {
-        return migrationAllowRename;
-    }
-
-    /**
-     * Whether migrations are allowed to rename objects based on heuristics. <p><strong>Turning this flag off is potentially destructive. Please always check your generated migration output with integration tests!</strong>
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setMigrationAllowRename(Boolean value) {
-        this.migrationAllowRename = value;
-    }
-
-    /**
-     * Whether migrations are allowed to rename constraints based on heuristics.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isMigrationAllowRenameConstraints() {
-        return migrationAllowRenameConstraints;
-    }
-
-    /**
-     * Whether migrations are allowed to rename constraints based on heuristics.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setMigrationAllowRenameConstraints(Boolean value) {
-        this.migrationAllowRenameConstraints = value;
-    }
-
-    /**
-     * Whether migrations are allowed to rename indexes based on heuristics.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isMigrationAllowRenameIndexes() {
-        return migrationAllowRenameIndexes;
-    }
-
-    /**
-     * Whether migrations are allowed to rename indexes based on heuristics.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setMigrationAllowRenameIndexes(Boolean value) {
-        this.migrationAllowRenameIndexes = value;
-    }
-
-    /**
-     * Whether migrations are allowed to rename tables based on heuristics. <p><strong>Turning this flag off is potentially destructive. Please always check your generated migration output with integration tests!</strong>
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isMigrationAllowRenameTables() {
-        return migrationAllowRenameTables;
-    }
-
-    /**
-     * Whether migrations are allowed to rename tables based on heuristics. <p><strong>Turning this flag off is potentially destructive. Please always check your generated migration output with integration tests!</strong>
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setMigrationAllowRenameTables(Boolean value) {
-        this.migrationAllowRenameTables = value;
-    }
-
-    /**
-     * Whether migrations are allowed to rename columns based on heuristics. <p><strong>Turning this flag off is potentially destructive. Please always check your generated migration output with integration tests!</strong>
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isMigrationAllowRenameColumns() {
-        return migrationAllowRenameColumns;
-    }
-
-    /**
-     * Whether migrations are allowed to rename columns based on heuristics. <p><strong>Turning this flag off is potentially destructive. Please always check your generated migration output with integration tests!</strong>
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setMigrationAllowRenameColumns(Boolean value) {
-        this.migrationAllowRenameColumns = value;
+    public void setMigrationAllowsUndo(Boolean value) {
+        this.migrationAllowsUndo = value;
     }
 
     /**
@@ -6487,7 +3606,7 @@ public class Settings
     }
 
     /**
-     * Whether migrations revert any untracked changes in the schemas that are being migrated.<p><strong>This is a potentially destructive feature, which should not be turned on in production</strong>. It is useful mostly to quickly revert any elements created in a development environment. This feature is available only in commercial distributions.
+     * Sets the value of the migrationRevertUntracked property.
      * 
      * @param value
      *     allowed object is
@@ -6499,27 +3618,51 @@ public class Settings
     }
 
     /**
-     * Whether a migration automatically runs a verification first.
+     * Whether to automatically existing schemas that are not yet managed by jOOQ Migrations.
      * 
      * @return
      *     possible object is
      *     {@link Boolean }
      *     
      */
-    public Boolean isMigrationAutoVerification() {
-        return migrationAutoVerification;
+    public Boolean isMigrationAutoBaseline() {
+        return migrationAutoBaseline;
     }
 
     /**
-     * Whether a migration automatically runs a verification first.
+     * Sets the value of the migrationAutoBaseline property.
      * 
      * @param value
      *     allowed object is
      *     {@link Boolean }
      *     
      */
-    public void setMigrationAutoVerification(Boolean value) {
-        this.migrationAutoVerification = value;
+    public void setMigrationAutoBaseline(Boolean value) {
+        this.migrationAutoBaseline = value;
+    }
+
+    /**
+     * Whether a migration automatically runs a validation first.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isMigrationAutoValidation() {
+        return migrationAutoValidation;
+    }
+
+    /**
+     * Sets the value of the migrationAutoValidation property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setMigrationAutoValidation(Boolean value) {
+        this.migrationAutoValidation = value;
     }
 
     /**
@@ -6535,7 +3678,7 @@ public class Settings
     }
 
     /**
-     * Various <code>migrateTo()</code> methods (e.g. {@link org.jooq.Meta#migrateTo(org.jooq.Meta)}) ignore the difference between <code>TIMESTAMP</code> and <code>TIMESTAMP(6)</code>, if 6 is the default precision for timestamps on the configured dialect.
+     * Sets the value of the migrationIgnoreDefaultTimestampPrecisionDiffs property.
      * 
      * @param value
      *     allowed object is
@@ -6544,54 +3687,6 @@ public class Settings
      */
     public void setMigrationIgnoreDefaultTimestampPrecisionDiffs(Boolean value) {
         this.migrationIgnoreDefaultTimestampPrecisionDiffs = value;
-    }
-
-    /**
-     * Various <code>migrateTo()</code> methods (e.g. {@link org.jooq.Meta#migrateTo(org.jooq.Meta)}) ignore the difference between (possibly synthetically) name constraints and unnamed constraints, if the structure of the constraint is the same.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isMigrationIgnoreUnnamedConstraintDiffs() {
-        return migrationIgnoreUnnamedConstraintDiffs;
-    }
-
-    /**
-     * Various <code>migrateTo()</code> methods (e.g. {@link org.jooq.Meta#migrateTo(org.jooq.Meta)}) ignore the difference between (possibly synthetically) name constraints and unnamed constraints, if the structure of the constraint is the same.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setMigrationIgnoreUnnamedConstraintDiffs(Boolean value) {
-        this.migrationIgnoreUnnamedConstraintDiffs = value;
-    }
-
-    /**
-     * Various <code>migrateTo()</code> methods (e.g. {@link org.jooq.Meta#migrateTo(org.jooq.Meta)}) ignore the presence or absence of implicit <code>NOT NULL</code> constraints on <code>PRIMARY KEY</code> columns if the constraint is really implicit for a given dialect. This flag allows for overriding this behaviour.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isMigrationIgnoreImplicitPrimaryKeyNotNullConstraints() {
-        return migrationIgnoreImplicitPrimaryKeyNotNullConstraints;
-    }
-
-    /**
-     * Various <code>migrateTo()</code> methods (e.g. {@link org.jooq.Meta#migrateTo(org.jooq.Meta)}) ignore the presence or absence of implicit <code>NOT NULL</code> constraints on <code>PRIMARY KEY</code> columns if the constraint is really implicit for a given dialect. This flag allows for overriding this behaviour.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setMigrationIgnoreImplicitPrimaryKeyNotNullConstraints(Boolean value) {
-        this.migrationIgnoreImplicitPrimaryKeyNotNullConstraints = value;
     }
 
     /**
@@ -6781,7 +3876,7 @@ public class Settings
     }
 
     /**
-     * [#9780] Whether commands of the type <code>SET key = value</code> should be parsed rather than ignored.
+     * Sets the value of the parseSetCommands property.
      * 
      * @param value
      *     allowed object is
@@ -6837,7 +3932,7 @@ public class Settings
     }
 
     /**
-     * [#13109] Whether the parser of the jOOQ Open Source Edition should ignore commercial only features, rather than failing.
+     * Sets the value of the parseIgnoreCommercialOnlyFeatures property.
      * 
      * @param value
      *     allowed object is
@@ -6861,7 +3956,7 @@ public class Settings
     }
 
     /**
-     * [#8325] Whether the parser should ignore content between ignore comment tokens.
+     * Sets the value of the parseIgnoreComments property.
      * 
      * @param value
      *     allowed object is
@@ -6905,118 +4000,6 @@ public class Settings
     }
 
     /**
-     * [#8325] Whether the parser should parse content between plain SQL template comment tokens into a plain SQL template, with {@link org.jooq.impl.DSL#sql(String)} semantics.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isParsePlainSQLTemplateComments() {
-        return parsePlainSQLTemplateComments;
-    }
-
-    /**
-     * [#8325] Whether the parser should parse content between plain SQL template comment tokens into a plain SQL template, with {@link org.jooq.impl.DSL#sql(String)} semantics.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setParsePlainSQLTemplateComments(Boolean value) {
-        this.parsePlainSQLTemplateComments = value;
-    }
-
-    /**
-     * [#8325] The plain SQL template comment start token
-     * 
-     */
-    public String getParsePlainSQLTemplateCommentStart() {
-        return parsePlainSQLTemplateCommentStart;
-    }
-
-    /**
-     * [#8325] The plain SQL template comment start token
-     * 
-     */
-    public void setParsePlainSQLTemplateCommentStart(String value) {
-        this.parsePlainSQLTemplateCommentStart = value;
-    }
-
-    /**
-     * [#8325] The plain SQL template comment stop token
-     * 
-     */
-    public String getParsePlainSQLTemplateCommentStop() {
-        return parsePlainSQLTemplateCommentStop;
-    }
-
-    /**
-     * [#8325] The plain SQL template comment stop token
-     * 
-     */
-    public void setParsePlainSQLTemplateCommentStop(String value) {
-        this.parsePlainSQLTemplateCommentStop = value;
-    }
-
-    /**
-     * [#8325] Whether the parser should parse content between raw comment tokens into a raw template, with {@link org.jooq.impl.DSL#raw(String)} semantics.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isParseRawSQLComments() {
-        return parseRawSQLComments;
-    }
-
-    /**
-     * [#8325] Whether the parser should parse content between raw comment tokens into a raw template, with {@link org.jooq.impl.DSL#raw(String)} semantics.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setParseRawSQLComments(Boolean value) {
-        this.parseRawSQLComments = value;
-    }
-
-    /**
-     * [#8325] The raw comment start token
-     * 
-     */
-    public String getParseRawSQLCommentStart() {
-        return parseRawSQLCommentStart;
-    }
-
-    /**
-     * [#8325] The raw comment start token
-     * 
-     */
-    public void setParseRawSQLCommentStart(String value) {
-        this.parseRawSQLCommentStart = value;
-    }
-
-    /**
-     * [#8325] The raw comment stop token
-     * 
-     */
-    public String getParseRawSQLCommentStop() {
-        return parseRawSQLCommentStop;
-    }
-
-    /**
-     * [#8325] The raw comment stop token
-     * 
-     */
-    public void setParseRawSQLCommentStop(String value) {
-        this.parseRawSQLCommentStop = value;
-    }
-
-    /**
      * [#12538] Whether the parser should retain comments and whitespace between queries when parsing multiple queries through {@link org.jooq.Parser#parse(String)}.
      * <p>
      * jOOQ's query object model doesn't have a way to represent comments
@@ -7035,13 +4018,7 @@ public class Settings
     }
 
     /**
-     * [#12538] Whether the parser should retain comments and whitespace between queries when parsing multiple queries through {@link org.jooq.Parser#parse(String)}.
-     * <p>
-     * jOOQ's query object model doesn't have a way to represent comments
-     * or other whitespace, and as such, the parser simply skips them by default.
-     * However, it may be desirable to retain comments before or in between top
-     * level queries, when parsing multiple such queries in a script. Comments
-     * inside of queries (including procedural statements) are still not supported.
+     * Sets the value of the parseRetainCommentsBetweenQueries property.
      * 
      * @param value
      *     allowed object is
@@ -7065,7 +4042,7 @@ public class Settings
     }
 
     /**
-     * [#8469] Whether to parse default expressions retrieved from {@link java.sql.DatabaseMetaData}.
+     * Sets the value of the parseMetaDefaultExpressions property.
      * 
      * @param value
      *     allowed object is
@@ -7074,50 +4051,6 @@ public class Settings
      */
     public void setParseMetaDefaultExpressions(Boolean value) {
         this.parseMetaDefaultExpressions = value;
-    }
-
-    /**
-     * [#8469] Whether to parse view sources retrieved from {@link java.sql.DatabaseMetaData}.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isParseMetaViewSources() {
-        return parseMetaViewSources;
-    }
-
-    /**
-     * [#8469] Whether to parse view sources retrieved from {@link java.sql.DatabaseMetaData}.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setParseMetaViewSources(Boolean value) {
-        this.parseMetaViewSources = value;
-    }
-
-    /**
-     * [#18679] The behaviour when formatting values with {@link org.jooq.DataType#redacted()}.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Redact getRedact() {
-        return redact;
-    }
-
-    /**
-     * [#18679] The behaviour when formatting values with {@link org.jooq.DataType#redacted()}.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public void setRedact(Redact value) {
-        this.redact = value;
     }
 
     /**
@@ -7197,7 +4130,7 @@ public class Settings
     }
 
     /**
-     * [#7963] Apply workaround for ORA-04043 when inserting into Oracle tables with qualified, quoted identifiers, and fetching generated keys
+     * Sets the value of the applyWorkaroundFor7962 property.
      * 
      * @param value
      *     allowed object is
@@ -7206,22 +4139,6 @@ public class Settings
      */
     public void setApplyWorkaroundFor7962(Boolean value) {
         this.applyWorkaroundFor7962 = value;
-    }
-
-    /**
-     * [#15286] The warning level when the deprecated static type registry was accessed by legacy code.
-     * 
-     */
-    public Warning getWarnOnStaticTypeRegistryAccess() {
-        return warnOnStaticTypeRegistryAccess;
-    }
-
-    /**
-     * [#15286] The warning level when the deprecated static type registry was accessed by legacy code.
-     * 
-     */
-    public void setWarnOnStaticTypeRegistryAccess(Warning value) {
-        this.warnOnStaticTypeRegistryAccess = value;
     }
 
     public List<InterpreterSearchSchema> getInterpreterSearchPath() {
@@ -7257,59 +4174,18 @@ public class Settings
         this.parseSearchPath = parseSearchPath;
     }
 
-    /**
-     * Historically, zero-scale decimal types are generated as their most appropriate, corresponding integer type (e.g. NUMBER(2, 0) and less: Byte). The same behaviour is replicated in the {@link org.jooq.Meta} API. This flag allows for turning off this feature.
-     * 
-     */
     public Settings withForceIntegerTypesOnZeroScaleDecimals(Boolean value) {
         setForceIntegerTypesOnZeroScaleDecimals(value);
         return this;
     }
 
-    /**
-     * Whether any catalog name should be rendered at all.
-     * <p>
-     * Use this for single-catalog environments, or when all objects are made
-     * available using synonyms
-     * 
-     */
     public Settings withRenderCatalog(Boolean value) {
         setRenderCatalog(value);
         return this;
     }
 
-    /**
-     * Whether any schema name should be rendered at all.
-     * <p>
-     * Setting this to false also implicitly sets "renderCatalog" to false.
-     * <p>
-     * Use this for single-schema environments, or when all objects are made
-     * available using synonyms
-     * 
-     */
     public Settings withRenderSchema(Boolean value) {
         setRenderSchema(value);
-        return this;
-    }
-
-    /**
-     * Whether any table name qualification should be rendered at all on columns.
-     * <p>
-     * Setting when tables aren't rendered, then implicitly, schemas and catalogs aren't rendered either.
-     * <p>
-     * The following values are available:
-     * <ul>
-     * <li>{@link RenderTable#ALWAYS}: The default, which should always be preferred. Columns are always qualified with their tables, where possible.</li>
-     * <li>{@link RenderTable#WHEN_MULTIPLE_TABLES}: The simplest option to reduce generated query verbosity, avoiding table qualification only in queries with a single table in the <code>FROM</code> clause.</li>
-     * <li>{@link RenderTable#WHEN_AMBIGUOUS_COLUMNS}: A much more expensive to compute option that checks the <code>FROM</code> clause for ambiguous column names, in case of which columns are qualified.</li>
-     * <li>{@link RenderTable#NEVER}: Always turn off table qualification.</li>
-     * </ul>
-     * <p>
-     * Use this when verbosity of rendered SQL is a problem.
-     * 
-     */
-    public Settings withRenderTable(RenderTable value) {
-        setRenderTable(value);
         return this;
     }
 
@@ -7325,6 +4201,8 @@ public class Settings
 
     /**
      * Whether rendered schema, table, column names, etc should be quoted.
+     * <p>
+     * This only affects names created through {@link org.jooq.impl.DSL#name(String)} methods (including those that are implicitly created through this method), not {@link org.jooq.impl.DSL#quotedName(String)} or {@link org.jooq.impl.DSL#unquotedName(String)}, whose behaviour cannot be overridden.
      * <p>
      * This setting does not affect any plain SQL usage.
      * 
@@ -7409,10 +4287,6 @@ public class Settings
         return this;
     }
 
-    /**
-     * Whether rendered SQL should be pretty-printed.
-     * 
-     */
     public Settings withRenderFormatted(Boolean value) {
         setRenderFormatted(value);
         return this;
@@ -7424,28 +4298,6 @@ public class Settings
      */
     public Settings withRenderFormatting(RenderFormatting value) {
         setRenderFormatting(value);
-        return this;
-    }
-
-    /**
-     * Whether to wrap String typed bind values with NULLIF(?, '') for Oracle compatibility.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withRenderNullifEmptyStringForBindValues(Boolean value) {
-        setRenderNullifEmptyStringForBindValues(value);
-        return this;
-    }
-
-    /**
-     * Whether to auto-alias expressions in derived tables.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withRenderAutoAliasedDerivedTableExpressions(AutoAliasExpressions value) {
-        setRenderAutoAliasedDerivedTableExpressions(value);
         return this;
     }
 
@@ -7503,42 +4355,17 @@ public class Settings
         return this;
     }
 
-    /**
-     * Whether stored function calls should be wrapped in scalar subqueries.
-     * <p>
-     * Oracle 11g (and potentially, other databases too) implements scalar subquery caching. With this flag
-     * set to true, users can automatically profit from this feature in all SQL statements.
-     * 
-     */
     public Settings withRenderScalarSubqueriesForStoredFunctions(Boolean value) {
         setRenderScalarSubqueriesForStoredFunctions(value);
         return this;
     }
 
     /**
-     * The join type to be generated by implicit joins for to-one paths in {@link org.jooq.Select} queries.
-     * <p>
-     * The <code>DEFAULT</code> is dependent on the nullability of the foreign key (<code>LEFT_JOIN</code>
-     * for nullable foreign keys and <code>INNER_JOIN</code> for non-nullable foreign keys). In DML statements,
-     * it is always <code>SCALAR_SUBQUERY</code>, unless DML joins are supported.
+     * The join type to be generated by implicit joins.
      * 
      */
     public Settings withRenderImplicitJoinType(RenderImplicitJoinType value) {
         setRenderImplicitJoinType(value);
-        return this;
-    }
-
-    /**
-     * The join type to be generated by implicit joins for to-many paths in {@link org.jooq.Select} queries.
-     * <p>
-     * The <code>DEFAULT</code> is <code>SCALAR_SUBQUERY</code> if the join path is implicit only, i.e. absent from
-     * the <code>FROM</code> clause, to prevent accidental cartesian products, or <code>LEFT_JOIN</code> if declared
-     * explicitly in the <code>FROM</code> clause. In DML statements, it is always <code>SCALAR_SUBQUERY</code>,
-     * unless DML joins are supported.
-     * 
-     */
-    public Settings withRenderImplicitJoinToManyType(RenderImplicitJoinType value) {
-        setRenderImplicitJoinToManyType(value);
         return this;
     }
 
@@ -7551,143 +4378,28 @@ public class Settings
         return this;
     }
 
-    /**
-     * Whether string concatenation operands should be coalesced to empty strings.
-     * <p>
-     * Some dialects treat <code>NULL</code> values as empty strings when concatenating strings (e.g. Oracle). For
-     * compatibility reasons, this flag allows for replicating this behaviour also elsewhere.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withRenderCoalesceToEmptyStringInConcat(Boolean value) {
         setRenderCoalesceToEmptyStringInConcat(value);
         return this;
     }
 
-    /**
-     * Whether an additional <code>ORDER BY rn</code> clause should be rendered on emulated paginated queries.
-     * <p>
-     * Older databases did not support OFFSET .. FETCH pagination, so jOOQ emulates it using derived
-     * tables and <code>ROWNUM</code> (Oracle 11g and older) or <code>ROW_NUMBER()</code> (e.g. DB2, 
-     * SQL Server, etc.) filtering. While these subqueries are ordered, the ordering is not 
-     * <em>guaranteed</em> to be stable in the outer most queries. It may be stable (and e.g. in Oracle, 
-     * it mostly is, if queries are not parallel, or joined to other queries, etc.), so the excess 
-     * <code>ORDER BY</code> clause may add some additional performance overhead. This setting forces 
-     * jOOQ to not generate the additional <code>ORDER BY</code> clause.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/7609">https://github.com/jOOQ/jOOQ/issues/7609</a>.
-     * 
-     */
     public Settings withRenderOrderByRownumberForEmulatedPagination(Boolean value) {
         setRenderOrderByRownumberForEmulatedPagination(value);
         return this;
     }
 
-    /**
-     * Whether the jOOQ <code>RETURNING</code> clause should map to SQL Server's <code>OUTPUT</code> clause.
-     * <p>
-     * SQL Server supports an <code>OUTPUT</code> clause in most DML statements, whose behaviour
-     * is almost identical to <code>RETURNING</code> in Firebird, Oracle, PostgreSQL. Users who
-     * want to prevent jOOQ from rendering this <code>OUTPUT</code> clause can deactivate this flag
-     * to revert to jOOQ calling {@code java.sql.Statement#getGeneratedKeys()} instead, which
-     * is only supported for single row inserts.
-     * <p>
-     * This <code>OUTPUT</code> clause does not support fetching trigger generated values. In order
-     * to fetch trigger generated values, {@link #fetchTriggerValuesAfterReturning} needs to
-     * be enabled as well.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/4498">https://github.com/jOOQ/jOOQ/issues/4498</a>.
-     * 
-     */
     public Settings withRenderOutputForSQLServerReturningClause(Boolean value) {
         setRenderOutputForSQLServerReturningClause(value);
         return this;
     }
 
-    /**
-     * Whether the jOOQ <code>GROUP_CONCAT</code> function should be overflow-protected by setting the <code>@@group_concat_max_len</code> session variable in MySQL style database systems.
-     * <p>
-     * MySQL truncates <code>GROUP_CONCAT</code> results after a certain length, which may be way
-     * too small for jOOQ's usage, especially when using the <code>MULTISET</code> emulation. By
-     * default, jOOQ sets a session variable to the highest possible value prior to executing a
-     * query containing <code>GROUP_CONCAT</code>. This flag can be used to opt out of this.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/12092">https://github.com/jOOQ/jOOQ/issues/12092</a>.
-     * 
-     */
     public Settings withRenderGroupConcatMaxLenSessionVariable(Boolean value) {
         setRenderGroupConcatMaxLenSessionVariable(value);
         return this;
     }
 
-    /**
-     * Whether queries combined with set operators (e.g. UNION and UNION ALL) should always be surrounded by a parenthesis pair.
-     * <p>
-     * By default (i.e. when this setting is set to <code>false</code> jOOQ will only render parenthesis pairs around queries combined with set operators when required.
-     * This is for example the case when set operators are nested, when non-associative operators like EXCEPT are used, or when the queries are rendered as derived tables.
-     * <p>
-     * When this setting is set to <code>true</code> the queries combined with set operators will always be surrounded by a parenthesis pair.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/3676">https://github.com/jOOQ/jOOQ/issues/3676</a> and <a href="https://github.com/jOOQ/jOOQ/issues/9751">https://github.com/jOOQ/jOOQ/issues/9751</a>.
-     * 
-     */
     public Settings withRenderParenthesisAroundSetOperationQueries(Boolean value) {
         setRenderParenthesisAroundSetOperationQueries(value);
-        return this;
-    }
-
-    /**
-     * Whether emulations that require repeating expressions should render variables for those expressions in derived tables.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/14065">https://github.com/jOOQ/jOOQ/issues/14065</a>.
-     * 
-     */
-    public Settings withRenderVariablesInDerivedTablesForEmulations(Boolean value) {
-        setRenderVariablesInDerivedTablesForEmulations(value);
-        return this;
-    }
-
-    /**
-     * Whether a <code>(a, b) < (:a, :b)</code> row predicate should be rendered for the <code>SEEK</code> clause.
-     * <p>
-     * Some RDBMS may support <code>(a, b) < (:a, :b)</code> row predicate syntax, which is very convenient for <code>SEEK</code> clause implementations, but fail to optimise this predicate as could be expected.
-     * This flag allows for expanding the predicate to the much more verbose, but equivalent <code>(a < :a) OR (a = :a AND b < :b)</code>. Dialects without native support for row predicates aren't affected
-     * by this flag.
-     * 
-     */
-    public Settings withRenderRowConditionForSeekClause(Boolean value) {
-        setRenderRowConditionForSeekClause(value);
-        return this;
-    }
-
-    /**
-     * Whether a redundant <code>(a <= :a)</code> predicate should be rendered for a <code>(a, b) < (:a, :b)</code> predicate for the <code>SEEK</code> clause.
-     * <p>
-     * Some RDBMS may not be able to properly optimise <code>(a, b) < ('a', 'b')</code> or <code>(a < 'a') OR (a = 'a' AND b < 'b')</code>, and choose an appropriate index. By adding an additional redundant predicate,
-     * jOOQ may help the optimiser, e.g. <code>(a <= :a) AND (a, b) < ('a', 'b')</code> or <code>(a <= :a) AND ((a < 'a') OR (a = 'a' AND b < 'b'))</code>
-     * 
-     */
-    public Settings withRenderRedundantConditionForSeekClause(Boolean value) {
-        setRenderRedundantConditionForSeekClause(value);
-        return this;
-    }
-
-    /**
-     * Whether plain SQL templates ({@link org.jooq.SQL}) are rendered as raw string content.
-     * 
-     */
-    public Settings withRenderPlainSQLTemplatesAsRaw(Boolean value) {
-        setRenderPlainSQLTemplatesAsRaw(value);
-        return this;
-    }
-
-    /**
-     * The token to place between the <code>$$</code> signs of a PostgreSQL dollar quoted string generated by jOOQ.
-     * 
-     */
-    public Settings withRenderDollarQuotedStringToken(String value) {
-        setRenderDollarQuotedStringToken(value);
         return this;
     }
 
@@ -7696,12 +4408,12 @@ public class Settings
      * <p>
      * A few hierarchical mapping features work with paths encoded in names (specifically field aliases), such as the reflective mapping of nested values when aliasing fields as:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT 
      *   a.first_name AS "book.author.firstName"
      *   a.last_name AS "book.author.lastName"
      * FROM ...
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Not all dialects support "." in identifiers. This setting allows for specifying an alternative String to use as separator, e.g. "__".
      * 
@@ -7711,84 +4423,18 @@ public class Settings
         return this;
     }
 
-    /**
-     * Whether the <code>java.time</code> (JSR 310) type {@link java.time.OffsetDateTime} should be bound natively to JDBC.
-     * <p>
-     * Historically, jOOQ encoded the <code>java.time</code> types as strings to offer better compatibility with older JDBC drivers. By now, most drivers should support the <code>java.time</code> types. Using them may produce better performance both on the server and on the client side.
-     * <p>
-     * This flag allows for reverting to pre-jOOQ 3.14 behaviour, where the default is to bind these types natively.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/9902">https://github.com/jOOQ/jOOQ/issues/9902</a>.
-     * 
-     */
     public Settings withBindOffsetDateTimeType(Boolean value) {
         setBindOffsetDateTimeType(value);
         return this;
     }
 
-    /**
-     * Whether the <code>java.time</code> (JSR 310) type {@link java.time.OffsetTime} should be bound natively to JDBC.
-     * <p>
-     * Historically, jOOQ encoded the <code>java.time</code> types as strings to offer better compatibility with older JDBC drivers. By now, most drivers should support the <code>java.time</code> types. Using them may produce better performance both on the server and on the client side.
-     * <p>
-     * This flag allows for reverting to pre-jOOQ 3.14 behaviour, where the default is to bind these types natively.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/9902">https://github.com/jOOQ/jOOQ/issues/9902</a>.
-     * 
-     */
     public Settings withBindOffsetTimeType(Boolean value) {
         setBindOffsetTimeType(value);
         return this;
     }
 
-    /**
-     * Whether right trim fetched <code>CHAR</code> typed strings from JDBC {@link java.sql.ResultSet}.
-     * <p>
-     * By default, jOOQ's internal {@link String} data type {@link org.jooq.Binding} fetched strings
-     * as returned by JDBC. With this flag enabled, jOOQ will always right-trim <code>CHAR</code> 
-     * typed strings, which can be useful in database products that will often use this historic
-     * fixed length string type, especially in dictionary views.
-     * 
-     */
-    public Settings withFetchTrimmedCharValues(Boolean value) {
-        setFetchTrimmedCharValues(value);
-        return this;
-    }
-
-    /**
-     * Fetch trigger values after SQL Server <code>OUTPUT</code> clause.
-     * <p>
-     * SQL Server <code>OUTPUT</code> statements do not support fetching trigger generated values.
-     * This is a limitation of the {@link #renderOutputForSQLServerReturningClause}. An additional
-     * <code>MERGE</code> statement can run a second query if (and only if) the primary key has been
-     * included in the <code>OUTPUT</code> clause.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/4498">https://github.com/jOOQ/jOOQ/issues/4498</a>.
-     * <p>
-     * @deprecated - 3.18.0 - [#13912] [#15316] - Use {@link #fetchTriggerValuesAfterReturning} instead.
-     * 
-     */
     public Settings withFetchTriggerValuesAfterSQLServerOutput(Boolean value) {
         setFetchTriggerValuesAfterSQLServerOutput(value);
-        return this;
-    }
-
-    /**
-     * Fetch trigger values after a <code>RETURNING</code> clause in dialects that don't have native support for this.
-     * <p>
-     * SQL Server <code>OUTPUT</code> clauses do not support fetching trigger generated values.
-     * Neither do SQLite <code>RETURNING</code> clauses. An additional
-     * <code>MERGE</code> statement can run a second query if (and only if) the primary key has been
-     * included in the <code>OUTPUT</code> clause.
-     * <p>
-     * Trigger meta data is only available in jOOQ's commercial editions. If setting this flag to
-     * <code>WHEN_NEEDED</code> in the jOOQ Open Source Edition, jOOQ will assume triggers are present.
-     * <p>
-     * For details, see <a href="https://github.com/jOOQ/jOOQ/issues/4498">https://github.com/jOOQ/jOOQ/issues/4498</a>.
-     * 
-     */
-    public Settings withFetchTriggerValuesAfterReturning(FetchTriggerValuesAfterReturning value) {
-        setFetchTriggerValuesAfterReturning(value);
         return this;
     }
 
@@ -7810,1127 +4456,171 @@ public class Settings
         return this;
     }
 
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#duplicateStatements(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     */
-    public Settings withDiagnosticsDuplicateStatements(Boolean value) {
-        setDiagnosticsDuplicateStatements(value);
-        return this;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#duplicateStatements(org.jooq.DiagnosticsContext)} diagnostic with the {@link #transformPatterns} feature activated.
-     * <p>
-     * When transforming patterns, many more complex, duplicate SQL statements can be recognised than if simply
-     * parsing and re-rendering the statement. This flag turns on all transformation patterns, independently of their
-     * individual settings.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withDiagnosticsDuplicateStatementsUsingTransformPatterns(Boolean value) {
-        setDiagnosticsDuplicateStatementsUsingTransformPatterns(value);
-        return this;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#missingWasNullCall(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     */
-    public Settings withDiagnosticsMissingWasNullCall(Boolean value) {
-        setDiagnosticsMissingWasNullCall(value);
-        return this;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#repeatedStatements(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     */
-    public Settings withDiagnosticsRepeatedStatements(Boolean value) {
-        setDiagnosticsRepeatedStatements(value);
-        return this;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#consecutiveAggregation(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withDiagnosticsConsecutiveAggregation(Boolean value) {
-        setDiagnosticsConsecutiveAggregation(value);
-        return this;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#concatenationInPredicate(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withDiagnosticsConcatenationInPredicate(Boolean value) {
-        setDiagnosticsConcatenationInPredicate(value);
-        return this;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#possiblyWrongExpression(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withDiagnosticsPossiblyWrongExpression(Boolean value) {
-        setDiagnosticsPossiblyWrongExpression(value);
-        return this;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#tooManyColumnsFetched(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     */
-    public Settings withDiagnosticsTooManyColumnsFetched(Boolean value) {
-        setDiagnosticsTooManyColumnsFetched(value);
-        return this;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#tooManyRowsFetched(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     */
-    public Settings withDiagnosticsTooManyRowsFetched(Boolean value) {
-        setDiagnosticsTooManyRowsFetched(value);
-        return this;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#unnecessaryWasNullCall(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * 
-     */
-    public Settings withDiagnosticsUnnecessaryWasNullCall(Boolean value) {
-        setDiagnosticsUnnecessaryWasNullCall(value);
-        return this;
-    }
-
-    /**
-     * Whether to run the various pattern transformation diagnostics.
-     * <p>
-     * {@link #transformPatterns} allows for applying numerous pattern transformations, which can be turned on separately when running
-     * diagnostics. This flag overrides the {@link #transformPatterns} flag in the diagnostics context. Individual pattern flags
-     * still allow to enable / disable the pattern for diagnostics. 
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withDiagnosticsPatterns(Boolean value) {
-        setDiagnosticsPatterns(value);
-        return this;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#trivialCondition(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withDiagnosticsTrivialCondition(Boolean value) {
-        setDiagnosticsTrivialCondition(value);
-        return this;
-    }
-
-    /**
-     * Whether to run the {@link org.jooq.DiagnosticsListener#nullConditoin(org.jooq.DiagnosticsContext)} diagnostic.
-     * <p>
-     * Diagnostics are turned off if no {@link org.jooq.Configuration#diagnosticsListenerProviders()} are configured.
-     * Once configured, this diagnostic is turned on by default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withDiagnosticsNullCondition(Boolean value) {
-        setDiagnosticsNullCondition(value);
-        return this;
-    }
-
-    /**
-     * Transform various syntax patterns to better versions, if possible.
-     * <p>
-     * This flag enables the pattern transformation feature, which consists of several sub-flags that are
-     * all prefixed with "transformPatterns", e.g. {@link #transformPatternsTrim}. While the sub-flags default
-     * to being enabled, and can be disabled on an individual basis, the global feature itself is disabled by
-     * default.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatterns(Boolean value) {
         setTransformPatterns(value);
         return this;
     }
 
-    /**
-     * Activate debug logging of the {@link #transformPatterns} feature.
-     * 
-     */
     public Settings withTransformPatternsLogging(Boolean value) {
         setTransformPatternsLogging(value);
         return this;
     }
 
-    /**
-     * Transform <code>SELECT DISTINCT a, b FROM t GROUP BY a, b</code> to <code>SELECT a, b FROM t GROUP BY a, b</code>.
-     * <p>
-     * The <code>GROUP BY</code> clause already removes duplicates, so if the <code>DISTINCT</code> clause
-     * contains at least all the columns from <code>GROUP BY</code> then it can be removed.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsUnnecessaryDistinct(Boolean value) {
-        setTransformPatternsUnnecessaryDistinct(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>SELECT (SELECT 1)</code> to <code>SELECT 1</code>.
-     * <p>
-     * Scalar subqueries that don't have any content other than a <code>SELECT</code> clause are unnecessary
-     * and can be removed.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsUnnecessaryScalarSubquery(Boolean value) {
-        setTransformPatternsUnnecessaryScalarSubquery(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>SELECT * FROM t INNER JOIN u ON TRUE</code> to <code>SELECT * FROM t CROSS JOIN u</code>.
-     * <p>
-     * Some <code>INNER JOIN</code> expressions can be proven to be unnecessary.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsUnnecessaryInnerJoin(Boolean value) {
-        setTransformPatternsUnnecessaryInnerJoin(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>SELECT a, b FROM t GROUP BY a, a, b</code> to <code>SELECT a, b FROM t GROUP BY a, b</code>.
-     * <p>
-     * Duplicate <code>GROUP BY</code> expressions can be removed.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsUnnecessaryGroupByExpressions(Boolean value) {
-        setTransformPatternsUnnecessaryGroupByExpressions(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>SELECT a, b FROM t ORDER BY a, a, b</code> to <code>SELECT a, b FROM t ORDER BY a, b</code>.
-     * <p>
-     * Duplicate <code>ORDER BY</code> expressions can be removed.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsUnnecessaryOrderByExpressions(Boolean value) {
-        setTransformPatternsUnnecessaryOrderByExpressions(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>[ NOT ] EXISTS (SELECT DISTINCT a, b FROM t ORDER BY c LIMIT d)</code> to <code>[ NOT ] EXISTS (SELECT 1 FROM t)</code>.
-     * <p>
-     * In <code>EXISTS</code> subqueries, quite a few <code>SELECT</code> clauses are meaningless, and can
-     * thus be removed. These include:
-     * <ul>
-     * <li><code>SELECT</code> (any projection can be ignored)</li>
-     * <li><code>DISTINCT</code></li>
-     * <li><code>ORDER BY</code></li>
-     * <li><code>LIMIT</code> (except <code>LIMIT 0</code>, in case of which {@link #transformPatternsTrivialPredicates} applies).</li>
-     * </ul>
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsUnnecessaryExistsSubqueryClauses(Boolean value) {
-        setTransformPatternsUnnecessaryExistsSubqueryClauses(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>COUNT(1)</code> or any other <code>COUNT(const)</code> to <code>COUNT(*)</code>.
-     * <p>
-     * There is no benefit to counting a constant expression. In fact, in some RDBMS, it might even be slightly
-     * slower, at least in benchmarks.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsCountConstant(Boolean value) {
-        setTransformPatternsCountConstant(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>LTRIM(RTRIM(x))</code> or <code>RTRIM(LTRIM(x))</code> to <code>TRIM(x)</code>.
-     * <p>
-     * Historically, a few dialects did not implement <code>TRIM(x)</code> or <code>TRIM(BOTH FROM x)</code>,
-     * so users worked around this by wrapping <code>LTRIM()</code> and <code>RTRIM()</code> with each other.
-     * Maintaining this is usually undesirable, so this transformation helps remove the unwanted wrapping.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsTrim(Boolean value) {
         setTransformPatternsTrim(value);
         return this;
     }
 
-    /**
-     * Transform <code>NOT(p AND q)</code> to <code>NOT(p) OR NOT(q)</code>.
-     * <p>
-     * This transformation normalises a predicate using De Morgan's rules.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsNotAnd(Boolean value) {
-        setTransformPatternsNotAnd(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>NOT(p OR q)</code> to <code>NOT(p) AND NOT(q)</code>.
-     * <p>
-     * This transformation normalises a predicate using De Morgan's rules.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsNotOr(Boolean value) {
-        setTransformPatternsNotOr(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>NOT(NOT(x))</code> to <code>x</code>.
-     * <p>
-     * This transformation removes a redundant logic negation.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsNotNot(Boolean value) {
         setTransformPatternsNotNot(value);
         return this;
     }
 
-    /**
-     * Transform <code>NOT (a != b)</code> to <code>a = b</code>, and similar comparisons.
-     * <p>
-     * This transformation removes a redundant logical negation from the <code>DISTINCT</code> predicate.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsNotComparison(Boolean value) {
         setTransformPatternsNotComparison(value);
         return this;
     }
 
-    /**
-     * Transform <code>NOT (a IS NOT DISTINCT FROM b)</code> to <code>a IS DISTINCT FROM b</code>.
-     * <p>
-     * This transformation removes a redundant logical negation from the <code>DISTINCT</code> predicate.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsNotNotDistinct(Boolean value) {
         setTransformPatternsNotNotDistinct(value);
         return this;
     }
 
-    /**
-     * Transform <code>a IS [ NOT ] DISTINCT FROM NULL</code> to <code>a IS [ NOT ] NULL</code>.
-     * <p>
-     * This simplifies the much more verbose <code>DISTINCT</code> predicate.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsDistinctFromNull(Boolean value) {
-        setTransformPatternsDistinctFromNull(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>(a + b) + (c + d)</code> to <code>((a + b) + c) + d</code>.
-     * <p>
-     * This transformation turns trees into lists, which greatly simplifies other tree traversal transformations.
-     * Some of those other transformations currently rely on this flag to be active.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsNormaliseAssociativeOps(Boolean value) {
         setTransformPatternsNormaliseAssociativeOps(value);
         return this;
     }
 
-    /**
-     * Transform <code>x IN (a)</code> to <code>x = a</code> and <code>x NOT IN (a)</code> to <code>x != a</code>.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsNormaliseInListSingleElementToComparison(Boolean value) {
         setTransformPatternsNormaliseInListSingleElementToComparison(value);
         return this;
     }
 
-    /**
-     * Transform <code>1 = a</code> to <code>a = 1</code>.
-     * <p>
-     * This transformation inverses {@link TableField} [op] {@link org.jooq.impl.QOM.Val} comparisons, if they're not in that order.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsNormaliseFieldCompareValue(Boolean value) {
         setTransformPatternsNormaliseFieldCompareValue(value);
         return this;
     }
 
-    /**
-     * Transform 2 argument <code>COALESCE(a, b)</code> to <code>NVL(a, b)</code>.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsNormaliseCoalesceToNvl(Boolean value) {
-        setTransformPatternsNormaliseCoalesceToNvl(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>x = c1 OR x = c2</code> to <code>x IN (c1, c2)</code>.
-     * <p>
-     * This transformation simplifies verbose <code>OR</code> predicates into simpler <code>IN</code> predicates.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsOrEqToIn(Boolean value) {
         setTransformPatternsOrEqToIn(value);
         return this;
     }
 
-    /**
-     * Transform <code>x != c1 AND x != c2</code> to <code>x NOT IN (c1, c2)</code>.
-     * <p>
-     * This transformation simplifies verbose <code>AND</code> predicates into simpler <code>NOT IN</code> predicates.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsAndNeToNotIn(Boolean value) {
         setTransformPatternsAndNeToNotIn(value);
         return this;
     }
 
-    /**
-     * Transform <code>x = a OR x > a</code> to <code>x >= a</code>.
-     * <p>
-     * This transformation merges multiple <code>OR</code> connected comparisons to a single comparison using a simpler operator.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsMergeOrComparison(Boolean value) {
         setTransformPatternsMergeOrComparison(value);
         return this;
     }
 
-    /**
-     * Transform <code>x >= a AND x <= a</code> to <code>x = a</code>.
-     * <p>
-     * This transformation merges multiple <code>AND</code> connected comparisons to a single comparison using a simpler operator.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsMergeAndComparison(Boolean value) {
         setTransformPatternsMergeAndComparison(value);
         return this;
     }
 
-    /**
-     * Transform <code>x IN (a, b, c) AND x IN (b, c, d)</code> to <code>x IN (b, c)</code>.
-     * <p>
-     * This transformation merges multiple <code>OR</code> connected comparisons to a single comparison using a simpler operator.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsMergeInLists(Boolean value) {
         setTransformPatternsMergeInLists(value);
         return this;
     }
 
-    /**
-     * Transform <code>x >= a AND x <= b</code> to <code>x BETWEEN a AND b</code>.
-     * <p>
-     * This transformation merges multiple <code>AND</code> connected range predicates to a single comparison using <code>BETWEEN</code>.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsMergeRangePredicates(Boolean value) {
         setTransformPatternsMergeRangePredicates(value);
         return this;
     }
 
-    /**
-     * Transform <code>x BETWEEN a AND b OR x BETWEEN b AND a</code> to <code>x BETWEEN SYMMETRIC a AND b</code>.
-     * <p>
-     * This transformation merges multiple <code>OR</code> connected <code>BETWEEN</code> predicates to a single comparison using <code>BETWEEN SYMMETRIC</code>.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsMergeBetweenSymmetricPredicates(Boolean value) {
         setTransformPatternsMergeBetweenSymmetricPredicates(value);
         return this;
     }
 
-    /**
-     * Transform a searched <code>CASE WHEN x = .. WHEN x = ..</code> to a simple <code>CASE x WHEN … WHEN …</code> expression.
-     * <p>
-     * When a searched <code>CASE</code> expression always compares the same column to a value, then it can be simplified, possibly
-     * unlocking further transformations that are available only to the simple <code>CASE</code> expression.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsCaseSearchedToCaseSimple(Boolean value) {
-        setTransformPatternsCaseSearchedToCaseSimple(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>CASE … ELSE NULL</code> removing the <code>ELSE</code> clause.
-     * <p>
-     * <code>CASE WHEN x THEN y ELSE NULL END</code> is equivalent to <code>CASE WHEN x THEN y END</code>.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsCaseElseNull(Boolean value) {
-        setTransformPatternsCaseElseNull(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>CASE</code> by removing unreachable clauses.
-     * <p>
-     * Case clauses can be proven to be unreachable, and thus removed:
-     * <ul>
-     * <li><code>CASE WHEN p THEN 1 WHEN TRUE THEN 2 WHEN q … ELSE … END</code> is equivalent to <code>CASE WHEN p THEN 1 ELSE 2 END</code></li>
-     * <li><code>CASE WHEN p THEN 1 WHEN FALSE THEN 2 WHEN q .. ELSE .. END</code> is equivalent to <code>CASE WHEN p THEN 1 WHEN q … ELSE … END</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsUnreachableCaseClauses(Boolean value) {
-        setTransformPatternsUnreachableCaseClauses(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>DECODE</code> by removing unreachable clauses.
-     * <p>
-     * DECODE clauses can be proven to be unreachable, and thus removed:
-     * <ul>
-     * <li><code>DECODE(a, b, 1, c, 2, b, 3)</code> is equivalent to <code>DECODE(a, b, 1, c, 2)</code></li>
-     * <li><code>DECODE(a, b, 1, c, 2, b, 3, 4)</code> is equivalent to <code>DECODE(a, b, 1, c, 2, 4)</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsUnreachableDecodeClauses(Boolean value) {
-        setTransformPatternsUnreachableDecodeClauses(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>CASE WHEN a IS NOT DISTINCT FROM b …</code> to an equivalent <code>DECODE</code> function.
-     * <p>
-     * When all <code>WHEN</code> clauses of a <code>CASE</code> expression use the <code>DISTINCT</code> predicate, then the
-     * <code>CASE</code> expression can be transformed into a <code>DECODE</code> function call:
-     * <ul>
-     * <li><code>CASE WHEN a IS NOT DISTINCT FROM b THEN 1 END</code> is equivalent to <code>DECODE(a, b, 1)</code></li>
-     * <li><code>CASE WHEN a IS NOT DISTINCT FROM b THEN 1 ELSE 2 END</code> is equivalent to <code>DECODE(a, b, 1, 2)</code></li>
-     * <li><code>CASE WHEN a IS NOT DISTINCT FROM b THEN 1 WHEN a IS NOT DISTINCT FROM c THEN 2 END</code> is equivalent to <code>DECODE(a, b, 1, c, 2)</code></li>
-     * <li><code>CASE WHEN a IS NOT DISTINCT FROM b THEN 1 WHEN a IS NOT DISTINCT FROM c THEN 2 ELSE 3 END</code> is equivalent to <code>DECODE(a, b, 1, c, 2, 3)</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsCaseDistinctToDecode(Boolean value) {
-        setTransformPatternsCaseDistinctToDecode(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>CASE WHEN a THEN x WHEN b THEN x END</code> to <code>CASE WHEN a OR b THEN x END</code>.
-     * <p>
-     * Two consecutive <code>WHEN</code> clauses can be merged, if their respective <code>THEN</code> clause is identical.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsCaseMergeWhenWhen(Boolean value) {
-        setTransformPatternsCaseMergeWhenWhen(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>CASE WHEN a THEN x WHEN b THEN y ELSE y END</code> to <code>CASE WHEN a THEN x ELSE y END</code>.
-     * <p>
-     * The ultimate <code>WHEN</code> clause can be merged with the <code>ELSE</code>, if their respective result is identical.
-     * If the <code>WHEN</code> clause is the only <code>WHEN</code> clause, then the entire <code>CASE</code> expression can
-     * be replaced by the <code>ELSE</code> clause content.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsCaseMergeWhenElse(Boolean value) {
-        setTransformPatternsCaseMergeWhenElse(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>CASE</code> expressions to their respective abbreviations.
-     * <p>
-     * Some <code>CASE</code> expressions have a shorter abbreviated form, such as <code>COALESCE()</code> or <code>NULLIF()</code>.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsCaseToCaseAbbreviation(Boolean value) {
-        setTransformPatternsCaseToCaseAbbreviation(value);
-        return this;
-    }
-
-    /**
-     * Transform complex predicates into simpler <code>CASE</code> abbreviations.
-     * <p>
-     * Some predicates can be simplified into case abbreviations, such as, for example
-     * <ul>
-     * <li><code>a IS NULL OR COALESCE(a = b, FALSE)</code> to <code>NULLIF(a, b) IS NULL</code></li>
-     * <li><code>a IS NOT NULL AND COALESCE(a != b, TRUE)</code> to <code>NULLIF(a, b) IS NOT NULL</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsSimplifyCaseAbbreviation(Boolean value) {
-        setTransformPatternsSimplifyCaseAbbreviation(value);
-        return this;
-    }
-
-    /**
-     * Flatten nested <code>CASE</code> abbreviations such as <code>NVL</code> or <code>CASE</code>.
-     * <p>
-     * Nested <code>CASE</code> abbreviations can be flattened, as such:
-     * <ul>
-     * <li><code>NVL(NVL(a, b), c)</code> to <code>COALESCE(a, b, c)</code></li>
-     * <li><code>COALESCE(a, ..., COALESCE(b, ..., c), ..., d)</code> to <code>COALESCE(a, …, b, …, c, ..., d)</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsFlattenCaseAbbreviation(Boolean value) {
-        setTransformPatternsFlattenCaseAbbreviation(value);
-        return this;
-    }
-
-    /**
-     * Flatten nested <code>DECODE</code> functions.
-     * <p>
-     * Nested <code>DECODE</code> functions can be flattened, as such:
-     * <ul>
-     * <li><code>DECODE(a, b, c, DECODE(a, d, e))</code> to <code>DECODE(a, b, c, d, e)</code></li>
-     * </ul>
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsFlattenDecode(Boolean value) {
-        setTransformPatternsFlattenDecode(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>CASE … ELSE CASE …</code> by flattening the nested <code>CASE</code>.
-     * <p>
-     * <code>CASE WHEN a THEN b ELSE CASE WHEN c THEN d END END</code> is equivalent to <code>CASE WHEN a THEN b WHEN c THEN d END</code>.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsFlattenCase(Boolean value) {
-        setTransformPatternsFlattenCase(value);
-        return this;
-    }
-
-    /**
-     * Transform trivial case abbreviations like <code>NVL(NULL, a)</code> to <code>a</code>.
-     * <p>
-     * This transformation removes any trivial case abbreviations, such as <code>NVL()</code>,
-     * <code>COALESCE()</code>, <code>NULLIF()</code>, etc.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsTrivialCaseAbbreviation(Boolean value) {
         setTransformPatternsTrivialCaseAbbreviation(value);
         return this;
     }
 
-    /**
-     * Transform trivial predicates like <code>1 = 1</code> to <code>TRUE</code>.
-     * <p>
-     * This transformation removes any trivial predicates.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsTrivialPredicates(Boolean value) {
         setTransformPatternsTrivialPredicates(value);
         return this;
     }
 
-    /**
-     * Transform trivial bitwise comparisons like <code>BIT_OR(a, 0)</code> to <code>a</code>.
-     * <p>
-     * This transformation removes any trivial predicates.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsTrivialBitwiseOperations(Boolean value) {
-        setTransformPatternsTrivialBitwiseOperations(value);
-        return this;
-    }
-
-    /**
-     * Transform bitwise operations to an equivalent <code>BIT_SET(a, b)</code> or <code>BIT_SET(a, b, c)</code> expression.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsBitSet(Boolean value) {
-        setTransformPatternsBitSet(value);
-        return this;
-    }
-
-    /**
-     * Transform bitwise operations to an equivalent <code>BIT_GET(a, b)</code> expression.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsBitGet(Boolean value) {
-        setTransformPatternsBitGet(value);
-        return this;
-    }
-
-    /**
-     * Transform predicates comparing scalar subqueries with a count <code>(SELECT COUNT(*) …) > 0</code> to equivalent <code>EXISTS (SELECT 1 …)</code>.
-     * <p>
-     * Scalar subqueries that count rows and whose count is compared to 0 can be transformed into equivalent, but likely cheaper to execute EXISTS queries.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsScalarSubqueryCountAsteriskGtZero(Boolean value) {
         setTransformPatternsScalarSubqueryCountAsteriskGtZero(value);
         return this;
     }
 
-    /**
-     * Transform predicates comparing scalar subqueries with a count <code>(SELECT COUNT(expr) …) > 0</code> to equivalent <code>EXISTS (SELECT 1 … WHERE expr IS NOT NULL)</code>.
-     * <p>
-     * Scalar subqueries that count non-null expressions and whose count is compared to 0 can be transformed into equivalent, but likely cheaper to execute EXISTS queries.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsScalarSubqueryCountExpressionGtZero(Boolean value) {
         setTransformPatternsScalarSubqueryCountExpressionGtZero(value);
         return this;
     }
 
-    /**
-     * Transform empty scalar subqueries like <code>(SELECT 1 WHERE FALSE)</code> to <code>NULL</code>.
-     * <p>
-     * Scalar subqueries that are guaranteed to produce no results can be replaced by a <code>NULL</code> value.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsEmptyScalarSubquery(Boolean value) {
         setTransformPatternsEmptyScalarSubquery(value);
         return this;
     }
 
-    /**
-     * Transform <code>-(-(x))</code> to <code>x</code>
-     * <p>
-     * This transformation removes a redundant arithmetic negation.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsNegNeg(Boolean value) {
         setTransformPatternsNegNeg(value);
         return this;
     }
 
-    /**
-     * Transform <code>~(~(x))</code> to <code>x</code>.
-     * <p>
-     * This transformation removes a redundant bitwise negation.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsBitNotBitNot(Boolean value) {
         setTransformPatternsBitNotBitNot(value);
         return this;
     }
 
-    /**
-     * Transform <code>~(bitnand(x, y))</code> to <code>bitand(x, y)</code> and <code>~(bitand(x, y)</code> to <code>bitnand(x, y)</code>.
-     * <p>
-     * This transformation removes a redundant bitwise negation.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsBitNotBitNand(Boolean value) {
         setTransformPatternsBitNotBitNand(value);
         return this;
     }
 
-    /**
-     * Transform <code>~(bitnor(x, y))</code> to <code>bitor(x, y)</code> and <code>~(bitor(x, y)</code> to <code>bitnor(x, y)</code>.
-     * <p>
-     * This transformation removes a redundant bitwise negation.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsBitNotBitNor(Boolean value) {
         setTransformPatternsBitNotBitNor(value);
         return this;
     }
 
-    /**
-     * Transform <code>~(bitxnor(x, y))</code> to <code>bitxor(x, y)</code> and <code>~(bitxor(x, y)</code> to <code>bitxnor(x, y)</code>.
-     * <p>
-     * This transformation removes a redundant bitwise negation.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsBitNotBitXNor(Boolean value) {
         setTransformPatternsBitNotBitXNor(value);
         return this;
     }
 
-    /**
-     * Any {org.jooq.impl.QOM.UReturnsNullOnNullInput} function or expression with <code>NULL</code> arguments can be replaced by <code>NULL</code>.
-     * <p>
-     * There are many built-in SQL functions and operators with a <code>RETURNS NULL ON NULL INPUT</code> property, e.g.
-     * <ul>
-     * <li><code>ABS(NULL)</code></li>
-     * <li><code>MOD(NULL, 1)</code></li>
-     * <li><code>NULL + 1</code></li>
-     * </ul>
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsNullOnNullInput(Boolean value) {
-        setTransformPatternsNullOnNullInput(value);
-        return this;
-    }
-
-    /**
-     * Transform all repetitions of idempotent functions, such as <code>UPPER(UPPER(s))</code> to <code>UPPER(s)</code>.
-     * <p>
-     * Idempotent functions that are covered so far, include:
-     * <ul>
-     * <li><code>LTRIM(LTRIM(s))</code> to <code>LTRIM(s)</code></li>
-     * <li><code>LTRIM(TRIM(s))</code> to <code>TRIM(s)</code></li>
-     * <li><code>RTRIM(RTRIM(s))</code> to <code>RTRIM(s)</code></li>
-     * <li><code>RTRIM(TRIM(s))</code> to <code>TRIM(s)</code></li>
-     * <li><code>TRIM(LTRIM(s))</code> to <code>TRIM(s)</code></li>
-     * <li><code>TRIM(RTRIM(s))</code> to <code>TRIM(s)</code></li>
-     * <li><code>UPPER(UPPER(s))</code> to <code>UPPER(s)</code></li>
-     * <li><code>LOWER(LOWER(s))</code> to <code>LOWER(s)</code></li>
-     * </ul>
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsIdempotentFunctionRepetition(Boolean value) {
         setTransformPatternsIdempotentFunctionRepetition(value);
         return this;
     }
 
-    /**
-     * Transform <code>a + 1 = 2</code> to <code>a = 2 - 1</code>, and other transformations.
-     * <p>
-     * It is usually best to compare single columns with constants or expressions to
-     * encourage index usage. While function based indexes are possible in some RDBMS,
-     * ordinary indexes are more reusable and should be preferred.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformPatternsArithmeticComparisons(Boolean value) {
-        setTransformPatternsArithmeticComparisons(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>1 / y * x</code> to <code>x / y</code>, and other transformations.
-     * <p>
-     * This transformation simplifies arithmetic expressions.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsArithmeticExpressions(Boolean value) {
         setTransformPatternsArithmeticExpressions(value);
         return this;
     }
 
-    /**
-     * Transform <code>SIN(x) / COS(x)</code> to <code>TAN(x)</code>, and other transformations.
-     * <p>
-     * This transformation turns expanded trignonometric function definitions into their shorter equivalents.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsTrigonometricFunctions(Boolean value) {
         setTransformPatternsTrigonometricFunctions(value);
         return this;
     }
 
-    /**
-     * Transform <code>LN(value) / LN(base)</code> to <code>LOG(base, value)</code>, and other transformations.
-     * <p>
-     * This transformation turns expanded logarithmic function definitions into their shorter equivalents.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsLogarithmicFunctions(Boolean value) {
         setTransformPatternsLogarithmicFunctions(value);
         return this;
     }
 
-    /**
-     * Transform <code>(EXP(x) - EXP(-x)) / 2</code> to <code>SINH(x)</code>, and other transformations.
-     * <p>
-     * This transformation turns expanded hyperbolic function definitions into their shorter equivalents.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsHyperbolicFunctions(Boolean value) {
         setTransformPatternsHyperbolicFunctions(value);
         return this;
     }
 
-    /**
-     * Transform <code>LN(x + SQRT(SQUARE(x) + 1))</code> to <code>ASINH(x)</code>, and other transformations.
-     * <p>
-     * This transformation turns expanded inverse hyperbolic function definitions into their shorter equivalents.
-     * <p>
-     * To enable this feature, {@link #transformPatterns} must be enabled as well.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformPatternsInverseHyperbolicFunctions(Boolean value) {
         setTransformPatternsInverseHyperbolicFunctions(value);
         return this;
     }
 
-    /**
-     * Transform {@link org.jooq.impl.QOM.CompareCondition} and a few other types of condition to inline their bind values, in case they match
-     *          
-     * <p>
-     * Historically, prior to ANSI join syntax, joins were implemented by listing tables in 
-     * the FROM clause and providing join predicates in the WHERE clause, possibly using vendor specific
-     * operators like <code>(+)</code> (Oracle, DB2) or <code>*=</code> (SQL Server) for outer join
-     * support. For backwards compatibility with older RDBMS versions, ANSI joins in jOOQ code may be
-     * converted to equivalent table lists in generated SQL using this flag.
-     * <p>
-     * This flag has a limited implementation that supports inner joins (in most cases) and outer joins
-     * (only for simple comparison predicates).
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformInlineBindValuesForFieldComparisons(Boolean value) {
         setTransformInlineBindValuesForFieldComparisons(value);
         return this;
     }
 
-    /**
-     * Transform ANSI join to table lists if possible.
-     * <p>
-     * Historically, prior to ANSI join syntax, joins were implemented by listing tables in 
-     * the FROM clause and providing join predicates in the WHERE clause, possibly using vendor specific
-     * operators like <code>(+)</code> (Oracle, DB2) or <code>*=</code> (SQL Server) for outer join
-     * support. For backwards compatibility with older RDBMS versions, ANSI joins in jOOQ code may be
-     * converted to equivalent table lists in generated SQL using this flag.
-     * <p>
-     * This flag has a limited implementation that supports inner joins (in most cases) and outer joins
-     * (only for simple comparison predicates).
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformAnsiJoinToTableLists(Boolean value) {
         setTransformAnsiJoinToTableLists(value);
         return this;
@@ -8942,12 +4632,8 @@ public class Settings
      * This transformation works around a known MySQL limitation "ERROR 1235 (42000): This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'"
      * <p>
      * This feature is available in the commercial distribution only.
-     * <p>
-     * @deprecated - 3.18.0 - [#14634] - The configuration of this transformation is deprecated. It will no longer be commercially available only, but apply also to the jOOQ Open Source Edition, when required.
-     *               
      * 
      */
-    @Deprecated
     public Settings withTransformInConditionSubqueryWithLimitToDerivedTable(Transformation value) {
         setTransformInConditionSubqueryWithLimitToDerivedTable(value);
         return this;
@@ -8964,18 +4650,6 @@ public class Settings
         return this;
     }
 
-    /**
-     * Transform table lists to ANSI join if possible.
-     * <p>
-     * (Very) historically, prior to ANSI join syntax, joins were implemented by listing tables in 
-     * the FROM clause and providing join predicates in the WHERE clause, possibly using vendor specific
-     * operators like <code>(+)</code> (Oracle, DB2) or <code>*=</code> (SQL Server) for outer join
-     * support. Migrating such join syntax is tedious. The jOOQ parser can parse the old syntax and
-     * this flag enables the transformation to ANSI join syntax.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Settings withTransformTableListsToAnsiJoin(Boolean value) {
         setTransformTableListsToAnsiJoin(value);
         return this;
@@ -9008,35 +4682,6 @@ public class Settings
      */
     public Settings withTransformUnneededArithmeticExpressions(TransformUnneededArithmeticExpressions value) {
         setTransformUnneededArithmeticExpressions(value);
-        return this;
-    }
-
-    /**
-     * Transform <code>GROUP BY [column index]</code> clauses by substituting the column index.
-     * <p>
-     * Not all dialects support grouping by column index, which is a convenient but also a bit confusing feature of
-     * some dialects. jOOQ can transform the syntax into an equivalent syntax where the referenced <code>SELECT</code>
-     * expression is duplicated into the <code>GROUP BY</code> clause.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformGroupByColumnIndex(Transformation value) {
-        setTransformGroupByColumnIndex(value);
-        return this;
-    }
-
-    /**
-     * Transform Common Table Expressions (CTE) by inlining their <code>WITH</code> clause definition to wherever they're referenced.
-     * <p>
-     * Non-recursive CTE are just syntax sugar for inline views (derived tables). When they're not supported natively,
-     * jOOQ can simply inline their definition to wherever they're referenced.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withTransformInlineCTE(Transformation value) {
-        setTransformInlineCTE(value);
         return this;
     }
 
@@ -9090,13 +4735,11 @@ public class Settings
      * The maximum number of allowed bind variables before inlining all values where <code>0</code> uses the dialect defaults: <ul>
      * <li>{@link org.jooq.SQLDialect#ACCESS} : 768</li>
      * <li>{@link org.jooq.SQLDialect#ASE} : 2000</li>
-     * <li>{@link org.jooq.SQLDialect#DATABRICKS} : 256</li>
      * <li>{@link org.jooq.SQLDialect#INGRES} : 1024</li>
      * <li>{@link org.jooq.SQLDialect#ORACLE} : 32767</li>
      * <li>{@link org.jooq.SQLDialect#POSTGRES} : 32767</li>
      * <li>{@link org.jooq.SQLDialect#SQLITE} : 999</li>
      * <li>{@link org.jooq.SQLDialect#SQLSERVER} : 2100</li>
-     * <li>{@link org.jooq.SQLDialect#TERADATA} : 2536</li>
      * </ul>
      * 
      */
@@ -9195,94 +4838,36 @@ public class Settings
         return this;
     }
 
-    /**
-     * When set to true, this will add jOOQ's default {@link org.jooq.tools.LoggerListener} for debug logging. This is meant for use in development only.
-     * 
-     */
     public Settings withExecuteLogging(Boolean value) {
         setExecuteLogging(value);
         return this;
     }
 
-    /**
-     * [#14420] Whether constraint violations and other {@link java.sql.SQLException} should produce additional log information about the column name and data causing the problem. Unlike {@link #executeLogging}, this is meant for use in production as well as development. This feature is available only in commercial distributions.
-     * 
-     */
-    public Settings withExecuteLoggingSQLExceptions(Boolean value) {
-        setExecuteLoggingSQLExceptions(value);
-        return this;
-    }
-
-    /**
-     * When set to true, this will add jOOQ's default logging DiagnosticsListeners.
-     * 
-     */
-    public Settings withDiagnosticsLogging(Boolean value) {
-        setDiagnosticsLogging(value);
-        return this;
-    }
-
-    /**
-     * Whether to activate the DiagnosticsConnection, explicit by <code>DEFAULT</code>, implicit if <code>ON</code>, or turned <code>OFF</code> entirely.
-     * 
-     */
-    public Settings withDiagnosticsConnection(DiagnosticsConnection value) {
-        setDiagnosticsConnection(value);
-        return this;
-    }
-
-    /**
-     * Whether store(), insert(), and update() methods should update the record version prior to the operation, for use with {@link #executeWithOptimisticLocking}.
-     * 
-     */
     public Settings withUpdateRecordVersion(Boolean value) {
         setUpdateRecordVersion(value);
         return this;
     }
 
-    /**
-     * Whether store(), insert(), and update() methods should update the record timestamp prior to the operation, for use with {@link #executeWithOptimisticLocking}.
-     * 
-     */
     public Settings withUpdateRecordTimestamp(Boolean value) {
         setUpdateRecordTimestamp(value);
         return this;
     }
 
-    /**
-     * Whether store() and delete() methods should be executed with optimistic locking.
-     * 
-     */
     public Settings withExecuteWithOptimisticLocking(Boolean value) {
         setExecuteWithOptimisticLocking(value);
         return this;
     }
 
-    /**
-     * Whether store() and delete() methods should be executed with optimistic locking also on "unversioned" tables,
-     * i.e. on tables that do not have a version and/or timestamp column.
-     * <p>
-     * This flag has no effect when "executeWithOptimisticLocking" is turned off.
-     * 
-     */
     public Settings withExecuteWithOptimisticLockingExcludeUnversioned(Boolean value) {
         setExecuteWithOptimisticLockingExcludeUnversioned(value);
         return this;
     }
 
-    /**
-     * Whether fetched records should be attached to the fetching configuration.
-     * 
-     */
     public Settings withAttachRecords(Boolean value) {
         setAttachRecords(value);
         return this;
     }
 
-    /**
-     * Whether {@link org.jooq.TableRecord#insert()} calls should be executed if the record is unchanged. This also affects the <code>INSERT</code> part of {@link org.jooq.UpdatableRecord#store()} and {@link org.jooq.UpdatableRecord#merge()} calls.
-     * 
-     */
     public Settings withInsertUnchangedRecords(Boolean value) {
         setInsertUnchangedRecords(value);
         return this;
@@ -9297,56 +4882,28 @@ public class Settings
         return this;
     }
 
-    /**
-     * Whether {@link org.jooq.UpdatableRecord#store()} and related calls should be based on {@link org.jooq.Record#touched()} or {@link org.jooq.Record#modified()} semantics. This also affects copying records into explicit statements.
-     * 
-     */
-    public Settings withRecordDirtyTracking(RecordDirtyTracking value) {
-        setRecordDirtyTracking(value);
-        return this;
-    }
-
-    /**
-     * Whether primary key values are deemed to be "updatable" in jOOQ.
-     * <p>
-     * Setting this to "true" will allow for updating primary key values through
-     * UpdatableRecord.store() and UpdatableRecord.update().
-     * 
-     */
     public Settings withUpdatablePrimaryKeys(Boolean value) {
         setUpdatablePrimaryKeys(value);
         return this;
     }
 
-    /**
-     * Whether reflection information should be cached in the configuration.
-     * 
-     */
     public Settings withReflectionCaching(Boolean value) {
         setReflectionCaching(value);
         return this;
     }
 
-    /**
-     * Whether record mappers should be cached in the configuration.
-     * 
-     */
     public Settings withCacheRecordMappers(Boolean value) {
         setCacheRecordMappers(value);
         return this;
     }
 
-    /**
-     * Whether parsing connection translations should be cached in the configuration.
-     * 
-     */
     public Settings withCacheParsingConnection(Boolean value) {
         setCacheParsingConnection(value);
         return this;
     }
 
     /**
-     * The default value of the ParsingConnection cache's LRU cache size.
+     * The default implementation of the ParsingConnection cache's LRU cache size.
      * 
      */
     public Settings withCacheParsingConnectionLRUCacheSize(Integer value) {
@@ -9354,28 +4911,6 @@ public class Settings
         return this;
     }
 
-    /**
-     * The default value of the RecordMapper cache's LRU cache size.
-     * 
-     */
-    public Settings withCacheRecordMappersLRUCacheSize(Integer value) {
-        setCacheRecordMappersLRUCacheSize(value);
-        return this;
-    }
-
-    /**
-     * The default value of the reflection cache's LRU cache size.
-     * 
-     */
-    public Settings withReflectionCacheLRUCacheSize(Integer value) {
-        setReflectionCacheLRUCacheSize(value);
-        return this;
-    }
-
-    /**
-     * Whether JDBC {@link java.sql.PreparedStatement} instances should be cached in loader API.
-     * 
-     */
     public Settings withCachePreparedStatementInLoader(Boolean value) {
         setCachePreparedStatementInLoader(value);
         return this;
@@ -9390,10 +4925,6 @@ public class Settings
         return this;
     }
 
-    /**
-     * Whether warnings should be fetched after each query execution.
-     * 
-     */
     public Settings withFetchWarnings(Boolean value) {
         setFetchWarnings(value);
         return this;
@@ -9408,96 +4939,41 @@ public class Settings
         return this;
     }
 
-    /**
-     * Whether calls to store(), insert() and update() should return the identity column.
-     * 
-     */
     public Settings withReturnIdentityOnUpdatableRecord(Boolean value) {
         setReturnIdentityOnUpdatableRecord(value);
         return this;
     }
 
-    /**
-     * Whether calls to store(), insert() and update() should return values for columns that are {@link org.jooq.DataType#defaulted()}.
-     * 
-     */
-    public Settings withReturnDefaultOnUpdatableRecord(Boolean value) {
-        setReturnDefaultOnUpdatableRecord(value);
-        return this;
-    }
-
-    /**
-     * Whether calls to store(), insert() and update() should return values for columns that are {@link org.jooq.DataType#computed()}.
-     * 
-     */
-    public Settings withReturnComputedOnUpdatableRecord(Boolean value) {
-        setReturnComputedOnUpdatableRecord(value);
-        return this;
-    }
-
-    /**
-     * Whether calls to store(), insert() and update() should return all columns, not just identity columns.
-     * <p>
-     * Do note that only few databases support this feature. It is supported only in case the INSERT's or UPDATE's
-     * RETURNING clause is fully supported, also for non-IDENTITY columns.
-     * 
-     */
     public Settings withReturnAllOnUpdatableRecord(Boolean value) {
         setReturnAllOnUpdatableRecord(value);
         return this;
     }
 
-    /**
-     * Whether calls to store(), insert(), update(), and delete() that are called on an UpdatableRecord
-     * that is created from a POJO (e.g. in a DAO) should return all Record values to the POJO, including
-     * IDENTITY values, and if {@link #returnAllOnUpdatableRecord} is active, also other values.
-     * 
-     */
     public Settings withReturnRecordToPojo(Boolean value) {
         setReturnRecordToPojo(value);
         return this;
     }
 
-    /**
-     * Whether JPA annotations should be considered by the {@link org.jooq.impl.DefaultRecordMapper}, assuming the <code>jOOQ-jpa-extensions</code> is on the classpath.
-     * 
-     */
     public Settings withMapJPAAnnotations(Boolean value) {
         setMapJPAAnnotations(value);
         return this;
     }
 
-    /**
-     * Whether constructor parameter names obtained from the {@link java.lang.Record} component names should be considered by the DefaultRecordMapper.
-     * 
-     */
     public Settings withMapRecordComponentParameterNames(Boolean value) {
         setMapRecordComponentParameterNames(value);
         return this;
     }
 
-    /**
-     * Whether constructor parameter names obtained from the {@link org.jooq.ConstructorPropertiesProvider} SPI (default implementation in the <code>jOOQ-beans-extensions</code> module) should be considered by the DefaultRecordMapper.
-     * 
-     */
     public Settings withMapConstructorPropertiesParameterNames(Boolean value) {
         setMapConstructorPropertiesParameterNames(value);
         return this;
     }
 
-    /**
-     * Whether constructor parameter names obtained via reflection in Java 8+ should be considered by the DefaultRecordMapper. This flag has no effect in Java 6 or 7.
-     * 
-     */
     public Settings withMapConstructorParameterNames(Boolean value) {
         setMapConstructorParameterNames(value);
         return this;
     }
 
-    /**
-     * Whether constructor parameter names obtained via reflection in Kotlin should be considered by the DefaultRecordMapper. This flag has no effect in Java.
-     * 
-     */
     public Settings withMapConstructorParameterNamesInKotlin(Boolean value) {
         setMapConstructorParameterNamesInKotlin(value);
         return this;
@@ -9552,19 +5028,11 @@ public class Settings
         return this;
     }
 
-    /**
-     * [#5570] Whether exception stack traces should be enhanced with additional debug information.
-     * 
-     */
     public Settings withDebugInfoOnStackTrace(Boolean value) {
         setDebugInfoOnStackTrace(value);
         return this;
     }
 
-    /**
-     * [#5600] Whether IN lists in IN predicates should be padded to powers of inListPadBase (default 2).
-     * 
-     */
     public Settings withInListPadding(Boolean value) {
         setInListPadding(value);
         return this;
@@ -9588,10 +5056,6 @@ public class Settings
         return this;
     }
 
-    /**
-     * [#6462] Use only the primary key to emulate MySQL's INSERT .. ON DUPLICATE KEY UPDATE statement. In MySQL, the statement considers all unique keys for duplicates to apply an update rather than an insert. Earlier versions of jOOQ considered only the PRIMARY KEY. This flag can be turned on to maintain backwards compatibility.
-     * 
-     */
     public Settings withEmulateOnDuplicateKeyUpdateOnPrimaryKeyOnly(Boolean value) {
         setEmulateOnDuplicateKeyUpdateOnPrimaryKeyOnly(value);
         return this;
@@ -9603,45 +5067,6 @@ public class Settings
      */
     public Settings withEmulateMultiset(NestedCollectionEmulation value) {
         setEmulateMultiset(value);
-        return this;
-    }
-
-    /**
-     * [#13598] Whether nested record projections at the top level should be emulated using the <code>MULTISET</code> emulation rather than the flattening emulation, if supported by the dialect.
-     * 
-     */
-    public Settings withEmulateNestedRecordProjectionsUsingMultisetEmulation(Boolean value) {
-        setEmulateNestedRecordProjectionsUsingMultisetEmulation(value);
-        return this;
-    }
-
-    /**
-     * [#13418] Whether computed columns should be emulated in the client.
-     * <p>
-     * This can be useful if a schema was generated using a dialect that supports computed columns, but it is
-     * deployed on an RDBMS that does not.
-     * 
-     */
-    public Settings withEmulateComputedColumns(Boolean value) {
-        setEmulateComputedColumns(value);
-        return this;
-    }
-
-    /**
-     * Whether <code>VIRTUAL</code> client side computed columns should be applied to queries. This feature is available only in commercial distributions.
-     * 
-     */
-    public Settings withComputedOnClientVirtual(Boolean value) {
-        setComputedOnClientVirtual(value);
-        return this;
-    }
-
-    /**
-     * Whether <code>STORED</code> client side computed columns should be applied to queries (including audit columns). This feature is available only in commercial distributions.
-     * 
-     */
-    public Settings withComputedOnClientStored(Boolean value) {
-        setComputedOnClientStored(value);
         return this;
     }
 
@@ -9682,17 +5107,6 @@ public class Settings
     }
 
     /**
-     * Whether interpreted schema, table, column names, etc should be quoted.
-     * <p>
-     * This setting does not affect any plain SQL usage.
-     * 
-     */
-    public Settings withInterpreterQuotedNames(InterpreterQuotedNames value) {
-        setInterpreterQuotedNames(value);
-        return this;
-    }
-
-    /**
      * The Locale to be used with any interpreter locale dependent logic, defaulting to {@link #getLocale()}.
      * 
      */
@@ -9701,192 +5115,43 @@ public class Settings
         return this;
     }
 
-    /**
-     * Using this flag, the interpreter will be able to delay the addition of foreign key declarations until the end of the interpretation run.
-     * 
-     */
     public Settings withInterpreterDelayForeignKeyDeclarations(Boolean value) {
         setInterpreterDelayForeignKeyDeclarations(value);
         return this;
     }
 
-    /**
-     * [#18500] Whether the interpreter should perform meta lookups in the already interpreted meta data.
-     * 
-     */
-    public Settings withInterpreterWithMetaLookups(InterpreterWithMetaLookups value) {
-        setInterpreterWithMetaLookups(value);
-        return this;
-    }
-
-    /**
-     * The {@link org.jooq.Meta} implementation that is backed by {@link java.sql.DatabaseMetaData} does not produce system generated indexes on constraints, by default.
-     * 
-     */
     public Settings withMetaIncludeSystemIndexes(Boolean value) {
         setMetaIncludeSystemIndexes(value);
         return this;
     }
 
-    /**
-     * The {@link org.jooq.Meta} implementation that is backed by {@link java.sql.DatabaseMetaData} does not produce system generated sequences, by default.
-     * 
-     */
     public Settings withMetaIncludeSystemSequences(Boolean value) {
         setMetaIncludeSystemSequences(value);
         return this;
     }
 
-    /**
-     * The database schema where the migration history is located.
-     * 
-     */
-    public Settings withMigrationHistorySchema(MigrationSchema value) {
-        setMigrationHistorySchema(value);
+    public Settings withMigrationAllowsUndo(Boolean value) {
+        setMigrationAllowsUndo(value);
         return this;
     }
 
-    /**
-     * Whether {@link #getMigrationHistorySchema()} should be created if it doesn't exist.
-     * 
-     */
-    public Settings withMigrationHistorySchemaCreateSchemaIfNotExists(Boolean value) {
-        setMigrationHistorySchemaCreateSchemaIfNotExists(value);
-        return this;
-    }
-
-    /**
-     * The default schema whose unqualified objects that are included in the migration.
-     * 
-     */
-    public Settings withMigrationDefaultSchema(MigrationSchema value) {
-        setMigrationDefaultSchema(value);
-        return this;
-    }
-
-    /**
-     * Whether {@link #getMigrationSchemata()} should be created if they don't exist.
-     * 
-     */
-    public Settings withMigrationSchemataCreateSchemaIfNotExists(Boolean value) {
-        setMigrationSchemataCreateSchemaIfNotExists(value);
-        return this;
-    }
-
-    /**
-     * The default {@link org.jooq.ContentType} that is used when loading migrations.
-     * 
-     */
-    public Settings withMigrationDefaultContentType(MigrationDefaultContentType value) {
-        setMigrationDefaultContentType(value);
-        return this;
-    }
-
-    /**
-     * Whether migrations are allowed to be executed in inverse order.<p><strong>This is a potentially destructive feature, which should not be turned on in production</strong>. It is useful mostly to quickly switch between branches in a development environment. This feature is available only in commercial distributions.
-     * 
-     */
-    public Settings withMigrationAllowUndo(Boolean value) {
-        setMigrationAllowUndo(value);
-        return this;
-    }
-
-    /**
-     * Whether migrations to invalid commits ({@link org.jooq.Commit#valid()}) are allowed. <p><strong>This is a potentially destructive feature, which should not be turned on in production</strong>. It is useful mostly to quickly test uncommited or inconsistent changes in development.
-     * 
-     */
-    public Settings withMigrationAllowInvalidCommits(Boolean value) {
-        setMigrationAllowInvalidCommits(value);
-        return this;
-    }
-
-    /**
-     * Whether migrations are allowed to rename objects based on heuristics. <p><strong>Turning this flag off is potentially destructive. Please always check your generated migration output with integration tests!</strong>
-     * 
-     */
-    public Settings withMigrationAllowRename(Boolean value) {
-        setMigrationAllowRename(value);
-        return this;
-    }
-
-    /**
-     * Whether migrations are allowed to rename constraints based on heuristics.
-     * 
-     */
-    public Settings withMigrationAllowRenameConstraints(Boolean value) {
-        setMigrationAllowRenameConstraints(value);
-        return this;
-    }
-
-    /**
-     * Whether migrations are allowed to rename indexes based on heuristics.
-     * 
-     */
-    public Settings withMigrationAllowRenameIndexes(Boolean value) {
-        setMigrationAllowRenameIndexes(value);
-        return this;
-    }
-
-    /**
-     * Whether migrations are allowed to rename tables based on heuristics. <p><strong>Turning this flag off is potentially destructive. Please always check your generated migration output with integration tests!</strong>
-     * 
-     */
-    public Settings withMigrationAllowRenameTables(Boolean value) {
-        setMigrationAllowRenameTables(value);
-        return this;
-    }
-
-    /**
-     * Whether migrations are allowed to rename columns based on heuristics. <p><strong>Turning this flag off is potentially destructive. Please always check your generated migration output with integration tests!</strong>
-     * 
-     */
-    public Settings withMigrationAllowRenameColumns(Boolean value) {
-        setMigrationAllowRenameColumns(value);
-        return this;
-    }
-
-    /**
-     * Whether migrations revert any untracked changes in the schemas that are being migrated.<p><strong>This is a potentially destructive feature, which should not be turned on in production</strong>. It is useful mostly to quickly revert any elements created in a development environment. This feature is available only in commercial distributions.
-     * 
-     */
     public Settings withMigrationRevertUntracked(Boolean value) {
         setMigrationRevertUntracked(value);
         return this;
     }
 
-    /**
-     * Whether a migration automatically runs a verification first.
-     * 
-     */
-    public Settings withMigrationAutoVerification(Boolean value) {
-        setMigrationAutoVerification(value);
+    public Settings withMigrationAutoBaseline(Boolean value) {
+        setMigrationAutoBaseline(value);
         return this;
     }
 
-    /**
-     * Various <code>migrateTo()</code> methods (e.g. {@link org.jooq.Meta#migrateTo(org.jooq.Meta)}) ignore the difference between <code>TIMESTAMP</code> and <code>TIMESTAMP(6)</code>, if 6 is the default precision for timestamps on the configured dialect.
-     * 
-     */
+    public Settings withMigrationAutoValidation(Boolean value) {
+        setMigrationAutoValidation(value);
+        return this;
+    }
+
     public Settings withMigrationIgnoreDefaultTimestampPrecisionDiffs(Boolean value) {
         setMigrationIgnoreDefaultTimestampPrecisionDiffs(value);
-        return this;
-    }
-
-    /**
-     * Various <code>migrateTo()</code> methods (e.g. {@link org.jooq.Meta#migrateTo(org.jooq.Meta)}) ignore the difference between (possibly synthetically) name constraints and unnamed constraints, if the structure of the constraint is the same.
-     * 
-     */
-    public Settings withMigrationIgnoreUnnamedConstraintDiffs(Boolean value) {
-        setMigrationIgnoreUnnamedConstraintDiffs(value);
-        return this;
-    }
-
-    /**
-     * Various <code>migrateTo()</code> methods (e.g. {@link org.jooq.Meta#migrateTo(org.jooq.Meta)}) ignore the presence or absence of implicit <code>NOT NULL</code> constraints on <code>PRIMARY KEY</code> columns if the constraint is really implicit for a given dialect. This flag allows for overriding this behaviour.
-     * 
-     */
-    public Settings withMigrationIgnoreImplicitPrimaryKeyNotNullConstraints(Boolean value) {
-        setMigrationIgnoreImplicitPrimaryKeyNotNullConstraints(value);
         return this;
     }
 
@@ -9986,10 +5251,6 @@ public class Settings
         return this;
     }
 
-    /**
-     * [#9780] Whether commands of the type <code>SET key = value</code> should be parsed rather than ignored.
-     * 
-     */
     public Settings withParseSetCommands(Boolean value) {
         setParseSetCommands(value);
         return this;
@@ -10013,19 +5274,11 @@ public class Settings
         return this;
     }
 
-    /**
-     * [#13109] Whether the parser of the jOOQ Open Source Edition should ignore commercial only features, rather than failing.
-     * 
-     */
     public Settings withParseIgnoreCommercialOnlyFeatures(Boolean value) {
         setParseIgnoreCommercialOnlyFeatures(value);
         return this;
     }
 
-    /**
-     * [#8325] Whether the parser should ignore content between ignore comment tokens.
-     * 
-     */
     public Settings withParseIgnoreComments(Boolean value) {
         setParseIgnoreComments(value);
         return this;
@@ -10049,101 +5302,13 @@ public class Settings
         return this;
     }
 
-    /**
-     * [#8325] Whether the parser should parse content between plain SQL template comment tokens into a plain SQL template, with {@link org.jooq.impl.DSL#sql(String)} semantics.
-     * 
-     */
-    public Settings withParsePlainSQLTemplateComments(Boolean value) {
-        setParsePlainSQLTemplateComments(value);
-        return this;
-    }
-
-    /**
-     * [#8325] The plain SQL template comment start token
-     * 
-     */
-    public Settings withParsePlainSQLTemplateCommentStart(String value) {
-        setParsePlainSQLTemplateCommentStart(value);
-        return this;
-    }
-
-    /**
-     * [#8325] The plain SQL template comment stop token
-     * 
-     */
-    public Settings withParsePlainSQLTemplateCommentStop(String value) {
-        setParsePlainSQLTemplateCommentStop(value);
-        return this;
-    }
-
-    /**
-     * [#8325] Whether the parser should parse content between raw comment tokens into a raw template, with {@link org.jooq.impl.DSL#raw(String)} semantics.
-     * 
-     */
-    public Settings withParseRawSQLComments(Boolean value) {
-        setParseRawSQLComments(value);
-        return this;
-    }
-
-    /**
-     * [#8325] The raw comment start token
-     * 
-     */
-    public Settings withParseRawSQLCommentStart(String value) {
-        setParseRawSQLCommentStart(value);
-        return this;
-    }
-
-    /**
-     * [#8325] The raw comment stop token
-     * 
-     */
-    public Settings withParseRawSQLCommentStop(String value) {
-        setParseRawSQLCommentStop(value);
-        return this;
-    }
-
-    /**
-     * [#12538] Whether the parser should retain comments and whitespace between queries when parsing multiple queries through {@link org.jooq.Parser#parse(String)}.
-     * <p>
-     * jOOQ's query object model doesn't have a way to represent comments
-     * or other whitespace, and as such, the parser simply skips them by default.
-     * However, it may be desirable to retain comments before or in between top
-     * level queries, when parsing multiple such queries in a script. Comments
-     * inside of queries (including procedural statements) are still not supported.
-     * 
-     */
     public Settings withParseRetainCommentsBetweenQueries(Boolean value) {
         setParseRetainCommentsBetweenQueries(value);
         return this;
     }
 
-    /**
-     * [#8469] Whether to parse default expressions retrieved from {@link java.sql.DatabaseMetaData}.
-     * 
-     */
     public Settings withParseMetaDefaultExpressions(Boolean value) {
         setParseMetaDefaultExpressions(value);
-        return this;
-    }
-
-    /**
-     * [#8469] Whether to parse view sources retrieved from {@link java.sql.DatabaseMetaData}.
-     * 
-     */
-    public Settings withParseMetaViewSources(Boolean value) {
-        setParseMetaViewSources(value);
-        return this;
-    }
-
-    /**
-     * [#18679] The behaviour when formatting values with {@link org.jooq.DataType#redacted()}.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Settings withRedact(Redact value) {
-        setRedact(value);
         return this;
     }
 
@@ -10183,21 +5348,8 @@ public class Settings
         return this;
     }
 
-    /**
-     * [#7963] Apply workaround for ORA-04043 when inserting into Oracle tables with qualified, quoted identifiers, and fetching generated keys
-     * 
-     */
     public Settings withApplyWorkaroundFor7962(Boolean value) {
         setApplyWorkaroundFor7962(value);
-        return this;
-    }
-
-    /**
-     * [#15286] The warning level when the deprecated static type registry was accessed by legacy code.
-     * 
-     */
-    public Settings withWarnOnStaticTypeRegistryAccess(Warning value) {
-        setWarnOnStaticTypeRegistryAccess(value);
         return this;
     }
 
@@ -10269,7 +5421,6 @@ public class Settings
         builder.append("forceIntegerTypesOnZeroScaleDecimals", forceIntegerTypesOnZeroScaleDecimals);
         builder.append("renderCatalog", renderCatalog);
         builder.append("renderSchema", renderSchema);
-        builder.append("renderTable", renderTable);
         builder.append("renderMapping", renderMapping);
         builder.append("renderQuotedNames", renderQuotedNames);
         builder.append("renderNameCase", renderNameCase);
@@ -10280,8 +5431,6 @@ public class Settings
         builder.append("renderLocale", renderLocale);
         builder.append("renderFormatted", renderFormatted);
         builder.append("renderFormatting", renderFormatting);
-        builder.append("renderNullifEmptyStringForBindValues", renderNullifEmptyStringForBindValues);
-        builder.append("renderAutoAliasedDerivedTableExpressions", renderAutoAliasedDerivedTableExpressions);
         builder.append("renderOptionalAssociativityParentheses", renderOptionalAssociativityParentheses);
         builder.append("renderOptionalAsKeywordForTableAliases", renderOptionalAsKeywordForTableAliases);
         builder.append("renderOptionalAsKeywordForFieldAliases", renderOptionalAsKeywordForFieldAliases);
@@ -10290,58 +5439,26 @@ public class Settings
         builder.append("renderImplicitWindowRange", renderImplicitWindowRange);
         builder.append("renderScalarSubqueriesForStoredFunctions", renderScalarSubqueriesForStoredFunctions);
         builder.append("renderImplicitJoinType", renderImplicitJoinType);
-        builder.append("renderImplicitJoinToManyType", renderImplicitJoinToManyType);
         builder.append("renderDefaultNullability", renderDefaultNullability);
         builder.append("renderCoalesceToEmptyStringInConcat", renderCoalesceToEmptyStringInConcat);
         builder.append("renderOrderByRownumberForEmulatedPagination", renderOrderByRownumberForEmulatedPagination);
         builder.append("renderOutputForSQLServerReturningClause", renderOutputForSQLServerReturningClause);
         builder.append("renderGroupConcatMaxLenSessionVariable", renderGroupConcatMaxLenSessionVariable);
         builder.append("renderParenthesisAroundSetOperationQueries", renderParenthesisAroundSetOperationQueries);
-        builder.append("renderVariablesInDerivedTablesForEmulations", renderVariablesInDerivedTablesForEmulations);
-        builder.append("renderRowConditionForSeekClause", renderRowConditionForSeekClause);
-        builder.append("renderRedundantConditionForSeekClause", renderRedundantConditionForSeekClause);
-        builder.append("renderPlainSQLTemplatesAsRaw", renderPlainSQLTemplatesAsRaw);
-        builder.append("renderDollarQuotedStringToken", renderDollarQuotedStringToken);
         builder.append("namePathSeparator", namePathSeparator);
         builder.append("bindOffsetDateTimeType", bindOffsetDateTimeType);
         builder.append("bindOffsetTimeType", bindOffsetTimeType);
-        builder.append("fetchTrimmedCharValues", fetchTrimmedCharValues);
         builder.append("fetchTriggerValuesAfterSQLServerOutput", fetchTriggerValuesAfterSQLServerOutput);
-        builder.append("fetchTriggerValuesAfterReturning", fetchTriggerValuesAfterReturning);
         builder.append("fetchIntermediateResult", fetchIntermediateResult);
-        builder.append("diagnosticsDuplicateStatements", diagnosticsDuplicateStatements);
-        builder.append("diagnosticsDuplicateStatementsUsingTransformPatterns", diagnosticsDuplicateStatementsUsingTransformPatterns);
-        builder.append("diagnosticsMissingWasNullCall", diagnosticsMissingWasNullCall);
-        builder.append("diagnosticsRepeatedStatements", diagnosticsRepeatedStatements);
-        builder.append("diagnosticsConsecutiveAggregation", diagnosticsConsecutiveAggregation);
-        builder.append("diagnosticsConcatenationInPredicate", diagnosticsConcatenationInPredicate);
-        builder.append("diagnosticsPossiblyWrongExpression", diagnosticsPossiblyWrongExpression);
-        builder.append("diagnosticsTooManyColumnsFetched", diagnosticsTooManyColumnsFetched);
-        builder.append("diagnosticsTooManyRowsFetched", diagnosticsTooManyRowsFetched);
-        builder.append("diagnosticsUnnecessaryWasNullCall", diagnosticsUnnecessaryWasNullCall);
-        builder.append("diagnosticsPatterns", diagnosticsPatterns);
-        builder.append("diagnosticsTrivialCondition", diagnosticsTrivialCondition);
-        builder.append("diagnosticsNullCondition", diagnosticsNullCondition);
         builder.append("transformPatterns", transformPatterns);
         builder.append("transformPatternsLogging", transformPatternsLogging);
-        builder.append("transformPatternsUnnecessaryDistinct", transformPatternsUnnecessaryDistinct);
-        builder.append("transformPatternsUnnecessaryScalarSubquery", transformPatternsUnnecessaryScalarSubquery);
-        builder.append("transformPatternsUnnecessaryInnerJoin", transformPatternsUnnecessaryInnerJoin);
-        builder.append("transformPatternsUnnecessaryGroupByExpressions", transformPatternsUnnecessaryGroupByExpressions);
-        builder.append("transformPatternsUnnecessaryOrderByExpressions", transformPatternsUnnecessaryOrderByExpressions);
-        builder.append("transformPatternsUnnecessaryExistsSubqueryClauses", transformPatternsUnnecessaryExistsSubqueryClauses);
-        builder.append("transformPatternsCountConstant", transformPatternsCountConstant);
         builder.append("transformPatternsTrim", transformPatternsTrim);
-        builder.append("transformPatternsNotAnd", transformPatternsNotAnd);
-        builder.append("transformPatternsNotOr", transformPatternsNotOr);
         builder.append("transformPatternsNotNot", transformPatternsNotNot);
         builder.append("transformPatternsNotComparison", transformPatternsNotComparison);
         builder.append("transformPatternsNotNotDistinct", transformPatternsNotNotDistinct);
-        builder.append("transformPatternsDistinctFromNull", transformPatternsDistinctFromNull);
         builder.append("transformPatternsNormaliseAssociativeOps", transformPatternsNormaliseAssociativeOps);
         builder.append("transformPatternsNormaliseInListSingleElementToComparison", transformPatternsNormaliseInListSingleElementToComparison);
         builder.append("transformPatternsNormaliseFieldCompareValue", transformPatternsNormaliseFieldCompareValue);
-        builder.append("transformPatternsNormaliseCoalesceToNvl", transformPatternsNormaliseCoalesceToNvl);
         builder.append("transformPatternsOrEqToIn", transformPatternsOrEqToIn);
         builder.append("transformPatternsAndNeToNotIn", transformPatternsAndNeToNotIn);
         builder.append("transformPatternsMergeOrComparison", transformPatternsMergeOrComparison);
@@ -10349,23 +5466,8 @@ public class Settings
         builder.append("transformPatternsMergeInLists", transformPatternsMergeInLists);
         builder.append("transformPatternsMergeRangePredicates", transformPatternsMergeRangePredicates);
         builder.append("transformPatternsMergeBetweenSymmetricPredicates", transformPatternsMergeBetweenSymmetricPredicates);
-        builder.append("transformPatternsCaseSearchedToCaseSimple", transformPatternsCaseSearchedToCaseSimple);
-        builder.append("transformPatternsCaseElseNull", transformPatternsCaseElseNull);
-        builder.append("transformPatternsUnreachableCaseClauses", transformPatternsUnreachableCaseClauses);
-        builder.append("transformPatternsUnreachableDecodeClauses", transformPatternsUnreachableDecodeClauses);
-        builder.append("transformPatternsCaseDistinctToDecode", transformPatternsCaseDistinctToDecode);
-        builder.append("transformPatternsCaseMergeWhenWhen", transformPatternsCaseMergeWhenWhen);
-        builder.append("transformPatternsCaseMergeWhenElse", transformPatternsCaseMergeWhenElse);
-        builder.append("transformPatternsCaseToCaseAbbreviation", transformPatternsCaseToCaseAbbreviation);
-        builder.append("transformPatternsSimplifyCaseAbbreviation", transformPatternsSimplifyCaseAbbreviation);
-        builder.append("transformPatternsFlattenCaseAbbreviation", transformPatternsFlattenCaseAbbreviation);
-        builder.append("transformPatternsFlattenDecode", transformPatternsFlattenDecode);
-        builder.append("transformPatternsFlattenCase", transformPatternsFlattenCase);
         builder.append("transformPatternsTrivialCaseAbbreviation", transformPatternsTrivialCaseAbbreviation);
         builder.append("transformPatternsTrivialPredicates", transformPatternsTrivialPredicates);
-        builder.append("transformPatternsTrivialBitwiseOperations", transformPatternsTrivialBitwiseOperations);
-        builder.append("transformPatternsBitSet", transformPatternsBitSet);
-        builder.append("transformPatternsBitGet", transformPatternsBitGet);
         builder.append("transformPatternsScalarSubqueryCountAsteriskGtZero", transformPatternsScalarSubqueryCountAsteriskGtZero);
         builder.append("transformPatternsScalarSubqueryCountExpressionGtZero", transformPatternsScalarSubqueryCountExpressionGtZero);
         builder.append("transformPatternsEmptyScalarSubquery", transformPatternsEmptyScalarSubquery);
@@ -10374,9 +5476,7 @@ public class Settings
         builder.append("transformPatternsBitNotBitNand", transformPatternsBitNotBitNand);
         builder.append("transformPatternsBitNotBitNor", transformPatternsBitNotBitNor);
         builder.append("transformPatternsBitNotBitXNor", transformPatternsBitNotBitXNor);
-        builder.append("transformPatternsNullOnNullInput", transformPatternsNullOnNullInput);
         builder.append("transformPatternsIdempotentFunctionRepetition", transformPatternsIdempotentFunctionRepetition);
-        builder.append("transformPatternsArithmeticComparisons", transformPatternsArithmeticComparisons);
         builder.append("transformPatternsArithmeticExpressions", transformPatternsArithmeticExpressions);
         builder.append("transformPatternsTrigonometricFunctions", transformPatternsTrigonometricFunctions);
         builder.append("transformPatternsLogarithmicFunctions", transformPatternsLogarithmicFunctions);
@@ -10389,8 +5489,6 @@ public class Settings
         builder.append("transformTableListsToAnsiJoin", transformTableListsToAnsiJoin);
         builder.append("transformRownum", transformRownum);
         builder.append("transformUnneededArithmeticExpressions", transformUnneededArithmeticExpressions);
-        builder.append("transformGroupByColumnIndex", transformGroupByColumnIndex);
-        builder.append("transformInlineCTE", transformInlineCTE);
         builder.append("backslashEscaping", backslashEscaping);
         builder.append("paramType", paramType);
         builder.append("paramCastMode", paramCastMode);
@@ -10407,9 +5505,6 @@ public class Settings
         builder.append("executeListenerStartInvocationOrder", executeListenerStartInvocationOrder);
         builder.append("executeListenerEndInvocationOrder", executeListenerEndInvocationOrder);
         builder.append("executeLogging", executeLogging);
-        builder.append("executeLoggingSQLExceptions", executeLoggingSQLExceptions);
-        builder.append("diagnosticsLogging", diagnosticsLogging);
-        builder.append("diagnosticsConnection", diagnosticsConnection);
         builder.append("updateRecordVersion", updateRecordVersion);
         builder.append("updateRecordTimestamp", updateRecordTimestamp);
         builder.append("executeWithOptimisticLocking", executeWithOptimisticLocking);
@@ -10417,21 +5512,16 @@ public class Settings
         builder.append("attachRecords", attachRecords);
         builder.append("insertUnchangedRecords", insertUnchangedRecords);
         builder.append("updateUnchangedRecords", updateUnchangedRecords);
-        builder.append("recordDirtyTracking", recordDirtyTracking);
         builder.append("updatablePrimaryKeys", updatablePrimaryKeys);
         builder.append("reflectionCaching", reflectionCaching);
         builder.append("cacheRecordMappers", cacheRecordMappers);
         builder.append("cacheParsingConnection", cacheParsingConnection);
         builder.append("cacheParsingConnectionLRUCacheSize", cacheParsingConnectionLRUCacheSize);
-        builder.append("cacheRecordMappersLRUCacheSize", cacheRecordMappersLRUCacheSize);
-        builder.append("reflectionCacheLRUCacheSize", reflectionCacheLRUCacheSize);
         builder.append("cachePreparedStatementInLoader", cachePreparedStatementInLoader);
         builder.append("throwExceptions", throwExceptions);
         builder.append("fetchWarnings", fetchWarnings);
         builder.append("fetchServerOutputSize", fetchServerOutputSize);
         builder.append("returnIdentityOnUpdatableRecord", returnIdentityOnUpdatableRecord);
-        builder.append("returnDefaultOnUpdatableRecord", returnDefaultOnUpdatableRecord);
-        builder.append("returnComputedOnUpdatableRecord", returnComputedOnUpdatableRecord);
         builder.append("returnAllOnUpdatableRecord", returnAllOnUpdatableRecord);
         builder.append("returnRecordToPojo", returnRecordToPojo);
         builder.append("mapJPAAnnotations", mapJPAAnnotations);
@@ -10450,37 +5540,19 @@ public class Settings
         builder.append("delimiter", delimiter);
         builder.append("emulateOnDuplicateKeyUpdateOnPrimaryKeyOnly", emulateOnDuplicateKeyUpdateOnPrimaryKeyOnly);
         builder.append("emulateMultiset", emulateMultiset);
-        builder.append("emulateNestedRecordProjectionsUsingMultisetEmulation", emulateNestedRecordProjectionsUsingMultisetEmulation);
-        builder.append("emulateComputedColumns", emulateComputedColumns);
-        builder.append("computedOnClientVirtual", computedOnClientVirtual);
-        builder.append("computedOnClientStored", computedOnClientStored);
         builder.append("executeUpdateWithoutWhere", executeUpdateWithoutWhere);
         builder.append("executeDeleteWithoutWhere", executeDeleteWithoutWhere);
         builder.append("interpreterDialect", interpreterDialect);
         builder.append("interpreterNameLookupCaseSensitivity", interpreterNameLookupCaseSensitivity);
-        builder.append("interpreterQuotedNames", interpreterQuotedNames);
         builder.append("interpreterLocale", interpreterLocale);
         builder.append("interpreterDelayForeignKeyDeclarations", interpreterDelayForeignKeyDeclarations);
-        builder.append("interpreterWithMetaLookups", interpreterWithMetaLookups);
         builder.append("metaIncludeSystemIndexes", metaIncludeSystemIndexes);
         builder.append("metaIncludeSystemSequences", metaIncludeSystemSequences);
-        builder.append("migrationHistorySchema", migrationHistorySchema);
-        builder.append("migrationHistorySchemaCreateSchemaIfNotExists", migrationHistorySchemaCreateSchemaIfNotExists);
-        builder.append("migrationDefaultSchema", migrationDefaultSchema);
-        builder.append("migrationSchemataCreateSchemaIfNotExists", migrationSchemataCreateSchemaIfNotExists);
-        builder.append("migrationDefaultContentType", migrationDefaultContentType);
-        builder.append("migrationAllowUndo", migrationAllowUndo);
-        builder.append("migrationAllowInvalidCommits", migrationAllowInvalidCommits);
-        builder.append("migrationAllowRename", migrationAllowRename);
-        builder.append("migrationAllowRenameConstraints", migrationAllowRenameConstraints);
-        builder.append("migrationAllowRenameIndexes", migrationAllowRenameIndexes);
-        builder.append("migrationAllowRenameTables", migrationAllowRenameTables);
-        builder.append("migrationAllowRenameColumns", migrationAllowRenameColumns);
+        builder.append("migrationAllowsUndo", migrationAllowsUndo);
         builder.append("migrationRevertUntracked", migrationRevertUntracked);
-        builder.append("migrationAutoVerification", migrationAutoVerification);
+        builder.append("migrationAutoBaseline", migrationAutoBaseline);
+        builder.append("migrationAutoValidation", migrationAutoValidation);
         builder.append("migrationIgnoreDefaultTimestampPrecisionDiffs", migrationIgnoreDefaultTimestampPrecisionDiffs);
-        builder.append("migrationIgnoreUnnamedConstraintDiffs", migrationIgnoreUnnamedConstraintDiffs);
-        builder.append("migrationIgnoreImplicitPrimaryKeyNotNullConstraints", migrationIgnoreImplicitPrimaryKeyNotNullConstraints);
         builder.append("locale", locale);
         builder.append("parseDialect", parseDialect);
         builder.append("parseLocale", parseLocale);
@@ -10497,22 +5569,13 @@ public class Settings
         builder.append("parseIgnoreComments", parseIgnoreComments);
         builder.append("parseIgnoreCommentStart", parseIgnoreCommentStart);
         builder.append("parseIgnoreCommentStop", parseIgnoreCommentStop);
-        builder.append("parsePlainSQLTemplateComments", parsePlainSQLTemplateComments);
-        builder.append("parsePlainSQLTemplateCommentStart", parsePlainSQLTemplateCommentStart);
-        builder.append("parsePlainSQLTemplateCommentStop", parsePlainSQLTemplateCommentStop);
-        builder.append("parseRawSQLComments", parseRawSQLComments);
-        builder.append("parseRawSQLCommentStart", parseRawSQLCommentStart);
-        builder.append("parseRawSQLCommentStop", parseRawSQLCommentStop);
         builder.append("parseRetainCommentsBetweenQueries", parseRetainCommentsBetweenQueries);
         builder.append("parseMetaDefaultExpressions", parseMetaDefaultExpressions);
-        builder.append("parseMetaViewSources", parseMetaViewSources);
-        builder.append("redact", redact);
         builder.append("readonlyTableRecordInsert", readonlyTableRecordInsert);
         builder.append("readonlyUpdatableRecordUpdate", readonlyUpdatableRecordUpdate);
         builder.append("readonlyInsert", readonlyInsert);
         builder.append("readonlyUpdate", readonlyUpdate);
         builder.append("applyWorkaroundFor7962", applyWorkaroundFor7962);
-        builder.append("warnOnStaticTypeRegistryAccess", warnOnStaticTypeRegistryAccess);
         builder.append("interpreterSearchPath", "schema", interpreterSearchPath);
         builder.append("migrationSchemata", "schema", migrationSchemata);
         builder.append("parseSearchPath", "schema", parseSearchPath);
@@ -10561,15 +5624,6 @@ public class Settings
             }
         } else {
             if (!renderSchema.equals(other.renderSchema)) {
-                return false;
-            }
-        }
-        if (renderTable == null) {
-            if (other.renderTable!= null) {
-                return false;
-            }
-        } else {
-            if (!renderTable.equals(other.renderTable)) {
                 return false;
             }
         }
@@ -10663,24 +5717,6 @@ public class Settings
                 return false;
             }
         }
-        if (renderNullifEmptyStringForBindValues == null) {
-            if (other.renderNullifEmptyStringForBindValues!= null) {
-                return false;
-            }
-        } else {
-            if (!renderNullifEmptyStringForBindValues.equals(other.renderNullifEmptyStringForBindValues)) {
-                return false;
-            }
-        }
-        if (renderAutoAliasedDerivedTableExpressions == null) {
-            if (other.renderAutoAliasedDerivedTableExpressions!= null) {
-                return false;
-            }
-        } else {
-            if (!renderAutoAliasedDerivedTableExpressions.equals(other.renderAutoAliasedDerivedTableExpressions)) {
-                return false;
-            }
-        }
         if (renderOptionalAssociativityParentheses == null) {
             if (other.renderOptionalAssociativityParentheses!= null) {
                 return false;
@@ -10753,15 +5789,6 @@ public class Settings
                 return false;
             }
         }
-        if (renderImplicitJoinToManyType == null) {
-            if (other.renderImplicitJoinToManyType!= null) {
-                return false;
-            }
-        } else {
-            if (!renderImplicitJoinToManyType.equals(other.renderImplicitJoinToManyType)) {
-                return false;
-            }
-        }
         if (renderDefaultNullability == null) {
             if (other.renderDefaultNullability!= null) {
                 return false;
@@ -10816,51 +5843,6 @@ public class Settings
                 return false;
             }
         }
-        if (renderVariablesInDerivedTablesForEmulations == null) {
-            if (other.renderVariablesInDerivedTablesForEmulations!= null) {
-                return false;
-            }
-        } else {
-            if (!renderVariablesInDerivedTablesForEmulations.equals(other.renderVariablesInDerivedTablesForEmulations)) {
-                return false;
-            }
-        }
-        if (renderRowConditionForSeekClause == null) {
-            if (other.renderRowConditionForSeekClause!= null) {
-                return false;
-            }
-        } else {
-            if (!renderRowConditionForSeekClause.equals(other.renderRowConditionForSeekClause)) {
-                return false;
-            }
-        }
-        if (renderRedundantConditionForSeekClause == null) {
-            if (other.renderRedundantConditionForSeekClause!= null) {
-                return false;
-            }
-        } else {
-            if (!renderRedundantConditionForSeekClause.equals(other.renderRedundantConditionForSeekClause)) {
-                return false;
-            }
-        }
-        if (renderPlainSQLTemplatesAsRaw == null) {
-            if (other.renderPlainSQLTemplatesAsRaw!= null) {
-                return false;
-            }
-        } else {
-            if (!renderPlainSQLTemplatesAsRaw.equals(other.renderPlainSQLTemplatesAsRaw)) {
-                return false;
-            }
-        }
-        if (renderDollarQuotedStringToken == null) {
-            if (other.renderDollarQuotedStringToken!= null) {
-                return false;
-            }
-        } else {
-            if (!renderDollarQuotedStringToken.equals(other.renderDollarQuotedStringToken)) {
-                return false;
-            }
-        }
         if (namePathSeparator == null) {
             if (other.namePathSeparator!= null) {
                 return false;
@@ -10888,15 +5870,6 @@ public class Settings
                 return false;
             }
         }
-        if (fetchTrimmedCharValues == null) {
-            if (other.fetchTrimmedCharValues!= null) {
-                return false;
-            }
-        } else {
-            if (!fetchTrimmedCharValues.equals(other.fetchTrimmedCharValues)) {
-                return false;
-            }
-        }
         if (fetchTriggerValuesAfterSQLServerOutput == null) {
             if (other.fetchTriggerValuesAfterSQLServerOutput!= null) {
                 return false;
@@ -10906,138 +5879,12 @@ public class Settings
                 return false;
             }
         }
-        if (fetchTriggerValuesAfterReturning == null) {
-            if (other.fetchTriggerValuesAfterReturning!= null) {
-                return false;
-            }
-        } else {
-            if (!fetchTriggerValuesAfterReturning.equals(other.fetchTriggerValuesAfterReturning)) {
-                return false;
-            }
-        }
         if (fetchIntermediateResult == null) {
             if (other.fetchIntermediateResult!= null) {
                 return false;
             }
         } else {
             if (!fetchIntermediateResult.equals(other.fetchIntermediateResult)) {
-                return false;
-            }
-        }
-        if (diagnosticsDuplicateStatements == null) {
-            if (other.diagnosticsDuplicateStatements!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsDuplicateStatements.equals(other.diagnosticsDuplicateStatements)) {
-                return false;
-            }
-        }
-        if (diagnosticsDuplicateStatementsUsingTransformPatterns == null) {
-            if (other.diagnosticsDuplicateStatementsUsingTransformPatterns!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsDuplicateStatementsUsingTransformPatterns.equals(other.diagnosticsDuplicateStatementsUsingTransformPatterns)) {
-                return false;
-            }
-        }
-        if (diagnosticsMissingWasNullCall == null) {
-            if (other.diagnosticsMissingWasNullCall!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsMissingWasNullCall.equals(other.diagnosticsMissingWasNullCall)) {
-                return false;
-            }
-        }
-        if (diagnosticsRepeatedStatements == null) {
-            if (other.diagnosticsRepeatedStatements!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsRepeatedStatements.equals(other.diagnosticsRepeatedStatements)) {
-                return false;
-            }
-        }
-        if (diagnosticsConsecutiveAggregation == null) {
-            if (other.diagnosticsConsecutiveAggregation!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsConsecutiveAggregation.equals(other.diagnosticsConsecutiveAggregation)) {
-                return false;
-            }
-        }
-        if (diagnosticsConcatenationInPredicate == null) {
-            if (other.diagnosticsConcatenationInPredicate!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsConcatenationInPredicate.equals(other.diagnosticsConcatenationInPredicate)) {
-                return false;
-            }
-        }
-        if (diagnosticsPossiblyWrongExpression == null) {
-            if (other.diagnosticsPossiblyWrongExpression!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsPossiblyWrongExpression.equals(other.diagnosticsPossiblyWrongExpression)) {
-                return false;
-            }
-        }
-        if (diagnosticsTooManyColumnsFetched == null) {
-            if (other.diagnosticsTooManyColumnsFetched!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsTooManyColumnsFetched.equals(other.diagnosticsTooManyColumnsFetched)) {
-                return false;
-            }
-        }
-        if (diagnosticsTooManyRowsFetched == null) {
-            if (other.diagnosticsTooManyRowsFetched!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsTooManyRowsFetched.equals(other.diagnosticsTooManyRowsFetched)) {
-                return false;
-            }
-        }
-        if (diagnosticsUnnecessaryWasNullCall == null) {
-            if (other.diagnosticsUnnecessaryWasNullCall!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsUnnecessaryWasNullCall.equals(other.diagnosticsUnnecessaryWasNullCall)) {
-                return false;
-            }
-        }
-        if (diagnosticsPatterns == null) {
-            if (other.diagnosticsPatterns!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsPatterns.equals(other.diagnosticsPatterns)) {
-                return false;
-            }
-        }
-        if (diagnosticsTrivialCondition == null) {
-            if (other.diagnosticsTrivialCondition!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsTrivialCondition.equals(other.diagnosticsTrivialCondition)) {
-                return false;
-            }
-        }
-        if (diagnosticsNullCondition == null) {
-            if (other.diagnosticsNullCondition!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsNullCondition.equals(other.diagnosticsNullCondition)) {
                 return false;
             }
         }
@@ -11059,93 +5906,12 @@ public class Settings
                 return false;
             }
         }
-        if (transformPatternsUnnecessaryDistinct == null) {
-            if (other.transformPatternsUnnecessaryDistinct!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsUnnecessaryDistinct.equals(other.transformPatternsUnnecessaryDistinct)) {
-                return false;
-            }
-        }
-        if (transformPatternsUnnecessaryScalarSubquery == null) {
-            if (other.transformPatternsUnnecessaryScalarSubquery!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsUnnecessaryScalarSubquery.equals(other.transformPatternsUnnecessaryScalarSubquery)) {
-                return false;
-            }
-        }
-        if (transformPatternsUnnecessaryInnerJoin == null) {
-            if (other.transformPatternsUnnecessaryInnerJoin!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsUnnecessaryInnerJoin.equals(other.transformPatternsUnnecessaryInnerJoin)) {
-                return false;
-            }
-        }
-        if (transformPatternsUnnecessaryGroupByExpressions == null) {
-            if (other.transformPatternsUnnecessaryGroupByExpressions!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsUnnecessaryGroupByExpressions.equals(other.transformPatternsUnnecessaryGroupByExpressions)) {
-                return false;
-            }
-        }
-        if (transformPatternsUnnecessaryOrderByExpressions == null) {
-            if (other.transformPatternsUnnecessaryOrderByExpressions!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsUnnecessaryOrderByExpressions.equals(other.transformPatternsUnnecessaryOrderByExpressions)) {
-                return false;
-            }
-        }
-        if (transformPatternsUnnecessaryExistsSubqueryClauses == null) {
-            if (other.transformPatternsUnnecessaryExistsSubqueryClauses!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsUnnecessaryExistsSubqueryClauses.equals(other.transformPatternsUnnecessaryExistsSubqueryClauses)) {
-                return false;
-            }
-        }
-        if (transformPatternsCountConstant == null) {
-            if (other.transformPatternsCountConstant!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsCountConstant.equals(other.transformPatternsCountConstant)) {
-                return false;
-            }
-        }
         if (transformPatternsTrim == null) {
             if (other.transformPatternsTrim!= null) {
                 return false;
             }
         } else {
             if (!transformPatternsTrim.equals(other.transformPatternsTrim)) {
-                return false;
-            }
-        }
-        if (transformPatternsNotAnd == null) {
-            if (other.transformPatternsNotAnd!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsNotAnd.equals(other.transformPatternsNotAnd)) {
-                return false;
-            }
-        }
-        if (transformPatternsNotOr == null) {
-            if (other.transformPatternsNotOr!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsNotOr.equals(other.transformPatternsNotOr)) {
                 return false;
             }
         }
@@ -11176,15 +5942,6 @@ public class Settings
                 return false;
             }
         }
-        if (transformPatternsDistinctFromNull == null) {
-            if (other.transformPatternsDistinctFromNull!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsDistinctFromNull.equals(other.transformPatternsDistinctFromNull)) {
-                return false;
-            }
-        }
         if (transformPatternsNormaliseAssociativeOps == null) {
             if (other.transformPatternsNormaliseAssociativeOps!= null) {
                 return false;
@@ -11209,15 +5966,6 @@ public class Settings
             }
         } else {
             if (!transformPatternsNormaliseFieldCompareValue.equals(other.transformPatternsNormaliseFieldCompareValue)) {
-                return false;
-            }
-        }
-        if (transformPatternsNormaliseCoalesceToNvl == null) {
-            if (other.transformPatternsNormaliseCoalesceToNvl!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsNormaliseCoalesceToNvl.equals(other.transformPatternsNormaliseCoalesceToNvl)) {
                 return false;
             }
         }
@@ -11284,114 +6032,6 @@ public class Settings
                 return false;
             }
         }
-        if (transformPatternsCaseSearchedToCaseSimple == null) {
-            if (other.transformPatternsCaseSearchedToCaseSimple!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsCaseSearchedToCaseSimple.equals(other.transformPatternsCaseSearchedToCaseSimple)) {
-                return false;
-            }
-        }
-        if (transformPatternsCaseElseNull == null) {
-            if (other.transformPatternsCaseElseNull!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsCaseElseNull.equals(other.transformPatternsCaseElseNull)) {
-                return false;
-            }
-        }
-        if (transformPatternsUnreachableCaseClauses == null) {
-            if (other.transformPatternsUnreachableCaseClauses!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsUnreachableCaseClauses.equals(other.transformPatternsUnreachableCaseClauses)) {
-                return false;
-            }
-        }
-        if (transformPatternsUnreachableDecodeClauses == null) {
-            if (other.transformPatternsUnreachableDecodeClauses!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsUnreachableDecodeClauses.equals(other.transformPatternsUnreachableDecodeClauses)) {
-                return false;
-            }
-        }
-        if (transformPatternsCaseDistinctToDecode == null) {
-            if (other.transformPatternsCaseDistinctToDecode!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsCaseDistinctToDecode.equals(other.transformPatternsCaseDistinctToDecode)) {
-                return false;
-            }
-        }
-        if (transformPatternsCaseMergeWhenWhen == null) {
-            if (other.transformPatternsCaseMergeWhenWhen!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsCaseMergeWhenWhen.equals(other.transformPatternsCaseMergeWhenWhen)) {
-                return false;
-            }
-        }
-        if (transformPatternsCaseMergeWhenElse == null) {
-            if (other.transformPatternsCaseMergeWhenElse!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsCaseMergeWhenElse.equals(other.transformPatternsCaseMergeWhenElse)) {
-                return false;
-            }
-        }
-        if (transformPatternsCaseToCaseAbbreviation == null) {
-            if (other.transformPatternsCaseToCaseAbbreviation!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsCaseToCaseAbbreviation.equals(other.transformPatternsCaseToCaseAbbreviation)) {
-                return false;
-            }
-        }
-        if (transformPatternsSimplifyCaseAbbreviation == null) {
-            if (other.transformPatternsSimplifyCaseAbbreviation!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsSimplifyCaseAbbreviation.equals(other.transformPatternsSimplifyCaseAbbreviation)) {
-                return false;
-            }
-        }
-        if (transformPatternsFlattenCaseAbbreviation == null) {
-            if (other.transformPatternsFlattenCaseAbbreviation!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsFlattenCaseAbbreviation.equals(other.transformPatternsFlattenCaseAbbreviation)) {
-                return false;
-            }
-        }
-        if (transformPatternsFlattenDecode == null) {
-            if (other.transformPatternsFlattenDecode!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsFlattenDecode.equals(other.transformPatternsFlattenDecode)) {
-                return false;
-            }
-        }
-        if (transformPatternsFlattenCase == null) {
-            if (other.transformPatternsFlattenCase!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsFlattenCase.equals(other.transformPatternsFlattenCase)) {
-                return false;
-            }
-        }
         if (transformPatternsTrivialCaseAbbreviation == null) {
             if (other.transformPatternsTrivialCaseAbbreviation!= null) {
                 return false;
@@ -11407,33 +6047,6 @@ public class Settings
             }
         } else {
             if (!transformPatternsTrivialPredicates.equals(other.transformPatternsTrivialPredicates)) {
-                return false;
-            }
-        }
-        if (transformPatternsTrivialBitwiseOperations == null) {
-            if (other.transformPatternsTrivialBitwiseOperations!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsTrivialBitwiseOperations.equals(other.transformPatternsTrivialBitwiseOperations)) {
-                return false;
-            }
-        }
-        if (transformPatternsBitSet == null) {
-            if (other.transformPatternsBitSet!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsBitSet.equals(other.transformPatternsBitSet)) {
-                return false;
-            }
-        }
-        if (transformPatternsBitGet == null) {
-            if (other.transformPatternsBitGet!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsBitGet.equals(other.transformPatternsBitGet)) {
                 return false;
             }
         }
@@ -11509,30 +6122,12 @@ public class Settings
                 return false;
             }
         }
-        if (transformPatternsNullOnNullInput == null) {
-            if (other.transformPatternsNullOnNullInput!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsNullOnNullInput.equals(other.transformPatternsNullOnNullInput)) {
-                return false;
-            }
-        }
         if (transformPatternsIdempotentFunctionRepetition == null) {
             if (other.transformPatternsIdempotentFunctionRepetition!= null) {
                 return false;
             }
         } else {
             if (!transformPatternsIdempotentFunctionRepetition.equals(other.transformPatternsIdempotentFunctionRepetition)) {
-                return false;
-            }
-        }
-        if (transformPatternsArithmeticComparisons == null) {
-            if (other.transformPatternsArithmeticComparisons!= null) {
-                return false;
-            }
-        } else {
-            if (!transformPatternsArithmeticComparisons.equals(other.transformPatternsArithmeticComparisons)) {
                 return false;
             }
         }
@@ -11641,24 +6236,6 @@ public class Settings
             }
         } else {
             if (!transformUnneededArithmeticExpressions.equals(other.transformUnneededArithmeticExpressions)) {
-                return false;
-            }
-        }
-        if (transformGroupByColumnIndex == null) {
-            if (other.transformGroupByColumnIndex!= null) {
-                return false;
-            }
-        } else {
-            if (!transformGroupByColumnIndex.equals(other.transformGroupByColumnIndex)) {
-                return false;
-            }
-        }
-        if (transformInlineCTE == null) {
-            if (other.transformInlineCTE!= null) {
-                return false;
-            }
-        } else {
-            if (!transformInlineCTE.equals(other.transformInlineCTE)) {
                 return false;
             }
         }
@@ -11806,33 +6383,6 @@ public class Settings
                 return false;
             }
         }
-        if (executeLoggingSQLExceptions == null) {
-            if (other.executeLoggingSQLExceptions!= null) {
-                return false;
-            }
-        } else {
-            if (!executeLoggingSQLExceptions.equals(other.executeLoggingSQLExceptions)) {
-                return false;
-            }
-        }
-        if (diagnosticsLogging == null) {
-            if (other.diagnosticsLogging!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsLogging.equals(other.diagnosticsLogging)) {
-                return false;
-            }
-        }
-        if (diagnosticsConnection == null) {
-            if (other.diagnosticsConnection!= null) {
-                return false;
-            }
-        } else {
-            if (!diagnosticsConnection.equals(other.diagnosticsConnection)) {
-                return false;
-            }
-        }
         if (updateRecordVersion == null) {
             if (other.updateRecordVersion!= null) {
                 return false;
@@ -11896,15 +6446,6 @@ public class Settings
                 return false;
             }
         }
-        if (recordDirtyTracking == null) {
-            if (other.recordDirtyTracking!= null) {
-                return false;
-            }
-        } else {
-            if (!recordDirtyTracking.equals(other.recordDirtyTracking)) {
-                return false;
-            }
-        }
         if (updatablePrimaryKeys == null) {
             if (other.updatablePrimaryKeys!= null) {
                 return false;
@@ -11950,24 +6491,6 @@ public class Settings
                 return false;
             }
         }
-        if (cacheRecordMappersLRUCacheSize == null) {
-            if (other.cacheRecordMappersLRUCacheSize!= null) {
-                return false;
-            }
-        } else {
-            if (!cacheRecordMappersLRUCacheSize.equals(other.cacheRecordMappersLRUCacheSize)) {
-                return false;
-            }
-        }
-        if (reflectionCacheLRUCacheSize == null) {
-            if (other.reflectionCacheLRUCacheSize!= null) {
-                return false;
-            }
-        } else {
-            if (!reflectionCacheLRUCacheSize.equals(other.reflectionCacheLRUCacheSize)) {
-                return false;
-            }
-        }
         if (cachePreparedStatementInLoader == null) {
             if (other.cachePreparedStatementInLoader!= null) {
                 return false;
@@ -12010,24 +6533,6 @@ public class Settings
             }
         } else {
             if (!returnIdentityOnUpdatableRecord.equals(other.returnIdentityOnUpdatableRecord)) {
-                return false;
-            }
-        }
-        if (returnDefaultOnUpdatableRecord == null) {
-            if (other.returnDefaultOnUpdatableRecord!= null) {
-                return false;
-            }
-        } else {
-            if (!returnDefaultOnUpdatableRecord.equals(other.returnDefaultOnUpdatableRecord)) {
-                return false;
-            }
-        }
-        if (returnComputedOnUpdatableRecord == null) {
-            if (other.returnComputedOnUpdatableRecord!= null) {
-                return false;
-            }
-        } else {
-            if (!returnComputedOnUpdatableRecord.equals(other.returnComputedOnUpdatableRecord)) {
                 return false;
             }
         }
@@ -12193,42 +6698,6 @@ public class Settings
                 return false;
             }
         }
-        if (emulateNestedRecordProjectionsUsingMultisetEmulation == null) {
-            if (other.emulateNestedRecordProjectionsUsingMultisetEmulation!= null) {
-                return false;
-            }
-        } else {
-            if (!emulateNestedRecordProjectionsUsingMultisetEmulation.equals(other.emulateNestedRecordProjectionsUsingMultisetEmulation)) {
-                return false;
-            }
-        }
-        if (emulateComputedColumns == null) {
-            if (other.emulateComputedColumns!= null) {
-                return false;
-            }
-        } else {
-            if (!emulateComputedColumns.equals(other.emulateComputedColumns)) {
-                return false;
-            }
-        }
-        if (computedOnClientVirtual == null) {
-            if (other.computedOnClientVirtual!= null) {
-                return false;
-            }
-        } else {
-            if (!computedOnClientVirtual.equals(other.computedOnClientVirtual)) {
-                return false;
-            }
-        }
-        if (computedOnClientStored == null) {
-            if (other.computedOnClientStored!= null) {
-                return false;
-            }
-        } else {
-            if (!computedOnClientStored.equals(other.computedOnClientStored)) {
-                return false;
-            }
-        }
         if (executeUpdateWithoutWhere == null) {
             if (other.executeUpdateWithoutWhere!= null) {
                 return false;
@@ -12265,15 +6734,6 @@ public class Settings
                 return false;
             }
         }
-        if (interpreterQuotedNames == null) {
-            if (other.interpreterQuotedNames!= null) {
-                return false;
-            }
-        } else {
-            if (!interpreterQuotedNames.equals(other.interpreterQuotedNames)) {
-                return false;
-            }
-        }
         if (interpreterLocale == null) {
             if (other.interpreterLocale!= null) {
                 return false;
@@ -12289,15 +6749,6 @@ public class Settings
             }
         } else {
             if (!interpreterDelayForeignKeyDeclarations.equals(other.interpreterDelayForeignKeyDeclarations)) {
-                return false;
-            }
-        }
-        if (interpreterWithMetaLookups == null) {
-            if (other.interpreterWithMetaLookups!= null) {
-                return false;
-            }
-        } else {
-            if (!interpreterWithMetaLookups.equals(other.interpreterWithMetaLookups)) {
                 return false;
             }
         }
@@ -12319,111 +6770,12 @@ public class Settings
                 return false;
             }
         }
-        if (migrationHistorySchema == null) {
-            if (other.migrationHistorySchema!= null) {
+        if (migrationAllowsUndo == null) {
+            if (other.migrationAllowsUndo!= null) {
                 return false;
             }
         } else {
-            if (!migrationHistorySchema.equals(other.migrationHistorySchema)) {
-                return false;
-            }
-        }
-        if (migrationHistorySchemaCreateSchemaIfNotExists == null) {
-            if (other.migrationHistorySchemaCreateSchemaIfNotExists!= null) {
-                return false;
-            }
-        } else {
-            if (!migrationHistorySchemaCreateSchemaIfNotExists.equals(other.migrationHistorySchemaCreateSchemaIfNotExists)) {
-                return false;
-            }
-        }
-        if (migrationDefaultSchema == null) {
-            if (other.migrationDefaultSchema!= null) {
-                return false;
-            }
-        } else {
-            if (!migrationDefaultSchema.equals(other.migrationDefaultSchema)) {
-                return false;
-            }
-        }
-        if (migrationSchemataCreateSchemaIfNotExists == null) {
-            if (other.migrationSchemataCreateSchemaIfNotExists!= null) {
-                return false;
-            }
-        } else {
-            if (!migrationSchemataCreateSchemaIfNotExists.equals(other.migrationSchemataCreateSchemaIfNotExists)) {
-                return false;
-            }
-        }
-        if (migrationDefaultContentType == null) {
-            if (other.migrationDefaultContentType!= null) {
-                return false;
-            }
-        } else {
-            if (!migrationDefaultContentType.equals(other.migrationDefaultContentType)) {
-                return false;
-            }
-        }
-        if (migrationAllowUndo == null) {
-            if (other.migrationAllowUndo!= null) {
-                return false;
-            }
-        } else {
-            if (!migrationAllowUndo.equals(other.migrationAllowUndo)) {
-                return false;
-            }
-        }
-        if (migrationAllowInvalidCommits == null) {
-            if (other.migrationAllowInvalidCommits!= null) {
-                return false;
-            }
-        } else {
-            if (!migrationAllowInvalidCommits.equals(other.migrationAllowInvalidCommits)) {
-                return false;
-            }
-        }
-        if (migrationAllowRename == null) {
-            if (other.migrationAllowRename!= null) {
-                return false;
-            }
-        } else {
-            if (!migrationAllowRename.equals(other.migrationAllowRename)) {
-                return false;
-            }
-        }
-        if (migrationAllowRenameConstraints == null) {
-            if (other.migrationAllowRenameConstraints!= null) {
-                return false;
-            }
-        } else {
-            if (!migrationAllowRenameConstraints.equals(other.migrationAllowRenameConstraints)) {
-                return false;
-            }
-        }
-        if (migrationAllowRenameIndexes == null) {
-            if (other.migrationAllowRenameIndexes!= null) {
-                return false;
-            }
-        } else {
-            if (!migrationAllowRenameIndexes.equals(other.migrationAllowRenameIndexes)) {
-                return false;
-            }
-        }
-        if (migrationAllowRenameTables == null) {
-            if (other.migrationAllowRenameTables!= null) {
-                return false;
-            }
-        } else {
-            if (!migrationAllowRenameTables.equals(other.migrationAllowRenameTables)) {
-                return false;
-            }
-        }
-        if (migrationAllowRenameColumns == null) {
-            if (other.migrationAllowRenameColumns!= null) {
-                return false;
-            }
-        } else {
-            if (!migrationAllowRenameColumns.equals(other.migrationAllowRenameColumns)) {
+            if (!migrationAllowsUndo.equals(other.migrationAllowsUndo)) {
                 return false;
             }
         }
@@ -12436,12 +6788,21 @@ public class Settings
                 return false;
             }
         }
-        if (migrationAutoVerification == null) {
-            if (other.migrationAutoVerification!= null) {
+        if (migrationAutoBaseline == null) {
+            if (other.migrationAutoBaseline!= null) {
                 return false;
             }
         } else {
-            if (!migrationAutoVerification.equals(other.migrationAutoVerification)) {
+            if (!migrationAutoBaseline.equals(other.migrationAutoBaseline)) {
+                return false;
+            }
+        }
+        if (migrationAutoValidation == null) {
+            if (other.migrationAutoValidation!= null) {
+                return false;
+            }
+        } else {
+            if (!migrationAutoValidation.equals(other.migrationAutoValidation)) {
                 return false;
             }
         }
@@ -12451,24 +6812,6 @@ public class Settings
             }
         } else {
             if (!migrationIgnoreDefaultTimestampPrecisionDiffs.equals(other.migrationIgnoreDefaultTimestampPrecisionDiffs)) {
-                return false;
-            }
-        }
-        if (migrationIgnoreUnnamedConstraintDiffs == null) {
-            if (other.migrationIgnoreUnnamedConstraintDiffs!= null) {
-                return false;
-            }
-        } else {
-            if (!migrationIgnoreUnnamedConstraintDiffs.equals(other.migrationIgnoreUnnamedConstraintDiffs)) {
-                return false;
-            }
-        }
-        if (migrationIgnoreImplicitPrimaryKeyNotNullConstraints == null) {
-            if (other.migrationIgnoreImplicitPrimaryKeyNotNullConstraints!= null) {
-                return false;
-            }
-        } else {
-            if (!migrationIgnoreImplicitPrimaryKeyNotNullConstraints.equals(other.migrationIgnoreImplicitPrimaryKeyNotNullConstraints)) {
                 return false;
             }
         }
@@ -12616,60 +6959,6 @@ public class Settings
                 return false;
             }
         }
-        if (parsePlainSQLTemplateComments == null) {
-            if (other.parsePlainSQLTemplateComments!= null) {
-                return false;
-            }
-        } else {
-            if (!parsePlainSQLTemplateComments.equals(other.parsePlainSQLTemplateComments)) {
-                return false;
-            }
-        }
-        if (parsePlainSQLTemplateCommentStart == null) {
-            if (other.parsePlainSQLTemplateCommentStart!= null) {
-                return false;
-            }
-        } else {
-            if (!parsePlainSQLTemplateCommentStart.equals(other.parsePlainSQLTemplateCommentStart)) {
-                return false;
-            }
-        }
-        if (parsePlainSQLTemplateCommentStop == null) {
-            if (other.parsePlainSQLTemplateCommentStop!= null) {
-                return false;
-            }
-        } else {
-            if (!parsePlainSQLTemplateCommentStop.equals(other.parsePlainSQLTemplateCommentStop)) {
-                return false;
-            }
-        }
-        if (parseRawSQLComments == null) {
-            if (other.parseRawSQLComments!= null) {
-                return false;
-            }
-        } else {
-            if (!parseRawSQLComments.equals(other.parseRawSQLComments)) {
-                return false;
-            }
-        }
-        if (parseRawSQLCommentStart == null) {
-            if (other.parseRawSQLCommentStart!= null) {
-                return false;
-            }
-        } else {
-            if (!parseRawSQLCommentStart.equals(other.parseRawSQLCommentStart)) {
-                return false;
-            }
-        }
-        if (parseRawSQLCommentStop == null) {
-            if (other.parseRawSQLCommentStop!= null) {
-                return false;
-            }
-        } else {
-            if (!parseRawSQLCommentStop.equals(other.parseRawSQLCommentStop)) {
-                return false;
-            }
-        }
         if (parseRetainCommentsBetweenQueries == null) {
             if (other.parseRetainCommentsBetweenQueries!= null) {
                 return false;
@@ -12685,24 +6974,6 @@ public class Settings
             }
         } else {
             if (!parseMetaDefaultExpressions.equals(other.parseMetaDefaultExpressions)) {
-                return false;
-            }
-        }
-        if (parseMetaViewSources == null) {
-            if (other.parseMetaViewSources!= null) {
-                return false;
-            }
-        } else {
-            if (!parseMetaViewSources.equals(other.parseMetaViewSources)) {
-                return false;
-            }
-        }
-        if (redact == null) {
-            if (other.redact!= null) {
-                return false;
-            }
-        } else {
-            if (!redact.equals(other.redact)) {
                 return false;
             }
         }
@@ -12751,17 +7022,8 @@ public class Settings
                 return false;
             }
         }
-        if (warnOnStaticTypeRegistryAccess == null) {
-            if (other.warnOnStaticTypeRegistryAccess!= null) {
-                return false;
-            }
-        } else {
-            if (!warnOnStaticTypeRegistryAccess.equals(other.warnOnStaticTypeRegistryAccess)) {
-                return false;
-            }
-        }
-        if ((interpreterSearchPath == null)||interpreterSearchPath.isEmpty()) {
-            if ((other.interpreterSearchPath!= null)&&(!other.interpreterSearchPath.isEmpty())) {
+        if (interpreterSearchPath == null) {
+            if (other.interpreterSearchPath!= null) {
                 return false;
             }
         } else {
@@ -12769,8 +7031,8 @@ public class Settings
                 return false;
             }
         }
-        if ((migrationSchemata == null)||migrationSchemata.isEmpty()) {
-            if ((other.migrationSchemata!= null)&&(!other.migrationSchemata.isEmpty())) {
+        if (migrationSchemata == null) {
+            if (other.migrationSchemata!= null) {
                 return false;
             }
         } else {
@@ -12778,8 +7040,8 @@ public class Settings
                 return false;
             }
         }
-        if ((parseSearchPath == null)||parseSearchPath.isEmpty()) {
-            if ((other.parseSearchPath!= null)&&(!other.parseSearchPath.isEmpty())) {
+        if (parseSearchPath == null) {
+            if (other.parseSearchPath!= null) {
                 return false;
             }
         } else {
@@ -12797,7 +7059,6 @@ public class Settings
         result = ((prime*result)+((forceIntegerTypesOnZeroScaleDecimals == null)? 0 :forceIntegerTypesOnZeroScaleDecimals.hashCode()));
         result = ((prime*result)+((renderCatalog == null)? 0 :renderCatalog.hashCode()));
         result = ((prime*result)+((renderSchema == null)? 0 :renderSchema.hashCode()));
-        result = ((prime*result)+((renderTable == null)? 0 :renderTable.hashCode()));
         result = ((prime*result)+((renderMapping == null)? 0 :renderMapping.hashCode()));
         result = ((prime*result)+((renderQuotedNames == null)? 0 :renderQuotedNames.hashCode()));
         result = ((prime*result)+((renderNameCase == null)? 0 :renderNameCase.hashCode()));
@@ -12808,8 +7069,6 @@ public class Settings
         result = ((prime*result)+((renderLocale == null)? 0 :renderLocale.hashCode()));
         result = ((prime*result)+((renderFormatted == null)? 0 :renderFormatted.hashCode()));
         result = ((prime*result)+((renderFormatting == null)? 0 :renderFormatting.hashCode()));
-        result = ((prime*result)+((renderNullifEmptyStringForBindValues == null)? 0 :renderNullifEmptyStringForBindValues.hashCode()));
-        result = ((prime*result)+((renderAutoAliasedDerivedTableExpressions == null)? 0 :renderAutoAliasedDerivedTableExpressions.hashCode()));
         result = ((prime*result)+((renderOptionalAssociativityParentheses == null)? 0 :renderOptionalAssociativityParentheses.hashCode()));
         result = ((prime*result)+((renderOptionalAsKeywordForTableAliases == null)? 0 :renderOptionalAsKeywordForTableAliases.hashCode()));
         result = ((prime*result)+((renderOptionalAsKeywordForFieldAliases == null)? 0 :renderOptionalAsKeywordForFieldAliases.hashCode()));
@@ -12818,58 +7077,26 @@ public class Settings
         result = ((prime*result)+((renderImplicitWindowRange == null)? 0 :renderImplicitWindowRange.hashCode()));
         result = ((prime*result)+((renderScalarSubqueriesForStoredFunctions == null)? 0 :renderScalarSubqueriesForStoredFunctions.hashCode()));
         result = ((prime*result)+((renderImplicitJoinType == null)? 0 :renderImplicitJoinType.hashCode()));
-        result = ((prime*result)+((renderImplicitJoinToManyType == null)? 0 :renderImplicitJoinToManyType.hashCode()));
         result = ((prime*result)+((renderDefaultNullability == null)? 0 :renderDefaultNullability.hashCode()));
         result = ((prime*result)+((renderCoalesceToEmptyStringInConcat == null)? 0 :renderCoalesceToEmptyStringInConcat.hashCode()));
         result = ((prime*result)+((renderOrderByRownumberForEmulatedPagination == null)? 0 :renderOrderByRownumberForEmulatedPagination.hashCode()));
         result = ((prime*result)+((renderOutputForSQLServerReturningClause == null)? 0 :renderOutputForSQLServerReturningClause.hashCode()));
         result = ((prime*result)+((renderGroupConcatMaxLenSessionVariable == null)? 0 :renderGroupConcatMaxLenSessionVariable.hashCode()));
         result = ((prime*result)+((renderParenthesisAroundSetOperationQueries == null)? 0 :renderParenthesisAroundSetOperationQueries.hashCode()));
-        result = ((prime*result)+((renderVariablesInDerivedTablesForEmulations == null)? 0 :renderVariablesInDerivedTablesForEmulations.hashCode()));
-        result = ((prime*result)+((renderRowConditionForSeekClause == null)? 0 :renderRowConditionForSeekClause.hashCode()));
-        result = ((prime*result)+((renderRedundantConditionForSeekClause == null)? 0 :renderRedundantConditionForSeekClause.hashCode()));
-        result = ((prime*result)+((renderPlainSQLTemplatesAsRaw == null)? 0 :renderPlainSQLTemplatesAsRaw.hashCode()));
-        result = ((prime*result)+((renderDollarQuotedStringToken == null)? 0 :renderDollarQuotedStringToken.hashCode()));
         result = ((prime*result)+((namePathSeparator == null)? 0 :namePathSeparator.hashCode()));
         result = ((prime*result)+((bindOffsetDateTimeType == null)? 0 :bindOffsetDateTimeType.hashCode()));
         result = ((prime*result)+((bindOffsetTimeType == null)? 0 :bindOffsetTimeType.hashCode()));
-        result = ((prime*result)+((fetchTrimmedCharValues == null)? 0 :fetchTrimmedCharValues.hashCode()));
         result = ((prime*result)+((fetchTriggerValuesAfterSQLServerOutput == null)? 0 :fetchTriggerValuesAfterSQLServerOutput.hashCode()));
-        result = ((prime*result)+((fetchTriggerValuesAfterReturning == null)? 0 :fetchTriggerValuesAfterReturning.hashCode()));
         result = ((prime*result)+((fetchIntermediateResult == null)? 0 :fetchIntermediateResult.hashCode()));
-        result = ((prime*result)+((diagnosticsDuplicateStatements == null)? 0 :diagnosticsDuplicateStatements.hashCode()));
-        result = ((prime*result)+((diagnosticsDuplicateStatementsUsingTransformPatterns == null)? 0 :diagnosticsDuplicateStatementsUsingTransformPatterns.hashCode()));
-        result = ((prime*result)+((diagnosticsMissingWasNullCall == null)? 0 :diagnosticsMissingWasNullCall.hashCode()));
-        result = ((prime*result)+((diagnosticsRepeatedStatements == null)? 0 :diagnosticsRepeatedStatements.hashCode()));
-        result = ((prime*result)+((diagnosticsConsecutiveAggregation == null)? 0 :diagnosticsConsecutiveAggregation.hashCode()));
-        result = ((prime*result)+((diagnosticsConcatenationInPredicate == null)? 0 :diagnosticsConcatenationInPredicate.hashCode()));
-        result = ((prime*result)+((diagnosticsPossiblyWrongExpression == null)? 0 :diagnosticsPossiblyWrongExpression.hashCode()));
-        result = ((prime*result)+((diagnosticsTooManyColumnsFetched == null)? 0 :diagnosticsTooManyColumnsFetched.hashCode()));
-        result = ((prime*result)+((diagnosticsTooManyRowsFetched == null)? 0 :diagnosticsTooManyRowsFetched.hashCode()));
-        result = ((prime*result)+((diagnosticsUnnecessaryWasNullCall == null)? 0 :diagnosticsUnnecessaryWasNullCall.hashCode()));
-        result = ((prime*result)+((diagnosticsPatterns == null)? 0 :diagnosticsPatterns.hashCode()));
-        result = ((prime*result)+((diagnosticsTrivialCondition == null)? 0 :diagnosticsTrivialCondition.hashCode()));
-        result = ((prime*result)+((diagnosticsNullCondition == null)? 0 :diagnosticsNullCondition.hashCode()));
         result = ((prime*result)+((transformPatterns == null)? 0 :transformPatterns.hashCode()));
         result = ((prime*result)+((transformPatternsLogging == null)? 0 :transformPatternsLogging.hashCode()));
-        result = ((prime*result)+((transformPatternsUnnecessaryDistinct == null)? 0 :transformPatternsUnnecessaryDistinct.hashCode()));
-        result = ((prime*result)+((transformPatternsUnnecessaryScalarSubquery == null)? 0 :transformPatternsUnnecessaryScalarSubquery.hashCode()));
-        result = ((prime*result)+((transformPatternsUnnecessaryInnerJoin == null)? 0 :transformPatternsUnnecessaryInnerJoin.hashCode()));
-        result = ((prime*result)+((transformPatternsUnnecessaryGroupByExpressions == null)? 0 :transformPatternsUnnecessaryGroupByExpressions.hashCode()));
-        result = ((prime*result)+((transformPatternsUnnecessaryOrderByExpressions == null)? 0 :transformPatternsUnnecessaryOrderByExpressions.hashCode()));
-        result = ((prime*result)+((transformPatternsUnnecessaryExistsSubqueryClauses == null)? 0 :transformPatternsUnnecessaryExistsSubqueryClauses.hashCode()));
-        result = ((prime*result)+((transformPatternsCountConstant == null)? 0 :transformPatternsCountConstant.hashCode()));
         result = ((prime*result)+((transformPatternsTrim == null)? 0 :transformPatternsTrim.hashCode()));
-        result = ((prime*result)+((transformPatternsNotAnd == null)? 0 :transformPatternsNotAnd.hashCode()));
-        result = ((prime*result)+((transformPatternsNotOr == null)? 0 :transformPatternsNotOr.hashCode()));
         result = ((prime*result)+((transformPatternsNotNot == null)? 0 :transformPatternsNotNot.hashCode()));
         result = ((prime*result)+((transformPatternsNotComparison == null)? 0 :transformPatternsNotComparison.hashCode()));
         result = ((prime*result)+((transformPatternsNotNotDistinct == null)? 0 :transformPatternsNotNotDistinct.hashCode()));
-        result = ((prime*result)+((transformPatternsDistinctFromNull == null)? 0 :transformPatternsDistinctFromNull.hashCode()));
         result = ((prime*result)+((transformPatternsNormaliseAssociativeOps == null)? 0 :transformPatternsNormaliseAssociativeOps.hashCode()));
         result = ((prime*result)+((transformPatternsNormaliseInListSingleElementToComparison == null)? 0 :transformPatternsNormaliseInListSingleElementToComparison.hashCode()));
         result = ((prime*result)+((transformPatternsNormaliseFieldCompareValue == null)? 0 :transformPatternsNormaliseFieldCompareValue.hashCode()));
-        result = ((prime*result)+((transformPatternsNormaliseCoalesceToNvl == null)? 0 :transformPatternsNormaliseCoalesceToNvl.hashCode()));
         result = ((prime*result)+((transformPatternsOrEqToIn == null)? 0 :transformPatternsOrEqToIn.hashCode()));
         result = ((prime*result)+((transformPatternsAndNeToNotIn == null)? 0 :transformPatternsAndNeToNotIn.hashCode()));
         result = ((prime*result)+((transformPatternsMergeOrComparison == null)? 0 :transformPatternsMergeOrComparison.hashCode()));
@@ -12877,23 +7104,8 @@ public class Settings
         result = ((prime*result)+((transformPatternsMergeInLists == null)? 0 :transformPatternsMergeInLists.hashCode()));
         result = ((prime*result)+((transformPatternsMergeRangePredicates == null)? 0 :transformPatternsMergeRangePredicates.hashCode()));
         result = ((prime*result)+((transformPatternsMergeBetweenSymmetricPredicates == null)? 0 :transformPatternsMergeBetweenSymmetricPredicates.hashCode()));
-        result = ((prime*result)+((transformPatternsCaseSearchedToCaseSimple == null)? 0 :transformPatternsCaseSearchedToCaseSimple.hashCode()));
-        result = ((prime*result)+((transformPatternsCaseElseNull == null)? 0 :transformPatternsCaseElseNull.hashCode()));
-        result = ((prime*result)+((transformPatternsUnreachableCaseClauses == null)? 0 :transformPatternsUnreachableCaseClauses.hashCode()));
-        result = ((prime*result)+((transformPatternsUnreachableDecodeClauses == null)? 0 :transformPatternsUnreachableDecodeClauses.hashCode()));
-        result = ((prime*result)+((transformPatternsCaseDistinctToDecode == null)? 0 :transformPatternsCaseDistinctToDecode.hashCode()));
-        result = ((prime*result)+((transformPatternsCaseMergeWhenWhen == null)? 0 :transformPatternsCaseMergeWhenWhen.hashCode()));
-        result = ((prime*result)+((transformPatternsCaseMergeWhenElse == null)? 0 :transformPatternsCaseMergeWhenElse.hashCode()));
-        result = ((prime*result)+((transformPatternsCaseToCaseAbbreviation == null)? 0 :transformPatternsCaseToCaseAbbreviation.hashCode()));
-        result = ((prime*result)+((transformPatternsSimplifyCaseAbbreviation == null)? 0 :transformPatternsSimplifyCaseAbbreviation.hashCode()));
-        result = ((prime*result)+((transformPatternsFlattenCaseAbbreviation == null)? 0 :transformPatternsFlattenCaseAbbreviation.hashCode()));
-        result = ((prime*result)+((transformPatternsFlattenDecode == null)? 0 :transformPatternsFlattenDecode.hashCode()));
-        result = ((prime*result)+((transformPatternsFlattenCase == null)? 0 :transformPatternsFlattenCase.hashCode()));
         result = ((prime*result)+((transformPatternsTrivialCaseAbbreviation == null)? 0 :transformPatternsTrivialCaseAbbreviation.hashCode()));
         result = ((prime*result)+((transformPatternsTrivialPredicates == null)? 0 :transformPatternsTrivialPredicates.hashCode()));
-        result = ((prime*result)+((transformPatternsTrivialBitwiseOperations == null)? 0 :transformPatternsTrivialBitwiseOperations.hashCode()));
-        result = ((prime*result)+((transformPatternsBitSet == null)? 0 :transformPatternsBitSet.hashCode()));
-        result = ((prime*result)+((transformPatternsBitGet == null)? 0 :transformPatternsBitGet.hashCode()));
         result = ((prime*result)+((transformPatternsScalarSubqueryCountAsteriskGtZero == null)? 0 :transformPatternsScalarSubqueryCountAsteriskGtZero.hashCode()));
         result = ((prime*result)+((transformPatternsScalarSubqueryCountExpressionGtZero == null)? 0 :transformPatternsScalarSubqueryCountExpressionGtZero.hashCode()));
         result = ((prime*result)+((transformPatternsEmptyScalarSubquery == null)? 0 :transformPatternsEmptyScalarSubquery.hashCode()));
@@ -12902,9 +7114,7 @@ public class Settings
         result = ((prime*result)+((transformPatternsBitNotBitNand == null)? 0 :transformPatternsBitNotBitNand.hashCode()));
         result = ((prime*result)+((transformPatternsBitNotBitNor == null)? 0 :transformPatternsBitNotBitNor.hashCode()));
         result = ((prime*result)+((transformPatternsBitNotBitXNor == null)? 0 :transformPatternsBitNotBitXNor.hashCode()));
-        result = ((prime*result)+((transformPatternsNullOnNullInput == null)? 0 :transformPatternsNullOnNullInput.hashCode()));
         result = ((prime*result)+((transformPatternsIdempotentFunctionRepetition == null)? 0 :transformPatternsIdempotentFunctionRepetition.hashCode()));
-        result = ((prime*result)+((transformPatternsArithmeticComparisons == null)? 0 :transformPatternsArithmeticComparisons.hashCode()));
         result = ((prime*result)+((transformPatternsArithmeticExpressions == null)? 0 :transformPatternsArithmeticExpressions.hashCode()));
         result = ((prime*result)+((transformPatternsTrigonometricFunctions == null)? 0 :transformPatternsTrigonometricFunctions.hashCode()));
         result = ((prime*result)+((transformPatternsLogarithmicFunctions == null)? 0 :transformPatternsLogarithmicFunctions.hashCode()));
@@ -12917,8 +7127,6 @@ public class Settings
         result = ((prime*result)+((transformTableListsToAnsiJoin == null)? 0 :transformTableListsToAnsiJoin.hashCode()));
         result = ((prime*result)+((transformRownum == null)? 0 :transformRownum.hashCode()));
         result = ((prime*result)+((transformUnneededArithmeticExpressions == null)? 0 :transformUnneededArithmeticExpressions.hashCode()));
-        result = ((prime*result)+((transformGroupByColumnIndex == null)? 0 :transformGroupByColumnIndex.hashCode()));
-        result = ((prime*result)+((transformInlineCTE == null)? 0 :transformInlineCTE.hashCode()));
         result = ((prime*result)+((backslashEscaping == null)? 0 :backslashEscaping.hashCode()));
         result = ((prime*result)+((paramType == null)? 0 :paramType.hashCode()));
         result = ((prime*result)+((paramCastMode == null)? 0 :paramCastMode.hashCode()));
@@ -12935,9 +7143,6 @@ public class Settings
         result = ((prime*result)+((executeListenerStartInvocationOrder == null)? 0 :executeListenerStartInvocationOrder.hashCode()));
         result = ((prime*result)+((executeListenerEndInvocationOrder == null)? 0 :executeListenerEndInvocationOrder.hashCode()));
         result = ((prime*result)+((executeLogging == null)? 0 :executeLogging.hashCode()));
-        result = ((prime*result)+((executeLoggingSQLExceptions == null)? 0 :executeLoggingSQLExceptions.hashCode()));
-        result = ((prime*result)+((diagnosticsLogging == null)? 0 :diagnosticsLogging.hashCode()));
-        result = ((prime*result)+((diagnosticsConnection == null)? 0 :diagnosticsConnection.hashCode()));
         result = ((prime*result)+((updateRecordVersion == null)? 0 :updateRecordVersion.hashCode()));
         result = ((prime*result)+((updateRecordTimestamp == null)? 0 :updateRecordTimestamp.hashCode()));
         result = ((prime*result)+((executeWithOptimisticLocking == null)? 0 :executeWithOptimisticLocking.hashCode()));
@@ -12945,21 +7150,16 @@ public class Settings
         result = ((prime*result)+((attachRecords == null)? 0 :attachRecords.hashCode()));
         result = ((prime*result)+((insertUnchangedRecords == null)? 0 :insertUnchangedRecords.hashCode()));
         result = ((prime*result)+((updateUnchangedRecords == null)? 0 :updateUnchangedRecords.hashCode()));
-        result = ((prime*result)+((recordDirtyTracking == null)? 0 :recordDirtyTracking.hashCode()));
         result = ((prime*result)+((updatablePrimaryKeys == null)? 0 :updatablePrimaryKeys.hashCode()));
         result = ((prime*result)+((reflectionCaching == null)? 0 :reflectionCaching.hashCode()));
         result = ((prime*result)+((cacheRecordMappers == null)? 0 :cacheRecordMappers.hashCode()));
         result = ((prime*result)+((cacheParsingConnection == null)? 0 :cacheParsingConnection.hashCode()));
         result = ((prime*result)+((cacheParsingConnectionLRUCacheSize == null)? 0 :cacheParsingConnectionLRUCacheSize.hashCode()));
-        result = ((prime*result)+((cacheRecordMappersLRUCacheSize == null)? 0 :cacheRecordMappersLRUCacheSize.hashCode()));
-        result = ((prime*result)+((reflectionCacheLRUCacheSize == null)? 0 :reflectionCacheLRUCacheSize.hashCode()));
         result = ((prime*result)+((cachePreparedStatementInLoader == null)? 0 :cachePreparedStatementInLoader.hashCode()));
         result = ((prime*result)+((throwExceptions == null)? 0 :throwExceptions.hashCode()));
         result = ((prime*result)+((fetchWarnings == null)? 0 :fetchWarnings.hashCode()));
         result = ((prime*result)+((fetchServerOutputSize == null)? 0 :fetchServerOutputSize.hashCode()));
         result = ((prime*result)+((returnIdentityOnUpdatableRecord == null)? 0 :returnIdentityOnUpdatableRecord.hashCode()));
-        result = ((prime*result)+((returnDefaultOnUpdatableRecord == null)? 0 :returnDefaultOnUpdatableRecord.hashCode()));
-        result = ((prime*result)+((returnComputedOnUpdatableRecord == null)? 0 :returnComputedOnUpdatableRecord.hashCode()));
         result = ((prime*result)+((returnAllOnUpdatableRecord == null)? 0 :returnAllOnUpdatableRecord.hashCode()));
         result = ((prime*result)+((returnRecordToPojo == null)? 0 :returnRecordToPojo.hashCode()));
         result = ((prime*result)+((mapJPAAnnotations == null)? 0 :mapJPAAnnotations.hashCode()));
@@ -12978,37 +7178,19 @@ public class Settings
         result = ((prime*result)+((delimiter == null)? 0 :delimiter.hashCode()));
         result = ((prime*result)+((emulateOnDuplicateKeyUpdateOnPrimaryKeyOnly == null)? 0 :emulateOnDuplicateKeyUpdateOnPrimaryKeyOnly.hashCode()));
         result = ((prime*result)+((emulateMultiset == null)? 0 :emulateMultiset.hashCode()));
-        result = ((prime*result)+((emulateNestedRecordProjectionsUsingMultisetEmulation == null)? 0 :emulateNestedRecordProjectionsUsingMultisetEmulation.hashCode()));
-        result = ((prime*result)+((emulateComputedColumns == null)? 0 :emulateComputedColumns.hashCode()));
-        result = ((prime*result)+((computedOnClientVirtual == null)? 0 :computedOnClientVirtual.hashCode()));
-        result = ((prime*result)+((computedOnClientStored == null)? 0 :computedOnClientStored.hashCode()));
         result = ((prime*result)+((executeUpdateWithoutWhere == null)? 0 :executeUpdateWithoutWhere.hashCode()));
         result = ((prime*result)+((executeDeleteWithoutWhere == null)? 0 :executeDeleteWithoutWhere.hashCode()));
         result = ((prime*result)+((interpreterDialect == null)? 0 :interpreterDialect.hashCode()));
         result = ((prime*result)+((interpreterNameLookupCaseSensitivity == null)? 0 :interpreterNameLookupCaseSensitivity.hashCode()));
-        result = ((prime*result)+((interpreterQuotedNames == null)? 0 :interpreterQuotedNames.hashCode()));
         result = ((prime*result)+((interpreterLocale == null)? 0 :interpreterLocale.hashCode()));
         result = ((prime*result)+((interpreterDelayForeignKeyDeclarations == null)? 0 :interpreterDelayForeignKeyDeclarations.hashCode()));
-        result = ((prime*result)+((interpreterWithMetaLookups == null)? 0 :interpreterWithMetaLookups.hashCode()));
         result = ((prime*result)+((metaIncludeSystemIndexes == null)? 0 :metaIncludeSystemIndexes.hashCode()));
         result = ((prime*result)+((metaIncludeSystemSequences == null)? 0 :metaIncludeSystemSequences.hashCode()));
-        result = ((prime*result)+((migrationHistorySchema == null)? 0 :migrationHistorySchema.hashCode()));
-        result = ((prime*result)+((migrationHistorySchemaCreateSchemaIfNotExists == null)? 0 :migrationHistorySchemaCreateSchemaIfNotExists.hashCode()));
-        result = ((prime*result)+((migrationDefaultSchema == null)? 0 :migrationDefaultSchema.hashCode()));
-        result = ((prime*result)+((migrationSchemataCreateSchemaIfNotExists == null)? 0 :migrationSchemataCreateSchemaIfNotExists.hashCode()));
-        result = ((prime*result)+((migrationDefaultContentType == null)? 0 :migrationDefaultContentType.hashCode()));
-        result = ((prime*result)+((migrationAllowUndo == null)? 0 :migrationAllowUndo.hashCode()));
-        result = ((prime*result)+((migrationAllowInvalidCommits == null)? 0 :migrationAllowInvalidCommits.hashCode()));
-        result = ((prime*result)+((migrationAllowRename == null)? 0 :migrationAllowRename.hashCode()));
-        result = ((prime*result)+((migrationAllowRenameConstraints == null)? 0 :migrationAllowRenameConstraints.hashCode()));
-        result = ((prime*result)+((migrationAllowRenameIndexes == null)? 0 :migrationAllowRenameIndexes.hashCode()));
-        result = ((prime*result)+((migrationAllowRenameTables == null)? 0 :migrationAllowRenameTables.hashCode()));
-        result = ((prime*result)+((migrationAllowRenameColumns == null)? 0 :migrationAllowRenameColumns.hashCode()));
+        result = ((prime*result)+((migrationAllowsUndo == null)? 0 :migrationAllowsUndo.hashCode()));
         result = ((prime*result)+((migrationRevertUntracked == null)? 0 :migrationRevertUntracked.hashCode()));
-        result = ((prime*result)+((migrationAutoVerification == null)? 0 :migrationAutoVerification.hashCode()));
+        result = ((prime*result)+((migrationAutoBaseline == null)? 0 :migrationAutoBaseline.hashCode()));
+        result = ((prime*result)+((migrationAutoValidation == null)? 0 :migrationAutoValidation.hashCode()));
         result = ((prime*result)+((migrationIgnoreDefaultTimestampPrecisionDiffs == null)? 0 :migrationIgnoreDefaultTimestampPrecisionDiffs.hashCode()));
-        result = ((prime*result)+((migrationIgnoreUnnamedConstraintDiffs == null)? 0 :migrationIgnoreUnnamedConstraintDiffs.hashCode()));
-        result = ((prime*result)+((migrationIgnoreImplicitPrimaryKeyNotNullConstraints == null)? 0 :migrationIgnoreImplicitPrimaryKeyNotNullConstraints.hashCode()));
         result = ((prime*result)+((locale == null)? 0 :locale.hashCode()));
         result = ((prime*result)+((parseDialect == null)? 0 :parseDialect.hashCode()));
         result = ((prime*result)+((parseLocale == null)? 0 :parseLocale.hashCode()));
@@ -13025,25 +7207,16 @@ public class Settings
         result = ((prime*result)+((parseIgnoreComments == null)? 0 :parseIgnoreComments.hashCode()));
         result = ((prime*result)+((parseIgnoreCommentStart == null)? 0 :parseIgnoreCommentStart.hashCode()));
         result = ((prime*result)+((parseIgnoreCommentStop == null)? 0 :parseIgnoreCommentStop.hashCode()));
-        result = ((prime*result)+((parsePlainSQLTemplateComments == null)? 0 :parsePlainSQLTemplateComments.hashCode()));
-        result = ((prime*result)+((parsePlainSQLTemplateCommentStart == null)? 0 :parsePlainSQLTemplateCommentStart.hashCode()));
-        result = ((prime*result)+((parsePlainSQLTemplateCommentStop == null)? 0 :parsePlainSQLTemplateCommentStop.hashCode()));
-        result = ((prime*result)+((parseRawSQLComments == null)? 0 :parseRawSQLComments.hashCode()));
-        result = ((prime*result)+((parseRawSQLCommentStart == null)? 0 :parseRawSQLCommentStart.hashCode()));
-        result = ((prime*result)+((parseRawSQLCommentStop == null)? 0 :parseRawSQLCommentStop.hashCode()));
         result = ((prime*result)+((parseRetainCommentsBetweenQueries == null)? 0 :parseRetainCommentsBetweenQueries.hashCode()));
         result = ((prime*result)+((parseMetaDefaultExpressions == null)? 0 :parseMetaDefaultExpressions.hashCode()));
-        result = ((prime*result)+((parseMetaViewSources == null)? 0 :parseMetaViewSources.hashCode()));
-        result = ((prime*result)+((redact == null)? 0 :redact.hashCode()));
         result = ((prime*result)+((readonlyTableRecordInsert == null)? 0 :readonlyTableRecordInsert.hashCode()));
         result = ((prime*result)+((readonlyUpdatableRecordUpdate == null)? 0 :readonlyUpdatableRecordUpdate.hashCode()));
         result = ((prime*result)+((readonlyInsert == null)? 0 :readonlyInsert.hashCode()));
         result = ((prime*result)+((readonlyUpdate == null)? 0 :readonlyUpdate.hashCode()));
         result = ((prime*result)+((applyWorkaroundFor7962 == null)? 0 :applyWorkaroundFor7962 .hashCode()));
-        result = ((prime*result)+((warnOnStaticTypeRegistryAccess == null)? 0 :warnOnStaticTypeRegistryAccess.hashCode()));
-        result = ((prime*result)+(((interpreterSearchPath == null)||interpreterSearchPath.isEmpty())? 0 :interpreterSearchPath.hashCode()));
-        result = ((prime*result)+(((migrationSchemata == null)||migrationSchemata.isEmpty())? 0 :migrationSchemata.hashCode()));
-        result = ((prime*result)+(((parseSearchPath == null)||parseSearchPath.isEmpty())? 0 :parseSearchPath.hashCode()));
+        result = ((prime*result)+((interpreterSearchPath == null)? 0 :interpreterSearchPath.hashCode()));
+        result = ((prime*result)+((migrationSchemata == null)? 0 :migrationSchemata.hashCode()));
+        result = ((prime*result)+((parseSearchPath == null)? 0 :parseSearchPath.hashCode()));
         return result;
     }
 

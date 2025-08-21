@@ -16,9 +16,6 @@
  */
 package org.apache.camel.component.smpp;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +33,7 @@ public class SmppSplitter {
      * The real length of the UDH header.
      * <p/>
      * The real length of the UDH header is {@link #UDHIE_HEADER_LENGTH} {@code + 1}.
-     *
+     * 
      * @see #UDHIE_HEADER_LENGTH
      */
     protected static final int UDHIE_HEADER_REAL_LENGTH = UDHIE_HEADER_LENGTH + 1;
@@ -75,16 +72,15 @@ public class SmppSplitter {
     protected static final int MAX_SEG_COUNT = 255;
 
     private static final Logger LOG = LoggerFactory.getLogger(SmppSplitter.class);
-    private static final Lock LOCK = new ReentrantLock();
 
     /**
      * Current reference number.
      */
     private static int refNum;
 
-    private final int messageLength;
-    private final int segmentLength;
-    private final int currentLength;
+    private int messageLength;
+    private int segmentLength;
+    private int currentLength;
 
     protected SmppSplitter(int messageLength, int segmentLength, int currentLength) {
         this.messageLength = messageLength;
@@ -94,41 +90,26 @@ public class SmppSplitter {
 
     /**
      * Returns reference number which length is {@link #UDHIE_SAR_REF_NUM_LENGTH}.
-     *
+     * 
      * @return the reference number of the multipart message
      */
-    protected static byte getReferenceNumber() {
-        LOCK.lock();
-        try {
-            refNum++;
-            if (refNum == 256) {
-                refNum = 1;
-            }
-            return (byte) refNum;
-        } finally {
-            LOCK.unlock();
+    protected static synchronized byte getReferenceNumber() {
+        refNum++;
+        if (refNum == 256) {
+            refNum = 1;
         }
+        return (byte) refNum;
     }
 
-    protected static byte getCurrentReferenceNumber() {
-        LOCK.lock();
-        try {
-            return (byte) refNum;
-        } finally {
-            LOCK.unlock();
-        }
+    protected static synchronized byte getCurrentReferenceNumber() {
+        return (byte) refNum;
     }
 
     /**
      * only needed for the unit tests
      */
-    protected static void resetCurrentReferenceNumber() {
-        LOCK.lock();
-        try {
-            SmppSplitter.refNum = 0;
-        } finally {
-            LOCK.unlock();
-        }
+    protected static synchronized void resetCurrentReferenceNumber() {
+        SmppSplitter.refNum = 0;
     }
 
     public byte[][] split(byte[] message) {
@@ -190,7 +171,7 @@ public class SmppSplitter {
 
     /**
      * Gets maximum message length.
-     *
+     * 
      * @return maximum message length
      */
     public int getMessageLength() {
@@ -199,7 +180,7 @@ public class SmppSplitter {
 
     /**
      * Gets maximum segment length.
-     *
+     * 
      * @return maximum segment length
      */
     public int getSegmentLength() {
@@ -208,7 +189,7 @@ public class SmppSplitter {
 
     /**
      * Gets length of the message to split.
-     *
+     * 
      * @return length of the message to split
      */
     public int getCurrentLength() {

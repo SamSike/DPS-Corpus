@@ -26,12 +26,10 @@ import org.apache.camel.processor.aggregate.MemoryAggregationRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 /**
  * Based on user forum issue
  */
-@DisabledIfSystemProperty(named = "ci.env.name", matches = ".*", disabledReason = "Flaky on GitHub Actions")
 public class AggregateLostGroupIssueTest extends ContextTestSupport {
 
     private int messageIndex;
@@ -70,12 +68,12 @@ public class AggregateLostGroupIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("timer://foo?period=10&delay=0").id("foo").startupOrder(2).process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         exchange.getMessage().setBody(messageIndex++);
                         exchange.getMessage().setHeader("aggregateGroup", "group1");
                     }
@@ -94,7 +92,7 @@ public class AggregateLostGroupIssueTest extends ContextTestSupport {
                         return oldExchange;
                     }
                 }).aggregationRepository(getAggregationRepository())
-                        .completionSize(10).completionTimeout(500).completionTimeoutCheckerInterval(100).to("log:aggregated")
+                        .completionSize(10).completionTimeout(200).completionTimeoutCheckerInterval(10).to("log:aggregated")
                         .to("mock:result");
             }
         };

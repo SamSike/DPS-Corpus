@@ -79,10 +79,10 @@ public class ValidatorEndpointClearCachedSchemaTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("validator:pd:somefile.xsd").convertBodyTo(String.class).to("log:after")
                         .to("mock:result");
 
@@ -130,14 +130,14 @@ public class ValidatorEndpointClearCachedSchemaTest extends ContextTestSupport {
 
     }
 
-    private void clearCachedSchema() {
+    private void clearCachedSchema() throws Exception {
         CamelContext context = this.context;
         if (context == null) {
             return;
         }
         Collection<Endpoint> endpoints = context.getEndpoints();
         for (Endpoint endpoint : endpoints) {
-            LOG.info("Endpoint URI: {}", endpoint.getEndpointUri());
+            LOG.info("Endpoint URI: " + endpoint.getEndpointUri());
             if (endpoint.getEndpointUri().startsWith("validator:")) {
                 ValidatorEndpoint xsltEndpoint = (ValidatorEndpoint) endpoint;
                 xsltEndpoint.clearCachedSchema();

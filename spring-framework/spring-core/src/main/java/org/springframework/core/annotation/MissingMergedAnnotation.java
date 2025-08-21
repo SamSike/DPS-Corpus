@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * An {@link AbstractMergedAnnotation} used as the implementation of
@@ -56,12 +56,14 @@ final class MissingMergedAnnotation<A extends Annotation> extends AbstractMerged
 	}
 
 	@Override
-	public @Nullable Object getSource() {
+	@Nullable
+	public Object getSource() {
 		return null;
 	}
 
 	@Override
-	public @Nullable MergedAnnotation<?> getMetaSource() {
+	@Nullable
+	public MergedAnnotation<?> getMetaSource() {
 		return null;
 	}
 
@@ -160,7 +162,7 @@ final class MissingMergedAnnotation<A extends Annotation> extends AbstractMerged
 	}
 
 	@Override
-	protected A createSynthesizedAnnotation() {
+	protected A createSynthesized() {
 		throw new NoSuchElementException("Unable to synthesize missing annotation");
 	}
 

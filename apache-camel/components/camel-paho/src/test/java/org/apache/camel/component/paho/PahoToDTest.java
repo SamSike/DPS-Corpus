@@ -16,32 +16,26 @@
  */
 package org.apache.camel.component.paho;
 
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class PahoToDTest extends PahoTestSupport {
 
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
-    protected ProducerTemplate template;
+    @Override
+    protected boolean useJmx() {
+        return false;
+    }
 
     @Test
     public void testToD() throws Exception {
         MockEndpoint bar = getMockEndpoint("mock:bar");
-        bar.expectedBodiesReceived("Hello bar");
+        bar.expectedBodiesReceived("Hello bar", null); // issue with Artemis
         MockEndpoint beer = getMockEndpoint("mock:beer");
         beer.expectedBodiesReceived("Hello beer");
 
-        template.sendBodyAndHeader("direct:start", "Hello bar", "where", "bar.PahoToDTest");
-        template.sendBodyAndHeader("direct:start", "Hello beer", "where", "beer.PahoToDTest");
+        template.sendBodyAndHeader("direct:start", "Hello bar", "where", "bar");
+        template.sendBodyAndHeader("direct:start", "Hello beer", "where", "beer");
 
         bar.assertIsSatisfied();
         beer.assertIsSatisfied();
@@ -52,25 +46,16 @@ public class PahoToDTest extends PahoTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() {
-                PahoComponent paho = getContext().getComponent("paho", PahoComponent.class);
+                PahoComponent paho = context.getComponent("paho", PahoComponent.class);
                 paho.getConfiguration().setBrokerUrl("tcp://localhost:" + service.brokerPort());
 
                 // route message dynamic using toD
                 from("direct:start").toD("paho:${header.where}");
 
-                from("paho:bar.PahoToDTest").to("mock:bar");
-                from("paho:beer.PahoToDTest").to("mock:beer");
+                from("paho:bar").to("mock:bar");
+                from("paho:beer").to("mock:beer");
             }
         };
     }
 
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        template = getCamelContextExtension().getProducerTemplate();
-    }
 }

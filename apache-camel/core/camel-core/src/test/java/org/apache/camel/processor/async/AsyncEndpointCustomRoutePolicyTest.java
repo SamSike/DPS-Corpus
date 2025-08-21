@@ -18,7 +18,6 @@ package org.apache.camel.processor.async;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.LongAdder;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
@@ -41,13 +40,13 @@ public class AsyncEndpointCustomRoutePolicyTest extends ContextTestSupport {
 
     private static class MyCustomRoutePolicy extends RoutePolicySupport {
 
-        private final LongAdder invoked = new LongAdder();
-        private final AtomicBoolean stopped = new AtomicBoolean();
+        private volatile int invoked;
+        private volatile AtomicBoolean stopped = new AtomicBoolean();
 
         @Override
         public void onExchangeDone(Route route, Exchange exchange) {
-            invoked.increment();
-            if (invoked.intValue() >= 2) {
+            invoked++;
+            if (invoked >= 2) {
                 try {
                     stopped.set(true);
                     stopConsumer(route.getConsumer());
@@ -90,19 +89,19 @@ public class AsyncEndpointCustomRoutePolicyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.addComponent("async", new MyAsyncComponent());
 
                 from("direct:start").routeId("foo").routePolicy(policy).to("mock:before").to("log:before")
                         .process(new Processor() {
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 beforeThreadName = Thread.currentThread().getName();
                             }
                         }).to("async:bye:camel").process(new Processor() {
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 afterThreadName = Thread.currentThread().getName();
                             }
                         }).to("log:after").to("mock:after").to("mock:result");

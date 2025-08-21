@@ -44,10 +44,10 @@ public class FileAsyncStressManuallyManualTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?readLock=markerFile&maxMessagesPerPoll=25&move=backup")).threads(10)
                         .process(new Processor() {
                             public void process(Exchange exchange) throws Exception {

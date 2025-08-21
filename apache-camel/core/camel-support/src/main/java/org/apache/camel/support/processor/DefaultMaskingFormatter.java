@@ -206,7 +206,7 @@ public class DefaultMaskingFormatter implements MaskingFormatter {
     }
 
     protected StringBuilder createOneOfThemRegex(Set<String> keywords) {
-        StringBuilder regex = new StringBuilder(256);
+        StringBuilder regex = new StringBuilder();
         if (keywords == null || keywords.isEmpty()) {
             return null;
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,12 @@
 
 package org.springframework.beans.factory.config;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.BeanNameAware;
-import org.springframework.core.env.AbstractPropertyResolver;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringValueResolver;
-import org.springframework.util.SystemPropertyUtils;
 
 /**
  * Abstract base class for property resource configurers that resolve placeholders
@@ -40,16 +37,16 @@ import org.springframework.util.SystemPropertyUtils;
  *
  * <pre class="code">
  * &lt;bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource"&gt;
- *   &lt;property name="driverClassName" value="${jdbc.driver}" /&gt;
- *   &lt;property name="url" value="jdbc:${jdbc.dbname}" /&gt;
+ *   &lt;property name="driverClassName" value="${driver}" /&gt;
+ *   &lt;property name="url" value="jdbc:${dbname}" /&gt;
  * &lt;/bean&gt;
  * </pre>
  *
  * Example properties file:
  *
  * <pre class="code">
- * jdbc.driver=com.mysql.jdbc.Driver
- * jdbc.dbname=mysql:mydb</pre>
+ * driver=com.mysql.jdbc.Driver
+ * dbname=mysql:mydb</pre>
  *
  * Annotated bean definitions may take advantage of property replacement using
  * the {@link org.springframework.beans.factory.annotation.Value @Value} annotation:
@@ -82,12 +79,11 @@ import org.springframework.util.SystemPropertyUtils;
  * <p>Example XML property with default value:
  *
  * <pre class="code">
- *   &lt;property name="url" value="jdbc:${jdbc.dbname:defaultdb}" /&gt;
+ *   &lt;property name="url" value="jdbc:${dbname:defaultdb}" /&gt;
  * </pre>
  *
  * @author Chris Beams
  * @author Juergen Hoeller
- * @author Sam Brannen
  * @since 3.1
  * @see PropertyPlaceholderConfigurer
  * @see org.springframework.context.support.PropertySourcesPlaceholderConfigurer
@@ -96,20 +92,13 @@ public abstract class PlaceholderConfigurerSupport extends PropertyResourceConfi
 		implements BeanNameAware, BeanFactoryAware {
 
 	/** Default placeholder prefix: {@value}. */
-	public static final String DEFAULT_PLACEHOLDER_PREFIX = SystemPropertyUtils.PLACEHOLDER_PREFIX;
+	public static final String DEFAULT_PLACEHOLDER_PREFIX = "${";
 
 	/** Default placeholder suffix: {@value}. */
-	public static final String DEFAULT_PLACEHOLDER_SUFFIX = SystemPropertyUtils.PLACEHOLDER_SUFFIX;
+	public static final String DEFAULT_PLACEHOLDER_SUFFIX = "}";
 
 	/** Default value separator: {@value}. */
-	public static final String DEFAULT_VALUE_SEPARATOR = SystemPropertyUtils.VALUE_SEPARATOR;
-
-	/**
-	 * Default escape character: {@code '\'}.
-	 * @since 6.2
-	 * @see AbstractPropertyResolver#getDefaultEscapeCharacter()
-	 */
-	public static final Character DEFAULT_ESCAPE_CHARACTER = SystemPropertyUtils.ESCAPE_CHARACTER;
+	public static final String DEFAULT_VALUE_SEPARATOR = ":";
 
 
 	/** Defaults to {@value #DEFAULT_PLACEHOLDER_PREFIX}. */
@@ -119,27 +108,26 @@ public abstract class PlaceholderConfigurerSupport extends PropertyResourceConfi
 	protected String placeholderSuffix = DEFAULT_PLACEHOLDER_SUFFIX;
 
 	/** Defaults to {@value #DEFAULT_VALUE_SEPARATOR}. */
-	protected @Nullable String valueSeparator = DEFAULT_VALUE_SEPARATOR;
-
-	/**
-	 * The default is determined by {@link AbstractPropertyResolver#getDefaultEscapeCharacter()}.
-	 */
-	protected @Nullable Character escapeCharacter = AbstractPropertyResolver.getDefaultEscapeCharacter();
+	@Nullable
+	protected String valueSeparator = DEFAULT_VALUE_SEPARATOR;
 
 	protected boolean trimValues = false;
 
-	protected @Nullable String nullValue;
+	@Nullable
+	protected String nullValue;
 
 	protected boolean ignoreUnresolvablePlaceholders = false;
 
-	private @Nullable String beanName;
+	@Nullable
+	private String beanName;
 
-	private @Nullable BeanFactory beanFactory;
+	@Nullable
+	private BeanFactory beanFactory;
 
 
 	/**
 	 * Set the prefix that a placeholder string starts with.
-	 * <p>The default is {@value #DEFAULT_PLACEHOLDER_PREFIX}.
+	 * The default is {@value #DEFAULT_PLACEHOLDER_PREFIX}.
 	 */
 	public void setPlaceholderPrefix(String placeholderPrefix) {
 		this.placeholderPrefix = placeholderPrefix;
@@ -147,32 +135,20 @@ public abstract class PlaceholderConfigurerSupport extends PropertyResourceConfi
 
 	/**
 	 * Set the suffix that a placeholder string ends with.
-	 * <p>The default is {@value #DEFAULT_PLACEHOLDER_SUFFIX}.
+	 * The default is {@value #DEFAULT_PLACEHOLDER_SUFFIX}.
 	 */
 	public void setPlaceholderSuffix(String placeholderSuffix) {
 		this.placeholderSuffix = placeholderSuffix;
 	}
 
 	/**
-	 * Specify the separating character between the placeholder variable and the
-	 * associated default value, or {@code null} if no such special character
-	 * should be processed as a value separator.
-	 * <p>The default is {@value #DEFAULT_VALUE_SEPARATOR}.
+	 * Specify the separating character between the placeholder variable
+	 * and the associated default value, or {@code null} if no such
+	 * special character should be processed as a value separator.
+	 * The default is {@value #DEFAULT_VALUE_SEPARATOR}.
 	 */
 	public void setValueSeparator(@Nullable String valueSeparator) {
 		this.valueSeparator = valueSeparator;
-	}
-
-	/**
-	 * Set the escape character to use to ignore the
-	 * {@linkplain #setPlaceholderPrefix(String) placeholder prefix} and the
-	 * {@linkplain #setValueSeparator(String) value separator}, or {@code null}
-	 * if no escaping should take place.
-	 * <p>The default is determined by {@link AbstractPropertyResolver#getDefaultEscapeCharacter()}.
-	 * @since 6.2
-	 */
-	public void setEscapeCharacter(@Nullable Character escapeCharacter) {
-		this.escapeCharacter = escapeCharacter;
 	}
 
 	/**
@@ -187,7 +163,7 @@ public abstract class PlaceholderConfigurerSupport extends PropertyResourceConfi
 
 	/**
 	 * Set a value that should be treated as {@code null} when resolved
-	 * as a placeholder value: for example, "" (empty String) or "null".
+	 * as a placeholder value: e.g. "" (empty String) or "null".
 	 * <p>Note that this will only apply to full property values,
 	 * not to parts of concatenated values.
 	 * <p>By default, no such null value is defined. This means that
@@ -235,6 +211,7 @@ public abstract class PlaceholderConfigurerSupport extends PropertyResourceConfi
 		this.beanFactory = beanFactory;
 	}
 
+
 	protected void doProcessProperties(ConfigurableListableBeanFactory beanFactoryToProcess,
 			StringValueResolver valueResolver) {
 
@@ -255,10 +232,10 @@ public abstract class PlaceholderConfigurerSupport extends PropertyResourceConfi
 			}
 		}
 
-		// Resolve placeholders in alias target names and aliases as well.
+		// New in Spring 2.5: resolve placeholders in alias target names and aliases as well.
 		beanFactoryToProcess.resolveAliases(valueResolver);
 
-		// Resolve placeholders in embedded values such as annotation attributes.
+		// New in Spring 3.0: resolve placeholders in embedded values such as annotation attributes.
 		beanFactoryToProcess.addEmbeddedValueResolver(valueResolver);
 	}
 

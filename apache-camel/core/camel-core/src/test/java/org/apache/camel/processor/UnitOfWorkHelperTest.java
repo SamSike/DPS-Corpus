@@ -18,6 +18,7 @@ package org.apache.camel.processor;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Message;
 import org.apache.camel.component.file.FileComponent;
 import org.apache.camel.component.file.GenericFile;
@@ -36,15 +37,17 @@ public class UnitOfWorkHelperTest extends ContextTestSupport {
 
     private static final String FILE_CONTENT = "Lorem ipsum dolor sit amet";
 
+    private MockEndpoint resultEndpoint;
     private SedaEndpoint fromEndpoint;
+    private CustomEventNotifier eventNotifier;
     private int numberOfExchangeCreatedEvents;
 
     @Test
-    void testUoWShouldBeClearedOnJobDone() {
-        MockEndpoint resultEndpoint = context.getEndpoint("mock:result", MockEndpoint.class);
+    void testUoWShouldBeClearedOnJobDone() throws Exception {
+        resultEndpoint = context.getEndpoint("mock:result", MockEndpoint.class);
         fromEndpoint = context.getEndpoint("seda:from", SedaEndpoint.class);
 
-        CustomEventNotifier eventNotifier = new CustomEventNotifier();
+        eventNotifier = new CustomEventNotifier();
         context.getManagementStrategy().addEventNotifier(eventNotifier);
         Exchange testExchange = createExchange("testFile");
 
@@ -62,7 +65,8 @@ public class UnitOfWorkHelperTest extends ContextTestSupport {
         testMessage.setBody(testFile);
 
         testExchange.setIn(testMessage);
-        testExchange.getExchangeExtension().setFromEndpoint(fromEndpoint);
+        ExtendedExchange extExchange = testExchange.adapt(ExtendedExchange.class);
+        extExchange.setFromEndpoint(fromEndpoint);
         testExchange.setProperty(FileComponent.FILE_EXCHANGE_FILE, testFile);
 
         return testExchange;

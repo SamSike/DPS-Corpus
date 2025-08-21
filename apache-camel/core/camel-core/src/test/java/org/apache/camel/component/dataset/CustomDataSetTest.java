@@ -30,14 +30,15 @@ import org.junit.jupiter.api.Test;
 
 public class CustomDataSetTest extends ContextTestSupport {
 
-    protected final DataSet dataSet = new DataSetSupport() {
-        final Expression expression = new XPathBuilder("/message/@index").resultType(Long.class);
+    protected DataSet dataSet = new DataSetSupport() {
+        Expression expression = new XPathBuilder("/message/@index").resultType(Long.class);
 
         @Override
-        public void assertMessageExpected(DataSetEndpoint dataSetEndpoint, Exchange expected, Exchange actual, long index) {
+        public void assertMessageExpected(DataSetEndpoint dataSetEndpoint, Exchange expected, Exchange actual, long index)
+                throws Exception {
             // lets compare the XPath result
             Predicate predicate = PredicateBuilder.isEqualTo(expression, ExpressionBuilder.constantExpression(index));
-            log.debug("evaluating predicate: {}", predicate);
+            log.debug("evaluating predicate: " + predicate);
             PredicateAssertHelper.assertMatches(predicate, "Actual: " + actual, actual);
         }
 
@@ -47,8 +48,8 @@ public class CustomDataSetTest extends ContextTestSupport {
     };
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("foo", dataSet);
         return answer;
     }
@@ -61,9 +62,9 @@ public class CustomDataSetTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("dataset:foo?initialDelay=0").to("direct:foo");
 
                 from("direct:foo").to("dataset:foo?initialDelay=0");

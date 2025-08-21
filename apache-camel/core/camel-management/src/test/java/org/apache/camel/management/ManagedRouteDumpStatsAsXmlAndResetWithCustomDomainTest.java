@@ -78,10 +78,10 @@ public class ManagedRouteDumpStatsAsXmlAndResetWithCustomDomainTest extends Mana
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 //              System.setProperty("org.apache.camel.jmx.mbeanObjectDomainName", CUSTOM_DOMAIN_NAME);
                 //              Or
                 getContext().getManagementStrategy().getManagementAgent().setMBeanObjectDomainName(CUSTOM_DOMAIN_NAME);

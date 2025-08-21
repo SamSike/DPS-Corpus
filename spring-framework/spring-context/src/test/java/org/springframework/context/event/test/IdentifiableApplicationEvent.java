@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@
 package org.springframework.context.event.test;
 
 import java.util.UUID;
-
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.context.ApplicationEvent;
 
@@ -51,13 +49,9 @@ public abstract class IdentifiableApplicationEvent extends ApplicationEvent impl
 	}
 
 	@Override
-	public boolean equals(@Nullable Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
 
 		IdentifiableApplicationEvent that = (IdentifiableApplicationEvent) o;
 

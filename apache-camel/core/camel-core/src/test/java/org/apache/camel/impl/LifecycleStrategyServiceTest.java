@@ -21,14 +21,13 @@ import org.apache.camel.Service;
 import org.apache.camel.TestSupport;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class LifecycleStrategyServiceTest extends TestSupport {
 
-    private final MyLifecycleStrategy dummy1 = new MyLifecycleStrategy();
+    private MyLifecycleStrategy dummy1 = new MyLifecycleStrategy();
 
-    protected CamelContext createCamelContext() {
+    protected CamelContext createCamelContext() throws Exception {
         CamelContext context = new DefaultCamelContext();
         context.addLifecycleStrategy(dummy1);
         return context;
@@ -36,13 +35,13 @@ public class LifecycleStrategyServiceTest extends TestSupport {
 
     @Test
     public void testLifecycleStrategyService() throws Exception {
-        assertFalse(dummy1.isStarted());
+        assertEquals(false, dummy1.isStarted());
 
         CamelContext context = createCamelContext();
         context.start();
-        assertTrue(dummy1.isStarted());
+        assertEquals(true, dummy1.isStarted());
         context.stop();
-        assertFalse(dummy1.isStarted());
+        assertEquals(false, dummy1.isStarted());
     }
 
     private static class MyLifecycleStrategy extends DummyLifecycleStrategy implements Service {

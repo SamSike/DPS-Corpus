@@ -37,11 +37,11 @@ public class GoogleCalendarComponent
     private GoogleCalendarClientFactory clientFactory;
 
     public GoogleCalendarComponent() {
-        super(GoogleCalendarApiName.class, GoogleCalendarApiCollection.getCollection());
+        super(GoogleCalendarEndpoint.class, GoogleCalendarApiName.class, GoogleCalendarApiCollection.getCollection());
     }
 
     public GoogleCalendarComponent(CamelContext context) {
-        super(context, GoogleCalendarApiName.class, GoogleCalendarApiCollection.getCollection());
+        super(context, GoogleCalendarEndpoint.class, GoogleCalendarApiName.class, GoogleCalendarApiCollection.getCollection());
     }
 
     @Override
@@ -53,12 +53,11 @@ public class GoogleCalendarComponent
         if (client == null) {
             if (config.getClientId() != null && !config.getClientId().isBlank()
                     && config.getClientSecret() != null && !config.getClientSecret().isBlank()) {
-                client = getClientFactory().makeClient(config.getClientId(), config.getClientSecret(), config.getScopesAsList(),
+                client = getClientFactory().makeClient(config.getClientId(), config.getClientSecret(), config.getScopes(),
                         config.getApplicationName(), config.getRefreshToken(),
                         config.getAccessToken(), config.getEmailAddress(), config.getP12FileName(), config.getUser());
             } else if (config.getServiceAccountKey() != null && !config.getServiceAccountKey().isBlank()) {
-                client = getClientFactory().makeClient(getCamelContext(), config.getServiceAccountKey(),
-                        config.getScopesAsList(),
+                client = getClientFactory().makeClient(getCamelContext(), config.getServiceAccountKey(), config.getScopes(),
                         config.getApplicationName(), config.getDelegate());
             } else {
                 throw new IllegalArgumentException(

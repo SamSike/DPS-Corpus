@@ -22,10 +22,10 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.support.HealthCheckComponent;
+import org.apache.camel.support.DefaultComponent;
 
 @Component("slack")
-public class SlackComponent extends HealthCheckComponent {
+public class SlackComponent extends DefaultComponent {
 
     @Metadata(label = "webhook")
     private String webhookUrl;
@@ -39,6 +39,7 @@ public class SlackComponent extends HealthCheckComponent {
 
     public SlackComponent(CamelContext context) {
         super(context);
+        registerExtension(new SlackComponentVerifierExtension());
     }
 
     @Override

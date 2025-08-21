@@ -24,6 +24,7 @@ import org.apache.camel.component.salesforce.api.dto.AbstractSObjectBase;
 /**
  * Salesforce DTO for SObject Report
  */
+//CHECKSTYLE:OFF
 public class Report extends AbstractSObjectBase {
 
     // Description
@@ -92,3 +93,4 @@ public class Report extends AbstractSObjectBase {
     }
 
 }
+//CHECKSTYLE:ON

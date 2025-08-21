@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import static org.springframework.core.testfixture.io.ResourceTestUtils.qualifie
  * @author Chris Beams
  * @since 07.01.2005
  */
-class LazyInitTargetSourceTests {
+public class LazyInitTargetSourceTests {
 
 	private static final Class<?> CLASS = LazyInitTargetSourceTests.class;
 
@@ -42,11 +42,9 @@ class LazyInitTargetSourceTests {
 	private static final Resource CUSTOM_TARGET_CONTEXT = qualifiedResource(CLASS, "customTarget.xml");
 	private static final Resource FACTORY_BEAN_CONTEXT = qualifiedResource(CLASS, "factoryBean.xml");
 
-	private final DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
-
-
 	@Test
-	void lazyInitSingletonTargetSource() {
+	public void testLazyInitSingletonTargetSource() {
+		DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
 		new XmlBeanDefinitionReader(bf).loadBeanDefinitions(SINGLETON_CONTEXT);
 		bf.preInstantiateSingletons();
 
@@ -57,7 +55,8 @@ class LazyInitTargetSourceTests {
 	}
 
 	@Test
-	void customLazyInitSingletonTargetSource() {
+	public void testCustomLazyInitSingletonTargetSource() {
+		DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
 		new XmlBeanDefinitionReader(bf).loadBeanDefinitions(CUSTOM_TARGET_CONTEXT);
 		bf.preInstantiateSingletons();
 
@@ -68,25 +67,25 @@ class LazyInitTargetSourceTests {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	void lazyInitFactoryBeanTargetSource() {
+	public void testLazyInitFactoryBeanTargetSource() {
+		DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
 		new XmlBeanDefinitionReader(bf).loadBeanDefinitions(FACTORY_BEAN_CONTEXT);
 		bf.preInstantiateSingletons();
 
-		Set<Object> set1 = (Set<Object>) bf.getBean("proxy1");
+		Set<?> set1 = (Set<?>) bf.getBean("proxy1");
 		assertThat(bf.containsSingleton("target1")).isFalse();
-		assertThat(set1).contains("10");
+		assertThat(set1.contains("10")).isTrue();
 		assertThat(bf.containsSingleton("target1")).isTrue();
 
-		Set<Object> set2 = (Set<Object>) bf.getBean("proxy2");
+		Set<?> set2 = (Set<?>) bf.getBean("proxy2");
 		assertThat(bf.containsSingleton("target2")).isFalse();
-		assertThat(set2).contains("20");
+		assertThat(set2.contains("20")).isTrue();
 		assertThat(bf.containsSingleton("target2")).isTrue();
 	}
 
 
 	@SuppressWarnings("serial")
-	static class CustomLazyInitTargetSource extends LazyInitTargetSource {
+	public static class CustomLazyInitTargetSource extends LazyInitTargetSource {
 
 		@Override
 		protected void postProcessTargetObject(Object targetObject) {

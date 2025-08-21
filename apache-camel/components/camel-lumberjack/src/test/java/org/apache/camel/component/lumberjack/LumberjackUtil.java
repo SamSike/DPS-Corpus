@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLEngine;
 
@@ -36,7 +37,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.SslHandler;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.support.jsse.SSLContextParameters;
-import org.awaitility.Awaitility;
 
 import static io.netty.buffer.Unpooled.wrappedBuffer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,12 +46,6 @@ final class LumberjackUtil {
     }
 
     static List<Integer> sendMessages(int port, SSLContextParameters sslContextParameters, List<Integer> windows)
-            throws InterruptedException {
-        return sendMessages(port, sslContextParameters, windows, true);
-    }
-
-    static List<Integer> sendMessages(
-            int port, SSLContextParameters sslContextParameters, List<Integer> windows, boolean waitForResult)
             throws InterruptedException {
         NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
         try {
@@ -92,10 +86,8 @@ final class LumberjackUtil {
                     .connect("127.0.0.1", port).sync().channel(); //
 
             // send 5 frame windows, without pausing
-            windows.stream().forEach(window -> channel.writeAndFlush(readSample(String.format("io/window%s.bin", window))));
-            if (waitForResult) {
-                Awaitility.await().until(() -> windows.size() == responses.size());
-            }
+            windows.stream().forEach(window -> channel.writeAndFlush(readSample(String.format("io/window%s", window))));
+            TimeUnit.MILLISECONDS.sleep(500);
 
             channel.close();
 

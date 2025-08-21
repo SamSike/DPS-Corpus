@@ -21,7 +21,6 @@ import org.apache.camel.AsyncProducer;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Channel;
 import org.apache.camel.Endpoint;
-import org.apache.camel.Predicate;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.Route;
@@ -43,12 +42,15 @@ public interface InternalProcessorFactory {
 
     InternalProcessor addUnitOfWorkProcessorAdvice(CamelContext camelContext, Processor processor, Route route);
 
+    InternalProcessor addChildUnitOfWorkProcessorAdvice(
+            CamelContext camelContext, Processor processor, Route route, UnitOfWork parent);
+
     SharedInternalProcessor createSharedCamelInternalProcessor(CamelContext camelContext);
 
     Channel createChannel(CamelContext camelContext);
 
     AsyncProducer createInterceptSendToEndpointProcessor(
-            InterceptSendToEndpoint endpoint, Endpoint delegate, AsyncProducer producer, boolean skip, Predicate onWhen);
+            InterceptSendToEndpoint endpoint, Endpoint delegate, AsyncProducer producer, boolean skip);
 
     AsyncProcessor createWrapProcessor(Processor processor, Processor wrapped);
 

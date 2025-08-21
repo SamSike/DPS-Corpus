@@ -38,10 +38,10 @@ public class ClaimCheckEipPushPopHeadersTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("mock:a").claimCheck(ClaimCheckOperation.Push).transform().constant("Bye World")
                         .setHeader("foo", constant(456)).to("mock:b")
                         // only merge in the message headers

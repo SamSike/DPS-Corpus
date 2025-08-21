@@ -47,6 +47,11 @@ public class ImageRecognitionProducer extends DefaultProducer {
         this.endpoint = endpoint;
     }
 
+    @Override
+    protected void doStart() throws Exception {
+        super.doStart();
+    }
+
     /**
      * initialize ClientConfigurations
      *

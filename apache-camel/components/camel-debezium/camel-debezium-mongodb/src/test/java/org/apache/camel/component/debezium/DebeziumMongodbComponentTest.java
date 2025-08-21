@@ -20,8 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.camel.component.debezium.mongodb.DebeziumMongodbComponent;
-import org.apache.camel.component.debezium.mongodb.configuration.MongoDbConnectorEmbeddedDebeziumConfiguration;
+import org.apache.camel.component.debezium.configuration.MongoDbConnectorEmbeddedDebeziumConfiguration;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.junit.jupiter.api.Test;
 
@@ -34,16 +33,16 @@ public class DebeziumMongodbComponentTest {
     void testIfConnectorEndpointCreatedWithConfig() throws Exception {
         final Map<String, Object> params = new HashMap<>();
         params.put("offsetStorageFileName", "/offset_test_file");
-        params.put("mongodbConnectionString", "mongodb://localhost:27017/?replicaSet=rs0");
+        params.put("mongodbHosts", "localhost");
         params.put("mongodbUser", "dbz");
         params.put("mongodbPassword", "pwd");
-        params.put("topicPrefix", "test");
-        params.put("schemaHistoryInternalFileFilename", "/db_history_file_test");
+        params.put("mongodbName", "test");
+        params.put("databaseHistoryFileFilename", "/db_history_file_test");
 
         final String remaining = "test_name";
         final String uri = "debezium?name=test_name&offsetStorageFileName=/test&"
                            + "databaseHostname=localhost&databaseServerId=1234&databaseUser=dbz&databasePassword=pwd&"
-                           + "databaseServerName=test&schemaHistoryInternalFileFilename=/test";
+                           + "databaseServerName=test&databaseHistoryFileFilename=/test";
 
         try (final DebeziumComponent debeziumComponent = new DebeziumMongodbComponent(new DefaultCamelContext())) {
             debeziumComponent.start();
@@ -56,11 +55,11 @@ public class DebeziumMongodbComponentTest {
                     = (MongoDbConnectorEmbeddedDebeziumConfiguration) debeziumEndpoint.getConfiguration();
             assertEquals("test_name", configuration.getName());
             assertEquals("/offset_test_file", configuration.getOffsetStorageFileName());
-            assertEquals("mongodb://localhost:27017/?replicaSet=rs0", configuration.getMongodbConnectionString());
+            assertEquals("localhost", configuration.getMongodbHosts());
             assertEquals("dbz", configuration.getMongodbUser());
             assertEquals("pwd", configuration.getMongodbPassword());
-            assertEquals("test", configuration.getTopicPrefix());
-            assertEquals("/db_history_file_test", configuration.getSchemaHistoryInternalFileFilename());
+            assertEquals("test", configuration.getMongodbName());
+            assertEquals("/db_history_file_test", configuration.getDatabaseHistoryFileFilename());
         }
     }
 
@@ -71,7 +70,7 @@ public class DebeziumMongodbComponentTest {
         configuration.setMongodbUser("test_db");
         configuration.setMongodbPassword("pwd");
         configuration.setOffsetStorageFileName("/offset/file");
-        configuration.setTopicPrefix("test");
+        configuration.setMongodbName("test");
 
         final String uri = "debezium:dummy";
         try (final DebeziumComponent debeziumComponent = new DebeziumMongodbComponent(new DefaultCamelContext())) {

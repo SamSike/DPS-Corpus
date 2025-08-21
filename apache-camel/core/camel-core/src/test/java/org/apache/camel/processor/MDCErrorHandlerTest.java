@@ -29,21 +29,21 @@ import org.slf4j.MDC;
 public class MDCErrorHandlerTest extends ContextTestSupport {
 
     @Test
-    public void testMDC() {
+    public void testMDC() throws Exception {
         template.sendBody("direct:start", "Hello World");
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setUseMDCLogging(true);
                 context.setUseBreadcrumb(true);
 
                 errorHandler(deadLetterChannel("direct:dead").onExceptionOccurred(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         Map<String, String> m = MDC.getCopyOfContextMap();
                         Assertions.assertEquals(5, m.size());
                         Assertions.assertEquals(exchange.getMessage().getHeader(Exchange.BREADCRUMB_ID),
@@ -59,7 +59,7 @@ public class MDCErrorHandlerTest extends ContextTestSupport {
                 from("direct:dead").routeId("dead")
                         .process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 Map<String, String> m = MDC.getCopyOfContextMap();
                                 Assertions.assertEquals(5, m.size());
                                 Assertions.assertEquals(exchange.getMessage().getHeader(Exchange.BREADCRUMB_ID),

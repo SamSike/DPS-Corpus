@@ -16,17 +16,14 @@
  */
 package org.apache.camel.impl.engine;
 
-import java.util.Map;
 import java.util.Objects;
-import java.util.StringJoiner;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
-import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.NamedNode;
 import org.apache.camel.NamedRoute;
-import org.apache.camel.spi.EndpointServiceLocation;
+import org.apache.camel.Route;
 import org.apache.camel.spi.ExchangeFormatter;
 import org.apache.camel.spi.Tracer;
 import org.apache.camel.support.CamelContextHelper;
@@ -35,7 +32,6 @@ import org.apache.camel.support.builder.ExpressionBuilder;
 import org.apache.camel.support.processor.DefaultExchangeFormatter;
 import org.apache.camel.support.service.ServiceSupport;
 import org.apache.camel.util.StringHelper;
-import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,8 +53,6 @@ public class DefaultTracer extends ServiceSupport implements CamelContextAware, 
     private CamelContext camelContext;
     private boolean enabled = true;
     private boolean standby;
-    private boolean traceRests;
-    private boolean traceTemplates;
     private long traceCounter;
 
     private ExchangeFormatter exchangeFormatter;
@@ -71,7 +65,7 @@ public class DefaultTracer extends ServiceSupport implements CamelContextAware, 
         formatter.setShowExchangeId(true);
         formatter.setShowExchangePattern(false);
         formatter.setMultiline(false);
-        formatter.setShowHeaders(true);
+        formatter.setShowHeaders(false);
         formatter.setStyle(DefaultExchangeFormatter.OutputStyle.Default);
         setExchangeFormatter(formatter);
     }
@@ -98,7 +92,7 @@ public class DefaultTracer extends ServiceSupport implements CamelContextAware, 
             // characters in the sanitizeUri method and will be reasonably fast
             String label = URISupport.sanitizeUri(StringHelper.limitLength(node.getLabel(), 50));
 
-            StringBuilder sb = new StringBuilder(512);
+            StringBuilder sb = new StringBuilder();
             sb.append(String.format(tracingFormat, "   ", routeId, label));
             sb.append(" ");
             String data = exchangeFormatter.format(exchange);
@@ -111,48 +105,6 @@ public class DefaultTracer extends ServiceSupport implements CamelContextAware, 
     @Override
     public void traceAfterNode(NamedNode node, Exchange exchange) {
         // noop
-    }
-
-    @Override
-    public void traceSentNode(NamedNode node, Exchange exchange, Endpoint endpoint, long elapsed) {
-        if (!traceBeforeAndAfterRoute) {
-            return;
-        }
-
-        // skip non-remote endpoints
-        if (!endpoint.isRemote()) {
-            return;
-        }
-
-        if (shouldTrace(node)) {
-            String routeId = ExpressionBuilder.routeIdExpression().evaluate(exchange, String.class);
-
-            StringBuilder sb = new StringBuilder(128);
-            sb.append(String.format(tracingFormat, "   ", routeId, ""));
-            sb.append(" ");
-
-            StringJoiner sj = new StringJoiner(", ");
-            sj.add("url=" + endpoint);
-            if (endpoint instanceof EndpointServiceLocation esl && esl.getServiceUrl() != null) {
-                // enrich with service location
-                sj.add("service=" + esl.getServiceUrl());
-                String protocol = esl.getServiceProtocol();
-                if (protocol != null) {
-                    sj.add("protocol=" + protocol);
-                }
-                Map<String, String> map = esl.getServiceMetadata();
-                if (map != null) {
-                    map.forEach((k, v) -> sj.add(k + "=" + v));
-                }
-            }
-
-            boolean failed = exchange.isFailed();
-            String data = "Sent " + (failed ? "failed" : "success") + " took " + TimeUtils.printDuration(elapsed, true);
-            data += " (" + sj + ")";
-            sb.append(data);
-            String out = sb.toString();
-            dumpTrace(out, node);
-        }
     }
 
     @Override
@@ -176,35 +128,14 @@ public class DefaultTracer extends ServiceSupport implements CamelContextAware, 
         sb.append(String.format(tracingFormat, arrow, route.getRouteId(), label));
         sb.append(" ");
         String data = exchangeFormatter.format(exchange);
-        String out = sb + data;
+        sb.append(data);
+        String out = sb.toString();
         dumpTrace(out, route);
+    }
 
-        // enrich with endpoint service location on incoming request
-        if (original) {
-            Endpoint endpoint = exchange.getFromEndpoint();
-            if (endpoint instanceof EndpointServiceLocation esl && esl.getServiceUrl() != null) {
-                // enrich with service location
-                StringJoiner sj = new StringJoiner(", ");
-                sj.add("url=" + endpoint);
-                sj.add("service=" + esl.getServiceUrl());
-                String protocol = esl.getServiceProtocol();
-                if (protocol != null) {
-                    sj.add("protocol=" + protocol);
-                }
-                Map<String, String> map = esl.getServiceMetadata();
-                if (map != null) {
-                    map.forEach((k, v) -> sj.add(k + "=" + v));
-                }
-                data = "Received (" + sj + ")";
-
-                sb = new StringBuilder();
-                sb.append(String.format(tracingFormat, "", route.getRouteId(), ""));
-                sb.append(" ");
-
-                out = sb + data;
-                dumpTrace(out, route);
-            }
-        }
+    @Override
+    public void traceAfterRoute(Route route, Exchange exchange) {
+        // noop
     }
 
     @Override
@@ -282,26 +213,6 @@ public class DefaultTracer extends ServiceSupport implements CamelContextAware, 
     }
 
     @Override
-    public boolean isTraceRests() {
-        return traceRests;
-    }
-
-    @Override
-    public void setTraceRests(boolean traceRests) {
-        this.traceRests = traceRests;
-    }
-
-    @Override
-    public boolean isTraceTemplates() {
-        return traceTemplates;
-    }
-
-    @Override
-    public void setTraceTemplates(boolean traceTemplates) {
-        this.traceTemplates = traceTemplates;
-    }
-
-    @Override
     public String getTracePattern() {
         return tracePattern;
     }
@@ -373,4 +284,8 @@ public class DefaultTracer extends ServiceSupport implements CamelContextAware, 
         }
     }
 
+    @Override
+    protected void doStop() throws Exception {
+        // noop
+    }
 }

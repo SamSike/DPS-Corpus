@@ -1,7 +1,9 @@
 /**
  * Integration with the JSR-310 <code>java.time</code> package in JDK 8.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.format.datetime.standard;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

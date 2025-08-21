@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ package org.springframework.web.client;
 
 import java.nio.charset.Charset;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 
 /**
  * Exception thrown when an unknown (or custom) HTTP status code is received.
@@ -34,8 +34,8 @@ public class UnknownHttpStatusCodeException extends RestClientResponseException 
 
 
 	/**
-	 * Construct a new instance of {@code HttpStatusCodeException} based on a
-	 * status code, status text, and response body content.
+	 * Construct a new instance of {@code HttpStatusCodeException} based on an
+	 * {@link HttpStatus}, status text, and response body content.
 	 * @param rawStatusCode the raw status code value
 	 * @param statusText the status text
 	 * @param responseHeaders the response headers (may be {@code null})
@@ -43,15 +43,15 @@ public class UnknownHttpStatusCodeException extends RestClientResponseException 
 	 * @param responseCharset the response body charset (may be {@code null})
 	 */
 	public UnknownHttpStatusCodeException(int rawStatusCode, String statusText, @Nullable HttpHeaders responseHeaders,
-			byte @Nullable [] responseBody, @Nullable Charset responseCharset) {
+			@Nullable byte[] responseBody, @Nullable Charset responseCharset) {
 
 		this("Unknown status code [" + rawStatusCode + "]" + " " + statusText,
 				rawStatusCode, statusText, responseHeaders, responseBody, responseCharset);
 	}
 
 	/**
-	 * Construct a new instance of {@code HttpStatusCodeException} based on a
-	 * status code, status text, and response body content.
+	 * Construct a new instance of {@code HttpStatusCodeException} based on an
+	 * {@link HttpStatus}, status text, and response body content.
 	 * @param rawStatusCode the raw status code value
 	 * @param statusText the status text
 	 * @param responseHeaders the response headers (may be {@code null})
@@ -60,7 +60,7 @@ public class UnknownHttpStatusCodeException extends RestClientResponseException 
 	 * @since 5.2.2
 	 */
 	public UnknownHttpStatusCodeException(String message, int rawStatusCode, String statusText,
-			@Nullable HttpHeaders responseHeaders, byte @Nullable [] responseBody, @Nullable Charset responseCharset) {
+			@Nullable HttpHeaders responseHeaders, @Nullable byte[] responseBody, @Nullable Charset responseCharset) {
 
 		super(message, rawStatusCode, statusText, responseHeaders, responseBody, responseCharset);
 	}

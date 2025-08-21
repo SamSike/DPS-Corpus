@@ -18,6 +18,7 @@ package org.apache.camel.component.disruptor;
 
 import org.apache.camel.CamelExecutionException;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -61,7 +62,7 @@ public class DisruptorWaitForTaskCompleteOnCompletionTest extends CamelTestSuppo
                 from("direct:start").process(new Processor() {
                     @Override
                     public void process(final Exchange exchange) {
-                        exchange.getExchangeExtension().addOnCompletion(new SynchronizationAdapter() {
+                        exchange.adapt(ExtendedExchange.class).addOnCompletion(new SynchronizationAdapter() {
                             @Override
                             public void onDone(final Exchange exchange) {
                                 done += "A";

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,21 +42,15 @@ package org.jooq;
 // ...
 // ...
 // ...
-// ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
-// ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 // ...
 import static org.jooq.SQLDialect.H2;
 // ...
 import static org.jooq.SQLDialect.HSQLDB;
-import static org.jooq.SQLDialect.IGNITE;
 // ...
 // ...
 import static org.jooq.SQLDialect.MARIADB;
@@ -67,9 +61,7 @@ import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
 // ...
-// ...
 import static org.jooq.SQLDialect.SQLITE;
-// ...
 // ...
 // ...
 // ...
@@ -112,7 +104,10 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R>,
     void newRecord();
 
     /**
-     * Short for calling {@link #newRecord()} and {@link #setRecord(Record)}.
+     * Short for calling <code>
+     * newRecord();
+     * setRecord(record);
+     * </code>
      *
      * @param record The record to add to this insert statement.
      */
@@ -148,7 +143,7 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R>,
      * <code>ON CONFLICT ON CONSTRAINT</code> clause in this <code>INSERT</code>
      * statement.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MYSQL, POSTGRES, YUGABYTEDB })
     void onConflictOnConstraint(Name constraint);
 
     /**
@@ -156,7 +151,7 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R>,
      * <code>ON CONFLICT ON CONSTRAINT</code> clause in this <code>INSERT</code>
      * statement.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MYSQL, POSTGRES, YUGABYTEDB })
     void onConflictOnConstraint(Constraint constraint);
 
     /**
@@ -180,7 +175,7 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R>,
      *
      * @see InsertOnDuplicateStep#onDuplicateKeyUpdate()
      */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void onDuplicateKeyUpdate(boolean flag);
 
     /**
@@ -196,32 +191,32 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R>,
      * </tr>
      * <tr>
      * <td>{@link SQLDialect#MYSQL} and {@link SQLDialect#MARIADB}</td>
-     * <td><pre><code>INSERT IGNORE INTO …</code></pre></td>
+     * <td><code><pre>INSERT IGNORE INTO ..</pre></code></td>
      * </tr>
      * <tr>
      * <td>{@link SQLDialect#POSTGRES_9_5} and {@link SQLDialect#SQLITE}</td>
-     * <td><pre><code>INSERT INTO … ON CONFLICT DO NOTHING</code></pre></td>
+     * <td><code><pre>INSERT INTO .. ON CONFLICT DO NOTHING</pre></code></td>
      * </tr>
      * <tr>
-     * <td>{@link SQLDialect#DB2}<br>
-     * {@link SQLDialect#HSQLDB}<br>
-     * {@link SQLDialect#ORACLE}<br>
-     * {@link SQLDialect#SQLSERVER}<br>
+     * <td>{@link SQLDialect#DB2}<br/>
+     * {@link SQLDialect#HSQLDB}<br/>
+     * {@link SQLDialect#ORACLE}<br/>
+     * {@link SQLDialect#SQLSERVER}<br/>
      * {@link SQLDialect#SYBASE}</td>
-     * <td><pre><code>MERGE INTO [dst]
+     * <td><code><pre>MERGE INTO [dst]
      * USING ([values])
      * ON [dst.key] = [values.key]
-     * WHEN NOT MATCHED THEN INSERT ..</code></pre></td>
+     * WHEN NOT MATCHED THEN INSERT ..</pre></code></td>
      * </tr>
      * <tr>
      * <td>All the others</td>
-     * <td><pre><code>INSERT INTO [dst] ( ... )
+     * <td><code><pre>INSERT INTO [dst] ( ... )
      * SELECT [values]
      * WHERE NOT EXISTS (
      *   SELECT 1
      *   FROM [dst]
      *   WHERE [dst.key] = [values.key]
-     * )</code></pre></td>
+     * )</pre></code></td>
      * </tr>
      * </table>
      * <p>
@@ -238,7 +233,7 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R>,
      *
      * @see InsertOnDuplicateStep#onDuplicateKeyUpdate()
      */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T> void addValueForUpdate(Field<T> field, T value);
 
     /**
@@ -247,7 +242,7 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R>,
      *
      * @see InsertOnDuplicateStep#onDuplicateKeyUpdate()
      */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     <T> void addValueForUpdate(Field<T> field, Field<T> value);
 
     /**
@@ -260,19 +255,8 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R>,
      *
      * @see InsertOnDuplicateStep#onDuplicateKeyUpdate()
      */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addValuesForUpdate(Map<?, ?> map);
-
-    /**
-     * Add multiple values to the <code>ON DUPLICATE KEY UPDATE</code> clause of
-     * this <code>INSERT</code> statement, where this is supported.
-     * <p>
-     * This works like {@link #setRecord(Record)}.
-     *
-     * @param record The record to add to this insert statement.
-     */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    void setRecordForUpdate(R record);
 
     /**
      * Adds a new condition the {@link #onConflict(Field...)} clause.
@@ -295,7 +279,7 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R>,
      * @param condition The condition
      */
     @Override
-    @Support({ CUBRID, DERBY, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addConditions(Condition condition);
 
     /**
@@ -308,7 +292,7 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R>,
      * @param conditions The condition
      */
     @Override
-    @Support({ CUBRID, DERBY, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addConditions(Condition... conditions);
 
     /**
@@ -321,7 +305,7 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R>,
      * @param conditions The condition
      */
     @Override
-    @Support({ CUBRID, DERBY, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addConditions(Collection<? extends Condition> conditions);
 
     /**
@@ -334,7 +318,7 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R>,
      * @param condition The condition
      */
     @Override
-    @Support({ CUBRID, DERBY, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addConditions(Operator operator, Condition condition);
 
     /**
@@ -347,7 +331,7 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R>,
      * @param conditions The condition
      */
     @Override
-    @Support({ CUBRID, DERBY, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addConditions(Operator operator, Condition... conditions);
 
     /**
@@ -360,13 +344,13 @@ public interface InsertQuery<R extends Record> extends StoreQuery<R>, Insert<R>,
      * @param conditions The condition
      */
     @Override
-    @Support({ CUBRID, DERBY, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void addConditions(Operator operator, Collection<? extends Condition> conditions);
 
     /**
      * Set an empty record with the <code>DEFAULT VALUES</code> clause.
      */
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     void setDefaultValues();
 
     /**

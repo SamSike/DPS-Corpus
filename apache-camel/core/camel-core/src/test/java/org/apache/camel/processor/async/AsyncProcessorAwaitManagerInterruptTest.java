@@ -22,10 +22,10 @@ import java.util.concurrent.RejectedExecutionException;
 import org.apache.camel.CamelExecutionException;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spi.AsyncProcessorAwaitManager;
-import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,10 +35,10 @@ public class AsyncProcessorAwaitManagerInterruptTest extends ContextTestSupport 
 
     @Test
     public void testAsyncAwaitInterrupt() throws Exception {
-        final AsyncProcessorAwaitManager asyncProcessorAwaitManager = PluginHelper.getAsyncProcessorAwaitManager(context);
-        asyncProcessorAwaitManager.getStatistics().setStatisticsEnabled(true);
+        context.adapt(ExtendedCamelContext.class).getAsyncProcessorAwaitManager().getStatistics().setStatisticsEnabled(true);
 
-        assertEquals(0, asyncProcessorAwaitManager.size());
+        assertEquals(0, context.adapt(ExtendedCamelContext.class).getAsyncProcessorAwaitManager().size());
+
         getMockEndpoint("mock:before").expectedBodiesReceived("Hello Camel");
         getMockEndpoint("mock:after").expectedBodiesReceived("Bye Camel");
         getMockEndpoint("mock:result").expectedMessageCount(0);
@@ -52,37 +52,35 @@ public class AsyncProcessorAwaitManagerInterruptTest extends ContextTestSupport 
 
         assertMockEndpointsSatisfied();
 
-        assertEquals(0, asyncProcessorAwaitManager.size());
+        assertEquals(0, context.adapt(ExtendedCamelContext.class).getAsyncProcessorAwaitManager().size());
         assertEquals(1,
-                asyncProcessorAwaitManager.getStatistics().getThreadsBlocked());
-        assertEquals(1, asyncProcessorAwaitManager.getStatistics()
+                context.adapt(ExtendedCamelContext.class).getAsyncProcessorAwaitManager().getStatistics().getThreadsBlocked());
+        assertEquals(1, context.adapt(ExtendedCamelContext.class).getAsyncProcessorAwaitManager().getStatistics()
                 .getThreadsInterrupted());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.addComponent("async", new MyAsyncComponent());
 
                 from("direct:start").routeId("myRoute").to("mock:before").to("async:bye:camel?delay=2000").id("myAsync")
                         .to("mock:after").process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
-                                final AsyncProcessorAwaitManager asyncProcessorAwaitManager
-                                        = PluginHelper.getAsyncProcessorAwaitManager(context);
-                                int size = asyncProcessorAwaitManager.size();
+                            public void process(Exchange exchange) throws Exception {
+                                int size = context.adapt(ExtendedCamelContext.class).getAsyncProcessorAwaitManager().size();
                                 log.info("async inflight: {}", size);
                                 assertEquals(1, size);
 
                                 Collection<AsyncProcessorAwaitManager.AwaitThread> threads
-                                        = asyncProcessorAwaitManager.browse();
+                                        = context.adapt(ExtendedCamelContext.class).getAsyncProcessorAwaitManager().browse();
                                 AsyncProcessorAwaitManager.AwaitThread thread = threads.iterator().next();
 
                                 // lets interrupt it
                                 String id = thread.getExchange().getExchangeId();
-                                asyncProcessorAwaitManager.interrupt(id);
+                                context.adapt(ExtendedCamelContext.class).getAsyncProcessorAwaitManager().interrupt(id);
                             }
                         }).transform(constant("Hi Camel")).to("mock:result");
             }

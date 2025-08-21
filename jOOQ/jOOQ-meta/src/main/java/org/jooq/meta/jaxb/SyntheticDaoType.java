@@ -30,7 +30,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
  *         &lt;element name="schema" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="name" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="comment" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
- *         &lt;element name="methods" type="{http://www.jooq.org/xsd/jooq-codegen-3.21.0.xsd}SyntheticDaoMethodsType" minOccurs="0"/&gt;
+ *         &lt;element name="methods" type="{http://www.jooq.org/xsd/jooq-codegen-3.17.0.xsd}SyntheticDaoMethodsType" minOccurs="0"/&gt;
  *       &lt;/all&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -49,7 +49,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class SyntheticDaoType implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String catalog;
     @XmlJavaTypeAdapter(StringAdapter.class)
@@ -259,8 +259,8 @@ public class SyntheticDaoType implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((methods == null)||methods.isEmpty()) {
-            if ((other.methods!= null)&&(!other.methods.isEmpty())) {
+        if (methods == null) {
+            if (other.methods!= null) {
                 return false;
             }
         } else {
@@ -279,7 +279,7 @@ public class SyntheticDaoType implements Serializable, XMLAppendable
         result = ((prime*result)+((schema == null)? 0 :schema.hashCode()));
         result = ((prime*result)+((name == null)? 0 :name.hashCode()));
         result = ((prime*result)+((comment == null)? 0 :comment.hashCode()));
-        result = ((prime*result)+(((methods == null)||methods.isEmpty())? 0 :methods.hashCode()));
+        result = ((prime*result)+((methods == null)? 0 :methods.hashCode()));
         return result;
     }
 

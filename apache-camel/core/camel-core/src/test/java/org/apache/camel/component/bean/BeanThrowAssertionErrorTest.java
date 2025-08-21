@@ -23,7 +23,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class BeanThrowAssertionErrorTest extends ContextTestSupport {
 
@@ -33,9 +33,12 @@ public class BeanThrowAssertionErrorTest extends ContextTestSupport {
         template.sendBody("direct:start", "Hello Camel");
         assertMockEndpointsSatisfied();
 
-        assertThrows(Exception.class,
-                () -> template.sendBody("direct:start", "Hello World"),
-                "Should fail");
+        try {
+            template.sendBody("direct:start", "Hello World");
+            fail("Should fail");
+        } catch (Exception e) {
+            // ignore
+        }
     }
 
     @Test
@@ -44,16 +47,19 @@ public class BeanThrowAssertionErrorTest extends ContextTestSupport {
         template.sendBody("direct:start2", "Hello World");
         assertMockEndpointsSatisfied();
 
-        assertThrows(Exception.class,
-                () -> template.sendBody("direct:start2", "Hello Camel"),
-                "Should fail");
+        try {
+            template.sendBody("direct:start2", "Hello Camel");
+            fail("Should fail");
+        } catch (Exception e) {
+            // ignore
+        }
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .bean(BeanThrowAssertionErrorTest.this, "doSomething")
                         .to("mock:result");
@@ -72,7 +78,7 @@ public class BeanThrowAssertionErrorTest extends ContextTestSupport {
     private static class MyProcessorBean implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             assertEquals("Hello World", exchange.getMessage().getBody());
         }
     }

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,10 +39,11 @@
 package org.jooq.impl;
 
 import static org.jooq.impl.DSL.noCondition;
-import static org.jooq.impl.Names.N_CONDITION;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 import org.jooq.Condition;
 import org.jooq.ConditionProvider;
@@ -69,19 +70,10 @@ final class ConditionProviderImpl extends AbstractField<Boolean> implements Cond
     }
 
     ConditionProviderImpl(Condition condition) {
-        super(N_CONDITION, SQLDataType.BOOLEAN);
+        super(DSL.name("condition"), SQLDataType.BOOLEAN);
 
         this.condition = condition;
     }
-
-    static final Condition extractCondition(Condition c) {
-
-        // join(..).on(..).and(..) uses some identity tricks to keep the right
-        // reference to the mutable ConditionProviderImpl instance, which we
-        // must take into account here.
-        return c instanceof ConditionProviderImpl cp ? cp.getWhere() : c;
-    }
-
 
     @Nullable
     final Condition getWhereOrNull() {
@@ -90,7 +82,7 @@ final class ConditionProviderImpl extends AbstractField<Boolean> implements Cond
 
     @NotNull
     final Condition getWhere() {
-        return hasWhere() ? extractCondition(condition) : noCondition();
+        return hasWhere() ? condition : noCondition();
     }
 
     final void setWhere(Condition newCondition) {
@@ -254,56 +246,6 @@ final class ConditionProviderImpl extends AbstractField<Boolean> implements Cond
     @Override
     public final Condition orNotExists(Select<?> select) {
         return getWhere().orNotExists(select);
-    }
-
-    @Override
-    public final Condition xor(Condition other) {
-        return getWhere().xor(other);
-    }
-
-    @Override
-    public final Condition xor(Field<Boolean> other) {
-        return getWhere().xor(other);
-    }
-
-    @Override
-    public final Condition xor(SQL sql) {
-        return getWhere().xor(sql);
-    }
-
-    @Override
-    public final Condition xor(String sql) {
-        return getWhere().xor(sql);
-    }
-
-    @Override
-    public final Condition xor(String sql, Object... bindings) {
-        return getWhere().xor(sql, bindings);
-    }
-
-    @Override
-    public final Condition xor(String sql, QueryPart... parts) {
-        return getWhere().xor(sql, parts);
-    }
-
-    @Override
-    public final Condition xorNot(Condition other) {
-        return getWhere().xorNot(other);
-    }
-
-    @Override
-    public final Condition xorNot(Field<Boolean> other) {
-        return getWhere().xorNot(other);
-    }
-
-    @Override
-    public final Condition xorExists(Select<?> select) {
-        return getWhere().xorExists(select);
-    }
-
-    @Override
-    public final Condition xorNotExists(Select<?> select) {
-        return getWhere().xorNotExists(select);
     }
 
     @Override

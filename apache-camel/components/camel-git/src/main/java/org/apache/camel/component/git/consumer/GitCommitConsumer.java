@@ -16,44 +16,31 @@
  */
 package org.apache.camel.component.git.consumer;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.component.git.GitConstants;
 import org.apache.camel.component.git.GitEndpoint;
 import org.apache.camel.util.ObjectHelper;
-import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
 
 public class GitCommitConsumer extends AbstractGitConsumer {
 
-    private final List<ObjectId> commitsConsumed = new ArrayList<>();
+    private List commitsConsumed = new ArrayList();
 
     public GitCommitConsumer(GitEndpoint endpoint, Processor processor) {
         super(endpoint, processor);
     }
 
     @Override
-    public GitEndpoint getEndpoint() {
-        return (GitEndpoint) super.getEndpoint();
-    }
-
-    @Override
     protected int poll() throws Exception {
-        Queue<Object> exchanges = new ArrayDeque<>();
-
-        String branch = getEndpoint().getBranchName();
+        int count = 0;
         Iterable<RevCommit> commits;
-        ObjectId id = null;
-        if (ObjectHelper.isNotEmpty(branch)) {
-            id = getGit().getRepository().resolve(branch);
-        }
-        if (id != null) {
-            commits = getGit().log().add(id).call();
+        if (ObjectHelper.isNotEmpty(((GitEndpoint) getEndpoint()).getBranchName())) {
+            commits = getGit().log().add(getGit().getRepository().resolve(((GitEndpoint) getEndpoint()).getBranchName()))
+                    .call();
         } else {
             commits = getGit().log().all().call();
         }
@@ -65,21 +52,12 @@ public class GitCommitConsumer extends AbstractGitConsumer {
                 e.getMessage().setHeader(GitConstants.GIT_COMMIT_AUTHOR_NAME, commit.getAuthorIdent().getName());
                 e.getMessage().setHeader(GitConstants.GIT_COMMIT_COMMITTER_NAME, commit.getCommitterIdent().getName());
                 e.getMessage().setHeader(GitConstants.GIT_COMMIT_TIME, commit.getCommitTime());
-                exchanges.add(e);
+                getProcessor().process(e);
+                commitsConsumed.add(commit.getId());
+                count++;
             }
         }
-        return processBatch(exchanges);
+        return count;
     }
 
-    @Override
-    public Object onPreProcessed(Exchange exchange) {
-        return exchange.getMessage().getHeader(GitConstants.GIT_COMMIT_ID);
-    }
-
-    @Override
-    public void onProcessed(Exchange exchange, Object value) {
-        if (value instanceof ObjectId oid) {
-            commitsConsumed.add(oid);
-        }
-    }
 }

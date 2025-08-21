@@ -21,11 +21,13 @@ import java.util.List;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 
+import org.apache.camel.CamelContext;
 import org.apache.camel.examples.SendEmail;
-import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
+import org.apache.camel.spring.SpringCamelContext;
+import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.context.support.AbstractApplicationContext;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
@@ -34,12 +36,15 @@ import org.springframework.transaction.support.TransactionTemplate;
 import static org.apache.camel.test.junit5.TestSupport.assertIsInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public abstract class AbstractJpaTest extends CamelSpringTestSupport {
+public abstract class AbstractJpaTest extends CamelTestSupport {
+    protected ApplicationContext applicationContext;
     protected TransactionTemplate transactionTemplate;
     protected EntityManager entityManager;
 
+    @Override
     @BeforeEach
-    public void setupEntityManager() {
+    public void setUp() throws Exception {
+        super.setUp();
         EntityManagerFactory entityManagerFactory = applicationContext.getBean("entityManagerFactory",
                 EntityManagerFactory.class);
         transactionTemplate = applicationContext.getBean("transactionTemplate", TransactionTemplate.class);
@@ -47,16 +52,19 @@ public abstract class AbstractJpaTest extends CamelSpringTestSupport {
         cleanupRepository();
     }
 
+    @Override
     @AfterEach
-    public void cleanupEntityManager() {
+    public void tearDown() throws Exception {
+        super.tearDown();
         if (entityManager != null) {
             entityManager.close();
         }
     }
 
     @Override
-    protected AbstractApplicationContext createApplicationContext() {
-        return new ClassPathXmlApplicationContext(routeXml());
+    protected CamelContext createCamelContext() throws Exception {
+        applicationContext = new ClassPathXmlApplicationContext(routeXml());
+        return SpringCamelContext.springCamelContext(applicationContext, true);
     }
 
     protected void cleanupRepository() {
@@ -77,7 +85,7 @@ public abstract class AbstractJpaTest extends CamelSpringTestSupport {
         assertEntityInDB(size, SendEmail.class);
     }
 
-    protected void assertEntityInDB(int size, Class<?> entityType) {
+    protected void assertEntityInDB(int size, Class entityType) {
         List<?> results = entityManager.createQuery("select o from " + entityType.getName() + " o").getResultList();
         assertEquals(size, results.size());
 

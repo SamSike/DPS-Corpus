@@ -35,13 +35,14 @@ public class GenericFileDefaultMoveExistingFileStrategy implements FileMoveExist
      * Moves any existing file due fileExists=Move is in use.
      */
     @Override
-    public boolean moveExistingFile(GenericFileEndpoint<?> endpoint, GenericFileOperations<?> operations, String fileName)
+    public boolean moveExistingFile(GenericFileEndpoint endpoint, GenericFileOperations operations, String fileName)
             throws GenericFileOperationFailedException {
 
         // need to evaluate using a dummy and simulate the file first, to have
         // access to all the file attributes
         // create a dummy exchange as Exchange is needed for expression
-        // evaluation we support only the following 3 tokens.
+        // evaluation
+        // we support only the following 3 tokens.
         Exchange dummy = endpoint.createExchange();
         String parent = FileUtil.onlyPath(fileName);
         String onlyName = FileUtil.stripPath(fileName);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.springframework.scheduling.quartz;
 import java.util.Date;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
@@ -29,6 +28,8 @@ import org.quartz.impl.triggers.SimpleTriggerImpl;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.core.Constants;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -45,7 +46,6 @@ import org.springframework.util.Assert;
  * instead of registering the JobDetail separately.
  *
  * @author Juergen Hoeller
- * @author Sam Brannen
  * @since 3.1
  * @see #setName
  * @see #setGroup
@@ -56,36 +56,23 @@ import org.springframework.util.Assert;
  */
 public class SimpleTriggerFactoryBean implements FactoryBean<SimpleTrigger>, BeanNameAware, InitializingBean {
 
-	/**
-	 * Map of constant names to constant values for the misfire instruction constants
-	 * defined in {@link org.quartz.Trigger} and {@link org.quartz.SimpleTrigger}.
-	 */
-	private static final Map<String, Integer> constants = Map.of(
-			"MISFIRE_INSTRUCTION_SMART_POLICY",
-				SimpleTrigger.MISFIRE_INSTRUCTION_SMART_POLICY,
-			"MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY",
-				SimpleTrigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY,
-			"MISFIRE_INSTRUCTION_FIRE_NOW",
-				SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW,
-			"MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_EXISTING_COUNT",
-				SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_EXISTING_COUNT,
-			"MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_REMAINING_COUNT",
-				SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_REMAINING_COUNT,
-			"MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_EXISTING_REPEAT_COUNT",
-				SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_EXISTING_REPEAT_COUNT,
-			"MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_REMAINING_REPEAT_COUNT",
-				SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_REMAINING_REPEAT_COUNT
-		);
+	/** Constants for the SimpleTrigger class. */
+	private static final Constants constants = new Constants(SimpleTrigger.class);
 
-	private @Nullable String name;
 
-	private @Nullable String group;
+	@Nullable
+	private String name;
 
-	private @Nullable JobDetail jobDetail;
+	@Nullable
+	private String group;
+
+	@Nullable
+	private JobDetail jobDetail;
 
 	private JobDataMap jobDataMap = new JobDataMap();
 
-	private @Nullable Date startTime;
+	@Nullable
+	private Date startTime;
 
 	private long startDelay;
 
@@ -95,13 +82,16 @@ public class SimpleTriggerFactoryBean implements FactoryBean<SimpleTrigger>, Bea
 
 	private int priority;
 
-	private int misfireInstruction = SimpleTrigger.MISFIRE_INSTRUCTION_SMART_POLICY;
+	private int misfireInstruction;
 
-	private @Nullable String description;
+	@Nullable
+	private String description;
 
-	private @Nullable String beanName;
+	@Nullable
+	private String beanName;
 
-	private @Nullable SimpleTrigger simpleTrigger;
+	@Nullable
+	private SimpleTrigger simpleTrigger;
 
 
 	/**
@@ -194,32 +184,25 @@ public class SimpleTriggerFactoryBean implements FactoryBean<SimpleTrigger>, Bea
 	}
 
 	/**
-	 * Specify the misfire instruction for this trigger.
+	 * Specify a misfire instruction for this trigger.
 	 */
 	public void setMisfireInstruction(int misfireInstruction) {
-		Assert.isTrue(constants.containsValue(misfireInstruction),
-				"Only values of misfire instruction constants allowed");
 		this.misfireInstruction = misfireInstruction;
 	}
 
 	/**
-	 * Set the misfire instruction for this trigger via the name of the corresponding
-	 * constant in the {@link org.quartz.Trigger} and {@link org.quartz.SimpleTrigger}
-	 * classes.
-	 * <p>Default is {@code MISFIRE_INSTRUCTION_SMART_POLICY}.
-	 * @see org.quartz.Trigger#MISFIRE_INSTRUCTION_SMART_POLICY
-	 * @see org.quartz.Trigger#MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY
+	 * Set the misfire instruction via the name of the corresponding
+	 * constant in the {@link org.quartz.SimpleTrigger} class.
+	 * Default is {@code MISFIRE_INSTRUCTION_SMART_POLICY}.
 	 * @see org.quartz.SimpleTrigger#MISFIRE_INSTRUCTION_FIRE_NOW
 	 * @see org.quartz.SimpleTrigger#MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_EXISTING_COUNT
 	 * @see org.quartz.SimpleTrigger#MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_REMAINING_COUNT
 	 * @see org.quartz.SimpleTrigger#MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_EXISTING_REPEAT_COUNT
 	 * @see org.quartz.SimpleTrigger#MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_REMAINING_REPEAT_COUNT
+	 * @see org.quartz.Trigger#MISFIRE_INSTRUCTION_SMART_POLICY
 	 */
 	public void setMisfireInstructionName(String constantName) {
-		Assert.hasText(constantName, "'constantName' must not be null or blank");
-		Integer misfireInstruction = constants.get(constantName);
-		Assert.notNull(misfireInstruction, "Only misfire instruction constants allowed");
-		this.misfireInstruction = misfireInstruction;
+		this.misfireInstruction = constants.asNumber(constantName).intValue();
 	}
 
 	/**
@@ -268,7 +251,8 @@ public class SimpleTriggerFactoryBean implements FactoryBean<SimpleTrigger>, Bea
 
 
 	@Override
-	public @Nullable SimpleTrigger getObject() {
+	@Nullable
+	public SimpleTrigger getObject() {
 		return this.simpleTrigger;
 	}
 

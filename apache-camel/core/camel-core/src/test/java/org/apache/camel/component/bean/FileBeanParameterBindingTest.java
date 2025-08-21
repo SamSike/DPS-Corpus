@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.bean;
 
-import java.util.UUID;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Header;
@@ -31,11 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class FileBeanParameterBindingTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello." + UUID.randomUUID() + ".txt";
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("foo", new MyFooBean());
         return jndi;
     }
@@ -44,18 +41,18 @@ public class FileBeanParameterBindingTest extends ContextTestSupport {
     public void testFileToBean() throws Exception {
         getMockEndpoint("mock:result").expectedMessageCount(1);
 
-        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri()).to("bean:foo?method=before").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         exchange.getIn().setHeader("bar", 123);
                     }
                 }).to("bean:foo?method=after").to("mock:result");
@@ -68,13 +65,13 @@ public class FileBeanParameterBindingTest extends ContextTestSupport {
 
         public void before(@Header("bar") Integer bar, @Header(Exchange.FILE_NAME) String name) {
             assertNull(bar, "There should be no bar");
-            assertEquals(TEST_FILE_NAME, name);
+            assertEquals("hello.txt", name);
         }
 
         public void after(@Header("bar") Integer bar, @Header(Exchange.FILE_NAME) String name) {
             assertNotNull(bar, "There should be bar");
             assertEquals(123, bar.intValue());
-            assertEquals(TEST_FILE_NAME, name);
+            assertEquals("hello.txt", name);
         }
     }
 }

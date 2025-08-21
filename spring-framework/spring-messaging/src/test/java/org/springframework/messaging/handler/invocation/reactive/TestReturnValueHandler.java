@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
 
 package org.springframework.messaging.handler.invocation.reactive;
 
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 
 /**
@@ -29,10 +29,12 @@ import org.springframework.messaging.Message;
  */
 public class TestReturnValueHandler implements HandlerMethodReturnValueHandler {
 
-	private @Nullable Object lastReturnValue;
+	@Nullable
+	private Object lastReturnValue;
 
 
-	public @Nullable Object getLastReturnValue() {
+	@Nullable
+	public Object getLastReturnValue() {
 		return this.lastReturnValue;
 	}
 

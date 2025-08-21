@@ -96,7 +96,7 @@ public class TimerListenerManager extends ServiceSupport implements Runnable, Ca
             try {
                 LOG.trace("Invoking onTimer on {}", listener);
                 listener.onTimer();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 // ignore
                 LOG.debug("Error occurred during onTimer for TimerListener: {}. This exception will be ignored.",
                         listener, e);
@@ -109,7 +109,7 @@ public class TimerListenerManager extends ServiceSupport implements Runnable, Ca
      * <p/>
      * It may be important to implement {@link #equals(Object)} and {@link #hashCode()} for the listener to ensure that
      * we can remove the same listener again, when invoking remove.
-     *
+     * 
      * @param listener listener
      */
     public void addTimerListener(TimerListener listener) {

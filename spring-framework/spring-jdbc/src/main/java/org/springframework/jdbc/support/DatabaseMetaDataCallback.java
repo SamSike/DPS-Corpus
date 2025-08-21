@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ package org.springframework.jdbc.support;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import org.jspecify.annotations.Nullable;
-
 /**
  * A callback interface used by the JdbcUtils class. Implementations of this
  * interface perform the actual work of extracting database meta-data, but
@@ -33,7 +31,7 @@ import org.jspecify.annotations.Nullable;
  * @see JdbcUtils#extractDatabaseMetaData(javax.sql.DataSource, DatabaseMetaDataCallback)
  */
 @FunctionalInterface
-public interface DatabaseMetaDataCallback<T extends @Nullable Object> {
+public interface DatabaseMetaDataCallback<T> {
 
 	/**
 	 * Implementations must implement this method to process the meta-data

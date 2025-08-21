@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Rossen Stoyanchev
  */
-class ExpressionValueMethodArgumentResolverTests {
+public class ExpressionValueMethodArgumentResolverTests {
 
 	private ExpressionValueMethodArgumentResolver resolver;
 
@@ -51,6 +51,7 @@ class ExpressionValueMethodArgumentResolverTests {
 	private NativeWebRequest webRequest;
 
 	@BeforeEach
+	@SuppressWarnings("resource")
 	public void setUp() throws Exception {
 		GenericWebApplicationContext context = new GenericWebApplicationContext();
 		context.refresh();
@@ -68,19 +69,19 @@ class ExpressionValueMethodArgumentResolverTests {
 	}
 
 	@AfterEach
-	void teardown() {
+	public void teardown() {
 		RequestContextHolder.resetRequestAttributes();
 	}
 
 	@Test
-	void supportsParameter() throws Exception {
+	public void supportsParameter() throws Exception {
 		assertThat(resolver.supportsParameter(paramSystemProperty)).isTrue();
 		assertThat(resolver.supportsParameter(paramContextPath)).isTrue();
 		assertThat(resolver.supportsParameter(paramNotSupported)).isFalse();
 	}
 
 	@Test
-	void resolveSystemProperty() throws Exception {
+	public void resolveSystemProperty() throws Exception {
 		System.setProperty("systemProperty", "22");
 		Object value = resolver.resolveArgument(paramSystemProperty, null, webRequest, null);
 		System.clearProperty("systemProperty");
@@ -89,7 +90,7 @@ class ExpressionValueMethodArgumentResolverTests {
 	}
 
 	@Test
-	void resolveContextPath() throws Exception {
+	public void resolveContextPath() throws Exception {
 		webRequest.getNativeRequest(MockHttpServletRequest.class).setContextPath("/contextPath");
 		Object value = resolver.resolveArgument(paramContextPath, null, webRequest, null);
 

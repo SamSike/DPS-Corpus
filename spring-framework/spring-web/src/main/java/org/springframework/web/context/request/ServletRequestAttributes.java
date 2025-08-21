@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
@@ -63,9 +63,11 @@ public class ServletRequestAttributes extends AbstractRequestAttributes {
 
 	private final HttpServletRequest request;
 
-	private @Nullable HttpServletResponse response;
+	@Nullable
+	private HttpServletResponse response;
 
-	private volatile @Nullable HttpSession session;
+	@Nullable
+	private volatile HttpSession session;
 
 	private final Map<String, Object> sessionAttributesToUpdate = new ConcurrentHashMap<>(1);
 
@@ -100,7 +102,8 @@ public class ServletRequestAttributes extends AbstractRequestAttributes {
 	/**
 	 * Exposes the native {@link HttpServletResponse} that we're wrapping (if any).
 	 */
-	public final @Nullable HttpServletResponse getResponse() {
+	@Nullable
+	public final HttpServletResponse getResponse() {
 		return this.response;
 	}
 
@@ -108,7 +111,8 @@ public class ServletRequestAttributes extends AbstractRequestAttributes {
 	 * Exposes the {@link HttpSession} that we're wrapping.
 	 * @param allowCreate whether to allow creation of a new session if none exists yet
 	 */
-	protected final @Nullable HttpSession getSession(boolean allowCreate) {
+	@Nullable
+	protected final HttpSession getSession(boolean allowCreate) {
 		if (isRequestActive()) {
 			HttpSession session = this.request.getSession(allowCreate);
 			this.session = session;
@@ -139,7 +143,7 @@ public class ServletRequestAttributes extends AbstractRequestAttributes {
 
 
 	@Override
-	public @Nullable Object getAttribute(String name, int scope) {
+	public Object getAttribute(String name, int scope) {
 		if (scope == SCOPE_REQUEST) {
 			if (!isRequestActive()) {
 				throw new IllegalStateException(
@@ -238,7 +242,7 @@ public class ServletRequestAttributes extends AbstractRequestAttributes {
 	}
 
 	@Override
-	public @Nullable Object resolveReference(String key) {
+	public Object resolveReference(String key) {
 		if (REFERENCE_REQUEST.equals(key)) {
 			return this.request;
 		}

@@ -30,11 +30,8 @@ public class JsonPathHeaderNameTest extends CamelTestSupport {
         return new RouteBuilder() {
             @Override
             public void configure() {
-                var jp = expression().jsonpath().expression("$..store.book.length()").resultType(int.class)
-                        .source("header:myHeader").end();
-
                 from("direct:start")
-                        .setHeader("number", jp)
+                        .setHeader("number").jsonpath("$..store.book.length()", false, int.class, "myHeader")
                         .to("mock:result");
             }
         };

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,10 @@ import java.lang.reflect.AnnotatedElement;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.DecoratingProxy;
 import org.springframework.core.OrderComparator;
 import org.springframework.core.annotation.MergedAnnotations.SearchStrategy;
+import org.springframework.lang.Nullable;
 
 /**
  * {@code AnnotationAwareOrderComparator} is an extension of
@@ -60,7 +59,8 @@ public class AnnotationAwareOrderComparator extends OrderComparator {
 	 * check in the superclass.
 	 */
 	@Override
-	protected @Nullable Integer findOrder(Object obj) {
+	@Nullable
+	protected Integer findOrder(Object obj) {
 		Integer order = super.findOrder(obj);
 		if (order != null) {
 			return order;
@@ -68,12 +68,13 @@ public class AnnotationAwareOrderComparator extends OrderComparator {
 		return findOrderFromAnnotation(obj);
 	}
 
-	private @Nullable Integer findOrderFromAnnotation(Object obj) {
-		AnnotatedElement element = (obj instanceof AnnotatedElement ae ? ae : obj.getClass());
+	@Nullable
+	private Integer findOrderFromAnnotation(Object obj) {
+		AnnotatedElement element = (obj instanceof AnnotatedElement ? (AnnotatedElement) obj : obj.getClass());
 		MergedAnnotations annotations = MergedAnnotations.from(element, SearchStrategy.TYPE_HIERARCHY);
 		Integer order = OrderUtils.getOrderFromAnnotations(element, annotations);
-		if (order == null && obj instanceof DecoratingProxy decoratingProxy) {
-			return findOrderFromAnnotation(decoratingProxy.getDecoratedClass());
+		if (order == null && obj instanceof DecoratingProxy) {
+			return findOrderFromAnnotation(((DecoratingProxy) obj).getDecoratedClass());
 		}
 		return order;
 	}
@@ -85,13 +86,14 @@ public class AnnotationAwareOrderComparator extends OrderComparator {
 	 * multiple matches but only one object to be returned.
 	 */
 	@Override
-	public @Nullable Integer getPriority(Object obj) {
-		if (obj instanceof Class<?> clazz) {
-			return OrderUtils.getPriority(clazz);
+	@Nullable
+	public Integer getPriority(Object obj) {
+		if (obj instanceof Class) {
+			return OrderUtils.getPriority((Class<?>) obj);
 		}
 		Integer priority = OrderUtils.getPriority(obj.getClass());
-		if (priority == null && obj instanceof DecoratingProxy decoratingProxy) {
-			return getPriority(decoratingProxy.getDecoratedClass());
+		if (priority == null  && obj instanceof DecoratingProxy) {
+			return getPriority(((DecoratingProxy) obj).getDecoratedClass());
 		}
 		return priority;
 	}
@@ -132,11 +134,11 @@ public class AnnotationAwareOrderComparator extends OrderComparator {
 	 * @see java.util.Arrays#sort(Object[], java.util.Comparator)
 	 */
 	public static void sortIfNecessary(Object value) {
-		if (value instanceof Object[] objects) {
-			sort(objects);
+		if (value instanceof Object[]) {
+			sort((Object[]) value);
 		}
-		else if (value instanceof List<?> list) {
-			sort(list);
+		else if (value instanceof List) {
+			sort((List<?>) value);
 		}
 	}
 

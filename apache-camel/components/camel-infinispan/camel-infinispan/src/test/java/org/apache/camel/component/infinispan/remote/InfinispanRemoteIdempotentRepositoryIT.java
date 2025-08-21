@@ -25,7 +25,6 @@ import org.apache.camel.spi.IdempotentRepository;
 import org.apache.camel.util.function.Suppliers;
 import org.infinispan.commons.api.BasicCache;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 public class InfinispanRemoteIdempotentRepositoryIT extends InfinispanRemoteTestSupport
         implements InfinispanIdempotentRepositoryTestSupport {
@@ -54,15 +53,13 @@ public class InfinispanRemoteIdempotentRepositoryIT extends InfinispanRemoteTest
     }
 
     @Override
-    public BasicCache<Object, Object> getCache(String name) {
-        return super.getCache(name);
+    public MockEndpoint getMockEndpoint(String id) {
+        return super.getMockEndpoint(id);
     }
 
-    @Test
-    void producerQueryOperationWithoutQueryBuilder() throws Exception {
-        MockEndpoint mock = getMockEndpoint("mock:result");
-
-        producerQueryOperationWithoutQueryBuilder(mock);
+    @Override
+    public BasicCache<Object, Object> getCache(String name) {
+        return super.getCache(name);
     }
 
     @Override

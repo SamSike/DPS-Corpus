@@ -32,10 +32,10 @@ public class SedaSizeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("seda:bar");
 
                 from("seda:bar?size=5").to("mock:bar");

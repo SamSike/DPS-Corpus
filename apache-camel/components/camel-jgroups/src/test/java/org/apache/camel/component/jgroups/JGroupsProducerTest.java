@@ -22,7 +22,8 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.jgroups.JChannel;
 import org.jgroups.Message;
-import org.jgroups.Receiver;
+import org.jgroups.ReceiverAdapter;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -58,7 +59,7 @@ public class JGroupsProducerTest extends CamelTestSupport {
     protected void doPreSetup() throws Exception {
         super.doPreSetup();
         channel = new JChannel();
-        channel.setReceiver(new Receiver() {
+        channel.setReceiver(new ReceiverAdapter() {
             @Override
             public void receive(Message msg) {
                 messageReceived = msg.getObject();
@@ -68,8 +69,10 @@ public class JGroupsProducerTest extends CamelTestSupport {
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
         channel.close();
+        super.tearDown();
     }
 
     @Test

@@ -35,21 +35,21 @@ public class AdviceWithTwoRoutesOnExceptionIssueTest extends ContextTestSupport 
     public void testAdviceWith() throws Exception {
         AdviceWith.adviceWith(context.getRouteDefinition("a"), context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 interceptSendToEndpoint("mock:a").skipSendToOriginalEndpoint().to("mock:error");
             }
         });
 
         AdviceWith.adviceWith(context.getRouteDefinition("b"), context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 interceptSendToEndpoint("mock:b").skipSendToOriginalEndpoint().to("mock:error");
             }
         });
 
         getMockEndpoint("mock:error").whenAnyExchangeReceived(new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 String body = exchange.getIn().getBody(String.class);
                 throw new IllegalArgumentException("Forced " + body);
             }
@@ -72,10 +72,10 @@ public class AdviceWithTwoRoutesOnExceptionIssueTest extends ContextTestSupport 
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).handled(true).setBody(simple("Handling ${exception.message}")).to("mock:handled");
 
                 from("direct:a").routeId("a").to("mock:a");

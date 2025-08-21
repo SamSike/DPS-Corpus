@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.context.annotation;
 
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
 import org.w3c.dom.Element;
 
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -27,6 +26,7 @@ import org.springframework.beans.factory.parsing.BeanComponentDefinition;
 import org.springframework.beans.factory.parsing.CompositeComponentDefinition;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
+import org.springframework.lang.Nullable;
 
 /**
  * Parser for the &lt;context:annotation-config/&gt; element.
@@ -40,7 +40,8 @@ import org.springframework.beans.factory.xml.ParserContext;
 public class AnnotationConfigBeanDefinitionParser implements BeanDefinitionParser {
 
 	@Override
-	public @Nullable BeanDefinition parse(Element element, ParserContext parserContext) {
+	@Nullable
+	public BeanDefinition parse(Element element, ParserContext parserContext) {
 		Object source = parserContext.extractSource(element);
 
 		// Obtain bean definitions for all relevant BeanPostProcessors.

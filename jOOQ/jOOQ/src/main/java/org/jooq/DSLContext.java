@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,15 +43,11 @@ package org.jooq;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
-// ...
 // ...
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 // ...
@@ -67,7 +63,6 @@ import static org.jooq.SQLDialect.MARIADB;
 import static org.jooq.SQLDialect.MYSQL;
 // ...
 // ...
-// ...
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
@@ -80,7 +75,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
@@ -121,11 +115,11 @@ import org.jooq.tools.jdbc.MockDataProvider;
 import org.jooq.tools.jdbc.MockRunnable;
 import org.jooq.util.xml.jaxb.InformationSchema;
 
-import org.jetbrains.annotations.ApiStatus.Experimental;
-import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.ApiStatus.Experimental;
+import org.jetbrains.annotations.ApiStatus.Internal;
 
 import io.r2dbc.spi.ConnectionFactory;
 
@@ -140,7 +134,7 @@ import io.r2dbc.spi.ConnectionFactory;
  * the <code>DSLContext</code>'s {@link #configuration()}, such that they can be
  * executed immediately in a fluent style. An example is given here:
  * <p>
- * <pre><code>
+ * <code><pre>
  * DSLContext create = DSL.using(connection, dialect);
  *
  * // Immediately fetch results after constructing a query
@@ -148,7 +142,7 @@ import io.r2dbc.spi.ConnectionFactory;
  *
  * // The above is equivalent to this "non-fluent" style
  * create.fetch(DSL.selectFrom(MY_TABLE).where(MY_TABLE.ID.eq(1)));
- * </code></pre>
+ * </pre></code>
  * <p>
  * The <code>DSL</code> provides convenient constructors to create a
  * {@link Configuration}, which will be shared among all <code>Query</code>
@@ -254,6 +248,8 @@ public interface DSLContext extends Scope {
     /**
      * A JDBC connection that proxies the underlying connection to run the jOOQ
      * Diagnostics Pack on executed queries.
+     * <p>
+     * <strong>This is experimental functionality.</strong>
      */
     @NotNull
     Connection diagnosticsConnection();
@@ -268,14 +264,54 @@ public interface DSLContext extends Scope {
     DataSource diagnosticsDataSource();
 
     /**
-     * The experimental migrations API.
+     * Initialise a {@link Version}.
      * <p>
      * This is EXPERIMENTAL functionality and subject to change in future jOOQ
      * versions.
      */
     @Experimental
     @NotNull
-    Migrations migrations();
+    Version version(String id);
+
+    /**
+     * Initialise a {@link Versions} graph.
+     * <p>
+     * This is EXPERIMENTAL functionality and subject to change in future jOOQ
+     * versions.
+     */
+    @Experimental
+    @NotNull
+    Versions versions();
+
+    /**
+     * Initialise a {@link Version}.
+     * <p>
+     * This is EXPERIMENTAL functionality and subject to change in future jOOQ
+     * versions.
+     */
+    @Experimental
+    @NotNull
+    Commit commit(String id);
+
+    /**
+     * Initialise a {@link Commits} graph.
+     * <p>
+     * This is EXPERIMENTAL functionality and subject to change in future jOOQ
+     * versions.
+     */
+    @Experimental
+    @NotNull
+    Commits commits();
+
+    /**
+     * Create a migration from the currently installed version to a new version.
+     * <p>
+     * This is EXPERIMENTAL functionality and subject to change in future jOOQ
+     * versions.
+     */
+    @Experimental
+    @NotNull
+    Migration migrateTo(Commit to);
 
     /**
      * Access the database meta data.
@@ -477,33 +513,6 @@ public interface DSLContext extends Scope {
     <T> T transactionResult(TransactionalCallable<T> transactional);
 
     /**
-     * Run a {@link TransactionalCallable} in the context of this
-     * <code>DSLContext</code>'s underlying {@link #configuration()}'s
-     * {@link Configuration#transactionProvider()}, and return the
-     * <code>transactional</code>'s outcome.
-     * <p>
-     * The argument transactional code should not capture any scope but derive
-     * its {@link Configuration} from the
-     * {@link TransactionalCallable#run(Configuration)} argument in order to
-     * create new statements.
-     *
-     * @param transactional The transactional code
-     * @param properties The transaction properties (e.g.
-     *            {@link Readonly#READONLY} or {@link Isolation#SERIALIZABLE}).
-     * @return The transactional outcome
-     * @throws RuntimeException any runtime exception thrown by the
-     *             <code>transactional</code> logic, indicating that a rollback
-     *             has occurred.
-     * @throws DataAccessException any database problem that may have arised
-     *             when executing the <code>transactional</code> logic, or a
-     *             wrapper for any checked exception thrown by the
-     *             <code>transactional</code> logic, indicating that a rollback
-     *             has occurred.
-     */
-    @Blocking
-    <T> T transactionResult(TransactionalCallable<T> transactional, TransactionProperty... properties);
-
-    /**
      * Run a {@link ContextTransactionalRunnable} in the context of this
      * <code>DSLContext</code>'s underlying {@link #configuration()}'s
      * {@link Configuration#transactionProvider()}, and return the
@@ -533,35 +542,6 @@ public interface DSLContext extends Scope {
     <T> T transactionResult(ContextTransactionalCallable<T> transactional) throws ConfigurationException;
 
     /**
-     * Run a {@link ContextTransactionalRunnable} in the context of this
-     * <code>DSLContext</code>'s underlying {@link #configuration()}'s
-     * {@link Configuration#transactionProvider()}, and return the
-     * <code>transactional</code>'s outcome.
-     * <p>
-     * The argument transactional code may capture scope to derive its
-     * {@link Configuration} from the "context" in order to create new
-     * statements. This context can be provided, for instance, by
-     * {@link ThreadLocalTransactionProvider} automatically.
-     *
-     * @param transactional The transactional code
-     * @return The transactional outcome
-     * @throws ConfigurationException if the underlying
-     *             {@link Configuration#transactionProvider()} is not able to
-     *             provide context (i.e. currently, it is not a
-     *             {@link ThreadLocalTransactionProvider}).
-     * @throws RuntimeException any runtime exception thrown by the
-     *             <code>transactional</code> logic, indicating that a rollback
-     *             has occurred.
-     * @throws DataAccessException any database problem that may have arised
-     *             when executing the <code>transactional</code> logic, or a
-     *             wrapper for any checked exception thrown by the
-     *             <code>transactional</code> logic, indicating that a rollback
-     *             has occurred.
-     */
-    @Blocking
-    <T> T transactionResult(ContextTransactionalCallable<T> transactional, TransactionProperty... properties) throws ConfigurationException;
-
-    /**
      * Run a {@link TransactionalRunnable} in the context of this
      * <code>DSLContext</code>'s underlying {@link #configuration()}'s
      * {@link Configuration#transactionProvider()}.
@@ -583,29 +563,6 @@ public interface DSLContext extends Scope {
      */
     @Blocking
     void transaction(TransactionalRunnable transactional);
-
-    /**
-     * Run a {@link TransactionalRunnable} in the context of this
-     * <code>DSLContext</code>'s underlying {@link #configuration()}'s
-     * {@link Configuration#transactionProvider()}.
-     * <p>
-     * The argument transactional code should not capture any scope but derive
-     * its {@link Configuration} from the
-     * {@link TransactionalCallable#run(Configuration)} argument in order to
-     * create new statements.
-     *
-     * @param transactional The transactional code
-     * @throws RuntimeException any runtime exception thrown by the
-     *             <code>transactional</code> logic, indicating that a rollback
-     *             has occurred.
-     * @throws DataAccessException any database problem that may have arised
-     *             when executing the <code>transactional</code> logic, or a
-     *             wrapper for any checked exception thrown by the
-     *             <code>transactional</code> logic, indicating that a rollback
-     *             has occurred.
-     */
-    @Blocking
-    void transaction(TransactionalRunnable transactional, TransactionProperty... properties);
 
     /**
      * Run a {@link ContextTransactionalRunnable} in the context of this
@@ -635,33 +592,6 @@ public interface DSLContext extends Scope {
     void transaction(ContextTransactionalRunnable transactional) throws ConfigurationException;
 
     /**
-     * Run a {@link ContextTransactionalRunnable} in the context of this
-     * <code>DSLContext</code>'s underlying {@link #configuration()}'s
-     * {@link Configuration#transactionProvider()}.
-     * <p>
-     * The argument transactional code may capture scope to derive its
-     * {@link Configuration} from the "context" in order to create new
-     * statements. This context can be provided, for instance, by
-     * {@link ThreadLocalTransactionProvider} automatically.
-     *
-     * @param transactional The transactional code
-     * @throws ConfigurationException if the underlying
-     *             {@link Configuration#transactionProvider()} is not able to
-     *             provide context (i.e. currently, it is not a
-     *             {@link ThreadLocalTransactionProvider}).
-     * @throws RuntimeException any runtime exception thrown by the
-     *             <code>transactional</code> logic, indicating that a rollback
-     *             has occurred.
-     * @throws DataAccessException any database problem that may have arised
-     *             when executing the <code>transactional</code> logic, or a
-     *             wrapper for any checked exception thrown by the
-     *             <code>transactional</code> logic, indicating that a rollback
-     *             has occurred.
-     */
-    @Blocking
-    void transaction(ContextTransactionalRunnable transactional, TransactionProperty... properties) throws ConfigurationException;
-
-    /**
      * Run a {@link TransactionalCallable} asynchronously.
      * <p>
      * The <code>TransactionCallable</code> is run in the context of this
@@ -679,25 +609,6 @@ public interface DSLContext extends Scope {
      */
     @NotNull
     <T> CompletionStage<T> transactionResultAsync(TransactionalCallable<T> transactional) throws ConfigurationException;
-
-    /**
-     * Run a {@link TransactionalCallable} asynchronously.
-     * <p>
-     * The <code>TransactionCallable</code> is run in the context of this
-     * <code>DSLContext</code>'s underlying {@link #configuration()}'s
-     * {@link Configuration#transactionProvider()}, and returns the
-     * <code>transactional</code>'s outcome in a new {@link CompletionStage}
-     * that is asynchronously completed by a task run by an {@link Executor}
-     * provided by the underlying {@link #configuration()}'s
-     * {@link Configuration#executorProvider()}.
-     *
-     * @param transactional The transactional code
-     * @return The transactional outcome
-     * @throws ConfigurationException If this is run with a
-     *             {@link ThreadLocalTransactionProvider}.
-     */
-    @NotNull
-    <T> CompletionStage<T> transactionResultAsync(TransactionalCallable<T> transactional, TransactionProperty... properties) throws ConfigurationException;
 
     /**
      * Run a {@link TransactionalRunnable} asynchronously.
@@ -718,24 +629,6 @@ public interface DSLContext extends Scope {
     CompletionStage<Void> transactionAsync(TransactionalRunnable transactional) throws ConfigurationException;
 
     /**
-     * Run a {@link TransactionalRunnable} asynchronously.
-     * <p>
-     * The <code>TransactionRunnable</code> is run in the context of this
-     * <code>DSLContext</code>'s underlying {@link #configuration()}'s
-     * {@link Configuration#transactionProvider()}, and returns the
-     * <code>transactional</code>'s outcome in a new {@link CompletionStage}
-     * that is asynchronously completed by a task run by an {@link Executor}
-     * provided by the underlying {@link #configuration()}'s
-     * {@link Configuration#executorProvider()}.
-     *
-     * @param transactional The transactional code
-     * @throws ConfigurationException If this is run with a
-     *             {@link ThreadLocalTransactionProvider}.
-     */
-    @NotNull
-    CompletionStage<Void> transactionAsync(TransactionalRunnable transactional, TransactionProperty... properties) throws ConfigurationException;
-
-    /**
      * Run a {@link TransactionalCallable} asynchronously.
      * <p>
      * The <code>TransactionCallable</code> is run in the context of this
@@ -752,24 +645,6 @@ public interface DSLContext extends Scope {
      */
     @NotNull
     <T> CompletionStage<T> transactionResultAsync(Executor executor, TransactionalCallable<T> transactional) throws ConfigurationException;
-
-    /**
-     * Run a {@link TransactionalCallable} asynchronously.
-     * <p>
-     * The <code>TransactionCallable</code> is run in the context of this
-     * <code>DSLContext</code>'s underlying {@link #configuration()}'s
-     * {@link Configuration#transactionProvider()}, and returns the
-     * <code>transactional</code>'s outcome in a new {@link CompletionStage}
-     * that is asynchronously completed by a task run by a given
-     * {@link Executor}.
-     *
-     * @param transactional The transactional code
-     * @return The transactional outcome
-     * @throws ConfigurationException If this is run with a
-     *             {@link ThreadLocalTransactionProvider}.
-     */
-    @NotNull
-    <T> CompletionStage<T> transactionResultAsync(Executor executor, TransactionalCallable<T> transactional, TransactionProperty... properties) throws ConfigurationException;
 
     /**
      * Run a {@link TransactionalRunnable} asynchronously.
@@ -789,23 +664,6 @@ public interface DSLContext extends Scope {
     CompletionStage<Void> transactionAsync(Executor executor, TransactionalRunnable transactional) throws ConfigurationException;
 
     /**
-     * Run a {@link TransactionalRunnable} asynchronously.
-     * <p>
-     * The <code>TransactionRunnable</code> is run in the context of this
-     * <code>DSLContext</code>'s underlying {@link #configuration()}'s
-     * {@link Configuration#transactionProvider()}, and returns the
-     * <code>transactional</code>'s outcome in a new {@link CompletionStage}
-     * that is asynchronously completed by a task run by a given
-     * {@link Executor}.
-     *
-     * @param transactional The transactional code
-     * @throws ConfigurationException If this is run with a
-     *             {@link ThreadLocalTransactionProvider}.
-     */
-    @NotNull
-    CompletionStage<Void> transactionAsync(Executor executor, TransactionalRunnable transactional, TransactionProperty... properties) throws ConfigurationException;
-
-    /**
      * Run a {@link TransactionalPublishable} reactively.
      *
      * @param transactional The transactional code
@@ -815,17 +673,6 @@ public interface DSLContext extends Scope {
      */
     @NotNull
     <T> Publisher<T> transactionPublisher(TransactionalPublishable<T> transactional);
-
-    /**
-     * Run a {@link TransactionalPublishable} reactively.
-     *
-     * @param transactional The transactional code
-     * @return The transactional outcome
-     * @throws ConfigurationException If this is run with a
-     *             {@link ThreadLocalTransactionProvider}.
-     */
-    @NotNull
-    <T> Publisher<T> transactionPublisher(TransactionalPublishable<T> transactional, TransactionProperty... properties);
 
     /**
      * Run a {@link ConnectionCallable} in the context of this
@@ -1060,7 +907,7 @@ public interface DSLContext extends Scope {
      * @see DSL#begin(Statement...)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     Block begin(Statement... statements);
 
     /**
@@ -1069,7 +916,7 @@ public interface DSLContext extends Scope {
      * @see DSL#begin(Collection)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     Block begin(Collection<? extends Statement> statements);
 
 
@@ -1108,8 +955,8 @@ public interface DSLContext extends Scope {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
-     * String sql = "SET SCHEMA 'abc'";</code></pre>
+     * <code><pre>
+     * String sql = "SET SCHEMA 'abc'";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1131,8 +978,8 @@ public interface DSLContext extends Scope {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
-     * String sql = "SET SCHEMA 'abc'";</code></pre>
+     * <code><pre>
+     * String sql = "SET SCHEMA 'abc'";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1154,8 +1001,8 @@ public interface DSLContext extends Scope {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
-     * String sql = "SET SCHEMA 'abc'";</code></pre>
+     * <code><pre>
+     * String sql = "SET SCHEMA 'abc'";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1179,13 +1026,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #query(String, Object...)}, the SQL passed to this method
      * should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * query("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will render this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1211,12 +1058,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1240,12 +1087,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1272,12 +1119,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1303,13 +1150,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #fetch(String, Object...)}, the SQL passed to this method
      * should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * fetch("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will execute this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1344,12 +1191,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1387,12 +1234,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1433,12 +1280,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1479,13 +1326,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #fetchLazy(String, Object...)}, the SQL passed to this
      * method should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * fetchLazy("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will execute this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1526,12 +1373,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1557,12 +1404,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1591,12 +1438,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1625,13 +1472,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #fetchLazy(String, Object...)}, the SQL passed to this
      * method should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * fetchLazy("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will execute this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1659,12 +1506,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1687,12 +1534,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1718,12 +1565,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1749,13 +1596,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #fetchLazy(String, Object...)}, the SQL passed to this
      * method should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * fetchLazy("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will execute this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1788,12 +1635,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1833,12 +1680,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1881,12 +1728,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1929,13 +1776,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #fetchStream(String, Object...)}, the SQL passed to this
      * method should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * fetchLazy("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will execute this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -1975,8 +1822,8 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Sybase ASE):
      * <p>
-     * <pre><code>
-     * String sql = "sp_help 'my_table'";</code></pre>
+     * <code><pre>
+     * String sql = "sp_help 'my_table'";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2000,8 +1847,8 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Sybase ASE):
      * <p>
-     * <pre><code>
-     * String sql = "sp_help 'my_table'";</code></pre>
+     * <code><pre>
+     * String sql = "sp_help 'my_table'";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2028,8 +1875,8 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Sybase ASE):
      * <p>
-     * <pre><code>
-     * String sql = "sp_help 'my_table'";</code></pre>
+     * <code><pre>
+     * String sql = "sp_help 'my_table'";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2056,13 +1903,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #fetchMany(String, Object...)}, the SQL passed to this
      * method should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * fetchMany("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will execute this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2090,12 +1937,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2119,12 +1966,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2151,12 +1998,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2183,13 +2030,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #fetchOne(String, Object...)}, the SQL passed to this
      * method should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * fetchOne("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will execute this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2218,12 +2065,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2248,12 +2095,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2281,12 +2128,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2314,13 +2161,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #fetchOne(String, Object...)}, the SQL passed to this
      * method should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * fetchOne("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will execute this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2350,12 +2197,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2379,12 +2226,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2411,12 +2258,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2443,13 +2290,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #fetchOne(String, Object...)}, the SQL passed to this
      * method should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * fetchOne("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will execute this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2478,12 +2325,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2509,12 +2356,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2543,12 +2390,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2577,13 +2424,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #fetchValue(String, Object...)}, the SQL passed to this
      * method should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * fetchOne("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will execute this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2614,12 +2461,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2645,12 +2492,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2679,12 +2526,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2713,13 +2560,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #fetchValue(String, Object...)}, the SQL passed to this
      * method should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * fetchOne("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will execute this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2750,12 +2597,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2780,12 +2627,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2813,12 +2660,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2846,13 +2693,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #fetchValue(String, Object...)}, the SQL passed to this
      * method should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * fetchOne("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will execute this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2942,13 +2789,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #execute(String, Object...)}, the SQL passed to this method
      * should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * execute("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will execute this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -2996,12 +2843,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -3043,12 +2890,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -3091,12 +2938,12 @@ public interface DSLContext extends Scope {
      * <p>
      * Example (Postgres):
      * <p>
-     * <pre><code>
-     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</code></pre> Example
+     * <code><pre>
+     * String sql = "FETCH ALL IN \"&lt;unnamed cursor 1&gt;\"";</pre></code> Example
      * (SQLite):
      * <p>
-     * <pre><code>
-     * String sql = "pragma table_info('my_table')";</code></pre>
+     * <code><pre>
+     * String sql = "pragma table_info('my_table')";</pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -3120,13 +2967,13 @@ public interface DSLContext extends Scope {
      * Unlike {@link #resultQuery(String, Object...)}, the SQL passed to this
      * method should not contain any bind variables. Instead, you can pass
      * {@link QueryPart} objects to the method which will be rendered at indexed
-     * locations of your SQL string as such: <pre><code>
+     * locations of your SQL string as such: <code><pre>
      * // The following query
      * resultQuery("select {0}, {1} from {2}", val(1), inline("test"), name("DUAL"));
      *
      * // Will render this SQL by default, using SQLDialect.ORACLE:
      * select ?, 'test' from "DUAL"
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -4031,14 +3878,14 @@ public interface DSLContext extends Scope {
      * <h3>The jOOQ {@link Result#format()}</h3>
      * <p>
      * This format is recognised by the fact that the first line starts with a
-     * "plus" sign: <pre><code>
+     * "plus" sign: <code><pre>
      * +-----+-----+--------------------------+
      * |COL1 |COL2 |COL3 containing whitespace|
      * +-----+-----+--------------------------+
      * |val1 |1    |some text                 |
      * |val2 | 2   | more text                |
      * +-----+-----+--------------------------+
-     * </code></pre> This method will decode the above formatted string
+     * </pre></code> This method will decode the above formatted string
      * according to the following rules:
      * <ul>
      * <li>The number of columns is defined by the number of dash groups in the
@@ -4053,12 +3900,12 @@ public interface DSLContext extends Scope {
      * <h3>The H2 database test data format</h3>
      * <p>
      * The supplied string is supposed to be formatted in the following,
-     * human-readable way: <pre><code>
+     * human-readable way: <code><pre>
      * COL1  COL2   COL3 containing whitespace
      * ----- ----   --------------------------
      * val1  1      some text
      * val2   2      more text
-     * </code></pre> This method will decode the above formatted string
+     * </pre></code> This method will decode the above formatted string
      * according to the following rules:
      * <ul>
      * <li>The number of columns is defined by the number of dash groups in the
@@ -4110,7 +3957,7 @@ public interface DSLContext extends Scope {
      * <li>Nested tables are not supported</li>
      * </ul>
      * <p>
-     * Ideal input looks like this: <pre><code>
+     * Ideal input looks like this: <code><pre>
      * &lt;table&gt;
      * &lt;tr&gt;&lt;th&gt;COL1&lt;/th&gt;&lt;th&gt;COL2&lt;/th&gt;&lt;/tr&gt;
      * &lt;tr&gt;&lt;td&gt;1&lt;/td&gt;&lt;td&gt;a&lt;/td&gt;&lt;/tr&gt;
@@ -4384,7 +4231,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(String alias);
 
     /**
@@ -4401,7 +4248,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(String alias, String... fieldAliases);
 
     /**
@@ -4418,7 +4265,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(String alias, Collection<String> fieldAliases);
 
     /**
@@ -4435,7 +4282,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(Name alias);
 
     /**
@@ -4452,7 +4299,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(Name alias, Name... fieldAliases);
 
     /**
@@ -4469,7 +4316,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(Name alias, Collection<? extends Name> fieldAliases);
 
     /**
@@ -4496,7 +4343,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(String alias, Function<? super Field<?>, ? extends String> fieldNameFunction);
 
     /**
@@ -4523,7 +4370,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep with(String alias, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction);
 
 
@@ -4542,7 +4389,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep1 with(String alias, String fieldAlias1);
 
     /**
@@ -4559,7 +4406,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep2 with(String alias, String fieldAlias1, String fieldAlias2);
 
     /**
@@ -4576,7 +4423,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep3 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3);
 
     /**
@@ -4593,7 +4440,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep4 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4);
 
     /**
@@ -4610,7 +4457,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep5 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5);
 
     /**
@@ -4627,7 +4474,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep6 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6);
 
     /**
@@ -4644,7 +4491,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep7 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7);
 
     /**
@@ -4661,7 +4508,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep8 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8);
 
     /**
@@ -4678,7 +4525,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep9 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9);
 
     /**
@@ -4695,7 +4542,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep10 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10);
 
     /**
@@ -4712,7 +4559,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep11 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11);
 
     /**
@@ -4729,7 +4576,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep12 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12);
 
     /**
@@ -4746,7 +4593,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep13 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13);
 
     /**
@@ -4763,7 +4610,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep14 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14);
 
     /**
@@ -4780,7 +4627,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep15 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15);
 
     /**
@@ -4797,7 +4644,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep16 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16);
 
     /**
@@ -4814,7 +4661,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep17 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17);
 
     /**
@@ -4831,7 +4678,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep18 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18);
 
     /**
@@ -4848,7 +4695,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep19 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19);
 
     /**
@@ -4865,7 +4712,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep20 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20);
 
     /**
@@ -4882,7 +4729,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep21 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20, String fieldAlias21);
 
     /**
@@ -4899,7 +4746,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep22 with(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20, String fieldAlias21, String fieldAlias22);
 
     /**
@@ -4916,7 +4763,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep1 with(Name alias, Name fieldAlias1);
 
     /**
@@ -4933,7 +4780,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep2 with(Name alias, Name fieldAlias1, Name fieldAlias2);
 
     /**
@@ -4950,7 +4797,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep3 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3);
 
     /**
@@ -4967,7 +4814,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep4 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4);
 
     /**
@@ -4984,7 +4831,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep5 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5);
 
     /**
@@ -5001,7 +4848,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep6 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6);
 
     /**
@@ -5018,7 +4865,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep7 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7);
 
     /**
@@ -5035,7 +4882,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep8 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8);
 
     /**
@@ -5052,7 +4899,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep9 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9);
 
     /**
@@ -5069,7 +4916,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep10 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10);
 
     /**
@@ -5086,7 +4933,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep11 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11);
 
     /**
@@ -5103,7 +4950,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep12 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12);
 
     /**
@@ -5120,7 +4967,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep13 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13);
 
     /**
@@ -5137,7 +4984,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep14 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14);
 
     /**
@@ -5154,7 +5001,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep15 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15);
 
     /**
@@ -5171,7 +5018,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep16 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16);
 
     /**
@@ -5188,7 +5035,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep17 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17);
 
     /**
@@ -5205,7 +5052,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep18 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18);
 
     /**
@@ -5222,7 +5069,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep19 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19);
 
     /**
@@ -5239,7 +5086,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep20 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20);
 
     /**
@@ -5256,7 +5103,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep21 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20, Name fieldAlias21);
 
     /**
@@ -5273,7 +5120,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep22 with(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20, Name fieldAlias21, Name fieldAlias22);
 
 
@@ -5289,7 +5136,7 @@ public interface DSLContext extends Scope {
      * <li>{@link DSL#name(String...)}</li>
      * <li>{@link Name#fields(String...)}</li>
      * <li>
-     * {@link DerivedColumnList#as(ResultQuery)}</li>
+     * {@link DerivedColumnList#as(Select)}</li>
      * </ul>
      * <p>
      * The <code>RECURSIVE</code> keyword may be optional or unsupported in some
@@ -5300,7 +5147,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithStep with(CommonTableExpression<?>... tables);
 
     /**
@@ -5314,7 +5161,7 @@ public interface DSLContext extends Scope {
      * <li>{@link DSL#name(String...)}</li>
      * <li>{@link Name#fields(String...)}</li>
      * <li>
-     * {@link DerivedColumnList#as(ResultQuery)}</li>
+     * {@link DerivedColumnList#as(Select)}</li>
      * </ul>
      * <p>
      * The <code>RECURSIVE</code> keyword may be optional or unsupported in some
@@ -5325,7 +5172,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithStep with(Collection<? extends CommonTableExpression<?>> tables);
 
     /**
@@ -5342,7 +5189,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep withRecursive(String alias);
 
     /**
@@ -5359,7 +5206,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep withRecursive(String alias, String... fieldAliases);
 
     /**
@@ -5376,7 +5223,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep withRecursive(String alias, Collection<String> fieldAliases);
 
     /**
@@ -5393,7 +5240,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep withRecursive(Name alias);
 
     /**
@@ -5410,7 +5257,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep withRecursive(Name alias, Name... fieldAliases);
 
     /**
@@ -5427,7 +5274,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep withRecursive(Name alias, Collection<? extends Name> fieldAliases);
 
     /**
@@ -5455,7 +5302,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep withRecursive(String alias, Function<? super Field<?>, ? extends String> fieldNameFunction);
 
     /**
@@ -5483,7 +5330,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep withRecursive(String alias, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction);
 
 
@@ -5502,7 +5349,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep1 withRecursive(String alias, String fieldAlias1);
 
     /**
@@ -5519,7 +5366,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep2 withRecursive(String alias, String fieldAlias1, String fieldAlias2);
 
     /**
@@ -5536,7 +5383,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep3 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3);
 
     /**
@@ -5553,7 +5400,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep4 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4);
 
     /**
@@ -5570,7 +5417,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep5 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5);
 
     /**
@@ -5587,7 +5434,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep6 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6);
 
     /**
@@ -5604,7 +5451,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep7 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7);
 
     /**
@@ -5621,7 +5468,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep8 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8);
 
     /**
@@ -5638,7 +5485,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep9 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9);
 
     /**
@@ -5655,7 +5502,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep10 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10);
 
     /**
@@ -5672,7 +5519,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep11 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11);
 
     /**
@@ -5689,7 +5536,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep12 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12);
 
     /**
@@ -5706,7 +5553,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep13 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13);
 
     /**
@@ -5723,7 +5570,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep14 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14);
 
     /**
@@ -5740,7 +5587,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep15 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15);
 
     /**
@@ -5757,7 +5604,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep16 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16);
 
     /**
@@ -5774,7 +5621,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep17 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17);
 
     /**
@@ -5791,7 +5638,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep18 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18);
 
     /**
@@ -5808,7 +5655,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep19 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19);
 
     /**
@@ -5825,7 +5672,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep20 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20);
 
     /**
@@ -5842,7 +5689,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep21 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20, String fieldAlias21);
 
     /**
@@ -5859,7 +5706,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep22 withRecursive(String alias, String fieldAlias1, String fieldAlias2, String fieldAlias3, String fieldAlias4, String fieldAlias5, String fieldAlias6, String fieldAlias7, String fieldAlias8, String fieldAlias9, String fieldAlias10, String fieldAlias11, String fieldAlias12, String fieldAlias13, String fieldAlias14, String fieldAlias15, String fieldAlias16, String fieldAlias17, String fieldAlias18, String fieldAlias19, String fieldAlias20, String fieldAlias21, String fieldAlias22);
 
     /**
@@ -5876,7 +5723,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep1 withRecursive(Name alias, Name fieldAlias1);
 
     /**
@@ -5893,7 +5740,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep2 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2);
 
     /**
@@ -5910,7 +5757,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep3 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3);
 
     /**
@@ -5927,7 +5774,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep4 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4);
 
     /**
@@ -5944,7 +5791,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep5 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5);
 
     /**
@@ -5961,7 +5808,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep6 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6);
 
     /**
@@ -5978,7 +5825,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep7 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7);
 
     /**
@@ -5995,7 +5842,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep8 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8);
 
     /**
@@ -6012,7 +5859,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep9 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9);
 
     /**
@@ -6029,7 +5876,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep10 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10);
 
     /**
@@ -6046,7 +5893,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep11 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11);
 
     /**
@@ -6063,7 +5910,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep12 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12);
 
     /**
@@ -6080,7 +5927,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep13 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13);
 
     /**
@@ -6097,7 +5944,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep14 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14);
 
     /**
@@ -6114,7 +5961,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep15 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15);
 
     /**
@@ -6131,7 +5978,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep16 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16);
 
     /**
@@ -6148,7 +5995,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep17 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17);
 
     /**
@@ -6165,7 +6012,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep18 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18);
 
     /**
@@ -6182,7 +6029,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep19 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19);
 
     /**
@@ -6199,7 +6046,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep20 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20);
 
     /**
@@ -6216,7 +6063,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep21 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20, Name fieldAlias21);
 
     /**
@@ -6233,7 +6080,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithAsStep22 withRecursive(Name alias, Name fieldAlias1, Name fieldAlias2, Name fieldAlias3, Name fieldAlias4, Name fieldAlias5, Name fieldAlias6, Name fieldAlias7, Name fieldAlias8, Name fieldAlias9, Name fieldAlias10, Name fieldAlias11, Name fieldAlias12, Name fieldAlias13, Name fieldAlias14, Name fieldAlias15, Name fieldAlias16, Name fieldAlias17, Name fieldAlias18, Name fieldAlias19, Name fieldAlias20, Name fieldAlias21, Name fieldAlias22);
 
 
@@ -6249,7 +6096,7 @@ public interface DSLContext extends Scope {
      * <li>{@link DSL#name(String...)}</li>
      * <li>{@link Name#fields(String...)}</li>
      * <li>
-     * {@link DerivedColumnList#as(ResultQuery)}</li>
+     * {@link DerivedColumnList#as(Select)}</li>
      * </ul>
      * <p>
      * The <code>RECURSIVE</code> keyword may be optional or unsupported in some
@@ -6260,7 +6107,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithStep withRecursive(CommonTableExpression<?>... tables);
 
     /**
@@ -6274,7 +6121,7 @@ public interface DSLContext extends Scope {
      * <li>{@link DSL#name(String...)}</li>
      * <li>{@link Name#fields(String...)}</li>
      * <li>
-     * {@link DerivedColumnList#as(ResultQuery)}</li>
+     * {@link DerivedColumnList#as(Select)}</li>
      * </ul>
      * <p>
      * The <code>RECURSIVE</code> keyword may be optional or unsupported in some
@@ -6285,7 +6132,7 @@ public interface DSLContext extends Scope {
      * recursive CTE.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WithStep withRecursive(Collection<? extends CommonTableExpression<?>> tables);
 
     /**
@@ -6299,9 +6146,9 @@ public interface DSLContext extends Scope {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT table.col1, table.col2 FROM table
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -6315,9 +6162,9 @@ public interface DSLContext extends Scope {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#table(Name)
      */
@@ -6333,9 +6180,9 @@ public interface DSLContext extends Scope {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -6358,9 +6205,9 @@ public interface DSLContext extends Scope {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -6384,9 +6231,9 @@ public interface DSLContext extends Scope {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -6410,9 +6257,9 @@ public interface DSLContext extends Scope {
      * <p>
      * Example:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * SELECT * FROM table
-     * </code></pre>
+     * </pre></code>
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -6437,7 +6284,7 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(Collection)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.select(fields)
@@ -6445,12 +6292,12 @@ public interface DSLContext extends Scope {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note that passing an empty collection conveniently produces
      * <code>SELECT *</code> semantics, i.e. it:
      * <ul>
-     * <li>Renders <code>SELECT tab1.col1, tab1.col2, …, tabN.colN</code> if
+     * <li>Renders <code>SELECT tab1.col1, tab1.col2, ..., tabN.colN</code> if
      * all columns are known</li>
      * <li>Renders <code>SELECT *</code> if not all columns are known, e.g. when
      * using plain SQL</li>
@@ -6471,7 +6318,7 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectFieldOrAsterisk...)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.select(field1, field2)
@@ -6480,12 +6327,12 @@ public interface DSLContext extends Scope {
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note that passing an empty collection conveniently produces
      * <code>SELECT *</code> semantics, i.e. it:
      * <ul>
-     * <li>Renders <code>SELECT tab1.col1, tab1.col2, …, tabN.colN</code> if
+     * <li>Renders <code>SELECT tab1.col1, tab1.col2, ..., tabN.colN</code> if
      * all columns are known</li>
      * <li>Renders <code>SELECT *</code> if not all columns are known, e.g. when
      * using plain SQL</li>
@@ -6513,14 +6360,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6543,14 +6390,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6573,14 +6420,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6603,14 +6450,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, field4)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6633,14 +6480,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, field4, field5)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6663,14 +6510,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field5, field6)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6693,14 +6540,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field6, field7)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6723,14 +6570,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field7, field8)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6753,14 +6600,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field8, field9)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6783,14 +6630,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field9, field10)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6813,14 +6660,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field10, field11)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6843,14 +6690,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field11, field12)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6873,14 +6720,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field12, field13)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6903,14 +6750,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field13, field14)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6933,14 +6780,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field14, field15)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6963,14 +6810,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field15, field16)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -6993,14 +6840,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field16, field17)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7023,14 +6870,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field17, field18)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7053,14 +6900,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field18, field19)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7083,14 +6930,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field19, field20)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7113,14 +6960,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field20, field21)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7143,14 +6990,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#select(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .select(field1, field2, field3, .., field21, field22)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7170,7 +7017,7 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(Collection)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.selectDistinct(fields)
@@ -7178,12 +7025,12 @@ public interface DSLContext extends Scope {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note that passing an empty collection conveniently produces
      * <code>SELECT DISTINCT *</code> semantics, i.e. it:
      * <ul>
-     * <li>Renders <code>SELECT DISTINCT tab1.col1, tab1.col2, …, tabN.colN</code> if
+     * <li>Renders <code>SELECT DISTINCT tab1.col1, tab1.col2, ..., tabN.colN</code> if
      * all columns are known</li>
      * <li>Renders <code>SELECT DISTINCT *</code> if not all columns are known, e.g. when
      * using plain SQL</li>
@@ -7204,7 +7051,7 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectFieldOrAsterisk...)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.selectDistinct(field1, field2)
@@ -7212,12 +7059,12 @@ public interface DSLContext extends Scope {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note that passing an empty collection conveniently produces
      * <code>SELECT DISTINCT *</code> semantics, i.e. it:
      * <ul>
-     * <li>Renders <code>SELECT DISTINCT tab1.col1, tab1.col2, …, tabN.colN</code> if
+     * <li>Renders <code>SELECT DISTINCT tab1.col1, tab1.col2, ..., tabN.colN</code> if
      * all columns are known</li>
      * <li>Renders <code>SELECT DISTINCT *</code> if not all columns are known, e.g. when
      * using plain SQL</li>
@@ -7245,14 +7092,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7275,14 +7122,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7305,14 +7152,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7335,14 +7182,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, field4)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7365,14 +7212,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, field4, field5)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7395,14 +7242,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field5, field6)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7425,14 +7272,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field6, field7)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7455,14 +7302,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field7, field8)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7485,14 +7332,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field8, field9)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7515,14 +7362,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field9, field10)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7545,14 +7392,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field10, field11)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7575,14 +7422,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field11, field12)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7605,14 +7452,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field12, field13)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7635,14 +7482,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field13, field14)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7665,14 +7512,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field14, field15)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7695,14 +7542,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field15, field16)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7725,14 +7572,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field16, field17)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7755,14 +7602,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field17, field18)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7785,14 +7632,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field18, field19)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7815,14 +7662,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field19, field20)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7845,14 +7692,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field20, field21)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7875,14 +7722,14 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectDistinct(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .selectDistinct(field1, field2, field3, .., field21, field22)
      *       .from(table1)
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectDistinct(SelectFieldOrAsterisk...)
      * @see #selectDistinct(SelectFieldOrAsterisk...)
@@ -7902,7 +7749,7 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectZero()} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.selectZero()
@@ -7910,7 +7757,7 @@ public interface DSLContext extends Scope {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#zero()
      * @see DSL#selectZero()
@@ -7928,7 +7775,7 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectOne()} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.selectOne()
@@ -7936,7 +7783,7 @@ public interface DSLContext extends Scope {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#one()
      * @see DSL#selectOne()
@@ -7954,7 +7801,7 @@ public interface DSLContext extends Scope {
      * create a subselect), consider using the static
      * {@link DSL#selectCount()} instead.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.selectCount()
@@ -7962,7 +7809,7 @@ public interface DSLContext extends Scope {
      *       .join(table2).on(field1.equal(field2))
      *       .where(field1.greaterThan(100))
      *       .orderBy(field2);
-     * </code></pre>
+     * </pre></code>
      *
      * @see DSL#selectCount()
      */
@@ -8003,7 +7850,7 @@ public interface DSLContext extends Scope {
      * This type of insert may feel more convenient to some users, as it uses
      * the <code>UPDATE</code> statement's <code>SET a = b</code> syntax.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.insertInto(table)
@@ -8016,7 +7863,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8027,7 +7874,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1)
      *       .values(field1)
@@ -8036,7 +7883,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8045,7 +7892,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2)
      *       .values(field1, field2)
@@ -8054,7 +7901,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8063,7 +7910,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3)
      *       .values(field1, field2, field3)
@@ -8072,7 +7919,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8081,7 +7928,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, field4)
      *       .values(field1, field2, field3, field4)
@@ -8090,7 +7937,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8099,7 +7946,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, field4, field5)
      *       .values(field1, field2, field3, field4, field5)
@@ -8108,7 +7955,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8117,7 +7964,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field5, field6)
      *       .values(valueA1, valueA2, valueA3, .., valueA5, valueA6)
@@ -8126,7 +7973,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8135,7 +7982,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field6, field7)
      *       .values(valueA1, valueA2, valueA3, .., valueA6, valueA7)
@@ -8144,7 +7991,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8153,7 +8000,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field7, field8)
      *       .values(valueA1, valueA2, valueA3, .., valueA7, valueA8)
@@ -8162,7 +8009,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8171,7 +8018,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field8, field9)
      *       .values(valueA1, valueA2, valueA3, .., valueA8, valueA9)
@@ -8180,7 +8027,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8189,7 +8036,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field9, field10)
      *       .values(valueA1, valueA2, valueA3, .., valueA9, valueA10)
@@ -8198,7 +8045,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8207,7 +8054,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field10, field11)
      *       .values(valueA1, valueA2, valueA3, .., valueA10, valueA11)
@@ -8216,7 +8063,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8225,7 +8072,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field11, field12)
      *       .values(valueA1, valueA2, valueA3, .., valueA11, valueA12)
@@ -8234,7 +8081,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8243,7 +8090,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field12, field13)
      *       .values(valueA1, valueA2, valueA3, .., valueA12, valueA13)
@@ -8252,7 +8099,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8261,7 +8108,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field13, field14)
      *       .values(valueA1, valueA2, valueA3, .., valueA13, valueA14)
@@ -8270,7 +8117,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8279,7 +8126,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field14, field15)
      *       .values(valueA1, valueA2, valueA3, .., valueA14, valueA15)
@@ -8288,7 +8135,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8297,7 +8144,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field15, field16)
      *       .values(valueA1, valueA2, valueA3, .., valueA15, valueA16)
@@ -8306,7 +8153,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8315,7 +8162,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field16, field17)
      *       .values(valueA1, valueA2, valueA3, .., valueA16, valueA17)
@@ -8324,7 +8171,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8333,7 +8180,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field17, field18)
      *       .values(valueA1, valueA2, valueA3, .., valueA17, valueA18)
@@ -8342,7 +8189,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8351,7 +8198,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field18, field19)
      *       .values(valueA1, valueA2, valueA3, .., valueA18, valueA19)
@@ -8360,7 +8207,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8369,7 +8216,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field19, field20)
      *       .values(valueA1, valueA2, valueA3, .., valueA19, valueA20)
@@ -8378,7 +8225,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8387,7 +8234,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field20, field21)
      *       .values(valueA1, valueA2, valueA3, .., valueA20, valueA21)
@@ -8396,7 +8243,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8405,7 +8252,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * using(configuration)
      *       .insertInto(table, field1, field2, field3, .., field21, field22)
      *       .values(valueA1, valueA2, valueA3, .., valueA21, valueA22)
@@ -8414,7 +8261,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8425,7 +8272,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.insertInto(table, field1, field2)
@@ -8435,7 +8282,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8444,7 +8291,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL insert statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.insertInto(table, field1, field2)
@@ -8454,7 +8301,7 @@ public interface DSLContext extends Scope {
      *       .set(field1, value1)
      *       .set(field2, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8473,7 +8320,7 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL update statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.update(table)
@@ -8481,17 +8328,17 @@ public interface DSLContext extends Scope {
      *       .set(field2, value2)
      *       .where(field1.greaterThan(100))
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note that some databases support table expressions more complex than
      * simple table references. In MySQL, for instance, you can write
-     * <pre><code>
+     * <code><pre>
      * create.update(t1.join(t2).on(t1.id.eq(t2.id)))
      *       .set(t1.value, value1)
      *       .set(t2.value, value2)
      *       .where(t1.id.eq(10))
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8546,7 +8393,7 @@ public interface DSLContext extends Scope {
      * </tr>
      * </table>
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.mergeInto(table)
@@ -8558,7 +8405,11 @@ public interface DSLContext extends Scope {
      *       .whenNotMatchedThenInsert(field1, field2)
      *       .values(value1, value2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
+     * <p>
+     * Note: Using this method, you can also create an H2-specific MERGE
+     * statement without field specification. See also
+     * {@link #mergeInto(Table, Field...)}
      */
     @NotNull @CheckReturnValue
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
@@ -8853,7 +8704,7 @@ public interface DSLContext extends Scope {
      * <tr>
      * <td>PostgreSQL</td>
      * <td>This database can emulate the H2-specific MERGE statement via
-     * <code>INSERT … ON CONFLICT DO UPDATE</code></td>
+     * <code>INSERT .. ON CONFLICT DO UPDATE</code></td>
      * <td><a href="http://www.postgresql.org/docs/9.5/static/sql-insert.html">http://www.postgresql.org/docs/9.5/static/sql-insert.html</a></td>
      * </tr>
      * <tr>
@@ -8894,13 +8745,13 @@ public interface DSLContext extends Scope {
     /**
      * Create a new DSL delete statement.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * DSLContext create = DSL.using(configuration);
      *
      * create.deleteFrom(table)
      *       .where(field1.greaterThan(100))
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Some but not all databases support aliased tables in delete statements.
      * <p>
@@ -8908,22 +8759,22 @@ public interface DSLContext extends Scope {
      * simple table references. In MySQL, for instance, you can write this to
      * form a multi table <code>DELETE</code> statement:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * create.delete(t1.join(t2).on(t1.id.eq(t2.id)))
      *       .where(t1.id.eq(10))
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * For single table delete statements that depend on multiple tables, use
      * the {@link DeleteUsingStep#using(TableLike)} clause, instead:
      * <p>
-     * <pre><code>
+     * <code><pre>
      * create.delete(t1)
      *       .using(t2)
      *       .where(t1.id.eq(t2.id))
      *       .and(t1.id.eq(10))
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull @CheckReturnValue
     @Support
@@ -8962,7 +8813,7 @@ public interface DSLContext extends Scope {
      * Create a batch statement to execute a set of queries in batch mode
      * (without bind values).
      * <p>
-     * This essentially runs the following logic: <pre><code>
+     * This essentially runs the following logic: <code><pre>
      * Statement s = connection.createStatement();
      *
      * for (Query query : queries) {
@@ -8970,7 +8821,7 @@ public interface DSLContext extends Scope {
      * }
      *
      * s.execute();
-     * </code></pre>
+     * </pre></code>
      *
      * @see java.sql.Statement#executeBatch()
      */
@@ -8982,7 +8833,7 @@ public interface DSLContext extends Scope {
      * Create a batch statement to execute a set of queries in batch mode
      * (without bind values).
      * <p>
-     * This essentially runs the following logic: <pre><code>
+     * This essentially runs the following logic: <code><pre>
      * Statement s = connection.createStatement();
      *
      * for (Query query : queries) {
@@ -8990,7 +8841,7 @@ public interface DSLContext extends Scope {
      * }
      *
      * s.execute();
-     * </code></pre>
+     * </pre></code>
      *
      * @see java.sql.Statement#executeBatch()
      */
@@ -9003,7 +8854,7 @@ public interface DSLContext extends Scope {
      * (without bind values).
      * <p>
      * This is a convenience method for calling
-     * <pre><code>batch(query(queries[0]), query(queries[1]), …)</code></pre>.
+     * <code><pre>batch(query(queries[0]), query(queries[1]), ...)</pre></code>.
      *
      * @see #query(String)
      * @see #batch(Query...)
@@ -9018,7 +8869,7 @@ public interface DSLContext extends Scope {
      * Create a batch statement to execute a set of queries in batch mode
      * (without bind values).
      * <p>
-     * This essentially runs the following logic: <pre><code>
+     * This essentially runs the following logic: <code><pre>
      * Statement s = connection.createStatement();
      *
      * for (Query query : queries) {
@@ -9026,7 +8877,7 @@ public interface DSLContext extends Scope {
      * }
      *
      * s.execute();
-     * </code></pre>
+     * </pre></code>
      *
      * @see java.sql.Statement#executeBatch()
      */
@@ -9038,14 +8889,14 @@ public interface DSLContext extends Scope {
      * Create a batch statement to execute a set of queries in batch mode (with
      * bind values).
      * <p>
-     * When running <pre><code>
+     * When running <code><pre>
      * create.batch(query)
      *       .bind(valueA1, valueA2)
      *       .bind(valueB1, valueB2)
      *       .execute();
-     * </code></pre>
+     * </pre></code>
      * <p>
-     * This essentially runs the following logic: <pre><code>
+     * This essentially runs the following logic: <code><pre>
      * Statement s = connection.prepareStatement(query.getSQL(false));
      *
      * for (Object[] bindValues : allBindValues) {
@@ -9057,7 +8908,7 @@ public interface DSLContext extends Scope {
      * }
      *
      * s.execute();
-     * </code></pre>
+     * </pre></code>
      * <p>
      * Note: bind values will be inlined to a static batch query as in
      * {@link #batch(Query...)}, if you choose to execute queries with
@@ -9074,7 +8925,7 @@ public interface DSLContext extends Scope {
      * bind values).
      * <p>
      * This is a convenience method for calling
-     * <pre><code>batch(query(sql))</code></pre>.
+     * <code><pre>batch(query(sql))</pre></code>.
      *
      * @see #query(String)
      * @see #batch(Query)
@@ -9108,7 +8959,7 @@ public interface DSLContext extends Scope {
      * bind values).
      * <p>
      * This is a convenience method for calling
-     * <pre><code>batch(query(sql), bindings)</code></pre>.
+     * <code><pre>batch(query(sql), bindings)</pre></code>.
      *
      * @see #query(String)
      * @see #batch(Query, Object[][])
@@ -9137,12 +8988,12 @@ public interface DSLContext extends Scope {
      * case, this corresponds to the number of total records.
      * <p>
      * The record type order is preserved in the way they are passed to this
-     * method. This is an example of how statements will be ordered: <pre><code>
+     * method. This is an example of how statements will be ordered: <code><pre>
      * // Let's assume, odd numbers result in INSERTs and even numbers in UPDATES
      * // Let's also assume a[n] are all of the same type, just as b[n], c[n]...
      * int[] result = create.batchStore(a1, a2, a3, b1, a4, c1, b3, a5)
      *                      .execute();
-     * </code></pre> The above results in <code>result.length == 8</code> and
+     * </pre></code> The above results in <code>result.length == 8</code> and
      * the following 4 separate batch statements:
      * <ol>
      * <li>INSERT a1, a3, a5</li>
@@ -9281,11 +9132,11 @@ public interface DSLContext extends Scope {
      * case, this corresponds to the number of total records.
      * <p>
      * The record type order is preserved in the way they are passed to this
-     * method. This is an example of how statements will be ordered: <pre><code>
+     * method. This is an example of how statements will be ordered: <code><pre>
      * // Let's assume a[n] are all of the same type, just as b[n], c[n]...
      * int[] result = create.batchDelete(a1, a2, a3, b1, a4, c1, c2, a5)
      *                      .execute();
-     * </code></pre> The above results in <code>result.length == 8</code> and
+     * </pre></code> The above results in <code>result.length == 8</code> and
      * the following 5 separate batch statements:
      * <ol>
      * <li>DELETE a1, a2, a3</li>
@@ -9478,7 +9329,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterDatabase(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, POSTGRES, YUGABYTEDB })
+    @Support({ POSTGRES, YUGABYTEDB })
     AlterDatabaseStep alterDatabase(@Stringly.Name String database);
 
     /**
@@ -9487,7 +9338,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterDatabase(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, POSTGRES, YUGABYTEDB })
+    @Support({ POSTGRES, YUGABYTEDB })
     AlterDatabaseStep alterDatabase(Name database);
 
     /**
@@ -9496,7 +9347,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterDatabase(Catalog)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, POSTGRES, YUGABYTEDB })
+    @Support({ POSTGRES, YUGABYTEDB })
     AlterDatabaseStep alterDatabase(Catalog database);
 
     /**
@@ -9613,7 +9464,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterIndexIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ H2, MARIADB, MYSQL, POSTGRES })
+    @Support({ H2, POSTGRES })
     AlterIndexOnStep alterIndexIfExists(@Stringly.Name String index);
 
     /**
@@ -9622,7 +9473,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterIndexIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ H2, MARIADB, MYSQL, POSTGRES })
+    @Support({ H2, POSTGRES })
     AlterIndexOnStep alterIndexIfExists(Name index);
 
     /**
@@ -9631,7 +9482,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterIndexIfExists(Index)
      */
     @NotNull @CheckReturnValue
-    @Support({ H2, MARIADB, MYSQL, POSTGRES })
+    @Support({ H2, POSTGRES })
     AlterIndexOnStep alterIndexIfExists(Index index);
 
     /**
@@ -9640,7 +9491,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterSchema(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, H2, HSQLDB, POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     AlterSchemaStep alterSchema(@Stringly.Name String schema);
 
     /**
@@ -9649,7 +9500,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterSchema(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, H2, HSQLDB, POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     AlterSchemaStep alterSchema(Name schema);
 
     /**
@@ -9658,7 +9509,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterSchema(Schema)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, H2, HSQLDB, POSTGRES })
+    @Support({ H2, HSQLDB, POSTGRES })
     AlterSchemaStep alterSchema(Schema schema);
 
     /**
@@ -9761,48 +9612,12 @@ public interface DSLContext extends Scope {
     AlterTypeStep alterType(Name type);
 
     /**
-     * The <code>ALTER TYPE</code> statement.
-     *
-     * @see DSL#alterType(Type)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    AlterTypeStep alterType(Type<?> type);
-
-    /**
-     * The <code>ALTER TYPE IF EXISTS</code> statement.
-     *
-     * @see DSL#alterTypeIfExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    AlterTypeStep alterTypeIfExists(@Stringly.Name String type);
-
-    /**
-     * The <code>ALTER TYPE IF EXISTS</code> statement.
-     *
-     * @see DSL#alterTypeIfExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    AlterTypeStep alterTypeIfExists(Name type);
-
-    /**
-     * The <code>ALTER TYPE IF EXISTS</code> statement.
-     *
-     * @see DSL#alterTypeIfExists(Type)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    AlterTypeStep alterTypeIfExists(Type<?> type);
-
-    /**
      * The <code>ALTER VIEW</code> statement.
      *
      * @see DSL#alterView(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     AlterViewStep alterView(@Stringly.Name String view);
 
     /**
@@ -9811,7 +9626,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterView(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     AlterViewStep alterView(Name view);
 
     /**
@@ -9820,7 +9635,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterView(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     AlterViewStep alterView(Table<?> view);
 
     /**
@@ -9829,7 +9644,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterViewIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, POSTGRES, YUGABYTEDB })
     AlterViewStep alterViewIfExists(@Stringly.Name String view);
 
     /**
@@ -9838,7 +9653,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterViewIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, POSTGRES, YUGABYTEDB })
     AlterViewStep alterViewIfExists(Name view);
 
     /**
@@ -9847,80 +9662,8 @@ public interface DSLContext extends Scope {
      * @see DSL#alterViewIfExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, POSTGRES, YUGABYTEDB })
     AlterViewStep alterViewIfExists(Table<?> view);
-
-    /**
-     * The <code>ALTER MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#alterMaterializedView(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    AlterViewStep alterMaterializedView(@Stringly.Name String view);
-
-    /**
-     * The <code>ALTER MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#alterMaterializedView(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    AlterViewStep alterMaterializedView(Name view);
-
-    /**
-     * The <code>ALTER MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#alterMaterializedView(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    AlterViewStep alterMaterializedView(Table<?> view);
-
-    /**
-     * The <code>ALTER MATERIALIZED VIEW IF EXISTS</code> statement.
-     *
-     * @see DSL#alterMaterializedViewIfExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    AlterViewStep alterMaterializedViewIfExists(@Stringly.Name String view);
-
-    /**
-     * The <code>ALTER MATERIALIZED VIEW IF EXISTS</code> statement.
-     *
-     * @see DSL#alterMaterializedViewIfExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    AlterViewStep alterMaterializedViewIfExists(Name view);
-
-    /**
-     * The <code>ALTER MATERIALIZED VIEW IF EXISTS</code> statement.
-     *
-     * @see DSL#alterMaterializedViewIfExists(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    AlterViewStep alterMaterializedViewIfExists(Table<?> view);
-
-    /**
-     * The <code>ALTER VIEW</code> statement.
-     *
-     * @see DSL#alterView(Table, Field...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    AlterViewStep alterView(Table<?> view, Field<?>... fields);
-
-    /**
-     * The <code>ALTER VIEW</code> statement.
-     *
-     * @see DSL#alterView(Table, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    AlterViewStep alterView(Table<?> view, Collection<? extends Field<?>> fields);
 
     /**
      * The <code>COMMENT ON TABLE</code> statement.
@@ -9928,7 +9671,7 @@ public interface DSLContext extends Scope {
      * @see DSL#commentOnTable(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CommentOnIsStep commentOnTable(@Stringly.Name String table);
 
     /**
@@ -9937,7 +9680,7 @@ public interface DSLContext extends Scope {
      * @see DSL#commentOnTable(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CommentOnIsStep commentOnTable(Name table);
 
     /**
@@ -9946,7 +9689,7 @@ public interface DSLContext extends Scope {
      * @see DSL#commentOnTable(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CommentOnIsStep commentOnTable(Table<?> table);
 
     /**
@@ -9955,7 +9698,7 @@ public interface DSLContext extends Scope {
      * @see DSL#commentOnView(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     CommentOnIsStep commentOnView(@Stringly.Name String view);
 
     /**
@@ -9964,7 +9707,7 @@ public interface DSLContext extends Scope {
      * @see DSL#commentOnView(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     CommentOnIsStep commentOnView(Name view);
 
     /**
@@ -9973,35 +9716,8 @@ public interface DSLContext extends Scope {
      * @see DSL#commentOnView(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, YUGABYTEDB })
     CommentOnIsStep commentOnView(Table<?> view);
-
-    /**
-     * The <code>COMMENT ON MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#commentOnMaterializedView(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CommentOnIsStep commentOnMaterializedView(@Stringly.Name String view);
-
-    /**
-     * The <code>COMMENT ON MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#commentOnMaterializedView(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CommentOnIsStep commentOnMaterializedView(Name view);
-
-    /**
-     * The <code>COMMENT ON MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#commentOnMaterializedView(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CommentOnIsStep commentOnMaterializedView(Table<?> view);
 
     /**
      * The <code>COMMENT ON COLUMN</code> statement.
@@ -10009,7 +9725,7 @@ public interface DSLContext extends Scope {
      * @see DSL#commentOnColumn(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     CommentOnIsStep commentOnColumn(@Stringly.Name String field);
 
     /**
@@ -10018,7 +9734,7 @@ public interface DSLContext extends Scope {
      * @see DSL#commentOnColumn(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     CommentOnIsStep commentOnColumn(Name field);
 
     /**
@@ -10027,52 +9743,8 @@ public interface DSLContext extends Scope {
      * @see DSL#commentOnColumn(Field)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     CommentOnIsStep commentOnColumn(Field<?> field);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * The <code>CREATE DATABASE</code> statement.
@@ -10080,7 +9752,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createDatabase(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateDatabaseFinalStep createDatabase(@Stringly.Name String database);
 
     /**
@@ -10089,7 +9761,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createDatabase(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateDatabaseFinalStep createDatabase(Name database);
 
     /**
@@ -10098,7 +9770,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createDatabase(Catalog)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateDatabaseFinalStep createDatabase(Catalog database);
 
     /**
@@ -10107,7 +9779,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createDatabaseIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, YUGABYTEDB })
     CreateDatabaseFinalStep createDatabaseIfNotExists(@Stringly.Name String database);
 
     /**
@@ -10116,7 +9788,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createDatabaseIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, YUGABYTEDB })
     CreateDatabaseFinalStep createDatabaseIfNotExists(Name database);
 
     /**
@@ -10125,7 +9797,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createDatabaseIfNotExists(Catalog)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, YUGABYTEDB })
     CreateDatabaseFinalStep createDatabaseIfNotExists(Catalog database);
 
     /**
@@ -10232,7 +9904,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createIndex(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     CreateIndexStep createIndex(@Stringly.Name String index);
 
     /**
@@ -10241,7 +9913,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createIndex(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     CreateIndexStep createIndex(Name index);
 
     /**
@@ -10250,7 +9922,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createIndex(Index)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     CreateIndexStep createIndex(Index index);
 
     /**
@@ -10259,7 +9931,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createIndex()
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     CreateIndexStep createIndex();
 
     /**
@@ -10268,7 +9940,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createIndexIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     CreateIndexStep createIndexIfNotExists(@Stringly.Name String index);
 
     /**
@@ -10277,7 +9949,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createIndexIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     CreateIndexStep createIndexIfNotExists(Name index);
 
     /**
@@ -10286,7 +9958,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createIndexIfNotExists(Index)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     CreateIndexStep createIndexIfNotExists(Index index);
 
     /**
@@ -10295,7 +9967,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createIndexIfNotExists()
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     CreateIndexStep createIndexIfNotExists();
 
     /**
@@ -10304,7 +9976,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createUniqueIndex(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateIndexStep createUniqueIndex(@Stringly.Name String index);
 
     /**
@@ -10313,7 +9985,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createUniqueIndex(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateIndexStep createUniqueIndex(Name index);
 
     /**
@@ -10322,7 +9994,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createUniqueIndex(Index)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateIndexStep createUniqueIndex(Index index);
 
     /**
@@ -10331,7 +10003,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createUniqueIndex()
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateIndexStep createUniqueIndex();
 
     /**
@@ -10340,7 +10012,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createUniqueIndexIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE, YUGABYTEDB })
     CreateIndexStep createUniqueIndexIfNotExists(@Stringly.Name String index);
 
     /**
@@ -10349,7 +10021,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createUniqueIndexIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE, YUGABYTEDB })
     CreateIndexStep createUniqueIndexIfNotExists(Name index);
 
     /**
@@ -10358,7 +10030,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createUniqueIndexIfNotExists(Index)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE, YUGABYTEDB })
     CreateIndexStep createUniqueIndexIfNotExists(Index index);
 
     /**
@@ -10367,7 +10039,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createUniqueIndexIfNotExists()
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, POSTGRES, SQLITE, YUGABYTEDB })
     CreateIndexStep createUniqueIndexIfNotExists();
 
 
@@ -10447,7 +10119,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createTableIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateTableElementListStep createTableIfNotExists(@Stringly.Name String table);
 
     /**
@@ -10456,7 +10128,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createTableIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateTableElementListStep createTableIfNotExists(Name table);
 
     /**
@@ -10465,548 +10137,123 @@ public interface DSLContext extends Scope {
      * @see DSL#createTableIfNotExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateTableElementListStep createTableIfNotExists(Table<?> table);
 
     /**
      * The <code>CREATE TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      *
      * @see DSL#createTemporaryTable(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateTableElementListStep createTemporaryTable(@Stringly.Name String table);
 
     /**
      * The <code>CREATE TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      *
      * @see DSL#createTemporaryTable(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateTableElementListStep createTemporaryTable(Name table);
 
     /**
      * The <code>CREATE TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      *
      * @see DSL#createTemporaryTable(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateTableElementListStep createTemporaryTable(Table<?> table);
 
     /**
      * The <code>CREATE TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      *
      * @see DSL#createTemporaryTableIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateTableElementListStep createTemporaryTableIfNotExists(@Stringly.Name String table);
 
     /**
      * The <code>CREATE TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      *
      * @see DSL#createTemporaryTableIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateTableElementListStep createTemporaryTableIfNotExists(Name table);
 
     /**
      * The <code>CREATE TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      *
      * @see DSL#createTemporaryTableIfNotExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateTableElementListStep createTemporaryTableIfNotExists(Table<?> table);
 
     /**
-     * The <code>CREATE LOCAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>LOCAL TEMPORARY</code> table, i.e. a table whose meta data
-     * and data are both local to a session or transaction.
-     *
-     * @see DSL#createLocalTemporaryTable(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    CreateTableElementListStep createLocalTemporaryTable(@Stringly.Name String table);
-
-    /**
-     * The <code>CREATE LOCAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>LOCAL TEMPORARY</code> table, i.e. a table whose meta data
-     * and data are both local to a session or transaction.
-     *
-     * @see DSL#createLocalTemporaryTable(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    CreateTableElementListStep createLocalTemporaryTable(Name table);
-
-    /**
-     * The <code>CREATE LOCAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>LOCAL TEMPORARY</code> table, i.e. a table whose meta data
-     * and data are both local to a session or transaction.
-     *
-     * @see DSL#createLocalTemporaryTable(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    CreateTableElementListStep createLocalTemporaryTable(Table<?> table);
-
-    /**
-     * The <code>CREATE LOCAL TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>LOCAL TEMPORARY</code> table, i.e. a table whose meta data
-     * and data are both local to a session or transaction.
-     *
-     * @see DSL#createLocalTemporaryTableIfNotExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    CreateTableElementListStep createLocalTemporaryTableIfNotExists(@Stringly.Name String table);
-
-    /**
-     * The <code>CREATE LOCAL TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>LOCAL TEMPORARY</code> table, i.e. a table whose meta data
-     * and data are both local to a session or transaction.
-     *
-     * @see DSL#createLocalTemporaryTableIfNotExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    CreateTableElementListStep createLocalTemporaryTableIfNotExists(Name table);
-
-    /**
-     * The <code>CREATE LOCAL TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>LOCAL TEMPORARY</code> table, i.e. a table whose meta data
-     * and data are both local to a session or transaction.
-     *
-     * @see DSL#createLocalTemporaryTableIfNotExists(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    CreateTableElementListStep createLocalTemporaryTableIfNotExists(Table<?> table);
-
-    /**
      * The <code>CREATE GLOBAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code> table, i.e. a table whose meta data
-     * but not data is shared among sessions and transactions.
      *
      * @see DSL#createGlobalTemporaryTable(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateTableElementListStep createGlobalTemporaryTable(@Stringly.Name String table);
 
     /**
      * The <code>CREATE GLOBAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code> table, i.e. a table whose meta data
-     * but not data is shared among sessions and transactions.
      *
      * @see DSL#createGlobalTemporaryTable(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateTableElementListStep createGlobalTemporaryTable(Name table);
 
     /**
      * The <code>CREATE GLOBAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code> table, i.e. a table whose meta data
-     * but not data is shared among sessions and transactions.
      *
      * @see DSL#createGlobalTemporaryTable(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateTableElementListStep createGlobalTemporaryTable(Table<?> table);
 
     /**
      * The <code>CREATE GLOBAL TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code> table, i.e. a table whose meta data
-     * but not data is shared among sessions and transactions.
      *
      * @see DSL#createGlobalTemporaryTableIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateTableElementListStep createGlobalTemporaryTableIfNotExists(@Stringly.Name String table);
 
     /**
      * The <code>CREATE GLOBAL TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code> table, i.e. a table whose meta data
-     * but not data is shared among sessions and transactions.
      *
      * @see DSL#createGlobalTemporaryTableIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateTableElementListStep createGlobalTemporaryTableIfNotExists(Name table);
 
     /**
      * The <code>CREATE GLOBAL TEMPORARY TABLE IF NOT EXISTS</code> statement.
-     * <p>
-     * Create a <code>GLOBAL TEMPORARY</code> table, i.e. a table whose meta data
-     * but not data is shared among sessions and transactions.
      *
      * @see DSL#createGlobalTemporaryTableIfNotExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
+    @Support({ FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateTableElementListStep createGlobalTemporaryTableIfNotExists(Table<?> table);
 
-    /**
-     * The <code>CREATE VIEW</code> statement.
-     *
-     * @see DSL#createView(String, String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    CreateViewAsStep<Record> createView(@Stringly.Name String view, @Stringly.Name String... fields);
-
-    /**
-     * The <code>CREATE VIEW</code> statement.
-     *
-     * @see DSL#createView(Name, Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    CreateViewAsStep<Record> createView(Name view, Name... fields);
-
-    /**
-     * The <code>CREATE VIEW</code> statement.
-     *
-     * @see DSL#createView(Table, Field...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    CreateViewAsStep<Record> createView(Table<?> view, Field<?>... fields);
-
-    /**
-     * The <code>CREATE VIEW</code> statement.
-     *
-     * @see DSL#createView(String, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    CreateViewAsStep<Record> createView(@Stringly.Name String view, Collection<? extends String> fields);
-
-    /**
-     * The <code>CREATE VIEW</code> statement.
-     *
-     * @see DSL#createView(Name, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    CreateViewAsStep<Record> createView(Name view, Collection<? extends Name> fields);
-
-    /**
-     * The <code>CREATE VIEW</code> statement.
-     *
-     * @see DSL#createView(Table, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    CreateViewAsStep<Record> createView(Table<?> view, Collection<? extends Field<?>> fields);
-
-    /**
-     * The <code>CREATE VIEW IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createViewIfNotExists(String, String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    CreateViewAsStep<Record> createViewIfNotExists(@Stringly.Name String view, @Stringly.Name String... fields);
-
-    /**
-     * The <code>CREATE VIEW IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createViewIfNotExists(Name, Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    CreateViewAsStep<Record> createViewIfNotExists(Name view, Name... fields);
-
-    /**
-     * The <code>CREATE VIEW IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createViewIfNotExists(Table, Field...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, Field<?>... fields);
-
-    /**
-     * The <code>CREATE VIEW IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createViewIfNotExists(String, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    CreateViewAsStep<Record> createViewIfNotExists(@Stringly.Name String view, Collection<? extends String> fields);
-
-    /**
-     * The <code>CREATE VIEW IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createViewIfNotExists(Name, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    CreateViewAsStep<Record> createViewIfNotExists(Name view, Collection<? extends Name> fields);
-
-    /**
-     * The <code>CREATE VIEW IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createViewIfNotExists(Table, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, Collection<? extends Field<?>> fields);
-
-    /**
-     * The <code>CREATE OR REPLACE VIEW</code> statement.
-     *
-     * @see DSL#createOrReplaceView(String, String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    CreateViewAsStep<Record> createOrReplaceView(@Stringly.Name String view, @Stringly.Name String... fields);
-
-    /**
-     * The <code>CREATE OR REPLACE VIEW</code> statement.
-     *
-     * @see DSL#createOrReplaceView(Name, Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    CreateViewAsStep<Record> createOrReplaceView(Name view, Name... fields);
-
-    /**
-     * The <code>CREATE OR REPLACE VIEW</code> statement.
-     *
-     * @see DSL#createOrReplaceView(Table, Field...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    CreateViewAsStep<Record> createOrReplaceView(Table<?> view, Field<?>... fields);
-
-    /**
-     * The <code>CREATE OR REPLACE VIEW</code> statement.
-     *
-     * @see DSL#createOrReplaceView(String, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    CreateViewAsStep<Record> createOrReplaceView(@Stringly.Name String view, Collection<? extends String> fields);
-
-    /**
-     * The <code>CREATE OR REPLACE VIEW</code> statement.
-     *
-     * @see DSL#createOrReplaceView(Name, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    CreateViewAsStep<Record> createOrReplaceView(Name view, Collection<? extends Name> fields);
-
-    /**
-     * The <code>CREATE OR REPLACE VIEW</code> statement.
-     *
-     * @see DSL#createOrReplaceView(Table, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    CreateViewAsStep<Record> createOrReplaceView(Table<?> view, Collection<? extends Field<?>> fields);
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#createMaterializedView(String, String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CreateViewAsStep<Record> createMaterializedView(@Stringly.Name String view, @Stringly.Name String... fields);
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#createMaterializedView(Name, Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CreateViewAsStep<Record> createMaterializedView(Name view, Name... fields);
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#createMaterializedView(Table, Field...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CreateViewAsStep<Record> createMaterializedView(Table<?> view, Field<?>... fields);
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#createMaterializedView(String, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CreateViewAsStep<Record> createMaterializedView(@Stringly.Name String view, Collection<? extends String> fields);
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#createMaterializedView(Name, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CreateViewAsStep<Record> createMaterializedView(Name view, Collection<? extends Name> fields);
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#createMaterializedView(Table, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CreateViewAsStep<Record> createMaterializedView(Table<?> view, Collection<? extends Field<?>> fields);
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createMaterializedViewIfNotExists(String, String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CreateViewAsStep<Record> createMaterializedViewIfNotExists(@Stringly.Name String view, @Stringly.Name String... fields);
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createMaterializedViewIfNotExists(Name, Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CreateViewAsStep<Record> createMaterializedViewIfNotExists(Name view, Name... fields);
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createMaterializedViewIfNotExists(Table, Field...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CreateViewAsStep<Record> createMaterializedViewIfNotExists(Table<?> view, Field<?>... fields);
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createMaterializedViewIfNotExists(String, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CreateViewAsStep<Record> createMaterializedViewIfNotExists(@Stringly.Name String view, Collection<? extends String> fields);
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createMaterializedViewIfNotExists(Name, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CreateViewAsStep<Record> createMaterializedViewIfNotExists(Name view, Collection<? extends Name> fields);
-
-    /**
-     * The <code>CREATE MATERIALIZED VIEW IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createMaterializedViewIfNotExists(Table, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    CreateViewAsStep<Record> createMaterializedViewIfNotExists(Table<?> view, Collection<? extends Field<?>> fields);
 
-    /**
-     * The <code>CREATE OR REPLACE MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#createOrReplaceMaterializedView(String, String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    CreateViewAsStep<Record> createOrReplaceMaterializedView(@Stringly.Name String view, @Stringly.Name String... fields);
 
-    /**
-     * The <code>CREATE OR REPLACE MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#createOrReplaceMaterializedView(Name, Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    CreateViewAsStep<Record> createOrReplaceMaterializedView(Name view, Name... fields);
 
-    /**
-     * The <code>CREATE OR REPLACE MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#createOrReplaceMaterializedView(Table, Field...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    CreateViewAsStep<Record> createOrReplaceMaterializedView(Table<?> view, Field<?>... fields);
 
-    /**
-     * The <code>CREATE OR REPLACE MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#createOrReplaceMaterializedView(String, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    CreateViewAsStep<Record> createOrReplaceMaterializedView(@Stringly.Name String view, Collection<? extends String> fields);
 
-    /**
-     * The <code>CREATE OR REPLACE MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#createOrReplaceMaterializedView(Name, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    CreateViewAsStep<Record> createOrReplaceMaterializedView(Name view, Collection<? extends Name> fields);
 
-    /**
-     * The <code>CREATE OR REPLACE MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#createOrReplaceMaterializedView(Table, Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES })
-    CreateViewAsStep<Record> createOrReplaceMaterializedView(Table<?> view, Collection<? extends Field<?>> fields);
 
 
 
@@ -11044,87 +10291,6 @@ public interface DSLContext extends Scope {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * The <code>CREATE TYPE</code> statement.
-     *
-     * @see DSL#createType(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    CreateTypeStep createType(@Stringly.Name String type);
-
-    /**
-     * The <code>CREATE TYPE</code> statement.
-     *
-     * @see DSL#createType(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    CreateTypeStep createType(Name type);
-
-    /**
-     * The <code>CREATE TYPE</code> statement.
-     *
-     * @see DSL#createType(Type)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    CreateTypeStep createType(Type<?> type);
-
-    /**
-     * The <code>CREATE TYPE IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createTypeIfNotExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES, YUGABYTEDB })
-    CreateTypeStep createTypeIfNotExists(@Stringly.Name String type);
-
-    /**
-     * The <code>CREATE TYPE IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createTypeIfNotExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES, YUGABYTEDB })
-    CreateTypeStep createTypeIfNotExists(Name type);
-
-    /**
-     * The <code>CREATE TYPE IF NOT EXISTS</code> statement.
-     *
-     * @see DSL#createTypeIfNotExists(Type)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ H2, POSTGRES, YUGABYTEDB })
-    CreateTypeStep createTypeIfNotExists(Type<?> type);
 
     /**
      * The <code>CREATE SCHEMA</code> statement.
@@ -11132,7 +10298,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createSchema(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateSchemaFinalStep createSchema(@Stringly.Name String schema);
 
     /**
@@ -11141,7 +10307,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createSchema(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateSchemaFinalStep createSchema(Name schema);
 
     /**
@@ -11150,7 +10316,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createSchema(Schema)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateSchemaFinalStep createSchema(Schema schema);
 
     /**
@@ -11159,7 +10325,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createSchemaIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateSchemaFinalStep createSchemaIfNotExists(@Stringly.Name String schema);
 
     /**
@@ -11168,7 +10334,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createSchemaIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateSchemaFinalStep createSchemaIfNotExists(Name schema);
 
     /**
@@ -11177,7 +10343,7 @@ public interface DSLContext extends Scope {
      * @see DSL#createSchemaIfNotExists(Schema)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateSchemaFinalStep createSchemaIfNotExists(Schema schema);
 
     /**
@@ -11186,8 +10352,8 @@ public interface DSLContext extends Scope {
      * @see DSL#createSequence(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
-    CreateSequenceAsStep<Number> createSequence(@Stringly.Name String sequence);
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    CreateSequenceFlagsStep createSequence(@Stringly.Name String sequence);
 
     /**
      * The <code>CREATE SEQUENCE</code> statement.
@@ -11195,8 +10361,8 @@ public interface DSLContext extends Scope {
      * @see DSL#createSequence(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
-    CreateSequenceAsStep<Number> createSequence(Name sequence);
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    CreateSequenceFlagsStep createSequence(Name sequence);
 
     /**
      * The <code>CREATE SEQUENCE</code> statement.
@@ -11204,8 +10370,8 @@ public interface DSLContext extends Scope {
      * @see DSL#createSequence(Sequence)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
-    CreateSequenceAsStep<Number> createSequence(Sequence<?> sequence);
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    CreateSequenceFlagsStep createSequence(Sequence<?> sequence);
 
     /**
      * The <code>CREATE SEQUENCE IF NOT EXISTS</code> statement.
@@ -11213,8 +10379,8 @@ public interface DSLContext extends Scope {
      * @see DSL#createSequenceIfNotExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
-    CreateSequenceAsStep<Number> createSequenceIfNotExists(@Stringly.Name String sequence);
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    CreateSequenceFlagsStep createSequenceIfNotExists(@Stringly.Name String sequence);
 
     /**
      * The <code>CREATE SEQUENCE IF NOT EXISTS</code> statement.
@@ -11222,8 +10388,8 @@ public interface DSLContext extends Scope {
      * @see DSL#createSequenceIfNotExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
-    CreateSequenceAsStep<Number> createSequenceIfNotExists(Name sequence);
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    CreateSequenceFlagsStep createSequenceIfNotExists(Name sequence);
 
     /**
      * The <code>CREATE SEQUENCE IF NOT EXISTS</code> statement.
@@ -11231,132 +10397,8 @@ public interface DSLContext extends Scope {
      * @see DSL#createSequenceIfNotExists(Sequence)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
-    CreateSequenceAsStep<Number> createSequenceIfNotExists(Sequence<?> sequence);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    CreateSequenceFlagsStep createSequenceIfNotExists(Sequence<?> sequence);
 
     /**
      * The <code>DROP DATABASE</code> statement.
@@ -11364,7 +10406,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropDatabase(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropDatabaseFinalStep dropDatabase(@Stringly.Name String database);
 
     /**
@@ -11373,7 +10415,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropDatabase(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropDatabaseFinalStep dropDatabase(Name database);
 
     /**
@@ -11382,7 +10424,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropDatabase(Catalog)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropDatabaseFinalStep dropDatabase(Catalog database);
 
     /**
@@ -11391,7 +10433,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropDatabaseIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropDatabaseFinalStep dropDatabaseIfExists(@Stringly.Name String database);
 
     /**
@@ -11400,7 +10442,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropDatabaseIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropDatabaseFinalStep dropDatabaseIfExists(Name database);
 
     /**
@@ -11409,7 +10451,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropDatabaseIfExists(Catalog)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropDatabaseFinalStep dropDatabaseIfExists(Catalog database);
 
     /**
@@ -11516,7 +10558,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropIndex(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     DropIndexOnStep dropIndex(@Stringly.Name String index);
 
     /**
@@ -11525,7 +10567,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropIndex(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     DropIndexOnStep dropIndex(Name index);
 
     /**
@@ -11534,7 +10576,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropIndex(Index)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support
     DropIndexOnStep dropIndex(Index index);
 
     /**
@@ -11543,7 +10585,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropIndexIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     DropIndexOnStep dropIndexIfExists(@Stringly.Name String index);
 
     /**
@@ -11552,7 +10594,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropIndexIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     DropIndexOnStep dropIndexIfExists(Name index);
 
     /**
@@ -11561,7 +10603,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropIndexIfExists(Index)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     DropIndexOnStep dropIndexIfExists(Index index);
 
 
@@ -11614,7 +10656,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropSchema(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropSchemaStep dropSchema(@Stringly.Name String schema);
 
     /**
@@ -11623,7 +10665,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropSchema(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropSchemaStep dropSchema(Name schema);
 
     /**
@@ -11632,7 +10674,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropSchema(Schema)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropSchemaStep dropSchema(Schema schema);
 
     /**
@@ -11641,7 +10683,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropSchemaIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropSchemaStep dropSchemaIfExists(@Stringly.Name String schema);
 
     /**
@@ -11650,7 +10692,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropSchemaIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropSchemaStep dropSchemaIfExists(Name schema);
 
     /**
@@ -11659,7 +10701,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropSchemaIfExists(Schema)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropSchemaStep dropSchemaIfExists(Schema schema);
 
     /**
@@ -11668,7 +10710,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropSequence(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     DropSequenceFinalStep dropSequence(@Stringly.Name String sequence);
 
     /**
@@ -11677,7 +10719,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropSequence(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     DropSequenceFinalStep dropSequence(Name sequence);
 
     /**
@@ -11686,7 +10728,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropSequence(Sequence)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     DropSequenceFinalStep dropSequence(Sequence<?> sequence);
 
     /**
@@ -11695,7 +10737,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropSequenceIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     DropSequenceFinalStep dropSequenceIfExists(@Stringly.Name String sequence);
 
     /**
@@ -11704,7 +10746,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropSequenceIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     DropSequenceFinalStep dropSequenceIfExists(Name sequence);
 
     /**
@@ -11713,132 +10755,8 @@ public interface DSLContext extends Scope {
      * @see DSL#dropSequenceIfExists(Sequence)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     DropSequenceFinalStep dropSequenceIfExists(Sequence<?> sequence);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * The <code>DROP TABLE</code> statement.
@@ -11873,7 +10791,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropTableIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DropTableStep dropTableIfExists(@Stringly.Name String table);
 
     /**
@@ -11882,7 +10800,7 @@ public interface DSLContext extends Scope {
      * @see DSL#dropTableIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DropTableStep dropTableIfExists(Name table);
 
     /**
@@ -11891,212 +10809,69 @@ public interface DSLContext extends Scope {
      * @see DSL#dropTableIfExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     DropTableStep dropTableIfExists(Table<?> table);
 
     /**
      * The <code>DROP TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      *
      * @see DSL#dropTemporaryTable(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropTableStep dropTemporaryTable(@Stringly.Name String table);
 
     /**
      * The <code>DROP TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      *
      * @see DSL#dropTemporaryTable(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropTableStep dropTemporaryTable(Name table);
 
     /**
      * The <code>DROP TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      *
      * @see DSL#dropTemporaryTable(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropTableStep dropTemporaryTable(Table<?> table);
 
     /**
      * The <code>DROP TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      *
      * @see DSL#dropTemporaryTableIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropTableStep dropTemporaryTableIfExists(@Stringly.Name String table);
 
     /**
      * The <code>DROP TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      *
      * @see DSL#dropTemporaryTableIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropTableStep dropTemporaryTableIfExists(Name table);
 
     /**
      * The <code>DROP TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code>, or if that's not supported in your dialect,
-     * a <code>LOCAL TEMPORARY</code> table.
      *
      * @see DSL#dropTemporaryTableIfExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     DropTableStep dropTemporaryTableIfExists(Table<?> table);
 
-    /**
-     * The <code>DROP LOCAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>LOCAL TEMPORARY</code> table.
-     *
-     * @see DSL#dropLocalTemporaryTable(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    DropTableStep dropLocalTemporaryTable(@Stringly.Name String table);
-
-    /**
-     * The <code>DROP LOCAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>LOCAL TEMPORARY</code> table.
-     *
-     * @see DSL#dropLocalTemporaryTable(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    DropTableStep dropLocalTemporaryTable(Name table);
-
-    /**
-     * The <code>DROP LOCAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>LOCAL TEMPORARY</code> table.
-     *
-     * @see DSL#dropLocalTemporaryTable(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    DropTableStep dropLocalTemporaryTable(Table<?> table);
-
-    /**
-     * The <code>DROP LOCAL TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>LOCAL TEMPORARY</code> table.
-     *
-     * @see DSL#dropLocalTemporaryTableIfExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    DropTableStep dropLocalTemporaryTableIfExists(@Stringly.Name String table);
-
-    /**
-     * The <code>DROP LOCAL TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>LOCAL TEMPORARY</code> table.
-     *
-     * @see DSL#dropLocalTemporaryTableIfExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    DropTableStep dropLocalTemporaryTableIfExists(Name table);
-
-    /**
-     * The <code>DROP LOCAL TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>LOCAL TEMPORARY</code> table.
-     *
-     * @see DSL#dropLocalTemporaryTableIfExists(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, H2, MARIADB, MYSQL, YUGABYTEDB })
-    DropTableStep dropLocalTemporaryTableIfExists(Table<?> table);
 
-    /**
-     * The <code>DROP GLOBAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code> table.
-     *
-     * @see DSL#dropGlobalTemporaryTable(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
-    DropTableStep dropGlobalTemporaryTable(@Stringly.Name String table);
 
-    /**
-     * The <code>DROP GLOBAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code> table.
-     *
-     * @see DSL#dropGlobalTemporaryTable(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
-    DropTableStep dropGlobalTemporaryTable(Name table);
 
-    /**
-     * The <code>DROP GLOBAL TEMPORARY TABLE</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code> table.
-     *
-     * @see DSL#dropGlobalTemporaryTable(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
-    DropTableStep dropGlobalTemporaryTable(Table<?> table);
 
-    /**
-     * The <code>DROP GLOBAL TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code> table.
-     *
-     * @see DSL#dropGlobalTemporaryTableIfExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
-    DropTableStep dropGlobalTemporaryTableIfExists(@Stringly.Name String table);
 
-    /**
-     * The <code>DROP GLOBAL TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code> table.
-     *
-     * @see DSL#dropGlobalTemporaryTableIfExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
-    DropTableStep dropGlobalTemporaryTableIfExists(Name table);
 
-    /**
-     * The <code>DROP GLOBAL TEMPORARY TABLE IF EXISTS</code> statement.
-     * <p>
-     * Drop a <code>GLOBAL TEMPORARY</code> table.
-     *
-     * @see DSL#dropGlobalTemporaryTableIfExists(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2 })
-    DropTableStep dropGlobalTemporaryTableIfExists(Table<?> table);
 
 
 
@@ -12134,159 +10909,6 @@ public interface DSLContext extends Scope {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * The <code>DROP TYPE</code> statement.
-     *
-     * @see DSL#dropType(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    DropTypeStep dropType(@Stringly.Name String types);
-
-    /**
-     * The <code>DROP TYPE</code> statement.
-     *
-     * @see DSL#dropType(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    DropTypeStep dropType(Name types);
-
-    /**
-     * The <code>DROP TYPE</code> statement.
-     *
-     * @see DSL#dropType(Type)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    DropTypeStep dropType(Type<?> types);
-
-    /**
-     * The <code>DROP TYPE</code> statement.
-     *
-     * @see DSL#dropType(String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    DropTypeStep dropType(@Stringly.Name String... types);
-
-    /**
-     * The <code>DROP TYPE</code> statement.
-     *
-     * @see DSL#dropType(Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    DropTypeStep dropType(Name... types);
-
-    /**
-     * The <code>DROP TYPE</code> statement.
-     *
-     * @see DSL#dropType(Type...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    DropTypeStep dropType(Type<?>... types);
-
-    /**
-     * The <code>DROP TYPE</code> statement.
-     *
-     * @see DSL#dropType(Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    DropTypeStep dropType(Collection<? extends Type<?>> types);
-
-    /**
-     * The <code>DROP TYPE IF EXISTS</code> statement.
-     *
-     * @see DSL#dropTypeIfExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    DropTypeStep dropTypeIfExists(@Stringly.Name String types);
-
-    /**
-     * The <code>DROP TYPE IF EXISTS</code> statement.
-     *
-     * @see DSL#dropTypeIfExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    DropTypeStep dropTypeIfExists(Name types);
-
-    /**
-     * The <code>DROP TYPE IF EXISTS</code> statement.
-     *
-     * @see DSL#dropTypeIfExists(Type)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    DropTypeStep dropTypeIfExists(Type<?> types);
-
-    /**
-     * The <code>DROP TYPE IF EXISTS</code> statement.
-     *
-     * @see DSL#dropTypeIfExists(String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    DropTypeStep dropTypeIfExists(@Stringly.Name String... types);
-
-    /**
-     * The <code>DROP TYPE IF EXISTS</code> statement.
-     *
-     * @see DSL#dropTypeIfExists(Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    DropTypeStep dropTypeIfExists(Name... types);
-
-    /**
-     * The <code>DROP TYPE IF EXISTS</code> statement.
-     *
-     * @see DSL#dropTypeIfExists(Type...)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    DropTypeStep dropTypeIfExists(Type<?>... types);
-
-    /**
-     * The <code>DROP TYPE IF EXISTS</code> statement.
-     *
-     * @see DSL#dropTypeIfExists(Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ DUCKDB, H2, POSTGRES, YUGABYTEDB })
-    DropTypeStep dropTypeIfExists(Collection<? extends Type<?>> types);
 
     /**
      * The <code>DROP VIEW</code> statement.
@@ -12294,8 +10916,8 @@ public interface DSLContext extends Scope {
      * @see DSL#dropView(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    DropViewStep dropView(@Stringly.Name String view);
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    DropViewFinalStep dropView(@Stringly.Name String view);
 
     /**
      * The <code>DROP VIEW</code> statement.
@@ -12303,8 +10925,8 @@ public interface DSLContext extends Scope {
      * @see DSL#dropView(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    DropViewStep dropView(Name view);
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    DropViewFinalStep dropView(Name view);
 
     /**
      * The <code>DROP VIEW</code> statement.
@@ -12312,8 +10934,8 @@ public interface DSLContext extends Scope {
      * @see DSL#dropView(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    DropViewStep dropView(Table<?> view);
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    DropViewFinalStep dropView(Table<?> view);
 
     /**
      * The <code>DROP VIEW IF EXISTS</code> statement.
@@ -12321,8 +10943,8 @@ public interface DSLContext extends Scope {
      * @see DSL#dropViewIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    DropViewStep dropViewIfExists(@Stringly.Name String view);
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    DropViewFinalStep dropViewIfExists(@Stringly.Name String view);
 
     /**
      * The <code>DROP VIEW IF EXISTS</code> statement.
@@ -12330,8 +10952,8 @@ public interface DSLContext extends Scope {
      * @see DSL#dropViewIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    DropViewStep dropViewIfExists(Name view);
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    DropViewFinalStep dropViewIfExists(Name view);
 
     /**
      * The <code>DROP VIEW IF EXISTS</code> statement.
@@ -12339,62 +10961,8 @@ public interface DSLContext extends Scope {
      * @see DSL#dropViewIfExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    DropViewStep dropViewIfExists(Table<?> view);
-
-    /**
-     * The <code>DROP MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#dropMaterializedView(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    DropViewStep dropMaterializedView(@Stringly.Name String view);
-
-    /**
-     * The <code>DROP MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#dropMaterializedView(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    DropViewStep dropMaterializedView(Name view);
-
-    /**
-     * The <code>DROP MATERIALIZED VIEW</code> statement.
-     *
-     * @see DSL#dropMaterializedView(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    DropViewStep dropMaterializedView(Table<?> view);
-
-    /**
-     * The <code>DROP MATERIALIZED VIEW IF EXISTS</code> statement.
-     *
-     * @see DSL#dropMaterializedViewIfExists(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    DropViewStep dropMaterializedViewIfExists(@Stringly.Name String view);
-
-    /**
-     * The <code>DROP MATERIALIZED VIEW IF EXISTS</code> statement.
-     *
-     * @see DSL#dropMaterializedViewIfExists(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    DropViewStep dropMaterializedViewIfExists(Name view);
-
-    /**
-     * The <code>DROP MATERIALIZED VIEW IF EXISTS</code> statement.
-     *
-     * @see DSL#dropMaterializedViewIfExists(Table)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    DropViewStep dropMaterializedViewIfExists(Table<?> view);
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    DropViewFinalStep dropViewIfExists(Table<?> view);
 
     /**
      * The <code>GRANT</code> statement.
@@ -12482,33 +11050,11 @@ public interface DSLContext extends Scope {
      * <p>
      * Set a vendor specific session configuration to a new value.
      *
-     * @see DSL#set(String, Param)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    RowCountQuery set(@Stringly.Name String name, Param<?> value);
-
-    /**
-     * The <code>SET</code> statement.
-     * <p>
-     * Set a vendor specific session configuration to a new value.
-     *
      * @see DSL#set(Name, Param)
      */
     @NotNull @CheckReturnValue
-    @Support({ MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ MYSQL, POSTGRES, YUGABYTEDB })
     RowCountQuery set(Name name, Param<?> value);
-
-    /**
-     * The <code>SET LOCAL</code> statement.
-     * <p>
-     * Set a vendor specific transaction-local configuration to a new value.
-     *
-     * @see DSL#setLocal(String, Param)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ POSTGRES, YUGABYTEDB })
-    RowCountQuery setLocal(@Stringly.Name String name, Param<?> value);
 
     /**
      * The <code>SET LOCAL</code> statement.
@@ -12529,7 +11075,7 @@ public interface DSLContext extends Scope {
      * @see DSL#setCatalog(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL })
+    @Support({ MARIADB, MYSQL })
     RowCountQuery setCatalog(@Stringly.Name String catalog);
 
     /**
@@ -12540,7 +11086,7 @@ public interface DSLContext extends Scope {
      * @see DSL#setCatalog(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL })
+    @Support({ MARIADB, MYSQL })
     RowCountQuery setCatalog(Name catalog);
 
     /**
@@ -12551,7 +11097,7 @@ public interface DSLContext extends Scope {
      * @see DSL#setCatalog(Catalog)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, MARIADB, MYSQL })
+    @Support({ MARIADB, MYSQL })
     RowCountQuery setCatalog(Catalog catalog);
 
     /**
@@ -12562,7 +11108,7 @@ public interface DSLContext extends Scope {
      * @see DSL#setSchema(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     RowCountQuery setSchema(@Stringly.Name String schema);
 
     /**
@@ -12573,7 +11119,7 @@ public interface DSLContext extends Scope {
      * @see DSL#setSchema(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     RowCountQuery setSchema(Name schema);
 
     /**
@@ -12584,7 +11130,7 @@ public interface DSLContext extends Scope {
      * @see DSL#setSchema(Schema)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     RowCountQuery setSchema(Schema schema);
 
     /**
@@ -12615,42 +11161,6 @@ public interface DSLContext extends Scope {
     <R extends Record> TruncateIdentityStep<R> truncate(Table<R> table);
 
     /**
-     * The <code>TRUNCATE</code> statement.
-     *
-     * @see DSL#truncate(String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    TruncateIdentityStep<Record> truncate(@Stringly.Name String... table);
-
-    /**
-     * The <code>TRUNCATE</code> statement.
-     *
-     * @see DSL#truncate(Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    TruncateIdentityStep<Record> truncate(Name... table);
-
-    /**
-     * The <code>TRUNCATE</code> statement.
-     *
-     * @see DSL#truncate(Table...)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    TruncateIdentityStep<Record> truncate(Table<?>... table);
-
-    /**
-     * The <code>TRUNCATE</code> statement.
-     *
-     * @see DSL#truncate(Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    TruncateIdentityStep<Record> truncate(Collection<? extends Table<?>> table);
-
-    /**
      * The <code>TRUNCATE TABLE</code> statement.
      *
      * @see DSL#truncateTable(String)
@@ -12677,41 +11187,7 @@ public interface DSLContext extends Scope {
     @Support
     <R extends Record> TruncateIdentityStep<R> truncateTable(Table<R> table);
 
-    /**
-     * The <code>TRUNCATE TABLE</code> statement.
-     *
-     * @see DSL#truncateTable(String...)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    TruncateIdentityStep<Record> truncateTable(@Stringly.Name String... table);
 
-    /**
-     * The <code>TRUNCATE TABLE</code> statement.
-     *
-     * @see DSL#truncateTable(Name...)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    TruncateIdentityStep<Record> truncateTable(Name... table);
-
-    /**
-     * The <code>TRUNCATE TABLE</code> statement.
-     *
-     * @see DSL#truncateTable(Table...)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    TruncateIdentityStep<Record> truncateTable(Table<?>... table);
-
-    /**
-     * The <code>TRUNCATE TABLE</code> statement.
-     *
-     * @see DSL#truncateTable(Collection)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    TruncateIdentityStep<Record> truncateTable(Collection<? extends Table<?>> table);
 
 
 
@@ -12746,83 +11222,31 @@ public interface DSLContext extends Scope {
 
 
     /**
-     * The <code>START TRANSACTION</code> statement.
-     * <p>
-     * Start a transaction
+     * Create a new DSL <code>CREATE VIEW</code> statement.
      *
-     * @see DSL#startTransaction()
+     * @see DSL#createView(String, String...)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    RowCountQuery startTransaction();
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    CreateViewAsStep<Record> createView(String view, String... fields);
 
     /**
-     * The <code>SAVEPOINT</code> statement.
-     * <p>
-     * Specify a savepoint
+     * Create a new DSL <code>CREATE VIEW</code> statement.
      *
-     * @see DSL#savepoint(String)
+     * @see DSL#createView(Name, Name...)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    RowCountQuery savepoint(@Stringly.Name String name);
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    CreateViewAsStep<Record> createView(Name view, Name... fields);
 
     /**
-     * The <code>SAVEPOINT</code> statement.
-     * <p>
-     * Specify a savepoint
+     * Create a new DSL <code>CREATE VIEW</code> statement.
      *
-     * @see DSL#savepoint(Name)
+     * @see DSL#createView(Table, Field...)
      */
     @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    RowCountQuery savepoint(Name name);
-
-    /**
-     * The <code>RELEASE SAVEPOINT</code> statement.
-     * <p>
-     * Release a savepoint
-     *
-     * @see DSL#releaseSavepoint(String)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    RowCountQuery releaseSavepoint(@Stringly.Name String name);
-
-    /**
-     * The <code>RELEASE SAVEPOINT</code> statement.
-     * <p>
-     * Release a savepoint
-     *
-     * @see DSL#releaseSavepoint(Name)
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    RowCountQuery releaseSavepoint(Name name);
-
-    /**
-     * The <code>COMMIT</code> statement.
-     * <p>
-     * Commit a transaction
-     *
-     * @see DSL#commit()
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    RowCountQuery commit();
-
-    /**
-     * The <code>ROLLBACK</code> statement.
-     * <p>
-     * Rollback a transaction
-     *
-     * @see DSL#rollback()
-     */
-    @NotNull @CheckReturnValue
-    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
-    RollbackToSavepointStep rollback();
-
-
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    CreateViewAsStep<Record> createView(Table<?> view, Field<?>... fields);
 
     /**
      * Create a new DSL <code>CREATE VIEW</code> statement.
@@ -12840,7 +11264,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateViewAsStep<Record> createView(String view, Function<? super Field<?>, ? extends String> fieldNameFunction);
 
     /**
@@ -12859,7 +11283,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateViewAsStep<Record> createView(String view, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction);
 
     /**
@@ -12878,7 +11302,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateViewAsStep<Record> createView(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction);
 
     /**
@@ -12897,7 +11321,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateViewAsStep<Record> createView(Name view, BiFunction<? super Field<?>, ? super Integer, ? extends Name> fieldNameFunction);
 
     /**
@@ -12916,7 +11340,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateViewAsStep<Record> createView(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction);
 
     /**
@@ -12935,8 +11359,35 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateViewAsStep<Record> createView(Table<?> view, BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> fieldNameFunction);
+
+    /**
+     * Create a new DSL <code>CREATE OR REPLACE VIEW</code> statement.
+     *
+     * @see DSL#createOrReplaceView(String, String...)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    CreateViewAsStep<Record> createOrReplaceView(String view, String... fields);
+
+    /**
+     * Create a new DSL <code>CREATE OR REPLACE VIEW</code> statement.
+     *
+     * @see DSL#createOrReplaceView(Name, Name...)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    CreateViewAsStep<Record> createOrReplaceView(Name view, Name... fields);
+
+    /**
+     * Create a new DSL <code>CREATE OR REPLACE VIEW</code> statement.
+     *
+     * @see DSL#createOrReplaceView(Table, Field...)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    CreateViewAsStep<Record> createOrReplaceView(Table<?> view, Field<?>... fields);
 
     /**
      * Create a new DSL <code>CREATE OR REPLACE VIEW</code> statement.
@@ -12954,7 +11405,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateViewAsStep<Record> createOrReplaceView(String view, Function<? super Field<?>, ? extends String> fieldNameFunction);
 
     /**
@@ -12973,7 +11424,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateViewAsStep<Record> createOrReplaceView(String view, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction);
 
     /**
@@ -12992,7 +11443,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateViewAsStep<Record> createOrReplaceView(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction);
 
     /**
@@ -13011,7 +11462,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateViewAsStep<Record> createOrReplaceView(Name view, BiFunction<? super Field<?>, ? super Integer, ? extends Name> fieldNameFunction);
 
     /**
@@ -13030,7 +11481,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateViewAsStep<Record> createOrReplaceView(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction);
 
     /**
@@ -13049,8 +11500,35 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     CreateViewAsStep<Record> createOrReplaceView(Table<?> view, BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> fieldNameFunction);
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     *
+     * @see DSL#createViewIfNotExists(String, String...)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    CreateViewAsStep<Record> createViewIfNotExists(String view, String... fields);
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     *
+     * @see DSL#createViewIfNotExists(Name, Name...)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    CreateViewAsStep<Record> createViewIfNotExists(Name view, Name... fields);
+
+    /**
+     * Create a new DSL <code>CREATE VIEW</code> statement.
+     *
+     * @see DSL#createViewIfNotExists(Table, Field...)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, Field<?>... fields);
 
     /**
      * Create a new DSL <code>CREATE VIEW</code> statement.
@@ -13068,7 +11546,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateViewAsStep<Record> createViewIfNotExists(String view, Function<? super Field<?>, ? extends String> fieldNameFunction);
 
     /**
@@ -13087,7 +11565,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateViewAsStep<Record> createViewIfNotExists(String view, BiFunction<? super Field<?>, ? super Integer, ? extends String> fieldNameFunction);
 
     /**
@@ -13106,7 +11584,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateViewAsStep<Record> createViewIfNotExists(Name view, Function<? super Field<?>, ? extends Name> fieldNameFunction);
 
     /**
@@ -13125,7 +11603,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateViewAsStep<Record> createViewIfNotExists(Name view, BiFunction<? super Field<?>, ? super Integer, ? extends Name> fieldNameFunction);
 
     /**
@@ -13144,7 +11622,7 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, Function<? super Field<?>, ? extends Field<?>> fieldNameFunction);
 
     /**
@@ -13163,8 +11641,116 @@ public interface DSLContext extends Scope {
      */
     @Deprecated(forRemoval = true, since = "3.14")
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> fieldNameFunction);
+
+    /**
+     * Create a new DSL <code>CREATE TYPE</code> statement.
+     *
+     * @see DSL#createType(String)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    CreateTypeStep createType(String type);
+
+    /**
+     * Create a new DSL <code>CREATE TYPE</code> statement.
+     *
+     * @see DSL#createType(Name)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    CreateTypeStep createType(Name type);
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropType(String)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    DropTypeStep dropType(String type);
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropType(Name)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    DropTypeStep dropType(Name type);
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropType(String...)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    DropTypeStep dropType(String... type);
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropType(Name...)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    DropTypeStep dropType(Name... type);
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropType(Collection)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    DropTypeStep dropType(Collection<?> type);
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropTypeIfExists(String)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    DropTypeStep dropTypeIfExists(String type);
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropTypeIfExists(Name)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    DropTypeStep dropTypeIfExists(Name type);
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropTypeIfExists(String...)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    DropTypeStep dropTypeIfExists(String... type);
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropTypeIfExists(Name...)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    DropTypeStep dropTypeIfExists(Name... type);
+
+    /**
+     * Create a new DSL <code>DROP TYPE</code> statement.
+     *
+     * @see DSL#dropTypeIfExists(Collection)
+     */
+    @NotNull @CheckReturnValue
+    @Support({ H2, POSTGRES, YUGABYTEDB })
+    DropTypeStep dropTypeIfExists(Collection<?> type);
 
     /**
      * Create a new DSL <code>ALTER TABLE</code> statement.
@@ -13199,7 +11785,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterTableIfExists(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableStep alterTableIfExists(String table);
 
     /**
@@ -13208,7 +11794,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterTableIfExists(Name)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableStep alterTableIfExists(Name table);
 
     /**
@@ -13217,7 +11803,7 @@ public interface DSLContext extends Scope {
      * @see DSL#alterTableIfExists(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableStep alterTableIfExists(Table<?> table);
 
     // -------------------------------------------------------------------------
@@ -13260,7 +11846,7 @@ public interface DSLContext extends Scope {
      * @throws DataAccessException if something went wrong executing the query
      */
     @NotNull
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     BigInteger nextval(String sequence) throws DataAccessException;
 
     /**
@@ -13270,7 +11856,7 @@ public interface DSLContext extends Scope {
      * @throws DataAccessException if something went wrong executing the query
      */
     @NotNull
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     BigInteger nextval(Name sequence) throws DataAccessException;
 
     /**
@@ -13280,7 +11866,7 @@ public interface DSLContext extends Scope {
      * @throws DataAccessException if something went wrong executing the query
      */
     @NotNull
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     <T extends Number> T nextval(Sequence<T> sequence) throws DataAccessException;
 
     /**
@@ -13292,7 +11878,7 @@ public interface DSLContext extends Scope {
      * @throws DataAccessException if something went wrong executing the query
      */
     @NotNull
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     <T extends Number> List<T> nextvals(Sequence<T> sequence, int size) throws DataAccessException;
 
     /**
@@ -13302,7 +11888,7 @@ public interface DSLContext extends Scope {
      * @throws DataAccessException if something went wrong executing the query
      */
     @NotNull
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     BigInteger currval(String sequence) throws DataAccessException;
 
     /**
@@ -13312,7 +11898,7 @@ public interface DSLContext extends Scope {
      * @throws DataAccessException if something went wrong executing the query
      */
     @NotNull
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     BigInteger currval(Name sequence) throws DataAccessException;
 
     /**
@@ -13322,7 +11908,7 @@ public interface DSLContext extends Scope {
      * @throws DataAccessException if something went wrong executing the query
      */
     @NotNull
-    @Support({ CUBRID, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     <T extends Number> T currval(Sequence<T> sequence) throws DataAccessException;
 
     // -------------------------------------------------------------------------
@@ -13367,11 +11953,11 @@ public interface DSLContext extends Scope {
      * implementation is governed by
      * {@link Configuration#recordUnmapperProvider()}.
      * <p>
-     * The resulting record will have its internal {@link Record#touched()}
-     * flags set to true for all values. This means that
-     * {@link UpdatableRecord#store()} will perform an <code>INSERT</code>
-     * statement. If you wish to store the record using an <code>UPDATE</code>
-     * statement, use {@link #executeUpdate(UpdatableRecord)} instead.
+     * The resulting record will have its internal "changed" flags set to true
+     * for all values. This means that {@link UpdatableRecord#store()} will
+     * perform an <code>INSERT</code> statement. If you wish to store the record
+     * using an <code>UPDATE</code> statement, use
+     * {@link #executeUpdate(UpdatableRecord)} instead.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14186,20 +12772,6 @@ public interface DSLContext extends Scope {
      * <code>DSLContext</code> and return a single value.
      *
      * @param field The field for which to fetch a single value.
-     * @param condition The condition for which to fetch a single value.
-     * @return The value or <code>null</code>, if no record was found.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @Support
-    @Blocking
-    <T> T fetchValue(TableField<?, T> field, Condition condition) throws DataAccessException, TooManyRowsException;
-
-    /**
-     * Execute a {@link ResultQuery} in the context of this
-     * <code>DSLContext</code> and return a single value.
-     *
-     * @param field The field for which to fetch a single value.
      * @return The value or <code>null</code>, if no record was found.
      * @throws DataAccessException if something went wrong executing the query
      */
@@ -14240,23 +12812,6 @@ public interface DSLContext extends Scope {
     <T> Optional<T> fetchOptionalValue(TableField<?, T> field) throws DataAccessException, TooManyRowsException, InvalidResultException;
 
     /**
-     * Execute a {@link ResultQuery} in the context of this
-     * <code>DSLContext</code> and return a single value.
-     *
-     * @param field The field for which to fetch a single value.
-     * @param condition The condition for which to fetch a single value.
-     * @return The value.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws TooManyRowsException if the query returned more than one record
-     * @throws InvalidResultException if the query returned a record with more
-     *             than one value
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <T> Optional<T> fetchOptionalValue(TableField<?, T> field, Condition condition) throws DataAccessException, TooManyRowsException, InvalidResultException;
-
-    /**
      * Fetch all values from a single column table.
      *
      * @param table The table from which to fetch values
@@ -14292,19 +12847,6 @@ public interface DSLContext extends Scope {
     @Support
     @Blocking
     <T> List<T> fetchValues(TableField<?, T> field) throws DataAccessException;
-
-    /**
-     * Fetch all values in a given {@link Table}'s {@link TableField}.
-     *
-     * @param field The field for which to fetch values.
-     * @param condition The condition for which to fetch values.
-     * @return The values. This will never be <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <T> List<T> fetchValues(TableField<?, T> field, Condition condition) throws DataAccessException;
 
     /**
      * Execute the query and return a {@link Map} with the first column as the
@@ -14376,7 +12918,7 @@ public interface DSLContext extends Scope {
      * <p>
      * This wraps a pre-existing <code>SELECT</code> query in another one to
      * calculate the <code>COUNT(*)</code> value, without modifying the original
-     * <code>SELECT</code>. An example: <pre><code>
+     * <code>SELECT</code>. An example: <code><pre>
      * -- Original query:
      * SELECT id, title FROM book WHERE title LIKE '%a%'
      *
@@ -14384,7 +12926,7 @@ public interface DSLContext extends Scope {
      * SELECT count(*) FROM (
      *   SELECT id, title FROM book WHERE title LIKE '%a%'
      * )
-     * </code></pre> This is particularly useful for those databases that do not
+     * </pre></code> This is particularly useful for those databases that do not
      * support the <code>COUNT(*) OVER()</code> window function to calculate
      * total results in paged queries.
      *
@@ -14399,7 +12941,7 @@ public interface DSLContext extends Scope {
     /**
      * Count the number of records in a table.
      * <p>
-     * This executes <pre><code>SELECT COUNT(*) FROM table</code></pre>
+     * This executes <code><pre>SELECT COUNT(*) FROM table</pre></code>
      *
      * @param table The table whose records to count
      * @return The number of records in the table
@@ -14412,7 +12954,7 @@ public interface DSLContext extends Scope {
     /**
      * Count the number of records in a table that satisfy a condition.
      * <p>
-     * This executes <pre><code>SELECT COUNT(*) FROM table WHERE condition</code></pre>
+     * This executes <code><pre>SELECT COUNT(*) FROM table WHERE condition</pre></code>
      *
      * @param table The table whose records to count
      * @param condition The condition to apply
@@ -14427,7 +12969,7 @@ public interface DSLContext extends Scope {
      * Count the number of records in a table that satisfy a condition.
      * <p>
      * This executes
-     * <pre><code>SELECT COUNT(*) FROM table WHERE condition</code></pre>
+     * <code><pre>SELECT COUNT(*) FROM table WHERE condition</pre></code>
      * <p>
      * Convenience API for calling {@link #fetchCount(Table, Condition)} with
      * {@link DSL#and(Condition...)}.
@@ -14445,7 +12987,7 @@ public interface DSLContext extends Scope {
      * Count the number of records in a table that satisfy a condition.
      * <p>
      * This executes
-     * <pre><code>SELECT COUNT(*) FROM table WHERE condition</code></pre>
+     * <code><pre>SELECT COUNT(*) FROM table WHERE condition</pre></code>
      * <p>
      * Convenience API for calling {@link #fetchCount(Table, Condition)} with
      * {@link DSL#and(Collection)}.
@@ -14464,7 +13006,7 @@ public interface DSLContext extends Scope {
      * <p>
      * This wraps a pre-existing <code>SELECT</code> query in another one to
      * check for result existence, without modifying the original
-     * <code>SELECT</code>. An example: <pre><code>
+     * <code>SELECT</code>. An example: <code><pre>
      * -- Original query:
      * SELECT id, title FROM book WHERE title LIKE '%a%'
      *
@@ -14472,10 +13014,10 @@ public interface DSLContext extends Scope {
      * SELECT EXISTS (
      *   SELECT id, title FROM book WHERE title LIKE '%a%'
      * )
-     * </code></pre>
+     * </pre></code>
      *
      * @param query The wrapped query
-     * @return The <code>EXISTS(…)</code> result
+     * @return The <code>EXISTS(...)</code> result
      * @throws DataAccessException if something went wrong executing the query
      */
     @Support
@@ -14485,7 +13027,7 @@ public interface DSLContext extends Scope {
     /**
      * Check if a table has any records.
      * <p>
-     * This executes <pre><code>SELECT EXISTS(SELECT * FROM table)</code></pre>
+     * This executes <code><pre>SELECT EXISTS(SELECT * FROM table)</pre></code>
      *
      * @param table The table whose records to count
      * @return Whether the table contains any records
@@ -14498,7 +13040,7 @@ public interface DSLContext extends Scope {
     /**
      * Check if a table has any records that satisfy a condition.
      * <p>
-     * This executes <pre><code>SELECT EXISTS(SELECT * FROM table WHERE condition)</code></pre>
+     * This executes <code><pre>SELECT EXISTS(SELECT * FROM table WHERE condition)</pre></code>
      *
      * @param table The table whose records to count
      * @return Whether the table contains any records that satisfy a condition
@@ -14511,7 +13053,7 @@ public interface DSLContext extends Scope {
     /**
      * Check if a table has any records that satisfy a condition.
      * <p>
-     * This executes <pre><code>SELECT EXISTS(SELECT * FROM table WHERE condition)</code></pre>
+     * This executes <code><pre>SELECT EXISTS(SELECT * FROM table WHERE condition)</pre></code>
      * <p>
      * Convenience API for calling {@link #fetchExists(Table, Condition)} with
      * {@link DSL#and(Condition...)}.
@@ -14527,7 +13069,7 @@ public interface DSLContext extends Scope {
     /**
      * Check if a table has any records that satisfy a condition.
      * <p>
-     * This executes <pre><code>SELECT EXISTS(SELECT * FROM table WHERE condition)</code></pre>
+     * This executes <code><pre>SELECT EXISTS(SELECT * FROM table WHERE condition)</pre></code>
      * <p>
      * Convenience API for calling {@link #fetchExists(Table, Condition)} with
      * {@link DSL#and(Collection)}.
@@ -14558,7 +13100,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records for
-     * <pre><code>SELECT table.col1, table.col2 FROM table</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -14575,7 +13117,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -14592,7 +13134,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -14612,7 +13154,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -14632,7 +13174,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return zero or one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14649,7 +13191,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return zero or one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14666,7 +13208,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return zero or one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14686,7 +13228,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return zero or one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14706,7 +13248,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14724,7 +13266,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14742,7 +13284,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14763,7 +13305,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14784,7 +13326,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14803,7 +13345,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14824,7 +13366,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14843,7 +13385,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14862,7 +13404,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14881,7 +13423,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14900,7 +13442,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14919,7 +13461,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14938,7 +13480,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14957,7 +13499,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14976,7 +13518,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -14995,7 +13537,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15014,7 +13556,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15033,7 +13575,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15052,7 +13594,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15071,7 +13613,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15090,7 +13632,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15109,7 +13651,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15128,7 +13670,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15147,7 +13689,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15166,7 +13708,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15185,7 +13727,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15204,7 +13746,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15223,7 +13765,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return exactly one record for
-     * <pre><code>SELECT F1, F2, …, FN</code></pre>.
+     * <code><pre>SELECT F1, F2, ..., FN</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15240,410 +13782,11 @@ public interface DSLContext extends Scope {
     @Blocking
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> Record22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> fetchSingle(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20, SelectField<T21> field21, SelectField<T22> field22) throws DataAccessException;
 
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15, Condition c16) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15, Condition c16, Condition c17) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15, Condition c16, Condition c17, Condition c18) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15, Condition c16, Condition c17, Condition c18, Condition c19) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15, Condition c16, Condition c17, Condition c18, Condition c19, Condition c20) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15, Condition c16, Condition c17, Condition c18, Condition c19, Condition c20, Condition c21) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
-    /**
-     * Disambiguation overload of {@link #fetchSingle(Table, Condition...)}.
-     * <p>
-     * Since jOOQ 3.17, {@link Table} extends {@link SelectField}, and
-     * {@link Condition} extends {@link Field}. As such, there is an overload
-     * conflict between {@link #fetchSingle(Table, Condition...)} and
-     * {@link #fetchSingle(SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField, SelectField)}, which can be
-     * resolved backwards compatibly with this method.
-     *
-     * @return The record. This is never <code>null</code>.
-     * @throws DataAccessException if something went wrong executing the query
-     * @throws NoDataFoundException if the query returned now rows
-     * @throws TooManyRowsException if the query returned more than one record
-     */
-    @NotNull
-    @Support
-    @Blocking
-    <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15, Condition c16, Condition c17, Condition c18, Condition c19, Condition c20, Condition c21, Condition c22) throws DataAccessException, NoDataFoundException, TooManyRowsException;
-
 
 
     /**
      * Execute and return zero or one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15660,7 +13803,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return zero or one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15677,7 +13820,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return zero or one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15697,7 +13840,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return zero or one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15717,7 +13860,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return zero or one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table LIMIT 1</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table LIMIT 1</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15733,7 +13876,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return zero or one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition LIMIT 1</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition LIMIT 1</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15749,7 +13892,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return zero or on e record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition LIMIT 1</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition LIMIT 1</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15768,7 +13911,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return zero or one record for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition LIMIT 1</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition LIMIT 1</pre></code>.
      * <p>
      * The resulting record is attached to this {@link Configuration} by
      * default. Use {@link Settings#isAttachRecords()} to override this
@@ -15787,7 +13930,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records lazily for
-     * <pre><code>SELECT table.col1, table.col2 FROM table</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -15812,7 +13955,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records lazily for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -15837,7 +13980,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records lazily for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -15865,7 +14008,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records lazily for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -15893,7 +14036,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records asynchronously for
-     * <pre><code>SELECT table.col1, table.col2 FROM table</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -15908,7 +14051,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records asynchronously for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -15923,7 +14066,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records asynchronously for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -15941,7 +14084,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records asynchronously for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -15959,7 +14102,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records asynchronously for
-     * <pre><code>SELECT table.col1, table.col2 FROM table</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -15974,7 +14117,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records asynchronously for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -15989,7 +14132,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records asynchronously for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -16007,7 +14150,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records asynchronously for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -16025,7 +14168,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records lazily for
-     * <pre><code>SELECT table.col1, table.col2 FROM table</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -16049,7 +14192,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records lazily for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -16073,7 +14216,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records lazily for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -16100,7 +14243,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Execute and return all records lazily for
-     * <pre><code>SELECT table.col1, table.col2 FROM table WHERE condition</code></pre>.
+     * <code><pre>SELECT table.col1, table.col2 FROM table WHERE condition</pre></code>.
      * <p>
      * The result and its contained records are attached to this
      * {@link Configuration} by default. Use {@link Settings#isAttachRecords()}
@@ -16128,25 +14271,13 @@ public interface DSLContext extends Scope {
     /**
      * Insert one record.
      * <p>
-     * This executes the following statement:
-     *
-     * <pre>
-     * <code>INSERT INTO [table] ([touched or modified columns in record])
-     * VALUES ([touched or modified values in record])</code>
-     * </pre>
+     * This executes something like the following statement:
+     * <code><pre>INSERT INTO [table] ... VALUES [record] </pre></code>
      * <p>
-     * Unlike {@link UpdatableRecord#insert()}, this does not change any of the
-     * argument <code>record</code>'s internal {@link Record#touched()} flags,
-     * such that a subsequent call to {@link UpdatableRecord#insert()} might
-     * lead to another <code>INSERT</code> statement being executed.
-     * <p>
-     * This context's {@link Settings#getRecordDirtyTracking()} may be used to
-     * specify whether {@link Record#touched()} or only
-     * {@link Record#modified()} fields are being taken into consideration for
-     * the <code>INSERT</code> statement.
-     * <p>
-     * Also any optimistic locking related {@link Settings} do not apply for
-     * this method.
+     * Unlike {@link UpdatableRecord#store()}, this does not change any of the
+     * argument <code>record</code>'s internal "changed" flags, such that a
+     * subsequent call to {@link UpdatableRecord#store()} might lead to another
+     * <code>INSERT</code> statement being executed.
      *
      * @return The number of inserted records
      * @throws DataAccessException if something went wrong executing the query
@@ -16157,22 +14288,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Update a table.
-     * <p>
-     * This executes the following statement:
-     *
-     * <pre>
-     * <code>UPDATE [table]
-     * SET [modified values in record]
-     * WHERE [record is supplied record]</code>
-     * </pre>
-     * <p>
-     * This context's {@link Settings#getRecordDirtyTracking()} may be used to
-     * specify whether {@link Record#touched()} or only
-     * {@link Record#modified()} fields are being taken into consideration for
-     * the <code>INSERT</code> statement.
-     * <p>
-     * Any optimistic locking related {@link Settings} do not apply for this
-     * method.
+     * <code><pre>UPDATE [table] SET [modified values in record] WHERE [record is supplied record] </pre></code>
      *
      * @return The number of updated records
      * @throws DataAccessException if something went wrong executing the query
@@ -16183,22 +14299,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Update a table.
-     * <p>
-     * This executes the following statement:
-     *
-     * <pre>
-     * <code>UPDATE [table]
-     * SET [touched or modified values in record]
-     * WHERE [condition]</code>
-     * </pre>
-     * <p>
-     * This context's {@link Settings#getRecordDirtyTracking()} may be used to
-     * specify whether {@link Record#touched()} or only
-     * {@link Record#modified()} fields are being taken into consideration for
-     * the <code>INSERT</code> statement.
-     * <p>
-     * Any optimistic locking related {@link Settings} do not apply for this
-     * method.
+     * <code><pre>UPDATE [table] SET [modified values in record] WHERE [condition]</pre></code>
      *
      * @return The number of updated records
      * @throws DataAccessException if something went wrong executing the query
@@ -16209,15 +14310,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Delete a record from a table.
-     * <p>
-     * This executes the following statement:
-     *
-     * <pre>
-     * <code>DELETE FROM [table] WHERE [record is supplied record]</code>
-     * </pre>
-     * <p>
-     * Any optimistic locking related {@link Settings} do not apply for this
-     * method.
+     * <code><pre>DELETE FROM [table] WHERE [record is supplied record]</pre></code>
      *
      * @return The number of deleted records
      * @throws DataAccessException if something went wrong executing the query
@@ -16228,15 +14321,7 @@ public interface DSLContext extends Scope {
 
     /**
      * Delete a record from a table.
-     * <p>
-     * This executes the following statement:
-     *
-     * <pre>
-     * <code>DELETE FROM [table] WHERE [condition]</code>
-     * </pre>
-     * <p>
-     * Any optimistic locking related {@link Settings} do not apply for this
-     * method.
+     * <code><pre>DELETE FROM [table] WHERE [condition]</pre></code>
      *
      * @return The number of deleted records
      * @throws DataAccessException if something went wrong executing the query

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.springframework.jdbc.core;
 
 import java.sql.ResultSet;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Common base class for ResultSet-supporting SqlParameters like
@@ -29,11 +29,14 @@ import org.jspecify.annotations.Nullable;
  */
 public class ResultSetSupportingSqlParameter extends SqlParameter {
 
-	private @Nullable ResultSetExtractor<?> resultSetExtractor;
+	@Nullable
+	private ResultSetExtractor<?> resultSetExtractor;
 
-	private @Nullable RowCallbackHandler rowCallbackHandler;
+	@Nullable
+	private RowCallbackHandler rowCallbackHandler;
 
-	private @Nullable RowMapper<?> rowMapper;
+	@Nullable
+	private RowMapper<?> rowMapper;
 
 
 	/**
@@ -111,21 +114,24 @@ public class ResultSetSupportingSqlParameter extends SqlParameter {
 	/**
 	 * Return the ResultSetExtractor held by this parameter, if any.
 	 */
-	public @Nullable ResultSetExtractor<?> getResultSetExtractor() {
+	@Nullable
+	public ResultSetExtractor<?> getResultSetExtractor() {
 		return this.resultSetExtractor;
 	}
 
 	/**
 	 * Return the RowCallbackHandler held by this parameter, if any.
 	 */
-	public @Nullable RowCallbackHandler getRowCallbackHandler() {
+	@Nullable
+	public RowCallbackHandler getRowCallbackHandler() {
 		return this.rowCallbackHandler;
 	}
 
 	/**
 	 * Return the RowMapper held by this parameter, if any.
 	 */
-	public @Nullable RowMapper<?> getRowMapper() {
+	@Nullable
+	public RowMapper<?> getRowMapper() {
 		return this.rowMapper;
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,7 @@ import java.util.Properties;
 import javax.xml.transform.ErrorListener;
 import javax.xml.transform.URIResolver;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.web.servlet.view.AbstractUrlBasedView;
 import org.springframework.web.servlet.view.UrlBasedViewResolver;
 
@@ -37,15 +36,19 @@ import org.springframework.web.servlet.view.UrlBasedViewResolver;
  */
 public class XsltViewResolver extends UrlBasedViewResolver {
 
-	private @Nullable String sourceKey;
+	@Nullable
+	private String sourceKey;
 
-	private @Nullable URIResolver uriResolver;
+	@Nullable
+	private URIResolver uriResolver;
 
-	private @Nullable ErrorListener errorListener;
+	@Nullable
+	private ErrorListener errorListener;
 
 	private boolean indent = true;
 
-	private @Nullable Properties outputProperties;
+	@Nullable
+	private Properties outputProperties;
 
 	private boolean cacheTemplates = true;
 

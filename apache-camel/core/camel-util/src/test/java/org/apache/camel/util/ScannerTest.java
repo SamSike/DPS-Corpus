@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 public class ScannerTest {
 
     @Test
-    public void testScannerString() {
+    public void testScannerString() throws Exception {
         String d = "data1\ndata2\ndata3\n";
 
         Scanner s = new Scanner(d, "\n");
@@ -43,7 +43,7 @@ public class ScannerTest {
     }
 
     @Test
-    public void testScannerInputStream() {
+    public void testScannerInputStream() throws Exception {
         String d = "data1\ndata2\ndata3\n";
         InputStream is = new ByteArrayInputStream(d.getBytes(StandardCharsets.UTF_8));
 

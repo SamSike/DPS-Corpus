@@ -44,16 +44,16 @@ public class DeadLetterChannelRedeliveringWhileShutdownTest extends ContextTestS
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:error").maximumRedeliveries(3).redeliveryDelay(100));
 
                 from("direct:start").to("mock:result");
 
                 from("seda:damm").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         throw new IllegalArgumentException("Damn");
                     }
                 });

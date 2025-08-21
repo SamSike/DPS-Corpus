@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -86,48 +83,11 @@ implements
     // XXX: QueryPart API
     // -------------------------------------------------------------------------
 
-    @Override
-    final boolean parenthesised(Context<?> ctx) {
-        switch (ctx.family()) {
-            case FIREBIRD:
-            case SQLITE:
-                return false;
 
-
-
-
-
-
-
-
-
-
-
-
-            case MARIADB:
-            case MYSQL:
-                return true;
-
-            case CLICKHOUSE:
-                return true;
-
-            case TRINO:
-                return false;
-
-            default:
-                return true;
-        }
-    }
 
     @Override
     public final void accept(Context<?> ctx) {
         switch (ctx.family()) {
-
-
-
-
-
-
             case FIREBIRD:
             case SQLITE:
                 ctx.visit(inline(""));
@@ -146,21 +106,10 @@ implements
 
 
 
-            case MARIADB:
-            case MYSQL:
-                ctx.visit(function(N_DATABASE, getDataType()));
-                break;
 
-            case CLICKHOUSE:
-                ctx.visit(function(N_currentDatabase, getDataType()));
-                break;
-
-            case TRINO:
-                ctx.visit(DSL.field("{0}", getDataType(), N_CURRENT_CATALOG));
-                break;
 
             default:
-                ctx.visit(function(N_CURRENT_DATABASE, getDataType()));
+                ctx.visit(N_CURRENT_DATABASE).sql("()");
                 break;
         }
     }
@@ -174,14 +123,7 @@ implements
 
 
 
-    // -------------------------------------------------------------------------
-    // XXX: Query Object Model
-    // -------------------------------------------------------------------------
 
-    @Override
-    public final Function0<? extends QOM.CurrentCatalog> $constructor() {
-        return () -> new CurrentCatalog();
-    }
 
     // -------------------------------------------------------------------------
     // XXX: The Object API
@@ -189,7 +131,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.CurrentCatalog o) {
+        if (that instanceof QOM.CurrentCatalog) { QOM.CurrentCatalog o = (QOM.CurrentCatalog) that;
             return true;
         }
         else

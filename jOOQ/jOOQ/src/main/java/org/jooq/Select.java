@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,13 +40,10 @@ package org.jooq;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.H2;
 // ...
@@ -57,8 +54,6 @@ import static org.jooq.SQLDialect.IGNITE;
 import static org.jooq.SQLDialect.MARIADB;
 // ...
 // ...
-import static org.jooq.SQLDialect.MYSQL;
-// ...
 // ...
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
@@ -67,7 +62,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
@@ -79,23 +73,23 @@ import org.jooq.impl.QOM;
 import org.jooq.impl.QOM.UnmodifiableList;
 import org.jooq.impl.QOM.With;
 
-import org.jetbrains.annotations.ApiStatus.Experimental;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.ApiStatus.Experimental;
 
 /**
  * A <code>SELECT</code> statement.
  * <p>
  * <strong>Example:</strong>
  * <p>
- * <pre><code>
+ * <code><pre>
  * // Assuming import static org.jooq.impl.DSL.*;
  *
  * using(configuration)
  *    .select(ACTOR.FIRST_NAME, ACTOR.LAST_NAME)
  *    .from(ACTOR)
  *    .fetch();
- * </code></pre>
+ * </pre></code>
  * <p>
  * Instances can be created using {@link DSL#select(SelectFieldOrAsterisk...)},
  * or {@link DSLContext#selectQuery()} and overloads.
@@ -103,7 +97,7 @@ import org.jetbrains.annotations.Nullable;
  * @param <R> The record type being returned by this query
  * @author Lukas Eder
  */
-public interface Select<R extends Record>
+public /* non-sealed */ interface Select<R extends Record>
 extends
     ResultQuery<R>,
     TableLike<R>,
@@ -112,27 +106,7 @@ extends
 {
 
     /**
-     * Check if the result of this subquery <code>IS NULL</code>
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    Condition isNull();
-
-    /**
-     * Check if the result of this subquery <code>IS NOT NULL</code>
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    Condition isNotNull();
-
-    /**
      * Apply the <code>UNION</code> set operation.
-     * <p>
-     * In SQL, a <code>UNION</code> is <code>DISTINCT</code> by default,
-     * meaning, duplicates are removed from the result set. So, this is the same
-     * as {@link #unionDistinct(Select)}. If duplicate removal isn't required,
-     * or already guaranteed by the data model, it is recommended to use
-     * {@link #unionAll(Select)}, instead.
      *
      * @throws IllegalArgumentException If the argument select has the same
      *             identity as this select. The jOOQ 3.x API is mutable, which
@@ -143,23 +117,6 @@ extends
     @NotNull @CheckReturnValue
     @Support
     Select<R> union(Select<? extends R> select);
-
-    /**
-     * Apply the <code>UNION DISTINCT</code> set operation.
-     * <p>
-     * In SQL, a <code>UNION</code> is <code>DISTINCT</code> by default.
-     * However, it is often useful to make this explicit to express intent when
-     * distinct removal is really desired.
-     *
-     * @throws IllegalArgumentException If the argument select has the same
-     *             identity as this select. The jOOQ 3.x API is mutable, which
-     *             means that calls to the DSL API mutate this instance. Adding
-     *             this instance as an set operation argument would lead to a
-     *             {@link StackOverflowError} when generating the SQL.
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    Select<R> unionDistinct(Select<? extends R> select);
 
     /**
      * Apply the <code>UNION ALL</code> set operation.
@@ -176,12 +133,6 @@ extends
 
     /**
      * Apply the <code>EXCEPT</code> (or <code>MINUS</code>) set operation.
-     * <p>
-     * In SQL, an <code>EXCEPT</code> is <code>DISTINCT</code> by default,
-     * meaning, duplicates are removed from the result set. So, this is the same
-     * as {@link #exceptDistinct(Select)}. If duplicate removal isn't required,
-     * or already guaranteed by the data model, it is recommended to use
-     * {@link #exceptAll(Select)}, instead, if the underlying RDBMS supports it.
      *
      * @throws IllegalArgumentException If the argument select has the same
      *             identity as this select. The jOOQ 3.x API is mutable, which
@@ -190,25 +141,8 @@ extends
      *             {@link StackOverflowError} when generating the SQL.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     Select<R> except(Select<? extends R> select);
-
-    /**
-     * Apply the <code>EXCEPT</code> (or <code>MINUS</code>) set operation.
-     * <p>
-     * In SQL, an <code>EXCEPT</code> is <code>DISTINCT</code> by default.
-     * However, it is often useful to make this explicit to express intent when
-     * distinct removal is really desired.
-     *
-     * @throws IllegalArgumentException If the argument select has the same
-     *             identity as this select. The jOOQ 3.x API is mutable, which
-     *             means that calls to the DSL API mutate this instance. Adding
-     *             this instance as an set operation argument would lead to a
-     *             {@link StackOverflowError} when generating the SQL.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    Select<R> exceptDistinct(Select<? extends R> select);
 
     /**
      * Apply the <code>EXCEPT ALL</code> set operation.
@@ -220,18 +154,11 @@ extends
      *             {@link StackOverflowError} when generating the SQL.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, HSQLDB, POSTGRES, YUGABYTEDB })
     Select<R> exceptAll(Select<? extends R> select);
 
     /**
      * Apply the <code>INTERSECT</code> set operation.
-     * <p>
-     * In SQL, an <code>INTERSECT</code> is <code>DISTINCT</code> by default,
-     * meaning, duplicates are removed from the result set. So, this is the same
-     * as {@link #intersectDistinct(Select)}. If duplicate removal isn't
-     * required, or already guaranteed by the data model, it is recommended to
-     * use {@link #intersectAll(Select)}, instead, if the underlying RDBMS
-     * supports it. Apply the <code>INTERSECT</code> set operation.
      *
      * @throws IllegalArgumentException If the argument select has the same
      *             identity as this select. The jOOQ 3.x API is mutable, which
@@ -240,25 +167,8 @@ extends
      *             {@link StackOverflowError} when generating the SQL.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, HSQLDB, IGNITE, MARIADB, POSTGRES, SQLITE, YUGABYTEDB })
     Select<R> intersect(Select<? extends R> select);
-
-    /**
-     * Apply the <code>INTERSECT</code> set operation.
-     * <p>
-     * In SQL, a <code>INTERSECT</code> is <code>DISTINCT</code> by default.
-     * However, it is often useful to make this explicit to express intent when
-     * distinct removal is really desired.
-     *
-     * @throws IllegalArgumentException If the argument select has the same
-     *             identity as this select. The jOOQ 3.x API is mutable, which
-     *             means that calls to the DSL API mutate this instance. Adding
-     *             this instance as an set operation argument would lead to a
-     *             {@link StackOverflowError} when generating the SQL.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
-    Select<R> intersectDistinct(Select<? extends R> select);
 
     /**
      * Apply the <code>INTERSECT ALL</code> set operation.
@@ -270,7 +180,7 @@ extends
      *             {@link StackOverflowError} when generating the SQL.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, HSQLDB, POSTGRES, YUGABYTEDB })
     Select<R> intersectAll(Select<? extends R> select);
 
     /**
@@ -295,14 +205,6 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
-    @NotNull Select<?> $with(With newWith);
-
-    /**
-     * Experimental query object model accessor method, see also {@link QOM}.
-     * Subject to change in future jOOQ versions, use at your own risk.
-     */
-    @Experimental
     @NotNull UnmodifiableList<? extends SelectFieldOrAsterisk> $select();
 
     /**
@@ -310,7 +212,6 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
     @NotNull Select<?> $select(Collection<? extends SelectFieldOrAsterisk> newSelect);
 
     /**
@@ -325,23 +226,7 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
     @NotNull Select<R> $distinct(boolean newDistinct);
-
-    /**
-     * Experimental query object model accessor method, see also {@link QOM}.
-     * Subject to change in future jOOQ versions, use at your own risk.
-     */
-    @Experimental
-    @NotNull UnmodifiableList<? extends SelectFieldOrAsterisk> $distinctOn();
-
-    /**
-     * Experimental query object model accessor method, see also {@link QOM}.
-     * Subject to change in future jOOQ versions, use at your own risk.
-     */
-    @Experimental
-    @CheckReturnValue
-    @NotNull Select<R> $distinctOn(Collection<? extends SelectFieldOrAsterisk> newDistinctOn);
 
     /**
      * Experimental query object model accessor method, see also {@link QOM}.
@@ -355,7 +240,6 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
     @NotNull Select<R> $from(Collection<? extends Table<?>> newFrom);
 
     /**
@@ -370,7 +254,6 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
     @NotNull Select<R> $where(Condition newWhere);
 
     /**
@@ -385,7 +268,6 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
     @NotNull Select<R> $groupBy(Collection<? extends GroupField> newGroupBy);
 
     /**
@@ -400,7 +282,6 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
     @NotNull Select<R> $groupByDistinct(boolean newGroupByDistinct);
 
     /**
@@ -415,7 +296,6 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
     @NotNull Select<R> $having(Condition newHaving);
 
     /**
@@ -430,7 +310,6 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
     @NotNull Select<R> $window(Collection<? extends WindowDefinition> newWindow);
 
     /**
@@ -445,7 +324,6 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
     @NotNull Select<R> $qualify(Condition newQualify);
 
     /**
@@ -460,7 +338,6 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
     @NotNull Select<R> $orderBy(Collection<? extends SortField<?>> newOrderBy);
 
     /**
@@ -475,7 +352,6 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
     @NotNull Select<R> $limit(Field<? extends Number> newLimit);
 
     /**
@@ -490,7 +366,6 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
     @NotNull Select<R> $limitPercent(boolean newLimitPercent);
 
     /**
@@ -505,7 +380,6 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
     @NotNull Select<R> $limitWithTies(boolean newLimitWithTies);
 
     /**
@@ -520,11 +394,7 @@ extends
      * Subject to change in future jOOQ versions, use at your own risk.
      */
     @Experimental
-    @CheckReturnValue
     @NotNull Select<R> $offset(Field<? extends Number> newOffset);
-
-
-
 
 
 

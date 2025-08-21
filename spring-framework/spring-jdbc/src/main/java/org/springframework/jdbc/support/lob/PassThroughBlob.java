@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,8 @@ import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
+import org.springframework.util.StreamUtils;
 
 /**
  * Simple JDBC {@link Blob} adapter that exposes a given byte array or binary stream.
@@ -31,14 +32,15 @@ import org.jspecify.annotations.Nullable;
  * @author Juergen Hoeller
  * @since 2.5.3
  */
-@Deprecated(since = "6.2")
 class PassThroughBlob implements Blob {
 
-	private byte @Nullable [] content;
+	@Nullable
+	private byte[] content;
 
-	private @Nullable InputStream binaryStream;
+	@Nullable
+	private InputStream binaryStream;
 
-	private final long contentLength;
+	private long contentLength;
 
 
 	public PassThroughBlob(byte[] content) {
@@ -63,7 +65,7 @@ class PassThroughBlob implements Blob {
 			return new ByteArrayInputStream(this.content);
 		}
 		else {
-			return (this.binaryStream != null ? this.binaryStream : InputStream.nullInputStream());
+			return (this.binaryStream != null ? this.binaryStream : StreamUtils.emptyInput());
 		}
 	}
 

@@ -18,6 +18,7 @@ package org.apache.camel.processor.transformer;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.spi.DataType;
@@ -30,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A {@link Transformer} implementation which leverages {@link Processor} to perform transformation.
- *
+ * 
  * {@see Transformer}
  */
 public class ProcessorTransformer extends Transformer {
@@ -40,16 +41,13 @@ public class ProcessorTransformer extends Transformer {
     private Processor processor;
     private String transformerString;
 
-    public ProcessorTransformer() {
-    }
-
     public ProcessorTransformer(CamelContext context) {
         setCamelContext(context);
     }
 
     /**
      * Perform data transformation with specified from/to type using Processor.
-     *
+     * 
      * @param message message to apply transformation
      * @param from    'from' data type
      * @param to      'to' data type
@@ -72,7 +70,7 @@ public class ProcessorTransformer extends Transformer {
         // must create a copy in this way
         Exchange transformExchange = new DefaultExchange(exchange);
         transformExchange.setIn(message);
-        transformExchange.getExchangeExtension().setProperties(exchange.getProperties());
+        transformExchange.adapt(ExtendedExchange.class).setProperties(exchange.getProperties());
         processor.process(transformExchange);
         Message answer = transformExchange.getMessage();
 
@@ -104,8 +102,8 @@ public class ProcessorTransformer extends Transformer {
     @Override
     public String toString() {
         if (transformerString == null) {
-            transformerString = String.format("ProcessorTransformer[name='%s', from='%s', to='%s', processor='%s']",
-                    getName(), getFrom(), getTo(), processor);
+            transformerString = String.format("ProcessorTransformer[scheme='%s', from='%s', to='%s', processor='%s']",
+                    getModel(), getFrom(), getTo(), processor);
         }
         return transformerString;
     }

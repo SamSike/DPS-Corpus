@@ -54,8 +54,6 @@ public class JdbcAggregateDiscardOnTimeoutTest extends AbstractJdbcAggregationTe
         return new RouteBuilder() {
             @Override
             public void configure() {
-                configureJdbcAggregationRepository();
-
                 from("direct:start")
                         .aggregate(header("id"), new MyAggregationStrategy())
                         .completionSize(3).aggregationRepository(repo)

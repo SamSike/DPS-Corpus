@@ -48,7 +48,7 @@ public class ManagedRuntimeEndpointRegistry extends ManagedService implements Ma
     @Override
     public void init(ManagementStrategy strategy) {
         super.init(strategy);
-        sanitize = strategy.getManagementAgent().getMask() != null ? strategy.getManagementAgent().getMask() : true;
+        sanitize = strategy.getManagementAgent().getMask() != null ? strategy.getManagementAgent().getMask() : false;
     }
 
     @Override

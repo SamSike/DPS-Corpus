@@ -19,6 +19,7 @@ package org.apache.camel.processor;
 import org.apache.camel.CamelExecutionException;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.support.processor.validation.SchemaValidationException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -27,6 +28,12 @@ import static org.junit.jupiter.api.Assertions.fail;
  * Unit test of ValidatingProcessor.
  */
 public class ValidatingDomProcessorTest extends ValidatingProcessorTest {
+
+    @Override
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
+    }
 
     @Override
     @Test

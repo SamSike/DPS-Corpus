@@ -20,6 +20,7 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Handler;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.language.simple.Simple;
+import org.apache.camel.processor.BeanRouteTest;
 import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -29,27 +30,27 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class ExpressionAnnotationToDisambiguateMethodsTest extends ContextTestSupport {
-    private static final Logger LOG = LoggerFactory.getLogger(ExpressionAnnotationToDisambiguateMethodsTest.class);
-    protected final MyBean myBean = new MyBean();
-    protected final MyOtherBean myOtherBean = new MyOtherBean();
+    private static final Logger LOG = LoggerFactory.getLogger(BeanRouteTest.class);
+    protected MyBean myBean = new MyBean();
+    protected MyOtherBean myOtherBean = new MyOtherBean();
 
     @Test
-    public void testSendMessage() {
+    public void testSendMessage() throws Exception {
         template.sendBodyAndHeader("direct:in", "<hello>world!</hello>", "foo", "bar");
 
         assertEquals("bar", myBean.bar, "bean body: " + myBean);
     }
 
     @Test
-    public void testSendMessageHandler() {
+    public void testSendMessageHandler() throws Exception {
         template.sendBodyAndHeader("direct:other", "<hello>world!</hello>", "foo", "bar");
 
         assertEquals("bar", myOtherBean.bar, "bean body: " + myOtherBean);
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("myBean", myBean);
         answer.bind("myOtherBean", myOtherBean);
         return answer;
@@ -75,7 +76,7 @@ public class ExpressionAnnotationToDisambiguateMethodsTest extends ContextTestSu
 
         public void foo(@Simple("${header.foo}") String bar) {
             this.bar = bar;
-            LOG.info("foo() method called with: {}", bar);
+            LOG.info("foo() method called with: " + bar);
         }
 
         public void wrongMethod(String body) {
@@ -93,7 +94,7 @@ public class ExpressionAnnotationToDisambiguateMethodsTest extends ContextTestSu
         @Handler
         public void foo(@Simple("${header.foo}") String bar) {
             this.bar = bar;
-            LOG.info("foo() method called with: {}", bar);
+            LOG.info("foo() method called with: " + bar);
         }
 
         public void wrongMethod(String body) {

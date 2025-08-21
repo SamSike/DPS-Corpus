@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,10 @@
 package org.springframework.cache.interceptor;
 
 import java.util.Collections;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -33,7 +28,7 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.CachingConfigurer;
+import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.cache.support.SimpleValueWrapper;
@@ -43,8 +38,6 @@ import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.BDDMockito.willThrow;
@@ -54,9 +47,7 @@ import static org.mockito.Mockito.verify;
 /**
  * @author Stephane Nicoll
  */
-class CacheErrorHandlerTests {
-
-	private AnnotationConfigApplicationContext context;
+public class CacheErrorHandlerTests {
 
 	private Cache cache;
 
@@ -66,80 +57,28 @@ class CacheErrorHandlerTests {
 
 	private SimpleService simpleService;
 
-
 	@BeforeEach
-	void setup() {
-		this.context = new AnnotationConfigApplicationContext(Config.class);
+	public void setup() {
+		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(Config.class);
 		this.cache = context.getBean("mockCache", Cache.class);
 		this.cacheInterceptor = context.getBean(CacheInterceptor.class);
 		this.errorHandler = context.getBean(CacheErrorHandler.class);
 		this.simpleService = context.getBean(SimpleService.class);
 	}
 
-	@AfterEach
-	void closeContext() {
-		this.context.close();
-	}
-
-
 	@Test
-	void getFail() {
+	public void getFail() {
 		UnsupportedOperationException exception = new UnsupportedOperationException("Test exception on get");
 		willThrow(exception).given(this.cache).get(0L);
 
 		Object result = this.simpleService.get(0L);
-		verify(this.errorHandler).handleCacheGetError(exception, this.cache, 0L);
+		verify(this.errorHandler).handleCacheGetError(exception, cache, 0L);
 		verify(this.cache).get(0L);
 		verify(this.cache).put(0L, result); // result of the invocation
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void getSyncFail() {
-		UnsupportedOperationException exception = new UnsupportedOperationException("Test exception on get");
-		willThrow(exception).given(this.cache).get(eq(0L), any(Callable.class));
-
-		Object result = this.simpleService.getSync(0L);
-		assertThat(result).isEqualTo(0L);
-		verify(this.errorHandler).handleCacheGetError(exception, this.cache, 0L);
-		verify(this.cache).get(eq(0L), any(Callable.class));
-	}
-
-	@Test
-	public void getCompletableFutureFail() {
-		UnsupportedOperationException exception = new UnsupportedOperationException("Test exception on get");
-		willThrow(exception).given(this.cache).retrieve(eq(0L));
-
-		Object result = this.simpleService.getFuture(0L).join();
-		assertThat(result).isEqualTo(0L);
-		verify(this.errorHandler).handleCacheGetError(exception, this.cache, 0L);
-		verify(this.cache).retrieve(eq(0L));
-	}
-
-	@Test
-	public void getMonoFail() {
-		UnsupportedOperationException exception = new UnsupportedOperationException("Test exception on get");
-		willThrow(exception).given(this.cache).retrieve(eq(0L));
-
-		Object result = this.simpleService.getMono(0L).block();
-		assertThat(result).isEqualTo(0L);
-		verify(this.errorHandler).handleCacheGetError(exception, this.cache, 0L);
-		verify(this.cache).retrieve(eq(0L));
-	}
-
-	@Test
-	public void getFluxFail() {
-		UnsupportedOperationException exception = new UnsupportedOperationException("Test exception on get");
-		willThrow(exception).given(this.cache).retrieve(eq(0L));
-
-		Object result = this.simpleService.getFlux(0L).blockLast();
-		assertThat(result).isEqualTo(0L);
-		verify(this.errorHandler).handleCacheGetError(exception, this.cache, 0L);
-		verify(this.cache).retrieve(eq(0L));
-	}
-
-	@Test
-	void getAndPutFail() {
+	public void getAndPutFail() {
 		UnsupportedOperationException exception = new UnsupportedOperationException("Test exception on get");
 		willThrow(exception).given(this.cache).get(0L);
 		willThrow(exception).given(this.cache).put(0L, 0L); // Update of the cache will fail as well
@@ -154,19 +93,19 @@ class CacheErrorHandlerTests {
 	}
 
 	@Test
-	void getFailProperException() {
+	public void getFailProperException() {
 		UnsupportedOperationException exception = new UnsupportedOperationException("Test exception on get");
 		willThrow(exception).given(this.cache).get(0L);
 
 		this.cacheInterceptor.setErrorHandler(new SimpleCacheErrorHandler());
 
-		assertThatExceptionOfType(UnsupportedOperationException.class)
-				.isThrownBy(() -> this.simpleService.get(0L))
-				.withMessage("Test exception on get");
+		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() ->
+				this.simpleService.get(0L))
+			.withMessage("Test exception on get");
 	}
 
 	@Test
-	void putFail() {
+	public void putFail() {
 		UnsupportedOperationException exception = new UnsupportedOperationException("Test exception on put");
 		willThrow(exception).given(this.cache).put(0L, 0L);
 
@@ -175,19 +114,19 @@ class CacheErrorHandlerTests {
 	}
 
 	@Test
-	void putFailProperException() {
+	public void putFailProperException() {
 		UnsupportedOperationException exception = new UnsupportedOperationException("Test exception on put");
 		willThrow(exception).given(this.cache).put(0L, 0L);
 
 		this.cacheInterceptor.setErrorHandler(new SimpleCacheErrorHandler());
 
-		assertThatExceptionOfType(UnsupportedOperationException.class)
-				.isThrownBy(() -> this.simpleService.put(0L))
-				.withMessage("Test exception on put");
+		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() ->
+				this.simpleService.put(0L))
+			.withMessage("Test exception on put");
 	}
 
 	@Test
-	void evictFail() {
+	public void evictFail() {
 		UnsupportedOperationException exception = new UnsupportedOperationException("Test exception on evict");
 		willThrow(exception).given(this.cache).evict(0L);
 
@@ -196,19 +135,19 @@ class CacheErrorHandlerTests {
 	}
 
 	@Test
-	void evictFailProperException() {
+	public void evictFailProperException() {
 		UnsupportedOperationException exception = new UnsupportedOperationException("Test exception on evict");
 		willThrow(exception).given(this.cache).evict(0L);
 
 		this.cacheInterceptor.setErrorHandler(new SimpleCacheErrorHandler());
 
-		assertThatExceptionOfType(UnsupportedOperationException.class)
-				.isThrownBy(() -> this.simpleService.evict(0L))
-				.withMessage("Test exception on evict");
+		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() ->
+				this.simpleService.evict(0L))
+			.withMessage("Test exception on evict");
 	}
 
 	@Test
-	void clearFail() {
+	public void clearFail() {
 		UnsupportedOperationException exception = new UnsupportedOperationException("Test exception on evict");
 		willThrow(exception).given(this.cache).clear();
 
@@ -217,26 +156,26 @@ class CacheErrorHandlerTests {
 	}
 
 	@Test
-	void clearFailProperException() {
+	public void clearFailProperException() {
 		UnsupportedOperationException exception = new UnsupportedOperationException("Test exception on clear");
 		willThrow(exception).given(this.cache).clear();
 
 		this.cacheInterceptor.setErrorHandler(new SimpleCacheErrorHandler());
 
-		assertThatExceptionOfType(UnsupportedOperationException.class)
-				.isThrownBy(() -> this.simpleService.clear())
-				.withMessage("Test exception on clear");
+		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() ->
+				this.simpleService.clear())
+			.withMessage("Test exception on clear");
 	}
 
 
 	@Configuration
 	@EnableCaching
-	static class Config implements CachingConfigurer {
+	static class Config extends CachingConfigurerSupport {
 
 		@Bean
 		@Override
 		public CacheErrorHandler errorHandler() {
-			return mock();
+			return mock(CacheErrorHandler.class);
 		}
 
 		@Bean
@@ -254,40 +193,20 @@ class CacheErrorHandlerTests {
 
 		@Bean
 		public Cache mockCache() {
-			Cache cache = mock();
+			Cache cache = mock(Cache.class);
 			given(cache.getName()).willReturn("test");
 			return cache;
 		}
 
 	}
 
-	@CacheConfig("test")
+	@CacheConfig(cacheNames = "test")
 	public static class SimpleService {
 		private AtomicLong counter = new AtomicLong();
 
 		@Cacheable
 		public Object get(long id) {
 			return this.counter.getAndIncrement();
-		}
-
-		@Cacheable(sync = true)
-		public Object getSync(long id) {
-			return this.counter.getAndIncrement();
-		}
-
-		@Cacheable
-		public CompletableFuture<Long> getFuture(long id) {
-			return CompletableFuture.completedFuture(this.counter.getAndIncrement());
-		}
-
-		@Cacheable
-		public Mono<Long> getMono(long id) {
-			return Mono.just(this.counter.getAndIncrement());
-		}
-
-		@Cacheable
-		public Flux<Long> getFlux(long id) {
-			return Flux.just(this.counter.getAndIncrement(), 0L);
 		}
 
 		@CachePut

@@ -38,10 +38,10 @@ public class XsltOutputBytesTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("xslt:org/apache/camel/component/xslt/example.xsl?output=bytes").to("mock:result");
             }
         };

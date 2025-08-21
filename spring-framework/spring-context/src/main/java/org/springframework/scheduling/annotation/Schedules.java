@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.aot.hint.annotation.Reflective;
-
 /**
  * Container annotation that aggregates several {@link Scheduled} annotations.
  *
@@ -42,7 +40,6 @@ import org.springframework.aot.hint.annotation.Reflective;
 @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Reflective
 public @interface Schedules {
 
 	Scheduled[] value();

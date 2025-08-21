@@ -59,24 +59,28 @@ public class AsyncEndpointEventNotifierSendingTest extends ContextTestSupport {
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        DefaultCamelContext context = new DefaultCamelContext(createCamelRegistry());
+        DefaultCamelContext context = new DefaultCamelContext(createRegistry());
         context.getManagementStrategy().addEventNotifier(new EventNotifierSupport() {
-            public void notify(CamelEvent event) {
+            public void notify(CamelEvent event) throws Exception {
                 events.add(event);
             }
 
             public boolean isEnabled(CamelEvent event) {
                 return event instanceof ExchangeSendingEvent || event instanceof ExchangeSentEvent;
             }
+
+            @Override
+            protected void doStart() throws Exception {
+            }
         });
         return context;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.addComponent("async", new MyAsyncComponent());
 
                 from("direct:start").to("mock:before").to("async:bye:camel?delay=250").to("mock:result");

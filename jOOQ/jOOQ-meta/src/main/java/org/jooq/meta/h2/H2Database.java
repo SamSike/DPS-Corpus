@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -46,6 +46,7 @@ import static org.jooq.impl.DSL.arrayAgg;
 import static org.jooq.impl.DSL.coalesce;
 import static org.jooq.impl.DSL.concat;
 import static org.jooq.impl.DSL.condition;
+import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.inline;
@@ -55,10 +56,7 @@ import static org.jooq.impl.DSL.not;
 import static org.jooq.impl.DSL.nullif;
 import static org.jooq.impl.DSL.nvl;
 import static org.jooq.impl.DSL.one;
-import static org.jooq.impl.DSL.replace;
-import static org.jooq.impl.DSL.row;
 import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.unquotedName;
 import static org.jooq.impl.DSL.upper;
 import static org.jooq.impl.DSL.when;
 import static org.jooq.impl.SQLDataType.BIGINT;
@@ -76,7 +74,6 @@ import static org.jooq.meta.h2.information_schema.Tables.SEQUENCES;
 import static org.jooq.meta.h2.information_schema.Tables.TABLES;
 import static org.jooq.meta.h2.information_schema.Tables.TYPE_INFO;
 import static org.jooq.meta.h2.information_schema.Tables.VIEWS;
-import static org.jooq.meta.h2.information_schema_2.Tables.SYNONYMS;
 import static org.jooq.meta.hsqldb.information_schema.Tables.CHECK_CONSTRAINTS;
 import static org.jooq.meta.hsqldb.information_schema.Tables.DOMAIN_CONSTRAINTS;
 import static org.jooq.meta.hsqldb.information_schema.Tables.ELEMENT_TYPES;
@@ -90,20 +87,15 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jooq.DSLContext;
 import org.jooq.Field;
-import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Record12;
-import org.jooq.Record14;
 import org.jooq.Record4;
-import org.jooq.Record5;
 import org.jooq.Record6;
 import org.jooq.Result;
 import org.jooq.ResultQuery;
@@ -112,12 +104,8 @@ import org.jooq.Select;
 import org.jooq.SortOrder;
 import org.jooq.Table;
 import org.jooq.TableField;
-// ...
-// ...
 import org.jooq.TableOptions.TableType;
 import org.jooq.impl.DSL;
-import org.jooq.impl.QOM.ForeignKeyRule;
-import org.jooq.impl.QOM.GenerationOption;
 import org.jooq.meta.AbstractDatabase;
 import org.jooq.meta.AbstractIndexDefinition;
 import org.jooq.meta.ArrayDefinition;
@@ -141,22 +129,16 @@ import org.jooq.meta.RoutineDefinition;
 import org.jooq.meta.SchemaDefinition;
 import org.jooq.meta.SequenceDefinition;
 import org.jooq.meta.TableDefinition;
-// ...
 import org.jooq.meta.UDTDefinition;
-import org.jooq.meta.XMLSchemaCollectionDefinition;
-import org.jooq.meta.h2.information_schema_2.tables.Synonyms;
 import org.jooq.meta.hsqldb.information_schema.Tables;
 import org.jooq.meta.hsqldb.information_schema.tables.CheckConstraints;
 import org.jooq.meta.hsqldb.information_schema.tables.DomainConstraints;
 import org.jooq.meta.hsqldb.information_schema.tables.Domains;
-import org.jooq.meta.hsqldb.information_schema.tables.ElementTypes;
 import org.jooq.meta.hsqldb.information_schema.tables.KeyColumnUsage;
+import org.jooq.tools.JooqLogger;
 import org.jooq.tools.StringUtils;
 import org.jooq.tools.csv.CSVReader;
 import org.jooq.util.h2.H2DataType;
-
-import org.jetbrains.annotations.ApiStatus.Internal;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * H2 implementation of {@link AbstractDatabase}
@@ -167,51 +149,6 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
 
     private static final long DEFAULT_SEQUENCE_CACHE    = 32;
     private static final long DEFAULT_SEQUENCE_MAXVALUE = Long.MAX_VALUE;
-
-    static final record ElementTypeLookupKey (String schema, String name, String identifier) {}
-    static final record ElementType (String dataType, Long length, Long precision, Long scale, String identifier, int dimension) {}
-    private Map<ElementTypeLookupKey, ElementType> ELEMENT_TYPE_LOOKUP;
-
-    ElementType elementTypeLookup(ElementTypeLookupKey key) {
-        if (ELEMENT_TYPE_LOOKUP == null) {
-            ElementTypes e = ELEMENT_TYPES;
-
-            ELEMENT_TYPE_LOOKUP = create().fetchMap(
-                select(
-                    row(
-                        e.OBJECT_SCHEMA,
-                        e.OBJECT_NAME,
-                        e.COLLECTION_TYPE_IDENTIFIER
-                    ).mapping(ElementTypeLookupKey::new),
-                    row(
-                        e.DATA_TYPE,
-                        e.CHARACTER_MAXIMUM_LENGTH,
-                        coalesce(e.DATETIME_PRECISION, e.NUMERIC_PRECISION),
-                        e.NUMERIC_SCALE,
-                        e.DTD_IDENTIFIER,
-                        inline(1)
-                    ).mapping(ElementType::new)
-                )
-                .from(e)
-                .where(e.OBJECT_SCHEMA.in(getInputSchemata()))
-            );
-
-            AtomicBoolean repeat = new AtomicBoolean(true);
-            while (repeat.getAndSet(false)) {
-                ELEMENT_TYPE_LOOKUP.replaceAll((k, v) -> {
-                    ElementType et = ELEMENT_TYPE_LOOKUP.get(new ElementTypeLookupKey(k.schema(), k.name(), v.identifier()));
-
-                    if (et != null) {
-                        repeat.set(true);
-                        return new ElementType(et.dataType(), et.length(), et.precision(), et.scale(), et.identifier(), v.dimension() + 1);                  }
-                    else
-                        return v;
-                });
-            }
-        }
-
-        return ELEMENT_TYPE_LOOKUP.get(key);
-    }
 
     @Override
     protected DSLContext create0() {
@@ -264,7 +201,6 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
             final boolean unique = !index.get(INDEXES.NON_UNIQUE, boolean.class);
 
             // [#6310] [#6620] Function-based indexes are not yet supported
-            // [#16237]        Alternatively, the column could be hidden or excluded
             for (Record column : columns)
                 if (table.getColumn(column.get(INDEXES.COLUMN_NAME)) == null)
                     continue indexLoop;
@@ -307,14 +243,14 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
                 INDEXES.TABLE_NAME,
                 INDEXES.INDEX_NAME,
                 field(INDEXES.getQualifiedName().append("INDEX_TYPE_NAME")).ne(inline("UNIQUE INDEX")).as(INDEXES.NON_UNIQUE),
-                field("I.COLUMN_NAME", INDEXES.COLUMN_NAME).as(INDEXES.COLUMN_NAME),
-                field("I.ORDINAL_POSITION", INDEXES.ORDINAL_POSITION).as(INDEXES.ORDINAL_POSITION),
-                field("I.ORDERING_SPECIFICATION", INDEXES.ASC_OR_DESC).as(INDEXES.ASC_OR_DESC))
+                field("i.column_name", INDEXES.COLUMN_NAME).as(INDEXES.COLUMN_NAME),
+                field("i.ordinal_position", INDEXES.ORDINAL_POSITION).as(INDEXES.ORDINAL_POSITION),
+                field("i.ordering_specification", INDEXES.ASC_OR_DESC).as(INDEXES.ASC_OR_DESC))
             .from(INDEXES)
-                .join("INFORMATION_SCHEMA.INDEX_COLUMNS I")
-                .on("{0} = I.TABLE_SCHEMA", INDEXES.TABLE_SCHEMA)
-                .and("{0} = I.TABLE_NAME", INDEXES.TABLE_NAME)
-                .and("{0} = I.INDEX_NAME", INDEXES.INDEX_NAME)
+                .join("information_schema.index_columns i")
+                .on("{0} = i.table_schema", INDEXES.TABLE_SCHEMA)
+                .and("{0} = i.table_name", INDEXES.TABLE_NAME)
+                .and("{0} = i.index_name", INDEXES.INDEX_NAME)
             .where(INDEXES.TABLE_SCHEMA.in(getInputSchemata()))
             .and(getIncludeSystemIndexes()
                 ? noCondition()
@@ -323,7 +259,7 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
                 INDEXES.TABLE_SCHEMA,
                 INDEXES.TABLE_NAME,
                 INDEXES.INDEX_NAME,
-                field("I.ORDINAL_POSITION"));
+                field("i.ordinal_position"));
     }
 
     private ResultQuery<?> indexes1_4() {
@@ -462,9 +398,7 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
                 fkKcu.TABLE_SCHEMA,
                 fkKcu.TABLE_NAME,
                 fkKcu.COLUMN_NAME,
-                pkKcu.COLUMN_NAME,
-                replace(REFERENTIAL_CONSTRAINTS.DELETE_RULE, inline(" "), inline("_")).as(REFERENTIAL_CONSTRAINTS.DELETE_RULE),
-                replace(REFERENTIAL_CONSTRAINTS.UPDATE_RULE, inline(" "), inline("_")).as(REFERENTIAL_CONSTRAINTS.UPDATE_RULE)
+                pkKcu.COLUMN_NAME
             )
             .from(REFERENTIAL_CONSTRAINTS)
             .join(fkKcu)
@@ -493,8 +427,6 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
             String uniqueKey = record.get(REFERENTIAL_CONSTRAINTS.UNIQUE_CONSTRAINT_NAME);
             String uniqueKeyTableName = record.get(TABLE_CONSTRAINTS.TABLE_NAME);
             String uniqueKeyColumn = record.get(pkKcu.COLUMN_NAME);
-            ForeignKeyRule deleteRule = record.get(REFERENTIAL_CONSTRAINTS.DELETE_RULE, ForeignKeyRule.class);
-            ForeignKeyRule updateRule = record.get(REFERENTIAL_CONSTRAINTS.UPDATE_RULE, ForeignKeyRule.class);
 
             TableDefinition foreignKeyTable = getTable(foreignKeySchema, foreignKeyTableName);
             TableDefinition uniqueKeyTable = getTable(uniqueKeySchema, uniqueKeyTableName);
@@ -507,9 +439,7 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
                     uniqueKey,
                     uniqueKeyTable,
                     uniqueKeyTable.getColumn(uniqueKeyColumn),
-                    true,
-                    deleteRule,
-                    updateRule
+                    true
                 );
         }
     }
@@ -612,7 +542,7 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
                 COLUMNS.CHECK_CONSTRAINT
             )
             .from(COLUMNS)
-            .where(nvl(COLUMNS.CHECK_CONSTRAINT, inline("")).ne(inline("")))
+            .where(COLUMNS.CHECK_CONSTRAINT.nvl("").ne(""))
             .and(COLUMNS.TABLE_SCHEMA.in(getInputSchemata()));
 
         for (Record record : create()
@@ -660,61 +590,7 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
     }
 
     @Override
-    public ResultQuery<Record4<String, String, String, String>> sources(List<String> schemas) {
-        return create()
-            .select(
-                VIEWS.TABLE_CATALOG,
-                VIEWS.TABLE_SCHEMA,
-                VIEWS.TABLE_NAME,
-                prependCreateView(VIEWS.TABLE_NAME, VIEWS.VIEW_DEFINITION, '"').as(VIEWS.VIEW_DEFINITION))
-            .from(VIEWS)
-            .where(VIEWS.TABLE_SCHEMA.in(schemas))
-            .orderBy(
-                VIEWS.TABLE_SCHEMA,
-                VIEWS.TABLE_NAME)
-        ;
-    }
-
-    @Override
-    public ResultQuery<Record5<String, String, String, String, String>> comments(List<String> schemas) {
-        Table<?> c =
-            select(
-                TABLES.TABLE_CATALOG,
-                TABLES.TABLE_SCHEMA,
-                TABLES.TABLE_NAME,
-                inline(null, VARCHAR).as(COLUMNS.COLUMN_NAME),
-                TABLES.REMARKS)
-            .from(TABLES)
-            .where(TABLES.REMARKS.isNotNull())
-            .unionAll(
-                select(
-                    COLUMNS.TABLE_CATALOG,
-                    COLUMNS.TABLE_SCHEMA,
-                    COLUMNS.TABLE_NAME,
-                    COLUMNS.COLUMN_NAME,
-                    COLUMNS.REMARKS)
-                .from(COLUMNS)
-                .where(COLUMNS.REMARKS.isNotNull()))
-            .asTable("c");
-
-        return create()
-            .select(
-                c.field(TABLES.TABLE_CATALOG),
-                c.field(TABLES.TABLE_SCHEMA),
-                c.field(TABLES.TABLE_NAME),
-                c.field(COLUMNS.COLUMN_NAME),
-                c.field(TABLES.REMARKS))
-            .from(c)
-            .where(c.field(TABLES.TABLE_SCHEMA).in(schemas))
-            .orderBy(1, 2, 3, 4);
-    }
-
-    @Override
     public ResultQuery<Record12<String, String, String, String, Integer, Integer, Long, Long, BigDecimal, BigDecimal, Boolean, Long>> sequences(List<String> schemas) {
-        Field<String> dataType = is2_0_202()
-            ? field(SEQUENCES.getQualifiedName().append("DATA_TYPE"), VARCHAR)
-            : inline("BIGINT");
-
         Field<Long> minValue = is2_0_202()
             ? field(SEQUENCES.getQualifiedName().append("MINIMUM_VALUE"), SEQUENCES.MIN_VALUE.getDataType())
             : SEQUENCES.MIN_VALUE;
@@ -732,7 +608,7 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
                 inline(null, VARCHAR).as("catalog"),
                 SEQUENCES.SEQUENCE_SCHEMA,
                 SEQUENCES.SEQUENCE_NAME,
-                dataType.as("type_name"),
+                inline("BIGINT").as("type_name"),
                 inline(null, INTEGER).as("precision"),
                 inline(null, INTEGER).as("scale"),
                 inline(null, BIGINT).as("start_value"),
@@ -750,48 +626,6 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
                 SEQUENCES.SEQUENCE_NAME);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @Override
     protected List<SequenceDefinition> getSequences0() throws SQLException {
         List<SequenceDefinition> result = new ArrayList<>();
@@ -805,7 +639,7 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
                 DefaultDataTypeDefinition type = new DefaultDataTypeDefinition(
                     this,
                     schema,
-                    record.get("type_name", String.class)
+                    H2DataType.BIGINT.getTypeName()
                 );
 
                 result.add(new DefaultSequenceDefinition(
@@ -825,12 +659,7 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
         return result;
     }
 
-    @Override
-    public ResultQuery<Record6<String, String, String, String, String, Integer>> enums(List<String> schemas) {
-        return null;
-    }
-
-    static record TableRecord(String schema, String table, TableType type, String comment) {}
+    static final /* record */ class TableRecord { private final String schema; private final String table; private final TableType type; private final String comment; private final String source; public TableRecord(String schema, String table, TableType type, String comment, String source) { this.schema = schema; this.table = table; this.type = type; this.comment = comment; this.source = source; } public String schema() { return schema; } public String table() { return table; } public TableType type() { return type; } public String comment() { return comment; } public String source() { return source; } @Override public boolean equals(Object o) { if (!(o instanceof TableRecord)) return false; TableRecord other = (TableRecord) o; if (!java.util.Objects.equals(this.schema, other.schema)) return false; if (!java.util.Objects.equals(this.table, other.table)) return false; if (!java.util.Objects.equals(this.type, other.type)) return false; if (!java.util.Objects.equals(this.comment, other.comment)) return false; if (!java.util.Objects.equals(this.source, other.source)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.schema, this.table, this.type, this.comment, this.source); } @Override public String toString() { return new StringBuilder("TableRecord[").append("schema=").append(this.schema).append(", table=").append(this.table).append(", type=").append(this.type).append(", comment=").append(this.comment).append(", source=").append(this.source).append("]").toString(); } }
 
     @Override
     protected List<TableDefinition> getTables0() throws SQLException {
@@ -840,10 +669,14 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
                     TABLES.TABLE_SCHEMA,
                     TABLES.TABLE_NAME,
                     when(TABLES.TABLE_TYPE.eq(inline("VIEW")), inline(TableType.VIEW.name()))
-                       .when(TABLES.STORAGE_TYPE.like(inline("%TEMPORARY%")), inline(TableType.GLOBAL_TEMPORARY.name()))
+                       .when(TABLES.STORAGE_TYPE.like(inline("%TEMPORARY%")), inline(TableType.TEMPORARY.name()))
                        .else_(inline(TableType.TABLE.name())).convertFrom(TableType::valueOf).as("table_type"),
-                    TABLES.REMARKS)
+                    TABLES.REMARKS,
+                    VIEWS.VIEW_DEFINITION)
                 .from(TABLES)
+                .leftJoin(VIEWS)
+                    .on(TABLES.TABLE_SCHEMA.eq(VIEWS.TABLE_SCHEMA))
+                    .and(TABLES.TABLE_NAME.eq(VIEWS.TABLE_NAME))
                 .where(TABLES.TABLE_SCHEMA.in(getInputSchemata()))
                 .orderBy(
                     TABLES.TABLE_SCHEMA,
@@ -851,9 +684,12 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
                 .fetch(mapping(TableRecord::new))) {
 
             SchemaDefinition schema = getSchema(r.schema);
+            String source = r.source;
+            if (source != null && !source.toLowerCase().startsWith("create"))
+                source = "create view \"" + r.table + "\" as " + source;
 
             if (schema != null)
-                result.add(new H2TableDefinition(schema, r.table, r.comment, r.type, null));
+                result.add(new H2TableDefinition(schema, r.table, r.comment, r.type, source));
         }
 
         return result;
@@ -888,9 +724,9 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
                 .and(ROUTINES.ROUTINE_NAME.equal(ELEMENT_TYPES.OBJECT_NAME))
                 .and(ROUTINES.DTD_IDENTIFIER.equal(ELEMENT_TYPES.COLLECTION_TYPE_IDENTIFIER))
                 .where(ROUTINES.ROUTINE_SCHEMA.in(getInputSchemata()))
-                .and(tableValuedFunctionsAsRoutines()
-                    ? noCondition()
-                    : ROUTINES.DATA_TYPE.isNull().or(ROUTINES.DATA_TYPE.notLike(inline("ROW(%"))))
+                .and(tableValuedFunctions()
+                    ? ROUTINES.DATA_TYPE.isNull().or(ROUTINES.DATA_TYPE.notLike(inline("ROW(%")))
+                    : noCondition())
                 .orderBy(
                     ROUTINES.ROUTINE_SCHEMA,
                     ROUTINES.ROUTINE_NAME)
@@ -990,18 +826,18 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
     private void getInlineEnums2_0(List<EnumDefinition> result) {
         // TODO: Re-generate the H2 schema and use generated code to run this query
 
-        create().resultQuery("""
-                select c.TABLE_SCHEMA , c.TABLE_NAME , c.COLUMN_NAME , array_agg(ev.value_name order by ev.VALUE_ORDINAL)
-                from INFORMATION_SCHEMA.ENUM_VALUES ev
-                join INFORMATION_SCHEMA.COLUMNS c
-                on ev.OBJECT_SCHEMA = c.TABLE_SCHEMA
-                and ev.OBJECT_NAME = c.TABLE_NAME
-                and ev.ENUM_IDENTIFIER = c.DTD_IDENTIFIER
-                where ev.OBJECT_TYPE = 'TABLE'
-                and c.DOMAIN_NAME IS NULL
-                group by c.TABLE_SCHEMA , c.TABLE_NAME , c.COLUMN_NAME
-                order by 1, 2, 3
-                """)
+        create().resultQuery(("" +
+                "select c.TABLE_SCHEMA , c.TABLE_NAME , c.COLUMN_NAME , array_agg(ev.value_name order by ev.VALUE_ORDINAL)\n" +
+                "from INFORMATION_SCHEMA.ENUM_VALUES ev\n" +
+                "join INFORMATION_SCHEMA.COLUMNS c\n" +
+                "on ev.OBJECT_SCHEMA = c.TABLE_SCHEMA\n" +
+                "and ev.OBJECT_NAME = c.TABLE_NAME\n" +
+                "and ev.ENUM_IDENTIFIER = c.DTD_IDENTIFIER\n" +
+                "where ev.OBJECT_TYPE = 'TABLE'\n" +
+                "and c.DOMAIN_NAME IS NULL\n" +
+                "group by c.TABLE_SCHEMA , c.TABLE_NAME , c.COLUMN_NAME\n" +
+                "order by 1, 2, 3\n" +
+                ""))
             .coerce(COLUMNS.TABLE_SCHEMA, COLUMNS.TABLE_NAME, COLUMNS.COLUMN_NAME, arrayAgg(COLUMNS.COLUMN_NAME))
             .forEach(r -> {
                 SchemaDefinition schema = getSchema(r.value1());
@@ -1015,19 +851,24 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
                     ColumnDefinition columnDefinition = tableDefinition.getColumn(r.value3());
 
                     if (columnDefinition != null) {
-                        String name = r.value2() + "_" + r.value3();
-                        DefaultEnumDefinition definition = new DefaultEnumDefinition(schema, name, "", true);
 
-                        for (String string : r.value4())
-                            definition.addLiteral(string);
+                        // [#1137] Avoid generating enum classes for enum types that
+                        // are explicitly forced to another type
+                        if (getConfiguredForcedType(columnDefinition, columnDefinition.getType()) == null) {
+                            String name = r.value2() + "_" + r.value3();
+                            DefaultEnumDefinition definition = new DefaultEnumDefinition(schema, name, "");
 
-                        result.add(definition);
+                            for (String string : r.value4())
+                                definition.addLiteral(string);
+
+                            result.add(definition);
+                        }
                     }
                 }
             });
     }
 
-    static record EnumRecord (String schema, String table, String column, String type) {}
+    static final /* record */ class EnumRecord { private final String schema; private final String table; private final String column; private final String type; public EnumRecord(String schema, String table, String column, String type) { this.schema = schema; this.table = table; this.column = column; this.type = type; } public String schema() { return schema; } public String table() { return table; } public String column() { return column; } public String type() { return type; } @Override public boolean equals(Object o) { if (!(o instanceof EnumRecord)) return false; EnumRecord other = (EnumRecord) o; if (!java.util.Objects.equals(this.schema, other.schema)) return false; if (!java.util.Objects.equals(this.table, other.table)) return false; if (!java.util.Objects.equals(this.column, other.column)) return false; if (!java.util.Objects.equals(this.type, other.type)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.schema, this.table, this.column, this.type); } @Override public String toString() { return new StringBuilder("EnumRecord[").append("schema=").append(this.schema).append(", table=").append(this.table).append(", column=").append(this.column).append(", type=").append(this.type).append("]").toString(); } }
 
     private void getInlineEnums1_4(List<EnumDefinition> result) {
 
@@ -1060,20 +901,25 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
                 ColumnDefinition columnDefinition = tableDefinition.getColumn(r.column);
 
                 if (columnDefinition != null) {
-                    String name = r.table + "_" + r.column;
-                    DefaultEnumDefinition definition = new DefaultEnumDefinition(schema, name, "", true);
 
-                    CSVReader reader = new CSVReader(
-                        new StringReader(r.type.replaceAll("(^enum\\()|(\\)[^)]*$)", ""))
-                       ,','  // Separator
-                       ,'\'' // Quote character
-                       ,true // Strict quotes
-                    );
+                    // [#1137] Avoid generating enum classes for enum types that
+                    // are explicitly forced to another type
+                    if (getConfiguredForcedType(columnDefinition, columnDefinition.getType()) == null) {
+                        String name = r.table + "_" + r.column;
+                        DefaultEnumDefinition definition = new DefaultEnumDefinition(schema, name, "");
 
-                    for (String string : reader.next())
-                        definition.addLiteral(string);
+                        CSVReader reader = new CSVReader(
+                            new StringReader(r.type.replaceAll("(^enum\\()|(\\)[^)]*$)", ""))
+                           ,','  // Separator
+                           ,'\'' // Quote character
+                           ,true // Strict quotes
+                        );
 
-                    result.add(definition);
+                        for (String string : reader.next())
+                            definition.addLiteral(string);
+
+                        result.add(definition);
+                    }
                 }
             }
         }
@@ -1082,13 +928,13 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
     private void getDomainEnums2_0(List<EnumDefinition> result) {
         // TODO: Re-generate the H2 schema and use generated code to run this query
 
-        create().resultQuery("""
-                    select object_schema, object_name, array_agg(ev.value_name order by ev.VALUE_ORDINAL)
-                    from INFORMATION_SCHEMA.ENUM_VALUES ev
-                    where ev.OBJECT_TYPE = 'DOMAIN'
-                    group by object_schema, object_name
-                    order by 1, 2
-                    """)
+        create().resultQuery(("" +
+                    "select object_schema, object_name, array_agg(ev.value_name order by ev.VALUE_ORDINAL)\n" +
+                    "from INFORMATION_SCHEMA.ENUM_VALUES ev\n" +
+                    "where ev.OBJECT_TYPE = 'DOMAIN'\n" +
+                    "group by object_schema, object_name\n" +
+                    "order by 1, 2\n" +
+                    ""))
                 .coerce(COLUMNS.TABLE_SCHEMA, COLUMNS.TABLE_NAME, arrayAgg(COLUMNS.COLUMN_NAME))
                 .forEach(r -> {
 
@@ -1104,7 +950,7 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
         });
     }
 
-    static record DomainRecord (String schema, String name, String sql) {}
+    static final /* record */ class DomainRecord { private final String schema; private final String name; private final String sql; public DomainRecord(String schema, String name, String sql) { this.schema = schema; this.name = name; this.sql = sql; } public String schema() { return schema; } public String name() { return name; } public String sql() { return sql; } @Override public boolean equals(Object o) { if (!(o instanceof DomainRecord)) return false; DomainRecord other = (DomainRecord) o; if (!java.util.Objects.equals(this.schema, other.schema)) return false; if (!java.util.Objects.equals(this.name, other.name)) return false; if (!java.util.Objects.equals(this.sql, other.sql)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.schema, this.name, this.sql); } @Override public String toString() { return new StringBuilder("DomainRecord[").append("schema=").append(this.schema).append(", name=").append(this.name).append(", sql=").append(this.sql).append("]").toString(); } }
 
     private void getDomainEnums1_4(List<EnumDefinition> result) {
 
@@ -1151,7 +997,7 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
     }
 
     private List<DomainDefinition> getDomains2_0() {
-        Map<Name, DefaultDomainDefinition> result = new LinkedHashMap<>();
+        List<DomainDefinition> result = new ArrayList<>();
 
         Domains d = Tables.DOMAINS.as("d");
         DomainConstraints dc = DOMAIN_CONSTRAINTS.as("dc");
@@ -1162,53 +1008,45 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
                 d.DOMAIN_NAME,
                 d.DATA_TYPE,
                 d.CHARACTER_MAXIMUM_LENGTH,
-                coalesce(d.NUMERIC_PRECISION, d.DATETIME_PRECISION).as(d.NUMERIC_PRECISION),
+                coalesce(d.DATETIME_PRECISION, d.NUMERIC_PRECISION).as(d.NUMERIC_PRECISION),
                 d.NUMERIC_SCALE,
                 d.DOMAIN_DEFAULT,
                 dc.checkConstraints().CHECK_CLAUSE)
             .from(d)
-            .leftJoin(dc)
+                .leftJoin(dc)
                 .on(d.DOMAIN_CATALOG.eq(dc.DOMAIN_CATALOG))
                 .and(d.DOMAIN_SCHEMA.eq(dc.DOMAIN_SCHEMA))
                 .and(d.DOMAIN_NAME.eq(dc.DOMAIN_NAME))
             .where(d.DOMAIN_SCHEMA.in(getInputSchemata()))
             .and(d.DATA_TYPE.ne(inline("ENUM")))
-            .orderBy(
-                d.DOMAIN_SCHEMA,
-                d.DOMAIN_NAME,
-                dc.checkConstraints().CONSTRAINT_NAME
-            )
+            .orderBy(d.DOMAIN_SCHEMA, d.DOMAIN_NAME)
         ) {
-            String schemaName = record.get(d.DOMAIN_SCHEMA);
-            String domainName = record.get(d.DOMAIN_NAME);
-            String check = record.get(dc.checkConstraints().CHECK_CLAUSE);
+            SchemaDefinition schema = getSchema(record.get(d.DOMAIN_SCHEMA));
 
-            DefaultDomainDefinition domain = result.computeIfAbsent(name(schemaName, domainName), k -> {
-                SchemaDefinition schema = getSchema(schemaName);
+            DataTypeDefinition baseType = new DefaultDataTypeDefinition(
+                this,
+                schema,
+                record.get(d.DATA_TYPE),
+                record.get(d.CHARACTER_MAXIMUM_LENGTH),
+                record.get(d.NUMERIC_PRECISION),
+                record.get(d.NUMERIC_SCALE),
+                true,
+                record.get(d.DOMAIN_DEFAULT)
+            );
 
-                DataTypeDefinition baseType = new DefaultDataTypeDefinition(
-                    this,
-                    schema,
-                    record.get(d.DATA_TYPE),
-                    record.get(d.CHARACTER_MAXIMUM_LENGTH),
-                    record.get(d.NUMERIC_PRECISION),
-                    record.get(d.NUMERIC_SCALE),
-                    true,
-                    record.get(d.DOMAIN_DEFAULT)
-                );
+            DefaultDomainDefinition domain = new DefaultDomainDefinition(
+                schema,
+                record.get(d.DOMAIN_NAME),
+                baseType
+            );
 
-                return new DefaultDomainDefinition(
-                    schema,
-                    domainName,
-                    baseType
-                );
-            });
+            if (!StringUtils.isBlank(record.get(dc.checkConstraints().CHECK_CLAUSE)))
+                domain.addCheckClause(record.get(dc.checkConstraints().CHECK_CLAUSE));
 
-            if (!StringUtils.isBlank(check))
-                domain.addCheckClause(check);
+            result.add(domain);
         }
 
-        return new ArrayList<>(result.values());
+        return result;
     }
 
     private List<DomainDefinition> getDomains1_4() {
@@ -1263,12 +1101,6 @@ public class H2Database extends AbstractDatabase implements ResultQueryDatabase 
             result.add(domain);
         }
 
-        return result;
-    }
-
-    @Override
-    protected List<XMLSchemaCollectionDefinition> getXMLSchemaCollections0() throws SQLException {
-        List<XMLSchemaCollectionDefinition> result = new ArrayList<>();
         return result;
     }
 

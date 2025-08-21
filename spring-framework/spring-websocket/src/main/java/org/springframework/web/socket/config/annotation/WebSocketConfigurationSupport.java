@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,8 @@
 
 package org.springframework.web.socket.config.annotation;
 
-import org.jspecify.annotations.Nullable;
-
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.Assert;
@@ -36,17 +32,19 @@ import org.springframework.web.servlet.HandlerMapping;
  */
 public class WebSocketConfigurationSupport {
 
-	private @Nullable ServletWebSocketHandlerRegistry handlerRegistry;
+	@Nullable
+	private ServletWebSocketHandlerRegistry handlerRegistry;
+
+	@Nullable
+	private TaskScheduler scheduler;
 
 
 	@Bean
-	public HandlerMapping webSocketHandlerMapping(
-		@Qualifier("defaultSockJsSchedulerContainer") DefaultSockJsSchedulerContainer schedulerContainer) {
-
+	public HandlerMapping webSocketHandlerMapping(@Nullable TaskScheduler defaultSockJsTaskScheduler) {
 		ServletWebSocketHandlerRegistry registry = initHandlerRegistry();
 		if (registry.requiresTaskScheduler()) {
-			TaskScheduler scheduler = schedulerContainer.getScheduler();
-			Assert.notNull(scheduler, "TaskScheduler is required but not initialized");
+			TaskScheduler scheduler = defaultSockJsTaskScheduler;
+			Assert.notNull(scheduler, "Expected default TaskScheduler bean");
 			registry.setTaskScheduler(scheduler);
 		}
 		return registry.getHandlerMapping();
@@ -64,9 +62,8 @@ public class WebSocketConfigurationSupport {
 	}
 
 	/**
-	 * A container of the default TaskScheduler to use if none was registered
-	 * explicitly via {@link SockJsServiceRegistration#setTaskScheduler} as
-	 * follows:
+	 * The default TaskScheduler to use if none is registered explicitly via
+	 * {@link SockJsServiceRegistration#setTaskScheduler}:
 	 * <pre class="code">
 	 * &#064;Configuration
 	 * &#064;EnableWebSocket
@@ -83,48 +80,16 @@ public class WebSocketConfigurationSupport {
 	 * </pre>
 	 */
 	@Bean
-	DefaultSockJsSchedulerContainer defaultSockJsSchedulerContainer() {
-		return (initHandlerRegistry().requiresTaskScheduler() ?
-				new DefaultSockJsSchedulerContainer(initDefaultSockJsScheduler()) :
-				new DefaultSockJsSchedulerContainer(null));
+	@Nullable
+	public TaskScheduler defaultSockJsTaskScheduler() {
+		if (initHandlerRegistry().requiresTaskScheduler()) {
+			ThreadPoolTaskScheduler threadPoolScheduler = new ThreadPoolTaskScheduler();
+			threadPoolScheduler.setThreadNamePrefix("SockJS-");
+			threadPoolScheduler.setPoolSize(Runtime.getRuntime().availableProcessors());
+			threadPoolScheduler.setRemoveOnCancelPolicy(true);
+			this.scheduler = threadPoolScheduler;
+		}
+		return this.scheduler;
 	}
-
-	private ThreadPoolTaskScheduler initDefaultSockJsScheduler() {
-		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-		scheduler.setThreadNamePrefix("SockJS-");
-		scheduler.setPoolSize(Runtime.getRuntime().availableProcessors());
-		scheduler.setRemoveOnCancelPolicy(true);
-		return scheduler;
-	}
-
-
-	static class DefaultSockJsSchedulerContainer implements InitializingBean, DisposableBean {
-
-		private final @Nullable ThreadPoolTaskScheduler scheduler;
-
-		DefaultSockJsSchedulerContainer(@Nullable ThreadPoolTaskScheduler scheduler) {
-			this.scheduler = scheduler;
-		}
-
-		public @Nullable ThreadPoolTaskScheduler getScheduler() {
-			return this.scheduler;
-		}
-
-		@Override
-		public void afterPropertiesSet() throws Exception {
-			if (this.scheduler != null) {
-				this.scheduler.afterPropertiesSet();
-			}
-		}
-
-		@Override
-		public void destroy() throws Exception {
-			if (this.scheduler != null) {
-				this.scheduler.destroy();
-			}
-		}
-
-	}
-
 
 }

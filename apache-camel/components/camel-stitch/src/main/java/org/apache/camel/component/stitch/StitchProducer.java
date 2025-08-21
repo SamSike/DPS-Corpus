@@ -53,6 +53,11 @@ public class StitchProducer extends DefaultAsyncProducer {
     }
 
     @Override
+    protected void doStop() throws Exception {
+        super.doStop();
+    }
+
+    @Override
     public StitchEndpoint getEndpoint() {
         return (StitchEndpoint) super.getEndpoint();
     }

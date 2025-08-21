@@ -31,17 +31,8 @@ public class SagaActionUriDefinition extends SendDefinition<SagaActionUriDefinit
     public SagaActionUriDefinition() {
     }
 
-    public SagaActionUriDefinition(SagaActionUriDefinition source) {
-        super(source);
-    }
-
     public SagaActionUriDefinition(String uri) {
         super(uri);
-    }
-
-    @Override
-    public SagaActionUriDefinition copyDefinition() {
-        return new SagaActionUriDefinition(this);
     }
 
     @Override

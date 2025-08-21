@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -59,9 +59,7 @@ import java.sql.Timestamp;
 import java.util.BitSet;
 import java.util.Calendar;
 import java.util.Map;
-import java.util.function.Predicate;
 
-import org.jooq.conf.Settings;
 import org.jooq.tools.jdbc.DefaultResultSet;
 
 /**
@@ -581,7 +579,7 @@ final class DiagnosticsResultSet extends DefaultResultSet {
 
     @Override
     public final boolean wasNull() throws SQLException {
-        if (!wasPrimitive && check(Settings::isDiagnosticsUnnecessaryWasNullCall)) {
+        if (!wasPrimitive) {
             DefaultDiagnosticsContext ctx = ctx("ResultSet::wasNull was called unnecessarily.");
             ctx.resultSetUnnecessaryWasNullCall = true;
             ctx.resultSetColumnIndex = wasColumnIndex;
@@ -611,7 +609,7 @@ final class DiagnosticsResultSet extends DefaultResultSet {
     }
 
     private final void checkPrimitive() throws SQLException {
-        if (wasPrimitive && wasNullable && check(Settings::isDiagnosticsMissingWasNullCall)) {
+        if (wasPrimitive && wasNullable) {
             DefaultDiagnosticsContext ctx = ctx("ResultSet::wasNull was not called.");
             ctx.resultSetMissingWasNullCall = true;
             ctx.resultSetColumnIndex = wasColumnIndex;
@@ -630,12 +628,8 @@ final class DiagnosticsResultSet extends DefaultResultSet {
         read(super.findColumn(columnLabel));
     }
 
-    private final boolean check(Predicate<? super Settings> test) {
-        return connection.check(test);
-    }
-
     private final DefaultDiagnosticsContext ctx(String message) throws SQLException {
-        DefaultDiagnosticsContext ctx = new DefaultDiagnosticsContext(connection.configuration, message, sql);
+        DefaultDiagnosticsContext ctx = new DefaultDiagnosticsContext(message, sql);
 
         ctx.resultSet = super.getDelegate();
         ctx.resultSetWrapper = this;
@@ -748,24 +742,20 @@ final class DiagnosticsResultSet extends DefaultResultSet {
         checkPrimitive();
 
         try {
-            if (check(Settings::isDiagnosticsTooManyRowsFetched)) {
-                if (current < rows)
-                    super.absolute(current = rows);
+            if (current < rows)
+                super.absolute(current = rows);
 
-                DefaultDiagnosticsContext c1 = ctx("Too many rows fetched");
-                c1.resultSetClosing = true;
+            DefaultDiagnosticsContext c1 = ctx("Too many rows fetched");
+            c1.resultSetClosing = true;
 
-                if (super.next())
-                    connection.listeners.tooManyRowsFetched(c1);
-            }
+            if (super.next())
+                connection.listeners.tooManyRowsFetched(c1);
 
-            if (check(Settings::isDiagnosticsTooManyColumnsFetched)) {
-                DefaultDiagnosticsContext c2 = ctx("Too many columns fetched");
-                c2.resultSetClosing = true;
+            DefaultDiagnosticsContext c2 = ctx("Too many columns fetched");
+            c2.resultSetClosing = true;
 
-                if (read.cardinality() != columns)
-                    connection.listeners.tooManyColumnsFetched(c2);
-            }
+            if (read.cardinality() != columns)
+                connection.listeners.tooManyColumnsFetched(c2);
         }
         catch (SQLException ignore) {}
 

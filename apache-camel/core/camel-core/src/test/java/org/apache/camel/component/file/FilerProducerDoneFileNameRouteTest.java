@@ -17,7 +17,6 @@
 package org.apache.camel.component.file;
 
 import java.util.Properties;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.ContextTestSupport;
@@ -32,13 +31,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Unit test for writing done files
  */
 public class FilerProducerDoneFileNameRouteTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello" + UUID.randomUUID() + ".txt";
 
-    private final Properties myProp = new Properties();
+    private Properties myProp = new Properties();
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myProp", myProp);
         return jndi;
     }
@@ -47,21 +45,21 @@ public class FilerProducerDoneFileNameRouteTest extends ContextTestSupport {
     public void testProducerPlaceholderPrefixDoneFileName() throws Exception {
         getMockEndpoint("mock:result").expectedMessageCount(1);
 
-        template.sendBodyAndHeader("direct:start", "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader("direct:start", "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         assertMockEndpointsSatisfied();
 
         assertTrue(oneExchangeDone.matches(5, TimeUnit.SECONDS));
 
-        assertFileExists(testFile(TEST_FILE_NAME));
-        assertFileExists(testFile("done-" + TEST_FILE_NAME));
+        assertFileExists(testFile("hello.txt"));
+        assertFileExists(testFile("done-hello.txt"));
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 myProp.put("myDir", testDirectory().toString());
 
                 context.getPropertiesComponent().setLocation("ref:myProp");

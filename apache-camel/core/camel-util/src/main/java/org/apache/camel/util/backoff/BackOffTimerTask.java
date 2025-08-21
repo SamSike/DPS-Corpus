@@ -22,15 +22,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 
 import org.apache.camel.util.function.ThrowingFunction;
 
-public final class BackOffTimerTask implements BackOffTimer.Task, Runnable {
-    private final Lock lock = new ReentrantLock();
-    private final BackOffTimer timer;
+final class BackOffTimerTask implements BackOffTimer.Task, Runnable {
     private final BackOff backOff;
     private final ScheduledExecutorService scheduler;
     private final ThrowingFunction<BackOffTimer.Task, Boolean, Exception> function;
@@ -44,11 +40,9 @@ public final class BackOffTimerTask implements BackOffTimer.Task, Runnable {
     private long currentElapsedTime;
     private long lastAttemptTime;
     private long nextAttemptTime;
-    private Throwable cause;
 
-    public BackOffTimerTask(BackOffTimer timer, BackOff backOff, ScheduledExecutorService scheduler,
-                            ThrowingFunction<BackOffTimer.Task, Boolean, Exception> function) {
-        this.timer = timer;
+    BackOffTimerTask(BackOff backOff, ScheduledExecutorService scheduler,
+                     ThrowingFunction<BackOffTimer.Task, Boolean, Exception> function) {
         this.backOff = backOff;
         this.scheduler = scheduler;
         this.status = Status.Active;
@@ -68,11 +62,6 @@ public final class BackOffTimerTask implements BackOffTimer.Task, Runnable {
     // *****************************
     // Properties
     // *****************************
-
-    @Override
-    public String getName() {
-        return timer.getName();
-    }
 
     @Override
     public BackOff getBackOff() {
@@ -115,20 +104,14 @@ public final class BackOffTimerTask implements BackOffTimer.Task, Runnable {
     }
 
     @Override
-    public Throwable getException() {
-        return cause;
-    }
-
-    @Override
     public void reset() {
         this.currentAttempts = 0;
         this.currentDelay = 0;
         this.currentElapsedTime = 0;
-        this.firstAttemptTime = BackOff.NEVER;
+        this.firstAttemptTime = 0;
         this.lastAttemptTime = BackOff.NEVER;
         this.nextAttemptTime = BackOff.NEVER;
         this.status = Status.Active;
-        this.cause = null;
     }
 
     @Override
@@ -142,23 +125,12 @@ public final class BackOffTimerTask implements BackOffTimer.Task, Runnable {
 
         // signal task completion on cancel.
         complete(null);
-
-        // the task is cancelled and should not be restarted so remove from timer
-        if (timer != null) {
-            timer.remove(this);
-        }
     }
 
     @Override
     public void whenComplete(BiConsumer<BackOffTimer.Task, Throwable> whenCompleted) {
-        lock.lock();
-        try {
-            if (backOff.isRemoveOnComplete()) {
-                timer.remove(this);
-            }
+        synchronized (this.consumers) {
             consumers.add(whenCompleted);
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -191,7 +163,6 @@ public final class BackOffTimerTask implements BackOffTimer.Task, Runnable {
                 } else {
                     stop();
 
-                    status = Status.Completed;
                     // if the function return false no more attempts should
                     // be made so stop the context.
                     complete(null);
@@ -199,7 +170,6 @@ public final class BackOffTimerTask implements BackOffTimer.Task, Runnable {
             } catch (Exception e) {
                 stop();
 
-                status = Status.Failed;
                 complete(e);
             }
         }
@@ -216,12 +186,8 @@ public final class BackOffTimerTask implements BackOffTimer.Task, Runnable {
     }
 
     void complete(Throwable throwable) {
-        this.cause = throwable;
-        lock.lock();
-        try {
+        synchronized (this.consumers) {
             consumers.forEach(c -> c.accept(this, throwable));
-        } finally {
-            lock.unlock();
         }
     }
 
@@ -233,7 +199,7 @@ public final class BackOffTimerTask implements BackOffTimer.Task, Runnable {
      * Return the number of milliseconds to wait before retrying the operation or ${@link BackOff#NEVER} to indicate
      * that no further attempt should be made.
      */
-    public long next() {
+    long next() {
         // A call to next when currentDelay is set to NEVER has no effects
         // as this means that either the timer is exhausted or it has explicit
         // stopped
@@ -262,8 +228,7 @@ public final class BackOffTimerTask implements BackOffTimer.Task, Runnable {
     @Override
     public String toString() {
         return "BackOffTimerTask["
-               + "name=" + timer.getName()
-               + ", status=" + status
+               + "status=" + status
                + ", currentAttempts=" + currentAttempts
                + ", currentDelay=" + currentDelay
                + ", currentElapsedTime=" + currentElapsedTime

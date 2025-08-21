@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.Ordered;
+import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.accept.ContentNegotiationManager;
@@ -53,15 +52,19 @@ import org.springframework.web.servlet.view.script.ScriptTemplateViewResolver;
  */
 public class ViewResolverRegistry {
 
-	private final ContentNegotiationManager contentNegotiationManager;
+	@Nullable
+	private ContentNegotiationManager contentNegotiationManager;
 
-	private final @Nullable ApplicationContext applicationContext;
+	@Nullable
+	private ApplicationContext applicationContext;
 
-	private @Nullable ContentNegotiatingViewResolver contentNegotiatingResolver;
+	@Nullable
+	private ContentNegotiatingViewResolver contentNegotiatingResolver;
 
 	private final List<ViewResolver> viewResolvers = new ArrayList<>(4);
 
-	private @Nullable Integer order;
+	@Nullable
+	private Integer order;
 
 
 	/**
@@ -86,7 +89,7 @@ public class ViewResolverRegistry {
 	/**
 	 * Enable use of a {@link ContentNegotiatingViewResolver} to front all other
 	 * configured view resolvers and select among all selected Views based on
-	 * media types requested by the client (for example, in the Accept header).
+	 * media types requested by the client (e.g. in the Accept header).
 	 * <p>If invoked multiple times the provided default views will be added to
 	 * any other default views that may have been configured already.
 	 * @see ContentNegotiatingViewResolver#setDefaultViews
@@ -98,7 +101,7 @@ public class ViewResolverRegistry {
 	/**
 	 * Enable use of a {@link ContentNegotiatingViewResolver} to front all other
 	 * configured view resolvers and select among all selected Views based on
-	 * media types requested by the client (for example, in the Accept header).
+	 * media types requested by the client (e.g. in the Accept header).
 	 * <p>If invoked multiple times the provided default views will be added to
 	 * any other default views that may have been configured already.
 	 * @see ContentNegotiatingViewResolver#setDefaultViews

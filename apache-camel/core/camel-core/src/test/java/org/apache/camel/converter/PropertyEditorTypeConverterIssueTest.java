@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class PropertyEditorTypeConverterIssueTest extends ContextTestSupport {
 
     @Test
-    public void testPropertyEditorTypeConverter() {
+    public void testPropertyEditorTypeConverter() throws Exception {
         // test that converters a custom object (MyBean) to a String which
         // causes
         // PropertyEditorTypeConverter to be used. And this test times how fast
@@ -40,6 +40,6 @@ public class PropertyEditorTypeConverterIssueTest extends ContextTestSupport {
             log.debug(s);
             assertNotNull(s);
         }
-        log.info("Time taken: {}", watch.taken());
+        log.info("Time taken: " + watch.taken());
     }
 }

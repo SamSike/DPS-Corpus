@@ -39,10 +39,10 @@ public class SetBodyTryCatchIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").setHeader("foo", constant("123")).doTry().setHeader("bar", constant("456")).to("mock:bar")
                         .bean(SetBodyTryCatchIssueTest.class, "doSomething")
                         .doCatch(IllegalArgumentException.class)
@@ -52,7 +52,7 @@ public class SetBodyTryCatchIssueTest extends ContextTestSupport {
         };
     }
 
-    public static void doSomething(Exchange exchange) {
+    public static void doSomething(Exchange exchange) throws Exception {
         Map<String, Object> headers = exchange.getIn().getHeaders();
 
         exchange.getMessage().setBody("Bye World");

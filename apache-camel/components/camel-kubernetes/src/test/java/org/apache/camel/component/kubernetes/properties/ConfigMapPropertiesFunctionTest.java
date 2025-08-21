@@ -49,16 +49,16 @@ public class ConfigMapPropertiesFunctionTest extends KubernetesTestSupport {
 
         KubernetesClient client = new KubernetesClientBuilder().withConfig(builder.build()).build();
 
-        Map<String, String> data = Map.of("foo.txt", "123", "bar.txt", "Moes Bar");
+        Map<String, String> data = Map.of("foo", "123", "bar", "Moes Bar");
         ConfigMap cm = new ConfigMapBuilder().editOrNewMetadata().withName("myconfig").endMetadata().withData(data).build();
-        client.resource(cm).serverSideApply();
+        client.resource(cm).createOrReplace();
 
         try (ConfigMapPropertiesFunction cmf = new ConfigMapPropertiesFunction()) {
             cmf.setClient(client);
             cmf.setCamelContext(context);
             cmf.start();
 
-            String out = cmf.apply("myconfig/foo.txt");
+            String out = cmf.apply("myconfig/foo");
             Assertions.assertEquals("123", out);
 
             out = cmf.apply("myconfig/unknown");
@@ -67,10 +67,7 @@ public class ConfigMapPropertiesFunctionTest extends KubernetesTestSupport {
             out = cmf.apply("myconfig/unknown:444");
             Assertions.assertEquals("444", out);
 
-            out = cmf.apply("myconfig/bar.txt");
-            Assertions.assertEquals("Moes Bar", out);
-
-            out = cmf.apply("myconfig/bar.txt:Boes Bar");
+            out = cmf.apply("myconfig/bar");
             Assertions.assertEquals("Moes Bar", out);
         } finally {
             client.resource(cm).delete();

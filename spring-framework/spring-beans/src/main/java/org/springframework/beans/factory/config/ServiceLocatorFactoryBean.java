@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;
@@ -32,6 +30,7 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -84,22 +83,22 @@ import org.springframework.util.StringUtils;
  * <p>A sample config in an XML-based
  * {@link org.springframework.beans.factory.BeanFactory} might look as follows:
  *
- * <pre class="code">&lt;beans&gt;
+ * <pre class="code">&lt;beans>
  *
- *   &lt;!-- Prototype bean since we have state --&gt;
- *   &lt;bean id="myService" class="a.b.c.MyService" singleton="false"/&gt;
+ *   &lt;!-- Prototype bean since we have state -->
+ *   &lt;bean id="myService" class="a.b.c.MyService" singleton="false"/>
  *
- *   &lt;!-- will lookup the above 'myService' bean by *TYPE* --&gt;
+ *   &lt;!-- will lookup the above 'myService' bean by *TYPE* -->
  *   &lt;bean id="myServiceFactory"
- *            class="org.springframework.beans.factory.config.ServiceLocatorFactoryBean"&gt;
- *     &lt;property name="serviceLocatorInterface" value="a.b.c.ServiceFactory"/&gt;
- *   &lt;/bean&gt;
+ *            class="org.springframework.beans.factory.config.ServiceLocatorFactoryBean">
+ *     &lt;property name="serviceLocatorInterface" value="a.b.c.ServiceFactory"/>
+ *   &lt;/bean>
  *
- *   &lt;bean id="clientBean" class="a.b.c.MyClientBean"&gt;
- *     &lt;property name="myServiceFactory" ref="myServiceFactory"/&gt;
- *   &lt;/bean&gt;
+ *   &lt;bean id="clientBean" class="a.b.c.MyClientBean">
+ *     &lt;property name="myServiceFactory" ref="myServiceFactory"/>
+ *   &lt;/bean>
  *
- *&lt;/beans&gt;</pre>
+ *&lt;/beans></pre>
  *
  * <p>The attendant {@code MyClientBean} class implementation might then
  * look something like this:
@@ -136,22 +135,22 @@ import org.springframework.util.StringUtils;
  * <p>A sample config in an XML-based
  * {@link org.springframework.beans.factory.BeanFactory} might look as follows:
  *
- * <pre class="code">&lt;beans&gt;
+ * <pre class="code">&lt;beans>
  *
- *   &lt;!-- Prototype beans since we have state (both extend MyService) --&gt;
- *   &lt;bean id="specialService" class="a.b.c.SpecialService" singleton="false"/&gt;
- *   &lt;bean id="anotherService" class="a.b.c.AnotherService" singleton="false"/&gt;
+ *   &lt;!-- Prototype beans since we have state (both extend MyService) -->
+ *   &lt;bean id="specialService" class="a.b.c.SpecialService" singleton="false"/>
+ *   &lt;bean id="anotherService" class="a.b.c.AnotherService" singleton="false"/>
  *
  *   &lt;bean id="myServiceFactory"
- *            class="org.springframework.beans.factory.config.ServiceLocatorFactoryBean"&gt;
- *     &lt;property name="serviceLocatorInterface" value="a.b.c.ServiceFactory"/&gt;
- *   &lt;/bean&gt;
+ *            class="org.springframework.beans.factory.config.ServiceLocatorFactoryBean">
+ *     &lt;property name="serviceLocatorInterface" value="a.b.c.ServiceFactory"/>
+ *   &lt;/bean>
  *
- *   &lt;bean id="clientBean" class="a.b.c.MyClientBean"&gt;
- *     &lt;property name="myServiceFactory" ref="myServiceFactory"/&gt;
- *   &lt;/bean&gt;
+ *   &lt;bean id="clientBean" class="a.b.c.MyClientBean">
+ *     &lt;property name="myServiceFactory" ref="myServiceFactory"/>
+ *   &lt;/bean>
  *
- *&lt;/beans&gt;</pre>
+ *&lt;/beans></pre>
  *
  * <p>The attendant {@code MyClientBean} class implementation might then
  * look something like this:
@@ -191,15 +190,20 @@ import org.springframework.util.StringUtils;
  */
 public class ServiceLocatorFactoryBean implements FactoryBean<Object>, BeanFactoryAware, InitializingBean {
 
-	private @Nullable Class<?> serviceLocatorInterface;
+	@Nullable
+	private Class<?> serviceLocatorInterface;
 
-	private @Nullable Constructor<Exception> serviceLocatorExceptionConstructor;
+	@Nullable
+	private Constructor<Exception> serviceLocatorExceptionConstructor;
 
-	private @Nullable Properties serviceMappings;
+	@Nullable
+	private Properties serviceMappings;
 
-	private @Nullable ListableBeanFactory beanFactory;
+	@Nullable
+	private ListableBeanFactory beanFactory;
 
-	private @Nullable Object proxy;
+	@Nullable
+	private Object proxy;
 
 
 	/**
@@ -246,11 +250,11 @@ public class ServiceLocatorFactoryBean implements FactoryBean<Object>, BeanFacto
 
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-		if (!(beanFactory instanceof ListableBeanFactory lbf)) {
+		if (!(beanFactory instanceof ListableBeanFactory)) {
 			throw new FatalBeanException(
 					"ServiceLocatorFactoryBean needs to run in a BeanFactory that is a ListableBeanFactory");
 		}
-		this.beanFactory = lbf;
+		this.beanFactory = (ListableBeanFactory) beanFactory;
 	}
 
 	@Override
@@ -311,7 +315,7 @@ public class ServiceLocatorFactoryBean implements FactoryBean<Object>, BeanFacto
 	 */
 	protected Exception createServiceLocatorException(Constructor<Exception> exceptionConstructor, BeansException cause) {
 		Class<?>[] paramTypes = exceptionConstructor.getParameterTypes();
-		@Nullable Object[] args = new Object[paramTypes.length];
+		Object[] args = new Object[paramTypes.length];
 		for (int i = 0; i < paramTypes.length; i++) {
 			if (String.class == paramTypes[i]) {
 				args[i] = cause.getMessage();
@@ -325,12 +329,13 @@ public class ServiceLocatorFactoryBean implements FactoryBean<Object>, BeanFacto
 
 
 	@Override
-	public @Nullable Object getObject() {
+	@Nullable
+	public Object getObject() {
 		return this.proxy;
 	}
 
 	@Override
-	public @Nullable Class<?> getObjectType() {
+	public Class<?> getObjectType() {
 		return this.serviceLocatorInterface;
 	}
 
@@ -388,7 +393,7 @@ public class ServiceLocatorFactoryBean implements FactoryBean<Object>, BeanFacto
 		/**
 		 * Check whether a service id was passed in.
 		 */
-		private String tryGetBeanName(Object @Nullable [] args) {
+		private String tryGetBeanName(@Nullable Object[] args) {
 			String beanName = "";
 			if (args != null && args.length == 1 && args[0] != null) {
 				beanName = args[0].toString();

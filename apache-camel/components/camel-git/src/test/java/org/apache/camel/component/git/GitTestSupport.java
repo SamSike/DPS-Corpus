@@ -17,25 +17,25 @@
 package org.apache.camel.component.git;
 
 import java.io.File;
-import java.util.UUID;
+import java.io.IOException;
 
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.errors.ConfigInvalidException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.util.SystemReader;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class GitTestSupport extends CamelTestSupport {
 
-    private final File localRepo = new File("target/test-repo-" + UUID.randomUUID());
-    private Repository repository;
-
-    private final File cloneRepo = new File("target/clone-repo-" + UUID.randomUUID());
+    public final String gitLocalRepo = "testRepo";
 
     public final String filenameToAdd = "filetest.txt";
 
@@ -57,39 +57,41 @@ public class GitTestSupport extends CamelTestSupport {
 
     public final String remoteUriTest = "https://github.com/oscerd/json-webserver-example.git";
 
+    @BeforeEach
     @Override
-    public void doPostTearDown() {
-        deleteDirectory(localRepo);
-        deleteDirectory(cloneRepo);
+    public void setUp() throws Exception {
+        super.setUp();
+        File localPath = File.createTempFile(gitLocalRepo, "");
+        localPath.delete();
+        File path = new File(gitLocalRepo);
+        path.deleteOnExit();
     }
 
-    public File getGitDir() {
-        return localRepo;
+    @AfterEach
+    @Override
+    public void tearDown() throws Exception {
+        super.tearDown();
+        File path = new File(gitLocalRepo);
+        deleteDirectory(path);
     }
 
-    public File getCloneDir() {
-        return cloneRepo;
+    protected Repository getTestRepository()
+            throws IOException, IllegalStateException, GitAPIException, ConfigInvalidException {
+        File gitRepo = new File(gitLocalRepo, ".git");
+        SystemReader.getInstance().getUserConfig().clear(); //clears user config in JGit context, that way there are no environmental contamination that may affect the tests
+        Git.init().setDirectory(new File(gitLocalRepo, "")).setInitialBranch("master").setBare(false).call();
+        // now open the resulting repository with a FileRepositoryBuilder
+        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+        Repository repo = builder.setGitDir(gitRepo).readEnvironment() // scan
+                // environment
+                // GIT_*
+                // variables
+                .findGitDir() // scan up the file system tree
+                .build();
+        return repo;
     }
 
-    protected Repository getTestRepository() throws Exception {
-        if (repository == null) {
-            File gitRepo = new File(localRepo, ".git");
-            SystemReader.getInstance().getUserConfig().clear(); //clears user config in JGit context, that way there are no environmental contamination that may affect the tests
-            Git.init().setDirectory(localRepo).setInitialBranch("master").setBare(false).call();
-            // now open the resulting repository with a FileRepositoryBuilder
-            FileRepositoryBuilder builder = new FileRepositoryBuilder();
-            Repository repo = builder.setGitDir(gitRepo).readEnvironment() // scan
-                    // environment
-                    // GIT_*
-                    // variables
-                    .findGitDir() // scan up the file system tree
-                    .build();
-            repository = repo;
-        }
-        return repository;
-    }
-
-    protected Git getGitTestRepository() throws Exception {
+    protected Git getGitTestRepository() throws IOException, IllegalStateException, GitAPIException, ConfigInvalidException {
         return new Git(getTestRepository());
     }
 

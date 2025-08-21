@@ -3,7 +3,9 @@
  * Provides an abstract base class for reactive transaction manager implementations,
  * and a transactional operator plus callback for transaction demarcation.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.transaction.reactive;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

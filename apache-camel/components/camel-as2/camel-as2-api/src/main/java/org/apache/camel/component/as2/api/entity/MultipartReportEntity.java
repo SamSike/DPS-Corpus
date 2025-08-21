@@ -16,24 +16,21 @@
  */
 package org.apache.camel.component.as2.api.entity;
 
-import java.io.IOException;
-
-import org.apache.hc.core5.http.ContentType;
+import org.apache.camel.component.as2.api.AS2MimeType;
+import org.apache.http.entity.ContentType;
 
 public class MultipartReportEntity extends MultipartMimeEntity {
 
-    public MultipartReportEntity(ContentType contentType,
-                                 String contentTransferEncoding,
+    public MultipartReportEntity(String charset,
                                  boolean isMainBody,
                                  String boundary) {
 
-        super(contentType, contentTransferEncoding, isMainBody, boundary);
+        super(ContentType.create(AS2MimeType.MULTIPART_REPORT, charset), isMainBody, boundary);
 
     }
 
-    @Override
-    public void close() throws IOException {
-        // do nothing
+    protected MultipartReportEntity() {
+
     }
 
 }

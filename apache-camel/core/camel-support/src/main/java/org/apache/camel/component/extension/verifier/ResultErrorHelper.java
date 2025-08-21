@@ -45,28 +45,16 @@ public final class ResultErrorHelper {
 
     /**
      *
-     * @param      parameterName the required option
-     * @param      parameters    the parameters
-     * @return                   an optional error
-     *
-     * @deprecated               use {@link #requiresOption(Map, String)} instead
-     */
-    @Deprecated
-    public static Optional<VerificationError> requiresOption(String parameterName, Map<String, Object> parameters) {
-        return Optional.ofNullable(requiresOption(parameters, parameterName));
-    }
-
-    /**
-     *
      * @param  parameterName the required option
-     * @param  parameters    the parameters
-     * @return               an error or null
+     * @param  parameters    the
+     * @return
      */
-    public static VerificationError requiresOption(Map<String, Object> parameters, String parameterName) {
+    public static Optional<VerificationError> requiresOption(String parameterName, Map<String, Object> parameters) {
         if (ObjectHelper.isEmpty(parameters.get(parameterName))) {
-            return ResultErrorBuilder.withMissingOption(parameterName).build();
+            return Optional.of(ResultErrorBuilder.withMissingOption(parameterName).build());
         }
-        return null;
+
+        return Optional.empty();
     }
 
     /**
@@ -166,8 +154,8 @@ public final class ResultErrorHelper {
     }
 
     static Set<String> parameters(final Set<String> options) {
+        final Set<String> withoutExclusionMark = options.stream().map(o -> o.replaceFirst("!", "")).collect(Collectors.toSet());
 
-        return options.stream().map(o -> o.replaceFirst("!", ""))
-                .collect(Collectors.toCollection(TreeSet::new));
+        return new TreeSet<>(withoutExclusionMark);
     }
 }

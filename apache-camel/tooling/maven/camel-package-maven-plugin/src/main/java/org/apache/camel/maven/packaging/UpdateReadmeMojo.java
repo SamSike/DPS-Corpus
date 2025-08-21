@@ -37,8 +37,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-
 import org.apache.camel.tooling.model.AnnotationModel;
 import org.apache.camel.tooling.model.ArtifactModel;
 import org.apache.camel.tooling.model.BaseModel;
@@ -57,7 +55,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.codehaus.plexus.build.BuildContext;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ASTNode;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
@@ -65,6 +62,7 @@ import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Javadoc;
 import org.jboss.forge.roaster.model.source.AnnotationElementSource;
 import org.jboss.forge.roaster.model.source.JavaAnnotationSource;
 import org.mvel2.templates.TemplateRuntime;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 import static org.apache.camel.tooling.util.PackageHelper.findCamelDirectory;
 
@@ -130,13 +128,8 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
 
     protected List<Path> sourceRoots;
 
-    @Inject
-    public UpdateReadmeMojo(MavenProjectHelper projectHelper, BuildContext buildContext) {
-        super(projectHelper, buildContext);
-    }
-
     @Override
-    public void execute(MavenProject project)
+    public void execute(MavenProject project, MavenProjectHelper projectHelper, BuildContext buildContext)
             throws MojoFailureException, MojoExecutionException {
         buildDir = new File(project.getBuild().getDirectory());
         componentDocDir = new File(project.getBasedir(), "src/main/docs");
@@ -145,7 +138,7 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
         languageDocDir2 = new File(project.getBasedir(), "/src/main/docs/modules/languages/pages");
         File engine = findCamelDirectory(project.getBasedir(), "camel-core-engine");
         eipDocDir = new File(engine, "/src/main/docs/modules/eips/pages");
-        super.execute(project);
+        super.execute(project, projectHelper, buildContext);
     }
 
     @Override
@@ -397,7 +390,7 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
         File coreDir = findCamelDirectory(project.getBasedir(), "camel-core-model");
 
         if (coreDir.isDirectory()) {
-            File target = new File(coreDir, "src/generated/resources/META-INF/org/apache/camel/model");
+            File target = new File(coreDir, "src/generated/resources/org/apache/camel/model");
             PackageHelper.findJsonFiles(target, jsonFiles);
         }
 
@@ -503,7 +496,7 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
             // find manual attributes
             Map<String, String> manualAttributes = new LinkedHashMap<>();
             for (String line : lines) {
-                if (!RELOCATE_MANUAL_ATTRIBUTES && line.isEmpty()) {
+                if (!RELOCATE_MANUAL_ATTRIBUTES && line.length() == 0) {
                     break;
                 }
                 for (Pattern attrName : MANUAL_ATTRIBUTES) {
@@ -537,7 +530,6 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
             if (model.isDeprecated()) {
                 newLines.add(":deprecated: *deprecated*");
             }
-            newLines.add(":tabs-sync-option:");
             if (model instanceof ComponentModel) {
                 newLines.add(":component-header: " + generateComponentHeader((ComponentModel) model));
                 if (Arrays.asList(model.getLabel().split(",")).contains("core")) {
@@ -567,7 +559,7 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
             boolean copy = false;
             if (updated || RELOCATE_MANUAL_ATTRIBUTES) {
                 outer: for (String line : lines) {
-                    if (!copy && line.isBlank()) {
+                    if (!copy && line.trim().isEmpty()) {
                         copy = true;
                     } else if (copy) {
 
@@ -803,7 +795,8 @@ public class UpdateReadmeMojo extends AbstractGeneratorMojo {
     }
 
     private OtherModel generateOtherModel(String json) {
-        return JsonMapper.generateOtherModel(json);
+        OtherModel other = JsonMapper.generateOtherModel(json);
+        return other;
     }
 
     private DataFormatModel generateDataFormatModel(String json) {

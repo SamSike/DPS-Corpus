@@ -17,54 +17,14 @@
 
 package org.apache.camel.test.infra.aws2.services;
 
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.apache.camel.test.infra.aws.common.services.AWSService;
 import org.apache.camel.test.infra.common.services.SimpleTestServiceBuilder;
-import org.apache.camel.test.infra.common.services.SingletonService;
 
 public final class AWSServiceFactory {
     private AWSServiceFactory() {
 
-    }
-
-    private static class SingletonAWSService extends SingletonService<AWSService> implements AWSService {
-        public SingletonAWSService(AWSService service, String name) {
-            super(service, name);
-        }
-
-        @Override
-        public Properties getConnectionProperties() {
-            return getService().getConnectionProperties();
-        }
-
-        @Override
-        public String amazonAWSHost() {
-            return getService().amazonAWSHost();
-        }
-
-        @Override
-        public String region() {
-            return getService().region();
-        }
-
-        @Override
-        public String protocol() {
-            return getService().protocol();
-        }
-
-        @Override
-        public String accessKey() {
-            return getService().accessKey();
-        }
-
-        @Override
-        public String secretKey() {
-            return getService().secretKey();
-        }
     }
 
     public static <T extends AWSService> SimpleTestServiceBuilder<T> builder() {
@@ -73,7 +33,7 @@ public final class AWSServiceFactory {
 
     private static AWSService createService(Supplier<AWSService> supplier) {
         return builder()
-                .addRemoteMapping(AWSTestServices.AWSRemoteTestService::new)
+                .addRemoteMapping(AWSRemoteService::new)
                 .addLocalMapping(supplier)
                 .withPropertyNameFormat("%s-service.instance.type")
                 .build();
@@ -81,98 +41,53 @@ public final class AWSServiceFactory {
 
     public static AWSService createKinesisService() {
         return builder()
-                .addRemoteMapping(AWSTestServices.AWSRemoteTestService::new)
-                .addLocalMapping(AWSTestServices.AWSKinesisLocalContainerTestService::new)
+                .addRemoteMapping(AWSRemoteService::new)
+                .addLocalMapping(AWSKinesisLocalContainerService::new)
                 .withPropertyNameFormat("%s-service.kinesis.instance.type")
                 .build();
     }
 
     public static AWSService createSQSService() {
-        return createService(AWSTestServices.AWSSQSLocalContainerTestService::new);
+        return createService(AWSSQSLocalContainerService::new);
     }
 
     public static AWSService createS3Service() {
-        return createService(AWSTestServices.AWSS3LocalContainerTestService::new);
+        return createService(AWSS3LocalContainerService::new);
     }
 
     public static AWSService createSNSService() {
-        return createService(AWSTestServices.AWSSNSLocalContainerTestService::new);
-    }
-
-    public static AWSService createConfigService() {
-        return createService(AWSTestServices.AWSConfigLocalContainerTestService::new);
+        return createService(AWSSNSLocalContainerService::new);
     }
 
     public static AWSService createCloudWatchService() {
-        return createService(AWSTestServices.AWSCloudWatchLocalContainerTestService::new);
+        return createService(AWSCloudWatchLocalContainerService::new);
     }
 
     public static AWSService createEC2Service() {
-        return createService(AWSTestServices.AWSEC2LocalContainerTestService::new);
+        return createService(AWSEC2LocalContainerService::new);
     }
 
     public static AWSService createEventBridgeService() {
-        return createService(AWSTestServices.AWSEventBridgeLocalContainerTestService::new);
+        return createService(AWSEventBridgeLocalContainerService::new);
     }
 
     public static AWSService createIAMService() {
-        return createService(AWSTestServices.AWSIAMLocalContainerTestService::new);
+        return createService(AWSIAMLocalContainerService::new);
     }
 
     public static AWSService createKMSService() {
-        return createService(AWSTestServices.AWSKMSLocalContainerTestService::new);
+        return createService(AWSKMSLocalContainerService::new);
     }
 
     public static AWSService createLambdaService() {
-        return createService(AWSTestServices.AWSLambdaLocalContainerTestService::new);
+        return createService(AWSLambdaLocalContainerService::new);
     }
 
     public static AWSService createSTSService() {
-        return createService(AWSTestServices.AWSSTSLocalContainerTestService::new);
+        return createService(AWSSTSLocalContainerService::new);
     }
 
     public static AWSService createDynamodbService() {
-        return createService(AWSTestServices.AWSDynamodbLocalContainerTestService::new);
-    }
-
-    public static AWSService createSecretsManagerService() {
-        return createService(AWSTestServices.AWSSecretsManagerLocalContainerTestService::new);
-    }
-
-    public static AWSService createSingletonDynamoDBService() {
-        return SingletonServiceHolder.getInstance(new AWSTestServices.AWSDynamodbLocalContainerTestService(), "dynamoDB");
-    }
-
-    public static AWSService createSingletonS3Service() {
-        return SingletonServiceHolder.getInstance(new AWSTestServices.AWSS3LocalContainerTestService(), "s3");
-    }
-
-    public static AWSService createSingletonSQSService() {
-        return SingletonServiceHolder.getInstance(new AWSTestServices.AWSSQSLocalContainerTestService(), "sqs");
-    }
-
-    public static AWSService createSingletonEventBridgeService() {
-        return SingletonServiceHolder.getInstance(new AWSTestServices.AWSEventBridgeLocalContainerTestService(), "eventBridge");
-    }
-
-    public static AWSService createSingletonKinesisService() {
-        return SingletonServiceHolder.getInstance(new AWSTestServices.AWSKinesisLocalContainerTestService(), "kinesis");
-    }
-
-    private static class SingletonServiceHolder {
-        private static final Map<String, AWSService> INSTANCES_HOLDER = new ConcurrentHashMap<>();
-
-        public synchronized static AWSService getInstance(AWSService service, String name) {
-            if (INSTANCES_HOLDER.get(name) == null) {
-                SimpleTestServiceBuilder<AWSService> instance = builder();
-                instance.addLocalMapping(() -> new SingletonAWSService(service, name))
-                        .addRemoteMapping(AWSTestServices.AWSRemoteTestService::new)
-                        .build();
-
-                INSTANCES_HOLDER.put(name, instance.build());
-            }
-
-            return INSTANCES_HOLDER.get(name);
-        }
+        return createService(AWSDynamodbLocalContainerService::new);
     }
 }

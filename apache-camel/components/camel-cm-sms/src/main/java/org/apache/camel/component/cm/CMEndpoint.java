@@ -22,30 +22,25 @@ import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.Processor;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.util.StringHelper;
-import org.apache.hc.client5.http.classic.HttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 
 /**
  * Send SMS messages via <a href="https://www.cmtelecom.com/">CM SMS Gateway</a>.
  */
 @UriEndpoint(firstVersion = "2.18.0", scheme = "cm-sms", title = "CM SMS Gateway", syntax = "cm-sms:host",
              category = { Category.MOBILE }, producerOnly = true)
-public class CMEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
+public class CMEndpoint extends DefaultEndpoint {
 
     @UriPath
     @Metadata(required = true)
     private String host;
     @UriParam
     private CMConfiguration configuration = new CMConfiguration();
-    private final CloseableHttpClient httpClient = HttpClientBuilder.create().build();
 
     public CMEndpoint(final String uri, final CMComponent component) {
         super(uri, component);
@@ -75,22 +70,12 @@ public class CMEndpoint extends DefaultEndpoint implements EndpointServiceLocati
         StringHelper.notEmpty(token, "productToken");
 
         UUID uuid = UUID.fromString(token);
-        return new CMProducer(this, new CMSenderOneMessageImpl(httpClient, getCMUrl(), uuid));
+        return new CMProducer(this, new CMSenderOneMessageImpl(getCMUrl(), uuid));
     }
 
     @Override
     public Consumer createConsumer(final Processor processor) throws Exception {
         throw new UnsupportedOperationException("Consumer not supported");
-    }
-
-    @Override
-    public String getServiceUrl() {
-        return host;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "http";
     }
 
     public CMConfiguration getConfiguration() {
@@ -108,15 +93,6 @@ public class CMEndpoint extends DefaultEndpoint implements EndpointServiceLocati
     @Override
     public CMComponent getComponent() {
         return (CMComponent) super.getComponent();
-    }
-
-    @Override
-    protected void doStop() throws Exception {
-        httpClient.close();
-    }
-
-    public HttpClient getHttpClient() {
-        return httpClient;
     }
 
     public String getHost() {

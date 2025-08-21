@@ -17,15 +17,13 @@
 package org.apache.camel.impl.console;
 
 import java.io.LineNumberReader;
-import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.support.LoggerHelper;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.json.JsonObject;
 import org.apache.camel.util.json.Jsoner;
@@ -42,39 +40,30 @@ public final class ConsoleHelper {
             return null;
         }
         Integer lineNumber = extractSourceLocationLineNumber(location);
-        try {
-            location = LoggerHelper.stripSourceLocationLineNumber(location);
-            Resource resource = PluginHelper.getResourceLoader(camelContext).resolveResource(location);
-            if (resource != null) {
-                return loadSourceAsJson(resource.getReader(), lineNumber);
-            }
-        } catch (Exception e) {
-            // ignore
-        }
-
-        return Collections.EMPTY_LIST;
-    }
-
-    public static List<JsonObject> loadSourceAsJson(Reader reader, Integer lineNumber) {
         List<JsonObject> code = new ArrayList<>();
         try {
-            LineNumberReader lnr = new LineNumberReader(reader);
-            int i = 0;
-            String t;
-            do {
-                t = lnr.readLine();
-                if (t != null) {
-                    i++;
-                    JsonObject c = new JsonObject();
-                    c.put("line", i);
-                    c.put("code", Jsoner.escape(t));
-                    if (lineNumber != null && lineNumber == i) {
-                        c.put("match", true);
+            location = LoggerHelper.stripSourceLocationLineNumber(location);
+            Resource resource = camelContext.adapt(ExtendedCamelContext.class).getResourceLoader()
+                    .resolveResource(location);
+            if (resource != null) {
+                LineNumberReader reader = new LineNumberReader(resource.getReader());
+                int i = 0;
+                String t;
+                do {
+                    t = reader.readLine();
+                    if (t != null) {
+                        i++;
+                        JsonObject c = new JsonObject();
+                        c.put("line", i);
+                        c.put("code", Jsoner.escape(t));
+                        if (lineNumber != null && lineNumber == i) {
+                            c.put("match", true);
+                        }
+                        code.add(c);
                     }
-                    code.add(c);
-                }
-            } while (t != null);
-            IOHelper.close(lnr);
+                } while (t != null);
+                IOHelper.close(reader);
+            }
         } catch (Exception e) {
             // ignore
         }
@@ -89,7 +78,8 @@ public final class ConsoleHelper {
 
         try {
             location = LoggerHelper.stripSourceLocationLineNumber(location);
-            Resource resource = PluginHelper.getResourceLoader(camelContext).resolveResource(location);
+            Resource resource = camelContext.adapt(ExtendedCamelContext.class).getResourceLoader()
+                    .resolveResource(location);
             if (resource != null) {
                 LineNumberReader reader = new LineNumberReader(resource.getReader());
                 int i = 0;

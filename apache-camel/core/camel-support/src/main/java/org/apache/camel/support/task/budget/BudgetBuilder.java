@@ -14,18 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.camel.support.task.budget;
 
 /**
  * An interface for budget builders
- *
+ * 
  * @param <T>
  */
 public interface BudgetBuilder<T extends Budget> {
-
     /**
      * Build the budget
-     *
+     * 
      * @return the budget that was built
      */
     T build();

@@ -26,10 +26,10 @@ import org.apache.camel.support.DefaultProducer;
 import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import twitter4j.Query;
+import twitter4j.QueryResult;
+import twitter4j.Status;
 import twitter4j.Twitter;
-import twitter4j.v1.Query;
-import twitter4j.v1.QueryResult;
-import twitter4j.v1.Status;
 
 public class SearchProducer extends DefaultProducer {
 
@@ -59,11 +59,11 @@ public class SearchProducer extends DefaultProducer {
             throw new CamelExchangeException("No keywords to use for query", exchange);
         }
 
-        Query query = Query.of(queryKeywords);
+        Query query = new Query(queryKeywords);
 
         // filter of older tweets
         if (endpoint.getProperties().isFilterOld() && myLastId != 0) {
-            query.sinceId(myLastId);
+            query.setSinceId(myLastId);
         }
 
         // since id
@@ -72,13 +72,13 @@ public class SearchProducer extends DefaultProducer {
             sinceId = endpoint.getProperties().getSinceId();
         }
         if (ObjectHelper.isNotEmpty(sinceId)) {
-            query.sinceId(sinceId);
+            query.setSinceId(sinceId);
         }
 
         // max id
         Long maxId = exchange.getIn().getHeader(TwitterConstants.TWITTER_MAXID, Long.class);
         if (ObjectHelper.isNotEmpty(maxId)) {
-            query.maxId(maxId);
+            query.setMaxId(maxId);
         }
 
         // language
@@ -88,7 +88,7 @@ public class SearchProducer extends DefaultProducer {
         }
 
         if (ObjectHelper.isNotEmpty(lang)) {
-            query.lang(lang);
+            query.setLang(lang);
         }
 
         // number of elements per page
@@ -97,7 +97,7 @@ public class SearchProducer extends DefaultProducer {
             count = endpoint.getProperties().getCount();
         }
         if (ObjectHelper.isNotEmpty(count)) {
-            query.count(count);
+            query.setCount(count);
         }
 
         // number of pages
@@ -108,7 +108,7 @@ public class SearchProducer extends DefaultProducer {
 
         Twitter twitter = endpoint.getProperties().getTwitter();
         LOG.debug("Searching twitter with keywords: {}", queryKeywords);
-        QueryResult results = twitter.v1().search().search(query);
+        QueryResult results = twitter.search(query);
         List<Status> list = results.getTweets();
 
         for (int i = 1; i < numberOfPages; i++) {
@@ -116,7 +116,7 @@ public class SearchProducer extends DefaultProducer {
                 break;
             }
             LOG.debug("Fetching page");
-            results = twitter.v1().search().search(results.nextQuery());
+            results = twitter.search(results.nextQuery());
             list.addAll(results.getTweets());
         }
 

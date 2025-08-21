@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -74,9 +74,11 @@ final class Dual extends AbstractTable<Record> implements QOM.Dual {
 
 
 
-    private static final Name          DUAL_DB2       = DSL.unquotedName("SYSIBM", "DUAL");
-    private static final Name          DUAL_SYBASE    = DSL.unquotedName("SYS", "DUMMY");
-    private static final Name          DUAL_ORACLE    = DSL.unquotedName("DUAL");
+
+
+
+
+
     private static final Name          DUAL_FIREBIRD  = DSL.unquotedName("RDB$DATABASE");
     private static final Name          DUAL_CUBRID    = DSL.unquotedName("db_root");
     private static final Name          DUAL_DERBY     = DSL.unquotedName("SYSIBM", "SYSDUMMY1");
@@ -91,13 +93,6 @@ final class Dual extends AbstractTable<Record> implements QOM.Dual {
         super(TableOptions.expression(), N_DUAL, (Schema) null);
 
         this.force = force;
-    }
-
-    static final boolean isDual(Name name) {
-        return DUAL_ORACLE.equalsIgnoreCase(name)
-            || DUAL_SYBASE.equalsIgnoreCase(name)
-            || DUAL_DB2.equalsIgnoreCase(name)
-            || DUAL_DERBY.equalsIgnoreCase(name);
     }
 
     @Override
@@ -143,7 +138,6 @@ final class Dual extends AbstractTable<Record> implements QOM.Dual {
                 case H2:
                 case POSTGRES:
                 case SQLITE:
-                case TRINO:
                 case YUGABYTEDB:
                     break;
 
@@ -152,7 +146,7 @@ final class Dual extends AbstractTable<Record> implements QOM.Dual {
                     break;
 
                 case HSQLDB:
-                    ctx.sql('(').visit(K_VALUES).sql(" (1)) ").visit(K_AS).sql(' ').visit(N_DUAL).sql(" (").visit(N_DUAL).sql(')');
+                    ctx.sql('(').visit(K_VALUES).sql("(1)) ").visit(K_AS).sql(' ').visit(N_DUAL).sql('(').visit(N_DUAL).sql(')');
                     break;
 
                 case CUBRID:

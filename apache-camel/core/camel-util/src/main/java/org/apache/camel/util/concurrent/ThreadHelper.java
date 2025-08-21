@@ -30,13 +30,13 @@ public final class ThreadHelper {
 
     private static final Pattern INVALID_PATTERN = Pattern.compile(".*#\\w+#.*");
 
-    private static final AtomicLong THREAD_COUNTER = new AtomicLong();
+    private static AtomicLong threadCounter = new AtomicLong();
 
     private ThreadHelper() {
     }
 
     private static long nextThreadCounter() {
-        return THREAD_COUNTER.incrementAndGet();
+        return threadCounter.incrementAndGet();
     }
 
     /**
@@ -54,10 +54,11 @@ public final class ThreadHelper {
         }
 
         // we support #longName# and #name# as name placeholders
+        String longName = name;
         String shortName = name.contains("?") ? StringHelper.before(name, "?") : name;
 
         // replace tokens
-        String answer = StringHelper.replaceFirst(pattern, "#longName#", name);
+        String answer = StringHelper.replaceFirst(pattern, "#longName#", longName);
         if (shortName != null) {
             answer = StringHelper.replaceFirst(answer, "#name#", shortName);
         }

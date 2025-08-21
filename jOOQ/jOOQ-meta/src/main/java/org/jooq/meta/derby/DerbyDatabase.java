@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -48,31 +48,26 @@ import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.not;
 import static org.jooq.impl.DSL.nullif;
-import static org.jooq.impl.DSL.position;
-import static org.jooq.impl.DSL.substring;
+import static org.jooq.impl.DSL.one;
 import static org.jooq.impl.DSL.when;
 import static org.jooq.impl.SQLDataType.BIGINT;
+import static org.jooq.impl.SQLDataType.BOOLEAN;
 import static org.jooq.impl.SQLDataType.INTEGER;
 import static org.jooq.impl.SQLDataType.NUMERIC;
 import static org.jooq.impl.SQLDataType.VARCHAR;
-import static org.jooq.meta.derby.sys.Tables.SYSALIASES;
 import static org.jooq.meta.derby.sys.Tables.SYSCHECKS;
-import static org.jooq.meta.derby.sys.Tables.SYSCOLUMNS;
 import static org.jooq.meta.derby.sys.Tables.SYSCONGLOMERATES;
 import static org.jooq.meta.derby.sys.Tables.SYSCONSTRAINTS;
 import static org.jooq.meta.derby.sys.Tables.SYSKEYS;
 import static org.jooq.meta.derby.sys.Tables.SYSSCHEMAS;
 import static org.jooq.meta.derby.sys.Tables.SYSSEQUENCES;
 import static org.jooq.meta.derby.sys.Tables.SYSTABLES;
-import static org.jooq.meta.derby.sys.Tables.SYSTRIGGERS;
 import static org.jooq.meta.derby.sys.Tables.SYSVIEWS;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -80,8 +75,6 @@ import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Record12;
-import org.jooq.Record14;
-import org.jooq.Record4;
 import org.jooq.Record5;
 import org.jooq.Record6;
 import org.jooq.Result;
@@ -89,16 +82,12 @@ import org.jooq.ResultQuery;
 import org.jooq.SQLDialect;
 import org.jooq.SortOrder;
 import org.jooq.TableOptions.TableType;
-// ...
-// ...
-import org.jooq.exception.ControlFlowSignal;
 import org.jooq.impl.DSL;
-import org.jooq.impl.QOM.ForeignKeyRule;
+import org.jooq.impl.SQLDataType;
 import org.jooq.meta.AbstractDatabase;
 import org.jooq.meta.AbstractIndexDefinition;
 import org.jooq.meta.ArrayDefinition;
 import org.jooq.meta.CatalogDefinition;
-import org.jooq.meta.ColumnDefinition;
 import org.jooq.meta.DataTypeDefinition;
 import org.jooq.meta.DefaultCheckConstraintDefinition;
 import org.jooq.meta.DefaultDataTypeDefinition;
@@ -116,9 +105,6 @@ import org.jooq.meta.SchemaDefinition;
 import org.jooq.meta.SequenceDefinition;
 import org.jooq.meta.TableDefinition;
 import org.jooq.meta.UDTDefinition;
-import org.jooq.meta.XMLSchemaCollectionDefinition;
-import org.jooq.meta.derby.sys.tables.Sysaliases;
-import org.jooq.meta.derby.sys.tables.Systriggers;
 
 /**
  * @author Lukas Eder
@@ -195,36 +181,15 @@ public class DerbyDatabase extends AbstractDatabase implements ResultQueryDataba
         Field<String> ukName = field("pc.constraintname", String.class);
         Field<String> ukTable = field("pt.tablename", String.class);
         Field<String> ukSchema = field("ps.schemaname", String.class);
-        Field<String> fkDeleteRule = field("f.deleterule", String.class);
-        Field<String> fkUpdateRule = field("f.updaterule", String.class);
 
-        for (Record record : create()
-            .select(
+        for (Record record : create().select(
                 fkName,
                 fkTable,
                 fkSchema,
                 fkDescriptor,
                 ukName,
                 ukTable,
-                ukSchema,
-
-                // [#9736] See https://db.apache.org/derby/docs/10.16/ref/rrefsistabs13420.html
-                //         As of 10.17, D is parsed and reported, but not implemented nor documented
-                case_(fkDeleteRule)
-                    .when(inline("R"), inline(ForeignKeyRule.NO_ACTION.name()))
-                    .when(inline("S"), inline(ForeignKeyRule.RESTRICT.name()))
-                    .when(inline("C"), inline(ForeignKeyRule.CASCADE.name()))
-                    .when(inline("U"), inline(ForeignKeyRule.SET_NULL.name()))
-                    .when(inline("D"), inline(ForeignKeyRule.SET_DEFAULT.name()))
-                    .as("deleterule"),
-                case_(fkUpdateRule)
-                    .when(inline("R"), inline(ForeignKeyRule.NO_ACTION.name()))
-                    .when(inline("S"), inline(ForeignKeyRule.RESTRICT.name()))
-                    .when(inline("C"), inline(ForeignKeyRule.CASCADE.name()))
-                    .when(inline("U"), inline(ForeignKeyRule.SET_NULL.name()))
-                    .when(inline("D"), inline(ForeignKeyRule.SET_DEFAULT.name()))
-                    .as("updaterule")
-            )
+                ukSchema)
             .from("sys.sysconstraints   fc")
             .join("sys.sysforeignkeys   f ").on("f.constraintid = fc.constraintid")
             .join("sys.sysconglomerates fg").on("fg.conglomerateid = f.conglomerateid")
@@ -235,8 +200,7 @@ public class DerbyDatabase extends AbstractDatabase implements ResultQueryDataba
             .join("sys.sysschemas       ps").on("ps.schemaid = pt.schemaid")
             // [#6797] The cast is necessary if a non-standard collation is used
             .where("cast(fc.type as varchar(32672)) = 'F'")
-            .orderBy(fkSchema, fkTable, fkName)
-        ) {
+            .fetch()) {
 
             SchemaDefinition foreignKeySchema = getSchema(record.get(fkSchema));
             SchemaDefinition uniqueKeySchema = getSchema(record.get(ukSchema));
@@ -249,8 +213,6 @@ public class DerbyDatabase extends AbstractDatabase implements ResultQueryDataba
 
             TableDefinition foreignKeyTable = getTable(foreignKeySchema, foreignKeyTableName);
             TableDefinition uniqueKeyTable = getTable(uniqueKeySchema, uniqueKeyTableName);
-            ForeignKeyRule deleteRule = record.get("deleterule", ForeignKeyRule.class);
-            ForeignKeyRule updateRule = record.get("updaterule", ForeignKeyRule.class);
 
             if (foreignKeyTable != null && uniqueKeyTable != null)
                 for (int i = 0; i < foreignKeyIndexes.size(); i++)
@@ -259,10 +221,7 @@ public class DerbyDatabase extends AbstractDatabase implements ResultQueryDataba
                         foreignKeyTable,
                         foreignKeyTable.getColumn(foreignKeyIndexes.get(i)),
                         uniqueKeyName,
-                        uniqueKeyTable,
-                        true,
-                        deleteRule,
-                        updateRule
+                        uniqueKeyTable
                     );
         }
     }
@@ -314,51 +273,6 @@ public class DerbyDatabase extends AbstractDatabase implements ResultQueryDataba
         }
     }
 
-    Map<TableDefinition, List<ColumnDefinition>> lookupColumnByIndex;
-
-    private ColumnDefinition lookupColumnByIndex(TableDefinition table, int index) {
-        if (lookupColumnByIndex == null) {
-            lookupColumnByIndex = new HashMap<>();
-
-            for (Record r : create()
-                .select(
-                    SYSTABLES.sysschemas().SCHEMANAME,
-                    SYSTABLES.TABLENAME,
-                    SYSCOLUMNS.COLUMNNAME,
-                    SYSCOLUMNS.COLUMNNUMBER)
-                .from(SYSCOLUMNS)
-                .join(SYSTABLES).on(SYSCOLUMNS.REFERENCEID.eq(SYSTABLES.TABLEID))
-                .where(SYSTABLES.sysschemas().SCHEMANAME.in(getInputSchemata()))
-                .orderBy(
-                    SYSTABLES.sysschemas().SCHEMANAME,
-                    SYSTABLES.TABLENAME,
-                    SYSCOLUMNS.COLUMNNUMBER)
-            ) {
-                SchemaDefinition s = getSchema(r.get(SYSTABLES.sysschemas().SCHEMANAME));
-
-                if (s != null) {
-                    TableDefinition t = getTable(s, r.get(SYSTABLES.TABLENAME));
-
-                    if (t != null) {
-                        ColumnDefinition c = t.getColumn(r.get(SYSCOLUMNS.COLUMNNAME));
-
-                        // [#16237] ColumnDefinition can be null if it's hidden or excluded
-                        lookupColumnByIndex.computeIfAbsent(t, x -> new ArrayList<>()).add(c);
-                    }
-                }
-            }
-        }
-
-        List<ColumnDefinition> list = lookupColumnByIndex.get(table);
-        if (list == null)
-            return null;
-
-        if (list.size() <= index)
-            return null;
-
-        return list.get(index);
-    }
-
     @Override
     protected List<IndexDefinition> getIndexes0() throws SQLException {
         List<IndexDefinition> result = new ArrayList<>();
@@ -397,37 +311,26 @@ public class DerbyDatabase extends AbstractDatabase implements ResultQueryDataba
             if (descriptor == null)
                 continue indexLoop;
 
-            class SkipIndex extends ControlFlowSignal {}
+            result.add(new AbstractIndexDefinition(tableSchema, indexName, table, descriptor.toUpperCase().contains("UNIQUE")) {
+                List<IndexColumnDefinition> indexColumns = new ArrayList<>();
 
-            try {
-                result.add(new AbstractIndexDefinition(tableSchema, indexName, table, descriptor.toUpperCase().contains("UNIQUE")) {
-                    List<IndexColumnDefinition> indexColumns = new ArrayList<>();
-
-                    {
-                        List<Integer> columnIndexes = decode(descriptor);
-                        for (int i = 0; i < columnIndexes.size(); i++) {
-                            ColumnDefinition column = lookupColumnByIndex(table, columnIndexes.get(i));
-
-                            // [#16237] If column is hidden or excluded
-                            if (column == null)
-                                throw new SkipIndex();
-
-                            indexColumns.add(new DefaultIndexColumnDefinition(
-                                this,
-                                column,
-                                SortOrder.ASC,
-                                i + 1
-                            ));
-                        }
+                {
+                    List<Integer> columnIndexes = decode(descriptor);
+                    for (int i = 0; i < columnIndexes.size(); i++) {
+                        indexColumns.add(new DefaultIndexColumnDefinition(
+                            this,
+                            table.getColumn(columnIndexes.get(i)),
+                            SortOrder.ASC,
+                            i + 1
+                        ));
                     }
+                }
 
-                    @Override
-                    protected List<IndexColumnDefinition> getIndexColumns0() {
-                        return indexColumns;
-                    }
-                });
-            }
-            catch (SkipIndex ignore) {}
+                @Override
+                protected List<IndexColumnDefinition> getIndexColumns0() {
+                    return indexColumns;
+                }
+            });
         }
 
         return result;
@@ -449,39 +352,10 @@ public class DerbyDatabase extends AbstractDatabase implements ResultQueryDataba
     }
 
     @Override
-    public ResultQuery<Record4<String, String, String, String>> sources(List<String> schemas) {
-        return create()
-            .select(
-                inline(null, VARCHAR).cast(VARCHAR).as("catalog"),
-                SYSSCHEMAS.SCHEMANAME,
-                SYSTABLES.TABLENAME,
-                SYSVIEWS.VIEWDEFINITION)
-            .from(SYSTABLES)
-
-            // [#17280] Avoid implicit joining (i.e. aliasing) SYSSCHEMAS due to a bug in Derby:
-            //          https://issues.apache.org/jira/browse/DERBY-7170
-            .join(SYSSCHEMAS)
-                .on(SYSTABLES.SCHEMAID.eq(SYSSCHEMAS.SCHEMAID))
-            .leftJoin(SYSVIEWS)
-                .on(SYSTABLES.TABLEID.eq(SYSVIEWS.TABLEID))
-
-            // [#6797] The cast is necessary if a non-standard collation is used
-            .where(SYSSCHEMAS.SCHEMANAME.cast(VARCHAR(32672)).in(schemas))
-            .orderBy(
-                SYSSCHEMAS.SCHEMANAME,
-                SYSTABLES.TABLENAME);
-    }
-
-    @Override
-    public ResultQuery<Record5<String, String, String, String, String>> comments(List<String> schemas) {
-        return null;
-    }
-
-    @Override
     public ResultQuery<Record12<String, String, String, String, Integer, Integer, Long, Long, BigDecimal, BigDecimal, Boolean, Long>> sequences(List<String> schemas) {
         return create().select(
                     inline(null, VARCHAR).cast(VARCHAR).as("catalog"),
-                    SYSSCHEMAS.SCHEMANAME,
+                    SYSSEQUENCES.sysschemas().SCHEMANAME,
                     SYSSEQUENCES.SEQUENCENAME,
                     SYSSEQUENCES.SEQUENCEDATATYPE,
                     inline(null, INTEGER).cast(INTEGER).as("numeric_precision"),
@@ -502,16 +376,10 @@ public class DerbyDatabase extends AbstractDatabase implements ResultQueryDataba
                     inline(null, BIGINT).cast(BIGINT).as("cache")
                 )
                 .from(SYSSEQUENCES)
-
-                // [#17280] Avoid implicit joining (i.e. aliasing) SYSSCHEMAS due to a bug in Derby:
-                //          https://issues.apache.org/jira/browse/DERBY-7170
-                .join(SYSSCHEMAS)
-                    .on(SYSSEQUENCES.SCHEMAID.eq(SYSSCHEMAS.SCHEMAID))
-
                 // [#6797] The cast is necessary if a non-standard collation is used
-                .where(SYSSCHEMAS.SCHEMANAME.cast(VARCHAR(32672)).in(schemas))
+                .where(SYSSEQUENCES.sysschemas().SCHEMANAME.cast(VARCHAR(32672)).in(schemas))
                 .orderBy(
-                    SYSSCHEMAS.SCHEMANAME,
+                    SYSSEQUENCES.sysschemas().SCHEMANAME,
                     SYSSEQUENCES.SEQUENCENAME);
     }
 
@@ -520,7 +388,7 @@ public class DerbyDatabase extends AbstractDatabase implements ResultQueryDataba
         List<SequenceDefinition> result = new ArrayList<>();
 
         for (Record record : sequences(getInputSchemata())) {
-            SchemaDefinition schema = getSchema(record.get(SYSSCHEMAS.SCHEMANAME));
+            SchemaDefinition schema = getSchema(record.get(SYSSEQUENCES.sysschemas().SCHEMANAME));
 
             DataTypeDefinition type = new DefaultDataTypeDefinition(
                 this,
@@ -546,42 +414,32 @@ public class DerbyDatabase extends AbstractDatabase implements ResultQueryDataba
     }
 
     @Override
-    public ResultQuery<Record6<String, String, String, String, String, Integer>> enums(List<String> schemas) {
-        return null;
-    }
-
-    @Override
     protected List<TableDefinition> getTables0() throws SQLException {
         List<TableDefinition> result = new ArrayList<>();
 
         for (Record record : create().select(
-            SYSSCHEMAS.SCHEMANAME,
+                    SYSTABLES.sysschemas().SCHEMANAME,
                     SYSTABLES.TABLENAME,
                     SYSTABLES.TABLEID,
                     when(SYSTABLES.TABLETYPE.eq(inline("V")), inline(TableType.VIEW.name()))
-                        .else_(inline(TableType.TABLE.name())).as("table_type"))
+                        .else_(inline(TableType.TABLE.name())).as("table_type"),
+                    SYSVIEWS.VIEWDEFINITION)
                 .from(SYSTABLES)
-
-                // [#17280] Avoid implicit joining (i.e. aliasing) SYSSCHEMAS due to a bug in Derby:
-                //          https://issues.apache.org/jira/browse/DERBY-7170
-                .join(SYSSCHEMAS)
-                    .on(SYSTABLES.SCHEMAID.eq(SYSSCHEMAS.SCHEMAID))
-
+                .leftJoin(SYSVIEWS)
+                    .on(SYSTABLES.TABLEID.eq(SYSVIEWS.TABLEID))
                 // [#6797] The cast is necessary if a non-standard collation is used
-                .where(SYSSCHEMAS.SCHEMANAME.cast(VARCHAR(32672)).in(getInputSchemata()))
-
-                // [#9574] Exclude aliases
-                .and(SYSTABLES.TABLETYPE.ne(inline("A")))
+                .where(SYSTABLES.sysschemas().SCHEMANAME.cast(VARCHAR(32672)).in(getInputSchemata()))
                 .orderBy(
-                    SYSSCHEMAS.SCHEMANAME,
+                    SYSTABLES.sysschemas().SCHEMANAME,
                     SYSTABLES.TABLENAME)) {
 
-            SchemaDefinition schema = getSchema(record.get(SYSSCHEMAS.SCHEMANAME));
+            SchemaDefinition schema = getSchema(record.get(SYSTABLES.sysschemas().SCHEMANAME));
             String name = record.get(SYSTABLES.TABLENAME);
             String id = record.get(SYSTABLES.TABLEID);
             TableType tableType = record.get("table_type", TableType.class);
+            String source = record.get(SYSVIEWS.VIEWDEFINITION);
 
-            DerbyTableDefinition table = new DerbyTableDefinition(schema, name, id, tableType, null);
+            DerbyTableDefinition table = new DerbyTableDefinition(schema, name, id, tableType, source);
             result.add(table);
         }
 
@@ -597,72 +455,6 @@ public class DerbyDatabase extends AbstractDatabase implements ResultQueryDataba
     @Override
     protected List<DomainDefinition> getDomains0() throws SQLException {
         List<DomainDefinition> result = new ArrayList<>();
-        return result;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
-    protected List<XMLSchemaCollectionDefinition> getXMLSchemaCollections0() throws SQLException {
-        List<XMLSchemaCollectionDefinition> result = new ArrayList<>();
         return result;
     }
 

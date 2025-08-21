@@ -51,6 +51,10 @@ public class RouteContextProcessorManualTest extends ContextTestSupport {
 
     @Test
     public void testForkAndJoin() throws InterruptedException {
+        // enable the other test method for manual testing
+    }
+
+    public void xxxTestForkAndJoin() throws InterruptedException {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(NUMBER_OF_MESSAGES);
 
@@ -67,11 +71,11 @@ public class RouteContextProcessorManualTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
 
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 Processor myProcessor = new RandomSleepProcessor();
                 from("seda:fork?concurrentConsumers=" + CONCURRENCY).process(myProcessor).to("seda:join");
                 from("seda:join").resequence(header("seqnum")).stream().capacity(CAPACITY).timeout(TIMEOUT).to("mock:result");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,16 +68,16 @@ public class Component {
 
 	int add(int... args) {
 		int sum = 0;
-		for (int arg : args) {
-			sum += arg;
+		for (int i = 0; i < args.length; i++) {
+			sum += args[i];
 		}
 		return sum;
 	}
 
 	int multiply(Integer... args) {
 		int product = 1;
-		for (Integer arg : args) {
-			product *= arg;
+		for (int i = 0; i < args.length; i++) {
+			product *= args[i];
 		}
 		return product;
 	}

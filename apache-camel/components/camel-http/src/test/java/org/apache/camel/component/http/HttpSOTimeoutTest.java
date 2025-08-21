@@ -18,9 +18,11 @@ package org.apache.camel.component.http;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.component.http.handler.DelayValidationHandler;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.http.HttpMethods.GET;
@@ -30,27 +32,32 @@ public class HttpSOTimeoutTest extends BaseHttpTest {
 
     private HttpServer localServer;
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+    public void setUp() throws Exception {
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext())
-                .register("/", new DelayValidationHandler(GET.name(), null, null, getExpectedContent(), 2000)).create();
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext())
+                .registerHandler("/", new DelayValidationHandler(GET.name(), null, null, getExpectedContent(), 2000)).create();
         localServer.start();
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() {
+    public void tearDown() throws Exception {
+        super.tearDown();
+
         if (localServer != null) {
             localServer.stop();
         }
     }
 
     @Test
-    public void httpGet() {
-        Exchange exchange = template.request("http://localhost:"
-                                             + localServer.getLocalPort() + "?httpClient.responseTimeout=5000",
+    public void httpGet() throws Exception {
+        Exchange exchange = template.request("http://" + localServer.getInetAddress().getHostName() + ":"
+                                             + localServer.getLocalPort() + "?httpClient.SocketTimeout=5000",
                 exchange1 -> {
                 });
 
@@ -58,9 +65,9 @@ public class HttpSOTimeoutTest extends BaseHttpTest {
     }
 
     @Test
-    public void httpGetShouldThrowASocketTimeoutException() {
-        Exchange reply = template.request("http://localhost:"
-                                          + localServer.getLocalPort() + "?httpClient.responseTimeout=1000",
+    public void httpGetShouldThrowASocketTimeoutException() throws Exception {
+        Exchange reply = template.request("http://" + localServer.getInetAddress().getHostName() + ":"
+                                          + localServer.getLocalPort() + "?httpClient.SocketTimeout=1000",
                 exchange -> {
                 });
         Exception e = reply.getException();
@@ -68,9 +75,9 @@ public class HttpSOTimeoutTest extends BaseHttpTest {
     }
 
     @Test
-    public void httpGetUriOption() {
-        HttpEndpoint endpoint = context.getEndpoint("http://localhost:"
-                                                    + localServer.getLocalPort() + "?responseTimeout=5000",
+    public void httpGetUriOption() throws Exception {
+        HttpEndpoint endpoint = context.getEndpoint("http://" + localServer.getInetAddress().getHostName() + ":"
+                                                    + localServer.getLocalPort() + "?socketTimeout=5000",
                 HttpEndpoint.class);
         Exchange exchange = template.request(endpoint,
                 exchange1 -> {
@@ -78,13 +85,13 @@ public class HttpSOTimeoutTest extends BaseHttpTest {
 
         assertExchange(exchange);
 
-        Assertions.assertEquals(5000, endpoint.getResponseTimeout());
+        Assertions.assertEquals(5000, endpoint.getSocketTimeout());
     }
 
     @Test
-    public void httpGetUriOptionShouldThrowASocketTimeoutException() {
-        Exchange reply = template.request("http://localhost:"
-                                          + localServer.getLocalPort() + "?responseTimeout=1000",
+    public void httpGetUriOptionShouldThrowASocketTimeoutException() throws Exception {
+        Exchange reply = template.request("http://" + localServer.getInetAddress().getHostName() + ":"
+                                          + localServer.getLocalPort() + "?socketTimeout=1000",
                 exchange -> {
                 });
         Exception e = reply.getException();

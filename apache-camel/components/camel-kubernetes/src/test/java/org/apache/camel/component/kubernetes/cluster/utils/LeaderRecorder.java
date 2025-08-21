@@ -29,7 +29,6 @@ import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.cluster.CamelClusterEventListener;
 import org.apache.camel.cluster.CamelClusterMember;
 import org.apache.camel.cluster.CamelClusterView;
-import org.apache.camel.util.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,11 +44,10 @@ public class LeaderRecorder implements CamelClusterEventListener.Leadership {
     private List<LeadershipInfo> leaderships = new CopyOnWriteArrayList<>();
 
     @Override
-    public void leadershipChanged(CamelClusterView view, CamelClusterMember leader) {
+    public void leadershipChanged(CamelClusterView view, Optional<CamelClusterMember> leader) {
         LOG.info("Cluster view {} - leader changed to: {}", view.getLocalMember(), leader);
         this.leaderships
-                .add(new LeadershipInfo(
-                        Optional.ofNullable(leader).map(CamelClusterMember::getId).orElse(null), System.currentTimeMillis()));
+                .add(new LeadershipInfo(leader.map(CamelClusterMember::getId).orElse(null), System.currentTimeMillis()));
     }
 
     public List<LeadershipInfo> getLeadershipInfo() {
@@ -70,9 +68,9 @@ public class LeaderRecorder implements CamelClusterEventListener.Leadership {
     }
 
     public void waitForLeader(Predicate<String> as, long time, TimeUnit unit) {
-        StopWatch watch = new StopWatch();
+        long start = System.currentTimeMillis();
         while (!as.test(getCurrentLeader())) {
-            assertFalse(watch.taken() > TimeUnit.MILLISECONDS.convert(time, unit),
+            assertFalse(System.currentTimeMillis() - start > TimeUnit.MILLISECONDS.convert(time, unit),
                     "Timeout while waiting for condition");
             doWait(50);
         }

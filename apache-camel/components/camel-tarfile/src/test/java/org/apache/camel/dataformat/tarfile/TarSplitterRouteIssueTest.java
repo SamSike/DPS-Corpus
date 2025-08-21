@@ -26,15 +26,17 @@ import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.test.junit5.TestSupport.deleteDirectory;
 
-class TarSplitterRouteIssueTest extends CamelTestSupport {
+public class TarSplitterRouteIssueTest extends CamelTestSupport {
 
+    @Override
     @BeforeEach
-    public void cleanOutputDirectory() {
+    public void setUp() throws Exception {
         deleteDirectory("target/tar");
+        super.setUp();
     }
 
     @Test
-    void testSplitter() throws Exception {
+    public void testSplitter() throws Exception {
         getMockEndpoint("mock:entry").expectedMessageCount(3);
 
         template.sendBody("direct:decompressFiles", new File("src/test/resources/data/tarfile3.tar"));
@@ -43,7 +45,7 @@ class TarSplitterRouteIssueTest extends CamelTestSupport {
     }
 
     @Test
-    void testSplitterWithWrongFile() throws Exception {
+    public void testSplitterWithWrongFile() throws Exception {
         getMockEndpoint("mock:entry").expectedMessageCount(0);
         getMockEndpoint("mock:errors").expectedMessageCount(1);
 

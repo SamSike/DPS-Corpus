@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,10 +39,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
-import org.apache.camel.Expression;
-import org.apache.camel.InvalidPayloadException;
 import org.apache.camel.converter.jaxp.StaxConverter;
 import org.apache.camel.spi.NamespaceAware;
 import org.apache.camel.support.ExpressionAdapter;
@@ -59,23 +57,20 @@ public class XMLTokenExpressionIterator extends ExpressionAdapter implements Nam
     protected final String path;
     protected char mode;
     protected int group;
-    protected Expression source;
+    protected String headerName;
+    protected String propertyName;
     protected Map<String, String> nsmap;
 
     public XMLTokenExpressionIterator(String path, char mode) {
-        this(null, path, mode);
+        this(path, mode, 1, null, null);
     }
 
-    public XMLTokenExpressionIterator(Expression source, String path, char mode) {
-        this.source = source;
+    public XMLTokenExpressionIterator(String path, char mode, int group, String headerName, String propertyName) {
+        StringHelper.notEmpty(path, "path");
+        this.headerName = headerName;
+        this.propertyName = propertyName;
         this.path = path;
         this.mode = mode;
-    }
-
-    @Override
-    public void init(CamelContext context) {
-        super.init(context);
-        // group must be 1 or higher
         this.group = Math.max(group, 1);
     }
 
@@ -103,6 +98,22 @@ public class XMLTokenExpressionIterator extends ExpressionAdapter implements Nam
 
     public void setGroup(int group) {
         this.group = group;
+    }
+
+    public String getHeaderName() {
+        return headerName;
+    }
+
+    public void setHeaderName(String headerName) {
+        this.headerName = headerName;
+    }
+
+    public String getPropertyName() {
+        return propertyName;
+    }
+
+    public void setPropertyName(String propertyName) {
+        this.propertyName = propertyName;
     }
 
     protected Iterator<?> createIterator(InputStream in, String charset)
@@ -141,29 +152,29 @@ public class XMLTokenExpressionIterator extends ExpressionAdapter implements Nam
      * @return             the evaluated value
      */
     protected Object doEvaluate(Exchange exchange, boolean closeStream) {
-        InputStream in = null;
         Reader reader = null;
         try {
-            if (source != null) {
-                in = source.evaluate(exchange, InputStream.class);
+            if (headerName != null) {
+                String val = exchange.getIn().getHeader(headerName, String.class);
+                reader = new StringReader(val);
+            } else if (propertyName != null) {
+                String val = exchange.getProperty(propertyName, String.class);
+                reader = new StringReader(val);
             } else {
-                in = exchange.getIn().getBody(InputStream.class);
+                InputStream in = exchange.getIn().getMandatoryBody(InputStream.class);
+                // use xml stream reader which is capable of handling reading the xml stream
+                // according to <xml encoding> charset
+                reader = new XmlStreamReader(in);
             }
-            if (in == null) {
-                throw new InvalidPayloadException(exchange, InputStream.class);
-            }
-            // use xml stream reader which is capable of handling reading the xml stream
-            // according to <xml encoding> charset
-            reader = new XmlStreamReader(in);
             return createIterator(reader);
         } catch (Exception e) {
             exchange.setException(e);
             // must close input stream
-            IOHelper.close(in, reader);
+            IOHelper.close(reader);
             return null;
         } finally {
             if (closeStream) {
-                IOHelper.close(in, reader);
+                IOHelper.close(reader);
             }
         }
     }
@@ -199,7 +210,7 @@ public class XMLTokenExpressionIterator extends ExpressionAdapter implements Nam
                 String s = sl[i];
                 if (s.length() > 0) {
                     int d = s.indexOf(':');
-                    String pfx = StringHelper.before(s, ":", "");
+                    String pfx = d > 0 ? s.substring(0, d) : "";
                     this.splitpath[i] = new AttributedQName(
                             "*".equals(pfx) ? "*" : nsmap == null ? "" : nsmap.get(pfx), d > 0 ? s.substring(d + 1) : s, pfx);
                 }
@@ -226,7 +237,7 @@ public class XMLTokenExpressionIterator extends ExpressionAdapter implements Nam
             } else if (this.mode == 'i') {
                 this.namespaces = new ArrayList<>();
             }
-            // when grouping the tokens, allocate the storage to temporarily store tokens.
+            // when grouping the tokens, allocate the storage to temporarily store tokens. 
             if (this.group > 1) {
                 this.tokens = new ArrayList<>();
             }
@@ -395,13 +406,8 @@ public class XMLTokenExpressionIterator extends ExpressionAdapter implements Nam
                 sb.append(token, 0, stag.length() - (empty ? 2 : 1));
                 for (Entry<String, String> e : getCurrentNamespaceBindings().entrySet()) {
                     if (!skip.contains(e.getKey())) {
-                        boolean defaultNS = e.getKey() == null || e.getKey().isEmpty();
-                        if (defaultNS) {
-                            sb.append(" xmlns").append("=").append(quote).append(e.getValue()).append(quote);
-                        } else {
-                            sb.append(" xmlns:")
-                                    .append(e.getKey()).append("=").append(quote).append(e.getValue()).append(quote);
-                        }
+                        sb.append(e.getKey().length() == 0 ? " xmlns" : " xmlns:")
+                                .append(e.getKey()).append("=").append(quote).append(e.getValue()).append(quote);
                     }
                 }
                 sb.append(token, stag.length() - (empty ? 2 : 1), token.length());
@@ -571,7 +577,7 @@ public class XMLTokenExpressionIterator extends ExpressionAdapter implements Nam
 
         private static String makeName(QName qname) {
             String pfx = qname.getPrefix();
-            return pfx.isEmpty() ? qname.getLocalPart() : qname.getPrefix() + ":" + qname.getLocalPart();
+            return pfx.length() == 0 ? qname.getLocalPart() : qname.getPrefix() + ":" + qname.getLocalPart();
         }
 
         @Override

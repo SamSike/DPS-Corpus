@@ -21,16 +21,13 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.processor.BodyInAggregatingStrategy;
 import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledOnOs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DisabledOnOs(architectures = { "s390x" },
-              disabledReason = "This test does not run reliably on s390x (see CAMEL-21438)")
 public class AggregateForceCompletionOnStopTest extends ContextTestSupport {
 
     @Test
-    public void testForceCompletionTrue() {
+    public void testForceCompletionTrue() throws Exception {
         MyCompletionProcessor myCompletionProcessor
                 = context.getRegistry().lookupByNameAndType("myCompletionProcessor", MyCompletionProcessor.class);
         myCompletionProcessor.reset();
@@ -49,7 +46,7 @@ public class AggregateForceCompletionOnStopTest extends ContextTestSupport {
     }
 
     @Test
-    public void testForceCompletionFalse() {
+    public void testForceCompletionFalse() throws Exception {
         MyCompletionProcessor myCompletionProcessor
                 = context.getRegistry().lookupByNameAndType("myCompletionProcessor", MyCompletionProcessor.class);
         myCompletionProcessor.reset();
@@ -107,17 +104,17 @@ public class AggregateForceCompletionOnStopTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myCompletionProcessor", new MyCompletionProcessor());
         return jndi;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:forceCompletionTrue").routeId("foo").aggregate(header("id"), new BodyInAggregatingStrategy())
                         .forceCompletionOnStop().completionSize(10).delay(100)
                         .process("myCompletionProcessor");

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,15 +38,12 @@
 
 package org.jooq.impl;
 
-import static org.jooq.impl.DSL.row;
 import static org.jooq.impl.QueryPartListView.wrap;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
 import static org.jooq.impl.Tools.converterOrFail;
-import static org.jooq.impl.Tools.indexFail;
 import static org.jooq.impl.Tools.indexOrFail;
 import static org.jooq.impl.Tools.map;
 import static org.jooq.impl.Tools.newRecord;
-import static org.jooq.impl.Tools.unaliasTable;
 
 import java.sql.SQLWarning;
 import java.util.ArrayList;
@@ -60,9 +57,7 @@ import org.jooq.Context;
 import org.jooq.Converter;
 import org.jooq.DataType;
 import org.jooq.Field;
-import org.jooq.Fields;
 import org.jooq.Name;
-// ...
 import org.jooq.Record;
 import org.jooq.RecordMapper;
 import org.jooq.RecordType;
@@ -81,20 +76,10 @@ import org.jooq.tools.JooqLogger;
  *
  * @author Lukas Eder
  */
-final class FieldsImpl<R extends Record>
-extends
-    AbstractQueryPart
-implements
-    RecordType<R>,
-    Mappable<R>,
-    UTransient
-{
+final class FieldsImpl<R extends Record> extends AbstractQueryPart implements RecordType<R>, Mappable<R>, UTransient {
 
     private static final JooqLogger log = JooqLogger.getLogger(FieldsImpl.class);
     Field<?>[]                      fields;
-
-
-
 
     FieldsImpl(SelectField<?>... fields) {
         this.fields = Tools.map(fields, toField(), Field<?>[]::new);
@@ -190,7 +175,7 @@ implements
     public final RecordMapper<R, Record> mapper(Field<?>[] f) {
         AbstractRow<?> row = Tools.row0(f == null ? EMPTY_FIELD : f);
 
-        return r -> newRecord(false, r.configuration(), AbstractRecord.class, row).operate(x -> {
+        return r -> newRecord(false, AbstractRecord.class, row, r.configuration()).operate(x -> {
             for (Field<?> field : row.fields.fields)
                 Tools.copyValue((AbstractRecord) x, field, r, field);
 
@@ -216,15 +201,15 @@ implements
      * [#13341] Prevent costly calls to Select.asTable() where not strictly
      * needed.
      */
-    static final Fields internalFieldsRow0(FieldsTrait fields) {
-        return fields instanceof Select<?> s ? ((FieldsTrait) s.asTable("t")).internalFieldsRow() : fields.internalFieldsRow();
+    static final Row fieldsRow0(FieldsTrait fields) {
+        return fields instanceof Select ? ((Select<?>) fields).asTable("t").fieldsRow() : fields.fieldsRow();
     }
 
     private static final ThrowingFunction<SelectField<?>, Field<?>, RuntimeException> toField() {
-        return f -> f instanceof Row r
-                  ? new RowAsField<>(r)
-                  : f instanceof Table<?> t
-                  ? new TableAsField<>(t)
+        return f -> f instanceof Row
+                  ? new RowAsField<>((Row) f)
+                  : f instanceof Table
+                  ? new TableAsField<>((Table<?>) f)
                   : (Field<?>) f;
     }
 
@@ -259,16 +244,10 @@ implements
                 return result.result(f, i);
         }
 
-        // [#4283] table / column matches are better than column only matches
-        Field<?> columnOnlyMatch = null;
-        Field<?> columnOnlyMatch2 = null;
-        int columnOnlyIndexMatch = -1;
-
-        // [#14671] column only matches might still match on the unaliased table
-        Field<?> unaliased = null;
-        Field<?> aliasMatch = null;
-        Field<?> aliasMatch2 = null;
-        int aliasIndexMatch = -1;
+        // [#4283] table / column matches are better than only column matches
+        Field<?> columnMatch = null;
+        Field<?> columnMatch2 = null;
+        int indexMatch = -1;
 
         String tableName = tableName(field);
         String fieldName = field.getName();
@@ -286,48 +265,30 @@ implements
 
             // In case no exact match was found, return the first field with matching name
             if (fName.equals(fieldName)) {
-
-                // [#14671] Prefer matches by unaliased tables, if applicable
-                if (unaliased == null)
-                    unaliased = unaliasTable(field);
-
-                if (unaliased != null && unaliased.equals(unaliasTable(f))) {
-                    if (aliasMatch == null) {
-                        aliasMatch = f;
-                        aliasIndexMatch = i;
-                    }
-                    else
-                        aliasMatch2 = f;
-                }
-
-                if (columnOnlyMatch == null) {
-                    columnOnlyMatch = f;
-                    columnOnlyIndexMatch = i;
+                if (columnMatch == null) {
+                    columnMatch = f;
+                    indexMatch = i;
                 }
 
                 // [#4476] [#4477] This might be unintentional from a user
                 //                 perspective, e.g. when ambiguous ID columns are present.
                 // [#5578] Finish the loop, though, as we might have an exact match
                 //         despite some ambiguity
-                else
-                    columnOnlyMatch2 = f;
+                else {
+                    columnMatch2 = f;
+                }
             }
         }
 
-        if (aliasMatch2 != null && log.isInfoEnabled())
-            log.info("Ambiguous match found for " + field + ". Both " + aliasMatch + " and " + aliasMatch2 + " match.", new SQLWarning());
+        if (columnMatch2 != null)
+            if (log.isInfoEnabled())
+                log.info("Ambiguous match found for " + fieldName + ". Both " + columnMatch + " and " + columnMatch2 + " match.", new SQLWarning());
 
-        if (aliasMatch != null)
-            return result.result(aliasMatch, aliasIndexMatch);
-
-        if (columnOnlyMatch2 != null && log.isInfoEnabled())
-            log.info("Ambiguous match found for " + field + ". Both " + columnOnlyMatch + " and " + columnOnlyMatch2 + " match.", new SQLWarning());
-
-        return result.result(columnOnlyMatch, columnOnlyIndexMatch);
+        return result.result(columnMatch, indexMatch);
     }
 
     private final String tableName(Field<?> field) {
-        if (field instanceof TableField<?, ?> f) {
+        if (field instanceof TableField) { TableField<?, ?> f = (TableField<?, ?>) field;
             Table<?> table = f.getTable();
 
             if (table != null)
@@ -417,7 +378,7 @@ implements
         if (index >= 0 && index < fields.length)
             return index;
 
-        throw indexFail(this, index);
+        throw new IllegalArgumentException("No field at index " + index + " in Record type " + fields);
     }
 
     @Override
@@ -558,55 +519,16 @@ implements
     // XXX: List-like API
     // -------------------------------------------------------------------------
 
-
-    @Override
-    public final Fields fieldsIncludingHidden() {
-
-
-
-
-
-        return this;
-    }
-
     final void add(Field<?> f) {
-
-
-
-
-
-
-
-
-
-
-
-        fields = add0(fields, f);
-    }
-
-
-
-
-
-
-
-
-
-
-
-    private static final Field<?>[] add0(Field<?>[] fields, Field<?> field) {
 
         // TODO: [#10481] Can we replace our internal Field<?>[] by an ArrayList<Field<?>>?
         Field<?>[] result = new Field[fields.length + 1];
 
         System.arraycopy(fields, 0, result, 0, fields.length);
-        result[fields.length] = field;
-        return result;
+        result[fields.length] = f;
+
+        fields = result;
     }
-
-
-
-
 
 
 
@@ -674,8 +596,8 @@ implements
         if (this == that)
             return true;
 
-        if (that instanceof FieldsImpl<?> f)
-            return Arrays.equals(fields, f.fields);
+        if (that instanceof FieldsImpl)
+            return Arrays.equals(fields, ((FieldsImpl<?>) that).fields);
 
         return false;
     }
@@ -683,10 +605,5 @@ implements
     @Override
     public int hashCode() {
         return Arrays.hashCode(fields);
-    }
-
-    @Override
-    public String toString() {
-        return row(fields).toString();
     }
 }

@@ -16,33 +16,25 @@
  */
 package org.apache.camel.openapi;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
 
-import io.swagger.v3.oas.models.ExternalDocumentation;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.media.ComposedSchema;
-import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.servers.Server;
-import org.apache.camel.tooling.util.Version;
+import io.apicurio.datamodels.core.models.common.Info;
+import io.apicurio.datamodels.core.models.common.Server;
+import io.apicurio.datamodels.openapi.models.OasDocument;
+import io.apicurio.datamodels.openapi.v2.models.Oas20Document;
+import io.apicurio.datamodels.openapi.v3.models.Oas30Document;
 
 public class BeanConfig {
-    public static final String DEFAULT_MEDIA_TYPE = "application/json";
-    public static final Version OPENAPI_VERSION_30 = new Version("3.0.0");
-    public static final Version OPENAPI_VERSION_31 = new Version("3.1.0");
-
     String[] schemes;
     String title;
-    Version version = OPENAPI_VERSION_30;
+    String version;
     String licenseUrl;
     String license;
 
     Info info;
     String host;
     String basePath;
-    String defaultConsumes = DEFAULT_MEDIA_TYPE;
-    String defaultProduces = DEFAULT_MEDIA_TYPE;
-    ExternalDocumentation externalDocs;
 
     public String[] getSchemes() {
         return schemes;
@@ -61,11 +53,11 @@ public class BeanConfig {
     }
 
     public String getVersion() {
-        return version.toString();
+        return version;
     }
 
     public void setVersion(String version) {
-        this.version = new Version(version);
+        this.version = version;
     }
 
     public String getLicenseUrl() {
@@ -105,7 +97,7 @@ public class BeanConfig {
     }
 
     public void setBasePath(String basePath) {
-        if (basePath != null && !basePath.isEmpty()) {
+        if (!"".equals(basePath) && basePath != null) {
             if (!basePath.startsWith("/")) {
                 this.basePath = "/" + basePath;
             } else {
@@ -114,82 +106,44 @@ public class BeanConfig {
         }
     }
 
-    public String getDefaultConsumes() {
-        return defaultConsumes;
-    }
-
-    public void setDefaultConsumes(String defaultConsumes) {
-        this.defaultConsumes = defaultConsumes;
-    }
-
-    public String getDefaultProduces() {
-        return defaultProduces;
-    }
-
-    public void setDefaultProduces(String defaultProduces) {
-        this.defaultProduces = defaultProduces;
-    }
-
-    public ExternalDocumentation getExternalDocs() {
-        return externalDocs;
-    }
-
-    public void setExternalDocs(ExternalDocumentation externalDocs) {
-        this.externalDocs = externalDocs;
-    }
-
-    public OpenAPI configure(OpenAPI openApi) {
-        if (info != null) {
-            openApi.setInfo(info);
-        }
-        if (externalDocs != null) {
-            openApi.setExternalDocs(externalDocs);
-        }
-
-        if (this.schemes != null) {
-            for (String scheme : this.schemes) {
-                String url = scheme + "://" + this.host;
-                if (this.basePath != null) {
-                    if (this.basePath.startsWith("/")) {
-                        url += this.basePath;
-                    } else {
-                        url = url + "/" + this.basePath;
-                    }
-                }
-                Server server = new Server().url(url);
-                openApi.addServersItem(server);
-            }
-        }
-        if (isOpenApi31()) {
-            // This is a workaround to addType on ComposedSchema
-            // It should be removed if https://github.com/swagger-api/swagger-core/issues/4574 resolved
-            if (openApi.getComponents() != null) {
-                Map<String, Schema> schemas = openApi.getComponents().getSchemas();
-                if (schemas != null) {
-                    for (Schema schema : schemas.values()) {
-                        if (schema instanceof ComposedSchema) {
-                            String type = schema.getType();
-                            if (type != null) {
-                                schema.addType(type);
-                            }
-                        }
-                    }
-                }
-            }
+    public OasDocument configure(OasDocument openApi) {
+        if (openApi instanceof Oas20Document) {
+            configureOas20((Oas20Document) openApi);
+        } else if (openApi instanceof Oas30Document) {
+            configureOas30((Oas30Document) openApi);
         }
         return openApi;
     }
 
-    public boolean isOpenApi2() {
-        return version.compareTo(OPENAPI_VERSION_30) < 0;
+    private void configureOas30(Oas30Document openApi) {
+        if (info != null) {
+            openApi.info = info;
+            info._ownerDocument = openApi;
+            info._parent = openApi;
+        }
+        Server server = openApi.createServer();
+        server.url = this.schemes[0] + "://" + this.host + this.basePath;
+        openApi.addServer(server);
     }
 
-    public boolean isOpenApi30() {
-        return version.compareTo(OPENAPI_VERSION_30) >= 0 && version.compareTo(OPENAPI_VERSION_31) < 0;
+    private void configureOas20(Oas20Document openApi) {
+        if (schemes != null) {
+            if (openApi.schemes == null) {
+                openApi.schemes = new ArrayList<String>();
+            }
+            openApi.schemes.addAll(Arrays.asList(schemes));
+        }
+        if (info != null) {
+            openApi.info = info;
+            info._ownerDocument = openApi;
+            info._parent = openApi;
+        }
+        openApi.host = host;
+        openApi.basePath = basePath;
     }
 
-    public boolean isOpenApi31() {
-        return version.compareTo(OPENAPI_VERSION_31) >= 0;
+    public boolean isOpenApi3() {
+        return this.version == null || this.version.startsWith("3");
     }
 
 }

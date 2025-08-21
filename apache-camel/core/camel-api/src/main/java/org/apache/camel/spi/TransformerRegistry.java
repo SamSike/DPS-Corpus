@@ -34,17 +34,19 @@ import org.apache.camel.StaticService;
  * <p/>
  * The dynamic cache stores the transformers that are created and used ad-hoc, such as from custom Java code that
  * creates new transformers etc. The dynamic cache has an upper limit, that by default is 1000 entries.
+ *
+ * @param <K> transformer key
  */
-public interface TransformerRegistry extends Map<TransformerKey, Transformer>, StaticService {
+public interface TransformerRegistry<K> extends Map<K, Transformer>, StaticService {
 
     /**
      * Lookup a {@link Transformer} in the registry which supports the transformation for the data types represented by
      * the key.
-     *
+     * 
      * @param  key a key represents the from/to data types to transform
      * @return     {@link Transformer} if matched, otherwise null
      */
-    Transformer resolveTransformer(TransformerKey key);
+    Transformer resolveTransformer(K key);
 
     /**
      * Number of transformers in the static registry.

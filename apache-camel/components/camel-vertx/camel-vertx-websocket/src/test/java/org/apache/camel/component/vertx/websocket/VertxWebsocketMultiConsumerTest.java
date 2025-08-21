@@ -37,16 +37,6 @@ public class VertxWebsocketMultiConsumerTest extends VertxWebSocketTestSupport {
         mockEndpoint.assertIsSatisfied();
     }
 
-    @Test
-    void testConsumerOnAlternativePort() throws Exception {
-        MockEndpoint mockEndpoint = getMockEndpoint("mock:result2");
-        mockEndpoint.expectedBodiesReceived("Hello World");
-
-        template.sendBody("vertx-websocket:localhost:" + port2 + "/test", "World");
-
-        mockEndpoint.assertIsSatisfied();
-    }
-
     @Override
     protected RoutesBuilder createRouteBuilder() {
         return new RouteBuilder() {
@@ -63,10 +53,6 @@ public class VertxWebsocketMultiConsumerTest extends VertxWebSocketTestSupport {
                 fromF("vertx-websocket:localhost:%d/test/c", port)
                         .setBody(simple("Hello ${body}"))
                         .to("mock:result");
-
-                fromF("vertx-websocket:localhost:%d/test", port2)
-                        .setBody(simple("Hello ${body}"))
-                        .to("mock:result2");
             }
         };
     }

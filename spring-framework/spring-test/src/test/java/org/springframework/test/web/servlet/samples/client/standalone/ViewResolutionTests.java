@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.ContentNegotiatingViewResolver;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
-import org.springframework.web.servlet.view.json.JacksonJsonView;
+import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
 import org.springframework.web.servlet.view.xml.MarshallingView;
 
 import static org.hamcrest.Matchers.equalTo;
@@ -51,7 +51,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * {@link org.springframework.test.web.servlet.samples.standalone.RequestParameterTests}.
  *
  * @author Rossen Stoyanchev
- * @author Sebastien Deleuze
  */
 class ViewResolutionTests {
 
@@ -79,14 +78,14 @@ class ViewResolutionTests {
 	void jsonOnly() {
 		WebTestClient testClient =
 				MockMvcWebTestClient.bindToController(new PersonController())
-						.singleView(new JacksonJsonView())
+						.singleView(new MappingJackson2JsonView())
 						.build();
 
 		testClient.get().uri("/person/Corea")
 				.exchange()
 				.expectStatus().isOk()
 				.expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
-				.expectBody().jsonPath("$.person.name").isEqualTo("Corea");
+				.expectBody().jsonPath("$.person.name", "Corea");
 	}
 
 	@Test
@@ -112,7 +111,7 @@ class ViewResolutionTests {
 		marshaller.setClassesToBeBound(Person.class);
 
 		List<View> viewList = new ArrayList<>();
-		viewList.add(new JacksonJsonView());
+		viewList.add(new MappingJackson2JsonView());
 		viewList.add(new MarshallingView(marshaller));
 
 		ContentNegotiationManager manager = new ContentNegotiationManager(
@@ -144,7 +143,7 @@ class ViewResolutionTests {
 				.exchange()
 				.expectStatus().isOk()
 				.expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
-				.expectBody().jsonPath("$.person.name").isEqualTo("Corea");
+				.expectBody().jsonPath("$.person.name", "Corea");
 
 		testClient.get().uri("/person/Corea")
 				.accept(MediaType.APPLICATION_XML)

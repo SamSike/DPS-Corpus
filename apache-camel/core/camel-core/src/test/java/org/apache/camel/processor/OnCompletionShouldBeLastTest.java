@@ -18,6 +18,7 @@ package org.apache.camel.processor;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.support.SynchronizationAdapter;
@@ -36,15 +37,15 @@ public class OnCompletionShouldBeLastTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onCompletion().to("mock:sync");
 
                 from("direct:start").process(new Processor() {
-                    public void process(Exchange exchange) {
-                        exchange.getExchangeExtension().addOnCompletion(new SynchronizationAdapter() {
+                    public void process(Exchange exchange) throws Exception {
+                        exchange.adapt(ExtendedExchange.class).addOnCompletion(new SynchronizationAdapter() {
                             @Override
                             public void onDone(Exchange exchange) {
                                 template.sendBody("mock:sync", "A");
@@ -56,7 +57,7 @@ public class OnCompletionShouldBeLastTest extends ContextTestSupport {
                             }
                         });
 
-                        exchange.getExchangeExtension().addOnCompletion(new SynchronizationAdapter() {
+                        exchange.adapt(ExtendedExchange.class).addOnCompletion(new SynchronizationAdapter() {
                             @Override
                             public void onDone(Exchange exchange) {
                                 template.sendBody("mock:sync", "B");
@@ -68,7 +69,7 @@ public class OnCompletionShouldBeLastTest extends ContextTestSupport {
                             }
                         });
 
-                        exchange.getExchangeExtension().addOnCompletion(new SynchronizationAdapter() {
+                        exchange.adapt(ExtendedExchange.class).addOnCompletion(new SynchronizationAdapter() {
                             @Override
                             public void onDone(Exchange exchange) {
                                 template.sendBody("mock:sync", "C");

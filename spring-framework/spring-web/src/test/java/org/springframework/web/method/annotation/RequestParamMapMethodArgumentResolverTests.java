@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ import static org.springframework.web.testfixture.method.MvcAnnotationPredicates
  * @author Rossen Stoyanchev
  * @author Juergen Hoeller
  */
-class RequestParamMapMethodArgumentResolverTests {
+public class RequestParamMapMethodArgumentResolverTests {
 
 	private RequestParamMapMethodArgumentResolver resolver = new RequestParamMapMethodArgumentResolver();
 
@@ -58,7 +58,7 @@ class RequestParamMapMethodArgumentResolverTests {
 
 
 	@Test
-	void supportsParameter() {
+	public void supportsParameter() {
 		MethodParameter param = this.testMethod.annot(requestParam().noName()).arg(Map.class, String.class, String.class);
 		assertThat(resolver.supportsParameter(param)).isTrue();
 
@@ -73,7 +73,7 @@ class RequestParamMapMethodArgumentResolverTests {
 	}
 
 	@Test
-	void resolveMapOfString() throws Exception {
+	public void resolveMapOfString() throws Exception {
 		String name = "foo";
 		String value = "bar";
 		request.addParameter(name, value);
@@ -88,7 +88,7 @@ class RequestParamMapMethodArgumentResolverTests {
 	}
 
 	@Test
-	void resolveMultiValueMapOfString() throws Exception {
+	public void resolveMultiValueMapOfString() throws Exception {
 		String name = "foo";
 		String value1 = "bar";
 		String value2 = "baz";
@@ -122,7 +122,7 @@ class RequestParamMapMethodArgumentResolverTests {
 		boolean condition = result instanceof Map;
 		assertThat(condition).isTrue();
 		Map<String, MultipartFile> resultMap = (Map<String, MultipartFile>) result;
-		assertThat(resultMap).hasSize(2);
+		assertThat(resultMap.size()).isEqualTo(2);
 		assertThat(resultMap.get("mfile")).isEqualTo(expected1);
 		assertThat(resultMap.get("other")).isEqualTo(expected2);
 	}
@@ -145,9 +145,12 @@ class RequestParamMapMethodArgumentResolverTests {
 		boolean condition = result instanceof MultiValueMap;
 		assertThat(condition).isTrue();
 		MultiValueMap<String, MultipartFile> resultMap = (MultiValueMap<String, MultipartFile>) result;
-		assertThat(resultMap).hasSize(2);
-		assertThat(resultMap.get("mfilelist")).containsExactly(expected1, expected2);
-		assertThat(resultMap.get("other")).containsExactly(expected3);
+		assertThat(resultMap.size()).isEqualTo(2);
+		assertThat(resultMap.get("mfilelist").size()).isEqualTo(2);
+		assertThat(resultMap.get("mfilelist").get(0)).isEqualTo(expected1);
+		assertThat(resultMap.get("mfilelist").get(1)).isEqualTo(expected2);
+		assertThat(resultMap.get("other").size()).isEqualTo(1);
+		assertThat(resultMap.get("other").get(0)).isEqualTo(expected3);
 	}
 
 	@Test
@@ -167,7 +170,7 @@ class RequestParamMapMethodArgumentResolverTests {
 		boolean condition = result instanceof Map;
 		assertThat(condition).isTrue();
 		Map<String, Part> resultMap = (Map<String, Part>) result;
-		assertThat(resultMap).hasSize(2);
+		assertThat(resultMap.size()).isEqualTo(2);
 		assertThat(resultMap.get("mfile")).isEqualTo(expected1);
 		assertThat(resultMap.get("other")).isEqualTo(expected2);
 	}
@@ -191,9 +194,12 @@ class RequestParamMapMethodArgumentResolverTests {
 		boolean condition = result instanceof MultiValueMap;
 		assertThat(condition).isTrue();
 		MultiValueMap<String, Part> resultMap = (MultiValueMap<String, Part>) result;
-		assertThat(resultMap).hasSize(2);
-		assertThat(resultMap.get("mfilelist")).containsExactly(expected1, expected2);
-		assertThat(resultMap.get("other")).containsExactly(expected3);
+		assertThat(resultMap.size()).isEqualTo(2);
+		assertThat(resultMap.get("mfilelist").size()).isEqualTo(2);
+		assertThat(resultMap.get("mfilelist").get(0)).isEqualTo(expected1);
+		assertThat(resultMap.get("mfilelist").get(1)).isEqualTo(expected2);
+		assertThat(resultMap.get("other").size()).isEqualTo(1);
+		assertThat(resultMap.get("other").get(0)).isEqualTo(expected3);
 	}
 
 

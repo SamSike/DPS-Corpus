@@ -30,17 +30,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class DirectNoToTypeTest extends ContextTestSupport {
 
     @Test
-    public void testNoToType() {
+    public void testNoToType() throws Exception {
         Object response = template.requestBody("direct:in", "Hello");
         assertEquals("Hello World", response);
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:in").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         String body = exchange.getIn().getBody(String.class);
                         exchange.getMessage().setBody(body + " World");
                     }

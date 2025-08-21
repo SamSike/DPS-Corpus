@@ -84,9 +84,9 @@ public class DeadLetterChannelRedeliveryTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 bindToRegistry("redeliveryProcessor", (Processor) (exchange -> {
                     redeliveryCounter = exchange.getIn().getHeader(Exchange.REDELIVERY_COUNTER, Integer.class);
                 }));

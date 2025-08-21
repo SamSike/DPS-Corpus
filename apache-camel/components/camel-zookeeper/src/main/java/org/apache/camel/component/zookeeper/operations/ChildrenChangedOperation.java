@@ -18,6 +18,7 @@ package org.apache.camel.component.zookeeper.operations;
 
 import java.util.List;
 
+import org.apache.zookeeper.AsyncCallback.Children2Callback;
 import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
@@ -41,7 +42,9 @@ public class ChildrenChangedOperation extends FutureEventDrivenOperation<List<St
 
     @Override
     protected void installWatch() {
-        connection.getChildren(getNode(), this, (int rc, String path, Object ctx, List<String> children, Stat stat) -> {
+        connection.getChildren(getNode(), this, new Children2Callback() {
+            public void processResult(int rc, String path, Object ctx, List<String> children, Stat stat) {
+            }
         }, null);
     }
 

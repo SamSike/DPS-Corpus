@@ -21,14 +21,9 @@ import java.util.Map;
 import java.util.stream.StreamSupport;
 
 import com.mongodb.client.MongoCollection;
-import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mongodb.MongoDbConstants;
-import org.apache.camel.test.infra.core.annotations.RouteFixture;
-import org.apache.camel.test.infra.core.api.ConfigurableRoute;
 import org.bson.Document;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -39,15 +34,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class MongoDbDynamicityIT extends AbstractMongoDbITSupport implements ConfigurableRoute {
-
-    @BeforeEach
-    void checkDocuments() {
-        Assumptions.assumeTrue(0 == testCollection.countDocuments(), "The collection should have no documents");
-    }
+public class MongoDbDynamicityIT extends AbstractMongoDbITSupport {
 
     @Test
     public void testInsertDynamicityDisabled() {
+        assertEquals(0, testCollection.countDocuments());
         mongo.getDatabase("otherDB").drop();
         db.getCollection("otherCollection").drop();
         assertFalse(StreamSupport.stream(mongo.listDatabaseNames().spliterator(), false).anyMatch("otherDB"::equals),
@@ -77,6 +68,7 @@ public class MongoDbDynamicityIT extends AbstractMongoDbITSupport implements Con
 
     @Test
     public void testInsertDynamicityEnabledDBOnly() {
+        assertEquals(0, testCollection.countDocuments());
         mongo.getDatabase("otherDB").drop();
         db.getCollection("otherCollection").drop();
         assertFalse(StreamSupport.stream(mongo.listDatabaseNames().spliterator(), false).anyMatch("otherDB"::equals),
@@ -104,6 +96,7 @@ public class MongoDbDynamicityIT extends AbstractMongoDbITSupport implements Con
 
     @Test
     public void testInsertDynamicityEnabledCollectionOnly() {
+        assertEquals(0, testCollection.countDocuments());
         mongo.getDatabase("otherDB").drop();
         db.getCollection("otherCollection").drop();
         assertFalse(StreamSupport.stream(mongo.listDatabaseNames().spliterator(), false).anyMatch("otherDB"::equals),
@@ -155,6 +148,7 @@ public class MongoDbDynamicityIT extends AbstractMongoDbITSupport implements Con
                 "The otherDB database should exist");
     }
 
+    @Override
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
@@ -168,11 +162,5 @@ public class MongoDbDynamicityIT extends AbstractMongoDbITSupport implements Con
 
             }
         };
-    }
-
-    @RouteFixture
-    @Override
-    public void createRouteBuilder(CamelContext context) throws Exception {
-        context.addRoutes(createRouteBuilder());
     }
 }

@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class RoutingSlipCreateProducerFailedTest extends ContextTestSupport {
 
     @Test
-    public void testRoutingSlipCreateProducerFailed() {
+    public void testRoutingSlipCreateProducerFailed() throws Exception {
         // no inflight
         assertEquals(0, context.getInflightRepository().size());
 
@@ -51,10 +51,10 @@ public class RoutingSlipCreateProducerFailedTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routingSlip(header("foo"));
             }
         };

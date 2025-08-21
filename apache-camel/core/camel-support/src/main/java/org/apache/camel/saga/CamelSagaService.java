@@ -19,7 +19,6 @@ package org.apache.camel.saga;
 import java.util.concurrent.CompletableFuture;
 
 import org.apache.camel.CamelContextAware;
-import org.apache.camel.Exchange;
 import org.apache.camel.Service;
 
 /**
@@ -27,7 +26,7 @@ import org.apache.camel.Service;
  */
 public interface CamelSagaService extends Service, CamelContextAware {
 
-    CompletableFuture<CamelSagaCoordinator> newSaga(Exchange exchange);
+    CompletableFuture<CamelSagaCoordinator> newSaga();
 
     CompletableFuture<CamelSagaCoordinator> getSaga(String id);
 

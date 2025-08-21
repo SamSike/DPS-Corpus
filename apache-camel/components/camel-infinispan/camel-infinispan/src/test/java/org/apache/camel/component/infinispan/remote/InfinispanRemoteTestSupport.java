@@ -16,75 +16,43 @@
  */
 package org.apache.camel.component.infinispan.remote;
 
-import java.time.Duration;
 import java.util.Properties;
 
 import org.apache.camel.BindToRegistry;
 import org.apache.camel.component.infinispan.InfinispanTestSupport;
 import org.apache.camel.spi.ComponentCustomizer;
-import org.apache.camel.support.task.ForegroundTask;
-import org.apache.camel.support.task.Tasks;
-import org.apache.camel.support.task.budget.Budgets;
-import org.apache.camel.support.task.budget.IterationBoundedBudget;
 import org.apache.camel.test.infra.infinispan.services.InfinispanService;
 import org.apache.camel.test.infra.infinispan.services.InfinispanServiceFactory;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.configuration.cache.CacheMode;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.shaded.org.apache.commons.lang3.SystemUtils;
 
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class InfinispanRemoteTestSupport extends InfinispanTestSupport {
-    private static final Logger LOG = LoggerFactory.getLogger(InfinispanRemoteTestSupport.class);
     @RegisterExtension
-    public static InfinispanService service = InfinispanServiceFactory.createSingletonInfinispanService();
+    public static InfinispanService service = InfinispanServiceFactory.createService();
 
     protected RemoteCacheManager cacheContainer;
 
     @Override
     protected void setupResources() throws Exception {
-        super.setupResources();
+        LoggerFactory.getLogger(getClass()).info("setupResources");
 
-        cacheContainer = getCacheContainer();
-        if (cacheContainer != null) {
-            final IterationBoundedBudget budget
-                    = Budgets.iterationBudget().withInterval(Duration.ofSeconds(1)).withMaxIterations(10).build();
-            final ForegroundTask task = Tasks.foregroundTask()
-                    .withBudget(budget).build();
-
-            final boolean cacheCreated = task.run(null, this::createCache);
-            Assumptions.assumeTrue(cacheCreated, "The container cache is not running healthily");
-        }
-    }
-
-    protected RemoteCacheManager getCacheContainer() {
-        return new RemoteCacheManager(getConfiguration().build());
-    }
-
-    protected boolean createCache() {
-        try {
-            getOrCreateCache();
-            return true;
-        } catch (Exception e) {
-            LOG.warn("Unable to create cache: {}", e.getMessage(), e);
-            return false;
-        }
-    }
-
-    protected void getOrCreateCache() {
+        cacheContainer = new RemoteCacheManager(getConfiguration().build());
         cacheContainer.administration()
                 .getOrCreateCache(
-                        getCacheName(),
+                        InfinispanTestSupport.TEST_CACHE,
                         new org.infinispan.configuration.cache.ConfigurationBuilder()
                                 .clustering()
                                 .cacheMode(CacheMode.DIST_SYNC).build());
+
+        super.setupResources();
     }
 
     @Override

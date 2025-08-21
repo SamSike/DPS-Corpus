@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Ordered;
 import org.apache.camel.Processor;
 import org.apache.camel.component.file.GenericFile;
@@ -40,14 +41,11 @@ public abstract class RemoteFileConsumer<T> extends GenericFileConsumer<T> {
 
     protected transient boolean loggedIn;
     protected transient boolean loggedInWarning;
-    protected transient boolean autoCreatedDone;
-    protected transient boolean autoCreateWarning;
 
-    protected RemoteFileConsumer(RemoteFileEndpoint<T> endpoint, Processor processor, RemoteFileOperations<T> operations,
-                                 GenericFileProcessStrategy processStrategy) {
+    public RemoteFileConsumer(RemoteFileEndpoint<T> endpoint, Processor processor, RemoteFileOperations<T> operations,
+                              GenericFileProcessStrategy processStrategy) {
         super(endpoint, processor, operations, processStrategy);
         this.setPollStrategy(new RemoteFilePollingConsumerPollStrategy());
-        this.setRetrieveFile(endpoint.isDownload());
     }
 
     @Override
@@ -74,35 +72,17 @@ public abstract class RemoteFileConsumer<T> extends GenericFileConsumer<T> {
         if (LOG.isTraceEnabled()) {
             LOG.trace("prePollCheck on {}", getEndpoint().getConfiguration().remoteServerInformation());
         }
-        Exception cause;
         try {
             connectIfNecessary();
-            loggedIn = true;
-            if (!autoCreatedDone) {
-                autoCreateIfNecessary();
-                autoCreatedDone = true;
-            }
         } catch (Exception e) {
-            cause = e;
-            String msg = "Cannot connect/login to: " + remoteServer();
-            if (loggedIn && !autoCreatedDone) {
-                msg = "Cannot auto-create starting directory at: " + remoteServer();
-            }
-            LOG.debug(msg, cause);
             loggedIn = false;
+
+            // login failed should we thrown exception
             if (getEndpoint().getConfiguration().isThrowExceptionOnConnectFailed()) {
                 throw e;
             }
         }
 
-        if (loggedIn && !autoCreatedDone) {
-            String message = "Cannot auto-create starting directory at: " + remoteServer() + ". Will skip this poll.";
-            if (!autoCreateWarning) {
-                LOG.warn(message);
-                autoCreateWarning = true;
-            }
-            return false;
-        }
         if (!loggedIn) {
             String message = "Cannot connect/login to: " + remoteServer() + ". Will skip this poll.";
             if (!loggedInWarning) {
@@ -114,9 +94,6 @@ public abstract class RemoteFileConsumer<T> extends GenericFileConsumer<T> {
             // need to log the failed log again
             loggedInWarning = false;
         }
-
-        // we are logged in so lets mark the consumer as ready
-        forceConsumerAsReady();
 
         return true;
     }
@@ -145,7 +122,7 @@ public abstract class RemoteFileConsumer<T> extends GenericFileConsumer<T> {
         // from the batch should do that
         boolean isLast = exchange.getProperty(ExchangePropertyKey.BATCH_COMPLETE, true, Boolean.class);
         if (isLast && getEndpoint().isDisconnect()) {
-            exchange.getExchangeExtension().addOnCompletion(new SynchronizationAdapter() {
+            exchange.adapt(ExtendedExchange.class).addOnCompletion(new SynchronizationAdapter() {
                 @Override
                 public void onDone(Exchange exchange) {
                     LOG.trace("processExchange disconnect from: {}", getEndpoint());
@@ -172,6 +149,11 @@ public abstract class RemoteFileConsumer<T> extends GenericFileConsumer<T> {
         }
 
         return super.processExchange(exchange);
+    }
+
+    @Override
+    protected boolean isRetrieveFile() {
+        return getEndpoint().isDownload();
     }
 
     /**
@@ -253,14 +235,6 @@ public abstract class RemoteFileConsumer<T> extends GenericFileConsumer<T> {
         }
     }
 
-    protected void autoCreateIfNecessary() throws GenericFileOperationFailedException {
-        if (endpoint.isAutoCreate() && hasStartingDirectory()) {
-            String dir = endpoint.getConfiguration().getDirectory();
-            LOG.debug("Auto creating directory: {}", dir);
-            getOperations().buildDirectory(dir, true);
-        }
-    }
-
     /**
      * Returns human-readable server information for logging purpose
      */
@@ -279,12 +253,11 @@ public abstract class RemoteFileConsumer<T> extends GenericFileConsumer<T> {
      *                                             maxMessagesPerPoll limit has been hit
      * @throws GenericFileOperationFailedException if the exception during doPollDirectory can not be ignored
      */
-    protected boolean doSafePollSubDirectory(
-            Exchange dynamic, String absolutePath, String dirName, List<GenericFile<T>> fileList, int depth) {
+    protected boolean doSafePollSubDirectory(String absolutePath, String dirName, List<GenericFile<T>> fileList, int depth) {
         try {
             LOG.trace("Polling sub directory: {} from: {}", absolutePath, endpoint);
             // Try to poll the directory
-            return doPollDirectory(dynamic, absolutePath, dirName, fileList, depth);
+            return doPollDirectory(absolutePath, dirName, fileList, depth);
         } catch (Exception e) {
             LOG.debug("Caught exception {}", e.getMessage());
             if (ignoreCannotRetrieveFile(absolutePath, null, e)) {
@@ -294,8 +267,8 @@ public abstract class RemoteFileConsumer<T> extends GenericFileConsumer<T> {
                 return true;
             } else {
                 LOG.trace("Not ignoring file error {} for {}", e.getMessage(), absolutePath);
-                if (e instanceof GenericFileOperationFailedException genericFileOperationFailedException) {
-                    throw genericFileOperationFailedException;
+                if (e instanceof GenericFileOperationFailedException) {
+                    throw (GenericFileOperationFailedException) e;
                 } else {
                     throw new GenericFileOperationFailedException(
                             "Cannot poll sub-directory: " + absolutePath + " from: " + endpoint, e);
@@ -314,6 +287,5 @@ public abstract class RemoteFileConsumer<T> extends GenericFileConsumer<T> {
      * @return              whether or not to continue polling, <tt>false</tt> means the maxMessagesPerPoll limit has
      *                      been hit
      */
-    protected abstract boolean doPollDirectory(
-            Exchange dynamic, String absolutePath, String dirName, List<GenericFile<T>> fileList, int depth);
+    protected abstract boolean doPollDirectory(String absolutePath, String dirName, List<GenericFile<T>> fileList, int depth);
 }

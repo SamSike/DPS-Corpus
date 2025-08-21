@@ -37,7 +37,7 @@ public class DefaultCamelContextStopFailureTest extends ContextTestSupport {
     }
 
     @Test
-    public void testStopWithFailure() {
+    public void testStopWithFailure() throws Exception {
         stopOrder = "";
 
         context.stop();
@@ -47,8 +47,8 @@ public class DefaultCamelContextStopFailureTest extends ContextTestSupport {
 
     private static final class MyService implements Service {
 
-        private final String name;
-        private final boolean fail;
+        private String name;
+        private boolean fail;
 
         private MyService(String name, boolean fail) {
             this.name = name;

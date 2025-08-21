@@ -31,7 +31,6 @@ import org.junit.jupiter.api.condition.OS;
 
 import static org.apache.camel.management.DefaultManagementObjectNameStrategy.TYPE_PROCESSOR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DisabledOnOs(OS.AIX)
@@ -75,7 +74,7 @@ public class ManagedRecipientListTest extends ManagementTestSupport {
         assertEquals(ServiceStatus.Started.name(), state);
 
         Boolean parallel = (Boolean) mbeanServer.getAttribute(on, "ParallelProcessing");
-        assertFalse(parallel.booleanValue());
+        assertEquals(false, parallel.booleanValue());
 
         String lan = (String) mbeanServer.getAttribute(on, "ExpressionLanguage");
         assertEquals("header", lan);
@@ -89,10 +88,10 @@ public class ManagedRecipientListTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .recipientList(header("whereto")).id("mysend");
             }

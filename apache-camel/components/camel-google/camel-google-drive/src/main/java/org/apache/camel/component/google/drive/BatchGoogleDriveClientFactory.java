@@ -66,10 +66,10 @@ public class BatchGoogleDriveClientFactory implements GoogleDriveClientFactory {
         try {
             Credential credential = authorize(clientId, clientSecret, scopes);
 
-            if (refreshToken != null && !refreshToken.isEmpty()) {
+            if (refreshToken != null && !"".equals(refreshToken)) {
                 credential.setRefreshToken(refreshToken);
             }
-            if (accessToken != null && !accessToken.isEmpty()) {
+            if (accessToken != null && !"".equals(accessToken)) {
                 credential.setAccessToken(accessToken);
             }
             return new Drive.Builder(transport, jsonFactory, credential).setApplicationName(applicationName).build();
@@ -94,13 +94,13 @@ public class BatchGoogleDriveClientFactory implements GoogleDriveClientFactory {
             CamelContext camelContext, String serviceAccountKey, Collection<String> scopes, String applicationName,
             String delegate) {
         if (serviceAccountKey == null) {
-            throw new IllegalArgumentException("serviceAccountKey is required to create Drive client.");
+            throw new IllegalArgumentException("serviceAccountKey is required to create Gmail client.");
         }
         try {
             Credential credential = authorizeServiceAccount(camelContext, serviceAccountKey, delegate, scopes);
             return new Drive.Builder(transport, jsonFactory, credential).setApplicationName(applicationName).build();
         } catch (Exception e) {
-            throw new RuntimeCamelException("Could not create Drive client.", e);
+            throw new RuntimeCamelException("Could not create Gmail client.", e);
         }
     }
 

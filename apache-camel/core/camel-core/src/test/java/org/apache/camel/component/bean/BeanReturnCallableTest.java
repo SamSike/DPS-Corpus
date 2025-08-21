@@ -38,16 +38,16 @@ public class BeanReturnCallableTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("myBean", new MyBean());
         return answer;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:in").setHeader("foo", constant("bar")).to("bean:myBean").to("mock:result");
             }
         };
@@ -55,8 +55,13 @@ public class BeanReturnCallableTest extends ContextTestSupport {
 
     public static class MyBean {
 
-        public Callable<String> doSomething() {
-            return () -> "I was called";
+        public Callable doSomething() {
+            return new Callable() {
+                @Override
+                public Object call() throws Exception {
+                    return "I was called";
+                }
+            };
         }
     }
 

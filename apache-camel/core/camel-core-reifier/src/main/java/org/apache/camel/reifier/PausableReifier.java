@@ -42,7 +42,7 @@ public class PausableReifier extends ProcessorReifier<PausableDefinition> {
 
         route.setConsumerListener(consumerListener);
 
-        return new PausableProcessor(childProcessor);
+        return new PausableProcessor(consumerListener, childProcessor);
     }
 
     protected ConsumerListener<?, ?> resolveConsumerListener() {

@@ -20,8 +20,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.component.reactive.streams.ReactiveStreamsBackpressureStrategy;
@@ -42,7 +40,6 @@ final class ReactorCamelProcessor implements Closeable {
     private final AtomicReference<FluxSink<Exchange>> camelSink;
 
     private final ReactorStreamsService service;
-    private final Lock lock = new ReentrantLock();
     private ReactiveStreamsProducer camelProducer;
 
     ReactorCamelProcessor(ReactorStreamsService service, String name) {
@@ -67,51 +64,41 @@ final class ReactorCamelProcessor implements Closeable {
         return publisher;
     }
 
-    void attach(ReactiveStreamsProducer producer) {
-        lock.lock();
-        try {
-            Objects.requireNonNull(producer, "producer cannot be null, use the detach method");
+    synchronized void attach(ReactiveStreamsProducer producer) {
+        Objects.requireNonNull(producer, "producer cannot be null, use the detach method");
 
-            if (this.camelProducer != null) {
-                throw new IllegalStateException("A producer is already attached to the stream '" + name + "'");
+        if (this.camelProducer != null) {
+            throw new IllegalStateException("A producer is already attached to the stream '" + name + "'");
+        }
+
+        if (this.camelProducer != producer) { // this condition is always true
+            detach();
+
+            ReactiveStreamsBackpressureStrategy strategy = producer.getEndpoint().getBackpressureStrategy();
+            Flux<Exchange> flux = Flux.create(camelSink::set, FluxSink.OverflowStrategy.IGNORE);
+
+            if (ObjectHelper.equal(strategy, ReactiveStreamsBackpressureStrategy.OLDEST)) {
+                // signal item emitted for non-dropped items only
+                flux = flux.onBackpressureDrop(this::onBackPressure).handle(this::onItemEmitted);
+            } else if (ObjectHelper.equal(strategy, ReactiveStreamsBackpressureStrategy.LATEST)) {
+                // Since there is no callback for dropped elements on backpressure "latest", item emission is signaled before dropping
+                // No exception is reported back to the exchanges
+                flux = flux.handle(this::onItemEmitted).onBackpressureLatest();
+            } else {
+                // Default strategy is BUFFER
+                flux = flux.onBackpressureBuffer(Queues.SMALL_BUFFER_SIZE, this::onBackPressure).handle(this::onItemEmitted);
             }
 
-            if (this.camelProducer != producer) { // this condition is always true
-                detach();
+            flux.subscribe(this.publisher);
 
-                ReactiveStreamsBackpressureStrategy strategy = producer.getEndpoint().getBackpressureStrategy();
-                Flux<Exchange> flux = Flux.create(camelSink::set, FluxSink.OverflowStrategy.IGNORE);
-
-                if (ObjectHelper.equal(strategy, ReactiveStreamsBackpressureStrategy.OLDEST)) {
-                    // signal item emitted for non-dropped items only
-                    flux = flux.onBackpressureDrop(this::onBackPressure).handle(this::onItemEmitted);
-                } else if (ObjectHelper.equal(strategy, ReactiveStreamsBackpressureStrategy.LATEST)) {
-                    // Since there is no callback for dropped elements on backpressure "latest", item emission is signaled before dropping
-                    // No exception is reported back to the exchanges
-                    flux = flux.handle(this::onItemEmitted).onBackpressureLatest();
-                } else {
-                    // Default strategy is BUFFER
-                    flux = flux.onBackpressureBuffer(Queues.SMALL_BUFFER_SIZE, this::onBackPressure)
-                            .handle(this::onItemEmitted);
-                }
-
-                flux.subscribe(this.publisher);
-
-                camelProducer = producer;
-            }
-        } finally {
-            lock.unlock();
+            camelProducer = producer;
         }
     }
 
-    void detach() {
-        lock.lock();
-        try {
-            this.camelProducer = null;
-            this.camelSink.set(null);
-        } finally {
-            lock.unlock();
-        }
+    synchronized void detach() {
+
+        this.camelProducer = null;
+        this.camelSink.set(null);
     }
 
     void send(Exchange exchange) {

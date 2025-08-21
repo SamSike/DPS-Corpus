@@ -31,7 +31,7 @@ public class PopulateInitialHeadersFailedIssueTest extends ContextTestSupport {
 
     @Test
     public void testPopulateInitialHeadersFailed() throws Exception {
-        Exchange exchange = DefaultExchange.newFromEndpoint(context.getEndpoint("seda:start"));
+        Exchange exchange = new DefaultExchange(context.getEndpoint("seda:start"));
         exchange.setPattern(ExchangePattern.InOut);
         MyFaultMessage msg = new MyFaultMessage(exchange);
         exchange.setMessage(msg);
@@ -46,10 +46,10 @@ public class PopulateInitialHeadersFailedIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // enable redelivery which forces copy defensive headers
                 errorHandler(defaultErrorHandler().maximumRedeliveries(3).redeliveryDelay(0));
 
@@ -59,7 +59,7 @@ public class PopulateInitialHeadersFailedIssueTest extends ContextTestSupport {
         };
     }
 
-    private static class MyFaultMessage extends DefaultMessage {
+    private class MyFaultMessage extends DefaultMessage {
 
         public MyFaultMessage(Exchange exchange) {
             super(exchange);

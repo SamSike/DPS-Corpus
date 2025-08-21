@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import org.springframework.web.testfixture.server.MockServerWebExchange;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link EncodedResourceResolver}.
+ * Unit tests for {@link EncodedResourceResolver}.
  *
  * @author Rossen Stoyanchev
  */
@@ -53,7 +53,7 @@ public class EncodedResourceResolverTests {
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		Cache cache = new ConcurrentMapCache("resourceCache");
 
 		VersionResourceResolver versionResolver = new VersionResourceResolver();
@@ -73,7 +73,7 @@ public class EncodedResourceResolverTests {
 
 
 	@Test
-	void resolveGzipped(GzippedFiles gzippedFiles) {
+	public void resolveGzipped(GzippedFiles gzippedFiles) {
 
 		MockServerWebExchange exchange = MockServerWebExchange.from(
 				MockServerHttpRequest.get("").header("Accept-Encoding", "gzip"));
@@ -93,7 +93,7 @@ public class EncodedResourceResolverTests {
 	}
 
 	@Test
-	void resolveGzippedWithVersion(GzippedFiles gzippedFiles) {
+	public void resolveGzippedWithVersion(GzippedFiles gzippedFiles) {
 
 		MockServerWebExchange exchange = MockServerWebExchange.from(
 				MockServerHttpRequest.get("").header("Accept-Encoding", "gzip"));
@@ -108,7 +108,7 @@ public class EncodedResourceResolverTests {
 	}
 
 	@Test
-	void resolveFromCacheWithEncodingVariants(GzippedFiles gzippedFiles) {
+	public void resolveFromCacheWithEncodingVariants(GzippedFiles gzippedFiles) {
 
 		// 1. Resolve, and cache .gz variant
 

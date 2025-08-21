@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.http.codec.multipart;
 
 import java.nio.charset.StandardCharsets;
@@ -38,12 +37,12 @@ import static org.mockito.Mockito.mock;
 import static org.springframework.http.codec.multipart.MultipartHttpMessageWriterTests.parse;
 
 /**
- * Tests for {@link PartHttpMessageWriter}.
+ * Unit tests for {@link PartHttpMessageWriter}.
  *
  * @author Rossen Stoyanchev
  * @since 5.3
  */
-class PartHttpMessageWriterTests extends AbstractLeakCheckingTests {
+public class PartHttpMessageWriterTests extends AbstractLeakCheckingTests {
 
 	private final PartHttpMessageWriter writer = new PartHttpMessageWriter();
 
@@ -51,25 +50,37 @@ class PartHttpMessageWriterTests extends AbstractLeakCheckingTests {
 
 
 	@Test
-	void canWrite() {
-		assertThat(this.writer.canWrite(ResolvableType.forClass(Part.class), MediaType.MULTIPART_FORM_DATA)).isTrue();
-		assertThat(this.writer.canWrite(ResolvableType.forClass(Part.class), MediaType.MULTIPART_MIXED)).isTrue();
-		assertThat(this.writer.canWrite(ResolvableType.forClass(Part.class), MediaType.MULTIPART_RELATED)).isTrue();
-		assertThat(this.writer.canWrite(ResolvableType.forClass(MultiValueMap.class), MediaType.MULTIPART_FORM_DATA)).isFalse();
+	public void canWrite() {
+		assertThat(this.writer.canWrite(
+				ResolvableType.forClassWithGenerics(MultiValueMap.class, String.class, Object.class),
+				MediaType.MULTIPART_FORM_DATA)).isTrue();
+		assertThat(this.writer.canWrite(
+				ResolvableType.forClassWithGenerics(MultiValueMap.class, String.class, String.class),
+				MediaType.MULTIPART_FORM_DATA)).isTrue();
+		assertThat(this.writer.canWrite(
+				ResolvableType.forClassWithGenerics(MultiValueMap.class, String.class, Object.class),
+				MediaType.MULTIPART_MIXED)).isTrue();
+		assertThat(this.writer.canWrite(
+				ResolvableType.forClassWithGenerics(MultiValueMap.class, String.class, Object.class),
+				MediaType.MULTIPART_RELATED)).isTrue();
+
+		assertThat(this.writer.canWrite(
+				ResolvableType.forClassWithGenerics(Map.class, String.class, Object.class),
+				MediaType.MULTIPART_FORM_DATA)).isFalse();
 	}
 
 	@Test
 	void write() {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.TEXT_PLAIN);
-		Part textPart = mock();
+		Part textPart = mock(Part.class);
 		given(textPart.name()).willReturn("text part");
 		given(textPart.headers()).willReturn(headers);
 		given(textPart.content()).willReturn(Flux.just(
 				this.bufferFactory.wrap("text1".getBytes(StandardCharsets.UTF_8)),
 				this.bufferFactory.wrap("text2".getBytes(StandardCharsets.UTF_8))));
 
-		FilePart filePart = mock();
+		FilePart filePart = mock(FilePart.class);
 		given(filePart.name()).willReturn("file part");
 		given(filePart.headers()).willReturn(new HttpHeaders());
 		given(filePart.filename()).willReturn("file.txt");
@@ -84,7 +95,7 @@ class PartHttpMessageWriterTests extends AbstractLeakCheckingTests {
 				.block(Duration.ofSeconds(5));
 
 		MultiValueMap<String, Part> requestParts = parse(this.response, hints);
-		assertThat(requestParts).hasSize(2);
+		assertThat(requestParts.size()).isEqualTo(2);
 
 		Part part = requestParts.getFirst("text part");
 		assertThat(part.name()).isEqualTo("text part");

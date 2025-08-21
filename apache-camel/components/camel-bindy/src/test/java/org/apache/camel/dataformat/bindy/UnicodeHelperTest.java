@@ -36,7 +36,7 @@ public class UnicodeHelperTest {
             0x1f3ff, // EMOJI MODIFIER FITZPATRICK TYPE-6; Hautfarbe für #1
             0x200d,  // ZERO WIDTH JOINER [ZWJ]; Steuerzeichen zum Verbinden
             0x2642,  // MALE SIGN; Geschlecht für #1
-            0xfe0f   // VARIATION SELECTOR-16 [VS16]; Darstellung als Piktogramm für #4
+            0xfe0f   // VARIATION SELECTOR-16 [VS16]; Darstellung als Piktogramm für #4                
     );
 
     @Test

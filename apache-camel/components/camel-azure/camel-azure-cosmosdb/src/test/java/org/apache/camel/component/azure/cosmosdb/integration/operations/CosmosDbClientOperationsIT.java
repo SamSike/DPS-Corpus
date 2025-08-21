@@ -62,7 +62,7 @@ class CosmosDbClientOperationsIT {
     }
 
     @AfterEach
-    void cleanup() {
+    void tearDown() {
         // delete all databases being used in the test after each test
         clientWrapper.readAllDatabases()
                 .toIterable()

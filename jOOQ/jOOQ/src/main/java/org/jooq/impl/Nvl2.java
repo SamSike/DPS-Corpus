@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -91,15 +91,12 @@ final class Nvl2<T> extends AbstractField<T> implements QOM.Nvl2<T> {
 
 
 
-            case CLICKHOUSE:
             case CUBRID:
             case DERBY:
-            case DUCKDB:
             case FIREBIRD:
             case MYSQL:
             case POSTGRES:
             case SQLITE:
-            case TRINO:
             case YUGABYTEDB:
                 acceptCase(ctx);
                 break;
@@ -138,7 +135,7 @@ final class Nvl2<T> extends AbstractField<T> implements QOM.Nvl2<T> {
     }
 
     @Override
-    public final Function3<? super Field<?>, ? super Field<T>, ? super Field<T>, ? extends QOM.Nvl2<T>> $constructor() {
+    public final Function3<? super Field<?>, ? super Field<T>, ? super Field<T>, ? extends Field<T>> $constructor() {
         return (a1, a2, a3) -> new Nvl2<>(a1, a2, a3);
     }
 }

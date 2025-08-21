@@ -70,25 +70,25 @@ public abstract class CamelTestConfiguration extends CamelSpringTestSupport {
         final String productTokenString = prop.getProperty("cm.product-token");
         final String sender = prop.getProperty("cm.default-sender");
 
-        final StringBuilder cmUri = new StringBuilder("cm-sms:" + host)
+        final StringBuffer cmUri = new StringBuffer("cm-sms:" + host)
                 .append("?productToken=").append(productTokenString);
         if (sender != null && !sender.isEmpty()) {
             cmUri.append("&defaultFrom=").append(sender);
         }
 
         // Defaults to false
-        final boolean testConnectionOnStartup = Boolean.parseBoolean(
+        final Boolean testConnectionOnStartup = Boolean.parseBoolean(
                 prop.getProperty("cm.testConnectionOnStartup", "false"));
         if (testConnectionOnStartup) {
             cmUri.append("&testConnectionOnStartup=")
-                    .append(testConnectionOnStartup);
+                    .append(testConnectionOnStartup.toString());
         }
 
         // Defaults to 8
-        final int defaultMaxNumberOfParts = Integer
+        final Integer defaultMaxNumberOfParts = Integer
                 .parseInt(prop.getProperty("defaultMaxNumberOfParts", "8"));
         cmUri.append("&defaultMaxNumberOfParts=")
-                .append(defaultMaxNumberOfParts);
+                .append(defaultMaxNumberOfParts.toString());
 
         uri = cmUri.toString();
     }

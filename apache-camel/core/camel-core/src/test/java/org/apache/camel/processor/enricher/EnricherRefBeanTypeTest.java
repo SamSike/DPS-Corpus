@@ -30,11 +30,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class EnricherRefBeanTypeTest extends ContextTestSupport {
 
-    private final MockEndpoint cool = new MockEndpoint("mock:cool", new MockComponent(context));
+    private MockEndpoint cool = new MockEndpoint("mock:cool", new MockComponent(context));
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("cool", cool);
         jndi.bind("latest", new UseLatestAggregationStrategy());
         return jndi;
@@ -43,7 +43,7 @@ public class EnricherRefBeanTypeTest extends ContextTestSupport {
     @Test
     public void testEnrichRef() throws Exception {
         cool.whenAnyExchangeReceived(new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getMessage().setBody("Bye World");
             }
         });
@@ -56,10 +56,10 @@ public class EnricherRefBeanTypeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 cool.setCamelContext(context);
 
                 from("direct:start").enrich().simple("ref:cool")

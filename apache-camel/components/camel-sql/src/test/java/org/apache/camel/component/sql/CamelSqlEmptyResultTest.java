@@ -19,6 +19,8 @@ package org.apache.camel.component.sql;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
@@ -33,7 +35,8 @@ public class CamelSqlEmptyResultTest extends CamelTestSupport {
     private JdbcTemplate jdbcTemplate;
 
     @Override
-    public void doPreSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
         db = new EmbeddedDatabaseBuilder()
                 .setName(getClass().getSimpleName())
                 .setType(EmbeddedDatabaseType.H2)
@@ -41,10 +44,14 @@ public class CamelSqlEmptyResultTest extends CamelTestSupport {
 
         jdbcTemplate = new JdbcTemplate(db);
         jdbcTemplate.execute("CREATE TABLE Persons (PersonID int, LastName varchar(255))");
+
+        super.setUp();
     }
 
     @Override
-    public void doPostTearDown() throws Exception {
+    @AfterEach
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (db != null) {
             db.shutdown();

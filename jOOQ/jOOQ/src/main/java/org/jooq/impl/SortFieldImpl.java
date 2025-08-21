@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,7 +37,6 @@
  */
 package org.jooq.impl;
 
-// ...
 // ...
 // ...
 // ...
@@ -62,20 +61,23 @@ import static org.jooq.impl.Keywords.K_NULLS_FIRST;
 import static org.jooq.impl.Keywords.K_NULLS_LAST;
 
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 import org.jooq.Context;
 import org.jooq.Field;
-// ...
-import org.jooq.QueryPart;
+import org.jooq.Function1;
 // ...
 import org.jooq.SQLDialect;
 import org.jooq.SortField;
 import org.jooq.SortOrder;
 // ...
+import org.jooq.QueryPart;
+// ...
 import org.jooq.impl.QOM.NullOrdering;
 
 
-final class SortFieldImpl<T> extends AbstractQueryPart implements SortField<T>, SimpleCheckQueryPart {
+final class SortFieldImpl<T> extends AbstractQueryPart implements SortField<T>, SimpleQueryPart {
 
     // DB2 supports NULLS FIRST/LAST only in OLAP (window) functions
     private static final Set<SQLDialect> NO_SUPPORT_NULLS = SQLDialect.supportedUntil(CUBRID, MARIADB, MYSQL);
@@ -85,13 +87,8 @@ final class SortFieldImpl<T> extends AbstractQueryPart implements SortField<T>, 
     NullOrdering                         nullOrdering;
 
     SortFieldImpl(Field<T> field, SortOrder order) {
-        this(field, order, null);
-    }
-
-    SortFieldImpl(Field<T> field, SortOrder order, NullOrdering nullOrdering) {
         this.field = field;
         this.order = order;
-        this.nullOrdering = nullOrdering;
     }
 
     @Override
@@ -107,6 +104,23 @@ final class SortFieldImpl<T> extends AbstractQueryPart implements SortField<T>, 
     @Override
     public final SortOrder getOrder() {
         return order;
+    }
+
+    final Field<T> getField() {
+        return field;
+    }
+
+    @SuppressWarnings("unchecked")
+    final <U> SortField<U> transform(Field<U> newField) {
+        if (newField == field)
+            return (SortFieldImpl<U>) this;
+
+        SortField<U> r = newField.sort(order);
+        return nullOrdering == NullOrdering.NULLS_FIRST
+             ? r.nullsFirst()
+             : nullOrdering == NullOrdering.NULLS_LAST
+             ? r.nullsLast()
+             : r;
     }
 
     @Override
@@ -193,26 +207,9 @@ final class SortFieldImpl<T> extends AbstractQueryPart implements SortField<T>, 
         return field;
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public final <U> SortField<U> $field(Field<U> newField) {
-        if (newField == field)
-            return (SortField<U>) this;
-        else
-            return new SortFieldImpl<>(newField, order, nullOrdering);
-    }
-
     @Override
     public final SortOrder $sortOrder() {
         return order;
-    }
-
-    @Override
-    public final SortField<T> $sortOrder(SortOrder newOrder) {
-        if (newOrder == order)
-            return this;
-        else
-            return new SortFieldImpl<>(field, newOrder, nullOrdering);
     }
 
     @Override
@@ -220,13 +217,9 @@ final class SortFieldImpl<T> extends AbstractQueryPart implements SortField<T>, 
         return nullOrdering;
     }
 
-    @Override
-    public final SortField<T> $nullOrdering(NullOrdering newOrdering) {
-        if (newOrdering == nullOrdering)
-            return this;
-        else
-            return new SortFieldImpl<>(field, order, newOrdering);
-    }
+
+
+
 
 
 

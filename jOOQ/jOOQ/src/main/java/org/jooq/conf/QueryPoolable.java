@@ -24,23 +24,8 @@ import jakarta.xml.bind.annotation.XmlType;
 @XmlEnum
 public enum QueryPoolable {
 
-
-    /**
-     * Statements are poolable
-     * 
-     */
     TRUE,
-
-    /**
-     * Statements are not poolable
-     * 
-     */
     FALSE,
-
-    /**
-     * Statements may be poolable, according to JDBC's default behaviour
-     * 
-     */
     DEFAULT;
 
     public String value() {

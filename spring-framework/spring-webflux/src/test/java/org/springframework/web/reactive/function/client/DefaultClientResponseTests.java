@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,42 +17,37 @@
 package org.springframework.web.reactive.function.client;
 
 import java.net.InetSocketAddress;
-import java.net.URI;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.OptionalLong;
 
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
 
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.codec.ByteArrayDecoder;
 import org.springframework.core.codec.StringDecoder;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DefaultDataBuffer;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpRange;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ClientHttpResponse;
 import org.springframework.http.codec.DecoderHttpMessageReader;
-import org.springframework.http.codec.json.JacksonJsonDecoder;
+import org.springframework.http.codec.HttpMessageReader;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.springframework.web.reactive.function.BodyExtractors.toMono;
@@ -61,31 +56,28 @@ import static org.springframework.web.reactive.function.BodyExtractors.toMono;
  * @author Arjen Poutsma
  * @author Denys Ivano
  */
-class DefaultClientResponseTests {
+public class DefaultClientResponseTests {
 
-	private static final ParameterizedTypeReference<String> STRING_TYPE = new ParameterizedTypeReference<>() {};
-
-
-	private final ClientHttpResponse mockResponse = mock();
+	private ClientHttpResponse mockResponse;
 
 	private final HttpHeaders httpHeaders = new HttpHeaders();
 
-	private final ExchangeStrategies mockExchangeStrategies = mock();
-
-	private @Nullable HttpRequest httpRequest = null;
+	private ExchangeStrategies mockExchangeStrategies;
 
 	private DefaultClientResponse defaultClientResponse;
 
 
 	@BeforeEach
-	void configureMocks() {
+	public void createMocks() {
+		mockResponse = mock(ClientHttpResponse.class);
 		given(mockResponse.getHeaders()).willReturn(this.httpHeaders);
-		defaultClientResponse = new DefaultClientResponse(mockResponse, mockExchangeStrategies, "", "", () -> httpRequest);
+		mockExchangeStrategies = mock(ExchangeStrategies.class);
+		defaultClientResponse = new DefaultClientResponse(mockResponse, mockExchangeStrategies, "", "", () -> null);
 	}
 
 
 	@Test
-	void statusCode() {
+	public void statusCode() {
 		HttpStatus status = HttpStatus.CONTINUE;
 		given(mockResponse.getStatusCode()).willReturn(status);
 
@@ -93,25 +85,34 @@ class DefaultClientResponseTests {
 	}
 
 	@Test
-	void header() {
+	public void rawStatusCode() {
+		int status = 999;
+		given(mockResponse.getRawStatusCode()).willReturn(status);
+
+		assertThat(defaultClientResponse.rawStatusCode()).isEqualTo(status);
+	}
+
+	@Test
+	public void header() {
 		long contentLength = 42L;
 		httpHeaders.setContentLength(contentLength);
 		MediaType contentType = MediaType.TEXT_PLAIN;
 		httpHeaders.setContentType(contentType);
 		InetSocketAddress host = InetSocketAddress.createUnresolved("localhost", 80);
 		httpHeaders.setHost(host);
-		httpHeaders.setRange(List.of(HttpRange.createByteRange(0, 42)));
+		List<HttpRange> range = Collections.singletonList(HttpRange.createByteRange(0, 42));
+		httpHeaders.setRange(range);
 
 		given(mockResponse.getHeaders()).willReturn(httpHeaders);
 
 		ClientResponse.Headers headers = defaultClientResponse.headers();
 		assertThat(headers.contentLength()).isEqualTo(OptionalLong.of(contentLength));
-		assertThat(headers.contentType()).contains(contentType);
+		assertThat(headers.contentType()).isEqualTo(Optional.of(contentType));
 		assertThat(headers.asHttpHeaders()).isEqualTo(httpHeaders);
 	}
 
 	@Test
-	void cookies() {
+	public void cookies() {
 		ResponseCookie cookie = ResponseCookie.from("foo", "bar").build();
 		MultiValueMap<String, ResponseCookie> cookies = new LinkedMultiValueMap<>();
 		cookies.add("foo", cookie);
@@ -123,280 +124,215 @@ class DefaultClientResponseTests {
 
 
 	@Test
-	void body() {
+	public void body() {
 		byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
-		DataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
-		mockTextPlainResponse(Flux.just(dataBuffer));
+		DefaultDataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(ByteBuffer.wrap(bytes));
+		Flux<DataBuffer> body = Flux.just(dataBuffer);
+		mockTextPlainResponse(body);
 
-		given(mockExchangeStrategies.messageReaders()).willReturn(
-				List.of(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes())));
+		List<HttpMessageReader<?>> messageReaders = Collections
+				.singletonList(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes()));
+		given(mockExchangeStrategies.messageReaders()).willReturn(messageReaders);
 
 		Mono<String> resultMono = defaultClientResponse.body(toMono(String.class));
 		assertThat(resultMono.block()).isEqualTo("foo");
 	}
 
 	@Test
-	void bodyToMono() {
+	public void bodyToMono() {
 		byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
-		DataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
-		mockTextPlainResponse(Flux.just(dataBuffer));
+		DefaultDataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(ByteBuffer.wrap(bytes));
+		Flux<DataBuffer> body = Flux.just(dataBuffer);
+		mockTextPlainResponse(body);
 
-		given(mockExchangeStrategies.messageReaders()).willReturn(
-				List.of(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes())));
+		List<HttpMessageReader<?>> messageReaders = Collections
+				.singletonList(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes()));
+		given(mockExchangeStrategies.messageReaders()).willReturn(messageReaders);
 
 		Mono<String> resultMono = defaultClientResponse.bodyToMono(String.class);
 		assertThat(resultMono.block()).isEqualTo("foo");
 	}
 
 	@Test
-	void bodyToMonoTypeReference() {
+	public void bodyToMonoTypeReference() {
 		byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
-		DataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
-		mockTextPlainResponse(Flux.just(dataBuffer));
+		DefaultDataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(ByteBuffer.wrap(bytes));
+		Flux<DataBuffer> body = Flux.just(dataBuffer);
+		mockTextPlainResponse(body);
 
-		given(mockExchangeStrategies.messageReaders()).willReturn(
-				List.of(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes())));
+		List<HttpMessageReader<?>> messageReaders = Collections
+				.singletonList(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes()));
+		given(mockExchangeStrategies.messageReaders()).willReturn(messageReaders);
 
-		Mono<String> resultMono = defaultClientResponse.bodyToMono(STRING_TYPE);
+		Mono<String> resultMono =
+				defaultClientResponse.bodyToMono(new ParameterizedTypeReference<String>() {
+				});
 		assertThat(resultMono.block()).isEqualTo("foo");
 	}
 
 	@Test
-	void bodyToFlux() {
+	public void bodyToFlux() {
 		byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
-		DataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
-		mockTextPlainResponse(Flux.just(dataBuffer));
+		DefaultDataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(ByteBuffer.wrap(bytes));
+		Flux<DataBuffer> body = Flux.just(dataBuffer);
+		mockTextPlainResponse(body);
 
-		given(mockExchangeStrategies.messageReaders()).willReturn(
-				List.of(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes())));
+		List<HttpMessageReader<?>> messageReaders = Collections
+				.singletonList(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes()));
+		given(mockExchangeStrategies.messageReaders()).willReturn(messageReaders);
 
 		Flux<String> resultFlux = defaultClientResponse.bodyToFlux(String.class);
 		Mono<List<String>> result = resultFlux.collectList();
-		assertThat(result.block()).containsExactly("foo");
+		assertThat(result.block()).isEqualTo(Collections.singletonList("foo"));
 	}
 
 	@Test
-	void bodyToFluxTypeReference() {
+	public void bodyToFluxTypeReference() {
 		byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
-		DataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
-		mockTextPlainResponse(Flux.just(dataBuffer));
+		DefaultDataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(ByteBuffer.wrap(bytes));
+		Flux<DataBuffer> body = Flux.just(dataBuffer);
+		mockTextPlainResponse(body);
 
-		given(mockExchangeStrategies.messageReaders()).willReturn(
-				List.of(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes())));
+		List<HttpMessageReader<?>> messageReaders = Collections
+				.singletonList(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes()));
+		given(mockExchangeStrategies.messageReaders()).willReturn(messageReaders);
 
-		Flux<String> resultFlux = defaultClientResponse.bodyToFlux(STRING_TYPE);
+		Flux<String> resultFlux =
+				defaultClientResponse.bodyToFlux(new ParameterizedTypeReference<String>() {
+				});
 		Mono<List<String>> result = resultFlux.collectList();
-		assertThat(result.block()).containsExactly("foo");
+		assertThat(result.block()).isEqualTo(Collections.singletonList("foo"));
 	}
 
 	@Test
-	void toEntity() {
+	public void toEntity() {
 		byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
-		DataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
-		mockTextPlainResponse(Flux.just(dataBuffer));
+		DefaultDataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(ByteBuffer.wrap(bytes));
+		Flux<DataBuffer> body = Flux.just(dataBuffer);
+		mockTextPlainResponse(body);
 
-		given(mockExchangeStrategies.messageReaders()).willReturn(
-				List.of(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes())));
+		List<HttpMessageReader<?>> messageReaders = Collections
+				.singletonList(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes()));
+		given(mockExchangeStrategies.messageReaders()).willReturn(messageReaders);
 
 		ResponseEntity<String> result = defaultClientResponse.toEntity(String.class).block();
 		assertThat(result.getBody()).isEqualTo("foo");
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(result.getStatusCodeValue()).isEqualTo(HttpStatus.OK.value());
 		assertThat(result.getHeaders().getContentType()).isEqualTo(MediaType.TEXT_PLAIN);
 	}
 
 	@Test
-	void toEntityWithUnknownStatusCode() {
+	public void toEntityWithUnknownStatusCode() throws Exception {
 		byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
-		DataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
+		DefaultDataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(ByteBuffer.wrap(bytes));
+		Flux<DataBuffer> body = Flux.just(dataBuffer);
 
 		httpHeaders.setContentType(MediaType.TEXT_PLAIN);
 		given(mockResponse.getHeaders()).willReturn(httpHeaders);
-		given(mockResponse.getStatusCode()).willReturn(HttpStatusCode.valueOf(999));
-		given(mockResponse.getBody()).willReturn(Flux.just(dataBuffer));
+		given(mockResponse.getStatusCode()).willThrow(new IllegalArgumentException("999"));
+		given(mockResponse.getRawStatusCode()).willReturn(999);
+		given(mockResponse.getBody()).willReturn(body);
 
-		given(mockExchangeStrategies.messageReaders()).willReturn(
-				List.of(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes())));
+		List<HttpMessageReader<?>> messageReaders = Collections
+				.singletonList(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes()));
+		given(mockExchangeStrategies.messageReaders()).willReturn(messageReaders);
 
 		ResponseEntity<String> result = defaultClientResponse.toEntity(String.class).block();
 		assertThat(result.getBody()).isEqualTo("foo");
-		assertThat(result.getStatusCode().value()).isEqualTo(999);
+		assertThatIllegalArgumentException().isThrownBy(
+				result::getStatusCode);
+		assertThat(result.getStatusCodeValue()).isEqualTo(999);
 		assertThat(result.getHeaders().getContentType()).isEqualTo(MediaType.TEXT_PLAIN);
 	}
 
 	@Test
-	void toEntityTypeReference() {
+	public void toEntityTypeReference() {
 		byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
-		DataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
-		mockTextPlainResponse(Flux.just(dataBuffer));
+		DefaultDataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(ByteBuffer.wrap(bytes));
+		Flux<DataBuffer> body = Flux.just(dataBuffer);
+		mockTextPlainResponse(body);
 
-		given(mockExchangeStrategies.messageReaders()).willReturn(
-				List.of(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes())));
+		List<HttpMessageReader<?>> messageReaders = Collections
+				.singletonList(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes()));
+		given(mockExchangeStrategies.messageReaders()).willReturn(messageReaders);
 
-		ResponseEntity<String> result = defaultClientResponse.toEntity(STRING_TYPE).block();
+		ResponseEntity<String> result = defaultClientResponse.toEntity(
+				new ParameterizedTypeReference<String>() {
+				}).block();
 		assertThat(result.getBody()).isEqualTo("foo");
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(result.getStatusCodeValue()).isEqualTo(HttpStatus.OK.value());
 		assertThat(result.getHeaders().getContentType()).isEqualTo(MediaType.TEXT_PLAIN);
 	}
 
 	@Test
-	void toEntityList() {
+	public void toEntityList() {
 		byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
-		DataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
-		mockTextPlainResponse(Flux.just(dataBuffer));
+		DefaultDataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(ByteBuffer.wrap(bytes));
+		Flux<DataBuffer> body = Flux.just(dataBuffer);
+		mockTextPlainResponse(body);
 
-		given(mockExchangeStrategies.messageReaders()).willReturn(
-				List.of(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes())));
+		List<HttpMessageReader<?>> messageReaders = Collections
+				.singletonList(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes()));
+		given(mockExchangeStrategies.messageReaders()).willReturn(messageReaders);
 
 		ResponseEntity<List<String>> result = defaultClientResponse.toEntityList(String.class).block();
-		assertThat(result.getBody()).containsExactly("foo");
+		assertThat(result.getBody()).isEqualTo(Collections.singletonList("foo"));
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(result.getStatusCodeValue()).isEqualTo(HttpStatus.OK.value());
 		assertThat(result.getHeaders().getContentType()).isEqualTo(MediaType.TEXT_PLAIN);
 	}
 
 	@Test
-	void toEntityListWithUnknownStatusCode() {
+	public void toEntityListWithUnknownStatusCode() {
 		byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
-		DataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
+		DefaultDataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(ByteBuffer.wrap(bytes));
+		Flux<DataBuffer> body = Flux.just(dataBuffer);
 
 		httpHeaders.setContentType(MediaType.TEXT_PLAIN);
 		given(mockResponse.getHeaders()).willReturn(httpHeaders);
-		given(mockResponse.getStatusCode()).willReturn(HttpStatusCode.valueOf(999));
-		given(mockResponse.getBody()).willReturn(Flux.just(dataBuffer));
+		given(mockResponse.getStatusCode()).willThrow(new IllegalArgumentException("999"));
+		given(mockResponse.getRawStatusCode()).willReturn(999);
+		given(mockResponse.getBody()).willReturn(body);
 
-		given(mockExchangeStrategies.messageReaders()).willReturn(
-				List.of(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes())));
+		List<HttpMessageReader<?>> messageReaders = Collections
+				.singletonList(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes()));
+		given(mockExchangeStrategies.messageReaders()).willReturn(messageReaders);
 
 		ResponseEntity<List<String>> result = defaultClientResponse.toEntityList(String.class).block();
-		assertThat(result.getBody()).containsExactly("foo");
-		assertThat(result.getStatusCode()).isEqualTo(HttpStatusCode.valueOf(999));
+		assertThat(result.getBody()).isEqualTo(Collections.singletonList("foo"));
+		assertThatIllegalArgumentException().isThrownBy(
+				result::getStatusCode);
+		assertThat(result.getStatusCodeValue()).isEqualTo(999);
 		assertThat(result.getHeaders().getContentType()).isEqualTo(MediaType.TEXT_PLAIN);
 	}
 
 	@Test
-	void toEntityListTypeReference() {
+	public void toEntityListTypeReference() {
 		byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
-		DataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
+		DefaultDataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(ByteBuffer.wrap(bytes));
+		Flux<DataBuffer> body = Flux.just(dataBuffer);
 
-		mockTextPlainResponse(Flux.just(dataBuffer));
+		mockTextPlainResponse(body);
 
-		given(mockExchangeStrategies.messageReaders()).willReturn(
-				List.of(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes())));
+		List<HttpMessageReader<?>> messageReaders = Collections
+				.singletonList(new DecoderHttpMessageReader<>(StringDecoder.allMimeTypes()));
+		given(mockExchangeStrategies.messageReaders()).willReturn(messageReaders);
 
-		ResponseEntity<List<String>> result = defaultClientResponse.toEntityList(STRING_TYPE).block();
-		assertThat(result.getBody()).containsExactly("foo");
+		ResponseEntity<List<String>> result = defaultClientResponse.toEntityList(
+				new ParameterizedTypeReference<String>() {}).block();
+		assertThat(result.getBody()).isEqualTo(Collections.singletonList("foo"));
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(result.getStatusCodeValue()).isEqualTo(HttpStatus.OK.value());
 		assertThat(result.getHeaders().getContentType()).isEqualTo(MediaType.TEXT_PLAIN);
-	}
-
-	@Test
-	@SuppressWarnings("deprecation")
-	void createException() {
-		byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
-		DataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
-
-		httpHeaders.setContentType(MediaType.TEXT_PLAIN);
-		given(mockResponse.getStatusCode()).willReturn(HttpStatus.NOT_FOUND);
-		given(mockResponse.getBody()).willReturn(Flux.just(dataBuffer));
-
-		httpRequest = new HttpRequest() {
-			@Override
-			public HttpMethod getMethod() {
-				return HttpMethod.valueOf("UNKNOWN");
-			}
-
-			@Override
-			public URI getURI() {
-				return URI.create("https://user:pass@example.org:9999/app/path?token=secret#fragment");
-			}
-
-			@Override
-			public HttpHeaders getHeaders() {
-				return HttpHeaders.EMPTY;
-			}
-
-			@Override
-			public Map<String, Object> getAttributes() {
-				return Collections.emptyMap();
-			}
-		};
-
-		given(mockExchangeStrategies.messageReaders()).willReturn(
-				List.of(new DecoderHttpMessageReader<>(new ByteArrayDecoder())));
-
-		Mono<WebClientResponseException> resultMono = defaultClientResponse.createException();
-		WebClientResponseException exception = resultMono.block();
-		assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-		assertThat(exception.getMessage()).isEqualTo("404 Not Found from UNKNOWN https://example.org:9999/app/path");
-		assertThat(exception.getHeaders().containsHeaderValue("Content-Type", "text/plain")).isTrue();
-		assertThat(exception.getResponseBodyAsByteArray()).isEqualTo(bytes);
-	}
-
-	@Test
-	@SuppressWarnings("unchecked")
-	void createExceptionAndDecodeContent() {
-		byte[] bytes = "{\"name\":\"Jason\"}".getBytes(StandardCharsets.UTF_8);
-		DataBuffer buffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
-
-		httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-		given(mockResponse.getStatusCode()).willReturn(HttpStatus.NOT_FOUND);
-		given(mockResponse.getBody()).willReturn(Flux.just(buffer));
-
-		given(mockExchangeStrategies.messageReaders()).willReturn(List.of(
-				new DecoderHttpMessageReader<>(new ByteArrayDecoder()),
-				new DecoderHttpMessageReader<>(new JacksonJsonDecoder())));
-
-		WebClientResponseException ex = defaultClientResponse.createException().block();
-		assertThat(ex.getResponseBodyAs(Map.class)).containsExactly(entry("name", "Jason"));
-	}
-
-	@Test
-	@SuppressWarnings("unchecked")
-	void createExceptionAndDecodeWithoutContent() {
-		byte[] bytes = new byte[0];
-		DataBuffer buffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
-
-		httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-		given(mockResponse.getStatusCode()).willReturn(HttpStatus.NOT_FOUND);
-		given(mockResponse.getBody()).willReturn(Flux.just(buffer));
-
-		given(mockExchangeStrategies.messageReaders()).willReturn(List.of(
-				new DecoderHttpMessageReader<>(new ByteArrayDecoder()),
-				new DecoderHttpMessageReader<>(new JacksonJsonDecoder())));
-
-		WebClientResponseException ex = defaultClientResponse.createException().block();
-		assertThat(ex.getResponseBodyAs(Map.class)).isNull();
-	}
-
-	@Test
-	@SuppressWarnings("deprecation")
-	void createError() {
-		byte[] bytes = "foo".getBytes(StandardCharsets.UTF_8);
-		DataBuffer dataBuffer = DefaultDataBufferFactory.sharedInstance.wrap(bytes);
-
-		httpHeaders.setContentType(MediaType.TEXT_PLAIN);
-		given(mockResponse.getStatusCode()).willReturn(HttpStatus.NOT_FOUND);
-		given(mockResponse.getBody()).willReturn(Flux.just(dataBuffer));
-
-		given(mockExchangeStrategies.messageReaders()).willReturn(
-				List.of(new DecoderHttpMessageReader<>(new ByteArrayDecoder())));
-
-		Mono<String> resultMono = defaultClientResponse.createError();
-		StepVerifier.create(resultMono)
-				.consumeErrorWith(t -> {
-					assertThat(t).isInstanceOf(WebClientResponseException.class);
-					WebClientResponseException exception = (WebClientResponseException) t;
-					assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-					assertThat(exception.getMessage()).isEqualTo("404 Not Found");
-					assertThat(exception.getHeaders().containsHeaderValue("Content-Type", "text/plain"));
-					assertThat(exception.getResponseBodyAsByteArray()).isEqualTo(bytes);
-				})
-				.verify();
 	}
 
 
 	private void mockTextPlainResponse(Flux<DataBuffer> body) {
 		httpHeaders.setContentType(MediaType.TEXT_PLAIN);
 		given(mockResponse.getStatusCode()).willReturn(HttpStatus.OK);
+		given(mockResponse.getRawStatusCode()).willReturn(HttpStatus.OK.value());
 		given(mockResponse.getBody()).willReturn(body);
 	}
 

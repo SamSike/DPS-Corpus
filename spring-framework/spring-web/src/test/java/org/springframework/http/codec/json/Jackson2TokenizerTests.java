@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,13 +27,11 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.TokenBuffer;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.CompositeByteBuf;
-import io.netty.buffer.UnpooledByteBufAllocator;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.skyscreamer.jsonassert.JSONAssert;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
@@ -41,21 +39,19 @@ import reactor.test.StepVerifier;
 import org.springframework.core.codec.DecodingException;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferLimitException;
-import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.core.testfixture.io.buffer.AbstractLeakCheckingTests;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Arjen Poutsma
  * @author Rossen Stoyanchev
  * @author Juergen Hoeller
  */
-@SuppressWarnings("removal")
-class Jackson2TokenizerTests extends AbstractLeakCheckingTests {
+public class Jackson2TokenizerTests extends AbstractLeakCheckingTests {
 
 	private JsonFactory jsonFactory;
 
@@ -63,14 +59,14 @@ class Jackson2TokenizerTests extends AbstractLeakCheckingTests {
 
 
 	@BeforeEach
-	void createParser() {
+	public void createParser() {
 		this.jsonFactory = new JsonFactory();
 		this.objectMapper = new ObjectMapper(this.jsonFactory);
 	}
 
 
 	@Test
-	void doNotTokenizeArrayElements() {
+	public void doNotTokenizeArrayElements() {
 		testTokenize(
 				singletonList("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}"),
 				singletonList("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}"), false);
@@ -119,7 +115,7 @@ class Jackson2TokenizerTests extends AbstractLeakCheckingTests {
 	}
 
 	@Test
-	void tokenizeArrayElements() {
+	public void tokenizeArrayElements() {
 		testTokenize(
 				singletonList("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}"),
 				singletonList("{\"foo\": \"foofoo\", \"bar\": \"barbar\"}"), true);
@@ -252,7 +248,7 @@ class Jackson2TokenizerTests extends AbstractLeakCheckingTests {
 	}
 
 	@Test
-	void testLimit() {
+	public void testLimit() {
 		List<String> source = asList(
 				"[",
 				"{", "\"id\":1,\"name\":\"Dan\"", "},",
@@ -273,7 +269,7 @@ class Jackson2TokenizerTests extends AbstractLeakCheckingTests {
 	}
 
 	@Test
-	void testLimitTokenized() {
+	public void testLimitTokenized() {
 
 		List<String> source = asList(
 				"[",
@@ -299,7 +295,7 @@ class Jackson2TokenizerTests extends AbstractLeakCheckingTests {
 	}
 
 	@Test
-	void errorInStream() {
+	public void errorInStream() {
 		DataBuffer buffer = stringBuffer("{\"id\":1,\"name\":");
 		Flux<DataBuffer> source = Flux.just(buffer).concatWith(Flux.error(new RuntimeException()));
 		Flux<TokenBuffer> result = Jackson2Tokenizer.tokenize(source, this.jsonFactory, this.objectMapper, true,
@@ -321,11 +317,12 @@ class Jackson2TokenizerTests extends AbstractLeakCheckingTests {
 				.verify();
 	}
 
-	@Test
-	void useBigDecimalForFloats() {
+	@ParameterizedTest
+	@ValueSource(booleans = {false, true})
+	public void useBigDecimalForFloats(boolean useBigDecimalForFloats) {
 		Flux<DataBuffer> source = Flux.just(stringBuffer("1E+2"));
 		Flux<TokenBuffer> tokens = Jackson2Tokenizer.tokenize(
-				source, this.jsonFactory, this.objectMapper, false, true, -1);
+				source, this.jsonFactory, this.objectMapper, false, useBigDecimalForFloats, -1);
 
 		StepVerifier.create(tokens)
 				.assertNext(tokenBuffer -> {
@@ -334,38 +331,19 @@ class Jackson2TokenizerTests extends AbstractLeakCheckingTests {
 						JsonToken token = parser.nextToken();
 						assertThat(token).isEqualTo(JsonToken.VALUE_NUMBER_FLOAT);
 						JsonParser.NumberType numberType = parser.getNumberType();
-						assertThat(numberType).isEqualTo(JsonParser.NumberType.BIG_DECIMAL);
+						if (useBigDecimalForFloats) {
+							assertThat(numberType).isEqualTo(JsonParser.NumberType.BIG_DECIMAL);
+						}
+						else {
+							assertThat(numberType).isEqualTo(JsonParser.NumberType.DOUBLE);
+						}
 					}
 					catch (IOException ex) {
-						fail(ex.getMessage(), ex);
+						fail(ex);
 					}
 				})
 				.verifyComplete();
 	}
-
-	// gh-31747
-	@Test
-	void compositeNettyBuffer() {
-		ByteBufAllocator allocator = UnpooledByteBufAllocator.DEFAULT;
-		ByteBuf firstByteBuf = allocator.buffer();
-		firstByteBuf.writeBytes("{\"foo\": \"foofoo\"".getBytes(StandardCharsets.UTF_8));
-		ByteBuf secondBuf = allocator.buffer();
-		secondBuf.writeBytes(", \"bar\": \"barbar\"}".getBytes(StandardCharsets.UTF_8));
-		CompositeByteBuf composite = allocator.compositeBuffer();
-		composite.addComponent(true, firstByteBuf);
-		composite.addComponent(true, secondBuf);
-
-		NettyDataBufferFactory bufferFactory = new NettyDataBufferFactory(allocator);
-		Flux<DataBuffer> source = Flux.just(bufferFactory.wrap(composite));
-		Flux<TokenBuffer> tokens = Jackson2Tokenizer.tokenize(source, this.jsonFactory, this.objectMapper, false, false, -1);
-
-		Flux<String> strings = tokens.map(this::tokenToString);
-
-		StepVerifier.create(strings)
-				.assertNext(s -> assertThat(s).isEqualTo("{\"foo\":\"foofoo\",\"bar\":\"barbar\"}"))
-				.verifyComplete();
-	}
-
 
 	private Flux<String> decode(List<String> source, boolean tokenize, int maxInMemorySize) {
 
@@ -373,17 +351,16 @@ class Jackson2TokenizerTests extends AbstractLeakCheckingTests {
 				Flux.fromIterable(source).map(this::stringBuffer),
 				this.jsonFactory, this.objectMapper, tokenize, false, maxInMemorySize);
 
-		return tokens.map(this::tokenToString);
-	}
-
-	private String tokenToString(TokenBuffer tokenBuffer) {
-		try {
-			TreeNode root = this.objectMapper.readTree(tokenBuffer.asParser());
-			return this.objectMapper.writeValueAsString(root);
-		}
-		catch (IOException ex) {
-			throw new UncheckedIOException(ex);
-		}
+		return tokens
+				.map(tokenBuffer -> {
+					try {
+						TreeNode root = this.objectMapper.readTree(tokenBuffer.asParser());
+						return this.objectMapper.writeValueAsString(root);
+					}
+					catch (IOException ex) {
+						throw new UncheckedIOException(ex);
+					}
+				});
 	}
 
 	private DataBuffer stringBuffer(String value) {

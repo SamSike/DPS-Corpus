@@ -29,14 +29,14 @@ import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
-import org.apache.camel.support.ScheduledPollEndpoint;
+import org.apache.camel.support.DefaultEndpoint;
 
 /**
  * Perform operations on git repositories.
  */
 @UriEndpoint(firstVersion = "2.16.0", scheme = "git", title = "Git", syntax = "git:localPath", category = { Category.FILE },
              headersClass = GitConstants.class)
-public class GitEndpoint extends ScheduledPollEndpoint {
+public class GitEndpoint extends DefaultEndpoint {
 
     @UriPath
     @Metadata(required = true)
@@ -56,10 +56,10 @@ public class GitEndpoint extends ScheduledPollEndpoint {
     @UriParam(enums = "commit,tag,branch", label = "consumer")
     private GitType type;
 
-    @UriParam(label = "producer,security", secret = true)
+    @UriParam(label = "producer")
     private String username;
 
-    @UriParam(label = "producer,security", secret = true)
+    @UriParam(label = "producer")
     private String password;
 
     @UriParam(label = "producer")
@@ -73,8 +73,8 @@ public class GitEndpoint extends ScheduledPollEndpoint {
     @Metadata(label = "producer")
     private boolean allowEmpty = true;
 
-    @UriParam(label = "producer",
-              enums = "add,cherryPick,clean,clone,commit,commitAll,createBranch,createTag,deleteBranch,deleteTag,gc,init,log,pull,push,remoteAdd,remoteList,remove,showBranches,showTags,status")
+    @UriParam(enums = "clone,init,add,remove,commit,commitAll,createBranch,deleteBranch,createTag,deleteTag,status,log,push,pull,showBranches,cherryPick,remoteAdd,remoteList",
+              label = "producer")
     private String operation;
 
     @UriParam(description = "A String with path to a .gitconfig file", label = "advanced")
@@ -224,7 +224,7 @@ public class GitEndpoint extends ScheduledPollEndpoint {
     }
 
     /**
-     * A String with path to a .gitconfig file
+     * A String with path to a .gitconfig file", label = "producer,consumer,advanced
      */
     public String getGitConfigFile() {
         return this.gitConfigFile;

@@ -27,13 +27,11 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class MatchersCatalogType implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String expression;
     protected MatcherRule catalogClass;
     protected MatcherRule catalogIdentifier;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String catalogExtends;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String catalogImplements;
 
@@ -86,30 +84,6 @@ public class MatchersCatalogType implements Serializable, XMLAppendable
     }
 
     /**
-     * This string provides a super class that a generated {@link org.jooq.Catalog} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.Catalog} does, so to minimise
-     * unexpected behaviour, custom catalog super classes should extend {@link org.jooq.impl.CatalogImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public String getCatalogExtends() {
-        return catalogExtends;
-    }
-
-    /**
-     * This string provides a super class that a generated {@link org.jooq.Catalog} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.Catalog} does, so to minimise
-     * unexpected behaviour, custom catalog super classes should extend {@link org.jooq.impl.CatalogImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public void setCatalogExtends(String value) {
-        this.catalogExtends = value;
-    }
-
-    /**
      * This string provides additional interfaces that a generated {@link org.jooq.Catalog} should implement.
      * 
      */
@@ -153,19 +127,6 @@ public class MatchersCatalogType implements Serializable, XMLAppendable
     }
 
     /**
-     * This string provides a super class that a generated {@link org.jooq.Catalog} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.Catalog} does, so to minimise
-     * unexpected behaviour, custom catalog super classes should extend {@link org.jooq.impl.CatalogImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public MatchersCatalogType withCatalogExtends(String value) {
-        setCatalogExtends(value);
-        return this;
-    }
-
-    /**
      * This string provides additional interfaces that a generated {@link org.jooq.Catalog} should implement.
      * 
      */
@@ -179,7 +140,6 @@ public class MatchersCatalogType implements Serializable, XMLAppendable
         builder.append("expression", expression);
         builder.append("catalogClass", catalogClass);
         builder.append("catalogIdentifier", catalogIdentifier);
-        builder.append("catalogExtends", catalogExtends);
         builder.append("catalogImplements", catalogImplements);
     }
 
@@ -229,15 +189,6 @@ public class MatchersCatalogType implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (catalogExtends == null) {
-            if (other.catalogExtends!= null) {
-                return false;
-            }
-        } else {
-            if (!catalogExtends.equals(other.catalogExtends)) {
-                return false;
-            }
-        }
         if (catalogImplements == null) {
             if (other.catalogImplements!= null) {
                 return false;
@@ -257,7 +208,6 @@ public class MatchersCatalogType implements Serializable, XMLAppendable
         result = ((prime*result)+((expression == null)? 0 :expression.hashCode()));
         result = ((prime*result)+((catalogClass == null)? 0 :catalogClass.hashCode()));
         result = ((prime*result)+((catalogIdentifier == null)? 0 :catalogIdentifier.hashCode()));
-        result = ((prime*result)+((catalogExtends == null)? 0 :catalogExtends.hashCode()));
         result = ((prime*result)+((catalogImplements == null)? 0 :catalogImplements.hashCode()));
         return result;
     }

@@ -4,7 +4,9 @@
  * {@link org.springframework.test.web.servlet.request.MockMvcRequestBuilders}
  * to gain access to instances of those implementations.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.test.web.servlet.request;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

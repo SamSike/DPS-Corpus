@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ package org.springframework.validation;
 
 import java.beans.PropertyEditor;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.ConfigurablePropertyAccessor;
 import org.springframework.beans.PropertyAccessorUtils;
@@ -27,6 +25,7 @@ import org.springframework.beans.PropertyEditorRegistry;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.ConvertingPropertyEditorAdapter;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -44,7 +43,8 @@ import org.springframework.util.Assert;
 @SuppressWarnings("serial")
 public abstract class AbstractPropertyBindingResult extends AbstractBindingResult {
 
-	private transient @Nullable ConversionService conversionService;
+	@Nullable
+	private transient ConversionService conversionService;
 
 
 	/**
@@ -70,7 +70,7 @@ public abstract class AbstractPropertyBindingResult extends AbstractBindingResul
 	 * @see #getPropertyAccessor()
 	 */
 	@Override
-	public @Nullable PropertyEditorRegistry getPropertyEditorRegistry() {
+	public PropertyEditorRegistry getPropertyEditorRegistry() {
 		return (getTarget() != null ? getPropertyAccessor() : null);
 	}
 
@@ -88,7 +88,8 @@ public abstract class AbstractPropertyBindingResult extends AbstractBindingResul
 	 * @see #getPropertyAccessor()
 	 */
 	@Override
-	public @Nullable Class<?> getFieldType(@Nullable String field) {
+	@Nullable
+	public Class<?> getFieldType(@Nullable String field) {
 		return (getTarget() != null ? getPropertyAccessor().getPropertyType(fixedField(field)) :
 				super.getFieldType(field));
 	}
@@ -98,7 +99,8 @@ public abstract class AbstractPropertyBindingResult extends AbstractBindingResul
 	 * @see #getPropertyAccessor()
 	 */
 	@Override
-	protected @Nullable Object getActualFieldValue(String field) {
+	@Nullable
+	protected Object getActualFieldValue(String field) {
 		return getPropertyAccessor().getPropertyValue(field);
 	}
 
@@ -107,7 +109,7 @@ public abstract class AbstractPropertyBindingResult extends AbstractBindingResul
 	 * @see #getCustomEditor
 	 */
 	@Override
-	protected @Nullable Object formatFieldValue(String field, @Nullable Object value) {
+	protected Object formatFieldValue(String field, @Nullable Object value) {
 		String fixedField = fixedField(field);
 		// Try custom editor...
 		PropertyEditor customEditor = getCustomEditor(fixedField);
@@ -136,7 +138,8 @@ public abstract class AbstractPropertyBindingResult extends AbstractBindingResul
 	 * @param fixedField the fully qualified field name
 	 * @return the custom PropertyEditor, or {@code null}
 	 */
-	protected @Nullable PropertyEditor getCustomEditor(String fixedField) {
+	@Nullable
+	protected PropertyEditor getCustomEditor(String fixedField) {
 		Class<?> targetType = getPropertyAccessor().getPropertyType(fixedField);
 		PropertyEditor editor = getPropertyAccessor().findCustomEditor(targetType, fixedField);
 		if (editor == null) {
@@ -150,7 +153,8 @@ public abstract class AbstractPropertyBindingResult extends AbstractBindingResul
 	 * if applicable.
 	 */
 	@Override
-	public @Nullable PropertyEditor findEditor(@Nullable String field, @Nullable Class<?> valueType) {
+	@Nullable
+	public PropertyEditor findEditor(@Nullable String field, @Nullable Class<?> valueType) {
 		Class<?> valueTypeForLookup = valueType;
 		if (valueTypeForLookup == null) {
 			valueTypeForLookup = getFieldType(field);

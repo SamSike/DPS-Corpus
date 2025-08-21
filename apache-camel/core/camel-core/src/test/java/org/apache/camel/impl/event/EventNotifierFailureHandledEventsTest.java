@@ -28,13 +28,21 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.processor.SendProcessor;
 import org.apache.camel.spi.CamelEvent;
 import org.apache.camel.support.EventNotifierSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class EventNotifierFailureHandledEventsTest extends ContextTestSupport {
 
-    private final List<CamelEvent> events = new ArrayList<>();
+    private static List<CamelEvent> events = new ArrayList<>();
+
+    @Override
+    @BeforeEach
+    public void setUp() throws Exception {
+        events.clear();
+        super.setUp();
+    }
 
     @Override
     public boolean isUseRouteBuilder() {
@@ -43,14 +51,14 @@ public class EventNotifierFailureHandledEventsTest extends ContextTestSupport {
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        DefaultCamelContext context = new DefaultCamelContext(createCamelRegistry());
+        DefaultCamelContext context = new DefaultCamelContext(createRegistry());
         context.getManagementStrategy().addEventNotifier(new EventNotifierSupport() {
-            public void notify(CamelEvent event) {
+            public void notify(CamelEvent event) throws Exception {
                 events.add(event);
             }
 
             @Override
-            protected void doBuild() {
+            protected void doBuild() throws Exception {
                 setIgnoreExchangeAsyncProcessingStartedEvents(true);
             }
         });
@@ -61,7 +69,7 @@ public class EventNotifierFailureHandledEventsTest extends ContextTestSupport {
     public void testExchangeDeadLetterChannel() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead"));
 
                 from("direct:start").throwException(new IllegalArgumentException("Damn"));
@@ -87,14 +95,14 @@ public class EventNotifierFailureHandledEventsTest extends ContextTestSupport {
         assertIsInstanceOf(ExchangeCreatedEvent.class, events.get(10));
 
         ExchangeFailureHandlingEvent e0 = assertIsInstanceOf(ExchangeFailureHandlingEvent.class, events.get(11));
-        assertTrue(e0.isDeadLetterChannel(), "should be DLC");
+        assertEquals(true, e0.isDeadLetterChannel(), "should be DLC");
         assertEquals("mock:dead", e0.getDeadLetterUri());
 
         assertIsInstanceOf(ExchangeSendingEvent.class, events.get(12));
         assertIsInstanceOf(ExchangeSentEvent.class, events.get(13));
 
         ExchangeFailureHandledEvent e = assertIsInstanceOf(ExchangeFailureHandledEvent.class, events.get(14));
-        assertTrue(e.isDeadLetterChannel(), "should be DLC");
+        assertEquals(true, e.isDeadLetterChannel(), "should be DLC");
         assertTrue(e.isHandled(), "should be marked as failure handled");
         assertFalse(e.isContinued(), "should not be continued");
         Processor fh = e.getFailureHandler();
@@ -117,7 +125,7 @@ public class EventNotifierFailureHandledEventsTest extends ContextTestSupport {
     public void testExchangeOnException() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(IllegalArgumentException.class).handled(true).to("mock:dead");
 
                 from("direct:start").throwException(new IllegalArgumentException("Damn"));
@@ -143,13 +151,13 @@ public class EventNotifierFailureHandledEventsTest extends ContextTestSupport {
         assertIsInstanceOf(ExchangeCreatedEvent.class, events.get(10));
 
         ExchangeFailureHandlingEvent e0 = assertIsInstanceOf(ExchangeFailureHandlingEvent.class, events.get(11));
-        assertFalse(e0.isDeadLetterChannel(), "should NOT be DLC");
+        assertEquals(false, e0.isDeadLetterChannel(), "should NOT be DLC");
 
         assertIsInstanceOf(ExchangeSendingEvent.class, events.get(12));
         assertIsInstanceOf(ExchangeSentEvent.class, events.get(13));
 
         ExchangeFailureHandledEvent e = assertIsInstanceOf(ExchangeFailureHandledEvent.class, events.get(14));
-        assertFalse(e.isDeadLetterChannel(), "should NOT be DLC");
+        assertEquals(false, e.isDeadLetterChannel(), "should NOT be DLC");
         assertTrue(e.isHandled(), "should be marked as failure handled");
         assertFalse(e.isContinued(), "should not be continued");
 
@@ -165,7 +173,7 @@ public class EventNotifierFailureHandledEventsTest extends ContextTestSupport {
     public void testExchangeDoTryDoCatch() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").doTry().throwException(new IllegalArgumentException("Damn"))
                         .doCatch(IllegalArgumentException.class).to("mock:dead").end();
             }
@@ -190,13 +198,13 @@ public class EventNotifierFailureHandledEventsTest extends ContextTestSupport {
         assertIsInstanceOf(ExchangeCreatedEvent.class, events.get(10));
 
         ExchangeFailureHandlingEvent e0 = assertIsInstanceOf(ExchangeFailureHandlingEvent.class, events.get(11));
-        assertFalse(e0.isDeadLetterChannel(), "should NOT be DLC");
+        assertEquals(false, e0.isDeadLetterChannel(), "should NOT be DLC");
 
         assertIsInstanceOf(ExchangeSendingEvent.class, events.get(12));
         assertIsInstanceOf(ExchangeSentEvent.class, events.get(13));
 
         ExchangeFailureHandledEvent e = assertIsInstanceOf(ExchangeFailureHandledEvent.class, events.get(14));
-        assertFalse(e.isDeadLetterChannel(), "should NOT be DLC");
+        assertEquals(false, e.isDeadLetterChannel(), "should NOT be DLC");
         assertFalse(e.isHandled(), "should not be marked as failure handled as it was continued instead");
         assertTrue(e.isContinued(), "should be continued");
 

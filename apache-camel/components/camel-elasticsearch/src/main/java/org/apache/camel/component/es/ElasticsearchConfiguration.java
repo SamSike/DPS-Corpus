@@ -53,14 +53,11 @@ public class ElasticsearchConfiguration {
     private int maxRetryTimeout = ElasticsearchConstants.MAX_RETRY_TIMEOUT;
     @UriParam(defaultValue = "" + ElasticsearchConstants.DEFAULT_CONNECTION_TIMEOUT)
     private int connectionTimeout = ElasticsearchConstants.DEFAULT_CONNECTION_TIMEOUT;
-    @UriParam(defaultValue = "false")
-    private boolean enableDocumentOnlyMode;
     @UriParam
     private boolean disconnect;
     @UriParam(label = "security")
     private boolean enableSSL;
     @UriParam(label = "security")
-    @Metadata(supportFileReference = true)
     private String certificatePath;
     @UriParam
     private boolean useScroll;
@@ -161,7 +158,7 @@ public class ElasticsearchConfiguration {
     }
 
     /**
-     * The timeout in ms to wait before the socket will time out.
+     * The timeout in ms to wait before the socket will timeout.
      */
     public int getSocketTimeout() {
         return socketTimeout;
@@ -172,7 +169,7 @@ public class ElasticsearchConfiguration {
     }
 
     /**
-     * The time in ms to wait before connection will time out.
+     * The time in ms to wait before connection will timeout.
      */
     public int getConnectionTimeout() {
         return connectionTimeout;
@@ -194,7 +191,7 @@ public class ElasticsearchConfiguration {
     }
 
     /**
-     * Password for authenticating
+     * Password for authenticate
      */
     public String getPassword() {
         return password;
@@ -251,7 +248,7 @@ public class ElasticsearchConfiguration {
 
     /**
      * Enable automatically discover nodes from a running Elasticsearch cluster. If this option is used in conjunction
-     * with Spring Boot, then it's managed by the Spring Boot configuration (see: Disable Sniffer in Spring Boot).
+     * with Spring Boot then it's managed by the Spring Boot configuration (see: Disable Sniffer in Spring Boot).
      */
     public boolean isEnableSniffer() {
         return enableSniffer;
@@ -315,20 +312,5 @@ public class ElasticsearchConfiguration {
 
     public void setDocumentClass(Class<?> documentClass) {
         this.documentClass = documentClass;
-    }
-
-    /**
-     * Indicates whether the body of the message contains only documents. By default, it is set to false to be able to
-     * do the same requests as what the Document API supports (see
-     * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs.html for more details). To ease the
-     * migration of routes based on the legacy component camel-elasticsearch-rest, you should consider enabling the
-     * mode, especially if your routes do update operations.
-     */
-    public boolean isEnableDocumentOnlyMode() {
-        return enableDocumentOnlyMode;
-    }
-
-    public void setEnableDocumentOnlyMode(boolean enableDocumentOnlyMode) {
-        this.enableDocumentOnlyMode = enableDocumentOnlyMode;
     }
 }

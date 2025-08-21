@@ -45,10 +45,10 @@ public class OnExceptionComplexWithNestedErrorHandlerRouteTest extends OnExcepti
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // global error handler
                 // as its based on a unit test we do not have any delays between
                 // and do not log the stack trace

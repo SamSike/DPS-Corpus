@@ -27,10 +27,10 @@ import org.apache.camel.processor.errorhandler.RedeliveryPolicy;
 import org.apache.camel.spi.CamelLogger;
 
 /**
- * Legacy error handler for XML DSL in camel-spring-xml
+ * Legacy error handler for XML DSL in camel-spring-xml/camel-blueprint
  */
 @XmlTransient
-@Deprecated(since = "3.17.0")
+@Deprecated
 public class DefaultErrorHandlerConfiguration implements DefaultErrorHandlerProperties {
 
     private CamelLogger logger;

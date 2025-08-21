@@ -28,6 +28,8 @@ import javax.management.ObjectName;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.AvailablePortFinder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -48,21 +50,20 @@ public class JettyEnableJmxTest extends BaseJettyTest {
     private MBeanServerConnection mbsc;
 
     @Override
-    public void doPostTearDown() throws Exception {
+    @AfterEach
+    public void tearDown() throws Exception {
         releaseMBeanServers();
         mbsc = null;
-        testConfigurationBuilder.withDisableJMX();
+        super.tearDown();
+        disableJMX();
     }
 
     @Override
-    public void doPreSetup() throws Exception {
-        testConfigurationBuilder.withEnableJMX();
+    @BeforeEach
+    public void setUp() throws Exception {
+        enableJMX();
         releaseMBeanServers();
-
-    }
-
-    @Override
-    protected void doPostSetup() {
+        super.setUp();
         mbsc = getMBeanConnection();
     }
 

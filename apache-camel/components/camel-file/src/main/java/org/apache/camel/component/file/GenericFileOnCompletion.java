@@ -34,12 +34,12 @@ import org.slf4j.LoggerFactory;
 public class GenericFileOnCompletion<T> implements Synchronization {
 
     private static final Logger LOG = LoggerFactory.getLogger(GenericFileOnCompletion.class);
-    private final GenericFileEndpoint<T> endpoint;
-    private final GenericFileOperations<T> operations;
-    private final GenericFileProcessStrategy<T> processStrategy;
+    private GenericFileEndpoint<T> endpoint;
+    private GenericFileOperations<T> operations;
+    private GenericFileProcessStrategy<T> processStrategy;
     private ExceptionHandler exceptionHandler;
-    private final GenericFile<T> file;
-    private final String absoluteFileName;
+    private GenericFile<T> file;
+    private String absoluteFileName;
 
     public GenericFileOnCompletion(GenericFileEndpoint<T> endpoint, GenericFileOperations<T> operations,
                                    GenericFileProcessStrategy processStrategy, GenericFile<T> file,
@@ -112,21 +112,18 @@ public class GenericFileOnCompletion<T> implements Synchronization {
     protected void processStrategyCommit(
             GenericFileProcessStrategy<T> processStrategy, Exchange exchange, GenericFile<T> file) {
         if (Boolean.TRUE.equals(endpoint.isIdempotent())) {
+
             // use absolute file path as default key, but evaluate if an
             // expression key was configured
             String key = absoluteFileName;
             if (endpoint.getIdempotentKey() != null) {
-                Exchange dummy = GenericFileHelper.createDummy(endpoint, exchange, () -> file);
+                Exchange dummy = endpoint.createExchange(file);
                 key = endpoint.getIdempotentKey().evaluate(dummy, String.class);
             }
+
             // only add to idempotent repository if we could process the file
             if (key != null) {
-                // eager = confirm, non-eager = add
-                if (endpoint.isIdempotentEager()) {
-                    endpoint.getIdempotentRepository().confirm(key);
-                } else {
-                    endpoint.getIdempotentRepository().add(key);
-                }
+                endpoint.getIdempotentRepository().add(key);
             }
         }
 
@@ -152,19 +149,6 @@ public class GenericFileOnCompletion<T> implements Synchronization {
 
         if (LOG.isWarnEnabled()) {
             LOG.warn("Rollback file strategy: {} for file: {}", processStrategy, file);
-        }
-
-        if (Boolean.TRUE.equals(endpoint.isIdempotent())) {
-            // use absolute file path as default key, but evaluate if an
-            // expression key was configured
-            String key = absoluteFileName;
-            if (endpoint.getIdempotentKey() != null) {
-                Exchange dummy = GenericFileHelper.createDummy(endpoint, exchange, () -> file);
-                key = endpoint.getIdempotentKey().evaluate(dummy, String.class);
-            }
-            if (key != null) {
-                endpoint.getIdempotentRepository().remove(key);
-            }
         }
 
         // only delete done file if moveFailed option is enabled, as otherwise

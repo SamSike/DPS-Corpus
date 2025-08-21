@@ -63,10 +63,10 @@ public class OnCompletionRouteScopeOverrideGlobalScopeTest extends ContextTestSu
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // define a global on completion that is invoked when the
                 // exchage is complete
                 onCompletion().to("log:global").to("mock:global");
@@ -89,7 +89,7 @@ public class OnCompletionRouteScopeOverrideGlobalScopeTest extends ContextTestSu
         }
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             if ("Kaboom".equals(exchange.getIn().getBody())) {
                 throw new IllegalArgumentException("Kaboom");
             }

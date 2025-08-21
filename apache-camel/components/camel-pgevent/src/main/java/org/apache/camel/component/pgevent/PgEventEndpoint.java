@@ -17,8 +17,6 @@
 package org.apache.camel.component.pgevent;
 
 import java.sql.DriverManager;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
 import javax.sql.DataSource;
 
@@ -29,7 +27,6 @@ import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.spi.ClassResolver;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
@@ -45,8 +42,8 @@ import org.slf4j.LoggerFactory;
  */
 @UriEndpoint(firstVersion = "2.15.0", scheme = "pgevent", title = "PostgresSQL Event",
              syntax = "pgevent:host:port/database/channel",
-             category = { Category.DATABASE }, headersClass = PgEventConstants.class)
-public class PgEventEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
+             category = { Category.DATABASE, Category.SQL }, headersClass = PgEventConstants.class)
+public class PgEventEndpoint extends DefaultEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(PgEventEndpoint.class);
 
@@ -69,18 +66,12 @@ public class PgEventEndpoint extends DefaultEndpoint implements EndpointServiceL
     private String user = "postgres";
     @UriParam(label = "security", secret = true)
     private String pass;
-    @UriParam(label = "advanced")
+    @UriParam
     private DataSource datasource;
-    @UriParam(label = "consumer,advanced", defaultValue = "5000")
-    private int reconnectDelay = 5000;
-    @UriParam(label = "consumer,advanced")
-    private ExecutorService workerPool;
-    @UriParam(label = "consumer,advanced", defaultValue = "1")
-    private int workerPoolCoreSize = 1;
-    @UriParam(label = "consumer,advanced", defaultValue = "10")
-    private int workerPoolMaxSize = 10;
 
     private final String uri;
+
+    private PGConnection dbConnection;
 
     public PgEventEndpoint(String uri, PgEventComponent component) {
         super(uri, component);
@@ -93,27 +84,6 @@ public class PgEventEndpoint extends DefaultEndpoint implements EndpointServiceL
         this.uri = uri;
         this.datasource = dataSource;
         parseUri();
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (host != null) {
-            return host + ":" + port;
-        }
-        return null;
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        if (user != null) {
-            return Map.of("username", user);
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "jdbc";
     }
 
     public final PGConnection initJdbc() throws Exception {
@@ -176,7 +146,7 @@ public class PgEventEndpoint extends DefaultEndpoint implements EndpointServiceL
     }
 
     private void validateInputs() throws IllegalArgumentException {
-        if (getChannel() == null || getChannel().isEmpty()) {
+        if (getChannel() == null || getChannel().length() == 0) {
             throw new IllegalArgumentException("A required parameter was not set when creating this Endpoint (channel)");
         }
 
@@ -193,11 +163,6 @@ public class PgEventEndpoint extends DefaultEndpoint implements EndpointServiceL
         PgEventConsumer consumer = new PgEventConsumer(this, processor);
         configureConsumer(consumer);
         return consumer;
-    }
-
-    ExecutorService createWorkerPool() {
-        return getCamelContext().getExecutorServiceManager().newThreadPool(this,
-                "PgEventConsumer[" + channel + "]", workerPoolCoreSize, workerPoolMaxSize);
     }
 
     public String getHost() {
@@ -276,50 +241,5 @@ public class PgEventEndpoint extends DefaultEndpoint implements EndpointServiceL
      */
     public void setDatasource(DataSource datasource) {
         this.datasource = datasource;
-    }
-
-    public int getReconnectDelay() {
-        return reconnectDelay;
-    }
-
-    /**
-     * When the consumer unexpected lose connection to the database, then this specifies the interval (millis) between
-     * re-connection attempts to establish a new connection.
-     */
-    public void setReconnectDelay(int reconnectDelay) {
-        this.reconnectDelay = reconnectDelay;
-    }
-
-    public ExecutorService getWorkerPool() {
-        return workerPool;
-    }
-
-    /**
-     * To use a custom worker pool for processing the events from the database.
-     */
-    public void setWorkerPool(ExecutorService workerPool) {
-        this.workerPool = workerPool;
-    }
-
-    public int getWorkerPoolCoreSize() {
-        return workerPoolCoreSize;
-    }
-
-    /**
-     * Number of core threads in the worker pool for processing the events from the database.
-     */
-    public void setWorkerPoolCoreSize(int workerPoolCoreSize) {
-        this.workerPoolCoreSize = workerPoolCoreSize;
-    }
-
-    public int getWorkerPoolMaxSize() {
-        return workerPoolMaxSize;
-    }
-
-    /**
-     * Maximum number of threads in the worker pool for processing the events from the database.
-     */
-    public void setWorkerPoolMaxSize(int workerPoolMaxSize) {
-        this.workerPoolMaxSize = workerPoolMaxSize;
     }
 }

@@ -33,11 +33,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FileIdempotentReadLockDelayedTest extends ContextTestSupport {
 
-    final MemoryIdempotentRepository myRepo = new MemoryIdempotentRepository();
+    MemoryIdempotentRepository myRepo = new MemoryIdempotentRepository();
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myRepo", myRepo);
         return jndi;
     }
@@ -67,20 +67,20 @@ public class FileIdempotentReadLockDelayedTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri(
                         "?initialDelay=0&delay=10&readLock=idempotent&readLockIdempotentReleaseDelay=1000&idempotentRepository=#myRepo"))
-                        .process(new Processor() {
-                            @Override
-                            public void process(Exchange exchange) {
-                                // we are in progress
-                                int size = myRepo.getCacheSize();
-                                assertTrue(size == 1 || size == 2);
-                            }
-                        }).to("mock:result");
+                                .process(new Processor() {
+                                    @Override
+                                    public void process(Exchange exchange) throws Exception {
+                                        // we are in progress
+                                        int size = myRepo.getCacheSize();
+                                        assertTrue(size == 1 || size == 2);
+                                    }
+                                }).to("mock:result");
             }
         };
     }

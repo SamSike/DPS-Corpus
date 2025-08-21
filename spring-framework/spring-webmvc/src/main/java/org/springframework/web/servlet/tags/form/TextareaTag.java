@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,193 +17,195 @@
 package org.springframework.web.servlet.tags.form;
 
 import jakarta.servlet.jsp.JspException;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * The {@code <textarea>} tag renders an HTML 'textarea'.
  *
- * <h3>Attribute Summary</h3>
+ * <p>
  * <table>
+ * <caption>Attribute Summary</caption>
  * <thead>
  * <tr>
- * <th class="table-header col-first">Attribute</th>
- * <th class="table-header col-second">Required?</th>
- * <th class="table-header col-second">Runtime Expression?</th>
- * <th class="table-header col-last">Description</th>
+ * <th class="colFirst">Attribute</th>
+ * <th class="colOne">Required?</th>
+ * <th class="colOne">Runtime Expression?</th>
+ * <th class="colLast">Description</th>
  * </tr>
  * </thead>
  * <tbody>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>accesskey</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Standard Attribute</p></td>
  * </tr>
- * <tr class="odd-row-color">
+ * <tr class="rowColor">
  * <td><p>cols</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Required Attribute</p></td>
  * </tr>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>cssClass</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Optional Attribute</p></td>
  * </tr>
- * <tr class="odd-row-color">
+ * <tr class="rowColor">
  * <td><p>cssErrorClass</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Optional Attribute. Used when the bound field has errors.</p></td>
  * </tr>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>cssStyle</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Optional Attribute</p></td>
  * </tr>
- * <tr class="odd-row-color">
+ * <tr class="rowColor">
  * <td><p>dir</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Standard Attribute</p></td>
  * </tr>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>disabled</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Optional Attribute. Setting the value of this attribute to 'true'
  * will disable the HTML element.</p></td>
  * </tr>
- * <tr class="odd-row-color">
+ * <tr class="rowColor">
  * <td><p>htmlEscape</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>Enable/disable HTML escaping of rendered values.</p></td>
  * </tr>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>id</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Standard Attribute</p></td>
  * </tr>
- * <tr class="odd-row-color">
+ * <tr class="rowColor">
  * <td><p>lang</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Standard Attribute</p></td>
  * </tr>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>onblur</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Event Attribute</p></td>
  * </tr>
- * <tr class="odd-row-color">
+ * <tr class="rowColor">
  * <td><p>onchange</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Event Attribute</p></td>
  * </tr>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>onclick</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Event Attribute</p></td>
  * </tr>
- * <tr class="odd-row-color">
+ * <tr class="rowColor">
  * <td><p>ondblclick</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Event Attribute</p></td>
  * </tr>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>onfocus</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Event Attribute</p></td>
  * </tr>
- * <tr class="odd-row-color">
+ * <tr class="rowColor">
  * <td><p>onkeydown</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Event Attribute</p></td>
  * </tr>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>onkeypress</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Event Attribute</p></td>
  * </tr>
- * <tr class="odd-row-color">
+ * <tr class="rowColor">
  * <td><p>onkeyup</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Event Attribute</p></td>
  * </tr>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>onmousedown</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Event Attribute</p></td>
  * </tr>
- * <tr class="odd-row-color">
+ * <tr class="rowColor">
  * <td><p>onmousemove</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Event Attribute</p></td>
  * </tr>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>onmouseout</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Event Attribute</p></td>
  * </tr>
- * <tr class="odd-row-color">
+ * <tr class="rowColor">
  * <td><p>onmouseover</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Event Attribute</p></td>
  * </tr>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>onmouseup</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Event Attribute</p></td>
  * </tr>
- * <tr class="odd-row-color">
+ * <tr class="rowColor">
  * <td><p>onselect</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Event Attribute</p></td>
  * </tr>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>path</p></td>
  * <td><p>true</p></td>
  * <td><p>true</p></td>
  * <td><p>Path to property for data binding</p></td>
  * </tr>
- * <tr class="odd-row-color">
+ * <tr class="rowColor">
  * <td><p>readonly</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Optional Attribute. Setting the value of this attribute to 'true'
  * will make the HTML element readonly.</p></td>
  * </tr>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>rows</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Required Attribute</p></td>
  * </tr>
- * <tr class="odd-row-color">
+ * <tr class="rowColor">
  * <td><p>tabindex</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
  * <td><p>HTML Standard Attribute</p></td>
  * </tr>
- * <tr class="even-row-color">
+ * <tr class="altColor">
  * <td><p>title</p></td>
  * <td><p>false</p></td>
  * <td><p>true</p></td>
@@ -226,11 +228,14 @@ public class TextareaTag extends AbstractHtmlInputElementTag {
 	public static final String ONSELECT_ATTRIBUTE = "onselect";
 
 
-	private @Nullable String rows;
+	@Nullable
+	private String rows;
 
-	private @Nullable String cols;
+	@Nullable
+	private String cols;
 
-	private @Nullable String onselect;
+	@Nullable
+	private String onselect;
 
 
 	/**
@@ -244,7 +249,8 @@ public class TextareaTag extends AbstractHtmlInputElementTag {
 	/**
 	 * Get the value of the '{@code rows}' attribute.
 	 */
-	protected @Nullable String getRows() {
+	@Nullable
+	protected String getRows() {
 		return this.rows;
 	}
 
@@ -259,7 +265,8 @@ public class TextareaTag extends AbstractHtmlInputElementTag {
 	/**
 	 * Get the value of the '{@code cols}' attribute.
 	 */
-	protected @Nullable String getCols() {
+	@Nullable
+	protected String getCols() {
 		return this.cols;
 	}
 
@@ -274,7 +281,8 @@ public class TextareaTag extends AbstractHtmlInputElementTag {
 	/**
 	 * Get the value of the '{@code onselect}' attribute.
 	 */
-	protected @Nullable String getOnselect() {
+	@Nullable
+	protected String getOnselect() {
 		return this.onselect;
 	}
 

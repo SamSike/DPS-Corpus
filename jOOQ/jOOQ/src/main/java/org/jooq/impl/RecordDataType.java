@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,17 +39,16 @@ package org.jooq.impl;
 
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
+import static org.jooq.impl.Tools.CONFIG;
 import static org.jooq.impl.Tools.newRecord;
 import static org.jooq.impl.Tools.recordType;
 
-import java.sql.Struct;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.jooq.CharacterSet;
 import org.jooq.Collation;
-import org.jooq.ConverterContext;
 import org.jooq.Field;
 import org.jooq.Generator;
 import org.jooq.Nullability;
@@ -74,15 +73,9 @@ final class RecordDataType<R extends Record> extends DefaultDataType<R> {
 
     @SuppressWarnings("unchecked")
     RecordDataType(Row row, Class<R> recordType, String name) {
-        super(null, recordType, name, nullability(row));
+        super(null, recordType, name, name);
 
         this.row = (AbstractRow<R>) row;
-    }
-
-    static final Nullability nullability(Row row) {
-        return Tools.anyMatch(row.fields(), f -> f.getDataType().nullable())
-             ? Nullability.NULL
-             : Nullability.NOT_NULL;
     }
 
     /**
@@ -95,8 +88,6 @@ final class RecordDataType<R extends Record> extends DefaultDataType<R> {
         Integer scale,
         Integer length,
         Nullability nullability,
-        boolean hidden,
-        boolean redacted,
         boolean readonly,
         Generator<?, ?, R> generatedAlwaysAs,
         GenerationOption generationOption,
@@ -106,7 +97,7 @@ final class RecordDataType<R extends Record> extends DefaultDataType<R> {
         boolean identity,
         Field<R> defaultValue
     ) {
-        super(t, precision, scale, length, nullability, hidden, redacted, readonly, generatedAlwaysAs, generationOption, generationLocation, collation, characterSet, identity, defaultValue);
+        super(t, precision, scale, length, nullability, readonly, generatedAlwaysAs, generationOption, generationLocation, collation, characterSet, identity, defaultValue);
 
         this.row = row;
     }
@@ -118,8 +109,6 @@ final class RecordDataType<R extends Record> extends DefaultDataType<R> {
         Integer newScale,
         Integer newLength,
         Nullability newNullability,
-        boolean newHidden,
-        boolean newRedacted,
         boolean newReadonly,
         Generator<?, ?, R> newGeneratedAlwaysAs,
         GenerationOption newGenerationOption,
@@ -136,8 +125,6 @@ final class RecordDataType<R extends Record> extends DefaultDataType<R> {
             newScale,
             newLength,
             newNullability,
-            newHidden,
-            newRedacted,
             newReadonly,
             newGeneratedAlwaysAs,
             newGenerationOption,
@@ -161,20 +148,15 @@ final class RecordDataType<R extends Record> extends DefaultDataType<R> {
 
     @SuppressWarnings("unchecked")
     @Override
-    final R convert(Object object, ConverterContext cc) {
+    public R convert(Object object) {
 
         // [#12269] [#13403] Don't re-copy perfectly fine results.
         if (object instanceof Record && ((Record) object).fieldsRow().equals(row))
             return (R) object;
 
         // [#12116] TODO: Move this logic into JSONReader to make it more generally useful
-        else if (
-            object instanceof Record
-         || object instanceof Map
-         || object instanceof List
-         || object instanceof Struct
-        ) {
-            return newRecord(true, cc.configuration(), getRecordType(), row)
+        else if (object instanceof Record || object instanceof Map || object instanceof List) {
+            return newRecord(true, getRecordType(), row, CONFIG)
                 .operate(r -> {
 
                     // [#12014] TODO: Fix this and remove workaround
@@ -191,6 +173,6 @@ final class RecordDataType<R extends Record> extends DefaultDataType<R> {
                 });
         }
         else
-            return super.convert(object, cc);
+            return super.convert(object);
     }
 }

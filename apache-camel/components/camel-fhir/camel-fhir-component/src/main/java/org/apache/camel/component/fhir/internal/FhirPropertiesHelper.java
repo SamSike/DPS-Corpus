@@ -16,9 +16,6 @@
  */
 package org.apache.camel.component.fhir.internal;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.fhir.FhirConfiguration;
 import org.apache.camel.support.component.ApiMethodPropertiesHelper;
@@ -28,22 +25,16 @@ import org.apache.camel.support.component.ApiMethodPropertiesHelper;
  */
 public final class FhirPropertiesHelper extends ApiMethodPropertiesHelper<FhirConfiguration> {
 
-    private static final Lock LOCK = new ReentrantLock();
     private static FhirPropertiesHelper helper;
 
     private FhirPropertiesHelper(CamelContext context) {
         super(context, FhirConfiguration.class, FhirConstants.PROPERTY_PREFIX);
     }
 
-    public static FhirPropertiesHelper getHelper(CamelContext context) {
-        LOCK.lock();
-        try {
-            if (helper == null) {
-                helper = new FhirPropertiesHelper(context);
-            }
-            return helper;
-        } finally {
-            LOCK.unlock();
+    public static synchronized FhirPropertiesHelper getHelper(CamelContext context) {
+        if (helper == null) {
+            helper = new FhirPropertiesHelper(context);
         }
+        return helper;
     }
 }

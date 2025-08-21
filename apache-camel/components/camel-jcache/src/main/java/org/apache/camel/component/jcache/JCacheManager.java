@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -40,7 +38,6 @@ public class JCacheManager<K, V> implements Closeable {
     private final JCacheConfiguration configuration;
     private final String cacheName;
     private final CamelContext camelContext;
-    private final Lock lock = new ReentrantLock();
     private CachingProvider provider;
     private CacheManager manager;
     private Cache<K, V> cache;
@@ -71,39 +68,29 @@ public class JCacheManager<K, V> implements Closeable {
         return this.configuration;
     }
 
-    public Cache<K, V> getCache() throws Exception {
-        lock.lock();
-        try {
-            if (cache == null) {
-                JCacheProvider provider = JCacheProviders.lookup(configuration.getCachingProvider());
-                cache = doGetCache(provider);
-            }
-
-            return cache;
-        } finally {
-            lock.unlock();
+    public synchronized Cache<K, V> getCache() throws Exception {
+        if (cache == null) {
+            JCacheProvider provider = JCacheProviders.lookup(configuration.getCachingProvider());
+            cache = doGetCache(provider);
         }
+
+        return cache;
     }
 
     @Override
-    public void close() throws IOException {
-        lock.lock();
-        try {
-            if (configuration != null) {
-                if (cache != null) {
-                    cache.close();
-                }
-
-                if (manager != null) {
-                    manager.close();
-                }
-
-                if (provider != null) {
-                    provider.close();
-                }
+    public synchronized void close() throws IOException {
+        if (configuration != null) {
+            if (cache != null) {
+                cache.close();
             }
-        } finally {
-            lock.unlock();
+
+            if (manager != null) {
+                manager.close();
+            }
+
+            if (provider != null) {
+                provider.close();
+            }
         }
     }
 

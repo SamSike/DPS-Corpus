@@ -36,10 +36,10 @@ public class PropertiesComponentEIPChoiceSimpleTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").choice().when(simple("${body} contains '{{cool.name}}'")).to("mock:camel").otherwise()
                         .to("mock:other");
             }

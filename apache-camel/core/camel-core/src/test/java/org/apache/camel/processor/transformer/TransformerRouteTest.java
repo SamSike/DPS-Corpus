@@ -63,8 +63,8 @@ public class TransformerRouteTest extends ContextTestSupport {
         abcresult.expectedMessageCount(1);
         abcresult.whenAnyExchangeReceived(new Processor() {
             @Override
-            public void process(Exchange exchange) {
-                LOG.info("Asserting String -> XOrderResponse conversion");
+            public void process(Exchange exchange) throws Exception {
+                LOG.info("Asserting String -> XOrderResponse convertion");
                 assertEquals(XOrderResponse.class, exchange.getIn().getBody().getClass());
             }
 
@@ -74,8 +74,8 @@ public class TransformerRouteTest extends ContextTestSupport {
         xyzresult.expectedMessageCount(1);
         xyzresult.whenAnyExchangeReceived(new Processor() {
             @Override
-            public void process(Exchange exchange) {
-                LOG.info("Asserting String -> XOrderResponse conversion is not yet performed");
+            public void process(Exchange exchange) throws Exception {
+                LOG.info("Asserting String -> XOrderResponse convertion is not yet performed");
                 assertEquals("response", exchange.getIn().getBody());
             }
         });
@@ -96,8 +96,8 @@ public class TransformerRouteTest extends ContextTestSupport {
         xyzresult.expectedMessageCount(1);
         xyzresult.whenAnyExchangeReceived(new Processor() {
             @Override
-            public void process(Exchange exchange) {
-                LOG.info("Asserting String -> XOrderResponse conversion is not yet performed");
+            public void process(Exchange exchange) throws Exception {
+                LOG.info("Asserting String -> XOrderResponse convertion is not yet performed");
                 assertEquals("response", exchange.getIn().getBody());
             }
         });
@@ -118,8 +118,8 @@ public class TransformerRouteTest extends ContextTestSupport {
         xyzresult.expectedMessageCount(1);
         xyzresult.whenAnyExchangeReceived(new Processor() {
             @Override
-            public void process(Exchange exchange) {
-                LOG.info("Asserting String -> XOrderResponse conversion is not yet performed");
+            public void process(Exchange exchange) throws Exception {
+                LOG.info("Asserting String -> XOrderResponse convertion is not yet performed");
                 assertEquals("response", exchange.getIn().getBody());
             }
         });
@@ -140,8 +140,8 @@ public class TransformerRouteTest extends ContextTestSupport {
         xyzresult.expectedMessageCount(1);
         xyzresult.whenAnyExchangeReceived(new Processor() {
             @Override
-            public void process(Exchange exchange) {
-                LOG.info("Asserting String -> XOrderResponse conversion is not yet performed");
+            public void process(Exchange exchange) throws Exception {
+                LOG.info("Asserting String -> XOrderResponse convertion is not yet performed");
                 assertEquals("response", exchange.getIn().getBody());
             }
         });
@@ -171,21 +171,21 @@ public class TransformerRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.getTypeConverterRegistry().addTypeConverters(new MyTypeConverters());
                 from("direct:abc").inputType(AOrder.class).outputType(AOrderResponse.class).process(new Processor() {
-                    public void process(Exchange exchange) {
-                        LOG.info("Asserting input -> AOrder conversion");
+                    public void process(Exchange exchange) throws Exception {
+                        LOG.info("Asserting input -> AOrder convertion");
                         assertEquals(AOrder.class, exchange.getIn().getBody().getClass());
                     }
                 }).to(ExchangePattern.InOut, "direct:xyz").to("mock:abcresult");
 
                 from("direct:xyz").inputType(XOrder.class).outputType(XOrderResponse.class).process(new Processor() {
-                    public void process(Exchange exchange) {
-                        LOG.info("Asserting input -> XOrder conversion");
+                    public void process(Exchange exchange) throws Exception {
+                        LOG.info("Asserting input -> XOrder convertion");
                         assertEquals(XOrder.class, exchange.getIn().getBody().getClass());
                         exchange.getIn().setBody("response");
                     }
@@ -206,15 +206,12 @@ public class TransformerRouteTest extends ContextTestSupport {
                         .withJava(XOrderResponseToOtherTransformer.class);
                 from("direct:custom").inputType("other:OtherXOrder").outputType("other:OtherXOrderResponse")
                         .to(ExchangePattern.InOut, "direct:xyz");
-                transformer().name("myDataType").withDataFormat(new MyDataFormatDefinition());
+                transformer().scheme("myDataType").withDataFormat(new MyDataFormatDefinition());
                 from("direct:testDataType").inputTypeWithValidate("myDataType")
                         .to("direct:testDataTypeStep2");
                 from("direct:testDataTypeStep2").inputType(MyDataType.class)
                         .to("mock:testDataType");
                 validator().type("myDataType").withExpression(bodyAs(String.class).contains("fake"));
-
-                transformer().withDefaults();
-                transformer().scan("com.apache.camel.processor.transformer.custom");
             }
         };
     }
@@ -252,12 +249,12 @@ public class TransformerRouteTest extends ContextTestSupport {
         public MyDataFormatDefinition() {
             super(new DefaultDataFormat() {
                 @Override
-                public void marshal(Exchange exchange, Object graph, OutputStream stream) {
+                public void marshal(Exchange exchange, Object graph, OutputStream stream) throws Exception {
                     throw new UnsupportedOperationException();
                 }
 
                 @Override
-                public Object unmarshal(Exchange exchange, InputStream stream) {
+                public Object unmarshal(Exchange exchange, InputStream stream) throws Exception {
                     return new MyDataType();
                 }
             });
@@ -277,16 +274,14 @@ public class TransformerRouteTest extends ContextTestSupport {
 
                 @Override
                 public Object unmarshal(Exchange exchange, InputStream stream) throws Exception {
-                    StringBuilder input = new StringBuilder();
-
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            input.append(line);
-                        }
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+                    String line = "";
+                    String input = "";
+                    while ((line = reader.readLine()) != null) {
+                        input += line;
                     }
-
-                    assertEquals("{name:XOrder}", input.toString());
+                    reader.close();
+                    assertEquals("{name:XOrder}", input);
                     LOG.info("DataFormat: JSON -> XOrder");
                     return new XOrder();
                 }
@@ -296,14 +291,14 @@ public class TransformerRouteTest extends ContextTestSupport {
 
     public static class MyXmlComponent extends DefaultComponent {
         @Override
-        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) {
+        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
             return new MyXmlEndpoint();
         }
     }
 
     public static class MyXmlEndpoint extends DefaultEndpoint {
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             return new DefaultAsyncProducer(this) {
                 @Override
                 public boolean process(Exchange exchange, AsyncCallback callback) {
@@ -324,7 +319,7 @@ public class TransformerRouteTest extends ContextTestSupport {
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             return null;
         }
 
@@ -341,7 +336,7 @@ public class TransformerRouteTest extends ContextTestSupport {
 
     public static class OtherToXOrderTransformer extends Transformer {
         @Override
-        public void transform(Message message, DataType from, DataType to) {
+        public void transform(Message message, DataType from, DataType to) throws Exception {
             assertEquals("name=XOrder", message.getBody());
             LOG.info("Bean: Other -> XOrder");
             message.setBody(new XOrder());
@@ -350,7 +345,7 @@ public class TransformerRouteTest extends ContextTestSupport {
 
     public static class XOrderResponseToOtherTransformer extends Transformer {
         @Override
-        public void transform(Message message, DataType from, DataType to) {
+        public void transform(Message message, DataType from, DataType to) throws Exception {
             LOG.info("Bean: XOrderResponse -> Other");
             message.setBody("name=XOrderResponse");
         }

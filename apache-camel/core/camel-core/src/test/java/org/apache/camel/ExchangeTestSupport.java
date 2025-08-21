@@ -44,7 +44,6 @@ public abstract class ExchangeTestSupport extends ContextTestSupport {
         in.setBody("<hello id='m123'>world!</hello>");
 
         exchange.setProperty("foobar", "cba");
-        exchange.setVariable("cheese", "gauda");
     }
 
     @Override

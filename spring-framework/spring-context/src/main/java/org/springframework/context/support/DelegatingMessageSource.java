@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,11 @@ package org.springframework.context.support;
 
 import java.util.Locale;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.context.HierarchicalMessageSource;
 import org.springframework.context.MessageSource;
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.context.NoSuchMessageException;
+import org.springframework.lang.Nullable;
 
 /**
  * Empty {@link MessageSource} that delegates all calls to the parent MessageSource.
@@ -38,7 +37,8 @@ import org.springframework.context.NoSuchMessageException;
  */
 public class DelegatingMessageSource extends MessageSourceSupport implements HierarchicalMessageSource {
 
-	private @Nullable MessageSource parentMessageSource;
+	@Nullable
+	private MessageSource parentMessageSource;
 
 
 	@Override
@@ -47,13 +47,15 @@ public class DelegatingMessageSource extends MessageSourceSupport implements Hie
 	}
 
 	@Override
-	public @Nullable MessageSource getParentMessageSource() {
+	@Nullable
+	public MessageSource getParentMessageSource() {
 		return this.parentMessageSource;
 	}
 
 
 	@Override
-	public @Nullable String getMessage(String code, Object @Nullable [] args, @Nullable String defaultMessage, @Nullable Locale locale) {
+	@Nullable
+	public String getMessage(String code, @Nullable Object[] args, @Nullable String defaultMessage, Locale locale) {
 		if (this.parentMessageSource != null) {
 			return this.parentMessageSource.getMessage(code, args, defaultMessage, locale);
 		}
@@ -66,22 +68,17 @@ public class DelegatingMessageSource extends MessageSourceSupport implements Hie
 	}
 
 	@Override
-	public String getMessage(String code, Object @Nullable [] args, @Nullable Locale locale) throws NoSuchMessageException {
+	public String getMessage(String code, @Nullable Object[] args, Locale locale) throws NoSuchMessageException {
 		if (this.parentMessageSource != null) {
 			return this.parentMessageSource.getMessage(code, args, locale);
 		}
 		else {
-			if (locale == null) {
-				throw new NoSuchMessageException(code);
-			}
-			else {
-				throw new NoSuchMessageException(code, locale);
-			}
+			throw new NoSuchMessageException(code, locale);
 		}
 	}
 
 	@Override
-	public String getMessage(MessageSourceResolvable resolvable, @Nullable Locale locale) throws NoSuchMessageException {
+	public String getMessage(MessageSourceResolvable resolvable, Locale locale) throws NoSuchMessageException {
 		if (this.parentMessageSource != null) {
 			return this.parentMessageSource.getMessage(resolvable, locale);
 		}
@@ -91,19 +88,14 @@ public class DelegatingMessageSource extends MessageSourceSupport implements Hie
 			}
 			String[] codes = resolvable.getCodes();
 			String code = (codes != null && codes.length > 0 ? codes[0] : "");
-			if (locale == null) {
-				throw new NoSuchMessageException(code);
-			}
-			else {
-				throw new NoSuchMessageException(code, locale);
-			}
+			throw new NoSuchMessageException(code, locale);
 		}
 	}
 
 
 	@Override
 	public String toString() {
-		return (this.parentMessageSource != null ? this.parentMessageSource.toString() : "Empty MessageSource");
+		return this.parentMessageSource != null ? this.parentMessageSource.toString() : "Empty MessageSource";
 	}
 
 }

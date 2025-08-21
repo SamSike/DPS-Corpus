@@ -44,7 +44,7 @@ public class FileSortByNestedExpressionTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("a/?initialDelay=0&delay=10&sortBy=file:ext;file:name")).convertBodyTo(String.class)
                         .to("mock:result");
             }
@@ -63,7 +63,7 @@ public class FileSortByNestedExpressionTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("b/?initialDelay=0&delay=10&sortBy=file:ext;reverse:file:name")).convertBodyTo(String.class)
                         .to("mock:reverse");
             }

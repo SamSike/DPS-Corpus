@@ -41,10 +41,10 @@ public class AggregateExpressionSizeFallbackTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(header("id"), new BodyInAggregatingStrategy())
                         // if no mySize header it will fallback to the 3 in size
                         .completionSize(header("mySize")).completionSize(3).to("mock:aggregated");

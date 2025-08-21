@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,17 @@ package org.springframework.web.reactive.result.method.annotation;
 import java.util.List;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ReactiveAdapterRegistry;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ValueConstants;
-import org.springframework.web.server.MissingRequestValueException;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.ServerWebInputException;
 
 /**
  * Resolver for method arguments annotated with @{@link RequestParam} from URI
@@ -99,12 +98,9 @@ public class RequestParamMethodArgumentResolver extends AbstractNamedValueSyncAr
 	}
 
 	@Override
-	protected @Nullable Object resolveNamedValue(String name, MethodParameter parameter, ServerWebExchange exchange) {
-		Object result = null;
+	protected Object resolveNamedValue(String name, MethodParameter parameter, ServerWebExchange exchange) {
 		List<String> paramValues = exchange.getRequest().getQueryParams().get(name);
-		if (paramValues == null) {
-			paramValues = exchange.getRequest().getQueryParams().get(name + "[]");
-		}
+		Object result = null;
 		if (paramValues != null) {
 			result = (paramValues.size() == 1 ? paramValues.get(0) : paramValues);
 		}
@@ -113,8 +109,9 @@ public class RequestParamMethodArgumentResolver extends AbstractNamedValueSyncAr
 
 	@Override
 	protected void handleMissingValue(String name, MethodParameter parameter, ServerWebExchange exchange) {
-		throw new MissingRequestValueException(
-				name, parameter.getNestedParameterType(), "query parameter", parameter);
+		String type = parameter.getNestedParameterType().getSimpleName();
+		String reason = "Required " + type + " parameter '" + name + "' is not present";
+		throw new ServerWebInputException(reason, parameter);
 	}
 
 

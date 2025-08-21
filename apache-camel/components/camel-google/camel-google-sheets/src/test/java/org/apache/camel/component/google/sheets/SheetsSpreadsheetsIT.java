@@ -32,7 +32,6 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.google.sheets.internal.GoogleSheetsApiCollection;
 import org.apache.camel.component.google.sheets.internal.GoogleSheetsConstants;
 import org.apache.camel.component.google.sheets.internal.SheetsSpreadsheetsApiMethod;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +48,7 @@ public class SheetsSpreadsheetsIT {
     private static final String PATH_PREFIX
             = GoogleSheetsApiCollection.getCollection().getApiName(SheetsSpreadsheetsApiMethod.class).getName();
 
-    @Nested
-    class CreateIT extends AbstractGoogleSheetsTestSupport {
+    public static class CreateTest extends AbstractGoogleSheetsTestSupport {
         private String title = "camel-sheets-" + new SecureRandom().nextInt(Integer.MAX_VALUE);
 
         @Test
@@ -66,7 +64,7 @@ public class SheetsSpreadsheetsIT {
             assertNotNull(result, "create result is null");
             assertEquals(title, result.getProperties().getTitle());
 
-            LOG.debug("create: {}", result);
+            LOG.debug("create: " + result);
         }
 
         @Override
@@ -87,8 +85,7 @@ public class SheetsSpreadsheetsIT {
         }
     }
 
-    @Nested
-    class GetIT extends AbstractGoogleSheetsTestSupport {
+    public static class GetTest extends AbstractGoogleSheetsTestSupport {
         private Spreadsheet testSheet = getSpreadsheet();
 
         @Test
@@ -98,7 +95,7 @@ public class SheetsSpreadsheetsIT {
             assertNotNull(result, "get result is null");
             assertEquals(testSheet.getSpreadsheetId(), result.getSpreadsheetId());
 
-            LOG.debug("get: {}", result);
+            LOG.debug("get: " + result);
         }
 
         @Override
@@ -118,8 +115,7 @@ public class SheetsSpreadsheetsIT {
         }
     }
 
-    @Nested
-    class BatchUpdateIT extends AbstractGoogleSheetsTestSupport {
+    public static class BatchUpdateTest extends AbstractGoogleSheetsTestSupport {
         private Spreadsheet testSheet = getSpreadsheet();
         private String updateTitle = "updated-" + testSheet.getProperties().getTitle();
 
@@ -143,7 +139,7 @@ public class SheetsSpreadsheetsIT {
             assertNotNull(result, "batchUpdate result is null");
             assertEquals(updateTitle, result.getUpdatedSpreadsheet().getProperties().getTitle());
 
-            LOG.debug("batchUpdate: {}", result);
+            LOG.debug("batchUpdate: " + result);
         }
 
         @Override

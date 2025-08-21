@@ -19,7 +19,6 @@ package org.apache.camel.cloud;
 /**
  * An interface to represent an object which wishes to be injected with a {@link ServiceChooser}
  */
-@Deprecated(since = "4.8.0")
 public interface ServiceChooserAware {
 
     /**

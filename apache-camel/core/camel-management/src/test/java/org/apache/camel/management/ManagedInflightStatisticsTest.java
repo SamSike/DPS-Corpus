@@ -124,10 +124,10 @@ public class ManagedInflightStatisticsTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .process(exchange -> {
                             CountDownLatch latch = (CountDownLatch) exchange.getIn().getBody();

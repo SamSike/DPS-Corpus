@@ -33,7 +33,7 @@ public abstract class AbstractGitHubProducer extends DefaultProducer {
 
     private Repository repository;
 
-    protected AbstractGitHubProducer(GitHubEndpoint endpoint) throws Exception {
+    public AbstractGitHubProducer(GitHubEndpoint endpoint) throws Exception {
         super(endpoint);
         this.endpoint = endpoint;
 

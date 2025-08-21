@@ -38,10 +38,10 @@ import org.mvel2.templates.TemplateRuntime;
  * Transform messages using an MVEL template.
  */
 @UriEndpoint(firstVersion = "2.12.0", scheme = "mvel", title = "MVEL", syntax = "mvel:resourceUri", producerOnly = true,
-             remote = false, category = { Category.TRANSFORMATION, Category.SCRIPT }, headersClass = MvelConstants.class)
+             category = { Category.TRANSFORMATION, Category.SCRIPT }, headersClass = MvelConstants.class)
 public class MvelEndpoint extends ResourceEndpoint {
 
-    @UriParam
+    @UriParam(defaultValue = "false")
     private boolean allowTemplateFromHeader;
     @UriParam
     private String encoding;
@@ -51,18 +51,6 @@ public class MvelEndpoint extends ResourceEndpoint {
 
     public MvelEndpoint(String uri, MvelComponent component, String resourceUri) {
         super(uri, component, resourceUri);
-    }
-
-    @Override
-    public boolean isRemote() {
-        return false;
-    }
-
-    @Override
-    public void clearContentCache() {
-        super.clearContentCache();
-        this.template = null;
-        this.compiled = null;
     }
 
     @Override

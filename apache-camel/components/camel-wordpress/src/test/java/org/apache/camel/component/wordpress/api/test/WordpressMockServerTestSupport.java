@@ -22,8 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.camel.component.wordpress.api.WordpressServiceProvider;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
@@ -83,11 +83,11 @@ public abstract class WordpressMockServerTestSupport {
         usersSingleUpdateRequestHandlers.put("DELETE", "/data/users/delete.json");
 
         // @formatter:off
-        return ServerBootstrap.bootstrap().setCanonicalHostName("localhost").setListenerPort(port)
-                .register("/wp/v2/posts", new WordpressServerHttpRequestHandler(postsListCreateRequestHandlers))
-                .register("/wp/v2/posts/*", new WordpressServerHttpRequestHandler(postsSingleUpdateRequestHandlers))
-                .register("/wp/v2/users", new WordpressServerHttpRequestHandler(usersListCreateRequestHandlers))
-                .register("/wp/v2/users/*", new WordpressServerHttpRequestHandler(usersSingleUpdateRequestHandlers))
+        return ServerBootstrap.bootstrap().setListenerPort(port)
+                .registerHandler("/wp/v2/posts", new WordpressServerHttpRequestHandler(postsListCreateRequestHandlers))
+                .registerHandler("/wp/v2/posts/*", new WordpressServerHttpRequestHandler(postsSingleUpdateRequestHandlers))
+                .registerHandler("/wp/v2/users", new WordpressServerHttpRequestHandler(usersListCreateRequestHandlers))
+                .registerHandler("/wp/v2/users/*", new WordpressServerHttpRequestHandler(usersSingleUpdateRequestHandlers))
                 .create();
         // @formatter:on
     }
@@ -105,6 +105,6 @@ public abstract class WordpressMockServerTestSupport {
     }
 
     public static String getServerBaseUrl() {
-        return "http://localhost:" + localServer.getLocalPort();
+        return "http://" + localServer.getInetAddress().getHostName() + ":" + localServer.getLocalPort();
     }
 }

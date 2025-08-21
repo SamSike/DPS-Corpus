@@ -17,9 +17,40 @@
 
 package org.apache.camel.test.infra.couchbase.services;
 
-import org.apache.camel.test.infra.common.services.ContainerTestService;
 import org.apache.camel.test.infra.common.services.TestService;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-public interface CouchbaseService extends CouchbaseInfraService, TestService, ContainerTestService {
+public interface CouchbaseService extends BeforeAllCallback, AfterAllCallback, TestService {
 
+    String getConnectionString();
+
+    String getUsername();
+
+    String getPassword();
+
+    String getHostname();
+
+    int getPort();
+
+    /**
+     * Perform any initialization necessary
+     */
+    void initialize();
+
+    /**
+     * Shuts down the service after the test has completed
+     */
+    void shutdown();
+
+    @Override
+    default void afterAll(ExtensionContext extensionContext) throws Exception {
+        shutdown();
+    }
+
+    @Override
+    default void beforeAll(ExtensionContext extensionContext) throws Exception {
+        initialize();
+    }
 }

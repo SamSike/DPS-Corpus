@@ -85,9 +85,10 @@ class MongoDbTailingThread extends MongoAbstractConsumerThread {
         if (lastVal == null) {
             answer = dbCol.find().cursorType(CursorType.TailableAwait).iterator();
         } else {
-            answer = dbCol.find(gt(tailTracking.getIncreasingFieldName(), lastVal))
+            MongoCursor<Document> iterator = dbCol.find(gt(tailTracking.getIncreasingFieldName(), lastVal))
                     .cursorType(CursorType.TailableAwait)
                     .iterator();
+            answer = iterator;
         }
         return answer;
     }

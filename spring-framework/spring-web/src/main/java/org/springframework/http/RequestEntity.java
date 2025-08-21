@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
 
@@ -67,11 +66,14 @@ import org.springframework.util.ObjectUtils;
  */
 public class RequestEntity<T> extends HttpEntity<T> {
 
-	private final @Nullable HttpMethod method;
+	@Nullable
+	private final HttpMethod method;
 
-	private final @Nullable URI url;
+	@Nullable
+	private final URI url;
 
-	private final @Nullable Type type;
+	@Nullable
+	private final Type type;
 
 	/**
 	 * Constructor with method and URL but without body nor headers.
@@ -79,7 +81,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @param url the URL
 	 */
 	public RequestEntity(HttpMethod method, URI url) {
-		this(null, (HttpHeaders) null, method, url, null);
+		this(null, null, method, url, null);
 	}
 
 	/**
@@ -89,7 +91,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @param url the URL
 	 */
 	public RequestEntity(@Nullable T body, HttpMethod method, URI url) {
-		this(body, (HttpHeaders) null, method, url, null);
+		this(body, null, method, url, null);
 	}
 
 	/**
@@ -101,7 +103,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @since 4.3
 	 */
 	public RequestEntity(@Nullable T body, HttpMethod method, URI url, Type type) {
-		this(body, (HttpHeaders) null, method, url, type);
+		this(body, null, method, url, type);
 	}
 
 	/**
@@ -109,52 +111,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @param headers the headers
 	 * @param method the method
 	 * @param url the URL
-	 * @since 7.0
 	 */
-	public RequestEntity(HttpHeaders headers, HttpMethod method, URI url) {
-		this(null, headers, method, url, null);
-	}
-
-	/**
-	 * Constructor with method, URL, headers and body.
-	 * @param body the body
-	 * @param headers the headers
-	 * @param method the method
-	 * @param url the URL
-	 * @since 7.0
-	 */
-	public RequestEntity(@Nullable T body, @Nullable HttpHeaders headers,
-			@Nullable HttpMethod method, URI url) {
-
-		this(body, headers, method, url, null);
-	}
-
-	/**
-	 * Constructor with method, URL, headers, body and type.
-	 * @param body the body
-	 * @param headers the headers
-	 * @param method the method
-	 * @param url the URL
-	 * @param type the type used for generic type resolution
-	 * @since 7.0
-	 */
-	public RequestEntity(@Nullable T body, @Nullable HttpHeaders headers,
-			@Nullable HttpMethod method, @Nullable URI url, @Nullable Type type) {
-
-		super(body, headers);
-		this.method = method;
-		this.url = url;
-		this.type = type;
-	}
-
-	/**
-	 * Constructor with method, URL and headers but without body.
-	 * @param headers the headers
-	 * @param method the method
-	 * @param url the URL
-	 * @deprecated in favor of {@link #RequestEntity(HttpHeaders, HttpMethod, URI)}
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
 	public RequestEntity(MultiValueMap<String, String> headers, HttpMethod method, URI url) {
 		this(null, headers, method, url, null);
 	}
@@ -165,11 +122,8 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @param headers the headers
 	 * @param method the method
 	 * @param url the URL
-	 * @deprecated in favor of {@link #RequestEntity(Object, HttpHeaders, HttpMethod, URI)}
 	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	public RequestEntity(
-			@Nullable T body, @Nullable MultiValueMap<String, String> headers,
+	public RequestEntity(@Nullable T body, @Nullable MultiValueMap<String, String> headers,
 			@Nullable HttpMethod method, URI url) {
 
 		this(body, headers, method, url, null);
@@ -183,10 +137,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @param url the URL
 	 * @param type the type used for generic type resolution
 	 * @since 4.3
-	 * @deprecated in favor of {@link #RequestEntity(Object, HttpHeaders, HttpMethod, URI, Type)}
 	 */
-	@SuppressWarnings("removal")
-	@Deprecated(since = "7.0", forRemoval = true)
 	public RequestEntity(@Nullable T body, @Nullable MultiValueMap<String, String> headers,
 			@Nullable HttpMethod method, @Nullable URI url, @Nullable Type type) {
 
@@ -201,28 +152,17 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * Return the HTTP method of the request.
 	 * @return the HTTP method as an {@code HttpMethod} enum value
 	 */
-	public @Nullable HttpMethod getMethod() {
+	@Nullable
+	public HttpMethod getMethod() {
 		return this.method;
 	}
 
 	/**
-	 * Return the {@link URI} for the target HTTP endpoint.
-	 * <p><strong>Note:</strong> This method raises
-	 * {@link UnsupportedOperationException} if the {@code RequestEntity} was
-	 * created with a URI template and variables rather than with a {@link URI}
-	 * instance. This is because a URI cannot be created without further input
-	 * on how to expand template and encode the URI. In such cases, the
-	 * {@code URI} is prepared by the
-	 * {@link org.springframework.web.client.RestTemplate} with the help of the
-	 * {@link org.springframework.web.util.UriTemplateHandler} it is configured with.
+	 * Return the URL of the request.
 	 */
 	public URI getUrl() {
 		if (this.url == null) {
-			throw new UnsupportedOperationException(
-					"The RequestEntity was created with a URI template and variables, " +
-							"and there is not enough information on how to correctly expand and " +
-							"encode the URI template. This will be done by the RestTemplate instead " +
-							"with help from the UriTemplateHandler it is configured with.");
+			throw new UnsupportedOperationException();
 		}
 		return this.url;
 	}
@@ -233,7 +173,8 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @return the request's body type, or {@code null} if not known
 	 * @since 4.3
 	 */
-	public @Nullable Type getType() {
+	@Nullable
+	public Type getType() {
 		if (this.type == null) {
 			T body = getBody();
 			if (body != null) {
@@ -252,16 +193,16 @@ public class RequestEntity<T> extends HttpEntity<T> {
 		if (!super.equals(other)) {
 			return false;
 		}
-		return (other instanceof RequestEntity<?> otherEntity &&
-				ObjectUtils.nullSafeEquals(this.method, otherEntity.method) &&
-				ObjectUtils.nullSafeEquals(this.url, otherEntity.url));
+		RequestEntity<?> otherEntity = (RequestEntity<?>) other;
+		return (ObjectUtils.nullSafeEquals(getMethod(), otherEntity.getMethod()) &&
+				ObjectUtils.nullSafeEquals(getUrl(), otherEntity.getUrl()));
 	}
 
 	@Override
 	public int hashCode() {
 		int hashCode = super.hashCode();
 		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(this.method);
-		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(this.url);
+		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(getUrl());
 		return hashCode;
 	}
 
@@ -306,7 +247,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @return the created builder
 	 * @since 5.3
 	 */
-	public static BodyBuilder method(HttpMethod method, String uriTemplate, @Nullable Object... uriVariables) {
+	public static BodyBuilder method(HttpMethod method, String uriTemplate, Object... uriVariables) {
 		return new DefaultBodyBuilder(method, uriTemplate, uriVariables);
 	}
 
@@ -338,7 +279,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @return the created builder
 	 * @since 5.3
 	 */
-	public static HeadersBuilder<?> get(String uriTemplate, @Nullable Object... uriVariables) {
+	public static HeadersBuilder<?> get(String uriTemplate, Object... uriVariables) {
 		return method(HttpMethod.GET, uriTemplate, uriVariables);
 	}
 
@@ -358,7 +299,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @return the created builder
 	 * @since 5.3
 	 */
-	public static HeadersBuilder<?> head(String uriTemplate, @Nullable Object... uriVariables) {
+	public static HeadersBuilder<?> head(String uriTemplate, Object... uriVariables) {
 		return method(HttpMethod.HEAD, uriTemplate, uriVariables);
 	}
 
@@ -378,7 +319,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @return the created builder
 	 * @since 5.3
 	 */
-	public static BodyBuilder post(String uriTemplate, @Nullable Object... uriVariables) {
+	public static BodyBuilder post(String uriTemplate, Object... uriVariables) {
 		return method(HttpMethod.POST, uriTemplate, uriVariables);
 	}
 
@@ -398,7 +339,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @return the created builder
 	 * @since 5.3
 	 */
-	public static BodyBuilder put(String uriTemplate, @Nullable Object... uriVariables) {
+	public static BodyBuilder put(String uriTemplate, Object... uriVariables) {
 		return method(HttpMethod.PUT, uriTemplate, uriVariables);
 	}
 
@@ -418,7 +359,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @return the created builder
 	 * @since 5.3
 	 */
-	public static BodyBuilder patch(String uriTemplate, @Nullable Object... uriVariables) {
+	public static BodyBuilder patch(String uriTemplate, Object... uriVariables) {
 		return method(HttpMethod.PATCH, uriTemplate, uriVariables);
 	}
 
@@ -438,7 +379,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @return the created builder
 	 * @since 5.3
 	 */
-	public static HeadersBuilder<?> delete(String uriTemplate, @Nullable Object... uriVariables) {
+	public static HeadersBuilder<?> delete(String uriTemplate, Object... uriVariables) {
 		return method(HttpMethod.DELETE, uriTemplate, uriVariables);
 	}
 
@@ -458,7 +399,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 	 * @return the created builder
 	 * @since 5.3
 	 */
-	public static HeadersBuilder<?> options(String uriTemplate, @Nullable Object... uriVariables) {
+	public static HeadersBuilder<?> options(String uriTemplate, Object... uriVariables) {
 		return method(HttpMethod.OPTIONS, uriTemplate, uriVariables);
 	}
 
@@ -491,7 +432,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 		 * Manipulate this entity's headers with the given consumer. The
 		 * headers provided to the consumer are "live", so that the consumer can be used to
 		 * {@linkplain HttpHeaders#set(String, String) overwrite} existing header values,
-		 * {@linkplain HttpHeaders#remove(String) remove} values, or use any of the other
+		 * {@linkplain HttpHeaders#remove(Object) remove} values, or use any of the other
 		 * {@link HttpHeaders} methods.
 		 * @param headersConsumer a function that consumes the {@code HttpHeaders}
 		 * @return this builder
@@ -599,13 +540,17 @@ public class RequestEntity<T> extends HttpEntity<T> {
 
 		private final HttpHeaders headers = new HttpHeaders();
 
-		private final @Nullable URI uri;
+		@Nullable
+		private final URI uri;
 
-		private final @Nullable String uriTemplate;
+		@Nullable
+		String uriTemplate;
 
-		private final @Nullable Object @Nullable [] uriVarsArray;
+		@Nullable
+		private Object[] uriVarsArray;
 
-		private final @Nullable Map<String, ? extends @Nullable Object> uriVarsMap;
+		@Nullable
+		Map<String, ?> uriVarsMap;
 
 		DefaultBodyBuilder(HttpMethod method, URI url) {
 			this.method = method;
@@ -615,7 +560,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 			this.uriVarsMap = null;
 		}
 
-		DefaultBodyBuilder(HttpMethod method, String uriTemplate, @Nullable Object... uriVars) {
+		DefaultBodyBuilder(HttpMethod method, String uriTemplate, Object... uriVars) {
 			this.method = method;
 			this.uri = null;
 			this.uriTemplate = uriTemplate;
@@ -623,7 +568,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 			this.uriVarsMap = null;
 		}
 
-		DefaultBodyBuilder(HttpMethod method, String uriTemplate, Map<String, ? extends @Nullable Object> uriVars) {
+		DefaultBodyBuilder(HttpMethod method, String uriTemplate, Map<String, ?> uriVars) {
 			this.method = method;
 			this.uri = null;
 			this.uriTemplate = uriTemplate;
@@ -716,7 +661,7 @@ public class RequestEntity<T> extends HttpEntity<T> {
 			return buildInternal(body, type);
 		}
 
-		private <T> RequestEntity<T> buildInternal(@Nullable T body, @Nullable Type type) {
+		private <T> RequestEntity<T>  buildInternal(@Nullable T body, @Nullable Type type) {
 			if (this.uri != null) {
 				return new RequestEntity<>(body, this.headers, this.method, this.uri, type);
 			}
@@ -740,14 +685,16 @@ public class RequestEntity<T> extends HttpEntity<T> {
 
 		private final String uriTemplate;
 
-		private final @Nullable Object @Nullable [] uriVarsArray;
+		@Nullable
+		private final Object[] uriVarsArray;
 
-		private final @Nullable Map<String, ? extends @Nullable Object> uriVarsMap;
+		@Nullable
+		private final Map<String, ?> uriVarsMap;
 
 		UriTemplateRequestEntity(
-				@Nullable T body, @Nullable HttpHeaders headers,
+				@Nullable T body, @Nullable MultiValueMap<String, String> headers,
 				@Nullable HttpMethod method, @Nullable Type type, String uriTemplate,
-				@Nullable Object @Nullable [] uriVarsArray, @Nullable Map<String, ?> uriVarsMap) {
+				@Nullable Object[] uriVarsArray, @Nullable Map<String, ?> uriVarsMap) {
 
 			super(body, headers, method, null, type);
 			this.uriTemplate = uriTemplate;
@@ -759,31 +706,14 @@ public class RequestEntity<T> extends HttpEntity<T> {
 			return this.uriTemplate;
 		}
 
-		public @Nullable Object @Nullable [] getVars() {
+		@Nullable
+		public Object[] getVars() {
 			return this.uriVarsArray;
 		}
 
-		public @Nullable Map<String, ? extends @Nullable Object> getVarsMap() {
+		@Nullable
+		public Map<String, ?> getVarsMap() {
 			return this.uriVarsMap;
-		}
-
-		@Override
-		public boolean equals(@Nullable Object other) {
-			if (this == other) {
-				return true;
-			}
-			if (!super.equals(other)) {
-				return false;
-			}
-			return (other instanceof UriTemplateRequestEntity<?> otherEntity &&
-					ObjectUtils.nullSafeEquals(this.uriTemplate, otherEntity.uriTemplate) &&
-					ObjectUtils.nullSafeEquals(this.uriVarsArray, otherEntity.uriVarsArray) &&
-					ObjectUtils.nullSafeEquals(this.uriVarsMap, otherEntity.uriVarsMap));
-		}
-
-		@Override
-		public int hashCode() {
-			return (29 * super.hashCode() + ObjectUtils.nullSafeHashCode(this.uriTemplate));
 		}
 
 		@Override

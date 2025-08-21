@@ -20,7 +20,6 @@ import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.DefaultEndpoint;
@@ -31,7 +30,7 @@ import org.apache.camel.support.SynchronousDelegateProducer;
  */
 @UriEndpoint(firstVersion = "2.20.0", scheme = "thrift", title = "Thrift", syntax = "thrift:host:port/service",
              category = { Category.RPC, Category.TRANSFORMATION }, headersClass = ThriftConstants.class)
-public class ThriftEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
+public class ThriftEndpoint extends DefaultEndpoint {
     @UriParam
     private ThriftConfiguration configuration;
     @UriParam(defaultValue = "false", label = "advanced",
@@ -48,16 +47,6 @@ public class ThriftEndpoint extends DefaultEndpoint implements EndpointServiceLo
         // Extract service and package names from the full service name
         serviceName = ThriftUtils.extractServiceName(configuration.getService());
         servicePackage = ThriftUtils.extractServicePackage(configuration.getService());
-    }
-
-    @Override
-    public String getServiceUrl() {
-        return configuration.getHost() + ":" + configuration.getPort();
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "thrift";
     }
 
     public ThriftConfiguration getConfiguration() {

@@ -32,23 +32,25 @@ import org.apache.camel.model.ExpressionSubElementDefinition;
 import org.apache.camel.model.language.CSimpleExpression;
 import org.apache.camel.model.language.DatasonnetExpression;
 import org.apache.camel.model.language.ExpressionDefinition;
-import org.apache.camel.model.language.JavaExpression;
 import org.apache.camel.model.language.JoorExpression;
+import org.apache.camel.model.language.JqExpression;
 import org.apache.camel.model.language.JsonPathExpression;
 import org.apache.camel.model.language.MethodCallExpression;
 import org.apache.camel.model.language.SimpleExpression;
 import org.apache.camel.model.language.SingleInputTypedExpressionDefinition;
 import org.apache.camel.model.language.TokenizerExpression;
 import org.apache.camel.model.language.TypedExpressionDefinition;
-import org.apache.camel.model.language.WasmExpression;
 import org.apache.camel.model.language.XMLTokenizerExpression;
 import org.apache.camel.model.language.XPathExpression;
 import org.apache.camel.model.language.XQueryExpression;
 import org.apache.camel.reifier.AbstractReifier;
 import org.apache.camel.spi.Language;
 import org.apache.camel.spi.PropertiesComponent;
+import org.apache.camel.spi.PropertyConfigurer;
+import org.apache.camel.spi.PropertyConfigurerAware;
 import org.apache.camel.spi.ReifierStrategy;
 import org.apache.camel.support.ExpressionToPredicateAdapter;
+import org.apache.camel.support.PropertyBindingSupport;
 import org.apache.camel.support.ScriptHelper;
 import org.apache.camel.util.ObjectHelper;
 
@@ -108,10 +110,10 @@ public class ExpressionReifier<T extends ExpressionDefinition> extends AbstractR
             return new CSimpleExpressionReifier(camelContext, definition);
         } else if (definition instanceof DatasonnetExpression) {
             return new DatasonnetExpressionReifier(camelContext, definition);
-        } else if (definition instanceof JavaExpression) {
-            return new JavaExpressionReifier(camelContext, definition);
         } else if (definition instanceof JoorExpression) {
             return new JoorExpressionReifier(camelContext, definition);
+        } else if (definition instanceof JqExpression) {
+            return new JqExpressionReifier(camelContext, definition);
         } else if (definition instanceof JsonPathExpression) {
             return new JsonPathExpressionReifier(camelContext, definition);
         } else if (definition instanceof MethodCallExpression) {
@@ -126,8 +128,6 @@ public class ExpressionReifier<T extends ExpressionDefinition> extends AbstractR
             return new XPathExpressionReifier(camelContext, definition);
         } else if (definition instanceof XQueryExpression) {
             return new XQueryExpressionReifier(camelContext, definition);
-        } else if (definition instanceof WasmExpression) {
-            return new WasmExpressionReifier(camelContext, definition);
         } else if (definition instanceof SingleInputTypedExpressionDefinition) {
             return new SingleInputTypedExpressionReifier<>(camelContext, definition);
         } else if (definition instanceof TypedExpressionDefinition) {
@@ -157,10 +157,9 @@ public class ExpressionReifier<T extends ExpressionDefinition> extends AbstractR
                 expression = definition.getExpressionValue();
             } else {
                 ObjectHelper.notNull(definition.getLanguage(), "language");
-                String lan = parseString(definition.getLanguage());
-                Language language = camelContext.resolveLanguage(lan);
+                Language language = camelContext.resolveLanguage(definition.getLanguage());
                 if (language == null) {
-                    throw new NoSuchLanguageException(lan);
+                    throw new NoSuchLanguageException(definition.getLanguage());
                 }
                 String exp = parseString(definition.getExpression());
                 // should be true by default
@@ -196,10 +195,9 @@ public class ExpressionReifier<T extends ExpressionDefinition> extends AbstractR
                 predicate = new ExpressionToPredicateAdapter(definition.getExpressionValue());
             } else {
                 ObjectHelper.notNull(definition.getLanguage(), "language");
-                String lan = parseString(definition.getLanguage());
-                Language language = camelContext.resolveLanguage(lan);
+                Language language = camelContext.resolveLanguage(definition.getLanguage());
                 if (language == null) {
-                    throw new NoSuchLanguageException(lan);
+                    throw new NoSuchLanguageException(definition.getLanguage());
                 }
                 String exp = parseString(definition.getExpression());
                 // should be true by default
@@ -239,8 +237,8 @@ public class ExpressionReifier<T extends ExpressionDefinition> extends AbstractR
         // allows to perform additional logic after the properties has been
         // configured which may be needed
         // in the various camel components outside camel-core
-        if (predicate instanceof AfterPropertiesConfigured afterPropertiesConfigured) {
-            afterPropertiesConfigured.afterPropertiesConfigured(camelContext);
+        if (predicate instanceof AfterPropertiesConfigured) {
+            ((AfterPropertiesConfigured) predicate).afterPropertiesConfigured(camelContext);
         }
     }
 
@@ -248,8 +246,8 @@ public class ExpressionReifier<T extends ExpressionDefinition> extends AbstractR
         // allows to perform additional logic after the properties has been
         // configured which may be needed
         // in the various camel components outside camel-core
-        if (expression instanceof AfterPropertiesConfigured afterPropertiesConfigured) {
-            afterPropertiesConfigured.afterPropertiesConfigured(camelContext);
+        if (expression instanceof AfterPropertiesConfigured) {
+            ((AfterPropertiesConfigured) expression).afterPropertiesConfigured(camelContext);
         }
     }
 
@@ -285,6 +283,22 @@ public class ExpressionReifier<T extends ExpressionDefinition> extends AbstractR
                 definition.setExpression(text);
             }
         }
+    }
+
+    @Deprecated
+    protected void setProperties(Object target, Map<String, Object> properties) {
+        properties.entrySet().removeIf(e -> e.getValue() == null);
+
+        PropertyConfigurer configurer = null;
+        if (target instanceof PropertyConfigurerAware) {
+            configurer = ((PropertyConfigurerAware) target).getPropertyConfigurer(target);
+        } else if (target instanceof PropertyConfigurer) {
+            configurer = (PropertyConfigurer) target;
+        }
+        PropertyBindingSupport.build()
+                .withConfigurer(configurer)
+                .withIgnoreCase(true)
+                .bind(camelContext, target, properties);
     }
 
 }

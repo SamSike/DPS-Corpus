@@ -20,8 +20,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
-
-import javax.inject.Inject;
+import java.util.stream.Collectors;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -30,7 +29,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.codehaus.plexus.build.BuildContext;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 /**
  * Analyses the Camel plugins in a project and generates extra descriptor information for easier auto-discovery in
@@ -40,7 +39,7 @@ import org.codehaus.plexus.build.BuildContext;
 public class PackageComponentMojo extends AbstractGeneratorMojo {
 
     /**
-     * The output directory for the generated component files
+     * The output directory for generated components file
      */
     @Parameter(defaultValue = "${project.basedir}/src/generated/resources")
     protected File componentOutDir;
@@ -51,19 +50,17 @@ public class PackageComponentMojo extends AbstractGeneratorMojo {
     @Parameter(defaultValue = "${project.build.directory}")
     protected File buildDir;
 
-    @Inject
-    public PackageComponentMojo(MavenProjectHelper projectHelper, BuildContext buildContext) {
-        super(projectHelper, buildContext);
+    public PackageComponentMojo() {
     }
 
-    PackageComponentMojo(Log log, MavenProject project, MavenProjectHelper projectHelper,
-                         File buildDir, File componentOutDir, BuildContext buildContext) {
-        this(projectHelper, buildContext);
-
+    public PackageComponentMojo(Log log, MavenProject project, MavenProjectHelper projectHelper,
+                                File buildDir, File componentOutDir, BuildContext buildContext) {
         setLog(log);
         this.project = project;
+        this.projectHelper = projectHelper;
         this.buildDir = buildDir;
         this.componentOutDir = componentOutDir;
+        this.buildContext = buildContext;
     }
 
     /**
@@ -115,7 +112,7 @@ public class PackageComponentMojo extends AbstractGeneratorMojo {
         }
 
         if (count > 0) {
-            final String names = String.join(" ", fileNames);
+            final String names = fileNames.stream().collect(Collectors.joining(" "));
 
             String properties = createProperties(project, "components", names);
             updateResource(camelMetaDir.toPath(), "component.properties", properties);

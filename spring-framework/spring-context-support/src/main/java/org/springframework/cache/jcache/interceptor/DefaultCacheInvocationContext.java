@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,6 @@ import java.util.Set;
 import javax.cache.annotation.CacheInvocationContext;
 import javax.cache.annotation.CacheInvocationParameter;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.cache.interceptor.CacheOperationInvocationContext;
 
 /**
@@ -44,12 +42,12 @@ class DefaultCacheInvocationContext<A extends Annotation>
 
 	private final Object target;
 
-	private final @Nullable Object[] args;
+	private final Object[] args;
 
 	private final CacheInvocationParameter[] allParameters;
 
 
-	public DefaultCacheInvocationContext(JCacheOperation<A> operation, Object target, @Nullable Object[] args) {
+	public DefaultCacheInvocationContext(JCacheOperation<A> operation, Object target, Object[] args) {
 		this.operation = operation;
 		this.target = target;
 		this.args = args;
@@ -68,7 +66,7 @@ class DefaultCacheInvocationContext<A extends Annotation>
 	}
 
 	@Override
-	public @Nullable Object[] getArgs() {
+	public Object[] getArgs() {
 		return this.args.clone();
 	}
 

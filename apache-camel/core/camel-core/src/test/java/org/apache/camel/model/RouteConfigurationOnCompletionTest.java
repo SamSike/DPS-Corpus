@@ -23,7 +23,7 @@ import org.apache.camel.builder.RouteConfigurationBuilder;
 import org.apache.camel.processor.OnCompletionTest;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class RouteConfigurationOnCompletionTest extends ContextTestSupport {
 
@@ -32,7 +32,7 @@ public class RouteConfigurationOnCompletionTest extends ContextTestSupport {
         CamelContext camelContext = super.createCamelContext();
         camelContext.addRoutes(new RouteConfigurationBuilder() {
             @Override
-            public void configuration() {
+            public void configuration() throws Exception {
                 routeConfiguration().onCompletion().onCompleteOnly().to("log:ok").to("mock:ok");
                 routeConfiguration().onCompletion().onFailureOnly().to("log:fail").to("mock:fail");
             }
@@ -58,8 +58,12 @@ public class RouteConfigurationOnCompletionTest extends ContextTestSupport {
         getMockEndpoint("mock:fail").expectedMessageCount(1);
         getMockEndpoint("mock:result").expectedMessageCount(0);
 
-        assertThrows(Exception.class, () -> template.sendBody("direct:start", "Kaboom"),
-                "Should have thrown exception");
+        try {
+            template.sendBody("direct:start", "Kaboom");
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            // expected
+        }
 
         assertMockEndpointsSatisfied();
     }
@@ -71,14 +75,18 @@ public class RouteConfigurationOnCompletionTest extends ContextTestSupport {
         getMockEndpoint("mock:result").expectedBodiesReceived("Bye World");
 
         template.sendBody("direct:start", "Hello World");
-        assertThrows(Exception.class, () -> template.sendBody("direct:start", "Kaboom"),
-                "Should throw exception");
+        try {
+            template.sendBody("direct:start", "Kaboom");
+            fail("Should throw exception");
+        } catch (Exception e) {
+            // expected
+        }
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
             public void configure() {

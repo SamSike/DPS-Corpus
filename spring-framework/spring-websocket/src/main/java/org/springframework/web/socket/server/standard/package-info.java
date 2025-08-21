@@ -1,7 +1,9 @@
 /**
  * Server-side classes for use with standard JSR-356 WebSocket endpoints.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.socket.server.standard;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -16,9 +16,9 @@
  */
 package org.apache.camel.component.kubernetes.producer;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
@@ -53,49 +53,33 @@ public class KubernetesPersistentVolumesClaimsProducerTest extends KubernetesTes
 
     @Test
     void listTest() {
-        server.expect().withPath("/api/v1/persistentvolumeclaims")
+        server.expect().withPath("/api/v1/namespaces/test/persistentvolumeclaims")
                 .andReturn(200,
                         new PersistentVolumeClaimListBuilder().addNewItem().and().addNewItem().and().addNewItem().and().build())
                 .once();
-        server.expect().withPath("/api/v1/namespaces/test/persistentvolumeclaims")
-                .andReturn(200, new PersistentVolumeClaimListBuilder().addNewItem().and().addNewItem().and().build())
-                .once();
         List<?> result = template.requestBody("direct:list", "", List.class);
-        assertEquals(3, result.size());
 
-        Exchange ex = template.request("direct:list",
-                exchange -> exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test"));
-        assertEquals(2, ex.getMessage().getBody(List.class).size());
+        assertEquals(3, result.size());
     }
 
     @Test
     void listByLabelsTest() throws Exception {
-        Map<String, String> labels = Map.of(
-                "key1", "value1",
-                "key2", "value2");
-
-        String urlEncodedLabels = toUrlEncoded(labels.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue())
-                .collect(Collectors.joining(",")));
-
-        server.expect().withPath("/api/v1/persistentvolumeclaims?labelSelector=" + urlEncodedLabels)
+        server.expect()
+                .withPath("/api/v1/namespaces/test/persistentvolumeclaims?labelSelector="
+                          + toUrlEncoded("key1=value1,key2=value2"))
                 .andReturn(200,
                         new PersistentVolumeClaimListBuilder().addNewItem().and().addNewItem().and().addNewItem().and().build())
                 .once();
-        server.expect().withPath("/api/v1/namespaces/test/persistentvolumeclaims?labelSelector=" + urlEncodedLabels)
-                .andReturn(200, new PersistentVolumeClaimListBuilder().addNewItem().and().addNewItem().and().build())
-                .once();
         Exchange ex = template.request("direct:listByLabels", exchange -> {
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_PERSISTENT_VOLUMES_CLAIMS_LABELS, labels);
-        });
-
-        assertEquals(3, ex.getMessage().getBody(List.class).size());
-
-        ex = template.request("direct:listByLabels", exchange -> {
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_PERSISTENT_VOLUMES_CLAIMS_LABELS, labels);
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test");
+            Map<String, String> labels = new HashMap<>();
+            labels.put("key1", "value1");
+            labels.put("key2", "value2");
+            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_PERSISTENT_VOLUMES_CLAIMS_LABELS, labels);
         });
 
-        assertEquals(2, ex.getMessage().getBody(List.class).size());
+        List<?> result = ex.getMessage().getBody(List.class);
+        assertEquals(3, result.size());
     }
 
     @Test
@@ -123,7 +107,7 @@ public class KubernetesPersistentVolumesClaimsProducerTest extends KubernetesTes
     }
 
     @Test
-    void updatePersistentVolumeClaim() {
+    void replacePersistentVolumeClaim() {
         Map<String, String> labels = Map.of("my.label.key", "my.label.value");
         PersistentVolumeClaimSpec spec = new PersistentVolumeClaimSpecBuilder().withVolumeName("SomeVolumeName").build();
         PersistentVolumeClaim vc1 = new PersistentVolumeClaimBuilder().withNewMetadata().withName("vc1").withNamespace("test")
@@ -135,7 +119,7 @@ public class KubernetesPersistentVolumesClaimsProducerTest extends KubernetesTes
                 .once();
         server.expect().put().withPath("/api/v1/namespaces/test/persistentvolumeclaims/vc1").andReturn(200, vc1).once();
 
-        Exchange ex = template.request("direct:update", exchange -> {
+        Exchange ex = template.request("direct:replace", exchange -> {
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test");
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_PERSISTENT_VOLUMES_CLAIMS_LABELS, labels);
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_PERSISTENT_VOLUME_CLAIM_NAME, "vc1");
@@ -177,8 +161,8 @@ public class KubernetesPersistentVolumesClaimsProducerTest extends KubernetesTes
                         "kubernetes-persistent-volumes-claims:///?kubernetesClient=#kubernetesClient&operation=listPersistentVolumesClaimsByLabels");
                 from("direct:create").to(
                         "kubernetes-persistent-volumes-claims:///?kubernetesClient=#kubernetesClient&operation=createPersistentVolumeClaim");
-                from("direct:update").to(
-                        "kubernetes-persistent-volumes-claims:///?kubernetesClient=#kubernetesClient&operation=updatePersistentVolumeClaim");
+                from("direct:replace").to(
+                        "kubernetes-persistent-volumes-claims:///?kubernetesClient=#kubernetesClient&operation=replacePersistentVolumeClaim");
                 from("direct:delete").to(
                         "kubernetes-persistent-volumes-claims:///?kubernetesClient=#kubernetesClient&operation=deletePersistentVolumeClaim");
             }

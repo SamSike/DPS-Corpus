@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,31 +43,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.jooq.Configuration;
 import org.jooq.Node;
 import org.jooq.exception.DataDefinitionException;
-import org.jooq.exception.DataMigrationVerificationException;
-
-import org.jetbrains.annotations.Nullable;
 
 /**
  * @author Lukas Eder
  */
-abstract class AbstractNode<N extends Node<N>> extends AbstractLazyScope implements Node<N> {
+abstract class AbstractNode<N extends Node<N>> implements Node<N> {
 
-    final N      root;
-    final String id;
-    final String message;
-    final String author;
+    private final String id;
+    private final String message;
 
-    @SuppressWarnings("unchecked")
-    AbstractNode(Configuration configuration, String id, String message, String author, N root) {
-        super(configuration);
-
-        this.root = root != null ? root : (N) this;
+    AbstractNode(String id, String message) {
         this.id = id;
         this.message = defaultIfNull(message, "");
-        this.author = author;
     }
 
     @Override
@@ -81,13 +70,14 @@ abstract class AbstractNode<N extends Node<N>> extends AbstractLazyScope impleme
     }
 
     @Override
-    public final String author() {
-        return author;
-    }
-
-    @Override
+    @SuppressWarnings("unchecked")
     public final N root() {
-        return root;
+        N node = (N) this;
+
+        while (!node.parents().isEmpty())
+            node = node.parents().get(0);
+
+        return node;
     }
 
     @SuppressWarnings("unchecked")

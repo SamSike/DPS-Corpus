@@ -56,7 +56,7 @@ public class ExtendedStartupListenerComponentTest extends ContextTestSupport {
         private int invoked;
 
         @Override
-        public void onCamelContextStarted(CamelContext context, boolean alreadyStarted) {
+        public void onCamelContextStarted(CamelContext context, boolean alreadyStarted) throws Exception {
             invoked++;
 
             // the routes should not have been started as they start afterwards
@@ -81,7 +81,7 @@ public class ExtendedStartupListenerComponentTest extends ContextTestSupport {
             // we can add new routes
             context.addRoutes(new RouteBuilder() {
                 @Override
-                public void configure() {
+                public void configure() throws Exception {
                     from("direct:late").routeId("late").to("mock:late");
                 }
             });
@@ -90,10 +90,10 @@ public class ExtendedStartupListenerComponentTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 my = new MyComponent();
                 context.addComponent("my", my);
 

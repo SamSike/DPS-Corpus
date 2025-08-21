@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,10 @@ package org.springframework.beans.factory.config;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.support.PropertiesLoaderSupport;
+import org.springframework.lang.Nullable;
 
 /**
  * Allows for making a properties file from a classpath location available
@@ -49,7 +48,8 @@ public class PropertiesFactoryBean extends PropertiesLoaderSupport
 
 	private boolean singleton = true;
 
-	private @Nullable Properties singletonInstance;
+	@Nullable
+	private Properties singletonInstance;
 
 
 	/**
@@ -75,7 +75,8 @@ public class PropertiesFactoryBean extends PropertiesLoaderSupport
 	}
 
 	@Override
-	public final @Nullable Properties getObject() throws IOException {
+	@Nullable
+	public final Properties getObject() throws IOException {
 		if (this.singleton) {
 			return this.singletonInstance;
 		}

@@ -34,7 +34,7 @@ public class AdviceWithPolicyTest extends ContextTestSupport {
         RouteDefinition route = context.getRouteDefinitions().get(0);
         AdviceWith.adviceWith(route, context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 weaveById("b").after().to("mock:result");
             }
         });
@@ -50,10 +50,10 @@ public class AdviceWithPolicyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").policy(new MyPolicy()).to("mock:a").id("a").to("mock:b").id("b");
             }
         };

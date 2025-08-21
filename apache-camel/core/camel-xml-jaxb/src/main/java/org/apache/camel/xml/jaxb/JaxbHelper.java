@@ -18,9 +18,7 @@ package org.apache.camel.xml.jaxb;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,25 +28,20 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Expression;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NamedNode;
 import org.apache.camel.TypeConversionException;
 import org.apache.camel.converter.jaxp.XmlConverter;
-import org.apache.camel.model.BasicExpressionNode;
 import org.apache.camel.model.ExpressionNode;
 import org.apache.camel.model.FromDefinition;
 import org.apache.camel.model.OptionalIdentifiedDefinition;
-import org.apache.camel.model.OutputDefinition;
-import org.apache.camel.model.RouteConfigurationDefinition;
-import org.apache.camel.model.RouteConfigurationsDefinition;
 import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.model.RouteTemplateDefinition;
 import org.apache.camel.model.RouteTemplatesDefinition;
@@ -58,13 +51,10 @@ import org.apache.camel.model.TemplatedRouteDefinition;
 import org.apache.camel.model.TemplatedRoutesDefinition;
 import org.apache.camel.model.ToDynamicDefinition;
 import org.apache.camel.model.language.ExpressionDefinition;
-import org.apache.camel.model.rest.RestConfigurationDefinition;
 import org.apache.camel.model.rest.RestDefinition;
 import org.apache.camel.model.rest.RestsDefinition;
 import org.apache.camel.spi.NamespaceAware;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.util.KeyValueHolder;
-import org.apache.camel.util.URISupport;
 
 import static org.apache.camel.model.ProcessorDefinitionHelper.filterTypeInOutputs;
 
@@ -75,7 +65,7 @@ public final class JaxbHelper {
     }
 
     public static JAXBContext getJAXBContext(CamelContext context) throws Exception {
-        return (JAXBContext) PluginHelper.getModelJAXBContextFactory(context).newJAXBContext();
+        return (JAXBContext) context.adapt(ExtendedCamelContext.class).getModelJAXBContextFactory().newJAXBContext();
     }
 
     /**
@@ -85,16 +75,8 @@ public final class JaxbHelper {
      * @param namespaces the map of namespaces to add discovered XML namespaces into
      */
     public static void extractNamespaces(RouteDefinition route, Map<String, String> namespaces) {
-        for (ExpressionNode en : filterTypeInOutputs(route.getOutputs(), ExpressionNode.class)) {
-            NamespaceAware na = getNamespaceAwareFromExpression(en);
-            if (na != null) {
-                Map<String, String> map = na.getNamespaces();
-                if (map != null && !map.isEmpty()) {
-                    namespaces.putAll(map);
-                }
-            }
-        }
-        for (BasicExpressionNode<?> en : filterTypeInOutputs(route.getOutputs(), BasicExpressionNode.class)) {
+        Collection<ExpressionNode> col = filterTypeInOutputs(route.getOutputs(), ExpressionNode.class);
+        for (ExpressionNode en : col) {
             NamespaceAware na = getNamespaceAwareFromExpression(en);
             if (na != null) {
                 Map<String, String> map = na.getNamespaces();
@@ -134,6 +116,7 @@ public final class JaxbHelper {
      * If the route has been built with endpoint-dsl, then the model will not have uri set which then cannot be included
      * in the JAXB model dump
      */
+    @SuppressWarnings("unchecked")
     public static void resolveEndpointDslUris(RouteDefinition route) {
         FromDefinition from = route.getInput();
         if (from != null && from.getEndpointConsumerBuilder() != null) {
@@ -156,29 +139,15 @@ public final class JaxbHelper {
         }
     }
 
-    private static NamespaceAware getNamespaceAwareFromExpression(ExpressionNode expressionNode) {
+    public static NamespaceAware getNamespaceAwareFromExpression(ExpressionNode expressionNode) {
         ExpressionDefinition ed = expressionNode.getExpression();
 
         NamespaceAware na = null;
         Expression exp = ed.getExpressionValue();
-        if (exp instanceof NamespaceAware namespaceAware) {
-            na = namespaceAware;
-        } else if (ed instanceof NamespaceAware namespaceAware) {
-            na = namespaceAware;
-        }
-
-        return na;
-    }
-
-    private static NamespaceAware getNamespaceAwareFromExpression(BasicExpressionNode expressionNode) {
-        ExpressionDefinition ed = expressionNode.getExpression();
-
-        NamespaceAware na = null;
-        Expression exp = ed.getExpressionValue();
-        if (exp instanceof NamespaceAware namespaceAware) {
-            na = namespaceAware;
-        } else if (ed instanceof NamespaceAware namespaceAware) {
-            na = namespaceAware;
+        if (exp instanceof NamespaceAware) {
+            na = (NamespaceAware) exp;
+        } else if (ed instanceof NamespaceAware) {
+            na = (NamespaceAware) ed;
         }
 
         return na;
@@ -205,7 +174,7 @@ public final class JaxbHelper {
         for (int i = 0; i < attributes.getLength(); i++) {
             Node item = attributes.item(i);
             String nsPrefix = item.getNodeName();
-            if (nsPrefix.startsWith("xmlns")) {
+            if (nsPrefix != null && nsPrefix.startsWith("xmlns")) {
                 String nsValue = item.getNodeValue();
                 String[] nsParts = nsPrefix.split(":");
                 if (nsParts.length == 1) {
@@ -220,97 +189,12 @@ public final class JaxbHelper {
         }
     }
 
-    /**
-     * Extract all source locations from the XML routes
-     *
-     * @param element   the XML element
-     * @param locations the map of source locations for EIPs in the route
-     */
-    public static void extractSourceLocations(Element element, Map<String, KeyValueHolder<Integer, String>> locations) {
-        NamedNodeMap attributes = element.getAttributes();
-        String id = null;
-        Integer sourceLineNumber = null;
-        String sourceLocation = null;
-        for (int i = 0; i < attributes.getLength(); i++) {
-            Node item = attributes.item(i);
-            String name = item.getNodeName();
-            if ("id".equals(name)) {
-                id = item.getNodeValue();
-            } else if ("sourceLineNumber".equals(name)) {
-                sourceLineNumber = Integer.parseInt(item.getNodeValue());
-            } else if ("sourceLocation".equals(name)) {
-                sourceLocation = item.getNodeValue();
-            }
-        }
-        if (id != null && sourceLineNumber != null && sourceLocation != null) {
-            locations.put(id, new KeyValueHolder<>(sourceLineNumber, sourceLocation));
-        }
-
-        final NodeList children = element.getChildNodes();
-        for (int index = 0; index < children.getLength(); index++) {
-            final Node child = children.item(index);
-            if (child.getNodeType() == Node.ELEMENT_NODE) {
-                extractSourceLocations((Element) child, locations);
-            }
-        }
-    }
-
     public static void applyNamespaces(RouteDefinition route, Map<String, String> namespaces) {
         Collection<ExpressionNode> col = filterTypeInOutputs(route.getOutputs(), ExpressionNode.class);
         for (ExpressionNode en : col) {
             NamespaceAware na = getNamespaceAwareFromExpression(en);
             if (na != null) {
                 na.setNamespaces(namespaces);
-            }
-        }
-        Collection<BasicExpressionNode> col2 = filterTypeInOutputs(route.getOutputs(), BasicExpressionNode.class);
-        for (BasicExpressionNode en : col2) {
-            NamespaceAware na = getNamespaceAwareFromExpression(en);
-            if (na != null) {
-                na.setNamespaces(namespaces);
-            }
-        }
-    }
-
-    public static void applyNamespaces(RouteConfigurationDefinition config, Map<String, String> namespaces) {
-        List<OutputDefinition<?>> defs = new ArrayList<>();
-        defs.addAll(config.getIntercepts());
-        defs.addAll(config.getInterceptFroms());
-        defs.addAll(config.getInterceptSendTos());
-        defs.addAll(config.getOnCompletions());
-        defs.addAll(config.getOnExceptions());
-        for (OutputDefinition<?> def : defs) {
-            Collection<ExpressionNode> col = filterTypeInOutputs(def.getOutputs(), ExpressionNode.class);
-            for (ExpressionNode en : col) {
-                NamespaceAware na = getNamespaceAwareFromExpression(en);
-                if (na != null) {
-                    na.setNamespaces(namespaces);
-                }
-            }
-            Collection<BasicExpressionNode> col2 = filterTypeInOutputs(def.getOutputs(), BasicExpressionNode.class);
-            for (BasicExpressionNode en : col2) {
-                NamespaceAware na = getNamespaceAwareFromExpression(en);
-                if (na != null) {
-                    na.setNamespaces(namespaces);
-                }
-            }
-        }
-    }
-
-    public static void applySourceLocations(RouteDefinition route, Map<String, KeyValueHolder<Integer, String>> locations) {
-        KeyValueHolder<Integer, String> kv = locations.get(route.getRouteId());
-        if (kv != null && route.getInput() != null) {
-            route.getInput().setLineNumber(kv.getKey());
-            route.getInput().setLocation(kv.getValue());
-        }
-
-        Collection<OptionalIdentifiedDefinition> def
-                = filterTypeInOutputs(route.getOutputs(), OptionalIdentifiedDefinition.class);
-        for (OptionalIdentifiedDefinition out : def) {
-            kv = locations.get(out.getId());
-            if (kv != null) {
-                out.setLineNumber(kv.getKey());
-                out.setLocation(kv.getValue());
             }
         }
     }
@@ -329,10 +213,6 @@ public final class JaxbHelper {
             throw new IllegalArgumentException("InputStream and XML is both null");
         }
 
-        Map<String, KeyValueHolder<Integer, String>> locations = new HashMap<>();
-        if (context.isDebugging()) {
-            extractSourceLocations(dom.getDocumentElement(), locations);
-        }
         Map<String, String> namespaces = new LinkedHashMap<>();
         extractNamespaces(dom, namespaces);
 
@@ -344,38 +224,22 @@ public final class JaxbHelper {
         }
 
         // Restore namespaces to anything that's NamespaceAware
-        if (result instanceof RouteTemplatesDefinition routeTemplatesDefinition) {
-            List<RouteTemplateDefinition> templates = routeTemplatesDefinition.getRouteTemplates();
+        if (result instanceof RouteTemplatesDefinition) {
+            List<RouteTemplateDefinition> templates = ((RouteTemplatesDefinition) result).getRouteTemplates();
             for (RouteTemplateDefinition template : templates) {
-                RouteDefinition route = template.getRoute();
-                applyNamespaces(route, namespaces);
-                if (!locations.isEmpty()) {
-                    applySourceLocations(route, locations);
-                }
-                resolveEndpointDslUris(route);
+                applyNamespaces(template.getRoute(), namespaces);
             }
-        } else if (result instanceof RouteTemplateDefinition template) {
-            RouteDefinition route = template.getRoute();
-            applyNamespaces(route, namespaces);
-            if (!locations.isEmpty()) {
-                applySourceLocations(route, locations);
-            }
-            resolveEndpointDslUris(route);
-        } else if (result instanceof RoutesDefinition routesDefinition) {
-            List<RouteDefinition> routes = routesDefinition.getRoutes();
+        } else if (result instanceof RouteTemplateDefinition) {
+            RouteTemplateDefinition template = (RouteTemplateDefinition) result;
+            applyNamespaces(template.getRoute(), namespaces);
+        } else if (result instanceof RoutesDefinition) {
+            List<RouteDefinition> routes = ((RoutesDefinition) result).getRoutes();
             for (RouteDefinition route : routes) {
                 applyNamespaces(route, namespaces);
-                if (!locations.isEmpty()) {
-                    applySourceLocations(route, locations);
-                }
-                resolveEndpointDslUris(route);
             }
-        } else if (result instanceof RouteDefinition route) {
+        } else if (result instanceof RouteDefinition) {
+            RouteDefinition route = (RouteDefinition) result;
             applyNamespaces(route, namespaces);
-            if (!locations.isEmpty()) {
-                applySourceLocations(route, locations);
-            }
-            resolveEndpointDslUris(route);
         }
 
         return type.cast(result);
@@ -384,11 +248,14 @@ public final class JaxbHelper {
     public static RoutesDefinition loadRoutesDefinition(CamelContext context, InputStream inputStream) throws Exception {
         XmlConverter xmlConverter = newXmlConverter(context);
         Document dom = xmlConverter.toDOMDocument(inputStream, null);
-        removeNoiseFromUris(dom.getDocumentElement());
 
         JAXBContext jaxbContext = getJAXBContext(context);
 
-        Map<String, String> namespaces = doExtractNamespaces(dom);
+        Map<String, String> namespaces = new LinkedHashMap<>();
+        extractNamespaces(dom, namespaces);
+        if (!namespaces.containsValue(CAMEL_NS)) {
+            addNamespaceToDom(dom);
+        }
 
         Binder<Node> binder = jaxbContext.createBinder();
         Object result = binder.unmarshal(dom);
@@ -399,50 +266,15 @@ public final class JaxbHelper {
 
         // can either be routes or a single route
         RoutesDefinition answer;
-        if (result instanceof RouteDefinition route) {
+        if (result instanceof RouteDefinition) {
+            RouteDefinition route = (RouteDefinition) result;
             answer = new RoutesDefinition();
             applyNamespaces(route, namespaces);
             answer.getRoutes().add(route);
-        } else if (result instanceof RoutesDefinition routesDefinition) {
-            answer = routesDefinition;
+        } else if (result instanceof RoutesDefinition) {
+            answer = (RoutesDefinition) result;
             for (RouteDefinition route : answer.getRoutes()) {
                 applyNamespaces(route, namespaces);
-            }
-        } else {
-            // ignore not supported type
-            return null;
-        }
-
-        return answer;
-    }
-
-    public static RouteConfigurationsDefinition loadRouteConfigurationsDefinition(CamelContext context, InputStream inputStream)
-            throws Exception {
-        XmlConverter xmlConverter = newXmlConverter(context);
-        Document dom = xmlConverter.toDOMDocument(inputStream, null);
-        removeNoiseFromUris(dom.getDocumentElement());
-
-        JAXBContext jaxbContext = getJAXBContext(context);
-
-        Map<String, String> namespaces = doExtractNamespaces(dom);
-
-        Binder<Node> binder = jaxbContext.createBinder();
-        Object result = binder.unmarshal(dom);
-
-        if (result == null) {
-            throw new JAXBException("Cannot unmarshal to RouteConfigurationsDefinition using JAXB");
-        }
-
-        // can either be routes or a single route
-        RouteConfigurationsDefinition answer;
-        if (result instanceof RouteConfigurationDefinition config) {
-            answer = new RouteConfigurationsDefinition();
-            applyNamespaces(config, namespaces);
-            answer.getRouteConfigurations().add(config);
-        } else if (result instanceof RouteConfigurationsDefinition routeConfigurationsDefinition) {
-            answer = routeConfigurationsDefinition;
-            for (RouteConfigurationDefinition config : answer.getRouteConfigurations()) {
-                applyNamespaces(config, namespaces);
             }
         } else {
             // ignore not supported type
@@ -456,11 +288,14 @@ public final class JaxbHelper {
             throws Exception {
         XmlConverter xmlConverter = newXmlConverter(context);
         Document dom = xmlConverter.toDOMDocument(inputStream, null);
-        removeNoiseFromUris(dom.getDocumentElement());
 
         JAXBContext jaxbContext = getJAXBContext(context);
 
-        Map<String, String> namespaces = doExtractNamespaces(dom);
+        Map<String, String> namespaces = new LinkedHashMap<>();
+        extractNamespaces(dom, namespaces);
+        if (!namespaces.containsValue(CAMEL_NS)) {
+            addNamespaceToDom(dom);
+        }
 
         Binder<Node> binder = jaxbContext.createBinder();
         Object result = binder.unmarshal(dom);
@@ -471,12 +306,13 @@ public final class JaxbHelper {
 
         // can either be routes or a single route
         RouteTemplatesDefinition answer;
-        if (result instanceof RouteTemplateDefinition route) {
+        if (result instanceof RouteTemplateDefinition) {
+            RouteTemplateDefinition route = (RouteTemplateDefinition) result;
             answer = new RouteTemplatesDefinition();
             applyNamespaces(route.getRoute(), namespaces);
             answer.getRouteTemplates().add(route);
-        } else if (result instanceof RouteTemplatesDefinition routeTemplatesDefinition) {
-            answer = routeTemplatesDefinition;
+        } else if (result instanceof RouteTemplatesDefinition) {
+            answer = (RouteTemplatesDefinition) result;
             for (RouteTemplateDefinition route : answer.getRouteTemplates()) {
                 applyNamespaces(route.getRoute(), namespaces);
             }
@@ -488,18 +324,9 @@ public final class JaxbHelper {
         return answer;
     }
 
-    private static Map<String, String> doExtractNamespaces(Document dom) {
-        Map<String, String> namespaces = new LinkedHashMap<>();
-        extractNamespaces(dom, namespaces);
-        if (!namespaces.containsValue(CAMEL_NS)) {
-            addNamespaceToDom(dom);
-        }
-        return namespaces;
-    }
-
     /**
      * Un-marshals the content of the input stream to an instance of {@link TemplatedRoutesDefinition}.
-     *
+     * 
      * @param  context     the Camel context from which the JAXBContext is extracted
      * @param  inputStream the input stream to unmarshal
      * @return             the content unmarshalled as a {@link TemplatedRoutesDefinition}.
@@ -509,11 +336,14 @@ public final class JaxbHelper {
             throws Exception {
         XmlConverter xmlConverter = newXmlConverter(context);
         Document dom = xmlConverter.toDOMDocument(inputStream, null);
-        removeNoiseFromUris(dom.getDocumentElement());
 
         JAXBContext jaxbContext = getJAXBContext(context);
 
-        doExtractNamespaces(dom);
+        Map<String, String> namespaces = new LinkedHashMap<>();
+        extractNamespaces(dom, namespaces);
+        if (!namespaces.containsValue(CAMEL_NS)) {
+            addNamespaceToDom(dom);
+        }
 
         Binder<Node> binder = jaxbContext.createBinder();
         Object result = binder.unmarshal(dom);
@@ -524,11 +354,12 @@ public final class JaxbHelper {
 
         // can either be routes or a single route
         TemplatedRoutesDefinition answer;
-        if (result instanceof TemplatedRouteDefinition templatedRoute) {
+        if (result instanceof TemplatedRouteDefinition) {
+            TemplatedRouteDefinition templatedRoute = (TemplatedRouteDefinition) result;
             answer = new TemplatedRoutesDefinition();
             answer.getTemplatedRoutes().add(templatedRoute);
-        } else if (result instanceof TemplatedRoutesDefinition templatedRoutesDefinition) {
-            answer = templatedRoutesDefinition;
+        } else if (result instanceof TemplatedRoutesDefinition) {
+            answer = (TemplatedRoutesDefinition) result;
         } else {
             // ignore not supported type
             return null;
@@ -555,7 +386,6 @@ public final class JaxbHelper {
     public static RestsDefinition loadRestsDefinition(CamelContext context, InputStream inputStream) throws Exception {
         // load routes using JAXB
         Document dom = newXmlConverter(context).toDOMDocument(inputStream, null);
-        removeNoiseFromUris(dom.getDocumentElement());
 
         if (!CAMEL_NS.equals(dom.getDocumentElement().getNamespaceURI())) {
             addNamespaceToDom(dom);
@@ -569,11 +399,12 @@ public final class JaxbHelper {
 
         // can either be routes or a single route
         RestsDefinition answer;
-        if (result instanceof RestDefinition rest) {
+        if (result instanceof RestDefinition) {
+            RestDefinition rest = (RestDefinition) result;
             answer = new RestsDefinition();
             answer.getRests().add(rest);
-        } else if (result instanceof RestsDefinition restsDefinition) {
-            answer = restsDefinition;
+        } else if (result instanceof RestsDefinition) {
+            answer = (RestsDefinition) result;
         } else {
             // ignore not supported type
             return null;
@@ -581,109 +412,4 @@ public final class JaxbHelper {
 
         return answer;
     }
-
-    public static RestConfigurationDefinition loadRestConfigurationDefinition(CamelContext context, InputStream inputStream)
-            throws Exception {
-        // load rest configuration using JAXB
-        Document dom = newXmlConverter(context).toDOMDocument(inputStream, null);
-
-        if (!CAMEL_NS.equals(dom.getDocumentElement().getNamespaceURI())) {
-            addNamespaceToDom(dom);
-        }
-        Unmarshaller unmarshaller = getJAXBContext(context).createUnmarshaller();
-        Object result = unmarshaller.unmarshal(dom);
-
-        if (result == null) {
-            throw new IOException("Cannot unmarshal to rest configuration using JAXB from input stream: " + inputStream);
-        }
-
-        if (result instanceof RestConfigurationDefinition restConfigurationDefinition) {
-            return restConfigurationDefinition;
-        } else {
-            // ignore not supported type
-            return null;
-        }
-    }
-
-    private static void removeNoiseFromUris(Element element) {
-        final NamedNodeMap attrs = element.getAttributes();
-
-        for (int index = 0; index < attrs.getLength(); index++) {
-            final Attr attr = (Attr) attrs.item(index);
-            final String attName = attr.getName();
-
-            if (attName.equals("uri") || attName.endsWith("Uri")) {
-                attr.setValue(URISupport.removeNoiseFromUri(attr.getValue()));
-            }
-        }
-
-        final NodeList children = element.getChildNodes();
-
-        for (int index = 0; index < children.getLength(); index++) {
-            final Node child = children.item(index);
-
-            if (child.getNodeType() == Node.ELEMENT_NODE) {
-                removeNoiseFromUris((Element) child);
-            }
-        }
-    }
-
-    public static void removeAutoAssignedIds(Element element) {
-        final NamedNodeMap attrs = element.getAttributes();
-
-        Attr id = null;
-        Attr customId = null;
-        for (int index = 0; index < attrs.getLength(); index++) {
-            final Attr attr = (Attr) attrs.item(index);
-            final String attName = attr.getName();
-
-            if (attName.equals("id")) {
-                id = attr;
-            } else if (attName.equals("customId")) {
-                customId = attr;
-            }
-        }
-
-        // remove auto-assigned id
-        if (id != null && customId == null) {
-            attrs.removeNamedItem("id");
-        }
-        // remove customId as its noisy
-        if (customId != null) {
-            attrs.removeNamedItem("customId");
-        }
-
-        final NodeList children = element.getChildNodes();
-        for (int index = 0; index < children.getLength(); index++) {
-            final Node child = children.item(index);
-            if (child.getNodeType() == Node.ELEMENT_NODE) {
-                removeAutoAssignedIds((Element) child);
-            }
-        }
-    }
-
-    public static void enrichLocations(Node node, Map<String, KeyValueHolder<Integer, String>> locations) {
-        if (node instanceof Element el) {
-            // from should grab it from parent (route)
-            String id = el.getAttribute("id");
-            if ("from".equals(el.getNodeName())) {
-                Node parent = el.getParentNode();
-                if (parent instanceof Element parentElement) {
-                    id = parentElement.getAttribute("id");
-                }
-            }
-            var loc = locations.get(id);
-            if (loc != null) {
-                el.setAttribute("sourceLineNumber", loc.getKey().toString());
-                el.setAttribute("sourceLocation", loc.getValue());
-            }
-        }
-        if (node.hasChildNodes()) {
-            for (int i = 0; i < node.getChildNodes().getLength(); i++) {
-                Node child = node.getChildNodes().item(i);
-                enrichLocations(child, locations);
-            }
-        }
-    }
-
 }

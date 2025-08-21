@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,12 +40,8 @@ package org.jooq.meta;
 
 import java.util.List;
 
-// ...
 import org.jooq.Record;
 import org.jooq.Table;
-import org.jooq.TableOptions;
-
-import org.jetbrains.annotations.NotNull;
 
 /**
  * The definition of a table or view.
@@ -58,11 +54,6 @@ public interface TableDefinition extends Definition {
      * All columns in the type, table or view.
      */
     List<ColumnDefinition> getColumns();
-
-    /**
-     * All columns in the type, table or view, including hidden columns.
-     */
-    List<ColumnDefinition> getColumnsIncludingHidden();
 
     /**
      * Get a column in this type by its name.
@@ -82,7 +73,6 @@ public interface TableDefinition extends Definition {
     /**
      * Whether this table is a synthetic table (e.g. a synthetic view).
      */
-    @Override
     boolean isSynthetic();
 
     /**
@@ -136,40 +126,9 @@ public interface TableDefinition extends Definition {
     List<ForeignKeyDefinition> getForeignKeys(TableDefinition referenced);
 
     /**
-     * Get the inverse foreign keys for this table.
-     */
-    List<InverseForeignKeyDefinition> getInverseForeignKeys();
-
-    /**
-     * Get the inverse foreign keys for this table referenced from a specific table.
-     */
-    List<InverseForeignKeyDefinition> getInverseForeignKeys(TableDefinition referencing);
-
-    /**
-     * Get the many to many keys for this table.
-     */
-    List<ManyToManyKeyDefinition> getManyToManyKeys();
-
-    /**
-     * Get the many to many keys for this table referencing another, specific
-     * table.
-     */
-    List<ManyToManyKeyDefinition> getManyToManyKeys(TableDefinition referencing);
-
-    /**
      * Get the <code>CHECK</code> constraints for this table.
      */
     List<CheckConstraintDefinition> getCheckConstraints();
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Get the <code>IDENTITY</code> column of this table, or <code>null</code>,
@@ -193,33 +152,14 @@ public interface TableDefinition extends Definition {
     Table<Record> getTable();
 
     /**
-     * The {@link TableOptions} providing additional information about the table.
-     */
-    TableOptions getTableOptions();
-
-    /**
      * The parameters of this table if this is a table-valued function.
      */
     List<ParameterDefinition> getParameters();
 
     /**
      * Whether this table is a temporary table.
-     *
-     * @deprecated - 3.21.0 - [#18626] - Use {@link #isGlobalTemporary()} or
-     *             {@link #isLocalTemporary()} instead.
      */
-    @Deprecated(forRemoval = true)
     boolean isTemporary();
-
-    /**
-     * Whether this table is a global temporary table.
-     */
-    boolean isGlobalTemporary();
-
-    /**
-     * Whether this table is a local temporary table.
-     */
-    boolean isLocalTemporary();
 
     /**
      * Whether this table is a view.
@@ -235,46 +175,5 @@ public interface TableDefinition extends Definition {
      * Whether this table is a table-valued function.
      */
     boolean isTableValuedFunction();
-
-    /**
-     * The referenced table type, if this {@link #isTableValuedFunction()}.
-     * <p>
-     * This returns:
-     * <ul>
-     * <li><code>this</code>, if {@link #isTableValuedFunction()} ==
-     * <code>false</code></li>
-     * <li><code>this</code>, if {@link #isTableValuedFunction()} ==
-     * <code>true</code> but the table valued function doesn't reference a table
-     * type</li>
-     * <li>Another table, if {@link #isTableValuedFunction()} ==
-     * <code>true</code> and the table valued function references a table
-     * type</li>
-     * </ul>
-     *
-     * @deprecated - [#7406] - 3.20.0 - Use {@link #getReferencedTableOrUDT()}
-     *             instead.
-     */
-    @Deprecated
-    @NotNull
-    TableDefinition getReferencedTable();
-
-    /**
-     * The referenced table or UDT type, if this
-     * {@link #isTableValuedFunction()}.
-     * <p>
-     * This returns:
-     * <ul>
-     * <li><code>this</code>, if {@link #isTableValuedFunction()} ==
-     * <code>false</code></li>
-     * <li><code>this</code>, if {@link #isTableValuedFunction()} ==
-     * <code>true</code> but the table valued function doesn't reference a table
-     * type</li>
-     * <li>Another {@link TableDefinition} or {@link UDTDefinition}, if
-     * {@link #isTableValuedFunction()} == <code>true</code> and the table
-     * valued function references a table type</li>
-     * </ul>
-     */
-    @NotNull
-    Definition getReferencedTableOrUDT();
 
 }

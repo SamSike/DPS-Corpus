@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -131,13 +131,6 @@ public interface DAO<R extends TableRecord<R>, P, T> {
 
     /**
      * Performs an <code>INSERT</code> statement for a given POJO.
-     * <p>
-     * Depending on various settings, like
-     * {@link Settings#isReturnRecordToPojo()},
-     * {@link Settings#isReturnIdentityOnUpdatableRecord()},
-     * {@link Settings#isReturnAllOnUpdatableRecord()}, and others, the argument
-     * POJO, if mutable, will receive any server side generated values using a
-     * {@link Record#into(Object)} call.
      *
      * @param object The POJO to be inserted
      * @throws DataAccessException if something went wrong executing the query
@@ -147,13 +140,6 @@ public interface DAO<R extends TableRecord<R>, P, T> {
 
     /**
      * Performs a batch <code>INSERT</code> statement for a given set of POJOs.
-     * <p>
-     * Depending on various settings, like
-     * {@link Settings#isReturnRecordToPojo()},
-     * {@link Settings#isReturnIdentityOnUpdatableRecord()},
-     * {@link Settings#isReturnAllOnUpdatableRecord()}, and others, the argument
-     * POJO, if mutable, will receive any server side generated values using a
-     * {@link Record#into(Object)} call.
      *
      * @param objects The POJOs to be inserted
      * @throws DataAccessException if something went wrong executing the query
@@ -164,13 +150,6 @@ public interface DAO<R extends TableRecord<R>, P, T> {
 
     /**
      * Performs a batch <code>INSERT</code> statement for a given set of POJOs.
-     * <p>
-     * Depending on various settings, like
-     * {@link Settings#isReturnRecordToPojo()},
-     * {@link Settings#isReturnIdentityOnUpdatableRecord()},
-     * {@link Settings#isReturnAllOnUpdatableRecord()}, and others, the argument
-     * POJO, if mutable, will receive any server side generated values using a
-     * {@link Record#into(Object)} call.
      *
      * @param objects The POJOs to be inserted
      * @throws DataAccessException if something went wrong executing the query
@@ -181,14 +160,6 @@ public interface DAO<R extends TableRecord<R>, P, T> {
 
     /**
      * Performs an <code>UPDATE</code> statement for a given POJO.
-     * <p>
-     * Depending on various settings, like
-     * {@link Settings#isReturnRecordToPojo()},
-     * {@link Settings#isReturnIdentityOnUpdatableRecord()},
-     * {@link Settings#isReturnAllOnUpdatableRecord()}, and others, the argument
-     * POJO, if mutable, will receive any server side generated values using a
-     * {@link Record#into(Object)} call, if <code>UPDATE … RETURNING</code> is
-     * supported by the dialect.
      *
      * @param object The POJO to be updated
      * @throws DataAccessException if something went wrong executing the query
@@ -198,14 +169,6 @@ public interface DAO<R extends TableRecord<R>, P, T> {
 
     /**
      * Performs a batch <code>UPDATE</code> statement for a given set of POJOs.
-     * <p>
-     * Depending on various settings, like
-     * {@link Settings#isReturnRecordToPojo()},
-     * {@link Settings#isReturnIdentityOnUpdatableRecord()},
-     * {@link Settings#isReturnAllOnUpdatableRecord()}, and others, the argument
-     * POJO, if mutable, will receive any server side generated values using a
-     * {@link Record#into(Object)} call, if <code>UPDATE … RETURNING</code> is
-     * supported by the dialect.
      *
      * @param objects The POJOs to be updated
      * @throws DataAccessException if something went wrong executing the query
@@ -216,14 +179,6 @@ public interface DAO<R extends TableRecord<R>, P, T> {
 
     /**
      * Performs a batch <code>UPDATE</code> statement for a given set of POJOs.
-     * <p>
-     * Depending on various settings, like
-     * {@link Settings#isReturnRecordToPojo()},
-     * {@link Settings#isReturnIdentityOnUpdatableRecord()},
-     * {@link Settings#isReturnAllOnUpdatableRecord()}, and others, the argument
-     * POJO, if mutable, will receive any server side generated values using a
-     * {@link Record#into(Object)} call, if <code>UPDATE … RETURNING</code> is
-     * supported by the dialect.
      *
      * @param objects The POJOs to be updated
      * @throws DataAccessException if something went wrong executing the query
@@ -358,7 +313,7 @@ public interface DAO<R extends TableRecord<R>, P, T> {
      */
     @NotNull
     @Support
-    List<@NotNull P> findAll() throws DataAccessException;
+    List<P> findAll() throws DataAccessException;
 
     /**
      * Find a record of the underlying table by ID.
@@ -381,7 +336,7 @@ public interface DAO<R extends TableRecord<R>, P, T> {
      */
     @NotNull
     @Support
-    Optional<@NotNull P> findOptionalById(T id) throws DataAccessException;
+    Optional<P> findOptionalById(T id) throws DataAccessException;
 
     /**
      * Find records by a given field and a set of values.
@@ -454,7 +409,7 @@ public interface DAO<R extends TableRecord<R>, P, T> {
      */
     @NotNull
     @Support
-    <Z> Optional<@NotNull P> fetchOptional(Field<Z> field, Z value) throws DataAccessException;
+    <Z> Optional<P> fetchOptional(Field<Z> field, Z value) throws DataAccessException;
 
     /**
      * Get the underlying table.

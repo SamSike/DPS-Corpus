@@ -35,6 +35,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NamedNode;
 import org.apache.camel.Route;
 import org.apache.camel.RuntimeCamelException;
@@ -134,7 +135,7 @@ public class XRayTracer extends ServiceSupport implements RoutePolicyFactory, St
             tracingStrategy = new NoopTracingStrategy();
         }
 
-        camelContext.getCamelContextExtension().addInterceptStrategy(tracingStrategy);
+        camelContext.adapt(ExtendedCamelContext.class).addInterceptStrategy(tracingStrategy);
 
         LOG.debug("Initialized XRay tracer");
     }

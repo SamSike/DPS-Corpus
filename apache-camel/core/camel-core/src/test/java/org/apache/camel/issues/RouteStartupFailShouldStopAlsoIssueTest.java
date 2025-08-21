@@ -50,7 +50,7 @@ public class RouteStartupFailShouldStopAlsoIssueTest extends ContextTestSupport 
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:bar").routeId("bar").to("mock:bar");
 
                 // the foo route fails to startup but it should be stopped when
@@ -59,7 +59,11 @@ public class RouteStartupFailShouldStopAlsoIssueTest extends ContextTestSupport 
             }
         });
 
-        assertThrows(Exception.class, () -> context.start(), "Should fail");
+        try {
+            context.start();
+        } catch (Exception e) {
+            // should fail
+        }
 
         assertTrue(context.getRouteController().getRouteStatus("foo").isStopped());
         assertFalse(context.getRouteController().getRouteStatus("foo").isStarted());
@@ -76,36 +80,36 @@ public class RouteStartupFailShouldStopAlsoIssueTest extends ContextTestSupport 
         assertEquals("doStop", EVENTS.get(2));
     }
 
-    private static class MyComponent extends DefaultComponent {
+    private class MyComponent extends DefaultComponent {
 
         public MyComponent(CamelContext context) {
             super(context);
         }
 
         @Override
-        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) {
+        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
             return new MyEndpoint(uri, this);
         }
     }
 
-    private static class MyEndpoint extends DefaultEndpoint {
+    private class MyEndpoint extends DefaultEndpoint {
 
         public MyEndpoint(String endpointUri, Component component) {
             super(endpointUri, component);
         }
 
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             throw new UnsupportedOperationException("Not supported");
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             return new MyFailConsumer(this, processor);
         }
     }
 
-    private static class MyFailConsumer extends DefaultConsumer {
+    private class MyFailConsumer extends DefaultConsumer {
 
         public MyFailConsumer(Endpoint endpoint, Processor processor) {
             super(endpoint, processor);

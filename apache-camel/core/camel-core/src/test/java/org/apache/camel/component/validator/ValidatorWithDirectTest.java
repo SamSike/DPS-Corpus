@@ -21,7 +21,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class ValidatorWithDirectTest extends ContextTestSupport {
 
@@ -34,16 +34,21 @@ public class ValidatorWithDirectTest extends ContextTestSupport {
         fail.expectedMessageCount(1);
         valid.expectedMessageCount(0);
 
-        assertThrows(Exception.class, () -> template.sendBody("direct:start", wrongBody),
-                "Should throw exception");
+        try {
+            template.sendBody("direct:start", wrongBody);
+            fail("Should throw exception");
+        } catch (Exception e) {
+            // expected
+        }
+
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
 
                 onException(Exception.class)
                         .to("mock:fail");

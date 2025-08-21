@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package org.springframework.jmx.export.metadata;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Metadata indicating that instances of an annotated class
@@ -31,19 +31,24 @@ import org.jspecify.annotations.Nullable;
  */
 public class ManagedResource extends AbstractJmxAttribute {
 
-	private @Nullable String objectName;
+	@Nullable
+	private String objectName;
 
 	private boolean log = false;
 
-	private @Nullable String logFile;
+	@Nullable
+	private String logFile;
 
-	private @Nullable String persistPolicy;
+	@Nullable
+	private String persistPolicy;
 
 	private int persistPeriod = -1;
 
-	private @Nullable String persistName;
+	@Nullable
+	private String persistName;
 
-	private @Nullable String persistLocation;
+	@Nullable
+	private String persistLocation;
 
 
 	/**
@@ -56,7 +61,8 @@ public class ManagedResource extends AbstractJmxAttribute {
 	/**
 	 * Return the JMX ObjectName of this managed resource.
 	 */
-	public @Nullable String getObjectName() {
+	@Nullable
+	public String getObjectName() {
 		return this.objectName;
 	}
 
@@ -72,7 +78,8 @@ public class ManagedResource extends AbstractJmxAttribute {
 		this.logFile = logFile;
 	}
 
-	public @Nullable String getLogFile() {
+	@Nullable
+	public String getLogFile() {
 		return this.logFile;
 	}
 
@@ -80,7 +87,8 @@ public class ManagedResource extends AbstractJmxAttribute {
 		this.persistPolicy = persistPolicy;
 	}
 
-	public @Nullable String getPersistPolicy() {
+	@Nullable
+	public String getPersistPolicy() {
 		return this.persistPolicy;
 	}
 
@@ -96,7 +104,8 @@ public class ManagedResource extends AbstractJmxAttribute {
 		this.persistName = persistName;
 	}
 
-	public @Nullable String getPersistName() {
+	@Nullable
+	public String getPersistName() {
 		return this.persistName;
 	}
 
@@ -104,7 +113,8 @@ public class ManagedResource extends AbstractJmxAttribute {
 		this.persistLocation = persistLocation;
 	}
 
-	public @Nullable String getPersistLocation() {
+	@Nullable
+	public String getPersistLocation() {
 		return this.persistLocation;
 	}
 

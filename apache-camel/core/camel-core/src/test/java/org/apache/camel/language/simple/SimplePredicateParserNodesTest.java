@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 public class SimplePredicateParserNodesTest extends ExchangeTestSupport {
 
     @Test
-    public void testParserNodes() {
+    public void testParserNodes() throws Exception {
         exchange.getIn().setBody("foo");
 
         SimplePredicateParser parser = new SimplePredicateParser(null, "${body} == 'foo'", true, null);
@@ -51,7 +51,7 @@ public class SimplePredicateParserNodesTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testParserNodesEmbeddedFunction() {
+    public void testParserNodesEmbeddedFunction() throws Exception {
         exchange.getIn().setBody("foo");
 
         SimplePredicateParser parser = new SimplePredicateParser(null, "${body} != 'Hello ${header.bar}'", true, null);

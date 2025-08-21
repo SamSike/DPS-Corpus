@@ -82,7 +82,8 @@ public class Olingo4Index {
             return entitySet;
         }
 
-        List<ClientEntity> copyEntities = new ArrayList<>(entities);
+        List<ClientEntity> copyEntities = new ArrayList<>();
+        copyEntities.addAll(entities);
 
         for (ClientEntity entity : copyEntities) {
             if (resultIndex.contains(entity.hashCode())) {

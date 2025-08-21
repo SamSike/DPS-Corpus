@@ -20,21 +20,22 @@ import jakarta.mail.Folder;
 import jakarta.mail.Store;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mail.Mailbox.MailboxUser;
-import org.apache.camel.component.mail.Mailbox.Protocol;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.jvnet.mock_javamail.Mailbox;
 
 /**
  * Unit test with poll enrich
  */
 public class MailPollEnrichNoMailTest extends CamelTestSupport {
-    private static final MailboxUser bill = Mailbox.getOrCreateUser("bill", "secret");
 
     @Override
-    public void doPreSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
         prepareMailbox();
+        super.setUp();
     }
 
     @Test
@@ -61,8 +62,8 @@ public class MailPollEnrichNoMailTest extends CamelTestSupport {
         // connect to mailbox
         Mailbox.clearAll();
         JavaMailSender sender = new DefaultJavaMailSender();
-        Store store = sender.getSession().getStore("imap");
-        store.connect("localhost", Mailbox.getPort(Protocol.imap), bill.getLogin(), bill.getPassword());
+        Store store = sender.getSession().getStore("pop3");
+        store.connect("localhost", 25, "bill", "secret");
         Folder folder = store.getFolder("INBOX");
         folder.open(Folder.READ_WRITE);
         folder.expunge();
@@ -73,7 +74,7 @@ public class MailPollEnrichNoMailTest extends CamelTestSupport {
         return new RouteBuilder() {
             public void configure() {
                 from("direct:start")
-                        .pollEnrich(bill.uriPrefix(Protocol.pop3) + "&initialDelay=100&delay=100", 0)
+                        .pollEnrich("pop3://bill@localhost?password=secret&initialDelay=100&delay=100", 0)
                         .to("log:mail", "mock:result");
             }
         };

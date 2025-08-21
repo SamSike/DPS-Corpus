@@ -25,14 +25,14 @@ import org.junit.jupiter.api.Test;
 public class RefPredicateTest extends LanguageTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myPredicate", new MyPredicate());
         return jndi;
     }
 
     @Test
-    public void testExpression() {
+    public void testExpression() throws Exception {
         exchange.getIn().setBody("Hello World");
         assertExpression("myPredicate", "true");
 
@@ -41,7 +41,7 @@ public class RefPredicateTest extends LanguageTestSupport {
     }
 
     @Test
-    public void testPredicates() {
+    public void testPredicates() throws Exception {
         exchange.getIn().setBody("Hello World");
         assertPredicate("myPredicate", true);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedCaseInsensitiveMap;
@@ -42,7 +41,7 @@ import org.springframework.util.StringUtils;
  * <a href="https://tools.ietf.org/html/rfc7230#section-3.2">RFC 7230 section 3.2</a></p>
  *
  * <p>Note that the order of extensions in HTTP headers defines their order of execution,
- * for example, extensions "foo, bar" will be executed as "bar(foo(message))".</p>
+ * e.g. extensions "foo, bar" will be executed as "bar(foo(message))".</p>
  *
  * @author Brian Clozel
  * @author Juergen Hoeller
@@ -73,7 +72,7 @@ public class WebSocketExtension {
 		Assert.hasLength(name, "Extension name must not be empty");
 		this.name = name;
 		if (!CollectionUtils.isEmpty(parameters)) {
-			Map<String, String> map = new LinkedCaseInsensitiveMap<>(parameters.size(), Locale.ROOT);
+			Map<String, String> map = new LinkedCaseInsensitiveMap<>(parameters.size(), Locale.ENGLISH);
 			map.putAll(parameters);
 			this.parameters = Collections.unmodifiableMap(map);
 		}
@@ -84,7 +83,7 @@ public class WebSocketExtension {
 
 
 	/**
-	 * Return the name of the extension (never {@code null} or empty).
+	 * Return the name of the extension (never {@code null) or empty}.
 	 */
 	public String getName() {
 		return this.name;

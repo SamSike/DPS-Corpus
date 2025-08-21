@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
-import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -30,17 +29,13 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.testfixture.http.server.reactive.bootstrap.HttpServer;
-import org.springframework.web.testfixture.http.server.reactive.bootstrap.ReactorHttpServer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -65,38 +60,38 @@ class RequestMappingExceptionHandlingIntegrationTests extends AbstractRequestMap
 	@ParameterizedHttpServerTest
 	void thrownException(HttpServer httpServer) throws Exception {
 		startServer(httpServer);
+
 		doTest("/thrown-exception", "Recovered from error: State");
 	}
 
 	@ParameterizedHttpServerTest
 	void thrownExceptionWithCause(HttpServer httpServer) throws Exception {
 		startServer(httpServer);
+
 		doTest("/thrown-exception-with-cause", "Recovered from error: State");
 	}
 
 	@ParameterizedHttpServerTest
 	void thrownExceptionWithCauseToHandle(HttpServer httpServer) throws Exception {
 		startServer(httpServer);
+
 		doTest("/thrown-exception-with-cause-to-handle", "Recovered from error: IO");
 	}
 
 	@ParameterizedHttpServerTest
 	void errorBeforeFirstItem(HttpServer httpServer) throws Exception {
 		startServer(httpServer);
-		doTest("/mono-error", "Recovered from error: Argument");
-	}
 
-	private void doTest(String url, String expected) {
-		assertThat(performGet(url, new HttpHeaders(), String.class).getBody()).isEqualTo(expected);
+		doTest("/mono-error", "Recovered from error: Argument");
 	}
 
 	@ParameterizedHttpServerTest  // SPR-16051
 	void exceptionAfterSeveralItems(HttpServer httpServer) throws Exception {
 		startServer(httpServer);
 
-		assertThatExceptionOfType(Throwable.class)
-				.isThrownBy(() -> performGet("/SPR-16051", new HttpHeaders(), String.class))
-				.withMessageStartingWith("Error while extracting response");
+		assertThatExceptionOfType(Throwable.class).isThrownBy(() ->
+				performGet("/SPR-16051", new HttpHeaders(), String.class).getBody())
+			.withMessageStartingWith("Error while extracting response");
 	}
 
 	@ParameterizedHttpServerTest  // SPR-16318
@@ -105,48 +100,18 @@ class RequestMappingExceptionHandlingIntegrationTests extends AbstractRequestMap
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Accept", "text/plain, application/problem+json");
-		assertThatExceptionOfType(HttpStatusCodeException.class)
-				.isThrownBy(() -> performGet("/SPR-16318", headers, String.class))
-				.satisfies(ex -> {
-					assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-					assertThat(ex.getResponseHeaders().getContentType().toString()).isEqualTo("application/problem+json");
-					assertThat(ex.getResponseBodyAsString()).isEqualTo("{\"reason\":\"error\"}");
-				});
+		assertThatExceptionOfType(HttpStatusCodeException.class).isThrownBy(() ->
+				performGet("/SPR-16318", headers, String.class).getBody())
+			.satisfies(ex -> {
+				assertThat(ex.getRawStatusCode()).isEqualTo(500);
+				assertThat(ex.getResponseHeaders().getContentType().toString()).isEqualTo("application/problem+json");
+				assertThat(ex.getResponseBodyAsString()).isEqualTo("{\"reason\":\"error\"}");
+			});
 	}
 
-	@Test
-	void globalExceptionHandlerWithHandlerNotFound() throws Exception {
-		startServer(new ReactorHttpServer());
-
-		assertThatExceptionOfType(HttpStatusCodeException.class)
-				.isThrownBy(() -> performGet("/no-such-handler", new HttpHeaders(), String.class))
-				.satisfies(ex -> {
-					assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-					assertThat(ex.getResponseBodyAsString()).isEqualTo("{" +
-							"\"instance\":\"\\/no-such-handler\"," +
-							"\"status\":404," +
-							"\"title\":\"Not Found\"," +
-							"\"type\":\"about:blank\"}");
-				});
+	private void doTest(String url, String expected) throws Exception {
+		assertThat(performGet(url, new HttpHeaders(), String.class).getBody()).isEqualTo(expected);
 	}
-
-	@Test
-	void globalExceptionHandlerWithMissingRequestParameter() throws Exception {
-		startServer(new ReactorHttpServer());
-
-		assertThatExceptionOfType(HttpStatusCodeException.class)
-				.isThrownBy(() -> performGet("/missing-request-parameter", new HttpHeaders(), String.class))
-				.satisfies(ex -> {
-					assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-					assertThat(ex.getResponseBodyAsString()).isEqualTo("{" +
-							"\"detail\":\"Required query parameter 'q' is not present.\"," +
-							"\"instance\":\"\\/missing-request-parameter\"," +
-							"\"status\":400," +
-							"\"title\":\"Bad Request\"," +
-							"\"type\":\"about:blank\"}");
-				});
-	}
-
 
 
 	@Configuration
@@ -173,17 +138,12 @@ class RequestMappingExceptionHandlingIntegrationTests extends AbstractRequestMap
 
 		@GetMapping("/thrown-exception-with-cause-to-handle")
 		public Publisher<String> handleAndThrowExceptionWithCauseToHandle() {
-			throw new RuntimeException("State1", new RuntimeException("State2", new IOException("IO")));
+			throw new RuntimeException("State", new IOException("IO"));
 		}
 
 		@GetMapping(path = "/mono-error")
 		public Publisher<String> handleWithError() {
 			return Mono.error(new IllegalArgumentException("Argument"));
-		}
-
-		@GetMapping(path = "/missing-request-parameter")
-		public String handleWithMissingParameter(@RequestParam String q) {
-			return "Success, q:" + q;
 		}
 
 		@GetMapping("/SPR-16051")
@@ -198,7 +158,7 @@ class RequestMappingExceptionHandlingIntegrationTests extends AbstractRequestMap
 		}
 
 		@GetMapping(path = "/SPR-16318", produces = "text/plain")
-		public Mono<String> handleTextPlain() {
+		public Mono<String> handleTextPlain() throws Exception {
 			return Mono.error(new Spr16318Exception());
 		}
 
@@ -221,11 +181,6 @@ class RequestMappingExceptionHandlingIntegrationTests extends AbstractRequestMap
 		public ResponseEntity<Map<String, String>> handle(Spr16318Exception ex) {
 			return ResponseEntity.status(500).body(Collections.singletonMap("reason", "error"));
 		}
-	}
-
-
-	@ControllerAdvice
-	private static class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 

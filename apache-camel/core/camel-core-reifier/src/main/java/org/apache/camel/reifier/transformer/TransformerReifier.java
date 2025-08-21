@@ -24,7 +24,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.model.transformer.CustomTransformerDefinition;
 import org.apache.camel.model.transformer.DataFormatTransformerDefinition;
 import org.apache.camel.model.transformer.EndpointTransformerDefinition;
-import org.apache.camel.model.transformer.LoadTransformerDefinition;
 import org.apache.camel.model.transformer.TransformerDefinition;
 import org.apache.camel.reifier.AbstractReifier;
 import org.apache.camel.spi.ReifierStrategy;
@@ -76,13 +75,11 @@ public abstract class TransformerReifier<T> extends AbstractReifier {
     private static TransformerReifier<? extends TransformerDefinition> coreReifier(
             CamelContext camelContext, TransformerDefinition definition) {
         if (definition instanceof CustomTransformerDefinition) {
-            return new CustomTransformerReifier(camelContext, definition);
+            return new CustomTransformeReifier(camelContext, definition);
         } else if (definition instanceof DataFormatTransformerDefinition) {
             return new DataFormatTransformerReifier(camelContext, definition);
         } else if (definition instanceof EndpointTransformerDefinition) {
-            return new EndpointTransformerReifier(camelContext, definition);
-        } else if (definition instanceof LoadTransformerDefinition) {
-            return new LoadTransformerReifier(camelContext, definition);
+            return new EndpointTransformeReifier(camelContext, definition);
         }
         return null;
     }

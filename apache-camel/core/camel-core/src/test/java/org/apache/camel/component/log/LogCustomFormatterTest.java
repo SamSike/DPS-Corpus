@@ -21,6 +21,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.ResolveEndpointFailedException;
 import org.apache.camel.spi.ExchangeFormatter;
 import org.apache.camel.support.processor.DefaultExchangeFormatter;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,8 +33,14 @@ public class LogCustomFormatterTest extends ContextTestSupport {
 
     private TestExchangeFormatter exchangeFormatter;
 
+    @BeforeEach
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+    }
+
     @Test
-    public void testCustomFormatterInComponent() {
+    public void testCustomFormatterInComponent() throws Exception {
         context.stop();
 
         LogComponent log = new LogComponent();
@@ -53,7 +60,7 @@ public class LogCustomFormatterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testCustomFormatterInRegistry() {
+    public void testCustomFormatterInRegistry() throws Exception {
         context.stop();
 
         exchangeFormatter = new TestExchangeFormatter();
@@ -71,7 +78,7 @@ public class LogCustomFormatterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testCustomFormatterInRegistryOptions() {
+    public void testCustomFormatterInRegistryOptions() throws Exception {
         context.stop();
 
         exchangeFormatter = new TestExchangeFormatter();
@@ -89,7 +96,7 @@ public class LogCustomFormatterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testCustomFormatterInRegistryUnknownOption() {
+    public void testCustomFormatterInRegistryUnknownOption() throws Exception {
         context.stop();
 
         exchangeFormatter = new TestExchangeFormatter();
@@ -99,17 +106,18 @@ public class LogCustomFormatterTest extends ContextTestSupport {
         context.start();
 
         // unknown parameter
-        Exception e = assertThrows(Exception.class, () -> {
+        try {
             String endpointUri2 = "log:" + LogCustomFormatterTest.class.getCanonicalName() + "?prefix=foo&bar=no";
             template.requestBody(endpointUri2, "Hello World");
-        }, "Should have thrown exception");
-
-        ResolveEndpointFailedException cause = assertIsInstanceOf(ResolveEndpointFailedException.class, e.getCause());
-        assertTrue(cause.getMessage().endsWith("Unknown parameters=[{bar=no}]"));
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            ResolveEndpointFailedException cause = assertIsInstanceOf(ResolveEndpointFailedException.class, e.getCause());
+            assertTrue(cause.getMessage().endsWith("Unknown parameters=[{bar=no}]"));
+        }
     }
 
     @Test
-    public void testFormatterNotPickedUpWithDifferentKey() {
+    public void testFormatterNotPickedUpWithDifferentKey() throws Exception {
         context.stop();
 
         exchangeFormatter = new TestExchangeFormatter();

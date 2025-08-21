@@ -44,7 +44,7 @@ public class SplitterShareUnitOfWorkCompletionAwareTest extends ContextTestSuppo
         };
     }
 
-    private static class MyStrategy implements AggregationStrategy {
+    private class MyStrategy implements AggregationStrategy {
 
         @Override
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {

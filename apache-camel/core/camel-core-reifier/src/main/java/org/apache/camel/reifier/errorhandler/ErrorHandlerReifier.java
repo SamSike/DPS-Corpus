@@ -17,13 +17,15 @@
 package org.apache.camel.reifier.errorhandler;
 
 import java.time.Duration;
-import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ErrorHandlerFactory;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.NamedNode;
 import org.apache.camel.Predicate;
@@ -46,7 +48,6 @@ import org.apache.camel.reifier.AbstractReifier;
 import org.apache.camel.spi.ErrorHandler;
 import org.apache.camel.spi.Language;
 import org.apache.camel.support.CamelContextHelper;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.util.ObjectHelper;
 
 public abstract class ErrorHandlerReifier<T extends ErrorHandlerFactory> extends AbstractReifier {
@@ -54,9 +55,7 @@ public abstract class ErrorHandlerReifier<T extends ErrorHandlerFactory> extends
     private static final Map<Class<?>, BiFunction<Route, ErrorHandlerFactory, ErrorHandlerReifier<? extends ErrorHandlerFactory>>> ERROR_HANDLERS
             = new HashMap<>(0);
 
-    protected final T definition;
-
-    protected final Lock lock = new ReentrantLock();
+    protected T definition;
 
     /**
      * Utility classes should not have a public constructor.
@@ -92,10 +91,10 @@ public abstract class ErrorHandlerReifier<T extends ErrorHandlerFactory> extends
     }
 
     private static ErrorHandlerReifier<? extends ErrorHandlerFactory> coreReifier(Route route, ErrorHandlerFactory definition) {
-        if (definition instanceof DeadLetterChannelDefinition deadLetterChannelDefinition) {
-            return new DeadLetterChannelReifier(route, deadLetterChannelDefinition);
-        } else if (definition instanceof DefaultErrorHandlerDefinition defaultErrorHandlerDefinition) {
-            return new DefaultErrorHandlerReifier(route, defaultErrorHandlerDefinition);
+        if (definition instanceof DeadLetterChannelDefinition) {
+            return new DeadLetterChannelReifier(route, (DeadLetterChannelDefinition) definition);
+        } else if (definition instanceof DefaultErrorHandlerDefinition) {
+            return new DefaultErrorHandlerReifier(route, (DefaultErrorHandlerDefinition) definition);
         } else if (definition instanceof NoErrorHandlerDefinition) {
             return new NoErrorHandlerReifier(route, definition);
         } else if (definition instanceof RefErrorHandlerDefinition) {
@@ -121,23 +120,21 @@ public abstract class ErrorHandlerReifier<T extends ErrorHandlerFactory> extends
         Processor onRedelivery = getProcessor(def.getOnRedelivery(), def.getOnRedeliveryRef());
         Processor onExceptionOccurred = getProcessor(def.getOnExceptionOccurred(), def.getOnExceptionOccurredRef());
         return new ExceptionPolicy(
-                parseString(def.getId()), CamelContextHelper.getRouteId(def),
+                def.getId(), CamelContextHelper.getRouteId(def),
                 parseBoolean(def.getUseOriginalMessage(), false),
                 parseBoolean(def.getUseOriginalBody(), false),
                 ObjectHelper.isNotEmpty(def.getOutputs()), handled,
                 continued, retryWhile, onRedelivery,
-                onExceptionOccurred, parseString(def.getRedeliveryPolicyRef()),
+                onExceptionOccurred, def.getRedeliveryPolicyRef(),
                 createRedeliveryPolicyOptions(def.getRedeliveryPolicyType()), def.getExceptions());
     }
 
-    @Deprecated
-    public RedeliveryPolicy createRedeliveryPolicy(RedeliveryPolicyDefinition definition, CamelContext context) {
+    public static RedeliveryPolicy createRedeliveryPolicy(RedeliveryPolicyDefinition definition, CamelContext context) {
         Map<RedeliveryOption, String> options = createRedeliveryPolicyOptions(definition);
         return createRedeliveryPolicy(options, context, null);
     }
 
-    @Deprecated
-    private RedeliveryPolicy createRedeliveryPolicy(
+    private static RedeliveryPolicy createRedeliveryPolicy(
             Map<RedeliveryOption, String> definition, CamelContext context, RedeliveryPolicy parentPolicy) {
         RedeliveryPolicy answer;
         if (parentPolicy != null) {
@@ -246,11 +243,11 @@ public abstract class ErrorHandlerReifier<T extends ErrorHandlerFactory> extends
         return answer;
     }
 
-    private Map<RedeliveryOption, String> createRedeliveryPolicyOptions(RedeliveryPolicyDefinition definition) {
+    private static Map<RedeliveryOption, String> createRedeliveryPolicyOptions(RedeliveryPolicyDefinition definition) {
         if (definition == null) {
             return null;
         }
-        Map<RedeliveryOption, String> policy = new EnumMap<>(RedeliveryOption.class);
+        Map<RedeliveryOption, String> policy = new HashMap<>();
         setOption(policy, RedeliveryOption.maximumRedeliveries, definition.getMaximumRedeliveries());
         setOption(policy, RedeliveryOption.redeliveryDelay, definition.getRedeliveryDelay(), "1000");
         setOption(policy, RedeliveryOption.asyncDelayedRedelivery, definition.getAsyncDelayedRedelivery());
@@ -278,16 +275,16 @@ public abstract class ErrorHandlerReifier<T extends ErrorHandlerFactory> extends
         return policy;
     }
 
-    private void setOption(Map<RedeliveryOption, String> policy, RedeliveryOption option, String value) {
+    private static void setOption(Map<RedeliveryOption, String> policy, RedeliveryOption option, Object value) {
         setOption(policy, option, value, null);
     }
 
-    private void setOption(
-            Map<RedeliveryOption, String> policy, RedeliveryOption option, String value, String defaultValue) {
+    private static void setOption(
+            Map<RedeliveryOption, String> policy, RedeliveryOption option, Object value, Object defaultValue) {
         if (value != null) {
-            policy.put(option, parseString(value));
+            policy.put(option, value.toString());
         } else if (defaultValue != null) {
-            policy.put(option, defaultValue);
+            policy.put(option, defaultValue.toString());
         }
     }
 
@@ -338,14 +335,16 @@ public abstract class ErrorHandlerReifier<T extends ErrorHandlerFactory> extends
     public abstract Processor createErrorHandler(Processor processor) throws Exception;
 
     public void configure(ErrorHandler handler) {
-        if (handler instanceof ErrorHandlerSupport handlerSupport) {
+        if (handler instanceof ErrorHandlerSupport) {
+            ErrorHandlerSupport handlerSupport = (ErrorHandlerSupport) handler;
+
             for (NamedNode exception : route.getErrorHandlers(definition)) {
                 addExceptionPolicy(handlerSupport, (OnExceptionDefinition) exception);
             }
         }
-        if (handler instanceof RedeliveryErrorHandler redeliveryErrorHandler) {
-            boolean original = redeliveryErrorHandler.isUseOriginalMessagePolicy()
-                    || redeliveryErrorHandler.isUseOriginalBodyPolicy();
+        if (handler instanceof RedeliveryErrorHandler) {
+            boolean original = ((RedeliveryErrorHandler) handler).isUseOriginalMessagePolicy()
+                    || ((RedeliveryErrorHandler) handler).isUseOriginalBodyPolicy();
             if (original) {
                 // ensure allow original is turned on
                 route.setAllowUseOriginalMessage(true);
@@ -461,8 +460,6 @@ public abstract class ErrorHandlerReifier<T extends ErrorHandlerFactory> extends
     }
 
     protected Predicate getPredicate(Predicate pred, String ref) {
-        ref = parseString(ref);
-
         if (pred == null && ref != null) {
             // its a bean expression
             Language bean = camelContext.resolveLanguage("bean");
@@ -471,9 +468,7 @@ public abstract class ErrorHandlerReifier<T extends ErrorHandlerFactory> extends
         return pred;
     }
 
-    protected <U> U getBean(Class<U> clazz, U bean, String ref) {
-        ref = parseString(ref);
-
+    protected <T> T getBean(Class<T> clazz, T bean, String ref) {
         if (bean == null && ref != null) {
             bean = lookupByNameAndType(ref, clazz);
         }
@@ -481,14 +476,12 @@ public abstract class ErrorHandlerReifier<T extends ErrorHandlerFactory> extends
     }
 
     protected Processor getProcessor(Processor processor, String ref) {
-        ref = parseString(ref);
-
         if (processor == null) {
             processor = getBean(Processor.class, null, ref);
         }
         if (processor != null) {
             // must wrap the processor in an UoW
-            processor = PluginHelper.getInternalProcessorFactory(camelContext)
+            processor = camelContext.adapt(ExtendedCamelContext.class).getInternalProcessorFactory()
                     .addUnitOfWorkProcessorAdvice(camelContext, processor, route);
         }
         return processor;

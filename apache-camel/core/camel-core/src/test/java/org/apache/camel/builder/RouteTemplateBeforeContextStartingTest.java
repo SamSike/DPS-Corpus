@@ -35,7 +35,7 @@ public class RouteTemplateBeforeContextStartingTest extends ContextTestSupport {
     public void testCreateRouteFromRouteTemplate() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 routeTemplate("myTemplate").templateParameter("foo").templateParameter("bar")
                         .from("direct:{{foo}}")
                         .to("mock:{{bar}}");

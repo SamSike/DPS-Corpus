@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -55,9 +55,6 @@ public final class XMLFormat {
     public final static XMLFormat DEFAULT_FOR_RECORDS = new XMLFormat().header(false).xmlns(false);
 
     final boolean                 mutable;
-
-
-
     boolean                       xmlns;
     boolean                       format;
     String                        newline;
@@ -71,9 +68,6 @@ public final class XMLFormat {
     public XMLFormat() {
         this(
             false,
-
-
-
             true,
             false,
             "\n",
@@ -88,9 +82,6 @@ public final class XMLFormat {
 
     private XMLFormat(
         boolean mutable,
-
-
-
         boolean xmlns,
         boolean format,
         String newline,
@@ -102,9 +93,6 @@ public final class XMLFormat {
         boolean quoteNested
     ) {
         this.mutable = mutable;
-
-
-
         this.xmlns = xmlns;
         this.format = format;
         this.newline = newline;
@@ -136,9 +124,6 @@ public final class XMLFormat {
         if (mutable ^ newMutable)
             return new XMLFormat(
                 newMutable,
-
-
-
                 xmlns,
                 format,
                 newline,
@@ -153,44 +138,6 @@ public final class XMLFormat {
             return this;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * The new value for the xmlns flag, defaulting to <code>true</code>.
      */
@@ -203,9 +150,6 @@ public final class XMLFormat {
         else
             return new XMLFormat(
                 mutable,
-
-
-
                 newXmlns,
                 format,
                 newline,
@@ -237,9 +181,6 @@ public final class XMLFormat {
         else
             return new XMLFormat(
                 mutable,
-
-
-
                 xmlns,
                 newFormat,
                 newline,
@@ -271,9 +212,6 @@ public final class XMLFormat {
         else
             return new XMLFormat(
                 mutable,
-
-
-
                 xmlns,
                 format,
                 newNewline,
@@ -306,9 +244,6 @@ public final class XMLFormat {
         else
             return new XMLFormat(
                 mutable,
-
-
-
                 xmlns,
                 format,
                 newline,
@@ -340,9 +275,6 @@ public final class XMLFormat {
         else
             return new XMLFormat(
                 mutable,
-
-
-
                 xmlns,
                 format,
                 newline,
@@ -380,8 +312,8 @@ public final class XMLFormat {
     /**
      * The new header value, defaulting to <code>true</code>.
      * <p>
-     * This flag governs whether the <code>/result/fields</code> element should
-     * be generated on export.
+     * This flag governs whether the <code>/result/fields element should be
+     * generated on export.
      * <p>
      * This flag is ignored on {@link Record#formatXML(XMLFormat)} and similar
      * methods.
@@ -395,9 +327,6 @@ public final class XMLFormat {
         else
             return new XMLFormat(
                 mutable,
-
-
-
                 xmlns,
                 format,
                 newline,
@@ -430,9 +359,6 @@ public final class XMLFormat {
         else
             return new XMLFormat(
                 mutable,
-
-
-
                 xmlns,
                 format,
                 newline,
@@ -467,9 +393,6 @@ public final class XMLFormat {
         else
             return new XMLFormat(
                 mutable,
-
-
-
                 xmlns,
                 format,
                 newline,

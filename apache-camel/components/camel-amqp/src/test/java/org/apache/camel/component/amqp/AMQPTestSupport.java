@@ -14,24 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.camel.component.amqp;
 
 import org.apache.camel.test.infra.artemis.services.ArtemisService;
 import org.apache.camel.test.infra.artemis.services.ArtemisServiceFactory;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.apache.camel.test.infra.core.api.ConfigurableContext;
-import org.apache.camel.test.infra.core.api.ConfigurableRoute;
-import org.junit.jupiter.api.Order;
+import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class AMQPTestSupport implements ConfigurableContext, ConfigurableRoute {
-    @Order(1)
+public class AMQPTestSupport extends CamelTestSupport {
+
     @RegisterExtension
     protected static ArtemisService service = ArtemisServiceFactory.createSingletonAMQPService();
 
-    @Order(2)
-    @RegisterExtension
-    protected static CamelContextExtension contextExtension = new DefaultCamelContextExtension();
+    @BeforeAll
+    public static void beforeAll() {
+        System.setProperty(AMQPConnectionDetails.AMQP_PORT, service.brokerPort() + "");
+    }
 }

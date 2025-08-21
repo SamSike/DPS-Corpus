@@ -69,10 +69,10 @@ public class CxfRsInvoker extends JAXRSInvoker {
         Continuation continuation;
         if (!endpoint.isSynchronous() && (continuation = getContinuation(cxfExchange)) != null) {
             LOG.trace("Calling the Camel async processors.");
-            return asyncInvoke(cxfExchange, method, paramArray, continuation, response);
+            return asyncInvoke(cxfExchange, serviceObject, method, paramArray, continuation, response);
         } else {
             LOG.trace("Calling the Camel sync processors.");
-            return syncInvoke(cxfExchange, method, paramArray, response);
+            return syncInvoke(cxfExchange, serviceObject, method, paramArray, response);
         }
     }
 
@@ -83,7 +83,7 @@ public class CxfRsInvoker extends JAXRSInvoker {
     }
 
     private Object asyncInvoke(
-            Exchange cxfExchange, Method method,
+            Exchange cxfExchange, final Object serviceObject, Method method,
             Object[] paramArray, final Continuation continuation, Object response)
             throws Exception {
         synchronized (continuation) {
@@ -136,7 +136,7 @@ public class CxfRsInvoker extends JAXRSInvoker {
     }
 
     private Object syncInvoke(
-            Exchange cxfExchange, Method method,
+            Exchange cxfExchange, final Object serviceObject, Method method,
             Object[] paramArray,
             Object response)
             throws Exception {
@@ -176,7 +176,7 @@ public class CxfRsInvoker extends JAXRSInvoker {
         binding.populateExchangeFromCxfRsRequest(cxfExchange, camelExchange, method, paramArray);
 
         // REVISIT: It can be done inside a binding but a propagateContext would need to be passed along as
-        // the CXF in message property. Question: where should this property name be set up ?
+        // the CXF in message property. Question: where should this property name be set up ? 
         if (endpoint.isPropagateContexts()) {
             camelExchange.setProperty(UriInfo.class.getName(), new UriInfoImpl(cxfExchange.getInMessage()));
             camelExchange.setProperty(Request.class.getName(), new RequestImpl(cxfExchange.getInMessage()));

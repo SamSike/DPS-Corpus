@@ -61,7 +61,7 @@ public class ManagedChoice extends ManagedProcessor implements ManagedChoiceMBea
     }
 
     @Override
-    public TabularData extendedInformation() {
+    public TabularData choiceStatistics() {
         try {
             TabularData answer = new TabularDataSupport(CamelOpenMBeanTypes.choiceTabularType());
 

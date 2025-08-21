@@ -41,13 +41,13 @@ import co.elastic.clients.elasticsearch.core.MsearchResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
+import co.elastic.clients.elasticsearch.core.UpdateResponse;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexResponse;
 import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
-import co.elastic.clients.transport.rest_client.RestClientOptions;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -63,7 +63,6 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.sniff.Sniffer;
@@ -82,6 +81,7 @@ class ElasticsearchProducer extends DefaultAsyncProducer {
     private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchProducer.class);
 
     protected final ElasticsearchConfiguration configuration;
+    private final Object mutex = new Object();
     private volatile RestClient client;
     private Sniffer sniffer;
 
@@ -142,8 +142,7 @@ class ElasticsearchProducer extends DefaultAsyncProducer {
             }
             final ObjectMapper mapper = new ObjectMapper();
             mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-            RestClientOptions options = new RestClientOptions(RequestOptions.DEFAULT, true);
-            ElasticsearchTransport transport = new RestClientTransport(client, new JacksonJsonpMapper(mapper), options);
+            ElasticsearchTransport transport = new RestClientTransport(client, new JacksonJsonpMapper(mapper));
             // 2. Index and type will be set by:
             // a. If the incoming body is already an action request
             // b. If the body is not an action request we will use headers if they
@@ -174,11 +173,6 @@ class ElasticsearchProducer extends DefaultAsyncProducer {
             Integer from = message.getHeader(ElasticsearchConstants.PARAM_FROM, Integer.class);
             if (from == null) {
                 message.setHeader(ElasticsearchConstants.PARAM_FROM, configuration.getFrom());
-            }
-
-            Boolean enableDocumentOnlyMode = message.getHeader(ElasticsearchConstants.PARAM_DOCUMENT_MODE, Boolean.class);
-            if (enableDocumentOnlyMode == null) {
-                message.setHeader(ElasticsearchConstants.PARAM_DOCUMENT_MODE, configuration.isEnableDocumentOnlyMode());
             }
 
             boolean configWaitForActiveShards = false;
@@ -390,10 +384,10 @@ class ElasticsearchProducer extends DefaultAsyncProducer {
      * Updates asynchronously a document.
      */
     private void processUpdateAsync(ActionContext ctx, Class<?> documentClass) {
-        UpdateRequest.Builder<?, ?> updateRequestBuilder = ctx.getMessage().getBody(UpdateRequest.Builder.class);
+        UpdateRequest.Builder updateRequestBuilder = ctx.getMessage().getBody(UpdateRequest.Builder.class);
         onComplete(
                 ctx.getClient().update(updateRequestBuilder.build(), documentClass)
-                        .thenApply(WriteResponseBase::id),
+                        .thenApply(r -> ((UpdateResponse<?>) r).id()),
                 ctx);
     }
 
@@ -479,8 +473,7 @@ class ElasticsearchProducer extends DefaultAsyncProducer {
 
     private void startClient() {
         if (client == null) {
-            lock.lock();
-            try {
+            synchronized (mutex) {
                 if (client == null) {
                     LOG.info("Connecting to the ElasticSearch cluster: {}", configuration.getClusterName());
                     if (configuration.getHostAddressesList() != null
@@ -490,8 +483,6 @@ class ElasticsearchProducer extends DefaultAsyncProducer {
                         LOG.warn("Incorrect ip address and port parameters settings for ElasticSearch cluster");
                     }
                 }
-            } finally {
-                lock.unlock();
             }
         }
     }
@@ -542,7 +533,7 @@ class ElasticsearchProducer extends DefaultAsyncProducer {
     /**
      * A SSL context based on the self-signed CA, so that using this SSL Context allows to connect to the Elasticsearch
      * service
-     *
+     * 
      * @return a customized SSL Context
      */
     private SSLContext createSslContextFromCa() {

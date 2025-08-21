@@ -16,8 +16,6 @@
  */
 package org.apache.camel.impl.event;
 
-import java.io.Serial;
-
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.spi.CamelEvent;
@@ -38,7 +36,7 @@ import org.apache.camel.spi.CamelEvent;
  * @see ExchangeSentEvent
  */
 public class ExchangeSendingEvent extends AbstractExchangeEvent implements CamelEvent.ExchangeSendingEvent {
-    private static final @Serial long serialVersionUID = -19248832613958122L;
+    private static final long serialVersionUID = -19248832613958122L;
 
     private final Endpoint endpoint;
 
@@ -53,7 +51,7 @@ public class ExchangeSendingEvent extends AbstractExchangeEvent implements Camel
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         return getExchange().getExchangeId() + " exchange sending to: " + endpoint;
     }
 

@@ -17,7 +17,7 @@
 package org.apache.camel.component.salesforce.api.dto.composite;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +36,7 @@ public class SObjectCompositeResponseTest {
         final String json = IOUtils.toString(
                 this.getClass().getResourceAsStream(
                         "/org/apache/camel/component/salesforce/api/dto/composite_response_example_failure.json"),
-                StandardCharsets.UTF_8);
+                Charset.forName("UTF-8"));
 
         final ObjectMapper mapper = JsonUtils.createObjectMapper();
 
@@ -51,7 +51,7 @@ public class SObjectCompositeResponseTest {
         final String json = IOUtils.toString(
                 this.getClass().getResourceAsStream(
                         "/org/apache/camel/component/salesforce/api/dto/composite_response_example_success.json"),
-                StandardCharsets.UTF_8);
+                Charset.forName("UTF-8"));
 
         final ObjectMapper mapper = JsonUtils.createObjectMapper();
 

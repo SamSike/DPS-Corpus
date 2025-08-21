@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,9 @@ import java.util.Map;
 
 import javax.management.modelmbean.ModelMBeanNotificationInfo;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.jmx.export.metadata.JmxMetadataUtils;
 import org.springframework.jmx.export.metadata.ManagedNotification;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -40,7 +39,8 @@ import org.springframework.util.StringUtils;
  */
 public abstract class AbstractConfigurableMBeanInfoAssembler extends AbstractReflectiveMBeanInfoAssembler {
 
-	private ModelMBeanNotificationInfo @Nullable [] notificationInfos;
+	@Nullable
+	private ModelMBeanNotificationInfo[] notificationInfos;
 
 	private final Map<String, ModelMBeanNotificationInfo[]> notificationInfoMappings = new HashMap<>();
 
@@ -73,16 +73,19 @@ public abstract class AbstractConfigurableMBeanInfoAssembler extends AbstractRef
 	}
 
 	private ModelMBeanNotificationInfo[] extractNotificationMetadata(Object mapValue) {
-		if (mapValue instanceof ManagedNotification mn) {
+		if (mapValue instanceof ManagedNotification) {
+			ManagedNotification mn = (ManagedNotification) mapValue;
 			return new ModelMBeanNotificationInfo[] {JmxMetadataUtils.convertToModelMBeanNotificationInfo(mn)};
 		}
-		else if (mapValue instanceof Collection<?> col) {
+		else if (mapValue instanceof Collection) {
+			Collection<?> col = (Collection<?>) mapValue;
 			List<ModelMBeanNotificationInfo> result = new ArrayList<>();
 			for (Object colValue : col) {
-				if (!(colValue instanceof ManagedNotification mn)) {
+				if (!(colValue instanceof ManagedNotification)) {
 					throw new IllegalArgumentException(
 							"Property 'notificationInfoMappings' only accepts ManagedNotifications for Map values");
 				}
+				ManagedNotification mn = (ManagedNotification) colValue;
 				result.add(JmxMetadataUtils.convertToModelMBeanNotificationInfo(mn));
 			}
 			return result.toArray(new ModelMBeanNotificationInfo[0]);

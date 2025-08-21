@@ -59,9 +59,6 @@ public interface ManagedPerformanceCounterMBean extends ManagedCounterMBean {
     @ManagedAttribute(description = "Delta Processing Time [milliseconds]")
     long getDeltaProcessingTime();
 
-    @ManagedAttribute(description = "Time in millis being idle (no messages incoming or inflight)")
-    long getIdleSince();
-
     @ManagedAttribute(description = "Last Exchange Created Timestamp")
     Date getLastExchangeCreatedTimestamp();
 

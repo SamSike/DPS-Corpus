@@ -97,7 +97,7 @@ public class MllpClientResource implements BeforeEachCallback, AfterEachCallback
                 clientSocket.close();
             }
         } catch (IOException e) {
-            log.warn(String.format("Exception encountered closing connection to %s:%s", mllpHost, mllpPort), e);
+            log.warn(String.format("Exception encountered closing connection to {}:{}", mllpHost, mllpPort), e);
         } finally {
             inputStream = null;
             outputStream = null;
@@ -141,7 +141,7 @@ public class MllpClientResource implements BeforeEachCallback, AfterEachCallback
                 clientSocket.close();
             }
         } catch (IOException e) {
-            log.warn(String.format("Exception encountered resetting connection to %s:%s", mllpHost, mllpPort), e);
+            log.warn(String.format("Exception encountered resetting connection to {}:{}", mllpHost, mllpPort), e);
         } finally {
             inputStream = null;
             outputStream = null;
@@ -366,7 +366,7 @@ public class MllpClientResource implements BeforeEachCallback, AfterEachCallback
             if (0 < acknowledgement.length()) {
                 log.error("Timeout waiting for acknowledgement", timeoutEx);
             } else {
-                log.error("Timeout while reading acknowledgement\n{}", acknowledgement.toString().replace('\r', '\n'),
+                log.error("Timeout while reading acknowledgement\n" + acknowledgement.toString().replace('\r', '\n'),
                         timeoutEx);
             }
             throw new MllpJUnitResourceTimeoutException("Timeout while reading acknowledgement", timeoutEx);

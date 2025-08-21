@@ -37,15 +37,10 @@ import org.apache.camel.util.StringHelper;
  */
 @Component("master")
 public class MasterComponent extends DefaultComponent {
-
     @Metadata(label = "advanced")
     private CamelClusterService service;
     @Metadata(label = "advanced")
     private CamelClusterService.Selector serviceSelector;
-    @Metadata(label = "advanced")
-    private long backOffDelay = 5000;
-    @Metadata(label = "advanced")
-    private int backOffMaxAttempts = 10;
 
     public MasterComponent() {
         this(null);
@@ -108,34 +103,6 @@ public class MasterComponent extends DefaultComponent {
         this.serviceSelector = serviceSelector;
     }
 
-    public long getBackOffDelay() {
-        return backOffDelay;
-    }
-
-    /**
-     * When the master becomes leader then backoff is in use to repeat starting the consumer until the consumer is
-     * successfully started or max attempts reached.
-     *
-     * This option is the delay in millis between start attempts.
-     */
-    public void setBackOffDelay(long backOffDelay) {
-        this.backOffDelay = backOffDelay;
-    }
-
-    public int getBackOffMaxAttempts() {
-        return backOffMaxAttempts;
-    }
-
-    /**
-     * When the master becomes leader then backoff is in use to repeat starting the consumer until the consumer is
-     * successfully started or max attempts reached.
-     *
-     * This option is the maximum number of attempts to try.
-     */
-    public void setBackOffMaxAttempts(int backOffMaxAttempts) {
-        this.backOffMaxAttempts = backOffMaxAttempts;
-    }
-
     @Override
     protected void doInit() throws Exception {
         CamelContext context = getCamelContext();
@@ -146,4 +113,5 @@ public class MasterComponent extends DefaultComponent {
                     () -> new IllegalStateException("No cluster service found"));
         }
     }
+
 }

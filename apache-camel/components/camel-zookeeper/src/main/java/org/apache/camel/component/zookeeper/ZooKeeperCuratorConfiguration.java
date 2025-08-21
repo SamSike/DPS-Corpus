@@ -84,7 +84,8 @@ public class ZooKeeperCuratorConfiguration implements Cloneable {
     }
 
     public void setNodes(String nodes) {
-        this.nodes = Arrays.stream(nodes.split(",")).collect(Collectors.toUnmodifiableList());
+        this.nodes = Collections.unmodifiableList(
+                Arrays.stream(nodes.split(",")).collect(Collectors.toList()));
     }
 
     public void setNodes(List<String> nodes) {

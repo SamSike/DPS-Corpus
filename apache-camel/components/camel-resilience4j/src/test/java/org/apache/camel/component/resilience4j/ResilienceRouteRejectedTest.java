@@ -20,17 +20,15 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
-import org.apache.camel.Exchange;
-import org.apache.camel.ExchangePropertyKey;
+import org.apache.camel.CamelExecutionException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class ResilienceRouteRejectedTest extends CamelTestSupport {
 
@@ -45,29 +43,28 @@ public class ResilienceRouteRejectedTest extends CamelTestSupport {
 
     @Test
     public void testResilience() throws Exception {
-        Exchange out = test("direct:start", "myResilience");
-        assertFalse(out.isFailed());
+        test("direct:start", "myResilience");
     }
 
     @Test
     public void testResilienceWithTimeOut() throws Exception {
-        Exchange out = test("direct:start.with.timeout.enabled", "myResilienceWithTimeout");
-        assertFalse(out.isFailed());
+        test("direct:start.with.timeout.enabled", "myResilienceWithTimeout");
     }
 
     @Test
     public void testResilienceWithThrowException() throws Exception {
-        Exchange out = test("direct:start-throw-exception", "myResilienceWithThrowException");
-        assertTrue(out.isFailed());
-        Exception e = out.getException();
-        CallNotPermittedException ce = assertInstanceOf(CallNotPermittedException.class, e);
-        assertEquals("myResilienceWithThrowException", ce.getCausingCircuitBreakerName());
-        assertEquals("CircuitBreaker 'myResilienceWithThrowException' is FORCED_OPEN and does not permit further calls",
-                ce.getMessage());
-        assertEquals("FORCED_OPEN", out.getProperty(ExchangePropertyKey.CIRCUIT_BREAKER_RESPONSE_STATE));
+        try {
+            test("direct:start-throw-exception", "myResilienceWithThrowException");
+            fail("Should throw exception");
+        } catch (CamelExecutionException e) {
+            CallNotPermittedException ce = assertInstanceOf(CallNotPermittedException.class, e.getCause());
+            assertEquals("myResilienceWithThrowException", ce.getCausingCircuitBreakerName());
+            assertEquals("CircuitBreaker 'myResilienceWithThrowException' is FORCED_OPEN and does not permit further calls",
+                    ce.getMessage());
+        }
     }
 
-    private Exchange test(String endPointUri, String circuitBreakerName) throws Exception {
+    private void test(String endPointUri, String circuitBreakerName) throws Exception {
         // look inside jmx
         // get the stats for the route
         MBeanServer mbeanServer = getMBeanServer();
@@ -86,13 +83,9 @@ public class ResilienceRouteRejectedTest extends CamelTestSupport {
         // send message which should get rejected, so the message is not changed
         getMockEndpoint("mock:result").expectedBodiesReceived("Hello World");
 
-        Exchange answer = template.send(endPointUri, e -> e.getMessage().setBody("Hello World"));
-        if (answer.isFailed()) {
-            return answer;
-        }
+        template.sendBody(endPointUri, "Hello World");
 
         MockEndpoint.assertIsSatisfied(context);
-        return answer;
     }
 
     @Override

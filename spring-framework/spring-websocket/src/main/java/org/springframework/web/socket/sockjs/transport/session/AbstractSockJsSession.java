@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,22 @@
 package org.springframework.web.socket.sockjs.transport.session;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
+import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.core.NestedExceptionUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -41,7 +44,6 @@ import org.springframework.web.socket.sockjs.frame.SockJsFrame;
 import org.springframework.web.socket.sockjs.frame.SockJsMessageCodec;
 import org.springframework.web.socket.sockjs.transport.SockJsServiceConfig;
 import org.springframework.web.socket.sockjs.transport.SockJsSession;
-import org.springframework.web.util.DisconnectedClientHelper;
 
 /**
  * An abstract base class for SockJS sessions implementing {@link SockJsSession}.
@@ -56,15 +58,37 @@ public abstract class AbstractSockJsSession implements SockJsSession {
 
 
 	/**
-	 * Log category to use for network failure after a client has gone away.
-	 * @see DisconnectedClientHelper
+	 * Log category to use on network IO exceptions after a client has gone away.
+	 * <p>Servlet containers don't expose a client disconnected callback; see
+	 * <a href="https://github.com/eclipse-ee4j/servlet-api/issues/44">eclipse-ee4j/servlet-api#44</a>.
+	 * Therefore network IO failures may occur simply because a client has gone away,
+	 * and that can fill the logs with unnecessary stack traces.
+	 * <p>We make a best effort to identify such network failures, on a per-server
+	 * basis, and log them under a separate log category. A simple one-line message
+	 * is logged at DEBUG level, while a full stack trace is shown at TRACE level.
+	 * @see #disconnectedClientLogger
 	 */
 	public static final String DISCONNECTED_CLIENT_LOG_CATEGORY =
 			"org.springframework.web.socket.sockjs.DisconnectedClient";
 
-	private static final DisconnectedClientHelper disconnectedClientHelper =
-			new DisconnectedClientHelper(DISCONNECTED_CLIENT_LOG_CATEGORY);
+	/**
+	 * Tomcat: ClientAbortException or EOFException
+	 * Jetty: EofException
+	 * WildFly, GlassFish: java.io.IOException "Broken pipe" (already covered)
+	 * <p>TODO:
+	 * This definition is currently duplicated between HttpWebHandlerAdapter
+	 * and AbstractSockJsSession. It is a candidate for a common utility class.
+	 * @see #indicatesDisconnectedClient(Throwable)
+	 */
+	private static final Set<String> DISCONNECTED_CLIENT_EXCEPTIONS =
+			new HashSet<>(Arrays.asList("ClientAbortException", "EOFException", "EofException"));
 
+
+	/**
+	 * Separate logger to use on network IO failure after a client has gone away.
+	 * @see #DISCONNECTED_CLIENT_LOG_CATEGORY
+	 */
+	protected static final Log disconnectedClientLogger = LogFactory.getLog(DISCONNECTED_CLIENT_LOG_CATEGORY);
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
@@ -84,9 +108,11 @@ public abstract class AbstractSockJsSession implements SockJsSession {
 
 	private volatile long timeLastActive = this.timeCreated;
 
-	private @Nullable ScheduledFuture<?> heartbeatFuture;
+	@Nullable
+	private ScheduledFuture<?> heartbeatFuture;
 
-	private @Nullable HeartbeatTask heartbeatTask;
+	@Nullable
+	private HeartbeatTask heartbeatTask;
 
 	private volatile boolean heartbeatDisabled;
 
@@ -245,7 +271,7 @@ public abstract class AbstractSockJsSession implements SockJsSession {
 			if (!isActive()) {
 				return;
 			}
-			Instant time = Instant.now().plus(this.config.getHeartbeatTime(), ChronoUnit.MILLIS);
+			Date time = new Date(System.currentTimeMillis() + this.config.getHeartbeatTime());
 			this.heartbeatTask = new HeartbeatTask();
 			this.heartbeatFuture = this.config.getTaskScheduler().schedule(this.heartbeatTask, time);
 			if (logger.isTraceEnabled()) {
@@ -321,9 +347,26 @@ public abstract class AbstractSockJsSession implements SockJsSession {
 	protected abstract void writeFrameInternal(SockJsFrame frame) throws IOException;
 
 	private void logWriteFrameFailure(Throwable ex) {
-		if (!disconnectedClientHelper.checkAndLogClientDisconnectedException(ex)) {
+		if (indicatesDisconnectedClient(ex)) {
+			if (disconnectedClientLogger.isTraceEnabled()) {
+				disconnectedClientLogger.trace("Looks like the client has gone away", ex);
+			}
+			else if (disconnectedClientLogger.isDebugEnabled()) {
+				disconnectedClientLogger.debug("Looks like the client has gone away: " + ex +
+						" (For a full stack trace, set the log category '" + DISCONNECTED_CLIENT_LOG_CATEGORY +
+						"' to TRACE level.)");
+			}
+		}
+		else {
 			logger.debug("Terminating connection after failure to send message to client", ex);
 		}
+	}
+
+	private boolean indicatesDisconnectedClient(Throwable ex)  {
+		String message = NestedExceptionUtils.getMostSpecificCause(ex).getMessage();
+		message = (message != null ? message.toLowerCase() : "");
+		String className = ex.getClass().getSimpleName();
+		return (message.contains("broken pipe") || DISCONNECTED_CLIENT_EXCEPTIONS.contains(className));
 	}
 
 
@@ -364,14 +407,17 @@ public abstract class AbstractSockJsSession implements SockJsSession {
 	}
 
 	private static List<String> getUndelivered(String[] messages, int i) {
-		return switch (messages.length - i) {
-			case 0 -> Collections.emptyList();
-			case 1 -> (messages[i].trim().isEmpty() ?
-					Collections.<String>emptyList() : Collections.singletonList(messages[i]));
-			default -> Arrays.stream(Arrays.copyOfRange(messages, i, messages.length))
-					.filter(message -> !message.trim().isEmpty())
-					.toList();
-		};
+		switch (messages.length - i) {
+			case 0:
+				return Collections.emptyList();
+			case 1:
+				return (messages[i].trim().isEmpty() ?
+						Collections.emptyList() : Collections.singletonList(messages[i]));
+			default:
+				return Arrays.stream(Arrays.copyOfRange(messages, i, messages.length))
+						.filter(message -> !message.trim().isEmpty())
+						.collect(Collectors.toList());
+		}
 	}
 
 	/**

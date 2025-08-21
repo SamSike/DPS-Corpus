@@ -17,6 +17,7 @@
 package org.apache.camel.component.infinispan.cluster;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.camel.cluster.CamelClusterMember;
@@ -50,13 +51,13 @@ public abstract class InfinispanClusterView extends AbstractCamelClusterView {
             if (master && this.leader.compareAndSet(false, true)) {
                 LOGGER.debug("Leadership taken for id: {}", id);
 
-                fireLeadershipChangedEvent(this);
+                fireLeadershipChangedEvent(Optional.of(this));
                 return;
             }
             if (!master && this.leader.compareAndSet(true, false)) {
                 LOGGER.debug("Leadership lost for id: {}", id);
 
-                fireLeadershipChangedEvent(getLeader().orElse(null));
+                fireLeadershipChangedEvent(getLeader());
                 return;
             }
         }

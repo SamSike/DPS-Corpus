@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,8 +39,6 @@ package org.jooq;
 
 import java.util.Collection;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * The step in the {@link Constraint} construction DSL API that allows for
  * matching a <code>FOREIGN KEY</code> clause with a <code>REFERENCES</code>
@@ -54,71 +52,53 @@ public interface ConstraintForeignKeyReferencesStepN {
      * Add a <code>REFERENCES</code> clause to the <code>CONSTRAINT</code>,
      * implicitly referencing the primary key.
      */
-    @NotNull
-    @Support
     ConstraintForeignKeyOnStep references(String table);
 
     /**
      * Add a <code>REFERENCES</code> clause to the <code>CONSTRAINT</code>,
      * referencing a key by column names.
      */
-    @NotNull
-    @Support
     ConstraintForeignKeyOnStep references(String table, String... fields);
 
     /**
      * Add a <code>REFERENCES</code> clause to the <code>CONSTRAINT</code>,
      * referencing a key by column names.
      */
-    @NotNull
-    @Support
     ConstraintForeignKeyOnStep references(String table, Collection<? extends String> fields);
 
     /**
      * Add a <code>REFERENCES</code> clause to the <code>CONSTRAINT</code>,
      * implicitly referencing the primary key.
      */
-    @NotNull
-    @Support
     ConstraintForeignKeyOnStep references(Name table);
 
     /**
      * Add a <code>REFERENCES</code> clause to the <code>CONSTRAINT</code>,
      * referencing a key by column names.
      */
-    @NotNull
-    @Support
     ConstraintForeignKeyOnStep references(Name table, Name... fields);
 
     /**
      * Add a <code>REFERENCES</code> clause to the <code>CONSTRAINT</code>,
      * referencing a key by column names.
      */
-    @NotNull
-    @Support
     ConstraintForeignKeyOnStep references(Name table, Collection<? extends Name> fields);
 
     /**
      * Add a <code>REFERENCES</code> clause to the <code>CONSTRAINT</code>,
      * implicitly referencing the primary key.
      */
-    @NotNull
-    @Support
     ConstraintForeignKeyOnStep references(Table<?> table);
 
     /**
      * Add a <code>REFERENCES</code> clause to the <code>CONSTRAINT</code>,
      * referencing a key by column names.
      */
-    @NotNull
-    @Support
     ConstraintForeignKeyOnStep references(Table<?> table, Field<?>... fields);
 
     /**
      * Add a <code>REFERENCES</code> clause to the <code>CONSTRAINT</code>,
      * referencing a key by column names.
      */
-    @NotNull
-    @Support
     ConstraintForeignKeyOnStep references(Table<?> table, Collection<? extends Field<?>> fields);
 }

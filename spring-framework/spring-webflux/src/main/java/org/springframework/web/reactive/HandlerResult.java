@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,13 @@
 
 package org.springframework.web.reactive;
 
-import org.jspecify.annotations.Nullable;
+import java.util.function.Function;
+
+import reactor.core.publisher.Mono;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
+import org.springframework.lang.Nullable;
 import org.springframework.ui.Model;
 import org.springframework.util.Assert;
 
@@ -33,13 +36,15 @@ public class HandlerResult {
 
 	private final Object handler;
 
-	private final @Nullable Object returnValue;
+	@Nullable
+	private final Object returnValue;
 
 	private final ResolvableType returnType;
 
 	private final BindingContext bindingContext;
 
-	private @Nullable DispatchExceptionHandler exceptionHandler;
+	@Nullable
+	private Function<Throwable, Mono<HandlerResult>> exceptionHandler;
 
 
 	/**
@@ -81,12 +86,13 @@ public class HandlerResult {
 	/**
 	 * Return the value returned from the handler, if any.
 	 */
-	public @Nullable Object getReturnValue() {
+	@Nullable
+	public Object getReturnValue() {
 		return this.returnValue;
 	}
 
 	/**
-	 * Return the type of the value returned from the handler -- for example, the return
+	 * Return the type of the value returned from the handler -- e.g. the return
 	 * type declared on a controller method's signature. Also see
 	 * {@link #getReturnTypeSource()} to obtain the underlying
 	 * {@link MethodParameter} for the return type.
@@ -119,24 +125,31 @@ public class HandlerResult {
 	}
 
 	/**
-	 * {@link HandlerAdapter} classes can set this to have their exception
-	 * handling mechanism applied to response rendering and to deferred
-	 * exceptions when invoking a handler with an asynchronous return value.
-	 * @param exceptionHandler the exception handler to use
-	 * @since 6.0
+	 * Configure an exception handler that may be used to produce an alternative
+	 * result when result handling fails. Especially for an async return value
+	 * errors may occur after the invocation of the handler.
+	 * @param function the error handler
+	 * @return the current instance
 	 */
-	public HandlerResult setExceptionHandler(DispatchExceptionHandler exceptionHandler) {
-		this.exceptionHandler = exceptionHandler;
+	public HandlerResult setExceptionHandler(Function<Throwable, Mono<HandlerResult>> function) {
+		this.exceptionHandler = function;
 		return this;
 	}
 
 	/**
-	 * Return the {@link #setExceptionHandler(DispatchExceptionHandler)
-	 * configured} exception handler.
-	 * @since 6.0
+	 * Whether there is an exception handler.
 	 */
-	public @Nullable DispatchExceptionHandler getExceptionHandler() {
-		return this.exceptionHandler;
+	public boolean hasExceptionHandler() {
+		return (this.exceptionHandler != null);
+	}
+
+	/**
+	 * Apply the exception handler and return the alternative result.
+	 * @param failure the exception
+	 * @return the new result or the same error if there is no exception handler
+	 */
+	public Mono<HandlerResult> applyExceptionHandler(Throwable failure) {
+		return (this.exceptionHandler != null ? this.exceptionHandler.apply(failure) : Mono.error(failure));
 	}
 
 }

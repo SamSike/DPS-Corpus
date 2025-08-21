@@ -95,7 +95,7 @@ public class MainIoCNewRouteBuilderComplexTest {
         }
 
         @Override
-        public void configure() {
+        public void configure() throws Exception {
             from("direct:start").bean("foo", "getName").to("mock:results");
         }
     }

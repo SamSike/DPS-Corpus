@@ -1,6 +1,5 @@
 package org.jooq.codegen;
 
-import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.toList;
 import static org.jooq.codegen.GenerationUtil.PLAIN_GENERIC_TYPE_PATTERN;
 import static org.jooq.codegen.GenerationUtil.TYPE_REFERENCE_PATTERN;
@@ -18,10 +17,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import org.jooq.codegen.GeneratorStrategy.Mode;
-import org.jooq.meta.Definition;
-import org.jooq.meta.jaxb.CommentType;
 import org.jooq.meta.jaxb.GeneratedSerialVersionUID;
 import org.jooq.tools.StringUtils;
 
@@ -38,9 +35,7 @@ public class JavaWriter extends GeneratorWriter<JavaWriter> {
     private static final String             SERIAL_STATEMENT = "__SERIAL_STATEMENT__";
     private static final String             IMPORT_STATEMENT = "__IMPORT_STATEMENT__";
 
-    private Set<String>                     fullyQualifiedTypesPatterns;
-    private String                          fullyQualifiedTypes;
-    private Pattern                         fullyQualifiedTypesPattern;
+    private final Pattern                   fullyQualifiedTypes;
     private final boolean                   javadoc;
     private final Set<String>               refConflicts;
     private final Set<String>               qualifiedTypes   = new TreeSet<>(qualifiedTypeComparator());
@@ -51,8 +46,6 @@ public class JavaWriter extends GeneratorWriter<JavaWriter> {
     private final boolean                   isScala;
     private final boolean                   isKotlin;
     private final GeneratedSerialVersionUID generatedSerialVersionUID;
-    private final Mode                      mode;
-    private boolean                         ignoreImports;
 
     public JavaWriter(File file, String fullyQualifiedTypes) {
         this(file, fullyQualifiedTypes, null);
@@ -71,10 +64,6 @@ public class JavaWriter extends GeneratorWriter<JavaWriter> {
     }
 
     public JavaWriter(File file, String fullyQualifiedTypes, String encoding, boolean javadoc, Files files, GeneratedSerialVersionUID generatedSerialVersionUID) {
-        this(file, fullyQualifiedTypes, encoding, javadoc, files, generatedSerialVersionUID, null);
-    }
-
-    public JavaWriter(File file, String fullyQualifiedTypes, String encoding, boolean javadoc, Files files, GeneratedSerialVersionUID generatedSerialVersionUID, Mode mode) {
         super(file, encoding, files);
 
         this.className = file.getName().replaceAll("\\.(java|scala|kt)$", "");
@@ -82,31 +71,14 @@ public class JavaWriter extends GeneratorWriter<JavaWriter> {
         this.isScala = file.getName().endsWith(".scala");
         this.isKotlin = file.getName().endsWith(".kt");
         this.refConflicts = new HashSet<>();
-        this.fullyQualifiedTypes = fullyQualifiedTypes;
-        this.fullyQualifiedTypesPattern = fullyQualifiedTypesPattern();
-        this.fullyQualifiedTypesPatterns = new HashSet<>();
-        this.fullyQualifiedTypesPatterns.add(fullyQualifiedTypes);
+        this.fullyQualifiedTypes = fullyQualifiedTypes == null ? null : Pattern.compile(fullyQualifiedTypes);
         this.javadoc = javadoc;
         this.generatedSerialVersionUID = generatedSerialVersionUID;
-        this.mode = mode;
 
         if (isJava || isKotlin)
             tabString("    ");
         else if (isScala)
             tabString("  ");
-    }
-
-    public JavaWriter addFullyQualifiedTypes(String moreTypes) {
-        if (fullyQualifiedTypesPatterns.add(moreTypes)) {
-            fullyQualifiedTypes = fullyQualifiedTypes + "|" + moreTypes;
-            fullyQualifiedTypesPattern = fullyQualifiedTypesPattern();
-        }
-
-        return this;
-    }
-
-    private Pattern fullyQualifiedTypesPattern() {
-        return fullyQualifiedTypes == null ? null : Pattern.compile(fullyQualifiedTypes);
     }
 
     public JavaWriter print(Class<?> clazz) {
@@ -116,27 +88,6 @@ public class JavaWriter extends GeneratorWriter<JavaWriter> {
 
     public JavaWriter printClass(String clazz) {
         print(ref(clazz));
-        return this;
-    }
-
-    public JavaWriter javadocAndAnnotations(Definition definition, String string, Object... args) {
-        javadoc(string, args);
-        annotations(definition);
-
-        return this;
-    }
-
-    public JavaWriter annotations(Definition definition) {
-
-
-
-
-
-
-
-
-
-
         return this;
     }
 
@@ -178,10 +129,6 @@ public class JavaWriter extends GeneratorWriter<JavaWriter> {
             .replace("\\u002a/", "\\u002a /")
             .replace("*\\u002f", "* \\u002f")
             .replace("\\u002a\\u002f", "\\u002a \\u002f");
-    }
-
-    public Mode mode() {
-        return mode;
     }
 
     public JavaWriter header(String header, Object... args) {
@@ -314,9 +261,6 @@ public class JavaWriter extends GeneratorWriter<JavaWriter> {
 
     @Override
     protected List<String> ref(List<String> clazz, int keepSegments) {
-        if (ignoreImports)
-            return super.ref(clazz, keepSegments);
-
         List<String> result = new ArrayList<>(clazz == null ? 0 : clazz.size());
 
         if (clazz != null) {
@@ -330,7 +274,7 @@ public class JavaWriter extends GeneratorWriter<JavaWriter> {
                     c = patchKotlinClasses(c);
 
                     // com.example.Table.TABLE.COLUMN (with keepSegments = 3)
-                    if (fullyQualifiedTypesPattern != null && fullyQualifiedTypesPattern.matcher(c).matches())
+                    if (fullyQualifiedTypes != null && fullyQualifiedTypes.matcher(c).matches())
                         break checks;
 
                     Matcher m = TYPE_REFERENCE_PATTERN.matcher(c);
@@ -379,7 +323,7 @@ public class JavaWriter extends GeneratorWriter<JavaWriter> {
         return result;
     }
 
-    private static final Pattern KOTLIN_ARRAY_PATTERN = Pattern.compile("kotlin.Array<(.*)\\?>");
+    private static final Pattern KOTLIN_ARRAY_PATTERN = Pattern.compile("kotlin.Array<([^?>]*)\\?>");
 
     private String patchKotlinClasses(String c) {
         // [#10768] TODO: Is this the right place to patch these classes?
@@ -413,9 +357,5 @@ public class JavaWriter extends GeneratorWriter<JavaWriter> {
         }
 
         return c;
-    }
-
-    public void ignoreImports(boolean ignoreImports) {
-        this.ignoreImports = ignoreImports;
     }
 }

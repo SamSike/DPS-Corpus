@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.resilience4j;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -24,7 +23,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import io.github.resilience4j.bulkhead.Bulkhead;
@@ -41,6 +39,8 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
+import org.apache.camel.ExtendedCamelContext;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Navigate;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
@@ -58,7 +58,6 @@ import org.apache.camel.spi.RouteIdAware;
 import org.apache.camel.spi.UnitOfWork;
 import org.apache.camel.support.AsyncProcessorSupport;
 import org.apache.camel.support.ExchangeHelper;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.UnitOfWorkHelper;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.ObjectHelper;
@@ -86,8 +85,6 @@ public class ResilienceProcessor extends AsyncProcessorSupport
     private final Processor processor;
     private final Processor fallback;
     private final boolean throwExceptionWhenHalfOpenOrOpenState;
-    private final Predicate<Throwable> recordPredicate;
-    private final Predicate<Throwable> ignorePredicate;
     private boolean shutdownExecutorService;
     private ExecutorService executorService;
     private ProcessorExchangeFactory processorExchangeFactory;
@@ -96,16 +93,13 @@ public class ResilienceProcessor extends AsyncProcessorSupport
 
     public ResilienceProcessor(CircuitBreakerConfig circuitBreakerConfig, BulkheadConfig bulkheadConfig,
                                TimeLimiterConfig timeLimiterConfig, Processor processor,
-                               Processor fallback, boolean throwExceptionWhenHalfOpenOrOpenState,
-                               Predicate<Throwable> recordPredicate, Predicate<Throwable> ignorePredicate) {
+                               Processor fallback, boolean throwExceptionWhenHalfOpenOrOpenState) {
         this.circuitBreakerConfig = circuitBreakerConfig;
         this.bulkheadConfig = bulkheadConfig;
         this.timeLimiterConfig = timeLimiterConfig;
         this.processor = processor;
         this.fallback = fallback;
         this.throwExceptionWhenHalfOpenOrOpenState = throwExceptionWhenHalfOpenOrOpenState;
-        this.recordPredicate = recordPredicate;
-        this.ignorePredicate = ignorePredicate;
     }
 
     @Override
@@ -119,9 +113,9 @@ public class ResilienceProcessor extends AsyncProcessorSupport
             bulkhead = Bulkhead.of(id, bulkheadConfig);
         }
 
-        boolean pooled = camelContext.getCamelContextExtension().getExchangeFactory().isPooled();
+        boolean pooled = camelContext.adapt(ExtendedCamelContext.class).getExchangeFactory().isPooled();
         if (pooled) {
-            int capacity = camelContext.getCamelContextExtension().getExchangeFactory().getCapacity();
+            int capacity = camelContext.adapt(ExtendedCamelContext.class).getExchangeFactory().getCapacity();
             taskFactory = new PooledTaskFactory(getId()) {
                 @Override
                 public PooledExchangeTask create(Exchange exchange, AsyncCallback callback) {
@@ -152,7 +146,7 @@ public class ResilienceProcessor extends AsyncProcessorSupport
         }
 
         // create a per processor exchange factory
-        this.processorExchangeFactory = getCamelContext().getCamelContextExtension()
+        this.processorExchangeFactory = getCamelContext().adapt(ExtendedCamelContext.class)
                 .getProcessorExchangeFactory().newProcessorExchangeFactory(this);
         this.processorExchangeFactory.setRouteId(getRouteId());
         this.processorExchangeFactory.setId(getId());
@@ -392,7 +386,7 @@ public class ResilienceProcessor extends AsyncProcessorSupport
 
     @ManagedAttribute
     public long getCircuitBreakerWaitDurationInOpenState() {
-        return Duration.ofMillis(circuitBreakerConfig.getWaitIntervalFunctionInOpenState().apply(1)).getSeconds();
+        return circuitBreakerConfig.getWaitDurationInOpenState().getSeconds();
     }
 
     @ManagedAttribute
@@ -493,10 +487,7 @@ public class ResilienceProcessor extends AsyncProcessorSupport
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Processing exchange: {} using circuit breaker: {}", exchange.getExchangeId(), id);
             }
-            Try.ofCallable(callable)
-                    .andThen(this::successState)
-                    .recover(fallbackTask)
-                    .get();
+            Try.ofCallable(callable).recover(fallbackTask).get();
         } catch (Exception e) {
             exchange.setException(e);
         } finally {
@@ -519,22 +510,12 @@ public class ResilienceProcessor extends AsyncProcessorSupport
         return true;
     }
 
-    private void successState(Exchange exchange) {
-        exchange.setProperty(ExchangePropertyKey.CIRCUIT_BREAKER_RESPONSE_SUCCESSFUL_EXECUTION, true);
-        exchange.setProperty(ExchangePropertyKey.CIRCUIT_BREAKER_RESPONSE_STATE, circuitBreaker.getState().name());
-    }
-
     private Exchange processTask(Exchange exchange) {
-        String state = circuitBreaker.getState().name();
-
         Exchange copy = null;
         UnitOfWork uow = null;
         Throwable cause;
         try {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Processing exchange: {} using circuit breaker ({}):{} with processor: {}",
-                        exchange.getExchangeId(), state, id, processor);
-            }
+            LOG.debug("Running processor: {} with exchange: {}", processor, exchange);
             // prepare a copy of exchange so downstream processors don't
             // cause side-effects if they mutate the exchange
             // in case timeout processing and continue with the fallback etc
@@ -543,8 +524,8 @@ public class ResilienceProcessor extends AsyncProcessorSupport
                 uow = copy.getUnitOfWork();
             } else {
                 // prepare uow on copy
-                uow = PluginHelper.getUnitOfWorkFactory(copy.getContext()).createUnitOfWork(copy);
-                copy.getExchangeExtension().setUnitOfWork(uow);
+                uow = copy.getContext().adapt(ExtendedCamelContext.class).getUnitOfWorkFactory().createUnitOfWork(copy);
+                copy.adapt(ExtendedExchange.class).setUnitOfWork(uow);
                 // the copy must be starting from the route where its copied from
                 Route route = ExchangeHelper.getRoute(exchange);
                 if (route != null) {
@@ -640,39 +621,9 @@ public class ResilienceProcessor extends AsyncProcessorSupport
 
         @Override
         public Exchange apply(Throwable throwable) {
-            String state = circuitBreaker.getState().name();
-            exchange.setProperty(ExchangePropertyKey.CIRCUIT_BREAKER_RESPONSE_STATE, state);
-
-            // check again if we should ignore or not record the throw exception as a failure
-            if (ignorePredicate != null && ignorePredicate.test(throwable)) {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("Processing exchange: {} recover task using circuit breaker ({}):{} ignored exception: {}",
-                            exchange.getExchangeId(), state, id, throwable);
-                }
-                // exception should be ignored
-                exchange.setProperty(ExchangePropertyKey.CIRCUIT_BREAKER_RESPONSE_SUCCESSFUL_EXECUTION, false);
-                exchange.setProperty(ExchangePropertyKey.CIRCUIT_BREAKER_RESPONSE_FROM_FALLBACK, false);
-                exchange.setProperty(ExchangePropertyKey.CIRCUIT_BREAKER_RESPONSE_SHORT_CIRCUITED, false);
-                exchange.setProperty(ExchangePropertyKey.CIRCUIT_BREAKER_RESPONSE_IGNORED, true);
-                exchange.setException(null);
-                return exchange;
-            }
-            if (recordPredicate != null && !recordPredicate.test(throwable)) {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("Processing exchange: {} recover task using circuit breaker ({}):{} success exception: {}",
-                            exchange.getExchangeId(), state, id, throwable);
-                }
-                // exception is a success
-                exchange.setProperty(ExchangePropertyKey.CIRCUIT_BREAKER_RESPONSE_SUCCESSFUL_EXECUTION, true);
-                exchange.setProperty(ExchangePropertyKey.CIRCUIT_BREAKER_RESPONSE_FROM_FALLBACK, false);
-                exchange.setProperty(ExchangePropertyKey.CIRCUIT_BREAKER_RESPONSE_SHORT_CIRCUITED, false);
-                exchange.setException(null);
-                return exchange;
-            }
-
             if (LOG.isTraceEnabled()) {
-                LOG.trace("Processing exchange: {} recover task using circuit breaker ({}):{} failed exception: {}",
-                        exchange.getExchangeId(), state, id, throwable);
+                LOG.trace("Processing exchange: {} recover task using circuit breaker: {} from: {}", exchange.getExchangeId(),
+                        id, throwable);
             }
 
             if (fallback == null) {
@@ -731,15 +682,13 @@ public class ResilienceProcessor extends AsyncProcessorSupport
             exchange.setException(null);
             // and we should not be regarded as exhausted as we are in a try ..
             // catch block
-            exchange.getExchangeExtension().setRedeliveryExhausted(false);
+            exchange.adapt(ExtendedExchange.class).setRedeliveryExhausted(false);
             // run the fallback processor
             try {
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("Processing exchange: {} using circuit breaker ({}):{} with fallback: {}",
-                            exchange.getExchangeId(), state, id, fallback);
-                }
+                LOG.debug("Running fallback: {} with exchange: {}", fallback, exchange);
                 // process the fallback until its fully done
                 fallback.process(exchange);
+                LOG.debug("Running fallback: {} with exchange: {} done", fallback, exchange);
             } catch (Throwable e) {
                 exchange.setException(e);
             }

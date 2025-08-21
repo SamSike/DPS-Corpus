@@ -25,70 +25,50 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.test.infra.artemis.common.ConnectionFactoryHelper;
 import org.apache.camel.test.infra.artemis.services.ArtemisService;
 import org.apache.camel.test.infra.artemis.services.ArtemisServiceFactory;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.TransientCamelContextExtension;
-import org.apache.camel.test.infra.core.annotations.ContextFixture;
-import org.apache.camel.test.infra.core.annotations.RouteFixture;
-import org.apache.camel.test.infra.core.api.CamelTestSupportHelper;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Tags;
+import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.Isolated;
 
 import static org.apache.camel.component.jms.JmsComponent.jmsComponentAutoAcknowledge;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tags({ @Tag("not-parallel") })
-public class ManagedJmsSelectorTest implements CamelTestSupportHelper {
+@Isolated
+public class ManagedJmsSelectorTest extends CamelTestSupport {
 
-    @Order(1)
     @RegisterExtension
-    public static ArtemisService service = ArtemisServiceFactory.createVMService();
+    public ArtemisService service = ArtemisServiceFactory.createVMService();
 
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new TransientCamelContextExtension();
+    @Override
+    protected boolean useJmx() {
+        return true;
+    }
 
-    @ContextFixture
-    public void setupContext(CamelContext context) {
+    @Override
+    protected CamelContext createCamelContext() {
+        CamelContext context = new DefaultCamelContext();
+
         final ConnectionFactory connectionFactory
                 = ConnectionFactoryHelper.createConnectionFactory(service.serviceAddress(), null);
 
         context.addComponent("activemq", jmsComponentAutoAcknowledge(connectionFactory));
 
-        DefaultCamelContext.setDisableJmx(false);
-    }
-
-    @RouteFixture
-    public void createRouteBuilder(CamelContext context) throws Exception {
-        final RouteBuilder routeBuilder = createRouteBuilder();
-
-        if (routeBuilder != null) {
-            context.addRoutes(routeBuilder);
-        }
-    }
-
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
+        return context;
     }
 
     protected MBeanServer getMBeanServer() {
-        return camelContextExtension.getContext().getManagementStrategy().getManagementAgent().getMBeanServer();
+        return context.getManagementStrategy().getManagementAgent().getMBeanServer();
     }
 
     @Test
     public void testJmsSelectorChangeViaJmx() throws Exception {
-        ProducerTemplate template = camelContextExtension.getProducerTemplate();
         MBeanServer mbeanServer = getMBeanServer();
 
         Set<ObjectName> set = mbeanServer.queryNames(new ObjectName("*:type=consumers,*"), null);
@@ -107,14 +87,17 @@ public class ManagedJmsSelectorTest implements CamelTestSupportHelper {
         template.sendBodyAndHeader("activemq:queue:startManagedJmsSelectorTest", "Pepsi", "brand", "softdrink");
         template.sendBodyAndHeader("activemq:queue:startManagedJmsSelectorTest", "Carlsberg", "brand", "beer");
 
-        MockEndpoint.assertIsSatisfied(camelContextExtension.getContext());
+        MockEndpoint.assertIsSatisfied(context);
 
         // change the selector at runtime
 
-        MockEndpoint.resetMocks(camelContextExtension.getContext());
+        MockEndpoint.resetMocks(context);
         mock.reset();
 
         mbeanServer.setAttribute(on, new Attribute("MessageSelector", "brand='softdrink'"));
+
+        // give it a little time to adjust
+        Thread.sleep(100);
 
         mock.expectedBodiesReceived("Pepsi");
         mock.reset();
@@ -128,6 +111,7 @@ public class ManagedJmsSelectorTest implements CamelTestSupportHelper {
         assertEquals("brand='softdrink'", selector);
     }
 
+    @Override
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override

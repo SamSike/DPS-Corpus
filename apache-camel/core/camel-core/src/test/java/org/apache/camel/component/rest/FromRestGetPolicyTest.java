@@ -30,16 +30,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class FromRestGetPolicyTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("dummy-rest", new DummyRestConsumerFactory());
         return jndi;
     }
 
     @Test
     public void testFromRestModel() throws Exception {
-        // routes are inlined
-        assertEquals(1, context.getRoutes().size());
+        assertEquals(2, context.getRoutes().size());
 
         assertEquals(1, context.getRestDefinitions().size());
 
@@ -49,10 +48,10 @@ public class FromRestGetPolicyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 restConfiguration().host("localhost");
 
                 rest("/say/hello").get().to("direct:hello");
@@ -63,7 +62,7 @@ public class FromRestGetPolicyTest extends ContextTestSupport {
         };
     }
 
-    private static class MyDummyPolicy implements Policy {
+    private class MyDummyPolicy implements Policy {
 
         @Override
         public void beforeWrap(Route route, NamedNode definition) {

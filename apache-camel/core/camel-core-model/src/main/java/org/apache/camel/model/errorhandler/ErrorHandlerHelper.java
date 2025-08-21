@@ -18,6 +18,7 @@ package org.apache.camel.model.errorhandler;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ErrorHandlerFactory;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Route;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.support.CamelContextHelper;
@@ -53,7 +54,8 @@ public final class ErrorHandlerHelper {
             // see if there has been configured a error handler builder on the route
             source = route.getErrorHandlerFactory();
             // check if its also a ref with no error handler configuration like me
-            if (source instanceof RefErrorHandlerDefinition other) {
+            if (source instanceof RefErrorHandlerDefinition) {
+                RefErrorHandlerDefinition other = (RefErrorHandlerDefinition) source;
                 String otherRef = other.getRef();
                 if (!isErrorHandlerFactoryConfigured(otherRef)) {
                     // the other has also no explicit error handler configured
@@ -66,7 +68,7 @@ public final class ErrorHandlerHelper {
                     // then fallback to the default error handler
                     // otherwise we could recursive loop forever (triggered by
                     // createErrorHandler method)
-                    answer = ((ModelCamelContext) camelContext).getModelReifierFactory().createDefaultErrorHandler();
+                    answer = camelContext.adapt(ModelCamelContext.class).getModelReifierFactory().createDefaultErrorHandler();
                 }
                 // inherit the error handlers from the other as they are to be
                 // shared
@@ -86,9 +88,10 @@ public final class ErrorHandlerHelper {
         return answer;
     }
 
-    private static ErrorHandlerFactory lookupErrorHandlerFactory(CamelContext camelContext) {
-        ErrorHandlerFactory answer = camelContext.getCamelContextExtension().getErrorHandlerFactory();
-        if (answer instanceof RefErrorHandlerDefinition other) {
+    protected static ErrorHandlerFactory lookupErrorHandlerFactory(CamelContext camelContext) {
+        ErrorHandlerFactory answer = camelContext.adapt(ExtendedCamelContext.class).getErrorHandlerFactory();
+        if (answer instanceof RefErrorHandlerDefinition) {
+            RefErrorHandlerDefinition other = (RefErrorHandlerDefinition) answer;
             String otherRef = other.getRef();
             if (isErrorHandlerFactoryConfigured(otherRef)) {
                 answer = CamelContextHelper.lookup(camelContext, otherRef, ErrorHandlerFactory.class);

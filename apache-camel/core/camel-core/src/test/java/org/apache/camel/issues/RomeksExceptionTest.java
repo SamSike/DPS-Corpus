@@ -50,26 +50,27 @@ public class RomeksExceptionTest extends ContextTestSupport {
         resultEndpoint.expectedMessageCount(0);
         exceptionEndpoint.expectedBodiesReceived("<exception/>");
 
-        RuntimeCamelException e = assertThrows(RuntimeCamelException.class,
-                () -> template.sendBodyAndHeader("direct:start", "<body/>", "route", route),
-                "Should have thrown exception");
-
-        boolean b = e.getCause() instanceof IllegalArgumentException;
-        assertTrue(b);
-        assertEquals("Exception thrown intentionally.", e.getCause().getMessage());
+        try {
+            template.sendBodyAndHeader("direct:start", "<body/>", "route", route);
+            fail("Should have thrown exception");
+        } catch (RuntimeCamelException e) {
+            boolean b = e.getCause() instanceof IllegalArgumentException;
+            assertTrue(b);
+            assertEquals("Exception thrown intentionally.", e.getCause().getMessage());
+        }
 
         assertMockEndpointsSatisfied();
 
         List<Exchange> list = exceptionEndpoint.getReceivedExchanges();
         Exchange exchange = list.get(0);
-        LOG.debug("Received: {}", exchange.getIn());
+        LOG.debug("Received: " + exchange.getIn());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         final Processor exceptionThrower = new Processor() {
-            public void process(Exchange exchange) {
-                LOG.debug("About to throw exception on {}", exchange);
+            public void process(Exchange exchange) throws Exception {
+                LOG.debug("About to throw exception on " + exchange);
 
                 exchange.getIn().setBody("<exception/>");
                 throw new IllegalArgumentException("Exception thrown intentionally.");

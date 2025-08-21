@@ -19,14 +19,12 @@ package org.apache.camel.dsl.jbang.core.commands.process;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.StringJoiner;
 
 import com.github.freva.asciitable.AsciiTable;
 import com.github.freva.asciitable.Column;
 import com.github.freva.asciitable.HorizontalAlign;
 import com.github.freva.asciitable.OverflowBehaviour;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
-import org.apache.camel.dsl.jbang.core.common.PidNameAgeCompletionCandidates;
 import org.apache.camel.dsl.jbang.core.common.ProcessHelper;
 import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.json.JsonArray;
@@ -35,24 +33,19 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 @Command(name = "metric",
-         description = "Get metrics (micrometer) of running Camel integrations", sortOptions = false, showDefaultValues = true)
+         description = "Get metrics (micrometer) of running Camel integrations")
 public class ListMetric extends ProcessWatchCommand {
 
-    @CommandLine.Parameters(description = "Name or pid of running Camel integration",
-                            arity = "0..1")
+    @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
     String name = "*";
 
-    @CommandLine.Option(names = { "--sort" }, completionCandidates = PidNameAgeCompletionCandidates.class,
+    @CommandLine.Option(names = { "--sort" },
                         description = "Sort by pid, name or age", defaultValue = "pid")
     String sort;
 
     @CommandLine.Option(names = { "--filter" },
-                        description = "Filter metric by type, name or tags")
+                        description = "Filter metric by type or name")
     String filter;
-
-    @CommandLine.Option(names = { "--tags" },
-                        description = "Show metric tags", defaultValue = "false")
-    boolean tags;
 
     @CommandLine.Option(names = { "--custom" },
                         description = "Only show custom metrics", defaultValue = "false")
@@ -67,7 +60,7 @@ public class ListMetric extends ProcessWatchCommand {
     }
 
     @Override
-    public Integer doProcessWatchCall() throws Exception {
+    public Integer doCall() throws Exception {
         List<Row> rows = new ArrayList<>();
 
         List<Long> pids = findPids(name);
@@ -86,7 +79,7 @@ public class ListMetric extends ProcessWatchCommand {
                         if ("CamelJBang".equals(row.name)) {
                             row.name = ProcessHelper.extractName(root, ph);
                         }
-                        row.pid = Long.toString(ph.pid());
+                        row.pid = "" + ph.pid();
                         row.uptime = extractSince(ph);
                         row.age = TimeUtils.printSince(row.uptime);
                         Row baseRow = row.copy();
@@ -101,8 +94,7 @@ public class ListMetric extends ProcessWatchCommand {
                                     row.type = "counter";
                                     row.metricName = jo.getString("name");
                                     row.metricDescription = jo.getString("description");
-                                    row.metricId = extractId(jo);
-                                    row.tags = extractTags(jo);
+                                    row.metricRouteId = extractRouteId(jo);
                                     row.count = jo.getDouble("count");
 
                                     if (custom && row.metricName.startsWith("Camel")) {
@@ -124,8 +116,7 @@ public class ListMetric extends ProcessWatchCommand {
                                     row.type = "timer";
                                     row.metricName = jo.getString("name");
                                     row.metricDescription = jo.getString("description");
-                                    row.metricId = extractId(jo);
-                                    row.tags = extractTags(jo);
+                                    row.metricRouteId = extractRouteId(jo);
                                     row.count = jo.getDouble("count");
                                     row.mean = jo.getDouble("mean");
                                     row.max = jo.getDouble("max");
@@ -137,8 +128,7 @@ public class ListMetric extends ProcessWatchCommand {
                                     if (!all && getNumber(row.count).isEmpty()) {
                                         continue;
                                     }
-                                    if (filter == null || row.type.equals(filter) || row.metricName.contains(filter)
-                                            || row.tags.contains(filter)) {
+                                    if (filter == null || row.type.equals(filter) || row.metricName.contains(filter)) {
                                         rows.add(row);
                                     }
                                 }
@@ -151,8 +141,7 @@ public class ListMetric extends ProcessWatchCommand {
                                     row.type = "gauge";
                                     row.metricName = jo.getString("name");
                                     row.metricDescription = jo.getString("description");
-                                    row.metricId = extractId(jo);
-                                    row.tags = extractTags(jo);
+                                    row.metricRouteId = extractRouteId(jo);
                                     row.count = jo.getDouble("value");
 
                                     if (custom && row.metricName.startsWith("Camel")) {
@@ -174,8 +163,7 @@ public class ListMetric extends ProcessWatchCommand {
                                     row.type = "distribution";
                                     row.metricName = jo.getString("name");
                                     row.metricDescription = jo.getString("description");
-                                    row.metricId = extractId(jo);
-                                    row.tags = extractTags(jo);
+                                    row.metricRouteId = extractRouteId(jo);
                                     row.count = jo.getDouble("value");
                                     row.mean = jo.getDouble("mean");
                                     row.max = jo.getDouble("max");
@@ -200,15 +188,15 @@ public class ListMetric extends ProcessWatchCommand {
         rows.sort(this::sortRow);
 
         if (!rows.isEmpty()) {
-            printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
+            System.out.println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
                     new Column().header("PID").headerAlign(HorizontalAlign.CENTER).with(r -> r.pid),
                     new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).maxWidth(30, OverflowBehaviour.ELLIPSIS_RIGHT)
                             .with(r -> r.name),
                     new Column().header("TYPE").dataAlign(HorizontalAlign.LEFT).with(r -> r.type),
                     new Column().header("METRIC").dataAlign(HorizontalAlign.LEFT).maxWidth(40, OverflowBehaviour.ELLIPSIS_RIGHT)
                             .with(r -> r.metricName),
-                    new Column().header("ID").dataAlign(HorizontalAlign.LEFT).maxWidth(40, OverflowBehaviour.ELLIPSIS_RIGHT)
-                            .with(r -> r.metricId),
+                    new Column().header("ROUTE").dataAlign(HorizontalAlign.LEFT).maxWidth(25, OverflowBehaviour.ELLIPSIS_RIGHT)
+                            .with(r -> r.metricRouteId),
                     new Column().header("VALUE").headerAlign(HorizontalAlign.RIGHT).dataAlign(HorizontalAlign.RIGHT)
                             .with(r -> getNumber(r.count)),
                     new Column().header("MEAN").headerAlign(HorizontalAlign.RIGHT).dataAlign(HorizontalAlign.RIGHT)
@@ -216,10 +204,7 @@ public class ListMetric extends ProcessWatchCommand {
                     new Column().header("MAX").headerAlign(HorizontalAlign.RIGHT).dataAlign(HorizontalAlign.RIGHT)
                             .with(r -> getNumber(r.max)),
                     new Column().header("TOTAL").headerAlign(HorizontalAlign.RIGHT).dataAlign(HorizontalAlign.RIGHT)
-                            .with(r -> getNumber(r.total)),
-                    new Column().header("TAGS").visible(tags).dataAlign(HorizontalAlign.LEFT)
-                            .maxWidth(60, OverflowBehaviour.NEWLINE)
-                            .with(r -> r.tags))));
+                            .with(r -> getNumber(r.total)))));
         }
 
         return 0;
@@ -251,14 +236,14 @@ public class ListMetric extends ProcessWatchCommand {
             // sort by metric/route
             answer = o1.metricName.compareToIgnoreCase(o2.metricName) * negate;
             if (answer == 0) {
-                answer = o1.metricId.compareToIgnoreCase(o2.metricId) * negate;
+                answer = o1.metricRouteId.compareToIgnoreCase(o2.metricRouteId) * negate;
             }
         }
         return answer;
     }
 
     private String getNumber(double d) {
-        String s = Double.toString(d);
+        String s = "" + d;
         if (s.equals("0.0") || s.equals("0,0")) {
             return "";
         } else if (s.endsWith(".0") || s.endsWith(",0")) {
@@ -267,41 +252,17 @@ public class ListMetric extends ProcessWatchCommand {
         return s;
     }
 
-    private String extractId(JsonObject jo) {
+    private String extractRouteId(JsonObject jo) {
         List<JsonObject> tags = jo.getCollection("tags");
-        String routeId = null;
-        String nodeId = null;
         if (tags != null) {
             for (JsonObject t : tags) {
                 String k = t.getString("key");
                 if ("routeId".equals(k)) {
-                    routeId = t.getString("value");
-                } else if ("nodeId".equals(k)) {
-                    nodeId = t.getString("value");
+                    return t.getString("value");
                 }
             }
         }
-        if (routeId != null && nodeId != null) {
-            return routeId + "/" + nodeId;
-        } else if (routeId != null) {
-            return routeId;
-        } else if (nodeId != null) {
-            return nodeId;
-        }
         return "";
-    }
-
-    private String extractTags(JsonObject jo) {
-        StringJoiner sj = new StringJoiner(" ");
-        List<JsonObject> tags = jo.getCollection("tags");
-        if (tags != null) {
-            for (JsonObject t : tags) {
-                String k = t.getString("key");
-                String v = t.getString("value");
-                sj.add(k + "=" + v);
-            }
-        }
-        return sj.toString();
     }
 
     private static class Row implements Cloneable {
@@ -312,8 +273,7 @@ public class ListMetric extends ProcessWatchCommand {
         String type;
         String metricName;
         String metricDescription;
-        String metricId;
-        String tags;
+        String metricRouteId;
         double count;
         double mean;
         double max;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package org.springframework.context.testfixture;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -68,10 +69,21 @@ public class SimpleMapScope implements Scope, Serializable {
 		this.callbacks.add(callback);
 	}
 
+	@Override
+	public Object resolveContextualObject(String key) {
+		return null;
+	}
+
 	public void close() {
-		for (Runnable runnable : this.callbacks) {
+		for (Iterator<Runnable> it = this.callbacks.iterator(); it.hasNext();) {
+			Runnable runnable = it.next();
 			runnable.run();
 		}
+	}
+
+	@Override
+	public String getConversationId() {
+		return null;
 	}
 
 }

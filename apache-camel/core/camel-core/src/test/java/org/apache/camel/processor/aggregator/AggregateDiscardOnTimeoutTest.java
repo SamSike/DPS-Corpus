@@ -54,10 +54,10 @@ public class AggregateDiscardOnTimeoutTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start").aggregate(header("id"), new BodyInAggregatingStrategy()).completionSize(3)
                         // use a 0.2 second timeout

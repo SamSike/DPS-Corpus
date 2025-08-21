@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.core.env.Environment;
@@ -32,6 +31,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -53,9 +53,11 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 
 	private final BeanDefinitionRegistry registry;
 
-	private @Nullable ResourceLoader resourceLoader;
+	@Nullable
+	private ResourceLoader resourceLoader;
 
-	private @Nullable ClassLoader beanClassLoader;
+	@Nullable
+	private ClassLoader beanClassLoader;
 
 	private Environment environment;
 
@@ -84,22 +86,26 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 		this.registry = registry;
 
 		// Determine ResourceLoader to use.
-		if (this.registry instanceof ResourceLoader _resourceLoader) {
-			this.resourceLoader = _resourceLoader;
+		if (this.registry instanceof ResourceLoader) {
+			this.resourceLoader = (ResourceLoader) this.registry;
 		}
 		else {
 			this.resourceLoader = new PathMatchingResourcePatternResolver();
 		}
 
 		// Inherit Environment if possible
-		if (this.registry instanceof EnvironmentCapable environmentCapable) {
-			this.environment = environmentCapable.getEnvironment();
+		if (this.registry instanceof EnvironmentCapable) {
+			this.environment = ((EnvironmentCapable) this.registry).getEnvironment();
 		}
 		else {
 			this.environment = new StandardEnvironment();
 		}
 	}
 
+
+	public final BeanDefinitionRegistry getBeanFactory() {
+		return this.registry;
+	}
 
 	@Override
 	public final BeanDefinitionRegistry getRegistry() {
@@ -122,7 +128,8 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 	}
 
 	@Override
-	public @Nullable ResourceLoader getResourceLoader() {
+	@Nullable
+	public ResourceLoader getResourceLoader() {
 		return this.resourceLoader;
 	}
 
@@ -138,7 +145,8 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 	}
 
 	@Override
-	public @Nullable ClassLoader getBeanClassLoader() {
+	@Nullable
+	public ClassLoader getBeanClassLoader() {
 		return this.beanClassLoader;
 	}
 
@@ -209,10 +217,10 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 					"Cannot load bean definitions from location [" + location + "]: no ResourceLoader available");
 		}
 
-		if (resourceLoader instanceof ResourcePatternResolver resourcePatternResolver) {
+		if (resourceLoader instanceof ResourcePatternResolver) {
 			// Resource pattern matching available.
 			try {
-				Resource[] resources = resourcePatternResolver.getResources(location);
+				Resource[] resources = ((ResourcePatternResolver) resourceLoader).getResources(location);
 				int count = loadBeanDefinitions(resources);
 				if (actualResources != null) {
 					Collections.addAll(actualResources, resources);

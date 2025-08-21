@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,8 @@ package org.springframework.context.annotation;
 
 import java.util.function.Predicate;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.type.AnnotationMetadata;
+import org.springframework.lang.Nullable;
 
 /**
  * Interface to be implemented by types that determine which @{@link Configuration}
@@ -78,7 +77,8 @@ public interface ImportSelector {
 	 * of transitively imported configuration classes, or {@code null} if none
 	 * @since 5.2.4
 	 */
-	default @Nullable Predicate<String> getExclusionFilter() {
+	@Nullable
+	default Predicate<String> getExclusionFilter() {
 		return null;
 	}
 

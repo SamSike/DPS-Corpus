@@ -43,13 +43,13 @@ public class InterceptFromWhenTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setTracing(true);
 
-                interceptFrom().onWhen(simple("${body} contains 'Goofy'")).to("mock:goofy").stop();
+                interceptFrom().when(simple("${body} contains 'Goofy'")).to("mock:goofy").stop();
 
                 from("direct:start").to("mock:end");
             }

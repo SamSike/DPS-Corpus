@@ -16,19 +16,16 @@
  */
 package org.apache.camel.component.file;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 public class FileConsumeNoopIdempotentEnabledTest extends ContextTestSupport {
 
     @Test
-    public void testNoop() {
+    public void testNoop() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         // should only be able to read the file once as idempotent is true
         mock.expectedMessageCount(1);
@@ -36,16 +33,16 @@ public class FileConsumeNoopIdempotentEnabledTest extends ContextTestSupport {
         template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         // give some time to let consumer try to read the file multiple times
-        Awaitility.await().pollDelay(50, TimeUnit.MILLISECONDS).untilAsserted(() -> {
-            assertMockEndpointsSatisfied();
-        });
+        Thread.sleep(50);
+
+        assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?noop=true&idempotent=true&initialDelay=0&delay=10")).convertBodyTo(String.class)
                         .to("mock:result");
             }

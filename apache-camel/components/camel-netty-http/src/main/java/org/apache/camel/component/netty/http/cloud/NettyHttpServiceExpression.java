@@ -19,7 +19,6 @@ package org.apache.camel.component.netty.http.cloud;
 import org.apache.camel.impl.cloud.DefaultServiceCallExpression;
 import org.apache.camel.util.ObjectHelper;
 
-@Deprecated
 public final class NettyHttpServiceExpression extends DefaultServiceCallExpression {
     public NettyHttpServiceExpression() {
     }

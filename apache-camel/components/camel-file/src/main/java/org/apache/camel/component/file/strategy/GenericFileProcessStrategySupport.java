@@ -131,7 +131,7 @@ public abstract class GenericFileProcessStrategySupport<T> extends ServiceSuppor
         try {
             operations.deleteFile(to.getAbsoluteFilePath());
         } catch (GenericFileOperationFailedException e) {
-            // ignore the file does not exist
+            // ignore the file does not exists
         }
 
         // make parent folder if missing
@@ -153,20 +153,17 @@ public abstract class GenericFileProcessStrategySupport<T> extends ServiceSuppor
 
     protected void deleteLocalWorkFile(Exchange exchange) {
         // delete local work file, if it was used (eg by ftp component)
-        String local = exchange.getIn().getHeader(FileConstants.FILE_LOCAL_WORK_PATH, String.class);
-        if (local != null) {
-            File f = new File(local);
-            if (f.exists()) {
-                boolean deleted = FileUtil.deleteFile(f);
-                LOG.trace("Local work file: {} was deleted: {}", local, deleted);
-            }
+        File local = exchange.getIn().getHeader(FileConstants.FILE_LOCAL_WORK_PATH, File.class);
+        if (local != null && local.exists()) {
+            boolean deleted = FileUtil.deleteFile(local);
+            LOG.trace("Local work file: {} was deleted: {}", local, deleted);
         }
     }
 
     @Override
     protected void doStart() throws Exception {
-        if (exclusiveReadLockStrategy instanceof CamelContextAware camelContextAware) {
-            camelContextAware.setCamelContext(camelContext);
+        if (exclusiveReadLockStrategy instanceof CamelContextAware) {
+            ((CamelContextAware) exclusiveReadLockStrategy).setCamelContext(camelContext);
         }
         ServiceHelper.startService(exclusiveReadLockStrategy);
     }

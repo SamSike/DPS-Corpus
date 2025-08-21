@@ -31,8 +31,7 @@ import org.apache.camel.Predicate;
 import org.apache.camel.support.DefaultExchange;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PredicateBuilderConcurrentTest extends ContextTestSupport {
 
@@ -51,7 +50,7 @@ public class PredicateBuilderConcurrentTest extends ContextTestSupport {
         for (int i = 0; i < 1000; i++) {
             final Integer num = i;
             Future<Boolean> future = pool.submit(new Callable<Boolean>() {
-                public Boolean call() {
+                public Boolean call() throws Exception {
                     Expression left = ExpressionBuilder.headerExpression("foo");
                     Expression right;
                     if (num % 2 == 0) {
@@ -75,9 +74,9 @@ public class PredicateBuilderConcurrentTest extends ContextTestSupport {
         for (int i = 0; i < 1000; i++) {
             Boolean result = futures.get(i).get(10, TimeUnit.SECONDS);
             if (i % 2 == 0) {
-                assertTrue(result.booleanValue(), "Should be true for #" + i);
+                assertEquals(true, result.booleanValue(), "Should be true for #" + i);
             } else {
-                assertFalse(result.booleanValue(), "Should be false for #" + i);
+                assertEquals(false, result.booleanValue(), "Should be false for #" + i);
             }
         }
 

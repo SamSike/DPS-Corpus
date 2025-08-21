@@ -25,12 +25,12 @@ import com.datasonnet.document.DefaultDocument;
 import com.datasonnet.document.Document;
 import com.datasonnet.document.MediaTypes;
 import com.datasonnet.header.Header;
-import com.datasonnet.jsonnet.Materializer;
-import com.datasonnet.jsonnet.Val;
 import com.datasonnet.spi.DataFormatService;
 import com.datasonnet.spi.Library;
 import com.datasonnet.spi.PluginException;
 import org.apache.camel.Exchange;
+import sjsonnet.Materializer;
+import sjsonnet.Val;
 
 public final class CML extends Library {
     private static final CML INSTANCE = new CML();
@@ -66,9 +66,6 @@ public final class CML extends Library {
         answer.put("header", makeSimpleFunc(
                 Collections.singletonList("key"), //parameters list
                 params -> header(params.get(0), dataFormats)));
-        answer.put("variable", makeSimpleFunc(
-                Collections.singletonList("key"), //parameters list
-                params -> variable(params.get(0), dataFormats)));
         answer.put("exchangeProperty", makeSimpleFunc(
                 Collections.singletonList("key"), //parameters list
                 params -> exchangeProperty(params.get(0), dataFormats)));
@@ -90,13 +87,6 @@ public final class CML extends Library {
     private Val header(Val key, DataFormatService dataformats) {
         if (key instanceof Val.Str) {
             return valFrom(exchange.get().getMessage().getHeader(((Val.Str) key).value()), dataformats);
-        }
-        throw new IllegalArgumentException("Expected String got: " + key.prettyName());
-    }
-
-    private Val variable(Val key, DataFormatService dataformats) {
-        if (key instanceof Val.Str) {
-            return valFrom(exchange.get().getVariable(((Val.Str) key).value()), dataformats);
         }
         throw new IllegalArgumentException("Expected String got: " + key.prettyName());
     }

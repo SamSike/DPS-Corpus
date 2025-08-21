@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.AopInfrastructureBean;
@@ -34,7 +33,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
-import org.springframework.util.Assert;
+import org.springframework.lang.Nullable;
 
 /**
  * Convenient superclass for
@@ -59,30 +58,26 @@ public abstract class AbstractBeanFactoryBasedTargetSourceCreator
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	private @Nullable ConfigurableBeanFactory beanFactory;
+	private ConfigurableBeanFactory beanFactory;
 
 	/** Internally used DefaultListableBeanFactory instances, keyed by bean name. */
-	private final Map<String, DefaultListableBeanFactory> internalBeanFactories = new HashMap<>();
+	private final Map<String, DefaultListableBeanFactory> internalBeanFactories =
+			new HashMap<>();
 
 
 	@Override
 	public final void setBeanFactory(BeanFactory beanFactory) {
-		if (!(beanFactory instanceof ConfigurableBeanFactory clbf)) {
+		if (!(beanFactory instanceof ConfigurableBeanFactory)) {
 			throw new IllegalStateException("Cannot do auto-TargetSource creation with a BeanFactory " +
 					"that doesn't implement ConfigurableBeanFactory: " + beanFactory.getClass());
 		}
-		this.beanFactory = clbf;
+		this.beanFactory = (ConfigurableBeanFactory) beanFactory;
 	}
 
 	/**
 	 * Return the BeanFactory that this TargetSourceCreators runs in.
 	 */
-	protected final @Nullable BeanFactory getBeanFactory() {
-		return this.beanFactory;
-	}
-
-	private ConfigurableBeanFactory getConfigurableBeanFactory() {
-		Assert.state(this.beanFactory != null, "BeanFactory not set");
+	protected final BeanFactory getBeanFactory() {
 		return this.beanFactory;
 	}
 
@@ -92,7 +87,8 @@ public abstract class AbstractBeanFactoryBasedTargetSourceCreator
 	//---------------------------------------------------------------------
 
 	@Override
-	public final @Nullable TargetSource getTargetSource(Class<?> beanClass, String beanName) {
+	@Nullable
+	public final TargetSource getTargetSource(Class<?> beanClass, String beanName) {
 		AbstractBeanFactoryBasedTargetSource targetSource =
 				createBeanFactoryBasedTargetSource(beanClass, beanName);
 		if (targetSource == null) {
@@ -108,7 +104,7 @@ public abstract class AbstractBeanFactoryBasedTargetSourceCreator
 		// We need to override just this bean definition, as it may reference other beans
 		// and we're happy to take the parent's definition for those.
 		// Always use prototype scope if demanded.
-		BeanDefinition bd = getConfigurableBeanFactory().getMergedBeanDefinition(beanName);
+		BeanDefinition bd = this.beanFactory.getMergedBeanDefinition(beanName);
 		GenericBeanDefinition bdCopy = new GenericBeanDefinition(bd);
 		if (isPrototypeBased()) {
 			bdCopy.setScope(BeanDefinition.SCOPE_PROTOTYPE);
@@ -130,7 +126,7 @@ public abstract class AbstractBeanFactoryBasedTargetSourceCreator
 	protected DefaultListableBeanFactory getInternalBeanFactoryForBean(String beanName) {
 		synchronized (this.internalBeanFactories) {
 			return this.internalBeanFactories.computeIfAbsent(beanName,
-					name -> buildInternalBeanFactory(getConfigurableBeanFactory()));
+					name -> buildInternalBeanFactory(this.beanFactory));
 		}
 	}
 
@@ -148,7 +144,8 @@ public abstract class AbstractBeanFactoryBasedTargetSourceCreator
 
 		// Filter out BeanPostProcessors that are part of the AOP infrastructure,
 		// since those are only meant to apply to beans defined in the original factory.
-		internalBeanFactory.getBeanPostProcessors().removeIf(AopInfrastructureBean.class::isInstance);
+		internalBeanFactory.getBeanPostProcessors().removeIf(beanPostProcessor ->
+				beanPostProcessor instanceof AopInfrastructureBean);
 
 		return internalBeanFactory;
 	}
@@ -192,7 +189,8 @@ public abstract class AbstractBeanFactoryBasedTargetSourceCreator
 	 * @param beanName the name of the bean
 	 * @return the AbstractPrototypeBasedTargetSource, or {@code null} if we don't match this
 	 */
-	protected abstract @Nullable AbstractBeanFactoryBasedTargetSource createBeanFactoryBasedTargetSource(
+	@Nullable
+	protected abstract AbstractBeanFactoryBasedTargetSource createBeanFactoryBasedTargetSource(
 			Class<?> beanClass, String beanName);
 
 }

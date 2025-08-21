@@ -22,7 +22,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class SameSedaQueueMultipleConsumersDifferenceTest extends ContextTestSupport {
 
@@ -47,28 +47,29 @@ public class SameSedaQueueMultipleConsumersDifferenceTest extends ContextTestSup
     }
 
     @Test
-    public void testAddConsumer() {
-        Exception e = assertThrows(Exception.class, () -> {
+    public void testAddConsumer() throws Exception {
+        try {
             context.addRoutes(new RouteBuilder() {
                 @Override
-                public void configure() {
+                public void configure() throws Exception {
                     from("seda:foo").routeId("fail").to("mock:fail");
                 }
             });
-        }, "Should have thrown exception");
-
-        FailedToStartRouteException failed = assertIsInstanceOf(FailedToStartRouteException.class, e);
-        assertEquals("fail", failed.getRouteId());
-        assertEquals(
-                "Cannot use existing queue seda://foo as the existing queue multiple consumers true does not match given multiple consumers false",
-                e.getCause().getMessage());
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            FailedToStartRouteException failed = assertIsInstanceOf(FailedToStartRouteException.class, e);
+            assertEquals("fail", failed.getRouteId());
+            assertEquals(
+                    "Cannot use existing queue seda://foo as the existing queue multiple consumers true does not match given multiple consumers false",
+                    e.getCause().getMessage());
+        }
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo?multipleConsumers=true").routeId("foo").to("mock:foo");
                 from("seda:foo?multipleConsumers=true").routeId("bar").to("mock:bar");
             }

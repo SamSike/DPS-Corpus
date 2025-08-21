@@ -54,7 +54,8 @@ public class KafkaResumeAdapter implements ResumeAdapter, Deserializable, Cachea
         Object keyObj = deserializeKey(keyBuffer);
         Object valueObj = deserializeValue(valueBuffer);
 
-        if (keyObj instanceof String key) {
+        if (keyObj instanceof String) {
+            String key = (String) keyObj;
 
             final String[] keyParts = key.split("/");
             if (keyParts == null || keyParts.length != 2) {
@@ -62,7 +63,8 @@ public class KafkaResumeAdapter implements ResumeAdapter, Deserializable, Cachea
                 String topic = keyParts[0];
                 int partition = Integer.parseInt(keyParts[1]);
 
-                if (valueObj instanceof Long offset) {
+                if (valueObj instanceof Long) {
+                    Long offset = (Long) valueObj;
 
                     resumeCache.add(new TopicPartition(topic, partition), offset);
                 } else {
@@ -85,7 +87,9 @@ public class KafkaResumeAdapter implements ResumeAdapter, Deserializable, Cachea
         Object keyObj = key.getValue();
         Long valueObject = offset.getValue(Long.class);
 
-        if (keyObj instanceof TopicPartition topicPartition) {
+        if (keyObj instanceof TopicPartition) {
+            TopicPartition topicPartition = (TopicPartition) keyObj;
+
             resumeCache.add(topicPartition, valueObject);
         }
 

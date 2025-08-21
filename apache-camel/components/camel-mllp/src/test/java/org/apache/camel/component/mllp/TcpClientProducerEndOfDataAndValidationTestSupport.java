@@ -112,7 +112,7 @@ public abstract class TcpClientProducerEndOfDataAndValidationTestSupport extends
         DefaultCamelContext context = (DefaultCamelContext) super.createCamelContext();
 
         context.setUseMDCLogging(true);
-        context.getCamelContextExtension().setName(this.getClass().getSimpleName());
+        context.setName(this.getClass().getSimpleName());
 
         return context;
     }
@@ -177,8 +177,10 @@ public abstract class TcpClientProducerEndOfDataAndValidationTestSupport extends
     }
 
     @Override
-    public void doPostTearDown() throws InterruptedException {
+    public void tearDown() throws Exception {
         MockEndpoint.assertIsSatisfied(context, 5, TimeUnit.SECONDS);
+
+        super.tearDown();
     }
 
     @Test
@@ -378,7 +380,7 @@ public abstract class TcpClientProducerEndOfDataAndValidationTestSupport extends
 
     /**
      * NOTE: Set expectation variables BEFORE calling this method.
-     *
+     * 
      * @throws Exception
      */
     protected void runMissingEndOfDataByte() throws Exception {
@@ -469,7 +471,7 @@ public abstract class TcpClientProducerEndOfDataAndValidationTestSupport extends
 
     /**
      * NOTE: Set expectation variables BEFORE calling this method.
-     *
+     * 
      * @throws Exception
      */
     public void runInvalidAcknowledgementContainingEmbeddedStartOfBlock() throws Exception {

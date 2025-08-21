@@ -18,11 +18,10 @@ package org.apache.camel.component.jetty;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.test.AvailablePortFinder;
-import org.apache.hc.client5.http.classic.methods.HttpTrace;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.HttpResponse;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpTrace;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -38,16 +37,16 @@ public class JettyEndpointSetHttpTraceTest extends BaseJettyTest {
 
     @Test
     public void testTraceDisabled() throws Exception {
+        CloseableHttpClient client = HttpClients.createDefault();
 
         HttpTrace trace = new HttpTrace("http://localhost:" + portTraceOff + "/myservice");
+        HttpResponse response = client.execute(trace);
 
-        try (CloseableHttpClient client = HttpClients.createDefault();
-             CloseableHttpResponse response = client.execute(trace)) {
+        // TRACE shouldn't be allowed by default
+        assertEquals(405, response.getStatusLine().getStatusCode());
+        trace.releaseConnection();
 
-            // TRACE shouldn't be allowed by default
-            assertEquals(405, response.getCode());
-            trace.reset();
-        }
+        client.close();
     }
 
     @Test
@@ -58,8 +57,8 @@ public class JettyEndpointSetHttpTraceTest extends BaseJettyTest {
         HttpResponse response = client.execute(trace);
 
         // TRACE is allowed
-        assertEquals(200, response.getCode());
-        trace.reset();
+        assertEquals(200, response.getStatusLine().getStatusCode());
+        trace.releaseConnection();
 
         client.close();
     }

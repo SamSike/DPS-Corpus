@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class OnExceptionHandleAndThrowNewExceptionTest extends ContextTestSupport {
 
     @Test
-    public void testOnExceptionHandleAndThrowNewException() {
+    public void testOnExceptionHandleAndThrowNewException() throws Exception {
         try {
             template.sendBody("direct:start", "Hello World");
             fail("Should have thrown exception");
@@ -47,10 +47,10 @@ public class OnExceptionHandleAndThrowNewExceptionTest extends ContextTestSuppor
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(IllegalArgumentException.class).handled(true).to("log:onException").process(new Processor() {
                     @Override
                     public void process(Exchange exchange) throws Exception {

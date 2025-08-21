@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package org.springframework.test.context.web;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,37 +29,35 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Sam Brannen
  * @since 3.2
  */
-@SpringJUnitConfig
-class BasicAnnotationConfigWacTests extends AbstractBasicWacTests {
+@ContextConfiguration
+public class BasicAnnotationConfigWacTests extends AbstractBasicWacTests {
 
-	@Autowired
-	ServletContextAwareBean servletContextAwareBean;
-
-	@Test
-	void fooEnigmaAutowired() {
-		assertThat(foo).isEqualTo("enigma");
-	}
-
-	@Test
-	void servletContextAwareBeanProcessed() {
-		assertThat(servletContextAwareBean).isNotNull();
-		assertThat(servletContextAwareBean.getServletContext()).isNotNull();
-	}
-
-
-	@Configuration(proxyBeanMethods = false)
+	@Configuration
 	static class Config {
 
 		@Bean
-		String foo() {
+		public String foo() {
 			return "enigma";
 		}
 
 		@Bean
-		ServletContextAwareBean servletContextAwareBean() {
+		public ServletContextAwareBean servletContextAwareBean() {
 			return new ServletContextAwareBean();
 		}
+	}
 
+	@Autowired
+	protected ServletContextAwareBean servletContextAwareBean;
+
+	@Test
+	public void fooEnigmaAutowired() {
+		assertThat(foo).isEqualTo("enigma");
+	}
+
+	@Test
+	public void servletContextAwareBeanProcessed() {
+		assertThat(servletContextAwareBean).isNotNull();
+		assertThat(servletContextAwareBean.servletContext).isNotNull();
 	}
 
 }

@@ -27,8 +27,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.camel.Exchange;
@@ -77,8 +76,8 @@ public class CsvMarshalHeaderWithCustomMarshallFactoryTest extends CamelTestSupp
         body.put("last_name", "Mustermann");
         producerTemplate.sendBodyAndHeader(body, Exchange.FILE_NAME, fileName);
         try (Stream<String> stream = Files.lines(Paths.get(outputFile.toURI()))
-                .filter(l -> !l.isBlank())) {
-            List<String> lines = stream.toList();
+                .filter(l -> l.trim().length() > 0)) {
+            List<String> lines = stream.collect(Collectors.toList());
             assertEquals(3, lines.size());
         }
     }
@@ -117,7 +116,6 @@ public class CsvMarshalHeaderWithCustomMarshallFactoryTest extends CamelTestSupp
 
     private static final class SinglePrinterCsvMarshaller extends CsvMarshaller {
 
-        private final Lock lock = new ReentrantLock();
         private final CSVPrinter printer;
 
         private SinglePrinterCsvMarshaller(CSVFormat format) {
@@ -137,8 +135,7 @@ public class CsvMarshalHeaderWithCustomMarshallFactoryTest extends CamelTestSupp
         @Override
         @SuppressWarnings("unchecked")
         public void marshal(Exchange exchange, Object object, OutputStream outputStream) throws IOException {
-            lock.lock();
-            try {
+            synchronized (printer) {
                 if (object instanceof Map) {
                     Map map = (Map) object;
                     printer.printRecord(getMapRecordValues(map));
@@ -153,16 +150,14 @@ public class CsvMarshalHeaderWithCustomMarshallFactoryTest extends CamelTestSupp
                 outputStream.write(stringBuilder.toString().getBytes());
                 // Reset the 'Appendable' for the next exchange.
                 stringBuilder.setLength(0);
-            } finally {
-                lock.unlock();
             }
         }
 
         @Override
         protected Iterable<?> getMapRecordValues(Map<?, ?> map) {
             List<String> result = new ArrayList<>(map.size());
-            for (Object o : map.values()) {
-                result.add((String) o);
+            for (Object key : map.keySet()) {
+                result.add((String) map.get(key));
             }
             return result;
         }

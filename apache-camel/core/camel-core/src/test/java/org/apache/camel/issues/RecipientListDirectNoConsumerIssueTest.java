@@ -58,10 +58,10 @@ public class RecipientListDirectNoConsumerIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.getComponent("direct", DirectComponent.class).setBlock(false);
 
                 onException(Exception.class).handled(true).to("mock:error");

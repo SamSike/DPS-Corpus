@@ -21,13 +21,13 @@ import java.util.Map;
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.support.HealthCheckComponent;
+import org.apache.camel.support.DefaultComponent;
 
 /**
  * Represents the component that manages {@link SplunkEndpoint}.
  */
 @Component("splunk")
-public class SplunkComponent extends HealthCheckComponent {
+public class SplunkComponent extends DefaultComponent {
 
     @Metadata(label = "advanced")
     private SplunkConfigurationFactory splunkConfigurationFactory = new DefaultSplunkConfigurationFactory();

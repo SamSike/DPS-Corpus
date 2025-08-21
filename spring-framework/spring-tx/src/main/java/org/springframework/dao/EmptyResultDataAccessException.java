@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 
 package org.springframework.dao;
-
-import org.jspecify.annotations.Nullable;
 
 /**
  * Data access exception thrown when a result was expected to have at least
@@ -42,7 +40,7 @@ public class EmptyResultDataAccessException extends IncorrectResultSizeDataAcces
 	 * @param msg the detail message
 	 * @param expectedSize the expected result size
 	 */
-	public EmptyResultDataAccessException(@Nullable String msg, int expectedSize) {
+	public EmptyResultDataAccessException(String msg, int expectedSize) {
 		super(msg, expectedSize, 0);
 	}
 
@@ -52,7 +50,7 @@ public class EmptyResultDataAccessException extends IncorrectResultSizeDataAcces
 	 * @param expectedSize the expected result size
 	 * @param ex the wrapped exception
 	 */
-	public EmptyResultDataAccessException(@Nullable String msg, int expectedSize, Throwable ex) {
+	public EmptyResultDataAccessException(String msg, int expectedSize, Throwable ex) {
 		super(msg, expectedSize, 0, ex);
 	}
 

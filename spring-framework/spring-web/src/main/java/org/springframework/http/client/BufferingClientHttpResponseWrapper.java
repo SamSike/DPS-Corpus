@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StreamUtils;
 
 /**
@@ -37,7 +36,8 @@ final class BufferingClientHttpResponseWrapper implements ClientHttpResponse {
 
 	private final ClientHttpResponse response;
 
-	private byte @Nullable [] body;
+	@Nullable
+	private byte[] body;
 
 
 	BufferingClientHttpResponseWrapper(ClientHttpResponse response) {
@@ -46,8 +46,13 @@ final class BufferingClientHttpResponseWrapper implements ClientHttpResponse {
 
 
 	@Override
-	public HttpStatusCode getStatusCode() throws IOException {
+	public HttpStatus getStatusCode() throws IOException {
 		return this.response.getStatusCode();
+	}
+
+	@Override
+	public int getRawStatusCode() throws IOException {
+		return this.response.getRawStatusCode();
 	}
 
 	@Override

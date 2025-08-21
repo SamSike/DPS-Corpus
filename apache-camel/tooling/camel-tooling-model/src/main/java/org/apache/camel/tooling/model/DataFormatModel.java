@@ -29,8 +29,8 @@ public class DataFormatModel extends ArtifactModel<DataFormatModel.DataFormatOpt
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.dataformat;
+    public String getKind() {
+        return "dataformat";
     }
 
     public String getModelName() {

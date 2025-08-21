@@ -20,39 +20,20 @@ import java.util.concurrent.TimeUnit;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.camel.CamelContext;
-import org.apache.camel.CamelContextAware;
 import org.apache.camel.NamedNode;
-import org.apache.camel.NonManagedService;
-import org.apache.camel.StaticService;
 import org.apache.camel.spi.RoutePolicy;
 import org.apache.camel.spi.RoutePolicyFactory;
-import org.apache.camel.support.service.ServiceSupport;
 
 /**
  * A {@link org.apache.camel.spi.RoutePolicyFactory} to plugin and use metrics for gathering route utilization
  * statistics
  */
-public class MicrometerRoutePolicyFactory extends ServiceSupport
-        implements RoutePolicyFactory, CamelContextAware, NonManagedService, StaticService {
+public class MicrometerRoutePolicyFactory implements RoutePolicyFactory {
 
-    private CamelContext camelContext;
     private MeterRegistry meterRegistry;
-    private RouteMetric contextMetric;
     private boolean prettyPrint = true;
-    private boolean skipCamelInfo = false;
     private TimeUnit durationUnit = TimeUnit.MILLISECONDS;
     private MicrometerRoutePolicyNamingStrategy namingStrategy = MicrometerRoutePolicyNamingStrategy.DEFAULT;
-    private MicrometerRoutePolicyConfiguration policyConfiguration = MicrometerRoutePolicyConfiguration.DEFAULT;
-
-    @Override
-    public CamelContext getCamelContext() {
-        return camelContext;
-    }
-
-    @Override
-    public void setCamelContext(CamelContext camelContext) {
-        this.camelContext = camelContext;
-    }
 
     /**
      * To use a specific {@link io.micrometer.core.instrument.MeterRegistry} instance.
@@ -78,17 +59,6 @@ public class MicrometerRoutePolicyFactory extends ServiceSupport
         this.prettyPrint = prettyPrint;
     }
 
-    public boolean isSkipCamelInfo() {
-        return skipCamelInfo;
-    }
-
-    /**
-     * Skip the evaluation of "app.info" metric which contains runtime provider information (default, `false`).
-     */
-    public void setSkipCamelInfo(boolean skipCamelInfo) {
-        this.skipCamelInfo = skipCamelInfo;
-    }
-
     /**
      * Sets the time unit to use for requests per unit (eg requests per second)
      */
@@ -111,42 +81,14 @@ public class MicrometerRoutePolicyFactory extends ServiceSupport
         this.namingStrategy = namingStrategy;
     }
 
-    public MicrometerRoutePolicyConfiguration getPolicyConfiguration() {
-        return policyConfiguration;
-    }
-
-    public void setPolicyConfiguration(MicrometerRoutePolicyConfiguration policyConfiguration) {
-        this.policyConfiguration = policyConfiguration;
-    }
-
-    public RouteMetric createOrGetContextMetric(MicrometerRoutePolicy policy) {
-        if (contextMetric == null) {
-            contextMetric = new ContextMetricsStatistics(
-                    policy.getMeterRegistry(), camelContext,
-                    policy.getNamingStrategy(), policy.getConfiguration(),
-                    policy.isRegisterKamelets(), policy.isRegisterTemplates());
-        }
-        return contextMetric;
-    }
-
     @Override
     public RoutePolicy createRoutePolicy(CamelContext camelContext, String routeId, NamedNode routeDefinition) {
-        MicrometerRoutePolicy answer = new MicrometerRoutePolicy(this);
+        MicrometerRoutePolicy answer = new MicrometerRoutePolicy();
         answer.setMeterRegistry(getMeterRegistry());
         answer.setPrettyPrint(isPrettyPrint());
-        answer.setSkipCamelInfo(isSkipCamelInfo());
         answer.setDurationUnit(getDurationUnit());
         answer.setNamingStrategy(getNamingStrategy());
-        answer.setConfiguration(getPolicyConfiguration());
         return answer;
     }
 
-    @Override
-    protected void doShutdown() throws Exception {
-        super.doShutdown();
-        if (contextMetric != null) {
-            contextMetric.remove();
-            contextMetric = null;
-        }
-    }
 }

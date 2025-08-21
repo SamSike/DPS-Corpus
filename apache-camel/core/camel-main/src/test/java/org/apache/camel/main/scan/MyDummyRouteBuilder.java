@@ -21,7 +21,7 @@ import org.apache.camel.builder.RouteBuilder;
 public class MyDummyRouteBuilder extends RouteBuilder {
 
     @Override
-    public void configure() {
+    public void configure() throws Exception {
         from("direct:dummy").to("mock:dummy");
     }
 }

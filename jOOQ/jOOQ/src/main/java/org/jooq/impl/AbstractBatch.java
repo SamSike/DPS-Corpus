@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,10 +37,8 @@
  */
 package org.jooq.impl;
 
-import static org.jooq.SQLDialect.TRINO;
 import static org.jooq.impl.Tools.blocking;
 
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
@@ -48,20 +46,27 @@ import java.util.concurrent.Executor;
 import org.jooq.Batch;
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
-import org.jooq.SQLDialect;
+
+import org.reactivestreams.Subscriber;
 
 /**
  * @author Lukas Eder
  */
 abstract class AbstractBatch implements Batch {
 
-    static final Set<SQLDialect> NO_SUPPORT_BATCH = SQLDialect.supportedBy(TRINO);
-    final Configuration          configuration;
-    final DSLContext             dsl;
+    final Configuration configuration;
+    final DSLContext    dsl;
 
     AbstractBatch(Configuration configuration) {
         this.configuration = configuration;
         this.dsl = DSL.using(configuration);
+    }
+
+    @Override
+    public void subscribe(Subscriber<? super Integer> s) {
+
+        // [#11700] TODO: Implement this
+        throw new UnsupportedOperationException();
     }
 
     @Override

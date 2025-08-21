@@ -31,6 +31,11 @@ public class BigIntegerFormatFactory extends AbstractFormatFactory {
     }
 
     @Override
+    public boolean canBuild(FormattingOptions formattingOptions) {
+        return super.canBuild(formattingOptions);
+    }
+
+    @Override
     public Format<?> build(FormattingOptions formattingOptions) {
         return bigIntegerFormat;
     }

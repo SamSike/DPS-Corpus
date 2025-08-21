@@ -1,7 +1,9 @@
 /**
  * Support for styling values as Strings, with ToStringCreator as central class.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.core.style;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

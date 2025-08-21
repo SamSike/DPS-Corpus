@@ -17,41 +17,27 @@
 package org.apache.camel.reifier;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.NamedNode;
-import org.apache.camel.Predicate;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
 import org.apache.camel.model.InterceptDefinition;
 import org.apache.camel.model.ProcessorDefinition;
-import org.apache.camel.model.ProcessorDefinitionHelper;
 import org.apache.camel.model.RouteDefinition;
-import org.apache.camel.processor.FilterProcessor;
 import org.apache.camel.processor.Pipeline;
 import org.apache.camel.spi.InterceptStrategy;
 
-public class InterceptReifier extends ProcessorReifier<InterceptDefinition> {
+public class InterceptReifier<T extends InterceptDefinition> extends ProcessorReifier<T> {
 
     public InterceptReifier(Route route, ProcessorDefinition<?> definition) {
-        super(route, (InterceptDefinition) definition);
+        super(route, (T) definition);
     }
 
     @Override
     public Processor createProcessor() throws Exception {
         // create the output processor
-        Processor child = this.createChildProcessor(true);
+        Processor output = this.createChildProcessor(true);
 
-        Predicate when = null;
-        if (definition.getOnWhen() != null) {
-            definition.getOnWhen().preCreateProcessor();
-            when = createPredicate(definition.getOnWhen().getExpression());
-        }
-        if (when != null) {
-            child = new FilterProcessor(getCamelContext(), when, child);
-        }
-        final Processor output = child;
-
-        // add the output as an intercept strategy to the route context so its
+        // add the output as a intercept strategy to the route context so its
         // invoked on each processing step
         route.getInterceptStrategies().add(new InterceptStrategy() {
             private Processor interceptedTarget;
@@ -59,24 +45,17 @@ public class InterceptReifier extends ProcessorReifier<InterceptDefinition> {
             public Processor wrapProcessorInInterceptors(
                     CamelContext context, NamedNode definition, Processor target, Processor nextTarget)
                     throws Exception {
-
                 // store the target we are intercepting
                 this.interceptedTarget = target;
 
-                Processor p = exchange -> {
-                    exchange.setProperty(ExchangePropertyKey.INTERCEPTED_ROUTE_ID,
-                            ProcessorDefinitionHelper.getRouteId(definition.getParent()));
-                    exchange.setProperty(ExchangePropertyKey.INTERCEPTED_NODE_ID, definition.getId());
-                    exchange.setProperty(ExchangePropertyKey.INTERCEPTED_ROUTE_ENDPOINT_URI,
-                            route.getEndpoint().getEndpointUri());
-                };
+                // remember the target that was intercepted
+                InterceptReifier.this.definition.getIntercepted().add(interceptedTarget);
 
-                // wrap in a pipeline so we continue routing to the next
                 if (interceptedTarget != null) {
-                    return Pipeline.newInstance(context, p, output, interceptedTarget);
+                    // wrap in a pipeline so we continue routing to the next
+                    return Pipeline.newInstance(context, output, interceptedTarget);
                 } else {
-                    return Pipeline.newInstance(context,
-                            p, output);
+                    return output;
                 }
             }
 
@@ -86,7 +65,7 @@ public class InterceptReifier extends ProcessorReifier<InterceptDefinition> {
             }
         });
 
-        // remove me from the route, so I am not invoked in a regular route path
+        // remove me from the route so I am not invoked in a regular route path
         ((RouteDefinition) route.getRoute()).getOutputs().remove(definition);
         // and return no processor to invoke next from me
         return null;

@@ -25,6 +25,7 @@ import javax.management.ObjectName;
 import javax.management.openmbean.TabularData;
 
 import org.apache.camel.Message;
+import org.apache.camel.ValidationException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spi.DataType;
 import org.apache.camel.spi.Validator;
@@ -82,10 +83,10 @@ public class ManagedValidatorRegistryTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 validator()
                         .type("xml:foo")
                         .withUri("direct:transformer");
@@ -103,7 +104,7 @@ public class ManagedValidatorRegistryTest extends ManagementTestSupport {
 
     public static class MyValidator extends Validator {
         @Override
-        public void validate(Message message, DataType type) {
+        public void validate(Message message, DataType type) throws ValidationException {
             // empty
         }
     }

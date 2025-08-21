@@ -63,11 +63,6 @@ public class StringSource extends StreamSource implements Externalizable {
     }
 
     @Override
-    public boolean isEmpty() {
-        return text.isEmpty();
-    }
-
-    @Override
     public InputStream getInputStream() {
         try {
             return new ByteArrayInputStream(text.getBytes(encoding));

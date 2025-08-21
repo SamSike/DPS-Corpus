@@ -1,7 +1,9 @@
 /**
  * For @NonNull annotations on implementation classes
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.testfixture.server;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

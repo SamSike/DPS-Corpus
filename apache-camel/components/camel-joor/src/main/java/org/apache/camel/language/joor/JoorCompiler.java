@@ -89,7 +89,7 @@ public class JoorCompiler extends ServiceSupport implements StaticService {
     protected void doStop() throws Exception {
         super.doStop();
         if (counter > 0) {
-            LOG.debug("Java compiled {} {} in {}", counter, counter == 1 ? "script" : "scripts",
+            LOG.info("jOOR language compiled {} {} in {}", counter, counter == 1 ? "script" : "scripts",
                     TimeUtils.printDuration(taken, true));
         }
     }
@@ -104,10 +104,8 @@ public class JoorCompiler extends ServiceSupport implements StaticService {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Compiling code:\n\n{}\n", code);
             }
-            LOG.debug("Compiling: {}", className);
             Reflect ref = Reflect.compile(className, code);
             Class<?> clazz = ref.type();
-            LOG.debug("Compiled to Java class: {}", clazz);
             answer = (JoorMethod) clazz.getConstructor(CamelContext.class).newInstance(camelContext);
         } catch (Exception e) {
             throw new JoorCompilationException(className, code, e);
@@ -118,7 +116,7 @@ public class JoorCompiler extends ServiceSupport implements StaticService {
         return answer;
     }
 
-    public String evalCode(CamelContext camelContext, String fqn, String script, boolean singleQuotes) {
+    private String evalCode(CamelContext camelContext, String fqn, String script, boolean singleQuotes) {
         String qn = fqn.substring(0, fqn.lastIndexOf('.'));
         String name = fqn.substring(fqn.lastIndexOf('.') + 1);
 
@@ -137,7 +135,7 @@ public class JoorCompiler extends ServiceSupport implements StaticService {
         script = evalDependencyInjection(camelContext, scriptImports, scriptBeans, script);
 
         //  wrap text into a class method we can call
-        StringBuilder sb = new StringBuilder(4096);
+        StringBuilder sb = new StringBuilder();
         sb.append("package ").append(qn).append(";\n");
         sb.append("\n");
         sb.append("import java.util.*;\n");

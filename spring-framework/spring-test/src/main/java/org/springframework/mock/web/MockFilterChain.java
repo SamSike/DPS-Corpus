@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.springframework.mock.web;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -28,15 +29,15 @@ import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 /**
  * Mock implementation of the {@link jakarta.servlet.FilterChain} interface.
  *
- * <p>A {@code MockFilterChain} can be configured with one or more filters and a
+ * <p>A {@link MockFilterChain} can be configured with one or more filters and a
  * Servlet to invoke. The first time the chain is called, it invokes all filters
  * and the Servlet, and saves the request and response. Subsequent invocations
  * raise an {@link IllegalStateException} unless {@link #reset()} is called.
@@ -50,25 +51,30 @@ import org.springframework.util.ObjectUtils;
  */
 public class MockFilterChain implements FilterChain {
 
-	private @Nullable ServletRequest request;
+	@Nullable
+	private ServletRequest request;
 
-	private @Nullable ServletResponse response;
+	@Nullable
+	private ServletResponse response;
 
 	private final List<Filter> filters;
 
-	private @Nullable Iterator<Filter> iterator;
+	@Nullable
+	private Iterator<Filter> iterator;
 
 
 	/**
-	 * Create an empty {@code MockFilterChain} without any {@linkplain Filter filters}.
+	 * Register a single do-nothing {@link Filter} implementation. The first
+	 * invocation saves the request and response. Subsequent invocations raise
+	 * an {@link IllegalStateException} unless {@link #reset()} is called.
 	 */
 	public MockFilterChain() {
 		this.filters = Collections.emptyList();
 	}
 
 	/**
-	 * Create a {@code MockFilterChain} with a {@link Servlet}.
-	 * @param servlet the {@code Servlet} to invoke
+	 * Create a FilterChain with a Servlet.
+	 * @param servlet the Servlet to invoke
 	 * @since 3.2
 	 */
 	public MockFilterChain(Servlet servlet) {
@@ -76,10 +82,9 @@ public class MockFilterChain implements FilterChain {
 	}
 
 	/**
-	 * Create a {@code MockFilterChain} with a {@link Servlet} and {@linkplain Filter
-	 * filters}.
-	 * @param servlet the {@code Servlet} to invoke in this {@code MockFilterChain}
-	 * @param filters the filters to invoke in this {@code MockFilterChain}
+	 * Create a {@code FilterChain} with Filter's and a Servlet.
+	 * @param servlet the {@link Servlet} to invoke in this {@link FilterChain}
+	 * @param filters the {@link Filter}'s to invoke in this {@link FilterChain}
 	 * @since 3.2
 	 */
 	public MockFilterChain(Servlet servlet, Filter... filters) {
@@ -90,21 +95,23 @@ public class MockFilterChain implements FilterChain {
 
 	private static List<Filter> initFilterList(Servlet servlet, Filter... filters) {
 		Filter[] allFilters = ObjectUtils.addObjectToArray(filters, new ServletFilterProxy(servlet));
-		return List.of(allFilters);
+		return Arrays.asList(allFilters);
 	}
 
 
 	/**
 	 * Return the request that {@link #doFilter} has been called with.
 	 */
-	public @Nullable ServletRequest getRequest() {
+	@Nullable
+	public ServletRequest getRequest() {
 		return this.request;
 	}
 
 	/**
 	 * Return the response that {@link #doFilter} has been called with.
 	 */
-	public @Nullable ServletResponse getResponse() {
+	@Nullable
+	public ServletResponse getResponse() {
 		return this.response;
 	}
 
@@ -132,7 +139,7 @@ public class MockFilterChain implements FilterChain {
 	}
 
 	/**
-	 * Reset this {@code MockFilterChain} allowing it to be invoked again.
+	 * Reset the {@link MockFilterChain} allowing it to be invoked again.
 	 */
 	public void reset() {
 		this.request = null;

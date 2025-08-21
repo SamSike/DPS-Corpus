@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ package org.springframework.jms.listener;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import jakarta.jms.Connection;
 import jakarta.jms.ConnectionFactory;
@@ -30,9 +28,9 @@ import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.Session;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.jms.support.JmsUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.Assert;
 
@@ -56,7 +54,7 @@ import org.springframework.util.Assert;
  *
  * <p>For a different style of MessageListener handling, through looped
  * {@code MessageConsumer.receive()} calls that also allow for
- * transactional receipt of messages (registering them with XA transactions),
+ * transactional reception of messages (registering them with XA transactions),
  * see {@link DefaultMessageListenerContainer}.
  *
  * @author Juergen Hoeller
@@ -73,13 +71,16 @@ public class SimpleMessageListenerContainer extends AbstractMessageListenerConta
 
 	private int concurrentConsumers = 1;
 
-	private @Nullable Executor taskExecutor;
+	@Nullable
+	private Executor taskExecutor;
 
-	private @Nullable Set<Session> sessions;
+	@Nullable
+	private Set<Session> sessions;
 
-	private @Nullable Set<MessageConsumer> consumers;
+	@Nullable
+	private Set<MessageConsumer> consumers;
 
-	private final Lock consumersLock = new ReentrantLock();
+	private final Object consumersMonitor = new Object();
 
 
 	/**
@@ -112,8 +113,8 @@ public class SimpleMessageListenerContainer extends AbstractMessageListenerConta
 	}
 
 	/**
-	 * Specify concurrency limits via a "lower-upper" String, for example, "5-10", or a simple
-	 * upper limit String, for example, "10".
+	 * Specify concurrency limits via a "lower-upper" String, e.g. "5-10", or a simple
+	 * upper limit String, e.g. "10".
 	 * <p>This listener container will always hold on to the maximum number of
 	 * consumers {@link #setConcurrentConsumers} since it is unable to scale.
 	 * <p>This property is primarily supported for configuration compatibility with
@@ -125,7 +126,7 @@ public class SimpleMessageListenerContainer extends AbstractMessageListenerConta
 		try {
 			int separatorIndex = concurrency.indexOf('-');
 			if (separatorIndex != -1) {
-				setConcurrentConsumers(Integer.parseInt(concurrency, separatorIndex + 1, concurrency.length(), 10));
+				setConcurrentConsumers(Integer.parseInt(concurrency.substring(separatorIndex + 1)));
 			}
 			else {
 				setConcurrentConsumers(Integer.parseInt(concurrency));
@@ -133,7 +134,7 @@ public class SimpleMessageListenerContainer extends AbstractMessageListenerConta
 		}
 		catch (NumberFormatException ex) {
 			throw new IllegalArgumentException("Invalid concurrency value [" + concurrency + "]: only " +
-					"single maximum integer (for example, \"5\") and minimum-maximum combo (for example, \"3-5\") supported. " +
+					"single maximum integer (e.g. \"5\") and minimum-maximum combo (e.g. \"3-5\") supported. " +
 					"Note that SimpleMessageListenerContainer will effectively ignore the minimum value and " +
 					"always keep a fixed number of consumers according to the maximum value.");
 		}
@@ -176,6 +177,7 @@ public class SimpleMessageListenerContainer extends AbstractMessageListenerConta
 	 * {@link jakarta.jms.MessageListener} will work fine, in general.
 	 * @see #setConcurrentConsumers
 	 * @see org.springframework.core.task.SimpleAsyncTaskExecutor
+	 * @see org.springframework.scheduling.commonj.WorkManagerTaskExecutor
 	 */
 	public void setTaskExecutor(Executor taskExecutor) {
 		this.taskExecutor = taskExecutor;
@@ -260,13 +262,9 @@ public class SimpleMessageListenerContainer extends AbstractMessageListenerConta
 				logger.debug("Trying to recover from JMS Connection exception: " + ex);
 			}
 			try {
-				this.consumersLock.lock();
-				try {
+				synchronized (this.consumersMonitor) {
 					this.sessions = null;
 					this.consumers = null;
-				}
-				finally {
-					this.consumersLock.unlock();
 				}
 				refreshSharedConnection();
 				initializeConsumers();
@@ -285,8 +283,7 @@ public class SimpleMessageListenerContainer extends AbstractMessageListenerConta
 	 */
 	protected void initializeConsumers() throws JMSException {
 		// Register Sessions and MessageConsumers.
-		this.consumersLock.lock();
-		try {
+		synchronized (this.consumersMonitor) {
 			if (this.consumers == null) {
 				this.sessions = new HashSet<>(this.concurrentConsumers);
 				this.consumers = new HashSet<>(this.concurrentConsumers);
@@ -299,9 +296,6 @@ public class SimpleMessageListenerContainer extends AbstractMessageListenerConta
 				}
 			}
 		}
-		finally {
-			this.consumersLock.unlock();
-		}
 	}
 
 	/**
@@ -312,7 +306,6 @@ public class SimpleMessageListenerContainer extends AbstractMessageListenerConta
 	 * @throws JMSException if thrown by JMS methods
 	 * @see #executeListener
 	 */
-	@SuppressWarnings("NullAway") // Lambda
 	protected MessageConsumer createListenerConsumer(final Session session) throws JMSException {
 		Destination destination = getDestination();
 		if (destination == null) {
@@ -341,7 +334,6 @@ public class SimpleMessageListenerContainer extends AbstractMessageListenerConta
 	 * @see #executeListener
 	 * @see #setExposeListenerSession
 	 */
-	@SuppressWarnings("NullAway") // Dataflow analysis limitation
 	protected void processMessage(Message message, Session session) {
 		ConnectionFactory connectionFactory = getConnectionFactory();
 		boolean exposeResource = (connectionFactory != null && isExposeListenerSession());
@@ -350,7 +342,7 @@ public class SimpleMessageListenerContainer extends AbstractMessageListenerConta
 					connectionFactory, new LocallyExposedJmsResourceHolder(session));
 		}
 		try {
-			createObservation(message).observe(() -> executeListener(session, message));
+			executeListener(session, message);
 		}
 		finally {
 			if (exposeResource) {
@@ -364,8 +356,7 @@ public class SimpleMessageListenerContainer extends AbstractMessageListenerConta
 	 */
 	@Override
 	protected void doShutdown() throws JMSException {
-		this.consumersLock.lock();
-		try {
+		synchronized (this.consumersMonitor) {
 			if (this.consumers != null) {
 				logger.debug("Closing JMS MessageConsumers");
 				for (MessageConsumer consumer : this.consumers) {
@@ -378,9 +369,6 @@ public class SimpleMessageListenerContainer extends AbstractMessageListenerConta
 					}
 				}
 			}
-		}
-		finally {
-			this.consumersLock.unlock();
 		}
 	}
 

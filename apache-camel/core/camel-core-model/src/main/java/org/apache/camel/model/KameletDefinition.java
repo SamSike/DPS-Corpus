@@ -40,18 +40,8 @@ public class KameletDefinition extends OutputDefinition<KameletDefinition> {
     public KameletDefinition() {
     }
 
-    protected KameletDefinition(KameletDefinition source) {
-        super(source);
-        this.name = source.name;
-    }
-
     public KameletDefinition(String name) {
         this.name = name;
-    }
-
-    @Override
-    public KameletDefinition copyDefinition() {
-        return new KameletDefinition(this);
     }
 
     @Override

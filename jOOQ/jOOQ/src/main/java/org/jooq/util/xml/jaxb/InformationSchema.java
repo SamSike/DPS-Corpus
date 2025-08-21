@@ -25,28 +25,23 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;all&gt;
- *         &lt;element name="catalogs" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}Catalogs" minOccurs="0"/&gt;
- *         &lt;element name="schemata" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}Schemata" minOccurs="0"/&gt;
- *         &lt;element name="sequences" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}Sequences" minOccurs="0"/&gt;
- *         &lt;element name="tables" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}Tables" minOccurs="0"/&gt;
- *         &lt;element name="views" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}Views" minOccurs="0"/&gt;
- *         &lt;element name="columns" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}Columns" minOccurs="0"/&gt;
- *         &lt;element name="table_constraints" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}TableConstraints" minOccurs="0"/&gt;
- *         &lt;element name="key_column_usages" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}KeyColumnUsages" minOccurs="0"/&gt;
- *         &lt;element name="referential_constraints" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}ReferentialConstraints" minOccurs="0"/&gt;
- *         &lt;element name="check_constraints" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}CheckConstraints" minOccurs="0"/&gt;
- *         &lt;element name="user_defined_types" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}UserDefinedTypes" minOccurs="0"/&gt;
- *         &lt;element name="attributes" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}Attributes" minOccurs="0"/&gt;
- *         &lt;element name="direct_supertypes" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}DirectSupertypes" minOccurs="0"/&gt;
- *         &lt;element name="domains" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}Domains" minOccurs="0"/&gt;
- *         &lt;element name="domain_constraints" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}DomainConstraints" minOccurs="0"/&gt;
- *         &lt;element name="indexes" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}Indexes" minOccurs="0"/&gt;
- *         &lt;element name="index_column_usages" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}IndexColumnUsages" minOccurs="0"/&gt;
- *         &lt;element name="routines" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}Routines" minOccurs="0"/&gt;
- *         &lt;element name="parameters" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}Parameters" minOccurs="0"/&gt;
- *         &lt;element name="element_types" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}ElementTypes" minOccurs="0"/&gt;
- *         &lt;element name="triggers" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}Triggers" minOccurs="0"/&gt;
- *         &lt;element name="synonyms" type="{http://www.jooq.org/xsd/jooq-meta-3.21.0.xsd}Synonyms" minOccurs="0"/&gt;
+ *         &lt;element name="catalogs" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}Catalogs" minOccurs="0"/&gt;
+ *         &lt;element name="schemata" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}Schemata" minOccurs="0"/&gt;
+ *         &lt;element name="sequences" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}Sequences" minOccurs="0"/&gt;
+ *         &lt;element name="tables" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}Tables" minOccurs="0"/&gt;
+ *         &lt;element name="views" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}Views" minOccurs="0"/&gt;
+ *         &lt;element name="columns" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}Columns" minOccurs="0"/&gt;
+ *         &lt;element name="table_constraints" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}TableConstraints" minOccurs="0"/&gt;
+ *         &lt;element name="key_column_usages" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}KeyColumnUsages" minOccurs="0"/&gt;
+ *         &lt;element name="referential_constraints" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}ReferentialConstraints" minOccurs="0"/&gt;
+ *         &lt;element name="check_constraints" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}CheckConstraints" minOccurs="0"/&gt;
+ *         &lt;element name="domains" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}Domains" minOccurs="0"/&gt;
+ *         &lt;element name="domain_constraints" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}DomainConstraints" minOccurs="0"/&gt;
+ *         &lt;element name="indexes" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}Indexes" minOccurs="0"/&gt;
+ *         &lt;element name="index_column_usages" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}IndexColumnUsages" minOccurs="0"/&gt;
+ *         &lt;element name="routines" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}Routines" minOccurs="0"/&gt;
+ *         &lt;element name="parameters" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}Parameters" minOccurs="0"/&gt;
+ *         &lt;element name="element_types" type="{http://www.jooq.org/xsd/jooq-meta-3.16.0.xsd}ElementTypes" minOccurs="0"/&gt;
  *       &lt;/all&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -66,7 +61,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class InformationSchema implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32100L;
+    private final static long serialVersionUID = 31600L;
     @XmlElementWrapper(name = "catalogs")
     @XmlElement(name = "catalog")
     protected List<Catalog> catalogs;
@@ -97,15 +92,6 @@ public class InformationSchema implements Serializable, XMLAppendable
     @XmlElementWrapper(name = "check_constraints")
     @XmlElement(name = "check_constraint")
     protected List<CheckConstraint> checkConstraints;
-    @XmlElementWrapper(name = "user_defined_types")
-    @XmlElement(name = "userDefinedType")
-    protected List<UserDefinedType> userDefinedTypes;
-    @XmlElementWrapper(name = "attributes")
-    @XmlElement(name = "attribute")
-    protected List<Attribute> attributes;
-    @XmlElementWrapper(name = "direct_supertypes")
-    @XmlElement(name = "directSupertype")
-    protected List<DirectSupertype> directSupertypes;
     @XmlElementWrapper(name = "domains")
     @XmlElement(name = "domain")
     protected List<Domain> domains;
@@ -127,12 +113,6 @@ public class InformationSchema implements Serializable, XMLAppendable
     @XmlElementWrapper(name = "element_types")
     @XmlElement(name = "element_type")
     protected List<ElementType> elementTypes;
-    @XmlElementWrapper(name = "triggers")
-    @XmlElement(name = "trigger")
-    protected List<Trigger> triggers;
-    @XmlElementWrapper(name = "synonyms")
-    @XmlElement(name = "synonym")
-    protected List<Synonym> synonyms;
 
     public List<Catalog> getCatalogs() {
         if (catalogs == null) {
@@ -244,39 +224,6 @@ public class InformationSchema implements Serializable, XMLAppendable
         this.checkConstraints = checkConstraints;
     }
 
-    public List<UserDefinedType> getUserDefinedTypes() {
-        if (userDefinedTypes == null) {
-            userDefinedTypes = new ArrayList<UserDefinedType>();
-        }
-        return userDefinedTypes;
-    }
-
-    public void setUserDefinedTypes(List<UserDefinedType> userDefinedTypes) {
-        this.userDefinedTypes = userDefinedTypes;
-    }
-
-    public List<Attribute> getAttributes() {
-        if (attributes == null) {
-            attributes = new ArrayList<Attribute>();
-        }
-        return attributes;
-    }
-
-    public void setAttributes(List<Attribute> attributes) {
-        this.attributes = attributes;
-    }
-
-    public List<DirectSupertype> getDirectSupertypes() {
-        if (directSupertypes == null) {
-            directSupertypes = new ArrayList<DirectSupertype>();
-        }
-        return directSupertypes;
-    }
-
-    public void setDirectSupertypes(List<DirectSupertype> directSupertypes) {
-        this.directSupertypes = directSupertypes;
-    }
-
     public List<Domain> getDomains() {
         if (domains == null) {
             domains = new ArrayList<Domain>();
@@ -352,28 +299,6 @@ public class InformationSchema implements Serializable, XMLAppendable
 
     public void setElementTypes(List<ElementType> elementTypes) {
         this.elementTypes = elementTypes;
-    }
-
-    public List<Trigger> getTriggers() {
-        if (triggers == null) {
-            triggers = new ArrayList<Trigger>();
-        }
-        return triggers;
-    }
-
-    public void setTriggers(List<Trigger> triggers) {
-        this.triggers = triggers;
-    }
-
-    public List<Synonym> getSynonyms() {
-        if (synonyms == null) {
-            synonyms = new ArrayList<Synonym>();
-        }
-        return synonyms;
-    }
-
-    public void setSynonyms(List<Synonym> synonyms) {
-        this.synonyms = synonyms;
     }
 
     public InformationSchema withCatalogs(Catalog... values) {
@@ -586,69 +511,6 @@ public class InformationSchema implements Serializable, XMLAppendable
         return this;
     }
 
-    public InformationSchema withUserDefinedTypes(UserDefinedType... values) {
-        if (values!= null) {
-            for (UserDefinedType value: values) {
-                getUserDefinedTypes().add(value);
-            }
-        }
-        return this;
-    }
-
-    public InformationSchema withUserDefinedTypes(Collection<UserDefinedType> values) {
-        if (values!= null) {
-            getUserDefinedTypes().addAll(values);
-        }
-        return this;
-    }
-
-    public InformationSchema withUserDefinedTypes(List<UserDefinedType> userDefinedTypes) {
-        setUserDefinedTypes(userDefinedTypes);
-        return this;
-    }
-
-    public InformationSchema withAttributes(Attribute... values) {
-        if (values!= null) {
-            for (Attribute value: values) {
-                getAttributes().add(value);
-            }
-        }
-        return this;
-    }
-
-    public InformationSchema withAttributes(Collection<Attribute> values) {
-        if (values!= null) {
-            getAttributes().addAll(values);
-        }
-        return this;
-    }
-
-    public InformationSchema withAttributes(List<Attribute> attributes) {
-        setAttributes(attributes);
-        return this;
-    }
-
-    public InformationSchema withDirectSupertypes(DirectSupertype... values) {
-        if (values!= null) {
-            for (DirectSupertype value: values) {
-                getDirectSupertypes().add(value);
-            }
-        }
-        return this;
-    }
-
-    public InformationSchema withDirectSupertypes(Collection<DirectSupertype> values) {
-        if (values!= null) {
-            getDirectSupertypes().addAll(values);
-        }
-        return this;
-    }
-
-    public InformationSchema withDirectSupertypes(List<DirectSupertype> directSupertypes) {
-        setDirectSupertypes(directSupertypes);
-        return this;
-    }
-
     public InformationSchema withDomains(Domain... values) {
         if (values!= null) {
             for (Domain value: values) {
@@ -796,48 +658,6 @@ public class InformationSchema implements Serializable, XMLAppendable
         return this;
     }
 
-    public InformationSchema withTriggers(Trigger... values) {
-        if (values!= null) {
-            for (Trigger value: values) {
-                getTriggers().add(value);
-            }
-        }
-        return this;
-    }
-
-    public InformationSchema withTriggers(Collection<Trigger> values) {
-        if (values!= null) {
-            getTriggers().addAll(values);
-        }
-        return this;
-    }
-
-    public InformationSchema withTriggers(List<Trigger> triggers) {
-        setTriggers(triggers);
-        return this;
-    }
-
-    public InformationSchema withSynonyms(Synonym... values) {
-        if (values!= null) {
-            for (Synonym value: values) {
-                getSynonyms().add(value);
-            }
-        }
-        return this;
-    }
-
-    public InformationSchema withSynonyms(Collection<Synonym> values) {
-        if (values!= null) {
-            getSynonyms().addAll(values);
-        }
-        return this;
-    }
-
-    public InformationSchema withSynonyms(List<Synonym> synonyms) {
-        setSynonyms(synonyms);
-        return this;
-    }
-
     @Override
     public final void appendTo(XMLBuilder builder) {
         builder.append("catalogs", "catalog", catalogs);
@@ -850,9 +670,6 @@ public class InformationSchema implements Serializable, XMLAppendable
         builder.append("key_column_usages", "key_column_usage", keyColumnUsages);
         builder.append("referential_constraints", "referential_constraint", referentialConstraints);
         builder.append("check_constraints", "check_constraint", checkConstraints);
-        builder.append("user_defined_types", "userDefinedType", userDefinedTypes);
-        builder.append("attributes", "attribute", attributes);
-        builder.append("direct_supertypes", "directSupertype", directSupertypes);
         builder.append("domains", "domain", domains);
         builder.append("domain_constraints", "domainConstraint", domainConstraints);
         builder.append("indexes", "index", indexes);
@@ -860,8 +677,6 @@ public class InformationSchema implements Serializable, XMLAppendable
         builder.append("routines", "routine", routines);
         builder.append("parameters", "parameter", parameters);
         builder.append("element_types", "element_type", elementTypes);
-        builder.append("triggers", "trigger", triggers);
-        builder.append("synonyms", "synonym", synonyms);
     }
 
     @Override
@@ -883,8 +698,8 @@ public class InformationSchema implements Serializable, XMLAppendable
             return false;
         }
         InformationSchema other = ((InformationSchema) that);
-        if ((catalogs == null)||catalogs.isEmpty()) {
-            if ((other.catalogs!= null)&&(!other.catalogs.isEmpty())) {
+        if (catalogs == null) {
+            if (other.catalogs!= null) {
                 return false;
             }
         } else {
@@ -892,8 +707,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((schemata == null)||schemata.isEmpty()) {
-            if ((other.schemata!= null)&&(!other.schemata.isEmpty())) {
+        if (schemata == null) {
+            if (other.schemata!= null) {
                 return false;
             }
         } else {
@@ -901,8 +716,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((sequences == null)||sequences.isEmpty()) {
-            if ((other.sequences!= null)&&(!other.sequences.isEmpty())) {
+        if (sequences == null) {
+            if (other.sequences!= null) {
                 return false;
             }
         } else {
@@ -910,8 +725,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((tables == null)||tables.isEmpty()) {
-            if ((other.tables!= null)&&(!other.tables.isEmpty())) {
+        if (tables == null) {
+            if (other.tables!= null) {
                 return false;
             }
         } else {
@@ -919,8 +734,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((views == null)||views.isEmpty()) {
-            if ((other.views!= null)&&(!other.views.isEmpty())) {
+        if (views == null) {
+            if (other.views!= null) {
                 return false;
             }
         } else {
@@ -928,8 +743,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((columns == null)||columns.isEmpty()) {
-            if ((other.columns!= null)&&(!other.columns.isEmpty())) {
+        if (columns == null) {
+            if (other.columns!= null) {
                 return false;
             }
         } else {
@@ -937,8 +752,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((tableConstraints == null)||tableConstraints.isEmpty()) {
-            if ((other.tableConstraints!= null)&&(!other.tableConstraints.isEmpty())) {
+        if (tableConstraints == null) {
+            if (other.tableConstraints!= null) {
                 return false;
             }
         } else {
@@ -946,8 +761,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((keyColumnUsages == null)||keyColumnUsages.isEmpty()) {
-            if ((other.keyColumnUsages!= null)&&(!other.keyColumnUsages.isEmpty())) {
+        if (keyColumnUsages == null) {
+            if (other.keyColumnUsages!= null) {
                 return false;
             }
         } else {
@@ -955,8 +770,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((referentialConstraints == null)||referentialConstraints.isEmpty()) {
-            if ((other.referentialConstraints!= null)&&(!other.referentialConstraints.isEmpty())) {
+        if (referentialConstraints == null) {
+            if (other.referentialConstraints!= null) {
                 return false;
             }
         } else {
@@ -964,8 +779,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((checkConstraints == null)||checkConstraints.isEmpty()) {
-            if ((other.checkConstraints!= null)&&(!other.checkConstraints.isEmpty())) {
+        if (checkConstraints == null) {
+            if (other.checkConstraints!= null) {
                 return false;
             }
         } else {
@@ -973,35 +788,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((userDefinedTypes == null)||userDefinedTypes.isEmpty()) {
-            if ((other.userDefinedTypes!= null)&&(!other.userDefinedTypes.isEmpty())) {
-                return false;
-            }
-        } else {
-            if (!userDefinedTypes.equals(other.userDefinedTypes)) {
-                return false;
-            }
-        }
-        if ((attributes == null)||attributes.isEmpty()) {
-            if ((other.attributes!= null)&&(!other.attributes.isEmpty())) {
-                return false;
-            }
-        } else {
-            if (!attributes.equals(other.attributes)) {
-                return false;
-            }
-        }
-        if ((directSupertypes == null)||directSupertypes.isEmpty()) {
-            if ((other.directSupertypes!= null)&&(!other.directSupertypes.isEmpty())) {
-                return false;
-            }
-        } else {
-            if (!directSupertypes.equals(other.directSupertypes)) {
-                return false;
-            }
-        }
-        if ((domains == null)||domains.isEmpty()) {
-            if ((other.domains!= null)&&(!other.domains.isEmpty())) {
+        if (domains == null) {
+            if (other.domains!= null) {
                 return false;
             }
         } else {
@@ -1009,8 +797,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((domainConstraints == null)||domainConstraints.isEmpty()) {
-            if ((other.domainConstraints!= null)&&(!other.domainConstraints.isEmpty())) {
+        if (domainConstraints == null) {
+            if (other.domainConstraints!= null) {
                 return false;
             }
         } else {
@@ -1018,8 +806,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((indexes == null)||indexes.isEmpty()) {
-            if ((other.indexes!= null)&&(!other.indexes.isEmpty())) {
+        if (indexes == null) {
+            if (other.indexes!= null) {
                 return false;
             }
         } else {
@@ -1027,8 +815,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((indexColumnUsages == null)||indexColumnUsages.isEmpty()) {
-            if ((other.indexColumnUsages!= null)&&(!other.indexColumnUsages.isEmpty())) {
+        if (indexColumnUsages == null) {
+            if (other.indexColumnUsages!= null) {
                 return false;
             }
         } else {
@@ -1036,8 +824,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((routines == null)||routines.isEmpty()) {
-            if ((other.routines!= null)&&(!other.routines.isEmpty())) {
+        if (routines == null) {
+            if (other.routines!= null) {
                 return false;
             }
         } else {
@@ -1045,8 +833,8 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((parameters == null)||parameters.isEmpty()) {
-            if ((other.parameters!= null)&&(!other.parameters.isEmpty())) {
+        if (parameters == null) {
+            if (other.parameters!= null) {
                 return false;
             }
         } else {
@@ -1054,30 +842,12 @@ public class InformationSchema implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((elementTypes == null)||elementTypes.isEmpty()) {
-            if ((other.elementTypes!= null)&&(!other.elementTypes.isEmpty())) {
+        if (elementTypes == null) {
+            if (other.elementTypes!= null) {
                 return false;
             }
         } else {
             if (!elementTypes.equals(other.elementTypes)) {
-                return false;
-            }
-        }
-        if ((triggers == null)||triggers.isEmpty()) {
-            if ((other.triggers!= null)&&(!other.triggers.isEmpty())) {
-                return false;
-            }
-        } else {
-            if (!triggers.equals(other.triggers)) {
-                return false;
-            }
-        }
-        if ((synonyms == null)||synonyms.isEmpty()) {
-            if ((other.synonyms!= null)&&(!other.synonyms.isEmpty())) {
-                return false;
-            }
-        } else {
-            if (!synonyms.equals(other.synonyms)) {
                 return false;
             }
         }
@@ -1088,28 +858,23 @@ public class InformationSchema implements Serializable, XMLAppendable
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = ((prime*result)+(((catalogs == null)||catalogs.isEmpty())? 0 :catalogs.hashCode()));
-        result = ((prime*result)+(((schemata == null)||schemata.isEmpty())? 0 :schemata.hashCode()));
-        result = ((prime*result)+(((sequences == null)||sequences.isEmpty())? 0 :sequences.hashCode()));
-        result = ((prime*result)+(((tables == null)||tables.isEmpty())? 0 :tables.hashCode()));
-        result = ((prime*result)+(((views == null)||views.isEmpty())? 0 :views.hashCode()));
-        result = ((prime*result)+(((columns == null)||columns.isEmpty())? 0 :columns.hashCode()));
-        result = ((prime*result)+(((tableConstraints == null)||tableConstraints.isEmpty())? 0 :tableConstraints.hashCode()));
-        result = ((prime*result)+(((keyColumnUsages == null)||keyColumnUsages.isEmpty())? 0 :keyColumnUsages.hashCode()));
-        result = ((prime*result)+(((referentialConstraints == null)||referentialConstraints.isEmpty())? 0 :referentialConstraints.hashCode()));
-        result = ((prime*result)+(((checkConstraints == null)||checkConstraints.isEmpty())? 0 :checkConstraints.hashCode()));
-        result = ((prime*result)+(((userDefinedTypes == null)||userDefinedTypes.isEmpty())? 0 :userDefinedTypes.hashCode()));
-        result = ((prime*result)+(((attributes == null)||attributes.isEmpty())? 0 :attributes.hashCode()));
-        result = ((prime*result)+(((directSupertypes == null)||directSupertypes.isEmpty())? 0 :directSupertypes.hashCode()));
-        result = ((prime*result)+(((domains == null)||domains.isEmpty())? 0 :domains.hashCode()));
-        result = ((prime*result)+(((domainConstraints == null)||domainConstraints.isEmpty())? 0 :domainConstraints.hashCode()));
-        result = ((prime*result)+(((indexes == null)||indexes.isEmpty())? 0 :indexes.hashCode()));
-        result = ((prime*result)+(((indexColumnUsages == null)||indexColumnUsages.isEmpty())? 0 :indexColumnUsages.hashCode()));
-        result = ((prime*result)+(((routines == null)||routines.isEmpty())? 0 :routines.hashCode()));
-        result = ((prime*result)+(((parameters == null)||parameters.isEmpty())? 0 :parameters.hashCode()));
-        result = ((prime*result)+(((elementTypes == null)||elementTypes.isEmpty())? 0 :elementTypes.hashCode()));
-        result = ((prime*result)+(((triggers == null)||triggers.isEmpty())? 0 :triggers.hashCode()));
-        result = ((prime*result)+(((synonyms == null)||synonyms.isEmpty())? 0 :synonyms.hashCode()));
+        result = ((prime*result)+((catalogs == null)? 0 :catalogs.hashCode()));
+        result = ((prime*result)+((schemata == null)? 0 :schemata.hashCode()));
+        result = ((prime*result)+((sequences == null)? 0 :sequences.hashCode()));
+        result = ((prime*result)+((tables == null)? 0 :tables.hashCode()));
+        result = ((prime*result)+((views == null)? 0 :views.hashCode()));
+        result = ((prime*result)+((columns == null)? 0 :columns.hashCode()));
+        result = ((prime*result)+((tableConstraints == null)? 0 :tableConstraints.hashCode()));
+        result = ((prime*result)+((keyColumnUsages == null)? 0 :keyColumnUsages.hashCode()));
+        result = ((prime*result)+((referentialConstraints == null)? 0 :referentialConstraints.hashCode()));
+        result = ((prime*result)+((checkConstraints == null)? 0 :checkConstraints.hashCode()));
+        result = ((prime*result)+((domains == null)? 0 :domains.hashCode()));
+        result = ((prime*result)+((domainConstraints == null)? 0 :domainConstraints.hashCode()));
+        result = ((prime*result)+((indexes == null)? 0 :indexes.hashCode()));
+        result = ((prime*result)+((indexColumnUsages == null)? 0 :indexColumnUsages.hashCode()));
+        result = ((prime*result)+((routines == null)? 0 :routines.hashCode()));
+        result = ((prime*result)+((parameters == null)? 0 :parameters.hashCode()));
+        result = ((prime*result)+((elementTypes == null)? 0 :elementTypes.hashCode()));
         return result;
     }
 

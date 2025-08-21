@@ -24,9 +24,11 @@ import org.apache.camel.support.processor.PredicateValidatingProcessor;
 
 @ManagedResource(description = "Managed Validate")
 public class ManagedValidate extends ManagedProcessor implements ManagedValidateMBean {
+    private final PredicateValidatingProcessor processor;
 
     public ManagedValidate(CamelContext context, PredicateValidatingProcessor processor, ValidateDefinition definition) {
         super(context, processor, definition);
+        this.processor = processor;
     }
 
     @Override

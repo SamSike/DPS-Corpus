@@ -1,7 +1,9 @@
 /**
  * Classes adapting Spring's Reactive WebSocket API to and from WebSocket runtimes.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.reactive.socket.adapter;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

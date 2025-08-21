@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,9 +38,9 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.spring.SpringCamelContext;
 import org.apache.camel.test.ExcludingPackageScanClassResolver;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.apache.camel.test.junit5.util.CamelContextTestHelper;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
+import org.junit.jupiter.api.AfterEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -75,22 +76,21 @@ public abstract class CamelSpringTestSupport extends CamelTestSupport {
     protected abstract AbstractApplicationContext createApplicationContext();
 
     @Override
-    protected final void postProcessTest() throws Exception {
-        if (testConfiguration().isCreateCamelContextPerClass()) {
+    public void postProcessTest() throws Exception {
+        if (isCreateCamelContextPerClass()) {
             applicationContext = THREAD_APP_CONTEXT.get();
         }
         super.postProcessTest();
     }
 
     @Override
-    protected final void doPreSetup() throws Exception {
-        boolean skip = CamelContextTestHelper.isSkipAutoStartContext(testConfiguration());
-        if (!skip) {
+    public void doPreSetup() throws Exception {
+        if (!"true".equalsIgnoreCase(System.getProperty("skipStartingCamelContext"))) {
             // tell camel-spring it should not trigger starting CamelContext, since we do that later
             // after we are finished setting up the unit test
             synchronized (LOCK) {
                 SpringCamelContext.setNoStart(true);
-                if (testConfiguration().isCreateCamelContextPerClass()) {
+                if (isCreateCamelContextPerClass()) {
                     applicationContext = THREAD_APP_CONTEXT.get();
                     if (applicationContext == null) {
                         applicationContext = doCreateApplicationContext();
@@ -132,18 +132,24 @@ public abstract class CamelSpringTestSupport extends CamelTestSupport {
     }
 
     @Override
-    public void doPostTearDown() throws Exception {
-        if (!testConfiguration().isCreateCamelContextPerClass()) {
+    @AfterEach
+    public void tearDown() throws Exception {
+        super.tearDown();
+
+        if (!isCreateCamelContextPerClass()) {
             IOHelper.close(applicationContext);
             applicationContext = null;
         }
+    }
+
+    @Override
+    public void doPostTearDown() throws Exception {
+        super.doPostTearDown();
 
         if (THREAD_APP_CONTEXT.get() != null) {
             IOHelper.close(THREAD_APP_CONTEXT.get());
             THREAD_APP_CONTEXT.remove();
         }
-
-        super.doPostTearDown();
     }
 
     /**
@@ -309,12 +315,20 @@ public abstract class CamelSpringTestSupport extends CamelTestSupport {
 
         @Override
         public InputStream getInputStream() throws IOException {
-            if (!properties.isEmpty()) {
-                final String before = readBefore();
+            if (properties.size() > 0) {
+                StringWriter sw = new StringWriter();
+                try (InputStreamReader r = new InputStreamReader(delegate.getInputStream(), StandardCharsets.UTF_8)) {
+                    char[] buf = new char[32768];
+                    int l;
+                    while ((l = r.read(buf)) > 0) {
+                        sw.write(buf, 0, l);
+                    }
+                }
+                String before = sw.toString();
                 String p = properties.keySet().stream().map(Pattern::quote)
                         .collect(Collectors.joining("|", Pattern.quote("{{") + "(", ")" + Pattern.quote("}}")));
                 Matcher m = Pattern.compile(p).matcher(before);
-                StringBuilder sb = new StringBuilder(before.length());
+                StringBuffer sb = new StringBuffer(before.length());
                 while (m.find()) {
                     m.appendReplacement(sb, properties.get(m.group(1)));
                 }
@@ -324,18 +338,6 @@ public abstract class CamelSpringTestSupport extends CamelTestSupport {
             } else {
                 return delegate.getInputStream();
             }
-        }
-
-        private String readBefore() throws IOException {
-            StringBuilder sb = new StringBuilder(32768);
-            try (InputStreamReader r = new InputStreamReader(delegate.getInputStream(), StandardCharsets.UTF_8)) {
-                char[] buf = new char[32768];
-                int l;
-                while ((l = r.read(buf)) > 0) {
-                    sb.append(buf, 0, l);
-                }
-            }
-            return sb.toString();
         }
     }
 }

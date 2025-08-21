@@ -20,8 +20,6 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.io.StringReader;
 import java.nio.CharBuffer;
 import java.util.*;
 import java.util.stream.Stream;
@@ -79,7 +77,7 @@ public class GrokDataFormat extends ServiceSupport implements DataFormat, DataFo
 
     /**
      * Sets the flattened mode flag
-     *
+     * 
      * @param flattened If true, conversion throws exception for conficting named matches.
      */
     public GrokDataFormat setFlattened(boolean flattened) {
@@ -133,31 +131,17 @@ public class GrokDataFormat extends ServiceSupport implements DataFormat, DataFo
 
     @Override
     public Object unmarshal(Exchange exchange, InputStream stream) throws Exception {
-        return unmarshal(exchange, (Object) stream);
-    }
-
-    @Override
-    public Object unmarshal(Exchange exchange, Object body) throws Exception {
         List<Map<String, Object>> result = new ArrayList<>();
 
-        Reader reader = null;
-        if (body instanceof String s) {
-            reader = new StringReader(s);
-        } else if (body instanceof Reader r) {
-            reader = r;
-        } else {
-            // fallback to input stream
-            InputStream is = exchange.getContext().getTypeConverter().mandatoryConvertTo(InputStream.class, exchange, body);
-            reader = new InputStreamReader(is, ExchangeHelper.getCharsetName(exchange));
-        }
-
-        try (Stream<String> lines = new BufferedReader(reader).lines()) {
+        InputStreamReader in = new InputStreamReader(stream, ExchangeHelper.getCharsetName(exchange));
+        try (Stream<String> lines = new BufferedReader(in).lines()) {
             lines.forEachOrdered(line -> processLine(line, result));
         }
 
         if (result.isEmpty()) {
             return null;
         }
+
         if (result.size() == 1) {
             return result.get(0);
         }

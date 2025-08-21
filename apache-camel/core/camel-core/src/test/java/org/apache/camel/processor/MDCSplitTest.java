@@ -41,10 +41,10 @@ public class MDCSplitTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // enable MDC and breadcrumb
                 context.setUseMDCLogging(true);
                 context.setUseBreadcrumb(true);
@@ -62,7 +62,6 @@ public class MDCSplitTest extends ContextTestSupport {
                 }).process(checker)
                         .to("log:foo")
                         .split(body().tokenize(","))
-                        .to("log:line")
                         .process(checker)
                         .end()
                         .to("mock:end");
@@ -76,6 +75,7 @@ public class MDCSplitTest extends ContextTestSupport {
      */
     private static class MdcCheckerProcessor implements Processor {
 
+        private String routeId = "route-async";
         private String exchangeId;
         private String messageId;
         private String breadcrumbId;
@@ -84,7 +84,7 @@ public class MDCSplitTest extends ContextTestSupport {
         private String foo;
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             // custom is propagated as its pattern matches
             assertEquals("World", MDC.get("custom.hello"));
             assertEquals("Baz", MDC.get("myKey"));
@@ -97,13 +97,12 @@ public class MDCSplitTest extends ContextTestSupport {
             }
 
             if (threadId != null) {
-                long currId = Thread.currentThread().getId();
+                Long currId = Thread.currentThread().getId();
                 assertEquals(threadId, (Object) currId);
             } else {
                 threadId = Thread.currentThread().getId();
             }
 
-            String routeId = "route-async";
             if (routeId != null) {
                 assertEquals(routeId, MDC.get("camel.routeId"));
             }
@@ -112,28 +111,28 @@ public class MDCSplitTest extends ContextTestSupport {
                 assertNotEquals(exchangeId, MDC.get("camel.exchangeId"));
             } else {
                 exchangeId = MDC.get("camel.exchangeId");
-                assertTrue(exchangeId != null && !exchangeId.isEmpty());
+                assertTrue(exchangeId != null && exchangeId.length() > 0);
             }
 
             if (messageId != null) {
                 assertNotEquals(messageId, MDC.get("camel.messageId"));
             } else {
                 messageId = MDC.get("camel.messageId");
-                assertTrue(messageId != null && !messageId.isEmpty());
+                assertTrue(messageId != null && messageId.length() > 0);
             }
 
             if (breadcrumbId != null) {
                 assertEquals(breadcrumbId, MDC.get("camel.breadcrumbId"));
             } else {
                 breadcrumbId = MDC.get("camel.breadcrumbId");
-                assertTrue(breadcrumbId != null && !breadcrumbId.isEmpty());
+                assertTrue(breadcrumbId != null && breadcrumbId.length() > 0);
             }
 
             if (contextId != null) {
                 assertEquals(contextId, MDC.get("camel.contextId"));
             } else {
                 contextId = MDC.get("camel.contextId");
-                assertTrue(contextId != null && !contextId.isEmpty());
+                assertTrue(contextId != null && contextId.length() > 0);
             }
         }
     }

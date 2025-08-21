@@ -16,10 +16,11 @@
  */
 package org.apache.camel.component.kubernetes.producer;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+import io.fabric8.kubernetes.api.model.PodListBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServiceListBuilder;
@@ -54,47 +55,26 @@ public class KubernetesServicesProducerTest extends KubernetesTestSupport {
     @Test
     void listTest() {
         server.expect().withPath("/api/v1/services")
-                .andReturn(200,
-                        new ServiceListBuilder().addNewItem().and().addNewItem().and().addNewItem().and().build())
-                .once();
-        server.expect().withPath("/api/v1/namespaces/test/services")
-                .andReturn(200, new ServiceListBuilder().addNewItem().and().addNewItem().and().build())
+                .andReturn(200, new ServiceListBuilder().addNewItem().and().addNewItem().and().addNewItem().and().build())
                 .once();
         List<?> result = template.requestBody("direct:list", "", List.class);
-        assertEquals(3, result.size());
 
-        Exchange ex = template.request("direct:list",
-                exchange -> exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test"));
-        assertEquals(2, ex.getMessage().getBody(List.class).size());
+        assertEquals(3, result.size());
     }
 
     @Test
     void listByLabelsTest() throws Exception {
-        Map<String, String> labels = Map.of(
-                "key1", "value1",
-                "key2", "value2");
-
-        String urlEncodedLabels = toUrlEncoded(labels.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue())
-                .collect(Collectors.joining(",")));
-
-        server.expect().withPath("/api/v1/services?labelSelector=" + urlEncodedLabels)
-                .andReturn(200,
-                        new ServiceListBuilder().addNewItem().and().addNewItem().and().addNewItem().and().build())
-                .once();
-        server.expect().withPath("/api/v1/namespaces/test/services?labelSelector=" + urlEncodedLabels)
-                .andReturn(200, new ServiceListBuilder().addNewItem().and().addNewItem().and().build())
-                .once();
-        Exchange ex = template.request("direct:listByLabels",
-                exchange -> exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_SERVICE_LABELS, labels));
-
-        assertEquals(3, ex.getMessage().getBody(List.class).size());
-
-        ex = template.request("direct:listByLabels", exchange -> {
+        server.expect().withPath("/api/v1/services?labelSelector=" + toUrlEncoded("key1=value1,key2=value2"))
+                .andReturn(200, new PodListBuilder().addNewItem().and().addNewItem().and().addNewItem().and().build()).once();
+        Exchange ex = template.request("direct:listByLabels", exchange -> {
+            Map<String, String> labels = new HashMap<>();
+            labels.put("key1", "value1");
+            labels.put("key2", "value2");
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_SERVICE_LABELS, labels);
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test");
         });
 
-        assertEquals(2, ex.getMessage().getBody(List.class).size());
+        List<?> result = ex.getMessage().getBody(List.class);
+        assertEquals(3, result.size());
     }
 
     @Test
@@ -136,7 +116,7 @@ public class KubernetesServicesProducerTest extends KubernetesTestSupport {
     }
 
     @Test
-    void updateService() {
+    void replaceService() {
         Map<String, String> labels = Map.of("my.label.key", "my.label.value");
         ServiceSpec spec = new ServiceSpecBuilder().withExternalName("SomeExternalName").build();
         Service se1 = new ServiceBuilder().withNewMetadata().withName("se1").withNamespace("test").withLabels(labels).and()
@@ -147,7 +127,7 @@ public class KubernetesServicesProducerTest extends KubernetesTestSupport {
                 .times(2);
         server.expect().put().withPath("/api/v1/namespaces/test/services/se1").andReturn(200, se1).once();
 
-        Exchange ex = template.request("direct:updateService", exchange -> {
+        Exchange ex = template.request("direct:replaceService", exchange -> {
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test");
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_SERVICE_LABELS, labels);
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_SERVICE_NAME, "se1");
@@ -190,8 +170,8 @@ public class KubernetesServicesProducerTest extends KubernetesTestSupport {
                         .to("kubernetes-services:///?kubernetesClient=#kubernetesClient&operation=getService");
                 from("direct:createService")
                         .to("kubernetes-services:///?kubernetesClient=#kubernetesClient&operation=createService");
-                from("direct:updateService")
-                        .to("kubernetes-services:///?kubernetesClient=#kubernetesClient&operation=updateService");
+                from("direct:replaceService")
+                        .to("kubernetes-services:///?kubernetesClient=#kubernetesClient&operation=replaceService");
                 from("direct:deleteService")
                         .to("kubernetes-services:///?kubernetesClient=#kubernetesClient&operation=deleteService");
             }

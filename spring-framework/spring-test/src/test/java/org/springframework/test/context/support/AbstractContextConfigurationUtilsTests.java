@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,10 @@ import java.lang.annotation.Target;
 import java.util.Collections;
 import java.util.Set;
 
+import org.mockito.Mockito;
+
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.AliasFor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.BootstrapContext;
 import org.springframework.test.context.BootstrapTestUtils;
@@ -40,7 +41,6 @@ import org.springframework.test.context.TestContextBootstrapper;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
-import static org.mockito.Mockito.mock;
 import static org.springframework.test.context.NestedTestConfiguration.EnclosingConfiguration.INHERIT;
 import static org.springframework.test.context.NestedTestConfiguration.EnclosingConfiguration.OVERRIDE;
 
@@ -58,11 +58,11 @@ abstract class AbstractContextConfigurationUtilsTests {
 	static final String[] EMPTY_STRING_ARRAY = new String[0];
 
 	static final Set<Class<? extends ApplicationContextInitializer<?>>>
-			EMPTY_INITIALIZER_CLASSES = Collections.emptySet();
+			EMPTY_INITIALIZER_CLASSES = Collections.<Class<? extends ApplicationContextInitializer<?>>> emptySet();
 
 
 	MergedContextConfiguration buildMergedContextConfiguration(Class<?> testClass) {
-		CacheAwareContextLoaderDelegate cacheAwareContextLoaderDelegate = mock();
+		CacheAwareContextLoaderDelegate cacheAwareContextLoaderDelegate = Mockito.mock(CacheAwareContextLoaderDelegate.class);
 		BootstrapContext bootstrapContext = BootstrapTestUtils.buildBootstrapContext(testClass, cacheAwareContextLoaderDelegate);
 		TestContextBootstrapper bootstrapper = BootstrapTestUtils.resolveTestContextBootstrapper(bootstrapContext);
 		return bootstrapper.buildMergedContextConfiguration();
@@ -149,19 +149,17 @@ abstract class AbstractContextConfigurationUtilsTests {
 	@ActiveProfiles(profiles = "foo")
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)
-	public @interface MetaLocationsFooConfig {
+	public static @interface MetaLocationsFooConfig {
 	}
 
 	@ContextConfiguration
 	@ActiveProfiles
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)
-	public @interface MetaLocationsFooConfigWithOverrides {
+	public static @interface MetaLocationsFooConfigWithOverrides {
 
-		@AliasFor(annotation = ContextConfiguration.class)
 		String[] locations() default "/foo.xml";
 
-		@AliasFor(annotation = ActiveProfiles.class)
 		String[] profiles() default "foo";
 	}
 
@@ -169,7 +167,7 @@ abstract class AbstractContextConfigurationUtilsTests {
 	@ActiveProfiles(profiles = "bar")
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)
-	public @interface MetaLocationsBarConfig {
+	public static @interface MetaLocationsBarConfig {
 	}
 
 	@MetaLocationsFooConfig
@@ -220,6 +218,20 @@ abstract class AbstractContextConfigurationUtilsTests {
 	@ContextConfiguration(classes = BarConfig.class, inheritLocations = false, loader = AnnotationConfigContextLoader.class)
 	@ActiveProfiles("bar")
 	static class OverriddenClassesBar extends ClassesFoo {
+	}
+
+	@SuppressWarnings("deprecation")
+	@ContextConfiguration(locations = "/foo.properties", loader = org.springframework.test.context.support.GenericPropertiesContextLoader.class)
+	@ActiveProfiles("foo")
+	static class PropertiesLocationsFoo {
+	}
+
+	// Combining @Configuration classes with a Properties based loader doesn't really make
+	// sense, but that's OK for unit testing purposes.
+	@SuppressWarnings("deprecation")
+	@ContextConfiguration(classes = FooConfig.class, loader = org.springframework.test.context.support.GenericPropertiesContextLoader.class)
+	@ActiveProfiles("foo")
+	static class PropertiesClassesFoo {
 	}
 
 	@ContextConfiguration(classes = FooConfig.class, loader = AnnotationConfigContextLoader.class)

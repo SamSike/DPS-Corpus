@@ -29,9 +29,9 @@ import org.apache.camel.spi.ExecutorServiceManager;
 import org.apache.camel.spi.ThreadPoolProfile;
 
 /**
- * Legacy error handler for XML DSL in camel-spring-xml
+ * Legacy error handler for XML DSL in camel-spring-xml/camel-blueprint
  */
-@Deprecated(since = "3.17.0")
+@Deprecated
 public class LegacyDefaultErrorHandlerReifier<T extends DefaultErrorHandlerProperties> extends ErrorHandlerReifier<T> {
 
     public LegacyDefaultErrorHandlerReifier(Route route, ErrorHandlerFactory definition) {
@@ -58,35 +58,30 @@ public class LegacyDefaultErrorHandlerReifier<T extends DefaultErrorHandlerPrope
         return answer;
     }
 
-    protected ScheduledExecutorService getExecutorService(
+    protected synchronized ScheduledExecutorService getExecutorService(
             ScheduledExecutorService executorService, String executorServiceRef) {
-        lock.lock();
-        try {
-            if (executorService == null || executorService.isShutdown()) {
-                // camel context will shutdown the executor when it shutdown so no
-                // need to shut it down when stopping
-                if (executorServiceRef != null) {
-                    executorService = lookupByNameAndType(executorServiceRef, ScheduledExecutorService.class);
-                    if (executorService == null) {
-                        ExecutorServiceManager manager = camelContext.getExecutorServiceManager();
-                        ThreadPoolProfile profile = manager.getThreadPoolProfile(executorServiceRef);
-                        executorService = manager.newScheduledThreadPool(this, executorServiceRef, profile);
-                    }
-                    if (executorService == null) {
-                        throw new IllegalArgumentException("ExecutorService " + executorServiceRef + " not found in registry.");
-                    }
-                } else {
-                    // no explicit configured thread pool, so leave it up to the
-                    // error handler to decide if it need
-                    // a default thread pool from
-                    // CamelContext#getErrorHandlerExecutorService
-                    executorService = null;
+        if (executorService == null || executorService.isShutdown()) {
+            // camel context will shutdown the executor when it shutdown so no
+            // need to shut it down when stopping
+            if (executorServiceRef != null) {
+                executorService = lookupByNameAndType(executorServiceRef, ScheduledExecutorService.class);
+                if (executorService == null) {
+                    ExecutorServiceManager manager = camelContext.getExecutorServiceManager();
+                    ThreadPoolProfile profile = manager.getThreadPoolProfile(executorServiceRef);
+                    executorService = manager.newScheduledThreadPool(this, executorServiceRef, profile);
                 }
+                if (executorService == null) {
+                    throw new IllegalArgumentException("ExecutorService " + executorServiceRef + " not found in registry.");
+                }
+            } else {
+                // no explicit configured thread pool, so leave it up to the
+                // error handler to decide if it need
+                // a default thread pool from
+                // CamelContext#getErrorHandlerExecutorService
+                executorService = null;
             }
-            return executorService;
-        } finally {
-            lock.unlock();
         }
+        return executorService;
     }
 
 }

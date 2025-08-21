@@ -44,8 +44,7 @@ public class SftpProduceTempFileIT extends SftpServerTestSupport {
     @Test
     public void testSftpTempFileNoStartingPath() {
         template.sendBodyAndHeader(
-                "sftp://localhost:{{ftp.server.port}}/?username=admin&password=admin&tempFileName=temp-${file:name}"
-                                   + "&knownHostsFile=" + service.getKnownHostsFile(),
+                "sftp://localhost:{{ftp.server.port}}/?username=admin&password=admin&tempFileName=temp-${file:name}",
                 "Hello World", Exchange.FILE_NAME,
                 "hello.txt");
 

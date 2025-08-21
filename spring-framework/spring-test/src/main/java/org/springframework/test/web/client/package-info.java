@@ -2,7 +2,9 @@
  * Contains client-side REST testing support.
  * @see org.springframework.test.web.client.MockRestServiceServer
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.test.web.client;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

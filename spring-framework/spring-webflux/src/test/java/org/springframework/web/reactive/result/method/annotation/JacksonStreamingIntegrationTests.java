@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,7 @@
 package org.springframework.web.reactive.result.method.annotation;
 
 import java.time.Duration;
-import java.util.Objects;
 
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -109,7 +107,7 @@ class JacksonStreamingIntegrationTests extends AbstractHttpHandlerIntegrationTes
 		@GetMapping(value = "/stream",
 				produces = { APPLICATION_NDJSON_VALUE, "application/stream+x-jackson-smile" })
 		Flux<Person> person() {
-			return testInterval(Duration.ofMillis(1), 50).map(l -> new Person("foo " + l));
+			return testInterval(Duration.ofMillis(100), 50).map(l -> new Person("foo " + l));
 		}
 
 	}
@@ -146,7 +144,7 @@ class JacksonStreamingIntegrationTests extends AbstractHttpHandlerIntegrationTes
 		}
 
 		@Override
-		public boolean equals(@Nullable Object o) {
+		public boolean equals(Object o) {
 			if (this == o) {
 				return true;
 			}
@@ -154,7 +152,7 @@ class JacksonStreamingIntegrationTests extends AbstractHttpHandlerIntegrationTes
 				return false;
 			}
 			Person person = (Person) o;
-			return Objects.equals(this.name, person.name);
+			return !(this.name != null ? !this.name.equals(person.name) : person.name != null);
 		}
 
 		@Override

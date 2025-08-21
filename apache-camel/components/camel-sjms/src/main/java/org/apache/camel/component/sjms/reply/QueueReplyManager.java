@@ -45,13 +45,16 @@ public class QueueReplyManager extends ReplyManagerSupport {
             // should not happen that we can't find the handler
             return;
         }
+
         correlation.put(newCorrelationId, handler, requestTimeout);
     }
 
     @Override
     protected void handleReplyMessage(String correlationID, Message message, Session session) {
-        ReplyHandler handler = correlation.remove(correlationID);
+        ReplyHandler handler = correlation.get(correlationID);
+
         if (handler != null) {
+            correlation.remove(correlationID);
             handler.onReply(correlationID, message, session);
         } else {
             // we could not correlate the received reply message to a matching request and therefore
@@ -73,21 +76,18 @@ public class QueueReplyManager extends ReplyManagerSupport {
 
         @Override
         public Destination createDestination(Session session, String destinationName, boolean topic) throws JMSException {
-            QueueReplyManager.this.lock.lock();
-            try {
+            synchronized (QueueReplyManager.this) {
                 // resolve the reply to destination
                 if (destination == null) {
                     destination = delegate.createDestination(session, destinationName, topic);
                     setReplyTo(destination);
                 }
-            } finally {
-                QueueReplyManager.this.lock.unlock();
             }
             return destination;
         }
 
         @Override
-        public Destination createTemporaryDestination(Session session, boolean topic) {
+        public Destination createTemporaryDestination(Session session, boolean topic) throws JMSException {
             return null;
         }
     }

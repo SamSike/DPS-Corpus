@@ -31,7 +31,7 @@ public class AsyncEndpointSplitTest extends ContextTestSupport {
     private static String afterThreadName;
 
     @Test
-    public void testAsyncEndpoint() {
+    public void testAsyncEndpoint() throws Exception {
         getMockEndpoint("mock:before").expectedBodiesReceived("A", "B");
         getMockEndpoint("mock:after").expectedBodiesReceived("Bye Camel", "Bye Camel");
         getMockEndpoint("mock:result").expectedBodiesReceived("Bye Camel");
@@ -43,18 +43,18 @@ public class AsyncEndpointSplitTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.addComponent("async", new MyAsyncComponent());
 
                 from("direct:start").split(body()).to("mock:before").to("log:before").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         beforeThreadName = Thread.currentThread().getName();
                     }
                 }).to("async:bye:camel").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         afterThreadName = Thread.currentThread().getName();
                     }
                 }).to("log:after").to("mock:after").end().to("mock:result");

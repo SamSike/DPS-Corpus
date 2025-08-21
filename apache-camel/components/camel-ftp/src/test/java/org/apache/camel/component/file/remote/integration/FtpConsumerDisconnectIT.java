@@ -22,6 +22,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.file.remote.FtpEndpoint;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.commons.net.ftp.FTPClient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.awaitility.Awaitility.await;
@@ -35,7 +36,10 @@ public class FtpConsumerDisconnectIT extends FtpServerTestSupport {
     }
 
     @Override
-    public void doPostSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
+
         // ask the singleton FtpEndpoint to make use of a custom FTPClient
         // so that we can hold a reference on it inside the test below
         FtpEndpoint<?> endpoint = context.getEndpoint(getFtpUrl(), FtpEndpoint.class);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@ package org.springframework.web.socket.server.standard;
 import jakarta.servlet.ServletContext;
 import jakarta.websocket.WebSocketContainer;
 import jakarta.websocket.server.ServerContainer;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.context.ServletContextAware;
 
@@ -47,53 +47,63 @@ import org.springframework.web.context.ServletContextAware;
 public class ServletServerContainerFactoryBean
 		implements FactoryBean<WebSocketContainer>, ServletContextAware, InitializingBean {
 
-	private @Nullable Long asyncSendTimeout;
+	@Nullable
+	private Long asyncSendTimeout;
 
-	private @Nullable Long maxSessionIdleTimeout;
+	@Nullable
+	private Long maxSessionIdleTimeout;
 
-	private @Nullable Integer maxTextMessageBufferSize;
+	@Nullable
+	private Integer maxTextMessageBufferSize;
 
-	private @Nullable Integer maxBinaryMessageBufferSize;
+	@Nullable
+	private Integer maxBinaryMessageBufferSize;
 
-	private @Nullable ServletContext servletContext;
+	@Nullable
+	private ServletContext servletContext;
 
-	private @Nullable ServerContainer serverContainer;
+	@Nullable
+	private ServerContainer serverContainer;
 
 
-	public void setAsyncSendTimeout(@Nullable Long timeoutInMillis) {
+	public void setAsyncSendTimeout(Long timeoutInMillis) {
 		this.asyncSendTimeout = timeoutInMillis;
 	}
 
-	public @Nullable Long getAsyncSendTimeout() {
+	@Nullable
+	public Long getAsyncSendTimeout() {
 		return this.asyncSendTimeout;
 	}
 
-	public void setMaxSessionIdleTimeout(@Nullable Long timeoutInMillis) {
+	public void setMaxSessionIdleTimeout(Long timeoutInMillis) {
 		this.maxSessionIdleTimeout = timeoutInMillis;
 	}
 
-	public @Nullable Long getMaxSessionIdleTimeout() {
+	@Nullable
+	public Long getMaxSessionIdleTimeout() {
 		return this.maxSessionIdleTimeout;
 	}
 
-	public void setMaxTextMessageBufferSize(@Nullable Integer bufferSize) {
+	public void setMaxTextMessageBufferSize(Integer bufferSize) {
 		this.maxTextMessageBufferSize = bufferSize;
 	}
 
-	public @Nullable Integer getMaxTextMessageBufferSize() {
+	@Nullable
+	public Integer getMaxTextMessageBufferSize() {
 		return this.maxTextMessageBufferSize;
 	}
 
-	public void setMaxBinaryMessageBufferSize(@Nullable Integer bufferSize) {
+	public void setMaxBinaryMessageBufferSize(Integer bufferSize) {
 		this.maxBinaryMessageBufferSize = bufferSize;
 	}
 
-	public @Nullable Integer getMaxBinaryMessageBufferSize() {
+	@Nullable
+	public Integer getMaxBinaryMessageBufferSize() {
 		return this.maxBinaryMessageBufferSize;
 	}
 
 	@Override
-	public void setServletContext(@Nullable ServletContext servletContext) {
+	public void setServletContext(ServletContext servletContext) {
 		this.servletContext = servletContext;
 	}
 
@@ -123,7 +133,8 @@ public class ServletServerContainerFactoryBean
 
 
 	@Override
-	public @Nullable ServerContainer getObject() {
+	@Nullable
+	public ServerContainer getObject() {
 		return this.serverContainer;
 	}
 

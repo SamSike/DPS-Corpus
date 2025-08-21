@@ -37,11 +37,8 @@ import static org.apache.camel.util.IOHelper.lookupEnvironmentVariable;
  * A parser to parse a string which contains property placeholders.
  */
 public class DefaultPropertiesParser implements PropertiesParser {
-
     private static final String UNRESOLVED_PREFIX_TOKEN = "@@[";
-
     private static final String UNRESOLVED_SUFFIX_TOKEN = "]@@";
-
     private static final String GET_OR_ELSE_TOKEN = ":";
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -118,7 +115,7 @@ public class DefaultPropertiesParser implements PropertiesParser {
                 input = input.replace("?nested=false", "");
             }
             if (nested) {
-                return doParseNested(null, input, new HashSet<>());
+                return doParseNested(input, new HashSet<String>());
             } else {
                 return doParse(input);
             }
@@ -135,10 +132,9 @@ public class DefaultPropertiesParser implements PropertiesParser {
                 return null;
             }
 
-            StringBuilder answer = new StringBuilder(input.length());
+            StringBuilder answer = new StringBuilder();
             Property property;
-            String prevKey = null;
-            while ((property = readProperty(prevKey, input)) != null) {
+            while ((property = readProperty(input)) != null) {
                 String before = input.substring(0, property.getBeginIndex());
                 String after = input.substring(property.getEndIndex());
                 String parsed = property.getValue();
@@ -150,7 +146,6 @@ public class DefaultPropertiesParser implements PropertiesParser {
                     return null;
                 }
                 input = after;
-                prevKey = property.getKey();
             }
             if (!input.isEmpty()) {
                 answer.append(input);
@@ -165,13 +160,13 @@ public class DefaultPropertiesParser implements PropertiesParser {
          * @param  replacedPropertyKeys Already replaced property keys used for tracking circular references
          * @return                      Evaluated string
          */
-        private String doParseNested(String prevKey, String input, Set<String> replacedPropertyKeys) {
+        private String doParseNested(String input, Set<String> replacedPropertyKeys) {
             if (input == null) {
                 return null;
             }
             String answer = input;
             Property property;
-            while ((property = readProperty(prevKey, answer)) != null) {
+            while ((property = readProperty(answer)) != null) {
                 if (replacedPropertyKeys.contains(property.getKey())) {
                     // Check for circular references (skip optional)
                     boolean optional = property.getKey().startsWith(OPTIONAL_TOKEN);
@@ -181,12 +176,6 @@ public class DefaultPropertiesParser implements PropertiesParser {
                         throw new IllegalArgumentException(
                                 "Circular reference detected with key [" + property.getKey() + "] from text: " + input);
                     }
-                }
-
-                if (propertiesComponent != null) {
-                    // nested placeholder so update resolved property with new value
-                    String k = prevKey != null ? prevKey : property.getKey();
-                    propertiesComponent.updateResolvedValue(k, property.getValue(), null);
                 }
 
                 Set<String> newReplaced = new HashSet<>(replacedPropertyKeys);
@@ -199,7 +188,7 @@ public class DefaultPropertiesParser implements PropertiesParser {
                 }
                 String before = answer.substring(0, beginIndex);
                 String after = answer.substring(property.getEndIndex());
-                String parsed = doParseNested(property.getKey(), property.getValue(), newReplaced);
+                String parsed = doParseNested(property.getValue(), newReplaced);
                 if (parsed != null) {
                     answer = before + parsed + after;
                 } else {
@@ -221,7 +210,7 @@ public class DefaultPropertiesParser implements PropertiesParser {
          * @param  input Input string
          * @return       A property in the given string or {@code null} if not found
          */
-        private Property readProperty(String prevKey, String input) {
+        private Property readProperty(String input) {
             // Find the index of the first valid suffix token
             int suffix = getSuffixIndex(input);
 
@@ -240,7 +229,7 @@ public class DefaultPropertiesParser implements PropertiesParser {
             }
 
             String key = input.substring(prefix + PREFIX_TOKEN.length(), suffix);
-            String value = getPropertyValue(prevKey, key, input);
+            String value = getPropertyValue(key, input);
             return new Property(prefix, suffix + SUFFIX_TOKEN.length(), key, value);
         }
 
@@ -316,15 +305,7 @@ public class DefaultPropertiesParser implements PropertiesParser {
          * @param  input Input string (used for exception message if value not found)
          * @return       Value of the property with the given key
          */
-        private String getPropertyValue(String prevKey, String key, String input) {
-            if (key == null) {
-                return null;
-            }
-
-            boolean optional = key.startsWith(OPTIONAL_TOKEN);
-            if (optional) {
-                key = key.substring(OPTIONAL_TOKEN.length());
-            }
+        private String getPropertyValue(String key, String input) {
 
             // the key may be a function, so lets check this first
             if (propertiesComponent != null) {
@@ -332,10 +313,10 @@ public class DefaultPropertiesParser implements PropertiesParser {
                 PropertiesFunction function = propertiesComponent.getPropertiesFunction(prefix);
                 if (function != null) {
                     String remainder = StringHelper.after(key, ":");
-                    boolean remainderOptional = remainder.startsWith(OPTIONAL_TOKEN);
                     if (function.lookupFirst(remainder)) {
-                        String value = getPropertyValue(prevKey, remainder, input);
-                        if (value == null && (remainderOptional || function.optional(remainder))) {
+                        boolean optional = remainder != null && remainder.startsWith(OPTIONAL_TOKEN);
+                        String value = getPropertyValue(remainder, input);
+                        if (optional && value == null) {
                             return null;
                         }
                         // it was not possible to resolve
@@ -348,34 +329,15 @@ public class DefaultPropertiesParser implements PropertiesParser {
                     log.debug("Property with key [{}] is applied by function [{}]", key, function.getName());
                     String value = function.apply(remainder);
                     if (value == null) {
-                        if (!remainderOptional) {
-                            remainderOptional = function.optional(remainder);
-                        }
-                        if (!remainderOptional && propertiesComponent != null
-                                && propertiesComponent.isIgnoreMissingProperty()) {
-                            // property is missing, but we should ignore this and return the placeholder unresolved
-                            return UNRESOLVED_PREFIX_TOKEN + key + UNRESOLVED_SUFFIX_TOKEN;
-                        }
-                        if (!remainderOptional) {
-                            throw new IllegalArgumentException(
-                                    "Property with key [" + key + "] using function [" + function.getName() + "]"
-                                                               + " returned null value which is not allowed, from input: "
-                                                               + input);
-                        } else {
-                            if (keepUnresolvedOptional) {
-                                // mark the key as unresolved
-                                return UNRESOLVED_PREFIX_TOKEN + OPTIONAL_TOKEN + key + UNRESOLVED_SUFFIX_TOKEN;
-                            } else {
-                                return null;
-                            }
-                        }
+                        throw new IllegalArgumentException(
+                                "Property with key [" + key + "] using function [" + function.getName() + "]"
+                                                           + " returned null value which is not allowed, from input: "
+                                                           + input);
                     } else {
                         if (log.isDebugEnabled()) {
                             log.debug("Property with key [{}] applied by function [{}] -> {}", key, function.getName(),
                                     value);
                         }
-                        String k = prevKey != null ? prevKey : key;
-                        propertiesComponent.updateResolvedValue(k, value, function.getName());
                         return value;
                     }
                 }
@@ -388,26 +350,20 @@ public class DefaultPropertiesParser implements PropertiesParser {
                 key = StringHelper.before(key, GET_OR_ELSE_TOKEN);
             }
 
-            String value = doGetPropertyValue(key, defaultValue);
+            boolean optional = key != null && key.startsWith(OPTIONAL_TOKEN);
+            if (optional) {
+                key = key.substring(OPTIONAL_TOKEN.length());
+            }
+
+            String value = doGetPropertyValue(key);
             if (value == null && defaultValue != null) {
                 log.debug("Property with key [{}] not found, using default value: {}", key, defaultValue);
                 value = defaultValue;
-                for (PropertiesLookupListener listener : propertiesComponent.getPropertiesLookupListeners()) {
-                    try {
-                        listener.onLookup(key, value, defaultValue, null);
-                    } catch (Exception e) {
-                        // ignore
-                    }
-                }
             }
 
             if (value == null) {
-                if (!optional && propertiesComponent != null && propertiesComponent.isIgnoreMissingProperty()) {
-                    // property is missing, but we should ignore this and return the placeholder unresolved
-                    return UNRESOLVED_PREFIX_TOKEN + key + UNRESOLVED_SUFFIX_TOKEN;
-                }
                 if (!optional) {
-                    StringBuilder esb = new StringBuilder(256);
+                    StringBuilder esb = new StringBuilder();
                     esb.append("Property with key [").append(key).append("] ");
                     esb.append("not found in properties from text: ").append(input);
                     throw new IllegalArgumentException(esb.toString());
@@ -430,7 +386,7 @@ public class DefaultPropertiesParser implements PropertiesParser {
          * @param  key Key of the property
          * @return     Value of the property or {@code null} if not found
          */
-        private String doGetPropertyValue(String key, String defaultValue) {
+        private String doGetPropertyValue(String key) {
             if (ObjectHelper.isEmpty(key)) {
                 return parseProperty(key, null, properties);
             }
@@ -442,16 +398,16 @@ public class DefaultPropertiesParser implements PropertiesParser {
             if (local != null) {
                 value = local.getProperty(key);
                 if (value != null) {
-                    String localDefaultValue = null;
+                    String defaultValue = null;
                     String loc = location(local, key, "LocalProperties");
-                    if (local instanceof OrderedLocationProperties propSource) {
-                        Object val = propSource.getDefaultValue(key);
+                    if (local instanceof OrderedLocationProperties) {
+                        Object val = ((OrderedLocationProperties) local).getDefaultValue(key);
                         if (val != null) {
-                            localDefaultValue
+                            defaultValue
                                     = propertiesComponent.getCamelContext().getTypeConverter().tryConvertTo(String.class, val);
                         }
                     }
-                    onLookup(key, value, localDefaultValue, loc);
+                    onLookup(key, value, defaultValue, loc);
                     log.debug("Found local property: {} with value: {} to be used.", key, value);
                 }
             }
@@ -467,49 +423,41 @@ public class DefaultPropertiesParser implements PropertiesParser {
             if (value == null && envMode == PropertiesComponent.ENVIRONMENT_VARIABLES_MODE_OVERRIDE) {
                 value = lookupEnvironmentVariable(key);
                 if (value != null) {
-                    onLookup(key, value, defaultValue, "ENV");
+                    onLookup(key, value, null, "ENV");
                     log.debug("Found an OS environment property: {} with value: {} to be used.", key, value);
                 }
             }
             if (value == null && sysMode == PropertiesComponent.SYSTEM_PROPERTIES_MODE_OVERRIDE) {
                 value = System.getProperty(key);
                 if (value != null) {
-                    onLookup(key, value, defaultValue, "SYS");
+                    onLookup(key, value, null, "SYS");
                     log.debug("Found a JVM system property: {} with value: {} to be used.", key, value);
                 }
             }
 
             if (value == null && properties != null) {
-                value = properties.lookup(key, defaultValue);
+                value = properties.lookup(key);
                 if (value != null) {
                     log.debug("Found property: {} with value: {} to be used.", key, value);
-                }
-            }
-
-            if (value == null) {
-                // custom lookup in spring boot or other runtimes
-                value = customLookup(key);
-                if (value != null) {
-                    log.debug("Found property (custom lookup): {} with value: {} to be used.", key, value);
                 }
             }
 
             if (value == null && envMode == PropertiesComponent.ENVIRONMENT_VARIABLES_MODE_FALLBACK) {
                 value = lookupEnvironmentVariable(key);
                 if (value != null) {
-                    onLookup(key, value, defaultValue, "ENV");
+                    onLookup(key, value, null, "ENV");
                     log.debug("Found an OS environment property: {} with value: {} to be used.", key, value);
                 }
             }
             if (value == null && sysMode == PropertiesComponent.SYSTEM_PROPERTIES_MODE_FALLBACK) {
                 value = System.getProperty(key);
                 if (value != null) {
-                    onLookup(key, value, defaultValue, "SYS");
+                    onLookup(key, value, null, "SYS");
                     log.debug("Found a JVM system property: {} with value: {} to be used.", key, value);
                 }
             }
 
-            // parse property may return null (such as when using route templates)
+            // parse property may return null (such as when using spring boot and route templates)
             String answer = parseProperty(key, value, properties);
             if (answer == null) {
                 answer = value;
@@ -530,8 +478,8 @@ public class DefaultPropertiesParser implements PropertiesParser {
 
     private static String location(Properties prop, String name, String defaultLocation) {
         String loc = null;
-        if (prop instanceof OrderedLocationProperties olp) {
-            loc = olp.getLocation(name);
+        if (prop instanceof OrderedLocationProperties) {
+            loc = ((OrderedLocationProperties) prop).getLocation(name);
         }
         if (loc == null) {
             loc = defaultLocation;

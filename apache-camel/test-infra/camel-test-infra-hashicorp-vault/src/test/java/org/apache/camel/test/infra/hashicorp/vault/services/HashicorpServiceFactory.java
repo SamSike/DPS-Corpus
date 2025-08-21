@@ -32,8 +32,4 @@ public final class HashicorpServiceFactory {
                 .addLocalMapping(HashicorpVaultLocalContainerService::new)
                 .build();
     }
-
-    public static class HashicorpVaultLocalContainerService extends HashicorpVaultLocalContainerInfraService
-            implements HashicorpVaultService {
-    }
 }

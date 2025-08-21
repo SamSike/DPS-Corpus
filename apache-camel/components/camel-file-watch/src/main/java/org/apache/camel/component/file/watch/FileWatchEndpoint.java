@@ -16,12 +16,17 @@
  */
 package org.apache.camel.component.file.watch;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import io.methvin.watcher.hashing.FileHasher;
 import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.MultipleConsumersSupport;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
+import org.apache.camel.component.file.watch.constants.FileEventEnum;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
@@ -34,42 +39,55 @@ import org.apache.camel.support.DefaultEndpoint;
 @UriEndpoint(firstVersion = "3.0.0", scheme = "file-watch", title = "File Watch", syntax = "file-watch:path",
              category = { Category.FILE }, consumerOnly = true, headersClass = FileWatchConstants.class)
 public class FileWatchEndpoint extends DefaultEndpoint implements MultipleConsumersSupport {
-
-    @UriPath(description = "Path of directory to consume events from.")
+    @UriPath(label = "consumer", description = "Path of directory to consume events from.")
     @Metadata(required = true)
     private String path;
-    @UriParam(description = "Comma separated list of events to watch. Possible values: CREATE,MODIFY,DELETE",
+
+    @UriParam(label = "consumer",
+              enums = "CREATE,MODIFY,DELETE",
+              description = "Comma separated list of events to watch.",
               defaultValue = "CREATE,MODIFY,DELETE")
-    private String events = "CREATE,MODIFY,DELETE";
-    @UriParam(description = "Auto create directory if does not exist.", defaultValue = "true")
+    private Set<FileEventEnum> events = new HashSet<>(Arrays.asList(FileEventEnum.values()));
+
+    @UriParam(label = "consumer", description = "Auto create directory if does not exists.", defaultValue = "true")
     private boolean autoCreate = true;
-    @UriParam(description = "Watch recursive in current and child directories (including newly created directories).",
+
+    @UriParam(label = "consumer",
+              description = "Watch recursive in current and child directories (including newly created directories).",
               defaultValue = "true")
     private boolean recursive = true;
-    @UriParam(label = "advanced",
+
+    @UriParam(label = "consumer",
               description = "The number of concurrent consumers. Increase this value, if your route is slow to prevent buffering in queue.",
               defaultValue = "1")
     private int concurrentConsumers;
-    @UriParam(label = "advanced",
+
+    @UriParam(label = "consumer",
               description = "The number of threads polling WatchService. Increase this value, if you see OVERFLOW messages in log.",
               defaultValue = "1")
     private int pollThreads;
-    @UriParam(description = "ANT style pattern to match files. The file is matched against path relative to endpoint path. "
+
+    @UriParam(label = "consumer",
+              description = "ANT style pattern to match files. The file is matched against path relative to endpoint path. "
                             + "Pattern must be also relative (not starting with slash)",
               defaultValue = "**")
     private String antInclude;
-    @UriParam(label = "advanced",
+
+    @UriParam(label = "consumer",
               description = "Maximum size of queue between WatchService and consumer. Unbounded by default.",
               defaultValue = "" + Integer.MAX_VALUE)
     private int queueSize;
-    @UriParam(label = "advanced",
+
+    @UriParam(label = "consumer",
               description = "Reference to io.methvin.watcher.hashing.FileHasher. "
                             + "This prevents emitting duplicate events on some platforms. "
                             + "For working with large files and if you dont need detect multiple modifications per second per file, "
                             + "use #lastModifiedTimeFileHasher. You can also provide custom implementation in registry.",
               defaultValue = "#murmur3FFileHasher")
     private FileHasher fileHasher;
-    @UriParam(description = "Enables or disables file hashing to detect duplicate events. "
+
+    @UriParam(label = "consumer",
+              description = "Enables or disables file hashing to detect duplicate events. "
                             + "If you disable this, you can get some events multiple times on some platforms and JDKs. "
                             + "Check java.nio.file.WatchService limitations for your target platform.",
               defaultValue = "true")
@@ -99,9 +117,7 @@ public class FileWatchEndpoint extends DefaultEndpoint implements MultipleConsum
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
-        FileWatchConsumer consumer = new FileWatchConsumer(this, processor);
-        configureConsumer(consumer);
-        return consumer;
+        return new FileWatchConsumer(this, processor);
     }
 
     public String getPath() {
@@ -112,12 +128,22 @@ public class FileWatchEndpoint extends DefaultEndpoint implements MultipleConsum
         this.path = path;
     }
 
-    public String getEvents() {
+    Set<FileEventEnum> getEvents() {
         return events;
     }
 
-    public void setEvents(String events) {
+    public void setEvents(Set<FileEventEnum> events) {
         this.events = events;
+    }
+
+    @SuppressWarnings("unused") //called via reflection
+    public void setEvents(String commaSeparatedEvents) {
+        String[] stringArray = commaSeparatedEvents.split(",");
+        Set<FileEventEnum> eventsSet = new HashSet<>();
+        for (String event : stringArray) {
+            eventsSet.add(FileEventEnum.valueOf(event.trim()));
+        }
+        events = eventsSet.isEmpty() ? new HashSet<>(Arrays.asList(FileEventEnum.values())) : eventsSet;
     }
 
     public boolean isAutoCreate() {

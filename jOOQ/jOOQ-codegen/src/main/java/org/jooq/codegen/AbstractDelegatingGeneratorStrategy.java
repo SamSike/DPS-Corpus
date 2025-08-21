@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -136,11 +136,6 @@ public abstract class AbstractDelegatingGeneratorStrategy extends AbstractGenera
     }
 
     @Override
-    public String getGlobalNamesJavaClassExtends(Definition container, Class<? extends Definition> objectType) {
-        return delegate.getGlobalNamesJavaClassExtends(container, objectType);
-    }
-
-    @Override
     public String getGlobalReferencesJavaClassExtends(Definition container, Class<? extends Definition> objectType) {
         return delegate.getGlobalReferencesJavaClassExtends(container, objectType);
     }
@@ -151,11 +146,6 @@ public abstract class AbstractDelegatingGeneratorStrategy extends AbstractGenera
     }
 
     @Override
-    public List<String> getGlobalNamesJavaClassImplements(Definition container, Class<? extends Definition> objectType) {
-        return delegate.getGlobalNamesJavaClassImplements(container, objectType);
-    }
-
-    @Override
     public List<String> getGlobalReferencesJavaClassImplements(Definition container, Class<? extends Definition> objectType) {
         return delegate.getGlobalReferencesJavaClassImplements(container, objectType);
     }
@@ -163,41 +153,6 @@ public abstract class AbstractDelegatingGeneratorStrategy extends AbstractGenera
     @Override
     public List<String> getJavaClassImplements(Definition definition, Mode mode) {
         return delegate.getJavaClassImplements(definition, mode);
-    }
-
-    @Override
-    public boolean getJavaGetterOverride(Definition definition, Mode mode) {
-        return delegate.getJavaGetterOverride(definition, mode);
-    }
-
-    @Override
-    public boolean getJavaSetterOverride(Definition definition, Mode mode) {
-        return delegate.getJavaSetterOverride(definition, mode);
-    }
-
-    @Override
-    public boolean getJavaMethodOverride(Definition definition, Mode mode) {
-        return delegate.getJavaMethodOverride(definition, mode);
-    }
-
-    @Override
-    public boolean getJavaMemberOverride(Definition definition, Mode mode) {
-        return delegate.getJavaMemberOverride(definition, mode);
-    }
-
-    @Override
-    public String getGlobalNamesJavaClassName(Definition container, Class<? extends Definition> objectType) {
-        return delegate.getGlobalNamesJavaClassName(container, objectType);
-    }
-
-    @Override
-    public String getGlobalNamesJavaPackageName(Definition container, Class<? extends Definition> objectType) {
-        return delegate.getGlobalNamesJavaPackageName(container, objectType);
-    }
-
-    @Override
-    public String getGlobalNamesFileHeader(Definition container, Class<? extends Definition> objectType) {
-        return delegate.getGlobalNamesFileHeader(container, objectType);
     }
 
     @Override

@@ -16,6 +16,7 @@
  */
 package org.apache.camel.openapi;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.camel.CamelContext;
@@ -31,12 +32,17 @@ public class DefaultRestDefinitionsResolver implements RestDefinitionsResolver {
                     "Must use JmxRestDefinitionsResolver to generate rest model from another CamelContext in the same JVM");
         }
 
-        Model model = camelContext.getCamelContextExtension().getContextPlugin(Model.class);
+        Model model = camelContext.getExtension(Model.class);
         List<RestDefinition> rests = model.getRestDefinitions();
         if (rests.isEmpty()) {
             return null;
         }
         return rests;
+    }
+
+    @Override
+    public List<String> findCamelContexts() throws Exception {
+        return Collections.emptyList();
     }
 
 }

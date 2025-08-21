@@ -24,7 +24,9 @@ import org.apache.camel.spi.Metadata;
 public interface MinioConstants {
 
     int BYTE_ARRAY_LENGTH = 1024;
-    @Metadata(description = "*Consumer:* The name of the bucket in which this object is contained.",
+    @Metadata(description = "*Producer:* The bucket Name which this object will be stored or which will be used for the current operation. "
+                            +
+                            "*Consumer:* The name of the bucket in which this object is contained.",
               javaType = "String")
     String BUCKET_NAME = "CamelMinioBucketName";
     @Metadata(label = "producer", description = "The bucket Destination Name which will be used for the current operation.",
@@ -114,9 +116,4 @@ public interface MinioConstants {
     String OFFSET = "CamelMinioOffset";
     @Metadata(label = "producer", description = "The length", javaType = "String")
     String LENGTH = "CamelMinioLength";
-    @Metadata(label = "producer", description = "Expiration of minio presigned url in Seconds", javaType = "int")
-    String PRESIGNED_URL_EXPIRATION_TIME = "CamelMinioPresignedURLExpirationTime";
-    @Metadata(description = "The bucket Name to override which this object will be stored or which will be used for the current operation or in which this object is contained.",
-              javaType = "String")
-    String OVERRIDE_BUCKET_NAME = "CamelMinioOverrideBucketName";
 }

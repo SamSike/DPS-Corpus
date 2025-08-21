@@ -3,7 +3,9 @@
  * a ReactiveTransactionManager for a single ConnectionFactory,
  * and various simple ConnectionFactory implementations.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.r2dbc.connection;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.http.codec.multipart;
 
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,10 +27,12 @@ import org.springframework.core.codec.Hints;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.core.io.buffer.PooledDataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ReactiveHttpOutputMessage;
 import org.springframework.http.codec.HttpMessageWriter;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link HttpMessageWriter} for writing with {@link Part}. This can be useful
@@ -46,21 +47,6 @@ public class PartHttpMessageWriter extends MultipartWriterSupport implements Htt
 
 	public PartHttpMessageWriter() {
 		super(MultipartHttpMessageReader.MIME_TYPES);
-	}
-
-	@Override
-	public boolean canWrite(ResolvableType elementType, @Nullable MediaType mediaType) {
-		if (Part.class.isAssignableFrom(elementType.toClass())) {
-			if (mediaType == null) {
-				return true;
-			}
-			for (MediaType supportedMediaType : getWritableMediaTypes()) {
-				if (supportedMediaType.isCompatibleWith(mediaType)) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 
@@ -81,7 +67,7 @@ public class PartHttpMessageWriter extends MultipartWriterSupport implements Htt
 		Flux<DataBuffer> body = Flux.from(parts)
 				.concatMap(part -> encodePart(boundary, part, outputMessage.bufferFactory()))
 				.concatWith(generateLastLine(boundary, outputMessage.bufferFactory()))
-				.doOnDiscard(DataBuffer.class, DataBufferUtils::release);
+				.doOnDiscard(PooledDataBuffer.class, DataBufferUtils::release);
 
 		if (logger.isDebugEnabled()) {
 			body = body.doOnNext(buffer -> Hints.touchDataBuffer(buffer, hints, logger));
@@ -94,9 +80,9 @@ public class PartHttpMessageWriter extends MultipartWriterSupport implements Htt
 		HttpHeaders headers = new HttpHeaders(part.headers());
 
 		String name = part.name();
-		if (!headers.containsHeader(HttpHeaders.CONTENT_DISPOSITION)) {
+		if (!headers.containsKey(HttpHeaders.CONTENT_DISPOSITION)) {
 			headers.setContentDispositionFormData(name,
-					(part instanceof FilePart filePart ? filePart.filename() : null));
+					(part instanceof FilePart ? ((FilePart) part).filename() : null));
 		}
 
 		return Flux.concat(

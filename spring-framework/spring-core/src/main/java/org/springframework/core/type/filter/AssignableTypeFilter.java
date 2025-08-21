@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.core.type.filter;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -56,16 +55,19 @@ public class AssignableTypeFilter extends AbstractTypeHierarchyTraversingFilter 
 	}
 
 	@Override
-	protected @Nullable Boolean matchSuperClass(String superClassName) {
+	@Nullable
+	protected Boolean matchSuperClass(String superClassName) {
 		return matchTargetType(superClassName);
 	}
 
 	@Override
-	protected @Nullable Boolean matchInterface(String interfaceName) {
+	@Nullable
+	protected Boolean matchInterface(String interfaceName) {
 		return matchTargetType(interfaceName);
 	}
 
-	protected @Nullable Boolean matchTargetType(String typeName) {
+	@Nullable
+	protected Boolean matchTargetType(String typeName) {
 		if (this.targetType.getName().equals(typeName)) {
 			return true;
 		}

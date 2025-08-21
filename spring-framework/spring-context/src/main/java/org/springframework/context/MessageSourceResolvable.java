@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package org.springframework.context;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Interface for objects that are suitable for message resolution in a
@@ -37,7 +37,8 @@ public interface MessageSourceResolvable {
 	 * they should get tried. The last code will therefore be the default one.
 	 * @return a String array of codes which are associated with this message
 	 */
-	String @Nullable [] getCodes();
+	@Nullable
+	String[] getCodes();
 
 	/**
 	 * Return the array of arguments to be used to resolve this message.
@@ -46,7 +47,8 @@ public interface MessageSourceResolvable {
 	 * placeholders within the message text
 	 * @see java.text.MessageFormat
 	 */
-	default Object @Nullable [] getArguments() {
+	@Nullable
+	default Object[] getArguments() {
 		return null;
 	}
 
@@ -59,7 +61,8 @@ public interface MessageSourceResolvable {
 	 * for this particular message.
 	 * @return the default message, or {@code null} if no default
 	 */
-	default @Nullable String getDefaultMessage() {
+	@Nullable
+	default String getDefaultMessage() {
 		return null;
 	}
 

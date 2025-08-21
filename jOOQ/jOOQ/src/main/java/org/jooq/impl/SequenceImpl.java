@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,6 +39,7 @@ package org.jooq.impl;
 
 import static org.jooq.Clause.SEQUENCE;
 import static org.jooq.Clause.SEQUENCE_REFERENCE;
+import static org.jooq.SQLDialect.CUBRID;
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
 // ...
@@ -58,10 +59,10 @@ import static org.jooq.impl.Names.N_CURRVAL;
 import static org.jooq.impl.Names.N_GENERATE_SERIES;
 import static org.jooq.impl.Names.N_GEN_ID;
 import static org.jooq.impl.Names.N_NEXTVAL;
+import static org.jooq.impl.Tools.getMappedSchema;
 
 import org.jooq.Catalog;
 import org.jooq.Clause;
-import org.jooq.Comment;
 import org.jooq.Configuration;
 import org.jooq.Context;
 import org.jooq.DataType;
@@ -73,7 +74,12 @@ import org.jooq.SQLDialect;
 import org.jooq.Schema;
 import org.jooq.Select;
 import org.jooq.Sequence;
+import org.jooq.exception.SQLDialectNotSupportedException;
+import org.jooq.impl.QOM.UEmpty;
 import org.jooq.impl.QOM.UNotYetImplemented;
+import org.jooq.impl.QOM.UTransient;
+
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A common base class for sequences
@@ -93,6 +99,7 @@ implements
 
     private static final Clause[]     CLAUSES          = { SEQUENCE, SEQUENCE_REFERENCE };
 
+    private final boolean             nameIsPlainSQL;
     private final Schema              schema;
     private final Field<T>            startWith;
     private final Field<T>            incrementBy;
@@ -103,15 +110,24 @@ implements
     private final SequenceFunction<T> currval;
     private final SequenceFunction<T> nextval;
 
-    SequenceImpl(Name name, Schema schema, Comment comment, DataType<T> type) {
-        this(name, schema, comment, type, null, null, null, null, false, null);
+    @Deprecated
+    public SequenceImpl(String name, Schema schema, DataType<T> type) {
+        this(name, schema, type, false);
+    }
+
+    SequenceImpl(String name, Schema schema, DataType<T> type, boolean nameIsPlainSQL) {
+        this(DSL.name(name), schema, type, nameIsPlainSQL);
+    }
+
+    SequenceImpl(Name name, Schema schema, DataType<T> type, boolean nameIsPlainSQL) {
+        this(name, schema, type, nameIsPlainSQL, null, null, null, null, false, null);
     }
 
     SequenceImpl(
         Name name,
         Schema schema,
-        Comment comment,
         DataType<T> type,
+        boolean nameIsPlainSQL,
         Field<T> startWith,
         Field<T> incrementBy,
         Field<T> minvalue,
@@ -119,9 +135,11 @@ implements
         boolean cycle,
         Field<T> cache
     ) {
-        super(qualify(schema, name), comment, type);
+        super(qualify(schema, name), CommentImpl.NO_COMMENT, type);
 
         this.schema = schema;
+        this.nameIsPlainSQL = nameIsPlainSQL;
+
         this.startWith = startWith;
         this.incrementBy = incrementBy;
         this.minvalue = minvalue;
@@ -233,7 +251,6 @@ implements
 
 
 
-                case DUCKDB:
                 case POSTGRES:
                 case YUGABYTEDB:
                     ctx.visit(method.keyword).sql('(');
@@ -300,8 +317,8 @@ implements
 
         @Override
         public boolean equals(Object that) {
-            if (that instanceof SequenceFunction<?> s)
-                return method == s.method && sequence.equals(s.sequence);
+            if (that instanceof SequenceFunction)
+                return method == ((SequenceFunction<?>) that).method && sequence.equals(((SequenceFunction<?>) that).sequence);
             else
                 return super.equals(that);
         }
@@ -326,9 +343,16 @@ implements
 
 
 
-        QualifiedImpl.acceptMappedSchemaPrefix(ctx, getSchema());
+        Schema mappedSchema = getMappedSchema(ctx, schema);
 
-        ctx.visit(getUnqualifiedName());
+        if (mappedSchema != null && !"".equals(mappedSchema.getName()) && ctx.family() != CUBRID)
+            ctx.visit(mappedSchema)
+               .sql('.');
+
+        if (nameIsPlainSQL)
+            ctx.sql(getName());
+        else
+            ctx.visit(getUnqualifiedName());
     }
 
     @Override
@@ -351,8 +375,8 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof SequenceImpl<?> s)
-            return getQualifiedName().equals(s.getQualifiedName());
+        if (that instanceof SequenceImpl)
+            return getQualifiedName().equals(((SequenceImpl<?>) that).getQualifiedName());
         else
             return super.equals(that);
     }

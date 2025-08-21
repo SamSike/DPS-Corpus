@@ -53,10 +53,10 @@ public class ErrorHandlerWrappedEachNodeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // use dead letter channel that supports redeliveries
                 errorHandler(deadLetterChannel("mock:error").maximumRedeliveries(3).redeliveryDelay(0).logStackTrace(false));
 
@@ -66,21 +66,21 @@ public class ErrorHandlerWrappedEachNodeTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("foo", new MyFooBean());
         return jndi;
     }
 
     public static final class MyFooBean {
 
-        public void kaboom() {
+        public void kaboom() throws Exception {
             if (kaboom++ < 2) {
                 throw new IllegalArgumentException("Kaboom");
             }
         }
 
-        public String hi(String payload) {
+        public String hi(String payload) throws Exception {
             hi++;
             return "Hi " + payload;
         }

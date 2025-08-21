@@ -26,8 +26,7 @@ import org.jolokia.jvmagent.client.util.VirtualMachineHandlerOperations;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
-@Command(name = "jolokia", description = "Attach Jolokia JVM Agent to a running Camel integration", sortOptions = false,
-         showDefaultValues = true)
+@Command(name = "jolokia", description = "Attach Jolokia JVM Agent to a running Camel integration")
 public class Jolokia extends ProcessBaseCommand {
 
     @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "1")
@@ -37,10 +36,6 @@ public class Jolokia extends ProcessBaseCommand {
                         description = "Stops the Jolokia JVM Agent in the running Camel integration")
     boolean stop;
 
-    @CommandLine.Option(names = { "--port" },
-                        description = "To use a specific port number when attaching Jolokia JVM Agent (default a free port is found in range 8778-9999)")
-    int port;
-
     private volatile long pid;
 
     public Jolokia(CamelJBangMain main) {
@@ -48,13 +43,13 @@ public class Jolokia extends ProcessBaseCommand {
     }
 
     @Override
-    public Integer doCall() throws Exception {
+    public Integer call() throws Exception {
         List<Long> pids = findPids(name);
         if (pids.isEmpty()) {
             return 0;
         } else if (pids.size() > 1) {
-            printer().println("Name or pid " + name + " matches " + pids.size()
-                              + " running Camel integrations. Specify a name or PID that matches exactly one.");
+            System.out.println("Name or pid " + name + " matches " + pids.size()
+                               + " running Camel integrations. Specify a name or PID that matches exactly one.");
             return 0;
         }
 
@@ -63,15 +58,11 @@ public class Jolokia extends ProcessBaseCommand {
         try {
             OptionsAndArgs options;
             if (stop) {
-                options = new OptionsAndArgs(null, "stop", Long.toString(pid));
+                options = new OptionsAndArgs(null, "stop", "" + pid);
             } else {
-                long p = port;
-                if (p <= 0) {
-                    // find a new free port to use when starting a new connection
-                    p = AvailablePortFinder.getNextAvailable(8778, 10000);
-                }
-                options = new OptionsAndArgs(
-                        null, "--port", Long.toString(p), "--discoveryEnabled", "true", "start", Long.toString(pid));
+                // find a new free port to use when starting a new connection
+                long port = AvailablePortFinder.getNextAvailable(8778, 10000);
+                options = new OptionsAndArgs(null, "--port", "" + port, "start", "" + pid);
             }
             VirtualMachineHandlerOperations vmHandler = PlatformUtils.createVMAccess(options);
             CommandDispatcher dispatcher = new CommandDispatcher(options);
@@ -85,7 +76,7 @@ public class Jolokia extends ProcessBaseCommand {
                 }
             }
         } catch (Exception e) {
-            printer().printErr("Cannot execute jolokia command due: " + e.getMessage());
+            System.err.println("Cannot execute jolokia command due: " + e.getMessage());
             exitCode = 1;
         }
 

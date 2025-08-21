@@ -166,7 +166,7 @@ public final class TemplatedRouteBuilder {
         try {
             if (handler != null) {
                 RouteTemplateDefinition def
-                        = ((ModelCamelContext) camelContext).getRouteTemplateDefinition(routeTemplateId);
+                        = camelContext.adapt(ModelCamelContext.class).getRouteTemplateDefinition(routeTemplateId);
                 if (def == null) {
                     throw new IllegalArgumentException("Cannot find RouteTemplate with id " + routeTemplateId);
                 }

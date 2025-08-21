@@ -18,6 +18,7 @@ package org.apache.camel.component.azure.storage.blob.operations;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.azure.core.http.HttpHeaders;
 import com.azure.storage.blob.models.BlobItem;
@@ -88,7 +89,7 @@ class BlobContainerOperationsTest {
 
         @SuppressWarnings("unchecked")
         final List<BlobItem> body = (List<BlobItem>) response.getBody();
-        final List<String> items = body.stream().map(BlobItem::getName).toList();
+        final List<String> items = body.stream().map(BlobItem::getName).collect(Collectors.toList());
 
         assertTrue(items.contains("item-1"));
         assertTrue(items.contains("item-2"));
@@ -111,7 +112,7 @@ class BlobContainerOperationsTest {
 
         @SuppressWarnings("unchecked")
         final List<BlobItem> body = (List<BlobItem>) response.getBody();
-        final List<String> items = body.stream().map(BlobItem::getName).toList();
+        final List<String> items = body.stream().map(BlobItem::getName).collect(Collectors.toList());
         assertEquals(3, items.size());
         assertTrue(items.contains("invoice1.pdf"));
         assertTrue(items.contains("invoice2.pdf"));

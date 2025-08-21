@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -95,7 +95,6 @@ public class DDLDatabase extends AbstractInterpretingDatabase {
     protected void export() throws Exception {
         Settings defaultSettings = new Settings();
         String scripts = getProperties().getProperty("scripts");
-        String sql = getProperties().getProperty("sql");
         String encoding = getProperties().getProperty("encoding", "UTF-8");
         String sort = getProperties().getProperty("sort", "semantic").toLowerCase();
         final String defaultNameCase = getProperties().getProperty("defaultNameCase", "as_is").toUpperCase();
@@ -105,9 +104,8 @@ public class DDLDatabase extends AbstractInterpretingDatabase {
         logExecutedQueries = !"false".equalsIgnoreCase(getProperties().getProperty("logExecutedQueries"));
         logExecutionResults = !"false".equalsIgnoreCase(getProperties().getProperty("logExecutionResults"));
 
-        if (isBlank(scripts) && isBlank(sql)) {
+        if (isBlank(scripts)) {
             scripts = "";
-            sql = "";
             log.warn("No scripts defined", "It is recommended that you provide an explicit script directory to scan");
         }
 
@@ -129,7 +127,7 @@ public class DDLDatabase extends AbstractInterpretingDatabase {
                 ctx.configuration().set(new VisitListener() {
                     @Override
                     public void visitStart(VisitContext vc) {
-                        if (vc.queryPart() instanceof Name n) {
+                        if (vc.queryPart() instanceof Name) { Name n = (Name) vc.queryPart();
                             Name[] parts = n.parts();
                             boolean changed = false;
 
@@ -154,19 +152,15 @@ public class DDLDatabase extends AbstractInterpretingDatabase {
                 });
             }
 
-            if (!isBlank(sql))
-                load(ctx, Source.of(sql));
-
-            if (!isBlank(scripts))
-                new FilePattern()
-                        .encoding(encoding)
-                        .basedir(new File(getBasedir()))
-                        .pattern(scripts)
-                        .sort(Sort.of(sort))
-                        .load(source -> DDLDatabase.this.load(ctx, source));
+            new FilePattern()
+                    .encoding(encoding)
+                    .basedir(new File(getBasedir()))
+                    .pattern(scripts)
+                    .sort(Sort.of(sort))
+                    .load(source -> DDLDatabase.this.load(ctx, source));
         }
         catch (ParserException e) {
-            log.error("An exception occurred while parsing script source : " + scripts + ". Please report this error to https://jooq.org/bug", e);
+            log.error("An exception occurred while parsing script source : " + scripts + ". Please report this error to https://github.com/jOOQ/jOOQ/issues/new", e);
             throw e;
         }
     }
@@ -234,7 +228,7 @@ public class DDLDatabase extends AbstractInterpretingDatabase {
                 + "- The jOOQ parser doesn't understand your SQL\n"
                 + "- The jOOQ DDL simulation logic (translating to H2) cannot simulate your SQL\n"
                 + "\n"
-                + "If you think this is a bug or a feature worth requesting, please report it here: https://jooq.org/bug\n"
+                + "If you think this is a bug or a feature worth requesting, please report it here: https://github.com/jOOQ/jOOQ/issues/new/choose\n"
                 + "\n"
                 + "As a workaround, you can use the Settings.parseIgnoreComments syntax documented here:\n"
                 + "https://www.jooq.org/doc/latest/manual/sql-building/dsl-context/custom-settings/settings-parser/");

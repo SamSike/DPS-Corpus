@@ -32,7 +32,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class CatalogMappingType implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlElement(required = true, defaultValue = "")
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String inputCatalog = "";
@@ -89,7 +89,7 @@ public class CatalogMappingType implements Serializable, XMLAppendable
     }
 
     /**
-     * See also {@link Database#isOutputCatalogToDefault()}
+     * Sets the value of the outputCatalogToDefault property.
      * 
      * @param value
      *     allowed object is
@@ -129,10 +129,6 @@ public class CatalogMappingType implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * See also {@link Database#isOutputCatalogToDefault()}
-     * 
-     */
     public CatalogMappingType withOutputCatalogToDefault(Boolean value) {
         setOutputCatalogToDefault(value);
         return this;
@@ -213,8 +209,8 @@ public class CatalogMappingType implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((schemata == null)||schemata.isEmpty()) {
-            if ((other.schemata!= null)&&(!other.schemata.isEmpty())) {
+        if (schemata == null) {
+            if (other.schemata!= null) {
                 return false;
             }
         } else {
@@ -232,7 +228,7 @@ public class CatalogMappingType implements Serializable, XMLAppendable
         result = ((prime*result)+((inputCatalog == null)? 0 :inputCatalog.hashCode()));
         result = ((prime*result)+((outputCatalog == null)? 0 :outputCatalog.hashCode()));
         result = ((prime*result)+((outputCatalogToDefault == null)? 0 :outputCatalogToDefault.hashCode()));
-        result = ((prime*result)+(((schemata == null)||schemata.isEmpty())? 0 :schemata.hashCode()));
+        result = ((prime*result)+((schemata == null)? 0 :schemata.hashCode()));
         return result;
     }
 

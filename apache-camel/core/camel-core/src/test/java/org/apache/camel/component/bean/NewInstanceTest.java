@@ -22,6 +22,7 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.processor.BeanRouteTest;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.support.DefaultRegistry;
 import org.apache.camel.support.jndi.JndiBeanRepository;
@@ -31,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class NewInstanceTest extends ContextTestSupport {
-    private static final Logger LOG = LoggerFactory.getLogger(NewInstanceTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BeanRouteTest.class);
     protected JndiContext jndiContext;
 
     @Test
@@ -51,7 +52,7 @@ public class NewInstanceTest extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
+    protected Registry createRegistry() throws Exception {
         jndiContext = new JndiContext();
         jndiContext.bind("myBean", new MyBean());
         return new DefaultRegistry(new JndiBeanRepository(jndiContext));
@@ -68,7 +69,7 @@ public class NewInstanceTest extends ContextTestSupport {
 
     public static class MyBean {
         private static int counter;
-        private final int id;
+        private int id;
 
         public MyBean() {
             id = generateId();

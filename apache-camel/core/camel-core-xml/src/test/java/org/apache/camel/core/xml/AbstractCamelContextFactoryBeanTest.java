@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.camel.ExtendedCamelContext;
@@ -29,6 +29,7 @@ import org.apache.camel.Service;
 import org.apache.camel.TypeConverter;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.converter.DefaultTypeConverter;
+import org.apache.camel.impl.engine.DefaultPackageScanClassResolver;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.spi.CamelBeanPostProcessor;
 import org.apache.camel.spi.ExecutorServiceManager;
@@ -37,9 +38,9 @@ import org.apache.camel.spi.Injector;
 import org.apache.camel.spi.ManagementNameStrategy;
 import org.apache.camel.spi.RuntimeEndpointRegistry;
 import org.apache.camel.support.ObjectHelper;
-import org.apache.camel.support.scan.DefaultPackageScanClassResolver;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.Invocation;
 
 import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
@@ -50,15 +51,16 @@ import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 public class AbstractCamelContextFactoryBeanTest {
 
     // any properties (abstract methods in AbstractCamelContextFactoryBean that
     // return String and receive no arguments) that do not support property
     // placeholders
-    final Set<String> propertiesThatAreNotPlaceholdered = Collections.singleton("{{getErrorHandlerRef}}");
+    Set<String> propertiesThatAreNotPlaceholdered = Collections.singleton("{{getErrorHandlerRef}}");
 
-    final TypeConverter typeConverter = new DefaultTypeConverter(
+    TypeConverter typeConverter = new DefaultTypeConverter(
             new DefaultPackageScanClassResolver(),
             new Injector() {
                 @Override
@@ -72,11 +74,6 @@ public class AbstractCamelContextFactoryBeanTest {
                 }
 
                 @Override
-                public <T> T newInstance(Class<T> type, Class<?> factoryClass, String factoryMethod) {
-                    return null;
-                }
-
-                @Override
                 public <T> T newInstance(Class<T> type, boolean postProcessBean) {
                     return ObjectHelper.newInstance(type);
                 }
@@ -85,10 +82,10 @@ public class AbstractCamelContextFactoryBeanTest {
                 public boolean supportsAutoWiring() {
                     return false;
                 }
-            }, false, false);
+            }, false);
 
     // properties that should return value that can be converted to boolean
-    final Set<String> valuesThatReturnBoolean = new HashSet<>(
+    Set<String> valuesThatReturnBoolean = new HashSet<>(
             asList("{{getStreamCache}}", "{{getDebug}}", "{{getTrace}}", "{{getBacklogTrace}}",
                     "{{getMessageHistory}}", "{{getLogMask}}", "{{getLogExhaustedMessageBody}}",
                     "{{getCaseInsensitiveHeaders}}",
@@ -99,19 +96,20 @@ public class AbstractCamelContextFactoryBeanTest {
                     "{{getInflightRepositoryBrowseEnabled}}"));
 
     // properties that should return value that can be converted to long
-    final Set<String> valuesThatReturnLong = new HashSet<>(List.of("{{getDelayer}}"));
+    Set<String> valuesThatReturnLong = new HashSet<>(asList("{{getDelayer}}"));
 
-    public AbstractCamelContextFactoryBeanTest() {
+    public AbstractCamelContextFactoryBeanTest() throws Exception {
         ((Service) typeConverter).start();
     }
 
     @Test
     public void shouldSupportPropertyPlaceholdersOnAllProperties() throws Exception {
-        final DefaultCamelContext context = mock(DefaultCamelContext.class);
+        final Set<Invocation> invocations = new LinkedHashSet<>();
 
-        final ExtendedCamelContext extendedCamelContext = mock(ExtendedCamelContext.class);
+        final DefaultCamelContext context = mock(DefaultCamelContext.class,
+                withSettings().invocationListeners(i -> invocations.add((Invocation) i.getInvocation())));
 
-        when(context.getCamelContextExtension()).thenReturn(extendedCamelContext);
+        when(context.adapt(ExtendedCamelContext.class)).thenReturn(context);
 
         // program the property resolution in context mock
         when(context.resolvePropertyPlaceholders(anyString())).thenAnswer(invocation -> {
@@ -136,8 +134,7 @@ public class AbstractCamelContextFactoryBeanTest {
         when(context.getManagementNameStrategy()).thenReturn(mock(ManagementNameStrategy.class));
         when(context.getExecutorServiceManager()).thenReturn(mock(ExecutorServiceManager.class));
         when(context.getInflightRepository()).thenReturn(mock(InflightRepository.class));
-        when(context.getCamelContextExtension().getContextPlugin(CamelBeanPostProcessor.class))
-                .thenReturn(mock(CamelBeanPostProcessor.class));
+        when(context.getBeanPostProcessor()).thenReturn(mock(CamelBeanPostProcessor.class));
 
         @SuppressWarnings("unchecked")
         final AbstractCamelContextFactoryBean<ModelCamelContext> factory = mock(AbstractCamelContextFactoryBean.class);
@@ -196,4 +193,18 @@ public class AbstractCamelContextFactoryBeanTest {
 
         return expectedPropertiesToBeResolved;
     }
+
+    static boolean shouldProvidePropertyPlaceholderSupport(final Method method) {
+        // all abstract getter methods that return String are possibly returning
+        // strings that contain property placeholders
+
+        final boolean isAbstract = Modifier.isAbstract(method.getModifiers());
+        final boolean isGetter = method.getName().startsWith("get");
+        final Class<?> returnType = method.getReturnType();
+
+        final boolean isCompatibleReturnType = String.class.isAssignableFrom(returnType);
+
+        return isAbstract && isGetter && isCompatibleReturnType;
+    }
+
 }

@@ -57,12 +57,12 @@ public class FromRestUriPrefixTest extends FromRestGetTest {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 restConfiguration().host("localhost");
-                // we have logic to clean up those paths so there is only one /
+                // we have logic to cleanup those paths so there is only one /
                 // between the paths
                 rest("/say/").get("/hello").to("direct:hello").get("/bye").consumes("application/json").to("direct:bye")
                         .post("/hi").to("mock:update");

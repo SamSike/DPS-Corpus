@@ -45,11 +45,11 @@ public class ZendeskComponent extends AbstractApiComponent<ZendeskApiName, Zende
     private Zendesk zendesk;
 
     public ZendeskComponent() {
-        super(ZendeskApiName.class, ZendeskApiCollection.getCollection());
+        super(ZendeskEndpoint.class, ZendeskApiName.class, ZendeskApiCollection.getCollection());
     }
 
     public ZendeskComponent(CamelContext context) {
-        super(context, ZendeskApiName.class, ZendeskApiCollection.getCollection());
+        super(context, ZendeskEndpoint.class, ZendeskApiName.class, ZendeskApiCollection.getCollection());
     }
 
     @Override

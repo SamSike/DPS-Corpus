@@ -1,7 +1,9 @@
 /**
  * JSON encoder and decoder support.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.http.codec.json;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

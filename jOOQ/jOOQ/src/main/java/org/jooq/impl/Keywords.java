@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -62,12 +62,10 @@ final class Keywords {
     static final Keyword K_ALTER_TABLE              = keyword("alter table");
     static final Keyword K_ALWAYS                   = keyword("always");
     static final Keyword K_AND                      = keyword("and");
-    static final Keyword K_ANTI_JOIN                = keyword("anti join");
     static final Keyword K_ARRAY                    = keyword("array");
     static final Keyword K_AS                       = keyword("as");
     static final Keyword K_AS_OF                    = keyword("as of");
     static final Keyword K_ATOMIC                   = keyword("atomic");
-    static final Keyword K_AUTHENTICATION           = keyword("authentication");
     static final Keyword K_AUTO                     = keyword("auto");
     static final Keyword K_AUTOINCREMENT            = keyword("autoincrement");
     static final Keyword K_AUTO_INCREMENT           = keyword("auto_increment");
@@ -79,7 +77,6 @@ final class Keywords {
     static final Keyword K_BETWEEN                  = keyword("between");
     static final Keyword K_BINARY                   = keyword("binary");
     static final Keyword K_BLOB                     = keyword("blob");
-    static final Keyword K_BLOCK                    = keyword("block");
     static final Keyword K_BOOLEAN                  = keyword("boolean");
     static final Keyword K_BOTH                     = keyword("both");
     static final Keyword K_BREAK                    = keyword("break");
@@ -99,7 +96,6 @@ final class Keywords {
     static final Keyword K_COLUMN                   = keyword("column");
     static final Keyword K_COLUMNS                  = keyword("columns");
     static final Keyword K_COMMENT                  = keyword("comment");
-    static final Keyword K_COMMIT                   = keyword("commit");
     static final Keyword K_CONNECT_BY               = keyword("connect by");
     static final Keyword K_CONSTRAINT               = keyword("constraint");
     static final Keyword K_CONSTRAINTS              = keyword("constraints");
@@ -107,17 +103,13 @@ final class Keywords {
     static final Keyword K_CONTAINS                 = keyword("contains");
     static final Keyword K_CONTENT                  = keyword("content");
     static final Keyword K_CONTINUE                 = keyword("continue");
-    static final Keyword K_CONVERSION               = keyword("conversion");
-    static final Keyword K_COUNT                    = keyword("count");
     static final Keyword K_CREATE                   = keyword("create");
-    static final Keyword K_CUBE                     = keyword("cube");
+    static final Keyword K_CROSS_JOIN_LATERAL       = keyword("cross join lateral");
     static final Keyword K_CURRENT                  = keyword("current");
     static final Keyword K_CURRENT_ROW              = keyword("current row");
     static final Keyword K_CURRENT_SCHEMA           = keyword("current_schema");
     static final Keyword K_CURRENT_VALUE_FOR        = keyword("current value for");
     static final Keyword K_CURRVAL                  = keyword("currval");
-    static final Keyword K_CURSOR                   = keyword("cursor");
-    static final Keyword K_CURSORS                  = keyword("cursors");
     static final Keyword K_CYCLE                    = keyword("cycle");
     static final Keyword K_DATA                     = keyword("data");
     static final Keyword K_DATABASE                 = keyword("database");
@@ -132,7 +124,6 @@ final class Keywords {
     static final Keyword K_DECLARE                  = keyword("declare");
     static final Keyword K_DEFAULT                  = keyword("default");
     static final Keyword K_DEFAULT_VALUES           = keyword("default values");
-    static final Keyword K_DEFERRED                 = keyword("deferred");
     static final Keyword K_DEFINE                   = keyword("define");
     static final Keyword K_DELETE                   = keyword("delete");
     static final Keyword K_DENSE_RANK               = keyword("dense_rank");
@@ -149,7 +140,11 @@ final class Keywords {
     static final Keyword K_DROP_COLUMN              = keyword("drop column");
     static final Keyword K_DROP_CONSTRAINT          = keyword("drop constraint");
     static final Keyword K_DROP_DEFAULT             = keyword("drop default");
+    static final Keyword K_DROP_INDEX               = keyword("drop index");
     static final Keyword K_DROP_NOT_NULL            = keyword("drop not null");
+    static final Keyword K_DROP_SCHEMA              = keyword("drop schema");
+    static final Keyword K_DROP_TABLE               = keyword("drop table");
+    static final Keyword K_DROP_VIEW                = keyword("drop view");
     static final Keyword K_DUAL                     = keyword("dual");
     static final Keyword K_EACH                     = keyword("each");
     static final Keyword K_ELEMENTS                 = keyword("elements");
@@ -165,7 +160,6 @@ final class Keywords {
     static final Keyword K_END_LOOP                 = keyword("end loop");
     static final Keyword K_END_TRY                  = keyword("end try");
     static final Keyword K_ENFORCED                 = keyword("enforced");
-    static final Keyword K_ENGINE                   = keyword("engine");
     static final Keyword K_ENUM                     = keyword("enum");
     static final Keyword K_ERROR                    = keyword("error");
     static final Keyword K_ESCAPE                   = keyword("escape");
@@ -178,11 +172,9 @@ final class Keywords {
     static final Keyword K_EXECUTE_IMMEDIATE        = keyword("execute immediate");
     static final Keyword K_EXECUTE_STATEMENT        = keyword("execute statement");
     static final Keyword K_EXIST                    = keyword("exist");
-    static final Keyword K_EXISTING                 = keyword("existing");
     static final Keyword K_EXISTS                   = keyword("exists");
     static final Keyword K_EXIT                     = keyword("exit");
     static final Keyword K_EXPLICIT                 = keyword("explicit");
-    static final Keyword K_EXPLODE                  = keyword("explode");
     static final Keyword K_FALSE                    = keyword("false");
     static final Keyword K_FETCH_FIRST              = keyword("fetch first");
     static final Keyword K_FETCH_NEXT               = keyword("fetch next");
@@ -195,21 +187,18 @@ final class Keywords {
     static final Keyword K_FOREIGN_KEY              = keyword("foreign key");
     static final Keyword K_FORMAT                   = keyword("format");
     static final Keyword K_FOR_PORTION_OF           = keyword("for portion of");
-    static final Keyword K_FRACTION                 = keyword("fraction");
     static final Keyword K_FROM                     = keyword("from");
     static final Keyword K_FUNCTION                 = keyword("function");
     static final Keyword K_GENERATED                = keyword("generated");
     static final Keyword K_GEOGRAPHY                = keyword("geography");
     static final Keyword K_GEOMETRY                 = keyword("geometry");
-    static final Keyword K_GLOBAL                   = keyword("global");
+    static final Keyword K_GLOBAL_TEMPORARY         = keyword("global temporary");
     static final Keyword K_GOTO                     = keyword("goto");
     static final Keyword K_GRANT                    = keyword("grant");
     static final Keyword K_GRANT_OPTION_FOR         = keyword("grant option for");
     static final Keyword K_GROUPING_SETS            = keyword("grouping sets");
     static final Keyword K_GROUP_BY                 = keyword("group by");
     static final Keyword K_HAVING                   = keyword("having");
-    static final Keyword K_HIDDEN                   = keyword("hidden");
-    static final Keyword K_HOLDLOCK                 = keyword("holdlock");
     static final Keyword K_HOUR                     = keyword("hour");
     static final Keyword K_HOUR_TO_SECOND           = keyword("hour to second");
     static final Keyword K_IDENTITY                 = keyword("identity");
@@ -220,13 +209,11 @@ final class Keywords {
     static final Keyword K_IGNORE_NULLS             = keyword("ignore nulls");
     static final Keyword K_IMMEDIATE                = keyword("immediate");
     static final Keyword K_IMMUTABLE                = keyword("immutable");
-    static final Keyword K_IMPLICITLY               = keyword("implicitly");
     static final Keyword K_IN                       = keyword("in");
     static final Keyword K_INCLUDE                  = keyword("include");
     static final Keyword K_INCLUDE_NULL_VALUES      = keyword("include_null_values");
     static final Keyword K_INCREMENT_BY             = keyword("increment by");
     static final Keyword K_INDEX                    = keyword("index");
-    static final Keyword K_INITIALLY                = keyword("initially");
     static final Keyword K_INLINE                   = keyword("inline");
     static final Keyword K_INOUT                    = keyword("inout");
     static final Keyword K_INSERT                   = keyword("insert");
@@ -234,7 +221,6 @@ final class Keywords {
     static final Keyword K_INT                      = keyword("int");
     static final Keyword K_INTERVAL                 = keyword("interval");
     static final Keyword K_INTO                     = keyword("into");
-    static final Keyword K_INVISIBLE                = keyword("invisible");
     static final Keyword K_IS                       = keyword("is");
     static final Keyword K_IS_DOCUMENT              = keyword("is document");
     static final Keyword K_IS_JSON                  = keyword("is json");
@@ -254,6 +240,8 @@ final class Keywords {
     static final Keyword K_LATERAL                  = keyword("lateral");
     static final Keyword K_LEADING                  = keyword("leading");
     static final Keyword K_LEAVE                    = keyword("leave");
+    static final Keyword K_LEFT_JOIN_LATERAL        = keyword("left join lateral");
+    static final Keyword K_LEFT_OUTER_JOIN_LATERAL  = keyword("left outer join lateral");
     static final Keyword K_LET                      = keyword("let");
     static final Keyword K_LIKE                     = keyword("like");
     static final Keyword K_LIKE_REGEX               = keyword("like_regex");
@@ -278,7 +266,6 @@ final class Keywords {
     static final Keyword K_MONTH                    = keyword("month");
     static final Keyword K_MULTISET                 = keyword("multiset");
     static final Keyword K_NAME                     = keyword("name");
-    static final Keyword K_NESTED                   = keyword("nested");
     static final Keyword K_NEW                      = keyword("new");
     static final Keyword K_NEXT                     = keyword("next");
     static final Keyword K_NEXTVAL                  = keyword("nextval");
@@ -296,7 +283,6 @@ final class Keywords {
     static final Keyword K_NULLS_LAST               = keyword("nulls last");
     static final Keyword K_NUMERIC                  = keyword("numeric");
     static final Keyword K_NVARCHAR                 = keyword("nvarchar");
-    static final Keyword K_OBJECT                   = keyword("object");
     static final Keyword K_OCCURRENCE               = keyword("occurrence");
     static final Keyword K_OF                       = keyword("of");
     static final Keyword K_OFFSET                   = keyword("offset");
@@ -335,16 +321,13 @@ final class Keywords {
     static final Keyword K_PREVIOUS_VALUE_FOR       = keyword("previous value for");
     static final Keyword K_PRIMARY_KEY              = keyword("primary key");
     static final Keyword K_PRIOR                    = keyword("prior");
-    static final Keyword K_PRIVATE                  = keyword("private");
     static final Keyword K_PROCEDURE                = keyword("procedure");
     static final Keyword K_PUBLIC                   = keyword("public");
     static final Keyword K_QUALIFY                  = keyword("qualify");
     static final Keyword K_QUERY                    = keyword("query");
-    static final Keyword K_QUOTA                    = keyword("quota");
     static final Keyword K_RAISE                    = keyword("raise");
     static final Keyword K_RAISERROR                = keyword("raiserror");
     static final Keyword K_RAW                      = keyword("raw");
-    static final Keyword K_READ                     = keyword("read");
     static final Keyword K_READPAST                 = keyword("readpast");
     static final Keyword K_READS                    = keyword("reads");
     static final Keyword K_RECORD                   = keyword("record");
@@ -352,10 +335,7 @@ final class Keywords {
     static final Keyword K_REF                      = keyword("ref");
     static final Keyword K_REFERENCES               = keyword("references");
     static final Keyword K_REFERENCING              = keyword("referencing");
-    static final Keyword K_REFRESH                  = keyword("refresh");
     static final Keyword K_REGEXP                   = keyword("regexp");
-    static final Keyword K_RELEASE                  = keyword("release");
-    static final Keyword K_REMOVE                   = keyword("remove");
     static final Keyword K_RENAME                   = keyword("rename");
     static final Keyword K_RENAME_COLUMN            = keyword("rename column");
     static final Keyword K_RENAME_CONSTRAINT        = keyword("rename constraint");
@@ -365,21 +345,16 @@ final class Keywords {
     static final Keyword K_RENAME_TABLE             = keyword("rename table");
     static final Keyword K_RENAME_TO                = keyword("rename to");
     static final Keyword K_REPEAT                   = keyword("repeat");
-    static final Keyword K_REPEATABLE               = keyword("repeatable");
     static final Keyword K_REPLACE                  = keyword("replace");
-    static final Keyword K_RESERVOIR                = keyword("reservoir");
     static final Keyword K_RESPECT_NULLS            = keyword("respect nulls");
     static final Keyword K_RESTART                  = keyword("restart");
     static final Keyword K_RESTART_WITH             = keyword("restart with");
     static final Keyword K_RESTRICT                 = keyword("restrict");
-    static final Keyword K_RETAIN                   = keyword("retain");
     static final Keyword K_RETURN                   = keyword("return");
     static final Keyword K_RETURNING                = keyword("returning");
     static final Keyword K_RETURNS                  = keyword("returns");
     static final Keyword K_REVERSE                  = keyword("reverse");
     static final Keyword K_REVOKE                   = keyword("revoke");
-    static final Keyword K_ROLLBACK                 = keyword("rollback");
-    static final Keyword K_ROLLUP                   = keyword("rollup");
     static final Keyword K_ROOT                     = keyword("root");
     static final Keyword K_ROW                      = keyword("row");
     static final Keyword K_ROWCOUNT                 = keyword("rowcount");
@@ -388,17 +363,11 @@ final class Keywords {
     static final Keyword K_ROWS_FROM                = keyword("rows from");
     static final Keyword K_ROWS_ONLY                = keyword("rows only");
     static final Keyword K_ROWS_WITH_TIES           = keyword("rows with ties");
-    static final Keyword K_ROWSTORE                 = keyword("rowstore");
-    static final Keyword K_SAMPLE                   = keyword("sample");
-    static final Keyword K_SAVE                     = keyword("save");
-    static final Keyword K_SAVEPOINT                = keyword("savepoint");
     static final Keyword K_SCHEMA                   = keyword("schema");
     static final Keyword K_SCN                      = keyword("scn");
     static final Keyword K_SEARCH_PATH              = keyword("search_path");
     static final Keyword K_SECOND                   = keyword("second");
-    static final Keyword K_SEED                     = keyword("seed");
     static final Keyword K_SELECT                   = keyword("select");
-    static final Keyword K_SEMI_JOIN                = keyword("semi join");
     static final Keyword K_SEPARATOR                = keyword("separator");
     static final Keyword K_SEQUENCE                 = keyword("sequence");
     static final Keyword K_SERIAL                   = keyword("serial");
@@ -413,11 +382,9 @@ final class Keywords {
     static final Keyword K_SIBLINGS                 = keyword("siblings");
     static final Keyword K_SIGNAL                   = keyword("signal");
     static final Keyword K_SKIP                     = keyword("skip");
-    static final Keyword K_SOURCE                   = keyword("source");
     static final Keyword K_SQL                      = keyword("sql");
     static final Keyword K_SQLSTATE                 = keyword("sqlstate");
     static final Keyword K_SQL_ERROR_CODE           = keyword("sql_error_code");
-    static final Keyword K_START                    = keyword("start");
     static final Keyword K_START_AT                 = keyword("start at");
     static final Keyword K_START_WITH               = keyword("start with");
     static final Keyword K_STATEMENT                = keyword("statement");
@@ -425,14 +392,10 @@ final class Keywords {
     static final Keyword K_STORED                   = keyword("stored");
     static final Keyword K_STORING                  = keyword("storing");
     static final Keyword K_STRUCT                   = keyword("struct");
-    static final Keyword K_SYNONYM                  = keyword("synonym");
     static final Keyword K_SWITCH                   = keyword("switch");
     static final Keyword K_SYMMETRIC                = keyword("symmetric");
     static final Keyword K_SYSTEM                   = keyword("system");
     static final Keyword K_TABLE                    = keyword("table");
-    static final Keyword K_TABLESAMPLE              = keyword("tablesample");
-    static final Keyword K_TARGET                   = keyword("target");
-    static final Keyword K_TBLPROPERTIES            = keyword("tblproperties");
     static final Keyword K_TEMPORARY                = keyword("temporary");
     static final Keyword K_THEN                     = keyword("then");
     static final Keyword K_THROW                    = keyword("throw");
@@ -443,25 +406,20 @@ final class Keywords {
     static final Keyword K_TO                       = keyword("to");
     static final Keyword K_TOP                      = keyword("top");
     static final Keyword K_TRAILING                 = keyword("trailing");
-    static final Keyword K_TRANSACTION              = keyword("transaction");
     static final Keyword K_TRIGGER                  = keyword("trigger");
     static final Keyword K_TRIM                     = keyword("trim");
     static final Keyword K_TRUE                     = keyword("true");
     static final Keyword K_TRUNCATE                 = keyword("truncate");
-    static final Keyword K_TUPLE                    = keyword("tuple");
     static final Keyword K_TYPE                     = keyword("type");
     static final Keyword K_UNBOUNDED_FOLLOWING      = keyword("unbounded following");
     static final Keyword K_UNBOUNDED_PRECEDING      = keyword("unbounded preceding");
     static final Keyword K_UNIQUE                   = keyword("unique");
-    static final Keyword K_UNLIMITED                = keyword("unlimited");
     static final Keyword K_UNNEST                   = keyword("unnest");
     static final Keyword K_UNTIL                    = keyword("until");
     static final Keyword K_UPDATE                   = keyword("update");
     static final Keyword K_UPDLOCK                  = keyword("updlock");
     static final Keyword K_UPSERT                   = keyword("upsert");
     static final Keyword K_USE                      = keyword("use");
-    static final Keyword K_USER                     = keyword("user");
-    static final Keyword K_USERS                    = keyword("users");
     static final Keyword K_USING                    = keyword("using");
     static final Keyword K_USING_INDEX              = keyword("using index");
     static final Keyword K_VALUE                    = keyword("value");
@@ -470,7 +428,6 @@ final class Keywords {
     static final Keyword K_VERSIONS                 = keyword("versions");
     static final Keyword K_VIEW                     = keyword("view");
     static final Keyword K_VIRTUAL                  = keyword("virtual");
-    static final Keyword K_VISIBLE                  = keyword("visible");
     static final Keyword K_VOLATILE                 = keyword("volatile");
     static final Keyword K_WHEN                     = keyword("when");
     static final Keyword K_WHERE                    = keyword("where");
@@ -490,8 +447,6 @@ final class Keywords {
     static final Keyword K_WITH_READ_ONLY           = keyword("with read only");
     static final Keyword K_WITH_ROLLUP              = keyword("with rollup");
     static final Keyword K_WITH_TIES                = keyword("with ties");
-    static final Keyword K_WORK                     = keyword("work");
-    static final Keyword K_WRITE                    = keyword("write");
     static final Keyword K_XML                      = keyword("xml");
     static final Keyword K_XMLEXISTS                = keyword("xmlexists");
     static final Keyword K_XMLTABLE                 = keyword("xmltable");

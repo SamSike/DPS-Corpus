@@ -16,18 +16,15 @@
  */
 package org.apache.camel.component.http;
 
-import java.util.Collections;
-
 import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.test.AvailablePortFinder;
-import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
-import org.apache.hc.core5.http.impl.routing.RequestRouter;
-import org.apache.hc.core5.http.protocol.UriPatternType;
-import org.apache.hc.core5.net.URIAuthority;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -52,23 +49,22 @@ public class HttpsTwoComponentsSslContextParametersGetTest extends BaseHttpsTest
     @BindToRegistry("https-bar")
     private HttpComponent httpComponent1 = new HttpComponent();
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
-        localServer = ServerBootstrap.bootstrap()
-                .setHttpProcessor(getBasicHttpProcessor())
-                .setRequestRouter(RequestRouter.create(
-                        new URIAuthority("localhost"),
-                        UriPatternType.URI_PATTERN,
-                        Collections.EMPTY_LIST,
-                        RequestRouter.LOCAL_AUTHORITY_RESOLVER,
-                        null))
+    public void setUp() throws Exception {
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext()).create();
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext()).create();
         localServer.start();
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() {
+    public void tearDown() throws Exception {
+        super.tearDown();
+
         if (localServer != null) {
             localServer.stop();
         }
@@ -81,21 +77,21 @@ public class HttpsTwoComponentsSslContextParametersGetTest extends BaseHttpsTest
 
     @Test
     public void httpsTwoDifferentSSLContextNotSupported() {
-        assertDoesNotThrow(this::runTest);
+        assertDoesNotThrow(() -> runTest());
     }
 
     private void runTest() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 port2 = AvailablePortFinder.getNextAvailable();
 
                 from("direct:foo")
-                        .to("https-foo://localhost:" + localServer.getLocalPort()
+                        .to("https-foo://127.0.0.1:" + localServer.getLocalPort()
                             + "/mail?x509HostnameVerifier=#x509HostnameVerifier&sslContextParameters=#sslContextParameters");
 
                 from("direct:bar")
-                        .to("https-bar://localhost:" + port2
+                        .to("https-bar://127.0.0.1:" + port2
                             + "/mail?x509HostnameVerifier=#x509HostnameVerifier&sslContextParameters=#sslContextParameters2");
             }
         });

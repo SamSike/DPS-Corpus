@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.context.index.processor;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.assertj.core.api.Condition;
 
@@ -29,7 +30,7 @@ import org.assertj.core.api.Condition;
 class Metadata {
 
 	public static Condition<CandidateComponentsMetadata> of(Class<?> type, Class<?>... stereotypes) {
-		return of(type.getName(), Arrays.stream(stereotypes).map(Class::getName).toList());
+		return of(type.getName(), Arrays.stream(stereotypes).map(Class::getName).collect(Collectors.toList()));
 	}
 
 	public static Condition<CandidateComponentsMetadata> of(String type, String... stereotypes) {
@@ -42,8 +43,8 @@ class Metadata {
 			ItemMetadata itemMetadata = metadata.getItems().stream()
 					.filter(item -> item.getType().equals(type))
 					.findFirst().orElse(null);
-			return (itemMetadata != null && itemMetadata.getStereotypes().size() == stereotypes.size() &&
-					itemMetadata.getStereotypes().containsAll(stereotypes));
+			return itemMetadata != null && itemMetadata.getStereotypes().size() == stereotypes.size()
+					&& itemMetadata.getStereotypes().containsAll(stereotypes);
 		}, "Candidates with type %s and stereotypes %s", type, stereotypes);
 	}
 

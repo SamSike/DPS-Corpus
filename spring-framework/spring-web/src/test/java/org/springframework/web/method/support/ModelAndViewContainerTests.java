@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,48 +29,59 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Rossen Stoyanchev
  * @since 3.1
  */
-class ModelAndViewContainerTests {
+public class ModelAndViewContainerTests {
 
 	private ModelAndViewContainer mavContainer;
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		this.mavContainer = new ModelAndViewContainer();
 	}
 
 
 	@Test
-	void getModel() {
+	public void getModel() {
 		this.mavContainer.addAttribute("name", "value");
-		assertThat(this.mavContainer.getModel()).hasSize(1);
+		assertThat(this.mavContainer.getModel().size()).isEqualTo(1);
 		assertThat(this.mavContainer.getModel().get("name")).isEqualTo("value");
 	}
 
 	@Test
-	void redirectScenarioWithRedirectModel() {
+	public void redirectScenarioWithRedirectModel() {
 		this.mavContainer.addAttribute("name1", "value1");
 		this.mavContainer.setRedirectModel(new ModelMap("name2", "value2"));
 		this.mavContainer.setRedirectModelScenario(true);
 
-		assertThat(this.mavContainer.getModel()).hasSize(1);
+		assertThat(this.mavContainer.getModel().size()).isEqualTo(1);
 		assertThat(this.mavContainer.getModel().get("name2")).isEqualTo("value2");
 	}
 
 	@Test
-	void ignoreDefaultModel() {
+	public void redirectScenarioWithoutRedirectModel() {
 		this.mavContainer.addAttribute("name", "value");
 		this.mavContainer.setRedirectModelScenario(true);
 
-		assertThat(this.mavContainer.getModel()).isEmpty();
+		assertThat(this.mavContainer.getModel().size()).isEqualTo(1);
+		assertThat(this.mavContainer.getModel().get("name")).isEqualTo("value");
+	}
+
+	@Test
+	public void ignoreDefaultModel() {
+		this.mavContainer.setIgnoreDefaultModelOnRedirect(true);
+		this.mavContainer.addAttribute("name", "value");
+		this.mavContainer.setRedirectModelScenario(true);
+
+		assertThat(this.mavContainer.getModel().isEmpty()).isTrue();
 	}
 
 	@Test  // SPR-14045
 	public void ignoreDefaultModelAndWithoutRedirectModel() {
+		this.mavContainer.setIgnoreDefaultModelOnRedirect(true);
 		this.mavContainer.setRedirectModelScenario(true);
 		this.mavContainer.addAttribute("name", "value");
 
-		assertThat(this.mavContainer.getModel()).hasSize(1);
+		assertThat(this.mavContainer.getModel().size()).isEqualTo(1);
 		assertThat(this.mavContainer.getModel().get("name")).isEqualTo("value");
 	}
 

@@ -16,10 +16,6 @@
  */
 package org.apache.camel.component.kubernetes.properties;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.RouteBuilder;
@@ -36,9 +32,7 @@ public class ConfigMapPropertiesFunctionLocalModeTest extends KubernetesTestSupp
             @Override
             public void configure() throws Exception {
                 from("direct:start")
-                        .transform().simple("Hello ${body} we are at {{configmap:myconfig/bar.txt}}");
-                from("direct:binary")
-                        .transform().simple("File saved to {{configmap-binary:myconfig/binary.bin}}");
+                        .transform().simple("Hello ${body} we are at {{configmap:myconfig/bar}}");
             }
         };
     }
@@ -47,9 +41,7 @@ public class ConfigMapPropertiesFunctionLocalModeTest extends KubernetesTestSupp
     protected CamelContext createCamelContext() throws Exception {
         CamelContext context = super.createCamelContext();
         context.getPropertiesComponent().addInitialProperty(ConfigMapPropertiesFunction.LOCAL_MODE, "true");
-        context.getPropertiesComponent().addInitialProperty("myconfig/bar.txt", "The Local Bar");
-        context.getPropertiesComponent().addInitialProperty("myconfig/binary.bin",
-                Path.of(getClass().getResource("/binary-example/binary.bin").toURI()).toAbsolutePath().toString());
+        context.getPropertiesComponent().addInitialProperty("myconfig/bar", "The Local Bar");
         return context;
     }
 
@@ -60,13 +52,4 @@ public class ConfigMapPropertiesFunctionLocalModeTest extends KubernetesTestSupp
         Assertions.assertEquals("Hello Jack we are at The Local Bar", out);
     }
 
-    @Test
-    @Order(2)
-    public void configMapLocalModeUsingBinary() throws IOException {
-        String out = template.requestBody("direct:binary", null, String.class);
-        Assertions.assertTrue(out.matches("File saved to .*binary.bin"));
-        Path filePath = Path.of(out.substring("File saved to ".length()));
-        Assertions.assertArrayEquals(readExampleBinaryFile(),
-                Files.readAllBytes(filePath));
-    }
 }

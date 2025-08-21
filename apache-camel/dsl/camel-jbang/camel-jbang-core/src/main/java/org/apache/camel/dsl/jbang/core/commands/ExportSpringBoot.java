@@ -17,212 +17,194 @@
 package org.apache.camel.dsl.jbang.core.commands;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.camel.catalog.CamelCatalog;
-import org.apache.camel.dsl.jbang.core.common.CatalogLoader;
-import org.apache.camel.dsl.jbang.core.common.CommandLineHelper;
-import org.apache.camel.dsl.jbang.core.common.PathUtils;
+import org.apache.camel.catalog.DefaultCamelCatalog;
+import org.apache.camel.catalog.RuntimeProvider;
+import org.apache.camel.catalog.VersionManager;
 import org.apache.camel.dsl.jbang.core.common.RuntimeUtil;
-import org.apache.camel.dsl.jbang.core.common.VersionHelper;
-import org.apache.camel.tooling.maven.MavenGav;
+import org.apache.camel.main.KameletMain;
+import org.apache.camel.main.download.DependencyDownloaderClassLoader;
+import org.apache.camel.main.download.MavenArtifact;
+import org.apache.camel.main.download.MavenDependencyDownloader;
+import org.apache.camel.main.download.MavenGav;
 import org.apache.camel.tooling.model.ArtifactModel;
 import org.apache.camel.util.CamelCaseOrderedProperties;
+import org.apache.camel.util.FileUtil;
 import org.apache.camel.util.IOHelper;
-import org.apache.camel.util.ObjectHelper;
+import org.apache.commons.io.FileUtils;
 
 class ExportSpringBoot extends Export {
 
+    private static final String DEFAULT_CAMEL_CATALOG = "org.apache.camel.catalog.DefaultCamelCatalog";
+    private static final String SPRING_BOOT_CATALOG_PROVIDER = "org.apache.camel.springboot.catalog.SpringBootRuntimeProvider";
+
     public ExportSpringBoot(CamelJBangMain main) {
         super(main);
-        pomTemplateName = "spring-boot-pom.tmpl";
     }
 
     @Override
     public Integer export() throws Exception {
-        this.camelSpringBootVersion = VersionHelper.getSpringBootVersion(null);
-
         String[] ids = gav.split(":");
         if (ids.length != 3) {
-            printer().printErr("--gav must be in syntax: groupId:artifactId:version");
+            System.err.println("--gav must be in syntax: groupId:artifactId:version");
             return 1;
         }
         if (!buildTool.equals("maven") && !buildTool.equals("gradle")) {
-            printer().printErr("--build-tool must either be maven or gradle, was: " + buildTool);
+            System.err.println("--build-tool must either be maven or gradle, was: " + buildTool);
             return 1;
         }
 
-        Path profile = Path.of("application.properties");
+        File profile = new File(getProfile() + ".properties");
 
         // the settings file has information what to export
-        Path settings = CommandLineHelper.getWorkDir().resolve(Run.RUN_SETTINGS_FILE);
-        if (fresh || !files.isEmpty() || !Files.exists(settings)) {
+        File settings = new File(Run.WORK_DIR + "/" + Run.RUN_SETTINGS_FILE);
+        if (fresh || !settings.exists()) {
             // allow to automatic build
-            printer().println("Generating fresh run data");
-            int silent = runSilently(ignoreLoadingError, lazyBean, verbose);
+            if (!quiet) {
+                System.out.println("Generating fresh run data");
+            }
+            int silent = runSilently();
             if (silent != 0) {
                 return silent;
             }
         } else {
-            printer().println("Reusing existing run data");
+            if (!quiet) {
+                System.out.println("Reusing existing run data");
+            }
         }
 
-        printer().println("Exporting as Spring Boot project to: " + exportDir);
+        if (!quiet) {
+            System.out.println("Exporting as Spring Boot project to: " + exportDir);
+        }
 
         // use a temporary work dir
-        Path buildDir = Path.of(BUILD_DIR);
-        PathUtils.deleteDirectory(buildDir);
-        Files.createDirectories(buildDir);
-
-        Path srcJavaDirRoot = buildDir.resolve("src/main/java");
-        String srcPackageName = exportPackageName(ids[0], ids[1], packageName);
-        Path srcJavaDir;
-        if (srcPackageName == null) {
-            srcJavaDir = srcJavaDirRoot;
-        } else {
-            srcJavaDir = srcJavaDirRoot.resolve(srcPackageName.replace('.', File.separatorChar));
-        }
-        Files.createDirectories(srcJavaDir);
-        Path srcResourcesDir = buildDir.resolve("src/main/resources");
-        Files.createDirectories(srcResourcesDir);
-        Path srcCamelResourcesDir = buildDir.resolve("src/main/resources/camel");
-        Path srcKameletsResourcesDir = buildDir.resolve("src/main/resources/kamelets");
-        // copy application properties files
-        copyApplicationPropertiesFiles(srcResourcesDir);
+        File buildDir = new File(BUILD_DIR);
+        FileUtil.removeDir(buildDir);
+        buildDir.mkdirs();
 
         // copy source files
-        copySourceFiles(settings, profile, srcJavaDirRoot, srcJavaDir,
-                srcResourcesDir, srcCamelResourcesDir,
-                srcKameletsResourcesDir, srcPackageName);
-
-        // create main class
-        createMainClassSource(srcJavaDir, srcPackageName, mainClassname);
-        // gather dependencies
-        final Set<String> deps = resolveDependencies(settings, profile);
-        // copy local lib JARs
-        copyLocalLibDependencies(deps);
+        String packageName = exportPackageName(ids[0], ids[1]);
+        File srcJavaDir = new File(BUILD_DIR, "src/main/java/" + packageName.replace('.', '/'));
+        srcJavaDir.mkdirs();
+        File srcResourcesDir = new File(BUILD_DIR, "src/main/resources");
+        srcResourcesDir.mkdirs();
+        File srcCamelResourcesDir = new File(BUILD_DIR, "src/main/resources/camel");
+        srcCamelResourcesDir.mkdirs();
+        copySourceFiles(settings, profile, srcJavaDir, srcResourcesDir, srcCamelResourcesDir, packageName);
         // copy from settings to profile
         copySettingsAndProfile(settings, profile, srcResourcesDir, prop -> {
             if (!hasModeline(settings)) {
                 prop.remove("camel.main.modeline");
             }
-            // ensure spring-boot keeps running if no HTTP server included
-            boolean http = deps.stream().anyMatch(s -> s.contains("mvn:org.apache.camel:camel-platform-http"));
-            if (!http) {
-                prop.put("camel.main.run-controller", "true");
-            }
-            // are we using http then enable embedded HTTP server (if not explicit configured already)
-            if (!prop.containsKey("server.port")) {
-                int port = httpServerPort(settings);
-                if (port == -1 && http) {
-                    port = 8080;
-                }
-                if (port != -1 && port != 8080) {
-                    prop.put("server.port", port);
-                }
-            }
-            if (!prop.containsKey("management.server.port")) {
-                port = httpManagementPort(settings);
-                if (port != -1) {
-                    prop.put("management.server.port", port);
-                }
-            }
             return prop;
         });
+        // create main class
+        createMainClassSource(srcJavaDir, packageName, mainClassname);
+        // gather dependencies
+        Set<String> deps = resolveDependencies(settings, profile);
         if ("maven".equals(buildTool)) {
-            createMavenPom(settings, profile, buildDir.resolve("pom.xml"), deps);
+            createMavenPom(settings, profile, new File(BUILD_DIR, "pom.xml"), deps);
             if (mavenWrapper) {
                 copyMavenWrapper();
             }
         } else if ("gradle".equals(buildTool)) {
-            createSettingsGradle(buildDir.resolve("settings.gradle"));
-            createBuildGradle(settings, buildDir.resolve("build.gradle"), deps);
+            createSettingsGradle(new File(BUILD_DIR, "settings.gradle"));
+            createBuildGradle(settings, new File(BUILD_DIR, "build.gradle"), deps);
             if (gradleWrapper) {
                 copyGradleWrapper();
             }
         }
-        copyDockerFiles(BUILD_DIR);
-        String appJar = "target" + File.separator + ids[1] + "-" + ids[2] + ".jar";
-        copyReadme(BUILD_DIR, appJar);
-        if (cleanExportDir || !exportDir.equals(".")) {
-            // cleaning current dir can be a bit dangerous so only clean if explicit enabled
-            // otherwise always clean export-dir to avoid stale data
+
+        if (!exportDir.equals(".")) {
             CommandHelper.cleanExportDir(exportDir);
         }
         // copy to export dir and remove work dir
-        PathUtils.copyDirectory(buildDir, Paths.get(exportDir));
-        PathUtils.deleteDirectory(buildDir);
+        FileUtils.copyDirectory(new File(BUILD_DIR), new File(exportDir));
+        FileUtil.removeDir(new File(BUILD_DIR));
 
         return 0;
     }
 
-    private void createSettingsGradle(Path file) throws Exception {
+    private void createSettingsGradle(File file) throws Exception {
         String[] ids = gav.split(":");
 
         String text = String.format("rootProject.name = '%s'", ids[1]);
-        IOHelper.writeText(text, Files.newOutputStream(file));
+        IOHelper.writeText(text, new FileOutputStream(file, false));
     }
 
-    private void createMavenPom(Path settings, Path profile, Path pom, Set<String> deps) throws Exception {
+    private void createMavenPom(File settings, File profile, File pom, Set<String> deps) throws Exception {
         String[] ids = gav.split(":");
+
+        String context = readResourceTemplate("templates/spring-boot-pom.tmpl");
 
         Properties prop = new CamelCaseOrderedProperties();
         RuntimeUtil.loadProperties(prop, settings);
-        String repos = getMavenRepositories(settings, prop, camelSpringBootVersion);
+        String repos = getMavenRepos(prop, camelSpringBootVersion);
 
-        CamelCatalog catalog = CatalogLoader.loadSpringBootCatalog(repos, camelSpringBootVersion, download);
-        if (ObjectHelper.isEmpty(camelVersion)) {
-            camelVersion = catalog.getLoadedVersion();
-        }
-        if (ObjectHelper.isEmpty(camelVersion)) {
-            camelVersion = VersionHelper.extractCamelVersion();
-        }
+        CamelCatalog catalog = loadSpringBootCatalog(repos, camelSpringBootVersion);
+        String camelVersion = catalog.getLoadedVersion();
 
-        // First try to load a specialized template from the catalog, if the catalog does not provide it
-        // fallback to the template defined in camel-jbang-core
-        String context;
-        InputStream template = catalog.loadResource("camel-jbang", pomTemplateName);
-        if (template != null) {
-            context = IOHelper.loadText(template);
-        } else {
-            context = readResourceTemplate("templates/" + pomTemplateName);
-        }
-
-        context = context.replaceAll("\\{\\{ \\.GroupId }}", ids[0]);
-        context = context.replaceAll("\\{\\{ \\.ArtifactId }}", ids[1]);
-        context = context.replaceAll("\\{\\{ \\.Version }}", ids[2]);
+        context = context.replaceFirst("\\{\\{ \\.GroupId }}", ids[0]);
+        context = context.replaceFirst("\\{\\{ \\.ArtifactId }}", ids[1]);
+        context = context.replaceFirst("\\{\\{ \\.Version }}", ids[2]);
         context = context.replaceAll("\\{\\{ \\.SpringBootVersion }}", springBootVersion);
-        context = context.replaceAll("\\{\\{ \\.JavaVersion }}", javaVersion);
-        context = context.replaceAll("\\{\\{ \\.CamelVersion }}", camelVersion);
-        context = context.replaceAll("\\{\\{ \\.CamelSpringBootVersion }}",
-                Objects.requireNonNullElseGet(camelSpringBootVersion, () -> camelVersion));
-        context = context.replaceFirst("\\{\\{ \\.ProjectBuildOutputTimestamp }}", this.getBuildMavenProjectDate());
+        context = context.replaceFirst("\\{\\{ \\.JavaVersion }}", javaVersion);
+        context = context.replaceFirst("\\{\\{ \\.CamelVersion }}", camelVersion);
 
-        context = replaceBuildProperties(context);
+        // Convert jkube properties to maven properties
+        Properties allProps = new CamelCaseOrderedProperties();
+        if (profile != null && profile.exists()) {
+            RuntimeUtil.loadProperties(allProps, profile);
+        }
+        StringBuilder sbJKube = new StringBuilder();
+        allProps.stringPropertyNames().stream().filter(p -> p.startsWith("jkube")).forEach(key -> {
+            String value = allProps.getProperty(key);
+            sbJKube.append("        <").append(key).append(">").append(value).append("</").append(key).append(">\n");
+        });
+        context = context.replaceFirst(Pattern.quote("{{ .jkubeProperties }}"),
+                Matcher.quoteReplacement(sbJKube.toString()));
 
-        if (repos == null || repos.isEmpty()) {
+        if (repos == null) {
             context = context.replaceFirst("\\{\\{ \\.MavenRepositories }}", "");
         } else {
-            String s = mavenRepositoriesAsPomXml(repos);
-            context = context.replaceFirst("\\{\\{ \\.MavenRepositories }}", s);
+            int i = 1;
+            StringBuilder sb = new StringBuilder();
+            sb.append("    <repositories>\n");
+            for (String repo : repos.split(",")) {
+                sb.append("        <repository>\n");
+                sb.append("            <id>custom").append(i++).append("</id>\n");
+                sb.append("            <url>").append(repo).append("</url>\n");
+                if (repo.contains("snapshots")) {
+                    sb.append("            <releases>\n");
+                    sb.append("                <enabled>false</enabled>\n");
+                    sb.append("            </releases>\n");
+                    sb.append("            <snapshots>\n");
+                    sb.append("                <enabled>true</enabled>\n");
+                    sb.append("            </snapshots>\n");
+                }
+                sb.append("        </repository>\n");
+            }
+            sb.append("    </repositories>\n");
+            context = context.replaceFirst("\\{\\{ \\.MavenRepositories }}", sb.toString());
         }
 
         List<MavenGav> gavs = new ArrayList<>();
         for (String dep : deps) {
-            MavenGav gav = parseMavenGav(dep);
+            MavenGav gav = MavenGav.parseGav(dep);
             String gid = gav.getGroupId();
             String aid = gav.getArtifactId();
+            String v = gav.getVersion();
 
             // transform to camel-spring-boot starter GAV
             if ("org.apache.camel".equals(gid)) {
@@ -236,10 +218,6 @@ class ExportSpringBoot extends Export {
                     // there is no spring boot starter so use plain camel
                     gav.setVersion(camelVersion);
                 }
-            }
-            // use spring-boot version from BOM
-            if ("org.springframework.boot".equals(gid)) {
-                gav.setVersion(null); // uses BOM so version should not be included
             }
             gavs.add(gav);
         }
@@ -255,16 +233,8 @@ class ExportSpringBoot extends Export {
             if (gav.getVersion() != null) {
                 sb.append("            <version>").append(gav.getVersion()).append("</version>\n");
             }
-            if (gav.getScope() != null) {
-                sb.append("            <scope>").append(gav.getScope()).append("</scope>\n");
-            }
-            if ("lib".equals(gav.getPackaging())) {
-                // special for lib JARs
-                sb.append("            <scope>system</scope>\n");
-                sb.append("            <systemPath>\\$\\{project.basedir}/lib/").append(gav.getArtifactId()).append("-")
-                        .append(gav.getVersion()).append(".jar</systemPath>\n");
-            } else if ("camel-kamelets-utils".equals(gav.getArtifactId())) {
-                // special for camel-kamelets-utils
+            // special for camel-kamelets-utils
+            if ("camel-kamelets-utils".equals(gav.getArtifactId())) {
                 sb.append("            <exclusions>\n");
                 sb.append("                <exclusion>\n");
                 sb.append("                    <groupId>org.apache.camel</groupId>\n");
@@ -276,19 +246,26 @@ class ExportSpringBoot extends Export {
         }
         context = context.replaceFirst("\\{\\{ \\.CamelDependencies }}", sb.toString());
 
-        IOHelper.writeText(context, Files.newOutputStream(pom));
+        // add jkube profiles if there is jkube version property
+        String jkubeProfiles = "";
+        if (allProps.getProperty("jkube.version") != null) {
+            jkubeProfiles = readResourceTemplate("templates/jkube-profiles.tmpl");
+        }
+        context = context.replaceFirst(Pattern.quote("{{ .jkubeProfiles }}"), Matcher.quoteReplacement(jkubeProfiles));
+
+        IOHelper.writeText(context, new FileOutputStream(pom, false));
     }
 
-    private void createBuildGradle(Path settings, Path gradleBuild, Set<String> deps) throws Exception {
+    private void createBuildGradle(File settings, File gradleBuild, Set<String> deps) throws Exception {
         String[] ids = gav.split(":");
 
         String context = readResourceTemplate("templates/spring-boot-build-gradle.tmpl");
 
         Properties prop = new CamelCaseOrderedProperties();
         RuntimeUtil.loadProperties(prop, settings);
-        String repos = getMavenRepositories(settings, prop, camelSpringBootVersion);
+        String repos = getMavenRepos(prop, camelSpringBootVersion);
 
-        CamelCatalog catalog = CatalogLoader.loadSpringBootCatalog(repos, camelSpringBootVersion, download);
+        CamelCatalog catalog = loadSpringBootCatalog(repos, camelSpringBootVersion);
         String camelVersion = catalog.getLoadedVersion();
 
         context = context.replaceFirst("\\{\\{ \\.GroupId }}", ids[0]);
@@ -297,10 +274,8 @@ class ExportSpringBoot extends Export {
         context = context.replaceAll("\\{\\{ \\.SpringBootVersion }}", springBootVersion);
         context = context.replaceFirst("\\{\\{ \\.JavaVersion }}", javaVersion);
         context = context.replaceAll("\\{\\{ \\.CamelVersion }}", camelVersion);
-        context = context.replaceFirst("\\{\\{ \\.CamelSpringBootVersion }}",
-                Objects.requireNonNullElse(camelSpringBootVersion, camelVersion));
 
-        if (repos == null || repos.isEmpty()) {
+        if (repos == null) {
             context = context.replaceFirst("\\{\\{ \\.MavenRepositories }}", "");
         } else {
             StringBuilder sb = new StringBuilder();
@@ -319,9 +294,10 @@ class ExportSpringBoot extends Export {
 
         List<MavenGav> gavs = new ArrayList<>();
         for (String dep : deps) {
-            MavenGav gav = parseMavenGav(dep);
+            MavenGav gav = MavenGav.parseGav(dep);
             String gid = gav.getGroupId();
             String aid = gav.getArtifactId();
+            String v = gav.getVersion();
 
             // transform to camel-spring-boot starter GAV
             if ("org.apache.camel".equals(gid)) {
@@ -344,12 +320,8 @@ class ExportSpringBoot extends Export {
 
         StringBuilder sb = new StringBuilder();
         for (MavenGav gav : gavs) {
-            if ("lib".equals(gav.getPackaging())) {
-                // special for lib JARs
-                sb.append("    implementation files('lib/").append(gav.getArtifactId())
-                        .append("-").append(gav.getVersion()).append(".jar')\n");
-            } else if ("camel-kamelets-utils".equals(gav.getArtifactId())) {
-                // special for camel-kamelets-utils
+            // special for camel-kamelets-utils
+            if ("camel-kamelets-utils".equals(gav.getArtifactId())) {
                 sb.append("    implementation ('").append(gav).append("') {\n");
                 sb.append("        exclude group: 'org.apache.camel', module: '*'\n");
                 sb.append("    }\n");
@@ -359,36 +331,35 @@ class ExportSpringBoot extends Export {
         }
         context = context.replaceFirst("\\{\\{ \\.CamelDependencies }}", sb.toString());
 
-        IOHelper.writeText(context, Files.newOutputStream(gradleBuild));
+        IOHelper.writeText(context, new FileOutputStream(gradleBuild, false));
     }
 
     @Override
-    protected Set<String> resolveDependencies(Path settings, Path profile) throws Exception {
+    protected Set<String> resolveDependencies(File settings, File profile) throws Exception {
         Set<String> answer = super.resolveDependencies(settings, profile);
 
         // remove out of the box dependencies
         answer.removeIf(s -> s.contains("camel-core"));
 
-        boolean http = answer.stream().anyMatch(s -> s.contains("mvn:org.apache.camel:camel-platform-http"));
-        if (hasOpenapi(answer) && !http) {
-            // include http server if using openapi
-            answer.add("mvn:org.apache.camel:camel-platform-http");
+        // if platform-http is included then we need servlet as implementation
+        if (answer.stream().anyMatch(s -> s.contains("camel-platform-http") && !s.contains("camel-servlet"))) {
+            // version does not matter
+            answer.add("mvn:org.apache.camel:camel-servlet:1.0-SNAPSHOT");
         }
 
         return answer;
     }
 
-    private void createMainClassSource(Path srcJavaDir, String packageName, String mainClassname) throws Exception {
+    private void createMainClassSource(File srcJavaDir, String packageName, String mainClassname) throws Exception {
         String context = readResourceTemplate("templates/spring-boot-main.tmpl");
 
         context = context.replaceFirst("\\{\\{ \\.PackageName }}", packageName);
         context = context.replaceAll("\\{\\{ \\.MainClassname }}", mainClassname);
-        IOHelper.writeText(context,
-                Files.newOutputStream(srcJavaDir.resolve(mainClassname + ".java")));
+        IOHelper.writeText(context, new FileOutputStream(srcJavaDir + "/" + mainClassname + ".java", false));
     }
 
     @Override
-    protected void adjustJavaSourceFileLine(String line, OutputStream fos) throws Exception {
+    protected void adjustJavaSourceFileLine(String line, FileOutputStream fos) throws Exception {
         if (line.startsWith("public class")
                 && (line.contains("RouteBuilder") || line.contains("EndpointRouteBuilder"))) {
             fos.write("import org.springframework.stereotype.Component;\n\n"
@@ -399,18 +370,60 @@ class ExportSpringBoot extends Export {
 
     @Override
     protected String applicationPropertyLine(String key, String value) {
-        if (key.startsWith("camel.server.")) {
-            // skip "camel.server." as this is for camel-main only
-            return null;
-        }
-        boolean camel44orOlder = camelSpringBootVersion != null && VersionHelper.isLE("4.4.0", camelSpringBootVersion);
-        if (camel44orOlder) {
-            // camel.main.x should be renamed to camel.springboot.x (for camel 4.4.x or older)
-            if (key.startsWith("camel.main.")) {
-                key = "camel.springboot." + key.substring(11);
-            }
+        // camel.main.x should be renamed to camel.springboot.x
+        if (key.startsWith("camel.main.")) {
+            key = "camel.springboot." + key.substring(11);
         }
         return super.applicationPropertyLine(key, value);
+    }
+
+    private CamelCatalog loadSpringBootCatalog(String repos, String version) throws Exception {
+        CamelCatalog answer = new DefaultCamelCatalog();
+        if (version == null) {
+            version = answer.getCatalogVersion();
+        }
+
+        // use kamelet-main to dynamic download dependency via maven
+        KameletMain main = new KameletMain();
+        try {
+            main.setRepos(repos);
+            main.start();
+
+            // wrap downloaded catalog files in an isolated classloader
+            DependencyDownloaderClassLoader cl
+                    = new DependencyDownloaderClassLoader(main.getCamelContext().getApplicationContextClassLoader());
+
+            // download camel-catalog for that specific version
+            MavenDependencyDownloader downloader = main.getCamelContext().hasService(MavenDependencyDownloader.class);
+            MavenArtifact ma = downloader.downloadArtifact("org.apache.camel", "camel-catalog", version);
+            if (ma != null) {
+                cl.addFile(ma.getFile());
+            } else {
+                throw new IOException("Cannot download org.apache.camel:camel-catalog:" + version);
+            }
+            ma = downloader.downloadArtifact("org.apache.camel.springboot", "camel-catalog-provider-springboot", version);
+            if (ma != null) {
+                cl.addFile(ma.getFile());
+            } else {
+                throw new IOException(
+                        "Cannot download org.apache.camel.springboot:camel-catalog-provider-springboot:" + version);
+            }
+
+            answer.setVersionManager(new SpringBootCatalogVersionManager(version, cl));
+            Class<RuntimeProvider> clazz = (Class<RuntimeProvider>) cl.loadClass(SPRING_BOOT_CATALOG_PROVIDER);
+            if (clazz != null) {
+                RuntimeProvider provider = main.getCamelContext().getInjector().newInstance(clazz);
+                if (provider != null) {
+                    answer.setRuntimeProvider(provider);
+                }
+            }
+            answer.enableCache();
+
+        } finally {
+            main.stop();
+        }
+
+        return answer;
     }
 
     private String readResourceTemplate(String name) throws IOException {
@@ -418,6 +431,47 @@ class ExportSpringBoot extends Export {
         String text = IOHelper.loadText(is);
         IOHelper.close(is);
         return text;
+    }
+
+    private final class SpringBootCatalogVersionManager implements VersionManager {
+
+        private ClassLoader classLoader;
+        private final String version;
+
+        public SpringBootCatalogVersionManager(String version, ClassLoader classLoader) {
+            this.version = version;
+            this.classLoader = classLoader;
+        }
+
+        @Override
+        public void setClassLoader(ClassLoader classLoader) {
+            this.classLoader = classLoader;
+        }
+
+        @Override
+        public String getLoadedVersion() {
+            return version;
+        }
+
+        @Override
+        public boolean loadVersion(String version) {
+            return this.version.equals(version);
+        }
+
+        @Override
+        public String getRuntimeProviderLoadedVersion() {
+            return version;
+        }
+
+        @Override
+        public boolean loadRuntimeProviderVersion(String groupId, String artifactId, String version) {
+            return true;
+        }
+
+        @Override
+        public InputStream getResourceAsStream(String name) {
+            return classLoader.getResourceAsStream(name);
+        }
     }
 
 }

@@ -20,10 +20,10 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
 
+import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.kafka.consumer.support.resume.KafkaResumable;
-import org.apache.camel.component.kafka.integration.common.KafkaTestUtil;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.processor.resume.TransientResumeStrategy;
 import org.apache.camel.processor.resume.kafka.KafkaResumeStrategyConfigurationBuilder;
@@ -33,9 +33,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class KafkaConsumerAutoInstResumeRouteStrategyIT extends BaseKafkaTestSupport {
+public class KafkaConsumerAutoInstResumeRouteStrategyIT extends BaseEmbeddedKafkaTestSupport {
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaConsumerAutoInstResumeRouteStrategyIT.class);
     private static final String TOPIC = "resumable-route-auto";
+
+    @EndpointInject("mock:result")
+    private MockEndpoint result;
 
     public static KafkaResumeStrategyConfigurationBuilder getDefaultKafkaResumeStrategyConfigurationBuilder() {
         return KafkaResumeStrategyConfigurationBuilder.newBuilder()
@@ -52,8 +58,7 @@ public class KafkaConsumerAutoInstResumeRouteStrategyIT extends BaseKafkaTestSup
 
     @BeforeEach
     public void before() {
-        Properties props = KafkaTestUtil.getDefaultProperties(service);
-        KafkaTestUtil.createTopic(service, TOPIC, 1);
+        Properties props = getDefaultProperties();
         KafkaProducer<Object, Object> producer = new KafkaProducer<>(props);
 
         for (int i = 0; i < 10; i++) {
@@ -61,10 +66,16 @@ public class KafkaConsumerAutoInstResumeRouteStrategyIT extends BaseKafkaTestSup
         }
     }
 
+    @Override
+    protected void doPreSetup() throws Exception {
+        super.doPreSetup();
+
+    }
+
     @Test
     @Timeout(value = 30)
     public void testOffsetIsBeingChecked() throws InterruptedException {
-        MockEndpoint mock = contextExtension.getMockEndpoint(KafkaTestUtil.MOCK_RESULT);
+        MockEndpoint mock = getMockEndpoint("mock:result");
 
         mock.expectedMessageCount(10);
         mock.assertIsSatisfied();
@@ -75,7 +86,7 @@ public class KafkaConsumerAutoInstResumeRouteStrategyIT extends BaseKafkaTestSup
         kafkaAdminClient.deleteTopics(Collections.singletonList(TOPIC));
     }
 
-    private void process(Exchange exchange) {
+    public void process(Exchange exchange) {
         exchange.getMessage().setHeader(Exchange.OFFSET, KafkaResumable.of(exchange));
     }
 
@@ -86,16 +97,16 @@ public class KafkaConsumerAutoInstResumeRouteStrategyIT extends BaseKafkaTestSup
             public void configure() {
                 fromF("kafka:%s?groupId=%s_GROUP&autoCommitIntervalMs=1000"
                       + "&autoOffsetReset=earliest&consumersCount=1", TOPIC, TOPIC)
-                        .resumable().configuration(getDefaultKafkaResumeStrategyConfigurationBuilder())
-                        .process(e -> process(e))
-                        .routeId("resume-strategy-auto-route")
-                        // Note: this is for manually testing the ResumableCompletion onFailure exception logging. Uncomment it for testing it
-                        // .process(e -> e.setException(new RuntimeCamelException("Mock error in test")))
-                        .to("mock:sentMessages");
+                              .resumable().configuration(getDefaultKafkaResumeStrategyConfigurationBuilder())
+                              .process(e -> process(e))
+                              .routeId("resume-strategy-auto-route")
+                              // Note: this is for manually testing the ResumableCompletion onFailure exception logging. Uncomment it for testing it
+                              // .process(e -> e.setException(new RuntimeCamelException("Mock error in test")))
+                              .to("mock:sentMessages");
 
                 fromF("kafka:%s?groupId=%s_GROUP&autoCommitIntervalMs=1000", "resumable-route-auto-offsets",
                         "resumable-route-auto-offsets")
-                        .to(KafkaTestUtil.MOCK_RESULT);
+                                .to("mock:result");
             }
         };
     }

@@ -16,8 +16,8 @@
  */
 package org.apache.camel.component.xchange;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.annotations.Component;
@@ -29,7 +29,7 @@ import org.knowm.xchange.utils.Assert;
 @Component("xchange")
 public class XChangeComponent extends DefaultComponent {
 
-    private final Map<String, XChange> xchanges = new ConcurrentHashMap<>();
+    private final Map<String, XChange> xchanges = new HashMap<>();
 
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
@@ -64,12 +64,16 @@ public class XChangeComponent extends DefaultComponent {
         return ExchangeFactory.INSTANCE.createExchange(exchangeClass);
     }
 
-    private XChange getOrCreateXChange(String name) {
-        return xchanges.computeIfAbsent(name, xc -> {
+    private synchronized XChange getOrCreateXChange(String name) {
+        XChange xchange = xchanges.get(name);
+        if (xchange == null) {
             Class<? extends Exchange> exchangeClass = XChangeHelper.loadXChangeClass(getCamelContext(), name);
             Assert.notNull(exchangeClass, "XChange not supported: " + name);
-            return new XChange(createExchange(exchangeClass));
-        });
+            xchange = new XChange(createExchange(exchangeClass));
+            xchanges.put(name, xchange);
+        }
+
+        return xchange;
     }
 
 }

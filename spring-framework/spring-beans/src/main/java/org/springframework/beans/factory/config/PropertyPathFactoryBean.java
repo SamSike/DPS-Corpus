@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.beans.factory.config;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeansException;
@@ -28,6 +27,7 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -87,19 +87,23 @@ public class PropertyPathFactoryBean implements FactoryBean<Object>, BeanNameAwa
 
 	private static final Log logger = LogFactory.getLog(PropertyPathFactoryBean.class);
 
-	private @Nullable BeanWrapper targetBeanWrapper;
+	@Nullable
+	private BeanWrapper targetBeanWrapper;
 
-	@SuppressWarnings("NullAway.Init")
+	@Nullable
 	private String targetBeanName;
 
-	private @Nullable String propertyPath;
+	@Nullable
+	private String propertyPath;
 
-	private @Nullable Class<?> resultType;
+	@Nullable
+	private Class<?> resultType;
 
-	@SuppressWarnings("NullAway.Init")
+	@Nullable
 	private String beanName;
 
-	private @Nullable BeanFactory beanFactory;
+	@Nullable
+	private BeanFactory beanFactory;
 
 
 	/**
@@ -117,7 +121,7 @@ public class PropertyPathFactoryBean implements FactoryBean<Object>, BeanNameAwa
 	 * Specify the name of a target bean to apply the property path to.
 	 * Alternatively, specify a target object directly.
 	 * @param targetBeanName the bean name to be looked up in the
-	 * containing bean factory (for example, "testBean")
+	 * containing bean factory (e.g. "testBean")
 	 * @see #setTargetObject
 	 */
 	public void setTargetBeanName(String targetBeanName) {
@@ -127,7 +131,7 @@ public class PropertyPathFactoryBean implements FactoryBean<Object>, BeanNameAwa
 	/**
 	 * Specify the property path to apply to the target.
 	 * @param propertyPath the property path, potentially nested
-	 * (for example, "age" or "spouse.age")
+	 * (e.g. "age" or "spouse.age")
 	 */
 	public void setPropertyPath(String propertyPath) {
 		this.propertyPath = StringUtils.trimAllWhitespace(propertyPath);
@@ -197,12 +201,13 @@ public class PropertyPathFactoryBean implements FactoryBean<Object>, BeanNameAwa
 
 
 	@Override
-	public @Nullable Object getObject() throws BeansException {
+	@Nullable
+	public Object getObject() throws BeansException {
 		BeanWrapper target = this.targetBeanWrapper;
 		if (target != null) {
 			if (logger.isWarnEnabled() && this.targetBeanName != null &&
-					this.beanFactory instanceof ConfigurableBeanFactory cbf &&
-					cbf.isCurrentlyInCreation(this.targetBeanName)) {
+					this.beanFactory instanceof ConfigurableBeanFactory &&
+					((ConfigurableBeanFactory) this.beanFactory).isCurrentlyInCreation(this.targetBeanName)) {
 				logger.warn("Target bean '" + this.targetBeanName + "' is still in creation due to a circular " +
 						"reference - obtained value for property '" + this.propertyPath + "' may be outdated!");
 			}
@@ -219,7 +224,7 @@ public class PropertyPathFactoryBean implements FactoryBean<Object>, BeanNameAwa
 	}
 
 	@Override
-	public @Nullable Class<?> getObjectType() {
+	public Class<?> getObjectType() {
 		return this.resultType;
 	}
 

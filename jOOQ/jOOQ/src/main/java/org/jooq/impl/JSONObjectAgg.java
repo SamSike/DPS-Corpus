@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,43 +40,20 @@ package org.jooq.impl;
 import static org.jooq.SQLDialect.MARIADB;
 import static org.jooq.impl.DSL.groupConcat;
 import static org.jooq.impl.DSL.inline;
-import static org.jooq.impl.DSL.jsonArray;
 import static org.jooq.impl.DSL.jsonObject;
-import static org.jooq.impl.DSL.key;
+import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.when;
-import static org.jooq.impl.JSONEntryImpl.jsonCast;
-import static org.jooq.impl.Keywords.K_AS;
-import static org.jooq.impl.Keywords.K_IS_NOT_NULL;
-import static org.jooq.impl.Keywords.K_NESTED;
-import static org.jooq.impl.Keywords.K_ORDER_BY;
-import static org.jooq.impl.Keywords.K_PATH;
-import static org.jooq.impl.Keywords.K_REPLACE;
-import static org.jooq.impl.Keywords.K_ROW;
-import static org.jooq.impl.Names.N_ARRAY_AGG;
-import static org.jooq.impl.Names.N_CAST;
 import static org.jooq.impl.Names.N_FIELD;
 import static org.jooq.impl.Names.N_JSONB_OBJECT_AGG;
 import static org.jooq.impl.Names.N_JSON_GROUP_OBJECT;
-import static org.jooq.impl.Names.N_JSON_OBJECT;
 import static org.jooq.impl.Names.N_JSON_OBJECTAGG;
 import static org.jooq.impl.Names.N_JSON_OBJECT_AGG;
-import static org.jooq.impl.Names.N_JSON_STRIP_NULLS;
-import static org.jooq.impl.Names.N_JSON_TRANSFORM;
-import static org.jooq.impl.Names.N_MAP;
-import static org.jooq.impl.Names.N_MAP_FILTER;
-import static org.jooq.impl.Names.N_MAP_FROM_ENTRIES;
-import static org.jooq.impl.Names.N_OBJECT_AGG;
-import static org.jooq.impl.Names.N_T;
-import static org.jooq.impl.Names.N_TO_JSON;
 import static org.jooq.impl.QOM.JSONOnNull.ABSENT_ON_NULL;
 import static org.jooq.impl.QOM.JSONOnNull.NULL_ON_NULL;
-import static org.jooq.impl.QueryPartListView.wrap;
-import static org.jooq.impl.SQLDataType.BLOB;
 import static org.jooq.impl.SQLDataType.JSON;
 import static org.jooq.impl.SQLDataType.VARCHAR;
 
-import java.util.function.Function;
-
+import org.jooq.AggregateFunction;
 import org.jooq.Context;
 import org.jooq.DataType;
 import org.jooq.Field;
@@ -125,38 +102,6 @@ implements
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             case POSTGRES:
             case YUGABYTEDB:
                 acceptPostgres(ctx);
@@ -182,69 +127,10 @@ implements
                 acceptSQLite(ctx);
                 break;
 
-            case DUCKDB:
-                acceptDuckDB(ctx);
-                break;
-
-            case TRINO:
-                acceptTrino(ctx);
-                break;
-
             default:
                 acceptStandard(ctx);
                 break;
         }
-    }
-
-    private final void acceptDuckDB(Context<?> ctx) {
-        ctx.visit(N_TO_JSON).sql('(');
-        ctx.visit(N_MAP_FROM_ENTRIES).sql('(');
-        ctx.visit(N_ARRAY_AGG).sql('(');
-        ctx.visit(K_ROW).sql('(').visit(entry.key()).sql(", ").visit(jsonCast(ctx, entry.value())).sql(')');
-        ctx.sql(')');
-
-        if (onNull == ABSENT_ON_NULL)
-            acceptFilterClause(ctx, f(entry.value().isNotNull()));
-        else
-            acceptFilterClause(ctx);
-
-        acceptOverClause(ctx);
-
-        ctx.sql(')');
-        ctx.sql(')');
-    }
-
-    private final void acceptTrino(Context<?> ctx) {
-        ctx.visit(N_CAST).sql('(');
-
-        boolean noAggregateFilter = onNull == JSONOnNull.ABSENT_ON_NULL && !supportsFilter(ctx);
-        if (noAggregateFilter)
-            ctx.visit(N_MAP_FILTER).sql('(');
-
-        ctx.visit(N_MAP).sql('(');
-        acceptTrinoArrayAgg(ctx, entry.key(), entry.value());
-        ctx.sql(", ");
-        acceptTrinoArrayAgg(ctx, entry.value(), entry.value());
-        ctx.sql(')');
-
-        if (noAggregateFilter)
-            ctx.sql(", (k, v) -> v ").visit(K_IS_NOT_NULL).sql(')');
-
-        ctx.sql(' ').visit(K_AS).sql(' ').visit(JSON);
-        ctx.sql(')');
-    }
-
-    private final void acceptTrinoArrayAgg(Context<?> ctx, Field<?> f1, Field<?> f2) {
-        ctx.visit(N_ARRAY_AGG).sql('(');
-        ctx.visit(jsonCast(ctx, f1));
-        ctx.sql(")");
-
-        if (onNull == ABSENT_ON_NULL)
-            acceptFilterClause(ctx, f(f2.isNotNull()));
-        else
-            acceptFilterClause(ctx);
-
-        acceptOverClause(ctx);
     }
 
     private final void acceptPostgres(Context<?> ctx) {
@@ -273,62 +159,7 @@ implements
         acceptOverClause(ctx);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private final void acceptGroupConcat(Context<?> ctx) {
-        ctx.sql('(').visit(groupConcatEmulation(ctx)).sql(')');
-    }
-
-    private final Field<?> groupConcatEmulation(Context<?> ctx) {
         final Field<String> listagg = CustomField.of(Names.N_GROUP_CONCAT, VARCHAR, c1 -> {
             Field<JSON> o1 = jsonObject(entry.key(), entry.value());
 
@@ -346,19 +177,7 @@ implements
             acceptOverClause(c1);
         });
 
-        Field<String> result = DSL.concat(inline('{'), listagg, inline('}'));
-
-        switch (ctx.family()) {
-
-
-
-
-
-
-
-            default:
-                return result;
-        }
+        ctx.sql('(').visit(DSL.concat(inline('{'), listagg, inline('}'))).sql(')');
     }
 
 
@@ -376,15 +195,9 @@ implements
 
 
     private final void acceptStandard(Context<?> ctx) {
-        acceptStandard(ctx, null, onNull);
-    }
+        ctx.visit(N_JSON_OBJECTAGG).sql('(').visit(entry);
 
-    private final void acceptStandard(Context<?> ctx, Function<? super Field<?>, ? extends Field<?>> mapper, JSONOnNull onNull0) {
-        JSONEntry<?> entry0 = mapper == null ? entry : key(entry.key()).value(mapper.apply(entry.value()));
-
-        ctx.visit(N_JSON_OBJECTAGG).sql('(').visit(entry0);
-
-        JSONNull jsonNull = new JSONNull(onNull0);
+        JSONNull jsonNull = new JSONNull(onNull);
         if (jsonNull.rendersContent(ctx))
             ctx.sql(' ').visit(jsonNull);
 
@@ -436,7 +249,7 @@ implements
     }
 
     @Override
-    public final Function1<? super JSONEntry<?>, ? extends QOM.JSONObjectAgg<J>> $constructor() {
+    public final Function1<? super JSONEntry<?>, ? extends AggregateFunction<J>> $constructor() {
         return e -> {
             JSONObjectAgg<J> r = new JSONObjectAgg<J>(getDataType(), e);
             r.onNull = onNull;

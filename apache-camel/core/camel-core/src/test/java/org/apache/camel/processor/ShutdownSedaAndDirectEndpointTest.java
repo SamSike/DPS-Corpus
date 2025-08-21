@@ -40,10 +40,10 @@ public class ShutdownSedaAndDirectEndpointTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo").startupOrder(1).to("direct:bar");
 
                 from("direct:bar").delay(25).to("mock:bar");

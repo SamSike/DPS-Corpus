@@ -16,12 +16,15 @@
  */
 package org.apache.camel.management;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.model.RouteDefinition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -62,8 +65,11 @@ public class RemoveRouteDefinitionTest extends ManagementTestSupport {
         ObjectName on = set.iterator().next();
 
         boolean registered = mbeanServer.isRegistered(on);
-        assertTrue(registered, "Should be registered");
+        assertEquals(true, registered, "Should be registered");
 
+        RouteDefinition definition = context.getRouteDefinition("route1");
+        List<RouteDefinition> routeDefinitions = new ArrayList<>();
+        routeDefinitions.add(definition);
         // must stop before we can remove
         context.getRouteController().stopRoute("route1");
         context.removeRoute("route1");
@@ -83,8 +89,11 @@ public class RemoveRouteDefinitionTest extends ManagementTestSupport {
         ObjectName on = set.iterator().next();
 
         boolean registered = mbeanServer.isRegistered(on);
-        assertTrue(registered, "Should be registered");
+        assertEquals(true, registered, "Should be registered");
 
+        RouteDefinition definition = context.getRouteDefinition("route1");
+        List<RouteDefinition> routeDefinitions = new ArrayList<>();
+        routeDefinitions.add(definition);
         context.getRouteController().stopRoute("route1");
 
         // route is only stopped so its still in JMX
@@ -93,10 +102,10 @@ public class RemoveRouteDefinitionTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("route1").to("log:foo").to("mock:result");
             }
         };

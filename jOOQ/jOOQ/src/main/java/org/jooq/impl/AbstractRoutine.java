@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,11 +40,8 @@ package org.jooq.impl;
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.jooq.Clause.FIELD;
 import static org.jooq.Clause.FIELD_FUNCTION;
-// ...
-// ...
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 // ...
@@ -52,46 +49,42 @@ import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
-// ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.XMLFormat.RecordFormat.COLUMN_NAME_ELEMENTS;
 import static org.jooq.conf.ThrowExceptions.THROW_NONE;
 import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.function;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.param;
-import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.sql;
 import static org.jooq.impl.DSL.table;
+import static org.jooq.impl.DSL.using;
 import static org.jooq.impl.DSL.val;
-import static org.jooq.impl.DefaultBinding.DefaultBooleanBinding.BIND_AS_1_0;
 import static org.jooq.impl.Keywords.K_BEGIN;
 import static org.jooq.impl.Keywords.K_BOOLEAN;
 import static org.jooq.impl.Keywords.K_CASE;
 import static org.jooq.impl.Keywords.K_COLUMNS;
 import static org.jooq.impl.Keywords.K_DECLARE;
+import static org.jooq.impl.Keywords.K_ELSE;
 import static org.jooq.impl.Keywords.K_END;
-import static org.jooq.impl.Keywords.K_END_IF;
 import static org.jooq.impl.Keywords.K_END_LOOP;
 import static org.jooq.impl.Keywords.K_FALSE;
 import static org.jooq.impl.Keywords.K_FIRST;
 import static org.jooq.impl.Keywords.K_FOR;
 import static org.jooq.impl.Keywords.K_FROM;
 import static org.jooq.impl.Keywords.K_FUNCTION;
-import static org.jooq.impl.Keywords.K_IF;
-import static org.jooq.impl.Keywords.K_IN;
 import static org.jooq.impl.Keywords.K_IS;
 import static org.jooq.impl.Keywords.K_IS_NOT_NULL;
-import static org.jooq.impl.Keywords.K_LAST;
 import static org.jooq.impl.Keywords.K_LOOP;
 import static org.jooq.impl.Keywords.K_NEXT;
 import static org.jooq.impl.Keywords.K_NOT;
+import static org.jooq.impl.Keywords.K_NULL;
 import static org.jooq.impl.Keywords.K_OPEN;
 import static org.jooq.impl.Keywords.K_PASSING;
 import static org.jooq.impl.Keywords.K_RECORD;
 import static org.jooq.impl.Keywords.K_RETURN;
 import static org.jooq.impl.Keywords.K_SELECT;
-import static org.jooq.impl.Keywords.K_SET;
 import static org.jooq.impl.Keywords.K_THEN;
 import static org.jooq.impl.Keywords.K_TRUE;
 import static org.jooq.impl.Keywords.K_TYPE;
@@ -103,18 +96,16 @@ import static org.jooq.impl.SQLDataType.NUMERIC;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
 import static org.jooq.impl.Tools.EMPTY_NAME;
 import static org.jooq.impl.Tools.configurationOrThrow;
-// ...
-import static org.jooq.impl.Tools.executeUpdateAndConsumeExceptions;
 import static org.jooq.impl.Tools.executeStatementAndGetFirstResultSet;
-import static org.jooq.impl.Tools.getRecordQualifier;
-import static org.jooq.impl.Tools.map;
+import static org.jooq.impl.Tools.settings;
 import static org.jooq.impl.Tools.toSQLDDLTypeDeclaration;
+import static org.jooq.impl.Tools.SimpleDataKey.DATA_TOP_LEVEL_CTE;
 
 import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -123,7 +114,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import org.jooq.AggregateFunction;
 // ...
@@ -132,11 +122,9 @@ import org.jooq.BindContext;
 import org.jooq.Binding;
 import org.jooq.Catalog;
 import org.jooq.Clause;
-import org.jooq.Comment;
 import org.jooq.Configuration;
 import org.jooq.Context;
 import org.jooq.Converter;
-import org.jooq.Cursor;
 import org.jooq.DSLContext;
 import org.jooq.DataType;
 import org.jooq.ExecuteContext;
@@ -156,12 +144,9 @@ import org.jooq.Result;
 import org.jooq.Results;
 import org.jooq.Routine;
 import org.jooq.SQLDialect;
-import org.jooq.SQLDialectCategory;
 import org.jooq.Schema;
-import org.jooq.Table;
 import org.jooq.UDT;
 import org.jooq.UDTField;
-import org.jooq.UDTRecord;
 import org.jooq.conf.SettingsTools;
 import org.jooq.exception.ControlFlowSignal;
 import org.jooq.exception.MappingException;
@@ -194,7 +179,6 @@ implements
 
     private static final Set<SQLDialect>      REQUIRE_SELECT_FROM                = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
     private static final Set<SQLDialect>      REQUIRE_DISAMBIGUATE_OVERLOADS     = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
-    private static final Set<SQLDialect>      SUPPORT_NAMED_ARGUMENTS            = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
 
     // ------------------------------------------------------------------------
     // Meta-data attributes (the same for every call)
@@ -253,124 +237,46 @@ implements
     // Constructors
     // ------------------------------------------------------------------------
 
-    /**
-     * @deprecated - 3.20.0 - [#15723] - Re-generate your code.
-     */
-    @Deprecated
     protected AbstractRoutine(String name, Schema schema) {
-        this(name, schema, (Package) null, (DataType<?>) null, null, null);
+        this(name, schema, null, null, null, null);
     }
 
-    protected AbstractRoutine(String name, Schema schema, Comment comment) {
-        this(name, schema, (Package) null, comment, (DataType<?>) null, null, null);
-    }
-
-    /**
-     * @deprecated - 3.20.0 - [#15723] - Re-generate your code.
-     */
-    @Deprecated
     protected AbstractRoutine(String name, Schema schema, Package pkg) {
-        this(name, schema, pkg, (DataType<?>) null, null, null);
+        this(name, schema, pkg, null, null, null);
     }
 
-    protected AbstractRoutine(String name, Schema schema, Package pkg, Comment comment) {
-        this(name, schema, pkg, comment, (DataType<?>) null, null, null);
+    protected AbstractRoutine(String name, Schema schema, DataType<T> type) {
+        this(name, schema, null, type, null, null);
     }
 
-    /**
-     * @deprecated - 3.20.0 - [#15723] - Re-generate your code.
-     */
-    @Deprecated
-    protected AbstractRoutine(String name, Schema schema, DataType<? extends T> type) {
-        this(name, schema, (Package) null, type, null, null);
-    }
-
-    protected AbstractRoutine(String name, Schema schema, Comment comment, DataType<? extends T> type) {
-        this(name, schema, (Package) null, comment, type, null, null);
-    }
-
-    /**
-     * @deprecated - 3.20.0 - [#15723] - Re-generate your code.
-     */
-    @Deprecated
     protected <X> AbstractRoutine(String name, Schema schema, DataType<X> type, Converter<X, T> converter) {
-        this(name, schema, (Package) null, type, converter, null);
+        this(name, schema, null, type, converter, null);
     }
 
-    protected <X> AbstractRoutine(String name, Schema schema, Comment comment, DataType<X> type, Converter<X, T> converter) {
-        this(name, schema, (Package) null, comment, type, converter, null);
-    }
-
-    /**
-     * @deprecated - 3.20.0 - [#15723] - Re-generate your code.
-     */
-    @Deprecated
     protected <X> AbstractRoutine(String name, Schema schema, DataType<X> type, Binding<X, T> binding) {
-        this(name, schema, (Package) null, type, null, binding);
+        this(name, schema, null, type, null, binding);
     }
 
-    protected <X> AbstractRoutine(String name, Schema schema, Comment comment, DataType<X> type, Binding<X, T> binding) {
-        this(name, schema, (Package) null, comment, type, null, binding);
-    }
 
-    /**
-     * @deprecated - 3.20.0 - [#15723] - Re-generate your code.
-     */
-    @Deprecated
     protected <X, Y> AbstractRoutine(String name, Schema schema, DataType<X> type, Converter<Y, T> converter, Binding<X, Y> binding) {
-        this(name, schema, (Package) null, type, converter, binding);
+        this(name, schema, null, type, converter, binding);
     }
 
-    protected <X, Y> AbstractRoutine(String name, Schema schema, Comment comment, DataType<X> type, Converter<Y, T> converter, Binding<X, Y> binding) {
-        this(name, schema, null, comment, type, converter, binding);
-    }
-
-    /**
-     * @deprecated - 3.20.0 - [#15723] - Re-generate your code.
-     */
-    @Deprecated
-    protected AbstractRoutine(String name, Schema schema, Package pkg, DataType<? extends T> type) {
+    protected AbstractRoutine(String name, Schema schema, Package pkg, DataType<T> type) {
         this(name, schema, pkg, type, null, null);
     }
 
-    protected AbstractRoutine(String name, Schema schema, Package pkg, Comment comment, DataType<? extends T> type) {
-        this(name, schema, pkg, comment, type, null, null);
-    }
-
-    /**
-     * @deprecated - 3.20.0 - [#15723] - Re-generate your code.
-     */
-    @Deprecated
     protected <X> AbstractRoutine(String name, Schema schema, Package pkg, DataType<X> type, Converter<X, T> converter) {
         this(name, schema, pkg, type, converter, null);
     }
 
-    protected <X> AbstractRoutine(String name, Schema schema, Package pkg, Comment comment, DataType<X> type, Converter<X, T> converter) {
-        this(name, schema, pkg, comment, type, converter, null);
-    }
-
-    /**
-     * @deprecated - 3.20.0 - [#15723] - Re-generate your code.
-     */
-    @Deprecated
     protected <X> AbstractRoutine(String name, Schema schema, Package pkg, DataType<X> type, Binding<X, T> binding) {
         this(name, schema, pkg, type, null, binding);
     }
 
-    protected <X> AbstractRoutine(String name, Schema schema, Package pkg, Comment comment, DataType<X> type, Binding<X, T> binding) {
-        this(name, schema, pkg, comment, type, null, binding);
-    }
-
-    /**
-     * @deprecated - 3.20.0 - [#15723] - Re-generate your code.
-     */
-    @Deprecated
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected <X, Y> AbstractRoutine(String name, Schema schema, Package pkg, DataType<X> type, Converter<Y, T> converter, Binding<X, Y> binding) {
-        this(name, schema, pkg, null, type, converter, binding);
-    }
-
-    protected <X, Y> AbstractRoutine(String name, Schema schema, Package pkg, Comment comment, DataType<X> type, Converter<Y, T> converter, Binding<X, Y> binding) {
-        super(qualify(pkg != null ? pkg : schema, DSL.name(name)), comment);
+        super(qualify(pkg != null ? pkg : schema, DSL.name(name)), CommentImpl.NO_COMMENT);
 
         this.resultIndexes = new HashMap<>();
 
@@ -413,7 +319,7 @@ implements
 
     @Override
     public final <Z> void set(Parameter<Z> parameter, Z value) {
-        setField(parameter, Tools.field(value, parameter.getDataType()));
+        setField(parameter, val(value, parameter.getDataType()));
     }
 
     /*
@@ -474,17 +380,6 @@ implements
             return executeSelectFromPOSTGRES();
         }
 
-
-
-
-
-
-
-
-
-
-
-
         // Procedures (no return value) are always executed as CallableStatement
         else if (type == null) {
             return executeCallableStatement();
@@ -508,15 +403,6 @@ implements
         else {
             switch (family) {
 
-
-
-
-
-
-
-
-
-
                 // [#852] Some RDBMS don't allow for using JDBC procedure escape
                 // syntax for functions. Select functions from DUAL instead
                 case HSQLDB:
@@ -533,8 +419,6 @@ implements
 
                 case FIREBIRD:
                 case H2:
-                case TRINO:
-
 
 
 
@@ -592,21 +476,6 @@ implements
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private final int executeSelectFromHSQLDB() {
         DSLContext create = create(configuration);
         Result<?> result = create.selectFrom(table(asField())).fetch();
@@ -627,32 +496,17 @@ implements
 
         // [#12659] Handle special case of single UDT OUT parameter, which cannot
         //          be referred to by its name, regrettably
-        if (fields.size() == 1
-            && fields.get(0).getDataType().isUDT()
-
-
-
-
-        ) {
+        if (fields.size() == 1 && fields.get(0).getDataType().isUDT())
             result = create.select(field("row(t.*)", fields.get(0).getDataType())).from("{0} as t", asField()).fetch();
-        }
-
-        // [#7503] Anonymous records have to be fetched from the projection
-        else if (fields.size() == 1 && fields.get(0).getDataType().isRecord())
-            result = create.select(asField()).fetch();
-
         else
             result = create.select(fields).from("{0}", asField()).fetch();
 
         int i = 0;
 
-        // [#5844] Table valued functions may return empty results!
-        if (!result.isEmpty()) {
-            if (returnParameter != null)
-                outValues.put(returnParameter, returnParameter.getDataType().convert(result.getValue(0, i++)));
-            for (Parameter<?> p : outParameters)
-                outValues.put(p, p.getDataType().convert(result.getValue(0, i++)));
-        }
+        if (returnParameter != null)
+            outValues.put(returnParameter, returnParameter.getDataType().convert(result.getValue(0, i++)));
+        for (Parameter<?> p : outParameters)
+            outValues.put(p, p.getDataType().convert(result.getValue(0, i++)));
 
         return 0;
     }
@@ -670,6 +524,9 @@ implements
         try {
             // [#8968] Keep start() event inside of lifecycle management
             listener.start(ctx);
+
+            Connection connection = ctx.connection();
+
             listener.renderStart(ctx);
             // [#1520] TODO: Should the number of bind values be checked, here?
             ctx.sql(create(configuration).render(this));
@@ -677,7 +534,7 @@ implements
 
             listener.prepareStart(ctx);
             if (ctx.statement() == null)
-                ctx.statement(ctx.connection().prepareCall(ctx.sql()));
+                ctx.statement(connection.prepareCall(ctx.sql()));
             Tools.setFetchSize(ctx, 0);
             // [#1856] TODO: Add Statement flags like timeout here
             listener.prepareEnd(ctx);
@@ -688,7 +545,7 @@ implements
                 ctx.statement().setQueryTimeout(t);
 
             listener.bindStart(ctx);
-            new DefaultBindContext(configuration, ctx, ctx.statement()).visit(this);
+            using(configuration).bindContext(ctx.statement()).visit(this);
             registerOutParameters(ctx);
             listener.bindEnd(ctx);
 
@@ -699,21 +556,14 @@ implements
 
 
 
+            // [#2925] Jaybird currently doesn't like fetching OUT parameters and consuming ResultSets
+            //         http://tracker.firebirdsql.org/browse/JDBC-350
+            if (ctx.family() != FIREBIRD)
+                Tools.consumeResultSets(ctx, listener, results, null, e);
 
-
-
-
-
-            {
-                // [#2925]  Jaybird currently doesn't like fetching OUT parameters and consuming ResultSets
-                //          http://tracker.firebirdsql.org/browse/JDBC-350
-                if (!asList(FIREBIRD).contains(ctx.family()))
-                    Tools.consumeResultSets(ctx, listener, results, e);
-
-                listener.outStart(ctx);
-                fetchOutParameters(ctx);
-                listener.outEnd(ctx);
-            }
+            listener.outStart(ctx);
+            fetchOutParameters(ctx);
+            listener.outEnd(ctx);
 
             return 0;
         }
@@ -737,38 +587,13 @@ implements
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private final SQLException execute0(ExecuteContext ctx, ExecuteListener listener) throws SQLException {
         listener.executeStart(ctx);
-        SQLException e;
-
-
-
-
-
-
-        e = executeStatementAndGetFirstResultSet(ctx, 0);
-
+        SQLException e = executeStatementAndGetFirstResultSet(ctx, 0);
         listener.executeEnd(ctx);
 
         if (e != null)
-            results.resultsOrRows().add(new ResultOrRowsImpl(Tools.translate(ctx, ctx.sql(), e)));
+            results.resultsOrRows().add(new ResultOrRowsImpl(Tools.translate(ctx.sql(), e)));
 
         return e;
     }
@@ -854,7 +679,6 @@ implements
         }
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     private final void bind1(BindContext context, Parameter<?> parameter, boolean bindAsIn, boolean bindAsOut) {
         int index = context.peekIndex();
 
@@ -870,18 +694,6 @@ implements
         }
 
         if (bindAsIn) {
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -923,22 +735,6 @@ implements
         else
             context.nextIndex();
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     final void toSQL0(RenderContext context) {
         toSQLDeclare(context);
@@ -990,7 +786,7 @@ implements
             if (indent && i++ > 0)
                 context.formatNewLine();
 
-            if (defaulted && context.family().category() == SQLDialectCategory.POSTGRES)
+            if (defaulted && context.family() == POSTGRES)
                 context.visit(parameter.getUnqualifiedName()).sql(" := ");
 
             // OUT and IN OUT parameters are always written as a '?' bind variable
@@ -1012,14 +808,7 @@ implements
     }
 
     private final void toSQLEnd(RenderContext context) {
-        if (!isSQLUsable() && context.family().category() == SQLDialectCategory.POSTGRES) {}
-
-
-
-
-
-
-
+        if (!isSQLUsable() && context.family() == POSTGRES) {}
 
 
 
@@ -1170,18 +959,6 @@ implements
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     }
 
 
@@ -1230,51 +1007,8 @@ implements
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private final void toSQLBegin(RenderContext context) {
-        if (!isSQLUsable() && context.family().category() == SQLDialectCategory.POSTGRES) {}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        if (!isSQLUsable() && context.family() == POSTGRES) {}
 
 
 
@@ -1596,126 +1330,7 @@ implements
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private final void toSQLAssign(RenderContext context) {
-
-
 
 
 
@@ -1773,18 +1388,10 @@ implements
 
 
 
-
-
-
         ctx.sql('?');
     }
 
     private final void toSQLInParam(RenderContext ctx, Parameter<?> parameter, int index, Field<?> value) {
-
-
-
-
-
 
 
 
@@ -1810,7 +1417,7 @@ implements
     private final Name getQualifiedName(Context<?> ctx) {
         List<Name> list = new ArrayList<>();
 
-        if (ctx.qualifySchema()) {
+        if (ctx.qualify()) {
             Schema mapped = Tools.getMappedSchema(ctx, getSchema());
 
             if (mapped != null && !"".equals(mapped.getName()))
@@ -1876,11 +1483,6 @@ implements
     }
 
     private final void registerOutParameters(ExecuteContext ctx) throws SQLException {
-
-
-
-
-
         Configuration c = ctx.configuration();
         CallableStatement statement = (CallableStatement) ctx.statement();
 
@@ -2040,9 +1642,7 @@ implements
     private final boolean pgArgNeedsCasting(Parameter<?> parameter) {
         // [#5264] Overloaded methods always need casting for overload resolution
         //         Some data types also need casting because expressions are automatically promoted to a "higher" type
-        return isOverloaded()
-            || parameter.getDataType().getFromType() == Byte.class
-            || parameter.getDataType().getFromType() == Short.class;
+        return isOverloaded() || parameter.getType() == Byte.class || parameter.getType() == Short.class;
     }
 
 
@@ -2107,6 +1707,33 @@ implements
 
 
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2375,7 +2002,7 @@ implements
     /**
      * The {@link Field} representation of this {@link Routine}
      */
-    class RoutineField extends AbstractField<T> implements UNotYetImplemented {
+    private class RoutineField extends AbstractField<T> implements UNotYetImplemented {
 
         @SuppressWarnings("unchecked")
         RoutineField() {
@@ -2492,6 +2119,13 @@ implements
 
 
 
+
+
+
+
+
+
+
             name = null;
 
             for (Parameter<?> parameter : getInParameters0(ctx.configuration())) {
@@ -2503,9 +2137,8 @@ implements
                 // Disambiguate overloaded function signatures
                 if (REQUIRE_DISAMBIGUATE_OVERLOADS.contains(ctx.dialect()))
 
-                    // [#4920]  In case there are any unnamed parameters, we mustn't
-                    // [#13947] Or, if named arguments aren't supported
-                    if (hasUnnamedParameters() || !SUPPORT_NAMED_ARGUMENTS.contains(ctx.dialect()))
+                    // [#4920] In case there are any unnamed parameters, we mustn't
+                    if (hasUnnamedParameters())
                         if (pgArgNeedsCasting(parameter))
                             fields.add(new Cast(getInValues().get(parameter), parameter.getDataType()));
                         else
@@ -2538,11 +2171,11 @@ implements
                 name != null ? name(name) : AbstractRoutine.this.getQualifiedName(ctx),
                 returnType,
                 false,
-                fields
+                fields.toArray(EMPTY_FIELD)
             );
 
             // [#3592] Decrease SQL -> PL/SQL context switches with Oracle Scalar Subquery Caching
-            if (TRUE.equals(ctx.settings().isRenderScalarSubqueriesForStoredFunctions()))
+            if (TRUE.equals(settings(ctx.configuration()).isRenderScalarSubqueriesForStoredFunctions()))
                 result = DSL.select(result).asField();
 
             ctx.visit(result);

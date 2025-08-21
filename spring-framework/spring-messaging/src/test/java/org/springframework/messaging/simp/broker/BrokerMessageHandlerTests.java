@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.SubscribableChannel;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.support.GenericMessage;
@@ -35,24 +37,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests for {@link org.springframework.messaging.simp.broker.AbstractBrokerMessageHandler}.
+ * Unit tests for {@link org.springframework.messaging.simp.broker.AbstractBrokerMessageHandler}.
  *
  * @author Rossen Stoyanchev
  */
-class BrokerMessageHandlerTests {
+public class BrokerMessageHandlerTests {
 
 	private final TestBrokerMessageHandler handler = new TestBrokerMessageHandler();
 
 
 	@Test
-	void startShouldUpdateIsRunning() {
+	public void startShouldUpdateIsRunning() {
 		assertThat(this.handler.isRunning()).isFalse();
 		this.handler.start();
 		assertThat(this.handler.isRunning()).isTrue();
 	}
 
 	@Test
-	void stopShouldUpdateIsRunning() {
+	public void stopShouldUpdateIsRunning() {
 		this.handler.start();
 		assertThat(this.handler.isRunning()).isTrue();
 
@@ -61,20 +63,20 @@ class BrokerMessageHandlerTests {
 	}
 
 	@Test
-	void startAndStopShouldNotPublishBrokerAvailabilityEvents() {
+	public void startAndStopShouldNotPublishBrokerAvailabilityEvents() {
 		this.handler.start();
 		this.handler.stop();
 		assertThat(this.handler.availabilityEvents).isEqualTo(Collections.emptyList());
 	}
 
 	@Test
-	void handleMessageWhenBrokerNotRunning() {
-		this.handler.handleMessage(new GenericMessage<>("payload"));
+	public void handleMessageWhenBrokerNotRunning() {
+		this.handler.handleMessage(new GenericMessage<Object>("payload"));
 		assertThat(this.handler.messages).isEqualTo(Collections.emptyList());
 	}
 
 	@Test
-	void publishBrokerAvailableEvent() {
+	public void publishBrokerAvailableEvent() {
 		assertThat(this.handler.isBrokerAvailable()).isFalse();
 		assertThat(this.handler.availabilityEvents).isEqualTo(Collections.emptyList());
 
@@ -85,7 +87,7 @@ class BrokerMessageHandlerTests {
 	}
 
 	@Test
-	void publishBrokerAvailableEventWhenAlreadyAvailable() {
+	public void publishBrokerAvailableEventWhenAlreadyAvailable() {
 		this.handler.publishBrokerAvailableEvent();
 		this.handler.publishBrokerAvailableEvent();
 
@@ -93,7 +95,7 @@ class BrokerMessageHandlerTests {
 	}
 
 	@Test
-	void publishBrokerUnavailableEvent() {
+	public void publishBrokerUnavailableEvent() {
 		this.handler.publishBrokerAvailableEvent();
 		assertThat(this.handler.isBrokerAvailable()).isTrue();
 
@@ -104,7 +106,7 @@ class BrokerMessageHandlerTests {
 	}
 
 	@Test
-	void publishBrokerUnavailableEventWhenAlreadyUnavailable() {
+	public void publishBrokerUnavailableEventWhenAlreadyUnavailable() {
 		this.handler.publishBrokerAvailableEvent();
 		this.handler.publishBrokerUnavailableEvent();
 		this.handler.publishBrokerUnavailableEvent();
@@ -113,7 +115,7 @@ class BrokerMessageHandlerTests {
 	}
 
 	@Test
-	void checkDestination() {
+	public void checkDestination() {
 		TestBrokerMessageHandler theHandler = new TestBrokerMessageHandler("/topic");
 		theHandler.start();
 
@@ -136,7 +138,7 @@ class BrokerMessageHandlerTests {
 	}
 
 	@Test
-	void checkDestinationWithoutConfiguredPrefixes() {
+	public void checkDestinationWithoutConfiguredPrefixes() {
 		this.handler.setUserDestinationPredicate(destination -> destination.startsWith("/user/"));
 		this.handler.start();
 
@@ -163,7 +165,8 @@ class BrokerMessageHandlerTests {
 
 
 		TestBrokerMessageHandler(String... destinationPrefixes) {
-			super(mock(), mock(), mock(), Arrays.asList(destinationPrefixes));
+			super(mock(SubscribableChannel.class), mock(MessageChannel.class),
+					mock(SubscribableChannel.class), Arrays.asList(destinationPrefixes));
 
 			setApplicationEventPublisher(this);
 		}

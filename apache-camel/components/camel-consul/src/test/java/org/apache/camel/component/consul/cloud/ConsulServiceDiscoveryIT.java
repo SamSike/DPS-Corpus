@@ -20,6 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import com.orbitz.consul.AgentClient;
+import com.orbitz.consul.model.agent.ImmutableRegCheck;
+import com.orbitz.consul.model.agent.ImmutableRegistration;
+import com.orbitz.consul.model.agent.Registration;
 import org.apache.camel.cloud.ServiceDefinition;
 import org.apache.camel.cloud.ServiceDiscovery;
 import org.apache.camel.component.consul.ConsulConfiguration;
@@ -27,10 +31,6 @@ import org.apache.camel.component.consul.ConsulTestSupport;
 import org.apache.camel.test.AvailablePortFinder;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.kiwiproject.consul.AgentClient;
-import org.kiwiproject.consul.model.agent.ImmutableRegCheck;
-import org.kiwiproject.consul.model.agent.ImmutableRegistration;
-import org.kiwiproject.consul.model.agent.Registration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -97,8 +97,7 @@ public class ConsulServiceDiscoveryIT extends ConsulTestSupport {
             Assertions.assertThat(service.getMetadata()).containsEntry("key1", "value1");
             Assertions.assertThat(service.getMetadata()).containsEntry("key2", "value2");
             Assertions.assertThat(service.getMetadata()).containsEntry("meta-key", "meta-val");
-            Assertions.assertThat(Boolean.toString(service.getHealth().isHealthy()))
-                    .isEqualTo(service.getMetadata().get("healthy"));
+            Assertions.assertThat("" + service.getHealth().isHealthy()).isEqualTo(service.getMetadata().get("healthy"));
         }
     }
 }

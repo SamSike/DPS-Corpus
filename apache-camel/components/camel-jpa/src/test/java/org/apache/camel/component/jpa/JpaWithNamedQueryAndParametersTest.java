@@ -97,7 +97,7 @@ public class JpaWithNamedQueryAndParametersTest {
         // now lets create a consumer to consume it
         consumer = endpoint.createConsumer(new Processor() {
             public void process(Exchange e) {
-                LOG.info("Received exchange: {}", e.getIn());
+                LOG.info("Received exchange: " + e.getIn());
                 receivedExchange = e;
                 latch.countDown();
             }
@@ -131,7 +131,7 @@ public class JpaWithNamedQueryAndParametersTest {
         params.put("custName", "Willem");
         // bind the params
         registry.bind("params", params);
-        camelContext.getCamelContextExtension().setRegistry(registry);
+        camelContext.setRegistry(registry);
 
         camelContext.start();
 
@@ -142,9 +142,7 @@ public class JpaWithNamedQueryAndParametersTest {
         assertTrue(value instanceof JpaEndpoint, "Should be a JPA endpoint but was: " + value);
         endpoint = (JpaEndpoint) value;
 
-        if (endpoint.getTransactionStrategy() instanceof DefaultTransactionStrategy strategy) {
-            transactionTemplate = strategy.getTransactionTemplate();
-        }
+        transactionTemplate = endpoint.createTransactionTemplate();
         entityManager = endpoint.getEntityManagerFactory().createEntityManager();
     }
 

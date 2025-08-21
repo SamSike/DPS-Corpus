@@ -16,8 +16,6 @@
  */
 package org.apache.camel.spi;
 
-import java.util.Date;
-
 /**
  * The last error that happened during changing the route lifecycle, i.e. such as when an exception was thrown during
  * starting the route.
@@ -54,9 +52,4 @@ public interface RouteError {
      * Whether the route is regarded as unhealthy.
      */
     boolean isUnhealthy();
-
-    /**
-     * The date and time when this error happened
-     */
-    Date getDate();
 }

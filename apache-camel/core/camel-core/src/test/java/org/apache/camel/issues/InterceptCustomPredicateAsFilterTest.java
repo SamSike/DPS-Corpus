@@ -30,11 +30,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class InterceptCustomPredicateAsFilterTest extends ContextTestSupport {
 
-    private final MyFiler filter = new MyFiler();
+    private MyFiler filter = new MyFiler();
 
     private static class MyFiler implements Predicate {
 
-        private final List<String> bodies = new ArrayList<>();
+        private List<String> bodies = new ArrayList<>();
 
         @Override
         public boolean matches(Exchange exchange) {
@@ -66,12 +66,12 @@ public class InterceptCustomPredicateAsFilterTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // secret messages should be filtered out asap
-                intercept().onWhen(not(filter)).to("mock:secret").stop();
+                intercept().when(not(filter)).to("mock:secret").stop();
 
                 from("direct:start").to("mock:good");
             }

@@ -26,7 +26,7 @@ import java.util.List;
  * <p>
  * For example:
  * </p>
- *
+ * 
  * <pre>
  * {@code
  *     public enum HelloWorldMethod implements ApiMethod {
@@ -54,7 +54,6 @@ public final class ApiMethodImpl implements ApiMethod {
     private final String name;
     private final Class<?> resultType;
     private final List<String> argNames;
-    private final List<String> setterArgNames;
     private final List<Class<?>> argTypes;
     private final Method method;
 
@@ -63,25 +62,19 @@ public final class ApiMethodImpl implements ApiMethod {
         this.name = name;
         this.resultType = resultType;
 
-        final List<String> tmpSetterArgNames = new ArrayList<>();
-        final List<String> tmpArgNames = new ArrayList<>();
-        final List<Class<?>> tmpArgTypes = new ArrayList<>();
+        final List<String> tmpArgNames = new ArrayList<>(args.length);
+        final List<Class<?>> tmpArgTypes = new ArrayList<>(args.length);
         for (ApiMethodArg arg : args) {
-            if (arg.isSetter()) {
-                tmpSetterArgNames.add(arg.getName());
-            } else {
-                tmpArgTypes.add(arg.getType());
-                tmpArgNames.add(arg.getName());
-            }
+            tmpArgTypes.add(arg.getType());
+            tmpArgNames.add(arg.getName());
         }
 
         this.argNames = Collections.unmodifiableList(tmpArgNames);
         this.argTypes = Collections.unmodifiableList(tmpArgTypes);
-        this.setterArgNames = Collections.unmodifiableList(tmpSetterArgNames);
 
         // find method in Proxy type
         try {
-            this.method = proxyType.getMethod(name, argTypes.toArray(new Class[argNames.size()]));
+            this.method = proxyType.getMethod(name, argTypes.toArray(new Class[args.length]));
         } catch (NoSuchMethodException e) {
             throw new IllegalArgumentException(
                     String.format("Missing method %s %s", name, argTypes.toString().replace('[', '(').replace(']', ')')),
@@ -105,11 +98,6 @@ public final class ApiMethodImpl implements ApiMethod {
     }
 
     @Override
-    public List<String> getSetterArgNames() {
-        return setterArgNames;
-    }
-
-    @Override
     public List<Class<?>> getArgTypes() {
         return argTypes;
     }
@@ -121,7 +109,7 @@ public final class ApiMethodImpl implements ApiMethod {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder(128);
+        StringBuilder builder = new StringBuilder();
         builder.append("{")
                 .append("name=").append(name)
                 .append(", resultType=").append(resultType)

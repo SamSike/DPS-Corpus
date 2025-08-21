@@ -18,13 +18,13 @@ package org.apache.camel.util;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PackageHelperTest {
 
     @Test
     public void testIsValidPackage() {
         boolean valid = PackageHelper.isValidVersion("org.apache.camel", 2.0);
-        assertTrue(valid, "Should be Camel 2.0 or higher");
+        assertEquals(true, valid, "Should be Camel 2.0 or higher");
     }
 }

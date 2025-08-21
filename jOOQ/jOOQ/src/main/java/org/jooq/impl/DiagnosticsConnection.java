@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,54 +37,28 @@
  */
 package org.jooq.impl;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.synchronizedMap;
 // ...
-// ...
-// ...
-import static org.jooq.conf.DiagnosticsConnection.OFF;
 import static org.jooq.conf.ParamType.FORCE_INDEXED;
-import static org.jooq.impl.DSL.count;
-import static org.jooq.impl.DSL.noCondition;
-import static org.jooq.impl.QOM.commutativeCheck;
 
 import java.sql.CallableStatement;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.function.Predicate;
 
-import org.jooq.AggregateFunction;
-import org.jooq.Condition;
 import org.jooq.Configuration;
-import org.jooq.Field;
 import org.jooq.Parser;
-// ...
 import org.jooq.Queries;
-import org.jooq.Query;
 import org.jooq.QueryPart;
 import org.jooq.RenderContext;
-// ...
-import org.jooq.Select;
-import org.jooq.TransactionContext;
-import org.jooq.conf.Settings;
-import org.jooq.impl.QOM.CompareCondition;
-import org.jooq.impl.QOM.Concat;
 import org.jooq.impl.QOM.Eq;
-import org.jooq.impl.QOM.In;
-import org.jooq.impl.QOM.InList;
-import org.jooq.impl.QOM.IsDistinctFrom;
-import org.jooq.impl.QOM.Mod;
-import org.jooq.impl.QOM.NotInList;
-import org.jooq.impl.QOM.UCommutativeOperator;
 import org.jooq.tools.jdbc.DefaultConnection;
 
 /**
@@ -93,29 +67,21 @@ import org.jooq.tools.jdbc.DefaultConnection;
 final class DiagnosticsConnection extends DefaultConnection {
 
     // TODO: Make these configurable
-    static final int                LRU_SIZE_GLOBAL = 50000;
-    static final int                LRU_SIZE_LOCAL  = 500;
-    static final int                DUP_SIZE        = 500;
+    static final int                      LRU_SIZE_GLOBAL = 50000;
+    static final int                      LRU_SIZE_LOCAL  = 500;
+    static final int                      DUP_SIZE        = 500;
+    static final Map<String, Set<String>> DUPLICATE_SQL   = Collections.synchronizedMap(new LRU<>(LRU_SIZE_GLOBAL));
 
-    final Configuration             configuration;
-    final Configuration             configurationTranformPatterns;
-    final RenderContext             normalisingRenderer;
-    final Parser                    parser;
-    final DiagnosticsListeners      listeners;
-    final boolean                   release;
+    final Map<String, List<String>>       repeatedSQL     = new LRU<>(LRU_SIZE_LOCAL);
+    final Configuration                   configuration;
+    final RenderContext                   normalisingRenderer;
+    final Parser                          parser;
+    final DiagnosticsListeners            listeners;
 
     DiagnosticsConnection(Configuration configuration) {
-        this(configuration, null);
-    }
+        super(configuration.connectionProvider().acquire());
 
-    DiagnosticsConnection(Configuration configuration, Connection c) {
-        super(c != null ? c : configuration.connectionProvider().acquire());
-
-        this.release = c == null;
-
-        // [#7527] The Settings.diagnosticsPattern flag overrides the Settings.transformPatterns flag.
         this.configuration = configuration;
-        this.configurationTranformPatterns = configuration.deriveSettings(s -> s.withTransformPatterns(true));
         this.normalisingRenderer = configuration.deriveSettings(s -> s
 
             // Forcing all inline parameters to be indexed helps find opportunities to use bind variables
@@ -146,164 +112,89 @@ final class DiagnosticsConnection extends DefaultConnection {
 
     @Override
     public final PreparedStatement prepareStatement(String sql) throws SQLException {
-        return new DiagnosticsStatement(this, getDelegate().prepareStatement(parse(sql)), sql);
+        return new DiagnosticsStatement(this, getDelegate().prepareStatement(parse(sql)));
     }
 
     @Override
     public final PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-        return new DiagnosticsStatement(this, getDelegate().prepareStatement(parse(sql), resultSetType, resultSetConcurrency), sql);
+        return new DiagnosticsStatement(this, getDelegate().prepareStatement(parse(sql), resultSetType, resultSetConcurrency));
     }
 
     @Override
     public final PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-        return new DiagnosticsStatement(this, getDelegate().prepareStatement(parse(sql), resultSetType, resultSetConcurrency, resultSetHoldability), sql);
+        return new DiagnosticsStatement(this, getDelegate().prepareStatement(parse(sql), resultSetType, resultSetConcurrency, resultSetHoldability));
     }
 
     @Override
     public final PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
-        return new DiagnosticsStatement(this, getDelegate().prepareStatement(parse(sql), autoGeneratedKeys), sql);
+        return new DiagnosticsStatement(this, getDelegate().prepareStatement(parse(sql), autoGeneratedKeys));
     }
 
     @Override
     public final PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
-        return new DiagnosticsStatement(this, getDelegate().prepareStatement(parse(sql), columnIndexes), sql);
+        return new DiagnosticsStatement(this, getDelegate().prepareStatement(parse(sql), columnIndexes));
     }
 
     @Override
     public final PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
-        return new DiagnosticsStatement(this, getDelegate().prepareStatement(parse(sql), columnNames), sql);
+        return new DiagnosticsStatement(this, getDelegate().prepareStatement(parse(sql), columnNames));
     }
 
     @Override
     public final CallableStatement prepareCall(String sql) throws SQLException {
-        return new DiagnosticsStatement(this, getDelegate().prepareCall(parse(sql)), sql);
+        return new DiagnosticsStatement(this, getDelegate().prepareCall(parse(sql)));
     }
 
     @Override
     public final CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-        return new DiagnosticsStatement(this, getDelegate().prepareCall(parse(sql), resultSetType, resultSetConcurrency), sql);
+        return new DiagnosticsStatement(this, getDelegate().prepareCall(parse(sql), resultSetType, resultSetConcurrency));
     }
 
     @Override
     public final CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-        return new DiagnosticsStatement(this, getDelegate().prepareCall(parse(sql), resultSetType, resultSetConcurrency, resultSetHoldability), sql);
+        return new DiagnosticsStatement(this, getDelegate().prepareCall(parse(sql), resultSetType, resultSetConcurrency, resultSetHoldability));
     }
 
     @Override
     public final void close() throws SQLException {
-        if (release) {
-            repeatedSql().clear();
-            consecutiveAgg().clear();
-
-            configuration.connectionProvider().release(getDelegate());
-        }
-    }
-
-    final boolean checkPattern(Predicate<? super Settings> test) {
-        return DiagnosticsListeners.checkPattern(configuration.settings(), test);
-    }
-
-    final boolean check(Predicate<? super Settings> test) {
-        return DiagnosticsListeners.check(configuration.settings(), test);
-    }
-
-    final Map<String, Set<String>> duplicateSql() {
-        return duplicateSql0(configuration);
-    }
-
-    @SuppressWarnings("unchecked")
-    static final Map<String, Set<String>> duplicateSql0(Configuration configuration) {
-        return (Map<String, Set<String>>) configuration.data().computeIfAbsent(
-            "org.jooq.diagnostics.duplicate-sql",
-            k -> synchronizedMap(new LRU<>(LRU_SIZE_GLOBAL))
-        );
-    }
-
-    final Map<String, List<String>> repeatedSql() {
-        return repeatedSql0(configuration);
-    }
-
-    static final Map<String, List<String>> repeatedSql0(Configuration configuration) {
-        return repetition0(configuration, "org.jooq.diagnostics.repeated-sql");
-    }
-
-    final Map<String, List<String>> consecutiveAgg() {
-        return consecutiveAgg0(configuration);
-    }
-
-    static final Map<String, List<String>> consecutiveAgg0(Configuration configuration) {
-        return repetition0(configuration, "org.jooq.diagnostics.consecutive-agg");
-    }
-
-    @SuppressWarnings("unchecked")
-    private static final Map<String, List<String>> repetition0(Configuration configuration, String cacheKey) {
-        return (Map<String, List<String>>) repetitionData(configuration).computeIfAbsent(
-            cacheKey,
-            k -> synchronizedMap(new LRU<>(LRU_SIZE_LOCAL))
-        );
-    }
-
-    private static final Map<Object, Object> repetitionData(Configuration configuration) {
-        TransactionContext trx = (TransactionContext) configuration.data(DefaultTransactionContext.DATA_KEY);
-        return trx != null ? trx.data() : configuration.data();
-    }
-
-    final boolean disabled() {
-        return configuration.settings().getDiagnosticsConnection() == OFF;
+        repeatedSQL.clear();
+        configuration.connectionProvider().release(getDelegate());
     }
 
     final String parse(String sql) {
-
-        // [#7398] Don't do anything if the feature is turned OFF
-        if (disabled())
-            return sql;
-
         Queries queries = null;
-        Queries transformed = null;
         String normalised;
 
         try {
-
-            // [#14137] TODO: Avoid unnecessary work, depending on the Settings
-            transformed = queries = parser.parse(sql);
-
-
-
-
-            normalised = normalisingRenderer.render(transformed);
+            queries = parser.parse(sql);
+            normalised = normalisingRenderer.render(queries);
         }
         catch (ParserException exception) {
             normalised = sql;
             listeners.exception(new DefaultDiagnosticsContext(
-                configuration,
                 "Query could not be parsed.", sql, exception
             ));
         }
 
         try {
-            if (check(Settings::isDiagnosticsDuplicateStatements)) {
-                Set<String> duplicates = duplicates(duplicateSql(), sql, normalised);
-
-                if (duplicates != null)
-                    listeners.duplicateStatements(new DefaultDiagnosticsContext(
-                        configuration,
-                        "Duplicate statements encountered.",
-                        sql, normalised, duplicates, null, queries, transformed, null
-                    ));
+            Set<String> duplicates = null;
+            synchronized (DUPLICATE_SQL) {
+                duplicates = duplicates(DUPLICATE_SQL, sql, normalised);
             }
 
-            if (check(Settings::isDiagnosticsRepeatedStatements)) {
-                List<String> repetitions = repetitions(repeatedSql(), sql, normalised);
+            if (duplicates != null)
+                listeners.duplicateStatements(new DefaultDiagnosticsContext(
+                    "Duplicate statements encountered.",
+                    sql, normalised, duplicates, null, queries, null
+                ));
 
-                if (repetitions != null)
-                    listeners.repeatedStatements(new DefaultDiagnosticsContext(
-                        configuration,
-                        "Repeated statements encountered.",
-                        sql, normalised, null, repetitions, queries, transformed, null
-                    ));
-            }
+            List<String> repetitions = repetitions(repeatedSQL, sql, normalised);
+            if (repetitions != null)
+                listeners.repeatedStatements(new DefaultDiagnosticsContext(
+                    "Repeated statements encountered.",
+                    sql, normalised, null, repetitions, queries, null
+                ));
 
-            if (queries != null) {
 
 
 
@@ -322,146 +213,30 @@ final class DiagnosticsConnection extends DefaultConnection {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            }
         }
         catch (Error e) {
             throw e;
         }
         catch (Throwable exception) {
             listeners.exception(new DefaultDiagnosticsContext(
-                configuration,
                 "An unexpected exception has occurred. See exception for details.",
-                sql, normalised, null, null, queries, transformed, exception
+                sql, normalised, null, null, queries, exception
             ));
         }
 
         return sql;
     }
 
+    private Set<String> duplicates(Map<String, Set<String>> map, String sql, String normalised) {
+        Set<String> v = map.computeIfAbsent(normalised, k -> new HashSet<>());
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private final Set<String> duplicates(Map<String, Set<String>> map, String sql, String normalised) {
-        synchronized (map) {
-            Set<String> v = map.computeIfAbsent(normalised, k -> new HashSet<>());
-
-            if (v.size() >= DUP_SIZE || (v.add(sql) && v.size() > 1))
-                return v;
-            else
-                return null;
-        }
+        if (v.size() >= DUP_SIZE || (v.add(sql) && v.size() > 1))
+            return v;
+        else
+            return null;
     }
 
-    private final List<String> repetitions(Map<String, List<String>> map, String sql, String normalised) {
+    private List<String> repetitions(Map<String, List<String>> map, String sql, String normalised) {
         List<String> v = map.computeIfAbsent(normalised, k -> new ArrayList<>());
 
         if (v.size() >= DUP_SIZE || (v.add(sql) && v.size() > 1))
@@ -471,7 +246,7 @@ final class DiagnosticsConnection extends DefaultConnection {
     }
 
     // See https://stackoverflow.com/a/1953516/521799
-    static final class LRU<V> extends LinkedHashMap<String, V> {
+    static class LRU<V> extends LinkedHashMap<String, V> {
         private final int size;
 
         LRU(int size) {

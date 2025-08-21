@@ -172,10 +172,10 @@ public class PredicateBinaryCoerceRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").choice().when(header("foo").isEqualTo("123")).to("mock:123")
                         .when(header("foo").isEqualTo(456)).to("mock:456")
                         .when(header("foo").isEqualTo(WaitForTaskToComplete.Always)).to("mock:enum").otherwise()

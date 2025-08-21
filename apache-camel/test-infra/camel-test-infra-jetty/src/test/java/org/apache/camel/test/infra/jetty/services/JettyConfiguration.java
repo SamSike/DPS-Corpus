@@ -30,22 +30,21 @@ import jakarta.servlet.Servlet;
 import javax.net.ssl.SSLContext;
 
 import org.apache.camel.util.KeyValueHolder;
-import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee10.servlet.ServletHolder;
-import org.eclipse.jetty.ee10.servlet.security.ConstraintMapping;
-import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.ee10.webapp.WebAppContext;
-import org.eclipse.jetty.ee10.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer;
-import org.eclipse.jetty.security.Constraint;
+import org.eclipse.jetty.security.ConstraintMapping;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.HashLoginService;
 import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.security.UserStore;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ErrorHandler;
+import org.eclipse.jetty.server.handler.HandlerCollection;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.security.Credential;
+import org.eclipse.jetty.webapp.WebAppContext;
 
 /**
  * A configuration holder for embedded Jetty instances
@@ -251,13 +250,13 @@ public class JettyConfiguration {
             l.setName(realm);
             l.setUserStore(us);
 
-            Constraint.Builder constraintBuilder = new Constraint.Builder();
-            constraintBuilder.name("BASIC");
-            constraintBuilder.roles("user");
-            constraintBuilder.authorization(Constraint.Authorization.SPECIFIC_ROLE);
+            Constraint constraint = new Constraint();
+            constraint.setName(Constraint.__BASIC_AUTH);
+            constraint.setRoles(new String[] { "user" });
+            constraint.setAuthenticate(true);
 
             ConstraintMapping cm = new ConstraintMapping();
-            cm.setConstraint(constraintBuilder.build());
+            cm.setConstraint(constraint);
             cm.setPathSpec(ServletConfiguration.ROOT_PATH_SPEC);
 
             ConstraintSecurityHandler csh = new ConstraintSecurityHandler();
@@ -291,8 +290,8 @@ public class JettyConfiguration {
         }
     }
 
-    public static class HandlerCollectionConfiguration extends AbstractContextHandlerConfiguration<ContextHandlerCollection> {
-        private final ContextHandlerCollection handlers = new ContextHandlerCollection();
+    public static class HandlerCollectionConfiguration extends AbstractContextHandlerConfiguration<HandlerCollection> {
+        private final HandlerCollection handlers = new HandlerCollection();
 
         public HandlerCollectionConfiguration(String contextPath) {
             super(contextPath);
@@ -302,43 +301,9 @@ public class JettyConfiguration {
             handlers.addHandler(handler);
         }
 
-        public ContextHandlerCollection resolve() {
+        @Override
+        HandlerCollection resolve() {
             return handlers;
-        }
-    }
-
-    public static class WebSocketContextHandlerConfiguration extends ServletHandlerConfiguration {
-
-        public WebSocketContextHandlerConfiguration(String contextPath) {
-            super(contextPath);
-        }
-
-        @Override
-        public List<ServletConfiguration<?>> getServletConfigurations() {
-            return super.getServletConfigurations();
-        }
-
-        @Override
-        ServletContextHandler resolve() {
-            ServletContextHandler contextHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
-
-            if (!super.userInfos.isEmpty()) {
-                contextHandler.setSecurityHandler(super.basicAuth(super.userInfos, super.realm));
-            }
-
-            contextHandler.setContextPath(super.getContextPath());
-            contextHandler.setAttribute(contextHandler.getClass().getName(), contextHandler);
-
-            for (ServletConfiguration servletConfiguration : super.servletConfigurations) {
-                contextHandler.addServlet(servletConfiguration.buildServletHolder(), servletConfiguration.getPathSpec());
-            }
-
-            if (customizer != null) {
-                customizer.accept(contextHandler);
-            }
-
-            JakartaWebSocketServletContainerInitializer.configure(contextHandler, null);
-            return contextHandler;
         }
     }
 

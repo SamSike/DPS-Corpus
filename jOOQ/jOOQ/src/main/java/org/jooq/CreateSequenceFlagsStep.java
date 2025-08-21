@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -68,99 +68,99 @@ import org.jetbrains.annotations.*;
  * </ul>
  */
 @SuppressWarnings({ "unused" })
-public interface CreateSequenceFlagsStep<T extends Number> extends CreateSequenceFinalStep {
+public interface CreateSequenceFlagsStep extends CreateSequenceFinalStep {
 
     /**
      * Add the <code>START WITH</code> clause to the <code>CREATE SEQUENCE</code> statement.
      *
      * @param startWith is wrapped as {@link org.jooq.impl.DSL#val(Object)}.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> startWith(T startWith);
+    CreateSequenceFlagsStep startWith(Number startWith);
 
     /**
      * Add the <code>START WITH</code> clause to the <code>CREATE SEQUENCE</code> statement.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> startWith(Field<T> startWith);
+    CreateSequenceFlagsStep startWith(Field<? extends Number> startWith);
 
     /**
      * Add the <code>INCREMENT BY</code> clause to the <code>CREATE SEQUENCE</code> statement.
      *
      * @param incrementBy is wrapped as {@link org.jooq.impl.DSL#val(Object)}.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> incrementBy(T incrementBy);
+    CreateSequenceFlagsStep incrementBy(Number incrementBy);
 
     /**
      * Add the <code>INCREMENT BY</code> clause to the <code>CREATE SEQUENCE</code> statement.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> incrementBy(Field<T> incrementBy);
+    CreateSequenceFlagsStep incrementBy(Field<? extends Number> incrementBy);
 
     /**
      * Add the <code>MINVALUE</code> clause to the <code>CREATE SEQUENCE</code> statement.
      *
      * @param minvalue is wrapped as {@link org.jooq.impl.DSL#val(Object)}.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> minvalue(T minvalue);
+    CreateSequenceFlagsStep minvalue(Number minvalue);
 
     /**
      * Add the <code>MINVALUE</code> clause to the <code>CREATE SEQUENCE</code> statement.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> minvalue(Field<T> minvalue);
+    CreateSequenceFlagsStep minvalue(Field<? extends Number> minvalue);
 
     /**
      * Add the <code>NO MINVALUE</code> clause to the <code>CREATE SEQUENCE</code> statement.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> noMinvalue();
+    CreateSequenceFlagsStep noMinvalue();
 
     /**
      * Add the <code>MAXVALUE</code> clause to the <code>CREATE SEQUENCE</code> statement.
      *
      * @param maxvalue is wrapped as {@link org.jooq.impl.DSL#val(Object)}.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> maxvalue(T maxvalue);
+    CreateSequenceFlagsStep maxvalue(Number maxvalue);
 
     /**
      * Add the <code>MAXVALUE</code> clause to the <code>CREATE SEQUENCE</code> statement.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> maxvalue(Field<T> maxvalue);
+    CreateSequenceFlagsStep maxvalue(Field<? extends Number> maxvalue);
 
     /**
      * Add the <code>NO MAXVALUE</code> clause to the <code>CREATE SEQUENCE</code> statement.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> noMaxvalue();
+    CreateSequenceFlagsStep noMaxvalue();
 
     /**
      * Add the <code>CYCLE</code> clause to the <code>CREATE SEQUENCE</code> statement.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> cycle();
+    CreateSequenceFlagsStep cycle();
 
     /**
      * Add the <code>NO CYCLE</code> clause to the <code>CREATE SEQUENCE</code> statement.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> noCycle();
+    CreateSequenceFlagsStep noCycle();
 
     /**
      * Add the <code>CACHE</code> clause to the <code>CREATE SEQUENCE</code> statement.
@@ -169,19 +169,19 @@ public interface CreateSequenceFlagsStep<T extends Number> extends CreateSequenc
      */
     @Support({ CUBRID, H2, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> cache(T cache);
+    CreateSequenceFlagsStep cache(Number cache);
 
     /**
      * Add the <code>CACHE</code> clause to the <code>CREATE SEQUENCE</code> statement.
      */
     @Support({ CUBRID, H2, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> cache(Field<T> cache);
+    CreateSequenceFlagsStep cache(Field<? extends Number> cache);
 
     /**
      * Add the <code>NO CACHE</code> clause to the <code>CREATE SEQUENCE</code> statement.
      */
-    @Support({ CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     @NotNull @CheckReturnValue
-    CreateSequenceFlagsStep<T> noCache();
+    CreateSequenceFlagsStep noCache();
 }

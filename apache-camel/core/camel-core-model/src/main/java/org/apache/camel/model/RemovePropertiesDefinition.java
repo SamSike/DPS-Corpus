@@ -46,13 +46,6 @@ public class RemovePropertiesDefinition extends NoOutputDefinition<RemovePropert
     public RemovePropertiesDefinition() {
     }
 
-    protected RemovePropertiesDefinition(RemovePropertiesDefinition source) {
-        super(source);
-        this.excludePatterns = source.excludePatterns;
-        this.pattern = source.pattern;
-        this.excludePattern = source.excludePattern;
-    }
-
     public RemovePropertiesDefinition(String pattern) {
         setPattern(pattern);
     }
@@ -60,11 +53,6 @@ public class RemovePropertiesDefinition extends NoOutputDefinition<RemovePropert
     public RemovePropertiesDefinition(String pattern, String... excludePatterns) {
         setPattern(pattern);
         setExcludePatterns(excludePatterns);
-    }
-
-    @Override
-    public RemovePropertiesDefinition copyDefinition() {
-        return new RemovePropertiesDefinition(this);
     }
 
     @Override

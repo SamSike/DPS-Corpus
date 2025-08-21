@@ -59,11 +59,11 @@ public class DefaultConsumerBridgeErrorHandlerTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         // START SNIPPET: e1
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // register our custom component
                 getContext().addComponent("my", new MyComponent());
 
@@ -83,7 +83,7 @@ public class DefaultConsumerBridgeErrorHandlerTest extends ContextTestSupport {
     public class MyComponent extends DefaultComponent {
 
         @Override
-        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) {
+        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
             return new MyEndpoint(uri, this);
         }
     }
@@ -95,7 +95,7 @@ public class DefaultConsumerBridgeErrorHandlerTest extends ContextTestSupport {
         }
 
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             return null;
         }
 
@@ -120,7 +120,7 @@ public class DefaultConsumerBridgeErrorHandlerTest extends ContextTestSupport {
             super(endpoint, processor);
         }
 
-        public void doSomething() {
+        public void doSomething() throws Exception {
             try {
                 if (invoked++ == 0) {
                     throw new IllegalArgumentException("Simulated");

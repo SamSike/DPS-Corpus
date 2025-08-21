@@ -64,10 +64,10 @@ public class ManagedCustomProcessorTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo")
                         .process(new MyCustomProcessor()).id("custom")
                         .to("mock:result");
@@ -91,8 +91,18 @@ public class ManagedCustomProcessorTest extends ManagementTestSupport {
         }
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             exchange.getIn().setHeader("foo", getFoo());
+        }
+
+        @Override
+        protected void doStart() throws Exception {
+            // noop
+        }
+
+        @Override
+        protected void doStop() throws Exception {
+            // noop
         }
     }
     // end::e1[]

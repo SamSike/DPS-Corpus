@@ -33,10 +33,10 @@ class DefaultDirectoryEntriesResumeAdapter extends AbstractFileResumeAdapter imp
     private static final Logger LOG = LoggerFactory.getLogger(DefaultDirectoryEntriesResumeAdapter.class);
 
     protected boolean add(Object key, Object offset) {
-        if (offset instanceof File fileBasedOffset) {
+        if (offset instanceof File) {
             FileSet fileSet = (FileSet) cache.computeIfAbsent((File) key, k -> new FileSet());
 
-            fileSet.update(fileBasedOffset);
+            fileSet.update((File) offset);
         } else {
             throw new UnsupportedOperationException("This adapter cannot be used for file offsets");
         }
@@ -51,7 +51,7 @@ class DefaultDirectoryEntriesResumeAdapter extends AbstractFileResumeAdapter imp
     }
 
     private boolean processed(ResumeCache<File> cache, File directory, File file) {
-        LOG.trace("Checking if file {} from directory {} is cached", file, directory);
+        LOG.trace("Checking if file {} with key {} is cached: {}, {}", file, directory);
         FileSet cached = cache.get(directory, FileSet.class);
         if (cached == null) {
             LOG.trace("FileSet is not cached, therefore has not been processed yet");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.context.annotation.ScopeMetadata;
+import org.springframework.context.annotation.ScopeMetadataResolver;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
@@ -305,25 +306,29 @@ class ClassPathBeanDefinitionScannerJsr330ScopeIntegrationTests {
 		GenericWebApplicationContext context = new GenericWebApplicationContext();
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(context);
 		scanner.setIncludeAnnotationConfig(false);
-		scanner.setScopeMetadataResolver(definition -> {
-			ScopeMetadata metadata = new ScopeMetadata();
-			if (definition instanceof AnnotatedBeanDefinition annDef) {
-				for (String type : annDef.getMetadata().getAnnotationTypes()) {
-					if (type.equals(jakarta.inject.Singleton.class.getName())) {
-						metadata.setScopeName(BeanDefinition.SCOPE_SINGLETON);
-						break;
-					}
-					else if (annDef.getMetadata().getMetaAnnotationTypes(type).contains(jakarta.inject.Scope.class.getName())) {
-						metadata.setScopeName(type.substring(type.length() - 13, type.length() - 6).toLowerCase());
-						metadata.setScopedProxyMode(scopedProxyMode);
-						break;
-					}
-					else if (type.startsWith("jakarta.inject")) {
-						metadata.setScopeName(BeanDefinition.SCOPE_PROTOTYPE);
+		scanner.setScopeMetadataResolver(new ScopeMetadataResolver() {
+			@Override
+			public ScopeMetadata resolveScopeMetadata(BeanDefinition definition) {
+				ScopeMetadata metadata = new ScopeMetadata();
+				if (definition instanceof AnnotatedBeanDefinition) {
+					AnnotatedBeanDefinition annDef = (AnnotatedBeanDefinition) definition;
+					for (String type : annDef.getMetadata().getAnnotationTypes()) {
+						if (type.equals(jakarta.inject.Singleton.class.getName())) {
+							metadata.setScopeName(BeanDefinition.SCOPE_SINGLETON);
+							break;
+						}
+						else if (annDef.getMetadata().getMetaAnnotationTypes(type).contains(jakarta.inject.Scope.class.getName())) {
+							metadata.setScopeName(type.substring(type.length() - 13, type.length() - 6).toLowerCase());
+							metadata.setScopedProxyMode(scopedProxyMode);
+							break;
+						}
+						else if (type.startsWith("jakarta.inject")) {
+							metadata.setScopeName(BeanDefinition.SCOPE_PROTOTYPE);
+						}
 					}
 				}
+				return metadata;
 			}
-			return metadata;
 		});
 
 		// Scan twice in order to find errors in the bean definition compatibility check.
@@ -344,7 +349,7 @@ class ClassPathBeanDefinitionScannerJsr330ScopeIntegrationTests {
 	}
 
 
-	public abstract static class ScopedTestBean implements IScopedTestBean {
+	public static abstract class ScopedTestBean implements IScopedTestBean {
 
 		private String name = DEFAULT_NAME;
 

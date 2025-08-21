@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
@@ -29,6 +28,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.reactive.ClientHttpRequest;
+import org.springframework.lang.Nullable;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserter;
 
@@ -99,7 +99,8 @@ public interface ClientRequest {
 	 * Return consumer(s) configured to access to the {@link ClientHttpRequest}.
 	 * @since 5.3
 	 */
-	@Nullable Consumer<ClientHttpRequest> httpRequest();
+	@Nullable
+	Consumer<ClientHttpRequest> httpRequest();
 
 
 	/**
@@ -131,6 +132,18 @@ public interface ClientRequest {
 	 */
 	static Builder from(ClientRequest other) {
 		return new DefaultClientRequestBuilder(other);
+	}
+
+	/**
+	 * Create a builder with the given HTTP method and url.
+	 * @param method the HTTP method (GET, POST, etc)
+	 * @param url the url (as a URI instance)
+	 * @return the created builder
+	 * @deprecated in favor of {@link #create(HttpMethod, URI)}
+	 */
+	@Deprecated
+	static Builder method(HttpMethod method, URI url) {
+		return new DefaultClientRequestBuilder(method, url);
 	}
 
 	/**
@@ -178,7 +191,7 @@ public interface ClientRequest {
 		 * Manipulate this request's headers with the given consumer. The
 		 * headers provided to the consumer are "live", so that the consumer can be used to
 		 * {@linkplain HttpHeaders#set(String, String) overwrite} existing header values,
-		 * {@linkplain HttpHeaders#remove(String) remove} values, or use any of the other
+		 * {@linkplain HttpHeaders#remove(Object) remove} values, or use any of the other
 		 * {@link HttpHeaders} methods.
 		 * @param headersConsumer a function that consumes the {@code HttpHeaders}
 		 * @return this builder
@@ -196,8 +209,8 @@ public interface ClientRequest {
 		/**
 		 * Manipulate this request's cookies with the given consumer. The
 		 * map provided to the consumer is "live", so that the consumer can be used to
-		 * {@linkplain MultiValueMap#set(Object, Object) overwrite} existing cookie values,
-		 * {@linkplain MultiValueMap#remove(Object) remove} cookies, or use any of the other
+		 * {@linkplain MultiValueMap#set(Object, Object) overwrite} existing header values,
+		 * {@linkplain MultiValueMap#remove(Object) remove} values, or use any of the other
 		 * {@link MultiValueMap} methods.
 		 * @param cookiesConsumer a function that consumes the cookies map
 		 * @return this builder

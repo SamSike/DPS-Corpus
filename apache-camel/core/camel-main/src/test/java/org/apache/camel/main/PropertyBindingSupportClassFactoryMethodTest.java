@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class PropertyBindingSupportClassFactoryMethodTest {
 
     @Test
-    public void testFactory() {
+    public void testFactory() throws Exception {
         CamelContext context = new DefaultCamelContext();
 
         context.start();
@@ -42,8 +42,7 @@ public class PropertyBindingSupportClassFactoryMethodTest {
                 .withCamelContext(context)
                 .withTarget(target)
                 .withProperty("name", "Donald")
-                .withProperty("myDriver",
-                        "#class:" + MyDriver.class.getName() + "#createDriver('localhost:2121', 'scott', 'tiger')")
+                .withProperty("myDriver", "#class:" + MyDriver.class.getName() + "('localhost:2121', 'scott', 'tiger')")
                 .withRemoveParameters(false).bind();
 
         assertEquals("Donald", target.getName());
@@ -55,7 +54,7 @@ public class PropertyBindingSupportClassFactoryMethodTest {
     }
 
     @Test
-    public void testFactoryPropertyPlaceholder() {
+    public void testFactoryPropertyPlaceholder() throws Exception {
         CamelContext context = new DefaultCamelContext();
 
         Properties prop = new Properties();
@@ -73,7 +72,7 @@ public class PropertyBindingSupportClassFactoryMethodTest {
                 .withTarget(target)
                 .withProperty("name", "Donald")
                 .withProperty("myDriver",
-                        "#class:" + MyDriver.class.getName() + "#createDriver('{{myUrl}}', '{{myUsername}}', '{{myPassword}}')")
+                        "#class:" + MyDriver.class.getName() + "('{{myUrl}}', '{{myUsername}}', '{{myPassword}}')")
                 .withRemoveParameters(false).bind();
 
         assertEquals("Donald", target.getName());
@@ -112,12 +111,10 @@ public class PropertyBindingSupportClassFactoryMethodTest {
         private String username;
         private String password;
 
-        public static MyDriver createDriver(String url, String username, String password) {
-            MyDriver driver = new MyDriver();
-            driver.url = url;
-            driver.username = username;
-            driver.password = password;
-            return driver;
+        public MyDriver(String url, String username, String password) {
+            this.url = url;
+            this.username = username;
+            this.password = password;
         }
 
         public String getUrl() {

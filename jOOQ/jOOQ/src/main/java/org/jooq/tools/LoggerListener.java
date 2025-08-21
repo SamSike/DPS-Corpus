@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -111,6 +111,14 @@ public class LoggerListener implements ExecuteListener {
                     log.debug("-> with bind values", newline + inlined);
             }
 
+            // [#2532] Log a complete BatchMultiple query
+            else if (ctx.type() == ExecuteType.BATCH
+                    && batchSQL.length > 0
+                    && batchSQL[batchSQL.length - 1] != null) {
+                for (String sql : batchSQL)
+                    log.debug("Executing batch query", newline + sql);
+            }
+
             else if (!StringUtils.isBlank(ctx.sql())) {
 
                 // [#1529] Batch queries should be logged specially
@@ -124,15 +132,15 @@ public class LoggerListener implements ExecuteListener {
 
     @Override
     public void bindEnd(ExecuteContext ctx) {
-        if (ctx.type() == ExecuteType.BATCH)
-            if (log.isDebugEnabled())
+        if (log.isDebugEnabled())
+            if (ctx.type() == ExecuteType.BATCH)
                 ctx.data().compute(BATCH_SIZE, (k, v) -> v == null ? 1 : ((int) v) + 1);
     }
 
     @Override
     public void executeStart(ExecuteContext ctx) {
-        if (ctx.type() == ExecuteType.BATCH)
-            if (log.isDebugEnabled())
+        if (log.isDebugEnabled())
+            if (ctx.type() == ExecuteType.BATCH)
                 log.debug("Batch size", ctx.data().getOrDefault(BATCH_SIZE, ctx.batchSQL().length));
     }
 
@@ -184,7 +192,7 @@ public class LoggerListener implements ExecuteListener {
     public void fetchEnd(ExecuteContext ctx) {
         Result<Record> buffer = (Result<Record>) ctx.data(BUFFER);
 
-        if (buffer != null && !buffer.isEmpty() && log.isDebugEnabled()) {
+        if (buffer != null && !buffer.isEmpty()) {
             log(ctx.configuration(), buffer);
             log.debug("Fetched row(s)", buffer.size() + (buffer.size() < maxRows() ? "" : " (or more)"));
         }
@@ -228,10 +236,7 @@ public class LoggerListener implements ExecuteListener {
 
     @Override
     public void exception(ExecuteContext ctx) {
-
-        // [#9506] An internal, undocumented flag that allows for muting exception logging of
-        //         "expected" exceptions.
-        if (log.isDebugEnabled() && ctx.configuration().data("org.jooq.tools.LoggerListener.exception.mute") == null)
+        if (log.isDebugEnabled())
             log.debug("Exception", ctx.exception());
     }
 
@@ -257,7 +262,7 @@ public class LoggerListener implements ExecuteListener {
             for (Parameter<?> param : routine.getOutParameters())
                 result.setValue((Field) fields.get(i++), routine.getValue(param));
 
-            result.touched(false);
+            result.changed(false);
         }
 
         return result;
@@ -287,7 +292,7 @@ public class LoggerListener implements ExecuteListener {
             if (context.renderContext() != null) {
                 QueryPart part = context.queryPart();
 
-                if (part instanceof Param<?> param) {
+                if (part instanceof Param) { Param<?> param = (Param<?>) part;
                     Object value = param.getValue();
 
                     if (value instanceof String && ((String) value).length() > maxLength) {

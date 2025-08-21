@@ -17,7 +17,6 @@
 package org.apache.camel.dsl.xml.io;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.builder.RouteConfigurationBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.support.ResourceHelper;
@@ -29,7 +28,7 @@ public class XmlRoutesBuilderLoaderTest {
     @Test
     public void canLoadRoutes() throws Exception {
         String content = ""
-                         + "<routes xmlns=\"http://camel.apache.org/schema/xml-io\">"
+                         + "<routes xmlns=\"http://camel.apache.org/schema/spring\">"
                          + "   <route id=\"xpath-route\">"
                          + "      <from uri=\"direct:test\"/>"
                          + "      <setBody>"
@@ -51,7 +50,7 @@ public class XmlRoutesBuilderLoaderTest {
     @Test
     public void canLoadRests() throws Exception {
         String content = ""
-                         + "<rests xmlns=\"http://camel.apache.org/schema/xml-io\">"
+                         + "<rests xmlns=\"http://camel.apache.org/schema/spring\">"
                          + "  <rest id=\"bar\" path=\"/say/hello\">"
                          + "    <get path=\"/bar\">"
                          + "      <to uri=\"mock:bar\"/>"
@@ -70,7 +69,7 @@ public class XmlRoutesBuilderLoaderTest {
     @Test
     public void canLoadTemplates() throws Exception {
         String content = ""
-                         + "<routeTemplates xmlns=\"http://camel.apache.org/schema/xml-io\">"
+                         + "<routeTemplates xmlns=\"http://camel.apache.org/schema/spring\">"
                          + "  <routeTemplate id=\"myTemplate\">"
                          + "    <templateParameter name=\"foo\"/>"
                          + "    <templateParameter name=\"bar\"/>"
@@ -87,45 +86,5 @@ public class XmlRoutesBuilderLoaderTest {
         builder.configure();
 
         assertFalse(builder.getRouteTemplateCollection().getRouteTemplates().isEmpty());
-    }
-
-    @Test
-    public void canLoadTemplatedRoutes() throws Exception {
-        String content = ""
-                         + "<templatedRoutes>"
-                         + "    <templatedRoute routeTemplateRef=\"myTemplate\" routeId=\"my-route\">"
-                         + "        <parameter name=\"foo\" value=\"fooVal\"/>"
-                         + "        <parameter name=\"bar\" value=\"barVal\"/>"
-                         + "    </templatedRoute>"
-                         + "</templatedRoutes>";
-
-        Resource resource = ResourceHelper.fromString("in-memory.xml", content);
-        RouteBuilder builder = (RouteBuilder) new XmlRoutesBuilderLoader().loadRoutesBuilder(resource);
-        builder.setCamelContext(new DefaultCamelContext());
-        builder.configure();
-
-        assertFalse(builder.getTemplatedRouteCollection().getTemplatedRoutes().isEmpty());
-    }
-
-    @Test
-    public void canLoadRouteConfigurations() throws Exception {
-        String content = ""
-                         + "<routeConfigurations xmlns=\"http://camel.apache.org/schema/xml-io\">"
-                         + "  <routeConfiguration>"
-                         + "    <onException>"
-                         + "      <exception>java.lang.Exception</exception>"
-                         + "      <handled><constant>true</constant></handled>"
-                         + "      <log message=\"XML WARN: ${exception.message}\"/>"
-                         + "    </onException>"
-                         + "  </routeConfiguration>"
-                         + "</routeConfigurations>";
-        Resource resource = ResourceHelper.fromString("in-memory.xml", content);
-        RouteConfigurationBuilder builder
-                = (RouteConfigurationBuilder) new XmlRoutesBuilderLoader().loadRoutesBuilder(resource);
-        DefaultCamelContext camelContext = new DefaultCamelContext();
-        builder.setCamelContext(camelContext);
-        builder.configuration();
-
-        assertFalse(builder.getRouteConfigurationCollection().getRouteConfigurations().isEmpty());
     }
 }

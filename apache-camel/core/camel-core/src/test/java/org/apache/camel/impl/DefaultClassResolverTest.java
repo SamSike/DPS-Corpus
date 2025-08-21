@@ -23,7 +23,7 @@ import org.apache.camel.impl.engine.DefaultClassResolver;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class DefaultClassResolverTest {
 
@@ -123,10 +123,12 @@ public class DefaultClassResolverTest {
     @Test
     public void testResolveMandatoryClassNotFound() {
         DefaultClassResolver resolver = new DefaultClassResolver();
-
-        assertThrows(ClassNotFoundException.class,
-                () -> resolver.resolveMandatoryClass("com.FooBar"),
-                "Should thrown an exception");
+        try {
+            resolver.resolveMandatoryClass("com.FooBar");
+            fail("Should thrown an exception");
+        } catch (ClassNotFoundException e) {
+            // expected
+        }
     }
 
     @Test
@@ -141,13 +143,6 @@ public class DefaultClassResolverTest {
         DefaultClassResolver resolver = new DefaultClassResolver();
         InputStream is = resolver.loadResourceAsStream("log4j2.properties");
         assertNotNull(is);
-    }
-
-    @Test
-    public void testResolveJavaMathClass() {
-        DefaultClassResolver resolver = new DefaultClassResolver();
-        Class<?> clazz = resolver.resolveClass("java.lang.Math");
-        assertNotNull(clazz);
     }
 
 }

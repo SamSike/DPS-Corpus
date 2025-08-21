@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
 
 package org.springframework.aop.framework.autoproxy;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.aop.framework.AbstractAdvisingBeanPostProcessor;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.lang.Nullable;
 
 /**
  * Extension of {@link AbstractAutoProxyCreator} which implements {@link BeanFactoryAware},
@@ -41,12 +40,14 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 public abstract class AbstractBeanFactoryAwareAdvisingPostProcessor extends AbstractAdvisingBeanPostProcessor
 		implements BeanFactoryAware {
 
-	protected @Nullable ConfigurableListableBeanFactory beanFactory;
+	@Nullable
+	private ConfigurableListableBeanFactory beanFactory;
 
 
 	@Override
 	public void setBeanFactory(BeanFactory beanFactory) {
-		this.beanFactory = (beanFactory instanceof ConfigurableListableBeanFactory clbf ? clbf : null);
+		this.beanFactory = (beanFactory instanceof ConfigurableListableBeanFactory ?
+				(ConfigurableListableBeanFactory) beanFactory : null);
 	}
 
 	@Override

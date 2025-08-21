@@ -1,7 +1,9 @@
 /**
  * Provides an HttpMessageConverter for the Smile data format ("binary JSON").
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.http.converter.smile;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

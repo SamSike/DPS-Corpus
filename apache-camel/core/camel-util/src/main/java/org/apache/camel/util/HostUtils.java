@@ -76,7 +76,9 @@ public final class HostUtils {
         for (Map.Entry<String, Set<InetAddress>> entry : interfaceAddressMap.entrySet()) {
             Set<InetAddress> addresses = entry.getValue();
             if (!addresses.isEmpty()) {
-                allAddresses.addAll(addresses);
+                for (InetAddress address : addresses) {
+                    allAddresses.add(address);
+                }
             }
         }
         return allAddresses;
@@ -88,13 +90,13 @@ public final class HostUtils {
     private static InetAddress chooseAddress() throws UnknownHostException {
         Set<InetAddress> addresses = getAddresses();
         if (addresses.contains(InetAddress.getLocalHost())) {
-            // if local host address is not bound to a loop-back interface, use it
+            //Then if local host address is not bound to a loop-back interface, use it.
             return InetAddress.getLocalHost();
-        } else if (!addresses.isEmpty()) {
-            // else return the first available address
-            return addresses.iterator().next();
+        } else if (addresses != null && !addresses.isEmpty()) {
+            //else return the first available addrress
+            return addresses.toArray(new InetAddress[addresses.size()])[0];
         } else {
-            // else we are forced to use the localhost address.
+            //else we are forcedt to use the localhost address.
             return InetAddress.getLocalHost();
         }
     }

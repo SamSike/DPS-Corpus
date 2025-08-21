@@ -32,21 +32,21 @@ public class RoutesConfigurationMultipleRouteBuilderTest extends ContextTestSupp
     public void testRoutesConfiguration() throws Exception {
         context.addRoutesConfigurations(new RouteConfigurationBuilder() {
             @Override
-            public void configuration() {
+            public void configuration() throws Exception {
                 // global configuration for all routes
                 routeConfiguration().onException(Exception.class).handled(true).to("mock:error");
             }
         });
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .throwException(new IllegalArgumentException("Foo"));
             }
         });
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start2")
                         .throwException(new IllegalArgumentException("Foo2"));
             }

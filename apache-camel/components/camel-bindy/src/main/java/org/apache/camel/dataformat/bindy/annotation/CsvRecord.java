@@ -42,24 +42,24 @@ public @interface CsvRecord {
      * Separator used to split a record in tokens (mandatory) - can be ',' or ';' or 'anything'. The only whitespace
      * character supported is tab (\t). No other whitespace characters (spaces) are not supported. This value is
      * interpreted as a regular expression. If you want to use a sign which has a special meaning in regular
-     * expressions, e.g., the '\|' sign, then you have to mask it, like '\|'
+     * expressions, e.g. the '\|' sign, then you have to mask it, like '\|'
      */
     String separator();
 
     /**
-     * The skipFirstLine parameter will allow skipping or not the first line of a CSV file. This line often contains
+     * The skipFirstLine parameter will allow to skip or not the first line of a CSV file. This line often contains
      * columns definition
      */
     boolean skipFirstLine() default false;
 
     /**
-     * The skipField parameter will allow skipping fields of a CSV file. If some fields are not necessary, they can be
+     * The skipField parameter will allow to skip fields of a CSV file. If some fields are not necessary, they can be
      * skipped.
      */
     boolean skipField() default false;
 
     /**
-     * Character to be used to add a carriage return after each record (optional) - allow defining the carriage return
+     * Character to be used to add a carriage return after each record (optional) - allow to define the carriage return
      * character to use. If you specify a value other than the three listed before, the value you enter (custom) will be
      * used as the CRLF character(s). Three values can be used : WINDOWS, UNIX, MAC, or custom.
      */
@@ -93,14 +93,8 @@ public @interface CsvRecord {
     boolean quotingEscaped() default false;
 
     /**
-     * Indicate if the values should be quoted only when needed (optional) - if enabled then the value is only quoted
-     * when it contains the configured separator, quote, or crlf characters. The quoting option must also be enabled.
-     */
-    boolean quotingOnlyWhenNeeded() default false;
-
-    /**
      * Last record spans rest of line (optional) - if enabled then the last column is auto spanned to end of line, for
-     * example if it is a comment, etc this allows the line to contain all characters, also the delimiter char.
+     * example if its a comment, etc this allows the line to contain all characters, also the delimiter char.
      */
     boolean autospanLine() default false;
 
@@ -118,10 +112,5 @@ public @interface CsvRecord {
      * The remove quotes parameter flags if unmarshalling should try to remove quotes for each field
      */
     boolean removeQuotes() default true;
-
-    /**
-     * Whether to trim each line (stand and end) before parsing the line into data fields.
-     */
-    boolean trimLine() default true;
 
 }

@@ -53,7 +53,7 @@ public class MockRepositoryService extends RepositoryService {
 
     @Override
     public List<RepositoryTag> getTags(IRepositoryIdProvider repository) {
-        LOG.debug("in MockRepositoryService returning {} tags", tags.size());
+        LOG.debug("in MockRepositoryService returning " + tags.size() + " tags");
         return tags;
     }
 }

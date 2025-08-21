@@ -75,9 +75,9 @@ public class AggregateGroupedExchangeBatchSizeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 // our route is aggregating from the direct queue and sending
                 // the response to the mock

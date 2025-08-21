@@ -50,14 +50,14 @@ public class FileRenameReadLockMustUseMarkerFileTest extends ContextTestSupport 
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
-                from(fileUri("?readLock=rename&initialDelay=0&delay=10")).routeId("foo").autoStartup(false)
+            public void configure() throws Exception {
+                from(fileUri("?readLock=rename&initialDelay=0&delay=10")).routeId("foo").noAutoStartup()
                         .process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 // got a file, so we should have a .camelLock file as
                                 // well
                                 String name = exchange.getIn().getHeader(Exchange.FILE_PATH)

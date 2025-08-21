@@ -16,6 +16,8 @@
  */
 package org.apache.camel.component.weather;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -25,8 +27,9 @@ import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriParams;
 import org.apache.camel.spi.UriPath;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.camel.support.ObjectHelper;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 import static org.apache.camel.component.weather.WeatherLanguage.en;
 import static org.apache.camel.component.weather.WeatherMode.JSON;
@@ -68,7 +71,7 @@ public class WeatherConfiguration {
     @UriParam(label = "filter")
     private String zip;
     @UriParam(label = "filter", javaType = "java.lang.String")
-    private String ids;
+    private List<String> ids;
     @UriParam(label = "filter")
     private Integer cnt;
     @UriParam(label = "security")
@@ -103,7 +106,7 @@ public class WeatherConfiguration {
             // ignore and fallback the period to be an empty string
         }
         if (result != 0) {
-            this.period = Integer.toString(result);
+            this.period = "" + result;
         }
     }
 
@@ -254,22 +257,25 @@ public class WeatherConfiguration {
         this.zip = zip;
     }
 
-    public String getIds() {
+    public List<String> getIds() {
         return ids;
-    }
-
-    public List<String> getIdsAsList() {
-        if (ids != null) {
-            return List.of(ids.split(","));
-        } else {
-            return null;
-        }
     }
 
     /**
      * List of id's of city/stations. You can separate multiple ids by comma.
      */
-    public void setIds(String ids) {
+    public void setIds(String id) {
+        if (ids == null) {
+            ids = new ArrayList<>();
+        }
+        Iterator<?> it = ObjectHelper.createIterator(id);
+        while (it.hasNext()) {
+            String myId = (String) it.next();
+            ids.add(myId);
+        }
+    }
+
+    public void setIds(List<String> ids) {
         this.ids = ids;
     }
 
@@ -334,7 +340,7 @@ public class WeatherConfiguration {
 
     /**
      * A custum geolocation provider to determine the longitude and latitude to use when no location information is set.
-     *
+     * 
      * The default implementaion uses the ipstack API and requires geolocationAccessKey and geolocationRequestHostIP
      */
     public void setGeoLocationProvider(GeoLocationProvider geoLocationProvider) {

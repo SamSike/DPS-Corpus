@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package org.springframework.jmx.export.metadata;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.jmx.support.MetricType;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -32,17 +31,21 @@ import org.springframework.util.Assert;
  */
 public class ManagedMetric extends AbstractJmxAttribute {
 
-	private @Nullable String category;
+	@Nullable
+	private String category;
 
-	private @Nullable String displayName;
+	@Nullable
+	private String displayName;
 
 	private MetricType metricType = MetricType.GAUGE;
 
 	private int persistPeriod = -1;
 
-	private @Nullable String persistPolicy;
+	@Nullable
+	private String persistPolicy;
 
-	private @Nullable String unit;
+	@Nullable
+	private String unit;
 
 
 	/**
@@ -55,7 +58,8 @@ public class ManagedMetric extends AbstractJmxAttribute {
 	/**
 	 * The category of this metric (ex. throughput, performance, utilization).
 	 */
-	public @Nullable String getCategory() {
+	@Nullable
+	public String getCategory() {
 		return this.category;
 	}
 
@@ -69,7 +73,8 @@ public class ManagedMetric extends AbstractJmxAttribute {
 	/**
 	 * A display name for this metric.
 	 */
-	public @Nullable String getDisplayName() {
+	@Nullable
+	public String getDisplayName() {
 		return this.displayName;
 	}
 
@@ -112,7 +117,8 @@ public class ManagedMetric extends AbstractJmxAttribute {
 	/**
 	 * The persist policy for this metric.
 	 */
-	public @Nullable String getPersistPolicy() {
+	@Nullable
+	public String getPersistPolicy() {
 		return this.persistPolicy;
 	}
 
@@ -126,7 +132,8 @@ public class ManagedMetric extends AbstractJmxAttribute {
 	/**
 	 * The expected unit of measurement values.
 	 */
-	public @Nullable String getUnit() {
+	@Nullable
+	public String getUnit() {
 		return this.unit;
 	}
 

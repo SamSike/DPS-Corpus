@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.scripting.support;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.scripting.ScriptSource;
 import org.springframework.util.Assert;
 
@@ -37,7 +36,8 @@ public class StaticScriptSource implements ScriptSource {
 
 	private boolean modified;
 
-	private @Nullable String className;
+	@Nullable
+	private String className;
 
 
 	/**
@@ -82,7 +82,8 @@ public class StaticScriptSource implements ScriptSource {
 	}
 
 	@Override
-	public @Nullable String suggestedClassName() {
+	@Nullable
+	public String suggestedClassName() {
 		return this.className;
 	}
 

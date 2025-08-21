@@ -16,29 +16,39 @@
  */
 package org.apache.camel.component.stub;
 
-import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.vm.AbstractVmTestSupport;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
 
-public class StubInOnlyTest extends ContextTestSupport {
+@ResourceLock("VmComponent")
+public class StubInOnlyTest extends AbstractVmTestSupport {
 
     @Test
     public void testInOnly() throws Exception {
         getMockEndpoint("mock:result").expectedBodiesReceived("Hello World");
 
-        template.sendBody("direct:start", "Hello World");
+        template2.sendBody("direct:start", "Hello World");
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
-                from("direct:start").to("stub:smtp://some.server.com?something=bar&whatnot=cheese");
-
+            public void configure() throws Exception {
                 from("stub:smtp://some.server.com?something=bar&whatnot=cheese").to("mock:result");
+            }
+        };
+    }
+
+    @Override
+    protected RouteBuilder createRouteBuilderForSecondContext() throws Exception {
+        return new RouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                from("direct:start").to("stub:smtp://some.server.com?something=bar&whatnot=cheese");
             }
         };
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package org.springframework.web.context.support;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.context.ApplicationEvent;
+import org.springframework.lang.Nullable;
 
 /**
  * Event raised when a request is handled within an ApplicationContext.
@@ -38,16 +37,19 @@ import org.springframework.context.ApplicationEvent;
 public class RequestHandledEvent extends ApplicationEvent {
 
 	/** Session id that applied to the request, if any. */
-	private final @Nullable String sessionId;
+	@Nullable
+	private String sessionId;
 
 	/** Usually the UserPrincipal. */
-	private final @Nullable String userName;
+	@Nullable
+	private String userName;
 
 	/** Request processing time. */
 	private final long processingTimeMillis;
 
 	/** Cause of failure, if any. */
-	private @Nullable Throwable failureCause;
+	@Nullable
+	private Throwable failureCause;
 
 
 	/**
@@ -94,7 +96,8 @@ public class RequestHandledEvent extends ApplicationEvent {
 	/**
 	 * Return the id of the HTTP session, if any.
 	 */
-	public @Nullable String getSessionId() {
+	@Nullable
+	public String getSessionId() {
 		return this.sessionId;
 	}
 
@@ -103,7 +106,8 @@ public class RequestHandledEvent extends ApplicationEvent {
 	 * (usually the UserPrincipal).
 	 * @see jakarta.servlet.http.HttpServletRequest#getUserPrincipal()
 	 */
-	public @Nullable String getUserName() {
+	@Nullable
+	public String getUserName() {
 		return this.userName;
 	}
 
@@ -117,7 +121,8 @@ public class RequestHandledEvent extends ApplicationEvent {
 	/**
 	 * Return the cause of failure, if any.
 	 */
-	public @Nullable Throwable getFailureCause() {
+	@Nullable
+	public Throwable getFailureCause() {
 		return this.failureCause;
 	}
 
@@ -141,10 +146,15 @@ public class RequestHandledEvent extends ApplicationEvent {
 		StringBuilder sb = new StringBuilder();
 		sb.append("session=[").append(this.sessionId).append("]; ");
 		sb.append("user=[").append(this.userName).append("]; ");
-		sb.append("time=[").append(this.processingTimeMillis).append("ms]");
-		if (wasFailure()) {
-			sb.append("; failure=[").append(this.failureCause).append("]");
+		sb.append("time=[").append(this.processingTimeMillis).append("ms]; ");
+		sb.append("status=[");
+		if (!wasFailure()) {
+			sb.append("OK");
 		}
+		else {
+			sb.append("failed: ").append(this.failureCause);
+		}
+		sb.append(']');
 		return sb.toString();
 	}
 

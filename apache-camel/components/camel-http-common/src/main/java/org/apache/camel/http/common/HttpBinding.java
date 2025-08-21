@@ -39,19 +39,18 @@ public interface HttpBinding {
      * @param request the request
      * @param message the message to populate with data from request
      */
-    void readRequest(HttpServletRequest request, Message message);
+    void readRequest(HttpServletRequest request, HttpMessage message);
 
     /**
-     * Parses the body from servlet request
+     * Parses the body from a {@link org.apache.camel.http.common.HttpMessage}
      *
-     * @param  request             the request
-     * @param  message             the message
+     * @param  httpMessage         the http message
      * @return                     the parsed body returned as either a {@link java.io.InputStream} or a
      *                             {@link java.io.Reader} depending on the {@link #setUseReaderForPayload(boolean)}
      *                             property.
      * @throws java.io.IOException can be thrown
      */
-    Object parseBody(HttpServletRequest request, Message message) throws IOException;
+    Object parseBody(HttpMessage httpMessage) throws IOException;
 
     /**
      * Writes the exchange to the servlet response.
@@ -135,12 +134,6 @@ public interface HttpBinding {
     boolean isMuteException();
 
     /**
-     * If enabled and an Exchange failed processing on the consumer side the exception's stack trace will be logged when
-     * the exception stack trace is not sent in the response's body.
-     */
-    boolean isLogException();
-
-    /**
      * Whether to allow java serialization when a request uses context-type=application/x-java-serialized-object
      * <p/>
      * This is by default turned off. If you enable this then be aware that Java will deserialize the incoming data from
@@ -193,12 +186,6 @@ public interface HttpBinding {
     void setMuteException(boolean muteException);
 
     /**
-     * If enabled and an Exchange failed processing on the consumer side the exception's stack trace will be logged when
-     * the exception stack trace is not sent in the response's body.
-     */
-    void setLogException(boolean logException);
-
-    /**
      * Whether to allow java serialization when a request uses context-type=application/x-java-serialized-object
      * <p/>
      * This is by default turned off. If you enable this then be aware that Java will deserialize the incoming data from
@@ -218,7 +205,7 @@ public interface HttpBinding {
     /**
      * Sets the header filter strategy to use.
      * <p/>
-     * Will default use {@link org.apache.camel.http.base.HttpHeaderFilterStrategy}
+     * Will default use {@link org.apache.camel.http.common.HttpHeaderFilterStrategy}
      *
      * @param headerFilterStrategy the custom strategy
      */

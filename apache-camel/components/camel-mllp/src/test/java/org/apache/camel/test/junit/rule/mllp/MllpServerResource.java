@@ -270,7 +270,7 @@ public class MllpServerResource implements BeforeEachCallback, AfterEachCallback
             case 1:
                 return true;
             default:
-                return messageCount % modulus == 0;
+                return (messageCount % modulus == 0) ? true : false;
         }
     }
 
@@ -562,7 +562,7 @@ public class MllpServerResource implements BeforeEachCallback, AfterEachCallback
         if (-1 != endOfMshSegment) {
             String mshSegment = hl7Message.substring(0, endOfMshSegment);
             char fieldSeparator = mshSegment.charAt(3);
-            String fieldSeparatorPattern = Pattern.quote(String.valueOf(fieldSeparator));
+            String fieldSeparatorPattern = Pattern.quote("" + fieldSeparator);
             String[] mshFields = mshSegment.split(fieldSeparatorPattern);
             if (mshFields.length == 0) {
                 log.error("Failed to split MSH Segment into fields");
@@ -1054,7 +1054,7 @@ public class MllpServerResource implements BeforeEachCallback, AfterEachCallback
                         instream = clientSocket.getInputStream();
                     } catch (IOException ioEx) {
                         if (clientSocket.isClosed()) {
-                            log.debug("Client socket was closed - ignoring exception");
+                            log.debug("Client socket was closed - ignoring exception", clientSocket);
                             break;
                         } else {
                             throw new MllpJUnitResourceException("Unexpected IOException encounted getting input stream", ioEx);

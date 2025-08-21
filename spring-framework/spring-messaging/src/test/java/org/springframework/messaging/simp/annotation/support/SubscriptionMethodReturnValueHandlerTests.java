@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.converter.JacksonJsonMessageConverter;
+import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.converter.StringMessageConverter;
 import org.springframework.messaging.core.MessageSendingOperations;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -59,9 +59,9 @@ import static org.mockito.Mockito.verify;
  * @author Sebastien Deleuze
  */
 @ExtendWith(MockitoExtension.class)
-class SubscriptionMethodReturnValueHandlerTests {
+public class SubscriptionMethodReturnValueHandlerTests {
 
-	private static final MimeType MIME_TYPE = new MimeType("text", "plain", StandardCharsets.UTF_8);
+	public static final MimeType MIME_TYPE = new MimeType("text", "plain", StandardCharsets.UTF_8);
 
 	private static final String PAYLOAD = "payload";
 
@@ -86,38 +86,38 @@ class SubscriptionMethodReturnValueHandlerTests {
 
 
 	@BeforeEach
-	void setup() throws Exception {
+	public void setup() throws Exception {
 		SimpMessagingTemplate messagingTemplate = new SimpMessagingTemplate(this.messageChannel);
 		messagingTemplate.setMessageConverter(new StringMessageConverter());
 		this.handler = new SubscriptionMethodReturnValueHandler(messagingTemplate);
 
 		SimpMessagingTemplate jsonMessagingTemplate = new SimpMessagingTemplate(this.messageChannel);
-		jsonMessagingTemplate.setMessageConverter(new JacksonJsonMessageConverter());
+		jsonMessagingTemplate.setMessageConverter(new MappingJackson2MessageConverter());
 		this.jsonHandler = new SubscriptionMethodReturnValueHandler(jsonMessagingTemplate);
 
-		Method method = getClass().getDeclaredMethod("getData");
+		Method method = this.getClass().getDeclaredMethod("getData");
 		this.subscribeEventReturnType = new MethodParameter(method, -1);
 
-		method = getClass().getDeclaredMethod("getDataAndSendTo");
+		method = this.getClass().getDeclaredMethod("getDataAndSendTo");
 		this.subscribeEventSendToReturnType = new MethodParameter(method, -1);
 
-		method = getClass().getDeclaredMethod("handle");
+		method = this.getClass().getDeclaredMethod("handle");
 		this.messageMappingReturnType = new MethodParameter(method, -1);
 
-		method = getClass().getDeclaredMethod("getJsonView");
+		method = this.getClass().getDeclaredMethod("getJsonView");
 		this.subscribeEventJsonViewReturnType = new MethodParameter(method, -1);
 	}
 
 
 	@Test
-	void supportsReturnType() {
+	public void supportsReturnType() throws Exception {
 		assertThat(this.handler.supportsReturnType(this.subscribeEventReturnType)).isTrue();
 		assertThat(this.handler.supportsReturnType(this.subscribeEventSendToReturnType)).isFalse();
 		assertThat(this.handler.supportsReturnType(this.messageMappingReturnType)).isFalse();
 	}
 
 	@Test
-	void testMessageSentToChannel() throws Exception {
+	public void testMessageSentToChannel() throws Exception {
 		given(this.messageChannel.send(any(Message.class))).willReturn(true);
 
 		String sessionId = "sess1";
@@ -144,13 +144,13 @@ class SubscriptionMethodReturnValueHandlerTests {
 
 	@Test
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	void testHeadersPassedToMessagingTemplate() throws Exception {
+	public void testHeadersPassedToMessagingTemplate() throws Exception {
 		String sessionId = "sess1";
 		String subscriptionId = "subs1";
 		String destination = "/dest";
 		Message<?> inputMessage = createInputMessage(sessionId, subscriptionId, destination, null);
 
-		MessageSendingOperations messagingTemplate = mock();
+		MessageSendingOperations messagingTemplate = mock(MessageSendingOperations.class);
 		SubscriptionMethodReturnValueHandler handler = new SubscriptionMethodReturnValueHandler(messagingTemplate);
 
 		handler.handleReturnValue(PAYLOAD, this.subscribeEventReturnType, inputMessage);
@@ -169,7 +169,7 @@ class SubscriptionMethodReturnValueHandlerTests {
 	}
 
 	@Test
-	void testJsonView() throws Exception {
+	public void testJsonView() throws Exception {
 		given(this.messageChannel.send(any(Message.class))).willReturn(true);
 
 		String sessionId = "sess1";
@@ -224,8 +224,8 @@ class SubscriptionMethodReturnValueHandlerTests {
 	}
 
 
-	private interface MyJacksonView1 {}
-	private interface MyJacksonView2 {}
+	private interface MyJacksonView1 {};
+	private interface MyJacksonView2 {};
 
 	private static class JacksonViewBean {
 

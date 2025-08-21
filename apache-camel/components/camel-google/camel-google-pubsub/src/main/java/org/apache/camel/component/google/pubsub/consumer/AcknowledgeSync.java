@@ -22,12 +22,12 @@ import java.util.concurrent.Callable;
 
 import com.google.cloud.pubsub.v1.stub.SubscriberStub;
 import com.google.pubsub.v1.AcknowledgeRequest;
-import com.google.pubsub.v1.ModifyAckDeadlineRequest;
 import org.apache.camel.Exchange;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.component.google.pubsub.GooglePubsubConstants;
+import org.apache.camel.spi.Synchronization;
 
-public class AcknowledgeSync implements GooglePubsubAcknowledge {
+public class AcknowledgeSync implements Synchronization {
 
     //Supplier cannot be used because of thrown exception (Callback used instead)
     private final Callable<SubscriberStub> subscriberStubSupplier;
@@ -39,7 +39,7 @@ public class AcknowledgeSync implements GooglePubsubAcknowledge {
     }
 
     @Override
-    public void ack(Exchange exchange) {
+    public void onComplete(Exchange exchange) {
         AcknowledgeRequest ackRequest = AcknowledgeRequest.newBuilder()
                 .addAllAckIds(getAckIdList(exchange))
                 .setSubscription(subscriptionName).build();
@@ -51,19 +51,7 @@ public class AcknowledgeSync implements GooglePubsubAcknowledge {
     }
 
     @Override
-    public void nack(Exchange exchange) {
-        // There is no explicit nack on the subscriber client. Using modifyAckDeadline with 0 seconds
-        // is the recommended way to nack a message. https://github.com/googleapis/python-pubsub/pull/123
-        ModifyAckDeadlineRequest nackRequest = ModifyAckDeadlineRequest.newBuilder()
-                .addAllAckIds(getAckIdList(exchange))
-                .setSubscription(subscriptionName)
-                .setAckDeadlineSeconds(0).build();
-
-        try (SubscriberStub subscriber = subscriberStubSupplier.call()) {
-            subscriber.modifyAckDeadlineCallable().call(nackRequest);
-        } catch (Exception e) {
-            throw new RuntimeCamelException(e);
-        }
+    public void onFailure(Exchange exchange) {
     }
 
     private List<String> getAckIdList(Exchange exchange) {

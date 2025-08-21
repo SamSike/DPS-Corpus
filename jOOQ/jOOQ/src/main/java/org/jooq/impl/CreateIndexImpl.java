@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -254,8 +251,7 @@ implements
 
 
     private static final Clause[]        CLAUSES                  = { Clause.CREATE_INDEX };
-    private static final Set<SQLDialect> NO_SUPPORT_IF_NOT_EXISTS = SQLDialect.supportedUntil(DERBY, FIREBIRD, MYSQL);
-    private static final Set<SQLDialect> NO_SUPPORT_SORT_SPEC     = SQLDialect.supportedBy(FIREBIRD);
+    private static final Set<SQLDialect> NO_SUPPORT_IF_NOT_EXISTS = SQLDialect.supportedBy(DERBY, FIREBIRD);
     private static final Set<SQLDialect> SUPPORT_UNNAMED_INDEX    = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
     private static final Set<SQLDialect> SUPPORT_INCLUDE          = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
     private static final Set<SQLDialect> SUPPORT_UNIQUE_INCLUDE   = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
@@ -300,12 +296,7 @@ implements
         boolean supportsFieldsBeforeTable = false ;
 
         QueryPartList<QueryPart> list = new QueryPartList<>().qualify(false);
-
-        // [#15366] Ignore explicit sort specification, if unsupported
-        if (NO_SUPPORT_SORT_SPEC.contains(ctx.dialect()))
-            list.addAll(map(sortFields(on), s -> s.$field()));
-        else
-            list.addAll(on);
+        list.addAll(on);
 
         // [#11284] Don't emulate the clause for UNIQUE indexes
         if (!supportsInclude && !unique && include != null)
@@ -324,10 +315,6 @@ implements
 
 
             ctx.sql('(').visit(list).sql(')');
-
-        // [#7539] A type is mandatory for ClickHouse. We currently default to minmax
-        if (ctx.family() == CLICKHOUSE)
-            ctx.sql(' ').visit(K_TYPE).sql(' ').visit(unquotedName("minmax"));
 
         if (supportsInclude && !include.isEmpty()) {
             Keyword keyword = K_INCLUDE;
@@ -411,12 +398,12 @@ implements
     }
 
     @Override
-    public final QOM.UnmodifiableList<? extends OrderField<?>> $on() {
+    public final UnmodifiableList<? extends OrderField<?>> $on() {
         return QOM.unmodifiable(on);
     }
 
     @Override
-    public final QOM.UnmodifiableList<? extends Field<?>> $include() {
+    public final UnmodifiableList<? extends Field<?>> $include() {
         return QOM.unmodifiable(include);
     }
 

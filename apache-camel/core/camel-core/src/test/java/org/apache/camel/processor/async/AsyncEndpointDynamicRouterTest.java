@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class AsyncEndpointDynamicRouterTest extends ContextTestSupport {
 
     private static int invoked;
-    private static final List<String> bodies = new ArrayList<>();
+    private static List<String> bodies = new ArrayList<>();
 
     @Test
     public void testAsyncEndpoint() throws Exception {
@@ -48,10 +48,10 @@ public class AsyncEndpointDynamicRouterTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.addComponent("async", new MyAsyncComponent());
 
                 from("direct:start").dynamicRouter(method(AsyncEndpointDynamicRouterTest.class, "slip"));

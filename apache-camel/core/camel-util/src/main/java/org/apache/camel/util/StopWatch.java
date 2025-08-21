@@ -35,6 +35,13 @@ public final class StopWatch {
     }
 
     /**
+     * Starts the stop watch from the given timestamp
+     */
+    public StopWatch(long timeMillis) {
+        start = timeMillis;
+    }
+
+    /**
      * Creates the stop watch
      *
      * @param start whether it should start immediately
@@ -84,10 +91,16 @@ public final class StopWatch {
     }
 
     /**
-     * Stops the stop watch
+     * Utility method to provide the elapsed time using milliseconds since epoch. This serves as an alternative for the
+     * former constructor based on a Date argument. This should be used only when converting old code that relies on
+     * that constructor as it can provide incorrect measurements in rare circumstances
+     * 
+     * @param  start the timestamp in milliseconds since epoch
+     * @return       the elapsed time in milliseconds
      */
-    public void stop() {
-        start = 0;
+    @Deprecated
+    public static long elapsedMillisSince(long start) {
+        return Duration.ofMillis(System.currentTimeMillis()).minusMillis(start).toMillis();
     }
 
 }

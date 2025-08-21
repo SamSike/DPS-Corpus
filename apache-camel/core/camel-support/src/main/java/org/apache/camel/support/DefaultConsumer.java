@@ -21,6 +21,8 @@ import org.apache.camel.AsyncProcessor;
 import org.apache.camel.Consumer;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedCamelContext;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.PooledExchange;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
@@ -29,7 +31,6 @@ import org.apache.camel.health.HealthCheck;
 import org.apache.camel.health.HealthCheckAware;
 import org.apache.camel.spi.ExceptionHandler;
 import org.apache.camel.spi.ExchangeFactory;
-import org.apache.camel.spi.HostedService;
 import org.apache.camel.spi.RouteIdAware;
 import org.apache.camel.spi.UnitOfWork;
 import org.apache.camel.support.service.ServiceHelper;
@@ -41,8 +42,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A default consumer useful for implementation inheritance.
  */
-public class DefaultConsumer extends ServiceSupport
-        implements Consumer, RouteAware, RouteIdAware, HealthCheckAware, HostedService {
+public class DefaultConsumer extends ServiceSupport implements Consumer, RouteAware, RouteIdAware, HealthCheckAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultConsumer.class);
 
@@ -62,13 +62,8 @@ public class DefaultConsumer extends ServiceSupport
         this.asyncProcessor = AsyncProcessorConverterHelper.convert(processor);
         this.exceptionHandler = new LoggingExceptionHandler(endpoint.getCamelContext(), getClass());
         // create a per consumer exchange factory
-        this.exchangeFactory = endpoint.getCamelContext().getCamelContextExtension()
+        this.exchangeFactory = endpoint.getCamelContext().adapt(ExtendedCamelContext.class)
                 .getExchangeFactory().newExchangeFactory(this);
-    }
-
-    @Override
-    public boolean isHostedService() {
-        return false;
     }
 
     @Override
@@ -112,14 +107,15 @@ public class DefaultConsumer extends ServiceSupport
         // if the exchange doesn't have from route id set, then set it if it originated
         // from this unit of work
         if (route != null && exchange.getFromRouteId() == null) {
-            exchange.getExchangeExtension().setFromRouteId(route.getId());
+            exchange.adapt(ExtendedExchange.class).setFromRouteId(route.getId());
         }
 
         // create uow (however for pooled exchanges then the uow is pre-created)
         UnitOfWork uow = exchange.getUnitOfWork();
         if (uow == null) {
-            uow = PluginHelper.getUnitOfWorkFactory(endpoint.getCamelContext()).createUnitOfWork(exchange);
-            exchange.getExchangeExtension().setUnitOfWork(uow);
+            uow = endpoint.getCamelContext().adapt(ExtendedCamelContext.class).getUnitOfWorkFactory()
+                    .createUnitOfWork(exchange);
+            exchange.adapt(ExtendedExchange.class).setUnitOfWork(uow);
         }
         return uow;
     }
@@ -139,17 +135,16 @@ public class DefaultConsumer extends ServiceSupport
     public Exchange createExchange(boolean autoRelease) {
         Exchange answer = exchangeFactory.create(getEndpoint(), autoRelease);
         endpoint.configureExchange(answer);
-
-        answer.getExchangeExtension().setFromRouteId(routeId);
+        answer.adapt(ExtendedExchange.class).setFromRouteId(routeId);
         return answer;
     }
 
     @Override
     public void releaseExchange(Exchange exchange, boolean autoRelease) {
         if (exchange != null) {
-            if (!autoRelease && exchange instanceof PooledExchange pooledExchange) {
+            if (!autoRelease && exchange instanceof PooledExchange) {
                 // if not auto release we must manually force done
-                pooledExchange.done();
+                ((PooledExchange) exchange).done();
             }
             exchangeFactory.release(exchange);
         }
@@ -159,10 +154,11 @@ public class DefaultConsumer extends ServiceSupport
     public AsyncCallback defaultConsumerCallback(Exchange exchange, boolean autoRelease) {
         boolean pooled = exchangeFactory.isPooled();
         if (pooled) {
-            AsyncCallback answer = exchange.getExchangeExtension().getDefaultConsumerCallback();
+            ExtendedExchange ee = exchange.adapt(ExtendedExchange.class);
+            AsyncCallback answer = ee.getDefaultConsumerCallback();
             if (answer == null) {
                 answer = new DefaultConsumerCallback(this, exchange, autoRelease);
-                exchange.getExchangeExtension().setDefaultConsumerCallback(answer);
+                ee.setDefaultConsumerCallback(answer);
             }
             return answer;
         } else {
@@ -263,27 +259,17 @@ public class DefaultConsumer extends ServiceSupport
         getExceptionHandler().handleException(message, newt);
     }
 
-    /**
-     * Handles the given exception using the {@link #getExceptionHandler()}
-     *
-     * @param message  additional message about the exception
-     * @param exchange exchange which cause the exception
-     * @param t        the exception to handle
-     */
-    protected void handleException(String message, Exchange exchange, Throwable t) {
-        Throwable newt = (t == null) ? new IllegalArgumentException("Handling [null] exception") : t;
-        getExceptionHandler().handleException(message, exchange, newt);
-    }
-
     private static final class DefaultConsumerCallback implements AsyncCallback {
 
         private final DefaultConsumer consumer;
         private final Exchange exchange;
+        private final boolean pooled;
         private final boolean autoRelease;
 
         public DefaultConsumerCallback(DefaultConsumer consumer, Exchange exchange, boolean autoRelease) {
             this.consumer = consumer;
             this.exchange = exchange;
+            this.pooled = exchange instanceof PooledExchange;
             this.autoRelease = autoRelease;
         }
 

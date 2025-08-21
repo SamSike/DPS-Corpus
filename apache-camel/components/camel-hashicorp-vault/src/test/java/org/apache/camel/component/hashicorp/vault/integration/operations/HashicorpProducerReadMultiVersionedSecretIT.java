@@ -71,8 +71,8 @@ public class HashicorpProducerReadMultiVersionedSecretIT extends HashicorpVaultB
         MockEndpoint.assertIsSatisfied(context);
         Exchange ret = mockRead.getExchanges().get(0);
         assertNotNull(ret);
-        assertEquals("30", ((Map) ret.getMessage().getBody(Map.class).get("data")).get("integer"));
-        assertEquals(1, ((Map) ret.getMessage().getBody(Map.class).get("metadata")).get("version"));
+        assertEquals(((Map) ret.getMessage().getBody(Map.class).get("data")).get("integer"), "30");
+        assertEquals(((Map) ret.getMessage().getBody(Map.class).get("metadata")).get("version"), 1);
     }
 
     @Override

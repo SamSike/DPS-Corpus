@@ -20,36 +20,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.activemq.artemis.jms.client.ActiveMQObjectMessage;
-import org.apache.camel.CamelContext;
-import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.jms.support.SerializableRequestDto;
-import org.apache.camel.component.jms.support.SerializableResponseDto;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.support.DefaultExchangeHolder;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Timeout(60)
 public class JmsInOutTransferExchangeTest extends AbstractJMSTest {
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
     private static final Logger LOG = LoggerFactory.getLogger(JmsInOutTransferExchangeTest.class);
 
     @EndpointInject("mock:transfer")
@@ -57,9 +44,6 @@ public class JmsInOutTransferExchangeTest extends AbstractJMSTest {
 
     @EndpointInject("mock:result")
     protected MockEndpoint result;
-    protected CamelContext context;
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
 
     @Override
     protected String getComponentName() {
@@ -97,12 +81,12 @@ public class JmsInOutTransferExchangeTest extends AbstractJMSTest {
 
         Exchange transferExchange = transfer.getExchanges().get(0);
         Exchange exchange = createExchangeWithBody(null);
-        assertInstanceOf(JmsMessage.class, transferExchange.getIn());
+        assertTrue(transferExchange.getIn() instanceof JmsMessage);
 
         JmsMessage transferMessage = transferExchange.getIn(JmsMessage.class);
         ActiveMQObjectMessage transferActiveMQMessage = (ActiveMQObjectMessage) transferMessage.getJmsMessage();
 
-        assertInstanceOf(DefaultExchangeHolder.class, transferActiveMQMessage.getObject());
+        assertTrue(transferActiveMQMessage.getObject() instanceof DefaultExchangeHolder);
         DefaultExchangeHolder exchangeHolder = (DefaultExchangeHolder) transferActiveMQMessage.getObject();
         DefaultExchangeHolder.unmarshal(exchange, exchangeHolder);
 
@@ -114,7 +98,7 @@ public class JmsInOutTransferExchangeTest extends AbstractJMSTest {
         assertEquals("PropertyValue", exchange.getProperty("PropertyName"));
 
         Exchange resultExchange = result.getExchanges().get(0);
-        assertInstanceOf(JmsMessage.class, resultExchange.getIn());
+        assertTrue(resultExchange.getIn() instanceof JmsMessage);
 
         JmsMessage resultMessage = resultExchange.getIn(JmsMessage.class);
         ActiveMQObjectMessage resultActiveMQMessage = (ActiveMQObjectMessage) resultMessage.getJmsMessage();
@@ -145,15 +129,4 @@ public class JmsInOutTransferExchangeTest extends AbstractJMSTest {
         };
     }
 
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        context = camelContextExtension.getContext();
-        template = camelContextExtension.getProducerTemplate();
-        consumer = camelContextExtension.getConsumerTemplate();
-    }
 }

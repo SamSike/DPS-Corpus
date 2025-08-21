@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,19 +35,19 @@ import org.springframework.core.Ordered;
  * <pre class="code">
  * &#064;Configuration
  * &#064;EnableCaching
- * class AppConfig {
+ * public class AppConfig {
  *
  *     &#064;Bean
- *     MyService myService() {
+ *     public MyService myService() {
  *         // configure and return a class having &#064;Cacheable methods
  *         return new MyService();
  *     }
  *
  *     &#064;Bean
- *     CacheManager cacheManager() {
+ *     public CacheManager cacheManager() {
  *         // configure and return an implementation of Spring's CacheManager SPI
  *         SimpleCacheManager cacheManager = new SimpleCacheManager();
- *         cacheManager.setCaches(Set.of(new ConcurrentMapCache("default")));
+ *         cacheManager.setCaches(Arrays.asList(new ConcurrentMapCache("default")));
  *         return cacheManager;
  *     }
  * }</pre>
@@ -103,25 +103,26 @@ import org.springframework.core.Ordered;
  * <pre class="code">
  * &#064;Configuration
  * &#064;EnableCaching
- * class AppConfig implements CachingConfigurer {
+ * public class AppConfig extends CachingConfigurerSupport {
  *
  *     &#064;Bean
- *     MyService myService() {
+ *     public MyService myService() {
  *         // configure and return a class having &#064;Cacheable methods
  *         return new MyService();
  *     }
  *
  *     &#064;Bean
  *     &#064;Override
- *     CacheManager cacheManager() {
+ *     public CacheManager cacheManager() {
  *         // configure and return an implementation of Spring's CacheManager SPI
  *         SimpleCacheManager cacheManager = new SimpleCacheManager();
- *         cacheManager.setCaches(Set.of(new ConcurrentMapCache("default")));
+ *         cacheManager.setCaches(Arrays.asList(new ConcurrentMapCache("default")));
  *         return cacheManager;
  *     }
  *
+ *     &#064;Bean
  *     &#064;Override
- *     KeyGenerator keyGenerator() {
+ *     public KeyGenerator keyGenerator() {
  *         // configure and return an implementation of Spring's KeyGenerator SPI
  *         return new MyKeyGenerator();
  *     }
@@ -136,11 +137,15 @@ import org.springframework.core.Ordered;
  * org.springframework.cache.interceptor.KeyGenerator KeyGenerator} SPI. Normally,
  * {@code @EnableCaching} will configure Spring's
  * {@link org.springframework.cache.interceptor.SimpleKeyGenerator SimpleKeyGenerator}
- * for this purpose, but when implementing {@code CachingConfigurer}, a custom key
- * generator can be specified.
+ * for this purpose, but when implementing {@code CachingConfigurer}, a key generator
+ * must be provided explicitly. Return {@code null} or {@code new SimpleKeyGenerator()}
+ * from this method if no customization is necessary.
  *
- * <p>{@link CachingConfigurer} offers additional customization options:
- * see the {@link CachingConfigurer} javadoc for further details.
+ * <p>{@link CachingConfigurer} offers additional customization options: it is recommended
+ * to extend from {@link org.springframework.cache.annotation.CachingConfigurerSupport
+ * CachingConfigurerSupport} that provides a default implementation for all methods which
+ * can be useful if you do not need to customize everything. See {@link CachingConfigurer}
+ * Javadoc for further details.
  *
  * <p>The {@link #mode} attribute controls how advice is applied: If the mode is
  * {@link AdviceMode#PROXY} (the default), then the other attributes control the behavior
@@ -176,7 +181,7 @@ public @interface EnableCaching {
 	 * For example, other beans marked with Spring's {@code @Transactional} annotation will
 	 * be upgraded to subclass proxying at the same time. This approach has no negative
 	 * impact in practice unless one is explicitly expecting one type of proxy vs another,
-	 * for example, in tests.
+	 * e.g. in tests.
 	 */
 	boolean proxyTargetClass() default false;
 

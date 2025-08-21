@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,10 @@ class RequestMappingViewResolutionIntegrationTests extends AbstractRequestMappin
 
 	@Override
 	protected ApplicationContext initApplicationContext() {
-		return new AnnotationConfigApplicationContext(WebConfig.class);
+		AnnotationConfigApplicationContext wac = new AnnotationConfigApplicationContext();
+		wac.register(WebConfig.class);
+		wac.refresh();
+		return wac;
 	}
 
 
@@ -69,7 +72,7 @@ class RequestMappingViewResolutionIntegrationTests extends AbstractRequestMappin
 	void etagCheckWithNotModifiedResponse(HttpServer httpServer) throws Exception {
 		startServer(httpServer);
 
-		URI uri = URI.create("http://localhost:" + this.port + "/html");
+		URI uri = new URI("http://localhost:" + this.port + "/html");
 		RequestEntity<Void> request = RequestEntity.get(uri).ifNoneMatch("\"deadb33f8badf00d\"").build();
 		ResponseEntity<String> response = getRestTemplate().exchange(request, String.class);
 
@@ -89,7 +92,7 @@ class RequestMappingViewResolutionIntegrationTests extends AbstractRequestMappin
 			}
 		};
 
-		URI uri = URI.create("http://localhost:" + this.port + "/redirect");
+		URI uri = new URI("http://localhost:" + this.port + "/redirect");
 		RequestEntity<Void> request = RequestEntity.get(uri).accept(MediaType.ALL).build();
 		ResponseEntity<Void> response = new RestTemplate(factory).exchange(request, Void.class);
 
@@ -111,11 +114,10 @@ class RequestMappingViewResolutionIntegrationTests extends AbstractRequestMappin
 
 		@Bean
 		public FreeMarkerConfigurer freeMarkerConfig() {
-			// No need to configure a custom template loader path via setTemplateLoaderPath(),
-			// since FreeMarkerConfigurer already registers a
-			// new ClassTemplateLoader(FreeMarkerConfigurer.class, ""), which automatically
-			// finds template files in the same package as this test class.
-			return new FreeMarkerConfigurer();
+			FreeMarkerConfigurer configurer = new FreeMarkerConfigurer();
+			configurer.setPreferFileSystemAccess(false);
+			configurer.setTemplateLoaderPath("classpath*:org/springframework/web/reactive/view/freemarker/");
+			return configurer;
 		}
 	}
 

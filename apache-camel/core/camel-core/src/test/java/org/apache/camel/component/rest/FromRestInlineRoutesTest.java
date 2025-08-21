@@ -26,8 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class FromRestInlineRoutesTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("dummy-rest", new DummyRestConsumerFactory());
         return jndi;
     }
@@ -37,7 +37,7 @@ public class FromRestInlineRoutesTest extends ContextTestSupport {
     }
 
     @Test
-    public void testInlined() {
+    public void testInlined() throws Exception {
         assertEquals(getExpectedNumberOfRoutes(), context.getRoutes().size());
 
         assertEquals(2, context.getRestDefinitions().size());
@@ -52,10 +52,10 @@ public class FromRestInlineRoutesTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 restConfiguration().host("localhost").inlineRoutes(true);
 
                 rest("/say/hello").get().to("direct:hello");

@@ -26,7 +26,6 @@ import java.util.Map;
 
 import javax.net.ssl.HostnameVerifier;
 
-import org.apache.camel.Category;
 import org.apache.camel.Component;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
@@ -38,7 +37,6 @@ import org.apache.camel.component.cxf.common.message.CxfConstants;
 import org.apache.camel.http.base.cookie.CookieHandler;
 import org.apache.camel.spi.HeaderFilterStrategy;
 import org.apache.camel.spi.HeaderFilterStrategyAware;
-import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
@@ -50,7 +48,6 @@ import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
 import org.apache.cxf.common.util.ModCountCopyOnWriteArrayList;
 import org.apache.cxf.common.util.StringUtils;
-import org.apache.cxf.ext.logging.AbstractLoggingInterceptor;
 import org.apache.cxf.ext.logging.LoggingFeature;
 import org.apache.cxf.feature.Feature;
 import org.apache.cxf.interceptor.AbstractBasicInterceptorProvider;
@@ -71,11 +68,8 @@ import static org.apache.camel.component.cxf.common.message.CxfConstants.SCHEME_
 /**
  * Expose JAX-RS REST services using Apache CXF or connect to external REST services using CXF REST client.
  */
-@UriEndpoint(firstVersion = "2.0.0", scheme = SCHEME_CXF_RS, title = "CXF-RS", syntax = "cxfrs:beanId:address",
-             category = { Category.REST }, lenientProperties = true, headersClass = CxfConstants.class)
-@Metadata(annotations = {
-        "protocol=http",
-})
+@UriEndpoint(firstVersion = "2.0.0", scheme = SCHEME_CXF_RS, title = "CXF-RS", syntax = "cxfrs:beanId:address", label = "rest",
+             lenientProperties = true, headersClass = CxfConstants.class)
 public class CxfRsEndpoint extends DefaultEndpoint implements HeaderFilterStrategyAware, Service {
 
     private static final Logger LOG = LoggerFactory.getLogger(CxfRsEndpoint.class);
@@ -127,10 +121,10 @@ public class CxfRsEndpoint extends DefaultEndpoint implements HeaderFilterStrate
     private SSLContextParameters sslContextParameters;
     @UriParam(label = "producer")
     private HostnameVerifier hostnameVerifier;
-    @UriParam(label = "logging")
+    @UriParam
     private boolean loggingFeatureEnabled;
-    @UriParam(label = "logging", defaultValue = "" + AbstractLoggingInterceptor.DEFAULT_LIMIT)
-    private int loggingSizeLimit = AbstractLoggingInterceptor.DEFAULT_LIMIT;
+    @UriParam
+    private int loggingSizeLimit;
     @UriParam
     private boolean skipFaultLogging;
     @UriParam(label = "advanced", defaultValue = "30000", javaType = "java.time.Duration")
@@ -160,8 +154,6 @@ public class CxfRsEndpoint extends DefaultEndpoint implements HeaderFilterStrate
     public CxfRsEndpoint(Component component, String uri, AbstractJAXRSFactoryBean bean) {
         super(uri, component);
         setAddress(bean.getAddress());
-        setFeatures(bean.getFeatures());
-        setProperties(bean.getProperties());
         // Update the sfb address by resolving the properties
         bean.setAddress(getAddress());
 
@@ -374,40 +366,28 @@ public class CxfRsEndpoint extends DefaultEndpoint implements HeaderFilterStrate
         }
 
         if (getProperties() != null) {
-            setupProperties(factory);
+            if (factory.getProperties() != null) {
+                // add to existing properties
+                factory.getProperties().putAll(getProperties());
+            } else {
+                factory.setProperties(getProperties());
+            }
+            LOG.debug("JAXRS FactoryBean: {} added properties: {}", factory, getProperties());
         }
 
         if (isLoggingFeatureEnabled()) {
-            setupLoggingFeature(factory);
+            LoggingFeature loggingFeature = new LoggingFeature();
+            if (getLoggingSizeLimit() > 0) {
+                loggingFeature.setLimit(getLoggingSizeLimit());
+            }
+            factory.getFeatures().add(loggingFeature);
         }
         if (this.isSkipFaultLogging()) {
-            setupSkipFaultLogging(factory);
+            if (factory.getProperties() == null) {
+                factory.setProperties(new HashMap<String, Object>());
+            }
+            factory.getProperties().put(FaultListener.class.getName(), new NullFaultListener());
         }
-    }
-
-    private void setupProperties(AbstractJAXRSFactoryBean factory) {
-        if (factory.getProperties() != null) {
-            // add to existing properties
-            factory.getProperties().putAll(getProperties());
-        } else {
-            factory.setProperties(getProperties());
-        }
-        LOG.debug("JAXRS FactoryBean: {} added properties: {}", factory, getProperties());
-    }
-
-    private void setupLoggingFeature(AbstractJAXRSFactoryBean factory) {
-        LoggingFeature loggingFeature = new LoggingFeature();
-        if (getLoggingSizeLimit() >= -1) {
-            loggingFeature.setLimit(getLoggingSizeLimit());
-        }
-        factory.getFeatures().add(loggingFeature);
-    }
-
-    private static void setupSkipFaultLogging(AbstractJAXRSFactoryBean factory) {
-        if (factory.getProperties() == null) {
-            factory.setProperties(new HashMap<>());
-        }
-        factory.getProperties().put(FaultListener.class.getName(), new NullFaultListener());
     }
 
     protected JAXRSServerFactoryBean newJAXRSServerFactoryBean() {
@@ -547,13 +527,9 @@ public class CxfRsEndpoint extends DefaultEndpoint implements HeaderFilterStrate
     }
 
     /**
-     * To limit the total size of number of bytes the logger will output when logging feature has been enabled and -1
-     * for no limit.
+     * To limit the total size of number of bytes the logger will output when logging feature has been enabled.
      */
     public void setLoggingSizeLimit(int loggingSizeLimit) {
-        if (loggingSizeLimit < -1) {
-            throw new IllegalArgumentException("LoggingSizeLimit must be greater or equal to -1.");
-        }
         this.loggingSizeLimit = loggingSizeLimit;
     }
 
@@ -719,7 +695,7 @@ public class CxfRsEndpoint extends DefaultEndpoint implements HeaderFilterStrate
      * Set the feature list to the CxfRs endpoint.
      */
     public void setFeatures(List<Feature> features) {
-        this.features = new ArrayList<>(features);
+        this.features = features;
     }
 
     public Map<String, Object> getProperties() {

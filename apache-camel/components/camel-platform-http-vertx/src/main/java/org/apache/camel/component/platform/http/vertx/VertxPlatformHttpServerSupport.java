@@ -32,19 +32,11 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.vertx.common.VertxHelper;
-import org.apache.camel.support.TempDirHelper;
 import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.util.ObjectHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class VertxPlatformHttpServerSupport {
-
-    private static final Logger LOG = LoggerFactory.getLogger(VertxPlatformHttpServerSupport.class);
-
     private static final Pattern COMMA_SEPARATED_SPLIT_REGEX = Pattern.compile("\\s*,\\s*");
-
-    private static final String DEFAULT_UPLOAD_DIR = "${java.io.tmpdir}/camel/camel-tmp-#uuid#/";
 
     private VertxPlatformHttpServerSupport() {
     }
@@ -55,33 +47,25 @@ public final class VertxPlatformHttpServerSupport {
     //
     // *****************************
 
-    static Handler<RoutingContext> createBodyHandler(
-            CamelContext camelContext, VertxPlatformHttpServerConfiguration configuration) {
+    static Handler<RoutingContext> createBodyHandler(VertxPlatformHttpServerConfiguration configuration) {
         BodyHandler bodyHandler = BodyHandler.create();
 
         if (configuration.getMaxBodySize() != null) {
-            bodyHandler.setBodyLimit(configuration.getMaxBodySize());
+            bodyHandler.setBodyLimit(configuration.getMaxBodySize().longValueExact());
         }
-        if (configuration.getBodyHandler().isHandleFileUploads()) {
-            String dir = configuration.getBodyHandler().getUploadsDirectory();
-            if (dir == null) {
-                dir = DEFAULT_UPLOAD_DIR;
-            }
-            dir = TempDirHelper.resolveTempDir(camelContext, null, dir);
-            bodyHandler.setUploadsDirectory(dir);
-        }
+
+        bodyHandler.setHandleFileUploads(configuration.getBodyHandler().isHandleFileUploads());
+        bodyHandler.setUploadsDirectory(configuration.getBodyHandler().getUploadsDirectory());
         bodyHandler.setDeleteUploadedFilesOnEnd(configuration.getBodyHandler().isDeleteUploadedFilesOnEnd());
         bodyHandler.setMergeFormAttributes(configuration.getBodyHandler().isMergeFormAttributes());
         bodyHandler.setPreallocateBodyBuffer(configuration.getBodyHandler().isPreallocateBodyBuffer());
 
-        if (configuration.getBodyHandler().isHandleFileUploads()) {
-            LOG.debug("Vert.x HttpServer file-upload dir: {}",
-                    configuration.getBodyHandler().getUploadsDirectory());
-        }
-
-        return (RoutingContext event) -> {
-            event.request().resume();
-            bodyHandler.handle(event);
+        return new Handler<RoutingContext>() {
+            @Override
+            public void handle(RoutingContext event) {
+                event.request().resume();
+                bodyHandler.handle(event);
+            }
         };
     }
 
@@ -94,48 +78,51 @@ public final class VertxPlatformHttpServerSupport {
     static Handler<RoutingContext> createCorsHandler(VertxPlatformHttpServerConfiguration configuration) {
         final VertxPlatformHttpServerConfiguration.Cors corsConfig = configuration.getCors();
 
-        return (RoutingContext event) -> {
-            final HttpServerRequest request = event.request();
-            final HttpServerResponse response = event.response();
-            final String origin = request.getHeader(HttpHeaders.ORIGIN);
+        return new Handler<RoutingContext>() {
+            @Override
+            public void handle(RoutingContext event) {
+                final HttpServerRequest request = event.request();
+                final HttpServerResponse response = event.response();
+                final String origin = request.getHeader(HttpHeaders.ORIGIN);
 
-            if (origin == null) {
-                event.next();
-            } else {
-                final String requestedMethods = request.getHeader(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD);
-                if (requestedMethods != null) {
-                    processHeaders(response, HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, requestedMethods,
-                            corsConfig.getMethods());
-                }
-
-                final String requestedHeaders = request.getHeader(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS);
-                if (requestedHeaders != null) {
-                    processHeaders(response, HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, requestedHeaders,
-                            corsConfig.getHeaders());
-                }
-
-                final boolean allowsOrigin
-                        = ObjectHelper.isEmpty(corsConfig.getOrigins()) || corsConfig.getOrigins().contains(origin);
-                if (allowsOrigin) {
-                    response.headers().set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
-                }
-
-                response.headers().set(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
-
-                if (ObjectHelper.isNotEmpty(corsConfig.getExposedHeaders())) {
-                    response.headers().set(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS,
-                            String.join(",", corsConfig.getExposedHeaders()));
-                }
-
-                if (request.method().equals(HttpMethod.OPTIONS)) {
-                    if ((requestedHeaders != null || requestedMethods != null)
-                            && corsConfig.getAccessControlMaxAge() != null) {
-                        response.putHeader(HttpHeaders.ACCESS_CONTROL_MAX_AGE,
-                                String.valueOf(corsConfig.getAccessControlMaxAge().getSeconds()));
-                    }
-                    response.end();
-                } else {
+                if (origin == null) {
                     event.next();
+                } else {
+                    final String requestedMethods = request.getHeader(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD);
+                    if (requestedMethods != null) {
+                        processHeaders(response, HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, requestedMethods,
+                                corsConfig.getMethods());
+                    }
+
+                    final String requestedHeaders = request.getHeader(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS);
+                    if (requestedHeaders != null) {
+                        processHeaders(response, HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, requestedHeaders,
+                                corsConfig.getHeaders());
+                    }
+
+                    final boolean allowsOrigin
+                            = ObjectHelper.isEmpty(corsConfig.getOrigins()) || corsConfig.getOrigins().contains(origin);
+                    if (allowsOrigin) {
+                        response.headers().set(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+                    }
+
+                    response.headers().set(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
+
+                    if (ObjectHelper.isNotEmpty(corsConfig.getExposedHeaders())) {
+                        response.headers().set(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS,
+                                String.join(",", corsConfig.getExposedHeaders()));
+                    }
+
+                    if (request.method().equals(HttpMethod.OPTIONS)) {
+                        if ((requestedHeaders != null || requestedMethods != null)
+                                && corsConfig.getAccessControlMaxAge() != null) {
+                            response.putHeader(HttpHeaders.ACCESS_CONTROL_MAX_AGE,
+                                    String.valueOf(corsConfig.getAccessControlMaxAge().getSeconds()));
+                        }
+                        response.end();
+                    } else {
+                        event.next();
+                    }
                 }
             }
         };

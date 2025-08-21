@@ -40,7 +40,7 @@ public class EndpointMustBeStartedBeforeSendProcessorTest extends ContextTestSup
     public void testEndpointMustBeStartedBeforeProducer() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 myendpoint = new MyEndpoint("myendpoint", context);
 
                 from("direct:start").to(myendpoint);
@@ -55,7 +55,7 @@ public class EndpointMustBeStartedBeforeSendProcessorTest extends ContextTestSup
     public void testEndpointMustBeStartedBeforeConsumer() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 myendpoint = new MyEndpoint("myendpoint", context);
 
                 from(myendpoint).to("mock:result");
@@ -70,7 +70,7 @@ public class EndpointMustBeStartedBeforeSendProcessorTest extends ContextTestSup
     public void testEndpointMustBeStartedBeforeConsumerAndProducer() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 myendpoint = new MyEndpoint("myendpoint", context);
 
                 from(myendpoint).to("mock:result").to(myendpoint);
@@ -85,7 +85,7 @@ public class EndpointMustBeStartedBeforeSendProcessorTest extends ContextTestSup
     public void testEndpointStartedOnceAndOnlyStoppedOnShutdown() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 myendpoint = new MyEndpoint("myendpoint", context);
 
                 from(myendpoint).routeId("foo").to("mock:result").to(myendpoint);
@@ -121,12 +121,12 @@ public class EndpointMustBeStartedBeforeSendProcessorTest extends ContextTestSup
         }
 
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             return new MyProducer(this);
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             return new MyConsumer(this, null);
         }
 
@@ -136,12 +136,12 @@ public class EndpointMustBeStartedBeforeSendProcessorTest extends ContextTestSup
         }
 
         @Override
-        public void doStart() {
+        public void doStart() throws Exception {
             order += "Endpoint";
         }
 
         @Override
-        protected void doStop() {
+        protected void doStop() throws Exception {
             order += "StopEndpoint";
         }
     }
@@ -153,17 +153,17 @@ public class EndpointMustBeStartedBeforeSendProcessorTest extends ContextTestSup
         }
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             // noop
         }
 
         @Override
-        protected void doStart() {
+        protected void doStart() throws Exception {
             order += "Producer";
         }
 
         @Override
-        protected void doStop() {
+        protected void doStop() throws Exception {
             order += "StopProducer";
         }
     }
@@ -175,12 +175,12 @@ public class EndpointMustBeStartedBeforeSendProcessorTest extends ContextTestSup
         }
 
         @Override
-        protected void doStart() {
+        protected void doStart() throws Exception {
             order += "Consumer";
         }
 
         @Override
-        protected void doStop() {
+        protected void doStop() throws Exception {
             order += "StopConsumer";
         }
     }

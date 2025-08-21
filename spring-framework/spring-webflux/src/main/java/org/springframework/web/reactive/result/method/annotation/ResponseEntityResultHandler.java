@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,13 @@
 
 package org.springframework.web.reactive.result.method.annotation;
 
-import java.net.URI;
 import java.time.Instant;
-import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
-import org.springframework.core.KotlinDetector;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ReactiveAdapter;
 import org.springframework.core.ReactiveAdapterRegistry;
@@ -33,20 +30,18 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.HttpMessageWriter;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.reactive.HandlerResult;
 import org.springframework.web.reactive.HandlerResultHandler;
 import org.springframework.web.reactive.accept.RequestedContentTypeResolver;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
- * Handles return values of type {@link HttpEntity}, {@link ResponseEntity},
- * {@link HttpHeaders}, {@link ErrorResponse}, and {@link ProblemDetail}.
+ * Handles {@link HttpEntity} and {@link ResponseEntity} return values.
  *
  * <p>By default the order for this result handler is set to 0. It is generally
  * safe to place it early in the order as it looks for a concrete return type.
@@ -56,7 +51,7 @@ import org.springframework.web.server.ServerWebExchange;
  */
 public class ResponseEntityResultHandler extends AbstractMessageWriterResultHandler implements HandlerResultHandler {
 
-	private static final Set<HttpMethod> SAFE_METHODS = Set.of(HttpMethod.GET, HttpMethod.HEAD);
+	private static final Set<HttpMethod> SAFE_METHODS = EnumSet.of(HttpMethod.GET, HttpMethod.HEAD);
 
 
 	/**
@@ -79,20 +74,7 @@ public class ResponseEntityResultHandler extends AbstractMessageWriterResultHand
 	public ResponseEntityResultHandler(List<HttpMessageWriter<?>> writers,
 			RequestedContentTypeResolver resolver, ReactiveAdapterRegistry registry) {
 
-		this(writers, resolver, registry, Collections.emptyList());
-	}
-
-	/**
-	 * Constructor with an {@link ReactiveAdapterRegistry} instance.
-	 * @param writers the writers for serializing to the response body
-	 * @param resolver to determine the requested content type
-	 * @param registry for adaptation to reactive types
-	 */
-	public ResponseEntityResultHandler(List<HttpMessageWriter<?>> writers,
-			RequestedContentTypeResolver resolver, ReactiveAdapterRegistry registry,
-			List<ErrorResponse.Interceptor> interceptors) {
-
-		super(writers, resolver, registry, interceptors);
+		super(writers, resolver, registry);
 		setOrder(0);
 	}
 
@@ -108,6 +90,7 @@ public class ResponseEntityResultHandler extends AbstractMessageWriterResultHand
 				isSupportedType(result.getReturnType().getGeneric().toClass());
 	}
 
+	@Nullable
 	private static Class<?> resolveReturnValueType(HandlerResult result) {
 		Class<?> valueType = result.getReturnType().toClass();
 		Object value = result.getReturnValue();
@@ -117,18 +100,14 @@ public class ResponseEntityResultHandler extends AbstractMessageWriterResultHand
 		return valueType;
 	}
 
-	private boolean isSupportedType(@Nullable Class<?> type) {
-		if (type == null) {
-			return false;
-		}
-		return ((HttpEntity.class.isAssignableFrom(type) && !RequestEntity.class.isAssignableFrom(type)) ||
-				ErrorResponse.class.isAssignableFrom(type) || ProblemDetail.class.isAssignableFrom(type) ||
-				HttpHeaders.class.isAssignableFrom(type));
+	private boolean isSupportedType(@Nullable Class<?> clazz) {
+		return (clazz != null && ((HttpEntity.class.isAssignableFrom(clazz) &&
+				!RequestEntity.class.isAssignableFrom(clazz)) ||
+				HttpHeaders.class.isAssignableFrom(clazz)));
 	}
 
 
 	@Override
-	@SuppressWarnings({"ConstantConditions", "NullAway"})
 	public Mono<Void> handleResult(ServerWebExchange exchange, HandlerResult result) {
 
 		Mono<?> returnValueMono;
@@ -139,9 +118,7 @@ public class ResponseEntityResultHandler extends AbstractMessageWriterResultHand
 		if (adapter != null) {
 			Assert.isTrue(!adapter.isMultiValue(), "Only a single ResponseEntity supported");
 			returnValueMono = Mono.from(adapter.toPublisher(result.getReturnValue()));
-			boolean isContinuation = (KotlinDetector.isSuspendingFunction(actualParameter.getMethod()) &&
-					!COROUTINES_FLOW_CLASS_NAME.equals(actualParameter.getParameterType().getName()));
-			bodyParameter = (isContinuation ? actualParameter.nested() : actualParameter.nested().nested());
+			bodyParameter = actualParameter.nested().nested();
 		}
 		else {
 			returnValueMono = Mono.justOrEmpty(result.getReturnValue());
@@ -150,47 +127,27 @@ public class ResponseEntityResultHandler extends AbstractMessageWriterResultHand
 
 		return returnValueMono.flatMap(returnValue -> {
 			HttpEntity<?> httpEntity;
-			if (returnValue instanceof HttpEntity<?> he) {
-				httpEntity = he;
+			if (returnValue instanceof HttpEntity) {
+				httpEntity = (HttpEntity<?>) returnValue;
 			}
-			else if (returnValue instanceof ErrorResponse response) {
-				httpEntity = new ResponseEntity<>(response.getBody(), response.getHeaders(), response.getStatusCode());
-			}
-			else if (returnValue instanceof ProblemDetail detail) {
-				httpEntity = ResponseEntity.of(detail).build();
-			}
-			else if (returnValue instanceof HttpHeaders headers) {
-				httpEntity = new ResponseEntity<>(headers, HttpStatus.OK);
+			else if (returnValue instanceof HttpHeaders) {
+				httpEntity = new ResponseEntity<>((HttpHeaders) returnValue, HttpStatus.OK);
 			}
 			else {
-				return Mono.error(() -> new IllegalArgumentException(
-						"HttpEntity or HttpHeaders expected but got: " + returnValue.getClass()));
+				throw new IllegalArgumentException(
+						"HttpEntity or HttpHeaders expected but got: " + returnValue.getClass());
 			}
 
-			if (httpEntity.getBody() instanceof ProblemDetail detail) {
-				if (detail.getInstance() == null) {
-					URI path = URI.create(exchange.getRequest().getPath().value());
-					detail.setInstance(path);
-				}
-				if (logger.isWarnEnabled() && httpEntity instanceof ResponseEntity<?> responseEntity) {
-					if (responseEntity.getStatusCode().value() != detail.getStatus()) {
-						logger.warn(actualParameter.getExecutable().toGenericString() +
-								" returned ResponseEntity: " + responseEntity + ", but its status" +
-								" doesn't match the ProblemDetail status: " + detail.getStatus());
-					}
-				}
-				invokeErrorResponseInterceptors(
-						detail, (returnValue instanceof ErrorResponse response ? response : null));
-			}
-
-			if (httpEntity instanceof ResponseEntity<?> responseEntity) {
-				exchange.getResponse().setStatusCode(responseEntity.getStatusCode());
+			if (httpEntity instanceof ResponseEntity) {
+				exchange.getResponse().setRawStatusCode(
+						((ResponseEntity<?>) httpEntity).getStatusCodeValue());
 			}
 
 			HttpHeaders entityHeaders = httpEntity.getHeaders();
 			HttpHeaders responseHeaders = exchange.getResponse().getHeaders();
 			if (!entityHeaders.isEmpty()) {
-				responseHeaders.putAll(entityHeaders);
+				entityHeaders.entrySet().stream()
+						.forEach(entry -> responseHeaders.put(entry.getKey(), entry.getValue()));
 			}
 
 			if (httpEntity.getBody() == null || returnValue instanceof HttpHeaders) {
@@ -200,9 +157,11 @@ public class ResponseEntityResultHandler extends AbstractMessageWriterResultHand
 			String etag = entityHeaders.getETag();
 			Instant lastModified = Instant.ofEpochMilli(entityHeaders.getLastModified());
 			HttpMethod httpMethod = exchange.getRequest().getMethod();
-			return ((SAFE_METHODS.contains(httpMethod) && exchange.checkNotModified(etag, lastModified)) ?
-					exchange.getResponse().setComplete() :
-					writeBody(httpEntity.getBody(), bodyParameter, actualParameter, exchange));
+			if (SAFE_METHODS.contains(httpMethod) && exchange.checkNotModified(etag, lastModified)) {
+				return exchange.getResponse().setComplete();
+			}
+
+			return writeBody(httpEntity.getBody(), bodyParameter, actualParameter, exchange);
 		});
 	}
 

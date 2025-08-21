@@ -52,12 +52,15 @@ public class PooledExecutorTest {
         log.info("Starting first set of runnables");
         startRunnables(runnableCount, runCount);
 
+        Thread.sleep(THREAD_COUNT * TestRunnable.SLEEP_MILLIS);
+
         log.info("Starting second set of runnables");
         startRunnables(runnableCount, runCount);
     }
 
-    void startRunnables(int runnableCount, int runCount) {
+    void startRunnables(int runnableCount, int runCount) throws InterruptedException {
         for (int id = 1; id <= runnableCount; ++id) {
+            Thread.sleep(TestRunnable.SLEEP_MILLIS / 2);
             try {
                 instance.addRunnable(new TestRunnable(id, runCount));
             } catch (RejectedExecutionException rejectedEx) {

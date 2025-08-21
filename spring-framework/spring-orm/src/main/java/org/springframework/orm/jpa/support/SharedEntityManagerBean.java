@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@ package org.springframework.orm.jpa.support;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 import org.springframework.orm.jpa.EntityManagerFactoryAccessor;
 import org.springframework.orm.jpa.EntityManagerFactoryInfo;
 import org.springframework.orm.jpa.SharedEntityManagerCreator;
@@ -52,11 +52,13 @@ import org.springframework.util.Assert;
 public class SharedEntityManagerBean extends EntityManagerFactoryAccessor
 		implements FactoryBean<EntityManager>, InitializingBean {
 
-	private @Nullable Class<? extends EntityManager> entityManagerInterface;
+	@Nullable
+	private Class<? extends EntityManager> entityManagerInterface;
 
 	private boolean synchronizedWithTransaction = true;
 
-	private @Nullable EntityManager shared;
+	@Nullable
+	private EntityManager shared;
 
 
 	/**
@@ -87,7 +89,8 @@ public class SharedEntityManagerBean extends EntityManagerFactoryAccessor
 		if (emf == null) {
 			throw new IllegalArgumentException("'entityManagerFactory' or 'persistenceUnitName' is required");
 		}
-		if (emf instanceof EntityManagerFactoryInfo emfInfo) {
+		if (emf instanceof EntityManagerFactoryInfo) {
+			EntityManagerFactoryInfo emfInfo = (EntityManagerFactoryInfo) emf;
 			if (this.entityManagerInterface == null) {
 				this.entityManagerInterface = emfInfo.getEntityManagerInterface();
 				if (this.entityManagerInterface == null) {
@@ -106,7 +109,8 @@ public class SharedEntityManagerBean extends EntityManagerFactoryAccessor
 
 
 	@Override
-	public @Nullable EntityManager getObject() {
+	@Nullable
+	public EntityManager getObject() {
 		return this.shared;
 	}
 

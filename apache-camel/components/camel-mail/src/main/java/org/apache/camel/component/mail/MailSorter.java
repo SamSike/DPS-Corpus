@@ -25,7 +25,7 @@ import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 
-import org.eclipse.angus.mail.imap.SortTerm;
+import com.sun.mail.imap.SortTerm;
 
 /**
  * Utility class for sorting of mail messages

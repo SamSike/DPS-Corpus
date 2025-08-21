@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.web.reactive.result.view;
 
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 
 /**
@@ -64,7 +62,8 @@ public interface RequestDataValueProcessor {
 	 * @param exchange the current exchange
 	 * @return additional hidden form fields to be added, or {@code null}
 	 */
-	@Nullable Map<String, String> getExtraHiddenFields(ServerWebExchange exchange);
+	@Nullable
+	Map<String, String> getExtraHiddenFields(ServerWebExchange exchange);
 
 	/**
 	 * Invoked when a URL is about to be rendered or redirected to.

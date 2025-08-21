@@ -17,18 +17,16 @@
 package org.apache.camel.component.resilience4j;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Predicate;
 
 import io.github.resilience4j.bulkhead.BulkheadConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
 import org.apache.camel.model.CircuitBreakerDefinition;
@@ -40,9 +38,7 @@ import org.apache.camel.spi.BeanIntrospection;
 import org.apache.camel.spi.ExtendedPropertyConfigurerGetter;
 import org.apache.camel.spi.PropertyConfigurer;
 import org.apache.camel.support.CamelContextHelper;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.PropertyBindingSupport;
-import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.function.Suppliers;
 
 public class ResilienceReifier extends ProcessorReifier<CircuitBreakerDefinition> {
@@ -56,8 +52,8 @@ public class ResilienceReifier extends ProcessorReifier<CircuitBreakerDefinition
         // create the regular and fallback processors
         Processor processor = createChildProcessor(true);
         Processor fallback = null;
-        if (definition.getOnFallback() != null && !definition.getOnFallback().getOutputs().isEmpty()) {
-            fallback = createOutputsProcessor(definition.getOnFallback().getOutputs());
+        if (definition.getOnFallback() != null) {
+            fallback = createProcessor(definition.getOnFallback());
         }
         boolean fallbackViaNetwork
                 = definition.getOnFallback() != null && parseBoolean(definition.getOnFallback().getFallbackViaNetwork(), false);
@@ -73,18 +69,9 @@ public class ResilienceReifier extends ProcessorReifier<CircuitBreakerDefinition
         if (b != null) {
             throwExceptionWhenHalfOpenOrOpenState = b;
         }
-        Predicate<Throwable> recordPredicate = null;
-        if (!config.getRecordExceptions().isEmpty()) {
-            recordPredicate = cbConfig.getRecordExceptionPredicate();
-        }
-        Predicate<Throwable> ignorePredicate = null;
-        if (!config.getIgnoreExceptions().isEmpty()) {
-            ignorePredicate = cbConfig.getIgnoreExceptionPredicate();
-        }
 
         ResilienceProcessor answer = new ResilienceProcessor(
-                cbConfig, bhConfig, tlConfig, processor, fallback, throwExceptionWhenHalfOpenOrOpenState, recordPredicate,
-                ignorePredicate);
+                cbConfig, bhConfig, tlConfig, processor, fallback, throwExceptionWhenHalfOpenOrOpenState);
         configureTimeoutExecutorService(answer, config);
         // using any existing circuit breakers?
         if (config.getCircuitBreaker() != null) {
@@ -94,7 +81,7 @@ public class ResilienceReifier extends ProcessorReifier<CircuitBreakerDefinition
         return answer;
     }
 
-    private CircuitBreakerConfig configureCircuitBreaker(Resilience4jConfigurationCommon config) throws ClassNotFoundException {
+    private CircuitBreakerConfig configureCircuitBreaker(Resilience4jConfigurationCommon config) {
         CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
         if (config.getAutomaticTransitionFromOpenToHalfOpenEnabled() != null) {
             builder.automaticTransitionFromOpenToHalfOpenEnabled(
@@ -126,12 +113,6 @@ public class ResilienceReifier extends ProcessorReifier<CircuitBreakerDefinition
         }
         if (config.getWritableStackTraceEnabled() != null) {
             builder.writableStackTraceEnabled(parseBoolean(config.getWritableStackTraceEnabled()));
-        }
-        if (!config.getRecordExceptions().isEmpty()) {
-            builder.recordException(createExceptionPredicate(createRecordExceptionClasses()));
-        }
-        if (!config.getIgnoreExceptions().isEmpty()) {
-            builder.ignoreException(createExceptionPredicate(createIgnoreExceptionClasses()));
         }
         return builder.build();
     }
@@ -196,13 +177,14 @@ public class ResilienceReifier extends ProcessorReifier<CircuitBreakerDefinition
     Resilience4jConfigurationDefinition buildResilience4jConfiguration() throws Exception {
         Map<String, Object> properties = new HashMap<>();
 
-        final PropertyConfigurer configurer = PluginHelper.getConfigurerResolver(camelContext)
+        final PropertyConfigurer configurer = camelContext.adapt(ExtendedCamelContext.class)
+                .getConfigurerResolver()
                 .resolvePropertyConfigurer(Resilience4jConfigurationDefinition.class.getName(), camelContext);
 
         // Extract properties from default configuration, the one configured on
         // camel context takes the precedence over those in the registry
         loadProperties(properties, Suppliers.firstNotNull(
-                () -> camelContext.getCamelContextExtension().getContextPlugin(Model.class).getResilience4jConfiguration(null),
+                () -> camelContext.getExtension(Model.class).getResilience4jConfiguration(null),
                 () -> lookupByNameAndType(ResilienceConstants.DEFAULT_RESILIENCE_CONFIGURATION_ID,
                         Resilience4jConfigurationDefinition.class)),
                 configurer);
@@ -211,9 +193,9 @@ public class ResilienceReifier extends ProcessorReifier<CircuitBreakerDefinition
         // on camel context takes the precedence over those in the registry
         if (definition.getConfiguration() != null) {
             final String ref = parseString(definition.getConfiguration());
+
             loadProperties(properties, Suppliers.firstNotNull(
-                    () -> camelContext.getCamelContextExtension().getContextPlugin(Model.class)
-                            .getResilience4jConfiguration(ref),
+                    () -> camelContext.getExtension(Model.class).getResilience4jConfiguration(ref),
                     () -> mandatoryLookup(ref, Resilience4jConfigurationDefinition.class)),
                     configurer);
         }
@@ -225,7 +207,6 @@ public class ResilienceReifier extends ProcessorReifier<CircuitBreakerDefinition
         Resilience4jConfigurationDefinition config = new Resilience4jConfigurationDefinition();
         PropertyBindingSupport.build()
                 .withCamelContext(camelContext)
-                .withIgnoreCase(true)
                 .withConfigurer(configurer)
                 .withProperties(properties)
                 .withTarget(config)
@@ -235,7 +216,7 @@ public class ResilienceReifier extends ProcessorReifier<CircuitBreakerDefinition
     }
 
     private void loadProperties(Map<String, Object> properties, Optional<?> optional, PropertyConfigurer configurer) {
-        BeanIntrospection beanIntrospection = PluginHelper.getBeanIntrospection(camelContext);
+        BeanIntrospection beanIntrospection = camelContext.adapt(ExtendedCamelContext.class).getBeanIntrospection();
         optional.ifPresent(bean -> {
             if (configurer instanceof ExtendedPropertyConfigurerGetter) {
                 ExtendedPropertyConfigurerGetter getter = (ExtendedPropertyConfigurerGetter) configurer;
@@ -251,39 +232,6 @@ public class ResilienceReifier extends ProcessorReifier<CircuitBreakerDefinition
                 beanIntrospection.getProperties(bean, properties, null, false);
             }
         });
-    }
-
-    private Class<? extends Throwable>[] createRecordExceptionClasses() throws ClassNotFoundException {
-        return resolveExceptions(definition.resilience4jConfiguration().getRecordExceptions());
-    }
-
-    private Class<? extends Throwable>[] createIgnoreExceptionClasses() throws ClassNotFoundException {
-        return resolveExceptions(definition.resilience4jConfiguration().getIgnoreExceptions());
-    }
-
-    private Class<? extends Throwable>[] resolveExceptions(List<String> list) throws ClassNotFoundException {
-        // must use the class resolver from CamelContext to load classes to ensure it can
-        // be loaded in all kind of environments such as JEE servers and OSGi etc.
-        List<Class<? extends Throwable>> answer = new ArrayList<>(list.size());
-        for (String name : list) {
-            name = parseString(name);
-            Class<Throwable> type = camelContext.getClassResolver().resolveMandatoryClass(name, Throwable.class);
-            answer.add(type);
-        }
-        return answer.toArray(new Class[0]);
-    }
-
-    private Predicate<Throwable> createExceptionPredicate(final Class<? extends Throwable>[] exceptions) {
-        return t -> {
-            for (Throwable te : ObjectHelper.createExceptionIterable(t)) {
-                for (var ex : exceptions) {
-                    if (ex.isInstance(te)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        };
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Sam Brannen
  * @author Rossen Stoyanchev
  */
-class ResponseStatusExceptionResolverTests {
+public class ResponseStatusExceptionResolverTests {
 
 	private final ResponseStatusExceptionResolver exceptionResolver = new ResponseStatusExceptionResolver();
 
@@ -58,34 +58,34 @@ class ResponseStatusExceptionResolverTests {
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		exceptionResolver.setWarnLogCategory(exceptionResolver.getClass().getName());
 	}
 
 
 	@Test
-	void statusCode() {
+	public void statusCode() {
 		StatusCodeException ex = new StatusCodeException();
 		ModelAndView mav = exceptionResolver.resolveException(request, response, null, ex);
 		assertResolved(mav, 400, null);
 	}
 
 	@Test
-	void statusCodeFromComposedResponseStatus() {
+	public void statusCodeFromComposedResponseStatus() {
 		StatusCodeFromComposedResponseStatusException ex = new StatusCodeFromComposedResponseStatusException();
 		ModelAndView mav = exceptionResolver.resolveException(request, response, null, ex);
 		assertResolved(mav, 400, null);
 	}
 
 	@Test
-	void statusCodeAndReason() {
+	public void statusCodeAndReason() {
 		StatusCodeAndReasonException ex = new StatusCodeAndReasonException();
 		ModelAndView mav = exceptionResolver.resolveException(request, response, null, ex);
 		assertResolved(mav, 410, "You suck!");
 	}
 
 	@Test
-	void statusCodeAndReasonMessage() {
+	public void statusCodeAndReasonMessage() {
 		Locale locale = Locale.CHINESE;
 		LocaleContextHolder.setLocale(locale);
 		try {
@@ -103,7 +103,7 @@ class ResponseStatusExceptionResolverTests {
 	}
 
 	@Test
-	void notAnnotated() {
+	public void notAnnotated() {
 		Exception ex = new Exception();
 		exceptionResolver.resolveException(request, response, null, ex);
 		ModelAndView mav = exceptionResolver.resolveException(request, response, null, ex);
@@ -111,7 +111,7 @@ class ResponseStatusExceptionResolverTests {
 	}
 
 	@Test // SPR-12903
-	public void nestedException() {
+	public void nestedException() throws Exception {
 		Exception cause = new StatusCodeAndReasonMessageException();
 		TypeMismatchException ex = new TypeMismatchException("value", ITestBean.class, cause);
 		ModelAndView mav = exceptionResolver.resolveException(request, response, null, ex);
@@ -119,14 +119,14 @@ class ResponseStatusExceptionResolverTests {
 	}
 
 	@Test
-	void responseStatusException() {
+	public void responseStatusException() throws Exception {
 		ResponseStatusException ex = new ResponseStatusException(HttpStatus.BAD_REQUEST);
 		ModelAndView mav = exceptionResolver.resolveException(request, response, null, ex);
 		assertResolved(mav, 400, null);
 	}
 
 	@Test  // SPR-15524
-	public void responseStatusExceptionWithReason() {
+	public void responseStatusExceptionWithReason() throws Exception {
 		ResponseStatusException ex = new ResponseStatusException(HttpStatus.BAD_REQUEST, "The reason");
 		ModelAndView mav = exceptionResolver.resolveException(request, response, null, ex);
 		assertResolved(mav, 400, "The reason");
@@ -139,7 +139,7 @@ class ResponseStatusExceptionResolverTests {
 
 		ModelAndView mav = exceptionResolver.resolveException(request, response, null, ex);
 
-		assertResolved(mav, 405, "Request method 'GET' is not supported.");
+		assertResolved(mav, 405, "Request method 'GET' not supported");
 		assertThat(response.getHeader(HttpHeaders.ALLOW)).isEqualTo("POST,PUT");
 	}
 

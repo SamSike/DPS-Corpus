@@ -27,7 +27,6 @@ import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -36,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SimpleParserPredicateTest extends ExchangeTestSupport {
 
     @Test
-    public void testSimpleBooleanValue() {
+    public void testSimpleBooleanValue() throws Exception {
         exchange.getIn().setBody("foo");
 
         SimplePredicateParser parser = new SimplePredicateParser(context, "true", true, null);
@@ -49,7 +48,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleEq() {
+    public void testSimpleEq() throws Exception {
         exchange.getIn().setBody("foo");
 
         SimplePredicateParser parser = new SimplePredicateParser(context, "${body} == 'foo'", true, null);
@@ -59,7 +58,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleEqNumeric() {
+    public void testSimpleEqNumeric() throws Exception {
         exchange.getIn().setBody(123);
 
         SimplePredicateParser parser = new SimplePredicateParser(context, "${body} == 123", true, null);
@@ -69,7 +68,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleEqFunctionFunction() {
+    public void testSimpleEqFunctionFunction() throws Exception {
         exchange.getIn().setBody(122);
         exchange.getIn().setHeader("val", 122);
 
@@ -80,7 +79,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleEqFunctionNumeric() {
+    public void testSimpleEqFunctionNumeric() throws Exception {
         exchange.getIn().setBody(122);
 
         SimplePredicateParser parser = new SimplePredicateParser(context, "${body} == 122", true, null);
@@ -90,7 +89,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleGtFunctionNumeric() {
+    public void testSimpleGtFunctionNumeric() throws Exception {
         exchange.getIn().setBody(122);
 
         SimplePredicateParser parser = new SimplePredicateParser(context, "${body} > 120", true, null);
@@ -100,7 +99,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleUnaryInc() {
+    public void testSimpleUnaryInc() throws Exception {
         exchange.getIn().setBody(122);
 
         SimplePredicateParser parser = new SimplePredicateParser(context, "${body}++ == 123", true, null);
@@ -110,7 +109,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleUnaryDec() {
+    public void testSimpleUnaryDec() throws Exception {
         exchange.getIn().setBody(122);
 
         SimplePredicateParser parser = new SimplePredicateParser(context, "${body}-- == 121", true, null);
@@ -120,7 +119,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleEqFunctionBoolean() {
+    public void testSimpleEqFunctionBoolean() throws Exception {
         exchange.getIn().setBody("Hello");
         exchange.getIn().setHeader("high", true);
 
@@ -131,7 +130,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleEqFunctionBooleanSpaces() {
+    public void testSimpleEqFunctionBooleanSpaces() throws Exception {
         exchange.getIn().setBody("Hello");
         exchange.getIn().setHeader("high", true);
 
@@ -142,7 +141,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleLogicalAnd() {
+    public void testSimpleLogicalAnd() throws Exception {
         exchange.getIn().setBody("Hello");
         exchange.getIn().setHeader("high", true);
         exchange.getIn().setHeader("foo", 123);
@@ -155,7 +154,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleLogicalOr() {
+    public void testSimpleLogicalOr() throws Exception {
         exchange.getIn().setBody("Hello");
         exchange.getIn().setHeader("high", true);
         exchange.getIn().setHeader("foo", 123);
@@ -168,7 +167,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleLogicalAndAnd() {
+    public void testSimpleLogicalAndAnd() throws Exception {
         exchange.getIn().setBody("Hello");
         exchange.getIn().setHeader("high", true);
         exchange.getIn().setHeader("foo", 123);
@@ -183,7 +182,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleManyAndLogical() {
+    public void testSimpleManyAndLogical() throws Exception {
         exchange.getIn().setBody("Hello");
 
         StringBuilder sb = new StringBuilder();
@@ -202,7 +201,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleManyOrLogical() {
+    public void testSimpleManyOrLogical() throws Exception {
         exchange.getIn().setBody("Hello");
 
         StringBuilder sb = new StringBuilder();
@@ -221,7 +220,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleExpressionPredicate() {
+    public void testSimpleExpressionPredicate() throws Exception {
         exchange.getIn().setBody("Hello");
         exchange.getIn().setHeader("number", "1234");
         SimplePredicateParser parser = new SimplePredicateParser(context, "${in.header.number} regex '\\d{4}'", true, null);
@@ -230,7 +229,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleMap() {
+    public void testSimpleMap() throws Exception {
         Map<String, String> map = new HashMap<>();
         map.put("foo", "123");
         map.put("foo bar", "456");
@@ -257,8 +256,8 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
 
         List<String> list = new ArrayList<>();
         list.add("foo");
@@ -269,7 +268,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleIn() {
+    public void testSimpleIn() throws Exception {
         Map<String, String> map = new HashMap<>();
         map.put("key", "foo");
         map.put("key2", "bar");
@@ -290,7 +289,7 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
     }
 
     @Test
-    public void testSimpleInEmpty() {
+    public void testSimpleInEmpty() throws Exception {
         SimplePredicateParser parser = new SimplePredicateParser(context, "${body} in ',,gold,silver'", true, null);
         Predicate pre = parser.parsePredicate();
 
@@ -305,21 +304,5 @@ public class SimpleParserPredicateTest extends ExchangeTestSupport {
 
         exchange.getIn().setBody("bronze");
         assertFalse(pre.matches(exchange), "Should not match bronze");
-    }
-
-    @Test
-    public void testSimpleWithAmbiguousBinaryOperator() {
-        String expression = """
-                ${body[value][conditions].getJSONObject(${exchangeProperty[CamelLoopIndex]})[levelType]} == "1"
-                && ${body[value][conditions].getJSONObject(${exchangeProperty[CamelLoopIndex]})[minLevel]} != null
-                && ${body[value][conditions].getJSONObject(${exchangeProperty[CamelLoopIndex]})[minLevel]} == "50"
-                """;
-        SimplePredicateParser simplePredicateParser = new SimplePredicateParser(
-                context,
-                expression,
-                true,
-                new HashMap<>());
-        Predicate predicate = simplePredicateParser.parsePredicate();
-        assertNotNull(predicate);
     }
 }

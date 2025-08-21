@@ -30,16 +30,15 @@ import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class BeanWithPropertiesAndHeadersAndBodyInjectionTest extends ContextTestSupport {
-    protected final MyBean myBean = new MyBean();
+    protected MyBean myBean = new MyBean();
 
     @Test
-    public void testSendMessage() {
+    public void testSendMessage() throws Exception {
         Exchange out = template.send("direct:in", new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.setProperty("p1", "abc");
                 exchange.setProperty("p2", 123);
 
@@ -50,7 +49,7 @@ public class BeanWithPropertiesAndHeadersAndBodyInjectionTest extends ContextTes
             }
         });
 
-        assertFalse(out.isFailed(), "Should not fail");
+        assertEquals(false, out.isFailed(), "Should not fail");
 
         Map<?, ?> foo = myBean.foo;
         Map<?, ?> bar = myBean.bar;
@@ -66,8 +65,8 @@ public class BeanWithPropertiesAndHeadersAndBodyInjectionTest extends ContextTes
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("myBean", myBean);
         return answer;
     }

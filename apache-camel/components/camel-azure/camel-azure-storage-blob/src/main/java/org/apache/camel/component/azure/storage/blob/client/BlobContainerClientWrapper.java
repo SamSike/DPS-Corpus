@@ -19,6 +19,7 @@ package org.apache.camel.component.azure.storage.blob.client;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.azure.core.http.HttpHeaders;
 import com.azure.core.util.Context;
@@ -47,7 +48,7 @@ public class BlobContainerClientWrapper {
     }
 
     public List<BlobItem> listBlobs(final ListBlobsOptions listBlobsOptions, final Duration timeout) {
-        return client.listBlobs(listBlobsOptions, timeout).stream().toList();
+        return client.listBlobs(listBlobsOptions, timeout).stream().collect(Collectors.toList());
     }
 
     public BlobClientWrapper getBlobClientWrapper(final String blobName) {

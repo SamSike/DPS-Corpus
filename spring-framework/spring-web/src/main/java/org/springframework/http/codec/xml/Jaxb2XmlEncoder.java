@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,13 +21,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.function.Function;
 
-import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.MarshalException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -41,6 +39,7 @@ import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.log.LogFormatUtils;
 import org.springframework.http.MediaType;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
@@ -92,8 +91,7 @@ public class Jaxb2XmlEncoder extends AbstractSingleValueEncoder<Object> {
 		if (super.canEncode(elementType, mimeType)) {
 			Class<?> outputClass = elementType.toClass();
 			return (outputClass.isAnnotationPresent(XmlRootElement.class) ||
-					outputClass.isAnnotationPresent(XmlType.class) ||
-					JAXBElement.class.isAssignableFrom(outputClass));
+					outputClass.isAnnotationPresent(XmlType.class));
 		}
 		else {
 			return false;
@@ -123,7 +121,7 @@ public class Jaxb2XmlEncoder extends AbstractSingleValueEncoder<Object> {
 		DataBuffer buffer = bufferFactory.allocateBuffer(1024);
 		try {
 			OutputStream outputStream = buffer.asOutputStream();
-			Class<?> clazz = getMarshallerType(value);
+			Class<?> clazz = ClassUtils.getUserClass(value);
 			Marshaller marshaller = initMarshaller(clazz);
 			marshaller.marshal(value, outputStream);
 			release = false;
@@ -139,15 +137,6 @@ public class Jaxb2XmlEncoder extends AbstractSingleValueEncoder<Object> {
 			if (release) {
 				DataBufferUtils.release(buffer);
 			}
-		}
-	}
-
-	private static Class<?> getMarshallerType(Object value) {
-		if (value instanceof JAXBElement<?> jaxbElement) {
-			return jaxbElement.getDeclaredType();
-		}
-		else {
-			return ClassUtils.getUserClass(value);
 		}
 	}
 

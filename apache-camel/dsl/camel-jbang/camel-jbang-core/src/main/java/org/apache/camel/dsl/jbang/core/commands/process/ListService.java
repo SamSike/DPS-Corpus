@@ -19,14 +19,12 @@ package org.apache.camel.dsl.jbang.core.commands.process;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.StringJoiner;
 
 import com.github.freva.asciitable.AsciiTable;
 import com.github.freva.asciitable.Column;
 import com.github.freva.asciitable.HorizontalAlign;
 import com.github.freva.asciitable.OverflowBehaviour;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
-import org.apache.camel.dsl.jbang.core.common.PidNameAgeCompletionCandidates;
 import org.apache.camel.dsl.jbang.core.common.ProcessHelper;
 import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.json.JsonArray;
@@ -35,34 +33,22 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 @Command(name = "service",
-         description = "Get services of Camel integrations", sortOptions = false, showDefaultValues = true)
+         description = "Get services of Camel integrations")
 public class ListService extends ProcessWatchCommand {
 
     @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
     String name = "*";
 
-    @CommandLine.Option(names = { "--sort" }, completionCandidates = PidNameAgeCompletionCandidates.class,
+    @CommandLine.Option(names = { "--sort" },
                         description = "Sort by pid, name or age", defaultValue = "pid")
     String sort;
-
-    @CommandLine.Option(names = { "--metadata" },
-                        description = "Show service metadata (only available for some services)")
-    boolean metadata;
-
-    @CommandLine.Option(names = { "--short-uri" },
-                        description = "List endpoint URI without query parameters (short)")
-    boolean shortUri;
-
-    @CommandLine.Option(names = { "--wide-uri" },
-                        description = "List endpoint URI in full details")
-    boolean wideUri;
 
     public ListService(CamelJBangMain main) {
         super(main);
     }
 
     @Override
-    public Integer doProcessWatchCall() throws Exception {
+    public Integer doCall() throws Exception {
         List<Row> rows = new ArrayList<>();
 
         List<Long> pids = findPids(name);
@@ -81,30 +67,32 @@ public class ListService extends ProcessWatchCommand {
                         if ("CamelJBang".equals(row.name)) {
                             row.name = ProcessHelper.extractName(root, ph);
                         }
-                        row.pid = Long.toString(ph.pid());
+                        row.pid = "" + ph.pid();
                         row.uptime = extractSince(ph);
                         row.age = TimeUtils.printSince(row.uptime);
 
+                        // platform-http is special
                         JsonObject jo = (JsonObject) root.get("services");
                         if (jo != null) {
-                            JsonArray arr = (JsonArray) jo.get("services");
+                            jo = (JsonObject) jo.get("platform-http");
+                        }
+                        if (jo != null) {
+                            JsonArray arr = (JsonArray) jo.get("endpoints");
                             if (arr != null) {
                                 for (int i = 0; i < arr.size(); i++) {
                                     row = row.copy();
                                     jo = (JsonObject) arr.get(i);
-                                    row.component = jo.getString("component");
-                                    row.direction = jo.getString("direction");
-                                    row.hosted = jo.getBooleanOrDefault("hosted", false);
-                                    row.protocol = jo.getString("protocol");
-                                    row.serviceUrl = jo.getString("serviceUrl");
-                                    row.endpointUri = jo.getString("endpointUri");
-                                    row.hits = jo.getLongOrDefault("hits", 0);
-                                    row.routeId = jo.getString("routeId");
-                                    row.metadata = jo.getMap("metadata");
+                                    row.component = "platform-http";
+                                    row.protocol = "http";
+                                    row.service = jo.getString("url");
+                                    row.verbs = jo.getString("verbs");
                                     rows.add(row);
                                 }
                             }
                         }
+                        fetchServices(root, row, "netty", rows);
+                        fetchServices(root, row, "mina", rows);
+                        fetchServices(root, row, "mllp", rows);
                     }
                 });
 
@@ -112,33 +100,36 @@ public class ListService extends ProcessWatchCommand {
         rows.sort(this::sortRow);
 
         if (!rows.isEmpty()) {
-            printer().println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
+            System.out.println(AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
                     new Column().header("PID").headerAlign(HorizontalAlign.CENTER).with(r -> r.pid),
                     new Column().header("NAME").dataAlign(HorizontalAlign.LEFT).maxWidth(30, OverflowBehaviour.ELLIPSIS_RIGHT)
                             .with(r -> r.name),
                     new Column().header("COMPONENT").dataAlign(HorizontalAlign.LEFT).with(r -> r.component),
-                    new Column().header("DIR").dataAlign(HorizontalAlign.LEFT).with(r -> r.direction),
-                    new Column().header("ROUTE").dataAlign(HorizontalAlign.LEFT).with(this::getRouteId),
                     new Column().header("PROTOCOL").dataAlign(HorizontalAlign.LEFT).with(this::getProtocol),
-                    new Column().header("SERVICE").dataAlign(HorizontalAlign.LEFT).with(this::getService),
-                    new Column().header("METADATA").visible(metadata).dataAlign(HorizontalAlign.LEFT).with(this::getMetadata),
-                    new Column().header("TOTAL").dataAlign(HorizontalAlign.RIGHT).with(r -> "" + r.hits),
-                    new Column().header("ENDPOINT").visible(!wideUri).dataAlign(HorizontalAlign.LEFT)
-                            .maxWidth(90, OverflowBehaviour.ELLIPSIS_RIGHT)
-                            .with(this::getUri),
-                    new Column().header("ENDPOINT").visible(wideUri).dataAlign(HorizontalAlign.LEFT)
-                            .maxWidth(140, OverflowBehaviour.NEWLINE)
-                            .with(this::getUri))));
+                    new Column().header("SERVICE").dataAlign(HorizontalAlign.LEFT).with(this::getService))));
         }
 
         return 0;
     }
 
-    private String getRouteId(Row r) {
-        if (r.routeId != null) {
-            return r.routeId;
+    private static void fetchServices(JsonObject root, Row row, String component, List<Row> rows) {
+        JsonObject jo = (JsonObject) root.get("services");
+        if (jo != null) {
+            jo = (JsonObject) jo.get(component);
         }
-        return "";
+        if (jo != null) {
+            JsonArray arr = (JsonArray) jo.get("endpoints");
+            if (arr != null) {
+                for (Object o : arr) {
+                    row = row.copy();
+                    jo = (JsonObject) o;
+                    row.component = component;
+                    row.protocol = jo.getString("protocol");
+                    row.service = row.protocol + ":" + jo.getString("host") + ":" + jo.getInteger("port");
+                    rows.add(row);
+                }
+            }
+        }
     }
 
     protected int sortRow(Row o1, Row o2) {
@@ -160,32 +151,20 @@ public class ListService extends ProcessWatchCommand {
         }
     }
 
-    private String getUri(Row r) {
-        String u = r.endpointUri;
-        if (shortUri) {
-            int pos = u.indexOf('?');
-            if (pos > 0) {
-                u = u.substring(0, pos);
-            }
-        }
-        return u;
-    }
-
     private String getProtocol(Row r) {
-        return r.protocol;
+        String s = r.protocol;
+        if (r.verbs != null) {
+            s = "rest";
+        }
+        return s;
     }
 
     private String getService(Row r) {
-        return r.serviceUrl;
-    }
-
-    private String getMetadata(Row r) {
-        if (r.metadata != null) {
-            StringJoiner sj = new StringJoiner(" ");
-            r.metadata.forEach((k, v) -> sj.add(k + "=" + v));
-            return sj.toString();
+        String s = r.service;
+        if (r.verbs != null) {
+            s += " (" + r.verbs + ")";
         }
-        return "";
+        return s;
     }
 
     private static class Row implements Cloneable {
@@ -194,14 +173,9 @@ public class ListService extends ProcessWatchCommand {
         String age;
         long uptime;
         String component;
-        String direction;
-        boolean hosted;
         String protocol;
-        String serviceUrl;
-        String endpointUri;
-        long hits;
-        String routeId;
-        JsonObject metadata;
+        String service;
+        String verbs;
 
         Row copy() {
             try {

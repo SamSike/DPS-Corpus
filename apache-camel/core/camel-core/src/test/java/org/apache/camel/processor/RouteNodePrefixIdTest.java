@@ -21,10 +21,12 @@ import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 public class RouteNodePrefixIdTest extends ContextTestSupport {
 
     @Test
-    public void testRoutePrefixId() {
+    public void testRoutePrefixId() throws Exception {
         Assertions.assertEquals(3, context.getRoutes().size());
 
         // ID should be prefixed
@@ -42,10 +44,10 @@ public class RouteNodePrefixIdTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").routeId("foo").nodePrefixId("aaa")
                         .to("mock:foo").id("myFoo")
                         .to("seda:foo");

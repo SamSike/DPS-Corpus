@@ -22,6 +22,7 @@ import org.apache.camel.component.thrift.generated.Calculator;
 import org.apache.camel.component.thrift.generated.Operation;
 import org.apache.camel.component.thrift.generated.Work;
 import org.apache.camel.spi.Registry;
+import org.apache.camel.support.SimpleRegistry;
 import org.apache.camel.support.jsse.KeyManagersParameters;
 import org.apache.camel.support.jsse.KeyStoreParameters;
 import org.apache.camel.support.jsse.SSLContextParameters;
@@ -83,7 +84,8 @@ public class ThriftConsumerSecurityTest extends CamelTestSupport {
     }
 
     @Override
-    protected void bindToRegistry(Registry registry) {
+    protected Registry createCamelRegistry() {
+        Registry reg = new SimpleRegistry();
         SSLContextParameters sslParameters = new SSLContextParameters();
 
         KeyStoreParameters keyStoreParams = new KeyStoreParameters();
@@ -95,7 +97,8 @@ public class ThriftConsumerSecurityTest extends CamelTestSupport {
 
         sslParameters.setKeyManagers(keyManagerParams);
 
-        registry.bind("sslParams", sslParameters);
+        reg.bind("sslParams", sslParameters);
+        return reg;
     }
 
     @Test
@@ -139,11 +142,11 @@ public class ThriftConsumerSecurityTest extends CamelTestSupport {
 
                 from("thrift://localhost:" + THRIFT_TEST_PORT
                      + "/org.apache.camel.component.thrift.generated.Calculator?negotiationType=SSL&sslParameters=#sslParams&synchronous=true")
-                        .to("mock:thrift-secure-service").choice()
-                        .when(header(ThriftConstants.THRIFT_METHOD_NAME_HEADER).isEqualTo("calculate"))
-                        .setBody(simple(Integer.valueOf(THRIFT_TEST_NUM1 * THRIFT_TEST_NUM2).toString()))
-                        .when(header(ThriftConstants.THRIFT_METHOD_NAME_HEADER).isEqualTo("echo"))
-                        .setBody(simple("${body[0]}")).bean(new CalculatorMessageBuilder(), "echo");
+                             .to("mock:thrift-secure-service").choice()
+                             .when(header(ThriftConstants.THRIFT_METHOD_NAME_HEADER).isEqualTo("calculate"))
+                             .setBody(simple(Integer.valueOf(THRIFT_TEST_NUM1 * THRIFT_TEST_NUM2).toString()))
+                             .when(header(ThriftConstants.THRIFT_METHOD_NAME_HEADER).isEqualTo("echo"))
+                             .setBody(simple("${body[0]}")).bean(new CalculatorMessageBuilder(), "echo");
             }
         };
     }

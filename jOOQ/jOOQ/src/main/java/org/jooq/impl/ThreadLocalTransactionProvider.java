@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,13 +43,13 @@ import java.sql.Connection;
 import java.sql.Savepoint;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Set;
 
 import org.jooq.Configuration;
 import org.jooq.ConnectionProvider;
 import org.jooq.TransactionContext;
-import org.jooq.TransactionProperty;
 import org.jooq.TransactionProvider;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A {@link TransactionProvider} that implements thread-bound transaction
@@ -82,57 +82,34 @@ public class ThreadLocalTransactionProvider implements TransactionProvider {
      *            supported.
      */
     public ThreadLocalTransactionProvider(ConnectionProvider connectionProvider, boolean nested) {
-        this(connectionProvider, nested, new TransactionProperty[0]);
-    }
-
-    /**
-     * @param nested Whether nested transactions via {@link Savepoint}s are
-     *            supported.
-     * @param properties The default transaction properties that are used to
-     *            create transactions from this provider.
-     */
-    public ThreadLocalTransactionProvider(
-        ConnectionProvider connectionProvider,
-        boolean nested,
-        TransactionProperty... properties
-    ) {
         this.localConnectionProvider = new ThreadLocalConnectionProvider(connectionProvider);
-        this.delegateTransactionProvider = new DefaultTransactionProvider(localConnectionProvider, nested, properties);
+        this.delegateTransactionProvider = new DefaultTransactionProvider(localConnectionProvider, nested);
         this.localConfigurations = new ThreadLocal<>();
         this.localTxConnection = new ThreadLocal<>();
-    }
-
-    @Override
-    public final Set<TransactionProperty> properties() {
-        return delegateTransactionProvider.properties();
     }
 
     @Override
     public void begin(TransactionContext ctx) {
         delegateTransactionProvider.begin(ctx);
         configurations().push(ctx.configuration());
-        if (delegateTransactionProvider.nestingLevel(ctx) == 1)
+        if (delegateTransactionProvider.nestingLevel(ctx.configuration()) == 1)
             localTxConnection.set(((DefaultConnectionProvider) ctx.configuration().data(DATA_DEFAULT_TRANSACTION_PROVIDER_CONNECTION)).connection);
     }
 
     @Override
     public void commit(TransactionContext ctx) {
-        if (delegateTransactionProvider.nestingLevel(ctx) == 1)
+        if (delegateTransactionProvider.nestingLevel(ctx.configuration()) == 1)
             localTxConnection.remove();
-
-        // [#17517] In case of failure during commit(), avoid calling pop() here
-        //          as it will be called in rollback()
-        delegateTransactionProvider.commit(ctx);
         configurations().pop();
+        delegateTransactionProvider.commit(ctx);
     }
 
     @Override
     public void rollback(TransactionContext ctx) {
-        if (delegateTransactionProvider.nestingLevel(ctx) == 1)
+        if (delegateTransactionProvider.nestingLevel(ctx.configuration()) == 1)
             localTxConnection.remove();
-
-        delegateTransactionProvider.rollback(ctx);
         configurations().pop();
+        delegateTransactionProvider.rollback(ctx);
     }
 
     Configuration configuration(Configuration fallback) {

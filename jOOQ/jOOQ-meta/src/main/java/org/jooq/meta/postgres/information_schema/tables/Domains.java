@@ -4,8 +4,11 @@
 package org.jooq.meta.postgres.information_schema.tables;
 
 
-import org.jooq.Condition;
+import java.util.Arrays;
+import java.util.List;
+
 import org.jooq.Field;
+import org.jooq.ForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -62,14 +65,12 @@ public class Domains extends TableImpl<Record> {
     public final TableField<Record, String> DATA_TYPE = createField(DSL.name("data_type"), SQLDataType.VARCHAR, this, "");
 
     /**
-     * The column
-     * <code>information_schema.domains.character_maximum_length</code>.
+     * The column <code>information_schema.domains.character_maximum_length</code>.
      */
     public final TableField<Record, Integer> CHARACTER_MAXIMUM_LENGTH = createField(DSL.name("character_maximum_length"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column
-     * <code>information_schema.domains.character_octet_length</code>.
+     * The column <code>information_schema.domains.character_octet_length</code>.
      */
     public final TableField<Record, Integer> CHARACTER_OCTET_LENGTH = createField(DSL.name("character_octet_length"), SQLDataType.INTEGER, this, "");
 
@@ -109,8 +110,7 @@ public class Domains extends TableImpl<Record> {
     public final TableField<Record, Integer> NUMERIC_PRECISION = createField(DSL.name("numeric_precision"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column
-     * <code>information_schema.domains.numeric_precision_radix</code>.
+     * The column <code>information_schema.domains.numeric_precision_radix</code>.
      */
     public final TableField<Record, Integer> NUMERIC_PRECISION_RADIX = createField(DSL.name("numeric_precision_radix"), SQLDataType.INTEGER, this, "");
 
@@ -180,11 +180,11 @@ public class Domains extends TableImpl<Record> {
     public final TableField<Record, String> DTD_IDENTIFIER = createField(DSL.name("dtd_identifier"), SQLDataType.VARCHAR, this, "");
 
     private Domains(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Domains(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view(), where);
+    private Domains(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view());
     }
 
     /**
@@ -208,14 +208,23 @@ public class Domains extends TableImpl<Record> {
         this(DSL.name("domains"), null);
     }
 
+    public <O extends Record> Domains(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, DOMAINS);
+    }
+
     @Override
     public Schema getSchema() {
-        return aliased() ? null : InformationSchema.INFORMATION_SCHEMA;
+        return InformationSchema.INFORMATION_SCHEMA;
     }
 
     @Override
     public UniqueKey<Record> getPrimaryKey() {
         return Keys.SYNTHETIC_PK_DOMAINS;
+    }
+
+    @Override
+    public List<UniqueKey<Record>> getKeys() {
+        return Arrays.<UniqueKey<Record>>asList(Keys.SYNTHETIC_PK_DOMAINS);
     }
 
     @Override
@@ -228,8 +237,19 @@ public class Domains extends TableImpl<Record> {
         return new Domains(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public Domains as(Table<?> alias) {
-        return new Domains(alias.getQualifiedName(), this);
+    public Domains rename(String name) {
+        return new Domains(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public Domains rename(Name name) {
+        return new Domains(name, null);
     }
 }

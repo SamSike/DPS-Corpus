@@ -16,55 +16,44 @@
  */
 package org.apache.camel.component.mongodb.integration;
 
-import org.apache.camel.CamelContext;
+import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.test.infra.core.annotations.RouteFixture;
-import org.apache.camel.test.infra.core.api.ConfigurableRoute;
+import org.apache.camel.component.mongodb.MongoDbEndpoint;
 import org.bson.Document;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.mongodb.MongoDbConstants.MONGO_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class MongoDbStopEndpointIT extends AbstractMongoDbITSupport implements ConfigurableRoute {
+public class MongoDbStopEndpointIT extends AbstractMongoDbITSupport {
 
     private static final String MY_ID = "myId";
 
-    String intermediate = "mongodb:myDb?database={{mongodb.testDb}}&collection={{mongodb.testCollection}}&operation=insert";
+    @EndpointInject("mongodb:myDb?database={{mongodb.testDb}}&collection={{mongodb.testCollection}}&operation=insert")
+    MongoDbEndpoint endpoint;
 
+    @Override
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
-                from("direct:insertJsonString").routeId("insert").to(intermediate);
+                from("direct:insertJsonString").routeId("insert").to(endpoint);
                 from("direct:findById").routeId("find").to(
                         "mongodb:myDb?database={{mongodb.testDb}}&collection={{mongodb.testCollection}}&operation=findById&dynamicity=true");
             }
         };
     }
 
-    @BeforeEach
-    void checkDocuments() {
-        Assumptions.assumeTrue(0 == testCollection.countDocuments(), "The collection should have no documents");
-    }
-
     @Test
     public void testStopEndpoint() {
+        assertEquals(0, testCollection.countDocuments());
+
         template.requestBody("direct:insertJsonString", "{\"scientist\": \"Newton\", \"_id\": \"" + MY_ID + "\"}");
 
-        context.getEndpoint("mongodb:myDb?database={{mongodb.testDb}}&collection={{mongodb.testCollection}}&operation=insert")
-                .stop();
+        endpoint.stop();
 
         Document result = template.requestBody("direct:findById", MY_ID, Document.class);
 
         assertEquals(MY_ID, result.get(MONGO_ID));
         assertEquals("Newton", result.get("scientist"));
-    }
-
-    @RouteFixture
-    @Override
-    public void createRouteBuilder(CamelContext context) throws Exception {
-        context.addRoutes(createRouteBuilder());
     }
 }

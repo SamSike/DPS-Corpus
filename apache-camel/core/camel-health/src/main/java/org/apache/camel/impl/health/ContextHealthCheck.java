@@ -19,8 +19,8 @@ package org.apache.camel.impl.health;
 import java.util.Map;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Ordered;
-import org.apache.camel.ServiceStatus;
 import org.apache.camel.health.HealthCheckResultBuilder;
 
 /**
@@ -42,8 +42,8 @@ public final class ContextHealthCheck extends AbstractHealthCheck {
 
     @Override
     public boolean isLiveness() {
-        // context is also liveness to ensure we have at least one liveness check
-        return true;
+        // this check is only for readiness
+        return false;
     }
 
     @Override
@@ -51,38 +51,16 @@ public final class ContextHealthCheck extends AbstractHealthCheck {
         builder.unknown();
 
         if (getCamelContext() != null) {
-            ServiceStatus status = getCamelContext().getStatus();
-            byte phase = getCamelContext().getCamelContextExtension().getStatusPhase();
-            String name = getCamelContext().getName();
-
-            builder.detail("context.name", name);
+            builder.detail("context.name", getCamelContext().getName());
             builder.detail("context.version", getCamelContext().getVersion());
-            builder.detail("context.status", status);
-            builder.detail("context.phase", phase);
+            builder.detail("context.status", getCamelContext().getStatus().name());
+            builder.detail("context.phase", getCamelContext().adapt(ExtendedCamelContext.class).getStatusPhase());
 
-            switch (status) {
-                case Initializing:
-                case Initialized:
-                case Starting:
-                    builder.message(
-                            "Camel Context '" + name + "' is starting. Status: '" + status + "', Phase: '" + phase
-                                    + "'. Please wait...");
-                    builder.down();
-                    break;
-                case Started:
-                    builder.up();
-                    break;
-                case Stopping:
-                case Stopped:
-                case Suspending:
-                case Suspended:
-                    builder.message("Camel Context '" + name + "' is shutting down. Status: '" + status + "', Phase: '" + phase
-                                    + "'. Please check the debug log");
-                    builder.down();
-                    break;
-                default:
-                    builder.message("Camel Context '" + name + "' has unknown Status: " + status);
-                    builder.down();
+            if (getCamelContext().getStatus().isStarted()) {
+                builder.up();
+            } else {
+                // not ready also during graceful shutdown
+                builder.down();
             }
         }
     }

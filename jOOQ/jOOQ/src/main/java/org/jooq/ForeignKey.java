@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,7 +41,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.jooq.exception.DataAccessException;
-import org.jooq.impl.QOM.ForeignKeyRule;
 
 import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.NotNull;
@@ -54,38 +53,18 @@ import org.jetbrains.annotations.Nullable;
  * Instances of this type cannot be created directly. They are available from
  * generated code.
  *
- * @param <CHILD> The <code>FOREIGN KEY</code>'s owner table record
- * @param <PARENT> The referenced <code>KEY</code>'s owner table record
+ * @param <R> The <code>FOREIGN KEY</code>'s owner table record
+ * @param <O> The referenced <code>KEY</code>'s owner table record
  * @author Lukas Eder
  */
 @SuppressWarnings("unchecked")
-public interface ForeignKey<CHILD extends Record, PARENT extends Record> extends Key<CHILD> {
-
-    /**
-     * The foreign key's <code>ON DELETE</code> rule, or <code>null</code> if
-     * it's not specified, which defaults to {@link ForeignKeyRule#NO_ACTION}.
-     */
-    @Nullable
-    ForeignKeyRule getDeleteRule();
-
-    /**
-     * The foreign key's <code>ON UPDATE</code> rule, or <code>null</code> if
-     * it's not specified, which defaults to {@link ForeignKeyRule#NO_ACTION}.
-     */
-    @Nullable
-    ForeignKeyRule getUpdateRule();
-
-    /**
-     * The inverse key.
-     */
-    @NotNull
-    InverseForeignKey<PARENT, CHILD> getInverseKey();
+public interface ForeignKey<R extends Record, O extends Record> extends Key<R> {
 
     /**
      * The referenced <code>UniqueKey</code>.
      */
     @NotNull
-    UniqueKey<PARENT> getKey();
+    UniqueKey<O> getKey();
 
     /**
      * The fields that make up the referenced <code>UniqueKey</code>.
@@ -95,7 +74,7 @@ public interface ForeignKey<CHILD extends Record, PARENT extends Record> extends
      * {@link UniqueKey#getFields()}, but not necessarily so.
      */
     @NotNull
-    List<TableField<PARENT, ?>> getKeyFields();
+    List<TableField<O, ?>> getKeyFields();
 
     /**
      * The fields that make up the referenced <code>UniqueKey</code>.
@@ -107,7 +86,7 @@ public interface ForeignKey<CHILD extends Record, PARENT extends Record> extends
      * @see #getKeyFields()
      */
     @NotNull
-    TableField<PARENT, ?> @NotNull [] getKeyFieldsArray();
+    TableField<O, ?> @NotNull [] getKeyFieldsArray();
 
     /**
      * Fetch a parent record of a given record through this foreign key
@@ -121,7 +100,7 @@ public interface ForeignKey<CHILD extends Record, PARENT extends Record> extends
      */
     @Nullable
     @Blocking
-    PARENT fetchParent(CHILD record) throws DataAccessException;
+    O fetchParent(R record) throws DataAccessException;
 
     /**
      * Fetch parent records of a given set of record through this foreign key
@@ -135,7 +114,7 @@ public interface ForeignKey<CHILD extends Record, PARENT extends Record> extends
      */
     @NotNull
     @Blocking
-    Result<PARENT> fetchParents(CHILD... records) throws DataAccessException;
+    Result<O> fetchParents(R... records) throws DataAccessException;
 
     /**
      * Fetch parent records of a given set of record through this foreign key
@@ -149,7 +128,7 @@ public interface ForeignKey<CHILD extends Record, PARENT extends Record> extends
      */
     @NotNull
     @Blocking
-    Result<PARENT> fetchParents(Collection<? extends CHILD> records) throws DataAccessException;
+    Result<O> fetchParents(Collection<? extends R> records) throws DataAccessException;
 
     /**
      * Fetch child records of a given record through this foreign key
@@ -163,7 +142,7 @@ public interface ForeignKey<CHILD extends Record, PARENT extends Record> extends
      */
     @NotNull
     @Blocking
-    Result<CHILD> fetchChildren(PARENT record) throws DataAccessException;
+    Result<R> fetchChildren(O record) throws DataAccessException;
 
     /**
      * Fetch child records of a given set of records through this foreign key
@@ -178,7 +157,7 @@ public interface ForeignKey<CHILD extends Record, PARENT extends Record> extends
      */
     @NotNull
     @Blocking
-    Result<CHILD> fetchChildren(PARENT... records) throws DataAccessException;
+    Result<R> fetchChildren(O... records) throws DataAccessException;
 
     /**
      * Fetch child records of a given set of records through this foreign key
@@ -193,47 +172,47 @@ public interface ForeignKey<CHILD extends Record, PARENT extends Record> extends
      */
     @NotNull
     @Blocking
-    Result<CHILD> fetchChildren(Collection<? extends PARENT> records) throws DataAccessException;
+    Result<R> fetchChildren(Collection<? extends O> records) throws DataAccessException;
 
     /**
      * Get a table expression representing the parent of a record, given this
      * foreign key.
      */
     @NotNull
-    Table<PARENT> parent(CHILD record);
+    Table<O> parent(R record);
 
     /**
      * Get a table expression representing the parents of a record, given this
      * foreign key.
      */
     @NotNull
-    Table<PARENT> parents(CHILD... records);
+    Table<O> parents(R... records);
 
     /**
      * Get a table expression representing the parents of a record, given this
      * foreign key.
      */
     @NotNull
-    Table<PARENT> parents(Collection<? extends CHILD> records);
+    Table<O> parents(Collection<? extends R> records);
 
     /**
      * Get a table expression representing the children of a record, given this
      * foreign key.
      */
     @NotNull
-    Table<CHILD> children(PARENT record);
+    Table<R> children(O record);
 
     /**
      * Get a table expression representing the children of a record, given this
      * foreign key.
      */
     @NotNull
-    Table<CHILD> children(PARENT... records);
+    Table<R> children(O... records);
 
     /**
      * Get a table expression representing the children of a record, given this
      * foreign key.
      */
     @NotNull
-    Table<CHILD> children(Collection<? extends PARENT> records);
+    Table<R> children(Collection<? extends O> records);
 }

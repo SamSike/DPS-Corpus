@@ -16,33 +16,30 @@
  */
 package org.apache.camel.builder;
 
+import java.util.List;
 import java.util.Map;
 
 import org.w3c.dom.Node;
 
 import org.apache.camel.model.DataFormatDefinition;
-import org.apache.camel.model.MarshalDefinition;
 import org.apache.camel.model.ProcessorDefinition;
-import org.apache.camel.model.UnmarshalDefinition;
 import org.apache.camel.model.dataformat.ASN1DataFormat;
+import org.apache.camel.model.dataformat.Any23DataFormat;
+import org.apache.camel.model.dataformat.Any23Type;
 import org.apache.camel.model.dataformat.AvroDataFormat;
 import org.apache.camel.model.dataformat.AvroLibrary;
 import org.apache.camel.model.dataformat.Base64DataFormat;
-import org.apache.camel.model.dataformat.BeanioDataFormat;
 import org.apache.camel.model.dataformat.BindyDataFormat;
 import org.apache.camel.model.dataformat.BindyType;
 import org.apache.camel.model.dataformat.CBORDataFormat;
 import org.apache.camel.model.dataformat.CsvDataFormat;
 import org.apache.camel.model.dataformat.CustomDataFormat;
-import org.apache.camel.model.dataformat.DfdlDataFormat;
 import org.apache.camel.model.dataformat.FhirJsonDataFormat;
 import org.apache.camel.model.dataformat.FhirXmlDataFormat;
-import org.apache.camel.model.dataformat.ForyDataFormat;
 import org.apache.camel.model.dataformat.GrokDataFormat;
 import org.apache.camel.model.dataformat.GzipDeflaterDataFormat;
 import org.apache.camel.model.dataformat.HL7DataFormat;
 import org.apache.camel.model.dataformat.IcalDataFormat;
-import org.apache.camel.model.dataformat.Iso8583DataFormat;
 import org.apache.camel.model.dataformat.JacksonXMLDataFormat;
 import org.apache.camel.model.dataformat.JaxbDataFormat;
 import org.apache.camel.model.dataformat.JsonApiDataFormat;
@@ -51,11 +48,9 @@ import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.dataformat.LZFDataFormat;
 import org.apache.camel.model.dataformat.MimeMultipartDataFormat;
 import org.apache.camel.model.dataformat.PGPDataFormat;
-import org.apache.camel.model.dataformat.ParquetAvroDataFormat;
 import org.apache.camel.model.dataformat.ProtobufDataFormat;
 import org.apache.camel.model.dataformat.ProtobufLibrary;
 import org.apache.camel.model.dataformat.RssDataFormat;
-import org.apache.camel.model.dataformat.SmooksDataFormat;
 import org.apache.camel.model.dataformat.SoapDataFormat;
 import org.apache.camel.model.dataformat.SwiftMtDataFormat;
 import org.apache.camel.model.dataformat.SwiftMxDataFormat;
@@ -76,8 +71,6 @@ import org.apache.camel.support.jsse.KeyStoreParameters;
 public class DataFormatClause<T extends ProcessorDefinition<?>> {
     private final T processorType;
     private final Operation operation;
-    private String variableSend;
-    private String variableReceive;
     private boolean allowNullBody;
 
     /**
@@ -94,36 +87,39 @@ public class DataFormatClause<T extends ProcessorDefinition<?>> {
     }
 
     /**
+     * Uses the Any23 data format
+     */
+    public T any23(String baseuri) {
+        return dataFormat(new Any23DataFormat(baseuri));
+    }
+
+    public T any23(String baseuri, Any23Type outputformat) {
+        return dataFormat(new Any23DataFormat(baseuri, outputformat));
+    }
+
+    public T any23(String baseuri, Any23Type outputformat, Map<String, String> configurations) {
+        return dataFormat(new Any23DataFormat(baseuri, outputformat, configurations));
+    }
+
+    public T any23(String baseuri, Any23Type outputformat, Map<String, String> configurations, List<String> extractors) {
+        return dataFormat(new Any23DataFormat(baseuri, outputformat, configurations, extractors));
+    }
+
+    /**
      * Uses the Avro data format
      */
     public T avro() {
         return dataFormat(new AvroDataFormat());
     }
 
-    /**
-     * Uses Avro data format with tje given library and schema
-     */
-    public T avro(AvroLibrary library, Object schema) {
+    public T avro(Object schema) {
         AvroDataFormat dataFormat = new AvroDataFormat();
-        dataFormat.setLibrary(library);
         dataFormat.setSchema(schema);
         return dataFormat(dataFormat);
     }
 
-    /**
-     * Uses Avro data format with the given unmarshalType
-     */
-    public T avro(String unmarshalTypeName) {
-        return dataFormat(new AvroDataFormat(unmarshalTypeName));
-    }
-
-    /**
-     * Uses Avro data format with given library and unmarshalType
-     */
-    public T avro(AvroLibrary library, String unmarshalTypeName) {
-        AvroDataFormat df = new AvroDataFormat(unmarshalTypeName);
-        df.setLibrary(library);
-        return dataFormat(df);
+    public T avro(String instanceClassName) {
+        return dataFormat(new AvroDataFormat(instanceClassName));
     }
 
     /**
@@ -149,16 +145,6 @@ public class DataFormatClause<T extends ProcessorDefinition<?>> {
         AvroDataFormat avroDataFormat = new AvroDataFormat();
         avroDataFormat.setLibrary(library);
         avroDataFormat.setUnmarshalType(unmarshalType);
-        return dataFormat(avroDataFormat);
-    }
-
-    /**
-     * Uses the Avro data format with given unmarshalType and schemaResolver
-     */
-    public T avro(Class<?> unmarshalType, String schemaResolver) {
-        AvroDataFormat avroDataFormat = new AvroDataFormat();
-        avroDataFormat.setUnmarshalType(unmarshalType);
-        avroDataFormat.setSchemaResolver(schemaResolver);
         return dataFormat(avroDataFormat);
     }
 
@@ -189,55 +175,6 @@ public class DataFormatClause<T extends ProcessorDefinition<?>> {
         dataFormat.setLineLength(Integer.toString(lineLength));
         dataFormat.setLineSeparator(lineSeparator);
         dataFormat.setUrlSafe(Boolean.toString(urlSafe));
-        return dataFormat(dataFormat);
-    }
-
-    /**
-     * Uses the beanio data format
-     */
-    public T beanio(String mapping, String streamName) {
-        BeanioDataFormat dataFormat = new BeanioDataFormat();
-        dataFormat.setMapping(mapping);
-        dataFormat.setStreamName(streamName);
-        return dataFormat(dataFormat);
-    }
-
-    /**
-     * Uses the beanio data format
-     */
-    public T beanio(String mapping, String streamName, String encoding) {
-        BeanioDataFormat dataFormat = new BeanioDataFormat();
-        dataFormat.setMapping(mapping);
-        dataFormat.setStreamName(streamName);
-        dataFormat.setEncoding(encoding);
-        return dataFormat(dataFormat);
-    }
-
-    /**
-     * Uses the beanio data format
-     */
-    public T beanio(
-            String mapping, String streamName, String encoding, boolean ignoreUnidentifiedRecords,
-            boolean ignoreUnexpectedRecords, boolean ignoreInvalidRecords) {
-        BeanioDataFormat dataFormat = new BeanioDataFormat();
-        dataFormat.setMapping(mapping);
-        dataFormat.setStreamName(streamName);
-        dataFormat.setEncoding(encoding);
-        dataFormat.setIgnoreUnidentifiedRecords(Boolean.toString(ignoreUnidentifiedRecords));
-        dataFormat.setIgnoreUnexpectedRecords(Boolean.toString(ignoreUnexpectedRecords));
-        dataFormat.setIgnoreInvalidRecords(Boolean.toString(ignoreInvalidRecords));
-        return dataFormat(dataFormat);
-    }
-
-    /**
-     * Uses the beanio data format
-     */
-    public T beanio(String mapping, String streamName, String encoding, String beanReaderErrorHandlerType) {
-        BeanioDataFormat dataFormat = new BeanioDataFormat();
-        dataFormat.setMapping(mapping);
-        dataFormat.setStreamName(streamName);
-        dataFormat.setEncoding(encoding);
-        dataFormat.setBeanReaderErrorHandlerType(beanReaderErrorHandlerType);
         return dataFormat(dataFormat);
     }
 
@@ -309,30 +246,6 @@ public class DataFormatClause<T extends ProcessorDefinition<?>> {
     }
 
     /**
-     * Uses the DFDL data format
-     */
-    public T dfdl(String schemaUri) {
-        return dataFormat(new DfdlDataFormat(schemaUri));
-    }
-
-    /**
-     * Use the Fory data format
-     */
-    public T fory() {
-        return dataFormat(new ForyDataFormat());
-    }
-
-    /**
-     * Use the Fory data format with the given unmarshalType
-     */
-
-    public T fory(Class type) {
-        ForyDataFormat format = new ForyDataFormat();
-        format.setUnmarshalType(type);
-        return dataFormat(format);
-    }
-
-    /**
      * Uses the Grok data format
      */
     public T grok(String pattern) {
@@ -381,24 +294,6 @@ public class DataFormatClause<T extends ProcessorDefinition<?>> {
         IcalDataFormat ical = new IcalDataFormat();
         ical.setValidating(Boolean.toString(validating));
         return dataFormat(ical);
-    }
-
-    /**
-     * Use the ISO-8583 data format
-     */
-    public T iso8583() {
-        return dataFormat(new Iso8583DataFormat());
-    }
-
-    /**
-     * Use the ISO-8583 data format
-     *
-     * @param isoType The default ISO-Type to use
-     */
-    public T iso8583(String isoType) {
-        Iso8583DataFormat df = new Iso8583DataFormat();
-        df.setIsoType(isoType);
-        return dataFormat(df);
     }
 
     /**
@@ -855,15 +750,6 @@ public class DataFormatClause<T extends ProcessorDefinition<?>> {
      */
     public T rss() {
         return dataFormat(new RssDataFormat());
-    }
-
-    /**
-     * Uses the Smooks data format
-     */
-    public T smooks(String smooksConfig) {
-        SmooksDataFormat smooksDataFormat = new SmooksDataFormat();
-        smooksDataFormat.setSmooksConfig(smooksConfig);
-        return dataFormat(smooksDataFormat);
     }
 
     /**
@@ -1388,28 +1274,6 @@ public class DataFormatClause<T extends ProcessorDefinition<?>> {
     }
 
     /**
-     * Uses the parquet-avro file data format
-     */
-    public T parquetAvro() {
-        ParquetAvroDataFormat parquetAvroDataFormat = new ParquetAvroDataFormat();
-        return dataFormat(parquetAvroDataFormat);
-    }
-
-    /**
-     * Uses the parquet-avro file data format
-     */
-    public T parquetAvro(String unmarshalType) {
-        return dataFormat(new ParquetAvroDataFormat(unmarshalType));
-    }
-
-    /**
-     * Uses the parquet-avro file data format
-     */
-    public T parquetAvro(Class<?> unmarshalType) {
-        return dataFormat(new ParquetAvroDataFormat(unmarshalType));
-    }
-
-    /**
      * Uses the FHIR JSON data format
      */
     public T fhirJson() {
@@ -1484,47 +1348,13 @@ public class DataFormatClause<T extends ProcessorDefinition<?>> {
         return this;
     }
 
-    /**
-     * To use a variable as the source for the message body to send. This makes it handy to use variables for user data
-     * and to easily control what data to use for sending and receiving. Important: When using send variable then the
-     * message body is taken from this variable instead of the current Message , however the headers from the Message
-     * will still be used as well. In other words, the variable is used instead of the message body, but everything else
-     * is as usual.
-     */
-    public DataFormatClause<T> variableSend(String variableSend) {
-        this.variableSend = variableSend;
-        return this;
-    }
-
-    /**
-     * To use a variable to store the received message body (only body, not headers). This makes it handy to use
-     * variables for user data and to easily control what data to use for sending and receiving.
-     *
-     * Important: When using receive variable then the received body is stored only in this variable and not on the
-     * current message.
-     */
-    public DataFormatClause<T> variableReceive(String variableReceive) {
-        this.variableReceive = variableReceive;
-        return this;
-    }
-
+    @SuppressWarnings("unchecked")
     private T dataFormat(DataFormatDefinition dataFormatType) {
         switch (operation) {
             case Unmarshal:
-                UnmarshalDefinition unmarshal = new UnmarshalDefinition(dataFormatType);
-                if (allowNullBody) {
-                    unmarshal.allowNullBody(true);
-                }
-                unmarshal.setVariableReceive(variableReceive);
-                unmarshal.setVariableSend(variableSend);
-                processorType.addOutput(unmarshal);
-                return processorType;
+                return (T) processorType.unmarshal(dataFormatType, allowNullBody);
             case Marshal:
-                MarshalDefinition marshal = new MarshalDefinition(dataFormatType);
-                marshal.setVariableReceive(variableReceive);
-                marshal.setVariableSend(variableSend);
-                processorType.addOutput(marshal);
-                return processorType;
+                return (T) processorType.marshal(dataFormatType);
             default:
                 throw new IllegalArgumentException("Unknown DataFormat operation: " + operation);
         }

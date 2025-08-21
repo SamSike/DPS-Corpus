@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.Conventions;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -89,7 +88,7 @@ public class ModelMap extends LinkedHashMap<String, Object> {
 	 */
 	public ModelMap addAttribute(Object attributeValue) {
 		Assert.notNull(attributeValue, "Model object must not be null");
-		if (attributeValue instanceof Collection<?> collection && collection.isEmpty()) {
+		if (attributeValue instanceof Collection && ((Collection<?>) attributeValue).isEmpty()) {
 			return this;
 		}
 		return addAttribute(Conventions.getVariableName(attributeValue), attributeValue);
@@ -151,7 +150,8 @@ public class ModelMap extends LinkedHashMap<String, Object> {
 	 * @return the corresponding attribute value, or {@code null} if none
 	 * @since 5.2
 	 */
-	public @Nullable Object getAttribute(String attributeName) {
+	@Nullable
+	public Object getAttribute(String attributeName) {
 		return get(attributeName);
 	}
 

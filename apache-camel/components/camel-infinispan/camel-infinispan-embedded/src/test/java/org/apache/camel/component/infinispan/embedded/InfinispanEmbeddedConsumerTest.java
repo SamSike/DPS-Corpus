@@ -164,6 +164,11 @@ public class InfinispanEmbeddedConsumerTest extends InfinispanEmbeddedTestSuppor
     }
 
     @Override
+    public MockEndpoint getMockEndpoint(String id) {
+        return super.getMockEndpoint(id);
+    }
+
+    @Override
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,12 +43,10 @@ import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.not;
 import static org.jooq.impl.DSL.notExists;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
-import static org.jooq.impl.Tools.anyMatch;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import org.jooq.Condition;
@@ -56,8 +54,6 @@ import org.jooq.Configuration;
 import org.jooq.Constraint;
 import org.jooq.Field;
 import org.jooq.FieldLike;
-import org.jooq.FieldOrRow;
-import org.jooq.FieldOrRowOrSelect;
 import org.jooq.InsertOnConflictConditionStep;
 import org.jooq.InsertOnConflictWhereIndexPredicateStep;
 import org.jooq.InsertOnDuplicateSetMoreStep;
@@ -113,7 +109,6 @@ import org.jooq.Record19;
 import org.jooq.Record20;
 import org.jooq.Record21;
 import org.jooq.Record22;
-// ...
 import org.jooq.Row;
 import org.jooq.RowN;
 import org.jooq.Row1;
@@ -143,11 +138,7 @@ import org.jooq.Select;
 import org.jooq.SelectField;
 import org.jooq.SelectFieldOrAsterisk;
 import org.jooq.Table;
-// ...
 import org.jooq.UniqueKey;
-import org.jooq.impl.QOM.Insert;
-import org.jooq.impl.QOM.UnmodifiableList;
-import org.jooq.impl.QOM.UnmodifiableMap;
 
 /**
  * @author Lukas Eder
@@ -185,9 +176,7 @@ final class InsertImpl<R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10
     InsertSetMoreStep<R>,
     InsertOnDuplicateSetMoreStep<R>,
     InsertOnConflictWhereIndexPredicateStep<R>,
-    InsertOnConflictConditionStep<R>,
-    QOM.Insert<R>
-{
+    InsertOnConflictConditionStep<R> {
 
     private final Table<R>    into;
     private Field<?>[]        fields;
@@ -221,112 +210,112 @@ final class InsertImpl<R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10
     }
 
     @Override
-    public final InsertImpl values(Object value1) {
+    public final InsertImpl values(T1 value1) {
         return values(new Object[] { value1 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2) {
+    public final InsertImpl values(T1 value1, T2 value2) {
         return values(new Object[] { value1, value2 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3) {
         return values(new Object[] { value1, value2, value3 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4) {
         return values(new Object[] { value1, value2, value3, value4 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5) {
         return values(new Object[] { value1, value2, value3, value4, value5 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8, Object value9) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8, value9 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8, Object value9, Object value10) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8, Object value9, Object value10, Object value11) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8, Object value9, Object value10, Object value11, Object value12) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8, Object value9, Object value10, Object value11, Object value12, Object value13) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8, Object value9, Object value10, Object value11, Object value12, Object value13, Object value14) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8, Object value9, Object value10, Object value11, Object value12, Object value13, Object value14, Object value15) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8, Object value9, Object value10, Object value11, Object value12, Object value13, Object value14, Object value15, Object value16) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8, Object value9, Object value10, Object value11, Object value12, Object value13, Object value14, Object value15, Object value16, Object value17) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16, T17 value17) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16, value17 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8, Object value9, Object value10, Object value11, Object value12, Object value13, Object value14, Object value15, Object value16, Object value17, Object value18) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16, T17 value17, T18 value18) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16, value17, value18 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8, Object value9, Object value10, Object value11, Object value12, Object value13, Object value14, Object value15, Object value16, Object value17, Object value18, Object value19) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16, T17 value17, T18 value18, T19 value19) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16, value17, value18, value19 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8, Object value9, Object value10, Object value11, Object value12, Object value13, Object value14, Object value15, Object value16, Object value17, Object value18, Object value19, Object value20) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16, T17 value17, T18 value18, T19 value19, T20 value20) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16, value17, value18, value19, value20 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8, Object value9, Object value10, Object value11, Object value12, Object value13, Object value14, Object value15, Object value16, Object value17, Object value18, Object value19, Object value20, Object value21) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16, T17 value17, T18 value18, T19 value19, T20 value20, T21 value21) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16, value17, value18, value19, value20, value21 });
     }
 
     @Override
-    public final InsertImpl values(Object value1, Object value2, Object value3, Object value4, Object value5, Object value6, Object value7, Object value8, Object value9, Object value10, Object value11, Object value12, Object value13, Object value14, Object value15, Object value16, Object value17, Object value18, Object value19, Object value20, Object value21, Object value22) {
+    public final InsertImpl values(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8, T9 value9, T10 value10, T11 value11, T12 value12, T13 value13, T14 value14, T15 value15, T16 value16, T17 value17, T18 value18, T19 value19, T20 value20, T21 value21, T22 value22) {
         return values(new Object[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16, value17, value18, value19, value20, value21, value22 });
     }
 
@@ -341,222 +330,222 @@ final class InsertImpl<R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10
     }
 
     @Override
-    public final InsertImpl values(Row1 values) {
+    public final InsertImpl values(Row1<T1> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row1... values) {
+    public final InsertImpl valuesOfRows(Row1<T1>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row2 values) {
+    public final InsertImpl values(Row2<T1, T2> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row2... values) {
+    public final InsertImpl valuesOfRows(Row2<T1, T2>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row3 values) {
+    public final InsertImpl values(Row3<T1, T2, T3> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row3... values) {
+    public final InsertImpl valuesOfRows(Row3<T1, T2, T3>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row4 values) {
+    public final InsertImpl values(Row4<T1, T2, T3, T4> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row4... values) {
+    public final InsertImpl valuesOfRows(Row4<T1, T2, T3, T4>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row5 values) {
+    public final InsertImpl values(Row5<T1, T2, T3, T4, T5> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row5... values) {
+    public final InsertImpl valuesOfRows(Row5<T1, T2, T3, T4, T5>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row6 values) {
+    public final InsertImpl values(Row6<T1, T2, T3, T4, T5, T6> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row6... values) {
+    public final InsertImpl valuesOfRows(Row6<T1, T2, T3, T4, T5, T6>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row7 values) {
+    public final InsertImpl values(Row7<T1, T2, T3, T4, T5, T6, T7> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row7... values) {
+    public final InsertImpl valuesOfRows(Row7<T1, T2, T3, T4, T5, T6, T7>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row8 values) {
+    public final InsertImpl values(Row8<T1, T2, T3, T4, T5, T6, T7, T8> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row8... values) {
+    public final InsertImpl valuesOfRows(Row8<T1, T2, T3, T4, T5, T6, T7, T8>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row9 values) {
+    public final InsertImpl values(Row9<T1, T2, T3, T4, T5, T6, T7, T8, T9> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row9... values) {
+    public final InsertImpl valuesOfRows(Row9<T1, T2, T3, T4, T5, T6, T7, T8, T9>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row10 values) {
+    public final InsertImpl values(Row10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row10... values) {
+    public final InsertImpl valuesOfRows(Row10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row11 values) {
+    public final InsertImpl values(Row11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row11... values) {
+    public final InsertImpl valuesOfRows(Row11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row12 values) {
+    public final InsertImpl values(Row12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row12... values) {
+    public final InsertImpl valuesOfRows(Row12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row13 values) {
+    public final InsertImpl values(Row13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row13... values) {
+    public final InsertImpl valuesOfRows(Row13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row14 values) {
+    public final InsertImpl values(Row14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row14... values) {
+    public final InsertImpl valuesOfRows(Row14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row15 values) {
+    public final InsertImpl values(Row15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row15... values) {
+    public final InsertImpl valuesOfRows(Row15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row16 values) {
+    public final InsertImpl values(Row16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row16... values) {
+    public final InsertImpl valuesOfRows(Row16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row17 values) {
+    public final InsertImpl values(Row17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row17... values) {
+    public final InsertImpl valuesOfRows(Row17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row18 values) {
+    public final InsertImpl values(Row18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row18... values) {
+    public final InsertImpl valuesOfRows(Row18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row19 values) {
+    public final InsertImpl values(Row19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row19... values) {
+    public final InsertImpl valuesOfRows(Row19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row20 values) {
+    public final InsertImpl values(Row20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row20... values) {
+    public final InsertImpl valuesOfRows(Row20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row21 values) {
+    public final InsertImpl values(Row21<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row21... values) {
+    public final InsertImpl valuesOfRows(Row21<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Row22 values) {
+    public final InsertImpl values(Row22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> values) {
         return values(values.fields());
     }
 
     @Override
-    public final InsertImpl valuesOfRows(Row22... values) {
+    public final InsertImpl valuesOfRows(Row22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22>... values) {
     	return valuesOfRows(Arrays.asList(values));
     }
 
@@ -571,222 +560,222 @@ final class InsertImpl<R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10
     }
 
     @Override
-    public final InsertImpl values(Record1 values) {
+    public final InsertImpl values(Record1<T1> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record1... values) {
+    public final InsertImpl valuesOfRecords(Record1<T1>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record2 values) {
+    public final InsertImpl values(Record2<T1, T2> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record2... values) {
+    public final InsertImpl valuesOfRecords(Record2<T1, T2>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record3 values) {
+    public final InsertImpl values(Record3<T1, T2, T3> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record3... values) {
+    public final InsertImpl valuesOfRecords(Record3<T1, T2, T3>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record4 values) {
+    public final InsertImpl values(Record4<T1, T2, T3, T4> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record4... values) {
+    public final InsertImpl valuesOfRecords(Record4<T1, T2, T3, T4>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record5 values) {
+    public final InsertImpl values(Record5<T1, T2, T3, T4, T5> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record5... values) {
+    public final InsertImpl valuesOfRecords(Record5<T1, T2, T3, T4, T5>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record6 values) {
+    public final InsertImpl values(Record6<T1, T2, T3, T4, T5, T6> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record6... values) {
+    public final InsertImpl valuesOfRecords(Record6<T1, T2, T3, T4, T5, T6>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record7 values) {
+    public final InsertImpl values(Record7<T1, T2, T3, T4, T5, T6, T7> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record7... values) {
+    public final InsertImpl valuesOfRecords(Record7<T1, T2, T3, T4, T5, T6, T7>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record8 values) {
+    public final InsertImpl values(Record8<T1, T2, T3, T4, T5, T6, T7, T8> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record8... values) {
+    public final InsertImpl valuesOfRecords(Record8<T1, T2, T3, T4, T5, T6, T7, T8>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record9 values) {
+    public final InsertImpl values(Record9<T1, T2, T3, T4, T5, T6, T7, T8, T9> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record9... values) {
+    public final InsertImpl valuesOfRecords(Record9<T1, T2, T3, T4, T5, T6, T7, T8, T9>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record10 values) {
+    public final InsertImpl values(Record10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record10... values) {
+    public final InsertImpl valuesOfRecords(Record10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record11 values) {
+    public final InsertImpl values(Record11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record11... values) {
+    public final InsertImpl valuesOfRecords(Record11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record12 values) {
+    public final InsertImpl values(Record12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record12... values) {
+    public final InsertImpl valuesOfRecords(Record12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record13 values) {
+    public final InsertImpl values(Record13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record13... values) {
+    public final InsertImpl valuesOfRecords(Record13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record14 values) {
+    public final InsertImpl values(Record14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record14... values) {
+    public final InsertImpl valuesOfRecords(Record14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record15 values) {
+    public final InsertImpl values(Record15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record15... values) {
+    public final InsertImpl valuesOfRecords(Record15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record16 values) {
+    public final InsertImpl values(Record16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record16... values) {
+    public final InsertImpl valuesOfRecords(Record16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record17 values) {
+    public final InsertImpl values(Record17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record17... values) {
+    public final InsertImpl valuesOfRecords(Record17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record18 values) {
+    public final InsertImpl values(Record18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record18... values) {
+    public final InsertImpl valuesOfRecords(Record18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record19 values) {
+    public final InsertImpl values(Record19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record19... values) {
+    public final InsertImpl valuesOfRecords(Record19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record20 values) {
+    public final InsertImpl values(Record20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record20... values) {
+    public final InsertImpl valuesOfRecords(Record20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record21 values) {
+    public final InsertImpl values(Record21<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record21... values) {
+    public final InsertImpl valuesOfRecords(Record21<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
     @Override
-    public final InsertImpl values(Record22 values) {
+    public final InsertImpl values(Record22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> values) {
         return values(values.intoArray());
     }
 
     @Override
-    public final InsertImpl valuesOfRecords(Record22... values) {
+    public final InsertImpl valuesOfRecords(Record22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22>... values) {
     	return valuesOfRecords(Arrays.asList(values));
     }
 
@@ -815,7 +804,7 @@ final class InsertImpl<R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10
 
         // [#4629] Plain SQL INSERT INTO t VALUES (a, b, c) statements don't know the insert columns
         else if (!Tools.isEmpty(fields) && fields.length != values.length)
-            throw new IllegalArgumentException("The number of values (" + values.length + ") must match the number of fields (" + fields.length + ")");
+            throw new IllegalArgumentException("The number of values must match the number of fields");
 
         getDelegate().newRecord();
         if (Tools.isEmpty(fields))
@@ -838,10 +827,10 @@ final class InsertImpl<R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10
         // [#1343] Only convert non-jOOQ objects
         // [#8606] The column index is relevant when adding a value to a plain SQL multi row INSERT
         //         statement that does not have any field list.
-        if (object instanceof Field f)
-            delegate.addValue(field, index, f);
-        else if (object instanceof FieldLike f)
-            delegate.addValue(field, index, f.asField());
+        if (object instanceof Field)
+            delegate.addValue(field, index, (Field) object);
+        else if (object instanceof FieldLike)
+            delegate.addValue(field, index, ((FieldLike) object).asField());
         else if (field != null)
             delegate.addValue(field, index, field.getDataType().convert(object));
 
@@ -851,113 +840,113 @@ final class InsertImpl<R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10
     }
 
     @Override
-    public final InsertImpl values(Field field1) {
-        return values(new Field[] { field1 });
+    public final InsertImpl values(Field<T1> value1) {
+        return values(new Field[] { value1 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2) {
-        return values(new Field[] { field1, field2 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2) {
+        return values(new Field[] { value1, value2 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3) {
-        return values(new Field[] { field1, field2, field3 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3) {
+        return values(new Field[] { value1, value2, value3 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4) {
-        return values(new Field[] { field1, field2, field3, field4 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4) {
+        return values(new Field[] { value1, value2, value3, value4 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5) {
-        return values(new Field[] { field1, field2, field3, field4, field5 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5) {
+        return values(new Field[] { value1, value2, value3, value4, value5 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8, Field<T9> value9) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8, value9 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8, Field<T9> value9, Field<T10> value10) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8, Field<T9> value9, Field<T10> value10, Field<T11> value11) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8, Field<T9> value9, Field<T10> value10, Field<T11> value11, Field<T12> value12) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8, Field<T9> value9, Field<T10> value10, Field<T11> value11, Field<T12> value12, Field<T13> value13) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8, Field<T9> value9, Field<T10> value10, Field<T11> value11, Field<T12> value12, Field<T13> value13, Field<T14> value14) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8, Field<T9> value9, Field<T10> value10, Field<T11> value11, Field<T12> value12, Field<T13> value13, Field<T14> value14, Field<T15> value15) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15, Field field16) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8, Field<T9> value9, Field<T10> value10, Field<T11> value11, Field<T12> value12, Field<T13> value13, Field<T14> value14, Field<T15> value15, Field<T16> value16) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15, Field field16, Field field17) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8, Field<T9> value9, Field<T10> value10, Field<T11> value11, Field<T12> value12, Field<T13> value13, Field<T14> value14, Field<T15> value15, Field<T16> value16, Field<T17> value17) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16, value17 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15, Field field16, Field field17, Field field18) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8, Field<T9> value9, Field<T10> value10, Field<T11> value11, Field<T12> value12, Field<T13> value13, Field<T14> value14, Field<T15> value15, Field<T16> value16, Field<T17> value17, Field<T18> value18) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16, value17, value18 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15, Field field16, Field field17, Field field18, Field field19) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8, Field<T9> value9, Field<T10> value10, Field<T11> value11, Field<T12> value12, Field<T13> value13, Field<T14> value14, Field<T15> value15, Field<T16> value16, Field<T17> value17, Field<T18> value18, Field<T19> value19) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16, value17, value18, value19 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15, Field field16, Field field17, Field field18, Field field19, Field field20) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8, Field<T9> value9, Field<T10> value10, Field<T11> value11, Field<T12> value12, Field<T13> value13, Field<T14> value14, Field<T15> value15, Field<T16> value16, Field<T17> value17, Field<T18> value18, Field<T19> value19, Field<T20> value20) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16, value17, value18, value19, value20 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15, Field field16, Field field17, Field field18, Field field19, Field field20, Field field21) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8, Field<T9> value9, Field<T10> value10, Field<T11> value11, Field<T12> value12, Field<T13> value13, Field<T14> value14, Field<T15> value15, Field<T16> value16, Field<T17> value17, Field<T18> value18, Field<T19> value19, Field<T20> value20, Field<T21> value21) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16, value17, value18, value19, value20, value21 });
     }
 
     @Override
-    public final InsertImpl values(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15, Field field16, Field field17, Field field18, Field field19, Field field20, Field field21, Field field22) {
-        return values(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21, field22 });
+    public final InsertImpl values(Field<T1> value1, Field<T2> value2, Field<T3> value3, Field<T4> value4, Field<T5> value5, Field<T6> value6, Field<T7> value7, Field<T8> value8, Field<T9> value9, Field<T10> value10, Field<T11> value11, Field<T12> value12, Field<T13> value13, Field<T14> value14, Field<T15> value15, Field<T16> value16, Field<T17> value17, Field<T18> value18, Field<T19> value19, Field<T20> value20, Field<T21> value21, Field<T22> value22) {
+        return values(new Field[] { value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16, value17, value18, value19, value20, value21, value22 });
     }
 
     @Override
@@ -969,7 +958,7 @@ final class InsertImpl<R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10
 
         // [#4629] Plain SQL INSERT INTO t VALUES (a, b, c) statements don't know the insert columns
         else if (!Tools.isEmpty(fields) && fields.length != values.length)
-            throw new IllegalArgumentException("The number of values (" + values.length + ") must match the number of fields (" + fields.length + ")");
+            throw new IllegalArgumentException("The number of values must match the number of fields");
 
         getDelegate().newRecord();
 
@@ -986,133 +975,133 @@ final class InsertImpl<R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1) {
+    public final <T1> InsertImpl columns(Field<T1> field1) {
         return columns(new Field[] { field1 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2) {
+    public final <T1, T2> InsertImpl columns(Field<T1> field1, Field<T2> field2) {
         return columns(new Field[] { field1, field2 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3) {
+    public final <T1, T2, T3> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3) {
         return columns(new Field[] { field1, field2, field3 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4) {
+    public final <T1, T2, T3, T4> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4) {
         return columns(new Field[] { field1, field2, field3, field4 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5) {
+    public final <T1, T2, T3, T4, T5> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5) {
         return columns(new Field[] { field1, field2, field3, field4, field5 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6) {
+    public final <T1, T2, T3, T4, T5, T6> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7) {
+    public final <T1, T2, T3, T4, T5, T6, T7> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15, Field field16) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15, Field field16, Field field17) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15, Field field16, Field field17, Field field18) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15, Field field16, Field field17, Field field18, Field field19) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18, Field<T19> field19) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15, Field field16, Field field17, Field field18, Field field19, Field field20) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18, Field<T19> field19, Field<T20> field20) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15, Field field16, Field field17, Field field18, Field field19, Field field20, Field field21) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18, Field<T19> field19, Field<T20> field20, Field<T21> field21) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertImpl columns(Field field1, Field field2, Field field3, Field field4, Field field5, Field field6, Field field7, Field field8, Field field9, Field field10, Field field11, Field field12, Field field13, Field field14, Field field15, Field field16, Field field17, Field field18, Field field19, Field field20, Field field21, Field field22) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> InsertImpl columns(Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18, Field<T19> field19, Field<T20> field20, Field<T21> field21, Field<T22> field22) {
         return columns(new Field[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21, field22 });
     }
 
@@ -1241,74 +1230,13 @@ final class InsertImpl<R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10
 
     @Override
     public final InsertImpl set(Record record) {
-        return set(Tools.mapOfTouchedValues(this, record));
-    }
-
-    @Override
-    public final InsertImpl set(Record... records) {
-        return set(Arrays.asList(records));
-    }
-
-    @Override
-    public final InsertImpl set(Collection<? extends Record> records) {
-        for (Record record : records)
-
-            // [#6373] [#7322] [#15455]
-            // A trailing newRecord() call is a no-op, but if users call set() twice with
-            // collections of records, then the expectation is for the two calls to be
-            // complete, i.e. no additional newRecord() calls should be needed in between
-            // the two
-            set(record).newRecord();
-
-        return this;
+        return set(Tools.mapOfChangedValues(record));
     }
 
     @Override
     public final InsertImpl setAllToExcluded() {
-
-        // [#14599] Don't use this.fields here, because in the INSERT .. SET case, that
-        //          auxiliary array doesn't contain the actual columns
-        for (Field<?> field : getDelegate().$columns())
+        for (Field<?> field : fields)
             set(field, (Field) excluded(field));
-
-        return this;
-    }
-
-    @Override
-    public final InsertImpl setNonKeyToExcluded() {
-        List<UniqueKey<R>> keys = getDelegate().$into().getKeys();
-
-        // [#14599] Don't use this.fields here, because in the INSERT .. SET case, that
-        //          auxiliary array doesn't contain the actual columns
-        for (Field<?> field : getDelegate().$columns())
-            if (!anyMatch(keys, k -> k.getFields().contains(field)))
-                set(field, (Field) excluded(field));
-
-        return this;
-    }
-
-    @Override
-    public final InsertImpl setNonPrimaryKeyToExcluded() {
-        UniqueKey<R> key = getDelegate().$into().getPrimaryKey();
-
-        // [#14599] Don't use this.fields here, because in the INSERT .. SET case, that
-        //          auxiliary array doesn't contain the actual columns
-        for (Field<?> field : getDelegate().$columns())
-            if (key == null || !key.getFields().contains(field))
-                set(field, (Field) excluded(field));
-
-        return this;
-    }
-
-    @Override
-    public final InsertImpl setNonConflictingKeyToExcluded() {
-        List<? extends Field<?>> key = getDelegate().$onConflict();
-
-        // [#14599] Don't use this.fields here, because in the INSERT .. SET case, that
-        //          auxiliary array doesn't contain the actual columns
-        for (Field<?> field : getDelegate().$columns())
-            if (!key.contains(field))
-                set(field, (Field) excluded(field));
 
         return this;
     }
@@ -1489,298 +1417,164 @@ final class InsertImpl<R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10
     @Override
     public final InsertResultStep<R> returning() {
         getDelegate().setReturning();
-        return new InsertAsResultQuery<>(getDelegate(), returningResult);
+        return new DMLQueryAsResultQuery<>(getDelegate(), returningResult);
     }
 
     @Override
     public final InsertResultStep<R> returning(SelectFieldOrAsterisk... f) {
         getDelegate().setReturning(f);
-        return new InsertAsResultQuery<>(getDelegate(), returningResult);
+        return new DMLQueryAsResultQuery<>(getDelegate(), returningResult);
     }
 
     @Override
     public final InsertResultStep<R> returning(Collection<? extends SelectFieldOrAsterisk> f) {
         getDelegate().setReturning(f);
-        return new InsertAsResultQuery<>(getDelegate(), returningResult);
+        return new DMLQueryAsResultQuery<>(getDelegate(), returningResult);
     }
 
     @Override
     public final InsertResultStep<Record> returningResult(SelectFieldOrAsterisk... f) {
         returningResult = true;
         getDelegate().setReturning(f);
-        return new InsertAsResultQuery(getDelegate(), returningResult);
+        return new DMLQueryAsResultQuery(getDelegate(), returningResult);
     }
 
     @Override
     public final InsertResultStep<Record> returningResult(Collection<? extends SelectFieldOrAsterisk> f) {
         returningResult = true;
         getDelegate().setReturning(f);
-        return new InsertAsResultQuery(getDelegate(), returningResult);
+        return new DMLQueryAsResultQuery(getDelegate(), returningResult);
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1) {
+    public final <T1> InsertResultStep<Record1<T1>> returningResult(SelectField<T1> field1) {
         return (InsertResultStep) returningResult(new SelectField[] { field1 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2) {
+    public final <T1, T2> InsertResultStep<Record2<T1, T2>> returningResult(SelectField<T1> field1, SelectField<T2> field2) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3) {
+    public final <T1, T2, T3> InsertResultStep<Record3<T1, T2, T3>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4) {
+    public final <T1, T2, T3, T4> InsertResultStep<Record4<T1, T2, T3, T4>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5) {
+    public final <T1, T2, T3, T4, T5> InsertResultStep<Record5<T1, T2, T3, T4, T5>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6) {
+    public final <T1, T2, T3, T4, T5, T6> InsertResultStep<Record6<T1, T2, T3, T4, T5, T6>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7) {
+    public final <T1, T2, T3, T4, T5, T6, T7> InsertResultStep<Record7<T1, T2, T3, T4, T5, T6, T7>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8> InsertResultStep<Record8<T1, T2, T3, T4, T5, T6, T7, T8>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8, SelectField field9) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9> InsertResultStep<Record9<T1, T2, T3, T4, T5, T6, T7, T8, T9>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8, SelectField field9, SelectField field10) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> InsertResultStep<Record10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8, SelectField field9, SelectField field10, SelectField field11) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> InsertResultStep<Record11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8, SelectField field9, SelectField field10, SelectField field11, SelectField field12) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> InsertResultStep<Record12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8, SelectField field9, SelectField field10, SelectField field11, SelectField field12, SelectField field13) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> InsertResultStep<Record13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8, SelectField field9, SelectField field10, SelectField field11, SelectField field12, SelectField field13, SelectField field14) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> InsertResultStep<Record14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8, SelectField field9, SelectField field10, SelectField field11, SelectField field12, SelectField field13, SelectField field14, SelectField field15) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> InsertResultStep<Record15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8, SelectField field9, SelectField field10, SelectField field11, SelectField field12, SelectField field13, SelectField field14, SelectField field15, SelectField field16) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> InsertResultStep<Record16<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8, SelectField field9, SelectField field10, SelectField field11, SelectField field12, SelectField field13, SelectField field14, SelectField field15, SelectField field16, SelectField field17) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> InsertResultStep<Record17<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8, SelectField field9, SelectField field10, SelectField field11, SelectField field12, SelectField field13, SelectField field14, SelectField field15, SelectField field16, SelectField field17, SelectField field18) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> InsertResultStep<Record18<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8, SelectField field9, SelectField field10, SelectField field11, SelectField field12, SelectField field13, SelectField field14, SelectField field15, SelectField field16, SelectField field17, SelectField field18, SelectField field19) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> InsertResultStep<Record19<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8, SelectField field9, SelectField field10, SelectField field11, SelectField field12, SelectField field13, SelectField field14, SelectField field15, SelectField field16, SelectField field17, SelectField field18, SelectField field19, SelectField field20) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> InsertResultStep<Record20<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8, SelectField field9, SelectField field10, SelectField field11, SelectField field12, SelectField field13, SelectField field14, SelectField field15, SelectField field16, SelectField field17, SelectField field18, SelectField field19, SelectField field20, SelectField field21) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> InsertResultStep<Record21<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20, SelectField<T21> field21) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21 });
     }
 
     @Override
     @SuppressWarnings("hiding")
-    public final InsertResultStep returningResult(SelectField field1, SelectField field2, SelectField field3, SelectField field4, SelectField field5, SelectField field6, SelectField field7, SelectField field8, SelectField field9, SelectField field10, SelectField field11, SelectField field12, SelectField field13, SelectField field14, SelectField field15, SelectField field16, SelectField field17, SelectField field18, SelectField field19, SelectField field20, SelectField field21, SelectField field22) {
+    public final <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> InsertResultStep<Record22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22>> returningResult(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20, SelectField<T21> field21, SelectField<T22> field22) {
         return (InsertResultStep) returningResult(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21, field22 });
     }
-
-
-    // -------------------------------------------------------------------------
-    // XXX: Query Object Model
-    // -------------------------------------------------------------------------
-
-    @Override
-    public final WithImpl $with() {
-        return getDelegate().$with();
-    }
-
-    @Override
-    public final Table<R> $into() {
-        return getDelegate().$into();
-    }
-
-    @Override
-    public final Insert<?> $into(Table<?> newInto) {
-        return getDelegate().$into(newInto);
-    }
-
-    @Override
-    public final UnmodifiableList<? extends Field<?>> $columns() {
-        return getDelegate().$columns();
-    }
-
-    @Override
-    public final Insert<?> $columns(Collection<? extends Field<?>> columns) {
-        return getDelegate().$columns(columns);
-    }
-
-    @Override
-    public final Select<?> $select() {
-        return getDelegate().$select();
-    }
-
-    @Override
-    public final Insert<?> $select(Select<?> select) {
-        return getDelegate().$select(select);
-    }
-
-    @Override
-    public final boolean $defaultValues() {
-        return getDelegate().$defaultValues();
-    }
-
-    @Override
-    public final Insert<?> $defaultValues(boolean defaultValues) {
-        return getDelegate().$defaultValues(defaultValues);
-    }
-
-    @Override
-    public final UnmodifiableList<? extends Row> $values() {
-        return getDelegate().$values();
-    }
-
-    @Override
-    public final Insert<?> $values(Collection<? extends Row> values) {
-        return getDelegate().$values(values);
-    }
-
-    @Override
-    public final boolean $onDuplicateKeyIgnore() {
-        return getDelegate().$onDuplicateKeyIgnore();
-    }
-
-    @Override
-    public final Insert<?> $onDuplicateKeyIgnore(boolean onDuplicateKeyIgnore) {
-        return getDelegate().$onDuplicateKeyIgnore(onDuplicateKeyIgnore);
-    }
-
-    @Override
-    public boolean $onDuplicateKeyUpdate() {
-        return getDelegate().$onDuplicateKeyUpdate();
-    }
-
-    @Override
-    public final Insert<?> $onDuplicateKeyUpdate(boolean onDuplicateKeyUpdate) {
-        return getDelegate().$onDuplicateKeyUpdate(onDuplicateKeyUpdate);
-    }
-
-    @Override
-    public final UnmodifiableList<? extends Field<?>> $onConflict() {
-        return getDelegate().$onConflict();
-    }
-
-    @Override
-    public final Insert<?> $onConflict(Collection<? extends Field<?>> onConflictFields) {
-        return getDelegate().$onConflict(onConflictFields);
-    }
-
-    @Override
-    public final Condition $onConflictWhere() {
-        return getDelegate().$onConflictWhere();
-    }
-
-    @Override
-    public final Insert<?> $onConflictWhere(Condition where) {
-        return getDelegate().$onConflictWhere(where);
-    }
-
-    @Override
-    public final UnmodifiableMap<? extends FieldOrRow, ? extends FieldOrRowOrSelect> $updateSet() {
-        return getDelegate().$updateSet();
-    }
-
-    @Override
-    public final Insert<?> $updateSet(Map<? extends FieldOrRow, ? extends FieldOrRowOrSelect> updateSet) {
-        return getDelegate().$updateSet(updateSet);
-    }
-
-    @Override
-    public final Condition $updateWhere() {
-        return getDelegate().$updateWhere();
-    }
-
-    @Override
-    public final Insert<?> $updateWhere(Condition where) {
-        return getDelegate().$updateWhere(where);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

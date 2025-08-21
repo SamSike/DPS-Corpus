@@ -35,11 +35,13 @@ import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.frontend.ClientFactoryBean;
 import org.apache.cxf.frontend.ClientProxyFactoryBean;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CxfConsumerTest extends CamelTestSupport {
     protected static final String SIMPLE_ENDPOINT_ADDRESS = "http://localhost:"
                                                             + CXFTestSupport.getPort1() + "/CxfConsumerTest/test";
@@ -73,7 +75,7 @@ public class CxfConsumerTest extends CamelTestSupport {
                                 ServletRequest request = (ServletRequest) cxfMessage.get("HTTP.REQUEST");
                                 assertNotNull(request, "Should get the ServletRequest");
                                 assertNotNull(request.getRemoteAddr(), "Should get the RemoteAddress");
-                                // Could verify the HttpRequest
+                                // Could verify the HttpRequest 
                                 String contentType = in.getHeader(Exchange.CONTENT_TYPE, String.class);
                                 assertNotNull(contentType, "Should get the contentType.");
 

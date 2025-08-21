@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+//CHECKSTYLE:OFF
 package com.braintreegateway;
 
 import com.braintreegateway.exceptions.NotFoundException;
@@ -55,7 +56,7 @@ public class DisputeGateway {
      */
     public Result<Dispute> accept(String id) {
         try {
-            if (id == null || id.isBlank()) {
+            if (id == null || id.trim().equals("")) {
                 throw new NotFoundException();
             }
 
@@ -95,11 +96,11 @@ public class DisputeGateway {
      * @throws NotFoundException if the Dispute ID or Document ID cannot be found.
      */
     public Result<DisputeEvidence> addFileEvidence(String disputeId, FileEvidenceRequest fileEvidenceRequest) {
-        if (disputeId == null || disputeId.isBlank()) {
+        if (disputeId == null || disputeId.trim().equals("")) {
             throw new NotFoundException("dispute with id \"" + disputeId + "\" not found");
         }
 
-        if (fileEvidenceRequest.getDocumentId() == null || fileEvidenceRequest.getDocumentId().isBlank()) {
+        if (fileEvidenceRequest.getDocumentId() == null || fileEvidenceRequest.getDocumentId().trim().equals("")) {
             throw new NotFoundException("document with id \"" + fileEvidenceRequest.getDocumentId() + "\" not found");
         }
 
@@ -147,9 +148,9 @@ public class DisputeGateway {
 
     private Result<DisputeEvidence> addTextEvidenceRequest(String id, TextEvidenceRequest textEvidenceRequest) {
         String content = textEvidenceRequest.getContent();
-        if (id == null || id.isBlank()) {
+        if (id == null || id.trim().equals("")) {
             throw new NotFoundException("Dispute ID is required");
-        } else if (content == null || content.isBlank()) {
+        } else if (content == null || content.trim().equals("")) {
             throw new IllegalArgumentException("Content cannot be empty");
         }
 
@@ -172,7 +173,7 @@ public class DisputeGateway {
      */
     public Result<Dispute> finalize(String id) {
         try {
-            if (id == null || id.isBlank()) {
+            if (id == null || id.trim().equals("")) {
                 throw new NotFoundException();
             }
 
@@ -199,7 +200,7 @@ public class DisputeGateway {
      */
     public Dispute find(String id) {
         try {
-            if (id == null || id.isBlank()) {
+            if (id == null || id.trim().equals("")) {
                 throw new NotFoundException();
             }
 
@@ -221,7 +222,7 @@ public class DisputeGateway {
      */
     public Result<Dispute> removeEvidence(String disputeId, String evidenceId) {
         try {
-            if (disputeId == null || disputeId.isBlank() || evidenceId == null || evidenceId.isBlank()) {
+            if (disputeId == null || disputeId.trim().equals("") || evidenceId == null || evidenceId.trim().equals("")) {
                 throw new NotFoundException();
             }
 
@@ -259,3 +260,4 @@ public class DisputeGateway {
         return new PaginatedResult<Dispute>(response.findInteger("total-items"), response.findInteger("page-size"), disputes);
     }
 }
+//CHECKSTYLE:ON

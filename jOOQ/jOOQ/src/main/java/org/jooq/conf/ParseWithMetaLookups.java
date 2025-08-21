@@ -24,23 +24,8 @@ import jakarta.xml.bind.annotation.XmlType;
 @XmlEnum
 public enum ParseWithMetaLookups {
 
-
-    /**
-     * Meta lookups are deactivated in the parser
-     * 
-     */
     OFF,
-
-    /**
-     * Meta lookups are active in the parser, but don't throw exceptions on failure
-     * 
-     */
     IGNORE_ON_FAILURE,
-
-    /**
-     * Meta lookups are active in the parser and throw exceptions on failure
-     * 
-     */
     THROW_ON_FAILURE;
 
     public String value() {

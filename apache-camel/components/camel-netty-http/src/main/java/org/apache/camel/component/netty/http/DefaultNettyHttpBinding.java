@@ -19,11 +19,12 @@ package org.apache.camel.component.netty.http;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -45,13 +46,12 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Message;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.TypeConverter;
 import org.apache.camel.component.netty.NettyConverter;
-import org.apache.camel.http.base.HttpHeaderFilterStrategy;
 import org.apache.camel.spi.HeaderFilterStrategy;
-import org.apache.camel.support.ExceptionHelper;
 import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.MessageHelper;
 import org.apache.camel.support.ObjectHelper;
@@ -64,7 +64,6 @@ import org.slf4j.LoggerFactory;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.TRANSFER_ENCODING;
 import static io.netty.handler.codec.http.HttpHeaderValues.CHUNKED;
-import static org.apache.camel.support.http.HttpUtil.determineResponseCode;
 
 /**
  * Default {@link NettyHttpBinding}.
@@ -72,7 +71,7 @@ import static org.apache.camel.support.http.HttpUtil.determineResponseCode;
 public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultNettyHttpBinding.class);
-    private HeaderFilterStrategy headerFilterStrategy = new HttpHeaderFilterStrategy();
+    private HeaderFilterStrategy headerFilterStrategy = new NettyHttpHeaderFilterStrategy();
 
     public DefaultNettyHttpBinding() {
     }
@@ -105,21 +104,18 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
             // for proxy use case pass the request body buffer directly to the response to avoid additional processing
             // we need to retain it so that the request can be released and we can keep the content
             answer.setBody(request.content().retain());
-            answer.getExchange().getExchangeExtension().setStreamCacheDisabled(true);
-            exchange.getExchangeExtension().addOnCompletion(new SynchronizationAdapter() {
+            answer.getExchange().adapt(ExtendedExchange.class).setStreamCacheDisabled(true);
+            exchange.adapt(ExtendedExchange.class).addOnCompletion(new SynchronizationAdapter() {
                 @Override
                 public void onDone(Exchange exchange) {
-                    if (request.content().refCnt() > 0) {
-                        LOG.debug("Releasing Netty HttpResponse ByteBuf");
-                        ReferenceCountUtil.release(request.content());
-                    }
+                    ReferenceCountUtil.release(request.content());
                 }
             });
         } else {
             // turn the body into stream cached (on the client/consumer side we can facade the netty stream instead of converting to byte array)
             NettyChannelBufferStreamCache cache = new NettyChannelBufferStreamCache(request.content());
             // add on completion to the cache which is needed for Camel to keep track of the lifecycle of the cache
-            exchange.getExchangeExtension().addOnCompletion(new NettyChannelBufferStreamCacheOnCompletion(cache));
+            exchange.adapt(ExtendedExchange.class).addOnCompletion(new NettyChannelBufferStreamCacheOnCompletion(cache));
             answer.setBody(cache);
         }
         return answer;
@@ -180,7 +176,15 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
         headers.put(Exchange.HTTP_PORT, port > 0 ? port : configuration.isSsl() || "https".equals(uri.getScheme()) ? 443 : 80);
 
         // strip the starting endpoint path so the path is relative to the endpoint uri
-        final String path = stripPath(configuration, uri);
+        String path = uri.getRawPath();
+        if (configuration.getPath() != null) {
+            // need to match by lower case as we want to ignore case on context-path
+            String matchPath = path.toLowerCase(Locale.US);
+            String match = configuration.getPath() != null ? configuration.getPath().toLowerCase(Locale.US) : null;
+            if (match != null && matchPath.startsWith(match)) {
+                path = path.substring(configuration.getPath().length());
+            }
+        }
         // keep the path uri using the case the request provided (do not convert to lower case)
         headers.put(NettyHttpConstants.HTTP_PATH, path);
 
@@ -208,7 +212,7 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
             Iterator<?> it = ObjectHelper.createIterator(values, ",", true);
             while (it.hasNext()) {
                 Object extracted = it.next();
-                Object decoded = shouldUrlDecodeHeader(configuration, name, extracted, StandardCharsets.UTF_8);
+                Object decoded = shouldUrlDecodeHeader(configuration, name, extracted, "UTF-8");
                 LOG.trace("HTTP-header: {}", extracted);
                 if (headerFilterStrategy != null
                         && !headerFilterStrategy.applyFilterToExternalHeaders(name, decoded, exchange)) {
@@ -234,7 +238,7 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
                 Iterator<?> it = ObjectHelper.createIterator(values, ",", true);
                 while (it.hasNext()) {
                     Object extracted = it.next();
-                    Object decoded = shouldUrlDecodeHeader(configuration, name, extracted, StandardCharsets.UTF_8);
+                    Object decoded = shouldUrlDecodeHeader(configuration, name, extracted, "UTF-8");
                     LOG.trace("URI-Parameter: {}", extracted);
                     if (headerFilterStrategy != null
                             && !headerFilterStrategy.applyFilterToExternalHeaders(name, decoded, exchange)) {
@@ -252,11 +256,13 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
                         .startsWith(NettyHttpConstants.CONTENT_TYPE_WWW_FORM_URLENCODED)
                 && !configuration.isBridgeEndpoint() && !configuration.isHttpProxy() && request instanceof FullHttpRequest) {
 
+            String charset = "UTF-8";
+
             // Push POST form params into the headers to retain compatibility with DefaultHttpBinding
             String body;
             ByteBuf buffer = ((FullHttpRequest) request).content().retain();
             try {
-                body = buffer.toString(StandardCharsets.UTF_8);
+                body = buffer.toString(Charset.forName(charset));
             } finally {
                 buffer.release();
             }
@@ -264,8 +270,8 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
                 for (String param : body.split("&")) {
                     String[] pair = param.split("=", 2);
                     if (pair.length == 2) {
-                        String name = shouldUrlDecodeHeader(configuration, "", pair[0], StandardCharsets.UTF_8);
-                        String value = shouldUrlDecodeHeader(configuration, name, pair[1], StandardCharsets.UTF_8);
+                        String name = shouldUrlDecodeHeader(configuration, "", pair[0], charset);
+                        String value = shouldUrlDecodeHeader(configuration, name, pair[1], charset);
                         if (headerFilterStrategy != null
                                 && !headerFilterStrategy.applyFilterToExternalHeaders(name, value, exchange)) {
                             NettyHttpHelper.appendHeader(headers, name, value);
@@ -277,19 +283,6 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
             }
         }
 
-    }
-
-    private static String stripPath(NettyHttpConfiguration configuration, URI uri) {
-        String path = uri.getRawPath();
-        if (configuration.getPath() != null) {
-            // need to match by lower case as we want to ignore case on context-path
-            String matchPath = path.toLowerCase(Locale.US);
-            String match = configuration.getPath() != null ? configuration.getPath().toLowerCase(Locale.US) : null;
-            if (match != null && matchPath.startsWith(match)) {
-                path = path.substring(configuration.getPath().length());
-            }
-        }
-        return path;
     }
 
     /**
@@ -309,35 +302,17 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
     /**
      * Decodes the header if needed to, or returns the header value as is.
      *
-     * @param      configuration                the configuration
-     * @param      headerName                   the header name
-     * @param      value                        the current header value
-     * @param      charset                      the charset to use for decoding
-     * @deprecated                              use
-     *                                          {@link #shouldUrlDecodeHeader(NettyHttpConfiguration, String, Object, Charset)}
-     * @return                                  the decoded value (if decoded was needed) or a <tt>toString</tt>
-     *                                          representation of the value.
-     * @throws     UnsupportedEncodingException is thrown if error decoding.
+     * @param  configuration                the configuration
+     * @param  headerName                   the header name
+     * @param  value                        the current header value
+     * @param  charset                      the charset to use for decoding
+     * @return                              the decoded value (if decoded was needed) or a <tt>toString</tt>
+     *                                      representation of the value.
+     * @throws UnsupportedEncodingException is thrown if error decoding.
      */
-    @Deprecated(since = "4.4.0")
     protected String shouldUrlDecodeHeader(
             NettyHttpConfiguration configuration, String headerName, Object value, String charset)
             throws UnsupportedEncodingException {
-        return shouldUrlDecodeHeader(configuration, headerName, value, Charset.forName(charset));
-    }
-
-    /**
-     * Decodes the header if needed to, or returns the header value as is.
-     *
-     * @param  configuration the configuration
-     * @param  headerName    the header name
-     * @param  value         the current header value
-     * @param  charset       the charset to use for decoding
-     * @return               the decoded value (if decoded was needed) or a <tt>toString</tt> representation of the
-     *                       value.
-     */
-    protected String shouldUrlDecodeHeader(
-            NettyHttpConfiguration configuration, String headerName, Object value, Charset charset) {
         // do not decode Content-Type
         if (NettyHttpConstants.CONTENT_TYPE.equals(headerName)) {
             return value.toString();
@@ -362,7 +337,7 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
             // keep the body as is, and use type converters
             answer.setBody(response.content());
             // turn off stream cache as we use the raw body as-is
-            answer.getExchange().getExchangeExtension().setStreamCacheDisabled(true);
+            answer.getExchange().adapt(ExtendedExchange.class).setStreamCacheDisabled(true);
         } else {
             // stores as byte array as the netty ByteBuf will be freed when the producer is done, and then we can no longer access the message body
             response.retain();
@@ -461,10 +436,12 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
                 message.setHeader(NettyHttpConstants.CONTENT_TYPE, NettyHttpConstants.CONTENT_TYPE_JAVA_SERIALIZED_OBJECT);
             } else {
                 // we failed due an exception so print it as plain text
-                final String stackTrace = ExceptionHelper.stackTraceToString(cause);
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                cause.printStackTrace(pw);
 
                 // the body should then be the stacktrace
-                body = NettyConverter.toByteBuffer(stackTrace.getBytes());
+                body = NettyConverter.toByteBuffer(sw.toString().getBytes());
                 // force content type to be text/plain as that is what the stacktrace is
                 message.setHeader(NettyHttpConstants.CONTENT_TYPE, "text/plain");
             }
@@ -485,7 +462,7 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
 
         if (body instanceof InputStream && configuration.isDisableStreamCache()) {
             response = new OutboundStreamHttpResponse(
-                    (InputStream) body, new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.valueOf(code), true));
+                    (InputStream) body, new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.valueOf(code)));
             response.headers().set(TRANSFER_ENCODING, CHUNKED);
         }
 
@@ -514,7 +491,7 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
             }
 
             if (buffer != null) {
-                response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.valueOf(code), buffer, true);
+                response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.valueOf(code), buffer);
                 // We just need to reset the readerIndex this time
                 if (buffer.readerIndex() == buffer.writerIndex()) {
                     buffer.setIndex(0, buffer.writerIndex());
@@ -525,7 +502,7 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
                 response.headers().set(HttpHeaderNames.CONTENT_LENGTH.toString(), len);
                 LOG.trace("Content-Length: {}", len);
             } else {
-                response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.valueOf(code), false);
+                response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.valueOf(code));
             }
         }
 
@@ -552,8 +529,8 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
         String contentType = MessageHelper.getContentType(message);
         if (contentType != null) {
             // set content-type
-            LOG.trace("Content-Type: {}", contentType);
             response.headers().set(HttpHeaderNames.CONTENT_TYPE.toString(), contentType);
+            LOG.trace("Content-Type: {}", contentType);
         }
 
         // configure connection to accordingly to keep alive configuration
@@ -579,6 +556,27 @@ public class DefaultNettyHttpBinding implements NettyHttpBinding, Cloneable {
         LOG.trace("Connection: {}", connection);
 
         return response;
+    }
+
+    /*
+     * set the HTTP status code
+     */
+    private int determineResponseCode(Exchange camelExchange, Object body) {
+        boolean failed = camelExchange.isFailed();
+        int defaultCode = failed ? 500 : 200;
+
+        Message message = camelExchange.getMessage();
+        Integer currentCode = message.getHeader(NettyHttpConstants.HTTP_RESPONSE_CODE, Integer.class);
+        int codeToUse = currentCode == null ? defaultCode : currentCode;
+
+        if (codeToUse != 500) {
+            if (body == null || body instanceof String && ((String) body).trim().isEmpty()) {
+                // no content 
+                codeToUse = currentCode == null ? 204 : currentCode;
+            }
+        }
+
+        return codeToUse;
     }
 
     @Override

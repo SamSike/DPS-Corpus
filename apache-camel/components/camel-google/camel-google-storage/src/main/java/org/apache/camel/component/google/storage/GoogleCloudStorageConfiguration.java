@@ -79,10 +79,6 @@ public class GoogleCloudStorageConfiguration implements Cloneable {
     @UriParam(label = "consumer", description = "A regular expression to include only blobs with name matching it.")
     private String filter;
 
-    @UriParam(label = "consumer",
-              description = "The prefix which is used in the BlobListOptions to only consume objects we are interested in")
-    private String prefix;
-
     public String getBucketName() {
         return this.bucketName;
     }
@@ -135,7 +131,7 @@ public class GoogleCloudStorageConfiguration implements Cloneable {
 
     /**
      * The Cloud Storage class to use when creating the new buckets
-     *
+     * 
      * @param storageClass
      */
     public void setStorageClass(StorageClass storageClass) {
@@ -148,7 +144,7 @@ public class GoogleCloudStorageConfiguration implements Cloneable {
 
     /**
      * The storage client
-     *
+     * 
      * @param storageClient
      */
     public void setStorageClient(Storage storageClient) {
@@ -161,7 +157,7 @@ public class GoogleCloudStorageConfiguration implements Cloneable {
 
     /**
      * Set the operation for the producer
-     *
+     * 
      * @param operation
      */
     public void setOperation(GoogleCloudStorageOperations operation) {
@@ -278,14 +274,4 @@ public class GoogleCloudStorageConfiguration implements Cloneable {
         return filter;
     }
 
-    public String getPrefix() {
-        return prefix;
-    }
-
-    /**
-     * The prefix which is used in the BlobListOptions to only consume objects we are interested in.
-     */
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
-    }
 }

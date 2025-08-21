@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,29 +17,24 @@
 package org.springframework.web.servlet.function;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.web.accept.ApiVersionStrategy;
-import org.springframework.web.accept.DefaultApiVersionStrategy;
-import org.springframework.web.accept.SemanticApiVersionParser;
+import org.springframework.lang.Nullable;
 import org.springframework.web.servlet.handler.PathPatternsTestUtils;
 import org.springframework.web.testfixture.servlet.MockHttpServletRequest;
 import org.springframework.web.util.pattern.PathPatternParser;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.web.servlet.HandlerMapping.API_VERSION_ATTRIBUTE;
+import static org.springframework.http.MediaType.TEXT_XML_VALUE;
 
 /**
  * @author Arjen Poutsma
- * @author Sebastien Deleuze
  */
 class RequestPredicatesTests {
 
@@ -154,7 +149,7 @@ class RequestPredicatesTests {
 	}
 
 	@Test
-	void pathWithContext() {
+	public void pathWithContext() {
 		RequestPredicate predicate = RequestPredicates.path("/p*");
 		ServerRequest request = initRequest("GET", "/context/path",
 				servletRequest -> servletRequest.setContextPath("/context"));
@@ -184,50 +179,25 @@ class RequestPredicatesTests {
 	}
 
 	@Test
-	void singleContentType() {
-		RequestPredicate predicate = RequestPredicates.contentType(MediaType.APPLICATION_JSON);
-		ServerRequest request = initRequest("GET", "/path", r -> r.setContentType(MediaType.APPLICATION_JSON_VALUE));
+	void contentType() {
+		MediaType json = MediaType.APPLICATION_JSON;
+		RequestPredicate predicate = RequestPredicates.contentType(json);
+		ServerRequest request = initRequest("GET", "/path", req -> req.setContentType(json.toString()));
 		assertThat(predicate.test(request)).isTrue();
-
-		assertThat(predicate.test(initRequest("GET", "", r -> r.setContentType(MediaType.TEXT_XML_VALUE)))).isFalse();
+		assertThat(predicate.test(initRequest("GET", ""))).isFalse();
 	}
 
 	@Test
-	void multipleContentTypes() {
-		RequestPredicate predicate = RequestPredicates.contentType(MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN);
-		ServerRequest request = initRequest("GET", "/path", r -> r.setContentType(MediaType.APPLICATION_JSON_VALUE));
+	void accept() {
+		MediaType json = MediaType.APPLICATION_JSON;
+		RequestPredicate predicate = RequestPredicates.accept(json);
+		ServerRequest request = initRequest("GET", "/path", req -> req.addHeader("Accept", json.toString()));
 		assertThat(predicate.test(request)).isTrue();
 
-		request = initRequest("GET", "/path", r -> r.setContentType(MediaType.TEXT_PLAIN_VALUE));
-		assertThat(predicate.test(request)).isTrue();
-
-		assertThat(predicate.test(initRequest("GET", "", r -> r.setContentType(MediaType.TEXT_XML_VALUE)))).isFalse();
-	}
-
-	@Test
-	void singleAccept() {
-		RequestPredicate predicate = RequestPredicates.accept(MediaType.APPLICATION_JSON);
-		ServerRequest request = initRequest("GET", "/path", r -> r.addHeader("Accept", MediaType.APPLICATION_JSON_VALUE));
-		assertThat(predicate.test(request)).isTrue();
-
-		request = initRequest("GET", "", req -> req.addHeader("Accept", MediaType.TEXT_XML_VALUE));
+		request = initRequest("GET", "", req -> req.addHeader("Accept", TEXT_XML_VALUE));
 		assertThat(predicate.test(request)).isFalse();
 	}
 
-	@Test
-	void multipleAccepts() {
-		RequestPredicate predicate = RequestPredicates.accept(MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN);
-		ServerRequest request = initRequest("GET", "/path", r -> r.addHeader("Accept", MediaType.APPLICATION_JSON_VALUE));
-		assertThat(predicate.test(request)).isTrue();
-
-		request = initRequest("GET", "/path", r -> r.addHeader("Accept", MediaType.TEXT_PLAIN_VALUE));
-		assertThat(predicate.test(request)).isTrue();
-
-		request = initRequest("GET", "", req -> req.addHeader("Accept", MediaType.TEXT_XML_VALUE));
-		assertThat(predicate.test(request)).isFalse();
-	}
-
-	@SuppressWarnings("removal")
 	@Test
 	void pathExtension() {
 		RequestPredicate predicate = RequestPredicates.pathExtension("txt");
@@ -239,19 +209,6 @@ class RequestPredicatesTests {
 		assertThat(predicate.test(initRequest("GET", "/FILE.TXT"))).isFalse();
 
 		assertThat(predicate.test(initRequest("GET", "/file.foo"))).isFalse();
-		assertThat(predicate.test(initRequest("GET", "/file"))).isFalse();
-	}
-
-	@SuppressWarnings("removal")
-	@Test
-	void pathExtensionPredicate() {
-		List<String> extensions = List.of("foo", "bar");
-		RequestPredicate predicate = RequestPredicates.pathExtension(extensions::contains);
-
-		assertThat(predicate.test(initRequest("GET", "/file.foo"))).isTrue();
-		assertThat(predicate.test(initRequest("GET", "/file.bar"))).isTrue();
-		assertThat(predicate.test(initRequest("GET", "/file"))).isFalse();
-		assertThat(predicate.test(initRequest("GET", "/file.baz"))).isFalse();
 	}
 
 	@Test
@@ -270,30 +227,12 @@ class RequestPredicatesTests {
 		assertThat(predicate.test(request)).isFalse();
 	}
 
-	@Test
-	void version() {
-		assertThat(RequestPredicates.version("1.1").test(serverRequest("1.1"))).isTrue();
-		assertThat(RequestPredicates.version("1.1+").test(serverRequest("1.5"))).isTrue();
-		assertThat(RequestPredicates.version("1.1").test(serverRequest("1.5"))).isFalse();
-	}
 
-	private static ServerRequest serverRequest(String version) {
-
-		ApiVersionStrategy strategy = new DefaultApiVersionStrategy(
-				List.of(exchange -> null), new SemanticApiVersionParser(), true, null, false, null);
-
-		MockHttpServletRequest servletRequest =
-				PathPatternsTestUtils.initRequest("GET", null, "/path", true,
-						req -> req.setAttribute(API_VERSION_ATTRIBUTE, strategy.parseVersion(version)));
-
-		return new DefaultServerRequest(servletRequest, Collections.emptyList(), strategy);
-	}
-
-	private static ServerRequest initRequest(String httpMethod, String requestUri) {
+	private ServerRequest initRequest(String httpMethod, String requestUri) {
 		return initRequest(httpMethod, requestUri, null);
 	}
 
-	private static ServerRequest initRequest(
+	private ServerRequest initRequest(
 			String httpMethod, String requestUri, @Nullable Consumer<MockHttpServletRequest> initializer) {
 
 		return new DefaultServerRequest(

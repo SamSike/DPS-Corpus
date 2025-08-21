@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package org.springframework.aop.framework.autoproxy;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.BeanNameAware;
+import org.springframework.lang.Nullable;
 
 /**
  * {@code BeanPostProcessor} implementation that creates AOP proxies based on all
@@ -45,7 +44,8 @@ public class DefaultAdvisorAutoProxyCreator extends AbstractAdvisorAutoProxyCrea
 
 	private boolean usePrefix = false;
 
-	private @Nullable String advisorBeanNamePrefix;
+	@Nullable
+	private String advisorBeanNamePrefix;
 
 
 	/**
@@ -78,7 +78,8 @@ public class DefaultAdvisorAutoProxyCreator extends AbstractAdvisorAutoProxyCrea
 	 * Return the prefix for bean names that will cause them to be included
 	 * for auto-proxying by this object.
 	 */
-	public @Nullable String getAdvisorBeanNamePrefix() {
+	@Nullable
+	public String getAdvisorBeanNamePrefix() {
 		return this.advisorBeanNamePrefix;
 	}
 

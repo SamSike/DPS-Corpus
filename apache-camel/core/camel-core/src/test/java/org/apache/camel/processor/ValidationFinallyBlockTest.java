@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
  * Test finallyBlock
  */
 public class ValidationFinallyBlockTest extends ContextTestSupport {
-    protected final Processor validator = new MyValidator();
+    protected Processor validator = new MyValidator();
     protected MockEndpoint validEndpoint;
     protected MockEndpoint invalidEndpoint;
     protected MockEndpoint allEndpoint;

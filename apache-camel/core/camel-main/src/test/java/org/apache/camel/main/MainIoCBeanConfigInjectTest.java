@@ -93,7 +93,7 @@ public class MainIoCBeanConfigInjectTest {
         }
 
         @Override
-        public void configure() {
+        public void configure() throws Exception {
             from("direct:start").bean("bar").to("mock:results");
         }
     }

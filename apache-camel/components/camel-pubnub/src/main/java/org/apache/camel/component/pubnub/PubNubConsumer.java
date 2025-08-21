@@ -18,26 +18,19 @@ package org.apache.camel.component.pubnub;
 
 import java.util.Arrays;
 
-import com.pubnub.api.java.PubNub;
-import com.pubnub.api.java.callbacks.SubscribeCallback;
-import com.pubnub.api.java.models.consumer.objects_api.channel.PNChannelMetadataResult;
-import com.pubnub.api.java.models.consumer.objects_api.membership.PNMembershipResult;
-import com.pubnub.api.java.models.consumer.objects_api.uuid.PNUUIDMetadataResult;
+import com.pubnub.api.PubNub;
+import com.pubnub.api.callbacks.SubscribeCallback;
 import com.pubnub.api.models.consumer.PNStatus;
 import com.pubnub.api.models.consumer.pubsub.PNMessageResult;
 import com.pubnub.api.models.consumer.pubsub.PNPresenceEventResult;
-import com.pubnub.api.models.consumer.pubsub.PNSignalResult;
-import com.pubnub.api.models.consumer.pubsub.files.PNFileEventResult;
-import com.pubnub.api.models.consumer.pubsub.message_actions.PNMessageActionResult;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.support.DefaultConsumer;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.pubnub.api.enums.PNStatusCategory.PNConnectionError;
+import static com.pubnub.api.enums.PNStatusCategory.PNTimeoutCategory;
 import static com.pubnub.api.enums.PNStatusCategory.PNUnexpectedDisconnectCategory;
 import static org.apache.camel.component.pubnub.PubNubConstants.CHANNEL;
 import static org.apache.camel.component.pubnub.PubNubConstants.TIMETOKEN;
@@ -100,7 +93,7 @@ public class PubNubConsumer extends DefaultConsumer {
 
         @Override
         public void status(PubNub pubnub, PNStatus status) {
-            if (status.getCategory() == PNUnexpectedDisconnectCategory || status.getCategory() == PNConnectionError) {
+            if (status.getCategory() == PNUnexpectedDisconnectCategory || status.getCategory() == PNTimeoutCategory) {
                 LOG.trace("Got status: {}. Reconnecting to PubNub", status);
                 pubnub.reconnect();
             } else {
@@ -116,14 +109,10 @@ public class PubNubConsumer extends DefaultConsumer {
             inmessage.setHeader(TIMETOKEN, message.getTimetoken());
             inmessage.setHeader(CHANNEL, message.getChannel());
             inmessage.setHeader(Exchange.MESSAGE_TIMESTAMP, message.getTimetoken());
-
             try {
                 getProcessor().process(exchange);
             } catch (Exception e) {
-                exchange.setException(e);
-            }
-            if (exchange.getException() != null) {
-                getExceptionHandler().handleException("Error processing exchange", exchange.getException());
+                getExceptionHandler().handleException("Error processing exchange", e);
             }
         }
 
@@ -142,39 +131,6 @@ public class PubNubConsumer extends DefaultConsumer {
             }
         }
 
-        /**
-         * signal, user, space, membership, messageAction, presence, and file listeners are mandatory and you MUST at
-         * least provide no op implementations for these listeners
-         */
-        @Override
-        public void signal(@NotNull PubNub pubnub, @NotNull PNSignalResult pnSignalResult) {
-            LOG.trace("signal: {}.", pnSignalResult);
-        }
-
-        @Override
-        public void uuid(@NotNull PubNub pubnub, @NotNull PNUUIDMetadataResult pnUUIDMetadataResult) {
-            LOG.trace("uuid: {}.", pnUUIDMetadataResult);
-        }
-
-        @Override
-        public void channel(@NotNull PubNub pubnub, @NotNull PNChannelMetadataResult pnChannelMetadataResult) {
-            LOG.trace("channel: {}.", pnChannelMetadataResult);
-        }
-
-        @Override
-        public void membership(@NotNull PubNub pubnub, @NotNull PNMembershipResult pnMembershipResult) {
-            LOG.trace("membership: {}.", pnMembershipResult);
-        }
-
-        @Override
-        public void messageAction(@NotNull PubNub pubnub, @NotNull PNMessageActionResult pnMessageActionResult) {
-            LOG.trace("messageAction: {}.", pnMessageActionResult);
-        }
-
-        @Override
-        public void file(@NotNull PubNub pubnub, @NotNull PNFileEventResult pnFileEventResult) {
-            LOG.trace("file: {}.", pnFileEventResult);
-        }
     }
 
 }

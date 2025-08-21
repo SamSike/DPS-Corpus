@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.dao.annotation;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.aopalliance.intercept.MethodInvocation;
 import org.junit.jupiter.api.Test;
@@ -30,7 +29,6 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.support.ChainedPersistenceExceptionTranslator;
 import org.springframework.dao.support.PersistenceExceptionTranslationInterceptor;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.stereotype.Repository;
@@ -48,7 +46,7 @@ import static org.mockito.Mockito.mock;
  * @author Juergen Hoeller
  * @author Tadaya Tsuyukubo
  */
-class PersistenceExceptionTranslationInterceptorTests extends PersistenceExceptionTranslationAdvisorTests {
+public class PersistenceExceptionTranslationInterceptorTests extends PersistenceExceptionTranslationAdvisorTests {
 
 	@Override
 	protected void addPersistenceExceptionTranslation(ProxyFactory pf, PersistenceExceptionTranslator pet) {
@@ -76,39 +74,12 @@ class PersistenceExceptionTranslationInterceptorTests extends PersistenceExcepti
 		interceptor.setAlwaysTranslate(true);
 
 		RuntimeException exception = new RuntimeException();
-		MethodInvocation invocation = mock();
+		MethodInvocation invocation = mock(MethodInvocation.class);
 		given(invocation.proceed()).willThrow(exception);
 
 		assertThatThrownBy(() -> interceptor.invoke(invocation)).isSameAs(exception);
+
 		assertThat(callOrder).containsExactly(10, 20, 30);
-	}
-
-	@Test
-	void detectPersistenceExceptionTranslatorsOnShutdown() throws Throwable {
-		DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
-		bf.setDependencyComparator(AnnotationAwareOrderComparator.INSTANCE);
-		bf.registerBeanDefinition("peti", new RootBeanDefinition(PersistenceExceptionTranslationInterceptor.class));
-		bf.registerBeanDefinition("pet", new RootBeanDefinition(ChainedPersistenceExceptionTranslator.class));
-
-		PersistenceExceptionTranslationInterceptor interceptor =
-				bf.getBean("peti", PersistenceExceptionTranslationInterceptor.class);
-		interceptor.setAlwaysTranslate(true);
-
-		RuntimeException exception = new RuntimeException();
-		MethodInvocation invocation = mock();
-		given(invocation.proceed()).willThrow(exception);
-
-		AtomicBoolean correctException = new AtomicBoolean(false);
-		bf.registerDisposableBean("disposable", () -> {
-			try {
-				interceptor.invoke(invocation);
-			}
-			catch (Throwable ex) {
-				correctException.set(ex == exception);
-			}
-		});
-		bf.destroySingletons();
-		assertThat(correctException).isTrue();
 	}
 
 

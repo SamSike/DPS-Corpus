@@ -26,10 +26,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ControlBusRestartRouteTest extends ContextTestSupport {
 
-    private final MyRoutePolicy myRoutePolicy = new MyRoutePolicy();
+    private MyRoutePolicy myRoutePolicy = new MyRoutePolicy();
 
     @Test
-    public void testControlBusRestart() {
+    public void testControlBusRestart() throws Exception {
         assertEquals(1, myRoutePolicy.getStart());
         assertEquals(0, myRoutePolicy.getStop());
 
@@ -44,16 +44,16 @@ public class ControlBusRestartRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo").routeId("foo").routePolicy(myRoutePolicy).to("mock:foo");
             }
         };
     }
 
-    private static final class MyRoutePolicy extends RoutePolicySupport {
+    private final class MyRoutePolicy extends RoutePolicySupport {
 
         private int start;
         private int stop;

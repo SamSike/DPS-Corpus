@@ -16,11 +16,11 @@
  */
 package org.apache.camel.processor.async;
 
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.camel.Endpoint;
 import org.apache.camel.support.DefaultComponent;
-import org.apache.camel.util.StringHelper;
 
 public class MyAsyncComponent extends DefaultComponent {
 
@@ -36,11 +36,11 @@ public class MyAsyncComponent extends DefaultComponent {
         // to make URIs valid we make the conventions of using ':' for ' ' and
         // capitalize words
         String[] words = value.split(":");
-        StringBuilder result = new StringBuilder();
+        String result = "";
         for (String word : words) {
-            result.append(result.isEmpty() ? "" : " ");
-            result.append(StringHelper.capitalize(word));
+            result += result.isEmpty() ? "" : " ";
+            result += word.substring(0, 1).toUpperCase(Locale.ENGLISH) + word.substring(1);
         }
-        return result.toString();
+        return result;
     }
 }

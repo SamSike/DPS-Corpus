@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,12 @@ import java.nio.charset.Charset;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.Part;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.lang.Nullable;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -37,7 +37,7 @@ import org.springframework.web.multipart.MultipartResolver;
 /**
  * {@link ServerHttpRequest} implementation that accesses one part of a multipart
  * request. If using {@link MultipartResolver} configuration the part is accessed
- * through a {@link MultipartFile}. Or if using Servlet multipart processing
+ * through a {@link MultipartFile}. Or if using Servlet 3.0 multipart processing
  * the part is accessed through {@code ServletRequest.getPart}.
  *
  * @author Rossen Stoyanchev
@@ -113,7 +113,8 @@ public class RequestPartServletServerHttpRequest extends ServletServerHttpReques
 		throw new IllegalStateException("No body available for request part '" + this.requestPartName + "'");
 	}
 
-	private @Nullable Part retrieveServletPart() {
+	@Nullable
+	private Part retrieveServletPart() {
 		try {
 			return this.multipartRequest.getPart(this.requestPartName);
 		}

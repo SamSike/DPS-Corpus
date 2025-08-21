@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,10 +37,6 @@
  */
 package org.jooq.meta;
 
-import java.util.function.Supplier;
-
-import org.jooq.Name;
-
 /**
  * A function that can be injected into jOOQ-meta elements to resolve Java types
  * from {@link DataTypeDefinition}.
@@ -56,11 +52,6 @@ public interface JavaTypeResolver {
      * Resolve a Java type from a {@link DataTypeDefinition}.
      */
     String resolve(DataTypeDefinition type);
-
-    /**
-     * Resolve a Java type from a qualified user type.
-     */
-    String resolve(Name qualifiedUserType);
 
     /**
      * Get a language dependent class literal for a type.
@@ -97,22 +88,4 @@ public interface JavaTypeResolver {
      * type, if necessary.
      */
     String ref(Class<?> type);
-
-    /**
-     * Map a defined type to a user type, resolving converters and bindings,
-     * which may not need imports in some output modes.
-     */
-    <T> T resolveDefinedType(Supplier<T> supplier);
-
-    /**
-     * Get a cache key for this resolver, which can be used for caching calls to
-     * {@link #resolve(DataTypeDefinition)}.
-     * <p>
-     * It can be safely assumed that consecutive calls to
-     * {@link #resolve(DataTypeDefinition)} will produce the same result,
-     * considering the cache key.
-     * <p>
-     * A <code>null</code> key means the resolver results cannot be cached.
-     */
-    Object cacheKey();
 }

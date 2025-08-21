@@ -22,7 +22,7 @@ import org.apache.camel.ContextTestSupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class SendToNonExistingDirectEndpointTest extends ContextTestSupport {
 
@@ -32,20 +32,21 @@ public class SendToNonExistingDirectEndpointTest extends ContextTestSupport {
     }
 
     @Test
-    public void testDirect() {
+    public void testDirect() throws Exception {
         context.start();
 
         context.getComponent("direct", DirectComponent.class).setBlock(false);
 
-        CamelExecutionException e = assertThrows(CamelExecutionException.class,
-                () -> template.sendBody("direct:foo", "Hello World"),
-                "Should have thrown exception");
-
-        DirectConsumerNotAvailableException cause
-                = assertIsInstanceOf(DirectConsumerNotAvailableException.class, e.getCause());
-        assertIsInstanceOf(CamelExchangeException.class, cause); // ensure
-        // backwards
-        // compatibility
-        assertNotNull(cause.getExchange());
+        try {
+            template.sendBody("direct:foo", "Hello World");
+            fail("Should have thrown exception");
+        } catch (CamelExecutionException e) {
+            DirectConsumerNotAvailableException cause
+                    = assertIsInstanceOf(DirectConsumerNotAvailableException.class, e.getCause());
+            assertIsInstanceOf(CamelExchangeException.class, cause); // ensure
+                                                                    // backwards
+                                                                    // compatibility
+            assertNotNull(cause.getExchange());
+        }
     }
 }

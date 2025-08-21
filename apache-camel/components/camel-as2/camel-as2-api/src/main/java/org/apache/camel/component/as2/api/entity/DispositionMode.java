@@ -22,8 +22,8 @@ public enum DispositionMode {
     AUTOMATIC_ACTION_MDN_SENT_MANUALLY("automatic-action", "MDN-sent-manually"),
     AUTOMATIC_ACTION_MDN_SENT_AUTOMATICALLY("automatic-action", "MDN-sent-automatically");
 
-    private final String actionMode;
-    private final String sendingMode;
+    private String actionMode;
+    private String sendingMode;
 
     private DispositionMode(String actionMode, String sendingMode) {
         this.actionMode = actionMode;
@@ -44,14 +44,14 @@ public enum DispositionMode {
     }
 
     public static DispositionMode parseDispositionMode(String dispositionModeString) {
-        switch (dispositionModeString.toLowerCase()) {
-            case "manual-action/mdn-sent-manually":
+        switch (dispositionModeString) {
+            case "manual-action/MDN-sent-manually":
                 return MANUAL_ACTION_MDN_SENT_MANUALLY;
-            case "manual-action/mdn-sent-automatically":
+            case "manual-actionMDN-sent-automatically":
                 return MANUAL_ACTION_MDN_SENT_AUTOMATICALLY;
-            case "automatic-action/mdn-sent-manually":
+            case "automatic-action/MDN-sent-manually":
                 return AUTOMATIC_ACTION_MDN_SENT_MANUALLY;
-            case "automatic-action/mdn-sent-automatically":
+            case "automatic-action/MDN-sent-automatically":
                 return AUTOMATIC_ACTION_MDN_SENT_AUTOMATICALLY;
             default:
                 return null;

@@ -24,7 +24,7 @@ import org.apache.camel.tooling.model.ComponentModel;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "component",
-                     description = "List components from the Camel Catalog", sortOptions = false, showDefaultValues = true)
+                     description = "List components from the Camel Catalog")
 public class CatalogComponent extends CatalogBaseCommand {
 
     public CatalogComponent(CamelJBangMain main) {
@@ -34,21 +34,18 @@ public class CatalogComponent extends CatalogBaseCommand {
     @Override
     List<CatalogBaseCommand.Row> collectRows() {
         List<Row> rows = new ArrayList<>();
-        for (String name : findComponentNames(catalog)) {
+        for (String name : catalog.findComponentNames()) {
             ComponentModel model = catalog.componentModel(name);
-            if (model != null) {
-                Row row = new Row();
-                row.name = model.getScheme();
-                row.title = model.getTitle();
-                row.level = model.getSupportLevel().name();
-                row.since = fixQuarkusSince(model.getFirstVersionShort());
-                row.description = model.getDescription();
-                row.label = model.getLabel() != null ? model.getLabel() : "";
-                row.deprecated = model.isDeprecated();
-                row.nativeSupported = model.isNativeSupported();
-                row.gav = getGAV(model);
-                rows.add(row);
-            }
+            Row row = new Row();
+            row.name = model.getScheme();
+            row.title = model.getTitle();
+            row.level = model.getSupportLevel().name();
+            row.since = model.getFirstVersionShort();
+            row.description = model.getDescription();
+            row.label = model.getLabel() != null ? model.getLabel() : "";
+            row.deprecated = model.isDeprecated();
+            row.gav = getGAV(model);
+            rows.add(row);
         }
         return rows;
     }

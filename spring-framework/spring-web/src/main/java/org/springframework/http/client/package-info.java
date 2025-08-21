@@ -3,7 +3,9 @@
  * contains the {@code ClientHttpRequest} and {@code ClientHttpResponse},
  * as well as a basic implementation of these interfaces.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.http.client;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

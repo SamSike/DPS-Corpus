@@ -18,10 +18,10 @@ package org.apache.camel.component.netty.http;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.test.AvailablePortFinder;
-import org.apache.hc.client5.http.classic.methods.HttpTrace;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpTrace;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -36,21 +36,25 @@ public class NettyHttpTraceDisabledTest extends BaseNettyTest {
 
     @Test
     public void testTraceDisabled() throws Exception {
-        HttpTrace trace = new HttpTrace("http://localhost:" + portTraceOff + "/myservice");
-        try (CloseableHttpClient client = HttpClients.createDefault();
-             CloseableHttpResponse response = client.execute(trace)) {
-            // TRACE shouldn't be allowed by default
-            assertEquals(405, response.getCode());
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            HttpTrace trace = new HttpTrace("http://localhost:" + portTraceOff + "/myservice");
+
+            try (CloseableHttpResponse response = client.execute(trace)) {
+                // TRACE shouldn't be allowed by default
+                assertEquals(405, response.getStatusLine().getStatusCode());
+            }
         }
     }
 
     @Test
     public void testTraceEnabled() throws Exception {
-        HttpTrace trace = new HttpTrace("http://localhost:" + portTraceOn + "/myservice");
-        try (CloseableHttpClient client = HttpClients.createDefault();
-             CloseableHttpResponse response = client.execute(trace)) {
-            // TRACE is allowed
-            assertEquals(200, response.getCode());
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            HttpTrace trace = new HttpTrace("http://localhost:" + portTraceOn + "/myservice");
+
+            try (CloseableHttpResponse response = client.execute(trace)) {
+                // TRACE is allowed
+                assertEquals(200, response.getStatusLine().getStatusCode());
+            }
         }
     }
 

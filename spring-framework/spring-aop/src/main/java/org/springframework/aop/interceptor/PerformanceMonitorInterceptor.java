@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.aop.interceptor;
 
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.util.StopWatch;
 
@@ -32,6 +31,7 @@ import org.springframework.util.StopWatch;
  * @author Dmitriy Kopylenko
  * @author Rob Harrop
  * @see org.springframework.util.StopWatch
+ * @see JamonPerformanceMonitorInterceptor
  */
 @SuppressWarnings("serial")
 public class PerformanceMonitorInterceptor extends AbstractMonitoringInterceptor {
@@ -54,7 +54,7 @@ public class PerformanceMonitorInterceptor extends AbstractMonitoringInterceptor
 
 
 	@Override
-	protected @Nullable Object invokeUnderTrace(MethodInvocation invocation, Log logger) throws Throwable {
+	protected Object invokeUnderTrace(MethodInvocation invocation, Log logger) throws Throwable {
 		String name = createInvocationTraceName(invocation);
 		StopWatch stopWatch = new StopWatch(name);
 		stopWatch.start(name);

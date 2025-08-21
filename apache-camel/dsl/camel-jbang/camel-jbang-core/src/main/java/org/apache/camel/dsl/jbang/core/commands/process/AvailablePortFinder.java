@@ -20,8 +20,43 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 class AvailablePortFinder {
+
+    private static final AvailablePortFinder INSTANCE = new AvailablePortFinder();
+
+    private class Port implements AutoCloseable {
+        final int port;
+
+        public Port(int port) {
+            this.port = port;
+        }
+
+        public int getPort() {
+            return port;
+        }
+
+        public void release() {
+            AvailablePortFinder.this.release(this);
+        }
+
+        public String toString() {
+            return Integer.toString(port);
+        }
+
+        @Override
+        public void close() {
+            release();
+        }
+    }
+
+    private final Map<Integer, Port> portMapping = new ConcurrentHashMap<>();
+
+    synchronized void release(Port port) {
+        INSTANCE.portMapping.remove(port.getPort(), port);
+    }
 
     /**
      * Gets the next available port in the given range.
@@ -32,14 +67,21 @@ class AvailablePortFinder {
      * @throws IllegalStateException if there are no ports available
      * @return                       the available port
      */
-    static int getNextAvailable(int fromPort, int toPort) {
-        return findPort(fromPort, toPort);
+    public static int getNextAvailable(int fromPort, int toPort) {
+        try (Port port = INSTANCE.findPort(fromPort, toPort)) {
+            return port.getPort();
+        }
     }
 
-    private static int findPort(int fromPort, int toPort) {
+    synchronized Port findPort(int fromPort, int toPort) {
         for (int i = fromPort; i <= toPort; i++) {
             try {
-                return probePort(i);
+                final int port = probePort(i);
+                Port p = new Port(port);
+                Port prv = INSTANCE.portMapping.putIfAbsent(port, p);
+                if (prv == null) {
+                    return p;
+                }
             } catch (IllegalStateException e) {
                 // do nothing, let's try the next port
             }
@@ -61,7 +103,8 @@ class AvailablePortFinder {
         try (ServerSocket ss = new ServerSocket()) {
             ss.setReuseAddress(true);
             ss.bind(new InetSocketAddress((InetAddress) null, port), 1);
-            return ss.getLocalPort();
+            int probedPort = ss.getLocalPort();
+            return probedPort;
         } catch (IOException e) {
             throw new IllegalStateException("Cannot find free port", e);
         }

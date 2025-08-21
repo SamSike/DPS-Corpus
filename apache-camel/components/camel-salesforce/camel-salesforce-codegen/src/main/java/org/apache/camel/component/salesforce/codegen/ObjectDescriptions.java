@@ -100,9 +100,6 @@ public final class ObjectDescriptions {
             // properties in order to minimize the code size
             // for CAMEL-11310
             return description.prune();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Interrupted while getting SObject description for '" + name + "'", e);
         } catch (final Exception e) {
             throw new IllegalStateException("Error getting SObject description for '" + name + "': " + e.getMessage(), e);
         }
@@ -134,9 +131,6 @@ public final class ObjectDescriptions {
             for (final SObject sObject : globalObjects.getSobjects()) {
                 objectNames.add(sObject.getName());
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Interrupted while getting global Objects", e);
         } catch (final Exception e) {
             throw new RuntimeException("Error getting global Objects: " + e.getMessage(), e);
         }
@@ -188,7 +182,7 @@ public final class ObjectDescriptions {
 
         // check whether a pattern is in effect
         Pattern incPattern;
-        if (includePattern != null && !includePattern.isBlank()) {
+        if (includePattern != null && !includePattern.trim().isEmpty()) {
             incPattern = Pattern.compile(includePattern.trim());
         } else if (includedNames.isEmpty()) {
             // include everything by default if no include names are set
@@ -200,7 +194,7 @@ public final class ObjectDescriptions {
 
         // check whether a pattern is in effect
         Pattern excPattern;
-        if (excludePattern != null && !excludePattern.isBlank()) {
+        if (excludePattern != null && !excludePattern.trim().isEmpty()) {
             excPattern = Pattern.compile(excludePattern.trim());
         } else {
             // exclude nothing by default

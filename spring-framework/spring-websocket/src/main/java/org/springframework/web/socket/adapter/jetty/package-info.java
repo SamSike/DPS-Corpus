@@ -1,7 +1,9 @@
 /**
  * Adapter classes for the Jetty WebSocket API.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.socket.adapter.jetty;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -16,13 +16,17 @@
  */
 package org.apache.camel.component.cxf.jaxws;
 
+import org.junit.jupiter.api.BeforeEach;
+
 /**
  * Test for throwing the CustomizedException from Camel CXF consumer with MESSAGE DataFormat
  */
 public class CxfMessageCustomizedExceptionTest extends CxfCustomizedExceptionTest {
 
+    @BeforeEach
     @Override
-    public void setupResources() {
+    public void setUp() throws Exception {
         routerEndpointURI = "cxf://" + routerAddress + "?" + SERVICE_CLASS + "&DataFormat=RAW";
+        super.setUp();
     }
 }

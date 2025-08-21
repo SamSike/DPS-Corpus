@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.web.reactive.result.method.annotation;
 
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +30,6 @@ import org.springframework.core.ReactiveAdapterRegistry;
 import org.springframework.core.codec.ByteArrayDecoder;
 import org.springframework.core.codec.ByteBufferDecoder;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -41,26 +39,22 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.BindingContext;
-import org.springframework.web.reactive.HandlerMapping;
-import org.springframework.web.reactive.accept.RequestedContentTypeResolverBuilder;
 import org.springframework.web.reactive.result.method.HandlerMethodArgumentResolver;
 import org.springframework.web.reactive.result.method.InvocableHandlerMethod;
 import org.springframework.web.reactive.result.method.SyncHandlerMethodArgumentResolver;
 import org.springframework.web.reactive.result.method.SyncInvocableHandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.testfixture.http.server.reactive.MockServerHttpRequest;
 import org.springframework.web.testfixture.method.ResolvableMethod;
-import org.springframework.web.testfixture.server.MockServerWebExchange;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link ControllerMethodResolver}.
+ * Unit tests for {@link ControllerMethodResolver}.
  *
  * @author Rossen Stoyanchev
  */
-class ControllerMethodResolverTests {
+public class ControllerMethodResolverTests {
 
 	private ControllerMethodResolver methodResolver;
 
@@ -68,7 +62,7 @@ class ControllerMethodResolverTests {
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		ArgumentResolverConfigurer resolvers = new ArgumentResolverConfigurer();
 		resolvers.addCustomResolver(new CustomArgumentResolver());
 		resolvers.addCustomResolver(new CustomSyncArgumentResolver());
@@ -82,9 +76,7 @@ class ControllerMethodResolverTests {
 		applicationContext.refresh();
 
 		this.methodResolver = new ControllerMethodResolver(
-				resolvers, ReactiveAdapterRegistry.getSharedInstance(), applicationContext,
-				new RequestedContentTypeResolverBuilder().build(), codecs.getReaders(),
-				null, null, null);
+				resolvers, ReactiveAdapterRegistry.getSharedInstance(), applicationContext, codecs.getReaders());
 
 		Method method = ResolvableMethod.on(TestController.class).mockCall(TestController::handle).method();
 		this.handlerMethod = new HandlerMethod(new TestController(), method);
@@ -92,7 +84,7 @@ class ControllerMethodResolverTests {
 
 
 	@Test
-	void requestMappingArgumentResolvers() {
+	public void requestMappingArgumentResolvers() {
 		InvocableHandlerMethod invocable = this.methodResolver.getRequestMappingMethod(this.handlerMethod);
 		List<HandlerMethodArgumentResolver> resolvers = invocable.getResolvers();
 
@@ -130,10 +122,10 @@ class ControllerMethodResolverTests {
 	}
 
 	@Test
-	void modelAttributeArgumentResolvers() {
+	public void modelAttributeArgumentResolvers() {
 		List<InvocableHandlerMethod> methods = this.methodResolver.getModelAttributeMethods(this.handlerMethod);
 
-		assertThat(methods).as("Expected one each from Controller + ControllerAdvice").hasSize(2);
+		assertThat(methods.size()).as("Expected one each from Controller + ControllerAdvice").isEqualTo(2);
 		InvocableHandlerMethod invocable = methods.get(0);
 		List<HandlerMethodArgumentResolver> resolvers = invocable.getResolvers();
 
@@ -167,11 +159,11 @@ class ControllerMethodResolverTests {
 	}
 
 	@Test
-	void initBinderArgumentResolvers() {
+	public void initBinderArgumentResolvers() {
 		List<SyncInvocableHandlerMethod> methods =
 				this.methodResolver.getInitBinderMethods(this.handlerMethod);
 
-		assertThat(methods).as("Expected one each from Controller + ControllerAdvice").hasSize(2);
+		assertThat(methods.size()).as("Expected one each from Controller + ControllerAdvice").isEqualTo(2);
 		SyncInvocableHandlerMethod invocable = methods.get(0);
 		List<SyncHandlerMethodArgumentResolver> resolvers = invocable.getResolvers();
 
@@ -197,10 +189,9 @@ class ControllerMethodResolverTests {
 	}
 
 	@Test
-	void exceptionHandlerArgumentResolvers() {
-		MockServerWebExchange serverWebExchange = MockServerWebExchange.builder(MockServerHttpRequest.get("/test").build()).build();
+	public void exceptionHandlerArgumentResolvers() {
 		InvocableHandlerMethod invocable = this.methodResolver.getExceptionHandlerMethod(
-				new ResponseStatusException(HttpStatus.BAD_REQUEST, "reason"), serverWebExchange, this.handlerMethod);
+				new ResponseStatusException(HttpStatus.BAD_REQUEST, "reason"), this.handlerMethod);
 
 		assertThat(invocable).as("No match").isNotNull();
 		assertThat(invocable.getBeanType()).isEqualTo(TestController.class);
@@ -233,41 +224,12 @@ class ControllerMethodResolverTests {
 	}
 
 	@Test
-	void exceptionHandlerFromControllerAdvice() {
-		MockServerWebExchange serverWebExchange = MockServerWebExchange.builder(MockServerHttpRequest.get("/test").build()).build();
+	public void exceptionHandlerFromControllerAdvice() {
 		InvocableHandlerMethod invocable = this.methodResolver.getExceptionHandlerMethod(
-				new IllegalStateException("reason"), serverWebExchange, this.handlerMethod);
+				new IllegalStateException("reason"), this.handlerMethod);
 
 		assertThat(invocable).isNotNull();
 		assertThat(invocable.getBeanType()).isEqualTo(TestControllerAdvice.class);
-	}
-
-	@Test
-	void exceptionHandlerWithMediaType() {
-		Method method = ResolvableMethod.on(ExceptionHandlerController.class).mockCall(ExceptionHandlerController::handle).method();
-		this.handlerMethod = new HandlerMethod(new ExceptionHandlerController(), method);
-		MockServerHttpRequest httpRequest = MockServerHttpRequest.get("/test").accept(MediaType.APPLICATION_JSON).build();
-		MockServerWebExchange serverWebExchange = MockServerWebExchange.builder(httpRequest).build();
-		InvocableHandlerMethod invocable = this.methodResolver.getExceptionHandlerMethod(
-				new ResponseStatusException(HttpStatus.BAD_REQUEST, "reason"), serverWebExchange, this.handlerMethod);
-
-		assertThat(invocable).as("No match").isNotNull();
-		assertThat(invocable.getBeanType()).isEqualTo(ExceptionHandlerController.class);
-		assertThat(invocable.getMethod().getName()).isEqualTo("handleExceptionJson");
-		Set<MediaType> producibleMediaTypes = serverWebExchange.getAttribute(HandlerMapping.PRODUCIBLE_MEDIA_TYPES_ATTRIBUTE);
-		assertThat(producibleMediaTypes).isNotEmpty().contains(MediaType.APPLICATION_JSON);
-	}
-
-	@Test
-	void exceptionHandlerWithInvalidAcceptHeader() {
-		Method method = ResolvableMethod.on(ExceptionHandlerController.class).mockCall(ExceptionHandlerController::handle).method();
-		this.handlerMethod = new HandlerMethod(new ExceptionHandlerController(), method);
-		MockServerHttpRequest httpRequest = MockServerHttpRequest.get("/test").header("Accept", "v=12").build();
-		MockServerWebExchange serverWebExchange = MockServerWebExchange.builder(httpRequest).build();
-		InvocableHandlerMethod invocable = this.methodResolver.getExceptionHandlerMethod(
-				new ResponseStatusException(HttpStatus.BAD_REQUEST, "reason"), serverWebExchange, this.handlerMethod);
-
-		assertThat(invocable).as("No match").isNotNull();
 	}
 
 
@@ -307,20 +269,6 @@ class ControllerMethodResolverTests {
 
 		@ExceptionHandler
 		void handleException(IllegalStateException ex) {}
-
-	}
-
-	@Controller
-	static class ExceptionHandlerController {
-
-		@GetMapping
-		void handle() {}
-
-		@ExceptionHandler(produces = "text/html")
-		void handleExceptionHtml(ResponseStatusException ex) {}
-
-		@ExceptionHandler(produces = "application/json")
-		void handleExceptionJson(ResponseStatusException ex) {}
 
 	}
 

@@ -42,7 +42,7 @@ public class LoggingEventNotifierTest extends ContextTestSupport {
         notifier.setIgnoreRouteEvents(true);
         notifier.setIgnoreServiceEvents(true);
 
-        CamelContext context = new DefaultCamelContext(createCamelRegistry());
+        CamelContext context = new DefaultCamelContext(createRegistry());
         context.getManagementStrategy().addEventNotifier(notifier);
 
         return context;
@@ -60,7 +60,7 @@ public class LoggingEventNotifierTest extends ContextTestSupport {
     }
 
     @Test
-    public void testExchangeFailed() {
+    public void testExchangeFailed() throws Exception {
         try {
             template.sendBody("direct:fail", "Hello World");
             fail("Should have thrown an exception");
@@ -73,10 +73,10 @@ public class LoggingEventNotifierTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("log:foo").to("mock:result");
 
                 from("direct:fail").throwException(new IllegalArgumentException("Damn"));

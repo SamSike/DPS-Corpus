@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.scheduling.quartz;
 
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -30,6 +29,7 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -50,11 +50,14 @@ import org.springframework.util.Assert;
 public class JobDetailFactoryBean
 		implements FactoryBean<JobDetail>, BeanNameAware, ApplicationContextAware, InitializingBean {
 
-	private @Nullable String name;
+	@Nullable
+	private String name;
 
-	private @Nullable String group;
+	@Nullable
+	private String group;
 
-	private @Nullable Class<? extends Job> jobClass;
+	@Nullable
+	private Class<? extends Job> jobClass;
 
 	private JobDataMap jobDataMap = new JobDataMap();
 
@@ -62,15 +65,20 @@ public class JobDetailFactoryBean
 
 	private boolean requestsRecovery = false;
 
-	private @Nullable String description;
+	@Nullable
+	private String description;
 
-	private @Nullable String beanName;
+	@Nullable
+	private String beanName;
 
-	private @Nullable ApplicationContext applicationContext;
+	@Nullable
+	private ApplicationContext applicationContext;
 
-	private @Nullable String applicationContextJobDataKey;
+	@Nullable
+	private String applicationContextJobDataKey;
 
-	private @Nullable JobDetail jobDetail;
+	@Nullable
+	private JobDetail jobDetail;
 
 
 	/**
@@ -133,7 +141,7 @@ public class JobDetailFactoryBean
 	}
 
 	/**
-	 * Set the recovery flag for this job, i.e. whether the job should
+	 * Set the recovery flag for this job, i.e. whether or not the job should
 	 * get re-executed if a 'recovery' or 'fail-over' situation is encountered.
 	 */
 	public void setRequestsRecovery(boolean requestsRecovery) {
@@ -210,7 +218,8 @@ public class JobDetailFactoryBean
 
 
 	@Override
-	public @Nullable JobDetail getObject() {
+	@Nullable
+	public JobDetail getObject() {
 		return this.jobDetail;
 	}
 

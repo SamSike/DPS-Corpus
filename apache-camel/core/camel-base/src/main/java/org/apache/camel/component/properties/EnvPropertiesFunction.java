@@ -17,7 +17,6 @@
 package org.apache.camel.component.properties;
 
 import org.apache.camel.spi.PropertiesFunction;
-import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.StringHelper;
 
 /**
@@ -40,7 +39,15 @@ public class EnvPropertiesFunction implements PropertiesFunction {
             defaultValue = StringHelper.after(remainder, ":");
         }
 
-        String value = IOHelper.lookupEnvironmentVariable(key);
+        // lookup OS environment variable using upper case key
+        key = key.toUpperCase();
+
+        String value = System.getenv(key);
+        // some OS do not support dashes in keys, so replace with underscore
+        if (value == null) {
+            String noDashKey = key.replace('-', '_');
+            value = System.getenv(noDashKey);
+        }
         return value != null ? value : defaultValue;
     }
 

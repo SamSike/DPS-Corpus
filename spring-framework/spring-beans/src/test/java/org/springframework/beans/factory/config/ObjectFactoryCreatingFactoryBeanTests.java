@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,13 +41,13 @@ import static org.springframework.core.testfixture.io.ResourceTestUtils.qualifie
  * @author Rick Evans
  * @author Chris Beams
  */
-class ObjectFactoryCreatingFactoryBeanTests {
+public class ObjectFactoryCreatingFactoryBeanTests {
 
 	private DefaultListableBeanFactory beanFactory;
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		this.beanFactory = new DefaultListableBeanFactory();
 		new XmlBeanDefinitionReader(this.beanFactory).loadBeanDefinitions(
 				qualifiedResource(ObjectFactoryCreatingFactoryBeanTests.class, "context.xml"));
@@ -55,23 +55,23 @@ class ObjectFactoryCreatingFactoryBeanTests {
 	}
 
 	@AfterEach
-	void close() {
+	public void close() {
 		this.beanFactory.setSerializationId(null);
 	}
 
 
 	@Test
-	void testFactoryOperation() {
+	public void testFactoryOperation() {
 		FactoryTestBean testBean = beanFactory.getBean("factoryTestBean", FactoryTestBean.class);
 		ObjectFactory<?> objectFactory = testBean.getObjectFactory();
 
 		Date date1 = (Date) objectFactory.getObject();
 		Date date2 = (Date) objectFactory.getObject();
-		assertThat(date1).isNotSameAs(date2);
+		assertThat(date1 != date2).isTrue();
 	}
 
 	@Test
-	void testFactorySerialization() throws Exception {
+	public void testFactorySerialization() throws Exception {
 		FactoryTestBean testBean = beanFactory.getBean("factoryTestBean", FactoryTestBean.class);
 		ObjectFactory<?> objectFactory = testBean.getObjectFactory();
 
@@ -79,21 +79,21 @@ class ObjectFactoryCreatingFactoryBeanTests {
 
 		Date date1 = (Date) objectFactory.getObject();
 		Date date2 = (Date) objectFactory.getObject();
-		assertThat(date1).isNotSameAs(date2);
+		assertThat(date1 != date2).isTrue();
 	}
 
 	@Test
-	void testProviderOperation() {
+	public void testProviderOperation() {
 		ProviderTestBean testBean = beanFactory.getBean("providerTestBean", ProviderTestBean.class);
 		Provider<?> provider = testBean.getProvider();
 
 		Date date1 = (Date) provider.get();
 		Date date2 = (Date) provider.get();
-		assertThat(date1).isNotSameAs(date2);
+		assertThat(date1 != date2).isTrue();
 	}
 
 	@Test
-	void testProviderSerialization() throws Exception {
+	public void testProviderSerialization() throws Exception {
 		ProviderTestBean testBean = beanFactory.getBean("providerTestBean", ProviderTestBean.class);
 		Provider<?> provider = testBean.getProvider();
 
@@ -101,15 +101,15 @@ class ObjectFactoryCreatingFactoryBeanTests {
 
 		Date date1 = (Date) provider.get();
 		Date date2 = (Date) provider.get();
-		assertThat(date1).isNotSameAs(date2);
+		assertThat(date1 != date2).isTrue();
 	}
 
 	@Test
-	void testDoesNotComplainWhenTargetBeanNameRefersToSingleton() throws Exception {
+	public void testDoesNotComplainWhenTargetBeanNameRefersToSingleton() throws Exception {
 		final String targetBeanName = "singleton";
 		final String expectedSingleton = "Alicia Keys";
 
-		BeanFactory beanFactory = mock();
+		BeanFactory beanFactory = mock(BeanFactory.class);
 		given(beanFactory.getBean(targetBeanName)).willReturn(expectedSingleton);
 
 		ObjectFactoryCreatingFactoryBean factory = new ObjectFactoryCreatingFactoryBean();
@@ -122,14 +122,14 @@ class ObjectFactoryCreatingFactoryBeanTests {
 	}
 
 	@Test
-	void testWhenTargetBeanNameIsNull() {
+	public void testWhenTargetBeanNameIsNull() throws Exception {
 		assertThatIllegalArgumentException().as(
 				"'targetBeanName' property not set").isThrownBy(
 						new ObjectFactoryCreatingFactoryBean()::afterPropertiesSet);
 	}
 
 	@Test
-	void testWhenTargetBeanNameIsEmptyString() {
+	public void testWhenTargetBeanNameIsEmptyString() throws Exception {
 		ObjectFactoryCreatingFactoryBean factory = new ObjectFactoryCreatingFactoryBean();
 		factory.setTargetBeanName("");
 		assertThatIllegalArgumentException().as(
@@ -138,7 +138,7 @@ class ObjectFactoryCreatingFactoryBeanTests {
 	}
 
 	@Test
-	void testWhenTargetBeanNameIsWhitespacedString() {
+	public void testWhenTargetBeanNameIsWhitespacedString() throws Exception {
 		ObjectFactoryCreatingFactoryBean factory = new ObjectFactoryCreatingFactoryBean();
 		factory.setTargetBeanName("  \t");
 		assertThatIllegalArgumentException().as(
@@ -147,7 +147,7 @@ class ObjectFactoryCreatingFactoryBeanTests {
 	}
 
 	@Test
-	void testEnsureOFBFBReportsThatItActuallyCreatesObjectFactoryInstances() {
+	public void testEnsureOFBFBReportsThatItActuallyCreatesObjectFactoryInstances() {
 		assertThat(new ObjectFactoryCreatingFactoryBean().getObjectType()).as("Must be reporting that it creates ObjectFactory instances (as per class contract).").isEqualTo(ObjectFactory.class);
 	}
 

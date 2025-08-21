@@ -24,14 +24,12 @@ import org.apache.camel.Route;
 import org.apache.camel.model.RouteTemplateDefinition;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class RouteTemplateDefaultValueTest extends ContextTestSupport {
 
     @Test
-    public void testDefineRouteTemplate() {
+    public void testDefineRouteTemplate() throws Exception {
         assertEquals(1, context.getRouteTemplateDefinitions().size());
 
         RouteTemplateDefinition routeTemplate = context.getRouteTemplateDefinition("myTemplate");
@@ -76,7 +74,7 @@ public class RouteTemplateDefaultValueTest extends ContextTestSupport {
     }
 
     @Test
-    public void testCreateRouteFromRouteTemplateMissingParameter() {
+    public void testCreateRouteFromRouteTemplateMissingParameter() throws Exception {
         assertEquals(1, context.getRouteTemplateDefinitions().size());
 
         RouteTemplateDefinition routeTemplate = context.getRouteTemplateDefinition("myTemplate");
@@ -84,18 +82,20 @@ public class RouteTemplateDefaultValueTest extends ContextTestSupport {
         assertEquals("bar", routeTemplate.getTemplateParameters().get(1).getName());
 
         Map<String, Object> parameters = new HashMap<>();
-
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
-                () -> context.addRouteFromTemplate(null, "myTemplate", parameters),
-                "Should throw exception");
-        assertEquals("Route template myTemplate the following mandatory parameters must be provided: foo", e.getMessage());
+        try {
+            context.addRouteFromTemplate(null, "myTemplate", parameters);
+            fail("Should throw exception");
+        } catch (IllegalArgumentException e) {
+            // bar has a default value so its only foo
+            assertEquals("Route template myTemplate the following mandatory parameters must be provided: foo", e.getMessage());
+        }
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 routeTemplate("myTemplate").templateParameter("foo").templateParameter("bar", "cake")
                         .from("direct:{{foo}}")
                         .to("mock:{{bar}}");

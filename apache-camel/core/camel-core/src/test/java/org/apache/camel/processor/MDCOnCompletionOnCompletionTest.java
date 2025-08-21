@@ -18,6 +18,7 @@ package org.apache.camel.processor;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -42,23 +43,23 @@ public class MDCOnCompletionOnCompletionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // enable MDC
                 context.setUseMDCLogging(true);
 
                 from("timer:foo?period=5000").routeId("route-a").setBody().constant("Hello World").onCompletion()
                         .process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
-                                exchange.getExchangeExtension().addOnCompletion(new MyOnCompletion());
+                            public void process(Exchange exchange) throws Exception {
+                                exchange.adapt(ExtendedExchange.class).addOnCompletion(new MyOnCompletion());
                             }
                         }).end().to("log:foo").to("direct:b");
 
                 from("direct:b").routeId("route-b").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         assertEquals("route-b", MDC.get("camel.routeId"));
                         assertEquals(exchange.getExchangeId(), MDC.get("camel.exchangeId"));
                         assertEquals(exchange.getIn().getMessageId(), MDC.get("camel.messageId"));
@@ -71,7 +72,7 @@ public class MDCOnCompletionOnCompletionTest extends ContextTestSupport {
         };
     }
 
-    private static class MyOnCompletion extends SynchronizationAdapter {
+    private class MyOnCompletion extends SynchronizationAdapter {
 
         @Override
         public void onDone(Exchange exchange) {

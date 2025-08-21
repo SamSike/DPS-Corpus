@@ -50,38 +50,26 @@ public abstract class AbstractDataFormatFeature extends AbstractFeature {
     protected void removeInterceptorWhichIsOutThePhases(
             List<Interceptor<? extends Message>> interceptors, String[] phaseNames, Set<String> needToBeKept) {
         for (Interceptor<? extends Message> i : interceptors) {
-            tryRemove(interceptors, phaseNames, needToBeKept, i);
-        }
-    }
-
-    private void tryRemove(
-            List<Interceptor<? extends Message>> interceptors, String[] phaseNames, Set<String> needToBeKept,
-            Interceptor<? extends Message> i) {
-        boolean outside = false;
-        if (i instanceof PhaseInterceptor) {
-            PhaseInterceptor<? extends Message> p = (PhaseInterceptor<? extends Message>) i;
-            for (String phaseName : phaseNames) {
-                if (p.getPhase().equals(phaseName)) {
-                    outside = true;
-                    break;
+            boolean outside = false;
+            if (i instanceof PhaseInterceptor) {
+                PhaseInterceptor<? extends Message> p = (PhaseInterceptor<? extends Message>) i;
+                for (String phaseName : phaseNames) {
+                    if (p.getPhase().equals(phaseName)) {
+                        outside = true;
+                        break;
+                    }
+                }
+                if (!outside) {
+                    // To support the old API
+                    if (needToBeKept == null) {
+                        getLogger().info("removing the interceptor {}", p);
+                        interceptors.remove(p);
+                    } else if (!needToBeKept.contains(p.getClass().getName())) {
+                        getLogger().info("removing the interceptor {}", p);
+                        interceptors.remove(p);
+                    }
                 }
             }
-            if (!outside) {
-                doRemove(interceptors, needToBeKept, p);
-            }
-        }
-    }
-
-    private void doRemove(
-            List<Interceptor<? extends Message>> interceptors, Set<String> needToBeKept,
-            PhaseInterceptor<? extends Message> p) {
-        // To support the old API
-        if (needToBeKept == null) {
-            getLogger().info("removing the interceptor {}", p);
-            interceptors.remove(p);
-        } else if (!needToBeKept.contains(p.getClass().getName())) {
-            getLogger().info("removing the interceptor {}", p);
-            interceptors.remove(p);
         }
     }
 

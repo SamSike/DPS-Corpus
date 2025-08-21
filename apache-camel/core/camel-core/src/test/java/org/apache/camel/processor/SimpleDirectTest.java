@@ -34,10 +34,10 @@ public class SimpleDirectTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("direct:foo").to("direct:bar").to("mock:result");
 
                 from("direct:foo").to("mock:foo");

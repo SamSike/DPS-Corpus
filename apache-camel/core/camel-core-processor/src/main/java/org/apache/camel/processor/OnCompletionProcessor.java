@@ -18,6 +18,7 @@ package org.apache.camel.processor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.camel.AsyncCallback;
@@ -25,6 +26,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.ExchangePropertyKey;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Message;
 import org.apache.camel.Ordered;
 import org.apache.camel.Predicate;
@@ -33,7 +35,6 @@ import org.apache.camel.Route;
 import org.apache.camel.Traceable;
 import org.apache.camel.spi.IdAware;
 import org.apache.camel.spi.RouteIdAware;
-import org.apache.camel.spi.SynchronizationRouteAware;
 import org.apache.camel.support.AsyncProcessorSupport;
 import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.SynchronizationAdapter;
@@ -41,7 +42,6 @@ import org.apache.camel.support.service.ServiceHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.camel.processor.ProcessorHelper.prepareMDCParallelTask;
 import static org.apache.camel.util.ObjectHelper.notNull;
 
 /**
@@ -162,26 +162,27 @@ public class OnCompletionProcessor extends AsyncProcessorSupport implements Trac
      * @param processor the processor
      * @param exchange  the exchange
      */
-    protected void doProcess(Processor processor, Exchange exchange) {
+    protected static void doProcess(Processor processor, Exchange exchange) {
+        ExtendedExchange ee = (ExtendedExchange) exchange;
         // must remember some properties which we cannot use during onCompletion processing
         // as otherwise we may cause issues
         // but keep the caused exception stored as a property (Exchange.EXCEPTION_CAUGHT) on the exchange
-        boolean stop = exchange.isRouteStop();
-        exchange.setRouteStop(false);
-        boolean failureHandled = exchange.getExchangeExtension().isFailureHandled();
-        Boolean errorhandlerHandled = exchange.getExchangeExtension().getErrorHandlerHandled();
-        exchange.getExchangeExtension().setErrorHandlerHandled(null);
-        boolean rollbackOnly = exchange.isRollbackOnly();
-        exchange.setRollbackOnly(false);
-        boolean rollbackOnlyLast = exchange.isRollbackOnlyLast();
-        exchange.setRollbackOnlyLast(false);
+        boolean stop = ee.isRouteStop();
+        ee.setRouteStop(false);
+        Object failureHandled = ee.removeProperty(ExchangePropertyKey.FAILURE_HANDLED);
+        Boolean errorhandlerHandled = ee.getErrorHandlerHandled();
+        ee.setErrorHandlerHandled(null);
+        boolean rollbackOnly = ee.isRollbackOnly();
+        ee.setRollbackOnly(false);
+        boolean rollbackOnlyLast = ee.isRollbackOnlyLast();
+        ee.setRollbackOnlyLast(false);
         // and we should not be regarded as exhausted as we are in a onCompletion block
-        boolean exhausted = exchange.getExchangeExtension().isRedeliveryExhausted();
-        exchange.getExchangeExtension().setRedeliveryExhausted(false);
+        boolean exhausted = ee.adapt(ExtendedExchange.class).isRedeliveryExhausted();
+        ee.setRedeliveryExhausted(false);
 
-        Exception cause = exchange.getException();
+        Exception cause = ee.getException();
         if (cause != null) {
-            exchange.setException(null);
+            ee.setException(null);
         }
 
         try {
@@ -190,22 +191,18 @@ public class OnCompletionProcessor extends AsyncProcessorSupport implements Trac
             exchange.setException(e);
         } finally {
             // restore the options
-            exchange.setRouteStop(stop);
-            if (failureHandled) {
-                exchange.getExchangeExtension().setFailureHandled(true);
+            ee.setRouteStop(stop);
+            if (failureHandled != null) {
+                ee.setProperty(ExchangePropertyKey.FAILURE_HANDLED, failureHandled);
             }
             if (errorhandlerHandled != null) {
-                exchange.getExchangeExtension().setErrorHandlerHandled(errorhandlerHandled);
+                ee.setErrorHandlerHandled(errorhandlerHandled);
             }
-            exchange.setRollbackOnly(rollbackOnly);
-            exchange.setRollbackOnlyLast(rollbackOnlyLast);
-            exchange.getExchangeExtension().setRedeliveryExhausted(exhausted);
+            ee.setRollbackOnly(rollbackOnly);
+            ee.setRollbackOnlyLast(rollbackOnlyLast);
+            ee.setRedeliveryExhausted(exhausted);
             if (cause != null) {
-                // if there is any exception in onCompletionProcessor, the exception should be suppressed
-                if (exchange.isFailed()) {
-                    cause.addSuppressed(exchange.getException());
-                }
-                exchange.setException(cause);
+                ee.setException(cause);
             }
         }
     }
@@ -266,27 +263,17 @@ public class OnCompletionProcessor extends AsyncProcessorSupport implements Trac
         }
 
         @Override
-        public SynchronizationRouteAware getRouteSynchronization() {
-            return new SynchronizationRouteAware() {
-                @Override
-                public void onBeforeRoute(Route route, Exchange exchange) {
-                    // NO-OP
+        @SuppressWarnings("unchecked")
+        public void onAfterRoute(Route route, Exchange exchange) {
+            // route scope = remember we have been at this route
+            if (routeScoped && route.getRouteId().equals(routeId)) {
+                List<String> routeIds = exchange.getProperty(ExchangePropertyKey.ON_COMPLETION_ROUTE_IDS, List.class);
+                if (routeIds == null) {
+                    routeIds = new ArrayList<>();
+                    exchange.setProperty(ExchangePropertyKey.ON_COMPLETION_ROUTE_IDS, routeIds);
                 }
-
-                @Override
-                public void onAfterRoute(Route route, Exchange exchange) {
-                    // route scope = remember we have been at this route
-                    if (routeScoped && route.getRouteId().equals(routeId)) {
-                        @SuppressWarnings("unchecked")
-                        List<String> routeIds = exchange.getProperty(ExchangePropertyKey.ON_COMPLETION_ROUTE_IDS, List.class);
-                        if (routeIds == null) {
-                            routeIds = new ArrayList<>();
-                            exchange.setProperty(ExchangePropertyKey.ON_COMPLETION_ROUTE_IDS, routeIds);
-                        }
-                        routeIds.add(route.getRouteId());
-                    }
-                }
-            };
+                routeIds.add(route.getRouteId());
+            }
         }
 
         @Override
@@ -299,12 +286,13 @@ public class OnCompletionProcessor extends AsyncProcessorSupport implements Trac
             final Exchange copy = prepareExchange(exchange);
 
             if (executorService != null) {
-                Runnable task = () -> {
-                    LOG.debug("Processing onComplete: {}", copy);
-                    doProcess(processor, copy);
-                };
-                task = prepareMDCParallelTask(camelContext, task);
-                executorService.submit(task);
+                executorService.submit(new Callable<Exchange>() {
+                    public Exchange call() throws Exception {
+                        LOG.debug("Processing onComplete: {}", copy);
+                        doProcess(processor, copy);
+                        return copy;
+                    }
+                });
             } else {
                 // run without thread-pool
                 LOG.debug("Processing onComplete: {}", copy);
@@ -328,14 +316,15 @@ public class OnCompletionProcessor extends AsyncProcessorSupport implements Trac
             }
 
             if (executorService != null) {
-                Runnable task = () -> {
-                    LOG.debug("Processing onFailure: {}", copy);
-                    doProcess(processor, copy);
-                    // restore exception after processing
-                    copy.setException(original);
-                };
-                task = prepareMDCParallelTask(camelContext, task);
-                executorService.submit(task);
+                executorService.submit(new Callable<Exchange>() {
+                    public Exchange call() throws Exception {
+                        LOG.debug("Processing onFailure: {}", copy);
+                        doProcess(processor, copy);
+                        // restore exception after processing
+                        copy.setException(original);
+                        return null;
+                    }
+                });
             } else {
                 // run without thread-pool
                 LOG.debug("Processing onFailure: {}", copy);
@@ -421,56 +410,47 @@ public class OnCompletionProcessor extends AsyncProcessorSupport implements Trac
         }
 
         @Override
-        public SynchronizationRouteAware getRouteSynchronization() {
-            return new SynchronizationRouteAware() {
-                @Override
-                public void onBeforeRoute(Route route, Exchange exchange) {
-                    // NO-OP
-                }
+        public void onAfterRoute(Route route, Exchange exchange) {
+            LOG.debug("onAfterRoute from Route {}", route.getRouteId());
+            // route scope = should be from this route
+            if (routeScoped && !route.getRouteId().equals(routeId)) {
+                return;
+            }
 
-                @Override
-                public void onAfterRoute(Route route, Exchange exchange) {
-                    LOG.debug("onAfterRoute from Route {}", route.getRouteId());
-                    // route scope = should be from this route
-                    if (routeScoped && !route.getRouteId().equals(routeId)) {
-                        return;
-                    }
+            // global scope = should be from the original route
+            if (!routeScoped && (!route.getRouteId().equals(routeId) || !exchange.getFromRouteId().equals(routeId))) {
+                return;
+            }
 
-                    // global scope = should be from the original route
-                    if (!routeScoped && (!route.getRouteId().equals(routeId) || !exchange.getFromRouteId().equals(routeId))) {
-                        return;
-                    }
+            if (exchange.isFailed() && onCompleteOnly) {
+                return;
+            }
 
-                    if (exchange.isFailed() && onCompleteOnly) {
-                        return;
-                    }
+            if (!exchange.isFailed() && onFailureOnly) {
+                return;
+            }
 
-                    if (!exchange.isFailed() && onFailureOnly) {
-                        return;
-                    }
+            if (onWhen != null && !onWhen.matches(exchange)) {
+                // predicate did not match so do not route the onComplete
+                return;
+            }
 
-                    if (onWhen != null && !onWhen.matches(exchange)) {
-                        // predicate did not match so do not route the onComplete
-                        return;
-                    }
+            // must use a copy as we don't want it to cause side effects of the original exchange
+            final Exchange copy = prepareExchange(exchange);
 
-                    // must use a copy as we don't want it to cause side effects of the original exchange
-                    final Exchange copy = prepareExchange(exchange);
-
-                    if (executorService != null) {
-                        Runnable task = () -> {
-                            LOG.debug("Processing onAfterRoute: {}", copy);
-                            doProcess(processor, copy);
-                        };
-                        task = prepareMDCParallelTask(camelContext, task);
-                        executorService.submit(task);
-                    } else {
-                        // run without thread-pool
+            if (executorService != null) {
+                executorService.submit(new Callable<Exchange>() {
+                    public Exchange call() throws Exception {
                         LOG.debug("Processing onAfterRoute: {}", copy);
                         doProcess(processor, copy);
+                        return copy;
                     }
-                }
-            };
+                });
+            } else {
+                // run without thread-pool
+                LOG.debug("Processing onAfterRoute: {}", copy);
+                doProcess(processor, copy);
+            }
         }
 
         @Override

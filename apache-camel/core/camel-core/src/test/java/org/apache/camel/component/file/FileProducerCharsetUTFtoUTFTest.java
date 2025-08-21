@@ -22,41 +22,40 @@ import java.nio.file.Files;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.util.ObjectHelper;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ *
+ */
 class FileProducerCharsetUTFtoUTFTest extends ContextTestSupport {
 
     private static final String DATA = "ABC\u00e6";
 
-    private static final String INPUT_FILE = "input." + FileProducerCharsetUTFtoUTFTest.class.getSimpleName() + ".txt";
-    private static final String OUTPUT_FILE = "output." + FileProducerCharsetUTFtoUTFTest.class.getSimpleName() + ".txt";
-
     @Test
     void testFileProducerCharsetUTFtoUTF() throws Exception {
         byte[] source = DATA.getBytes(StandardCharsets.UTF_8);
-        try (OutputStream fos = Files.newOutputStream(testFile(INPUT_FILE))) {
+        try (OutputStream fos = Files.newOutputStream(testFile("input.txt"))) {
             fos.write(source);
         }
 
         assertTrue(oneExchangeDone.matchesWaitTime());
 
-        assertFileExists(testFile(OUTPUT_FILE));
-        byte[] target = Files.readAllBytes(testFile(OUTPUT_FILE));
+        assertFileExists(testFile("output.txt"));
+        byte[] target = Files.readAllBytes(testFile("output.txt"));
 
-        assertArrayEquals(source, target, "The byte arrays should be equals but they are not.\n Source:\n" + new String(source)
-                                          + "\nTarget:\n" + new String(target));
+        assertTrue(ObjectHelper.equalByteArray(source, target));
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
-                fromF(fileUri("?initialDelay=0&delay=10&fileName=%s"), INPUT_FILE)
-                        .toF(fileUri("?fileName=%s&charset=utf-8"), OUTPUT_FILE);
+            public void configure() throws Exception {
+                from(fileUri("?initialDelay=0&delay=10&fileName=input.txt"))
+                        .to(fileUri("?fileName=output.txt&charset=utf-8"));
             }
         };
     }

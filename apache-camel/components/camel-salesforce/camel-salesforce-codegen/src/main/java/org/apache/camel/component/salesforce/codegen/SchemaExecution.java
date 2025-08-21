@@ -26,9 +26,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.jsonSchema.jakarta.JsonSchema;
+import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import org.apache.camel.component.salesforce.api.dto.SObjectDescription;
 import org.apache.camel.component.salesforce.api.utils.JsonUtils;
+import org.apache.camel.component.salesforce.internal.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,11 +51,11 @@ public class SchemaExecution extends AbstractSalesforceExecution {
     File outputDirectory;
 
     @Override
-    protected void executeWithClient() throws Exception {
+    protected void executeWithClient(RestClient client) throws Exception {
         getLog().info("Generating JSON Schema...");
 
         final ObjectDescriptions descriptions = new ObjectDescriptions(
-                getRestClient(), getResponseTimeout(), includes, includePattern, excludes, excludePattern, getLog());
+                client, getResponseTimeout(), includes, includePattern, excludes, excludePattern, getLog());
 
         // generate JSON schema for every object description
         final ObjectMapper schemaObjectMapper = JsonUtils.createSchemaObjectMapper();

@@ -37,10 +37,10 @@ public class InterceptFromPropertyPlaceholderTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 interceptFrom("seda:foo").to("mock:foo");
 
                 from("seda:{{queue}}").to("mock:result");

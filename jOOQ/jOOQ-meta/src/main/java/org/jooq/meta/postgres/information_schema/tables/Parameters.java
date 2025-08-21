@@ -4,8 +4,8 @@
 package org.jooq.meta.postgres.information_schema.tables;
 
 
-import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.ForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -85,26 +85,22 @@ public class Parameters extends TableImpl<Record> {
     public final TableField<Record, String> DATA_TYPE = createField(DSL.name("data_type"), SQLDataType.VARCHAR, this, "");
 
     /**
-     * The column
-     * <code>information_schema.parameters.character_maximum_length</code>.
+     * The column <code>information_schema.parameters.character_maximum_length</code>.
      */
     public final TableField<Record, Integer> CHARACTER_MAXIMUM_LENGTH = createField(DSL.name("character_maximum_length"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column
-     * <code>information_schema.parameters.character_octet_length</code>.
+     * The column <code>information_schema.parameters.character_octet_length</code>.
      */
     public final TableField<Record, Integer> CHARACTER_OCTET_LENGTH = createField(DSL.name("character_octet_length"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column
-     * <code>information_schema.parameters.character_set_catalog</code>.
+     * The column <code>information_schema.parameters.character_set_catalog</code>.
      */
     public final TableField<Record, String> CHARACTER_SET_CATALOG = createField(DSL.name("character_set_catalog"), SQLDataType.VARCHAR, this, "");
 
     /**
-     * The column
-     * <code>information_schema.parameters.character_set_schema</code>.
+     * The column <code>information_schema.parameters.character_set_schema</code>.
      */
     public final TableField<Record, String> CHARACTER_SET_SCHEMA = createField(DSL.name("character_set_schema"), SQLDataType.VARCHAR, this, "");
 
@@ -134,8 +130,7 @@ public class Parameters extends TableImpl<Record> {
     public final TableField<Record, Integer> NUMERIC_PRECISION = createField(DSL.name("numeric_precision"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column
-     * <code>information_schema.parameters.numeric_precision_radix</code>.
+     * The column <code>information_schema.parameters.numeric_precision_radix</code>.
      */
     public final TableField<Record, Integer> NUMERIC_PRECISION_RADIX = createField(DSL.name("numeric_precision_radix"), SQLDataType.INTEGER, this, "");
 
@@ -190,8 +185,7 @@ public class Parameters extends TableImpl<Record> {
     public final TableField<Record, String> SCOPE_NAME = createField(DSL.name("scope_name"), SQLDataType.VARCHAR, this, "");
 
     /**
-     * The column
-     * <code>information_schema.parameters.maximum_cardinality</code>.
+     * The column <code>information_schema.parameters.maximum_cardinality</code>.
      */
     public final TableField<Record, Integer> MAXIMUM_CARDINALITY = createField(DSL.name("maximum_cardinality"), SQLDataType.INTEGER, this, "");
 
@@ -206,24 +200,22 @@ public class Parameters extends TableImpl<Record> {
     public final TableField<Record, String> PARAMETER_DEFAULT = createField(DSL.name("parameter_default"), SQLDataType.VARCHAR, this, "");
 
     private Parameters(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Parameters(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view(), where);
+    private Parameters(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view());
     }
 
     /**
-     * Create an aliased <code>information_schema.parameters</code> table
-     * reference
+     * Create an aliased <code>information_schema.parameters</code> table reference
      */
     public Parameters(String alias) {
         this(DSL.name(alias), PARAMETERS);
     }
 
     /**
-     * Create an aliased <code>information_schema.parameters</code> table
-     * reference
+     * Create an aliased <code>information_schema.parameters</code> table reference
      */
     public Parameters(Name alias) {
         this(alias, PARAMETERS);
@@ -236,9 +228,13 @@ public class Parameters extends TableImpl<Record> {
         this(DSL.name("parameters"), null);
     }
 
+    public <O extends Record> Parameters(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, PARAMETERS);
+    }
+
     @Override
     public Schema getSchema() {
-        return aliased() ? null : InformationSchema.INFORMATION_SCHEMA;
+        return InformationSchema.INFORMATION_SCHEMA;
     }
 
     @Override
@@ -251,8 +247,19 @@ public class Parameters extends TableImpl<Record> {
         return new Parameters(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public Parameters as(Table<?> alias) {
-        return new Parameters(alias.getQualifiedName(), this);
+    public Parameters rename(String name) {
+        return new Parameters(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public Parameters rename(Name name) {
+        return new Parameters(name, null);
     }
 }

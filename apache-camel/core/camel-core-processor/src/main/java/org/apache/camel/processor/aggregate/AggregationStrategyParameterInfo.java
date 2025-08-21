@@ -50,7 +50,7 @@ public class AggregationStrategyParameterInfo {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder(256);
+        final StringBuilder sb = new StringBuilder();
         sb.append("ParameterInfo");
         sb.append("[index=").append(index);
         sb.append(", type=").append(type);

@@ -38,10 +38,10 @@ public class MulticastPipelineAggregateIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:a").multicast(new SumAggregateBean()).pipeline().bean(IncreaseOne.class).bean(new IncreaseTwo())
                         .end().pipeline().bean(IncreaseOne.class)
                         .bean(new IncreaseTwo()).end().end().to("mock:a");

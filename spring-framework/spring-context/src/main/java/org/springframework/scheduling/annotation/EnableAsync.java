@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,7 +104,8 @@ import org.springframework.core.Ordered;
  * }</pre>
  *
  * <p>If only one item needs to be customized, {@code null} can be returned to
- * keep the default settings.
+ * keep the default settings. Consider also extending from {@link AsyncConfigurerSupport}
+ * when possible.
  *
  * <p>Note: In the above example the {@code ThreadPoolTaskExecutor} is not a fully managed
  * Spring bean. Add the {@code @Bean} annotation to the {@code getAsyncExecutor()} method
@@ -133,7 +134,7 @@ import org.springframework.core.Ordered;
  * setting of the <em>thread name prefix</em> of the {@code Executor}; this is because
  * the {@code <task:executor>} element does not expose such an attribute. This
  * demonstrates how the JavaConfig-based approach allows for maximum configurability
- * through direct access to the actual component.
+ * through direct access to actual componentry.
  *
  * <p>The {@link #mode} attribute controls how advice is applied: If the mode is
  * {@link AdviceMode#PROXY} (the default), then the other attributes control the behavior
@@ -145,12 +146,6 @@ import org.springframework.core.Ordered;
  * this case the {@code spring-aspects} module JAR must be present on the classpath, with
  * compile-time weaving or load-time weaving applying the aspect to the affected classes.
  * There is no proxy involved in such a scenario; local calls will be intercepted as well.
- *
- * <p><b>Note: {@code @EnableAsync} applies to its local application context only,
- * allowing for selective activation at different levels.</b> Please redeclare
- * {@code @EnableAsync} in each individual context, for example, the common root web
- * application context and any separate {@code DispatcherServlet} application contexts,
- * if you need to apply its behavior at multiple levels.
  *
  * @author Chris Beams
  * @author Juergen Hoeller

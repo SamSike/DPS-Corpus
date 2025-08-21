@@ -51,7 +51,10 @@ public final class InetAddressUtil {
         } catch (UnknownHostException uhe) {
             String host = uhe.getMessage(); // host = "hostname: hostname"
             if (host != null) {
-                return StringHelper.before(host, ":");
+                int colon = host.indexOf(':');
+                if (colon > 0) {
+                    return host.substring(0, colon);
+                }
             }
             throw uhe;
         }

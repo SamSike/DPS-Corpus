@@ -24,7 +24,7 @@ import java.util.Map;
  */
 final class TestUtils {
 
-    static final String LS = System.lineSeparator();
+    protected static final String LS = System.lineSeparator();
 
     private TestUtils() {
         // Prevent instantiation

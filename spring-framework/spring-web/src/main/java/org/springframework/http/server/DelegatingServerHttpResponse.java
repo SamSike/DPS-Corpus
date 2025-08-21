@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.http.HttpStatus;
 import org.springframework.util.Assert;
 
 /**
@@ -52,7 +52,7 @@ public class DelegatingServerHttpResponse implements ServerHttpResponse {
 	}
 
 	@Override
-	public void setStatusCode(HttpStatusCode status) {
+	public void setStatusCode(HttpStatus status) {
 		this.delegate.setStatusCode(status);
 	}
 

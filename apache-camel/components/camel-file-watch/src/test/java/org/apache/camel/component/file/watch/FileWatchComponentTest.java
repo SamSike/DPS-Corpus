@@ -22,12 +22,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.file.watch.constants.FileEventEnum;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -94,13 +92,8 @@ public class FileWatchComponentTest extends FileWatchComponentTestBase {
         createFile(b.toFile(), "inB.txt");
         createFile(b.toFile(), "inB.java");
 
-        /*
-        On systems with slow IO, the time of creation and the time of notification may not be the reliably aligned (i.e; the
-        notification may be sent while the creation is still in progress).
-        As such, we have to be lenient checking for the expected number of exchanges received.
-         */
-        all.expectedMinimumMessageCount(8); // 2 directories, 6 files
-        Awaitility.await().atMost(2, TimeUnit.SECONDS).untilAsserted(() -> all.assertIsSatisfied());
+        all.expectedMessageCount(8); // 2 directories, 6 files
+        all.assertIsSatisfied();
 
         onlyTxtAnywhere.expectedMessageCount(3); // 3 txt files
         onlyTxtAnywhere.assertIsSatisfied();
@@ -132,7 +125,7 @@ public class FileWatchComponentTest extends FileWatchComponentTestBase {
                 .getHeader(FileWatchConstants.EVENT_TYPE_HEADER, FileEventEnum.class) == FileEventEnum.CREATE);
 
         for (int i = 0; i < 10; i++) {
-            createFile(testPath(), String.valueOf(i));
+            createFile(testPath(), i + "");
         }
 
         MockEndpoint.assertIsSatisfied(context);
@@ -142,32 +135,32 @@ public class FileWatchComponentTest extends FileWatchComponentTestBase {
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
-                fromF("file-watch://%s", testPath())
+                from("file-watch://" + testPath())
                         .routeId("watchAll")
                         .to("mock:watchAll");
 
-                fromF("file-watch://%s?events=CREATE&antInclude=*.txt", testPath())
+                from("file-watch://" + testPath() + "?events=CREATE&antInclude=*.txt")
                         .routeId("onlyTxtInRoot")
                         .to("mock:onlyTxtInRoot");
 
-                fromF("file-watch://%s?events=CREATE&antInclude=*/*.txt", testPath())
+                from("file-watch://" + testPath() + "?events=CREATE&antInclude=*/*.txt")
                         .routeId("onlyTxtInSubdirectory")
                         .to("mock:onlyTxtInSubdirectory");
 
-                fromF("file-watch://%s?events=CREATE&antInclude=**/*.txt", testPath())
+                from("file-watch://" + testPath() + "?events=CREATE&antInclude=**/*.txt")
                         .routeId("onlyTxtAnywhere")
                         .to("mock:onlyTxtAnywhere");
 
-                fromF("file-watch://%s?events=CREATE", testPath())
+                from("file-watch://" + testPath() + "?events=CREATE")
                         .to("mock:watchCreate");
 
-                fromF("file-watch://%s?events=MODIFY", testPath())
+                from("file-watch://" + testPath() + "?events=MODIFY")
                         .to("mock:watchModify");
 
-                fromF("file-watch://%s?events=DELETE,CREATE", testPath())
+                from("file-watch://" + testPath() + "?events=DELETE,CREATE")
                         .to("mock:watchDeleteOrCreate");
 
-                fromF("file-watch://%s?events=DELETE,MODIFY", testPath())
+                from("file-watch://" + testPath() + "?events=DELETE,MODIFY")
                         .to("mock:watchDeleteOrModify");
             }
         };

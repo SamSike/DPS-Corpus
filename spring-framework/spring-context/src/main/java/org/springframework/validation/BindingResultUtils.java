@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,7 @@ package org.springframework.validation;
 
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -38,19 +37,15 @@ public abstract class BindingResultUtils {
 	 * @return the BindingResult, or {@code null} if none found
 	 * @throws IllegalStateException if the attribute found is not of type BindingResult
 	 */
-	public static @Nullable BindingResult getBindingResult(Map<?, ?> model, String name) {
+	@Nullable
+	public static BindingResult getBindingResult(Map<?, ?> model, String name) {
 		Assert.notNull(model, "Model map must not be null");
 		Assert.notNull(name, "Name must not be null");
 		Object attr = model.get(BindingResult.MODEL_KEY_PREFIX + name);
-		if (attr == null) {
-			return null;
-		}
-		if (attr instanceof BindingResult bindingResult) {
-			return bindingResult;
-		}
-		else {
+		if (attr != null && !(attr instanceof BindingResult)) {
 			throw new IllegalStateException("BindingResult attribute is not of type BindingResult: " + attr);
 		}
+		return (BindingResult) attr;
 	}
 
 	/**

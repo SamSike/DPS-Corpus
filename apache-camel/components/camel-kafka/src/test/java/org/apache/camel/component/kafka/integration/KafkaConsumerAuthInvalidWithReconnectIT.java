@@ -16,18 +16,18 @@
  */
 package org.apache.camel.component.kafka.integration;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.kafka.MockConsumerInterceptor;
-import org.apache.camel.component.kafka.integration.common.KafkaAdminUtil;
-import org.apache.camel.component.kafka.integration.common.KafkaTestUtil;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.apache.camel.test.infra.core.annotations.RouteFixture;
+import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.infra.kafka.services.ContainerLocalAuthKafkaService;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
@@ -40,34 +40,28 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperties;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.fail;
 
-/**
- * A KafkaContainer that supports JAAS+SASL based authentication
- */
-@EnabledIfSystemProperties({
-        @EnabledIfSystemProperty(named = "kafka.instance.type", matches = "local-kafka3-container",
-                                 disabledReason = "Requires Kafka 3.x"),
-        @EnabledIfSystemProperty(named = "kafka.instance.type", matches = "kafka", disabledReason = "Requires Kafka 3.x")
-})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class KafkaConsumerAuthInvalidWithReconnectIT {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class KafkaConsumerAuthInvalidWithReconnectIT extends AbstractKafkaTestSupport {
     public static final String TOPIC = "test-auth-invalid-with-reconnect";
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaConsumerAuthInvalidWithReconnectIT.class);
 
     private static ContainerLocalAuthKafkaService service;
 
-    @RegisterExtension
-    private static final CamelContextExtension contextExtension = new DefaultCamelContextExtension();
+    @EndpointInject("mock:result")
+    private MockEndpoint to;
+
+    @EndpointInject("mock:dlq")
+    private MockEndpoint dlq;
 
     private org.apache.kafka.clients.producer.KafkaProducer<String, String> producer;
 
@@ -79,7 +73,16 @@ public class KafkaConsumerAuthInvalidWithReconnectIT {
     @BeforeAll
     public static void beforeClass() {
         service.initialize();
-        KafkaTestUtil.setServiceProperties(service);
+        AbstractKafkaTestSupport.setServiceProperties(service);
+    }
+
+    protected Properties getDefaultProperties() {
+        return getDefaultProperties(service);
+    }
+
+    @Override
+    protected CamelContext createCamelContext() throws Exception {
+        return createCamelContextFromService(service);
     }
 
     protected static String getBootstrapServers() {
@@ -89,7 +92,7 @@ public class KafkaConsumerAuthInvalidWithReconnectIT {
     @BeforeEach
     public void before() {
 
-        Properties props = KafkaTestUtil.getDefaultProperties(service);
+        Properties props = getDefaultProperties();
         props.put(SaslConfigs.SASL_JAAS_CONFIG,
                 ContainerLocalAuthKafkaService.generateSimpleSaslJaasConfig("camel", "camel-secret"));
         props.put("security.protocol", "SASL_PLAINTEXT");
@@ -111,11 +114,7 @@ public class KafkaConsumerAuthInvalidWithReconnectIT {
         }
     }
 
-    @RouteFixture
-    public void createRouteBuilder(CamelContext context) throws Exception {
-        context.addRoutes(createRouteBuilder());
-    }
-
+    @Override
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
 
@@ -124,28 +123,31 @@ public class KafkaConsumerAuthInvalidWithReconnectIT {
                 final String simpleSaslJaasConfig
                         = ContainerLocalAuthKafkaService.generateSimpleSaslJaasConfig("camel", "camel-secret");
 
-                fromF("kafka:%s?brokers=%s"
-                      + "&groupId=%s&autoOffsetReset=earliest&keyDeserializer=org.apache.kafka.common.serialization.StringDeserializer"
+                fromF("kafka:%s"
+                      + "?groupId=%s&autoOffsetReset=earliest&keyDeserializer=org.apache.kafka.common.serialization.StringDeserializer"
                       + "&valueDeserializer=org.apache.kafka.common.serialization.StringDeserializer"
                       + "&autoCommitIntervalMs=1000&pollTimeoutMs=1000&autoCommitEnable=true&pollOnError=RECONNECT"
                       + "&saslMechanism=PLAIN&securityProtocol=SASL_PLAINTEXT&saslJaasConfig=%s", TOPIC,
-                        service.getBootstrapServers(),
                         "KafkaConsumerAuthInvalidWithReconnectIT", simpleSaslJaasConfig)
-                        .process(
-                                exchange -> LOG.trace("Captured on the processor: {}", exchange.getMessage().getBody()))
-                        .routeId("full-it").to(KafkaTestUtil.MOCK_DLQ);
+                                .process(
+                                        exchange -> LOG.trace("Captured on the processor: {}", exchange.getMessage().getBody()))
+                                .routeId("full-it").to(to);
             }
         };
+    }
+
+    private Map<String, ConsumerGroupDescription> getConsumerGroupInfo(AdminClient adminClient, String groupId)
+            throws InterruptedException, ExecutionException, TimeoutException {
+        return adminClient.describeConsumerGroups(Collections.singletonList(groupId)).all().get(30, TimeUnit.SECONDS);
     }
 
     @Test
     @Order(1)
     void testIsDisconnected() {
-        AdminClient adminClient = KafkaAdminUtil.createAuthAdminClient(service);
+        AdminClient adminClient = BaseEmbeddedKafkaAuthTestSupport.createAuthAdminClient(service);
 
         final Map<String, ConsumerGroupDescription> allGroups
-                = assertDoesNotThrow(
-                        () -> KafkaAdminUtil.getConsumerGroupInfo("KafkaConsumerAuthInvalidWithReconnectIT", adminClient));
+                = assertDoesNotThrow(() -> getConsumerGroupInfo(adminClient, "KafkaConsumerAuthInvalidWithReconnectIT"));
         final ConsumerGroupDescription groupInfo = allGroups.get("KafkaConsumerAuthInvalidWithReconnectIT");
 
         Assert.assertEquals("There should be no members in this group", 0, groupInfo.members().size());
@@ -164,15 +166,14 @@ public class KafkaConsumerAuthInvalidWithReconnectIT {
 
         service.initialize();
 
-        AdminClient adminClient = KafkaAdminUtil.createAuthAdminClient(service);
+        AdminClient adminClient = BaseEmbeddedKafkaAuthTestSupport.createAuthAdminClient(service);
         Awaitility.await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> assertIsConnected(adminClient));
         adminClient.close();
     }
 
     private void assertIsConnected(AdminClient adminClient) {
         final Map<String, ConsumerGroupDescription> allGroups
-                = assertDoesNotThrow(
-                        () -> KafkaAdminUtil.getConsumerGroupInfo("KafkaConsumerAuthInvalidWithReconnectIT", adminClient));
+                = assertDoesNotThrow(() -> getConsumerGroupInfo(adminClient, "KafkaConsumerAuthInvalidWithReconnectIT"));
 
         Assert.assertTrue("There should be at least one group named KafkaConsumerAuthInvalidWithReconnectIT",
                 allGroups.size() >= 1);

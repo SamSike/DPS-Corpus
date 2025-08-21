@@ -33,10 +33,6 @@ import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @deprecated since 4.7
- */
-@Deprecated(since = "4.7")
 @ManagedResource(description = "Service Registration Route policy")
 public class ServiceRegistrationRoutePolicy extends RoutePolicySupport implements CamelContextAware {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServiceRegistrationRoutePolicy.class);
@@ -127,7 +123,9 @@ public class ServiceRegistrationRoutePolicy extends RoutePolicySupport implement
         final Endpoint endpoint = route.getConsumer().getEndpoint();
         final Map<String, String> properties = new HashMap<>();
 
-        if (endpoint instanceof DiscoverableService service) {
+        if (endpoint instanceof DiscoverableService) {
+            final DiscoverableService service = (DiscoverableService) endpoint;
+
             // first load all the properties from the endpoint
             properties.putAll(service.getServiceProperties());
         }

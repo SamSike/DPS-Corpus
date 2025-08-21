@@ -55,10 +55,10 @@ public class RouteTemplateCustomSourceTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 routeTemplate("myTemplate").templateParameter("foo").templateParameter("bar")
                         .from("direct:{{foo}}")
                         .to("mock:{{bar}}");
@@ -66,7 +66,7 @@ public class RouteTemplateCustomSourceTest extends ContextTestSupport {
         };
     }
 
-    private static class MyRouteTemplateParameterSource implements RouteTemplateParameterSource {
+    private class MyRouteTemplateParameterSource implements RouteTemplateParameterSource {
 
         @Override
         public Map<String, Object> parameters(String routeId) {

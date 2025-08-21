@@ -24,13 +24,13 @@ import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class MethodCallBeanRefNotFoundTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("foo", new MyFooBean());
         return jndi;
     }
@@ -39,21 +39,21 @@ public class MethodCallBeanRefNotFoundTest extends ContextTestSupport {
     public void testMethodCallBeanRefNotFound() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:a").routeId("a").split().method("foo", "hello").to("mock:a");
 
                 from("direct:b").routeId("b").split().method("bar", "hello").to("mock:b");
             }
         });
-
-        Exception e = assertThrows(Exception.class,
-                () -> context.start(),
-                "Should have thrown exception");
-
-        FailedToCreateRouteException failed = assertIsInstanceOf(FailedToCreateRouteException.class, e);
-        assertEquals("b", failed.getRouteId());
-        NoSuchBeanException cause = assertIsInstanceOf(NoSuchBeanException.class, e.getCause());
-        assertEquals("bar", cause.getName());
+        try {
+            context.start();
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            FailedToCreateRouteException failed = assertIsInstanceOf(FailedToCreateRouteException.class, e);
+            assertEquals("b", failed.getRouteId());
+            NoSuchBeanException cause = assertIsInstanceOf(NoSuchBeanException.class, e.getCause());
+            assertEquals("bar", cause.getName());
+        }
     }
 
     @Override

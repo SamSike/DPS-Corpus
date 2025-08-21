@@ -27,11 +27,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class MainTemplatedRoutePrefixIdTest {
 
     @Test
-    void testMain() {
+    void testMain() throws Exception {
         Main main = new Main();
         main.configure().addRoutesBuilder(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 routeTemplate("myTemplate")
                         .templateParameter("foo")
                         .templateParameter("bar")

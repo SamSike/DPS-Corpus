@@ -21,6 +21,7 @@ import java.util.List;
 import org.apache.camel.Channel;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Endpoint;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
 import org.apache.camel.impl.engine.DefaultRoute;
@@ -32,8 +33,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ContextErrorHandlerTest extends ContextTestSupport {
 
@@ -47,16 +46,16 @@ public class ContextErrorHandlerTest extends ContextTestSupport {
         redeliveryPolicy.setUseExponentialBackOff("true");
         DeadLetterChannelBuilder deadLetterChannelBuilder = new DeadLetterChannelBuilder("mock:error");
         deadLetterChannelBuilder.setRedeliveryPolicy(redeliveryPolicy);
-        context.getCamelContextExtension().setErrorHandlerFactory(deadLetterChannelBuilder);
+        context.adapt(ExtendedCamelContext.class).setErrorHandlerFactory(deadLetterChannelBuilder);
     }
 
     @Override
-    protected void startCamelContext() {
+    protected void startCamelContext() throws Exception {
         // do nothing here
     }
 
     @Override
-    protected void stopCamelContext() {
+    protected void stopCamelContext() throws Exception {
         // do nothing here
     }
 
@@ -88,10 +87,9 @@ public class ContextErrorHandlerTest extends ContextTestSupport {
             Processor processor = consumerRoute.getProcessor();
 
             Channel channel = unwrapChannel(processor);
-            assertNotNull(channel, "The channel should not be null");
             assertIsInstanceOf(DeadLetterChannel.class, channel.getErrorHandler());
             SendProcessor sendProcessor = assertIsInstanceOf(SendProcessor.class, channel.getNextProcessor());
-            log.debug("Found sendProcessor: {}", sendProcessor);
+            log.debug("Found sendProcessor: " + sendProcessor);
         }
     }
 
@@ -113,13 +111,12 @@ public class ContextErrorHandlerTest extends ContextTestSupport {
             Processor processor = consumerRoute.getProcessor();
 
             Channel channel = unwrapChannel(processor);
-            assertNotNull(channel, "The channel should not be null");
             DeadLetterChannel deadLetterChannel = assertIsInstanceOf(DeadLetterChannel.class, channel.getErrorHandler());
 
             RedeliveryPolicy redeliveryPolicy = deadLetterChannel.getRedeliveryPolicy();
 
             assertEquals(1, redeliveryPolicy.getMaximumRedeliveries(), "getMaximumRedeliveries()");
-            assertTrue(redeliveryPolicy.isUseExponentialBackOff(), "isUseExponentialBackOff()");
+            assertEquals(true, redeliveryPolicy.isUseExponentialBackOff(), "isUseExponentialBackOff()");
         }
     }
 

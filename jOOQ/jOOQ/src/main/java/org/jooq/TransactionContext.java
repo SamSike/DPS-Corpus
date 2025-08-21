@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,8 +37,6 @@
  */
 package org.jooq;
 
-import java.util.Set;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,11 +50,6 @@ import org.jetbrains.annotations.Nullable;
  * @author Lukas Eder
  */
 public interface TransactionContext extends Scope {
-
-    /**
-     * The transaction properties that the transaction was created with.
-     */
-    Set<TransactionProperty> properties();
 
     /**
      * A user-defined transaction object, possibly obtained from
@@ -73,27 +66,6 @@ public interface TransactionContext extends Scope {
      */
     @NotNull
     TransactionContext transaction(Transaction transaction);
-
-    /**
-     * The result of a {@link TransactionalCallable} or
-     * {@link ContextTransactionalCallable}, if the transaction has completed
-     * successfully.
-     *
-     * @return The result. May be <code>null</code> if the transaction hasn't
-     *         completed yet, or if there was no result (e.g. in a
-     *         {@link TransactionalRunnable} or
-     *         {@link ContextTransactionalRunnable}), or if the result is
-     *         <code>null</code>.
-     */
-    @Nullable
-    Object result();
-
-    /**
-     * Set the result of the {@link TransactionalCallable} or
-     * {@link ContextTransactionalCallable}.
-     */
-    @NotNull
-    TransactionContext result(Object result);
 
     /**
      * The exception that has caused the rollback.

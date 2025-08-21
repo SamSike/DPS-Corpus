@@ -38,7 +38,7 @@ public final class ResumeStrategyHelper {
 
     /**
      * Executes the resume operation
-     *
+     * 
      * @param  context        a camel context on which the registry will be searched for the resume action
      * @param  on             the calling instance for the resume operation
      * @param  resumeStrategy the instance of the {@link ResumeStrategy} to perform the resume
@@ -54,7 +54,7 @@ public final class ResumeStrategyHelper {
 
     /**
      * Executes the resume operation
-     *
+     * 
      * @param  context        a camel context on which the registry will be searched for the resume action
      * @param  on             the calling instance for the resume operation
      * @param  resumeStrategy the instance of the {@link ResumeStrategy} to perform the resume
@@ -82,11 +82,11 @@ public final class ResumeStrategyHelper {
             return;
         }
 
-        if (resumeAdapter instanceof ResumeActionAware resumeActionAware) {
+        if (resumeAdapter instanceof ResumeActionAware) {
             ResumeAction action = (ResumeAction) context.getRegistry().lookupByName(actionName);
             ObjectHelper.notNull(action, "The resume action cannot be null", on);
 
-            resumeActionAware.setResumeAction(action);
+            ((ResumeActionAware) resumeAdapter).setResumeAction(action);
         }
 
         resumeAdapter.resume();

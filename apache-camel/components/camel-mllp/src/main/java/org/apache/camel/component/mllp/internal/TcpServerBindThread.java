@@ -20,20 +20,14 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.SocketException;
-import java.security.GeneralSecurityException;
 import java.time.Duration;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLServerSocketFactory;
 
 import org.apache.camel.Route;
 import org.apache.camel.component.mllp.MllpTcpServerConsumer;
 import org.apache.camel.spi.UnitOfWork;
-import org.apache.camel.support.jsse.SSLContextParameters;
 import org.apache.camel.support.task.BlockingTask;
 import org.apache.camel.support.task.Tasks;
 import org.apache.camel.support.task.budget.Budgets;
-import org.apache.camel.util.StringHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -44,15 +38,18 @@ import org.slf4j.MDC;
 public class TcpServerBindThread extends Thread {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final MllpTcpServerConsumer consumer;
-    private final SSLContextParameters sslContextParameters;
 
-    public TcpServerBindThread(MllpTcpServerConsumer consumer, final SSLContextParameters sslParams) {
+    public TcpServerBindThread(MllpTcpServerConsumer consumer) {
         this.consumer = consumer;
-        this.sslContextParameters = sslParams;
 
         // Get the URI without options
         String fullEndpointKey = consumer.getEndpoint().getEndpointKey();
-        String endpointKey = StringHelper.before(fullEndpointKey, "?", fullEndpointKey);
+        String endpointKey;
+        if (fullEndpointKey.contains("?")) {
+            endpointKey = fullEndpointKey.substring(0, fullEndpointKey.indexOf('?'));
+        } else {
+            endpointKey = fullEndpointKey;
+        }
 
         this.setName(String.format("%s - %s", this.getClass().getSimpleName(), endpointKey));
     }
@@ -75,15 +72,7 @@ public class TcpServerBindThread extends Thread {
         try {
             // Note: this socket is going to be closed in the TcpServerAcceptThread instance
             // launched by the consumer
-            ServerSocket serverSocket;
-            if (sslContextParameters != null) {
-                log.debug("Initializing SSLContextParameters");
-                SSLContext sslContext = sslContextParameters.createSSLContext(consumer.getEndpoint().getCamelContext());
-                SSLServerSocketFactory sslServerSocketFactory = sslContext.getServerSocketFactory();
-                serverSocket = sslServerSocketFactory.createServerSocket();
-            } else {
-                serverSocket = new ServerSocket();
-            }
+            ServerSocket serverSocket = new ServerSocket();
             InetSocketAddress socketAddress = setupSocket(serverSocket);
 
             log.debug("Attempting to bind to {}", socketAddress);
@@ -91,9 +80,6 @@ public class TcpServerBindThread extends Thread {
             doAccept(serverSocket, socketAddress);
         } catch (IOException ioEx) {
             log.error("Unexpected exception encountered initializing ServerSocket before attempting to bind", ioEx);
-        } catch (GeneralSecurityException e) {
-            log.error("Error creating SSLContext for secure server socket", e);
-            throw new RuntimeException("SSLContext initialization failed", e);
         }
     }
 
@@ -106,7 +92,7 @@ public class TcpServerBindThread extends Thread {
                 .withName("mllp-tcp-server-accept")
                 .build();
 
-        if (task.run(consumer.getEndpoint().getCamelContext(), () -> doBind(serverSocket, socketAddress))) {
+        if (task.run(() -> doBind(serverSocket, socketAddress))) {
             consumer.startAcceptThread(serverSocket);
         } else {
             log.error("Failed to bind to address {} within timeout {}", socketAddress,

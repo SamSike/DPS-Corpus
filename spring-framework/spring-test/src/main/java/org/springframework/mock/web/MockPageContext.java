@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.jsp.JspWriter;
 import jakarta.servlet.jsp.PageContext;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -63,7 +63,8 @@ public class MockPageContext extends PageContext {
 
 	private final Map<String, Object> attributes = new LinkedHashMap<>();
 
-	private @Nullable JspWriter out;
+	@Nullable
+	private JspWriter out;
 
 
 	/**
@@ -153,37 +154,52 @@ public class MockPageContext extends PageContext {
 	public void setAttribute(String name, @Nullable Object value, int scope) {
 		Assert.notNull(name, "Attribute name must not be null");
 		switch (scope) {
-			case PAGE_SCOPE -> setAttribute(name, value);
-			case REQUEST_SCOPE -> this.request.setAttribute(name, value);
-			case SESSION_SCOPE -> this.request.getSession().setAttribute(name, value);
-			case APPLICATION_SCOPE -> this.servletContext.setAttribute(name, value);
-			default -> throw new IllegalArgumentException("Invalid scope: " + scope);
+			case PAGE_SCOPE:
+				setAttribute(name, value);
+				break;
+			case REQUEST_SCOPE:
+				this.request.setAttribute(name, value);
+				break;
+			case SESSION_SCOPE:
+				this.request.getSession().setAttribute(name, value);
+				break;
+			case APPLICATION_SCOPE:
+				this.servletContext.setAttribute(name, value);
+				break;
+			default:
+				throw new IllegalArgumentException("Invalid scope: " + scope);
 		}
 	}
 
 	@Override
-	public @Nullable Object getAttribute(String name) {
+	@Nullable
+	public Object getAttribute(String name) {
 		Assert.notNull(name, "Attribute name must not be null");
 		return this.attributes.get(name);
 	}
 
 	@Override
-	public @Nullable Object getAttribute(String name, int scope) {
+	@Nullable
+	public Object getAttribute(String name, int scope) {
 		Assert.notNull(name, "Attribute name must not be null");
-		return switch (scope) {
-			case PAGE_SCOPE -> getAttribute(name);
-			case REQUEST_SCOPE -> this.request.getAttribute(name);
-			case SESSION_SCOPE -> {
+		switch (scope) {
+			case PAGE_SCOPE:
+				return getAttribute(name);
+			case REQUEST_SCOPE:
+				return this.request.getAttribute(name);
+			case SESSION_SCOPE:
 				HttpSession session = this.request.getSession(false);
-				yield (session != null ? session.getAttribute(name) : null);
-			}
-			case APPLICATION_SCOPE -> this.servletContext.getAttribute(name);
-			default -> throw new IllegalArgumentException("Invalid scope: " + scope);
-		};
+				return (session != null ? session.getAttribute(name) : null);
+			case APPLICATION_SCOPE:
+				return this.servletContext.getAttribute(name);
+			default:
+				throw new IllegalArgumentException("Invalid scope: " + scope);
+		}
 	}
 
 	@Override
-	public @Nullable Object findAttribute(String name) {
+	@Nullable
+	public Object findAttribute(String name) {
 		Object value = getAttribute(name);
 		if (value == null) {
 			value = getAttribute(name, REQUEST_SCOPE);
@@ -210,11 +226,20 @@ public class MockPageContext extends PageContext {
 	public void removeAttribute(String name, int scope) {
 		Assert.notNull(name, "Attribute name must not be null");
 		switch (scope) {
-			case PAGE_SCOPE -> this.attributes.remove(name);
-			case REQUEST_SCOPE -> this.request.removeAttribute(name);
-			case SESSION_SCOPE -> this.request.getSession().removeAttribute(name);
-			case APPLICATION_SCOPE -> this.servletContext.removeAttribute(name);
-			default -> throw new IllegalArgumentException("Invalid scope: " + scope);
+			case PAGE_SCOPE:
+				this.attributes.remove(name);
+				break;
+			case REQUEST_SCOPE:
+				this.request.removeAttribute(name);
+				break;
+			case SESSION_SCOPE:
+				this.request.getSession().removeAttribute(name);
+				break;
+			case APPLICATION_SCOPE:
+				this.servletContext.removeAttribute(name);
+				break;
+			default:
+				throw new IllegalArgumentException("Invalid scope: " + scope);
 		}
 	}
 
@@ -243,16 +268,19 @@ public class MockPageContext extends PageContext {
 
 	@Override
 	public Enumeration<String> getAttributeNamesInScope(int scope) {
-		return switch (scope) {
-			case PAGE_SCOPE -> getAttributeNames();
-			case REQUEST_SCOPE -> this.request.getAttributeNames();
-			case SESSION_SCOPE -> {
+		switch (scope) {
+			case PAGE_SCOPE:
+				return getAttributeNames();
+			case REQUEST_SCOPE:
+				return this.request.getAttributeNames();
+			case SESSION_SCOPE:
 				HttpSession session = this.request.getSession(false);
-				yield (session != null ? session.getAttributeNames() : Collections.emptyEnumeration());
-			}
-			case APPLICATION_SCOPE -> this.servletContext.getAttributeNames();
-			default -> throw new IllegalArgumentException("Invalid scope: " + scope);
-		};
+				return (session != null ? session.getAttributeNames() : Collections.emptyEnumeration());
+			case APPLICATION_SCOPE:
+				return this.servletContext.getAttributeNames();
+			default:
+				throw new IllegalArgumentException("Invalid scope: " + scope);
+		}
 	}
 
 	@Override
@@ -264,7 +292,22 @@ public class MockPageContext extends PageContext {
 	}
 
 	@Override
-	public @Nullable ELContext getELContext() {
+	@Deprecated
+	@Nullable
+	public jakarta.servlet.jsp.el.ExpressionEvaluator getExpressionEvaluator() {
+		return null;
+	}
+
+	@Override
+	@Nullable
+	public ELContext getELContext() {
+		return null;
+	}
+
+	@Override
+	@Deprecated
+	@Nullable
+	public jakarta.servlet.jsp.el.VariableResolver getVariableResolver() {
 		return null;
 	}
 
@@ -289,7 +332,8 @@ public class MockPageContext extends PageContext {
 	}
 
 	@Override
-	public @Nullable Exception getException() {
+	@Nullable
+	public Exception getException() {
 		return null;
 	}
 
@@ -322,17 +366,13 @@ public class MockPageContext extends PageContext {
 	}
 
 	public byte[] getContentAsByteArray() {
-		if (this.response instanceof MockHttpServletResponse mockResponse) {
-			return mockResponse.getContentAsByteArray();
-		}
-		throw new IllegalStateException("MockHttpServletResponse is required");
+		Assert.state(this.response instanceof MockHttpServletResponse, "MockHttpServletResponse required");
+		return ((MockHttpServletResponse) this.response).getContentAsByteArray();
 	}
 
 	public String getContentAsString() throws UnsupportedEncodingException {
-		if (this.response instanceof MockHttpServletResponse mockResponse) {
-			return mockResponse.getContentAsString();
-		}
-		throw new IllegalStateException("MockHttpServletResponse is required");
+		Assert.state(this.response instanceof MockHttpServletResponse, "MockHttpServletResponse required");
+		return ((MockHttpServletResponse) this.response).getContentAsString();
 	}
 
 	@Override

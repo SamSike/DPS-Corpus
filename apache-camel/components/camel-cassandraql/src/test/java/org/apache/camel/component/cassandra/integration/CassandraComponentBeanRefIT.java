@@ -16,10 +16,10 @@
  */
 package org.apache.camel.component.cassandra.integration;
 
-import com.datastax.oss.driver.api.core.CqlSession;
-import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.cassandra.CassandraEndpoint;
+import org.apache.camel.spi.Registry;
+import org.apache.camel.support.SimpleRegistry;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,8 +29,12 @@ public class CassandraComponentBeanRefIT extends BaseCassandra {
     public static final String CQL = "insert into camel_user(login, first_name, last_name) values (?, ?, ?)";
     public static final String SESSION_URI = "cql:bean:cassandraSession?cql=" + CQL;
 
-    @BindToRegistry("cassandraSession")
-    private CqlSession session = getSession();
+    @Override
+    protected Registry createCamelRegistry() {
+        SimpleRegistry registry = new SimpleRegistry();
+        registry.bind("cassandraSession", getSession());
+        return registry;
+    }
 
     @Override
     protected RouteBuilder createRouteBuilder() {

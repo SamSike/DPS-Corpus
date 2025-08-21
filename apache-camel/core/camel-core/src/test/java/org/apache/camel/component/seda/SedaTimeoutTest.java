@@ -25,9 +25,7 @@ import org.apache.camel.ExchangeTimedOutException;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SedaTimeoutTest extends ContextTestSupport {
     private int timeout = 100;
@@ -39,17 +37,19 @@ public class SedaTimeoutTest extends ContextTestSupport {
     }
 
     @Test
-    public void testSedaTimeout() {
+    public void testSedaTimeout() throws Exception {
         Future<String> out = template.asyncRequestBody("seda:foo?timeout=" + timeout, "World", String.class);
+        try {
+            out.get();
+            fail("Should have thrown an exception");
+        } catch (ExecutionException e) {
+            assertIsInstanceOf(CamelExecutionException.class, e.getCause());
+            assertIsInstanceOf(ExchangeTimedOutException.class, e.getCause().getCause());
 
-        ExecutionException e = assertThrows(ExecutionException.class, out::get, "Should have thrown an exception");
-
-        assertIsInstanceOf(CamelExecutionException.class, e.getCause());
-        assertIsInstanceOf(ExchangeTimedOutException.class, e.getCause().getCause());
-
-        SedaEndpoint se = (SedaEndpoint) context.getRoute("seda").getEndpoint();
-        assertNotNull(se, "Consumer endpoint cannot be null");
-        assertEquals(0, se.getCurrentQueueSize(), "Timeout Exchanges should be removed from queue");
+            SedaEndpoint se = (SedaEndpoint) context.getRoute("seda").getEndpoint();
+            assertNotNull(se, "Consumer endpoint cannot be null");
+            assertEquals(0, se.getCurrentQueueSize(), "Timeout Exchanges should be removed from queue");
+        }
     }
 
     @Test
@@ -60,10 +60,10 @@ public class SedaTimeoutTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo").routeId("seda").to("mock:before").delay(250).transform(body().prepend("Bye "))
                         .to("mock:result");
             }

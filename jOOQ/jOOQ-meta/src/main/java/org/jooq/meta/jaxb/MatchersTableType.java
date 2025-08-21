@@ -27,29 +27,20 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class MatchersTableType implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String expression;
     protected MatcherRule tableClass;
     protected MatcherRule tableIdentifier;
     @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String tableExtends;
-    @XmlJavaTypeAdapter(StringAdapter.class)
     protected String tableImplements;
-    protected MatcherRule pathClass;
-    protected MatcherRule pathExtends;
-    protected MatcherRule pathImplements;
     protected MatcherRule recordClass;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String recordExtends;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String recordImplements;
     protected MatcherRule interfaceClass;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String interfaceImplements;
     protected MatcherRule daoClass;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String daoExtends;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String daoImplements;
     protected MatcherRule pojoClass;
@@ -107,30 +98,6 @@ public class MatchersTableType implements Serializable, XMLAppendable
     }
 
     /**
-     * This string provides a super class that a generated {@link org.jooq.Table} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.Table} does, so to minimise
-     * unexpected behaviour, custom table super classes should extend {@link org.jooq.impl.TableImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public String getTableExtends() {
-        return tableExtends;
-    }
-
-    /**
-     * This string provides a super class that a generated {@link org.jooq.Table} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.Table} does, so to minimise
-     * unexpected behaviour, custom table super classes should extend {@link org.jooq.impl.TableImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public void setTableExtends(String value) {
-        this.tableExtends = value;
-    }
-
-    /**
      * This string provides additional interfaces that a generated {@link org.jooq.Table} should implement.
      * 
      */
@@ -147,54 +114,6 @@ public class MatchersTableType implements Serializable, XMLAppendable
     }
 
     /**
-     * This rule influences the naming of the generated {@link org.jooq.Table} and {@link org.jooq.Path} object.
-     * 
-     */
-    public MatcherRule getPathClass() {
-        return pathClass;
-    }
-
-    /**
-     * This rule influences the naming of the generated {@link org.jooq.Table} and {@link org.jooq.Path} object.
-     * 
-     */
-    public void setPathClass(MatcherRule value) {
-        this.pathClass = value;
-    }
-
-    /**
-     * This string provides a super class that a generated {@link org.jooq.Table} and {@link org.jooq.Path} object should extend.
-     * 
-     */
-    public MatcherRule getPathExtends() {
-        return pathExtends;
-    }
-
-    /**
-     * This string provides a super class that a generated {@link org.jooq.Table} and {@link org.jooq.Path} object should extend.
-     * 
-     */
-    public void setPathExtends(MatcherRule value) {
-        this.pathExtends = value;
-    }
-
-    /**
-     * This string provides additional interfaces that a generated {@link org.jooq.Table} and {@link org.jooq.Path} object should implement.
-     * 
-     */
-    public MatcherRule getPathImplements() {
-        return pathImplements;
-    }
-
-    /**
-     * This string provides additional interfaces that a generated {@link org.jooq.Table} and {@link org.jooq.Path} object should implement.
-     * 
-     */
-    public void setPathImplements(MatcherRule value) {
-        this.pathImplements = value;
-    }
-
-    /**
      * This rule influences the naming of the generated {@link org.jooq.TableRecord} object.
      * 
      */
@@ -208,30 +127,6 @@ public class MatchersTableType implements Serializable, XMLAppendable
      */
     public void setRecordClass(MatcherRule value) {
         this.recordClass = value;
-    }
-
-    /**
-     * This string provides a super class that a generated {@link org.jooq.TableRecord} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.TableRecord} does, so to minimise
-     * unexpected behaviour, custom table record super classes should extend {@link org.jooq.impl.TableRecordImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public String getRecordExtends() {
-        return recordExtends;
-    }
-
-    /**
-     * This string provides a super class that a generated {@link org.jooq.TableRecord} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.TableRecord} does, so to minimise
-     * unexpected behaviour, custom table record super classes should extend {@link org.jooq.impl.TableRecordImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public void setRecordExtends(String value) {
-        this.recordExtends = value;
     }
 
     /**
@@ -296,30 +191,6 @@ public class MatchersTableType implements Serializable, XMLAppendable
      */
     public void setDaoClass(MatcherRule value) {
         this.daoClass = value;
-    }
-
-    /**
-     * This string provides a super class that a generated {@link org.jooq.DAO} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.DAO} does, so to minimise
-     * unexpected behaviour, custom DAO super classes should extend {@link org.jooq.impl.DAOImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public String getDaoExtends() {
-        return daoExtends;
-    }
-
-    /**
-     * This string provides a super class that a generated {@link org.jooq.DAO} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.DAO} does, so to minimise
-     * unexpected behaviour, custom DAO super classes should extend {@link org.jooq.impl.DAOImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public void setDaoExtends(String value) {
-        this.daoExtends = value;
     }
 
     /**
@@ -414,19 +285,6 @@ public class MatchersTableType implements Serializable, XMLAppendable
     }
 
     /**
-     * This string provides a super class that a generated {@link org.jooq.Table} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.Table} does, so to minimise
-     * unexpected behaviour, custom table super classes should extend {@link org.jooq.impl.TableImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public MatchersTableType withTableExtends(String value) {
-        setTableExtends(value);
-        return this;
-    }
-
-    /**
      * This string provides additional interfaces that a generated {@link org.jooq.Table} should implement.
      * 
      */
@@ -436,51 +294,11 @@ public class MatchersTableType implements Serializable, XMLAppendable
     }
 
     /**
-     * This rule influences the naming of the generated {@link org.jooq.Table} and {@link org.jooq.Path} object.
-     * 
-     */
-    public MatchersTableType withPathClass(MatcherRule value) {
-        setPathClass(value);
-        return this;
-    }
-
-    /**
-     * This string provides a super class that a generated {@link org.jooq.Table} and {@link org.jooq.Path} object should extend.
-     * 
-     */
-    public MatchersTableType withPathExtends(MatcherRule value) {
-        setPathExtends(value);
-        return this;
-    }
-
-    /**
-     * This string provides additional interfaces that a generated {@link org.jooq.Table} and {@link org.jooq.Path} object should implement.
-     * 
-     */
-    public MatchersTableType withPathImplements(MatcherRule value) {
-        setPathImplements(value);
-        return this;
-    }
-
-    /**
      * This rule influences the naming of the generated {@link org.jooq.TableRecord} object.
      * 
      */
     public MatchersTableType withRecordClass(MatcherRule value) {
         setRecordClass(value);
-        return this;
-    }
-
-    /**
-     * This string provides a super class that a generated {@link org.jooq.TableRecord} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.TableRecord} does, so to minimise
-     * unexpected behaviour, custom table record super classes should extend {@link org.jooq.impl.TableRecordImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public MatchersTableType withRecordExtends(String value) {
-        setRecordExtends(value);
         return this;
     }
 
@@ -517,19 +335,6 @@ public class MatchersTableType implements Serializable, XMLAppendable
      */
     public MatchersTableType withDaoClass(MatcherRule value) {
         setDaoClass(value);
-        return this;
-    }
-
-    /**
-     * This string provides a super class that a generated {@link org.jooq.DAO} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.DAO} does, so to minimise
-     * unexpected behaviour, custom DAO super classes should extend {@link org.jooq.impl.DAOImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public MatchersTableType withDaoExtends(String value) {
-        setDaoExtends(value);
         return this;
     }
 
@@ -574,18 +379,12 @@ public class MatchersTableType implements Serializable, XMLAppendable
         builder.append("expression", expression);
         builder.append("tableClass", tableClass);
         builder.append("tableIdentifier", tableIdentifier);
-        builder.append("tableExtends", tableExtends);
         builder.append("tableImplements", tableImplements);
-        builder.append("pathClass", pathClass);
-        builder.append("pathExtends", pathExtends);
-        builder.append("pathImplements", pathImplements);
         builder.append("recordClass", recordClass);
-        builder.append("recordExtends", recordExtends);
         builder.append("recordImplements", recordImplements);
         builder.append("interfaceClass", interfaceClass);
         builder.append("interfaceImplements", interfaceImplements);
         builder.append("daoClass", daoClass);
-        builder.append("daoExtends", daoExtends);
         builder.append("daoImplements", daoImplements);
         builder.append("pojoClass", pojoClass);
         builder.append("pojoExtends", pojoExtends);
@@ -638,15 +437,6 @@ public class MatchersTableType implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (tableExtends == null) {
-            if (other.tableExtends!= null) {
-                return false;
-            }
-        } else {
-            if (!tableExtends.equals(other.tableExtends)) {
-                return false;
-            }
-        }
         if (tableImplements == null) {
             if (other.tableImplements!= null) {
                 return false;
@@ -656,48 +446,12 @@ public class MatchersTableType implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (pathClass == null) {
-            if (other.pathClass!= null) {
-                return false;
-            }
-        } else {
-            if (!pathClass.equals(other.pathClass)) {
-                return false;
-            }
-        }
-        if (pathExtends == null) {
-            if (other.pathExtends!= null) {
-                return false;
-            }
-        } else {
-            if (!pathExtends.equals(other.pathExtends)) {
-                return false;
-            }
-        }
-        if (pathImplements == null) {
-            if (other.pathImplements!= null) {
-                return false;
-            }
-        } else {
-            if (!pathImplements.equals(other.pathImplements)) {
-                return false;
-            }
-        }
         if (recordClass == null) {
             if (other.recordClass!= null) {
                 return false;
             }
         } else {
             if (!recordClass.equals(other.recordClass)) {
-                return false;
-            }
-        }
-        if (recordExtends == null) {
-            if (other.recordExtends!= null) {
-                return false;
-            }
-        } else {
-            if (!recordExtends.equals(other.recordExtends)) {
                 return false;
             }
         }
@@ -734,15 +488,6 @@ public class MatchersTableType implements Serializable, XMLAppendable
             }
         } else {
             if (!daoClass.equals(other.daoClass)) {
-                return false;
-            }
-        }
-        if (daoExtends == null) {
-            if (other.daoExtends!= null) {
-                return false;
-            }
-        } else {
-            if (!daoExtends.equals(other.daoExtends)) {
                 return false;
             }
         }
@@ -792,18 +537,12 @@ public class MatchersTableType implements Serializable, XMLAppendable
         result = ((prime*result)+((expression == null)? 0 :expression.hashCode()));
         result = ((prime*result)+((tableClass == null)? 0 :tableClass.hashCode()));
         result = ((prime*result)+((tableIdentifier == null)? 0 :tableIdentifier.hashCode()));
-        result = ((prime*result)+((tableExtends == null)? 0 :tableExtends.hashCode()));
         result = ((prime*result)+((tableImplements == null)? 0 :tableImplements.hashCode()));
-        result = ((prime*result)+((pathClass == null)? 0 :pathClass.hashCode()));
-        result = ((prime*result)+((pathExtends == null)? 0 :pathExtends.hashCode()));
-        result = ((prime*result)+((pathImplements == null)? 0 :pathImplements.hashCode()));
         result = ((prime*result)+((recordClass == null)? 0 :recordClass.hashCode()));
-        result = ((prime*result)+((recordExtends == null)? 0 :recordExtends.hashCode()));
         result = ((prime*result)+((recordImplements == null)? 0 :recordImplements.hashCode()));
         result = ((prime*result)+((interfaceClass == null)? 0 :interfaceClass.hashCode()));
         result = ((prime*result)+((interfaceImplements == null)? 0 :interfaceImplements.hashCode()));
         result = ((prime*result)+((daoClass == null)? 0 :daoClass.hashCode()));
-        result = ((prime*result)+((daoExtends == null)? 0 :daoExtends.hashCode()));
         result = ((prime*result)+((daoImplements == null)? 0 :daoImplements.hashCode()));
         result = ((prime*result)+((pojoClass == null)? 0 :pojoClass.hashCode()));
         result = ((prime*result)+((pojoExtends == null)? 0 :pojoExtends.hashCode()));

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -45,9 +45,8 @@ import static org.jooq.tools.StringUtils.isEmpty;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,15 +55,14 @@ import org.jooq.Converter;
 import org.jooq.DataType;
 import org.jooq.GeneratorStatementType;
 import org.jooq.Name;
+// ...
 import org.jooq.exception.SQLDialectNotSupportedException;
 // ...
-import org.jooq.impl.AutoConverter;
 import org.jooq.impl.DateAsTimestampBinding;
 import org.jooq.impl.DefaultDataType;
 import org.jooq.impl.EnumConverter;
 import org.jooq.impl.QOM.GenerationOption;
 import org.jooq.impl.SQLDataType;
-import org.jooq.impl.XMLtoJAXBConverter;
 import org.jooq.meta.jaxb.CustomType;
 import org.jooq.meta.jaxb.ForcedType;
 import org.jooq.meta.jaxb.LambdaConverter;
@@ -72,28 +70,66 @@ import org.jooq.tools.JooqLogger;
 import org.jooq.tools.StringUtils;
 
 public abstract class AbstractTypedElementDefinition<T extends Definition>
-extends
-    AbstractContainerElementDefinition<T>
-implements
-    TypedElementDefinition<T>
-{
+    extends AbstractDefinition
+    implements TypedElementDefinition<T> {
 
-    private static final JooqLogger         log                            = JooqLogger.getLogger(AbstractTypedElementDefinition.class);
-    private static final Pattern            LENGTH_PRECISION_SCALE_PATTERN = Pattern.compile("[\\w\\s]+(?:\\(\\s*?(\\d+)\\s*?\\)|\\(\\s*?(\\d+)\\s*?,\\s*?(\\d+)\\s*?\\))");
+    private static final JooqLogger      log                            = JooqLogger.getLogger(AbstractTypedElementDefinition.class);
+    private static final Pattern         LENGTH_PRECISION_SCALE_PATTERN = Pattern.compile("[\\w\\s]+(?:\\(\\s*?(\\d+)\\s*?\\)|\\(\\s*?(\\d+)\\s*?,\\s*?(\\d+)\\s*?\\))");
 
-    private final DataTypeDefinition        definedType;
-    private transient DataTypeDefinition    type;
-    private Map<Object, DataTypeDefinition> resolvedType;
+    private final T                      container;
+    private final DataTypeDefinition     definedType;
+    private transient DataTypeDefinition type;
+    private transient DataTypeDefinition resolvedType;
 
     public AbstractTypedElementDefinition(T container, String name, int position, DataTypeDefinition definedType, String comment) {
         this(container, name, position, definedType, comment, null);
     }
 
     public AbstractTypedElementDefinition(T container, String name, int position, DataTypeDefinition definedType, String comment, String overload) {
-        super(container, name, position, comment, overload);
+        super(container.getDatabase(),
+              container.getSchema(),
+              protectName(container, name, position),
+              comment,
+              overload);
 
+        this.container = container;
         this.definedType = definedType;
-        this.resolvedType = new HashMap<>();
+    }
+
+    private static final String protectName(Definition container, String name, int position) {
+        if (name == null) {
+
+            // [#6654] Specific error messages per type
+            if (container instanceof TableDefinition)
+                log.info("Missing name", "Table " + container + " holds a column without a name at position " + position);
+            else if (container instanceof UDTDefinition)
+                log.info("Missing name", "UDT " + container + " holds an attribute without a name at position " + position);
+            else if (container instanceof IndexDefinition)
+                log.info("Missing name", "Index " + container + " holds a column without a name at position " + position);
+            else if (container instanceof RoutineDefinition)
+                log.info("Missing name", "Routine " + container + " holds a parameter without a name at position " + position);
+            else
+                log.info("Missing name", "Object " + container + " holds an element without a name at position " + position);
+
+            return "_" + position;
+        }
+
+        return name;
+    }
+
+    @Override
+    public final T getContainer() {
+        return container;
+    }
+
+    @Override
+    public List<Definition> getDefinitionPath() {
+        List<Definition> result = new ArrayList<>();
+
+        result.addAll(getContainer().getDefinitionPath());
+        result.add(this);
+
+        return result;
     }
 
     @Override
@@ -106,12 +142,10 @@ implements
 
     @Override
     public DataTypeDefinition getType(JavaTypeResolver resolver) {
-        Object key = resolver.cacheKey();
+        if (resolvedType == null)
+            resolvedType = mapDefinedType(container, this, definedType, resolver);
 
-        if (key == null)
-            return mapDefinedType(container, this, definedType, resolver);
-        else
-            return resolvedType.computeIfAbsent(key, k -> mapDefinedType(container, this, definedType, resolver));
+        return resolvedType;
     }
 
     @Override
@@ -143,21 +177,6 @@ implements
     }
 
     public static final DataTypeDefinition mapDefinedType(Definition container, Definition child, DataTypeDefinition definedType, JavaTypeResolver resolver) {
-        if (resolver == null)
-            return mapDefinedType0(container, child, definedType, resolver);
-        else
-            return resolver.resolveDefinedType(() -> mapDefinedType0(container, child, definedType, resolver));
-    }
-
-    static final DataTypeDefinition mapDefinedType0(
-        Definition container,
-        Definition child,
-        DataTypeDefinition definedType,
-        JavaTypeResolver resolver
-    ) {
-        if (resolver == null)
-            resolver = new DefaultJavaTypeResolver();
-
         DataTypeDefinition result = definedType;
         Database db = container.getDatabase();
 
@@ -195,10 +214,8 @@ implements
 
         // [#677] Forced types for matching regular expressions
         ForcedType forcedType = db.getConfiguredForcedType(child, definedType);
-
         if (forcedType != null) {
-            String uType = forcedType.getUserType();
-            String name = forcedType.getName();
+            String uType = forcedType.getName();
             String generator = forcedType.getGenerator();
             String converter = null;
             String binding = result.getBinding();
@@ -209,89 +226,11 @@ implements
 
 
 
-            boolean nullable = result.isNullable();
-            String defaultValue = result.getDefaultValue();
-            boolean identity = result.isIdentity();
-            boolean hidden = result.isHidden();
-            boolean redacted = result.isRedacted();
-            boolean readonly = result.isReadonly();
-            String generatedAlwaysAs = result.getGeneratedAlwaysAs();
-
-
-
-
-
-
-            int length = 0;
-            int precision = 0;
-            int scale = 0;
-
             CustomType customType = customType(db, forcedType);
-
-            // [#2486] Allow users to override length, precision, and scale
-            if (name != null) {
-                DataType<?> forcedDataType = null;
-
-                Matcher matcher = LENGTH_PRECISION_SCALE_PATTERN.matcher(name);
-                if (matcher.find()) {
-                    if (!isEmpty(matcher.group(1))) {
-                        length = precision = convert(matcher.group(1), int.class);
-                    }
-                    else {
-                        precision = convert(matcher.group(2), int.class);
-                        scale = convert(matcher.group(3), int.class);
-                    }
-                }
-
-                try {
-                    forcedDataType = getDataType(db, name, precision, scale);
-
-                    // [#677] SQLDataType matches are actual type-rewrites
-                    if (forcedDataType != null)
-                        result = new DefaultDataTypeDefinition(
-                            db,
-                            child.getSchema(),
-                            name,
-                            length,
-                            precision,
-                            scale,
-                            nullable,
-                            hidden,
-                            redacted,
-                            readonly,
-                            generatedAlwaysAs,
-                            defaultValue,
-                            identity,
-                            (Name) null,
-                            generator,
-                            converter,
-                            binding,
-                            null
-                        );
-
-                }
-                catch (SQLDialectNotSupportedException e) {
-
-                    if (!db.getConfiguredCustomTypes().isEmpty()) {
-                        if (customType != null)
-                            db.markUsed(forcedType);
-
-                        // [#7373] [#10944] Refer to <customType/> only if someone is still using the feature
-                        else if (!TRUE.equals(forcedType.isIgnoreUnused()))
-                            Logging.log(db.onMetadataProblem(),
-                                () -> "Bad configuration for <forcedType/> " + forcedType.getName() + ". No matching <customType/> found, and no matching SQLDataType found: " + forcedType);
-                    }
-                }
-            }
-
             if (customType != null) {
-
-                // [#7373] [#10944] Historically, configured custom types could have a userType declaration in their names
-                //                  This is no longer documented, but should be maintained, still
                 uType = (!StringUtils.isBlank(customType.getType()))
                     ? customType.getType()
                     : customType.getName();
-                name = customType.getName();
 
                 if (generator == null)
                     generator = customType.getGenerator();
@@ -303,62 +242,23 @@ implements
 
 
 
-
-
-                // [#13791] AutoConverters profit from simplified configuration
-                if (TRUE.equals(customType.isAutoConverter()) ||
-                    AutoConverter.class.getName().equals(customType.getConverter())) {
-                    String tType = tType(db, resolver, result);
-                    converter = resolver.constructorCall(AutoConverter.class.getName() + "<" + resolver.ref(tType) + ", " + resolver.ref(uType) + ">") + "(" + resolver.classLiteral(tType) + ", " + resolver.classLiteral(uType) + ")";
-                }
-
-                // [#5877] [#6567] ... so do EnumConverters
-                else if (TRUE.equals(customType.isEnumConverter()) ||
+                // [#5877] [#6567] EnumConverters profit from simplified configuration
+                if (TRUE.equals(customType.isEnumConverter()) ||
                     EnumConverter.class.getName().equals(customType.getConverter())) {
-                    String tType = tType(db, resolver, result);
+                    String tType = tType(db, resolver, definedType);
                     converter = resolver.constructorCall(EnumConverter.class.getName() + "<" + resolver.ref(tType) + ", " + resolver.ref(uType) + ">") + "(" + resolver.classLiteral(tType) + ", " + resolver.classLiteral(uType) + ")";
                 }
-
-                // [#13607] ... so do XML and JSON converters
-                else if (TRUE.equals(customType.isXmlConverter()) ||
-                    XMLtoJAXBConverter.class.getName().equals(customType.getConverter())) {
-                    converter = resolver.constructorCall(XMLtoJAXBConverter.class.getName() + "<" + resolver.ref(uType) + ">") + "(" + resolver.classLiteral(uType) + ")";
-                }
-                else if (TRUE.equals(customType.isJsonConverter())) {
-                    if (tType(db, resolver, result).endsWith("JSONB"))
-                        converter = resolver.constructorCall("org.jooq.jackson.extensions.converters.JSONBtoJacksonConverter<" + resolver.ref(uType) + ">") + "(" + resolver.classLiteral(uType) + ")";
-                    else
-                        converter = resolver.constructorCall("org.jooq.jackson.extensions.converters.JSONtoJacksonConverter<" + resolver.ref(uType) + ">") + "(" + resolver.classLiteral(uType) + ")";
-                }
-                else if ("org.jooq.jackson.extensions.converters.JSONtoJacksonConverter".equals(customType.getConverter())) {
-                    converter = resolver.constructorCall("org.jooq.jackson.extensions.converters.JSONtoJacksonConverter<" + resolver.ref(uType) + ">") + "(" + resolver.classLiteral(uType) + ")";
-                }
-                else if ("org.jooq.jackson.extensions.converters.JSONBtoJacksonConverter".equals(customType.getConverter())) {
-                    converter = resolver.constructorCall("org.jooq.jackson.extensions.converters.JSONBtoJacksonConverter<" + resolver.ref(uType) + ">") + "(" + resolver.classLiteral(uType) + ")";
-                }
-
                 else if (customType.getLambdaConverter() != null) {
                     LambdaConverter c = customType.getLambdaConverter();
-                    String tType = tType(db, resolver, result);
+                    String tType = tType(db, resolver, definedType);
                     converter = resolver.ref(Converter.class) + ".of" + (!FALSE.equals(c.isNullable()) ? "Nullable" : "") + "(" + resolver.classLiteral(tType) + ", " + resolver.classLiteral(uType) + ", " + c.getFrom() + ", " + c.getTo() + ")";
                 }
                 else if (!StringUtils.isBlank(customType.getConverter())) {
-                    if (TRUE.equals(customType.isGenericConverter())) {
-                        String tType = tType(db, resolver, result);
-                        converter = resolver.constructorCall(customType.getConverter() + "<" + resolver.ref(tType) + ", " + resolver.ref(uType) + ">") + "(" + resolver.classLiteral(tType) + ", " + resolver.classLiteral(uType) + ")";
-                    }
-                    else
-                        converter = customType.getConverter();
+                    converter = customType.getConverter();
                 }
 
-                if (!StringUtils.isBlank(customType.getBinding())) {
-                    if (TRUE.equals(customType.isGenericBinding())) {
-                        String tType = tType(db, resolver, result);
-                        binding = resolver.constructorCall(customType.getBinding() + "<" + resolver.ref(tType) + ", " + resolver.ref(uType) + ">") + "(" + resolver.classLiteral(tType) + ", " + resolver.classLiteral(uType) + ")";
-                    }
-                    else
-                        binding = customType.getBinding();
-                }
+                if (!StringUtils.isBlank(customType.getBinding()))
+                    binding = customType.getBinding();
             }
 
 
@@ -374,17 +274,68 @@ implements
 
 
 
-            if (name != null || uType != null) {
+            if (uType != null) {
                 db.markUsed(forcedType);
-                db.doOnce(new SimpleImmutableEntry<>(child, forcedType), () -> log.info("Forcing type", child + " to " + forcedType));
+                log.info("Forcing type", child + " to " + forcedType);
 
-                if (customType != null) {
-                    length = result.getLength();
-                    precision = result.getPrecision();
-                    scale = result.getScale();
+                DataType<?> forcedDataType = null;
+
+                boolean n = result.isNullable();
+                String d = result.getDefaultValue();
+                boolean i = result.isIdentity();
+                boolean r = result.isReadonly();
+                String g = result.getGeneratedAlwaysAs();
+
+                int l = 0;
+                int p = 0;
+                int s = 0;
+
+                // [#2486] Allow users to override length, precision, and scale
+                Matcher matcher = LENGTH_PRECISION_SCALE_PATTERN.matcher(uType);
+                if (matcher.find()) {
+                    if (!isEmpty(matcher.group(1))) {
+                        l = p = convert(matcher.group(1), int.class);
+                    }
+                    else {
+                        p = convert(matcher.group(2), int.class);
+                        s = convert(matcher.group(3), int.class);
+                    }
+                }
+
+                try {
+                    forcedDataType = getDataType(db, uType, p, s);
+                } catch (SQLDialectNotSupportedException ignore) {}
+
+                // [#677] SQLDataType matches are actual type-rewrites
+                if (forcedDataType != null) {
+
+                    // [#3704] When <forcedType/> matches a custom type AND a data type rewrite, the rewrite was usually accidental.
+                    if (customType != null)
+                        log.warn("Custom type conflict", child + " has custom type " + customType + " forced by " + forcedType + " but a data type rewrite applies");
+
+                    result = new DefaultDataTypeDefinition(db, child.getSchema(), uType, l, p, s, n, r, g, d, i, (Name) null, generator, converter, binding, null);
+                }
+
+                // Other forced types are UDT's, enums, etc.
+                else if (customType != null) {
+                    l = result.getLength();
+                    p = result.getPrecision();
+                    s = result.getScale();
                     String t = result.getType();
                     Name u = result.getQualifiedUserType();
-                    result = new DefaultDataTypeDefinition(db, definedType.getSchema(), t, length, precision, scale, nullable, hidden, readonly, generatedAlwaysAs, defaultValue, identity, u, generator, converter, binding, uType);
+                    result = new DefaultDataTypeDefinition(db, definedType.getSchema(), t, l, p, s, n, r, g, d, i, u, generator, converter, binding, uType);
+                }
+
+                // [#4597] If we don't have a type-rewrite (forcedDataType) or a
+                //         matching customType, the user probably malconfigured
+                //         their <forcedTypes/> or <customTypes/>
+                else {
+
+                    // [#7373] [#10944] Refer to <customType/> only if someone is still using the feature
+                    if (db.getConfiguredCustomTypes().isEmpty())
+                        log.warn("Bad configuration for <forcedType/> " + forcedType.getName() + ". No matching SQLDataType found: " + forcedType);
+                    else
+                        log.warn("Bad configuration for <forcedType/> " + forcedType.getName() + ". No matching <customType/> found, and no matching SQLDataType found: " + forcedType);
                 }
             }
 
@@ -399,18 +350,6 @@ implements
 
 
             }
-
-
-
-
-
-
-
-
-
-
-
-
         }
 
         return result;
@@ -448,16 +387,9 @@ implements
         else {
             return new CustomType()
                 .withBinding(forcedType.getBinding())
-                .withGenericBinding(forcedType.isGenericBinding())
-                .withAutoConverter(forcedType.isAutoConverter())
-                .withGenericConverter(forcedType.isGenericConverter())
                 .withEnumConverter(forcedType.isEnumConverter())
-                .withXmlConverter(forcedType.isXmlConverter())
-                .withJsonConverter(forcedType.isJsonConverter())
                 .withLambdaConverter(forcedType.getLambdaConverter())
                 .withVisibilityModifier(forcedType.getVisibilityModifier())
-                .withHidden(forcedType.isHidden())
-                .withRedacted(forcedType.isRedacted())
                 .withGenerator(forcedType.getGenerator())
                 .withAuditInsertTimestamp(forcedType.isAuditInsertTimestamp())
                 .withAuditInsertUser(forcedType.isAuditInsertUser())

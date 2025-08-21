@@ -21,7 +21,6 @@ import java.io.InputStream;
 import org.apache.camel.component.cxf.common.header.CxfHeaderHelper;
 import org.apache.camel.component.cxf.transport.CamelTransportConstants;
 import org.apache.camel.spi.HeaderFilterStrategy;
-import org.apache.camel.util.ObjectHelper;
 import org.apache.cxf.message.ExchangeImpl;
 import org.apache.cxf.message.MessageImpl;
 
@@ -44,7 +43,7 @@ public final class CxfMessageHelper {
         } else {
             message = exchange.getIn();
         }
-        ObjectHelper.notNull(message, "message");
+        assert message != null;
         if (cxfExchange == null) {
             cxfExchange = new ExchangeImpl();
             exchange.setProperty(CamelTransportConstants.CXF_EXCHANGE, cxfExchange);

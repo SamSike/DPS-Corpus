@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,7 +38,6 @@
 
 package org.jooq.impl;
 
-import static org.jooq.conf.ParamType.INLINED;
 import static org.jooq.impl.Tools.CONFIG;
 
 import java.io.IOException;
@@ -54,7 +53,6 @@ import org.jooq.DSLContext;
 // ...
 import org.jooq.QueryPart;
 import org.jooq.QueryPartInternal;
-import org.jooq.RenderContext;
 import org.jooq.exception.DataAccessException;
 import org.jooq.exception.SQLDialectNotSupportedException;
 import org.jooq.tools.JooqLogger;
@@ -69,7 +67,7 @@ abstract class AbstractQueryPart implements QueryPartInternal {
     // -------------------------------------------------------------------------
 
     Configuration configuration() {
-        return CONFIG.get();
+        return CONFIG;
     }
 
     // -------------------------------------------------------------------------
@@ -162,11 +160,11 @@ abstract class AbstractQueryPart implements QueryPartInternal {
 
         // This is a working default implementation. It should be overridden by
         // concrete subclasses, to improve performance
-        if (that instanceof QueryPart q) {
+        if (that instanceof QueryPart) { QueryPart q = (QueryPart) that;
 
             // [#10635] The two QueryParts may have different Settings attached.
             DSLContext dsl1 = Tools.configuration(configuration()).dsl();
-            DSLContext dsl2 = that instanceof AbstractQueryPart a ? Tools.configuration(a.configuration()).dsl() : dsl1;
+            DSLContext dsl2 = that instanceof AbstractQueryPart ? Tools.configuration(((AbstractQueryPart) that).configuration()).dsl() : dsl1;
 
             String sql1 = dsl1.renderInlined(this);
             String sql2 = dsl2.renderInlined(q);
@@ -187,15 +185,11 @@ abstract class AbstractQueryPart implements QueryPartInternal {
 
     @Override
     public String toString() {
-
-        // [#8355] Subtypes may have null configuration
-        Configuration configuration = Tools.configuration(configuration());
-        return toString0(create(configuration.deriveSettings(s -> s.withRenderFormatted(true))).renderContext().paramType(INLINED));
-    }
-
-    String toString0(RenderContext ctx) {
         try {
-            return ctx.visit(this).render();
+
+            // [#8355] Subtypes may have null configuration
+            Configuration configuration = Tools.configuration(configuration());
+            return create(configuration.deriveSettings(s -> s.withRenderFormatted(true))).renderInlined(this);
         }
         catch (SQLDialectNotSupportedException e) {
             return "[ ... " + e.getMessage() + " ... ]";
@@ -243,6 +237,22 @@ abstract class AbstractQueryPart implements QueryPartInternal {
      * Internal convenience method
      */
     protected final DataAccessException translate(String sql, SQLException e) {
-        return Tools.translate(create(), sql, e);
+        return Tools.translate(sql, e);
+    }
+
+    private static final JooqLogger log = JooqLogger.getLogger(AbstractQueryPart.class, "serialization", 100);
+
+    private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+        ois.defaultReadObject();
+
+        if (log.isWarnEnabled())
+            log.warn("DEPRECATION", "A QueryPart of type " + getClass() + " has been deserialised. Serialization support is deprecated in jOOQ. Please contact https://github.com/jOOQ/jOOQ/issues/11506 and state your use-case to see if it can be implemented otherwise.");
+    }
+
+    private void writeObject(ObjectOutputStream oos) throws IOException {
+        oos.defaultWriteObject();
+
+        if (log.isWarnEnabled())
+            log.warn("DEPRECATION", "A QueryPart of type " + getClass() + " has been serialised. Serialization support is deprecated in jOOQ. Please contact https://github.com/jOOQ/jOOQ/issues/11506 and state your use-case to see if it can be implemented otherwise.");
     }
 }

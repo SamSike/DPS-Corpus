@@ -62,10 +62,10 @@ public class DeadLetterChannelOnRedeliveryTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 // we configure our Dead Letter Channel to invoke
                 // MyRedeliveryProcessor before a redelivery is
@@ -75,8 +75,8 @@ public class DeadLetterChannelOnRedeliveryTest extends ContextTestSupport {
                         .redeliveryDelay(0L));
                 // END SNIPPET: e1
 
-                from("direct:start").routeId("myRoute").process(new Processor() {
-                    public void process(Exchange exchange) {
+                from("direct:start").process(new Processor() {
+                    public void process(Exchange exchange) throws Exception {
                         // force some error so Camel will do redelivery
                         if (++counter <= 3) {
                             throw new IllegalArgumentException("Forced by unit test");
@@ -92,10 +92,10 @@ public class DeadLetterChannelOnRedeliveryTest extends ContextTestSupport {
     // This is our processor that is executed before every redelivery attempt
     // here we can do what we want in the java code, such as altering the
     // message
-    public static class MyRedeliverProcessor implements Processor {
+    public class MyRedeliverProcessor implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             // the message is being redelivered so we can alter it
 
             // we just append the redelivery counter to the body
@@ -108,12 +108,7 @@ public class DeadLetterChannelOnRedeliveryTest extends ContextTestSupport {
             // the maximum redelivery was set to 5
             int max = exchange.getIn().getHeader(Exchange.REDELIVERY_MAX_COUNTER, Integer.class);
             assertEquals(5, max);
-
-            // should be happening inside myRoute
-            String rid = exchange.getProperty(Exchange.FAILURE_ROUTE_ID, String.class);
-            assertEquals("myRoute", rid);
         }
-
     }
     // END SNIPPET: e2
 

@@ -19,7 +19,6 @@ package org.apache.camel.language.python;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExpressionIllegalSyntaxException;
 import org.apache.camel.support.ExpressionSupport;
-import org.python.core.PyCode;
 import org.python.core.PyObject;
 import org.python.util.PythonInterpreter;
 
@@ -27,18 +26,10 @@ public class PythonExpression extends ExpressionSupport {
 
     private final String expressionString;
     private final Class<?> type;
-    private final PythonInterpreter compiler;
-    private final PyCode compiledExpression;
 
     public PythonExpression(String expressionString, Class<?> type) {
         this.expressionString = expressionString;
         this.type = type;
-        this.compiler = new PythonInterpreter();
-        try {
-            this.compiledExpression = compiler.compile(expressionString);
-        } catch (Exception e) {
-            throw new ExpressionIllegalSyntaxException(expressionString, e);
-        }
     }
 
     public static PythonExpression python(String expression) {
@@ -47,7 +38,7 @@ public class PythonExpression extends ExpressionSupport {
 
     @Override
     public <T> T evaluate(Exchange exchange, Class<T> type) {
-        try {
+        try (PythonInterpreter compiler = new PythonInterpreter()) {
             compiler.set("exchange", exchange);
             compiler.set("context", exchange.getContext());
             compiler.set("exchangeId", exchange.getExchangeId());
@@ -56,15 +47,13 @@ public class PythonExpression extends ExpressionSupport {
             compiler.set("properties", exchange.getAllProperties());
             compiler.set("body", exchange.getMessage().getBody());
 
-            PyObject out = compiler.eval(compiledExpression);
+            PyObject out = compiler.eval(expressionString);
             if (out != null) {
                 String value = out.toString();
                 return exchange.getContext().getTypeConverter().convertTo(type, value);
             }
         } catch (Exception e) {
             throw new ExpressionIllegalSyntaxException(expressionString, e);
-        } finally {
-            compiler.cleanup();
         }
         return null;
     }

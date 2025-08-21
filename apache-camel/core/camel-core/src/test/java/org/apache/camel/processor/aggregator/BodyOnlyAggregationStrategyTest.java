@@ -20,6 +20,7 @@ import org.apache.camel.AggregationStrategy;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.ErrorHandlerFactory;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
@@ -40,10 +41,10 @@ public class BodyOnlyAggregationStrategyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 ErrorHandlerFactory dh = deadLetterChannel("direct:error").useOriginalMessage();
 
                 from("direct:failingRoute")
@@ -74,8 +75,8 @@ public class BodyOnlyAggregationStrategyTest extends ContextTestSupport {
         public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
             oldExchange.getIn().setBody(newExchange.getIn().getBody());
 
-            oldExchange.getExchangeExtension().setErrorHandlerHandled(
-                    newExchange.getExchangeExtension().getErrorHandlerHandled());
+            oldExchange.adapt(ExtendedExchange.class).setErrorHandlerHandled(
+                    newExchange.adapt(ExtendedExchange.class).getErrorHandlerHandled());
 
             return oldExchange;
         }

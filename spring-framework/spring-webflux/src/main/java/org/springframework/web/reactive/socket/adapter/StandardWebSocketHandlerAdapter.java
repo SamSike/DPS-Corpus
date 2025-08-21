@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,9 @@ import jakarta.websocket.Endpoint;
 import jakarta.websocket.EndpointConfig;
 import jakarta.websocket.PongMessage;
 import jakarta.websocket.Session;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.socket.CloseStatus;
 import org.springframework.web.reactive.socket.WebSocketHandler;
@@ -36,21 +36,21 @@ import org.springframework.web.reactive.socket.WebSocketMessage.Type;
 import org.springframework.web.reactive.socket.WebSocketSession;
 
 /**
- * Adapter for the Jakarta WebSocket API (JSR-356) that delegates events to a
- * reactive {@link WebSocketHandler} and its session.
+ * Adapter for Java WebSocket API (JSR-356) that delegates events to a reactive
+ * {@link WebSocketHandler} and its session.
  *
  * @author Violeta Georgieva
  * @author Rossen Stoyanchev
- * @author Sam Brannen
  * @since 5.0
  */
 public class StandardWebSocketHandlerAdapter extends Endpoint {
 
 	private final WebSocketHandler delegateHandler;
 
-	private final Function<Session, StandardWebSocketSession> sessionFactory;
+	private Function<Session, StandardWebSocketSession> sessionFactory;
 
-	private @Nullable StandardWebSocketSession delegateSession;
+	@Nullable
+	private StandardWebSocketSession delegateSession;
 
 
 	public StandardWebSocketHandlerAdapter(WebSocketHandler handler,
@@ -64,7 +64,6 @@ public class StandardWebSocketHandlerAdapter extends Endpoint {
 
 
 	@Override
-	@SuppressWarnings("NullAway") // Lambda
 	public void onOpen(Session session, EndpointConfig config) {
 		this.delegateSession = this.sessionFactory.apply(session);
 		Assert.state(this.delegateSession != null, "No delegate session");
@@ -90,16 +89,16 @@ public class StandardWebSocketHandlerAdapter extends Endpoint {
 	private <T> WebSocketMessage toMessage(T message) {
 		WebSocketSession session = this.delegateSession;
 		Assert.state(session != null, "Cannot create message without a session");
-		if (message instanceof String text) {
-			byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+		if (message instanceof String) {
+			byte[] bytes = ((String) message).getBytes(StandardCharsets.UTF_8);
 			return new WebSocketMessage(Type.TEXT, session.bufferFactory().wrap(bytes));
 		}
-		else if (message instanceof ByteBuffer byteBuffer) {
-			DataBuffer buffer = session.bufferFactory().wrap(byteBuffer);
+		else if (message instanceof ByteBuffer) {
+			DataBuffer buffer = session.bufferFactory().wrap((ByteBuffer) message);
 			return new WebSocketMessage(Type.BINARY, buffer);
 		}
-		else if (message instanceof PongMessage pongMessage) {
-			DataBuffer buffer = session.bufferFactory().wrap(pongMessage.getApplicationData());
+		else if (message instanceof PongMessage) {
+			DataBuffer buffer = session.bufferFactory().wrap(((PongMessage) message).getApplicationData());
 			return new WebSocketMessage(Type.PONG, buffer);
 		}
 		else {

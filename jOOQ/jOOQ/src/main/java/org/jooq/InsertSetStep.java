@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,36 +37,27 @@
  */
 package org.jooq;
 
+import org.jetbrains.annotations.*;
+
+
 // ...
 // ...
 // ...
-// ...
-// ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
-// ...
 import static org.jooq.SQLDialect.HSQLDB;
-import static org.jooq.SQLDialect.IGNITE;
-// ...
 // ...
 import static org.jooq.SQLDialect.MARIADB;
 // ...
 import static org.jooq.SQLDialect.MYSQL;
 // ...
 import static org.jooq.SQLDialect.POSTGRES;
-// ...
-// ...
-// ...
 import static org.jooq.SQLDialect.SQLITE;
-// ...
 // ...
 // ...
 // ...
@@ -75,14 +66,10 @@ import static org.jooq.SQLDialect.YUGABYTEDB;
 import java.util.Collection;
 import java.util.Map;
 
-import org.jooq.conf.Settings;
-
-import org.jetbrains.annotations.NotNull;
-
 /**
  * This type is used for the {@link Insert}'s alternative DSL API.
  * <p>
- * Example: <pre><code>
+ * Example: <code><pre>
  * DSLContext create = DSL.using(configuration);
  *
  * create.insertInto(table)
@@ -95,7 +82,7 @@ import org.jetbrains.annotations.NotNull;
  *       .set(field1, value1)
  *       .set(field2, value2)
  *       .execute();
- * </code></pre>
+ * </pre></code>
  * <p>
  * <h3>Referencing <code>XYZ*Step</code> types directly from client code</h3>
  * <p>
@@ -342,41 +329,15 @@ public interface InsertSetStep<R extends Record> {
      * Set values in the <code>INSERT</code> statement.
      * <p>
      * This is the same as calling {@link #set(Map)} with the argument record
-     * treated as a <code>Map&lt;Field&lt;?&gt;, Object&gt;</code>, except that
-     * the {@link Record#touched()} flags (or {@link Record#modified()} flags,
-     * depending on the query's {@link Settings#getRecordDirtyTracking()}
-     * configuration) are taken into consideration in order to update only
-     * touched (or modified) values.
+     * treated as a <code>Map&lt;Field&lt;?&gt;, Object&gt;</code>, except that the
+     * {@link Record#changed()} flags are taken into consideration in order to
+     * update only changed values.
      *
      * @see #set(Map)
      */
     @NotNull @CheckReturnValue
     @Support
     InsertSetMoreStep<R> set(Record record);
-
-    /**
-     * Set values in the <code>INSERT</code> statement.
-     * <p>
-     * This is convenience for multiple calls to {@link #set(Record)} and
-     * {@link InsertSetMoreStep#newRecord()}.
-     *
-     * @see #set(Record)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    InsertSetMoreStep<R> set(Record... records);
-
-    /**
-     * Set values in the <code>INSERT</code> statement.
-     * <p>
-     * This is convenience for multiple calls to {@link #set(Record)} and
-     * {@link InsertSetMoreStep#newRecord()}.
-     *
-     * @see #set(Record)
-     */
-    @NotNull @CheckReturnValue
-    @Support
-    InsertSetMoreStep<R> set(Collection<? extends Record> records);
 
     /**
      * Add values to the insert statement with implicit field names.
@@ -403,14 +364,14 @@ public interface InsertSetStep<R extends Record> {
      * Add an empty record with default values.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     InsertOnDuplicateStep<R> defaultValues();
 
     /**
      * Use a <code>SELECT</code> statement as the source of values for the
      * <code>INSERT</code> statement.
      * <p>
-     * This variant of the <code>INSERT … SELECT</code> statement does not
+     * This variant of the <code>INSERT .. SELECT</code> statement does not
      * allow for specifying a subset of the fields inserted into. It will insert
      * into all fields of the table specified in the <code>INTO</code> clause.
      * Use {@link DSLContext#insertInto(Table, Field...)} or

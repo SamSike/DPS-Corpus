@@ -20,12 +20,12 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.health.HealthCheck;
 import org.apache.camel.health.HealthCheckHelper;
 import org.apache.camel.health.HealthCheckRegistry;
 import org.apache.camel.health.HealthCheckResultBuilder;
 import org.apache.camel.health.HealthCheckResultStrategy;
-import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -37,11 +37,12 @@ public class HealthCheckResultStrategyTest extends ContextTestSupport {
     }
 
     @Test
-    public void testMyFoo() {
+    public void testMyFoo() throws Exception {
         context.getRegistry().bind("myStrategy", new MyResultStrategy());
         context.start();
 
-        HealthCheck hc = PluginHelper.getHealthCheckResolver(context).resolveHealthCheck("myfoo");
+        HealthCheck hc
+                = context.adapt(ExtendedCamelContext.class).getHealthCheckResolver().resolveHealthCheck("myfoo");
         Assertions.assertNotNull(hc);
 
         Assertions.assertEquals("acme", hc.getGroup());
@@ -54,14 +55,15 @@ public class HealthCheckResultStrategyTest extends ContextTestSupport {
     }
 
     @Test
-    public void testAddToRegistry() {
+    public void testAddToRegistry() throws Exception {
         context.getRegistry().bind("myStrategy", new MyResultStrategy());
         context.start();
 
-        HealthCheck hc = PluginHelper.getHealthCheckResolver(context).resolveHealthCheck("myfoo");
+        HealthCheck hc
+                = context.adapt(ExtendedCamelContext.class).getHealthCheckResolver().resolveHealthCheck("myfoo");
         Assertions.assertNotNull(hc);
 
-        HealthCheckRegistry hcr = context.getCamelContextExtension().getContextPlugin(HealthCheckRegistry.class);
+        HealthCheckRegistry hcr = context.getExtension(HealthCheckRegistry.class);
         hcr.register(hc);
 
         Collection<HealthCheck.Result> col = HealthCheckHelper.invoke(context);

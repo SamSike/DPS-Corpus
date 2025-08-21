@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.file;
 
-import java.util.UUID;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
@@ -28,13 +26,12 @@ import org.junit.jupiter.api.Test;
  * Unit test to verify the append chars option
  */
 public class FileProduceAppendCharsSingleMessageTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello" + UUID.randomUUID() + ".txt";
 
     @Test
     public void testAppendChars() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(1);
-        mock.expectedFileExists(testFile(TEST_FILE_NAME), "Hello@@@");
+        mock.expectedFileExists(testFile("hello.txt"), "Hello@@@");
 
         template.sendBody("direct:start", "Hello");
 
@@ -45,7 +42,7 @@ public class FileProduceAppendCharsSingleMessageTest extends ContextTestSupport 
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
-                from("direct:start").setHeader(Exchange.FILE_NAME, constant(TEST_FILE_NAME))
+                from("direct:start").setHeader(Exchange.FILE_NAME, constant("hello.txt"))
                         .to(fileUri("?fileExist=Append&appendChars=@@@"), "mock:result");
             }
         };

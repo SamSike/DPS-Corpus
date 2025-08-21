@@ -22,7 +22,6 @@ import java.util.Optional;
 import org.apache.camel.Exchange;
 import org.apache.camel.TypeConversionException;
 
-@Deprecated(since = "4.11.0")
 public interface MetaDataExtension extends ComponentExtension {
     /**
      * @param  parameters

@@ -33,8 +33,8 @@ public class BootstrapConfigurerResolver extends DefaultConfigurerResolver imple
 
     @Override
     public void close() throws IOException {
-        if (factoryFinder instanceof BootstrapCloseable bootstrapCloseable) {
-            bootstrapCloseable.close();
+        if (factoryFinder instanceof BootstrapCloseable) {
+            ((BootstrapCloseable) factoryFinder).close();
         }
         factoryFinder = null;
     }

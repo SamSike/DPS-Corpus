@@ -25,9 +25,9 @@ import org.apache.camel.model.errorhandler.ErrorHandlerRefProperties;
 import org.apache.camel.util.ObjectHelper;
 
 /**
- * Legacy error handler for XML DSL in camel-spring-xml
+ * Legacy error handler for XML DSL in camel-spring-xml/camel-blueprint
  */
-@Deprecated(since = "3.17.0")
+@Deprecated
 public class LegacyErrorHandlerRefReifier extends ErrorHandlerReifier<ErrorHandlerRefProperties> {
 
     public LegacyErrorHandlerRefReifier(Route route, ErrorHandlerFactory definition) {
@@ -37,7 +37,7 @@ public class LegacyErrorHandlerRefReifier extends ErrorHandlerReifier<ErrorHandl
     @Override
     public Processor createErrorHandler(Processor processor) throws Exception {
         ErrorHandlerFactory handler = lookupErrorHandler(route);
-        return ((ModelCamelContext) camelContext).getModelReifierFactory().createErrorHandler(route, handler,
+        return camelContext.adapt(ModelCamelContext.class).getModelReifierFactory().createErrorHandler(route, handler,
                 processor);
     }
 

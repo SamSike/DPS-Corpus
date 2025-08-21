@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -92,8 +92,6 @@ public class HSQLDBTableDefinition extends AbstractTableDefinition {
                 COLUMNS.IS_NULLABLE,
                 COLUMNS.COLUMN_DEFAULT,
                 COLUMNS.GENERATION_EXPRESSION,
-                COLUMNS.IS_SYSTEM_TIME_PERIOD_START,
-                COLUMNS.IS_SYSTEM_TIME_PERIOD_END,
                 nvl(ELEMENT_TYPES.CHARACTER_MAXIMUM_LENGTH, COLUMNS.CHARACTER_MAXIMUM_LENGTH).as(COLUMNS.CHARACTER_MAXIMUM_LENGTH),
                 coalesce(
                     ELEMENT_TYPES.DATETIME_PRECISION,
@@ -119,12 +117,7 @@ public class HSQLDBTableDefinition extends AbstractTableDefinition {
                 .and(COLUMNS.TABLE_NAME.equal(getName()))
             .orderBy(COLUMNS.ORDINAL_POSITION)
         ) {
-            String generated =
-                  record.get(COLUMNS.IS_SYSTEM_TIME_PERIOD_START, boolean.class)
-                ? "ROW START"
-                : record.get(COLUMNS.IS_SYSTEM_TIME_PERIOD_END, boolean.class)
-                ? "ROW END"
-                : record.get(COLUMNS.GENERATION_EXPRESSION);
+            String generated = record.get(COLUMNS.GENERATION_EXPRESSION);
 
             DataTypeDefinition type = new DefaultDataTypeDefinition(
                 getDatabase(),

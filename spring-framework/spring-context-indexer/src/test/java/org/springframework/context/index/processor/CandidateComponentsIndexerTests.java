@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import jakarta.annotation.ManagedBean;
 import jakarta.inject.Named;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Embeddable;
@@ -42,6 +43,7 @@ import org.springframework.context.index.sample.SampleNonStaticEmbedded;
 import org.springframework.context.index.sample.SampleNone;
 import org.springframework.context.index.sample.SampleRepository;
 import org.springframework.context.index.sample.SampleService;
+import org.springframework.context.index.sample.cdi.SampleManagedBean;
 import org.springframework.context.index.sample.cdi.SampleNamed;
 import org.springframework.context.index.sample.cdi.SampleTransactional;
 import org.springframework.context.index.sample.jpa.SampleConverter;
@@ -80,13 +82,13 @@ class CandidateComponentsIndexerTests {
 	@Test
 	void noCandidate() {
 		CandidateComponentsMetadata metadata = compile(SampleNone.class);
-		assertThat(metadata.getItems()).isEmpty();
+		assertThat(metadata.getItems()).hasSize(0);
 	}
 
 	@Test
 	void noAnnotation() {
 		CandidateComponentsMetadata metadata = compile(CandidateComponentsIndexerTests.class);
-		assertThat(metadata.getItems()).isEmpty();
+		assertThat(metadata.getItems()).hasSize(0);
 	}
 
 	@Test
@@ -122,6 +124,11 @@ class CandidateComponentsIndexerTests {
 	@Test
 	void stereotypeOnAbstractClass() {
 		testComponent(AbstractController.class);
+	}
+
+	@Test
+	void cdiManagedBean() {
+		testSingleComponent(SampleManagedBean.class, ManagedBean.class);
 	}
 
 	@Test
@@ -192,7 +199,7 @@ class CandidateComponentsIndexerTests {
 
 	@Test
 	void embeddedCandidatesAreDetected()
-			throws ClassNotFoundException {
+			throws IOException, ClassNotFoundException {
 		// Validate nested type structure
 		String nestedType = "org.springframework.context.index.sample.SampleEmbedded.Another$AnotherPublicCandidate";
 		Class<?> type = ClassUtils.forName(nestedType, getClass().getClassLoader());
@@ -207,7 +214,7 @@ class CandidateComponentsIndexerTests {
 	@Test
 	void embeddedNonStaticCandidateAreIgnored() {
 		CandidateComponentsMetadata metadata = compile(SampleNonStaticEmbedded.class);
-		assertThat(metadata.getItems()).isEmpty();
+		assertThat(metadata.getItems()).hasSize(0);
 	}
 
 	private void testComponent(Class<?>... classes) {
@@ -215,7 +222,7 @@ class CandidateComponentsIndexerTests {
 		for (Class<?> c : classes) {
 			assertThat(metadata).has(Metadata.of(c, Component.class));
 		}
-		assertThat(metadata.getItems()).hasSameSizeAs(classes);
+		assertThat(metadata.getItems()).hasSize(classes.length);
 	}
 
 	private void testSingleComponent(Class<?> target, Class<?>... stereotypes) {
@@ -224,14 +231,12 @@ class CandidateComponentsIndexerTests {
 		assertThat(metadata.getItems()).hasSize(1);
 	}
 
-	@SuppressWarnings("removal")
 	private CandidateComponentsMetadata compile(Class<?>... types) {
 		CandidateComponentsIndexer processor = new CandidateComponentsIndexer();
 		this.compiler.getTask(types).call(processor);
 		return readGeneratedMetadata(this.compiler.getOutputLocation());
 	}
 
-	@SuppressWarnings("removal")
 	private CandidateComponentsMetadata compile(String... types) {
 		CandidateComponentsIndexer processor = new CandidateComponentsIndexer();
 		this.compiler.getTask(types).call(processor);
@@ -242,7 +247,8 @@ class CandidateComponentsIndexerTests {
 		File metadataFile = new File(outputLocation, MetadataStore.METADATA_PATH);
 		if (metadataFile.isFile()) {
 			try (FileInputStream fileInputStream = new FileInputStream(metadataFile)) {
-				return PropertiesMarshaller.read(fileInputStream);
+				CandidateComponentsMetadata metadata = PropertiesMarshaller.read(fileInputStream);
+				return metadata;
 			}
 			catch (IOException ex) {
 				throw new IllegalStateException("Failed to read metadata from disk", ex);

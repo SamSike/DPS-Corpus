@@ -24,8 +24,6 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.IvParameterSpec;
 
-import org.apache.camel.util.StringHelper;
-
 /**
  * A class to hold a pair of encryption and decryption ciphers.
  */
@@ -38,7 +36,13 @@ public class CipherPair {
     public CipherPair(String transformation) throws GeneralSecurityException {
         this.transformation = transformation;
 
-        String a = StringHelper.before(transformation, "/", transformation);
+        int d = transformation.indexOf('/');
+        String a;
+        if (d > 0) {
+            a = transformation.substring(0, d);
+        } else {
+            a = transformation;
+        }
 
         KeyGenerator keygen = KeyGenerator.getInstance(a);
         keygen.init(new SecureRandom());

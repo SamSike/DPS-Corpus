@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.util.IOHelper;
 import org.apache.commons.csv.CSVFormat;
@@ -69,12 +70,12 @@ abstract class CsvUnmarshaller {
     /**
      * Unmarshal the CSV
      *
-     * @param  exchange  Exchange (used for accessing type converter)
-     * @param  body      the input
-     * @return           Unmarshalled CSV
-     * @throws Exception if error during unmarshalling
+     * @param  exchange    Exchange (used for accessing type converter)
+     * @param  inputStream Input CSV stream
+     * @return             Unmarshalled CSV
+     * @throws IOException if the stream cannot be read properly
      */
-    public abstract Object unmarshal(Exchange exchange, Object body) throws Exception;
+    public abstract Object unmarshal(Exchange exchange, InputStream inputStream) throws IOException;
 
     private static CsvRecordConverter<?> extractConverter(CsvDataFormat dataFormat) {
         if (dataFormat.getRecordConverter() != null) {
@@ -99,15 +100,9 @@ abstract class CsvUnmarshaller {
         }
 
         @Override
-        public Object unmarshal(Exchange exchange, Object body) throws Exception {
-            Reader reader = exchange.getContext().getTypeConverter().tryConvertTo(Reader.class, exchange, body);
-            if (reader == null) {
-                // fallback to input stream
-                InputStream is = exchange.getContext().getTypeConverter().mandatoryConvertTo(InputStream.class, exchange, body);
-                reader = new InputStreamReader(is, ExchangeHelper.getCharsetName(exchange));
-            }
+        public Object unmarshal(Exchange exchange, InputStream inputStream) throws IOException {
             CSVParser parser
-                    = new CSVParser(reader, format);
+                    = new CSVParser(new InputStreamReader(inputStream, ExchangeHelper.getCharsetName(exchange)), format);
             try {
                 if (dataFormat.isCaptureHeaderRecord()) {
                     exchange.getMessage().setHeader(CsvConstants.HEADER_RECORD, parser.getHeaderNames());
@@ -138,18 +133,14 @@ abstract class CsvUnmarshaller {
         }
 
         @Override
-        public Object unmarshal(Exchange exchange, Object body) throws Exception {
-            Reader reader = exchange.getContext().getTypeConverter().tryConvertTo(Reader.class, exchange, body);
-            if (reader == null) {
-                // fallback to input stream
-                InputStream is = exchange.getContext().getTypeConverter().mandatoryConvertTo(InputStream.class, exchange, body);
-                reader = new InputStreamReader(is, ExchangeHelper.getCharsetName(exchange));
-            }
+        public Object unmarshal(Exchange exchange, InputStream inputStream) throws IOException {
+            Reader reader = null;
             try {
+                reader = new InputStreamReader(inputStream, ExchangeHelper.getCharsetName(exchange));
                 CSVParser parser = new CSVParser(reader, format);
-                CsvIterator<?> answer = new CsvIterator<>(parser, converter);
-                // add to UoW, so we can close the iterator, so it can release any resources
-                exchange.getExchangeExtension().addOnCompletion(new CsvUnmarshalOnCompletion(answer));
+                CsvIterator answer = new CsvIterator(parser, converter);
+                // add to UoW so we can close the iterator so it can release any resources
+                exchange.adapt(ExtendedExchange.class).addOnCompletion(new CsvUnmarshalOnCompletion(answer));
                 return answer;
             } catch (Exception e) {
                 IOHelper.close(reader);

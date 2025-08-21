@@ -16,10 +16,7 @@
  */
 package org.apache.camel.api.management;
 
-import java.util.List;
-
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
-import org.apache.camel.api.management.mbean.ManagedConsumerMBean;
 import org.apache.camel.api.management.mbean.ManagedProcessorMBean;
 import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.api.management.mbean.ManagedStepMBean;
@@ -80,41 +77,5 @@ public interface ManagedCamelContext {
      * @throws IllegalArgumentException if the type is not compliant
      */
     <T extends ManagedRouteMBean> T getManagedRoute(String routeId, Class<T> type);
-
-    /**
-     * Gets all the managed routes
-     *
-     * @return the routes or an empty list if no routes exists
-     */
-    List<ManagedRouteMBean> getManagedRoutes();
-
-    /**
-     * Gets all the managed routes for the given group
-     *
-     * @param  groupId the group id
-     * @return         the routes or an empty list if no routes exists for the group
-     */
-    List<ManagedRouteMBean> getManagedRoutesByGroup(String groupId);
-
-    /**
-     * Gets the managed consumer client api from any of the routes which with the given route id
-     *
-     * @param  id route id having the consumer
-     * @return    the consumer or <tt>null</tt> if not found
-     */
-    default ManagedConsumerMBean getManagedConsumer(String id) {
-        return getManagedConsumer(id, ManagedConsumerMBean.class);
-    }
-
-    /**
-     * Gets the managed consumer client api from any of the routes which with the given route id
-     *
-     * @param  id                       route id having the consumer
-     * @param  type                     the managed consumer type from the {@link org.apache.camel.api.management.mbean}
-     *                                  package.
-     * @return                          the consumer or <tt>null</tt> if not found
-     * @throws IllegalArgumentException if the type is not compliant
-     */
-    <T extends ManagedConsumerMBean> T getManagedConsumer(String id, Class<T> type);
 
 }

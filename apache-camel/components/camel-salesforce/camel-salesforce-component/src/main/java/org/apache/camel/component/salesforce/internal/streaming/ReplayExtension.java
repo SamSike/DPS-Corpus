@@ -36,6 +36,9 @@ import org.cometd.bayeux.client.ClientSession.Extension;
 
 /**
  * The Bayeux extension for replay
+ *
+ * @author hal.hildebrand
+ * @since  API v37.0
  */
 public class ReplayExtension implements Extension {
     private static final String EXTENSION_NAME = "replay";
@@ -45,12 +48,7 @@ public class ReplayExtension implements Extension {
     private final ConcurrentMap<String, Long> dataMap = new ConcurrentHashMap<>();
     private final AtomicBoolean supported = new AtomicBoolean();
 
-    public void setReplayIdIfAbsent(final String channelName, final long replayId) {
-        dataMap.putIfAbsent(channelName, replayId);
-    }
-
-    public void setReplayId(final String channelName, final long replayId) {
-        // force setting with a specific value
+    public void addChannelReplayId(final String channelName, final long replayId) {
         dataMap.put(channelName, replayId);
     }
 

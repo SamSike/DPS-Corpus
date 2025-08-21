@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,33 +34,33 @@ import static java.util.Locale.US;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link FixedLocaleContextResolver}.
+ * Unit tests for {@link FixedLocaleContextResolver}.
  *
  * @author Sebastien Deleuze
  */
-class FixedLocaleContextResolverTests {
+public class FixedLocaleContextResolverTests {
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		Locale.setDefault(US);
 	}
 
 	@Test
-	void resolveDefaultLocale() {
+	public void resolveDefaultLocale() {
 		FixedLocaleContextResolver resolver = new FixedLocaleContextResolver();
 		assertThat(resolver.resolveLocaleContext(exchange()).getLocale()).isEqualTo(US);
 		assertThat(resolver.resolveLocaleContext(exchange(CANADA)).getLocale()).isEqualTo(US);
 	}
 
 	@Test
-	void resolveCustomizedLocale() {
+	public void resolveCustomizedLocale() {
 		FixedLocaleContextResolver resolver = new FixedLocaleContextResolver(FRANCE);
 		assertThat(resolver.resolveLocaleContext(exchange()).getLocale()).isEqualTo(FRANCE);
 		assertThat(resolver.resolveLocaleContext(exchange(CANADA)).getLocale()).isEqualTo(FRANCE);
 	}
 
 	@Test
-	void resolveCustomizedAndTimeZoneLocale() {
+	public void resolveCustomizedAndTimeZoneLocale() {
 		TimeZone timeZone = TimeZone.getTimeZone(ZoneId.of("UTC"));
 		FixedLocaleContextResolver resolver = new FixedLocaleContextResolver(FRANCE, timeZone);
 		TimeZoneAwareLocaleContext context = (TimeZoneAwareLocaleContext) resolver.resolveLocaleContext(exchange());

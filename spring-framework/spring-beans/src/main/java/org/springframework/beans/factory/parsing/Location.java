@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package org.springframework.beans.factory.parsing;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -38,7 +37,8 @@ public class Location {
 
 	private final Resource resource;
 
-	private final @Nullable Object source;
+	@Nullable
+	private final Object source;
 
 
 	/**
@@ -75,7 +75,8 @@ public class Location {
 	 * <p>See the {@link Location class level javadoc for this class} for examples
 	 * of what the actual type of the returned object may be.
 	 */
-	public @Nullable Object getSource() {
+	@Nullable
+	public Object getSource() {
 		return this.source;
 	}
 

@@ -25,6 +25,8 @@ import io.fabric8.kubernetes.api.model.ResourceQuotaBuilder;
 import io.fabric8.kubernetes.api.model.ResourceQuotaList;
 import io.fabric8.kubernetes.api.model.ResourceQuotaSpec;
 import io.fabric8.kubernetes.api.model.StatusDetails;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.kubernetes.AbstractKubernetesEndpoint;
@@ -61,7 +63,7 @@ public class KubernetesResourcesQuotaProducer extends DefaultProducer {
                 doList(exchange);
                 break;
 
-            case KubernetesOperations.LIST_RESOURCES_QUOTA_BY_LABELS_OPERATION:
+            case KubernetesOperations.LIST_SECRETS_BY_LABELS_OPERATION:
                 doListResourceQuotasByLabels(exchange);
                 break;
 
@@ -73,8 +75,8 @@ public class KubernetesResourcesQuotaProducer extends DefaultProducer {
                 doCreateResourceQuota(exchange);
                 break;
 
-            case KubernetesOperations.UPDATE_RESOURCE_QUOTA_OPERATION:
-                doUpdateResourceQuota(exchange);
+            case KubernetesOperations.REPLACE_RESOURCE_QUOTA_OPERATION:
+                doReplaceResourceQuota(exchange);
                 break;
 
             case KubernetesOperations.DELETE_RESOURCE_QUOTA_OPERATION:
@@ -87,33 +89,30 @@ public class KubernetesResourcesQuotaProducer extends DefaultProducer {
     }
 
     protected void doList(Exchange exchange) {
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
-        ResourceQuotaList resList;
-
-        if (ObjectHelper.isEmpty(namespace)) {
-            resList = getEndpoint().getKubernetesClient().resourceQuotas().inAnyNamespace().list();
-        } else {
-            resList = getEndpoint().getKubernetesClient().resourceQuotas().inNamespace(namespace).list();
-        }
+        ResourceQuotaList resList = getEndpoint().getKubernetesClient().resourceQuotas().inAnyNamespace().list();
 
         prepareOutboundMessage(exchange, resList.getItems());
     }
 
     protected void doListResourceQuotasByLabels(Exchange exchange) {
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
         Map<String, String> labels
                 = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_RESOURCES_QUOTA_LABELS, Map.class);
+        String namespaceName = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
         ResourceQuotaList resList;
-
-        if (ObjectHelper.isEmpty(labels)) {
-            LOG.error("Listing ResourceQuotas by labels requires specifying labels");
-            throw new IllegalArgumentException("Listing ResourceQuotas by labels requires specifying labels");
-        }
-
-        if (ObjectHelper.isEmpty(namespace)) {
-            resList = getEndpoint().getKubernetesClient().resourceQuotas().inAnyNamespace().withLabels(labels).list();
+        if (!ObjectHelper.isEmpty(namespaceName)) {
+            NonNamespaceOperation<ResourceQuota, ResourceQuotaList, Resource<ResourceQuota>> resQuota
+                    = getEndpoint().getKubernetesClient().resourceQuotas().inNamespace(namespaceName);
+            for (Map.Entry<String, String> entry : labels.entrySet()) {
+                resQuota.withLabel(entry.getKey(), entry.getValue());
+            }
+            resList = resQuota.list();
         } else {
-            resList = getEndpoint().getKubernetesClient().resourceQuotas().inNamespace(namespace).withLabels(labels).list();
+            MixedOperation<ResourceQuota, ResourceQuotaList, Resource<ResourceQuota>> resQuota
+                    = getEndpoint().getKubernetesClient().resourceQuotas();
+            for (Map.Entry<String, String> entry : labels.entrySet()) {
+                resQuota.withLabel(entry.getKey(), entry.getValue());
+            }
+            resList = resQuota.list();
         }
 
         prepareOutboundMessage(exchange, resList.getItems());
@@ -136,8 +135,8 @@ public class KubernetesResourcesQuotaProducer extends DefaultProducer {
         prepareOutboundMessage(exchange, rq);
     }
 
-    protected void doUpdateResourceQuota(Exchange exchange) {
-        doCreateOrUpdateResourceQuota(exchange, "Update", Resource::update);
+    protected void doReplaceResourceQuota(Exchange exchange) {
+        doCreateOrUpdateResourceQuota(exchange, "Replace", Resource::replace);
     }
 
     protected void doCreateResourceQuota(Exchange exchange) {

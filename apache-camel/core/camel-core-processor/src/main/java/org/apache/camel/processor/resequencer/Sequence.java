@@ -16,8 +16,6 @@
  */
 package org.apache.camel.processor.resequencer;
 
-import java.io.Serial;
-import java.util.Objects;
 import java.util.TreeSet;
 
 /**
@@ -27,21 +25,24 @@ import java.util.TreeSet;
  */
 public class Sequence<E> extends TreeSet<E> {
 
-    private static final @Serial long serialVersionUID = 5647393631147741711L;
+    private static final long serialVersionUID = 5647393631147741711L;
+
+    private SequenceElementComparator<E> comparator;
 
     /**
      * Creates a new {@link Sequence} instance.
-     *
+     * 
      * @param comparator a strategy for comparing elements of this sequence.
      */
     public Sequence(SequenceElementComparator<E> comparator) {
-        super(Objects.requireNonNull(comparator));
+        super(comparator);
+        this.comparator = comparator;
     }
 
     /**
      * Returns the immediate predecessor of the given element in this sequence or <code>null</code> if no predecessor
      * exists.
-     *
+     * 
      * @param  e an element which is compared to elements of this sequence.
      * @return   an element of this sequence or <code>null</code>.
      */
@@ -50,7 +51,7 @@ public class Sequence<E> extends TreeSet<E> {
         if (elem == null) {
             return null;
         }
-        if (seqComparator().predecessor(elem, e)) {
+        if (comparator.predecessor(elem, e)) {
             return elem;
         }
         return null;
@@ -59,7 +60,7 @@ public class Sequence<E> extends TreeSet<E> {
     /**
      * Returns the immediate successor of the given element in this sequence or <code>null</code> if no successor
      * exists.
-     *
+     * 
      * @param  e an element which is compared to elements of this sequence.
      * @return   an element of this sequence or <code>null</code>.
      */
@@ -68,7 +69,7 @@ public class Sequence<E> extends TreeSet<E> {
         if (elem == null) {
             return null;
         }
-        if (seqComparator().successor(elem, e)) {
+        if (comparator.successor(elem, e)) {
             return elem;
         }
         return null;
@@ -76,12 +77,12 @@ public class Sequence<E> extends TreeSet<E> {
 
     /**
      * Returns this sequence's comparator.
-     *
+     * 
      * @return this sequence's comparator.
      */
-    @SuppressWarnings("unchecked")
-    public SequenceElementComparator<E> seqComparator() {
-        return Objects.requireNonNull((SequenceElementComparator<E>) super.comparator());
+    @Override
+    public SequenceElementComparator<E> comparator() {
+        return comparator;
     }
 
     /**
@@ -89,7 +90,7 @@ public class Sequence<E> extends TreeSet<E> {
      * is the last element in the sequence <code>null</code> is returned. <strong>Please note that this method is
      * provided for compatibility with Java 5 SE. On a Java 6 SE platform the same method implemented by the
      * {@link TreeSet} class should be used for better performance.</strong>
-     *
+     * 
      * @param  e an element which is compared to elements of this sequence.
      * @return   an element of this sequence or <code>null</code>.
      */
@@ -100,7 +101,7 @@ public class Sequence<E> extends TreeSet<E> {
             if (found) {
                 return current;
             }
-            if (seqComparator().compare(e, current) == 0) {
+            if (comparator.compare(e, current) == 0) {
                 found = true;
             }
         }
@@ -112,7 +113,7 @@ public class Sequence<E> extends TreeSet<E> {
      * is the first element in the sequence <code>null</code> is returned. <strong>Please note that this method is
      * provided for compatibility with Java 5 SE. On a Java 6 SE platform the same method implemented by the
      * {@link TreeSet} class should be used for better performance.</strong>
-     *
+     * 
      * @param  e an element which is compared to elements of this sequence.
      * @return   an element of this sequence or <code>null</code>.
      */
@@ -120,7 +121,7 @@ public class Sequence<E> extends TreeSet<E> {
     public E lower(E e) {
         E last = null;
         for (E current : this) {
-            if (seqComparator().compare(e, current) == 0) {
+            if (comparator.compare(e, current) == 0) {
                 return last;
             }
             last = current;

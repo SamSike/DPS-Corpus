@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package org.springframework.beans;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.AttributeAccessorSupport;
+import org.springframework.lang.Nullable;
 
 /**
  * Extension of {@link org.springframework.core.AttributeAccessorSupport},
@@ -31,7 +30,8 @@ import org.springframework.core.AttributeAccessorSupport;
 @SuppressWarnings("serial")
 public class BeanMetadataAttributeAccessor extends AttributeAccessorSupport implements BeanMetadataElement {
 
-	private @Nullable Object source;
+	@Nullable
+	private Object source;
 
 
 	/**
@@ -43,7 +43,8 @@ public class BeanMetadataAttributeAccessor extends AttributeAccessorSupport impl
 	}
 
 	@Override
-	public @Nullable Object getSource() {
+	@Nullable
+	public Object getSource() {
 		return this.source;
 	}
 
@@ -62,7 +63,8 @@ public class BeanMetadataAttributeAccessor extends AttributeAccessorSupport impl
 	 * @return the corresponding BeanMetadataAttribute object,
 	 * or {@code null} if no such attribute defined
 	 */
-	public @Nullable BeanMetadataAttribute getMetadataAttribute(String name) {
+	@Nullable
+	public BeanMetadataAttribute getMetadataAttribute(String name) {
 		return (BeanMetadataAttribute) super.getAttribute(name);
 	}
 
@@ -72,13 +74,15 @@ public class BeanMetadataAttributeAccessor extends AttributeAccessorSupport impl
 	}
 
 	@Override
-	public @Nullable Object getAttribute(String name) {
+	@Nullable
+	public Object getAttribute(String name) {
 		BeanMetadataAttribute attribute = (BeanMetadataAttribute) super.getAttribute(name);
 		return (attribute != null ? attribute.getValue() : null);
 	}
 
 	@Override
-	public @Nullable Object removeAttribute(String name) {
+	@Nullable
+	public Object removeAttribute(String name) {
 		BeanMetadataAttribute attribute = (BeanMetadataAttribute) super.removeAttribute(name);
 		return (attribute != null ? attribute.getValue() : null);
 	}

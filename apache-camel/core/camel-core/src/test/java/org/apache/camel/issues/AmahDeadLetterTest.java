@@ -35,10 +35,10 @@ public class AmahDeadLetterTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:err").redeliveryDelay(0));
 
                 from("seda:a").process(new Processor() {

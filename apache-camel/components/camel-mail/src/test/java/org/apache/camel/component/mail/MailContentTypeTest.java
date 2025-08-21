@@ -23,10 +23,9 @@ import jakarta.mail.Message;
 import jakarta.mail.internet.MimeMultipart;
 
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mail.Mailbox.MailboxUser;
-import org.apache.camel.component.mail.Mailbox.Protocol;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
+import org.jvnet.mock_javamail.Mailbox;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Unit test for contentType option.
  */
 public class MailContentTypeTest extends CamelTestSupport {
-    private static final MailboxUser claus = Mailbox.getOrCreateUser("claus", "secret");
 
     @Test
     public void testSendHtmlMail() throws Exception {
@@ -43,7 +41,7 @@ public class MailContentTypeTest extends CamelTestSupport {
 
         sendBody("direct:a", "<html><body><h1>Hello</h1>World</body></html>");
 
-        Mailbox box = claus.getInbox();
+        Mailbox box = Mailbox.get("claus@localhost");
         Message msg = box.get(0);
 
         assertTrue(msg.getContentType().startsWith("text/html"));
@@ -56,7 +54,7 @@ public class MailContentTypeTest extends CamelTestSupport {
 
         sendBody("direct:b", "Hello World");
 
-        Mailbox box = claus.getInbox();
+        Mailbox box = Mailbox.get("claus@localhost");
         Message msg = box.get(0);
         assertTrue(msg.getContentType().startsWith("text/plain"));
         assertEquals("Hello World", msg.getContent());
@@ -70,7 +68,7 @@ public class MailContentTypeTest extends CamelTestSupport {
         headers.put(MailConstants.MAIL_ALTERNATIVE_BODY, "Hello World");
         sendBody("direct:c", "<html><body><h1>Hello</h1>World</body></html>", headers);
 
-        Mailbox box = claus.getInbox();
+        Mailbox box = Mailbox.get("claus@localhost");
         Message msg = box.get(0);
         assertTrue(msg.getContentType().startsWith("multipart/alternative"));
         assertEquals("Hello World", ((MimeMultipart) msg.getContent()).getBodyPart(0).getContent());
@@ -82,9 +80,9 @@ public class MailContentTypeTest extends CamelTestSupport {
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
-                from("direct:a").to(claus.uriPrefix(Protocol.smtp) + "&contentType=text/html");
-                from("direct:b").to(claus.uriPrefix(Protocol.smtp) + "&contentType=text/plain");
-                from("direct:c").to(claus.uriPrefix(Protocol.smtp));
+                from("direct:a").to("smtp://claus@localhost?contentType=text/html");
+                from("direct:b").to("smtp://claus@localhost?contentType=text/plain");
+                from("direct:c").to("smtp://claus@localhost");
             }
         };
     }

@@ -29,6 +29,7 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.jms.ConsumerType;
 import org.apache.camel.component.jms.DefaultSpringErrorHandler;
+import org.apache.camel.component.jms.MessageListenerContainerFactory;
 import org.apache.camel.component.jms.ReplyToType;
 import org.apache.camel.component.jms.SimpleJmsMessageListenerContainer;
 import org.springframework.jms.listener.AbstractMessageListenerContainer;
@@ -41,6 +42,7 @@ import org.springframework.jms.support.destination.DestinationResolver;
 public class QueueReplyManager extends ReplyManagerSupport {
 
     private String replyToSelectorValue;
+    private MessageSelectorCreator dynamicMessageSelector;
 
     public QueueReplyManager(CamelContext camelContext) {
         super(camelContext);
@@ -70,12 +72,13 @@ public class QueueReplyManager extends ReplyManagerSupport {
 
     @Override
     protected void handleReplyMessage(String correlationID, Message message, Session session) {
-        ReplyHandler handler = correlation.remove(correlationID);
+        ReplyHandler handler = correlation.get(correlationID);
         if (handler == null && endpoint.isUseMessageIDAsCorrelationID()) {
             handler = waitForProvisionCorrelationToBeUpdated(correlationID, message);
         }
 
         if (handler != null) {
+            correlation.remove(correlationID);
             handler.onReply(correlationID, message, session);
         } else {
             // we could not correlate the received reply message to a matching request and therefore
@@ -109,15 +112,12 @@ public class QueueReplyManager extends ReplyManagerSupport {
                 Session session, String destinationName,
                 boolean pubSubDomain)
                 throws JMSException {
-            QueueReplyManager.this.lock.lock();
-            try {
+            synchronized (QueueReplyManager.this) {
                 // resolve the reply to destination
                 if (destination == null) {
                     destination = delegate.resolveDestinationName(session, destinationName, pubSubDomain);
                     setReplyTo(destination);
                 }
-            } finally {
-                QueueReplyManager.this.lock.unlock();
             }
             return destination;
         }
@@ -130,7 +130,12 @@ public class QueueReplyManager extends ReplyManagerSupport {
         } else if (endpoint.getConfiguration().getReplyToConsumerType() == ConsumerType.Simple) {
             return createSimpleListenerContainer();
         } else {
-            return getAbstractMessageListenerContainer(endpoint);
+            MessageListenerContainerFactory factory = endpoint.getConfiguration().getMessageListenerContainerFactory();
+            if (factory != null) {
+                return factory.createMessageListenerContainer(endpoint);
+            }
+            throw new IllegalArgumentException(
+                    "ReplyToConsumerType.Custom requires that a MessageListenerContainerFactory has been configured");
         }
     }
 
@@ -189,7 +194,16 @@ public class QueueReplyManager extends ReplyManagerSupport {
         answer.setSessionTransacted(false);
 
         // other optional properties
-        setOptionalProperties(answer);
+        if (endpoint.getExceptionListener() != null) {
+            answer.setExceptionListener(endpoint.getExceptionListener());
+        }
+        if (endpoint.getErrorHandler() != null) {
+            answer.setErrorHandler(endpoint.getErrorHandler());
+        } else {
+            answer.setErrorHandler(new DefaultSpringErrorHandler(
+                    endpoint.getCamelContext(), QueueReplyManager.class, endpoint.getErrorHandlerLoggingLevel(),
+                    endpoint.isErrorHandlerLogStackTrace()));
+        }
         // set task executor
         if (endpoint.getTaskExecutor() != null) {
             log.debug("Using custom TaskExecutor: {} on listener container: {}", endpoint.getTaskExecutor(), answer);
@@ -239,7 +253,7 @@ public class QueueReplyManager extends ReplyManagerSupport {
                         endpoint.getReplyTo(), fixedMessageSelector, answer);
             } else {
                 // use a dynamic message selector which will select the message we want to receive as reply
-                MessageSelectorCreator dynamicMessageSelector = new MessageSelectorCreator(correlation);
+                dynamicMessageSelector = new MessageSelectorCreator(correlation);
                 answer = new SharedQueueMessageListenerContainer(endpoint, dynamicMessageSelector);
                 log.debug("Using shared queue: {} with dynamic message selector as reply listener: {}", endpoint.getReplyTo(),
                         answer);
@@ -274,9 +288,6 @@ public class QueueReplyManager extends ReplyManagerSupport {
         if (endpoint.getMaxMessagesPerTask() >= 0) {
             answer.setMaxMessagesPerTask(endpoint.getMaxMessagesPerTask());
         }
-        if (endpoint.getIdleReceivesPerTaskLimit() != 0) {
-            answer.setIdleReceivesPerTaskLimit(endpoint.getIdleReceivesPerTaskLimit());
-        }
         answer.setMessageListener(this);
         answer.setPubSubDomain(false);
         answer.setSubscriptionDurable(false);
@@ -291,7 +302,16 @@ public class QueueReplyManager extends ReplyManagerSupport {
         answer.setSessionTransacted(false);
 
         // other optional properties
-        setOptionalProperties(answer);
+        if (endpoint.getExceptionListener() != null) {
+            answer.setExceptionListener(endpoint.getExceptionListener());
+        }
+        if (endpoint.getErrorHandler() != null) {
+            answer.setErrorHandler(endpoint.getErrorHandler());
+        } else {
+            answer.setErrorHandler(new DefaultSpringErrorHandler(
+                    endpoint.getCamelContext(), QueueReplyManager.class, endpoint.getErrorHandlerLoggingLevel(),
+                    endpoint.isErrorHandlerLogStackTrace()));
+        }
         if (endpoint.getReceiveTimeout() >= 0) {
             answer.setReceiveTimeout(endpoint.getReceiveTimeout());
         }
@@ -323,18 +343,5 @@ public class QueueReplyManager extends ReplyManagerSupport {
         }
 
         return answer;
-    }
-
-    private <T extends AbstractMessageListenerContainer> void setOptionalProperties(T answer) {
-        if (endpoint.getExceptionListener() != null) {
-            answer.setExceptionListener(endpoint.getExceptionListener());
-        }
-        if (endpoint.getErrorHandler() != null) {
-            answer.setErrorHandler(endpoint.getErrorHandler());
-        } else {
-            answer.setErrorHandler(new DefaultSpringErrorHandler(
-                    endpoint.getCamelContext(), QueueReplyManager.class, endpoint.getErrorHandlerLoggingLevel(),
-                    endpoint.isErrorHandlerLogStackTrace()));
-        }
     }
 }

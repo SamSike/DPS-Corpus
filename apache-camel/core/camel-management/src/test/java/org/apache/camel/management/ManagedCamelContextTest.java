@@ -17,7 +17,6 @@
 package org.apache.camel.management;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,9 +24,9 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.api.management.ManagedCamelContext;
 import org.apache.camel.api.management.mbean.ManagedCamelContextMBean;
-import org.apache.camel.api.management.mbean.ManagedRouteMBean;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.RefDataFormatTest;
@@ -53,29 +52,21 @@ public class ManagedCamelContextTest extends ManagementTestSupport {
         CamelContext context = super.createCamelContext();
         // to force a different management name than the camel id
         context.getManagementNameStrategy().setNamePattern("19-#name#");
-        context.getCamelContextExtension().setDescription("My special Camel description");
+        context.adapt(ExtendedCamelContext.class).setDescription("My special Camel description");
         context.setNameStrategy(new ExplicitCamelContextNameStrategy("my-camel-context"));
-        context.setSourceLocationEnabled(true);
+        // debugger needed for source locations
+        context.setDebugging(true);
         return context;
     }
 
     @Test
-    public void testManagedCamelContextClient() {
-        ManagedCamelContextMBean client
-                = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class).getManagedCamelContext();
+    public void testManagedCamelContextClient() throws Exception {
+        ManagedCamelContextMBean client = context.getExtension(ManagedCamelContext.class).getManagedCamelContext();
         assertNotNull(client);
 
         assertEquals("my-camel-context", client.getCamelId());
         assertEquals("My special Camel description", client.getCamelDescription());
         assertEquals("Started", client.getState());
-
-        List<ManagedRouteMBean> routes
-                = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class).getManagedRoutes();
-        assertEquals(3, routes.size());
-
-        routes = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class)
-                .getManagedRoutesByGroup("cheese");
-        assertEquals(2, routes.size());
     }
 
     @Test
@@ -110,10 +101,10 @@ public class ManagedCamelContextTest extends ManagementTestSupport {
         assertEquals(Boolean.FALSE, logMask);
 
         Integer total = (Integer) mbeanServer.getAttribute(on, "TotalRoutes");
-        assertEquals(3, total.intValue());
+        assertEquals(2, total.intValue());
 
         Integer started = (Integer) mbeanServer.getAttribute(on, "StartedRoutes");
-        assertEquals(3, started.intValue());
+        assertEquals(2, started.intValue());
 
         // invoke operations
         MockEndpoint mock = getMockEndpoint("mock:result");
@@ -267,18 +258,39 @@ public class ManagedCamelContextTest extends ManagementTestSupport {
         Assertions.assertTrue(names.contains("reverse"));
     }
 
+    @Test
+    public void testSourceLocations() throws Exception {
+        MBeanServer mbeanServer = getMBeanServer();
+        ObjectName on = getContextObjectName();
+
+        String xml = (String) mbeanServer.invoke(on, "dumpRoutesSourceLocationsAsXml", null, null);
+        Assertions.assertNotNull(xml);
+
+        Assertions.assertTrue(xml.contains(
+                "sourceLocation=\"ManagedCamelContextTest.java\" sourceLineNumber=\"289\"/>"));
+        Assertions.assertTrue(xml.contains(
+                "sourceLocation=\"ManagedCamelContextTest.java\" sourceLineNumber=\"290\"/>"));
+        Assertions.assertTrue(xml.contains(
+                "sourceLocation=\"ManagedCamelContextTest.java\" sourceLineNumber=\"291\"/>"));
+
+        Assertions.assertTrue(xml.contains(
+                "sourceLocation=\"ManagedCamelContextTest.java\" sourceLineNumber=\"293\"/>"));
+        Assertions.assertTrue(xml.contains(
+                "sourceLocation=\"ManagedCamelContextTest.java\" sourceLineNumber=\"294\"/>"));
+        Assertions.assertTrue(xml.contains(
+                "sourceLocation=\"ManagedCamelContextTest.java\" sourceLineNumber=\"295\"/>"));
+    }
+
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
-                from("direct:start").group("cheese")
+            public void configure() throws Exception {
+                from("direct:start")
                         .delay(10)
                         .to("mock:result");
 
-                from("direct:bar").to("mock:bar");
-
-                from("direct:foo").group("cheese")
+                from("direct:foo")
                         .delay(10)
                         .transform(constant("Bye World")).id("myTransform");
             }

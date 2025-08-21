@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,8 +58,7 @@ import static org.springframework.core.ResolvableType.forClass;
 import static org.springframework.web.testfixture.method.MvcAnnotationPredicates.requestPart;
 
 /**
- * Tests for {@link RequestPartMethodArgumentResolver}.
- *
+ * Unit tests for {@link RequestPartMethodArgumentResolver}.
  * @author Rossen Stoyanchev
  * @author Ilya Lukyanovich
  */

@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 
 import software.amazon.awssdk.services.iam.IamClient;
-import software.amazon.awssdk.services.iam.IamServiceClientConfiguration;
 import software.amazon.awssdk.services.iam.model.AccessKey;
 import software.amazon.awssdk.services.iam.model.AccessKeyMetadata;
 import software.amazon.awssdk.services.iam.model.CreateAccessKeyRequest;
@@ -158,11 +157,6 @@ public class AmazonIAMClientMock implements IamClient {
     public UpdateAccessKeyResponse updateAccessKey(UpdateAccessKeyRequest updateAccessKeyRequest) {
         UpdateAccessKeyResponse result = UpdateAccessKeyResponse.builder().build();
         return result;
-    }
-
-    @Override
-    public IamServiceClientConfiguration serviceClientConfiguration() {
-        return null;
     }
 
     @Override

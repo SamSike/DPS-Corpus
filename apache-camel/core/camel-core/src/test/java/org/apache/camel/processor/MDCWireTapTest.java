@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class MDCWireTapTest extends ContextTestSupport {
 
@@ -38,21 +39,21 @@ public class MDCWireTapTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // enable MDC
                 context.setUseMDCLogging(true);
 
                 from("direct:a").routeId("route-a").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         assertEquals("route-a", MDC.get("camel.routeId"));
                         assertEquals(exchange.getExchangeId(), MDC.get("camel.exchangeId"));
                         MDC.put("custom.id", "1");
                     }
                 }).to("log:before-wiretap").wireTap("direct:b").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         assertEquals("route-a", MDC.get("camel.routeId"));
                         assertEquals(exchange.getExchangeId(), MDC.get("camel.exchangeId"));
                         assertEquals("1", MDC.get("custom.id"));
@@ -60,10 +61,11 @@ public class MDCWireTapTest extends ContextTestSupport {
                 }).to("log:a-done").to("mock:a");
 
                 from("direct:b").routeId("route-b").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         assertEquals("route-b", MDC.get("camel.routeId"));
                         assertEquals(exchange.getExchangeId(), MDC.get("camel.exchangeId"));
-                        assertEquals("1", MDC.get("custom.id"));
+                        // custom MDC is not propagated
+                        assertNull(MDC.get("custom.id"));
                     }
                 }).to("log:b-done").to("mock:b");
             }

@@ -3,7 +3,9 @@
  *
  * <p>Normally to be used through an AspectJAutoProxyCreator rather than directly.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.aop.aspectj.annotation;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

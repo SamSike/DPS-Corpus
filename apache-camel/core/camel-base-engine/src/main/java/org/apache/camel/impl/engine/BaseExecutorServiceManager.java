@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NamedNode;
 import org.apache.camel.StaticService;
 import org.apache.camel.spi.ExecutorServiceManager;
@@ -39,7 +40,6 @@ import org.apache.camel.spi.ThreadPoolFactory;
 import org.apache.camel.spi.ThreadPoolProfile;
 import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.DefaultThreadPoolFactory;
-import org.apache.camel.support.OrderedComparator;
 import org.apache.camel.support.ResolverHelper;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.support.service.ServiceSupport;
@@ -64,12 +64,11 @@ public class BaseExecutorServiceManager extends ServiceSupport implements Execut
     private final CamelContext camelContext;
     private final List<ExecutorService> executorServices = new CopyOnWriteArrayList<>();
     private final Map<String, ThreadPoolProfile> threadPoolProfiles = new ConcurrentHashMap<>();
-    private final List<ThreadFactoryListener> threadFactoryListeners = new CopyOnWriteArrayList<>();
     private ThreadPoolFactory threadPoolFactory;
     private String threadNamePattern;
     private long shutdownAwaitTermination = 10000;
     private String defaultThreadPoolProfileId = "defaultThreadPoolProfile";
-    private final ThreadPoolProfile defaultProfile;
+    private ThreadPoolProfile defaultProfile;
 
     public BaseExecutorServiceManager(CamelContext camelContext) {
         this.camelContext = camelContext;
@@ -89,11 +88,6 @@ public class BaseExecutorServiceManager extends ServiceSupport implements Execut
 
     public CamelContext getCamelContext() {
         return camelContext;
-    }
-
-    @Override
-    public void addThreadFactoryListener(ThreadFactoryListener threadFactoryListener) {
-        threadFactoryListeners.add(threadFactoryListener);
     }
 
     @Override
@@ -249,8 +243,6 @@ public class BaseExecutorServiceManager extends ServiceSupport implements Execut
     public ScheduledExecutorService newSingleThreadScheduledExecutor(Object source, String name) {
         ThreadPoolProfile profile = new ThreadPoolProfile(name);
         profile.setPoolSize(1);
-        profile.setMaxPoolSize(1);
-        profile.setKeepAliveTime(0L);
         profile.setAllowCoreThreadTimeOut(false);
         return newScheduledThreadPool(source, name, profile);
     }
@@ -335,7 +327,6 @@ public class BaseExecutorServiceManager extends ServiceSupport implements Execut
                         }
                     }
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
                     warned = true;
                     LOG.warn("Forcing shutdown of ExecutorService: {} due interrupted.", executorService);
                     // we were interrupted during shutdown, so force shutdown
@@ -355,18 +346,12 @@ public class BaseExecutorServiceManager extends ServiceSupport implements Execut
             }
         }
 
-        doRemove(executorService, failSafe);
-
-        return warned;
-    }
-
-    private void doRemove(ExecutorService executorService, boolean failSafe) {
         // let lifecycle strategy be notified as well which can let it be managed in JMX as well
         ThreadPoolExecutor threadPool = null;
-        if (executorService instanceof ThreadPoolExecutor threadPoolExecutor) {
-            threadPool = threadPoolExecutor;
-        } else if (executorService instanceof SizedScheduledExecutorService sizedScheduledExecutorService) {
-            threadPool = sizedScheduledExecutorService.getScheduledThreadPoolExecutor();
+        if (executorService instanceof ThreadPoolExecutor) {
+            threadPool = (ThreadPoolExecutor) executorService;
+        } else if (executorService instanceof SizedScheduledExecutorService) {
+            threadPool = ((SizedScheduledExecutorService) executorService).getScheduledThreadPoolExecutor();
         }
         if (threadPool != null) {
             for (LifecycleStrategy lifecycle : camelContext.getLifecycleStrategies()) {
@@ -378,20 +363,26 @@ public class BaseExecutorServiceManager extends ServiceSupport implements Execut
         if (!failSafe) {
             executorServices.remove(executorService);
         }
+
+        return warned;
     }
 
     @Override
     public List<Runnable> shutdownNow(ExecutorService executorService) {
-        return doShutdownNow(executorService);
+        return doShutdownNow(executorService, false);
     }
 
-    private List<Runnable> doShutdownNow(ExecutorService executorService) {
+    private List<Runnable> doShutdownNow(ExecutorService executorService, boolean failSafe) {
         ObjectHelper.notNull(executorService, "executorService");
 
         List<Runnable> answer = null;
         if (!executorService.isShutdown()) {
-            LOG.debug("Forcing shutdown of ExecutorService: {}", executorService);
-
+            if (failSafe) {
+                // log as warn, as we shutdown as fail-safe, so end user should see more details in the log.
+                LOG.warn("Forcing shutdown of ExecutorService: {}", executorService);
+            } else {
+                LOG.debug("Forcing shutdown of ExecutorService: {}", executorService);
+            }
             answer = executorService.shutdownNow();
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Shutdown of ExecutorService: {} is shutdown: {} and terminated: {}.",
@@ -399,7 +390,23 @@ public class BaseExecutorServiceManager extends ServiceSupport implements Execut
             }
         }
 
-        doRemove(executorService, false);
+        // let lifecycle strategy be notified as well which can let it be managed in JMX as well
+        ThreadPoolExecutor threadPool = null;
+        if (executorService instanceof ThreadPoolExecutor) {
+            threadPool = (ThreadPoolExecutor) executorService;
+        } else if (executorService instanceof SizedScheduledExecutorService) {
+            threadPool = ((SizedScheduledExecutorService) executorService).getScheduledThreadPoolExecutor();
+        }
+        if (threadPool != null) {
+            for (LifecycleStrategy lifecycle : camelContext.getLifecycleStrategies()) {
+                lifecycle.onThreadPoolRemove(camelContext, threadPool);
+            }
+        }
+
+        // remove reference as its shutdown (do not remove if fail-safe)
+        if (!failSafe) {
+            executorServices.remove(executorService);
+        }
 
         return answer;
     }
@@ -447,33 +454,18 @@ public class BaseExecutorServiceManager extends ServiceSupport implements Execut
         if (threadPoolFactory == null) {
             threadPoolFactory = ResolverHelper.resolveService(
                     camelContext,
-                    camelContext.getCamelContextExtension().getBootstrapFactoryFinder(),
+                    camelContext.adapt(ExtendedCamelContext.class).getBootstrapFactoryFinder(),
                     ThreadPoolFactory.FACTORY,
                     ThreadPoolFactory.class)
                     .orElseGet(DefaultThreadPoolFactory::new);
         }
         CamelContextAware.trySetCamelContext(threadPoolFactory, camelContext);
         ServiceHelper.initService(threadPoolFactory);
-
-        // discover custom thread factory listener via Camel factory finder
-        ResolverHelper.resolveService(
-                camelContext,
-                camelContext.getCamelContextExtension().getBootstrapFactoryFinder(),
-                ThreadFactoryListener.FACTORY,
-                ThreadFactoryListener.class).ifPresent(this::addThreadFactoryListener);
     }
 
     @Override
     protected void doStart() throws Exception {
         super.doStart();
-
-        Set<ThreadFactoryListener> listeners = camelContext.getRegistry().findByType(ThreadFactoryListener.class);
-        if (listeners != null && !listeners.isEmpty()) {
-            threadFactoryListeners.addAll(listeners);
-        }
-        if (!threadFactoryListeners.isEmpty()) {
-            threadFactoryListeners.sort(OrderedComparator.get());
-        }
         ServiceHelper.startService(threadPoolFactory);
     }
 
@@ -495,10 +487,11 @@ public class BaseExecutorServiceManager extends ServiceSupport implements Execut
                     if (warned) {
                         forced.add(executorService);
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     // only log if something goes wrong as we want to shutdown them all
-                    LOG.warn("Error occurred during shutdown of ExecutorService: {}. This exception will be ignored.",
-                            executorService, e);
+                    LOG.warn("Error occurred during shutdown of ExecutorService: "
+                             + executorService + ". This exception will be ignored.",
+                            e);
                 }
             }
         }
@@ -526,7 +519,6 @@ public class BaseExecutorServiceManager extends ServiceSupport implements Execut
         }
 
         ServiceHelper.stopAndShutdownServices(threadPoolFactory);
-        threadFactoryListeners.clear();
     }
 
     /**
@@ -547,12 +539,12 @@ public class BaseExecutorServiceManager extends ServiceSupport implements Execut
         String routeId = null;
 
         // extract id from source
-        if (source instanceof NamedNode namedNode) {
-            id = namedNode.getId();
+        if (source instanceof NamedNode) {
+            id = ((NamedNode) source).getId();
             // and let source be the short name of the pattern
-            sourceId = namedNode.getShortName();
-        } else if (source instanceof String str) {
-            id = str;
+            sourceId = ((NamedNode) source).getShortName();
+        } else if (source instanceof String) {
+            id = (String) source;
         } else if (source != null) {
             if (source instanceof StaticService) {
                 // the source is static service so its name would be unique
@@ -570,16 +562,16 @@ public class BaseExecutorServiceManager extends ServiceSupport implements Execut
         StringHelper.notEmpty(id, "id for thread pool " + executorService);
 
         // extract route id if possible
-        if (source instanceof NamedNode namedNode) {
-            routeId = CamelContextHelper.getRouteId(namedNode);
+        if (source instanceof NamedNode) {
+            routeId = CamelContextHelper.getRouteId((NamedNode) source);
         }
 
         // let lifecycle strategy be notified as well which can let it be managed in JMX as well
         ThreadPoolExecutor threadPool = null;
-        if (executorService instanceof ThreadPoolExecutor threadPoolExecutor) {
-            threadPool = threadPoolExecutor;
-        } else if (executorService instanceof SizedScheduledExecutorService scheduledExecutorService) {
-            threadPool = scheduledExecutorService.getScheduledThreadPoolExecutor();
+        if (executorService instanceof ThreadPoolExecutor) {
+            threadPool = (ThreadPoolExecutor) executorService;
+        } else if (executorService instanceof SizedScheduledExecutorService) {
+            threadPool = ((SizedScheduledExecutorService) executorService).getScheduledThreadPoolExecutor();
         }
         if (threadPool != null) {
             for (LifecycleStrategy lifecycle : camelContext.getLifecycleStrategies()) {
@@ -591,12 +583,8 @@ public class BaseExecutorServiceManager extends ServiceSupport implements Execut
         onNewExecutorService(executorService);
     }
 
-    protected ThreadFactory createThreadFactory(String name, boolean daemon) {
-        ThreadFactory factory = new CamelThreadFactory(threadNamePattern, name, daemon);
-        for (ThreadFactoryListener listener : threadFactoryListeners) {
-            factory = listener.onNewThreadFactory(factory);
-        }
-        return factory;
+    protected ThreadFactory createThreadFactory(String name, boolean isDaemon) {
+        return new CamelThreadFactory(threadNamePattern, name, isDaemon);
     }
 
 }

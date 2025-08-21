@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Route;
+import org.apache.camel.VetoCamelContextStartException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.support.LifecycleStrategySupport;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class DefaultCamelContextWithLifecycleStrategyRestartTest extends ContextTestSupport {
 
-    private final MyStrategy strategy = new MyStrategy();
+    private MyStrategy strategy = new MyStrategy();
 
     @Test
     public void testRestart() throws Exception {
@@ -88,22 +89,22 @@ public class DefaultCamelContextWithLifecycleStrategyRestartTest extends Context
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo").to("mock:result");
             }
         };
     }
 
-    private static class MyStrategy extends LifecycleStrategySupport {
+    private class MyStrategy extends LifecycleStrategySupport {
 
-        private final AtomicInteger contextStartCounter = new AtomicInteger();
-        private final AtomicInteger removeCounter = new AtomicInteger();
+        private AtomicInteger contextStartCounter = new AtomicInteger();
+        private AtomicInteger removeCounter = new AtomicInteger();
 
         @Override
-        public void onContextStarting(CamelContext context) {
+        public void onContextStart(CamelContext context) throws VetoCamelContextStartException {
             contextStartCounter.incrementAndGet();
         }
 

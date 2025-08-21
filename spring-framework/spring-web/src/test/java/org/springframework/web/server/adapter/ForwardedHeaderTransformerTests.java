@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.web.server.adapter;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.junit.jupiter.api.Test;
 
@@ -29,12 +30,10 @@ import org.springframework.web.testfixture.http.server.reactive.MockServerHttpRe
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link ForwardedHeaderTransformer}.
- *
+ * Unit tests for {@link ForwardedHeaderTransformer}.
  * @author Rossen Stoyanchev
- * @author Sebastien Deleuze
  */
-class ForwardedHeaderTransformerTests {
+public class ForwardedHeaderTransformerTests {
 
 	private static final String BASE_URL = "https://example.com/path";
 
@@ -58,7 +57,7 @@ class ForwardedHeaderTransformerTests {
 	}
 
 	@Test
-	void xForwardedHeaders() {
+	void xForwardedHeaders() throws Exception {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("X-Forwarded-Host", "84.198.58.199");
 		headers.add("X-Forwarded-Port", "443");
@@ -66,131 +65,105 @@ class ForwardedHeaderTransformerTests {
 		headers.add("foo", "bar");
 		ServerHttpRequest request = this.requestMutator.apply(getRequest(headers));
 
-		assertThat(request.getURI()).isEqualTo(URI.create("https://84.198.58.199/path"));
+		assertThat(request.getURI()).isEqualTo(new URI("https://84.198.58.199/path"));
 		assertForwardedHeadersRemoved(request);
 	}
 
 	@Test
-	void forwardedHeader() {
+	void forwardedHeader() throws Exception {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Forwarded", "host=84.198.58.199;proto=https");
 		ServerHttpRequest request = this.requestMutator.apply(getRequest(headers));
 
-		assertThat(request.getURI()).isEqualTo(URI.create("https://84.198.58.199/path"));
+		assertThat(request.getURI()).isEqualTo(new URI("https://84.198.58.199/path"));
 		assertForwardedHeadersRemoved(request);
 	}
 
 	@Test
-	void xForwardedPrefix() {
+	void xForwardedPrefix() throws Exception {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("X-Forwarded-Prefix", "/prefix");
 		ServerHttpRequest request = this.requestMutator.apply(getRequest(headers));
 
-		assertThat(request.getURI()).isEqualTo(URI.create("https://example.com/prefix/path"));
+		assertThat(request.getURI()).isEqualTo(new URI("https://example.com/prefix/path"));
 		assertThat(request.getPath().value()).isEqualTo("/prefix/path");
 		assertForwardedHeadersRemoved(request);
 	}
 
 	@Test // gh-23305
-	void xForwardedPrefixShouldNotLeadToDecodedPath() {
+	void xForwardedPrefixShouldNotLeadToDecodedPath() throws Exception {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("X-Forwarded-Prefix", "/prefix");
 		ServerHttpRequest request = MockServerHttpRequest
-				.method(HttpMethod.GET, URI.create("https://example.com/a%20b?q=a%2Bb"))
+				.method(HttpMethod.GET, new URI("https://example.com/a%20b?q=a%2Bb"))
 				.headers(headers)
 				.build();
 
 		request = this.requestMutator.apply(request);
 
-		assertThat(request.getURI()).isEqualTo(URI.create("https://example.com/prefix/a%20b?q=a%2Bb"));
+		assertThat(request.getURI()).isEqualTo(new URI("https://example.com/prefix/a%20b?q=a%2Bb"));
 		assertThat(request.getPath().value()).isEqualTo("/prefix/a%20b");
 		assertForwardedHeadersRemoved(request);
 	}
 
 	@Test
-	void xForwardedPrefixTrailingSlash() {
+	void xForwardedPrefixTrailingSlash() throws Exception {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("X-Forwarded-Prefix", "/prefix////");
 		ServerHttpRequest request = this.requestMutator.apply(getRequest(headers));
 
-		assertThat(request.getURI()).isEqualTo(URI.create("https://example.com/prefix/path"));
+		assertThat(request.getURI()).isEqualTo(new URI("https://example.com/prefix/path"));
 		assertThat(request.getPath().value()).isEqualTo("/prefix/path");
 		assertForwardedHeadersRemoved(request);
 	}
 
 	@Test // SPR-17525
-	void shouldNotDoubleEncode() {
+	void shouldNotDoubleEncode() throws Exception {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Forwarded", "host=84.198.58.199;proto=https");
 
 		ServerHttpRequest request = MockServerHttpRequest
-				.method(HttpMethod.GET, URI.create("https://example.com/a%20b?q=a%2Bb"))
+				.method(HttpMethod.GET, new URI("https://example.com/a%20b?q=a%2Bb"))
 				.headers(headers)
 				.build();
 
 		request = this.requestMutator.apply(request);
 
-		assertThat(request.getURI()).isEqualTo(URI.create("https://84.198.58.199/a%20b?q=a%2Bb"));
+		assertThat(request.getURI()).isEqualTo(new URI("https://84.198.58.199/a%20b?q=a%2Bb"));
 		assertForwardedHeadersRemoved(request);
 	}
 
-	@Test // gh-30137
-	void shouldHandleUnencodedUri() {
-			HttpHeaders headers = new HttpHeaders();
-			headers.add("Forwarded", "host=84.198.58.199;proto=https");
-			ServerHttpRequest request = MockServerHttpRequest
-							.method(HttpMethod.GET, URI.create("https://example.com/a?q=1+1=2"))
-							.headers(headers)
-							.build();
-
-			request = this.requestMutator.apply(request);
-
-			assertThat(request.getURI()).isEqualTo(URI.create("https://84.198.58.199/a?q=1+1=2"));
-			assertForwardedHeadersRemoved(request);
-	}
-
 	@Test
-	void shouldConcatenatePrefixes() {
+	void shouldConcatenatePrefixes() throws Exception {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("X-Forwarded-Prefix", "/first,/second");
 		ServerHttpRequest request = this.requestMutator.apply(getRequest(headers));
 
-		assertThat(request.getURI()).isEqualTo(URI.create("https://example.com/first/second/path"));
+		assertThat(request.getURI()).isEqualTo(new URI("https://example.com/first/second/path"));
 		assertThat(request.getPath().value()).isEqualTo("/first/second/path");
 		assertForwardedHeadersRemoved(request);
 	}
 
 	@Test
-	void shouldConcatenatePrefixesWithTrailingSlashes() {
+	void shouldConcatenatePrefixesWithTrailingSlashes() throws Exception {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("X-Forwarded-Prefix", "/first/,/second//");
 		ServerHttpRequest request = this.requestMutator.apply(getRequest(headers));
 
-		assertThat(request.getURI()).isEqualTo(URI.create("https://example.com/first/second/path"));
+		assertThat(request.getURI()).isEqualTo(new URI("https://example.com/first/second/path"));
 		assertThat(request.getPath().value()).isEqualTo("/first/second/path");
 		assertForwardedHeadersRemoved(request);
 	}
 
-	@Test // gh-33465
-	void shouldRemoveSingleTrailingSlash() {
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("X-Forwarded-Prefix", "/prefix,/");
-		ServerHttpRequest request = this.requestMutator.apply(getRequest(headers));
-
-		assertThat(request.getURI()).isEqualTo(URI.create("https://example.com/prefix/path"));
-		assertThat(request.getPath().value()).isEqualTo("/prefix/path");
-		assertForwardedHeadersRemoved(request);
-	}
-
 	@Test
-	void forwardedForNotPresent() {
+	public void forwardedForNotPresent() throws URISyntaxException {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Forwarded", "host=84.198.58.199;proto=https");
 
 		InetSocketAddress remoteAddress = new InetSocketAddress("example.client", 47011);
 
 		ServerHttpRequest request = MockServerHttpRequest
-				.method(HttpMethod.GET, URI.create("https://example.com/a%20b?q=a%2Bb"))
+				.method(HttpMethod.GET, new URI("https://example.com/a%20b?q=a%2Bb"))
 				.remoteAddress(remoteAddress)
 				.headers(headers)
 				.build();
@@ -200,14 +173,14 @@ class ForwardedHeaderTransformerTests {
 	}
 
 	@Test
-	void forwardedFor() {
+	public void forwardedFor() throws URISyntaxException {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Forwarded", "for=\"203.0.113.195:4711\";host=84.198.58.199;proto=https");
 
 		InetSocketAddress remoteAddress = new InetSocketAddress("example.client", 47011);
 
 		ServerHttpRequest request = MockServerHttpRequest
-				.method(HttpMethod.GET, URI.create("https://example.com/a%20b?q=a%2Bb"))
+				.method(HttpMethod.GET, new URI("https://example.com/a%20b?q=a%2Bb"))
 				.remoteAddress(remoteAddress)
 				.headers(headers)
 				.build();
@@ -219,12 +192,12 @@ class ForwardedHeaderTransformerTests {
 	}
 
 	@Test
-	void xForwardedFor() {
+	public void xForwardedFor() throws URISyntaxException {
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("x-forwarded-for", "203.0.113.195, 70.41.3.18, 150.172.238.178");
 
 		ServerHttpRequest request = MockServerHttpRequest
-				.method(HttpMethod.GET, URI.create("https://example.com/a%20b?q=a%2Bb"))
+				.method(HttpMethod.GET, new URI("https://example.com/a%20b?q=a%2Bb"))
 				.headers(headers)
 				.build();
 
@@ -240,7 +213,7 @@ class ForwardedHeaderTransformerTests {
 
 	private void assertForwardedHeadersRemoved(ServerHttpRequest request) {
 		ForwardedHeaderTransformer.FORWARDED_HEADER_NAMES
-				.forEach(name -> assertThat(request.getHeaders().containsHeader(name)).isFalse());
+				.forEach(name -> assertThat(request.getHeaders().containsKey(name)).isFalse());
 	}
 
 }

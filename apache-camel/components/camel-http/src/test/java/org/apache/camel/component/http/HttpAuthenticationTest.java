@@ -23,21 +23,22 @@ import java.util.Map;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.component.http.handler.AuthenticationValidationHandler;
-import org.apache.camel.component.http.interceptor.RequestBasicAuth;
-import org.apache.camel.component.http.interceptor.ResponseBasicUnauthorized;
-import org.apache.hc.core5.http.HttpRequestInterceptor;
-import org.apache.hc.core5.http.HttpResponseInterceptor;
-import org.apache.hc.core5.http.HttpStatus;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
-import org.apache.hc.core5.http.protocol.DefaultHttpProcessor;
-import org.apache.hc.core5.http.protocol.HttpProcessor;
-import org.apache.hc.core5.http.protocol.RequestValidateHost;
-import org.apache.hc.core5.http.protocol.ResponseContent;
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.HttpResponseInterceptor;
+import org.apache.http.HttpStatus;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.localserver.RequestBasicAuth;
+import org.apache.http.localserver.ResponseBasicUnauthorized;
+import org.apache.http.protocol.HttpProcessor;
+import org.apache.http.protocol.ImmutableHttpProcessor;
+import org.apache.http.protocol.ResponseContent;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.http.HttpMethods.GET;
-import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -46,23 +47,27 @@ public class HttpAuthenticationTest extends BaseHttpTest {
 
     private HttpServer localServer;
 
-    private final String user = "camel";
-    private final String password = "password";
+    private String user = "camel";
+    private String password = "password";
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+    public void setUp() throws Exception {
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext())
-                .register("/search",
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext())
+                .registerHandler("/search",
                         new AuthenticationValidationHandler(GET.name(), null, null, getExpectedContent(), user, password))
                 .create();
         localServer.start();
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() throws Exception {
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (localServer != null) {
             localServer.stop();
@@ -70,8 +75,8 @@ public class HttpAuthenticationTest extends BaseHttpTest {
     }
 
     @Test
-    public void basicAuthenticationShouldSuccess() {
-        Exchange exchange = template.request("http://localhost:"
+    public void basicAuthenticationShouldSuccess() throws Exception {
+        Exchange exchange = template.request("http://" + localServer.getInetAddress().getHostName() + ":"
                                              + localServer.getLocalPort() + "/search?authUsername=" + user + "&authPassword="
                                              + password,
                 exchange1 -> {
@@ -81,8 +86,8 @@ public class HttpAuthenticationTest extends BaseHttpTest {
     }
 
     @Test
-    public void basicAuthenticationPreemptiveShouldSuccess() {
-        Exchange exchange = template.request("http://localhost:"
+    public void basicAuthenticationPreemptiveShouldSuccess() throws Exception {
+        Exchange exchange = template.request("http://" + localServer.getInetAddress().getHostName() + ":"
                                              + localServer.getLocalPort() + "/search?authUsername=" + user + "&authPassword="
                                              + password + "&authenticationPreemptive=true",
                 exchange1 -> {
@@ -92,9 +97,9 @@ public class HttpAuthenticationTest extends BaseHttpTest {
     }
 
     @Test
-    public void basicAuthenticationShouldFailWithoutCreds() {
+    public void basicAuthenticationShouldFailWithoutCreds() throws Exception {
         Exchange exchange
-                = template.request("http://localhost:" + localServer.getLocalPort()
+                = template.request("http://" + localServer.getInetAddress().getHostName() + ":" + localServer.getLocalPort()
                                    + "/search?throwExceptionOnFailure=false",
                         exchange1 -> {
                         });
@@ -103,9 +108,9 @@ public class HttpAuthenticationTest extends BaseHttpTest {
     }
 
     @Test
-    public void basicAuthenticationShouldFailWithWrongCreds() {
+    public void basicAuthenticationShouldFailWithWrongCreds() throws Exception {
         Exchange exchange = template
-                .request("http://localhost:" + localServer.getLocalPort()
+                .request("http://" + localServer.getInetAddress().getHostName() + ":" + localServer.getLocalPort()
                          + "/search?throwExceptionOnFailure=false&authUsername=camel&authPassword=wrong",
                         exchange1 -> {
                         });
@@ -116,13 +121,12 @@ public class HttpAuthenticationTest extends BaseHttpTest {
     @Override
     protected HttpProcessor getBasicHttpProcessor() {
         List<HttpRequestInterceptor> requestInterceptors = new ArrayList<>();
-        requestInterceptors.add(new RequestValidateHost());
         requestInterceptors.add(new RequestBasicAuth());
         List<HttpResponseInterceptor> responseInterceptors = new ArrayList<>();
         responseInterceptors.add(new ResponseContent());
         responseInterceptors.add(new ResponseBasicUnauthorized());
 
-        return new DefaultHttpProcessor(requestInterceptors, responseInterceptors);
+        return new ImmutableHttpProcessor(requestInterceptors, responseInterceptors);
     }
 
     protected void assertExchangeFailed(Exchange exchange) {

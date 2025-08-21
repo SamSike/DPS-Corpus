@@ -21,10 +21,10 @@ import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-class SpringTarSplitterRouteTest extends CamelSpringTestSupport {
+public class SpringTarSplitterRouteTest extends CamelSpringTestSupport {
 
     @Test
-    void testSplitter() throws InterruptedException {
+    public void testSplitter() throws InterruptedException {
         MockEndpoint processTarEntry = getMockEndpoint("mock:processTarEntry");
 
         processTarEntry.expectedBodiesReceivedInAnyOrder("chau", "hi", "hola", "hello", "greetings");

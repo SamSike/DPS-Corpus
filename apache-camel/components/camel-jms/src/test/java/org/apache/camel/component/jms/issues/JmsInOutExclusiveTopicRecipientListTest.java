@@ -16,44 +16,27 @@
  */
 package org.apache.camel.component.jms.issues;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.ConsumerTemplate;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jms.AbstractJMSTest;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.awaitility.Awaitility;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class JmsInOutExclusiveTopicRecipientListTest extends AbstractJMSTest {
 
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
-    protected CamelContext context;
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
-
     @Test
     public void testJmsInOutExclusiveTopicTest() throws Exception {
         getMockEndpoint("mock:result").expectedBodiesReceived("Bye Camel");
 
-        // instantiate JmsInOutExclusiveTopicRecipientListTest.reply queue
-        Awaitility.await().untilAsserted(() -> {
-            String out = template.requestBodyAndHeader("direct:start", "Camel", "whereTo",
-                    "activemq:topic:JmsInOutExclusiveTopicRecipientListTest.news?replyToType=Exclusive&replyTo=queue:JmsInOutExclusiveTopicRecipientListTest.reply",
-                    String.class);
-            assertEquals("Bye Camel", out);
+        Thread.sleep(1000); // instantiate JmsInOutExclusiveTopicRecipientListTest.reply queue
 
-            MockEndpoint.assertIsSatisfied(context);
-        });
+        String out = template.requestBodyAndHeader("direct:start", "Camel", "whereTo",
+                "activemq:topic:JmsInOutExclusiveTopicRecipientListTest.news?replyToType=Exclusive&replyTo=queue:JmsInOutExclusiveTopicRecipientListTest.reply",
+                String.class);
+        assertEquals("Bye Camel", out);
+
+        MockEndpoint.assertIsSatisfied(context);
     }
 
     @Override
@@ -78,6 +61,8 @@ public class JmsInOutExclusiveTopicRecipientListTest extends AbstractJMSTest {
                             log.info("ReplyTo: {}", replyTo);
                             log.info("CorrelationID: {}", cid);
                             if (replyTo != null && cid != null) {
+                                // wait a bit before sending back
+                                Thread.sleep(1000);
                                 log.info("Sending back reply message on {}", replyTo);
                                 template.sendBodyAndHeader("activemq:" + replyTo, exchange.getIn().getBody(),
                                         "JMSCorrelationID", cid);
@@ -87,15 +72,4 @@ public class JmsInOutExclusiveTopicRecipientListTest extends AbstractJMSTest {
         };
     }
 
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        context = camelContextExtension.getContext();
-        template = camelContextExtension.getProducerTemplate();
-        consumer = camelContextExtension.getConsumerTemplate();
-    }
 }

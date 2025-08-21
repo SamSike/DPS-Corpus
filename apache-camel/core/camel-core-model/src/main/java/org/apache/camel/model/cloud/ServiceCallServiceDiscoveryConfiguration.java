@@ -25,6 +25,7 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NoFactoryAvailableException;
 import org.apache.camel.cloud.ServiceDiscovery;
 import org.apache.camel.cloud.ServiceDiscoveryFactory;
@@ -39,10 +40,10 @@ import org.apache.camel.util.ObjectHelper;
 @XmlRootElement(name = "serviceDiscoveryConfiguration")
 @XmlAccessorType(XmlAccessType.FIELD)
 @Configurer(extended = true)
-@Deprecated(since = "3.19.0")
+@Deprecated
 public class ServiceCallServiceDiscoveryConfiguration extends ServiceCallConfiguration implements ServiceDiscoveryFactory {
     @XmlTransient
-    private final ServiceCallDefinition parent;
+    private final Optional<ServiceCallDefinition> parent;
     @XmlTransient
     private final String factoryKey;
 
@@ -51,16 +52,16 @@ public class ServiceCallServiceDiscoveryConfiguration extends ServiceCallConfigu
     }
 
     public ServiceCallServiceDiscoveryConfiguration(ServiceCallDefinition parent, String factoryKey) {
-        this.parent = parent;
+        this.parent = Optional.ofNullable(parent);
         this.factoryKey = factoryKey;
     }
 
     public ServiceCallDefinition end() {
-        return Optional.ofNullable(parent).orElseThrow(() -> new IllegalStateException("Parent definition is not set"));
+        return this.parent.orElseThrow(() -> new IllegalStateException("Parent definition is not set"));
     }
 
     public ProcessorDefinition<?> endParent() {
-        return Optional.ofNullable(parent).map(ServiceCallDefinition::end)
+        return this.parent.map(ServiceCallDefinition::end)
                 .orElseThrow(() -> new IllegalStateException("Parent definition is not set"));
     }
 
@@ -93,7 +94,7 @@ public class ServiceCallServiceDiscoveryConfiguration extends ServiceCallConfigu
             Class<?> type;
             try {
                 // Then use Service factory.
-                type = camelContext.getCamelContextExtension()
+                type = camelContext.adapt(ExtendedCamelContext.class)
                         .getFactoryFinder(ServiceCallDefinitionConstants.RESOURCE_PATH).findClass(factoryKey).orElse(null);
             } catch (Exception e) {
                 throw new NoFactoryAvailableException(ServiceCallDefinitionConstants.RESOURCE_PATH + factoryKey, e);
@@ -114,12 +115,12 @@ public class ServiceCallServiceDiscoveryConfiguration extends ServiceCallConfigu
                 Map<String, Object> parameters = getConfiguredOptions(camelContext, this);
 
                 parameters.replaceAll((k, v) -> {
-                    if (v instanceof String str) {
+                    if (v instanceof String) {
                         try {
-                            v = camelContext.resolvePropertyPlaceholders(str);
+                            v = camelContext.resolvePropertyPlaceholders((String) v);
                         } catch (Exception e) {
                             throw new IllegalArgumentException(
-                                    String.format("Exception while resolving %s (%s)", k, v), e);
+                                    String.format("Exception while resolving %s (%s)", k, v.toString()), e);
                         }
                     }
 

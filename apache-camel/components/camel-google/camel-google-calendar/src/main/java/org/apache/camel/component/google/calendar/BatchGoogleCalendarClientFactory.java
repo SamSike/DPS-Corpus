@@ -45,11 +45,12 @@ public class BatchGoogleCalendarClientFactory implements GoogleCalendarClientFac
             String clientId, String clientSecret, Collection<String> scopes, String applicationName, String refreshToken,
             String accessToken,
             String emailAddress, String p12FileName, String user) {
+        boolean serviceAccount = false;
         // if emailAddress and p12FileName values are present, assume Google
         // Service Account
-        boolean serviceAccount
-                = null != emailAddress && !emailAddress.isEmpty() && null != p12FileName && !p12FileName.isEmpty();
-
+        if (null != emailAddress && !"".equals(emailAddress) && null != p12FileName && !"".equals(p12FileName)) {
+            serviceAccount = true;
+        }
         if (!serviceAccount && (clientId == null || clientSecret == null)) {
             throw new IllegalArgumentException("clientId and clientSecret are required to create Google Calendar client.");
         }
@@ -60,10 +61,10 @@ public class BatchGoogleCalendarClientFactory implements GoogleCalendarClientFac
                 credential = authorizeServiceAccount(emailAddress, p12FileName, scopes, user);
             } else {
                 credential = authorize(clientId, clientSecret);
-                if (refreshToken != null && !refreshToken.isEmpty()) {
+                if (refreshToken != null && !"".equals(refreshToken)) {
                     credential.setRefreshToken(refreshToken);
                 }
-                if (accessToken != null && !accessToken.isEmpty()) {
+                if (accessToken != null && !"".equals(accessToken)) {
                     credential.setAccessToken(accessToken);
                 }
             }
@@ -88,7 +89,7 @@ public class BatchGoogleCalendarClientFactory implements GoogleCalendarClientFac
             throws Exception {
         HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
         // set the service account user when provided
-        return new GoogleCredential.Builder()
+        GoogleCredential credential = new GoogleCredential.Builder()
                 .setTransport(httpTransport)
                 .setJsonFactory(jsonFactory)
                 .setServiceAccountId(emailAddress)
@@ -96,6 +97,7 @@ public class BatchGoogleCalendarClientFactory implements GoogleCalendarClientFac
                 .setServiceAccountScopes(scopes)
                 .setServiceAccountUser(user)
                 .build();
+        return credential;
     }
 
     @Override

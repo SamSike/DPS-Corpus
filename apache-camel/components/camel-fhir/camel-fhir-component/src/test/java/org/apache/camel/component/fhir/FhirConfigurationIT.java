@@ -24,11 +24,11 @@ import ca.uhn.fhir.rest.client.api.IClientInterceptor;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.client.impl.GenericClient;
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.fhir.internal.FhirApiCollection;
 import org.apache.camel.component.fhir.internal.FhirCreateApiMethod;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -55,8 +55,7 @@ public class FhirConfigurationIT extends AbstractFhirTestSupport {
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-
-        final CamelContext context = new DefaultCamelContext();
+        final CamelContext context = new DefaultCamelContext(createCamelRegistry());
 
         // add FhirComponent to Camel context but don't set up componentConfiguration
         final FhirComponent component = new FhirComponent(context);
@@ -84,7 +83,7 @@ public class FhirConfigurationIT extends AbstractFhirTestSupport {
     }
 
     @Test
-    public void testComponentConfiguration() {
+    public void testConfiguration() {
         FhirEndpoint endpoint = getMandatoryEndpoint(TEST_URI, FhirEndpoint.class);
         GenericClient client = (GenericClient) endpoint.getClient();
         FhirConfiguration configuration = endpoint.getConfiguration();
@@ -97,7 +96,7 @@ public class FhirConfigurationIT extends AbstractFhirTestSupport {
 
         assertTrue(interceptors.contains(this.mockClientInterceptor), "User defined IClientInterceptor not found");
 
-        long counter = PluginHelper.getBeanIntrospection(context).getInvokedCounter();
+        long counter = context.adapt(ExtendedCamelContext.class).getBeanIntrospection().getInvokedCounter();
         assertEquals(0, counter, "Should not use reflection");
     }
 

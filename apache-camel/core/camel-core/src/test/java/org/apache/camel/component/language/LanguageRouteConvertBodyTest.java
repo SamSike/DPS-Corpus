@@ -17,7 +17,6 @@
 package org.apache.camel.component.language;
 
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
@@ -35,12 +34,12 @@ public class LanguageRouteConvertBodyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
-                String script = URLEncoder.encode("${mandatoryBodyAs(String)}", StandardCharsets.UTF_8);
+                String script = URLEncoder.encode("${mandatoryBodyAs(String)}", "UTF-8");
                 from("direct:start").to("language:simple:" + script).to("mock:result");
                 // END SNIPPET: e1
             }
@@ -48,8 +47,8 @@ public class LanguageRouteConvertBodyTest extends ContextTestSupport {
     }
 
     private static final class MyOrder {
-        private final int id;
-        private final String name;
+        private int id;
+        private String name;
 
         private MyOrder(int id, String name) {
             this.id = id;

@@ -17,7 +17,6 @@
 package org.apache.camel.component.xslt.saxon;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -28,7 +27,6 @@ import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
-import javax.xml.transform.stream.StreamSource;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -40,7 +38,6 @@ import net.sf.saxon.TransformerFactoryImpl;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Category;
 import org.apache.camel.Component;
-import org.apache.camel.Exchange;
 import org.apache.camel.api.management.ManagedAttribute;
 import org.apache.camel.api.management.ManagedResource;
 import org.apache.camel.component.xslt.XsltBuilder;
@@ -52,7 +49,6 @@ import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.EndpointHelper;
 import org.apache.camel.support.ResourceHelper;
-import org.apache.camel.support.builder.ExpressionBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +57,7 @@ import org.slf4j.LoggerFactory;
  */
 @ManagedResource(description = "Managed XsltSaxonEndpoint")
 @UriEndpoint(firstVersion = "3.0.0", scheme = "xslt-saxon", title = "XSLT Saxon", syntax = "xslt-saxon:resourceUri",
-             remote = false, producerOnly = true, category = { Category.CORE, Category.TRANSFORMATION })
+             producerOnly = true, category = { Category.CORE, Category.TRANSFORMATION })
 public class XsltSaxonEndpoint extends XsltEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(XsltSaxonEndpoint.class);
@@ -81,11 +77,6 @@ public class XsltSaxonEndpoint extends XsltEndpoint {
 
     public XsltSaxonEndpoint(String endpointUri, Component component) {
         super(endpointUri, component);
-    }
-
-    @Override
-    public boolean isRemote() {
-        return false;
     }
 
     public List<Object> getSaxonExtensionFunctions() {
@@ -178,7 +169,7 @@ public class XsltSaxonEndpoint extends XsltEndpoint {
 
         // must load resource first which sets a template and do a stylesheet compilation to catch errors early
         // load resource from classpath otherwise load in doStart()
-        if (isContentCache() && ResourceHelper.isClasspathUri(getResourceUri())) {
+        if (ResourceHelper.isClasspathUri(getResourceUri())) {
             loadResource(getResourceUri(), getXslt());
         }
 
@@ -189,7 +180,7 @@ public class XsltSaxonEndpoint extends XsltEndpoint {
     protected void doStart() throws Exception {
         super.doStart();
 
-        if (isContentCache() && !ResourceHelper.isClasspathUri(getResourceUri())) {
+        if (!ResourceHelper.isClasspathUri(getResourceUri())) {
             loadResource(getResourceUri(), getXslt());
         }
     }
@@ -241,35 +232,16 @@ public class XsltSaxonEndpoint extends XsltEndpoint {
         xslt.setEntityResolver(getEntityResolver());
         xslt.setAllowStAX(allowStAX);
         xslt.setDeleteOutputFile(isDeleteOutputFile());
-        xslt.setSource(ExpressionBuilder.singleInputExpression(getSource()));
-
-        if (getXsltMessageLogger() != null) {
-            xslt.setXsltMessageLogger(getXsltMessageLogger());
-        }
 
         configureOutput(xslt, getOutput().name());
 
-        // any additional transformer parameters then make a copy to avoid side effects
+        // any additional transformer parameters then make a copy to avoid side-effects
         if (getParameters() != null) {
             Map<String, Object> copy = new HashMap<>(getParameters());
             xslt.setParameters(copy);
         }
 
         return xslt;
-    }
-
-    @Override
-    protected XsltBuilder createBuilderForCustomStylesheet(String template, Exchange exchange) throws Exception {
-        InputStream is = getCamelContext().getTypeConverter().mandatoryConvertTo(InputStream.class, exchange, template);
-        XsltBuilder builder = createXsltBuilder();
-        Source source = new StreamSource(is);
-        if (this.saxonReaderProperties != null) {
-            //for Saxon we need to create XMLReader for the coming source
-            //so that the features configuration can take effect
-            source = createReaderForSource(source);
-        }
-        builder.setTransformerSource(source);
-        return builder;
     }
 
     /**

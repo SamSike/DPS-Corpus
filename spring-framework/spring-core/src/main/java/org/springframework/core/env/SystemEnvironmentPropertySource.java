@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,9 @@
 
 package org.springframework.core.env;
 
-import java.util.Locale;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -90,7 +88,8 @@ public class SystemEnvironmentPropertySource extends MapPropertySource {
 	 * any underscore/uppercase variant thereof exists in this property source.
 	 */
 	@Override
-	public @Nullable Object getProperty(String name) {
+	@Nullable
+	public Object getProperty(String name) {
 		String actualName = resolvePropertyName(name);
 		if (logger.isDebugEnabled() && !name.equals(actualName)) {
 			logger.debug("PropertySource '" + getName() + "' does not contain property '" + name +
@@ -110,7 +109,7 @@ public class SystemEnvironmentPropertySource extends MapPropertySource {
 		if (resolvedName != null) {
 			return resolvedName;
 		}
-		String uppercasedName = name.toUpperCase(Locale.ROOT);
+		String uppercasedName = name.toUpperCase();
 		if (!name.equals(uppercasedName)) {
 			resolvedName = checkPropertyName(uppercasedName);
 			if (resolvedName != null) {
@@ -120,7 +119,8 @@ public class SystemEnvironmentPropertySource extends MapPropertySource {
 		return name;
 	}
 
-	private @Nullable String checkPropertyName(String name) {
+	@Nullable
+	private String checkPropertyName(String name) {
 		// Check name as-is
 		if (this.source.containsKey(name)) {
 			return name;

@@ -29,7 +29,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class Generate implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlElement(defaultValue = "true")
     protected Boolean indexes = true;
     @XmlElement(defaultValue = "true")
@@ -37,23 +37,21 @@ public class Generate implements Serializable, XMLAppendable
     @XmlElement(defaultValue = "true")
     protected Boolean sequenceFlags = true;
     @XmlElement(defaultValue = "true")
-    protected Boolean udtPaths = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean udtConstructors = true;
-    @XmlElement(defaultValue = "true")
     protected Boolean implicitJoinPathsToOne = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean implicitJoinPathsToMany = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean implicitJoinPathsManyToMany = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean implicitJoinPathTableSubtypes = true;
-    @XmlElement(defaultValue = "false")
-    protected Boolean implicitJoinPathUnusedConstructors = false;
     @XmlElement(defaultValue = "true")
     protected Boolean implicitJoinPathsUseTableNameForUnambiguousFKs = true;
     @XmlElement(defaultValue = "true")
     protected Boolean implicitJoinPathsAsKotlinProperties = true;
+    @XmlElement(defaultValue = "true")
+    protected Boolean existsConvenienceOneToMany = true;
+    @XmlElement(defaultValue = "true")
+    protected Boolean existsConvenienceManyToMany = true;
+    @XmlElement(defaultValue = "true")
+    protected Boolean rowConvenienceToOne = true;
+    @XmlElement(defaultValue = "true")
+    protected Boolean multisetConvenienceOneToMany = true;
+    @XmlElement(defaultValue = "true")
+    protected Boolean multisetConvenienceManyToMany = true;
     @XmlElement(defaultValue = "true")
     protected Boolean deprecated = true;
     @XmlElement(defaultValue = "true")
@@ -70,8 +68,6 @@ public class Generate implements Serializable, XMLAppendable
     protected GeneratedAnnotationType generatedAnnotationType = GeneratedAnnotationType.DETECT_FROM_JDK;
     @XmlElement(defaultValue = "false")
     protected Boolean generatedAnnotationDate = false;
-    @XmlElement(defaultValue = "true")
-    protected Boolean generatedAnnotationJooqVersion = true;
     @XmlElement(defaultValue = "false")
     protected Boolean nonnullAnnotation = false;
     @XmlElement(defaultValue = "javax.annotation.Nonnull")
@@ -79,8 +75,6 @@ public class Generate implements Serializable, XMLAppendable
     protected String nonnullAnnotationType = "javax.annotation.Nonnull";
     @XmlElement(defaultValue = "false")
     protected Boolean nullableAnnotation = false;
-    @XmlElement(defaultValue = "false")
-    protected Boolean nullableAnnotationOnWriteOnlyNullableTypes = false;
     @XmlElement(defaultValue = "javax.annotation.Nullable")
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String nullableAnnotationType = "javax.annotation.Nullable";
@@ -92,10 +86,6 @@ public class Generate implements Serializable, XMLAppendable
     protected Boolean routines = true;
     @XmlElement(defaultValue = "true")
     protected Boolean sequences = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean triggers = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean synonyms = true;
     @XmlElement(defaultValue = "true")
     protected Boolean udts = true;
     @XmlElement(defaultValue = "true")
@@ -110,32 +100,14 @@ public class Generate implements Serializable, XMLAppendable
     protected Boolean embeddables = true;
     @XmlElement(defaultValue = "true")
     protected Boolean records = true;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String recordsIncludes;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String recordsExcludes;
-    @XmlElement(defaultValue = "false")
-    protected Boolean recordsImplementingRecordN = false;
+    @XmlElement(defaultValue = "true")
+    protected Boolean recordsImplementingRecordN = true;
     @XmlElement(defaultValue = "false")
     protected Boolean enumsAsScalaSealedTraits = false;
-    @XmlElement(defaultValue = "true")
-    protected Boolean enumsAsScalaEnums = true;
     @XmlElement(defaultValue = "false")
     protected Boolean pojos = false;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String pojosIncludes;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String pojosExcludes;
     @XmlElement(defaultValue = "true")
     protected Boolean pojosEqualsAndHashCode = true;
-    @XmlElement(defaultValue = "false")
-    protected Boolean pojosEqualsAndHashCodeIncludePrimaryKeyOnly = false;
-    @XmlElement(defaultValue = "")
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String pojosEqualsAndHashCodeColumnIncludeExpression = "";
-    @XmlElement(defaultValue = "")
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String pojosEqualsAndHashCodeColumnExcludeExpression = "";
     @XmlElement(defaultValue = "true")
     protected Boolean pojosToString = true;
     @XmlElement(defaultValue = "false")
@@ -156,10 +128,6 @@ public class Generate implements Serializable, XMLAppendable
     protected Boolean serializableInterfaces = true;
     @XmlElement(defaultValue = "false")
     protected Boolean daos = false;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String daosIncludes;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String daosExcludes;
     @XmlElement(defaultValue = "true")
     protected Boolean jooqVersionReference = true;
     @XmlElement(defaultValue = "false")
@@ -174,18 +142,6 @@ public class Generate implements Serializable, XMLAppendable
     protected Boolean springDao = false;
     @XmlElement(defaultValue = "true")
     protected Boolean kotlinSetterJvmNameAnnotationsOnIsPrefix = true;
-    @XmlElement(defaultValue = "false")
-    protected Boolean kotlinNotNullPojoAttributes = false;
-    @XmlElement(defaultValue = "false")
-    protected Boolean kotlinNotNullRecordAttributes = false;
-    @XmlElement(defaultValue = "false")
-    protected Boolean kotlinNotNullInterfaceAttributes = false;
-    @XmlElement(defaultValue = "true")
-    protected Boolean kotlinDefaultedNullablePojoAttributes = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean kotlinDefaultedNullableRecordAttributes = true;
-    @XmlElement(defaultValue = "false")
-    protected Boolean globalObjectNames = false;
     @XmlElement(defaultValue = "true")
     protected Boolean globalObjectReferences = true;
     @XmlElement(defaultValue = "true")
@@ -194,10 +150,6 @@ public class Generate implements Serializable, XMLAppendable
     protected Boolean globalSchemaReferences = true;
     @XmlElement(defaultValue = "true")
     protected Boolean globalDomainReferences = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean globalTriggerReferences = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean globalSynonymReferences = true;
     @XmlElement(defaultValue = "true")
     protected Boolean globalTableReferences = true;
     @XmlElement(defaultValue = "true")
@@ -214,10 +166,6 @@ public class Generate implements Serializable, XMLAppendable
     protected Boolean globalKeyReferences = true;
     @XmlElement(defaultValue = "true")
     protected Boolean globalIndexReferences = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean defaultCatalog = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean defaultSchema = true;
     @XmlElement(defaultValue = "true")
     protected Boolean javadoc = true;
     @XmlElement(defaultValue = "true")
@@ -244,8 +192,6 @@ public class Generate implements Serializable, XMLAppendable
     protected Boolean commentsOnParameters = true;
     @XmlElement(defaultValue = "true")
     protected Boolean commentsOnSequences = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean commentsOnDomains = true;
     @XmlElement(defaultValue = "true")
     protected Boolean commentsOnLinks = true;
     @XmlElement(defaultValue = "true")
@@ -284,8 +230,6 @@ public class Generate implements Serializable, XMLAppendable
     protected Boolean jsonTypes = true;
     @XmlElement(defaultValue = "true")
     protected Boolean intervalTypes = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean decfloatTypes = true;
     @XmlElement(defaultValue = "\\n")
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String newline = "\\n";
@@ -296,20 +240,6 @@ public class Generate implements Serializable, XMLAppendable
     @XmlElement(defaultValue = "DETECT_FROM_JDK")
     @XmlSchemaType(name = "string")
     protected GeneratedTextBlocks textBlocks = GeneratedTextBlocks.DETECT_FROM_JDK;
-    @XmlElement(defaultValue = "true")
-    protected Boolean whereMethodOverrides = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean renameMethodOverrides = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean asMethodOverrides = true;
-    @XmlElement(defaultValue = "false")
-    protected Boolean hiddenColumnsInRecords = false;
-    @XmlElement(defaultValue = "false")
-    protected Boolean hiddenColumnsInPojos = false;
-    @XmlElement(defaultValue = "false")
-    protected Boolean hiddenColumnsInInterfaces = false;
-    @XmlElement(defaultValue = "true")
-    protected Boolean redactedColumnsInPojos = true;
 
     /**
      * Generate index information.
@@ -324,7 +254,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate index information.
+     * Sets the value of the indexes property.
      * 
      * @param value
      *     allowed object is
@@ -349,8 +279,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Primary key / foreign key relations should be generated and used.
-     * This is a prerequisite for various advanced features
+     * Sets the value of the relations property.
      * 
      * @param value
      *     allowed object is
@@ -374,7 +303,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Sequence flags should be generated and used.
+     * Sets the value of the sequenceFlags property.
      * 
      * @param value
      *     allowed object is
@@ -383,54 +312,6 @@ public class Generate implements Serializable, XMLAppendable
      */
     public void setSequenceFlags(Boolean value) {
         this.sequenceFlags = value;
-    }
-
-    /**
-     * Generate UDT path expressions on tables and on UDTs.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isUdtPaths() {
-        return udtPaths;
-    }
-
-    /**
-     * Generate UDT path expressions on tables and on UDTs.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setUdtPaths(Boolean value) {
-        this.udtPaths = value;
-    }
-
-    /**
-     * Generate UDT constructor expressions on UDTs.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isUdtConstructors() {
-        return udtConstructors;
-    }
-
-    /**
-     * Generate UDT constructor expressions on UDTs.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setUdtConstructors(Boolean value) {
-        this.udtConstructors = value;
     }
 
     /**
@@ -446,7 +327,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate implicit join path constructors on generated tables for outgoing foreign key relationships (to-one relationships)
+     * Sets the value of the implicitJoinPathsToOne property.
      * 
      * @param value
      *     allowed object is
@@ -455,102 +336,6 @@ public class Generate implements Serializable, XMLAppendable
      */
     public void setImplicitJoinPathsToOne(Boolean value) {
         this.implicitJoinPathsToOne = value;
-    }
-
-    /**
-     * Generate implicit join path constructors on generated tables for incoming foreign key relationships (to-many relationships)
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isImplicitJoinPathsToMany() {
-        return implicitJoinPathsToMany;
-    }
-
-    /**
-     * Generate implicit join path constructors on generated tables for incoming foreign key relationships (to-many relationships)
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setImplicitJoinPathsToMany(Boolean value) {
-        this.implicitJoinPathsToMany = value;
-    }
-
-    /**
-     * Generate implicit join path constructors on generated tables for many-to-many relationships. This turns off implicitly, if either of the other path generations are turned off.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isImplicitJoinPathsManyToMany() {
-        return implicitJoinPathsManyToMany;
-    }
-
-    /**
-     * Generate implicit join path constructors on generated tables for many-to-many relationships. This turns off implicitly, if either of the other path generations are turned off.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setImplicitJoinPathsManyToMany(Boolean value) {
-        this.implicitJoinPathsManyToMany = value;
-    }
-
-    /**
-     * Generate implicit join path table subtypes implementing {@link org.jooq.Path} for increased JOIN convenience.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isImplicitJoinPathTableSubtypes() {
-        return implicitJoinPathTableSubtypes;
-    }
-
-    /**
-     * Generate implicit join path table subtypes implementing {@link org.jooq.Path} for increased JOIN convenience.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setImplicitJoinPathTableSubtypes(Boolean value) {
-        this.implicitJoinPathTableSubtypes = value;
-    }
-
-    /**
-     * Generate implicit join path constructors also if there isn't any outgoing or incoming foreign key relationship.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isImplicitJoinPathUnusedConstructors() {
-        return implicitJoinPathUnusedConstructors;
-    }
-
-    /**
-     * Generate implicit join path constructors also if there isn't any outgoing or incoming foreign key relationship.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setImplicitJoinPathUnusedConstructors(Boolean value) {
-        this.implicitJoinPathUnusedConstructors = value;
     }
 
     /**
@@ -576,17 +361,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether names of unambiguous {@link org.jooq.meta.ForeignKeyDefinition} should be based
-     * on the referenced {@link org.jooq.meta.TableDefinition}.
-     * <p>
-     * When a child table has only one {@link org.jooq.meta.ForeignKeyDefinition} towards a
-     * parent table, then that path is "unambiguous." In that case, some
-     * {@link GeneratorStrategy} implementations may choose to use the parent
-     * table's {@link org.jooq.meta.TableDefinition} for implementations of
-     * {@link org.jooq.codegen.GeneratorStrategy#getJavaMethodName(Definition)}, instead of the
-     * {@link org.jooq.meta.ForeignKeyDefinition}, e.g. for implicit join paths.
-     * <p>
-     * This flag allows for turning off this default behaviour.
+     * Sets the value of the implicitJoinPathsUseTableNameForUnambiguousFKs property.
      * 
      * @param value
      *     allowed object is
@@ -610,7 +385,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether implicit join path constructors should be offered as properties in Kotlin.
+     * Sets the value of the implicitJoinPathsAsKotlinProperties property.
      * 
      * @param value
      *     allowed object is
@@ -619,6 +394,136 @@ public class Generate implements Serializable, XMLAppendable
      */
     public void setImplicitJoinPathsAsKotlinProperties(Boolean value) {
         this.implicitJoinPathsAsKotlinProperties = value;
+    }
+
+    /**
+     * Generate <code>EXISTS</code> convenience syntax for one-to-many relationships.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isExistsConvenienceOneToMany() {
+        return existsConvenienceOneToMany;
+    }
+
+    /**
+     * Sets the value of the existsConvenienceOneToMany property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setExistsConvenienceOneToMany(Boolean value) {
+        this.existsConvenienceOneToMany = value;
+    }
+
+    /**
+     * Generate <code>EXISTS</code> convenience syntax for many-to-many relationships. A many-to-many relationship is achieved when a child table has 2 non-nullable foreign keys that are part of a unique key.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isExistsConvenienceManyToMany() {
+        return existsConvenienceManyToMany;
+    }
+
+    /**
+     * Sets the value of the existsConvenienceManyToMany property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setExistsConvenienceManyToMany(Boolean value) {
+        this.existsConvenienceManyToMany = value;
+    }
+
+    /**
+     * Generate <code>ROW</code> convenience syntax for to-one relationships.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isRowConvenienceToOne() {
+        return rowConvenienceToOne;
+    }
+
+    /**
+     * Sets the value of the rowConvenienceToOne property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setRowConvenienceToOne(Boolean value) {
+        this.rowConvenienceToOne = value;
+    }
+
+    /**
+     * Generate <code>MULTISET</code> convenience syntax for one-to-many relationships.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isMultisetConvenienceOneToMany() {
+        return multisetConvenienceOneToMany;
+    }
+
+    /**
+     * Sets the value of the multisetConvenienceOneToMany property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setMultisetConvenienceOneToMany(Boolean value) {
+        this.multisetConvenienceOneToMany = value;
+    }
+
+    /**
+     * Generate <code>MULTISET</code> convenience syntax for many-to-many relationships. A many-to-many relationship is achieved when a child table has 2 non-nullable foreign keys that are part of a unique key.
+     * <p>
+     * This feature is available in the commercial distribution only.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isMultisetConvenienceManyToMany() {
+        return multisetConvenienceManyToMany;
+    }
+
+    /**
+     * Sets the value of the multisetConvenienceManyToMany property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setMultisetConvenienceManyToMany(Boolean value) {
+        this.multisetConvenienceManyToMany = value;
     }
 
     /**
@@ -634,7 +539,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate deprecated code for backwards compatibility
+     * Sets the value of the deprecated property.
      * 
      * @param value
      *     allowed object is
@@ -647,7 +552,7 @@ public class Generate implements Serializable, XMLAppendable
 
     /**
      * Generate deprecation annotations on references to unknown data types.
-     * This helps to identify columns, attributes, and parameters, which may not be usable through
+     * This helps identifying columns, attributes, and parameters, which may not be usable through
      * jOOQ API, without adding custom data type bindings to them.
      * 
      * @return
@@ -660,9 +565,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate deprecation annotations on references to unknown data types.
-     * This helps to identify columns, attributes, and parameters, which may not be usable through
-     * jOOQ API, without adding custom data type bindings to them.
+     * Sets the value of the deprecationOnUnknownTypes property.
      * 
      * @param value
      *     allowed object is
@@ -687,7 +590,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * @deprecated
+     * Sets the value of the instanceFields property.
      * 
      * @param value
      *     allowed object is
@@ -716,7 +619,8 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Use the {@link org.jooq.Generated} annotation specified by {@link #getGeneratedAnnotationType()} in generated code.
+     * Generate the {@link javax.annotation.processing.Generated} annotation to indicate
+     * jOOQ version used for source code.
      * 
      * @return
      *     possible object is
@@ -728,7 +632,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Use the {@link org.jooq.Generated} annotation specified by {@link #getGeneratedAnnotationType()} in generated code.
+     * Sets the value of the generatedAnnotation property.
      * 
      * @param value
      *     allowed object is
@@ -740,7 +644,8 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Specify the type of {@link org.jooq.Generated} annotation to use in generated code.
+     * Generate the {@link javax.annotation.processing.Generated} annotation to indicate
+     * jOOQ version used for source code.
      * 
      */
     public GeneratedAnnotationType getGeneratedAnnotationType() {
@@ -748,7 +653,8 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Specify the type of {@link org.jooq.Generated} annotation to use in generated code.
+     * Generate the {@link javax.annotation.processing.Generated} annotation to indicate
+     * jOOQ version used for source code.
      * 
      */
     public void setGeneratedAnnotationType(GeneratedAnnotationType value) {
@@ -756,7 +662,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether the {@link org.jooq.Generated} annotation specified by {@link #getGeneratedAnnotationType()} should include the <code>date</code> attribute.
+     * Whether the {@link javax.annotation.processing.Generated} annotation should include the <code>date</code> attribute.
      * 
      * @return
      *     possible object is
@@ -768,7 +674,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether the {@link org.jooq.Generated} annotation specified by {@link #getGeneratedAnnotationType()} should include the <code>date</code> attribute.
+     * Sets the value of the generatedAnnotationDate property.
      * 
      * @param value
      *     allowed object is
@@ -777,30 +683,6 @@ public class Generate implements Serializable, XMLAppendable
      */
     public void setGeneratedAnnotationDate(Boolean value) {
         this.generatedAnnotationDate = value;
-    }
-
-    /**
-     * Whether the {@link org.jooq.Generated} annotation specified by {@link #getGeneratedAnnotationType()} should include the jOOQ version.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isGeneratedAnnotationJooqVersion() {
-        return generatedAnnotationJooqVersion;
-    }
-
-    /**
-     * Whether the {@link org.jooq.Generated} annotation specified by {@link #getGeneratedAnnotationType()} should include the jOOQ version.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setGeneratedAnnotationJooqVersion(Boolean value) {
-        this.generatedAnnotationJooqVersion = value;
     }
 
     /**
@@ -816,7 +698,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether non-nullable items should be annotated with the annotation type specified in {@link #nonnullAnnotationType}. In SQL and by consequence in jOOQ, non-nullability cannot be guaranteed statically. There may still be some cases (e.g. after unions, outer joins, etc.) where a normally non-null value turns out to be null!
+     * Sets the value of the nonnullAnnotation property.
      * 
      * @param value
      *     allowed object is
@@ -856,7 +738,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether nullable items should be annotated with the annotation type specified in {@link #nullableAnnotationType}. Unlike {@link #nonnullAnnotation}, nullability can be guaranteed as in SQL, and by consequence in jOOQ, every column expression can be made nullable using some SQL operation.
+     * Sets the value of the nullableAnnotation property.
      * 
      * @param value
      *     allowed object is
@@ -865,30 +747,6 @@ public class Generate implements Serializable, XMLAppendable
      */
     public void setNullableAnnotation(Boolean value) {
         this.nullableAnnotation = value;
-    }
-
-    /**
-     * Whether write-only (e.g. defaulted, non-null) nullable items should be annotated with the annotation type specified in {@link #nullableAnnotationType}. Unlike {@link #nonnullAnnotation}, nullability can be guaranteed as in SQL, and by consequence in jOOQ, every column expression can be made nullable using some SQL operation.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isNullableAnnotationOnWriteOnlyNullableTypes() {
-        return nullableAnnotationOnWriteOnlyNullableTypes;
-    }
-
-    /**
-     * Whether write-only (e.g. defaulted, non-null) nullable items should be annotated with the annotation type specified in {@link #nullableAnnotationType}. Unlike {@link #nonnullAnnotation}, nullability can be guaranteed as in SQL, and by consequence in jOOQ, every column expression can be made nullable using some SQL operation.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setNullableAnnotationOnWriteOnlyNullableTypes(Boolean value) {
-        this.nullableAnnotationOnWriteOnlyNullableTypes = value;
     }
 
     /**
@@ -920,7 +778,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate the {@link java.beans.ConstructorProperties} annotation on generated POJOs and/or records.
+     * Sets the value of the constructorPropertiesAnnotation property.
      * 
      * @param value
      *     allowed object is
@@ -944,7 +802,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate the {@link java.beans.ConstructorProperties} annotation on generated POJOs (defaults to <code>true</code> if {@link #constructorPropertiesAnnotation} is active).
+     * Sets the value of the constructorPropertiesAnnotationOnPojos property.
      * 
      * @param value
      *     allowed object is
@@ -968,7 +826,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate the {@link java.beans.ConstructorProperties} annotation on generated records (defaults to <code>true</code> if {@link #constructorPropertiesAnnotation} is active).
+     * Sets the value of the constructorPropertiesAnnotationOnRecords property.
      * 
      * @param value
      *     allowed object is
@@ -992,7 +850,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate Routine classes.
+     * Sets the value of the routines property.
      * 
      * @param value
      *     allowed object is
@@ -1004,7 +862,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate Sequence classes.
+     * Generate Sequence classes. 
      * 
      * @return
      *     possible object is
@@ -1016,7 +874,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate Sequence classes.
+     * Sets the value of the sequences property.
      * 
      * @param value
      *     allowed object is
@@ -1028,55 +886,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate Trigger classes.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTriggers() {
-        return triggers;
-    }
-
-    /**
-     * Generate Trigger classes.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTriggers(Boolean value) {
-        this.triggers = value;
-    }
-
-    /**
-     * Generate Synonym classes.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isSynonyms() {
-        return synonyms;
-    }
-
-    /**
-     * Generate Synonym classes.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setSynonyms(Boolean value) {
-        this.synonyms = value;
-    }
-
-    /**
-     * Generate UDT classes.
+     * Generate UDT classes. 
      * 
      * @return
      *     possible object is
@@ -1088,7 +898,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate UDT classes.
+     * Sets the value of the udts property.
      * 
      * @param value
      *     allowed object is
@@ -1112,7 +922,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate Queue classes.
+     * Sets the value of the queues property.
      * 
      * @param value
      *     allowed object is
@@ -1136,7 +946,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate database Link classes.
+     * Sets the value of the links property.
      * 
      * @param value
      *     allowed object is
@@ -1160,7 +970,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate Key classes.
+     * Sets the value of the keys property.
      * 
      * @param value
      *     allowed object is
@@ -1184,7 +994,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate Table classes.
+     * Sets the value of the tables property.
      * 
      * @param value
      *     allowed object is
@@ -1208,7 +1018,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate embeddable classes.
+     * Sets the value of the embeddables property.
      * 
      * @param value
      *     allowed object is
@@ -1232,7 +1042,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate TableRecord classes.
+     * Sets the value of the records property.
      * 
      * @param value
      *     allowed object is
@@ -1241,74 +1051,6 @@ public class Generate implements Serializable, XMLAppendable
      */
     public void setRecords(Boolean value) {
         this.records = value;
-    }
-
-    /**
-     * All the object identifiers for which to generate records, by default, all of them.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public String getRecordsIncludes() {
-        return recordsIncludes;
-    }
-
-    /**
-     * All the object identifiers for which to generate records, by default, all of them.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public void setRecordsIncludes(String value) {
-        this.recordsIncludes = value;
-    }
-
-    /**
-     * All the object identifiers for which not to generate records.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public String getRecordsExcludes() {
-        return recordsExcludes;
-    }
-
-    /**
-     * All the object identifiers for which not to generate records.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public void setRecordsExcludes(String value) {
-        this.recordsExcludes = value;
     }
 
     /**
@@ -1324,7 +1066,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate TableRecord classes that implement Record[N] super types
+     * Sets the value of the recordsImplementingRecordN property.
      * 
      * @param value
      *     allowed object is
@@ -1349,7 +1091,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * @deprecated Activate the legacy Scala sealed trait enum emulation
+     * Sets the value of the enumsAsScalaSealedTraits property.
      * 
      * @param value
      *     allowed object is
@@ -1359,30 +1101,6 @@ public class Generate implements Serializable, XMLAppendable
     @Deprecated
     public void setEnumsAsScalaSealedTraits(Boolean value) {
         this.enumsAsScalaSealedTraits = value;
-    }
-
-    /**
-     * Generate enums as Scala 3.0 enums (if Scala 3 is supported).
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isEnumsAsScalaEnums() {
-        return enumsAsScalaEnums;
-    }
-
-    /**
-     * Generate enums as Scala 3.0 enums (if Scala 3 is supported).
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setEnumsAsScalaEnums(Boolean value) {
-        this.enumsAsScalaEnums = value;
     }
 
     /**
@@ -1398,7 +1116,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate POJOs.
+     * Sets the value of the pojos property.
      * 
      * @param value
      *     allowed object is
@@ -1407,74 +1125,6 @@ public class Generate implements Serializable, XMLAppendable
      */
     public void setPojos(Boolean value) {
         this.pojos = value;
-    }
-
-    /**
-     * All the object identifiers for which to generate POJOs, by default, all of them.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public String getPojosIncludes() {
-        return pojosIncludes;
-    }
-
-    /**
-     * All the object identifiers for which to generate POJOs, by default, all of them.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public void setPojosIncludes(String value) {
-        this.pojosIncludes = value;
-    }
-
-    /**
-     * All the object identifiers for which not to generate POJOs.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public String getPojosExcludes() {
-        return pojosExcludes;
-    }
-
-    /**
-     * All the object identifiers for which not to generate POJOs.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public void setPojosExcludes(String value) {
-        this.pojosExcludes = value;
     }
 
     /**
@@ -1490,7 +1140,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate basic equals() and hashCode() methods in POJOs.
+     * Sets the value of the pojosEqualsAndHashCode property.
      * 
      * @param value
      *     allowed object is
@@ -1499,62 +1149,6 @@ public class Generate implements Serializable, XMLAppendable
      */
     public void setPojosEqualsAndHashCode(Boolean value) {
         this.pojosEqualsAndHashCode = value;
-    }
-
-    /**
-     * Include primary key columns only in generated equals() and hashCode() methods in POJOs.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isPojosEqualsAndHashCodeIncludePrimaryKeyOnly() {
-        return pojosEqualsAndHashCodeIncludePrimaryKeyOnly;
-    }
-
-    /**
-     * Include primary key columns only in generated equals() and hashCode() methods in POJOs.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setPojosEqualsAndHashCodeIncludePrimaryKeyOnly(Boolean value) {
-        this.pojosEqualsAndHashCodeIncludePrimaryKeyOnly = value;
-    }
-
-    /**
-     * A regular expression matching columns for inclusion in generated equals() and hashCode() methods in POJOs.
-     * 
-     */
-    public String getPojosEqualsAndHashCodeColumnIncludeExpression() {
-        return pojosEqualsAndHashCodeColumnIncludeExpression;
-    }
-
-    /**
-     * A regular expression matching columns for inclusion in generated equals() and hashCode() methods in POJOs.
-     * 
-     */
-    public void setPojosEqualsAndHashCodeColumnIncludeExpression(String value) {
-        this.pojosEqualsAndHashCodeColumnIncludeExpression = value;
-    }
-
-    /**
-     * A regular expression matching columns for exclusion in generated equals() and hashCode() methods in POJOs.
-     * 
-     */
-    public String getPojosEqualsAndHashCodeColumnExcludeExpression() {
-        return pojosEqualsAndHashCodeColumnExcludeExpression;
-    }
-
-    /**
-     * A regular expression matching columns for exclusion in generated equals() and hashCode() methods in POJOs.
-     * 
-     */
-    public void setPojosEqualsAndHashCodeColumnExcludeExpression(String value) {
-        this.pojosEqualsAndHashCodeColumnExcludeExpression = value;
     }
 
     /**
@@ -1570,7 +1164,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate basic toString() methods in POJOs.
+     * Sets the value of the pojosToString property.
      * 
      * @param value
      *     allowed object is
@@ -1594,7 +1188,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate POJOs as records, when using the JavaGenerator.
+     * Sets the value of the pojosAsJavaRecordClasses property.
      * 
      * @param value
      *     allowed object is
@@ -1606,7 +1200,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate POJOs as case classes, when using the ScalaGenerator or Scala3Generator.
+     * Generate POJOs as case classes, when using the ScalaGenerator.
      * 
      * @return
      *     possible object is
@@ -1618,7 +1212,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate POJOs as case classes, when using the ScalaGenerator or Scala3Generator.
+     * Sets the value of the pojosAsScalaCaseClasses property.
      * 
      * @param value
      *     allowed object is
@@ -1642,7 +1236,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate POJOs as data classes, when using the KotlinGenerator.
+     * Sets the value of the pojosAsKotlinDataClasses property.
      * 
      * @param value
      *     allowed object is
@@ -1666,7 +1260,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate immutable POJOs.
+     * Sets the value of the immutablePojos property.
      * 
      * @param value
      *     allowed object is
@@ -1690,7 +1284,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate serializable POJOs.
+     * Sets the value of the serializablePojos property.
      * 
      * @param value
      *     allowed object is
@@ -1714,7 +1308,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generated interfaces to be implemented by records and/or POJOs.
+     * Sets the value of the interfaces property.
      * 
      * @param value
      *     allowed object is
@@ -1738,7 +1332,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate immutable interfaces.
+     * Sets the value of the immutableInterfaces property.
      * 
      * @param value
      *     allowed object is
@@ -1762,7 +1356,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate serializable interfaces.
+     * Sets the value of the serializableInterfaces property.
      * 
      * @param value
      *     allowed object is
@@ -1786,7 +1380,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate DAOs.
+     * Sets the value of the daos property.
      * 
      * @param value
      *     allowed object is
@@ -1795,74 +1389,6 @@ public class Generate implements Serializable, XMLAppendable
      */
     public void setDaos(Boolean value) {
         this.daos = value;
-    }
-
-    /**
-     * All the object identifiers for which to generate DAOs, by default, all of them.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public String getDaosIncludes() {
-        return daosIncludes;
-    }
-
-    /**
-     * All the object identifiers for which to generate DAOs, by default, all of them.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public void setDaosIncludes(String value) {
-        this.daosIncludes = value;
-    }
-
-    /**
-     * All the object identifiers for which not to generate DAOs.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public String getDaosExcludes() {
-        return daosExcludes;
-    }
-
-    /**
-     * All the object identifiers for which not to generate DAOs.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public void setDaosExcludes(String value) {
-        this.daosExcludes = value;
     }
 
     /**
@@ -1878,7 +1404,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate references to the most up to date minor release in {@link org.jooq.Constants} to produce compilation errors if an outdated runtime library is being used.
+     * Sets the value of the jooqVersionReference property.
      * 
      * @param value
      *     allowed object is
@@ -1902,7 +1428,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Annotate POJOs and Records with JPA annotations.
+     * Sets the value of the jpaAnnotations property.
      * 
      * @param value
      *     allowed object is
@@ -1942,7 +1468,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Annotate POJOs and Records with JSR-303 validation annotations
+     * Sets the value of the validationAnnotations property.
      * 
      * @param value
      *     allowed object is
@@ -1966,7 +1492,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Annotate DAOs with useful spring annotations such as @Repository or @Autowired.
+     * Sets the value of the springAnnotations property.
      * 
      * @param value
      *     allowed object is
@@ -1990,7 +1516,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate an AbstractSpringDAOImpl as a base class for other DAO classes, containing @Transactional annotations, etc.
+     * Sets the value of the springDao property.
      * 
      * @param value
      *     allowed object is
@@ -2014,7 +1540,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Workaround for Kotlin generating <code>setX()</code> setters instead of <code>setIsX()</code> in byte code for mutable properties called <code>isX</code>.
+     * Sets the value of the kotlinSetterJvmNameAnnotationsOnIsPrefix property.
      * 
      * @param value
      *     allowed object is
@@ -2023,150 +1549,6 @@ public class Generate implements Serializable, XMLAppendable
      */
     public void setKotlinSetterJvmNameAnnotationsOnIsPrefix(Boolean value) {
         this.kotlinSetterJvmNameAnnotationsOnIsPrefix = value;
-    }
-
-    /**
-     * Generate non-nullable types on POJO attributes, where column is not null.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isKotlinNotNullPojoAttributes() {
-        return kotlinNotNullPojoAttributes;
-    }
-
-    /**
-     * Generate non-nullable types on POJO attributes, where column is not null.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setKotlinNotNullPojoAttributes(Boolean value) {
-        this.kotlinNotNullPojoAttributes = value;
-    }
-
-    /**
-     * Generate non-nullable types on Record attributes, where column is not null.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isKotlinNotNullRecordAttributes() {
-        return kotlinNotNullRecordAttributes;
-    }
-
-    /**
-     * Generate non-nullable types on Record attributes, where column is not null.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setKotlinNotNullRecordAttributes(Boolean value) {
-        this.kotlinNotNullRecordAttributes = value;
-    }
-
-    /**
-     * Generate non-nullable types on interface attributes, where column is not null.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isKotlinNotNullInterfaceAttributes() {
-        return kotlinNotNullInterfaceAttributes;
-    }
-
-    /**
-     * Generate non-nullable types on interface attributes, where column is not null.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setKotlinNotNullInterfaceAttributes(Boolean value) {
-        this.kotlinNotNullInterfaceAttributes = value;
-    }
-
-    /**
-     * Generate defaulted nullable POJO attributes.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isKotlinDefaultedNullablePojoAttributes() {
-        return kotlinDefaultedNullablePojoAttributes;
-    }
-
-    /**
-     * Generate defaulted nullable POJO attributes.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setKotlinDefaultedNullablePojoAttributes(Boolean value) {
-        this.kotlinDefaultedNullablePojoAttributes = value;
-    }
-
-    /**
-     * Generate defaulted nullable Record attributes.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isKotlinDefaultedNullableRecordAttributes() {
-        return kotlinDefaultedNullableRecordAttributes;
-    }
-
-    /**
-     * Generate defaulted nullable Record attributes.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setKotlinDefaultedNullableRecordAttributes(Boolean value) {
-        this.kotlinDefaultedNullableRecordAttributes = value;
-    }
-
-    /**
-     * Turn on generation of all global object names.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isGlobalObjectNames() {
-        return globalObjectNames;
-    }
-
-    /**
-     * Turn on generation of all global object names.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setGlobalObjectNames(Boolean value) {
-        this.globalObjectNames = value;
     }
 
     /**
@@ -2182,7 +1564,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all global object references.
+     * Sets the value of the globalObjectReferences property.
      * 
      * @param value
      *     allowed object is
@@ -2206,7 +1588,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of global catalog references.
+     * Sets the value of the globalCatalogReferences property.
      * 
      * @param value
      *     allowed object is
@@ -2230,7 +1612,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of global schema references.
+     * Sets the value of the globalSchemaReferences property.
      * 
      * @param value
      *     allowed object is
@@ -2254,7 +1636,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of global domain references.
+     * Sets the value of the globalDomainReferences property.
      * 
      * @param value
      *     allowed object is
@@ -2263,54 +1645,6 @@ public class Generate implements Serializable, XMLAppendable
      */
     public void setGlobalDomainReferences(Boolean value) {
         this.globalDomainReferences = value;
-    }
-
-    /**
-     * Turn off generation of global trigger references.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isGlobalTriggerReferences() {
-        return globalTriggerReferences;
-    }
-
-    /**
-     * Turn off generation of global trigger references.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setGlobalTriggerReferences(Boolean value) {
-        this.globalTriggerReferences = value;
-    }
-
-    /**
-     * Turn off generation of global synonym references.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isGlobalSynonymReferences() {
-        return globalSynonymReferences;
-    }
-
-    /**
-     * Turn off generation of global synonym references.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setGlobalSynonymReferences(Boolean value) {
-        this.globalSynonymReferences = value;
     }
 
     /**
@@ -2326,7 +1660,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of global table references.
+     * Sets the value of the globalTableReferences property.
      * 
      * @param value
      *     allowed object is
@@ -2350,7 +1684,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of global sequence references.
+     * Sets the value of the globalSequenceReferences property.
      * 
      * @param value
      *     allowed object is
@@ -2374,7 +1708,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of global UDT references.
+     * Sets the value of the globalUDTReferences property.
      * 
      * @param value
      *     allowed object is
@@ -2398,7 +1732,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of global routine references.
+     * Sets the value of the globalRoutineReferences property.
      * 
      * @param value
      *     allowed object is
@@ -2422,7 +1756,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of global queue references.
+     * Sets the value of the globalQueueReferences property.
      * 
      * @param value
      *     allowed object is
@@ -2446,7 +1780,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of global database link references.
+     * Sets the value of the globalLinkReferences property.
      * 
      * @param value
      *     allowed object is
@@ -2470,7 +1804,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of global key references.
+     * Sets the value of the globalKeyReferences property.
      * 
      * @param value
      *     allowed object is
@@ -2494,7 +1828,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of global index references.
+     * Sets the value of the globalIndexReferences property.
      * 
      * @param value
      *     allowed object is
@@ -2503,54 +1837,6 @@ public class Generate implements Serializable, XMLAppendable
      */
     public void setGlobalIndexReferences(Boolean value) {
         this.globalIndexReferences = value;
-    }
-
-    /**
-     * Turn off generation of a <code>DefaultCatalog</code> object, which is generated by default in the absence of catalogs.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDefaultCatalog() {
-        return defaultCatalog;
-    }
-
-    /**
-     * Turn off generation of a <code>DefaultCatalog</code> object, which is generated by default in the absence of catalogs.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDefaultCatalog(Boolean value) {
-        this.defaultCatalog = value;
-    }
-
-    /**
-     * Turn off generation of a <code>DefaultSchema</code> object, which is generated by default in the absence of schemas.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDefaultSchema() {
-        return defaultSchema;
-    }
-
-    /**
-     * Turn off generation of a <code>DefaultSchema</code> object, which is generated by default in the absence of schemas.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDefaultSchema(Boolean value) {
-        this.defaultSchema = value;
     }
 
     /**
@@ -2566,7 +1852,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of Javadoc on all objects.
+     * Sets the value of the javadoc property.
      * 
      * @param value
      *     allowed object is
@@ -2590,7 +1876,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all objects.
+     * Sets the value of the comments property.
      * 
      * @param value
      *     allowed object is
@@ -2614,7 +1900,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all catalogs.
+     * Sets the value of the commentsOnCatalogs property.
      * 
      * @param value
      *     allowed object is
@@ -2638,7 +1924,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all schemas.
+     * Sets the value of the commentsOnSchemas property.
      * 
      * @param value
      *     allowed object is
@@ -2662,7 +1948,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all tables.
+     * Sets the value of the commentsOnTables property.
      * 
      * @param value
      *     allowed object is
@@ -2686,7 +1972,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all columns.
+     * Sets the value of the commentsOnColumns property.
      * 
      * @param value
      *     allowed object is
@@ -2710,7 +1996,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all embeddables.
+     * Sets the value of the commentsOnEmbeddables property.
      * 
      * @param value
      *     allowed object is
@@ -2734,7 +2020,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all UDTs.
+     * Sets the value of the commentsOnUDTs property.
      * 
      * @param value
      *     allowed object is
@@ -2758,7 +2044,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all attributes.
+     * Sets the value of the commentsOnAttributes property.
      * 
      * @param value
      *     allowed object is
@@ -2782,7 +2068,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all packages.
+     * Sets the value of the commentsOnPackages property.
      * 
      * @param value
      *     allowed object is
@@ -2806,7 +2092,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all routines.
+     * Sets the value of the commentsOnRoutines property.
      * 
      * @param value
      *     allowed object is
@@ -2830,7 +2116,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all parameters.
+     * Sets the value of the commentsOnParameters property.
      * 
      * @param value
      *     allowed object is
@@ -2854,7 +2140,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all sequences.
+     * Sets the value of the commentsOnSequences property.
      * 
      * @param value
      *     allowed object is
@@ -2863,30 +2149,6 @@ public class Generate implements Serializable, XMLAppendable
      */
     public void setCommentsOnSequences(Boolean value) {
         this.commentsOnSequences = value;
-    }
-
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all domains.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isCommentsOnDomains() {
-        return commentsOnDomains;
-    }
-
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all domains.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setCommentsOnDomains(Boolean value) {
-        this.commentsOnDomains = value;
     }
 
     /**
@@ -2902,7 +2164,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all links.
+     * Sets the value of the commentsOnLinks property.
      * 
      * @param value
      *     allowed object is
@@ -2926,7 +2188,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all queues.
+     * Sets the value of the commentsOnQueues property.
      * 
      * @param value
      *     allowed object is
@@ -2950,7 +2212,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all SQL comments as Javadoc on all keys.
+     * Sets the value of the commentsOnKeys property.
      * 
      * @param value
      *     allowed object is
@@ -2974,7 +2236,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all source code on all object types.
+     * Sets the value of the sources property.
      * 
      * @param value
      *     allowed object is
@@ -2998,7 +2260,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Turn off generation of all source code on all views.
+     * Sets the value of the sourcesOnViews property.
      * 
      * @param value
      *     allowed object is
@@ -3022,7 +2284,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate fluent setters in records, POJOs, interfaces.
+     * Sets the value of the fluentSetters property.
      * 
      * @param value
      *     allowed object is
@@ -3063,24 +2325,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Modify DefaultGeneratorStrategy behaviour to generate getters and setters in JavaBeans style in records, POJOs, interfaces.
-     * <p>
-     * If this flag is set to false, then:
-     * <p>
-     * <ul>
-     * <li>Column name   : X_INDEX</li>
-     * <li>Attribute name: xIndex</li>
-     * <li>Getter name   : getXIndex()</li>
-     * <li>Setter name   : setXIndex()</li>
-     * </ul>
-     * <p>
-     * If this flag is set to true, then:
-     * <ul>
-     * <li>Getter name   : getxIndex()</li>
-     * <li>Setter name   : setxIndex()</li>
-     * </ul>
-     * <p>
-     * Custom GeneratorStrategy implementations are unaffected
+     * Sets the value of the javaBeansGettersAndSetters property.
      * 
      * @param value
      *     allowed object is
@@ -3106,9 +2351,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate varargs setters for array types for convenience.
-     * <p>
-     * This may lead to compilation warnings in current Java versions.
+     * Sets the value of the varargSetters property.
      * 
      * @param value
      *     allowed object is
@@ -3188,7 +2431,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether empty catalogs (e.g. empty because of <excludes/> configurations) should still be generated.
+     * Sets the value of the emptyCatalogs property.
      * 
      * @param value
      *     allowed object is
@@ -3212,7 +2455,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether empty schemas (e.g. empty because of <excludes/> configurations) should still be generated.
+     * Sets the value of the emptySchemas property.
      * 
      * @param value
      *     allowed object is
@@ -3239,10 +2482,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * A flag indicating whether Java 8's java.time types should be used by the
-     * source code generator, rather than JDBC's java.sql types.
-     * <p>
-     * This flag is ignored in the commercial Java 6 distribution of jOOQ 3.9+ 
+     * Sets the value of the javaTimeTypes property.
      * 
      * @param value
      *     allowed object is
@@ -3266,7 +2506,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * A flag indicating whether the spatial type support should be enabled.
+     * Sets the value of the spatialTypes property.
      * 
      * @param value
      *     allowed object is
@@ -3290,7 +2530,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * A flag indicating whether the XML type support should be enabled.
+     * Sets the value of the xmlTypes property.
      * 
      * @param value
      *     allowed object is
@@ -3314,7 +2554,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * A flag indicating whether the JSON type support should be enabled.
+     * Sets the value of the jsonTypes property.
      * 
      * @param value
      *     allowed object is
@@ -3338,7 +2578,7 @@ public class Generate implements Serializable, XMLAppendable
     }
 
     /**
-     * A flag indicating whether the INTERVAL type support should be enabled.
+     * Sets the value of the intervalTypes property.
      * 
      * @param value
      *     allowed object is
@@ -3347,30 +2587,6 @@ public class Generate implements Serializable, XMLAppendable
      */
     public void setIntervalTypes(Boolean value) {
         this.intervalTypes = value;
-    }
-
-    /**
-     * A flag indicating whether the DECFLOAT type support should be enabled.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isDecfloatTypes() {
-        return decfloatTypes;
-    }
-
-    /**
-     * A flag indicating whether the DECFLOAT type support should be enabled.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setDecfloatTypes(Boolean value) {
-        this.decfloatTypes = value;
     }
 
     /**
@@ -3437,333 +2653,71 @@ public class Generate implements Serializable, XMLAppendable
         this.textBlocks = value;
     }
 
-    /**
-     * Whether to generate overrides for {@link org.jooq.Table#where(org.jooq.Condition)} and related overloads.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isWhereMethodOverrides() {
-        return whereMethodOverrides;
-    }
-
-    /**
-     * Whether to generate overrides for {@link org.jooq.Table#where(org.jooq.Condition)} and related overloads.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setWhereMethodOverrides(Boolean value) {
-        this.whereMethodOverrides = value;
-    }
-
-    /**
-     * Whether to generate overrides (see <a href="https://github.com/jOOQ/jOOQ/issues/13937">https://github.com/jOOQ/jOOQ/issues/13937</a>) for {@link org.jooq.Table#rename(org.jooq.Name)} and related overloads.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isRenameMethodOverrides() {
-        return renameMethodOverrides;
-    }
-
-    /**
-     * Whether to generate overrides (see <a href="https://github.com/jOOQ/jOOQ/issues/13937">https://github.com/jOOQ/jOOQ/issues/13937</a>) for {@link org.jooq.Table#rename(org.jooq.Name)} and related overloads.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setRenameMethodOverrides(Boolean value) {
-        this.renameMethodOverrides = value;
-    }
-
-    /**
-     * Whether to generate overrides for {@link org.jooq.Table#as(org.jooq.Name)} and related overloads.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isAsMethodOverrides() {
-        return asMethodOverrides;
-    }
-
-    /**
-     * Whether to generate overrides for {@link org.jooq.Table#as(org.jooq.Name)} and related overloads.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setAsMethodOverrides(Boolean value) {
-        this.asMethodOverrides = value;
-    }
-
-    /**
-     * Whether hidden columns should be generated in records.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isHiddenColumnsInRecords() {
-        return hiddenColumnsInRecords;
-    }
-
-    /**
-     * Whether hidden columns should be generated in records.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setHiddenColumnsInRecords(Boolean value) {
-        this.hiddenColumnsInRecords = value;
-    }
-
-    /**
-     * Whether hidden columns should be generated in POJOs.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isHiddenColumnsInPojos() {
-        return hiddenColumnsInPojos;
-    }
-
-    /**
-     * Whether hidden columns should be generated in POJOs.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setHiddenColumnsInPojos(Boolean value) {
-        this.hiddenColumnsInPojos = value;
-    }
-
-    /**
-     * Whether hidden columns should be generated in interfaces.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isHiddenColumnsInInterfaces() {
-        return hiddenColumnsInInterfaces;
-    }
-
-    /**
-     * Whether hidden columns should be generated in interfaces.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setHiddenColumnsInInterfaces(Boolean value) {
-        this.hiddenColumnsInInterfaces = value;
-    }
-
-    /**
-     * Whether redacted columns should be redacted in POJOs.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isRedactedColumnsInPojos() {
-        return redactedColumnsInPojos;
-    }
-
-    /**
-     * Whether redacted columns should be redacted in POJOs.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setRedactedColumnsInPojos(Boolean value) {
-        this.redactedColumnsInPojos = value;
-    }
-
-    /**
-     * Generate index information.
-     * 
-     */
     public Generate withIndexes(Boolean value) {
         setIndexes(value);
         return this;
     }
 
-    /**
-     * Primary key / foreign key relations should be generated and used.
-     * This is a prerequisite for various advanced features
-     * 
-     */
     public Generate withRelations(Boolean value) {
         setRelations(value);
         return this;
     }
 
-    /**
-     * Sequence flags should be generated and used.
-     * 
-     */
     public Generate withSequenceFlags(Boolean value) {
         setSequenceFlags(value);
         return this;
     }
 
-    /**
-     * Generate UDT path expressions on tables and on UDTs.
-     * 
-     */
-    public Generate withUdtPaths(Boolean value) {
-        setUdtPaths(value);
-        return this;
-    }
-
-    /**
-     * Generate UDT constructor expressions on UDTs.
-     * 
-     */
-    public Generate withUdtConstructors(Boolean value) {
-        setUdtConstructors(value);
-        return this;
-    }
-
-    /**
-     * Generate implicit join path constructors on generated tables for outgoing foreign key relationships (to-one relationships)
-     * 
-     */
     public Generate withImplicitJoinPathsToOne(Boolean value) {
         setImplicitJoinPathsToOne(value);
         return this;
     }
 
-    /**
-     * Generate implicit join path constructors on generated tables for incoming foreign key relationships (to-many relationships)
-     * 
-     */
-    public Generate withImplicitJoinPathsToMany(Boolean value) {
-        setImplicitJoinPathsToMany(value);
-        return this;
-    }
-
-    /**
-     * Generate implicit join path constructors on generated tables for many-to-many relationships. This turns off implicitly, if either of the other path generations are turned off.
-     * 
-     */
-    public Generate withImplicitJoinPathsManyToMany(Boolean value) {
-        setImplicitJoinPathsManyToMany(value);
-        return this;
-    }
-
-    /**
-     * Generate implicit join path table subtypes implementing {@link org.jooq.Path} for increased JOIN convenience.
-     * 
-     */
-    public Generate withImplicitJoinPathTableSubtypes(Boolean value) {
-        setImplicitJoinPathTableSubtypes(value);
-        return this;
-    }
-
-    /**
-     * Generate implicit join path constructors also if there isn't any outgoing or incoming foreign key relationship.
-     * 
-     */
-    public Generate withImplicitJoinPathUnusedConstructors(Boolean value) {
-        setImplicitJoinPathUnusedConstructors(value);
-        return this;
-    }
-
-    /**
-     * Whether names of unambiguous {@link org.jooq.meta.ForeignKeyDefinition} should be based
-     * on the referenced {@link org.jooq.meta.TableDefinition}.
-     * <p>
-     * When a child table has only one {@link org.jooq.meta.ForeignKeyDefinition} towards a
-     * parent table, then that path is "unambiguous." In that case, some
-     * {@link GeneratorStrategy} implementations may choose to use the parent
-     * table's {@link org.jooq.meta.TableDefinition} for implementations of
-     * {@link org.jooq.codegen.GeneratorStrategy#getJavaMethodName(Definition)}, instead of the
-     * {@link org.jooq.meta.ForeignKeyDefinition}, e.g. for implicit join paths.
-     * <p>
-     * This flag allows for turning off this default behaviour.
-     * 
-     */
     public Generate withImplicitJoinPathsUseTableNameForUnambiguousFKs(Boolean value) {
         setImplicitJoinPathsUseTableNameForUnambiguousFKs(value);
         return this;
     }
 
-    /**
-     * Whether implicit join path constructors should be offered as properties in Kotlin.
-     * 
-     */
     public Generate withImplicitJoinPathsAsKotlinProperties(Boolean value) {
         setImplicitJoinPathsAsKotlinProperties(value);
         return this;
     }
 
-    /**
-     * Generate deprecated code for backwards compatibility
-     * 
-     */
+    public Generate withExistsConvenienceOneToMany(Boolean value) {
+        setExistsConvenienceOneToMany(value);
+        return this;
+    }
+
+    public Generate withExistsConvenienceManyToMany(Boolean value) {
+        setExistsConvenienceManyToMany(value);
+        return this;
+    }
+
+    public Generate withRowConvenienceToOne(Boolean value) {
+        setRowConvenienceToOne(value);
+        return this;
+    }
+
+    public Generate withMultisetConvenienceOneToMany(Boolean value) {
+        setMultisetConvenienceOneToMany(value);
+        return this;
+    }
+
+    public Generate withMultisetConvenienceManyToMany(Boolean value) {
+        setMultisetConvenienceManyToMany(value);
+        return this;
+    }
+
     public Generate withDeprecated(Boolean value) {
         setDeprecated(value);
         return this;
     }
 
-    /**
-     * Generate deprecation annotations on references to unknown data types.
-     * This helps to identify columns, attributes, and parameters, which may not be usable through
-     * jOOQ API, without adding custom data type bindings to them.
-     * 
-     */
     public Generate withDeprecationOnUnknownTypes(Boolean value) {
         setDeprecationOnUnknownTypes(value);
         return this;
     }
 
-    /**
-     * @deprecated
-     * 
-     */
     public Generate withInstanceFields(Boolean value) {
         setInstanceFields(value);
         return this;
@@ -3778,17 +2732,14 @@ public class Generate implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Use the {@link org.jooq.Generated} annotation specified by {@link #getGeneratedAnnotationType()} in generated code.
-     * 
-     */
     public Generate withGeneratedAnnotation(Boolean value) {
         setGeneratedAnnotation(value);
         return this;
     }
 
     /**
-     * Specify the type of {@link org.jooq.Generated} annotation to use in generated code.
+     * Generate the {@link javax.annotation.processing.Generated} annotation to indicate
+     * jOOQ version used for source code.
      * 
      */
     public Generate withGeneratedAnnotationType(GeneratedAnnotationType value) {
@@ -3796,28 +2747,11 @@ public class Generate implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Whether the {@link org.jooq.Generated} annotation specified by {@link #getGeneratedAnnotationType()} should include the <code>date</code> attribute.
-     * 
-     */
     public Generate withGeneratedAnnotationDate(Boolean value) {
         setGeneratedAnnotationDate(value);
         return this;
     }
 
-    /**
-     * Whether the {@link org.jooq.Generated} annotation specified by {@link #getGeneratedAnnotationType()} should include the jOOQ version.
-     * 
-     */
-    public Generate withGeneratedAnnotationJooqVersion(Boolean value) {
-        setGeneratedAnnotationJooqVersion(value);
-        return this;
-    }
-
-    /**
-     * Whether non-nullable items should be annotated with the annotation type specified in {@link #nonnullAnnotationType}. In SQL and by consequence in jOOQ, non-nullability cannot be guaranteed statically. There may still be some cases (e.g. after unions, outer joins, etc.) where a normally non-null value turns out to be null!
-     * 
-     */
     public Generate withNonnullAnnotation(Boolean value) {
         setNonnullAnnotation(value);
         return this;
@@ -3832,21 +2766,8 @@ public class Generate implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Whether nullable items should be annotated with the annotation type specified in {@link #nullableAnnotationType}. Unlike {@link #nonnullAnnotation}, nullability can be guaranteed as in SQL, and by consequence in jOOQ, every column expression can be made nullable using some SQL operation.
-     * 
-     */
     public Generate withNullableAnnotation(Boolean value) {
         setNullableAnnotation(value);
-        return this;
-    }
-
-    /**
-     * Whether write-only (e.g. defaulted, non-null) nullable items should be annotated with the annotation type specified in {@link #nullableAnnotationType}. Unlike {@link #nonnullAnnotation}, nullability can be guaranteed as in SQL, and by consequence in jOOQ, every column expression can be made nullable using some SQL operation.
-     * 
-     */
-    public Generate withNullableAnnotationOnWriteOnlyNullableTypes(Boolean value) {
-        setNullableAnnotationOnWriteOnlyNullableTypes(value);
         return this;
     }
 
@@ -3859,415 +2780,141 @@ public class Generate implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Generate the {@link java.beans.ConstructorProperties} annotation on generated POJOs and/or records.
-     * 
-     */
     public Generate withConstructorPropertiesAnnotation(Boolean value) {
         setConstructorPropertiesAnnotation(value);
         return this;
     }
 
-    /**
-     * Generate the {@link java.beans.ConstructorProperties} annotation on generated POJOs (defaults to <code>true</code> if {@link #constructorPropertiesAnnotation} is active).
-     * 
-     */
     public Generate withConstructorPropertiesAnnotationOnPojos(Boolean value) {
         setConstructorPropertiesAnnotationOnPojos(value);
         return this;
     }
 
-    /**
-     * Generate the {@link java.beans.ConstructorProperties} annotation on generated records (defaults to <code>true</code> if {@link #constructorPropertiesAnnotation} is active).
-     * 
-     */
     public Generate withConstructorPropertiesAnnotationOnRecords(Boolean value) {
         setConstructorPropertiesAnnotationOnRecords(value);
         return this;
     }
 
-    /**
-     * Generate Routine classes.
-     * 
-     */
     public Generate withRoutines(Boolean value) {
         setRoutines(value);
         return this;
     }
 
-    /**
-     * Generate Sequence classes.
-     * 
-     */
     public Generate withSequences(Boolean value) {
         setSequences(value);
         return this;
     }
 
-    /**
-     * Generate Trigger classes.
-     * 
-     */
-    public Generate withTriggers(Boolean value) {
-        setTriggers(value);
-        return this;
-    }
-
-    /**
-     * Generate Synonym classes.
-     * 
-     */
-    public Generate withSynonyms(Boolean value) {
-        setSynonyms(value);
-        return this;
-    }
-
-    /**
-     * Generate UDT classes.
-     * 
-     */
     public Generate withUdts(Boolean value) {
         setUdts(value);
         return this;
     }
 
-    /**
-     * Generate Queue classes.
-     * 
-     */
     public Generate withQueues(Boolean value) {
         setQueues(value);
         return this;
     }
 
-    /**
-     * Generate database Link classes.
-     * 
-     */
     public Generate withLinks(Boolean value) {
         setLinks(value);
         return this;
     }
 
-    /**
-     * Generate Key classes.
-     * 
-     */
     public Generate withKeys(Boolean value) {
         setKeys(value);
         return this;
     }
 
-    /**
-     * Generate Table classes.
-     * 
-     */
     public Generate withTables(Boolean value) {
         setTables(value);
         return this;
     }
 
-    /**
-     * Generate embeddable classes.
-     * 
-     */
     public Generate withEmbeddables(Boolean value) {
         setEmbeddables(value);
         return this;
     }
 
-    /**
-     * Generate TableRecord classes.
-     * 
-     */
     public Generate withRecords(Boolean value) {
         setRecords(value);
         return this;
     }
 
-    /**
-     * All the object identifiers for which to generate records, by default, all of them.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public Generate withRecordsIncludes(String value) {
-        setRecordsIncludes(value);
-        return this;
-    }
-
-    /**
-     * All the object identifiers for which not to generate records.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public Generate withRecordsExcludes(String value) {
-        setRecordsExcludes(value);
-        return this;
-    }
-
-    /**
-     * Generate TableRecord classes that implement Record[N] super types
-     * 
-     */
     public Generate withRecordsImplementingRecordN(Boolean value) {
         setRecordsImplementingRecordN(value);
         return this;
     }
 
-    /**
-     * @deprecated Activate the legacy Scala sealed trait enum emulation
-     * 
-     */
     public Generate withEnumsAsScalaSealedTraits(Boolean value) {
         setEnumsAsScalaSealedTraits(value);
         return this;
     }
 
-    /**
-     * Generate enums as Scala 3.0 enums (if Scala 3 is supported).
-     * 
-     */
-    public Generate withEnumsAsScalaEnums(Boolean value) {
-        setEnumsAsScalaEnums(value);
-        return this;
-    }
-
-    /**
-     * Generate POJOs.
-     * 
-     */
     public Generate withPojos(Boolean value) {
         setPojos(value);
         return this;
     }
 
-    /**
-     * All the object identifiers for which to generate POJOs, by default, all of them.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public Generate withPojosIncludes(String value) {
-        setPojosIncludes(value);
-        return this;
-    }
-
-    /**
-     * All the object identifiers for which not to generate POJOs.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public Generate withPojosExcludes(String value) {
-        setPojosExcludes(value);
-        return this;
-    }
-
-    /**
-     * Generate basic equals() and hashCode() methods in POJOs.
-     * 
-     */
     public Generate withPojosEqualsAndHashCode(Boolean value) {
         setPojosEqualsAndHashCode(value);
         return this;
     }
 
-    /**
-     * Include primary key columns only in generated equals() and hashCode() methods in POJOs.
-     * 
-     */
-    public Generate withPojosEqualsAndHashCodeIncludePrimaryKeyOnly(Boolean value) {
-        setPojosEqualsAndHashCodeIncludePrimaryKeyOnly(value);
-        return this;
-    }
-
-    /**
-     * A regular expression matching columns for inclusion in generated equals() and hashCode() methods in POJOs.
-     * 
-     */
-    public Generate withPojosEqualsAndHashCodeColumnIncludeExpression(String value) {
-        setPojosEqualsAndHashCodeColumnIncludeExpression(value);
-        return this;
-    }
-
-    /**
-     * A regular expression matching columns for exclusion in generated equals() and hashCode() methods in POJOs.
-     * 
-     */
-    public Generate withPojosEqualsAndHashCodeColumnExcludeExpression(String value) {
-        setPojosEqualsAndHashCodeColumnExcludeExpression(value);
-        return this;
-    }
-
-    /**
-     * Generate basic toString() methods in POJOs.
-     * 
-     */
     public Generate withPojosToString(Boolean value) {
         setPojosToString(value);
         return this;
     }
 
-    /**
-     * Generate POJOs as records, when using the JavaGenerator.
-     * 
-     */
     public Generate withPojosAsJavaRecordClasses(Boolean value) {
         setPojosAsJavaRecordClasses(value);
         return this;
     }
 
-    /**
-     * Generate POJOs as case classes, when using the ScalaGenerator or Scala3Generator.
-     * 
-     */
     public Generate withPojosAsScalaCaseClasses(Boolean value) {
         setPojosAsScalaCaseClasses(value);
         return this;
     }
 
-    /**
-     * Generate POJOs as data classes, when using the KotlinGenerator.
-     * 
-     */
     public Generate withPojosAsKotlinDataClasses(Boolean value) {
         setPojosAsKotlinDataClasses(value);
         return this;
     }
 
-    /**
-     * Generate immutable POJOs.
-     * 
-     */
     public Generate withImmutablePojos(Boolean value) {
         setImmutablePojos(value);
         return this;
     }
 
-    /**
-     * Generate serializable POJOs.
-     * 
-     */
     public Generate withSerializablePojos(Boolean value) {
         setSerializablePojos(value);
         return this;
     }
 
-    /**
-     * Generated interfaces to be implemented by records and/or POJOs.
-     * 
-     */
     public Generate withInterfaces(Boolean value) {
         setInterfaces(value);
         return this;
     }
 
-    /**
-     * Generate immutable interfaces.
-     * 
-     */
     public Generate withImmutableInterfaces(Boolean value) {
         setImmutableInterfaces(value);
         return this;
     }
 
-    /**
-     * Generate serializable interfaces.
-     * 
-     */
     public Generate withSerializableInterfaces(Boolean value) {
         setSerializableInterfaces(value);
         return this;
     }
 
-    /**
-     * Generate DAOs.
-     * 
-     */
     public Generate withDaos(Boolean value) {
         setDaos(value);
         return this;
     }
 
-    /**
-     * All the object identifiers for which to generate DAOs, by default, all of them.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public Generate withDaosIncludes(String value) {
-        setDaosIncludes(value);
-        return this;
-    }
-
-    /**
-     * All the object identifiers for which not to generate DAOs.
-     * <p>
-     * This is a Java regular expression. Use the pipe to separate several expressions.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * 
-     */
-    public Generate withDaosExcludes(String value) {
-        setDaosExcludes(value);
-        return this;
-    }
-
-    /**
-     * Generate references to the most up to date minor release in {@link org.jooq.Constants} to produce compilation errors if an outdated runtime library is being used.
-     * 
-     */
     public Generate withJooqVersionReference(Boolean value) {
         setJooqVersionReference(value);
         return this;
     }
 
-    /**
-     * Annotate POJOs and Records with JPA annotations.
-     * 
-     */
     public Generate withJpaAnnotations(Boolean value) {
         setJpaAnnotations(value);
         return this;
@@ -4282,452 +2929,186 @@ public class Generate implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Annotate POJOs and Records with JSR-303 validation annotations
-     * 
-     */
     public Generate withValidationAnnotations(Boolean value) {
         setValidationAnnotations(value);
         return this;
     }
 
-    /**
-     * Annotate DAOs with useful spring annotations such as @Repository or @Autowired.
-     * 
-     */
     public Generate withSpringAnnotations(Boolean value) {
         setSpringAnnotations(value);
         return this;
     }
 
-    /**
-     * Generate an AbstractSpringDAOImpl as a base class for other DAO classes, containing @Transactional annotations, etc.
-     * 
-     */
     public Generate withSpringDao(Boolean value) {
         setSpringDao(value);
         return this;
     }
 
-    /**
-     * Workaround for Kotlin generating <code>setX()</code> setters instead of <code>setIsX()</code> in byte code for mutable properties called <code>isX</code>.
-     * 
-     */
     public Generate withKotlinSetterJvmNameAnnotationsOnIsPrefix(Boolean value) {
         setKotlinSetterJvmNameAnnotationsOnIsPrefix(value);
         return this;
     }
 
-    /**
-     * Generate non-nullable types on POJO attributes, where column is not null.
-     * 
-     */
-    public Generate withKotlinNotNullPojoAttributes(Boolean value) {
-        setKotlinNotNullPojoAttributes(value);
-        return this;
-    }
-
-    /**
-     * Generate non-nullable types on Record attributes, where column is not null.
-     * 
-     */
-    public Generate withKotlinNotNullRecordAttributes(Boolean value) {
-        setKotlinNotNullRecordAttributes(value);
-        return this;
-    }
-
-    /**
-     * Generate non-nullable types on interface attributes, where column is not null.
-     * 
-     */
-    public Generate withKotlinNotNullInterfaceAttributes(Boolean value) {
-        setKotlinNotNullInterfaceAttributes(value);
-        return this;
-    }
-
-    /**
-     * Generate defaulted nullable POJO attributes.
-     * 
-     */
-    public Generate withKotlinDefaultedNullablePojoAttributes(Boolean value) {
-        setKotlinDefaultedNullablePojoAttributes(value);
-        return this;
-    }
-
-    /**
-     * Generate defaulted nullable Record attributes.
-     * 
-     */
-    public Generate withKotlinDefaultedNullableRecordAttributes(Boolean value) {
-        setKotlinDefaultedNullableRecordAttributes(value);
-        return this;
-    }
-
-    /**
-     * Turn on generation of all global object names.
-     * 
-     */
-    public Generate withGlobalObjectNames(Boolean value) {
-        setGlobalObjectNames(value);
-        return this;
-    }
-
-    /**
-     * Turn off generation of all global object references.
-     * 
-     */
     public Generate withGlobalObjectReferences(Boolean value) {
         setGlobalObjectReferences(value);
         return this;
     }
 
-    /**
-     * Turn off generation of global catalog references.
-     * 
-     */
     public Generate withGlobalCatalogReferences(Boolean value) {
         setGlobalCatalogReferences(value);
         return this;
     }
 
-    /**
-     * Turn off generation of global schema references.
-     * 
-     */
     public Generate withGlobalSchemaReferences(Boolean value) {
         setGlobalSchemaReferences(value);
         return this;
     }
 
-    /**
-     * Turn off generation of global domain references.
-     * 
-     */
     public Generate withGlobalDomainReferences(Boolean value) {
         setGlobalDomainReferences(value);
         return this;
     }
 
-    /**
-     * Turn off generation of global trigger references.
-     * 
-     */
-    public Generate withGlobalTriggerReferences(Boolean value) {
-        setGlobalTriggerReferences(value);
-        return this;
-    }
-
-    /**
-     * Turn off generation of global synonym references.
-     * 
-     */
-    public Generate withGlobalSynonymReferences(Boolean value) {
-        setGlobalSynonymReferences(value);
-        return this;
-    }
-
-    /**
-     * Turn off generation of global table references.
-     * 
-     */
     public Generate withGlobalTableReferences(Boolean value) {
         setGlobalTableReferences(value);
         return this;
     }
 
-    /**
-     * Turn off generation of global sequence references.
-     * 
-     */
     public Generate withGlobalSequenceReferences(Boolean value) {
         setGlobalSequenceReferences(value);
         return this;
     }
 
-    /**
-     * Turn off generation of global UDT references.
-     * 
-     */
     public Generate withGlobalUDTReferences(Boolean value) {
         setGlobalUDTReferences(value);
         return this;
     }
 
-    /**
-     * Turn off generation of global routine references.
-     * 
-     */
     public Generate withGlobalRoutineReferences(Boolean value) {
         setGlobalRoutineReferences(value);
         return this;
     }
 
-    /**
-     * Turn off generation of global queue references.
-     * 
-     */
     public Generate withGlobalQueueReferences(Boolean value) {
         setGlobalQueueReferences(value);
         return this;
     }
 
-    /**
-     * Turn off generation of global database link references.
-     * 
-     */
     public Generate withGlobalLinkReferences(Boolean value) {
         setGlobalLinkReferences(value);
         return this;
     }
 
-    /**
-     * Turn off generation of global key references.
-     * 
-     */
     public Generate withGlobalKeyReferences(Boolean value) {
         setGlobalKeyReferences(value);
         return this;
     }
 
-    /**
-     * Turn off generation of global index references.
-     * 
-     */
     public Generate withGlobalIndexReferences(Boolean value) {
         setGlobalIndexReferences(value);
         return this;
     }
 
-    /**
-     * Turn off generation of a <code>DefaultCatalog</code> object, which is generated by default in the absence of catalogs.
-     * 
-     */
-    public Generate withDefaultCatalog(Boolean value) {
-        setDefaultCatalog(value);
-        return this;
-    }
-
-    /**
-     * Turn off generation of a <code>DefaultSchema</code> object, which is generated by default in the absence of schemas.
-     * 
-     */
-    public Generate withDefaultSchema(Boolean value) {
-        setDefaultSchema(value);
-        return this;
-    }
-
-    /**
-     * Turn off generation of Javadoc on all objects.
-     * 
-     */
     public Generate withJavadoc(Boolean value) {
         setJavadoc(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all objects.
-     * 
-     */
     public Generate withComments(Boolean value) {
         setComments(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all catalogs.
-     * 
-     */
     public Generate withCommentsOnCatalogs(Boolean value) {
         setCommentsOnCatalogs(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all schemas.
-     * 
-     */
     public Generate withCommentsOnSchemas(Boolean value) {
         setCommentsOnSchemas(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all tables.
-     * 
-     */
     public Generate withCommentsOnTables(Boolean value) {
         setCommentsOnTables(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all columns.
-     * 
-     */
     public Generate withCommentsOnColumns(Boolean value) {
         setCommentsOnColumns(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all embeddables.
-     * 
-     */
     public Generate withCommentsOnEmbeddables(Boolean value) {
         setCommentsOnEmbeddables(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all UDTs.
-     * 
-     */
     public Generate withCommentsOnUDTs(Boolean value) {
         setCommentsOnUDTs(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all attributes.
-     * 
-     */
     public Generate withCommentsOnAttributes(Boolean value) {
         setCommentsOnAttributes(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all packages.
-     * 
-     */
     public Generate withCommentsOnPackages(Boolean value) {
         setCommentsOnPackages(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all routines.
-     * 
-     */
     public Generate withCommentsOnRoutines(Boolean value) {
         setCommentsOnRoutines(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all parameters.
-     * 
-     */
     public Generate withCommentsOnParameters(Boolean value) {
         setCommentsOnParameters(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all sequences.
-     * 
-     */
     public Generate withCommentsOnSequences(Boolean value) {
         setCommentsOnSequences(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all domains.
-     * 
-     */
-    public Generate withCommentsOnDomains(Boolean value) {
-        setCommentsOnDomains(value);
-        return this;
-    }
-
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all links.
-     * 
-     */
     public Generate withCommentsOnLinks(Boolean value) {
         setCommentsOnLinks(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all queues.
-     * 
-     */
     public Generate withCommentsOnQueues(Boolean value) {
         setCommentsOnQueues(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all SQL comments as Javadoc on all keys.
-     * 
-     */
     public Generate withCommentsOnKeys(Boolean value) {
         setCommentsOnKeys(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all source code on all object types.
-     * 
-     */
     public Generate withSources(Boolean value) {
         setSources(value);
         return this;
     }
 
-    /**
-     * Turn off generation of all source code on all views.
-     * 
-     */
     public Generate withSourcesOnViews(Boolean value) {
         setSourcesOnViews(value);
         return this;
     }
 
-    /**
-     * Generate fluent setters in records, POJOs, interfaces.
-     * 
-     */
     public Generate withFluentSetters(Boolean value) {
         setFluentSetters(value);
         return this;
     }
 
-    /**
-     * Modify DefaultGeneratorStrategy behaviour to generate getters and setters in JavaBeans style in records, POJOs, interfaces.
-     * <p>
-     * If this flag is set to false, then:
-     * <p>
-     * <ul>
-     * <li>Column name   : X_INDEX</li>
-     * <li>Attribute name: xIndex</li>
-     * <li>Getter name   : getXIndex()</li>
-     * <li>Setter name   : setXIndex()</li>
-     * </ul>
-     * <p>
-     * If this flag is set to true, then:
-     * <ul>
-     * <li>Getter name   : getxIndex()</li>
-     * <li>Setter name   : setxIndex()</li>
-     * </ul>
-     * <p>
-     * Custom GeneratorStrategy implementations are unaffected
-     * 
-     */
     public Generate withJavaBeansGettersAndSetters(Boolean value) {
         setJavaBeansGettersAndSetters(value);
         return this;
     }
 
-    /**
-     * Generate varargs setters for array types for convenience.
-     * <p>
-     * This may lead to compilation warnings in current Java versions.
-     * 
-     */
     public Generate withVarargSetters(Boolean value) {
         setVarargSetters(value);
         return this;
@@ -4764,78 +3145,38 @@ public class Generate implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Whether empty catalogs (e.g. empty because of <excludes/> configurations) should still be generated.
-     * 
-     */
     public Generate withEmptyCatalogs(Boolean value) {
         setEmptyCatalogs(value);
         return this;
     }
 
-    /**
-     * Whether empty schemas (e.g. empty because of <excludes/> configurations) should still be generated.
-     * 
-     */
     public Generate withEmptySchemas(Boolean value) {
         setEmptySchemas(value);
         return this;
     }
 
-    /**
-     * A flag indicating whether Java 8's java.time types should be used by the
-     * source code generator, rather than JDBC's java.sql types.
-     * <p>
-     * This flag is ignored in the commercial Java 6 distribution of jOOQ 3.9+ 
-     * 
-     */
     public Generate withJavaTimeTypes(Boolean value) {
         setJavaTimeTypes(value);
         return this;
     }
 
-    /**
-     * A flag indicating whether the spatial type support should be enabled.
-     * 
-     */
     public Generate withSpatialTypes(Boolean value) {
         setSpatialTypes(value);
         return this;
     }
 
-    /**
-     * A flag indicating whether the XML type support should be enabled.
-     * 
-     */
     public Generate withXmlTypes(Boolean value) {
         setXmlTypes(value);
         return this;
     }
 
-    /**
-     * A flag indicating whether the JSON type support should be enabled.
-     * 
-     */
     public Generate withJsonTypes(Boolean value) {
         setJsonTypes(value);
         return this;
     }
 
-    /**
-     * A flag indicating whether the INTERVAL type support should be enabled.
-     * 
-     */
     public Generate withIntervalTypes(Boolean value) {
         setIntervalTypes(value);
-        return this;
-    }
-
-    /**
-     * A flag indicating whether the DECFLOAT type support should be enabled.
-     * 
-     */
-    public Generate withDecfloatTypes(Boolean value) {
-        setDecfloatTypes(value);
         return this;
     }
 
@@ -4875,91 +3216,19 @@ public class Generate implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Whether to generate overrides for {@link org.jooq.Table#where(org.jooq.Condition)} and related overloads.
-     * 
-     */
-    public Generate withWhereMethodOverrides(Boolean value) {
-        setWhereMethodOverrides(value);
-        return this;
-    }
-
-    /**
-     * Whether to generate overrides (see <a href="https://github.com/jOOQ/jOOQ/issues/13937">https://github.com/jOOQ/jOOQ/issues/13937</a>) for {@link org.jooq.Table#rename(org.jooq.Name)} and related overloads.
-     * 
-     */
-    public Generate withRenameMethodOverrides(Boolean value) {
-        setRenameMethodOverrides(value);
-        return this;
-    }
-
-    /**
-     * Whether to generate overrides for {@link org.jooq.Table#as(org.jooq.Name)} and related overloads.
-     * 
-     */
-    public Generate withAsMethodOverrides(Boolean value) {
-        setAsMethodOverrides(value);
-        return this;
-    }
-
-    /**
-     * Whether hidden columns should be generated in records.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Generate withHiddenColumnsInRecords(Boolean value) {
-        setHiddenColumnsInRecords(value);
-        return this;
-    }
-
-    /**
-     * Whether hidden columns should be generated in POJOs.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Generate withHiddenColumnsInPojos(Boolean value) {
-        setHiddenColumnsInPojos(value);
-        return this;
-    }
-
-    /**
-     * Whether hidden columns should be generated in interfaces.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Generate withHiddenColumnsInInterfaces(Boolean value) {
-        setHiddenColumnsInInterfaces(value);
-        return this;
-    }
-
-    /**
-     * Whether redacted columns should be redacted in POJOs.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Generate withRedactedColumnsInPojos(Boolean value) {
-        setRedactedColumnsInPojos(value);
-        return this;
-    }
-
     @Override
     public final void appendTo(XMLBuilder builder) {
         builder.append("indexes", indexes);
         builder.append("relations", relations);
         builder.append("sequenceFlags", sequenceFlags);
-        builder.append("udtPaths", udtPaths);
-        builder.append("udtConstructors", udtConstructors);
         builder.append("implicitJoinPathsToOne", implicitJoinPathsToOne);
-        builder.append("implicitJoinPathsToMany", implicitJoinPathsToMany);
-        builder.append("implicitJoinPathsManyToMany", implicitJoinPathsManyToMany);
-        builder.append("implicitJoinPathTableSubtypes", implicitJoinPathTableSubtypes);
-        builder.append("implicitJoinPathUnusedConstructors", implicitJoinPathUnusedConstructors);
         builder.append("implicitJoinPathsUseTableNameForUnambiguousFKs", implicitJoinPathsUseTableNameForUnambiguousFKs);
         builder.append("implicitJoinPathsAsKotlinProperties", implicitJoinPathsAsKotlinProperties);
+        builder.append("existsConvenienceOneToMany", existsConvenienceOneToMany);
+        builder.append("existsConvenienceManyToMany", existsConvenienceManyToMany);
+        builder.append("rowConvenienceToOne", rowConvenienceToOne);
+        builder.append("multisetConvenienceOneToMany", multisetConvenienceOneToMany);
+        builder.append("multisetConvenienceManyToMany", multisetConvenienceManyToMany);
         builder.append("deprecated", deprecated);
         builder.append("deprecationOnUnknownTypes", deprecationOnUnknownTypes);
         builder.append("instanceFields", instanceFields);
@@ -4967,19 +3236,15 @@ public class Generate implements Serializable, XMLAppendable
         builder.append("generatedAnnotation", generatedAnnotation);
         builder.append("generatedAnnotationType", generatedAnnotationType);
         builder.append("generatedAnnotationDate", generatedAnnotationDate);
-        builder.append("generatedAnnotationJooqVersion", generatedAnnotationJooqVersion);
         builder.append("nonnullAnnotation", nonnullAnnotation);
         builder.append("nonnullAnnotationType", nonnullAnnotationType);
         builder.append("nullableAnnotation", nullableAnnotation);
-        builder.append("nullableAnnotationOnWriteOnlyNullableTypes", nullableAnnotationOnWriteOnlyNullableTypes);
         builder.append("nullableAnnotationType", nullableAnnotationType);
         builder.append("constructorPropertiesAnnotation", constructorPropertiesAnnotation);
         builder.append("constructorPropertiesAnnotationOnPojos", constructorPropertiesAnnotationOnPojos);
         builder.append("constructorPropertiesAnnotationOnRecords", constructorPropertiesAnnotationOnRecords);
         builder.append("routines", routines);
         builder.append("sequences", sequences);
-        builder.append("triggers", triggers);
-        builder.append("synonyms", synonyms);
         builder.append("udts", udts);
         builder.append("queues", queues);
         builder.append("links", links);
@@ -4987,18 +3252,10 @@ public class Generate implements Serializable, XMLAppendable
         builder.append("tables", tables);
         builder.append("embeddables", embeddables);
         builder.append("records", records);
-        builder.append("recordsIncludes", recordsIncludes);
-        builder.append("recordsExcludes", recordsExcludes);
         builder.append("recordsImplementingRecordN", recordsImplementingRecordN);
         builder.append("enumsAsScalaSealedTraits", enumsAsScalaSealedTraits);
-        builder.append("enumsAsScalaEnums", enumsAsScalaEnums);
         builder.append("pojos", pojos);
-        builder.append("pojosIncludes", pojosIncludes);
-        builder.append("pojosExcludes", pojosExcludes);
         builder.append("pojosEqualsAndHashCode", pojosEqualsAndHashCode);
-        builder.append("pojosEqualsAndHashCodeIncludePrimaryKeyOnly", pojosEqualsAndHashCodeIncludePrimaryKeyOnly);
-        builder.append("pojosEqualsAndHashCodeColumnIncludeExpression", pojosEqualsAndHashCodeColumnIncludeExpression);
-        builder.append("pojosEqualsAndHashCodeColumnExcludeExpression", pojosEqualsAndHashCodeColumnExcludeExpression);
         builder.append("pojosToString", pojosToString);
         builder.append("pojosAsJavaRecordClasses", pojosAsJavaRecordClasses);
         builder.append("pojosAsScalaCaseClasses", pojosAsScalaCaseClasses);
@@ -5009,8 +3266,6 @@ public class Generate implements Serializable, XMLAppendable
         builder.append("immutableInterfaces", immutableInterfaces);
         builder.append("serializableInterfaces", serializableInterfaces);
         builder.append("daos", daos);
-        builder.append("daosIncludes", daosIncludes);
-        builder.append("daosExcludes", daosExcludes);
         builder.append("jooqVersionReference", jooqVersionReference);
         builder.append("jpaAnnotations", jpaAnnotations);
         builder.append("jpaVersion", jpaVersion);
@@ -5018,18 +3273,10 @@ public class Generate implements Serializable, XMLAppendable
         builder.append("springAnnotations", springAnnotations);
         builder.append("springDao", springDao);
         builder.append("kotlinSetterJvmNameAnnotationsOnIsPrefix", kotlinSetterJvmNameAnnotationsOnIsPrefix);
-        builder.append("kotlinNotNullPojoAttributes", kotlinNotNullPojoAttributes);
-        builder.append("kotlinNotNullRecordAttributes", kotlinNotNullRecordAttributes);
-        builder.append("kotlinNotNullInterfaceAttributes", kotlinNotNullInterfaceAttributes);
-        builder.append("kotlinDefaultedNullablePojoAttributes", kotlinDefaultedNullablePojoAttributes);
-        builder.append("kotlinDefaultedNullableRecordAttributes", kotlinDefaultedNullableRecordAttributes);
-        builder.append("globalObjectNames", globalObjectNames);
         builder.append("globalObjectReferences", globalObjectReferences);
         builder.append("globalCatalogReferences", globalCatalogReferences);
         builder.append("globalSchemaReferences", globalSchemaReferences);
         builder.append("globalDomainReferences", globalDomainReferences);
-        builder.append("globalTriggerReferences", globalTriggerReferences);
-        builder.append("globalSynonymReferences", globalSynonymReferences);
         builder.append("globalTableReferences", globalTableReferences);
         builder.append("globalSequenceReferences", globalSequenceReferences);
         builder.append("globalUDTReferences", globalUDTReferences);
@@ -5038,8 +3285,6 @@ public class Generate implements Serializable, XMLAppendable
         builder.append("globalLinkReferences", globalLinkReferences);
         builder.append("globalKeyReferences", globalKeyReferences);
         builder.append("globalIndexReferences", globalIndexReferences);
-        builder.append("defaultCatalog", defaultCatalog);
-        builder.append("defaultSchema", defaultSchema);
         builder.append("javadoc", javadoc);
         builder.append("comments", comments);
         builder.append("commentsOnCatalogs", commentsOnCatalogs);
@@ -5053,7 +3298,6 @@ public class Generate implements Serializable, XMLAppendable
         builder.append("commentsOnRoutines", commentsOnRoutines);
         builder.append("commentsOnParameters", commentsOnParameters);
         builder.append("commentsOnSequences", commentsOnSequences);
-        builder.append("commentsOnDomains", commentsOnDomains);
         builder.append("commentsOnLinks", commentsOnLinks);
         builder.append("commentsOnQueues", commentsOnQueues);
         builder.append("commentsOnKeys", commentsOnKeys);
@@ -5072,18 +3316,10 @@ public class Generate implements Serializable, XMLAppendable
         builder.append("xmlTypes", xmlTypes);
         builder.append("jsonTypes", jsonTypes);
         builder.append("intervalTypes", intervalTypes);
-        builder.append("decfloatTypes", decfloatTypes);
         builder.append("newline", newline);
         builder.append("indentation", indentation);
         builder.append("printMarginForBlockComment", printMarginForBlockComment);
         builder.append("textBlocks", textBlocks);
-        builder.append("whereMethodOverrides", whereMethodOverrides);
-        builder.append("renameMethodOverrides", renameMethodOverrides);
-        builder.append("asMethodOverrides", asMethodOverrides);
-        builder.append("hiddenColumnsInRecords", hiddenColumnsInRecords);
-        builder.append("hiddenColumnsInPojos", hiddenColumnsInPojos);
-        builder.append("hiddenColumnsInInterfaces", hiddenColumnsInInterfaces);
-        builder.append("redactedColumnsInPojos", redactedColumnsInPojos);
     }
 
     @Override
@@ -5132,66 +3368,12 @@ public class Generate implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (udtPaths == null) {
-            if (other.udtPaths!= null) {
-                return false;
-            }
-        } else {
-            if (!udtPaths.equals(other.udtPaths)) {
-                return false;
-            }
-        }
-        if (udtConstructors == null) {
-            if (other.udtConstructors!= null) {
-                return false;
-            }
-        } else {
-            if (!udtConstructors.equals(other.udtConstructors)) {
-                return false;
-            }
-        }
         if (implicitJoinPathsToOne == null) {
             if (other.implicitJoinPathsToOne!= null) {
                 return false;
             }
         } else {
             if (!implicitJoinPathsToOne.equals(other.implicitJoinPathsToOne)) {
-                return false;
-            }
-        }
-        if (implicitJoinPathsToMany == null) {
-            if (other.implicitJoinPathsToMany!= null) {
-                return false;
-            }
-        } else {
-            if (!implicitJoinPathsToMany.equals(other.implicitJoinPathsToMany)) {
-                return false;
-            }
-        }
-        if (implicitJoinPathsManyToMany == null) {
-            if (other.implicitJoinPathsManyToMany!= null) {
-                return false;
-            }
-        } else {
-            if (!implicitJoinPathsManyToMany.equals(other.implicitJoinPathsManyToMany)) {
-                return false;
-            }
-        }
-        if (implicitJoinPathTableSubtypes == null) {
-            if (other.implicitJoinPathTableSubtypes!= null) {
-                return false;
-            }
-        } else {
-            if (!implicitJoinPathTableSubtypes.equals(other.implicitJoinPathTableSubtypes)) {
-                return false;
-            }
-        }
-        if (implicitJoinPathUnusedConstructors == null) {
-            if (other.implicitJoinPathUnusedConstructors!= null) {
-                return false;
-            }
-        } else {
-            if (!implicitJoinPathUnusedConstructors.equals(other.implicitJoinPathUnusedConstructors)) {
                 return false;
             }
         }
@@ -5210,6 +3392,51 @@ public class Generate implements Serializable, XMLAppendable
             }
         } else {
             if (!implicitJoinPathsAsKotlinProperties.equals(other.implicitJoinPathsAsKotlinProperties)) {
+                return false;
+            }
+        }
+        if (existsConvenienceOneToMany == null) {
+            if (other.existsConvenienceOneToMany!= null) {
+                return false;
+            }
+        } else {
+            if (!existsConvenienceOneToMany.equals(other.existsConvenienceOneToMany)) {
+                return false;
+            }
+        }
+        if (existsConvenienceManyToMany == null) {
+            if (other.existsConvenienceManyToMany!= null) {
+                return false;
+            }
+        } else {
+            if (!existsConvenienceManyToMany.equals(other.existsConvenienceManyToMany)) {
+                return false;
+            }
+        }
+        if (rowConvenienceToOne == null) {
+            if (other.rowConvenienceToOne!= null) {
+                return false;
+            }
+        } else {
+            if (!rowConvenienceToOne.equals(other.rowConvenienceToOne)) {
+                return false;
+            }
+        }
+        if (multisetConvenienceOneToMany == null) {
+            if (other.multisetConvenienceOneToMany!= null) {
+                return false;
+            }
+        } else {
+            if (!multisetConvenienceOneToMany.equals(other.multisetConvenienceOneToMany)) {
+                return false;
+            }
+        }
+        if (multisetConvenienceManyToMany == null) {
+            if (other.multisetConvenienceManyToMany!= null) {
+                return false;
+            }
+        } else {
+            if (!multisetConvenienceManyToMany.equals(other.multisetConvenienceManyToMany)) {
                 return false;
             }
         }
@@ -5276,15 +3503,6 @@ public class Generate implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (generatedAnnotationJooqVersion == null) {
-            if (other.generatedAnnotationJooqVersion!= null) {
-                return false;
-            }
-        } else {
-            if (!generatedAnnotationJooqVersion.equals(other.generatedAnnotationJooqVersion)) {
-                return false;
-            }
-        }
         if (nonnullAnnotation == null) {
             if (other.nonnullAnnotation!= null) {
                 return false;
@@ -5309,15 +3527,6 @@ public class Generate implements Serializable, XMLAppendable
             }
         } else {
             if (!nullableAnnotation.equals(other.nullableAnnotation)) {
-                return false;
-            }
-        }
-        if (nullableAnnotationOnWriteOnlyNullableTypes == null) {
-            if (other.nullableAnnotationOnWriteOnlyNullableTypes!= null) {
-                return false;
-            }
-        } else {
-            if (!nullableAnnotationOnWriteOnlyNullableTypes.equals(other.nullableAnnotationOnWriteOnlyNullableTypes)) {
                 return false;
             }
         }
@@ -5372,24 +3581,6 @@ public class Generate implements Serializable, XMLAppendable
             }
         } else {
             if (!sequences.equals(other.sequences)) {
-                return false;
-            }
-        }
-        if (triggers == null) {
-            if (other.triggers!= null) {
-                return false;
-            }
-        } else {
-            if (!triggers.equals(other.triggers)) {
-                return false;
-            }
-        }
-        if (synonyms == null) {
-            if (other.synonyms!= null) {
-                return false;
-            }
-        } else {
-            if (!synonyms.equals(other.synonyms)) {
                 return false;
             }
         }
@@ -5456,24 +3647,6 @@ public class Generate implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (recordsIncludes == null) {
-            if (other.recordsIncludes!= null) {
-                return false;
-            }
-        } else {
-            if (!recordsIncludes.equals(other.recordsIncludes)) {
-                return false;
-            }
-        }
-        if (recordsExcludes == null) {
-            if (other.recordsExcludes!= null) {
-                return false;
-            }
-        } else {
-            if (!recordsExcludes.equals(other.recordsExcludes)) {
-                return false;
-            }
-        }
         if (recordsImplementingRecordN == null) {
             if (other.recordsImplementingRecordN!= null) {
                 return false;
@@ -5492,15 +3665,6 @@ public class Generate implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (enumsAsScalaEnums == null) {
-            if (other.enumsAsScalaEnums!= null) {
-                return false;
-            }
-        } else {
-            if (!enumsAsScalaEnums.equals(other.enumsAsScalaEnums)) {
-                return false;
-            }
-        }
         if (pojos == null) {
             if (other.pojos!= null) {
                 return false;
@@ -5510,57 +3674,12 @@ public class Generate implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (pojosIncludes == null) {
-            if (other.pojosIncludes!= null) {
-                return false;
-            }
-        } else {
-            if (!pojosIncludes.equals(other.pojosIncludes)) {
-                return false;
-            }
-        }
-        if (pojosExcludes == null) {
-            if (other.pojosExcludes!= null) {
-                return false;
-            }
-        } else {
-            if (!pojosExcludes.equals(other.pojosExcludes)) {
-                return false;
-            }
-        }
         if (pojosEqualsAndHashCode == null) {
             if (other.pojosEqualsAndHashCode!= null) {
                 return false;
             }
         } else {
             if (!pojosEqualsAndHashCode.equals(other.pojosEqualsAndHashCode)) {
-                return false;
-            }
-        }
-        if (pojosEqualsAndHashCodeIncludePrimaryKeyOnly == null) {
-            if (other.pojosEqualsAndHashCodeIncludePrimaryKeyOnly!= null) {
-                return false;
-            }
-        } else {
-            if (!pojosEqualsAndHashCodeIncludePrimaryKeyOnly.equals(other.pojosEqualsAndHashCodeIncludePrimaryKeyOnly)) {
-                return false;
-            }
-        }
-        if (pojosEqualsAndHashCodeColumnIncludeExpression == null) {
-            if (other.pojosEqualsAndHashCodeColumnIncludeExpression!= null) {
-                return false;
-            }
-        } else {
-            if (!pojosEqualsAndHashCodeColumnIncludeExpression.equals(other.pojosEqualsAndHashCodeColumnIncludeExpression)) {
-                return false;
-            }
-        }
-        if (pojosEqualsAndHashCodeColumnExcludeExpression == null) {
-            if (other.pojosEqualsAndHashCodeColumnExcludeExpression!= null) {
-                return false;
-            }
-        } else {
-            if (!pojosEqualsAndHashCodeColumnExcludeExpression.equals(other.pojosEqualsAndHashCodeColumnExcludeExpression)) {
                 return false;
             }
         }
@@ -5654,24 +3773,6 @@ public class Generate implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (daosIncludes == null) {
-            if (other.daosIncludes!= null) {
-                return false;
-            }
-        } else {
-            if (!daosIncludes.equals(other.daosIncludes)) {
-                return false;
-            }
-        }
-        if (daosExcludes == null) {
-            if (other.daosExcludes!= null) {
-                return false;
-            }
-        } else {
-            if (!daosExcludes.equals(other.daosExcludes)) {
-                return false;
-            }
-        }
         if (jooqVersionReference == null) {
             if (other.jooqVersionReference!= null) {
                 return false;
@@ -5735,60 +3836,6 @@ public class Generate implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (kotlinNotNullPojoAttributes == null) {
-            if (other.kotlinNotNullPojoAttributes!= null) {
-                return false;
-            }
-        } else {
-            if (!kotlinNotNullPojoAttributes.equals(other.kotlinNotNullPojoAttributes)) {
-                return false;
-            }
-        }
-        if (kotlinNotNullRecordAttributes == null) {
-            if (other.kotlinNotNullRecordAttributes!= null) {
-                return false;
-            }
-        } else {
-            if (!kotlinNotNullRecordAttributes.equals(other.kotlinNotNullRecordAttributes)) {
-                return false;
-            }
-        }
-        if (kotlinNotNullInterfaceAttributes == null) {
-            if (other.kotlinNotNullInterfaceAttributes!= null) {
-                return false;
-            }
-        } else {
-            if (!kotlinNotNullInterfaceAttributes.equals(other.kotlinNotNullInterfaceAttributes)) {
-                return false;
-            }
-        }
-        if (kotlinDefaultedNullablePojoAttributes == null) {
-            if (other.kotlinDefaultedNullablePojoAttributes!= null) {
-                return false;
-            }
-        } else {
-            if (!kotlinDefaultedNullablePojoAttributes.equals(other.kotlinDefaultedNullablePojoAttributes)) {
-                return false;
-            }
-        }
-        if (kotlinDefaultedNullableRecordAttributes == null) {
-            if (other.kotlinDefaultedNullableRecordAttributes!= null) {
-                return false;
-            }
-        } else {
-            if (!kotlinDefaultedNullableRecordAttributes.equals(other.kotlinDefaultedNullableRecordAttributes)) {
-                return false;
-            }
-        }
-        if (globalObjectNames == null) {
-            if (other.globalObjectNames!= null) {
-                return false;
-            }
-        } else {
-            if (!globalObjectNames.equals(other.globalObjectNames)) {
-                return false;
-            }
-        }
         if (globalObjectReferences == null) {
             if (other.globalObjectReferences!= null) {
                 return false;
@@ -5822,24 +3869,6 @@ public class Generate implements Serializable, XMLAppendable
             }
         } else {
             if (!globalDomainReferences.equals(other.globalDomainReferences)) {
-                return false;
-            }
-        }
-        if (globalTriggerReferences == null) {
-            if (other.globalTriggerReferences!= null) {
-                return false;
-            }
-        } else {
-            if (!globalTriggerReferences.equals(other.globalTriggerReferences)) {
-                return false;
-            }
-        }
-        if (globalSynonymReferences == null) {
-            if (other.globalSynonymReferences!= null) {
-                return false;
-            }
-        } else {
-            if (!globalSynonymReferences.equals(other.globalSynonymReferences)) {
                 return false;
             }
         }
@@ -5912,24 +3941,6 @@ public class Generate implements Serializable, XMLAppendable
             }
         } else {
             if (!globalIndexReferences.equals(other.globalIndexReferences)) {
-                return false;
-            }
-        }
-        if (defaultCatalog == null) {
-            if (other.defaultCatalog!= null) {
-                return false;
-            }
-        } else {
-            if (!defaultCatalog.equals(other.defaultCatalog)) {
-                return false;
-            }
-        }
-        if (defaultSchema == null) {
-            if (other.defaultSchema!= null) {
-                return false;
-            }
-        } else {
-            if (!defaultSchema.equals(other.defaultSchema)) {
                 return false;
             }
         }
@@ -6047,15 +4058,6 @@ public class Generate implements Serializable, XMLAppendable
             }
         } else {
             if (!commentsOnSequences.equals(other.commentsOnSequences)) {
-                return false;
-            }
-        }
-        if (commentsOnDomains == null) {
-            if (other.commentsOnDomains!= null) {
-                return false;
-            }
-        } else {
-            if (!commentsOnDomains.equals(other.commentsOnDomains)) {
                 return false;
             }
         }
@@ -6221,15 +4223,6 @@ public class Generate implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (decfloatTypes == null) {
-            if (other.decfloatTypes!= null) {
-                return false;
-            }
-        } else {
-            if (!decfloatTypes.equals(other.decfloatTypes)) {
-                return false;
-            }
-        }
         if (newline == null) {
             if (other.newline!= null) {
                 return false;
@@ -6266,69 +4259,6 @@ public class Generate implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (whereMethodOverrides == null) {
-            if (other.whereMethodOverrides!= null) {
-                return false;
-            }
-        } else {
-            if (!whereMethodOverrides.equals(other.whereMethodOverrides)) {
-                return false;
-            }
-        }
-        if (renameMethodOverrides == null) {
-            if (other.renameMethodOverrides!= null) {
-                return false;
-            }
-        } else {
-            if (!renameMethodOverrides.equals(other.renameMethodOverrides)) {
-                return false;
-            }
-        }
-        if (asMethodOverrides == null) {
-            if (other.asMethodOverrides!= null) {
-                return false;
-            }
-        } else {
-            if (!asMethodOverrides.equals(other.asMethodOverrides)) {
-                return false;
-            }
-        }
-        if (hiddenColumnsInRecords == null) {
-            if (other.hiddenColumnsInRecords!= null) {
-                return false;
-            }
-        } else {
-            if (!hiddenColumnsInRecords.equals(other.hiddenColumnsInRecords)) {
-                return false;
-            }
-        }
-        if (hiddenColumnsInPojos == null) {
-            if (other.hiddenColumnsInPojos!= null) {
-                return false;
-            }
-        } else {
-            if (!hiddenColumnsInPojos.equals(other.hiddenColumnsInPojos)) {
-                return false;
-            }
-        }
-        if (hiddenColumnsInInterfaces == null) {
-            if (other.hiddenColumnsInInterfaces!= null) {
-                return false;
-            }
-        } else {
-            if (!hiddenColumnsInInterfaces.equals(other.hiddenColumnsInInterfaces)) {
-                return false;
-            }
-        }
-        if (redactedColumnsInPojos == null) {
-            if (other.redactedColumnsInPojos!= null) {
-                return false;
-            }
-        } else {
-            if (!redactedColumnsInPojos.equals(other.redactedColumnsInPojos)) {
-                return false;
-            }
-        }
         return true;
     }
 
@@ -6339,15 +4269,14 @@ public class Generate implements Serializable, XMLAppendable
         result = ((prime*result)+((indexes == null)? 0 :indexes.hashCode()));
         result = ((prime*result)+((relations == null)? 0 :relations.hashCode()));
         result = ((prime*result)+((sequenceFlags == null)? 0 :sequenceFlags.hashCode()));
-        result = ((prime*result)+((udtPaths == null)? 0 :udtPaths.hashCode()));
-        result = ((prime*result)+((udtConstructors == null)? 0 :udtConstructors.hashCode()));
         result = ((prime*result)+((implicitJoinPathsToOne == null)? 0 :implicitJoinPathsToOne.hashCode()));
-        result = ((prime*result)+((implicitJoinPathsToMany == null)? 0 :implicitJoinPathsToMany.hashCode()));
-        result = ((prime*result)+((implicitJoinPathsManyToMany == null)? 0 :implicitJoinPathsManyToMany.hashCode()));
-        result = ((prime*result)+((implicitJoinPathTableSubtypes == null)? 0 :implicitJoinPathTableSubtypes.hashCode()));
-        result = ((prime*result)+((implicitJoinPathUnusedConstructors == null)? 0 :implicitJoinPathUnusedConstructors.hashCode()));
         result = ((prime*result)+((implicitJoinPathsUseTableNameForUnambiguousFKs == null)? 0 :implicitJoinPathsUseTableNameForUnambiguousFKs.hashCode()));
         result = ((prime*result)+((implicitJoinPathsAsKotlinProperties == null)? 0 :implicitJoinPathsAsKotlinProperties.hashCode()));
+        result = ((prime*result)+((existsConvenienceOneToMany == null)? 0 :existsConvenienceOneToMany.hashCode()));
+        result = ((prime*result)+((existsConvenienceManyToMany == null)? 0 :existsConvenienceManyToMany.hashCode()));
+        result = ((prime*result)+((rowConvenienceToOne == null)? 0 :rowConvenienceToOne.hashCode()));
+        result = ((prime*result)+((multisetConvenienceOneToMany == null)? 0 :multisetConvenienceOneToMany.hashCode()));
+        result = ((prime*result)+((multisetConvenienceManyToMany == null)? 0 :multisetConvenienceManyToMany.hashCode()));
         result = ((prime*result)+((deprecated == null)? 0 :deprecated.hashCode()));
         result = ((prime*result)+((deprecationOnUnknownTypes == null)? 0 :deprecationOnUnknownTypes.hashCode()));
         result = ((prime*result)+((instanceFields == null)? 0 :instanceFields.hashCode()));
@@ -6355,19 +4284,15 @@ public class Generate implements Serializable, XMLAppendable
         result = ((prime*result)+((generatedAnnotation == null)? 0 :generatedAnnotation.hashCode()));
         result = ((prime*result)+((generatedAnnotationType == null)? 0 :generatedAnnotationType.hashCode()));
         result = ((prime*result)+((generatedAnnotationDate == null)? 0 :generatedAnnotationDate.hashCode()));
-        result = ((prime*result)+((generatedAnnotationJooqVersion == null)? 0 :generatedAnnotationJooqVersion.hashCode()));
         result = ((prime*result)+((nonnullAnnotation == null)? 0 :nonnullAnnotation.hashCode()));
         result = ((prime*result)+((nonnullAnnotationType == null)? 0 :nonnullAnnotationType.hashCode()));
         result = ((prime*result)+((nullableAnnotation == null)? 0 :nullableAnnotation.hashCode()));
-        result = ((prime*result)+((nullableAnnotationOnWriteOnlyNullableTypes == null)? 0 :nullableAnnotationOnWriteOnlyNullableTypes.hashCode()));
         result = ((prime*result)+((nullableAnnotationType == null)? 0 :nullableAnnotationType.hashCode()));
         result = ((prime*result)+((constructorPropertiesAnnotation == null)? 0 :constructorPropertiesAnnotation.hashCode()));
         result = ((prime*result)+((constructorPropertiesAnnotationOnPojos == null)? 0 :constructorPropertiesAnnotationOnPojos.hashCode()));
         result = ((prime*result)+((constructorPropertiesAnnotationOnRecords == null)? 0 :constructorPropertiesAnnotationOnRecords.hashCode()));
         result = ((prime*result)+((routines == null)? 0 :routines.hashCode()));
         result = ((prime*result)+((sequences == null)? 0 :sequences.hashCode()));
-        result = ((prime*result)+((triggers == null)? 0 :triggers.hashCode()));
-        result = ((prime*result)+((synonyms == null)? 0 :synonyms.hashCode()));
         result = ((prime*result)+((udts == null)? 0 :udts.hashCode()));
         result = ((prime*result)+((queues == null)? 0 :queues.hashCode()));
         result = ((prime*result)+((links == null)? 0 :links.hashCode()));
@@ -6375,18 +4300,10 @@ public class Generate implements Serializable, XMLAppendable
         result = ((prime*result)+((tables == null)? 0 :tables.hashCode()));
         result = ((prime*result)+((embeddables == null)? 0 :embeddables.hashCode()));
         result = ((prime*result)+((records == null)? 0 :records.hashCode()));
-        result = ((prime*result)+((recordsIncludes == null)? 0 :recordsIncludes.hashCode()));
-        result = ((prime*result)+((recordsExcludes == null)? 0 :recordsExcludes.hashCode()));
         result = ((prime*result)+((recordsImplementingRecordN == null)? 0 :recordsImplementingRecordN.hashCode()));
         result = ((prime*result)+((enumsAsScalaSealedTraits == null)? 0 :enumsAsScalaSealedTraits.hashCode()));
-        result = ((prime*result)+((enumsAsScalaEnums == null)? 0 :enumsAsScalaEnums.hashCode()));
         result = ((prime*result)+((pojos == null)? 0 :pojos.hashCode()));
-        result = ((prime*result)+((pojosIncludes == null)? 0 :pojosIncludes.hashCode()));
-        result = ((prime*result)+((pojosExcludes == null)? 0 :pojosExcludes.hashCode()));
         result = ((prime*result)+((pojosEqualsAndHashCode == null)? 0 :pojosEqualsAndHashCode.hashCode()));
-        result = ((prime*result)+((pojosEqualsAndHashCodeIncludePrimaryKeyOnly == null)? 0 :pojosEqualsAndHashCodeIncludePrimaryKeyOnly.hashCode()));
-        result = ((prime*result)+((pojosEqualsAndHashCodeColumnIncludeExpression == null)? 0 :pojosEqualsAndHashCodeColumnIncludeExpression.hashCode()));
-        result = ((prime*result)+((pojosEqualsAndHashCodeColumnExcludeExpression == null)? 0 :pojosEqualsAndHashCodeColumnExcludeExpression.hashCode()));
         result = ((prime*result)+((pojosToString == null)? 0 :pojosToString.hashCode()));
         result = ((prime*result)+((pojosAsJavaRecordClasses == null)? 0 :pojosAsJavaRecordClasses.hashCode()));
         result = ((prime*result)+((pojosAsScalaCaseClasses == null)? 0 :pojosAsScalaCaseClasses.hashCode()));
@@ -6397,8 +4314,6 @@ public class Generate implements Serializable, XMLAppendable
         result = ((prime*result)+((immutableInterfaces == null)? 0 :immutableInterfaces.hashCode()));
         result = ((prime*result)+((serializableInterfaces == null)? 0 :serializableInterfaces.hashCode()));
         result = ((prime*result)+((daos == null)? 0 :daos.hashCode()));
-        result = ((prime*result)+((daosIncludes == null)? 0 :daosIncludes.hashCode()));
-        result = ((prime*result)+((daosExcludes == null)? 0 :daosExcludes.hashCode()));
         result = ((prime*result)+((jooqVersionReference == null)? 0 :jooqVersionReference.hashCode()));
         result = ((prime*result)+((jpaAnnotations == null)? 0 :jpaAnnotations.hashCode()));
         result = ((prime*result)+((jpaVersion == null)? 0 :jpaVersion.hashCode()));
@@ -6406,18 +4321,10 @@ public class Generate implements Serializable, XMLAppendable
         result = ((prime*result)+((springAnnotations == null)? 0 :springAnnotations.hashCode()));
         result = ((prime*result)+((springDao == null)? 0 :springDao.hashCode()));
         result = ((prime*result)+((kotlinSetterJvmNameAnnotationsOnIsPrefix == null)? 0 :kotlinSetterJvmNameAnnotationsOnIsPrefix.hashCode()));
-        result = ((prime*result)+((kotlinNotNullPojoAttributes == null)? 0 :kotlinNotNullPojoAttributes.hashCode()));
-        result = ((prime*result)+((kotlinNotNullRecordAttributes == null)? 0 :kotlinNotNullRecordAttributes.hashCode()));
-        result = ((prime*result)+((kotlinNotNullInterfaceAttributes == null)? 0 :kotlinNotNullInterfaceAttributes.hashCode()));
-        result = ((prime*result)+((kotlinDefaultedNullablePojoAttributes == null)? 0 :kotlinDefaultedNullablePojoAttributes.hashCode()));
-        result = ((prime*result)+((kotlinDefaultedNullableRecordAttributes == null)? 0 :kotlinDefaultedNullableRecordAttributes.hashCode()));
-        result = ((prime*result)+((globalObjectNames == null)? 0 :globalObjectNames.hashCode()));
         result = ((prime*result)+((globalObjectReferences == null)? 0 :globalObjectReferences.hashCode()));
         result = ((prime*result)+((globalCatalogReferences == null)? 0 :globalCatalogReferences.hashCode()));
         result = ((prime*result)+((globalSchemaReferences == null)? 0 :globalSchemaReferences.hashCode()));
         result = ((prime*result)+((globalDomainReferences == null)? 0 :globalDomainReferences.hashCode()));
-        result = ((prime*result)+((globalTriggerReferences == null)? 0 :globalTriggerReferences.hashCode()));
-        result = ((prime*result)+((globalSynonymReferences == null)? 0 :globalSynonymReferences.hashCode()));
         result = ((prime*result)+((globalTableReferences == null)? 0 :globalTableReferences.hashCode()));
         result = ((prime*result)+((globalSequenceReferences == null)? 0 :globalSequenceReferences.hashCode()));
         result = ((prime*result)+((globalUDTReferences == null)? 0 :globalUDTReferences.hashCode()));
@@ -6426,8 +4333,6 @@ public class Generate implements Serializable, XMLAppendable
         result = ((prime*result)+((globalLinkReferences == null)? 0 :globalLinkReferences.hashCode()));
         result = ((prime*result)+((globalKeyReferences == null)? 0 :globalKeyReferences.hashCode()));
         result = ((prime*result)+((globalIndexReferences == null)? 0 :globalIndexReferences.hashCode()));
-        result = ((prime*result)+((defaultCatalog == null)? 0 :defaultCatalog.hashCode()));
-        result = ((prime*result)+((defaultSchema == null)? 0 :defaultSchema.hashCode()));
         result = ((prime*result)+((javadoc == null)? 0 :javadoc.hashCode()));
         result = ((prime*result)+((comments == null)? 0 :comments.hashCode()));
         result = ((prime*result)+((commentsOnCatalogs == null)? 0 :commentsOnCatalogs.hashCode()));
@@ -6441,7 +4346,6 @@ public class Generate implements Serializable, XMLAppendable
         result = ((prime*result)+((commentsOnRoutines == null)? 0 :commentsOnRoutines.hashCode()));
         result = ((prime*result)+((commentsOnParameters == null)? 0 :commentsOnParameters.hashCode()));
         result = ((prime*result)+((commentsOnSequences == null)? 0 :commentsOnSequences.hashCode()));
-        result = ((prime*result)+((commentsOnDomains == null)? 0 :commentsOnDomains.hashCode()));
         result = ((prime*result)+((commentsOnLinks == null)? 0 :commentsOnLinks.hashCode()));
         result = ((prime*result)+((commentsOnQueues == null)? 0 :commentsOnQueues.hashCode()));
         result = ((prime*result)+((commentsOnKeys == null)? 0 :commentsOnKeys.hashCode()));
@@ -6460,18 +4364,10 @@ public class Generate implements Serializable, XMLAppendable
         result = ((prime*result)+((xmlTypes == null)? 0 :xmlTypes.hashCode()));
         result = ((prime*result)+((jsonTypes == null)? 0 :jsonTypes.hashCode()));
         result = ((prime*result)+((intervalTypes == null)? 0 :intervalTypes.hashCode()));
-        result = ((prime*result)+((decfloatTypes == null)? 0 :decfloatTypes.hashCode()));
         result = ((prime*result)+((newline == null)? 0 :newline.hashCode()));
         result = ((prime*result)+((indentation == null)? 0 :indentation.hashCode()));
         result = ((prime*result)+((printMarginForBlockComment == null)? 0 :printMarginForBlockComment.hashCode()));
         result = ((prime*result)+((textBlocks == null)? 0 :textBlocks.hashCode()));
-        result = ((prime*result)+((whereMethodOverrides == null)? 0 :whereMethodOverrides.hashCode()));
-        result = ((prime*result)+((renameMethodOverrides == null)? 0 :renameMethodOverrides.hashCode()));
-        result = ((prime*result)+((asMethodOverrides == null)? 0 :asMethodOverrides.hashCode()));
-        result = ((prime*result)+((hiddenColumnsInRecords == null)? 0 :hiddenColumnsInRecords.hashCode()));
-        result = ((prime*result)+((hiddenColumnsInPojos == null)? 0 :hiddenColumnsInPojos.hashCode()));
-        result = ((prime*result)+((hiddenColumnsInInterfaces == null)? 0 :hiddenColumnsInInterfaces.hashCode()));
-        result = ((prime*result)+((redactedColumnsInPojos == null)? 0 :redactedColumnsInPojos.hashCode()));
         return result;
     }
 

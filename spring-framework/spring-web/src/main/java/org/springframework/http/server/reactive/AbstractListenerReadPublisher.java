@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,13 @@ import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.logging.Log;
-import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.Operators;
 
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.core.log.LogDelegateFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -37,8 +35,8 @@ import org.springframework.util.Assert;
  * event-listener read APIs and Reactive Streams.
  *
  * <p>Specifically a base class for reading from the HTTP request body with
- * Servlet non-blocking I/O and Undertow XNIO as well as handling incoming
- * WebSocket messages with standard Jakarta WebSocket (JSR-356), Jetty, and
+ * Servlet 3.1 non-blocking I/O and Undertow XNIO as well as handling incoming
+ * WebSocket messages with standard Java WebSocket (JSR-356), Jetty, and
  * Undertow.
  *
  * @author Arjen Poutsma
@@ -47,7 +45,6 @@ import org.springframework.util.Assert;
  * @since 5.0
  * @param <T> the type of element signaled
  */
-@SuppressWarnings("NullAway") // Dataflow analysis limitation
 public abstract class AbstractListenerReadPublisher<T> implements Publisher<T> {
 
 	/**
@@ -59,8 +56,6 @@ public abstract class AbstractListenerReadPublisher<T> implements Publisher<T> {
 	 */
 	protected static Log rsReadLogger = LogDelegateFactory.getHiddenLog(AbstractListenerReadPublisher.class);
 
-	static final DataBuffer EMPTY_BUFFER = DefaultDataBufferFactory.sharedInstance.allocateBuffer(0);
-
 
 	private final AtomicReference<State> state = new AtomicReference<>(State.UNSUBSCRIBED);
 
@@ -70,13 +65,13 @@ public abstract class AbstractListenerReadPublisher<T> implements Publisher<T> {
 	private static final AtomicLongFieldUpdater<AbstractListenerReadPublisher> DEMAND_FIELD_UPDATER =
 			AtomicLongFieldUpdater.newUpdater(AbstractListenerReadPublisher.class, "demand");
 
-	private volatile @Nullable Subscriber<? super T> subscriber;
+	@Nullable
+	private volatile Subscriber<? super T> subscriber;
 
-	/** Flag to defer transition to COMPLETED briefly while SUBSCRIBING or READING. */
 	private volatile boolean completionPending;
 
-	/** Flag to defer transition to COMPLETED briefly while SUBSCRIBING or READING. */
-	private volatile @Nullable Throwable errorPending;
+	@Nullable
+	private volatile Throwable errorPending;
 
 	private final String logPrefix;
 
@@ -124,8 +119,8 @@ public abstract class AbstractListenerReadPublisher<T> implements Publisher<T> {
 	}
 
 	/**
-	 * Subclasses can call this method to signal onComplete, delegating a
-	 * notification from the container when all data has been read.
+	 * Sub-classes can call this method to delegate a contain notification when
+	 * all data has been read.
 	 */
 	public void onAllDataRead() {
 		State state = this.state.get();
@@ -136,8 +131,7 @@ public abstract class AbstractListenerReadPublisher<T> implements Publisher<T> {
 	}
 
 	/**
-	 * Subclasses can call this to signal onError, delegating a
-	 * notification from the container for an error.
+	 * Sub-classes can call this to delegate container error notifications.
 	 */
 	public final void onError(Throwable ex) {
 		State state = this.state.get();
@@ -160,7 +154,8 @@ public abstract class AbstractListenerReadPublisher<T> implements Publisher<T> {
 	 * Read once from the input, if possible.
 	 * @return the item that was read; or {@code null}
 	 */
-	protected abstract @Nullable T read() throws IOException;
+	@Nullable
+	protected abstract T read() throws IOException;
 
 	/**
 	 * Invoked when reading is paused due to a lack of demand.
@@ -174,7 +169,7 @@ public abstract class AbstractListenerReadPublisher<T> implements Publisher<T> {
 
 	/**
 	 * Invoked after an I/O read error from the underlying server or after a
-	 * cancellation signal from the downstream consumer to allow subclasses
+	 * cancellation signal from the downstream consumer to allow sub-classes
 	 * to discard any current cached data they might have.
 	 * @since 5.0.11
 	 */
@@ -184,21 +179,16 @@ public abstract class AbstractListenerReadPublisher<T> implements Publisher<T> {
 	// Private methods for use in State...
 
 	/**
-	 * Read and publish data one by one until there are no more items
-	 * to read (i.e. input queue drained), or there is no more demand.
-	 * @return {@code true} if there is demand but no more to read, or
-	 * {@code false} if there is more to read but lack of demand.
+	 * Read and publish data one at a time until there is no more data, no more
+	 * demand, or perhaps we completed in the mean time.
+	 * @return {@code true} if there is more demand; {@code false} if there is
+	 * no more demand or we have completed.
 	 */
 	private boolean readAndPublish() throws IOException {
 		long r;
 		while ((r = this.demand) > 0 && (this.state.get() != State.COMPLETED)) {
 			T data = read();
-			if (data == EMPTY_BUFFER) {
-				if (rsReadLogger.isTraceEnabled()) {
-					rsReadLogger.trace(getLogPrefix() + "0 bytes read, trying again");
-				}
-			}
-			else if (data != null) {
+			if (data != null) {
 				if (r != Long.MAX_VALUE) {
 					DEMAND_FIELD_UPDATER.addAndGet(this, -1L);
 				}
@@ -240,7 +230,7 @@ public abstract class AbstractListenerReadPublisher<T> implements Publisher<T> {
 
 	private boolean handlePendingCompletionOrError() {
 		State state = this.state.get();
-		if (state == State.DEMAND || state == State.NO_DEMAND) {
+		if (state == State.DEMAND || state  == State.NO_DEMAND) {
 			if (this.completionPending) {
 				rsReadLogger.trace(getLogPrefix() + "Processing pending completion");
 				this.state.get().onAllDataRead(this);
@@ -270,7 +260,7 @@ public abstract class AbstractListenerReadPublisher<T> implements Publisher<T> {
 
 
 		@Override
-		public void request(long n) {
+		public final void request(long n) {
 			if (rsReadLogger.isTraceEnabled()) {
 				rsReadLogger.trace(getLogPrefix() + "request " + (n != Long.MAX_VALUE ? n : "Long.MAX_VALUE"));
 			}
@@ -278,7 +268,7 @@ public abstract class AbstractListenerReadPublisher<T> implements Publisher<T> {
 		}
 
 		@Override
-		public void cancel() {
+		public final void cancel() {
 			State state = AbstractListenerReadPublisher.this.state.get();
 			if (rsReadLogger.isTraceEnabled()) {
 				rsReadLogger.trace(getLogPrefix() + "cancel [" + state + "]");
@@ -289,7 +279,7 @@ public abstract class AbstractListenerReadPublisher<T> implements Publisher<T> {
 
 
 	/**
-	 * The states that a read {@link Publisher} transitions through.
+	 * Represents a state for the {@link Publisher} to be in.
 	 * <p><pre>
 	 *        UNSUBSCRIBED
 	 *             |
@@ -363,12 +353,6 @@ public abstract class AbstractListenerReadPublisher<T> implements Publisher<T> {
 				publisher.errorPending = ex;
 				publisher.handlePendingCompletionOrError();
 			}
-
-			@Override
-			<T> void cancel(AbstractListenerReadPublisher<T> publisher) {
-				publisher.completionPending = true;
-				publisher.handlePendingCompletionOrError();
-			}
 		},
 
 		NO_DEMAND {
@@ -440,13 +424,6 @@ public abstract class AbstractListenerReadPublisher<T> implements Publisher<T> {
 			@Override
 			<T> void onError(AbstractListenerReadPublisher<T> publisher, Throwable ex) {
 				publisher.errorPending = ex;
-				publisher.handlePendingCompletionOrError();
-			}
-
-			@Override
-			<T> void cancel(AbstractListenerReadPublisher<T> publisher) {
-				publisher.discardData();
-				publisher.completionPending = true;
 				publisher.handlePendingCompletionOrError();
 			}
 		},

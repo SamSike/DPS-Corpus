@@ -23,9 +23,12 @@ import org.apache.camel.component.wordpress.api.service.WordpressServicePosts;
 import org.apache.camel.component.wordpress.api.service.WordpressServiceUsers;
 import org.apache.camel.component.wordpress.api.service.impl.WordpressServicePostsAdapter;
 import org.apache.camel.component.wordpress.api.service.impl.WordpressServiceUsersAdapter;
-import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Strings.emptyToNull;
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 public final class WordpressServiceProvider {
 
@@ -55,10 +58,10 @@ public final class WordpressServiceProvider {
     }
 
     public void init(WordpressAPIConfiguration config) {
-        ObjectHelper.notNullOrEmpty(config.getApiUrl(),
+        checkNotNull(emptyToNull(config.getApiUrl()),
                 "Please inform the Wordpress API url , eg.: http://myblog.com/wp-json/wp");
 
-        if (config.getApiVersion() == null || config.getApiVersion().isEmpty()) {
+        if (isNullOrEmpty(config.getApiVersion())) {
             config.setApiVersion(WordpressConstants.API_VERSION);
         }
 

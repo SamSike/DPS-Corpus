@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,15 @@
 
 package org.springframework.messaging.simp.stomp;
 
-import java.util.concurrent.CompletableFuture;
-
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.simp.SimpLogging;
 import org.springframework.messaging.tcp.TcpOperations;
 import org.springframework.messaging.tcp.reactor.ReactorNettyTcpClient;
 import org.springframework.util.Assert;
+import org.springframework.util.concurrent.ListenableFuture;
 
 /**
- * A STOMP over TCP client, configurable with {@link ReactorNettyTcpClient}.
+ * A STOMP over TCP client that uses {@link ReactorNettyTcpClient}.
  *
  * @author Rossen Stoyanchev
  * @since 5.0
@@ -61,7 +59,7 @@ public class ReactorNettyTcpStompClient extends StompClientSupport {
 		this.tcpClient = tcpClient;
 	}
 
-	private static TcpOperations<byte[]> initTcpClient(String host, int port) {
+	private static ReactorNettyTcpClient<byte[]> initTcpClient(String host, int port) {
 		ReactorNettyTcpClient<byte[]> client = new ReactorNettyTcpClient<>(host, port, new StompReactorNettyCodec());
 		client.setLogger(SimpLogging.forLog(client.getLogger()));
 		return client;
@@ -72,36 +70,34 @@ public class ReactorNettyTcpStompClient extends StompClientSupport {
 	 * Connect and notify the given {@link StompSessionHandler} when connected
 	 * on the STOMP level.
 	 * @param handler the handler for the STOMP session
-	 * @return a CompletableFuture for access to the session when ready for use
-	 * @since 6.0
+	 * @return a ListenableFuture for access to the session when ready for use
 	 */
-	public CompletableFuture<StompSession> connectAsync(StompSessionHandler handler) {
-		return connectAsync(null, handler);
+	public ListenableFuture<StompSession> connect(StompSessionHandler handler) {
+		return connect(null, handler);
 	}
 
 	/**
-	 * An overloaded version of {@link #connectAsync(StompSessionHandler)} that
+	 * An overloaded version of {@link #connect(StompSessionHandler)} that
 	 * accepts headers to use for the STOMP CONNECT frame.
 	 * @param connectHeaders headers to add to the CONNECT frame
 	 * @param handler the handler for the STOMP session
-	 * @return a CompletableFuture for access to the session when ready for use
+	 * @return a ListenableFuture for access to the session when ready for use
 	 */
-	public CompletableFuture<StompSession> connectAsync(@Nullable StompHeaders connectHeaders, StompSessionHandler handler) {
+	public ListenableFuture<StompSession> connect(@Nullable StompHeaders connectHeaders, StompSessionHandler handler) {
 		ConnectionHandlingStompSession session = createSession(connectHeaders, handler);
-		this.tcpClient.connectAsync(session);
-		return session.getSession();
+		this.tcpClient.connect(session);
+		return session.getSessionFuture();
 	}
 
 	/**
 	 * Shut down the client and release resources.
 	 */
 	public void shutdown() {
-		this.tcpClient.shutdownAsync();
+		this.tcpClient.shutdown();
 	}
 
 	@Override
 	public String toString() {
 		return "ReactorNettyTcpStompClient[" + this.tcpClient + "]";
 	}
-
 }

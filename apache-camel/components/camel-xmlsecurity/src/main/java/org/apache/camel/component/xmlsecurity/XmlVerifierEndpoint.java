@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.xmlsecurity;
 
-import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
@@ -35,8 +34,8 @@ import static org.apache.camel.component.xmlsecurity.api.XmlSignatureConstants.S
  * Verify XML payloads using the XML signature specification.
  */
 @UriEndpoint(firstVersion = "2.12.0", scheme = SCHEME_VERIFIER, title = "XML Security Verify",
-             syntax = "xmlsecurity-verify:name", producerOnly = true, category = { Category.SECURITY, Category.TRANSFORMATION },
-             remote = false, headersClass = XmlSignatureConstants.class)
+             syntax = "xmlsecurity-verify:name", producerOnly = true, label = "security,transformation",
+             headersClass = XmlSignatureConstants.class)
 public class XmlVerifierEndpoint extends DefaultEndpoint {
 
     @UriPath
@@ -49,11 +48,6 @@ public class XmlVerifierEndpoint extends DefaultEndpoint {
                                XmlVerifierConfiguration configuration) {
         super(uri, component);
         this.configuration = configuration;
-    }
-
-    @Override
-    public boolean isRemote() {
-        return false;
     }
 
     public String getName() {

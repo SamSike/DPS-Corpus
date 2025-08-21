@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,7 +42,6 @@ import java.sql.SQLException;
 
 import org.jooq.BindContext;
 import org.jooq.Configuration;
-import org.jooq.ExecuteContext;
 import org.jooq.Field;
 import org.jooq.QueryPart;
 import org.jooq.QueryPartInternal;
@@ -55,8 +54,8 @@ import org.jooq.exception.DataAccessException;
  */
 abstract class AbstractBindContext extends AbstractContext<BindContext> implements BindContext {
 
-    AbstractBindContext(Configuration configuration, ExecuteContext ctx, PreparedStatement stmt) {
-        super(configuration, ctx, stmt);
+    AbstractBindContext(Configuration configuration, PreparedStatement stmt) {
+        super(configuration, stmt);
     }
 
     // ------------------------------------------------------------------------
@@ -74,7 +73,7 @@ abstract class AbstractBindContext extends AbstractContext<BindContext> implemen
             return bindValue0(value, field);
         }
         catch (SQLException e) {
-            throw Tools.translate(this, null, e);
+            throw Tools.translate(null, e);
         }
     }
 
@@ -100,6 +99,11 @@ abstract class AbstractBindContext extends AbstractContext<BindContext> implemen
     @Override
     public final String render(QueryPart part) {
         throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public final BindContext keyword(String keyword) {
+        return this;
     }
 
     @Override
@@ -234,6 +238,11 @@ abstract class AbstractBindContext extends AbstractContext<BindContext> implemen
 
     @Override
     public final BindContext formatPrintMargin(int margin) {
+        return this;
+    }
+
+    @Override
+    public final BindContext literal(String literal) {
         return this;
     }
 

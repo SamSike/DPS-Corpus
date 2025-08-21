@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,14 +40,9 @@ package org.jooq.impl;
 import static java.time.temporal.ChronoField.INSTANT_SECONDS;
 import static java.time.temporal.ChronoField.MILLI_OF_DAY;
 import static java.time.temporal.ChronoField.MILLI_OF_SECOND;
-import static org.jooq.ContextConverter.scoped;
-import static org.jooq.Decfloat.decfloat;
 import static org.jooq.impl.Internal.arrayType;
-import static org.jooq.impl.Internal.converterContext;
 import static org.jooq.impl.Tools.configuration;
 import static org.jooq.impl.Tools.emulateMultiset;
-import static org.jooq.impl.Tools.enums;
-import static org.jooq.tools.StringUtils.leftPad;
 import static org.jooq.tools.reflect.Reflect.accessible;
 import static org.jooq.tools.reflect.Reflect.wrapper;
 import static org.jooq.types.Unsigned.ubyte;
@@ -69,7 +64,6 @@ import java.nio.ByteBuffer;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLXML;
 import java.sql.Struct;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -79,8 +73,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
-import java.time.Year;
-import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
@@ -98,19 +90,16 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import jakarta.xml.bind.JAXB;
+
 // ...
 import org.jooq.Converter;
-import org.jooq.ConverterContext;
 import org.jooq.ConverterProvider;
-import org.jooq.Data;
-import org.jooq.Converters.UnknownType;
-import org.jooq.Decfloat;
 import org.jooq.EnumType;
 import org.jooq.Field;
 import org.jooq.JSON;
 import org.jooq.JSONB;
 import org.jooq.JSONFormat;
-import org.jooq.Param;
 import org.jooq.QualifiedRecord;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -129,19 +118,11 @@ import org.jooq.tools.json.JSONObject;
 import org.jooq.tools.json.JSONParser;
 import org.jooq.tools.json.ParseException;
 import org.jooq.tools.reflect.Reflect;
-import org.jooq.types.DayToSecond;
 import org.jooq.types.UByte;
 import org.jooq.types.UInteger;
 import org.jooq.types.ULong;
 import org.jooq.types.UShort;
-import org.jooq.types.YearToMonth;
-import org.jooq.types.YearToSecond;
-import org.jooq.util.postgres.PostgresUtils;
 import org.jooq.util.xml.jaxb.InformationSchema;
-
-import org.jetbrains.annotations.NotNull;
-
-import jakarta.xml.bind.JAXB;
 
 /**
  * Utility methods for type conversions
@@ -184,8 +165,6 @@ final class Convert {
 
         trueValues.add("1");
         trueValues.add("1.0");
-        trueValues.add("1E0");
-        trueValues.add("1e0");
         trueValues.add("y");
         trueValues.add("Y");
         trueValues.add("yes");
@@ -201,8 +180,6 @@ final class Convert {
 
         falseValues.add("0");
         falseValues.add("0.0");
-        falseValues.add("0E0");
-        falseValues.add("0e0");
         falseValues.add("n");
         falseValues.add("N");
         falseValues.add("no");
@@ -253,15 +230,6 @@ final class Convert {
                 catch (Exception e) {
                     jsonMapper = klass.getDeclaredConstructor().newInstance();
                     log.debug("Jackson kotlin module is not available");
-                }
-
-                try {
-                    Class<?> jtmc = Class.forName("com.fasterxml.jackson.datatype.jsr310.JavaTimeModule");
-                    Object jtm = jtmc.getDeclaredConstructor().newInstance();
-                    Reflect.on(jsonMapper).call("registerModule", jtm);
-                }
-                catch (Exception e) {
-                    log.debug("JavaTimeModule is not available");
                 }
 
                 jsonReadMethod = klass.getMethod("readValue", String.class, Class.class);
@@ -380,9 +348,8 @@ final class Convert {
         if (from == null)
             return null;
 
-        // [#18052] Use wrapper types here, because we guarantee a U[] array typed result (i.e. Object[])
-        Object[] arrayOfT = (Object[]) convertArray(from, wrapper(converter.fromType()));
-        Object[] arrayOfU = (Object[]) Array.newInstance(wrapper(converter.toType()), from.length);
+        Object[] arrayOfT = convertArray(from, converter.fromType());
+        Object[] arrayOfU = (Object[]) Array.newInstance(converter.toType(), from.length);
 
         for (int i = 0; i < arrayOfT.length; i++)
             arrayOfU[i] = convert(arrayOfT[i], converter);
@@ -407,10 +374,10 @@ final class Convert {
      * @throws DataTypeException - When the conversion is not possible
      */
     @SuppressWarnings("unchecked")
-    static final Object convertArray(Object[] from, Class<?> toClass) throws DataTypeException {
+    static final Object[] convertArray(Object[] from, Class<?> toClass) throws DataTypeException {
         if (from == null)
             return null;
-        else if (!equalArrayDegree(from.getClass(), toClass))
+        else if (!toClass.isArray())
             return convertArray(from, arrayType(toClass));
         else if (toClass == from.getClass())
             return from;
@@ -421,70 +388,6 @@ final class Convert {
                 return Arrays.copyOf(from, from.length, (Class<? extends Object[]>) toClass);
             else if (from[0] != null && from[0].getClass() == toComponentType)
                 return Arrays.copyOf(from, from.length, (Class<? extends Object[]>) toClass);
-            else if (toComponentType == byte.class) {
-                final byte[] result = (byte[]) Array.newInstance(toComponentType, from.length);
-
-                for (int i = 0; i < from.length; i++)
-                    result[i] = (byte) convert(from[i], toComponentType);
-
-                return result;
-            }
-            else if (toComponentType == short.class) {
-                final short[] result = (short[]) Array.newInstance(toComponentType, from.length);
-
-                for (int i = 0; i < from.length; i++)
-                    result[i] = (short) convert(from[i], toComponentType);
-
-                return result;
-            }
-            else if (toComponentType == int.class) {
-                final int[] result = (int[]) Array.newInstance(toComponentType, from.length);
-
-                for (int i = 0; i < from.length; i++)
-                    result[i] = (int) convert(from[i], toComponentType);
-
-                return result;
-            }
-            else if (toComponentType == long.class) {
-                final long[] result = (long[]) Array.newInstance(toComponentType, from.length);
-
-                for (int i = 0; i < from.length; i++)
-                    result[i] = (long) convert(from[i], toComponentType);
-
-                return result;
-            }
-            else if (toComponentType == char.class) {
-                final char[] result = (char[]) Array.newInstance(toComponentType, from.length);
-
-                for (int i = 0; i < from.length; i++)
-                    result[i] = (char) convert(from[i], toComponentType);
-
-                return result;
-            }
-            else if (toComponentType == boolean.class) {
-                final boolean[] result = (boolean[]) Array.newInstance(toComponentType, from.length);
-
-                for (int i = 0; i < from.length; i++)
-                    result[i] = (boolean) convert(from[i], toComponentType);
-
-                return result;
-            }
-            else if (toComponentType == float.class) {
-                final float[] result = (float[]) Array.newInstance(toComponentType, from.length);
-
-                for (int i = 0; i < from.length; i++)
-                    result[i] = (float) convert(from[i], toComponentType);
-
-                return result;
-            }
-            else if (toComponentType == double.class) {
-                final double[] result = (double[]) Array.newInstance(toComponentType, from.length);
-
-                for (int i = 0; i < from.length; i++)
-                    result[i] = (double) convert(from[i], toComponentType);
-
-                return result;
-            }
             else {
                 final Object[] result = (Object[]) Array.newInstance(toComponentType, from.length);
 
@@ -496,25 +399,8 @@ final class Convert {
         }
     }
 
-    private static boolean equalArrayDegree(Class<?> c1, Class<?> c2) {
-        Class<?> ct1 = c1.getComponentType();
-        Class<?> ct2 = c2.getComponentType();
-
-        // [#18059] The check isn't symmetric as we'll wrap only the right type
-        if (ct1 == null)
-            return true;
-
-        // [#18059] binary data of type byte[] is not considered an array type
-        else if (ct2 == null && ct1 == byte.class)
-            return true;
-        else if (ct2 == null)
-            return false;
-        else
-            return equalArrayDegree(ct1, ct2);
-    }
-
-    static final <U> U[] convertCollection(Collection from, Class<? extends U[]> to) {
-        return new ConvertAll<U[]>(to).from(from, converterContext());
+    static final <U> U[] convertCollection(Collection from, Class<? extends U[]> to){
+        return new ConvertAll<U[]>(to).from(from);
     }
 
     /**
@@ -544,10 +430,10 @@ final class Convert {
         Class<T> fromType = converter.fromType();
 
         if (fromType == Object.class)
-            return scoped(converter).from((T) from, converterContext());
+            return converter.from((T) from);
 
         ConvertAll<T> convertAll = new ConvertAll<>(fromType);
-        return scoped(converter).from(convertAll.from(from, converterContext()), converterContext());
+        return converter.from(convertAll.from(from));
     }
 
     /**
@@ -658,7 +544,7 @@ final class Convert {
         List<U> result = new ArrayList<>(collection.size());
 
         for (Object o : collection)
-            result.add(convert(all.from(o, converterContext()), converter));
+            result.add(convert(all.from(o), converter));
 
         return result;
     }
@@ -671,20 +557,17 @@ final class Convert {
     /**
      * The converter to convert them all.
      */
-    private static final class ConvertAll<U> extends AbstractContextConverter<Object, U> {
+    private static class ConvertAll<U> implements Converter<Object, U> {
 
         private final Class<? extends U> toClass;
 
-        @SuppressWarnings("unchecked")
         ConvertAll(Class<? extends U> toClass) {
-            super(Object.class, (Class<U>) toClass);
-
             this.toClass = toClass;
         }
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
-        public U from(Object from, ConverterContext scope) {
+        public U from(Object from) {
             if (from == null) {
 
                 // [#936] If types are converted to primitives, the result must not
@@ -725,10 +608,10 @@ final class Convert {
 
                 // [#12557] Anything can be unwrapped from Optional
                 else if (fromClass == Optional.class)
-                    return from(((Optional) from).orElse(null), scope);
+                    return from(((Optional) from).orElse(null));
 
                 // Regular checks
-                else if (fromClass == byte[].class && !toClass.isArray()) {
+                else if (fromClass == byte[].class) {
 
                     // [#5824] UUID's most significant bits in byte[] are first
                     if (toClass == UUID.class) {
@@ -747,7 +630,7 @@ final class Convert {
                         return convert(new String((byte[]) from), toClass);
                 }
                 else if (fromClass.isArray()) {
-                    Object[] fromArray = toObjectArray(from);
+                    Object[] fromArray = (Object[]) from;
 
                     // [#3062] [#5796] Default collections if no specific collection type was requested
                     if (Collection.class.isAssignableFrom(toClass) &&
@@ -812,38 +695,24 @@ final class Convert {
 
                 // All types can be converted into String
                 else if (toClass == String.class) {
-                    try {
-                        if (from instanceof EnumType e)
-                            return (U) e.getLiteral();
+                    if (from instanceof EnumType)
+                        return (U) ((EnumType) from).getLiteral();
 
-                        // [#17497] Avoid potentially costly Data::toString call
-                        else if (from instanceof Data d)
-                            return (U) d.data();
-
-                        // [#18157] In case the driver (e.g. oracle-r2dbc) can't do the conversion itself
-                        else if (from instanceof SQLXML s)
-                            return (U) s.getString();
-
-                        else
-                            return (U) from.toString();
-                    }
-                    catch (SQLException e) {
-                        throw new DataTypeException("Cannot convert to String: ", e);
-                    }
+                    return (U) from.toString();
                 }
 
                 // [#5569] It should be possible, at least, to convert an empty string to an empty (var)binary.
                 else if (toClass == byte[].class) {
 
                     // [#5824] UUID's most significant bits in byte[] are first
-                    if (from instanceof UUID u) {
+                    if (from instanceof UUID) { UUID u = (UUID) from;
                         ByteBuffer b = ByteBuffer.wrap(new byte[16]);
                         b.putLong(u.getMostSignificantBits());
                         b.putLong(u.getLeastSignificantBits());
                         return (U) b.array();
                     }
-                    else if (from instanceof ByteBuffer b)
-                        return (U) b.array();
+                    else if (from instanceof ByteBuffer)
+                        return (U) ((ByteBuffer) from).array();
                     else
                         return (U) from.toString().getBytes();
                 }
@@ -903,9 +772,6 @@ final class Convert {
 
                     if (wrapperFrom == Boolean.class)
                         return (U) (((Boolean) from) ? Long.valueOf(1L) : Long.valueOf(0L));
-
-                    if (wrapperFrom == Year.class)
-                        return (U) (Long) (long) ((Year) from).getValue();
 
                     if (java.util.Date.class.isAssignableFrom(fromClass))
                         return (U) Long.valueOf(((java.util.Date) from).getTime());
@@ -1044,23 +910,6 @@ final class Convert {
                         return null;
                     }
                 }
-                else if (toClass == Decfloat.class) {
-                    if (wrapperFrom == Boolean.class)
-                        return (U) (((Boolean) from) ? decfloat("1") : decfloat("0"));
-
-                    return (U) decfloat(from.toString());
-                }
-                else if (toClass == Year.class) {
-                    if (Number.class.isAssignableFrom(wrapperFrom))
-                        return (U) Year.of((((Number) from).intValue()));
-
-                    try {
-                        return (U) Year.parse(from.toString().trim());
-                    }
-                    catch (DateTimeParseException e) {
-                        return null;
-                    }
-                }
                 else if (wrapperTo == Boolean.class) {
                     String s = from.toString().toLowerCase().trim();
 
@@ -1095,11 +944,8 @@ final class Convert {
                 else if (java.util.Date.class.isAssignableFrom(fromClass)) {
 
                     // [#12225] Avoid losing precision if possible
-                    if (Timestamp.class == fromClass)
-                        if (LocalDateTime.class == toClass)
-                            return (U) ((Timestamp) from).toLocalDateTime();
-                        else
-                            return toDate(((Timestamp) from).getTime(), ((Timestamp) from).getNanos(), toClass);
+                    if (Timestamp.class == fromClass && LocalDateTime.class == toClass)
+                        return (U) ((Timestamp) from).toLocalDateTime();
                     else if (Date.class == fromClass && LocalDate.class == toClass)
                         return (U) ((Date) from).toLocalDate();
                     else if (Time.class == fromClass && LocalTime.class == toClass)
@@ -1112,16 +958,10 @@ final class Convert {
                     // [#12225] Avoid losing precision if possible
                     if (LocalDateTime.class == fromClass && Timestamp.class == toClass)
                         return (U) Timestamp.valueOf((LocalDateTime) from);
-                    else if (LocalDateTime.class == fromClass && Temporal.class.isAssignableFrom(toClass))
-                        return toDate(((LocalDateTime) from).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), ((LocalDateTime) from).getNano(), toClass);
                     else if (LocalDate.class == fromClass && Date.class == toClass)
                         return (U) Date.valueOf((LocalDate) from);
                     else if (LocalTime.class == fromClass && Time.class == toClass)
                         return (U) Time.valueOf((LocalTime) from);
-                    else if (OffsetDateTime.class == fromClass && (Timestamp.class == toClass || Temporal.class.isAssignableFrom(toClass)))
-                        return toDate(((OffsetDateTime) from).toInstant().toEpochMilli(), ((OffsetDateTime) from).getNano(), toClass);
-                    else if (Instant.class == fromClass && (Timestamp.class == toClass || Temporal.class.isAssignableFrom(toClass)))
-                        return toDate(((Instant) from).toEpochMilli(), ((Instant) from).getNano(), toClass);
                     else
                         return toDate(convert(from, Long.class), toClass);
                 }
@@ -1137,7 +977,7 @@ final class Convert {
                 // [#1501] Strings can be converted to java.sql.Date
                 else if (fromClass == String.class && toClass == java.sql.Date.class) {
                     try {
-                        return (U) java.sql.Date.valueOf(patchIso8601Date((String) from));
+                        return (U) java.sql.Date.valueOf((String) from);
                     }
                     catch (IllegalArgumentException e) {
                         return null;
@@ -1147,7 +987,7 @@ final class Convert {
                 // [#1501] Strings can be converted to java.sql.Date
                 else if (fromClass == String.class && toClass == java.sql.Time.class) {
                     try {
-                        return (U) java.sql.Time.valueOf(patchFractionalSeconds(patchIso8601Time((String) from)));
+                        return (U) java.sql.Time.valueOf(patchIso8601Time((String) from));
                     }
                     catch (IllegalArgumentException e) {
                         return null;
@@ -1164,15 +1004,14 @@ final class Convert {
                     }
                 }
                 else if (fromClass == String.class && toClass == LocalDate.class) {
-                    String s = patchIso8601Date((String) from);
 
                     // Try "lenient" ISO date formats first
                     try {
-                        return (U) java.sql.Date.valueOf(s).toLocalDate();
+                        return (U) java.sql.Date.valueOf((String) from).toLocalDate();
                     }
                     catch (IllegalArgumentException e1) {
                         try {
-                            return (U) LocalDate.parse(s);
+                            return (U) LocalDate.parse((String) from);
                         }
                         catch (DateTimeParseException e2) {
                             return null;
@@ -1218,7 +1057,7 @@ final class Convert {
 
                     // Try "local" ISO date formats first
                     try {
-                        return (U) java.sql.Timestamp.valueOf((String) from).toLocalDateTime().atZone(ZoneId.systemDefault()).toOffsetDateTime();
+                        return (U) java.sql.Timestamp.valueOf((String) from).toLocalDateTime().atOffset(OffsetDateTime.now().getOffset());
                     }
                     catch (IllegalArgumentException e1) {
                         try {
@@ -1234,7 +1073,7 @@ final class Convert {
 
                     // Try "local" ISO date formats first
                     try {
-                        return (U) java.sql.Timestamp.valueOf((String) from).toLocalDateTime().atZone(ZoneId.systemDefault()).toInstant();
+                        return (U) java.sql.Timestamp.valueOf((String) from).toLocalDateTime().atOffset(OffsetDateTime.now().getOffset()).toInstant();
                     }
                     catch (IllegalArgumentException e1) {
                         try {
@@ -1246,86 +1085,27 @@ final class Convert {
                     }
                 }
 
-                // [#14437] [#14713] Interval conversions
-                else if (fromClass == String.class && toClass == YearToMonth.class) {
-
-                    // Try our own standard SQL implementation first
-                    YearToMonth r = YearToMonth.valueOf((String) from);
-                    if (r != null)
-                        return (U) r;
-
-                    // If that failed, try the H2 specific format
-                    if (((String) from).startsWith("INTERVAL")) {
-                        try {
-                            r = ((Param<YearToMonth>) scope.dsl().parser().parseField((String) from)).getValue();
-                            return (U) r;
-                        }
-                        catch (Exception ignore) {}
-                    }
-
-                    // If that failed, try the PostgreSQL specific formats
-                    try {
-                        return (U) PostgresUtils.toYearToMonth(from);
-                    }
-                    catch (Exception e) {
-                        return null;
-                    }
-                }
-                else if (fromClass == String.class && toClass == DayToSecond.class) {
-
-                    // Try our own standard SQL implementation first
-                    DayToSecond r = DayToSecond.valueOf((String) from);
-                    if (r != null)
-                        return (U) r;
-
-                    // If that failed, try the H2 specific format
-                    if (((String) from).startsWith("INTERVAL")) {
-                        try {
-                            r = ((Param<DayToSecond>) scope.dsl().parser().parseField((String) from)).getValue();
-                            return (U) r;
-                        }
-                        catch (Exception ignore) {}
-                    }
-
-                    // If that failed, try the PostgreSQL specific formats
-                    try {
-                        return (U) PostgresUtils.toDayToSecond(from);
-                    }
-                    catch (Exception e) {
-                        return null;
-                    }
-                }
-                else if (fromClass == String.class && toClass == YearToSecond.class) {
-
-                    // Try our own standard SQL implementation first
-                    YearToSecond r = YearToSecond.valueOf((String) from);
-                    if (r != null)
-                        return (U) r;
-
-                    // If that failed, try the PostgreSQL specific formats
-                    try {
-                        return (U) PostgresUtils.toYearToSecond(from);
-                    }
-                    catch (Exception e) {
-                        return null;
-                    }
-                }
-
                 // [#1448] [#6255] [#5720] To Enum conversion
                 else if (java.lang.Enum.class.isAssignableFrom(toClass) && (fromClass == String.class || from instanceof Enum || from instanceof EnumType)) {
                     try {
                         String fromString =
                             (fromClass == String.class) ? (String) from
-                          : from instanceof EnumType e ? e.getLiteral()
+                          : from instanceof EnumType ? ((EnumType) from).getLiteral()
                           : ((Enum) from).name();
 
                         if (fromString == null)
                             return null;
 
-                        if (EnumType.class.isAssignableFrom(toClass))
-                            return (U) EnumType.lookupLiteral((Class) toClass, fromString);
-                        else
+                        if (EnumType.class.isAssignableFrom(toClass)) {
+                            for (Object value : toClass.getEnumConstants())
+                                if (fromString.equals(((EnumType) value).getLiteral()))
+                                    return (U) value;
+
+                            return null;
+                        }
+                        else {
                             return (U) java.lang.Enum.valueOf((Class) toClass, fromString);
+                        }
 
                     }
                     catch (IllegalArgumentException e) {
@@ -1503,9 +1283,20 @@ final class Convert {
 
 
 
-                else if (Collection.class.isAssignableFrom(fromClass) && Collection.class.isAssignableFrom(toClass)) {
-                    return copyCollection(fromClass, (Collection<?>) from);
-                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                 // TODO [#2520] When RecordUnmappers are supported, they should also be considered here
 
@@ -1541,86 +1332,6 @@ final class Convert {
             }
 
             throw fail(from, toClass);
-        }
-
-        private final Object[] toObjectArray(Object from) {
-            Object[] result;
-
-            if (from instanceof Object[] a) {
-                return a;
-            }
-            else if (from instanceof byte[] a) {
-                result = new Byte[a.length];
-
-                for (int i = 0; i < result.length; i++)
-                    result[i] = a[i];
-            }
-            else if (from instanceof short[] a) {
-                result = new Short[a.length];
-
-                for (int i = 0; i < result.length; i++)
-                    result[i] = a[i];
-            }
-            else if (from instanceof int[] a) {
-                result = new Integer[a.length];
-
-                for (int i = 0; i < result.length; i++)
-                    result[i] = a[i];
-            }
-            else if (from instanceof long[] a) {
-                result = new Long[a.length];
-
-                for (int i = 0; i < result.length; i++)
-                    result[i] = a[i];
-            }
-            else if (from instanceof char[] a) {
-                result = new Character[a.length];
-
-                for (int i = 0; i < result.length; i++)
-                    result[i] = a[i];
-            }
-            else if (from instanceof boolean[] a) {
-                result = new Boolean[a.length];
-
-                for (int i = 0; i < result.length; i++)
-                    result[i] = a[i];
-            }
-            else if (from instanceof float[] a) {
-                result = new Float[a.length];
-
-                for (int i = 0; i < result.length; i++)
-                    result[i] = a[i];
-            }
-            else if (from instanceof double[] a) {
-                result = new Double[a.length];
-
-                for (int i = 0; i < result.length; i++)
-                    result[i] = a[i];
-            }
-            else
-                throw new IllegalArgumentException("Unsupported type: " + from);
-
-            return result;
-        }
-
-        @SuppressWarnings("unchecked")
-        private final U copyCollection(Class<?> fromClass, Collection<?> collection) {
-            try {
-                Collection<Object> c;
-
-                if (!toClass.isInterface())
-                    c = (Collection<Object>) toClass.newInstance();
-                else if (Set.class.isAssignableFrom(toClass))
-                    c = new LinkedHashSet<>();
-                else
-                    c = new ArrayList<>();
-
-                c.addAll(collection);
-                return (U) c;
-            }
-            catch (Exception e) {
-                throw new DataTypeException("Cannot convert from " + fromClass + " to " + toClass, e);
-            }
         }
 
         @SuppressWarnings("unchecked")
@@ -1678,29 +1389,32 @@ final class Convert {
         }
 
         @Override
-        public Object to(U to, ConverterContext scope) {
+        public Object to(U to) {
             return to;
         }
 
-        /**
-         * Convert a long timestamp (millis) to any date type.
-         */
-        private static <X> X toDate(long time, Class<X> toClass) {
-            return toDate(time, 0, toClass);
+        @Override
+        public Class<Object> fromType() {
+            return Object.class;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public Class<U> toType() {
+            return (Class<U>) toClass;
         }
 
         /**
-         * Convert a long timestamp (millis) with nanos adjustment to any date
-         * type.
+         * Convert a long timestamp to any date type
          */
         @SuppressWarnings("unchecked")
-        private static <X> X toDate(long time, int nanos, Class<X> toClass) {
+        private static <X> X toDate(long time, Class<X> toClass) {
             if (toClass == Date.class)
                 return (X) new Date(time);
             else if (toClass == Time.class)
                 return (X) new Time(time);
             else if (toClass == Timestamp.class)
-                return (X) toTimestamp(time, nanos);
+                return (X) new Timestamp(time);
             else if (toClass == java.util.Date.class)
                 return (X) new java.util.Date(time);
             else if (toClass == Calendar.class) {
@@ -1715,36 +1429,24 @@ final class Convert {
             else if (toClass == OffsetTime.class)
                 return (X) new Time(time).toLocalTime().atOffset(OffsetTime.now().getOffset());
             else if (toClass == LocalDateTime.class)
-                return (X) toTimestamp(time, nanos).toLocalDateTime();
+                return (X) new Timestamp(time).toLocalDateTime();
             else if (toClass == OffsetDateTime.class)
-                return (X) toTimestamp(time, nanos).toLocalDateTime().atZone(ZoneId.systemDefault()).toOffsetDateTime();
+                return (X) new Timestamp(time).toLocalDateTime().atOffset(OffsetDateTime.now().getOffset());
             else if (toClass == Instant.class)
-                if (nanos == 0L)
-                    return (X) Instant.ofEpochMilli(time);
-                else
-                    return (X) Instant.ofEpochSecond(time / 1000L, nanos);
+                return (X) Instant.ofEpochMilli(time);
 
             throw fail(time, toClass);
-        }
-
-        private static Timestamp toTimestamp(long time, int nanos) {
-            if (nanos == 0L)
-                return new Timestamp(time);
-
-            Timestamp ts = new Timestamp(time / 1000L * 1000L);
-            ts.setNanos(nanos);
-            return ts;
         }
 
         private static final long millis(Temporal temporal) {
 
             // java.sql.* temporal types:
-            if (temporal instanceof LocalDate ld)
-                return Date.valueOf(ld).getTime();
-            else if (temporal instanceof LocalTime lt)
-                return Time.valueOf(lt).getTime();
-            else if (temporal instanceof LocalDateTime ldt)
-                return Timestamp.valueOf(ldt).getTime();
+            if (temporal instanceof LocalDate)
+                return Date.valueOf((LocalDate) temporal).getTime();
+            else if (temporal instanceof LocalTime)
+                return Time.valueOf((LocalTime) temporal).getTime();
+            else if (temporal instanceof LocalDateTime)
+                return Timestamp.valueOf((LocalDateTime) temporal).getTime();
 
             // OffsetDateTime
             else if (temporal.isSupported(INSTANT_SECONDS))
@@ -1778,168 +1480,25 @@ final class Convert {
                 return new DataTypeException(message + ". Check your classpath to see if Jackson or Gson is available to jOOQ.");
             else if (from instanceof XML && !_XML.JAXB_AVAILABLE)
                 return new DataTypeException(message + ". Check your classpath to see if JAXB is available to jOOQ.");
-
-            // [#16872] [#16884]
-            else if (UnknownType.class.isAssignableFrom(toClass))
-                return new DataTypeException(message +
-                    """
-
-                    UnknownType conversion errors appear mainly when using ad-hoc converters together with
-                    reflective conversion or mapping. Ad-hoc converter calls, such as when using:
-
-                    - DataType<T>.asConvertedDataTypeFrom(Function<T, U>)
-                    - Field<T>.convertFrom(Function<T, U>)
-                    - Row[N].mapping(Function[N]<TN.., U>)
-
-                    .. don't know anything about the user type <U> because it is erased by the compiler.
-                    Reflective conversion or mapping tends to need a Class<U> reference. Workarounds include:
-
-                    - Pass the Class<U> literal to an overload of the above method
-                    - Avoid combining ad-hoc conversion with reflective conversion or mapping
-
-                    If you think you've encountered a bug where the conversion should still work, please
-                    report it here: https://jooq.org/bug
-                    """);
             else
                 return new DataTypeException(message);
         }
     }
 
-    static final Pattern P_FRACTIONAL_SECONDS = Pattern.compile("^(\\d+:\\d+:\\d+)\\.\\d+$");
-
-    static final String patchFractionalSeconds(String string) {
-
-        // [#15478] java.sql.Time doesn't support them
-        return string.length() > 8
-             ? P_FRACTIONAL_SECONDS.matcher(string).replaceFirst("$1")
+    static final String patchIso8601Time(String string) {
+        // [#12158] Support Db2's 15.30.45 format
+        return string.length() == 8
+             ? string.replace('.', ':')
              : string;
     }
 
-    static final String patchIso8601Time(String s) {
-        int l = s.length();
-        int c1 = s.indexOf(':');
+    static final String patchIso8601Timestamp(String string, boolean t) {
+        if (string.length() > 11)
+            if (t && string.charAt(10) == ' ')
+                return string.substring(0, 10) + "T" + string.substring(11);
+            else if (!t && string.charAt(10) == 'T')
+                return string.substring(0, 10) + " " + string.substring(11);
 
-        if (c1 >= 0) {
-            int c2 = s.indexOf(':', c1 + 1);
-
-            if (c2 == -1)
-                return padLead2(s, c1) + ':' + padMid2(s, c1) + ":00";
-            else if (l < 8 || c2 != l - 3 || c1 != l - 6)
-                return padLead2(s, c1) + ':' + padMid2(s, c1, c2) + ':' + padMid2(s, c2);
-        }
-
-        // [#12158] Support Db2's 15.30.45 format
-        else if ((c1 = s.indexOf('.')) >= 0) {
-            return patchIso8601Time(s.replace('.', ':'));
-        }
-
-        return s;
-    }
-
-    static final String patchIso8601Timestamp(String s, boolean t) {
-
-        // [#11485] Trino produces a non-ISO 8601 "UTC" suffix, instead of "Z"
-        if (s.endsWith(" UTC"))
-            s = s.replace(" UTC", "Z");
-
-        int l = s.length();
-        int d1 = s.indexOf('-');
-        int d2 = s.indexOf('-', d1 + 1);
-        int ss = s.indexOf(' ', d2 + 1);
-        int st = s.indexOf('T', d2 + 1);
-        int sx = Math.max(ss, st);
-        int c1 = s.indexOf(':', sx + 1);
-        int c2 = s.indexOf(':', c1 + 1);
-        int cx = Math.max(c1, c2);
-
-        // [#18197] Maintain timezone suffixes, if any
-        int z =
-            Math.max(
-                s.indexOf('Z', cx + 1),
-                Math.max(
-                    s.indexOf('+', cx + 1),
-                    s.indexOf('-', cx + 1)
-                )
-            );
-
-        if (d1 == -1 || d2 == -1)
-            return s;
-
-        // [#12547] Support year numbers with more or less than 4 digits
-        // [#13786] Be lenient with PostgreSQL style abbreviated time stamp literals
-        else if (sx == -1)
-            return padLead4(s, d1) + '-'
-                 + padMid2(s, d1, d2) + '-'
-                 + padMid2(s, d2)
-                 + (t ? "T00:00:00" : " 00:00:00");
-        else if (c2 == -1)
-            return padLead4(s, d1) + '-'
-                 + padMid2(s, d1, d2) + '-'
-                 + padMid2(s, d2, sx)
-                 + (t ? 'T' : ' ')
-                 + padMid2(s, sx, c1) + ':'
-                 + (z == -1 ? padMid2(s, c1) : padMid2(s, c1, z)) + ":00"
-                 + (z == -1 ? "" : s.substring(z));
-
-        // [#13786] TODO: This doesn't pad seconds in the presence of fractional seconds or time zones
-        else if (t == (st == -1) || l - c2 < 3 || c2 - c1 < 3 || c1 - sx < 3 || sx - d2 < 3 || d2 - d1 < 3)
-            return padLead4(s, d1) + '-'
-                 + padMid2(s, d1, d2) + '-'
-                 + padMid2(s, d2, sx)
-                 + (t ? 'T' : ' ')
-                 + padMid2(s, sx, c1) + ':'
-                 + padMid2(s, c1, c2) + ':'
-                 + (z == -1 ? padMid2(s, c2) : padMid2(s, c2, z))
-                 + (z == -1 ? "" : s.substring(z));
-        else
-            return s;
-    }
-
-    static final String patchIso8601Date(String s) {
-
-        // [#11485] Trino produces a non-ISO 8601 "UTC" suffix, instead of "Z"
-        if (s.endsWith(" UTC"))
-            s = s.replace(" UTC", "Z");
-
-        int l = s.length();
-        int d1 = s.indexOf('-');
-        int d2 = s.indexOf('-', d1 + 1);
-        int ss = s.indexOf(' ', d2 + 1);
-        int st = s.indexOf('T', d2 + 1);
-        int sx = Math.max(ss, st);
-
-        if (d1 == -1 || d2 == -1)
-            return s;
-
-        // [#12547] Support year numbers with more or less than 4 digits
-        // [#13786] Be lenient with PostgreSQL style abbreviated time stamp literals
-        else if (sx == -1)
-            if (l - d2 < 3 || d2 - d1 < 3)
-                return padLead4(s, d1) + '-'
-                     + padMid2(s, d1, d2) + '-'
-                     + padMid2(s, d2);
-            else
-                return s;
-
-        else
-            return padLead4(s, d1) + '-'
-                 + padMid2(s, d1, d2) + '-'
-                 + padMid2(s, d2, sx);
-    }
-
-    private static final String padLead2(String s, int i1) {
-        return leftPad(s.substring(0, i1), 2, '0');
-    }
-
-    private static final String padLead4(String s, int i1) {
-        return leftPad(s.substring(0, i1), 4, '0');
-    }
-
-    private static final String padMid2(String s, int i1) {
-        return leftPad(s.substring(i1 + 1), 2, '0');
-    }
-
-    private static final String padMid2(String s, int i1, int i2) {
-        return leftPad(s.substring(i1 + 1, i2), 2, '0');
+        return string;
     }
 }

@@ -25,20 +25,29 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+
 public abstract class HttpsServerTestSupport extends HttpServerTestSupport {
 
     private static final String KEYSTORE = "/localhost.p12";
     private static final String PASSWORD = "changeit";
 
+    @BeforeEach
     @Override
-    public void setupResources() throws Exception {
+    public void setUp() throws Exception {
         System.setProperty("javax.net.ssl.trustStorePassword", PASSWORD);
         final URL keystoreResourceUrl = HttpsServerTestSupport.class.getResource(KEYSTORE);
         System.setProperty("javax.net.ssl.trustStore", new File(keystoreResourceUrl.toURI()).getAbsolutePath());
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() throws Exception {
+    public void tearDown() throws Exception {
+        super.tearDown();
+
         System.clearProperty("javax.net.ssl.trustStorePassword");
         System.clearProperty("javax.net.ssl.trustStore");
     }

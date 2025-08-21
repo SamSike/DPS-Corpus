@@ -71,7 +71,6 @@ public class ConnectionHolder implements Watcher {
         try {
             connectionLatch.await();
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
             throw RuntimeCamelException.wrapRuntimeCamelException(e);
         }
     }
@@ -96,7 +95,6 @@ public class ConnectionHolder implements Watcher {
         } catch (InterruptedException e) {
             LOG.warn("Error closing zookeeper connection {}. This exception will be ignored.",
                     configuration.getConnectString(), e);
-            Thread.currentThread().interrupt();
         }
     }
 }

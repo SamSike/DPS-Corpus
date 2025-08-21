@@ -229,12 +229,13 @@ public final class ObjectConverter {
         if (org.apache.camel.util.ObjectHelper.isNaN(value)) {
             return null;
         }
-        if (value instanceof String str) {
-            return new BigInteger(str);
+        if (value instanceof String) {
+            return new BigInteger((String) value);
         }
 
         Long num = null;
-        if (value instanceof Number number) {
+        if (value instanceof Number) {
+            Number number = (Number) value;
             num = number.longValue();
         }
         if (num != null) {

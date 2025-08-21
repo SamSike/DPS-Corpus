@@ -35,10 +35,9 @@ public interface Condition {
      * @param  exchange   the exchange
      * @param  processor  the {@link Processor}
      * @param  definition the present location in the route where the {@link Exchange} is located at
-     * @param  before     before or after processing
      * @return            <tt>true</tt> to match, <tt>false</tt> otherwise
      */
-    boolean matchProcess(Exchange exchange, Processor processor, NamedNode definition, boolean before);
+    boolean matchProcess(Exchange exchange, Processor processor, NamedNode definition);
 
     /**
      * Does the condition match

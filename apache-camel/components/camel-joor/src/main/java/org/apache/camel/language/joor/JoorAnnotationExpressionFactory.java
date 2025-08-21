@@ -35,10 +35,10 @@ public class JoorAnnotationExpressionFactory extends DefaultAnnotationExpression
         if (resultType.equals(Object.class)) {
             resultType = expressionReturnType;
         }
-        params[0] = resultType;
+        params[1] = resultType;
         if (annotation instanceof Joor) {
             Joor joorAnnotation = (Joor) annotation;
-            params[1] = joorAnnotation.preCompile();
+            params[0] = joorAnnotation.preCompile();
             params[2] = joorAnnotation.singleQuotes();
         }
         String expression = getExpressionFromAnnotation(annotation);

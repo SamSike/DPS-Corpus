@@ -211,11 +211,11 @@ public class ClusterServiceViewTest {
         }
 
         @Override
-        protected void doStart() {
+        protected void doStart() throws Exception {
         }
 
         @Override
-        protected void doStop() {
+        protected void doStop() throws Exception {
         }
 
         public boolean isLeader() {
@@ -226,7 +226,7 @@ public class ClusterServiceViewTest {
             this.leader = leader;
 
             if (isRunAllowed()) {
-                fireLeadershipChangedEvent(getLeader().orElse(null));
+                fireLeadershipChangedEvent(getLeader());
             }
         }
     }
@@ -237,7 +237,7 @@ public class ClusterServiceViewTest {
         }
 
         @Override
-        protected TestClusterView createView(String namespace) {
+        protected TestClusterView createView(String namespace) throws Exception {
             return new TestClusterView(this, namespace);
         }
     }

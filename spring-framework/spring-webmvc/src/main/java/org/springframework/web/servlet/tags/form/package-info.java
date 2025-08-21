@@ -21,7 +21,9 @@
  * <li>{@link org.springframework.web.servlet.tags.form.TextareaTag The textarea tag}
  * </ul>
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.servlet.tags.form;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,27 +39,23 @@ package org.jooq.impl;
 
 import static org.jooq.Clause.FIELD;
 import static org.jooq.Clause.FIELD_VALUE;
-import static org.jooq.SQLDialect.*;
+// ...
 import static org.jooq.conf.ParamType.INDEXED;
 import static org.jooq.conf.ParamType.INLINED;
 import static org.jooq.conf.ParamType.NAMED;
 import static org.jooq.conf.ParamType.NAMED_OR_INLINED;
 
 import java.util.Arrays;
-import java.util.Set;
 
-// ...
 // ...
 // ...
 import org.jooq.Clause;
 import org.jooq.Context;
-import org.jooq.Data;
 import org.jooq.DataType;
 import org.jooq.Name;
 import org.jooq.Param;
 import org.jooq.ParamMode;
 import org.jooq.QualifiedRecord;
-import org.jooq.SQLDialect;
 import org.jooq.conf.ParamType;
 import org.jooq.impl.DefaultBinding.InternalBinding;
 import org.jooq.impl.QOM.NotYetImplementedException;
@@ -72,13 +68,11 @@ import org.jooq.tools.StringUtils;
  */
 abstract class AbstractParam<T> extends AbstractParamX<T> implements SimpleQueryPart {
 
-    private static Set<SQLDialect> NO_SUPPORT_ARRAY_BINDS    = SQLDialect.supportedBy(TRINO);
-    private static Set<SQLDialect> NO_SUPPORT_INTERVAL_BINDS = SQLDialect.supportedBy(TRINO);
-    private static final Clause[]  CLAUSES                   = { FIELD, FIELD_VALUE };
+    private static final Clause[] CLAUSES = { FIELD, FIELD_VALUE };
 
-    private final String           paramName;
-    T                              value;
-    private boolean                inline;
+    private final String          paramName;
+    T                             value;
+    private boolean               inline;
 
     AbstractParam(T value, DataType<T> type) {
         this(value, type, null);
@@ -92,7 +86,7 @@ abstract class AbstractParam<T> extends AbstractParamX<T> implements SimpleQuery
     }
 
     @Override
-    final boolean isNullable() {
+    final boolean isPossiblyNullable() {
         return !inline || value == null;
     }
 
@@ -105,36 +99,30 @@ abstract class AbstractParam<T> extends AbstractParamX<T> implements SimpleQuery
      * </ul>
      */
     static final Name name(Object value, String paramName) {
-        return new LazyName(() -> DSL.name(
+        return DSL.name(
                paramName != null
              ? paramName
 
              // [#3707] Protect value.toString call for certain jOOQ types.
-             : value instanceof QualifiedRecord<?> q
-             ? q.getQualifier().getName()
+             : value instanceof QualifiedRecord
+             ? ((QualifiedRecord<?>) value).getQualifier().getName()
+
+
 
 
 
 
 
              : name(value)
-        ));
+        );
     }
 
     private final static String name(Object value) {
 
-        // [#13392] [##14131] The generated name of an array value shouldn't
-        //          depend on the identity of the value, but on the value itself
-        if (value instanceof byte[] b) {
+        // [#13392] The generated name of a byte[] value shouldn't depend on the
+        //          identity of the value, but on the value itself
+        if (value instanceof byte[]) { byte[] b = (byte[]) value;
             return "b_" + Internal.hash0(Arrays.hashCode(Arrays.copyOf(b, 16)));
-        }
-        else if (value instanceof Object[] o) {
-            return "a_" + Internal.hash0(Arrays.hashCode(Arrays.copyOf(o, 16)));
-        }
-
-        // [#17578] Avoid calling potentially costly normalising operations in Data::toString
-        else if (value instanceof Data d) {
-            return d.data();
         }
         else
             return String.valueOf(value);
@@ -155,7 +143,7 @@ abstract class AbstractParam<T> extends AbstractParamX<T> implements SimpleQuery
     }
 
     private static boolean positive(Object value) {
-        return value instanceof Number n ? n.doubleValue() >= 0 : false;
+        return value instanceof Number ? ((Number) value).doubleValue() >= 0 : false;
     }
 
     @Override
@@ -163,6 +151,10 @@ abstract class AbstractParam<T> extends AbstractParamX<T> implements SimpleQuery
         return CLAUSES;
     }
 
+    @Override
+    public final boolean generatesCast() {
+        return true;
+    }
 
     // ------------------------------------------------------------------------
     // XXX: Param API
@@ -193,13 +185,14 @@ abstract class AbstractParam<T> extends AbstractParamX<T> implements SimpleQuery
         return inline;
     }
 
-    /* non-final */ boolean isInline(Context<?> ctx) {
+    final boolean isInline(Context<?> ctx) {
         return isInline()
             || (ctx.paramType() == INLINED)
             || (ctx.paramType() == NAMED_OR_INLINED && StringUtils.isBlank(paramName))
-            // [#10153] [#11485] Some dialects support ARRAY types only as inline values
-            || NO_SUPPORT_ARRAY_BINDS.contains(ctx.dialect()) && getDataType().isArray()
-            || NO_SUPPORT_INTERVAL_BINDS.contains(ctx.dialect()) && getDataType().isInterval()
+
+
+
+
         ;
     }
 
@@ -256,7 +249,7 @@ abstract class AbstractParam<T> extends AbstractParamX<T> implements SimpleQuery
         if (this == that)
             return true;
 
-        if (that instanceof Param<?> p) {
+        if (that instanceof Param) { Param<?> p = (Param<?>) that;
             Object thatValue = p.getValue();
 
             if (value == null)
@@ -276,10 +269,10 @@ abstract class AbstractParam<T> extends AbstractParamX<T> implements SimpleQuery
     public int hashCode() {
         return value == null
             ? 0
-            : value instanceof byte[] a
-            ? Arrays.hashCode(a)
-            : value instanceof Object[] a
-            ? Arrays.hashCode(a)
+            : value instanceof byte[]
+            ? Arrays.hashCode((byte[]) value)
+            : value instanceof Object[]
+            ? Arrays.hashCode((Object[]) value)
             : value.hashCode();
     }
 }

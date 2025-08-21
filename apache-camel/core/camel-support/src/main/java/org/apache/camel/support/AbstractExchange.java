@@ -16,138 +16,198 @@
  */
 package org.apache.camel.support;
 
-import java.util.EnumMap;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.camel.AsyncCallback;
 import org.apache.camel.CamelContext;
-import org.apache.camel.CamelContextAware;
 import org.apache.camel.CamelExecutionException;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.ExchangePropertyKey;
+import org.apache.camel.ExtendedCamelContext;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Message;
 import org.apache.camel.MessageHistory;
 import org.apache.camel.SafeCopyProperty;
+import org.apache.camel.spi.HeadersMapFactory;
+import org.apache.camel.spi.Synchronization;
 import org.apache.camel.spi.UnitOfWork;
-import org.apache.camel.spi.VariableRepository;
 import org.apache.camel.util.ObjectHelper;
+
+import static org.apache.camel.support.MessageHelper.copyBody;
 
 /**
  * Base class for the two official and only implementations of {@link Exchange}, the {@link DefaultExchange} and
  * {@link DefaultPooledExchange}.
  *
- * Camel end users should use {@link DefaultExchange} if creating an {@link Exchange} manually. However, this is seldom
- * used, because exchanges are created via {@link Endpoint}s.
+ * Camel end users should use {@link DefaultExchange} if creating an {@link Exchange} manually. However that is more
+ * seldom to use, as exchanges are created via {@link Endpoint}.
  *
  * @see DefaultExchange
  */
-abstract class AbstractExchange implements Exchange {
+class AbstractExchange implements ExtendedExchange {
 
-    private final CamelContext context;
-    private final ExtendedExchangeExtension privateExtension;
+    // number of elements in array
+    static final int INTERNAL_LENGTH = ExchangePropertyKey.values().length;
+    // empty array for reset
+    static final Object[] EMPTY_INTERNAL_PROPERTIES = new Object[INTERNAL_LENGTH];
 
-    protected final EnumMap<ExchangePropertyKey, Object> internalProperties;
-    protected Map<String, Object> properties; // create properties on-demand as we use internal properties mostly
-    protected Map<String, SafeCopyProperty> safeCopyProperties;
-    protected ExchangeVariableRepository variableRepository;
-    protected Message in;
-    protected Message out;
-    protected Exception exception;
-    protected String exchangeId;
-    protected ExchangePattern pattern;
+    final CamelContext context;
+    Map<String, Object> properties; // create properties on-demand as we use internal properties mostly
+    // optimize for internal exchange properties (not intended for end users)
+    final Object[] internalProperties = new Object[INTERNAL_LENGTH];
+    long created;
+    Message in;
+    Message out;
+    Exception exception;
+    String exchangeId;
+    UnitOfWork unitOfWork;
+    ExchangePattern pattern;
+    Endpoint fromEndpoint;
+    String fromRouteId;
+    List<Synchronization> onCompletions;
+    Boolean externalRedelivered;
+    String historyNodeId;
+    String historyNodeLabel;
+    String historyNodeSource;
+    boolean transacted;
+    boolean routeStop;
+    boolean rollbackOnly;
+    boolean rollbackOnlyLast;
+    boolean notifyEvent;
+    boolean interrupted;
+    boolean interruptable = true;
+    boolean redeliveryExhausted;
+    boolean streamCacheDisabled;
+    Boolean errorHandlerHandled;
+    AsyncCallback defaultConsumerCallback; // optimize (do not reset)
+    Map<String, SafeCopyProperty> safeCopyProperties;
 
-    protected AbstractExchange(CamelContext context, EnumMap<ExchangePropertyKey, Object> internalProperties,
-                               Map<String, Object> properties) {
+    public AbstractExchange(CamelContext context) {
         this.context = context;
-        this.internalProperties = new EnumMap<>(internalProperties);
-        this.privateExtension = new ExtendedExchangeExtension(this);
-        this.properties = safeCopyProperties(properties);
+        this.pattern = ExchangePattern.InOnly;
+        this.created = System.currentTimeMillis();
     }
 
-    protected AbstractExchange(CamelContext context) {
-        this(context, ExchangePattern.InOnly);
-    }
-
-    protected AbstractExchange(CamelContext context, ExchangePattern pattern) {
+    public AbstractExchange(CamelContext context, ExchangePattern pattern) {
         this.context = context;
         this.pattern = pattern;
-        this.internalProperties = new EnumMap<>(ExchangePropertyKey.class);
-        this.privateExtension = new ExtendedExchangeExtension(this);
+        this.created = System.currentTimeMillis();
     }
 
-    protected AbstractExchange(Exchange parent) {
+    public AbstractExchange(Exchange parent) {
         this.context = parent.getContext();
         this.pattern = parent.getPattern();
-        this.internalProperties = new EnumMap<>(ExchangePropertyKey.class);
-        this.privateExtension = new ExtendedExchangeExtension(this);
-        this.privateExtension.setFromEndpoint(parent.getFromEndpoint());
-        this.privateExtension.setFromRouteId(parent.getFromRouteId());
-        this.privateExtension.setUnitOfWork(parent.getUnitOfWork());
+        this.created = parent.getCreated();
+        this.fromEndpoint = parent.getFromEndpoint();
+        this.fromRouteId = parent.getFromRouteId();
+        this.unitOfWork = parent.getUnitOfWork();
     }
 
-    @SuppressWarnings("CopyConstructorMissesField")
-    protected AbstractExchange(AbstractExchange parent) {
-        this.context = parent.getContext();
-        this.pattern = parent.getPattern();
-        this.internalProperties = new EnumMap<>(parent.internalProperties);
-        this.privateExtension = new ExtendedExchangeExtension(this);
-        this.privateExtension.setFromEndpoint(parent.getFromEndpoint());
-        this.privateExtension.setFromRouteId(parent.getFromRouteId());
-        this.privateExtension.setUnitOfWork(parent.getUnitOfWork());
+    public AbstractExchange(Endpoint fromEndpoint) {
+        this.context = fromEndpoint.getCamelContext();
+        this.pattern = fromEndpoint.getExchangePattern();
+        this.created = System.currentTimeMillis();
+        this.fromEndpoint = fromEndpoint;
+    }
 
-        setIn(parent.getIn().copy());
-
-        if (parent.hasOut()) {
-            setOut(parent.getOut().copy());
-        }
-
-        setException(parent.exception);
-
-        privateExtension.setNotifyEvent(parent.getExchangeExtension().isNotifyEvent());
-        privateExtension.setRedeliveryExhausted(parent.getExchangeExtension().isRedeliveryExhausted());
-        privateExtension.setErrorHandlerHandled(parent.getExchangeExtension().getErrorHandlerHandled());
-        privateExtension.setStreamCacheDisabled(parent.getExchangeExtension().isStreamCacheDisabled());
-        privateExtension.setRollbackOnly(parent.getExchangeExtension().isRollbackOnly());
-        privateExtension.setRollbackOnlyLast(parent.getExchangeExtension().isRollbackOnlyLast());
-        privateExtension.setRouteStop(parent.getExchangeExtension().isRouteStop());
-
-        if (parent.hasVariables()) {
-            if (this.variableRepository == null) {
-                this.variableRepository = new ExchangeVariableRepository(getContext());
-            }
-            this.variableRepository.copyFrom(parent.variableRepository);
-        }
-        if (parent.hasProperties()) {
-            this.properties = safeCopyProperties(parent.properties);
-        }
-        if (parent.hasSafeCopyProperties()) {
-            this.safeCopyProperties = parent.copySafeCopyProperties();
-        }
+    public AbstractExchange(Endpoint fromEndpoint, ExchangePattern pattern) {
+        this.context = fromEndpoint.getCamelContext();
+        this.pattern = pattern;
+        this.created = System.currentTimeMillis();
+        this.fromEndpoint = fromEndpoint;
     }
 
     @Override
     public long getCreated() {
-        return getClock().getCreated();
+        return created;
     }
-
-    abstract AbstractExchange newCopy();
 
     @Override
     public Exchange copy() {
-        AbstractExchange exchange = newCopy();
+        DefaultExchange exchange = new DefaultExchange(this);
+
+        exchange.setIn(getIn().copy());
+        copyBody(getIn(), exchange.getIn());
+        if (getIn().hasHeaders()) {
+            exchange.getIn().setHeaders(safeCopyHeaders(getIn().getHeaders()));
+        }
+        if (hasOut()) {
+            exchange.setOut(getOut().copy());
+            copyBody(getOut(), exchange.getOut());
+            if (getOut().hasHeaders()) {
+                exchange.getOut().setHeaders(safeCopyHeaders(getOut().getHeaders()));
+            }
+        }
+
+        exchange.setException(exception);
+        exchange.setRouteStop(routeStop);
+        exchange.setRollbackOnly(rollbackOnly);
+        exchange.setRollbackOnlyLast(rollbackOnlyLast);
+        exchange.setNotifyEvent(notifyEvent);
+        exchange.setRedeliveryExhausted(redeliveryExhausted);
+        exchange.setErrorHandlerHandled(errorHandlerHandled);
+        exchange.setStreamCacheDisabled(streamCacheDisabled);
+
+        // copy properties after body as body may trigger lazy init
+        if (hasProperties()) {
+            copyProperties(getProperties(), exchange.getProperties());
+        }
+
+        if (hasSafeCopyProperties()) {
+            safeCopyProperties(this.safeCopyProperties, exchange.getSafeCopyProperties());
+        }
+        // copy over internal properties
+        System.arraycopy(internalProperties, 0, exchange.internalProperties, 0, internalProperties.length);
 
         if (getContext().isMessageHistory()) {
-            exchange.internalProperties.computeIfPresent(ExchangePropertyKey.MESSAGE_HISTORY,
-                    (k, v) -> new CopyOnWriteArrayList<>((List<MessageHistory>) v));
+            // safe copy message history using a defensive copy
+            List<MessageHistory> history
+                    = (List<MessageHistory>) exchange.internalProperties[ExchangePropertyKey.MESSAGE_HISTORY.ordinal()];
+            if (history != null) {
+                // use thread-safe list as message history may be accessed concurrently
+                exchange.internalProperties[ExchangePropertyKey.MESSAGE_HISTORY.ordinal()]
+                        = new CopyOnWriteArrayList<>(history);
+            }
         }
 
         return exchange;
+    }
+
+    private Map<String, Object> safeCopyHeaders(Map<String, Object> headers) {
+        if (headers == null) {
+            return null;
+        }
+
+        if (context != null) {
+            ExtendedCamelContext ecc = (ExtendedCamelContext) context;
+            HeadersMapFactory factory = ecc.getHeadersMapFactory();
+            if (factory != null) {
+                return factory.newMap(headers);
+            }
+        }
+        // should not really happen but some tests dont start camel context
+        return new HashMap<>(headers);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void copyProperties(Map<String, Object> source, Map<String, Object> target) {
+        target.putAll(source);
+    }
+
+    private void safeCopyProperties(
+            Map<String, SafeCopyProperty> source, Map<String, SafeCopyProperty> target) {
+        source.entrySet().stream().forEach(entry -> {
+            target.put(entry.getKey(), entry.getValue().safeCopy());
+        });
     }
 
     @Override
@@ -157,19 +217,14 @@ abstract class AbstractExchange implements Exchange {
 
     @Override
     public Object getProperty(ExchangePropertyKey key) {
-        return internalProperties.get(key);
+        return internalProperties[key.ordinal()];
     }
 
     @Override
     public <T> T getProperty(ExchangePropertyKey key, Class<T> type) {
         Object value = getProperty(key);
-        return evalPropertyValue(type, value);
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> T evalPropertyValue(final Class<T> type, final Object value) {
         if (value == null) {
-            // let's avoid NullPointerException when converting to boolean for null values
+            // lets avoid NullPointerException when converting to boolean for null values
             if (boolean.class == type) {
                 return (T) Boolean.FALSE;
             }
@@ -177,7 +232,7 @@ abstract class AbstractExchange implements Exchange {
         }
 
         // eager same instance type test to avoid the overhead of invoking the type converter
-        // if already is the same type
+        // if already same type
         if (type.isInstance(value)) {
             return (T) value;
         }
@@ -185,14 +240,14 @@ abstract class AbstractExchange implements Exchange {
         return ExchangeHelper.convertToType(this, type, value);
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> T evalPropertyValue(final Object defaultValue, final Class<T> type, final Object value) {
-        Object val = value;
-        if (val == null) {
-            val = defaultValue;
+    @Override
+    public <T> T getProperty(ExchangePropertyKey key, Object defaultValue, Class<T> type) {
+        Object value = getProperty(key);
+        if (value == null) {
+            value = defaultValue;
         }
-        if (val == null) {
-            // let's avoid NullPointerException when converting to boolean for null values
+        if (value == null) {
+            // lets avoid NullPointerException when converting to boolean for null values
             if (boolean.class == type) {
                 return (T) Boolean.FALSE;
             }
@@ -200,28 +255,24 @@ abstract class AbstractExchange implements Exchange {
         }
 
         // eager same instance type test to avoid the overhead of invoking the type converter
-        // if already is the same type
-        if (type.isInstance(val)) {
-            return (T) val;
+        // if already same type
+        if (type.isInstance(value)) {
+            return (T) value;
         }
 
-        return ExchangeHelper.convertToType(this, type, val);
-    }
-
-    @Override
-    public <T> T getProperty(ExchangePropertyKey key, Object defaultValue, Class<T> type) {
-        Object value = getProperty(key);
-        return evalPropertyValue(defaultValue, type, value);
+        return ExchangeHelper.convertToType(this, type, value);
     }
 
     @Override
     public void setProperty(ExchangePropertyKey key, Object value) {
-        internalProperties.put(key, value);
+        internalProperties[key.ordinal()] = value;
     }
 
     @Override
     public Object removeProperty(ExchangePropertyKey key) {
-        return internalProperties.remove(key);
+        Object old = internalProperties[key.ordinal()];
+        internalProperties[key.ordinal()] = null;
+        return old;
     }
 
     @Override
@@ -229,7 +280,7 @@ abstract class AbstractExchange implements Exchange {
         Object answer = null;
         ExchangePropertyKey key = ExchangePropertyKey.asExchangePropertyKey(name);
         if (key != null) {
-            answer = internalProperties.get(key);
+            answer = internalProperties[key.ordinal()];
             // if the property is not an internal then fallback to lookup in the properties map
         }
         if (answer == null && properties != null) {
@@ -239,15 +290,54 @@ abstract class AbstractExchange implements Exchange {
     }
 
     @Override
-    public <T> T getProperty(String name, Class<T> type) {
-        Object value = getProperty(name);
-        return evalPropertyValue(type, value);
+    public Object getProperty(String name, Object defaultValue) {
+        Object answer = getProperty(name);
+        return answer != null ? answer : defaultValue;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    public <T> T getProperty(String name, Class<T> type) {
+        Object value = getProperty(name);
+        if (value == null) {
+            // lets avoid NullPointerException when converting to boolean for null values
+            if (boolean.class == type) {
+                return (T) Boolean.FALSE;
+            }
+            return null;
+        }
+
+        // eager same instance type test to avoid the overhead of invoking the type converter
+        // if already same type
+        if (type.isInstance(value)) {
+            return (T) value;
+        }
+
+        return ExchangeHelper.convertToType(this, type, value);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
     public <T> T getProperty(String name, Object defaultValue, Class<T> type) {
         Object value = getProperty(name);
-        return evalPropertyValue(defaultValue, type, value);
+        if (value == null) {
+            value = defaultValue;
+        }
+        if (value == null) {
+            // lets avoid NullPointerException when converting to boolean for null values
+            if (boolean.class == type) {
+                return (T) Boolean.FALSE;
+            }
+            return null;
+        }
+
+        // eager same instance type test to avoid the overhead of invoking the type converter
+        // if already same type
+        if (type.isInstance(value)) {
+            return (T) value;
+        }
+
+        return ExchangeHelper.convertToType(this, type, value);
     }
 
     @Override
@@ -267,7 +357,8 @@ abstract class AbstractExchange implements Exchange {
         }
     }
 
-    void setProperties(Map<String, Object> properties) {
+    @Override
+    public void setProperties(Map<String, Object> properties) {
         if (this.properties == null) {
             this.properties = new ConcurrentHashMap<>(8);
         } else {
@@ -300,7 +391,8 @@ abstract class AbstractExchange implements Exchange {
             if (properties != null) {
                 properties.clear();
             }
-            internalProperties.clear();
+            // reset array by copying over from empty which is a very fast JVM optimized operation
+            System.arraycopy(EMPTY_INTERNAL_PROPERTIES, 0, this.internalProperties, 0, INTERNAL_LENGTH);
             return true;
         }
 
@@ -312,16 +404,27 @@ abstract class AbstractExchange implements Exchange {
                     continue;
                 }
                 matches = true;
-                internalProperties.remove(epk);
+                internalProperties[epk.ordinal()] = null;
             }
         }
 
         // store keys to be removed as we cannot loop and remove at the same time in implementations such as HashMap
         if (properties != null) {
-            Set<String> toBeRemoved = PatternHelper.matchingSet(properties, pattern, excludePatterns);
+            Set<String> toBeRemoved = null;
+            for (String key : properties.keySet()) {
+                if (PatternHelper.matchPattern(key, pattern)) {
+                    if (excludePatterns != null && PatternHelper.isExcludePatternMatch(key, excludePatterns)) {
+                        continue;
+                    }
+                    matches = true;
+                    if (toBeRemoved == null) {
+                        toBeRemoved = new HashSet<>();
+                    }
+                    toBeRemoved.add(key);
+                }
+            }
 
-            if (toBeRemoved != null) {
-                matches = true;
+            if (matches && toBeRemoved != null) {
                 if (toBeRemoved.size() == properties.size()) {
                     // special optimization when all should be removed
                     properties.clear();
@@ -344,13 +447,11 @@ abstract class AbstractExchange implements Exchange {
         return properties;
     }
 
-    private Map<String, SafeCopyProperty> copySafeCopyProperties() {
-        Map<String, SafeCopyProperty> copy = new ConcurrentHashMap<>();
-        for (Map.Entry<String, SafeCopyProperty> entry : this.safeCopyProperties.entrySet()) {
-            copy.put(entry.getKey(), entry.getValue().safeCopy());
+    Map<String, SafeCopyProperty> getSafeCopyProperties() {
+        if (safeCopyProperties == null) {
+            this.safeCopyProperties = new ConcurrentHashMap<>(2);
         }
-
-        return copy;
+        return safeCopyProperties;
     }
 
     @Override
@@ -370,89 +471,6 @@ abstract class AbstractExchange implements Exchange {
 
     private boolean hasSafeCopyProperties() {
         return safeCopyProperties != null && !safeCopyProperties.isEmpty();
-    }
-
-    @Override
-    public Object getVariable(String name) {
-        VariableRepository repo = null;
-        final String id = ExchangeHelper.getVariableRepositoryId(name);
-        if (id != null) {
-            repo = ExchangeHelper.getVariableRepository(this, id);
-            name = ExchangeHelper.resolveVariableRepositoryName(this, name, id);
-        }
-        if (repo != null && name != null) {
-            return repo.getVariable(name);
-        } else if (variableRepository != null) {
-            return variableRepository.getVariable(name);
-        }
-        return null;
-    }
-
-    @Override
-    public <T> T getVariable(String name, Class<T> type) {
-        Object value = getVariable(name);
-        return evalPropertyValue(type, value);
-    }
-
-    @Override
-    public <T> T getVariable(String name, Object defaultValue, Class<T> type) {
-        Object value = getVariable(name);
-        return evalPropertyValue(defaultValue, type, value);
-    }
-
-    @Override
-    public void setVariable(String name, Object value) {
-        VariableRepository repo = null;
-        final String id = ExchangeHelper.getVariableRepositoryId(name);
-        if (id != null) {
-            repo = ExchangeHelper.getVariableRepository(this, id);
-            name = ExchangeHelper.resolveVariableRepositoryName(this, name, id);
-        }
-        if (repo != null) {
-            repo.setVariable(name, value);
-        } else {
-            if (variableRepository == null) {
-                variableRepository = new ExchangeVariableRepository(getContext());
-            }
-            variableRepository.setVariable(name, value);
-        }
-    }
-
-    @Override
-    public Object removeVariable(String name) {
-        VariableRepository repo = null;
-        final String id = ExchangeHelper.getVariableRepositoryId(name);
-        if (id != null) {
-            repo = ExchangeHelper.getVariableRepository(this, id);
-            name = ExchangeHelper.resolveVariableRepositoryName(this, name, id);
-        }
-        if (repo != null) {
-            return repo.removeVariable(name);
-        } else if (variableRepository != null) {
-            if ("*".equals(name)) {
-                variableRepository.clear();
-                return null;
-            }
-            return variableRepository.removeVariable(name);
-        }
-        return null;
-    }
-
-    @Override
-    public Map<String, Object> getVariables() {
-        if (variableRepository == null) {
-            // force creating variables
-            variableRepository = new ExchangeVariableRepository(getContext());
-        }
-        return variableRepository.getVariables();
-    }
-
-    @Override
-    public boolean hasVariables() {
-        if (variableRepository != null) {
-            return variableRepository.hasVariables();
-        }
-        return false;
     }
 
     @Override
@@ -478,7 +496,8 @@ abstract class AbstractExchange implements Exchange {
         return context.getTypeConverter().convertTo(type, this, in);
     }
 
-    <T> T getInOrNull(Class<T> type) {
+    @Override
+    public <T> T getInOrNull(Class<T> type) {
         if (in == null) {
             return null;
         }
@@ -499,20 +518,11 @@ abstract class AbstractExchange implements Exchange {
     public Message getOut() {
         // lazy create
         if (out == null) {
-            out = newOutMessage();
+            out = (in instanceof MessageSupport)
+                    ? ((MessageSupport) in).newInstance() : new DefaultMessage(getContext());
             configureMessage(out);
         }
         return out;
-    }
-
-    private Message newOutMessage() {
-        if (in != null) {
-            Message answer = in.newInstance();
-            CamelContextAware.trySetCamelContext(answer, getContext());
-            return answer;
-        } else {
-            return new DefaultMessage(getContext());
-        }
     }
 
     @SuppressWarnings("deprecated")
@@ -580,16 +590,21 @@ abstract class AbstractExchange implements Exchange {
     public void setException(Throwable t) {
         if (t == null) {
             this.exception = null;
-        } else if (t instanceof Exception exception) {
-            this.exception = exception;
+        } else if (t instanceof Exception) {
+            this.exception = (Exception) t;
         } else {
             // wrap throwable into an exception
             this.exception = CamelExecutionException.wrapCamelExecutionException(this, t);
         }
         if (t instanceof InterruptedException) {
             // mark the exchange as interrupted due to the interrupt exception
-            privateExtension.setInterrupted(true);
+            setInterrupted(true);
         }
+    }
+
+    @Override
+    public <T extends Exchange> T adapt(Class<T> type) {
+        return type.cast(this);
     }
 
     @Override
@@ -604,12 +619,22 @@ abstract class AbstractExchange implements Exchange {
 
     @Override
     public Endpoint getFromEndpoint() {
-        return privateExtension.getFromEndpoint();
+        return fromEndpoint;
+    }
+
+    @Override
+    public void setFromEndpoint(Endpoint fromEndpoint) {
+        this.fromEndpoint = fromEndpoint;
     }
 
     @Override
     public String getFromRouteId() {
-        return privateExtension.getFromRouteId();
+        return fromRouteId;
+    }
+
+    @Override
+    public void setFromRouteId(String fromRouteId) {
+        this.fromRouteId = fromRouteId;
     }
 
     @Override
@@ -632,67 +657,258 @@ abstract class AbstractExchange implements Exchange {
 
     @Override
     public boolean isTransacted() {
-        return privateExtension.isTransacted();
+        return transacted;
+    }
+
+    @Override
+    public void setTransacted(boolean transacted) {
+        this.transacted = transacted;
     }
 
     @Override
     public boolean isRouteStop() {
-        return privateExtension.isRouteStop();
+        return routeStop;
     }
 
     @Override
     public void setRouteStop(boolean routeStop) {
-        privateExtension.setRouteStop(routeStop);
+        this.routeStop = routeStop;
     }
 
     @Override
     public boolean isExternalRedelivered() {
-        return privateExtension.isExternalRedelivered(getIn());
+        if (externalRedelivered == null) {
+            // lets avoid adding methods to the Message API, so we use the
+            // DefaultMessage to allow component specific messages to extend
+            // and implement the isExternalRedelivered method.
+            Message msg = getIn();
+            if (msg instanceof DefaultMessage) {
+                externalRedelivered = ((DefaultMessage) msg).isTransactedRedelivered();
+            }
+            // not from a transactional resource so mark it as false by default
+            if (externalRedelivered == null) {
+                externalRedelivered = false;
+            }
+        }
+        return externalRedelivered;
     }
 
     @Override
     public boolean isRollbackOnly() {
-        return privateExtension.isRollbackOnly();
+        return rollbackOnly;
     }
 
     @Override
     public void setRollbackOnly(boolean rollbackOnly) {
-        privateExtension.setRollbackOnly(rollbackOnly);
+        this.rollbackOnly = rollbackOnly;
     }
 
     @Override
     public boolean isRollbackOnlyLast() {
-        return privateExtension.isRollbackOnlyLast();
+        return rollbackOnlyLast;
     }
 
     @Override
     public void setRollbackOnlyLast(boolean rollbackOnlyLast) {
-        privateExtension.setRollbackOnlyLast(rollbackOnlyLast);
+        this.rollbackOnlyLast = rollbackOnlyLast;
     }
 
     @Override
     public UnitOfWork getUnitOfWork() {
-        return privateExtension.getUnitOfWork();
+        return unitOfWork;
+    }
+
+    @Override
+    public void setUnitOfWork(UnitOfWork unitOfWork) {
+        this.unitOfWork = unitOfWork;
+        if (unitOfWork != null && onCompletions != null) {
+            // now an unit of work has been assigned so add the on completions
+            // we might have registered already
+            for (Synchronization onCompletion : onCompletions) {
+                unitOfWork.addSynchronization(onCompletion);
+            }
+            // cleanup the temporary on completion list as they now have been registered
+            // on the unit of work
+            onCompletions.clear();
+            onCompletions = null;
+        }
+    }
+
+    @Override
+    public void addOnCompletion(Synchronization onCompletion) {
+        if (unitOfWork == null) {
+            // unit of work not yet registered so we store the on completion temporary
+            // until the unit of work is assigned to this exchange by the unit of work
+            if (onCompletions == null) {
+                onCompletions = new ArrayList<>();
+            }
+            onCompletions.add(onCompletion);
+        } else {
+            getUnitOfWork().addSynchronization(onCompletion);
+        }
+    }
+
+    @Override
+    public boolean containsOnCompletion(Synchronization onCompletion) {
+        if (unitOfWork != null) {
+            // if there is an unit of work then the completions is moved there
+            return unitOfWork.containsSynchronization(onCompletion);
+        } else {
+            // check temporary completions if no unit of work yet
+            return onCompletions != null && onCompletions.contains(onCompletion);
+        }
+    }
+
+    @Override
+    public void handoverCompletions(Exchange target) {
+        if (onCompletions != null) {
+            for (Synchronization onCompletion : onCompletions) {
+                target.adapt(ExtendedExchange.class).addOnCompletion(onCompletion);
+            }
+            // cleanup the temporary on completion list as they have been handed over
+            onCompletions.clear();
+            onCompletions = null;
+        } else if (unitOfWork != null) {
+            // let unit of work handover
+            unitOfWork.handoverSynchronization(target);
+        }
+    }
+
+    @Override
+    public List<Synchronization> handoverCompletions() {
+        List<Synchronization> answer = null;
+        if (onCompletions != null) {
+            answer = new ArrayList<>(onCompletions);
+            onCompletions.clear();
+            onCompletions = null;
+        }
+        return answer;
+    }
+
+    @Override
+    public String getHistoryNodeId() {
+        return historyNodeId;
+    }
+
+    @Override
+    public void setHistoryNodeId(String historyNodeId) {
+        this.historyNodeId = historyNodeId;
+    }
+
+    @Override
+    public String getHistoryNodeLabel() {
+        return historyNodeLabel;
+    }
+
+    @Override
+    public void setHistoryNodeLabel(String historyNodeLabel) {
+        this.historyNodeLabel = historyNodeLabel;
+    }
+
+    @Override
+    public String getHistoryNodeSource() {
+        return historyNodeSource;
+    }
+
+    @Override
+    public void setHistoryNodeSource(String historyNodeSource) {
+        this.historyNodeSource = historyNodeSource;
+    }
+
+    @Override
+    public boolean isNotifyEvent() {
+        return notifyEvent;
+    }
+
+    @Override
+    public void setNotifyEvent(boolean notifyEvent) {
+        this.notifyEvent = notifyEvent;
+    }
+
+    @Override
+    public boolean isInterrupted() {
+        return interrupted;
+    }
+
+    @Override
+    public void setInterrupted(boolean interrupted) {
+        if (interruptable) {
+            this.interrupted = interrupted;
+        }
+    }
+
+    @Override
+    public void setInterruptable(boolean interruptable) {
+        this.interruptable = interruptable;
+    }
+
+    @Override
+    public boolean isRedeliveryExhausted() {
+        return redeliveryExhausted;
+    }
+
+    @Override
+    public void setRedeliveryExhausted(boolean redeliveryExhausted) {
+        this.redeliveryExhausted = redeliveryExhausted;
+    }
+
+    @Override
+    public Boolean getErrorHandlerHandled() {
+        return errorHandlerHandled;
+    }
+
+    @Override
+    public boolean isErrorHandlerHandledSet() {
+        return errorHandlerHandled != null;
+    }
+
+    @Override
+    public boolean isErrorHandlerHandled() {
+        return errorHandlerHandled;
+    }
+
+    @Override
+    public void setErrorHandlerHandled(Boolean errorHandlerHandled) {
+        this.errorHandlerHandled = errorHandlerHandled;
+    }
+
+    @Override
+    public boolean isStreamCacheDisabled() {
+        return streamCacheDisabled;
+    }
+
+    @Override
+    public void setStreamCacheDisabled(boolean streamCacheDisabled) {
+        this.streamCacheDisabled = streamCacheDisabled;
     }
 
     /**
      * Configures the message after it has been set on the exchange
      */
     protected void configureMessage(Message message) {
-        if (message instanceof MessageSupport messageSupport) {
+        if (message instanceof MessageSupport) {
+            MessageSupport messageSupport = (MessageSupport) message;
             messageSupport.setExchange(this);
             messageSupport.setCamelContext(getContext());
         }
     }
 
-    void copyInternalProperties(Exchange target) {
-        ((AbstractExchange) target).internalProperties.putAll(internalProperties);
+    @Override
+    public void copyInternalProperties(Exchange target) {
+        AbstractExchange ae = (AbstractExchange) target;
+        for (int i = 0; i < internalProperties.length; i++) {
+            Object value = internalProperties[i];
+            if (value != null) {
+                ae.internalProperties[i] = value;
+            }
+        }
     }
 
-    Map<String, Object> getInternalProperties() {
+    @Override
+    public Map<String, Object> getInternalProperties() {
         Map<String, Object> map = new HashMap<>();
         for (ExchangePropertyKey key : ExchangePropertyKey.values()) {
-            Object value = internalProperties.get(key);
+            Object value = internalProperties[key.ordinal()];
             if (value != null) {
                 map.put(key.getName(), value);
             }
@@ -700,12 +916,22 @@ abstract class AbstractExchange implements Exchange {
         return map;
     }
 
+    @Override
+    public AsyncCallback getDefaultConsumerCallback() {
+        return defaultConsumerCallback;
+    }
+
+    @Override
+    public void setDefaultConsumerCallback(AsyncCallback defaultConsumerCallback) {
+        this.defaultConsumerCallback = defaultConsumerCallback;
+    }
+
     protected String createExchangeId() {
         return context.getUuidGenerator().generateExchangeUuid();
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         // do not output information about the message as it may contain sensitive information
         if (exchangeId != null) {
             return "Exchange[" + exchangeId + "]";
@@ -714,7 +940,8 @@ abstract class AbstractExchange implements Exchange {
         }
     }
 
-    void setSafeCopyProperty(String key, SafeCopyProperty value) {
+    @Override
+    public void setSafeCopyProperty(String key, SafeCopyProperty value) {
         if (value != null) {
             // avoid the NullPointException
             if (safeCopyProperties == null) {
@@ -729,11 +956,12 @@ abstract class AbstractExchange implements Exchange {
     }
 
     @SuppressWarnings("unchecked")
-    <T> T getSafeCopyProperty(String key, Class<T> type) {
+    @Override
+    public <T> T getSafeCopyProperty(String key, Class<T> type) {
         if (!hasSafeCopyProperties()) {
             return null;
         }
-        Object value = safeCopyProperties.get(key);
+        Object value = getSafeCopyProperties().get(key);
 
         if (type.isInstance(value)) {
             return (T) value;
@@ -742,14 +970,4 @@ abstract class AbstractExchange implements Exchange {
         return ExchangeHelper.convertToType(this, type, value);
     }
 
-    public ExtendedExchangeExtension getExchangeExtension() {
-        return privateExtension;
-    }
-
-    private static Map<String, Object> safeCopyProperties(Map<String, Object> properties) {
-        if (properties == null) {
-            return null;
-        }
-        return new ConcurrentHashMap<>(properties);
-    }
 }

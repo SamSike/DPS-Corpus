@@ -38,10 +38,10 @@ public class AsyncEndpointTryCatchFinally5Test extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.addComponent("async", new MyAsyncComponent());
 
                 from("direct:start").doTry().to("log:try").to("mock:try").throwException(new IllegalArgumentException("Damn"))

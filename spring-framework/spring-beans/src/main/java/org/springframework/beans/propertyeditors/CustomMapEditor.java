@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
@@ -108,8 +107,9 @@ public class CustomMapEditor extends PropertyEditorSupport {
 			// Use the source value as-is, as it matches the target type.
 			super.setValue(value);
 		}
-		else if (value instanceof Map<?, ?> source) {
+		else if (value instanceof Map) {
 			// Convert Map elements.
+			Map<?, ?> source = (Map<?, ?>) value;
 			Map<Object, Object> target = createMap(this.mapType, source.size());
 			source.forEach((key, val) -> target.put(convertKey(key), convertValue(val)));
 			super.setValue(target);
@@ -197,7 +197,8 @@ public class CustomMapEditor extends PropertyEditorSupport {
 	 * there is no appropriate text representation.
 	 */
 	@Override
-	public @Nullable String getAsText() {
+	@Nullable
+	public String getAsText() {
 		return null;
 	}
 

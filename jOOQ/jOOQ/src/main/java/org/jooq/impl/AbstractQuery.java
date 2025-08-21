@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -45,15 +45,6 @@ import static org.jooq.ExecuteType.DDL;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.FIREBIRD;
-// ...
-import static org.jooq.SQLDialect.HSQLDB;
-// ...
-// ...
-// ...
-// ...
-// ...
-// ...
 import static org.jooq.conf.ParamType.INLINED;
 import static org.jooq.conf.SettingsTools.executePreparedStatements;
 import static org.jooq.conf.SettingsTools.getParamType;
@@ -65,12 +56,10 @@ import static org.jooq.impl.Tools.consumeExceptions;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_COUNT_BIND_VALUES;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_FORCE_STATIC_STATEMENT;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
@@ -80,9 +69,9 @@ import org.jooq.Configuration;
 import org.jooq.ExecuteContext;
 import org.jooq.ExecuteListener;
 import org.jooq.Param;
+import org.jooq.Query;
 import org.jooq.Record;
 import org.jooq.RenderContext;
-import org.jooq.SQLDialect;
 import org.jooq.Select;
 import org.jooq.conf.QueryPoolable;
 import org.jooq.conf.SettingsTools;
@@ -90,25 +79,22 @@ import org.jooq.conf.StatementType;
 import org.jooq.exception.ControlFlowSignal;
 import org.jooq.exception.DetachedException;
 import org.jooq.impl.DefaultRenderContext.Rendered;
-import org.jooq.impl.DefaultUnwrapperProvider.DefaultUnwrapper;
 import org.jooq.tools.Ints;
 import org.jooq.tools.JooqLogger;
-import org.jooq.tools.jdbc.BatchedPreparedStatement;
 
 /**
  * @author Lukas Eder
  */
 abstract class AbstractQuery<R extends Record> extends AbstractAttachableQueryPart implements CloseableQuery {
 
-    private static final JooqLogger      log                                 = JooqLogger.getLogger(AbstractQuery.class);
-    private static final Set<SQLDialect> SET_AUTOCOMMIT_ON_START_TRANSACTION = SQLDialect.supportedBy(FIREBIRD, HSQLDB);
+    private static final JooqLogger log      = JooqLogger.getLogger(AbstractQuery.class);
 
-    private int                          timeout;
-    private QueryPoolable                poolable                            = QueryPoolable.DEFAULT;
-    private boolean                      keepStatement;
-    transient PreparedStatement          statement;
-    transient int                        statementExecutionCount;
-    transient Rendered                   rendered;
+    private int                     timeout;
+    private QueryPoolable           poolable = QueryPoolable.DEFAULT;
+    private boolean                 keepStatement;
+    transient PreparedStatement     statement;
+    transient int                   statementExecutionCount;
+    transient Rendered              rendered;
 
     AbstractQuery(Configuration configuration) {
         super(configuration);
@@ -247,7 +233,7 @@ abstract class AbstractQuery<R extends Record> extends AbstractAttachableQueryPa
                 statement = null;
             }
             catch (SQLException e) {
-                throw Tools.translate(create(), rendered.sql, e);
+                throw Tools.translate(rendered.sql, e);
             }
         }
     }
@@ -259,7 +245,7 @@ abstract class AbstractQuery<R extends Record> extends AbstractAttachableQueryPa
                 statement.cancel();
             }
             catch (SQLException e) {
-                throw Tools.translate(create(), rendered.sql, e);
+                throw Tools.translate(rendered.sql, e);
             }
         }
     }
@@ -269,7 +255,7 @@ abstract class AbstractQuery<R extends Record> extends AbstractAttachableQueryPa
         if (isExecutable()) {
 
             // Get the attached configuration of this query
-            Configuration c = configurationOrDefault();
+            Configuration c = configuration();
 
             // [#1191] The following triggers a start event on all listeners.
             //         This may be used to provide jOOQ with a JDBC connection,
@@ -286,7 +272,7 @@ abstract class AbstractQuery<R extends Record> extends AbstractAttachableQueryPa
 
                 // [#385] If a statement was previously kept open
                 if (keepStatement() && statement != null) {
-                    rendered.setSQLAndParams(ctx);
+                    ctx.sql(rendered.sql);
                     ctx.statement(statement);
 
                     // [#3191] Pre-initialise the ExecuteContext with a previous connection, if available.
@@ -298,19 +284,25 @@ abstract class AbstractQuery<R extends Record> extends AbstractAttachableQueryPa
 
                 // [#385] First time statement preparing
                 else {
-                    ctx.transformQueries(listener);
-
                     listener.renderStart(ctx);
                     rendered = getSQL0(ctx);
-                    rendered.setSQLAndParams(ctx);
+                    ctx.sql(rendered.sql);
                     listener.renderEnd(ctx);
                     rendered.sql = ctx.sql();
 
-                    connection(ctx);
-
-                    // [#7106] In some SQL dialects, starting a transaction requires JDBC interaction
-                    if (this instanceof StartTransaction && SET_AUTOCOMMIT_ON_START_TRANSACTION.contains(ctx.dialect()))
-                        ctx.connection().setAutoCommit(false);
+                    // [#3234] Defer initialising of a connection until the prepare step
+                    // This optimises unnecessary ConnectionProvider.acquire() calls when
+                    // ControlFlowSignals are thrown
+                    if (ctx.connection() == null)
+                        if (ctx.configuration().connectionFactory() instanceof NoConnectionFactory)
+                            throw new DetachedException("Cannot execute query. No JDBC Connection configured");
+                        else
+                            throw new DetachedException(
+                                "Attempt to execute a blocking method (e.g. Query.execute() or ResultQuery.fetch()) "
+                              + "when only an R2BDC ConnectionFactory was configured. jOOQ's RowCountQuery and ResultQuery "
+                              + "extend Publisher, which allows for reactive streams implementations to subscribe to the "
+                              + "results of a jOOQ query. Simply embed your query in the stream, e.g. using Flux.from(query). "
+                              + "See also: https://www.jooq.org/doc/latest/manual/sql-execution/fetching/reactive-fetching/");
 
                     listener.prepareStart(ctx);
                     prepare(ctx);
@@ -341,8 +333,8 @@ abstract class AbstractQuery<R extends Record> extends AbstractAttachableQueryPa
                     !TRUE.equals(ctx.data(DATA_FORCE_STATIC_STATEMENT))) {
 
                     listener.bindStart(ctx);
-                    if (ctx.params().length > 0)
-                        new DefaultBindContext(c, ctx, ctx.statement()).visit(QueryPartListView.wrap(ctx.params()));
+                    if (rendered.bindValues != null)
+                        using(c).bindContext(ctx.statement()).visit(rendered.bindValues);
                     listener.bindEnd(ctx);
                 }
 
@@ -385,26 +377,6 @@ abstract class AbstractQuery<R extends Record> extends AbstractAttachableQueryPa
         }
     }
 
-    static final Connection connection(DefaultExecuteContext ctx) {
-        Connection result = ctx.connection();
-
-        // [#3234] Defer initialising of a connection until the prepare step
-        // This optimises unnecessary ConnectionProvider.acquire() calls when
-        // ControlFlowSignals are thrown
-        if (result == null)
-            if (ctx.configuration().connectionFactory() instanceof NoConnectionFactory)
-                throw new DetachedException("Cannot execute query. No JDBC Connection configured");
-            else
-                throw new DetachedException(
-                    "Attempt to execute a blocking method (e.g. Query.execute() or ResultQuery.fetch()) "
-                  + "when only an R2BDC ConnectionFactory was configured. jOOQ's RowCountQuery and ResultQuery "
-                  + "extend Publisher, which allows for reactive streams implementations to subscribe to the "
-                  + "results of a jOOQ query. Simply embed your query in the stream, e.g. using Flux.from(query). "
-                  + "See also: https://www.jooq.org/doc/latest/manual/sql-execution/fetching/reactive-fetching/");
-        else
-            return result;
-    }
-
     @Override
     public final CompletionStage<Integer> executeAsync() {
         return executeAsync(Tools.configuration(this).executorProvider().provide());
@@ -430,17 +402,6 @@ abstract class AbstractQuery<R extends Record> extends AbstractAttachableQueryPa
     protected void prepare(ExecuteContext ctx) throws SQLException {
         if (ctx.statement() == null)
             ctx.statement(ctx.connection().prepareStatement(ctx.sql()));
-    }
-
-    /**
-     * Make sure a {@link PreparedStatement}, which may be a
-     * {@link BatchedPreparedStatement}, is executed immediately, not batched.
-     */
-    final PreparedStatement executeImmediate(PreparedStatement s) throws SQLException {
-        if (DefaultUnwrapper.isWrapperFor(s, BatchedPreparedStatement.class))
-            s.unwrap(BatchedPreparedStatement.class).setExecuteImmediate(true);
-
-        return s;
     }
 
     /**
@@ -495,8 +456,34 @@ abstract class AbstractQuery<R extends Record> extends AbstractAttachableQueryPa
         return true;
     }
 
-    private static final Rendered getSQL0(DefaultExecuteContext ctx) {
-        Rendered rendered = Rendered.rendered(ctx.originalConfiguration(), ctx, ctx.query(), true, false);
+    private final Rendered getSQL0(ExecuteContext ctx) {
+        Rendered result;
+        DefaultRenderContext render;
+        Configuration c = configurationOrThrow();
+
+        // [#3542] [#4977] Some dialects do not support bind values in DDL statements
+        // [#6474] [#6929] Can this be communicated in a leaner way?
+        if (ctx.type() == DDL) {
+            ctx.data(DATA_FORCE_STATIC_STATEMENT, true);
+            render = new DefaultRenderContext(c);
+            result = new Rendered(render.paramType(INLINED).visit(this).render(), null, render.skipUpdateCounts());
+        }
+        else if (executePreparedStatements(configuration().settings())) {
+            try {
+                render = new DefaultRenderContext(c);
+                render.data(DATA_COUNT_BIND_VALUES, true);
+                result = new Rendered(render.visit(this).render(), render.bindValues(), render.skipUpdateCounts());
+            }
+            catch (DefaultRenderContext.ForceInlineSignal e) {
+                ctx.data(DATA_FORCE_STATIC_STATEMENT, true);
+                render = new DefaultRenderContext(c);
+                result = new Rendered(render.paramType(INLINED).visit(this).render(), null, render.skipUpdateCounts());
+            }
+        }
+        else {
+            render = new DefaultRenderContext(c);
+            result = new Rendered(render.paramType(INLINED).visit(this).render(), null, render.skipUpdateCounts());
+        }
 
 
 
@@ -522,14 +509,8 @@ abstract class AbstractQuery<R extends Record> extends AbstractAttachableQueryPa
 
 
 
-
-
-        return rendered;
+        return result;
     }
-
-
-
-
 
 
 

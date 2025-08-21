@@ -17,6 +17,7 @@
 package org.apache.camel.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
@@ -26,8 +27,6 @@ import jakarta.xml.bind.annotation.XmlElementRef;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 
-import org.apache.camel.Exchange;
-import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.Predicate;
 import org.apache.camel.spi.AsPredicate;
 import org.apache.camel.spi.Metadata;
@@ -45,32 +44,20 @@ public class CatchDefinition extends OutputDefinition<CatchDefinition> {
 
     @XmlElement(name = "exception")
     private List<String> exceptions = new ArrayList<>();
-    @Metadata(description = "Used for triggering doCatch in specific situations")
-    @XmlElement
+    @XmlElement(name = "onWhen")
     @AsPredicate
-    private OnWhenDefinition onWhen;
+    private WhenDefinition onWhen;
 
     public CatchDefinition() {
     }
 
-    protected CatchDefinition(CatchDefinition source) {
-        super(source);
-        this.exceptionClasses = source.exceptionClasses;
-        this.exceptions = source.exceptions != null ? new ArrayList<>(source.exceptions) : null;
-        this.onWhen = source.onWhen != null ? source.onWhen.copyDefinition() : null;
-    }
-
     public CatchDefinition(List<Class<? extends Throwable>> exceptionClasses) {
-        exception(exceptionClasses);
+        this.exceptionClasses = exceptionClasses;
     }
 
     public CatchDefinition(Class<? extends Throwable> exceptionType) {
-        exception(exceptionType);
-    }
-
-    @Override
-    public CatchDefinition copyDefinition() {
-        return new CatchDefinition(this);
+        exceptionClasses = new ArrayList<>();
+        exceptionClasses.add(exceptionType);
     }
 
     @Override
@@ -107,50 +94,19 @@ public class CatchDefinition extends OutputDefinition<CatchDefinition> {
         this.exceptionClasses = exceptionClasses;
     }
 
-    @Override
-    public boolean acceptDebugger(Exchange exchange) {
-        // only accept if not handled by a previous catch clause handled, and that there is an exception
-        boolean previous = exchange.getProperty(ExchangePropertyKey.EXCEPTION_HANDLED) != null;
-        final Exception e = exchange.getException();
-        return !previous && e != null;
-    }
-
     // Fluent API
     // -------------------------------------------------------------------------
-
     /**
-     * The exception(s) to catch.
+     * The exceptions to catch.
      *
-     * @param  exception one or more exceptions
-     * @return           the builder
+     * @param      exceptionClasses a list of the exception classes
+     * @return                      the builder
+     * @deprecated                  use {@link #exception(Class[])}
      */
-    public CatchDefinition exception(Class<? extends Throwable> exception) {
-        return exception(List.of(exception));
-    }
-
-    /**
-     * The exception(s) to catch.
-     *
-     * @param  exception1 fist exception
-     * @param  exception2 second exception
-     * @return            the builder
-     */
-    public CatchDefinition exception(Class<? extends Throwable> exception1, Class<? extends Throwable> exception2) {
-        return exception(List.of(exception1, exception2));
-    }
-
-    /**
-     * The exception(s) to catch.
-     *
-     * @param  exception1 fist exception
-     * @param  exception2 second exception
-     * @param  exception3 third exception
-     * @return            the builder
-     */
-    public CatchDefinition exception(
-            Class<? extends Throwable> exception1, Class<? extends Throwable> exception2,
-            Class<? extends Throwable> exception3) {
-        return exception(List.of(exception1, exception2, exception3));
+    @Deprecated
+    public CatchDefinition exceptionClasses(List<Class<? extends Throwable>> exceptionClasses) {
+        setExceptionClasses(exceptionClasses);
+        return this;
     }
 
     /**
@@ -159,24 +115,12 @@ public class CatchDefinition extends OutputDefinition<CatchDefinition> {
      * @param  exceptions one or more exceptions
      * @return            the builder
      */
-    @SafeVarargs
-    public final CatchDefinition exception(Class<? extends Throwable>... exceptions) {
-        return exception(List.of(exceptions));
-    }
-
-    /**
-     * The exception(s) to catch.
-     *
-     * @param  exceptions one or more exceptions
-     * @return            the builder
-     */
-    public CatchDefinition exception(List<Class<? extends Throwable>> exceptions) {
+    public CatchDefinition exception(Class<? extends Throwable>... exceptions) {
         if (exceptionClasses == null) {
             exceptionClasses = new ArrayList<>();
         }
-        for (Class<? extends Throwable> c : exceptions) {
-            this.exceptionClasses.add(c);
-            this.exceptions.add(c.getName());
+        if (exceptions != null) {
+            exceptionClasses.addAll(Arrays.asList(exceptions));
         }
         return this;
     }
@@ -191,7 +135,21 @@ public class CatchDefinition extends OutputDefinition<CatchDefinition> {
      * @return           the builder
      */
     public CatchDefinition onWhen(@AsPredicate Predicate predicate) {
-        setOnWhen(new OnWhenDefinition(predicate));
+        setOnWhen(new WhenDefinition(predicate));
+        return this;
+    }
+
+    /**
+     * Sets the exception class that the CatchType want to catch
+     *
+     * @param      exception the exception of class
+     * @return               the builder
+     * @deprecated           use {@link #exception(Class[])}
+     */
+    @Deprecated
+    public CatchDefinition exceptionClasses(Class<? extends Throwable> exception) {
+        List<Class<? extends Throwable>> list = getExceptionClasses();
+        list.add(exception);
         return this;
     }
 
@@ -203,11 +161,11 @@ public class CatchDefinition extends OutputDefinition<CatchDefinition> {
         this.exceptions = exceptions;
     }
 
-    public OnWhenDefinition getOnWhen() {
+    public WhenDefinition getOnWhen() {
         return onWhen;
     }
 
-    public void setOnWhen(OnWhenDefinition onWhen) {
+    public void setOnWhen(WhenDefinition onWhen) {
         this.onWhen = onWhen;
     }
 

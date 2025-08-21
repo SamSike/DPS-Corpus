@@ -16,13 +16,11 @@
  */
 package org.apache.camel.management.mbean;
 
-import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,13 +56,10 @@ import org.apache.camel.api.management.mbean.RouteError;
 import org.apache.camel.model.Model;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.model.RouteDefinition;
-import org.apache.camel.model.RoutesDefinition;
 import org.apache.camel.spi.InflightRepository;
 import org.apache.camel.spi.ManagementStrategy;
 import org.apache.camel.spi.RoutePolicy;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.util.ObjectHelper;
-import org.apache.camel.xml.LwModelHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,23 +116,8 @@ public class ManagedRoute extends ManagedPerformanceCounter implements TimerList
     }
 
     @Override
-    public String getNodePrefixId() {
-        return route.getNodePrefixId();
-    }
-
-    @Override
     public String getRouteGroup() {
         return route.getGroup();
-    }
-
-    @Override
-    public boolean isCreatedByRouteTemplate() {
-        return "true".equals(route.getProperties().getOrDefault(Route.TEMPLATE_PROPERTY, "false"));
-    }
-
-    @Override
-    public boolean isCreatedByKamelet() {
-        return "true".equals(route.getProperties().getOrDefault(Route.KAMELET_PROPERTY, "false"));
     }
 
     @Override
@@ -168,11 +148,6 @@ public class ManagedRoute extends ManagedPerformanceCounter implements TimerList
     @Override
     public String getDescription() {
         return description;
-    }
-
-    @Override
-    public Boolean getAutoStartup() {
-        return route.isAutoStartup();
     }
 
     @Override
@@ -325,12 +300,7 @@ public class ManagedRoute extends ManagedPerformanceCounter implements TimerList
         if (!context.getStatus().isStarted()) {
             throw new IllegalArgumentException("CamelContext is not started");
         }
-        try {
-            context.getRouteController().startRoute(getRouteId());
-        } catch (Exception e) {
-            LOG.warn("Error starting route: {} due to: {}. This exception is ignored.", getRouteId(), e.getMessage(), e);
-            throw e;
-        }
+        context.getRouteController().startRoute(getRouteId());
     }
 
     @Override
@@ -338,12 +308,7 @@ public class ManagedRoute extends ManagedPerformanceCounter implements TimerList
         if (!context.getStatus().isStarted()) {
             throw new IllegalArgumentException("CamelContext is not started");
         }
-        try {
-            context.getRouteController().stopRoute(getRouteId());
-        } catch (Exception e) {
-            LOG.warn("Error stopping route: {} due to: {}. This exception is ignored.", getRouteId(), e.getMessage(), e);
-            throw e;
-        }
+        context.getRouteController().stopRoute(getRouteId());
     }
 
     @Override
@@ -371,10 +336,6 @@ public class ManagedRoute extends ManagedPerformanceCounter implements TimerList
         return context.getRouteController().stopRoute(getRouteId(), timeout, TimeUnit.SECONDS, abortAfterTimeout);
     }
 
-    /**
-     * @deprecated not in use
-     */
-    @Deprecated(since = "4.8.0")
     public void shutdown() throws Exception {
         if (!context.getStatus().isStarted()) {
             throw new IllegalArgumentException("CamelContext is not started");
@@ -384,10 +345,6 @@ public class ManagedRoute extends ManagedPerformanceCounter implements TimerList
         context.removeRoute(routeId);
     }
 
-    /**
-     * @deprecated not in use
-     */
-    @Deprecated(since = "4.8.0")
     public void shutdown(long timeout) throws Exception {
         if (!context.getStatus().isStarted()) {
             throw new IllegalArgumentException("CamelContext is not started");
@@ -418,8 +375,7 @@ public class ManagedRoute extends ManagedPerformanceCounter implements TimerList
                 LOG.debug("Sleeping {} seconds before starting route: {}", delay, getRouteId());
                 Thread.sleep(delay * 1000);
             } catch (InterruptedException e) {
-                LOG.info("Interrupted while waiting before starting the route");
-                Thread.currentThread().interrupt();
+                // ignore
             }
         }
         start();
@@ -427,51 +383,21 @@ public class ManagedRoute extends ManagedPerformanceCounter implements TimerList
 
     @Override
     public String dumpRouteAsXml() throws Exception {
-        return dumpRouteAsXml(false);
+        return dumpRouteAsXml(false, false);
     }
 
     @Override
     public String dumpRouteAsXml(boolean resolvePlaceholders) throws Exception {
-        return dumpRouteAsXml(resolvePlaceholders, true);
+        return dumpRouteAsXml(resolvePlaceholders, false);
     }
 
     @Override
-    public String dumpRouteAsXml(boolean resolvePlaceholders, boolean generatedIds) throws Exception {
+    public String dumpRouteAsXml(boolean resolvePlaceholders, boolean resolveDelegateEndpoints) throws Exception {
         String id = route.getId();
-        RouteDefinition def = context.getCamelContextExtension().getContextPlugin(Model.class).getRouteDefinition(id);
+        RouteDefinition def = context.getExtension(Model.class).getRouteDefinition(id);
         if (def != null) {
-            // if we are debugging then ids is needed for the debugger
-            if (context.isDebugging()) {
-                generatedIds = true;
-            }
-            return PluginHelper.getModelToXMLDumper(context).dumpModelAsXml(context, def, resolvePlaceholders, generatedIds);
-        }
-
-        return null;
-    }
-
-    @Override
-    public String dumpRouteAsYaml() throws Exception {
-        return dumpRouteAsYaml(false, false);
-    }
-
-    @Override
-    public String dumpRouteAsYaml(boolean resolvePlaceholders) throws Exception {
-        return dumpRouteAsYaml(resolvePlaceholders, false, true);
-    }
-
-    @Override
-    public String dumpRouteAsYaml(boolean resolvePlaceholders, boolean uriAsParameters) throws Exception {
-        return dumpRouteAsYaml(resolvePlaceholders, uriAsParameters, true);
-    }
-
-    @Override
-    public String dumpRouteAsYaml(boolean resolvePlaceholders, boolean uriAsParameters, boolean generatedIds) throws Exception {
-        String id = route.getId();
-        RouteDefinition def = context.getCamelContextExtension().getContextPlugin(Model.class).getRouteDefinition(id);
-        if (def != null) {
-            return PluginHelper.getModelToYAMLDumper(context).dumpModelAsYaml(context, def, resolvePlaceholders,
-                    uriAsParameters, generatedIds);
+            ExtendedCamelContext ecc = context.adapt(ExtendedCamelContext.class);
+            return ecc.getModelToXMLDumper().dumpModelAsXml(context, def, resolvePlaceholders, resolveDelegateEndpoints);
         }
 
         return null;
@@ -662,7 +588,7 @@ public class ManagedRoute extends ManagedPerformanceCounter implements TimerList
             processors.sort(new OrderProcessorMBeans());
 
             // grab route consumer
-            RouteDefinition rd = ((ModelCamelContext) context).getRouteDefinition(route.getRouteId());
+            RouteDefinition rd = context.adapt(ModelCamelContext.class).getRouteDefinition(route.getRouteId());
             if (rd != null) {
                 String id = rd.getRouteId();
                 int line = rd.getInput().getLineNumber();
@@ -709,60 +635,6 @@ public class ManagedRoute extends ManagedPerformanceCounter implements TimerList
                 }
             }
         }
-    }
-
-    @Override
-    public void updateRouteFromXml(String xml) throws Exception {
-        // check whether this is allowed
-        if (!isUpdateRouteEnabled()) {
-            throw new IllegalAccessException("Updating route is not enabled");
-        }
-
-        // convert to model from xml
-        ExtendedCamelContext ecc = context.getCamelContextExtension();
-        InputStream is = context.getTypeConverter().convertTo(InputStream.class, xml);
-        RoutesDefinition routes = LwModelHelper.loadRoutesDefinition(is);
-        if (routes == null || routes.getRoutes().isEmpty()) {
-            return;
-        }
-        RouteDefinition def = routes.getRoutes().get(0);
-
-        // if the xml does not contain the route-id then we fix this by adding the actual route id
-        // this may be needed if the route-id was auto-generated, as the intend is to update this route
-        // and not add a new route, adding a new route, use the MBean operation on ManagedCamelContext instead.
-        if (ObjectHelper.isEmpty(def.getId())) {
-            def.setId(getRouteId());
-        } else if (!def.getId().equals(getRouteId())) {
-            throw new IllegalArgumentException(
-                    "Cannot update route from XML as routeIds does not match. routeId: "
-                                               + getRouteId() + ", routeId from XML: " + def.getId());
-        }
-
-        LOG.debug("Updating route: {} from xml: {}", def.getId(), xml);
-        try {
-            // add will remove existing route first
-            ecc.getContextPlugin(Model.class).addRouteDefinition(def);
-        } catch (Exception e) {
-            // log the error as warn as the management api may be invoked remotely over JMX which does not propagate such exception
-            String msg = "Error updating route: " + def.getId() + " from xml: " + xml + " due: " + e.getMessage();
-            LOG.warn(msg, e);
-            throw e;
-        }
-    }
-
-    @Override
-    public boolean isUpdateRouteEnabled() {
-        // check whether this is allowed
-        Boolean enabled = context.getManagementStrategy().getManagementAgent().getUpdateRouteEnabled();
-        return enabled != null ? enabled : false;
-    }
-
-    @Override
-    public boolean isRemoteEndpoint() {
-        if (route.getEndpoint() != null) {
-            return route.getEndpoint().isRemote();
-        }
-        return false;
     }
 
     @Override
@@ -837,11 +709,6 @@ public class ManagedRoute extends ManagedPerformanceCounter implements TimerList
                 @Override
                 public Throwable getException() {
                     return error.getException();
-                }
-
-                @Override
-                public Date getDate() {
-                    return error.getDate();
                 }
             };
         }

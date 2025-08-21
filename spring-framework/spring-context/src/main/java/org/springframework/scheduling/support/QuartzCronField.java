@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,21 +24,14 @@ import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
  * Extension of {@link CronField} for
- * <a href="https://www.quartz-scheduler.org">Quartz</a>-specific fields.
+ * <a href="https://www.quartz-scheduler.org>Quartz</a> -specific fields.
  * Created using the {@code parse*} methods, uses a {@link TemporalAdjuster}
  * internally.
- *
- * <p>Supports a Quartz day-of-month/week field with an L/# expression. Follows
- * common cron conventions in every other respect, including 0-6 for SUN-SAT
- * (plus 7 for SUN as well). Note that Quartz deviates from the day-of-week
- * convention in cron through 1-7 for SUN-SAT whereas Spring strictly follows
- * cron even in combination with the optional Quartz-specific L/# expressions.
  *
  * @author Arjen Poutsma
  * @since 5.3
@@ -67,18 +60,16 @@ final class QuartzCronField extends CronField {
 		this.rollForwardType = rollForwardType;
 	}
 
-
 	/**
-	 * Determine whether the given value is a Quartz day-of-month field.
+	 * Returns whether the given value is a Quartz day-of-month field.
 	 */
 	public static boolean isQuartzDaysOfMonthField(String value) {
 		return value.contains("L") || value.contains("W");
 	}
 
 	/**
-	 * Parse the given value into a days of months {@code QuartzCronField},
-	 * the fourth entry of a cron expression.
-	 * <p>Expects a "L" or "W" in the given value.
+	 * Parse the given value into a days of months {@code QuartzCronField}, the fourth entry of a cron expression.
+	 * Expects a "L" or "W" in the given value.
 	 */
 	public static QuartzCronField parseDaysOfMonth(String value) {
 		int idx = value.lastIndexOf('L');
@@ -87,15 +78,15 @@ final class QuartzCronField extends CronField {
 			if (idx != 0) {
 				throw new IllegalArgumentException("Unrecognized characters before 'L' in '" + value + "'");
 			}
-			else if (value.length() == 2 && value.charAt(1) == 'W') {  // "LW"
+			else if (value.length() == 2 && value.charAt(1) == 'W') { // "LW"
 				adjuster = lastWeekdayOfMonth();
 			}
 			else {
-				if (value.length() == 1) {  // "L"
+				if (value.length() == 1) { // "L"
 					adjuster = lastDayOfMonth();
 				}
-				else {  // "L-[0-9]+"
-					int offset = Integer.parseInt(value, idx + 1, value.length(), 10);
+				else { // "L-[0-9]+"
+					int offset = Integer.parseInt(value.substring(idx + 1));
 					if (offset >= 0) {
 						throw new IllegalArgumentException("Offset '" + offset + " should be < 0 '" + value + "'");
 					}
@@ -112,8 +103,8 @@ final class QuartzCronField extends CronField {
 			else if (idx != value.length() - 1) {
 				throw new IllegalArgumentException("Unrecognized characters after 'W' in '" + value + "'");
 			}
-			else {  // "[0-9]+W"
-				int dayOfMonth = Integer.parseInt(value, 0, idx, 10);
+			else { // "[0-9]+W"
+				int dayOfMonth = Integer.parseInt(value.substring(0, idx));
 				dayOfMonth = Type.DAY_OF_MONTH.checkValidValue(dayOfMonth);
 				TemporalAdjuster adjuster = weekdayNearestTo(dayOfMonth);
 				return new QuartzCronField(Type.DAY_OF_MONTH, adjuster, value);
@@ -123,16 +114,15 @@ final class QuartzCronField extends CronField {
 	}
 
 	/**
-	 * Determine whether the given value is a Quartz day-of-week field.
+	 * Returns whether the given value is a Quartz day-of-week field.
 	 */
 	public static boolean isQuartzDaysOfWeekField(String value) {
 		return value.contains("L") || value.contains("#");
 	}
 
 	/**
-	 * Parse the given value into a days of week {@code QuartzCronField},
-	 * the sixth entry of a cron expression.
-	 * <p>Expects a "L" or "#" in the given value.
+	 * Parse the given value into a days of week {@code QuartzCronField}, the sixth entry of a cron expression.
+	 * Expects a "L" or "#" in the given value.
 	 */
 	public static QuartzCronField parseDaysOfWeek(String value) {
 		int idx = value.lastIndexOf('L');
@@ -145,7 +135,7 @@ final class QuartzCronField extends CronField {
 				if (idx == 0) {
 					throw new IllegalArgumentException("No day-of-week before 'L' in '" + value + "'");
 				}
-				else {  // "[0-7]L"
+				else { // "[0-7]L"
 					DayOfWeek dayOfWeek = parseDayOfWeek(value.substring(0, idx));
 					adjuster = lastInMonth(dayOfWeek);
 				}
@@ -162,11 +152,12 @@ final class QuartzCronField extends CronField {
 			}
 			// "[0-7]#[0-9]+"
 			DayOfWeek dayOfWeek = parseDayOfWeek(value.substring(0, idx));
-			int ordinal = Integer.parseInt(value, idx + 1, value.length(), 10);
+			int ordinal = Integer.parseInt(value.substring(idx + 1));
 			if (ordinal <= 0) {
 				throw new IllegalArgumentException("Ordinal '" + ordinal + "' in '" + value +
 						"' must be positive number ");
 			}
+
 			TemporalAdjuster adjuster = dayOfWeekInMonth(ordinal, dayOfWeek);
 			return new QuartzCronField(Type.DAY_OF_WEEK, Type.DAY_OF_MONTH, adjuster, value);
 		}
@@ -176,13 +167,14 @@ final class QuartzCronField extends CronField {
 	private static DayOfWeek parseDayOfWeek(String value) {
 		int dayOfWeek = Integer.parseInt(value);
 		if (dayOfWeek == 0) {
-			dayOfWeek = 7;  // cron is 0 based; java.time 1 based
+			dayOfWeek = 7; // cron is 0 based; java.time 1 based
 		}
 		try {
 			return DayOfWeek.of(dayOfWeek);
 		}
 		catch (DateTimeException ex) {
-			throw new IllegalArgumentException(ex.getMessage() + " '" + value + "'", ex);
+			String msg = ex.getMessage() + " '" + value + "'";
+			throw new IllegalArgumentException(msg, ex);
 		}
 	}
 
@@ -221,10 +213,10 @@ final class QuartzCronField extends CronField {
 			Temporal lastDom = adjuster.adjustInto(temporal);
 			Temporal result;
 			int dow = lastDom.get(ChronoField.DAY_OF_WEEK);
-			if (dow == 6) {  // Saturday
+			if (dow == 6) { // Saturday
 				result = lastDom.minus(1, ChronoUnit.DAYS);
 			}
-			else if (dow == 7) {  // Sunday
+			else if (dow == 7) { // Sunday
 				result = lastDom.minus(2, ChronoUnit.DAYS);
 			}
 			else {
@@ -235,7 +227,7 @@ final class QuartzCronField extends CronField {
 	}
 
 	/**
-	 * Returns a temporal adjuster that finds the nth-to-last day of the month.
+	 * Return a temporal adjuster that finds the nth-to-last day of the month.
 	 * @param offset the negative offset, i.e. -3 means third-to-last
 	 * @return a nth-to-last day-of-month adjuster
 	 */
@@ -249,7 +241,7 @@ final class QuartzCronField extends CronField {
 	}
 
 	/**
-	 * Returns a temporal adjuster that finds the weekday nearest to the given
+	 * Return a temporal adjuster that finds the weekday nearest to the given
 	 * day-of-month. If {@code dayOfMonth} falls on a Saturday, the date is
 	 * moved back to Friday; if it falls on a Sunday (or if {@code dayOfMonth}
 	 * is 1 and it falls on a Saturday), it is moved forward to Monday.
@@ -259,48 +251,45 @@ final class QuartzCronField extends CronField {
 	private static TemporalAdjuster weekdayNearestTo(int dayOfMonth) {
 		return temporal -> {
 			int current = Type.DAY_OF_MONTH.get(temporal);
-			DayOfWeek dayOfWeek = DayOfWeek.from(temporal);
+			int dayOfWeek = temporal.get(ChronoField.DAY_OF_WEEK);
 
-			if ((current == dayOfMonth && isWeekday(dayOfWeek)) ||  // dayOfMonth is a weekday
-					(dayOfWeek == DayOfWeek.FRIDAY && current == dayOfMonth - 1) ||  // dayOfMonth is a Saturday, so Friday before
-					(dayOfWeek == DayOfWeek.MONDAY && current == dayOfMonth + 1) ||  // dayOfMonth is a Sunday, so Monday after
-					(dayOfWeek == DayOfWeek.MONDAY && dayOfMonth == 1 && current == 3)) {  // dayOfMonth is Saturday 1st, so Monday 3rd
+			if ((current == dayOfMonth && dayOfWeek < 6) || // dayOfMonth is a weekday
+					(dayOfWeek == 5 && current == dayOfMonth - 1) || // dayOfMonth is a Saturday, so Friday before
+					(dayOfWeek == 1 && current == dayOfMonth + 1) || // dayOfMonth is a Sunday, so Monday after
+					(dayOfWeek == 1 && dayOfMonth == 1 && current == 3)) { // dayOfMonth is the 1st, so Monday 3rd
 				return temporal;
 			}
 			int count = 0;
 			while (count++ < CronExpression.MAX_ATTEMPTS) {
+				temporal = Type.DAY_OF_MONTH.elapseUntil(cast(temporal), dayOfMonth);
+				temporal = atMidnight().adjustInto(temporal);
+				current = Type.DAY_OF_MONTH.get(temporal);
 				if (current == dayOfMonth) {
-					dayOfWeek = DayOfWeek.from(temporal);
+					dayOfWeek = temporal.get(ChronoField.DAY_OF_WEEK);
 
-					if (dayOfWeek == DayOfWeek.SATURDAY) {
+					if (dayOfWeek == 6) { // Saturday
 						if (dayOfMonth != 1) {
-							temporal = temporal.minus(1, ChronoUnit.DAYS);
+							return temporal.minus(1, ChronoUnit.DAYS);
 						}
 						else {
-							// exception for "1W" fields: execute on next Monday
-							temporal = temporal.plus(2, ChronoUnit.DAYS);
+							// exception for "1W" fields: execute on nearest Monday
+							return temporal.plus(2, ChronoUnit.DAYS);
 						}
 					}
-					else if (dayOfWeek == DayOfWeek.SUNDAY) {
-						temporal = temporal.plus(1, ChronoUnit.DAYS);
+					else if (dayOfWeek == 7) { // Sunday
+						return temporal.plus(1, ChronoUnit.DAYS);
 					}
-					return atMidnight().adjustInto(temporal);
-				}
-				else {
-					temporal = Type.DAY_OF_MONTH.elapseUntil(cast(temporal), dayOfMonth);
-					current = Type.DAY_OF_MONTH.get(temporal);
+					else {
+						return temporal;
+					}
 				}
 			}
 			return null;
 		};
 	}
 
-	private static boolean isWeekday(DayOfWeek dayOfWeek) {
-		return dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY;
-	}
-
 	/**
-	 * Returns a temporal adjuster that finds the last of the given day-of-week
+	 * Return a temporal adjuster that finds the last of the given doy-of-week
 	 * in a month.
 	 */
 	private static TemporalAdjuster lastInMonth(DayOfWeek dayOfWeek) {
@@ -318,16 +307,8 @@ final class QuartzCronField extends CronField {
 	private static TemporalAdjuster dayOfWeekInMonth(int ordinal, DayOfWeek dayOfWeek) {
 		TemporalAdjuster adjuster = TemporalAdjusters.dayOfWeekInMonth(ordinal, dayOfWeek);
 		return temporal -> {
-			// TemporalAdjusters can overflow to a different month
-			// in this case, attempt the same adjustment with the next/previous month
-			for (int i = 0; i < 12; i++) {
-				Temporal result = adjuster.adjustInto(temporal);
-				if (result.get(ChronoField.MONTH_OF_YEAR) == temporal.get(ChronoField.MONTH_OF_YEAR)) {
-					return rollbackToMidnight(temporal, result);
-				}
-				temporal = result;
-			}
-			return null;
+			Temporal result = adjuster.adjustInto(temporal);
+			return rollbackToMidnight(temporal, result);
 		};
 	}
 
@@ -345,9 +326,8 @@ final class QuartzCronField extends CronField {
 		}
 	}
 
-
 	@Override
-	public <T extends Temporal & Comparable<? super T>> @Nullable T nextOrSame(T temporal) {
+	public <T extends Temporal & Comparable<? super T>> T nextOrSame(T temporal) {
 		T result = adjust(temporal);
 		if (result != null) {
 			if (result.compareTo(temporal) < 0) {
@@ -362,17 +342,13 @@ final class QuartzCronField extends CronField {
 		return result;
 	}
 
+
+	@Nullable
 	@SuppressWarnings("unchecked")
-	private <T extends Temporal & Comparable<? super T>> @Nullable T adjust(T temporal) {
+	private <T extends Temporal & Comparable<? super T>> T adjust(T temporal) {
 		return (T) this.adjuster.adjustInto(temporal);
 	}
 
-
-	@Override
-	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof QuartzCronField that &&
-				type() == that.type() && this.value.equals(that.value)));
-	}
 
 	@Override
 	public int hashCode() {
@@ -380,8 +356,22 @@ final class QuartzCronField extends CronField {
 	}
 
 	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof QuartzCronField)) {
+			return false;
+		}
+		QuartzCronField other = (QuartzCronField) o;
+		return type() == other.type() &&
+				this.value.equals(other.value);
+	}
+
+	@Override
 	public String toString() {
 		return type() + " '" + this.value + "'";
+
 	}
 
 }

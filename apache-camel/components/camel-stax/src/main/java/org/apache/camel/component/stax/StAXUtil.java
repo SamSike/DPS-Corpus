@@ -36,12 +36,12 @@ public final class StAXUtil {
         }
 
         XmlType xmlType = handled.getAnnotation(XmlType.class);
-        if (xmlType != null && xmlType.name() != null && !xmlType.name().isBlank()) {
+        if (xmlType != null && xmlType.name() != null && xmlType.name().trim().length() > 0) {
             TAG_NAMES.put(handled, xmlType.name());
             return xmlType.name();
         } else {
             XmlRootElement xmlRoot = handled.getAnnotation(XmlRootElement.class);
-            if (xmlRoot != null && xmlRoot.name() != null && !xmlRoot.name().isBlank()) {
+            if (xmlRoot != null && xmlRoot.name() != null && xmlRoot.name().trim().length() > 0) {
                 TAG_NAMES.put(handled, xmlRoot.name());
                 return xmlRoot.name();
             }

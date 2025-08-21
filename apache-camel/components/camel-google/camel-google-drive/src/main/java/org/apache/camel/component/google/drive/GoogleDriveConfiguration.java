@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.google.drive;
 
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.camel.component.google.drive.internal.GoogleDriveApiName;
@@ -39,7 +38,7 @@ public class GoogleDriveConfiguration {
     @Metadata(required = true)
     private String methodName;
     @UriParam
-    private String scopes;
+    private List<String> scopes;
     @UriParam
     private String clientId;
     @UriParam(label = "security", secret = true)
@@ -116,8 +115,8 @@ public class GoogleDriveConfiguration {
     }
 
     /**
-     * OAuth 2 refresh token. Using this, the Google Drive component can obtain a new accessToken whenever the current
-     * one expires - a necessity if the application is long-lived.
+     * OAuth 2 refresh token. Using this, the Google Calendar component can obtain a new accessToken whenever the
+     * current one expires - a necessity if the application is long-lived.
      */
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
@@ -134,26 +133,15 @@ public class GoogleDriveConfiguration {
         this.applicationName = applicationName;
     }
 
-    public String getScopes() {
+    public List<String> getScopes() {
         return scopes;
     }
 
-    public Collection<String> getScopesAsList() {
-        if (scopes != null) {
-            return List.of(scopes.split(","));
-        } else {
-            return null;
-        }
-    }
-
     /**
-     * Specifies the level of permissions you want a calendar application to have to a user account. See
-     * https://developers.google.com/identity/protocols/googlescopes for more info. Multiple scopes can be separated by
-     * comma.
-     *
-     * @see com.google.api.services.drive.DriveScopes
+     * Specifies the level of permissions you want a drive application to have to a user account. See
+     * https://developers.google.com/drive/web/scopes for more info.
      */
-    public void setScopes(String scopes) {
+    public void setScopes(List<String> scopes) {
         this.scopes = scopes;
     }
 
@@ -164,7 +152,7 @@ public class GoogleDriveConfiguration {
     /**
      * Service account key in json format to authenticate an application as a service account. Accept base64 adding the
      * prefix "base64:"
-     *
+     * 
      * @param serviceAccountKey String file, classpath, base64, or http url
      */
     public void setServiceAccountKey(String serviceAccountKey) {
@@ -181,5 +169,4 @@ public class GoogleDriveConfiguration {
     public void setDelegate(String delegate) {
         this.delegate = delegate;
     }
-
 }

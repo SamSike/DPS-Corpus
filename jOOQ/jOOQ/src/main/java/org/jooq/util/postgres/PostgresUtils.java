@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,9 +38,7 @@
 package org.jooq.util.postgres;
 
 import static java.lang.Integer.toOctalString;
-import static org.jooq.impl.Internal.converterContext;
 import static org.jooq.tools.StringUtils.leftPad;
-import static org.jooq.util.postgres.PostgresUtils.PGState.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -51,8 +49,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.jooq.ContextConverter;
-import org.jooq.Data;
+import org.jooq.Converter;
 import org.jooq.EnumType;
 import org.jooq.Record;
 import org.jooq.exception.DataTypeException;
@@ -77,19 +74,15 @@ import org.jetbrains.annotations.ApiStatus.Internal;
 @Internal
 public class PostgresUtils {
 
-    private static final String POSTGRESQL_HEX_STRING_PREFIX  = "\\x";
+    private static final String     POSTGRESQL_HEX_STRING_PREFIX = "\\x";
 
     // PGobject parsing state machine
-    enum PGState {
-        PG_OBJECT_INIT,
-        PG_OBJECT_BEFORE_VALUE,
-        PG_OBJECT_QUOTED_VALUE,
-        PG_OBJECT_UNQUOTED_VALUE,
-        PG_OBJECT_NESTED_VALUE,
-        PG_OBJECT_NESTED_QUOTED_VALUE,
-        PG_OBJECT_AFTER_VALUE,
-        PG_OBJECT_END
-    }
+    private static final int        PG_OBJECT_INIT               = 0;
+    private static final int        PG_OBJECT_BEFORE_VALUE       = 1;
+    private static final int        PG_OBJECT_QUOTED_VALUE       = 2;
+    private static final int        PG_OBJECT_UNQUOTED_VALUE     = 3;
+    private static final int        PG_OBJECT_AFTER_VALUE        = 4;
+    private static final int        PG_OBJECT_END                = 5;
 
     /**
      * Parse a Postgres-encoded <code>bytea</code> string
@@ -251,8 +244,8 @@ public class PostgresUtils {
     public static DayToSecond toDayToSecond(Object pgInterval) {
         if (pgInterval == null)
             return null;
-        else if (pgInterval instanceof PGInterval i)
-            return toDayToSecond(i);
+        else if (pgInterval instanceof PGInterval)
+            return toDayToSecond((PGInterval) pgInterval);
         else
             return toDayToSecond(new PGInterval(pgInterval.toString()));
     }
@@ -287,8 +280,8 @@ public class PostgresUtils {
     public static YearToMonth toYearToMonth(Object pgInterval) {
         if (pgInterval == null)
             return null;
-        else if (pgInterval instanceof PGInterval i)
-            return toYearToMonth(i);
+        else if (pgInterval instanceof PGInterval)
+            return toYearToMonth((PGInterval) pgInterval);
         else
             return toYearToMonth(new PGInterval(pgInterval.toString()));
     }
@@ -341,32 +334,40 @@ public class PostgresUtils {
     private static List<String> toPGObjectOrArray(String input, char open, char close) {
         List<String> values = new ArrayList<String>();
         int i = 0;
-        PGState state = PG_OBJECT_INIT;
-        int nestLevel = 0;
+        int state = PG_OBJECT_INIT;
         StringBuilder sb = null;
 
         while (i < input.length()) {
             char c = input.charAt(i);
 
             switch (state) {
+                // Initial state
                 case PG_OBJECT_INIT:
 
-                    if (c == open)
+                    // Consume the opening bracket
+                    if (c == open) {
                         state = PG_OBJECT_BEFORE_VALUE;
+                    }
 
                     break;
 
+                // Before a new value
                 case PG_OBJECT_BEFORE_VALUE:
                     sb = new StringBuilder();
 
+                    // Consume "empty"
                     if (c == ',') {
                         values.add(null);
                         state = PG_OBJECT_BEFORE_VALUE;
                     }
+
+                    // Consume "empty"
                     else if (c == close) {
                         values.add(null);
                         state = PG_OBJECT_END;
                     }
+
+                    // Consume the opening quote
                     else if (c == '"') {
                         state = PG_OBJECT_QUOTED_VALUE;
                     }
@@ -379,12 +380,7 @@ public class PostgresUtils {
                         state = PG_OBJECT_AFTER_VALUE;
                     }
 
-                    // [#252] Consume nested array
-                    else if (c == open) {
-                        sb.append(c);
-                        state = PG_OBJECT_NESTED_VALUE;
-                        nestLevel++;
-                    }
+                    // Consume a character
                     else {
                         sb.append(c);
                         state = PG_OBJECT_UNQUOTED_VALUE;
@@ -392,17 +388,26 @@ public class PostgresUtils {
 
                     break;
 
+                // A "value" is being created
                 case PG_OBJECT_QUOTED_VALUE:
+
+                    // Consume a quote
                     if (c == '"') {
+
+                        // Consume an escaped quote
                         if (input.charAt(i + 1) == '"') {
                             sb.append(c);
                             i++;
                         }
+
+                        // Consume the closing quote
                         else {
                             values.add(sb.toString());
                             state = PG_OBJECT_AFTER_VALUE;
                         }
                     }
+
+                    // Consume a backslash
                     else if (c == '\\') {
                         char n = input.charAt(i + 1);
 
@@ -413,92 +418,57 @@ public class PostgresUtils {
                         }
 
                         // Consume an "illegal" backslash (?)
-                        else
+                        else {
                             sb.append(c);
-                    }
-                    else
-                        sb.append(c);
-
-                    break;
-
-                case PG_OBJECT_UNQUOTED_VALUE:
-                    if (c == close) {
-                        values.add(sb.toString());
-                        state = PG_OBJECT_END;
-                    }
-                    else if (c == ',') {
-                        values.add(sb.toString());
-                        state = PG_OBJECT_BEFORE_VALUE;
-                    }
-                    else
-                        sb.append(c);
-
-                    break;
-
-                case PG_OBJECT_NESTED_VALUE:
-                    if (c == close) {
-                        nestLevel--;
-                        sb.append(c);
-
-                        if (nestLevel == 0) {
-                            values.add(sb.toString());
-                            state = PG_OBJECT_AFTER_VALUE;
                         }
                     }
-                    else if (c == open) {
-                        nestLevel++;
-                        sb.append(c);
-                    }
-                    else if (c == '"') {
-                        state = PG_OBJECT_NESTED_QUOTED_VALUE;
-                        sb.append(c);
-                    }
+
+                    // Consume any other character
                     else {
                         sb.append(c);
                     }
 
                     break;
 
-                case PG_OBJECT_NESTED_QUOTED_VALUE:
-                    if (c == '"') {
-                        if (input.charAt(i + 1) == '"') {
-                            sb.append(c);
-                            sb.append(c);
-                            i++;
-                        }
-                        else {
-                            sb.append(c);
-                            state = PG_OBJECT_NESTED_VALUE;
-                        }
-                    }
-                    else if (c == '\\') {
-                        char n = input.charAt(i + 1);
+                // A value is being created
+                case PG_OBJECT_UNQUOTED_VALUE:
 
-                        // [#10467] Consume an escaped backslash or quote
-                        if (n == '\\' || n == '"') {
-                            sb.append(c);
-                            sb.append(n);
-                            i++;
-                        }
-
-                        // Consume an "illegal" backslash (?)
-                        else
-                            sb.append(c);
+                    // Consume the closing bracket
+                    if (c == close) {
+                        values.add(sb.toString());
+                        state = PG_OBJECT_END;
                     }
-                    else
+
+                    // Consume the value separator
+                    else if (c == ',') {
+                        values.add(sb.toString());
+                        state = PG_OBJECT_BEFORE_VALUE;
+                    }
+
+                    // Consume any other character
+                    else {
                         sb.append(c);
+                    }
 
                     break;
 
+                // A value was just added
                 case PG_OBJECT_AFTER_VALUE:
-                    if (c == close)
+
+                    // Consume the closing bracket
+                    if (c == close) {
                         state = PG_OBJECT_END;
-                    else if (c == ',')
+                    }
+
+                    // Consume the value separator
+                    else if (c == ',') {
                         state = PG_OBJECT_BEFORE_VALUE;
+                    }
 
                     break;
             }
 
+            // Consume next character
             i++;
         }
 
@@ -509,10 +479,7 @@ public class PostgresUtils {
      * Create a Postgres string representation of an array
      */
     public static String toPGArrayString(Object[] value) {
-        return toPGArrayString0(value, new StringBuilder()).toString();
-    }
-
-    private static StringBuilder toPGArrayString0(Object[] value, StringBuilder sb) {
+        StringBuilder sb = new StringBuilder();
         sb.append("{");
 
         String separator = "";
@@ -522,23 +489,8 @@ public class PostgresUtils {
             // [#753] null must be set as a literal
             if (o == null)
                 sb.append(o);
-
-            // [#6359] Avoid quotes for numbers
-            else if (o instanceof Number)
-                sb.append(toPGString(o));
-
             else if (o instanceof byte[])
-                toPGString0((byte[]) o, sb);
-
-            // [#252] Multi dimensional array support
-            else if (o instanceof Object[] a) {
-
-                // [#252] In PostgreSQL "maths" ∅ = {∅}...
-                if (isDeepEmpty(a))
-                    ;
-                else
-                    toPGArrayString0(a, sb);
-            }
+                sb.append(toPGString((byte[]) o));
             else
                 sb.append("\"")
                   .append(StringUtils.replace(StringUtils.replace(toPGString(o), "\\", "\\\\"), "\"", "\\\""))
@@ -548,32 +500,21 @@ public class PostgresUtils {
         }
 
         sb.append("}");
-        return sb;
-    }
-
-    private static boolean isDeepEmpty(Object[] a) {
-        if (a.length == 0)
-            return true;
-        else if (a.length == 1 && a[0] instanceof Object[] b)
-            return isDeepEmpty(b);
-        else
-            return false;
+        return sb.toString();
     }
 
     /**
      * Create a PostgreSQL string representation of any object.
      */
     public static String toPGString(Object o) {
-        if (o instanceof byte[] a)
-            return toPGString(a);
-        else if (o instanceof Object[] a)
-            return toPGArrayString(a);
-        else if (o instanceof Record r)
-            return toPGString(r);
-        else if (o instanceof EnumType e)
-            return e.getLiteral();
-        else if (o instanceof Data d)
-            return d.data();
+        if (o instanceof byte[])
+            return toPGString((byte[]) o);
+        else if (o instanceof Object[])
+            return toPGArrayString((Object[]) o);
+        else if (o instanceof Record)
+            return toPGString((Record) o);
+        else if (o instanceof EnumType)
+            return ((EnumType) o).getLiteral();
         else
             return "" + o;
     }
@@ -582,22 +523,19 @@ public class PostgresUtils {
      * Create a PostgreSQL string representation of a record.
      */
     public static String toPGString(Record r) {
-        return toPGString0(r, new StringBuilder()).toString();
-    }
-
-    private static StringBuilder toPGString0(Record r, StringBuilder sb) {
+        StringBuilder sb = new StringBuilder();
         sb.append("(");
 
         String separator = "";
         for (int i = 0; i < r.size(); i++) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            Object a = ((ContextConverter) r.field(i).getConverter()).to(r.get(i), converterContext());
+            Object a = ((Converter) r.field(i).getConverter()).to(r.get(i));
             sb.append(separator);
 
             // [#753] null must not be set as a literal
             if (a != null) {
                 if (a instanceof byte[])
-                    toPGString0((byte[]) a, sb);
+                    sb.append(toPGString((byte[]) a));
                 else
                     sb.append("\"")
                       .append(StringUtils.replace(StringUtils.replace(toPGString(a), "\\", "\\\\"), "\"", "\\\""))
@@ -608,17 +546,15 @@ public class PostgresUtils {
         }
 
         sb.append(")");
-        return sb;
+        return sb.toString();
     }
 
     /**
      * Create a PostgreSQL string representation of a binary.
      */
     public static String toPGString(byte[] binary) {
-        return toPGString0(binary, new StringBuilder()).toString();
-    }
+        StringBuilder sb = new StringBuilder();
 
-    private static StringBuilder toPGString0(byte[] binary, StringBuilder sb) {
         for (byte b : binary) {
 
             // [#3924] Beware of signed vs unsigned bytes!
@@ -626,6 +562,6 @@ public class PostgresUtils {
             sb.append(leftPad(toOctalString(b & 0x000000ff), 3, '0'));
         }
 
-        return sb;
+        return sb.toString();
     }
 }

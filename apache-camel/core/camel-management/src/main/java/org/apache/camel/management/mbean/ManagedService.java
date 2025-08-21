@@ -68,8 +68,8 @@ public class ManagedService implements ManagedInstance, ManagedServiceMBean {
     @Override
     public String getState() {
         // must use String type to be sure remote JMX can read the attribute without requiring Camel classes.
-        if (service instanceof StatefulService statefulService) {
-            ServiceStatus status = statefulService.getStatus();
+        if (service instanceof StatefulService) {
+            ServiceStatus status = ((StatefulService) service).getStatus();
             return status.name();
         }
 
@@ -126,7 +126,8 @@ public class ManagedService implements ManagedInstance, ManagedServiceMBean {
 
     @Override
     public boolean isSuspended() {
-        if (service instanceof SuspendableService ss) {
+        if (service instanceof SuspendableService) {
+            SuspendableService ss = (SuspendableService) service;
             return ss.isSuspended();
         } else {
             return false;
@@ -138,7 +139,8 @@ public class ManagedService implements ManagedInstance, ManagedServiceMBean {
         if (!context.getStatus().isStarted()) {
             throw new IllegalArgumentException("CamelContext is not started");
         }
-        if (service instanceof Suspendable && service instanceof SuspendableService ss) {
+        if (service instanceof Suspendable && service instanceof SuspendableService) {
+            SuspendableService ss = (SuspendableService) service;
             ss.suspend();
         } else {
             throw new UnsupportedOperationException("suspend() is not a supported operation");
@@ -150,7 +152,8 @@ public class ManagedService implements ManagedInstance, ManagedServiceMBean {
         if (!context.getStatus().isStarted()) {
             throw new IllegalArgumentException("CamelContext is not started");
         }
-        if (service instanceof SuspendableService ss) {
+        if (service instanceof SuspendableService) {
+            SuspendableService ss = (SuspendableService) service;
             ss.resume();
         } else {
             throw new UnsupportedOperationException("resume() is not a supported operation");

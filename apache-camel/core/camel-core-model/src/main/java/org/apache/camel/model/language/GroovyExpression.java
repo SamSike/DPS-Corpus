@@ -34,21 +34,12 @@ public class GroovyExpression extends TypedExpressionDefinition {
     public GroovyExpression() {
     }
 
-    protected GroovyExpression(GroovyExpression source) {
-        super(source);
-    }
-
     public GroovyExpression(String expression) {
         super(expression);
     }
 
     private GroovyExpression(Builder builder) {
         super(builder);
-    }
-
-    @Override
-    public GroovyExpression copyDefinition() {
-        return new GroovyExpression(this);
     }
 
     @Override

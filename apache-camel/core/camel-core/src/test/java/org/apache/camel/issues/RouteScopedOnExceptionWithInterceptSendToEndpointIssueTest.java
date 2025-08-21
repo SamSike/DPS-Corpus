@@ -28,7 +28,7 @@ import org.apache.camel.model.RouteDefinition;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Based on user forum issue
@@ -40,7 +40,7 @@ public class RouteScopedOnExceptionWithInterceptSendToEndpointIssueTest extends 
         RouteDefinition route = context.getRouteDefinitions().get(0);
         AdviceWith.adviceWith(route, context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 interceptSendToEndpoint("seda:*").skipSendToOriginalEndpoint().throwException(new ConnectException("Forced"));
             }
         });
@@ -50,21 +50,22 @@ public class RouteScopedOnExceptionWithInterceptSendToEndpointIssueTest extends 
         // we fail all redeliveries so after that we send to mock:exhausted
         getMockEndpoint("mock:exhausted").expectedMessageCount(1);
 
-        CamelExecutionException e = assertThrows(CamelExecutionException.class,
-                () -> template.sendBody("direct:start", "Hello World"),
-                "Should thrown an exception");
-
-        ConnectException cause = assertIsInstanceOf(ConnectException.class, e.getCause());
-        assertEquals("Forced", cause.getMessage());
+        try {
+            template.sendBody("direct:start", "Hello World");
+            fail("Should thrown an exception");
+        } catch (CamelExecutionException e) {
+            ConnectException cause = assertIsInstanceOf(ConnectException.class, e.getCause());
+            assertEquals("Forced", cause.getMessage());
+        }
 
         assertMockEndpointsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:global").maximumRedeliveries(2).redeliveryDelay(5000));
 
                 from("direct:start")

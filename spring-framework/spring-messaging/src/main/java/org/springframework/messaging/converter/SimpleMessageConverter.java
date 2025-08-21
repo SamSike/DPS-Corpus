@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.messaging.converter;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
@@ -37,7 +36,8 @@ import org.springframework.util.ClassUtils;
 public class SimpleMessageConverter implements MessageConverter {
 
 	@Override
-	public @Nullable Object fromMessage(Message<?> message, Class<?> targetClass) {
+	@Nullable
+	public Object fromMessage(Message<?> message, Class<?> targetClass) {
 		Object payload = message.getPayload();
 		return (ClassUtils.isAssignableValue(targetClass, payload) ? payload : null);
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,11 @@ package org.springframework.transaction.interceptor;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.StringValueResolver;
 
@@ -39,17 +38,20 @@ import org.springframework.util.StringValueResolver;
 @SuppressWarnings("serial")
 public class DefaultTransactionAttribute extends DefaultTransactionDefinition implements TransactionAttribute {
 
-	private @Nullable String descriptor;
+	@Nullable
+	private String descriptor;
 
-	private @Nullable String timeoutString;
+	@Nullable
+	private String timeoutString;
 
-	private @Nullable String qualifier;
+	@Nullable
+	private String qualifier;
 
 	private Collection<String> labels = Collections.emptyList();
 
 
 	/**
-	 * Create a new {@code DefaultTransactionAttribute} with default settings.
+	 * Create a new DefaultTransactionAttribute, with default settings.
 	 * Can be modified through bean property setters.
 	 * @see #setPropagationBehavior
 	 * @see #setIsolationLevel
@@ -58,6 +60,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * @see #setName
 	 */
 	public DefaultTransactionAttribute() {
+		super();
 	}
 
 	/**
@@ -73,7 +76,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	}
 
 	/**
-	 * Create a new {@code DefaultTransactionAttribute} with the given
+	 * Create a new DefaultTransactionAttribute with the given
 	 * propagation behavior. Can be modified through bean property setters.
 	 * @param propagationBehavior one of the propagation constants in the
 	 * TransactionDefinition interface
@@ -88,7 +91,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 
 	/**
 	 * Set a descriptor for this transaction attribute,
-	 * for example, indicating where the attribute is applying.
+	 * e.g. indicating where the attribute is applying.
 	 * @since 4.3.4
 	 */
 	public void setDescriptor(@Nullable String descriptor) {
@@ -100,7 +103,8 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * or {@code null} if none.
 	 * @since 4.3.4
 	 */
-	public @Nullable String getDescriptor() {
+	@Nullable
+	public String getDescriptor() {
 		return this.descriptor;
 	}
 
@@ -122,7 +126,8 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * @see #getTimeout
 	 * @see #resolveAttributeStrings
 	 */
-	public @Nullable String getTimeoutString() {
+	@Nullable
+	public String getTimeoutString() {
 		return this.timeoutString;
 	}
 
@@ -142,7 +147,8 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 	 * @since 3.0
 	 */
 	@Override
-	public @Nullable String getQualifier() {
+	@Nullable
+	public String getQualifier() {
 		return this.qualifier;
 	}
 
@@ -164,7 +170,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 
 	/**
 	 * The default behavior is as with EJB: rollback on unchecked exception
-	 * ({@link RuntimeException}), assuming an unexpected outcome outside any
+	 * ({@link RuntimeException}), assuming an unexpected outcome outside of any
 	 * business rules. Additionally, we also attempt to rollback on {@link Error} which
 	 * is clearly an unexpected outcome as well. By contrast, a checked exception is
 	 * considered a business exception and therefore a regular expected outcome of the
@@ -201,7 +207,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 				}
 				catch (RuntimeException ex) {
 					throw new IllegalArgumentException(
-							"Invalid timeoutString value \"" + timeoutString + "\"; " + ex);
+							"Invalid timeoutString value \"" + timeoutString + "\" - cannot parse into int");
 				}
 			}
 		}
@@ -210,7 +216,7 @@ public class DefaultTransactionAttribute extends DefaultTransactionDefinition im
 			if (this.qualifier != null) {
 				this.qualifier = resolver.resolveStringValue(this.qualifier);
 			}
-			Set<String> resolvedLabels = CollectionUtils.newLinkedHashSet(this.labels.size());
+			Set<String> resolvedLabels = new LinkedHashSet<>(this.labels.size());
 			for (String label : this.labels) {
 				resolvedLabels.add(resolver.resolveStringValue(label));
 			}

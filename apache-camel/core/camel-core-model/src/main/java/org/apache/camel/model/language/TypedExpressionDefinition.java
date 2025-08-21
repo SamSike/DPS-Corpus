@@ -34,12 +34,6 @@ public abstract class TypedExpressionDefinition extends ExpressionDefinition {
     protected TypedExpressionDefinition() {
     }
 
-    protected TypedExpressionDefinition(TypedExpressionDefinition source) {
-        super(source);
-        this.resultTypeName = source.resultTypeName;
-        this.resultType = source.resultType;
-    }
-
     protected TypedExpressionDefinition(String expression) {
         super(expression);
     }

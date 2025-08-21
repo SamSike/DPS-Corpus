@@ -38,20 +38,19 @@ public class CamelJmxConsumerObserveAttributeMatchStringTest extends CamelTestSu
         getMockEndpoint("mock:result").message(0).body().contains("<attributeName>Tracing</attributeName>");
 
         // change the attribute so JMX triggers but should be filtered
-        ManagedRouteMBean mr
-                = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class).getManagedRoute("foo");
+        ManagedRouteMBean mr = context.getExtension(ManagedCamelContext.class).getManagedRoute("foo");
         mr.setStatisticsEnabled(true);
 
         // change the attribute so JMX triggers
-        mr = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class).getManagedRoute("foo");
+        mr = context.getExtension(ManagedCamelContext.class).getManagedRoute("foo");
         mr.setTracing(true);
 
         // change the attribute so JMX triggers
-        mr = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class).getManagedRoute("foo");
+        mr = context.getExtension(ManagedCamelContext.class).getManagedRoute("foo");
         mr.setTracing(false);
 
         // change the attribute so JMX triggers
-        mr = context.getCamelContextExtension().getContextPlugin(ManagedCamelContext.class).getManagedRoute("foo");
+        mr = context.getExtension(ManagedCamelContext.class).getManagedRoute("foo");
         mr.setTracing(true);
 
         MockEndpoint.assertIsSatisfied(context);
@@ -66,8 +65,8 @@ public class CamelJmxConsumerObserveAttributeMatchStringTest extends CamelTestSu
 
                 fromF("jmx:platform?objectDomain=org.apache.camel&key.context=%s&key.type=routes&key.name=\"foo\"&observedAttribute=Tracing&stringToCompare=false",
                         id).routeId("jmxRoute")
-                        .to("log:jmx")
-                        .to("mock:result");
+                                .to("log:jmx")
+                                .to("mock:result");
 
                 from("direct:foo").routeId("foo").to("log:foo", "mock:foo");
             }

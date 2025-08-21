@@ -36,13 +36,6 @@ class ReplaceBeanTest extends CamelMainTestSupport {
     String name;
 
     @Override
-    protected void postProcessTest() throws Exception {
-        super.postProcessTest();
-
-        bindToRegistryAfterInjections(context.getRegistry());
-    }
-
-    @Override
     protected void configure(MainConfigurationProperties configuration) {
         // Add the configuration class
         configuration.addConfiguration(MyConfiguration.class);

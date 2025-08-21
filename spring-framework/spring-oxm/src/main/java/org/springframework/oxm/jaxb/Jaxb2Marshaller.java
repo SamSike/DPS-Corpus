@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -31,22 +32,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.XMLConstants;
 import javax.xml.datatype.Duration;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLStreamReader;
@@ -77,7 +72,6 @@ import jakarta.xml.bind.attachment.AttachmentMarshaller;
 import jakarta.xml.bind.attachment.AttachmentUnmarshaller;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 import org.w3c.dom.ls.LSResourceResolver;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -88,6 +82,7 @@ import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
 import org.springframework.oxm.GenericMarshaller;
 import org.springframework.oxm.GenericUnmarshaller;
 import org.springframework.oxm.MarshallingFailureException;
@@ -103,7 +98,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.xml.StaxUtils;
 
@@ -117,7 +111,6 @@ import org.springframework.util.xml.StaxUtils;
  * @author Arjen Poutsma
  * @author Juergen Hoeller
  * @author Rossen Stoyanchev
- * @author Sam Brannen
  * @since 3.0
  * @see #setContextPath
  * @see #setClassesToBeBound
@@ -142,31 +135,43 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 	/** Logger available to subclasses. */
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	private @Nullable String contextPath;
+	@Nullable
+	private String contextPath;
 
-	private Class<?> @Nullable [] classesToBeBound;
+	@Nullable
+	private Class<?>[] classesToBeBound;
 
-	private String @Nullable [] packagesToScan;
+	@Nullable
+	private String[] packagesToScan;
 
-	private @Nullable Map<String, ?> jaxbContextProperties;
+	@Nullable
+	private Map<String, ?> jaxbContextProperties;
 
-	private @Nullable Map<String, ?> marshallerProperties;
+	@Nullable
+	private Map<String, ?> marshallerProperties;
 
-	private @Nullable Map<String, ?> unmarshallerProperties;
+	@Nullable
+	private Map<String, ?> unmarshallerProperties;
 
-	private Marshaller.@Nullable Listener marshallerListener;
+	@Nullable
+	private Marshaller.Listener marshallerListener;
 
-	private Unmarshaller.@Nullable Listener unmarshallerListener;
+	@Nullable
+	private Unmarshaller.Listener unmarshallerListener;
 
-	private @Nullable ValidationEventHandler validationEventHandler;
+	@Nullable
+	private ValidationEventHandler validationEventHandler;
 
-	private XmlAdapter<?, ?> @Nullable [] adapters;
+	@Nullable
+	private XmlAdapter<?, ?>[] adapters;
 
-	private Resource @Nullable [] schemaResources;
+	@Nullable
+	private Resource[] schemaResources;
 
 	private String schemaLanguage = XMLConstants.W3C_XML_SCHEMA_NS_URI;
 
-	private @Nullable LSResourceResolver schemaResourceResolver;
+	@Nullable
+	private LSResourceResolver schemaResourceResolver;
 
 	private boolean lazyInit = false;
 
@@ -176,23 +181,23 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 
 	private boolean checkForXmlRootElement = true;
 
-	private @Nullable Class<?> mappedClass;
+	@Nullable
+	private Class<?> mappedClass;
 
-	private @Nullable ClassLoader beanClassLoader;
+	@Nullable
+	private ClassLoader beanClassLoader;
 
-	private final Lock jaxbContextLock = new ReentrantLock();
+	private final Object jaxbContextMonitor = new Object();
 
-	private volatile @Nullable JAXBContext jaxbContext;
+	@Nullable
+	private volatile JAXBContext jaxbContext;
 
-	private @Nullable Schema schema;
+	@Nullable
+	private Schema schema;
 
 	private boolean supportDtd = false;
 
 	private boolean processExternalEntities = false;
-
-	private volatile @Nullable SAXParserFactory schemaParserFactory;
-
-	private volatile @Nullable SAXParserFactory sourceParserFactory;
 
 
 	/**
@@ -216,7 +221,8 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 	/**
 	 * Return the JAXB context path.
 	 */
-	public @Nullable String getContextPath() {
+	@Nullable
+	public String getContextPath() {
 		return this.contextPath;
 	}
 
@@ -225,14 +231,15 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 	 * <p>Setting either this property, {@link #setContextPath "contextPath"}
 	 * or {@link #setPackagesToScan "packagesToScan"} is required.
 	 */
-	public void setClassesToBeBound(Class<?> @Nullable ... classesToBeBound) {
+	public void setClassesToBeBound(@Nullable Class<?>... classesToBeBound) {
 		this.classesToBeBound = classesToBeBound;
 	}
 
 	/**
 	 * Return the list of Java classes to be recognized by a newly created JAXBContext.
 	 */
-	public Class<?> @Nullable [] getClassesToBeBound() {
+	@Nullable
+	public Class<?>[] getClassesToBeBound() {
 		return this.classesToBeBound;
 	}
 
@@ -243,14 +250,15 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 	 * <p>Setting either this property, {@link #setContextPath "contextPath"} or
 	 * {@link #setClassesToBeBound "classesToBeBound"} is required.
 	 */
-	public void setPackagesToScan(String @Nullable ... packagesToScan) {
+	public void setPackagesToScan(@Nullable String... packagesToScan) {
 		this.packagesToScan = packagesToScan;
 	}
 
 	/**
 	 * Return the packages to search for JAXB2 annotations.
 	 */
-	public String @Nullable [] getPackagesToScan() {
+	@Nullable
+	public String[] getPackagesToScan() {
 		return this.packagesToScan;
 	}
 
@@ -413,7 +421,6 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 	 */
 	public void setSupportDtd(boolean supportDtd) {
 		this.supportDtd = supportDtd;
-		this.sourceParserFactory = null;
 	}
 
 	/**
@@ -438,7 +445,6 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 		if (processExternalEntities) {
 			this.supportDtd = true;
 		}
-		this.sourceParserFactory = null;
 	}
 
 	/**
@@ -486,9 +492,7 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 		if (context != null) {
 			return context;
 		}
-
-		this.jaxbContextLock.lock();
-		try {
+		synchronized (this.jaxbContextMonitor) {
 			context = this.jaxbContext;
 			if (context == null) {
 				try {
@@ -511,9 +515,6 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 				}
 			}
 			return context;
-		}
-		finally {
-			this.jaxbContextLock.unlock();
 		}
 	}
 
@@ -573,7 +574,8 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 		}
 	}
 
-	private Schema loadSchema(Resource[] resources, String schemaLanguage) throws IOException, SAXException, ParserConfigurationException {
+	@SuppressWarnings("deprecation")
+	private Schema loadSchema(Resource[] resources, String schemaLanguage) throws IOException, SAXException {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Setting validation schema to " +
 					StringUtils.arrayToCommaDelimitedString(this.schemaResources));
@@ -581,27 +583,14 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 		Assert.notEmpty(resources, "No resources given");
 		Assert.hasLength(schemaLanguage, "No schema language provided");
 		Source[] schemaSources = new Source[resources.length];
-
-		// This parser is used to read the schema resources provided by the application.
-		// The parser used for reading the source is protected against XXE attacks.
-		// See "processSource(Source source)".
-		SAXParserFactory saxParserFactory = this.schemaParserFactory;
-		if (saxParserFactory == null) {
-			saxParserFactory = SAXParserFactory.newInstance();
-			saxParserFactory.setNamespaceAware(true);
-			saxParserFactory.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
-			this.schemaParserFactory = saxParserFactory;
-		}
-		SAXParser saxParser = saxParserFactory.newSAXParser();
-		XMLReader xmlReader = saxParser.getXMLReader();
-
+		XMLReader xmlReader = org.xml.sax.helpers.XMLReaderFactory.createXMLReader();
+		xmlReader.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
 		for (int i = 0; i < resources.length; i++) {
 			Resource resource = resources[i];
 			Assert.isTrue(resource != null && resource.exists(), () -> "Resource does not exist: " + resource);
 			InputSource inputSource = SaxResourceUtils.createInputSource(resource);
 			schemaSources[i] = new SAXSource(xmlReader, inputSource);
 		}
-
 		SchemaFactory schemaFactory = SchemaFactory.newInstance(schemaLanguage);
 		if (this.schemaResourceResolver != null) {
 			schemaFactory.setResourceResolver(this.schemaResourceResolver);
@@ -618,21 +607,25 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 
 	@Override
 	public boolean supports(Type genericType) {
-		if (genericType instanceof ParameterizedType parameterizedType) {
+		if (genericType instanceof ParameterizedType) {
+			ParameterizedType parameterizedType = (ParameterizedType) genericType;
 			if (JAXBElement.class == parameterizedType.getRawType() &&
 					parameterizedType.getActualTypeArguments().length == 1) {
 				Type typeArgument = parameterizedType.getActualTypeArguments()[0];
-				if (typeArgument instanceof Class<?> classArgument) {
-					return ((byte.class == classArgument.componentType()) ||
+				if (typeArgument instanceof Class) {
+					Class<?> classArgument = (Class<?>) typeArgument;
+					return ((classArgument.isArray() && Byte.TYPE == classArgument.getComponentType()) ||
 							isPrimitiveWrapper(classArgument) || isStandardClass(classArgument) ||
 							supportsInternal(classArgument, false));
 				}
-				else if (typeArgument instanceof GenericArrayType arrayType) {
-					return (byte.class == arrayType.getGenericComponentType());
+				else if (typeArgument instanceof GenericArrayType) {
+					GenericArrayType arrayType = (GenericArrayType) typeArgument;
+					return (Byte.TYPE == arrayType.getGenericComponentType());
 				}
 			}
 		}
-		else if (genericType instanceof Class<?> clazz) {
+		else if (genericType instanceof Class) {
+			Class<?> clazz = (Class<?>) genericType;
 			return supportsInternal(clazz, this.checkForXmlRootElement);
 		}
 		return false;
@@ -864,6 +857,7 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	private Source processSource(Source source) {
 		if (StaxUtils.isStaxSource(source) || source instanceof DOMSource) {
 			return source;
@@ -872,11 +866,13 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 		XMLReader xmlReader = null;
 		InputSource inputSource = null;
 
-		if (source instanceof SAXSource saxSource) {
+		if (source instanceof SAXSource) {
+			SAXSource saxSource = (SAXSource) source;
 			xmlReader = saxSource.getXMLReader();
 			inputSource = saxSource.getInputSource();
 		}
-		else if (source instanceof StreamSource streamSource) {
+		else if (source instanceof StreamSource) {
+			StreamSource streamSource = (StreamSource) source;
 			if (streamSource.getInputStream() != null) {
 				inputSource = new InputSource(streamSource.getInputStream());
 			}
@@ -889,28 +885,18 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 		}
 
 		try {
-			// By default, Spring will prevent the processing of external entities.
-			// This is a mitigation against XXE attacks.
 			if (xmlReader == null) {
-				SAXParserFactory saxParserFactory = this.sourceParserFactory;
-				if (saxParserFactory == null) {
-					saxParserFactory = SAXParserFactory.newInstance();
-					saxParserFactory.setNamespaceAware(true);
-					saxParserFactory.setFeature(
-							"http://apache.org/xml/features/disallow-doctype-decl", !isSupportDtd());
-					saxParserFactory.setFeature(
-							"http://xml.org/sax/features/external-general-entities", isProcessExternalEntities());
-					this.sourceParserFactory = saxParserFactory;
-				}
-				SAXParser saxParser = saxParserFactory.newSAXParser();
-				xmlReader = saxParser.getXMLReader();
+				xmlReader = org.xml.sax.helpers.XMLReaderFactory.createXMLReader();
 			}
+			xmlReader.setFeature("http://apache.org/xml/features/disallow-doctype-decl", !isSupportDtd());
+			String name = "http://xml.org/sax/features/external-general-entities";
+			xmlReader.setFeature(name, isProcessExternalEntities());
 			if (!isProcessExternalEntities()) {
 				xmlReader.setEntityResolver(NO_OP_ENTITY_RESOLVER);
 			}
 			return new SAXSource(xmlReader, inputSource);
 		}
-		catch (SAXException | ParserConfigurationException ex) {
+		catch (SAXException ex) {
 			logger.info("Processing of external entities could not be disabled", ex);
 			return source;
 		}
@@ -991,16 +977,22 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 			String host = getHost(elementNamespace, dataHandler);
 			String contentId = UUID.randomUUID() + "@" + host;
 			this.mimeContainer.addAttachment("<" + contentId + ">", dataHandler);
-			contentId = URLEncoder.encode(contentId, StandardCharsets.UTF_8);
+			try {
+				contentId = URLEncoder.encode(contentId, "UTF-8");
+			}
+			catch (UnsupportedEncodingException ex) {
+				// ignore
+			}
 			return CID + contentId;
 		}
 
 		private String getHost(String elementNamespace, DataHandler dataHandler) {
 			try {
-				URI uri = ResourceUtils.toURI(elementNamespace);
+				URI uri = new URI(elementNamespace);
 				return uri.getHost();
 			}
-			catch (URISyntaxException ignored) {
+			catch (URISyntaxException ex) {
+				// ignore
 			}
 			return dataHandler.getName();
 		}
@@ -1042,7 +1034,12 @@ public class Jaxb2Marshaller implements MimeMarshaller, MimeUnmarshaller, Generi
 		public DataHandler getAttachmentAsDataHandler(String contentId) {
 			if (contentId.startsWith(CID)) {
 				contentId = contentId.substring(CID.length());
-				contentId = URLDecoder.decode(contentId, StandardCharsets.UTF_8);
+				try {
+					contentId = URLDecoder.decode(contentId, "UTF-8");
+				}
+				catch (UnsupportedEncodingException ex) {
+					// ignore
+				}
 				contentId = '<' + contentId + '>';
 			}
 			DataHandler dataHandler = this.mimeContainer.getAttachment(contentId);

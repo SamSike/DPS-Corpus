@@ -26,7 +26,8 @@ import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Unit test to test exception configuration
@@ -69,20 +70,22 @@ public class ExceptionBuilderWithHandledExceptionTest extends ContextTestSupport
         mock.expectedMessageCount(1);
         mock.expectedHeaderReceived(MESSAGE_INFO, "Handled exchange with IOException");
 
-        // expected, failure is not handled because predicate doesn't match
-        Exception ex = assertThrows(RuntimeCamelException.class,
-                () -> template.sendBodyAndHeader("direct:a", "Hello IOE", "foo", "something that does not match"),
-                "Should have thrown a IOException");
-        boolean b = ex.getCause() instanceof IOException;
-        assertTrue(b);
+        try {
+            template.sendBodyAndHeader("direct:a", "Hello IOE", "foo", "something that does not match");
+            fail("Should have thrown a IOException");
+        } catch (RuntimeCamelException e) {
+            boolean b = e.getCause() instanceof IOException;
+            assertTrue(b);
+            // expected, failure is not handled because predicate doesn't match
+        }
 
         MockEndpoint.assertIsSatisfied(result, mock);
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:error").redeliveryDelay(0).maximumRedeliveries(3));
 
                 // START SNIPPET: exceptionBuilder1

@@ -35,8 +35,11 @@ public class JcrNodePathCreationTest extends JcrRouteTestSupport {
 
     private Value[] multiValued;
 
+    @Override
     @BeforeEach
-    public void setupCredentials() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
+
         Session session = openSession();
 
         ValueFactory valFact = session.getValueFactory();

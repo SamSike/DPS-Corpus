@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.jmx.export.metadata;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -28,11 +27,14 @@ import org.springframework.util.StringUtils;
  */
 public class ManagedNotification {
 
-	private String @Nullable [] notificationTypes;
+	@Nullable
+	private String[] notificationTypes;
 
-	private @Nullable String name;
+	@Nullable
+	private String name;
 
-	private @Nullable String description;
+	@Nullable
+	private String description;
 
 
 	/**
@@ -46,14 +48,15 @@ public class ManagedNotification {
 	/**
 	 * Set a list of notification types.
 	 */
-	public void setNotificationTypes(String @Nullable ... notificationTypes) {
+	public void setNotificationTypes(@Nullable String... notificationTypes) {
 		this.notificationTypes = notificationTypes;
 	}
 
 	/**
 	 * Return the list of notification types.
 	 */
-	public String @Nullable [] getNotificationTypes() {
+	@Nullable
+	public String[] getNotificationTypes() {
 		return this.notificationTypes;
 	}
 
@@ -67,7 +70,8 @@ public class ManagedNotification {
 	/**
 	 * Return the name of this notification.
 	 */
-	public @Nullable String getName() {
+	@Nullable
+	public String getName() {
 		return this.name;
 	}
 
@@ -81,7 +85,8 @@ public class ManagedNotification {
 	/**
 	 * Return a description for this notification.
 	 */
-	public @Nullable String getDescription() {
+	@Nullable
+	public String getDescription() {
 		return this.description;
 	}
 

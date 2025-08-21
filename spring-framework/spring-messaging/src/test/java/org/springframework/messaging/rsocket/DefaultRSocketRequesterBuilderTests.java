@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,13 +60,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 /**
- * Tests for {@link DefaultRSocketRequesterBuilder}.
+ * Unit tests for {@link DefaultRSocketRequesterBuilder}.
  *
  * @author Brian Clozel
  */
-class DefaultRSocketRequesterBuilderTests {
+public class DefaultRSocketRequesterBuilderTests {
 
-	private ClientTransport transport = mock();
+	private ClientTransport transport;
 
 	private final MockConnection connection = new MockConnection();
 
@@ -74,15 +74,17 @@ class DefaultRSocketRequesterBuilderTests {
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
+		this.transport = mock(ClientTransport.class);
 		given(this.transport.connect()).willReturn(Mono.just(this.connection));
 		given(this.transport.maxFrameLength()).willReturn(16777215);
 	}
 
 
 	@Test
-	void rsocketConnectorConfigurer() {
-		Consumer<RSocketStrategies.Builder> strategiesConfigurer = mock();
+	@SuppressWarnings("unchecked")
+	public void rsocketConnectorConfigurer() {
+		Consumer<RSocketStrategies.Builder> strategiesConfigurer = mock(Consumer.class);
 		RSocketRequester.builder()
 				.rsocketConnector(this.connectorConfigurer)
 				.rsocketStrategies(strategiesConfigurer)
@@ -95,7 +97,7 @@ class DefaultRSocketRequesterBuilderTests {
 	}
 
 	@Test
-	void defaultDataMimeType() {
+	public void defaultDataMimeType() {
 		RSocketRequester requester = RSocketRequester.builder().transport(this.transport);
 
 		assertThat(requester.dataMimeType())
@@ -104,7 +106,7 @@ class DefaultRSocketRequesterBuilderTests {
 	}
 
 	@Test
-	void defaultDataMimeTypeWithCustomDecoderRegistered() {
+	public void defaultDataMimeTypeWithCustomDecoderRegistered() {
 		RSocketStrategies strategies = RSocketStrategies.builder()
 				.decoder(new TestJsonDecoder(MimeTypeUtils.APPLICATION_JSON))
 				.build();
@@ -119,7 +121,7 @@ class DefaultRSocketRequesterBuilderTests {
 	}
 
 	@Test
-	void dataMimeTypeExplicitlySet() {
+	public void dataMimeTypeExplicitlySet() {
 		RSocketRequester requester = RSocketRequester.builder()
 				.dataMimeType(MimeTypeUtils.APPLICATION_JSON)
 				.transport(this.transport);
@@ -131,7 +133,7 @@ class DefaultRSocketRequesterBuilderTests {
 	}
 
 	@Test
-	void mimeTypesCannotBeChangedAtRSocketConnectorLevel() {
+	public void mimeTypesCannotBeChangedAtRSocketConnectorLevel() {
 		MimeType dataMimeType = MimeTypeUtils.APPLICATION_JSON;
 		MimeType metaMimeType = MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_ROUTING.getString());
 
@@ -153,7 +155,7 @@ class DefaultRSocketRequesterBuilderTests {
 	}
 
 	@Test
-	void setupRoute() {
+	public void setupRoute() {
 		RSocketRequester requester = RSocketRequester.builder()
 				.dataMimeType(MimeTypeUtils.TEXT_PLAIN)
 				.metadataMimeType(MimeTypeUtils.TEXT_PLAIN)
@@ -168,7 +170,7 @@ class DefaultRSocketRequesterBuilderTests {
 	}
 
 	@Test
-	void setupWithAsyncValues() {
+	public void setupWithAsyncValues() {
 
 		Mono<String> asyncMeta1 = Mono.delay(Duration.ofMillis(1)).map(aLong -> "Async Metadata 1");
 		Mono<String> asyncMeta2 = Mono.delay(Duration.ofMillis(1)).map(aLong -> "Async Metadata 2");
@@ -198,7 +200,7 @@ class DefaultRSocketRequesterBuilderTests {
 	}
 
 	@Test
-	void frameDecoderMatchesDataBufferFactory() throws Exception {
+	public void frameDecoderMatchesDataBufferFactory() throws Exception {
 		testPayloadDecoder(new NettyDataBufferFactory(ByteBufAllocator.DEFAULT), PayloadDecoder.ZERO_COPY);
 		testPayloadDecoder(DefaultDataBufferFactory.sharedInstance, PayloadDecoder.DEFAULT);
 	}

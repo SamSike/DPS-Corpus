@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
  * A collection of helper methods for working with {@link Service} objects.
  */
 public final class ServiceHelper {
-
     private static final Logger LOG = LoggerFactory.getLogger(ServiceHelper.class);
 
     /**
@@ -52,10 +51,10 @@ public final class ServiceHelper {
      * Calling this method has no effect if {@code value} is {@code null}.
      */
     public static void buildService(Object value) {
-        if (value instanceof Service service) {
-            service.build();
-        } else if (value instanceof Iterable iterable) {
-            for (Object o : iterable) {
+        if (value instanceof Service) {
+            ((Service) value).build();
+        } else if (value instanceof Iterable) {
+            for (Object o : (Iterable) value) {
                 buildService(o);
             }
         }
@@ -81,10 +80,10 @@ public final class ServiceHelper {
      * Calling this method has no effect if {@code value} is {@code null}.
      */
     public static void initService(Object value) {
-        if (value instanceof Service service) {
-            service.init();
-        } else if (value instanceof Iterable iterable) {
-            for (Object o : iterable) {
+        if (value instanceof Service) {
+            ((Service) value).init();
+        } else if (value instanceof Iterable) {
+            for (Object o : (Iterable) value) {
                 initService(o);
             }
         }
@@ -110,32 +109,10 @@ public final class ServiceHelper {
      * Calling this method has no effect if {@code value} is {@code null}.
      */
     public static void startService(Object value) {
-        if (value instanceof Service service) {
-            startService(service);
-        } else if (value instanceof Iterable iterable) {
-            startService(iterable);
-        }
-    }
-
-    /**
-     * Starts the given {@code value} if it's a {@link Service} or a collection of it.
-     * <p/>
-     * Calling this method has no effect if {@code value} is {@code null}.
-     */
-    public static void startService(Service service) {
-        if (service != null) {
-            service.start();
-        }
-    }
-
-    /**
-     * Starts the given {@code value} if it's a {@link Service} or a collection of it.
-     * <p/>
-     * Calling this method has no effect if {@code value} is {@code null}.
-     */
-    public static void startService(Iterable<?> value) {
-        if (value != null) {
-            for (Object o : value) {
+        if (value instanceof Service) {
+            ((Service) value).start();
+        } else if (value instanceof Iterable) {
+            for (Object o : (Iterable) value) {
                 startService(o);
             }
         }
@@ -144,7 +121,7 @@ public final class ServiceHelper {
     /**
      * Starts each element of the given {@code services} if {@code services} itself is not {@code null}, otherwise this
      * method would return immediately.
-     *
+     * 
      * @see #startService(Object)
      */
     public static void startService(Object... services) {
@@ -161,7 +138,7 @@ public final class ServiceHelper {
      * <p/>
      * If there's any exception being thrown while stopping the elements one after the other this method would rethrow
      * the <b>first</b> such exception being thrown.
-     *
+     * 
      * @see #stopService(Collection)
      */
     public static void stopService(Object... services) {
@@ -176,43 +153,15 @@ public final class ServiceHelper {
      * Stops the given {@code value}, rethrowing the first exception caught.
      * <p/>
      * Calling this method has no effect if {@code value} is {@code null}.
-     *
+     * 
      * @see Service#stop()
      * @see #stopService(Collection)
      */
     public static void stopService(Object value) {
-        if (value instanceof Service service) {
-            stopService(service);
-        } else if (value instanceof Iterable iterable) {
-            stopService(iterable);
-        }
-    }
-
-    /**
-     * Stops the given {@code value}, rethrowing the first exception caught.
-     * <p/>
-     * Calling this method has no effect if {@code value} is {@code null}.
-     *
-     * @see Service#stop()
-     * @see #stopService(Collection)
-     */
-    public static void stopService(Service service) {
-        if (service != null) {
-            service.stop();
-        }
-    }
-
-    /**
-     * Stops the given {@code value}, rethrowing the first exception caught.
-     * <p/>
-     * Calling this method has no effect if {@code value} is {@code null}.
-     *
-     * @see Service#stop()
-     * @see #stopService(Collection)
-     */
-    public static void stopService(Iterable<?> value) {
-        if (value != null) {
-            for (Object o : value) {
+        if (value instanceof Service) {
+            ((Service) value).stop();
+        } else if (value instanceof Iterable) {
+            for (Object o : (Iterable) value) {
                 stopService(o);
             }
         }
@@ -224,7 +173,7 @@ public final class ServiceHelper {
      * <p/>
      * If there's any exception being thrown while stopping the elements one after the other this method would rethrow
      * the <b>first</b> such exception being thrown.
-     *
+     * 
      * @see #stopService(Object)
      */
     public static void stopService(Collection<?> services) {
@@ -255,7 +204,7 @@ public final class ServiceHelper {
      * <p/>
      * If there's any exception being thrown while stopping/shutting down the elements one after the other this method
      * would rethrow the <b>first</b> such exception being thrown.
-     *
+     * 
      * @see #stopAndShutdownServices(Collection)
      */
     public static void stopAndShutdownServices(Object... services) {
@@ -270,7 +219,7 @@ public final class ServiceHelper {
      * Stops and shutdowns the given {@code service}, rethrowing the first exception caught.
      * <p/>
      * Calling this method has no effect if {@code value} is {@code null}.
-     *
+     * 
      * @see #stopService(Object)
      * @see ShutdownableService#shutdown()
      */
@@ -278,25 +227,9 @@ public final class ServiceHelper {
         stopService(value);
 
         // then try to shutdown
-        if (value instanceof ShutdownableService service) {
-            LOG.trace("Shutting down service {}", service);
-            service.shutdown();
-        }
-    }
-
-    /**
-     * Stops and shutdowns the given {@code service}, rethrowing the first exception caught.
-     * <p/>
-     * Calling this method has no effect if {@code value} is {@code null}.
-     *
-     * @see #stopService(Object)
-     * @see ShutdownableService#shutdown()
-     */
-    public static void stopAndShutdownService(ShutdownableService service) {
-        stopService(service);
-
-        if (service != null) {
-            LOG.trace("Shutting down service {}", service);
+        if (value instanceof ShutdownableService) {
+            ShutdownableService service = (ShutdownableService) value;
+            LOG.trace("Shutting down service {}", value);
             service.shutdown();
         }
     }
@@ -307,7 +240,7 @@ public final class ServiceHelper {
      * <p/>
      * If there's any exception being thrown while stopping/shutting down the elements one after the other this method
      * would rethrow the <b>first</b> such exception being thrown.
-     *
+     * 
      * @see #stopService(Object)
      * @see ShutdownableService#shutdown()
      */
@@ -320,7 +253,15 @@ public final class ServiceHelper {
         for (Object value : services) {
 
             try {
-                stopAndShutdownService(value);
+                // must stop it first
+                stopService(value);
+
+                // then try to shutdown
+                if (value instanceof ShutdownableService) {
+                    ShutdownableService service = (ShutdownableService) value;
+                    LOG.trace("Shutting down service: {}", service);
+                    service.shutdown();
+                }
             } catch (RuntimeException e) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Caught exception shutting down service: {}", value, e);
@@ -341,7 +282,7 @@ public final class ServiceHelper {
      * <p/>
      * If there's any exception being thrown while resuming the elements one after the other this method would rethrow
      * the <b>first</b> such exception being thrown.
-     *
+     * 
      * @see #resumeService(Object)
      */
     public static void resumeServices(Collection<?> services) {
@@ -350,7 +291,8 @@ public final class ServiceHelper {
         }
         RuntimeException firstException = null;
         for (Object value : services) {
-            if (value instanceof Service service) {
+            if (value instanceof Service) {
+                Service service = (Service) value;
                 try {
                     resumeService(service);
                 } catch (RuntimeException e) {
@@ -379,7 +321,7 @@ public final class ServiceHelper {
      * {@link org.apache.camel.SuspendableService} then its {@link org.apache.camel.Service#start()} is called.
      * <p/>
      * Calling this method has no effect if {@code service} is {@code null}.
-     *
+     * 
      * @param  service   the service
      * @return           <tt>true</tt> if either <tt>resume</tt> method or {@link #startService(Object)} was called,
      *                   <tt>false</tt> otherwise.
@@ -387,7 +329,8 @@ public final class ServiceHelper {
      * @see              #startService(Object)
      */
     public static boolean resumeService(Object service) {
-        if (service instanceof Suspendable && service instanceof SuspendableService ss) {
+        if (service instanceof Suspendable && service instanceof SuspendableService) {
+            SuspendableService ss = (SuspendableService) service;
             if (ss.isSuspended()) {
                 LOG.debug("Resuming service {}", service);
                 ss.resume();
@@ -407,7 +350,7 @@ public final class ServiceHelper {
      * <p/>
      * If there's any exception being thrown while suspending the elements one after the other this method would rethrow
      * the <b>first</b> such exception being thrown.
-     *
+     * 
      * @see #suspendService(Object)
      */
     public static void suspendServices(Collection<?> services) {
@@ -416,7 +359,8 @@ public final class ServiceHelper {
         }
         RuntimeException firstException = null;
         for (Object value : services) {
-            if (value instanceof Service service) {
+            if (value instanceof Service) {
+                Service service = (Service) value;
                 try {
                     suspendService(service);
                 } catch (RuntimeException e) {
@@ -445,7 +389,7 @@ public final class ServiceHelper {
      * {@link org.apache.camel.SuspendableService} then its {@link org.apache.camel.Service#stop()} is called.
      * <p/>
      * Calling this method has no effect if {@code service} is {@code null}.
-     *
+     * 
      * @param  service   the service
      * @return           <tt>true</tt> if either the <tt>suspend</tt> method or {@link #stopService(Object)} was called,
      *                   <tt>false</tt> otherwise.
@@ -453,7 +397,8 @@ public final class ServiceHelper {
      * @see              #stopService(Object)
      */
     public static boolean suspendService(Object service) {
-        if (service instanceof Suspendable && service instanceof SuspendableService ss) {
+        if (service instanceof Suspendable && service instanceof SuspendableService) {
+            SuspendableService ss = (SuspendableService) service;
             if (!ss.isSuspended()) {
                 LOG.trace("Suspending service {}", service);
                 ss.suspend();
@@ -475,25 +420,12 @@ public final class ServiceHelper {
      * @see    StatefulService#isStopped()
      */
     public static boolean isStopped(Object value) {
-        if (value instanceof StatefulService statefulService) {
-            return isStopped(statefulService);
+        if (value instanceof StatefulService) {
+            StatefulService service = (StatefulService) value;
+            if (service.isStopping() || service.isStopped()) {
+                return true;
+            }
         }
-
-        return false;
-    }
-
-    /**
-     * Is the given service stopping or already stopped?
-     *
-     * @return <tt>true</tt> if stopping or already stopped, <tt>false</tt> otherwise
-     * @see    StatefulService#isStopping()
-     * @see    StatefulService#isStopped()
-     */
-    public static boolean isStopped(StatefulService service) {
-        if (service != null && (service.isStopping() || service.isStopped())) {
-            return true;
-        }
-
         return false;
     }
 
@@ -505,25 +437,12 @@ public final class ServiceHelper {
      * @see    StatefulService#isStarted()
      */
     public static boolean isStarted(Object value) {
-        if (value instanceof StatefulService statefulService) {
-            return isStarted(statefulService);
+        if (value instanceof StatefulService) {
+            StatefulService service = (StatefulService) value;
+            if (service.isStarting() || service.isStarted()) {
+                return true;
+            }
         }
-
-        return false;
-    }
-
-    /**
-     * Is the given service starting or already started?
-     *
-     * @return <tt>true</tt> if starting or already started, <tt>false</tt> otherwise
-     * @see    StatefulService#isStarting()
-     * @see    StatefulService#isStarted()
-     */
-    public static boolean isStarted(StatefulService service) {
-        if (service != null && (service.isStarting() || service.isStarted())) {
-            return true;
-        }
-
         return false;
     }
 
@@ -535,25 +454,12 @@ public final class ServiceHelper {
      * @see    StatefulService#isSuspended()
      */
     public static boolean isSuspended(Object value) {
-        if (value instanceof StatefulService statefulService) {
-            return isSuspended(statefulService);
+        if (value instanceof StatefulService) {
+            StatefulService service = (StatefulService) value;
+            if (service.isSuspending() || service.isSuspended()) {
+                return true;
+            }
         }
-
-        return false;
-    }
-
-    /**
-     * Is the given service suspending or already suspended?
-     *
-     * @return <tt>true</tt> if suspending or already suspended, <tt>false</tt> otherwise
-     * @see    StatefulService#isSuspending()
-     * @see    StatefulService#isSuspended()
-     */
-    public static boolean isSuspended(StatefulService service) {
-        if (service != null && (service.isSuspending() || service.isSuspended())) {
-            return true;
-        }
-
         return false;
     }
 
@@ -584,25 +490,26 @@ public final class ServiceHelper {
 
     private static void doGetChildServices(Set<Service> services, Service service, boolean includeErrorHandler) {
         services.add(service);
-        if (service instanceof Navigate nav) {
+        if (service instanceof Navigate) {
+            Navigate<?> nav = (Navigate<?>) service;
             if (nav.hasNext()) {
                 List<?> children = nav.next();
                 for (Object child : children) {
-                    if (child instanceof Channel channel) {
+                    if (child instanceof Channel) {
                         if (includeErrorHandler) {
                             // special for error handler as they are tied to the Channel
-                            Processor errorHandler = channel.getErrorHandler();
-                            if (errorHandler instanceof Service errService) {
-                                services.add(errService);
+                            Processor errorHandler = ((Channel) child).getErrorHandler();
+                            if (errorHandler instanceof Service) {
+                                services.add((Service) errorHandler);
                             }
                         }
-                        Processor next = channel.getNextProcessor();
-                        if (next instanceof Service nextService) {
-                            services.add(nextService);
+                        Processor next = ((Channel) child).getNextProcessor();
+                        if (next instanceof Service) {
+                            services.add((Service) next);
                         }
                     }
-                    if (child instanceof Service childService) {
-                        doGetChildServices(services, childService, includeErrorHandler);
+                    if (child instanceof Service) {
+                        doGetChildServices(services, (Service) child, includeErrorHandler);
                     }
                 }
             }

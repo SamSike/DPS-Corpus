@@ -1,7 +1,9 @@
 /**
  * Support classes for adapting to specific JPA vendors.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.orm.jpa.vendor;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

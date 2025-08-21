@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package org.springframework.messaging;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.NestedRuntimeException;
+import org.springframework.lang.Nullable;
 
 /**
  * The base exception for any failures related to messaging.
@@ -30,7 +29,8 @@ import org.springframework.core.NestedRuntimeException;
 @SuppressWarnings("serial")
 public class MessagingException extends NestedRuntimeException {
 
-	private final @Nullable Message<?> failedMessage;
+	@Nullable
+	private final Message<?> failedMessage;
 
 
 	public MessagingException(Message<?> message) {
@@ -53,7 +53,7 @@ public class MessagingException extends NestedRuntimeException {
 		this.failedMessage = message;
 	}
 
-	public MessagingException(Message<?> message, @Nullable Throwable cause) {
+	public MessagingException(Message<?> message, Throwable cause) {
 		super(null, cause);
 		this.failedMessage = message;
 	}
@@ -64,14 +64,15 @@ public class MessagingException extends NestedRuntimeException {
 	}
 
 
-	public @Nullable Message<?> getFailedMessage() {
+	@Nullable
+	public Message<?> getFailedMessage() {
 		return this.failedMessage;
 	}
 
 	@Override
 	public String toString() {
-		return super.toString() + (this.failedMessage == null ? "" :
-				(", failedMessage=" + this.failedMessage));
+		return super.toString() + (this.failedMessage == null ? ""
+				: (", failedMessage=" + this.failedMessage));
 	}
 
 }

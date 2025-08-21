@@ -36,7 +36,7 @@ public class QuartzEndpointConfigureTest extends BaseQuartzTest {
     @Test
     public void testConfigureGroupAndName() throws Exception {
         QuartzEndpoint endpoint
-                = checkEndpoint("quartz://myGroup/myName?trigger.repeatCount=3&trigger.repeatInterval=100");
+                = resolveMandatoryEndpoint("quartz://myGroup/myName?trigger.repeatCount=3&trigger.repeatInterval=100");
 
         Scheduler scheduler = endpoint.getComponent().getScheduler();
         TriggerKey triggerKey = endpoint.getTriggerKey();
@@ -54,7 +54,7 @@ public class QuartzEndpointConfigureTest extends BaseQuartzTest {
 
     @Test
     public void testConfigureName() throws Exception {
-        QuartzEndpoint endpoint = checkEndpoint("quartz://myName");
+        QuartzEndpoint endpoint = resolveMandatoryEndpoint("quartz://myName");
 
         Scheduler scheduler = endpoint.getComponent().getScheduler();
         TriggerKey triggerKey = endpoint.getTriggerKey();
@@ -68,7 +68,7 @@ public class QuartzEndpointConfigureTest extends BaseQuartzTest {
 
     @Test
     public void testConfigureCronExpression() throws Exception {
-        QuartzEndpoint endpoint = checkEndpoint("quartz://myGroup/myTimerName?cron=0+0/5+12-18+?+*+MON-FRI");
+        QuartzEndpoint endpoint = resolveMandatoryEndpoint("quartz://myGroup/myTimerName?cron=0+0/5+12-18+?+*+MON-FRI");
 
         Scheduler scheduler = endpoint.getComponent().getScheduler();
         TriggerKey triggerKey = endpoint.getTriggerKey();
@@ -87,7 +87,7 @@ public class QuartzEndpointConfigureTest extends BaseQuartzTest {
 
     @Test
     public void testConfigureAnotherCronExpression() throws Exception {
-        QuartzEndpoint endpoint = checkEndpoint("quartz://myGroup/myTimerName?cron=0+0+*+*+*+?");
+        QuartzEndpoint endpoint = resolveMandatoryEndpoint("quartz://myGroup/myTimerName?cron=0+0+*+*+*+?");
 
         Scheduler scheduler = endpoint.getComponent().getScheduler();
         TriggerKey triggerKey = endpoint.getTriggerKey();
@@ -106,7 +106,7 @@ public class QuartzEndpointConfigureTest extends BaseQuartzTest {
 
     @Test
     public void testConfigureJobName() throws Exception {
-        QuartzEndpoint endpoint = checkEndpoint("quartz://myGroup/myTimerName?job.name=hadrian&cron=0+0+*+*+*+?");
+        QuartzEndpoint endpoint = resolveMandatoryEndpoint("quartz://myGroup/myTimerName?job.name=hadrian&cron=0+0+*+*+*+?");
 
         Scheduler scheduler = endpoint.getComponent().getScheduler();
         TriggerKey triggerKey = endpoint.getTriggerKey();
@@ -123,7 +123,7 @@ public class QuartzEndpointConfigureTest extends BaseQuartzTest {
 
     @Test
     public void testConfigureNoDoubleSlashNoCron() {
-        QuartzEndpoint endpoint = checkEndpoint("quartz:myGroup/myTimerName");
+        QuartzEndpoint endpoint = resolveMandatoryEndpoint("quartz:myGroup/myTimerName");
 
         TriggerKey triggerKey = endpoint.getTriggerKey();
         assertEquals("myTimerName", triggerKey.getName(), "getName()");
@@ -132,7 +132,7 @@ public class QuartzEndpointConfigureTest extends BaseQuartzTest {
 
     @Test
     public void testConfigureNoDoubleSlashQuestionCron() throws Exception {
-        QuartzEndpoint endpoint = checkEndpoint("quartz:myGroup/myTimerName?cron=0+0+*+*+*+?");
+        QuartzEndpoint endpoint = resolveMandatoryEndpoint("quartz:myGroup/myTimerName?cron=0+0+*+*+*+?");
 
         Scheduler scheduler = endpoint.getComponent().getScheduler();
         TriggerKey triggerKey = endpoint.getTriggerKey();
@@ -151,16 +151,17 @@ public class QuartzEndpointConfigureTest extends BaseQuartzTest {
 
     @Test
     public void testConfigureDeleteJob() {
-        QuartzEndpoint endpoint = checkEndpoint("quartz:myGroup/myTimerName?cron=0+0+*+*+*+?");
+        QuartzEndpoint endpoint = resolveMandatoryEndpoint("quartz:myGroup/myTimerName?cron=0+0+*+*+*+?");
         assertEquals("0 0 * * * ?", endpoint.getCron(), "cron expression");
         assertTrue(endpoint.isDeleteJob(), "deleteJob");
 
-        endpoint = checkEndpoint("quartz:myGroup/myTimerName2?cron=1+0+*+*+*+?&deleteJob=false");
+        endpoint = resolveMandatoryEndpoint("quartz:myGroup/myTimerName2?cron=1+0+*+*+*+?&deleteJob=false");
         assertEquals("1 0 * * * ?", endpoint.getCron(), "cron expression");
         assertFalse(endpoint.isDeleteJob(), "deleteJob");
     }
 
-    protected QuartzEndpoint checkEndpoint(String uri) {
+    @Override
+    protected QuartzEndpoint resolveMandatoryEndpoint(String uri) {
         Endpoint endpoint = super.resolveMandatoryEndpoint(uri);
         return assertIsInstanceOf(QuartzEndpoint.class, endpoint);
     }

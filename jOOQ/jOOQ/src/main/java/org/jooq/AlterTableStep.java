@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,13 +42,10 @@ package org.jooq;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
@@ -58,7 +55,6 @@ import static org.jooq.SQLDialect.IGNITE;
 // ...
 // ...
 import static org.jooq.SQLDialect.MARIADB;
-// ...
 // ...
 import static org.jooq.SQLDialect.MYSQL;
 // ...
@@ -74,7 +70,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
@@ -118,7 +113,7 @@ public interface AlterTableStep {
      * @see DSLContext#commentOnTable(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableFinalStep comment(String comment);
 
     /**
@@ -128,7 +123,7 @@ public interface AlterTableStep {
      * @see DSLContext#commentOnTable(Table)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableFinalStep comment(Comment comment);
 
     /**
@@ -136,7 +131,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     AlterTableFinalStep renameTo(Table<?> newName);
 
     /**
@@ -144,7 +139,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     AlterTableFinalStep renameTo(Name newName);
 
     /**
@@ -152,7 +147,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     AlterTableFinalStep renameTo(String newName);
 
     /**
@@ -160,7 +155,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     AlterTableRenameColumnToStep renameColumn(Field<?> oldName);
 
     /**
@@ -168,7 +163,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     AlterTableRenameColumnToStep renameColumn(Name oldName);
 
     /**
@@ -176,32 +171,8 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     AlterTableRenameColumnToStep renameColumn(String oldName);
-
-    /**
-     * Add a <code>RENAME COLUMN</code> clause to the <code>ALTER TABLE</code>
-     * statement.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    AlterTableRenameColumnToStep renameColumnIfExists(Field<?> oldName);
-
-    /**
-     * Add a <code>RENAME COLUMN</code> clause to the <code>ALTER TABLE</code>
-     * statement.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    AlterTableRenameColumnToStep renameColumnIfExists(Name oldName);
-
-    /**
-     * Add a <code>RENAME COLUMN</code> clause to the <code>ALTER TABLE</code>
-     * statement.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    AlterTableRenameColumnToStep renameColumnIfExists(String oldName);
 
     /**
      * Add a <code>RENAME INDEX</code> clause to the <code>ALTER TABLE</code>
@@ -268,308 +239,52 @@ public interface AlterTableStep {
      * This is an alias for {@link #alterColumn(Field)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     <T> AlterTableAlterStep<T> alter(Field<T> field);
 
     /**
      * Add an <code>ALTER COLUMN</code> clause to the <code>ALTER TABLE</code>
      * statement.
      * <p>
-     * Note that in some RDBMS, the current column type is required in order to
-     * alter a column, so for best results, better pass it explicitly with
-     * {@link #alter(Field)}.
-     * <p>
      * This is an alias for {@link #alterColumn(Name)}
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableAlterStep<Object> alter(Name field);
 
     /**
      * Add an <code>ALTER COLUMN</code> clause to the <code>ALTER TABLE</code>
      * statement.
      * <p>
-     * Note that in some RDBMS, the current column type is required in order to
-     * alter a column, so for best results, better pass it explicitly with
-     * {@link #alter(Field)}.
-     * <p>
      * This is an alias for {@link #alterColumn(String)}
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableAlterStep<Object> alter(String field);
-
-    /**
-     * Add an <code>ALTER COLUMN IF EXISTS</code> clause to the <code>ALTER TABLE</code>
-     * statement.
-     * <p>
-     * This is an alias for {@link #alterColumnIfExists(Field)}.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    <T> AlterTableAlterStep<T> alterIfExists(Field<T> field);
-
-    /**
-     * Add an <code>ALTER COLUMN IF EXISTS</code> clause to the <code>ALTER TABLE</code>
-     * statement.
-     * <p>
-     * Note that in some RDBMS, the current column type is required in order to
-     * alter a column, so for best results, better pass it explicitly with
-     * {@link #alterIfExists(Field)}.
-     * <p>
-     * This is an alias for {@link #alterColumnIfExists(Name)}
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    AlterTableAlterStep<Object> alterIfExists(Name field);
-
-    /**
-     * Add an <code>ALTER COLUMN IF EXISTS</code> clause to the <code>ALTER TABLE</code>
-     * statement.
-     * <p>
-     * Note that in some RDBMS, the current column type is required in order to
-     * alter a column, so for best results, better pass it explicitly with
-     * {@link #alterIfExists(Field)}.
-     * <p>
-     * This is an alias for {@link #alterColumnIfExists(String)}
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    AlterTableAlterStep<Object> alterIfExists(String field);
 
     /**
      * Add an <code>ALTER COLUMN</code> clause to the <code>ALTER TABLE</code>
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     <T> AlterTableAlterStep<T> alterColumn(Field<T> field);
 
     /**
      * Add an <code>ALTER COLUMN</code> clause to the <code>ALTER TABLE</code>
      * statement.
-     * <p>
-     * Note that in some RDBMS, the current column type is required in order to
-     * alter a column, so for best results, better pass it explicitly with
-     * {@link #alterColumn(Field)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableAlterStep<Object> alterColumn(Name field);
 
     /**
      * Add an <code>ALTER COLUMN</code> clause to the <code>ALTER TABLE</code>
      * statement.
-     * <p>
-     * Note that in some RDBMS, the current column type is required in order to
-     * alter a column, so for best results, better pass it explicitly with
-     * {@link #alterColumn(Field)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableAlterStep<Object> alterColumn(String field);
-
-    /**
-     * Add an <code>ALTER COLUMN IF EXISTS</code> clause to the <code>ALTER TABLE</code>
-     * statement.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    <T> AlterTableAlterStep<T> alterColumnIfExists(Field<T> field);
-
-    /**
-     * Add an <code>ALTER COLUMN IF EXISTS</code> clause to the <code>ALTER TABLE</code>
-     * statement.
-     * <p>
-     * Note that in some RDBMS, the current column type is required in order to
-     * alter a column, so for best results, better pass it explicitly with
-     * {@link #alterColumnIfExists(Field)}.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    AlterTableAlterStep<Object> alterColumnIfExists(Name field);
-
-    /**
-     * Add an <code>ALTER COLUMN IF EXISTS</code> clause to the <code>ALTER TABLE</code>
-     * statement.
-     * <p>
-     * Note that in some RDBMS, the current column type is required in order to
-     * alter a column, so for best results, better pass it explicitly with
-     * {@link #alterColumnIfExists(Field)}.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    AlterTableAlterStep<Object> alterColumnIfExists(String field);
-
-    /**
-     * Add a MySQL style <code>CHANGE COLUMN</code> clause to the
-     * <code>ALTER TABLE</code> statement.
-     * <p>
-     * Unless this statement style is strictly required, it is always
-     * recommended to use the more explicit {@link #alterColumn(Field)} command
-     * instead. This clause is supported by jOOQ mainly for interoperability
-     * purposes, e.g. when using the parser on legacy MySQL DDL scripts.
-     * <p>
-     * This is an alias for {@link #changeColumn(Field, Field)}.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    <T> AlterTableChangeStep<T> change(Field<?> oldName, Field<T> newName);
-
-    /**
-     * Add a MySQL style <code>CHANGE COLUMN</code> clause to the
-     * <code>ALTER TABLE</code> statement.
-     * <p>
-     * Unless this statement style is strictly required, it is always
-     * recommended to use the more explicit {@link #alterColumn(Field)} command
-     * instead. This clause is supported by jOOQ mainly for interoperability
-     * purposes, e.g. when using the parser on legacy MySQL DDL scripts.
-     * <p>
-     * This is an alias for {@link #changeColumn(Name, Name)}
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    AlterTableChangeStep<Object> change(Name oldName, Name newName);
-
-    /**
-     * Add a MySQL style <code>CHANGE COLUMN</code> clause to the
-     * <code>ALTER TABLE</code> statement.
-     * <p>
-     * Unless this statement style is strictly required, it is always
-     * recommended to use the more explicit {@link #alterColumn(Field)} command
-     * instead. This clause is supported by jOOQ mainly for interoperability
-     * purposes, e.g. when using the parser on legacy MySQL DDL scripts.
-     * <p>
-     * This is an alias for {@link #changeColumn(String, String)}
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    AlterTableChangeStep<Object> change(String oldName, String newName);
-
-    /**
-     * Add a MySQL style <code>CHANGE COLUMN IF EXISTS</code> clause to the
-     * <code>ALTER TABLE</code> statement.
-     * <p>
-     * Unless this statement style is strictly required, it is always
-     * recommended to use the more explicit {@link #alterColumn(Field)} command
-     * instead. This clause is supported by jOOQ mainly for interoperability
-     * purposes, e.g. when using the parser on legacy MySQL DDL scripts.
-     * <p>
-     * This is an alias for {@link #changeColumn(Field, Field)}.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    <T> AlterTableChangeStep<T> changeIfExists(Field<?> oldName, Field<T> newName);
-
-    /**
-     * Add a MySQL style <code>CHANGE COLUMN IF EXISTS</code> clause to the
-     * <code>ALTER TABLE</code> statement.
-     * <p>
-     * Unless this statement style is strictly required, it is always
-     * recommended to use the more explicit {@link #alterColumn(Field)} command
-     * instead. This clause is supported by jOOQ mainly for interoperability
-     * purposes, e.g. when using the parser on legacy MySQL DDL scripts.
-     * <p>
-     * This is an alias for {@link #changeColumn(Field, Field)}.
-     */
-
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    AlterTableChangeStep<Object> changeIfExists(Name oldName, Name newName);
-
-    /**
-     * Add a MySQL style <code>CHANGE COLUMN IF EXISTS</code> clause to the
-     * <code>ALTER TABLE</code> statement.
-     * <p>
-     * Unless this statement style is strictly required, it is always
-     * recommended to use the more explicit {@link #alterColumn(Field)} command
-     * instead. This clause is supported by jOOQ mainly for interoperability
-     * purposes, e.g. when using the parser on legacy MySQL DDL scripts.
-     * <p>
-     * This is an alias for {@link #changeColumn(Field, Field)}.
-     */
-
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    AlterTableChangeStep<Object> changeIfExists(String oldName, String newName);
-
-    /**
-     * Add a MySQL style <code>CHANGE COLUMN</code> clause to the
-     * <code>ALTER TABLE</code> statement.
-     * <p>
-     * Unless this statement style is strictly required, it is always
-     * recommended to use the more explicit {@link #alterColumn(Field)} command
-     * instead. This clause is supported by jOOQ mainly for interoperability
-     * purposes, e.g. when using the parser on legacy MySQL DDL scripts.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    <T> AlterTableChangeStep<T> changeColumn(Field<?> oldName, Field<T> newName);
-
-    /**
-     * Add a MySQL style <code>CHANGE COLUMN</code> clause to the
-     * <code>ALTER TABLE</code> statement.
-     * <p>
-     * Unless this statement style is strictly required, it is always
-     * recommended to use the more explicit {@link #alterColumn(Field)} command
-     * instead. This clause is supported by jOOQ mainly for interoperability
-     * purposes, e.g. when using the parser on legacy MySQL DDL scripts.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    AlterTableChangeStep<Object> changeColumn(Name oldName, Name newName);
-
-    /**
-     * Add a MySQL style <code>CHANGE COLUMN</code> clause to the
-     * <code>ALTER TABLE</code> statement.
-     * <p>
-     * Unless this statement style is strictly required, it is always
-     * recommended to use the more explicit {@link #alterColumn(Field)} command
-     * instead. This clause is supported by jOOQ mainly for interoperability
-     * purposes, e.g. when using the parser on legacy MySQL DDL scripts.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, TRINO, YUGABYTEDB })
-    AlterTableChangeStep<Object> changeColumn(String oldName, String newName);
-
-    /**
-     * Add a MySQL style <code>CHANGE COLUMN IF EXISTS</code> clause to the
-     * <code>ALTER TABLE</code> statement.
-     * <p>
-     * Unless this statement style is strictly required, it is always
-     * recommended to use the more explicit {@link #alterColumn(Field)} command
-     * instead. This clause is supported by jOOQ mainly for interoperability
-     * purposes, e.g. when using the parser on legacy MySQL DDL scripts.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    <T> AlterTableChangeStep<T> changeColumnIfExists(Field<?> oldName, Field<T> newName);
-
-    /**
-     * Add a MySQL style <code>CHANGE COLUMN IF EXISTS</code> clause to the
-     * <code>ALTER TABLE</code> statement.
-     * <p>
-     * Unless this statement style is strictly required, it is always
-     * recommended to use the more explicit {@link #alterColumn(Field)} command
-     * instead. This clause is supported by jOOQ mainly for interoperability
-     * purposes, e.g. when using the parser on legacy MySQL DDL scripts.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    AlterTableChangeStep<Object> changeColumnIfExists(Name oldName, Name newName);
-
-    /**
-     * Add a MySQL style <code>CHANGE COLUMN IF EXISTS</code> clause to the
-     * <code>ALTER TABLE</code> statement.
-     * <p>
-     * Unless this statement style is strictly required, it is always
-     * recommended to use the more explicit {@link #alterColumn(Field)} command
-     * instead. This clause is supported by jOOQ mainly for interoperability
-     * purposes, e.g. when using the parser on legacy MySQL DDL scripts.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
-    AlterTableChangeStep<Object> changeColumnIfExists(String oldName, String newName);
 
     /**
      * Add an <code>ALTER CONSTRAINT</code> clause to the <code>ALTER TABLE</code>
@@ -610,15 +325,7 @@ public interface AlterTableStep {
      * the <code>ALTER TABLE</code> statement.
      */
     @NotNull @CheckReturnValue
-    @Support
-    AlterTableAddStep add(TableElement field);
-
-    /**
-     * Add an <code>ADD</code> clause with multiple columns or constraints to
-     * the <code>ALTER TABLE</code> statement.
-     */
-    @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableAddStep add(TableElement... fields);
 
     /**
@@ -626,7 +333,7 @@ public interface AlterTableStep {
      * the <code>ALTER TABLE</code> statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableAddStep add(Collection<? extends TableElement> fields);
 
     /**
@@ -666,7 +373,7 @@ public interface AlterTableStep {
      * This is an alias for {@link #addColumnIfNotExists(Field)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableAddStep addIfNotExists(Field<?> field);
 
     /**
@@ -676,7 +383,7 @@ public interface AlterTableStep {
      * This is an alias for {@link #addColumnIfNotExists(Field, DataType)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     <T> AlterTableAddStep addIfNotExists(Field<T> field, DataType<T> type);
 
     /**
@@ -686,7 +393,7 @@ public interface AlterTableStep {
      * This is an alias for {@link #addColumnIfNotExists(Name, DataType)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableAddStep addIfNotExists(Name field, DataType<?> type);
 
     /**
@@ -696,7 +403,7 @@ public interface AlterTableStep {
      * This is an alias for {@link #addColumnIfNotExists(String, DataType)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableAddStep addIfNotExists(String field, DataType<?> type);
 
     /**
@@ -736,7 +443,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableAddStep addColumnIfNotExists(Field<?> field);
 
     /**
@@ -744,7 +451,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     <T> AlterTableAddStep addColumnIfNotExists(Field<T> field, DataType<T> type);
 
     /**
@@ -752,7 +459,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableAddStep addColumnIfNotExists(Name field, DataType<?> type);
 
     /**
@@ -760,7 +467,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableAddStep addColumnIfNotExists(String field, DataType<?> type);
 
     /**
@@ -768,7 +475,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableUsingIndexStep add(Constraint constraint);
 
     /**
@@ -808,7 +515,7 @@ public interface AlterTableStep {
      * This is an alias for {@link #dropColumnIfExists(Field)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropIfExists(Field<?> field);
 
     /**
@@ -818,7 +525,7 @@ public interface AlterTableStep {
      * This is an alias for {@link #dropColumnIfExists(Name)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropIfExists(Name field);
 
     /**
@@ -828,7 +535,7 @@ public interface AlterTableStep {
      * This is an alias for {@link #dropColumnIfExists(String)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropIfExists(String field);
 
     /**
@@ -860,7 +567,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropColumnIfExists(Field<?> field);
 
     /**
@@ -868,7 +575,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropColumnIfExists(Name field);
 
     /**
@@ -876,7 +583,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, IGNITE, MARIADB, POSTGRES, TRINO, YUGABYTEDB })
+    @Support({ H2, IGNITE, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropColumnIfExists(String field);
 
     /**
@@ -886,7 +593,7 @@ public interface AlterTableStep {
      * This is an alias for {@link #dropColumns(Collection)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableDropStep drop(Field<?>... fields);
 
     /**
@@ -896,7 +603,7 @@ public interface AlterTableStep {
      * This is an alias for {@link #dropColumns(Collection)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableDropStep drop(Name... fields);
 
     /**
@@ -906,7 +613,7 @@ public interface AlterTableStep {
      * This is an alias for {@link #dropColumns(Collection)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableDropStep drop(String... fields);
 
     /**
@@ -914,7 +621,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropColumns(Field<?>... fields);
 
     /**
@@ -922,7 +629,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropColumns(Name... fields);
 
     /**
@@ -930,7 +637,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropColumns(String... fields);
 
     /**
@@ -940,7 +647,7 @@ public interface AlterTableStep {
      * This is an alias for {@link #dropColumns(Collection)}.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableDropStep drop(Collection<? extends Field<?>> fields);
 
     /**
@@ -948,7 +655,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, IGNITE, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropColumns(Collection<? extends Field<?>> fields);
 
     /**
@@ -956,7 +663,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableDropStep drop(Constraint constraint);
 
     /**
@@ -966,7 +673,7 @@ public interface AlterTableStep {
      * @see DSL#constraint(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropConstraint(Constraint constraint);
 
     /**
@@ -976,7 +683,7 @@ public interface AlterTableStep {
      * @see DSL#constraint(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropConstraint(Name constraint);
 
     /**
@@ -986,7 +693,7 @@ public interface AlterTableStep {
      * @see DSL#constraint(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropConstraint(String constraint);
 
     /**
@@ -994,7 +701,7 @@ public interface AlterTableStep {
      * statement.
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ H2, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropIfExists(Constraint constraint);
 
     /**
@@ -1004,7 +711,7 @@ public interface AlterTableStep {
      * @see DSL#constraint(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ H2, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropConstraintIfExists(Constraint constraint);
 
     /**
@@ -1014,7 +721,7 @@ public interface AlterTableStep {
      * @see DSL#constraint(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ H2, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropConstraintIfExists(Name constraint);
 
     /**
@@ -1024,7 +731,7 @@ public interface AlterTableStep {
      * @see DSL#constraint(String)
      */
     @NotNull @CheckReturnValue
-    @Support({ CLICKHOUSE, FIREBIRD, H2, MARIADB, POSTGRES, YUGABYTEDB })
+    @Support({ H2, POSTGRES, YUGABYTEDB })
     AlterTableDropStep dropConstraintIfExists(String constraint);
 
     /**
@@ -1088,7 +795,7 @@ public interface AlterTableStep {
      * Some dialects (e.g. {@link SQLDialect#COCKROACHDB}) may not be able to
      * drop constraints by name. If users specify the constraint type
      * <em>and</em> the name, however, then the syntax can be emulated, e.g.
-     * using <code>DROP INDEX … CASCADE</code>.
+     * using <code>DROP INDEX .. CASCADE</code>.
      */
     @NotNull @CheckReturnValue
     @Support({ CUBRID, DERBY, FIREBIRD, H2, HSQLDB, MARIADB, MYSQL, POSTGRES, YUGABYTEDB })
@@ -1101,7 +808,7 @@ public interface AlterTableStep {
      * Some dialects (e.g. {@link SQLDialect#COCKROACHDB}) may not be able to
      * drop constraints by name. If users specify the constraint type
      * <em>and</em> the name, however, then the syntax can be emulated, e.g.
-     * using <code>DROP INDEX … CASCADE</code>.
+     * using <code>DROP INDEX .. CASCADE</code>.
      *
      * @see DSL#constraint(Name)
      */
@@ -1116,7 +823,7 @@ public interface AlterTableStep {
      * Some dialects (e.g. {@link SQLDialect#COCKROACHDB}) may not be able to
      * drop constraints by name. If users specify the constraint type
      * <em>and</em> the name, however, then the syntax can be emulated, e.g.
-     * using <code>DROP INDEX … CASCADE</code>.
+     * using <code>DROP INDEX .. CASCADE</code>.
      *
      * @see DSL#constraint(String)
      */

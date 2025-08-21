@@ -16,9 +16,6 @@
  */
 package org.apache.camel.component.sjms.consumer;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import jakarta.jms.Connection;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
@@ -30,7 +27,6 @@ import jakarta.jms.Session;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.AsyncProcessor;
 import org.apache.camel.CamelExchangeException;
-import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.Processor;
@@ -69,7 +65,6 @@ public class EndpointMessageListener implements SessionMessageListener {
     private boolean eagerLoadingOfProperties;
     private String eagerPoisonBody;
     private volatile SjmsTemplate template;
-    private final Lock lock = new ReentrantLock();
 
     public EndpointMessageListener(SjmsConsumer consumer, SjmsEndpoint endpoint, Processor processor) {
         this.consumer = consumer;
@@ -77,16 +72,11 @@ public class EndpointMessageListener implements SessionMessageListener {
         this.processor = AsyncProcessorConverterHelper.convert(processor);
     }
 
-    public SjmsTemplate getTemplate() {
-        lock.lock();
-        try {
-            if (template == null) {
-                template = endpoint.createInOnlyTemplate();
-            }
-            return template;
-        } finally {
-            lock.unlock();
+    public synchronized SjmsTemplate getTemplate() {
+        if (template == null) {
+            template = endpoint.createInOnlyTemplate();
         }
+        return template;
     }
 
     public void setTemplate(SjmsTemplate template) {
@@ -283,52 +273,39 @@ public class EndpointMessageListener implements SessionMessageListener {
             return;
         }
         try {
-            SessionCallback callback = createSessionCallback(replyDestination, message, exchange, out, cause,
-                    endpoint.getJmsObjectFactory()::createMessageProducer);
+            SessionCallback callback = new SessionCallback() {
+                @Override
+                public Object doInJms(Session session) throws Exception {
+                    MessageProducer producer = null;
+                    try {
+                        Message reply = endpoint.getBinding().makeJmsMessage(exchange, out, session, cause);
+                        final String correlationID = determineCorrelationId(message);
+                        reply.setJMSCorrelationID(correlationID);
+
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("{} sending reply JMS message [correlationId:{}]: {}", endpoint, correlationID, reply);
+                        }
+
+                        producer = endpoint.getJmsObjectFactory().createMessageProducer(session, endpoint, replyDestination);
+                        template.send(producer, reply);
+                    } finally {
+                        close(producer);
+                    }
+
+                    return null;
+                }
+
+                @Override
+                public void onClose(Connection connection, Session session) {
+                    // do not close as we use provided session
+                }
+            };
 
             getTemplate().execute(session, callback);
 
         } catch (Exception e) {
             exchange.setException(new CamelExchangeException("Unable to send reply JMS message", exchange, e));
         }
-    }
-
-    @FunctionalInterface
-    private interface MessageProducerCreator<T> {
-        MessageProducer create(Session session, Endpoint endpoint, T replyDestination) throws Exception;
-    }
-
-    private <T> SessionCallback createSessionCallback(
-            T replyDestination, Message message, Exchange exchange, org.apache.camel.Message out, Exception cause,
-            MessageProducerCreator<T> messageProducerCreator) {
-        return new SessionCallback() {
-            @Override
-            public Object doInJms(Session session) throws Exception {
-                MessageProducer producer = null;
-                try {
-                    Message reply = endpoint.getBinding().makeJmsMessage(exchange, out, session, cause);
-                    final String correlationID = determineCorrelationId(message);
-                    reply.setJMSCorrelationID(correlationID);
-
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("{} sending reply JMS message [correlationId:{}]: {}", endpoint, correlationID, reply);
-                    }
-
-                    producer = messageProducerCreator.create(session, endpoint, replyDestination);
-
-                    template.send(producer, reply);
-                } finally {
-                    close(producer);
-                }
-
-                return null;
-            }
-
-            @Override
-            public void onClose(Connection connection, Session session) {
-                // do not close as we use provided session
-            }
-        };
     }
 
     protected void sendReply(
@@ -340,8 +317,33 @@ public class EndpointMessageListener implements SessionMessageListener {
             return;
         }
         try {
-            SessionCallback callback = createSessionCallback(replyDestination, message, exchange, out, cause,
-                    endpoint.getJmsObjectFactory()::createMessageProducer);
+            SessionCallback callback = new SessionCallback() {
+                @Override
+                public Object doInJms(Session session) throws Exception {
+                    MessageProducer producer = null;
+                    try {
+                        Message reply = endpoint.getBinding().makeJmsMessage(exchange, out, session, cause);
+                        final String correlationID = determineCorrelationId(message);
+                        reply.setJMSCorrelationID(correlationID);
+
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("{} sending reply JMS message [correlationId:{}]: {}", endpoint, correlationID, reply);
+                        }
+
+                        producer = endpoint.getJmsObjectFactory().createMessageProducer(session, endpoint, replyDestination);
+                        template.send(producer, reply);
+                    } finally {
+                        close(producer);
+                    }
+
+                    return null;
+                }
+
+                @Override
+                public void onClose(Connection connection, Session session) {
+                    // do not close as we use provided session
+                }
+            };
 
             getTemplate().execute(session, callback);
 

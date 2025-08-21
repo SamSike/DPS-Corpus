@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,30 +19,30 @@ package org.springframework.http.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.util.Objects;
-
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 
 /**
  * {@link ClientHttpResponse} implementation that uses standard JDK facilities.
- * Obtained via {@link SimpleClientHttpRequest#execute()}.
+ * Obtained via {@link SimpleBufferingClientHttpRequest#execute()} and
+ * {@link SimpleStreamingClientHttpRequest#execute()}.
  *
  * @author Arjen Poutsma
  * @author Brian Clozel
  * @since 3.0
  */
-final class SimpleClientHttpResponse implements ClientHttpResponse {
+final class SimpleClientHttpResponse extends AbstractClientHttpResponse {
 
 	private final HttpURLConnection connection;
 
-	private @Nullable HttpHeaders headers;
+	@Nullable
+	private HttpHeaders headers;
 
-	private @Nullable InputStream responseStream;
+	@Nullable
+	private InputStream responseStream;
 
 
 	SimpleClientHttpResponse(HttpURLConnection connection) {
@@ -51,8 +51,8 @@ final class SimpleClientHttpResponse implements ClientHttpResponse {
 
 
 	@Override
-	public HttpStatusCode getStatusCode() throws IOException {
-		return HttpStatusCode.valueOf(this.connection.getResponseCode());
+	public int getRawStatusCode() throws IOException {
+		return this.connection.getResponseCode();
 	}
 
 	@Override
@@ -85,15 +85,8 @@ final class SimpleClientHttpResponse implements ClientHttpResponse {
 
 	@Override
 	public InputStream getBody() throws IOException {
-		if (this.responseStream == null) {
-			if (this.connection.getResponseCode() >= 400) {
-				InputStream errorStream = this.connection.getErrorStream();
-				this.responseStream = (errorStream != null) ? errorStream : InputStream.nullInputStream();
-			}
-			else {
-				this.responseStream = this.connection.getInputStream();
-			}
-		}
+		InputStream errorStream = this.connection.getErrorStream();
+		this.responseStream = (errorStream != null ? errorStream : this.connection.getInputStream());
 		return this.responseStream;
 	}
 
@@ -103,7 +96,6 @@ final class SimpleClientHttpResponse implements ClientHttpResponse {
 			if (this.responseStream == null) {
 				getBody();
 			}
-			Objects.requireNonNull(this.responseStream);
 			StreamUtils.drain(this.responseStream);
 			this.responseStream.close();
 		}

@@ -53,7 +53,7 @@ public final class OrderedLocationProperties extends BaseOrderedProperties {
         }
     }
 
-    public void putAll(String location, Map<?, ?> map) {
+    public void putAll(String location, Map<Object, Object> map) {
         for (var entry : map.entrySet()) {
             put(location, entry.getKey(), entry.getValue());
         }
@@ -86,26 +86,16 @@ public final class OrderedLocationProperties extends BaseOrderedProperties {
     }
 
     @Override
-    public void clear() {
-        lock.lock();
-        try {
-            locations.clear();
-            defaultValues.clear();
-            super.clear();
-        } finally {
-            lock.unlock();
-        }
+    public synchronized void clear() {
+        locations.clear();
+        defaultValues.clear();
+        super.clear();
     }
 
     @Override
-    public Object remove(Object key) {
-        lock.lock();
-        try {
-            locations.remove(key);
-            defaultValues.remove(key);
-            return super.remove(key);
-        } finally {
-            lock.unlock();
-        }
+    public synchronized Object remove(Object key) {
+        locations.remove(key);
+        defaultValues.remove(key);
+        return super.remove(key);
     }
 }

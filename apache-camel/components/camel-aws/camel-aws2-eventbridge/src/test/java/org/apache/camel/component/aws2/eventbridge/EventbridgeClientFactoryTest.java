@@ -19,7 +19,6 @@ package org.apache.camel.component.aws2.eventbridge;
 import org.apache.camel.component.aws2.eventbridge.client.EventbridgeClientFactory;
 import org.apache.camel.component.aws2.eventbridge.client.EventbridgeInternalClient;
 import org.apache.camel.component.aws2.eventbridge.client.impl.EventbridgeClientIAMOptimizedImpl;
-import org.apache.camel.component.aws2.eventbridge.client.impl.EventbridgeClientSessionTokenImpl;
 import org.apache.camel.component.aws2.eventbridge.client.impl.EventbridgeClientStandardImpl;
 import org.junit.jupiter.api.Test;
 
@@ -48,13 +47,5 @@ public class EventbridgeClientFactoryTest {
         eventbridgeConfiguration.setUseDefaultCredentialsProvider(true);
         EventbridgeInternalClient eventbridgeClient = EventbridgeClientFactory.getEventbridgeClient(eventbridgeConfiguration);
         assertTrue(eventbridgeClient instanceof EventbridgeClientIAMOptimizedImpl);
-    }
-
-    @Test
-    public void getSessionTokenEventbridgeClient() {
-        EventbridgeConfiguration eventbridgeConfiguration = new EventbridgeConfiguration();
-        eventbridgeConfiguration.setUseSessionCredentials(true);
-        EventbridgeInternalClient eventbridgeClient = EventbridgeClientFactory.getEventbridgeClient(eventbridgeConfiguration);
-        assertTrue(eventbridgeClient instanceof EventbridgeClientSessionTokenImpl);
     }
 }

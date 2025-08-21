@@ -31,13 +31,15 @@ import org.junit.jupiter.api.Test;
  */
 public class FileLanguageExtSingleTest extends LanguageTestSupport {
 
+    private File file;
+
     @Override
     protected String getLanguageName() {
         return "file";
     }
 
     @Test
-    public void testFileNoSingleExt() {
+    public void testFileNoSingleExt() throws Exception {
         assertExpression("${file:name}", "test" + File.separator + "bye.def.txt");
         assertExpression("${file:name.noext}", "test" + File.separator + "bye");
         assertExpression("${file:name.noext.single}", "test" + File.separator + "bye.def");
@@ -55,7 +57,7 @@ public class FileLanguageExtSingleTest extends LanguageTestSupport {
         template.sendBodyAndHeader(uri, "Bye World", Exchange.FILE_NAME, "test/bye.def.txt");
 
         // get the file handle
-        File file = testFile("test/bye.def.txt").toFile();
+        file = testFile("test/bye.def.txt").toFile();
         GenericFile<File> gf = FileConsumer.asGenericFile(testDirectory().toString(), file, null, false);
 
         FileEndpoint endpoint = getMandatoryEndpoint(uri, FileEndpoint.class);

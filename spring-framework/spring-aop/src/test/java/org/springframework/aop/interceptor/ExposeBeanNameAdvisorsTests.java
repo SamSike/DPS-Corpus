@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Rod Johnson
  * @author Chris Beams
  */
-class ExposeBeanNameAdvisorsTests {
+public class ExposeBeanNameAdvisorsTests {
 
-	private static class RequiresBeanNameBoundTestBean extends TestBean {
+	private class RequiresBeanNameBoundTestBean extends TestBean {
 		private final String beanName;
 
 		public RequiresBeanNameBoundTestBean(String beanName) {
@@ -46,7 +46,7 @@ class ExposeBeanNameAdvisorsTests {
 	}
 
 	@Test
-	void testNoIntroduction() {
+	public void testNoIntroduction() {
 		String beanName = "foo";
 		TestBean target = new RequiresBeanNameBoundTestBean(beanName);
 		ProxyFactory pf = new ProxyFactory(target);
@@ -61,7 +61,7 @@ class ExposeBeanNameAdvisorsTests {
 	}
 
 	@Test
-	void testWithIntroduction() {
+	public void testWithIntroduction() {
 		String beanName = "foo";
 		TestBean target = new RequiresBeanNameBoundTestBean(beanName);
 		ProxyFactory pf = new ProxyFactory(target);

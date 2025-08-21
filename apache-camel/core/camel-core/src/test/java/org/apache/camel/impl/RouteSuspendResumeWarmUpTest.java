@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RouteSuspendResumeWarmUpTest extends ContextTestSupport {
 
-    private final MyService service = new MyService();
+    private MyService service = new MyService();
 
     @Test
     public void testRouteSuspendResumeWarmUpTest() throws Exception {
@@ -48,10 +48,10 @@ public class RouteSuspendResumeWarmUpTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").routeId("foo").process(service).to("mock:result");
             }
         };
@@ -62,17 +62,17 @@ public class RouteSuspendResumeWarmUpTest extends ContextTestSupport {
         private volatile String state;
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             // noop
         }
 
         @Override
-        protected void doStart() {
+        protected void doStart() throws Exception {
             state = "start";
         }
 
         @Override
-        protected void doStop() {
+        protected void doStop() throws Exception {
             state = "stop";
         }
 

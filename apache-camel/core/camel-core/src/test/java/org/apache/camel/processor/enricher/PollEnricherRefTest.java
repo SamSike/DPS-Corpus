@@ -30,11 +30,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PollEnricherRefTest extends ContextTestSupport {
 
-    private final SedaEndpoint cool = new SedaEndpoint();
+    private SedaEndpoint cool = new SedaEndpoint();
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("cool", cool);
         jndi.bind("agg", new UseLatestAggregationStrategy());
         return jndi;
@@ -48,7 +48,7 @@ public class PollEnricherRefTest extends ContextTestSupport {
     }
 
     @Test
-    public void testPollEnrichRef() {
+    public void testPollEnrichRef() throws Exception {
         Exchange exchange = new DefaultExchange(context);
         exchange.getIn().setBody("Bye World");
         cool.getQueue().add(exchange);
@@ -60,10 +60,10 @@ public class PollEnricherRefTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 cool.setEndpointUriIfNotSpecified("cool");
 
                 from("direct:start").pollEnrich().simple("ref:cool").timeout(2000).aggregationStrategy("agg");

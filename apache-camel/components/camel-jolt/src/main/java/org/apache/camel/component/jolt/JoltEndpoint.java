@@ -32,7 +32,6 @@ import org.apache.camel.Category;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.component.ResourceEndpoint;
-import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.ExchangeHelper;
@@ -42,8 +41,7 @@ import org.apache.camel.util.ObjectHelper;
  * JSON to JSON transformation using JOLT.
  */
 @UriEndpoint(firstVersion = "2.16.0", scheme = "jolt", title = "JOLT", syntax = "jolt:resourceUri", producerOnly = true,
-             remote = false, category = { Category.TRANSFORMATION }, headersClass = JoltConstants.class)
-@Metadata(excludeProperties = "allowContextMapAll")
+             category = { Category.TRANSFORMATION }, headersClass = JoltConstants.class)
 public class JoltEndpoint extends ResourceEndpoint {
 
     private JoltTransform transform;
@@ -68,17 +66,6 @@ public class JoltEndpoint extends ResourceEndpoint {
     }
 
     @Override
-    public boolean isRemote() {
-        return false;
-    }
-
-    @Override
-    public void clearContentCache() {
-        super.clearContentCache();
-        transform = null;
-    }
-
-    @Override
     public ExchangePattern getExchangePattern() {
         return ExchangePattern.InOut;
     }
@@ -88,44 +75,39 @@ public class JoltEndpoint extends ResourceEndpoint {
         return "jolt:" + getResourceUri();
     }
 
-    private JoltTransform getTransform() throws Exception {
-        getInternalLock().lock();
-        try {
-            if (transform == null) {
-                if (log.isDebugEnabled()) {
-                    String path = getResourceUri();
-                    log.debug("Jolt content read from resource {} with resourceUri: {} for endpoint {}", getResourceUri(), path,
-                            getEndpointUri());
-                }
-
-                // Sortr does not require a spec
-                if (this.transformDsl == JoltTransformType.Sortr) {
-                    this.transform = new Sortr();
-                } else {
-                    // getResourceAsInputStream also considers the content cache
-                    Object spec = JsonUtils.jsonToObject(getResourceAsInputStream());
-                    switch (this.transformDsl) {
-                        case Shiftr:
-                            this.transform = new Shiftr(spec);
-                            break;
-                        case Defaultr:
-                            this.transform = new Defaultr(spec);
-                            break;
-                        case Removr:
-                            this.transform = new Removr(spec);
-                            break;
-                        case Chainr:
-                        default:
-                            this.transform = Chainr.fromSpec(spec);
-                            break;
-                    }
-                }
-
+    private synchronized JoltTransform getTransform() throws Exception {
+        if (transform == null) {
+            if (log.isDebugEnabled()) {
+                String path = getResourceUri();
+                log.debug("Jolt content read from resource {} with resourceUri: {} for endpoint {}", getResourceUri(), path,
+                        getEndpointUri());
             }
-            return transform;
-        } finally {
-            getInternalLock().unlock();
+
+            // Sortr does not require a spec
+            if (this.transformDsl == JoltTransformType.Sortr) {
+                this.transform = new Sortr();
+            } else {
+                // getResourceAsInputStream also considers the content cache
+                Object spec = JsonUtils.jsonToObject(getResourceAsInputStream());
+                switch (this.transformDsl) {
+                    case Shiftr:
+                        this.transform = new Shiftr(spec);
+                        break;
+                    case Defaultr:
+                        this.transform = new Defaultr(spec);
+                        break;
+                    case Removr:
+                        this.transform = new Removr(spec);
+                        break;
+                    case Chainr:
+                    default:
+                        this.transform = Chainr.fromSpec(spec);
+                        break;
+                }
+            }
+
         }
+        return transform;
     }
 
     /**

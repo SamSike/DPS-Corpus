@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,9 +40,7 @@ package org.jooq.meta.sqlite;
 import static org.jooq.conf.ParseWithMetaLookups.THROW_ON_FAILURE;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.inline;
-import static org.jooq.impl.DSL.lower;
 import static org.jooq.impl.DSL.name;
-import static org.jooq.impl.DSL.quotedName;
 import static org.jooq.impl.DSL.selectOne;
 import static org.jooq.impl.QOM.GenerationOption.STORED;
 import static org.jooq.impl.QOM.GenerationOption.VIRTUAL;
@@ -54,13 +52,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jooq.Configuration;
-import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.Query;
 import org.jooq.Record;
 import org.jooq.Table;
 import org.jooq.TableOptions.TableType;
-import org.jooq.conf.InterpreterWithMetaLookups;
 import org.jooq.exception.DataDefinitionException;
 import org.jooq.impl.DSL;
 import org.jooq.impl.ParserException;
@@ -80,6 +76,7 @@ import org.jooq.tools.JooqLogger;
 public class SQLiteTableDefinition extends AbstractTableDefinition {
 
     private static final JooqLogger log = JooqLogger.getLogger(SQLiteTableDefinition.class);
+    private static Boolean          existsSqliteSequence;
     private Table<?>                interpretedTable;
 
     public SQLiteTableDefinition(SchemaDefinition schema, String name, String comment) {
@@ -93,14 +90,11 @@ public class SQLiteTableDefinition extends AbstractTableDefinition {
     Table<?> interpretedTable() {
         if (interpretedTable == null) {
             try {
+                Configuration c = create().configuration().derive();
+                c.settings().withParseWithMetaLookups(THROW_ON_FAILURE);
+                Query query = create().parser().parseQuery(getSource());
 
-                // [#14687] [#18500] The commercial editions now validate view sources, so we need to ignore those
-                //                   meta lookup failures.
-                DSLContext ctx = create();
-                ctx.settings().setInterpreterWithMetaLookups(InterpreterWithMetaLookups.IGNORE_ON_FAILURE);
-                Query query = ctx.parser().parseQuery(getSource());
-
-                for (Table<?> t : ctx.meta(query).getTables(getInputName()))
+                for (Table<?> t : create().meta(query).getTables(getInputName()))
                     return interpretedTable = t;
             }
             catch (ParserException e) {
@@ -120,7 +114,7 @@ public class SQLiteTableDefinition extends AbstractTableDefinition {
 
         Field<String> fName = field(name("name"), String.class);
         Field<String> fType = field(name("type"), String.class);
-        Field<Boolean> fNotnull = field(quotedName("notnull"), boolean.class);
+        Field<Boolean> fNotnull = field(name("notnull"), boolean.class);
         Field<String> fDefaultValue = field(name("dflt_value"), String.class);
         Field<Integer> fPk = field(name("pk"), int.class);
         Field<Integer> fHidden = field(name("hidden"), int.class);
@@ -182,33 +176,18 @@ public class SQLiteTableDefinition extends AbstractTableDefinition {
 
 
 
+
             }
 
-            identityCheck:
             if (pk > 0) {
 
-                // [#14656] Explicit WITHOUT ROWID clauses mean there's no identity
-                if (getSource().matches("(?s:\\.*(?i:\\bwithout\\s+rowid\\b).*)"))
-                    break identityCheck;
-
                 // [#6854] sqlite_sequence only contains identity information once a table contains records.
-                identity |= ((SQLiteDatabase) getDatabase()).existsSqliteSequence() && create()
+                identity |= existsSqliteSequence() && create()
                     .fetchOne("select count(*) from sqlite_sequence where name = ?", getName())
                     .get(0, Boolean.class);
 
-                // [#6854] If sqlite_sequence didn't contain an entry and the table is empty...
-                if (!identity && !create().fetchExists(selectOne().from("{0}", DSL.name(getName())))) {
-
-                    // [#14656] The presence of AUTOINCREMENT means there must be an identity (SQLite rejects it, otherwise)
+                if (!identity && !create().fetchExists(selectOne().from("{0}", DSL.name(getName()))))
                     identity = getSource().matches("(?s:.*\\b" + getName() + "\\b[^,]*(?i:\\bautoincrement\\b)[^,]*.*)");
-                }
-
-                // [#14656] Finally, a table can be non-empty, not have an autoincrement token, not have an entry in
-                //          sqlite_sequence, but still have an identity (!) when there's an INTEGER PRIMARY KEY column.
-                //          e.g. CREATE TABLE t (i INTEGER NOT NULL, PRIMARY KEY (i)) And then, there's also the possibility
-                //          of running into quirks when using DESC vs ASC, see
-                //          https://www.sqlite.org/lang_createtable.html#rowids_and_the_integer_primary_key
-                if (!identity) {}
             }
 
             DefaultDataTypeDefinition type = new DefaultDataTypeDefinition(
@@ -235,5 +214,17 @@ public class SQLiteTableDefinition extends AbstractTableDefinition {
         }
 
         return result;
+    }
+
+    private boolean existsSqliteSequence() {
+        if (existsSqliteSequence == null) {
+            existsSqliteSequence = create()
+                .selectCount()
+                .from(SQLITE_MASTER)
+                .where(SQLiteMaster.NAME.lower().eq("sqlite_sequence"))
+                .fetchOne(0, boolean.class);
+        }
+
+        return existsSqliteSequence;
     }
 }

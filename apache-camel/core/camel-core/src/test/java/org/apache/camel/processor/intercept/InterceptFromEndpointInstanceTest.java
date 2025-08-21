@@ -38,9 +38,9 @@ public class InterceptFromEndpointInstanceTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 interceptFrom("direct*").to("mock:intercepted");
 
                 Endpoint direct = context.getEndpoint("direct:start");

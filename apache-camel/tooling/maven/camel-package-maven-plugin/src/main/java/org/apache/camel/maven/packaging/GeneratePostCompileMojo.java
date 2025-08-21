@@ -16,15 +16,11 @@
  */
 package org.apache.camel.maven.packaging;
 
-import javax.inject.Inject;
-
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProjectHelper;
-import org.codehaus.plexus.build.BuildContext;
 
 /**
  * Used by Apache Camel project itself - do NOT use as end user.
@@ -32,11 +28,6 @@ import org.codehaus.plexus.build.BuildContext;
 @Mojo(name = "generate-postcompile", threadSafe = true, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME,
       defaultPhase = LifecyclePhase.PROCESS_CLASSES)
 public class GeneratePostCompileMojo extends AbstractGenerateMojo {
-
-    @Inject
-    public GeneratePostCompileMojo(MavenProjectHelper projectHelper, BuildContext buildContext) {
-        super(projectHelper, buildContext);
-    }
 
     protected void doExecute() throws MojoFailureException, MojoExecutionException {
         // jandex

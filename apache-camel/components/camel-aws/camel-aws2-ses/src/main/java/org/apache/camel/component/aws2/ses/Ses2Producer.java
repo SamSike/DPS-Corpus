@@ -17,25 +17,30 @@
 package org.apache.camel.component.aws2.ses;
 
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
-import org.apache.camel.health.HealthCheck;
-import org.apache.camel.health.HealthCheckHelper;
-import org.apache.camel.health.WritableHealthCheckRepository;
 import org.apache.camel.support.DefaultProducer;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.services.ses.model.*;
+import software.amazon.awssdk.services.ses.model.Body;
+import software.amazon.awssdk.services.ses.model.Content;
+import software.amazon.awssdk.services.ses.model.Destination;
+import software.amazon.awssdk.services.ses.model.SendEmailRequest;
+import software.amazon.awssdk.services.ses.model.SendEmailResponse;
+import software.amazon.awssdk.services.ses.model.SendRawEmailRequest;
+import software.amazon.awssdk.services.ses.model.SendRawEmailResponse;
 
 /**
  * A Producer which sends messages to the Amazon Simple Email Service SDK v2 <a href="http://aws.amazon.com/ses/">AWS
@@ -46,8 +51,6 @@ public class Ses2Producer extends DefaultProducer {
     private static final Logger LOG = LoggerFactory.getLogger(Ses2Producer.class);
 
     private transient String sesProducerToString;
-    private HealthCheck producerHealthCheck;
-    private WritableHealthCheckRepository healthCheckRepository;
 
     public Ses2Producer(Endpoint endpoint) {
         super(endpoint);
@@ -55,19 +58,17 @@ public class Ses2Producer extends DefaultProducer {
 
     @Override
     public void process(Exchange exchange) throws Exception {
-        Object body = exchange.getIn().getBody();
-        boolean mail = body instanceof jakarta.mail.Message;
-        if (mail) {
-            SendRawEmailRequest request = createRawMailRequest(exchange);
+        if (!(exchange.getIn().getBody() instanceof jakarta.mail.Message)) {
+            SendEmailRequest request = createMailRequest(exchange);
             LOG.trace("Sending request [{}] from exchange [{}]...", request, exchange);
-            SendRawEmailResponse result = getEndpoint().getSESClient().sendRawEmail(request);
+            SendEmailResponse result = getEndpoint().getSESClient().sendEmail(request);
             LOG.trace("Received result [{}]", result);
             Message message = getMessageForResponse(exchange);
             message.setHeader(Ses2Constants.MESSAGE_ID, result.messageId());
         } else {
-            SendEmailRequest request = createMailRequest(exchange);
+            SendRawEmailRequest request = createRawMailRequest(exchange);
             LOG.trace("Sending request [{}] from exchange [{}]...", request, exchange);
-            SendEmailResponse result = getEndpoint().getSESClient().sendEmail(request);
+            SendRawEmailResponse result = getEndpoint().getSESClient().sendRawEmail(request);
             LOG.trace("Received result [{}]", result);
             Message message = getMessageForResponse(exchange);
             message.setHeader(Ses2Constants.MESSAGE_ID, result.messageId());
@@ -81,7 +82,6 @@ public class Ses2Producer extends DefaultProducer {
         request.returnPath(determineReturnPath(exchange));
         request.replyToAddresses(determineReplyToAddresses(exchange));
         request.message(createMessage(exchange));
-        request.tags(determineTags(exchange));
         request.configurationSetName(determineConfigurationSet(exchange));
         return request.build();
     }
@@ -91,7 +91,6 @@ public class Ses2Producer extends DefaultProducer {
         request.source(determineFrom(exchange));
         request.destinations(determineRawTo(exchange));
         request.rawMessage(createRawMessage(exchange));
-        request.tags(determineTags(exchange));
         request.configurationSetName(determineConfigurationSet(exchange));
         return request.build();
     }
@@ -99,13 +98,8 @@ public class Ses2Producer extends DefaultProducer {
     private software.amazon.awssdk.services.ses.model.Message createMessage(Exchange exchange) {
         software.amazon.awssdk.services.ses.model.Message.Builder message
                 = software.amazon.awssdk.services.ses.model.Message.builder();
-        String content;
-        if (exchange.getIn().getBody() instanceof RawMessage raw) {
-            content = raw.data().toString();
-        } else {
-            content = exchange.getIn().getBody(String.class);
-        }
-        boolean isHtmlEmail = exchange.getIn().getHeader(Ses2Constants.HTML_EMAIL, false, Boolean.class);
+        final boolean isHtmlEmail = exchange.getIn().getHeader(Ses2Constants.HTML_EMAIL, false, Boolean.class);
+        String content = exchange.getIn().getBody(String.class);
         if (isHtmlEmail) {
             message.body(Body.builder().html(Content.builder().data(content).build()).build());
         } else {
@@ -119,12 +113,19 @@ public class Ses2Producer extends DefaultProducer {
         software.amazon.awssdk.services.ses.model.RawMessage.Builder message
                 = software.amazon.awssdk.services.ses.model.RawMessage.builder();
         jakarta.mail.Message content = exchange.getIn().getBody(jakarta.mail.Message.class);
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        content.writeTo(bos);
-        message.data(SdkBytes.fromByteArrayUnsafe(bos.toByteArray()));
+        OutputStream byteOutput = new ByteArrayOutputStream();
+        try {
+            content.writeTo(byteOutput);
+        } catch (Exception e) {
+            LOG.error("Cannot write to byte Array");
+            throw e;
+        }
+        byte[] messageByteArray = ((ByteArrayOutputStream) byteOutput).toByteArray();
+        message.data(SdkBytes.fromByteBuffer(ByteBuffer.wrap(messageByteArray)));
         return message.build();
     }
 
+    @SuppressWarnings("unchecked")
     private Collection<String> determineReplyToAddresses(Exchange exchange) {
         String replyToAddresses = exchange.getIn().getHeader(Ses2Constants.REPLY_TO_ADDRESSES, String.class);
         if (replyToAddresses == null) {
@@ -133,7 +134,7 @@ public class Ses2Producer extends DefaultProducer {
         if (ObjectHelper.isNotEmpty(replyToAddresses)) {
             return Stream.of(replyToAddresses.split(","))
                     .map(String::trim)
-                    .toList();
+                    .collect(Collectors.toList());
         } else {
             return Collections.emptyList();
         }
@@ -162,7 +163,7 @@ public class Ses2Producer extends DefaultProducer {
         if (ObjectHelper.isNotEmpty(cc)) {
             return Stream.of(cc.split(","))
                     .map(String::trim)
-                    .toList();
+                    .collect(Collectors.toList());
         } else {
             return Collections.emptyList();
         }
@@ -176,7 +177,7 @@ public class Ses2Producer extends DefaultProducer {
         if (ObjectHelper.isNotEmpty(bcc)) {
             return Stream.of(bcc.split(","))
                     .map(String::trim)
-                    .toList();
+                    .collect(Collectors.toList());
         } else {
             return Collections.emptyList();
         }
@@ -190,7 +191,7 @@ public class Ses2Producer extends DefaultProducer {
         if (ObjectHelper.isNotEmpty(to)) {
             return Stream.of(to.split(","))
                     .map(String::trim)
-                    .toList();
+                    .collect(Collectors.toList());
         } else {
             return Collections.emptyList();
         }
@@ -210,20 +211,6 @@ public class Ses2Producer extends DefaultProducer {
             subject = getConfiguration().getSubject();
         }
         return subject;
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<MessageTag> determineTags(Exchange exchange) {
-        Map<String, String> tagMap = exchange.getIn().getHeader(Ses2Constants.TAGS, Map.class);
-        if (tagMap == null || tagMap.isEmpty()) {
-            return null;
-        }
-        return tagMap.entrySet().stream()
-                .map(entry -> MessageTag.builder()
-                        .name(entry.getKey())
-                        .value(entry.getValue())
-                        .build())
-                .toList();
     }
 
     private String determineConfigurationSet(Exchange exchange) {
@@ -254,29 +241,4 @@ public class Ses2Producer extends DefaultProducer {
     public static Message getMessageForResponse(final Exchange exchange) {
         return exchange.getMessage();
     }
-
-    @Override
-    protected void doStart() throws Exception {
-        // health-check is optional so discover and resolve
-        healthCheckRepository = HealthCheckHelper.getHealthCheckRepository(
-                getEndpoint().getCamelContext(),
-                "producers",
-                WritableHealthCheckRepository.class);
-
-        if (healthCheckRepository != null) {
-            String id = getEndpoint().getId();
-            producerHealthCheck = new Ses2ProducerHealthCheck(getEndpoint(), id);
-            producerHealthCheck.setEnabled(getEndpoint().getComponent().isHealthCheckProducerEnabled());
-            healthCheckRepository.addHealthCheck(producerHealthCheck);
-        }
-    }
-
-    @Override
-    protected void doStop() throws Exception {
-        if (healthCheckRepository != null && producerHealthCheck != null) {
-            healthCheckRepository.removeHealthCheck(producerHealthCheck);
-            producerHealthCheck = null;
-        }
-    }
-
 }

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,8 +41,6 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.sql.ResultSet;
 
-import org.jooq.conf.Redact;
-import org.jooq.conf.Settings;
 import org.jooq.exception.IOException;
 
 import org.jetbrains.annotations.NotNull;
@@ -70,16 +68,6 @@ import org.xml.sax.SAXException;
  * resource is closed. Calling these methods on a {@link Cursor} is not
  * repeatable as the {@link Cursor} (and the underlying JDBC {@link ResultSet})
  * is consumed entirely, and closed eagerly after consumption.
- * <p>
- * Formatting is subject to {@link Settings#getRedact()} if a formatted
- * {@link DataType#redacted()} flag is set. It affects these formats:
- * <ul>
- * <li>HTML with {@link Redact#TEXT_ONLY} or {@link Redact#ALL_FORMATS}</li>
- * <li>Text with {@link Redact#TEXT_ONLY} or {@link Redact#ALL_FORMATS}</li>
- * <li>CSV with {@link Redact#ALL_FORMATS}</li>
- * <li>JSON with {@link Redact#ALL_FORMATS}</li>
- * <li>XML with {@link Redact#ALL_FORMATS}</li>
- * </ul>
  *
  * @author Lukas Eder
  */
@@ -122,7 +110,7 @@ public interface Formattable {
     /**
      * Get a simple formatted representation of this result as HTML.
      * <p>
-     * The HTML code is formatted as follows: <pre><code>
+     * The HTML code is formatted as follows: <code><pre>
      * &lt;table&gt;
      *   &lt;thead&gt;
      *     &lt;tr&gt;
@@ -148,7 +136,7 @@ public interface Formattable {
      *     ...
      *   &lt;/tbody&gt;
      * &lt;/table&gt;
-     * </code></pre>
+     * </pre></code>
      *
      * @return The formatted result
      */
@@ -234,14 +222,14 @@ public interface Formattable {
      * Get a simple formatted representation of this result as a JSON array of
      * array.
      * <p>
-     * The format is the following: <pre><code>
+     * The format is the following: <code><pre>
      * {"fields":[{"name":"field-1","type":"type-1"},
      *            {"name":"field-2","type":"type-2"},
      *            ...,
      *            {"name":"field-n","type":"type-n"}],
      *  "records":[[value-1-1,value-1-2,...,value-1-n],
      *             [value-2-1,value-2-2,...,value-2-n]]}
-     * </code></pre>
+     * </pre></code>
      *
      * @return The formatted result
      */
@@ -287,7 +275,7 @@ public interface Formattable {
     /**
      * Get this result as an ASCII chart.
      * <p>
-     * When running a query like this: <pre><code>
+     * When running a query like this: <code><pre>
      * String chart =
      * create.select(
      *            BOOK_TO_BOOK_STORE.BOOK_STORE_NAME,
@@ -297,7 +285,7 @@ public interface Formattable {
      *        .groupBy(BOOK_TO_BOOK_STORE.BOOK_STORE_NAME)
      *        .fetch()
      *        .formatChart();
-     * </code></pre> Where the formatted result would look like this:
+     * </pre></code> Where the formatted result would look like this:
      *
      * <pre>
      * +-------------------------+-----+

@@ -29,14 +29,14 @@ import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class MockEndpointTimeClauseTest extends ContextTestSupport {
 
     @Test
     public void testReceivedTimestamp() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
-        mock.message(0).predicate(e -> e.getClock().getCreated() > 0);
+        mock.message(0).predicate(e -> e.getCreated() > 0);
         mock.message(0).exchangeProperty(Exchange.RECEIVED_TIMESTAMP).isNotNull();
         mock.message(0).exchangeProperty(Exchange.RECEIVED_TIMESTAMP).isInstanceOf(Date.class);
 
@@ -92,10 +92,12 @@ public class MockEndpointTimeClauseTest extends ContextTestSupport {
             }
         });
 
-        AssertionError e = assertThrows(AssertionError.class, mock::assertIsSatisfied,
-                "Should have thrown an exception");
-
-        assertEquals("mock://result Received message count. Expected: <1> but was: <2>", e.getMessage());
+        try {
+            mock.assertIsSatisfied();
+            fail("Should have thrown an exception");
+        } catch (AssertionError e) {
+            assertEquals("mock://result Received message count. Expected: <1> but was: <2>", e.getMessage());
+        }
 
         executor.shutdownNow();
     }
@@ -125,7 +127,7 @@ public class MockEndpointTimeClauseTest extends ContextTestSupport {
             }
         });
 
-        // but the assertion would be complete beforehand and thus
+        // but the assertion would be complete before hand and thus
         // the assertion was valid at the time given
         assertMockEndpointsSatisfied();
 
@@ -230,8 +232,8 @@ public class MockEndpointTimeClauseTest extends ContextTestSupport {
     }
 
     private boolean isStarted(Service service) {
-        if (service instanceof StatefulService statefulService) {
-            return statefulService.isStarted();
+        if (service instanceof StatefulService) {
+            return ((StatefulService) service).isStarted();
         }
         return true;
     }

@@ -170,6 +170,10 @@ public class CamelNodeDetails {
     }
 
     private static String padString(int level) {
-        return "  ".repeat(level);
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < level; i++) {
+            sb.append("  ");
+        }
+        return sb.toString();
     }
 }

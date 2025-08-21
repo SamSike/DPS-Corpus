@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 import java.math.BigDecimal;
 
 
@@ -101,9 +98,8 @@ implements
 
 
 
-            case DUCKDB:
-                acceptNative(ctx);
-                break;
+
+
 
             default:
                 acceptEmulation(ctx);
@@ -111,34 +107,28 @@ implements
         }
     }
 
-    private final void acceptNative(Context<?> ctx) {
-        Name name;
-
-        switch (ctx.family()) {
 
 
 
 
 
-            default:
-                name = N_PRODUCT;
-                break;
-        }
 
-        ctx.visit(CustomField.of(name, NUMERIC, c -> {
-            c.visit(distinct
-                ? aggregateDistinct(name, NUMERIC, arguments.toArray(EMPTY_FIELD))
-                : aggregate(name, NUMERIC, arguments.toArray(EMPTY_FIELD)));
 
-            acceptFilterClause(c);
-            acceptOverClause(c);
-        }));
-    }
+
+
+
+
+
+
+
+
+
+
 
     private final void acceptEmulation(Context<?> ctx) {
 
         @SuppressWarnings({ "unchecked" })
-        final Field<Integer> f = (Field) arguments.get(0);
+        final Field<Integer> f = (Field) DSL.field("{0}", arguments.get(0).getDataType(), arguments.get(0));
         final Field<Integer> negatives = DSL.when(f.lt(zero()), inline(-1));
 
         Field<BigDecimal> negativesSum = CustomField.of("sum", NUMERIC, c -> {
@@ -192,7 +182,7 @@ implements
     @SuppressWarnings("unchecked")
     @Override
     public final Field<? extends Number> $field() {
-        return (Field<? extends Number>) getArgument(0);
+        return (Field<? extends Number>) getArguments().get(0);
     }
 
     @Override
@@ -238,7 +228,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.Product o) {
+        if (that instanceof QOM.Product) { QOM.Product o = (QOM.Product) that;
             return
                 StringUtils.equals($field(), o.$field()) &&
                 $distinct() == o.$distinct()

@@ -23,8 +23,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.processor.BodyInAggregatingStrategy;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AggregateShutdownThreadPoolTest extends ContextTestSupport {
 
@@ -59,7 +58,7 @@ public class AggregateShutdownThreadPoolTest extends ContextTestSupport {
 
     @Test
     public void testAggregateShutdownCustomThreadPoolTest() throws Exception {
-        assertFalse(myPool.isShutdown());
+        assertEquals(false, myPool.isShutdown());
 
         getMockEndpoint("mock:aggregated").expectedBodiesReceived("A+B+C");
 
@@ -68,15 +67,15 @@ public class AggregateShutdownThreadPoolTest extends ContextTestSupport {
         template.sendBodyAndHeader("direct:bar", "C", "id", 123);
 
         assertMockEndpointsSatisfied();
-        assertFalse(myPool.isShutdown());
+        assertEquals(false, myPool.isShutdown());
 
         context.getRouteController().stopRoute("bar");
-        assertFalse(myPool.isShutdown());
+        assertEquals(false, myPool.isShutdown());
 
         resetMocks();
 
         context.getRouteController().startRoute("bar");
-        assertFalse(myPool.isShutdown());
+        assertEquals(false, myPool.isShutdown());
 
         getMockEndpoint("mock:aggregated").expectedBodiesReceived("D+E+F");
 
@@ -85,18 +84,18 @@ public class AggregateShutdownThreadPoolTest extends ContextTestSupport {
         template.sendBodyAndHeader("direct:bar", "F", "id", 123);
 
         assertMockEndpointsSatisfied();
-        assertFalse(myPool.isShutdown());
+        assertEquals(false, myPool.isShutdown());
 
         context.stop();
         // now it should be shutdown when CamelContext is stopped/shutdown
-        assertTrue(myPool.isShutdown());
+        assertEquals(true, myPool.isShutdown());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 myPool = context.getExecutorServiceManager().newDefaultThreadPool(this, "myPool");
 
                 from("direct:foo").routeId("foo").aggregate(header("id"), new BodyInAggregatingStrategy()).completionSize(3)

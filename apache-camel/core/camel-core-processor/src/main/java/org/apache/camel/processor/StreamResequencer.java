@@ -80,7 +80,7 @@ public class StreamResequencer extends AsyncProcessorSupport
 
     /**
      * Creates a new {@link StreamResequencer} instance.
-     *
+     * 
      * @param processor  next processor that processes re-ordered exchanges.
      * @param comparator a sequence element comparator for exchanges.
      */
@@ -118,7 +118,7 @@ public class StreamResequencer extends AsyncProcessorSupport
      * resequencer at a given point in time. If the capacity if reached, polling from the endpoint will be skipped for
      * <code>timeout</code> milliseconds giving exchanges the possibility to time out and to be delivered after the
      * waiting period.
-     *
+     * 
      * @return this resequencer's capacity.
      */
     public int getCapacity() {
@@ -129,7 +129,7 @@ public class StreamResequencer extends AsyncProcessorSupport
      * Returns this resequencer's timeout. This sets the resequencer engine's timeout via
      * {@link ResequencerEngine#setTimeout(long)}. This value is also used to define the polling timeout from the
      * endpoint.
-     *
+     * 
      * @return this resequencer's timeout. (Processor)
      * @see    ResequencerEngine#setTimeout(long)
      */
@@ -229,7 +229,7 @@ public class StreamResequencer extends AsyncProcessorSupport
 
     /**
      * Sends the <code>exchange</code> to the next <code>processor</code>.
-     *
+     * 
      * @param exchange exchange to send.
      */
     @Override
@@ -239,14 +239,15 @@ public class StreamResequencer extends AsyncProcessorSupport
 
     @Override
     public boolean process(Exchange exchange, AsyncCallback callback) {
-        try {
-            engine.waitUntil(s -> s.size() < capacity);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            // we were interrupted so break out
-            exchange.setException(e);
-            callback.done(true);
-            return true;
+        while (engine.size() >= capacity) {
+            try {
+                Thread.sleep(getTimeout());
+            } catch (InterruptedException e) {
+                // we were interrupted so break out
+                exchange.setException(e);
+                callback.done(true);
+                return true;
+            }
         }
 
         try {
@@ -302,12 +303,11 @@ public class StreamResequencer extends AsyncProcessorSupport
                         deliveryRequestLock.unlock();
                     }
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
                     break;
                 }
                 try {
                     engine.deliver();
-                } catch (Exception t) {
+                } catch (Throwable t) {
                     // a fail-safe to handle all exceptions being thrown
                     getExceptionHandler().handleException(t);
                 }

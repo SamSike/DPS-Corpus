@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package org.springframework.core.convert;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Exception to be thrown when a suitable converter could not be found
@@ -29,7 +29,8 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("serial")
 public class ConverterNotFoundException extends ConversionException {
 
-	private final @Nullable TypeDescriptor sourceType;
+	@Nullable
+	private final TypeDescriptor sourceType;
 
 	private final TypeDescriptor targetType;
 
@@ -49,7 +50,8 @@ public class ConverterNotFoundException extends ConversionException {
 	/**
 	 * Return the source type that was requested to convert from.
 	 */
-	public @Nullable TypeDescriptor getSourceType() {
+	@Nullable
+	public TypeDescriptor getSourceType() {
 		return this.sourceType;
 	}
 

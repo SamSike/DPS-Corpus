@@ -18,14 +18,15 @@ package org.apache.camel.component.properties;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.ProcessorDefinition;
 import org.apache.camel.model.SendDefinition;
-import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  *
@@ -41,16 +42,17 @@ public class PropertiesRouteFromTest extends ContextTestSupport {
         assertEquals("{{cool.start}}", uri);
 
         // use a routes definition to dump the routes
-        String xml = PluginHelper.getModelToXMLDumper(context).dumpModelAsXml(context, context.getRouteDefinition("foo"));
-        assertThat(xml).containsPattern("\\Q<from id=\"\\Efrom[0-9]+\\Q\" uri=\"{{cool.start}}\"/>\\E");
+        ExtendedCamelContext ecc = context.adapt(ExtendedCamelContext.class);
+        String xml = ecc.getModelToXMLDumper().dumpModelAsXml(context, context.getRouteDefinition("foo"));
+        assertTrue(xml.contains("<from uri=\"{{cool.start}}\"/>"));
         assertThat(xml).containsPattern("\\Q<to id=\"\\Eto[0-9]+\\Q\" uri=\"{{cool.end}}\"/>\\E");
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("{{cool.start}}").routeId("foo").to("{{cool.end}}");
             }
         };

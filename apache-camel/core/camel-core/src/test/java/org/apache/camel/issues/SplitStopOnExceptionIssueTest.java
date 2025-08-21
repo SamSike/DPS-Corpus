@@ -35,7 +35,7 @@ public class SplitStopOnExceptionIssueTest extends ContextTestSupport {
 
         Exchange out = template.request("direct:start", new Processor() {
             @Override
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("Hello,World,Kaboom");
             }
         });
@@ -57,10 +57,10 @@ public class SplitStopOnExceptionIssueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").setProperty("foo", constant("before")).split().tokenize(",")
                         .setProperty("foo", constant("changed")).to("mock:line")
                         .filter(body().contains("Kaboom")).throwException(new IllegalArgumentException("Forced exception"))

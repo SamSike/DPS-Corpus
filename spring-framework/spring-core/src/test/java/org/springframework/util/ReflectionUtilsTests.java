@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,10 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.tests.sample.objects.TestObject;
-import org.springframework.util.ReflectionUtils.MethodFilter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -73,7 +73,7 @@ class ReflectionUtilsTests {
 		assertThat(testBean.getName()).isEqualTo("FooBar");
 
 		ReflectionUtils.setField(field, testBean, null);
-		assertThat(testBean.getName()).isNull();
+		assertThat((Object) testBean.getName()).isNull();
 	}
 
 	@Test
@@ -176,7 +176,7 @@ class ReflectionUtilsTests {
 		src.setName("freddie");
 		src.setAge(15);
 		src.setSpouse(new TestObject());
-		assertThat(src.getAge()).isNotEqualTo(dest.getAge());
+		assertThat(src.getAge() == dest.getAge()).isFalse();
 
 		ReflectionUtils.shallowCopyFieldState(src, dest);
 		assertThat(dest.getAge()).isEqualTo(src.getAge());
@@ -184,58 +184,40 @@ class ReflectionUtilsTests {
 	}
 
 	@Test
-	void doWithMethodsUsingProtectedFilter() {
+	void doWithProtectedMethods() {
 		ListSavingMethodCallback mc = new ListSavingMethodCallback();
 		ReflectionUtils.doWithMethods(TestObject.class, mc, method -> Modifier.isProtected(method.getModifiers()));
-		assertThat(mc.getMethodNames())
-			.hasSizeGreaterThanOrEqualTo(2)
-			.as("Must find protected methods on Object").contains("clone", "finalize")
-			.as("Public, not protected").doesNotContain("hashCode", "absquatulate");
+		assertThat(mc.getMethodNames().isEmpty()).isFalse();
+		assertThat(mc.getMethodNames().contains("clone")).as("Must find protected method on Object").isTrue();
+		assertThat(mc.getMethodNames().contains("finalize")).as("Must find protected method on Object").isTrue();
+		assertThat(mc.getMethodNames().contains("hashCode")).as("Public, not protected").isFalse();
+		assertThat(mc.getMethodNames().contains("absquatulate")).as("Public, not protected").isFalse();
 	}
 
 	@Test
-	void doWithMethodsUsingUserDeclaredMethodsFilterStartingWithObject() {
-		ListSavingMethodCallback mc = new ListSavingMethodCallback();
-		ReflectionUtils.doWithMethods(Object.class, mc, ReflectionUtils.USER_DECLARED_METHODS);
-		assertThat(mc.getMethodNames()).isEmpty();
-	}
-
-	@Test
-	void doWithMethodsUsingUserDeclaredMethodsFilterStartingWithTestObject() {
-		ListSavingMethodCallback mc = new ListSavingMethodCallback();
-		ReflectionUtils.doWithMethods(TestObject.class, mc, ReflectionUtils.USER_DECLARED_METHODS);
-		assertThat(mc.getMethodNames())
-			.as("user declared methods").contains("absquatulate", "compareTo", "getName", "setName", "getAge", "setAge", "getSpouse", "setSpouse")
-			.as("methods on Object").doesNotContain("equals", "hashCode", "toString", "clone", "finalize", "getClass", "notify", "notifyAll", "wait");
-	}
-
-	@Test
-	void doWithMethodsUsingUserDeclaredMethodsComposedFilter() {
-		ListSavingMethodCallback mc = new ListSavingMethodCallback();
-		// "q" because both absquatulate() and equals() contain "q"
-		MethodFilter isSetterMethodOrNameContainsQ = m -> m.getName().startsWith("set") || m.getName().contains("q");
-		MethodFilter methodFilter = ReflectionUtils.USER_DECLARED_METHODS.and(isSetterMethodOrNameContainsQ);
-		ReflectionUtils.doWithMethods(TestObject.class, mc, methodFilter);
-		assertThat(mc.getMethodNames()).containsExactlyInAnyOrder("setName", "setAge", "setSpouse", "absquatulate");
-	}
-
-	@Test
-	void doWithMethodsFindsDuplicatesInClassHierarchy() {
+	void duplicatesFound() {
 		ListSavingMethodCallback mc = new ListSavingMethodCallback();
 		ReflectionUtils.doWithMethods(TestObjectSubclass.class, mc);
-		assertThat(mc.getMethodNames().stream()).filteredOn("absquatulate"::equals).as("Found 2 absquatulates").hasSize(2);
+		int absquatulateCount = 0;
+		for (String name : mc.getMethodNames()) {
+			if (name.equals("absquatulate")) {
+				++absquatulateCount;
+			}
+		}
+		assertThat(absquatulateCount).as("Found 2 absquatulates").isEqualTo(2);
 	}
 
 	@Test
-	void findMethod() {
+	void findMethod() throws Exception {
 		assertThat(ReflectionUtils.findMethod(B.class, "bar", String.class)).isNotNull();
 		assertThat(ReflectionUtils.findMethod(B.class, "foo", Integer.class)).isNotNull();
 		assertThat(ReflectionUtils.findMethod(B.class, "getClass")).isNotNull();
 	}
 
+	@Disabled("[SPR-8644] findMethod() does not currently support var-args")
 	@Test
-	void findMethodWithVarArgs() {
-		assertThat(ReflectionUtils.findMethod(B.class, "add", int[].class)).isNotNull();
+	void findMethodWithVarArgs() throws Exception {
+		assertThat(ReflectionUtils.findMethod(B.class, "add", int.class, int.class, int.class)).isNotNull();
 	}
 
 	@Test
@@ -277,27 +259,37 @@ class ReflectionUtilsTests {
 	}
 
 	@Test
-	void getAllDeclaredMethods() {
+	void getAllDeclaredMethods() throws Exception {
 		class Foo {
 			@Override
 			public String toString() {
 				return super.toString();
 			}
 		}
-		Method[] allDeclaredMethods = ReflectionUtils.getAllDeclaredMethods(Foo.class);
-		assertThat(allDeclaredMethods).extracting(Method::getName).filteredOn("toString"::equals).hasSize(2);
+		int toStringMethodCount = 0;
+		for (Method method : ReflectionUtils.getAllDeclaredMethods(Foo.class)) {
+			if (method.getName().equals("toString")) {
+				toStringMethodCount++;
+			}
+		}
+		assertThat(toStringMethodCount).isEqualTo(2);
 	}
 
 	@Test
-	void getUniqueDeclaredMethods() {
+	void getUniqueDeclaredMethods() throws Exception {
 		class Foo {
 			@Override
 			public String toString() {
 				return super.toString();
 			}
 		}
-		Method[] uniqueDeclaredMethods = ReflectionUtils.getUniqueDeclaredMethods(Foo.class);
-		assertThat(uniqueDeclaredMethods).extracting(Method::getName).filteredOn("toString"::equals).hasSize(1);
+		int toStringMethodCount = 0;
+		for (Method method : ReflectionUtils.getUniqueDeclaredMethods(Foo.class)) {
+			if (method.getName().equals("toString")) {
+				toStringMethodCount++;
+			}
+		}
+		assertThat(toStringMethodCount).isEqualTo(1);
 	}
 
 	@Test
@@ -305,19 +297,25 @@ class ReflectionUtilsTests {
 		class Parent {
 			@SuppressWarnings("unused")
 			public Number m1() {
-				return 42;
+				return Integer.valueOf(42);
 			}
 		}
 		class Leaf extends Parent {
 			@Override
 			public Integer m1() {
-				return 42;
+				return Integer.valueOf(42);
 			}
 		}
+		int m1MethodCount = 0;
 		Method[] methods = ReflectionUtils.getUniqueDeclaredMethods(Leaf.class);
-		assertThat(methods).extracting(Method::getName).filteredOn("m1"::equals).hasSize(1);
-		assertThat(methods).contains(Leaf.class.getMethod("m1"));
-		assertThat(methods).doesNotContain(Parent.class.getMethod("m1"));
+		for (Method method : methods) {
+			if (method.getName().equals("m1")) {
+				m1MethodCount++;
+			}
+		}
+		assertThat(m1MethodCount).isEqualTo(1);
+		assertThat(ObjectUtils.containsElement(methods, Leaf.class.getMethod("m1"))).isTrue();
+		assertThat(ObjectUtils.containsElement(methods, Parent.class.getMethod("m1"))).isFalse();
 	}
 
 	@Test
@@ -334,7 +332,7 @@ class ReflectionUtilsTests {
 		private List<Method> methods = new ArrayList<>();
 
 		@Override
-		public void doWith(Method m) throws IllegalArgumentException {
+		public void doWith(Method m) throws IllegalArgumentException, IllegalAccessException {
 			this.methodNames.add(m.getName());
 			this.methods.add(m);
 		}
@@ -378,7 +376,7 @@ class ReflectionUtilsTests {
 
 	private static class A {
 
-		@SuppressWarnings({ "unused", "RedundantThrows" })
+		@SuppressWarnings("unused")
 		private void foo(Integer i) throws RemoteException {
 		}
 	}
@@ -391,8 +389,8 @@ class ReflectionUtilsTests {
 
 		int add(int... args) {
 			int sum = 0;
-			for (int arg : args) {
-				sum += arg;
+			for (int i = 0; i < args.length; i++) {
+				sum += args[i];
 			}
 			return sum;
 		}

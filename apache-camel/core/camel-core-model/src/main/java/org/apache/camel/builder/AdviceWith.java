@@ -24,8 +24,6 @@ import org.apache.camel.model.Model;
 import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.model.RoutesDefinition;
-import org.apache.camel.spi.ModelToXMLDumper;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.function.ThrowingConsumer;
 import org.slf4j.Logger;
@@ -199,12 +197,13 @@ public final class AdviceWith {
         ObjectHelper.notNull(builder, "RouteBuilder");
 
         LOG.debug("AdviceWith route before: {}", definition);
-        ExtendedCamelContext ecc = camelContext.getCamelContextExtension();
-        Model model = camelContext.getCamelContextExtension().getContextPlugin(Model.class);
+        ExtendedCamelContext ecc = camelContext.adapt(ExtendedCamelContext.class);
+        Model model = camelContext.getExtension(Model.class);
 
         // inject this route into the advice route builder so it can access this route
         // and offer features to manipulate the route directly
-        if (builder instanceof AdviceWithRouteBuilder arb) {
+        if (builder instanceof AdviceWithRouteBuilder) {
+            AdviceWithRouteBuilder arb = (AdviceWithRouteBuilder) builder;
             arb.setOriginalRoute(definition);
         }
 
@@ -212,11 +211,10 @@ public final class AdviceWith {
         RoutesDefinition routes = builder.configureRoutes(camelContext);
 
         // was logging enabled or disabled
-        boolean logRoutesAsXml;
-        if (builder instanceof AdviceWithRouteBuilder arb) {
+        boolean logRoutesAsXml = true;
+        if (builder instanceof AdviceWithRouteBuilder) {
+            AdviceWithRouteBuilder arb = (AdviceWithRouteBuilder) builder;
             logRoutesAsXml = arb.isLogRouteAsXml();
-        } else {
-            logRoutesAsXml = true;
         }
 
         LOG.debug("AdviceWith routes: {}", routes);
@@ -241,9 +239,8 @@ public final class AdviceWith {
         String beforeAsXml = null;
         if (logRoutesAsXml && LOG.isInfoEnabled()) {
             try {
-                ModelToXMLDumper modelToXMLDumper = PluginHelper.getModelToXMLDumper(ecc);
-                beforeAsXml = modelToXMLDumper.dumpModelAsXml(camelContext, definition);
-            } catch (Exception e) {
+                beforeAsXml = ecc.getModelToXMLDumper().dumpModelAsXml(camelContext, definition);
+            } catch (Throwable e) {
                 // ignore, it may be due jaxb is not on classpath etc
             }
         }
@@ -252,8 +249,8 @@ public final class AdviceWith {
         model.removeRouteDefinition(definition);
 
         // any advice with tasks we should execute first?
-        if (builder instanceof AdviceWithRouteBuilder adviceWithRouteBuilder) {
-            List<AdviceWithTask> tasks = adviceWithRouteBuilder.getAdviceWithTasks();
+        if (builder instanceof AdviceWithRouteBuilder) {
+            List<AdviceWithTask> tasks = ((AdviceWithRouteBuilder) builder).getAdviceWithTasks();
             for (AdviceWithTask task : tasks) {
                 task.task();
             }
@@ -276,12 +273,11 @@ public final class AdviceWith {
             LOG.info("AdviceWith route after: {}", merged);
         }
 
-        if (beforeAsXml != null && LOG.isInfoEnabled()) {
+        if (beforeAsXml != null && logRoutesAsXml && LOG.isInfoEnabled()) {
             try {
-                ModelToXMLDumper modelToXMLDumper = PluginHelper.getModelToXMLDumper(ecc);
-                String afterAsXml = modelToXMLDumper.dumpModelAsXml(camelContext, merged);
+                String afterAsXml = ecc.getModelToXMLDumper().dumpModelAsXml(camelContext, merged);
                 LOG.info("Adviced route before/after as XML:\n{}\n\n{}", beforeAsXml, afterAsXml);
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 // ignore, it may be due jaxb is not on classpath etc
             }
         }
@@ -294,14 +290,14 @@ public final class AdviceWith {
     }
 
     private static RouteDefinition findRouteDefinition(CamelContext camelContext, Object routeId) {
-        ModelCamelContext mcc = (ModelCamelContext) camelContext;
+        ModelCamelContext mcc = camelContext.adapt(ModelCamelContext.class);
         if (mcc.getRouteDefinitions().isEmpty()) {
             throw new IllegalArgumentException("Cannot advice route as there are no routes");
         }
 
         RouteDefinition rd;
-        if (routeId instanceof RouteDefinition routeDefinition) {
-            rd = routeDefinition;
+        if (routeId instanceof RouteDefinition) {
+            rd = (RouteDefinition) routeId;
         } else {
             String id = mcc.getTypeConverter().convertTo(String.class, routeId);
             if (id != null) {
@@ -314,7 +310,7 @@ public final class AdviceWith {
                     }
                 }
                 if (rd == null) {
-                    throw new IllegalArgumentException("Cannot advice route as route with id: " + routeId + " does not exist");
+                    throw new IllegalArgumentException("Cannot advice route as route with id: " + routeId + " does not exists");
                 }
             } else {
                 // grab first route

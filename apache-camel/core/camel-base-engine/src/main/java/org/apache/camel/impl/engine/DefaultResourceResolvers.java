@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.ContentTypeAware;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.annotations.ResourceResolver;
@@ -41,7 +42,6 @@ import org.apache.camel.support.ResourceSupport;
 import org.apache.camel.util.FileUtil;
 
 public final class DefaultResourceResolvers {
-
     private DefaultResourceResolvers() {
     }
 
@@ -58,7 +58,8 @@ public final class DefaultResourceResolvers {
 
         @Override
         public Resource createResource(String location, String remaining) {
-            final File path = new File(getPath(remaining));
+            final File path = new File(tryDecodeUri(remaining));
+
             return new ResourceSupport(SCHEME, location) {
                 @Override
                 public boolean exists() {
@@ -73,14 +74,27 @@ public final class DefaultResourceResolvers {
                 @Override
                 public InputStream getInputStream() throws IOException {
                     if (!exists()) {
-                        throw new FileNotFoundException(path + " does not exist");
+                        throw new FileNotFoundException(path + " does not exists");
                     }
                     if (path.isDirectory()) {
                         throw new FileNotFoundException(path + " is a directory");
                     }
+
                     return new FileInputStream(path);
                 }
             };
+        }
+
+        protected String tryDecodeUri(String uri) {
+            try {
+                // try to decode as the uri may contain %20 for spaces etc
+                uri = URLDecoder.decode(uri, StandardCharsets.UTF_8.name());
+            } catch (Exception e) {
+                getLogger().trace("Error URL decoding uri using UTF-8 encoding: {}. This exception is ignored.", uri);
+                // ignore
+            }
+
+            return uri;
         }
     }
 
@@ -132,6 +146,7 @@ public final class DefaultResourceResolvers {
         @Override
         public Resource createResource(String location, String remaining) {
             final String path = getPath(remaining);
+
             return new ResourceSupport(SCHEME, location) {
                 @Override
                 public boolean exists() {
@@ -141,22 +156,43 @@ public final class DefaultResourceResolvers {
                 @Override
                 public URI getURI() {
                     URL url = getCamelContext()
+                            .adapt(ExtendedCamelContext.class)
                             .getClassResolver()
                             .loadResourceAsURL(path);
+
                     try {
                         return url != null ? url.toURI() : null;
                     } catch (URISyntaxException e) {
                         throw new IllegalArgumentException(e);
                     }
+
                 }
 
                 @Override
                 public InputStream getInputStream() throws IOException {
                     return getCamelContext()
+                            .adapt(ExtendedCamelContext.class)
                             .getClassResolver()
                             .loadResourceAsStream(path);
                 }
             };
+        }
+
+        private String getPath(String location) {
+            String uri = tryDecodeUri(location);
+            return FileUtil.compactPath(uri, '/');
+        }
+
+        protected String tryDecodeUri(String uri) {
+            try {
+                // try to decode as the uri may contain %20 for spaces etc
+                uri = URLDecoder.decode(uri, StandardCharsets.UTF_8.name());
+            } catch (Exception e) {
+                getLogger().trace("Error URL decoding uri using UTF-8 encoding: {}. This exception is ignored.", uri);
+                // ignore
+            }
+
+            return uri;
         }
     }
 
@@ -187,6 +223,7 @@ public final class DefaultResourceResolvers {
                     if (!exists()) {
                         throw new IOException("There is no bean in the registry with name " + remaining + " and type String");
                     }
+
                     return new ByteArrayInputStream(val.getBytes());
                 }
             };
@@ -217,6 +254,7 @@ public final class DefaultResourceResolvers {
                     if (!exists()) {
                         throw new IOException("No base64 content defined");
                     }
+
                     final byte[] decoded = Base64.getDecoder().decode(remaining);
                     return new ByteArrayInputStream(decoded);
                 }
@@ -249,8 +287,10 @@ public final class DefaultResourceResolvers {
                     if (!exists()) {
                         throw new IOException("No gzip content defined");
                     }
+
                     final byte[] decoded = Base64.getDecoder().decode(remaining);
                     final InputStream is = new ByteArrayInputStream(decoded);
+
                     return new GZIPInputStream(is);
                 }
             };
@@ -281,6 +321,7 @@ public final class DefaultResourceResolvers {
                     if (!exists()) {
                         throw new IOException("No memory content defined");
                     }
+
                     return new ByteArrayInputStream(remaining.getBytes());
                 }
             };
@@ -297,19 +338,22 @@ public final class DefaultResourceResolvers {
         @Override
         public boolean exists() {
             URLConnection connection = null;
+
             try {
                 connection = new URL(getLocation()).openConnection();
-                if (connection instanceof HttpURLConnection httpURLConnection) {
-                    return httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK;
+
+                if (connection instanceof HttpURLConnection) {
+                    return ((HttpURLConnection) connection).getResponseCode() == HttpURLConnection.HTTP_OK;
                 }
+
                 return connection.getContentLengthLong() > 0;
             } catch (IOException e) {
                 throw new IllegalArgumentException(e);
             } finally {
                 // close the http connection to avoid
                 // leaking gaps in case of an exception
-                if (connection instanceof HttpURLConnection httpURLConnection) {
-                    httpURLConnection.disconnect();
+                if (connection instanceof HttpURLConnection) {
+                    ((HttpURLConnection) connection).disconnect();
                 }
             }
         }
@@ -318,14 +362,15 @@ public final class DefaultResourceResolvers {
         public InputStream getInputStream() throws IOException {
             URLConnection con = new URL(getLocation()).openConnection();
             con.setUseCaches(false);
+
             try {
                 setContentType(con.getContentType());
                 return con.getInputStream();
             } catch (IOException e) {
                 // close the http connection to avoid
                 // leaking gaps in case of an exception
-                if (con instanceof HttpURLConnection httpURLConnection) {
-                    httpURLConnection.disconnect();
+                if (con instanceof HttpURLConnection) {
+                    ((HttpURLConnection) con).disconnect();
                 }
                 throw e;
             }
@@ -341,24 +386,4 @@ public final class DefaultResourceResolvers {
             this.contentType = contentType;
         }
     }
-
-    private static String getPath(String location) {
-        // skip leading double slashes
-        if (location.startsWith("//")) {
-            location = location.substring(2);
-        }
-        String uri = tryDecodeUri(location);
-        return FileUtil.compactPath(uri, '/');
-    }
-
-    private static String tryDecodeUri(String uri) {
-        try {
-            // try to decode as the uri may contain %20 for spaces etc
-            uri = URLDecoder.decode(uri, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            // ignore
-        }
-        return uri;
-    }
-
 }

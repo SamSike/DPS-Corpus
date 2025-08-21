@@ -52,9 +52,6 @@ public class XmppGroupChatProducer extends DefaultProducer {
         if (connection == null) {
             try {
                 connection = endpoint.createConnection();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeExchangeException("Interrupted while connecting to XMPP server.", exchange, e);
             } catch (Exception e) {
                 throw new RuntimeExchangeException("Could not connect to XMPP server.", exchange, e);
             }
@@ -63,9 +60,6 @@ public class XmppGroupChatProducer extends DefaultProducer {
         if (chat == null) {
             try {
                 initializeChat();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeExchangeException("Interrupted while initializing XMPP chat.", exchange, e);
             } catch (Exception e) {
                 throw new RuntimeExchangeException("Could not initialize XMPP chat.", exchange, e);
             }
@@ -90,25 +84,17 @@ public class XmppGroupChatProducer extends DefaultProducer {
             // must invoke nextMessage to consume the response from the server
             // otherwise the client local queue will fill up (CAMEL-1467)
             chat.pollMessage();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeExchangeException("Interrupted while sending XMPP message: " + message, exchange, e);
         } catch (Exception e) {
             throw new RuntimeExchangeException("Could not send XMPP message: " + message, exchange, e);
         }
     }
 
-    private void reconnect() throws InterruptedException, IOException, SmackException, XMPPException {
-        lock.lock();
-        try {
-            if (!connection.isConnected()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Reconnecting to: {}", XmppEndpoint.getConnectionMessage(connection));
-                }
-                connection.connect();
+    private synchronized void reconnect() throws InterruptedException, IOException, SmackException, XMPPException {
+        if (!connection.isConnected()) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Reconnecting to: {}", XmppEndpoint.getConnectionMessage(connection));
             }
-        } finally {
-            lock.unlock();
+            connection.connect();
         }
     }
 
@@ -135,26 +121,20 @@ public class XmppGroupChatProducer extends DefaultProducer {
         super.doStart();
     }
 
-    protected void initializeChat()
+    protected synchronized void initializeChat()
             throws InterruptedException, SmackException, XMPPException, XmppStringprepException {
-        lock.lock();
-        try {
-            if (chat == null) {
-                room = endpoint.resolveRoom(connection);
-                String roomPassword = endpoint.getRoomPassword();
-                MultiUserChatManager chatManager = MultiUserChatManager.getInstanceFor(connection);
-                chat = chatManager.getMultiUserChat(JidCreate.entityBareFrom(room));
-                MucEnterConfiguration.Builder mucc
-                        = chat.getEnterConfigurationBuilder(Resourcepart.from(endpoint.getNickname()))
-                                .requestNoHistory();
-                if (roomPassword != null) {
-                    mucc.withPassword(roomPassword);
-                }
-                chat.join(mucc.build());
-                LOG.info("Joined room: {} as: {}", room, endpoint.getNickname());
+        if (chat == null) {
+            room = endpoint.resolveRoom(connection);
+            String roomPassword = endpoint.getRoomPassword();
+            MultiUserChatManager chatManager = MultiUserChatManager.getInstanceFor(connection);
+            chat = chatManager.getMultiUserChat(JidCreate.entityBareFrom(room));
+            MucEnterConfiguration.Builder mucc = chat.getEnterConfigurationBuilder(Resourcepart.from(endpoint.getNickname()))
+                    .requestNoHistory();
+            if (roomPassword != null) {
+                mucc.withPassword(roomPassword);
             }
-        } finally {
-            lock.unlock();
+            chat.join(mucc.build());
+            LOG.info("Joined room: {} as: {}", room, endpoint.getNickname());
         }
     }
 

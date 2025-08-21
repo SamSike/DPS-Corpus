@@ -1,7 +1,9 @@
 /**
  * Support classes for Spring's JMS framework.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jms.support.destination;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

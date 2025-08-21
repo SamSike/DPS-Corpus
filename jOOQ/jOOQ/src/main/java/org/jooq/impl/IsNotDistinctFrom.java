@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -91,11 +88,6 @@ implements
     // XXX: QueryPart API
     // -------------------------------------------------------------------------
 
-    @Override
-    final boolean isNullable() {
-        return false;
-    }
-
 
 
     @Override
@@ -118,10 +110,6 @@ implements
         // [#7222] [#7224] Make sure the columns are aliased
         else if (IsDistinctFrom.EMULATE_DISTINCT_PREDICATE.contains(ctx.dialect()))
             ctx.visit(exists(select(arg1.as("x")).intersect(select(arg2.as("x")))));
-
-        // [#7539] While INTERSECT is supported, correlating subqueries hardly is in ClickHouse
-        else if (IsDistinctFrom.EMULATE_WITH_ARRAYS.contains(ctx.dialect()))
-            ctx.visit(function(N_arrayUniq, INTEGER, array(arg1, arg2)).eq(inline(1)));
 
         // MySQL knows the <=> operator
         else if (IsDistinctFrom.SUPPORT_DISTINCT_WITH_ARROW.contains(ctx.dialect()))
@@ -187,7 +175,7 @@ implements
 
     @Override
     public boolean equals(Object that) {
-        if (that instanceof QOM.IsNotDistinctFrom<?> o) {
+        if (that instanceof QOM.IsNotDistinctFrom) { QOM.IsNotDistinctFrom<?> o = (QOM.IsNotDistinctFrom<?>) that;
             return
                 StringUtils.equals($arg1(), o.$arg1()) &&
                 StringUtils.equals($arg2(), o.$arg2())

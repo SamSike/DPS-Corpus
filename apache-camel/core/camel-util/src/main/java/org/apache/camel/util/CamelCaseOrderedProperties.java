@@ -34,13 +34,8 @@ import java.util.Properties;
 public final class CamelCaseOrderedProperties extends BaseOrderedProperties {
 
     @Override
-    public Object get(Object key) {
-        lock.lock();
-        try {
-            return getProperty(key.toString());
-        } finally {
-            lock.unlock();
-        }
+    public synchronized Object get(Object key) {
+        return getProperty(key.toString());
     }
 
     @Override

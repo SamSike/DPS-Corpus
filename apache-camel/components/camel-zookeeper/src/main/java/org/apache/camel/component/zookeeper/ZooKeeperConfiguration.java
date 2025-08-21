@@ -127,6 +127,7 @@ public class ZooKeeperConfiguration implements Cloneable {
         }
         b.setLength(b.length() - 1);
         return b.toString();
+
     }
 
     /**

@@ -18,6 +18,7 @@ package org.apache.camel.issues;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.DeadLetterChannelBuilder;
 import org.apache.camel.builder.RouteBuilder;
@@ -36,10 +37,10 @@ public class OnExceptionContinuedIssueTest extends ContextTestSupport {
         defaultErrorHandlerBuilder.redeliveryDelay(0); // run fast
         defaultErrorHandlerBuilder.maximumRedeliveries(2);
 
-        context.getCamelContextExtension().setErrorHandlerFactory(defaultErrorHandlerBuilder);
+        context.adapt(ExtendedCamelContext.class).setErrorHandlerFactory(defaultErrorHandlerBuilder);
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setTracing(false);
 
                 onException(OrderFailedException.class).maximumRedeliveries(0).continued(true);
@@ -54,18 +55,18 @@ public class OnExceptionContinuedIssueTest extends ContextTestSupport {
                     }
                 }).to("mock:two").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         log.info("Second Processor Invoked");
                     }
                 }).to("mock:three").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         log.info("Third Processor Invoked");
                         throw new RuntimeException("Some Runtime Exception");
                     }
                 }).to("mock:four").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         log.info("Fourth Processor Invoked");
                     }
                 });
@@ -86,7 +87,7 @@ public class OnExceptionContinuedIssueTest extends ContextTestSupport {
         assertMockEndpointsSatisfied();
     }
 
-    public static class OrderFailedException extends Exception {
+    public class OrderFailedException extends Exception {
 
         public OrderFailedException(String s) {
             super(s);

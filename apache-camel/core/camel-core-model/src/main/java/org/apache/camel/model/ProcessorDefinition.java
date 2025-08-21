@@ -19,10 +19,12 @@ package org.apache.camel.model;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -62,7 +64,6 @@ import org.apache.camel.resume.ResumeStrategy;
 import org.apache.camel.spi.AsEndpointUri;
 import org.apache.camel.spi.AsPredicate;
 import org.apache.camel.spi.DataFormat;
-import org.apache.camel.spi.DataType;
 import org.apache.camel.spi.IdempotentRepository;
 import org.apache.camel.spi.InterceptStrategy;
 import org.apache.camel.spi.Metadata;
@@ -78,12 +79,14 @@ import org.slf4j.Logger;
 @XmlAccessorType(XmlAccessType.FIELD)
 @SuppressWarnings("rawtypes")
 public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>> extends OptionalIdentifiedDefinition<Type>
-        implements Block, CopyableDefinition<ProcessorDefinition>, DisabledAwareDefinition {
+        implements Block {
     @XmlTransient
     private static final AtomicInteger COUNTER = new AtomicInteger();
     @XmlAttribute
     @Metadata(label = "advanced", javaType = "java.lang.Boolean")
     protected String disabled;
+    @XmlAttribute
+    protected Boolean inheritErrorHandler;
     @XmlTransient
     private final Deque<Block> blocks = new LinkedList<>();
     @XmlTransient
@@ -94,22 +97,10 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
     private final List<InterceptStrategy> interceptStrategies = new ArrayList<>();
     @XmlTransient
     private final int index;
-    @XmlTransient
-    private Boolean inheritErrorHandler; // used for camel-jta
 
     protected ProcessorDefinition() {
         // every time we create a definition we should inc the counter
         index = COUNTER.getAndIncrement();
-    }
-
-    protected ProcessorDefinition(ProcessorDefinition source) {
-        super(source);
-        this.disabled = source.disabled;
-        this.blocks.addAll(source.blocks);
-        this.parent = source.parent;
-        this.routeConfiguration = source.routeConfiguration;
-        this.interceptStrategies.addAll(source.interceptStrategies);
-        this.index = source.index;
     }
 
     private static <T extends ExpressionNode> ExpressionClause<T> createAndSetExpression(T result) {
@@ -196,8 +187,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
         CamelContextAware.trySetCamelContext(output, context);
 
         if (!(this instanceof OutputNode)) {
-            ProcessorDefinition p = getParent();
-            p.addOutput(output);
+            getParent().addOutput(output);
             return;
         }
 
@@ -212,8 +202,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
         // still allow if using advice-with)
         boolean parentIsRoute = RouteDefinition.class.isAssignableFrom(this.getClass())
                 || AdviceWithDefinition.class.isAssignableFrom(this.getClass());
-        boolean parentIsAlreadyTop = this.isTopLevelOnly();
-        if (output.isTopLevelOnly() && !parentIsRoute && !parentIsAlreadyTop) {
+        if (output.isTopLevelOnly() && !parentIsRoute) {
             throw new IllegalArgumentException(
                     "The output must be added as top-level on the route. Try moving " + output + " to the top of route.");
         }
@@ -222,10 +211,8 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
         configureChild(output);
         getOutputs().add(output);
 
-        if (context != null && (context.isSourceLocationEnabled()
-                || context.isDebugging() || context.isDebugStandby()
-                || context.isTracing() || context.isTracingStandby())) {
-            // we want to capture source location:line for every output (also when debugging or tracing enabled/standby)
+        if (context != null && (context.isSourceLocationEnabled() || context.isDebugging() || context.isTracing())) {
+            // we want to capture source location:line for every output
             Resource resource = this instanceof ResourceAware ? ((ResourceAware) this).getResource() : null;
             ProcessorDefinitionHelper.prepareSourceLocation(resource, output);
         }
@@ -267,22 +254,6 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
     }
 
     /**
-     * Sends the exchange to the given endpoint
-     *
-     * @param  uri             the endpoint to send to
-     * @param  variableSend    to use a variable as the source for the message body to send.
-     * @param  variableReceive to use a variable to store the received message body (only body, not headers).
-     * @return                 the builder
-     */
-    public Type toV(@AsEndpointUri String uri, String variableSend, String variableReceive) {
-        ToDefinition to = new ToDefinition(uri);
-        to.setVariableSend(variableSend);
-        to.setVariableReceive(variableReceive);
-        addOutput(to);
-        return asType();
-    }
-
-    /**
      * Sends the exchange to the given dynamic endpoint
      *
      * @return the builder
@@ -309,46 +280,12 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
     /**
      * Sends the exchange to the given dynamic endpoint
      *
-     * @param  uri             the dynamic endpoint to send to (resolved using simple language by default)
-     * @param  variableSend    to use a variable as the source for the message body to send.
-     * @param  variableReceive to use a variable to store the received message body (only body, not headers).
-     * @return                 the builder
-     */
-    public Type toD(@AsEndpointUri String uri, String variableSend, String variableReceive) {
-        ToDynamicDefinition answer = new ToDynamicDefinition(uri);
-        answer.setVariableSend(variableSend);
-        answer.setVariableReceive(variableReceive);
-        addOutput(answer);
-        return asType();
-    }
-
-    /**
-     * Sends the exchange to the given dynamic endpoint
-     *
      * @param  endpointProducerBuilder the dynamic endpoint to send to (resolved using simple language by default)
      * @return                         the builder
      */
     public Type toD(@AsEndpointUri EndpointProducerBuilder endpointProducerBuilder) {
         ToDynamicDefinition answer = new ToDynamicDefinition();
         answer.setEndpointProducerBuilder(endpointProducerBuilder);
-        addOutput(answer);
-        return asType();
-    }
-
-    /**
-     * Sends the exchange to the given dynamic endpoint
-     *
-     * @param  endpointProducerBuilder the dynamic endpoint to send to (resolved using simple language by default)
-     * @param  variableSend            to use a variable as the source for the message body to send.
-     * @param  variableReceive         to use a variable to store the received message body (only body, not headers).
-     * @return                         the builder
-     */
-    public Type toD(
-            @AsEndpointUri EndpointProducerBuilder endpointProducerBuilder, String variableSend, String variableReceive) {
-        ToDynamicDefinition answer = new ToDynamicDefinition();
-        answer.setEndpointProducerBuilder(endpointProducerBuilder);
-        answer.setVariableSend(variableSend);
-        answer.setVariableReceive(variableReceive);
         addOutput(answer);
         return asType();
     }
@@ -434,7 +371,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      *
      * @return the builder
      */
-    @Deprecated(since = "3.19.0")
+    @Deprecated
     public ServiceCallDefinition serviceCall() {
         ServiceCallDefinition answer = new ServiceCallDefinition();
         addOutput(answer);
@@ -447,7 +384,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * @param  name the service name
      * @return      the builder
      */
-    @Deprecated(since = "3.19.0")
+    @Deprecated
     public Type serviceCall(String name) {
         ServiceCallDefinition answer = new ServiceCallDefinition();
         answer.setName(name);
@@ -462,7 +399,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * @param  uri  the endpoint uri to use for calling the service
      * @return      the builder
      */
-    @Deprecated(since = "3.19.0")
+    @Deprecated
     public Type serviceCall(String name, @AsEndpointUri String uri) {
         ServiceCallDefinition answer = new ServiceCallDefinition();
         answer.setName(name);
@@ -567,6 +504,20 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * @param  endpoints list of endpoints to send to
      * @return           the builder
      */
+    @Deprecated
+    public Type to(Iterable<Endpoint> endpoints) {
+        for (Endpoint endpoint : endpoints) {
+            addOutput(new ToDefinition(endpoint));
+        }
+        return asType();
+    }
+
+    /**
+     * Sends the exchange to a list of endpoints
+     *
+     * @param  endpoints list of endpoints to send to
+     * @return           the builder
+     */
     public Type to(@AsEndpointUri EndpointProducerBuilder... endpoints) {
         for (EndpointProducerBuilder endpoint : endpoints) {
             addOutput(new ToDefinition(endpoint));
@@ -600,6 +551,21 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * @return           the builder
      */
     public Type to(ExchangePattern pattern, Endpoint... endpoints) {
+        for (Endpoint endpoint : endpoints) {
+            addOutput(new ToDefinition(endpoint, pattern));
+        }
+        return asType();
+    }
+
+    /**
+     * Sends the exchange to a list of endpoints
+     *
+     * @param  pattern   the pattern to use for the message exchanges
+     * @param  endpoints list of endpoints to send to
+     * @return           the builder
+     */
+    @Deprecated
+    public Type to(ExchangePattern pattern, Iterable<Endpoint> endpoints) {
         for (Endpoint endpoint : endpoints) {
             addOutput(new ToDefinition(endpoint, pattern));
         }
@@ -651,6 +617,156 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
     }
 
     /**
+     * Sends the message to the given endpoint using an <a href="http://camel.apache.org/event-message.html">Event
+     * Message</a> or <a href="http://camel.apache.org/exchange-pattern.html">InOnly exchange pattern</a>
+     * <p/>
+     * Notice the existing MEP is restored after the message has been sent to the given endpoint.
+     *
+     * @param      uri The endpoint uri which is used for sending the exchange
+     * @return         the builder
+     * @deprecated     use to where you can specify the exchange pattern as well
+     */
+    @Deprecated
+    public Type inOnly(@AsEndpointUri String uri) {
+        return to(ExchangePattern.InOnly, uri);
+    }
+
+    /**
+     * Sends the message to the given endpoint using an <a href="http://camel.apache.org/event-message.html">Event
+     * Message</a> or <a href="http://camel.apache.org/exchange-pattern.html">InOnly exchange pattern</a>
+     * <p/>
+     * Notice the existing MEP is restored after the message has been sent to the given endpoint.
+     *
+     * @param      endpoint The endpoint which is used for sending the exchange
+     * @return              the builder
+     * @deprecated          use to where you can specify the exchange pattern as well
+     */
+    @Deprecated
+    public Type inOnly(Endpoint endpoint) {
+        return to(ExchangePattern.InOnly, endpoint);
+    }
+
+    /**
+     * Sends the message to the given endpoints using an <a href="http://camel.apache.org/event-message.html">Event
+     * Message</a> or <a href="http://camel.apache.org/exchange-pattern.html">InOnly exchange pattern</a>
+     * <p/>
+     * Notice the existing MEP is restored after the message has been sent to the given endpoint.
+     *
+     * @param      uris list of endpoints to send to
+     * @return          the builder
+     * @deprecated      use to where you can specify the exchange pattern as well
+     */
+    @Deprecated
+    public Type inOnly(@AsEndpointUri String... uris) {
+        return to(ExchangePattern.InOnly, uris);
+    }
+
+    /**
+     * Sends the message to the given endpoints using an <a href="http://camel.apache.org/event-message.html">Event
+     * Message</a> or <a href="http://camel.apache.org/exchange-pattern.html">InOnly exchange pattern</a>
+     * <p/>
+     * Notice the existing MEP is restored after the message has been sent to the given endpoint.
+     *
+     * @param      endpoints list of endpoints to send to
+     * @return               the builder
+     * @deprecated           use to where you can specify the exchange pattern as well
+     */
+    @Deprecated
+    public Type inOnly(@AsEndpointUri Endpoint... endpoints) {
+        return to(ExchangePattern.InOnly, endpoints);
+    }
+
+    /**
+     * Sends the message to the given endpoints using an <a href="http://camel.apache.org/event-message.html">Event
+     * Message</a> or <a href="http://camel.apache.org/exchange-pattern.html">InOnly exchange pattern</a>
+     * <p/>
+     * Notice the existing MEP is restored after the message has been sent to the given endpoint.
+     *
+     * @param      endpoints list of endpoints to send to
+     * @return               the builder
+     * @deprecated           use to where you can specify the exchange pattern as well
+     */
+    @Deprecated
+    public Type inOnly(Iterable<Endpoint> endpoints) {
+        return to(ExchangePattern.InOnly, endpoints);
+    }
+
+    /**
+     * Sends the message to the given endpoint using an <a href="http://camel.apache.org/request-reply.html">Request
+     * Reply</a> or <a href="http://camel.apache.org/exchange-pattern.html">InOut exchange pattern</a>
+     * <p/>
+     * Notice the existing MEP is restored after the message has been sent to the given endpoint.
+     *
+     * @param      uri The endpoint uri which is used for sending the exchange
+     * @return         the builder
+     * @deprecated     use to where you can specify the exchange pattern as well
+     */
+    @Deprecated
+    public Type inOut(@AsEndpointUri String uri) {
+        return to(ExchangePattern.InOut, uri);
+    }
+
+    /**
+     * Sends the message to the given endpoint using an <a href="http://camel.apache.org/request-reply.html">Request
+     * Reply</a> or <a href="http://camel.apache.org/exchange-pattern.html">InOut exchange pattern</a>
+     * <p/>
+     * Notice the existing MEP is restored after the message has been sent to the given endpoint.
+     *
+     * @param      endpoint The endpoint which is used for sending the exchange
+     * @return              the builder
+     * @deprecated          use to where you can specify the exchange pattern as well
+     */
+    @Deprecated
+    public Type inOut(Endpoint endpoint) {
+        return to(ExchangePattern.InOut, endpoint);
+    }
+
+    /**
+     * Sends the message to the given endpoints using an <a href="http://camel.apache.org/request-reply.html">Request
+     * Reply</a> or <a href="http://camel.apache.org/exchange-pattern.html">InOut exchange pattern</a>
+     * <p/>
+     * Notice the existing MEP is restored after the message has been sent to the given endpoint.
+     *
+     * @param      uris list of endpoints to send to
+     * @return          the builder
+     * @deprecated      use to where you can specify the exchange pattern as well
+     */
+    @Deprecated
+    public Type inOut(@AsEndpointUri String... uris) {
+        return to(ExchangePattern.InOut, uris);
+    }
+
+    /**
+     * Sends the message to the given endpoints using an <a href="http://camel.apache.org/request-reply.html">Request
+     * Reply</a> or <a href="http://camel.apache.org/exchange-pattern.html">InOut exchange pattern</a>
+     * <p/>
+     * Notice the existing MEP is restored after the message has been sent to the given endpoint.
+     *
+     * @param      endpoints list of endpoints to send to
+     * @return               the builder
+     * @deprecated           use to where you can specify the exchange pattern as well
+     */
+    @Deprecated
+    public Type inOut(Endpoint... endpoints) {
+        return to(ExchangePattern.InOut, endpoints);
+    }
+
+    /**
+     * Sends the message to the given endpoints using an <a href="http://camel.apache.org/request-reply.html">Request
+     * Reply</a> or <a href="http://camel.apache.org/exchange-pattern.html">InOut exchange pattern</a>
+     * <p/>
+     * Notice the existing MEP is restored after the message has been sent to the given endpoint.
+     *
+     * @param      endpoints list of endpoints to send to
+     * @return               the builder
+     * @deprecated           use to where you can specify the exchange pattern as well
+     */
+    @Deprecated
+    public Type inOut(Iterable<Endpoint> endpoints) {
+        return to(ExchangePattern.InOut, endpoints);
+    }
+
+    /**
      * Sets the id of this node.
      * <p/>
      * <b>Important:</b> If you want to set the id of the route, then you <b>must</b> use {@link #routeId(String)}
@@ -661,53 +777,15 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      */
     @Override
     public Type id(String id) {
-        // special for choice otherwise
-        if (this instanceof ChoiceDefinition cbr) {
-            if (cbr.getOtherwise() != null) {
-                if (cbr.getOtherwise().getOutputs().isEmpty()) {
-                    cbr.getOtherwise().id(id);
-                } else {
-                    var last = cbr.getOtherwise().getOutputs().get(cbr.getOtherwise().getOutputs().size() - 1);
-                    last.id(id);
-                }
-            } else if (!cbr.getWhenClauses().isEmpty()) {
-                var last = cbr.getWhenClauses().get(cbr.getWhenClauses().size() - 1);
-                if (last.getOutputs().isEmpty()) {
-                    last.setId(id);
-                } else {
-                    var p = last.getOutputs().get(last.getOutputs().size() - 1);
-                    p.id(id);
-                }
-            } else {
-                cbr.setId(id);
-            }
-            return asType();
-        }
-
         if (this instanceof OutputNode && getOutputs().isEmpty()) {
             // set id on this
             setId(id);
         } else {
-            List<ProcessorDefinition<?>> outputs = null;
-            if (this instanceof NoOutputDefinition<Type>) {
-                // this does not accept output so it should be on the parent
-                if (getParent() != null) {
-                    outputs = getParent().getOutputs();
-                }
-            } else if (this instanceof OutputExpressionNode) {
-                outputs = getOutputs();
-            } else if (this instanceof ExpressionNode) {
-                // this does not accept output so it should be on the parent
-                if (getParent() != null) {
-                    outputs = getParent().getOutputs();
-                }
-            } else {
-                outputs = getOutputs();
-            }
 
             // set it on last output as this is what the user means to do
             // for Block(s) with non empty getOutputs() the id probably refers
             // to the last definition in the current Block
+            List<ProcessorDefinition<?>> outputs = getOutputs();
             if (!blocks.isEmpty()) {
                 if (blocks.getLast() instanceof ProcessorDefinition) {
                     ProcessorDefinition<?> block = (ProcessorDefinition<?>) blocks.getLast();
@@ -716,8 +794,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
                     }
                 }
             }
-            if (outputs != null && !outputs.isEmpty()) {
-                // set id on last output
+            if (!getOutputs().isEmpty()) {
                 outputs.get(outputs.size() - 1).setId(id);
             } else {
                 // the output could be empty
@@ -781,7 +858,9 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
 
         RouteDefinition route = ProcessorDefinitionHelper.getRoute(def);
         if (route != null) {
-            route.setDescription(description);
+            DescriptionDefinition desc = new DescriptionDefinition();
+            desc.setText(description);
+            route.setDescription(desc);
         }
 
         return asType();
@@ -799,84 +878,6 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
         RouteDefinition route = ProcessorDefinitionHelper.getRoute(def);
         if (route != null) {
             route.setNodePrefixId(prefixId);
-        }
-
-        return asType();
-    }
-
-    /**
-     * Sets the description of this node.
-     * <p/>
-     * <b>Important:</b> If you want to set the description of the route, then you <b>must</b> use
-     * {@link #routeDescription(String)} instead.
-     *
-     * @param  description the description
-     * @return             the builder
-     */
-    @Override
-    public Type description(String description) {
-        // special for choice otherwise
-        if (this instanceof ChoiceDefinition cbr) {
-            if (cbr.getOtherwise() != null) {
-                if (cbr.getOtherwise().getOutputs().isEmpty()) {
-                    cbr.getOtherwise().description(description);
-                } else {
-                    var last = cbr.getOtherwise().getOutputs().get(cbr.getOtherwise().getOutputs().size() - 1);
-                    last.description(description);
-                }
-            } else if (!cbr.getWhenClauses().isEmpty()) {
-                var last = cbr.getWhenClauses().get(cbr.getWhenClauses().size() - 1);
-                if (last.getOutputs().isEmpty()) {
-                    last.setDescription(description);
-                } else {
-                    var p = last.getOutputs().get(last.getOutputs().size() - 1);
-                    p.description(description);
-                }
-            } else {
-                cbr.setDescription(description);
-            }
-            return asType();
-        }
-
-        if (this instanceof OutputNode && getOutputs().isEmpty()) {
-            // set description on this
-            setDescription(description);
-        } else {
-            List<ProcessorDefinition<?>> outputs = null;
-            if (this instanceof NoOutputDefinition<Type>) {
-                // this does not accept output so it should be on the parent
-                if (getParent() != null) {
-                    outputs = getParent().getOutputs();
-                }
-            } else if (this instanceof OutputExpressionNode) {
-                outputs = getOutputs();
-            } else if (this instanceof ExpressionNode) {
-                // this does not accept output so it should be on the parent
-                if (getParent() != null) {
-                    outputs = getParent().getOutputs();
-                }
-            } else {
-                outputs = getOutputs();
-            }
-
-            // set it on last output as this is what the user means to do
-            // for Block(s) with non empty getOutputs() the id probably refers
-            // to the last definition in the current Block
-            if (!blocks.isEmpty()) {
-                if (blocks.getLast() instanceof ProcessorDefinition) {
-                    ProcessorDefinition<?> block = (ProcessorDefinition<?>) blocks.getLast();
-                    if (!block.getOutputs().isEmpty()) {
-                        outputs = block.getOutputs();
-                    }
-                }
-            }
-            if (outputs != null && !outputs.isEmpty()) {
-                // set description on last output
-                outputs.get(outputs.size() - 1).setDescription(description);
-            } else {
-                // the output could be empty
-                setDescription(description);
-            }
         }
 
         return asType();
@@ -911,9 +912,17 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
             // set it on last output as this is what the user means to do
             // for Block(s) with non empty getOutputs() the id probably refers
             // to the last definition in the current Block
-            final List<ProcessorDefinition<?>> definitions = getProcessorDefinitions();
+            List<ProcessorDefinition<?>> outputs = getOutputs();
+            if (!blocks.isEmpty()) {
+                if (blocks.getLast() instanceof ProcessorDefinition) {
+                    ProcessorDefinition<?> block = (ProcessorDefinition<?>) blocks.getLast();
+                    if (!block.getOutputs().isEmpty()) {
+                        outputs = block.getOutputs();
+                    }
+                }
+            }
             if (!getOutputs().isEmpty()) {
-                definitions.get(definitions.size() - 1).setDisabled(disabled);
+                outputs.get(outputs.size() - 1).setDisabled(disabled);
             } else {
                 // the output could be empty
                 setDisabled(disabled);
@@ -921,19 +930,6 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
         }
 
         return asType();
-    }
-
-    private List<ProcessorDefinition<?>> getProcessorDefinitions() {
-        List<ProcessorDefinition<?>> outputs = getOutputs();
-        if (!blocks.isEmpty()) {
-            if (blocks.getLast() instanceof ProcessorDefinition) {
-                ProcessorDefinition<?> block = (ProcessorDefinition<?>) blocks.getLast();
-                if (!block.getOutputs().isEmpty()) {
-                    outputs = block.getOutputs();
-                }
-            }
-        }
-        return outputs;
     }
 
     /**
@@ -1049,6 +1045,24 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
     }
 
     /**
+     * <a href="https://camel.apache.org/components/latest/eips/pipeline-eip.html">Pipes and Filters EIP:</a> Creates a
+     * {@link org.apache.camel.processor.Pipeline} of the list of endpoints so that the message will get processed by
+     * each endpoint in turn and for request/response the output of one endpoint will be the input of the next endpoint
+     *
+     * @param  endpoints list of endpoints
+     * @return           the builder
+     */
+    @Deprecated
+    public Type pipeline(Collection<Endpoint> endpoints) {
+        PipelineDefinition answer = new PipelineDefinition();
+        for (Endpoint endpoint : endpoints) {
+            answer.addOutput(new ToDefinition(endpoint));
+        }
+        addOutput(answer);
+        return asType();
+    }
+
+    /**
      * Continues processing the {@link org.apache.camel.Exchange} using asynchronous routing engine.
      *
      * @return the builder
@@ -1110,7 +1124,8 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * @return the builder
      */
     public ProcessorDefinition<?> end() {
-        ProcessorDefinition<?> defn = this;
+        // must do this ugly cast to avoid compiler error on AIX/HP-UX
+        ProcessorDefinition<?> defn = (ProcessorDefinition<?>) this;
 
         // when using choice .. when .. otherwise - doTry .. doCatch ..
         // doFinally we should always
@@ -1164,26 +1179,25 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * @return the choice builder
      */
     public ChoiceDefinition endChoice() {
+        // are we nested choice?
         ProcessorDefinition<?> def = this;
-
-        // are we already a choice
-        if (def instanceof ChoiceDefinition cho) {
-            return cho;
-        }
-
-        // end and find the choice
-        def = end();
-        if (def instanceof RouteDefinition) {
-            // okay that was too far down so go back up
-            def = this;
+        if (def.getParent() instanceof WhenDefinition) {
+            return (ChoiceDefinition) def.getParent().getParent();
         }
 
         // are we already a choice?
-        if (def instanceof ChoiceDefinition choice) {
-            return choice;
+        if (def instanceof ChoiceDefinition) {
+            return (ChoiceDefinition) def;
+        }
+
+        // okay end this and get back to the choice
+        def = end();
+        if (def instanceof WhenDefinition) {
+            return (ChoiceDefinition) def.getParent();
+        } else if (def instanceof OtherwiseDefinition) {
+            return (ChoiceDefinition) def.getParent();
         } else {
-            throw new IllegalArgumentException(
-                    "Cannot endChoice() to find current/parent choice DSL. If you have nested choice then you may need to end().endChoice() to go back to parent choice.");
+            return (ChoiceDefinition) def;
         }
     }
 
@@ -1196,8 +1210,9 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
         ProcessorDefinition<?> def = this;
 
         // are we already a try?
-        if (def instanceof TryDefinition td) {
+        if (def instanceof TryDefinition) {
             // then we need special logic to end
+            TryDefinition td = (TryDefinition) def;
             return (TryDefinition) td.onEndDoTry();
         }
 
@@ -1215,8 +1230,8 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
         ProcessorDefinition<?> def = this;
 
         // are we already a doCatch?
-        if (def instanceof CatchDefinition catchDefinition) {
-            return catchDefinition;
+        if (def instanceof CatchDefinition) {
+            return (CatchDefinition) def;
         }
 
         // okay end this and get back to the try
@@ -1233,8 +1248,8 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
         ProcessorDefinition<?> def = this;
 
         // are we already a try?
-        if (def instanceof CircuitBreakerDefinition circuitBreakerDefinition) {
-            return circuitBreakerDefinition;
+        if (def instanceof CircuitBreakerDefinition) {
+            return (CircuitBreakerDefinition) def;
         }
 
         // okay end this and get back to the try
@@ -1419,36 +1434,6 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
         LoadBalanceDefinition answer = new LoadBalanceDefinition();
         addOutput(answer);
         return answer.loadBalance(loadBalancer);
-    }
-
-    /**
-     * Creates a log message to be logged at INFO level.
-     *
-     * @param  logLanguage to use a custom log language such as groovy
-     * @param  message     the log message (you can use simple language syntax)
-     * @return             the builder
-     */
-    public Type log(String logLanguage, String message) {
-        LogDefinition answer = new LogDefinition(message);
-        answer.setLogLanguage(logLanguage);
-        addOutput(answer);
-        return asType();
-    }
-
-    /**
-     * Creates a log message to be logged at INFO level.
-     *
-     * @param  logLanguage  to use a custom log language such as groovy
-     * @param  loggingLevel the logging level to use
-     * @param  message      the log message (you can use simple language syntax)
-     * @return              the builder
-     */
-    public Type log(String logLanguage, LoggingLevel loggingLevel, String message) {
-        LogDefinition answer = new LogDefinition(message);
-        answer.setLoggingLevel(loggingLevel.name());
-        answer.setLogLanguage(logLanguage);
-        addOutput(answer);
-        return asType();
     }
 
     /**
@@ -1726,7 +1711,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * @return the builder
      */
     public SamplingDefinition sample() {
-        return sample(Duration.ofSeconds(1));
+        return sample(1, TimeUnit.SECONDS);
     }
 
     /**
@@ -1753,6 +1738,22 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      */
     public SamplingDefinition sample(String samplePeriod) {
         SamplingDefinition answer = new SamplingDefinition(samplePeriod);
+        addOutput(answer);
+        return answer;
+    }
+
+    /**
+     * <a href="http://camel.apache.org/sampling.html">Sampling Throttler</a> Creates a sampling throttler allowing you
+     * to extract a sample of exchanges from the traffic through a route. It is configured with a sampling period during
+     * which only a single exchange is allowed to pass through. All other exchanges will be stopped.
+     *
+     * @param  samplePeriod this is the sample interval, only one exchange is allowed through in this interval
+     * @param  unit         this is the units for the samplePeriod e.g. Seconds
+     * @return              the builder
+     */
+    @Deprecated
+    public SamplingDefinition sample(long samplePeriod, TimeUnit unit) {
+        SamplingDefinition answer = new SamplingDefinition(samplePeriod, unit);
         addOutput(answer);
         return answer;
     }
@@ -1978,14 +1979,14 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * that a specific endpoint does not get overloaded, or that we don't exceed an agreed SLA with some external
      * service.
      * <p/>
-     * Setting the maximumConcurrentRequest will ensure that no more than the specified number of messages will flow to
-     * the endpoint at any given time.
+     * Will default use a time period of 1 second, so setting the maximumRequestCount to eg 10 will default ensure at
+     * most 10 messages per second.
      *
-     * @param  maximumConcurrentRequests the maximum number of concurrent messages
-     * @return                           the builder
+     * @param  maximumRequestCount the maximum messages
+     * @return                     the builder
      */
-    public ThrottleDefinition throttle(long maximumConcurrentRequests) {
-        return throttle(ExpressionBuilder.constantExpression(maximumConcurrentRequests));
+    public ThrottleDefinition throttle(long maximumRequestCount) {
+        return throttle(ExpressionBuilder.constantExpression(maximumRequestCount));
     }
 
     /**
@@ -1993,14 +1994,14 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * that a specific endpoint does not get overloaded, or that we don't exceed an agreed SLA with some external
      * service.
      * <p/>
-     * Setting the maximumConcurrentRequest will ensure that no more than the specified number of messages will flow to
-     * the endpoint at any given time.
+     * Will default use a time period of 1 second, so setting the maximumRequestCount to eg 10 will default ensure at
+     * most 10 messages per second.
      *
-     * @param  maximumConcurrentRequests an expression to calculate the maximum concurrent request count
-     * @return                           the builder
+     * @param  maximumRequestCount an expression to calculate the maximum request count
+     * @return                     the builder
      */
-    public ThrottleDefinition throttle(Expression maximumConcurrentRequests) {
-        ThrottleDefinition answer = new ThrottleDefinition(maximumConcurrentRequests);
+    public ThrottleDefinition throttle(Expression maximumRequestCount) {
+        ThrottleDefinition answer = new ThrottleDefinition(maximumRequestCount);
         addOutput(answer);
         return answer;
     }
@@ -2012,18 +2013,17 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * based on the key expression to group exchanges. This will make key-based throttling instead of overall
      * throttling.
      * <p/>
-     * Setting the maximumConcurrentRequest will ensure that no more than the specified number of messages will flow to
-     * the endpoint at any given time.
+     * Will default use a time period of 1 second, so setting the maximumRequestCount to eg 10 will default ensure at
+     * most 10 messages per second.
      *
-     * @param  maximumConcurrentRequests an expression to calculate the maximum concurrent request count
-     * @param  correlationExpressionKey  is a correlation key that can throttle by the given key instead of overall
-     *                                   throttling
-     * @return                           the builder
+     * @param  maximumRequestCount      an expression to calculate the maximum request count
+     * @param  correlationExpressionKey is a correlation key that can throttle by the given key instead of overall
+     *                                  throttling
+     * @return                          the builder
      */
-    public ThrottleDefinition throttle(Expression maximumConcurrentRequests, long correlationExpressionKey) {
+    public ThrottleDefinition throttle(Expression maximumRequestCount, long correlationExpressionKey) {
         ThrottleDefinition answer
-                = new ThrottleDefinition(
-                        maximumConcurrentRequests, ExpressionBuilder.constantExpression(correlationExpressionKey));
+                = new ThrottleDefinition(maximumRequestCount, ExpressionBuilder.constantExpression(correlationExpressionKey));
         addOutput(answer);
         return answer;
     }
@@ -2035,16 +2035,16 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * based on the key expression to group exchanges. This will make key-based throttling instead of overall
      * throttling.
      * <p/>
-     * Setting the maximumConcurrentRequest will ensure that no more than the specified number of messages will flow to
-     * the endpoint at any given time.
+     * Will default use a time period of 1 second, so setting the maximumRequestCount to eg 10 will default ensure at
+     * most 10 messages per second.
      *
-     * @param  maximumConcurrentRequests an expression to calculate the maximum concurrent request count
-     * @param  correlationExpressionKey  is a correlation key as an expression that can throttle by the given key
-     *                                   instead of overall throttling
-     * @return                           the builder
+     * @param  maximumRequestCount      an expression to calculate the maximum request count
+     * @param  correlationExpressionKey is a correlation key as an expression that can throttle by the given key instead
+     *                                  of overall throttling
+     * @return                          the builder
      */
-    public ThrottleDefinition throttle(Expression maximumConcurrentRequests, Expression correlationExpressionKey) {
-        ThrottleDefinition answer = new ThrottleDefinition(maximumConcurrentRequests, correlationExpressionKey);
+    public ThrottleDefinition throttle(Expression maximumRequestCount, Expression correlationExpressionKey) {
+        ThrottleDefinition answer = new ThrottleDefinition(maximumRequestCount, correlationExpressionKey);
         addOutput(answer);
         return answer;
     }
@@ -2242,46 +2242,12 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * each processor and destination gets a copy of the original message to avoid the processors interfering with each
      * other using {@link ExchangePattern#InOnly}.
      *
-     * @param  endpoint     the endpoint to wiretap to
-     * @param  variableSend to use a variable as the source for the message body to send.
-     * @return              the builder
-     */
-    public WireTapDefinition<Type> wireTap(@AsEndpointUri EndpointProducerBuilder endpoint, String variableSend) {
-        WireTapDefinition answer = new WireTapDefinition();
-        answer.setEndpointProducerBuilder(endpoint);
-        answer.setVariableSend(variableSend);
-        addOutput(answer);
-        return answer;
-    }
-
-    /**
-     * <a href="http://camel.apache.org/wiretap.html">WireTap EIP:</a> Sends messages to all its child outputs; so that
-     * each processor and destination gets a copy of the original message to avoid the processors interfering with each
-     * other using {@link ExchangePattern#InOnly}.
-     *
      * @param  uri the dynamic endpoint to wiretap to (resolved using simple language by default)
      * @return     the builder
      */
     public WireTapDefinition<Type> wireTap(@AsEndpointUri String uri) {
         WireTapDefinition answer = new WireTapDefinition();
         answer.setUri(uri);
-        addOutput(answer);
-        return answer;
-    }
-
-    /**
-     * <a href="http://camel.apache.org/wiretap.html">WireTap EIP:</a> Sends messages to all its child outputs; so that
-     * each processor and destination gets a copy of the original message to avoid the processors interfering with each
-     * other using {@link ExchangePattern#InOnly}.
-     *
-     * @param  uri          the dynamic endpoint to wiretap to (resolved using simple language by default)
-     * @param  variableSend to use a variable as the source for the message body to send.
-     * @return              the builder
-     */
-    public WireTapDefinition<Type> wireTap(@AsEndpointUri String uri, String variableSend) {
-        WireTapDefinition answer = new WireTapDefinition();
-        answer.setUri(uri);
-        answer.setVariableSend(variableSend);
         addOutput(answer);
         return answer;
     }
@@ -2343,43 +2309,10 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * <a href="http://camel.apache.org/exception-clause.html">Exception clause</a> for catching certain exceptions and
      * handling them.
      *
-     * @param  exceptionType1 the first exception to catch
-     * @param  exceptionType2 the second exception to catch
-     * @return                the exception builder to configure
-     */
-    public OnExceptionDefinition onException(
-            Class<? extends Throwable> exceptionType1, Class<? extends Throwable> exceptionType2) {
-        OnExceptionDefinition answer = new OnExceptionDefinition(Arrays.asList(exceptionType1, exceptionType2));
-        addOutput(answer);
-        return answer;
-    }
-
-    /**
-     * <a href="http://camel.apache.org/exception-clause.html">Exception clause</a> for catching certain exceptions and
-     * handling them.
-     *
-     * @param  exceptionType1 the first exception to catch
-     * @param  exceptionType2 the second exception to catch
-     * @param  exceptionType3 the third exception to catch
-     * @return                the exception builder to configure
-     */
-    public OnExceptionDefinition onException(
-            Class<? extends Throwable> exceptionType1, Class<? extends Throwable> exceptionType2,
-            Class<? extends Throwable> exceptionType3) {
-        OnExceptionDefinition answer = new OnExceptionDefinition(Arrays.asList(exceptionType1, exceptionType2, exceptionType3));
-        addOutput(answer);
-        return answer;
-    }
-
-    /**
-     * <a href="http://camel.apache.org/exception-clause.html">Exception clause</a> for catching certain exceptions and
-     * handling them.
-     *
      * @param  exceptions list of exceptions to catch
      * @return            the exception builder to configure
      */
-    @SafeVarargs
-    public final OnExceptionDefinition onException(Class<? extends Throwable>... exceptions) {
+    public OnExceptionDefinition onException(Class<? extends Throwable>... exceptions) {
         OnExceptionDefinition answer = new OnExceptionDefinition(Arrays.asList(exceptions));
         addOutput(answer);
         return answer;
@@ -2503,8 +2436,8 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      */
     public Type bean(Object bean) {
         BeanDefinition answer = new BeanDefinition();
-        if (bean instanceof String str) {
-            answer.setRef(str);
+        if (bean instanceof String) {
+            answer.setRef((String) bean);
         } else {
             answer.setBean(bean);
         }
@@ -2527,19 +2460,14 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * <a href="http://camel.apache.org/message-translator.html">Message Translator EIP:</a> Adds a bean which is
      * invoked which could be a final destination, or could be a transformation in a pipeline
      *
-     * @param  bean   the bean to invoke (if String then a reference to a bean, prefix with type: to specify FQN java
-     *                class)
+     * @param  bean   the bean to invoke, or a reference to a bean if the type is a String
      * @param  method the method name to invoke on the bean (can be used to avoid ambiguity)
      * @return        the builder
      */
     public Type bean(Object bean, String method) {
         BeanDefinition answer = new BeanDefinition();
-        if (bean instanceof String str) {
-            if (str.startsWith("type:")) {
-                answer.setBeanType(str.substring(5));
-            } else {
-                answer.setRef(str);
-            }
+        if (bean instanceof String) {
+            answer.setRef((String) bean);
         } else {
             answer.setBean(bean);
         }
@@ -2583,8 +2511,8 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      */
     public Type bean(Object bean, BeanScope scope) {
         BeanDefinition answer = new BeanDefinition();
-        if (bean instanceof String str) {
-            answer.setRef(str);
+        if (bean instanceof String) {
+            answer.setRef((String) bean);
         } else {
             answer.setBean(bean);
         }
@@ -2604,8 +2532,8 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      */
     public Type bean(Object bean, String method, BeanScope scope) {
         BeanDefinition answer = new BeanDefinition();
-        if (bean instanceof String str) {
-            answer.setRef(str);
+        if (bean instanceof String) {
+            answer.setRef((String) bean);
         } else {
             answer.setBean(bean);
         }
@@ -2738,33 +2666,6 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
 
     /**
      * <a href="http://camel.apache.org/message-translator.html">Message Translator EIP:</a> Adds a processor which sets
-     * the body on the OUT message according to a data type transformation.
-     *
-     * @param  fromType the data type representing the input of the transformation
-     * @param  toType   the data type representing the output of the transformation.
-     * @return          the builder
-     */
-    public Type transform(DataType fromType, DataType toType) {
-        TransformDefinition answer = new TransformDefinition(fromType, toType);
-        addOutput(answer);
-        return asType();
-    }
-
-    /**
-     * <a href="http://camel.apache.org/message-translator.html">Message Translator EIP:</a> Adds a processor which sets
-     * the body on the OUT message according to a data type transformation.
-     *
-     * @param  toType the data type representing the output of the transformation.
-     * @return        the builder
-     */
-    public Type transform(DataType toType) {
-        TransformDefinition answer = new TransformDefinition(DataType.ANY, toType);
-        addOutput(answer);
-        return asType();
-    }
-
-    /**
-     * <a href="http://camel.apache.org/message-translator.html">Message Translator EIP:</a> Adds a processor which sets
      * the body on the OUT message
      *
      * @return a expression builder clause to set the body
@@ -2804,7 +2705,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * Adds a processor which sets the header on the IN message
      *
      * @param  name the header name
-     * @return      an expression builder clause to set the header
+     * @return      a expression builder clause to set the header
      */
     public ExpressionClause<ProcessorDefinition<Type>> setHeader(String name) {
         ExpressionClause<ProcessorDefinition<Type>> clause = new ExpressionClause<>(this);
@@ -2827,18 +2728,6 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
     }
 
     /**
-     * Adds a processor which sets several headers on the IN message
-     *
-     * @param  headerNamesAndValues a sequence of header names and values or a Map containing names and values
-     * @return                      the builder
-     */
-    public Type setHeaders(Object... headerNamesAndValues) {
-        SetHeadersDefinition answer = new SetHeadersDefinition(headerNamesAndValues);
-        addOutput(answer);
-        return asType();
-    }
-
-    /**
      * Adds a processor which sets the header on the IN message
      *
      * @param  name     the header name
@@ -2852,62 +2741,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
                 return supplier.get();
             }
         });
-        addOutput(answer);
-        return asType();
-    }
 
-    /**
-     * Adds a processor which sets the variable
-     *
-     * @param  name the variable name
-     * @return      an expression builder clause to set the variable
-     */
-    public ExpressionClause<ProcessorDefinition<Type>> setVariable(String name) {
-        ExpressionClause<ProcessorDefinition<Type>> clause = new ExpressionClause<>(this);
-        SetVariableDefinition answer = new SetVariableDefinition(name, clause);
-        addOutput(answer);
-        return clause;
-    }
-
-    /**
-     * Adds a processor which sets several variables on the exchange
-     *
-     * @param  variableNamesAndValues a sequence of variable names and values or a Map containing names and values
-     * @return                        the builder
-     */
-    public Type setVariables(Object... variableNamesAndValues) {
-        SetVariablesDefinition answer = new SetVariablesDefinition(variableNamesAndValues);
-        addOutput(answer);
-        return asType();
-    }
-
-    /**
-     * Adds a processor which sets the variable
-     *
-     * @param  name       the variable name
-     * @param  expression the expression used to set the variable
-     * @return            the builder
-     */
-    public Type setVariable(String name, Expression expression) {
-        SetVariableDefinition answer = new SetVariableDefinition(name, expression);
-        addOutput(answer);
-        return asType();
-    }
-
-    /**
-     * Adds a processor which sets the variable
-     *
-     * @param  name     the variable name
-     * @param  supplier the supplier used to set the variable
-     * @return          the builder
-     */
-    public Type setVariable(String name, final Supplier<Object> supplier) {
-        SetVariableDefinition answer = new SetVariableDefinition(name, new ExpressionAdapter() {
-            @Override
-            public Object evaluate(Exchange exchange) {
-                return supplier.get();
-            }
-        });
         addOutput(answer);
         return asType();
     }
@@ -2995,18 +2829,6 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
     }
 
     /**
-     * Adds a processor which removes the variable
-     *
-     * @param  name the variable name
-     * @return      the builder
-     */
-    public Type removeVariable(String name) {
-        RemoveVariableDefinition answer = new RemoveVariableDefinition(name);
-        addOutput(answer);
-        return asType();
-    }
-
-    /**
      * Adds a processor which removes the exchange property
      *
      * @param  name the property name
@@ -3075,108 +2897,6 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      */
     public Type convertBodyTo(Class<?> type, String charset) {
         addOutput(new ConvertBodyDefinition(type, charset));
-        return asType();
-    }
-
-    /**
-     * Converts the IN message header to the specified type
-     *
-     * @param  name the header name
-     * @param  type the type to convert to
-     * @return      the builder
-     */
-    public Type convertHeaderTo(String name, Class<?> type) {
-        addOutput(new ConvertHeaderDefinition(name, type));
-        return asType();
-    }
-
-    /**
-     * Converts the IN message header to the specified type
-     *
-     * @param  name   the header name
-     * @param  toName to use another header to store the result
-     * @param  type   the type to convert to
-     * @return        the builder
-     */
-    public Type convertHeaderTo(String name, String toName, Class<?> type) {
-        addOutput(new ConvertHeaderDefinition(name, toName, type));
-        return asType();
-    }
-
-    /**
-     * Converts the IN message header to the specified type
-     *
-     * @param  name      the header name
-     * @param  type      the type to convert to
-     * @param  mandatory whether to use mandatory type conversion or not
-     * @return           the builder
-     */
-    public Type convertHeaderTo(String name, Class<?> type, boolean mandatory) {
-        addOutput(new ConvertHeaderDefinition(name, type, mandatory));
-        return asType();
-    }
-
-    /**
-     * Converts the IN message header to the specified type
-     *
-     * @param  name    the header name
-     * @param  type    the type to convert to
-     * @param  charset the charset to use by type converters (not all converters support specific charset)
-     * @return         the builder
-     */
-    public Type convertHeaderTo(String name, Class<?> type, String charset) {
-        addOutput(new ConvertHeaderDefinition(name, type, charset));
-        return asType();
-    }
-
-    /**
-     * Converts the variable to the specified type
-     *
-     * @param  name the variable name
-     * @param  type the type to convert to
-     * @return      the builder
-     */
-    public Type convertVariableTo(String name, Class<?> type) {
-        addOutput(new ConvertVariableDefinition(name, type));
-        return asType();
-    }
-
-    /**
-     * Converts the variable to the specified type
-     *
-     * @param  name   the variable name
-     * @param  toName to use another variable to store the result
-     * @param  type   the type to convert to
-     * @return        the builder
-     */
-    public Type convertVariableTo(String name, String toName, Class<?> type) {
-        addOutput(new ConvertVariableDefinition(name, toName, type));
-        return asType();
-    }
-
-    /**
-     * Converts the variable to the specified type
-     *
-     * @param  name      the variable name
-     * @param  type      the type to convert to
-     * @param  mandatory whether to use mandatory type conversion or not
-     * @return           the builder
-     */
-    public Type convertVariableTo(String name, Class<?> type, boolean mandatory) {
-        addOutput(new ConvertVariableDefinition(name, type, mandatory));
-        return asType();
-    }
-
-    /**
-     * Converts the variable to the specified type
-     *
-     * @param  name    the variable name
-     * @param  type    the type to convert to
-     * @param  charset the charset to use by type converters (not all converters support specific charset)
-     * @return         the builder
-     */
-    public Type convertVariableTo(String name, Class<?> type, String charset) {
-        addOutput(new ConvertVariableDefinition(name, type, charset));
         return asType();
     }
 
@@ -3330,7 +3050,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * <pre>
      * {@code
      * fom("direct:start")
-     *         .enrichWith("direct:resource")
+     *     .enrichWith("direct:resource")
      *         .body(String.class, (o, n) -> n + o);
      * }
      * </pre>
@@ -3378,7 +3098,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * <pre>
      * {@code
      * fom("direct:start")
-     *         .enrichWith("direct:resource")
+     *     .enrichWith("direct:resource")
      *         .body(String.class, (o, n) -> n + o);
      * }
      * </pre>
@@ -3960,97 +3680,6 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
     }
 
     /**
-     * Polls a message from the given endpoint
-     *
-     * @param  uri the endpoint to poll from
-     * @return     the builder
-     */
-    public Type poll(@AsEndpointUri String uri) {
-        addOutput(new PollDefinition(uri));
-        return asType();
-    }
-
-    /**
-     * Polls a message from the given endpoint
-     *
-     * @param  uri     the endpoint to poll from
-     * @param  timeout timeout in millis when polling from the external service.
-     * @return         the builder
-     */
-    public Type poll(@AsEndpointUri String uri, long timeout) {
-        PollDefinition poll = new PollDefinition(uri);
-        poll.setTimeout(String.valueOf(timeout));
-        addOutput(poll);
-        return asType();
-    }
-
-    /**
-     * Polls a message from the given endpoint
-     *
-     * @param  endpoint the endpoint to poll from
-     * @return          the builder
-     */
-    public Type poll(Endpoint endpoint) {
-        addOutput(new PollDefinition(endpoint));
-        return asType();
-    }
-
-    /**
-     * Polls a message from the given endpoint
-     *
-     * @param  endpoint the endpoint to poll from
-     * @param  timeout  timeout in millis when polling from the external service.
-     * @return          the builder
-     */
-    public Type poll(Endpoint endpoint, long timeout) {
-        PollDefinition poll = new PollDefinition(endpoint);
-        poll.setTimeout(String.valueOf(timeout));
-        addOutput(poll);
-        return asType();
-    }
-
-    /**
-     * Polls a message from the given endpoint
-     *
-     * @param  endpoint the endpoint to poll from
-     * @return          the builder
-     */
-    public Type poll(@AsEndpointUri EndpointConsumerBuilder endpoint) {
-        addOutput(new PollDefinition(endpoint));
-        return asType();
-    }
-
-    /**
-     * Polls a message from the given endpoint
-     *
-     * @param  endpoint the endpoint to poll from
-     * @param  timeout  timeout in millis when polling from the external service.
-     * @return          the builder
-     */
-    public Type poll(@AsEndpointUri EndpointConsumerBuilder endpoint, long timeout) {
-        PollDefinition poll = new PollDefinition(endpoint);
-        poll.setTimeout(String.valueOf(timeout));
-        addOutput(poll);
-        return asType();
-    }
-
-    /**
-     * Polls a message from the given endpoint
-     *
-     * @param  uri             the endpoint to poll from
-     * @param  timeout         timeout in millis when polling from the external service.
-     * @param  variableReceive to use a variable to store the received message body (only body, not headers).
-     * @return                 the builder
-     */
-    public Type pollV(@AsEndpointUri String uri, long timeout, String variableReceive) {
-        PollDefinition poll = new PollDefinition(uri);
-        poll.setTimeout(String.valueOf(timeout));
-        poll.setVariableReceive(variableReceive);
-        addOutput(poll);
-        return asType();
-    }
-
-    /**
      * The <a href="http://camel.apache.org/content-enricher.html">Content Enricher EIP</a> enriches an exchange with
      * additional data obtained from a <code>resourceUri</code> using a {@link org.apache.camel.PollingConsumer} to poll
      * the endpoint.
@@ -4233,6 +3862,32 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
         return asType();
     }
 
+    /**
+     * Sets whether or not to inherit the configured error handler. <br/>
+     * The default value is <tt>true</tt>.
+     * <p/>
+     * You can use this to disable using the inherited error handler for a given DSL such as a load balancer where you
+     * want to use a custom error handler strategy.
+     *
+     * @param  inheritErrorHandler whether to not to inherit the error handler for this node
+     * @return                     the builder
+     */
+    public Type inheritErrorHandler(boolean inheritErrorHandler) {
+        // set on last output
+        int size = getOutputs().size();
+        if (size == 0) {
+            // if no outputs then configure this DSL
+            setInheritErrorHandler(inheritErrorHandler);
+        } else {
+            // configure on last output as its the intended
+            ProcessorDefinition<?> output = getOutputs().get(size - 1);
+            if (output != null) {
+                output.setInheritErrorHandler(inheritErrorHandler);
+            }
+        }
+        return asType();
+    }
+
     @SuppressWarnings("unchecked")
     Type asType() {
         return (Type) this;
@@ -4292,8 +3947,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
 
     /**
      * This enables pausable consumers, which allows the consumer to pause work until a certain condition allows it to
-     * resume operation. Please note that the check method is called only if the consumer has been paused due to an
-     * error on the routh.
+     * resume operation
      *
      * @param  consumerListener the consumer listener to use for consumer events
      * @return                  the builder
@@ -4308,8 +3962,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
 
     /**
      * This enables pausable consumers, which allows the consumer to pause work until a certain condition allows it to
-     * resume operation. Please note that the check method is called only if the consumer has been paused due to an
-     * error on the routh.
+     * resume operation
      *
      * @param  consumerListenerRef the resume strategy
      * @return                     the builder
@@ -4324,8 +3977,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
 
     /**
      * This enables pausable consumers, which allows the consumer to pause work until a certain condition allows it to
-     * resume operation. Please note that the check method is called only if the consumer has been paused due to an
-     * error on the routh.
+     * resume operation
      *
      * @param  consumerListenerRef the resume strategy
      * @return                     the builder
@@ -4335,18 +3987,6 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
         answer.setConsumerListener(consumerListenerRef);
         answer.setUntilCheck(untilCheck);
         addOutput(answer);
-        return asType();
-    }
-
-    /**
-     * This enables tokenization/chunking of blocks of text so that the elements of a message are separated in text
-     * segments as a composite message
-     *
-     * @param  tokenizerDefinition The tokenizer
-     * @return                     the builder
-     */
-    public Type tokenize(TokenizerImplementationDefinition tokenizerDefinition) {
-        addOutput(new TokenizerDefinition(tokenizerDefinition));
         return asType();
     }
 
@@ -4378,22 +4018,20 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
         this.interceptStrategies.add(strategy);
     }
 
-    @Override
-    public String getDisabled() {
-        return disabled;
-    }
-
-    @Override
-    public void setDisabled(String disabled) {
-        this.disabled = disabled;
-    }
-
-    public Boolean getInheritErrorHandler() {
+    public Boolean isInheritErrorHandler() {
         return inheritErrorHandler;
     }
 
     public void setInheritErrorHandler(Boolean inheritErrorHandler) {
         this.inheritErrorHandler = inheritErrorHandler;
+    }
+
+    public String getDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(String disabled) {
+        this.disabled = disabled;
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.web.reactive.accept;
 
 import java.util.Collections;
@@ -32,14 +31,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 /**
- * Tests for {@link ParameterContentTypeResolver}.
- *
+ * Unit tests for {@link ParameterContentTypeResolver}.
  * @author Rossen Stoyanchev
  */
-class ParameterContentTypeResolverTests {
+public class ParameterContentTypeResolverTests {
 
 	@Test
-	void noKey() {
+	public void noKey() {
 		ParameterContentTypeResolver resolver = new ParameterContentTypeResolver(Collections.emptyMap());
 		ServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/"));
 		List<MediaType> mediaTypes = resolver.resolveMediaTypes(exchange);
@@ -48,34 +46,34 @@ class ParameterContentTypeResolverTests {
 	}
 
 	@Test
-	void noMatchForKey() {
+	public void noMatchForKey() {
 		ParameterContentTypeResolver resolver = new ParameterContentTypeResolver(Collections.emptyMap());
 		assertThatExceptionOfType(NotAcceptableStatusException.class).isThrownBy(() ->
 				resolver.resolveMediaTypes(createExchange("blah")));
 	}
 
 	@Test
-	void resolveKeyFromRegistrations() {
+	public void resolveKeyFromRegistrations() {
 		ServerWebExchange exchange = createExchange("html");
 
 		Map<String, MediaType> mapping = Collections.emptyMap();
 		RequestedContentTypeResolver resolver = new ParameterContentTypeResolver(mapping);
 		List<MediaType> mediaTypes = resolver.resolveMediaTypes(exchange);
-		assertThat(mediaTypes).containsExactly(new MediaType("text", "html"));
+		assertThat(mediaTypes).isEqualTo(Collections.singletonList(new MediaType("text", "html")));
 
 		mapping = Collections.singletonMap("HTML", MediaType.APPLICATION_XHTML_XML);
 		resolver = new ParameterContentTypeResolver(mapping);
 		mediaTypes = resolver.resolveMediaTypes(exchange);
-		assertThat(mediaTypes).containsExactly(new MediaType("application", "xhtml+xml"));
+		assertThat(mediaTypes).isEqualTo(Collections.singletonList(new MediaType("application", "xhtml+xml")));
 	}
 
 	@Test
-	void resolveKeyThroughMediaTypeFactory() {
+	public void resolveKeyThroughMediaTypeFactory() {
 		ServerWebExchange exchange = createExchange("xls");
 		RequestedContentTypeResolver resolver = new ParameterContentTypeResolver(Collections.emptyMap());
 		List<MediaType> mediaTypes = resolver.resolveMediaTypes(exchange);
 
-		assertThat(mediaTypes).containsExactly(new MediaType("application", "vnd.ms-excel"));
+		assertThat(mediaTypes).isEqualTo(Collections.singletonList(new MediaType("application", "vnd.ms-excel")));
 	}
 
 	@Test // SPR-13747
@@ -85,7 +83,7 @@ class ParameterContentTypeResolverTests {
 		ParameterContentTypeResolver resolver = new ParameterContentTypeResolver(mapping);
 		List<MediaType> mediaTypes = resolver.resolveMediaTypes(exchange);
 
-		assertThat(mediaTypes).containsExactly(MediaType.APPLICATION_JSON);
+		assertThat(mediaTypes).isEqualTo(Collections.singletonList(MediaType.APPLICATION_JSON));
 	}
 
 	private MockServerWebExchange createExchange(String format) {

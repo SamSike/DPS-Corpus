@@ -45,12 +45,6 @@ public class SamplingDefinition extends NoOutputDefinition<SamplingDefinition> {
     public SamplingDefinition() {
     }
 
-    protected SamplingDefinition(SamplingDefinition source) {
-        super(source);
-        this.samplePeriod = source.samplePeriod;
-        this.messageFrequency = source.messageFrequency;
-    }
-
     public SamplingDefinition(String samplePeriod) {
         this.samplePeriod = samplePeriod;
     }
@@ -65,11 +59,6 @@ public class SamplingDefinition extends NoOutputDefinition<SamplingDefinition> {
 
     public SamplingDefinition(long messageFrequency) {
         this.messageFrequency = Long.toString(messageFrequency);
-    }
-
-    @Override
-    public SamplingDefinition copyDefinition() {
-        return new SamplingDefinition(this);
     }
 
     @Override

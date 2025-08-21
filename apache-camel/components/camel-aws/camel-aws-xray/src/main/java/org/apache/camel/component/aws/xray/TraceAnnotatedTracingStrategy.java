@@ -79,7 +79,7 @@ public class TraceAnnotatedTracingStrategy implements InterceptStrategy {
 
         String metricName = trace.metricName();
 
-        if (metricName.isEmpty()) {
+        if ("".equals(metricName)) {
             metricName = processorClass.getSimpleName();
         }
 

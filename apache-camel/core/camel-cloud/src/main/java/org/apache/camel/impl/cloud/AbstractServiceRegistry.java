@@ -25,10 +25,6 @@ import org.apache.camel.Ordered;
 import org.apache.camel.cloud.ServiceRegistry;
 import org.apache.camel.support.service.ServiceSupport;
 
-/**
- * @deprecated since 4.7
- */
-@Deprecated(since = "4.7")
 public abstract class AbstractServiceRegistry extends ServiceSupport implements ServiceRegistry {
     private final Map<String, Object> attributes;
     private int order;

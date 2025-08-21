@@ -1,7 +1,9 @@
 /**
  * An API for defining Formatters to format field model values for display in a UI.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.format;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

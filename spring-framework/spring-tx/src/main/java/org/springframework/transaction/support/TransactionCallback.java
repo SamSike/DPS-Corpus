@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.transaction.support;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.TransactionStatus;
 
 /**
@@ -26,14 +25,14 @@ import org.springframework.transaction.TransactionStatus;
  *
  * <p>Typically used to assemble various calls to transaction-unaware data access
  * services into a higher-level service method with transaction demarcation. As an
- * alternative, consider the use of declarative transaction demarcation (for example, through
+ * alternative, consider the use of declarative transaction demarcation (e.g. through
  * Spring's {@link org.springframework.transaction.annotation.Transactional} annotation).
  *
  * @author Juergen Hoeller
  * @since 17.03.2003
- * @param <T> the result type
  * @see TransactionTemplate
  * @see CallbackPreferringPlatformTransactionManager
+ * @param <T> the result type
  */
 @FunctionalInterface
 public interface TransactionCallback<T> {
@@ -42,7 +41,7 @@ public interface TransactionCallback<T> {
 	 * Gets called by {@link TransactionTemplate#execute} within a transactional context.
 	 * Does not need to care about transactions itself, although it can retrieve and
 	 * influence the status of the current transaction via the given status object,
-	 * for example, setting rollback-only.
+	 * e.g. setting rollback-only.
 	 * <p>Allows for returning a result object created within the transaction, i.e. a
 	 * domain object or a collection of domain objects. A RuntimeException thrown by the
 	 * callback is treated as application exception that enforces a rollback. Any such
@@ -53,6 +52,7 @@ public interface TransactionCallback<T> {
 	 * @see TransactionTemplate#execute
 	 * @see CallbackPreferringPlatformTransactionManager#execute
 	 */
-	@Nullable T doInTransaction(TransactionStatus status);
+	@Nullable
+	T doInTransaction(TransactionStatus status);
 
 }

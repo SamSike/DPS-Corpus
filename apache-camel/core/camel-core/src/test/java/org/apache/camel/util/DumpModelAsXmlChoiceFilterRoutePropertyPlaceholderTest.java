@@ -19,8 +19,8 @@ package org.apache.camel.util;
 import java.util.Properties;
 
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -33,7 +33,8 @@ public class DumpModelAsXmlChoiceFilterRoutePropertyPlaceholderTest extends Cont
 
     @Test
     public void testDumpModelAsXml() throws Exception {
-        String xml = PluginHelper.getModelToXMLDumper(context).dumpModelAsXml(context, context.getRouteDefinition("myRoute"));
+        ExtendedCamelContext ecc = context.adapt(ExtendedCamelContext.class);
+        String xml = ecc.getModelToXMLDumper().dumpModelAsXml(context, context.getRouteDefinition("myRoute"));
         assertNotNull(xml);
         log.info(xml);
 
@@ -45,7 +46,8 @@ public class DumpModelAsXmlChoiceFilterRoutePropertyPlaceholderTest extends Cont
 
     @Test
     public void testDumpModelAsXmAl() throws Exception {
-        String xml = PluginHelper.getModelToXMLDumper(context).dumpModelAsXml(context, context.getRouteDefinition("a"));
+        ExtendedCamelContext ecc = context.adapt(ExtendedCamelContext.class);
+        String xml = ecc.getModelToXMLDumper().dumpModelAsXml(context, context.getRouteDefinition("a"));
         assertNotNull(xml);
         log.info(xml);
 
@@ -55,10 +57,10 @@ public class DumpModelAsXmlChoiceFilterRoutePropertyPlaceholderTest extends Cont
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 Properties prop = new Properties();
                 prop.put("duke", "dude");
                 prop.put("best", "gold");

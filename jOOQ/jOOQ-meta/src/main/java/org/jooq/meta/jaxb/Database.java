@@ -33,11 +33,9 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class Database implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String name;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String java;
     @XmlList
     @XmlElement(defaultValue = "COMMENTS CASE_INSENSITIVE")
     protected List<RegexFlag> regexFlags;
@@ -45,14 +43,12 @@ public class Database implements Serializable, XMLAppendable
     protected Boolean regexMatchesPartialQualification = true;
     @XmlElement(defaultValue = "true")
     protected Boolean sqlMatchesPartialQualification = true;
+    @XmlElement(defaultValue = ".*")
     @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String includes;
+    protected String includes = ".*";
+    @XmlElement(defaultValue = "")
     @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String includeSql;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String excludes;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String excludeSql;
+    protected String excludes = "";
     @XmlElement(defaultValue = "false")
     protected Boolean includeExcludeColumns = false;
     @XmlElement(defaultValue = "false")
@@ -74,15 +70,9 @@ public class Database implements Serializable, XMLAppendable
     @XmlElement(defaultValue = "true")
     protected Boolean includePackageConstants = true;
     @XmlElement(defaultValue = "true")
-    protected Boolean includeXMLSchemaCollections = true;
-    @XmlElement(defaultValue = "true")
     protected Boolean includeUDTs = true;
     @XmlElement(defaultValue = "true")
     protected Boolean includeDomains = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean includeTriggers = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean includeSynonyms = true;
     @XmlElement(defaultValue = "true")
     protected Boolean includeSequences = true;
     @XmlElement(defaultValue = "true")
@@ -107,8 +97,6 @@ public class Database implements Serializable, XMLAppendable
     protected Boolean includeSystemUDTs = false;
     @XmlElement(defaultValue = "true")
     protected Boolean includeInvisibleColumns = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean invisibleColumnsAsHidden = true;
     @XmlElement(defaultValue = "")
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String recordVersionFields = "";
@@ -171,16 +159,8 @@ public class Database implements Serializable, XMLAppendable
     @XmlElement(defaultValue = "true")
     protected Boolean forcedTypesForBuiltinDataTypeExtensions = true;
     @XmlElement(defaultValue = "true")
-    protected Boolean forcedTypesForXMLSchemaCollections = true;
-    @XmlElement(defaultValue = "true")
     protected Boolean forceIntegerTypesOnZeroScaleDecimals = true;
     protected Boolean tableValuedFunctions;
-    @XmlElement(defaultValue = "true")
-    protected Boolean tableValuedFunctionsAsRoutines = true;
-    @XmlElement(defaultValue = "true")
-    protected Boolean tableValuedFunctionsAsTables = true;
-    @XmlElement(defaultValue = "false")
-    protected Boolean oracleUseDBAViews = false;
     @XmlElement(defaultValue = "5")
     protected Integer logSlowQueriesAfterSeconds = 5;
     @XmlElement(defaultValue = "5")
@@ -313,22 +293,6 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * A self-contained, inline implementation of {@link org.jooq.meta.Database} that will be compiled and class-loaded on the fly by the code generator.
-     * 
-     */
-    public String getJava() {
-        return java;
-    }
-
-    /**
-     * A self-contained, inline implementation of {@link org.jooq.meta.Database} that will be compiled and class-loaded on the fly by the code generator.
-     * 
-     */
-    public void setJava(String value) {
-        this.java = value;
-    }
-
-    /**
      * The flags that will be applied to all regular expressions from this configuration by default.
      * <p>
      * The default value is "COMMENTS CASE_INSENSITIVE"Gets the value of the regexFlags property.
@@ -372,7 +336,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether regular expressions that match qualified object names also match partial qualifications (e.g. `table\.column` matches `schema.table.column`) or only full and/or no qualifications (e.g. `schema\.table\.column` and `column` match `schema.table.column`)
+     * Sets the value of the regexMatchesPartialQualification property.
      * 
      * @param value
      *     allowed object is
@@ -396,7 +360,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether SQL queries that match qualified object names also match partial qualifications (e.g. `table\.column` matches `schema.table.column`) or only full and/or no qualifications (e.g. `schema\.table\.column` and `column` match `schema.table.column`)
+     * Sets the value of the sqlMatchesPartialQualification property.
      * 
      * @param value
      *     allowed object is
@@ -442,44 +406,6 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * All elements that are generated from your schema.
-     * <p>
-     * This is a query that produces Java regular expressions, which are appended to the ones produced by includes.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * <p>
-     * Excludes match before includes, i.e. excludes have a higher priority.
-     * 
-     */
-    public String getIncludeSql() {
-        return includeSql;
-    }
-
-    /**
-     * All elements that are generated from your schema.
-     * <p>
-     * This is a query that produces Java regular expressions, which are appended to the ones produced by includes.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * <p>
-     * Excludes match before includes, i.e. excludes have a higher priority.
-     * 
-     */
-    public void setIncludeSql(String value) {
-        this.includeSql = value;
-    }
-
-    /**
      * All elements that are excluded from your schema.
      * <p>
      * This is a Java regular expression. Use the pipe to separate several expressions.
@@ -502,44 +428,6 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * All elements that are excluded from your schema.
-     * <p>
-     * This is a query that produces Java regular expressions, which are appended to the ones produced by excludes.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * <p>
-     * Excludes match before includes, i.e. excludes have a higher priority.
-     * 
-     */
-    public String getExcludeSql() {
-        return excludeSql;
-    }
-
-    /**
-     * All elements that are excluded from your schema.
-     * <p>
-     * This is a query that produces Java regular expressions, which are appended to the ones produced by excludes.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * <p>
-     * Excludes match before includes, i.e. excludes have a higher priority.
-     * 
-     */
-    public void setExcludeSql(String value) {
-        this.excludeSql = value;
-    }
-
-    /**
      * This flag indicates whether include / exclude patterns should also match columns within tables.
      * 
      * @return
@@ -552,7 +440,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether include / exclude patterns should also match columns within tables.
+     * Sets the value of the includeExcludeColumns property.
      * 
      * @param value
      *     allowed object is
@@ -576,7 +464,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether include / exclude patterns should also match routines within packages.
+     * Sets the value of the includeExcludePackageRoutines property.
      * 
      * @param value
      *     allowed object is
@@ -600,7 +488,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether tables should be included in output produced by this database
+     * Sets the value of the includeTables property.
      * 
      * @param value
      *     allowed object is
@@ -624,7 +512,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether embeddable types should be included in output produced by this database
+     * Sets the value of the includeEmbeddables property.
      * 
      * @param value
      *     allowed object is
@@ -648,7 +536,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether routines should be included in output produced by this database
+     * Sets the value of the includeRoutines property.
      * 
      * @param value
      *     allowed object is
@@ -672,7 +560,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether trigger implementation routines should be included in output produced by this database (e.g. in PostgreSQL)
+     * Sets the value of the includeTriggerRoutines property.
      * 
      * @param value
      *     allowed object is
@@ -696,7 +584,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether packages should be included in output produced by this database
+     * Sets the value of the includePackages property.
      * 
      * @param value
      *     allowed object is
@@ -720,7 +608,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether routines contained in packages should be included in output produced by this database
+     * Sets the value of the includePackageRoutines property.
      * 
      * @param value
      *     allowed object is
@@ -744,7 +632,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether UDTs contained in packages should be included in output produced by this database
+     * Sets the value of the includePackageUDTs property.
      * 
      * @param value
      *     allowed object is
@@ -768,7 +656,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether constants contained in packages should be included in output produced by this database
+     * Sets the value of the includePackageConstants property.
      * 
      * @param value
      *     allowed object is
@@ -777,30 +665,6 @@ public class Database implements Serializable, XMLAppendable
      */
     public void setIncludePackageConstants(Boolean value) {
         this.includePackageConstants = value;
-    }
-
-    /**
-     * This flag indicates whether XML schema collections should be included in output produced by this database
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isIncludeXMLSchemaCollections() {
-        return includeXMLSchemaCollections;
-    }
-
-    /**
-     * This flag indicates whether XML schema collections should be included in output produced by this database
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setIncludeXMLSchemaCollections(Boolean value) {
-        this.includeXMLSchemaCollections = value;
     }
 
     /**
@@ -816,7 +680,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether udts should be included in output produced by this database
+     * Sets the value of the includeUDTs property.
      * 
      * @param value
      *     allowed object is
@@ -840,7 +704,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether domains should be included in output produced by this database
+     * Sets the value of the includeDomains property.
      * 
      * @param value
      *     allowed object is
@@ -849,62 +713,6 @@ public class Database implements Serializable, XMLAppendable
      */
     public void setIncludeDomains(Boolean value) {
         this.includeDomains = value;
-    }
-
-    /**
-     * This flag indicates whether triggers should be included in output produced by this database.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isIncludeTriggers() {
-        return includeTriggers;
-    }
-
-    /**
-     * This flag indicates whether triggers should be included in output produced by this database.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setIncludeTriggers(Boolean value) {
-        this.includeTriggers = value;
-    }
-
-    /**
-     * This flag indicates whether synonyms should be included in output produced by this database.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isIncludeSynonyms() {
-        return includeSynonyms;
-    }
-
-    /**
-     * This flag indicates whether synonyms should be included in output produced by this database.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setIncludeSynonyms(Boolean value) {
-        this.includeSynonyms = value;
     }
 
     /**
@@ -920,7 +728,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether sequences should be included in output produced by this database
+     * Sets the value of the includeSequences property.
      * 
      * @param value
      *     allowed object is
@@ -944,7 +752,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether indexes should be included in output produced by this database
+     * Sets the value of the includeIndexes property.
      * 
      * @param value
      *     allowed object is
@@ -968,7 +776,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether primary keys should be included in output produced by this database
+     * Sets the value of the includePrimaryKeys property.
      * 
      * @param value
      *     allowed object is
@@ -992,7 +800,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether unique keys should be included in output produced by this database
+     * Sets the value of the includeUniqueKeys property.
      * 
      * @param value
      *     allowed object is
@@ -1016,7 +824,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether foreign keys should be included in output produced by this database
+     * Sets the value of the includeForeignKeys property.
      * 
      * @param value
      *     allowed object is
@@ -1040,7 +848,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether check constraints should be included in output produced by this database
+     * Sets the value of the includeCheckConstraints property.
      * 
      * @param value
      *     allowed object is
@@ -1064,7 +872,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether system tables should be included in output produced by this database
+     * Sets the value of the includeSystemTables property.
      * 
      * @param value
      *     allowed object is
@@ -1088,7 +896,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether system generated indexes should be included in output produced by this database
+     * Sets the value of the includeSystemIndexes property.
      * 
      * @param value
      *     allowed object is
@@ -1112,7 +920,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether system generated check constraints should be included in output produced by this database
+     * Sets the value of the includeSystemCheckConstraints property.
      * 
      * @param value
      *     allowed object is
@@ -1136,7 +944,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether system generated sequences should be included in output produced by this database
+     * Sets the value of the includeSystemSequences property.
      * 
      * @param value
      *     allowed object is
@@ -1160,7 +968,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether system generated UDTs should be included in output produced by this database
+     * Sets the value of the includeSystemUDTs property.
      * 
      * @param value
      *     allowed object is
@@ -1184,7 +992,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * This flag indicates whether invisible columns should be included in output produced by this database
+     * Sets the value of the includeInvisibleColumns property.
      * 
      * @param value
      *     allowed object is
@@ -1193,34 +1001,6 @@ public class Database implements Serializable, XMLAppendable
      */
     public void setIncludeInvisibleColumns(Boolean value) {
         this.includeInvisibleColumns = value;
-    }
-
-    /**
-     * This flag indicates whether invisible columns should marked as {@link org.jooq.DataType#hidden()} in output produced by this database.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isInvisibleColumnsAsHidden() {
-        return invisibleColumnsAsHidden;
-    }
-
-    /**
-     * This flag indicates whether invisible columns should marked as {@link org.jooq.DataType#hidden()} in output produced by this database.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setInvisibleColumnsAsHidden(Boolean value) {
-        this.invisibleColumnsAsHidden = value;
     }
 
     /**
@@ -1396,7 +1176,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate {@link java.sql.Timestamp} fields for DATE columns. This is particularly useful for Oracle databases
+     * Sets the value of the dateAsTimestamp property.
      * 
      * @param value
      *     allowed object is
@@ -1429,15 +1209,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * Ignore procedure return values in Transact-SQL generated code.
-     * <p>
-     * In jOOQ 3.6.0, #4106 was implemented to support Transact-SQL's
-     * optional return values from stored procedures. This turns all procedures
-     * into Routine<Integer> (instead of Routine<Void>). For backwards-
-     * compatibility reasons, users can suppress this change in jOOQ 3.x
-     * <p>
-     * @deprecated This feature is deprecated as of jOOQ 3.6.0 and will be removed again in
-     * jOOQ 4.0.
+     * Sets the value of the ignoreProcedureReturnValues property.
      * 
      * @param value
      *     allowed object is
@@ -1462,7 +1234,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * Generate jOOU data types for your unsigned data types, which are not natively supported in Java
+     * Sets the value of the unsignedTypes property.
      * 
      * @param value
      *     allowed object is
@@ -1486,7 +1258,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * Include display width in type declaration. In some RDBMS (e.g. MariaDB, MySQL), fixed width integer types are optionally accompanied by a display width. This is sometimes abused to model BOOLEAN types via TINYINT(1). This flag allows for including that display width in the type declaration exposed by jOOQ-meta code, as if it were a numeric precision.
+     * Sets the value of the integerDisplayWidths property.
      * 
      * @param value
      *     allowed object is
@@ -1561,8 +1333,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * A flag to indicate that the outputCatalog should be the "default" catalog,
-     * which generates catalog-less, unqualified tables, procedures, etc.
+     * Sets the value of the outputCatalogToDefault property.
      * 
      * @param value
      *     allowed object is
@@ -1637,8 +1408,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * A flag to indicate that the outputSchema should be the "default" schema,
-     * which generates schema-less, unqualified tables, procedures, etc.
+     * Sets the value of the outputSchemaToDefault property.
      * 
      * @param value
      *     allowed object is
@@ -1826,9 +1596,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether identity columns should expose {@link org.jooq.DataType#readonly()} behaviour.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the readonlyIdentities property.
      * 
      * @param value
      *     allowed object is
@@ -1854,9 +1622,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether computed columns should expose {@link org.jooq.DataType#readonly()} behaviour.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the readonlyComputedColumns property.
      * 
      * @param value
      *     allowed object is
@@ -1882,9 +1648,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether columns that are known not to be updatable (e.g. in views) should expose {@link org.jooq.DataType#readonly()} behaviour.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the readonlyNonUpdatableColumns property.
      * 
      * @param value
      *     allowed object is
@@ -1908,7 +1672,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * Enable some default forced type configurations for built in data type extensions, such as the ones from the jooq-postgres-extensions module.
+     * Sets the value of the forcedTypesForBuiltinDataTypeExtensions property.
      * 
      * @param value
      *     allowed object is
@@ -1917,34 +1681,6 @@ public class Database implements Serializable, XMLAppendable
      */
     public void setForcedTypesForBuiltinDataTypeExtensions(Boolean value) {
         this.forcedTypesForBuiltinDataTypeExtensions = value;
-    }
-
-    /**
-     * Enable some default forced type configurations for XML schema collections, mapping them to JAXB annotated types using the {@link org.jooq.impl.XMLtoJAXBConverter}
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isForcedTypesForXMLSchemaCollections() {
-        return forcedTypesForXMLSchemaCollections;
-    }
-
-    /**
-     * Enable some default forced type configurations for XML schema collections, mapping them to JAXB annotated types using the {@link org.jooq.impl.XMLtoJAXBConverter}
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setForcedTypesForXMLSchemaCollections(Boolean value) {
-        this.forcedTypesForXMLSchemaCollections = value;
     }
 
     /**
@@ -1960,7 +1696,7 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * Historically, zero-scale decimal types are generated as their most appropriate, corresponding integer type (e.g. NUMBER(2, 0) and less: Byte). This allows for turning off this feature. In case of conflict between this rule and actual {@link #getForcedTypes()}, the latter will win.
+     * Sets the value of the forceIntegerTypesOnZeroScaleDecimals property.
      * 
      * @param value
      *     allowed object is
@@ -1972,101 +1708,35 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * @deprecated Use tableValuedFunctionsAsRoutines and/or tableValuedFunctionsAsTables
+     * Whether table valued functions should be reported as tables.
+     * <p>
+     * If this is deactivated, such functions are not generated as tables, but
+     * as ordinary routines. This is particularly useful for backwards-
+     * compatibility between jOOQ 3.8 and previous versions, when using TABLE
+     * and VARRAY types in Oracle.
+     * <p>
+     * While this flag defaults to true for most databases, it defaults to false
+     * for Oracle.
      * 
      * @return
      *     possible object is
      *     {@link Boolean }
      *     
      */
-    @Deprecated
     public Boolean isTableValuedFunctions() {
         return tableValuedFunctions;
     }
 
     /**
-     * @deprecated Use tableValuedFunctionsAsRoutines and/or tableValuedFunctionsAsTables
+     * Sets the value of the tableValuedFunctions property.
      * 
      * @param value
      *     allowed object is
      *     {@link Boolean }
      *     
      */
-    @Deprecated
     public void setTableValuedFunctions(Boolean value) {
         this.tableValuedFunctions = value;
-    }
-
-    /**
-     * Whether table valued functions should be reported as routines.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTableValuedFunctionsAsRoutines() {
-        return tableValuedFunctionsAsRoutines;
-    }
-
-    /**
-     * Whether table valued functions should be reported as routines.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTableValuedFunctionsAsRoutines(Boolean value) {
-        this.tableValuedFunctionsAsRoutines = value;
-    }
-
-    /**
-     * Whether table valued functions should be reported as tables.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isTableValuedFunctionsAsTables() {
-        return tableValuedFunctionsAsTables;
-    }
-
-    /**
-     * Whether table valued functions should be reported as tables.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setTableValuedFunctionsAsTables(Boolean value) {
-        this.tableValuedFunctionsAsTables = value;
-    }
-
-    /**
-     * Specify whether to use the Oracle DBA_XYZ views instead of the ALL_XYZ views.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isOracleUseDBAViews() {
-        return oracleUseDBAViews;
-    }
-
-    /**
-     * Specify whether to use the Oracle DBA_XYZ views instead of the ALL_XYZ views.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setOracleUseDBAViews(Boolean value) {
-        this.oracleUseDBAViews = value;
     }
 
     /**
@@ -2246,15 +1916,6 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * A self-contained, inline implementation of {@link org.jooq.meta.Database} that will be compiled and class-loaded on the fly by the code generator.
-     * 
-     */
-    public Database withJava(String value) {
-        setJava(value);
-        return this;
-    }
-
-    /**
      * The flags that will be applied to all regular expressions from this configuration by default.
      * <p>
      * The default value is "COMMENTS CASE_INSENSITIVE"Gets the value of the regexFlags property.
@@ -2318,19 +1979,11 @@ public class Database implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Whether regular expressions that match qualified object names also match partial qualifications (e.g. `table\.column` matches `schema.table.column`) or only full and/or no qualifications (e.g. `schema\.table\.column` and `column` match `schema.table.column`)
-     * 
-     */
     public Database withRegexMatchesPartialQualification(Boolean value) {
         setRegexMatchesPartialQualification(value);
         return this;
     }
 
-    /**
-     * Whether SQL queries that match qualified object names also match partial qualifications (e.g. `table\.column` matches `schema.table.column`) or only full and/or no qualifications (e.g. `schema\.table\.column` and `column` match `schema.table.column`)
-     * 
-     */
     public Database withSqlMatchesPartialQualification(Boolean value) {
         setSqlMatchesPartialQualification(value);
         return this;
@@ -2355,26 +2008,6 @@ public class Database implements Serializable, XMLAppendable
     }
 
     /**
-     * All elements that are generated from your schema.
-     * <p>
-     * This is a query that produces Java regular expressions, which are appended to the ones produced by includes.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * <p>
-     * Excludes match before includes, i.e. excludes have a higher priority.
-     * 
-     */
-    public Database withIncludeSql(String value) {
-        setIncludeSql(value);
-        return this;
-    }
-
-    /**
      * All elements that are excluded from your schema.
      * <p>
      * This is a Java regular expression. Use the pipe to separate several expressions.
@@ -2386,281 +2019,123 @@ public class Database implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * All elements that are excluded from your schema.
-     * <p>
-     * This is a query that produces Java regular expressions, which are appended to the ones produced by excludes.
-     * Watch out for case-sensitivity. Depending on your database, this might be
-     * important!
-     * <p>
-     * You can create case-insensitive regular expressions
-     * using this syntax: <code>(?i:expr)</code>
-     * <p>
-     * Whitespace is ignored and comments are possible unless overridden in {@link #getRegexFlags()}.
-     * <p>
-     * Excludes match before includes, i.e. excludes have a higher priority.
-     * 
-     */
-    public Database withExcludeSql(String value) {
-        setExcludeSql(value);
-        return this;
-    }
-
-    /**
-     * This flag indicates whether include / exclude patterns should also match columns within tables.
-     * 
-     */
     public Database withIncludeExcludeColumns(Boolean value) {
         setIncludeExcludeColumns(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether include / exclude patterns should also match routines within packages.
-     * 
-     */
     public Database withIncludeExcludePackageRoutines(Boolean value) {
         setIncludeExcludePackageRoutines(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether tables should be included in output produced by this database
-     * 
-     */
     public Database withIncludeTables(Boolean value) {
         setIncludeTables(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether embeddable types should be included in output produced by this database
-     * 
-     */
     public Database withIncludeEmbeddables(Boolean value) {
         setIncludeEmbeddables(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether routines should be included in output produced by this database
-     * 
-     */
     public Database withIncludeRoutines(Boolean value) {
         setIncludeRoutines(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether trigger implementation routines should be included in output produced by this database (e.g. in PostgreSQL)
-     * 
-     */
     public Database withIncludeTriggerRoutines(Boolean value) {
         setIncludeTriggerRoutines(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether packages should be included in output produced by this database
-     * 
-     */
     public Database withIncludePackages(Boolean value) {
         setIncludePackages(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether routines contained in packages should be included in output produced by this database
-     * 
-     */
     public Database withIncludePackageRoutines(Boolean value) {
         setIncludePackageRoutines(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether UDTs contained in packages should be included in output produced by this database
-     * 
-     */
     public Database withIncludePackageUDTs(Boolean value) {
         setIncludePackageUDTs(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether constants contained in packages should be included in output produced by this database
-     * 
-     */
     public Database withIncludePackageConstants(Boolean value) {
         setIncludePackageConstants(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether XML schema collections should be included in output produced by this database
-     * 
-     */
-    public Database withIncludeXMLSchemaCollections(Boolean value) {
-        setIncludeXMLSchemaCollections(value);
-        return this;
-    }
-
-    /**
-     * This flag indicates whether udts should be included in output produced by this database
-     * 
-     */
     public Database withIncludeUDTs(Boolean value) {
         setIncludeUDTs(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether domains should be included in output produced by this database
-     * 
-     */
     public Database withIncludeDomains(Boolean value) {
         setIncludeDomains(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether triggers should be included in output produced by this database.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Database withIncludeTriggers(Boolean value) {
-        setIncludeTriggers(value);
-        return this;
-    }
-
-    /**
-     * This flag indicates whether synonyms should be included in output produced by this database.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Database withIncludeSynonyms(Boolean value) {
-        setIncludeSynonyms(value);
-        return this;
-    }
-
-    /**
-     * This flag indicates whether sequences should be included in output produced by this database
-     * 
-     */
     public Database withIncludeSequences(Boolean value) {
         setIncludeSequences(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether indexes should be included in output produced by this database
-     * 
-     */
     public Database withIncludeIndexes(Boolean value) {
         setIncludeIndexes(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether primary keys should be included in output produced by this database
-     * 
-     */
     public Database withIncludePrimaryKeys(Boolean value) {
         setIncludePrimaryKeys(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether unique keys should be included in output produced by this database
-     * 
-     */
     public Database withIncludeUniqueKeys(Boolean value) {
         setIncludeUniqueKeys(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether foreign keys should be included in output produced by this database
-     * 
-     */
     public Database withIncludeForeignKeys(Boolean value) {
         setIncludeForeignKeys(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether check constraints should be included in output produced by this database
-     * 
-     */
     public Database withIncludeCheckConstraints(Boolean value) {
         setIncludeCheckConstraints(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether system tables should be included in output produced by this database
-     * 
-     */
     public Database withIncludeSystemTables(Boolean value) {
         setIncludeSystemTables(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether system generated indexes should be included in output produced by this database
-     * 
-     */
     public Database withIncludeSystemIndexes(Boolean value) {
         setIncludeSystemIndexes(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether system generated check constraints should be included in output produced by this database
-     * 
-     */
     public Database withIncludeSystemCheckConstraints(Boolean value) {
         setIncludeSystemCheckConstraints(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether system generated sequences should be included in output produced by this database
-     * 
-     */
     public Database withIncludeSystemSequences(Boolean value) {
         setIncludeSystemSequences(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether system generated UDTs should be included in output produced by this database
-     * 
-     */
     public Database withIncludeSystemUDTs(Boolean value) {
         setIncludeSystemUDTs(value);
         return this;
     }
 
-    /**
-     * This flag indicates whether invisible columns should be included in output produced by this database
-     * 
-     */
     public Database withIncludeInvisibleColumns(Boolean value) {
         setIncludeInvisibleColumns(value);
-        return this;
-    }
-
-    /**
-     * This flag indicates whether invisible columns should marked as {@link org.jooq.DataType#hidden()} in output produced by this database.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Database withInvisibleColumnsAsHidden(Boolean value) {
-        setInvisibleColumnsAsHidden(value);
         return this;
     }
 
@@ -2750,45 +2225,21 @@ public class Database implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Generate {@link java.sql.Timestamp} fields for DATE columns. This is particularly useful for Oracle databases
-     * 
-     */
     public Database withDateAsTimestamp(Boolean value) {
         setDateAsTimestamp(value);
         return this;
     }
 
-    /**
-     * Ignore procedure return values in Transact-SQL generated code.
-     * <p>
-     * In jOOQ 3.6.0, #4106 was implemented to support Transact-SQL's
-     * optional return values from stored procedures. This turns all procedures
-     * into Routine<Integer> (instead of Routine<Void>). For backwards-
-     * compatibility reasons, users can suppress this change in jOOQ 3.x
-     * <p>
-     * @deprecated This feature is deprecated as of jOOQ 3.6.0 and will be removed again in
-     * jOOQ 4.0.
-     * 
-     */
     public Database withIgnoreProcedureReturnValues(Boolean value) {
         setIgnoreProcedureReturnValues(value);
         return this;
     }
 
-    /**
-     * Generate jOOU data types for your unsigned data types, which are not natively supported in Java
-     * 
-     */
     public Database withUnsignedTypes(Boolean value) {
         setUnsignedTypes(value);
         return this;
     }
 
-    /**
-     * Include display width in type declaration. In some RDBMS (e.g. MariaDB, MySQL), fixed width integer types are optionally accompanied by a display width. This is sometimes abused to model BOOLEAN types via TINYINT(1). This flag allows for including that display width in the type declaration exposed by jOOQ-meta code, as if it were a numeric precision.
-     * 
-     */
     public Database withIntegerDisplayWidths(Boolean value) {
         setIntegerDisplayWidths(value);
         return this;
@@ -2821,11 +2272,6 @@ public class Database implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * A flag to indicate that the outputCatalog should be the "default" catalog,
-     * which generates catalog-less, unqualified tables, procedures, etc.
-     * 
-     */
     public Database withOutputCatalogToDefault(Boolean value) {
         setOutputCatalogToDefault(value);
         return this;
@@ -2858,11 +2304,6 @@ public class Database implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * A flag to indicate that the outputSchema should be the "default" schema,
-     * which generates schema-less, unqualified tables, procedures, etc.
-     * 
-     */
     public Database withOutputSchemaToDefault(Boolean value) {
         setOutputSchemaToDefault(value);
         return this;
@@ -2955,101 +2396,33 @@ public class Database implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Whether identity columns should expose {@link org.jooq.DataType#readonly()} behaviour.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Database withReadonlyIdentities(Boolean value) {
         setReadonlyIdentities(value);
         return this;
     }
 
-    /**
-     * Whether computed columns should expose {@link org.jooq.DataType#readonly()} behaviour.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Database withReadonlyComputedColumns(Boolean value) {
         setReadonlyComputedColumns(value);
         return this;
     }
 
-    /**
-     * Whether columns that are known not to be updatable (e.g. in views) should expose {@link org.jooq.DataType#readonly()} behaviour.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public Database withReadonlyNonUpdatableColumns(Boolean value) {
         setReadonlyNonUpdatableColumns(value);
         return this;
     }
 
-    /**
-     * Enable some default forced type configurations for built in data type extensions, such as the ones from the jooq-postgres-extensions module.
-     * 
-     */
     public Database withForcedTypesForBuiltinDataTypeExtensions(Boolean value) {
         setForcedTypesForBuiltinDataTypeExtensions(value);
         return this;
     }
 
-    /**
-     * Enable some default forced type configurations for XML schema collections, mapping them to JAXB annotated types using the {@link org.jooq.impl.XMLtoJAXBConverter}
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public Database withForcedTypesForXMLSchemaCollections(Boolean value) {
-        setForcedTypesForXMLSchemaCollections(value);
-        return this;
-    }
-
-    /**
-     * Historically, zero-scale decimal types are generated as their most appropriate, corresponding integer type (e.g. NUMBER(2, 0) and less: Byte). This allows for turning off this feature. In case of conflict between this rule and actual {@link #getForcedTypes()}, the latter will win.
-     * 
-     */
     public Database withForceIntegerTypesOnZeroScaleDecimals(Boolean value) {
         setForceIntegerTypesOnZeroScaleDecimals(value);
         return this;
     }
 
-    /**
-     * @deprecated Use tableValuedFunctionsAsRoutines and/or tableValuedFunctionsAsTables
-     * 
-     */
     public Database withTableValuedFunctions(Boolean value) {
         setTableValuedFunctions(value);
-        return this;
-    }
-
-    /**
-     * Whether table valued functions should be reported as routines.
-     * 
-     */
-    public Database withTableValuedFunctionsAsRoutines(Boolean value) {
-        setTableValuedFunctionsAsRoutines(value);
-        return this;
-    }
-
-    /**
-     * Whether table valued functions should be reported as tables.
-     * 
-     */
-    public Database withTableValuedFunctionsAsTables(Boolean value) {
-        setTableValuedFunctionsAsTables(value);
-        return this;
-    }
-
-    /**
-     * Specify whether to use the Oracle DBA_XYZ views instead of the ALL_XYZ views.
-     * 
-     */
-    public Database withOracleUseDBAViews(Boolean value) {
-        setOracleUseDBAViews(value);
         return this;
     }
 
@@ -3248,14 +2621,11 @@ public class Database implements Serializable, XMLAppendable
     @Override
     public final void appendTo(XMLBuilder builder) {
         builder.append("name", name);
-        builder.append("java", java);
         builder.append("regexFlags", "regexFlags", regexFlags);
         builder.append("regexMatchesPartialQualification", regexMatchesPartialQualification);
         builder.append("sqlMatchesPartialQualification", sqlMatchesPartialQualification);
         builder.append("includes", includes);
-        builder.append("includeSql", includeSql);
         builder.append("excludes", excludes);
-        builder.append("excludeSql", excludeSql);
         builder.append("includeExcludeColumns", includeExcludeColumns);
         builder.append("includeExcludePackageRoutines", includeExcludePackageRoutines);
         builder.append("includeTables", includeTables);
@@ -3266,11 +2636,8 @@ public class Database implements Serializable, XMLAppendable
         builder.append("includePackageRoutines", includePackageRoutines);
         builder.append("includePackageUDTs", includePackageUDTs);
         builder.append("includePackageConstants", includePackageConstants);
-        builder.append("includeXMLSchemaCollections", includeXMLSchemaCollections);
         builder.append("includeUDTs", includeUDTs);
         builder.append("includeDomains", includeDomains);
-        builder.append("includeTriggers", includeTriggers);
-        builder.append("includeSynonyms", includeSynonyms);
         builder.append("includeSequences", includeSequences);
         builder.append("includeIndexes", includeIndexes);
         builder.append("includePrimaryKeys", includePrimaryKeys);
@@ -3283,7 +2650,6 @@ public class Database implements Serializable, XMLAppendable
         builder.append("includeSystemSequences", includeSystemSequences);
         builder.append("includeSystemUDTs", includeSystemUDTs);
         builder.append("includeInvisibleColumns", includeInvisibleColumns);
-        builder.append("invisibleColumnsAsHidden", invisibleColumnsAsHidden);
         builder.append("recordVersionFields", recordVersionFields);
         builder.append("recordTimestampFields", recordTimestampFields);
         builder.append("syntheticObjects", syntheticObjects);
@@ -3310,12 +2676,8 @@ public class Database implements Serializable, XMLAppendable
         builder.append("readonlyComputedColumns", readonlyComputedColumns);
         builder.append("readonlyNonUpdatableColumns", readonlyNonUpdatableColumns);
         builder.append("forcedTypesForBuiltinDataTypeExtensions", forcedTypesForBuiltinDataTypeExtensions);
-        builder.append("forcedTypesForXMLSchemaCollections", forcedTypesForXMLSchemaCollections);
         builder.append("forceIntegerTypesOnZeroScaleDecimals", forceIntegerTypesOnZeroScaleDecimals);
         builder.append("tableValuedFunctions", tableValuedFunctions);
-        builder.append("tableValuedFunctionsAsRoutines", tableValuedFunctionsAsRoutines);
-        builder.append("tableValuedFunctionsAsTables", tableValuedFunctionsAsTables);
-        builder.append("oracleUseDBAViews", oracleUseDBAViews);
         builder.append("logSlowQueriesAfterSeconds", logSlowQueriesAfterSeconds);
         builder.append("logSlowResultsAfterSeconds", logSlowResultsAfterSeconds);
         builder.append("properties", "property", properties);
@@ -3356,17 +2718,8 @@ public class Database implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (java == null) {
-            if (other.java!= null) {
-                return false;
-            }
-        } else {
-            if (!java.equals(other.java)) {
-                return false;
-            }
-        }
-        if ((regexFlags == null)||regexFlags.isEmpty()) {
-            if ((other.regexFlags!= null)&&(!other.regexFlags.isEmpty())) {
+        if (regexFlags == null) {
+            if (other.regexFlags!= null) {
                 return false;
             }
         } else {
@@ -3401,30 +2754,12 @@ public class Database implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (includeSql == null) {
-            if (other.includeSql!= null) {
-                return false;
-            }
-        } else {
-            if (!includeSql.equals(other.includeSql)) {
-                return false;
-            }
-        }
         if (excludes == null) {
             if (other.excludes!= null) {
                 return false;
             }
         } else {
             if (!excludes.equals(other.excludes)) {
-                return false;
-            }
-        }
-        if (excludeSql == null) {
-            if (other.excludeSql!= null) {
-                return false;
-            }
-        } else {
-            if (!excludeSql.equals(other.excludeSql)) {
                 return false;
             }
         }
@@ -3518,15 +2853,6 @@ public class Database implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (includeXMLSchemaCollections == null) {
-            if (other.includeXMLSchemaCollections!= null) {
-                return false;
-            }
-        } else {
-            if (!includeXMLSchemaCollections.equals(other.includeXMLSchemaCollections)) {
-                return false;
-            }
-        }
         if (includeUDTs == null) {
             if (other.includeUDTs!= null) {
                 return false;
@@ -3542,24 +2868,6 @@ public class Database implements Serializable, XMLAppendable
             }
         } else {
             if (!includeDomains.equals(other.includeDomains)) {
-                return false;
-            }
-        }
-        if (includeTriggers == null) {
-            if (other.includeTriggers!= null) {
-                return false;
-            }
-        } else {
-            if (!includeTriggers.equals(other.includeTriggers)) {
-                return false;
-            }
-        }
-        if (includeSynonyms == null) {
-            if (other.includeSynonyms!= null) {
-                return false;
-            }
-        } else {
-            if (!includeSynonyms.equals(other.includeSynonyms)) {
                 return false;
             }
         }
@@ -3668,15 +2976,6 @@ public class Database implements Serializable, XMLAppendable
             }
         } else {
             if (!includeInvisibleColumns.equals(other.includeInvisibleColumns)) {
-                return false;
-            }
-        }
-        if (invisibleColumnsAsHidden == null) {
-            if (other.invisibleColumnsAsHidden!= null) {
-                return false;
-            }
-        } else {
-            if (!invisibleColumnsAsHidden.equals(other.invisibleColumnsAsHidden)) {
                 return false;
             }
         }
@@ -3914,15 +3213,6 @@ public class Database implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (forcedTypesForXMLSchemaCollections == null) {
-            if (other.forcedTypesForXMLSchemaCollections!= null) {
-                return false;
-            }
-        } else {
-            if (!forcedTypesForXMLSchemaCollections.equals(other.forcedTypesForXMLSchemaCollections)) {
-                return false;
-            }
-        }
         if (forceIntegerTypesOnZeroScaleDecimals == null) {
             if (other.forceIntegerTypesOnZeroScaleDecimals!= null) {
                 return false;
@@ -3938,33 +3228,6 @@ public class Database implements Serializable, XMLAppendable
             }
         } else {
             if (!tableValuedFunctions.equals(other.tableValuedFunctions)) {
-                return false;
-            }
-        }
-        if (tableValuedFunctionsAsRoutines == null) {
-            if (other.tableValuedFunctionsAsRoutines!= null) {
-                return false;
-            }
-        } else {
-            if (!tableValuedFunctionsAsRoutines.equals(other.tableValuedFunctionsAsRoutines)) {
-                return false;
-            }
-        }
-        if (tableValuedFunctionsAsTables == null) {
-            if (other.tableValuedFunctionsAsTables!= null) {
-                return false;
-            }
-        } else {
-            if (!tableValuedFunctionsAsTables.equals(other.tableValuedFunctionsAsTables)) {
-                return false;
-            }
-        }
-        if (oracleUseDBAViews == null) {
-            if (other.oracleUseDBAViews!= null) {
-                return false;
-            }
-        } else {
-            if (!oracleUseDBAViews.equals(other.oracleUseDBAViews)) {
                 return false;
             }
         }
@@ -3986,8 +3249,8 @@ public class Database implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((properties == null)||properties.isEmpty()) {
-            if ((other.properties!= null)&&(!other.properties.isEmpty())) {
+        if (properties == null) {
+            if (other.properties!= null) {
                 return false;
             }
         } else {
@@ -3995,8 +3258,8 @@ public class Database implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((comments == null)||comments.isEmpty()) {
-            if ((other.comments!= null)&&(!other.comments.isEmpty())) {
+        if (comments == null) {
+            if (other.comments!= null) {
                 return false;
             }
         } else {
@@ -4004,8 +3267,8 @@ public class Database implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((catalogs == null)||catalogs.isEmpty()) {
-            if ((other.catalogs!= null)&&(!other.catalogs.isEmpty())) {
+        if (catalogs == null) {
+            if (other.catalogs!= null) {
                 return false;
             }
         } else {
@@ -4013,8 +3276,8 @@ public class Database implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((schemata == null)||schemata.isEmpty()) {
-            if ((other.schemata!= null)&&(!other.schemata.isEmpty())) {
+        if (schemata == null) {
+            if (other.schemata!= null) {
                 return false;
             }
         } else {
@@ -4022,8 +3285,8 @@ public class Database implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((embeddables == null)||embeddables.isEmpty()) {
-            if ((other.embeddables!= null)&&(!other.embeddables.isEmpty())) {
+        if (embeddables == null) {
+            if (other.embeddables!= null) {
                 return false;
             }
         } else {
@@ -4031,8 +3294,8 @@ public class Database implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((customTypes == null)||customTypes.isEmpty()) {
-            if ((other.customTypes!= null)&&(!other.customTypes.isEmpty())) {
+        if (customTypes == null) {
+            if (other.customTypes!= null) {
                 return false;
             }
         } else {
@@ -4040,8 +3303,8 @@ public class Database implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((enumTypes == null)||enumTypes.isEmpty()) {
-            if ((other.enumTypes!= null)&&(!other.enumTypes.isEmpty())) {
+        if (enumTypes == null) {
+            if (other.enumTypes!= null) {
                 return false;
             }
         } else {
@@ -4049,8 +3312,8 @@ public class Database implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if ((forcedTypes == null)||forcedTypes.isEmpty()) {
-            if ((other.forcedTypes!= null)&&(!other.forcedTypes.isEmpty())) {
+        if (forcedTypes == null) {
+            if (other.forcedTypes!= null) {
                 return false;
             }
         } else {
@@ -4066,14 +3329,11 @@ public class Database implements Serializable, XMLAppendable
         final int prime = 31;
         int result = 1;
         result = ((prime*result)+((name == null)? 0 :name.hashCode()));
-        result = ((prime*result)+((java == null)? 0 :java.hashCode()));
-        result = ((prime*result)+(((regexFlags == null)||regexFlags.isEmpty())? 0 :regexFlags.hashCode()));
+        result = ((prime*result)+((regexFlags == null)? 0 :regexFlags.hashCode()));
         result = ((prime*result)+((regexMatchesPartialQualification == null)? 0 :regexMatchesPartialQualification.hashCode()));
         result = ((prime*result)+((sqlMatchesPartialQualification == null)? 0 :sqlMatchesPartialQualification.hashCode()));
         result = ((prime*result)+((includes == null)? 0 :includes.hashCode()));
-        result = ((prime*result)+((includeSql == null)? 0 :includeSql.hashCode()));
         result = ((prime*result)+((excludes == null)? 0 :excludes.hashCode()));
-        result = ((prime*result)+((excludeSql == null)? 0 :excludeSql.hashCode()));
         result = ((prime*result)+((includeExcludeColumns == null)? 0 :includeExcludeColumns.hashCode()));
         result = ((prime*result)+((includeExcludePackageRoutines == null)? 0 :includeExcludePackageRoutines.hashCode()));
         result = ((prime*result)+((includeTables == null)? 0 :includeTables.hashCode()));
@@ -4084,11 +3344,8 @@ public class Database implements Serializable, XMLAppendable
         result = ((prime*result)+((includePackageRoutines == null)? 0 :includePackageRoutines.hashCode()));
         result = ((prime*result)+((includePackageUDTs == null)? 0 :includePackageUDTs.hashCode()));
         result = ((prime*result)+((includePackageConstants == null)? 0 :includePackageConstants.hashCode()));
-        result = ((prime*result)+((includeXMLSchemaCollections == null)? 0 :includeXMLSchemaCollections.hashCode()));
         result = ((prime*result)+((includeUDTs == null)? 0 :includeUDTs.hashCode()));
         result = ((prime*result)+((includeDomains == null)? 0 :includeDomains.hashCode()));
-        result = ((prime*result)+((includeTriggers == null)? 0 :includeTriggers.hashCode()));
-        result = ((prime*result)+((includeSynonyms == null)? 0 :includeSynonyms.hashCode()));
         result = ((prime*result)+((includeSequences == null)? 0 :includeSequences.hashCode()));
         result = ((prime*result)+((includeIndexes == null)? 0 :includeIndexes.hashCode()));
         result = ((prime*result)+((includePrimaryKeys == null)? 0 :includePrimaryKeys.hashCode()));
@@ -4101,7 +3358,6 @@ public class Database implements Serializable, XMLAppendable
         result = ((prime*result)+((includeSystemSequences == null)? 0 :includeSystemSequences.hashCode()));
         result = ((prime*result)+((includeSystemUDTs == null)? 0 :includeSystemUDTs.hashCode()));
         result = ((prime*result)+((includeInvisibleColumns == null)? 0 :includeInvisibleColumns.hashCode()));
-        result = ((prime*result)+((invisibleColumnsAsHidden == null)? 0 :invisibleColumnsAsHidden.hashCode()));
         result = ((prime*result)+((recordVersionFields == null)? 0 :recordVersionFields.hashCode()));
         result = ((prime*result)+((recordTimestampFields == null)? 0 :recordTimestampFields.hashCode()));
         result = ((prime*result)+((syntheticObjects == null)? 0 :syntheticObjects.hashCode()));
@@ -4128,22 +3384,18 @@ public class Database implements Serializable, XMLAppendable
         result = ((prime*result)+((readonlyComputedColumns == null)? 0 :readonlyComputedColumns.hashCode()));
         result = ((prime*result)+((readonlyNonUpdatableColumns == null)? 0 :readonlyNonUpdatableColumns.hashCode()));
         result = ((prime*result)+((forcedTypesForBuiltinDataTypeExtensions == null)? 0 :forcedTypesForBuiltinDataTypeExtensions.hashCode()));
-        result = ((prime*result)+((forcedTypesForXMLSchemaCollections == null)? 0 :forcedTypesForXMLSchemaCollections.hashCode()));
         result = ((prime*result)+((forceIntegerTypesOnZeroScaleDecimals == null)? 0 :forceIntegerTypesOnZeroScaleDecimals.hashCode()));
         result = ((prime*result)+((tableValuedFunctions == null)? 0 :tableValuedFunctions.hashCode()));
-        result = ((prime*result)+((tableValuedFunctionsAsRoutines == null)? 0 :tableValuedFunctionsAsRoutines.hashCode()));
-        result = ((prime*result)+((tableValuedFunctionsAsTables == null)? 0 :tableValuedFunctionsAsTables.hashCode()));
-        result = ((prime*result)+((oracleUseDBAViews == null)? 0 :oracleUseDBAViews.hashCode()));
         result = ((prime*result)+((logSlowQueriesAfterSeconds == null)? 0 :logSlowQueriesAfterSeconds.hashCode()));
         result = ((prime*result)+((logSlowResultsAfterSeconds == null)? 0 :logSlowResultsAfterSeconds.hashCode()));
-        result = ((prime*result)+(((properties == null)||properties.isEmpty())? 0 :properties.hashCode()));
-        result = ((prime*result)+(((comments == null)||comments.isEmpty())? 0 :comments.hashCode()));
-        result = ((prime*result)+(((catalogs == null)||catalogs.isEmpty())? 0 :catalogs.hashCode()));
-        result = ((prime*result)+(((schemata == null)||schemata.isEmpty())? 0 :schemata.hashCode()));
-        result = ((prime*result)+(((embeddables == null)||embeddables.isEmpty())? 0 :embeddables.hashCode()));
-        result = ((prime*result)+(((customTypes == null)||customTypes.isEmpty())? 0 :customTypes.hashCode()));
-        result = ((prime*result)+(((enumTypes == null)||enumTypes.isEmpty())? 0 :enumTypes.hashCode()));
-        result = ((prime*result)+(((forcedTypes == null)||forcedTypes.isEmpty())? 0 :forcedTypes.hashCode()));
+        result = ((prime*result)+((properties == null)? 0 :properties.hashCode()));
+        result = ((prime*result)+((comments == null)? 0 :comments.hashCode()));
+        result = ((prime*result)+((catalogs == null)? 0 :catalogs.hashCode()));
+        result = ((prime*result)+((schemata == null)? 0 :schemata.hashCode()));
+        result = ((prime*result)+((embeddables == null)? 0 :embeddables.hashCode()));
+        result = ((prime*result)+((customTypes == null)? 0 :customTypes.hashCode()));
+        result = ((prime*result)+((enumTypes == null)? 0 :enumTypes.hashCode()));
+        result = ((prime*result)+((forcedTypes == null)? 0 :forcedTypes.hashCode()));
         return result;
     }
 

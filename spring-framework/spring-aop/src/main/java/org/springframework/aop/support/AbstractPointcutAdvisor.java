@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@ package org.springframework.aop.support;
 import java.io.Serializable;
 
 import org.aopalliance.aop.Advice;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.aop.PointcutAdvisor;
 import org.springframework.core.Ordered;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -38,7 +38,8 @@ import org.springframework.util.ObjectUtils;
 @SuppressWarnings("serial")
 public abstract class AbstractPointcutAdvisor implements PointcutAdvisor, Ordered, Serializable {
 
-	private @Nullable Integer order;
+	@Nullable
+	private Integer order;
 
 
 	public void setOrder(int order) {
@@ -51,18 +52,29 @@ public abstract class AbstractPointcutAdvisor implements PointcutAdvisor, Ordere
 			return this.order;
 		}
 		Advice advice = getAdvice();
-		if (advice instanceof Ordered ordered) {
-			return ordered.getOrder();
+		if (advice instanceof Ordered) {
+			return ((Ordered) advice).getOrder();
 		}
 		return Ordered.LOWEST_PRECEDENCE;
+	}
+
+	@Override
+	public boolean isPerInstance() {
+		return true;
 	}
 
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof PointcutAdvisor otherAdvisor &&
-				ObjectUtils.nullSafeEquals(getAdvice(), otherAdvisor.getAdvice()) &&
-				ObjectUtils.nullSafeEquals(getPointcut(), otherAdvisor.getPointcut())));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof PointcutAdvisor)) {
+			return false;
+		}
+		PointcutAdvisor otherAdvisor = (PointcutAdvisor) other;
+		return (ObjectUtils.nullSafeEquals(getAdvice(), otherAdvisor.getAdvice()) &&
+				ObjectUtils.nullSafeEquals(getPointcut(), otherAdvisor.getPointcut()));
 	}
 
 	@Override

@@ -16,9 +16,6 @@
  */
 package org.apache.camel.component.box.internal;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.box.BoxConfiguration;
 import org.apache.camel.support.component.ApiMethodPropertiesHelper;
@@ -28,22 +25,16 @@ import org.apache.camel.support.component.ApiMethodPropertiesHelper;
  */
 public final class BoxPropertiesHelper extends ApiMethodPropertiesHelper<BoxConfiguration> {
 
-    private static final Lock LOCK = new ReentrantLock();
     private static BoxPropertiesHelper helper;
 
     private BoxPropertiesHelper(CamelContext context) {
         super(context, BoxConfiguration.class, BoxConstants.PROPERTY_PREFIX);
     }
 
-    public static BoxPropertiesHelper getHelper(CamelContext context) {
-        LOCK.lock();
-        try {
-            if (helper == null) {
-                helper = new BoxPropertiesHelper(context);
-            }
-            return helper;
-        } finally {
-            LOCK.unlock();
+    public static synchronized BoxPropertiesHelper getHelper(CamelContext context) {
+        if (helper == null) {
+            helper = new BoxPropertiesHelper(context);
         }
+        return helper;
     }
 }

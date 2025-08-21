@@ -57,10 +57,10 @@ public class ClusteredRoutePolicyUnmanagedClusterServiceTest extends ContextTest
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo").routeId("foo").routePolicy(policy)
                         .to("mock:foo");
                 from("seda:bar").routeId("bar").routePolicy(policy)
@@ -112,12 +112,12 @@ public class ClusteredRoutePolicyUnmanagedClusterServiceTest extends ContextTest
         }
 
         @Override
-        protected void doStart() {
+        protected void doStart() throws Exception {
             running = true;
         }
 
         @Override
-        protected void doStop() {
+        protected void doStop() throws Exception {
             running = false;
         }
 
@@ -129,7 +129,7 @@ public class ClusteredRoutePolicyUnmanagedClusterServiceTest extends ContextTest
             this.leader = leader;
 
             if (isRunAllowed()) {
-                fireLeadershipChangedEvent(getLeader().orElse(null));
+                fireLeadershipChangedEvent(getLeader());
             }
         }
 
@@ -147,7 +147,7 @@ public class ClusteredRoutePolicyUnmanagedClusterServiceTest extends ContextTest
         }
 
         @Override
-        protected TestClusterView createView(String namespace) {
+        protected TestClusterView createView(String namespace) throws Exception {
             if (view == null) {
                 view = new TestClusterView(this, namespace);
             }

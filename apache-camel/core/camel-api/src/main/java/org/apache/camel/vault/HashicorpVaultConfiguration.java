@@ -25,80 +25,67 @@ public class HashicorpVaultConfiguration extends VaultConfiguration {
 
     @Metadata(secret = true)
     private String token;
+    @Metadata(secret = true)
+    private String engine;
     @Metadata
     private String host;
     @Metadata
     private String port;
     @Metadata
     private String scheme;
-    @Metadata
-    private boolean cloud;
-    @Metadata
-    private String namespace;
-
-    public String getToken() {
-        return token;
-    }
 
     /**
      * Token to access hashicorp vault
      */
+    public String getToken() {
+        return token;
+    }
+
     public void setToken(String token) {
         this.token = token;
     }
 
-    public String getHost() {
-        return host;
+    /**
+     * Engine to look at hashicorp vault
+     */
+    public String getEngine() {
+        return engine;
+    }
+
+    public void setEngine(String engine) {
+        this.engine = engine;
     }
 
     /**
      * Host to access hashicorp vault
      */
-    public void setHost(String host) {
-        this.host = host;
+    public String getHost() {
+        return host;
     }
 
-    public String getPort() {
-        return port;
+    public void setHost(String host) {
+        this.host = host;
     }
 
     /**
      * Port to access hashicorp vault
      */
-    public void setPort(String port) {
-        this.port = port;
+    public String getPort() {
+        return port;
     }
 
-    public String getScheme() {
-        return scheme;
+    public void setPort(String port) {
+        this.port = port;
     }
 
     /**
      * Scheme to access hashicorp vault
      */
+    public String getScheme() {
+        return scheme;
+    }
+
     public void setScheme(String scheme) {
         this.scheme = scheme;
-    }
-
-    public boolean isCloud() {
-        return cloud;
-    }
-
-    /**
-     * Determine if the Hashicorp Vault is deployed on Hashicorp Cloud or not
-     */
-    public void setCloud(boolean cloud) {
-        this.cloud = cloud;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    /**
-     * If the Hashicorp Vault instance is deployed on Hashicorp Cloud, this field will determine the namespace
-     */
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
     }
 }

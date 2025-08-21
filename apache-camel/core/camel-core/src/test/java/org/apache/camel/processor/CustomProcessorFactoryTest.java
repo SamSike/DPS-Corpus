@@ -18,6 +18,7 @@ package org.apache.camel.processor;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.NamedNode;
 import org.apache.camel.Processor;
 import org.apache.camel.Route;
@@ -36,7 +37,7 @@ public class CustomProcessorFactoryTest extends ContextTestSupport {
     protected CamelContext createCamelContext() throws Exception {
         CamelContext context = super.createCamelContext();
         // register our custom factory
-        context.getCamelContextExtension().addContextPlugin(ProcessorFactory.class, new MyFactory());
+        context.adapt(ExtendedCamelContext.class).setProcessorFactory(new MyFactory());
         return context;
     }
     // END SNIPPET: e1
@@ -63,10 +64,10 @@ public class CustomProcessorFactoryTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").setBody().constant("body not altered").to("mock:foo");
 
                 from("direct:foo").split(body()).setBody().constant("body not altered").to("mock:split").end()
@@ -81,12 +82,14 @@ public class CustomProcessorFactoryTest extends ContextTestSupport {
 
         @Override
         public Processor createProcessor(Route route, NamedNode definition) throws Exception {
-            if (definition instanceof SplitDefinition split) {
+            if (definition instanceof SplitDefinition) {
                 // add additional output to the splitter
+                SplitDefinition split = (SplitDefinition) definition;
                 split.addOutput(new ToDefinition("mock:extra"));
             }
 
-            if (definition instanceof SetBodyDefinition set) {
+            if (definition instanceof SetBodyDefinition) {
+                SetBodyDefinition set = (SetBodyDefinition) definition;
                 set.setExpression(new ConstantExpression("body was altered"));
             }
 

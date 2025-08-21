@@ -51,22 +51,6 @@ public interface JSonSchemaResolver {
     String getLanguageJSonSchema(String name);
 
     /**
-     * Returns the transformer information as JSON format.
-     *
-     * @param  name the transformer name
-     * @return      transformer details in JSon
-     */
-    String getTransformerJSonSchema(String name);
-
-    /**
-     * Returns the dev console information as JSON format.
-     *
-     * @param  name the dev console name
-     * @return      dev console details in JSon
-     */
-    String getDevConsoleJSonSchema(String name);
-
-    /**
      * Returns the other (miscellaneous) information as JSON format.
      *
      * @param  name the other (miscellaneous) name
@@ -88,13 +72,5 @@ public interface JSonSchemaResolver {
      * @return the camel-main json schema
      */
     String getMainJsonSchema();
-
-    /**
-     * Returns the pojo bean information as JSON format.
-     *
-     * @param  name the pojo bean name
-     * @return      model details in JSon
-     */
-    String getPojoBeanJSonSchema(String name);
 
 }

@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class BeanInfoOverloadedTest extends ContextTestSupport {
 
     @Test
-    public void testBeanInfoOverloaded() {
+    public void testBeanInfoOverloaded() throws Exception {
         BeanInfo beanInfo = new BeanInfo(context, Bean.class);
 
         Message message = new DefaultMessage(context);
@@ -46,8 +46,7 @@ public class BeanInfoOverloadedTest extends ContextTestSupport {
         assertEquals(RequestB.class, method.getGenericParameterTypes()[0]);
     }
 
-    @SuppressWarnings("Unused")
-    static class Bean {
+    class Bean {
         public void doSomething(RequestA request) {
         }
 
@@ -55,11 +54,11 @@ public class BeanInfoOverloadedTest extends ContextTestSupport {
         }
     }
 
-    static class RequestA {
+    class RequestA {
         public int i;
     }
 
-    static class RequestB {
+    class RequestB {
         public String s;
     }
 

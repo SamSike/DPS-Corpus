@@ -35,8 +35,7 @@ class MongoDbChangeStreamsThread extends MongoAbstractConsumerThread {
     private List<BsonDocument> bsonFilter;
     private BsonDocument resumeToken;
 
-    MongoDbChangeStreamsThread(MongoDbEndpoint endpoint, MongoDbChangeStreamsConsumer consumer,
-                               List<BsonDocument> bsonFilter) {
+    MongoDbChangeStreamsThread(MongoDbEndpoint endpoint, MongoDbChangeStreamsConsumer consumer, List<BsonDocument> bsonFilter) {
         super(endpoint, consumer);
         this.bsonFilter = bsonFilter;
     }
@@ -52,13 +51,12 @@ class MongoDbChangeStreamsThread extends MongoAbstractConsumerThread {
                 ? dbCol.watch(bsonFilter)
                 : dbCol.watch();
 
-        iterable.fullDocument(endpoint.getFullDocument());
-
         if (resumeToken != null) {
             iterable = iterable.resumeAfter(resumeToken);
         }
 
-        return iterable.iterator();
+        MongoCursor<ChangeStreamDocument<Document>> cursor = iterable.iterator();
+        return cursor;
     }
 
     @Override

@@ -38,8 +38,6 @@ import org.jsmpp.bean.ReplaceIfPresentFlag;
 import org.jsmpp.bean.SMSCDeliveryReceipt;
 import org.jsmpp.bean.TypeOfNumber;
 import org.jsmpp.session.SMPPSession;
-import org.jsmpp.session.SubmitSmResult;
-import org.jsmpp.util.MessageId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,7 +98,7 @@ public class SmppSubmitSmCommandTest {
                 eq(DataCodings.newInstance((byte) 0)), eq((byte) 0),
                 eq("1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
                         .getBytes())))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                                .thenReturn("1");
 
         command.execute(exchange);
 
@@ -132,14 +130,14 @@ public class SmppSubmitSmCommandTest {
                 (String) isNull(), (String) isNull(), eq(new RegisteredDelivery(SMSCDeliveryReceipt.SUCCESS_FAILURE)),
                 eq(ReplaceIfPresentFlag.DEFAULT.value()),
                 eq(DataCodings.newInstance((byte) 0)), eq((byte) 0), eq(firstSM)))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
         when(session.submitShortMessage(eq("CMT"), eq(TypeOfNumber.UNKNOWN), eq(NumberingPlanIndicator.UNKNOWN), eq("1616"),
                 eq(TypeOfNumber.UNKNOWN), eq(NumberingPlanIndicator.UNKNOWN), eq("1717"), eq(new ESMClass()), eq((byte) 0),
                 eq((byte) 1),
                 (String) isNull(), (String) isNull(), eq(new RegisteredDelivery(SMSCDeliveryReceipt.SUCCESS_FAILURE)),
                 eq(ReplaceIfPresentFlag.DEFAULT.value()),
                 eq(DataCodings.newInstance((byte) 0)), eq((byte) 0), eq(secondSM)))
-                .thenReturn(new SubmitSmResult(new MessageId("2"), null));
+                        .thenReturn("2");
 
         command.execute(exchange);
 
@@ -171,14 +169,14 @@ public class SmppSubmitSmCommandTest {
                 (String) isNull(), (String) isNull(), eq(new RegisteredDelivery(SMSCDeliveryReceipt.SUCCESS_FAILURE)),
                 eq(ReplaceIfPresentFlag.DEFAULT.value()),
                 eq(DataCodings.newInstance((byte) 0)), eq((byte) 0), eq(firstSM)))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
         when(session.submitShortMessage(eq("CMT"), eq(TypeOfNumber.UNKNOWN), eq(NumberingPlanIndicator.UNKNOWN), eq("1616"),
                 eq(TypeOfNumber.UNKNOWN), eq(NumberingPlanIndicator.UNKNOWN), eq("1717"), eq(new ESMClass()), eq((byte) 0),
                 eq((byte) 1),
                 (String) isNull(), (String) isNull(), eq(new RegisteredDelivery(SMSCDeliveryReceipt.SUCCESS_FAILURE)),
                 eq(ReplaceIfPresentFlag.DEFAULT.value()),
                 eq(DataCodings.newInstance((byte) 0)), eq((byte) 0), eq(secondSM)))
-                .thenReturn(new SubmitSmResult(new MessageId("2"), null));
+                        .thenReturn("2");
 
         assertThrows(SmppException.class, () -> command.execute(exchange));
     }
@@ -207,7 +205,7 @@ public class SmppSubmitSmCommandTest {
                 (String) isNull(), (String) isNull(), eq(new RegisteredDelivery(SMSCDeliveryReceipt.SUCCESS_FAILURE)),
                 eq(ReplaceIfPresentFlag.DEFAULT.value()),
                 eq(DataCodings.newInstance((byte) 0)), eq((byte) 0), eq(firstSM)))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
 
         command.execute(exchange);
 
@@ -240,7 +238,7 @@ public class SmppSubmitSmCommandTest {
                 eq(new RegisteredDelivery(SMSCDeliveryReceipt.FAILURE)),
                 eq(ReplaceIfPresentFlag.REPLACE.value()), eq(DataCodings.newInstance((byte) 0)), eq((byte) 0),
                 eq("short message body".getBytes())))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
 
         command.execute(exchange);
 
@@ -285,7 +283,7 @@ public class SmppSubmitSmCommandTest {
                 eq(new OptionalParameter.Dest_addr_subunit((byte) 4)),
                 eq(new OptionalParameter.Dest_telematics_id((short) 2)), eq(new OptionalParameter.Qos_time_to_live(3600000)),
                 eq(new OptionalParameter.Alert_on_message_delivery((byte) 0))))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
 
         command.execute(exchange);
 
@@ -346,7 +344,7 @@ public class SmppSubmitSmCommandTest {
                 eq(new OptionalParameter.Short((short) 0x2153, (short) 9)),
                 eq(new OptionalParameter.Int((short) 0x2154, 7400000)),
                 eq(new OptionalParameter.Null((short) 0x2155))))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
 
         command.execute(exchange);
 
@@ -379,7 +377,7 @@ public class SmppSubmitSmCommandTest {
                 eq(new RegisteredDelivery(SMSCDeliveryReceipt.FAILURE)),
                 eq(ReplaceIfPresentFlag.REPLACE.value()), eq(DataCodings.newInstance((byte) 0)), eq((byte) 0),
                 eq("short message body".getBytes())))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
 
         command.execute(exchange);
 
@@ -402,7 +400,7 @@ public class SmppSubmitSmCommandTest {
                 eq(new RegisteredDelivery(SMSCDeliveryReceipt.SUCCESS_FAILURE)),
                 eq(ReplaceIfPresentFlag.DEFAULT.value()), argThat(not(DataCodings.newInstance(incorrectDataCoding))),
                 eq((byte) 0), eq(body)))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
 
         command.execute(exchange);
 
@@ -436,7 +434,7 @@ public class SmppSubmitSmCommandTest {
                 eq(DataCodings.newInstance(dataCoding)),
                 eq((byte) 0),
                 eq(bodyNarrowed)))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
 
         command.execute(exchange);
 
@@ -470,7 +468,7 @@ public class SmppSubmitSmCommandTest {
                 eq(DataCodings.newInstance(dataCoding)),
                 eq((byte) 0),
                 eq(bodyNarrowed)))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
 
         command.execute(exchange);
 
@@ -503,7 +501,7 @@ public class SmppSubmitSmCommandTest {
                 eq(DataCodings.newInstance(dataCoding)),
                 eq((byte) 0),
                 eq(body)))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
 
         command.execute(exchange);
 
@@ -536,7 +534,7 @@ public class SmppSubmitSmCommandTest {
                 eq(DataCodings.newInstance(dataCoding)),
                 eq((byte) 0),
                 eq(body)))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
 
         command.execute(exchange);
 
@@ -570,7 +568,7 @@ public class SmppSubmitSmCommandTest {
                 eq(DataCodings.newInstance(binDataCoding)),
                 eq((byte) 0),
                 eq(body)))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
 
         command.execute(exchange);
 
@@ -605,7 +603,7 @@ public class SmppSubmitSmCommandTest {
                 eq(DataCodings.newInstance(latin1DataCoding)),
                 eq((byte) 0),
                 eq(bodyNarrowed)))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
 
         command.execute(exchange);
 
@@ -629,7 +627,7 @@ public class SmppSubmitSmCommandTest {
                 (String) isNull(), (String) isNull(), eq(new RegisteredDelivery(SMSCDeliveryReceipt.DEFAULT)),
                 eq(ReplaceIfPresentFlag.DEFAULT.value()),
                 eq(DataCodings.newInstance((byte) 0)), eq((byte) 0), any(byte[].class)))
-                .thenReturn(new SubmitSmResult(new MessageId("1"), null));
+                        .thenReturn("1");
 
         when(session.submitShortMessage(eq("CMT"),
                 eq(TypeOfNumber.UNKNOWN), eq(NumberingPlanIndicator.UNKNOWN), eq("1616"),
@@ -638,7 +636,7 @@ public class SmppSubmitSmCommandTest {
                 (String) isNull(), (String) isNull(), eq(new RegisteredDelivery(SMSCDeliveryReceipt.SUCCESS_FAILURE)),
                 eq(ReplaceIfPresentFlag.DEFAULT.value()),
                 eq(DataCodings.newInstance((byte) 0)), eq((byte) 0), any(byte[].class)))
-                .thenReturn(new SubmitSmResult(new MessageId("2"), null));
+                        .thenReturn("2");
 
         command.execute(exchange);
         assertEquals(Arrays.asList("1", "2"), exchange.getMessage().getHeader(SmppConstants.ID));

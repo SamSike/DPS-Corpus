@@ -23,7 +23,7 @@ import org.apache.camel.spi.Metadata;
 /**
  * Global configuration for Health Check
  */
-@Configurer(extended = true)
+@Configurer(bootstrap = true)
 public class HealthConfigurationProperties implements BootstrapCloseable {
 
     private MainConfigurationProperties parent;
@@ -34,8 +34,8 @@ public class HealthConfigurationProperties implements BootstrapCloseable {
     private Boolean routesEnabled;
     @Metadata(defaultValue = "true")
     private Boolean consumersEnabled;
-    @Metadata(defaultValue = "false")
-    private Boolean producersEnabled;
+    @Metadata(defaultValue = "true")
+    private Boolean componentsEnabled;
     @Metadata(defaultValue = "true")
     private Boolean registryEnabled;
     @Metadata
@@ -91,15 +91,15 @@ public class HealthConfigurationProperties implements BootstrapCloseable {
         this.consumersEnabled = consumersEnabled;
     }
 
-    public Boolean getProducersEnabled() {
-        return producersEnabled;
+    public Boolean getComponentsEnabled() {
+        return componentsEnabled;
     }
 
     /**
-     * Whether producers health check is enabled
+     * Whether components health check is enabled
      */
-    public void setProducersEnabled(Boolean producersEnabled) {
-        this.producersEnabled = producersEnabled;
+    public void setComponentsEnabled(Boolean componentsEnabled) {
+        this.componentsEnabled = componentsEnabled;
     }
 
     public Boolean getRegistryEnabled() {

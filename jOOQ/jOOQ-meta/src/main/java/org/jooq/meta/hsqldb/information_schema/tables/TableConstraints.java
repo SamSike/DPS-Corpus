@@ -7,10 +7,8 @@ package org.jooq.meta.hsqldb.information_schema.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -28,14 +26,13 @@ import org.jooq.meta.hsqldb.information_schema.Keys;
 /**
  * one row for each table constraint associated with a table
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class TableConstraints extends TableImpl<Record> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1492215078;
 
     /**
-     * The reference instance of
-     * <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS</code>
+     * The reference instance of <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS</code>
      */
     public static final TableConstraints TABLE_CONSTRAINTS = new TableConstraints();
 
@@ -48,38 +45,32 @@ public class TableConstraints extends TableImpl<Record> {
     }
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_CATALOG</code>.
+     * The column <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_CATALOG</code>.
      */
     public final TableField<Record, String> CONSTRAINT_CATALOG = createField(DSL.name("CONSTRAINT_CATALOG"), SQLDataType.VARCHAR(128), this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_SCHEMA</code>.
+     * The column <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_SCHEMA</code>.
      */
     public final TableField<Record, String> CONSTRAINT_SCHEMA = createField(DSL.name("CONSTRAINT_SCHEMA"), SQLDataType.VARCHAR(128), this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_NAME</code>.
+     * The column <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_NAME</code>.
      */
     public final TableField<Record, String> CONSTRAINT_NAME = createField(DSL.name("CONSTRAINT_NAME"), SQLDataType.VARCHAR(128), this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_TYPE</code>.
+     * The column <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_TYPE</code>.
      */
     public final TableField<Record, String> CONSTRAINT_TYPE = createField(DSL.name("CONSTRAINT_TYPE"), SQLDataType.VARCHAR(65536), this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.TABLE_CATALOG</code>.
+     * The column <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.TABLE_CATALOG</code>.
      */
     public final TableField<Record, String> TABLE_CATALOG = createField(DSL.name("TABLE_CATALOG"), SQLDataType.VARCHAR(128), this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.TABLE_SCHEMA</code>.
+     * The column <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.TABLE_SCHEMA</code>.
      */
     public final TableField<Record, String> TABLE_SCHEMA = createField(DSL.name("TABLE_SCHEMA"), SQLDataType.VARCHAR(128), this, "");
 
@@ -89,56 +80,51 @@ public class TableConstraints extends TableImpl<Record> {
     public final TableField<Record, String> TABLE_NAME = createField(DSL.name("TABLE_NAME"), SQLDataType.VARCHAR(128), this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.IS_DEFERRABLE</code>.
+     * The column <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.IS_DEFERRABLE</code>.
      */
     public final TableField<Record, String> IS_DEFERRABLE = createField(DSL.name("IS_DEFERRABLE"), SQLDataType.VARCHAR(3), this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.INITIALLY_DEFERRED</code>.
+     * The column <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS.INITIALLY_DEFERRED</code>.
      */
     public final TableField<Record, String> INITIALLY_DEFERRED = createField(DSL.name("INITIALLY_DEFERRED"), SQLDataType.VARCHAR(3), this, "");
 
     private TableConstraints(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private TableConstraints(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment("one row for each table constraint associated with a table"), TableOptions.table(), where);
+    private TableConstraints(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment("one row for each table constraint associated with a table"), TableOptions.table());
     }
 
     /**
-     * Create an aliased <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS</code> table
-     * reference
+     * Create an aliased <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS</code> table reference
      */
     public TableConstraints(String alias) {
         this(DSL.name(alias), TABLE_CONSTRAINTS);
     }
 
     /**
-     * Create an aliased <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS</code> table
-     * reference
+     * Create an aliased <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS</code> table reference
      */
     public TableConstraints(Name alias) {
         this(alias, TABLE_CONSTRAINTS);
     }
 
     /**
-     * Create a <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS</code> table
-     * reference
+     * Create a <code>INFORMATION_SCHEMA.TABLE_CONSTRAINTS</code> table reference
      */
     public TableConstraints() {
         this(DSL.name("TABLE_CONSTRAINTS"), null);
     }
 
-    public <O extends Record> TableConstraints(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, TABLE_CONSTRAINTS);
+    public <O extends Record> TableConstraints(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, TABLE_CONSTRAINTS);
     }
 
     @Override
     public Schema getSchema() {
-        return aliased() ? null : InformationSchema.INFORMATION_SCHEMA;
+        return InformationSchema.INFORMATION_SCHEMA;
     }
 
     @Override
@@ -147,75 +133,8 @@ public class TableConstraints extends TableImpl<Record> {
     }
 
     @Override
-    public List<ForeignKey<Record, ?>> getReferences() {
-        return Arrays.asList(Keys.SYNTHETIC_FK_TABLE_CONSTRAINTS__SYNTHETIC_PK_SCHEMATA);
-    }
-
-    private transient Schemata _schemata;
-
-    /**
-     * Get the implicit join path to the
-     * <code>INFORMATION_SCHEMA.SCHEMATA</code> table.
-     */
-    public Schemata schemata() {
-        if (_schemata == null)
-            _schemata = new Schemata(this, Keys.SYNTHETIC_FK_TABLE_CONSTRAINTS__SYNTHETIC_PK_SCHEMATA, null);
-
-        return _schemata;
-    }
-
-    private transient ReferentialConstraints _referencedConstraint;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS</code> table, via the
-     * <code>REFERENCED_CONSTRAINT</code> key
-     */
-    public ReferentialConstraints referencedConstraint() {
-        if (_referencedConstraint == null)
-            _referencedConstraint = new ReferentialConstraints(this, null, Keys.REFERENCED_CONSTRAINT.getInverseKey());
-
-        return _referencedConstraint;
-    }
-
-    private transient ReferentialConstraints _referencingConstraint;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS</code> table, via the
-     * <code>REFERENCING_CONSTRAINT</code> key
-     */
-    public ReferentialConstraints referencingConstraint() {
-        if (_referencingConstraint == null)
-            _referencingConstraint = new ReferentialConstraints(this, null, Keys.REFERENCING_CONSTRAINT.getInverseKey());
-
-        return _referencingConstraint;
-    }
-
-    private transient CheckConstraints _checkConstraints;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>INFORMATION_SCHEMA.CHECK_CONSTRAINTS</code> table
-     */
-    public CheckConstraints checkConstraints() {
-        if (_checkConstraints == null)
-            _checkConstraints = new CheckConstraints(this, null, Keys.SYNTHETIC_FK_CHECK_CONSTRAINTS__SYNTHETIC_PK_TABLE_CONSTRAINTS.getInverseKey());
-
-        return _checkConstraints;
-    }
-
-    private transient KeyColumnUsage _keyColumnUsage;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>INFORMATION_SCHEMA.KEY_COLUMN_USAGE</code> table
-     */
-    public KeyColumnUsage keyColumnUsage() {
-        if (_keyColumnUsage == null)
-            _keyColumnUsage = new KeyColumnUsage(this, null, Keys.SYNTHETIC_FK_KEY_COLUMN_USAGE__SYNTHETIC_PK_TABLE_CONSTRAINTS.getInverseKey());
-
-        return _keyColumnUsage;
+    public List<UniqueKey<Record>> getKeys() {
+        return Arrays.<UniqueKey<Record>>asList(Keys.SYNTHETIC_PK_TABLE_CONSTRAINTS);
     }
 
     @Override
@@ -228,8 +147,19 @@ public class TableConstraints extends TableImpl<Record> {
         return new TableConstraints(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public TableConstraints as(Table<?> alias) {
-        return new TableConstraints(alias.getQualifiedName(), this);
+    public TableConstraints rename(String name) {
+        return new TableConstraints(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public TableConstraints rename(Name name) {
+        return new TableConstraints(name, null);
     }
 }

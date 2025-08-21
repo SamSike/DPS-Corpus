@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,21 +39,14 @@
 package org.jooq.meta.hsqldb;
 
 import static org.jooq.Records.mapping;
-import static org.jooq.impl.DSL.case_;
-import static org.jooq.impl.DSL.coalesce;
-import static org.jooq.impl.DSL.count;
 import static org.jooq.impl.DSL.decode;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.inline;
-import static org.jooq.impl.DSL.lower;
-import static org.jooq.impl.DSL.max;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.nvl;
-import static org.jooq.impl.DSL.replace;
 import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.trim;
 import static org.jooq.impl.DSL.when;
 import static org.jooq.impl.SQLDataType.BIGINT;
 import static org.jooq.impl.SQLDataType.INTEGER;
@@ -61,7 +54,6 @@ import static org.jooq.impl.SQLDataType.NUMERIC;
 import static org.jooq.impl.SQLDataType.VARCHAR;
 import static org.jooq.meta.hsqldb.information_schema.Tables.CHECK_CONSTRAINTS;
 import static org.jooq.meta.hsqldb.information_schema.Tables.COLUMNS;
-import static org.jooq.meta.hsqldb.information_schema.Tables.DOMAINS;
 import static org.jooq.meta.hsqldb.information_schema.Tables.DOMAIN_CONSTRAINTS;
 import static org.jooq.meta.hsqldb.information_schema.Tables.ELEMENT_TYPES;
 import static org.jooq.meta.hsqldb.information_schema.Tables.KEY_COLUMN_USAGE;
@@ -69,41 +61,30 @@ import static org.jooq.meta.hsqldb.information_schema.Tables.REFERENTIAL_CONSTRA
 import static org.jooq.meta.hsqldb.information_schema.Tables.ROUTINES;
 import static org.jooq.meta.hsqldb.information_schema.Tables.SCHEMATA;
 import static org.jooq.meta.hsqldb.information_schema.Tables.SEQUENCES;
-import static org.jooq.meta.hsqldb.information_schema.Tables.SYSTEM_COLUMNS;
 import static org.jooq.meta.hsqldb.information_schema.Tables.SYSTEM_INDEXINFO;
-import static org.jooq.meta.hsqldb.information_schema.Tables.SYSTEM_SYNONYMS;
 import static org.jooq.meta.hsqldb.information_schema.Tables.SYSTEM_TABLES;
 import static org.jooq.meta.hsqldb.information_schema.Tables.TABLE_CONSTRAINTS;
-import static org.jooq.meta.hsqldb.information_schema.Tables.TRIGGERS;
 import static org.jooq.meta.hsqldb.information_schema.Tables.VIEWS;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.jooq.DSLContext;
 import org.jooq.Field;
-import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Record12;
-import org.jooq.Record14;
-import org.jooq.Record4;
-import org.jooq.Record5;
 import org.jooq.Record6;
 import org.jooq.Result;
 import org.jooq.ResultQuery;
 import org.jooq.SQLDialect;
 import org.jooq.SortOrder;
-import org.jooq.Table;
 import org.jooq.TableOptions.TableType;
-// ...
 import org.jooq.impl.DSL;
-import org.jooq.impl.QOM.ForeignKeyRule;
-import org.jooq.impl.QOM.GenerationOption;
+import org.jooq.impl.SQLDataType;
 import org.jooq.meta.AbstractDatabase;
 import org.jooq.meta.AbstractIndexDefinition;
 import org.jooq.meta.ArrayDefinition;
@@ -126,14 +107,10 @@ import org.jooq.meta.SchemaDefinition;
 import org.jooq.meta.SequenceDefinition;
 import org.jooq.meta.TableDefinition;
 import org.jooq.meta.UDTDefinition;
-import org.jooq.meta.XMLSchemaCollectionDefinition;
 import org.jooq.meta.hsqldb.information_schema.tables.CheckConstraints;
 import org.jooq.meta.hsqldb.information_schema.tables.Columns;
 import org.jooq.meta.hsqldb.information_schema.tables.DomainConstraints;
-import org.jooq.meta.hsqldb.information_schema.tables.Domains;
 import org.jooq.meta.hsqldb.information_schema.tables.KeyColumnUsage;
-import org.jooq.meta.hsqldb.information_schema.tables.SystemSynonyms;
-import org.jooq.meta.hsqldb.information_schema.tables.Triggers;
 import org.jooq.tools.JooqLogger;
 import org.jooq.tools.StringUtils;
 
@@ -204,7 +181,6 @@ public class HSQLDBDatabase extends AbstractDatabase implements ResultQueryDatab
             final boolean unique = !index.get(SYSTEM_INDEXINFO.NON_UNIQUE, boolean.class);
 
             // [#6310] [#6620] Function-based indexes are not yet supported
-            // [#16237]        Alternatively, the column could be hidden or excluded
             for (Record column : cols)
                 if (table.getColumn(column.get(SYSTEM_INDEXINFO.COLUMN_NAME)) == null)
                     continue indexLoop;
@@ -304,9 +280,7 @@ public class HSQLDBDatabase extends AbstractDatabase implements ResultQueryDatab
                 fkKcu.TABLE_SCHEMA,
                 fkKcu.TABLE_NAME,
                 fkKcu.COLUMN_NAME,
-                pkKcu.COLUMN_NAME,
-                replace(REFERENTIAL_CONSTRAINTS.DELETE_RULE, inline(" "), inline("_")).as(REFERENTIAL_CONSTRAINTS.DELETE_RULE),
-                replace(REFERENTIAL_CONSTRAINTS.UPDATE_RULE, inline(" "), inline("_")).as(REFERENTIAL_CONSTRAINTS.UPDATE_RULE)
+                pkKcu.COLUMN_NAME
             )
             .from(REFERENTIAL_CONSTRAINTS)
             .join(fkKcu)
@@ -337,8 +311,6 @@ public class HSQLDBDatabase extends AbstractDatabase implements ResultQueryDatab
             String uniqueKey = record.get(REFERENTIAL_CONSTRAINTS.UNIQUE_CONSTRAINT_NAME);
             String uniqueKeyTableName = record.get(TABLE_CONSTRAINTS.TABLE_NAME);
             String uniqueKeyColumn = record.get(pkKcu.COLUMN_NAME);
-            ForeignKeyRule deleteRule = record.get(REFERENTIAL_CONSTRAINTS.DELETE_RULE, ForeignKeyRule.class);
-            ForeignKeyRule updateRule = record.get(REFERENTIAL_CONSTRAINTS.UPDATE_RULE, ForeignKeyRule.class);
 
             TableDefinition foreignKeyTable = getTable(foreignKeySchema, foreignKeyTableName);
             TableDefinition uniqueKeyTable = getTable(uniqueKeySchema, uniqueKeyTableName);
@@ -351,9 +323,7 @@ public class HSQLDBDatabase extends AbstractDatabase implements ResultQueryDatab
                     uniqueKey,
                     uniqueKeyTable,
                     uniqueKeyTable.getColumn(uniqueKeyColumn),
-                    true,
-                    deleteRule,
-                    updateRule
+                    true
                 );
         }
     }
@@ -420,61 +390,6 @@ public class HSQLDBDatabase extends AbstractDatabase implements ResultQueryDatab
     }
 
     @Override
-    public ResultQuery<Record4<String, String, String, String>> sources(List<String> schemas) {
-        return create()
-            .select(
-                VIEWS.TABLE_CATALOG,
-                VIEWS.TABLE_SCHEMA,
-                VIEWS.TABLE_NAME,
-                VIEWS.VIEW_DEFINITION)
-            .from(VIEWS)
-            .where(VIEWS.TABLE_SCHEMA.in(schemas))
-            .orderBy(
-                VIEWS.TABLE_SCHEMA,
-                VIEWS.TABLE_NAME)
-        ;
-    }
-
-    @Override
-    public ResultQuery<Record5<String, String, String, String, String>> comments(List<String> schemas) {
-        Table<?> c =
-            select(
-                SYSTEM_TABLES.TABLE_CAT,
-                SYSTEM_TABLES.TABLE_SCHEM,
-                SYSTEM_TABLES.TABLE_NAME,
-                inline(null, VARCHAR).as(COLUMNS.COLUMN_NAME),
-                SYSTEM_TABLES.REMARKS)
-            .from(SYSTEM_TABLES)
-            .where(SYSTEM_TABLES.REMARKS.isNotNull())
-            .unionAll(
-                select(
-                    COLUMNS.TABLE_CATALOG,
-                    COLUMNS.TABLE_SCHEMA,
-                    COLUMNS.TABLE_NAME,
-                    COLUMNS.COLUMN_NAME,
-                    SYSTEM_COLUMNS.REMARKS)
-                .from(COLUMNS)
-                    .join(SYSTEM_COLUMNS)
-                        .on(COLUMNS.TABLE_CATALOG.eq(SYSTEM_COLUMNS.TABLE_CAT))
-                        .and(COLUMNS.TABLE_SCHEMA.eq(SYSTEM_COLUMNS.TABLE_SCHEM))
-                        .and(COLUMNS.TABLE_NAME.eq(SYSTEM_COLUMNS.TABLE_NAME))
-                        .and(COLUMNS.COLUMN_NAME.eq(SYSTEM_COLUMNS.COLUMN_NAME))
-                .where(SYSTEM_COLUMNS.REMARKS.isNotNull()))
-            .asTable("c");
-
-        return create()
-            .select(
-                c.field(SYSTEM_TABLES.TABLE_CAT),
-                c.field(SYSTEM_TABLES.TABLE_SCHEM),
-                c.field(SYSTEM_TABLES.TABLE_NAME),
-                c.field(COLUMNS.COLUMN_NAME),
-                c.field(SYSTEM_TABLES.REMARKS))
-            .from(c)
-            .where(c.field(SYSTEM_TABLES.TABLE_SCHEM).in(schemas))
-            .orderBy(1, 2, 3, 4);
-    }
-
-    @Override
     public ResultQuery<Record12<String, String, String, String, Integer, Integer, Long, Long, BigDecimal, BigDecimal, Boolean, Long>> sequences(List<String> schemas) {
         return create()
             .select(
@@ -518,11 +433,6 @@ public class HSQLDBDatabase extends AbstractDatabase implements ResultQueryDatab
     }
 
     @Override
-    public ResultQuery<Record6<String, String, String, String, String, Integer>> enums(List<String> schemas) {
-        return null;
-    }
-
-    @Override
     protected List<TableDefinition> getTables0() throws SQLException {
         List<TableDefinition> result = new ArrayList<>();
 
@@ -532,17 +442,17 @@ public class HSQLDBDatabase extends AbstractDatabase implements ResultQueryDatab
                     SYSTEM_TABLES.TABLE_NAME,
                     inline("").as(ROUTINES.SPECIFIC_NAME),
                     SYSTEM_TABLES.REMARKS,
-                    trim(when(SYSTEM_TABLES.TABLE_TYPE.eq(inline("VIEW")), inline(TableType.VIEW.name()))
-                        .else_(inline(TableType.TABLE.name()))).as("table_type"),
-                    when(lower(VIEWS.VIEW_DEFINITION).like(inline("create%")), VIEWS.VIEW_DEFINITION)
-                        .else_(prependCreateView(SYSTEM_TABLES.TABLE_NAME, VIEWS.VIEW_DEFINITION, '"')).as(VIEWS.VIEW_DEFINITION)
+                    when(SYSTEM_TABLES.TABLE_TYPE.eq(inline("VIEW")), inline(TableType.VIEW.name()))
+                        .else_(inline(TableType.TABLE.name())).trim().as("table_type"),
+                    when(VIEWS.VIEW_DEFINITION.lower().like(inline("create%")), VIEWS.VIEW_DEFINITION)
+                        .else_(inline("create view \"").concat(SYSTEM_TABLES.TABLE_NAME).concat("\" as ").concat(VIEWS.VIEW_DEFINITION)).as(VIEWS.VIEW_DEFINITION)
                 )
                 .from(SYSTEM_TABLES)
                 .leftJoin(VIEWS)
                     .on(SYSTEM_TABLES.TABLE_SCHEM.eq(VIEWS.TABLE_SCHEMA))
                     .and(SYSTEM_TABLES.TABLE_NAME.eq(VIEWS.TABLE_NAME))
                 .where(SYSTEM_TABLES.TABLE_SCHEM.in(getInputSchemata()))
-                .unionAll(tableValuedFunctionsAsTables()
+                .unionAll(tableValuedFunctions()
                     ? select(
                         ROUTINES.ROUTINE_SCHEMA,
                         ROUTINES.ROUTINE_NAME,
@@ -586,145 +496,49 @@ public class HSQLDBDatabase extends AbstractDatabase implements ResultQueryDatab
 
     @Override
     protected List<DomainDefinition> getDomains0() throws SQLException {
-        Map<Name, DefaultDomainDefinition> result = new LinkedHashMap<>();
+        List<DomainDefinition> result = new ArrayList<>();
 
-        Domains d = DOMAINS.as("d");
         DomainConstraints dc = DOMAIN_CONSTRAINTS.as("dc");
 
         for (Record record : create()
             .select(
-                d.DOMAIN_SCHEMA,
-                d.DOMAIN_NAME,
-                d.DATA_TYPE,
-                d.CHARACTER_MAXIMUM_LENGTH,
-                coalesce(d.NUMERIC_PRECISION, d.DATETIME_PRECISION).as(d.NUMERIC_PRECISION),
-                d.NUMERIC_SCALE,
-                d.DOMAIN_DEFAULT,
+                dc.domains().DOMAIN_SCHEMA,
+                dc.domains().DOMAIN_NAME,
+                dc.domains().DATA_TYPE,
+                dc.domains().CHARACTER_MAXIMUM_LENGTH,
+                dc.domains().NUMERIC_PRECISION,
+                dc.domains().NUMERIC_SCALE,
+                dc.domains().DOMAIN_DEFAULT,
                 dc.checkConstraints().CHECK_CLAUSE)
-            .from(d)
-            .leftJoin(dc)
-                .on(d.DOMAIN_CATALOG.eq(dc.DOMAIN_CATALOG))
-                .and(d.DOMAIN_SCHEMA.eq(dc.DOMAIN_SCHEMA))
-                .and(d.DOMAIN_NAME.eq(dc.DOMAIN_NAME))
-            .where(d.DOMAIN_SCHEMA.in(getInputSchemata()))
-            .orderBy(
-                d.DOMAIN_SCHEMA,
-                d.DOMAIN_NAME,
-                dc.checkConstraints().CONSTRAINT_NAME
-            )
+            .from(dc)
+            .where(dc.domains().DOMAIN_SCHEMA.in(getInputSchemata()))
+            .orderBy(dc.domains().DOMAIN_SCHEMA, dc.domains().DOMAIN_NAME)
         ) {
-            String schemaName = record.get(d.DOMAIN_SCHEMA);
-            String domainName = record.get(d.DOMAIN_NAME);
-            String check = record.get(dc.checkConstraints().CHECK_CLAUSE);
+            SchemaDefinition schema = getSchema(record.get(dc.domains().DOMAIN_SCHEMA));
 
-            DefaultDomainDefinition domain = result.computeIfAbsent(name(schemaName, domainName), k -> {
-                SchemaDefinition schema = getSchema(schemaName);
+            DataTypeDefinition baseType = new DefaultDataTypeDefinition(
+                this,
+                schema,
+                record.get(dc.domains().DATA_TYPE),
+                record.get(dc.domains().CHARACTER_MAXIMUM_LENGTH),
+                record.get(dc.domains().NUMERIC_PRECISION),
+                record.get(dc.domains().NUMERIC_SCALE),
+                true,
+                record.get(dc.domains().DOMAIN_DEFAULT)
+            );
 
-                DataTypeDefinition baseType = new DefaultDataTypeDefinition(
-                    this,
-                    schema,
-                    record.get(d.DATA_TYPE),
-                    record.get(d.CHARACTER_MAXIMUM_LENGTH),
-                    record.get(d.NUMERIC_PRECISION),
-                    record.get(d.NUMERIC_SCALE),
-                    true,
-                    record.get(d.DOMAIN_DEFAULT)
-                );
+            DefaultDomainDefinition domain = new DefaultDomainDefinition(
+                schema,
+                record.get(dc.domains().DOMAIN_NAME),
+                baseType
+            );
 
-                return new DefaultDomainDefinition(
-                    schema,
-                    domainName,
-                    baseType
-                );
-            });
+            if (!StringUtils.isBlank(record.get(dc.checkConstraints().CHECK_CLAUSE)))
+                domain.addCheckClause(record.get(dc.checkConstraints().CHECK_CLAUSE));
 
-            if (!StringUtils.isBlank(check))
-                domain.addCheckClause(check);
+            result.add(domain);
         }
 
-        return new ArrayList<>(result.values());
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
-    protected List<XMLSchemaCollectionDefinition> getXMLSchemaCollections0() throws SQLException {
-        List<XMLSchemaCollectionDefinition> result = new ArrayList<>();
         return result;
     }
 
@@ -759,13 +573,13 @@ public class HSQLDBDatabase extends AbstractDatabase implements ResultQueryDatab
                 .and(ROUTINES.ROUTINE_NAME.equal(ELEMENT_TYPES.OBJECT_NAME))
                 .and(ROUTINES.DTD_IDENTIFIER.equal(ELEMENT_TYPES.COLLECTION_TYPE_IDENTIFIER))
                 .where(ROUTINES.ROUTINE_SCHEMA.in(getInputSchemata()))
-                .and(tableValuedFunctionsAsRoutines()
-                    ? noCondition()
-                    : ROUTINES.DATA_TYPE.isNull().or(ROUTINES.DATA_TYPE.notLike(inline("ROW(%"))))
+                .and(tableValuedFunctions()
+                    ? ROUTINES.DATA_TYPE.isNull().or(ROUTINES.DATA_TYPE.notLike(inline("ROW(%")))
+                    : noCondition())
                 .orderBy(
                     ROUTINES.ROUTINE_SCHEMA,
                     ROUTINES.ROUTINE_NAME)
-        ) {
+                .fetch()) {
 
             String datatype = record.get("datatype", String.class);
 

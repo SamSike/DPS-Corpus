@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,7 @@ package org.springframework.messaging.simp.stomp;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.converter.MessageConverter;
 import org.springframework.messaging.converter.SimpleMessageConverter;
 import org.springframework.scheduling.TaskScheduler;
@@ -45,7 +44,8 @@ public abstract class StompClientSupport {
 
 	private MessageConverter messageConverter = new SimpleMessageConverter();
 
-	private @Nullable TaskScheduler taskScheduler;
+	@Nullable
+	private TaskScheduler taskScheduler;
 
 	private long[] defaultHeartbeat = new long[] {10000, 10000};
 
@@ -85,7 +85,8 @@ public abstract class StompClientSupport {
 	/**
 	 * The configured TaskScheduler.
 	 */
-	public @Nullable TaskScheduler getTaskScheduler() {
+	@Nullable
+	public TaskScheduler getTaskScheduler() {
 		return this.taskScheduler;
 	}
 

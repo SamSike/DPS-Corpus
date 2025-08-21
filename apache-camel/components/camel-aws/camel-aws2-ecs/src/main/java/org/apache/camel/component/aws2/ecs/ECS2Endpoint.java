@@ -22,7 +22,8 @@ import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.component.aws2.ecs.client.ECS2ClientFactory;
-import org.apache.camel.spi.EndpointServiceLocation;
+import org.apache.camel.health.HealthCheckHelper;
+import org.apache.camel.impl.health.ComponentsHealthCheckRepository;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.ScheduledPollEndpoint;
@@ -30,14 +31,16 @@ import org.apache.camel.util.ObjectHelper;
 import software.amazon.awssdk.services.ecs.EcsClient;
 
 /**
- * Manage AWS ECS cluster instances.
+ * Manage AWS ECS cluster instances using AWS SDK version 2.x.
  */
 @UriEndpoint(firstVersion = "3.1.0", scheme = "aws2-ecs", title = "AWS Elastic Container Service (ECS)",
              syntax = "aws2-ecs:label", producerOnly = true, category = { Category.CLOUD, Category.MANAGEMENT },
              headersClass = ECS2Constants.class)
-public class ECS2Endpoint extends ScheduledPollEndpoint implements EndpointServiceLocation {
+public class ECS2Endpoint extends ScheduledPollEndpoint {
 
     private EcsClient ecsClient;
+    private ComponentsHealthCheckRepository healthCheckRepository;
+    private ECS2ClientHealthCheck clientHealthCheck;
 
     @UriParam
     private ECS2Configuration configuration;
@@ -45,11 +48,6 @@ public class ECS2Endpoint extends ScheduledPollEndpoint implements EndpointServi
     public ECS2Endpoint(String uri, Component component, ECS2Configuration configuration) {
         super(uri, component);
         this.configuration = configuration;
-    }
-
-    @Override
-    public ECS2Component getComponent() {
-        return (ECS2Component) super.getComponent();
     }
 
     @Override
@@ -68,10 +66,23 @@ public class ECS2Endpoint extends ScheduledPollEndpoint implements EndpointServi
 
         ecsClient = configuration.getEcsClient() != null
                 ? configuration.getEcsClient() : ECS2ClientFactory.getEcsClient(configuration).getEcsClient();
+
+        healthCheckRepository = HealthCheckHelper.getHealthCheckRepository(getCamelContext(),
+                ComponentsHealthCheckRepository.REPOSITORY_ID, ComponentsHealthCheckRepository.class);
+
+        if (healthCheckRepository != null) {
+            clientHealthCheck = new ECS2ClientHealthCheck(this, getId());
+            healthCheckRepository.addHealthCheck(clientHealthCheck);
+        }
     }
 
     @Override
     public void doStop() throws Exception {
+        if (healthCheckRepository != null && clientHealthCheck != null) {
+            healthCheckRepository.removeHealthCheck(clientHealthCheck);
+            clientHealthCheck = null;
+        }
+
         if (ObjectHelper.isEmpty(configuration.getEcsClient())) {
             if (ecsClient != null) {
                 ecsClient.close();
@@ -86,22 +97,5 @@ public class ECS2Endpoint extends ScheduledPollEndpoint implements EndpointServi
 
     public EcsClient getEcsClient() {
         return ecsClient;
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (!configuration.isOverrideEndpoint()) {
-            if (ObjectHelper.isNotEmpty(configuration.getRegion())) {
-                return configuration.getRegion();
-            }
-        } else if (ObjectHelper.isNotEmpty(configuration.getUriEndpointOverride())) {
-            return configuration.getUriEndpointOverride();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "ecs";
     }
 }

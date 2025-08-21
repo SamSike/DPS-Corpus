@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,7 +43,6 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.time.Year;
 import java.util.UUID;
 
 import org.jooq.DataType;
@@ -109,25 +108,20 @@ public class MySQLDataType {
     public static final DataType<byte[]>     VARBINARY          = new BuiltInDataType<>(FAMILY, SQLDataType.VARBINARY, "varbinary", "binary");
     public static final DataType<Date>       DATE               = new BuiltInDataType<>(FAMILY, SQLDataType.DATE, "date", "date");
     public static final DataType<Time>       TIME               = new BuiltInDataType<>(FAMILY, SQLDataType.TIME, "time", "time");
-    public static final DataType<Timestamp>  DATETIME           = new BuiltInDataType<>(FAMILY, SQLDataType.TIMESTAMP, "datetime", "datetime");
     public static final DataType<Timestamp>  TIMESTAMP          = new BuiltInDataType<>(FAMILY, SQLDataType.TIMESTAMP, "timestamp", "datetime");
+    public static final DataType<Timestamp>  DATETIME           = new BuiltInDataType<>(FAMILY, SQLDataType.TIMESTAMP, "datetime", "datetime");
 
     // -------------------------------------------------------------------------
     // Compatibility types for supported SQLDialect.MYSQL, SQLDataTypes
     // -------------------------------------------------------------------------
 
     protected static final DataType<String>     __NCHAR         = new BuiltInDataType<>(FAMILY, SQLDataType.NCHAR, "char", "char");
-    protected static final DataType<String>     __NCLOB         = new BuiltInDataType<>(FAMILY, SQLDataType.NCLOB, "text", "char");
+    protected static final DataType<String>     __NCLOB         = new BuiltInDataType<>(FAMILY, SQLDataType.NCLOB, "clob", "char");
     protected static final DataType<String>     __LONGNVARCHAR  = new BuiltInDataType<>(FAMILY, SQLDataType.LONGNVARCHAR, "varchar", "char");
     protected static final DataType<BigDecimal> __NUMERIC       = new BuiltInDataType<>(FAMILY, SQLDataType.NUMERIC, "decimal", "decimal");
     protected static final DataType<String>     __NVARCHAR      = new BuiltInDataType<>(FAMILY, SQLDataType.NVARCHAR, "varchar", "char");
     protected static final DataType<String>     __LONGVARCHAR   = new BuiltInDataType<>(FAMILY, SQLDataType.LONGVARCHAR, "varchar", "char");
     protected static final DataType<byte[]>     __LONGVARBINARY = new BuiltInDataType<>(FAMILY, SQLDataType.LONGVARBINARY, "varbinary", "binary");
-
-    protected static final DataType<BigDecimal> __DECIMALUNSIGNED = new BuiltInDataType<>(FAMILY, SQLDataType.DECIMAL, "decimal unsigned", "decimal");
-    protected static final DataType<Double>     __DOUBLEUNSIGNED  = new BuiltInDataType<>(FAMILY, SQLDataType.DOUBLE, "double unsigned", "decimal");
-    protected static final DataType<Double>     __FLOATUNSIGNED   = new BuiltInDataType<>(FAMILY, SQLDataType.FLOAT, "float unsigned", "decimal");
-    protected static final DataType<Float>      __REALUNSIGNED    = new BuiltInDataType<>(FAMILY, SQLDataType.REAL, "real unsigned", "decimal");
 
     // -------------------------------------------------------------------------
     // Dialect-specific data types and synonyms thereof
@@ -141,7 +135,7 @@ public class MySQLDataType {
     public static final DataType<byte[]>     TINYBLOB           = new BuiltInDataType<>(FAMILY, SQLDataType.BLOB, "tinyblob", "binary");
     public static final DataType<byte[]>     MEDIUMBLOB         = new BuiltInDataType<>(FAMILY, SQLDataType.BLOB, "mediumblob", "binary");
     public static final DataType<byte[]>     LONGBLOB           = new BuiltInDataType<>(FAMILY, SQLDataType.BLOB, "longblob", "binary");
-    public static final DataType<Year>       YEAR               = new BuiltInDataType<>(FAMILY, SQLDataType.YEAR, "year", "signed");
+    public static final DataType<Date>       YEAR               = new BuiltInDataType<>(FAMILY, SQLDataType.DATE, "year", "date");
     public static final DataType<JSON>       JSON               = new BuiltInDataType<>(FAMILY, SQLDataType.JSON, "json");
 
     // -------------------------------------------------------------------------

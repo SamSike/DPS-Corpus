@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,9 @@ package org.springframework.web.server.i18n;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.context.i18n.LocaleContext;
 import org.springframework.context.i18n.TimeZoneAwareLocaleContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.server.ServerWebExchange;
 
@@ -40,7 +39,8 @@ public class FixedLocaleContextResolver implements LocaleContextResolver {
 
 	private final Locale locale;
 
-	private final @Nullable TimeZone timeZone;
+	@Nullable
+	private final TimeZone timeZone;
 
 
 	/**
@@ -79,7 +79,8 @@ public class FixedLocaleContextResolver implements LocaleContextResolver {
 				return locale;
 			}
 			@Override
-			public @Nullable TimeZone getTimeZone() {
+			@Nullable
+			public TimeZone getTimeZone() {
 				return timeZone;
 			}
 		};

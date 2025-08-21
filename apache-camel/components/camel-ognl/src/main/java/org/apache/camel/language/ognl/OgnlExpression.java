@@ -16,7 +16,6 @@
  */
 package org.apache.camel.language.ognl;
 
-import ognl.ClassResolver;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import ognl.OgnlException;
@@ -26,7 +25,7 @@ import org.apache.camel.ExpressionIllegalSyntaxException;
 import org.apache.camel.support.ExpressionSupport;
 
 /**
- * An OGNL {@link org.apache.camel.Expression}
+ * An <a href="http://www.ognl.org/">OGNL</a> {@link org.apache.camel.Expression}
  */
 public class OgnlExpression extends ExpressionSupport {
 
@@ -50,11 +49,11 @@ public class OgnlExpression extends ExpressionSupport {
 
     @Override
     public <T> T evaluate(Exchange exchange, Class<T> tClass) {
-        ClassResolver cr = new CamelClassResolver(exchange.getContext().getClassResolver());
-        RootObject root = new RootObject(exchange);
-        OgnlContext oglContext = Ognl.createDefaultContext(root, cr);
+        OgnlContext oglContext = new OgnlContext();
+        // setup the class resolver from camel
+        oglContext.setClassResolver(new CamelClassResolver(exchange.getContext().getClassResolver()));
         try {
-            Object value = Ognl.getValue(expression, oglContext, root);
+            Object value = Ognl.getValue(expression, oglContext, new RootObject(exchange));
             return exchange.getContext().getTypeConverter().convertTo(tClass, value);
         } catch (OgnlException e) {
             throw new ExpressionEvaluationException(this, exchange, e);

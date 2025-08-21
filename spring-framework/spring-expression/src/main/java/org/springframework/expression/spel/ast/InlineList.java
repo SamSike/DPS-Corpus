@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,74 +21,69 @@ import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.asm.MethodVisitor;
 import org.springframework.expression.EvaluationException;
 import org.springframework.expression.TypedValue;
 import org.springframework.expression.spel.CodeFlow;
 import org.springframework.expression.spel.ExpressionState;
 import org.springframework.expression.spel.SpelNode;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * Represent a list in an expression, for example, '{1,2,3}'.
+ * Represent a list in an expression, e.g. '{1,2,3}'
  *
  * @author Andy Clement
- * @author Sam Brannen
- * @author Harry Yang
- * @author Semyon Danilov
  * @since 3.0.4
  */
 public class InlineList extends SpelNodeImpl {
 
-	private final @Nullable TypedValue constant;
+	// If the list is purely literals, it is a constant value and can be computed and cached
+	@Nullable
+	private TypedValue constant;  // TODO must be immutable list
 
 
 	public InlineList(int startPos, int endPos, SpelNodeImpl... args) {
 		super(startPos, endPos, args);
-		this.constant = computeConstantValue();
+		checkIfConstant();
 	}
 
 
 	/**
-	 * If all the components of the list are constants, or lists that themselves
-	 * contain constants, then a constant list can be built to represent this node.
-	 * <p>This will speed up later getValue calls and reduce the amount of garbage
+	 * If all the components of the list are constants, or lists that themselves contain constants, then a constant list
+	 * can be built to represent this node. This will speed up later getValue calls and reduce the amount of garbage
 	 * created.
 	 */
-	private @Nullable TypedValue computeConstantValue() {
+	private void checkIfConstant() {
+		boolean isConstant = true;
 		for (int c = 0, max = getChildCount(); c < max; c++) {
 			SpelNode child = getChild(c);
 			if (!(child instanceof Literal)) {
-				if (child instanceof InlineList inlineList) {
+				if (child instanceof InlineList) {
+					InlineList inlineList = (InlineList) child;
 					if (!inlineList.isConstant()) {
-						return null;
+						isConstant = false;
 					}
 				}
-				else if (!(child instanceof OpMinus opMinus) || !opMinus.isNegativeNumberLiteral()) {
-					return null;
+				else {
+					isConstant = false;
 				}
 			}
 		}
-
-		List<Object> constantList = new ArrayList<>();
-		int childcount = getChildCount();
-		ExpressionState expressionState = new ExpressionState(new StandardEvaluationContext());
-		for (int c = 0; c < childcount; c++) {
-			SpelNode child = getChild(c);
-			if (child instanceof Literal literal) {
-				constantList.add(literal.getLiteralValue().getValue());
+		if (isConstant) {
+			List<Object> constantList = new ArrayList<>();
+			int childcount = getChildCount();
+			for (int c = 0; c < childcount; c++) {
+				SpelNode child = getChild(c);
+				if ((child instanceof Literal)) {
+					constantList.add(((Literal) child).getLiteralValue().getValue());
+				}
+				else if (child instanceof InlineList) {
+					constantList.add(((InlineList) child).getConstantValue());
+				}
 			}
-			else if (child instanceof InlineList inlineList) {
-				constantList.add(inlineList.getConstantValue());
-			}
-			else if (child instanceof OpMinus) {
-				constantList.add(child.getValue(expressionState));
-			}
+			this.constant = new TypedValue(Collections.unmodifiableList(constantList));
 		}
-		return new TypedValue(Collections.unmodifiableList(constantList));
 	}
 
 	@Override
@@ -110,7 +105,8 @@ public class InlineList extends SpelNodeImpl {
 	public String toStringAST() {
 		StringJoiner sj = new StringJoiner(",", "{", "}");
 		// String ast matches input string, not the 'toString()' of the resultant collection, which would use []
-		for (int c = 0; c < getChildCount(); c++) {
+		int count = getChildCount();
+		for (int c = 0; c < count; c++) {
 			sj.add(getChild(c).toStringAST());
 		}
 		return sj.toString();
@@ -124,7 +120,8 @@ public class InlineList extends SpelNodeImpl {
 	}
 
 	@SuppressWarnings("unchecked")
-	public @Nullable List<Object> getConstantValue() {
+	@Nullable
+	public List<Object> getConstantValue() {
 		Assert.state(this.constant != null, "No constant");
 		return (List<Object>) this.constant.getValue();
 	}
@@ -167,8 +164,8 @@ public class InlineList extends SpelNodeImpl {
 			// The children might be further lists if they are not constants. In this
 			// situation do not call back into generateCode() because it will register another clinit adder.
 			// Instead, directly build the list here:
-			if (this.children[c] instanceof InlineList inlineList) {
-				inlineList.generateClinitCode(clazzname, constantFieldName, mv, codeflow, true);
+			if (this.children[c] instanceof InlineList) {
+				((InlineList)this.children[c]).generateClinitCode(clazzname, constantFieldName, mv, codeflow, true);
 			}
 			else {
 				this.children[c].generateCode(mv, codeflow);

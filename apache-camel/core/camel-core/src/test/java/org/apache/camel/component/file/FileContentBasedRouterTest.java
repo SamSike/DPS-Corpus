@@ -74,10 +74,10 @@ public class FileContentBasedRouterTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?noop=true&initialDelay=0&delay=10")).choice()
                         .when(header("CamelFileName").isEqualTo("london.txt")).to("mock:london")
                         .when(header("CamelFileName").isEqualTo("paris.txt")).to("mock:paris").otherwise().to("mock:other");

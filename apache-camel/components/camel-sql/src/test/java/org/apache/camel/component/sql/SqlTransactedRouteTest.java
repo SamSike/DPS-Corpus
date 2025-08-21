@@ -23,7 +23,10 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.spring.spi.SpringTransactionPolicy;
+import org.apache.camel.support.SimpleRegistry;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -44,30 +47,39 @@ public class SqlTransactedRouteTest extends CamelTestSupport {
     private String sqlEndpoint = "sql:overriddenByTheHeader?dataSource=#testdb";
 
     @Override
-    public void doPostSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
+
         jdbc = new JdbcTemplate(db);
         jdbc.execute("CREATE TABLE CUSTOMER (ID VARCHAR(15) NOT NULL PRIMARY KEY, NAME VARCHAR(100))");
     }
 
     @Override
-    protected void bindToRegistry(Registry registry) throws Exception {
+    protected Registry createCamelRegistry() {
+        Registry reg = new SimpleRegistry();
+
         db = new EmbeddedDatabaseBuilder()
                 .setName(getClass().getSimpleName())
                 .setType(EmbeddedDatabaseType.H2).build();
-        registry.bind("testdb", db);
+        reg.bind("testdb", db);
 
         DataSourceTransactionManager txMgr = new DataSourceTransactionManager();
         txMgr.setDataSource(db);
-        registry.bind("txManager", txMgr);
+        reg.bind("txManager", txMgr);
 
         SpringTransactionPolicy txPolicy = new SpringTransactionPolicy();
         txPolicy.setTransactionManager(txMgr);
         txPolicy.setPropagationBehaviorName("PROPAGATION_REQUIRED");
-        registry.bind("required", txPolicy);
+        reg.bind("required", txPolicy);
+
+        return reg;
     }
 
     @Override
-    public void doPostTearDown() throws Exception {
+    @AfterEach
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (db != null) {
             db.shutdown();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,14 +39,12 @@ import javax.imageio.stream.ImageOutputStream;
 import javax.imageio.stream.MemoryCacheImageInputStream;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.StreamingHttpOutputMessage;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -73,9 +71,11 @@ public class BufferedImageHttpMessageConverter implements HttpMessageConverter<B
 
 	private final List<MediaType> readableMediaTypes = new ArrayList<>();
 
-	private @Nullable MediaType defaultContentType;
+	@Nullable
+	private MediaType defaultContentType;
 
-	private @Nullable File cacheDir;
+	@Nullable
+	private File cacheDir;
 
 
 	public BufferedImageHttpMessageConverter() {
@@ -116,7 +116,8 @@ public class BufferedImageHttpMessageConverter implements HttpMessageConverter<B
 	 * Returns the default {@code Content-Type} to be used for writing.
 	 * Called when {@link #write} is invoked without a specified content type parameter.
 	 */
-	public @Nullable MediaType getDefaultContentType() {
+	@Nullable
+	public MediaType getDefaultContentType() {
 		return this.defaultContentType;
 	}
 
@@ -126,7 +127,7 @@ public class BufferedImageHttpMessageConverter implements HttpMessageConverter<B
 	 */
 	public void setCacheDir(File cacheDir) {
 		Assert.notNull(cacheDir, "'cacheDir' must not be null");
-		Assert.isTrue(cacheDir.isDirectory(), () -> "'cacheDir' is not a directory: " + cacheDir);
+		Assert.isTrue(cacheDir.isDirectory(), "'cacheDir' is not a directory");
 		this.cacheDir = cacheDir;
 	}
 
@@ -168,8 +169,6 @@ public class BufferedImageHttpMessageConverter implements HttpMessageConverter<B
 
 		ImageInputStream imageInputStream = null;
 		ImageReader imageReader = null;
-		// We cannot use try-with-resources here for the ImageInputStream, since we have
-		// custom handling of the close() method in a finally-block.
 		try {
 			imageInputStream = createImageInputStream(inputMessage.getBody());
 			MediaType contentType = inputMessage.getHeaders().getContentType();
@@ -206,7 +205,6 @@ public class BufferedImageHttpMessageConverter implements HttpMessageConverter<B
 	}
 
 	private ImageInputStream createImageInputStream(InputStream is) throws IOException {
-		is = StreamUtils.nonClosing(is);
 		if (this.cacheDir != null) {
 			return new FileCacheImageInputStream(is, this.cacheDir);
 		}
@@ -216,25 +214,16 @@ public class BufferedImageHttpMessageConverter implements HttpMessageConverter<B
 	}
 
 	@Override
-	public void write(final BufferedImage image, final @Nullable MediaType contentType,
+	public void write(final BufferedImage image, @Nullable final MediaType contentType,
 			final HttpOutputMessage outputMessage)
 			throws IOException, HttpMessageNotWritableException {
 
 		final MediaType selectedContentType = getContentType(contentType);
 		outputMessage.getHeaders().setContentType(selectedContentType);
 
-		if (outputMessage instanceof StreamingHttpOutputMessage streamingOutputMessage) {
-			streamingOutputMessage.setBody(new StreamingHttpOutputMessage.Body() {
-				@Override
-				public void writeTo(OutputStream outputStream) throws IOException {
-					BufferedImageHttpMessageConverter.this.writeInternal(image, selectedContentType, outputStream);
-				}
-
-				@Override
-				public boolean repeatable() {
-					return true;
-				}
-			});
+		if (outputMessage instanceof StreamingHttpOutputMessage) {
+			StreamingHttpOutputMessage streamingOutputMessage = (StreamingHttpOutputMessage) outputMessage;
+			streamingOutputMessage.setBody(outputStream -> writeInternal(image, selectedContentType, outputStream));
 		}
 		else {
 			writeInternal(image, selectedContentType, outputMessage.getBody());

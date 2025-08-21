@@ -20,6 +20,7 @@ import jakarta.mail.search.SearchTerm;
 
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
+import org.jvnet.mock_javamail.Mailbox;
 
 import static org.apache.camel.component.mail.SearchTermBuilder.Op;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,8 +39,8 @@ public class MailSearchTermNotSpamTest extends MailSearchTermTest {
     @Override
     @Test
     public void testSearchTerm() throws Exception {
-        Mailbox mailbox = bill.getInbox();
-        assertEquals(6, mailbox.getMessageCount());
+        Mailbox mailbox = Mailbox.get("bill@localhost");
+        assertEquals(6, mailbox.size());
 
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedBodiesReceivedInAnyOrder("I like riding the Camel", "Ordering Camel in Action",

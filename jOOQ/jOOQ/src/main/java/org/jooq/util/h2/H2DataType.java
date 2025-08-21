@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -44,11 +44,9 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.Year;
 import java.util.UUID;
 
 import org.jooq.DataType;
-import org.jooq.Decfloat;
 import org.jooq.JSON;
 import org.jooq.JSONB;
 import org.jooq.Record;
@@ -117,8 +115,8 @@ public class H2DataType {
     public static final DataType<Timestamp>         DATETIME                     = new BuiltInDataType<>(FAMILY, SQLDataType.TIMESTAMP, "datetime(p)");
     public static final DataType<OffsetDateTime>    TIMESTAMPWITHTIMEZONE        = new BuiltInDataType<>(FAMILY, SQLDataType.TIMESTAMPWITHTIMEZONE, "timestamp(p) with time zone");
     public static final DataType<Instant>           INSTANT                      = new BuiltInDataType<>(FAMILY, SQLDataType.INSTANT, "timestamp(p) with time zone");
-    public static final DataType<byte[]>            VARBINARY                    = new BuiltInDataType<>(FAMILY, SQLDataType.VARBINARY, "varbinary(l)");
     public static final DataType<byte[]>            BINARY                       = new BuiltInDataType<>(FAMILY, SQLDataType.BINARY, "binary(l)");
+    public static final DataType<byte[]>            VARBINARY                    = new BuiltInDataType<>(FAMILY, SQLDataType.VARBINARY, "varbinary(l)");
     public static final DataType<byte[]>            BINARYVARYING                = new BuiltInDataType<>(FAMILY, SQLDataType.VARBINARY, "binary varying(l)");
     public static final DataType<byte[]>            LONGVARBINARY                = new BuiltInDataType<>(FAMILY, SQLDataType.LONGVARBINARY, "longvarbinary(l)");
     public static final DataType<byte[]>            BLOB                         = new BuiltInDataType<>(FAMILY, SQLDataType.BLOB, "blob");
@@ -132,7 +130,6 @@ public class H2DataType {
     public static final DataType<String>            CHAR                         = new BuiltInDataType<>(FAMILY, SQLDataType.CHAR, "char(l)");
     public static final DataType<String>            CHARACTER                    = new BuiltInDataType<>(FAMILY, SQLDataType.CHAR, "character(l)");
     public static final DataType<String>            LONGVARCHAR                  = new BuiltInDataType<>(FAMILY, SQLDataType.LONGVARCHAR, "longvarchar(l)");
-    public static final DataType<String>            LONGNVARCHAR                 = new BuiltInDataType<>(FAMILY, SQLDataType.LONGNVARCHAR, "longnvarchar(l)");
     public static final DataType<String>            CLOB                         = new BuiltInDataType<>(FAMILY, SQLDataType.CLOB, "clob");
     public static final DataType<String>            CHARLARGEOBJECT              = new BuiltInDataType<>(FAMILY, SQLDataType.CLOB, "char large object");
     public static final DataType<String>            CHARACTERLARGEOBJECT         = new BuiltInDataType<>(FAMILY, SQLDataType.CLOB, "character large object");
@@ -151,14 +148,13 @@ public class H2DataType {
     public static final DataType<JSONB>             JSONB                        = new BuiltInDataType<>(FAMILY, SQLDataType.JSONB, "json");
     public static final DataType<YearToMonth>       INTERVALYEARTOMONTH          = new BuiltInDataType<>(FAMILY, SQLDataType.INTERVALYEARTOMONTH, "interval year to month");
     public static final DataType<DayToSecond>       INTERVALDAYTOSECOND          = new BuiltInDataType<>(FAMILY, SQLDataType.INTERVALDAYTOSECOND, "interval day to second", "interval day(9) to second");
-    public static final DataType<Decfloat>          DECFLOAT                     = new BuiltInDataType<>(FAMILY, SQLDataType.DECFLOAT, "decfloat");
 
     // -------------------------------------------------------------------------
     // Compatibility types for supported SQLDialect.H2, SQLDataTypes
     // -------------------------------------------------------------------------
 
+    protected static final DataType<String>         __LONGNVARCHAR               = new BuiltInDataType<>(FAMILY, SQLDataType.LONGNVARCHAR, "longvarchar(l)");
     protected static final DataType<Result<Record>> __RESULT                     = new BuiltInDataType<>(FAMILY, SQLDataType.RESULT, "result_set");
-    protected static final DataType<Year>           __YEAR                       = new BuiltInDataType<>(FAMILY, SQLDataType.YEAR, "smallint");
 
     // -------------------------------------------------------------------------
     // Compatibility types for supported Java types
@@ -174,6 +170,7 @@ public class H2DataType {
     // Dialect-specific data types and synonyms thereof
     // -------------------------------------------------------------------------
 
+    public static final DataType<Short>             YEAR                         = new BuiltInDataType<>(FAMILY, SQLDataType.SMALLINT, "year");
     public static final DataType<Long>              IDENTITY                     = new BuiltInDataType<>(FAMILY, SQLDataType.BIGINT, "identity");
     public static final DataType<Timestamp>         SMALLDATETIME                = new BuiltInDataType<>(FAMILY, SQLDataType.TIMESTAMP, "smalldatetime");
     public static final DataType<byte[]>            RAW                          = new BuiltInDataType<>(FAMILY, SQLDataType.BLOB, "raw");

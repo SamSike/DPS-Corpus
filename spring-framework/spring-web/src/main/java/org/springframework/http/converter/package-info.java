@@ -1,7 +1,9 @@
 /**
  * Provides an HttpMessageConverter abstraction to convert between Java objects and HTTP input/output messages.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.http.converter;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

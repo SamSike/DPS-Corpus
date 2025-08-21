@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 
 public class RouteAwareProcessorTest extends ContextTestSupport {
 
-    private final MyProcessor processor = new MyProcessor();
+    private MyProcessor processor = new MyProcessor();
 
     @Test
     public void testRouteIdAware() throws Exception {
@@ -39,10 +39,10 @@ public class RouteAwareProcessorTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo")
                         .process(processor).id("myProcessor")
                         .to("mock:result");
@@ -50,7 +50,7 @@ public class RouteAwareProcessorTest extends ContextTestSupport {
         };
     }
 
-    private static class MyProcessor extends ServiceSupport implements Processor, RouteIdAware, IdAware {
+    private class MyProcessor extends ServiceSupport implements Processor, RouteIdAware, IdAware {
 
         private String id;
         private String routeId;
@@ -76,8 +76,18 @@ public class RouteAwareProcessorTest extends ContextTestSupport {
         }
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             exchange.getMessage().setBody("Hello route " + routeId + " from processor " + id);
+        }
+
+        @Override
+        protected void doStart() throws Exception {
+            // noop
+        }
+
+        @Override
+        protected void doStop() throws Exception {
+            // noop
         }
     }
 

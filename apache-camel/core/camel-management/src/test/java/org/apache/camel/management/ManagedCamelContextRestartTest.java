@@ -46,17 +46,17 @@ public class ManagedCamelContextRestartTest extends ManagementTestSupport {
 
         context.getManagementStrategy().addEventNotifier(new EventNotifierSupport() {
             @Override
-            public void notify(CamelEvent event) {
+            public void notify(CamelEvent event) throws Exception {
                 // Empty.
             }
 
             @Override
-            protected void doStart() {
+            protected void doStart() throws Exception {
                 starts++;
             }
 
             @Override
-            protected void doStop() {
+            protected void doStop() throws Exception {
                 stops++;
             }
         });
@@ -105,10 +105,10 @@ public class ManagedCamelContextRestartTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").delay(10).transform(constant("Bye World"));
             }
         };

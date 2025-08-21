@@ -16,10 +16,10 @@
  */
 package org.apache.camel.component.optaplanner;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.camel.Category;
 import org.apache.camel.Component;
@@ -35,11 +35,13 @@ import org.optaplanner.core.api.solver.SolverFactory;
 /**
  * Solve planning problems with OptaPlanner.
  */
-@UriEndpoint(firstVersion = "2.13.0", scheme = "optaplanner", title = "OptaPlanner", syntax = "optaplanner:problemName",
-             category = { Category.WORKFLOW }, headersClass = OptaPlannerConstants.class)
+@UriEndpoint(firstVersion = "2.13.0", scheme = "optaplanner", title = "OptaPlanner", syntax = "optaplanner:configFile",
+             category = { Category.ENGINE, Category.PLANNING }, headersClass = OptaPlannerConstants.class)
 public class OptaPlannerEndpoint extends DefaultEndpoint {
-    private static final Map<String, Solver<Object>> SOLVERS = new ConcurrentHashMap<>();
-    private static final Map<Long, Set<OptaplannerSolutionEventListener>> SOLUTION_LISTENER = new ConcurrentHashMap<>();
+    private static final Map<String, Solver<Object>> SOLVERS = new HashMap<>();
+    private static final Map<Long, Set<OptaplannerSolutionEventListener>> SOLUTION_LISTENER = new HashMap();
+
+    private SolverFactory<Object> solverFactory;
 
     @UriParam
     private OptaPlannerConfiguration configuration;
@@ -54,17 +56,21 @@ public class OptaPlannerEndpoint extends DefaultEndpoint {
     }
 
     protected Solver<Object> getOrCreateSolver(String solverId) {
-        return SOLVERS.computeIfAbsent(solverId, k -> createSolver());
+        synchronized (SOLVERS) {
+            return SOLVERS.computeIfAbsent(solverId, k -> createSolver());
+        }
     }
 
     protected Solver<Object> createSolver() {
         ClassLoader classLoader = getCamelContext().getApplicationContextClassLoader();
-        SolverFactory<Object> solverFactory = SolverFactory.createFromXmlResource(configuration.getConfigFile(), classLoader);
+        solverFactory = SolverFactory.createFromXmlResource(configuration.getConfigFile(), classLoader);
         return solverFactory.buildSolver();
     }
 
     protected Solver<Object> getSolver(String solverId) {
-        return SOLVERS.get(solverId);
+        synchronized (SOLVERS) {
+            return SOLVERS.get(solverId);
+        }
     }
 
     @Override
@@ -80,10 +86,17 @@ public class OptaPlannerEndpoint extends DefaultEndpoint {
     }
 
     @Override
+    protected void doStart() throws Exception {
+        super.doStart();
+    }
+
+    @Override
     protected void doStop() throws Exception {
-        for (Map.Entry<String, Solver<Object>> solver : SOLVERS.entrySet()) {
-            solver.getValue().terminateEarly();
-            SOLVERS.remove(solver.getKey());
+        synchronized (SOLVERS) {
+            for (Map.Entry<String, Solver<Object>> solver : SOLVERS.entrySet()) {
+                solver.getValue().terminateEarly();
+                SOLVERS.remove(solver.getKey());
+            }
         }
         super.doStop();
     }
@@ -92,17 +105,22 @@ public class OptaPlannerEndpoint extends DefaultEndpoint {
         return SOLUTION_LISTENER.get(problemId);
     }
 
-    protected void addSolutionEventListener(Long problemId, OptaplannerSolutionEventListener listener) {
-        SOLUTION_LISTENER.computeIfAbsent(problemId, k -> new HashSet<>()).add(listener);
+    protected synchronized void addSolutionEventListener(Long problemId, OptaplannerSolutionEventListener listener) {
+        Set<OptaplannerSolutionEventListener> listeners = SOLUTION_LISTENER.get(problemId);
+        if (listeners == null) {
+            listeners = new HashSet<>();
+            listeners.add(listener);
+            SOLUTION_LISTENER.put(problemId, listeners);
+        } else {
+            listeners.add(listener);
+        }
     }
 
-    protected void removeSolutionEventListener(Long problemId, OptaplannerSolutionEventListener listener) {
-        SOLUTION_LISTENER.computeIfPresent(problemId, (k, listeners) -> {
-            listeners.remove(listener);
-            if (listeners.isEmpty()) {
-                return null;
-            }
-            return listeners;
-        });
+    protected synchronized void removeSolutionEventListener(Long problemId, OptaplannerSolutionEventListener listener) {
+        Set<OptaplannerSolutionEventListener> listeners = SOLUTION_LISTENER.get(problemId);
+        listeners.remove(listener);
+        if (listeners.isEmpty()) {
+            SOLUTION_LISTENER.remove(problemId);
+        }
     }
 }

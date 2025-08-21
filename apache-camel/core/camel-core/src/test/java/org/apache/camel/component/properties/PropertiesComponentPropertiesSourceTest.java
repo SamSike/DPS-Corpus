@@ -24,7 +24,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Ordered;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.LoadablePropertiesSource;
-import org.apache.camel.util.ObjectHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -124,7 +123,7 @@ public class PropertiesComponentPropertiesSourceTest {
         }
 
         public PropertiesPropertiesSource(int order, String name, String... kv) {
-            ObjectHelper.equal(kv.length % 2, 0);
+            assert kv.length % 2 == 0;
 
             this.name = name;
             this.order = order;

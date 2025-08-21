@@ -44,7 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.jayway.jsonpath.Option.ALWAYS_RETURN_LIST;
-import static com.jayway.jsonpath.Option.DEFAULT_PATH_LEAF_TO_NULL;
 import static com.jayway.jsonpath.Option.SUPPRESS_EXCEPTIONS;
 
 public class JsonPathEngine {
@@ -56,22 +55,24 @@ public class JsonPathEngine {
     private static final Pattern SIMPLE_PATTERN = Pattern.compile("\\$\\{[^\\}]+\\}", Pattern.MULTILINE);
     private final String expression;
     private final boolean writeAsString;
+    private final String headerName;
+    private final String propertyName;
     private final Configuration configuration;
     private final boolean hasSimple;
-    private final Expression source;
     private JsonPathAdapter adapter;
     private volatile boolean initJsonAdapter;
 
     @Deprecated
     public JsonPathEngine(String expression) {
-        this(expression, null, false, false, true, null, null);
+        this(expression, false, false, true, null, null, null, null);
     }
 
-    public JsonPathEngine(String expression, Expression source, boolean writeAsString, boolean suppressExceptions,
-                          boolean allowSimple, Option[] options, CamelContext context) {
+    public JsonPathEngine(String expression, boolean writeAsString, boolean suppressExceptions, boolean allowSimple,
+                          String headerName, String propertyName, Option[] options, CamelContext context) {
         this.expression = expression;
-        this.source = source;
         this.writeAsString = writeAsString;
+        this.headerName = headerName;
+        this.propertyName = propertyName;
 
         Configuration.ConfigurationBuilder builder = Configuration.builder();
         if (options != null) {
@@ -105,11 +106,7 @@ public class JsonPathEngine {
 
     private ObjectMapper findRegisteredMapper(CamelContext context) {
         if (context != null) {
-            ObjectMapper mapper = context.getRegistry().findSingleByType(ObjectMapper.class);
-            // do not use XML mapper
-            if (mapper != null && !mapper.getClass().getSimpleName().equals("XmlMapper")) {
-                return mapper;
-            }
+            return context.getRegistry().findSingleByType(ObjectMapper.class);
         }
         return null;
     }
@@ -142,7 +139,7 @@ public class JsonPathEngine {
             // write each row as a string but keep it as a list/iterable
             if (answer instanceof Iterable) {
                 List<String> list = new ArrayList<>();
-                Iterable<Object> it = (Iterable<Object>) answer;
+                Iterable it = (Iterable) answer;
                 for (Object o : it) {
                     if (adapter != null) {
                         String json = adapter.writeAsString(o, exchange);
@@ -153,13 +150,13 @@ public class JsonPathEngine {
                 }
                 return list;
             } else if (answer instanceof Map) {
-                Map<Object, Object> map = (Map<Object, Object>) answer;
-                for (Map.Entry<Object, Object> entry : map.entrySet()) {
-                    Object value = entry.getValue();
+                Map map = (Map) answer;
+                for (Object key : map.keySet()) {
+                    Object value = map.get(key);
                     if (adapter != null) {
                         String json = adapter.writeAsString(value, exchange);
                         if (json != null) {
-                            map.put(entry.getKey(), json);
+                            map.put(key, json);
                         }
                     }
                 }
@@ -176,7 +173,18 @@ public class JsonPathEngine {
     }
 
     private Object getPayload(Exchange exchange) {
-        return source != null ? source.evaluate(exchange, Object.class) : exchange.getMessage().getBody();
+        Object payload = null;
+        if (headerName == null && propertyName == null) {
+            payload = exchange.getIn().getBody();
+        } else {
+            if (headerName != null) {
+                payload = exchange.getIn().getHeader(headerName);
+            }
+            if (payload == null && propertyName != null) {
+                payload = exchange.getProperty(propertyName);
+            }
+        }
+        return payload;
     }
 
     private Object doRead(String path, Exchange exchange) throws IOException, CamelExchangeException {
@@ -194,7 +202,6 @@ public class JsonPathEngine {
             }
         }
 
-        Object answer;
         if (json instanceof String) {
             LOG.trace("JSonPath: {} is read as String: {}", path, json);
             String str = (String) json;
@@ -209,19 +216,18 @@ public class JsonPathEngine {
             return JsonPath.using(configuration).parse(list).read(path);
         } else {
             //try to auto convert into inputStream
-            answer = readWithInputStream(path, exchange);
+            Object answer = readWithInputStream(path, exchange);
             if (answer == null) {
                 // fallback and attempt an adapter which can read the message body/header
                 answer = readWithAdapter(path, exchange);
             }
-        }
-        if (answer != null) {
-            return answer;
+            if (answer != null) {
+                return answer;
+            }
         }
 
         // is json path configured to suppress exceptions
-        if (configuration.getOptions().contains(SUPPRESS_EXCEPTIONS)
-                || configuration.getOptions().contains(DEFAULT_PATH_LEAF_TO_NULL)) {
+        if (configuration.getOptions().contains(SUPPRESS_EXCEPTIONS)) {
             if (configuration.getOptions().contains(ALWAYS_RETURN_LIST)) {
                 return Collections.emptyList();
             } else {
@@ -230,15 +236,15 @@ public class JsonPathEngine {
         }
 
         // okay it was not then lets throw a failure
-        if (source != null) {
-            throw new CamelExchangeException("Cannot read " + source + " as supported JSON value", exchange);
+        if (headerName != null) {
+            throw new CamelExchangeException("Cannot read message header " + headerName + " as supported JSON value", exchange);
         } else {
             throw new CamelExchangeException("Cannot read message body as supported JSON value", exchange);
         }
     }
 
     private Object readWithInputStream(String path, Exchange exchange) throws IOException {
-        Object json = getPayload(exchange);
+        Object json = headerName != null ? exchange.getIn().getHeader(headerName) : exchange.getIn().getBody();
         LOG.trace("JSonPath: {} is read as InputStream: {}", path, json);
 
         InputStream is = exchange.getContext().getTypeConverter().tryConvertTo(InputStream.class, exchange, json);
@@ -264,7 +270,7 @@ public class JsonPathEngine {
     }
 
     private Object readWithAdapter(String path, Exchange exchange) {
-        Object json = getPayload(exchange);
+        Object json = headerName != null ? exchange.getIn().getHeader(headerName) : exchange.getIn().getBody();
         LOG.trace("JSonPath: {} is read with adapter: {}", path, json);
 
         doInitAdapter(exchange);

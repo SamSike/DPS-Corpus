@@ -33,7 +33,6 @@ import org.apache.camel.component.digitalocean.producer.DigitalOceanRegionsProdu
 import org.apache.camel.component.digitalocean.producer.DigitalOceanSizesProducer;
 import org.apache.camel.component.digitalocean.producer.DigitalOceanSnapshotsProducer;
 import org.apache.camel.component.digitalocean.producer.DigitalOceanTagsProducer;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.DefaultEndpoint;
@@ -51,7 +50,7 @@ import org.slf4j.LoggerFactory;
  */
 @UriEndpoint(firstVersion = "2.19.0", scheme = "digitalocean", title = "DigitalOcean", syntax = "digitalocean:operation",
              producerOnly = true, category = { Category.CLOUD, Category.MANAGEMENT }, headersClass = DigitalOceanHeaders.class)
-public class DigitalOceanEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
+public class DigitalOceanEndpoint extends DefaultEndpoint {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(DigitalOceanEndpoint.class);
 
@@ -63,16 +62,6 @@ public class DigitalOceanEndpoint extends DefaultEndpoint implements EndpointSer
     public DigitalOceanEndpoint(String uri, DigitalOceanComponent component, DigitalOceanConfiguration configuration) {
         super(uri, component);
         this.configuration = configuration;
-    }
-
-    @Override
-    public String getServiceUrl() {
-        return "api.digitalocean.com";
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "rest";
     }
 
     @Override

@@ -1,7 +1,9 @@
 /**
  * Support infrastructure for bean definition parsing.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.beans.factory.parsing;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

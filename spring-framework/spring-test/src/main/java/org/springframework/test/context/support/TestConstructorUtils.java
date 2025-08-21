@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,16 @@
 
 package org.springframework.test.context.support;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
-import java.util.Set;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.SpringProperties;
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.context.TestConstructor.AutowireMode;
 import org.springframework.test.context.TestContextAnnotationUtils;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.CollectionUtils;
 
 /**
  * Utility methods for working with {@link TestConstructor @TestConstructor}.
@@ -40,31 +33,10 @@ import org.springframework.util.CollectionUtils;
  * <p>Primarily intended for use within the framework.
  *
  * @author Sam Brannen
- * @author Florian Lehmann
  * @since 5.2
  * @see TestConstructor
  */
-@SuppressWarnings("unchecked")
 public abstract class TestConstructorUtils {
-
-	private static final Log logger = LogFactory.getLog(TestConstructorUtils.class);
-
-	private static final Set<Class<? extends Annotation>> autowiredAnnotationTypes = CollectionUtils.newLinkedHashSet(2);
-
-	static {
-		autowiredAnnotationTypes.add(Autowired.class);
-
-		ClassLoader classLoader = TestConstructorUtils.class.getClassLoader();
-		try {
-			autowiredAnnotationTypes.add((Class<? extends Annotation>)
-					ClassUtils.forName("jakarta.inject.Inject", classLoader));
-			logger.trace("'jakarta.inject.Inject' annotation found and supported for autowiring");
-		}
-		catch (ClassNotFoundException ex) {
-			// jakarta.inject API not available - simply skip.
-		}
-	}
-
 
 	private TestConstructorUtils() {
 	}
@@ -72,8 +44,10 @@ public abstract class TestConstructorUtils {
 	/**
 	 * Determine if the supplied executable for the given test class is an
 	 * autowirable constructor.
+	 *
 	 * <p>This method delegates to {@link #isAutowirableConstructor(Executable, Class, PropertyProvider)}
 	 * will a value of {@code null} for the fallback {@link PropertyProvider}.
+	 *
 	 * @param executable an executable for the test class
 	 * @param testClass the test class
 	 * @return {@code true} if the executable is an autowirable constructor
@@ -86,8 +60,10 @@ public abstract class TestConstructorUtils {
 	/**
 	 * Determine if the supplied constructor for the given test class is
 	 * autowirable.
+	 *
 	 * <p>This method delegates to {@link #isAutowirableConstructor(Constructor, Class, PropertyProvider)}
 	 * will a value of {@code null} for the fallback {@link PropertyProvider}.
+	 *
 	 * @param constructor a constructor for the test class
 	 * @param testClass the test class
 	 * @return {@code true} if the constructor is autowirable
@@ -100,8 +76,10 @@ public abstract class TestConstructorUtils {
 	/**
 	 * Determine if the supplied executable for the given test class is an
 	 * autowirable constructor.
+	 *
 	 * <p>This method delegates to {@link #isAutowirableConstructor(Constructor, Class, PropertyProvider)}
 	 * if the supplied executable is a constructor and otherwise returns {@code false}.
+	 *
 	 * @param executable an executable for the test class
 	 * @param testClass the test class
 	 * @param fallbackPropertyProvider fallback property provider used to look up
@@ -114,8 +92,8 @@ public abstract class TestConstructorUtils {
 	public static boolean isAutowirableConstructor(Executable executable, Class<?> testClass,
 			@Nullable PropertyProvider fallbackPropertyProvider) {
 
-		return (executable instanceof Constructor<?> constructor &&
-				isAutowirableConstructor(constructor, testClass, fallbackPropertyProvider));
+		return (executable instanceof Constructor &&
+				isAutowirableConstructor((Constructor<?>) executable, testClass, fallbackPropertyProvider));
 	}
 
 	/**
@@ -126,8 +104,7 @@ public abstract class TestConstructorUtils {
 	 * conditions is {@code true}.
 	 *
 	 * <ol>
-	 * <li>The constructor is annotated with {@link Autowired @Autowired} or
-	 * {@link jakarta.inject.Inject @jakarta.inject.Inject}.</li>
+	 * <li>The constructor is annotated with {@link Autowired @Autowired}.</li>
 	 * <li>{@link TestConstructor @TestConstructor} is <em>present</em> or
 	 * <em>meta-present</em> on the test class with
 	 * {@link TestConstructor#autowireMode() autowireMode} set to
@@ -137,6 +114,7 @@ public abstract class TestConstructorUtils {
 	 * {@link PropertyProvider} (see
 	 * {@link TestConstructor#TEST_CONSTRUCTOR_AUTOWIRE_MODE_PROPERTY_NAME}).</li>
 	 * </ol>
+	 *
 	 * @param constructor a constructor for the test class
 	 * @param testClass the test class
 	 * @param fallbackPropertyProvider fallback property provider used to look up
@@ -148,12 +126,12 @@ public abstract class TestConstructorUtils {
 	public static boolean isAutowirableConstructor(Constructor<?> constructor, Class<?> testClass,
 			@Nullable PropertyProvider fallbackPropertyProvider) {
 
-		// Is the constructor annotated with @Autowired/@Inject?
-		if (isAnnotatedWithAutowiredOrInject(constructor)) {
+		// Is the constructor annotated with @Autowired?
+		if (AnnotatedElementUtils.hasAnnotation(constructor, Autowired.class)) {
 			return true;
 		}
 
-		AutowireMode autowireMode;
+		AutowireMode autowireMode = null;
 
 		// Is the test class annotated with @TestConstructor?
 		TestConstructor testConstructor = TestContextAnnotationUtils.findMergedAnnotation(testClass, TestConstructor.class);
@@ -173,11 +151,6 @@ public abstract class TestConstructorUtils {
 		}
 
 		return (autowireMode == AutowireMode.ALL);
-	}
-
-	private static boolean isAnnotatedWithAutowiredOrInject(Constructor<?> constructor) {
-		return autowiredAnnotationTypes.stream()
-				.anyMatch(annotationType -> AnnotatedElementUtils.hasAnnotation(constructor, annotationType));
 	}
 
 }

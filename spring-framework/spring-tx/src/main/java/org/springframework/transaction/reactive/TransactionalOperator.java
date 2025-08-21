@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,6 @@ import org.springframework.transaction.TransactionException;
  *
  * @author Mark Paluch
  * @author Juergen Hoeller
- * @author Enric Sala
  * @since 5.2
  * @see #execute
  * @see ReactiveTransactionManager
@@ -70,9 +69,7 @@ public interface TransactionalOperator {
 	 * @throws TransactionException in case of initialization, rollback, or system errors
 	 * @throws RuntimeException if thrown by the TransactionCallback
 	 */
-	default <T> Mono<T> transactional(Mono<T> mono) {
-		return execute(it -> mono).singleOrEmpty();
-	}
+	<T> Mono<T> transactional(Mono<T> mono);
 
 	/**
 	 * Execute the action specified by the given callback object within a transaction.

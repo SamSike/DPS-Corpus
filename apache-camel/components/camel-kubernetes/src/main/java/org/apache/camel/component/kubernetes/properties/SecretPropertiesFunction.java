@@ -16,14 +16,54 @@
  */
 package org.apache.camel.component.kubernetes.properties;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Base64;
+
+import io.fabric8.kubernetes.api.model.Secret;
+import org.apache.camel.spi.PropertiesFunction;
+
 /**
- * Resolves String type secret keys .
+ * A {@link PropertiesFunction} that can lookup from Kubernetes secret.
  */
 @org.apache.camel.spi.annotations.PropertiesFunction("secret")
-public class SecretPropertiesFunction extends BaseSecretPropertiesFunction {
+public class SecretPropertiesFunction extends BasePropertiesFunction {
 
     @Override
     public String getName() {
         return "secret";
+    }
+
+    @Override
+    Path getMountPath() {
+        if (getMountPathSecrets() != null) {
+            return Paths.get(getMountPathSecrets());
+        }
+        return null;
+    }
+
+    @Override
+    String lookup(String name, String key, String defaultValue) {
+        String answer = null;
+        Secret sec = getClient().secrets().withName(name).get();
+        if (sec != null) {
+            // string data can be used as-is
+            answer = sec.getStringData() != null ? sec.getStringData().get(key) : null;
+            if (answer == null) {
+                // need to base64 decode from data
+                answer = sec.getData() != null ? sec.getData().get(key) : null;
+                if (answer != null) {
+                    byte[] data = Base64.getDecoder().decode(answer);
+                    if (data != null) {
+                        answer = new String(data);
+                    }
+                }
+            }
+        }
+        if (answer == null) {
+            return defaultValue;
+        }
+
+        return answer;
     }
 }

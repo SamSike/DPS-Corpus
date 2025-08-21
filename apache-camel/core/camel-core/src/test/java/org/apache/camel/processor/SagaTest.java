@@ -42,7 +42,7 @@ public class SagaTest extends ContextTestSupport {
     private CreditService creditService;
 
     @Test
-    public void testCreditExhausted() {
+    public void testCreditExhausted() throws Exception {
         // total credit is 100
         buy(20, false, false);
         buy(70, false, false);
@@ -54,7 +54,7 @@ public class SagaTest extends ContextTestSupport {
     }
 
     @Test
-    public void testTotalCompensation() {
+    public void testTotalCompensation() throws Exception {
         // total credit is 100
         for (int i = 0; i < 10; i++) {
             if (i % 2 == 0) {
@@ -84,7 +84,7 @@ public class SagaTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
 
         return new RouteBuilder() {
             @Override
@@ -131,7 +131,7 @@ public class SagaTest extends ContextTestSupport {
 
     public static class OrderManagerService {
 
-        private final Set<String> orders = new HashSet<>();
+        private Set<String> orders = new HashSet<>();
 
         public synchronized void newOrder(String id) {
             orders.add(id);
@@ -148,9 +148,9 @@ public class SagaTest extends ContextTestSupport {
 
     public static class CreditService {
 
-        private final int totalCredit;
+        private int totalCredit;
 
-        private final Map<String, Integer> reservations = new HashMap<>();
+        private Map<String, Integer> reservations = new HashMap<>();
 
         public CreditService(int totalCredit) {
             this.totalCredit = totalCredit;

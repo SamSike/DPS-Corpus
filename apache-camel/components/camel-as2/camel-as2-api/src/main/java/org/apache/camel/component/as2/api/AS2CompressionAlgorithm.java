@@ -23,7 +23,7 @@ import org.bouncycastle.operator.OutputCompressor;
 public enum AS2CompressionAlgorithm {
     ZLIB(new ZlibCompressor());
 
-    private final OutputCompressor outputCompressor;
+    private OutputCompressor outputCompressor;
 
     private AS2CompressionAlgorithm(OutputCompressor outputCompressor) {
         this.outputCompressor = outputCompressor;

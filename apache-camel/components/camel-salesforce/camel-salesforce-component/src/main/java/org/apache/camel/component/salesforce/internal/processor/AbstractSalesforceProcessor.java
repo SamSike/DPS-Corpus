@@ -53,7 +53,6 @@ public abstract class AbstractSalesforceProcessor extends ServiceSupport impleme
     protected SalesforceHttpClient httpClient;
     protected SalesforceLoginConfig loginConfig;
     protected Map<String, Class<?>> classMap;
-    protected Map<String, Class<?>> eventClassMap;
 
     protected boolean rawPayload;
 
@@ -78,9 +77,6 @@ public abstract class AbstractSalesforceProcessor extends ServiceSupport impleme
         }
         if (classMap == null) {
             this.classMap = endpoint.getComponent().getClassMap();
-        }
-        if (eventClassMap == null) {
-            this.eventClassMap = endpoint.getComponent().getEventClassMap();
         }
     }
 

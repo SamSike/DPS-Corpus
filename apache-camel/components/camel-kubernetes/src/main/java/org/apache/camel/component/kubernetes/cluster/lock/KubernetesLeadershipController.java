@@ -30,8 +30,6 @@ import java.util.stream.Collectors;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.readiness.Readiness;
-import io.fabric8.kubernetes.client.utils.PodStatusUtil;
 import org.apache.camel.CamelContext;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.Service;
@@ -219,7 +217,6 @@ public class KubernetesLeadershipController implements Service {
             Thread.sleep(delay);
         } catch (InterruptedException e) {
             LOG.warn("Thread interrupted", e);
-            Thread.currentThread().interrupt();
         }
 
         LOG.info("{} Current pod is becoming the new leader now...", logPrefix);
@@ -241,7 +238,6 @@ public class KubernetesLeadershipController implements Service {
             Thread.sleep(delay);
         } catch (InterruptedException e) {
             LOG.warn("Thread interrupted", e);
-            Thread.currentThread().interrupt();
         }
 
         LOG.info("{} Current pod is losing leadership now...", logPrefix);
@@ -481,11 +477,7 @@ public class KubernetesLeadershipController implements Service {
                 .inNamespace(this.lockConfiguration.getKubernetesResourcesNamespaceOrDefault(kubernetesClient))
                 .withLabels(this.lockConfiguration.getClusterLabels()).list().getItems();
 
-        return pods.stream()
-                .filter(PodStatusUtil::isRunning)
-                .filter(Readiness::isPodReady)
-                .map(pod -> pod.getMetadata().getName())
-                .collect(Collectors.toSet());
+        return pods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toSet());
     }
 
     private long jitter(long num, double factor) {

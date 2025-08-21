@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package org.springframework.jndi;
 import javax.naming.Context;
 import javax.naming.NamingException;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Callback interface to be implemented by classes that need to perform an
@@ -44,10 +44,11 @@ public interface JndiCallback<T> {
 	 * <p>Implementations don't need to worry about error handling
 	 * or cleanup, as the JndiTemplate class will handle this.
 	 * @param ctx the current JNDI context
-	 * @return a result object, or {@code null}
 	 * @throws NamingException if thrown by JNDI methods
+	 * @return a result object, or {@code null}
 	 */
-	@Nullable T doInContext(Context ctx) throws NamingException;
+	@Nullable
+	T doInContext(Context ctx) throws NamingException;
 
 }
 

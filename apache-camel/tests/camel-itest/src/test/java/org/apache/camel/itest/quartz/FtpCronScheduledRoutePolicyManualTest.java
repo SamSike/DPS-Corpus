@@ -31,6 +31,7 @@ import org.apache.ftpserver.ftplet.UserManager;
 import org.apache.ftpserver.listener.ListenerFactory;
 import org.apache.ftpserver.usermanager.ClearTextPasswordEncryptor;
 import org.apache.ftpserver.usermanager.impl.PropertiesUserManager;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -73,7 +74,8 @@ public class FtpCronScheduledRoutePolicyManualTest extends CamelTestSupport {
 
     @Override
     @BeforeEach
-    public void doPostSetup() throws Exception {
+    public void setUp() throws Exception {
+        super.setUp();
         deleteDirectory("res");
         createDirectory("res/home/myapp");
         initFtpServer();
@@ -81,7 +83,9 @@ public class FtpCronScheduledRoutePolicyManualTest extends CamelTestSupport {
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
+        super.tearDown();
         ftpServer.stop();
         ftpServer = null;
     }

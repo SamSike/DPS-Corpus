@@ -2,7 +2,9 @@
  * Spring's generic mail infrastructure.
  * Concrete implementations are provided in the subpackages.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.mail;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

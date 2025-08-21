@@ -16,9 +16,6 @@
  */
 package org.apache.camel.component.vertx.websocket;
 
-import java.net.URI;
-import java.util.Map;
-
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.Router;
@@ -31,67 +28,35 @@ import org.apache.camel.support.jsse.SSLContextParameters;
 @UriParams
 public class VertxWebsocketConfiguration {
 
-    private URI websocketURI;
-
-    @UriPath
-    @Metadata(required = true)
+    @UriPath(name = "host", defaultValue = VertxWebsocketConstants.DEFAULT_VERTX_SERVER_HOST)
     private String host;
-    @UriPath
-    @Metadata(required = true)
+    @UriPath(name = "port", defaultValue = "0")
     private int port;
-    @UriPath
+    @UriPath(name = "path", defaultValue = VertxWebsocketConstants.DEFAULT_VERTX_SERVER_PATH)
+    @Metadata(required = true)
     private String path;
     @UriParam(label = "consumer")
     private String allowedOriginPattern;
-    @UriParam(label = "consumer,advanced")
+    @UriParam(label = "consumer")
     private Router router;
-    @UriParam(label = "consumer,advanced")
+    @UriParam(label = "consumer")
     private HttpServerOptions serverOptions;
-    @UriParam(label = "consumer")
-    private boolean consumeAsClient;
-    @UriParam(label = "consumer")
-    private int reconnectInitialDelay;
-    @UriParam(label = "consumer", defaultValue = "1000")
-    private int reconnectInterval = 1000;
-    @UriParam(label = "consumer")
-    private int maxReconnectAttempts;
-    @UriParam(label = "producer,advanced")
+    @UriParam(label = "producer")
     private HttpClientOptions clientOptions;
     @UriParam(label = "producer")
     private boolean sendToAll;
     @UriParam(label = "producer")
     private String clientSubProtocols;
-    @UriParam(label = "consumer")
-    private boolean fireWebSocketConnectionEvents;
-    @UriParam(label = "security", defaultValue = "true")
-    private boolean allowOriginHeader = true;
-    @UriParam(label = "security")
-    private String originHeaderUrl;
-    @UriParam(label = "security", prefix = "handshake.", multiValue = true)
-    private Map<String, Object> handshakeHeaders;
     @UriParam(label = "security")
     private SSLContextParameters sslContextParameters;
-
-    /**
-     * The WebSocket URI address to use.
-     */
-    public void setWebsocketURI(URI websocketURI) {
-        this.websocketURI = websocketURI;
-        this.host = websocketURI.getHost();
-        this.port = websocketURI.getPort();
-        this.path = websocketURI.getPath();
-    }
-
-    public URI getWebsocketURI() {
-        return websocketURI;
-    }
 
     public String getHost() {
         return host;
     }
 
     /**
-     * WebSocket hostname, such as localhost or a remote host when in client mode.
+     * The host that the consumer should bind to or the host of the remote websocket destination that the producer
+     * should connect to
      */
     public void setHost(String host) {
         this.host = host;
@@ -102,7 +67,8 @@ public class VertxWebsocketConfiguration {
     }
 
     /**
-     * WebSocket port number to use.
+     * The port that the consumer should bind to or port of the remote websocket destination that the producer should
+     * connect to
      */
     public void setPort(int port) {
         this.port = port;
@@ -110,13 +76,6 @@ public class VertxWebsocketConfiguration {
 
     public String getPath() {
         return path;
-    }
-
-    /**
-     * WebSocket path to use.
-     */
-    public void setPath(String path) {
-        this.path = path;
     }
 
     /**
@@ -137,51 +96,12 @@ public class VertxWebsocketConfiguration {
         this.serverOptions = serverOptions;
     }
 
-    public boolean isConsumeAsClient() {
-        return consumeAsClient;
-    }
-
-    public int getReconnectInitialDelay() {
-        return reconnectInitialDelay;
-    }
-
     /**
-     * When consumeAsClient is set to true this sets the initial delay in milliseconds before attempting to reconnect to
-     * a previously closed WebSocket.
+     * The path that the consumer should bind to or path of the remote websocket destination that the producer should
+     * connect to
      */
-    public void setReconnectInitialDelay(int reconnectInitialDelay) {
-        this.reconnectInitialDelay = reconnectInitialDelay;
-    }
-
-    public int getReconnectInterval() {
-        return reconnectInterval;
-    }
-
-    /**
-     * When consumeAsClient is set to true this sets the interval in milliseconds at which reconnecting to a previously
-     * closed WebSocket occurs.
-     */
-    public void setReconnectInterval(int reconnectInterval) {
-        this.reconnectInterval = reconnectInterval;
-    }
-
-    public int getMaxReconnectAttempts() {
-        return maxReconnectAttempts;
-    }
-
-    /**
-     * When consumeAsClient is set to true this sets the maximum number of allowed reconnection attempts to a previously
-     * closed WebSocket. A value of 0 (the default) will attempt to reconnect indefinitely.
-     */
-    public void setMaxReconnectAttempts(int maxReconnectAttempts) {
-        this.maxReconnectAttempts = maxReconnectAttempts;
-    }
-
-    /**
-     * When set to true, the consumer acts as a WebSocket client, creating exchanges on each received WebSocket event.
-     */
-    public void setConsumeAsClient(boolean consumeAsClient) {
-        this.consumeAsClient = consumeAsClient;
+    public void setPath(String path) {
+        this.path = path;
     }
 
     public HttpClientOptions getClientOptions() {
@@ -189,11 +109,8 @@ public class VertxWebsocketConfiguration {
     }
 
     /**
-     * To send to all websocket subscribers. Can be used to configure at the endpoint level, instead of providing the
-     * {@code VertxWebsocketConstants.SEND_TO_ALL} header on the message. Note that when using this option, the host
-     * name specified for the vertx-websocket producer URI must match one used for an existing vertx-websocket consumer.
-     * Note that this option only applies when producing messages to endpoints hosted by the vertx-websocket consumer
-     * and not to an externally hosted WebSocket.
+     * To send to all websocket subscribers. Can be used to configure on endpoint level, instead of having to use the
+     * {@code VertxWebsocketConstants.SEND_TO_ALL} header on the message.
      */
     public void setSendToAll(boolean sendToAll) {
         this.sendToAll = sendToAll;
@@ -245,51 +162,5 @@ public class VertxWebsocketConfiguration {
 
     public String getClientSubProtocols() {
         return clientSubProtocols;
-    }
-
-    /**
-     * Whether the server consumer will create a message exchange when a new WebSocket peer connects or disconnects
-     */
-    public void setFireWebSocketConnectionEvents(boolean fireWebSocketConnectionEvents) {
-        this.fireWebSocketConnectionEvents = fireWebSocketConnectionEvents;
-    }
-
-    public boolean isFireWebSocketConnectionEvents() {
-        return fireWebSocketConnectionEvents;
-    }
-
-    public boolean isAllowOriginHeader() {
-        return allowOriginHeader;
-    }
-
-    /**
-     * Whether the WebSocket client should add the Origin header to the WebSocket handshake request.
-     */
-    public void setAllowOriginHeader(boolean allowOriginHeader) {
-        this.allowOriginHeader = allowOriginHeader;
-    }
-
-    public String getOriginHeaderUrl() {
-        return originHeaderUrl;
-    }
-
-    /**
-     * The value of the Origin header that the WebSocket client should use on the WebSocket handshake request. When not
-     * specified, the WebSocket client will automatically determine the value for the Origin from the request URL.
-     */
-    public void setOriginHeaderUrl(String originHeaderUrl) {
-        this.originHeaderUrl = originHeaderUrl;
-    }
-
-    public Map<String, Object> getHandshakeHeaders() {
-        return handshakeHeaders;
-    }
-
-    /**
-     * Headers to send in the HTTP handshake request. When the endpoint is a consumer, it only works when it consumes a
-     * remote host as a client (i.e. consumeAsClient is true).
-     */
-    public void setHandshakeHeaders(final Map<String, Object> handshakeHeaders) {
-        this.handshakeHeaders = handshakeHeaders;
     }
 }

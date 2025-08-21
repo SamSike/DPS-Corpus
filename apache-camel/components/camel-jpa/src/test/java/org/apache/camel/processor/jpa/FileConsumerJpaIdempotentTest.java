@@ -41,13 +41,11 @@ public class FileConsumerJpaIdempotentTest extends AbstractJpaTest {
             = "select x from " + MessageProcessed.class.getName() + " x where x.processorName = ?1";
     protected static final String PROCESSOR_NAME = "FileConsumer";
 
+    @Override
     @BeforeEach
-    public void cleanupDir() {
+    public void setUp() throws Exception {
         deleteDirectory("target/idempotent");
-    }
-
-    @BeforeEach
-    public void setMessages() {
+        super.setUp();
         template.sendBodyAndHeader("file://target/idempotent/", "Hello World", Exchange.FILE_NAME, "report.txt");
     }
 

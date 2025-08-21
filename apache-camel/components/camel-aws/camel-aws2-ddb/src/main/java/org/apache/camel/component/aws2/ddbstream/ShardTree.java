@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import software.amazon.awssdk.services.dynamodb.model.Shard;
 
@@ -38,7 +39,7 @@ class ShardTree {
         List<Shard> roots = shards.values()
                 .stream()
                 .filter(s -> !shards.containsKey(s.parentShardId()))
-                .toList();
+                .collect(Collectors.toList());
         if (roots.isEmpty()) {
             throw new IllegalStateException("Unable to find an unparented shard in " + shards);
         }
@@ -49,14 +50,14 @@ class ShardTree {
         return shards.values()
                 .stream()
                 .filter(s -> s.sequenceNumberRange().endingSequenceNumber() == null)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     List<Shard> getChildren(String shardId) {
         return shards.values()
                 .stream()
                 .filter(s -> shardId.equals(s.parentShardId()))
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override

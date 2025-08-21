@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ import static org.springframework.web.testfixture.method.MvcAnnotationPredicates
  * Test fixture with {@link MatrixVariableMethodArgumentResolver}.
  * @author Rossen Stoyanchev
  */
-class MatrixVariablesMethodArgumentResolverTests {
+public class MatrixVariablesMethodArgumentResolverTests {
 
 	private MatrixVariableMethodArgumentResolver resolver;
 
@@ -54,11 +54,11 @@ class MatrixVariablesMethodArgumentResolverTests {
 
 	private MockHttpServletRequest request;
 
-	private ResolvableMethod testMethod = ResolvableMethod.on(getClass()).named("handle").build();
+	private ResolvableMethod testMethod = ResolvableMethod.on(this.getClass()).named("handle").build();
 
 
 	@BeforeEach
-	void setup() throws Exception {
+	public void setup() throws Exception {
 		this.resolver = new MatrixVariableMethodArgumentResolver();
 		this.mavContainer = new ModelAndViewContainer();
 		this.request = new MockHttpServletRequest();
@@ -70,7 +70,7 @@ class MatrixVariablesMethodArgumentResolverTests {
 
 
 	@Test
-	void supportsParameter() {
+	public void supportsParameter() {
 
 		assertThat(this.resolver.supportsParameter(this.testMethod.arg(String.class))).isFalse();
 
@@ -82,7 +82,7 @@ class MatrixVariablesMethodArgumentResolverTests {
 	}
 
 	@Test
-	void resolveArgument() throws Exception {
+	public void resolveArgument() throws Exception {
 		MultiValueMap<String, String> params = getVariablesFor("cars");
 		params.add("colors", "red");
 		params.add("colors", "green");
@@ -93,7 +93,7 @@ class MatrixVariablesMethodArgumentResolverTests {
 	}
 
 	@Test
-	void resolveArgumentPathVariable() throws Exception {
+	public void resolveArgumentPathVariable() throws Exception {
 		getVariablesFor("cars").add("year", "2006");
 		getVariablesFor("bikes").add("year", "2005");
 		MethodParameter param = this.testMethod.annot(matrixAttribute().name("year")).arg(int.class);
@@ -102,13 +102,13 @@ class MatrixVariablesMethodArgumentResolverTests {
 	}
 
 	@Test
-	void resolveArgumentDefaultValue() throws Exception {
+	public void resolveArgumentDefaultValue() throws Exception {
 		MethodParameter param = this.testMethod.annot(matrixAttribute().name("year")).arg(int.class);
 		assertThat(resolver.resolveArgument(param, this.mavContainer, this.webRequest, null)).isEqualTo("2013");
 	}
 
 	@Test
-	void resolveArgumentMultipleMatches() {
+	public void resolveArgumentMultipleMatches() throws Exception {
 		getVariablesFor("var1").add("colors", "red");
 		getVariablesFor("var2").add("colors", "green");
 		MethodParameter param = this.testMethod.annot(matrixAttribute().noName()).arg(List.class, String.class);
@@ -118,14 +118,14 @@ class MatrixVariablesMethodArgumentResolverTests {
 	}
 
 	@Test
-	void resolveArgumentRequired() {
+	public void resolveArgumentRequired() throws Exception {
 		MethodParameter param = this.testMethod.annot(matrixAttribute().noName()).arg(List.class, String.class);
 		assertThatExceptionOfType(ServletRequestBindingException.class).isThrownBy(() ->
 				this.resolver.resolveArgument(param, this.mavContainer, this.webRequest, null));
 	}
 
 	@Test
-	void resolveArgumentNoMatch() throws Exception {
+	public void resolveArgumentNoMatch() throws Exception {
 		MultiValueMap<String, String> params = getVariablesFor("cars");
 		params.add("anotherYear", "2012");
 		MethodParameter param = this.testMethod.annot(matrixAttribute().name("year")).arg(int.class);

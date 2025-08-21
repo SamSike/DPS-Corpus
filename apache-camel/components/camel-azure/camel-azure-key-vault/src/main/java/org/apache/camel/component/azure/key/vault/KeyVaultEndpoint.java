@@ -16,11 +16,8 @@
  */
 package org.apache.camel.component.azure.key.vault;
 
-import java.util.Map;
-
-import com.azure.core.credential.TokenCredential;
+import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
-import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
 import org.apache.camel.Category;
@@ -28,12 +25,9 @@ import org.apache.camel.Component;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.spi.EndpointServiceLocation;
-import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.DefaultEndpoint;
-import org.apache.camel.util.ObjectHelper;
 
 /**
  * Manage secrets and keys in Azure Key Vault Service
@@ -43,10 +37,7 @@ import org.apache.camel.util.ObjectHelper;
                      Category.CLOUD, Category.CLOUD },
              producerOnly = true,
              headersClass = KeyVaultConstants.class)
-@Metadata(annotations = {
-        "vault=azure-key-vault",
-})
-public class KeyVaultEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
+public class KeyVaultEndpoint extends DefaultEndpoint {
 
     private SecretClient secretClient;
 
@@ -70,17 +61,12 @@ public class KeyVaultEndpoint extends DefaultEndpoint implements EndpointService
         // Build key vault URI
         String keyVaultUri = "https://" + getConfiguration().getVaultName() + ".vault.azure.net";
 
-        TokenCredential credential = null;
         // Credential
-        if (configuration.getCredentialType().equals(CredentialType.CLIENT_SECRET)) {
-            credential = new ClientSecretCredentialBuilder()
-                    .tenantId(getConfiguration().getTenantId())
-                    .clientId(getConfiguration().getClientId())
-                    .clientSecret(getConfiguration().getClientSecret())
-                    .build();
-        } else if (configuration.getCredentialType().equals(CredentialType.AZURE_IDENTITY)) {
-            credential = new DefaultAzureCredentialBuilder().build();
-        }
+        ClientSecretCredential credential = new ClientSecretCredentialBuilder()
+                .tenantId(getConfiguration().getTenantId())
+                .clientId(getConfiguration().getClientId())
+                .clientSecret(getConfiguration().getClientSecret())
+                .build();
 
         // Build Client
         localClient = new SecretClientBuilder()
@@ -121,26 +107,5 @@ public class KeyVaultEndpoint extends DefaultEndpoint implements EndpointService
 
     public void setSecretClient(SecretClient secretClient) {
         this.secretClient = secretClient;
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (ObjectHelper.isNotEmpty(configuration.getTenantId())) {
-            return configuration.getTenantId();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "keyvault";
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        if (configuration.getVaultName() != null) {
-            return Map.of("vault", configuration.getVaultName());
-        }
-        return null;
     }
 }

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,13 +41,11 @@ package org.jooq.impl;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
 // ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
@@ -63,13 +61,14 @@ import static org.jooq.SQLDialect.MYSQL;
 import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
+import static org.jooq.impl.Internal.iadd;
 import static org.jooq.impl.Keywords.K_OVERLAPS;
 import static org.jooq.impl.Tools.castIfNeeded;
 
 import java.util.Set;
 
 import org.jooq.Clause;
+import org.jooq.Condition;
 import org.jooq.Context;
 import org.jooq.DataType;
 import org.jooq.Field;
@@ -83,8 +82,8 @@ import org.jooq.SQLDialect;
  */
 final class RowOverlaps<T1, T2> extends AbstractCondition implements QOM.RowOverlaps {
 
-    private static final Set<SQLDialect> EMULATE_NON_STANDARD_OVERLAPS = SQLDialect.supportedUntil(CLICKHOUSE, CUBRID, DERBY, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, SQLITE, TRINO);
-    private static final Set<SQLDialect> EMULATE_INTERVAL_OVERLAPS     = SQLDialect.supportedBy(CLICKHOUSE, DUCKDB, HSQLDB, TRINO);
+    private static final Set<SQLDialect> EMULATE_NON_STANDARD_OVERLAPS = SQLDialect.supportedUntil(CUBRID, DERBY, FIREBIRD, H2, MARIADB, MYSQL, SQLITE);
+    private static final Set<SQLDialect> EMULATE_INTERVAL_OVERLAPS     = SQLDialect.supportedBy(HSQLDB);
 
     private final Row2<T1, T2>           left;
     private final Row2<T1, T2>           right;
@@ -161,7 +160,7 @@ final class RowOverlaps<T1, T2> extends AbstractCondition implements QOM.RowOver
 
     @SuppressWarnings("unchecked")
     @Override
-    public final Function2<? super Row, ? super Row, ? extends QOM.RowOverlaps> $constructor() {
+    public final Function2<? super Row, ? super Row, ? extends Condition> $constructor() {
         return (r1, r2) -> new RowOverlaps<>((Row2<T1, T2>) r1, (Row2<T1, T2>) r2);
     }
 }

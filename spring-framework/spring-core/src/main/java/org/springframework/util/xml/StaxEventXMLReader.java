@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,13 +37,13 @@ import javax.xml.stream.events.StartDocument;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
-import org.jspecify.annotations.Nullable;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.ext.Locator2;
 import org.xml.sax.helpers.AttributesImpl;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -67,7 +67,8 @@ class StaxEventXMLReader extends AbstractStaxXMLReader {
 
 	private String xmlVersion = DEFAULT_XML_VERSION;
 
-	private @Nullable String encoding;
+	@Nullable
+	private String encoding;
 
 
 	/**
@@ -103,33 +104,47 @@ class StaxEventXMLReader extends AbstractStaxXMLReader {
 				documentStarted = true;
 			}
 			switch (event.getEventType()) {
-				case XMLStreamConstants.START_DOCUMENT -> {
+				case XMLStreamConstants.START_DOCUMENT:
 					handleStartDocument(event);
 					documentStarted = true;
-				}
-				case XMLStreamConstants.START_ELEMENT -> {
+					break;
+				case XMLStreamConstants.START_ELEMENT:
 					elementDepth++;
 					handleStartElement(event.asStartElement());
-				}
-				case XMLStreamConstants.END_ELEMENT -> {
+					break;
+				case XMLStreamConstants.END_ELEMENT:
 					elementDepth--;
 					if (elementDepth >= 0) {
 						handleEndElement(event.asEndElement());
 					}
-				}
-				case XMLStreamConstants.PROCESSING_INSTRUCTION ->
-						handleProcessingInstruction((ProcessingInstruction) event);
-				case XMLStreamConstants.CHARACTERS, XMLStreamConstants.SPACE, XMLStreamConstants.CDATA ->
-						handleCharacters(event.asCharacters());
-				case XMLStreamConstants.END_DOCUMENT -> {
+					break;
+				case XMLStreamConstants.PROCESSING_INSTRUCTION:
+					handleProcessingInstruction((ProcessingInstruction) event);
+					break;
+				case XMLStreamConstants.CHARACTERS:
+				case XMLStreamConstants.SPACE:
+				case XMLStreamConstants.CDATA:
+					handleCharacters(event.asCharacters());
+					break;
+				case XMLStreamConstants.END_DOCUMENT:
 					handleEndDocument();
 					documentEnded = true;
-				}
-				case XMLStreamConstants.NOTATION_DECLARATION -> handleNotationDeclaration((NotationDeclaration) event);
-				case XMLStreamConstants.ENTITY_DECLARATION -> handleEntityDeclaration((EntityDeclaration) event);
-				case XMLStreamConstants.COMMENT -> handleComment((Comment) event);
-				case XMLStreamConstants.DTD -> handleDtd((DTD) event);
-				case XMLStreamConstants.ENTITY_REFERENCE -> handleEntityReference((EntityReference) event);
+					break;
+				case XMLStreamConstants.NOTATION_DECLARATION:
+					handleNotationDeclaration((NotationDeclaration) event);
+					break;
+				case XMLStreamConstants.ENTITY_DECLARATION:
+					handleEntityDeclaration((EntityDeclaration) event);
+					break;
+				case XMLStreamConstants.COMMENT:
+					handleComment((Comment) event);
+					break;
+				case XMLStreamConstants.DTD:
+					handleDtd((DTD) event);
+					break;
+				case XMLStreamConstants.ENTITY_REFERENCE:
+					handleEntityReference((EntityReference) event);
+					break;
 			}
 		}
 		if (documentStarted && !documentEnded) {
@@ -163,11 +178,13 @@ class StaxEventXMLReader extends AbstractStaxXMLReader {
 					return (location != null ? location.getLineNumber() : -1);
 				}
 				@Override
-				public @Nullable String getPublicId() {
+				@Nullable
+				public String getPublicId() {
 					return (location != null ? location.getPublicId() : null);
 				}
 				@Override
-				public @Nullable String getSystemId() {
+				@Nullable
+				public String getSystemId() {
 					return (location != null ? location.getSystemId() : null);
 				}
 				@Override
@@ -175,7 +192,8 @@ class StaxEventXMLReader extends AbstractStaxXMLReader {
 					return xmlVersion;
 				}
 				@Override
-				public @Nullable String getEncoding() {
+				@Nullable
+				public String getEncoding() {
 					return encoding;
 				}
 			});

@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 
 public class TwoSchedulerConcurrentTasksOneRouteTest extends ContextTestSupport {
 
-    private final AtomicBoolean sleep = new AtomicBoolean(true);
+    private AtomicBoolean sleep = new AtomicBoolean(true);
 
     @Test
     public void testTwoScheduler() throws Exception {
@@ -36,7 +36,7 @@ public class TwoSchedulerConcurrentTasksOneRouteTest extends ContextTestSupport 
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             public void configure() {
                 // number of core threads a thread pool should have

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -110,7 +110,7 @@ class ExceptionHandlerTests {
 					.accept(MediaType.APPLICATION_JSON)
 					.exchange()
 					.expectStatus().isOk()
-					.expectBody().jsonPath("$.name").isEqualTo("Yoda");
+					.expectBody().jsonPath("$.name", "Yoda");
 		}
 
 		@Test
@@ -123,7 +123,7 @@ class ExceptionHandlerTests {
 					.accept(MediaType.APPLICATION_JSON)
 					.exchange()
 					.expectStatus().isOk()
-					.expectBody().jsonPath("$.error").isEqualTo("local - IllegalArgumentException");
+					.expectBody().jsonPath("$.error", "local - IllegalArgumentException");
 		}
 
 		@Test
@@ -136,7 +136,7 @@ class ExceptionHandlerTests {
 					.accept(MediaType.APPLICATION_JSON)
 					.exchange()
 					.expectStatus().isOk()
-					.expectBody().jsonPath("$.error").isEqualTo("global - IllegalStateException");
+					.expectBody().jsonPath("$.error", "global - IllegalArgumentException");
 		}
 
 		@Test
@@ -149,20 +149,21 @@ class ExceptionHandlerTests {
 					.accept(MediaType.APPLICATION_JSON)
 					.exchange()
 					.expectStatus().isOk()
-					.expectBody().jsonPath("$.error").isEqualTo("globalPersonController - IllegalStateException");
+					.expectBody().jsonPath("$.error", "globalPersonController - IllegalStateException");
 		}
 
 		@Test
 		void noHandlerFound() {
 			WebTestClient client = MockMvcWebTestClient.bindToController(new RestPersonController())
 					.controllerAdvice(RestGlobalExceptionHandler.class, RestPersonControllerExceptionHandler.class)
+					.dispatcherServletCustomizer(servlet -> servlet.setThrowExceptionIfNoHandlerFound(true))
 					.build();
 
 			client.get().uri("/bogus")
 					.accept(MediaType.APPLICATION_JSON)
 					.exchange()
 					.expectStatus().isOk()
-					.expectBody().jsonPath("$.error").isEqualTo("global - NoHandlerFoundException");
+					.expectBody().jsonPath("$.error", "global - NoHandlerFoundException");
 		}
 	}
 
@@ -172,11 +173,14 @@ class ExceptionHandlerTests {
 
 		@GetMapping("/person/{name}")
 		Person get(@PathVariable String name) {
-			return switch (name) {
-				case "Luke" -> throw new IllegalArgumentException();
-				case "Leia" -> throw new IllegalStateException();
-				default -> new Person("Yoda");
-			};
+			switch (name) {
+				case "Luke":
+					throw new IllegalArgumentException();
+				case "Leia":
+					throw new IllegalStateException();
+				default:
+					return new Person("Yoda");
+			}
 		}
 
 		@ExceptionHandler
@@ -205,8 +209,30 @@ class ExceptionHandlerTests {
 		}
 	}
 
-	record Person(String name) {}
+	static class Person {
 
-	record Error(String error) {}
+		private final String name;
+
+		Person(String name) {
+			this.name = name;
+		}
+
+		public String getName() {
+			return name;
+		}
+	}
+
+	static class Error {
+
+		private final String error;
+
+		Error(String error) {
+			this.error = error;
+		}
+
+		public String getError() {
+			return error;
+		}
+	}
 
 }

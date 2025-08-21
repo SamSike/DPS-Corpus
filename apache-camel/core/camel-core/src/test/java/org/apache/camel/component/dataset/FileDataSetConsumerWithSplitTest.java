@@ -16,15 +16,14 @@
  */
 package org.apache.camel.component.dataset;
 
-import java.time.Duration;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.spi.Registry;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FileDataSetConsumerWithSplitTest extends ContextTestSupport {
 
@@ -38,8 +37,8 @@ public class FileDataSetConsumerWithSplitTest extends ContextTestSupport {
     final String dataSetUri = "dataset://" + dataSetName;
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("foo", dataSet);
         return answer;
     }
@@ -49,7 +48,7 @@ public class FileDataSetConsumerWithSplitTest extends ContextTestSupport {
         MockEndpoint result = getMockEndpoint(resultUri);
         result.expectedMinimumMessageCount((int) dataSet.getSize());
 
-        result.assertIsSatisfied(Duration.ofSeconds(5).toMillis());
+        result.assertIsSatisfied();
     }
 
     @Test
@@ -58,21 +57,21 @@ public class FileDataSetConsumerWithSplitTest extends ContextTestSupport {
         dataSet.setSize(20);
         result.expectedMinimumMessageCount((int) dataSet.getSize());
 
-        result.assertIsSatisfied(Duration.ofSeconds(5).toMillis());
+        result.assertIsSatisfied();
     }
 
     @Override
     @BeforeEach
     public void setUp() throws Exception {
         dataSet = new FileDataSet(testDataFileName, "\n");
-        Assumptions.assumeTrue(testDataFileRecordCount == dataSet.getSize(), "Unexpected DataSet size");
+        assertEquals(testDataFileRecordCount, dataSet.getSize(), "Unexpected DataSet size");
         super.setUp();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from(dataSetUri).to("mock://result");
             }
         };

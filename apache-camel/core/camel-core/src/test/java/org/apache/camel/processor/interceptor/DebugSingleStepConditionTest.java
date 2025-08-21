@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DebugSingleStepConditionTest extends ContextTestSupport {
 
-    private final List<String> logs = new ArrayList<>();
+    private List<String> logs = new ArrayList<>();
     private Breakpoint breakpoint;
     private Condition beerCondition;
 
@@ -52,7 +52,7 @@ public class DebugSingleStepConditionTest extends ContextTestSupport {
         };
 
         beerCondition = new ConditionSupport() {
-            public boolean matchProcess(Exchange exchange, Processor processor, NamedNode definition, boolean before) {
+            public boolean matchProcess(Exchange exchange, Processor processor, NamedNode definition) {
                 return "beer".equals(exchange.getFromRouteId());
             }
         };
@@ -76,10 +76,10 @@ public class DebugSingleStepConditionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // turn on debugging
                 context.setDebugging(true);
                 context.setDebugger(new DefaultDebugger());

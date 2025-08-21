@@ -20,13 +20,14 @@ import java.util.Map;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
+import org.apache.camel.component.extension.ComponentVerifierExtension;
 import org.apache.camel.spi.Metadata;
-import org.apache.camel.support.HealthCheckComponent;
+import org.apache.camel.support.DefaultComponent;
 
 /**
  * Base Twitter component
  */
-public abstract class AbstractTwitterComponent extends HealthCheckComponent {
+public abstract class AbstractTwitterComponent extends DefaultComponent {
     @Metadata(label = "security", secret = true)
     private String consumerKey;
     @Metadata(label = "security", secret = true)
@@ -50,6 +51,8 @@ public abstract class AbstractTwitterComponent extends HealthCheckComponent {
 
     protected AbstractTwitterComponent(CamelContext context, String componentVerifierScheme) {
         super(context);
+
+        registerExtension(() -> new TwitterComponentVerifierExtension(componentVerifierScheme));
     }
 
     @Override
@@ -166,4 +169,11 @@ public abstract class AbstractTwitterComponent extends HealthCheckComponent {
         return httpProxyPort;
     }
 
+    /**
+     * Get a verifier for the component.
+     */
+    public ComponentVerifierExtension getVerifier() {
+        return (scope, parameters) -> getExtension(ComponentVerifierExtension.class)
+                .orElseThrow(UnsupportedOperationException::new).verify(scope, parameters);
+    }
 }

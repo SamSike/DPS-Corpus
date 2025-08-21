@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.google.mail.stream;
 
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.camel.RuntimeCamelException;
@@ -42,8 +41,6 @@ public class GoogleMailStreamConfiguration implements Cloneable {
     @UriParam(label = "security", secret = true)
     private String refreshToken;
     @UriParam
-    private boolean raw;
-    @UriParam
     private String applicationName;
     @UriParam(defaultValue = "is:unread")
     private String query = "is:unread";
@@ -59,7 +56,7 @@ public class GoogleMailStreamConfiguration implements Cloneable {
     @UriParam
     private String delegate;
     @UriParam
-    private String scopes;
+    private List<String> scopes;
 
     public String getClientId() {
         return clientId;
@@ -99,23 +96,11 @@ public class GoogleMailStreamConfiguration implements Cloneable {
     }
 
     /**
-     * OAuth 2 refresh token. Using this, the Google Mail component can obtain a new accessToken whenever the current
-     * one expires - a necessity if the application is long-lived.
+     * OAuth 2 refresh token. Using this, the Google Calendar component can obtain a new accessToken whenever the
+     * current one expires - a necessity if the application is long-lived.
      */
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
-    }
-
-    public boolean isRaw() {
-        return raw;
-    }
-
-    /**
-     * Whether to store the entire email message in an RFC 2822 formatted and base64url encoded string (in JSon format),
-     * in the Camel message body.
-     */
-    public void setRaw(boolean raw) {
-        this.raw = raw;
     }
 
     public String getApplicationName() {
@@ -190,7 +175,7 @@ public class GoogleMailStreamConfiguration implements Cloneable {
 
     /**
      * Sets "*.json" file with credentials for Service account
-     *
+     * 
      * @param serviceAccountKey String file, classpath, or http url
      */
     public void setServiceAccountKey(String serviceAccountKey) {
@@ -208,26 +193,16 @@ public class GoogleMailStreamConfiguration implements Cloneable {
         this.delegate = delegate;
     }
 
-    public String getScopes() {
+    public List<String> getScopes() {
         return scopes;
     }
 
-    public Collection<String> getScopesAsList() {
-        if (scopes != null) {
-            return List.of(scopes.split(","));
-        } else {
-            return null;
-        }
-    }
-
     /**
-     * Specifies the level of permissions you want a calendar application to have to a user account. See
-     * https://developers.google.com/identity/protocols/googlescopes for more info. Multiple scopes can be separated by
-     * comma.
-     *
+     * GMail scopes
+     * 
      * @see com.google.api.services.gmail.GmailScopes
      */
-    public void setScopes(String scopes) {
+    public void setScopes(List<String> scopes) {
         this.scopes = scopes;
     }
 

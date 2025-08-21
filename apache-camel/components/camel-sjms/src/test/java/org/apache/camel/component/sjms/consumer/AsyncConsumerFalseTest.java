@@ -33,18 +33,16 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  */
 public class AsyncConsumerFalseTest extends CamelTestSupport {
 
-    private static final String SJMS_QUEUE_URI = "sjms:queue:start.AsyncConsumerFalseTest";
-
     @RegisterExtension
-    public static ArtemisService service = ArtemisServiceFactory.createSingletonVMService();
+    public ArtemisService service = ArtemisServiceFactory.createSingletonVMService();
 
     @Test
     public void testAsyncJmsConsumer() throws Exception {
         // async is disabled (so we should receive in same order)
         getMockEndpoint("mock:result").expectedBodiesReceived("Camel", "Hello World");
 
-        template.sendBody("sjms:queue:start.AsyncConsumerFalseTest", "Hello Camel");
-        template.sendBody("sjms:queue:start.AsyncConsumerFalseTest", "Hello World");
+        template.sendBody("sjms:queue:start", "Hello Camel");
+        template.sendBody("sjms:queue:start", "Hello World");
         MockEndpoint.assertIsSatisfied(context);
     }
 
@@ -69,7 +67,7 @@ public class AsyncConsumerFalseTest extends CamelTestSupport {
             @Override
             public void configure() {
                 // disable async in only mode on the consumer
-                from(SJMS_QUEUE_URI)
+                from("sjms:queue:start")
                         .choice()
                         .when(body().contains("Camel"))
                         .to("async:camel?delay=2000")

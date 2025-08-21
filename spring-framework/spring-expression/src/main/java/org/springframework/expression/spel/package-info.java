@@ -1,7 +1,9 @@
 /**
  * SpEL's central implementation package.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.expression.spel;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

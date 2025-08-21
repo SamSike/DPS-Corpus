@@ -28,6 +28,7 @@ import org.apache.camel.spi.Registry;
 import org.apache.mina.core.filterchain.IoFilter;
 import org.apache.mina.core.filterchain.IoFilterAdapter;
 import org.apache.mina.core.session.IoSession;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,8 +51,10 @@ public class MinaFiltersTest extends BaseMinaTest {
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
         TestFilter.called = 0;
+        super.tearDown();
     }
 
     private void testFilter(final String uri) throws Exception {

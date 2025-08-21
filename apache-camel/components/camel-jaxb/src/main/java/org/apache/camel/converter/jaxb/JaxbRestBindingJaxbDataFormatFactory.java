@@ -20,12 +20,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.spi.DataFormat;
 import org.apache.camel.spi.PropertyConfigurer;
 import org.apache.camel.spi.RestBindingJaxbDataFormatFactory;
 import org.apache.camel.spi.RestConfiguration;
 import org.apache.camel.spi.annotations.JdkService;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.PropertyBindingSupport;
 
 /**
@@ -40,7 +40,7 @@ public class JaxbRestBindingJaxbDataFormatFactory implements RestBindingJaxbData
             DataFormat jaxb, DataFormat outJaxb)
             throws Exception {
         // lookup configurer
-        PropertyConfigurer configurer = PluginHelper.getConfigurerResolver(camelContext)
+        PropertyConfigurer configurer = camelContext.adapt(ExtendedCamelContext.class).getConfigurerResolver()
                 .resolvePropertyConfigurer("jaxb-dataformat-configurer", camelContext);
         if (configurer == null) {
             throw new IllegalStateException("Cannot find configurer for dataformat: jaxb");
@@ -55,7 +55,12 @@ public class JaxbRestBindingJaxbDataFormatFactory implements RestBindingJaxbData
                 .withConfigurer(configurer)
                 .withTarget(jaxb);
 
-        final String typeName = getTypeName(type, typeClass);
+        String typeName = null;
+        if (typeClass != null) {
+            typeName = typeClass.isArray() ? typeClass.getComponentType().getName() : typeClass.getName();
+        } else if (type != null) {
+            typeName = type.endsWith("[]") ? type.substring(0, type.length() - 2) : type;
+        }
         if (typeName != null) {
             builder.withProperty("contextPath", typeName);
             builder.withProperty("contextPathIsClassName", "true");
@@ -73,18 +78,6 @@ public class JaxbRestBindingJaxbDataFormatFactory implements RestBindingJaxbData
                 .withConfigurer(configurer)
                 .withTarget(outJaxb);
 
-        final String outTypeName = getOutTypeName(outType, outTypeClass, typeName);
-
-        if (outTypeName != null) {
-            outBuilder.withProperty("contextPath", outTypeName);
-            outBuilder.withProperty("contextPathIsClassName", "true");
-        }
-
-        setAdditionalConfiguration(config, "xml.out.", outBuilder);
-        outBuilder.bind();
-    }
-
-    private static String getOutTypeName(String outType, Class<?> outTypeClass, String typeName) {
         String outTypeName = null;
         if (outTypeClass != null) {
             outTypeName = outTypeClass.isArray() ? outTypeClass.getComponentType().getName() : outTypeClass.getName();
@@ -94,17 +87,14 @@ public class JaxbRestBindingJaxbDataFormatFactory implements RestBindingJaxbData
             // fallback and use the context from the input
             outTypeName = typeName;
         }
-        return outTypeName;
-    }
 
-    private static String getTypeName(String type, Class<?> typeClass) {
-        String typeName = null;
-        if (typeClass != null) {
-            typeName = typeClass.isArray() ? typeClass.getComponentType().getName() : typeClass.getName();
-        } else if (type != null) {
-            typeName = type.endsWith("[]") ? type.substring(0, type.length() - 2) : type;
+        if (outTypeName != null) {
+            outBuilder.withProperty("contextPath", outTypeName);
+            outBuilder.withProperty("contextPathIsClassName", "true");
         }
-        return typeName;
+
+        setAdditionalConfiguration(config, "xml.out.", outBuilder);
+        outBuilder.bind();
     }
 
     private void setAdditionalConfiguration(RestConfiguration config, String prefix, PropertyBindingSupport.Builder builder) {

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -59,6 +59,7 @@ import static org.jooq.Clause.TABLE_JOIN_PARTITION_BY;
 import static org.jooq.Clause.TABLE_JOIN_SEMI_LEFT;
 import static org.jooq.Clause.TABLE_JOIN_STRAIGHT;
 import static org.jooq.Clause.TABLE_JOIN_USING;
+import static org.jooq.JoinType.CROSS_APPLY;
 import static org.jooq.JoinType.CROSS_JOIN;
 import static org.jooq.JoinType.FULL_OUTER_JOIN;
 import static org.jooq.JoinType.JOIN;
@@ -69,65 +70,45 @@ import static org.jooq.JoinType.NATURAL_FULL_OUTER_JOIN;
 import static org.jooq.JoinType.NATURAL_JOIN;
 import static org.jooq.JoinType.NATURAL_LEFT_OUTER_JOIN;
 import static org.jooq.JoinType.NATURAL_RIGHT_OUTER_JOIN;
+import static org.jooq.JoinType.OUTER_APPLY;
 import static org.jooq.JoinType.RIGHT_OUTER_JOIN;
 // ...
 // ...
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
-// ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
-import static org.jooq.SQLDialect.DERBY;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
 // ...
-import static org.jooq.SQLDialect.HSQLDB;
 import static org.jooq.SQLDialect.IGNITE;
 // ...
 // ...
-// ...
-import static org.jooq.SQLDialect.MARIADB;
-// ...
-import static org.jooq.SQLDialect.MYSQL;
 // ...
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.SQLITE;
 // ...
-// ...
-// ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
+import static org.jooq.impl.DSL.condition;
 import static org.jooq.impl.DSL.exists;
-import static org.jooq.impl.DSL.lateral;
-import static org.jooq.impl.DSL.noCondition;
 import static org.jooq.impl.DSL.notExists;
-import static org.jooq.impl.DSL.one;
-import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.selectFrom;
 import static org.jooq.impl.DSL.selectOne;
-import static org.jooq.impl.Keywords.K_ANTI_JOIN;
+import static org.jooq.impl.Keywords.K_CROSS_JOIN_LATERAL;
+import static org.jooq.impl.Keywords.K_LEFT_JOIN_LATERAL;
+import static org.jooq.impl.Keywords.K_LEFT_OUTER_JOIN_LATERAL;
 import static org.jooq.impl.Keywords.K_ON;
 import static org.jooq.impl.Keywords.K_PARTITION_BY;
-import static org.jooq.impl.Keywords.K_SEMI_JOIN;
 import static org.jooq.impl.Keywords.K_USING;
 import static org.jooq.impl.Names.N_JOIN;
 import static org.jooq.impl.QueryPartListView.wrap;
-import static org.jooq.impl.TableImpl.path;
-import static org.jooq.impl.Tools.containsTable;
 import static org.jooq.impl.Tools.containsUnaliasedTable;
-import static org.jooq.impl.Tools.embeddedFieldsRow;
 import static org.jooq.impl.Tools.map;
-import static org.jooq.impl.Tools.visitAutoAliased;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_COLLECT_SEMI_ANTI_JOIN;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_RENDER_IMPLICIT_JOIN;
 import static org.jooq.impl.Tools.SimpleDataKey.DATA_COLLECTED_SEMI_ANTI_JOIN;
 
 import java.util.ArrayList;
@@ -147,28 +128,49 @@ import org.jooq.Operator;
 // ...
 import org.jooq.QueryPart;
 import org.jooq.Record;
-import org.jooq.RenderContext;
-// ...
+import org.jooq.SQL;
 import org.jooq.SQLDialect;
+import org.jooq.Select;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableLike;
+import org.jooq.TableOnConditionStep;
+import org.jooq.TableOptionalOnStep;
 import org.jooq.TableOptions;
-// ...
+import org.jooq.TableOuterJoinStep;
+import org.jooq.TablePartitionByStep;
 import org.jooq.conf.RenderOptionalKeyword;
 import org.jooq.exception.DataAccessException;
-import org.jooq.impl.QOM.JoinHint;
-import org.jooq.impl.QOM.Lateral;
-import org.jooq.impl.QOM.UnmodifiableList;
+import org.jooq.impl.QOM.UNotYetImplemented;
 
 /**
- * A table consisting of two joined tables and possibly a join condition.
+ * A table consisting of two joined tables and possibly a join condition
  *
  * @author Lukas Eder
  */
-abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
+final class JoinTable
+extends
+     AbstractTable<Record>
+implements
+    TableOuterJoinStep<Record>,
+    TableOptionalOnStep<Record>,
+    TablePartitionByStep<Record>,
+    TableOnConditionStep<Record>,
+    UNotYetImplemented
+{
 
-    static final Clause[]         CLAUSES                    = { TABLE, TABLE_JOIN };
+    private static final Clause[]         CLAUSES                    = { TABLE, TABLE_JOIN };
+
+
+
+
+    private static final Set<SQLDialect>  EMULATE_NATURAL_JOIN       = SQLDialect.supportedBy(CUBRID);
+    private static final Set<SQLDialect>  EMULATE_NATURAL_OUTER_JOIN = SQLDialect.supportedBy(CUBRID, H2, IGNITE);
+    private static final Set<SQLDialect>  EMULATE_JOIN_USING         = SQLDialect.supportedBy(CUBRID, IGNITE);
+    private static final Set<SQLDialect>  EMULATE_APPLY              = SQLDialect.supportedBy(FIREBIRD, POSTGRES, YUGABYTEDB);
+
+    final Table<?>                        lhs;
+    final Table<?>                        rhs;
 
 
 
@@ -176,53 +178,41 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
 
 
 
+    final JoinType                        type;
+    final ConditionProviderImpl           condition;
+    final QueryPartList<Field<?>>         using;
 
-    static final Set<SQLDialect>  EMULATE_NATURAL_JOIN       = SQLDialect.supportedBy(CLICKHOUSE, CUBRID, TRINO);
-    static final Set<SQLDialect>  EMULATE_NATURAL_OUTER_JOIN = SQLDialect.supportedBy(CLICKHOUSE, CUBRID, H2, IGNITE, TRINO);
-    static final Set<SQLDialect>  EMULATE_JOIN_USING         = SQLDialect.supportedBy(CUBRID, IGNITE);
-    static final Set<SQLDialect>  EMULATE_APPLY              = SQLDialect.supportedBy(FIREBIRD, POSTGRES, TRINO, YUGABYTEDB);
-    static final Set<SQLDialect>  EMUlATE_SEMI_ANTI_JOIN     = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, H2, HSQLDB, IGNITE, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB);
-    static final Set<SQLDialect>  NO_SUPPORT_NESTED_JOIN     = SQLDialect.supportedBy(CLICKHOUSE);
+    JoinTable(TableLike<?> lhs, TableLike<?> rhs, JoinType type) {
 
-    final Table<?>                lhs;
-    final Table<?>                rhs;
-    final QueryPartList<Field<?>> lhsPartitionBy;
-    final QueryPartList<Field<?>> rhsPartitionBy;
 
-    final JoinType                type;
-    final JoinHint                hint;
-    final ConditionProviderImpl   condition;
-    final QueryPartList<Field<?>> using;
 
-    JoinTable(TableLike<?> lhs, TableLike<?> rhs, JoinType type, JoinHint hint) {
-        this(lhs, rhs, type, hint, emptyList());
-    }
 
-    JoinTable(TableLike<?> lhs, TableLike<?> rhs, JoinType type, JoinHint hint, Collection<? extends Field<?>> lhsPartitionBy) {
+
+
         super(TableOptions.expression(), N_JOIN);
 
         this.lhs = lhs.asTable();
         this.rhs = rhs.asTable();
-        this.lhsPartitionBy = new QueryPartList<>(lhsPartitionBy);
-        this.rhsPartitionBy = new QueryPartList<>();
+
+
+
+
+
+
         this.type = type;
-        this.hint = hint;
+
         this.condition = new ConditionProviderImpl();
         this.using = new QueryPartList<>();
     }
 
-    @Deprecated
-    final J transform(Table<?> newLhs, Table<?> newRhs) {
-        return transform(newLhs, newRhs, condition);
-    }
+    final JoinTable transform(Table<?> newLhs, Table<?> newRhs) {
+        if (lhs == newLhs && rhs == newRhs)
+            return this;
 
-    @SuppressWarnings("unchecked")
-    @Deprecated
-    final J transform(Table<?> newLhs, Table<?> newRhs, ConditionProviderImpl newCondition) {
-        if (lhs == newLhs && rhs == newRhs && condition == newCondition)
-            return (J) this;
+        JoinTable result = new JoinTable(newLhs, newRhs, type);
 
-        return construct(newLhs, lhsPartitionBy, rhsPartitionBy, newRhs, newCondition, using, hint);
+        // TODO: Retain partitionBy clause
+        return !using.isEmpty() ? result.using(using) : result.on(condition);
     }
 
     // ------------------------------------------------------------------------
@@ -242,9 +232,6 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
 
     @Override
     public final void accept(Context<?> ctx) {
-        boolean lpath = path(lhs) != null;
-        boolean rpath = path(rhs) != null;
-        boolean path = lpath || rpath;
 
 
 
@@ -252,36 +239,6 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
 
 
 
-        // [#14985] APPLY or LATERAL with path joins
-        if ((this instanceof CrossApply || this instanceof OuterApply) && rpath)
-            ctx.visit($table2(selectFrom(rhs).asTable(rhs)));
-        else if (rhs instanceof Lateral && path(((Lateral<?>) rhs).$arg1()) != null)
-            ctx.visit($table2(lateral(selectFrom(((Lateral<?>) rhs).$arg1()).asTable(((Lateral<?>) rhs).$arg1()))));
-        else if (type == NATURAL_JOIN && path)
-            ctx.visit(lhs.join(rhs, JOIN, hint).on(naturalCondition()));
-        else if (type == NATURAL_LEFT_OUTER_JOIN && path)
-            ctx.visit(lhs.join(rhs, LEFT_OUTER_JOIN, hint).on(naturalCondition()));
-        else if (type == NATURAL_RIGHT_OUTER_JOIN && path)
-            ctx.visit(lhs.join(rhs, RIGHT_OUTER_JOIN, hint).on(naturalCondition()));
-        else if (type == NATURAL_FULL_OUTER_JOIN && path)
-            ctx.visit(lhs.join(rhs, FULL_OUTER_JOIN, hint).on(naturalCondition()));
-        else if (!using.isEmpty() && path)
-            ctx.visit(lhs.join(rhs, type, hint).on(usingCondition()));
-
-        // [#14988] Make sure APPLY table reference continues working by wrapping lateral(rhs)
-        else if (this instanceof CrossApply && EMULATE_APPLY.contains(ctx.dialect()))
-            ctx.visit(lhs.crossJoin(lateral(rhs)));
-        else if (this instanceof OuterApply && EMULATE_APPLY.contains(ctx.dialect()))
-            ctx.visit(lhs.leftJoin(lateral(rhs)).on(noCondition()));
-
-
-
-
-        else
-            accept0(ctx);
-    }
-
-    private final void accept0(Context<?> ctx) {
         JoinType translatedType = translateType(ctx);
         Clause translatedClause = translateClause(translatedType);
         Keyword keyword = translateKeyword(ctx, translatedType);
@@ -303,9 +260,7 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
         switch (translatedType) {
             case LEFT_SEMI_JOIN:
             case LEFT_ANTI_JOIN:
-                if (EMUlATE_SEMI_ANTI_JOIN.contains(ctx.dialect())
-                    && TRUE.equals(ctx.data(DATA_COLLECT_SEMI_ANTI_JOIN))
-                ) {
+                if (TRUE.equals(ctx.data(DATA_COLLECT_SEMI_ANTI_JOIN))) {
 
                     @SuppressWarnings("unchecked")
                     List<Condition> semiAntiJoinPredicates = (List<Condition>) ctx.data(DATA_COLLECTED_SEMI_ANTI_JOIN);
@@ -315,13 +270,14 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
                         ctx.data(DATA_COLLECTED_SEMI_ANTI_JOIN, semiAntiJoinPredicates);
                     }
 
+                    Condition c = !using.isEmpty() ? usingCondition() : condition;
                     switch (translatedType) {
                         case LEFT_SEMI_JOIN:
-                            semiAntiJoinPredicates.add(exists(select(one()).from(rhs).where(condition())));
+                            semiAntiJoinPredicates.add(exists(selectOne().from(rhs).where(c)));
                             break;
 
                         case LEFT_ANTI_JOIN:
-                            semiAntiJoinPredicates.add(notExists(select(one()).from(rhs).where(condition())));
+                            semiAntiJoinPredicates.add(notExists(selectOne().from(rhs).where(c)));
                             break;
                     }
 
@@ -356,34 +312,19 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
             toSQLJoinCondition(ctx);
             ctx.formatIndentEnd();
         }
+        else if (OUTER_APPLY == translatedType && EMULATE_APPLY.contains(ctx.dialect())) {
+            ctx.formatIndentStart()
+               .formatSeparator()
+               .start(TABLE_JOIN_ON)
+               .visit(K_ON)
+               .sql(" 1 = 1")
+               .end(TABLE_JOIN_ON)
+               .formatIndentEnd();
+        }
+
         ctx.end(translatedClause)
            .formatIndentEnd();
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -444,10 +385,6 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
 
 
 
-
-
-
-
                 else
                     keyword = translatedType.toKeyword();
 
@@ -473,74 +410,22 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
 
                 break;
 
-            case LEFT_SEMI_JOIN:
-                switch (ctx.family()) {
-                    case DUCKDB:
-                        keyword = K_SEMI_JOIN;
-                        break;
-
-                    default:
-                        keyword = translatedType.toKeyword();
-                        break;
-                }
-
-                break;
-
-            case LEFT_ANTI_JOIN:
-                switch (ctx.family()) {
-                    case DUCKDB:
-                        keyword = K_ANTI_JOIN;
-                        break;
-
-                    default:
-                        keyword = translatedType.toKeyword();
-                        break;
-                }
-
-                break;
-
             default:
                 keyword = translatedType.toKeyword();
                 break;
         }
 
-
-
+        if (translatedType == CROSS_APPLY && EMULATE_APPLY.contains(ctx.dialect()))
+            keyword = K_CROSS_JOIN_LATERAL;
+        else if (translatedType == OUTER_APPLY && EMULATE_APPLY.contains(ctx.dialect()))
+            if (ctx.settings().getRenderOptionalOuterKeyword() == RenderOptionalKeyword.OFF)
+                keyword = K_LEFT_JOIN_LATERAL;
+            else
+                keyword = K_LEFT_OUTER_JOIN_LATERAL;
 
 
         return keyword;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private void toSQLTable(Context<?> ctx, Table<?> table) {
 
@@ -556,7 +441,7 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
         if (wrap)
             ctx.sqlIndentStart('(');
 
-        visitAutoAliased(ctx, table, Context::declareTables, (c, t) -> c.visit(t));
+        ctx.visit(table);
 
         if (wrap)
             ctx.sqlIndentEnd(')');
@@ -650,34 +535,14 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
                  emulateNaturalLeftOuterJoin(ctx) ||
                  emulateNaturalRightOuterJoin(ctx) ||
                  emulateNaturalFullOuterJoin(ctx)) {
+
             toSQLJoinCondition(ctx, naturalCondition());
         }
 
-        // [#14985] Path joins additional conditions
-        else if ((TableImpl.path(lhs) != null || TableImpl.path(rhs) != null)
-
-            // Do this only if we're *not* rendering implicit joins, in case of which join paths
-            // are expected, and their predicates are already present.
-            && ctx.data(DATA_RENDER_IMPLICIT_JOIN) == null
-        ) {
-            toSQLJoinCondition(ctx, DSL.and(
-                lhs instanceof TableImpl<?> ti ? pathConditionIfInCurrentScope(ctx, ti) : noCondition(),
-                rhs instanceof TableImpl<?> ti ? pathConditionIfInCurrentScope(ctx, ti) : noCondition(),
-                condition.getWhere()
-            ));
-        }
-
         // Regular JOIN condition
-        else
+        else {
             toSQLJoinCondition(ctx, condition);
-    }
-
-    private final Condition pathConditionIfInCurrentScope(Context<?> ctx, TableImpl<?> ti) {
-
-        // [#15936] Don't add path correlation predicates to JOIN .. ON clauses.
-        //          It's wrong for OUTER JOIN or some nested join trees, and they're already
-        //          being added in SelectQueryImpl
-        return ctx.inCurrentScope(ti.path) ? ti.pathCondition() : noCondition();
+        }
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -692,19 +557,6 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
         }
 
         return DSL.and(conditions);
-    }
-
-    final boolean hasCondition() {
-        return condition.hasWhere() || !using.isEmpty();
-    }
-
-    final Condition condition() {
-        if (condition.hasWhere())
-            return condition.getWhere();
-        else if (!using.isEmpty())
-            return usingCondition();
-        else
-            return noCondition();
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -728,12 +580,12 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
 
     @Override
     public final Table<Record> as(Name alias) {
-        return new TableAlias<>(this, alias, true);
+        return new TableAlias<>(this, alias, c -> true);
     }
 
     @Override
     public final Table<Record> as(Name alias, Name... fieldAliases) {
-        return new TableAlias<>(this, alias, fieldAliases, true);
+        return new TableAlias<>(this, alias, fieldAliases, c -> true);
     }
 
     @Override
@@ -773,29 +625,64 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
     // Join API
     // ------------------------------------------------------------------------
 
-    @Override
-    @SuppressWarnings("unchecked")
-    final J partitionBy0(Collection<? extends Field<?>> fields) {
-        rhsPartitionBy.addAll(fields);
-        return (J) this;
-    }
 
-    @SuppressWarnings("unchecked")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     @Override
-    public final J on(Condition conditions) {
+    public final JoinTable on(Condition conditions) {
         condition.addConditions(conditions);
-        return (J) this;
+        return this;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public final J on(Condition... conditions) {
+    public final JoinTable on(Condition... conditions) {
         condition.addConditions(conditions);
-        return (J) this;
+        return this;
     }
 
     @Override
-    public final J onKey() throws DataAccessException {
+    public final JoinTable on(Field<Boolean> c) {
+        return on(condition(c));
+    }
+
+    @Override
+    public final JoinTable on(SQL sql) {
+        and(sql);
+        return this;
+    }
+
+    @Override
+    public final JoinTable on(String sql) {
+        and(sql);
+        return this;
+    }
+
+    @Override
+    public final JoinTable on(String sql, Object... bindings) {
+        and(sql, bindings);
+        return this;
+    }
+
+    @Override
+    public final JoinTable on(String sql, QueryPart... parts) {
+        and(sql, parts);
+        return this;
+    }
+
+    @Override
+    public final JoinTable onKey() throws DataAccessException {
         List<?> leftToRight = lhs.getReferencesTo(rhs);
         List<?> rightToLeft = rhs.getReferencesTo(lhs);
 
@@ -805,13 +692,13 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
             return onKey((ForeignKey<?, ?>) rightToLeft.get(0), rhs, lhs);
 
         if (rightToLeft.isEmpty() && leftToRight.isEmpty())
-            throw onKeyException(OnKeyExceptionReason.NOT_FOUND, null, null);
+            throw onKeyException(OnKeyExceptionReason.NOT_FOUND, leftToRight, rightToLeft);
         else
-            throw onKeyException(OnKeyExceptionReason.AMBIGUOUS, leftToRight, rightToLeft);
+            throw onKeyException(OnKeyExceptionReason.AMBIGUOUS, null, null);
     }
 
     @Override
-    public final J onKey(TableField<?, ?>... keyFields) throws DataAccessException {
+    public final JoinTable onKey(TableField<?, ?>... keyFields) throws DataAccessException {
         if (keyFields != null && keyFields.length > 0) {
 
             // [#7626] Make sure this works with aliased columns as well
@@ -824,30 +711,23 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
                     unaliased.set(i, (TableField<?, ?>) alias.wrapped().field(f));
             }
 
-            // [#14668] Try exact matches of aliases first
-            for (boolean unalias : new boolean[] { false, true }) {
-                if (containsTable(lhs, keyFields[0].getTable(), unalias)) {
+            if (containsUnaliasedTable(lhs, keyFields[0].getTable())) {
+                for (ForeignKey<?, ?> key : lhs.getReferences())
+                    if (key.getFields().containsAll(unaliased) && unaliased.containsAll(key.getFields()))
+                        return onKey(key);
 
-                    // [#11150] Try exact matches of key columns first
-                    for (ForeignKey<?, ?> key : lhs.getReferences())
-                        if (key.getFields().containsAll(unaliased) && unaliased.containsAll(key.getFields()))
-                            return onKey(key, lhs, rhs);
+                for (ForeignKey<?, ?> key : lhs.getReferences())
+                    if (key.getFields().containsAll(unaliased))
+                        return onKey(key);
+            }
+            else if (containsUnaliasedTable(rhs, keyFields[0].getTable())) {
+                for (ForeignKey<?, ?> key : rhs.getReferences())
+                    if (key.getFields().containsAll(unaliased) && unaliased.containsAll(key.getFields()))
+                        return onKey(key);
 
-                    for (ForeignKey<?, ?> key : lhs.getReferences())
-                        if (key.getFields().containsAll(unaliased))
-                            return onKey(key, lhs, rhs);
-                }
-                else if (containsTable(rhs, keyFields[0].getTable(), unalias)) {
-
-                    // [#11150] Try exact matches of key columns first
-                    for (ForeignKey<?, ?> key : rhs.getReferences())
-                        if (key.getFields().containsAll(unaliased) && unaliased.containsAll(key.getFields()))
-                            return onKey(key, rhs, lhs);
-
-                    for (ForeignKey<?, ?> key : rhs.getReferences())
-                        if (key.getFields().containsAll(unaliased))
-                            return onKey(key, rhs, lhs);
-                }
+                for (ForeignKey<?, ?> key : rhs.getReferences())
+                    if (key.getFields().containsAll(unaliased))
+                        return onKey(key);
             }
         }
 
@@ -855,27 +735,18 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
     }
 
     @Override
-    public final J onKey(ForeignKey<?, ?> key) {
-
-        // [#12214] Unlike onKey(TableField...), where the argument field is
-        //          expected to be a referencing field, not a referenced field,
-        //          here we have to check both ends of the key to avoid
-        //          ambiguities
-        if (containsUnaliasedTable(lhs, key.getTable()) && containsUnaliasedTable(rhs, key.getKey().getTable()))
+    public final JoinTable onKey(ForeignKey<?, ?> key) {
+        if (containsUnaliasedTable(lhs, key.getTable()))
             return onKey(key, lhs, rhs);
-        else if (containsUnaliasedTable(rhs, key.getTable()) && containsUnaliasedTable(lhs, key.getKey().getTable()))
+        else if (containsUnaliasedTable(rhs, key.getTable()))
             return onKey(key, rhs, lhs);
-        else
-            throw onKeyException(OnKeyExceptionReason.NOT_FOUND, null, null);
-    }
 
-    private final J onKey(ForeignKey<?, ?> key, Table<?> fk, Table<?> pk) {
-        return and(onKey0(key, fk, pk));
+        throw onKeyException(OnKeyExceptionReason.NOT_FOUND, null, null);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    static final Condition onKey0(ForeignKey<?, ?> key, Table<?> fk, Table<?> pk) {
-        Condition result = noCondition();
+    private final JoinTable onKey(ForeignKey<?, ?> key, Table<?> fk, Table<?> pk) {
+        JoinTable result = this;
 
         TableField<?, ?>[] references = key.getFieldsArray();
         TableField<?, ?>[] referenced = key.getKeyFieldsArray();
@@ -884,28 +755,12 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
             Field f1 = fk.field(references[i]);
             Field f2 = pk.field(referenced[i]);
 
-
-
-
-
-
-
-
-
-
             // [#2870] TODO: If lhs or rhs are aliased tables, extract the appropriate fields from them
-            result = result.and(f1.equal(f2));
+            result.and(f1.equal(f2));
         }
 
         return result;
     }
-
-
-
-
-
-
-
 
     private enum OnKeyExceptionReason {
         AMBIGUOUS, NOT_FOUND
@@ -921,135 +776,116 @@ abstract class JoinTable<J extends JoinTable<J>> extends AbstractJoinTable<J> {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public final J using(Collection<? extends Field<?>> fields) {
+    public final JoinTable using(Field<?>... fields) {
+        return using(asList(fields));
+    }
+
+    @Override
+    public final JoinTable using(Collection<? extends Field<?>> fields) {
         using.addAll(fields);
-        return (J) this;
+        return this;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public final J and(Condition c) {
+    public final JoinTable and(Condition c) {
         condition.addConditions(c);
-        return (J) this;
+        return this;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public final J or(Condition c) {
+    public final JoinTable and(Field<Boolean> c) {
+        return and(condition(c));
+    }
+
+    @Override
+    public final JoinTable and(SQL sql) {
+        return and(condition(sql));
+    }
+
+    @Override
+    public final JoinTable and(String sql) {
+        return and(condition(sql));
+    }
+
+    @Override
+    public final JoinTable and(String sql, Object... bindings) {
+        return and(condition(sql, bindings));
+    }
+
+    @Override
+    public final JoinTable and(String sql, QueryPart... parts) {
+        return and(condition(sql, parts));
+    }
+
+    @Override
+    public final JoinTable andNot(Condition c) {
+        return and(c.not());
+    }
+
+    @Override
+    public final JoinTable andNot(Field<Boolean> c) {
+        return andNot(condition(c));
+    }
+
+    @Override
+    public final JoinTable andExists(Select<?> select) {
+        return and(exists(select));
+    }
+
+    @Override
+    public final JoinTable andNotExists(Select<?> select) {
+        return and(notExists(select));
+    }
+
+    @Override
+    public final JoinTable or(Condition c) {
         condition.addConditions(Operator.OR, c);
-        return (J) this;
+        return this;
     }
-
-    // -------------------------------------------------------------------------
-    // XXX: Query Object Model
-    // -------------------------------------------------------------------------
-
-    abstract J construct(
-        Table<?> table1,
-        Collection<? extends Field<?>> partitionBy1,
-        Collection<? extends Field<?>> partitionBy2,
-        Table<?> table2,
-        Condition on,
-        Collection<? extends Field<?>> using,
-        JoinHint hint
-    );
-
-    public final Table<?> $table1() {
-        return lhs;
-    }
-
-    public final J $table1(Table<?> t1) {
-        return construct(t1, $partitionBy1(), $partitionBy2(), $table2(), $on(), $using(), $hint());
-    }
-
-    public final UnmodifiableList<Field<?>> $partitionBy1() {
-        return QOM.unmodifiable(lhsPartitionBy);
-    }
-
-    public final J $partitionBy1(Collection<? extends Field<?>> p1) {
-        return construct($table1(), p1, $partitionBy2(), $table2(), $on(), $using(), $hint());
-    }
-
-    public final UnmodifiableList<Field<?>> $partitionBy2() {
-        return QOM.unmodifiable(rhsPartitionBy);
-    }
-
-    public final J $partitionBy2(Collection<? extends Field<?>> p2) {
-        return construct($table1(), $partitionBy1(), p2, $table2(), $on(), $using(), $hint());
-    }
-
-    public final Table<?> $table2() {
-        return rhs;
-    }
-
-    public final J $table2(Table<?> t2) {
-        return construct($table1(), $partitionBy1(), $partitionBy2(), t2, $on(), $using(), $hint());
-    }
-
-    public final JoinHint $hint() {
-        return hint;
-    }
-
-    public final J $hint(JoinHint newHint) {
-        return construct($table1(), $partitionBy1(), $partitionBy2(), $table2(), $on(), $using(), newHint);
-    }
-
-    public final Condition $on() {
-        return condition.getWhereOrNull();
-    }
-
-    public final J $on(Condition o) {
-        return construct($table1(), $partitionBy1(), $partitionBy2(), $table2(), o, emptyList(), $hint());
-    }
-
-    public final UnmodifiableList<Field<?>> $using() {
-        return QOM.unmodifiable(using);
-    }
-
-    public final J $using(Collection<? extends Field<?>> u) {
-        return construct($table1(), $partitionBy1(), $partitionBy2(), $table2(), null, u, $hint());
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // -------------------------------------------------------------------------
-    // XXX: Object API
-    // -------------------------------------------------------------------------
 
     @Override
-    String toString0(RenderContext ctx) {
-        return super.toString0(ctx.declareTables(true));
+    public final JoinTable or(Field<Boolean> c) {
+        return or(condition(c));
+    }
+
+    @Override
+    public final JoinTable or(SQL sql) {
+        return or(condition(sql));
+    }
+
+    @Override
+    public final JoinTable or(String sql) {
+        return or(condition(sql));
+    }
+
+    @Override
+    public final JoinTable or(String sql, Object... bindings) {
+        return or(condition(sql, bindings));
+    }
+
+    @Override
+    public final JoinTable or(String sql, QueryPart... parts) {
+        return or(condition(sql, parts));
+    }
+
+    @Override
+    public final JoinTable orNot(Condition c) {
+        return or(c.not());
+    }
+
+    @Override
+    public final JoinTable orNot(Field<Boolean> c) {
+        return orNot(condition(c));
+    }
+
+    @Override
+    public final JoinTable orExists(Select<?> select) {
+        return or(exists(select));
+    }
+
+    @Override
+    public final JoinTable orNotExists(Select<?> select) {
+        return or(notExists(select));
     }
 }

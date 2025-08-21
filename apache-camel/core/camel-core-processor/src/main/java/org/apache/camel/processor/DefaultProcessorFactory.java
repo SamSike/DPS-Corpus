@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.Expression;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.LineNumberAware;
 import org.apache.camel.NamedNode;
 import org.apache.camel.NoFactoryAvailableException;
@@ -33,7 +34,6 @@ import org.apache.camel.spi.BootstrapCloseable;
 import org.apache.camel.spi.FactoryFinder;
 import org.apache.camel.spi.ProcessorFactory;
 import org.apache.camel.spi.annotations.JdkService;
-import org.apache.camel.support.PluginHelper;
 
 /**
  * Default {@link ProcessorFactory} that supports using 3rd party Camel components to implement the EIP
@@ -54,8 +54,8 @@ public class DefaultProcessorFactory implements ProcessorFactory, BootstrapClose
 
     @Override
     public void close() throws IOException {
-        if (finder instanceof BootstrapCloseable bootstrapCloseable) {
-            bootstrapCloseable.close();
+        if (finder instanceof BootstrapCloseable) {
+            ((BootstrapCloseable) finder).close();
             finder = null;
         }
     }
@@ -64,12 +64,13 @@ public class DefaultProcessorFactory implements ProcessorFactory, BootstrapClose
     public Processor createChildProcessor(Route route, NamedNode definition, boolean mandatory) throws Exception {
         String name = definition.getClass().getSimpleName();
         if (finder == null) {
-            finder = PluginHelper.getFactoryFinderResolver(route.getCamelContext())
+            finder = route.getCamelContext().adapt(ExtendedCamelContext.class).getFactoryFinderResolver()
                     .resolveBootstrapFactoryFinder(route.getCamelContext().getClassResolver(), RESOURCE_PATH);
         }
         try {
             Object object = finder.newInstance(name).orElse(null);
-            if (object instanceof ProcessorFactory pc) {
+            if (object instanceof ProcessorFactory) {
+                ProcessorFactory pc = (ProcessorFactory) object;
                 Processor processor = pc.createChildProcessor(route, definition, mandatory);
                 LineNumberAware.trySetLineNumberAware(processor, definition);
                 return processor;
@@ -85,7 +86,7 @@ public class DefaultProcessorFactory implements ProcessorFactory, BootstrapClose
     public Processor createProcessor(Route route, NamedNode definition) throws Exception {
         String name = definition.getClass().getSimpleName();
         if (finder == null) {
-            finder = PluginHelper.getFactoryFinderResolver(route.getCamelContext())
+            finder = route.getCamelContext().adapt(ExtendedCamelContext.class).getFactoryFinderResolver()
                     .resolveBootstrapFactoryFinder(route.getCamelContext().getClassResolver(), RESOURCE_PATH);
         }
         ProcessorFactory pc = finder.newInstance(name, ProcessorFactory.class).orElse(null);
@@ -117,7 +118,7 @@ public class DefaultProcessorFactory implements ProcessorFactory, BootstrapClose
             boolean shutdownExecutorService = (boolean) args[2];
             return new MulticastProcessor(
                     camelContext, null, processors, null, true, executor, shutdownExecutorService, false, false, 0,
-                    null, false, false, 0);
+                    null, false, false);
         } else if ("Pipeline".equals(definitionName)) {
             List<Processor> processors = (List<Processor>) args[0];
             return Pipeline.newInstance(camelContext, processors);

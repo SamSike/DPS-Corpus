@@ -16,10 +16,6 @@
  */
 package org.apache.camel.component.micrometer;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -28,6 +24,7 @@ import org.apache.camel.Component;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
+import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
@@ -38,14 +35,13 @@ import org.apache.camel.support.DefaultEndpoint;
  * Collect various metrics directly from Camel routes using the Micrometer library.
  */
 @UriEndpoint(firstVersion = "2.22.0", scheme = "micrometer", title = "Micrometer",
-             remote = false, syntax = "micrometer:metricsType:metricsName", producerOnly = true,
-             category = { Category.MONITORING },
+             syntax = "micrometer:metricsType:metricsName", producerOnly = true, category = { Category.MONITORING },
              headersClass = MicrometerConstants.class)
 public class MicrometerEndpoint extends DefaultEndpoint {
 
     protected MeterRegistry registry;
 
-    @UriPath(description = "Type of metrics", enums = "counter,summary,timer")
+    @UriPath(description = "Type of metrics", enums = "counter,distribution_summary,timer")
     @Metadata(required = true)
     protected final Meter.Type metricsType;
     @UriPath(description = "Name of metrics")
@@ -53,8 +49,8 @@ public class MicrometerEndpoint extends DefaultEndpoint {
     protected final String metricsName;
     @UriParam(description = "Description of metrics")
     protected String metricsDescription;
-    @UriParam(description = "Tags of metrics", multiValue = true, prefix = "tags.")
-    protected Map<String, String> tags;
+    @UriPath(description = "Tags of metrics")
+    protected final Iterable<Tag> tags;
     @UriParam(description = "Action expression when using timer type", enums = "start,stop")
     private String action;
     @UriParam(description = "Value expression when using histogram type")
@@ -65,21 +61,17 @@ public class MicrometerEndpoint extends DefaultEndpoint {
     private String decrement;
 
     public MicrometerEndpoint(String uri, Component component, MeterRegistry registry, Meter.Type metricsType,
-                              String metricsName) {
+                              String metricsName, Iterable<Tag> tags) {
         super(uri, component);
         this.registry = registry;
         this.metricsType = metricsType;
         this.metricsName = metricsName;
-    }
-
-    @Override
-    public boolean isRemote() {
-        return false;
+        this.tags = tags;
     }
 
     @Override
     public Consumer createConsumer(Processor processor) {
-        throw new UnsupportedOperationException("Consumer not supported");
+        throw new RuntimeCamelException("Cannot consume from " + getClass().getSimpleName() + ": " + getEndpointUri());
     }
 
     @Override
@@ -95,23 +87,16 @@ public class MicrometerEndpoint extends DefaultEndpoint {
         }
     }
 
-    Iterable<Tag> createTags() {
-        if (tags != null && !tags.isEmpty()) {
-            List<Tag> answer = new ArrayList<>();
-            tags.forEach((k, v) -> {
-                answer.add(Tag.of(k, v));
-            });
-            return answer;
-        }
-        return null;
-    }
-
     public MeterRegistry getRegistry() {
         return registry;
     }
 
     public String getMetricsName() {
         return metricsName;
+    }
+
+    public Iterable<Tag> getTags() {
+        return tags;
     }
 
     public Meter.Type getMetricsType() {
@@ -124,14 +109,6 @@ public class MicrometerEndpoint extends DefaultEndpoint {
 
     public void setMetricsDescription(String metricsDescription) {
         this.metricsDescription = metricsDescription;
-    }
-
-    public Map<String, String> getTags() {
-        return tags;
-    }
-
-    public void setTags(Map<String, String> tags) {
-        this.tags = tags;
     }
 
     public String getAction() {

@@ -33,10 +33,10 @@ public class ErrorHandlerRefTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 DeadLetterChannelBuilder dlc = new DeadLetterChannelBuilder("mock:dead");
                 context.getRegistry().bind("myDead", dlc);
 

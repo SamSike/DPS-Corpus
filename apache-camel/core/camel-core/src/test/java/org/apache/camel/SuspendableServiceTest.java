@@ -18,8 +18,7 @@ package org.apache.camel;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SuspendableServiceTest {
 
@@ -54,13 +53,13 @@ public class SuspendableServiceTest {
     @Test
     public void testSuspendable() {
         MyService my = new MyService();
-        assertFalse(my.isSuspended());
+        assertEquals(false, my.isSuspended());
 
         my.suspend();
-        assertTrue(my.isSuspended());
+        assertEquals(true, my.isSuspended());
 
         my.resume();
-        assertFalse(my.isSuspended());
+        assertEquals(false, my.isSuspended());
     }
 
 }

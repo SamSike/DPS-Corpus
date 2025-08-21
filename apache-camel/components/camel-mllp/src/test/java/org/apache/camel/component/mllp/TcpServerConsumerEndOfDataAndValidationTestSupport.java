@@ -37,7 +37,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.camel.component.mllp.MllpExceptionTestSupport.LOG_PHI_TRUE;
+import static org.apache.camel.component.mllp.MllpExceptionTestSupport.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -74,6 +74,7 @@ public abstract class TcpServerConsumerEndOfDataAndValidationTestSupport extends
         DefaultCamelContext context = (DefaultCamelContext) super.createCamelContext();
 
         context.setUseMDCLogging(true);
+        context.setName(this.getClass().getSimpleName());
 
         return context;
     }
@@ -98,9 +99,9 @@ public abstract class TcpServerConsumerEndOfDataAndValidationTestSupport extends
                 fromF("mllp://%s:%d?autoAck=true&connectTimeout=%d&receiveTimeout=%d&readTimeout=%d&validatePayload=%b&requireEndOfData=%b",
                         mllpClient.getMllpHost(), mllpClient.getMllpPort(), CONNECT_TIMEOUT, RECEIVE_TIMEOUT, READ_TIMEOUT,
                         validatePayload(), requireEndOfData())
-                        .routeId(routeId)
-                        .log(LoggingLevel.INFO, routeId, "Test route received message")
-                        .to(complete);
+                                .routeId(routeId)
+                                .log(LoggingLevel.INFO, routeId, "Test route received message")
+                                .to(complete);
             }
         };
     }
@@ -116,8 +117,10 @@ public abstract class TcpServerConsumerEndOfDataAndValidationTestSupport extends
     }
 
     @Override
-    public void cleanupResources() throws InterruptedException {
+    public void tearDown() throws Exception {
         MockEndpoint.assertIsSatisfied(context, 5, TimeUnit.SECONDS);
+
+        super.tearDown();
     }
 
     @Test
@@ -366,6 +369,15 @@ public abstract class TcpServerConsumerEndOfDataAndValidationTestSupport extends
                 assertTrue(invalidMessageDone.matches(5, TimeUnit.SECONDS),
                         "Exchange containing invalid message should have completed");
                 // The component may reset the connection in this case, so reconnect if needed
+                /*
+                // TODO: Figure out why this isn't working
+                try {
+                    mllpClient.checkConnection();
+                } catch (MllpJUnitResourceException checkConnectionEx) {
+                    mllpClient.disconnect();
+                    mllpClient.connect();
+                }
+                */
                 mllpClient.disconnect();
                 mllpClient.connect();
             } else {

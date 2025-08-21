@@ -20,6 +20,11 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.function.Function;
 
+import com.orbitz.consul.Consul;
+import com.orbitz.consul.model.ConsulResponse;
+import com.orbitz.consul.option.ConsistencyMode;
+import com.orbitz.consul.option.ImmutableQueryOptions;
+import com.orbitz.consul.option.QueryOptions;
 import org.apache.camel.Message;
 import org.apache.camel.NoSuchHeaderException;
 import org.apache.camel.Processor;
@@ -28,11 +33,6 @@ import org.apache.camel.component.consul.ConsulConstants;
 import org.apache.camel.component.consul.ConsulEndpoint;
 import org.apache.camel.support.HeaderSelectorProducer;
 import org.apache.camel.util.ObjectHelper;
-import org.kiwiproject.consul.Consul;
-import org.kiwiproject.consul.model.ConsulResponse;
-import org.kiwiproject.consul.option.ConsistencyMode;
-import org.kiwiproject.consul.option.ImmutableQueryOptions;
-import org.kiwiproject.consul.option.QueryOptions;
 
 abstract class AbstractConsulProducer<C> extends HeaderSelectorProducer {
     private final ConsulEndpoint endpoint;
@@ -93,7 +93,7 @@ abstract class AbstractConsulProducer<C> extends HeaderSelectorProducer {
         ObjectHelper.ifNotEmpty(
                 message.getHeader(ConsulConstants.CONSUL_CONSISTENCY_MODE, conf.getConsistencyMode(), ConsistencyMode.class),
                 builder::consistencyMode);
-        ObjectHelper.ifNotEmpty(message.getHeader(ConsulConstants.CONSUL_NODE_META, conf.getNodeMetasAsList(), List.class),
+        ObjectHelper.ifNotEmpty(message.getHeader(ConsulConstants.CONSUL_NODE_META, conf.getNodeMeta(), List.class),
                 builder::nodeMeta);
 
         return builder.build();

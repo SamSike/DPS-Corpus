@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.test.context.junit.jupiter;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -80,20 +79,21 @@ abstract class AbstractExpressionEvaluatingCondition implements ExecutionConditi
 	 * @param loadContextExtractor a function that extracts the {@code loadContext}
 	 * flag from the annotation
 	 * @param enabledOnTrue indicates whether the returned {@code ConditionEvaluationResult}
-	 * should be {@link ConditionEvaluationResult#enabled(String) enabled} if the expression
+	 * should be {@link ConditionEvaluationResult#enabled enabled} if the expression
 	 * evaluates to {@code true}
 	 * @param context the {@code ExtensionContext}
-	 * @return {@link ConditionEvaluationResult#enabled(String) enabled} if the container
-	 * or test should be enabled; otherwise {@link ConditionEvaluationResult#disabled(String) disabled}
+	 * @return {@link ConditionEvaluationResult#enabled enabled} if the container
+	 * or test should be enabled; otherwise {@link ConditionEvaluationResult#disabled disabled}
 	 */
 	protected <A extends Annotation> ConditionEvaluationResult evaluateAnnotation(Class<A> annotationType,
 			Function<A, String> expressionExtractor, Function<A, String> reasonExtractor,
 			Function<A, Boolean> loadContextExtractor, boolean enabledOnTrue, ExtensionContext context) {
 
-		AnnotatedElement element = context.getElement().orElseThrow(() -> new IllegalStateException("No AnnotatedElement"));
+		Assert.state(context.getElement().isPresent(), "No AnnotatedElement");
+		AnnotatedElement element = context.getElement().get();
 		Optional<A> annotation = findMergedAnnotation(element, annotationType);
 
-		if (annotation.isEmpty()) {
+		if (!annotation.isPresent()) {
 			String reason = String.format("%s is enabled since @%s is not present", element,
 					annotationType.getSimpleName());
 			if (logger.isDebugEnabled()) {
@@ -118,8 +118,8 @@ abstract class AbstractExpressionEvaluatingCondition implements ExecutionConditi
 			if (logger.isInfoEnabled()) {
 				logger.info(reason);
 			}
-			result = (enabledOnTrue ? ConditionEvaluationResult.enabled(reason) :
-					ConditionEvaluationResult.disabled(reason));
+			result = (enabledOnTrue ? ConditionEvaluationResult.enabled(reason)
+					: ConditionEvaluationResult.disabled(reason));
 		}
 		else {
 			String adjective = (enabledOnTrue ? "disabled" : "enabled");
@@ -138,7 +138,8 @@ abstract class AbstractExpressionEvaluatingCondition implements ExecutionConditi
 		// since the DirtiesContextTestExecutionListener will never be invoked for
 		// a disabled test class.
 		// See https://github.com/spring-projects/spring-framework/issues/26694
-		if (loadContext && result.isDisabled() && element instanceof Class<?> testClass) {
+		if (loadContext && result.isDisabled() && element instanceof Class) {
+			Class<?> testClass = (Class<?>) element;
 			DirtiesContext dirtiesContext = TestContextAnnotationUtils.findMergedAnnotation(testClass, DirtiesContext.class);
 			if (dirtiesContext != null) {
 				HierarchyMode hierarchyMode = dirtiesContext.hierarchyMode();
@@ -152,7 +153,8 @@ abstract class AbstractExpressionEvaluatingCondition implements ExecutionConditi
 	private <A extends Annotation> boolean evaluateExpression(String expression, boolean loadContext,
 			Class<A> annotationType, ExtensionContext context) {
 
-		AnnotatedElement element = context.getElement().orElseThrow(() -> new IllegalStateException("No AnnotatedElement"));
+		Assert.state(context.getElement().isPresent(), "No AnnotatedElement");
+		AnnotatedElement element = context.getElement().get();
 		GenericApplicationContext gac = null;
 		ApplicationContext applicationContext;
 
@@ -165,7 +167,7 @@ abstract class AbstractExpressionEvaluatingCondition implements ExecutionConditi
 			applicationContext = gac;
 		}
 
-		if (!(applicationContext instanceof ConfigurableApplicationContext cac)) {
+		if (!(applicationContext instanceof ConfigurableApplicationContext)) {
 			if (logger.isWarnEnabled()) {
 				String contextType = applicationContext.getClass().getName();
 				logger.warn(String.format("@%s(\"%s\") could not be evaluated on [%s] since the test " +
@@ -175,7 +177,7 @@ abstract class AbstractExpressionEvaluatingCondition implements ExecutionConditi
 			return false;
 		}
 
-		ConfigurableBeanFactory configurableBeanFactory = cac.getBeanFactory();
+		ConfigurableBeanFactory configurableBeanFactory = ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
 		BeanExpressionResolver expressionResolver = configurableBeanFactory.getBeanExpressionResolver();
 		Assert.state(expressionResolver != null, "No BeanExpressionResolver");
 		BeanExpressionContext beanExpressionContext = new BeanExpressionContext(configurableBeanFactory, null);
@@ -187,11 +189,11 @@ abstract class AbstractExpressionEvaluatingCondition implements ExecutionConditi
 			gac.close();
 		}
 
-		if (result instanceof Boolean b) {
-			return b;
+		if (result instanceof Boolean) {
+			return (Boolean) result;
 		}
-		else if (result instanceof String str) {
-			str = str.trim().toLowerCase(Locale.ROOT);
+		else if (result instanceof String) {
+			String str = ((String) result).trim().toLowerCase();
 			if ("true".equals(str)) {
 				return true;
 			}

@@ -31,7 +31,7 @@ import org.apache.camel.spi.Metadata;
 @XmlRootElement(name = "customServiceFilter")
 @XmlAccessorType(XmlAccessType.FIELD)
 @Configurer(extended = true)
-@Deprecated(since = "3.19.0")
+@Deprecated
 public class CustomServiceCallServiceFilterConfiguration extends ServiceCallServiceFilterConfiguration {
     @XmlAttribute(name = "ref")
     private String serviceFilterRef;

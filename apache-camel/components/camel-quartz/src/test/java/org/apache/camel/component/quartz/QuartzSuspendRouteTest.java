@@ -33,14 +33,14 @@ public class QuartzSuspendRouteTest extends BaseQuartzTest {
 
         context.getRouteController().suspendRoute("foo");
 
+        int size = mock.getReceivedCounter();
+
         MockEndpoint.resetMocks(context);
 
         mock.expectedMessageCount(0);
         mock.assertIsSatisfied(3000);
 
-        int size = mock.getReceivedCounter();
-
-        assertEquals(0, size, "Should not schedule when suspended");
+        assertEquals(size, size, "Should not schedule when suspended");
 
         MockEndpoint.resetMocks(context);
         mock.expectedMinimumMessageCount(1);

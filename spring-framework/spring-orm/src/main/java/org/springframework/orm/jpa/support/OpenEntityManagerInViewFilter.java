@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.lang.Nullable;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.orm.jpa.EntityManagerHolder;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -75,11 +75,14 @@ public class OpenEntityManagerInViewFilter extends OncePerRequestFilter {
 	public static final String DEFAULT_ENTITY_MANAGER_FACTORY_BEAN_NAME = "entityManagerFactory";
 
 
-	private @Nullable String entityManagerFactoryBeanName;
+	@Nullable
+	private String entityManagerFactoryBeanName;
 
-	private @Nullable String persistenceUnitName;
+	@Nullable
+	private String persistenceUnitName;
 
-	private volatile @Nullable EntityManagerFactory entityManagerFactory;
+	@Nullable
+	private volatile EntityManagerFactory entityManagerFactory;
 
 
 	/**
@@ -98,7 +101,8 @@ public class OpenEntityManagerInViewFilter extends OncePerRequestFilter {
 	 * Return the bean name of the EntityManagerFactory to fetch from Spring's
 	 * root application context.
 	 */
-	protected @Nullable String getEntityManagerFactoryBeanName() {
+	@Nullable
+	protected String getEntityManagerFactoryBeanName() {
 		return this.entityManagerFactoryBeanName;
 	}
 
@@ -119,7 +123,8 @@ public class OpenEntityManagerInViewFilter extends OncePerRequestFilter {
 	/**
 	 * Return the name of the persistence unit to access the EntityManagerFactory for, if any.
 	 */
-	protected @Nullable String getPersistenceUnitName() {
+	@Nullable
+	protected String getPersistenceUnitName() {
 		return this.persistenceUnitName;
 	}
 

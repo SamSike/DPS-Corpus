@@ -62,7 +62,7 @@ public class XPathChoiceTest extends ContextTestSupport {
         assertMockEndpointsSatisfied();
     }
 
-    protected void sendMessage(final Object headerValue, final Object body) {
+    protected void sendMessage(final Object headerValue, final Object body) throws Exception {
         template.sendBodyAndHeader("direct:start", body, "foo", headerValue);
     }
 

@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -47,7 +46,7 @@ public class CamelInfluxDbConverterTest {
 
         assertNotNull(line);
         LOG.debug("doesNotAddCamelHeaders generated: \"{}\"", line);
-        assertFalse(line.contains(InfluxDb2Constants.MEASUREMENT));
+        assertTrue(!line.contains(InfluxDb2Constants.MEASUREMENT));
 
     }
 

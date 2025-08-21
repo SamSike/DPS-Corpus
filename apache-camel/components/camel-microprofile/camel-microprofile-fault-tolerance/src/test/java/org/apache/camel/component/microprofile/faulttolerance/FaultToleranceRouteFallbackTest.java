@@ -20,7 +20,6 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.spi.CircuitBreakerConstants;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class FaultToleranceRouteFallbackTest extends CamelTestSupport {
@@ -30,7 +29,6 @@ public class FaultToleranceRouteFallbackTest extends CamelTestSupport {
         getMockEndpoint("mock:result").expectedBodiesReceived("Fallback message");
         getMockEndpoint("mock:result").expectedPropertyReceived(CircuitBreakerConstants.RESPONSE_SUCCESSFUL_EXECUTION, false);
         getMockEndpoint("mock:result").expectedPropertyReceived(CircuitBreakerConstants.RESPONSE_FROM_FALLBACK, true);
-        getMockEndpoint("mock:result").expectedPropertyReceived(CircuitBreakerConstants.RESPONSE_STATE, "CLOSED");
 
         template.sendBody("direct:start", "Hello World");
 
@@ -43,11 +41,7 @@ public class FaultToleranceRouteFallbackTest extends CamelTestSupport {
             @Override
             public void configure() {
                 from("direct:start").to("log:start").circuitBreaker().throwException(new IllegalArgumentException("Forced"))
-                        .onFallback()
-                        .process(e -> {
-                            Assertions.assertEquals("CLOSED", e.getProperty(CircuitBreakerConstants.RESPONSE_STATE));
-                        })
-                        .transform().constant("Fallback message")
+                        .onFallback().transform().constant("Fallback message")
                         .end().to("log:result").to("mock:result");
             }
         };

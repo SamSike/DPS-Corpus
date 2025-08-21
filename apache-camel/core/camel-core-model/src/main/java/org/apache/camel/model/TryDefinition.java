@@ -35,11 +35,10 @@ import org.apache.camel.spi.annotations.DslProperty;
 /**
  * Marks the beginning of a try, catch, finally block
  */
-@Metadata(label = "eip,routing,error")
+@Metadata(label = "error")
 @XmlRootElement(name = "doTry")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class TryDefinition extends OutputDefinition<TryDefinition> {
-
     @DslProperty
     @XmlTransient
     private List<CatchDefinition> catchClauses;
@@ -54,17 +53,6 @@ public class TryDefinition extends OutputDefinition<TryDefinition> {
     private int endCounter; // used for detecting multiple nested doTry blocks
 
     public TryDefinition() {
-    }
-
-    protected TryDefinition(TryDefinition source) {
-        super(source);
-        this.catchClauses = ProcessorDefinitionHelper.deepCopyDefinitions(source.catchClauses);
-        this.finallyClause = source.finallyClause != null ? source.finallyClause.copyDefinition() : null;
-    }
-
-    @Override
-    public TryDefinition copyDefinition() {
-        return new TryDefinition(this);
     }
 
     @Override
@@ -144,7 +132,7 @@ public class TryDefinition extends OutputDefinition<TryDefinition> {
         // set the onWhen predicate on all the catch definitions
         Collection<CatchDefinition> col = ProcessorDefinitionHelper.filterTypeInOutputs(getOutputs(), CatchDefinition.class);
         for (CatchDefinition doCatch : col) {
-            doCatch.setOnWhen(new OnWhenDefinition(predicate));
+            doCatch.setOnWhen(new WhenDefinition(predicate));
         }
         return this;
     }
@@ -229,22 +217,21 @@ public class TryDefinition extends OutputDefinition<TryDefinition> {
             if (catchClauses == null) {
                 catchClauses = new ArrayList<>();
             }
-            int doFinallyCounter = 0;
             for (ProcessorDefinition<?> output : outputs) {
-                if (output instanceof CatchDefinition catchDefinition) {
+                if (output instanceof CatchDefinition) {
                     if (!catchClauses.contains(output)) {
-                        catchClauses.add(catchDefinition);
+                        catchClauses.add((CatchDefinition) output);
                     }
-                } else if (output instanceof FinallyDefinition finallyDefinition) {
-                    ++doFinallyCounter;
-                    finallyClause = finallyDefinition;
+                } else if (output instanceof FinallyDefinition) {
+                    if (finallyClause != null && output != finallyClause) {
+                        throw new IllegalArgumentException(
+                                "Multiple finally clauses added: " + finallyClause + " and " + output);
+                    } else {
+                        finallyClause = (FinallyDefinition) output;
+                    }
                 } else {
                     outputsWithoutCatches.add(output);
                 }
-            }
-            if (doFinallyCounter > 1) {
-                throw new IllegalArgumentException(
-                        "Multiple finally clauses added: " + doFinallyCounter);
             }
             // initialize parent
             for (CatchDefinition cd : catchClauses) {
@@ -255,5 +242,4 @@ public class TryDefinition extends OutputDefinition<TryDefinition> {
             }
         }
     }
-
 }

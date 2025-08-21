@@ -79,7 +79,6 @@ import static com.github.dockerjava.api.model.HostConfig.newHostConfig;
  */
 public class DockerProducer extends DefaultProducer {
     private static final Logger LOGGER = LoggerFactory.getLogger(DockerProducer.class);
-    public static final String MISSING_CONTAINER_ID = "Container ID must be specified";
     private DockerConfiguration configuration;
     private DockerComponent component;
 
@@ -502,7 +501,7 @@ public class DockerProducer extends DefaultProducer {
         String containerId
                 = DockerHelper.getProperty(DockerConstants.DOCKER_CONTAINER_ID, configuration, message, String.class);
 
-        ObjectHelper.notNull(containerId, MISSING_CONTAINER_ID);
+        ObjectHelper.notNull(containerId, "Container ID must be specified");
 
         CommitCmd commitCmd = client.commitCmd(containerId);
 
@@ -884,7 +883,7 @@ public class DockerProducer extends DefaultProducer {
         String containerId
                 = DockerHelper.getProperty(DockerConstants.DOCKER_CONTAINER_ID, configuration, message, String.class);
 
-        ObjectHelper.notNull(containerId, MISSING_CONTAINER_ID);
+        ObjectHelper.notNull(containerId, "Container ID must be specified");
 
         ContainerDiffCmd diffContainerCmd = client.containerDiffCmd(containerId);
 
@@ -913,7 +912,7 @@ public class DockerProducer extends DefaultProducer {
         String containerId
                 = DockerHelper.getProperty(DockerConstants.DOCKER_CONTAINER_ID, configuration, message, String.class);
 
-        ObjectHelper.notNull(containerId, MISSING_CONTAINER_ID);
+        ObjectHelper.notNull(containerId, "Container ID must be specified");
 
         return client.inspectContainerCmd(containerId);
     }
@@ -932,7 +931,7 @@ public class DockerProducer extends DefaultProducer {
         String containerId
                 = DockerHelper.getProperty(DockerConstants.DOCKER_CONTAINER_ID, configuration, message, String.class);
 
-        ObjectHelper.notNull(containerId, MISSING_CONTAINER_ID);
+        ObjectHelper.notNull(containerId, "Container ID must be specified");
 
         KillContainerCmd killContainerCmd = client.killContainerCmd(containerId);
 
@@ -1007,7 +1006,7 @@ public class DockerProducer extends DefaultProducer {
         String containerId
                 = DockerHelper.getProperty(DockerConstants.DOCKER_CONTAINER_ID, configuration, message, String.class);
 
-        ObjectHelper.notNull(containerId, MISSING_CONTAINER_ID);
+        ObjectHelper.notNull(containerId, "Container ID must be specified");
 
         return client.pauseContainerCmd(containerId);
     }
@@ -1026,7 +1025,7 @@ public class DockerProducer extends DefaultProducer {
         String containerId
                 = DockerHelper.getProperty(DockerConstants.DOCKER_CONTAINER_ID, configuration, message, String.class);
 
-        ObjectHelper.notNull(containerId, MISSING_CONTAINER_ID);
+        ObjectHelper.notNull(containerId, "Container ID must be specified");
 
         RemoveContainerCmd removeContainerCmd = client.removeContainerCmd(containerId);
 
@@ -1088,7 +1087,7 @@ public class DockerProducer extends DefaultProducer {
         String containerId
                 = DockerHelper.getProperty(DockerConstants.DOCKER_CONTAINER_ID, configuration, message, String.class);
 
-        ObjectHelper.notNull(containerId, MISSING_CONTAINER_ID);
+        ObjectHelper.notNull(containerId, "Container ID must be specified");
 
         return client.startContainerCmd(containerId);
     }
@@ -1133,7 +1132,7 @@ public class DockerProducer extends DefaultProducer {
         String containerId
                 = DockerHelper.getProperty(DockerConstants.DOCKER_CONTAINER_ID, configuration, message, String.class);
 
-        ObjectHelper.notNull(containerId, MISSING_CONTAINER_ID);
+        ObjectHelper.notNull(containerId, "Container ID must be specified");
 
         TopContainerCmd topContainerCmd = client.topContainerCmd(containerId);
 
@@ -1161,7 +1160,7 @@ public class DockerProducer extends DefaultProducer {
         String containerId
                 = DockerHelper.getProperty(DockerConstants.DOCKER_CONTAINER_ID, configuration, message, String.class);
 
-        ObjectHelper.notNull(containerId, MISSING_CONTAINER_ID);
+        ObjectHelper.notNull(containerId, "Container ID must be specified");
 
         return client.unpauseContainerCmd(containerId);
     }
@@ -1217,7 +1216,7 @@ public class DockerProducer extends DefaultProducer {
                 = DockerHelper.getProperty(DockerConstants.DOCKER_CONTAINER_ID, configuration, message, String.class);
 
         ObjectHelper.notNull(networkId, "Network ID must be specified");
-        ObjectHelper.notNull(containerId, MISSING_CONTAINER_ID);
+        ObjectHelper.notNull(containerId, "Container ID must be specified");
 
         return client.connectToNetworkCmd().withNetworkId(networkId).withContainerId(containerId);
 
@@ -1241,7 +1240,7 @@ public class DockerProducer extends DefaultProducer {
         String containerId
                 = DockerHelper.getProperty(DockerConstants.DOCKER_CONTAINER_ID, configuration, message, String.class);
 
-        ObjectHelper.notNull(containerId, MISSING_CONTAINER_ID);
+        ObjectHelper.notNull(containerId, "Container ID must be specified");
 
         ExecCreateCmd execCreateCmd = client.execCreateCmd(containerId);
 

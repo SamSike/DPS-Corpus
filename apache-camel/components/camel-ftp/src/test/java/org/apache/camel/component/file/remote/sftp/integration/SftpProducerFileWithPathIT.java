@@ -30,8 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SftpProducerFileWithPathIT extends SftpServerTestSupport {
 
     private String getFtpUrl() {
-        return "sftp://admin@localhost:{{ftp.server.port}}/{{ftp.root.dir}}?password=admin&knownHostsFile="
-               + service.getKnownHostsFile();
+        return "sftp://admin@localhost:{{ftp.server.port}}/{{ftp.root.dir}}?password=admin";
     }
 
     @Test

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -50,12 +50,9 @@ import static org.jooq.Clause.TABLE_REFERENCE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.CUBRID;
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
 // ...
@@ -67,7 +64,6 @@ import static org.jooq.SQLDialect.IGNITE;
 import static org.jooq.SQLDialect.MARIADB;
 // ...
 import static org.jooq.SQLDialect.MYSQL;
-// ...
 // ...
 // ...
 // ...
@@ -84,12 +80,9 @@ import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.Keywords.K_AS;
-import static org.jooq.impl.NoAutoAlias.noAutoAlias;
 import static org.jooq.impl.QueryPartListView.wrap;
-import static org.jooq.impl.SubqueryCharacteristics.DERIVED_TABLE;
 import static org.jooq.impl.Tools.EMPTY_NAME;
 import static org.jooq.impl.Tools.combine;
-import static org.jooq.impl.Tools.isNotEmpty;
 import static org.jooq.impl.Tools.map;
 import static org.jooq.impl.Tools.visitSubquery;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_AS_REQUIRED;
@@ -115,23 +108,19 @@ import org.jooq.Select;
 import org.jooq.Table;
 import org.jooq.conf.RenderOptionalKeyword;
 import org.jooq.impl.QOM.UEmpty;
-import org.jooq.impl.Tools.BooleanDataKey;
 
 /**
  * @author Lukas Eder
  */
-final class Alias<Q extends QueryPart> extends AbstractQueryPart implements UEmpty, SimpleCheckQueryPart {
+final class Alias<Q extends QueryPart> extends AbstractQueryPart implements UEmpty {
 
-    private static final Clause[] CLAUSES_TABLE_REFERENCE               = { TABLE, TABLE_REFERENCE };
-    private static final Clause[] CLAUSES_TABLE_ALIAS                   = { TABLE, TABLE_ALIAS };
-    private static final Clause[] CLAUSES_FIELD_REFERENCE               = { FIELD, FIELD_REFERENCE };
-    private static final Clause[] CLAUSES_FIELD_ALIAS                   = { FIELD, FIELD_ALIAS };
-    static final Set<SQLDialect>  NO_SUPPORT_ALIASED_JOIN_TABLES        = SQLDialect.supportedBy(DERBY, DUCKDB, FIREBIRD, MARIADB, MYSQL, SQLITE);
-    static final Set<SQLDialect>  SUPPORT_AS_REQUIRED                   = SQLDialect.supportedBy(DERBY, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB);
-    static final Set<SQLDialect>  SUPPORT_DERIVED_COLUMN_NAMES_SPECIAL1 = SQLDialect.supportedBy(CUBRID, FIREBIRD, MYSQL);
-    static final Set<SQLDialect>  SUPPORT_DERIVED_COLUMN_NAMES_SPECIAL2 = SQLDialect.supportedUntil(CLICKHOUSE, IGNITE, MARIADB, SQLITE);
-
-
+    private static final Clause[]        CLAUSES_TABLE_REFERENCE               = { TABLE, TABLE_REFERENCE };
+    private static final Clause[]        CLAUSES_TABLE_ALIAS                   = { TABLE, TABLE_ALIAS };
+    private static final Clause[]        CLAUSES_FIELD_REFERENCE               = { FIELD, FIELD_REFERENCE };
+    private static final Clause[]        CLAUSES_FIELD_ALIAS                   = { FIELD, FIELD_ALIAS };
+    private static final Set<SQLDialect> SUPPORT_AS_REQUIRED                   = SQLDialect.supportedBy(DERBY, HSQLDB, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB);
+    private static final Set<SQLDialect> SUPPORT_DERIVED_COLUMN_NAMES_SPECIAL1 = SQLDialect.supportedBy(CUBRID, FIREBIRD, MYSQL);
+    private static final Set<SQLDialect> SUPPORT_DERIVED_COLUMN_NAMES_SPECIAL2 = SQLDialect.supportedUntil(IGNITE, MARIADB, SQLITE);
 
 
 
@@ -141,13 +130,13 @@ final class Alias<Q extends QueryPart> extends AbstractQueryPart implements UEmp
     final Q                              wrapping;
     final Name                           alias;
     final Name[]                         fieldAliases;
-    final boolean                        wrapInParentheses;
+    final Predicate<Context<?>>          wrapInParentheses;
 
     Alias(Q wrapped, Q wrapping, Name alias) {
-        this(wrapped, wrapping, alias, null, false);
+        this(wrapped, wrapping, alias, null, c -> false);
     }
 
-    Alias(Q wrapped, Q wrapping, Name alias, Name[] fieldAliases, boolean wrapInParentheses) {
+    Alias(Q wrapped, Q wrapping, Name alias, Name[] fieldAliases, Predicate<Context<?>> wrapInParentheses) {
         this.wrapped = wrapped;
         this.wrapping = wrapping;
         this.alias = alias;
@@ -157,16 +146,6 @@ final class Alias<Q extends QueryPart> extends AbstractQueryPart implements UEmp
 
     final Q wrapped() {
         return wrapped;
-    }
-
-    final boolean hasFieldAliases() {
-        return isNotEmpty(fieldAliases);
-    }
-
-    @Override
-    public final boolean isSimple(Context<?> ctx) {
-        return wrapped instanceof Table && !ctx.declareTables()
-            || wrapped instanceof Field && !ctx.declareFields();
     }
 
     @Override
@@ -185,15 +164,7 @@ final class Alias<Q extends QueryPart> extends AbstractQueryPart implements UEmp
 
 
         if (ctx.declareAliases() && (ctx.declareFields() || ctx.declareTables())) {
-
-            // [#14310] Support nesting of alias declaring parts where this
-            //          makes sense. The below declareAliases(false) call was
-            //          added for cases where x.as("a").as("b") leaks into the
-            //          expression tree, to prevent doubly declaring an alias.
-            boolean aliasedJoinTable = wrapped instanceof JoinTable;
-
-            if (!aliasedJoinTable)
-                ctx.declareAliases(false);
+            ctx.declareAliases(false);
 
 
 
@@ -208,9 +179,7 @@ final class Alias<Q extends QueryPart> extends AbstractQueryPart implements UEmp
 
 
             acceptDeclareAliasStandard(ctx);
-
-            if (!aliasedJoinTable)
-                ctx.declareAliases(true);
+            ctx.declareAliases(true);
         }
         else
             ctx.qualify(false, c -> c.visit(alias));
@@ -239,20 +208,19 @@ final class Alias<Q extends QueryPart> extends AbstractQueryPart implements UEmp
         // [#454] [#1801] Some databases don't allow "derived column names" in
         // "simple class specifications", or "common table expression references".
         // Hence, wrap the table reference in a subselect
-        if (hasFieldAliases()
+        if (fieldAliases != null
                 && (SUPPORT_DERIVED_COLUMN_NAMES_SPECIAL1.contains(dialect))
                 && (wrapped instanceof TableImpl || wrapped instanceof CommonTableExpressionImpl)) {
 
-            visitSubquery(context, select(asterisk()).from(noAutoAlias((Table<?>) wrapped).as(alias)), DERIVED_TABLE);
+            visitSubquery(context, select(asterisk()).from(((Table<?>) wrapped).as(alias)), true, false, false);
         }
 
         // [#1801] Some databases do not support "derived column names".
         // They can be emulated by concatenating a dummy SELECT with no
         // results using UNION ALL
-        else if (hasFieldAliases() && (
+        else if (fieldAliases != null && (
                 emulatedDerivedColumnList
              || SUPPORT_DERIVED_COLUMN_NAMES_SPECIAL2.contains(dialect)
-
 
 
 
@@ -268,11 +236,11 @@ final class Alias<Q extends QueryPart> extends AbstractQueryPart implements UEmp
                 // [#3156] Do not SELECT * from derived tables to prevent ambiguously defined columns
                 // in those derived tables
                 Select<?> wrappedAsSelect =
-                    wrapped instanceof Select<?> s
-                  ? s
-                  : wrapped instanceof DerivedTable<?> d
-                  ? d.query()
-                  : select(asterisk()).from(noAutoAlias((Table<?>) wrapped).as(alias));
+                    wrapped instanceof Select
+                  ? (Select<?>) wrapped
+                  : wrapped instanceof DerivedTable
+                  ? ((DerivedTable<?>) wrapped).query()
+                  : select(asterisk()).from(((Table<?>) wrapped).as(alias));
 
                 List<Field<?>> select = wrappedAsSelect.getSelect();
 
@@ -324,7 +292,7 @@ final class Alias<Q extends QueryPart> extends AbstractQueryPart implements UEmp
                             }
                         }
 
-                        visitSubquery(context, select(fields).where(falseCondition()).unionAll(wrappedAsSelect), DERIVED_TABLE);
+                        visitSubquery(context, select(fields).where(falseCondition()).unionAll(wrappedAsSelect), true, false, false);
                     }
 
                     // [#10521] Avoid the clumsy UNION ALL emulation if possible
@@ -347,7 +315,7 @@ final class Alias<Q extends QueryPart> extends AbstractQueryPart implements UEmp
                .qualify(false, c -> c.visit(alias));
 
         // [#1801] Add field aliases to the table alias, if applicable
-        if (hasFieldAliases() && !emulatedDerivedColumnList) {
+        if (fieldAliases != null && !emulatedDerivedColumnList) {
             toSQLDerivedColumnList(context);
         }
 
@@ -411,45 +379,18 @@ final class Alias<Q extends QueryPart> extends AbstractQueryPart implements UEmp
     }
 
     private final void toSQLWrapped(Context<?> ctx) {
-        if (wrapInParentheses)
-            ctx.data(DATA_WRAP_DERIVED_TABLES_IN_PARENTHESES, false, c -> toSQLWrapped(c, wrapInParentheses));
+        boolean wrap = wrapInParentheses.test(ctx);
+
+        if (wrap)
+            ctx.data(DATA_WRAP_DERIVED_TABLES_IN_PARENTHESES, false, c -> toSQLWrapped(c, wrap));
         else
-            toSQLWrapped(ctx, wrapInParentheses);
+            toSQLWrapped(ctx, wrap);
     }
 
     private final void toSQLWrapped(Context<?> ctx, boolean wrap) {
-        boolean nestedJoinTable = wrapped instanceof JoinTable;
-
-        if (wrap)
-            if (nestedJoinTable)
-                ctx.sqlIndentStart('(');
-            else
-                ctx.sql('(');
-
-        if (nestedJoinTable && NO_SUPPORT_ALIASED_JOIN_TABLES.contains(ctx.dialect())) {
-            ctx.visit(select(asterisk()).from((Table<?>) wrapped));
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-        else
-            ctx.visit(wrapped);
-
-        if (wrap)
-            if (nestedJoinTable)
-                ctx.sqlIndentEnd(')');
-            else
-                ctx.sql(')');
+        ctx.sql(wrap ? "(" : "")
+           .visit(wrapped)
+           .sql(wrap ? ")" : "");
     }
 
     private final void toSQLDerivedColumnList(Context<?> ctx) {

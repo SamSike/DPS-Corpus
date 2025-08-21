@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
 import org.springframework.beans.BeansException;
@@ -41,6 +40,7 @@ import org.springframework.context.ApplicationContextException;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.lang.Nullable;
 import org.springframework.scripting.support.StandardScriptEvalException;
 import org.springframework.scripting.support.StandardScriptUtils;
 import org.springframework.util.Assert;
@@ -73,23 +73,32 @@ public class ScriptTemplateView extends AbstractUrlBasedView {
 	private static final String DEFAULT_RESOURCE_LOADER_PATH = "classpath:";
 
 
-	private @Nullable ScriptEngine engine;
+	@Nullable
+	private ScriptEngine engine;
 
-	private @Nullable Supplier<ScriptEngine> engineSupplier;
+	@Nullable
+	private Supplier<ScriptEngine> engineSupplier;
 
-	private @Nullable String engineName;
+	@Nullable
+	private String engineName;
 
-	private @Nullable Boolean sharedEngine;
+	@Nullable
+	private Boolean sharedEngine;
 
-	private String @Nullable [] scripts;
+	@Nullable
+	private String[] scripts;
 
-	private @Nullable String renderObject;
+	@Nullable
+	private String renderObject;
 
-	private @Nullable String renderFunction;
+	@Nullable
+	private String renderFunction;
 
-	private String @Nullable [] resourceLoaderPaths;
+	@Nullable
+	private String[] resourceLoaderPaths;
 
-	private volatile @Nullable ScriptEngineManager scriptEngineManager;
+	@Nullable
+	private volatile ScriptEngineManager scriptEngineManager;
 
 
 	/**
@@ -218,12 +227,12 @@ public class ScriptTemplateView extends AbstractUrlBasedView {
 			engineCount++;
 		}
 		Assert.isTrue(engineCount == 1,
-				"You should define either 'engine', 'engineSupplier', or 'engineName'.");
+				"You should define either 'engine', 'engineSupplier' or 'engineName'.");
 
 		if (Boolean.FALSE.equals(this.sharedEngine)) {
 			Assert.isTrue(this.engine == null,
 					"When 'sharedEngine' is set to false, you should specify the " +
-					"script engine using 'engineName' or 'engineSupplier', not 'engine'.");
+					"script engine using 'engineName' or 'engineSupplier' , not 'engine'.");
 		}
 		else if (this.engine != null) {
 			loadScripts(this.engine);
@@ -296,7 +305,8 @@ public class ScriptTemplateView extends AbstractUrlBasedView {
 		}
 	}
 
-	protected @Nullable Resource getResource(String location) {
+	@Nullable
+	protected Resource getResource(String location) {
 		if (this.resourceLoaderPaths != null) {
 			for (String path : this.resourceLoaderPaths) {
 				Resource resource = obtainApplicationContext().getResource(path + location);

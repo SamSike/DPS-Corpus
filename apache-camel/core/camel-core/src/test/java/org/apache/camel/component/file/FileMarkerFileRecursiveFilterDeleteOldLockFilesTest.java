@@ -28,8 +28,8 @@ import org.junit.jupiter.api.Test;
 public class FileMarkerFileRecursiveFilterDeleteOldLockFilesTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myFilter", new MyFileFilter());
         return jndi;
     }
@@ -65,12 +65,12 @@ public class FileMarkerFileRecursiveFilterDeleteOldLockFilesTest extends Context
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?initialDelay=0&delay=10&recursive=true&sortBy=file:name&filter=#myFilter"))
-                        .routeId("foo").autoStartup(false).convertBodyTo(String.class)
+                        .routeId("foo").noAutoStartup().convertBodyTo(String.class)
                         .to("mock:result");
             }
         };

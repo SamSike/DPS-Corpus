@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.context.annotation;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.core.type.AnnotatedTypeMetadata;
@@ -24,9 +25,10 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
  * @author Andy Wilkinson
  * @author Juergen Hoeller
  */
-class Spr16217Tests {
+public class Spr16217Tests {
 
 	@Test
+	@Disabled("TODO")
 	public void baseConfigurationIsIncludedWhenFirstSuperclassReferenceIsSkippedInRegisterBeanPhase() {
 		try (AnnotationConfigApplicationContext context =
 					new AnnotationConfigApplicationContext(RegisterBeanPhaseImportingConfiguration.class)) {
@@ -35,7 +37,7 @@ class Spr16217Tests {
 	}
 
 	@Test
-	void baseConfigurationIsIncludedWhenFirstSuperclassReferenceIsSkippedInParseConfigurationPhase() {
+	public void baseConfigurationIsIncludedWhenFirstSuperclassReferenceIsSkippedInParseConfigurationPhase() {
 		try (AnnotationConfigApplicationContext context =
 					new AnnotationConfigApplicationContext(ParseConfigurationPhaseImportingConfiguration.class)) {
 			context.getBean("someBean");
@@ -43,13 +45,16 @@ class Spr16217Tests {
 	}
 
 	@Test
-	void baseConfigurationIsIncludedOnceWhenBothConfigurationClassesAreActive() {
+	public void baseConfigurationIsIncludedOnceWhenBothConfigurationClassesAreActive() {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-		try (context) {
-			context.setAllowBeanDefinitionOverriding(false);
-			context.register(UnconditionalImportingConfiguration.class);
-			context.refresh();
+		context.setAllowBeanDefinitionOverriding(false);
+		context.register(UnconditionalImportingConfiguration.class);
+		context.refresh();
+		try {
 			context.getBean("someBean");
+		}
+		finally {
+			context.close();
 		}
 	}
 

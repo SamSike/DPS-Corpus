@@ -50,7 +50,7 @@ public class Sqs2ClientIAMOptimized implements Sqs2InternalClient {
 
     /**
      * Getting the sqs aws client that is used.
-     *
+     * 
      * @return Amazon SQS Client.
      */
     @Override
@@ -75,18 +75,13 @@ public class Sqs2ClientIAMOptimized implements Sqs2InternalClient {
             clientBuilder.endpointOverride(URI.create(configuration.getUriEndpointOverride()));
         }
         if (configuration.isTrustAllCertificates()) {
-            if (httpClientBuilder == null) {
-                httpClientBuilder = ApacheHttpClient.builder();
-            }
-            SdkHttpClient ahc = httpClientBuilder.buildWithDefaults(AttributeMap
+            SdkHttpClient ahc = ApacheHttpClient.builder().buildWithDefaults(AttributeMap
                     .builder()
                     .put(
                             SdkHttpConfigurationOption.TRUST_ALL_CERTIFICATES,
                             Boolean.TRUE)
                     .build());
-            // set created http client to use instead of builder
             clientBuilder.httpClient(ahc);
-            clientBuilder.httpClientBuilder(null);
         }
         client = clientBuilder.build();
         return client;

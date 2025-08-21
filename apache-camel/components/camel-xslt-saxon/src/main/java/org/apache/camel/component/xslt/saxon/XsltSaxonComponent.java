@@ -48,8 +48,7 @@ public class XsltSaxonComponent extends XsltComponent {
 
     /**
      * Allows you to use a custom net.sf.saxon.lib.ExtensionFunctionDefinition. You would need to add camel-saxon to the
-     * classpath. The function is looked up in the registry, where you can use commas to separate multiple values to
-     * lookup.
+     * classpath. The function is looked up in the registry, where you can comma to separate multiple values to lookup.
      */
     public void setSaxonExtensionFunctions(List<Object> extensionFunctions) {
         this.saxonExtensionFunctions = extensionFunctions;
@@ -57,8 +56,7 @@ public class XsltSaxonComponent extends XsltComponent {
 
     /**
      * Allows you to use a custom net.sf.saxon.lib.ExtensionFunctionDefinition. You would need to add camel-saxon to the
-     * classpath. The function is looked up in the registry, where you can use commas to separate multiple values to
-     * lookup.
+     * classpath. The function is looked up in the registry, where you can comma to separate multiple values to lookup.
      */
     public void setSaxonExtensionFunctions(String extensionFunctions) {
         this.saxonExtensionFunctions = EndpointHelper.resolveReferenceListParameter(

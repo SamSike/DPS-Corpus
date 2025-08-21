@@ -85,10 +85,10 @@ public class BeanInvokeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:a").bean(BeanInvokeTest.class, "doSomething").to("mock:a");
                 from("direct:b").bean(BeanInvokeTest.class, "changeSomething").to("mock:b");
                 from("direct:c").bean(BeanInvokeTest.class, "doNothing").to("mock:c");
@@ -96,12 +96,10 @@ public class BeanInvokeTest extends ContextTestSupport {
         };
     }
 
-    @SuppressWarnings("Unused")
     public String doSomething(String s) {
         return s;
     }
 
-    @SuppressWarnings("Unused")
     public String changeSomething(String s) {
         if ("Hello World".equals(s)) {
             return "Bye World";
@@ -109,7 +107,6 @@ public class BeanInvokeTest extends ContextTestSupport {
         return null;
     }
 
-    @SuppressWarnings("Unused")
     public void doNothing(String s) {
     }
 

@@ -25,15 +25,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Base class for ordered properties implementations.
  */
 abstract class BaseOrderedProperties extends Properties {
 
-    protected final Lock lock = new ReentrantLock();
     private final Map<String, Object> map = new LinkedHashMap<>();
 
     public Map<String, Object> asMap() {
@@ -41,13 +38,8 @@ abstract class BaseOrderedProperties extends Properties {
     }
 
     @Override
-    public Object put(Object key, Object value) {
-        lock.lock();
-        try {
-            return doPut(key.toString(), value.toString());
-        } finally {
-            lock.unlock();
-        }
+    public synchronized Object put(Object key, Object value) {
+        return doPut(key.toString(), value.toString());
     }
 
     protected Object doPut(String key, String value) {
@@ -55,55 +47,30 @@ abstract class BaseOrderedProperties extends Properties {
     }
 
     @Override
-    public void putAll(Map<?, ?> t) {
-        lock.lock();
-        try {
-            for (Map.Entry<?, ?> entry : t.entrySet()) {
-                put(entry.getKey(), entry.getValue());
-            }
-        } finally {
-            lock.unlock();
+    public synchronized void putAll(Map<?, ?> t) {
+        for (Map.Entry<?, ?> entry : t.entrySet()) {
+            put(entry.getKey(), entry.getValue());
         }
     }
 
     @Override
-    public Object get(Object key) {
-        lock.lock();
-        try {
-            return map.get(key);
-        } finally {
-            lock.unlock();
-        }
+    public synchronized Object get(Object key) {
+        return map.get(key);
     }
 
     @Override
-    public boolean isEmpty() {
-        lock.lock();
-        try {
-            return map.isEmpty();
-        } finally {
-            lock.unlock();
-        }
+    public synchronized boolean isEmpty() {
+        return map.isEmpty();
     }
 
     @Override
-    public Object remove(Object key) {
-        lock.lock();
-        try {
-            return map.remove(key);
-        } finally {
-            lock.unlock();
-        }
+    public synchronized Object remove(Object key) {
+        return map.remove(key);
     }
 
     @Override
-    public void clear() {
-        lock.lock();
-        try {
-            map.clear();
-        } finally {
-            lock.unlock();
-        }
+    public synchronized void clear() {
+        map.clear();
     }
 
     @Override
@@ -117,13 +84,8 @@ abstract class BaseOrderedProperties extends Properties {
     }
 
     @Override
-    public Enumeration<Object> keys() {
-        lock.lock();
-        try {
-            return new Vector<Object>(map.keySet()).elements();
-        } finally {
-            lock.unlock();
-        }
+    public synchronized Enumeration<Object> keys() {
+        return new Vector<Object>(map.keySet()).elements();
     }
 
     @Override
@@ -134,17 +96,13 @@ abstract class BaseOrderedProperties extends Properties {
     @Override
     @SuppressWarnings("unchecked")
     public Set<Map.Entry<Object, Object>> entrySet() {
-        return (Set) map.entrySet();
+        Set entrySet = map.entrySet();
+        return entrySet;
     }
 
     @Override
-    public int size() {
-        lock.lock();
-        try {
-            return map.size();
-        } finally {
-            lock.unlock();
-        }
+    public synchronized int size() {
+        return map.size();
     }
 
     @Override
@@ -158,13 +116,8 @@ abstract class BaseOrderedProperties extends Properties {
     }
 
     @Override
-    public String toString() {
-        lock.lock();
-        try {
-            return map.toString();
-        } finally {
-            lock.unlock();
-        }
+    public synchronized String toString() {
+        return map.toString();
     }
 
 }

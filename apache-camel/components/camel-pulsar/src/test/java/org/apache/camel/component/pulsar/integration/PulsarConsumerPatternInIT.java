@@ -22,7 +22,10 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.component.pulsar.PulsarComponent;
+import org.apache.camel.component.pulsar.utils.AutoConfiguration;
 import org.apache.camel.spi.Registry;
+import org.apache.camel.support.SimpleRegistry;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.internal.PulsarAdminBuilderImpl;
 import org.apache.pulsar.client.api.Producer;
@@ -38,9 +41,9 @@ public class PulsarConsumerPatternInIT extends PulsarITSupport {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PulsarConsumerPatternInIT.class);
 
-    private static final String TOPIC_URI = "persistent://public/default/PulsarConsumerPatternInIT/camel-foo";
-    private static final String TOPIC_TWO_URI = "persistent://public/default/PulsarConsumerPatternInIT/camel-bar";
-    private static final String TOPIC_PATTERN_URI = "persistent://public/default/PulsarConsumerPatternInIT/camel-.*";
+    private static final String TOPIC_URI = "persistent://public/default/camel-foo";
+    private static final String TOPIC_TWO_URI = "persistent://public/default/camel-bar";
+    private static final String TOPIC_PATTERN_URI = "persistent://public/default/camel-.*";
     private static final String PRODUCER = "camel-producer-1";
 
     @EndpointInject("pulsar:" + TOPIC_PATTERN_URI + "?topicsPattern=true"
@@ -64,13 +67,23 @@ public class PulsarConsumerPatternInIT extends PulsarITSupport {
     }
 
     @Override
-    protected void bindToRegistry(Registry registry) throws Exception {
+    protected Registry createCamelRegistry() throws Exception {
+        SimpleRegistry registry = new SimpleRegistry();
+
         registerPulsarBeans(registry);
+
+        return registry;
     }
 
-    private void registerPulsarBeans(Registry registry) throws PulsarClientException {
+    private void registerPulsarBeans(SimpleRegistry registry) throws PulsarClientException {
         PulsarClient pulsarClient = givenPulsarClient();
-        registerPulsarBeans(registry, pulsarClient, context);
+        AutoConfiguration autoConfiguration = new AutoConfiguration(null, null);
+
+        registry.bind("pulsarClient", pulsarClient);
+        PulsarComponent comp = new PulsarComponent(context);
+        comp.setAutoConfiguration(autoConfiguration);
+        comp.setPulsarClient(pulsarClient);
+        registry.bind("pulsar", comp);
     }
 
     private PulsarClient givenPulsarClient() throws PulsarClientException {

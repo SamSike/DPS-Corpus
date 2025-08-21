@@ -16,18 +16,22 @@
  */
 package org.apache.camel.dsl.jbang.core.commands.action;
 
-import java.nio.file.Path;
+import java.io.File;
 import java.util.List;
 
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
-import org.apache.camel.dsl.jbang.core.common.PathUtils;
+import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.json.JsonObject;
 import picocli.CommandLine;
 
 public abstract class CamelRouteAction extends ActionBaseCommand {
 
     @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
-    String name = "*";
+    String name;
+
+    @CommandLine.Option(names = { "--all" },
+                        description = "To select all running Camel integrations")
+    boolean all;
 
     @CommandLine.Option(names = { "--id" },
                         description = "Route ids (multiple ids can be separated by comma)", defaultValue = "*")
@@ -38,16 +42,22 @@ public abstract class CamelRouteAction extends ActionBaseCommand {
     }
 
     @Override
-    public Integer doCall() throws Exception {
+    public Integer call() throws Exception {
+        if (!all && name == null) {
+            return 0;
+        } else if (all) {
+            name = "*";
+        }
+
         List<Long> pids = findPids(name);
 
         for (long pid : pids) {
             JsonObject root = new JsonObject();
             root.put("action", "route");
             root.put("id", id);
-            Path f = getActionFile(Long.toString(pid));
+            File f = getActionFile("" + pid);
             onAction(root);
-            PathUtils.writeTextSafely(root.toJson(), f);
+            IOHelper.writeText(root.toJson(), f);
         }
 
         return 0;

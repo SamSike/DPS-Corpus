@@ -18,8 +18,10 @@ package org.apache.camel.dataformat.asn1;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import com.beanit.asn1bean.ber.ReverseByteArrayOutputStream;
@@ -35,7 +37,6 @@ import org.bouncycastle.asn1.ASN1Primitive;
 
 @Dataformat("asn1")
 public class ASN1DataFormat extends ServiceSupport implements DataFormat, DataFormatName {
-
     private boolean usingIterator;
     private Class<?> unmarshalType;
 
@@ -61,27 +62,27 @@ public class ASN1DataFormat extends ServiceSupport implements DataFormat, DataFo
                 encodeGenericTypeObject(exchange, stream);
                 return;
             }
-            Object body = exchange.getIn().getBody();
-            if (body instanceof ASN1Primitive) {
-                ASN1Primitive asn1Primitive = ObjectHelper.cast(ASN1Primitive.class, body);
+            Object record = exchange.getIn().getBody();
+            if (record instanceof ASN1Primitive) {
+                ASN1Primitive asn1Primitive = ObjectHelper.cast(ASN1Primitive.class, record);
                 berOut = new ByteArrayInputStream(asn1Primitive.getEncoded());
-            } else if (body instanceof byte[]) {
-                berOut = new ByteArrayInputStream(ObjectHelper.cast(byte[].class, body));
+            } else if (record instanceof byte[]) {
+                berOut = new ByteArrayInputStream(ObjectHelper.cast(byte[].class, record));
             }
         } else {
             byte[] byteInput = exchange.getContext().getTypeConverter().mandatoryConvertTo(byte[].class, exchange, graph);
             berOut = new ByteArrayInputStream(byteInput);
         }
         try {
-            if (berOut != null) {
-                IOHelper.copy(berOut, stream);
-            }
+            IOHelper.copy(berOut, stream);
         } finally {
             IOHelper.close(berOut, stream);
         }
     }
 
-    private void encodeGenericTypeObject(Exchange exchange, OutputStream stream) throws Exception {
+    private void encodeGenericTypeObject(Exchange exchange, OutputStream stream)
+            throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException,
+            InvocationTargetException, IOException {
         Class<?>[] paramOut = new Class<?>[1];
         paramOut[0] = OutputStream.class;
         try (ReverseByteArrayOutputStream berOut = new ReverseByteArrayOutputStream(IOHelper.DEFAULT_BUFFER_SIZE / 256, true)) {
@@ -91,8 +92,8 @@ public class ASN1DataFormat extends ServiceSupport implements DataFormat, DataFo
         }
     }
 
-    @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
     public Object unmarshal(Exchange exchange, InputStream stream) throws Exception {
         if (usingIterator) {
             if (unmarshalType != null) {
@@ -100,7 +101,7 @@ public class ASN1DataFormat extends ServiceSupport implements DataFormat, DataFo
             }
             return new ASN1MessageIterator(exchange, stream);
         } else {
-            ASN1Primitive asn1Record;
+            ASN1Primitive asn1Record = null;
             byte[] asn1Bytes;
             try (ASN1InputStream ais = new ASN1InputStream(stream);
                  ByteArrayOutputStream asn1Out = new ByteArrayOutputStream();) {
@@ -128,6 +129,16 @@ public class ASN1DataFormat extends ServiceSupport implements DataFormat, DataFo
 
     public void setUnmarshalType(Class<?> unmarshalType) {
         this.unmarshalType = unmarshalType;
+    }
+
+    @Override
+    protected void doStart() throws Exception {
+        // no op
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        // no op
     }
 
 }

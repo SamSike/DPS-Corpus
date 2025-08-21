@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -60,37 +60,29 @@ import static org.jooq.impl.DSL.notExists;
 import static org.jooq.impl.DSL.sql;
 import static org.jooq.impl.DSL.table;
 import static org.jooq.impl.DSL.val;
-import static org.jooq.impl.QOM.JoinHint.HASH;
-import static org.jooq.impl.QOM.JoinHint.LOOP;
-import static org.jooq.impl.QOM.JoinHint.MERGE;
-import static org.jooq.impl.QOM.SampleMethod.BERNOULLI;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
 import static org.jooq.impl.Tools.EMPTY_NAME;
-import static org.jooq.impl.Tools.EMPTY_TABLE_FIELD;
-import static org.jooq.impl.Tools.anyMatch;
 import static org.jooq.impl.Tools.map;
 import static org.jooq.impl.Tools.traverseJoins;
-import static org.jooq.impl.Tools.unwrap;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.jooq.Binding;
 import org.jooq.Catalog;
 import org.jooq.Check;
 import org.jooq.Clause;
 import org.jooq.Comment;
+import org.jooq.Comparator;
 import org.jooq.Condition;
 import org.jooq.Configuration;
 import org.jooq.Context;
-import org.jooq.ContextConverter;
 import org.jooq.Converter;
 import org.jooq.DataType;
 import org.jooq.DivideByOnStep;
@@ -103,7 +95,6 @@ import org.jooq.JoinType;
 // ...
 import org.jooq.Name;
 import org.jooq.Package;
-import org.jooq.Path;
 // ...
 // ...
 // ...
@@ -127,29 +118,19 @@ import org.jooq.TableOptions;
 import org.jooq.TableOptions.TableType;
 import org.jooq.TableOuterJoinStep;
 import org.jooq.TablePartitionByStep;
-import org.jooq.TableSampleRowsStep;
-// ...
 import org.jooq.UniqueKey;
 // ...
 // ...
-import org.jooq.impl.QOM.Aliasable;
 import org.jooq.impl.QOM.GenerationLocation;
-import org.jooq.impl.QOM.JoinHint;
-import org.jooq.impl.QOM.SampleMethod;
 import org.jooq.tools.JooqLogger;
+
+import org.jetbrains.annotations.NotNull;
 
 
 /**
  * @author Lukas Eder
  */
-abstract class AbstractTable<R extends Record>
-extends
-    AbstractNamed
-implements
-    Table<R>,
-    FieldsTrait,
-    Aliasable<Table<R>>
-{
+abstract class AbstractTable<R extends Record> extends AbstractNamed implements Table<R>, FieldsTrait {
 
     private static final JooqLogger  log              = JooqLogger.getLogger(AbstractTable.class);
     private static final Clause[]    CLAUSES          = { TABLE };
@@ -173,20 +154,6 @@ implements
 
         this.options = options;
         this.tableschema = schema;
-    }
-
-    // ------------------------------------------------------------------------
-    // XXX: QOM API
-    // ------------------------------------------------------------------------
-
-    @Override
-    public /* non-final */ Name $alias() {
-        return null;
-    }
-
-    @Override
-    public /* non-final */ Table<R> $aliased() {
-        return this;
     }
 
     // ------------------------------------------------------------------------
@@ -214,7 +181,7 @@ implements
     }
 
     @Override
-    public final ContextConverter<?, R> getConverter() {
+    public final Converter<?, R> getConverter() {
         return getDataType().getConverter();
     }
 
@@ -508,19 +475,15 @@ implements
     @Override
     public Identity<R, ?> getIdentity() {
         if (identity == null) {
-            Identity<R, ?> i = null;
-
             for (Field<?> f : fields())
                 if (f instanceof TableField && f.getDataType().identity())
-                    if (i == null)
-                        i = new IdentityImpl(this, (TableField) f);
+                    if (identity == null)
+                        identity = new IdentityImpl(this, (TableField) f);
                     else
                         log.info("Multiple identities", "There are multiple identity fields in table " + this + ", which is not supported by jOOQ");
 
-            if (i == null)
-                i = (Identity<R, ?>) IdentityImpl.NULL;
-
-            identity = i;
+            if (identity == null)
+                identity = (Identity<R, ?>) IdentityImpl.NULL;
         }
 
         return identity == IdentityImpl.NULL ? null : identity;
@@ -534,59 +497,6 @@ implements
     @Override
     public UniqueKey<R> getPrimaryKey() {
         return null;
-    }
-
-    static final record PrimaryKeyWithEmbeddables<R extends Record>(UniqueKey<R> primaryKey) {}
-
-    transient PrimaryKeyWithEmbeddables<R> primaryKeyWithEmbeddables;
-
-    /**
-     * [#15873] [#15875] Embeddable keys are currently listing their embedded
-     * columns, which may have been replaced.
-     */
-    @SuppressWarnings("unchecked")
-    final UniqueKey<R> getPrimaryKeyWithEmbeddables() {
-        if (primaryKeyWithEmbeddables == null) {
-            UniqueKey<R> uniqueKey = getPrimaryKey();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            primaryKeyWithEmbeddables = new PrimaryKeyWithEmbeddables<>(uniqueKey);
-        }
-
-        return primaryKeyWithEmbeddables.primaryKey;
     }
 
     /**
@@ -669,10 +579,17 @@ implements
 
         for (ForeignKey<R, ?> reference : getReferences()) {
             traverseJoins(other, o -> {
-
-                // [#1460] [#6304] [#14387] In case the other table was aliased or otherwise wrapped
-                if (unwrap(o).equals(reference.getKey().getTable()))
+                if (o.equals(reference.getKey().getTable())) {
                     result.add((ForeignKey<R, O>) reference);
+                }
+
+                // [#1460] [#6304] In case the other table was aliased
+                else {
+                    Table<?> aliased = Tools.aliased(o);
+
+                    if (aliased != null && aliased.equals(reference.getKey().getTable()))
+                        result.add((ForeignKey<R, O>) reference);
+                }
             });
         }
 
@@ -689,20 +606,6 @@ implements
         return Collections.emptyList();
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * Subclasses may call this method to create {@link TableField} objects that
      * are linked to this table.
@@ -714,7 +617,7 @@ implements
      */
     @Deprecated
     protected static final <R extends Record, T> TableField<R, T> createField(String name, DataType<T> type, Table<R> table) {
-        return createField(DSL.name(name), type, table, null, null, null, null);
+        return createField(DSL.name(name), type, table, null, null, null);
     }
 
     /**
@@ -728,7 +631,7 @@ implements
      */
     @Deprecated
     protected static final <R extends Record, T> TableField<R, T> createField(String name, DataType<T> type, Table<R> table, String comment) {
-        return createField(DSL.name(name), type, table, comment, null, null, null);
+        return createField(DSL.name(name), type, table, comment, null, null);
     }
 
     /**
@@ -743,7 +646,7 @@ implements
      */
     @Deprecated
     protected static final <R extends Record, T, U> TableField<R, U> createField(String name, DataType<T> type, Table<R> table, String comment, Converter<T, U> converter) {
-        return createField(DSL.name(name), type, table, comment, converter, null, null);
+        return createField(DSL.name(name), type, table, comment, converter, null);
     }
 
     /**
@@ -788,7 +691,7 @@ implements
      */
     @Deprecated
     protected final <T> TableField<R, T> createField(String name, DataType<T> type) {
-        return createField(DSL.name(name), type, this, null, null, null, null);
+        return createField(DSL.name(name), type, this, null, null, null);
     }
 
     /**
@@ -803,7 +706,7 @@ implements
      */
     @Deprecated
     protected final <T> TableField<R, T> createField(String name, DataType<T> type, String comment) {
-        return createField(DSL.name(name), type, this, comment, null, null, null);
+        return createField(DSL.name(name), type, this, comment, null, null);
     }
 
     /**
@@ -818,7 +721,7 @@ implements
      */
     @Deprecated
     protected final <T, U> TableField<R, U> createField(String name, DataType<T> type, String comment, Converter<T, U> converter) {
-        return createField(DSL.name(name), type, this, comment, converter, null, null);
+        return createField(DSL.name(name), type, this, comment, converter, null);
     }
 
     /**
@@ -859,7 +762,7 @@ implements
      * @param type The data type of the field
      */
     protected static final <R extends Record, T> TableField<R, T> createField(Name name, DataType<T> type, Table<R> table) {
-        return createField(name, type, table, null, null, null, null);
+        return createField(name, type, table, null, null, null);
     }
 
     /**
@@ -870,7 +773,7 @@ implements
      * @param type The data type of the field
      */
     protected static final <R extends Record, T> TableField<R, T> createField(Name name, DataType<T> type, Table<R> table, String comment) {
-        return createField(name, type, table, comment, null, null, null);
+        return createField(name, type, table, comment, null, null);
     }
 
     /**
@@ -881,7 +784,7 @@ implements
      * @param type The data type of the field
      */
     protected static final <R extends Record, T, U> TableField<R, U> createField(Name name, DataType<T> type, Table<R> table, String comment, Converter<T, U> converter) {
-        return createField(name, type, table, comment, converter, null, null);
+        return createField(name, type, table, comment, converter, null);
     }
 
     /**
@@ -892,7 +795,7 @@ implements
      * @param type The data type of the field
      */
     protected static final <R extends Record, T, U> TableField<R, U> createField(Name name, DataType<T> type, Table<R> table, String comment, Binding<T, U> binding) {
-        return createField(name, type, table, comment, null, binding, null);
+        return createField(name, type, table, comment, null, binding);
     }
 
     /**
@@ -904,39 +807,6 @@ implements
      */
     protected static final <R extends Record, T, X, U> TableField<R, U> createField(Name name, DataType<T> type, Table<R> table, String comment, Converter<X, U> converter, Binding<T, X> binding) {
         return createField(name, type, table, comment, converter, binding, null);
-    }
-
-    /**
-     * Subclasses may call this method to create {@link TableField} objects that
-     * are linked to this table.
-     *
-     * @param name The name of the field (case-sensitive!)
-     * @param type The data type of the field
-     */
-    protected static final <R extends Record, TR extends Table<R>, T> TableField<R, T> createField(Name name, DataType<T> type, TR table, String comment, Generator<R, TR, T> generator) {
-        return createField(name, type, table, comment, null, null, generator);
-    }
-
-    /**
-     * Subclasses may call this method to create {@link TableField} objects that
-     * are linked to this table.
-     *
-     * @param name The name of the field (case-sensitive!)
-     * @param type The data type of the field
-     */
-    protected static final <R extends Record, TR extends Table<R>, T, U> TableField<R, U> createField(Name name, DataType<T> type, TR table, String comment, Converter<T, U> converter, Generator<R, TR, U> generator) {
-        return createField(name, type, table, comment, converter, null, generator);
-    }
-
-    /**
-     * Subclasses may call this method to create {@link TableField} objects that
-     * are linked to this table.
-     *
-     * @param name The name of the field (case-sensitive!)
-     * @param type The data type of the field
-     */
-    protected static final <R extends Record, TR extends Table<R>, T, U> TableField<R, U> createField(Name name, DataType<T> type, TR table, String comment, Binding<T, U> binding, Generator<R, TR, U> generator) {
-        return createField(name, type, table, comment, null, binding, generator);
     }
 
     /**
@@ -961,8 +831,8 @@ implements
         TableFieldImpl<R, U> tableField = new TableFieldImpl<>(name, actualType, table, DSL.comment(comment), actualBinding);
 
         // [#1199] The public API of Table returns immutable field lists
-        if (table instanceof TableImpl<?> t)
-            t.fields.add(tableField);
+        if (table instanceof TableImpl)
+            ((TableImpl<?>) table).fields0().add(tableField);
 
         return tableField;
     }
@@ -975,7 +845,7 @@ implements
      * @param type The data type of the field
      */
     protected final <T> TableField<R, T> createField(Name name, DataType<T> type) {
-        return createField(name, type, this, null, null, null, null);
+        return createField(name, type, this, null, null, null);
     }
 
     /**
@@ -986,7 +856,7 @@ implements
      * @param type The data type of the field
      */
     protected final <T> TableField<R, T> createField(Name name, DataType<T> type, String comment) {
-        return createField(name, type, this, comment, null, null, null);
+        return createField(name, type, this, comment, null, null);
     }
 
     /**
@@ -997,7 +867,7 @@ implements
      * @param type The data type of the field
      */
     protected final <T, U> TableField<R, U> createField(Name name, DataType<T> type, String comment, Converter<T, U> converter) {
-        return createField(name, type, this, comment, converter, null, null);
+        return createField(name, type, this, comment, converter, null);
     }
 
     /**
@@ -1008,7 +878,7 @@ implements
      * @param type The data type of the field
      */
     protected final <T, U> TableField<R, U> createField(Name name, DataType<T> type, String comment, Binding<T, U> binding) {
-        return createField(name, type, this, comment, null, binding, null);
+        return createField(name, type, this, comment, null, binding);
     }
 
     /**
@@ -1019,51 +889,7 @@ implements
      * @param type The data type of the field
      */
     protected final <T, X, U> TableField<R, U> createField(Name name, DataType<T> type, String comment, Converter<X, U> converter, Binding<T, X> binding) {
-        return createField(name, type, this, comment, converter, binding, null);
-    }
-
-    /**
-     * Subclasses may call this method to create {@link TableField} objects that
-     * are linked to this table.
-     *
-     * @param name The name of the field (case-sensitive!)
-     * @param type The data type of the field
-     */
-    protected final <TR extends Table<R>, T> TableField<R, T> createField0(Name name, DataType<T> type, TR table, String comment, Generator<R, TR, T> generator) {
-        return createField(name, type, table, comment, null, null, generator);
-    }
-
-    /**
-     * Subclasses may call this method to create {@link TableField} objects that
-     * are linked to this table.
-     *
-     * @param name The name of the field (case-sensitive!)
-     * @param type The data type of the field
-     */
-    protected final <TR extends Table<R>, T, U> TableField<R, U> createField0(Name name, DataType<T> type, TR table, String comment, Converter<T, U> converter, Generator<R, TR, U> generator) {
-        return createField(name, type, table, comment, converter, null, generator);
-    }
-
-    /**
-     * Subclasses may call this method to create {@link TableField} objects that
-     * are linked to this table.
-     *
-     * @param name The name of the field (case-sensitive!)
-     * @param type The data type of the field
-     */
-    protected final <TR extends Table<R>, T, U> TableField<R, U> createField0(Name name, DataType<T> type, TR table, String comment, Binding<T, U> binding, Generator<R, TR, U> generator) {
-        return createField(name, type, table, comment, null, binding, generator);
-    }
-
-    /**
-     * Subclasses may call this method to create {@link TableField} objects that
-     * are linked to this table.
-     *
-     * @param name The name of the field (case-sensitive!)
-     * @param type The data type of the field
-     */
-    protected final <TR extends Table<R>, T, X, U> TableField<R, U> createField0(Name name, DataType<T> type, TR table, String comment, Converter<X, U> converter, Binding<T, X> binding, Generator<R, TR, U> generator) {
-        return createField(name, type, table, comment, converter, binding, generator);
+        return createField(name, type, this, comment, converter, binding);
     }
 
 
@@ -1101,104 +927,70 @@ implements
         return new QualifiedRowid(this);
     }
 
-    @Override
-    public final TableSampleRowsStep<R> tablesample(Number size) {
-        return new SampleTable(this, Tools.field(size), null);
-    }
-
-    @Override
-    public final TableSampleRowsStep<R> tablesample(Field<? extends Number> size) {
-        return new SampleTable(this, size, null);
-    }
-
-    @Override
-    public final TableSampleRowsStep<R> tablesampleBernoulli(Number size) {
-        return new SampleTable(this, Tools.field(size), SampleMethod.BERNOULLI);
-    }
-
-    @Override
-    public final TableSampleRowsStep<R> tablesampleBernoulli(Field<? extends Number> size) {
-        return new SampleTable(this, size, SampleMethod.BERNOULLI);
-    }
-
-    @Override
-    public final TableSampleRowsStep<R> tablesampleSystem(Number size) {
-        return new SampleTable(this, Tools.field(size), SampleMethod.SYSTEM);
-    }
-
-    @Override
-    public final TableSampleRowsStep<R> tablesampleSystem(Field<? extends Number> size) {
-        return new SampleTable(this, size, SampleMethod.SYSTEM);
-    }
-
 
 
     // ------------------------------------------------------------------------
     // XXX: Other API
     // ------------------------------------------------------------------------
 
-    /* non-final */ Table<R> hintedTable(String keywords, String... indexes) {
-        return new HintedTable<>(this, keywords, indexes);
-    }
-
     @Override
     public final Table<R> useIndex(String... indexes) {
-        return hintedTable("use index", indexes);
+        return new HintedTable<>(this, "use index", indexes);
     }
 
     @Override
     public final Table<R> useIndexForJoin(String... indexes) {
-        return hintedTable("use index for join", indexes);
+        return new HintedTable<>(this, "use index for join", indexes);
     }
 
     @Override
     public final Table<R> useIndexForOrderBy(String... indexes) {
-        return hintedTable("use index for order by", indexes);
+        return new HintedTable<>(this, "use index for order by", indexes);
     }
 
     @Override
     public final Table<R> useIndexForGroupBy(String... indexes) {
-        return hintedTable("use index for group by", indexes);
+        return new HintedTable<>(this, "use index for group by", indexes);
     }
 
     @Override
     public final Table<R> ignoreIndex(String... indexes) {
-        return hintedTable("ignore index", indexes);
+        return new HintedTable<>(this, "ignore index", indexes);
     }
 
     @Override
     public final Table<R> ignoreIndexForJoin(String... indexes) {
-        return hintedTable("ignore index for join", indexes);
+        return new HintedTable<>(this, "ignore index for join", indexes);
     }
 
     @Override
     public final Table<R> ignoreIndexForOrderBy(String... indexes) {
-        return hintedTable("ignore index for order by", indexes);
+        return new HintedTable<>(this, "ignore index for order by", indexes);
     }
 
     @Override
     public final Table<R> ignoreIndexForGroupBy(String... indexes) {
-        return hintedTable("ignore index for group by", indexes);
+        return new HintedTable<>(this, "ignore index for group by", indexes);
     }
 
     @Override
     public final Table<R> forceIndex(String... indexes) {
-        return hintedTable("force index", indexes);
+        return new HintedTable<>(this, "force index", indexes);
     }
 
     @Override
     public final Table<R> forceIndexForJoin(String... indexes) {
-        return hintedTable("force index for join", indexes);
+        return new HintedTable<>(this, "force index for join", indexes);
     }
 
     @Override
     public final Table<R> forceIndexForOrderBy(String... indexes) {
-        return hintedTable("force index for order by", indexes);
+        return new HintedTable<>(this, "force index for order by", indexes);
     }
 
     @Override
     public final Table<R> forceIndexForGroupBy(String... indexes) {
-        return hintedTable("force index for group by", indexes);
+        return new HintedTable<>(this, "force index for group by", indexes);
     }
 
     // ------------------------------------------------------------------------
@@ -1229,14 +1021,6 @@ implements
     public final Table<R> as(Table<?> otherTable, BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> aliasFunction) {
         return as(otherTable.getUnqualifiedName(), (f, i) -> aliasFunction.apply(f, i).getUnqualifiedName());
     }
-
-    @Override
-    public /* non-final */ Table<Record> withOrdinality() {
-        return new WithOrdinalityTable<>(this);
-    }
-
-
-
 
 
 
@@ -1386,28 +1170,16 @@ implements
         return new DivideBy(this, divisor);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public final TableOnStep<R> leftSemiJoin(TableLike<?> table) {
-        return (TableOnStep<R>) join(table, LEFT_SEMI_JOIN);
+        return (TableOnStep) join(table, LEFT_SEMI_JOIN);
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public final TableOptionalOnStep<R> leftSemiJoin(Path<?> path) {
-        return (TableOptionalOnStep<R>) join(path, LEFT_SEMI_JOIN);
-    }
-
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public final TableOnStep<R> leftAntiJoin(TableLike<?> table) {
-        return (TableOnStep<R>) join(table, LEFT_ANTI_JOIN);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public final TableOptionalOnStep<R> leftAntiJoin(Path<?> path) {
-        return (TableOptionalOnStep<R>) join(path, LEFT_ANTI_JOIN);
+        return (TableOnStep) join(table, LEFT_ANTI_JOIN);
     }
 
     // ------------------------------------------------------------------------
@@ -1416,7 +1188,7 @@ implements
 
     @Override
     public /* non-final */ Table<R> where(Condition condition) {
-        return new InlineDerivedTable<>(this, condition, false);
+        return new InlineDerivedTable<>(this, condition);
     }
 
     @Override
@@ -1468,104 +1240,15 @@ implements
     // XXX: JOIN API
     // ------------------------------------------------------------------------
 
-    // [#14906] Declare public API return type, allowing for JoinTable to override
-    //          this only internally, to prevent leaking JoinTable into client code
     @Override
-    public /* non-final */ TableOptionalOnStep<Record> join(TableLike<?> table, JoinType type) {
-        return join(table, type, null);
-    }
-
-    // [#14906] Declare public API return type, allowing for JoinTable to override
-    //          this only internally, to prevent leaking JoinTable into client code
-    @Override
-    public /* non-final */ TableOptionalOnStep<Record> join(TableLike<?> table, JoinType type, JoinHint hint) {
-
-        if (this instanceof NoTable)
-            return new NoTableJoin(table.asTable());
-        else if (this instanceof NoTableJoin n)
-            return n.table.join(table, type, hint);
-        else if (table instanceof NoTable)
-            return new NoTableJoin(this);
-        else if (table instanceof NoTableJoin n)
-            return join(n.table, type, hint);
-
-        switch (type) {
-            case CROSS_APPLY:
-                return new CrossApply(this, table);
-            case CROSS_JOIN:
-                return new CrossJoin(this, table);
-            case FULL_OUTER_JOIN:
-                return new FullJoin(this, table, hint);
-            case JOIN:
-                return new Join(this, table, hint);
-            case LEFT_ANTI_JOIN:
-                return new LeftAntiJoin(this, table);
-            case LEFT_OUTER_JOIN:
-                return new LeftJoin(this, table, hint);
-            case LEFT_SEMI_JOIN:
-                return new LeftSemiJoin(this, table);
-            case NATURAL_FULL_OUTER_JOIN:
-                return new NaturalFullJoin(this, table, hint);
-            case NATURAL_JOIN:
-                return new NaturalJoin(this, table, hint);
-            case NATURAL_LEFT_OUTER_JOIN:
-                return new NaturalLeftJoin(this, table, hint);
-            case NATURAL_RIGHT_OUTER_JOIN:
-                return new NaturalRightJoin(this, table, hint);
-            case OUTER_APPLY:
-                return new OuterApply(this, table);
-            case RIGHT_OUTER_JOIN:
-                return new RightJoin(this, table, hint);
-            case STRAIGHT_JOIN:
-                return new StraightJoin(this, table, hint);
-            default:
-                throw new IllegalArgumentException("Unsupported join type: " + type);
-        }
+    public final TableOptionalOnStep<Record> join(TableLike<?> table, JoinType type) {
+        return new JoinTable(this, table, type);
     }
 
     @Override
     public final TableOnStep<Record> join(TableLike<?> table) {
         return innerJoin(table);
     }
-
-    @Override
-    public final TableOptionalOnStep<Record> join(Path<?> path) {
-        return innerJoin(path);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public final TableOnStep<Record> join(SQL sql) {
@@ -1596,45 +1279,6 @@ implements
     public final TableOnStep<Record> innerJoin(TableLike<?> table) {
         return join(table, JOIN);
     }
-
-    @Override
-    public final TableOptionalOnStep<Record> innerJoin(Path<?> path) {
-        return join(path, JOIN);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public final TableOnStep<Record> innerJoin(SQL sql) {
@@ -1681,45 +1325,6 @@ implements
     }
 
     @Override
-    public final TableOptionalOnStep<Record> leftJoin(Path<?> path) {
-        return leftOuterJoin(path);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
     public final TablePartitionByStep<Record> leftJoin(SQL sql) {
         return leftOuterJoin(sql);
     }
@@ -1751,48 +1356,6 @@ implements
     }
 
     @Override
-    public final TableOptionalOnStep<Record> leftOuterJoin(Path<?> path) {
-        return join(path, LEFT_OUTER_JOIN);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
     public final TablePartitionByStep<Record> leftOuterJoin(SQL sql) {
         return leftOuterJoin(table(sql));
     }
@@ -1821,45 +1384,6 @@ implements
     public final TablePartitionByStep<Record> rightJoin(TableLike<?> table) {
         return rightOuterJoin(table);
     }
-
-    @Override
-    public final TableOptionalOnStep<Record> rightJoin(Path<?> path) {
-        return rightOuterJoin(path);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public final TablePartitionByStep<Record> rightJoin(SQL sql) {
@@ -1893,48 +1417,6 @@ implements
     }
 
     @Override
-    public final TableOptionalOnStep<Record> rightOuterJoin(Path<?> path) {
-        return join(path, RIGHT_OUTER_JOIN);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
     public final TablePartitionByStep<Record> rightOuterJoin(SQL sql) {
         return rightOuterJoin(table(sql));
     }
@@ -1959,145 +1441,63 @@ implements
         return rightOuterJoin(table(name));
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public final TablePartitionByStep<Record> fullOuterJoin(TableLike<?> table) {
-        return (TablePartitionByStep<Record>) join(table, FULL_OUTER_JOIN);
+    public final TableOnStep<Record> fullOuterJoin(TableLike<?> table) {
+        return join(table, FULL_OUTER_JOIN);
     }
 
     @Override
-    public final TableOptionalOnStep<Record> fullOuterJoin(Path<?> path) {
-        return join(path, FULL_OUTER_JOIN);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
-    public final TablePartitionByStep<Record> fullOuterJoin(SQL sql) {
+    public final TableOnStep<Record> fullOuterJoin(SQL sql) {
         return fullOuterJoin(table(sql));
     }
 
     @Override
-    public final TablePartitionByStep<Record> fullOuterJoin(String sql) {
+    public final TableOnStep<Record> fullOuterJoin(String sql) {
         return fullOuterJoin(table(sql));
     }
 
     @Override
-    public final TablePartitionByStep<Record> fullOuterJoin(String sql, Object... bindings) {
+    public final TableOnStep<Record> fullOuterJoin(String sql, Object... bindings) {
         return fullOuterJoin(table(sql, bindings));
     }
 
     @Override
-    public final TablePartitionByStep<Record> fullOuterJoin(String sql, QueryPart... parts) {
+    public final TableOnStep<Record> fullOuterJoin(String sql, QueryPart... parts) {
         return fullOuterJoin(table(sql, parts));
     }
 
     @Override
-    public final TablePartitionByStep<Record> fullOuterJoin(Name name) {
+    public final TableOnStep<Record> fullOuterJoin(Name name) {
         return fullOuterJoin(table(name));
     }
 
     @Override
-    public final TablePartitionByStep<Record> fullJoin(TableLike<?> table) {
+    public final TableOnStep<Record> fullJoin(TableLike<?> table) {
         return fullOuterJoin(table);
     }
 
     @Override
-    public final TableOptionalOnStep<Record> fullJoin(Path<?> path) {
-        return fullOuterJoin(path);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
-    public final TablePartitionByStep<Record> fullJoin(SQL sql) {
+    public final TableOnStep<Record> fullJoin(SQL sql) {
         return fullOuterJoin(sql);
     }
 
     @Override
-    public final TablePartitionByStep<Record> fullJoin(String sql) {
+    public final TableOnStep<Record> fullJoin(String sql) {
         return fullOuterJoin(sql);
     }
 
     @Override
-    public final TablePartitionByStep<Record> fullJoin(String sql, Object... bindings) {
+    public final TableOnStep<Record> fullJoin(String sql, Object... bindings) {
         return fullOuterJoin(sql, bindings);
     }
 
     @Override
-    public final TablePartitionByStep<Record> fullJoin(String sql, QueryPart... parts) {
+    public final TableOnStep<Record> fullJoin(String sql, QueryPart... parts) {
         return fullOuterJoin(sql, parts);
     }
 
     @Override
-    public final TablePartitionByStep<Record> fullJoin(Name name) {
+    public final TableOnStep<Record> fullJoin(Name name) {
         return fullOuterJoin(name);
     }
 
@@ -2314,11 +1714,6 @@ implements
     @Override
     public final TableOptionalOnStep<Record> straightJoin(TableLike<?> table) {
         return join(table, STRAIGHT_JOIN);
-    }
-
-    @Override
-    public final TableOptionalOnStep<Record> straightJoin(Path<?> path) {
-        return join(path, STRAIGHT_JOIN);
     }
 
     @Override

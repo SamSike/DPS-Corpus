@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,47 +19,45 @@ package org.springframework.cache.interceptor;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.aop.ClassFilter;
 import org.springframework.aop.support.StaticMethodMatcherPointcut;
 import org.springframework.cache.CacheManager;
+import org.springframework.lang.Nullable;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 /**
- * A {@code Pointcut} that matches if the underlying {@link CacheOperationSource}
- * has an operation for a given method.
+ * A Pointcut that matches if the underlying {@link CacheOperationSource}
+ * has an attribute for a given method.
  *
  * @author Costin Leau
  * @author Juergen Hoeller
- * @author Sam Brannen
  * @since 3.1
  */
 @SuppressWarnings("serial")
-final class CacheOperationSourcePointcut extends StaticMethodMatcherPointcut implements Serializable {
+abstract class CacheOperationSourcePointcut extends StaticMethodMatcherPointcut implements Serializable {
 
-	private @Nullable CacheOperationSource cacheOperationSource;
-
-
-	public CacheOperationSourcePointcut() {
+	protected CacheOperationSourcePointcut() {
 		setClassFilter(new CacheOperationSourceClassFilter());
 	}
 
 
-	public void setCacheOperationSource(@Nullable CacheOperationSource cacheOperationSource) {
-		this.cacheOperationSource = cacheOperationSource;
-	}
-
 	@Override
 	public boolean matches(Method method, Class<?> targetClass) {
-		return (this.cacheOperationSource == null ||
-				this.cacheOperationSource.hasCacheOperations(method, targetClass));
+		CacheOperationSource cas = getCacheOperationSource();
+		return (cas != null && !CollectionUtils.isEmpty(cas.getCacheOperations(method, targetClass)));
 	}
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof CacheOperationSourcePointcut that &&
-				ObjectUtils.nullSafeEquals(this.cacheOperationSource, that.cacheOperationSource)));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof CacheOperationSourcePointcut)) {
+			return false;
+		}
+		CacheOperationSourcePointcut otherPc = (CacheOperationSourcePointcut) other;
+		return ObjectUtils.nullSafeEquals(getCacheOperationSource(), otherPc.getCacheOperationSource());
 	}
 
 	@Override
@@ -69,42 +67,31 @@ final class CacheOperationSourcePointcut extends StaticMethodMatcherPointcut imp
 
 	@Override
 	public String toString() {
-		return getClass().getName() + ": " + this.cacheOperationSource;
+		return getClass().getName() + ": " + getCacheOperationSource();
 	}
+
+
+	/**
+	 * Obtain the underlying {@link CacheOperationSource} (may be {@code null}).
+	 * To be implemented by subclasses.
+	 */
+	@Nullable
+	protected abstract CacheOperationSource getCacheOperationSource();
 
 
 	/**
 	 * {@link ClassFilter} that delegates to {@link CacheOperationSource#isCandidateClass}
 	 * for filtering classes whose methods are not worth searching to begin with.
 	 */
-	private final class CacheOperationSourceClassFilter implements ClassFilter {
+	private class CacheOperationSourceClassFilter implements ClassFilter {
 
 		@Override
 		public boolean matches(Class<?> clazz) {
 			if (CacheManager.class.isAssignableFrom(clazz)) {
 				return false;
 			}
-			return (cacheOperationSource == null || cacheOperationSource.isCandidateClass(clazz));
-		}
-
-		private @Nullable CacheOperationSource getCacheOperationSource() {
-			return cacheOperationSource;
-		}
-
-		@Override
-		public boolean equals(@Nullable Object other) {
-			return (this == other || (other instanceof CacheOperationSourceClassFilter that &&
-					ObjectUtils.nullSafeEquals(getCacheOperationSource(), that.getCacheOperationSource())));
-		}
-
-		@Override
-		public int hashCode() {
-			return CacheOperationSourceClassFilter.class.hashCode();
-		}
-
-		@Override
-		public String toString() {
-			return CacheOperationSourceClassFilter.class.getName() + ": " + getCacheOperationSource();
+			CacheOperationSource cas = getCacheOperationSource();
+			return (cas == null || cas.isCandidateClass(clazz));
 		}
 	}
 

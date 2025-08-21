@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.core;
 
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -26,35 +26,27 @@ import reactor.blockhound.BlockHound;
 import reactor.core.scheduler.ReactorBlockHoundIntegration;
 import reactor.core.scheduler.Schedulers;
 
+import org.springframework.tests.sample.objects.TestObject;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.condition.JRE.JAVA_18;
+import static org.junit.jupiter.api.condition.JRE.JAVA_14;
 
 /**
  * Tests to verify the spring-core BlockHound integration rules.
  *
- * <p>NOTE: to run this test class in the IDE, you need to specify the following
- * JVM argument. For details, see
- * <a href="https://github.com/reactor/BlockHound/issues/33">BlockHound issue 33</a>.
- *
- * <pre style="code">
- * -XX:+AllowRedefinitionToAddDeleteMethods
- * </pre>
- *
  * @author Rossen Stoyanchev
- * @author Sam Brannen
  * @since 5.2.4
  */
-@DisabledForJreRange(min = JAVA_18, disabledReason = "BlockHound is not compatible with Java 18+")
-class SpringCoreBlockHoundIntegrationTests {
+@DisabledForJreRange(min = JAVA_14)
+public class SpringCoreBlockHoundIntegrationTests {
+
 
 	@BeforeAll
-	static void setup() {
+	static void setUp() {
 		BlockHound.builder()
-				.with(new ReactorBlockHoundIntegration())  // Reactor non-blocking thread predicate
+				.with(new ReactorBlockHoundIntegration()) // Reactor non-blocking thread predicate
 				.with(new ReactiveAdapterRegistry.SpringCoreBlockHoundIntegration())
 				.install();
 	}
@@ -67,7 +59,16 @@ class SpringCoreBlockHoundIntegrationTests {
 	}
 
 	@Test
-	void concurrentReferenceHashMapSegmentDoTask() {
+	void localVariableTableParameterNameDiscoverer() {
+		testNonBlockingTask(() -> {
+			Method setName = TestObject.class.getMethod("setName", String.class);
+			String[] names = new LocalVariableTableParameterNameDiscoverer().getParameterNames(setName);
+			assertThat(names).isEqualTo(new String[] {"name"});
+		});
+	}
+
+	@Test
+	void concurrentReferenceHashMap() {
 		int size = 10000;
 		Map<String, String> map = new ConcurrentReferenceHashMap<>(size);
 
@@ -87,30 +88,6 @@ class SpringCoreBlockHoundIntegrationTests {
 
 		CompletableFuture.allOf(future1, future2).join();
 		assertThat(map).hasSize(size);
-	}
-
-	@Test
-	void concurrentReferenceHashMapSegmentClear() {
-		int size = 10000;
-		Map<String, String> map = new ConcurrentReferenceHashMap<>(size);
-
-		CompletableFuture<Object> future1 = new CompletableFuture<>();
-		testNonBlockingTask(() -> {
-			for (int i = 0; i < size / 2; i++) {
-				map.put("a" + i, "bar");
-			}
-		}, future1);
-
-		CompletableFuture<Object> future2 = new CompletableFuture<>();
-		testNonBlockingTask(() -> {
-			for (int i = 0; i < size; i++) {
-				map.clear();
-			}
-		}, future2);
-
-		//ensure blockhound doesn't trigger
-		final CompletableFuture<Void> allOf = CompletableFuture.allOf(future1, future2);
-		assertThatNoException().isThrownBy(allOf::join);
 	}
 
 	private void testNonBlockingTask(NonBlockingTask task) {

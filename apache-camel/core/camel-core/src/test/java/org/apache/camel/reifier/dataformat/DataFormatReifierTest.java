@@ -28,7 +28,7 @@ public class DataFormatReifierTest {
         DefaultCamelContext context = new DefaultCamelContext();
         DataFormatReifier.registerReifier(MyDataFormat.class, CustomDataFormatReifier::new);
         DataFormatReifier<?> ref = DataFormatReifier.reifier(context, new MyDataFormat());
-        Assertions.assertInstanceOf(MyDataFormat.class, ref.definition);
+        Assertions.assertTrue(ref.definition instanceof MyDataFormat);
     }
 
     public static class MyDataFormat extends CustomDataFormat {

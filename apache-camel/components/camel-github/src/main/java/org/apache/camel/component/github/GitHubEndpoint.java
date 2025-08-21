@@ -32,7 +32,6 @@ import org.apache.camel.component.github.producer.GetCommitFileProducer;
 import org.apache.camel.component.github.producer.PullRequestCommentProducer;
 import org.apache.camel.component.github.producer.PullRequestFilesProducer;
 import org.apache.camel.component.github.producer.PullRequestStateProducer;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
@@ -63,7 +62,7 @@ import org.apache.camel.util.StringHelper;
  */
 @UriEndpoint(firstVersion = "2.15.0", scheme = "github", title = "GitHub", syntax = "github:type/branchName",
              category = { Category.FILE, Category.CLOUD, Category.API }, headersClass = GitHubConstants.class)
-public class GitHubEndpoint extends ScheduledPollEndpoint implements EndpointServiceLocation {
+public class GitHubEndpoint extends ScheduledPollEndpoint {
 
     @UriPath
     @Metadata(required = true)
@@ -72,8 +71,6 @@ public class GitHubEndpoint extends ScheduledPollEndpoint implements EndpointSer
     private String branchName;
     @UriParam(label = "consumer", defaultValue = "last")
     private String startingSha = "last";
-    @UriParam(label = "consumer", defaultValue = "true")
-    private boolean commitMessageAsBody = true;
     @UriParam(label = "security", secret = true)
     private String oauthToken;
     @UriParam
@@ -93,16 +90,6 @@ public class GitHubEndpoint extends ScheduledPollEndpoint implements EndpointSer
 
     public GitHubEndpoint(String uri, GitHubComponent component) {
         super(uri, component);
-    }
-
-    @Override
-    public String getServiceUrl() {
-        return "api.github.com";
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "rest";
     }
 
     @Override
@@ -167,18 +154,6 @@ public class GitHubEndpoint extends ScheduledPollEndpoint implements EndpointSer
      */
     public void setBranchName(String branchName) {
         this.branchName = branchName;
-    }
-
-    public boolean isCommitMessageAsBody() {
-        return commitMessageAsBody;
-    }
-
-    /**
-     * Whether the commit consumer should store the commit message or the raw
-     * org.eclipse.egit.github.core.RepositoryCommit object as the message body.
-     */
-    public void setCommitMessageAsBody(boolean commitMessageAsBody) {
-        this.commitMessageAsBody = commitMessageAsBody;
     }
 
     public String getStartingSha() {

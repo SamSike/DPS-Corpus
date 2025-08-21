@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.jooq.beans;
 
-import org.apache.camel.component.jooq.db.tables.records.AuthorRecord;
 import org.jooq.Query;
 import org.jooq.ResultQuery;
 import org.jooq.impl.DSL;
@@ -28,7 +27,7 @@ import static org.apache.camel.component.jooq.db.Tables.AUTHOR;
 public class AuthorRecordBean {
     private int id = 1;
 
-    public ResultQuery<AuthorRecord> select() {
+    public ResultQuery select() {
         return DSL.selectFrom(AUTHOR).where(AUTHOR.ID.eq(id));
     }
 

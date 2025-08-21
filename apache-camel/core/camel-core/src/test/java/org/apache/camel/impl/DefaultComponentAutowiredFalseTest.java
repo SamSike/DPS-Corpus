@@ -39,8 +39,8 @@ import org.junit.jupiter.api.Test;
 public class DefaultComponentAutowiredFalseTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry reg = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry reg = super.createRegistry();
         reg.bind("mycomponent-component", new MyComponentConfigurer());
         reg.bind("mycomponent-endpoint-configurer", new MyComponentConfigurer());
         reg.bind("chf", new MyContentHandlerFactory());
@@ -48,7 +48,7 @@ public class DefaultComponentAutowiredFalseTest extends ContextTestSupport {
     }
 
     @Test
-    public void testAutowiredFalse() {
+    public void testAutowiredFalse() throws Exception {
         MyComponent my = new MyComponent(context);
         my.setAutowiredEnabled(false);
         context.addComponent("mycomponent", my);
@@ -65,7 +65,7 @@ public class DefaultComponentAutowiredFalseTest extends ContextTestSupport {
     }
 
     @Test
-    public void testAutowiredFalseWithEndpointTrue() {
+    public void testAutowiredFalseWithEndpointTrue() throws Exception {
         MyComponent my = new MyComponent(context);
         my.setAutowiredEnabled(false);
         context.addComponent("mycomponent", my);
@@ -86,7 +86,7 @@ public class DefaultComponentAutowiredFalseTest extends ContextTestSupport {
     }
 
     @Test
-    public void testAutowiredTrue() {
+    public void testAutowiredTrue() throws Exception {
         MyComponent my = new MyComponent(context);
         my.setAutowiredEnabled(true);
         context.addComponent("mycomponent", my);
@@ -113,7 +113,7 @@ public class DefaultComponentAutowiredFalseTest extends ContextTestSupport {
         }
 
         @Override
-        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) {
+        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
             MyEndpoint me = new MyEndpoint();
             me.setComponent(this);
             return me;
@@ -147,7 +147,8 @@ public class DefaultComponentAutowiredFalseTest extends ContextTestSupport {
         @Override
         public boolean configure(CamelContext camelContext, Object target, String name, Object value, boolean ignoreCase) {
             if ("contentHandlerFactory".equals(name)) {
-                if (target instanceof MyComponent comp) {
+                if (target instanceof MyComponent) {
+                    MyComponent comp = (MyComponent) target;
                     comp.setContentHandlerFactory((ContentHandlerFactory) value);
                 } else {
                     MyEndpoint endp = (MyEndpoint) target;
@@ -186,12 +187,12 @@ public class DefaultComponentAutowiredFalseTest extends ContextTestSupport {
         private ContentHandlerFactory contentHandlerFactory;
 
         @Override
-        public Producer createProducer() {
+        public Producer createProducer() throws Exception {
             return null;
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             return null;
         }
 

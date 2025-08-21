@@ -28,7 +28,7 @@ import org.w3c.dom.Element;
 
 import org.apache.camel.TypeConverter;
 import org.apache.camel.impl.converter.DefaultTypeConverter;
-import org.apache.camel.support.scan.DefaultPackageScanClassResolver;
+import org.apache.camel.impl.engine.DefaultPackageScanClassResolver;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.ReflectionInjector;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,20 +41,20 @@ import static org.junit.jupiter.api.Assertions.*;
 public class JaxpTest {
     private static final Logger LOG = LoggerFactory.getLogger(JaxpTest.class);
     protected TypeConverter converter = new DefaultTypeConverter(
-            new DefaultPackageScanClassResolver(), new ReflectionInjector(), false, false);
+            new DefaultPackageScanClassResolver(), new ReflectionInjector(), false);
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         ServiceHelper.startService(converter);
     }
 
     @Test
-    public void testConvertToDocument() {
+    public void testConvertToDocument() throws Exception {
         Document document
                 = converter.convertTo(Document.class, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><hello>world!</hello>");
         assertNotNull(document);
 
-        LOG.debug("Found document: {}", document);
+        LOG.debug("Found document: " + document);
 
         // lets now convert back again
 
@@ -65,20 +65,20 @@ public class JaxpTest {
     }
 
     @Test
-    public void testConvertToSource() {
+    public void testConvertToSource() throws Exception {
         Source source = converter.convertTo(Source.class, "<hello>world!</hello>");
         assertNotNull(source);
 
-        LOG.debug("Found document: {}", source);
+        LOG.debug("Found document: " + source);
     }
 
     @Test
-    public void testStreamSourceToDomSource() {
+    public void testStreamSourceToDomSource() throws Exception {
         StreamSource streamSource = new StreamSource(new StringReader("<hello>world!</hello>"));
         DOMSource domSource = converter.convertTo(DOMSource.class, streamSource);
         assertNotNull(domSource, "Could not convert to a DOMSource!");
 
-        LOG.debug("Found document: {}", domSource);
+        LOG.debug("Found document: " + domSource);
     }
 
     @Test
@@ -88,7 +88,7 @@ public class JaxpTest {
         Source source = converter.convertTo(DOMSource.class, element);
         assertNotNull(source, "Could not convert from Node to Source!");
 
-        LOG.debug("Found source: {}", source);
+        LOG.debug("Found source: " + source);
 
         InputStream in = converter.convertTo(InputStream.class, source);
         assertNotNull(in, "Could not convert from Source to InputStream!");

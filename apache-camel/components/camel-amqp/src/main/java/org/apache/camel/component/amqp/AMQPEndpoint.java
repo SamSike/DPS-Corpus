@@ -30,8 +30,4 @@ import org.apache.camel.spi.UriEndpoint;
              syntax = "amqp:destinationType:destinationName", category = { Category.MESSAGING })
 public class AMQPEndpoint extends JmsEndpoint {
 
-    @Override
-    public String getServiceProtocol() {
-        return "amqp";
-    }
 }

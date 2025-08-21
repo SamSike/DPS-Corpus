@@ -73,8 +73,8 @@ public class KubernetesHPAProducer extends DefaultProducer {
                 doCreateHPA(exchange);
                 break;
 
-            case KubernetesOperations.UPDATE_HPA_OPERATION:
-                doUpdateHPA(exchange);
+            case KubernetesOperations.REPLACE_HPA_OPERATION:
+                doReplaceHPA(exchange);
                 break;
 
             case KubernetesOperations.DELETE_HPA_OPERATION:
@@ -87,36 +87,26 @@ public class KubernetesHPAProducer extends DefaultProducer {
     }
 
     protected void doList(Exchange exchange) {
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
-        HorizontalPodAutoscalerList hpaList;
-
-        if (ObjectHelper.isEmpty(namespace)) {
-            hpaList = getEndpoint().getKubernetesClient().autoscaling().v1().horizontalPodAutoscalers().inAnyNamespace().list();
-        } else {
-            hpaList = getEndpoint().getKubernetesClient().autoscaling().v1().horizontalPodAutoscalers().inNamespace(namespace)
-                    .list();
-        }
+        HorizontalPodAutoscalerList hpaList
+                = getEndpoint().getKubernetesClient().autoscaling().v1().horizontalPodAutoscalers().list();
 
         prepareOutboundMessage(exchange, hpaList.getItems());
     }
 
     protected void doListHPAByLabel(Exchange exchange) {
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
         Map<String, String> labels = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_HPA_LABELS, Map.class);
-        HorizontalPodAutoscalerList hpaList;
-
         if (ObjectHelper.isEmpty(labels)) {
             LOG.error("Get HPA by labels require specify a labels set");
             throw new IllegalArgumentException("Get HPA by labels require specify a labels set");
         }
 
-        if (ObjectHelper.isEmpty(namespace)) {
-            hpaList = getEndpoint().getKubernetesClient().autoscaling().v1().horizontalPodAutoscalers().inAnyNamespace()
-                    .withLabels(labels).list();
-        } else {
-            hpaList = getEndpoint().getKubernetesClient().autoscaling().v1().horizontalPodAutoscalers().inNamespace(namespace)
-                    .withLabels(labels).list();
-        }
+        HorizontalPodAutoscalerList hpaList = getEndpoint()
+                .getKubernetesClient()
+                .autoscaling()
+                .v1()
+                .horizontalPodAutoscalers()
+                .withLabels(labels)
+                .list();
 
         prepareOutboundMessage(exchange, hpaList.getItems());
     }
@@ -139,8 +129,8 @@ public class KubernetesHPAProducer extends DefaultProducer {
         prepareOutboundMessage(exchange, hpa);
     }
 
-    protected void doUpdateHPA(Exchange exchange) {
-        doCreateOrUpdateHPA(exchange, "Update", Resource::update);
+    protected void doReplaceHPA(Exchange exchange) {
+        doCreateOrUpdateHPA(exchange, "Replace", Resource::replace);
     }
 
     protected void doCreateHPA(Exchange exchange) {

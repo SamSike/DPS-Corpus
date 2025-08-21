@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,13 +34,13 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.http.converter.support.AllEncompassingFormHttpMessageConverter;
 import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
@@ -94,7 +94,8 @@ public class FormContentFilter extends OncePerRequestFilter {
 		}
 	}
 
-	private @Nullable MultiValueMap<String, String> parseIfNecessary(HttpServletRequest request) throws IOException {
+	@Nullable
+	private MultiValueMap<String, String> parseIfNecessary(HttpServletRequest request) throws IOException {
 		if (!shouldParse(request)) {
 			return null;
 		}
@@ -116,7 +117,7 @@ public class FormContentFilter extends OncePerRequestFilter {
 				MediaType mediaType = MediaType.parseMediaType(contentType);
 				return MediaType.APPLICATION_FORM_URLENCODED.includes(mediaType);
 			}
-			catch (IllegalArgumentException ignored) {
+			catch (IllegalArgumentException ex) {
 			}
 		}
 		return false;
@@ -125,7 +126,7 @@ public class FormContentFilter extends OncePerRequestFilter {
 
 	private static class FormContentRequestWrapper extends HttpServletRequestWrapper {
 
-		private final MultiValueMap<String, String> formParams;
+		private MultiValueMap<String, String> formParams;
 
 		public FormContentRequestWrapper(HttpServletRequest request, MultiValueMap<String, String> params) {
 			super(request);
@@ -133,7 +134,8 @@ public class FormContentFilter extends OncePerRequestFilter {
 		}
 
 		@Override
-		public @Nullable String getParameter(String name) {
+		@Nullable
+		public String getParameter(String name) {
 			String queryStringValue = super.getParameter(name);
 			String formValue = this.formParams.getFirst(name);
 			return (queryStringValue != null ? queryStringValue : formValue);
@@ -159,6 +161,7 @@ public class FormContentFilter extends OncePerRequestFilter {
 		}
 
 		@Override
+		@Nullable
 		public String[] getParameterValues(String name) {
 			String[] parameterValues = super.getParameterValues(name);
 			List<String> formParam = this.formParams.get(name);

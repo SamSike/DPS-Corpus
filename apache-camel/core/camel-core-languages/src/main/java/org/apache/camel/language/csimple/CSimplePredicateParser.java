@@ -16,7 +16,6 @@
  */
 package org.apache.camel.language.csimple;
 
-import org.apache.camel.CamelContext;
 import org.apache.camel.language.simple.SimplePredicateParser;
 
 /**
@@ -25,13 +24,10 @@ import org.apache.camel.language.simple.SimplePredicateParser;
 public class CSimplePredicateParser {
 
     public String parsePredicate(String predicate) {
-        return parsePredicate(null, predicate);
-    }
-
-    public String parsePredicate(CamelContext camelContext, String predicate) {
         // reuse simple language parser but output the result as java code
-        SimplePredicateParser parser = new SimplePredicateParser(camelContext, predicate, true, null);
-        return parser.parseCode();
+        SimplePredicateParser parser = new SimplePredicateParser(null, predicate, true, null);
+        String code = parser.parseCode();
+        return code;
     }
 
 }

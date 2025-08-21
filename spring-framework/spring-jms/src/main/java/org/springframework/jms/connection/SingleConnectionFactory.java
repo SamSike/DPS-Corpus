@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import jakarta.jms.Connection;
 import jakarta.jms.ConnectionFactory;
@@ -39,11 +37,10 @@ import jakarta.jms.TopicConnection;
 import jakarta.jms.TopicConnectionFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.Lifecycle;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -52,7 +49,7 @@ import org.springframework.util.ObjectUtils;
  * A JMS ConnectionFactory adapter that returns the same Connection
  * from all {@link #createConnection()} calls, and ignores calls to
  * {@link jakarta.jms.Connection#close()}. According to the JMS Connection
- * model, this is perfectly thread-safe (in contrast to, for example, JDBC). The
+ * model, this is perfectly thread-safe (in contrast to e.g. JDBC). The
  * shared Connection can be automatically recovered in case of an Exception.
  *
  * <p>You can either pass in a specific JMS Connection directly or let this
@@ -88,32 +85,38 @@ import org.springframework.util.ObjectUtils;
  * @see org.springframework.jms.listener.DefaultMessageListenerContainer#setCacheLevel
  */
 public class SingleConnectionFactory implements ConnectionFactory, QueueConnectionFactory,
-		TopicConnectionFactory, ExceptionListener, InitializingBean, DisposableBean, Lifecycle {
+		TopicConnectionFactory, ExceptionListener, InitializingBean, DisposableBean {
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	private @Nullable ConnectionFactory targetConnectionFactory;
+	@Nullable
+	private ConnectionFactory targetConnectionFactory;
 
-	private @Nullable String clientId;
+	@Nullable
+	private String clientId;
 
-	private @Nullable ExceptionListener exceptionListener;
+	@Nullable
+	private ExceptionListener exceptionListener;
 
 	private boolean reconnectOnException = false;
 
 	/** The target Connection. */
-	private @Nullable Connection connection;
+	@Nullable
+	private Connection connection;
 
 	/** A hint whether to create a queue or topic connection. */
-	private @Nullable Boolean pubSubMode;
+	@Nullable
+	private Boolean pubSubMode;
 
 	/** An internal aggregator allowing for per-connection ExceptionListeners. */
-	private @Nullable AggregatedExceptionListener aggregatedExceptionListener;
+	@Nullable
+	private AggregatedExceptionListener aggregatedExceptionListener;
 
 	/** Whether the shared Connection has been started. */
 	private int startedCount = 0;
 
-	/** Lifecycle lock for the shared Connection. */
-	private final Lock connectionLock = new ReentrantLock();
+	/** Synchronization monitor for the shared Connection. */
+	private final Object connectionMonitor = new Object();
 
 
 	/**
@@ -155,7 +158,8 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 	 * Return the target ConnectionFactory which will be used to lazily
 	 * create a single Connection, if any.
 	 */
-	public @Nullable ConnectionFactory getTargetConnectionFactory() {
+	@Nullable
+	public ConnectionFactory getTargetConnectionFactory() {
 		return this.targetConnectionFactory;
 	}
 
@@ -176,7 +180,8 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 	 * Return a JMS client ID for the single Connection created and exposed
 	 * by this ConnectionFactory, if any.
 	 */
-	protected @Nullable String getClientId() {
+	@Nullable
+	protected String getClientId() {
 		return this.clientId;
 	}
 
@@ -193,7 +198,8 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 	 * Return the JMS ExceptionListener implementation that should be registered
 	 * with the single Connection created by this factory, if any.
 	 */
-	protected @Nullable ExceptionListener getExceptionListener() {
+	@Nullable
+	protected ExceptionListener getExceptionListener() {
 		return this.exceptionListener;
 	}
 
@@ -245,19 +251,15 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 	@Override
 	public QueueConnection createQueueConnection() throws JMSException {
 		Connection con;
-		this.connectionLock.lock();
-		try {
+		synchronized (this.connectionMonitor) {
 			this.pubSubMode = Boolean.FALSE;
 			con = createConnection();
 		}
-		finally {
-			this.connectionLock.unlock();
-		}
-		if (!(con instanceof QueueConnection queueConnection)) {
+		if (!(con instanceof QueueConnection)) {
 			throw new jakarta.jms.IllegalStateException(
 					"This SingleConnectionFactory does not hold a QueueConnection but rather: " + con);
 		}
-		return queueConnection;
+		return ((QueueConnection) con);
 	}
 
 	@Override
@@ -269,19 +271,15 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 	@Override
 	public TopicConnection createTopicConnection() throws JMSException {
 		Connection con;
-		this.connectionLock.lock();
-		try {
+		synchronized (this.connectionMonitor) {
 			this.pubSubMode = Boolean.TRUE;
 			con = createConnection();
 		}
-		finally {
-			this.connectionLock.unlock();
-		}
-		if (!(con instanceof TopicConnection topicConnection)) {
+		if (!(con instanceof TopicConnection)) {
 			throw new jakarta.jms.IllegalStateException(
 					"This SingleConnectionFactory does not hold a TopicConnection but rather: " + con);
 		}
-		return topicConnection;
+		return ((TopicConnection) con);
 	}
 
 	@Override
@@ -323,17 +321,39 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 	 * @throws jakarta.jms.JMSException if thrown by JMS API methods
 	 * @see #initConnection()
 	 */
-	@SuppressWarnings("NullAway") // Dataflow analysis limitation
 	protected Connection getConnection() throws JMSException {
-		this.connectionLock.lock();
-		try {
+		synchronized (this.connectionMonitor) {
 			if (this.connection == null) {
 				initConnection();
 			}
 			return this.connection;
 		}
-		finally {
-			this.connectionLock.unlock();
+	}
+
+	/**
+	 * Initialize the underlying shared Connection.
+	 * <p>Closes and reinitializes the Connection if an underlying
+	 * Connection is present already.
+	 * @throws jakarta.jms.JMSException if thrown by JMS API methods
+	 * @see #prepareConnection
+	 */
+	public void initConnection() throws JMSException {
+		if (getTargetConnectionFactory() == null) {
+			throw new IllegalStateException(
+					"'targetConnectionFactory' is required for lazily initializing a Connection");
+		}
+		synchronized (this.connectionMonitor) {
+			if (this.connection != null) {
+				closeConnection(this.connection);
+			}
+			this.connection = doCreateConnection();
+			prepareConnection(this.connection);
+			if (this.startedCount > 0) {
+				this.connection.start();
+			}
+			if (logger.isDebugEnabled()) {
+				logger.debug("Established shared JMS Connection: " + this.connection);
+			}
 		}
 	}
 
@@ -360,92 +380,15 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 	}
 
 	/**
-	 * Initialize the underlying shared connection on start.
-	 * @since 6.1
-	 * @see #initConnection()
+	 * Reset the underlying shared Connection, to be reinitialized on next access.
+	 * @see #closeConnection
 	 */
-	@Override
-	public void start() {
-		try {
-			initConnection();
-		}
-		catch (JMSException ex) {
-			logger.info("Start attempt failed for shared JMS Connection", ex);
-		}
-	}
-
-	/**
-	 * Reset the underlying shared connection on stop.
-	 * @since 6.1
-	 * @see #resetConnection()
-	 */
-	@Override
-	public void stop() {
-		resetConnection();
-	}
-
-	/**
-	 * Check whether there is currently an underlying connection.
-	 * @since 6.1
-	 * @see #start()
-	 * @see #stop()
-	 */
-	@Override
-	public boolean isRunning() {
-		this.connectionLock.lock();
-		try {
-			return (this.connection != null);
-		}
-		finally {
-			this.connectionLock.unlock();
-		}
-	}
-
-
-	/**
-	 * Initialize the underlying shared Connection.
-	 * <p>Closes and reinitializes the Connection if an underlying
-	 * Connection is present already.
-	 * @throws jakarta.jms.JMSException if thrown by JMS API methods
-	 * @see #prepareConnection
-	 */
-	public void initConnection() throws JMSException {
-		if (getTargetConnectionFactory() == null) {
-			throw new IllegalStateException(
-					"'targetConnectionFactory' is required for lazily initializing a Connection");
-		}
-		this.connectionLock.lock();
-		try {
+	public void resetConnection() {
+		synchronized (this.connectionMonitor) {
 			if (this.connection != null) {
 				closeConnection(this.connection);
 			}
-			// Create new (method local) connection, which is later assigned to instance connection
-			//  - prevention to hold instance connection without exception listener, in case when
-			//    some subsequent methods (after creation of connection) throw JMSException
-			Connection con = doCreateConnection();
-			try {
-				prepareConnection(con);
-				this.connection = con;
-			}
-			catch (JMSException ex) {
-				// Attempt to close new (not used) connection to release possible resources
-				try {
-					con.close();
-				}
-				catch(Throwable th) {
-					logger.debug("Could not close newly obtained JMS Connection that failed to prepare", th);
-				}
-				throw ex;
-			}
-			if (this.startedCount > 0) {
-				this.connection.start();
-			}
-			if (logger.isDebugEnabled()) {
-				logger.debug("Established shared JMS Connection: " + this.connection);
-			}
-		}
-		finally {
-			this.connectionLock.unlock();
+			this.connection = null;
 		}
 	}
 
@@ -456,11 +399,11 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 	 */
 	protected Connection doCreateConnection() throws JMSException {
 		ConnectionFactory cf = getTargetConnectionFactory();
-		if (Boolean.FALSE.equals(this.pubSubMode) && cf instanceof QueueConnectionFactory queueFactory) {
-			return queueFactory.createQueueConnection();
+		if (Boolean.FALSE.equals(this.pubSubMode) && cf instanceof QueueConnectionFactory) {
+			return ((QueueConnectionFactory) cf).createQueueConnection();
 		}
-		else if (Boolean.TRUE.equals(this.pubSubMode) && cf instanceof TopicConnectionFactory topicFactory) {
-			return topicFactory.createTopicConnection();
+		else if (Boolean.TRUE.equals(this.pubSubMode) && cf instanceof TopicConnectionFactory) {
+			return ((TopicConnectionFactory) cf).createTopicConnection();
 		}
 		else {
 			return obtainTargetConnectionFactory().createConnection();
@@ -510,7 +453,8 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 	 * creation of a raw standard Session
 	 * @throws JMSException if thrown by the JMS API
 	 */
-	protected @Nullable Session getSession(Connection con, Integer mode) throws JMSException {
+	@Nullable
+	protected Session getSession(Connection con, Integer mode) throws JMSException {
 		return null;
 	}
 
@@ -528,31 +472,14 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 		boolean transacted = (mode == Session.SESSION_TRANSACTED);
 		int ackMode = (transacted ? Session.AUTO_ACKNOWLEDGE : mode);
 		// Now actually call the appropriate JMS factory method...
-		if (Boolean.FALSE.equals(this.pubSubMode) && con instanceof QueueConnection queueConnection) {
-			return queueConnection.createQueueSession(transacted, ackMode);
+		if (Boolean.FALSE.equals(this.pubSubMode) && con instanceof QueueConnection) {
+			return ((QueueConnection) con).createQueueSession(transacted, ackMode);
 		}
-		else if (Boolean.TRUE.equals(this.pubSubMode) && con instanceof TopicConnection topicConnection) {
-			return topicConnection.createTopicSession(transacted, ackMode);
+		else if (Boolean.TRUE.equals(this.pubSubMode) && con instanceof TopicConnection) {
+			return ((TopicConnection) con).createTopicSession(transacted, ackMode);
 		}
 		else {
 			return con.createSession(transacted, ackMode);
-		}
-	}
-
-	/**
-	 * Reset the underlying shared Connection, to be reinitialized on next access.
-	 * @see #closeConnection
-	 */
-	public void resetConnection() {
-		this.connectionLock.lock();
-		try {
-			if (this.connection != null) {
-				closeConnection(this.connection);
-			}
-			this.connection = null;
-		}
-		finally {
-			this.connectionLock.unlock();
 		}
 	}
 
@@ -565,10 +492,13 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 			logger.debug("Closing shared JMS Connection: " + con);
 		}
 		try {
-			try (con) {
+			try {
 				if (this.startedCount > 0) {
 					con.stop();
 				}
+			}
+			finally {
+				con.close();
 			}
 		}
 		catch (jakarta.jms.IllegalStateException ex) {
@@ -606,14 +536,16 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 	 */
 	private class SharedConnectionInvocationHandler implements InvocationHandler {
 
-		private @Nullable ExceptionListener localExceptionListener;
+		@Nullable
+		private ExceptionListener localExceptionListener;
 
 		private boolean locallyStarted = false;
 
 		@Override
-		public @Nullable Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+		@Nullable
+		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			switch (method.getName()) {
-				case "equals" -> {
+				case "equals":
 					Object other = args[0];
 					if (proxy == other) {
 						return true;
@@ -622,17 +554,14 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 						return false;
 					}
 					InvocationHandler otherHandler = Proxy.getInvocationHandler(other);
-					return (otherHandler instanceof SharedConnectionInvocationHandler sharedHandler &&
-							factory() == sharedHandler.factory());
-				}
-				case "hashCode" -> {
+					return (otherHandler instanceof SharedConnectionInvocationHandler &&
+							factory() == ((SharedConnectionInvocationHandler) otherHandler).factory());
+				case "hashCode":
 					// Use hashCode of containing SingleConnectionFactory.
 					return System.identityHashCode(factory());
-				}
-				case "toString" -> {
+				case "toString":
 					return "Shared JMS Connection: " + getConnection();
-				}
-				case "setClientID" -> {
+				case "setClientID":
 					// Handle setClientID method: throw exception if not compatible.
 					String currentClientId = getConnection().getClientID();
 					if (currentClientId != null && currentClientId.equals(args[0])) {
@@ -643,11 +572,9 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 								"setClientID call not supported on proxy for shared Connection. " +
 								"Set the 'clientId' property on the SingleConnectionFactory instead.");
 					}
-				}
-				case "setExceptionListener" -> {
+				case "setExceptionListener":
 					// Handle setExceptionListener method: add to the chain.
-					connectionLock.lock();
-					try {
+					synchronized (connectionMonitor) {
 						if (aggregatedExceptionListener != null) {
 							ExceptionListener listener = (ExceptionListener) args[0];
 							if (listener != this.localExceptionListener) {
@@ -669,13 +596,8 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 									"which will allow for registering further ExceptionListeners to the recovery chain.");
 						}
 					}
-					finally {
-						connectionLock.unlock();
-					}
-				}
-				case "getExceptionListener" -> {
-					connectionLock.lock();
-					try {
+				case "getExceptionListener":
+					synchronized (connectionMonitor) {
 						if (this.localExceptionListener != null) {
 							return this.localExceptionListener;
 						}
@@ -683,22 +605,15 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 							return getExceptionListener();
 						}
 					}
-					finally {
-						connectionLock.unlock();
-					}
-				}
-				case "start" -> {
+				case "start":
 					localStart();
 					return null;
-				}
-				case "stop" -> {
+				case "stop":
 					localStop();
 					return null;
-				}
-				case "close" -> {
+				case "close":
 					localStop();
-					connectionLock.lock();
-					try {
+					synchronized (connectionMonitor) {
 						if (this.localExceptionListener != null) {
 							if (aggregatedExceptionListener != null) {
 								aggregatedExceptionListener.delegates.remove(this.localExceptionListener);
@@ -706,12 +621,10 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 							this.localExceptionListener = null;
 						}
 					}
-					finally {
-						connectionLock.unlock();
-					}
 					return null;
-				}
-				case "createSession", "createQueueSession", "createTopicSession" -> {
+				case "createSession":
+				case "createQueueSession":
+				case "createTopicSession":
 					// Default: JMS 2.0 createSession() method
 					Integer mode = Session.AUTO_ACKNOWLEDGE;
 					if (!ObjectUtils.isEmpty(args)) {
@@ -740,8 +653,8 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 						}
 						return session;
 					}
-				}
 			}
+
 			try {
 				return method.invoke(getConnection(), args);
 			}
@@ -751,8 +664,7 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 		}
 
 		private void localStart() throws JMSException {
-			connectionLock.lock();
-			try {
+			synchronized (connectionMonitor) {
 				if (!this.locallyStarted) {
 					this.locallyStarted = true;
 					if (startedCount == 0 && connection != null) {
@@ -761,14 +673,10 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 					startedCount++;
 				}
 			}
-			finally {
-				connectionLock.unlock();
-			}
 		}
 
 		private void localStop() throws JMSException {
-			connectionLock.lock();
-			try {
+			synchronized (connectionMonitor) {
 				if (this.locallyStarted) {
 					this.locallyStarted = false;
 					if (startedCount == 1 && connection != null) {
@@ -778,9 +686,6 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 						startedCount--;
 					}
 				}
-			}
-			finally {
-				connectionLock.unlock();
 			}
 		}
 
@@ -803,12 +708,8 @@ public class SingleConnectionFactory implements ConnectionFactory, QueueConnecti
 			// Iterate over temporary copy in order to avoid ConcurrentModificationException,
 			// since listener invocations may in turn trigger registration of listeners...
 			Set<ExceptionListener> copy;
-			connectionLock.lock();
-			try {
+			synchronized (connectionMonitor) {
 				copy = new LinkedHashSet<>(this.delegates);
-			}
-			finally {
-				connectionLock.unlock();
 			}
 			for (ExceptionListener listener : copy) {
 				listener.onException(ex);

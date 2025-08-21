@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
-import static org.jooq.codegen.GenerationUtil.escapeString0;
 import static org.jooq.codegen.Language.KOTLIN;
 
 /**
@@ -59,11 +58,6 @@ public abstract class AbstractGeneratorStrategy implements GeneratorStrategy {
     // -------------------------------------------------------------------------
     // Strategy methods
     // -------------------------------------------------------------------------
-
-    @Override
-    public final String getGlobalNamesFileName(Definition container, Class<? extends Definition> objectType) {
-        return getGlobalNamesJavaClassName(container, objectType) + ".java";
-    }
 
     @Override
     public final String getGlobalReferencesFileName(Definition container, Class<? extends Definition> objectType) {
@@ -83,21 +77,14 @@ public abstract class AbstractGeneratorStrategy implements GeneratorStrategy {
     @Override
     public final File getFileRoot() {
         String dir = getTargetDirectory();
-        String pkg = unescape(getTargetPackage().replaceAll("\\.", "/"));
+        String pkg = getTargetPackage().replaceAll("\\.", "/");
         return new File(dir + "/" + pkg);
-    }
-
-    @Override
-    public final File getGlobalNamesFile(Definition container, Class<? extends Definition> objectType) {
-        String dir = getTargetDirectory();
-        String pkg = unescape(getGlobalNamesJavaPackageName(container, objectType).replaceAll("\\.", "/"));
-        return new File(dir + "/" + pkg, getGlobalNamesFileName(container, objectType));
     }
 
     @Override
     public final File getGlobalReferencesFile(Definition container, Class<? extends Definition> objectType) {
         String dir = getTargetDirectory();
-        String pkg = unescape(getGlobalReferencesJavaPackageName(container, objectType).replaceAll("\\.", "/"));
+        String pkg = getGlobalReferencesJavaPackageName(container, objectType).replaceAll("\\.", "/");
         return new File(dir + "/" + pkg, getGlobalReferencesFileName(container, objectType));
     }
 
@@ -109,37 +96,15 @@ public abstract class AbstractGeneratorStrategy implements GeneratorStrategy {
     @Override
     public final File getFile(Definition definition, Mode mode) {
         String dir = getTargetDirectory();
-        String pkg = unescape(getJavaPackageName(definition, mode).replaceAll("\\.", "/"));
+        String pkg = getJavaPackageName(definition, mode).replaceAll("\\.", "/");
         return new File(dir + "/" + pkg, getFileName(definition, mode));
     }
 
     @Override
     public final File getFile(String fileName) {
         String dir = getTargetDirectory();
-        String pkg = unescape(getTargetPackage().replaceAll("\\.", "/"));
+        String pkg = getTargetPackage().replaceAll("\\.", "/");
         return new File(dir + "/" + pkg, fileName);
-    }
-
-    final String unescape(String pkg) {
-        return unescape(getTargetLanguage(), pkg);
-    }
-
-    static final String unescape(Language language, String pkg) {
-        // [#13866] Backticks that were used to escape identifiers conflicting
-        //          with keywords shouldn't appear in file names.
-        switch (language) {
-
-
-
-            case SCALA_3:
-            case KOTLIN:
-                if (pkg.contains("`"))
-                    pkg = pkg.replaceAll("`([^`]+)`", "$1");
-
-                break;
-        }
-
-        return pkg;
     }
 
     @Override
@@ -173,10 +138,6 @@ public abstract class AbstractGeneratorStrategy implements GeneratorStrategy {
 
         else if (definition instanceof SequenceDefinition
             || definition instanceof DomainDefinition
-
-
-
-
             || definition instanceof IndexDefinition
             || definition instanceof IdentityDefinition
             || definition instanceof ConstraintDefinition
@@ -199,17 +160,6 @@ public abstract class AbstractGeneratorStrategy implements GeneratorStrategy {
         }
 
         sb.append(".");
-
-
-
-
-
-
-
-
-
-
-
         sb.append(getJavaIdentifier(definition));
 
         return sb.toString();
@@ -253,11 +203,6 @@ public abstract class AbstractGeneratorStrategy implements GeneratorStrategy {
     @Override
     public final String getJavaMemberName(Definition definition) {
         return getJavaMemberName(definition, Mode.DEFAULT);
-    }
-
-    @Override
-    public final String getGlobalNamesFullJavaClassName(Definition container, Class<? extends Definition> objectType) {
-        return getGlobalNamesJavaPackageName(container, objectType) + "." + getGlobalNamesJavaClassName(container, objectType);
     }
 
     @Override

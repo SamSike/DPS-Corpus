@@ -23,7 +23,7 @@ import org.apache.camel.model.SagaCompletionMode;
 import org.apache.camel.saga.InMemorySagaService;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  *
@@ -85,15 +85,19 @@ public class SagaComponentTest extends ContextTestSupport {
         MockEndpoint compensated = getMockEndpoint("mock:compensated");
         compensated.expectedMessageCount(1);
 
-        assertThrows(Exception.class, () -> template.sendBody("direct:auto-workflow", "auto-compensate"),
-                "Should throw an exception");
+        try {
+            template.sendBody("direct:auto-workflow", "auto-compensate");
+            fail("Should throw an exception");
+        } catch (Exception ex) {
+            // OK
+        }
 
         completed.assertIsNotSatisfied();
         compensated.assertIsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
             public void configure() throws Exception {

@@ -18,6 +18,7 @@ package org.apache.camel.console;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.camel.CamelContext;
@@ -77,7 +78,7 @@ public interface DevConsoleRegistry extends CamelContextAware, StaticService, Id
     default Collection<String> getConsoleIDs() {
         return stream()
                 .map(DevConsole::getId)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     /**
@@ -96,7 +97,7 @@ public interface DevConsoleRegistry extends CamelContextAware, StaticService, Id
      * This registry is not used by the camel context, but it is up to the implementation to properly use it.
      */
     static DevConsoleRegistry get(CamelContext context) {
-        return context.getCamelContextExtension().getContextPlugin(DevConsoleRegistry.class);
+        return context.getExtension(DevConsoleRegistry.class);
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.jspecify.annotations.Nullable;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,13 +29,14 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.CachingConfigurer;
+import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.testfixture.cache.CacheTestUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,9 +51,7 @@ import static org.springframework.context.testfixture.cache.CacheTestUtils.asser
  * @author Stephane Nicoll
  * @since 4.1
  */
-class CacheResolverCustomizationTests {
-
-	private ConfigurableApplicationContext context;
+public class CacheResolverCustomizationTests {
 
 	private CacheManager cacheManager;
 
@@ -64,21 +61,16 @@ class CacheResolverCustomizationTests {
 
 
 	@BeforeEach
-	void setup() {
-		this.context = new AnnotationConfigApplicationContext(Config.class);
+	public void setup() {
+		ApplicationContext context = new AnnotationConfigApplicationContext(Config.class);
 		this.cacheManager = context.getBean("cacheManager", CacheManager.class);
 		this.anotherCacheManager = context.getBean("anotherCacheManager", CacheManager.class);
 		this.simpleService = context.getBean(SimpleService.class);
 	}
 
-	@AfterEach
-	void closeContext() {
-		this.context.close();
-	}
-
 
 	@Test
-	void noCustomization() {
+	public void noCustomization() {
 		Cache cache = this.cacheManager.getCache("default");
 
 		Object key = new Object();
@@ -89,7 +81,7 @@ class CacheResolverCustomizationTests {
 	}
 
 	@Test
-	void customCacheResolver() {
+	public void customCacheResolver() {
 		Cache cache = this.cacheManager.getCache("primary");
 
 		Object key = new Object();
@@ -100,7 +92,7 @@ class CacheResolverCustomizationTests {
 	}
 
 	@Test
-	void customCacheManager() {
+	public void customCacheManager() {
 		Cache cache = this.anotherCacheManager.getCache("default");
 
 		Object key = new Object();
@@ -111,7 +103,7 @@ class CacheResolverCustomizationTests {
 	}
 
 	@Test
-	void runtimeResolution() {
+	public void runtimeResolution() {
 		Cache defaultCache = this.cacheManager.getCache("default");
 		Cache primaryCache = this.cacheManager.getCache("primary");
 
@@ -129,7 +121,7 @@ class CacheResolverCustomizationTests {
 	}
 
 	@Test
-	void namedResolution() {
+	public void namedResolution() {
 		Cache cache = this.cacheManager.getCache("secondary");
 
 		Object key = new Object();
@@ -140,25 +132,24 @@ class CacheResolverCustomizationTests {
 	}
 
 	@Test
-	void noCacheResolved() {
+	public void noCacheResolved() {
 		Method method = ReflectionUtils.findMethod(SimpleService.class, "noCacheResolved", Object.class);
-
-		assertThatIllegalStateException()
-				.isThrownBy(() -> this.simpleService.noCacheResolved(new Object()))
-				.withMessageContaining(method.toString());
+		assertThatIllegalStateException().isThrownBy(() ->
+				this.simpleService.noCacheResolved(new Object()))
+			.withMessageContaining(method.toString());
 	}
 
 	@Test
-	void unknownCacheResolver() {
-		assertThatExceptionOfType(NoSuchBeanDefinitionException.class)
-				.isThrownBy(() -> this.simpleService.unknownCacheResolver(new Object()))
-				.satisfies(ex -> assertThat(ex.getBeanName()).isEqualTo("unknownCacheResolver"));
+	public void unknownCacheResolver() {
+		assertThatExceptionOfType(NoSuchBeanDefinitionException.class).isThrownBy(() ->
+				this.simpleService.unknownCacheResolver(new Object()))
+			.satisfies(ex -> assertThat(ex.getBeanName()).isEqualTo("unknownCacheResolver"));
 	}
 
 
 	@Configuration
 	@EnableCaching
-	static class Config implements CachingConfigurer {
+	static class Config extends CachingConfigurerSupport {
 
 		@Override
 		@Bean
@@ -206,7 +197,7 @@ class CacheResolverCustomizationTests {
 	}
 
 
-	@CacheConfig("default")
+	@CacheConfig(cacheNames = "default")
 	static class SimpleService {
 
 		private final AtomicLong counter = new AtomicLong();
@@ -260,7 +251,8 @@ class CacheResolverCustomizationTests {
 		}
 
 		@Override
-		protected @Nullable Collection<String> getCacheNames(CacheOperationInvocationContext<?> context) {
+		@Nullable
+		protected Collection<String> getCacheNames(CacheOperationInvocationContext<?> context) {
 			String cacheName = (String) context.getArgs()[1];
 			return Collections.singleton(cacheName);
 		}
@@ -274,7 +266,8 @@ class CacheResolverCustomizationTests {
 		}
 
 		@Override
-		protected @Nullable Collection<String> getCacheNames(CacheOperationInvocationContext<?> context) {
+		@Nullable
+		protected Collection<String> getCacheNames(CacheOperationInvocationContext<?> context) {
 			return null;
 		}
 	}

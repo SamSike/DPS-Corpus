@@ -18,6 +18,7 @@ package org.apache.camel.impl.health;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
@@ -31,7 +32,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class DefaultHealthCheckRegistryTest {
 
     @Test
-    public void testDefaultHealthCheckRegistry() {
+    public void testDefaultHealthCheckRegistry() throws Exception {
         CamelContext context = new DefaultCamelContext();
 
         DefaultHealthCheckRegistry registry = new DefaultHealthCheckRegistry();
@@ -50,7 +50,7 @@ public class DefaultHealthCheckRegistryTest {
         registry.register(new MyHealthCheck("G1", "2"));
         registry.register(new MyHealthCheck("G2", "3"));
 
-        List<HealthCheck> checks = registry.stream().toList();
+        List<HealthCheck> checks = registry.stream().collect(Collectors.toList());
         assertEquals(3, checks.size());
 
         for (HealthCheck check : checks) {
@@ -63,7 +63,7 @@ public class DefaultHealthCheckRegistryTest {
     }
 
     @Test
-    public void testInjectCamelContext() {
+    public void testInjectCamelContext() throws Exception {
         CamelContext context = new DefaultCamelContext();
 
         HealthCheckRegistry registry = new DefaultHealthCheckRegistry();
@@ -76,7 +76,7 @@ public class DefaultHealthCheckRegistryTest {
         context.start();
         registry.start();
 
-        List<HealthCheck> checks = registry.stream().toList();
+        List<HealthCheck> checks = registry.stream().collect(Collectors.toList());
         assertEquals(3, checks.size());
 
         for (HealthCheck check : checks) {
@@ -90,7 +90,7 @@ public class DefaultHealthCheckRegistryTest {
     }
 
     @Test
-    public void testDiscoverFromCamelRegistry() {
+    public void testDiscoverFromCamelRegistry() throws Exception {
         CamelContext context = new DefaultCamelContext();
 
         HealthCheckRegistry registry = new DefaultHealthCheckRegistry();
@@ -103,7 +103,7 @@ public class DefaultHealthCheckRegistryTest {
         context.start();
         registry.start();
 
-        List<HealthCheck> checks = registry.stream().toList();
+        List<HealthCheck> checks = registry.stream().collect(Collectors.toList());
         assertEquals(3, checks.size());
 
         for (HealthCheck check : checks) {
@@ -117,7 +117,7 @@ public class DefaultHealthCheckRegistryTest {
     }
 
     @Test
-    public void testResolveContextHealthCheck() {
+    public void testResolveContextHealthCheck() throws Exception {
         CamelContext context = new DefaultCamelContext();
 
         HealthCheckRegistry registry = new DefaultHealthCheckRegistry();
@@ -126,7 +126,7 @@ public class DefaultHealthCheckRegistryTest {
         assertNotNull(hc);
         assertEquals("camel", hc.getGroup());
         assertEquals("context", hc.getId());
-        assertInstanceOf(ContextHealthCheck.class, hc);
+        assertTrue(hc instanceof ContextHealthCheck);
 
         registry.register(hc);
         registry.register(new MyHealthCheck("G1", "1"));
@@ -136,7 +136,7 @@ public class DefaultHealthCheckRegistryTest {
         context.start();
         registry.start();
 
-        List<HealthCheck> checks = registry.stream().toList();
+        List<HealthCheck> checks = registry.stream().collect(Collectors.toList());
         assertEquals(4, checks.size());
 
         for (HealthCheck check : checks) {
@@ -158,12 +158,12 @@ public class DefaultHealthCheckRegistryTest {
         HealthCheckRepository hc = (HealthCheckRepository) registry.resolveById("routes");
         assertNotNull(hc);
         assertEquals("routes", hc.getId());
-        assertInstanceOf(RoutesHealthCheckRepository.class, hc);
+        assertTrue(hc instanceof RoutesHealthCheckRepository);
         registry.register(hc);
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("mock:foo").routeId("foo");
                 from("direct:start2").to("mock:bar").routeId("bar");
             }
@@ -172,7 +172,7 @@ public class DefaultHealthCheckRegistryTest {
         context.start();
         registry.start();
 
-        List<HealthCheck> checks = registry.stream().toList();
+        List<HealthCheck> checks = registry.stream().collect(Collectors.toList());
         assertEquals(2, checks.size());
 
         for (HealthCheck check : checks) {

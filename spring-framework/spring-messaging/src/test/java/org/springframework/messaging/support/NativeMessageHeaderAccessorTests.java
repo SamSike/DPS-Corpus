@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,10 +36,10 @@ import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
  *
  * @author Rossen Stoyanchev
  */
-class NativeMessageHeaderAccessorTests {
+public class NativeMessageHeaderAccessorTests {
 
 	@Test
-	void createFromNativeHeaderMap() {
+	public void createFromNativeHeaderMap() {
 		MultiValueMap<String, String> inputNativeHeaders = new LinkedMultiValueMap<>();
 		inputNativeHeaders.add("foo", "bar");
 		inputNativeHeaders.add("bar", "baz");
@@ -54,7 +54,7 @@ class NativeMessageHeaderAccessorTests {
 	}
 
 	@Test
-	void createFromMessage() {
+	public void createFromMessage() {
 		MultiValueMap<String, String> inputNativeHeaders = new LinkedMultiValueMap<>();
 		inputNativeHeaders.add("foo", "bar");
 		inputNativeHeaders.add("bar", "baz");
@@ -67,7 +67,7 @@ class NativeMessageHeaderAccessorTests {
 		NativeMessageHeaderAccessor headerAccessor = new NativeMessageHeaderAccessor(message);
 		Map<String, Object> actual = headerAccessor.toMap();
 
-		assertThat(actual).hasSize(2);
+		assertThat(actual.size()).isEqualTo(2);
 		assertThat(actual.get("a")).isEqualTo("b");
 		assertThat(actual.get(NativeMessageHeaderAccessor.NATIVE_HEADERS)).isNotNull();
 		assertThat(actual.get(NativeMessageHeaderAccessor.NATIVE_HEADERS)).isEqualTo(inputNativeHeaders);
@@ -75,18 +75,18 @@ class NativeMessageHeaderAccessorTests {
 	}
 
 	@Test
-	void createFromMessageNull() {
+	public void createFromMessageNull() {
 		NativeMessageHeaderAccessor headerAccessor = new NativeMessageHeaderAccessor((Message<?>) null);
 
 		Map<String, Object> actual = headerAccessor.toMap();
-		assertThat(actual).isEmpty();
+		assertThat(actual.size()).isEqualTo(0);
 
 		Map<String, List<String>> actualNativeHeaders = headerAccessor.toNativeHeaderMap();
 		assertThat(actualNativeHeaders).isEqualTo(Collections.emptyMap());
 	}
 
 	@Test
-	void createFromMessageAndModify() {
+	public void createFromMessageAndModify() {
 
 		MultiValueMap<String, String> inputNativeHeaders = new LinkedMultiValueMap<>();
 		inputNativeHeaders.add("foo", "bar");
@@ -104,7 +104,7 @@ class NativeMessageHeaderAccessorTests {
 
 		Map<String, Object> actual = headerAccessor.toMap();
 
-		assertThat(actual).hasSize(2);
+		assertThat(actual.size()).isEqualTo(2);
 		assertThat(actual.get("a")).isEqualTo("B");
 
 		@SuppressWarnings("unchecked")
@@ -117,7 +117,7 @@ class NativeMessageHeaderAccessorTests {
 	}
 
 	@Test
-	void setNativeHeader() {
+	public void setNativeHeader() {
 		MultiValueMap<String, String> nativeHeaders = new LinkedMultiValueMap<>();
 		nativeHeaders.add("foo", "bar");
 
@@ -128,7 +128,7 @@ class NativeMessageHeaderAccessorTests {
 	}
 
 	@Test
-	void setNativeHeaderNullValue() {
+	public void setNativeHeaderNullValue() {
 		MultiValueMap<String, String> nativeHeaders = new LinkedMultiValueMap<>();
 		nativeHeaders.add("foo", "bar");
 
@@ -139,7 +139,7 @@ class NativeMessageHeaderAccessorTests {
 	}
 
 	@Test
-	void setNativeHeaderLazyInit() {
+	public void setNativeHeaderLazyInit() {
 		NativeMessageHeaderAccessor headerAccessor = new NativeMessageHeaderAccessor();
 		headerAccessor.setNativeHeader("foo", "baz");
 
@@ -147,7 +147,7 @@ class NativeMessageHeaderAccessorTests {
 	}
 
 	@Test
-	void setNativeHeaderLazyInitNullValue() {
+	public void setNativeHeaderLazyInitNullValue() {
 		NativeMessageHeaderAccessor headerAccessor = new NativeMessageHeaderAccessor();
 		headerAccessor.setNativeHeader("foo", null);
 
@@ -156,7 +156,7 @@ class NativeMessageHeaderAccessorTests {
 	}
 
 	@Test
-	void setNativeHeaderImmutable() {
+	public void setNativeHeaderImmutable() {
 		NativeMessageHeaderAccessor headerAccessor = new NativeMessageHeaderAccessor();
 		headerAccessor.setNativeHeader("foo", "bar");
 		headerAccessor.setImmutable();
@@ -167,7 +167,7 @@ class NativeMessageHeaderAccessorTests {
 	}
 
 	@Test
-	void addNativeHeader() {
+	public void addNativeHeader() {
 		MultiValueMap<String, String> nativeHeaders = new LinkedMultiValueMap<>();
 		nativeHeaders.add("foo", "bar");
 
@@ -178,7 +178,7 @@ class NativeMessageHeaderAccessorTests {
 	}
 
 	@Test
-	void addNativeHeaderNullValue() {
+	public void addNativeHeaderNullValue() {
 		MultiValueMap<String, String> nativeHeaders = new LinkedMultiValueMap<>();
 		nativeHeaders.add("foo", "bar");
 
@@ -189,7 +189,7 @@ class NativeMessageHeaderAccessorTests {
 	}
 
 	@Test
-	void addNativeHeaderLazyInit() {
+	public void addNativeHeaderLazyInit() {
 		NativeMessageHeaderAccessor headerAccessor = new NativeMessageHeaderAccessor();
 		headerAccessor.addNativeHeader("foo", "bar");
 
@@ -197,7 +197,7 @@ class NativeMessageHeaderAccessorTests {
 	}
 
 	@Test
-	void addNativeHeaderLazyInitNullValue() {
+	public void addNativeHeaderLazyInitNullValue() {
 		NativeMessageHeaderAccessor headerAccessor = new NativeMessageHeaderAccessor();
 		headerAccessor.addNativeHeader("foo", null);
 
@@ -206,7 +206,7 @@ class NativeMessageHeaderAccessorTests {
 	}
 
 	@Test
-	void addNativeHeaderImmutable() {
+	public void addNativeHeaderImmutable() {
 		NativeMessageHeaderAccessor headerAccessor = new NativeMessageHeaderAccessor();
 		headerAccessor.addNativeHeader("foo", "bar");
 		headerAccessor.setImmutable();
@@ -217,7 +217,7 @@ class NativeMessageHeaderAccessorTests {
 	}
 
 	@Test
-	void setImmutableIdempotent() {
+	public void setImmutableIdempotent() {
 		NativeMessageHeaderAccessor headerAccessor = new NativeMessageHeaderAccessor();
 		headerAccessor.addNativeHeader("foo", "bar");
 		headerAccessor.setImmutable();
@@ -236,7 +236,7 @@ class NativeMessageHeaderAccessorTests {
 		Message<?> target = MessageBuilder.createMessage(source.getPayload(), targetAccessor.getMessageHeaders());
 
 		MessageHeaderAccessor accessor = MessageHeaderAccessor.getMutableAccessor(target);
-		assertThat(accessor.isMutable()).isTrue();
+		assertThat(accessor.isMutable());
 		((NativeMessageHeaderAccessor) accessor).addNativeHeader("foo", "baz");
 		assertThat(((NativeMessageHeaderAccessor) accessor).getNativeHeader("foo")).containsExactly("bar", "baz");
 	}
@@ -253,7 +253,7 @@ class NativeMessageHeaderAccessorTests {
 		Message<?> target = MessageBuilder.createMessage(source.getPayload(), targetAccessor.getMessageHeaders());
 
 		MessageHeaderAccessor accessor = MessageHeaderAccessor.getMutableAccessor(target);
-		assertThat(accessor.isMutable()).isTrue();
+		assertThat(accessor.isMutable());
 		((NativeMessageHeaderAccessor) accessor).addNativeHeader("foo", "baz");
 		assertThat(((NativeMessageHeaderAccessor) accessor).getNativeHeader("foo")).containsExactly("bar", "baz");
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.BindingContext;
 import org.springframework.web.server.ServerWebExchange;
 
@@ -83,11 +83,10 @@ class HandlerMethodArgumentResolverComposite implements HandlerMethodArgumentRes
 	}
 
 	/**
-	 * Clear the list of configured resolvers and the resolver cache.
+	 * Clear the list of configured resolvers.
 	 */
 	public void clear() {
 		this.argumentResolvers.clear();
-		this.argumentResolverCache.clear();
 	}
 
 
@@ -123,7 +122,8 @@ class HandlerMethodArgumentResolverComposite implements HandlerMethodArgumentRes
 	 * Find a registered {@link HandlerMethodArgumentResolver} that supports
 	 * the given method parameter.
 	 */
-	private @Nullable HandlerMethodArgumentResolver getArgumentResolver(MethodParameter parameter) {
+	@Nullable
+	private HandlerMethodArgumentResolver getArgumentResolver(MethodParameter parameter) {
 		HandlerMethodArgumentResolver result = this.argumentResolverCache.get(parameter);
 		if (result == null) {
 			for (HandlerMethodArgumentResolver methodArgumentResolver : this.argumentResolvers) {

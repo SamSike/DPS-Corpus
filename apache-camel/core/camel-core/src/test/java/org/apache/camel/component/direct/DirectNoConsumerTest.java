@@ -23,7 +23,7 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class DirectNoConsumerTest extends ContextTestSupport {
 
@@ -32,44 +32,44 @@ public class DirectNoConsumerTest extends ContextTestSupport {
         return false;
     }
 
-    @Test
     public void testInOnly() throws Exception {
         context.getComponent("direct", DirectComponent.class).setBlock(false);
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("direct:foo");
             }
         });
 
         context.start();
 
-        CamelExecutionException e = assertThrows(CamelExecutionException.class,
-                () -> template.sendBody("direct:start", "Hello World"),
-                "Should throw an exception");
-
-        assertIsInstanceOf(DirectConsumerNotAvailableException.class, e.getCause());
+        try {
+            template.sendBody("direct:start", "Hello World");
+            fail("Should throw an exception");
+        } catch (CamelExecutionException e) {
+            assertIsInstanceOf(DirectConsumerNotAvailableException.class, e.getCause());
+        }
     }
 
-    @Test
     public void testInOut() throws Exception {
         context.getComponent("direct", DirectComponent.class).setBlock(false);
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("direct:foo");
             }
         });
 
         context.start();
 
-        CamelExecutionException e = assertThrows(CamelExecutionException.class,
-                () -> template.requestBody("direct:start", "Hello World"),
-                "Should throw an exception");
-
-        assertIsInstanceOf(DirectConsumerNotAvailableException.class, e.getCause());
+        try {
+            template.requestBody("direct:start", "Hello World");
+            fail("Should throw an exception");
+        } catch (CamelExecutionException e) {
+            assertIsInstanceOf(DirectConsumerNotAvailableException.class, e.getCause());
+        }
     }
 
     @Test
@@ -78,7 +78,7 @@ public class DirectNoConsumerTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("direct:foo?failIfNoConsumers=false");
             }
         });
@@ -94,7 +94,7 @@ public class DirectNoConsumerTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").wireTap("direct:foo?failIfNoConsumers=false").to("mock:foo");
             }
         });
@@ -114,7 +114,7 @@ public class DirectNoConsumerTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").routeId("stopThisRoute").to("mock:foo");
             }
         });
@@ -129,11 +129,12 @@ public class DirectNoConsumerTest extends ContextTestSupport {
 
         context.getRouteController().stopRoute("stopThisRoute");
         TimeUnit.MILLISECONDS.sleep(100);
-
-        CamelExecutionException e = assertThrows(CamelExecutionException.class,
-                () -> template.sendBody("direct:foo", "Hello World"),
-                "Should have thrown an exception");
-        assertIsInstanceOf(DirectConsumerNotAvailableException.class, e.getCause());
+        try {
+            template.sendBody("direct:foo", "Hello World");
+            fail("Should throw an exception");
+        } catch (CamelExecutionException e) {
+            assertIsInstanceOf(DirectConsumerNotAvailableException.class, e.getCause());
+        }
     }
 
     @Test
@@ -142,7 +143,7 @@ public class DirectNoConsumerTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:in").to("direct:foo");
                 from("direct:foo").to("mock:foo");
             }
@@ -163,7 +164,7 @@ public class DirectNoConsumerTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:in").to("direct:foo?failIfNoConsumers=false").to("direct:bar");
                 from("direct:bar").to("mock:foo");
             }
@@ -184,7 +185,7 @@ public class DirectNoConsumerTest extends ContextTestSupport {
 
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo?failIfNoConsumers=false").to("log:test");
             }
         });

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,8 @@ import java.util.Collections;
 import java.util.List;
 
 import jakarta.servlet.ServletException;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 
 /**
  * Abstract base for exceptions related to media types. Adds a list of supported {@link MediaType MediaTypes}.
@@ -32,34 +30,27 @@ import org.springframework.http.ProblemDetail;
  * @since 3.0
  */
 @SuppressWarnings("serial")
-public abstract class HttpMediaTypeException extends ServletException implements ErrorResponse {
+public abstract class HttpMediaTypeException extends ServletException {
 
 	private final List<MediaType> supportedMediaTypes;
 
-	private final ProblemDetail body = ProblemDetail.forStatus(getStatusCode());
 
-	private final String messageDetailCode;
-
-	private final Object @Nullable [] messageDetailArguments;
-
+	/**
+	 * Create a new HttpMediaTypeException.
+	 * @param message the exception message
+	 */
+	protected HttpMediaTypeException(String message) {
+		super(message);
+		this.supportedMediaTypes = Collections.emptyList();
+	}
 
 	/**
 	 * Create a new HttpMediaTypeException with a list of supported media types.
 	 * @param supportedMediaTypes the list of supported media types
-	 * @param messageDetailCode the code to use to resolve the problem "detail"
-	 * through a {@link org.springframework.context.MessageSource}
-	 * @param messageDetailArguments the arguments to make available when
-	 * resolving the problem "detail" through a {@code MessageSource}
-	 * @since 6.0
 	 */
-	protected HttpMediaTypeException(@Nullable String message, List<MediaType> supportedMediaTypes,
-			@Nullable String messageDetailCode, Object @Nullable [] messageDetailArguments) {
-
+	protected HttpMediaTypeException(String message, List<MediaType> supportedMediaTypes) {
 		super(message);
 		this.supportedMediaTypes = Collections.unmodifiableList(supportedMediaTypes);
-		this.messageDetailCode = (messageDetailCode != null ?
-				messageDetailCode : ErrorResponse.getDefaultDetailMessageCode(getClass(), null));
-		this.messageDetailArguments = messageDetailArguments;
 	}
 
 
@@ -68,21 +59,6 @@ public abstract class HttpMediaTypeException extends ServletException implements
 	 */
 	public List<MediaType> getSupportedMediaTypes() {
 		return this.supportedMediaTypes;
-	}
-
-	@Override
-	public ProblemDetail getBody() {
-		return this.body;
-	}
-
-	@Override
-	public String getDetailMessageCode() {
-		return this.messageDetailCode;
-	}
-
-	@Override
-	public Object @Nullable [] getDetailMessageArguments() {
-		return this.messageDetailArguments;
 	}
 
 }

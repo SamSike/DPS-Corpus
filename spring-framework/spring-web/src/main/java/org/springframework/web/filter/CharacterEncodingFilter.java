@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -46,7 +46,8 @@ import org.springframework.util.Assert;
  */
 public class CharacterEncodingFilter extends OncePerRequestFilter {
 
-	private @Nullable String encoding;
+	@Nullable
+	private String encoding;
 
 	private boolean forceRequestEncoding = false;
 
@@ -119,7 +120,8 @@ public class CharacterEncodingFilter extends OncePerRequestFilter {
 	 * Return the configured encoding for requests and/or responses.
 	 * @since 4.3
 	 */
-	public @Nullable String getEncoding() {
+	@Nullable
+	public String getEncoding() {
 		return this.encoding;
 	}
 

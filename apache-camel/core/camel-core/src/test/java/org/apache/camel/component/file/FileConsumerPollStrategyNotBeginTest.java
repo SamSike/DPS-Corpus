@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.file;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.camel.Consumer;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Endpoint;
@@ -26,7 +24,6 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.spi.PollingConsumerPollStrategy;
 import org.apache.camel.spi.Registry;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -40,16 +37,16 @@ public class FileConsumerPollStrategyNotBeginTest extends ContextTestSupport {
     private static volatile String event = "";
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myPoll", new MyPollStrategy());
         return jndi;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?pollStrategy=#myPoll&noop=true&initialDelay=0&delay=10")).convertBodyTo(String.class)
                         .to("mock:result");
             }
@@ -68,8 +65,9 @@ public class FileConsumerPollStrategyNotBeginTest extends ContextTestSupport {
         oneExchangeDone.matchesWaitTime();
 
         // the poll strategy commit is executed after the exchange is done
-        Awaitility.await().pollDelay(100, TimeUnit.MILLISECONDS)
-                .untilAsserted(() -> assertTrue(event.startsWith("beginbegincommit")));
+        Thread.sleep(100);
+
+        assertTrue(event.startsWith("beginbegincommit"));
     }
 
     private static class MyPollStrategy implements PollingConsumerPollStrategy {
@@ -90,7 +88,7 @@ public class FileConsumerPollStrategyNotBeginTest extends ContextTestSupport {
         }
 
         @Override
-        public boolean rollback(Consumer consumer, Endpoint endpoint, int retryCounter, Exception cause) {
+        public boolean rollback(Consumer consumer, Endpoint endpoint, int retryCounter, Exception cause) throws Exception {
             event += "rollback";
             return false;
         }

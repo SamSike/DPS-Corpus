@@ -17,7 +17,6 @@
 package org.apache.camel.routepolicy.quartz;
 
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.ServiceStatus;
 import org.apache.camel.builder.RouteBuilder;
@@ -29,7 +28,6 @@ import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.camel.throttling.ThrottlingInflightRoutePolicy;
 import org.junit.jupiter.api.Test;
 
-import static org.apache.camel.test.junit5.TestSupport.executeSlowly;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class MultiplePoliciesOnRouteTest extends CamelTestSupport {
@@ -82,8 +80,10 @@ public class MultiplePoliciesOnRouteTest extends CamelTestSupport {
         context.start();
 
         assertSame(ServiceStatus.Started, context.getRouteController().getRouteStatus("test"));
-
-        executeSlowly(size, 3, TimeUnit.MILLISECONDS, (i) -> template.sendBody(url, "Message " + i));
+        for (int i = 0; i < size; i++) {
+            template.sendBody(url, "Message " + i);
+            Thread.sleep(3);
+        }
 
         context.getComponent("quartz", QuartzComponent.class).stop();
         success.assertIsSatisfied();

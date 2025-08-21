@@ -79,7 +79,7 @@ class CosmosDbContainerOperationsIT {
     }
 
     @AfterAll
-    void cleanup() {
+    void tearDown() {
         clientWrapper.getDatabase(DATABASE_NAME).delete().block();
         clientWrapper.getDatabase(LEASE_DATABASE_NAME).delete().block();
     }
@@ -90,7 +90,7 @@ class CosmosDbContainerOperationsIT {
 
         containerOperations = CosmosDbClientOperations.withClient(clientWrapper)
                 .createDatabaseIfNotExistAndGetDatabaseOperations(DATABASE_NAME, null)
-                .createContainerIfNotExistAndGetContainerOperations(containerId, "partition", null, null);
+                .createContainerIfNotExistAndGetContainerOperations(containerId, "partition", null);
 
         // make sure container is created
         containerOperations.getContainerId().block();

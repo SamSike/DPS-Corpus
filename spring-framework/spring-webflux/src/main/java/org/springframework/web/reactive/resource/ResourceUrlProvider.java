@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.web.reactive.resource;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,7 +24,6 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
 import org.springframework.beans.BeansException;
@@ -31,10 +31,12 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.http.server.PathContainer;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.web.reactive.HandlerMapping;
-import org.springframework.web.reactive.handler.AbstractUrlHandlerMapping;
+import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
+import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
 import org.springframework.web.util.pattern.PathPatternParser;
@@ -57,7 +59,8 @@ public class ResourceUrlProvider implements ApplicationListener<ContextRefreshed
 
 	private final Map<PathPattern, ResourceWebHandler> handlerMap = new LinkedHashMap<>();
 
-	private @Nullable ApplicationContext applicationContext;
+	@Nullable
+	private ApplicationContext applicationContext;
 
 
 	@Override
@@ -83,9 +86,8 @@ public class ResourceUrlProvider implements ApplicationListener<ContextRefreshed
 	public void registerHandlers(Map<String, ResourceWebHandler> handlerMap) {
 		this.handlerMap.clear();
 		handlerMap.forEach((rawPattern, resourceWebHandler) -> {
-			PathPatternParser parser = PathPatternParser.defaultInstance;
-			rawPattern = parser.initFullPathPattern(rawPattern);
-			PathPattern pattern = parser.parse(rawPattern);
+			rawPattern = prependLeadingSlash(rawPattern);
+			PathPattern pattern = PathPatternParser.defaultInstance.parse(rawPattern);
 			this.handlerMap.put(pattern, resourceWebHandler);
 		});
 	}
@@ -93,19 +95,22 @@ public class ResourceUrlProvider implements ApplicationListener<ContextRefreshed
 	@Override
 	public void onApplicationEvent(ContextRefreshedEvent event) {
 		if (this.applicationContext == event.getApplicationContext() && this.handlerMap.isEmpty()) {
-			detectResourceHandlers(event.getApplicationContext());
+			detectResourceHandlers(this.applicationContext);
 		}
 	}
 
 	private void detectResourceHandlers(ApplicationContext context) {
-		context.getBeanProvider(HandlerMapping.class).orderedStream()
-				.filter(AbstractUrlHandlerMapping.class::isInstance)
-				.map(AbstractUrlHandlerMapping.class::cast)
-				.forEach(mapping -> mapping.getHandlerMap().forEach((pattern, handler) -> {
-					if (handler instanceof ResourceWebHandler resourceHandler) {
-						this.handlerMap.put(pattern, resourceHandler);
-					}
-				}));
+		Map<String, SimpleUrlHandlerMapping> beans = context.getBeansOfType(SimpleUrlHandlerMapping.class);
+		List<SimpleUrlHandlerMapping> mappings = new ArrayList<>(beans.values());
+		AnnotationAwareOrderComparator.sort(mappings);
+
+		mappings.forEach(mapping ->
+			mapping.getHandlerMap().forEach((pattern, handler) -> {
+				if (handler instanceof ResourceWebHandler) {
+					ResourceWebHandler resourceHandler = (ResourceWebHandler) handler;
+					this.handlerMap.put(pattern, resourceHandler);
+				}
+			}));
 
 		if (this.handlerMap.isEmpty()) {
 			logger.trace("No resource handling mappings found");
@@ -166,6 +171,16 @@ public class ResourceUrlProvider implements ApplicationListener<ContextRefreshed
 					}
 					return Mono.empty();
 				});
+	}
+
+
+	private static String prependLeadingSlash(String pattern) {
+		if (StringUtils.hasLength(pattern) && !pattern.startsWith("/")) {
+			return "/" + pattern;
+		}
+		else {
+			return pattern;
+		}
 	}
 
 }

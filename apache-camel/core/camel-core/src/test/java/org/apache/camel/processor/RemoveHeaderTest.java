@@ -31,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class RemoveHeaderTest extends ContextTestSupport {
     private MockEndpoint end;
     private MockEndpoint mid;
-    private final String headerName = "foo";
-    private final String expectedHeaderValue = "bar";
+    private String headerName = "foo";
+    private String expectedHeaderValue = "bar";
 
     @Test
     public void testSetHeaderMidRouteThenRemove() throws Exception {

@@ -23,7 +23,7 @@ import java.util.Collections;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.support.DefaultExchange;
+import org.apache.camel.support.DefaultMessage;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,23 +31,22 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class RestProducerTest {
 
-    private final CamelContext camelContext = new DefaultCamelContext();
+    private CamelContext camelContext = new DefaultCamelContext();
 
     @Test
     public void shouldCreateMultipleQueryParameters() throws UnsupportedEncodingException, URISyntaxException {
-        DefaultExchange exchange = new DefaultExchange(camelContext);
-        exchange.getMessage().setHeader("multiple", Arrays.asList("value1", "value2", "value3"));
+        final DefaultMessage message = new DefaultMessage(camelContext);
+        message.setHeader("multiple", Arrays.asList("value1", "value2", "value3"));
 
-        assertEquals("param=value1&param=value2&param=value3",
-                RestProducer.createQueryParameters("param={multiple}", exchange));
+        assertEquals("param=value1&param=value2&param=value3", RestProducer.createQueryParameters("param={multiple}", message));
     }
 
     @Test
     public void shouldCreateMultipleOptionalQueryParameters() throws UnsupportedEncodingException, URISyntaxException {
-        DefaultExchange exchange = new DefaultExchange(camelContext);
-        exchange.getMessage().setHeader("multiple", Collections.EMPTY_LIST);
+        final DefaultMessage message = new DefaultMessage(camelContext);
+        message.setHeader("multiple", Collections.EMPTY_LIST);
 
-        assertEquals("", RestProducer.createQueryParameters("multiple={multiple?}", exchange));
+        assertEquals("", RestProducer.createQueryParameters("multiple={multiple?}", message));
     }
 
     @Test
@@ -58,18 +57,18 @@ public class RestProducerTest {
     @Test
     public void shouldCreateOptionalPlaceholderQueryParametersForPresentValues()
             throws UnsupportedEncodingException, URISyntaxException {
-        DefaultExchange exchange = new DefaultExchange(camelContext);
-        exchange.getMessage().setHeader("paramPlaceholderName", "paramValue");
+        final DefaultMessage message = new DefaultMessage(camelContext);
+        message.setHeader("paramPlaceholderName", "paramValue");
 
-        assertEquals("param=paramValue", RestProducer.createQueryParameters("param={paramPlaceholderName?}", exchange));
+        assertEquals("param=paramValue", RestProducer.createQueryParameters("param={paramPlaceholderName?}", message));
     }
 
     @Test
     public void shouldCreatePlaceholderQueryParameters() throws UnsupportedEncodingException, URISyntaxException {
-        DefaultExchange exchange = new DefaultExchange(camelContext);
-        exchange.getMessage().setHeader("paramPlaceholderName", "paramValue");
+        final DefaultMessage message = new DefaultMessage(camelContext);
+        message.setHeader("paramPlaceholderName", "paramValue");
 
-        assertEquals("param=paramValue", RestProducer.createQueryParameters("param={paramPlaceholderName}", exchange));
+        assertEquals("param=paramValue", RestProducer.createQueryParameters("param={paramPlaceholderName}", message));
     }
 
     @Test
@@ -80,18 +79,18 @@ public class RestProducerTest {
     @Test
     public void shouldNotCreateOptionalPlaceholderQueryParametersForMissingValues()
             throws UnsupportedEncodingException, URISyntaxException {
-        DefaultExchange exchange = new DefaultExchange(camelContext);
+        final DefaultMessage message = new DefaultMessage(camelContext);
 
-        assertEquals("", RestProducer.createQueryParameters("param={paramPlaceholderName?}", exchange));
+        assertEquals("", RestProducer.createQueryParameters("param={paramPlaceholderName?}", message));
     }
 
     @Test
     public void shouldSupportAllCombinations() throws UnsupportedEncodingException, URISyntaxException {
-        DefaultExchange exchange = new DefaultExchange(camelContext);
-        exchange.getMessage().setHeader("requiredParamPlaceholder", "header_required_value");
-        exchange.getMessage().setHeader("optionalPresentParamPlaceholder", "header_optional_present_value");
-        exchange.getMessage().setHeader("multiple", Arrays.asList("value1", "value2", "value3"));
-        exchange.getMessage().setHeader("multipleOptional", Collections.EMPTY_LIST);
+        final DefaultMessage message = new DefaultMessage(camelContext);
+        message.setHeader("requiredParamPlaceholder", "header_required_value");
+        message.setHeader("optionalPresentParamPlaceholder", "header_optional_present_value");
+        message.setHeader("multiple", Arrays.asList("value1", "value2", "value3"));
+        message.setHeader("multipleOptional", Collections.EMPTY_LIST);
 
         assertEquals("given=value"
                      + "&required=header_required_value"
@@ -103,6 +102,6 @@ public class RestProducerTest {
                                                    + "&optional_present={optionalPresentParamPlaceholder?}"
                                                    + "&multiple={multiple}"
                                                    + "&multipleOptional={multipleOptional?}",
-                        exchange));
+                        message));
     }
 }

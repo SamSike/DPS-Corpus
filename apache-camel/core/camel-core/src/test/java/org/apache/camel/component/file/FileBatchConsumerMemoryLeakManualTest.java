@@ -52,9 +52,9 @@ public class FileBatchConsumerMemoryLeakManualTest extends ContextTestSupport {
         }
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("c/?sortBy=ignoreCase:file:name")).process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         StringBuilder buf = new StringBuilder(10000000);
                         buf.setLength(1000000);
                         exchange.getIn().setBody(buf.toString());

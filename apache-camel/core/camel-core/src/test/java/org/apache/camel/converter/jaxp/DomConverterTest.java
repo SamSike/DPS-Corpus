@@ -17,7 +17,6 @@
 package org.apache.camel.converter.jaxp;
 
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.w3c.dom.Document;
@@ -47,8 +46,7 @@ public class DomConverterTest extends ContextTestSupport {
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?><hello>world!</hello>");
 
         byte[] bytes = new DomConverter().toByteArray(document.getChildNodes(), null);
-        assertTrue(ObjectHelper.equalByteArray("<hello>world!</hello>".getBytes(StandardCharsets.UTF_8), bytes),
-                "Should be equal");
+        assertTrue(ObjectHelper.equalByteArray("<hello>world!</hello>".getBytes("UTF-8"), bytes), "Should be equal");
     }
 
     @Test
@@ -57,12 +55,11 @@ public class DomConverterTest extends ContextTestSupport {
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?><foo>\u99f1\u99ddb\u00e4r</foo>");
 
         byte[] bytes = new DomConverter().toByteArray(document.getChildNodes(), null);
-        assertTrue(ObjectHelper.equalByteArray("<foo>\u99f1\u99ddb\u00e4r</foo>".getBytes(StandardCharsets.UTF_8), bytes),
-                "Should be equal");
+        assertTrue(ObjectHelper.equalByteArray("<foo>\u99f1\u99ddb\u00e4r</foo>".getBytes("UTF-8"), bytes), "Should be equal");
     }
 
     @Test
-    public void testDomConverterToInteger() {
+    public void testDomConverterToInteger() throws Exception {
         Document document = context.getTypeConverter().convertTo(Document.class,
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?><hello>47</hello>");
 
@@ -71,7 +68,7 @@ public class DomConverterTest extends ContextTestSupport {
     }
 
     @Test
-    public void testDomConverterToLong() {
+    public void testDomConverterToLong() throws Exception {
         Document document = context.getTypeConverter().convertTo(Document.class,
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?><hello>47</hello>");
 

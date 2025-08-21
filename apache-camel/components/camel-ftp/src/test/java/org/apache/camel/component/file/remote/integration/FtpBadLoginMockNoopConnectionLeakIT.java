@@ -31,6 +31,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.file.remote.FtpEndpoint;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.commons.net.ftp.FTPClient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +61,10 @@ public class FtpBadLoginMockNoopConnectionLeakIT extends FtpServerTestSupport {
     }
 
     @Override
-    public void doPostSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
+
         FtpEndpoint<?> endpoint = context.getEndpoint(getFtpUrl(), FtpEndpoint.class);
         endpoint.setFtpClient(new FTPClient() {
             @Override

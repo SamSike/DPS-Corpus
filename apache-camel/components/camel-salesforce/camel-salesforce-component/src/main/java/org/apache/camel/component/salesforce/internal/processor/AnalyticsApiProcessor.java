@@ -34,10 +34,7 @@ import org.apache.camel.component.salesforce.internal.client.AnalyticsApiClient;
 import org.apache.camel.component.salesforce.internal.client.DefaultAnalyticsApiClient;
 import org.apache.camel.support.service.ServiceHelper;
 
-import static org.apache.camel.component.salesforce.SalesforceEndpointConfig.INCLUDE_DETAILS;
-import static org.apache.camel.component.salesforce.SalesforceEndpointConfig.INSTANCE_ID;
-import static org.apache.camel.component.salesforce.SalesforceEndpointConfig.REPORT_ID;
-import static org.apache.camel.component.salesforce.SalesforceEndpointConfig.REPORT_METADATA;
+import static org.apache.camel.component.salesforce.SalesforceEndpointConfig.*;
 
 /**
  * Exchange processor for Analytics API.

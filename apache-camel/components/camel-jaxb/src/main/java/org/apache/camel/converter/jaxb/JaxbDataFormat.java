@@ -21,8 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.lang.reflect.InvocationTargetException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,7 +34,6 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.JAXBIntrospector;
 import jakarta.xml.bind.MarshalException;
 import jakarta.xml.bind.Marshaller;
-import jakarta.xml.bind.PropertyException;
 import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.bind.ValidationEvent;
 
@@ -55,12 +53,12 @@ import org.apache.camel.CamelContextAware;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.InvalidPayloadException;
-import org.apache.camel.NoTypeConversionAvailableException;
 import org.apache.camel.TypeConverter;
 import org.apache.camel.spi.DataFormat;
 import org.apache.camel.spi.DataFormatContentTypeHeader;
 import org.apache.camel.spi.DataFormatName;
 import org.apache.camel.spi.annotations.Dataformat;
+import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.support.service.ServiceSupport;
 import org.apache.camel.util.IOHelper;
@@ -158,7 +156,18 @@ public class JaxbDataFormat extends ServiceSupport
                 marshaller.setProperty(namespacePrefixMapper.getRegistrationKey(), namespacePrefixMapper);
             }
             // Inject any JAX-RI custom properties from the exchange or from the instance into the marshaller
-            injectCustomProperties(exchange, marshaller);
+            Map<String, Object> customProperties = exchange.getProperty(JaxbConstants.JAXB_PROVIDER_PROPERTIES, Map.class);
+            if (customProperties == null) {
+                customProperties = getJaxbProviderProperties();
+            }
+            if (customProperties != null) {
+                for (Entry<String, Object> property : customProperties.entrySet()) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Using JAXB Provider Property {}={}", property.getKey(), property.getValue());
+                    }
+                    marshaller.setProperty(property.getKey(), property.getValue());
+                }
+            }
             doMarshal(exchange, graph, stream, marshaller, charset);
 
             if (contentTypeHeader) {
@@ -166,21 +175,6 @@ public class JaxbDataFormat extends ServiceSupport
             }
         } catch (Exception e) {
             throw new IOException(e);
-        }
-    }
-
-    private void injectCustomProperties(Exchange exchange, Marshaller marshaller) throws PropertyException {
-        Map<String, Object> customProperties = exchange.getProperty(JaxbConstants.JAXB_PROVIDER_PROPERTIES, Map.class);
-        if (customProperties == null) {
-            customProperties = getJaxbProviderProperties();
-        }
-        if (customProperties != null) {
-            for (Entry<String, Object> property : customProperties.entrySet()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Using JAXB Provider Property {}={}", property.getKey(), property.getValue());
-                }
-                marshaller.setProperty(property.getKey(), property.getValue());
-            }
         }
     }
 
@@ -193,114 +187,83 @@ public class JaxbDataFormat extends ServiceSupport
         String partNamespaceFromHeader = exchange.getIn().getHeader(JaxbConstants.JAXB_PART_NAMESPACE, String.class);
         if ((partClass != null || partClassFromHeader != null)
                 && (partNamespaceOnDataFormat != null || partNamespaceFromHeader != null)) {
-            element = toElement(graph, partClassFromHeader, partNamespaceFromHeader, partNamespaceOnDataFormat);
+            if (partClassFromHeader != null) {
+                try {
+                    partClass = camelContext.getClassResolver().resolveMandatoryClass(partClassFromHeader, Object.class);
+                } catch (ClassNotFoundException e) {
+                    throw new JAXBException(e);
+                }
+            }
+            if (partNamespaceFromHeader != null) {
+                partNamespaceOnDataFormat = QName.valueOf(partNamespaceFromHeader);
+            }
+            element = new JAXBElement<>(partNamespaceOnDataFormat, (Class<Object>) partClass, graph);
         }
 
         // only marshal if its possible
         if (introspector.isElement(element)) {
-            tryMarshal(exchange, stream, marshaller, charset, element);
+            if (asXmlStreamWriter(exchange)) {
+                XMLStreamWriter writer = typeConverter.convertTo(XMLStreamWriter.class, exchange, stream);
+                if (needFiltering(exchange)) {
+                    writer = new FilteringXmlStreamWriter(writer, charset);
+                }
+                if (xmlStreamWriterWrapper != null) {
+                    writer = xmlStreamWriterWrapper.wrapWriter(writer);
+                }
+                marshaller.marshal(element, writer);
+            } else {
+                marshaller.marshal(element, stream);
+            }
             return;
         } else if (objectFactory && element != null) {
-            if (tryFromFactory(exchange, stream, marshaller, charset, element)) {
-                return;
+            Method objectFactoryMethod = JaxbHelper.getJaxbElementFactoryMethod(camelContext, element.getClass());
+            if (objectFactoryMethod != null) {
+                try {
+                    Object instance = objectFactoryMethod.getDeclaringClass().newInstance();
+                    if (instance != null) {
+                        Object toMarshall = objectFactoryMethod.invoke(instance, element);
+                        if (asXmlStreamWriter(exchange)) {
+                            XMLStreamWriter writer = typeConverter.convertTo(XMLStreamWriter.class, exchange, stream);
+                            if (needFiltering(exchange)) {
+                                writer = new FilteringXmlStreamWriter(writer, charset);
+                            }
+                            if (xmlStreamWriterWrapper != null) {
+                                writer = xmlStreamWriterWrapper.wrapWriter(writer);
+                            }
+                            marshaller.marshal(toMarshall, writer);
+                        } else {
+                            marshaller.marshal(toMarshall, stream);
+                        }
+                        return;
+                    }
+                } catch (Exception e) {
+                    // if a schema is set then an MarshallException is thrown when the XML is not valid
+                    // and the method must throw this exception as it would when the object in the body is a root element
+                    // or a partial class (the other alternatives above)
+                    //
+                    // it would be best to completely remove the exception handler here but it's left for backwards compatibility reasons.
+                    if (MarshalException.class.isAssignableFrom(e.getClass()) && schema != null) {
+                        throw e;
+                    }
+
+                    LOG.debug("Unable to create JAXBElement object for type {} due to {}", element.getClass(),
+                            e.getMessage(), e);
+                }
             }
         }
 
         // cannot marshal
         if (!mustBeJAXBElement) {
             // write the graph as is to the output stream
-            writeGraph(exchange, graph, stream);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Attempt to marshalling non JAXBElement with type {} as InputStream",
+                        ObjectHelper.classCanonicalName(graph));
+            }
+            InputStream is = exchange.getContext().getTypeConverter().mandatoryConvertTo(InputStream.class, exchange, graph);
+            IOHelper.copyAndCloseInput(is, stream);
         } else {
             throw new InvalidPayloadException(exchange, JAXBElement.class);
         }
-    }
-
-    private boolean tryFromFactory(
-            Exchange exchange, OutputStream stream, Marshaller marshaller, String charset, Object element)
-            throws IllegalAccessException, InvocationTargetException, JAXBException, InstantiationException {
-        Method objectFactoryMethod = JaxbHelper.getJaxbElementFactoryMethod(camelContext, element.getClass());
-        if (objectFactoryMethod != null) {
-            try {
-                tryMarshallFromInstance(exchange, stream, marshaller, charset, objectFactoryMethod, element);
-                return true;
-            } catch (Exception e) {
-                // if a schema is set then an MarshallException is thrown when the XML is not valid
-                // and the method must throw this exception as it would when the object in the body is a root element
-                // or a partial class (the other alternatives above)
-                //
-                // it would be best to completely remove the exception handler here but it's left for backwards compatibility reasons.
-                if (MarshalException.class.isAssignableFrom(e.getClass()) && schema != null) {
-                    throw e;
-                }
-
-                LOG.debug("Unable to create JAXBElement object for type {} due to {}", element.getClass(),
-                        e.getMessage(), e);
-            }
-        }
-        return false;
-    }
-
-    private static void writeGraph(Exchange exchange, Object graph, OutputStream stream)
-            throws NoTypeConversionAvailableException, IOException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Attempt to marshalling non JAXBElement with type {} as InputStream",
-                    ObjectHelper.classCanonicalName(graph));
-        }
-        InputStream is = exchange.getContext().getTypeConverter().mandatoryConvertTo(InputStream.class, exchange, graph);
-        IOHelper.copyAndCloseInput(is, stream);
-    }
-
-    private void tryMarshallFromInstance(
-            Exchange exchange, OutputStream stream, Marshaller marshaller, String charset, Method objectFactoryMethod,
-            Object element)
-            throws IllegalAccessException, InvocationTargetException, JAXBException, InstantiationException {
-        Object instance = objectFactoryMethod.getDeclaringClass().newInstance();
-        Object toMarshall = objectFactoryMethod.invoke(instance, element);
-        if (asXmlStreamWriter(exchange)) {
-            XMLStreamWriter writer = typeConverter.convertTo(XMLStreamWriter.class, exchange, stream);
-            if (needFiltering(exchange)) {
-                writer = new FilteringXmlStreamWriter(writer, charset);
-            }
-            if (xmlStreamWriterWrapper != null) {
-                writer = xmlStreamWriterWrapper.wrapWriter(writer);
-            }
-            marshaller.marshal(toMarshall, writer);
-        } else {
-            marshaller.marshal(toMarshall, stream);
-        }
-        return;
-    }
-
-    private void tryMarshal(Exchange exchange, OutputStream stream, Marshaller marshaller, String charset, Object element)
-            throws JAXBException {
-        if (asXmlStreamWriter(exchange)) {
-            XMLStreamWriter writer = typeConverter.convertTo(XMLStreamWriter.class, exchange, stream);
-            if (needFiltering(exchange)) {
-                writer = new FilteringXmlStreamWriter(writer, charset);
-            }
-            if (xmlStreamWriterWrapper != null) {
-                writer = xmlStreamWriterWrapper.wrapWriter(writer);
-            }
-            marshaller.marshal(element, writer);
-        } else {
-            marshaller.marshal(element, stream);
-        }
-    }
-
-    private Object toElement(
-            Object graph, String partClassFromHeader, String partNamespaceFromHeader, QName partNamespaceOnDataFormat)
-            throws JAXBException {
-        if (partClassFromHeader != null) {
-            try {
-                partClass = camelContext.getClassResolver().resolveMandatoryClass(partClassFromHeader, Object.class);
-            } catch (ClassNotFoundException e) {
-                throw new JAXBException(e);
-            }
-        }
-        if (partNamespaceFromHeader != null) {
-            partNamespaceOnDataFormat = QName.valueOf(partNamespaceFromHeader);
-        }
-        return new JAXBElement<>(partNamespaceOnDataFormat, (Class<Object>) partClass, graph);
     }
 
     private boolean asXmlStreamWriter(Exchange exchange) {
@@ -308,26 +271,16 @@ public class JaxbDataFormat extends ServiceSupport
     }
 
     @Override
-    public Object unmarshal(Exchange exchange, InputStream stream) throws Exception {
-        return unmarshal(exchange, (Object) stream);
-    }
-
-    @Override
-    public Object unmarshal(Exchange exchange, Object body) throws Exception {
+    public Object unmarshal(Exchange exchange, InputStream stream) throws IOException {
         try {
             Object answer;
 
-            XMLStreamReader xmlReader;
+            final XMLStreamReader xmlReader;
             if (needFiltering(exchange)) {
                 xmlReader
-                        = typeConverter.convertTo(XMLStreamReader.class, exchange, createNonXmlFilterReader(exchange, body));
+                        = typeConverter.convertTo(XMLStreamReader.class, exchange, createNonXmlFilterReader(exchange, stream));
             } else {
-                xmlReader = typeConverter.tryConvertTo(XMLStreamReader.class, exchange, body);
-                if (xmlReader == null) {
-                    // fallback to input stream
-                    InputStream is = getCamelContext().getTypeConverter().mandatoryConvertTo(InputStream.class, exchange, body);
-                    xmlReader = typeConverter.convertTo(XMLStreamReader.class, exchange, is);
-                }
+                xmlReader = typeConverter.convertTo(XMLStreamReader.class, exchange, stream);
             }
             String partClassFromHeader = exchange.getIn().getHeader(JaxbConstants.JAXB_PART_CLASS, String.class);
             if (partClass != null || partClassFromHeader != null) {
@@ -353,15 +306,9 @@ public class JaxbDataFormat extends ServiceSupport
         }
     }
 
-    private NonXmlFilterReader createNonXmlFilterReader(Exchange exchange, Object body)
-            throws NoTypeConversionAvailableException {
-        Reader reader = getCamelContext().getTypeConverter().tryConvertTo(Reader.class, exchange, body);
-        if (reader == null) {
-            // fallback to input stream
-            InputStream is = getCamelContext().getTypeConverter().mandatoryConvertTo(InputStream.class, exchange, body);
-            reader = new InputStreamReader(is);
-        }
-        return new NonXmlFilterReader(reader);
+    private NonXmlFilterReader createNonXmlFilterReader(Exchange exchange, InputStream stream)
+            throws UnsupportedEncodingException {
+        return new NonXmlFilterReader(new InputStreamReader(stream, ExchangeHelper.getCharsetName(exchange)));
     }
 
     protected boolean needFiltering(Exchange exchange) {

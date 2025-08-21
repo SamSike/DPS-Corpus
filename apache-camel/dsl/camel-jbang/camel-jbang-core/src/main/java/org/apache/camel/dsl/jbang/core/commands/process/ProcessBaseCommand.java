@@ -16,8 +16,8 @@
  */
 package org.apache.camel.dsl.jbang.core.commands.process;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +26,7 @@ import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
 import org.apache.camel.dsl.jbang.core.common.ProcessHelper;
 import org.apache.camel.support.PatternHelper;
 import org.apache.camel.util.FileUtil;
+import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.StringHelper;
 import org.apache.camel.util.json.JsonObject;
 import org.apache.camel.util.json.Jsoner;
@@ -43,11 +44,8 @@ abstract class ProcessBaseCommand extends CamelCommand {
         if (name.matches("\\d+")) {
             return List.of(Long.parseLong(name));
         } else {
-            if (name.endsWith("!")) {
-                // exclusive this name only
-                name = name.substring(0, name.length() - 1);
-            } else if (!name.endsWith("*")) {
-                // lets be open and match all that starts with this pattern
+            // lets be open and match all that starts with this pattern
+            if (!name.endsWith("*")) {
                 name = name + "*";
             }
         }
@@ -65,18 +63,6 @@ abstract class ProcessBaseCommand extends CamelCommand {
                         pName = FileUtil.onlyName(pName);
                         if (pName != null && !pName.isEmpty() && PatternHelper.matchPattern(pName, pattern)) {
                             pids.add(ph.pid());
-                        } else {
-                            // try camel context name
-                            JsonObject context = (JsonObject) root.get("context");
-                            if (context != null) {
-                                pName = context.getString("name");
-                                if ("CamelJBang".equals(pName)) {
-                                    pName = null;
-                                }
-                                if (pName != null && !pName.isEmpty() && PatternHelper.matchPattern(pName, pattern)) {
-                                    pids.add(ph.pid());
-                                }
-                            }
                         }
                     }
                 });
@@ -84,7 +70,7 @@ abstract class ProcessBaseCommand extends CamelCommand {
         return pids;
     }
 
-    public static long extractSince(ProcessHandle ph) {
+    static long extractSince(ProcessHandle ph) {
         long since = 0;
         if (ph.info().startInstant().isPresent()) {
             since = ph.info().startInstant().get().toEpochMilli();
@@ -92,14 +78,34 @@ abstract class ProcessBaseCommand extends CamelCommand {
         return since;
     }
 
+    static String extractState(int status) {
+        if (status <= 4) {
+            return "Starting";
+        } else if (status == 5) {
+            return "Running";
+        } else if (status == 6) {
+            return "Suspending";
+        } else if (status == 7) {
+            return "Suspended";
+        } else if (status == 8) {
+            return "Terminating";
+        } else if (status == 9) {
+            return "Terminated";
+        } else {
+            return "Terminated";
+        }
+    }
+
     JsonObject loadStatus(long pid) {
         try {
-            Path f = getStatusFile(Long.toString(pid));
-            if (f != null && Files.exists(f)) {
-                String text = Files.readString(f);
+            File f = getStatusFile("" + pid);
+            if (f != null && f.exists()) {
+                FileInputStream fis = new FileInputStream(f);
+                String text = IOHelper.loadText(fis);
+                IOHelper.close(fis);
                 return (JsonObject) Jsoner.deserialize(text);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             // ignore
         }
         return null;

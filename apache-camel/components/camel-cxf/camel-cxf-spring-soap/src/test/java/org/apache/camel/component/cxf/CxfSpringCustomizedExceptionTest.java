@@ -29,7 +29,10 @@ import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
 import org.apache.camel.util.IOHelper;
 import org.apache.cxf.binding.soap.SoapFault;
 import org.apache.cxf.interceptor.Fault;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -37,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CxfSpringCustomizedExceptionTest extends CamelSpringTestSupport {
     private static final String EXCEPTION_MESSAGE = "This is an exception test message";
     private static final String DETAIL_TEXT = "This is a detail text node";
@@ -53,13 +57,18 @@ public class CxfSpringCustomizedExceptionTest extends CamelSpringTestSupport {
     }
 
     @Override
-    public void setupResources() {
+    @BeforeEach
+    public void setUp() throws Exception {
         CXFTestSupport.getPort1();
+        super.setUp();
+
     }
 
     @Override
-    public void cleanupResources() {
+    @AfterEach
+    public void tearDown() throws Exception {
         IOHelper.close(applicationContext);
+        super.tearDown();
     }
 
     @Test

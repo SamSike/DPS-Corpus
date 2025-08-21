@@ -43,13 +43,13 @@ public class ShutdownGracefulNoAutoStartedRoutesTest extends ContextTestSupport 
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").routeId("foo").to("mock:foo");
 
-                from("direct:bar").routeId("bar").autoStartup(false).to("mock:bar");
+                from("direct:bar").routeId("bar").noAutoStartup().to("mock:bar");
             }
         };
     }

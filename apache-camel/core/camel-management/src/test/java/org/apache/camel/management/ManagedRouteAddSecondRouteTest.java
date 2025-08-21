@@ -35,10 +35,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ManagedRouteAddSecondRouteTest extends ManagementTestSupport {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo").to("mock:result");
             }
         };
@@ -57,7 +57,7 @@ public class ManagedRouteAddSecondRouteTest extends ManagementTestSupport {
         // add a 2nd route
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:bar").routeId("bar").to("mock:bar");
             }
         });

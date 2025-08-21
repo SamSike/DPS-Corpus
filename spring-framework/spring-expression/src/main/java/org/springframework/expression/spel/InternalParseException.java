@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package org.springframework.expression.spel;
 
-import org.jspecify.annotations.Nullable;
-
 /**
  * Wraps a real parse exception. This exception flows to the top parse method and then
  * the wrapped exception is thrown as the real problem.
@@ -28,12 +26,12 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("serial")
 public class InternalParseException extends RuntimeException {
 
-	public InternalParseException(@Nullable SpelParseException cause) {
+	public InternalParseException(SpelParseException cause) {
 		super(cause);
 	}
 
 	@Override
-	public @Nullable SpelParseException getCause() {
+	public SpelParseException getCause() {
 		return (SpelParseException) super.getCause();
 	}
 

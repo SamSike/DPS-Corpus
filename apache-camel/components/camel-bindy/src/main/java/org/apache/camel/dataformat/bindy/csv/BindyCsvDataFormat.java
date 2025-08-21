@@ -206,20 +206,15 @@ public class BindyCsvDataFormat extends BindyAbstractDataFormat {
             String separator, Boolean removeQuotes, String quote, AtomicInteger count) {
         return line -> {
             try {
+                // Trim the line coming in to remove any trailing whitespace
                 String trimmedLine;
 
-                // Trim the line coming in to remove any trailing whitespace
-                if (factory.isTrimLine()) {
-                    // if separator is a tab, don't trim any leading whitespaces (could be empty values separated by tabs)
-                    if (separator.equals("\t")) {
-                        // trim only trailing whitespaces (remove new lines etc but keep tab character)
-                        trimmedLine = line.replaceAll("[ \\n\\x0B\\f\\r]+$", "");
-                    } else {
-                        trimmedLine = line.trim();
-                    }
+                // if separator is a tab, don't trim any leading whitespaces (could be empty values separated by tabs)
+                if (separator.equals("\t")) {
+                    // trim only trailing whitespaces (remove new lines etc but keep tab character)
+                    trimmedLine = line.replaceAll("[ \\n\\x0B\\f\\r]+$", "");
                 } else {
-                    // no trim
-                    trimmedLine = line;
+                    trimmedLine = line.trim();
                 }
 
                 // Increment counter
@@ -244,18 +239,7 @@ public class BindyCsvDataFormat extends BindyAbstractDataFormat {
                     separators.add(separators.get(separators.size() - 1));
                 }
 
-                Pattern delimiterPattern = Pattern.compile(Pattern.quote(quote) + "(.*?)" + Pattern.quote(quote));
-                Matcher delimiterMatcher = delimiterPattern.matcher(trimmedLine);
-
-                int escapedSubstringToHandle = 0;
-                // Find and print delimited substrings
-                while (delimiterMatcher.find()) {
-                    String substring = delimiterMatcher.group();
-                    escapedSubstringToHandle += pattern.split(substring).length - 1;
-                }
-
-                String[] tokens = pattern.split(trimmedLine,
-                        factory.getAutospanLine() ? factory.getMaxpos() + escapedSubstringToHandle : -1);
+                String[] tokens = pattern.split(trimmedLine, factory.getAutospanLine() ? factory.getMaxpos() : -1);
 
                 List<String> result = Arrays.asList(tokens);
 
@@ -300,7 +284,7 @@ public class BindyCsvDataFormat extends BindyAbstractDataFormat {
         // if the separator char is also inside a quoted token, therefore we
         // need
         // to fix this afterwards
-        StringBuilder current = new StringBuilder(256);
+        StringBuilder current = new StringBuilder();
         boolean inProgress = false;
         List<String> answer = new ArrayList<>();
         int idxSeparator = 0;
@@ -331,27 +315,8 @@ public class BindyCsvDataFormat extends BindyAbstractDataFormat {
 
             // "not empty"+quote
             if (s.endsWith(quote)) {
-                boolean escaped = false;
-                if (quote.equals("\"")) {
-                    int i;
-                    for (i = s.length() - 2; i > 0; i--) {
-                        char ch = s.charAt(i);
-                        if (ch == '"' && (canStart || inProgress)) {
-                            escaped = !escaped;
-                        } else if (ch == '\\') {
-                            continue;
-                        } else {
-                            break;
-                        }
-                    }
-                    if (i == 0 && s.charAt(i) == '"' && inProgress) {
-                        escaped = !escaped;
-                    }
-                }
-                if (!escaped) {
-                    cutEnd = true;
-                    canClose = true;
-                }
+                cutEnd = true;
+                canClose = true;
             }
 
             // optimize to only substring once

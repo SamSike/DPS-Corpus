@@ -22,7 +22,6 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Expression;
 import org.apache.camel.NoTypeConversionAvailableException;
 import org.apache.camel.RuntimeCamelException;
-import org.apache.camel.language.simple.BaseSimpleParser;
 import org.apache.camel.language.simple.types.SimpleParserException;
 import org.apache.camel.language.simple.types.SimpleToken;
 import org.apache.camel.language.simple.types.UnaryOperatorType;
@@ -33,7 +32,7 @@ import org.apache.camel.util.ObjectHelper;
  */
 public class UnaryExpression extends BaseSimpleNode {
 
-    private final UnaryOperatorType operator;
+    private UnaryOperatorType operator;
     private SimpleNode left;
 
     public UnaryExpression(SimpleToken token) {
@@ -147,14 +146,10 @@ public class UnaryExpression extends BaseSimpleNode {
     }
 
     @Override
-    public String createCode(CamelContext camelContext, String expression) throws SimpleParserException {
-        return BaseSimpleParser.CODE_START + doCreateCode(camelContext, expression) + BaseSimpleParser.CODE_END;
-    }
-
-    private String doCreateCode(CamelContext camelContext, String expression) throws SimpleParserException {
+    public String createCode(String expression) throws SimpleParserException {
         ObjectHelper.notNull(left, "left node", this);
 
-        final String number = left.createCode(camelContext, expression);
+        final String number = left.createCode(expression);
 
         if (operator == UnaryOperatorType.INC) {
             return "increment(exchange, " + number + ")";

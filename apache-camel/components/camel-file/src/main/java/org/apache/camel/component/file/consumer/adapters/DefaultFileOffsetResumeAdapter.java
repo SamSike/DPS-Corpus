@@ -23,7 +23,6 @@ import org.apache.camel.component.file.GenericFile;
 import org.apache.camel.component.file.consumer.FileOffsetResumeAdapter;
 import org.apache.camel.component.file.consumer.FileResumeAdapter;
 import org.apache.camel.resume.Offset;
-import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,14 +41,15 @@ class DefaultFileOffsetResumeAdapter extends AbstractFileResumeAdapter implement
 
     @Override
     public void setResumePayload(GenericFile<File> genericFile) {
-        this.genericFile = ObjectHelper.notNull(genericFile, "genericFile");
+        assert genericFile != null;
+        this.genericFile = genericFile;
     }
 
     public boolean add(Object key, Object offset) {
-        if (offset instanceof Long longOffset) {
+        if (offset instanceof Long) {
             FileOffset fileOffset = (FileOffset) cache.computeIfAbsent((File) key, k -> new FileOffset());
 
-            fileOffset.update(longOffset);
+            fileOffset.update((Long) offset);
         } else {
             throw new UnsupportedOperationException("This adapter cannot be used for directory entries");
         }
@@ -74,8 +74,8 @@ class DefaultFileOffsetResumeAdapter extends AbstractFileResumeAdapter implement
             return;
         }
 
-        if (offsetObj instanceof Long longOffsetObj) {
-            genericFile.updateLastOffsetValue(longOffsetObj);
+        if (offsetObj instanceof Long) {
+            genericFile.updateLastOffsetValue((Long) offsetObj);
         } else {
             // This should never happen
             LOG.warn("Cannot perform a resume operation of an object of unhandled type: {}", offsetObj.getClass());

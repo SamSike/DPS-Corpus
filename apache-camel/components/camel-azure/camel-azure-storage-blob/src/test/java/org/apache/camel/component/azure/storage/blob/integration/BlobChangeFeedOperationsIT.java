@@ -86,7 +86,7 @@ class BlobChangeFeedOperationsIT extends Base {
     }
 
     @AfterAll
-    public void deleteClient() {
+    public void tearDown() {
         containerClient.delete();
     }
 

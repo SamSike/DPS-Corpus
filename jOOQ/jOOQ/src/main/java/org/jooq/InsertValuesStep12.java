@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -45,7 +45,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * This type is used for the {@link Insert}'s DSL API.
  * <p>
- * Example: <pre><code>
+ * Example: <code><pre>
  * using(configuration)
  *       .insertInto(table, field1, field2, field3, .., field11, field12)
  *       .values(valueA1, valueA2, valueA3, .., valueA11, valueA12)
@@ -54,7 +54,7 @@ import org.jetbrains.annotations.NotNull;
  *       .set(field1, value1)
  *       .set(field2, value2)
  *       .execute();
- * </code></pre>
+ * </pre></code>
  *
  * @author Lukas Eder
  */
@@ -123,17 +123,8 @@ public interface InsertValuesStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7
     /**
      * Add multiple rows of values to the insert statement.
      * <p>
-     * This is equivalent to calling the other values clauses multiple times,
-     * but allows for dynamic construction of row arrays.
-     * <p>
-     * <strong>Note</strong>: Irrespective of individual
-     * {@link Record#touched()} or {@link Record#modified()} flag values, all
-     * record values are copied to the <code>VALUES</code> clause using
-     * {@link Record#intoArray()}, to match insert columns by position, not by
-     * name. If you prefer omitting untouched or unmodified values and adding
-     * values by field name rather than by index, use
-     * {@link InsertSetStep#set(Record...)} instead. That syntax is available
-     * only if you omit the explicit insert columns list.
+     * This is equivalent to calling the other values clauses multiple times, but
+     * allows for dynamic construction of row arrays.
      */
     @NotNull @CheckReturnValue
     @Support
@@ -143,17 +134,8 @@ public interface InsertValuesStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7
     /**
      * Add multiple rows of values to the insert statement.
      * <p>
-     * This is equivalent to calling the other values clauses multiple times,
-     * but allows for dynamic construction of row arrays.
-     * <p>
-     * <strong>Note</strong>: Irrespective of individual
-     * {@link Record#touched()} or {@link Record#modified()} flag values, all
-     * record values are copied to the <code>VALUES</code> clause using
-     * {@link Record#intoArray()}, to match insert columns by position, not by
-     * name. If you prefer omitting untouched or unmodified values and adding
-     * values by field name rather than by index, use
-     * {@link InsertSetStep#set(Record...)} instead. That syntax is available
-     * only if you omit the explicit insert columns list.
+     * This is equivalent to calling the other values clauses multiple times, but
+     * allows for dynamic construction of row arrays.
      */
     @NotNull @CheckReturnValue
     @Support
@@ -163,7 +145,7 @@ public interface InsertValuesStep12<R extends Record, T1, T2, T3, T4, T5, T6, T7
      * Use a <code>SELECT</code> statement as the source of values for the
      * <code>INSERT</code> statement
      * <p>
-     * This variant of the <code>INSERT … SELECT</code> statement expects a
+     * This variant of the <code>INSERT .. SELECT</code> statement expects a
      * select returning exactly as many fields as specified previously in the
      * <code>INTO</code> clause:
      * {@link DSLContext#insertInto(Table, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field, Field)}

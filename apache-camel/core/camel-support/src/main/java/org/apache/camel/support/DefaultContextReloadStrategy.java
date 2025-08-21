@@ -19,7 +19,6 @@ package org.apache.camel.support;
 import org.apache.camel.CamelContext;
 import org.apache.camel.api.management.ManagedAttribute;
 import org.apache.camel.api.management.ManagedOperation;
-import org.apache.camel.api.management.ManagedResource;
 import org.apache.camel.spi.ContextReloadStrategy;
 import org.apache.camel.spi.PropertiesComponent;
 import org.apache.camel.spi.PropertiesSource;
@@ -31,7 +30,6 @@ import org.slf4j.LoggerFactory;
 /**
  * Default {@link ContextReloadStrategy}.
  */
-@ManagedResource(description = "Managed DefaultContextReloadStrategy")
 public class DefaultContextReloadStrategy extends ServiceSupport implements ContextReloadStrategy {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultContextReloadStrategy.class);
@@ -39,7 +37,6 @@ public class DefaultContextReloadStrategy extends ServiceSupport implements Cont
     private CamelContext camelContext;
     private int succeeded;
     private int failed;
-    private Exception lastError;
 
     @Override
     public CamelContext getCamelContext() {
@@ -51,25 +48,18 @@ public class DefaultContextReloadStrategy extends ServiceSupport implements Cont
         this.camelContext = camelContext;
     }
 
-    @ManagedOperation(description = "Trigger on-demand reloading")
-    public void onReload() {
-        onReload("JMX Management");
-    }
-
     @Override
     public void onReload(Object source) {
         LOG.info("Reloading CamelContext ({}) triggered by: {}", camelContext.getName(), source);
         try {
-            lastError = null;
             EventHelper.notifyContextReloading(getCamelContext(), source);
             reloadProperties(source);
             reloadRoutes(source);
             incSucceededCounter();
             EventHelper.notifyContextReloaded(getCamelContext(), source);
         } catch (Exception e) {
-            lastError = e;
             incFailedCounter();
-            LOG.warn("Error reloading CamelContext ({}) due to: {}", camelContext.getName(), e.getMessage(), e);
+            LOG.warn("Error reloading CamelContext (" + camelContext.getName() + ") due to: " + e.getMessage(), e);
             EventHelper.notifyContextReloadFailure(getCamelContext(), source, e);
         }
     }
@@ -111,17 +101,22 @@ public class DefaultContextReloadStrategy extends ServiceSupport implements Cont
         failed = 0;
     }
 
-    @Override
-    public Exception getLastError() {
-        return lastError;
-    }
-
     protected void incSucceededCounter() {
         succeeded++;
     }
 
     protected void incFailedCounter() {
         failed++;
+    }
+
+    @Override
+    protected void doStart() throws Exception {
+        // noop
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        // noop
     }
 
 }

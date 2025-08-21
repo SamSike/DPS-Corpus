@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class BeanWithHeadersAndBodyInject3Test extends ContextTestSupport {
-    private final MyBean myBean = new MyBean();
+    private MyBean myBean = new MyBean();
 
     @Override
     protected RouteBuilder createRouteBuilder() {
@@ -71,15 +71,15 @@ public class BeanWithHeadersAndBodyInject3Test extends ContextTestSupport {
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("myBean", myBean);
         return answer;
     }
 
     public static class MyBean {
 
-        public String doSomething(@Body String body, @Headers Map<String, Object> headers) {
+        public String doSomething(@Body String body, @Headers Map headers) {
             headers.put("out", 123);
             return "Hello!";
         }

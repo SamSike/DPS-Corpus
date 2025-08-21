@@ -91,16 +91,10 @@ public abstract class RouteConfigurationBuilder extends RouteBuilder implements 
         if (!list.isEmpty()) {
             // remove existing before updating
             for (RouteConfigurationDefinition def : list) {
-                context.getCamelContextExtension().getContextPlugin(Model.class).removeRouteConfiguration(def);
+                context.getExtension(Model.class).removeRouteConfiguration(def);
             }
             populateRoutesConfiguration();
         }
-    }
-
-    @Override
-    protected void initializeCamelContext(CamelContext camelContext) {
-        super.initializeCamelContext(camelContext);
-        getRouteConfigurationCollection().setCamelContext(camelContext);
     }
 
     protected void populateRoutesConfiguration() throws Exception {
@@ -109,10 +103,7 @@ public abstract class RouteConfigurationBuilder extends RouteBuilder implements 
             throw new IllegalArgumentException("CamelContext has not been injected!");
         }
         getRouteConfigurationCollection().setCamelContext(camelContext);
-        if (getResource() != null) {
-            getRouteConfigurationCollection().setResource(getResource());
-        }
-        camelContext.getCamelContextExtension().getContextPlugin(Model.class)
+        camelContext.getExtension(Model.class)
                 .addRouteConfigurations(getRouteConfigurationCollection().getRouteConfigurations());
     }
 

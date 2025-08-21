@@ -26,7 +26,7 @@ import org.apache.camel.spi.Registry;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  *
@@ -39,12 +39,13 @@ public class ContextScopedOnExceptionNotHandledErrorHandlerRefIssueTwoRoutesTest
         getMockEndpoint("mock:handled").expectedMessageCount(1);
         getMockEndpoint("mock:dead").expectedMessageCount(0);
 
-        CamelExecutionException e = assertThrows(CamelExecutionException.class,
-                () -> template.sendBody("direct:start", "Hello World"),
-                "Should have thrown exception");
-
-        IllegalArgumentException cause = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
-        assertEquals("Damn", cause.getMessage());
+        try {
+            template.sendBody("direct:start", "Hello World");
+            fail("Should have thrown exception");
+        } catch (CamelExecutionException e) {
+            IllegalArgumentException cause = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
+            assertEquals("Damn", cause.getMessage());
+        }
 
         assertMockEndpointsSatisfied();
     }
@@ -61,17 +62,17 @@ public class ContextScopedOnExceptionNotHandledErrorHandlerRefIssueTwoRoutesTest
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myDLC", new DeadLetterChannelBuilder("mock:dead"));
         return jndi;
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler("myDLC");
 
                 onException(IllegalArgumentException.class).handled(false).to("mock:handled").end();

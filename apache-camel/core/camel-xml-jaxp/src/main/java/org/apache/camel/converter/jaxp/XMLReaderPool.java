@@ -22,8 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
@@ -83,7 +81,6 @@ public class XMLReaderPool {
      * Wraps another XMLReader for single use only.
      */
     private final class OneTimeXMLReader implements XMLReader {
-        private final Lock lock = new ReentrantLock();
         private final XMLReader xmlReader;
         private final Map<String, Boolean> initFeatures = new HashMap<>();
         private final Map<String, Object> initProperties = new HashMap<>();
@@ -209,32 +206,22 @@ public class XMLReaderPool {
         }
 
         @Override
-        public void parse(InputSource input) throws IOException, SAXException {
-            lock.lock();
+        public synchronized void parse(InputSource input) throws IOException, SAXException {
+            checkValid();
             try {
-                checkValid();
-                try {
-                    xmlReader.parse(input);
-                } finally {
-                    release();
-                }
+                xmlReader.parse(input);
             } finally {
-                lock.unlock();
+                release();
             }
         }
 
         @Override
-        public void parse(String systemId) throws IOException, SAXException {
-            lock.lock();
+        public synchronized void parse(String systemId) throws IOException, SAXException {
+            checkValid();
             try {
-                checkValid();
-                try {
-                    xmlReader.parse(systemId);
-                } finally {
-                    release();
-                }
+                xmlReader.parse(systemId);
             } finally {
-                lock.unlock();
+                release();
             }
         }
 

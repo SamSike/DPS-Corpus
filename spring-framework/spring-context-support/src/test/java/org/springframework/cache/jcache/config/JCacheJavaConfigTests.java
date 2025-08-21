@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 /**
  * @author Stephane Nicoll
  */
-class JCacheJavaConfigTests extends AbstractJCacheAnnotationTests {
+public class JCacheJavaConfigTests extends AbstractJCacheAnnotationTests {
 
 	@Override
 	protected ApplicationContext getApplicationContext() {
@@ -61,7 +61,7 @@ class JCacheJavaConfigTests extends AbstractJCacheAnnotationTests {
 
 
 	@Test
-	void fullCachingConfig() {
+	public void fullCachingConfig() throws Exception {
 		AnnotationConfigApplicationContext context =
 				new AnnotationConfigApplicationContext(FullCachingConfig.class);
 
@@ -75,7 +75,7 @@ class JCacheJavaConfigTests extends AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	void emptyConfigSupport() {
+	public void emptyConfigSupport() {
 		ConfigurableApplicationContext context =
 				new AnnotationConfigApplicationContext(EmptyConfigSupportConfig.class);
 
@@ -88,7 +88,7 @@ class JCacheJavaConfigTests extends AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	void bothSetOnlyResolverIsUsed() {
+	public void bothSetOnlyResolverIsUsed() {
 		ConfigurableApplicationContext context =
 				new AnnotationConfigApplicationContext(FullCachingConfigSupport.class);
 
@@ -100,7 +100,7 @@ class JCacheJavaConfigTests extends AbstractJCacheAnnotationTests {
 	}
 
 	@Test
-	void exceptionCacheResolverLazilyRequired() {
+	public void exceptionCacheResolverLazilyRequired() {
 		try (ConfigurableApplicationContext context = new AnnotationConfigApplicationContext(NoExceptionCacheResolverConfig.class)) {
 			DefaultJCacheOperationSource cos = context.getBean(DefaultJCacheOperationSource.class);
 			assertThat(cos.getCacheResolver()).isSameAs(context.getBean("cacheResolver"));
@@ -180,7 +180,7 @@ class JCacheJavaConfigTests extends AbstractJCacheAnnotationTests {
 
 	@Configuration
 	@EnableCaching
-	public static class EmptyConfigSupportConfig implements JCacheConfigurer {
+	public static class EmptyConfigSupportConfig extends JCacheConfigurerSupport {
 		@Bean
 		public CacheManager cm() {
 			return new NoOpCacheManager();
@@ -190,7 +190,7 @@ class JCacheJavaConfigTests extends AbstractJCacheAnnotationTests {
 
 	@Configuration
 	@EnableCaching
-	static class FullCachingConfigSupport implements JCacheConfigurer {
+	static class FullCachingConfigSupport extends JCacheConfigurerSupport {
 
 		@Override
 		@Bean
@@ -220,7 +220,7 @@ class JCacheJavaConfigTests extends AbstractJCacheAnnotationTests {
 
 	@Configuration
 	@EnableCaching
-	static class NoExceptionCacheResolverConfig implements JCacheConfigurer {
+	static class NoExceptionCacheResolverConfig extends JCacheConfigurerSupport {
 
 		@Override
 		@Bean

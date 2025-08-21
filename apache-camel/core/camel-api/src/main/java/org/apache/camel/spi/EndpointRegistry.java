@@ -36,8 +36,10 @@ import org.apache.camel.StaticService;
  * <p/>
  * The dynamic cache stores the endpoints that are created and used ad-hoc, such as from custom Java code that creates
  * new endpoints etc. The dynamic cache has an upper limit, that by default is 1000 entries.
+ *
+ * @param <K> endpoint key
  */
-public interface EndpointRegistry extends Map<NormalizedEndpointUri, Endpoint>, StaticService {
+public interface EndpointRegistry<K> extends Map<K, Endpoint>, StaticService {
 
     /**
      * Number of endpoints in the static registry.
@@ -76,15 +78,6 @@ public interface EndpointRegistry extends Map<NormalizedEndpointUri, Endpoint>, 
     boolean isDynamic(String key);
 
     /**
-     * Whether the given endpoint is stored in the registry
-     *
-     * @param  key the endpoint key
-     * @return     <tt>true</tt> if present, <tt>false</tt> if not
-     */
-    @Override
-    boolean containsKey(Object key);
-
-    /**
      * Cleanup the cache (purging stale entries)
      */
     void cleanUp();
@@ -93,10 +86,5 @@ public interface EndpointRegistry extends Map<NormalizedEndpointUri, Endpoint>, 
      * Gets a read-only collection of the endpoints currently in the registry.
      */
     Collection<Endpoint> getReadOnlyValues();
-
-    /**
-     * Gets a read-only map of the endpoints currently in the registry.
-     */
-    Map<String, Endpoint> getReadOnlyMap();
 
 }

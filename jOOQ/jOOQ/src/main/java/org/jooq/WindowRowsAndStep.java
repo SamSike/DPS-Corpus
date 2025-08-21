@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,11 +39,8 @@ package org.jooq;
 
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 // ...
-// ...
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
@@ -60,7 +57,6 @@ import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 
@@ -69,7 +65,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * This type is used for the window function DSL API.
  * <p>
- * Example: <pre><code>
+ * Example: <code><pre>
  * field.firstValue()
  *      .ignoreNulls()
  *      .over()
@@ -77,7 +73,7 @@ import org.jetbrains.annotations.NotNull;
  *      .orderBy(PUBLISHED_IN.asc())
  *      .rowsBetweenUnboundedPreceding()
  *      .andUnboundedFollowing()
- * </code></pre>
+ * </pre></code>
  *
  * @param <T> The function return type
  * @author Lukas Eder
@@ -85,42 +81,42 @@ import org.jetbrains.annotations.NotNull;
 public interface WindowRowsAndStep<T> {
 
     /**
-     * Add a <code>… AND UNBOUNDED PRECEDING</code> frame clause to the window
+     * Add a <code>... AND UNBOUNDED PRECEDING</code> frame clause to the window
      * function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WindowExcludeStep<T> andUnboundedPreceding();
 
     /**
-     * Add a <code>… AND [number] PRECEDING</code> frame clause to the window
+     * Add a <code>... AND [number] PRECEDING</code> frame clause to the window
      * function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WindowExcludeStep<T> andPreceding(int number);
 
     /**
-     * Add a <code>… AND CURRENT ROW</code> frame clause to the window
+     * Add a <code>... AND CURRENT ROW</code> frame clause to the window
      * function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WindowExcludeStep<T> andCurrentRow();
 
     /**
-     * Add a <code>… AND UNBOUNDED FOLLOWING</code> frame clause to the window
+     * Add a <code>... AND UNBOUNDED FOLLOWING</code> frame clause to the window
      * function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WindowExcludeStep<T> andUnboundedFollowing();
 
     /**
-     * Add a <code>… AND [number] FOLLOWING</code> frame clause to the window
+     * Add a <code>... AND [number] FOLLOWING</code> frame clause to the window
      * function.
      */
     @NotNull
-    @Support({ CLICKHOUSE, DUCKDB, FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, TRINO, YUGABYTEDB })
+    @Support({ FIREBIRD, H2, MARIADB, MYSQL, POSTGRES, SQLITE, YUGABYTEDB })
     WindowExcludeStep<T> andFollowing(int number);
 }

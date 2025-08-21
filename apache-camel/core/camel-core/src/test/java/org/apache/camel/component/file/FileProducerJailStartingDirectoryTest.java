@@ -22,8 +22,8 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class FileProducerJailStartingDirectoryTest extends ContextTestSupport {
 
@@ -32,12 +32,13 @@ public class FileProducerJailStartingDirectoryTest extends ContextTestSupport {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(0);
 
-        Exception e = assertThrows(Exception.class,
-                () -> template.sendBodyAndHeader("direct:start", "Hello World", Exchange.FILE_NAME, "hello.txt"),
-                "Should have thrown exception");
-
-        IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
-        assertTrue(iae.getMessage().contains("as the filename is jailed to the starting directory"));
+        try {
+            template.sendBodyAndHeader("direct:start", "Hello World", Exchange.FILE_NAME, "hello.txt");
+            fail("Should have thrown exception");
+        } catch (Exception e) {
+            IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
+            assertTrue(iae.getMessage().contains("as the filename is jailed to the starting directory"));
+        }
 
         assertMockEndpointsSatisfied();
     }
@@ -53,10 +54,10 @@ public class FileProducerJailStartingDirectoryTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").setHeader(Exchange.FILE_NAME, simple("../${file:name}"))
                         .to(fileUri("outbox"))
                         .to("mock:result");

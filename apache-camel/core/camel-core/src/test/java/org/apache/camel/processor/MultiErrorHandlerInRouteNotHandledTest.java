@@ -27,8 +27,8 @@ import org.junit.jupiter.api.Test;
  * Unit test with multi route specific error handlers
  */
 public class MultiErrorHandlerInRouteNotHandledTest extends ContextTestSupport {
-    private final MyProcessor outer = new MyProcessor();
-    private final MyProcessor inner = new MyProcessor();
+    private MyProcessor outer = new MyProcessor();
+    private MyProcessor inner = new MyProcessor();
 
     @Test
     public void testNoErrors() throws Exception {
@@ -78,9 +78,9 @@ public class MultiErrorHandlerInRouteNotHandledTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").errorHandler(deadLetterChannel("mock:outer").maximumRedeliveries(1).redeliveryDelay(0))
                         .process(outer).to("direct:outer");
 
@@ -95,7 +95,7 @@ public class MultiErrorHandlerInRouteNotHandledTest extends ContextTestSupport {
         private String name;
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             if (name.equals("Error")) {
                 throw new IllegalArgumentException("Forced exception by unit test");
             }

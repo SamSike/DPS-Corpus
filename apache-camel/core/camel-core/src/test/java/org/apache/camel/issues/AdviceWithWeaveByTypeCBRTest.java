@@ -29,7 +29,7 @@ public class AdviceWithWeaveByTypeCBRTest extends ContextTestSupport {
     public void testWeaveByType() throws Exception {
         AdviceWith.adviceWith(context.getRouteDefinitions().get(0), context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 weaveByType(ChoiceDefinition.class).replace().to("mock:baz");
             }
         });
@@ -42,10 +42,10 @@ public class AdviceWithWeaveByTypeCBRTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").transform(simple("Hello ${body}")).log("Got ${body}").to("mock:result").choice()
                         .when(header("foo").isEqualTo("bar")).to("mock:resultA")
                         .otherwise().to("mock:resultB");

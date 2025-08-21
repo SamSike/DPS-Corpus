@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -99,6 +99,9 @@ implements
     private Result<R>                      result;
     private ResultsImpl                    results;
 
+    // Some temp variables for String interning
+    private final Intern                   intern                            = new Intern();
+
     AbstractResultQuery(Configuration configuration) {
         super(configuration);
     }
@@ -168,6 +171,30 @@ implements
     }
 
     @Override
+    public final CloseableResultQuery<R> intern(Field<?>... fields) {
+        intern.internFields = fields;
+        return this;
+    }
+
+    @Override
+    public final CloseableResultQuery<R> intern(int... fieldIndexes) {
+        intern.internIndexes = fieldIndexes;
+        return this;
+    }
+
+    @Override
+    public final CloseableResultQuery<R> intern(String... fieldNameStrings) {
+        intern.internNameStrings = fieldNameStrings;
+        return this;
+    }
+
+    @Override
+    public final CloseableResultQuery<R> intern(Name... fieldNames) {
+        intern.internNames = fieldNames;
+        return this;
+    }
+
+    @Override
     protected final void prepare(ExecuteContext ctx) throws SQLException {
         if (ctx.statement() == null) {
 
@@ -204,7 +231,7 @@ implements
         // [#4511] [#4753] PostgreSQL doesn't like fetchSize with autoCommit == true
         int f = SettingsTools.getFetchSize(fetchSize, ctx.settings());
         if (REPORT_FETCH_SIZE_WITH_AUTOCOMMIT.contains(ctx.dialect()) && f != 0 && ctx.connection().getAutoCommit())
-            log.info("Fetch Size", "A fetch size of " + f + " was set on a auto-commit PostgreSQL connection, which is not recommended. See https://jdbc.postgresql.org/documentation/query/#getting-results-based-on-a-cursor");
+            log.info("Fetch Size", "A fetch size of " + f + " was set on a auto-commit PostgreSQL connection, which is not recommended. See http://jdbc.postgresql.org/documentation/head/query.html#query-with-cursor");
 
         SQLException e = executeStatementAndGetFirstResultSet(ctx, rendered.skipUpdateCounts);
         listener.executeEnd(ctx);
@@ -232,7 +259,7 @@ implements
             }
 
             Field<?>[] fields = getFields(() -> ctx.resultSet().getMetaData());
-            cursor = new CursorImpl<>(ctx, listener, fields, keepStatement(), keepResultSet(), getTable(), getRecordType(), SettingsTools.getMaxRows(maxRows, ctx.settings()), autoclosing);
+            cursor = new CursorImpl<>(ctx, listener, fields, intern.internIndexes(fields), keepStatement(), keepResultSet(), getRecordType(), SettingsTools.getMaxRows(maxRows, ctx.settings()), autoclosing);
 
             if (!lazy) {
                 result = cursor.fetch();
@@ -243,7 +270,7 @@ implements
         // Fetch several result sets
         else {
             results = new ResultsImpl(ctx.configuration());
-            consumeResultSets(ctx, listener, results, e);
+            consumeResultSets(ctx, listener, results, intern, e);
         }
 
         return result != null ? result.size() : 0;
@@ -316,23 +343,14 @@ implements
     }
 
     @SuppressWarnings("unchecked")
-    final Table<? extends R> getTable() {
-        if (coerceTable != null)
-            return (Table<? extends R>) coerceTable;
-        else
-            return getTable0();
-    }
-
-    @SuppressWarnings("unchecked")
     @Override
     public final Class<? extends R> getRecordType() {
         if (coerceTable != null)
             return (Class<? extends R>) coerceTable.getRecordType();
-        else
-            return getRecordType0();
+
+        return getRecordType0();
     }
 
-    abstract Table<? extends R> getTable0();
     abstract Class<? extends R> getRecordType0();
 
     @Override

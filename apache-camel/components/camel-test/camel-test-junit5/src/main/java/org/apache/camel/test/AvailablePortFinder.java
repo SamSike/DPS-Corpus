@@ -16,8 +16,11 @@
  */
 package org.apache.camel.test;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -39,7 +42,7 @@ public final class AvailablePortFinder {
     public class Port implements BeforeEachCallback, AfterAllCallback, AutoCloseable {
         final int port;
         String testClass;
-        final Throwable creation;
+        Throwable creation;
 
         public Port(int port) {
             this.port = port;
@@ -54,18 +57,15 @@ public final class AvailablePortFinder {
             AvailablePortFinder.this.release(this);
         }
 
-        @Override
         public String toString() {
             return Integer.toString(port);
         }
 
-        @Override
         public void beforeEach(ExtensionContext context) throws Exception {
             testClass = context.getTestClass().map(Class::getName).orElse(null);
             LOG.info("Registering port {} for test {}", port, testClass);
         }
 
-        @Override
         public void afterAll(ExtensionContext context) throws Exception {
             release();
         }
@@ -133,21 +133,6 @@ public final class AvailablePortFinder {
     }
 
     /**
-     * Gets the next available port.
-     *
-     * @throws IllegalStateException if there are no ports available
-     * @return                       the available port
-     */
-    public static int getNextRandomAvailable() {
-        Random random = new Random();
-        int fromPort = random.nextInt(10000, 65500);
-        int toPort = random.nextInt(fromPort, 65500);
-        try (Port port = INSTANCE.findPort(fromPort, toPort)) {
-            return port.getPort();
-        }
-    }
-
-    /**
      * Gets the next available port in the given range.
      *
      * @param  fromPort              port number start range.
@@ -197,7 +182,29 @@ public final class AvailablePortFinder {
      *                               available port number.
      */
     public static int probePort(int port) {
-        return AvailablePort.probePort(null, port);
+        return probePort(null, port);
+    }
+
+    /**
+     * Probe a port to see if it is free
+     *
+     * @param  port                  an integer port number to be tested. If port is 0, then the next available port is
+     *                               returned.
+     * @throws IllegalStateException if the port is not free or, in case of port 0, if there are no ports available at
+     *                               all.
+     * @return                       the port number itself if the port is free or, in case of port 0, the first
+     *                               available port number.
+     */
+    public static int probePort(InetAddress address, int port) {
+        try (ServerSocket ss = new ServerSocket()) {
+            ss.setReuseAddress(true);
+            ss.bind(new InetSocketAddress(address, port), 1);
+            int probedPort = ss.getLocalPort();
+            LOG.info("Available port is -> {}", probedPort);
+            return probedPort;
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot find free port", e);
+        }
     }
 
 }

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -42,20 +42,14 @@ import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
 import static org.jooq.impl.DSL.name;
-import static org.jooq.tools.StringUtils.defaultIfNull;
-import static org.jooq.tools.StringUtils.isEmpty;
 
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.jooq.DSLContext;
 import org.jooq.Name;
-// ...
 import org.jooq.SQLDialect;
-import org.jooq.impl.DSL;
-import org.jooq.impl.DefaultConfiguration;
 import org.jooq.meta.jaxb.CommentType;
 import org.jooq.tools.StringUtils;
 
@@ -83,7 +77,6 @@ public abstract class AbstractDefinition implements Definition {
     private transient Name          qualifiedInputNamePart;
     private transient Name          qualifiedOutputNamePart;
     private transient Integer       hashCode;
-    private transient List<String>  partiallyQualifiedNames;
 
     public AbstractDefinition(Database database, SchemaDefinition schema, String name) {
         this(database, schema, name, null);
@@ -187,35 +180,9 @@ public abstract class AbstractDefinition implements Definition {
 
 
 
-        return getSchemaComment();
-    }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    private final String getSchemaComment() {
-        return !isEmpty(schemaComment) ? schemaComment : defaultIfNull(getDatabase().getComments().get(this), "");
+        return schemaComment;
     }
 
     @Override
@@ -309,23 +276,6 @@ public abstract class AbstractDefinition implements Definition {
         }
 
         return qualifiedOutputNamePart;
-    }
-
-    // [#16567] Avoid re-creating rendering contexts every time we render a name for matching purposes.
-    private static final DSLContext CTX = new DefaultConfiguration().dsl();
-
-    @Override
-    public final List<String> getPartiallyQualifiedNames() {
-        if (partiallyQualifiedNames == null) {
-            partiallyQualifiedNames = new ArrayList<>();
-
-            List<Name> parts = Arrays.asList(getQualifiedNamePart().parts());
-
-            for (int i = parts.size() - 1; i >= 0; i--)
-                partiallyQualifiedNames.add(CTX.render(DSL.name(parts.subList(i, parts.size()).toArray(new Name[0])).unquotedName()));
-        }
-
-        return partiallyQualifiedNames;
     }
 
     @Override

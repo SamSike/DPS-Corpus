@@ -52,15 +52,15 @@ public class RedeliveryErrorHandlerBreakoutDuringShutdownTest extends ContextTes
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // just keep on redelivering
                 errorHandler(defaultErrorHandler().maximumRedeliveries(-1).redeliveryDelay(1000));
 
                 from("seda:start").to("mock:before").process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         throw new IllegalArgumentException("Forced");
                     }
                 }).to("mock:after");

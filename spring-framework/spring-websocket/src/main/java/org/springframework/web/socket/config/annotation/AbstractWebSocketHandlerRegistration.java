@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -37,7 +36,7 @@ import org.springframework.web.socket.sockjs.transport.handler.WebSocketTranspor
 
 /**
  * Base class for {@link WebSocketHandlerRegistration WebSocketHandlerRegistrations} that gathers all the configuration
- * options but allows subclasses to put together the actual HTTP request mappings.
+ * options but allows sub-classes to put together the actual HTTP request mappings.
  *
  * @author Rossen Stoyanchev
  * @author Sebastien Deleuze
@@ -48,7 +47,8 @@ public abstract class AbstractWebSocketHandlerRegistration<M> implements WebSock
 
 	private final MultiValueMap<WebSocketHandler, String> handlerMap = new LinkedMultiValueMap<>();
 
-	private @Nullable HandshakeHandler handshakeHandler;
+	@Nullable
+	private HandshakeHandler handshakeHandler;
 
 	private final List<HandshakeInterceptor> interceptors = new ArrayList<>();
 
@@ -56,7 +56,8 @@ public abstract class AbstractWebSocketHandlerRegistration<M> implements WebSock
 
 	private final List<String> allowedOriginPatterns = new ArrayList<>();
 
-	private @Nullable SockJsServiceRegistration sockJsServiceRegistration;
+	@Nullable
+	private SockJsServiceRegistration sockJsServiceRegistration;
 
 
 	@Override
@@ -73,7 +74,8 @@ public abstract class AbstractWebSocketHandlerRegistration<M> implements WebSock
 		return this;
 	}
 
-	protected @Nullable HandshakeHandler getHandshakeHandler() {
+	@Nullable
+	protected HandshakeHandler getHandshakeHandler() {
 		return this.handshakeHandler;
 	}
 
@@ -141,7 +143,8 @@ public abstract class AbstractWebSocketHandlerRegistration<M> implements WebSock
 	 * if the application did not provide one. This should be done prior to
 	 * calling {@link #getMappings()}.
 	 */
-	protected @Nullable SockJsServiceRegistration getSockJsServiceRegistration() {
+	@Nullable
+	protected SockJsServiceRegistration getSockJsServiceRegistration() {
 		return this.sockJsServiceRegistration;
 	}
 

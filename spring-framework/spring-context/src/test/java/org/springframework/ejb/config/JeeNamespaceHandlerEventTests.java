@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Juergen Hoeller
  * @author Chris Beams
  */
-class JeeNamespaceHandlerEventTests {
+public class JeeNamespaceHandlerEventTests {
 
 	private final CollectingReaderEventListener eventListener = new CollectingReaderEventListener();
 
@@ -43,7 +43,7 @@ class JeeNamespaceHandlerEventTests {
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() throws Exception {
 		this.reader = new XmlBeanDefinitionReader(this.beanFactory);
 		this.reader.setEventListener(this.eventListener);
 		this.reader.loadBeanDefinitions(new ClassPathResource("jeeNamespaceHandlerTests.xml", getClass()));
@@ -51,21 +51,21 @@ class JeeNamespaceHandlerEventTests {
 
 
 	@Test
-	void testJndiLookupComponentEventReceived() {
+	public void testJndiLookupComponentEventReceived() {
 		ComponentDefinition component = this.eventListener.getComponentDefinition("simple");
 		boolean condition = component instanceof BeanComponentDefinition;
 		assertThat(condition).isTrue();
 	}
 
 	@Test
-	void testLocalSlsbComponentEventReceived() {
+	public void testLocalSlsbComponentEventReceived() {
 		ComponentDefinition component = this.eventListener.getComponentDefinition("simpleLocalEjb");
 		boolean condition = component instanceof BeanComponentDefinition;
 		assertThat(condition).isTrue();
 	}
 
 	@Test
-	void testRemoteSlsbComponentEventReceived() {
+	public void testRemoteSlsbComponentEventReceived() {
 		ComponentDefinition component = this.eventListener.getComponentDefinition("simpleRemoteEjb");
 		boolean condition = component instanceof BeanComponentDefinition;
 		assertThat(condition).isTrue();

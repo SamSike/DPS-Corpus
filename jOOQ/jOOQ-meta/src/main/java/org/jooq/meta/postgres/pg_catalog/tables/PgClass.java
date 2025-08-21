@@ -7,10 +7,8 @@ package org.jooq.meta.postgres.pg_catalog.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -19,7 +17,6 @@ import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
-import org.jooq.impl.DefaultDataType;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 import org.jooq.meta.postgres.pg_catalog.Keys;
@@ -200,12 +197,12 @@ public class PgClass extends TableImpl<Record> {
     /**
      * The column <code>pg_catalog.pg_class.relacl</code>.
      */
-    public final TableField<Record, String[]> RELACL = createField(DSL.name("relacl"), SQLDataType.VARCHAR.array(), this, "");
+    public final TableField<Record, String[]> RELACL = createField(DSL.name("relacl"), SQLDataType.VARCHAR.getArrayDataType(), this, "");
 
     /**
      * The column <code>pg_catalog.pg_class.reloptions</code>.
      */
-    public final TableField<Record, String[]> RELOPTIONS = createField(DSL.name("reloptions"), SQLDataType.CLOB.array(), this, "");
+    public final TableField<Record, String[]> RELOPTIONS = createField(DSL.name("reloptions"), SQLDataType.CLOB.getArrayDataType(), this, "");
 
     /**
      * @deprecated Unknown data type. If this is a qualified, user-defined type,
@@ -216,14 +213,14 @@ public class PgClass extends TableImpl<Record> {
      * configuration.
      */
     @Deprecated
-    public final TableField<Record, Object> RELPARTBOUND = createField(DSL.name("relpartbound"), DefaultDataType.getDefaultDataType("\"pg_catalog\".\"pg_node_tree\""), this, "");
+    public final TableField<Record, Object> RELPARTBOUND = createField(DSL.name("relpartbound"), org.jooq.impl.DefaultDataType.getDefaultDataType("\"pg_catalog\".\"pg_node_tree\""), this, "");
 
     private PgClass(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private PgClass(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private PgClass(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -247,8 +244,8 @@ public class PgClass extends TableImpl<Record> {
         this(DSL.name("pg_class"), null);
     }
 
-    public <O extends Record> PgClass(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, PG_CLASS);
+    public <O extends Record> PgClass(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, PG_CLASS);
     }
 
     @Override
@@ -279,76 +276,9 @@ public class PgClass extends TableImpl<Record> {
      */
     public PgNamespace pgNamespace() {
         if (_pgNamespace == null)
-            _pgNamespace = new PgNamespace(this, Keys.PG_CLASS__SYNTHETIC_FK_PG_CLASS__SYNTHETIC_PK_PG_NAMESPACE, null);
+            _pgNamespace = new PgNamespace(this, Keys.PG_CLASS__SYNTHETIC_FK_PG_CLASS__SYNTHETIC_PK_PG_NAMESPACE);
 
         return _pgNamespace;
-    }
-
-    private transient PgAttribute _pgAttribute;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>pg_catalog.pg_attribute</code> table
-     */
-    public PgAttribute pgAttribute() {
-        if (_pgAttribute == null)
-            _pgAttribute = new PgAttribute(this, null, Keys.PG_ATTRIBUTE__SYNTHETIC_FK_PG_ATTRIBUTE__SYNTHETIC_PK_PG_CLASS.getInverseKey());
-
-        return _pgAttribute;
-    }
-
-    private transient PgConstraint _pgConstraint;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>pg_catalog.pg_constraint</code> table
-     */
-    public PgConstraint pgConstraint() {
-        if (_pgConstraint == null)
-            _pgConstraint = new PgConstraint(this, null, Keys.PG_CONSTRAINT__SYNTHETIC_FK_PG_CONSTRAINT__SYNTHETIC_PK_PG_CLASS.getInverseKey());
-
-        return _pgConstraint;
-    }
-
-    private transient PgIndex _indexClass;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>pg_catalog.pg_index</code> table, via the <code>INDEX_CLASS</code>
-     * key
-     */
-    public PgIndex indexClass() {
-        if (_indexClass == null)
-            _indexClass = new PgIndex(this, null, Keys.PG_INDEX__INDEX_CLASS.getInverseKey());
-
-        return _indexClass;
-    }
-
-    private transient PgIndex _tableClass;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>pg_catalog.pg_index</code> table, via the <code>TABLE_CLASS</code>
-     * key
-     */
-    public PgIndex tableClass() {
-        if (_tableClass == null)
-            _tableClass = new PgIndex(this, null, Keys.PG_INDEX__TABLE_CLASS.getInverseKey());
-
-        return _tableClass;
-    }
-
-    private transient PgSequence _pgSequence;
-
-    /**
-     * Get the implicit to-many join path to the
-     * <code>pg_catalog.pg_sequence</code> table
-     */
-    public PgSequence pgSequence() {
-        if (_pgSequence == null)
-            _pgSequence = new PgSequence(this, null, Keys.PG_SEQUENCE__SYNTHETIC_FK_PG_SEQUENCE__SYNTHETIC_PK_PG_CLASS.getInverseKey());
-
-        return _pgSequence;
     }
 
     @Override
@@ -361,8 +291,19 @@ public class PgClass extends TableImpl<Record> {
         return new PgClass(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public PgClass as(Table<?> alias) {
-        return new PgClass(alias.getQualifiedName(), this);
+    public PgClass rename(String name) {
+        return new PgClass(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public PgClass rename(Name name) {
+        return new PgClass(name, null);
     }
 }

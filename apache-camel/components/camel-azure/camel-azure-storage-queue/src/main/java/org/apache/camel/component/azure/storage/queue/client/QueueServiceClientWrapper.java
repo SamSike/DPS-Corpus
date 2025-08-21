@@ -18,6 +18,7 @@ package org.apache.camel.component.azure.storage.queue.client;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.azure.core.util.Context;
 import com.azure.storage.queue.QueueServiceClient;
@@ -36,7 +37,7 @@ public class QueueServiceClientWrapper {
     }
 
     public List<QueueItem> listQueues(QueuesSegmentOptions options, Duration timeout) {
-        return client.listQueues(options, timeout, Context.NONE).stream().toList();
+        return client.listQueues(options, timeout, Context.NONE).stream().collect(Collectors.toList());
     }
 
     public QueueClientWrapper getQueueClientWrapper(final String queueName) {

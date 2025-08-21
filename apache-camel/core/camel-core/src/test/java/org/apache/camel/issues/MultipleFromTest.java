@@ -39,9 +39,9 @@ public class MultipleFromTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("mock:result");
                 from("seda:in").to("mock:result");
             }

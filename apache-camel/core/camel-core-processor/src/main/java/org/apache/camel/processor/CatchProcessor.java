@@ -17,21 +17,16 @@
 package org.apache.camel.processor;
 
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.camel.AsyncCallback;
-import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Predicate;
 import org.apache.camel.Processor;
 import org.apache.camel.RollbackExchangeException;
 import org.apache.camel.Traceable;
 import org.apache.camel.spi.IdAware;
-import org.apache.camel.spi.InterceptableProcessor;
 import org.apache.camel.spi.RouteIdAware;
 import org.apache.camel.support.EventHelper;
 import org.apache.camel.support.ExchangeHelper;
@@ -43,42 +38,19 @@ import org.slf4j.LoggerFactory;
 /**
  * A processor which catches exceptions.
  */
-public class CatchProcessor extends DelegateAsyncProcessor implements Traceable, IdAware, RouteIdAware, InterceptableProcessor {
+public class CatchProcessor extends DelegateAsyncProcessor implements Traceable, IdAware, RouteIdAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(CatchProcessor.class);
 
-    private final CamelContext camelContext;
     private String id;
     private String routeId;
     private final List<Class<? extends Throwable>> exceptions;
-    private boolean extendedStatistics;
-    // to capture how many different exceptions has been caught
-    private ConcurrentMap<String, AtomicLong> exceptionMatches;
     private final Predicate onWhen;
-    private transient long matches;
 
-    public CatchProcessor(CamelContext camelContext, List<Class<? extends Throwable>> exceptions, Processor processor,
-                          Predicate onWhen) {
+    public CatchProcessor(List<Class<? extends Throwable>> exceptions, Processor processor, Predicate onWhen) {
         super(processor);
-        this.camelContext = camelContext;
         this.exceptions = exceptions;
         this.onWhen = onWhen;
-    }
-
-    @Override
-    protected void doInit() throws Exception {
-        super.doInit();
-        if (onWhen != null) {
-            onWhen.init(camelContext);
-        }
-        // only if JMX is enabled
-        if (camelContext.getManagementStrategy() != null && camelContext.getManagementStrategy().getManagementAgent() != null) {
-            this.extendedStatistics
-                    = camelContext.getManagementStrategy().getManagementAgent().getStatisticsLevel().isExtended();
-            this.exceptionMatches = new ConcurrentHashMap<>();
-        } else {
-            this.extendedStatistics = false;
-        }
     }
 
     @Override
@@ -112,11 +84,6 @@ public class CatchProcessor extends DelegateAsyncProcessor implements Traceable,
     }
 
     @Override
-    public boolean canIntercept() {
-        return false;
-    }
-
-    @Override
     public boolean process(final Exchange exchange, final AsyncCallback callback) {
         final Exception e = exchange.getException();
         Throwable caught = catches(exchange, e);
@@ -131,28 +98,24 @@ public class CatchProcessor extends DelegateAsyncProcessor implements Traceable,
         }
 
         // must remember some properties which we cannot use during doCatch processing
-        final boolean stop = exchange.isRouteStop();
-        exchange.setRouteStop(false);
-        final boolean rollbackOnly = exchange.isRollbackOnly();
-        exchange.setRollbackOnly(false);
-        final boolean rollbackOnlyLast = exchange.isRollbackOnlyLast();
-        exchange.setRollbackOnlyLast(false);
+        ExtendedExchange ee = (ExtendedExchange) exchange;
+        final boolean stop = ee.isRouteStop();
+        ee.setRouteStop(false);
+        final boolean rollbackOnly = ee.isRollbackOnly();
+        ee.setRollbackOnly(false);
+        final boolean rollbackOnlyLast = ee.isRollbackOnlyLast();
+        ee.setRollbackOnlyLast(false);
 
         // store the last to endpoint as the failure endpoint
         if (exchange.getProperty(ExchangePropertyKey.FAILURE_ENDPOINT) == null) {
             exchange.setProperty(ExchangePropertyKey.FAILURE_ENDPOINT, exchange.getProperty(ExchangePropertyKey.TO_ENDPOINT));
-        }
-        // and store the route id so we know in which route we failed
-        String routeId = ExchangeHelper.getAtRouteId(exchange);
-        if (routeId != null) {
-            exchange.setProperty(ExchangePropertyKey.FAILURE_ROUTE_ID, routeId);
         }
         // give the rest of the pipeline another chance
         exchange.setProperty(ExchangePropertyKey.EXCEPTION_HANDLED, true);
         exchange.setProperty(ExchangePropertyKey.EXCEPTION_CAUGHT, e);
         exchange.setException(null);
         // and we should not be regarded as exhausted as we are in a try .. catch block
-        exchange.getExchangeExtension().setRedeliveryExhausted(false);
+        exchange.adapt(ExtendedExchange.class).setRedeliveryExhausted(false);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("The exception is handled for the exception: {} caused by: {}",
@@ -168,7 +131,7 @@ public class CatchProcessor extends DelegateAsyncProcessor implements Traceable,
                 EventHelper.notifyExchangeFailureHandled(exchange.getContext(), exchange, processor, false, null);
 
                 // always clear redelivery exhausted in a catch clause
-                exchange.getExchangeExtension().setRedeliveryExhausted(false);
+                exchange.adapt(ExtendedExchange.class).setRedeliveryExhausted(false);
 
                 if (rollbackOnly || rollbackOnlyLast || stop) {
                     exchange.setRouteStop(stop);
@@ -208,12 +171,6 @@ public class CatchProcessor extends DelegateAsyncProcessor implements Traceable,
             // see if we catch this type
             for (final Class<?> type : exceptions) {
                 if (type.isInstance(e) && matchesWhen(exchange)) {
-                    if (extendedStatistics) {
-                        String fqn = exception.getClass().getName();
-                        AtomicLong match = exceptionMatches.computeIfAbsent(fqn, k -> new AtomicLong());
-                        match.incrementAndGet();
-                    }
-                    matches++;
                     return e;
                 }
             }
@@ -223,35 +180,8 @@ public class CatchProcessor extends DelegateAsyncProcessor implements Traceable,
         return null;
     }
 
-    /**
-     * Gets the total number of Exchanges that was caught (also matched the onWhen predicate).
-     */
-    public long getCaughtCount() {
-        return matches;
-    }
-
-    /**
-     * Gets the number of Exchanges that was caught by the given exception class name (also matched the onWhen
-     * predicate). This requires to have extended statistics enabled on management statistics level.
-     */
-    public long getCaughtCount(String className) {
-        AtomicLong cnt = exceptionMatches.get(className);
-        return cnt != null ? cnt.get() : 0;
-    }
-
-    /**
-     * Reset counters.
-     */
-    public void reset() {
-        matches = 0;
-        exceptionMatches.values().forEach(c -> c.set(0));
-    }
-
-    /**
-     * Set of the caught exception fully qualified class names
-     */
-    public Set<String> getCaughtExceptionClassNames() {
-        return exceptionMatches.keySet();
+    public List<Class<? extends Throwable>> getExceptions() {
+        return exceptions;
     }
 
     /**

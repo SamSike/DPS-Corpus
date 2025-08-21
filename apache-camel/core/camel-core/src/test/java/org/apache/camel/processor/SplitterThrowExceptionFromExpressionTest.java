@@ -40,10 +40,10 @@ public class SplitterThrowExceptionFromExpressionTest extends ContextTestSupport
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(ExpressionEvaluationException.class).handled(true).to("mock://error");
 
                 from("direct://start").split().method(SplitterThrowExceptionFromExpressionTest.class, "splitMe")

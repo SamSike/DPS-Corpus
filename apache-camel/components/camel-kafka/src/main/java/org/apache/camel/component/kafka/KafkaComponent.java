@@ -16,25 +16,21 @@
  */
 package org.apache.camel.component.kafka;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.SSLContextParametersAware;
+import org.apache.camel.component.kafka.consumer.DefaultKafkaManualCommitFactory;
 import org.apache.camel.component.kafka.consumer.KafkaManualCommit;
 import org.apache.camel.component.kafka.consumer.KafkaManualCommitFactory;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.support.HealthCheckComponent;
-import org.apache.camel.support.PropertyBindingSupport;
+import org.apache.camel.support.DefaultComponent;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.PropertiesHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Component("kafka")
-public class KafkaComponent extends HealthCheckComponent implements SSLContextParametersAware {
-    private static final Logger LOG = LoggerFactory.getLogger(KafkaComponent.class);
+public class KafkaComponent extends DefaultComponent implements SSLContextParametersAware {
 
     @Metadata
     private KafkaConfiguration configuration = new KafkaConfiguration();
@@ -54,8 +50,6 @@ public class KafkaComponent extends HealthCheckComponent implements SSLContextPa
     private int subscribeConsumerBackoffMaxAttempts;
     @Metadata(label = "consumer,advanced", defaultValue = "5000")
     private long subscribeConsumerBackoffInterval = 5000;
-    @Metadata(label = "consumer,advanced")
-    private boolean subscribeConsumerTopicMustExists;
 
     public KafkaComponent() {
     }
@@ -85,18 +79,15 @@ public class KafkaComponent extends HealthCheckComponent implements SSLContextPa
             endpoint.getConfiguration().setSslContextParameters(retrieveGlobalSslContextParameters());
         }
 
+        // overwrite the additional properties from the endpoint
         if (!endpointAdditionalProperties.isEmpty()) {
-            Map<String, Object> map = new HashMap<>();
-            // resolve parameter values from the values (#bean / #class etc)
-            PropertyBindingSupport.bindProperties(getCamelContext(), map, endpointAdditionalProperties);
-            // overwrite the additional properties from the endpoint
-            endpoint.getConfiguration().getAdditionalProperties().putAll(map);
+            endpoint.getConfiguration().getAdditionalProperties().putAll(endpointAdditionalProperties);
         }
 
         // If a topic is not defined in the KafkaConfiguration (set as option parameter) but only in the uri,
         // it can happen that it is not set correctly in the configuration of the endpoint.
         // Therefore, the topic is added after setProperties method
-        // and a null check to avoid overwriting a value from the configuration.
+        // and an null check to avoid overwriting a value from the configuration.
         if (endpoint.getConfiguration().getTopic() == null) {
             endpoint.getConfiguration().setTopic(remaining);
         }
@@ -147,7 +138,7 @@ public class KafkaComponent extends HealthCheckComponent implements SSLContextPa
 
     /**
      * Factory to use for creating {@link org.apache.kafka.clients.consumer.KafkaConsumer} and
-     * {@link org.apache.kafka.clients.producer.KafkaProducer} instances. This allows configuring a custom factory to
+     * {@link org.apache.kafka.clients.producer.KafkaProducer} instances. This allows to configure a custom factory to
      * create instances with logic that extends the vanilla Kafka clients.
      */
     public void setKafkaClientFactory(KafkaClientFactory kafkaClientFactory) {
@@ -175,12 +166,12 @@ public class KafkaComponent extends HealthCheckComponent implements SSLContextPa
      *
      * Error during creating the consumer may be fatal due to invalid configuration and as such recovery is not
      * possible. However, one part of the validation is DNS resolution of the bootstrap broker hostnames. This may be a
-     * temporary networking problem, and could potentially be recoverable. While other errors are fatal, such as some
-     * invalid kafka configurations. Unfortunately, kafka-client does not separate this kind of errors.
+     * temporary networking problem, and could potentially be recoverable. While other errors are fatal such as some
+     * invalid kafka configurations. Unfortunately kafka-client does not separate this kind of errors.
      *
      * Camel will by default retry forever, and therefore never give up. If you want to give up after many attempts then
-     * set this option and Camel will then when giving up terminate the consumer. To try again, you can manually restart
-     * the consumer by stopping, and starting the route.
+     * set this option and Camel will then when giving up terminate the consumer. You can manually restart the consumer
+     * by stopping and starting the route, to try again.
      */
     public void setCreateConsumerBackoffMaxAttempts(int createConsumerBackoffMaxAttempts) {
         this.createConsumerBackoffMaxAttempts = createConsumerBackoffMaxAttempts;
@@ -208,9 +199,9 @@ public class KafkaComponent extends HealthCheckComponent implements SSLContextPa
      * Error during subscribing the consumer to the kafka topic could be temporary errors due to network issues, and
      * could potentially be recoverable.
      *
-     * Camel will by default retry forever, and therefore never give up. If you want to give up after many attempts,
-     * then set this option and Camel will then when giving up terminate the consumer. You can manually restart the
-     * consumer by stopping and starting the route, to try again.
+     * Camel will by default retry forever, and therefore never give up. If you want to give up after many attempts then
+     * set this option and Camel will then when giving up terminate the consumer. You can manually restart the consumer
+     * by stopping and starting the route, to try again.
      */
     public void setSubscribeConsumerBackoffMaxAttempts(int subscribeConsumerBackoffMaxAttempts) {
         this.subscribeConsumerBackoffMaxAttempts = subscribeConsumerBackoffMaxAttempts;
@@ -227,23 +218,6 @@ public class KafkaComponent extends HealthCheckComponent implements SSLContextPa
         this.subscribeConsumerBackoffInterval = subscribeConsumerBackoffInterval;
     }
 
-    public boolean isSubscribeConsumerTopicMustExists() {
-        return subscribeConsumerTopicMustExists;
-    }
-
-    /**
-     * Whether when a Camel Kafka consumer is subscribing to a Kafka broker then check whether a topic already exist on
-     * the broker, and fail if it does not. Otherwise, the Camel Kafka consumer will keep attempt to consume from the
-     * topic, until it's created on the Kafka broker; and until then the Camel Kafka consumer will fail and log a WARN
-     * about UNKNOWN_TOPIC_OR_PARTITION.
-     *
-     * The option subscribeConsumerBackoffMaxAttempts can be configured to give up trying to subscribe after a given
-     * number of attempts.
-     */
-    public void setSubscribeConsumerTopicMustExists(boolean subscribeConsumerTopicMustExists) {
-        this.subscribeConsumerTopicMustExists = subscribeConsumerTopicMustExists;
-    }
-
     @Override
     protected void doInit() throws Exception {
         super.doInit();
@@ -253,17 +227,7 @@ public class KafkaComponent extends HealthCheckComponent implements SSLContextPa
             kafkaClientFactory = new DefaultKafkaClientFactory();
         }
         if (configuration.isAllowManualCommit() && kafkaManualCommitFactory == null) {
-            LOG.warn("The component was setup for allowing manual commits, but a manual commit factory was not set");
+            kafkaManualCommitFactory = new DefaultKafkaManualCommitFactory();
         }
-    }
-
-    @Override
-    protected void doStart() throws Exception {
-        super.doStart();
-
-        Map<String, Object> map = new HashMap<>();
-        // resolve parameter values from the values (#bean / #class etc)
-        PropertyBindingSupport.bindProperties(getCamelContext(), map, configuration.getAdditionalProperties());
-        configuration.setAdditionalProperties(map);
     }
 }

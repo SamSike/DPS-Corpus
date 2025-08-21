@@ -36,10 +36,10 @@ public class SchedulerMulticastParallelGreedyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("scheduler:testBug?initialDelay=1&useFixedDelay=true&delay=20000&greedy=true&synchronous=true")
                     .multicast().parallelProcessing()
                         .log("test")

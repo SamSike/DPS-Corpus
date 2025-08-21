@@ -16,9 +16,6 @@
  */
 package org.apache.camel.component.google.drive.internal;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.google.drive.GoogleDriveConfiguration;
 import org.apache.camel.support.component.ApiMethodPropertiesHelper;
@@ -28,22 +25,16 @@ import org.apache.camel.support.component.ApiMethodPropertiesHelper;
  */
 public final class GoogleDrivePropertiesHelper extends ApiMethodPropertiesHelper<GoogleDriveConfiguration> {
 
-    private static final Lock LOCK = new ReentrantLock();
     private static GoogleDrivePropertiesHelper helper;
 
     private GoogleDrivePropertiesHelper(CamelContext context) {
         super(context, GoogleDriveConfiguration.class, GoogleDriveConstants.PROPERTY_PREFIX);
     }
 
-    public static GoogleDrivePropertiesHelper getHelper(CamelContext context) {
-        LOCK.lock();
-        try {
-            if (helper == null) {
-                helper = new GoogleDrivePropertiesHelper(context);
-            }
-            return helper;
-        } finally {
-            LOCK.unlock();
+    public static synchronized GoogleDrivePropertiesHelper getHelper(CamelContext context) {
+        if (helper == null) {
+            helper = new GoogleDrivePropertiesHelper(context);
         }
+        return helper;
     }
 }

@@ -1,7 +1,9 @@
 /**
  * Support package for recording startup metrics using Java Flight Recorder.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.core.metrics.jfr;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

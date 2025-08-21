@@ -43,12 +43,16 @@ import org.apache.cxf.binding.soap.SoapFault;
 import org.apache.cxf.frontend.ClientFactoryBean;
 import org.apache.cxf.frontend.ClientProxyFactoryBean;
 import org.apache.cxf.interceptor.Fault;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class CxfCustomizedExceptionTest extends CamelTestSupport {
 
     protected static final String SERVICE_CLASS = "serviceClass=org.apache.camel.component.cxf.jaxws.HelloService";
@@ -74,13 +78,18 @@ public class CxfCustomizedExceptionTest extends CamelTestSupport {
     private Bus bus;
 
     @Override
-    public void setupResources() {
+    @BeforeEach
+    public void setUp() throws Exception {
         bus = BusFactory.getDefaultBus();
+        super.setUp();
+
     }
 
     @Override
-    public void cleanupResources() {
+    @AfterEach
+    public void tearDown() throws Exception {
         //TODO need to shutdown the server
+        super.tearDown();
     }
 
     @Override
@@ -169,7 +178,7 @@ public class CxfCustomizedExceptionTest extends CamelTestSupport {
         IOHelper.copy(is, out);
         out.flush();
         is.close();
-        // check the response code
+        // check the response code        
         try {
             urlConnection.getInputStream();
             fail("We except an IOException here");

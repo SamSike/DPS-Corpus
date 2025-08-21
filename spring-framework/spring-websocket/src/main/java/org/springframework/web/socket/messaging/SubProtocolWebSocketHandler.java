@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,14 +25,13 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.context.SmartLifecycle;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
@@ -48,7 +47,6 @@ import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.SessionLimitExceededException;
-import org.springframework.web.socket.handler.WebSocketSessionDecorator;
 import org.springframework.web.socket.sockjs.transport.session.PollingSockJsSession;
 import org.springframework.web.socket.sockjs.transport.session.StreamingSockJsSession;
 
@@ -86,7 +84,8 @@ public class SubProtocolWebSocketHandler
 
 	private final Set<SubProtocolHandler> protocolHandlers = new LinkedHashSet<>();
 
-	private @Nullable SubProtocolHandler defaultProtocolHandler;
+	@Nullable
+	private SubProtocolHandler defaultProtocolHandler;
 
 	private final Map<String, WebSocketSessionHolder> sessions = new ConcurrentHashMap<>();
 
@@ -98,11 +97,9 @@ public class SubProtocolWebSocketHandler
 
 	private volatile long lastSessionCheckTime = System.currentTimeMillis();
 
-	private final Lock sessionCheckLock = new ReentrantLock();
+	private final ReentrantLock sessionCheckLock = new ReentrantLock();
 
 	private final DefaultStats stats = new DefaultStats();
-
-	private @Nullable Integer phase;
 
 	private volatile boolean running;
 
@@ -182,7 +179,8 @@ public class SubProtocolWebSocketHandler
 	/**
 	 * Return the default sub-protocol handler to use.
 	 */
-	public @Nullable SubProtocolHandler getDefaultProtocolHandler() {
+	@Nullable
+	public SubProtocolHandler getDefaultProtocolHandler() {
 		return this.defaultProtocolHandler;
 	}
 
@@ -229,7 +227,7 @@ public class SubProtocolWebSocketHandler
 	 * is established and before the first sub-protocol message is received.
 	 * <p>This handler is for WebSocket connections that use a sub-protocol.
 	 * Therefore, we expect the client to send at least one sub-protocol message
-	 * in the beginning, or else we assume the connection isn't doing well, for example,
+	 * in the beginning, or else we assume the connection isn't doing well, e.g.
 	 * proxy issue, slow network, and can be closed.
 	 * <p>By default this is set to {@code 60,000} (1 minute).
 	 * @param timeToFirstMessage the maximum time allowed in milliseconds
@@ -247,21 +245,6 @@ public class SubProtocolWebSocketHandler
 	 */
 	public int getTimeToFirstMessage() {
 		return this.timeToFirstMessage;
-	}
-
-	/**
-	 * Set the phase that this handler should run in.
-	 * <p>By default, this is {@link SmartLifecycle#DEFAULT_PHASE}, but with
-	 * {@code @EnableWebSocketMessageBroker} configuration it is set to 0.
-	 * @since 6.1.4
-	 */
-	public void setPhase(int phase) {
-		this.phase = phase;
-	}
-
-	@Override
-	public int getPhase() {
-		return (this.phase != null ? this.phase : SmartLifecycle.super.getPhase());
 	}
 
 	/**
@@ -284,7 +267,7 @@ public class SubProtocolWebSocketHandler
 
 	@Override
 	public final void start() {
-		Assert.state(this.defaultProtocolHandler != null || !this.protocolHandlers.isEmpty(), "No handlers");
+		Assert.isTrue(this.defaultProtocolHandler != null || !this.protocolHandlers.isEmpty(), "No handlers");
 
 		synchronized (this.lifecycleMonitor) {
 			this.clientOutboundChannel.subscribe(this);
@@ -333,8 +316,6 @@ public class SubProtocolWebSocketHandler
 			return;
 		}
 
-		checkSessions();
-
 		this.stats.incrementSessionCount(session);
 		session = decorateSession(session);
 		this.sessions.put(session.getId(), new WebSocketSessionHolder(session));
@@ -355,6 +336,7 @@ public class SubProtocolWebSocketHandler
 		if (holder != null) {
 			holder.setHasHandledMessages();
 		}
+		checkSessions();
 	}
 
 	/**
@@ -400,7 +382,7 @@ public class SubProtocolWebSocketHandler
 			}
 		}
 		catch (Exception ex) {
-			// Could be part of normal workflow (for example, browser tab closed)
+			// Could be part of normal workflow (e.g. browser tab closed)
 			if (logger.isDebugEnabled()) {
 				logger.debug("Failed to send message to client in " + session + ": " + message, ex);
 			}
@@ -474,7 +456,8 @@ public class SubProtocolWebSocketHandler
 		return handler;
 	}
 
-	private @Nullable String resolveSessionId(Message<?> message) {
+	@Nullable
+	private String resolveSessionId(Message<?> message) {
 		for (SubProtocolHandler handler : this.protocolHandlerLookup.values()) {
 			String sessionId = handler.resolveSessionId(message);
 			if (sessionId != null) {
@@ -491,17 +474,16 @@ public class SubProtocolWebSocketHandler
 	}
 
 	/**
-	 * A higher-level protocol can use heartbeats to detect sessions that need to
-	 * be cleaned up. However, if a WebSocket session is established, but messages
-	 * can't flow (for example, due to a proxy issue), then the higher level protocol is
-	 * never successfully negotiated, and without heartbeats, sessions can hang.
-	 * The method  checks for sessions that have not received any messages 60
-	 * seconds after the WebSocket session was established, and closes them.
+	 * When a session is connected through a higher-level protocol it has a chance
+	 * to use heartbeat management to shut down sessions that are too slow to send
+	 * or receive messages. However, after a WebSocketSession is established and
+	 * before the higher level protocol is fully connected there is a possibility for
+	 * sessions to hang. This method checks and closes any sessions that have been
+	 * connected for more than 60 seconds without having received a single message.
 	 */
 	private void checkSessions() {
 		long currentTime = System.currentTimeMillis();
-		long timeSinceLastCheck = currentTime - this.lastSessionCheckTime;
-		if (!isRunning() || timeSinceLastCheck < getTimeToFirstMessage() / 2) {
+		if (!isRunning() || (currentTime - this.lastSessionCheckTime < getTimeToFirstMessage())) {
 			return;
 		}
 
@@ -687,7 +669,6 @@ public class SubProtocolWebSocketHandler
 		}
 
 		AtomicInteger getCountFor(WebSocketSession session) {
-			session = WebSocketSessionDecorator.unwrap(session);
 			if (session instanceof PollingSockJsSession) {
 				return this.httpPolling;
 			}

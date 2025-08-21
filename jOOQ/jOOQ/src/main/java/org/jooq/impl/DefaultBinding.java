@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -48,24 +48,18 @@ import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 import static java.time.temporal.ChronoField.YEAR;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
-import static java.util.regex.Matcher.quoteReplacement;
-import static org.jooq.ContextConverter.scoped;
-import static org.jooq.Decfloat.decfloat;
-import static org.jooq.Decfloat.decfloatOrNull;
 import static org.jooq.Geography.geography;
 import static org.jooq.Geometry.geometry;
 // ...
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
+// ...
 // ...
 import static org.jooq.SQLDialect.CUBRID;
 // ...
-// ...
 import static org.jooq.SQLDialect.DEFAULT;
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 // ...
@@ -79,22 +73,16 @@ import static org.jooq.SQLDialect.HSQLDB;
 // ...
 import static org.jooq.SQLDialect.MYSQL;
 // ...
-// ...
-// ...
 import static org.jooq.SQLDialect.POSTGRES;
-// ...
 // ...
 // ...
 import static org.jooq.SQLDialect.SQLITE;
 // ...
 // ...
 // ...
-import static org.jooq.SQLDialect.TRINO;
 // ...
 import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.conf.ParamType.INLINED;
-import static org.jooq.impl.Array.NO_SUPPORT_SQUARE_BRACKETS;
-import static org.jooq.impl.BlobBinding.readBlob;
 import static org.jooq.impl.Convert.convert;
 import static org.jooq.impl.Convert.patchIso8601Timestamp;
 import static org.jooq.impl.DSL.cast;
@@ -109,12 +97,9 @@ import static org.jooq.impl.DefaultBinding.DefaultDoubleBinding.nan;
 import static org.jooq.impl.DefaultBinding.DefaultEnumTypeBinding.pgEnumValue;
 import static org.jooq.impl.DefaultBinding.DefaultEnumTypeBinding.pgRenderEnumCast;
 import static org.jooq.impl.DefaultBinding.DefaultJSONBBinding.EMULATE_AS_BLOB;
-import static org.jooq.impl.DefaultBinding.DefaultJSONBinding.patchSnowflakeJSON;
 import static org.jooq.impl.DefaultBinding.DefaultResultBinding.readMultisetJSON;
 import static org.jooq.impl.DefaultBinding.DefaultResultBinding.readMultisetXML;
-import static org.jooq.impl.DefaultBinding.DefaultStringBinding.autoRtrim;
 import static org.jooq.impl.DefaultDataType.getDataType;
-import static org.jooq.impl.DefaultDataType.unsupportedDatetimePrecision;
 import static org.jooq.impl.DefaultExecuteContext.localExecuteContext;
 import static org.jooq.impl.DefaultExecuteContext.localTargetConnection;
 import static org.jooq.impl.Internal.arrayType;
@@ -141,18 +126,13 @@ import static org.jooq.impl.Keywords.K_TRUE;
 import static org.jooq.impl.Keywords.K_YEAR_TO_DAY;
 import static org.jooq.impl.Keywords.K_YEAR_TO_FRACTION;
 import static org.jooq.impl.Names.N_BYTEA;
-import static org.jooq.impl.Names.N_JSON_PARSE;
-import static org.jooq.impl.Names.N_PARSE_JSON;
 import static org.jooq.impl.Names.N_ST_GEOMFROMTEXT;
 import static org.jooq.impl.Names.N_ST_GEOMFROMWKB;
-import static org.jooq.impl.Names.N_TO_BINARY;
 import static org.jooq.impl.R2DBC.isR2dbc;
 import static org.jooq.impl.SQLDataType.BIGINT;
 import static org.jooq.impl.SQLDataType.BLOB;
-import static org.jooq.impl.SQLDataType.BOOLEAN;
 import static org.jooq.impl.SQLDataType.CHAR;
 import static org.jooq.impl.SQLDataType.DATE;
-import static org.jooq.impl.SQLDataType.DECFLOAT;
 import static org.jooq.impl.SQLDataType.DECIMAL_INTEGER;
 import static org.jooq.impl.SQLDataType.DOUBLE;
 import static org.jooq.impl.SQLDataType.INTEGER;
@@ -175,20 +155,12 @@ import static org.jooq.impl.Tools.convertHexToBytes;
 import static org.jooq.impl.Tools.emulateMultiset;
 import static org.jooq.impl.Tools.enums;
 // ...
-import static org.jooq.impl.Tools.getMappedTable;
-import static org.jooq.impl.Tools.getMappedUDT;
 import static org.jooq.impl.Tools.getMappedUDTName;
-import static org.jooq.impl.Tools.getRecordQualifier;
 import static org.jooq.impl.Tools.isEmpty;
 import static org.jooq.impl.Tools.map;
 import static org.jooq.impl.Tools.needsBackslashEscaping;
 import static org.jooq.impl.Tools.newRecord;
-import static org.jooq.impl.Tools.rtrim;
 import static org.jooq.impl.Tools.uncoerce;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_MULTISET_CONTENT;
-import static org.jooq.impl.Tools.ExtendedDataKey.DATA_OMIT_DATETIME_LITERAL_PREFIX;
-import static org.jooq.tools.StringUtils.defaultIfNull;
-import static org.jooq.tools.StringUtils.isEmpty;
 import static org.jooq.tools.StringUtils.leftPad;
 import static org.jooq.tools.jdbc.JDBCUtils.safeFree;
 import static org.jooq.tools.jdbc.JDBCUtils.wasNull;
@@ -226,28 +198,22 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
-import java.time.Year;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.SignStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// ...
-// ...
 // ...
 import org.jooq.Attachable;
 import org.jooq.Binding;
@@ -256,18 +222,13 @@ import org.jooq.BindingGetSQLInputContext;
 import org.jooq.BindingGetStatementContext;
 import org.jooq.BindingRegisterContext;
 import org.jooq.BindingSQLContext;
-import org.jooq.BindingScope;
 import org.jooq.BindingSetSQLOutputContext;
 import org.jooq.BindingSetStatementContext;
 import org.jooq.Configuration;
 import org.jooq.Context;
-import org.jooq.ContextConverter;
 import org.jooq.Converter;
-import org.jooq.ConverterContext;
 import org.jooq.Converters;
-import org.jooq.DSLContext;
 import org.jooq.DataType;
-import org.jooq.Decfloat;
 import org.jooq.EnumType;
 import org.jooq.ExecuteScope;
 import org.jooq.Field;
@@ -280,7 +241,6 @@ import org.jooq.Param;
 // ...
 import org.jooq.QualifiedRecord;
 import org.jooq.Record;
-import org.jooq.RecordQualifier;
 import org.jooq.RenderContext;
 import org.jooq.Result;
 import org.jooq.Row;
@@ -290,29 +250,24 @@ import org.jooq.Schema;
 import org.jooq.Scope;
 import org.jooq.Source;
 import org.jooq.Spatial;
+import org.jooq.TableRecord;
 import org.jooq.UDT;
 import org.jooq.UDTField;
 import org.jooq.UDTRecord;
 import org.jooq.XML;
 import org.jooq.conf.NestedCollectionEmulation;
 import org.jooq.exception.ControlFlowSignal;
-import org.jooq.exception.DataAccessException;
 import org.jooq.exception.DataTypeException;
 import org.jooq.exception.MappingException;
 import org.jooq.exception.SQLDialectNotSupportedException;
 import org.jooq.impl.Cast.CastNative;
 import org.jooq.impl.R2DBC.R2DBCPreparedStatement;
-import org.jooq.impl.Tools.ExtendedDataKey;
 import org.jooq.tools.JooqLogger;
 import org.jooq.tools.Longs;
 import org.jooq.tools.StringUtils;
 import org.jooq.tools.jdbc.JDBCUtils;
 import org.jooq.tools.jdbc.MockArray;
 import org.jooq.tools.jdbc.MockResultSet;
-import org.jooq.tools.json.JSONArray;
-import org.jooq.tools.json.JSONObject;
-import org.jooq.tools.json.JSONParser;
-import org.jooq.tools.json.JSONValue;
 import org.jooq.types.DayToSecond;
 import org.jooq.types.UByte;
 import org.jooq.types.UInteger;
@@ -338,11 +293,7 @@ import org.jooq.util.postgres.PostgresUtils;
 public class DefaultBinding<T, U> implements Binding<T, U> {
 
     static final JooqLogger              log                       = JooqLogger.getLogger(DefaultBinding.class);
-
-
-
-
-
+    private static final Set<SQLDialect> REQUIRE_JDBC_DATE_LITERAL = SQLDialect.supportedBy(MYSQL);
 
     // Taken from org.postgresql.PGStatement 9223372036825200000
     private static final long            PG_DATE_POSITIVE_INFINITY = 9223372036825200000L;
@@ -365,7 +316,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    static final <T, U> Binding<T, U> binding(DataType<? extends T> dataType, Converter<T, U> converter) {
+    static final <T, U> Binding<T, U> binding(DataType<T> dataType, Converter<T, U> converter) {
         Class<?> type = converter.fromType();
 
         // Concrete types
@@ -387,8 +338,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             return new DefaultDateBinding(dataType, converter);
         else if (type == DayToSecond.class)
             return new DefaultDayToSecondBinding(dataType, converter);
-        else if (type == Decfloat.class)
-            return new DefaultDecfloatBinding(dataType, converter);
         else if (type == Double.class || type == double.class)
             return new DefaultDoubleBinding(dataType, converter);
         else if (type == Float.class || type == float.class)
@@ -419,31 +368,31 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         else if (type == LocalDate.class)
             return (Binding<T, U>) new DelegatingBinding<>(
                 (DataType<LocalDate>) dataType,
-                ContextConverter.ofNullable(Date.class, LocalDate.class,
-                    (BiFunction<Date, ConverterContext, LocalDate> & Serializable) (t, x) -> t.toLocalDate(),
-                    (BiFunction<LocalDate, ConverterContext, Date> & Serializable) (t, x) -> Date.valueOf(t)
+                Converter.ofNullable(Date.class, LocalDate.class,
+                    (Function<Date, LocalDate> & Serializable) Date::toLocalDate,
+                    (Function<LocalDate, Date> & Serializable) Date::valueOf
                 ),
-                (ContextConverter<LocalDate, U>) converter,
+                (Converter<LocalDate, U>) converter,
                 c -> new DefaultDateBinding<>(DATE, c)
             );
         else if (type == LocalDateTime.class)
             return (Binding<T, U>) new DelegatingBinding<>(
                 (DataType<LocalDateTime>) dataType,
-                ContextConverter.ofNullable(Timestamp.class, LocalDateTime.class,
-                    (BiFunction<Timestamp, ConverterContext, LocalDateTime> & Serializable) (t, x) -> t.toLocalDateTime(),
-                    (BiFunction<LocalDateTime, ConverterContext, Timestamp> & Serializable) (t, x) -> Timestamp.valueOf(t)
+                Converter.ofNullable(Timestamp.class, LocalDateTime.class,
+                    (Function<Timestamp, LocalDateTime> & Serializable) Timestamp::toLocalDateTime,
+                    (Function<LocalDateTime, Timestamp> & Serializable) Timestamp::valueOf
                 ),
-                (ContextConverter<LocalDateTime, U>) converter,
+                (Converter<LocalDateTime, U>) converter,
                 c -> new DefaultTimestampBinding<>(TIMESTAMP, c)
             );
         else if (type == LocalTime.class)
             return (Binding<T, U>) new DelegatingBinding<>(
                 (DataType<LocalTime>) dataType,
-                ContextConverter.ofNullable(Time.class, LocalTime.class,
-                    (BiFunction<Time, ConverterContext, LocalTime> & Serializable) (t, x) -> t.toLocalTime(),
-                    (BiFunction<LocalTime, ConverterContext, Time> & Serializable) (t, x) -> Time.valueOf(t)
+                Converter.ofNullable(Time.class, LocalTime.class,
+                    (Function<Time, LocalTime> & Serializable) Time::toLocalTime,
+                    (Function<LocalTime, Time> & Serializable) Time::valueOf
                 ),
-                (ContextConverter<LocalTime, U>) converter,
+                (Converter<LocalTime, U>) converter,
                 c -> new DefaultTimeBinding<>(TIME, c)
             );
         else if (type == Long.class || type == long.class)
@@ -473,41 +422,41 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         else if (type == UByte.class)
             return (Binding<T, U>) new DelegatingBinding<>(
                 (DataType<UByte>) dataType,
-                ContextConverter.ofNullable(Short.class, UByte.class,
-                    (BiFunction<Short, ConverterContext, UByte> & Serializable) (t, x) -> UByte.valueOf(t),
-                    (BiFunction<UByte, ConverterContext, Short> & Serializable) (t, x) -> t.shortValue()
+                Converter.ofNullable(Short.class, UByte.class,
+                    (Function<Short, UByte> & Serializable) UByte::valueOf,
+                    (Function<UByte, Short> & Serializable) UByte::shortValue
                 ),
-                (ContextConverter<UByte, U>) converter,
+                (Converter<UByte, U>) converter,
                 c -> new DefaultShortBinding<>(SMALLINT, c)
             );
         else if (type == UInteger.class)
             return (Binding<T, U>) new DelegatingBinding<>(
                 (DataType<UInteger>) dataType,
-                ContextConverter.ofNullable(Long.class, UInteger.class,
-                    (BiFunction<Long, ConverterContext, UInteger> & Serializable) (t, x) -> UInteger.valueOf(t),
-                    (BiFunction<UInteger, ConverterContext, Long> & Serializable) (t, x) -> t.longValue()
+                Converter.ofNullable(Long.class, UInteger.class,
+                    (Function<Long, UInteger> & Serializable) UInteger::valueOf,
+                    (Function<UInteger, Long> & Serializable) UInteger::longValue
                 ),
-                (ContextConverter<UInteger, U>) converter,
+                (Converter<UInteger, U>) converter,
                 c -> new DefaultLongBinding<>(BIGINT, c)
             );
         else if (type == ULong.class)
             return (Binding<T, U>) new DelegatingBinding<>(
                 (DataType<ULong>) dataType,
-                ContextConverter.ofNullable(BigInteger.class, ULong.class,
-                    (BiFunction<BigInteger, ConverterContext, ULong> & Serializable) (t, x) -> ULong.valueOf(t),
-                    (BiFunction<ULong, ConverterContext, BigInteger> & Serializable) (t, x) -> t.toBigInteger()
+                Converter.ofNullable(BigInteger.class, ULong.class,
+                    (Function<BigInteger, ULong> & Serializable) ULong::valueOf,
+                    (Function<ULong, BigInteger> & Serializable) ULong::toBigInteger
                 ),
-                (ContextConverter<ULong, U>) converter,
+                (Converter<ULong, U>) converter,
                 c -> new DefaultBigIntegerBinding<>(DECIMAL_INTEGER, c)
             );
         else if (type == UShort.class)
             return (Binding<T, U>) new DelegatingBinding<>(
                 (DataType<UShort>) dataType,
-                ContextConverter.ofNullable(Integer.class, UShort.class,
-                    (BiFunction<Integer, ConverterContext, UShort> & Serializable) (t, x) -> UShort.valueOf(t),
-                    (BiFunction<UShort, ConverterContext, Integer> & Serializable) (t, x) -> t.intValue()
+                Converter.ofNullable(Integer.class, UShort.class,
+                    (Function<Integer, UShort> & Serializable) UShort::valueOf,
+                    (Function<UShort, Integer> & Serializable) UShort::intValue
                 ),
-                (ContextConverter<UShort, U>) converter,
+                (Converter<UShort, U>) converter,
                 c -> new DefaultIntegerBinding<>(INTEGER, c)
             );
         else if (type == UUID.class)
@@ -516,15 +465,11 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             return new DefaultYearToSecondBinding(dataType, converter);
         else if (type == YearToMonth.class)
             return new DefaultYearToMonthBinding(dataType, converter);
-        else if (type == Year.class)
-            return new DefaultYearBinding(dataType, converter);
 
         // Subtypes of array types etc.
         // The type byte[] is handled earlier. byte[][] can be handled here
         else if (type.isArray())
             return new DefaultArrayBinding(dataType, converter);
-
-
 
 
 
@@ -557,7 +502,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    static final <T, X, U> Binding<T, U> newBinding(final Converter<X, U> converter, final DataType<? extends T> dataType, final Binding<T, X> binding) {
+    static final <T, X, U> Binding<T, U> newBinding(final Converter<X, U> converter, final DataType<T> dataType, final Binding<T, X> binding) {
         final Binding<T, U> theBinding;
 
 
@@ -568,12 +513,12 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             theBinding = (Binding) binding;
         }
         else if (binding == null) {
-            theBinding = binding(dataType, (ContextConverter<T, U>) scoped(converter));
+            theBinding = binding(dataType, (Converter<T, U>) converter);
         }
         else {
             theBinding = new Binding<T, U>() {
 
-                final ContextConverter<T, U> theConverter = Converters.of(binding.converter(), converter);
+                final Converter<T, U>     theConverter     = Converters.of(binding.converter(), converter);
 
                 @Override
                 public Converter<T, U> converter() {
@@ -629,33 +574,11 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         try {
             if (QualifiedRecord.class.isAssignableFrom(type)) {
                 Class<QualifiedRecord<?>> t = (Class<QualifiedRecord<?>>) type;
-
-                // [#644] Prevent infinite recursion between fields and subtypes
-                if (result.putIfAbsent(getMappedUDTName(scope, t), t) == null) {
-
-
-
-
-
-
-
-
-
-
-
-
-                    RecordQualifier<?> q = getRecordQualifier(t);
-                    for (Field<?> field : q.fields())
-                        typeMap(field.getType(), scope, result);
-
-                    // [#644] Put subtypes into the type map as well
-                    if (q instanceof UDT<?> u) {
-                        for (UDT<?> s : u.getSubtypes())
-                            typeMap(s.getRecordType(), scope, result);
-                    }
-                }
+                result.put(getMappedUDTName(scope, t), t);
+                QualifiedRecord<?> r = t.getDeclaredConstructor().newInstance();
+                for (Field<?> field : r.getQualifier().fields())
+                    typeMap(field.getType(), scope, result);
             }
-
 
 
 
@@ -763,21 +686,21 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
      */
     abstract static class InternalBinding<T, U> implements org.jooq.Binding<T, U> {
         static final Set<SQLDialect> NEEDS_PRECISION_SCALE_ON_BIGDECIMAL = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD, H2, HSQLDB);
-        static final Set<SQLDialect> REQUIRES_JSON_CAST                  = SQLDialect.supportedBy(POSTGRES, TRINO, YUGABYTEDB);
+        static final Set<SQLDialect> REQUIRES_JSON_CAST                  = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
         static final Set<SQLDialect> NO_SUPPORT_ENUM_CAST                = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
-        static final Set<SQLDialect> NO_SUPPORT_NVARCHAR                 = SQLDialect.supportedBy(CLICKHOUSE, DERBY, DUCKDB, FIREBIRD, POSTGRES, SQLITE, TRINO, YUGABYTEDB);
+        static final Set<SQLDialect> NO_SUPPORT_NVARCHAR                 = SQLDialect.supportedBy(DERBY, FIREBIRD, POSTGRES, SQLITE, YUGABYTEDB);
 
 
 
 
 
         final DataType<T>            dataType;
-        final ContextConverter<T, U> converter;
+        final Converter<T, U>        converter;
         final boolean                attachable;
 
         InternalBinding(DataType<T> dataType, Converter<T, U> converter) {
             this.dataType = dataType;
-            this.converter = ContextConverter.scoped(converter);
+            this.converter = converter;
 
             // [#11099] Caching this per binding seems to have a considerable performance effect.
             //          We must be careful to short circuit instanceof Attachable checks only if we *know*
@@ -787,28 +710,8 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         }
 
         @Override
-        public final ContextConverter<T, U> converter() {
+        public final Converter<T, U> converter() {
             return converter;
-        }
-
-        static final Configuration originalConfiguration(Scope ctx) {
-            if (ctx instanceof ExecuteScope es) {
-                if (es.executeContext() instanceof DefaultExecuteContext dec) {
-                    return dec.originalConfiguration();
-                }
-            }
-
-            return ctx.configuration();
-        }
-
-        static final DSLContext originalScope(Scope ctx) {
-            if (ctx instanceof ExecuteScope es) {
-                if (es.executeContext() instanceof DefaultExecuteContext dec) {
-                    return dec.originalConfiguration().dsl();
-                }
-            }
-
-            return ctx.dsl();
         }
 
         private final boolean shouldCast(BindingSQLContext<U> ctx, T converted) {
@@ -817,35 +720,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             if (ctx.render().paramType() == INLINED) {
                 if (converted == null) {
                     switch (ctx.family()) {
-
-
-
-
-
-
-
-
                         case DERBY:
-                            return true;
-                    }
-                }
-
-                // [#17803] Some dialects require the cast for syntactic reasons (see DefaultDoubleBinding.REQUIRES_LITERAL_CAST)
-                //          Others require it occasionally to prevent wrong type promotions, on literals only.
-                if (dataType.isFloat()) {
-                    switch (ctx.family()) {
-
-
-
-                        case FIREBIRD:
-
-                        // [#10879] We'll need more precise cast types, first!
-                        // case MARIADB:
-                        // case MYSQL:
-                        case POSTGRES:
-
-
-                        case YUGABYTEDB:
                             return true;
                     }
                 }
@@ -862,7 +737,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
                         case DERBY:
-                        case DUCKDB:
                         case FIREBIRD:
 
                         // These dialects have some trouble, when they mostly get it right.
@@ -910,106 +784,21 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             }
 
             // [#7242] [#13252] Other vendor specific types also need a lot of casting
-            if (dataType.isJSON() || dataType.isXML()) {
-                switch (ctx.family()) {
+            if (dataType.isJSON()
+                || dataType.isXML()
 
 
 
-
-                    case POSTGRES:
-                    case TRINO:
-                    case YUGABYTEDB:
-                        return true;
-                }
-            }
-
-            if (dataType.isUUID()) {
-                switch (ctx.family()) {
-
-
-
-                    case CLICKHOUSE:
-                    case HSQLDB:
-                    case POSTGRES:
-                    case TRINO:
-                    case YUGABYTEDB:
-                        return true;
-                }
-            }
-
-            if (dataType.getType() == OffsetDateTime.class ||
-                dataType.getType() == Instant.class
             ) {
                 switch (ctx.family()) {
 
 
 
-
-
-
-
-                    case TRINO:
+                    case POSTGRES:
+                    case YUGABYTEDB:
                         return true;
                 }
             }
-
-            if (dataType.getType() == OffsetTime.class) {
-                switch (ctx.family()) {
-
-
-
-
-
-
-
-                    case TRINO:
-                        return true;
-                }
-            }
-
-            if (dataType.getType() == Decfloat.class) {
-                switch (ctx.family()) {
-
-
-                    case FIREBIRD:
-                    case H2:
-                        return true;
-                }
-            }
-
-            // [#2902] The xerial driver binds BigDecimal as String, which may produce
-            //         wrong results
-            if (dataType.isDecimal()) {
-                switch (ctx.family()) {
-                    case SQLITE:
-                        return true;
-                }
-            }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1070,7 +859,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             // [#7351] UUID data types need to be cast too
             // [#7242] JSON(B) data types need to be cast too
             // [#13252] XML data types need to be cast too
-            // [#17803] Floating point literals need to be cast as well
             else if (REQUIRES_JSON_CAST.contains(ctx.dialect()) &&
                     (sqlDataType == null ||
                     (!sqlDataType.isTemporal()
@@ -1079,8 +867,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-                        && !sqlDataType.isJSON())
-                        && !sqlDataType.isFloat()))
+                        && !sqlDataType.isJSON())))
                 sql(ctx, converted);
 
 
@@ -1106,10 +893,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
                     dataType.precisionDefined() ? dataType.precision() : null,
                     dataType.scaleDefined() ? dataType.scale() : null
                 );
-
-            // [#17212] Avoid precision on datetime casts when not supported
-            else if (dataType.isDateTime() && unsupportedDatetimePrecision(ctx, dataType))
-                sqlCast(ctx, converted, dataType, null, null, null);
 
             // In all other cases, the bind variable can be cast normally
             else
@@ -1142,39 +925,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         }
 
         private final void sqlCast(BindingSQLContext<U> ctx, T converted, DataType<?> t, Integer length, Integer precision, Integer scale) throws SQLException {
-            switch (ctx.family()) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-                case TRINO: {
-                    if (t.isJSON()) {
-                        ctx.render().visit(N_JSON_PARSE).sql('(');
-                        sql(ctx, converted);
-                        ctx.render().sql(')');
-                    }
-                    else
-                        sqlCast0(ctx, converted, t, length, precision, scale);
-
-                    break;
-                }
-
-                default:
-                    sqlCast0(ctx, converted, t, length, precision, scale);
-                    break;
-            }
-        }
-
-        private final void sqlCast0(BindingSQLContext<U> ctx, T converted, DataType<?> t, Integer length, Integer precision, Integer scale) throws SQLException {
             ctx.render().visit(K_CAST).sql('(');
             sql(ctx, converted);
             ctx.render().sql(' ').visit(K_AS).sql(' ')
@@ -1184,7 +934,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         public final void sql(BindingSQLContext<U> ctx) throws SQLException {
-            T converted = converter().to(ctx.value(), ctx.converterContext());
+            T converted = converter().to(ctx.value());
 
             // Casting can be enforced or prevented
             switch (ctx.render().castMode()) {
@@ -1244,7 +994,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         public final void set(BindingSetStatementContext<U> ctx) throws SQLException {
-            T value = converter().to(ctx.value(), ctx.converterContext());
+            T value = converter().to(ctx.value());
 
             if (!FALSE.equals(ctx.settings().isExecuteLogging()))
                 if (log.isTraceEnabled())
@@ -1261,7 +1011,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         public final void set(BindingSetSQLOutputContext<U> ctx) throws SQLException {
-            T value = converter().to(ctx.value(), ctx.converterContext());
+            T value = converter().to(ctx.value());
 
             if (value == null)
                 ctx.output().writeObject(null);
@@ -1271,30 +1021,30 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         public final void get(BindingGetResultSetContext<U> ctx) throws SQLException {
-            U value = converter().from(get0(ctx), ctx.converterContext());
+            U value = converter().from(get0(ctx));
 
             if (attachable)
-                value = attach(value, originalConfiguration(ctx));
+                value = attach(value, ctx.configuration());
 
             ctx.value(value);
         }
 
         @Override
         public final void get(BindingGetStatementContext<U> ctx) throws SQLException {
-            U value = converter().from(get0(ctx), ctx.converterContext());
+            U value = converter().from(get0(ctx));
 
             if (attachable)
-                value = attach(value, originalConfiguration(ctx));
+                value = attach(value, ctx.configuration());
 
             ctx.value(value);
         }
 
         @Override
         public final void get(BindingGetSQLInputContext<U> ctx) throws SQLException {
-            U value = converter().from(get0(ctx), ctx.converterContext());
+            U value = converter().from(get0(ctx));
 
             if (attachable)
-                value = attach(value, originalConfiguration(ctx));
+                value = attach(value, ctx.configuration());
 
             ctx.value(value);
         }
@@ -1309,8 +1059,8 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         }
 
         /* non-final */ void setNull0(BindingSetStatementContext<U> ctx) throws SQLException {
-            if (ctx.statement() instanceof R2DBCPreparedStatement s)
-                s.setNull(ctx.index(), dataType);
+            if (ctx.statement() instanceof R2DBCPreparedStatement)
+                ((R2DBCPreparedStatement) ctx.statement()).setNull(ctx.index(), dataType);
             else
                 ctx.statement().setNull(ctx.index(), sqltype(ctx.statement(), ctx.configuration()));
         }
@@ -1321,11 +1071,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @SuppressWarnings("unused")
         /* non-final */ void sqlInline0(BindingSQLContext<U> ctx, T value) throws SQLException {
-            sqlInline1(ctx, value);
-        }
-
-        @SuppressWarnings("unused")
-        final void sqlInline1(BindingSQLContext<U> ctx, Object value) throws SQLException {
 
             // Known fall-through types:
             // - Blob, Clob
@@ -1334,33 +1079,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             ctx.render().sql('\'')
                         .sql(escape(value, ctx.render()), true)
                         .sql('\'');
-        }
-
-        static final <U> void sqlInlineWorkaround6516(
-            BindingSQLContext<U> ctx,
-            String value,
-            int limit,
-            String prefix,
-            ThrowingBiConsumer<? super BindingSQLContext<U>, ? super String, SQLException> sqlInline0
-        ) throws SQLException {
-            int l = value.length();
-
-            if (l > limit) {
-                ctx.render().sql('(');
-
-                for (int i = 0; i < l; i += limit) {
-                    if (i > 0)
-                        ctx.render().sql(" || ");
-
-                    ctx.render().sql(prefix).sql("(");
-                    sqlInline0.accept(ctx, value.substring(i, Math.min(l, i + limit)));
-                    ctx.render().sql(')');
-                }
-
-                ctx.render().sql(')');
-            }
-            else
-                sqlInline0.accept(ctx, value);
         }
 
         @SuppressWarnings("unused")
@@ -1388,14 +1106,14 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
     static final class DelegatingBinding<X, T, U> extends InternalBinding<X, U> {
 
-        private final ContextConverter<T, X> delegatingConverter;
+        private final Converter<T, X>       delegatingConverter;
         private final InternalBinding<T, U> delegatingBinding;
 
         DelegatingBinding(
             DataType<X> originalDataType,
-            ContextConverter<T, X> delegatingConverter,
-            ContextConverter<X, U> originalConverter,
-            Function<? super ContextConverter<T, U>, ? extends InternalBinding<T, U>> f
+            Converter<T, X> delegatingConverter,
+            Converter<X, U> originalConverter,
+            Function<? super Converter<T, U>, ? extends InternalBinding<T, U>> f
         ) {
             super(originalDataType, originalConverter);
 
@@ -1405,17 +1123,17 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         final void sqlInline0(BindingSQLContext<U> ctx, X value) throws SQLException {
-            delegatingBinding.sqlInline0(ctx, delegatingConverter.to(value, ctx.converterContext()));
+            delegatingBinding.sqlInline0(ctx, delegatingConverter.to(value));
         }
 
         @Override
         final void sqlBind0(BindingSQLContext<U> ctx, X value) throws SQLException {
-            delegatingBinding.sqlBind0(ctx, delegatingConverter.to(value, ctx.converterContext()));
+            delegatingBinding.sqlBind0(ctx, delegatingConverter.to(value));
         }
 
         @Override
         final void set0(BindingSetStatementContext<U> ctx, X value) throws SQLException {
-            delegatingBinding.set0(ctx, delegatingConverter.to(value, ctx.converterContext()));
+            delegatingBinding.set0(ctx, delegatingConverter.to(value));
         }
 
         @Override
@@ -1425,22 +1143,22 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         final void set0(BindingSetSQLOutputContext<U> ctx, X value) throws SQLException {
-            delegatingBinding.set0(ctx, delegatingConverter.to(value, ctx.converterContext()));
+            delegatingBinding.set0(ctx, delegatingConverter.to(value));
         }
 
         @Override
         final X get0(BindingGetResultSetContext<U> ctx) throws SQLException {
-            return delegatingConverter.from(delegatingBinding.get0(ctx), ctx.converterContext());
+            return delegatingConverter.from(delegatingBinding.get0(ctx));
         }
 
         @Override
         final X get0(BindingGetStatementContext<U> ctx) throws SQLException {
-            return delegatingConverter.from(delegatingBinding.get0(ctx), ctx.converterContext());
+            return delegatingConverter.from(delegatingBinding.get0(ctx));
         }
 
         @Override
         final X get0(BindingGetSQLInputContext<U> ctx) throws SQLException {
-            return delegatingConverter.from(delegatingBinding.get0(ctx), ctx.converterContext());
+            return delegatingConverter.from(delegatingBinding.get0(ctx));
         }
 
         @Override
@@ -1450,11 +1168,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
     }
 
     static final class DefaultArrayBinding<U> extends InternalBinding<Object[], U> {
-
-        private static final Set<SQLDialect> REQUIRES_JSON_CAST  = SQLDialect.supportedBy(DUCKDB);
         private static final Set<SQLDialect> REQUIRES_ARRAY_CAST = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
-
-
 
 
 
@@ -1500,7 +1214,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
             // By default, render HSQLDB syntax
             else {
-                boolean squareBrackets = !NO_SUPPORT_SQUARE_BRACKETS.contains(ctx.dialect());
+                boolean squareBrackets = true;
 
                 ctx.render().visit(K_ARRAY);
                 ctx.render().sql(squareBrackets ? '[' : '(');
@@ -1528,30 +1242,11 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         @Override
         final void sqlBind0(BindingSQLContext<U> ctx, Object[] value) throws SQLException {
             Cast.renderCastIf(ctx.render(),
+                c -> super.sqlBind0(ctx, value),
                 c -> {
-                    if (REQUIRES_JSON_CAST.contains(ctx.dialect())) {
-                        ctx.render().visit(K_CAST).sql('(');
-                        super.sqlBind0(ctx, value);
-                        ctx.render().sql(' ').visit(K_AS).sql(' ').visit(K_JSON).sql(')');
-                    }
-
-
-
-
-
-
-
-
-
-                    else
-                        super.sqlBind0(ctx, value);
-                },
-                c -> {
-                    if (REQUIRES_JSON_CAST.contains(ctx.dialect()))
-                        ctx.render().sql(dataType.getCastTypeName(ctx.render().configuration()));
 
                     // Postgres needs explicit casting for enum (array) types
-                    else if (EnumType.class.isAssignableFrom(dataType.getType().getComponentType()))
+                    if (EnumType.class.isAssignableFrom(dataType.getType().getComponentType()))
                         pgRenderEnumCast(ctx.render(), dataType.getType(), pgEnumValue(dataType.getType()));
 
                     // ... and also for other array types
@@ -1560,27 +1255,8 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
                 },
 
                 // In Postgres, some additional casting must be done in some cases...
-                () -> REQUIRES_ARRAY_CAST.contains(ctx.dialect())
-
-
-
-                   || REQUIRES_JSON_CAST.contains(ctx.dialect())
+                () -> REQUIRES_ARRAY_CAST.contains(ctx.family())
             );
-        }
-
-        @Override
-        final void setNull0(BindingSetStatementContext<U> ctx) throws SQLException {
-            switch (ctx.family()) {
-
-
-
-
-
-
-                default:
-                    super.setNull0(ctx);
-                    break;
-            }
         }
 
         @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -1589,28 +1265,11 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             switch (ctx.family()) {
 
 
-
-
-
-
-
-
-
-                case POSTGRES: {
-
-                    // [#12485] Passing the array string as OTHER (OID = unspecified) may prevent poor
-                    //          decisions by the PostgreSQL optimiser.
-                    ctx.statement().setObject(ctx.index(), toPGArrayString(value), Types.OTHER);
-                    break;
-                }
-
-
-
+                case POSTGRES:
                 case YUGABYTEDB: {
                     ctx.statement().setString(ctx.index(), toPGArrayString(value));
                     break;
                 }
-
                 case HSQLDB: {
                     Object[] a = value;
                     Class<?> t = dataType.getType();
@@ -1618,44 +1277,17 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
                     // [#2325] [#5823] Cannot bind UUID[] type in HSQLDB.
                     // See also: https://sourceforge.net/p/hsqldb/bugs/1466
                     if (t == UUID[].class) {
-                        a = (Object[]) Convert.convertArray(a, byte[][].class);
+                        a = Convert.convertArray(a, byte[][].class);
                         t = byte[][].class;
-                    }
-
-                    // [#16585] Another HSQLDB bug regarding LocalTime:
-                    // See also: https://sourceforge.net/p/hsqldb/bugs/1702/
-                    else if (t == LocalTime[].class) {
-                        a = (Object[]) Convert.convertArray(a, Time[].class);
-                        t = Time[].class;
                     }
 
                     ctx.statement().setArray(ctx.index(), new MockArray(ctx.family(), a, t));
                     break;
                 }
-
-                // [#15732] Use JSON as a workaround to bind array types for now.
-                case DUCKDB: {
-                    ctx.statement().setString(ctx.index(), JSONValue.toJSONString(value));
-                    break;
-                }
-
-                case CLICKHOUSE: {
-                    Object[] a = value;
-
-                    // [#7539] Work around a JDBC bug: https://github.com/ClickHouse/clickhouse-java/issues/1626
-                    if (a instanceof Date[]) {
-                        a = (Object[]) Convert.convertArray(a, LocalDate[].class);
-                    }
-
-                    ctx.statement().setObject(ctx.index(), a);
-                    break;
-                }
-
                 case H2: {
                     ctx.statement().setObject(ctx.index(), value);
                     break;
                 }
-
                 default:
                     throw new SQLDialectNotSupportedException("Cannot bind ARRAY types in dialect " + ctx.family());
             }
@@ -1672,63 +1304,13 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             switch (ctx.family()) {
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                 case POSTGRES:
                 case YUGABYTEDB:
                     return pgGetArray(ctx, ctx.resultSet(), dataType, ctx.index());
 
-                case HSQLDB: {
-
-                    // [#13965] Some HSQLDB versions have trouble reading NULL values as arrays
-                    //          See also: https://sourceforge.net/p/hsqldb/bugs/1662/
-                    if (ctx.resultSet().getObject(ctx.index()) == null)
-                        return null;
-
-                    // However, due to a historic HSQLDB bug, we better not rely on rs.getObject() here:
-                    // See https://sourceforge.net/p/hsqldb/bugs/1102/
-                    else
-                        return convertArray(ctx.resultSet().getArray(ctx.index()), dataType.getType());
-                }
-
                 default:
+                    // Note: due to a HSQLDB bug, it is not recommended to call rs.getObject() here:
+                    // See https://sourceforge.net/tracker/?func=detail&aid=3181365&group_id=23316&atid=378131
                     return convertArray(ctx.resultSet().getArray(ctx.index()), dataType.getType());
             }
         }
@@ -1763,16 +1345,12 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
                 if (array == null)
                     return null;
 
-                DataType<?> cdt = dataType.getArrayComponentDataType();
-
                 // Try fetching a Java Object[]. That's gonna work for non-UDT types
                 try {
 
+                    // [#5633] Special treatment for this type.
                     // [#5586] [#5613] TODO: Improve PostgreSQL array deserialisation.
-                    // [#5633] Special treatment for byte[][] types.
-                    // [#14010] UDT arrays should skip the Convert utility
-                    // [#16581] OffsetTime[] is returned as Time[] by Array::getArray
-                    if (cdt.isBinary() || cdt.isUDT() || cdt.getType() == OffsetTime.class)
+                    if (byte[][].class == dataType.getType())
                         throw new ControlFlowSignal("GOTO the next array deserialisation strategy");
                     else
                         return (T) convertArray(array, (Class<? extends Object[]>) dataType.getType());
@@ -1817,8 +1395,8 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         private static final Object[] convertArray(Object array, Class<? extends Object[]> type) throws SQLException {
             if (array instanceof Object[])
                 return Convert.convert(array, type);
-            else if (array instanceof Array a)
-                return convertArray(a, type);
+            else if (array instanceof Array)
+                return convertArray((Array) array, type);
 
             return null;
         }
@@ -2005,69 +1583,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     static final class DefaultBigDecimalBinding<U> extends InternalBinding<BigDecimal, U> {
         private static final Set<SQLDialect> BIND_AS_STRING   = SQLDialect.supportedBy(SQLITE);
 
@@ -2077,26 +1592,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         final void sqlInline0(BindingSQLContext<U> ctx, BigDecimal value) {
-            switch (ctx.family()) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                default:
-                    ctx.render().sql(value.toString());
-                    break;
-            }
+            ctx.render().sql(value.toString());
         }
 
         @Override
@@ -2212,60 +1708,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         }
     }
 
-    static final class DefaultDecfloatBinding<U> extends InternalBinding<Decfloat, U> {
-
-        DefaultDecfloatBinding(DataType<Decfloat> dataType, Converter<Decfloat, U> converter) {
-            super(dataType, converter);
-        }
-
-        @Override
-        final void sqlInline0(org.jooq.BindingSQLContext<U> ctx, Decfloat value) throws SQLException {
-
-            // [#5249] [#6912] [#8063] [#11701] [#11076] Special inlining of special floating point values
-            if (value.isNaN())
-                ctx.render().visit(nan(ctx, DECFLOAT));
-            else if (value.isPositiveInfinity())
-                ctx.render().visit(infinity(ctx, DECFLOAT, false));
-            else if (value.isNegativeInfinity())
-                ctx.render().visit(infinity(ctx, DECFLOAT, true));
-            else if (REQUIRES_LITERAL_CAST.contains(ctx.dialect()))
-                ctx.render().visit(field(ctx.render().floatFormat().format(value)).cast(DECFLOAT));
-            else
-                ctx.render().sql(value.data());
-
-        }
-
-        @Override
-        final void set0(BindingSetStatementContext<U> ctx, Decfloat value) throws SQLException {
-            ctx.statement().setString(ctx.index(), value.data());
-        }
-
-        @Override
-        final void set0(BindingSetSQLOutputContext<U> ctx, Decfloat value) throws SQLException {
-            ctx.output().writeString(value.data());
-        }
-
-        @Override
-        final Decfloat get0(BindingGetResultSetContext<U> ctx) throws SQLException {
-            return decfloatOrNull(ctx.resultSet().getString(ctx.index()));
-        }
-
-        @Override
-        final Decfloat get0(BindingGetStatementContext<U> ctx) throws SQLException {
-            return decfloatOrNull(ctx.statement().getString(ctx.index()));
-        }
-
-        @Override
-        final Decfloat get0(BindingGetSQLInputContext<U> ctx) throws SQLException {
-            return decfloatOrNull(ctx.input().readString());
-        }
-
-        @Override
-        final int sqltype(Statement statement, Configuration configuration) {
-            return Types.VARCHAR;
-        }
-    }
-
     static final class DefaultBlobBinding<U> extends InternalBinding<Blob, U> {
 
         DefaultBlobBinding(DataType<Blob> dataType, Converter<Blob, U> converter) {
@@ -2329,7 +1771,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
     }
 
     static final class DefaultBooleanBinding<U> extends InternalBinding<Boolean, U> {
-        static final Set<SQLDialect> BIND_AS_1_0        = SQLDialect.supportedUntil(FIREBIRD, SQLITE);
+        private static final Set<SQLDialect> BIND_AS_1_0        = SQLDialect.supportedBy(FIREBIRD, SQLITE);
 
 
 
@@ -2370,13 +1812,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         @Override
         final void set0(BindingSetStatementContext<U> ctx, Boolean value) throws SQLException {
             switch (ctx.family()) {
-
-
-
-
-
-
-
 
 
 
@@ -2446,7 +1881,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         @Override
         final int sqltype(Statement statement, Configuration configuration) throws SQLException {
             switch (configuration.family()) {
-
 
 
 
@@ -2545,29 +1979,8 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-
-
-
-
                 default:
                     super.setNull0(ctx);
-                    break;
-            }
-        }
-
-        @Override
-        void sqlBind0(org.jooq.BindingSQLContext<U> ctx, byte[] value) throws SQLException {
-            switch (ctx.family()) {
-
-
-
-
-
-
-
-
-                default:
-                    super.sqlBind0(ctx, value);
                     break;
             }
         }
@@ -2577,16 +1990,18 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             // [#1154] Binary data cannot always be inlined
 
             switch (ctx.family()) {
-                case DUCKDB:
+
+
+
+                case H2:
+                case HSQLDB:
+                case MARIADB:
+                case MYSQL:
+                case SQLITE:
                     ctx.render()
-                       .visit(K_CAST)
-                       .sql("('")
-                       .sql(escapeHexDigitPairs(convertBytesToHex(value)))
-                       .sql("' ")
-                       .visit(K_AS)
-                       .sql(' ')
-                       .visit(BLOB)
-                       .sql(')');
+                       .sql("X'")
+                       .sql(convertBytesToHex(value))
+                       .sql('\'');
 
                     break;
 
@@ -2602,14 +2017,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
                        .sql(')');
 
                     break;
-
-
-
-
-
-
-
-
 
 
 
@@ -2668,24 +2075,9 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             }
         }
 
-        final String escapeHexDigitPairs(String hex) {
-            StringBuilder sb = new StringBuilder();
-            int l = hex.length();
-
-            for (int i = 0; i < l; i += 2)
-                sb.append("\\x").append(hex.charAt(i)).append(hex.charAt(i + 1));
-
-            return sb.toString();
-        }
-
         @Override
         final void set0(BindingSetStatementContext<U> ctx, byte[] value) throws SQLException {
             switch (ctx.family()) {
-
-
-
-
-
                 case H2:
                     blobs.set(new DefaultBindingSetStatementContext<>(ctx.executeContext(), ctx.statement(), ctx.index(), value));
                     break;
@@ -2713,7 +2105,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         @Override
         final byte[] get0(BindingGetResultSetContext<U> ctx) throws SQLException {
             switch (ctx.family()) {
-                case DUCKDB:
                 case H2:
                     DefaultBindingGetResultSetContext<byte[]> x = new DefaultBindingGetResultSetContext<>(ctx.executeContext(), ctx.resultSet(), ctx.index());
                     blobs.get(x);
@@ -2727,7 +2118,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         @Override
         final byte[] get0(BindingGetStatementContext<U> ctx) throws SQLException {
             switch (ctx.family()) {
-                case DUCKDB:
                 case H2:
                     DefaultBindingGetStatementContext<byte[]> x = new DefaultBindingGetStatementContext<>(ctx.executeContext(), ctx.statement(), ctx.index());
                     blobs.get(x);
@@ -2740,6 +2130,13 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         final byte[] get0(BindingGetSQLInputContext<U> ctx) throws SQLException {
+
+
+
+
+
+
+
 
 
 
@@ -2829,16 +2226,12 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         final void setNull0(BindingSetStatementContext<U> ctx) throws SQLException {
-            switch (ctx.family()) {
 
 
 
 
 
-                default:
-                    super.setNull0(ctx);
-                    break;
-            }
+            super.setNull0(ctx);
         }
 
         @Override
@@ -2865,16 +2258,9 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             else if (ctx.family() == DERBY)
                 ctx.render().visit(K_DATE).sql("('").sql(escape(value, ctx.render())).sql("')");
 
-
-
-
-
-
-
-            // [#16498] Special cases where the standard datetime literal prefix needs to be omitted
-            //          See: https://bugs.mysql.com/bug.php?id=114450
-            else if (ctx.data(DATA_OMIT_DATETIME_LITERAL_PREFIX) != null)
-                ctx.render().sql('\'').sql(format(value, ctx.render())).sql('\'');
+            // [#3648] Circumvent a MySQL bug related to date literals
+            else if (REQUIRE_JDBC_DATE_LITERAL.contains(ctx.dialect()))
+                ctx.render().sql("{d '").sql(escape(value, ctx.render())).sql("'}");
 
             // Most dialects implement SQL standard date literals
             else
@@ -2904,7 +2290,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         final void sqlBind0(BindingSQLContext<U> ctx, Date value) throws SQLException {
-            switch (ctx.family()) {
 
 
 
@@ -2915,15 +2300,12 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-                default:
-                    super.sqlBind0(ctx, value);
-                    break;
-            }
+
+            super.sqlBind0(ctx, value);
         }
 
         @Override
         final void register0(BindingRegisterContext<U> ctx) throws SQLException {
-            switch (ctx.family()) {
 
 
 
@@ -2931,23 +2313,14 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-                default:
-                    super.register0(ctx);
-                    break;
-            }
+
+            super.register0(ctx);
         }
 
         @Override
         final void set0(BindingSetStatementContext<U> ctx, Date value) throws SQLException {
-            switch (ctx.family()) {
-
-                // DuckDB doesn't support setDate() yet: https://github.com/duckdb/duckdb/discussions/7207
-                case DUCKDB:
-
-                // SQLite's type affinity needs special care...
-                case SQLITE:
-                    ctx.statement().setString(ctx.index(), value.toString());
-                    break;
+            if (ctx.family() == SQLITE)
+                ctx.statement().setString(ctx.index(), value.toString());
 
 
 
@@ -2955,16 +2328,12 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-
-                default:
-                    ctx.statement().setDate(ctx.index(), value);
-                    break;
-            }
+            else
+                ctx.statement().setDate(ctx.index(), value);
         }
 
         @Override
         final void set0(BindingSetSQLOutputContext<U> ctx, Date value) throws SQLException {
-            switch (ctx.family()) {
 
 
 
@@ -2973,23 +2342,18 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-                default:
-                    ctx.output().writeDate(value);
-                    break;
-            }
+            ctx.output().writeDate(value);
         }
 
         @Override
         final Date get0(BindingGetResultSetContext<U> ctx) throws SQLException {
-            switch (ctx.family()) {
+            SQLDialect family = ctx.family();
 
-                // SQLite's type affinity needs special care...
-                case SQLITE: {
-                    String date = ctx.resultSet().getString(ctx.index());
-                    return date == null ? null : new Date(parse(Date.class, date));
-                }
-
-
+            // SQLite's type affinity needs special care...
+            if (family == SQLITE) {
+                String date = ctx.resultSet().getString(ctx.index());
+                return date == null ? null : new Date(parse(Date.class, date));
+            }
 
 
 
@@ -2997,14 +2361,15 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-                default:
-                    return ctx.resultSet().getDate(ctx.index());
+
+
+            else {
+                return ctx.resultSet().getDate(ctx.index());
             }
         }
 
         @Override
         final Date get0(BindingGetStatementContext<U> ctx) throws SQLException {
-            switch (ctx.family()) {
 
 
 
@@ -3013,14 +2378,13 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-                default:
-                    return ctx.statement().getDate(ctx.index());
-            }
+
+
+            return ctx.statement().getDate(ctx.index());
         }
 
         @Override
         final Date get0(BindingGetSQLInputContext<U> ctx) throws SQLException {
-            switch (ctx.family()) {
 
 
 
@@ -3029,29 +2393,27 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-                default:
-                    return ctx.input().readDate();
-            }
+
+
+            return ctx.input().readDate();
         }
 
         @Override
         final int sqltype(Statement statement, Configuration configuration) {
-            switch (configuration.family()) {
 
 
 
 
 
 
-                default:
-                    return Types.DATE;
-            }
+
+            return Types.DATE;
         }
     }
 
     static final class DefaultDayToSecondBinding<U> extends InternalBinding<DayToSecond, U> {
         private static final Set<SQLDialect> REQUIRE_PG_INTERVAL       = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
-        private static final Set<SQLDialect> REQUIRE_STANDARD_INTERVAL = SQLDialect.supportedBy(H2, TRINO);
+        private static final Set<SQLDialect> REQUIRE_STANDARD_INTERVAL = SQLDialect.supportedBy(H2);
 
         DefaultDayToSecondBinding(DataType<DayToSecond> dataType, Converter<DayToSecond, U> converter) {
             super(dataType, converter);
@@ -3063,11 +2425,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             // [#566] Interval data types are best bound as Strings
             if (REQUIRE_PG_INTERVAL.contains(ctx.dialect()))
                 ctx.render().visit(inline(toPGInterval(value).toString()));
-
-            // [#11485] Truncate the nanosecond precision to (8) as Trino doesn't accept the usual precision of (9)
-            //          https://trino.io/docs/current/functions/datetime.html#extraction-function
-            else if (ctx.family() == TRINO)
-                ctx.render().sql(renderDTS(ctx, value, i -> apply(i.toString(), s -> s.substring(0, s.length() - 1))));
             else
                 super.sqlInline0(ctx, value);
         }
@@ -3119,16 +2476,12 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         }
 
         private final String renderDTS(Scope scope, DayToSecond dts) {
-            return renderDTS(scope, dts, Object::toString);
-        }
-
-        private final String renderDTS(Scope scope, DayToSecond dts, Function<? super DayToSecond, ? extends String> toString) {
             if (dts == null)
                 return null;
             else if (REQUIRE_STANDARD_INTERVAL.contains(scope.dialect()))
-                return "INTERVAL '" + toString.apply(dts) + "' DAY TO SECOND";
+                return "INTERVAL '" + dts.toString() + "' DAY TO SECOND";
             else
-                return toString.apply(dts);
+                return dts.toString();
         }
 
         @Override
@@ -3173,10 +2526,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         static final Field<?> nan(BindingSQLContext<?> ctx, DataType<?> type) {
             switch (ctx.family()) {
                 case FIREBIRD:
-                    if (type.isDecimal())
-                        return inline("NaN").cast(type);
-                    else
-                        return log(inline(1), inline(1));
+                    return log(inline(1), inline(1));
                 case HSQLDB:
                     return inline(0.0).div(field("0.0e0", (DataType) type));
                 default:
@@ -3188,10 +2538,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         static final Field<?> infinity(BindingSQLContext<?> ctx, DataType<?> type, boolean negative) {
             switch (ctx.family()) {
                 case FIREBIRD:
-                    if (type.isDecimal())
-                        return inline(negative ? "-Infinity" : "Infinity").cast(type);
-                    else
-                        return log(negative ? inline(0.5) : inline(1.5), inline(1));
+                    return log(negative ? inline(0.5) : inline(1.5), inline(1));
                 case HSQLDB:
                     return inline(negative ? -1.0 : 1.0).div(field("0.0e0", (DataType) type));
                 default:
@@ -3247,7 +2594,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         @Override
         final void sqlInline0(BindingSQLContext<U> ctx, Double value) {
 
-            // [#5249] [#6912] [#8063] [#11701] [#11076] Special inlining of special floating point values
+            // [#5249] [#6912] [#8063] [#11701] Special inlining of special floating point values
             if (value.isNaN())
                 ctx.render().visit(nan(ctx, DOUBLE));
             else if (value == Double.POSITIVE_INFINITY)
@@ -3328,7 +2675,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
                 c -> pgRenderEnumCast(c, dataType.getType(), enumValue),
 
                 // Postgres needs explicit casting for enum (array) types
-                () -> REQUIRE_ENUM_CAST.contains(ctx.dialect()) && enumValue.getName() != null
+                () -> REQUIRE_ENUM_CAST.contains(ctx.dialect()) && enumValue.getSchema() != null
             );
         }
 
@@ -3341,7 +2688,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
                 c -> pgRenderEnumCast(c, dataType.getType(), enumValue),
 
                 // Postgres needs explicit casting for enum (array) types
-                () -> REQUIRE_ENUM_CAST.contains(ctx.dialect()) && enumValue.getName() != null
+                () -> REQUIRE_ENUM_CAST.contains(ctx.dialect()) && enumValue.getSchema() != null
             );
         }
 
@@ -3392,9 +2739,9 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         }
 
         static final void pgRenderEnumCast(Context<?> ctx, Class<?> type, EnumType value) {
-            if (value.getName() != null) {
-                Schema schema = using(ctx.configuration()).map(value.getSchema());
-
+            Schema schema = value.getSchema();
+            if (schema != null) {
+                schema = using(ctx.configuration()).map(schema);
                 if (schema != null && TRUE.equals(ctx.configuration().settings().isRenderSchema())) {
                     ctx.visit(schema);
                     ctx.sql('.');
@@ -3444,12 +2791,12 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         @Override
         final void sqlInline0(BindingSQLContext<U> ctx, Float value) {
 
-            // [#5249] [#6912] [#8063] [#11701] [#11076] Special inlining of special floating point values
+            // [#5249] [#6912] [#8063] [#11701] Special inlining of special floating point values
             if (value.isNaN())
                 ctx.render().visit(nan(ctx, REAL));
-            else if (value == Float.POSITIVE_INFINITY)
+            else if (value == Double.POSITIVE_INFINITY)
                 ctx.render().visit(infinity(ctx, REAL, false));
-            else if (value == Float.NEGATIVE_INFINITY)
+            else if (value == Double.NEGATIVE_INFINITY)
                 ctx.render().visit(infinity(ctx, REAL, true));
             else if (REQUIRES_LITERAL_CAST.contains(ctx.dialect()))
                 ctx.render().visit(field(ctx.render().floatFormat().format(value)).cast(REAL));
@@ -3782,13 +3129,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             int length;
 
             for (length = 0; length < maxLength && (pos + length) < string.length(); length++) {
-                char c = string.charAt(pos + length);
-
-                // [#11485] Some RDBMS seem to prepend + to large years, e.g. +10000-01-01
-                if (c == '+' && length == 0)
-                    continue;
-
-                int digit = c - '0';
+                int digit = string.charAt(pos + length) - '0';
 
                 if (digit >= 0 && digit < 10)
                     result = result * 10 + digit;
@@ -3806,14 +3147,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
     }
 
     static final class DefaultOffsetDateTimeBinding<U> extends InternalBinding<OffsetDateTime, U> {
-
-
-
-
-
-
-
-
 
         DefaultOffsetDateTimeBinding(DataType<OffsetDateTime> dataType, Converter<OffsetDateTime, U> converter) {
             super(dataType, converter);
@@ -3838,9 +3171,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
                 // [#5895] HSQLDB derives the specific data type from the literal
 
 
-                case FIREBIRD:
                 case HSQLDB:
-                case TRINO:
                     ctx.render().visit(K_TIMESTAMP).sql(" '").sql(escape(format(value, family), ctx.render())).sql('\'');
                     break;
 
@@ -3865,29 +3196,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         }
 
         @Override
-        final void sqlBind0(BindingSQLContext<U> ctx, OffsetDateTime value) throws SQLException {
-            switch (ctx.family()) {
-
-                // [#17088] The R2DBC H2 driver binds strings as CLOB, which cannot be converted to TIMESTAMPTZ
-                case H2:
-                    if (isR2dbc(ctx)) {
-                        Cast.renderCast(ctx.render(),
-                            c -> super.sqlBind0(ctx, value),
-                            c -> c.sql(VARCHAR.getCastTypeName(c.configuration()))
-                        );
-                    }
-                    else
-                        super.sqlBind0(ctx, value);
-
-                    break;
-
-                default:
-                    super.sqlBind0(ctx, value);
-                    break;
-            }
-        }
-
-        @Override
         final void set0(BindingSetStatementContext<U> ctx, OffsetDateTime value) throws SQLException {
             SQLDialect family = ctx.family();
 
@@ -3898,10 +3206,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-
-
-            else if (family == FIREBIRD)
-                ctx.statement().setString(ctx.index(), value.toString());
 
             else
                 ctx.statement().setString(ctx.index(), format(value, family));
@@ -3926,16 +3230,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         final OffsetDateTime get0(BindingGetResultSetContext<U> ctx) throws SQLException {
             if (!FALSE.equals(ctx.settings().isBindOffsetDateTimeType()))
                 return ctx.resultSet().getObject(ctx.index(), OffsetDateTime.class);
-
-
-
-
-
-
-
-
-
-
             else
                 return OffsetDateTimeParser.offsetDateTime(ctx.resultSet().getString(ctx.index()));
         }
@@ -3944,12 +3238,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         final OffsetDateTime get0(BindingGetStatementContext<U> ctx) throws SQLException {
             if (!FALSE.equals(ctx.settings().isBindOffsetDateTimeType()))
                 return ctx.statement().getObject(ctx.index(), OffsetDateTime.class);
-
-
-
-
-
-
             else
                 return OffsetDateTimeParser.offsetDateTime(ctx.statement().getString(ctx.index()));
         }
@@ -3959,9 +3247,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
             if (!FALSE.equals(ctx.settings().isBindOffsetDateTimeType()))
                 return ctx.input().readObject(OffsetDateTime.class);
-
-
-
 
 
 
@@ -3984,9 +3269,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             // [#5779] [#9902] Use the JDBC 4.2 TIME[STAMP]_WITH_TIMEZONE types by default
             if (!FALSE.equals(configuration.settings().isBindOffsetDateTimeType()))
                 return Types.TIMESTAMP_WITH_TIMEZONE;
-
-
-
 
 
 
@@ -4076,9 +3358,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
             switch (ctx.family()) {
                 // [#5895] HSQLDB derives the specific data type from the literal
-                case FIREBIRD:
                 case HSQLDB:
-                case TRINO:
                     ctx.render().visit(K_TIME).sql(" '").sql(escape(format(value), ctx.render())).sql('\'');
                     break;
 
@@ -4113,9 +3393,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
                 ctx.statement().setString(ctx.index(), string);
             }
-
-            else if (ctx.family() == FIREBIRD)
-                ctx.statement().setString(ctx.index(), value.toString());
             else
                 ctx.statement().setObject(ctx.index(), value);
         }
@@ -4176,15 +3453,14 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
     static final class DefaultInstantBinding<U> extends InternalBinding<Instant, U> {
 
-        @SuppressWarnings("unchecked")
-        private static final ContextConverter<OffsetDateTime, Instant> CONVERTER = ContextConverter.ofNullable(
+        private static final Converter<OffsetDateTime, Instant> CONVERTER        = Converter.ofNullable(
             OffsetDateTime.class,
             Instant.class,
-            (BiFunction<OffsetDateTime, ConverterContext, Instant> & Serializable) (t, x) -> t.toInstant(),
-            (BiFunction<Instant, ConverterContext, OffsetDateTime> & Serializable) (i, x) -> OffsetDateTime.ofInstant(i, ZoneOffset.UTC)
+            (Function<OffsetDateTime, Instant> & Serializable) OffsetDateTime::toInstant,
+            (Function<Instant, OffsetDateTime> & Serializable) i -> OffsetDateTime.ofInstant(i, ZoneOffset.UTC)
         );
 
-        private final DefaultOffsetDateTimeBinding<U>                  delegate;
+        private final DefaultOffsetDateTimeBinding<U>           delegate;
 
         DefaultInstantBinding(DataType<Instant> dataType, Converter<Instant, U> converter) {
             super(dataType, converter);
@@ -4199,37 +3475,32 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         final void sqlInline0(BindingSQLContext<U> ctx, Instant value) throws SQLException {
-            delegate.sqlInline0(ctx, CONVERTER.to(value, ctx.converterContext()));
-        }
-
-        @Override
-        final void sqlBind0(BindingSQLContext<U> ctx, Instant value) throws SQLException {
-            delegate.sqlBind0(ctx, CONVERTER.to(value, ctx.converterContext()));
+            delegate.sqlInline0(ctx, CONVERTER.to(value));
         }
 
         @Override
         final void set0(BindingSetStatementContext<U> ctx, Instant value) throws SQLException {
-            delegate.set0(ctx, CONVERTER.to(value, ctx.converterContext()));
+            delegate.set0(ctx, CONVERTER.to(value));
         }
 
         @Override
         final void set0(BindingSetSQLOutputContext<U> ctx, Instant value) throws SQLException {
-            delegate.set0(ctx, CONVERTER.to(value, ctx.converterContext()));
+            delegate.set0(ctx, CONVERTER.to(value));
         }
 
         @Override
         final Instant get0(BindingGetResultSetContext<U> ctx) throws SQLException {
-            return CONVERTER.from(delegate.get0(ctx), ctx.converterContext());
+            return CONVERTER.from(delegate.get0(ctx));
         }
 
         @Override
         final Instant get0(BindingGetStatementContext<U> ctx) throws SQLException {
-            return CONVERTER.from(delegate.get0(ctx), ctx.converterContext());
+            return CONVERTER.from(delegate.get0(ctx));
         }
 
         @Override
         final Instant get0(BindingGetSQLInputContext<U> ctx) throws SQLException {
-            return CONVERTER.from(delegate.get0(ctx), ctx.converterContext());
+            return CONVERTER.from(delegate.get0(ctx));
         }
 
         @Override
@@ -4324,22 +3595,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             }
         }
 
-
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        @Override
-        void sqlInline0(BindingSQLContext<U> ctx, Object value) throws SQLException {
-            Binding<?, ?> b = binding(DefaultDataType.getDataType(
-                DEFAULT, (Class<Object>) value.getClass(), SQLDataType.OTHER
-            ));
-
-            if (b instanceof DefaultOtherBinding )
-                super.sqlInline0(ctx, value);
-            else if (b instanceof InternalBinding i)
-                i.sqlInline0(ctx, value);
-            else
-                super.sqlInline0(ctx, value);
-        }
-
         @Override
         final void set0(BindingSetSQLOutputContext<U> ctx, Object value) throws SQLException {
             throw new DataTypeException("Type " + dataType + " is not supported");
@@ -4347,17 +3602,17 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         final Object get0(BindingGetResultSetContext<U> ctx) throws SQLException {
-            return unlob(ctx, ctx.resultSet().getObject(ctx.index()));
+            return unlob(ctx.resultSet().getObject(ctx.index()));
         }
 
         @Override
         final Object get0(BindingGetStatementContext<U> ctx) throws SQLException {
-            return unlob(ctx, ctx.statement().getObject(ctx.index()));
+            return unlob(ctx.statement().getObject(ctx.index()));
         }
 
         @Override
         final Object get0(BindingGetSQLInputContext<U> ctx) throws SQLException {
-            return unlob(ctx, ctx.input().readObject());
+            return unlob(ctx.input().readObject());
         }
 
         @Override
@@ -4369,11 +3624,16 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
          * [#2534] Extract <code>byte[]</code> or <code>String</code> data from a
          * LOB, if the argument is a lob.
          */
-        private static final Object unlob(Scope ctx, Object object) throws SQLException {
-            if (object instanceof Blob blob) {
-                return readBlob(ctx, blob);
+        private static final Object unlob(Object object) throws SQLException {
+            if (object instanceof Blob) { Blob blob = (Blob) object;
+                try {
+                    return blob.getBytes(1, asInt(blob.length()));
+                }
+                finally {
+                    JDBCUtils.safeFree(blob);
+                }
             }
-            else if (object instanceof Clob clob) {
+            else if (object instanceof Clob) { Clob clob = (Clob) object;
                 try {
                     return clob.getSubString(1, asInt(clob.length()));
                 }
@@ -4424,29 +3684,21 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
     }
 
     static final class DefaultRecordBinding<U> extends InternalBinding<Record, U> {
-
-
-
-
-
-
-
-        static final Set<SQLDialect> REQUIRE_RECORD_CAST        = SQLDialect.supportedBy(DUCKDB, POSTGRES, YUGABYTEDB);
+        static final Set<SQLDialect> REQUIRE_RECORD_CAST = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
 
         DefaultRecordBinding(DataType<Record> dataType, Converter<Record, U> converter) {
             super(dataType, converter);
         }
 
         @Override
-        final void sqlBind0(BindingSQLContext<U> ctx, Record value) throws SQLException {
+        void sqlBind0(BindingSQLContext<U> ctx, Record value) throws SQLException {
             Cast.renderCastIf(ctx.render(),
                 c -> super.sqlBind0(ctx, value),
-                c -> pgRenderRecordCast(ctx.render()),
-                () -> REQUIRE_RECORD_CAST.contains(ctx.dialect())
+                c -> pgRenderRecordCast(ctx.render(), value),
+                () -> REQUIRE_RECORD_CAST.contains(ctx.dialect()) && value != null
             );
         }
 
-        @SuppressWarnings({ "rawtypes", "unchecked" })
         @Override
         final void sqlInline0(BindingSQLContext<U> ctx, Record value) throws SQLException {
             Cast.renderCastIf(ctx.render(),
@@ -4454,9 +3706,9 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
                     if (REQUIRE_RECORD_CAST.contains(ctx.dialect()))
                         ctx.render().visit(inline(PostgresUtils.toPGString(value)));
                     else
-                        ctx.render().visit(new QualifiedRecordConstant((QualifiedRecord) value, getRecordQualifier(dataType)));
+                        ctx.render().sql("[UDT]");
                 },
-                c -> pgRenderRecordCast(ctx.render()),
+                c -> pgRenderRecordCast(ctx.render(), value),
                 () -> REQUIRE_RECORD_CAST.contains(ctx.dialect())
             );
         }
@@ -4464,9 +3716,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         @SuppressWarnings({ "rawtypes", "unchecked" })
         @Override
         final void register0(BindingRegisterContext<U> ctx) throws SQLException {
-
-
-
 
 
 
@@ -4501,49 +3750,26 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         final void set0(BindingSetSQLOutputContext<U> ctx, Record value) throws SQLException {
-            if (value instanceof QualifiedRecord<?> q)
-                ctx.output().writeObject(q);
+            if (value instanceof QualifiedRecord)
+                ctx.output().writeObject((QualifiedRecord<?>) value);
             else
                 throw new UnsupportedOperationException("Type " + dataType + " is not supported");
         }
 
         @Override
         final Record get0(BindingGetResultSetContext<U> ctx) throws SQLException {
-            boolean skipDegree1 = !TRUE.equals(ctx.settings().isEmulateNestedRecordProjectionsUsingMultisetEmulation());
-
             switch (ctx.family()) {
 
 
                 case POSTGRES:
-                case YUGABYTEDB: {
-
-                    // [#17979] Native ROW support may be overridden for various reasons
-                    if (TRUE.equals(ctx.executeContext().data(DATA_MULTISET_CONTENT)))
-                        return readMultiset(ctx, dataType, skipDegree1);
-                    else
-                        return pgNewRecord(ctx,
-                            dataType.getType(),
-                            (AbstractRow<Record>) dataType.getRow(),
-                            ctx.resultSet().getObject(ctx.index())
-                        );
-                }
-
-                case CLICKHOUSE:
-                case DUCKDB:
-                case H2: {
-                    Object object = ctx.resultSet().getObject(ctx.index());
-
-                    if (object == null)
-                        return null;
-
-                    return readMultiset(ctx, dataType, skipDegree1 && !(object instanceof Struct) && !(object instanceof ResultSet));
-                }
+                case YUGABYTEDB:
+                    return pgNewRecord(ctx, dataType.getType(), (AbstractRow<Record>) dataType.getRow(), ctx.resultSet().getObject(ctx.index()));
 
                 default:
                     if (UDTRecord.class.isAssignableFrom(dataType.getType()))
                         return localExecuteContext(ctx.executeContext(), () -> (Record) ctx.resultSet().getObject(ctx.index(), typeMap(dataType.getType(), ctx)));
                     else
-                        return readMultiset(ctx, dataType, skipDegree1);
+                        return readMultiset(ctx, dataType);
             }
         }
 
@@ -4567,19 +3793,17 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         }
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
-        static final <R extends Record> R readMultiset(BindingGetResultSetContext<?> ctx, DataType<R> type, boolean skipDegree1) throws SQLException {
+        static final <R extends Record> R readMultiset(BindingGetResultSetContext<?> ctx, DataType<R> type) throws SQLException {
             AbstractRow<R> row = (AbstractRow<R>) type.getRow();
             Result<R> result;
 
             // [#12930] AbstractRowAsField doesn't unnecessarily nest Row1
-            // [#17074] Do this only if requested (e.g. native ROW may be generated despite JSON MULTISET emulation at the top level)
-            if (skipDegree1 && row.size() == 1 && emulateMultiset(ctx.configuration()) != NestedCollectionEmulation.NATIVE) {
+            if (row.size() == 1 && emulateMultiset(ctx.configuration()) != NestedCollectionEmulation.NATIVE) {
                 result = new ResultImpl<>(ctx.configuration(), row);
-                result.add(newRecord(true, ctx.configuration(), (Class<R>) type.getRecordType(), row).operate(r -> {
+                result.add(newRecord(true, (Class<R>) type.getRecordType(), row, ctx.configuration()).operate(r -> {
                     DefaultBindingGetResultSetContext<?> c = new DefaultBindingGetResultSetContext<>(ctx.executeContext(), ctx.resultSet(), ctx.index());
                     r.field(0).getBinding().get((BindingGetResultSetContext) c);
                     r.fromArray(c.value());
-                    r.touched(false);
                     return r;
                 }));
             }
@@ -4587,15 +3811,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
                 result = DefaultResultBinding.readMultiset(ctx, row, type.getType(),
                     s -> s != null && (s.startsWith("[") || s.startsWith("{")) ? "[" + s + "]" : null,
                     s -> s != null && (s.startsWith("<")) ? "<result>" + s + "</result>" : null,
-
-                    // [#18175] H2 uses nested ResultSet values instead of Struct to model ROW expressions
-                    s -> s instanceof ResultSet rs
-                         ? asList(rs)
-                         : s instanceof Struct x
-                         ? asList(x)
-                         : s instanceof List<?> l
-                         ? asList(l)
-                         : null
+                    s -> s instanceof Struct ? asList((Struct) s) : null
                 );
 
             return isEmpty(result) ? null : result.get(0);
@@ -4612,129 +3828,100 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         // interfaces. Instead, a string representation of a UDT has to be parsed
         // -------------------------------------------------------------------------
 
-        final void pgRenderRecordCast(Context<?> ctx) {
-            if (dataType instanceof UDTDataType<?> u) {
-                ctx.visit(defaultIfNull(getMappedUDT(ctx, u.udt), u.udt));
-            }
-            else if (dataType instanceof TableDataType<?> t) {
-                ctx.visit(defaultIfNull(getMappedTable(ctx, t.table), t.table));
-            }
-            else if (dataType.isQualifiedRecord()) {
-                RecordQualifier<?> q = getRecordQualifier(dataType);
-                ctx.visit(defaultIfNull(Tools.getMappedQualifier(ctx, q), q));
-            }
-            else
-                ctx.visit(dataType.getQualifiedName());
+        static final void pgRenderRecordCast(Context<?> ctx, Record value) {
+            if (value instanceof UDTRecord)
+                ctx.visit(((UDTRecord<?>) value).getUDT().getQualifiedName());
+            else if (value instanceof TableRecord)
+                ctx.visit(((TableRecord<?>) value).getTable().getQualifiedName());
         }
 
         @SuppressWarnings("unchecked")
-        private static final <T, U> U pgFromString(BindingScope ctx, Field<U> field, String string) {
-            ContextConverter<T, U> converter = (ContextConverter<T, U>) field.getConverter();
+        private static final <T, U> U pgFromString(Scope ctx, Field<U> field, String string) {
+            Converter<T, U> converter = (Converter<T, U>) field.getConverter();
             Class<?> type = wrapper(converter.fromType());
 
             if (string == null)
-                return converter.from(null, ctx.converterContext());
+                return null;
             else if (type == Blob.class)
                 ; // Not supported
             else if (type == Boolean.class)
-                return converter.from((T) Convert.convert(string, Boolean.class), ctx.converterContext());
+                return converter.from((T) Convert.convert(string, Boolean.class));
             else if (type == BigInteger.class)
-                return converter.from((T) new BigInteger(string), ctx.converterContext());
+                return converter.from((T) new BigInteger(string));
             else if (type == BigDecimal.class)
-                return converter.from((T) new BigDecimal(string), ctx.converterContext());
+                return converter.from((T) new BigDecimal(string));
             else if (type == Byte.class)
-                return converter.from((T) Byte.valueOf(string), ctx.converterContext());
+                return converter.from((T) Byte.valueOf(string));
             else if (type == byte[].class)
-                return converter.from((T) PostgresUtils.toBytes(string), ctx.converterContext());
+                return converter.from((T) PostgresUtils.toBytes(string));
             else if (type == Clob.class)
                 ; // Not supported
             else if (type == Date.class)
-                return converter.from((T) Date.valueOf(string), ctx.converterContext());
-            else if (type == Decfloat.class)
-                return converter.from((T) Decfloat.decfloat(string), ctx.converterContext());
+                return converter.from((T) Date.valueOf(string));
             else if (type == Double.class)
-                return converter.from((T) Double.valueOf(string), ctx.converterContext());
+                return converter.from((T) Double.valueOf(string));
             else if (type == Float.class)
-                return converter.from((T) Float.valueOf(string), ctx.converterContext());
-
-
-
-
-
-
+                return converter.from((T) Float.valueOf(string));
             else if (type == Integer.class)
-                return converter.from((T) Integer.valueOf(string), ctx.converterContext());
+                return converter.from((T) Integer.valueOf(string));
             else if (type == Long.class)
-                return converter.from((T) Long.valueOf(string), ctx.converterContext());
+                return converter.from((T) Long.valueOf(string));
             else if (type == Short.class)
-                return converter.from((T) Short.valueOf(string), ctx.converterContext());
+                return converter.from((T) Short.valueOf(string));
             else if (type == String.class)
-                return converter.from((T) string, ctx.converterContext());
+                return converter.from((T) string);
             else if (type == Time.class)
-                return converter.from((T) Time.valueOf(string), ctx.converterContext());
+                return converter.from((T) Time.valueOf(string));
             else if (type == Timestamp.class)
-                return converter.from((T) Timestamp.valueOf(patchIso8601Timestamp(string, false)), ctx.converterContext());
+                return converter.from((T) Timestamp.valueOf(patchIso8601Timestamp(string, false)));
             else if (type == LocalTime.class)
-                return converter.from((T) LocalTime.parse(string), ctx.converterContext());
+                return converter.from((T) LocalTime.parse(string));
             else if (type == LocalDate.class)
-                return converter.from((T) LocalDate.parse(string), ctx.converterContext());
+                return converter.from((T) LocalDate.parse(string));
             else if (type == LocalDateTime.class)
-                return converter.from((T) LocalDateTime.parse(patchIso8601Timestamp(string, true)), ctx.converterContext());
+                return converter.from((T) LocalDateTime.parse(patchIso8601Timestamp(string, true)));
             else if (type == OffsetTime.class)
-                return converter.from((T) OffsetDateTimeParser.offsetTime(string), ctx.converterContext());
+                return converter.from((T) OffsetDateTimeParser.offsetTime(string));
             else if (type == OffsetDateTime.class)
-                return converter.from((T) OffsetDateTimeParser.offsetDateTime(string), ctx.converterContext());
+                return converter.from((T) OffsetDateTimeParser.offsetDateTime(string));
             else if (type == Instant.class)
-                return converter.from((T) OffsetDateTimeParser.offsetDateTime(string).toInstant(), ctx.converterContext());
-            else if (type == JSON.class)
-                return converter.from((T) JSON.json(string), ctx.converterContext());
-            else if (type == JSONB.class)
-                return converter.from((T) JSONB.jsonb(string), ctx.converterContext());
+                return converter.from((T) OffsetDateTimeParser.offsetDateTime(string).toInstant());
             else if (type == UByte.class)
-                return converter.from((T) UByte.valueOf(string), ctx.converterContext());
+                return converter.from((T) UByte.valueOf(string));
             else if (type == UShort.class)
-                return converter.from((T) UShort.valueOf(string), ctx.converterContext());
+                return converter.from((T) UShort.valueOf(string));
             else if (type == UInteger.class)
-                return converter.from((T) UInteger.valueOf(string), ctx.converterContext());
+                return converter.from((T) UInteger.valueOf(string));
             else if (type == ULong.class)
-                return converter.from((T) ULong.valueOf(string), ctx.converterContext());
+                return converter.from((T) ULong.valueOf(string));
             else if (type == UUID.class)
-                return converter.from((T) UUID.fromString(string), ctx.converterContext());
-            else if (type == XML.class)
-                return converter.from((T) XML.xml(string), ctx.converterContext());
-            else if (type == Year.class)
-                return converter.from((T) Year.parse(string), ctx.converterContext());
-            else if (type == YearToMonth.class)
-                return converter.from((T) PostgresUtils.toYearToMonth(string), ctx.converterContext());
-            else if (type == YearToSecond.class)
-                return converter.from((T) PostgresUtils.toYearToSecond(string), ctx.converterContext());
-            else if (type == DayToSecond.class)
-                return converter.from((T) PostgresUtils.toDayToSecond(string), ctx.converterContext());
+                return converter.from((T) UUID.fromString(string));
             else if (type.isArray())
-                return converter.from((T) pgNewArray(ctx, field, type, string), ctx.converterContext());
+                return converter.from((T) pgNewArray(ctx, field, type, string));
 
 
 
 
             else if (EnumType.class.isAssignableFrom(type))
-                return converter.from((T) DefaultEnumTypeBinding.getEnumType((Class<EnumType>) type, string), ctx.converterContext());
+                return converter.from((T) DefaultEnumTypeBinding.getEnumType((Class<EnumType>) type, string));
             else if (Result.class.isAssignableFrom(type))
                 if (string.startsWith("<"))
-                    return converter.from((T) readMultisetXML(ctx, (AbstractRow<Record>) field.getDataType().getRow(), (Class<Record>) field.getDataType().getRecordType(), string), ctx.converterContext());
+                    return converter.from((T) readMultisetXML(ctx, (AbstractRow<Record>) field.getDataType().getRow(), (Class<Record>) field.getDataType().getRecordType(), string));
                 else
-                    return converter.from((T) readMultisetJSON(ctx, (AbstractRow<Record>) field.getDataType().getRow(), (Class<Record>) field.getDataType().getRecordType(), string), ctx.converterContext());
+                    return converter.from((T) readMultisetJSON(ctx, (AbstractRow<Record>) field.getDataType().getRow(), (Class<Record>) field.getDataType().getRecordType(), string));
             else if (Record.class.isAssignableFrom(type)
 
             // [#11812] UDTRecords/TableRecords or InternalRecords that don't have an explicit converter
                     && (!InternalRecord.class.isAssignableFrom(type) || type == converter.fromType()))
-                return converter.from((T) pgNewRecord(ctx, type, (AbstractRow<?>) field.getDataType().getRow(), string), ctx.converterContext());
+                return converter.from((T) pgNewRecord(ctx, type, (AbstractRow<?>) field.getDataType().getRow(), string));
             else if (type == Object.class)
-                return converter.from((T) string, ctx.converterContext());
+                return converter.from((T) string);
 
             // [#4964] [#6058] Recurse only if we have a meaningful converter, not the identity converter,
             //                 which would cause a StackOverflowError, here!
-            else if (type != wrapper(converter.toType()))
-                return converter.from((T) pgFromString(ctx, field("converted_field", ConvertedDataType.delegate(field.getDataType())), string), ctx.converterContext());
+            else if (type != wrapper(converter.toType())) {
+                return converter.from((T) pgFromString(ctx, field("converted_field", ((ConvertedDataType<?, ?>) field.getDataType()).delegate()), string));
+            }
 
             throw new UnsupportedOperationException("Class " + type + " is not supported");
         }
@@ -4751,14 +3938,9 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
          * @return The converted {@link UDTRecord}
          */
         @SuppressWarnings("unchecked")
-        static final Record pgNewRecord(BindingScope ctx, Class<?> type, AbstractRow<?> fields, Object object) {
+        static final Record pgNewRecord(Scope ctx, Class<?> type, AbstractRow<?> fields, Object object) {
             if (object == null)
                 return null;
-
-            // [#15395] The ResultSet::getObject method returned a UDTRecord (i.e. it's a MockResultSet).
-            //          As such, we can skip the serialisation / deserialisation logic.
-            else if (object instanceof Record r)
-                return r;
 
             String s = object.toString();
             List<String> values = PostgresUtils.toPGObject(s);
@@ -4775,37 +3957,39 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             if (fields == null && Record.class.isAssignableFrom(type))
                 fields = Tools.row0(Tools.fields(values.size(), SQLDataType.VARCHAR));
 
-            return Tools.newRecord(true, originalConfiguration(ctx), (Class<Record>) type, (AbstractRow<Record>) fields)
+            return Tools.newRecord(true, (Class<Record>) type, (AbstractRow<Record>) fields)
                         .operate(r -> {
                             Row row = r.fieldsRow();
 
                             for (int i = 0; i < row.size(); i++)
                                 pgSetValue(ctx, r, row.field(i), values.get(i));
 
-                            r.touched(false);
+                            r.changed(false);
                             return r;
                         });
         }
 
-        private static final <T> void pgSetValue(BindingScope ctx, Record record, Field<T> field, String value) {
+        private static final <T> void pgSetValue(Scope ctx, Record record, Field<T> field, String value) {
             record.set(field, pgFromString(ctx, field, value));
         }
 
         /**
          * Create an array from a String
+         * <p>
+         * Unfortunately, this feature is very poorly documented and true UDT
+         * support by the PostGreSQL JDBC driver has been postponed for a long time.
          *
          * @param string A String representation of an array
          * @return The converted array
          */
-        private static final Object[] pgNewArray(BindingScope ctx, Field<?> field, Class<?> type, String string) {
+        private static final Object[] pgNewArray(Scope ctx, Field<?> field, Class<?> type, String string) {
             if (string == null)
                 return null;
 
-            DataType<?> t = field.getDataType();
             try {
                 return Tools.map(
                     toPGArray(string),
-                    v -> pgFromString(ctx, field("array_element", ConvertedDataType.delegate(t).getArrayComponentDataType()), v),
+                    v -> pgFromString(ctx, field("array_element", type.getComponentType()), v),
                     size -> (Object[]) java.lang.reflect.Array.newInstance(type.getComponentType(), size)
                 );
             }
@@ -4849,19 +4033,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @SuppressWarnings("unchecked")
         static final <R extends Record> Result<R> readMultiset(BindingGetResultSetContext<?> ctx, DataType<Result<R>> type) throws SQLException {
-            return readMultiset(ctx,
-                (AbstractRow<R>) type.getRow(),
-                (Class<R>) type.getRecordType(),
-                identity(),
-                identity(),
-                o -> o instanceof List<?> l
-                   ? l
-                   : o instanceof Object[] a
-                   ? asList(a)
-                   : o instanceof Array a
-                   ? asList((Object[]) a.getArray())
-                   : null
-            );
+            return readMultiset(ctx, (AbstractRow<R>) type.getRow(), (Class<R>) type.getRecordType(), identity(), identity(), (Function) identity());
         }
 
         static final <R extends Record> Result<R> readMultiset(
@@ -4870,29 +4042,15 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             Class<R> recordType,
             Function<String, String> jsonStringPatch,
             Function<String, String> xmlStringPatch,
-            ThrowingFunction<Object, List<?>, SQLException> nativePatch
+            Function<Object, List<Struct>> nativePatch
         )
         throws SQLException {
             NestedCollectionEmulation emulation = emulateMultiset(ctx.configuration());
 
-            // [#17074] Native capable dialects may render ROW at the top level despite JSON being requested.
-            //          This probably hints at a design problem somewhere, which we'll investigate once more
-            //          dialects support NATIVE implementations
-            switch (ctx.family()) {
-                case DUCKDB:
-                    if (ctx.resultSet().getObject(ctx.index()) instanceof Struct)
-                        emulation = NestedCollectionEmulation.NATIVE;
-
-                    break;
-
-                case H2:
-                    if (ctx.resultSet().getObject(ctx.index()) instanceof ResultSet)
-                        emulation = NestedCollectionEmulation.NATIVE;
-
-                    break;
-            }
-
             switch (emulation) {
+                // case ARRAY:
+                //     return copy(ctx, (Multiset<?>) field, ctx.configuration().dsl().fetch(ctx.resultSet().getArray(ctx.index()).getResultSet()));
+
                 case JSON:
                 case JSONB:
                     if (emulation == NestedCollectionEmulation.JSONB && EMULATE_AS_BLOB.contains(ctx.dialect())) {
@@ -4915,41 +4073,45 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
                         s -> readMultisetXML(ctx, row, recordType, s)
                     );
 
-                case NATIVE:
-                    return apply(
-                        nativePatch.apply(ctx.resultSet().getObject(ctx.index())),
-                        l -> readMultisetList(ctx, row, recordType, l)
-                    );
+
+
+
+
+
+
+
+
             }
 
             throw new UnsupportedOperationException("Multiset emulation not yet supported: " + emulation);
         }
 
-        static final <R extends Record> Result<R> readMultisetList(BindingGetResultSetContext<?> ctx, AbstractRow<R> row, Class<R> recordType, List<?> l) throws SQLException {
-            return new ListHandler<>(originalScope(ctx), ctx.executeContext(), row, recordType).read(l);
-        }
+
+
+
+
+
+
 
         static final <R extends Record> Result<R> readMultisetXML(Scope ctx, AbstractRow<R> row, Class<R> recordType, String s) {
             if (s.startsWith("<"))
-                return new XMLHandler<>(originalScope(ctx), row, recordType).read(s);
+                return new XMLHandler<>(ctx.dsl(), row, recordType).read(s);
             else
                 return readMultisetScalar(ctx, row, recordType, s);
         }
 
         static final <R extends Record> Result<R> readMultisetJSON(Scope ctx, AbstractRow<R> row, Class<R> recordType, String s) {
             if (s.startsWith("{") || s.startsWith("["))
-                return new JSONReader<>(originalScope(ctx), row, recordType, true).read(new StringReader(patchSnowflakeJSON(ctx, s)), true);
+                return new JSONReader<>(ctx.dsl(), row, recordType, true).read(new StringReader(s), true);
             else
                 return readMultisetScalar(ctx, row, recordType, s);
         }
 
         static final <R extends Record> Result<R> readMultisetScalar(Scope ctx, AbstractRow<R> row, Class<R> recordType, String s) {
-            Configuration c = originalConfiguration(ctx);
-            Result<R> result = new ResultImpl<>(c, row);
+            Result<R> result = new ResultImpl<>(ctx.configuration(), row);
 
-            result.add(newRecord(true, c, recordType, row).operate(r -> {
+            result.add(newRecord(true, recordType, row, ctx.configuration()).operate(r -> {
                 r.from(asList(s));
-                r.touched(false);
                 return r;
             }));
 
@@ -5053,46 +4215,13 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         }
 
         @Override
-        final void sqlInline0(BindingSQLContext<U> ctx, String value) throws SQLException {
-
-            // [#6516] The below heuristics work for UTF-32 and UTF-8
-            //         future UTF encodings which may use more bytes per
-            //         character are not handled here, yet.
-            if (ctx.family() == DERBY)
-                sqlInlineWorkaround6516(ctx, value, 8192, "", super::sqlInline0);
-
-
-
-
-
-
-
-
-
-
-
-            else
-                super.sqlInline0(ctx, value);
-        }
-
-        @Override
         final void set0(BindingSetStatementContext<U> ctx, String value) throws SQLException {
-
-
-
-
-
-
-
-
-
-
-
             ctx.statement().setString(ctx.index(), value);
         }
 
         @Override
         final void set0(BindingSetSQLOutputContext<U> ctx, String value) throws SQLException {
+
 
 
 
@@ -5123,17 +4252,17 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-            return autoRtrim(ctx, dataType, ctx.resultSet().getString(ctx.index()));
+            return ctx.resultSet().getString(ctx.index());
         }
 
         @Override
         final String get0(BindingGetStatementContext<U> ctx) throws SQLException {
-            return autoRtrim(ctx, dataType, ctx.statement().getString(ctx.index()));
+            return ctx.statement().getString(ctx.index());
         }
 
         @Override
         final String get0(BindingGetSQLInputContext<U> ctx) throws SQLException {
-            return autoRtrim(ctx, dataType, ctx.input().readString());
+            return ctx.input().readString();
         }
 
         @Override
@@ -5147,22 +4276,9 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
             return Types.VARCHAR;
         }
-
-        static final String autoRtrim(Scope ctx, DataType<String> type, String string) {
-            if (type.hasFixedLength() && !isEmpty(string) && TRUE.equals(ctx.settings().isFetchTrimmedCharValues()))
-                return rtrim(string);
-            else
-                return string;
-        }
     }
 
     static final class DefaultNStringBinding<U> extends InternalBinding<String, U> {
-
-
-
-
-
-
         private final DefaultStringBinding<U> fallback;
 
         DefaultNStringBinding(DataType<String> dataType, Converter<String, U> converter) {
@@ -5186,11 +4302,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             if (NO_SUPPORT_NVARCHAR.contains(ctx.dialect())) {
                 fallback.sqlInline0(ctx, value);
             }
-
-
-
-
-
             else {
                 ctx.render().sql('N');
                 super.sqlInline0(ctx, value);
@@ -5226,15 +4337,8 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         final String get0(BindingGetResultSetContext<U> ctx) throws SQLException {
             if (NO_SUPPORT_NVARCHAR.contains(ctx.dialect()))
                 return fallback.get0(ctx);
-
-            // [#17850] In some cases, NULL values can't be read as NVARCHAR as the
-            //          MySQL driver will throw an exception due to a wrong encoding (e.g. ISO 8859-1)
-            else if (ctx.family() == MYSQL)
-                return ctx.resultSet().getObject(ctx.index()) == null
-                    ? null
-                    : autoRtrim(ctx, dataType, ctx.resultSet().getNString(ctx.index()));
             else
-                return autoRtrim(ctx, dataType, ctx.resultSet().getNString(ctx.index()));
+                return ctx.resultSet().getNString(ctx.index());
         }
 
         @Override
@@ -5242,7 +4346,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             if (NO_SUPPORT_NVARCHAR.contains(ctx.dialect()))
                 return fallback.get0(ctx);
             else
-                return autoRtrim(ctx, dataType, ctx.statement().getNString(ctx.index()));
+                return ctx.statement().getNString(ctx.index());
         }
 
         @Override
@@ -5250,7 +4354,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             if (NO_SUPPORT_NVARCHAR.contains(ctx.dialect()))
                 return fallback.get0(ctx);
             else
-                return autoRtrim(ctx, dataType, ctx.input().readNString());
+                return ctx.input().readNString();
         }
 
         @Override
@@ -5325,21 +4429,11 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-
                 default:
 
-
-
-
-
-
-
-
-
-                    // [#16498] Special cases where the standard datetime literal prefix needs to be omitted
-                    //          See: https://bugs.mysql.com/bug.php?id=114450
-                    if (ctx.data(DATA_OMIT_DATETIME_LITERAL_PREFIX) != null)
-                        ctx.render().sql('\'').sql(escape(value, ctx.render())).sql('\'');
+                    // [#3648] Circumvent a MySQL bug related to date literals
+                    if (REQUIRE_JDBC_DATE_LITERAL.contains(ctx.dialect()))
+                        ctx.render().sql("{t '").sql(escape(value, ctx.render())).sql("'}");
 
                     // Most dialects implement SQL standard time literals
                     else
@@ -5351,22 +4445,10 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         final void set0(BindingSetStatementContext<U> ctx, Time value) throws SQLException {
-            switch (ctx.family()) {
-
-
-
-
-
-
-                case DUCKDB:
-                case SQLITE:
-                    ctx.statement().setString(ctx.index(), value.toString());
-                    break;
-
-                default:
-                    ctx.statement().setTime(ctx.index(), value);
-                    break;
-            }
+            if (ctx.family() == SQLITE)
+                ctx.statement().setString(ctx.index(), value.toString());
+            else
+                ctx.statement().setTime(ctx.index(), value);
         }
 
         @Override
@@ -5376,28 +4458,15 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         final Time get0(BindingGetResultSetContext<U> ctx) throws SQLException {
-            switch (ctx.family()) {
 
+            // SQLite's type affinity needs special care...
+            if (ctx.family() == SQLDialect.SQLITE) {
+                String time = ctx.resultSet().getString(ctx.index());
+                return time == null ? null : new Time(parse(Time.class, time));
+            }
 
-
-
-
-
-
-                // ResultSet.getTime() isn't implemented correctly, see: https://github.com/duckdb/duckdb/issues/10682
-                case DUCKDB: {
-                    String time = ctx.resultSet().getString(ctx.index());
-                    return time == null ? null : Convert.convert(time, Time.class);
-                }
-
-                // SQLite's type affinity needs special care...
-                case SQLITE: {
-                    String time = ctx.resultSet().getString(ctx.index());
-                    return time == null ? null : new Time(parse(Time.class, time));
-                }
-
-                default:
-                    return ctx.resultSet().getTime(ctx.index());
+            else {
+                return ctx.resultSet().getTime(ctx.index());
             }
         }
 
@@ -5454,10 +4523,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-            // [#7539] Clickhouse Timestamp literals don't support milliseconds
-            else if (ctx.family() == CLICKHOUSE)
-                ctx.render().visit(K_TIMESTAMP).sql(" '").sql(truncateTimestamp(escape(value, ctx.render()))).sql('\'');
-
             // [#1253] Derby doesn't support the standard literal
             else if (ctx.family() == DERBY)
                 ctx.render().visit(K_TIMESTAMP).sql("('").sql(escape(value, ctx.render())).sql("')");
@@ -5466,25 +4531,13 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             else if (ctx.family() == CUBRID)
                 ctx.render().visit(K_DATETIME).sql(" '").sql(escape(value, ctx.render())).sql('\'');
 
-
-
-
-
-
-
-            // [#16498] Special cases where the standard datetime literal prefix needs to be omitted
-            //          See: https://bugs.mysql.com/bug.php?id=114450
-            else if (ctx.data(DATA_OMIT_DATETIME_LITERAL_PREFIX) != null)
-                ctx.render().sql('\'').sql(format(value, ctx.render())).sql('\'');
+            // [#3648] Circumvent a MySQL bug related to date literals
+            else if (REQUIRE_JDBC_DATE_LITERAL.contains(ctx.dialect()))
+                ctx.render().sql("{ts '").sql(escape(value, ctx.render())).sql("'}");
 
             // Most dialects implement SQL standard timestamp literals
             else
                 ctx.render().visit(K_TIMESTAMP).sql(" '").sql(format(value, ctx.render())).sql('\'');
-        }
-
-        private final String truncateTimestamp(String t) {
-            int i = t.indexOf('.');
-            return i > 0 ? t.substring(0, i) : t;
         }
 
         private final String format(Timestamp value, RenderContext render) {
@@ -5598,23 +4651,15 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         final UUID get0(BindingGetResultSetContext<U> ctx) throws SQLException {
             switch (ctx.family()) {
 
-                // [#1624] Some JDBC drivers natively support the java.util.UUID data type
-                // [#8439] In edge cases (e.g. arrays over domains) the type info may have
-                //         been lost between server and JDBC driver, so let's expect PGobject
+                // [#1624] Some JDBC drivers natively support the
+                // java.util.UUID data type
+
 
 
                 case H2:
                 case POSTGRES:
-                case YUGABYTEDB: {
-                    Object o = ctx.resultSet().getObject(ctx.index());
-
-                    if (o == null)
-                        return null;
-                    else if (o instanceof UUID u)
-                        return u;
-                    else
-                        return Convert.convert(o.toString(), UUID.class);
-                }
+                case YUGABYTEDB:
+                    return Convert.convert(ctx.resultSet().getObject(ctx.index()), UUID.class);
 
 
 
@@ -6268,27 +5313,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    static final class DefaultJSONBinding<U> extends InternalBinding<org.jooq.JSON, U> {
+    static final class DefaultJSONBinding<U> extends InternalBinding<JSON, U> {
 
         DefaultJSONBinding(DataType<JSON> dataType, Converter<JSON, U> converter) {
             super(dataType, converter);
@@ -6332,54 +5357,25 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
 
         @Override
         final JSON get0(BindingGetResultSetContext<U> ctx) throws SQLException {
-            String string = patchSnowflakeJSON(ctx, ctx.resultSet().getString(ctx.index()));
+            String string = ctx.resultSet().getString(ctx.index());
             return string == null ? null : JSON.valueOf(string);
         }
 
         @Override
         final JSON get0(BindingGetStatementContext<U> ctx) throws SQLException {
-            String string = patchSnowflakeJSON(ctx, ctx.statement().getString(ctx.index()));
+            String string = ctx.statement().getString(ctx.index());
             return string == null ? null : JSON.valueOf(string);
         }
 
         @Override
         final JSON get0(BindingGetSQLInputContext<U> ctx) throws SQLException {
-            String string = patchSnowflakeJSON(ctx, ctx.input().readString());
+            String string = ctx.input().readString();
             return string == null ? null : JSON.valueOf(string);
         }
 
         @Override
         final int sqltype(Statement statement, Configuration configuration) {
             return Types.VARCHAR;
-        }
-
-
-
-
-
-
-        static final String patchSnowflakeJSON(Scope ctx, String json) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            return json;
         }
     }
 
@@ -6403,12 +5399,12 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         @Override
         void sqlInline0(BindingSQLContext<U> ctx, JSONB value) throws SQLException {
             if (EMULATE_AS_BLOB.contains(ctx.dialect())) {
-                bytes(ctx.configuration()).sqlInline0(ctx, bytesConverter(ctx.configuration()).to(value, ctx.converterContext()));
+                bytes(ctx.configuration()).sqlInline0(ctx, bytesConverter(ctx.configuration()).to(value));
             }
             else {
-                super.sqlInline1(ctx, value.data());
+                super.sqlInline0(ctx, value);
 
-                if (ctx.family() == H2)
+                if (ctx.family() == H2 && value != null)
                     ctx.render().sql(' ').visit(K_FORMAT).sql(' ').visit(K_JSON);
             }
         }
@@ -6424,7 +5420,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         @Override
         final void set0(BindingSetStatementContext<U> ctx, JSONB value) throws SQLException {
             if (EMULATE_AS_BLOB.contains(ctx.dialect()))
-                bytes(ctx.configuration()).set0(ctx, bytesConverter(ctx.configuration()).to(value, ctx.converterContext()));
+                bytes(ctx.configuration()).set0(ctx, bytesConverter(ctx.configuration()).to(value));
             else
                 ctx.statement().setString(ctx.index(), value.data());
         }
@@ -6432,7 +5428,7 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         @Override
         final void set0(BindingSetSQLOutputContext<U> ctx, JSONB value) throws SQLException {
             if (EMULATE_AS_BLOB.contains(ctx.dialect()))
-                bytes(ctx.configuration()).set0(ctx, bytesConverter(ctx.configuration()).to(value, ctx.converterContext()));
+                bytes(ctx.configuration()).set0(ctx, bytesConverter(ctx.configuration()).to(value));
             else
                 ctx.output().writeString(value.data());
         }
@@ -6440,27 +5436,27 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         @Override
         final JSONB get0(BindingGetResultSetContext<U> ctx) throws SQLException {
             if (EMULATE_AS_BLOB.contains(ctx.dialect()))
-                return bytesConverter(ctx.configuration()).from(bytes(ctx.configuration()).get0(ctx), ctx.converterContext());
+                return bytesConverter(ctx.configuration()).from(bytes(ctx.configuration()).get0(ctx));
 
-            String string = patchSnowflakeJSON(ctx, ctx.resultSet().getString(ctx.index()));
+            String string = ctx.resultSet().getString(ctx.index());
             return string == null ? null : JSONB.valueOf(string);
         }
 
         @Override
         final JSONB get0(BindingGetStatementContext<U> ctx) throws SQLException {
             if (EMULATE_AS_BLOB.contains(ctx.dialect()))
-                return bytesConverter(ctx.configuration()).from(bytes(ctx.configuration()).get0(ctx), ctx.converterContext());
+                return bytesConverter(ctx.configuration()).from(bytes(ctx.configuration()).get0(ctx));
 
-            String string = patchSnowflakeJSON(ctx, ctx.statement().getString(ctx.index()));
+            String string = ctx.statement().getString(ctx.index());
             return string == null ? null : JSONB.valueOf(string);
         }
 
         @Override
         final JSONB get0(BindingGetSQLInputContext<U> ctx) throws SQLException {
             if (EMULATE_AS_BLOB.contains(ctx.dialect()))
-                return bytesConverter(ctx.configuration()).from(bytes(ctx.configuration()).get0(ctx), ctx.converterContext());
+                return bytesConverter(ctx.configuration()).from(bytes(ctx.configuration()).get0(ctx));
 
-            String string = patchSnowflakeJSON(ctx, ctx.input().readString());
+            String string = ctx.input().readString();
             return string == null ? null : JSONB.valueOf(string);
         }
 
@@ -6472,10 +5468,10 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             return Types.VARCHAR;
         }
 
-        private final ContextConverter<byte[], JSONB> bytesConverter(final Configuration configuration) {
-            return ContextConverter.ofNullable(byte[].class, JSONB.class,
-                (t, x) -> JSONB.valueOf(new String(t, configuration.charsetProvider().provide())),
-                (u, x) -> u.data().getBytes(configuration.charsetProvider().provide())
+        private final Converter<byte[], JSONB> bytesConverter(final Configuration configuration) {
+            return Converter.ofNullable(byte[].class, JSONB.class,
+                t -> JSONB.valueOf(new String(t, configuration.charsetProvider().provide())),
+                u -> u.toString().getBytes(configuration.charsetProvider().provide())
             );
         }
 
@@ -6603,51 +5599,9 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         }
     }
 
-    static final class DefaultYearBinding<U> extends InternalBinding<Year, U> {
-
-        DefaultYearBinding(DataType<Year> dataType, Converter<Year, U> converter) {
-            super(dataType, converter);
-        }
-
-        @Override
-        final void sqlInline0(BindingSQLContext<U> ctx, Year value) {
-            ctx.render().sql(value.getValue());
-        }
-
-        @Override
-        final void set0(BindingSetStatementContext<U> ctx, Year value) throws SQLException {
-            ctx.statement().setInt(ctx.index(), value.getValue());
-        }
-
-        @Override
-        final void set0(BindingSetSQLOutputContext<U> ctx, Year value) throws SQLException {
-            ctx.output().writeInt(value.getValue());
-        }
-
-        @Override
-        final Year get0(BindingGetResultSetContext<U> ctx) throws SQLException {
-            return wasNull(ctx.resultSet(), Year.of(ctx.resultSet().getInt(ctx.index())));
-        }
-
-        @Override
-        final Year get0(BindingGetStatementContext<U> ctx) throws SQLException {
-            return wasNull(ctx.statement(), Year.of(ctx.statement().getInt(ctx.index())));
-        }
-
-        @Override
-        final Year get0(BindingGetSQLInputContext<U> ctx) throws SQLException {
-            return wasNull(ctx.input(), Year.of(ctx.input().readInt()));
-        }
-
-        @Override
-        final int sqltype(Statement statement, Configuration configuration) {
-            return Types.SMALLINT;
-        }
-    }
-
     static final class DefaultYearToMonthBinding<U> extends InternalBinding<YearToMonth, U> {
         private static final Set<SQLDialect> REQUIRE_PG_INTERVAL       = SQLDialect.supportedBy(POSTGRES, YUGABYTEDB);
-        private static final Set<SQLDialect> REQUIRE_STANDARD_INTERVAL = SQLDialect.supportedBy(H2, TRINO);
+        private static final Set<SQLDialect> REQUIRE_STANDARD_INTERVAL = SQLDialect.supportedBy(H2);
 
         DefaultYearToMonthBinding(DataType<YearToMonth> dataType, Converter<YearToMonth, U> converter) {
             super(dataType, converter);
@@ -6659,8 +5613,6 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
             // [#566] Interval data types are best bound as Strings
             if (REQUIRE_PG_INTERVAL.contains(ctx.dialect()))
                 ctx.render().visit(inline(toPGInterval(value).toString()));
-            else if (ctx.family() == TRINO)
-                ctx.render().sql(renderYTM(ctx, value));
             else
                 super.sqlInline0(ctx, value);
         }
@@ -6712,16 +5664,12 @@ public class DefaultBinding<T, U> implements Binding<T, U> {
         }
 
         private final String renderYTM(Scope scope, YearToMonth ytm) {
-            return renderYTM(scope, ytm, Object::toString);
-        }
-
-        private final String renderYTM(Scope scope, YearToMonth ytm, Function<? super YearToMonth, ? extends String> toString) {
             if (ytm == null)
                 return null;
             else if (REQUIRE_STANDARD_INTERVAL.contains(scope.dialect()))
-                return "INTERVAL '" + toString.apply(ytm) + "' YEAR TO MONTH";
+                return "INTERVAL '" + ytm.toString() + "' YEAR TO MONTH";
             else
-                return toString.apply(ytm);
+                return ytm.toString();
         }
 
         @Override

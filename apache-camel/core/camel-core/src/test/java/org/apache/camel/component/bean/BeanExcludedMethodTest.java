@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BeanExcludedMethodTest extends ContextTestSupport {
 
     @Test
-    public void testExcludedMethod() {
+    public void testExcludedMethod() throws Exception {
         BeanInfo info = new BeanInfo(context, MyDummyBean.class);
 
         Exchange exchange = new DefaultExchange(context);
@@ -36,7 +36,7 @@ public class BeanExcludedMethodTest extends ContextTestSupport {
     }
 
     @Test
-    public void testNotExcludedMethod() {
+    public void testNotExcludedMethod() throws Exception {
         BeanInfo info = new BeanInfo(context, MyOtherDummyBean.class);
 
         Exchange exchange = new DefaultExchange(context);
@@ -54,6 +54,11 @@ public class BeanExcludedMethodTest extends ContextTestSupport {
             return true;
         }
 
+        @Override
+        public int hashCode() {
+            return super.hashCode();
+        }
+
     }
 
     public static class MyOtherDummyBean {
@@ -62,6 +67,11 @@ public class BeanExcludedMethodTest extends ContextTestSupport {
         public boolean equals(Object obj) {
             fail("Should not call equals");
             return true;
+        }
+
+        @Override
+        public int hashCode() {
+            return super.hashCode();
         }
 
         @Override

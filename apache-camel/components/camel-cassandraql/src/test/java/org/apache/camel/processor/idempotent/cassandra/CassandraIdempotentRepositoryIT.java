@@ -16,13 +16,10 @@
  */
 package org.apache.camel.processor.idempotent.cassandra;
 
-import java.io.IOException;
-
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.cassandra.integration.BaseCassandra;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -34,16 +31,25 @@ public class CassandraIdempotentRepositoryIT extends BaseCassandra {
 
     private CassandraIdempotentRepository idempotentRepository;
 
-    @BeforeEach
-    protected void doPreSetup() throws IOException {
+    @Override
+    protected void doPreSetup() throws Exception {
         idempotentRepository = new CassandraIdempotentRepository(getSession());
         idempotentRepository.start();
+
+        super.doPreSetup();
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext context) throws Exception {
+        super.beforeEach(context);
 
         executeScript("IdempotentDataSet.cql");
     }
 
+    @Override
     @AfterEach
-    public void tearDown() {
+    public void tearDown() throws Exception {
+        super.tearDown();
         idempotentRepository.stop();
     }
 
@@ -130,8 +136,4 @@ public class CassandraIdempotentRepositoryIT extends BaseCassandra {
         assertFalse(idempotentRepository.contains(key));
     }
 
-    @Override
-    protected RouteBuilder createRouteBuilder() {
-        return null;
-    }
 }

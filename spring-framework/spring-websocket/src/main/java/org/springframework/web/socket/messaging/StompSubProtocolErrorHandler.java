@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.web.socket.messaging;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -37,7 +36,8 @@ public class StompSubProtocolErrorHandler implements SubProtocolErrorHandler<byt
 
 
 	@Override
-	public @Nullable Message<byte[]> handleClientMessageProcessingError(@Nullable Message<byte[]> clientMessage, Throwable ex) {
+	@Nullable
+	public Message<byte[]> handleClientMessageProcessingError(@Nullable Message<byte[]> clientMessage, Throwable ex) {
 		StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.ERROR);
 		accessor.setMessage(ex.getMessage());
 		accessor.setLeaveMutable(true);
@@ -57,7 +57,8 @@ public class StompSubProtocolErrorHandler implements SubProtocolErrorHandler<byt
 	}
 
 	@Override
-	public @Nullable Message<byte[]> handleErrorMessageToClient(Message<byte[]> errorMessage) {
+	@Nullable
+	public Message<byte[]> handleErrorMessageToClient(Message<byte[]> errorMessage) {
 		StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(errorMessage, StompHeaderAccessor.class);
 		Assert.notNull(accessor, "No StompHeaderAccessor");
 		if (!accessor.isMutable()) {

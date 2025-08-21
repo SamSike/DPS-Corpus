@@ -21,7 +21,7 @@ package org.apache.camel.component.mock;
  */
 public abstract class AssertionClauseTask extends AssertionClause implements AssertionTask {
 
-    protected AssertionClauseTask(MockEndpoint mock) {
+    public AssertionClauseTask(MockEndpoint mock) {
         super(mock);
     }
 }

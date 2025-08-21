@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.AbstractTransactionManagementC
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.TransactionManagementConfigurationSelector;
 import org.springframework.transaction.config.TransactionManagementConfigUtils;
-import org.springframework.transaction.interceptor.TransactionAttributeSource;
 
 /**
  * {@code @Configuration} class that registers the Spring infrastructure beans necessary
@@ -38,15 +37,14 @@ import org.springframework.transaction.interceptor.TransactionAttributeSource;
  * @see TransactionManagementConfigurationSelector
  * @see AspectJJtaTransactionManagementConfiguration
  */
-@Configuration(proxyBeanMethods = false)
+@Configuration
 @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
 public class AspectJTransactionManagementConfiguration extends AbstractTransactionManagementConfiguration {
 
 	@Bean(name = TransactionManagementConfigUtils.TRANSACTION_ASPECT_BEAN_NAME)
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-	public AnnotationTransactionAspect transactionAspect(TransactionAttributeSource transactionAttributeSource) {
+	public AnnotationTransactionAspect transactionAspect() {
 		AnnotationTransactionAspect txAspect = AnnotationTransactionAspect.aspectOf();
-		txAspect.setTransactionAttributeSource(transactionAttributeSource);
 		if (this.txManager != null) {
 			txAspect.setTransactionManager(this.txManager);
 		}

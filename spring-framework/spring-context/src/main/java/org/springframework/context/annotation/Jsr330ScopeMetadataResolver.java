@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.lang.Nullable;
 
 /**
  * Simple {@link ScopeMetadataResolver} implementation that follows JSR-330 scoping rules:
@@ -74,11 +73,12 @@ public class Jsr330ScopeMetadataResolver implements ScopeMetadataResolver {
 	/**
 	 * Resolve the given annotation type into a named Spring scope.
 	 * <p>The default implementation simply checks against registered scopes.
-	 * Can be overridden for custom mapping rules, for example, naming conventions.
+	 * Can be overridden for custom mapping rules, e.g. naming conventions.
 	 * @param annotationType the JSR-330 annotation type
 	 * @return the Spring scope name
 	 */
-	protected @Nullable String resolveScopeName(String annotationType) {
+	@Nullable
+	protected String resolveScopeName(String annotationType) {
 		return this.scopeMap.get(annotationType);
 	}
 
@@ -87,7 +87,8 @@ public class Jsr330ScopeMetadataResolver implements ScopeMetadataResolver {
 	public ScopeMetadata resolveScopeMetadata(BeanDefinition definition) {
 		ScopeMetadata metadata = new ScopeMetadata();
 		metadata.setScopeName(BeanDefinition.SCOPE_PROTOTYPE);
-		if (definition instanceof AnnotatedBeanDefinition annDef) {
+		if (definition instanceof AnnotatedBeanDefinition) {
+			AnnotatedBeanDefinition annDef = (AnnotatedBeanDefinition) definition;
 			Set<String> annTypes = annDef.getMetadata().getAnnotationTypes();
 			String found = null;
 			for (String annType : annTypes) {

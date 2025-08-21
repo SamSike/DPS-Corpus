@@ -2,7 +2,9 @@
  * Support classes for Spring's TaskExecutor abstraction.
  * Includes an adapter for the standard ExecutorService interface.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.core.task.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

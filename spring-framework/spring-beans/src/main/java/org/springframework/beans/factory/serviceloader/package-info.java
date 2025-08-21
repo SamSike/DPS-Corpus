@@ -1,7 +1,9 @@
 /**
- * Support package for the Java {@link java.util.ServiceLoader} facility.
+ * Support package for the Java 6 ServiceLoader facility.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.beans.factory.serviceloader;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

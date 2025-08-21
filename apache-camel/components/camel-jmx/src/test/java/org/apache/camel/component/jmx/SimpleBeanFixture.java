@@ -159,7 +159,7 @@ public class SimpleBeanFixture {
         final MockEndpoint mock = mContext.getEndpoint("mock:sink", MockEndpoint.class);
         mock.setExpectedMessageCount(1);
         mMockEndpoint = new MockEndpointFixture(mock);
-        mContext.getCamelContextExtension().setRegistry(getRegistry());
+        mContext.setRegistry(getRegistry());
         mContext.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {

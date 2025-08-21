@@ -21,6 +21,7 @@ import java.util.Objects;
 
 import org.apache.camel.component.wordpress.api.auth.WordpressAuthentication;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
 import static java.util.Objects.hash;
 
 /**
@@ -68,7 +69,8 @@ public final class WordpressAPIConfiguration implements Serializable {
 
     @Override
     public String toString() {
-        return "WordpressAPIConfiguration{" + this.apiUrl + ", Version=" + this.apiVersion + ", " + this.authentication + "}";
+        return toStringHelper(this).addValue(this.apiUrl).add("Version", this.apiVersion).addValue(this.authentication)
+                .toString();
     }
 
     @Override

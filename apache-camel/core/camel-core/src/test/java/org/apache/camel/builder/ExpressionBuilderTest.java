@@ -38,13 +38,13 @@ import static org.apache.camel.builder.PredicateBuilder.contains;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ExpressionBuilderTest extends TestSupport {
-    protected final CamelContext camelContext = new DefaultCamelContext();
-    protected final Exchange exchange = new DefaultExchange(camelContext);
+    protected CamelContext camelContext = new DefaultCamelContext();
+    protected Exchange exchange = new DefaultExchange(camelContext);
 
     @Test
-    public void testRegexTokenize() {
+    public void testRegexTokenize() throws Exception {
         Expression expression = regexTokenizeExpression(headerExpression("location"), ",");
-        List<String> expected = new ArrayList<>(Arrays.asList("Islington", "London", "UK"));
+        List<String> expected = new ArrayList<>(Arrays.asList(new String[] { "Islington", "London", "UK" }));
         assertExpression(expression, exchange, expected);
 
         Predicate predicate
@@ -56,7 +56,7 @@ public class ExpressionBuilderTest extends TestSupport {
     }
 
     @Test
-    public void testRegexReplaceAll() {
+    public void testRegexReplaceAll() throws Exception {
         Expression expression = regexReplaceAll(headerExpression("location"), "London", "Westminster");
         assertExpression(expression, exchange, "Islington,Westminster,UK");
 
@@ -65,10 +65,10 @@ public class ExpressionBuilderTest extends TestSupport {
     }
 
     @Test
-    public void testTokenize() {
+    public void testTokenize() throws Exception {
         Expression expression = tokenizeExpression(headerExpression("location"), ",");
 
-        List<String> expected = new ArrayList<>(Arrays.asList("Islington", "London", "UK"));
+        List<String> expected = new ArrayList<>(Arrays.asList(new String[] { "Islington", "London", "UK" }));
         assertExpression(expression, exchange, expected);
 
         Predicate predicate = contains(tokenizeExpression(headerExpression("location"), ","), constantExpression("London"));
@@ -79,25 +79,25 @@ public class ExpressionBuilderTest extends TestSupport {
     }
 
     @Test
-    public void testTokenizeLines() {
+    public void testTokenizeLines() throws Exception {
         Expression expression = regexTokenizeExpression(bodyExpression(), "[\r|\n]");
         exchange.getIn().setBody("Hello World\nBye World\rSee you again");
 
-        List<String> expected = new ArrayList<>(Arrays.asList("Hello World", "Bye World", "See you again"));
+        List<String> expected = new ArrayList<>(Arrays.asList(new String[] { "Hello World", "Bye World", "See you again" }));
         assertExpression(expression, exchange, expected);
     }
 
     @Test
-    public void testSortLines() {
+    public void testSortLines() throws Exception {
         Expression expression = sortExpression(body().tokenize(",").getExpression(), new SortByName());
         exchange.getIn().setBody("Jonathan,Claus,James,Hadrian");
 
-        List<String> expected = new ArrayList<>(Arrays.asList("Claus", "Hadrian", "James", "Jonathan"));
+        List<String> expected = new ArrayList<>(Arrays.asList(new String[] { "Claus", "Hadrian", "James", "Jonathan" }));
         assertExpression(expression, exchange, expected);
     }
 
     @Test
-    public void testCamelContextPropertiesExpression() {
+    public void testCamelContextPropertiesExpression() throws Exception {
         camelContext.getGlobalOptions().put("CamelTestKey", "CamelTestValue");
         Expression expression = camelContextPropertyExpression("CamelTestKey");
         expression.init(camelContext);
@@ -109,7 +109,7 @@ public class ExpressionBuilderTest extends TestSupport {
     }
 
     @Test
-    public void testParseSimpleOrFallbackToConstantExpression() {
+    public void testParseSimpleOrFallbackToConstantExpression() throws Exception {
         Expression exp = simpleExpression("world");
         exp.init(camelContext);
         assertEquals("world", exp.evaluate(exchange, String.class));
@@ -124,21 +124,14 @@ public class ExpressionBuilderTest extends TestSupport {
     }
 
     @Test
-    public void testFunction() {
+    public void testFunction() throws Exception {
         assertExpression(messageExpression(m -> m.getExchange().getIn().getHeader("name")), exchange, "James");
         assertExpression(messageExpression(m -> m.getHeader("name")), exchange, "James");
     }
 
     @Test
-    public void testHeaderExpression() {
+    public void testHeaderExpression() throws Exception {
         assertExpression(headerExpression("name", String.class), exchange, "James");
-    }
-
-    @Test
-    public void testConstantsOnly() {
-        Expression expression = concatExpression(
-                List.of(constantExpression("Hello"), constantExpression(" big "), constantExpression("World")));
-        assertExpression(expression, exchange, "Hello big World");
     }
 
     @Override

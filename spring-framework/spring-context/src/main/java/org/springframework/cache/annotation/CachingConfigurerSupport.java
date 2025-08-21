@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,42 +16,43 @@
 
 package org.springframework.cache.annotation;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.cache.interceptor.CacheResolver;
 import org.springframework.cache.interceptor.KeyGenerator;
+import org.springframework.lang.Nullable;
 
 /**
  * An implementation of {@link CachingConfigurer} with empty methods allowing
- * subclasses to override only the methods they're interested in.
+ * sub-classes to override only the methods they're interested in.
  *
  * @author Stephane Nicoll
  * @since 4.1
  * @see CachingConfigurer
- * @deprecated as of 6.0 in favor of implementing {@link CachingConfigurer} directly
  */
-@Deprecated(since = "6.0")
 public class CachingConfigurerSupport implements CachingConfigurer {
 
 	@Override
-	public @Nullable CacheManager cacheManager() {
+	@Nullable
+	public CacheManager cacheManager() {
 		return null;
 	}
 
 	@Override
-	public @Nullable CacheResolver cacheResolver() {
+	@Nullable
+	public CacheResolver cacheResolver() {
 		return null;
 	}
 
 	@Override
-	public @Nullable KeyGenerator keyGenerator() {
+	@Nullable
+	public KeyGenerator keyGenerator() {
 		return null;
 	}
 
 	@Override
-	public @Nullable CacheErrorHandler errorHandler() {
+	@Nullable
+	public CacheErrorHandler errorHandler() {
 		return null;
 	}
 

@@ -16,7 +16,8 @@
  */
 package org.apache.camel.util.backoff;
 
-import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
 import org.apache.camel.util.function.ThrowingFunction;
@@ -24,54 +25,39 @@ import org.apache.camel.util.function.ThrowingFunction;
 /**
  * A simple timer utility that use a linked {@link BackOff} to determine when a task should be executed.
  */
-public interface BackOffTimer {
+public class BackOffTimer {
+    private final ScheduledExecutorService scheduler;
+
+    public BackOffTimer(ScheduledExecutorService scheduler) {
+        this.scheduler = scheduler;
+    }
 
     /**
-     * Schedules a task to run according to the backoff settings
-     *
-     * @param  backOff  the settings for how often to run the task
-     * @param  function the function to call for each run
-     * @return          the task
+     * Schedule the given function/task to be executed some time in the future according to the given backOff.
      */
-    Task schedule(BackOff backOff, ThrowingFunction<Task, Boolean, Exception> function);
+    public Task schedule(BackOff backOff, ThrowingFunction<Task, Boolean, Exception> function) {
+        final BackOffTimerTask task = new BackOffTimerTask(backOff, scheduler, function);
 
-    /**
-     * Gets the name of this timer.
-     */
-    String getName();
+        long delay = task.next();
+        if (delay != BackOff.NEVER) {
+            scheduler.schedule(task, delay, TimeUnit.MILLISECONDS);
+        } else {
+            task.cancel();
+        }
 
-    /**
-     * Removes the task
-     */
-    void remove(Task task);
-
-    /**
-     * Access to unmodifiable set of all the tasks
-     */
-    Set<Task> getTasks();
-
-    /**
-     * Number of tasks
-     */
-    int size();
+        return task;
+    }
 
     // ****************************************
     // TimerTask
     // ****************************************
 
-    interface Task {
+    public interface Task {
         enum Status {
             Active,
             Inactive,
-            Exhausted,
-            Completed,
-            Failed
+            Exhausted
         }
-
-        /**
-         * Name of this task
-         */
-        String getName();
 
         /**
          * The back-off associated with this task.
@@ -112,11 +98,6 @@ public interface BackOffTimer {
          * An indication about the time the next attempt will be made.
          */
         long getNextAttemptTime();
-
-        /**
-         * The task failed for some un-expected exception
-         */
-        Throwable getException();
 
         /**
          * Reset the task.

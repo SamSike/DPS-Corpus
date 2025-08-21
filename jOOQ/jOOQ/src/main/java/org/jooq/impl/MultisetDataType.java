@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,28 +37,23 @@
  */
 package org.jooq.impl;
 
-import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static org.jooq.impl.Tools.CONFIG;
 import static org.jooq.impl.Tools.newRecord;
 
-import java.sql.Array;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.jooq.CharacterSet;
 import org.jooq.Collation;
-import org.jooq.ConverterContext;
 import org.jooq.Field;
 import org.jooq.Generator;
 import org.jooq.Nullability;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.Row;
-import org.jooq.exception.DataAccessException;
 import org.jooq.impl.QOM.GenerationLocation;
 import org.jooq.impl.QOM.GenerationOption;
 
@@ -92,8 +87,6 @@ final class MultisetDataType<R extends Record> extends DefaultDataType<Result<R>
         Integer scale,
         Integer length,
         Nullability nullability,
-        boolean hidden,
-        boolean redacted,
         boolean readonly,
         Generator<?, ?, Result<R>> generatedAlwaysAs,
         GenerationOption generationOption,
@@ -103,7 +96,7 @@ final class MultisetDataType<R extends Record> extends DefaultDataType<Result<R>
         boolean identity,
         Field<Result<R>> defaultValue
     ) {
-        super(t, precision, scale, length, nullability, hidden, redacted, readonly, generatedAlwaysAs, generationOption, generationLocation, collation, characterSet, identity, defaultValue);
+        super(t, precision, scale, length, nullability, readonly, generatedAlwaysAs, generationOption, generationLocation, collation, characterSet, identity, defaultValue);
 
         this.row = row;
         this.recordType = recordType;
@@ -116,8 +109,6 @@ final class MultisetDataType<R extends Record> extends DefaultDataType<Result<R>
         Integer newScale,
         Integer newLength,
         Nullability newNullability,
-        boolean newHidden,
-        boolean newRedacted,
         boolean newReadonly,
         Generator<?, ?, Result<R>> newGeneratedAlwaysAs,
         GenerationOption newGenerationOption,
@@ -135,8 +126,6 @@ final class MultisetDataType<R extends Record> extends DefaultDataType<Result<R>
             newScale,
             newLength,
             newNullability,
-            newHidden,
-            newRedacted,
             newReadonly,
             newGeneratedAlwaysAs,
             newGenerationOption,
@@ -158,20 +147,20 @@ final class MultisetDataType<R extends Record> extends DefaultDataType<Result<R>
         return recordType;
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    final Result<R> convert(Object object, ConverterContext cc) {
+    public Result<R> convert(Object object) {
 
         // [#12269] [#13403] Don't re-copy perfectly fine results.
         if (object instanceof Result && ((Result<?>) object).fieldsRow().equals(row))
             return (Result<R>) object;
 
         // [#3884] TODO: Move this logic into JSONReader to make it more generally useful
-        else if (object instanceof List l) {
-            ResultImpl<R> result = new ResultImpl<>(cc.configuration(), row);
+        else if (object instanceof List) { List l = (List) object;
+            ResultImpl<R> result = new ResultImpl<>(CONFIG, row);
 
             for (Object record : l)
-                result.add(newRecord(true, cc.configuration(), recordType, row)
+                result.add(newRecord(true, recordType, row, CONFIG)
                     .operate(r -> {
 
                         // [#12014] TODO: Fix this and remove workaround
@@ -189,20 +178,9 @@ final class MultisetDataType<R extends Record> extends DefaultDataType<Result<R>
 
             return result;
         }
-        else if (object instanceof Object[] a) {
-            return convert(asList(a), cc);
-        }
-        else if (object instanceof Array a) {
-            try {
-                return convert(asList((Object[]) a.getArray()), cc);
-            }
-            catch (SQLException e) {
-                throw new DataAccessException("Error while accessing array", e);
-            }
-        }
         else if (object == null)
-            return new ResultImpl<>(cc.configuration(), row);
+            return new ResultImpl<>(CONFIG, row);
         else
-            return super.convert(object, cc);
+            return super.convert(object);
     }
 }

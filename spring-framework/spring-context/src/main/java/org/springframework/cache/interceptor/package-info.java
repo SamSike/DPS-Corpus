@@ -3,7 +3,9 @@
  * Builds on the AOP infrastructure in org.springframework.aop.framework.
  * Any POJO can be cache-advised with Spring.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.cache.interceptor;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

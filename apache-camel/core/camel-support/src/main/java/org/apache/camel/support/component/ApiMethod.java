@@ -26,42 +26,35 @@ public interface ApiMethod {
 
     /**
      * Returns method name.
-     *
+     * 
      * @return name
      */
     String getName();
 
     /**
      * Returns method result type.
-     *
+     * 
      * @return result type
      */
     Class<?> getResultType();
 
     /**
      * Returns method argument names.
-     *
+     * 
      * @return argument names
      */
     List<String> getArgNames();
 
     /**
-     * Returns setter argument names.
-     *
-     * @return setter argument names
-     */
-    List<String> getSetterArgNames();
-
-    /**
      * Return method argument types.
-     *
+     * 
      * @return argument types
      */
     List<Class<?>> getArgTypes();
 
     /**
      * Returns {@link Method} in proxy type.
-     *
+     * 
      * @return method
      */
     Method getMethod();

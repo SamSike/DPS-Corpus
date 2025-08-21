@@ -16,14 +16,24 @@
  */
 package org.apache.camel.test.infra.arangodb.services;
 
-import org.apache.camel.test.infra.common.services.ContainerTestService;
 import org.apache.camel.test.infra.common.services.SimpleTestServiceBuilder;
 import org.apache.camel.test.infra.common.services.SingletonService;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 public final class ArangoDBServiceFactory {
     private static class SingletonArangoDBService extends SingletonService<ArangoDBService> implements ArangoDBService {
         public SingletonArangoDBService(ArangoDBService service, String name) {
             super(service, name);
+        }
+
+        @Override
+        public void beforeAll(ExtensionContext extensionContext) {
+            addToStore(extensionContext);
+        }
+
+        @Override
+        public void afterAll(ExtensionContext extensionContext) {
+            // NO-OP
         }
 
         @Override
@@ -35,17 +45,10 @@ public final class ArangoDBServiceFactory {
         public String getHost() {
             return getService().getHost();
         }
-
-        @Override
-        public int port() {
-            return getService().port();
-        }
-
-        @Override
-        public String host() {
-            return getService().host();
-        }
     }
+
+    private static SimpleTestServiceBuilder<ArangoDBService> instance;
+    private static ArangoDBService arangoDBService;
 
     private ArangoDBServiceFactory() {
 
@@ -63,25 +66,19 @@ public final class ArangoDBServiceFactory {
     }
 
     public static ArangoDBService createSingletonService() {
-        return SingletonServiceHolder.INSTANCE;
-    }
+        if (arangoDBService == null) {
 
-    private static class SingletonServiceHolder {
-        static final ArangoDBService INSTANCE;
-        static {
-            SimpleTestServiceBuilder<ArangoDBService> instance = builder();
-            instance.addLocalMapping(() -> new SingletonArangoDBService(new ArangoDBLocalContainerService(), "arangoDB"))
-                    .addRemoteMapping(ArangoDBRemoteService::new)
-                    .build();
+            if (instance == null) {
+                instance = builder();
 
-            INSTANCE = instance.build();
+                instance.addLocalMapping(() -> new SingletonArangoDBService(new ArangoDBLocalContainerService(), "arangoDB"))
+                        .addRemoteMapping(ArangoDBRemoteService::new)
+                        .build();
+            }
+
+            arangoDBService = instance.build();
         }
+
+        return arangoDBService;
     }
-}
-
-class ArangoDBLocalContainerService extends ArangoDBLocalContainerInfraService
-        implements ArangoDBService, ContainerTestService {
-}
-
-class ArangoDBRemoteService extends ArangoDBRemoteInfraService implements ArangoDBService {
 }

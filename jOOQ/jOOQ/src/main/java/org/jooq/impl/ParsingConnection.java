@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,7 +38,6 @@
 package org.jooq.impl;
 
 import static java.util.Collections.emptyList;
-import static org.jooq.conf.ParamType.INLINED;
 import static org.jooq.conf.SettingsTools.getParamType;
 import static org.jooq.impl.CacheType.CACHE_PARSING_CONNECTION;
 import static org.jooq.impl.Tools.EMPTY_PARAM;
@@ -58,7 +57,6 @@ import org.jooq.Configuration;
 import org.jooq.DSLContext;
 import org.jooq.Param;
 import org.jooq.conf.Settings;
-import org.jooq.conf.SettingsTools;
 import org.jooq.exception.DataAccessException;
 import org.jooq.exception.DetachedException;
 import org.jooq.impl.DefaultRenderContext.Rendered;
@@ -75,14 +73,9 @@ final class ParsingConnection extends DefaultConnection {
     final Configuration             configuration;
 
     ParsingConnection(Configuration configuration) {
-        super(new SettingsEnabledConnection(
-            configuration.connectionProvider().acquire(),
-            configuration.settings(),
-            null,
-            SettingsTools.getParamType(configuration.settings()) == INLINED
-        ));
+        super(configuration.connectionProvider().acquire());
 
-        if (((SettingsEnabledConnection) getDelegate()).getDelegate() == null)
+        if (getDelegate() == null)
             if (configuration.connectionFactory() instanceof NoConnectionFactory)
                 throw new DetachedException("ConnectionProvider did not provide a JDBC Connection");
             else
@@ -105,13 +98,16 @@ final class ParsingConnection extends DefaultConnection {
             bindSize = render.bindValues().size();
             bindMapping = new HashMap<>();
 
-            // [#16456] Parsed bind indexes are available in Val
-            for (int j = 0; j < render.bindValues().size(); j++) {
-                if (render.bindValues().get(j) instanceof Val<?> v) {
-                    if (v.index <= bindValues.length)
-                        bindMapping.computeIfAbsent(v.index - 1, x -> new ArrayList<>()).add(j);
-                }
-            }
+            // TODO: We shouldn't rely on identity for these reasons:
+            // - Copies are possible
+            // - Wrappings are possible
+            // - Conversions are possible
+            // Ideally, we should be able to maintain and extract the map directly in the DefaultRenderContext
+            // TODO: If anything goes wrong (probably because of the above), the cache must be invalid, and we must re-parse and re-render the query every time
+            for (int i = 0; i < bindValues.length; i++)
+                for (int j = 0; j < render.bindValues().size(); j++)
+                    if (bindValues[i] == render.bindValues().get(j))
+                        bindMapping.computeIfAbsent(i, x -> new ArrayList<>()).add(j);
         }
 
         Rendered rendered(Param<?>... bindValues) {
@@ -192,7 +188,6 @@ final class ParsingConnection extends DefaultConnection {
             int size = p.size();
             Rendered rendered = size == 0 ? translate(configuration, sql) : translate(configuration, sql, p.get(0).toArray(EMPTY_PARAM));
             PreparedStatement s = prepare.apply(rendered.sql);
-            boolean inlined = SettingsTools.getParamType(configuration.settings()) == INLINED;
 
             for (int i = 0; i < size; i++) {
 
@@ -200,17 +195,13 @@ final class ParsingConnection extends DefaultConnection {
                 if (i > 0)
                     rendered = translate(configuration, sql, p.get(i).toArray(EMPTY_PARAM));
 
-                if (!inlined)
-                    new DefaultBindContext(configuration, null, s).visit(rendered.bindValues);
+                new DefaultBindContext(configuration, s).visit(rendered.bindValues);
 
                 // TODO: Find a less hacky way to signal that we're batching. Currently:
                 // - ArrayList<Arraylist<Param<?>>> = batching
                 // - SingletonList<ArrayList<Param<?>>> = not batching
                 if (size > 1 || p instanceof ArrayList)
-                    if (!inlined)
-                        s.addBatch();
-                    else
-                        s.addBatch(rendered.sql);
+                    s.addBatch();
             }
 
             return s;

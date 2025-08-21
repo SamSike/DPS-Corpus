@@ -20,45 +20,39 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public final class DropboxPropertyManager {
 
-    private static final Lock LOCK = new ReentrantLock();
     private static Properties properties;
     private static DropboxPropertyManager instance;
 
     private DropboxPropertyManager() {
     }
 
-    public static DropboxPropertyManager getInstance() throws Exception {
-        LOCK.lock();
-        try {
-            if (instance == null) {
-                instance = new DropboxPropertyManager();
-                properties = loadProperties();
-            }
-            return instance;
-        } finally {
-            LOCK.unlock();
+    public static synchronized DropboxPropertyManager getInstance() throws Exception {
+        if (instance == null) {
+            instance = new DropboxPropertyManager();
+            properties = loadProperties();
         }
+        return instance;
     }
 
     public String getProperty(String key) {
         return properties.getProperty(key);
     }
 
-    private static Properties loadProperties() throws DropboxException {
+    private static Properties loadProperties() throws Exception {
         URL url = DropboxPropertyManager.class.getResource("/dropbox.properties");
-        if (url == null) {
-            throw new DropboxException("dropbox.properties could not be found");
-        }
-        Properties properties = new Properties();
+
         try (InputStream inStream = url.openStream()) {
-            properties.load(inStream);
+            properties = new Properties();
+            try {
+                properties.load(inStream);
+            } catch (IOException e) {
+                throw new DropboxException("dropbox.properties can't be read", e);
+            }
         } catch (IOException e) {
-            throw new DropboxException("dropbox.properties can't be read", e);
+            throw new DropboxException("dropbox.properties could not be found", e);
         }
 
         return properties;

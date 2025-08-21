@@ -37,10 +37,10 @@ public class RouteTemplateEnvClashTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 routeTemplate("myTemplate").templateParameter("foo-service-host").templateParameter("foo-service-port", "4444")
                         .from("direct:foo")
                         .to("mock:{{foo-service-host}}:{{foo-service-port}}");

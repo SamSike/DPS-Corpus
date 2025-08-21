@@ -17,6 +17,7 @@
 package org.apache.camel.tooling.util;
 
 import java.util.Collection;
+import java.util.Locale;
 
 /**
  * Some String helper methods
@@ -28,14 +29,14 @@ public final class Strings {
     }
 
     public static boolean isEmpty(String s) {
-        return s == null || s.isBlank();
+        return s == null || s.trim().isEmpty();
     }
 
     /**
-     * Returns true if the given text is null or empty string or has <var>null</var> as the value
+     * Returns true if the given text is null or empty string or has <tt>null</tt> as the value
      */
     public static boolean isNullOrEmpty(String text) {
-        return text == null || text.isEmpty() || "null".equals(text);
+        return text == null || text.length() == 0 || "null".equals(text);
     }
 
     public static String safeNull(String text) {
@@ -58,30 +59,14 @@ public final class Strings {
      *
      * @param  text  the text
      * @param  after the token
-     * @return       the text after the token, or <var>null</var> if text does not contain the token
+     * @return       the text after the token, or <tt>null</tt> if text does not contain the token
      */
     public static String after(String text, String after) {
-        if (text == null) {
+        int index = text.indexOf(after);
+        if (index < 0) {
             return null;
         }
-        int pos = text.indexOf(after);
-        if (pos == -1) {
-            return null;
-        }
-        return text.substring(pos + after.length());
-    }
-
-    /**
-     * Returns the string after the given token
-     *
-     * @param  text         the text
-     * @param  after        the token
-     * @param  defaultValue the default value
-     * @return              the text after the token, or default value if text does not contain the token
-     */
-    public static String after(String text, String after, String defaultValue) {
-        String answer = after(text, after);
-        return answer != null ? answer : defaultValue;
+        return text.substring(index + after.length());
     }
 
     /**
@@ -91,9 +76,10 @@ public final class Strings {
         // remove generics
         int pos = className.indexOf('<');
         if (pos != -1) {
-            className = className.substring(0, pos);
+            return className.substring(0, pos);
+        } else {
+            return className;
         }
-        return className.replace('$', '.');
     }
 
     /**
@@ -140,10 +126,10 @@ public final class Strings {
      * @return      as a title
      */
     public static String asTitle(String name) {
-        StringBuilder sb = new StringBuilder(name.length() + 16);
+        StringBuilder sb = new StringBuilder();
         for (char c : name.toCharArray()) {
             boolean upper = Character.isUpperCase(c);
-            boolean first = sb.isEmpty();
+            boolean first = sb.length() == 0;
             if (first) {
                 sb.append(Character.toUpperCase(c));
             } else if (upper) {
@@ -161,15 +147,15 @@ public final class Strings {
     }
 
     public static String before(String text, String before) {
-        if (text == null) {
+        int index = text.indexOf(before);
+        if (index < 0) {
             return null;
         }
-        int pos = text.indexOf(before);
-        return pos == -1 ? null : text.substring(0, pos);
+        return text.substring(0, index);
     }
 
     public static String indentCollection(String indent, Collection<String> list) {
-        StringBuilder sb = new StringBuilder(256);
+        StringBuilder sb = new StringBuilder();
         for (String text : list) {
             sb.append(indent).append(text);
         }
@@ -194,7 +180,7 @@ public final class Strings {
                 sb.append(Character.toUpperCase(c));
             } else {
                 // upper case first
-                if (sb.isEmpty()) {
+                if (sb.length() == 0) {
                     sb.append(Character.toUpperCase(c));
                 } else {
                     sb.append(c);
@@ -215,70 +201,37 @@ public final class Strings {
         if (text == null || text.isEmpty()) {
             return text;
         }
-        char prev = 0;
+        StringBuilder answer = new StringBuilder();
 
+        Character prev = null;
+        Character next = null;
         char[] arr = text.toCharArray();
-        StringBuilder answer = new StringBuilder(arr.length < 13 ? 16 : arr.length + 8);
-
         for (int i = 0; i < arr.length; i++) {
             char ch = arr[i];
-
+            if (i < arr.length - 1) {
+                next = arr[i + 1];
+            } else {
+                next = null;
+            }
             if (ch == '-' || ch == '_') {
                 answer.append("-");
-            } else {
-                if (Character.isUpperCase(ch) && prev != 0) {
-                    char next;
-
-                    if (i < arr.length - 1) {
-                        next = arr[i + 1];
-                    } else {
-                        next = 0;
-                    }
-
-                    if (!Character.isUpperCase(prev) || next != 0 && Character.isLowerCase(next)) {
-                        applyDashPrefix(prev, answer, ch);
-                    } else {
-                        answer.append(Character.toLowerCase(ch));
-                    }
-                } else {
-                    answer.append(Character.toLowerCase(ch));
+            } else if (Character.isUpperCase(ch) && prev != null && !Character.isUpperCase(prev)) {
+                if (prev != '-' && prev != '_') {
+                    answer.append("-");
                 }
+                answer.append(ch);
+            } else if (Character.isUpperCase(ch) && prev != null && next != null && Character.isLowerCase(next)) {
+                if (prev != '-' && prev != '_') {
+                    answer.append("-");
+                }
+                answer.append(ch);
+            } else {
+                answer.append(ch);
             }
             prev = ch;
         }
 
-        return answer.toString();
-    }
-
-    private static void applyDashPrefix(char prev, StringBuilder answer, char ch) {
-        if (prev != '-' && prev != '_') {
-            answer.append("-");
-        }
-        answer.append(Character.toLowerCase(ch));
-    }
-
-    /**
-     * A simpler version of StringHelper#capitlize for usage in the tooling code
-     *
-     * @param  text the string
-     * @return      the string capitalized (upper case first character) or null if the input is null
-     */
-    public static String capitalize(final String text) {
-        return doCapitalize(text);
-    }
-
-    private static String doCapitalize(String ret) {
-        if (ret == null) {
-            return null;
-        }
-
-        final char[] chars = ret.toCharArray();
-
-        // We are OK with the limitations of Character.toUpperCase. The symbols and ideographs
-        // for which it does not return the capitalized value should not be used here (this is
-        // mostly used to capitalize setters/getters)
-        chars[0] = Character.toUpperCase(chars[0]);
-        return new String(chars);
+        return answer.toString().toLowerCase(Locale.ENGLISH);
     }
 
 }

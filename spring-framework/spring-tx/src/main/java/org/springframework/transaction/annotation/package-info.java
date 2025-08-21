@@ -3,7 +3,9 @@
  * Hooked into Spring's transaction interception infrastructure
  * via a special TransactionAttributeSource implementation.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.transaction.annotation;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

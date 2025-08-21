@@ -33,10 +33,10 @@ public class FileBridgeErrorHandlerTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).handled(true).to("mock:error");
 
                 from("file://target/dummy?bridgeErrorHandler=true&autoCreate=false&directoryMustExist=true")

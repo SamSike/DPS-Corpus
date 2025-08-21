@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,7 +39,6 @@ package org.jooq.impl;
 
 import static org.jooq.impl.AbstractRowAsField.acceptMultisetContent;
 import static org.jooq.impl.AbstractRowAsField.forceMultisetContent;
-import static org.jooq.impl.AbstractRowAsField.forceRowContent;
 import static org.jooq.impl.QueryPartListView.wrap;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_LIST_ALREADY_INDENTED;
 
@@ -48,8 +47,6 @@ import org.jooq.EmbeddableRecord;
 import org.jooq.Field;
 import org.jooq.Name;
 import org.jooq.Record;
-import org.jooq.RenderContext;
-import org.jooq.Row;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.impl.QOM.UNotYetImplemented;
@@ -99,24 +96,14 @@ implements
         // TODO [#12021] [#12706] ROW must consistently follow MULTISET emulation
         // [#12237] If a RowField is nested somewhere in MULTISET, we must apply
         //          the MULTISET emulation as well, here
-        if (forceMultisetContent(ctx, () -> toRow().size() > 1))
-            acceptMultisetContent(ctx, toRow(), this, this::acceptRow);
-        else if (forceRowContent(ctx))
-            acceptRow(ctx);
+        if (forceMultisetContent(ctx, () -> getDataType().getRow().size() > 1))
+            acceptMultisetContent(ctx, getDataType().getRow(), this, this::acceptDefault);
         else
             acceptDefault(ctx);
     }
 
-    private final void acceptRow(Context<?> ctx) {
-        ctx.visit(toRow().rf());
-    }
-
-    private final AbstractRow<?> toRow() {
-        return ((AbstractRow<?>) getDataType().getRow());
-    }
-
-    private final void acceptDefault(Context<?> ctx) {
-        ctx.data(DATA_LIST_ALREADY_INDENTED, true, c -> c.visit(wrap(toRow().fields())));
+    private void acceptDefault(Context<?> ctx) {
+        ctx.data(DATA_LIST_ALREADY_INDENTED, true, c -> c.visit(wrap(getDataType().getRow().fields())));
     }
 
     @Override
@@ -128,18 +115,9 @@ implements
     int projectionSize() {
         int result = 0;
 
-        for (Field<?> field : toRow().fields.fields)
+        for (Field<?> field : ((AbstractRow<?>) getDataType().getRow()).fields.fields)
             result += ((AbstractField<?>) field).projectionSize();
 
         return result;
-    }
-
-    // -------------------------------------------------------------------------
-    // The Object API
-    // -------------------------------------------------------------------------
-
-    @Override
-    String toString0(RenderContext ctx) {
-        return ctx.visit(toRow()).render();
     }
 }

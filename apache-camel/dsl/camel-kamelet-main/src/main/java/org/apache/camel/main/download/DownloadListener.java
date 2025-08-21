@@ -34,13 +34,6 @@ public interface DownloadListener {
     }
 
     /**
-     * Some dependencies require third-party maven repositories to be downloaded.
-     */
-    default void onExtraRepository(String repo) {
-        // noop
-    }
-
-    /**
      * Uses an existing already downloaded dependency
      */
     void onAlreadyDownloadedDependency(String groupId, String artifactId, String version);
@@ -49,6 +42,13 @@ public interface DownloadListener {
      * When a kamelet is being downloaded (typically loaded directly from camel-kamelets JAR)
      */
     default void onLoadingKamelet(String name) {
+        // noop
+    }
+
+    /**
+     * When a modeline is detected
+     */
+    default void onLoadingModeline(String key, String value) {
         // noop
     }
 

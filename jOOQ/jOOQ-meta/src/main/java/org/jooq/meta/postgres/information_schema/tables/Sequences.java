@@ -7,10 +7,8 @@ package org.jooq.meta.postgres.information_schema.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -72,8 +70,7 @@ public class Sequences extends TableImpl<Record> {
     public final TableField<Record, Integer> NUMERIC_PRECISION = createField(DSL.name("numeric_precision"), SQLDataType.INTEGER, this, "");
 
     /**
-     * The column
-     * <code>information_schema.sequences.numeric_precision_radix</code>.
+     * The column <code>information_schema.sequences.numeric_precision_radix</code>.
      */
     public final TableField<Record, Integer> NUMERIC_PRECISION_RADIX = createField(DSL.name("numeric_precision_radix"), SQLDataType.INTEGER, this, "");
 
@@ -108,24 +105,22 @@ public class Sequences extends TableImpl<Record> {
     public final TableField<Record, String> CYCLE_OPTION = createField(DSL.name("cycle_option"), SQLDataType.VARCHAR(3), this, "");
 
     private Sequences(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Sequences(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view(), where);
+    private Sequences(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.view());
     }
 
     /**
-     * Create an aliased <code>information_schema.sequences</code> table
-     * reference
+     * Create an aliased <code>information_schema.sequences</code> table reference
      */
     public Sequences(String alias) {
         this(DSL.name(alias), SEQUENCES);
     }
 
     /**
-     * Create an aliased <code>information_schema.sequences</code> table
-     * reference
+     * Create an aliased <code>information_schema.sequences</code> table reference
      */
     public Sequences(Name alias) {
         this(alias, SEQUENCES);
@@ -138,13 +133,13 @@ public class Sequences extends TableImpl<Record> {
         this(DSL.name("sequences"), null);
     }
 
-    public <O extends Record> Sequences(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, SEQUENCES);
+    public <O extends Record> Sequences(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, SEQUENCES);
     }
 
     @Override
     public Schema getSchema() {
-        return aliased() ? null : InformationSchema.INFORMATION_SCHEMA;
+        return InformationSchema.INFORMATION_SCHEMA;
     }
 
     @Override
@@ -153,21 +148,17 @@ public class Sequences extends TableImpl<Record> {
     }
 
     @Override
-    public List<ForeignKey<Record, ?>> getReferences() {
-        return Arrays.asList(Keys.SEQUENCES__SYNTHETIC_FK_SEQUENCES__SYNTHETIC_PK_SCHEMATA);
+    public List<UniqueKey<Record>> getKeys() {
+        return Arrays.<UniqueKey<Record>>asList(Keys.SYNTHETIC_PK_SEQUENCES);
     }
 
-    private transient Schemata _schemata;
+    @Override
+    public List<ForeignKey<Record, ?>> getReferences() {
+        return Arrays.<ForeignKey<Record, ?>>asList(Keys.SEQUENCES__SYNTHETIC_FK_SEQUENCES__SYNTHETIC_PK_SCHEMATA);
+    }
 
-    /**
-     * Get the implicit join path to the
-     * <code>information_schema.schemata</code> table.
-     */
     public Schemata schemata() {
-        if (_schemata == null)
-            _schemata = new Schemata(this, Keys.SEQUENCES__SYNTHETIC_FK_SEQUENCES__SYNTHETIC_PK_SCHEMATA, null);
-
-        return _schemata;
+        return new Schemata(this, Keys.SEQUENCES__SYNTHETIC_FK_SEQUENCES__SYNTHETIC_PK_SCHEMATA);
     }
 
     @Override
@@ -180,8 +171,19 @@ public class Sequences extends TableImpl<Record> {
         return new Sequences(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public Sequences as(Table<?> alias) {
-        return new Sequences(alias.getQualifiedName(), this);
+    public Sequences rename(String name) {
+        return new Sequences(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public Sequences rename(Name name) {
+        return new Sequences(name, null);
     }
 }

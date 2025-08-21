@@ -25,7 +25,6 @@ import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.component.geocoder.http.AuthenticationMethod;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
@@ -35,8 +34,8 @@ import org.apache.camel.support.DefaultEndpoint;
  * Find geocodes (latitude and longitude) for a given address or the other way round.
  */
 @UriEndpoint(firstVersion = "2.12.0", scheme = "geocoder", title = "Geocoder", syntax = "geocoder:address:latlng",
-             producerOnly = true, category = { Category.API, Category.SEARCH }, headersClass = GeoCoderConstants.class)
-public class GeoCoderEndpoint extends DefaultEndpoint implements EndpointServiceLocation {
+             producerOnly = true, category = { Category.API, Category.LOCATION }, headersClass = GeoCoderConstants.class)
+public class GeoCoderEndpoint extends DefaultEndpoint {
 
     @UriPath
     private String address;
@@ -77,16 +76,7 @@ public class GeoCoderEndpoint extends DefaultEndpoint implements EndpointService
 
     public GeoCoderEndpoint(String uri, GeoCoderComponent component) {
         super(uri, component);
-    }
 
-    @Override
-    public String getServiceUrl() {
-        return "https://www.googleapis.com";
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "rest";
     }
 
     @Override

@@ -7,6 +7,7 @@ package org.jooq.meta.postgres.information_schema;
 import java.util.Arrays;
 import java.util.List;
 
+import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
 import org.jooq.meta.postgres.information_schema.tables.Attributes;
@@ -21,7 +22,6 @@ import org.jooq.meta.postgres.information_schema.tables.Routines;
 import org.jooq.meta.postgres.information_schema.tables.Schemata;
 import org.jooq.meta.postgres.information_schema.tables.Sequences;
 import org.jooq.meta.postgres.information_schema.tables.Tables;
-import org.jooq.meta.postgres.information_schema.tables.Triggers;
 import org.jooq.meta.postgres.information_schema.tables.Views;
 
 
@@ -99,11 +99,6 @@ public class InformationSchema extends SchemaImpl {
     public final Tables TABLES = Tables.TABLES;
 
     /**
-     * The table <code>information_schema.triggers</code>.
-     */
-    public final Triggers TRIGGERS = Triggers.TRIGGERS;
-
-    /**
      * The table <code>information_schema.views</code>.
      */
     public final Views VIEWS = Views.VIEWS;
@@ -115,9 +110,15 @@ public class InformationSchema extends SchemaImpl {
         super("information_schema", null);
     }
 
+
+    @Override
+    public Catalog getCatalog() {
+        return DefaultCatalog.DEFAULT_CATALOG;
+    }
+
     @Override
     public final List<Table<?>> getTables() {
-        return Arrays.asList(
+        return Arrays.<Table<?>>asList(
             Attributes.ATTRIBUTES,
             CheckConstraints.CHECK_CONSTRAINTS,
             Columns.COLUMNS,
@@ -130,8 +131,6 @@ public class InformationSchema extends SchemaImpl {
             Schemata.SCHEMATA,
             Sequences.SEQUENCES,
             Tables.TABLES,
-            Triggers.TRIGGERS,
-            Views.VIEWS
-        );
+            Views.VIEWS);
     }
 }

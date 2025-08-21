@@ -32,11 +32,11 @@ public class HttpProxyRouteTest extends BaseJettyTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpProxyRouteTest.class);
 
-    private final int size = 10;
+    private int size = 10;
 
     @Test
     public void testHttpProxy() {
-        LOG.info("Sending {} messages to a http endpoint which is proxied/bridged", size);
+        LOG.info("Sending " + size + " messages to a http endpoint which is proxied/bridged");
 
         StopWatch watch = new StopWatch();
         for (int i = 0; i < size; i++) {
@@ -44,7 +44,7 @@ public class HttpProxyRouteTest extends BaseJettyTest {
             assertEquals("Bye " + i, out);
         }
 
-        LOG.info("Time taken: {}", TimeUtils.printDuration(watch.taken(), true));
+        LOG.info("Time taken: " + TimeUtils.printDuration(watch.taken(), true));
     }
 
     @Test

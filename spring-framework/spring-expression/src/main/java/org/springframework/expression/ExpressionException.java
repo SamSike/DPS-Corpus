@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 package org.springframework.expression;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
- * Superclass for exceptions that can occur whilst processing expressions.
+ * Super class for exceptions that can occur whilst processing expressions.
  *
  * @author Andy Clement
  * @author Phillip Webb
@@ -28,7 +28,8 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("serial")
 public class ExpressionException extends RuntimeException {
 
-	protected final @Nullable String expressionString;
+	@Nullable
+	protected final String expressionString;
 
 	protected int position;  // -1 if not known; should be known in all reasonable cases
 
@@ -48,7 +49,7 @@ public class ExpressionException extends RuntimeException {
 	 * @param message a descriptive message
 	 * @param cause the underlying cause of this exception
 	 */
-	public ExpressionException(String message, @Nullable Throwable cause) {
+	public ExpressionException(String message, Throwable cause) {
 		super(message, cause);
 		this.expressionString = null;
 		this.position = 0;
@@ -94,7 +95,7 @@ public class ExpressionException extends RuntimeException {
 	 * @param message a descriptive message
 	 * @param cause the underlying cause of this exception
 	 */
-	public ExpressionException(int position, String message, @Nullable Throwable cause) {
+	public ExpressionException(int position, String message, Throwable cause) {
 		super(message, cause);
 		this.expressionString = null;
 		this.position = position;
@@ -104,7 +105,8 @@ public class ExpressionException extends RuntimeException {
 	/**
 	 * Return the expression string.
 	 */
-	public final @Nullable String getExpressionString() {
+	@Nullable
+	public final String getExpressionString() {
 		return this.expressionString;
 	}
 
@@ -121,6 +123,7 @@ public class ExpressionException extends RuntimeException {
 	 * @see #getSimpleMessage()
 	 * @see java.lang.Throwable#getMessage()
 	 */
+	@Override
 	public String getMessage() {
 		return toDetailedString();
 	}
@@ -153,7 +156,6 @@ public class ExpressionException extends RuntimeException {
 	 * that caused the failure.
 	 * @since 4.0
 	 */
-	@SuppressWarnings("NullAway") // Dataflow analysis limitation
 	public String getSimpleMessage() {
 		return super.getMessage();
 	}

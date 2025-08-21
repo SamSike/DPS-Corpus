@@ -24,10 +24,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class OnExceptionFailureRouteIdTest extends DeadLetterChannelFailureRouteIdTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(IllegalArgumentException.class).handled(true).to("direct:dead");
 
                 from("direct:foo").routeId("foo").to("mock:foo").to("direct:bar").to("mock:result");

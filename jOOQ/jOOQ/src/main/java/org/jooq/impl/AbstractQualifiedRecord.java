@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,7 +37,6 @@
  */
 package org.jooq.impl;
 
-// ...
 import static org.jooq.impl.DefaultExecuteContext.localExecuteContext;
 import static org.jooq.impl.Tools.fieldsArray;
 import static org.jooq.impl.Tools.getMappedUDTName;
@@ -53,6 +52,7 @@ import org.jooq.Field;
 import org.jooq.QualifiedRecord;
 import org.jooq.RecordQualifier;
 import org.jooq.Row;
+import org.jooq.Scope;
 
 /**
  * @author Lukas Eder
@@ -76,17 +76,15 @@ abstract class AbstractQualifiedRecord<R extends QualifiedRecord<R>> extends Abs
         return qualifier;
     }
 
-    // [#12180] scalac 3 requires overriding this method to work around an interoperability regression
     @SuppressWarnings("unchecked")
     @Override
-    public /* non-final */ <T> R with(Field<T> field, T value) {
+    public final <T> R with(Field<T> field, T value) {
         return (R) super.with(field, value);
     }
 
-    // [#12180] scalac 3 requires overriding this method to work around an interoperability regression
     @SuppressWarnings("unchecked")
     @Override
-    public /* non-final */ <T, U> R with(Field<T> field, U value, Converter<? extends T, ? super U> converter) {
+    public final <T, U> R with(Field<T> field, U value, Converter<? extends T, ? super U> converter) {
         return (R) super.with(field, value, converter);
     }
 
@@ -112,22 +110,10 @@ abstract class AbstractQualifiedRecord<R extends QualifiedRecord<R>> extends Abs
 
     @Override
     public final String getSQLTypeName() throws SQLException {
-        ExecuteContext ctx = localExecuteContext();
 
         // [#1693] This needs to return the fully qualified SQL type name, in
         // case the connected user is not the owner of the UDT
-        String result = getMappedUDTName(ctx, this);
-
-
-
-
-
-
-
-
-
-
-        return result;
+        return getMappedUDTName(localExecuteContext(), this);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

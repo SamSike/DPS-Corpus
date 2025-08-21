@@ -57,10 +57,10 @@ public class FileLanguageCBRTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?delete=true&initialDelay=0&delay=10")).convertBodyTo(String.class).choice().when()
                         .simple("${file:ext} == 'txt'").to("mock:txt").when()
                         .simple("${file:ext} == 'dat'").to("mock:dat").otherwise().to("mock:other");

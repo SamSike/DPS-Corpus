@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,13 @@ package org.springframework.beans;
 
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.lang.Nullable;
 
 /**
  * Common interface for classes that can access named properties
- * (such as bean properties of an object or fields in an object).
- *
- * <p>Serves as base interface for {@link BeanWrapper}.
+ * (such as bean properties of an object or fields in an object)
+ * Serves as base interface for {@link BeanWrapper}.
  *
  * @author Juergen Hoeller
  * @since 1.1
@@ -102,7 +100,8 @@ public interface PropertyAccessor {
 	 * @throws PropertyAccessException if the property was valid but the
 	 * accessor method failed
 	 */
-	@Nullable Class<?> getPropertyType(String propertyName) throws BeansException;
+	@Nullable
+	Class<?> getPropertyType(String propertyName) throws BeansException;
 
 	/**
 	 * Return a type descriptor for the specified property:
@@ -114,7 +113,8 @@ public interface PropertyAccessor {
 	 * @throws PropertyAccessException if the property was valid but the
 	 * accessor method failed
 	 */
-	@Nullable TypeDescriptor getPropertyTypeDescriptor(String propertyName) throws BeansException;
+	@Nullable
+	TypeDescriptor getPropertyTypeDescriptor(String propertyName) throws BeansException;
 
 	/**
 	 * Get the current value of the specified property.
@@ -126,7 +126,8 @@ public interface PropertyAccessor {
 	 * @throws PropertyAccessException if the property was valid but the
 	 * accessor method failed
 	 */
-	@Nullable Object getPropertyValue(String propertyName) throws BeansException;
+	@Nullable
+	Object getPropertyValue(String propertyName) throws BeansException;
 
 	/**
 	 * Set the specified value as current property value.

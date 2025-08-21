@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,6 @@
 package org.springframework.expression.spel.ast;
 
 import java.lang.reflect.Array;
-import java.util.Locale;
-
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.asm.MethodVisitor;
 import org.springframework.asm.Type;
@@ -27,20 +24,21 @@ import org.springframework.expression.EvaluationException;
 import org.springframework.expression.TypedValue;
 import org.springframework.expression.spel.CodeFlow;
 import org.springframework.expression.spel.ExpressionState;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * Represents a reference to a type, for example {@code "T(String)"} or
- * {@code "T(com.example.Foo)"}.
+ * Represents a reference to a type, for example
+ * {@code "T(String)" or "T(com.somewhere.Foo)"}.
  *
  * @author Andy Clement
- * @author Sam Brannen
  */
 public class TypeReference extends SpelNodeImpl {
 
 	private final int dimensions;
 
-	private transient @Nullable Class<?> type;
+	@Nullable
+	private transient Class<?> type;
 
 
 	public TypeReference(int startPos, int endPos, SpelNodeImpl qualifiedId) {
@@ -55,11 +53,11 @@ public class TypeReference extends SpelNodeImpl {
 
 	@Override
 	public TypedValue getValueInternal(ExpressionState state) throws EvaluationException {
-		// TODO Possible optimization: if we cache the discovered type reference, but can we do that?
+		// TODO possible optimization here if we cache the discovered type reference, but can we do that?
 		String typeName = (String) this.children[0].getValueInternal(state).getValue();
 		Assert.state(typeName != null, "No type name");
 		if (!typeName.contains(".") && Character.isLowerCase(typeName.charAt(0))) {
-			TypeCode tc = TypeCode.valueOf(typeName.toUpperCase(Locale.ROOT));
+			TypeCode tc = TypeCode.valueOf(typeName.toUpperCase());
 			if (tc != TypeCode.OBJECT) {
 				// It is a primitive type
 				Class<?> clazz = makeArrayIfNecessary(tc.getType());
@@ -76,19 +74,22 @@ public class TypeReference extends SpelNodeImpl {
 	}
 
 	private Class<?> makeArrayIfNecessary(Class<?> clazz) {
-		if (this.dimensions < 1) {
-			return clazz;
+		if (this.dimensions != 0) {
+			for (int i = 0; i < this.dimensions; i++) {
+				Object array = Array.newInstance(clazz, 0);
+				clazz = array.getClass();
+			}
 		}
-		int[] dims = new int[this.dimensions];
-		Object array = Array.newInstance(clazz, dims);
-		return array.getClass();
+		return clazz;
 	}
 
 	@Override
 	public String toStringAST() {
 		StringBuilder sb = new StringBuilder("T(");
 		sb.append(getChild(0).toStringAST());
-		sb.append("[]".repeat(this.dimensions));
+		for (int d = 0; d < this.dimensions; d++) {
+			sb.append("[]");
+		}
 		sb.append(')');
 		return sb.toString();
 	}
@@ -100,31 +101,31 @@ public class TypeReference extends SpelNodeImpl {
 
 	@Override
 	public void generateCode(MethodVisitor mv, CodeFlow cf) {
-		// TODO Future optimization: if followed by a static method call, skip generating code here.
+		// TODO Future optimization - if followed by a static method call, skip generating code here
 		Assert.state(this.type != null, "No type available");
 		if (this.type.isPrimitive()) {
-			if (this.type == boolean.class) {
+			if (this.type == Boolean.TYPE) {
 				mv.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "TYPE", "Ljava/lang/Class;");
 			}
-			else if (this.type == byte.class) {
+			else if (this.type == Byte.TYPE) {
 				mv.visitFieldInsn(GETSTATIC, "java/lang/Byte", "TYPE", "Ljava/lang/Class;");
 			}
-			else if (this.type == char.class) {
+			else if (this.type == Character.TYPE) {
 				mv.visitFieldInsn(GETSTATIC, "java/lang/Character", "TYPE", "Ljava/lang/Class;");
 			}
-			else if (this.type == double.class) {
+			else if (this.type == Double.TYPE) {
 				mv.visitFieldInsn(GETSTATIC, "java/lang/Double", "TYPE", "Ljava/lang/Class;");
 			}
-			else if (this.type == float.class) {
+			else if (this.type == Float.TYPE) {
 				mv.visitFieldInsn(GETSTATIC, "java/lang/Float", "TYPE", "Ljava/lang/Class;");
 			}
-			else if (this.type == int.class) {
+			else if (this.type == Integer.TYPE) {
 				mv.visitFieldInsn(GETSTATIC, "java/lang/Integer", "TYPE", "Ljava/lang/Class;");
 			}
-			else if (this.type == long.class) {
+			else if (this.type == Long.TYPE) {
 				mv.visitFieldInsn(GETSTATIC, "java/lang/Long", "TYPE", "Ljava/lang/Class;");
 			}
-			else if (this.type == short.class) {
+			else if (this.type == Short.TYPE) {
 				mv.visitFieldInsn(GETSTATIC, "java/lang/Short", "TYPE", "Ljava/lang/Class;");
 			}
 		}

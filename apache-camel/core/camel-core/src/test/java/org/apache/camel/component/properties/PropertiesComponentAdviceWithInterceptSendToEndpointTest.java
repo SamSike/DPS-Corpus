@@ -31,7 +31,7 @@ public class PropertiesComponentAdviceWithInterceptSendToEndpointTest extends Co
         RouteDefinition route = context.getRouteDefinition("foo");
         AdviceWith.adviceWith(route, context, new AdviceWithRouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 interceptSendToEndpoint("{{cool.mock}}:res*").to("mock:foo");
             }
         });
@@ -45,10 +45,10 @@ public class PropertiesComponentAdviceWithInterceptSendToEndpointTest extends Co
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("foo").to("{{cool.end}}");
             }
         };

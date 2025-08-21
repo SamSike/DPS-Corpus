@@ -24,13 +24,14 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
-import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -42,17 +43,22 @@ public class SqlConsumerDeleteFailedTest extends CamelTestSupport {
     private JdbcTemplate jdbcTemplate;
 
     @Override
-    public void doPreSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
         db = new EmbeddedDatabaseBuilder()
                 .setName(getClass().getSimpleName())
                 .setType(EmbeddedDatabaseType.H2)
                 .addScript("sql/createAndPopulateDatabase.sql").build();
 
         jdbcTemplate = new JdbcTemplate(db);
+
+        super.setUp();
     }
 
     @Override
-    public void doPostTearDown() throws Exception {
+    @AfterEach
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (db != null) {
             db.shutdown();
@@ -74,8 +80,11 @@ public class SqlConsumerDeleteFailedTest extends CamelTestSupport {
         assertEquals(3, exchanges.get(1).getIn().getBody(Map.class).get("ID"));
         assertEquals("Linux", exchanges.get(1).getIn().getBody(Map.class).get("PROJECT"));
 
-        await("Should have deleted 2 rows, keeping 1")
-                .until(() -> jdbcTemplate.queryForObject("select count(*) from projects", Integer.class) == 1);
+        // give it a little tine to delete
+        Thread.sleep(500);
+
+        assertEquals(Integer.valueOf(1), jdbcTemplate.queryForObject("select count(*) from projects", Integer.class),
+                "Should have deleted 2 rows");
         assertEquals("AMQ", jdbcTemplate.queryForObject("select PROJECT from projects where license = 'BAD'", String.class),
                 "Should be AMQ project that is BAD");
     }
@@ -91,16 +100,16 @@ public class SqlConsumerDeleteFailedTest extends CamelTestSupport {
                      + "?initialDelay=0&delay=50"
                      + "&consumer.onConsume=delete from projects where id = :#id"
                      + "&consumer.onConsumeFailed=update projects set license = 'BAD' where id = :#id")
-                        .process(new Processor() {
-                            @Override
-                            public void process(Exchange exchange) {
-                                Object project = exchange.getIn().getBody(Map.class).get("PROJECT");
-                                if ("AMQ".equals(project)) {
-                                    throw new IllegalArgumentException("Cannot handled AMQ");
-                                }
-                            }
-                        })
-                        .to("mock:result");
+                             .process(new Processor() {
+                                 @Override
+                                 public void process(Exchange exchange) {
+                                     Object project = exchange.getIn().getBody(Map.class).get("PROJECT");
+                                     if ("AMQ".equals(project)) {
+                                         throw new IllegalArgumentException("Cannot handled AMQ");
+                                     }
+                                 }
+                             })
+                             .to("mock:result");
             }
         };
     }

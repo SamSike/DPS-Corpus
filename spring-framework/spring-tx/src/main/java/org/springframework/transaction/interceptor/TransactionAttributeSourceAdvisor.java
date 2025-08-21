@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@
 package org.springframework.transaction.interceptor;
 
 import org.aopalliance.aop.Advice;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.aop.ClassFilter;
 import org.springframework.aop.Pointcut;
 import org.springframework.aop.support.AbstractPointcutAdvisor;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -40,9 +40,16 @@ import org.springframework.util.Assert;
 @SuppressWarnings("serial")
 public class TransactionAttributeSourceAdvisor extends AbstractPointcutAdvisor {
 
-	private @Nullable TransactionInterceptor transactionInterceptor;
+	@Nullable
+	private TransactionInterceptor transactionInterceptor;
 
-	private final TransactionAttributeSourcePointcut pointcut = new TransactionAttributeSourcePointcut();
+	private final TransactionAttributeSourcePointcut pointcut = new TransactionAttributeSourcePointcut() {
+		@Override
+		@Nullable
+		protected TransactionAttributeSource getTransactionAttributeSource() {
+			return (transactionInterceptor != null ? transactionInterceptor.getTransactionAttributeSource() : null);
+		}
+	};
 
 
 	/**
@@ -64,9 +71,7 @@ public class TransactionAttributeSourceAdvisor extends AbstractPointcutAdvisor {
 	 * Set the transaction interceptor to use for this advisor.
 	 */
 	public void setTransactionInterceptor(TransactionInterceptor interceptor) {
-		Assert.notNull(interceptor, "TransactionInterceptor must not be null");
 		this.transactionInterceptor = interceptor;
-		this.pointcut.setTransactionAttributeSource(interceptor.getTransactionAttributeSource());
 	}
 
 	/**

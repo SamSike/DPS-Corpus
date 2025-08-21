@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,44 +37,16 @@
  */
 package org.jooq.impl;
 
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
-// ...
-// ...
-// ...
-// ...
-import static org.jooq.SQLDialect.CLICKHOUSE;
-import static org.jooq.SQLDialect.CUBRID;
-// ...
 import static org.jooq.SQLDialect.DERBY;
-import static org.jooq.SQLDialect.DUCKDB;
 // ...
 import static org.jooq.SQLDialect.FIREBIRD;
 // ...
-import static org.jooq.SQLDialect.HSQLDB;
-import static org.jooq.SQLDialect.IGNITE;
 // ...
-// ...
-// ...
-import static org.jooq.SQLDialect.POSTGRES;
-// ...
-// ...
-// ...
-import static org.jooq.SQLDialect.SQLITE;
-// ...
-// ...
-// ...
-import static org.jooq.SQLDialect.TRINO;
-// ...
-import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.impl.Internal.arrayType;
-import static org.jooq.impl.Internal.converterContext;
 import static org.jooq.impl.QOM.GenerationOption.STORED;
 import static org.jooq.impl.QOM.GenerationOption.VIRTUAL;
 import static org.jooq.impl.SQLDataType.BLOB;
-import static org.jooq.impl.SQLDataType.CHAR;
 import static org.jooq.impl.SQLDataType.CLOB;
-import static org.jooq.impl.SQLDataType.LONGNVARCHAR;
 import static org.jooq.impl.SQLDataType.NCHAR;
 import static org.jooq.impl.SQLDataType.NCLOB;
 import static org.jooq.impl.SQLDataType.NVARCHAR;
@@ -82,7 +54,6 @@ import static org.jooq.impl.Tools.CONFIG;
 import static org.jooq.impl.Tools.CONFIG_UNQUOTED;
 import static org.jooq.impl.Tools.NO_SUPPORT_BINARY_TYPE_LENGTH;
 import static org.jooq.impl.Tools.map;
-import static org.jooq.impl.Tools.settings;
 import static org.jooq.impl.Tools.visitMappedSchema;
 
 import java.lang.reflect.Array;
@@ -101,7 +72,6 @@ import java.time.OffsetTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Supplier;
 
 // ...
@@ -112,11 +82,8 @@ import org.jooq.Collation;
 import org.jooq.Comment;
 import org.jooq.Configuration;
 import org.jooq.Context;
-import org.jooq.ContextConverter;
 import org.jooq.Converter;
-import org.jooq.ConverterContext;
 import org.jooq.DataType;
-import org.jooq.Decfloat;
 import org.jooq.Domain;
 import org.jooq.EmbeddableRecord;
 import org.jooq.EnumType;
@@ -134,19 +101,15 @@ import org.jooq.QualifiedRecord;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.Row;
-import org.jooq.RowId;
 import org.jooq.SQLDialect;
 import org.jooq.Schema;
 import org.jooq.Table;
-import org.jooq.UDTRecord;
 import org.jooq.XML;
 import org.jooq.impl.QOM.GenerationLocation;
 import org.jooq.impl.QOM.GenerationOption;
 import org.jooq.impl.QOM.UEmpty;
 import org.jooq.types.Interval;
 import org.jooq.types.UNumber;
-
-import org.jetbrains.annotations.NotNull;
 
 // ...
 
@@ -163,11 +126,6 @@ implements
 {
 
     static final Set<SQLDialect> NO_SUPPORT_TIMESTAMP_PRECISION = SQLDialect.supportedBy(DERBY, FIREBIRD);
-
-
-
-
-
 
     AbstractDataType(Name name, Comment comment) {
         super(name, comment);
@@ -197,28 +155,11 @@ implements
     }
 
     @Override
-    public abstract boolean hidden();
-
-    @Override
-    public abstract DataType<T> hidden(boolean h);
-
-    @Override
-    public abstract boolean redacted();
-
-    @Override
-    public abstract DataType<T> redacted(boolean r);
-
-    @Override
     public abstract boolean readonly();
 
     @Override
     public final boolean readonlyInternal() {
-        return readonlyInternal(CONFIG.get());
-    }
-
-    @Override
-    public final boolean readonlyInternal(Configuration configuration) {
-        return readonly() && !computedOnClientStored(configuration);
+        return readonly() && !computedOnClientStored();
     }
 
     @Override
@@ -230,63 +171,30 @@ implements
     }
 
     @Override
-    public final boolean computedOnServer() {
-        return computedOnServer(CONFIG.get());
-    }
-
-    @Override
-    public final boolean computedOnServer(Configuration configuration) {
-        return computed() && generationLocation(configuration) == GenerationLocation.SERVER;
-    }
-
-    @Override
     public final boolean computedOnClient() {
-        return computedOnClient(CONFIG.get());
-    }
-
-    @Override
-    public final boolean computedOnClient(Configuration configuration) {
-        return computed() && generationLocation(configuration) == GenerationLocation.CLIENT;
+        return computed() && generationLocation() == GenerationLocation.CLIENT;
     }
 
     @Override
     public final boolean computedOnClientStored() {
-        return computedOnClientStored(CONFIG.get());
-    }
-
-    @Override
-    public final boolean computedOnClientStored(Configuration configuration) {
-        return computedOnClient(configuration)
-            && generationOption(configuration) != GenerationOption.VIRTUAL
+        return computedOnClient()
+            && generationOption() == GenerationOption.STORED
             && (generatedAlwaysAsGenerator().supports(GeneratorStatementType.INSERT) ||
-                generatedAlwaysAsGenerator().supports(GeneratorStatementType.UPDATE))
-            && !FALSE.equals(configuration.settings().isComputedOnClientStored());
+                generatedAlwaysAsGenerator().supports(GeneratorStatementType.UPDATE));
     }
 
     @Override
     public final boolean computedOnClientStoredOn(GeneratorStatementType statementType) {
-        return computedOnClientStoredOn(statementType, CONFIG.get());
-    }
-
-    @Override
-    public final boolean computedOnClientStoredOn(GeneratorStatementType statementType, Configuration configuration) {
-        return computedOnClient(configuration)
-            && generationOption(configuration) != GenerationOption.VIRTUAL
-            && generatedAlwaysAsGenerator().supports(statementType)
-            && !FALSE.equals(configuration.settings().isComputedOnClientStored());
+        return computedOnClient()
+            && generationOption() == GenerationOption.STORED
+            && generatedAlwaysAsGenerator().supports(statementType);
     }
 
     @Override
     public final boolean computedOnClientVirtual() {
-        return computedOnClientVirtual(CONFIG.get());
-    }
-
-    @Override
-    public final boolean computedOnClientVirtual(Configuration configuration) {
-        return computedOnClient(configuration)
-            && generationOption(configuration) == GenerationOption.VIRTUAL
-            && generatedAlwaysAsGenerator().supports(GeneratorStatementType.SELECT)
-            && !FALSE.equals(configuration.settings().isComputedOnClientVirtual());
+        return computedOnClient()
+            && generationOption() == GenerationOption.VIRTUAL
+            && generatedAlwaysAsGenerator().supports(GeneratorStatementType.SELECT);
     }
 
     @Override
@@ -305,7 +213,7 @@ implements
     @Override
     public final Field<T> generatedAlwaysAs() {
         Generator<?, ?, T> s = generatedAlwaysAsGenerator();
-        return s == null ? null : s.apply(new DefaultGeneratorContext(CONFIG.get()));
+        return s == null ? null : s.apply(new DefaultGeneratorContext(CONFIG));
     }
 
     @Override
@@ -327,23 +235,11 @@ implements
     @Override
     public abstract GenerationOption generationOption();
 
-    final GenerationOption generationOption(Configuration configuration) {
-        return TRUE.equals(settings(configuration).isEmulateComputedColumns())
-             ? GenerationOption.STORED
-             : generationOption();
-    }
-
     @Override
     public abstract DataType<T> generationLocation(GenerationLocation generationLocation);
 
     @Override
     public abstract GenerationLocation generationLocation();
-
-    final GenerationLocation generationLocation(Configuration configuration) {
-        return TRUE.equals(settings(configuration).isEmulateComputedColumns())
-             ? GenerationLocation.CLIENT
-             : generationLocation();
-    }
 
     @Override
     public abstract DataType<T> collation(Collation c);
@@ -353,16 +249,6 @@ implements
 
     @Override
     public abstract DataType<T> identity(boolean i);
-
-    @Override
-    public final DataType<T> autoIncrement() {
-        return identity(true);
-    }
-
-    @Override
-    public final DataType<T> generatedByDefaultAsIdentity() {
-        return identity(true);
-    }
 
     @Override
     public final DataType<T> defaultValue(T d) {
@@ -386,6 +272,12 @@ implements
 
     @Override
     public abstract DataType<T> default_(Field<T> d);
+
+    @Override
+    @Deprecated
+    public final DataType<T> defaulted(boolean d) {
+        return defaultValue(d ? Tools.field(null, this) : null);
+    }
 
     @Override
     public final boolean defaulted() {
@@ -427,7 +319,6 @@ implements
 
         return tType == BigInteger.class
             || tType == BigDecimal.class
-            || tType == Decfloat.class
             || tType == Timestamp.class
             || tType == Time.class
             || tType == LocalDateTime.class
@@ -508,17 +399,6 @@ implements
     }
 
     @Override
-    public final boolean hasFixedLength() {
-        AbstractDataType<T> t = (AbstractDataType<T>) getSQLDataType();
-        return t == CHAR
-            || t == NCHAR
-
-            // [#9540] [#10368] In case the constant literals haven't been initialised yet
-            || CHAR == null && "char".equals(t.typeName0())
-            || NCHAR == null && "nchar".equals(t.typeName0());
-    }
-
-    @Override
     public final boolean lengthDefined() {
         return length0() != null && hasLength();
     }
@@ -542,8 +422,6 @@ implements
             return Types.BIGINT;
         else if (tType == BigDecimal.class)
             return Types.DECIMAL;
-        else if (tType == Decfloat.class)
-            return Types.FLOAT;
         else if (tType == Byte.class)
             return Types.TINYINT;
         else if (tType == byte[].class)
@@ -635,23 +513,13 @@ implements
     }
 
     @Override
-    public final ContextConverter<?, T> getConverter() {
-        return (@NotNull ContextConverter<?, T>) ContextConverter.scoped(getBinding().converter());
-    }
-
-    @Override
-    public final Class<?> getFromType() {
-        return getConverter().fromType();
-    }
-
-    @Override
-    public final Class<T> getToType() {
-        return getConverter().toType();
+    public final Converter<?, T> getConverter() {
+        return getBinding().converter();
     }
 
     @Override
     public /* non-final */ String getTypeName() {
-        return getTypeName0(CONFIG_UNQUOTED.get());
+        return getTypeName0(CONFIG_UNQUOTED);
     }
 
     private final String getTypeName0(Configuration configuration) {
@@ -670,23 +538,10 @@ implements
 
     @Override
     public /* final */ String getCastTypeName() {
-        return getCastTypeName0(CONFIG_UNQUOTED.get());
+        return getCastTypeName0(CONFIG_UNQUOTED);
     }
 
     private final String getCastTypeName0(Configuration configuration) {
-        switch (configuration.family()) {
-            case CLICKHOUSE:
-                if (nullable() && !isJSON() && !isArray())
-                    return "Nullable(" + getCastTypeName1(configuration) + ")";
-                else
-                    return getCastTypeName1(configuration);
-
-            default:
-                return getCastTypeName1(configuration);
-        }
-    }
-
-    private final String getCastTypeName1(Configuration configuration) {
         SQLDialect dialect = configuration.dialect();
 
         // [#10277] Various qualified, user defined types
@@ -699,9 +554,8 @@ implements
         //         a null value, historically, so removing this check would
         //         introduce a lot of regressions!
         else if (lengthDefined() && length() > 0) {
-            if (isBinary() && NO_SUPPORT_BINARY_TYPE_LENGTH.contains(dialect)) {
+            if (isBinary() && NO_SUPPORT_BINARY_TYPE_LENGTH.contains(dialect))
                 return castTypeName0();
-            }
 
 
 
@@ -709,7 +563,7 @@ implements
             else
                 return castTypePrefix0() + "(" + length() + ")" + castTypeSuffix0();
         }
-        else if (precisionDefined() && (isDateTime() && hasPrecision() || precision() > 0)) {
+        else if (precisionDefined() && (isTimestamp() || precision() > 0)) {
 
             // [#8029] Not all dialects support precision on timestamp
             // syntax, possibly despite there being explicit or implicit
@@ -753,11 +607,6 @@ implements
     }
 
     @Override
-    public final DataType<T[]> array() {
-        return getArrayDataType();
-    }
-
-    @Override
     public /* non-final */ Class<?> getArrayComponentType() {
         return null;
     }
@@ -765,16 +614,6 @@ implements
     @Override
     public /* non-final */ DataType<?> getArrayComponentDataType() {
         return null;
-    }
-
-    @Override
-    public /* non-final */ Class<?> getArrayBaseType() {
-        return getType();
-    }
-
-    @Override
-    public /* non-final */ DataType<?> getArrayBaseDataType() {
-        return this;
     }
 
     @Override
@@ -818,8 +657,6 @@ implements
             scale0(),
             length0(),
             nullability(),
-            hidden(),
-            redacted(),
             readonly(),
             (Generator<?, ?, E>) generatedAlwaysAsGenerator(),
             generationOption(),
@@ -859,18 +696,7 @@ implements
     }
 
     @Override
-    public final T convert(Object object) {
-        return convert(object, converterContext());
-    }
-
-    static final <T> T convert0(DataType<T> type, Object object, ConverterContext cc) {
-        if (type instanceof AbstractDataType<T> t)
-            return t.convert(object, cc);
-        else
-            return type.convert(object);
-    }
-
-    /* non-final */ T convert(Object object, ConverterContext cc) {
+    public /* non-final */ T convert(Object object) {
 
         // [#1441] Avoid unneeded type conversions to improve performance
         if (object == null)
@@ -897,14 +723,6 @@ implements
     }
 
     @Override
-    public final boolean isDecimal() {
-        Class<?> tType = tType0();
-        return BigInteger.class == tType
-            || BigDecimal.class == tType
-            || Decfloat.class == tType;
-    }
-
-    @Override
     public final boolean isInteger() {
         Class<?> tType = tType0();
         return UNumber.class.isAssignableFrom(tType)
@@ -913,20 +731,6 @@ implements
             || Integer.class == tType
             || Long.class == tType
         ;
-    }
-
-    @Override
-    public final boolean isFloat() {
-        Class<?> tType = tType0();
-        return Float.class == tType
-            || Double.class == tType
-            || Decfloat.class == tType
-        ;
-    }
-
-    @Override
-    public final boolean isBoolean() {
-        return tType0() == Boolean.class;
     }
 
     @Override
@@ -940,14 +744,11 @@ implements
         return t == NCHAR
             || t == NCLOB
             || t == NVARCHAR
-            || t == LONGNVARCHAR
 
             // [#9540] [#10368] In case the constant literals haven't been initialised yet
             || NCHAR == null && "nchar".equals(t.typeName0())
             || NCLOB == null && "nclob".equals(t.typeName0())
-            || NVARCHAR == null && "nvarchar".equals(t.typeName0())
-            || LONGNVARCHAR == null && "longnvarchar".equals(t.typeName0())
-        ;
+            || NVARCHAR == null && "nvarchar".equals(t.typeName0());
     }
 
     @Override
@@ -975,24 +776,11 @@ implements
     }
 
     @Override
-    public final boolean isTimestampWithTimeZone() {
-        Class<?> tType = tType0();
-        return java.time.OffsetDateTime.class.isAssignableFrom(tType)
-            || java.time.Instant.class.isAssignableFrom(tType)
-        ;
-    }
-
-    @Override
     public final boolean isTime() {
         Class<?> tType = tType0();
         return java.sql.Time.class.isAssignableFrom(tType)
             || java.time.LocalTime.class.isAssignableFrom(tType)
         ;
-    }
-
-    @Override
-    public final boolean isTimeWithTimeZone() {
-        return java.time.OffsetTime.class.isAssignableFrom(tType0());
     }
 
     @Override
@@ -1047,17 +835,7 @@ implements
     }
 
     @Override
-    public final boolean isUDTRecord() {
-        return UDTRecord.class.isAssignableFrom(tType0());
-    }
-
-    @Override
     public final boolean isUDT() {
-        return isQualifiedRecord();
-    }
-
-    @Override
-    public final boolean isQualifiedRecord() {
         return QualifiedRecord.class.isAssignableFrom(tType0());
     }
 
@@ -1091,21 +869,6 @@ implements
     public final boolean isSpatial() {
         Class<?> tType = tType0();
         return tType == Geometry.class || tType == Geography.class;
-    }
-
-    @Override
-    public final boolean isRowId() {
-        return tType0() == RowId.class;
-    }
-
-    @Override
-    public final boolean isUUID() {
-        return tType0() == UUID.class;
-    }
-
-    @Override
-    public final boolean isOther() {
-        return getType() == Object.class;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
 import org.apache.commons.logging.Log;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.context.SmartLifecycle;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
@@ -59,21 +59,21 @@ public abstract class AbstractBrokerMessageHandler
 
 	private final Collection<String> destinationPrefixes;
 
-	private @Nullable Predicate<String> userDestinationPredicate;
+	@Nullable
+	private Predicate<String> userDestinationPredicate;
 
 	private boolean preservePublishOrder = false;
 
-	private @Nullable ApplicationEventPublisher eventPublisher;
+	@Nullable
+	private ApplicationEventPublisher eventPublisher;
 
-	private final AtomicBoolean brokerAvailable = new AtomicBoolean();
+	private AtomicBoolean brokerAvailable = new AtomicBoolean();
 
 	private final BrokerAvailabilityEvent availableEvent = new BrokerAvailabilityEvent(true, this);
 
 	private final BrokerAvailabilityEvent notAvailableEvent = new BrokerAvailabilityEvent(false, this);
 
 	private boolean autoStartup = true;
-
-	private @Nullable Integer phase;
 
 	private volatile boolean running;
 
@@ -84,8 +84,8 @@ public abstract class AbstractBrokerMessageHandler
 
 	/**
 	 * Constructor with no destination prefixes (matches all destinations).
-	 * @param inboundChannel the channel for receiving messages from clients (for example, WebSocket clients)
-	 * @param outboundChannel the channel for sending messages to clients (for example, WebSocket clients)
+	 * @param inboundChannel the channel for receiving messages from clients (e.g. WebSocket clients)
+	 * @param outboundChannel the channel for sending messages to clients (e.g. WebSocket clients)
 	 * @param brokerChannel the channel for the application to send messages to the broker
 	 */
 	public AbstractBrokerMessageHandler(SubscribableChannel inboundChannel, MessageChannel outboundChannel,
@@ -96,8 +96,8 @@ public abstract class AbstractBrokerMessageHandler
 
 	/**
 	 * Constructor with destination prefixes to match to destinations of messages.
-	 * @param inboundChannel the channel for receiving messages from clients (for example, WebSocket clients)
-	 * @param outboundChannel the channel for sending messages to clients (for example, WebSocket clients)
+	 * @param inboundChannel the channel for receiving messages from clients (e.g. WebSocket clients)
+	 * @param outboundChannel the channel for sending messages to clients (e.g. WebSocket clients)
 	 * @param brokerChannel the channel for the application to send messages to the broker
 	 * @param destinationPrefixes prefixes to use to filter out messages
 	 */
@@ -130,7 +130,7 @@ public abstract class AbstractBrokerMessageHandler
 	}
 
 	/**
-	 * Return destination prefixes to use to filter messages to forward
+	 * Return destination prefixes prefixes to use to filter messages to forward
 	 * to the broker. Messages that have a destination and where the destination
 	 * doesn't match are ignored.
 	 * <p>By default this is not set.
@@ -161,7 +161,8 @@ public abstract class AbstractBrokerMessageHandler
 	 * ThreadPoolExecutor that in turn does not guarantee processing in order.
 	 * <p>When this flag is set to {@code true} messages within the same session
 	 * will be sent to the {@code "clientOutboundChannel"} one at a time in
-	 * order to preserve the order of publication.
+	 * order to preserve the order of publication. Enable this only if needed
+	 * since there is some performance overhead to keep messages in order.
 	 * @param preservePublishOrder whether to publish in order
 	 * @since 5.1
 	 */
@@ -183,7 +184,8 @@ public abstract class AbstractBrokerMessageHandler
 		this.eventPublisher = publisher;
 	}
 
-	public @Nullable ApplicationEventPublisher getApplicationEventPublisher() {
+	@Nullable
+	public ApplicationEventPublisher getApplicationEventPublisher() {
 		return this.eventPublisher;
 	}
 
@@ -196,21 +198,6 @@ public abstract class AbstractBrokerMessageHandler
 		return this.autoStartup;
 	}
 
-	/**
-	 * Set the phase that this handler should run in.
-	 * <p>By default, this is {@link SmartLifecycle#DEFAULT_PHASE}, but with
-	 * {@code @EnableWebSocketMessageBroker} configuration it is set to 0.
-	 * @since 6.1.4
-	 */
-	public void setPhase(int phase) {
-		this.phase = phase;
-	}
-
-	@Override
-	public int getPhase() {
-		return (this.phase != null ? this.phase : SmartLifecycle.super.getPhase());
-	}
-
 
 	@Override
 	public void start() {
@@ -218,8 +205,8 @@ public abstract class AbstractBrokerMessageHandler
 			logger.info("Starting...");
 			this.clientInboundChannel.subscribe(this);
 			this.brokerChannel.subscribe(this);
-			if (this.clientInboundChannel instanceof InterceptableChannel ic) {
-				ic.addInterceptor(0, this.unsentDisconnectInterceptor);
+			if (this.clientInboundChannel instanceof InterceptableChannel) {
+				((InterceptableChannel) this.clientInboundChannel).addInterceptor(0, this.unsentDisconnectInterceptor);
 			}
 			startInternal();
 			this.running = true;
@@ -237,8 +224,8 @@ public abstract class AbstractBrokerMessageHandler
 			stopInternal();
 			this.clientInboundChannel.unsubscribe(this);
 			this.brokerChannel.unsubscribe(this);
-			if (this.clientInboundChannel instanceof InterceptableChannel ic) {
-				ic.removeInterceptor(this.unsentDisconnectInterceptor);
+			if (this.clientInboundChannel instanceof InterceptableChannel) {
+				((InterceptableChannel) this.clientInboundChannel).removeInterceptor(this.unsentDisconnectInterceptor);
 			}
 			this.running = false;
 			logger.info("Stopped.");
@@ -260,7 +247,7 @@ public abstract class AbstractBrokerMessageHandler
 	 * Check whether this message handler is currently running.
 	 * <p>Note that even when this message handler is running the
 	 * {@link #isBrokerAvailable()} flag may still independently alternate between
-	 * being on and off depending on the concrete subclass implementation.
+	 * being on and off depending on the concrete sub-class implementation.
 	 */
 	@Override
 	public final boolean isRunning() {
@@ -273,9 +260,9 @@ public abstract class AbstractBrokerMessageHandler
 	 * indicates whether this message handler is running. In other words the message
 	 * handler must first be running and then the {@code #isBrokerAvailable()} flag
 	 * may still independently alternate between being on and off depending on the
-	 * concrete subclass implementation.
+	 * concrete sub-class implementation.
 	 * <p>Application components may implement
-	 * {@code org.springframework.context.ApplicationListener<BrokerAvailabilityEvent>}
+	 * {@code org.springframework.context.ApplicationListener&lt;BrokerAvailabilityEvent&gt;}
 	 * to receive notifications when broker becomes available and unavailable.
 	 */
 	public boolean isBrokerAvailable() {

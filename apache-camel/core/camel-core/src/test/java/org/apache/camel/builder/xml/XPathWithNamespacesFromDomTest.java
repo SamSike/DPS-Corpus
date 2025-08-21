@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class XPathWithNamespacesFromDomTest extends ContextTestSupport {
 
     @Test
-    public void testXPathUsingDomForNamespaces() {
+    public void testXPathUsingDomForNamespaces() throws Exception {
         Document document = context.getTypeConverter().convertTo(Document.class,
                 "<x:foo xmlns:x='n1' xmlns:y='n2'><bar id='a' xmlns:y='n3'/></x:foo>");
         Element element = (Element) document.getElementsByTagName("bar").item(0);

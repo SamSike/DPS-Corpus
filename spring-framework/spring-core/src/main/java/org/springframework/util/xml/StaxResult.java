@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,10 @@ import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.sax.SAXResult;
 
-import org.jspecify.annotations.Nullable;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.ext.LexicalHandler;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Implementation of the {@code Result} tagging interface for StAX writers. Can be constructed with
@@ -47,9 +48,11 @@ import org.xml.sax.ext.LexicalHandler;
  */
 class StaxResult extends SAXResult {
 
-	private @Nullable XMLEventWriter eventWriter;
+	@Nullable
+	private XMLEventWriter eventWriter;
 
-	private @Nullable XMLStreamWriter streamWriter;
+	@Nullable
+	private XMLStreamWriter streamWriter;
 
 
 	/**
@@ -82,7 +85,8 @@ class StaxResult extends SAXResult {
 	 * @return the StAX event writer used by this result
 	 * @see #StaxResult(javax.xml.stream.XMLEventWriter)
 	 */
-	public @Nullable XMLEventWriter getXMLEventWriter() {
+	@Nullable
+	public XMLEventWriter getXMLEventWriter() {
 		return this.eventWriter;
 	}
 
@@ -93,7 +97,8 @@ class StaxResult extends SAXResult {
 	 * @return the StAX stream writer used by this result
 	 * @see #StaxResult(javax.xml.stream.XMLStreamWriter)
 	 */
-	public @Nullable XMLStreamWriter getXMLStreamWriter() {
+	@Nullable
+	public XMLStreamWriter getXMLStreamWriter() {
 		return this.streamWriter;
 	}
 

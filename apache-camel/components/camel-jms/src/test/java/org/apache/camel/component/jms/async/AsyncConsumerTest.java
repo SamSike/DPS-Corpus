@@ -17,30 +17,15 @@
 package org.apache.camel.component.jms.async;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.ConsumerTemplate;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jms.AbstractJMSTest;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.apache.camel.test.infra.core.annotations.ContextFixture;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
  *
  */
 public class AsyncConsumerTest extends AbstractJMSTest {
-
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
-    protected CamelContext context;
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
 
     @Test
     public void testAsyncJmsConsumer() throws Exception {
@@ -61,9 +46,12 @@ public class AsyncConsumerTest extends AbstractJMSTest {
         return "activemq";
     }
 
-    @ContextFixture
-    public void configureComponent(CamelContext context) {
-        context.addComponent("async", new MyAsyncComponent());
+    @Override
+    protected CamelContext createCamelContext() throws Exception {
+        CamelContext camelContext = super.createCamelContext();
+        camelContext.addComponent("async", new MyAsyncComponent());
+
+        return camelContext;
     }
 
     @Override
@@ -81,17 +69,5 @@ public class AsyncConsumerTest extends AbstractJMSTest {
                         .to("mock:result");
             }
         };
-    }
-
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        context = camelContextExtension.getContext();
-        template = camelContextExtension.getProducerTemplate();
-        consumer = camelContextExtension.getConsumerTemplate();
     }
 }

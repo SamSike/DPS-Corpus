@@ -17,54 +17,34 @@
 package org.apache.camel.component.amqp;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.infra.core.annotations.ContextFixture;
-import org.apache.camel.test.infra.core.annotations.RouteFixture;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.amqp.AMQPConnectionDetails.discoverAMQP;
 
 public class AMQPToDTest extends AMQPTestSupport {
-    private ProducerTemplate template;
 
     @Test
     public void testToD() throws Exception {
-        contextExtension.getMockEndpoint("mock:bar").expectedBodiesReceived("Hello bar");
-        contextExtension.getMockEndpoint("mock:beer").expectedBodiesReceived("Hello beer");
+        getMockEndpoint("mock:bar").expectedBodiesReceived("Hello bar");
+        getMockEndpoint("mock:beer").expectedBodiesReceived("Hello beer");
 
         template.sendBodyAndHeader("direct:start", "Hello bar", "where", "bar");
         template.sendBodyAndHeader("direct:start", "Hello beer", "where", "beer");
 
-        MockEndpoint.assertIsSatisfied(contextExtension.getContext());
+        MockEndpoint.assertIsSatisfied(context);
     }
 
-    @BeforeAll
-    static void startContext() {
-        System.setProperty(AMQPConnectionDetails.AMQP_PORT, String.valueOf(service.brokerPort()));
-    }
-
-    @BeforeEach
-    void setupTemplate() {
-        template = contextExtension.getProducerTemplate();
-    }
-
-    @ContextFixture
-    public void configureContext(CamelContext camelContext) {
-        System.setProperty(AMQPConnectionDetails.AMQP_PORT, String.valueOf(service.brokerPort()));
-
+    @Override
+    protected CamelContext createCamelContext() throws Exception {
+        CamelContext camelContext = super.createCamelContext();
         camelContext.getRegistry().bind("amqpConnection", discoverAMQP(camelContext));
+        return camelContext;
     }
 
-    @RouteFixture
-    public void createRouteBuilder(CamelContext context) throws Exception {
-        context.addRoutes(createRouteBuilder());
-    }
-
-    private RouteBuilder createRouteBuilder() {
+    @Override
+    protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
                 // route message dynamic using toD

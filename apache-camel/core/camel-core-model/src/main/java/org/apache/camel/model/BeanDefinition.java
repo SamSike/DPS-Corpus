@@ -52,16 +52,6 @@ public class BeanDefinition extends NoOutputDefinition<BeanDefinition> {
     public BeanDefinition() {
     }
 
-    protected BeanDefinition(BeanDefinition source) {
-        super(source);
-        this.beanClass = source.beanClass;
-        this.bean = source.bean;
-        this.ref = source.ref;
-        this.method = source.method;
-        this.beanType = source.beanType;
-        this.scope = source.scope;
-    }
-
     public BeanDefinition(String ref) {
         this.ref = ref;
     }
@@ -69,11 +59,6 @@ public class BeanDefinition extends NoOutputDefinition<BeanDefinition> {
     public BeanDefinition(String ref, String method) {
         this.ref = ref;
         this.method = method;
-    }
-
-    @Override
-    public BeanDefinition copyDefinition() {
-        return new BeanDefinition(this);
     }
 
     @Override
@@ -114,7 +99,7 @@ public class BeanDefinition extends NoOutputDefinition<BeanDefinition> {
     }
 
     /**
-     * Sets a reference to an existing bean to use, which is looked up from the registry
+     * Sets a reference to an exiting bean to use, which is looked up from the registry
      */
     public void setRef(String ref) {
         this.ref = ref;
@@ -162,6 +147,27 @@ public class BeanDefinition extends NoOutputDefinition<BeanDefinition> {
      */
     public void setBeanType(Class<?> beanType) {
         this.beanClass = beanType;
+    }
+
+    @Deprecated
+    public String getCache() {
+        if (scope == null || BeanScope.Singleton.name().equals(scope)) {
+            return "true";
+        } else {
+            return "false";
+        }
+    }
+
+    /**
+     * Use singleton option instead
+     */
+    @Deprecated
+    public void setCache(String cache) {
+        if ("true".equals(cache)) {
+            scope = BeanScope.Singleton.name();
+        } else {
+            scope = BeanScope.Prototype.name();
+        }
     }
 
     public String getScope() {

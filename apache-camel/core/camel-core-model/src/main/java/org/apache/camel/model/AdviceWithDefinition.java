@@ -27,15 +27,6 @@ public class AdviceWithDefinition extends OutputDefinition<AdviceWithDefinition>
     public AdviceWithDefinition() {
     }
 
-    public AdviceWithDefinition(AdviceWithDefinition source) {
-        super(source);
-    }
-
-    @Override
-    public AdviceWithDefinition copyDefinition() {
-        return new AdviceWithDefinition(this);
-    }
-
     @Override
     public String getShortName() {
         return "adviceWith";

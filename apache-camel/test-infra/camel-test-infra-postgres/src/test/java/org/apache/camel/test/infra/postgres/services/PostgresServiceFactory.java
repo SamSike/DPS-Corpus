@@ -32,7 +32,4 @@ public final class PostgresServiceFactory {
                 .addRemoteMapping(PostgresRemoteService::new)
                 .build();
     }
-
-    public static class PostgresRemoteService extends PostgresRemoteInfraService implements PostgresService {
-    }
 }

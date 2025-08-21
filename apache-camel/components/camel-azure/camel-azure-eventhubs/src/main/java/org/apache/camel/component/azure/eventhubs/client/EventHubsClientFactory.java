@@ -19,7 +19,6 @@ package org.apache.camel.component.azure.eventhubs.client;
 import java.util.Locale;
 import java.util.function.Consumer;
 
-import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.messaging.eventhubs.CheckpointStore;
 import com.azure.messaging.eventhubs.EventHubClientBuilder;
 import com.azure.messaging.eventhubs.EventHubConsumerAsyncClient;
@@ -32,7 +31,6 @@ import com.azure.messaging.eventhubs.models.EventContext;
 import com.azure.storage.blob.BlobContainerAsyncClient;
 import com.azure.storage.blob.BlobContainerClientBuilder;
 import com.azure.storage.common.StorageSharedKeyCredential;
-import org.apache.camel.component.azure.eventhubs.CredentialType;
 import org.apache.camel.component.azure.eventhubs.EventHubsConfiguration;
 import org.apache.camel.util.ObjectHelper;
 
@@ -49,27 +47,17 @@ public final class EventHubsClientFactory {
                 .transportType(configuration.getAmqpTransportType())
                 .retryOptions(configuration.getAmqpRetryOptions());
 
-        CredentialType type = configuration.getCredentialType();
-        if (type == null) {
-            type = CredentialType.CONNECTION_STRING;
-        }
-        if (CredentialType.CONNECTION_STRING.equals(type)) {
+        if (ObjectHelper.isEmpty(configuration.getTokenCredential())) {
             return eventHubClientBuilder
                     .connectionString(buildConnectionString(configuration))
                     .buildAsyncProducerClient();
-        } else if (CredentialType.TOKEN_CREDENTIAL.equals(type)) {
-
-            checkTokenCredentialConfiguration(configuration);
-            return eventHubClientBuilder
-                    .fullyQualifiedNamespace(getFullyQualifiedNamespace(configuration))
-                    .eventHubName(configuration.getEventHubName())
-                    .credential(configuration.getTokenCredential())
-                    .buildAsyncProducerClient();
         }
+
+        checkTokenCredentialConfiguration(configuration);
         return eventHubClientBuilder
                 .fullyQualifiedNamespace(getFullyQualifiedNamespace(configuration))
                 .eventHubName(configuration.getEventHubName())
-                .credential(new DefaultAzureCredentialBuilder().build())
+                .credential(configuration.getTokenCredential())
                 .buildAsyncProducerClient();
     }
 
@@ -80,27 +68,17 @@ public final class EventHubsClientFactory {
                 .transportType(configuration.getAmqpTransportType())
                 .retryOptions(configuration.getAmqpRetryOptions());
 
-        CredentialType type = configuration.getCredentialType();
-        if (type == null) {
-            type = CredentialType.CONNECTION_STRING;
-        }
-        if (CredentialType.CONNECTION_STRING.equals(type)) {
+        if (ObjectHelper.isEmpty(configuration.getTokenCredential())) {
             return eventHubClientBuilder
                     .connectionString(buildConnectionString(configuration))
                     .buildAsyncConsumerClient();
-        } else if (CredentialType.TOKEN_CREDENTIAL.equals(type)) {
-
-            checkTokenCredentialConfiguration(configuration);
-            return eventHubClientBuilder
-                    .fullyQualifiedNamespace(getFullyQualifiedNamespace(configuration))
-                    .eventHubName(configuration.getEventHubName())
-                    .credential(configuration.getTokenCredential())
-                    .buildAsyncConsumerClient();
         }
+
+        checkTokenCredentialConfiguration(configuration);
         return eventHubClientBuilder
                 .fullyQualifiedNamespace(getFullyQualifiedNamespace(configuration))
                 .eventHubName(configuration.getEventHubName())
-                .credential(new DefaultAzureCredentialBuilder().build())
+                .credential(configuration.getTokenCredential())
                 .buildAsyncConsumerClient();
     }
 
@@ -116,27 +94,17 @@ public final class EventHubsClientFactory {
                 .processError(processError)
                 .processEvent(processEvent);
 
-        CredentialType type = configuration.getCredentialType();
-        if (type == null) {
-            type = CredentialType.CONNECTION_STRING;
-        }
-        if (CredentialType.CONNECTION_STRING.equals(type)) {
+        if (ObjectHelper.isEmpty(configuration.getTokenCredential())) {
             return eventProcessorClientBuilder
                     .connectionString(buildConnectionString(configuration))
                     .buildEventProcessorClient();
-        } else if (CredentialType.TOKEN_CREDENTIAL.equals(type)) {
-
-            checkTokenCredentialConfiguration(configuration);
-            return eventProcessorClientBuilder
-                    .fullyQualifiedNamespace(getFullyQualifiedNamespace(configuration))
-                    .eventHubName(configuration.getEventHubName())
-                    .credential(configuration.getTokenCredential())
-                    .buildEventProcessorClient();
         }
+
+        checkTokenCredentialConfiguration(configuration);
         return eventProcessorClientBuilder
                 .fullyQualifiedNamespace(getFullyQualifiedNamespace(configuration))
                 .eventHubName(configuration.getEventHubName())
-                .credential(new DefaultAzureCredentialBuilder().build())
+                .credential(configuration.getTokenCredential())
                 .buildEventProcessorClient();
     }
 

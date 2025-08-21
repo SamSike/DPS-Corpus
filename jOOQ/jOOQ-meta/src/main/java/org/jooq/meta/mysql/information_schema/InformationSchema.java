@@ -7,6 +7,7 @@ package org.jooq.meta.mysql.information_schema;
 import java.util.Arrays;
 import java.util.List;
 
+import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
 import org.jooq.meta.mysql.information_schema.tables.CheckConstraints;
@@ -19,7 +20,6 @@ import org.jooq.meta.mysql.information_schema.tables.Schemata;
 import org.jooq.meta.mysql.information_schema.tables.Statistics;
 import org.jooq.meta.mysql.information_schema.tables.TableConstraints;
 import org.jooq.meta.mysql.information_schema.tables.Tables;
-import org.jooq.meta.mysql.information_schema.tables.Triggers;
 import org.jooq.meta.mysql.information_schema.tables.Views;
 
 
@@ -29,7 +29,7 @@ import org.jooq.meta.mysql.information_schema.tables.Views;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class InformationSchema extends SchemaImpl {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1825826342;
 
     /**
      * The reference instance of <code>information_schema</code>
@@ -87,11 +87,6 @@ public class InformationSchema extends SchemaImpl {
     public final Tables TABLES = Tables.TABLES;
 
     /**
-     * The table <code>information_schema.TRIGGERS</code>.
-     */
-    public final Triggers TRIGGERS = Triggers.TRIGGERS;
-
-    /**
      * The table <code>information_schema.VIEWS</code>.
      */
     public final Views VIEWS = Views.VIEWS;
@@ -103,9 +98,15 @@ public class InformationSchema extends SchemaImpl {
         super("information_schema", null);
     }
 
+
+    @Override
+    public Catalog getCatalog() {
+        return DefaultCatalog.DEFAULT_CATALOG;
+    }
+
     @Override
     public final List<Table<?>> getTables() {
-        return Arrays.asList(
+        return Arrays.<Table<?>>asList(
             CheckConstraints.CHECK_CONSTRAINTS,
             Columns.COLUMNS,
             KeyColumnUsage.KEY_COLUMN_USAGE,
@@ -116,8 +117,6 @@ public class InformationSchema extends SchemaImpl {
             Statistics.STATISTICS,
             TableConstraints.TABLE_CONSTRAINTS,
             Tables.TABLES,
-            Triggers.TRIGGERS,
-            Views.VIEWS
-        );
+            Views.VIEWS);
     }
 }

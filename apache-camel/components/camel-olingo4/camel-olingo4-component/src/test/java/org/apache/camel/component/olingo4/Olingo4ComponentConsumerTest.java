@@ -19,11 +19,10 @@ package org.apache.camel.component.olingo4;
 import java.util.Iterator;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.spi.BeanIntrospection;
-import org.apache.camel.support.PluginHelper;
 import org.apache.olingo.client.api.domain.ClientCollectionValue;
 import org.apache.olingo.client.api.domain.ClientComplexValue;
 import org.apache.olingo.client.api.domain.ClientEntity;
@@ -47,7 +46,7 @@ public class Olingo4ComponentConsumerTest extends AbstractOlingo4TestSupport {
     private static final String AIRPORTS = "Airports";
 
     public Olingo4ComponentConsumerTest() {
-        testConfiguration().withUseRouteBuilder(false);
+        setUseRouteBuilder(false);
     }
 
     private void addRouteAndStartContext(RouteBuilder builder) throws Exception {
@@ -58,9 +57,8 @@ public class Olingo4ComponentConsumerTest extends AbstractOlingo4TestSupport {
     @Override
     protected CamelContext createCamelContext() throws Exception {
         CamelContext context = super.createCamelContext();
-        final BeanIntrospection beanIntrospection = PluginHelper.getBeanIntrospection(context);
-        beanIntrospection.setLoggingLevel(LoggingLevel.INFO);
-        beanIntrospection.setExtendedStatistics(true);
+        context.adapt(ExtendedCamelContext.class).getBeanIntrospection().setLoggingLevel(LoggingLevel.INFO);
+        context.adapt(ExtendedCamelContext.class).getBeanIntrospection().setExtendedStatistics(true);
         return context;
     }
 
@@ -95,7 +93,7 @@ public class Olingo4ComponentConsumerTest extends AbstractOlingo4TestSupport {
         }
 
         // should be reflection free
-        long counter = PluginHelper.getBeanIntrospection(context).getInvokedCounter();
+        long counter = context.adapt(ExtendedCamelContext.class).getBeanIntrospection().getInvokedCounter();
         assertEquals(0, counter);
     }
 
@@ -117,7 +115,7 @@ public class Olingo4ComponentConsumerTest extends AbstractOlingo4TestSupport {
             public void configure() {
                 from("olingo4://read/" + PEOPLE
                      + "?delay=2&sendEmptyMessageWhenIdle=true&splitResult=false&filterAlreadySeen=true")
-                        .to("mock:consumer-alreadyseen");
+                             .to("mock:consumer-alreadyseen");
             }
         };
         addRouteAndStartContext(builder);
@@ -166,7 +164,7 @@ public class Olingo4ComponentConsumerTest extends AbstractOlingo4TestSupport {
             public void configure() {
                 from("olingo4://read/" + PEOPLE
                      + "?delay=2&sendEmptyMessageWhenIdle=false&splitResult=false&filterAlreadySeen=true")
-                        .to("mock:consumer-alreadyseen");
+                             .to("mock:consumer-alreadyseen");
             }
         };
         addRouteAndStartContext(builder);
@@ -279,7 +277,7 @@ public class Olingo4ComponentConsumerTest extends AbstractOlingo4TestSupport {
         assertEquals("San Francisco International Airport", nameProp.getValue().toString());
 
         // should be reflection free
-        long counter = PluginHelper.getBeanIntrospection(context).getInvokedCounter();
+        long counter = context.adapt(ExtendedCamelContext.class).getBeanIntrospection().getInvokedCounter();
         assertEquals(0, counter);
     }
 

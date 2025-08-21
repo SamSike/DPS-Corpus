@@ -19,7 +19,6 @@ package org.apache.camel.management.mbean;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.LoggingLevel;
 import org.apache.camel.api.management.ManagedResource;
 import org.apache.camel.api.management.mbean.ManagedSchedulePollConsumerMBean;
 import org.apache.camel.support.ScheduledPollConsumer;
@@ -66,36 +65,6 @@ public class ManagedScheduledPollConsumer extends ManagedConsumer implements Man
     @Override
     public void setUseFixedDelay(boolean useFixedDelay) {
         getConsumer().setUseFixedDelay(useFixedDelay);
-    }
-
-    @Override
-    public boolean isGreedy() {
-        return getConsumer().isGreedy();
-    }
-
-    @Override
-    public void setGreedy(boolean greedy) {
-        getConsumer().setGreedy(greedy);
-    }
-
-    @Override
-    public boolean isSendEmptyMessageWhenIdle() {
-        return getConsumer().isSendEmptyMessageWhenIdle();
-    }
-
-    @Override
-    public void setSendEmptyMessageWhenIdle(boolean sendEmptyMessageWhenIdle) {
-        getConsumer().setSendEmptyMessageWhenIdle(sendEmptyMessageWhenIdle);
-    }
-
-    @Override
-    public String getRunningLoggingLevel() {
-        return getConsumer().getRunLoggingLevel().name();
-    }
-
-    @Override
-    public void setRunningLoggingLevel(String runningLoggingLevel) {
-        getConsumer().setRunLoggingLevel(LoggingLevel.valueOf(runningLoggingLevel));
     }
 
     @Override
@@ -151,30 +120,5 @@ public class ManagedScheduledPollConsumer extends ManagedConsumer implements Man
     @Override
     public long getRepeatCount() {
         return getConsumer().getRepeatCount();
-    }
-
-    @Override
-    public boolean isFirstPollDone() {
-        return getConsumer().isFirstPollDone();
-    }
-
-    @Override
-    public boolean isConsumerReady() {
-        return getConsumer().isConsumerReady();
-    }
-
-    @Override
-    public long getCounter() {
-        return getConsumer().getCounter();
-    }
-
-    @Override
-    public long getErrorCounter() {
-        return getConsumer().getErrorCounter();
-    }
-
-    @Override
-    public long getSuccessCounter() {
-        return getConsumer().getSuccessCounter();
     }
 }

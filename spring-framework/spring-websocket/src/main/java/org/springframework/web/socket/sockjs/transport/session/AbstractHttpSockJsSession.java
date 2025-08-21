@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,13 +27,13 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import jakarta.servlet.ServletRequest;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.ServerHttpAsyncRequestControl;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.filter.ShallowEtagHeaderFilter;
 import org.springframework.web.socket.CloseStatus;
@@ -55,23 +55,32 @@ public abstract class AbstractHttpSockJsSession extends AbstractSockJsSession {
 
 	private final Queue<String> messageCache;
 
-	private volatile @Nullable URI uri;
+	@Nullable
+	private volatile URI uri;
 
-	private volatile @Nullable HttpHeaders handshakeHeaders;
+	@Nullable
+	private volatile HttpHeaders handshakeHeaders;
 
-	private volatile @Nullable Principal principal;
+	@Nullable
+	private volatile Principal principal;
 
-	private volatile @Nullable InetSocketAddress localAddress;
+	@Nullable
+	private volatile InetSocketAddress localAddress;
 
-	private volatile @Nullable InetSocketAddress remoteAddress;
+	@Nullable
+	private volatile InetSocketAddress remoteAddress;
 
-	private volatile @Nullable String acceptedProtocol;
+	@Nullable
+	private volatile String acceptedProtocol;
 
-	private volatile @Nullable ServerHttpResponse response;
+	@Nullable
+	private volatile ServerHttpResponse response;
 
-	private volatile @Nullable SockJsFrameFormat frameFormat;
+	@Nullable
+	private volatile SockJsFrameFormat frameFormat;
 
-	private volatile @Nullable ServerHttpAsyncRequestControl asyncRequestControl;
+	@Nullable
+	private volatile ServerHttpAsyncRequestControl asyncRequestControl;
 
 	private boolean readyToSend;
 
@@ -99,17 +108,20 @@ public abstract class AbstractHttpSockJsSession extends AbstractSockJsSession {
 	}
 
 	@Override
-	public @Nullable Principal getPrincipal() {
+	@Nullable
+	public Principal getPrincipal() {
 		return this.principal;
 	}
 
 	@Override
-	public @Nullable InetSocketAddress getLocalAddress() {
+	@Nullable
+	public InetSocketAddress getLocalAddress() {
 		return this.localAddress;
 	}
 
 	@Override
-	public @Nullable InetSocketAddress getRemoteAddress() {
+	@Nullable
+	public InetSocketAddress getRemoteAddress() {
 		return this.remoteAddress;
 	}
 
@@ -127,7 +139,8 @@ public abstract class AbstractHttpSockJsSession extends AbstractSockJsSession {
 	 * Return the selected sub-protocol to use.
 	 */
 	@Override
-	public @Nullable String getAcceptedProtocol() {
+	@Nullable
+	public String getAcceptedProtocol() {
 		return this.acceptedProtocol;
 	}
 
@@ -177,7 +190,7 @@ public abstract class AbstractHttpSockJsSession extends AbstractSockJsSession {
 	/**
 	 * Handle the first request for receiving messages on a SockJS HTTP transport
 	 * based session.
-	 * <p>Long polling-based transports (for example, "xhr", "jsonp") complete the request
+	 * <p>Long polling-based transports (e.g. "xhr", "jsonp") complete the request
 	 * after writing the open frame. Streaming-based transports ("xhr_streaming",
 	 * "eventsource", and "htmlfile") leave the response open longer for further
 	 * streaming of message frames but will also close it eventually after some
@@ -216,7 +229,7 @@ public abstract class AbstractHttpSockJsSession extends AbstractSockJsSession {
 				// Let "our" handler know before sending the open frame to the remote handler
 				delegateConnectionEstablished();
 				handleRequestInternal(request, response, true);
-				// Request might have been reset (for example, polling sessions do after writing)
+				// Request might have been reset (e.g. polling sessions do after writing)
 				this.readyToSend = isActive();
 			}
 			catch (Throwable ex) {
@@ -229,7 +242,7 @@ public abstract class AbstractHttpSockJsSession extends AbstractSockJsSession {
 	/**
 	 * Handle all requests, except the first one, to receive messages on a SockJS
 	 * HTTP transport based session.
-	 * <p>Long polling-based transports (for example, "xhr", "jsonp") complete the request
+	 * <p>Long polling-based transports (e.g. "xhr", "jsonp") complete the request
 	 * after writing any buffered message frames (or the next one). Streaming-based
 	 * transports ("xhr_streaming", "eventsource", and "htmlfile") leave the
 	 * response open longer for further streaming of message frames but will also
@@ -244,8 +257,7 @@ public abstract class AbstractHttpSockJsSession extends AbstractSockJsSession {
 		synchronized (this.responseLock) {
 			try {
 				if (isClosed()) {
-					String formattedFrame = frameFormat.format(SockJsFrame.closeFrameGoAway());
-					response.getBody().write(formattedFrame.getBytes(SockJsFrame.CHARSET));
+					response.getBody().write(SockJsFrame.closeFrameGoAway().getContentBytes());
 					return;
 				}
 				this.response = response;
@@ -265,8 +277,8 @@ public abstract class AbstractHttpSockJsSession extends AbstractSockJsSession {
 	}
 
 	private void disableShallowEtagHeaderFilter(ServerHttpRequest request) {
-		if (request instanceof ServletServerHttpRequest servletServerHttpRequest) {
-			ServletRequest servletRequest = servletServerHttpRequest.getServletRequest();
+		if (request instanceof ServletServerHttpRequest) {
+			ServletRequest servletRequest = ((ServletServerHttpRequest) request).getServletRequest();
 			ShallowEtagHeaderFilter.disableContentCaching(servletRequest);
 		}
 	}
@@ -327,7 +339,7 @@ public abstract class AbstractHttpSockJsSession extends AbstractSockJsSession {
 					control.complete();
 				}
 				catch (Throwable ex) {
-					// Could be part of normal workflow (for example, browser tab closed)
+					// Could be part of normal workflow (e.g. browser tab closed)
 					logger.debug("Failed to complete request: " + ex.getMessage());
 				}
 			}

@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.infinispan.remote;
 
-import java.util.Map;
-
 import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
@@ -25,7 +23,6 @@ import org.apache.camel.Producer;
 import org.apache.camel.component.infinispan.InfinispanComponent;
 import org.apache.camel.component.infinispan.InfinispanConstants;
 import org.apache.camel.component.infinispan.InfinispanEndpoint;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
@@ -38,8 +35,8 @@ import static org.apache.camel.component.infinispan.InfinispanConstants.SCHEME_I
  * Read and write from/to Infinispan distributed key/value store and data grid.
  */
 @UriEndpoint(firstVersion = "2.13.0", scheme = SCHEME_INFINISPAN, title = "Infinispan", syntax = "infinispan:cacheName",
-             category = { Category.CACHE, Category.CLUSTERING }, headersClass = InfinispanConstants.class)
-public class InfinispanRemoteEndpoint extends InfinispanEndpoint implements EndpointServiceLocation {
+             category = { Category.CACHE, Category.DATAGRID, Category.CLUSTERING }, headersClass = InfinispanConstants.class)
+public class InfinispanRemoteEndpoint extends InfinispanEndpoint {
 
     @UriPath(description = "The name of the cache to use. Use current to use the existing cache name from the currently configured cached manager. Or use default for the default cache manager name.")
     @Metadata(required = true)
@@ -56,27 +53,6 @@ public class InfinispanRemoteEndpoint extends InfinispanEndpoint implements Endp
         this.cacheName = cacheName;
         this.configuration = configuration;
         this.manager = new InfinispanRemoteManager(component.getCamelContext(), configuration);
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (configuration.getHosts() != null) {
-            return configuration.getHosts();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "infinispan";
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        if (configuration.getUsername() != null) {
-            return Map.of("username", configuration.getUsername());
-        }
-        return null;
     }
 
     @Override

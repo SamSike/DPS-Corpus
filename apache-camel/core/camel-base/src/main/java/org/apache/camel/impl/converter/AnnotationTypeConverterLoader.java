@@ -38,7 +38,6 @@ import org.apache.camel.TypeConverterLoaderException;
 import org.apache.camel.spi.PackageScanClassResolver;
 import org.apache.camel.spi.TypeConverterLoader;
 import org.apache.camel.spi.TypeConverterRegistry;
-import org.apache.camel.util.AnnotationHelper;
 import org.apache.camel.util.CastUtils;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
@@ -68,9 +67,9 @@ public class AnnotationTypeConverterLoader implements TypeConverterLoader {
     public static final String META_INF_SERVICES = "META-INF/services/org/apache/camel/TypeConverter";
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationTypeConverterLoader.class);
     private static final Charset UTF8 = StandardCharsets.UTF_8;
-    protected final PackageScanClassResolver resolver;
-    protected final Set<Class<?>> visitedClasses = new HashSet<>();
-    protected final Set<String> visitedURIs = new HashSet<>();
+    protected PackageScanClassResolver resolver;
+    protected Set<Class<?>> visitedClasses = new HashSet<>();
+    protected Set<String> visitedURIs = new HashSet<>();
     private final String basePackage;
 
     public AnnotationTypeConverterLoader(PackageScanClassResolver resolver) {
@@ -185,7 +184,7 @@ public class AnnotationTypeConverterLoader implements TypeConverterLoader {
                             // class found, so no need to load it with another class loader
                         }
                         break;
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         // do nothing here
                     }
                 }
@@ -200,7 +199,7 @@ public class AnnotationTypeConverterLoader implements TypeConverterLoader {
         }
 
         // return the packages which is not FQN classes
-        return packages.toArray(new String[0]);
+        return packages.toArray(new String[packages.size()]);
     }
 
     /**
@@ -221,7 +220,7 @@ public class AnnotationTypeConverterLoader implements TypeConverterLoader {
             findPackages(packages, ccl);
         }
         findPackages(packages, getClass().getClassLoader());
-        return packages.toArray(new String[0]);
+        return packages.toArray(new String[packages.size()]);
     }
 
     protected void findPackages(Set<String> packages, ClassLoader classLoader) throws IOException {
@@ -241,7 +240,7 @@ public class AnnotationTypeConverterLoader implements TypeConverterLoader {
                             break;
                         }
                         line = line.trim();
-                        if (line.startsWith("#") || line.isEmpty()) {
+                        if (line.startsWith("#") || line.length() == 0) {
                             continue;
                         }
                         tokenize(packages, line);
@@ -260,7 +259,7 @@ public class AnnotationTypeConverterLoader implements TypeConverterLoader {
         StringTokenizer iter = new StringTokenizer(line, ",");
         while (iter.hasMoreTokens()) {
             String name = iter.nextToken().trim();
-            if (!name.isEmpty()) {
+            if (name.length() > 0) {
                 packages.add(name);
             }
         }
@@ -281,7 +280,7 @@ public class AnnotationTypeConverterLoader implements TypeConverterLoader {
             for (Method method : methods) {
                 // this may be prone to ClassLoader or packaging problems when the same class is defined
                 // in two different jars (as is the case sometimes with specs).
-                if (AnnotationHelper.hasAnnotation(method, Converter.class, true)) {
+                if (ObjectHelper.hasAnnotation(method, Converter.class, true)) {
                     boolean allowNull = false;
                     if (method.getAnnotation(Converter.class) != null) {
                         allowNull = method.getAnnotation(Converter.class).allowNull();
@@ -302,7 +301,7 @@ public class AnnotationTypeConverterLoader implements TypeConverterLoader {
         } catch (NoClassDefFoundError e) {
             boolean ignore = false;
             // does the class allow to ignore the type converter when having load errors
-            if (AnnotationHelper.hasAnnotation(type, Converter.class, true)) {
+            if (ObjectHelper.hasAnnotation(type, Converter.class, true)) {
                 if (type.getAnnotation(Converter.class) != null) {
                     ignore = type.getAnnotation(Converter.class).ignoreOnLoadError();
                 }
@@ -436,7 +435,7 @@ public class AnnotationTypeConverterLoader implements TypeConverterLoader {
             }
         }
 
-        return packages.toArray(new String[0]);
+        return packages.toArray(new String[packages.size()]);
     }
 
 }

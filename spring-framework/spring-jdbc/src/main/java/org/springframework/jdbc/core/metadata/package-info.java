@@ -2,7 +2,9 @@
  * Context metadata abstraction for the configuration and execution
  * of table inserts and stored procedure calls.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.jdbc.core.metadata;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

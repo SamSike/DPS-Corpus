@@ -17,13 +17,13 @@
 package org.apache.camel.component.log;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LogListenerTest {
     private static boolean listenerFired;
@@ -34,7 +34,7 @@ public class LogListenerTest {
         CamelContext context = createCamelContext();
         MockEndpoint mock = context.getEndpoint("mock:foo", MockEndpoint.class);
         mock.expectedMessageCount(1);
-        context.getCamelContextExtension().addLogListener((exchange, camelLogger, message) -> {
+        context.adapt(ExtendedCamelContext.class).addLogListener((exchange, camelLogger, message) -> {
             assertEquals("Exchange[ExchangePattern: InOnly, BodyType: String, Body: hello]", message);
             listenerFired = true;
             return message + " - modified by listener";
@@ -42,7 +42,7 @@ public class LogListenerTest {
         context.start();
         context.createProducerTemplate().sendBody("direct:foo", "hello");
         mock.assertIsSatisfied();
-        assertTrue(listenerFired);
+        assertEquals(true, listenerFired);
         context.stop();
     }
 
@@ -52,10 +52,10 @@ public class LogListenerTest {
         return context;
     }
 
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").routeId("foo").to("log:foo").to("mock:foo");
             }
         };

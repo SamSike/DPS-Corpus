@@ -33,8 +33,8 @@ import org.junit.jupiter.api.condition.OS;
 public class FileProducerExpressionTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myguidgenerator", new MyGuidGenerator());
         return jndi;
     }
@@ -48,14 +48,14 @@ public class FileProducerExpressionTest extends ContextTestSupport {
     }
 
     @Test
-    public void testProduceBeanByExpression() {
+    public void testProduceBeanByExpression() throws Exception {
         template.sendBody(fileUri("?fileName=${bean:myguidgenerator}.bak"), "Hello World");
 
         assertFileExists(testFile("123.bak"));
     }
 
     @Test
-    public void testProducerDateByHeader() {
+    public void testProducerDateByHeader() throws Exception {
         template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME,
                 context.resolveLanguage("simple").createExpression("myfile-${date:now:yyyyMMdd}.txt"));
 
@@ -64,7 +64,7 @@ public class FileProducerExpressionTest extends ContextTestSupport {
     }
 
     @Test
-    public void testProducerDateByExpression() {
+    public void testProducerDateByExpression() throws Exception {
         template.sendBody(fileUri("?fileName=myfile-${date:now:yyyyMMdd}.txt"), "Hello World");
 
         String date = new SimpleDateFormat("yyyyMMdd").format(new Date());
@@ -72,16 +72,16 @@ public class FileProducerExpressionTest extends ContextTestSupport {
     }
 
     @Test
-    public void testProducerComplexByExpression() {
-        String expression = "target/filelanguageinbox/myfile-${bean:myguidgenerator.guid}-${date:now:yyyyMMdd}.txt";
+    public void testProducerComplexByExpression() throws Exception {
+        String expression = "../filelanguageinbox/myfile-${bean:myguidgenerator.guid}-${date:now:yyyyMMdd}.txt";
         template.sendBody(fileUri("?jailStartingDirectory=false&fileName=" + expression), "Hello World");
 
         String date = new SimpleDateFormat("yyyyMMdd").format(new Date());
-        assertFileExists(testFile("target/filelanguageinbox/myfile-123-" + date + ".txt"));
+        assertFileExists(testFile("../filelanguageinbox/myfile-123-" + date + ".txt"));
     }
 
     @Test
-    public void testProducerSimpleWithHeaderByExpression() {
+    public void testProducerSimpleWithHeaderByExpression() throws Exception {
         template.sendBodyAndHeader(fileUri("?fileName=myfile-${in.header.foo}.txt"), "Hello World", "foo",
                 "abc");
 
@@ -89,7 +89,7 @@ public class FileProducerExpressionTest extends ContextTestSupport {
     }
 
     @Test
-    public void testProducerWithDateHeader() {
+    public void testProducerWithDateHeader() throws Exception {
         Calendar cal = Calendar.getInstance();
         cal.set(1974, Calendar.APRIL, 20);
         Date date = cal.getTime();
@@ -100,7 +100,7 @@ public class FileProducerExpressionTest extends ContextTestSupport {
         assertFileExists(testFile("mybirthday-19740420.txt"));
     }
 
-    public static class MyGuidGenerator {
+    public class MyGuidGenerator {
         public String guid() {
             return "123";
         }

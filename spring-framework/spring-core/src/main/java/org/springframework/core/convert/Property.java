@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
-
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ReflectionUtils;
@@ -35,7 +33,7 @@ import org.springframework.util.StringUtils;
 /**
  * A description of a JavaBeans Property that allows us to avoid a dependency on
  * {@code java.beans.PropertyDescriptor}. The {@code java.beans} package
- * is not available in a number of environments (for example, Android, Java ME), so this is
+ * is not available in a number of environments (e.g. Android, Java ME), so this is
  * desirable for portability of Spring's core conversion facility.
  *
  * <p>Used to build a {@link TypeDescriptor} from a property location. The built
@@ -49,19 +47,22 @@ import org.springframework.util.StringUtils;
  */
 public final class Property {
 
-	private static final Map<Property, Annotation[]> annotationCache = new ConcurrentReferenceHashMap<>();
+	private static Map<Property, Annotation[]> annotationCache = new ConcurrentReferenceHashMap<>();
 
 	private final Class<?> objectType;
 
-	private final @Nullable Method readMethod;
+	@Nullable
+	private final Method readMethod;
 
-	private final @Nullable Method writeMethod;
+	@Nullable
+	private final Method writeMethod;
 
 	private final String name;
 
 	private final MethodParameter methodParameter;
 
-	private Annotation @Nullable [] annotations;
+	@Nullable
+	private Annotation[] annotations;
 
 
 	public Property(Class<?> objectType, @Nullable Method readMethod, @Nullable Method writeMethod) {
@@ -87,30 +88,32 @@ public final class Property {
 	}
 
 	/**
-	 * The name of the property: for example, 'foo'.
+	 * The name of the property: e.g. 'foo'
 	 */
 	public String getName() {
 		return this.name;
 	}
 
 	/**
-	 * The property type: for example, {@code java.lang.String}.
+	 * The property type: e.g. {@code java.lang.String}
 	 */
 	public Class<?> getType() {
 		return this.methodParameter.getParameterType();
 	}
 
 	/**
-	 * The property getter method: for example, {@code getFoo()}.
+	 * The property getter method: e.g. {@code getFoo()}
 	 */
-	public @Nullable Method getReadMethod() {
+	@Nullable
+	public Method getReadMethod() {
 		return this.readMethod;
 	}
 
 	/**
-	 * The property setter method: for example, {@code setFoo(String)}.
+	 * The property setter method: e.g. {@code setFoo(String)}
 	 */
-	public @Nullable Method getWriteMethod() {
+	@Nullable
+	public Method getWriteMethod() {
 		return this.writeMethod;
 	}
 
@@ -143,7 +146,7 @@ public final class Property {
 					index += 2;
 				}
 				else {
-					// Record-style plain accessor method, for example, name()
+					// Record-style plain accessor method, e.g. name()
 					index = 0;
 				}
 			}
@@ -181,14 +184,16 @@ public final class Property {
 		return write;
 	}
 
-	private @Nullable MethodParameter resolveReadMethodParameter() {
+	@Nullable
+	private MethodParameter resolveReadMethodParameter() {
 		if (getReadMethod() == null) {
 			return null;
 		}
 		return new MethodParameter(getReadMethod(), -1).withContainingClass(getObjectType());
 	}
 
-	private @Nullable MethodParameter resolveWriteMethodParameter() {
+	@Nullable
+	private MethodParameter resolveWriteMethodParameter() {
 		if (getWriteMethod() == null) {
 			return null;
 		}
@@ -218,7 +223,8 @@ public final class Property {
 		}
 	}
 
-	private @Nullable Field getField() {
+	@Nullable
+	private Field getField() {
 		String name = getName();
 		if (!StringUtils.hasLength(name)) {
 			return null;
@@ -238,7 +244,8 @@ public final class Property {
 		return field;
 	}
 
-	private @Nullable Class<?> declaringClass() {
+	@Nullable
+	private Class<?> declaringClass() {
 		if (getReadMethod() != null) {
 			return getReadMethod().getDeclaringClass();
 		}
@@ -253,16 +260,22 @@ public final class Property {
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof Property that &&
-				ObjectUtils.nullSafeEquals(this.objectType, that.objectType) &&
-				ObjectUtils.nullSafeEquals(this.name, that.name) &&
-				ObjectUtils.nullSafeEquals(this.readMethod, that.readMethod) &&
-				ObjectUtils.nullSafeEquals(this.writeMethod, that.writeMethod)));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof Property)) {
+			return false;
+		}
+		Property otherProperty = (Property) other;
+		return (ObjectUtils.nullSafeEquals(this.objectType, otherProperty.objectType) &&
+				ObjectUtils.nullSafeEquals(this.name, otherProperty.name) &&
+				ObjectUtils.nullSafeEquals(this.readMethod, otherProperty.readMethod) &&
+				ObjectUtils.nullSafeEquals(this.writeMethod, otherProperty.writeMethod));
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.objectType, this.name);
+		return (ObjectUtils.nullSafeHashCode(this.objectType) * 31 + ObjectUtils.nullSafeHashCode(this.name));
 	}
 
 }

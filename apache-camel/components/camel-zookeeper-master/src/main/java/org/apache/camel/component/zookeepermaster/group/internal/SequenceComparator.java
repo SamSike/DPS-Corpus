@@ -18,10 +18,10 @@ package org.apache.camel.component.zookeepermaster.group.internal;
 
 import java.util.Comparator;
 
-public class SequenceComparator<T> implements Comparator<ChildData<T>> {
+public class SequenceComparator implements Comparator<ChildData> {
 
     @Override
-    public int compare(ChildData<T> left, ChildData<T> right) {
+    public int compare(ChildData left, ChildData right) {
         return left.getPath().compareTo(right.getPath());
     }
 }

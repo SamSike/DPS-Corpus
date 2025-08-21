@@ -27,13 +27,11 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class MatchersSchemaType implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String expression;
     protected MatcherRule schemaClass;
     protected MatcherRule schemaIdentifier;
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String schemaExtends;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String schemaImplements;
 
@@ -86,30 +84,6 @@ public class MatchersSchemaType implements Serializable, XMLAppendable
     }
 
     /**
-     * This string provides a super class that a generated {@link org.jooq.Schema} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.Schema} does, so to minimise
-     * unexpected behaviour, custom schema super classes should extend {@link org.jooq.impl.SchemaImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public String getSchemaExtends() {
-        return schemaExtends;
-    }
-
-    /**
-     * This string provides a super class that a generated {@link org.jooq.Schema} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.Schema} does, so to minimise
-     * unexpected behaviour, custom schema super classes should extend {@link org.jooq.impl.SchemaImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public void setSchemaExtends(String value) {
-        this.schemaExtends = value;
-    }
-
-    /**
      * This string provides additional interfaces that a generated {@link org.jooq.Schema} should implement.
      * 
      */
@@ -153,19 +127,6 @@ public class MatchersSchemaType implements Serializable, XMLAppendable
     }
 
     /**
-     * This string provides a super class that a generated {@link org.jooq.Schema} should extend.
-     * <p>        
-     * jOOQ internals make a few assumptions about what a {@link org.jooq.Schema} does, so to minimise
-     * unexpected behaviour, custom schema super classes should extend {@link org.jooq.impl.SchemaImpl}
-     * and follow its (undocumented!) assumptions (e.g. constructors, etc.). Use this at your own risk.
-     * 
-     */
-    public MatchersSchemaType withSchemaExtends(String value) {
-        setSchemaExtends(value);
-        return this;
-    }
-
-    /**
      * This string provides additional interfaces that a generated {@link org.jooq.Schema} should implement.
      * 
      */
@@ -179,7 +140,6 @@ public class MatchersSchemaType implements Serializable, XMLAppendable
         builder.append("expression", expression);
         builder.append("schemaClass", schemaClass);
         builder.append("schemaIdentifier", schemaIdentifier);
-        builder.append("schemaExtends", schemaExtends);
         builder.append("schemaImplements", schemaImplements);
     }
 
@@ -229,15 +189,6 @@ public class MatchersSchemaType implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (schemaExtends == null) {
-            if (other.schemaExtends!= null) {
-                return false;
-            }
-        } else {
-            if (!schemaExtends.equals(other.schemaExtends)) {
-                return false;
-            }
-        }
         if (schemaImplements == null) {
             if (other.schemaImplements!= null) {
                 return false;
@@ -257,7 +208,6 @@ public class MatchersSchemaType implements Serializable, XMLAppendable
         result = ((prime*result)+((expression == null)? 0 :expression.hashCode()));
         result = ((prime*result)+((schemaClass == null)? 0 :schemaClass.hashCode()));
         result = ((prime*result)+((schemaIdentifier == null)? 0 :schemaIdentifier.hashCode()));
-        result = ((prime*result)+((schemaExtends == null)? 0 :schemaExtends.hashCode()));
         result = ((prime*result)+((schemaImplements == null)? 0 :schemaImplements.hashCode()));
         return result;
     }

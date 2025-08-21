@@ -87,7 +87,7 @@ public class JGroupsRaftClusteredRoutePolicyTest extends JGroupsRaftClusterAbstr
 
         DefaultCamelContext context = new DefaultCamelContext();
         context.disableJMX();
-        context.getCamelContextExtension().setName("context-" + id);
+        context.setName("context-" + id);
         context.addService(service);
         context.addRoutes(new RouteBuilder() {
             @Override

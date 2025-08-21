@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.file;
 
-import java.util.UUID;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
@@ -27,7 +25,6 @@ import org.junit.jupiter.api.Test;
  * Unit test for writing done files
  */
 public class FilerConsumerDoneFileNoopTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello" + UUID.randomUUID() + ".txt";
 
     @Test
     public void testDoneFile() throws Exception {
@@ -36,7 +33,7 @@ public class FilerConsumerDoneFileNoopTest extends ContextTestSupport {
         // done file
         getMockEndpoint("mock:result").setResultMinimumWaitTime(50);
 
-        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
 
         assertMockEndpointsSatisfied();
         resetMocks();
@@ -54,14 +51,14 @@ public class FilerConsumerDoneFileNoopTest extends ContextTestSupport {
         assertFileExists(testFile("done"));
 
         // as well the original file should be kept due noop
-        assertFileExists(testFile(TEST_FILE_NAME));
+        assertFileExists(testFile("hello.txt"));
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?initialDelay=0&delay=10&doneFileName=done&noop=true")).to("mock:result");
             }
         };

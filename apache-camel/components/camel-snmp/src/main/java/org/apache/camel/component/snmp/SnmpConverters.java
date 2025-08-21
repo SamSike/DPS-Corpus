@@ -57,7 +57,7 @@ public final class SnmpConverters {
                 StringTokenizer strTok = new StringTokenizer(s, ",");
                 while (strTok.hasMoreTokens()) {
                     String tok = strTok.nextToken();
-                    if (tok != null && !tok.isBlank()) {
+                    if (tok != null && tok.trim().length() > 0) {
                         list.add(new OID(tok.trim()));
                     } else {
                         // empty token - skip
@@ -70,7 +70,7 @@ public final class SnmpConverters {
 
             return list;
         } catch (Exception e) {
-            // return null if we can't convert without an error
+            // return null if we can't convert without an error 
             // and it could let camel to choice the other converter to do the job
             // new OID(...) will throw NumberFormatException if it's not a valid OID
             return null;
@@ -79,9 +79,9 @@ public final class SnmpConverters {
 
     private static void entryAppend(StringBuilder sb, String tag, String value) {
         sb.append(ENTRY_TAG_OPEN);
-        sb.append('<').append(tag).append('>');
+        sb.append("<" + tag + ">");
         sb.append(value);
-        sb.append("</").append(tag).append('>');
+        sb.append("</" + tag + ">");
         sb.append(ENTRY_TAG_CLOSE);
     }
 
@@ -98,7 +98,7 @@ public final class SnmpConverters {
 
         // prepare the header
         if (pdu.getType() == PDU.V1TRAP) {
-            sb.append("<").append(SNMP_TAG).append(" messageType=\"v1\">");
+            sb.append("<" + SNMP_TAG + " messageType=\"v1\">");
         } else {
             sb.append(SNMP_TAG_OPEN);
         }

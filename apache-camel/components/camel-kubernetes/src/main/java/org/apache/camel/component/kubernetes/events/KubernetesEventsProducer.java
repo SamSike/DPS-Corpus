@@ -76,8 +76,8 @@ public class KubernetesEventsProducer extends DefaultProducer {
                 doCreateEvent(exchange);
                 break;
 
-            case KubernetesOperations.UPDATE_EVENT_OPERATION:
-                doUpdateEvent(exchange);
+            case KubernetesOperations.REPLACE_EVENT_OPERATION:
+                doReplaceEvent(exchange);
                 break;
 
             case KubernetesOperations.DELETE_EVENT_OPERATION:
@@ -91,31 +91,29 @@ public class KubernetesEventsProducer extends DefaultProducer {
 
     protected void doList(Exchange exchange) {
         EventList eventList;
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
-        if (ObjectHelper.isEmpty(namespace)) {
-            eventList = getEndpoint().getKubernetesClient().events().v1().events().inAnyNamespace().list();
+        String namespaceName = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
+        if (ObjectHelper.isNotEmpty(namespaceName)) {
+            eventList = getEndpoint().getKubernetesClient().events().v1().events().inNamespace(namespaceName).list();
         } else {
-            eventList = getEndpoint().getKubernetesClient().events().v1().events().inNamespace(namespace).list();
+            eventList = getEndpoint().getKubernetesClient().events().v1().events().inAnyNamespace().list();
         }
         prepareOutboundMessage(exchange, eventList.getItems());
     }
 
     protected void doListEventsByLabel(Exchange exchange) {
-        String namespace = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, String.class);
         Map<String, String> labels = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_EVENTS_LABELS, Map.class);
-        EventList eventList;
-
         if (ObjectHelper.isEmpty(labels)) {
             LOG.error("Get events by labels require specify a labels set");
             throw new IllegalArgumentException("Get events by labels require specify a labels set");
         }
 
-        if (ObjectHelper.isEmpty(namespace)) {
-            eventList = getEndpoint().getKubernetesClient().events().v1().events().inAnyNamespace().withLabels(labels).list();
-        } else {
-            eventList = getEndpoint().getKubernetesClient().events().v1().events().inNamespace(namespace).withLabels(labels)
-                    .list();
-        }
+        EventList eventList = getEndpoint().getKubernetesClient()
+                .events()
+                .v1()
+                .events()
+                .inAnyNamespace()
+                .withLabels(labels)
+                .list();
 
         prepareOutboundMessage(exchange, eventList.getItems());
     }
@@ -137,8 +135,8 @@ public class KubernetesEventsProducer extends DefaultProducer {
         prepareOutboundMessage(exchange, event);
     }
 
-    protected void doUpdateEvent(Exchange exchange) {
-        doCreateOrUpdateEvent(exchange, "Update", Resource::update);
+    protected void doReplaceEvent(Exchange exchange) {
+        doCreateOrUpdateEvent(exchange, "Replace", Resource::replace);
     }
 
     protected void doCreateEvent(Exchange exchange) {

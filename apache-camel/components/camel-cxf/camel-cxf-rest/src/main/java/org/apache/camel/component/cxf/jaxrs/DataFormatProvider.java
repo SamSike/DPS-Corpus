@@ -37,7 +37,7 @@ import org.apache.cxf.jaxrs.utils.JAXRSUtils;
 
 public class DataFormatProvider<T> implements MessageBodyWriter<T>, MessageBodyReader<T> {
 
-    private final Map<String, DataFormat> formats = new HashMap<>();
+    private Map<String, DataFormat> formats = new HashMap<>();
 
     @Override
     public boolean isReadable(Class<?> cls, Type type, Annotation[] anns, MediaType mt) {

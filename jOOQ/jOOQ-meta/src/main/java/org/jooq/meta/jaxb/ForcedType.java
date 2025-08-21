@@ -29,7 +29,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class ForcedType implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlElement(defaultValue = "0")
     protected Integer priority = 0;
     @XmlJavaTypeAdapter(StringAdapter.class)
@@ -38,10 +38,6 @@ public class ForcedType implements Serializable, XMLAppendable
     protected String userType;
     @XmlSchemaType(name = "string")
     protected VisibilityModifier visibilityModifier;
-    @XmlElement(defaultValue = "false")
-    protected Boolean hidden = false;
-    @XmlElement(defaultValue = "false")
-    protected Boolean redacted = false;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String generator;
     protected Boolean auditInsertTimestamp;
@@ -50,15 +46,10 @@ public class ForcedType implements Serializable, XMLAppendable
     protected Boolean auditUpdateUser;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String converter;
-    protected Boolean genericConverter;
-    protected Boolean autoConverter;
     protected Boolean enumConverter;
-    protected Boolean xmlConverter;
-    protected Boolean jsonConverter;
     protected LambdaConverter lambdaConverter;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String binding;
-    protected Boolean genericBinding;
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String excludeExpression;
     @XmlJavaTypeAdapter(StringAdapter.class)
@@ -81,8 +72,6 @@ public class ForcedType implements Serializable, XMLAppendable
     @XmlElement(defaultValue = "ALL")
     @XmlSchemaType(name = "string")
     protected ForcedTypeObjectType objectType = ForcedTypeObjectType.ALL;
-    @XmlElement(defaultValue = "false")
-    protected Boolean ignoreUnused = false;
 
     /**
      * The priority among forced types in which to apply this one. Forced types of equal priority will be applied in the order in which they're added to the forced types list (e.g. the Maven lexical XML order)
@@ -163,70 +152,6 @@ public class ForcedType implements Serializable, XMLAppendable
     }
 
     /**
-     * The hidden flag allows for hiding columns from usage in queries by default, unless explicitly projected..
-     * <p>
-     * This has no effect on matched objects that are not columns.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isHidden() {
-        return hidden;
-    }
-
-    /**
-     * The hidden flag allows for hiding columns from usage in queries by default, unless explicitly projected..
-     * <p>
-     * This has no effect on matched objects that are not columns.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setHidden(Boolean value) {
-        this.hidden = value;
-    }
-
-    /**
-     * The redacted flag allows for redacting columns when formatting result set output, e.g. in debug logs.
-     * <p>
-     * This has no effect on matched objects that are not columns.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isRedacted() {
-        return redacted;
-    }
-
-    /**
-     * The redacted flag allows for redacting columns when formatting result set output, e.g. in debug logs.
-     * <p>
-     * This has no effect on matched objects that are not columns.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setRedacted(Boolean value) {
-        this.redacted = value;
-    }
-
-    /**
      * A {@link org.jooq.Generator} implementation used for client-side computed columns.
      * <p>
      * This has no effect on matched objects that are not columns.
@@ -267,11 +192,7 @@ public class ForcedType implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#INSERT} timestamp.
-     * <p>
-     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the auditInsertTimestamp property.
      * 
      * @param value
      *     allowed object is
@@ -299,11 +220,7 @@ public class ForcedType implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#INSERT} timestamp.
-     * <p>
-     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the auditInsertUser property.
      * 
      * @param value
      *     allowed object is
@@ -331,11 +248,7 @@ public class ForcedType implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#UPDATE} timestamp.
-     * <p>
-     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the auditUpdateTimestamp property.
      * 
      * @param value
      *     allowed object is
@@ -363,11 +276,7 @@ public class ForcedType implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#UPDATE} timestamp.
-     * <p>
-     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
-     * <p>
-     * This feature is available in the commercial distribution only.
+     * Sets the value of the auditUpdateUser property.
      * 
      * @param value
      *     allowed object is
@@ -395,54 +304,6 @@ public class ForcedType implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether the converter is generic, receiving <code>&lt;T, U&gt;</code> type variables as well as <code>Class&lt;T&gt;</class> and <code>Class&lt;U&gt;</class> constructor arguments.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isGenericConverter() {
-        return genericConverter;
-    }
-
-    /**
-     * Whether the converter is generic, receiving <code>&lt;T, U&gt;</code> type variables as well as <code>Class&lt;T&gt;</class> and <code>Class&lt;U&gt;</class> constructor arguments.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setGenericConverter(Boolean value) {
-        this.genericConverter = value;
-    }
-
-    /**
-     * Whether the converter is an {@link org.jooq.impl.AutoConverter}.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isAutoConverter() {
-        return autoConverter;
-    }
-
-    /**
-     * Whether the converter is an {@link org.jooq.impl.AutoConverter}.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setAutoConverter(Boolean value) {
-        this.autoConverter = value;
-    }
-
-    /**
      * Whether the converter is an {@link org.jooq.impl.EnumConverter}.
      * 
      * @return
@@ -455,7 +316,7 @@ public class ForcedType implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether the converter is an {@link org.jooq.impl.EnumConverter}.
+     * Sets the value of the enumConverter property.
      * 
      * @param value
      *     allowed object is
@@ -464,54 +325,6 @@ public class ForcedType implements Serializable, XMLAppendable
      */
     public void setEnumConverter(Boolean value) {
         this.enumConverter = value;
-    }
-
-    /**
-     * Whether the converter is an {@link org.jooq.impl.XMLtoJAXBConverter}.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isXmlConverter() {
-        return xmlConverter;
-    }
-
-    /**
-     * Whether the converter is an {@link org.jooq.impl.XMLtoJAXBConverter}.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setXmlConverter(Boolean value) {
-        this.xmlConverter = value;
-    }
-
-    /**
-     * Whether the converter is an {@link org.jooq.jackson.extensions.converters.JSONtoJacksonConverter} or a {@link org.jooq.jackson.extensions.converters.JSONtoJacksonConverter}.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isJsonConverter() {
-        return jsonConverter;
-    }
-
-    /**
-     * Whether the converter is an {@link org.jooq.jackson.extensions.converters.JSONtoJacksonConverter} or a {@link org.jooq.jackson.extensions.converters.JSONtoJacksonConverter}.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setJsonConverter(Boolean value) {
-        this.jsonConverter = value;
     }
 
     /**
@@ -544,30 +357,6 @@ public class ForcedType implements Serializable, XMLAppendable
      */
     public void setBinding(String value) {
         this.binding = value;
-    }
-
-    /**
-     * Whether the binding is generic, receiving <code>&lt;T, U&gt;</code> type variables as well as <code>Class&lt;T&gt;</class> and <code>Class&lt;U&gt;</class> constructor arguments.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isGenericBinding() {
-        return genericBinding;
-    }
-
-    /**
-     * Whether the binding is generic, receiving <code>&lt;T, U&gt;</code> type variables as well as <code>Class&lt;T&gt;</class> and <code>Class&lt;U&gt;</class> constructor arguments.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setGenericBinding(Boolean value) {
-        this.genericBinding = value;
     }
 
     /**
@@ -745,30 +534,6 @@ public class ForcedType implements Serializable, XMLAppendable
     }
 
     /**
-     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isIgnoreUnused() {
-        return ignoreUnused;
-    }
-
-    /**
-     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setIgnoreUnused(Boolean value) {
-        this.ignoreUnused = value;
-    }
-
-    /**
      * The priority among forced types in which to apply this one. Forced types of equal priority will be applied in the order in which they're added to the forced types list (e.g. the Maven lexical XML order)
      * 
      */
@@ -812,32 +577,6 @@ public class ForcedType implements Serializable, XMLAppendable
     }
 
     /**
-     * The hidden flag allows for hiding columns from usage in queries by default, unless explicitly projected..
-     * <p>
-     * This has no effect on matched objects that are not columns.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public ForcedType withHidden(Boolean value) {
-        setHidden(value);
-        return this;
-    }
-
-    /**
-     * The redacted flag allows for redacting columns when formatting result set output, e.g. in debug logs.
-     * <p>
-     * This has no effect on matched objects that are not columns.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
-    public ForcedType withRedacted(Boolean value) {
-        setRedacted(value);
-        return this;
-    }
-
-    /**
      * A {@link org.jooq.Generator} implementation used for client-side computed columns.
      * <p>
      * This has no effect on matched objects that are not columns.
@@ -850,53 +589,21 @@ public class ForcedType implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#INSERT} timestamp.
-     * <p>
-     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public ForcedType withAuditInsertTimestamp(Boolean value) {
         setAuditInsertTimestamp(value);
         return this;
     }
 
-    /**
-     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#INSERT} timestamp.
-     * <p>
-     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public ForcedType withAuditInsertUser(Boolean value) {
         setAuditInsertUser(value);
         return this;
     }
 
-    /**
-     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#UPDATE} timestamp.
-     * <p>
-     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public ForcedType withAuditUpdateTimestamp(Boolean value) {
         setAuditUpdateTimestamp(value);
         return this;
     }
 
-    /**
-     * Whether this column acts as an audit {@link org.jooq.GeneratorStatementType#UPDATE} timestamp.
-     * <p>
-     * This flag produces a {@link #generator} configuration, so it cannot be combined with a custom generator. The different audit flags are mutually exclusive.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     * 
-     */
     public ForcedType withAuditUpdateUser(Boolean value) {
         setAuditUpdateUser(value);
         return this;
@@ -911,48 +618,8 @@ public class ForcedType implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Whether the converter is generic, receiving <code>&lt;T, U&gt;</code> type variables as well as <code>Class&lt;T&gt;</class> and <code>Class&lt;U&gt;</class> constructor arguments.
-     * 
-     */
-    public ForcedType withGenericConverter(Boolean value) {
-        setGenericConverter(value);
-        return this;
-    }
-
-    /**
-     * Whether the converter is an {@link org.jooq.impl.AutoConverter}.
-     * 
-     */
-    public ForcedType withAutoConverter(Boolean value) {
-        setAutoConverter(value);
-        return this;
-    }
-
-    /**
-     * Whether the converter is an {@link org.jooq.impl.EnumConverter}.
-     * 
-     */
     public ForcedType withEnumConverter(Boolean value) {
         setEnumConverter(value);
-        return this;
-    }
-
-    /**
-     * Whether the converter is an {@link org.jooq.impl.XMLtoJAXBConverter}.
-     * 
-     */
-    public ForcedType withXmlConverter(Boolean value) {
-        setXmlConverter(value);
-        return this;
-    }
-
-    /**
-     * Whether the converter is an {@link org.jooq.jackson.extensions.converters.JSONtoJacksonConverter} or a {@link org.jooq.jackson.extensions.converters.JSONtoJacksonConverter}.
-     * 
-     */
-    public ForcedType withJsonConverter(Boolean value) {
-        setJsonConverter(value);
         return this;
     }
 
@@ -971,15 +638,6 @@ public class ForcedType implements Serializable, XMLAppendable
      */
     public ForcedType withBinding(String value) {
         setBinding(value);
-        return this;
-    }
-
-    /**
-     * Whether the binding is generic, receiving <code>&lt;T, U&gt;</code> type variables as well as <code>Class&lt;T&gt;</class> and <code>Class&lt;U&gt;</class> constructor arguments.
-     * 
-     */
-    public ForcedType withGenericBinding(Boolean value) {
-        setGenericBinding(value);
         return this;
     }
 
@@ -1080,37 +738,21 @@ public class ForcedType implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
-     * 
-     */
-    public ForcedType withIgnoreUnused(Boolean value) {
-        setIgnoreUnused(value);
-        return this;
-    }
-
     @Override
     public final void appendTo(XMLBuilder builder) {
         builder.append("priority", priority);
         builder.append("name", name);
         builder.append("userType", userType);
         builder.append("visibilityModifier", visibilityModifier);
-        builder.append("hidden", hidden);
-        builder.append("redacted", redacted);
         builder.append("generator", generator);
         builder.append("auditInsertTimestamp", auditInsertTimestamp);
         builder.append("auditInsertUser", auditInsertUser);
         builder.append("auditUpdateTimestamp", auditUpdateTimestamp);
         builder.append("auditUpdateUser", auditUpdateUser);
         builder.append("converter", converter);
-        builder.append("genericConverter", genericConverter);
-        builder.append("autoConverter", autoConverter);
         builder.append("enumConverter", enumConverter);
-        builder.append("xmlConverter", xmlConverter);
-        builder.append("jsonConverter", jsonConverter);
         builder.append("lambdaConverter", lambdaConverter);
         builder.append("binding", binding);
-        builder.append("genericBinding", genericBinding);
         builder.append("excludeExpression", excludeExpression);
         builder.append("includeExpression", includeExpression);
         builder.append("expression", expression);
@@ -1121,7 +763,6 @@ public class ForcedType implements Serializable, XMLAppendable
         builder.append("types", types);
         builder.append("nullability", nullability);
         builder.append("objectType", objectType);
-        builder.append("ignoreUnused", ignoreUnused);
     }
 
     @Override
@@ -1179,24 +820,6 @@ public class ForcedType implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (hidden == null) {
-            if (other.hidden!= null) {
-                return false;
-            }
-        } else {
-            if (!hidden.equals(other.hidden)) {
-                return false;
-            }
-        }
-        if (redacted == null) {
-            if (other.redacted!= null) {
-                return false;
-            }
-        } else {
-            if (!redacted.equals(other.redacted)) {
-                return false;
-            }
-        }
         if (generator == null) {
             if (other.generator!= null) {
                 return false;
@@ -1251,48 +874,12 @@ public class ForcedType implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (genericConverter == null) {
-            if (other.genericConverter!= null) {
-                return false;
-            }
-        } else {
-            if (!genericConverter.equals(other.genericConverter)) {
-                return false;
-            }
-        }
-        if (autoConverter == null) {
-            if (other.autoConverter!= null) {
-                return false;
-            }
-        } else {
-            if (!autoConverter.equals(other.autoConverter)) {
-                return false;
-            }
-        }
         if (enumConverter == null) {
             if (other.enumConverter!= null) {
                 return false;
             }
         } else {
             if (!enumConverter.equals(other.enumConverter)) {
-                return false;
-            }
-        }
-        if (xmlConverter == null) {
-            if (other.xmlConverter!= null) {
-                return false;
-            }
-        } else {
-            if (!xmlConverter.equals(other.xmlConverter)) {
-                return false;
-            }
-        }
-        if (jsonConverter == null) {
-            if (other.jsonConverter!= null) {
-                return false;
-            }
-        } else {
-            if (!jsonConverter.equals(other.jsonConverter)) {
                 return false;
             }
         }
@@ -1311,15 +898,6 @@ public class ForcedType implements Serializable, XMLAppendable
             }
         } else {
             if (!binding.equals(other.binding)) {
-                return false;
-            }
-        }
-        if (genericBinding == null) {
-            if (other.genericBinding!= null) {
-                return false;
-            }
-        } else {
-            if (!genericBinding.equals(other.genericBinding)) {
                 return false;
             }
         }
@@ -1413,15 +991,6 @@ public class ForcedType implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (ignoreUnused == null) {
-            if (other.ignoreUnused!= null) {
-                return false;
-            }
-        } else {
-            if (!ignoreUnused.equals(other.ignoreUnused)) {
-                return false;
-            }
-        }
         return true;
     }
 
@@ -1433,22 +1002,15 @@ public class ForcedType implements Serializable, XMLAppendable
         result = ((prime*result)+((name == null)? 0 :name.hashCode()));
         result = ((prime*result)+((userType == null)? 0 :userType.hashCode()));
         result = ((prime*result)+((visibilityModifier == null)? 0 :visibilityModifier.hashCode()));
-        result = ((prime*result)+((hidden == null)? 0 :hidden.hashCode()));
-        result = ((prime*result)+((redacted == null)? 0 :redacted.hashCode()));
         result = ((prime*result)+((generator == null)? 0 :generator.hashCode()));
         result = ((prime*result)+((auditInsertTimestamp == null)? 0 :auditInsertTimestamp.hashCode()));
         result = ((prime*result)+((auditInsertUser == null)? 0 :auditInsertUser.hashCode()));
         result = ((prime*result)+((auditUpdateTimestamp == null)? 0 :auditUpdateTimestamp.hashCode()));
         result = ((prime*result)+((auditUpdateUser == null)? 0 :auditUpdateUser.hashCode()));
         result = ((prime*result)+((converter == null)? 0 :converter.hashCode()));
-        result = ((prime*result)+((genericConverter == null)? 0 :genericConverter.hashCode()));
-        result = ((prime*result)+((autoConverter == null)? 0 :autoConverter.hashCode()));
         result = ((prime*result)+((enumConverter == null)? 0 :enumConverter.hashCode()));
-        result = ((prime*result)+((xmlConverter == null)? 0 :xmlConverter.hashCode()));
-        result = ((prime*result)+((jsonConverter == null)? 0 :jsonConverter.hashCode()));
         result = ((prime*result)+((lambdaConverter == null)? 0 :lambdaConverter.hashCode()));
         result = ((prime*result)+((binding == null)? 0 :binding.hashCode()));
-        result = ((prime*result)+((genericBinding == null)? 0 :genericBinding.hashCode()));
         result = ((prime*result)+((excludeExpression == null)? 0 :excludeExpression.hashCode()));
         result = ((prime*result)+((includeExpression == null)? 0 :includeExpression.hashCode()));
         result = ((prime*result)+((expression == null)? 0 :expression.hashCode()));
@@ -1459,7 +1021,6 @@ public class ForcedType implements Serializable, XMLAppendable
         result = ((prime*result)+((types == null)? 0 :types.hashCode()));
         result = ((prime*result)+((nullability == null)? 0 :nullability.hashCode()));
         result = ((prime*result)+((objectType == null)? 0 :objectType.hashCode()));
-        result = ((prime*result)+((ignoreUnused == null)? 0 :ignoreUnused.hashCode()));
         return result;
     }
 

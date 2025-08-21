@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,40 +38,23 @@
 package org.jooq.impl;
 
 import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 // ...
 import static org.jooq.SQLDialect.IGNITE;
 import static org.jooq.SQLDialect.MARIADB;
 // ...
 import static org.jooq.SQLDialect.MYSQL;
-import static org.jooq.TableOptions.TableType.MATERIALIZED_VIEW;
-import static org.jooq.TableOptions.TableType.VIEW;
 import static org.jooq.impl.Comparators.CHECK_COMP;
 import static org.jooq.impl.Comparators.FOREIGN_KEY_COMP;
 import static org.jooq.impl.Comparators.INDEX_COMP;
 import static org.jooq.impl.Comparators.KEY_COMP;
 import static org.jooq.impl.Comparators.NAMED_COMP;
-import static org.jooq.impl.Comparators.UNQUALIFIED_COMP;
 import static org.jooq.impl.ConstraintType.CHECK;
 import static org.jooq.impl.ConstraintType.FOREIGN_KEY;
 import static org.jooq.impl.ConstraintType.PRIMARY_KEY;
 import static org.jooq.impl.ConstraintType.UNIQUE;
-import static org.jooq.impl.CreateTableImpl.SUPPORT_NULLABLE_PRIMARY_KEY;
-import static org.jooq.impl.DSL.unquotedName;
-import static org.jooq.impl.HistoryImpl.initCtx;
 import static org.jooq.impl.Tools.NO_SUPPORT_TIMESTAMP_PRECISION;
-import static org.jooq.impl.Tools.NO_SUPPORT_TIME_PRECISION;
-import static org.jooq.impl.Tools.allMatch;
 import static org.jooq.impl.Tools.anyMatch;
-import static org.jooq.impl.Tools.autoAlias;
-import static org.jooq.impl.Tools.filter;
-import static org.jooq.impl.Tools.findAny;
-import static org.jooq.impl.Tools.flatMap;
-import static org.jooq.impl.Tools.isEmpty;
-import static org.jooq.impl.Tools.isVal1;
-import static org.jooq.impl.Tools.map;
 import static org.jooq.tools.StringUtils.defaultIfNull;
 import static org.jooq.tools.StringUtils.defaultString;
 import static org.jooq.tools.StringUtils.isEmpty;
@@ -83,10 +66,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.ToLongFunction;
 
 import org.jooq.AlterSequenceFlagsStep;
 import org.jooq.Catalog;
@@ -98,7 +78,6 @@ import org.jooq.DataType;
 import org.jooq.Domain;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.Function2;
 import org.jooq.Index;
 import org.jooq.Key;
 import org.jooq.Meta;
@@ -106,18 +85,14 @@ import org.jooq.MigrationConfiguration;
 import org.jooq.Name;
 import org.jooq.Named;
 import org.jooq.Nullability;
-// ...
 import org.jooq.Queries;
 import org.jooq.Query;
 import org.jooq.SQLDialect;
 import org.jooq.Schema;
 import org.jooq.Sequence;
-// ...
 import org.jooq.Table;
 import org.jooq.TableOptions.TableType;
-// ...
 import org.jooq.UniqueKey;
-import org.jooq.conf.Settings;
 import org.jooq.tools.StringUtils;
 
 /**
@@ -125,7 +100,7 @@ import org.jooq.tools.StringUtils;
  *
  * @author Lukas Eder
  */
-final class Diff extends AbstractScope {
+final class Diff {
 
     private static final Set<SQLDialect> NO_SUPPORT_PK_NAMES = SQLDialect.supportedBy(IGNITE, MARIADB, MYSQL);
 
@@ -135,83 +110,18 @@ final class Diff extends AbstractScope {
     private final Meta                   meta1;
     private final Meta                   meta2;
     private final DDL                    ddl;
-    private final DependencyComparator   comparator;
 
     Diff(Configuration configuration, MigrationConfiguration migrateConf, Meta meta1, Meta meta2) {
-        super(initCtx(
-            configuration,
-            configuration.settings().getMigrationDefaultSchema()
-        ));
-
         this.migrateConf = migrateConf;
-        this.exportConf = new DDLExportConfiguration()
-            .createOrReplaceView(migrateConf.createOrReplaceView())
-            .createOrReplaceMaterializedView(migrateConf.createOrReplaceMaterializedView());
-
-        this.ctx = dsl();
+        this.exportConf = new DDLExportConfiguration().createOrReplaceView(migrateConf.createOrReplaceView());
+        this.ctx = configuration.dsl();
         this.meta1 = meta1;
         this.meta2 = meta2;
         this.ddl = new DDL(ctx, exportConf);
-        this.comparator = new DependencyComparator();
     }
 
     final Queries queries() {
-        return ctx.queries(patch(appendCatalogs(new DiffResult(), meta1.getCatalogs(), meta2.getCatalogs())).queries);
-    }
-
-    private final DiffResult patch(DiffResult result) {
-
-        // [#18388] The final outcome of a diff may have to be patched with additional statements, for example,
-        //          when a child table is dropped and its parent PK or UK is dropped as well, we must drop
-        //          the child table's FK explicitly in order to ensure that happens first, before the PK or UK is dropped.
-        //          A better solution would be to detect an "ideal" drop order among tables, but that would require a more
-        //          sophisticated dependency analysis, and it would still not always be possible.
-        if (anyMatch(result.queries, q -> droppingPKorUK(q)) && anyMatch(result.queries, q -> q instanceof QOM.DropTable)) {
-            List<ForeignKey<?, ?>> fks = flatMap(
-                filter(result.queries, q -> q instanceof QOM.DropTable),
-                q -> ((QOM.DropTable) q).$table().getReferences()
-            );
-
-            Set<UniqueKey<?>> uks = new HashSet<>(map(
-                filter(result.queries, q -> droppingPKorUK(q)),
-                q -> droppedPKorUK((AlterTableImpl) q)
-            ));
-
-            boolean sort = false;
-            for (ForeignKey<?, ?> x : filter(fks, fk -> uks.contains(fk.getKey()) && !result.droppedFks.contains(fk))) {
-                result.queries.add(ctx.alterTable(x.getTable()).dropForeignKey(x.constraint()));
-                sort = true;
-            }
-
-            if (sort)
-                result.queries.sort(comparator);
-        }
-
-        return result;
-    }
-
-    private final boolean droppingPKorUK(Query q) {
-        if (q instanceof AlterTableImpl a) {
-            if (a.$dropConstraintType() == PRIMARY_KEY)
-                return true;
-            else if (a.$dropConstraintType() == UNIQUE)
-                return true;
-            else
-                return droppedPKorUK(a) != null;
-        }
-
-        return false;
-    }
-
-    private final UniqueKey<?> droppedPKorUK(AlterTableImpl a) {
-
-        // [#18388] TODO: Is there a case where meta data isn't available on the Table?
-        if (a.$dropConstraintType() == PRIMARY_KEY)
-            return a.$table().getPrimaryKey();
-
-        // [#18388] TODO: Is there a case where we're comparing structural and nominal constraints, which should match?
-        else
-            return findAny(a.$table().getUniqueKeys(), u -> u.constraint().equals(a.$dropConstraint()));
+        return ctx.queries(appendCatalogs(new DiffResult(), meta1.getCatalogs(), meta2.getCatalogs()).queries);
     }
 
     private final DiffResult appendCatalogs(DiffResult result, List<Catalog> l1, List<Catalog> l2) {
@@ -252,11 +162,6 @@ final class Diff extends AbstractScope {
                     for (Sequence<?> seq : s.getSequences())
                         dropSequence().drop(r, seq);
 
-
-
-
-
-
                     if (!StringUtils.isEmpty(s.getName()))
                         r.queries.add(ctx.dropSchema(s));
                 }
@@ -264,30 +169,10 @@ final class Diff extends AbstractScope {
             (r, s1, s2) -> {
                 appendDomains(r, s1.getDomains(), s2.getDomains());
                 appendTables(r, s1.getTables(), s2.getTables());
-
-
-
                 appendSequences(r, s1.getSequences(), s2.getSequences());
             }
         );
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private final Drop<Sequence<?>> dropSequence() {
         return (r, s) -> r.queries.add(ctx.dropSequence(s));
@@ -301,24 +186,24 @@ final class Diff extends AbstractScope {
                 AlterSequenceFlagsStep stmt = null;
                 AlterSequenceFlagsStep stmt0 = ctx.alterSequence(s1);
 
-                if (s2.getStartWith() != null && !equivalentSequenceFlag(s2, s1, Sequence::getStartWith, this::defaultStartWithValue))
+                if (s2.getStartWith() != null && !s2.getStartWith().equals(s1.getStartWith()))
                     stmt = defaultIfNull(stmt, stmt0).startWith(s2.getStartWith());
-                else if (s2.getStartWith() == null && s1.getStartWith() != null && !equivalentSequenceFlag(s1, s2, Sequence::getStartWith, this::defaultStartWithValue))
-                    stmt = defaultIfNull(stmt, stmt0).startWith(defaultStartWithValue(s2));
+                else if (s2.getStartWith() == null && s1.getStartWith() != null)
+                    stmt = defaultIfNull(stmt, stmt0).startWith(1);
 
-                if (s2.getIncrementBy() != null && !equivalentSequenceFlag(s2, s1, Sequence::getIncrementBy, this::defaultIncrementByValue))
+                if (s2.getIncrementBy() != null && !s2.getIncrementBy().equals(s1.getIncrementBy()))
                     stmt = defaultIfNull(stmt, stmt0).incrementBy(s2.getIncrementBy());
-                else if (s2.getIncrementBy() == null && s1.getIncrementBy() != null && !equivalentSequenceFlag(s1, s2, Sequence::getIncrementBy, this::defaultIncrementByValue))
-                    stmt = defaultIfNull(stmt, stmt0).incrementBy(defaultIncrementByValue(s2));
+                else if (s2.getIncrementBy() == null && s1.getIncrementBy() != null)
+                    stmt = defaultIfNull(stmt, stmt0).incrementBy(1);
 
-                if (s2.getMinvalue() != null && !equivalentSequenceFlag(s2, s1, Sequence::getMinvalue, this::defaultMinValue))
+                if (s2.getMinvalue() != null && !s2.getMinvalue().equals(s1.getMinvalue()))
                     stmt = defaultIfNull(stmt, stmt0).minvalue(s2.getMinvalue());
-                else if (s2.getMinvalue() == null && s1.getMinvalue() != null && !equivalentSequenceFlag(s1, s2, Sequence::getMinvalue, this::defaultMinValue))
+                else if (s2.getMinvalue() == null && s1.getMinvalue() != null)
                     stmt = defaultIfNull(stmt, stmt0).noMinvalue();
 
-                if (s2.getMaxvalue() != null && !equivalentSequenceFlag(s2, s1, Sequence::getMaxvalue, this::defaultMaxValue))
+                if (s2.getMaxvalue() != null && !s2.getMaxvalue().equals(s1.getMaxvalue()))
                     stmt = defaultIfNull(stmt, stmt0).maxvalue(s2.getMaxvalue());
-                else if (s2.getMaxvalue() == null && s1.getMaxvalue() != null && !equivalentSequenceFlag(s1, s2, Sequence::getMaxvalue, this::defaultMaxValue))
+                else if (s2.getMaxvalue() == null && s1.getMaxvalue() != null)
                     stmt = defaultIfNull(stmt, stmt0).noMaxvalue();
 
                 if (s2.getCache() != null && !s2.getCache().equals(s1.getCache()))
@@ -335,69 +220,6 @@ final class Diff extends AbstractScope {
                     r.queries.add(stmt);
             }
         );
-    }
-
-    private final boolean equivalentSequenceFlag(
-        Sequence<?> s2,
-        Sequence<?> s1,
-        Function<? super Sequence<?>, ? extends Field<?>> flag,
-        ToLongFunction<? super Sequence<?>> defaultValue
-    ) {
-        Field<?> sw2 = flag.apply(s2);
-        Field<?> sw1 = flag.apply(s1);
-
-        if (Objects.equals(sw2, sw1))
-            return true;
-        else
-            return equivalentSequenceFlagValue(sw2, sw1, defaultValue.applyAsLong(s2))
-                || equivalentSequenceFlagValue(sw1, sw2, defaultValue.applyAsLong(s1));
-    }
-
-    private final boolean equivalentSequenceFlagValue(
-        Field<?> sw2,
-        Field<?> sw1,
-        Long defaultValue
-    ) {
-        return sw1 == null && isVal1(sw2, v -> Objects.equals(Convert.convert(v.getValue(), Long.class), defaultValue));
-    }
-
-    private final Long defaultStartWithValue(Sequence<?> s) {
-        switch (ctx.family()) {
-            case HSQLDB:
-                return 0L;
-            default:
-                return 1L;
-        }
-    }
-
-    private final Long defaultIncrementByValue(Sequence<?> s) {
-        return 1L;
-    }
-
-    private final Long defaultMinValue(Sequence<?> s) {
-        if (s.getDataType().getFromType() == Byte.class)
-            return (long) Byte.MIN_VALUE;
-        else if (s.getDataType().getFromType() == Short.class)
-            return (long) Short.MIN_VALUE;
-        else if (s.getDataType().getFromType() == Integer.class)
-            return (long) Integer.MIN_VALUE;
-        else if (s.getDataType().getFromType() == Long.class)
-            return Long.MIN_VALUE;
-        else
-            return null;
-    }
-
-    private final Long defaultMaxValue(Sequence<?> s) {
-        if (s.getDataType().getFromType() == Byte.class)
-            return (long) Byte.MAX_VALUE;
-        else if (s.getDataType().getFromType() == Short.class)
-            return (long) Short.MAX_VALUE;
-        else if (s.getDataType().getFromType() == Integer.class)
-            return (long) Integer.MAX_VALUE;
-        else if (s.getDataType().getFromType() == Long.class)
-            return Long.MAX_VALUE;
-        else
-            return null;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -432,15 +254,10 @@ final class Diff extends AbstractScope {
                     if (r.droppedFks.add(fk) && !migrateConf.dropTableCascade())
                         r.queries.add(ctx.alterTable(fk.getTable()).dropForeignKey(fk.constraint()));
 
-            if (t.getTableType() == VIEW)
+            if (t.getTableType().isView())
                 r.queries.add(ctx.dropView(t));
-            else if (t.getTableType() == MATERIALIZED_VIEW)
-                r.queries.add(ctx.dropMaterializedView(t));
-            else if (t.getTableType() == TableType.GLOBAL_TEMPORARY
-                  || t.getTableType() == TableType.TEMPORARY)
-                r.queries.add(ctx.dropGlobalTemporaryTable(t));
-            else if (t.getTableType() == TableType.LOCAL_TEMPORARY)
-                r.queries.add(ctx.dropLocalTemporaryTable(t));
+            else if (t.getTableType() == TableType.TEMPORARY)
+                r.queries.add(ctx.dropTemporaryTable(t));
             else
                 r.queries.add(migrateConf.dropTableCascade()
                     ? ctx.dropTable(t).cascade()
@@ -451,37 +268,31 @@ final class Diff extends AbstractScope {
     private final Merge<Table<?>> MERGE_TABLE = new Merge<Table<?>>() {
         @Override
         public void merge(DiffResult r, Table<?> t1, Table<?> t2) {
-            boolean m1 = t1.getTableType() == MATERIALIZED_VIEW;
-            boolean m2 = t2.getTableType() == MATERIALIZED_VIEW;
-            boolean v1 = t1.getTableType() == VIEW;
-            boolean v2 = t2.getTableType() == VIEW;
+            boolean v1 = t1.getTableType().isView();
+            boolean v2 = t2.getTableType().isView();
 
-            if (v1 && v2 || m1 && m2) {
+            if (v1 && v2) {
                 if (!Arrays.equals(t1.fields(), t2.fields())
                       || t2.getOptions().select() != null && !t2.getOptions().select().equals(t1.getOptions().select())
                       || t2.getOptions().source() != null && !t2.getOptions().source().equals(t1.getOptions().source())) {
-                    replaceView(r, t1, t2, true);
+                    replaceView(r, t1, t2);
                     return;
                 }
             }
-            else if (v1 != v2 || m1 != m2) {
-                replaceView(r, t1, t2, false);
+            else if (v1 != v2) {
+                replaceView(r, t1, t2);
                 return;
             }
             else {
 
-                // [#18044] [#18327] Ensure constraint / column drop / add order
-                DiffResult temp = new DiffResult(new ArrayList<>(), new ArrayList<>(), r.addedFks, r.droppedFks);
-
-                appendColumns(temp, t1, t2, asList(t1.fields()), asList(t2.fields()));
-                appendPrimaryKey(temp, t1, asList(t1.getPrimaryKey()), asList(t2.getPrimaryKey()));
-                appendUniqueKeys(temp, t1, removePrimary(t1.getKeys()), removePrimary(t2.getKeys()));
-                appendForeignKeys(temp, t1, t1.getReferences(), t2.getReferences());
-                appendChecks(temp, t1, t1.getChecks(), t2.getChecks());
-                appendIndexes(temp, t1, t1.getIndexes(), t2.getIndexes());
-
-                temp.queries.sort(comparator);
-                r.addAll(temp);
+                // TODO: The order of dropping / adding these objects might be incorrect
+                //       as there could be inter-dependencies.
+                appendColumns(r, t1, asList(t1.fields()), asList(t2.fields()));
+                appendPrimaryKey(r, t1, asList(t1.getPrimaryKey()), asList(t2.getPrimaryKey()));
+                appendUniqueKeys(r, t1, removePrimary(t1.getKeys()), removePrimary(t2.getKeys()));
+                appendForeignKeys(r, t1, t1.getReferences(), t2.getReferences());
+                appendChecks(r, t1, t1.getChecks(), t2.getChecks());
+                appendIndexes(r, t1, t1.getIndexes(), t2.getIndexes());
             }
 
             String c1 = defaultString(t1.getComment());
@@ -490,16 +301,12 @@ final class Diff extends AbstractScope {
             if (!c1.equals(c2))
                 if (v2)
                     r.queries.add(ctx.commentOnView(t2).is(c2));
-                else if (m2)
-                    r.queries.add(ctx.commentOnMaterializedView(t2).is(c2));
                 else
                     r.queries.add(ctx.commentOnTable(t2).is(c2));
         }
 
-        private void replaceView(DiffResult r, Table<?> v1, Table<?> v2, boolean canReplace) {
-            if (!canReplace
-                    || v2.getTableType() == VIEW && !migrateConf.createOrReplaceView()
-                    || v2.getTableType() == MATERIALIZED_VIEW && !migrateConf.createOrReplaceMaterializedView())
+        private void replaceView(DiffResult r, Table<?> v1, Table<?> v2) {
+            if (!migrateConf.createOrReplaceView())
                 dropTable().drop(r, v1);
 
             createTable().create(r, v2);
@@ -550,17 +357,11 @@ final class Diff extends AbstractScope {
         return false;
     }
 
-    private final DiffResult appendColumns(
-        DiffResult result,
-        Table<?> t1,
-        Table<?> t2,
-        List<? extends Field<?>> l1,
-        List<? extends Field<?>> l2
-    ) {
+    private final DiffResult appendColumns(DiffResult result, Table<?> t1, List<? extends Field<?>> l1, List<? extends Field<?>> l2) {
         final List<Field<?>> add = new ArrayList<>();
         final List<Field<?>> drop = new ArrayList<>();
 
-        result = append(result, l1, l2, UNQUALIFIED_COMP,
+        result = append(result, l1, l2, null,
             (r, f) -> {
 
                 // Ignore synthetic columns
@@ -596,9 +397,9 @@ final class Diff extends AbstractScope {
                     if (typeNameDifference(type1, type2))
                         r.queries.add(ctx.alterTable(t1).alter(f1).set(type2.nullability(Nullability.DEFAULT)));
 
-                    if (type1.nullable() && !type2.nullable() && respectPkNullability(f1, f2))
+                    if (type1.nullable() && !type2.nullable())
                         r.queries.add(ctx.alterTable(t1).alter(f1).setNotNull());
-                    else if (!type1.nullable() && type2.nullable() && respectPkNullability(f1, f2))
+                    else if (!type1.nullable() && type2.nullable())
                         r.queries.add(ctx.alterTable(t1).alter(f1).dropNotNull());
 
                     Field<?> d1 = type1.defaultValue();
@@ -606,13 +407,8 @@ final class Diff extends AbstractScope {
 
                     if (type1.defaulted() && !type2.defaulted())
                         r.queries.add(ctx.alterTable(t1).alter(f1).dropDefault());
-                    else if (type2.defaulted() && (!type1.defaulted() || !equivalent(d2, d1)))
+                    else if (type2.defaulted() && (!type1.defaulted() || !d2.equals(d1)))
                         r.queries.add(ctx.alterTable(t1).alter(f1).setDefault((Field) d2));
-
-                    if (type1.identity() && !type2.identity())
-                        r.queries.add(ctx.alterTable(t1).alter(f1).dropIdentity());
-                    else if (type2.identity() && !type1.identity())
-                        r.queries.add(ctx.alterTable(t1).alter(f1).setGeneratedByDefaultAsIdentity());
 
                     if ((type1.hasLength() && type2.hasLength() && (type1.lengthDefined() != type2.lengthDefined() || type1.length() != type2.length()))
                         || (type1.hasPrecision() && type2.hasPrecision() && precisionDifference(type1, type2))
@@ -621,42 +417,6 @@ final class Diff extends AbstractScope {
 
                     // [#9656] TODO: Change collation
                     // [#9656] TODO: Change character set
-                }
-
-                private final boolean equivalent(Field<?> d2, Field<?> d1) {
-                    if (d2.equals(d1))
-                        return true;
-
-                    // [#17688] Some expressions can be considered "equivalent," even if not exactly identical.
-                    //          CAST('a' AS TEXT) is equivalent to 'a'
-                    if (Objects.equals(d2.getDataType().getSQLDataType(), d1.getDataType().getSQLDataType())) {
-                        if (d2 instanceof QOM.Cast<?> c)
-                            d2 = c.$field();
-                        if (d1 instanceof QOM.Cast<?> c)
-                            d1 = c.$field();
-
-                        Val<?> v2 = Tools.extractVal(d2);
-                        Val<?> v1 = Tools.extractVal(d1);
-
-                        if (v2 != null && v1 != null)
-                            return Objects.equals(v2.getValue(), v1.getValue());
-                    }
-
-                    return false;
-                }
-
-                private final boolean respectPkNullability(Field<?> f1, Field<?> f2) {
-                    if (FALSE.equals(ctx.settings().isMigrationIgnoreImplicitPrimaryKeyNotNullConstraints())
-                            || SUPPORT_NULLABLE_PRIMARY_KEY.contains(ctx.dialect()))
-                        return true;
-
-                    UniqueKey<?> pk1 = t1.getPrimaryKey();
-                    UniqueKey<?> pk2 = t2.getPrimaryKey();
-
-                    return pk1 == null
-                        || pk2 == null
-                        || !pk1.getFields().contains(f1)
-                        || !pk2.getFields().contains(f2);
                 }
 
                 private final boolean typeNameDifference(DataType<?> type1, DataType<?> type2) {
@@ -687,10 +447,7 @@ final class Diff extends AbstractScope {
                     if (!type.precisionDefined())
                         return true;
 
-                    if ((type.isTime() || type.isTimeWithTimeZone()) && NO_SUPPORT_TIME_PRECISION.contains(ctx.dialect()))
-                        return true;
-
-                    if (!type.isTime() && !type.isTimeWithTimeZone() && NO_SUPPORT_TIMESTAMP_PRECISION.contains(ctx.dialect()))
+                    if (NO_SUPPORT_TIMESTAMP_PRECISION.contains(ctx.dialect()))
                         return true;
 
                     if (FALSE.equals(ctx.settings().isMigrationIgnoreDefaultTimestampPrecisionDiffs()))
@@ -754,45 +511,23 @@ final class Diff extends AbstractScope {
         );
     }
 
-    private final boolean allowRenames(Function<Settings, Boolean> setting) {
-        return
-            !FALSE.equals(ctx.settings().isMigrationAllowRename())
-         && !FALSE.equals(setting.apply(ctx.settings()));
-    }
-
     private final <K extends Named> Merge<K> keyMerge(Table<?> t1, Create<K> create, Drop<K> drop, ConstraintType type) {
         return (r, k1, k2) -> {
             Name n1 = k1.getUnqualifiedName();
             Name n2 = k2.getUnqualifiedName();
-            boolean ignoreRenames = false;
-            boolean allowRenames = allowRenames(Settings::isMigrationAllowRenameConstraints);
 
             if (n1.empty() ^ n2.empty()) {
-                if (!TRUE.equals(ctx.settings().isMigrationIgnoreUnnamedConstraintDiffs())) {
-                    drop.drop(r, k1);
-                    create.create(r, k2);
+                drop.drop(r, k1);
+                create.create(r, k2);
 
-                    return;
-                }
-                else
-                    allowRenames = !(ignoreRenames = true);
+                return;
             }
 
-            if (UNQUALIFIED_COMP.compare(k1, k2) != 0) {
-                if (allowRenames) {
+            if (NAMED_COMP.compare(k1, k2) != 0)
 
-                    // [#10813] Don't rename constraints in MySQL
-                    if (type != PRIMARY_KEY || !NO_SUPPORT_PK_NAMES.contains(ctx.dialect())) {
-                        rename(r, type == CHECK ? t1.getChecks() : t1.getKeys(), n1, n2,
-                            (_n1, _n2) -> ctx.alterTable(t1).renameConstraint(_n1).to(_n2)
-                        );
-                    }
-                }
-                else if (!ignoreRenames) {
-                    drop.drop(r, k1);
-                    create.create(r, k2);
-                }
-            }
+                // [#10813] Don't rename constraints in MySQL
+                if (type != PRIMARY_KEY || !NO_SUPPORT_PK_NAMES.contains(ctx.dialect()))
+                    r.queries.add(ctx.alterTable(t1).renameConstraint(n1).to(n2));
 
 
 
@@ -805,29 +540,6 @@ final class Diff extends AbstractScope {
 
 
         };
-    }
-
-    private final void rename(
-        DiffResult r,
-        List<? extends Named> existing,
-        Name n1,
-        Name n2,
-        Function2<? super Name, ? super Name, ? extends Query> renameQuery
-    ) {
-
-        // [#18441] Handle name swaps
-        // [#18454] TODO: Handle case sensitivity according to dialect
-        if (anyMatch(existing, k -> k.getName().equals(n2.last()))) {
-            Name temp = unquotedName(autoAlias(ctx.configuration(), n1.append(n2)));
-
-            if (n1.qualified())
-                temp = n1.qualifier().append(temp);
-
-            r.queries.add(renameQuery.apply(n1, temp));
-            r.cleanup.add(renameQuery.apply(temp, n2));
-        }
-        else
-            r.queries.add(renameQuery.apply(n1, n2));
     }
 
     private final <K extends Named> Merge<K> keyMerge(Domain<?> d1, Create<K> create, Drop<K> drop) {
@@ -842,16 +554,13 @@ final class Diff extends AbstractScope {
                 return;
             }
 
-            if (UNQUALIFIED_COMP.compare(k1, k2) != 0)
+            if (NAMED_COMP.compare(k1, k2) != 0)
                 r.queries.add(ctx.alterDomain(d1).renameConstraint(n1).to(n2));
         };
     }
 
     private final DiffResult appendForeignKeys(DiffResult result, final Table<?> t1, List<? extends ForeignKey<?, ?>> fk1, List<? extends ForeignKey<?, ?>> fk2) {
-        final Create<ForeignKey<?, ?>> create = (r, fk) -> {
-            if (r.addedFks.add(fk))
-                r.queries.add(ctx.alterTable(t1).add(fk.constraint()));
-        };
+        final Create<ForeignKey<?, ?>> create = (r, fk) -> r.queries.add(ctx.alterTable(t1).add(fk.constraint()));
         final Drop<ForeignKey<?, ?>> drop = (r, fk) -> {
             if (r.droppedFks.add(fk))
                 r.queries.add(ctx.alterTable(t1).dropForeignKey(fk.constraint()));
@@ -901,17 +610,8 @@ final class Diff extends AbstractScope {
                     drop.drop(r, ix1);
                     create.create(r, ix2);
                 }
-                else if (UNQUALIFIED_COMP.compare(ix1, ix2) != 0) {
-                    if (allowRenames(Settings::isMigrationAllowRenameIndexes)) {
-                        rename(r, t1.getIndexes(), ix1.getUnqualifiedName(), ix2.getUnqualifiedName(),
-                            (_i1, _i2) -> ctx.alterTable(t1).renameIndex(_i1).to(_i2)
-                        );
-                    }
-                    else {
-                        drop.drop(r, ix1);
-                        create.create(r, ix2);
-                    }
-                }
+                else if (NAMED_COMP.compare(ix1, ix2) != 0)
+                    r.queries.add(ctx.alterTable(t1).renameIndex(ix1).to(ix2));
             },
             true
         );
@@ -948,9 +648,9 @@ final class Diff extends AbstractScope {
         Iterator<? extends N> i1 = sorted(l1, comp);
         Iterator<? extends N> i2 = sorted(l2, comp);
 
-        DiffResult dropped = dropMergeCreate ? new DiffResult(new ArrayList<>(), new ArrayList<>(), result.addedFks, result.droppedFks) : result;
-        DiffResult merged = dropMergeCreate ? new DiffResult(new ArrayList<>(), new ArrayList<>(), result.addedFks, result.droppedFks) : result;
-        DiffResult created = dropMergeCreate ? new DiffResult(new ArrayList<>(), new ArrayList<>(), result.addedFks, result.droppedFks) : result;
+        DiffResult dropped = dropMergeCreate ? new DiffResult(new ArrayList<>(), result.droppedFks) : result;
+        DiffResult merged = dropMergeCreate ? new DiffResult(new ArrayList<>(), result.droppedFks) : result;
+        DiffResult created = dropMergeCreate ? new DiffResult(new ArrayList<>(), result.droppedFks) : result;
 
         for (;;) {
             if (s1 == null && i1.hasNext())
@@ -994,7 +694,6 @@ final class Diff extends AbstractScope {
             result.addAll(created);
         }
 
-        result.queries.sort(comparator);
         return result;
     }
 
@@ -1016,171 +715,19 @@ final class Diff extends AbstractScope {
         return result.iterator();
     }
 
-    private static final record DiffResult(
-        List<Query> queries,
-        List<Query> cleanup,
-        Set<ForeignKey<?, ?>> addedFks,
-        Set<ForeignKey<?, ?>> droppedFks
-    ) {
+    private static final /* record */ class DiffResult { private final List<Query> queries; private final Set<ForeignKey<?, ?>> droppedFks; public DiffResult(List<Query> queries, Set<ForeignKey<?, ?>> droppedFks) { this.queries = queries; this.droppedFks = droppedFks; } public List<Query> queries() { return queries; } public Set<ForeignKey<?, ?>> droppedFks() { return droppedFks; } @Override public boolean equals(Object o) { if (!(o instanceof DiffResult)) return false; DiffResult other = (DiffResult) o; if (!java.util.Objects.equals(this.queries, other.queries)) return false; if (!java.util.Objects.equals(this.droppedFks, other.droppedFks)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.queries, this.droppedFks); }
         DiffResult() {
-            this(new ArrayList<>(), new ArrayList<>(), new HashSet<>(), new HashSet<>());
+            this(new ArrayList<>(), new HashSet<>());
         }
 
         void addAll(DiffResult other) {
             queries.addAll(other.queries);
-            queries.addAll(other.cleanup);
-            addedFks.addAll(other.addedFks);
             droppedFks.addAll(other.droppedFks);
         }
 
         @Override
         public String toString() {
-            return Tools.concat(queries, cleanup).toString();
+            return queries.toString();
         }
-    }
-
-    static final int sortIndex(Query q) {
-        final int CATALOG = 10;
-        final int SCHEMA = 9;
-        final int SEQ = 8;
-        final int SYN = 7;
-        final int COMM = 6;
-        final int VIEW = 5;
-        final int FKEY = 4;
-        final int CONS = 3;
-        final int NULL = 2;
-        final int COL = 1;
-
-        if (q instanceof AlterTableImpl a) {
-            return
-
-                // [#18383] FOREIGN KEY must be dropped before other constraints, or added after other constraints
-                  a.$dropConstraint() instanceof QOM.ForeignKey || a.$dropConstraintType() == FOREIGN_KEY
-                ? -FKEY
-                : a.$addConstraint() instanceof QOM.ForeignKey || a.$dropConstraintType() == FOREIGN_KEY
-                ? FKEY
-
-                // [#18044] DROP CONSTRAINT / INDEX before everything, ADD CONSTRAINT / INDEX after everything
-                : a.$dropConstraint() != null || a.$dropConstraintType() != null
-                ? -CONS
-                : a.$addConstraint() != null
-                ? CONS
-
-                // [#18450] DROP NOT NULL must happen after dropping constraints, SET NOT NULL before adding constraints
-                : a.$alterColumnNullability() == Nullability.NULL
-                ? -NULL
-                : a.$alterColumnNullability() == Nullability.NOT_NULL
-                ? NULL
-
-                // [#18462] To prevent tables from being without columns, adding columns must happen before dropping them
-                : a.$addColumn() != null || anyMatch(a.$add(), c -> c instanceof Field)
-                ? -COL
-                : !isEmpty(a.$dropColumns())
-                ? COL
-
-                : 0;
-        }
-
-        // [#18506] Objects that are created first, dropped last
-        else if (q instanceof QOM.DropDatabase)
-            return CATALOG;
-        else if (q instanceof QOM.CreateDatabase)
-            return -CATALOG;
-        else if (q instanceof QOM.DropSchema)
-            return SCHEMA;
-        else if (q instanceof QOM.CreateSchema)
-            return -SCHEMA;
-        else if (q instanceof QOM.DropSequence)
-            return SEQ;
-        else if (q instanceof QOM.CreateSequence)
-            return -SEQ;
-
-        // [#18327] [#18481] [#18503] Objects with dependencies on tables
-        else if (q instanceof QOM.DropIndex)
-            return -CONS;
-        else if (q instanceof QOM.CreateIndex)
-            return CONS;
-        else if (q instanceof QOM.DropView)
-            return -VIEW;
-        else if (q instanceof QOM.CreateView)
-            return VIEW;
-
-
-
-
-
-
-        else if (q instanceof QOM.CommentOn)
-            return COMM;
-        else
-            return 0;
-    }
-
-    /**
-     * [#15327] A comparator that checks dependencies of objects to ensure
-     * objects are dropped or created in the right order.
-     * <p>
-     * The comparator is stateful, allowing for caching the potentially costly
-     * dependency lookups for the duration of a sort. This means it shouldn't be
-     * re-used between sorts, if the underlying schema may have changed.
-     * <p>
-     * Note these are commercial only features as they depend on
-     * {@link Traverser} API.
-     */
-    final class DependencyComparator implements Comparator<Query> {
-
-        @Override
-        public int compare(Query q1, Query q2) {
-            int i1 = sortIndex(q1);
-            int i2 = sortIndex(q2);
-            int i = i1 - i2;
-
-            if (i != 0)
-                return i;
-
-
-
-
-
-
-
-
-
-
-
-
-
-            return 0;
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

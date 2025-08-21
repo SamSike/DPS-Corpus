@@ -45,16 +45,16 @@ public class FilerConsumerRetryDoneFileNameTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?doneFileName=done&initialDelay=0&delay=10")).to("mock:input")
                         .process(new Processor() {
                             int index;
 
                             @Override
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 if (index++ == 0) {
                                     // done file should still exists
                                     assertFileExists(testFile("done"));

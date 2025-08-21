@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.io.IOException;
 import groovy.lang.GroovyObject;
 import groovy.lang.GroovySystem;
 import groovy.lang.MetaClass;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
@@ -29,6 +28,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.groovy.GroovyBeanDefinitionReader;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link org.springframework.web.context.WebApplicationContext} implementation which takes
@@ -175,7 +175,8 @@ public class GroovyWebApplicationContext extends AbstractRefreshableWebApplicati
 	}
 
 	@Override
-	public @Nullable Object getProperty(String property) {
+	@Nullable
+	public Object getProperty(String property) {
 		if (containsBean(property)) {
 			return getBean(property);
 		}

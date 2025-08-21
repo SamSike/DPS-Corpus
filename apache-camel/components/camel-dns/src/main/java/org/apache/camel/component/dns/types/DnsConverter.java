@@ -36,8 +36,8 @@ public final class DnsConverter {
     }
 
     @Converter
-    public static String toString(Record recordObject) {
-        return recordObject.toString();
+    public static String toString(Record record) {
+        return record.toString();
     }
 
     @Converter

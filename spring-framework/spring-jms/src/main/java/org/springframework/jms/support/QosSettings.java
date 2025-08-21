@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@
 package org.springframework.jms.support;
 
 import jakarta.jms.Message;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * Gather the Quality-of-Service settings that can be used when sending a message.
@@ -110,15 +111,22 @@ public class QosSettings {
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof QosSettings that &&
-				this.deliveryMode == that.deliveryMode &&
-				this.priority == that.priority &&
-				this.timeToLive == that.timeToLive));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof QosSettings)) {
+			return false;
+		}
+
+		QosSettings otherSettings = (QosSettings) other;
+		return (this.deliveryMode == otherSettings.deliveryMode &&
+				this.priority == otherSettings.priority &&
+				this.timeToLive == otherSettings.timeToLive);
 	}
 
 	@Override
 	public int hashCode() {
-		return this.deliveryMode * 31 + this.priority;
+		return (this.deliveryMode * 31 + this.priority);
 	}
 
 	@Override

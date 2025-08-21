@@ -2,7 +2,9 @@
  * Server-side support classes including container-specific strategies
  * for upgrading a request.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.socket.server.support;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

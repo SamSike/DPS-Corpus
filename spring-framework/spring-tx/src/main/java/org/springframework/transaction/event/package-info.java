@@ -1,7 +1,9 @@
 /**
  * Spring's support for listening to transaction events.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.transaction.event;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

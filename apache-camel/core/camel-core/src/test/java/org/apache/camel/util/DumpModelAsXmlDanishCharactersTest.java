@@ -17,10 +17,10 @@
 package org.apache.camel.util;
 
 import org.apache.camel.ContextTestSupport;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.MyBarSingleton;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.spi.Registry;
-import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -32,27 +32,28 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class DumpModelAsXmlDanishCharactersTest extends ContextTestSupport {
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myCoolBean", new MyBarSingleton());
         return jndi;
     }
 
     @Test
     public void testDumpModelAsXml() throws Exception {
-        String xml = PluginHelper.getModelToXMLDumper(context).dumpModelAsXml(context, context.getRouteDefinition("myRoute"));
+        ExtendedCamelContext ecc = context.adapt(ExtendedCamelContext.class);
+        String xml = ecc.getModelToXMLDumper().dumpModelAsXml(context, context.getRouteDefinition("myRoute"));
         assertNotNull(xml);
         log.info(xml);
 
         assertTrue(xml.contains("<simple>Hello ${body}</simple>"));
-        assertTrue(xml.contains("description=\"Hello danish \u00C6\u00D8\u00C5\""));
+        assertTrue(xml.contains("<description>Hello danish \u00C6\u00D8\u00C5</description>"));
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").routeId("myRoute").description("Hello danish \u00C6\u00D8\u00C5")
                         .setBody(simple("Hello ${body}")).to("mock:result");
             }

@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.function.LongSupplier;
 
 import org.apache.camel.Exchange;
-import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.WrappedFile;
 import org.apache.camel.util.FileUtil;
 import org.apache.camel.util.ObjectHelper;
@@ -77,7 +76,8 @@ public class GenericFile<T> implements WrappedFile<T> {
      * @param source the source
      * @param result the result
      */
-    public void copyFrom(GenericFile<T> source, GenericFile<T> result) {
+    @SuppressWarnings("unchecked")
+    public void copyFrom(GenericFile source, GenericFile result) {
         result.setCopyFromAbsoluteFilePath(source.getAbsoluteFilePath());
         result.setEndpointPath(source.getEndpointPath());
         result.setAbsolute(source.isAbsolute());
@@ -127,7 +127,7 @@ public class GenericFile<T> implements WrappedFile<T> {
     private GenericFileMessage<T> commonBindToExchange(Exchange exchange) {
         Map<String, Object> headers;
 
-        exchange.setProperty(ExchangePropertyKey.FILE_EXCHANGE_FILE, this);
+        exchange.setProperty(FileComponent.FILE_EXCHANGE_FILE, this);
         GenericFileMessage<T> msg = new GenericFileMessage<>(exchange, this);
 
         headers = exchange.getMessage().hasHeaders() ? exchange.getMessage().getHeaders() : null;
@@ -165,8 +165,14 @@ public class GenericFile<T> implements WrappedFile<T> {
                 message.setHeader(FileConstants.FILE_EXTENDED_ATTRIBUTES, extendedAttributes);
             }
 
-            if (isProbeContentType(isProbeContentTypeFromEndpoint)) {
-                probeContentType(message);
+            if ((isProbeContentTypeFromEndpoint || probeContentType) && file instanceof File) {
+                File f = (File) file;
+                Path path = f.toPath();
+                try {
+                    message.setHeader(FileConstants.FILE_CONTENT_TYPE, Files.probeContentType(path));
+                } catch (Exception e) {
+                    // just ignore the exception
+                }
             }
 
             if (isAbsolute()) {
@@ -191,20 +197,6 @@ public class GenericFile<T> implements WrappedFile<T> {
         }
     }
 
-    private boolean isProbeContentType(boolean isProbeContentTypeFromEndpoint) {
-        return (isProbeContentTypeFromEndpoint || probeContentType) && file instanceof File;
-    }
-
-    private void probeContentType(GenericFileMessage<T> message) {
-        File f = (File) file;
-        Path path = f.toPath();
-        try {
-            message.setHeader(FileConstants.FILE_CONTENT_TYPE, Files.probeContentType(path));
-        } catch (Exception e) {
-            // just ignore the exception
-        }
-    }
-
     protected boolean isAbsolute(String name) {
         return FileUtil.isAbsolute(new File(name));
     }
@@ -224,7 +216,7 @@ public class GenericFile<T> implements WrappedFile<T> {
         // Make sure the names is normalized.
         String newFileName = FileUtil.normalizePath(newName);
         String newEndpointPath = FileUtil.normalizePath(
-                endpointPath.endsWith(String.valueOf(File.separatorChar)) ? endpointPath : endpointPath + File.separatorChar);
+                endpointPath.endsWith("" + File.separatorChar) ? endpointPath : endpointPath + File.separatorChar);
 
         LOG.trace("Normalized endpointPath: {}", newEndpointPath);
         LOG.trace("Normalized newFileName: {}", newFileName);
@@ -234,7 +226,15 @@ public class GenericFile<T> implements WrappedFile<T> {
             // for relative then we should avoid having the endpoint path
             // duplicated so clip it
             if (ObjectHelper.isNotEmpty(newEndpointPath) && newFileName.startsWith(newEndpointPath)) {
-                newFileName = clipFileName(newEndpointPath, newFileName);
+                // clip starting endpoint in case it was added
+                // use File.separatorChar as the normalizePath uses this as path
+                // separator so we should use the same
+                // in this logic here
+                if (newEndpointPath.endsWith("" + File.separatorChar)) {
+                    newFileName = StringHelper.after(newFileName, newEndpointPath);
+                } else {
+                    newFileName = StringHelper.after(newFileName, newEndpointPath + File.separatorChar);
+                }
 
                 // reconstruct file with clipped name
                 file = new File(newFileName);
@@ -265,30 +265,13 @@ public class GenericFile<T> implements WrappedFile<T> {
         }
 
         if (LOG.isTraceEnabled()) {
-            logFileProperties();
+            LOG.trace("FileNameOnly: {}", getFileNameOnly());
+            LOG.trace("FileName: {}", getFileName());
+            LOG.trace("Absolute: {}", isAbsolute());
+            LOG.trace("Relative path: {}", getRelativeFilePath());
+            LOG.trace("Absolute path: {}", getAbsoluteFilePath());
+            LOG.trace("Name changed to: {}", this);
         }
-    }
-
-    private void logFileProperties() {
-        LOG.trace("FileNameOnly: {}", getFileNameOnly());
-        LOG.trace("FileName: {}", getFileName());
-        LOG.trace("Absolute: {}", isAbsolute());
-        LOG.trace("Relative path: {}", getRelativeFilePath());
-        LOG.trace("Absolute path: {}", getAbsoluteFilePath());
-        LOG.trace("Name changed to: {}", this);
-    }
-
-    private static String clipFileName(String newEndpointPath, String newFileName) {
-        // clip starting endpoint in case it was added
-        // use File.separatorChar as the normalizePath uses this as path
-        // separator so we should use the same
-        // in this logic here
-        if (newEndpointPath.endsWith(String.valueOf(File.separatorChar))) {
-            newFileName = StringHelper.after(newFileName, newEndpointPath);
-        } else {
-            newFileName = StringHelper.after(newFileName, newEndpointPath + File.separatorChar);
-        }
-        return newFileName;
     }
 
     public String getRelativeFilePath() {

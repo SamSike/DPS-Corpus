@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package org.springframework.messaging.handler.annotation.support;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.MethodParameter;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.invocation.MethodArgumentResolutionException;
 import org.springframework.validation.BindingResult;
@@ -35,7 +34,8 @@ import org.springframework.validation.ObjectError;
 @SuppressWarnings("serial")
 public class MethodArgumentNotValidException extends MethodArgumentResolutionException {
 
-	private final @Nullable BindingResult bindingResult;
+	@Nullable
+	private final BindingResult bindingResult;
 
 
 	/**
@@ -60,7 +60,8 @@ public class MethodArgumentNotValidException extends MethodArgumentResolutionExc
 	 * Return the BindingResult if the failure is validation-related,
 	 * or {@code null} if none.
 	 */
-	public final @Nullable BindingResult getBindingResult() {
+	@Nullable
+	public final BindingResult getBindingResult() {
 		return this.bindingResult;
 	}
 

@@ -41,11 +41,11 @@ public class FileConsumeSimpleRelativeMoveToAbsoluteTest extends ContextTestSupp
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         String base = testDirectory(".done").toAbsolutePath().toString();
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?recursive=true&move=" + base + "&initialDelay=0&delay=10"))
                         .convertBodyTo(String.class).to("mock:result");
             }

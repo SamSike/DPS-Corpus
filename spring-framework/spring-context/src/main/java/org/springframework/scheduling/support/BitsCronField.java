@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,7 @@ import java.time.DateTimeException;
 import java.time.temporal.Temporal;
 import java.time.temporal.ValueRange;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -30,14 +29,16 @@ import org.springframework.util.StringUtils;
  * Created using the {@code parse*} methods.
  *
  * @author Arjen Poutsma
- * @author Juergen Hoeller
  * @since 5.3
  */
 final class BitsCronField extends CronField {
 
-	public static final BitsCronField ZERO_NANOS = forZeroNanos();
-
 	private static final long MASK = 0xFFFFFFFFFFFFFFFFL;
+
+
+	@Nullable
+	private static BitsCronField zeroNanos = null;
+
 
 	// we store at most 60 bits, for seconds and minutes, so a 64-bit long suffices
 	private long bits;
@@ -47,14 +48,16 @@ final class BitsCronField extends CronField {
 		super(type);
 	}
 
-
 	/**
-	 * Return a {@code BitsCronField} enabled for 0 nanoseconds.
+	 * Return a {@code BitsCronField} enabled for 0 nano seconds.
 	 */
-	private static BitsCronField forZeroNanos() {
-		BitsCronField field = new BitsCronField(Type.NANO);
-		field.setBit(0);
-		return field;
+	public static BitsCronField zeroNanos() {
+		if (zeroNanos == null) {
+			BitsCronField field = new BitsCronField(Type.NANO);
+			field.setBit(0);
+			zeroNanos = field;
+		}
+		return zeroNanos;
 	}
 
 	/**
@@ -72,7 +75,7 @@ final class BitsCronField extends CronField {
 	}
 
 	/**
-	 * Parse the given value into an hours {@code BitsCronField}, the third entry of a cron expression.
+	 * Parse the given value into a hours {@code BitsCronField}, the third entry of a cron expression.
 	 */
 	public static BitsCronField parseHours(String value) {
 		return BitsCronField.parseField(value, Type.HOUR);
@@ -104,6 +107,7 @@ final class BitsCronField extends CronField {
 		}
 		return result;
 	}
+
 
 	private static BitsCronField parseDate(String value, BitsCronField.Type type) {
 		if (value.equals("?")) {
@@ -157,8 +161,8 @@ final class BitsCronField extends CronField {
 				return ValueRange.of(result, result);
 			}
 			else {
-				int min = Integer.parseInt(value, 0, hyphenPos, 10);
-				int max = Integer.parseInt(value, hyphenPos + 1, value.length(), 10);
+				int min = Integer.parseInt(value.substring(0, hyphenPos));
+				int max = Integer.parseInt(value.substring(hyphenPos + 1));
 				min = type.checkValidValue(min);
 				max = type.checkValidValue(max);
 				if (type == Type.DAY_OF_WEEK && min == 7) {
@@ -170,9 +174,9 @@ final class BitsCronField extends CronField {
 		}
 	}
 
-
+	@Nullable
 	@Override
-	public <T extends Temporal & Comparable<? super T>> @Nullable T nextOrSame(T temporal) {
+	public <T extends Temporal & Comparable<? super T>> T nextOrSame(T temporal) {
 		int current = type().get(temporal);
 		int next = nextSetBit(current);
 		if (next == -1) {
@@ -213,6 +217,7 @@ final class BitsCronField extends CronField {
 		else {
 			return -1;
 		}
+
 	}
 
 	private void setBits(ValueRange range) {
@@ -242,19 +247,24 @@ final class BitsCronField extends CronField {
 	}
 
 	private void clearBit(int index) {
-		this.bits &= ~(1L << index);
-	}
-
-
-	@Override
-	public boolean equals(Object other) {
-		return (this == other || (other instanceof BitsCronField that &&
-				type() == that.type() && this.bits == that.bits));
+		this.bits &=  ~(1L << index);
 	}
 
 	@Override
 	public int hashCode() {
 		return Long.hashCode(this.bits);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof BitsCronField)) {
+			return false;
+		}
+		BitsCronField other = (BitsCronField) o;
+		return type() == other.type() && this.bits == other.bits;
 	}
 
 	@Override

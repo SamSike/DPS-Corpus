@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,7 +51,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
 
 import org.jooq.Record;
 import org.jooq.impl.AbstractRoutine;
@@ -65,8 +64,6 @@ import org.jooq.meta.ColumnDefinition;
 import org.jooq.meta.Definition;
 import org.jooq.meta.EnumDefinition;
 import org.jooq.meta.ForeignKeyDefinition;
-import org.jooq.meta.InverseForeignKeyDefinition;
-import org.jooq.meta.ManyToManyKeyDefinition;
 import org.jooq.meta.ParameterDefinition;
 import org.jooq.meta.RoutineDefinition;
 import org.jooq.meta.SchemaDefinition;
@@ -119,18 +116,18 @@ class GeneratorStrategyWrapper extends AbstractDelegatingGeneratorStrategy {
             TypedElementDefinition<?> e = (TypedElementDefinition<?>) definition;
 
             if (identifier.equals(getJavaIdentifier(e.getContainer())))
-                return append(identifier, "_");
+                return identifier + "_";
 
             // [#2781] Disambiguate collisions with the leading package name
             if (identifier.equals(getJavaPackageName(e.getContainer()).replaceAll("\\..*", "")))
-                return append(identifier, "_");
+                return identifier + "_";
         }
 
         else if (definition instanceof TableDefinition) {
             SchemaDefinition schema = definition.getSchema();
 
             if (identifier.equals(getJavaIdentifier(schema)))
-                return append(identifier, "_");
+                return identifier + "_";
         }
 
         // [#5557] Once more, this causes issues...
@@ -138,25 +135,11 @@ class GeneratorStrategyWrapper extends AbstractDelegatingGeneratorStrategy {
             CatalogDefinition catalog = definition.getCatalog();
 
             if (identifier.equals(getJavaIdentifier(catalog)))
-                return append(identifier, "_");
+                return identifier + "_";
         }
 
         identifier = overload(definition, Mode.DEFAULT, identifier);
         return identifier;
-    }
-
-    static final String append(String identifier, String suffix) {
-        if (identifier.startsWith("`") && identifier.endsWith("`"))
-            return identifier.replaceFirst("^`(.*)`$", "`$1" + Matcher.quoteReplacement(suffix) + "`");
-        else
-            return identifier + suffix;
-    }
-
-    static final String prepend(String prefix, String identifier) {
-        if (identifier.startsWith("`") && identifier.endsWith("`"))
-            return identifier.replaceFirst("^`(.*)`$", "`" + Matcher.quoteReplacement(prefix) + "$1`");
-        else
-            return prefix + identifier;
     }
 
     @Override
@@ -178,7 +161,7 @@ class GeneratorStrategyWrapper extends AbstractDelegatingGeneratorStrategy {
         methodName = overload(definition, mode, methodName);
         methodName = convertToIdentifier(methodName, getTargetLanguage());
 
-        return disambiguateMethod(definition, mode, methodName);
+        return disambiguateMethod(definition, methodName);
     }
 
     /**
@@ -186,7 +169,7 @@ class GeneratorStrategyWrapper extends AbstractDelegatingGeneratorStrategy {
      */
     private String overload(Definition definition, Mode mode, String identifier) {
         if (!StringUtils.isBlank(definition.getOverload()))
-            identifier = append(identifier, getOverloadSuffix(definition, mode, definition.getOverload()));
+            identifier += getOverloadSuffix(definition, mode, definition.getOverload());
 
         return identifier;
     }
@@ -195,32 +178,14 @@ class GeneratorStrategyWrapper extends AbstractDelegatingGeneratorStrategy {
      * [#182] Method name disambiguation is important to avoid name clashes due
      * to pre-existing getters / setters in super classes
      */
-    private String disambiguateMethod(Definition definition, Mode mode, String method) {
+    private String disambiguateMethod(Definition definition, String method) {
         Set<String> reserved = null;
 
-        if (definition instanceof AttributeDefinition a) {
-            reserved = new HashSet<>(reservedColumns(UDTRecordImpl.class, 0));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        if (definition instanceof AttributeDefinition) {
+            reserved = reservedColumns(UDTRecordImpl.class, 0);
         }
-        else if (definition instanceof ColumnDefinition c) {
-            if (c.getContainer().getPrimaryKey() != null)
+        else if (definition instanceof ColumnDefinition) {
+            if (((ColumnDefinition) definition).getContainer().getPrimaryKey() != null)
                 reserved = reservedColumns(UpdatableRecordImpl.class, 0);
             else
                 reserved = reservedColumns(TableRecordImpl.class, 0);
@@ -232,17 +197,17 @@ class GeneratorStrategyWrapper extends AbstractDelegatingGeneratorStrategy {
         }
 
         // [#9150] Member procedures and functions can collide with UDTRecord methods
-        else if (definition instanceof RoutineDefinition r) {
-            if (r.getPackage() instanceof UDTDefinition
-                    && r.getInParameters().size() > 0
-                    && "SELF".equalsIgnoreCase(r.getInParameters().get(0).getName()))
-                reserved = reservedColumns(UDTRecordImpl.class, r.getInParameters().size() - 1);
+        else if (definition instanceof RoutineDefinition) {
+            RoutineDefinition routine = (RoutineDefinition) definition;
+
+            if (routine.getPackage() instanceof UDTDefinition
+                    && routine.getInParameters().size() > 0
+                    && "SELF".equalsIgnoreCase(routine.getInParameters().get(0).getName()))
+                reserved = reservedColumns(UDTRecordImpl.class, routine.getInParameters().size() - 1);
         }
 
         // [#11032] Foreign keys produce implicit join methods that can collide with TableImpl methods
-        else if (definition instanceof ForeignKeyDefinition
-              || definition instanceof InverseForeignKeyDefinition
-              || definition instanceof ManyToManyKeyDefinition) {
+        else if (definition instanceof ForeignKeyDefinition) {
             reserved = reservedColumns(TableImpl.class, 0);
         }
 
@@ -289,7 +254,7 @@ class GeneratorStrategyWrapper extends AbstractDelegatingGeneratorStrategy {
 
             // [#5457] In Scala, we must not "override" any inherited members, even if they're private
             //         or package private, and thus not visible
-            if (getTargetLanguage().isScala())
+            if (getTargetLanguage() == Language.SCALA)
                 for (Field f : clazz.getDeclaredFields())
                     result.add(f.getName());
         }
@@ -320,23 +285,8 @@ class GeneratorStrategyWrapper extends AbstractDelegatingGeneratorStrategy {
     }
 
     @Override
-    public String getGlobalNamesJavaClassName(Definition container, Class<? extends Definition> objectType) {
-        String name = delegate.getGlobalNamesJavaClassName(container, objectType);
-
-        if (name.equals(delegate.getJavaClassName(container)))
-            name = name + "_";
-
-        return fixJavaClassName(name);
-    }
-
-    @Override
     public String getGlobalReferencesJavaClassName(Definition container, Class<? extends Definition> objectType) {
-        String name = delegate.getGlobalReferencesJavaClassName(container, objectType);
-
-        if (name.equals(delegate.getJavaClassName(container)))
-            name = name + "_";
-
-        return fixJavaClassName(name);
+        return fixJavaClassName(delegate.getGlobalReferencesJavaClassName(container, objectType));
     }
 
     @Override
@@ -346,17 +296,13 @@ class GeneratorStrategyWrapper extends AbstractDelegatingGeneratorStrategy {
             return name;
 
         // [#1150] Intercept Mode.RECORD calls for tables
-        if (definition instanceof TableDefinition && mode == Mode.RECORD && !generator.generateRecordsIncluded(definition))
+        if (definition instanceof TableDefinition && !generator.generateRecords() && mode == Mode.RECORD)
             return Record.class.getSimpleName();
 
         String className;
 
         className = delegate.getJavaClassName(definition, mode);
         className = overload(definition, mode, className);
-
-        // [#17402] Don't allow nested Path classes to be named the same as the Table
-        if (definition instanceof TableDefinition && mode == Mode.PATH && className.equals(getJavaClassName(definition)))
-            className += "Path";
 
         return fixJavaClassName(className);
     }
@@ -369,11 +315,6 @@ class GeneratorStrategyWrapper extends AbstractDelegatingGeneratorStrategy {
     }
 
     @Override
-    public String getGlobalNamesJavaPackageName(Definition container, Class<? extends Definition> objectType) {
-        return fixJavaPackageName(delegate.getGlobalNamesJavaPackageName(container, objectType));
-    }
-
-    @Override
     public String getGlobalReferencesJavaPackageName(Definition container, Class<? extends Definition> objectType) {
         return fixJavaPackageName(delegate.getGlobalReferencesJavaPackageName(container, objectType));
     }
@@ -382,7 +323,7 @@ class GeneratorStrategyWrapper extends AbstractDelegatingGeneratorStrategy {
     public String getJavaPackageName(Definition definition, Mode mode) {
 
         // [#1150] Intercept Mode.RECORD calls for tables
-        if (definition instanceof TableDefinition && mode == Mode.RECORD && !generator.generateRecordsIncluded(definition))
+        if (!generator.generateRecords() && mode == Mode.RECORD && definition instanceof TableDefinition)
             return Record.class.getPackage().getName();
 
         return fixJavaPackageName(delegate.getJavaPackageName(definition, mode));

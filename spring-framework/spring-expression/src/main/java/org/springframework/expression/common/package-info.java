@@ -1,7 +1,9 @@
 /**
  * Common utility classes behind the <em>Spring Expression Language</em>.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.expression.common;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

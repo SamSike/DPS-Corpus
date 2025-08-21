@@ -4,7 +4,6 @@
 package org.jooq.meta.derby.sys;
 
 
-import org.jooq.meta.derby.sys.tables.Sysaliases;
 import org.jooq.meta.derby.sys.tables.Syschecks;
 import org.jooq.meta.derby.sys.tables.Syscolumns;
 import org.jooq.meta.derby.sys.tables.Sysconglomerates;
@@ -13,20 +12,14 @@ import org.jooq.meta.derby.sys.tables.Syskeys;
 import org.jooq.meta.derby.sys.tables.Sysschemas;
 import org.jooq.meta.derby.sys.tables.Syssequences;
 import org.jooq.meta.derby.sys.tables.Systables;
-import org.jooq.meta.derby.sys.tables.Systriggers;
 import org.jooq.meta.derby.sys.tables.Sysviews;
 
 
 /**
  * Convenience access to all tables in SYS.
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Tables {
-
-    /**
-     * The table <code>SYS.SYSALIASES</code>.
-     */
-    public static final Sysaliases SYSALIASES = Sysaliases.SYSALIASES;
 
     /**
      * The table <code>SYS.SYSCHECKS</code>.
@@ -67,11 +60,6 @@ public class Tables {
      * The table <code>SYS.SYSTABLES</code>.
      */
     public static final Systables SYSTABLES = Systables.SYSTABLES;
-
-    /**
-     * The table <code>SYS.SYSTRIGGERS</code>.
-     */
-    public static final Systriggers SYSTRIGGERS = Systriggers.SYSTRIGGERS;
 
     /**
      * The table <code>SYS.SYSVIEWS</code>.

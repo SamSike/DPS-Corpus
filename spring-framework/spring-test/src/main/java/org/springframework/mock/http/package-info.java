@@ -3,7 +3,9 @@
  * This package contains {@code MockHttpInputMessage} and
  * {@code MockHttpOutputMessage}.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.mock.http;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

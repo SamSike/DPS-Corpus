@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,9 +38,7 @@
 
 package org.jooq.meta;
 
-import java.io.IOException;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +47,6 @@ import java.util.Properties;
 import org.jooq.DSLContext;
 import org.jooq.DataType;
 import org.jooq.Name;
-// ...
 import org.jooq.SQLDialect;
 import org.jooq.Table;
 import org.jooq.TableField;
@@ -64,15 +61,12 @@ import org.jooq.meta.jaxb.RegexFlag;
 import org.jooq.meta.jaxb.SchemaMappingType;
 import org.jooq.meta.jaxb.SyntheticColumnType;
 import org.jooq.meta.jaxb.SyntheticDaoType;
-import org.jooq.meta.jaxb.SyntheticDefaultType;
-import org.jooq.meta.jaxb.SyntheticEnumType;
 import org.jooq.meta.jaxb.SyntheticForeignKeyType;
 import org.jooq.meta.jaxb.SyntheticIdentityType;
 import org.jooq.meta.jaxb.SyntheticObjectsType;
 import org.jooq.meta.jaxb.SyntheticPrimaryKeyType;
 import org.jooq.meta.jaxb.SyntheticReadonlyColumnType;
 import org.jooq.meta.jaxb.SyntheticReadonlyRowidType;
-import org.jooq.meta.jaxb.SyntheticSynonymType;
 import org.jooq.meta.jaxb.SyntheticUniqueKeyType;
 import org.jooq.meta.jaxb.SyntheticViewType;
 
@@ -87,11 +81,6 @@ public interface Database extends AutoCloseable {
      * Get the sources for all objects that offer sources.
      */
     Map<Definition, String> getSources();
-
-    /**
-     * Get the comments for all objects that offer comments.
-     */
-    Map<Definition, String> getComments();
 
     /**
      * The catalogs generated from this database.
@@ -119,21 +108,6 @@ public interface Database extends AutoCloseable {
     SchemaDefinition getSchema(String name);
 
     /**
-     * The XML schema collections generated from this database.
-     */
-    List<XMLSchemaCollectionDefinition> getXMLSchemaCollections();
-
-    /**
-     * The XML schema collections generated from this database.
-     */
-    List<XMLSchemaCollectionDefinition> getXMLSchemaCollections(SchemaDefinition schema);
-
-    /**
-     * The XML schema collection generated from this database by name
-     */
-    XMLSchemaCollectionDefinition getXMLSchemaCollection(SchemaDefinition schema, String name);
-
-    /**
      * Retrieve the schema's primary key / foreign key relations.
      */
     Relations getRelations();
@@ -147,26 +121,6 @@ public interface Database extends AutoCloseable {
      * The sequences contained in this database.
      */
     List<SequenceDefinition> getSequences(SchemaDefinition schema);
-
-    /**
-     * Get a sequence in this database by name.
-     */
-    SequenceDefinition getSequence(SchemaDefinition schema, String name);
-
-    /**
-     * Get a sequence in this database by name.
-     */
-    SequenceDefinition getSequence(SchemaDefinition schema, String name, boolean ignoreCase);
-
-    /**
-     * Get a sequence in this database by name.
-     */
-    SequenceDefinition getSequence(SchemaDefinition schema, Name name);
-
-    /**
-     * Get a sequence in this database by name.
-     */
-    SequenceDefinition getSequence(SchemaDefinition schema, Name name, boolean ignoreCase);
 
     /**
      * The identities contained in this database.
@@ -314,106 +268,24 @@ public interface Database extends AutoCloseable {
     List<DomainDefinition> getDomains(SchemaDefinition schema);
 
     /**
-     * Get a domain UDT defined in this database by name.
+     * Get an domain UDT defined in this database by name.
      */
     DomainDefinition getDomain(SchemaDefinition schema, String name);
 
     /**
-     * Get a domain UDT defined in this database by name.
+     * Get an domain UDT defined in this database by name.
      */
     DomainDefinition getDomain(SchemaDefinition schema, String name, boolean ignoreCase);
 
     /**
-     * Get a domain UDT defined in this database by name.
+     * Get an domain UDT defined in this database by name.
      */
     DomainDefinition getDomain(SchemaDefinition schema, Name name);
 
     /**
-     * Get a domain UDT defined in this database by name.
+     * Get an domain UDT defined in this database by name.
      */
     DomainDefinition getDomain(SchemaDefinition schema, Name name, boolean ignoreCase);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * The UDTs defined in this database.
@@ -451,11 +323,6 @@ public interface Database extends AutoCloseable {
     List<UDTDefinition> getUDTs(PackageDefinition pkg);
 
     /**
-     * Get the subtypes of a UDT, if any.
-     */
-    List<UDTDefinition> getSubtypes(UDTDefinition udt);
-
-    /**
      * The Arrays defined in this database.
      */
     List<ArrayDefinition> getArrays(SchemaDefinition schema);
@@ -485,26 +352,6 @@ public interface Database extends AutoCloseable {
      * database.
      */
     List<RoutineDefinition> getRoutines(SchemaDefinition schema);
-
-    /**
-     * Get a routine in this database by name.
-     */
-    RoutineDefinition getRoutine(SchemaDefinition schema, String name);
-
-    /**
-     * Get a routine in this database by name.
-     */
-    RoutineDefinition getRoutine(SchemaDefinition schema, String name, boolean ignoreCase);
-
-    /**
-     * Get a routine in this database by name.
-     */
-    RoutineDefinition getRoutine(SchemaDefinition schema, Name name);
-
-    /**
-     * Get a routine in this database by name.
-     */
-    RoutineDefinition getRoutine(SchemaDefinition schema, Name name, boolean ignoreCase);
 
     /**
      * The packages contained in this database.
@@ -596,24 +443,10 @@ public interface Database extends AutoCloseable {
     void setExcludes(String[] excludes);
 
     /**
-     * Database objects matching any of the regular expressions produced by this
-     * SQL query will not be generated, in addition to the ones specified by
-     * {@link #getExcludes()}.
-     */
-    void setExcludeSql(String sql);
-
-    /**
      * Database objects matching any of these regular expressions will not be
      * generated.
      */
     String[] getExcludes();
-
-    /**
-     * Database objects matching any of the regular expressions produced by this
-     * SQL query will not be generated, in addition to the ones specified by
-     * {@link #getExcludes()}.
-     */
-    String getExcludeSql();
 
     /**
      * Only database objects matching any of these regular expressions will be
@@ -622,24 +455,10 @@ public interface Database extends AutoCloseable {
     void setIncludes(String[] includes);
 
     /**
-     * Only database objects matching any of the regular expressions produced by
-     * this SQL query will be generated, in addition to the ones specified by
-     * {@link #getIncludes()}.
-     */
-    void setIncludeSql(String sql);
-
-    /**
      * Only database objects matching any of these regular expressions will be
      * generated.
      */
     String[] getIncludes();
-
-    /**
-     * Only database objects matching any of the regular expressions produced by
-     * this SQL query will be generated, in addition to the ones specified by
-     * {@link #getIncludes()}.
-     */
-    String getIncludeSql();
 
     /**
      * Indicate whether include / exclude regular expression shall also match
@@ -775,30 +594,6 @@ public interface Database extends AutoCloseable {
      */
     boolean getIncludeDomains();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * whether sequences should be included.
      */
@@ -808,16 +603,6 @@ public interface Database extends AutoCloseable {
      * whether sequences should be included.
      */
     boolean getIncludeSequences();
-
-    /**
-     * whether XML schema collections should be included.
-     */
-    boolean getIncludeXMLSchemaCollections();
-
-    /**
-     * whether XML schema collections should be included.
-     */
-    void setIncludeXMLSchemaCollections(boolean includeXMLSchemaCollections);
 
     /**
      * whether user defined types should be included.
@@ -920,20 +705,6 @@ public interface Database extends AutoCloseable {
     boolean getIncludeInvisibleColumns();
 
     /**
-     * Whether invisible columns should be marked as {@link DataType#hidden()}.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     */
-    void setInvisibleColumnsAsHidden(boolean invisibleColumnsAsHidden);
-
-    /**
-     * Whether invisible columns should be marked as {@link DataType#hidden()}.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     */
-    boolean getInvisibleColumnsAsHidden();
-
-    /**
      * Whether zero-scale decimal types should be treated as their most
      * appropriate, corresponding integer type.
      */
@@ -946,80 +717,14 @@ public interface Database extends AutoCloseable {
     boolean getForceIntegerTypesOnZeroScaleDecimals();
 
     /**
-     * The action to be taken by the generator as the consequence of an
-     * encountered exception outside of jOOQ's control, such as a
-     * {@link SQLException} or a {@link IOException}.
+     * The behaviour when errors are encountered.
      */
     void setOnError(OnError onError);
 
     /**
-     * The action to be taken by the generator as the consequence of an
-     * encountered exception outside of jOOQ's control, such as a
-     * {@link SQLException} or a {@link IOException}.
+     * The behaviour when errors are encountered.
      */
     OnError onError();
-
-    /**
-     * The action to be taken by the generator as the consequence of deprecated
-     * configuration being used.
-     */
-    void setOnDeprecated(OnError onError);
-
-    /**
-     * The action to be taken by the generator as the consequence of deprecated
-     * configuration being used.
-     */
-    OnError onDeprecated();
-
-    /**
-     * The action to be taken by the generator as the consequence of
-     * experimental configuration being used.
-     */
-    void setOnExperimental(OnError onError);
-
-    /**
-     * The action to be taken by the generator as the consequence of
-     * experimental configuration being used.
-     */
-    OnError onExperimental();
-
-    /**
-     * The action to be taken by the generator as the consequence of
-     * inconsistent or illegal configuration being used.
-     */
-    void setOnMisconfiguration(OnError onError);
-
-    /**
-     * The action to be taken by the generator as the consequence of
-     * inconsistent or illegal configuration being used.
-     */
-    OnError onMisconfiguration();
-
-    /**
-     * The action to be taken by the generator as the consequence of database
-     * meta data causing code generation problems, such as ambiguities in
-     * generated file names or object names.
-     */
-    void setOnMetadataProblem(OnError onError);
-
-    /**
-     * The action to be taken by the generator as the consequence of database
-     * meta data causing code generation problems, such as ambiguities in
-     * generated file names or object names.
-     */
-    OnError onMetadataProblem();
-
-    /**
-     * The action to be taken by the generator as the consequence of database meta data querying
-     * being slow.
-     */
-    void setOnPerformanceProblem(OnError onError);
-
-    /**
-     * The action to be taken by the generator as the consequence of database meta data querying
-     * being slow.
-     */
-    OnError onPerformanceProblem();
 
     /**
      * [#3488] Add an additional filter to the database that is applied in
@@ -1036,11 +741,6 @@ public interface Database extends AutoCloseable {
      * Filter a list of definitions according to the exclude / include / and filter settings of this database.
      */
     <D extends Definition> List<D> filterExcludeInclude(List<D> definitions);
-
-    /**
-     * Filter a list of definitions according to the exclude / include expressions passed as arguments.
-     */
-    <D extends Definition> List<D> filterExcludeInclude(List<D> definitions, String exclude, String include);
 
     /**
      * Sort a list of definitions according to the {@link #getOrderProvider()} defined in this database.
@@ -1129,7 +829,7 @@ public interface Database extends AutoCloseable {
      * of synthetic primary keys in generated code.
      *
      * @deprecated - 3.14.0 - [#10588] - Use
-     *             {@link #setConfiguredSyntheticObjects(SyntheticObjectsType)}
+     *             {@link #setConfiguredSyntheticKeys(SyntheticKeysType)}
      *             instead.
      */
     @Deprecated
@@ -1150,7 +850,7 @@ public interface Database extends AutoCloseable {
      * primary keys in generated code.
      *
      * @deprecated - 3.14.0 - [#10588] - Use
-     *             {@link #setConfiguredSyntheticObjects(SyntheticObjectsType)}
+     *             {@link #setConfiguredSyntheticKeys(SyntheticKeysType)}
      *             instead.
      */
     @Deprecated
@@ -1171,7 +871,7 @@ public interface Database extends AutoCloseable {
      * columns in generated code.
      *
      * @deprecated - 3.14.0 - [#10588] - Use
-     *             {@link #setConfiguredSyntheticObjects(SyntheticObjectsType)}
+     *             {@link #setConfiguredSyntheticKeys(SyntheticKeysType)}
      *             instead.
      */
     @Deprecated
@@ -1242,26 +942,6 @@ public interface Database extends AutoCloseable {
      * such as the ones from <code>jooq-codegen-postgres</code> should be added.
      */
     void setForcedTypesForBuiltinDataTypeExtensions(boolean forcedTypesForBuiltinDataTypeExtensions);
-
-    /**
-     * Whether some additional forced types for
-     * {@link XMLSchemaCollectionDefinition} types should be created
-     * automatically for columns that have non-ambiguous references to an
-     * {@link XMLTypeDefinition}.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     */
-    boolean getForcedTypesForXMLSchemaCollections();
-
-    /**
-     * Whether some additional forced types for
-     * {@link XMLSchemaCollectionDefinition} types should be created
-     * automatically for columns that have non-ambiguous references to an
-     * {@link XMLTypeDefinition}.
-     * <p>
-     * This feature is available in the commercial distribution only.
-     */
-    void setForcedTypesForXMLSchemaCollections(boolean forcedTypesForXMLSchemaCollections);
 
     /**
      * Log slow queries after this amount of seconds.
@@ -1498,22 +1178,6 @@ public interface Database extends AutoCloseable {
     List<SyntheticIdentityType> getConfiguredSyntheticIdentities();
 
     /**
-     * Get the configured synthetic defaults.
-     */
-    List<SyntheticDefaultType> getConfiguredSyntheticDefaults();
-
-    /**
-     * Get the configured synthetic enums.
-     */
-    List<SyntheticEnumType> getConfiguredSyntheticEnums();
-
-    /**
-     * Get the configured forced type object for any given {@link Definition},
-     * or <code>null</code> if no {@link SyntheticEnumType} matches the definition.
-     */
-    SyntheticEnumType getConfiguredSyntheticEnum(Definition definition);
-
-    /**
      * Get the configured synthetic primary keys.
      */
     List<SyntheticPrimaryKeyType> getConfiguredSyntheticPrimaryKeys();
@@ -1527,11 +1191,6 @@ public interface Database extends AutoCloseable {
      * Get the configured synthetic foreign keys.
      */
     List<SyntheticForeignKeyType> getConfiguredSyntheticForeignKeys();
-
-    /**
-     * Get the configured synthetic synonyms.
-     */
-    List<SyntheticSynonymType> getConfiguredSyntheticSynonyms();
 
     /**
      * Get the configured synthetic views.
@@ -1584,26 +1243,6 @@ public interface Database extends AutoCloseable {
     List<SyntheticIdentityType> getUnusedSyntheticIdentities();
 
     /**
-     * Mark a synthetic default as used.
-     */
-    void markUsed(SyntheticDefaultType default_);
-
-    /**
-     * Retrieve the not-yet used synthetic defaults.
-     */
-    List<SyntheticDefaultType> getUnusedSyntheticDefaults();
-
-    /**
-     * Mark a synthetic enum as used.
-     */
-    void markUsed(SyntheticEnumType e);
-
-    /**
-     * Retrieve the not-yet used synthetic enums.
-     */
-    List<SyntheticEnumType> getUnusedSyntheticEnums();
-
-    /**
      * Mark a synthetic primary key as used.
      */
     void markUsed(SyntheticPrimaryKeyType primaryKey);
@@ -1632,16 +1271,6 @@ public interface Database extends AutoCloseable {
      * Retrieve the not-yet used synthetic foreign keys.
      */
     List<SyntheticForeignKeyType> getUnusedSyntheticForeignKeys();
-
-    /**
-     * Mark a synthetic synonym as used.
-     */
-    void markUsed(SyntheticSynonymType synonym);
-
-    /**
-     * Retrieve the not-yet used synthetic synonyms.
-     */
-    List<SyntheticSynonymType> getUnusedSyntheticSynonyms();
 
     /**
      * Mark a synthetic view as used.
@@ -1738,40 +1367,14 @@ public interface Database extends AutoCloseable {
     boolean includeRelations();
 
     /**
-     * @deprecated - 3.21.0 - [#17713] Use
-     *             {@link #setTableValuedFunctionsAsTables(boolean)} or
-     *             {@link #setTableValuedFunctionsAsRoutines(boolean)} instead.
+     * [#4838] Whether table-valued functions should be reported as tables.
      */
-    @Deprecated
     void setTableValuedFunctions(boolean tableValuedFunctions);
 
     /**
-     * @deprecated - 3.21.0 - [#17713] Use
-     *             {@link #tableValuedFunctionsAsTables()} or
-     *             {@link #tableValuedFunctionsAsRoutines()} instead.
+     * [#4838] Whether table-valued functions should be reported as tables.
      */
-    @Deprecated
     boolean tableValuedFunctions();
-
-    /**
-     * [#4838] [#17713] Whether table-valued functions should be reported as routines.
-     */
-    void setTableValuedFunctionsAsRoutines(boolean tableValuedFunctionsAsRoutines);
-
-    /**
-     * [#4838] [#17713] Whether table-valued functions should be reported as routines.
-     */
-    boolean tableValuedFunctionsAsRoutines();
-
-    /**
-     * [#4838] [#17713] Whether table-valued functions should be reported as tables.
-     */
-    void setTableValuedFunctionsAsTables(boolean tableValuedFunctionsAsTables);
-
-    /**
-     * [#4838] [#17713] Whether table-valued functions should be reported as tables.
-     */
-    boolean tableValuedFunctionsAsTables();
 
     /**
      * Check for the existence of a table field in the dictionary views.
@@ -1849,9 +1452,4 @@ public interface Database extends AutoCloseable {
          */
         boolean exclude(Definition definition);
     }
-
-    /**
-     * Do something (e.g. log a message) only once per key.
-     */
-    void doOnce(Object key, Runnable runnable);
 }

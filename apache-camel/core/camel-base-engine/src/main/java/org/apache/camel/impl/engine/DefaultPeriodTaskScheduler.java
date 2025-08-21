@@ -16,9 +16,6 @@
  */
 package org.apache.camel.impl.engine;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.TimerListener;
 import org.apache.camel.spi.PeriodTaskScheduler;
@@ -35,20 +32,15 @@ public final class DefaultPeriodTaskScheduler extends TimerListenerManager imple
 
     @Override
     public void schedulePeriodTask(Runnable task, long period) {
-        addTimerListener(new PeriodicTaskWrapper(task, period));
-    }
-
-    @Override
-    public void scheduledTask(Runnable task) {
-        addTimerListener(new TaskWrapper(task));
+        addTimerListener(new TaskWrapper(task, period));
     }
 
     @Override
     public <T> T getTaskByType(Class<T> type) {
         for (TimerListener listener : getListeners()) {
             Object task = listener;
-            if (listener instanceof TaskWrapper wrapper) {
-                task = wrapper.getTask();
+            if (listener instanceof TaskWrapper) {
+                task = ((TaskWrapper) listener).getTask();
             }
             if (type.isInstance(task)) {
                 return type.cast(task);
@@ -62,29 +54,31 @@ public final class DefaultPeriodTaskScheduler extends TimerListenerManager imple
         if (listener instanceof TaskWrapper) {
             super.addTimerListener(listener);
         } else {
-            throw new IllegalArgumentException("Use the schedulePeriodTask or scheduledTask methods");
+            throw new IllegalArgumentException("Use the addPeriodTask method");
         }
     }
 
-    private class TaskWrapper extends ServiceSupport implements TimerListener {
-        final Runnable task;
-        private ExecutorService executorService;
-        private Future running;
+    private final class TaskWrapper extends ServiceSupport implements TimerListener {
 
-        public TaskWrapper(Runnable task) {
+        private final StopWatch watch = new StopWatch();
+        private final Runnable task;
+        private final long period;
+
+        public TaskWrapper(Runnable task, long period) {
             this.task = task;
-        }
-
-        @Override
-        public void onTimer() {
-            // submit task only once as the task can potentially keep running (until camel is stopped)
-            if (running == null) {
-                running = executorService.submit(task);
-            }
+            this.period = period;
         }
 
         public Runnable getTask() {
             return task;
+        }
+
+        @Override
+        public void onTimer() {
+            if (watch.taken() > period) {
+                watch.restart();
+                task.run();
+            }
         }
 
         @Override
@@ -95,8 +89,6 @@ public final class DefaultPeriodTaskScheduler extends TimerListenerManager imple
 
         @Override
         protected void doInit() throws Exception {
-            this.executorService = getCamelContext().getExecutorServiceManager().newSingleThreadExecutor(this,
-                    task.getClass().getSimpleName());
             ServiceHelper.initService(task);
         }
 
@@ -108,9 +100,6 @@ public final class DefaultPeriodTaskScheduler extends TimerListenerManager imple
         @Override
         protected void doStop() throws Exception {
             ServiceHelper.stopService(task);
-            getCamelContext().getExecutorServiceManager().shutdown(executorService);
-            executorService = null;
-            running = null;
         }
 
         @Override
@@ -123,23 +112,4 @@ public final class DefaultPeriodTaskScheduler extends TimerListenerManager imple
             return task.toString();
         }
     }
-
-    private final class PeriodicTaskWrapper extends TaskWrapper {
-        private final StopWatch watch = new StopWatch();
-        private final long period;
-
-        public PeriodicTaskWrapper(Runnable task, long period) {
-            super(task);
-            this.period = period;
-        }
-
-        @Override
-        public void onTimer() {
-            if (watch.taken() > period) {
-                watch.restart();
-                task.run();
-            }
-        }
-    }
-
 }

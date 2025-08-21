@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,29 +24,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Tests for {@link ResponseCookie}.
- *
+ * Unit tests for {@link ResponseCookie}.
  * @author Rossen Stoyanchev
  */
-class ResponseCookieTests {
+public class ResponseCookieTests {
 
 	@Test
-	void basic() {
+	public void basic() {
 
 		assertThat(ResponseCookie.from("id", null).build().toString()).isEqualTo("id=");
 		assertThat(ResponseCookie.from("id", "1fWa").build().toString()).isEqualTo("id=1fWa");
 
 		ResponseCookie cookie = ResponseCookie.from("id", "1fWa")
-				.domain("abc").path("/path").maxAge(0).httpOnly(true).partitioned(true).secure(true).sameSite("None")
+				.domain("abc").path("/path").maxAge(0).httpOnly(true).secure(true).sameSite("None")
 				.build();
 
 		assertThat(cookie.toString()).isEqualTo("id=1fWa; Path=/path; Domain=abc; " +
 				"Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; " +
-				"Secure; HttpOnly; Partitioned; SameSite=None");
+				"Secure; HttpOnly; SameSite=None");
 	}
 
 	@Test
-	void nameChecks() {
+	public void nameChecks() {
 
 		Arrays.asList("id", "i.d.", "i-d", "+id", "i*d", "i$d", "#id")
 				.forEach(name -> ResponseCookie.from(name, "value").build());
@@ -57,7 +56,7 @@ class ResponseCookieTests {
 	}
 
 	@Test
-	void valueChecks() {
+	public void valueChecks() {
 
 		Arrays.asList("1fWa", "", null, "1f=Wa", "1f-Wa", "1f/Wa", "1.f.W.a.")
 				.forEach(value -> ResponseCookie.from("id", value).build());
@@ -68,7 +67,7 @@ class ResponseCookieTests {
 	}
 
 	@Test
-	void domainChecks() {
+	public void domainChecks() {
 
 		Arrays.asList("abc", "abc.org", "abc-def.org", "abc3.org", ".abc.org")
 				.forEach(domain -> ResponseCookie.from("n", "v").domain(domain).build());

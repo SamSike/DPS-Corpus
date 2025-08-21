@@ -26,7 +26,6 @@ import org.apache.camel.spi.Synchronization;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Unit test to verify unit of work with seda. That the UnitOfWork is able to route using seda but keeping the same UoW.
@@ -56,7 +55,7 @@ public class SedaUnitOfWorkTest extends ContextTestSupport {
     }
 
     @Test
-    public void testSedaUOWWithException() {
+    public void testSedaUOWWithException() throws Exception {
         NotifyBuilder notify = new NotifyBuilder(context).whenDone(2).create();
 
         template.sendBodyAndHeader("direct:start", "Hello World", "kaboom", "yes");
@@ -69,24 +68,24 @@ public class SedaUnitOfWorkTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setTracing(true);
 
                 from("direct:start").process(new MyUOWProcessor(SedaUnitOfWorkTest.this, "A")).to("seda:foo");
 
                 from("seda:foo").process(new Processor() {
-                    public void process(Exchange exchange) {
-                        assertNull(sync);
+                    public void process(Exchange exchange) throws Exception {
+                        assertEquals(null, sync);
                     }
                 }).process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         lastOne = "processor";
                     }
                 }).process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         if ("yes".equals(exchange.getIn().getHeader("kaboom"))) {
                             throw new IllegalStateException("kaboom done!");
                         }
@@ -99,8 +98,8 @@ public class SedaUnitOfWorkTest extends ContextTestSupport {
 
     private static final class MyUOWProcessor implements Processor {
 
-        private final SedaUnitOfWorkTest test;
-        private final String id;
+        private SedaUnitOfWorkTest test;
+        private String id;
 
         private MyUOWProcessor(SedaUnitOfWorkTest test, String id) {
             this.test = test;
@@ -108,7 +107,7 @@ public class SedaUnitOfWorkTest extends ContextTestSupport {
         }
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             exchange.getUnitOfWork().addSynchronization(new Synchronization() {
                 public void onComplete(Exchange exchange) {
                     test.sync = "onComplete" + id;

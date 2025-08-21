@@ -37,12 +37,14 @@ public final class GoogleCloudStorageConnectionFactory {
         if (!Strings.isNullOrEmpty(configuration.getServiceAccountKey())) {
             InputStream resolveMandatoryResourceAsInputStream
                     = ResourceHelper.resolveMandatoryResourceAsInputStream(context, configuration.getServiceAccountKey());
-            return StorageOptions.newBuilder()
+            Storage storage = StorageOptions.newBuilder()
                     .setCredentials(
                             ServiceAccountCredentials.fromStream(resolveMandatoryResourceAsInputStream))
                     .build().getService();
+            return storage;
         } else {
-            return StorageOptions.getDefaultInstance().getService();
+            Storage storage = StorageOptions.getDefaultInstance().getService();
+            return storage;
         }
     }
 

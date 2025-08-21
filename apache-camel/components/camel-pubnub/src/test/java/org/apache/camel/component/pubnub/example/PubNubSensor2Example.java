@@ -107,12 +107,30 @@ public final class PubNubSensor2Example {
         }
     }
 
-    record DeviceWeatherInfo(String device, int humidity, int temperature) {
+    static class DeviceWeatherInfo {
+        private String device;
+        private int humidity;
+        private int temperature;
 
-        private static SecureRandom rand = new SecureRandom();
-        public DeviceWeatherInfo(String device) {
-            this(device, rand.nextInt(100), rand.nextInt(40));
+        DeviceWeatherInfo(String device) {
+            SecureRandom rand = new SecureRandom();
+            this.device = device;
+            this.humidity = rand.nextInt(100);
+            this.temperature = rand.nextInt(40);
         }
+
+        public String getDevice() {
+            return device;
+        }
+
+        public int getHumidity() {
+            return humidity;
+        }
+
+        public int getTemperature() {
+            return temperature;
+        }
+
     }
 
     public static class EventGeneratorBean {

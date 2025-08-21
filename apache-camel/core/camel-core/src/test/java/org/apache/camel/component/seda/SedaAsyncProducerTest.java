@@ -83,14 +83,14 @@ public class SedaAsyncProducerTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(noErrorHandler());
 
                 from("direct:start").delay(100).process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         route = route + "process";
                         // set the response
                         exchange.getMessage().setBody("Bye World");

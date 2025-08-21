@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -53,9 +53,6 @@ implements
 
     private List<RoutineDefinition> routines;
     private final boolean           synthetic;
-    private final SchemaDefinition  supertypeSchema;
-    private final String            supertypeName;
-    private final boolean           instantiable;
 
     public AbstractUDTDefinition(SchemaDefinition schema, String name, String comment) {
         this(schema, null, name, false, comment);
@@ -66,16 +63,9 @@ implements
     }
 
     public AbstractUDTDefinition(SchemaDefinition schema, PackageDefinition pkg, String name, boolean synthetic, String comment) {
-        this(schema, pkg, name, synthetic, comment, null, null, true);
-    }
-
-    public AbstractUDTDefinition(SchemaDefinition schema, PackageDefinition pkg, String name, boolean synthetic, String comment, SchemaDefinition supertypeSchema, String supertypeName, boolean instantiable) {
         super(schema, pkg, name, comment);
 
         this.synthetic = synthetic;
-        this.supertypeSchema = supertypeSchema;
-        this.supertypeName = supertypeName;
-        this.instantiable = instantiable;
     }
 
     @Override
@@ -116,25 +106,5 @@ implements
     @Override
     public boolean isSynthetic() {
         return synthetic;
-    }
-
-    @Override
-    public boolean isInTypeHierarchy() {
-        return getSupertype() != null || !getSubtypes().isEmpty();
-    }
-
-    @Override
-    public UDTDefinition getSupertype() {
-        return supertypeSchema == null ? null : getDatabase().getUDT(supertypeSchema, supertypeName);
-    }
-
-    @Override
-    public List<UDTDefinition> getSubtypes() {
-        return getDatabase().getSubtypes(this);
-    }
-
-    @Override
-    public boolean isInstantiable() {
-        return instantiable;
     }
 }

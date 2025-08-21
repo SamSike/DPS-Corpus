@@ -16,15 +16,11 @@
  */
 package org.apache.camel.component.grpc.client;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import io.grpc.stub.StreamObserver;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.component.grpc.GrpcConfiguration;
-import org.apache.camel.component.grpc.GrpcConstants;
 import org.apache.camel.component.grpc.GrpcUtils;
 
 /**
@@ -36,7 +32,6 @@ class GrpcStreamingExchangeForwarder implements GrpcExchangeForwarder {
 
     private final Object grpcStub;
 
-    private final Lock lock = new ReentrantLock();
     private volatile StreamObserver<Object> currentStream;
 
     private volatile StreamObserver<Object> currentResponseObserver;
@@ -49,16 +44,7 @@ class GrpcStreamingExchangeForwarder implements GrpcExchangeForwarder {
     @Override
     public boolean forward(Exchange exchange, StreamObserver<Object> responseObserver, AsyncCallback callback) {
         Message message = exchange.getIn();
-        StreamObserver<Object> streamObserver = checkAndRecreateStreamObserver(responseObserver);
-        if (message.getHeaders().containsKey(GrpcConstants.GRPC_EVENT_TYPE_HEADER)) {
-            switch (message.getHeader(GrpcConstants.GRPC_EVENT_TYPE_HEADER, String.class)) {
-                case GrpcConstants.GRPC_EVENT_TYPE_ON_NEXT -> streamObserver.onNext(message.getBody());
-                case GrpcConstants.GRPC_EVENT_TYPE_ON_ERROR -> streamObserver.onError((Throwable) message.getBody());
-                case GrpcConstants.GRPC_EVENT_TYPE_ON_COMPLETED -> streamObserver.onCompleted();
-            }
-        } else {
-            streamObserver.onNext(message.getBody());
-        }
+        checkAndRecreateStreamObserver(responseObserver).onNext(message.getBody());
         callback.done(true);
         return true;
     }
@@ -79,16 +65,13 @@ class GrpcStreamingExchangeForwarder implements GrpcExchangeForwarder {
     private StreamObserver<Object> checkAndRecreateStreamObserver(StreamObserver<Object> responseObserver) {
         StreamObserver<Object> curStream = this.currentStream;
         if (curStream == null) {
-            lock.lock();
-            try {
+            synchronized (this) {
                 if (this.currentStream == null) {
                     this.currentResponseObserver = responseObserver;
                     this.currentStream = doCreateStream(responseObserver);
                 }
 
                 curStream = this.currentStream;
-            } finally {
-                lock.unlock();
             }
         }
 
@@ -100,12 +83,9 @@ class GrpcStreamingExchangeForwarder implements GrpcExchangeForwarder {
     }
 
     private void doCloseStream() {
-        lock.lock();
-        try {
+        synchronized (this) {
             this.currentStream = null;
             this.currentResponseObserver = null;
-        } finally {
-            lock.unlock();
         }
     }
 

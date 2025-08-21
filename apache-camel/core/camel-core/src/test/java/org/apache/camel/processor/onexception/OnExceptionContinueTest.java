@@ -39,11 +39,11 @@ public class OnExceptionContinueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
             // START SNIPPET: e1
-            public void configure() {
+            public void configure() throws Exception {
                 // tell Camel to handle and continue when this exception is
                 // thrown
                 onException(IllegalArgumentException.class).continued(true);

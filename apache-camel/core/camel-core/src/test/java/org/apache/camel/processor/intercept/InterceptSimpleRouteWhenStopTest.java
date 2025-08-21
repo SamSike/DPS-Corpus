@@ -49,12 +49,12 @@ public class InterceptSimpleRouteWhenStopTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
-                intercept().onWhen(body().contains("Hello")).to("mock:intercepted").stop();
+                intercept().when(body().contains("Hello")).to("mock:intercepted").stop();
 
                 from("direct:start").to("mock:foo", "mock:bar", "mock:result");
                 // END SNIPPET: e1

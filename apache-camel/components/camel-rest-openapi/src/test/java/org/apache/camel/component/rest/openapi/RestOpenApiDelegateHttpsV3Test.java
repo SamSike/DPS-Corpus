@@ -18,37 +18,28 @@ package org.apache.camel.component.rest.openapi;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Component;
-import org.apache.camel.support.PluginHelper;
+import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.support.PropertyBindingSupport;
 
 public class RestOpenApiDelegateHttpsV3Test extends HttpsV3Test {
 
     @Override
-    protected CamelContext createCamelContext(String componentName) {
-        final CamelContext camelContext = super.createCamelContext(componentName);
+    protected CamelContext createCamelContext() throws Exception {
+        final CamelContext camelContext = super.createCamelContext();
 
         // since camel context is not started, then we need to manually initialize the delegate
-        final Component delegate;
-        try {
-            delegate = PluginHelper.getComponentResolver(camelContext)
-                    .resolveComponent(componentName, camelContext);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        final Component delegate = ((DefaultCamelContext) camelContext).getComponentResolver()
+                .resolveComponent(componentName, camelContext);
         delegate.setCamelContext(camelContext);
         delegate.init();
 
         // and configure the ssl context parameters via binding
-        try {
-            new PropertyBindingSupport.Builder()
-                    .withCamelContext(camelContext)
-                    .withProperty("sslContextParameters", createHttpsParameters(camelContext))
-                    .withTarget(delegate)
-                    .withConfigurer(delegate.getComponentPropertyConfigurer())
-                    .bind();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        new PropertyBindingSupport.Builder()
+                .withCamelContext(camelContext)
+                .withProperty("sslContextParameters", createHttpsParameters(camelContext))
+                .withTarget(delegate)
+                .withConfigurer(delegate.getComponentPropertyConfigurer())
+                .bind();
         camelContext.addComponent(componentName, delegate);
 
         return camelContext;

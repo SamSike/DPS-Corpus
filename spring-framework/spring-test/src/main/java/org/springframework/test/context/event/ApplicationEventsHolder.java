@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.test.context.event;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -38,7 +37,6 @@ import org.springframework.util.Assert;
  *
  * @author Sam Brannen
  * @author Oliver Drotbohm
- * @author Simon Baslé
  * @since 5.3.3
  * @see ApplicationEvents
  * @see RecordApplicationEvents
@@ -46,7 +44,7 @@ import org.springframework.util.Assert;
  */
 public abstract class ApplicationEventsHolder {
 
-	private static final ThreadLocal<DefaultApplicationEvents> applicationEvents = new InheritableThreadLocal<>();
+	private static final ThreadLocal<DefaultApplicationEvents> applicationEvents = new ThreadLocal<>();
 
 
 	private ApplicationEventsHolder() {
@@ -58,7 +56,8 @@ public abstract class ApplicationEventsHolder {
 	 * Get the {@link ApplicationEvents} for the current thread.
 	 * @return the current {@code ApplicationEvents}, or {@code null} if not registered
 	 */
-	public static @Nullable ApplicationEvents getApplicationEvents() {
+	@Nullable
+	public static ApplicationEvents getApplicationEvents() {
 		return applicationEvents.get();
 	}
 

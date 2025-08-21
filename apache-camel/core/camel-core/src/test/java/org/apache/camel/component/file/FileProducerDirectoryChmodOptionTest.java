@@ -18,7 +18,6 @@ package org.apache.camel.component.file;
 
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
-import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Date;
@@ -36,8 +35,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DisabledOnOs(OS.WINDOWS)
 public class FileProducerDirectoryChmodOptionTest extends ContextTestSupport {
-
-    private static final String SUBDIR_NAME = "testdir";
 
     @Test
     public void testWriteValidNoDir() throws Exception {
@@ -60,21 +57,19 @@ public class FileProducerDirectoryChmodOptionTest extends ContextTestSupport {
         mock.expectedMessageCount(1);
         String testFileName = "chmod" + routeSuffix + ".txt";
         String testFileContent = "Writing file with chmod " + routeSuffix + " option at " + new Date();
-        String testFilePath = Path.of(SUBDIR_NAME, testFileName).toString();
-        mock.expectedFileExists(testFile(testFilePath), testFileContent);
+        mock.expectedFileExists(testFile(testFileName), testFileContent);
 
-        template.sendBodyAndHeader("direct:write" + routeSuffix, testFileContent, Exchange.FILE_NAME, testFilePath);
+        template.sendBodyAndHeader("direct:write" + routeSuffix, testFileContent, Exchange.FILE_NAME, testFileName);
 
         if (expectedDirectoryPermissions != null) {
-            Set<PosixFilePermission> permissions
-                    = Files.getPosixFilePermissions(testDirectory(SUBDIR_NAME), LinkOption.NOFOLLOW_LINKS);
+            Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(testDirectory(), LinkOption.NOFOLLOW_LINKS);
             assertEquals(expectedDirectoryPermissions, PosixFilePermissions.toString(permissions));
             assertEquals(expectedDirectoryPermissions.replace("-", "").length(), permissions.size());
         }
 
         if (expectedPermissions != null) {
             Set<PosixFilePermission> permissions
-                    = Files.getPosixFilePermissions(testFile(testFilePath), LinkOption.NOFOLLOW_LINKS);
+                    = Files.getPosixFilePermissions(testFile(testFileName), LinkOption.NOFOLLOW_LINKS);
             assertEquals(expectedPermissions, PosixFilePermissions.toString(permissions));
             assertEquals(expectedPermissions.replace("-", "").length(), permissions.size());
         }

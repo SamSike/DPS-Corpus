@@ -17,8 +17,8 @@
 package org.apache.camel.component.salesforce.internal.streaming;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -26,16 +26,16 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.eclipse.jetty.io.Content;
+import org.apache.camel.util.IOHelper;
 import org.eclipse.jetty.io.EndPoint;
 import org.eclipse.jetty.server.AbstractNetworkConnector;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,11 +49,39 @@ class StubServer {
 
     private final List<StubResponse> stubs = new ArrayList<>();
 
-    class StubHandler extends Handler.Abstract {
+    class StubHandler extends AbstractHandler {
 
-        private StubResponse stubFor(final Request request, final String body) throws IOException {
-            final List<StubResponse> allResponses = new ArrayList<>(stubs);
-            allResponses.addAll(defaultStubs);
+        @Override
+        public void handle(
+                final String target, final Request baseRequest, final HttpServletRequest request,
+                final HttpServletResponse response)
+                throws IOException, ServletException {
+            final String body;
+            try (Reader bodyReader = request.getReader()) {
+                body = IOHelper.toString(bodyReader);
+            }
+
+            final StubResponse stub = stubFor(request, body);
+
+            if (stub == null) {
+                LOG.error("Stub not found for {} {}", request.getMethod(), request.getRequestURI());
+                response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED);
+                return;
+            }
+
+            response.setStatus(stub.responseStatus);
+            response.setContentType("application/json;charset=UTF-8");
+
+            final String id = messageIdFrom(body);
+
+            try (Writer out = response.getWriter()) {
+                stub.writeTo(id, out);
+            }
+        }
+
+        private StubResponse stubFor(final HttpServletRequest request, final String body) throws IOException {
+            final List<StubResponse> allResponses = new ArrayList<>(defaultStubs);
+            allResponses.addAll(stubs);
 
             for (final StubResponse stub : allResponses) {
                 if (stub.matches(request, body)) {
@@ -64,40 +92,6 @@ class StubServer {
             return null;
         }
 
-        @Override
-        public boolean handle(Request request, Response response, Callback callback) throws Exception {
-            StringBuilder body = new StringBuilder();
-            while (true) {
-                Content.Chunk chunk = request.read();
-                if (chunk.isLast()) {
-                    break;
-                }
-
-                byte[] bytes = new byte[chunk.getByteBuffer().remaining()];
-                chunk.getByteBuffer().get(bytes);
-                String chunkString = new String(bytes, StandardCharsets.UTF_8);
-                body.append(chunkString);
-            }
-
-            final StubResponse stub = stubFor(request, body.toString());
-
-            if (stub == null) {
-                LOG.error("Stub not found for {} {}", request.getMethod(), request.getHttpURI().getPath());
-                Response.writeError(request, response, callback, HttpServletResponse.SC_NOT_IMPLEMENTED);
-                callback.succeeded();
-                return false;
-            }
-
-            response.setStatus(stub.responseStatus);
-            response.getHeaders().add("Content-Type", "application/json;charset=UTF-8");
-
-            final String id = messageIdFrom(body.toString());
-
-            stub.writeTo(id, response, callback);
-
-            callback.succeeded();
-            return true;
-        }
     }
 
     final class StubResponse {
@@ -161,9 +155,9 @@ class StubServer {
             return requestMethod + " " + requestPath;
         }
 
-        private boolean matches(final Request request, final String body) throws IOException {
+        private boolean matches(final HttpServletRequest request, final String body) throws IOException {
             final boolean matches = Objects.equals(requestMethod, request.getMethod())
-                    && Objects.equals(requestPath, request.getHttpURI().getPath());
+                    && Objects.equals(requestPath, request.getRequestURI());
 
             if (!matches) {
                 return false;
@@ -176,11 +170,10 @@ class StubServer {
             return requestCondition.test(body);
         }
 
-        private void writeTo(final String messageId, final Response out, final Callback callback) throws IOException {
+        private void writeTo(final String messageId, final Writer out) throws IOException {
             if (responseString != null) {
-                out.write(true,
-                        ByteBuffer.wrap(responseString.replace("$id", messageId).getBytes(StandardCharsets.UTF_8)),
-                        callback);
+                out.write(responseString.replace("$id", messageId));
+                out.flush();
                 return;
             }
 
@@ -189,9 +182,8 @@ class StubServer {
                     try {
                         final String message = responseMessages.poll(25, TimeUnit.MILLISECONDS);
                         if (message != null) {
-                            out.write(true,
-                                    ByteBuffer.wrap(message.replace("$id", messageId).getBytes(StandardCharsets.UTF_8)),
-                                    callback);
+                            out.write(message.replace("$id", messageId));
+                            out.flush();
                             return;
                         }
 

@@ -393,7 +393,7 @@ public class BindyKeyValuePairFactory extends BindyAbstractFactory implements Bi
 
                 String targetClass = oneToMany.mappedTo();
 
-                if (!targetClass.isEmpty()) {
+                if (!targetClass.equals("")) {
                     // Class cl = Class.forName(targetClass); Does not work in
                     // OSGI when class is defined in another bundle
                     Class<?> cl = null;
@@ -429,7 +429,7 @@ public class BindyKeyValuePairFactory extends BindyAbstractFactory implements Bi
     @Override
     public String unbind(CamelContext camelContext, Map<String, Object> model) throws Exception {
 
-        StringBuilder builder = new StringBuilder(256);
+        StringBuilder builder = new StringBuilder();
 
         Map<Integer, KeyValuePairField> keyValuePairFieldsSorted = new TreeMap<>(keyValuePairFields);
         Iterator<Integer> it = keyValuePairFieldsSorted.keySet().iterator();
@@ -565,7 +565,7 @@ public class BindyKeyValuePairFactory extends BindyAbstractFactory implements Bi
                     LOG.debug("Value added at the position ({}) : {}{}", posit, value, separator);
                 }
 
-                builder.append(value).append(separator);
+                builder.append(value + separator);
             }
         }
 

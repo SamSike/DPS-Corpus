@@ -21,14 +21,12 @@ import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 @Disabled // on purpose to ignore
 public class MyRouteEmptyUriTest extends CamelTestSupport {
 
     @Test
     void testFoo() {
-        assertTrue(context.isStarted());
+        // noop
     }
 
     @Override

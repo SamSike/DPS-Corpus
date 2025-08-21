@@ -9,3 +9,5 @@
 # Unignore .java files in subdirectories only
 !**/*.java
 
+# Ignore gitignore files in subdirectories
+**/.gitignore

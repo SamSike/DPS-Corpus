@@ -56,11 +56,11 @@ public class CustomListAggregationStrategyCompletionFromBatchConsumerTest extend
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
-                from(fileUri("?initialDelay=0&delay=10&sortBy=file:name")).routeId("foo").autoStartup(false)
+            public void configure() throws Exception {
+                from(fileUri("?initialDelay=0&delay=10&sortBy=file:name")).routeId("foo").noAutoStartup()
                         .aggregate(new MyListOfNumbersStrategy()).constant(true)
                         .completionFromBatchConsumer().to("mock:result");
             }
@@ -70,7 +70,7 @@ public class CustomListAggregationStrategyCompletionFromBatchConsumerTest extend
     /**
      * Our strategy just group a list of integers.
      */
-    public static final class MyListOfNumbersStrategy extends AbstractListAggregationStrategy<Integer> {
+    public final class MyListOfNumbersStrategy extends AbstractListAggregationStrategy<Integer> {
 
         @Override
         public Integer getValue(Exchange exchange) {

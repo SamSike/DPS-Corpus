@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package org.springframework.web.context.request;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Extension of the {@link WebRequest} interface, exposing the
@@ -40,7 +40,8 @@ public interface NativeWebRequest extends WebRequest {
 	 * Return the underlying native response object, if any.
 	 * @see jakarta.servlet.http.HttpServletResponse
 	 */
-	@Nullable Object getNativeResponse();
+	@Nullable
+	Object getNativeResponse();
 
 	/**
 	 * Return the underlying native request object, if available.
@@ -49,7 +50,8 @@ public interface NativeWebRequest extends WebRequest {
 	 * of that type is available
 	 * @see jakarta.servlet.http.HttpServletRequest
 	 */
-	<T> @Nullable T getNativeRequest(@Nullable Class<T> requiredType);
+	@Nullable
+	<T> T getNativeRequest(@Nullable Class<T> requiredType);
 
 	/**
 	 * Return the underlying native response object, if available.
@@ -58,6 +60,7 @@ public interface NativeWebRequest extends WebRequest {
 	 * of that type is available
 	 * @see jakarta.servlet.http.HttpServletResponse
 	 */
-	<T> @Nullable T getNativeResponse(@Nullable Class<T> requiredType);
+	@Nullable
+	<T> T getNativeResponse(@Nullable Class<T> requiredType);
 
 }

@@ -16,12 +16,14 @@
  */
 package org.apache.camel.dsl.yaml.deserializers;
 
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import org.apache.camel.dsl.yaml.common.YamlDeserializationContext;
 import org.apache.camel.dsl.yaml.common.YamlDeserializerBase;
 import org.apache.camel.dsl.yaml.common.YamlDeserializerResolver;
 import org.apache.camel.dsl.yaml.common.exception.UnsupportedFieldException;
+import org.apache.camel.dsl.yaml.common.exception.YamlDeserializationException;
 import org.apache.camel.model.KameletDefinition;
 import org.apache.camel.spi.annotations.YamlProperty;
 import org.apache.camel.spi.annotations.YamlType;
@@ -36,12 +38,12 @@ import org.snakeyaml.engine.v2.nodes.NodeTuple;
           order = YamlDeserializerResolver.ORDER_DEFAULT,
           nodes = "kamelet",
           properties = {
+                  @YamlProperty(name = "inherit-error-handler", type = "boolean"),
                   @YamlProperty(name = "name", type = "string", required = true),
                   @YamlProperty(name = "parameters", type = "object"),
                   @YamlProperty(name = "steps", type = "array:org.apache.camel.model.ProcessorDefinition")
           })
 public class KameletDeserializer extends YamlDeserializerBase<KameletDefinition> {
-
     public KameletDeserializer() {
         super(KameletDefinition.class);
     }
@@ -64,8 +66,8 @@ public class KameletDeserializer extends YamlDeserializerBase<KameletDefinition>
         Map<String, Object> parameters = null;
 
         for (NodeTuple tuple : node.getValue()) {
-            String key = asText(tuple.getKeyNode());
-            Node val = tuple.getValueNode();
+            final String key = asText(tuple.getKeyNode());
+            final Node val = tuple.getValueNode();
 
             setDeserializationContext(val, dc);
 
@@ -79,6 +81,10 @@ public class KameletDeserializer extends YamlDeserializerBase<KameletDefinition>
                 case "name":
                     name = asText(val);
                     break;
+                case "inheritErrorHandler":
+                case "inherit-error-handler":
+                    target.setInheritErrorHandler(asBoolean(val));
+                    break;
                 case "parameters":
                     parameters = asScalarMap(tuple.getValueNode());
                     break;
@@ -88,7 +94,11 @@ public class KameletDeserializer extends YamlDeserializerBase<KameletDefinition>
         }
 
         if (parameters != null) {
-            name += "?" + URISupport.createQueryString(parameters, false);
+            try {
+                name += "?" + URISupport.createQueryString(parameters, false);
+            } catch (URISyntaxException e) {
+                throw new YamlDeserializationException(node, "Error creating endpoint query string", e);
+            }
         }
 
         target.setName(name);

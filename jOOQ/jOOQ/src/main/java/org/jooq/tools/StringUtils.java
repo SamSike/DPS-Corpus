@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -616,12 +616,14 @@ public final class StringUtils {
      * <ul>
      *   <li>If <code>str</code> is less than <code>maxWidth</code> characters
      *       long, return it.</li>
-     *   <li>Else abbreviate it to <code>(substring(str, 0, max-3) + "…")</code>.</li>
+     *   <li>Else abbreviate it to <code>(substring(str, 0, max-3) + "...")</code>.</li>
      *   <li>If <code>maxWidth</code> is less than <code>4</code>, throw an
      *       <code>IllegalArgumentException</code>.</li>
      *   <li>In no case will it return a String of length greater than
      *       <code>maxWidth</code>.</li>
      * </ul>
+     * </p>
+     *
      * <pre>
      * StringUtils.abbreviate(null, *)      = null
      * StringUtils.abbreviate("", 4)        = ""
@@ -1356,20 +1358,13 @@ public final class StringUtils {
     // -------------------------------------------------------------------------
 
     /**
-     * Convert a string from <code>snake_case</code> to <code>PascalCase</code>.
-     * <p>
-     * [#18576] In SQL, identifiers may also contain whitespace, which is
-     * treated the same way as underscores.
-     * <p>
-     * [#18412] For historic reasons, the method claims the result is in
-     * <code>camelCase</code> because it is often used with a prefix making the
-     * result camel case, e.g. "set" + "PascalCase" => "setPascalCase".
+     * Convert a string to camel case
      */
     public static String toCamelCase(String string) {
         StringBuilder result = new StringBuilder();
 
         // [#2515] - Keep trailing underscores
-        for (String word : string.split("[_ ]", -1)) {
+        for (String word : string.split("_", -1)) {
 
             // Uppercase first letter of a word
             if (word.length() > 0) {
@@ -1395,8 +1390,7 @@ public final class StringUtils {
     }
 
     /**
-     * Convert a string from <code>snake_case</code> to <code>camelCase</code>
-     * (LC = lower-case first letter).
+     * Convert a string to camel case starting with a lower case letter
      */
     public static String toCamelCaseLC(String string) {
         return toLC(toCamelCase(string));
@@ -1440,11 +1434,11 @@ public final class StringUtils {
      * A custom adaptation of {@link Pattern#split(CharSequence, int)}.
      * <p>
      * This is useful if the matched split-tokens should be returned as well.
-     * For example: <pre><code>
+     * For example: <code><pre>
      * split("e", "hello world")    // ["h", "e", "llo world"]
      * split("o", "hello world")    // ["hell", "o", " w", "o", "rld"]
      * split("[eo]", "hello world") // ["h", "e", "ll", "o", " w", "o", "rld"]
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The result will always be an odd-length array.
      */

@@ -85,7 +85,7 @@ public class ExecScriptTest {
     private Exchange executeScript(final File scriptFile, long timeout, String... args) {
         StringBuilder argsBuilder = new StringBuilder();
         for (String arg : args) {
-            argsBuilder.append(arg).append(" ");
+            argsBuilder.append(arg + " ");
         }
         final String whiteSpaceSeparatedArgs = argsBuilder.toString().trim();
 

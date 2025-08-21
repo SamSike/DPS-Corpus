@@ -34,7 +34,7 @@ public class DeadLetterChannelTest extends ContextTestSupport {
     protected MockEndpoint deadEndpoint;
     protected MockEndpoint successEndpoint;
     protected int failUntilAttempt = 2;
-    protected final String body = "<hello>world!</hello>";
+    protected String body = "<hello>world!</hello>";
 
     @Test
     public void testFirstFewAttemptsFail() throws Exception {

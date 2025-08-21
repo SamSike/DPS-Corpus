@@ -24,6 +24,8 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.spring.junit5.CamelSpringTestSupport;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.frontend.ServerFactoryBean;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +43,8 @@ public class FileToCxfMessageDataFormatTest extends CamelSpringTestSupport {
     private Server server;
 
     @Override
-    public void setupResources() {
+    @BeforeEach
+    public void setUp() throws Exception {
         deleteDirectory("target/filetocxf");
 
         // set CXF
@@ -53,10 +56,14 @@ public class FileToCxfMessageDataFormatTest extends CamelSpringTestSupport {
 
         server = factory.create();
         server.start();
+
+        super.setUp();
     }
 
     @Override
-    public void cleanupResources() {
+    @AfterEach
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         server.stop();
         server.destroy();
@@ -78,7 +85,7 @@ public class FileToCxfMessageDataFormatTest extends CamelSpringTestSupport {
 
         String out = mock.getReceivedExchanges().get(0).getIn().getBody(String.class);
         assertNotNull(out);
-        LOG.info("Reply payload as a String:\n{}", out);
+        LOG.info("Reply payload as a String:\n" + out);
         assertTrue(out.contains("echo Camel"), "Should invoke the echo operation");
     }
 

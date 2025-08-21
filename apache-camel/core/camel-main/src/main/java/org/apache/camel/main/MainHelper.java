@@ -21,51 +21,43 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Component;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.PropertyBindingException;
 import org.apache.camel.spi.ExtendedPropertyConfigurerGetter;
 import org.apache.camel.spi.PropertyConfigurer;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.PropertyBindingSupport;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.OrderedLocationProperties;
 import org.apache.camel.util.OrderedProperties;
-import org.apache.camel.util.SensitiveUtils;
-import org.apache.camel.util.StopWatch;
 import org.apache.camel.util.StringHelper;
 import org.apache.camel.util.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.camel.util.LocationHelper.locationSummary;
-
 public final class MainHelper {
     private static final Logger LOG = LoggerFactory.getLogger(MainHelper.class);
 
     private final String version;
-    private final StopWatch stopWatch;
+    private final long startDate;
     private final Set<String> componentEnvNames = new HashSet<>();
     private final Set<String> dataformatEnvNames = new HashSet<>();
     private final Set<String> languageEnvNames = new HashSet<>();
 
     public MainHelper() {
-        stopWatch = new StopWatch();
-
+        startDate = System.currentTimeMillis();
         try {
             InputStream is = MainHelper.class.getResourceAsStream("/org/apache/camel/main/components.properties");
             loadLines(is, componentEnvNames, s -> "CAMEL_COMPONENT_" + s.toUpperCase(Locale.US).replace('-', '_'));
@@ -90,7 +82,7 @@ public final class MainHelper {
     }
 
     public String getUptime() {
-        long delta = stopWatch.taken();
+        long delta = System.currentTimeMillis() - startDate;
         if (delta == 0) {
             return "";
         }
@@ -111,7 +103,7 @@ public final class MainHelper {
     public static Optional<String> lookupPropertyFromSysOrEnv(String name) {
         String answer = System.getProperty(name);
         if (answer == null) {
-            answer = IOHelper.lookupEnvironmentVariable(name);
+            answer = System.getenv(toEnvVar(name));
         }
 
         return Optional.ofNullable(answer);
@@ -128,17 +120,9 @@ public final class MainHelper {
             final String pk2 = pk.replace('-', '_');
             System.getenv().forEach((k, v) -> {
                 k = k.toUpperCase(Locale.US);
-                // kubernetes ENV injected services should be skipped
-                // (https://learn.microsoft.com/en-us/visualstudio/bridge/kubernetes-environment-variables#environment-variables-table)
-                boolean k8s = k.endsWith("_SERVICE_HOST") || k.endsWith("_SERVICE_PORT") || k.endsWith("_PORT")
-                        || k.contains("_PORT_");
-                if (k8s) {
-                    LOG.trace("Skipping Kubernetes Service OS environment variable: {}", k);
-                } else {
-                    if (k.startsWith(pk) || k.startsWith(pk2)) {
-                        String key = k.toLowerCase(Locale.US).replace('_', '.');
-                        answer.put(key, v);
-                    }
+                if (k.startsWith(pk) || k.startsWith(pk2)) {
+                    String key = k.toLowerCase(Locale.US).replace('_', '.');
+                    answer.put(key, v);
                 }
             });
         }
@@ -247,8 +231,7 @@ public final class MainHelper {
 
     public static String optionKey(String key) {
         // as we ignore case for property names we should use keys in same case and without dashes
-        // we need to preserve inside [] and quotes
-        key = StringHelper.dashToCamelCase(key, true);
+        key = StringHelper.dashToCamelCase(key);
         return key;
     }
 
@@ -259,30 +242,33 @@ public final class MainHelper {
         boolean rc = false;
 
         PropertyConfigurer targetConfigurer = null;
-        if (target instanceof Component component) {
+        if (target instanceof Component) {
             // the component needs to be initialized to have the configurer ready
             ServiceHelper.initService(target);
-            targetConfigurer = component.getComponentPropertyConfigurer();
+            targetConfigurer = ((Component) target).getComponentPropertyConfigurer();
         }
         if (targetConfigurer == null) {
             String name = target.getClass().getName();
             // see if there is a configurer for it
-            targetConfigurer = PluginHelper.getConfigurerResolver(context).resolvePropertyConfigurer(name, context);
+            targetConfigurer = context.adapt(ExtendedCamelContext.class)
+                    .getConfigurerResolver().resolvePropertyConfigurer(name, context);
         }
 
         PropertyConfigurer sourceConfigurer = null;
-        if (source instanceof Component component) {
+        if (source instanceof Component) {
             // the component needs to be initialized to have the configurer ready
             ServiceHelper.initService(source);
-            sourceConfigurer = component.getComponentPropertyConfigurer();
+            sourceConfigurer = ((Component) source).getComponentPropertyConfigurer();
         }
         if (sourceConfigurer == null) {
             String name = source.getClass().getName();
             // see if there is a configurer for it
-            sourceConfigurer = PluginHelper.getConfigurerResolver(context).resolvePropertyConfigurer(name, context);
+            sourceConfigurer = context.adapt(ExtendedCamelContext.class)
+                    .getConfigurerResolver().resolvePropertyConfigurer(name, context);
         }
 
-        if (targetConfigurer != null && sourceConfigurer instanceof ExtendedPropertyConfigurerGetter getter) {
+        if (targetConfigurer != null && sourceConfigurer instanceof ExtendedPropertyConfigurerGetter) {
+            ExtendedPropertyConfigurerGetter getter = (ExtendedPropertyConfigurerGetter) sourceConfigurer;
             for (String key : getter.getAllOptions(source).keySet()) {
                 Object value = getter.getOptionValue(source, key, true);
                 if (value != null) {
@@ -304,36 +290,17 @@ public final class MainHelper {
 
         boolean rc = false;
         PropertyConfigurer configurer = null;
-        if (target instanceof Component component) {
+        if (target instanceof Component) {
             // the component needs to be initialized to have the configurer ready
             ServiceHelper.initService(target);
-            configurer = component.getComponentPropertyConfigurer();
+            configurer = ((Component) target).getComponentPropertyConfigurer();
         }
 
         if (configurer == null) {
             String name = target.getClass().getName();
             // see if there is a configurer for it (use bootstrap)
-            configurer = PluginHelper.getBootstrapConfigurerResolver(context).resolvePropertyConfigurer(name, context);
-        }
-
-        // we should be flexible in terms of property names as the user may type in names using different cases and
-        // with or without dots (especially from ENV variables)
-        if (configurer instanceof ExtendedPropertyConfigurerGetter ec) {
-            Map<String, Object> options = ec.getAllOptions(target);
-            for (String key : options.keySet()) {
-                // first char is upper case
-                key = Character.toLowerCase(key.charAt(0)) + key.substring(1);
-                String actualKey = key;
-                // convert camelCase to dot notation (via toDash)
-                key = StringHelper.camelCaseToDot(key);
-                if (properties.get(key) != null) {
-                    Object value = properties.get(key);
-                    String loc = properties.getLocation(key);
-                    properties.remove(key);
-                    properties.put(loc, actualKey, value);
-                    LOG.debug("Adjusting property key: {} -> {}", key, actualKey);
-                }
-            }
+            configurer = context.adapt(ExtendedCamelContext.class)
+                    .getBootstrapConfigurerResolver().resolvePropertyConfigurer(name, context);
         }
 
         try {
@@ -379,15 +346,8 @@ public final class MainHelper {
                 throw new PropertyBindingException(
                         e.getTarget(), e.getPropertyName(), e.getValue(), optionPrefix, key, e.getCause());
             } else {
-                LOG.debug(
-                        "Error configuring property ({}) with name: {}) on bean: {} with value: {}. This exception is ignored as failIfNotSet=false.",
-                        key, e.getPropertyName(), target, e.getValue(), e);
-            }
-        } catch (Exception e) {
-            if (failIfNotSet) {
-                throw e;
-            } else {
-                LOG.debug("Error configuring properties on bean: {}. This exception is ignored as failIfNotSet=false.", target,
+                LOG.debug("Error configuring property (" + key + ") with name: " + e.getPropertyName() + ") on bean: " + target
+                          + " with value: " + e.getValue() + ". This exception is ignored as failIfNotSet=false.",
                         e);
             }
         }
@@ -483,13 +443,11 @@ public final class MainHelper {
      * Warning, don't use for crazy big streams :)
      */
     private static void loadLines(InputStream in, Set<String> lines, Function<String, String> func) throws IOException {
-        if (in != null) {
-            try (final InputStreamReader isr = new InputStreamReader(in);
-                 final BufferedReader reader = new LineNumberReader(isr)) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    lines.add(func.apply(line));
-                }
+        try (final InputStreamReader isr = new InputStreamReader(in);
+             final BufferedReader reader = new LineNumberReader(isr)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(func.apply(line));
             }
         }
     }
@@ -583,57 +541,6 @@ public final class MainHelper {
         toRemove.forEach(properties::remove);
 
         return rc;
-    }
-
-    public static void logConfigurationSummary(
-            Logger log, OrderedLocationProperties autoConfiguredProperties,
-            String title, Predicate<String> filter) {
-        if (log == null) {
-            log = LOG;
-        }
-        boolean header = false;
-        List<String> toRemove = new ArrayList<>();
-        for (var entry : autoConfiguredProperties.entrySet()) {
-            String k = entry.getKey().toString();
-            if (filter == null || filter.test(k)) {
-                Object v = entry.getValue();
-                String loc = locationSummary(autoConfiguredProperties, k);
-
-                // tone down logging noise for our own internal configurations
-                boolean debug = loc.contains("[camel-main]");
-                if (debug && !LOG.isDebugEnabled()) {
-                    continue;
-                }
-
-                if (!header) {
-                    log.info(title);
-                    header = true;
-                }
-
-                sensitiveAwareLogging(log, k, v, loc, debug);
-                toRemove.add(k);
-            }
-        }
-        toRemove.forEach(autoConfiguredProperties::remove);
-    }
-
-    public static void sensitiveAwareLogging(Logger log, String k, Object v, String loc, boolean debug) {
-        if (log == null) {
-            log = LOG;
-        }
-        if (SensitiveUtils.containsSensitive(k)) {
-            if (debug) {
-                log.debug("    {} {} = xxxxxx", loc, k);
-            } else {
-                log.info("    {} {} = xxxxxx", loc, k);
-            }
-        } else {
-            if (debug) {
-                log.debug("    {} {} = {}", loc, k, v);
-            } else {
-                log.info("    {} {} = {}", loc, k, v);
-            }
-        }
     }
 
 }

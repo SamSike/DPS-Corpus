@@ -31,7 +31,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class GZIPHelperTest {
 
-    private static final byte[] sampleBytes = new byte[] { 1, 2, 3, 1, 2, 3 };
+    private static byte[] sampleBytes = new byte[] { 1, 2, 3, 1, 2, 3 };
+    private static String sampleString = "<Hello>World</Hello>";
 
     @Test
     public void toGZIPInputStreamShouldReturnTheSameInputStream() throws IOException {
@@ -53,7 +54,6 @@ public class GZIPHelperTest {
 
     @Test
     public void testCompressAndUnCompressData() throws IOException {
-        String sampleString = "<Hello>World</Hello>";
         InputStream inputStream = GZIPHelper.compressGzip("gzip", new ByteArrayInputStream(sampleString.getBytes()));
         assertNotNull(inputStream, "The inputStream should not be null.");
         inputStream = GZIPHelper.uncompressGzip("gzip", inputStream);

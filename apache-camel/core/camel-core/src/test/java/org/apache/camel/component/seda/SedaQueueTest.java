@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SedaQueueTest extends ContextTestSupport {
 
     @Test
-    public void testQueue() {
+    public void testQueue() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedBodiesReceivedInAnyOrder("Hello World", "Bye World", "Goodday World", "Bar");
 
@@ -40,7 +40,7 @@ public class SedaQueueTest extends ContextTestSupport {
     }
 
     @Test
-    public void testQueueRef() {
+    public void testQueueRef() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedBodiesReceived("Hello World");
 
@@ -52,10 +52,10 @@ public class SedaQueueTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.getRegistry().bind("arrayQueue", new ArrayBlockingQueue<Exchange>(10));
 
                 from("seda:foo?size=20&concurrentConsumers=2").to("mock:result");

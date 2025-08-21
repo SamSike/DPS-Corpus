@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,7 @@ import javax.management.NotificationFilter;
 import javax.management.NotificationListener;
 import javax.management.ObjectName;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -43,13 +42,17 @@ import org.springframework.util.ObjectUtils;
  */
 public class NotificationListenerHolder {
 
-	private @Nullable NotificationListener notificationListener;
+	@Nullable
+	private NotificationListener notificationListener;
 
-	private @Nullable NotificationFilter notificationFilter;
+	@Nullable
+	private NotificationFilter notificationFilter;
 
-	private @Nullable Object handback;
+	@Nullable
+	private Object handback;
 
-	protected @Nullable Set<Object> mappedObjectNames;
+	@Nullable
+	protected Set<Object> mappedObjectNames;
 
 
 	/**
@@ -62,7 +65,8 @@ public class NotificationListenerHolder {
 	/**
 	 * Get the {@link javax.management.NotificationListener}.
 	 */
-	public @Nullable NotificationListener getNotificationListener() {
+	@Nullable
+	public NotificationListener getNotificationListener() {
 		return this.notificationListener;
 	}
 
@@ -80,7 +84,8 @@ public class NotificationListenerHolder {
 	 * with the encapsulated {@link #getNotificationListener() NotificationListener}.
 	 * <p>May be {@code null}.
 	 */
-	public @Nullable NotificationFilter getNotificationFilter() {
+	@Nullable
+	public NotificationFilter getNotificationFilter() {
 		return this.notificationFilter;
 	}
 
@@ -102,7 +107,8 @@ public class NotificationListenerHolder {
 	 * @return the handback object (may be {@code null})
 	 * @see javax.management.NotificationListener#handleNotification(javax.management.Notification, Object)
 	 */
-	public @Nullable Object getHandback() {
+	@Nullable
+	public Object getHandback() {
 		return this.handback;
 	}
 
@@ -135,7 +141,8 @@ public class NotificationListenerHolder {
 	 * be registered as a listener for {@link javax.management.Notification Notifications}.
 	 * @throws MalformedObjectNameException if an {@code ObjectName} is malformed
 	 */
-	public ObjectName @Nullable [] getResolvedObjectNames() throws MalformedObjectNameException {
+	@Nullable
+	public ObjectName[] getResolvedObjectNames() throws MalformedObjectNameException {
 		if (this.mappedObjectNames == null) {
 			return null;
 		}
@@ -151,17 +158,26 @@ public class NotificationListenerHolder {
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof NotificationListenerHolder that &&
-				ObjectUtils.nullSafeEquals(this.notificationListener, that.notificationListener) &&
-				ObjectUtils.nullSafeEquals(this.notificationFilter, that.notificationFilter) &&
-				ObjectUtils.nullSafeEquals(this.handback, that.handback) &&
-				ObjectUtils.nullSafeEquals(this.mappedObjectNames, that.mappedObjectNames)));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof NotificationListenerHolder)) {
+			return false;
+		}
+		NotificationListenerHolder otherNlh = (NotificationListenerHolder) other;
+		return (ObjectUtils.nullSafeEquals(this.notificationListener, otherNlh.notificationListener) &&
+				ObjectUtils.nullSafeEquals(this.notificationFilter, otherNlh.notificationFilter) &&
+				ObjectUtils.nullSafeEquals(this.handback, otherNlh.handback) &&
+				ObjectUtils.nullSafeEquals(this.mappedObjectNames, otherNlh.mappedObjectNames));
 	}
 
 	@Override
 	public int hashCode() {
-		return ObjectUtils.nullSafeHash(this.notificationListener, this.notificationFilter,
-				this.handback, this.mappedObjectNames);
+		int hashCode = ObjectUtils.nullSafeHashCode(this.notificationListener);
+		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(this.notificationFilter);
+		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(this.handback);
+		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(this.mappedObjectNames);
+		return hashCode;
 	}
 
 }

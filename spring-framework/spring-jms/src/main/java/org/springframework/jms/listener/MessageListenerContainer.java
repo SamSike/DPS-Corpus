@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,11 @@
 
 package org.springframework.jms.listener;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.context.SmartLifecycle;
 import org.springframework.jms.support.QosSettings;
 import org.springframework.jms.support.converter.MessageConverter;
 import org.springframework.jms.support.destination.DestinationResolver;
+import org.springframework.lang.Nullable;
 
 /**
  * Internal abstraction used by the framework representing a message
@@ -34,7 +33,7 @@ import org.springframework.jms.support.destination.DestinationResolver;
 public interface MessageListenerContainer extends SmartLifecycle {
 
 	/**
-	 * Set up the message listener to use. Throws an {@link IllegalArgumentException}
+	 * Setup the message listener to use. Throws an {@link IllegalArgumentException}
 	 * if that message listener type is not supported.
 	 */
 	void setupMessageListener(Object messageListener);
@@ -43,13 +42,15 @@ public interface MessageListenerContainer extends SmartLifecycle {
 	 * Return the {@link MessageConverter} that can be used to
 	 * convert {@link jakarta.jms.Message}, if any.
 	 */
-	@Nullable MessageConverter getMessageConverter();
+	@Nullable
+	MessageConverter getMessageConverter();
 
 	/**
 	 * Return the {@link DestinationResolver} to use to resolve
 	 * destinations by names.
 	 */
-	@Nullable DestinationResolver getDestinationResolver();
+	@Nullable
+	DestinationResolver getDestinationResolver();
 
 	/**
 	 * Return whether the Publish/Subscribe domain ({@link jakarta.jms.Topic Topics}) is used.
@@ -70,6 +71,7 @@ public interface MessageListenerContainer extends SmartLifecycle {
 	 * or {@code null} if the broker's defaults should be used.
 	 * @since 5.0
 	 */
-	@Nullable QosSettings getReplyQosSettings();
+	@Nullable
+	QosSettings getReplyQosSettings();
 
 }

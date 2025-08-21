@@ -22,13 +22,13 @@ import org.apache.camel.spi.Registry;
 
 public class BeanRecipientListInterfaceAnnotationTest extends BeanRecipientListTest {
     @Override
-    protected void checkBean() {
+    protected void checkBean() throws Exception {
         // do nothing here
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry answer = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry answer = super.createRegistry();
         answer.bind("myBean", new MyBean());
         return answer;
     }
@@ -39,8 +39,8 @@ public class BeanRecipientListInterfaceAnnotationTest extends BeanRecipientListT
     }
 
     public static class MyBean implements Route {
-        private static final AtomicInteger counter = new AtomicInteger();
-        private final int id;
+        private static AtomicInteger counter = new AtomicInteger();
+        private int id;
 
         public MyBean() {
             id = counter.incrementAndGet();

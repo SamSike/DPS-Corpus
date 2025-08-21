@@ -98,10 +98,10 @@ public class LogInputStreamTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:a").noStreamCaching().to("log:a").to("mock:a");
 
                 from("direct:b").noStreamCaching().to("log:b?showStreams=true").to("mock:b");

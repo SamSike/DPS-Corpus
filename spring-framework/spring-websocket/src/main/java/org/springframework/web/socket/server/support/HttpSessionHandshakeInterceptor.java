@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,20 +22,20 @@ import java.util.Enumeration;
 import java.util.Map;
 
 import jakarta.servlet.http.HttpSession;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.lang.Nullable;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 /**
  * An interceptor to copy information from the HTTP session to the "handshake
- * attributes" map to be made available via {@link WebSocketSession#getAttributes()}.
+ * attributes" map to made available via{@link WebSocketSession#getAttributes()}.
  *
- * <p>Copies a subset or all HTTP session attributes and/or the HTTP session ID
+ * <p>Copies a subset or all HTTP session attributes and/or the HTTP session id
  * under the key {@link #HTTP_SESSION_ID_ATTR_NAME}.
  *
  * @author Rossen Stoyanchev
@@ -162,8 +162,10 @@ public class HttpSessionHandshakeInterceptor implements HandshakeInterceptor {
 		return true;
 	}
 
-	private @Nullable HttpSession getSession(ServerHttpRequest request) {
-		if (request instanceof ServletServerHttpRequest serverRequest) {
+	@Nullable
+	private HttpSession getSession(ServerHttpRequest request) {
+		if (request instanceof ServletServerHttpRequest) {
+			ServletServerHttpRequest serverRequest = (ServletServerHttpRequest) request;
 			return serverRequest.getServletRequest().getSession(isCreateSession());
 		}
 		return null;

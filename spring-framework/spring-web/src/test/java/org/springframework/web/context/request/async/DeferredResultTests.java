@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package org.springframework.web.context.request.async;
 
+import java.util.function.Consumer;
+
 import org.junit.jupiter.api.Test;
 
 import org.springframework.web.context.request.async.DeferredResult.DeferredResultHandler;
@@ -29,11 +31,11 @@ import static org.mockito.Mockito.verify;
  *
  * @author Rossen Stoyanchev
  */
-class DeferredResultTests {
+public class DeferredResultTests {
 
 	@Test
-	void setResult() {
-		DeferredResultHandler handler = mock();
+	public void setResult() {
+		DeferredResultHandler handler = mock(DeferredResultHandler.class);
 
 		DeferredResult<String> result = new DeferredResult<>();
 		result.setResultHandler(handler);
@@ -43,8 +45,8 @@ class DeferredResultTests {
 	}
 
 	@Test
-	void setResultTwice() {
-		DeferredResultHandler handler = mock();
+	public void setResultTwice() {
+		DeferredResultHandler handler = mock(DeferredResultHandler.class);
 
 		DeferredResult<String> result = new DeferredResult<>();
 		result.setResultHandler(handler);
@@ -56,8 +58,8 @@ class DeferredResultTests {
 	}
 
 	@Test
-	void isSetOrExpired() {
-		DeferredResultHandler handler = mock();
+	public void isSetOrExpired() {
+		DeferredResultHandler handler = mock(DeferredResultHandler.class);
 
 		DeferredResult<String> result = new DeferredResult<>();
 		result.setResultHandler(handler);
@@ -72,8 +74,8 @@ class DeferredResultTests {
 	}
 
 	@Test
-	void hasResult() {
-		DeferredResultHandler handler = mock();
+	public void hasResult() {
+		DeferredResultHandler handler = mock(DeferredResultHandler.class);
 
 		DeferredResult<String> result = new DeferredResult<>();
 		result.setResultHandler(handler);
@@ -87,29 +89,29 @@ class DeferredResultTests {
 	}
 
 	@Test
-	void onCompletion() throws Exception {
+	public void onCompletion() throws Exception {
 		final StringBuilder sb = new StringBuilder();
 
 		DeferredResult<String> result = new DeferredResult<>();
 		result.onCompletion(() -> sb.append("completion event"));
 
-		result.getLifecycleInterceptor().afterCompletion(null, null);
+		result.getInterceptor().afterCompletion(null, null);
 
 		assertThat(result.isSetOrExpired()).isTrue();
 		assertThat(sb.toString()).isEqualTo("completion event");
 	}
 
 	@Test
-	void onTimeout() throws Exception {
+	public void onTimeout() throws Exception {
 		final StringBuilder sb = new StringBuilder();
 
-		DeferredResultHandler handler = mock();
+		DeferredResultHandler handler = mock(DeferredResultHandler.class);
 
 		DeferredResult<String> result = new DeferredResult<>(null, "timeout result");
 		result.setResultHandler(handler);
 		result.onTimeout(() -> sb.append("timeout event"));
 
-		result.getLifecycleInterceptor().handleTimeout(null, null);
+		result.getInterceptor().handleTimeout(null, null);
 
 		assertThat(sb.toString()).isEqualTo("timeout event");
 		assertThat(result.setResult("hello")).as("Should not be able to set result a second time").isFalse();
@@ -117,17 +119,22 @@ class DeferredResultTests {
 	}
 
 	@Test
-	void onError() throws Exception {
+	public void onError() throws Exception {
 		final StringBuilder sb = new StringBuilder();
 
-		DeferredResultHandler handler = mock();
+		DeferredResultHandler handler = mock(DeferredResultHandler.class);
 
 		DeferredResult<String> result = new DeferredResult<>(null, "error result");
 		result.setResultHandler(handler);
 		Exception e = new Exception();
-		result.onError(t -> sb.append("error event"));
+		result.onError(new Consumer<Throwable>() {
+			@Override
+			public void accept(Throwable t) {
+				sb.append("error event");
+			}
+		});
 
-		result.getLifecycleInterceptor().handleError(null, null, e);
+		result.getInterceptor().handleError(null, null, e);
 
 		assertThat(sb.toString()).isEqualTo("error event");
 		assertThat(result.setResult("hello")).as("Should not be able to set result a second time").isFalse();

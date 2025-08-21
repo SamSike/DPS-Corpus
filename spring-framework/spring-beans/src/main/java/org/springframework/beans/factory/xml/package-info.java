@@ -2,7 +2,9 @@
  * Contains an abstract XML-based {@code BeanFactory} implementation,
  * including a standard "spring-beans" XSD.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.beans.factory.xml;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

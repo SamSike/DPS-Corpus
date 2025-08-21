@@ -21,104 +21,20 @@ import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.PollingConsumerPollStrategy;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Isolated;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Isolated
+@DisabledIfSystemProperty(named = "ci.env.name", matches = "github.com", disabledReason = "Flaky on Github CI")
 public class ScheduledPollConsumerBackoffTest extends ContextTestSupport {
 
     private static int commits;
     private static int errors;
 
     @Test
-    public void testBackoffIdle() {
+    public void testBackoffIdle() throws Exception {
 
         final Endpoint endpoint = getMockEndpoint("mock:foo");
-        final MockScheduledPollConsumer consumer = createMockScheduledPollConsumer(endpoint);
-
-        consumer.run();
-        consumer.run();
-        assertEquals(2, commits);
-        // now it should backoff 4 times
-        consumer.run();
-        consumer.run();
-        consumer.run();
-        consumer.run();
-        assertEquals(3, commits);
-        // and now we poll again
-        consumer.run();
-        consumer.run();
-        assertEquals(4, commits);
-        // now it should backoff 4 times
-        consumer.run();
-        consumer.run();
-        consumer.run();
-        consumer.run();
-        assertEquals(6, commits);
-        consumer.run();
-        assertEquals(6, commits);
-
-        consumer.stop();
-    }
-
-    @Test
-    public void testBackoffError() {
-
-        final Endpoint endpoint = getMockEndpoint("mock:foo");
-        final Exception expectedException = new Exception("Hello, I should be thrown on shutdown only!");
-        final MockScheduledPollConsumer consumer = createMockScheduledPollConsumer(endpoint, expectedException);
-
-        consumer.run();
-        consumer.run();
-        consumer.run();
-        assertEquals(3, errors);
-        // now it should backoff 4 times
-        consumer.run();
-        consumer.run();
-        consumer.run();
-        consumer.run();
-        assertEquals(4, errors);
-        // and now we poll again
-        consumer.run();
-        consumer.run();
-        consumer.run();
-        assertEquals(6, errors);
-        // now it should backoff 4 times
-        consumer.run();
-        consumer.run();
-        consumer.run();
-        consumer.run();
-        assertEquals(8, errors);
-
-        consumer.stop();
-    }
-
-    private static MockScheduledPollConsumer createMockScheduledPollConsumer(Endpoint endpoint, Exception expectedException) {
-        MockScheduledPollConsumer consumer = new MockScheduledPollConsumer(endpoint, expectedException);
-        consumer.setBackoffMultiplier(4);
-        consumer.setBackoffErrorThreshold(3);
-
-        consumer.setPollStrategy(new PollingConsumerPollStrategy() {
-            public boolean begin(Consumer consumer, Endpoint endpoint) {
-                return true;
-            }
-
-            public void commit(Consumer consumer, Endpoint endpoint, int polledMessages) {
-                commits++;
-            }
-
-            public boolean rollback(Consumer consumer, Endpoint endpoint, int retryCounter, Exception e) {
-                errors++;
-                return false;
-            }
-        });
-
-        consumer.start();
-        return consumer;
-    }
-
-    private static MockScheduledPollConsumer createMockScheduledPollConsumer(Endpoint endpoint) {
         MockScheduledPollConsumer consumer = new MockScheduledPollConsumer(endpoint, null);
         consumer.setBackoffMultiplier(4);
         consumer.setBackoffIdleThreshold(2);
@@ -132,12 +48,86 @@ public class ScheduledPollConsumerBackoffTest extends ContextTestSupport {
                 commits++;
             }
 
-            public boolean rollback(Consumer consumer, Endpoint endpoint, int retryCounter, Exception e) {
+            public boolean rollback(Consumer consumer, Endpoint endpoint, int retryCounter, Exception e) throws Exception {
                 return false;
             }
         });
 
         consumer.start();
-        return consumer;
+
+        consumer.run();
+        consumer.run();
+        assertEquals(2, commits);
+        // now it should backoff 4 times
+        consumer.run();
+        consumer.run();
+        consumer.run();
+        consumer.run();
+        assertEquals(2, commits);
+        // and now we poll again
+        consumer.run();
+        consumer.run();
+        assertEquals(4, commits);
+        // now it should backoff 4 times
+        consumer.run();
+        consumer.run();
+        consumer.run();
+        consumer.run();
+        assertEquals(4, commits);
+        consumer.run();
+        assertEquals(5, commits);
+
+        consumer.stop();
+    }
+
+    @Test
+    public void testBackoffError() throws Exception {
+
+        final Endpoint endpoint = getMockEndpoint("mock:foo");
+        final Exception expectedException = new Exception("Hello, I should be thrown on shutdown only!");
+        MockScheduledPollConsumer consumer = new MockScheduledPollConsumer(endpoint, expectedException);
+        consumer.setBackoffMultiplier(4);
+        consumer.setBackoffErrorThreshold(3);
+
+        consumer.setPollStrategy(new PollingConsumerPollStrategy() {
+            public boolean begin(Consumer consumer, Endpoint endpoint) {
+                return true;
+            }
+
+            public void commit(Consumer consumer, Endpoint endpoint, int polledMessages) {
+                commits++;
+            }
+
+            public boolean rollback(Consumer consumer, Endpoint endpoint, int retryCounter, Exception e) throws Exception {
+                errors++;
+                return false;
+            }
+        });
+
+        consumer.start();
+
+        consumer.run();
+        consumer.run();
+        consumer.run();
+        assertEquals(3, errors);
+        // now it should backoff 4 times
+        consumer.run();
+        consumer.run();
+        consumer.run();
+        consumer.run();
+        assertEquals(3, errors);
+        // and now we poll again
+        consumer.run();
+        consumer.run();
+        consumer.run();
+        assertEquals(6, errors);
+        // now it should backoff 4 times
+        consumer.run();
+        consumer.run();
+        consumer.run();
+        consumer.run();
+        assertEquals(6, errors);
+
+        consumer.stop();
     }
 }

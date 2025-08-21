@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,8 +39,6 @@ package org.jooq.impl;
 
 import static org.jooq.conf.ParamType.INLINED;
 import static org.jooq.impl.DSL.function;
-import static org.jooq.impl.DSL.jsonGetAttribute;
-import static org.jooq.impl.DSL.systemName;
 import static org.jooq.impl.JSONExists.Behaviour.ERROR;
 import static org.jooq.impl.JSONExists.Behaviour.FALSE;
 import static org.jooq.impl.JSONExists.Behaviour.TRUE;
@@ -50,7 +48,6 @@ import static org.jooq.impl.Keywords.K_JSON_EXISTS;
 import static org.jooq.impl.Keywords.K_ON;
 import static org.jooq.impl.Names.N_JSONB_PATH_EXISTS;
 import static org.jooq.impl.Names.N_JSON_CONTAINS_PATH;
-import static org.jooq.impl.Names.N_JSON_QUERY;
 import static org.jooq.impl.Names.N_JSON_TYPE;
 import static org.jooq.impl.SQLDataType.JSONB;
 import static org.jooq.impl.Tools.castIfNeeded;
@@ -127,16 +124,9 @@ final class JSONExists extends AbstractCondition implements JSONExistsOnStep, UN
     // XXX: QueryPart API
     // -------------------------------------------------------------------------
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public final void accept(Context<?> ctx) {
         switch (ctx.family()) {
-
-
-
-
-
-
 
             case MYSQL:
                 ctx.visit(N_JSON_CONTAINS_PATH).sql('(').visit(json).sql(", 'one', ").visit(path).sql(')');
@@ -152,14 +142,6 @@ final class JSONExists extends AbstractCondition implements JSONExistsOnStep, UN
                    .visit(castIfNeeded(json, JSONB)).sql(", ");
                 Cast.renderCast(ctx, c -> c.visit(path), c -> c.visit(Names.N_JSONPATH));
                 ctx.sql(')');
-                break;
-
-            case CLICKHOUSE:
-                ctx.visit(function(systemName("JSON_EXISTS"), getDataType(), json, path));
-                break;
-
-            case DUCKDB:
-                ctx.visit(jsonGetAttribute((Field) json, path).isNotNull());
                 break;
 
             default:

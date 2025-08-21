@@ -25,7 +25,7 @@ import org.apache.camel.spi.RestConfiguration;
 /**
  * Global configuration for Rest DSL.
  */
-@Configurer(extended = true)
+@Configurer(bootstrap = true)
 public class RestConfigurationProperties extends RestConfiguration implements BootstrapCloseable {
 
     private MainConfigurationProperties parent;
@@ -47,7 +47,6 @@ public class RestConfigurationProperties extends RestConfiguration implements Bo
         setDataFormatProperties(null);
         setApiProperties(null);
         setCorsHeaders(null);
-        setValidationLevels(null);
     }
 
     // getter and setters
@@ -114,11 +113,9 @@ public class RestConfigurationProperties extends RestConfiguration implements Bo
     }
 
     /**
-     * Whether to use X-Forward headers to set host etc. for OpenApi.
-     *
-     * This may be needed in special cases involving reverse-proxy and networking going from HTTP to HTTPS etc. Then the
-     * proxy can send X-Forward headers (X-Forwarded-Proto) that influences the host names in the OpenAPI schema that
-     * camel-openapi-java generates from Rest DSL routes.
+     * Whether to use X-Forward headers for Host and related setting.
+     * <p/>
+     * The default value is true.
      */
     public RestConfigurationProperties withUseXForwardHeaders(boolean useXForwardHeaders) {
         setUseXForwardHeaders(useXForwardHeaders);
@@ -140,8 +137,9 @@ public class RestConfigurationProperties extends RestConfiguration implements Bo
 
     /**
      * Sets the location of the api document (swagger api) the REST producer will use to validate the REST uri and query
-     * parameters are valid accordingly to the api document. This requires adding camel-openapi-java to the classpath,
-     * and any miss configuration will let Camel fail on startup and report the error(s).
+     * parameters are valid accordingly to the api document. This requires adding camel-openapi-java
+     * to the classpath, and any miss configuration will let Camel fail on startup and report the
+     * error(s).
      * <p/>
      * The location of the api document is loaded from classpath by default, but you can use <tt>file:</tt> or
      * <tt>http:</tt> to refer to resources to load from file or http url.
@@ -214,15 +212,6 @@ public class RestConfigurationProperties extends RestConfiguration implements Bo
     }
 
     /**
-     * Package name to use as base (offset) for classpath scanning of POJO classes are located when using binding mode
-     * is enabled for JSon or XML. Multiple package names can be separated by comma.
-     */
-    public RestConfigurationProperties withBindingPackageScan(String bindingPackageScan) {
-        setBindingPackageScan(bindingPackageScan);
-        return this;
-    }
-
-    /**
      * Whether to skip binding on output if there is a custom HTTP error code header. This allows to build custom error
      * messages that do not bind to json / xml etc, as success messages otherwise will do.
      */
@@ -241,18 +230,6 @@ public class RestConfigurationProperties extends RestConfiguration implements Bo
      */
     public RestConfigurationProperties withClientRequestValidation(boolean clientRequestValidation) {
         setClientRequestValidation(clientRequestValidation);
-        return this;
-    }
-
-    /**
-     * Whether to check what Camel is returning as response to the client:
-     *
-     * 1) Status-code and Content-Type matches Rest DSL response messages. 2) Check whether expected headers is included
-     * according to the Rest DSL repose message headers. 3) If the response body is JSon then check whether its valid
-     * JSon. Returns 500 if validation error detected.
-     */
-    public RestConfigurationProperties withClientResponseValidation(boolean clientResponseValidation) {
-        setClientResponseValidation(clientResponseValidation);
         return this;
     }
 
@@ -361,17 +338,6 @@ public class RestConfigurationProperties extends RestConfiguration implements Bo
             setCorsHeaders(new HashMap<>());
         }
         getCorsHeaders().put(key, value);
-        return this;
-    }
-
-    /**
-     * Adds a validation error property
-     */
-    public RestConfigurationProperties withValidationLevel(String key, String value) {
-        if (getValidationLevels() == null) {
-            setValidationLevels(new HashMap<>());
-        }
-        getValidationLevels().put(key, value);
         return this;
     }
 

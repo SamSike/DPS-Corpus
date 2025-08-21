@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class NettyHttpCustomOptionsTest extends BaseNettyTest {
 
-    final String expectedResponse = "response";
+    String expectedResponse = "response";
 
     @Test
     public void shouldReturnCustomResponseForOptions() {

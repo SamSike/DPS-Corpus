@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,12 @@ import jakarta.servlet.AsyncEvent;
 import jakarta.servlet.AsyncListener;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * A {@link ServerHttpAsyncRequestControl} to use on Servlet containers.
+ * A {@link ServerHttpAsyncRequestControl} to use on Servlet containers (Servlet 3.0+).
  *
  * @author Rossen Stoyanchev
  * @since 4.0
@@ -43,9 +43,10 @@ public class ServletServerHttpAsyncRequestControl implements ServerHttpAsyncRequ
 
 	private final ServletServerHttpResponse response;
 
-	private @Nullable AsyncContext asyncContext;
+	@Nullable
+	private AsyncContext asyncContext;
 
-	private final AtomicBoolean asyncCompleted = new AtomicBoolean();
+	private AtomicBoolean asyncCompleted = new AtomicBoolean();
 
 
 	/**
@@ -61,7 +62,7 @@ public class ServletServerHttpAsyncRequestControl implements ServerHttpAsyncRequ
 				"Async support must be enabled on a servlet and for all filters involved " +
 				"in async request processing. This is done in Java code using the Servlet API " +
 				"or by adding \"<async-supported>true</async-supported>\" to servlet and " +
-				"filter declarations in web.xml.");
+				"filter declarations in web.xml. Also you must use a Servlet 3.0+ container");
 
 		this.request = request;
 		this.response = response;
@@ -114,11 +115,13 @@ public class ServletServerHttpAsyncRequestControl implements ServerHttpAsyncRequ
 	// ---------------------------------------------------------------------
 
 	@Override
-	public void onStartAsync(AsyncEvent event) throws IOException {
+	public void onComplete(AsyncEvent event) throws IOException {
+		this.asyncContext = null;
+		this.asyncCompleted.set(true);
 	}
 
 	@Override
-	public void onTimeout(AsyncEvent event) throws IOException {
+	public void onStartAsync(AsyncEvent event) throws IOException {
 	}
 
 	@Override
@@ -126,9 +129,7 @@ public class ServletServerHttpAsyncRequestControl implements ServerHttpAsyncRequ
 	}
 
 	@Override
-	public void onComplete(AsyncEvent event) throws IOException {
-		this.asyncContext = null;
-		this.asyncCompleted.set(true);
+	public void onTimeout(AsyncEvent event) throws IOException {
 	}
 
 }

@@ -18,21 +18,10 @@ package org.apache.camel.component.jms;
 
 import jakarta.jms.JMSException;
 
-import org.apache.camel.CamelContext;
 import org.apache.camel.CamelExecutionException;
-import org.apache.camel.ConsumerTemplate;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.apache.camel.test.junit5.TestSupport.assertIsInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,23 +32,37 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 public class JmsAllowNullBodyTest extends AbstractJMSTest {
 
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
-    protected CamelContext context;
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
-
-    @ParameterizedTest
-    @ValueSource(strings = { "", "?allowNullBody=true", "?allowNullBody=true&jmsMessageType=Text" })
-    @DisplayName("Test correct handling of allowNullBody configuration")
-    public void testAllowNullBody(String option) throws Exception {
+    @Test
+    public void testAllowNullBodyDefault() throws Exception {
         getMockEndpoint("mock:result").expectedMessageCount(1);
         getMockEndpoint("mock:result").message(0).body().isNull();
         getMockEndpoint("mock:result").message(0).header("bar").isEqualTo(123);
 
         // allow null body is default enabled
-        template.sendBodyAndHeader("activemq:queue:JmsAllowNullBodyTest" + option, null, "bar", 123);
+        template.sendBodyAndHeader("activemq:queue:JmsAllowNullBodyTest", null, "bar", 123);
+
+        MockEndpoint.assertIsSatisfied(context);
+    }
+
+    @Test
+    public void testAllowNullBody() throws Exception {
+        getMockEndpoint("mock:result").expectedMessageCount(1);
+        getMockEndpoint("mock:result").message(0).body().isNull();
+        getMockEndpoint("mock:result").message(0).header("bar").isEqualTo(123);
+
+        template.sendBodyAndHeader("activemq:queue:JmsAllowNullBodyTest?allowNullBody=true", null, "bar", 123);
+
+        MockEndpoint.assertIsSatisfied(context);
+    }
+
+    @Test
+    public void testAllowNullTextBody() throws Exception {
+        getMockEndpoint("mock:result").expectedMessageCount(1);
+        getMockEndpoint("mock:result").message(0).body().isNull();
+        getMockEndpoint("mock:result").message(0).header("bar").isEqualTo(123);
+
+        template.sendBodyAndHeader("activemq:queue:JmsAllowNullBodyTest?allowNullBody=true&jmsMessageType=Text", null, "bar",
+                123);
 
         MockEndpoint.assertIsSatisfied(context);
     }
@@ -88,17 +91,5 @@ public class JmsAllowNullBodyTest extends AbstractJMSTest {
                 from("activemq:queue:JmsAllowNullBodyTest").to("mock:result");
             }
         };
-    }
-
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        context = camelContextExtension.getContext();
-        template = camelContextExtension.getProducerTemplate();
-        consumer = camelContextExtension.getConsumerTemplate();
     }
 }

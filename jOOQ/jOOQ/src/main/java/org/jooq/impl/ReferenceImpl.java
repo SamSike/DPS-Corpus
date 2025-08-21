@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,7 +51,6 @@ import org.jooq.ConstraintEnforcementStep;
 import org.jooq.DSLContext;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Result;
@@ -60,86 +59,51 @@ import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.UniqueKey;
 import org.jooq.exception.DetachedException;
-import org.jooq.impl.QOM.ForeignKeyRule;
 import org.jooq.impl.QOM.UEmpty;
 
 /**
  * @author Lukas Eder
  */
-final class ReferenceImpl<CHILD extends Record, PARENT extends Record>
-extends
-    AbstractKey<CHILD>
-implements
-    ForeignKey<CHILD, PARENT>,
-    UEmpty
-{
+final class ReferenceImpl<R extends Record, O extends Record> extends AbstractKey<R> implements ForeignKey<R, O>, UEmpty {
 
-    private final UniqueKey<PARENT>       uk;
-    private final TableField<PARENT, ?>[] ukFields;
-    private final ForeignKeyRule          deleteRule;
-    private final ForeignKeyRule          updateRule;
+    private final UniqueKey<O>       uk;
+    private final TableField<O, ?>[] ukFields;
 
-    ReferenceImpl(
-        Table<CHILD> table,
-        Name name,
-        TableField<CHILD, ?>[] fkFields,
-        UniqueKey<PARENT> uk,
-        TableField<PARENT, ?>[] ukFields,
-        boolean enforced,
-        ForeignKeyRule deleteRule,
-        ForeignKeyRule updateRule
-    ) {
+    ReferenceImpl(Table<R> table, Name name, TableField<R, ?>[] fkFields, UniqueKey<O> uk, TableField<O, ?>[] ukFields, boolean enforced) {
         super(table, name, fkFields, enforced);
 
         this.uk = uk;
         this.ukFields = ukFields;
-        this.deleteRule = deleteRule;
-        this.updateRule = updateRule;
     }
 
     @Override
-    public final ForeignKeyRule getDeleteRule() {
-        return deleteRule;
-    }
-
-    @Override
-    public final ForeignKeyRule getUpdateRule() {
-        return updateRule;
-    }
-
-    @Override
-    public final InverseForeignKey<PARENT, CHILD> getInverseKey() {
-        return new InverseReferenceImpl<>(this);
-    }
-
-    @Override
-    public final UniqueKey<PARENT> getKey() {
+    public final UniqueKey<O> getKey() {
         return uk;
     }
 
     @Override
-    public final List<TableField<PARENT, ?>> getKeyFields() {
+    public final List<TableField<O, ?>> getKeyFields() {
         return Arrays.asList(ukFields);
     }
 
     @Override
-    public final TableField<PARENT, ?>[] getKeyFieldsArray() {
+    public final TableField<O, ?>[] getKeyFieldsArray() {
         return ukFields;
     }
 
     @Override
-    public final PARENT fetchParent(CHILD record) {
+    public final O fetchParent(R record) {
         return filterOne(fetchParents(record));
     }
 
     @Override
     @SafeVarargs
-    public final Result<PARENT> fetchParents(CHILD... records) {
+    public final Result<O> fetchParents(R... records) {
         return fetchParents(list(records));
     }
 
     @Override
-    public final Result<PARENT> fetchParents(Collection<? extends CHILD> records) {
+    public final Result<O> fetchParents(Collection<? extends R> records) {
         if (records == null || records.size() == 0)
             return new ResultImpl<>(new DefaultConfiguration(), uk.getFields());
         else
@@ -147,18 +111,18 @@ implements
     }
 
     @Override
-    public final Result<CHILD> fetchChildren(PARENT record) {
+    public final Result<R> fetchChildren(O record) {
         return fetchChildren(list(record));
     }
 
     @Override
     @SafeVarargs
-    public final Result<CHILD> fetchChildren(PARENT... records) {
+    public final Result<R> fetchChildren(O... records) {
         return fetchChildren(list(records));
     }
 
     @Override
-    public final Result<CHILD> fetchChildren(Collection<? extends PARENT> records) {
+    public final Result<R> fetchChildren(Collection<? extends O> records) {
         if (records == null || records.size() == 0)
             return new ResultImpl<>(new DefaultConfiguration(), getFields());
         else
@@ -166,34 +130,34 @@ implements
     }
 
     @Override
-    public final Table<PARENT> parent(CHILD record) {
+    public final Table<O> parent(R record) {
         return parents(list(record));
     }
 
     @SafeVarargs
     @Override
-    public final Table<PARENT> parents(CHILD... records) {
+    public final Table<O> parents(R... records) {
         return parents(list(records));
     }
 
     @Override
-    public final Table<PARENT> parents(Collection<? extends CHILD> records) {
+    public final Table<O> parents(Collection<? extends R> records) {
         return table(records, uk.getTable(), uk.getFieldsArray(), getFieldsArray());
     }
 
     @Override
-    public final Table<CHILD> children(PARENT record) {
+    public final Table<R> children(O record) {
         return children(list(record));
     }
 
     @SafeVarargs
     @Override
-    public final Table<CHILD> children(PARENT... records) {
+    public final Table<R> children(O... records) {
         return children(list(records));
     }
 
     @Override
-    public final Table<CHILD> children(Collection<? extends PARENT> records) {
+    public final Table<R> children(Collection<? extends O> records) {
         return table(records, getTable(), getFieldsArray(), uk.getFieldsArray());
     }
 
@@ -213,8 +177,7 @@ implements
             table,
             f1.length == 1
                 ? ((Field<Object>) f1[0]).in(extractValues(records, f2[0]))
-                : row(f1).in(extractRows(records, f2)),
-            false
+                : row(f1).in(extractRows(records, f2))
         );
     }
 

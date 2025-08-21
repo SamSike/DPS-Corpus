@@ -24,14 +24,16 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 
+import org.apache.camel.Endpoint;
+import org.apache.camel.EndpointInject;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.kafka.KafkaConstants;
 import org.apache.camel.component.kafka.MockConsumerInterceptor;
 import org.apache.camel.component.kafka.consumer.errorhandler.KafkaConsumerListener;
 import org.apache.camel.component.kafka.consumer.support.ProcessingResult;
-import org.apache.camel.component.kafka.integration.BaseKafkaTestSupport;
-import org.apache.camel.component.kafka.integration.common.KafkaTestUtil;
+import org.apache.camel.component.kafka.integration.AbstractKafkaTestSupport;
+import org.apache.camel.component.kafka.integration.BaseEmbeddedKafkaTestSupport;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
@@ -51,36 +53,53 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class KafkaPausableConsumerIT extends BaseKafkaTestSupport {
+public class KafkaPausableConsumerIT extends BaseEmbeddedKafkaTestSupport {
+    // Just a wrapper for us to check if the expected methods are being called
+    private static class TestListener extends KafkaConsumerListener {
+        volatile boolean afterConsumeCalled;
+        volatile boolean afterProcessCalled;
+
+        @Override
+        public boolean afterConsume(Object ignored) {
+            afterConsumeCalled = true;
+            return super.afterConsume(ignored);
+        }
+
+        @Override
+        public boolean afterProcess(ProcessingResult result) {
+            afterProcessCalled = true;
+            return super.afterProcess(result);
+        }
+    }
+
     public static final String SOURCE_TOPIC = "pause-source";
+
     private static final Logger LOG = LoggerFactory.getLogger(KafkaPausableConsumerIT.class);
+
     private static final int RETRY_COUNT = 10;
-    private static final LongAdder count = new LongAdder();
-    private static final TestListener testConsumerListener = new TestListener();
+    private LongAdder count = new LongAdder();
+
+    @EndpointInject("kafka:" + SOURCE_TOPIC
+                    + "?groupId=KafkaPausableConsumerIT&autoOffsetReset=earliest&keyDeserializer=org.apache.kafka.common.serialization.StringDeserializer"
+                    + "&valueDeserializer=org.apache.kafka.common.serialization.StringDeserializer"
+                    + "&autoCommitIntervalMs=1000&pollTimeoutMs=1000&autoCommitEnable=true&interceptorClasses=org.apache.camel.component.kafka.MockConsumerInterceptor")
+    private Endpoint from;
+
+    @EndpointInject("direct:intermediate")
+    private Endpoint intermediate;
+
+    @EndpointInject("mock:result")
+    private MockEndpoint to;
+
     private org.apache.kafka.clients.producer.KafkaProducer<String, String> producer;
 
-    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
-    private static boolean canContinue() {
-        // First one should go through ...
-        if (count.intValue() <= 1) {
-            return true;
-        }
-
-        if (count.intValue() >= RETRY_COUNT) {
-            return true;
-        }
-
-        return false;
-    }
-
-    public static int getCount() {
-        return count.intValue();
-    }
+    private TestListener testConsumerListener = new TestListener();
 
     @BeforeEach
     public void before() {
-        Properties props = KafkaTestUtil.getDefaultProperties(service);
+        Properties props = AbstractKafkaTestSupport.getDefaultProperties(service);
         producer = new org.apache.kafka.clients.producer.KafkaProducer<>(props);
         MockConsumerInterceptor.recordsCaptured.clear();
 
@@ -93,14 +112,31 @@ public class KafkaPausableConsumerIT extends BaseKafkaTestSupport {
             producer.close();
         }
         // clean all test topics
-        KafkaTestUtil.createAdminClient(service)
+        AbstractKafkaTestSupport.createAdminClient(service)
                 .deleteTopics(Collections.singletonList(SOURCE_TOPIC)).all();
 
         executorService.shutdownNow();
     }
 
+    private boolean canContinue() {
+        // First one should go through ...
+        if (count.intValue() <= 1) {
+            return true;
+        }
+
+        if (count.intValue() >= RETRY_COUNT) {
+            return true;
+        }
+
+        return false;
+    }
+
     public void increment() {
         count.increment();
+    }
+
+    public int getCount() {
+        return count.intValue();
     }
 
     @Override
@@ -109,16 +145,13 @@ public class KafkaPausableConsumerIT extends BaseKafkaTestSupport {
 
             @Override
             public void configure() {
-                from("kafka:" + SOURCE_TOPIC
-                     + "?groupId=KafkaPausableConsumerIT&autoOffsetReset=earliest&keyDeserializer=org.apache.kafka.common.serialization.StringDeserializer"
-                     + "&valueDeserializer=org.apache.kafka.common.serialization.StringDeserializer"
-                     + "&autoCommitIntervalMs=1000&pollTimeoutMs=1000&autoCommitEnable=true&interceptorClasses=org.apache.camel.component.kafka.MockConsumerInterceptor")
+                from(from)
                         .pausable(testConsumerListener, o -> canContinue())
                         .routeId("pausable-it")
                         .process(exchange -> LOG.info("Got record from Kafka: {}", exchange.getMessage().getBody()))
-                        .to("direct:intermediate");
+                        .to(intermediate);
 
-                from("direct:intermediate")
+                from(intermediate)
                         .process(exchange -> {
                             LOG.info("Got record on the intermediate processor: {}", exchange.getMessage().getBody());
 
@@ -126,7 +159,7 @@ public class KafkaPausableConsumerIT extends BaseKafkaTestSupport {
                                 throw new RuntimeCamelException("Error");
                             }
                         })
-                        .to(KafkaTestUtil.MOCK_RESULT);
+                        .to(to);
             }
         };
     }
@@ -140,8 +173,6 @@ public class KafkaPausableConsumerIT extends BaseKafkaTestSupport {
 
         // Although all messages will be sent more than once to the exception only 5 messages should reach the final
         // destination, because sending them on the first few tries should fail
-
-        MockEndpoint to = contextExtension.getMockEndpoint(KafkaTestUtil.MOCK_RESULT);
         to.expectedMessageCount(5);
         to.expectedBodiesReceivedInAnyOrder("message-0", "message-1", "message-2", "message-3", "message-4");
 
@@ -173,23 +204,5 @@ public class KafkaPausableConsumerIT extends BaseKafkaTestSupport {
         Map<String, Object> headers = to.getExchanges().get(0).getIn().getHeaders();
         assertFalse(headers.containsKey(skippedHeaderKey), "Should not receive skipped header");
         assertTrue(headers.containsKey(propagatedHeaderKey), "Should receive propagated header");
-    }
-
-    // Just a wrapper for us to check if the expected methods are being called
-    private static class TestListener extends KafkaConsumerListener {
-        volatile boolean afterConsumeCalled;
-        volatile boolean afterProcessCalled;
-
-        @Override
-        public boolean afterConsume(Object ignored) {
-            afterConsumeCalled = true;
-            return super.afterConsume(ignored);
-        }
-
-        @Override
-        public boolean afterProcess(ProcessingResult result) {
-            afterProcessCalled = true;
-            return super.afterProcess(result);
-        }
     }
 }

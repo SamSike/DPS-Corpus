@@ -74,7 +74,8 @@ public class XmppMessage extends DefaultMessage {
 
     @Override
     public XmppMessage newInstance() {
-        return new XmppMessage(getCamelContext());
+        XmppMessage answer = new XmppMessage(getCamelContext());
+        return answer;
     }
 
     @Override

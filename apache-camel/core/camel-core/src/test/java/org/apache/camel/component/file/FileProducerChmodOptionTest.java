@@ -35,8 +35,8 @@ import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @DisabledOnOs(OS.WINDOWS)
 public class FileProducerChmodOptionTest extends ContextTestSupport {
@@ -68,27 +68,28 @@ public class FileProducerChmodOptionTest extends ContextTestSupport {
     }
 
     @Test
-    public void testInvalidChmod() {
-        FailedToCreateRouteException e = assertThrows(FailedToCreateRouteException.class, () -> {
+    public void testInvalidChmod() throws Exception {
+        try {
             context.addRoutes(new RouteBuilder() {
 
                 @Override
-                public void configure() {
+                public void configure() throws Exception {
                     from("direct:writeBadChmod1").to(fileUri("?chmod=abc")).to("mock:badChmod1");
                 }
             });
-        }, "Expected FailedToCreateRouteException");
-
-        assertIsInstanceOf(ResolveEndpointFailedException.class, e.getCause());
-        PropertyBindingException pbe = assertIsInstanceOf(PropertyBindingException.class, e.getCause().getCause());
-        assertEquals("chmod", pbe.getPropertyName());
-        IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, pbe.getCause());
-        assertTrue(iae.getMessage().contains("chmod option [abc] is not valid"));
+            fail("Expected FailedToCreateRouteException");
+        } catch (FailedToCreateRouteException e) {
+            assertIsInstanceOf(ResolveEndpointFailedException.class, e.getCause());
+            PropertyBindingException pbe = assertIsInstanceOf(PropertyBindingException.class, e.getCause().getCause());
+            assertEquals("chmod", pbe.getPropertyName());
+            IllegalArgumentException iae = assertIsInstanceOf(IllegalArgumentException.class, pbe.getCause());
+            assertTrue(iae.getMessage().contains("chmod option [abc] is not valid"));
+        }
     }
 
     /**
      * Write a file without chmod set, should work normally and not throw an exception for invalid chmod value
-     *
+     * 
      * @throws Exception
      */
     @Test

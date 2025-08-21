@@ -19,13 +19,14 @@ package org.apache.camel.component.seda;
 import org.apache.camel.CamelExecutionException;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.support.SynchronizationAdapter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class SedaWaitForTaskCompleteOnCompletionTest extends ContextTestSupport {
 
@@ -35,12 +36,14 @@ public class SedaWaitForTaskCompleteOnCompletionTest extends ContextTestSupport 
     public void testAlways() throws Exception {
         getMockEndpoint("mock:result").expectedMessageCount(0);
 
-        CamelExecutionException e
-                = assertThrows(CamelExecutionException.class, () -> template.sendBody("direct:start", "Hello World"),
-                        "Should have thrown an exception");
+        try {
+            template.sendBody("direct:start", "Hello World");
+            fail("Should have thrown an exception");
+        } catch (CamelExecutionException e) {
+            assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
+            assertEquals("Forced", e.getCause().getMessage());
+        }
 
-        assertIsInstanceOf(IllegalArgumentException.class, e.getCause());
-        assertEquals("Forced", e.getCause().getMessage());
         assertMockEndpointsSatisfied();
 
         // 3 + 1 C and A should be last
@@ -48,16 +51,16 @@ public class SedaWaitForTaskCompleteOnCompletionTest extends ContextTestSupport 
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(defaultErrorHandler().maximumRedeliveries(3).redeliveryDelay(0));
 
                 from("direct:start").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
-                        exchange.getExchangeExtension().addOnCompletion(new SynchronizationAdapter() {
+                    public void process(Exchange exchange) throws Exception {
+                        exchange.adapt(ExtendedExchange.class).addOnCompletion(new SynchronizationAdapter() {
                             @Override
                             public void onDone(Exchange exchange) {
                                 done = done + "A";
@@ -66,14 +69,14 @@ public class SedaWaitForTaskCompleteOnCompletionTest extends ContextTestSupport 
                     }
                 }).to("seda:foo?waitForTaskToComplete=Always").process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         done = done + "B";
                     }
                 }).to("mock:result");
 
                 from("seda:foo").errorHandler(noErrorHandler()).process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         done = done + "C";
                     }
                 }).throwException(new IllegalArgumentException("Forced"));

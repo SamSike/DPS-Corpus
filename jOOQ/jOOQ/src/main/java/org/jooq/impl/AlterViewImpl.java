@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -51,17 +51,14 @@ import static org.jooq.SQLDialect.*;
 import org.jooq.*;
 import org.jooq.Function1;
 import org.jooq.Record;
-import org.jooq.conf.ParamType;
-import org.jooq.tools.StringUtils;
+import org.jooq.conf.*;
+import org.jooq.impl.*;
+import org.jooq.impl.QOM.*;
+import org.jooq.tools.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import java.util.*;
+import java.util.function.*;
+import java.util.stream.*;
 
 
 /**
@@ -77,28 +74,20 @@ implements
     AlterViewFinalStep
 {
 
-    final Table<?>                              view;
-    final QueryPartListView<? extends Field<?>> fields;
-    final boolean                               materialized;
-    final boolean                               ifExists;
-          Comment                               comment;
-          Table<?>                              renameTo;
-          Select<?>                             as;
+    final Table<?> view;
+    final boolean  ifExists;
+          Comment  comment;
+          Table<?> renameTo;
 
     AlterViewImpl(
         Configuration configuration,
         Table<?> view,
-        Collection<? extends Field<?>> fields,
-        boolean materialized,
         boolean ifExists
     ) {
         this(
             configuration,
             view,
-            fields,
-            materialized,
             ifExists,
-            null,
             null,
             null
         );
@@ -107,37 +96,16 @@ implements
     AlterViewImpl(
         Configuration configuration,
         Table<?> view,
-        boolean materialized,
-        boolean ifExists
-    ) {
-        this(
-            configuration,
-            view,
-            null,
-            materialized,
-            ifExists
-        );
-    }
-
-    AlterViewImpl(
-        Configuration configuration,
-        Table<?> view,
-        Collection<? extends Field<?>> fields,
-        boolean materialized,
         boolean ifExists,
         Comment comment,
-        Table<?> renameTo,
-        Select<?> as
+        Table<?> renameTo
     ) {
         super(configuration);
 
         this.view = view;
-        this.fields = new QueryPartList<>(fields);
-        this.materialized = materialized;
         this.ifExists = ifExists;
         this.comment = comment;
         this.renameTo = renameTo;
-        this.as = as;
     }
 
     // -------------------------------------------------------------------------
@@ -171,32 +139,18 @@ implements
         return this;
     }
 
-    @Override
-    public final AlterViewImpl as(Select<?> as) {
-        this.as = as;
-        return this;
-    }
-
     // -------------------------------------------------------------------------
     // XXX: QueryPart API
     // -------------------------------------------------------------------------
 
 
 
-    private static final Clause[]        CLAUSES                     = { Clause.ALTER_VIEW };
-    private static final Set<SQLDialect> NO_SUPPORT_RENAME_IF_EXISTS = SQLDialect.supportedUntil(CUBRID, DERBY, FIREBIRD);
-    private static final Set<SQLDialect> NO_SUPPORT_IF_EXISTS        = SQLDialect.supportedUntil(CUBRID, DERBY, FIREBIRD);
-    private static final Set<SQLDialect> SUPPORT_ALTER_TABLE_RENAME  = SQLDialect.supportedBy(CLICKHOUSE, HSQLDB, YUGABYTEDB);
-
-
-
-
+    private static final Clause[]        CLAUSES                    = { Clause.ALTER_VIEW };
+    private static final Set<SQLDialect> SUPPORT_IF_EXISTS          = SQLDialect.supportedBy(CUBRID, DERBY, FIREBIRD);
+    private static final Set<SQLDialect> SUPPORT_ALTER_TABLE_RENAME = SQLDialect.supportedBy(HSQLDB, YUGABYTEDB);
 
     private final boolean supportsIfExists(Context<?> ctx) {
-        if (renameTo != null)
-            return !NO_SUPPORT_RENAME_IF_EXISTS.contains(ctx.dialect());
-        else
-            return !NO_SUPPORT_IF_EXISTS.contains(ctx.dialect());
+        return !SUPPORT_IF_EXISTS.contains(ctx.dialect());
     }
 
     @Override
@@ -208,76 +162,11 @@ implements
     }
 
     private final void accept0(Context<?> ctx) {
-        if (as != null) {
-            switch (ctx.family()) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                case CUBRID:
-                case DERBY:
-                case FIREBIRD:
-                case H2:
-                case HSQLDB:
-                case IGNITE:
-                case MARIADB:
-                case MYSQL:
-                case POSTGRES:
-                case SQLITE:
-                case YUGABYTEDB:
-                    if (materialized)
-                        ctx.visit(begin(dropMaterializedView(view), createMaterializedView(view, fields.toArray(Tools.EMPTY_FIELD)).as(as)));
-                    else
-                        ctx.visit(begin(dropView(view), createView(view, fields.toArray(Tools.EMPTY_FIELD)).as(as)));
-
-                    break;
-
-                default:
-                    ctx.visit(K_ALTER).sql(' ');
-
-                    if (materialized)
-                        ctx.visit(K_MATERIALIZED).sql(' ');
-
-                    ctx.visit(K_VIEW).sql(' ').visit(view);
-                    Select<?> s = as;
-
-                    if (!fields.isEmpty()) {
-
-
-
-
-
-                        ctx.sql(" (").visit(QueryPartCollectionView.wrap(fields).qualify(false)).sql(')');
-                    }
-
-                    ctx.formatSeparator().visit(K_AS).formatSeparator().visit(s);
-                    break;
-            }
-
-            return;
-        }
-
         if (comment != null) {
-            ctx.visit((materialized ? commentOnMaterializedView(view) : commentOnView(view)).is(comment));
+            ctx.visit(commentOnView(view).is(comment));
             return;
         }
 
-        if (renameTo != null) {
 
 
 
@@ -295,11 +184,7 @@ implements
 
 
 
-            if (SUPPORT_ALTER_TABLE_RENAME.contains(ctx.dialect())) {
-                ctx.visit((ifExists ? alterTableIfExists(view) : alterTable(view)).renameTo(renameTo));
-                return;
-            }
-        }
+
 
         accept1(ctx);
     }
@@ -354,24 +239,24 @@ implements
 
     private final void accept1(Context<?> ctx) {
         ctx.start(Clause.ALTER_VIEW_VIEW)
-           .visit(K_ALTER).sql(' ');
-
-        if (materialized)
-            ctx.visit(K_MATERIALIZED).sql(' ').visit(K_VIEW);
-        else
-            ctx.visit(K_VIEW);
+           .visit(K_ALTER).sql(' ')
+           .visit(SUPPORT_ALTER_TABLE_RENAME.contains(ctx.dialect()) ? K_TABLE : K_VIEW);
 
         if (ifExists && supportsIfExists(ctx))
             ctx.sql(' ').visit(K_IF_EXISTS);
 
-        ctx.sql(' ').visit(view).sql(' ')
-           .end(Clause.ALTER_VIEW_VIEW);
+        ctx.sql(' ').visit(view)
+           .end(Clause.ALTER_VIEW_VIEW)
+           .formatIndentStart()
+           .formatSeparator();
 
         if (renameTo != null)
             ctx.start(Clause.ALTER_VIEW_RENAME)
                .visit(K_RENAME_TO).sql(' ')
                .qualify(false, c -> c.visit(renameTo))
                .end(Clause.ALTER_VIEW_RENAME);
+
+        ctx.formatIndentEnd();
     }
 
     @Override
@@ -391,16 +276,6 @@ implements
     }
 
     @Override
-    public final QOM.UnmodifiableList<? extends Field<?>> $fields() {
-        return QOM.unmodifiable(fields);
-    }
-
-    @Override
-    public final boolean $materialized() {
-        return materialized;
-    }
-
-    @Override
     public final boolean $ifExists() {
         return ifExists;
     }
@@ -416,53 +291,28 @@ implements
     }
 
     @Override
-    public final Select<?> $as() {
-        return as;
-    }
-
-    @Override
     public final QOM.AlterView $view(Table<?> newValue) {
-        return $constructor().apply(newValue, $fields(), $materialized(), $ifExists(), $comment(), $renameTo(), $as());
-    }
-
-    @Override
-    public final QOM.AlterView $fields(Collection<? extends Field<?>> newValue) {
-        return $constructor().apply($view(), newValue, $materialized(), $ifExists(), $comment(), $renameTo(), $as());
-    }
-
-    @Override
-    public final QOM.AlterView $materialized(boolean newValue) {
-        return $constructor().apply($view(), $fields(), newValue, $ifExists(), $comment(), $renameTo(), $as());
+        return $constructor().apply(newValue, $ifExists(), $comment(), $renameTo());
     }
 
     @Override
     public final QOM.AlterView $ifExists(boolean newValue) {
-        return $constructor().apply($view(), $fields(), $materialized(), newValue, $comment(), $renameTo(), $as());
+        return $constructor().apply($view(), newValue, $comment(), $renameTo());
     }
 
     @Override
     public final QOM.AlterView $comment(Comment newValue) {
-        return $constructor().apply($view(), $fields(), $materialized(), $ifExists(), newValue, $renameTo(), $as());
+        return $constructor().apply($view(), $ifExists(), newValue, $renameTo());
     }
 
     @Override
     public final QOM.AlterView $renameTo(Table<?> newValue) {
-        return $constructor().apply($view(), $fields(), $materialized(), $ifExists(), $comment(), newValue, $as());
+        return $constructor().apply($view(), $ifExists(), $comment(), newValue);
     }
 
-    @Override
-    public final QOM.AlterView $as(Select<?> newValue) {
-        return $constructor().apply($view(), $fields(), $materialized(), $ifExists(), $comment(), $renameTo(), newValue);
+    public final Function4<? super Table<?>, ? super Boolean, ? super Comment, ? super Table<?>, ? extends QOM.AlterView> $constructor() {
+        return (a1, a2, a3, a4) -> new AlterViewImpl(configuration(), a1, a2, a3, a4);
     }
-
-    public final Function7<? super Table<?>, ? super Collection<? extends Field<?>>, ? super Boolean, ? super Boolean, ? super Comment, ? super Table<?>, ? super Select<?>, ? extends QOM.AlterView> $constructor() {
-        return (a1, a2, a3, a4, a5, a6, a7) -> new AlterViewImpl(configuration(), a1, (Collection<? extends Field<?>>) a2, a3, a4, a5, a6, a7);
-    }
-
-
-
-
-
 
 
 

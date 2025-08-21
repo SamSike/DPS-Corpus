@@ -50,7 +50,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ScpOperations implements RemoteFileOperations<ScpFile> {
     private static final Logger LOG = LoggerFactory.getLogger(ScpOperations.class);
-    private static final byte[] EMPTY = {};
 
     private ScpEndpoint endpoint;
     private Session session;
@@ -116,7 +115,7 @@ public class ScpOperations implements RemoteFileOperations<ScpFile> {
             // Do an explicit test for a null body and decide what to do
             if (endpoint.isAllowNullBody()) {
                 LOG.trace("Writing empty file.");
-                is = new ByteArrayInputStream(EMPTY);
+                is = new ByteArrayInputStream(new byte[] {});
             } else {
                 throw new GenericFileOperationFailedException("Cannot write null body to file: " + name);
             }

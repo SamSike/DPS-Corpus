@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -48,7 +48,6 @@ import org.jooq.meta.Definition;
 import org.jooq.meta.DomainDefinition;
 import org.jooq.meta.EnumDefinition;
 import org.jooq.meta.ForeignKeyDefinition;
-import org.jooq.meta.InverseForeignKeyDefinition;
 import org.jooq.meta.ParameterDefinition;
 import org.jooq.meta.RoutineDefinition;
 import org.jooq.meta.SyntheticDaoDefinition;
@@ -245,14 +244,6 @@ public interface GeneratorStrategy {
     String getJavaSetterName(Definition definition, Mode mode);
 
     /**
-     * Whether the {@link #getJavaSetterName(Definition, Mode)} produces a
-     * method that overrides a member from a parent type unknown to jOOQ, e.g.
-     * from {@link #getJavaClassExtends(Definition, Mode)} or
-     * {@link #getJavaClassImplements(Definition, Mode)}.
-     */
-    boolean getJavaSetterOverride(Definition definition, Mode mode);
-
-    /**
      * This is applied to definitions that can result in getters of a container.
      * For example, the definition could be a {@link ColumnDefinition}, the
      * container a {@link TableDefinition}. Then this would apply to records and
@@ -280,14 +271,6 @@ public interface GeneratorStrategy {
     String getJavaGetterName(Definition definition, Mode mode);
 
     /**
-     * Whether the {@link #getJavaGetterName(Definition, Mode)} produces a
-     * method that overrides a member from a parent type unknown to jOOQ, e.g.
-     * from {@link #getJavaClassExtends(Definition, Mode)} or
-     * {@link #getJavaClassImplements(Definition, Mode)}.
-     */
-    boolean getJavaGetterOverride(Definition definition, Mode mode);
-
-    /**
      * This is applied to definitions that can result in methods. For example,
      * the definition could be a {@link RoutineDefinition}
      * <p>
@@ -305,22 +288,6 @@ public interface GeneratorStrategy {
      * @return The Java method name representing this object, e.g. [myFunction]
      */
     String getJavaMethodName(Definition definition, Mode mode);
-
-    /**
-     * Whether the {@link #getJavaMethodName(Definition, Mode)} produces a
-     * method that overrides a member from a parent type unknown to jOOQ, e.g.
-     * from {@link #getJavaClassExtends(Definition, Mode)} or
-     * {@link #getJavaClassImplements(Definition, Mode)}.
-     */
-    boolean getJavaMethodOverride(Definition definition, Mode mode);
-
-    /**
-     * @return The super class name of the global names class for a given
-     *         definition type, e.g. [com.example.AbstractPojo]. If this returns
-     *         <code>null</code> or an empty string, then no super class is
-     *         extended.
-     */
-    String getGlobalNamesJavaClassExtends(Definition container, Class<? extends Definition> objectType);
 
     /**
      * @return The super class name of the global references class for a given
@@ -350,14 +317,6 @@ public interface GeneratorStrategy {
     String getJavaClassExtends(Definition definition, Mode mode);
 
     /**
-     * @return The implemented interface names of the global names class
-     *         for a given definition type, e.g. [com.example.Pojo]. If this
-     *         returns <code>null</code> or an empty list, then no interfaces
-     *         are implemented.
-     */
-    List<String> getGlobalNamesJavaClassImplements(Definition container, Class<? extends Definition> objectType);
-
-    /**
      * @return The implemented interface names of the global references class
      *         for a given definition type, e.g. [com.example.Pojo]. If this
      *         returns <code>null</code> or an empty list, then no interfaces
@@ -385,12 +344,6 @@ public interface GeneratorStrategy {
     List<String> getJavaClassImplements(Definition definition, Mode mode);
 
     /**
-     * @return The Java class name of the global names class for a given
-     *         definition type, e.g. [TableNames]
-     */
-    String getGlobalNamesJavaClassName(Definition container, Class<? extends Definition> objectType);
-
-    /**
      * @return The Java class name of the global references class for a given
      *         definition type, e.g. [MyTableSuffix]
      */
@@ -409,12 +362,6 @@ public interface GeneratorStrategy {
      *         [MyTableSuffix]
      */
     String getJavaClassName(Definition definition, Mode mode);
-
-    /**
-     * @return The Java package name of the global names class for a given
-     *         definition type, e.g. [org.jooq.generated]
-     */
-    String getGlobalNamesJavaPackageName(Definition container, Class<? extends Definition> objectType);
 
     /**
      * @return The Java package name of the global references class for a given
@@ -468,20 +415,6 @@ public interface GeneratorStrategy {
     String getJavaMemberName(Definition definition, Mode mode);
 
     /**
-     * Whether the {@link #getJavaMemberName(Definition, Mode)} produces a
-     * member that overrides a member from a parent type unknown to jOOQ, e.g.
-     * from {@link #getJavaClassExtends(Definition, Mode)} or
-     * {@link #getJavaClassImplements(Definition, Mode)}.
-     */
-    boolean getJavaMemberOverride(Definition definition, Mode mode);
-
-    /**
-     * @return The full Java class name of the global names class for a
-     *         given definition type, e.g. [org.jooq.generated.TableNames]
-     */
-    String getGlobalNamesFullJavaClassName(Definition container, Class<? extends Definition> objectType);
-
-    /**
      * @return The full Java class name of the global references class for a
      *         given definition type, e.g. [org.jooq.generated.MyTable]
      */
@@ -501,12 +434,6 @@ public interface GeneratorStrategy {
      *         [org.jooq.generated.MyTable][suffix]
      */
     String getFullJavaClassName(Definition definition, Mode mode);
-
-    /**
-     * @return The Java class file name of the global names class for a
-     *         given definition type, e.g. [TableNames.java]
-     */
-    String getGlobalNamesFileName(Definition container, Class<? extends Definition> objectType);
 
     /**
      * @return The Java class file name of the global references class for a
@@ -533,12 +460,6 @@ public interface GeneratorStrategy {
     File getFileRoot();
 
     /**
-     * @return The Java class file name of the global names class for a
-     *         given definition type, e.g. [C:\org\jooq\generated\TableNames.java]
-     */
-    File getGlobalNamesFile(Definition container, Class<? extends Definition> objectType);
-
-    /**
      * @return The Java class file name of the global references class for a
      *         given definition type, e.g. [C:\org\jooq\generated\MyTable.java]
      */
@@ -563,32 +484,24 @@ public interface GeneratorStrategy {
     File getFile(String fileName);
 
     /**
-     * @return The Java class file header of the global names class for a
-     *         given definition type, e.g. <pre><code>
-     * This file is generated by jOOQ.
-     * </code></pre>
-     */
-    String getGlobalNamesFileHeader(Definition container, Class<? extends Definition> objectType);
-
-    /**
      * @return The Java class file header of the global references class for a
-     *         given definition type, e.g. <pre><code>
+     *         given definition type, e.g. <code><pre>
      * This file is generated by jOOQ.
-     * </code></pre>
+     * </pre></code>
      */
     String getGlobalReferencesFileHeader(Definition container, Class<? extends Definition> objectType);
 
     /**
-     * @return The Java class file header, e.g. <pre><code>
+     * @return The Java class file header, e.g. <code><pre>
      * This file is generated by jOOQ.
-     * </code></pre>
+     * </pre></code>
      */
     String getFileHeader(Definition definition);
 
     /**
-     * @return The Java class file header, e.g. <pre><code>
+     * @return The Java class file header, e.g. <code><pre>
      * This file is generated by jOOQ.
-     * </code></pre>
+     * </pre></code>
      */
     String getFileHeader(Definition definition, Mode mode);
 
@@ -615,12 +528,6 @@ public interface GeneratorStrategy {
          * {@link UDTDefinition}'s record class is being rendered.
          */
         RECORD,
-
-        /**
-         * The record type mode. This is used when a {@link UDTDefinition}'s
-         * record type interface is being rendered.
-         */
-        RECORD_TYPE,
 
         /**
          * The pojo mode. This is used when a {@link TableDefinition}'s pojo
@@ -656,14 +563,7 @@ public interface GeneratorStrategy {
          * The domain mode. This is used when a {@link DomainDefinition}'s class
          * is being rendered
          */
-        DOMAIN,
-
-        /**
-         * The path mode. This is used when a {@link ForeignKeyDefinition}, an
-         * {@link InverseForeignKeyDefinition}, or a {@link UDTDefinition} is
-         * used to generate a path expression.
-         */
-        PATH
+        DOMAIN
 
     }
 }

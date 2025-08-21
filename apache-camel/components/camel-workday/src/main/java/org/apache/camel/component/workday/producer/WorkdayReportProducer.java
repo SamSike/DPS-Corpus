@@ -46,9 +46,10 @@ public class WorkdayReportProducer extends WorkdayDefaultProducer {
 
         stringBuilder.append("format=");
         stringBuilder.append(configuration.getReportFormat());
-
-        return String.format(WORKDAY_RASS_URL_TEMPLATE, configuration.getHost(), configuration.getTenant(),
+        String uriString = String.format(WORKDAY_RASS_URL_TEMPLATE, configuration.getHost(), configuration.getTenant(),
                 stringBuilder.toString());
+
+        return uriString;
     }
 
 }

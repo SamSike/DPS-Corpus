@@ -16,12 +16,14 @@
  */
 package org.apache.camel.component.activemq;
 
-import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.activemq.Service;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
+import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.component.jms.JmsConfiguration;
 import org.apache.camel.component.jms.JmsEndpoint;
@@ -32,8 +34,6 @@ import org.apache.camel.support.component.PropertyConfigurerSupport;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.PropertiesHelper;
 import org.apache.camel.util.URISupport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.jms.connection.SingleConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
 
@@ -42,12 +42,8 @@ import org.springframework.jms.core.JmsTemplate;
  */
 @Component("activemq")
 public class ActiveMQComponent extends JmsComponent {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQComponent.class);
-
     private final CopyOnWriteArrayList<SingleConnectionFactory> singleConnectionFactoryList = new CopyOnWriteArrayList<>();
-    private final CopyOnWriteArrayList<Object> pooledConnectionFactoryServiceList = new CopyOnWriteArrayList<>();
-    private boolean embedded;
+    private final CopyOnWriteArrayList<Service> pooledConnectionFactoryServiceList = new CopyOnWriteArrayList<>();
 
     public ActiveMQComponent() {
     }
@@ -85,26 +81,9 @@ public class ActiveMQComponent extends JmsComponent {
         return answer;
     }
 
-    public boolean isEmbedded() {
-        return embedded;
-    }
-
-    /**
-     * Use an embedded in-memory (non-persistent) ActiveMQ broker for development and testing purposes. You must have
-     * activemq-broker JAR on the classpath.
-     */
-    @Metadata(label = "common")
-    public void setEmbedded(boolean embedded) {
-        this.embedded = embedded;
-        if (embedded) {
-            setBrokerURL("vm://localhost?broker.persistent=false");
-            LOG.info("Using embedded in-memory ActiveMQ broker (you must have activemq-broker JAR added as dependency)");
-        }
-    }
-
     public String getBrokerURL() {
-        if (getConfiguration() instanceof ActiveMQConfiguration activeMQConfiguration) {
-            return activeMQConfiguration.getBrokerURL();
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            return ((ActiveMQConfiguration) getConfiguration()).getBrokerURL();
         }
         return null;
     }
@@ -115,8 +94,8 @@ public class ActiveMQComponent extends JmsComponent {
      */
     @Metadata(label = "common")
     public void setBrokerURL(String brokerURL) {
-        if (getConfiguration() instanceof ActiveMQConfiguration activeMQConfiguration) {
-            activeMQConfiguration.setBrokerURL(brokerURL);
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration) getConfiguration()).setBrokerURL(brokerURL);
         }
     }
 
@@ -127,21 +106,21 @@ public class ActiveMQComponent extends JmsComponent {
      */
     @Metadata(defaultValue = "false", label = "advanced")
     public void setTrustAllPackages(boolean trustAllPackages) {
-        if (getConfiguration() instanceof ActiveMQConfiguration activeMQConfiguration) {
-            activeMQConfiguration.setTrustAllPackages(trustAllPackages);
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration) getConfiguration()).setTrustAllPackages(trustAllPackages);
         }
     }
 
     public boolean isTrustAllPackages() {
-        if (getConfiguration() instanceof ActiveMQConfiguration activeMQConfiguration) {
-            return activeMQConfiguration.isTrustAllPackages();
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            return ((ActiveMQConfiguration) getConfiguration()).isTrustAllPackages();
         }
         return false;
     }
 
     /**
      * Enables or disables whether a PooledConnectionFactory will be used so that when messages are sent to ActiveMQ
-     * from outside a message consuming thread, pooling will be used rather than the default with the Spring
+     * from outside of a message consuming thread, pooling will be used rather than the default with the Spring
      * {@link JmsTemplate} which will create a new connection, session, producer for each message then close them all
      * down again.
      * <p/>
@@ -149,36 +128,36 @@ public class ActiveMQComponent extends JmsComponent {
      */
     @Metadata(defaultValue = "true", label = "common")
     public void setUsePooledConnection(boolean usePooledConnection) {
-        if (getConfiguration() instanceof ActiveMQConfiguration activeMQConfiguration) {
-            activeMQConfiguration.setUsePooledConnection(usePooledConnection);
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration) getConfiguration()).setUsePooledConnection(usePooledConnection);
         }
     }
 
     public boolean isUsePooledConnection() {
-        if (getConfiguration() instanceof ActiveMQConfiguration activeMQConfiguration) {
-            return activeMQConfiguration.isUsePooledConnection();
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            return ((ActiveMQConfiguration) getConfiguration()).isUsePooledConnection();
         }
         return true;
     }
 
     /**
      * Enables or disables whether a Spring {@link SingleConnectionFactory} will be used so that when messages are sent
-     * to ActiveMQ from outside a message consuming thread, pooling will be used rather than the default with the Spring
-     * {@link JmsTemplate} which will create a new connection, session, producer for each message then close them all
-     * down again.
+     * to ActiveMQ from outside of a message consuming thread, pooling will be used rather than the default with the
+     * Spring {@link JmsTemplate} which will create a new connection, session, producer for each message then close them
+     * all down again.
      * <p/>
      * The default value is false and a pooled connection is used by default.
      */
     @Metadata(defaultValue = "false", label = "common")
     public void setUseSingleConnection(boolean useSingleConnection) {
-        if (getConfiguration() instanceof ActiveMQConfiguration activeMQConfiguration) {
-            activeMQConfiguration.setUseSingleConnection(useSingleConnection);
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration) getConfiguration()).setUseSingleConnection(useSingleConnection);
         }
     }
 
     public boolean isUseSingleConnection() {
-        if (getConfiguration() instanceof ActiveMQConfiguration activeMQConfiguration) {
-            return activeMQConfiguration.isUseSingleConnection();
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            return ((ActiveMQConfiguration) getConfiguration()).isUseSingleConnection();
         }
         return false;
     }
@@ -200,7 +179,7 @@ public class ActiveMQComponent extends JmsComponent {
         super.setProperties(bean, parameters);
     }
 
-    protected void addPooledConnectionFactoryService(Object pooledConnectionFactoryService) {
+    protected void addPooledConnectionFactoryService(Service pooledConnectionFactoryService) {
         pooledConnectionFactoryServiceList.add(pooledConnectionFactoryService);
     }
 
@@ -209,12 +188,18 @@ public class ActiveMQComponent extends JmsComponent {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected String convertPathToActualDestination(String path, Map<String, Object> parameters) {
         // support ActiveMQ destination options using the destination. prefix
         // http://activemq.apache.org/destination-options.html
-        Map<String, Object> options = PropertiesHelper.extractProperties(parameters, "destination.");
+        Map options = PropertiesHelper.extractProperties(parameters, "destination.");
 
-        String query = URISupport.createQueryString(options);
+        String query;
+        try {
+            query = URISupport.createQueryString(options);
+        } catch (URISyntaxException e) {
+            throw RuntimeCamelException.wrapRuntimeCamelException(e);
+        }
 
         // if we have destination options then append them to the destination
         // name
@@ -238,11 +223,9 @@ public class ActiveMQComponent extends JmsComponent {
 
     @Override
     protected void doStop() throws Exception {
-        for (Object s : pooledConnectionFactoryServiceList) {
+        for (Service s : pooledConnectionFactoryServiceList) {
             try {
-                // invoke stop method if exists
-                Method m = s.getClass().getMethod("stop");
-                org.apache.camel.support.ObjectHelper.invokeMethod(m, s);
+                s.stop();
             } catch (Exception e) {
                 // ignore
             }
@@ -266,8 +249,8 @@ public class ActiveMQComponent extends JmsComponent {
      */
     @Override
     public void setConfiguration(JmsConfiguration configuration) {
-        if (configuration instanceof ActiveMQConfiguration activeMQConfiguration) {
-            activeMQConfiguration.setActiveMQComponent(this);
+        if (configuration instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration) configuration).setActiveMQComponent(this);
         }
         super.setConfiguration(configuration);
     }

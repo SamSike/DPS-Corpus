@@ -41,10 +41,10 @@ public class DeadLetterChannelUseOriginalInBodyWithFileTest extends ContextTestS
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:dead").disableRedelivery().logStackTrace(false).useOriginalMessage());
 
                 from(fileUri("?initialDelay=0&delay=10&noop=true")).transform(body().append(" World"))
@@ -59,7 +59,7 @@ public class DeadLetterChannelUseOriginalInBodyWithFileTest extends ContextTestS
         }
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             assertEquals("Hello World", exchange.getIn().getBody(String.class));
             throw new IllegalArgumentException("Forced");
         }

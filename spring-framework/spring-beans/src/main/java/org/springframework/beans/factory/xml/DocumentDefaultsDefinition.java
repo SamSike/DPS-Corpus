@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package org.springframework.beans.factory.xml;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.parsing.DefaultsDefinition;
+import org.springframework.lang.Nullable;
 
 /**
  * Simple JavaBean that holds the defaults specified at the {@code <beans>}
@@ -30,19 +29,26 @@ import org.springframework.beans.factory.parsing.DefaultsDefinition;
  */
 public class DocumentDefaultsDefinition implements DefaultsDefinition {
 
-	private @Nullable String lazyInit;
+	@Nullable
+	private String lazyInit;
 
-	private @Nullable String merge;
+	@Nullable
+	private String merge;
 
-	private @Nullable String autowire;
+	@Nullable
+	private String autowire;
 
-	private @Nullable String autowireCandidates;
+	@Nullable
+	private String autowireCandidates;
 
-	private @Nullable String initMethod;
+	@Nullable
+	private String initMethod;
 
-	private @Nullable String destroyMethod;
+	@Nullable
+	private String destroyMethod;
 
-	private @Nullable Object source;
+	@Nullable
+	private Object source;
 
 
 	/**
@@ -55,7 +61,8 @@ public class DocumentDefaultsDefinition implements DefaultsDefinition {
 	/**
 	 * Return the default lazy-init flag for the document that's currently parsed.
 	 */
-	public @Nullable String getLazyInit() {
+	@Nullable
+	public String getLazyInit() {
 		return this.lazyInit;
 	}
 
@@ -69,7 +76,8 @@ public class DocumentDefaultsDefinition implements DefaultsDefinition {
 	/**
 	 * Return the default merge setting for the document that's currently parsed.
 	 */
-	public @Nullable String getMerge() {
+	@Nullable
+	public String getMerge() {
 		return this.merge;
 	}
 
@@ -83,7 +91,8 @@ public class DocumentDefaultsDefinition implements DefaultsDefinition {
 	/**
 	 * Return the default autowire setting for the document that's currently parsed.
 	 */
-	public @Nullable String getAutowire() {
+	@Nullable
+	public String getAutowire() {
 		return this.autowire;
 	}
 
@@ -99,7 +108,8 @@ public class DocumentDefaultsDefinition implements DefaultsDefinition {
 	 * Return the default autowire-candidate pattern for the document that's currently parsed.
 	 * May also return a comma-separated list of patterns.
 	 */
-	public @Nullable String getAutowireCandidates() {
+	@Nullable
+	public String getAutowireCandidates() {
 		return this.autowireCandidates;
 	}
 
@@ -113,7 +123,8 @@ public class DocumentDefaultsDefinition implements DefaultsDefinition {
 	/**
 	 * Return the default init-method setting for the document that's currently parsed.
 	 */
-	public @Nullable String getInitMethod() {
+	@Nullable
+	public String getInitMethod() {
 		return this.initMethod;
 	}
 
@@ -127,7 +138,8 @@ public class DocumentDefaultsDefinition implements DefaultsDefinition {
 	/**
 	 * Return the default destroy-method setting for the document that's currently parsed.
 	 */
-	public @Nullable String getDestroyMethod() {
+	@Nullable
+	public String getDestroyMethod() {
 		return this.destroyMethod;
 	}
 
@@ -140,7 +152,8 @@ public class DocumentDefaultsDefinition implements DefaultsDefinition {
 	}
 
 	@Override
-	public @Nullable Object getSource() {
+	@Nullable
+	public Object getSource() {
 		return this.source;
 	}
 

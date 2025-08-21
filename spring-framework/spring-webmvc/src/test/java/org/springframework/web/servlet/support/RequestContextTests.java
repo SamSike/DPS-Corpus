@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Dave Syer
  * @author Rossen Stoyanchev
  */
-class RequestContextTests {
+public class RequestContextTests {
 
 	private MockHttpServletRequest request = new MockHttpServletRequest();
 
@@ -46,21 +46,21 @@ class RequestContextTests {
 	private Map<String, Object> model = new HashMap<>();
 
 	@BeforeEach
-	void init() {
+	public void init() {
 		GenericWebApplicationContext applicationContext = new GenericWebApplicationContext();
 		applicationContext.refresh();
 		servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, applicationContext);
 	}
 
 	@Test
-	void testGetContextUrl() {
+	public void testGetContextUrl() throws Exception {
 		request.setContextPath("foo/");
 		RequestContext context = new RequestContext(request, response, servletContext, model);
 		assertThat(context.getContextUrl("bar")).isEqualTo("foo/bar");
 	}
 
 	@Test
-	void testGetContextUrlWithMap() {
+	public void testGetContextUrlWithMap() throws Exception {
 		request.setContextPath("foo/");
 		RequestContext context = new RequestContext(request, response, servletContext, model);
 		Map<String, Object> map = new HashMap<>();
@@ -70,7 +70,7 @@ class RequestContextTests {
 	}
 
 	@Test
-	void testGetContextUrlWithMapEscaping() {
+	public void testGetContextUrlWithMapEscaping() throws Exception {
 		request.setContextPath("foo/");
 		RequestContext context = new RequestContext(request, response, servletContext, model);
 		Map<String, Object> map = new HashMap<>();
@@ -80,7 +80,7 @@ class RequestContextTests {
 	}
 
 	@Test
-	void testPathToServlet() {
+	public void testPathToServlet() throws Exception {
 		request.setContextPath("/app");
 		request.setServletPath("/servlet");
 		RequestContext context = new RequestContext(request, response, servletContext, model);

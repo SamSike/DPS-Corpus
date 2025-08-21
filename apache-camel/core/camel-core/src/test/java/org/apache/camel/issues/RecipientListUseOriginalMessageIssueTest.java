@@ -16,13 +16,10 @@
  */
 package org.apache.camel.issues;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -39,16 +36,14 @@ public class RecipientListUseOriginalMessageIssueTest extends ContextTestSupport
 
         assertMockEndpointsSatisfied();
 
-        Awaitility.await().pollDelay(50, TimeUnit.MILLISECONDS).untilAsserted(() -> {
-            assertFileExists(testFile("outbox/hello.txt"), "A");
-        });
+        assertFileExists(testFile("outbox/hello.txt"), "A");
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(Exception.class).handled(true).useOriginalMessage()
                         .to(fileUri("outbox"))
                         .to("mock:error");
@@ -56,12 +51,12 @@ public class RecipientListUseOriginalMessageIssueTest extends ContextTestSupport
                 from(fileUri("inbox?initialDelay=0&delay=10"))
                         .process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 exchange.getIn().setBody("B");
                             }
                         }).process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 // try to put some invalid destination
                                 exchange.getIn().setHeader("path", "xxx");
                             }

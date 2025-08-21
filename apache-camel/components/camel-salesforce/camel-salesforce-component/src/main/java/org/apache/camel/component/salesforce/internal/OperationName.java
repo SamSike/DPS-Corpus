@@ -41,7 +41,6 @@ public enum OperationName {
     SEARCH("search"),
     APEX_CALL("apexCall"),
     RECENT("recent"),
-    GET_EVENT_SCHEMA("getEventSchema"),
 
     // bulk API
     CREATE_JOB("createJob"),
@@ -108,12 +107,7 @@ public enum OperationName {
     // Raw operation
     RAW("raw"),
 
-    // Streaming API
-    SUBSCRIBE("subscribe"),
-
-    // Pub/Sub API
-    PUBSUB_PUBLISH("pubSubPublish"),
-    PUBSUB_SUBSCRIBE("pubSubSubscribe");
+    SUBSCRIBE("subscribe");
 
     private final String value;
 

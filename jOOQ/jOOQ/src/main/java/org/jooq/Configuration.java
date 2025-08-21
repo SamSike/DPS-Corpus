@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -53,7 +53,6 @@ import javax.sql.DataSource;
 
 import org.jooq.conf.Settings;
 import org.jooq.exception.DataAccessException;
-import org.jooq.impl.AnnotatedPojoMemberProvider;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DataSourceConnectionProvider;
 import org.jooq.impl.DefaultConfiguration;
@@ -109,8 +108,8 @@ import io.r2dbc.spi.ConnectionFactory;
  * <li>{@link #connectionProvider()}: The {@link ConnectionProvider} that
  * defines the semantics of {@link ConnectionProvider#acquire()} and
  * {@link ConnectionProvider#release(Connection)} for all queries executed in
- * the context of this <code>Configuration</code>. <br>
- * <br>
+ * the context of this <code>Configuration</code>. <br/>
+ * <br/>
  * jOOQ-provided default implementations include:
  * <ul>
  * <li>{@link DefaultConnectionProvider}: a non-thread-safe implementation that
@@ -122,8 +121,8 @@ import io.r2dbc.spi.ConnectionFactory;
  * </li>
  * <li>{@link #executeListenerProviders()}: A set of
  * {@link ExecuteListenerProvider} that implement {@link Query} execution
- * lifecycle management.<br>
- * <br>
+ * lifecycle management.<br/>
+ * <br/>
  * jOOQ-provided example implementations include:
  * <ul>
  * <li>{@link LoggerListener}: generating default query execution log output
@@ -145,14 +144,14 @@ import io.r2dbc.spi.ConnectionFactory;
  * <li>{@link #recordListenerProviders()}: A set of
  * {@link RecordListenerProvider} that implement {@link Record} fetching and
  * storing lifecycle management, specifically for use with
- * {@link UpdatableRecord}.<br>
- * <br>
+ * {@link UpdatableRecord}.<br/>
+ * <br/>
  * jOOQ does not provide any implementations.</li>
  * <li>{@link #recordMapperProvider()}: The {@link RecordMapperProvider} that
  * defines and implements the behaviour of {@link Record#into(Class)},
  * {@link ResultQuery#fetchInto(Class)}, {@link Cursor#fetchInto(Class)}, and
- * various related methods. <br>
- * <br>
+ * various related methods. <br/>
+ * <br/>
  * jOOQ-provided default implementations include:
  * <ul>
  * <li>{@link DefaultRecordMapperProvider}: an implementation delegating to the
@@ -166,8 +165,8 @@ import io.r2dbc.spi.ConnectionFactory;
  * <li>{@link #transactionProvider()}: The {@link TransactionProvider} that
  * defines and implements the behaviour of the
  * {@link DSLContext#transaction(TransactionalRunnable)} and
- * {@link DSLContext#transactionResult(TransactionalCallable)} methods.<br>
- * <br>
+ * {@link DSLContext#transactionResult(TransactionalCallable)} methods.<br/>
+ * <br/>
  * jOOQ-provided default implementations include:
  * <ul>
  * <li>{@link DefaultTransactionProvider}: an implementation backed by JDBC
@@ -180,9 +179,11 @@ import io.r2dbc.spi.ConnectionFactory;
  * <li>{@link #visitListenerProviders()}: A set of {@link VisitListenerProvider}
  * that implement {@link Query} rendering and variable binding lifecycle
  * management, and that are allowed to implement query transformation - e.g. to
- * implement row-level security, or multi-tenancy.<br>
- * <br>
+ * implement row-level security, or multi-tenancy.<br/>
+ * <br/>
  * jOOQ does not provide any implementations.</li>
+ * </ul>
+ * </li>
  * </ul>
  * <p>
  * <h3>Thread safety</h3>
@@ -416,18 +417,6 @@ public interface Configuration extends Serializable {
     CharsetProvider charsetProvider();
 
     /**
-     * Get this configuration's underlying annotated POJO member provider.
-     */
-    @NotNull
-    AnnotatedPojoMemberProvider annotatedPojoMemberProvider();
-
-    /**
-     * Get this configuration's underlying constructor properties provider.
-     */
-    @NotNull
-    ConstructorPropertiesProvider constructorPropertiesProvider();
-
-    /**
      * Get this configuration's underlying record mapper provider.
      */
     @NotNull
@@ -560,19 +549,6 @@ public interface Configuration extends Serializable {
      */
     @NotNull
     FormattingProvider formattingProvider();
-
-    /**
-     * Get the configured <code>SubscriberProvider</code> from this configuration.
-     */
-    @NotNull
-    SubscriberProvider<?> subscriberProvider();
-
-
-
-
-
-
-
 
 
 
@@ -778,32 +754,6 @@ public interface Configuration extends Serializable {
      */
     @NotNull
     Configuration set(TransactionProvider newTransactionProvider);
-
-    /**
-     * Change this configuration to hold a new annotated POJO member provider.
-     * <p>
-     * This method is not thread-safe and should not be used in globally
-     * available <code>Configuration</code> objects.
-     *
-     * @param newAnnotatedPojoMemberProvider The new annotated POJO member
-     *            provider to be contained in the changed configuration.
-     * @return The changed configuration.
-     */
-    @NotNull
-    Configuration set(AnnotatedPojoMemberProvider newAnnotatedPojoMemberProvider);
-
-    /**
-     * Change this configuration to hold a new constructor properties provider.
-     * <p>
-     * This method is not thread-safe and should not be used in globally
-     * available <code>Configuration</code> objects.
-     *
-     * @param newConstructorPropertiesProvider The new constructor properties
-     *            provider to be contained in the changed configuration.
-     * @return The changed configuration.
-     */
-    @NotNull
-    Configuration set(ConstructorPropertiesProvider newConstructorPropertiesProvider);
 
     /**
      * Change this configuration to hold a new record mapper.
@@ -1279,33 +1229,6 @@ public interface Configuration extends Serializable {
     @NotNull
     Configuration set(FormattingProvider newFormattingProvider);
 
-    /**
-     * Change this configuration to hold new subscriber provider.
-     * <p>
-     * This method is not thread-safe and should not be used in globally
-     * available <code>Configuration</code> objects.
-     *
-     * @param newSubscriberProvider The new subscriber provider to be contained in
-     *            the changed configuration.
-     * @return The changed configuration.
-     */
-    @NotNull
-    Configuration set(SubscriberProvider<?> newSubscriberProvider);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1557,28 +1480,6 @@ public interface Configuration extends Serializable {
      */
     @NotNull
     Configuration derive(TransactionProvider newTransactionProvider);
-
-    /**
-     * Create a derived configuration from this one, with a new annotated POJO
-     * member provider.
-     *
-     * @param newAnnotatedPojoMemberProvider The new annotated POJO member
-     *            provider to be contained in the derived configuration.
-     * @return The derived configuration.
-     */
-    @NotNull
-    Configuration derive(AnnotatedPojoMemberProvider newAnnotatedPojoMemberProvider);
-
-    /**
-     * Create a derived configuration from this one, with a new constructor
-     * properties provider.
-     *
-     * @param newConstructorPropertiesProvider The new constructor properties
-     *            provider to be contained in the derived configuration.
-     * @return The derived configuration.
-     */
-    @NotNull
-    Configuration derive(ConstructorPropertiesProvider newConstructorPropertiesProvider);
 
     /**
      * Create a derived configuration from this one, with a new record mapper.
@@ -1972,40 +1873,6 @@ public interface Configuration extends Serializable {
      */
     @NotNull
     Configuration derive(FormattingProvider newFormattingProvider);
-
-    /**
-     * Create a derived configuration from this one, with a new subscriber
-     * provider.
-     *
-     * @param newSubscriberProvider The new subscriber provider to be contained in
-     *            the derived configuration.
-     * @return The derived configuration.
-     */
-    @NotNull
-    Configuration derive(SubscriberProvider<?> newSubscriberProvider);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

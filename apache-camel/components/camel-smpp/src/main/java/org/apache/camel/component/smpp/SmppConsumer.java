@@ -75,12 +75,11 @@ public class SmppConsumer extends DefaultConsumer {
                 configuration.getSessionStateListener().onStateChange(newState, oldState, source);
             }
 
-            if (newState.equals(SessionState.UNBOUND) || newState.equals(SessionState.CLOSED)) {
-                LOG.warn(newState.equals(SessionState.UNBOUND)
-                        ? "Session to {} was unbound - trying to reconnect" : "Lost connection to: {} - trying to reconnect...",
-                        getEndpoint().getConnectionString());
+            if (newState.equals(SessionState.CLOSED)) {
+                LOG.warn("Lost connection to: {} - trying to reconnect...", getEndpoint().getConnectionString());
                 closeSession();
-                reconnect();
+
+                reconnect(configuration.getInitialReconnectDelay());
             }
         };
         this.messageReceiverListener
@@ -110,15 +109,14 @@ public class SmppConsumer extends DefaultConsumer {
                         BindType.BIND_RX, this.configuration.getSystemId(),
                         this.configuration.getPassword(), this.configuration.getSystemType(),
                         TypeOfNumber.UNKNOWN, NumberingPlanIndicator.UNKNOWN,
-                        configuration.getAddressRange(),
-                        configuration.getInterfaceVersionByte()));
+                        configuration.getAddressRange()));
 
         return newSession;
     }
 
     /**
      * Factory method to easily instantiate a SMPPSession
-     *
+     * 
      * @return the SMPPSession
      */
     SMPPSession createSMPPSession() {
@@ -185,15 +183,14 @@ public class SmppConsumer extends DefaultConsumer {
         }
     }
 
-    private void reconnect() {
+    private void reconnect(final long initialReconnectDelay) {
         if (reconnectLock.tryLock()) {
-            BlockingTask task = newReconnectTask(reconnectService, RECONNECT_TASK_NAME,
-                    configuration.getInitialReconnectDelay(),
+            BlockingTask task = newReconnectTask(reconnectService, RECONNECT_TASK_NAME, initialReconnectDelay,
                     configuration.getReconnectDelay(),
                     configuration.getMaxReconnect());
 
             try {
-                task.run(getEndpoint().getCamelContext(), this::doReconnect);
+                task.run(this::doReconnect);
             } finally {
                 reconnectLock.unlock();
             }
@@ -215,7 +212,7 @@ public class SmppConsumer extends DefaultConsumer {
 
     /**
      * Returns the smpp configuration
-     *
+     * 
      * @return the configuration
      */
     public SmppConfiguration getConfiguration() {

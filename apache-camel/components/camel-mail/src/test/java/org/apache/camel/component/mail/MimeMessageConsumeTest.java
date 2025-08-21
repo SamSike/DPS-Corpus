@@ -18,6 +18,7 @@ package org.apache.camel.component.mail;
 
 import java.io.File;
 import java.net.URISyntaxException;
+import java.util.Properties;
 
 import jakarta.activation.DataHandler;
 import jakarta.activation.DataSource;
@@ -37,18 +38,15 @@ import jakarta.mail.internet.MimeMultipart;
 import org.apache.camel.Exchange;
 import org.apache.camel.attachment.AttachmentMessage;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.mail.Mailbox.MailboxUser;
-import org.apache.camel.component.mail.Mailbox.Protocol;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Test;
+import org.jvnet.mock_javamail.Mailbox;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class MimeMessageConsumeTest extends CamelTestSupport {
-    private static final MailboxUser james3 = Mailbox.getOrCreateUser("james3", "secret");
-    private static final MailboxUser james4 = Mailbox.getOrCreateUser("james4", "secret");
     private String body = "hello world!";
 
     @Test
@@ -58,13 +56,15 @@ public class MimeMessageConsumeTest extends CamelTestSupport {
         MockEndpoint resultEndpoint = getMockEndpoint("mock:result");
         resultEndpoint.expectedMinimumMessageCount(1);
 
-        Session session = Mailbox.getSmtpSession();
+        Properties properties = new Properties();
+        properties.put("mail.smtp.host", "localhost");
+        Session session = Session.getInstance(properties, null);
 
         MimeMessage message = new MimeMessage(session);
         populateMimeMessageBody(message);
         message.setRecipients(Message.RecipientType.TO, "james3@localhost");
 
-        Transport.send(message, james3.getLogin(), james3.getPassword());
+        Transport.send(message);
 
         // lets test the receive worked
         resultEndpoint.assertIsSatisfied();
@@ -136,10 +136,8 @@ public class MimeMessageConsumeTest extends CamelTestSupport {
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
-                from(james3.uriPrefix(Protocol.pop3) + "&initialDelay=100&delay=100").removeHeader("to")
-                        .to(james4.uriPrefix(Protocol.smtp));
-                from(james4.uriPrefix(Protocol.pop3) + "&initialDelay=200&delay=100").convertBodyTo(String.class)
-                        .to("mock:result");
+                from("pop3://james3@localhost?initialDelay=100&delay=100").removeHeader("to").to("smtp://james4@localhost");
+                from("pop3://james4@localhost?initialDelay=200&delay=100").convertBodyTo(String.class).to("mock:result");
             }
         };
     }

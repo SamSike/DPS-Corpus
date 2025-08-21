@@ -14,18 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.camel.support.task;
 
 /**
  * Provides a common pattern for building tasks
- *
+ * 
  * @param <T> the task type to build
  */
 public interface TaskBuilder<T extends Task> {
 
     /**
      * Builds the task of the given type for the builder
-     *
+     * 
      * @return a new instance of the task
      */
     T build();

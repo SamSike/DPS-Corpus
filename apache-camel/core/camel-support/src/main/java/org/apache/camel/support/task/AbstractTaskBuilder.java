@@ -14,27 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.camel.support.task;
 
 /**
  * Provides common logic for task builders
- *
+ * 
  * @param <T> the type of the task
  */
 public abstract class AbstractTaskBuilder<T extends Task> implements TaskBuilder<T> {
-
     protected static final String DEFAULT_NAME = "camel-repeatable-task";
-
     private String name = AbstractTaskBuilder.DEFAULT_NAME;
 
     /**
      * Assigns a name to the task being built
-     *
+     * 
      * @param  name the name of the task
      * @return      A reference to this object
      */
     public AbstractTaskBuilder<T> withName(String name) {
         this.name = name;
+
         return this;
     }
 

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,14 +38,12 @@
 
 package org.jooq.impl;
 
-import static org.jooq.SQLDialect.CLICKHOUSE;
 // ...
 import static org.jooq.SQLDialect.HSQLDB;
 // ...
 import static org.jooq.impl.DSL.asterisk;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.Names.NQ_SELECT;
-import static org.jooq.impl.SubqueryCharacteristics.PREDICAND;
 import static org.jooq.impl.Tools.visitSubquery;
 
 import java.util.Set;
@@ -64,7 +62,6 @@ import org.jooq.Select;
 @SuppressWarnings("unchecked")
 final class ScalarSubquery<T> extends AbstractField<T> implements QOM.ScalarSubquery<T> {
 
-    static final Set<SQLDialect> NO_SUPPORT_CORRELATED_SUBQUERY     = SQLDialect.supportedBy(CLICKHOUSE);
     static final Set<SQLDialect> NO_SUPPORT_WITH_IN_SCALAR_SUBQUERY = SQLDialect.supportedBy(HSQLDB);
     final Select<?>              query;
     final boolean                predicandSubquery;
@@ -89,9 +86,9 @@ final class ScalarSubquery<T> extends AbstractField<T> implements QOM.ScalarSubq
         // HSQLDB allows for using WITH inside of IN, see: https://sourceforge.net/p/hsqldb/bugs/1617/
         // We'll still emulate CTE in scalar subqueries with a derived tables in all cases.
         if (q != null && q.with != null && NO_SUPPORT_WITH_IN_SCALAR_SUBQUERY.contains(ctx.dialect()))
-            visitSubquery(ctx, select(asterisk()).from(query.asTable("t")), predicandSubquery ? PREDICAND : 0);
+            visitSubquery(ctx, select(asterisk()).from(query.asTable("t")), false, false, predicandSubquery);
         else
-            visitSubquery(ctx, query, predicandSubquery ? PREDICAND : 0);
+            visitSubquery(ctx, query, false, false, predicandSubquery);
     }
 
     // -------------------------------------------------------------------------
@@ -99,7 +96,7 @@ final class ScalarSubquery<T> extends AbstractField<T> implements QOM.ScalarSubq
     // -------------------------------------------------------------------------
 
     @Override
-    public final Function1<? super Select<? extends Record1<T>>, ? extends QOM.ScalarSubquery<T>> $constructor() {
+    public final Function1<? super Select<? extends Record1<T>>, ? extends Field<T>> $constructor() {
         return s -> new ScalarSubquery<>((Select<?>) s, (DataType<T>) Tools.scalarType(s), predicandSubquery);
     }
 

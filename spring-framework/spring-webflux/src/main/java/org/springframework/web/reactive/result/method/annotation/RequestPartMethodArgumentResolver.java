@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -33,18 +32,19 @@ import org.springframework.http.codec.HttpMessageReader;
 import org.springframework.http.codec.multipart.Part;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
+import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.reactive.BindingContext;
-import org.springframework.web.server.MissingRequestValueException;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.ServerWebInputException;
 
 /**
  * Resolver for {@code @RequestPart} arguments where the named part is decoded
  * much like an {@code @RequestBody} argument but based on the content of an
  * individual part instead. The arguments may be wrapped with a reactive type
- * for a single value (for example, Reactor {@code Mono}, RxJava {@code Single}).
+ * for a single value (e.g. Reactor {@code Mono}, RxJava {@code Single}).
  *
  * <p>This resolver also supports arguments of type {@link Part} which may be
  * wrapped with a reactive type for a single value or multiple values.
@@ -115,8 +115,8 @@ public class RequestPartMethodArgumentResolver extends AbstractMessageReaderArgu
 					List<Part> list = map.get(name);
 					if (CollectionUtils.isEmpty(list)) {
 						if (isRequired) {
-							throw new MissingRequestValueException(
-									name, parameter.getParameterType(), "request part", parameter);
+							String reason = "Required request part '" + name + "' is not present";
+							throw new ServerWebInputException(reason, parameter);
 						}
 						return Collections.emptyList();
 					}

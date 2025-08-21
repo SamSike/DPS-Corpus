@@ -58,35 +58,25 @@ public class IrcComponent extends DefaultComponent implements SSLContextParamete
         return endpoint;
     }
 
-    public IRCConnection getIRCConnection(IrcConfiguration configuration) {
-        lock.lock();
-        try {
-            final IRCConnection connection;
-            if (connectionCache.containsKey(configuration.getCacheKey())) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Returning Cached Connection to {}:{}", configuration.getHostname(), configuration.getNickname());
-                }
-                connection = connectionCache.get(configuration.getCacheKey());
-            } else {
-                connection = createConnection(configuration);
-                connectionCache.put(configuration.getCacheKey(), connection);
+    public synchronized IRCConnection getIRCConnection(IrcConfiguration configuration) {
+        final IRCConnection connection;
+        if (connectionCache.containsKey(configuration.getCacheKey())) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Returning Cached Connection to {}:{}", configuration.getHostname(), configuration.getNickname());
             }
-            return connection;
-        } finally {
-            lock.unlock();
+            connection = connectionCache.get(configuration.getCacheKey());
+        } else {
+            connection = createConnection(configuration);
+            connectionCache.put(configuration.getCacheKey(), connection);
         }
+        return connection;
     }
 
-    public void closeIRCConnection(IrcConfiguration configuration) {
-        lock.lock();
-        try {
-            IRCConnection connection = connectionCache.get(configuration.getCacheKey());
-            if (connection != null) {
-                closeConnection(connection);
-                connectionCache.remove(configuration.getCacheKey());
-            }
-        } finally {
-            lock.unlock();
+    public synchronized void closeIRCConnection(IrcConfiguration configuration) {
+        IRCConnection connection = connectionCache.get(configuration.getCacheKey());
+        if (connection != null) {
+            closeConnection(connection);
+            connectionCache.remove(configuration.getCacheKey());
         }
     }
 

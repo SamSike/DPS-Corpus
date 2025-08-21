@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,9 @@
 
 package org.springframework.web.context.request;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.config.Scope;
+import org.springframework.lang.Nullable;
 
 /**
  * Abstract {@link Scope} implementation that reads from a particular scope
@@ -29,7 +28,7 @@ import org.springframework.beans.factory.config.Scope;
  * this class which {@link RequestAttributes} scope to read attributes from.
  *
  * <p>Subclasses may wish to override the {@link #get} and {@link #remove}
- * methods to add synchronization around the call back into this superclass.
+ * methods to add synchronization around the call back into this super class.
  *
  * @author Rod Johnson
  * @author Juergen Hoeller
@@ -58,7 +57,8 @@ public abstract class AbstractRequestAttributesScope implements Scope {
 	}
 
 	@Override
-	public @Nullable Object remove(String name) {
+	@Nullable
+	public Object remove(String name) {
 		RequestAttributes attributes = RequestContextHolder.currentRequestAttributes();
 		Object scopedObject = attributes.getAttribute(name, getScope());
 		if (scopedObject != null) {
@@ -77,7 +77,8 @@ public abstract class AbstractRequestAttributesScope implements Scope {
 	}
 
 	@Override
-	public @Nullable Object resolveContextualObject(String key) {
+	@Nullable
+	public Object resolveContextualObject(String key) {
 		RequestAttributes attributes = RequestContextHolder.currentRequestAttributes();
 		return attributes.resolveReference(key);
 	}

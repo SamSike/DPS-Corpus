@@ -4,13 +4,8 @@
 package org.jooq.meta.hsqldb.information_schema.tables;
 
 
-import java.util.Arrays;
-import java.util.List;
-
-import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Schema;
@@ -21,16 +16,15 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
 import org.jooq.meta.hsqldb.information_schema.InformationSchema;
-import org.jooq.meta.hsqldb.information_schema.Keys;
 
 
 /**
  * one row for each column of table of view
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Columns extends TableImpl<Record> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -739376577;
 
     /**
      * The reference instance of <code>INFORMATION_SCHEMA.COLUMNS</code>
@@ -86,14 +80,12 @@ public class Columns extends TableImpl<Record> {
     public final TableField<Record, String> DATA_TYPE = createField(DSL.name("DATA_TYPE"), SQLDataType.VARCHAR(65536), this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.COLUMNS.CHARACTER_MAXIMUM_LENGTH</code>.
+     * The column <code>INFORMATION_SCHEMA.COLUMNS.CHARACTER_MAXIMUM_LENGTH</code>.
      */
     public final TableField<Record, Long> CHARACTER_MAXIMUM_LENGTH = createField(DSL.name("CHARACTER_MAXIMUM_LENGTH"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.COLUMNS.CHARACTER_OCTET_LENGTH</code>.
+     * The column <code>INFORMATION_SCHEMA.COLUMNS.CHARACTER_OCTET_LENGTH</code>.
      */
     public final TableField<Record, Long> CHARACTER_OCTET_LENGTH = createField(DSL.name("CHARACTER_OCTET_LENGTH"), SQLDataType.BIGINT, this, "");
 
@@ -103,8 +95,7 @@ public class Columns extends TableImpl<Record> {
     public final TableField<Record, Long> NUMERIC_PRECISION = createField(DSL.name("NUMERIC_PRECISION"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.COLUMNS.NUMERIC_PRECISION_RADIX</code>.
+     * The column <code>INFORMATION_SCHEMA.COLUMNS.NUMERIC_PRECISION_RADIX</code>.
      */
     public final TableField<Record, Long> NUMERIC_PRECISION_RADIX = createField(DSL.name("NUMERIC_PRECISION_RADIX"), SQLDataType.BIGINT, this, "");
 
@@ -264,20 +255,17 @@ public class Columns extends TableImpl<Record> {
     public final TableField<Record, String> GENERATION_EXPRESSION = createField(DSL.name("GENERATION_EXPRESSION"), SQLDataType.VARCHAR(65536), this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.COLUMNS.IS_SYSTEM_TIME_PERIOD_START</code>.
+     * The column <code>INFORMATION_SCHEMA.COLUMNS.IS_SYSTEM_TIME_PERIOD_START</code>.
      */
     public final TableField<Record, String> IS_SYSTEM_TIME_PERIOD_START = createField(DSL.name("IS_SYSTEM_TIME_PERIOD_START"), SQLDataType.VARCHAR(3), this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.COLUMNS.IS_SYSTEM_TIME_PERIOD_END</code>.
+     * The column <code>INFORMATION_SCHEMA.COLUMNS.IS_SYSTEM_TIME_PERIOD_END</code>.
      */
     public final TableField<Record, String> IS_SYSTEM_TIME_PERIOD_END = createField(DSL.name("IS_SYSTEM_TIME_PERIOD_END"), SQLDataType.VARCHAR(3), this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.COLUMNS.SYSTEM_TIME_PERIOD_TIMESTAMP_GENERATION</code>.
+     * The column <code>INFORMATION_SCHEMA.COLUMNS.SYSTEM_TIME_PERIOD_TIMESTAMP_GENERATION</code>.
      */
     public final TableField<Record, String> SYSTEM_TIME_PERIOD_TIMESTAMP_GENERATION = createField(DSL.name("SYSTEM_TIME_PERIOD_TIMESTAMP_GENERATION"), SQLDataType.VARCHAR(65536), this, "");
 
@@ -292,23 +280,21 @@ public class Columns extends TableImpl<Record> {
     public final TableField<Record, String> DECLARED_DATA_TYPE = createField(DSL.name("DECLARED_DATA_TYPE"), SQLDataType.VARCHAR(65536), this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.COLUMNS.DECLARED_NUMERIC_PRECISION</code>.
+     * The column <code>INFORMATION_SCHEMA.COLUMNS.DECLARED_NUMERIC_PRECISION</code>.
      */
     public final TableField<Record, Long> DECLARED_NUMERIC_PRECISION = createField(DSL.name("DECLARED_NUMERIC_PRECISION"), SQLDataType.BIGINT, this, "");
 
     /**
-     * The column
-     * <code>INFORMATION_SCHEMA.COLUMNS.DECLARED_NUMERIC_SCALE</code>.
+     * The column <code>INFORMATION_SCHEMA.COLUMNS.DECLARED_NUMERIC_SCALE</code>.
      */
     public final TableField<Record, Long> DECLARED_NUMERIC_SCALE = createField(DSL.name("DECLARED_NUMERIC_SCALE"), SQLDataType.BIGINT, this, "");
 
     private Columns(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Columns(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment("one row for each column of table of view"), TableOptions.table(), where);
+    private Columns(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment("one row for each column of table of view"), TableOptions.table());
     }
 
     /**
@@ -332,44 +318,13 @@ public class Columns extends TableImpl<Record> {
         this(DSL.name("COLUMNS"), null);
     }
 
-    public <O extends Record> Columns(Table<O> path, ForeignKey<O, Record> childPath, InverseForeignKey<O, Record> parentPath) {
-        super(path, childPath, parentPath, COLUMNS);
+    public <O extends Record> Columns(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, COLUMNS);
     }
 
     @Override
     public Schema getSchema() {
-        return aliased() ? null : InformationSchema.INFORMATION_SCHEMA;
-    }
-
-    @Override
-    public List<ForeignKey<Record, ?>> getReferences() {
-        return Arrays.asList(Keys.SYNTHETIC_FK_COLUMNS__SYNTHETIC_PK_SCHEMATA, Keys.SYNTHETIC_FK_COLUMNS__SYNTHETIC_PK_TABLES);
-    }
-
-    private transient Schemata _schemata;
-
-    /**
-     * Get the implicit join path to the
-     * <code>INFORMATION_SCHEMA.SCHEMATA</code> table.
-     */
-    public Schemata schemata() {
-        if (_schemata == null)
-            _schemata = new Schemata(this, Keys.SYNTHETIC_FK_COLUMNS__SYNTHETIC_PK_SCHEMATA, null);
-
-        return _schemata;
-    }
-
-    private transient Tables _tables;
-
-    /**
-     * Get the implicit join path to the <code>INFORMATION_SCHEMA.TABLES</code>
-     * table.
-     */
-    public Tables tables() {
-        if (_tables == null)
-            _tables = new Tables(this, Keys.SYNTHETIC_FK_COLUMNS__SYNTHETIC_PK_TABLES, null);
-
-        return _tables;
+        return InformationSchema.INFORMATION_SCHEMA;
     }
 
     @Override
@@ -382,8 +337,19 @@ public class Columns extends TableImpl<Record> {
         return new Columns(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public Columns as(Table<?> alias) {
-        return new Columns(alias.getQualifiedName(), this);
+    public Columns rename(String name) {
+        return new Columns(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public Columns rename(Name name) {
+        return new Columns(name, null);
     }
 }

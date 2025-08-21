@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.infinispan;
 
+import org.apache.camel.component.mock.MockEndpoint;
 import org.infinispan.commons.api.BasicCache;
 
 public interface InfinispanConsumerTestSupport {
@@ -26,4 +27,6 @@ public interface InfinispanConsumerTestSupport {
     BasicCache<Object, Object> getCache();
 
     BasicCache<Object, Object> getCache(String name);
+
+    MockEndpoint getMockEndpoint(String id);
 }

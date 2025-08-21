@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -119,7 +119,7 @@ final class TranslatingMetaProvider implements MetaProvider {
                 final Locale locale = SettingsTools.interpreterLocale(ctx.settings());
                 if (nameCase != null && nameCase != RenderNameCase.AS_IS) {
                     ctx.configuration().set(onVisitStart(c -> {
-                        if (c.queryPart() instanceof Name n) {
+                        if (c.queryPart() instanceof Name) { Name n = (Name) c.queryPart();
                             Name[] parts = n.parts();
                             boolean changed = false;
 
@@ -217,16 +217,16 @@ final class TranslatingMetaProvider implements MetaProvider {
 
                 // [#9138] Make users aware of the new parse ignore comment syntax
                 log.error("DDL interpretation",
-                    """
-                    Your SQL string could not be parsed or interpreted. This may have a variety of reasons, including:
-                    - The jOOQ parser doesn't understand your SQL
-                    - The jOOQ DDL interpretation logic (translating to H2) cannot simulate your SQL
-
-                    If you think this is a bug or a feature worth requesting, please report it here: https://jooq.org/bug
-
-                    As a workaround, you can use the Settings.parseIgnoreComments syntax documented here:
-                    https://www.jooq.org/doc/latest/manual/sql-building/dsl-context/custom-settings/settings-parser/
-                    """
+                    ("" +
+                    "Your SQL string could not be parsed or interpreted. This may have a variety of reasons, including:\n" +
+                    "- The jOOQ parser doesn't understand your SQL\n" +
+                    "- The jOOQ DDL interpretation logic (translating to H2) cannot simulate your SQL\n" +
+                    "\n" +
+                    "If you think this is a bug or a feature worth requesting, please report it here: https://github.com/jOOQ/jOOQ/issues/new/choose\n" +
+                    "\n" +
+                    "As a workaround, you can use the Settings.parseIgnoreComments syntax documented here:\n" +
+                    "https://www.jooq.org/doc/latest/manual/sql-building/dsl-context/custom-settings/settings-parser/\n" +
+                    "")
                 );
 
                 throw e;

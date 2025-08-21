@@ -30,8 +30,6 @@ import org.apache.camel.RuntimeCamelException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.camel.component.box.api.BoxHelper.buildBoxApiErrorMessage;
-
 /**
  * Provides operations to manage Box searches.
  */
@@ -48,7 +46,7 @@ public class BoxSearchManager {
 
     /**
      * Create search manager to manage the searches of Box connection's authenticated user.
-     *
+     * 
      * @param boxConnection - Box connection to authenticated user account.
      */
     public BoxSearchManager(BoxAPIConnection boxConnection) {
@@ -57,17 +55,22 @@ public class BoxSearchManager {
 
     /**
      * Search folder and all descendant folders using the given query.
-     *
+     * 
      * @param  folderId - the id of folder searched.
      * @param  query    - the search query.
-     *
+     * 
      * @return          A collection of matching items.
      */
     public Collection<BoxItem> searchFolder(String folderId, String query) {
         try {
             LOG.debug("Searching folder(id={}) with query={}", folderId, query);
-            BoxHelper.notNull(folderId, BoxHelper.FOLDER_ID);
-            BoxHelper.notNull(query, BoxHelper.QUERY);
+
+            if (folderId == null) {
+                throw new IllegalArgumentException("Parameter 'folderId' can not be null");
+            }
+            if (query == null) {
+                throw new IllegalArgumentException("Parameter 'query' can not be null");
+            }
 
             // New box API for search requires offset and limit as parameters.
             // To preserve api from previous functionality fro previous version, we will execute more searches if needed and merge results
@@ -75,7 +78,7 @@ public class BoxSearchManager {
             bsp.setAncestorFolderIds(Collections.singletonList(folderId));
             bsp.setQuery(query);
 
-            LinkedList<BoxItem> result = new LinkedList<>();
+            LinkedList<BoxItem> result = new LinkedList();
             BoxSearch bs = new BoxSearch(boxConnection);
             PartialCollection<BoxItem.Info> partialResult;
             int offset = 0;
@@ -88,7 +91,7 @@ public class BoxSearchManager {
             return result;
         } catch (BoxAPIException e) {
             throw new RuntimeCamelException(
-                    buildBoxApiErrorMessage(e), e);
+                    String.format("Box API returned the error code %d%n%n%s", e.getResponseCode(), e.getResponse()), e);
         }
     }
 }

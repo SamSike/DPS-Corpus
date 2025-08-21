@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.azure.storage.queue;
 
-import java.io.InputStream;
 import java.time.Duration;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,15 +29,14 @@ import com.azure.storage.queue.models.QueueStorageException;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.component.azure.storage.queue.client.QueueClientWrapper;
 import org.apache.camel.component.azure.storage.queue.operations.QueueOperations;
 import org.apache.camel.spi.Synchronization;
 import org.apache.camel.support.ScheduledBatchPollingConsumer;
-import org.apache.camel.support.SynchronizationAdapter;
 import org.apache.camel.util.CastUtils;
-import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +50,7 @@ public class QueueConsumer extends ScheduledBatchPollingConsumer {
 
     public QueueConsumer(final QueueEndpoint endpoint, final Processor processor) {
         super(endpoint, processor);
+
     }
 
     @Override
@@ -72,9 +71,6 @@ public class QueueConsumer extends ScheduledBatchPollingConsumer {
             final List<QueueMessageItem> messageItems = clientWrapper.receiveMessages(getConfiguration().getMaxMessages(),
                     getConfiguration().getVisibilityTimeout(),
                     getConfiguration().getTimeout());
-
-            // okay we have some response from azure so lets mark the consumer as ready
-            forceConsumerAsReady();
 
             LOG.trace("Receiving messages [{}]...", messageItems);
 
@@ -133,7 +129,7 @@ public class QueueConsumer extends ScheduledBatchPollingConsumer {
             final Duration timeout = exchange.getIn().getHeader(QueueConstants.TIMEOUT, Duration.class);
 
             // add on completion to handle after work when the exchange is done
-            exchange.getExchangeExtension().addOnCompletion(new Synchronization() {
+            exchange.adapt(ExtendedExchange.class).addOnCompletion(new Synchronization() {
                 @Override
                 public void onComplete(Exchange exchange) {
                     // past messageId, popReceipt, timeout for fix exchange override case
@@ -163,16 +159,8 @@ public class QueueConsumer extends ScheduledBatchPollingConsumer {
         final Message message = exchange.getIn();
 
         BinaryData data = messageItem.getBody();
-        InputStream is = data == null ? null : data.toStream();
-        message.setBody(is);
+        message.setBody(data == null ? null : data.toString());
         message.setHeaders(QueueExchangeHeaders.createQueueExchangeHeadersFromQueueMessageItem(messageItem).toMap());
-
-        exchange.getExchangeExtension().addOnCompletion(new SynchronizationAdapter() {
-            @Override
-            public void onDone(Exchange exchange) {
-                IOHelper.close(is);
-            }
-        });
 
         return exchange;
     }
@@ -184,10 +172,8 @@ public class QueueConsumer extends ScheduledBatchPollingConsumer {
      */
     private void processCommit(final Exchange exchange) {
         try {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Deleting message with pop receipt handle {}...",
-                        QueueExchangeHeaders.getPopReceiptFromHeaders(exchange));
-            }
+            LOG.trace("Deleting message with pop receipt handle {}...",
+                    QueueExchangeHeaders.getPopReceiptFromHeaders(exchange));
             queueOperations.deleteMessage(exchange);
         } catch (QueueStorageException ex) {
             getExceptionHandler().handleException("Error occurred during deleting message. This exception is ignored.",

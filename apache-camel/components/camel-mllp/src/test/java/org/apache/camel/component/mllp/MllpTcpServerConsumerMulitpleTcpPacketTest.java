@@ -47,7 +47,7 @@ public class MllpTcpServerConsumerMulitpleTcpPacketTest extends CamelTestSupport
         DefaultCamelContext context = (DefaultCamelContext) super.createCamelContext();
 
         context.setUseMDCLogging(true);
-        context.getCamelContextExtension().setName(this.getClass().getSimpleName());
+        context.setName(this.getClass().getSimpleName());
 
         return context;
     }
@@ -71,12 +71,12 @@ public class MllpTcpServerConsumerMulitpleTcpPacketTest extends CamelTestSupport
 
                 fromF("mllp://%s:%d",
                         mllpClient.getMllpHost(), mllpClient.getMllpPort())
-                        .routeId(routeId)
-                        .process(new PassthroughProcessor("Before send to result"))
-                        .to(result)
-                        .toF("log://%s?level=INFO&groupInterval=%d&groupActiveOnly=%b", routeId, groupInterval,
-                                groupActiveOnly)
-                        .log(LoggingLevel.DEBUG, routeId, "Test route received message");
+                                .routeId(routeId)
+                                .process(new PassthroughProcessor("Before send to result"))
+                                .to(result)
+                                .toF("log://%s?level=INFO&groupInterval=%d&groupActiveOnly=%b", routeId, groupInterval,
+                                        groupActiveOnly)
+                                .log(LoggingLevel.DEBUG, routeId, "Test route received message");
 
             }
         };
@@ -95,7 +95,7 @@ public class MllpTcpServerConsumerMulitpleTcpPacketTest extends CamelTestSupport
         MockEndpoint.assertIsSatisfied(context, 10, TimeUnit.SECONDS);
 
         assertThat("Should be acknowledgment for message 1", acknowledgement,
-                CoreMatchers.containsString("MSA|AA|00001"));
+                CoreMatchers.containsString(String.format("MSA|AA|00001")));
     }
 
     @Test

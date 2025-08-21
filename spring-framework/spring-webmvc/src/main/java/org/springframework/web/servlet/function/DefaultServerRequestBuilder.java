@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,26 +40,19 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.ResolvableType;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.GenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.SmartHttpMessageConverter;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.validation.BindException;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
-import org.springframework.web.accept.ApiVersionStrategy;
-import org.springframework.web.bind.ServletRequestDataBinder;
-import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.util.UriBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -75,9 +68,7 @@ class DefaultServerRequestBuilder implements ServerRequest.Builder {
 
 	private final List<HttpMessageConverter<?>> messageConverters;
 
-	private final @Nullable ApiVersionStrategy versionStrategy;
-
-	private HttpMethod method;
+	private String methodName;
 
 	private URI uri;
 
@@ -89,7 +80,8 @@ class DefaultServerRequestBuilder implements ServerRequest.Builder {
 
 	private final MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 
-	private @Nullable InetSocketAddress remoteAddress;
+	@Nullable
+	private InetSocketAddress remoteAddress;
 
 	private byte[] body = new byte[0];
 
@@ -98,8 +90,7 @@ class DefaultServerRequestBuilder implements ServerRequest.Builder {
 		Assert.notNull(other, "ServerRequest must not be null");
 		this.servletRequest = other.servletRequest();
 		this.messageConverters = new ArrayList<>(other.messageConverters());
-		this.versionStrategy = other.apiVersionStrategy();
-		this.method = other.method();
+		this.methodName = other.methodName();
 		this.uri = other.uri();
 		headers(headers -> headers.addAll(other.headers().asHttpHeaders()));
 		cookies(cookies -> cookies.addAll(other.cookies()));
@@ -111,7 +102,7 @@ class DefaultServerRequestBuilder implements ServerRequest.Builder {
 	@Override
 	public ServerRequest.Builder method(HttpMethod method) {
 		Assert.notNull(method, "HttpMethod must not be null");
-		this.method = method;
+		this.methodName = method.name();
 		return this;
 	}
 
@@ -124,7 +115,6 @@ class DefaultServerRequestBuilder implements ServerRequest.Builder {
 
 	@Override
 	public ServerRequest.Builder header(String headerName, String... headerValues) {
-		Assert.notNull(headerName, "Header name must not be null");
 		for (String headerValue : headerValues) {
 			this.headers.add(headerName, headerValue);
 		}
@@ -133,14 +123,12 @@ class DefaultServerRequestBuilder implements ServerRequest.Builder {
 
 	@Override
 	public ServerRequest.Builder headers(Consumer<HttpHeaders> headersConsumer) {
-		Assert.notNull(headersConsumer, "Headers consumer must not be null");
 		headersConsumer.accept(this.headers);
 		return this;
 	}
 
 	@Override
 	public ServerRequest.Builder cookie(String name, String... values) {
-		Assert.notNull(name, "Cookie name must not be null");
 		for (String value : values) {
 			this.cookies.add(name, new Cookie(name, value));
 		}
@@ -149,41 +137,36 @@ class DefaultServerRequestBuilder implements ServerRequest.Builder {
 
 	@Override
 	public ServerRequest.Builder cookies(Consumer<MultiValueMap<String, Cookie>> cookiesConsumer) {
-		Assert.notNull(cookiesConsumer, "Cookies consumer must not be null");
 		cookiesConsumer.accept(this.cookies);
 		return this;
 	}
 
 	@Override
 	public ServerRequest.Builder body(byte[] body) {
-		Assert.notNull(body, "Body must not be null");
 		this.body = body;
 		return this;
 	}
 
 	@Override
 	public ServerRequest.Builder body(String body) {
-		Assert.notNull(body, "Body must not be null");
 		return body(body.getBytes(StandardCharsets.UTF_8));
 	}
 
 	@Override
 	public ServerRequest.Builder attribute(String name, Object value) {
-		Assert.notNull(name, "Name must not be null");
+		Assert.notNull(name, "'name' must not be null");
 		this.attributes.put(name, value);
 		return this;
 	}
 
 	@Override
 	public ServerRequest.Builder attributes(Consumer<Map<String, Object>> attributesConsumer) {
-		Assert.notNull(attributesConsumer, "Attributes consumer must not be null");
 		attributesConsumer.accept(this.attributes);
 		return this;
 	}
 
 	@Override
 	public ServerRequest.Builder param(String name, String... values) {
-		Assert.notNull(name, "Name must not be null");
 		for (String value : values) {
 			this.params.add(name, value);
 		}
@@ -192,13 +175,12 @@ class DefaultServerRequestBuilder implements ServerRequest.Builder {
 
 	@Override
 	public ServerRequest.Builder params(Consumer<MultiValueMap<String, String>> paramsConsumer) {
-		Assert.notNull(paramsConsumer, "Parameters consumer must not be null");
 		paramsConsumer.accept(this.params);
 		return this;
 	}
 
 	@Override
-	public ServerRequest.Builder remoteAddress(@Nullable InetSocketAddress remoteAddress) {
+	public ServerRequest.Builder remoteAddress(InetSocketAddress remoteAddress) {
 		this.remoteAddress = remoteAddress;
 		return this;
 	}
@@ -206,15 +188,14 @@ class DefaultServerRequestBuilder implements ServerRequest.Builder {
 
 	@Override
 	public ServerRequest build() {
-		return new BuiltServerRequest(this.servletRequest, this.method, this.uri, this.headers, this.cookies,
-				this.attributes, this.params, this.remoteAddress, this.body,
-				this.messageConverters, this.versionStrategy);
+		return new BuiltServerRequest(this.servletRequest, this.methodName, this.uri, this.headers, this.cookies,
+				this.attributes, this.params, this.remoteAddress, this.body, this.messageConverters);
 	}
 
 
 	private static class BuiltServerRequest implements ServerRequest {
 
-		private final HttpMethod method;
+		private final String methodName;
 
 		private final URI uri;
 
@@ -230,21 +211,18 @@ class DefaultServerRequestBuilder implements ServerRequest.Builder {
 
 		private final List<HttpMessageConverter<?>> messageConverters;
 
-		private final @Nullable ApiVersionStrategy versionStrategy;
-
 		private final MultiValueMap<String, String> params;
 
-		private final @Nullable InetSocketAddress remoteAddress;
+		@Nullable
+		private final InetSocketAddress remoteAddress;
 
-		public BuiltServerRequest(HttpServletRequest servletRequest, HttpMethod method, URI uri,
+		public BuiltServerRequest(HttpServletRequest servletRequest, String methodName, URI uri,
 				HttpHeaders headers, MultiValueMap<String, Cookie> cookies,
 				Map<String, Object> attributes, MultiValueMap<String, String> params,
-				@Nullable InetSocketAddress remoteAddress, byte[] body,
-				List<HttpMessageConverter<?>> messageConverters,
-				@Nullable ApiVersionStrategy versionStrategy) {
+				@Nullable InetSocketAddress remoteAddress, byte[] body, List<HttpMessageConverter<?>> messageConverters) {
 
 			this.servletRequest = servletRequest;
-			this.method = method;
+			this.methodName = methodName;
 			this.uri = uri;
 			this.headers = new HttpHeaders(headers);
 			this.cookies = new LinkedMultiValueMap<>(cookies);
@@ -253,12 +231,11 @@ class DefaultServerRequestBuilder implements ServerRequest.Builder {
 			this.remoteAddress = remoteAddress;
 			this.body = body;
 			this.messageConverters = messageConverters;
-			this.versionStrategy = versionStrategy;
 		}
 
 		@Override
-		public HttpMethod method() {
-			return this.method;
+		public String methodName() {
+			return this.methodName;
 		}
 
 		@Override
@@ -300,11 +277,6 @@ class DefaultServerRequestBuilder implements ServerRequest.Builder {
 		}
 
 		@Override
-		public @Nullable ApiVersionStrategy apiVersionStrategy() {
-			return this.versionStrategy;
-		}
-
-		@Override
 		public <T> T body(Class<T> bodyType) throws IOException, ServletException {
 			return bodyInternal(bodyType, bodyType);
 		}
@@ -321,54 +293,21 @@ class DefaultServerRequestBuilder implements ServerRequest.Builder {
 			MediaType contentType = headers().contentType().orElse(MediaType.APPLICATION_OCTET_STREAM);
 
 			for (HttpMessageConverter<?> messageConverter : this.messageConverters) {
-				if (messageConverter instanceof GenericHttpMessageConverter<?> genericMessageConverter) {
+				if (messageConverter instanceof GenericHttpMessageConverter) {
+					GenericHttpMessageConverter<T> genericMessageConverter =
+							(GenericHttpMessageConverter<T>) messageConverter;
 					if (genericMessageConverter.canRead(bodyType, bodyClass, contentType)) {
-						return (T) genericMessageConverter.read(bodyType, bodyClass, inputMessage);
+						return genericMessageConverter.read(bodyType, bodyClass, inputMessage);
 					}
 				}
-				else if (messageConverter instanceof SmartHttpMessageConverter<?> smartMessageConverter) {
-					ResolvableType resolvableType = ResolvableType.forType(bodyType);
-					if (smartMessageConverter.canRead(resolvableType, contentType)) {
-						return (T) smartMessageConverter.read(resolvableType, inputMessage, null);
-					}
-				}
-				else if (messageConverter.canRead(bodyClass, contentType)) {
+				if (messageConverter.canRead(bodyClass, contentType)) {
 					HttpMessageConverter<T> theConverter =
 							(HttpMessageConverter<T>) messageConverter;
 					Class<? extends T> clazz = (Class<? extends T>) bodyClass;
 					return theConverter.read(clazz, inputMessage);
 				}
 			}
-			throw new HttpMediaTypeNotSupportedException(contentType, Collections.emptyList(), method());
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public <T> T bind(Class<T> bindType, Consumer<WebDataBinder> dataBinderCustomizer) throws BindException {
-			Assert.notNull(bindType, "BindType must not be null");
-			Assert.notNull(dataBinderCustomizer, "DataBinderCustomizer must not be null");
-
-			ServletRequestDataBinder dataBinder = new ServletRequestDataBinder(null);
-			dataBinder.setTargetType(ResolvableType.forClass(bindType));
-			dataBinderCustomizer.accept(dataBinder);
-
-			HttpServletRequest servletRequest = servletRequest();
-			dataBinder.construct(servletRequest);
-			dataBinder.bind(servletRequest);
-
-			BindingResult bindingResult = dataBinder.getBindingResult();
-			if (bindingResult.hasErrors()) {
-				throw new BindException(bindingResult);
-			}
-			else {
-				T result = (T) bindingResult.getTarget();
-				if (result != null) {
-					return result;
-				}
-				else {
-					throw new IllegalStateException("Binding result has neither target nor errors");
-				}
-			}
+			throw new HttpMediaTypeNotSupportedException(contentType, Collections.emptyList());
 		}
 
 		@Override

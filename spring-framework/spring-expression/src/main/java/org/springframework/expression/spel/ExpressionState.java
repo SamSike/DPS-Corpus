@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,12 @@
 package org.springframework.expression.spel;
 
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.function.Supplier;
-
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.expression.EvaluationContext;
@@ -33,23 +33,23 @@ import org.springframework.expression.PropertyAccessor;
 import org.springframework.expression.TypeComparator;
 import org.springframework.expression.TypeConverter;
 import org.springframework.expression.TypedValue;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 /**
- * ExpressionState is for maintaining per-expression-evaluation state: any changes to
- * it are not seen by other expressions, but it gives a place to hold local variables and
+ * An ExpressionState is for maintaining per-expression-evaluation state, any changes to
+ * it are not seen by other expressions but it gives a place to hold local variables and
  * for component expressions in a compound expression to communicate state. This is in
  * contrast to the EvaluationContext, which is shared amongst expression evaluations, and
  * any changes to it will be seen by other expressions or any code that chooses to ask
  * questions of the context.
  *
- * <p>It also acts as a place to define common utility routines that the various AST
+ * <p>It also acts as a place for to define common utility routines that the various AST
  * nodes might need.
  *
  * @author Andy Clement
  * @author Juergen Hoeller
- * @author Sam Brannen
  * @since 3.0
  */
 public class ExpressionState {
@@ -60,7 +60,11 @@ public class ExpressionState {
 
 	private final SpelParserConfiguration configuration;
 
-	private @Nullable Deque<TypedValue> contextObjects;
+	@Nullable
+	private Deque<TypedValue> contextObjects;
+
+	@Nullable
+	private Deque<VariableScope> variableScopes;
 
 	// When entering a new scope there is a new base object which should be used
 	// for '#this' references (or to act as a target for unqualified references).
@@ -68,8 +72,9 @@ public class ExpressionState {
 	// For example:
 	// #list1.?[#list2.contains(#this)]
 	// On entering the selection we enter a new scope, and #this is now the
-	// element from list1.
-	private @Nullable Deque<TypedValue> scopeRootObjects;
+	// element from list1
+	@Nullable
+	private ArrayDeque<TypedValue> scopeRootObjects;
 
 
 	public ExpressionState(EvaluationContext context) {
@@ -86,7 +91,6 @@ public class ExpressionState {
 
 	public ExpressionState(EvaluationContext context, TypedValue rootObject, SpelParserConfiguration configuration) {
 		Assert.notNull(context, "EvaluationContext must not be null");
-		Assert.notNull(rootObject, "'rootObject' must not be null");
 		Assert.notNull(configuration, "SpelParserConfiguration must not be null");
 		this.relatedContext = context;
 		this.rootObject = rootObject;
@@ -105,12 +109,18 @@ public class ExpressionState {
 	}
 
 	public void pushActiveContextObject(TypedValue obj) {
-		initContextObjects().push(obj);
+		if (this.contextObjects == null) {
+			this.contextObjects = new ArrayDeque<>();
+		}
+		this.contextObjects.push(obj);
 	}
 
 	public void popActiveContextObject() {
+		if (this.contextObjects == null) {
+			this.contextObjects = new ArrayDeque<>();
+		}
 		try {
-			initContextObjects().pop();
+			this.contextObjects.pop();
 		}
 		catch (NoSuchElementException ex) {
 			throw new IllegalStateException("Cannot pop active context object: stack is empty");
@@ -128,41 +138,10 @@ public class ExpressionState {
 		return this.scopeRootObjects.element();
 	}
 
-	/**
-	 * Assign the value created by the specified {@link Supplier} to a named variable
-	 * within the evaluation context.
-	 * <p>In contrast to {@link #setVariable(String, Object)}, this method should
-	 * only be invoked to support assignment within an expression.
-	 * @param name the name of the variable to assign
-	 * @param valueSupplier the supplier of the value to be assigned to the variable
-	 * @return a {@link TypedValue} wrapping the assigned value
-	 * @since 5.2.24
-	 * @see EvaluationContext#assignVariable(String, Supplier)
-	 */
-	public TypedValue assignVariable(String name, Supplier<TypedValue> valueSupplier) {
-		return this.relatedContext.assignVariable(name, valueSupplier);
-	}
-
-	/**
-	 * Set a named variable in the evaluation context to a specified value.
-	 * <p>In contrast to {@link #assignVariable(String, Supplier)}, this method
-	 * should only be invoked programmatically.
-	 * @param name the name of the variable to set
-	 * @param value the value to be placed in the variable
-	 * @see EvaluationContext#setVariable(String, Object)
-	 */
 	public void setVariable(String name, @Nullable Object value) {
 		this.relatedContext.setVariable(name, value);
 	}
 
-	/**
-	 * Look up a named global variable in the evaluation context.
-	 * @param name the name of the variable to look up
-	 * @return a {@link TypedValue} containing the value of the variable, or
-	 * {@link TypedValue#NULL} if the variable does not exist
-	 * @see #assignVariable(String, Supplier)
-	 * @see #setVariable(String, Object)
-	 */
 	public TypedValue lookupVariable(String name) {
 		Object value = this.relatedContext.lookupVariable(name);
 		return (value != null ? new TypedValue(value) : TypedValue.NULL);
@@ -176,10 +155,6 @@ public class ExpressionState {
 		return this.relatedContext.getTypeLocator().findType(type);
 	}
 
-	public TypeConverter getTypeConverter() {
-		return this.relatedContext.getTypeConverter();
-	}
-
 	public Object convertValue(Object value, TypeDescriptor targetTypeDescriptor) throws EvaluationException {
 		Object result = this.relatedContext.getTypeConverter().convertValue(
 				value, TypeDescriptor.forObject(value), targetTypeDescriptor);
@@ -189,30 +164,61 @@ public class ExpressionState {
 		return result;
 	}
 
-	public @Nullable Object convertValue(TypedValue value, TypeDescriptor targetTypeDescriptor) throws EvaluationException {
+	public TypeConverter getTypeConverter() {
+		return this.relatedContext.getTypeConverter();
+	}
+
+	@Nullable
+	public Object convertValue(TypedValue value, TypeDescriptor targetTypeDescriptor) throws EvaluationException {
 		Object val = value.getValue();
 		return this.relatedContext.getTypeConverter().convertValue(
 				val, TypeDescriptor.forObject(val), targetTypeDescriptor);
 	}
 
-	/**
-	 * Enter a new scope with a new {@linkplain #getActiveContextObject() root
-	 * context object} and a new local variable scope.
+	/*
+	 * A new scope is entered when a function is invoked.
 	 */
+	public void enterScope(Map<String, Object> argMap) {
+		initVariableScopes().push(new VariableScope(argMap));
+		initScopeRootObjects().push(getActiveContextObject());
+	}
+
 	public void enterScope() {
+		initVariableScopes().push(new VariableScope(Collections.emptyMap()));
+		initScopeRootObjects().push(getActiveContextObject());
+	}
+
+	public void enterScope(String name, Object value) {
+		initVariableScopes().push(new VariableScope(name, value));
 		initScopeRootObjects().push(getActiveContextObject());
 	}
 
 	public void exitScope() {
+		initVariableScopes().pop();
 		initScopeRootObjects().pop();
 	}
 
+	public void setLocalVariable(String name, Object value) {
+		initVariableScopes().element().setVariable(name, value);
+	}
 
-	private Deque<TypedValue> initContextObjects() {
-		if (this.contextObjects == null) {
-			this.contextObjects = new ArrayDeque<>();
+	@Nullable
+	public Object lookupLocalVariable(String name) {
+		for (VariableScope scope : initVariableScopes()) {
+			if (scope.definesVariable(name)) {
+				return scope.lookupVariable(name);
+			}
 		}
-		return this.contextObjects;
+		return null;
+	}
+
+	private Deque<VariableScope> initVariableScopes() {
+		if (this.variableScopes == null) {
+			this.variableScopes = new ArrayDeque<>();
+			// top-level empty variable scope
+			this.variableScopes.add(new VariableScope());
+		}
+		return this.variableScopes;
 	}
 
 	private Deque<TypedValue> initScopeRootObjects() {
@@ -245,6 +251,44 @@ public class ExpressionState {
 
 	public SpelParserConfiguration getConfiguration() {
 		return this.configuration;
+	}
+
+
+	/**
+	 * A new scope is entered when a function is called and it is used to hold the
+	 * parameters to the function call. If the names of the parameters clash with
+	 * those in a higher level scope, those in the higher level scope will not be
+	 * accessible whilst the function is executing. When the function returns,
+	 * the scope is exited.
+	 */
+	private static class VariableScope {
+
+		private final Map<String, Object> vars = new HashMap<>();
+
+		public VariableScope() {
+		}
+
+		public VariableScope(@Nullable Map<String, Object> arguments) {
+			if (arguments != null) {
+				this.vars.putAll(arguments);
+			}
+		}
+
+		public VariableScope(String name, Object value) {
+			this.vars.put(name,value);
+		}
+
+		public Object lookupVariable(String name) {
+			return this.vars.get(name);
+		}
+
+		public void setVariable(String name, Object value) {
+			this.vars.put(name,value);
+		}
+
+		public boolean definesVariable(String name) {
+			return this.vars.containsKey(name);
+		}
 	}
 
 }

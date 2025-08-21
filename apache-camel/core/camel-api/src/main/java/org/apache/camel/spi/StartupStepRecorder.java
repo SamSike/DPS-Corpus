@@ -16,8 +16,6 @@
  */
 package org.apache.camel.spi;
 
-import java.util.stream.Stream;
-
 import org.apache.camel.StartupStep;
 import org.apache.camel.StaticService;
 
@@ -109,12 +107,5 @@ public interface StartupStepRecorder extends StaticService {
      * Ends the step
      */
     void endStep(StartupStep step);
-
-    /**
-     * Some records will capture all steps which can be accessed on demand.
-     */
-    default Stream<StartupStep> steps() {
-        return Stream.empty();
-    }
 
 }

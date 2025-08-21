@@ -18,7 +18,6 @@ package org.apache.camel.component.salesforce.internal.client;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -50,22 +49,20 @@ import org.apache.camel.component.salesforce.api.utils.JsonUtils;
 import org.apache.camel.component.salesforce.internal.SalesforceSession;
 import org.apache.camel.support.service.ServiceSupport;
 import org.apache.commons.io.IOUtils;
-import org.eclipse.jetty.client.BufferingResponseListener;
-import org.eclipse.jetty.client.ByteBufferRequestContent;
-import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.InputStreamRequestContent;
-import org.eclipse.jetty.client.Request;
-import org.eclipse.jetty.client.Response;
-import org.eclipse.jetty.client.Result;
-import org.eclipse.jetty.client.internal.HttpContentResponse;
-import org.eclipse.jetty.client.transport.HttpConversation;
-import org.eclipse.jetty.client.transport.HttpRequest;
+import org.eclipse.jetty.client.HttpContentResponse;
+import org.eclipse.jetty.client.api.ContentProvider;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.client.api.Result;
+import org.eclipse.jetty.client.util.BufferingResponseListener;
+import org.eclipse.jetty.client.util.ByteBufferContentProvider;
+import org.eclipse.jetty.client.util.InputStreamContentProvider;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpMethod;
 import org.eclipse.jetty.http.HttpStatus;
-import org.eclipse.jetty.io.Content;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,9 +133,7 @@ public abstract class AbstractClientBase extends ServiceSupport
             if (!inflightRequests.isTerminated()) {
                 try {
                     inflightRequests.awaitAdvanceInterruptibly(0, terminationTimeout, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } catch (TimeoutException ignored) {
+                } catch (InterruptedException | TimeoutException ignored) {
                     // exception is ignored
                 }
             }
@@ -167,9 +162,8 @@ public abstract class AbstractClientBase extends ServiceSupport
     }
 
     protected Request getRequest(String method, String url, Map<String, List<String>> headers) {
-        HttpRequest request
-                = (HttpRequest) httpClient.newHttpRequest(new HttpConversation(), URI.create(url)).method(method)
-                        .timeout(session.getTimeout(), TimeUnit.MILLISECONDS);
+        SalesforceHttpRequest request = (SalesforceHttpRequest) httpClient.newRequest(url).method(method)
+                .timeout(session.getTimeout(), TimeUnit.MILLISECONDS);
         request.getConversation().setAttribute(SalesforceSecurityHandler.CLIENT_ATTRIBUTE, this);
         addHeadersTo(request, headers);
 
@@ -184,19 +178,13 @@ public abstract class AbstractClientBase extends ServiceSupport
         // Highly memory inefficient,
         // but buffer the request content to allow it to be replayed for
         // authentication retries
-        final Request.Content content = request.getBody();
-        if (content instanceof InputStreamRequestContent) {
-            InputStreamRequestContent inputStreamRequestContent = (InputStreamRequestContent) content;
+        final ContentProvider content = request.getContent();
+        if (content instanceof InputStreamContentProvider) {
             final List<ByteBuffer> buffers = new ArrayList<>();
-            while (true) {
-                Content.Chunk chunk = inputStreamRequestContent.read();
-                if (chunk.isLast()) {
-                    break;
-                } else {
-                    buffers.add(chunk.getByteBuffer());
-                }
+            for (ByteBuffer buffer : content) {
+                buffers.add(buffer);
             }
-            request.body(new ByteBufferRequestContent(buffers.toArray(new ByteBuffer[0])));
+            request.content(new ByteBufferContentProvider(buffers.toArray(new ByteBuffer[buffers.size()])));
             buffers.clear();
         }
 
@@ -229,8 +217,8 @@ public abstract class AbstractClientBase extends ServiceSupport
 
                         // HTTP error status
                         final int status = response.getStatus();
-                        HttpRequest request
-                                = (HttpRequest) ((HttpRequest) result.getRequest()).getConversation()
+                        SalesforceHttpRequest request
+                                = (SalesforceHttpRequest) ((SalesforceHttpRequest) result.getRequest()).getConversation()
                                         .getAttribute(SalesforceSecurityHandler.AUTHENTICATION_REQUEST_ATTRIBUTE);
 
                         if (status == HttpStatus.BAD_REQUEST_400 && request != null) {
@@ -330,7 +318,7 @@ public abstract class AbstractClientBase extends ServiceSupport
                         responseContent.reset();
                         body = IOUtils.toString(responseContent, StandardCharsets.UTF_8);
                         responseContent.reset();
-                    } catch (Exception t) {
+                    } catch (Throwable t) {
                         log.warn("Unable to reset HTTP response content input stream.");
                     }
                     if (statusCode == HttpStatus.NOT_FOUND_404) {

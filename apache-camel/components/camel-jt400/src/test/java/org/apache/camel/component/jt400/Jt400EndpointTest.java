@@ -16,6 +16,7 @@
  */
 package org.apache.camel.component.jt400;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,7 +30,9 @@ public class Jt400EndpointTest extends Jt400TestSupport {
     private Jt400Endpoint endpoint;
 
     @Override
-    public void doPostSetup() throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
+        super.setUp();
         endpoint = (Jt400Endpoint) resolveMandatoryEndpoint(
                 "jt400://user:password@host/qsys.lib/library.lib/queue.dtaq?ccsid=500&format=binary&guiAvailable=true&connectionPool=#mockPool");
     }

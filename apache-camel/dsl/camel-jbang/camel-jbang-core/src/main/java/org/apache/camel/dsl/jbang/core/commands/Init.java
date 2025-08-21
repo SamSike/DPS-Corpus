@@ -16,23 +16,19 @@
  */
 package org.apache.camel.dsl.jbang.core.commands;
 
-import java.io.IOException;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Stack;
 import java.util.StringJoiner;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.dsl.jbang.core.commands.catalog.KameletCatalogHelper;
-import org.apache.camel.dsl.jbang.core.common.CommandLineHelper;
 import org.apache.camel.dsl.jbang.core.common.ResourceDoesNotExist;
-import org.apache.camel.dsl.jbang.core.common.VersionHelper;
 import org.apache.camel.github.GistResourceResolver;
 import org.apache.camel.github.GitHubResourceResolver;
-import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.impl.lw.LightweightCamelContext;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.util.FileUtil;
 import org.apache.camel.util.IOHelper;
@@ -45,53 +41,39 @@ import static org.apache.camel.dsl.jbang.core.common.GistHelper.fetchGistUrls;
 import static org.apache.camel.dsl.jbang.core.common.GitHubHelper.asGithubSingleUrl;
 import static org.apache.camel.dsl.jbang.core.common.GitHubHelper.fetchGithubUrls;
 
-@Command(name = "init", description = "Creates a new Camel integration",
-         sortOptions = false, showDefaultValues = true)
-public class Init extends CamelCommand {
+@Command(name = "init", description = "Creates a new Camel integration")
+class Init extends CamelCommand {
 
     @Parameters(description = "Name of integration file (or a github link)", arity = "1",
                 paramLabel = "<file>", parameterConsumer = FileConsumer.class)
     private Path filePath; // Defined only for file path completion; the field never used
+
     private String file;
 
-    @Option(names = {
-            "--dir",
-            "--directory" }, description = "Directory relative path where the new Camel integration will be saved",
-            defaultValue = ".")
-    private String directory;
-
-    @Option(names = { "--clean-dir", "--clean-directory" },
-            description = "Whether to clean directory first (deletes all files in directory)")
-    private boolean cleanDirectory;
+    @Option(names = { "--integration" },
+            description = "When creating a yaml file should it be created as a Camel K Integration CRD")
+    private boolean integration;
 
     @Option(names = { "--from-kamelet" },
-            description = "To be used when extending an existing Kamelet")
+            description = "To be used for extending an existing Kamelet")
     private String fromKamelet;
 
     @Option(names = {
-            "--kamelets-version" }, description = "Apache Camel Kamelets version")
+            "--kamelets-version" }, description = "Apache Camel Kamelets version", defaultValue = "3.20.0")
     private String kameletsVersion;
 
-    @Option(names = { "--pipe" },
-            description = "When creating a yaml file should it be created as a Pipe CR")
-    private boolean pipe;
+    @Option(names = {
+            "-dir",
+            "--directory" }, description = "Directory where the project will be saved", defaultValue = ".")
+    private String directory;
 
     public Init(CamelJBangMain main) {
         super(main);
     }
 
     @Override
-    public Integer doCall() throws Exception {
-        int code = execute();
-        if (code == 0) {
-            // In case of successful execution, we create the working directory if it does not exist to help the tooling
-            // know that it is a Camel JBang project
-            createWorkingDirectoryIfAbsent();
-        }
-        return code;
-    }
+    public Integer call() throws Exception {
 
-    private int execute() throws Exception {
         // is the file referring to an existing file on github/gist
         // then we should download the file to local for use
         if (file.startsWith("https://github.com/")) {
@@ -101,12 +83,12 @@ public class Init extends CamelCommand {
         }
 
         String ext = FileUtil.onlyExt(file, false);
-        if ("yaml".equals(ext) && pipe) {
-            ext = "init-pipe.yaml";
+        if ("yaml".equals(ext) && integration) {
+            ext = "integration.yaml";
         }
 
         if (fromKamelet != null && !"kamelet.yaml".equals(ext)) {
-            printer().println("When extending from an existing Kamelet then file must have extension .kamelet.yaml");
+            System.out.println("When extending from an existing Kamelet then file must have extension .kamelet.yaml");
             return 1;
         }
 
@@ -114,9 +96,6 @@ public class Init extends CamelCommand {
         InputStream is = null;
         if ("kamelet.yaml".equals(ext)) {
             if (fromKamelet != null) {
-                if (kameletsVersion == null) {
-                    kameletsVersion = VersionHelper.extractKameletsVersion();
-                }
                 // load existing kamelet
                 is = KameletCatalogHelper.loadKameletYamlSchema(fromKamelet, kameletsVersion);
             } else if (file.contains("source")) {
@@ -126,9 +105,6 @@ public class Init extends CamelCommand {
             } else {
                 ext = "kamelet-action.yaml";
             }
-        } else if (ext != null && (ext.startsWith("camel.yaml") || ext.startsWith("camel.xml"))) {
-            // we allow xxx.camel.yaml / xxx.camel.xml
-            ext = ext.substring(6);
         }
 
         if (is == null) {
@@ -136,9 +112,9 @@ public class Init extends CamelCommand {
         }
         if (is == null) {
             if (fromKamelet != null) {
-                printer().printErr("Existing Kamelet does not exist: " + fromKamelet);
+                System.out.println("Error: Existing Kamelet does not exist: " + fromKamelet);
             } else {
-                printer().printErr("Unsupported file type: " + ext);
+                System.out.println("Error: Unsupported file type: " + ext);
             }
             return 1;
         }
@@ -146,17 +122,12 @@ public class Init extends CamelCommand {
         IOHelper.close(is);
 
         if (!directory.equals(".")) {
-            if (cleanDirectory) {
-                // ensure target dir is created after clean
-                CommandHelper.cleanExportDir(directory);
-            }
-            Path dirPath = Paths.get(directory);
-            Files.createDirectories(dirPath);
+            File dir = new File(directory);
+            CommandHelper.cleanExportDir(directory);
+            // ensure target dir is created after clean
+            dir.mkdirs();
         }
-        Path targetPath = Paths.get(file);
-        if (!targetPath.isAbsolute()) {
-            targetPath = Paths.get(directory, file);
-        }
+        File target = new File(directory, file);
         content = content.replaceFirst("\\{\\{ \\.Name }}", name);
         if (fromKamelet != null) {
             content = content.replaceFirst("\\s\\sname:\\s" + fromKamelet, "  name: " + name);
@@ -166,6 +137,7 @@ public class Init extends CamelCommand {
             StringBuilder sb = new StringBuilder();
             String[] lines = content.split("\n");
             boolean top = true;
+            boolean ann = false;
             for (String line : lines) {
                 // remove top license header
                 if (top && line.startsWith("#")) {
@@ -177,50 +149,8 @@ public class Init extends CamelCommand {
             }
             content = sb.toString();
         }
-        if ("java".equals(ext)) {
-            String packageDeclaration = computeJavaPackageDeclaration(targetPath);
-            content = content.replaceFirst("\\{\\{ \\.PackageDeclaration }}", packageDeclaration);
-        }
-        // in case of using relative paths in the file name
-        Path parentPath = targetPath.getParent();
-        if (parentPath != null) {
-            if (".".equals(parentPath.getFileName().toString())) {
-                targetPath = Paths.get(file);
-            } else {
-                Files.createDirectories(parentPath);
-            }
-        }
-        Files.writeString(targetPath, content);
+        IOHelper.writeText(content, new FileOutputStream(target, false));
         return 0;
-    }
-
-    /**
-     * @return The package declaration lines to insert at the beginning of the file or empty string if no package found
-     */
-    private String computeJavaPackageDeclaration(Path targetPath) throws IOException {
-        String packageDeclaration = "";
-        String canonicalPath = targetPath.getParent().toRealPath().toString();
-        String srcMainJavaPath = Paths.get("src", "main", "java").toString();
-        int index = canonicalPath.indexOf(srcMainJavaPath);
-        if (index != -1) {
-            String packagePath = canonicalPath.substring(index + srcMainJavaPath.length() + 1);
-            String packageName = packagePath.replace(java.io.File.separatorChar, '.');
-            if (!packageName.isEmpty()) {
-                packageDeclaration = "package " + packageName + ";\n\n";
-            }
-        }
-        return packageDeclaration;
-    }
-
-    private void createWorkingDirectoryIfAbsent() {
-        Path work = CommandLineHelper.getWorkDir();
-        if (!Files.exists(work)) {
-            try {
-                Files.createDirectories(work);
-            } catch (IOException e) {
-                // ignore
-            }
-        }
     }
 
     private int downloadFromGithub() throws Exception {
@@ -239,15 +169,13 @@ public class Init extends CamelCommand {
         if (all.length() > 0) {
             // okay we downloaded something so prepare export dir
             if (!directory.equals(".")) {
-                Path dirPath = Paths.get(directory);
-                if (cleanDirectory) {
-                    // ensure target dir is created after clean
-                    CommandHelper.cleanExportDir(directory);
-                }
-                Files.createDirectories(dirPath);
+                File dir = new File(directory);
+                CommandHelper.cleanExportDir(directory);
+                // ensure target dir is created after clean
+                dir.mkdirs();
             }
 
-            CamelContext tiny = new DefaultCamelContext();
+            CamelContext tiny = new LightweightCamelContext();
             GitHubResourceResolver resolver = new GitHubResourceResolver();
             resolver.setCamelContext(tiny);
             for (String u : all.toString().split(",")) {
@@ -257,9 +185,9 @@ public class Init extends CamelCommand {
                 }
                 String loc = resource.getLocation();
                 String name = FileUtil.stripPath(loc);
-                Path targetPath = Paths.get(directory, name);
-                try (OutputStream os = Files.newOutputStream(targetPath)) {
-                    IOUtils.copy(resource.getInputStream(), os);
+                File target = new File(directory, name);
+                try (FileOutputStream fo = new FileOutputStream(target)) {
+                    IOUtils.copy(resource.getInputStream(), fo);
                 }
             }
         }
@@ -275,15 +203,13 @@ public class Init extends CamelCommand {
         if (all.length() > 0) {
             // okay we downloaded something so prepare export dir
             if (!directory.equals(".")) {
-                Path dirPath = Paths.get(directory);
-                if (cleanDirectory) {
-                    // ensure target dir is created after clean
-                    CommandHelper.cleanExportDir(directory);
-                }
-                Files.createDirectories(dirPath);
+                File dir = new File(directory);
+                CommandHelper.cleanExportDir(directory);
+                // ensure target dir is created after clean
+                dir.mkdirs();
             }
 
-            CamelContext tiny = new DefaultCamelContext();
+            CamelContext tiny = new LightweightCamelContext();
             GistResourceResolver resolver = new GistResourceResolver();
             resolver.setCamelContext(tiny);
             for (String u : all.toString().split(",")) {
@@ -293,9 +219,9 @@ public class Init extends CamelCommand {
                 }
                 String loc = resource.getLocation();
                 String name = FileUtil.stripPath(loc);
-                Path targetPath = Paths.get(directory, name);
-                try (OutputStream os = Files.newOutputStream(targetPath)) {
-                    IOUtils.copy(resource.getInputStream(), os);
+                File target = new File(directory, name);
+                try (FileOutputStream fo = new FileOutputStream(target)) {
+                    IOUtils.copy(resource.getInputStream(), fo);
                 }
             }
         }
@@ -306,7 +232,8 @@ public class Init extends CamelCommand {
     static class FileConsumer extends ParameterConsumer<Init> {
         @Override
         protected void doConsumeParameters(Stack<String> args, Init cmd) {
-            cmd.file = args.pop();
+            String arg = args.pop();
+            cmd.file = arg;
         }
     }
 

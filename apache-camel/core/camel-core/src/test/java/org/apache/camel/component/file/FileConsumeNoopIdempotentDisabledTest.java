@@ -36,10 +36,10 @@ public class FileConsumeNoopIdempotentDisabledTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?initialDelay=0&delay=10&noop=true&idempotent=false")).convertBodyTo(String.class)
                         .to("mock:result");
             }

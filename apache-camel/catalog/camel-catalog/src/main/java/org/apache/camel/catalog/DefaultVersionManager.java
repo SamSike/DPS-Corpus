@@ -33,11 +33,6 @@ public class DefaultVersionManager implements VersionManager {
     }
 
     @Override
-    public ClassLoader getClassLoader() {
-        return classLoader;
-    }
-
-    @Override
     public String getLoadedVersion() {
         return camelCatalog.getCatalogVersion();
     }

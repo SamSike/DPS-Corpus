@@ -24,18 +24,18 @@ import static org.apache.camel.component.kafka.producer.support.ProducerUtil.set
 
 public class KafkaProducerMetadataCallBack implements Callback {
     private final Object body;
-    private final boolean recordMetadata;
+    private final boolean record;
 
-    public KafkaProducerMetadataCallBack(Object body, boolean recordMetadata) {
+    public KafkaProducerMetadataCallBack(Object body, boolean record) {
         this.body = body;
-        this.recordMetadata = recordMetadata;
+        this.record = record;
     }
 
     @Override
     public void onCompletion(RecordMetadata recordMetadata, Exception e) {
         setException(body, e);
 
-        if (this.recordMetadata) {
+        if (record) {
             setRecordMetadata(body, recordMetadata);
         }
     }

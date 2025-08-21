@@ -28,29 +28,29 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BeanReturnNullTest extends ContextTestSupport {
 
     @Test
-    public void testReturnBean() {
+    public void testReturnBean() throws Exception {
         MyBean out = template.requestBody("direct:start", "Camel", MyBean.class);
         assertNotNull(out);
         assertEquals("Camel", out.getName());
     }
 
     @Test
-    public void testReturnNull() {
+    public void testReturnNull() throws Exception {
         Object out = template.requestBody("direct:start", "foo");
         assertNull(out);
     }
 
     @Test
-    public void testReturnNullMyBean() {
+    public void testReturnNullMyBean() throws Exception {
         MyBean out = template.requestBody("direct:start", "foo", MyBean.class);
         assertNull(out);
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").bean(BeanReturnNullTest.class, "doSomething");
             }
         };
@@ -66,7 +66,7 @@ public class BeanReturnNullTest extends ContextTestSupport {
 
     public static final class MyBean {
 
-        public final String name;
+        public String name;
 
         public MyBean(String name) {
             this.name = name;

@@ -46,10 +46,10 @@ public class MessageHistoryCopyExchangeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.setMessageHistory(true);
 
                 from("seda:start").to("log:foo").to("mock:a").to("direct:bar").to("mock:b");

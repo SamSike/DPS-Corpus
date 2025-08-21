@@ -20,6 +20,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.maven.model.Build;
@@ -63,8 +64,8 @@ public abstract class AbstractGeneratorMojoTest {
         mojo.componentPackage = COMPONENT_PACKAGE;
         mojo.project = new MavenProject((Model) null) {
             @Override
-            public List<String> getTestClasspathElements() {
-                return Collections.emptyList();
+            public List getTestClasspathElements() {
+                return Collections.EMPTY_LIST;
             }
 
             @Override
@@ -102,6 +103,7 @@ public abstract class AbstractGeneratorMojoTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldAddCompilationRootsByDefault() throws Exception {
         AbstractSourceGeneratorMojo mojo = createGeneratorMojo();
         assumeTrue(mojo != null, "Ignored because createGeneratorMojo is not implemented");
@@ -148,7 +150,7 @@ public abstract class AbstractGeneratorMojoTest {
     private void assertCompileSourceRoots(Supplier<List<String>> roots, File... expectedSources) {
         List<String> compileSourceRoots = roots.get();
         assertEquals(expectedSources.length, compileSourceRoots.size());
-        assertEquals(Stream.of(expectedSources).map(File::getAbsolutePath).toList(), compileSourceRoots);
+        assertEquals(Stream.of(expectedSources).map(File::getAbsolutePath).collect(Collectors.toList()), compileSourceRoots);
     }
 
 }

@@ -45,7 +45,7 @@ public class CamelLogProcessor extends AsyncProcessorSupport implements IdAware,
 
     private String id;
     private String routeId;
-    private final CamelLogger logger;
+    private CamelLogger logger;
     private ExchangeFormatter formatter;
     private MaskingFormatter maskingFormatter;
     private final Set<LogListener> listeners;
@@ -62,6 +62,7 @@ public class CamelLogProcessor extends AsyncProcessorSupport implements IdAware,
 
     public CamelLogProcessor(CamelLogger logger, ExchangeFormatter formatter, MaskingFormatter maskingFormatter,
                              Set<LogListener> listeners) {
+        this.formatter = new ToStringExchangeFormatter();
         this.logger = logger;
         this.formatter = formatter;
         this.maskingFormatter = maskingFormatter;
@@ -140,7 +141,7 @@ public class CamelLogProcessor extends AsyncProcessorSupport implements IdAware,
             try {
                 String output = listener.onLog(exchange, logger, message);
                 message = output != null ? output : message;
-            } catch (Exception t) {
+            } catch (Throwable t) {
                 LOG.warn("Ignoring an exception thrown by {}: {}", listener.getClass().getName(), t.getMessage());
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("", t);

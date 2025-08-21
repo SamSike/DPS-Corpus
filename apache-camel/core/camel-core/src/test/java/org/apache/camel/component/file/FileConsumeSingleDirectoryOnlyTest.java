@@ -40,9 +40,9 @@ public class FileConsumeSingleDirectoryOnlyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?recursive=false&delete=true&initialDelay=0&delay=10"))
                         .convertBodyTo(String.class).to("mock:result");
             }

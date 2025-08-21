@@ -134,7 +134,7 @@ public class CamelTransportFactory extends AbstractTransportFactory
         return new CamelConduit(camelContext, b, localInfo, target, headerFilterStrategy);
     }
 
-    // CXF 2.x support methods
+    // CXF 2.x support methods    
     public void setBus(Bus b) {
         unregisterFactory();
         bus = b;
@@ -165,34 +165,26 @@ public class CamelTransportFactory extends AbstractTransportFactory
         }
         DestinationFactoryManager dfm = bus.getExtension(DestinationFactoryManager.class);
         if (null != dfm && getTransportIds() != null) {
-            unregisterDestinationFactories(dfm);
+            for (String ns : getTransportIds()) {
+                try {
+                    if (dfm.getDestinationFactory(ns) == this) {
+                        dfm.deregisterDestinationFactory(ns);
+                    }
+                } catch (BusException e) {
+                    //ignore
+                }
+            }
         }
         ConduitInitiatorManager cim = bus.getExtension(ConduitInitiatorManager.class);
         if (cim != null && getTransportIds() != null) {
-            unregisterConduitInitiators(cim);
-        }
-    }
-
-    private void unregisterConduitInitiators(ConduitInitiatorManager cim) {
-        for (String ns : getTransportIds()) {
-            try {
-                if (cim.getConduitInitiator(ns) == this) {
-                    cim.deregisterConduitInitiator(ns);
+            for (String ns : getTransportIds()) {
+                try {
+                    if (cim.getConduitInitiator(ns) == this) {
+                        cim.deregisterConduitInitiator(ns);
+                    }
+                } catch (BusException e) {
+                    //ignore
                 }
-            } catch (BusException e) {
-                //ignore
-            }
-        }
-    }
-
-    private void unregisterDestinationFactories(DestinationFactoryManager dfm) {
-        for (String ns : getTransportIds()) {
-            try {
-                if (dfm.getDestinationFactory(ns) == this) {
-                    dfm.deregisterDestinationFactory(ns);
-                }
-            } catch (BusException e) {
-                //ignore
             }
         }
     }

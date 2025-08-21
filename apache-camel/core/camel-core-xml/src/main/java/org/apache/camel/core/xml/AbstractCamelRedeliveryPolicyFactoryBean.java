@@ -125,7 +125,6 @@ public abstract class AbstractCamelRedeliveryPolicyFactoryBean extends AbstractC
     private String exchangeFormatterRef;
 
     @Override
-    @SuppressWarnings("java:S3776")
     public RedeliveryPolicy getObject() throws Exception {
         RedeliveryPolicy answer = new RedeliveryPolicy();
         CamelContext context = getCamelContext();

@@ -17,8 +17,6 @@
 package org.apache.camel.component.netty;
 
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ThreadFactory;
 
@@ -28,16 +26,10 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollServerDomainSocketChannel;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
-import io.netty.channel.kqueue.KQueue;
-import io.netty.channel.kqueue.KQueueServerDomainSocketChannel;
-import io.netty.channel.kqueue.KQueueServerSocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.util.concurrent.ImmediateEventExecutor;
 import org.apache.camel.CamelContext;
 import org.apache.camel.support.CamelContextHelper;
@@ -151,35 +143,15 @@ public class SingleTCPNettyServerBootstrapFactory extends ServiceSupport impleme
         }
 
         serverBootstrap = new ServerBootstrap();
-        if (configuration.getUnixDomainSocketPath() != null) {
-            if (KQueue.isAvailable()) {
-                serverBootstrap.group(bg, wg).channel(KQueueServerDomainSocketChannel.class);
-            } else if (Epoll.isAvailable()) {
-                serverBootstrap.group(bg, wg).channel(EpollServerDomainSocketChannel.class);
-            } else {
-                throw new IllegalStateException(
-                        "Unable to use unix domain sockets - both Epoll and KQueue are not available");
-            }
+        if (configuration.isNativeTransport()) {
+            serverBootstrap.group(bg, wg).channel(EpollServerSocketChannel.class);
         } else {
-            if (configuration.isNativeTransport()) {
-                if (KQueue.isAvailable()) {
-                    serverBootstrap.group(bg, wg).channel(KQueueServerSocketChannel.class);
-                } else if (Epoll.isAvailable()) {
-                    serverBootstrap.group(bg, wg).channel(EpollServerSocketChannel.class);
-                } else {
-                    throw new IllegalStateException(
-                            "Unable to use native transport - both Epoll and KQueue are not available");
-                }
-            } else {
-                serverBootstrap.group(bg, wg).channel(NioServerSocketChannel.class);
-            }
+            serverBootstrap.group(bg, wg).channel(NioServerSocketChannel.class);
         }
-        if (configuration.getUnixDomainSocketPath() == null) {
-            serverBootstrap.childOption(ChannelOption.SO_KEEPALIVE, configuration.isKeepAlive());
-            serverBootstrap.childOption(ChannelOption.TCP_NODELAY, configuration.isTcpNoDelay());
-            serverBootstrap.option(ChannelOption.SO_REUSEADDR, configuration.isReuseAddress());
-            serverBootstrap.childOption(ChannelOption.SO_REUSEADDR, configuration.isReuseAddress());
-        }
+        serverBootstrap.childOption(ChannelOption.SO_KEEPALIVE, configuration.isKeepAlive());
+        serverBootstrap.childOption(ChannelOption.TCP_NODELAY, configuration.isTcpNoDelay());
+        serverBootstrap.option(ChannelOption.SO_REUSEADDR, configuration.isReuseAddress());
+        serverBootstrap.childOption(ChannelOption.SO_REUSEADDR, configuration.isReuseAddress());
         serverBootstrap.childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, configuration.getConnectTimeout());
         if (configuration.getBacklog() > 0) {
             serverBootstrap.option(ChannelOption.SO_BACKLOG, configuration.getBacklog());
@@ -207,16 +179,9 @@ public class SingleTCPNettyServerBootstrapFactory extends ServiceSupport impleme
 
         LOG.debug("Created ServerBootstrap {}", serverBootstrap);
 
-        SocketAddress socketAddress;
-        if (configuration.getUnixDomainSocketPath() != null) {
-            Path udsPath = Path.of(configuration.getUnixDomainSocketPath()).toAbsolutePath();
-            LOG.info("ServerBootstrap binding to {}", udsPath);
-            socketAddress = new DomainSocketAddress(udsPath.toFile());
-        } else {
-            LOG.info("ServerBootstrap binding to {}:{}", configuration.getHost(), configuration.getPort());
-            socketAddress = new InetSocketAddress(configuration.getHost(), configuration.getPort());
-        }
-        ChannelFuture channelFuture = serverBootstrap.bind(socketAddress).sync();
+        LOG.info("ServerBootstrap binding to {}:{}", configuration.getHost(), configuration.getPort());
+        ChannelFuture channelFuture
+                = serverBootstrap.bind(new InetSocketAddress(configuration.getHost(), configuration.getPort())).sync();
         channel = channelFuture.channel();
         // to keep track of all channels in use
         allChannels.add(channel);
@@ -224,24 +189,18 @@ public class SingleTCPNettyServerBootstrapFactory extends ServiceSupport impleme
 
     protected void stopServerBootstrap() {
         // close all channels
-        if (configuration.getUnixDomainSocketPath() != null) {
-            Path udsPath = Path.of(configuration.getUnixDomainSocketPath()).toAbsolutePath();
-            LOG.info("ServerBootstrap unbinding from {}", udsPath);
-        } else {
-            LOG.info("ServerBootstrap unbinding from {}:{}", configuration.getHost(), configuration.getPort());
-
-        }
+        LOG.info("ServerBootstrap unbinding from {}:{}", configuration.getHost(), configuration.getPort());
 
         LOG.trace("Closing {} channels", allChannels.size());
-        allChannels.close().awaitUninterruptibly(configuration.getShutdownTimeout());
+        allChannels.close().awaitUninterruptibly();
 
         // and then shutdown the thread pools
         if (bossGroup != null) {
-            bossGroup.shutdownGracefully().awaitUninterruptibly(configuration.getShutdownTimeout());
+            bossGroup.shutdownGracefully();
             bossGroup = null;
         }
         if (workerGroup != null) {
-            workerGroup.shutdownGracefully().awaitUninterruptibly(configuration.getShutdownTimeout());
+            workerGroup.shutdownGracefully();
             workerGroup = null;
         }
     }

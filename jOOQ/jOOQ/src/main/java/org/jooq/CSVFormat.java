@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -53,9 +53,6 @@ public final class CSVFormat {
 
     public static final CSVFormat DEFAULT = new CSVFormat();
 
-
-
-
     final String                  delimiter;
     final String                  nullString;
     final String                  emptyString;
@@ -66,9 +63,6 @@ public final class CSVFormat {
 
     public CSVFormat() {
         this(
-
-
-
             ",",
             "\"\"",
             "\"\"",
@@ -80,9 +74,6 @@ public final class CSVFormat {
     }
 
     private CSVFormat(
-
-
-
         String delimiter,
         String nullString,
         String emptyString,
@@ -91,9 +82,6 @@ public final class CSVFormat {
         Quote quote,
         boolean header
     ) {
-
-
-
         this.delimiter = delimiter;
         this.nullString = nullString;
         this.emptyString = emptyString;
@@ -102,36 +90,6 @@ public final class CSVFormat {
         this.quote = quote;
         this.header = header;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * The delimiter to be used between CSV cells, defaulting to
@@ -151,9 +109,6 @@ public final class CSVFormat {
     @NotNull
     public CSVFormat delimiter(String newDelimiter) {
         return new CSVFormat(
-
-
-
             newDelimiter,
             nullString,
             emptyString,
@@ -226,9 +181,6 @@ public final class CSVFormat {
     @NotNull
     public CSVFormat nullString(String newNullString) {
         return new CSVFormat(
-
-
-
             delimiter,
             newNullString,
             emptyString,
@@ -281,9 +233,6 @@ public final class CSVFormat {
     @NotNull
     public CSVFormat emptyString(String newEmptyString) {
         return new CSVFormat(
-
-
-
             delimiter,
             nullString,
             newEmptyString,
@@ -320,9 +269,6 @@ public final class CSVFormat {
     @NotNull
     public CSVFormat newline(String newNewline) {
         return new CSVFormat(
-
-
-
             delimiter,
             nullString,
             emptyString,
@@ -348,9 +294,6 @@ public final class CSVFormat {
     @NotNull
     public CSVFormat quoteString(String newQuoteString) {
         return new CSVFormat(
-
-
-
             delimiter,
             nullString,
             emptyString,
@@ -376,9 +319,6 @@ public final class CSVFormat {
     @NotNull
     public CSVFormat quote(Quote newQuote) {
         return new CSVFormat(
-
-
-
             delimiter,
             nullString,
             emptyString,
@@ -404,9 +344,6 @@ public final class CSVFormat {
     @NotNull
     public CSVFormat header(boolean newHeader) {
         return new CSVFormat(
-
-
-
             delimiter,
             nullString,
             emptyString,

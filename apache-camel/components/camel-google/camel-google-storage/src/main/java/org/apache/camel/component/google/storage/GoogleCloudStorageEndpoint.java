@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.google.storage;
 
-import java.util.Map;
-
 import com.google.cloud.storage.Bucket;
 import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.BucketInfo.Builder;
@@ -27,23 +25,21 @@ import org.apache.camel.Category;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.ScheduledPollEndpoint;
-import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Store and retrieve objects from Google Cloud Storage Service using the google-cloud-storage library.
- *
+ * 
  * Google Storage Endpoint definition represents a bucket within the storage and contains configuration to customize the
  * behavior of Consumer and Producer.
  */
 @UriEndpoint(firstVersion = "3.9.0", scheme = "google-storage", title = "Google Storage", syntax = "google-storage:bucketName",
              category = { Category.CLOUD }, headersClass = GoogleCloudStorageConstants.class)
-public class GoogleCloudStorageEndpoint extends ScheduledPollEndpoint implements EndpointServiceLocation {
+public class GoogleCloudStorageEndpoint extends ScheduledPollEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(GoogleCloudStorageEndpoint.class);
 
@@ -68,11 +64,6 @@ public class GoogleCloudStorageEndpoint extends ScheduledPollEndpoint implements
         Consumer consumer = new GoogleCloudStorageConsumer(this, processor);
         configureConsumer(consumer);
         return consumer;
-    }
-
-    @Override
-    public GoogleCloudStorageComponent getComponent() {
-        return (GoogleCloudStorageComponent) super.getComponent();
     }
 
     @Override
@@ -122,29 +113,6 @@ public class GoogleCloudStorageEndpoint extends ScheduledPollEndpoint implements
 
     public Storage getStorageClient() {
         return storageClient;
-    }
-
-    @Override
-    public String getServiceUrl() {
-        if (ObjectHelper.isNotEmpty(configuration.getBucketName())
-                && ObjectHelper.isNotEmpty(configuration.getStorageLocation())) {
-            return getServiceProtocol() + ":" + configuration.getStorageLocation() + ":"
-                   + configuration.getBucketName();
-        }
-        return null;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return "storage";
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        if (configuration.getStorageClass() != null) {
-            return Map.of("storageClass", configuration.getStorageClass().name());
-        }
-        return null;
     }
 
 }

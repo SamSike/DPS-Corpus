@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -39,7 +39,6 @@
 package org.jooq.impl;
 
 import static org.jooq.SortOrder.DESC;
-import static org.jooq.impl.Tools.allMatch;
 import static org.jooq.impl.Tools.anyMatch;
 
 import java.util.List;
@@ -75,7 +74,7 @@ final class SortFieldList extends QueryPartList<SortField<?>> {
      * all {@link SortOrder#ASC} or all {@link SortOrder#DESC}.
      */
     final boolean uniform() {
-        return allMatch(this, f -> (f.getOrder() == DESC) == (get(0).getOrder() == DESC));
+        return !anyMatch(this, f -> (f.getOrder() == DESC) != (get(0).getOrder() == DESC));
     }
 
     /**
@@ -83,10 +82,10 @@ final class SortFieldList extends QueryPartList<SortField<?>> {
      * <code>NULLS FIRST</code> or <code>NULLS LAST</code> clause.
      */
     final boolean nulls() {
-        return anyMatch(this, f -> f.$nullOrdering() != null);
+        return anyMatch(this, f -> ((SortFieldImpl<?>) f).nullOrdering != null);
     }
 
     final List<Field<?>> fields() {
-        return Tools.map(this, f -> f.$field());
+        return Tools.map(this, f -> ((SortFieldImpl<?>) f).getField());
     }
 }

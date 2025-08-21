@@ -67,10 +67,10 @@ public class ManagedResequencerTest extends ManagementTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start")
                         .resequence(header("num")).size(3).id("mysend")
                         .to("mock:foo");

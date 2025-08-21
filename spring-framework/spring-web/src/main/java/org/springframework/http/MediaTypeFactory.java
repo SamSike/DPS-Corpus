@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.io.Resource;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -78,7 +77,7 @@ public final class MediaTypeFactory {
 				String[] tokens = StringUtils.tokenizeToStringArray(line, " \t\n\r\f");
 				MediaType mediaType = MediaType.parseMediaType(tokens[0]);
 				for (int i = 1; i < tokens.length; i++) {
-					String fileExtension = tokens[i].toLowerCase(Locale.ROOT);
+					String fileExtension = tokens[i].toLowerCase(Locale.ENGLISH);
 					result.add(fileExtension, mediaType);
 				}
 			}
@@ -118,7 +117,7 @@ public final class MediaTypeFactory {
 		List<MediaType> mediaTypes = null;
 		String ext = StringUtils.getFilenameExtension(filename);
 		if (ext != null) {
-			mediaTypes = fileExtensionToMediaTypes.get(ext.toLowerCase(Locale.ROOT));
+			mediaTypes = fileExtensionToMediaTypes.get(ext.toLowerCase(Locale.ENGLISH));
 		}
 		return (mediaTypes != null ? mediaTypes : Collections.emptyList());
 	}

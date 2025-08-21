@@ -18,6 +18,7 @@ package org.apache.camel.builder.endpoint;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -32,8 +33,10 @@ public class FileBatchConsumerMemoryLeakManualTest extends BaseEndpointDslTest {
     private String fileUrl = "target/data/filesorter/";
 
     @Override
-    public void doPreSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
         deleteDirectory("target/data/filesorter");
+        super.setUp();
     }
 
     @Override

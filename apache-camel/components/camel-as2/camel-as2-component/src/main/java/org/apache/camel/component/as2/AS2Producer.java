@@ -23,10 +23,9 @@ import org.apache.camel.component.as2.internal.AS2ApiName;
 import org.apache.camel.component.as2.internal.AS2Constants;
 import org.apache.camel.component.as2.internal.AS2PropertiesHelper;
 import org.apache.camel.support.component.AbstractApiProducer;
-import org.apache.hc.core5.http.ClassicHttpResponse;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.HttpResponse;
-import org.apache.hc.core5.http.protocol.HttpCoreContext;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.protocol.HttpCoreContext;
 
 /**
  * The AS2 producer.
@@ -42,13 +41,11 @@ public class AS2Producer extends AbstractApiProducer<AS2ApiName, AS2Configuratio
         HttpCoreContext context = (HttpCoreContext) methodResult;
         resultExchange.setProperty(AS2Constants.AS2_INTERCHANGE, context);
         HttpResponse response = context.getResponse();
-        if (response instanceof ClassicHttpResponse classicResponse) {
-            HttpEntity entity = classicResponse.getEntity();
-            if (entity instanceof DispositionNotificationMultipartReportEntity || entity instanceof MultipartSignedEntity) {
-                resultExchange.getMessage().setBody(entity);
-            } else {
-                resultExchange.getMessage().setBody(null);
-            }
+        HttpEntity entity = response.getEntity();
+        if (entity instanceof DispositionNotificationMultipartReportEntity || entity instanceof MultipartSignedEntity) {
+            resultExchange.getOut().setBody(entity);
+        } else {
+            resultExchange.getOut().setBody(null);
         }
     }
 }

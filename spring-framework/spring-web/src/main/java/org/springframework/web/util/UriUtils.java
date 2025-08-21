@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -35,7 +34,7 @@ import org.springframework.util.StringUtils;
  *
  * <p>There are two types of encode methods:
  * <ul>
- * <li>{@code "encodeXyz"} -- these encode a specific URI component (for example, path,
+ * <li>{@code "encodeXyz"} -- these encode a specific URI component (e.g. path,
  * query) by percent encoding illegal characters, which includes non-US-ASCII
  * characters, and also characters that are otherwise illegal within the given
  * URI component type, as defined in RFC 3986. The effect of this method, with
@@ -247,15 +246,15 @@ public abstract class UriUtils {
 	 * Encode the query parameters from the given {@code MultiValueMap} with UTF-8.
 	 * <p>This can be used with {@link UriComponentsBuilder#queryParams(MultiValueMap)}
 	 * when building a URI from an already encoded template.
-	 * <pre class="code">{@code
-	 * MultiValueMap<String, String> params = new LinkedMultiValueMap<>(2);
+	 * <pre class="code">
+	 * MultiValueMap&lt;String, String&gt; params = new LinkedMultiValueMap<>(2);
 	 * // add to params...
 	 *
 	 * ServletUriComponentsBuilder.fromCurrentRequest()
 	 *         .queryParams(UriUtils.encodeQueryParams(params))
 	 *         .build(true)
 	 *         .toUriString();
-	 * }</pre>
+	 * </pre>
 	 * @param params the parameters to encode
 	 * @return a new {@code MultiValueMap} with the encoded names and values
 	 * @since 5.2.3
@@ -308,7 +307,7 @@ public abstract class UriUtils {
 	 * meaning, anywhere within a URI, as defined in
 	 * <a href="https://tools.ietf.org/html/rfc3986">RFC 3986</a>.
 	 * This is useful to ensure that the given String will be preserved as-is
-	 * and will not have any impact on the structure or meaning of the URI.
+	 * and will not have any o impact on the structure or meaning of the URI.
 	 * @param source the String to be encoded
 	 * @param charset the character encoding to encode to
 	 * @return the encoded String
@@ -325,7 +324,7 @@ public abstract class UriUtils {
 	 * @return the encoded String
 	 * @since 5.0
 	 */
-	public static Map<String, String> encodeUriVariables(Map<String, ? extends @Nullable Object> uriVariables) {
+	public static Map<String, String> encodeUriVariables(Map<String, ?> uriVariables) {
 		Map<String, String> result = CollectionUtils.newLinkedHashMap(uriVariables.size());
 		uriVariables.forEach((key, value) -> {
 			String stringValue = (value != null ? value.toString() : "");
@@ -341,7 +340,7 @@ public abstract class UriUtils {
 	 * @return the encoded String
 	 * @since 5.0
 	 */
-	public static Object[] encodeUriVariables(@Nullable Object... uriVariables) {
+	public static Object[] encodeUriVariables(Object... uriVariables) {
 		return Arrays.stream(uriVariables)
 				.map(value -> {
 					String stringValue = (value != null ? value.toString() : "");
@@ -360,39 +359,29 @@ public abstract class UriUtils {
 
 
 	/**
-	 * Decode the given encoded URI component value by replacing each
-	 * "<i>{@code %xy}</i>" sequence with a hexadecimal representation of the
-	 * character in the specified character encoding, leaving other characters
-	 * unmodified.
-	 * @param source the encoded URI component value
-	 * @param encoding the character encoding to use to decode the "<i>{@code %xy}</i>"
-	 * sequences
+	 * Decode the given encoded URI component.
+	 * <p>See {@link StringUtils#uriDecode(String, Charset)} for the decoding rules.
+	 * @param source the encoded String
+	 * @param encoding the character encoding to use
 	 * @return the decoded value
-	 * @throws IllegalArgumentException if the given source contains invalid encoded
-	 * sequences
+	 * @throws IllegalArgumentException when the given source contains invalid encoded sequences
 	 * @see StringUtils#uriDecode(String, Charset)
-	 * @see java.net.URLDecoder#decode(String, String) java.net.URLDecoder#decode
-	 * for HTML form decoding
+	 * @see java.net.URLDecoder#decode(String, String)
 	 */
 	public static String decode(String source, String encoding) {
 		return StringUtils.uriDecode(source, Charset.forName(encoding));
 	}
 
 	/**
-	 * Decode the given encoded URI component value by replacing each
-	 * "<i>{@code %xy}</i>" sequence with a hexadecimal representation of the
-	 * character in the specified character encoding, leaving other characters
-	 * unmodified.
-	 * @param source the encoded URI component value
-	 * @param charset the character encoding to use to decode the "<i>{@code %xy}</i>"
-	 * sequences
+	 * Decode the given encoded URI component.
+	 * <p>See {@link StringUtils#uriDecode(String, Charset)} for the decoding rules.
+	 * @param source the encoded String
+	 * @param charset the character encoding to use
 	 * @return the decoded value
-	 * @throws IllegalArgumentException if the given source contains invalid encoded
-	 * sequences
+	 * @throws IllegalArgumentException when the given source contains invalid encoded sequences
 	 * @since 5.0
 	 * @see StringUtils#uriDecode(String, Charset)
-	 * @see java.net.URLDecoder#decode(String, String) java.net.URLDecoder#decode
-	 * for HTML form decoding
+	 * @see java.net.URLDecoder#decode(String, String)
 	 */
 	public static String decode(String source, Charset charset) {
 		return StringUtils.uriDecode(source, charset);
@@ -400,11 +389,12 @@ public abstract class UriUtils {
 
 	/**
 	 * Extract the file extension from the given URI path.
-	 * @param path the URI path (for example, "/products/index.html")
-	 * @return the extracted file extension (for example, "html")
+	 * @param path the URI path (e.g. "/products/index.html")
+	 * @return the extracted file extension (e.g. "html")
 	 * @since 4.3.2
 	 */
-	public static @Nullable String extractFileExtension(String path) {
+	@Nullable
+	public static String extractFileExtension(String path) {
 		int end = path.indexOf('?');
 		int fragmentIndex = path.indexOf('#');
 		if (fragmentIndex != -1 && (end == -1 || fragmentIndex < end)) {
@@ -417,7 +407,7 @@ public abstract class UriUtils {
 		int paramIndex = path.indexOf(';', begin);
 		end = (paramIndex != -1 && paramIndex < end ? paramIndex : end);
 		int extIndex = path.lastIndexOf('.', end);
-		if (extIndex != -1 && extIndex >= begin) {
+		if (extIndex != -1 && extIndex > begin) {
 			return path.substring(extIndex + 1, end);
 		}
 		return null;

@@ -768,9 +768,9 @@ public class JsonObject extends LinkedHashMap<String, Object> implements Jsonabl
                 writable.write(',');
             }
             final Map.Entry<String, Object> entry = entries.next();
-            Jsoner.serialize(entry.getKey(), writable);
+            writable.write(Jsoner.serialize(entry.getKey()));
             writable.write(':');
-            Jsoner.serialize(entry.getValue(), writable);
+            writable.write(Jsoner.serialize(entry.getValue()));
         }
         writable.write('}');
     }

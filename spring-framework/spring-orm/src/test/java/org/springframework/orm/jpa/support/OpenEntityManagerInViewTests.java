@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,37 +60,44 @@ import static org.mockito.Mockito.verify;
  * @author Chris Beams
  * @author Phillip Webb
  */
-class OpenEntityManagerInViewTests {
+public class OpenEntityManagerInViewTests {
+
+	private EntityManager manager;
+
+	private EntityManagerFactory factory;
+
+	private MockHttpServletRequest request;
+
+	private MockHttpServletResponse response;
+
+	private ServletWebRequest webRequest;
 
 	private final TestTaskExecutor taskExecutor = new TestTaskExecutor();
 
-	private EntityManager manager = mock();
-
-	private EntityManagerFactory factory = mock();
-
-	private MockHttpServletRequest request = new MockHttpServletRequest();
-
-	private MockHttpServletResponse response = new MockHttpServletResponse();
-
-	private ServletWebRequest webRequest = new ServletWebRequest(this.request);
-
 
 	@BeforeEach
-	void setUp() {
+	public void setUp() {
+		factory = mock(EntityManagerFactory.class);
+		manager = mock(EntityManager.class);
+
 		given(factory.createEntityManager()).willReturn(manager);
+
+		this.request = new MockHttpServletRequest();
 		this.request.setAsyncSupported(true);
+		this.response = new MockHttpServletResponse();
+		this.webRequest = new ServletWebRequest(this.request);
 	}
 
 	@AfterEach
-	void tearDown() {
-		assertThat(TransactionSynchronizationManager.getResourceMap()).isEmpty();
+	public void tearDown() {
+		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty()).isTrue();
 		assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isFalse();
 		assertThat(TransactionSynchronizationManager.isCurrentTransactionReadOnly()).isFalse();
 		assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
 	}
 
 	@Test
-	void testOpenEntityManagerInViewInterceptor() {
+	public void testOpenEntityManagerInViewInterceptor() {
 		OpenEntityManagerInViewInterceptor interceptor = new OpenEntityManagerInViewInterceptor();
 		interceptor.setEntityManagerFactory(this.factory);
 
@@ -126,7 +133,7 @@ class OpenEntityManagerInViewTests {
 	}
 
 	@Test
-	void testOpenEntityManagerInViewInterceptorAsyncScenario() throws Exception {
+	public void testOpenEntityManagerInViewInterceptorAsyncScenario() throws Exception {
 
 		// Initial request thread
 
@@ -183,7 +190,7 @@ class OpenEntityManagerInViewTests {
 	}
 
 	@Test
-	void testOpenEntityManagerInViewInterceptorAsyncTimeoutScenario() throws Exception {
+	public void testOpenEntityManagerInViewInterceptorAsyncTimeoutScenario() throws Exception {
 
 		// Initial request thread
 
@@ -223,7 +230,7 @@ class OpenEntityManagerInViewTests {
 	}
 
 	@Test
-	void testOpenEntityManagerInViewInterceptorAsyncErrorScenario() throws Exception {
+	public void testOpenEntityManagerInViewInterceptorAsyncErrorScenario() throws Exception {
 
 		// Initial request thread
 
@@ -263,11 +270,11 @@ class OpenEntityManagerInViewTests {
 	}
 
 	@Test
-	void testOpenEntityManagerInViewFilter() throws Exception {
+	public void testOpenEntityManagerInViewFilter() throws Exception {
 		given(manager.isOpen()).willReturn(true);
 
-		final EntityManagerFactory factory2 = mock();
-		final EntityManager manager2 = mock();
+		final EntityManagerFactory factory2 = mock(EntityManagerFactory.class);
+		final EntityManager manager2 = mock(EntityManager.class);
 
 		given(factory2.createEntityManager()).willReturn(manager2);
 		given(manager2.isOpen()).willReturn(true);
@@ -317,11 +324,11 @@ class OpenEntityManagerInViewTests {
 	}
 
 	@Test
-	void testOpenEntityManagerInViewFilterAsyncScenario() throws Exception {
+	public void testOpenEntityManagerInViewFilterAsyncScenario() throws Exception {
 		given(manager.isOpen()).willReturn(true);
 
-		final EntityManagerFactory factory2 = mock();
-		final EntityManager manager2 = mock();
+		final EntityManagerFactory factory2 = mock(EntityManagerFactory.class);
+		final EntityManager manager2 = mock(EntityManager.class);
 
 		given(factory2.createEntityManager()).willReturn(manager2);
 		given(manager2.isOpen()).willReturn(true);
@@ -361,7 +368,7 @@ class OpenEntityManagerInViewTests {
 
 		FilterChain filterChain3 = new PassThroughFilterChain(filter2, filterChain2);
 
-		AsyncWebRequest asyncWebRequest = mock();
+		AsyncWebRequest asyncWebRequest = mock(AsyncWebRequest.class);
 		given(asyncWebRequest.isAsyncStarted()).willReturn(true);
 
 		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(this.request);
@@ -411,7 +418,6 @@ class OpenEntityManagerInViewTests {
 		private final CountDownLatch latch = new CountDownLatch(1);
 
 		@Override
-		@SuppressWarnings("deprecation")
 		public void execute(Runnable task, long startTimeout) {
 			Runnable decoratedTask = () -> {
 				try {

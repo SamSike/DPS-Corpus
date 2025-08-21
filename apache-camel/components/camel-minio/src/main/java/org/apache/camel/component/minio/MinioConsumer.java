@@ -38,6 +38,7 @@ import io.minio.errors.MinioException;
 import io.minio.messages.Item;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.spi.Synchronization;
@@ -91,7 +92,7 @@ public class MinioConsumer extends ScheduledBatchPollingConsumer {
                         LOG.trace("Destination Bucket created");
                     } else {
                         throw new IllegalArgumentException(
-                                "Destination Bucket does not exist, set autoCreateBucket option for bucket auto creation");
+                                "Destination Bucket does not exists, set autoCreateBucket option for bucket auto creation");
                     }
                 }
             } else {
@@ -166,9 +167,6 @@ public class MinioConsumer extends ScheduledBatchPollingConsumer {
 
             Iterator<Result<Item>> listObjects = getMinioClient().listObjects(listObjectRequest.build()).iterator();
 
-            // we have listed some objects so mark the consumer as ready
-            forceConsumerAsReady();
-
             if (listObjects.hasNext()) {
                 exchanges = createExchanges(listObjects);
                 if (maxMessagesPerPoll <= 0 || exchanges.size() < maxMessagesPerPoll) {
@@ -227,6 +225,7 @@ public class MinioConsumer extends ScheduledBatchPollingConsumer {
         } catch (Exception e) {
             LOG.warn("Error getting MinioObject due: {}", e.getMessage());
             throw e;
+
         }
 
         return answer;
@@ -273,7 +272,7 @@ public class MinioConsumer extends ScheduledBatchPollingConsumer {
                     minioObject = getObject(srcBucketName, getMinioClient(), srcObjectName);
                     exchange.getIn().setBody(IOUtils.toByteArray(minioObject));
                     if (getConfiguration().isAutoCloseBody()) {
-                        exchange.getExchangeExtension().addOnCompletion(new SynchronizationAdapter() {
+                        exchange.adapt(ExtendedExchange.class).addOnCompletion(new SynchronizationAdapter() {
                             @Override
                             public void onDone(Exchange exchange) {
                                 IOHelper.close(minioObject);
@@ -287,7 +286,7 @@ public class MinioConsumer extends ScheduledBatchPollingConsumer {
             }
 
             // add on completion to handle after work when the exchange is done
-            exchange.getExchangeExtension().addOnCompletion(new Synchronization() {
+            exchange.adapt(ExtendedExchange.class).addOnCompletion(new Synchronization() {
                 public void onComplete(Exchange exchange) {
                     processCommit(exchange);
                 }

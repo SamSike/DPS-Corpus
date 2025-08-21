@@ -22,8 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
@@ -59,7 +57,6 @@ public class SchemaReader {
     private String schemaLanguage = XMLConstants.W3C_XML_SCHEMA_NS_URI;
     // must be volatile because is accessed from different threads see ValidatorEndpoint.clearCachedSchema
     private volatile Schema schema;
-    private final Lock lock = new ReentrantLock();
     private Source schemaSource;
     // must be volatile because is accessed from different threads see ValidatorEndpoint.clearCachedSchema
     private volatile SchemaFactory schemaFactory;
@@ -97,13 +94,10 @@ public class SchemaReader {
 
     public Schema getSchema() throws IOException, SAXException {
         if (schema == null) {
-            lock.lock();
-            try {
+            synchronized (this) {
                 if (schema == null) {
                     schema = createSchema();
                 }
-            } finally {
-                lock.unlock();
             }
         }
         return schema;
@@ -158,13 +152,10 @@ public class SchemaReader {
 
     public SchemaFactory getSchemaFactory() {
         if (schemaFactory == null) {
-            lock.lock();
-            try {
+            synchronized (this) {
                 if (schemaFactory == null) {
                     schemaFactory = createSchemaFactory();
                 }
-            } finally {
-                lock.unlock();
             }
         }
         return schemaFactory;
@@ -209,50 +200,35 @@ public class SchemaReader {
 
         URL url = getSchemaUrl();
         if (url != null) {
-            lock.lock();
-            try {
+            synchronized (this) {
                 return factory.newSchema(url);
-            } finally {
-                lock.unlock();
             }
         }
 
         File file = getSchemaFile();
         if (file != null) {
-            lock.lock();
-            try {
+            synchronized (this) {
                 return factory.newSchema(file);
-            } finally {
-                lock.unlock();
             }
         }
 
         byte[] bytes = getSchemaAsByteArray();
         if (bytes != null) {
-            lock.lock();
-            try {
+            synchronized (this) {
                 return factory.newSchema(new StreamSource(new ByteArrayInputStream(schemaAsByteArray)));
-            } finally {
-                lock.unlock();
             }
         }
 
         if (schemaResourceUri != null) {
-            lock.lock();
-            try {
+            synchronized (this) {
                 bytes = readSchemaResource();
                 return factory.newSchema(new StreamSource(new ByteArrayInputStream(bytes)));
-            } finally {
-                lock.unlock();
             }
         }
 
         Source source = getSchemaSource();
-        lock.lock();
-        try {
+        synchronized (this) {
             return factory.newSchema(source);
-        } finally {
-            lock.unlock();
         }
 
     }

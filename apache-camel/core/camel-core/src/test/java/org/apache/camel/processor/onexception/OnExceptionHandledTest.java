@@ -37,10 +37,10 @@ public class OnExceptionHandledTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 onException(IllegalArgumentException.class).handled(true).to("log:foo?showAll=true").to("mock:handled");
 
                 from("direct:start").throwException(new IllegalArgumentException("Forced"));

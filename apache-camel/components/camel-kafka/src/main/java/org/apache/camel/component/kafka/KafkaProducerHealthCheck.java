@@ -32,9 +32,15 @@ public class KafkaProducerHealthCheck extends AbstractHealthCheck {
     private final String clientId;
 
     public KafkaProducerHealthCheck(KafkaProducer kafkaProducer, String clientId) {
-        super("camel", "producer:kafka-" + clientId);
+        super("camel", "kafka-producer-" + clientId);
         this.kafkaProducer = kafkaProducer;
         this.clientId = clientId;
+    }
+
+    @Override
+    public boolean isLiveness() {
+        // this health check is only readiness
+        return false;
     }
 
     @Override

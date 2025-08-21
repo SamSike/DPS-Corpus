@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.beans.factory.config;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringValueResolver;
 
 /**
@@ -39,7 +38,8 @@ public class EmbeddedValueResolver implements StringValueResolver {
 
 	private final BeanExpressionContext exprContext;
 
-	private final @Nullable BeanExpressionResolver exprResolver;
+	@Nullable
+	private final BeanExpressionResolver exprResolver;
 
 
 	public EmbeddedValueResolver(ConfigurableBeanFactory beanFactory) {
@@ -49,7 +49,8 @@ public class EmbeddedValueResolver implements StringValueResolver {
 
 
 	@Override
-	public @Nullable String resolveStringValue(String strVal) {
+	@Nullable
+	public String resolveStringValue(String strVal) {
 		String value = this.exprContext.getBeanFactory().resolveEmbeddedValue(strVal);
 		if (this.exprResolver != null && value != null) {
 			Object evaluated = this.exprResolver.evaluate(value, this.exprContext);

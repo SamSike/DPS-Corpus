@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,12 @@ import jakarta.resource.spi.BootstrapContext;
 import jakarta.resource.spi.ResourceAdapter;
 import jakarta.resource.spi.XATerminator;
 import jakarta.resource.spi.work.WorkManager;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link org.springframework.beans.factory.FactoryBean} that bootstraps
@@ -50,13 +50,17 @@ import org.springframework.beans.factory.InitializingBean;
  */
 public class ResourceAdapterFactoryBean implements FactoryBean<ResourceAdapter>, InitializingBean, DisposableBean {
 
-	private @Nullable ResourceAdapter resourceAdapter;
+	@Nullable
+	private ResourceAdapter resourceAdapter;
 
-	private @Nullable BootstrapContext bootstrapContext;
+	@Nullable
+	private BootstrapContext bootstrapContext;
 
-	private @Nullable WorkManager workManager;
+	@Nullable
+	private WorkManager workManager;
 
-	private @Nullable XATerminator xaTerminator;
+	@Nullable
+	private XATerminator xaTerminator;
 
 
 	/**
@@ -125,7 +129,8 @@ public class ResourceAdapterFactoryBean implements FactoryBean<ResourceAdapter>,
 
 
 	@Override
-	public @Nullable ResourceAdapter getObject() {
+	@Nullable
+	public ResourceAdapter getObject() {
 		return this.resourceAdapter;
 	}
 

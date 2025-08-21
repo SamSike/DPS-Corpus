@@ -32,7 +32,6 @@ public class KafkaConsumerListener implements ConsumerListener<Object, Processin
     private SeekPolicy seekPolicy;
 
     private Predicate<?> afterConsumeEval;
-    private boolean paused;
 
     public Consumer<?, ?> getConsumer() {
         return consumer;
@@ -57,20 +56,15 @@ public class KafkaConsumerListener implements ConsumerListener<Object, Processin
 
     @Override
     public boolean afterConsume(@SuppressWarnings("unused") Object ignored) {
-        if (paused) {
-            if (afterConsumeEval.test(null)) {
-                LOG.warn("State changed, therefore resuming the consumer");
-                consumer.resume(consumer.assignment());
+        if (afterConsumeEval.test(null)) {
+            LOG.warn("State changed, therefore resuming the consumer");
+            consumer.resume(consumer.assignment());
 
-                return true;
-            }
-
-            LOG.warn("The consumer is not yet resumable");
-            return false;
+            return true;
         }
 
-        // It's not paused, so we can continue processing
-        return true;
+        LOG.warn("The consumer is not yet resumable");
+        return false;
     }
 
     @Override
@@ -78,7 +72,6 @@ public class KafkaConsumerListener implements ConsumerListener<Object, Processin
         if (result.isFailed()) {
             LOG.warn("Pausing consumer due to error on the last processing");
             consumer.pause(consumer.assignment());
-            paused = true;
 
             if (seekPolicy == SeekPolicy.BEGINNING) {
                 LOG.debug("Seeking from the beginning of topic");

@@ -54,8 +54,7 @@ public class VertxHttpCustomBindingTest extends VertxHttpTestSupport {
             }
 
             @Override
-            public void populateRequestHeaders(
-                    VertxHttpEndpoint endpoint, Exchange exchange, HttpRequest<Buffer> request, HeaderFilterStrategy strategy) {
+            public void populateRequestHeaders(Exchange exchange, HttpRequest<Buffer> request, HeaderFilterStrategy strategy) {
                 // Noop
             }
 

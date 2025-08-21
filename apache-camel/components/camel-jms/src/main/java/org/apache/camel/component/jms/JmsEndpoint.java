@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.jms;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,10 +34,9 @@ import org.apache.camel.MultipleConsumersSupport;
 import org.apache.camel.PollingConsumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
+import org.apache.camel.Service;
 import org.apache.camel.api.management.ManagedAttribute;
 import org.apache.camel.api.management.ManagedResource;
-import org.apache.camel.spi.BeanIntrospection;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.HeaderFilterStrategy;
 import org.apache.camel.spi.HeaderFilterStrategyAware;
 import org.apache.camel.spi.Metadata;
@@ -47,11 +44,9 @@ import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
 import org.apache.camel.support.DefaultEndpoint;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.SynchronousDelegateProducer;
 import org.apache.camel.util.StringHelper;
 import org.apache.camel.util.UnsafeUriCharactersEncoder;
-import org.apache.camel.util.UnwrapHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.task.TaskExecutor;
@@ -65,7 +60,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.ErrorHandler;
 
 /**
- * Send and receive messages to/from JMS message brokers.
+ * Sent and receive messages to/from a JMS Queue or Topic.
  *
  * This component uses Spring JMS and supports JMS 1.1 and 2.0 API.
  */
@@ -74,13 +69,10 @@ import org.springframework.util.ErrorHandler;
              category = { Category.MESSAGING }, headersClass = JmsConstants.class)
 @Metadata(excludeProperties = "bridgeErrorHandler")
 public class JmsEndpoint extends DefaultEndpoint
-        implements AsyncEndpoint, HeaderFilterStrategyAware, MultipleConsumersSupport, EndpointServiceLocation {
+        implements AsyncEndpoint, HeaderFilterStrategyAware, MultipleConsumersSupport, Service {
 
     private static final Logger LOG = LoggerFactory.getLogger(JmsEndpoint.class);
 
-    private String serviceUrl;
-    private String serviceProtocol;
-    private Map<String, String> serviceMetadata;
     private final AtomicInteger runningMessageListeners = new AtomicInteger();
     private boolean pubSubDomain;
     private JmsBinding binding;
@@ -144,51 +136,6 @@ public class JmsEndpoint extends DefaultEndpoint
     }
 
     @Override
-    protected void doStart() throws Exception {
-        if (getComponent().isServiceLocationEnabled()) {
-            // we need to use reflection to find the URL to the brokers, so do this once on startup
-            BeanIntrospection bi = PluginHelper.getBeanIntrospection(getCamelContext());
-            ConnectionFactory cf = getConnectionFactory();
-            // unwrap if cf is from a synthetic ClientProxy bean
-            if (cf != null && cf.getClass().getName().endsWith("ClientProxy")) {
-                ConnectionFactory actual = UnwrapHelper.unwrapClientProxy(cf);
-                if (actual != null) {
-                    cf = actual;
-                }
-            }
-            serviceUrl = JmsServiceLocationHelper.getBrokerURLFromConnectionFactory(bi, cf);
-            serviceProtocol = getComponent().getDefaultName();
-
-            serviceMetadata = new HashMap<>();
-            String user = JmsServiceLocationHelper.getUsernameFromConnectionFactory(bi, cf);
-            if (user != null) {
-                serviceMetadata.put("username", user);
-                if (getConfiguration().getClientId() != null) {
-                    serviceMetadata.put("clientId", getConfiguration().getClientId());
-                }
-            }
-        }
-    }
-
-    @Override
-    public String getServiceUrl() {
-        return serviceUrl;
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return serviceProtocol;
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        if (serviceMetadata != null && !serviceMetadata.isEmpty()) {
-            return serviceMetadata;
-        }
-        return null;
-    }
-
-    @Override
     public Producer createProducer() throws Exception {
         Producer answer = new JmsProducer(this);
         if (getConfiguration().isSynchronous()) {
@@ -245,8 +192,8 @@ public class JmsEndpoint extends DefaultEndpoint
             // we are using a shared thread pool that this listener container is using.
             // store a reference to the consumer, but we should not shutdown the thread pool when the consumer stops
             // as the lifecycle of the shared thread pool is handled elsewhere
-            if (configuration.getTaskExecutor() instanceof ExecutorService executorService) {
-                consumer.setListenerContainerExecutorService(executorService, false);
+            if (configuration.getTaskExecutor() instanceof ExecutorService) {
+                consumer.setListenerContainerExecutorService((ExecutorService) configuration.getTaskExecutor(), false);
             }
         } else if (!(listenerContainer instanceof DefaultJmsMessageListenerContainer)
                 || configuration.getDefaultTaskExecutorType() == null) {
@@ -268,8 +215,8 @@ public class JmsEndpoint extends DefaultEndpoint
 
         // set a default transaction name if none provided
         if (configuration.getTransactionName() == null) {
-            if (listenerContainer instanceof DefaultMessageListenerContainer defaultMessageListenerContainer) {
-                defaultMessageListenerContainer.setTransactionName(consumerName);
+            if (listenerContainer instanceof DefaultMessageListenerContainer) {
+                ((DefaultMessageListenerContainer) listenerContainer).setTransactionName(consumerName);
             }
         }
 
@@ -286,10 +233,10 @@ public class JmsEndpoint extends DefaultEndpoint
     }
 
     private void setContainerTaskExecutor(AbstractMessageListenerContainer listenerContainer, Executor executor) {
-        if (listenerContainer instanceof SimpleMessageListenerContainer container) {
-            container.setTaskExecutor(executor);
-        } else if (listenerContainer instanceof DefaultMessageListenerContainer defaultMessageListenerContainer) {
-            defaultMessageListenerContainer.setTaskExecutor(executor);
+        if (listenerContainer instanceof SimpleMessageListenerContainer) {
+            ((SimpleMessageListenerContainer) listenerContainer).setTaskExecutor(executor);
+        } else if (listenerContainer instanceof DefaultMessageListenerContainer) {
+            ((DefaultMessageListenerContainer) listenerContainer).setTaskExecutor(executor);
         }
     }
 
@@ -555,10 +502,6 @@ public class JmsEndpoint extends DefaultEndpoint
         return getConfiguration().getDestinationResolver();
     }
 
-    public TemporaryQueueResolver getTemporaryQueueResolver() {
-        return getConfiguration().getTemporaryQueueResolver();
-    }
-
     @ManagedAttribute
     public String getDurableSubscriptionName() {
         return getConfiguration().getDurableSubscriptionName();
@@ -622,11 +565,6 @@ public class JmsEndpoint extends DefaultEndpoint
     @ManagedAttribute
     public int getMaxMessagesPerTask() {
         return getConfiguration().getMaxMessagesPerTask();
-    }
-
-    @ManagedAttribute
-    public int getIdleReceivesPerTaskLimit() {
-        return getConfiguration().getIdleReceivesPerTaskLimit();
     }
 
     public MessageConverter getMessageConverter() {
@@ -883,10 +821,6 @@ public class JmsEndpoint extends DefaultEndpoint
         getConfiguration().setDestinationResolver(destinationResolver);
     }
 
-    public void setDestinationResolver(TemporaryQueueResolver temporaryQueueResolver) {
-        getConfiguration().setTemporaryQueueResolver(temporaryQueueResolver);
-    }
-
     @ManagedAttribute
     public void setDisableReplyTo(boolean disableReplyTo) {
         getConfiguration().setDisableReplyTo(disableReplyTo);
@@ -956,11 +890,6 @@ public class JmsEndpoint extends DefaultEndpoint
     @ManagedAttribute
     public void setMaxMessagesPerTask(int maxMessagesPerTask) {
         getConfiguration().setMaxMessagesPerTask(maxMessagesPerTask);
-    }
-
-    @ManagedAttribute
-    public void setIdleReceivesPerTaskLimit(int idleReceivesPerTaskLimit) {
-        getConfiguration().setIdleReceivesPerTaskLimit(idleReceivesPerTaskLimit);
     }
 
     public void setMessageConverter(MessageConverter messageConverter) {

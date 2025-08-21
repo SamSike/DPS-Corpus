@@ -43,8 +43,8 @@ public class AsyncEndpointRoutingSlipBeanNonBlockingTest extends ContextTestSupp
     private Exchange innerExchange;
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
-        Registry jndi = super.createCamelRegistry();
+    protected Registry createRegistry() throws Exception {
+        Registry jndi = super.createRegistry();
         jndi.bind("myBean", new MyRoutingSlipBean());
         return jndi;
     }
@@ -71,10 +71,10 @@ public class AsyncEndpointRoutingSlipBeanNonBlockingTest extends ContextTestSupp
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.addComponent("async", new MyAsyncComponent());
 
                 from("direct:start").to("bean:myBean");
@@ -101,7 +101,7 @@ public class AsyncEndpointRoutingSlipBeanNonBlockingTest extends ContextTestSupp
         }
 
         @Override
-        public Boolean call() {
+        public Boolean call() throws Exception {
             Exchange exchange = startEndpoint.createExchange(ExchangePattern.InOut);
             exchange.getIn().setBody("Hello Camel");
             return asyncSender.process(exchange, new AsyncCallback() {

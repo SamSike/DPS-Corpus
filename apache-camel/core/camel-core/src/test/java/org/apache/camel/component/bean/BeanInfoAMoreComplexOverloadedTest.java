@@ -26,12 +26,12 @@ import org.apache.camel.support.DefaultMessage;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class BeanInfoAMoreComplexOverloadedTest extends ContextTestSupport {
 
     @Test
-    public void testRequestA() {
+    public void testRequestA() throws Exception {
         BeanInfo beanInfo = new BeanInfo(context, Bean.class);
 
         Message message = new DefaultMessage(context);
@@ -48,7 +48,7 @@ public class BeanInfoAMoreComplexOverloadedTest extends ContextTestSupport {
     }
 
     @Test
-    public void testRequestB() {
+    public void testRequestB() throws Exception {
         BeanInfo beanInfo = new BeanInfo(context, Bean.class);
 
         Message message = new DefaultMessage(context);
@@ -65,7 +65,7 @@ public class BeanInfoAMoreComplexOverloadedTest extends ContextTestSupport {
     }
 
     @Test
-    public void testAmbigious() {
+    public void testAmbigious() throws Exception {
         BeanInfo beanInfo = new BeanInfo(context, Bean.class);
 
         Message message = new DefaultMessage(context);
@@ -73,14 +73,15 @@ public class BeanInfoAMoreComplexOverloadedTest extends ContextTestSupport {
         Exchange exchange = new DefaultExchange(context);
         exchange.setIn(message);
 
-        AmbiguousMethodCallException e = assertThrows(AmbiguousMethodCallException.class,
-                () -> beanInfo.createInvocation(new Bean(), exchange),
-                "Should have thrown an exception");
-        assertEquals(2, e.getMethods().size());
+        try {
+            beanInfo.createInvocation(new Bean(), exchange);
+            fail("Should have thrown an exception");
+        } catch (AmbiguousMethodCallException e) {
+            assertEquals(2, e.getMethods().size());
+        }
     }
 
-    @SuppressWarnings("Unused")
-    static class Bean {
+    class Bean {
         public void doSomething(RequestA request) {
         }
 
@@ -88,15 +89,15 @@ public class BeanInfoAMoreComplexOverloadedTest extends ContextTestSupport {
         }
     }
 
-    static class BaseRequest {
+    class BaseRequest {
         public long id;
     }
 
-    static class RequestA extends BaseRequest {
+    class RequestA extends BaseRequest {
         public int i;
     }
 
-    static class RequestB extends BaseRequest {
+    class RequestB extends BaseRequest {
         public String s;
     }
 

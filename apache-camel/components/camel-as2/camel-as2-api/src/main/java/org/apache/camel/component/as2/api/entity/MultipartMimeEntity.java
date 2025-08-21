@@ -21,11 +21,11 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.camel.component.as2.api.AS2SignedDataGenerator;
 import org.apache.camel.component.as2.api.CanonicalOutputStream;
 import org.apache.camel.component.as2.api.util.EntityUtils;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.Header;
+import org.apache.http.Header;
+import org.apache.http.HeaderIterator;
+import org.apache.http.entity.ContentType;
 
 public abstract class MultipartMimeEntity extends MimeEntity {
 
@@ -33,17 +33,16 @@ public abstract class MultipartMimeEntity extends MimeEntity {
 
     private final List<MimeEntity> parts = new ArrayList<>();
 
-    protected MultipartMimeEntity(ContentType contentType, String contentTransferEncoding) {
-        super(contentType, contentTransferEncoding);
+    public MultipartMimeEntity(ContentType contentType) {
+        this(contentType, false, null);
     }
 
-    protected MultipartMimeEntity(AS2SignedDataGenerator signer, boolean isMainBody, String boundary) {
-        this(signer.createMultipartSignedContentType(boundary), null, isMainBody, boundary);
+    public MultipartMimeEntity(ContentType contentType, boolean isMainBody) {
+        this(contentType, isMainBody, null);
     }
 
-    protected MultipartMimeEntity(ContentType contentType, String contentTransferEncoding, boolean isMainBody,
-                                  String boundary) {
-        super(contentType, contentTransferEncoding);
+    public MultipartMimeEntity(ContentType contentType, boolean isMainBody, String boundary) {
+        setContentType(contentType);
         setMainBody(isMainBody);
 
         if (boundary != null) {
@@ -52,6 +51,9 @@ public abstract class MultipartMimeEntity extends MimeEntity {
             this.boundary = EntityUtils.createBoundaryValue();
         }
 
+    }
+
+    protected MultipartMimeEntity() {
     }
 
     public String getBoundary() {
@@ -97,7 +99,9 @@ public abstract class MultipartMimeEntity extends MimeEntity {
 
             // Write out mime part headers if this is not the main body of message.
             if (!isMainBody()) {
-                for (Header header : getAllHeaders()) {
+                HeaderIterator it = headerIterator();
+                while (it.hasNext()) {
+                    Header header = it.nextHeader();
                     canonicalOutstream.writeln(header.toString());
                 }
                 canonicalOutstream.writeln(); // ensure empty line between headers and body; RFC2046 - 5.1.1

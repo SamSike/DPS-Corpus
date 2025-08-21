@@ -30,7 +30,6 @@ import org.apache.camel.component.sql.stored.template.ast.ParseRuntimeException;
 import org.apache.camel.component.sql.stored.template.ast.Template;
 import org.apache.camel.spi.PropertiesComponent;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,8 +39,9 @@ public class ParserTest extends CamelTestSupport {
 
     TemplateParser parser;
 
-    @BeforeEach
-    void setupTest() {
+    @Override
+    protected void startCamelContext() throws Exception {
+        super.startCamelContext();
         parser = new TemplateParser(context.getClassResolver());
     }
 

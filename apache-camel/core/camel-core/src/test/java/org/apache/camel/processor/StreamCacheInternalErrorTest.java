@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 
 public class StreamCacheInternalErrorTest extends ContextTestSupport {
 
-    private final BodyToStreamCacheConverter converter = new BodyToStreamCacheConverter();
+    private BodyToStreamCacheConverter converter = new BodyToStreamCacheConverter();
 
     @Test
     public void testOk() throws Exception {
@@ -99,7 +99,7 @@ public class StreamCacheInternalErrorTest extends ContextTestSupport {
         };
     }
 
-    private static class BodyToStreamCacheConverter extends TypeConverterSupport {
+    private class BodyToStreamCacheConverter extends TypeConverterSupport {
 
         private int invoked;
 
@@ -130,8 +130,8 @@ public class StreamCacheInternalErrorTest extends ContextTestSupport {
         }
     }
 
-    private static class MyBody {
-        private final String body;
+    private class MyBody {
+        private String body;
 
         public MyBody(String body) {
             this.body = body;

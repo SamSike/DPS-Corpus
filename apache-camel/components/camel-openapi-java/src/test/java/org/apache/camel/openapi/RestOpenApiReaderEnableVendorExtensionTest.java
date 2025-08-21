@@ -16,14 +16,17 @@
  */
 package org.apache.camel.openapi;
 
-import io.swagger.v3.oas.models.OpenAPI;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import io.apicurio.datamodels.Library;
+import io.apicurio.datamodels.openapi.models.OasDocument;
 import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.engine.DefaultClassResolver;
 import org.apache.camel.model.rest.RestParamType;
 import org.apache.camel.test.junit5.CamelTestSupport;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,35 +72,71 @@ public class RestOpenApiReaderEnableVendorExtensionTest extends CamelTestSupport
         };
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = { "3.1", "3.0" })
-    public void testEnableVendorExtension(String version) throws Exception {
+    @Test
+    public void testEnableVendorExtension() throws Exception {
         BeanConfig config = new BeanConfig();
         config.setHost("localhost:8080");
         config.setSchemes(new String[] { "http" });
         config.setBasePath("/api");
         config.setTitle("Camel User store");
         config.setLicense("Apache 2.0");
-        config.setVersion(version);
+        config.setVersion("2.0");
         config.setLicenseUrl("http://www.apache.org/licenses/LICENSE-2.0.html");
         RestOpenApiReader reader = new RestOpenApiReader();
 
-        OpenAPI openApi = reader.read(context, context.getRestDefinitions(), config, context.getName(),
+        OasDocument openApi = reader.read(context, context.getRestDefinitions(), config, context.getName(),
                 new DefaultClassResolver());
         assertNotNull(openApi);
 
-        String json = RestOpenApiSupport.getJsonFromOpenAPIAsString(openApi, config);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        Object dump = Library.writeNode(openApi);
+        String json = mapper.writeValueAsString(dump);
+
+        log.info(json);
+
+        String camelId = context.getName();
+
+        assertTrue(json.contains("\"host\" : \"localhost:8080\""));
+        assertTrue(json.contains("\"description\" : \"The user returned\""));
+        assertTrue(json.contains("\"$ref\" : \"#/definitions/User\""));
+        assertFalse(json.contains("\"enum\""));
+        assertTrue(json.contains("\"x-camelContextId\" : \"" + camelId + "\""));
+        context.stop();
+    }
+
+    @Test
+    public void testEnableVendorExtensionV3() throws Exception {
+        BeanConfig config = new BeanConfig();
+        config.setHost("localhost:8080");
+        config.setSchemes(new String[] { "http" });
+        config.setBasePath("/api");
+        config.setTitle("Camel User store");
+        config.setLicense("Apache 2.0");
+
+        config.setLicenseUrl("http://www.apache.org/licenses/LICENSE-2.0.html");
+        RestOpenApiReader reader = new RestOpenApiReader();
+
+        OasDocument openApi = reader.read(context, context.getRestDefinitions(), config, context.getName(),
+                new DefaultClassResolver());
+        assertNotNull(openApi);
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        Object dump = Library.writeNode(openApi);
+        String json = mapper.writeValueAsString(dump);
+
         log.info(json);
 
         String camelId = context.getName();
 
         assertTrue(json.contains("\"url\" : \"http://localhost:8080/api\""));
-        assertTrue(json.contains("\"$ref\" : \"#/components/schemas/User\""));
         assertTrue(json.contains("\"description\" : \"The user returned\""));
+        assertTrue(json.contains("\"$ref\" : \"#/components/schemas/User\""));
         assertFalse(json.contains("\"enum\""));
         assertTrue(json.contains("\"x-camelContextId\" : \"" + camelId + "\""));
-
         context.stop();
     }
-
 }

@@ -96,7 +96,7 @@ public class JaxbXmlMainRestsTest {
         CamelContext camelContext = main.getCamelContext();
         assertNotNull(camelContext);
 
-        List<RestDefinition> restDefinitions = ((ModelCamelContext) camelContext).getRestDefinitions();
+        List<RestDefinition> restDefinitions = camelContext.adapt(ModelCamelContext.class).getRestDefinitions();
         assertEquals(1, restDefinitions.size());
 
         RestDefinition restDefinition = restDefinitions.get(0);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,15 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Strategy API for extracting a value for an annotation attribute from a given
  * source object which is typically an {@link Annotation}, {@link Map}, or
  * {@link TypeMappedAnnotation}.
  *
- * @author Sam Brannen
  * @since 5.2.4
+ * @author Sam Brannen
  */
 @FunctionalInterface
 interface ValueExtractor {
@@ -37,6 +37,7 @@ interface ValueExtractor {
 	 * Extract the annotation attribute represented by the supplied {@link Method}
 	 * from the supplied source {@link Object}.
 	 */
-	@Nullable Object extract(Method attribute, @Nullable Object object);
+	@Nullable
+	Object extract(Method attribute, @Nullable Object object);
 
 }

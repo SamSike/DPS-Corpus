@@ -91,10 +91,10 @@ public class SplitterNullBodyTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").split(body()).to("mock:split").end().to("mock:result");
 
                 from("direct:streaming").split(body()).streaming().to("mock:split").end().to("mock:result");

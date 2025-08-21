@@ -21,11 +21,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.camel.CamelConfiguration;
 import org.apache.camel.CamelContext;
-import org.apache.camel.ContextEvents;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.ProducerTemplate;
-import org.apache.camel.clock.Clock;
 import org.apache.camel.spi.EventNotifier;
-import org.apache.camel.support.ResetableClock;
 import org.apache.camel.support.service.ServiceHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +44,6 @@ public abstract class MainSupport extends BaseMainSupport {
     protected volatile ProducerTemplate camelTemplate;
 
     private String appName = "Apache Camel (Main)";
-    private Clock clock;
     private int durationMaxIdleSeconds;
     private int durationMaxMessages;
     private long durationMaxSeconds;
@@ -69,8 +66,6 @@ public abstract class MainSupport extends BaseMainSupport {
     protected void doInit() throws Exception {
         // we want this logging to be as early as possible
         LOG.info("{} {} is starting", appName, helper.getVersion());
-        clock = new ResetableClock();
-        this.shutdownStrategy.init();
         super.doInit();
     }
 
@@ -173,7 +168,7 @@ public abstract class MainSupport extends BaseMainSupport {
                 camelTemplate = null;
             }
         } catch (Exception e) {
-            LOG.debug("Error stopping camelTemplate due {}. This exception is ignored.", e.getMessage(), e);
+            LOG.debug("Error stopping camelTemplate due " + e.getMessage() + ". This exception is ignored.", e);
         }
     }
 
@@ -198,8 +193,72 @@ public abstract class MainSupport extends BaseMainSupport {
     protected void registerMainBootstrap() {
         CamelContext context = getCamelContext();
         if (context != null) {
-            context.getCamelContextExtension().addBootstrap(new MainBootstrapCloseable());
+            context.adapt(ExtendedCamelContext.class).addBootstrap(new MainBootstrapCloseable(this));
         }
+    }
+
+    @Deprecated
+    public int getDuration() {
+        return mainConfigurationProperties.getDurationMaxSeconds();
+    }
+
+    /**
+     * Sets the duration (in seconds) to run the application until it should be terminated. Defaults to -1. Any value <=
+     * 0 will run forever.
+     *
+     * @deprecated use {@link #configure()}
+     */
+    @Deprecated
+    public void setDuration(int duration) {
+        mainConfigurationProperties.setDurationMaxSeconds(duration);
+    }
+
+    @Deprecated
+    public int getDurationIdle() {
+        return mainConfigurationProperties.getDurationMaxIdleSeconds();
+    }
+
+    /**
+     * Sets the maximum idle duration (in seconds) when running the application, and if there has been no message
+     * processed after being idle for more than this duration then the application should be terminated. Defaults to -1.
+     * Any value <= 0 will run forever.
+     *
+     * @deprecated use {@link #configure()}
+     */
+    @Deprecated
+    public void setDurationIdle(int durationIdle) {
+        mainConfigurationProperties.setDurationMaxIdleSeconds(durationIdle);
+    }
+
+    @Deprecated
+    public int getDurationMaxMessages() {
+        return mainConfigurationProperties.getDurationMaxMessages();
+    }
+
+    /**
+     * Sets the duration to run the application to process at most max messages until it should be terminated. Defaults
+     * to -1. Any value <= 0 will run forever.
+     *
+     * @deprecated use {@link #configure()}
+     */
+    @Deprecated
+    public void setDurationMaxMessages(int durationMaxMessages) {
+        mainConfigurationProperties.setDurationMaxMessages(durationMaxMessages);
+    }
+
+    /**
+     * Sets the exit code for the application if duration was hit
+     *
+     * @deprecated use {@link #configure()}
+     */
+    @Deprecated
+    public void setDurationHitExitCode(int durationHitExitCode) {
+        mainConfigurationProperties.setDurationHitExitCode(durationHitExitCode);
+    }
+
+    @Deprecated
+    public int getDurationHitExitCode() {
+        return mainConfigurationProperties.getDurationHitExitCode();
     }
 
     public int getExitCode() {
@@ -342,7 +401,6 @@ public abstract class MainSupport extends BaseMainSupport {
         if (camelContext == null) {
             throw new IllegalStateException("Created CamelContext is null");
         }
-        camelContext.getClock().add(ContextEvents.BOOT, clock);
         postProcessCamelContext(camelContext);
     }
 }

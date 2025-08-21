@@ -78,13 +78,14 @@ public class Resequencer extends AsyncProcessorSupport implements Navigate<Proce
     private boolean reverse;
     private boolean allowDuplicates;
     private Predicate completionPredicate;
-    private final Expression expression;
+    private Expression expression;
 
     private final CamelContext camelContext;
     private final AsyncProcessor processor;
     private final Collection<Exchange> collection;
     private ExceptionHandler exceptionHandler;
-    private BatchSender sender;
+
+    private final BatchSender sender;
 
     public Resequencer(CamelContext camelContext, Processor processor, Expression expression) {
         this(camelContext, processor, createSet(expression, false, false), expression);
@@ -106,6 +107,7 @@ public class Resequencer extends AsyncProcessorSupport implements Navigate<Proce
         this.processor = AsyncProcessorConverterHelper.convert(processor);
         this.collection = collection;
         this.expression = expression;
+        this.sender = new BatchSender();
         this.exceptionHandler = new LoggingExceptionHandler(camelContext, getClass());
     }
 
@@ -320,8 +322,7 @@ public class Resequencer extends AsyncProcessorSupport implements Navigate<Proce
 
     protected void postProcess(Exchange exchange) {
         if (exchange.getException() != null) {
-            getExceptionHandler().handleException("Error processing aggregated exchange: " + exchange, exchange,
-                    exchange.getException());
+            getExceptionHandler().handleException("Error processing aggregated exchange: " + exchange, exchange.getException());
         }
     }
 
@@ -338,21 +339,14 @@ public class Resequencer extends AsyncProcessorSupport implements Navigate<Proce
     @Override
     protected void doStart() throws Exception {
         ServiceHelper.startService(processor);
-        sender = new BatchSender();
         sender.start();
     }
 
     @Override
     protected void doStop() throws Exception {
-        if (sender != null) {
-            try {
-                sender.cancel();
-            } catch (Exception e) {
-                // ignore
-            }
-            sender = null;
-        }
+        sender.cancel();
         ServiceHelper.stopService(processor);
+        collection.clear();
     }
 
     /**
@@ -382,7 +376,7 @@ public class Resequencer extends AsyncProcessorSupport implements Navigate<Proce
                 // exchange is valid so enqueue the exchange
                 sender.enqueueExchange(exchange);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             exchange.setException(e);
         }
         callback.done(true);
@@ -400,7 +394,7 @@ public class Resequencer extends AsyncProcessorSupport implements Navigate<Proce
         try {
             result = expression.evaluate(exchange, Object.class);
         } catch (Exception e) {
-            LOG.debug("Error evaluating expression: {}. This exception is ignored.", expression, e);
+            LOG.debug("Error evaluating expression: " + expression + ". This exception is ignored.", e);
         }
         return result != null;
     }
@@ -410,11 +404,11 @@ public class Resequencer extends AsyncProcessorSupport implements Navigate<Proce
      */
     private class BatchSender extends Thread {
 
-        private final Queue<Exchange> queue;
-        private final Lock queueLock = new ReentrantLock();
+        private Queue<Exchange> queue;
+        private Lock queueLock = new ReentrantLock();
         private final AtomicBoolean exchangeEnqueued = new AtomicBoolean();
         private final Queue<String> completionPredicateMatched = new ConcurrentLinkedQueue<>();
-        private final Condition exchangeEnqueuedCondition = queueLock.newCondition();
+        private Condition exchangeEnqueuedCondition = queueLock.newCondition();
 
         BatchSender() {
             super(camelContext.getExecutorServiceManager().resolveThreadName("Batch Sender"));
@@ -487,7 +481,7 @@ public class Resequencer extends AsyncProcessorSupport implements Navigate<Proce
                         try {
                             try {
                                 sendExchanges();
-                            } catch (Exception t) {
+                            } catch (Throwable t) {
                                 // a fail safe to handle all exceptions being thrown
                                 getExceptionHandler().handleException(t);
                             }
@@ -496,7 +490,6 @@ public class Resequencer extends AsyncProcessorSupport implements Navigate<Proce
                         }
 
                     } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
                         break;
                     }
 
@@ -519,7 +512,7 @@ public class Resequencer extends AsyncProcessorSupport implements Navigate<Proce
                     } catch (Exception t) {
                         e.setException(t);
                     } catch (Throwable t) {
-                        getExceptionHandler().handleException("Error adding exchange", e, t);
+                        getExceptionHandler().handleException(t);
                     }
                     if (exchangeId != null && exchangeId.equals(e.getExchangeId())) {
                         // this batch is complete so stop draining
@@ -558,7 +551,7 @@ public class Resequencer extends AsyncProcessorSupport implements Navigate<Proce
             }
         }
 
-        private void sendExchanges() {
+        private void sendExchanges() throws Exception {
             Iterator<Exchange> iter = collection.iterator();
             while (iter.hasNext()) {
                 Exchange exchange = iter.next();

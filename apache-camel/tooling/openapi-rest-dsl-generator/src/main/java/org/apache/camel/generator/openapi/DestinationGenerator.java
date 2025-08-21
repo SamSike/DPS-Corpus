@@ -16,11 +16,11 @@
  */
 package org.apache.camel.generator.openapi;
 
-import io.swagger.v3.oas.models.Operation;
+import io.apicurio.datamodels.openapi.models.OasOperation;
 
 @FunctionalInterface
 public interface DestinationGenerator {
 
-    String generateDestinationFor(Operation operation);
+    String generateDestinationFor(OasOperation operation);
 
 }

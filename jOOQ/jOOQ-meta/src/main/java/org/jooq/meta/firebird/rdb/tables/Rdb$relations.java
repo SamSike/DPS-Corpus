@@ -7,18 +7,19 @@ package org.jooq.meta.firebird.rdb.tables;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.ForeignKey;
 import org.jooq.Name;
 import org.jooq.Record;
+import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
-import org.jooq.impl.DefaultDataType;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
+import org.jooq.meta.firebird.rdb.DefaultSchema;
 import org.jooq.meta.firebird.rdb.Keys;
 
 
@@ -86,12 +87,12 @@ public class Rdb$relations extends TableImpl<Record> {
     /**
      * The column <code>RDB$RELATIONS.RDB$RELATION_NAME</code>.
      */
-    public final TableField<Record, String> RDB$RELATION_NAME = createField(DSL.name("RDB$RELATION_NAME"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$RELATION_NAME = createField(DSL.name("RDB$RELATION_NAME"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$RELATIONS.RDB$SECURITY_CLASS</code>.
      */
-    public final TableField<Record, String> RDB$SECURITY_CLASS = createField(DSL.name("RDB$SECURITY_CLASS"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$SECURITY_CLASS = createField(DSL.name("RDB$SECURITY_CLASS"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$RELATIONS.RDB$EXTERNAL_FILE</code>.
@@ -111,12 +112,12 @@ public class Rdb$relations extends TableImpl<Record> {
     /**
      * The column <code>RDB$RELATIONS.RDB$OWNER_NAME</code>.
      */
-    public final TableField<Record, String> RDB$OWNER_NAME = createField(DSL.name("RDB$OWNER_NAME"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$OWNER_NAME = createField(DSL.name("RDB$OWNER_NAME"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$RELATIONS.RDB$DEFAULT_CLASS</code>.
      */
-    public final TableField<Record, String> RDB$DEFAULT_CLASS = createField(DSL.name("RDB$DEFAULT_CLASS"), SQLDataType.CHAR(63), this, "");
+    public final TableField<Record, String> RDB$DEFAULT_CLASS = createField(DSL.name("RDB$DEFAULT_CLASS"), SQLDataType.CHAR(31), this, "");
 
     /**
      * The column <code>RDB$RELATIONS.RDB$FLAGS</code>.
@@ -128,23 +129,12 @@ public class Rdb$relations extends TableImpl<Record> {
      */
     public final TableField<Record, Short> RDB$RELATION_TYPE = createField(DSL.name("RDB$RELATION_TYPE"), SQLDataType.SMALLINT, this, "");
 
-    /**
-     * @deprecated Unknown data type. If this is a qualified, user-defined type,
-     * it may have been excluded from code generation. If this is a built-in
-     * type, you can define an explicit {@link org.jooq.Binding} to specify how
-     * this type should be handled. Deprecation can be turned off using
-     * {@literal <deprecationOnUnknownTypes/>} in your code generator
-     * configuration.
-     */
-    @Deprecated
-    public final TableField<Record, Object> RDB$SQL_SECURITY = createField(DSL.name("RDB$SQL_SECURITY"), DefaultDataType.getDefaultDataType("\"RDB$SQL_SECURITY\""), this, "");
-
     private Rdb$relations(Name alias, Table<Record> aliased) {
-        this(alias, aliased, (Field<?>[]) null, null);
+        this(alias, aliased, null);
     }
 
-    private Rdb$relations(Name alias, Table<Record> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table(), where);
+    private Rdb$relations(Name alias, Table<Record> aliased, Field<?>[] parameters) {
+        super(alias, null, aliased, parameters, DSL.comment(""), TableOptions.table());
     }
 
     /**
@@ -168,6 +158,15 @@ public class Rdb$relations extends TableImpl<Record> {
         this(DSL.name("RDB$RELATIONS"), null);
     }
 
+    public <O extends Record> Rdb$relations(Table<O> child, ForeignKey<O, Record> key) {
+        super(child, key, RDB$RELATIONS);
+    }
+
+    @Override
+    public Schema getSchema() {
+        return aliased() ? null : DefaultSchema.DEFAULT_SCHEMA;
+    }
+
     @Override
     public List<UniqueKey<Record>> getUniqueKeys() {
         return Arrays.asList(Keys.RDB$INDEX_0);
@@ -183,8 +182,19 @@ public class Rdb$relations extends TableImpl<Record> {
         return new Rdb$relations(alias, this);
     }
 
+    /**
+     * Rename this table
+     */
     @Override
-    public Rdb$relations as(Table<?> alias) {
-        return new Rdb$relations(alias.getQualifiedName(), this);
+    public Rdb$relations rename(String name) {
+        return new Rdb$relations(DSL.name(name), null);
+    }
+
+    /**
+     * Rename this table
+     */
+    @Override
+    public Rdb$relations rename(Name name) {
+        return new Rdb$relations(name, null);
     }
 }

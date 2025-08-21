@@ -32,16 +32,20 @@ public class VertxConsumer extends DefaultConsumer {
     private static final Logger LOG = LoggerFactory.getLogger(VertxConsumer.class);
 
     private final VertxEndpoint endpoint;
-    private transient MessageConsumer<?> messageConsumer;
+    private transient MessageConsumer messageConsumer;
 
-    private final Handler<Message<Object>> handler = VertxConsumer.this::onEventBusEvent;
+    private Handler<Message<Object>> handler = new Handler<Message<Object>>() {
+        public void handle(Message event) {
+            onEventBusEvent(event);
+        }
+    };
 
     public VertxConsumer(VertxEndpoint endpoint, Processor processor) {
         super(endpoint, processor);
         this.endpoint = endpoint;
     }
 
-    protected void onEventBusEvent(final Message<?> event) {
+    protected void onEventBusEvent(final Message event) {
         LOG.debug("onEvent {}", event);
 
         final boolean reply = event.replyAddress() != null;

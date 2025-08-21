@@ -31,7 +31,6 @@ import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -65,34 +64,33 @@ public class ManagedFromRestGetTest extends ManagementTestSupport {
         assertTrue(xml.contains("application/json"));
         assertTrue(xml.contains("</rests>"));
 
-        assertTrue(xml.contains(
-                "<param defaultValue=\"1\" dataType=\"integer\" name=\"header_count\" description=\"header param description1\" type=\"header\""));
-        assertTrue(xml.contains(
-                "<param defaultValue=\"b\" name=\"header_letter\" description=\"header param description2\" type=\"query\" collectionFormat=\"multi\" required=\"false\""));
+        assertTrue(xml.contains("<param collectionFormat=\"multi\" dataType=\"string\" defaultValue=\"b\" "
+                                + "description=\"header param description2\" name=\"header_letter\" required=\"false\" type=\"query\">"));
+        assertTrue(xml.contains("<param dataType=\"integer\" defaultValue=\"1\" "
+                                + "description=\"header param description1\" name=\"header_count\" required=\"true\" type=\"header\">"));
         assertTrue(xml.contains("<value>1</value>"));
         assertTrue(xml.contains("<value>a</value>"));
 
-        assertTrue(xml.contains("<responseMessage code=\"300\" responseModel=\"java.lang.Integer\" message=\"test msg\"/>"));
+        assertTrue(xml.contains("<responseMessage code=\"300\" message=\"test msg\" responseModel=\"java.lang.Integer\"/>"));
 
         String xml2 = (String) mbeanServer.invoke(on, "dumpRoutesAsXml", null, null);
         log.info(xml2);
         // and we should have rest in the routes that indicate its from a rest dsl
         assertTrue(xml2.contains("rest=\"true\""));
 
-        // routes are inlined
-        assertFalse(xml2.matches("[\\S\\s]* <to id=\"to[0-9]+\" uri=\"direct:hello\"/>[\\S\\s]*"));
-        assertFalse(xml2.matches("[\\S\\s]*<to id=\"to[0-9]+\" uri=\"direct:bye\"/>[\\S\\s]*"));
+        assertTrue(xml2.matches("[\\S\\s]* <to id=\"to[0-9]+\" uri=\"direct:hello\"/>[\\S\\s]*"));
+        assertTrue(xml2.matches("[\\S\\s]*<to id=\"to[0-9]+\" uri=\"direct:bye\"/>[\\S\\s]*"));
         assertTrue(xml2.matches("[\\S\\s]*<to id=\"to[0-9]+\" uri=\"mock:update\"/>[\\S\\s]*"));
 
-        // there should be 3 routes
-        assertEquals(3, context.getRouteDefinitions().size());
+        // there should be 3 + 2 routes
+        assertEquals(3 + 2, context.getRouteDefinitions().size());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 restConfiguration().host("localhost");
                 rest("/say/hello")
                         .get().to("direct:hello");
@@ -100,12 +98,11 @@ public class ManagedFromRestGetTest extends ManagementTestSupport {
                 rest("/say/bye")
                         .get().consumes("application/json")
                         .param().type(RestParamType.header).description("header param description1").dataType("integer")
-                            .allowableValues(Arrays.asList("1", "2", "3", "4"))
-                            .defaultValue("1").name("header_count").required(true)
-                        .endParam()
-                        .param().type(RestParamType.query).description("header param description2")
-                            .dataType("string").allowableValues(Arrays.asList("a", "b", "c", "d"))
-                            .defaultValue("b").collectionFormat(CollectionFormat.multi).name("header_letter").required(false)
+                        .allowableValues(Arrays.asList("1", "2", "3", "4"))
+                        .defaultValue("1").name("header_count").required(true)
+                        .endParam().param().type(RestParamType.query).description("header param description2")
+                        .dataType("string").allowableValues(Arrays.asList("a", "b", "c", "d"))
+                        .defaultValue("b").collectionFormat(CollectionFormat.multi).name("header_letter").required(false)
                         .endParam()
                         .responseMessage().code(300).message("test msg").responseModel(Integer.class).endResponseMessage()
                         .to("direct:bye")

@@ -37,6 +37,7 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.SSLContextParametersAware;
+import org.apache.camel.component.extension.ComponentVerifierExtension;
 import org.apache.camel.component.undertow.spi.UndertowSecurityProvider;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.RestApiConsumerFactory;
@@ -57,8 +58,6 @@ import org.apache.camel.util.URISupport;
 import org.apache.camel.util.UnsafeUriCharactersEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.camel.support.http.HttpUtil.recreateUrl;
 
 /**
  * Represents the component that manages {@link UndertowEndpoint}.
@@ -318,9 +317,13 @@ public class UndertowComponent extends DefaultComponent
             }
         }
 
-        url = recreateUrl(map, url);
+        // get the endpoint
+        String query = URISupport.createQueryString(map);
+        if (!query.isEmpty()) {
+            url = url + "?" + query;
+        }
 
-        parameters = parameters != null ? new HashMap<>(parameters) : new HashMap<>();
+        parameters = parameters != null ? new HashMap<>(parameters) : new HashMap<String, Object>();
 
         // there are cases where we might end up here without component being created beforehand
         // we need to abide by the component properties specified in the parameters when creating
@@ -453,6 +456,11 @@ public class UndertowComponent extends DefaultComponent
      */
     public void setMuteException(boolean muteException) {
         this.muteException = muteException;
+    }
+
+    public ComponentVerifierExtension getVerifier() {
+        return (scope, parameters) -> getExtension(ComponentVerifierExtension.class)
+                .orElseThrow(UnsupportedOperationException::new).verify(scope, parameters);
     }
 
     protected String getComponentName() {

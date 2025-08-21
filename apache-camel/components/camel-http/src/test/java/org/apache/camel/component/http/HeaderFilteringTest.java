@@ -19,6 +19,8 @@ package org.apache.camel.component.http;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -32,14 +34,13 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.RestConfiguration;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.DefaultMessage;
-import org.apache.camel.support.ExceptionHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.ContentType.APPLICATION_JSON;
 import static org.apache.camel.component.http.HttpMethods.POST;
-import static org.apache.hc.core5.http.HttpHeaders.HOST;
+import static org.apache.http.HttpHeaders.HOST;
+import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -102,7 +103,10 @@ public class HeaderFilteringTest {
 
                 exchange.sendResponseHeaders(200, 0);
             } catch (final AssertionError error) {
-                final String failure = ExceptionHelper.stackTraceToString(error);
+                final StringWriter out = new StringWriter();
+                error.printStackTrace(new PrintWriter(out));
+
+                final String failure = out.toString();
                 final byte[] failureBytes = failure.getBytes(StandardCharsets.UTF_8);
                 exchange.sendResponseHeaders(500, failureBytes.length);
                 responseBody.write(failureBytes);

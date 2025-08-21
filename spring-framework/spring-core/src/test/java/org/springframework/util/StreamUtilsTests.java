@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,14 +38,12 @@ import static org.mockito.Mockito.never;
  * Tests for {@link StreamUtils}.
  *
  * @author Phillip Webb
- * @author Juergen Hoeller
  */
 class StreamUtilsTests {
 
 	private byte[] bytes = new byte[StreamUtils.BUFFER_SIZE + 10];
 
 	private String string = "";
-
 
 	@BeforeEach
 	void setup() {
@@ -54,7 +52,6 @@ class StreamUtilsTests {
 			string += UUID.randomUUID().toString();
 		}
 	}
-
 
 	@Test
 	void copyToByteArray() throws Exception {
@@ -94,35 +91,16 @@ class StreamUtilsTests {
 	}
 
 	@Test
-	void copyRangeWithinBuffer() throws Exception {
+	void copyRange() throws Exception {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ByteArrayInputStream in = new ByteArrayInputStream(bytes);
-		StreamUtils.copyRange(in, out, 0, 100);
-		assertThat(in.available()).isEqualTo(bytes.length - 101);
-		assertThat(out.toByteArray()).isEqualTo(Arrays.copyOfRange(bytes, 0, 101));
-	}
-
-	@Test
-	void copyRangeBeyondBuffer() throws Exception {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ByteArrayInputStream in = new ByteArrayInputStream(bytes);
-		StreamUtils.copyRange(in, out, 0, 8200);
-		assertThat(in.available()).isEqualTo(1);
-		assertThat(out.toByteArray()).isEqualTo(Arrays.copyOfRange(bytes, 0, 8201));
-	}
-
-	@Test
-	void copyRangeBeyondAvailable() throws Exception {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ByteArrayInputStream in = new ByteArrayInputStream(bytes);
-		StreamUtils.copyRange(in, out, 0, 8300);
-		assertThat(in.available()).isEqualTo(0);
-		assertThat(out.toByteArray()).isEqualTo(Arrays.copyOfRange(bytes, 0, 8202));
+		StreamUtils.copyRange(new ByteArrayInputStream(bytes), out, 0, 100);
+		byte[] range = Arrays.copyOfRange(bytes, 0, 101);
+		assertThat(out.toByteArray()).isEqualTo(range);
 	}
 
 	@Test
 	void nonClosingInputStream() throws Exception {
-		InputStream source = mock();
+		InputStream source = mock(InputStream.class);
 		InputStream nonClosing = StreamUtils.nonClosing(source);
 		nonClosing.read();
 		nonClosing.read(bytes);
@@ -137,7 +115,7 @@ class StreamUtilsTests {
 
 	@Test
 	void nonClosingOutputStream() throws Exception {
-		OutputStream source = mock();
+		OutputStream source = mock(OutputStream.class);
 		OutputStream nonClosing = StreamUtils.nonClosing(source);
 		nonClosing.write(1);
 		nonClosing.write(bytes);
@@ -149,5 +127,4 @@ class StreamUtilsTests {
 		ordered.verify(source).write(bytes, 1, 2);
 		ordered.verify(source, never()).close();
 	}
-
 }

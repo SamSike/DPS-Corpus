@@ -19,6 +19,7 @@ package org.apache.camel.processor;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.camel.ContextTestSupport;
@@ -40,8 +41,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class FileIdempotentTrunkStoreTest extends ContextTestSupport {
     protected Endpoint startEndpoint;
     protected MockEndpoint resultEndpoint;
+    private File store = testFile("idempotentfilestore.dat").toFile();
     private IdempotentRepository repo;
-    private File store;
 
     @Test
     public void testTrunkFileStore() throws Exception {
@@ -70,7 +71,7 @@ public class FileIdempotentTrunkStoreTest extends ContextTestSupport {
 
         // check the file should only have the last 2 entries as it was trunked
         try (Stream<String> fileContent = Files.lines(store.toPath())) {
-            List<String> fileEntries = fileContent.toList();
+            List<String> fileEntries = fileContent.collect(Collectors.toList());
             // expected order
             MatcherAssert.assertThat(fileEntries, IsIterableContainingInOrder.contains("ZZZZZZZZZZ", "XXXXXXXXXX"));
         }
@@ -90,7 +91,6 @@ public class FileIdempotentTrunkStoreTest extends ContextTestSupport {
     @Override
     @BeforeEach
     public void setUp() throws Exception {
-        store = testFile("idempotentfilestore.dat").toFile();
         // delete file store before testing
         if (store.exists()) {
             store.delete();

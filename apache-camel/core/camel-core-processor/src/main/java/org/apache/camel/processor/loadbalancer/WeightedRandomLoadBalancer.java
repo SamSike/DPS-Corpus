@@ -29,25 +29,20 @@ public class WeightedRandomLoadBalancer extends WeightedLoadBalancer {
     }
 
     @Override
-    protected AsyncProcessor chooseProcessor(AsyncProcessor[] processors, Exchange exchange) {
-        lock.lock();
-        try {
-            int randomWeight = ThreadLocalRandom.current().nextInt(runtimeRatioSum);
-            int choiceWeight = 0;
-            int index = 0;
-            while (true) {
-                DistributionRatio ratio = getRatios().get(index);
-                choiceWeight += ratio.getRuntimeWeight();
-                if (randomWeight < choiceWeight) {
-                    ratio.decrement();
-                    decrementSum();
-                    lastIndex = index;
-                    return processors[index];
-                }
-                index++;
+    protected synchronized AsyncProcessor chooseProcessor(AsyncProcessor[] processors, Exchange exchange) {
+        int randomWeight = ThreadLocalRandom.current().nextInt(runtimeRatioSum);
+        int choiceWeight = 0;
+        int index = 0;
+        while (true) {
+            DistributionRatio ratio = getRatios().get(index);
+            choiceWeight += ratio.getRuntimeWeight();
+            if (randomWeight < choiceWeight) {
+                ratio.decrement();
+                decrementSum();
+                lastIndex = index;
+                return processors[index];
             }
-        } finally {
-            lock.unlock();
+            index++;
         }
     }
 

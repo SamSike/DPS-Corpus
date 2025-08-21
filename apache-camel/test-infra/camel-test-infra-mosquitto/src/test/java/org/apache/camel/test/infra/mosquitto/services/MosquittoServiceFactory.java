@@ -33,5 +33,4 @@ public final class MosquittoServiceFactory {
                 .addRemoteMapping(MosquittoRemoteService::new)
                 .build();
     }
-
 }

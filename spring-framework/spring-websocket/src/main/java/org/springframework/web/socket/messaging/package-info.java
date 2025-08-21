@@ -1,7 +1,9 @@
 /**
  * WebSocket integration for Spring's messaging module.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.socket.messaging;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

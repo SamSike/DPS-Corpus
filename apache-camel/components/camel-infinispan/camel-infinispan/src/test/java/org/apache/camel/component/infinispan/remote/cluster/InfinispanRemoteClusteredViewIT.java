@@ -36,7 +36,7 @@ import static org.awaitility.Awaitility.await;
 
 public class InfinispanRemoteClusteredViewIT {
     @RegisterExtension
-    public static InfinispanService service = InfinispanServiceFactory.createSingletonInfinispanService();
+    public static InfinispanService service = InfinispanServiceFactory.createService();
 
     @Test
     public void getLeaderTest() throws Exception {

@@ -24,10 +24,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class ResequenceBatchIgnoreInvalidExchangesTest extends ResequenceStreamIgnoreInvalidExchangesTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
                 from("direct:start").resequence(header("seqno")).batch().timeout(250)
                         // ignore invalid exchanges (they are discarded)

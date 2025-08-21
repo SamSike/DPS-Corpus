@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -52,12 +52,7 @@ import org.jooq.impl.QOM.UNotYetImplemented;
 /**
  * @author Lukas Eder
  */
-final class FunctionTable<R extends Record>
-extends
-    AbstractTable<R>
-implements
-    UNotYetImplemented
-{
+final class FunctionTable<R extends Record> extends AbstractTable<R> implements UNotYetImplemented {
 
     private final Field<?> function;
 
@@ -67,25 +62,12 @@ implements
         this.function = function;
     }
 
-    // -------------------------------------------------------------------------
-    // XXX: Table API
-    // -------------------------------------------------------------------------
-
     @SuppressWarnings("unchecked")
     @Override
     public final Class<? extends R> getRecordType() {
         // TODO: [#4695] Calculate the correct Record[B] type
         return (Class<? extends R>) RecordImplN.class;
     }
-
-    @Override
-    final FieldsImpl<R> fields0() {
-        return new FieldsImpl<>();
-    }
-
-    // -------------------------------------------------------------------------
-    // XXX: DSL API
-    // -------------------------------------------------------------------------
 
     @Override
     public final Table<R> as(Name as) {
@@ -97,10 +79,6 @@ implements
         return new TableAlias<>(new FunctionTable<>(function), as, fieldAliases);
     }
 
-    // -------------------------------------------------------------------------
-    // XXX: QueryPart API
-    // -------------------------------------------------------------------------
-
     @Override
     public final void accept(Context<?> ctx) {
         switch (ctx.family()) {
@@ -108,8 +86,6 @@ implements
                 ctx.visit(K_TABLE).sql('(').visit(function).sql(')');
                 break;
             }
-
-
 
             // [#4254] This is required to enable using PostgreSQL functions
             // with defaulted parameters.
@@ -124,5 +100,10 @@ implements
             default:
                 throw new SQLDialectNotSupportedException("FUNCTION TABLE is not supported for " + ctx.dialect());
         }
+    }
+
+    @Override
+    final FieldsImpl<R> fields0() {
+        return new FieldsImpl<>();
     }
 }

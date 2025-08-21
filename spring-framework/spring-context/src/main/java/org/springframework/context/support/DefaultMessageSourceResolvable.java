@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,8 @@ package org.springframework.context.support;
 
 import java.io.Serializable;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.context.MessageSourceResolvable;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -36,11 +35,14 @@ import org.springframework.util.StringUtils;
 @SuppressWarnings("serial")
 public class DefaultMessageSourceResolvable implements MessageSourceResolvable, Serializable {
 
-	private final String @Nullable [] codes;
+	@Nullable
+	private final String[] codes;
 
-	private final Object @Nullable [] arguments;
+	@Nullable
+	private final Object[] arguments;
 
-	private final @Nullable String defaultMessage;
+	@Nullable
+	private final String defaultMessage;
 
 
 	/**
@@ -84,7 +86,7 @@ public class DefaultMessageSourceResolvable implements MessageSourceResolvable, 
 	 * @param defaultMessage the default message to be used to resolve this message
 	 */
 	public DefaultMessageSourceResolvable(
-			String @Nullable [] codes, Object @Nullable [] arguments, @Nullable String defaultMessage) {
+			@Nullable String[] codes, @Nullable Object[] arguments, @Nullable String defaultMessage) {
 
 		this.codes = codes;
 		this.arguments = arguments;
@@ -104,22 +106,26 @@ public class DefaultMessageSourceResolvable implements MessageSourceResolvable, 
 	 * Return the default code of this resolvable, that is,
 	 * the last one in the codes array.
 	 */
-	public @Nullable String getCode() {
+	@Nullable
+	public String getCode() {
 		return (this.codes != null && this.codes.length > 0 ? this.codes[this.codes.length - 1] : null);
 	}
 
 	@Override
-	public String @Nullable [] getCodes() {
+	@Nullable
+	public String[] getCodes() {
 		return this.codes;
 	}
 
 	@Override
-	public Object @Nullable [] getArguments() {
+	@Nullable
+	public Object[] getArguments() {
 		return this.arguments;
 	}
 
 	@Override
-	public @Nullable String getDefaultMessage() {
+	@Nullable
+	public String getDefaultMessage() {
 		return this.defaultMessage;
 	}
 
@@ -165,15 +171,24 @@ public class DefaultMessageSourceResolvable implements MessageSourceResolvable, 
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof MessageSourceResolvable that &&
-				ObjectUtils.nullSafeEquals(getCodes(), that.getCodes()) &&
-				ObjectUtils.nullSafeEquals(getArguments(), that.getArguments()) &&
-				ObjectUtils.nullSafeEquals(getDefaultMessage(), that.getDefaultMessage())));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof MessageSourceResolvable)) {
+			return false;
+		}
+		MessageSourceResolvable otherResolvable = (MessageSourceResolvable) other;
+		return (ObjectUtils.nullSafeEquals(getCodes(), otherResolvable.getCodes()) &&
+				ObjectUtils.nullSafeEquals(getArguments(), otherResolvable.getArguments()) &&
+				ObjectUtils.nullSafeEquals(getDefaultMessage(), otherResolvable.getDefaultMessage()));
 	}
 
 	@Override
 	public int hashCode() {
-		return ObjectUtils.nullSafeHash(getCode(), getArguments(), getDefaultMessage());
+		int hashCode = ObjectUtils.nullSafeHashCode(getCodes());
+		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(getArguments());
+		hashCode = 29 * hashCode + ObjectUtils.nullSafeHashCode(getDefaultMessage());
+		return hashCode;
 	}
 
 }

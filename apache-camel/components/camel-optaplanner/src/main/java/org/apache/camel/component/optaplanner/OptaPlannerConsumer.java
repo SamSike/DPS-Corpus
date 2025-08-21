@@ -19,17 +19,50 @@ package org.apache.camel.component.optaplanner;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.support.DefaultConsumer;
+import org.optaplanner.core.api.solver.Solver;
+import org.optaplanner.core.api.solver.event.BestSolutionChangedEvent;
+import org.optaplanner.core.api.solver.event.SolverEventListener;
 
+/**
+ * OptaPlanner component for Camel
+ */
 public class OptaPlannerConsumer extends DefaultConsumer {
     private final OptaPlannerEndpoint endpoint;
     private final OptaPlannerConfiguration configuration;
+    private SolverEventListener<Object> solverListener;
     private OptaplannerSolutionEventListener solverJobListener;
 
     public OptaPlannerConsumer(OptaPlannerEndpoint endpoint, Processor processor, OptaPlannerConfiguration configuration) {
         super(endpoint, processor);
         this.endpoint = endpoint;
         this.configuration = configuration;
-        this.solverJobListener = this::processSolverJobEvent;
+        if (!configuration.isUseSolverManager()) {
+            solverListener = new SolverEventListener<Object>() {
+                @Override
+                public void bestSolutionChanged(BestSolutionChangedEvent<Object> event) {
+                    if (event.isEveryProblemFactChangeProcessed() && event.getNewBestScore().isSolutionInitialized()) {
+                        processEvent(event);
+                    }
+                }
+            };
+        } else {
+            solverJobListener = new OptaplannerSolutionEventListener() {
+                @Override
+                public void bestSolutionChanged(OptaplannerSolutionEvent event) {
+                    processSolverJobEvent(event);
+                }
+            };
+        }
+    }
+
+    public void processEvent(BestSolutionChangedEvent<Object> event) {
+        Exchange exchange = createExchange(true);
+        exchange.getMessage().setHeader(OptaPlannerConstants.BEST_SOLUTION, event.getNewBestSolution());
+        try {
+            getProcessor().process(exchange);
+        } catch (Exception e) {
+            getExceptionHandler().handleException(e);
+        }
     }
 
     public void processSolverJobEvent(OptaplannerSolutionEvent event) {
@@ -38,26 +71,34 @@ public class OptaPlannerConsumer extends DefaultConsumer {
         try {
             getProcessor().process(exchange);
         } catch (Exception e) {
-            exchange.setException(e);
-        }
-        if (exchange.getException() != null) {
-            getExceptionHandler().handleException(exchange.getException());
+            getExceptionHandler().handleException(e);
         }
     }
 
     @Override
     protected void doStart() throws Exception {
-        final Long problemId = configuration.getProblemId();
-        endpoint.addSolutionEventListener(problemId, solverJobListener);
-
+        // usage of XML file and getting the solver created
+        if (!configuration.isUseSolverManager()) {
+            Solver<Object> solver = endpoint.getOrCreateSolver(configuration.getSolverId());
+            solver.addEventListener(solverListener);
+        } else {
+            final Long problemId = configuration.getProblemId();
+            endpoint.addSolutionEventListener(problemId, solverJobListener);
+        }
         super.doStart();
     }
 
     @Override
     protected void doStop() throws Exception {
-        final Long problemId = configuration.getProblemId();
-        endpoint.removeSolutionEventListener(problemId, solverJobListener);
-
+        // usage of XML file and getting the solver created
+        if (!configuration.isUseSolverManager()) {
+            Solver<Object> solver = endpoint.getOrCreateSolver(configuration.getSolverId());
+            solver.removeEventListener(solverListener);
+        } else {
+            // usage of problem Id created async with Optaplanner producer
+            final Long problemId = configuration.getProblemId();
+            endpoint.removeSolutionEventListener(problemId, solverJobListener);
+        }
         super.doStop();
     }
 }

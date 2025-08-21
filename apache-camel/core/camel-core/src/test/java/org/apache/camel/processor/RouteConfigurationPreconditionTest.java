@@ -77,7 +77,7 @@ class RouteConfigurationPreconditionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteConfigurationBuilder() {
             @Override
             public void configuration() {

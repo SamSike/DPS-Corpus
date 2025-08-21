@@ -28,7 +28,6 @@ import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.xmlunit.assertj3.XmlAssert;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -49,8 +48,7 @@ public class XMLTokenExpressionIteratorGroupingTest {
                                              + "<c:C attr='7'>pear</c:C>"
                                              + "<c:C attr='8'/>"
                                              + "</c:B>"
-                                             + "</g:A>")
-            .getBytes();
+                                             + "</g:A>").getBytes();
 
     // one extracted C in its wrapped context per token
     private static final String[] RESULTS_WRAPPED_SIZE1 = {
@@ -401,8 +399,7 @@ public class XMLTokenExpressionIteratorGroupingTest {
                              + "<c:C attr='1'>peach</c:C>"
                              + "<c:C attr='2'/>"
                              + "<c:C attr='3'>orange</c:C>"
-                             + "</c:B></g:A>")
-                .getBytes();
+                             + "</c:B></g:A>").getBytes();
         final String[] results = {
                 "<?xml version='1.0' encoding='UTF-8'?><g:A xmlns:g='urn:g'><c:B attr='1' xmlns:c='urn:c'>"
                                    + "<c:C attr='1'>peach</c:C><c:C attr='2'/>"
@@ -431,12 +428,7 @@ public class XMLTokenExpressionIteratorGroupingTest {
 
         assertEquals(expected.length, results.size(), "token count");
         for (int i = 0; i < expected.length; i++) {
-            String expectedToken = expected[i];
-            if (expectedToken.startsWith("<")) {
-                XmlAssert.assertThat(results.get(i)).and(expectedToken).areIdentical();
-            } else {
-                assertEquals(expectedToken, results.get(i), "mismatch [" + i + "]");
-            }
+            assertEquals(expected[i], results.get(i), "mismatch [" + i + "]");
         }
     }
 }

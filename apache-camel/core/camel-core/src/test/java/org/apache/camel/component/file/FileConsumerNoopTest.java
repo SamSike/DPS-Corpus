@@ -17,7 +17,6 @@
 package org.apache.camel.component.file;
 
 import java.nio.file.Files;
-import java.util.UUID;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
@@ -28,28 +27,26 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FileConsumerNoopTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME_1 = "hello" + UUID.randomUUID() + ".txt";
-    private static final String TEST_FILE_NAME_2 = "bye" + UUID.randomUUID() + ".txt";
 
     @Test
     public void testNoop() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMessageCount(2);
 
-        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME_1);
-        template.sendBodyAndHeader(fileUri(), "Bye World", Exchange.FILE_NAME, TEST_FILE_NAME_2);
+        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
+        template.sendBodyAndHeader(fileUri(), "Bye World", Exchange.FILE_NAME, "bye.txt");
 
         assertMockEndpointsSatisfied();
 
-        assertTrue(Files.exists(testFile(TEST_FILE_NAME_1)));
-        assertTrue(Files.exists(testFile(TEST_FILE_NAME_2)));
+        assertTrue(Files.exists(testFile("hello.txt")));
+        assertTrue(Files.exists(testFile("bye.txt")));
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?noop=true&initialDelay=0&delay=10")).convertBodyTo(String.class)
                         .to("mock:result");
             }

@@ -16,8 +16,6 @@
  */
 package org.apache.camel;
 
-import java.util.Objects;
-
 /**
  * Holder object for a given value.
  */
@@ -43,11 +41,15 @@ public class ValueHolder<V> {
 
         ValueHolder<?> that = (ValueHolder<?>) o;
 
-        return Objects.equals(value, that.value);
+        if (value != null ? !value.equals(that.value) : that.value != null) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(value);
+        return value != null ? value.hashCode() : 0;
     }
 }

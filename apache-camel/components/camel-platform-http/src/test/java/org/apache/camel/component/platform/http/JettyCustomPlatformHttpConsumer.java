@@ -20,37 +20,26 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.StringJoiner;
+import java.util.regex.Pattern;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
-import org.apache.camel.TypeConverter;
-import org.apache.camel.component.platform.http.spi.PlatformHttpConsumer;
-import org.apache.camel.spi.HeaderFilterStrategy;
 import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.DefaultConsumer;
 import org.apache.camel.support.DefaultMessage;
-import org.apache.camel.support.ObjectHelper;
-import org.apache.camel.support.http.HttpUtil;
 import org.apache.camel.util.IOHelper;
-import org.eclipse.jetty.http.HttpField;
-import org.eclipse.jetty.io.Content;
-import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.util.Callback;
 
-public class JettyCustomPlatformHttpConsumer extends DefaultConsumer implements PlatformHttpConsumer {
+public class JettyCustomPlatformHttpConsumer extends DefaultConsumer {
+    private static final Pattern PATH_PARAMETER_PATTERN = Pattern.compile("\\{([^/}]+)\\}");
 
     public JettyCustomPlatformHttpConsumer(PlatformHttpEndpoint endpoint, Processor processor) {
         super(endpoint, processor);
@@ -75,122 +64,67 @@ public class JettyCustomPlatformHttpConsumer extends DefaultConsumer implements 
     private ContextHandler createHandler(PlatformHttpEndpoint endpoint, String path) {
         ContextHandler contextHandler = new ContextHandler();
         contextHandler.setContextPath(path);
-        contextHandler.setBaseResourceAsString(".");
+        contextHandler.setResourceBase(".");
         contextHandler.setClassLoader(Thread.currentThread().getContextClassLoader());
-        contextHandler.setAllowNullPathInContext(true);
-
-        contextHandler.setHandler(new Handler.Abstract() {
+        contextHandler.setAllowNullPathInfo(true);
+        contextHandler.setHandler(new AbstractHandler() {
             @Override
-            public boolean handle(Request request, Response response, Callback callback) throws Exception {
+            public void handle(
+                    String s, Request request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
                 Exchange exchg = null;
                 try {
-                    StringBuilder bodyRequest = new StringBuilder(1024);
-                    while (true) {
-                        Content.Chunk chunk = request.read();
-                        if (chunk.isLast()) {
-                            break;
-                        }
-
-                        byte[] bytes = new byte[chunk.getByteBuffer().remaining()];
-                        chunk.getByteBuffer().get(bytes);
-                        String chunkString = new String(bytes, StandardCharsets.UTF_8);
-                        bodyRequest.append(chunkString);
+                    BufferedReader reader = httpServletRequest.getReader();
+                    String bodyRequest = "";
+                    String strCurrentLine = "";
+                    while ((strCurrentLine = reader.readLine()) != null) {
+                        bodyRequest += strCurrentLine;
                     }
-                    final Exchange exchange = exchg = toExchange(request, bodyRequest.toString());
+                    final Exchange exchange = exchg = toExchange(request, bodyRequest);
                     if (getEndpoint().isHttpProxy()) {
                         exchange.getMessage().removeHeader("Proxy-Connection");
                     }
-                    exchange.getMessage().setHeader(Exchange.HTTP_SCHEME, request.getHttpURI().getScheme());
-                    exchange.getMessage().setHeader(Exchange.HTTP_HOST, Request.getServerName(request));
-                    exchange.getMessage().setHeader(Exchange.HTTP_PORT, Request.getServerPort(request));
-                    exchange.getMessage().setHeader(Exchange.HTTP_PATH, Request.getPathInContext(request));
+                    exchange.getMessage().setHeader(Exchange.HTTP_SCHEME, httpServletRequest.getScheme());
+                    exchange.getMessage().setHeader(Exchange.HTTP_HOST, httpServletRequest.getServerName());
+                    exchange.getMessage().setHeader(Exchange.HTTP_PORT, httpServletRequest.getServerPort());
+                    exchange.getMessage().setHeader(Exchange.HTTP_PATH, httpServletRequest.getPathInfo());
                     if (getEndpoint().isHttpProxy()) {
-                        exchange.getExchangeExtension().setStreamCacheDisabled(true);
+                        exchange.adapt(ExtendedExchange.class).setStreamCacheDisabled(true);
                     }
                     createUoW(exchange);
                     getProcessor().process(exchange);
-                    response.setStatus(HttpServletResponse.SC_OK);
+                    httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+                    request.setHandled(true);
                     if (getEndpoint().isHttpProxy()) {
                         // extract response
-                        InputStream responseStream = exchange.getMessage().getBody(InputStream.class);
-                        String body = JettyCustomPlatformHttpConsumer.toString(responseStream);
+                        InputStream response = exchange.getMessage().getBody(InputStream.class);
+                        String body = JettyCustomPlatformHttpConsumer.toString(response);
                         exchange.getMessage().setBody(body);
                     }
-
-                    copyMessageHeadersToResponse(response, exchange.getMessage(), getEndpoint().getHeaderFilterStrategy(),
-                            exchange);
-                    response.write(true,
-                            ByteBuffer.wrap(exchange.getMessage().getBody(String.class).getBytes(StandardCharsets.UTF_8)),
-                            callback);
+                    httpServletResponse.getWriter().println(exchange.getMessage().getBody());
                 } catch (Exception e) {
                     getExceptionHandler().handleException("Failed handling platform-http endpoint " + endpoint.getPath(), exchg,
                             e);
-
-                    callback.failed(e);
-                    return false;
                 } finally {
                     if (exchg != null) {
                         doneUoW(exchg);
                     }
                 }
-
-                callback.succeeded();
-                return true;
             }
         });
         return contextHandler;
-    }
-
-    private void copyMessageHeadersToResponse(
-            Response response,
-            Message message,
-            HeaderFilterStrategy headerFilterStrategy,
-            Exchange exchange) {
-        final TypeConverter tc = exchange.getContext().getTypeConverter();
-        for (Map.Entry<String, Object> entry : message.getHeaders().entrySet()) {
-            final String key = entry.getKey();
-            final Object value = entry.getValue();
-            final Iterator<?> it = ObjectHelper.createIterator(value, null, true);
-
-            Set<String> responseHeadersFilledByJetty = Set.of("content-length");
-            if (responseHeadersFilledByJetty.contains(entry.getKey().toLowerCase())) {
-                continue;
-            }
-
-            HttpUtil.applyHeader(headerFilterStrategy, exchange, it, tc, key,
-                    (values, firstValue) -> applyHeader(response, key, values, firstValue));
-        }
-
-    }
-
-    private void applyHeader(Response response, String key, List<String> values, String firstValue) {
-        if (values != null) {
-            response.getHeaders().put(key, values);
-        } else if (firstValue != null) {
-            response.getHeaders().put(key, firstValue);
-        }
     }
 
     private Exchange toExchange(Request request, String body) {
         final Exchange exchange = getEndpoint().createExchange();
         final Message message = new DefaultMessage(exchange);
 
-        final String charset = request.getHeaders().get("charset");
+        final String charset = request.getHeader("charset");
         if (charset != null) {
             exchange.setProperty(Exchange.CHARSET_NAME, charset);
             message.setHeader(Exchange.HTTP_CHARACTER_ENCODING, charset);
         }
 
-        for (HttpField header : request.getHeaders()) {
-            String headerName = header.getName();
-            String headerValue = header.getValue();
-            if (getEndpoint().getHeaderFilterStrategy().applyFilterToExternalHeaders(headerName, headerValue, exchange)) {
-                continue;
-            }
-            message.setHeader(header.getName(), header.getValue());
-        }
-
-        message.setBody(!body.isEmpty() ? body : null);
+        message.setBody(body.length() != 0 ? body : null);
         exchange.setMessage(message);
         return exchange;
     }

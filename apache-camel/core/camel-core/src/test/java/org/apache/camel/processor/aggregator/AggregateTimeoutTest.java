@@ -77,10 +77,10 @@ public class AggregateTimeoutTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(header("id"), new MyAggregationStrategy()).discardOnCompletionTimeout()
                         .completionSize(3)
                         // use a 0.1 second timeout

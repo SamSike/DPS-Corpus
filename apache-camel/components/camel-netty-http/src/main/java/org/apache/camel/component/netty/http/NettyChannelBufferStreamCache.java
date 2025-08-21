@@ -29,10 +29,6 @@ import org.apache.camel.util.IOHelper;
  * A {@link ByteBuf} which is exposed as an {@link InputStream} which makes it very easy to use by Camel and other Camel
  * components. Also supported is {@link StreamCache} which allows the data to be re-read for example when doing content
  * based routing with XPath.
- * <p/>
- * <b>Important:</b> All the classes from the Camel release that implements {@link StreamCache} is NOT intended for end
- * users to create as instances, but they are part of Camels
- * <a href="https://camel.apache.org/manual/stream-caching.html">stream-caching</a> functionality.
  */
 public final class NettyChannelBufferStreamCache extends InputStream implements StreamCache {
 
@@ -50,7 +46,7 @@ public final class NettyChannelBufferStreamCache extends InputStream implements 
     }
 
     @Override
-    public int read() {
+    public int read() throws IOException {
         return buffer.readByte();
     }
 
@@ -60,7 +56,7 @@ public final class NettyChannelBufferStreamCache extends InputStream implements 
     }
 
     @Override
-    public int read(byte[] b, int off, int len) {
+    public int read(byte[] b, int off, int len) throws IOException {
         // are we at end, then return -1
         if (buffer.readerIndex() == buffer.capacity()) {
             return -1;
@@ -93,7 +89,7 @@ public final class NettyChannelBufferStreamCache extends InputStream implements 
     }
 
     @Override
-    public StreamCache copy(Exchange exchange) {
+    public StreamCache copy(Exchange exchange) throws IOException {
         return new NettyChannelBufferStreamCache(buffer.copy());
     }
 
@@ -105,11 +101,6 @@ public final class NettyChannelBufferStreamCache extends InputStream implements 
     @Override
     public long length() {
         return buffer.readableBytes();
-    }
-
-    @Override
-    public long position() {
-        return buffer.readerIndex();
     }
 
     /**

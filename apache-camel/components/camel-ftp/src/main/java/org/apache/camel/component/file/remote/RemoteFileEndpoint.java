@@ -26,7 +26,6 @@ import org.apache.camel.component.file.GenericFileEndpoint;
 import org.apache.camel.component.file.GenericFileExist;
 import org.apache.camel.component.file.GenericFilePollingConsumer;
 import org.apache.camel.component.file.GenericFileProducer;
-import org.apache.camel.spi.EndpointServiceLocation;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.support.processor.idempotent.MemoryIdempotentRepository;
 import org.apache.camel.util.StringHelper;
@@ -36,7 +35,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Remote file endpoint.
  */
-public abstract class RemoteFileEndpoint<T> extends GenericFileEndpoint<T> implements EndpointServiceLocation {
+public abstract class RemoteFileEndpoint<T> extends GenericFileEndpoint<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(RemoteFileEndpoint.class);
 
@@ -68,7 +67,7 @@ public abstract class RemoteFileEndpoint<T> extends GenericFileEndpoint<T> imple
                                                          + "not be downloaded.")
     private boolean download = true;
 
-    protected RemoteFileEndpoint() {
+    public RemoteFileEndpoint() {
         // ftp must be synchronous as the ftp-client is not thread-safe
         setSynchronous(true);
         // no args constructor for spring bean endpoint configuration
@@ -80,7 +79,7 @@ public abstract class RemoteFileEndpoint<T> extends GenericFileEndpoint<T> imple
         setPollStrategy(new RemoteFilePollingConsumerPollStrategy());
     }
 
-    protected RemoteFileEndpoint(String uri, RemoteFileComponent<T> component, RemoteFileConfiguration configuration) {
+    public RemoteFileEndpoint(String uri, RemoteFileComponent<T> component, RemoteFileConfiguration configuration) {
         super(uri, component);
         this.configuration = configuration;
         // ftp must be synchronous as the ftp-client is not thread-safe
@@ -103,24 +102,6 @@ public abstract class RemoteFileEndpoint<T> extends GenericFileEndpoint<T> imple
     @Override
     public RemoteFileConfiguration getConfiguration() {
         return (RemoteFileConfiguration) this.configuration;
-    }
-
-    @Override
-    public String getServiceUrl() {
-        return getConfiguration().getProtocol() + ":" + getConfiguration().getHost() + ":" + getConfiguration().getPort();
-    }
-
-    @Override
-    public String getServiceProtocol() {
-        return getConfiguration().getProtocol();
-    }
-
-    @Override
-    public Map<String, String> getServiceMetadata() {
-        if (getConfiguration().getUsername() != null) {
-            return Map.of("username", getConfiguration().getUsername());
-        }
-        return null;
     }
 
     @Override
@@ -186,11 +167,6 @@ public abstract class RemoteFileEndpoint<T> extends GenericFileEndpoint<T> imple
 
     @Override
     public PollingConsumer createPollingConsumer() throws Exception {
-        if (maxMessagesPerPoll > 1) {
-            throw new IllegalArgumentException(
-                    "The option maxMessagesPerPoll is not supported for polling consumer (such as when using poll or pollEnrich EIP)");
-        }
-
         if (LOG.isDebugEnabled()) {
             LOG.debug("Creating GenericFilePollingConsumer with queueSize: {} blockWhenFull: {} blockTimeout: {}",
                     getPollingConsumerQueueSize(), isPollingConsumerBlockWhenFull(),

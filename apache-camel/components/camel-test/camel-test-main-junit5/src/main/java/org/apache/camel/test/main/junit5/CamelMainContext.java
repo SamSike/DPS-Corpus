@@ -40,7 +40,6 @@ import org.apache.camel.model.ProcessorDefinition;
 import org.apache.camel.spi.CamelBeanPostProcessor;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.support.BreakpointSupport;
-import org.apache.camel.support.PluginHelper;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.commons.support.HierarchyTraversalMode;
 
@@ -62,7 +61,7 @@ final class CamelMainContext implements ExtensionContext.Store.CloseableResource
 
     /**
      * Construct a {@code CamelMainContext} with the given Camel context.
-     *
+     * 
      * @param camelContext the Camel context used for the test.
      */
     private CamelMainContext(ModelCamelContext camelContext) {
@@ -117,7 +116,7 @@ final class CamelMainContext implements ExtensionContext.Store.CloseableResource
 
         /**
          * Construct a {@code Builder} with the given extension context.
-         *
+         * 
          * @param context the extension context from which all the data needed to create an instance of
          *                {@code CamelMainContext} is extracted
          */
@@ -144,12 +143,12 @@ final class CamelMainContext implements ExtensionContext.Store.CloseableResource
          */
         CamelMainContext build() throws Exception {
             final ModelCamelContext camelContext = new DefaultCamelContext();
-            final ExtendedCamelContext extendedCamelContext = camelContext.getCamelContextExtension();
+            final ExtendedCamelContext extendedCamelContext = camelContext.getExtension(ExtendedCamelContext.class);
             mockEndpointsIfNeeded(extendedCamelContext);
             configureShutdownTimeout(camelContext);
             configureDebuggerIfNeeded(camelContext);
             initCamelContext(camelContext);
-            final CamelBeanPostProcessor beanPostProcessor = PluginHelper.getBeanPostProcessor(extendedCamelContext);
+            final CamelBeanPostProcessor beanPostProcessor = extendedCamelContext.getBeanPostProcessor();
             for (Object instance : instances) {
                 initInstance(beanPostProcessor, instance);
                 replaceBeansInRegistry(camelContext.getRegistry(), instance);
@@ -218,9 +217,10 @@ final class CamelMainContext implements ExtensionContext.Store.CloseableResource
         private void configureDebuggerIfNeeded(ModelCamelContext context) {
             // Get the instance of the outer class
             Object instance = getOuterClassInstance();
-            if (instance instanceof DebuggerCallback callback) {
+            if (instance instanceof DebuggerCallback) {
                 context.setDebugging(true);
                 context.setDebugger(new DefaultDebugger());
+                DebuggerCallback callback = (DebuggerCallback) instance;
                 context.getDebugger().addBreakpoint(new BreakpointSupport() {
                     @Override
                     public void beforeProcess(Exchange exchange, Processor processor, NamedNode definition) {
@@ -354,7 +354,7 @@ final class CamelMainContext implements ExtensionContext.Store.CloseableResource
         /**
          * For all methods or fields annotated with {@link ReplaceInRegistry}, replace in the registry the beans
          * corresponding to their name and type.
-         *
+         * 
          * @throws RuntimeCamelException if an annotated method could not be invoked or an annotated field cannot be
          *                               accessed, or if the annotated method has parameters.
          */
@@ -394,7 +394,7 @@ final class CamelMainContext implements ExtensionContext.Store.CloseableResource
         /**
          * Invoke all methods annotated with {@link Configure} that have one parameter of type
          * {@link MainConfigurationProperties}.
-         *
+         * 
          * @throws RuntimeCamelException if an annotated method could not be invoked or has invalid parameters.
          */
         private void invokeConfigureMethods(MainForTest main, Object instance) {

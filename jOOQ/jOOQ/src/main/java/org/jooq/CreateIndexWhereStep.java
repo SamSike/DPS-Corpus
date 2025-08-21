@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -73,87 +73,67 @@ public interface CreateIndexWhereStep extends CreateIndexFinalStep {
     /**
      * Add the <code>WHERE</code> clause to the <code>CREATE INDEX</code> statement.
      */
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     @NotNull @CheckReturnValue
     CreateIndexFinalStep where(Field<Boolean> where);
 
     /**
      * Add the <code>WHERE</code> clause to the <code>CREATE INDEX</code> statement.
      */
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     @NotNull @CheckReturnValue
     CreateIndexFinalStep where(Condition... where);
 
     /**
      * Add the <code>WHERE</code> clause to the <code>CREATE INDEX</code> statement.
      */
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     @NotNull @CheckReturnValue
     CreateIndexFinalStep where(Collection<? extends Condition> where);
 
     /**
      * Add the <code>WHERE</code> clause to the <code>CREATE INDEX</code> statement.
      */
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     @NotNull @CheckReturnValue
     CreateIndexFinalStep where(Condition where);
 
     /**
      * Add the <code>WHERE</code> clause to the <code>CREATE INDEX</code> statement.
-     * <p>
-     * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
-     * guarantee syntax integrity. You may also create the possibility of
-     * malicious SQL injection. Be sure to properly use bind variables and/or
-     * escape literals when concatenated into SQL clauses!
      *
      * @see SQL
      */
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     @PlainSQL
     @NotNull @CheckReturnValue
     CreateIndexFinalStep where(@Stringly.SQL String where, QueryPart... parts);
 
     /**
      * Add the <code>WHERE</code> clause to the <code>CREATE INDEX</code> statement.
-     * <p>
-     * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
-     * guarantee syntax integrity. You may also create the possibility of
-     * malicious SQL injection. Be sure to properly use bind variables and/or
-     * escape literals when concatenated into SQL clauses!
      *
      * @see SQL
      */
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     @PlainSQL
     @NotNull @CheckReturnValue
     CreateIndexFinalStep where(@Stringly.SQL String where, Object... bindings);
 
     /**
      * Add the <code>WHERE</code> clause to the <code>CREATE INDEX</code> statement.
-     * <p>
-     * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
-     * guarantee syntax integrity. You may also create the possibility of
-     * malicious SQL injection. Be sure to properly use bind variables and/or
-     * escape literals when concatenated into SQL clauses!
      *
      * @see SQL
      */
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     @PlainSQL
     @NotNull @CheckReturnValue
     CreateIndexFinalStep where(@Stringly.SQL String where);
 
     /**
      * Add the <code>WHERE</code> clause to the <code>CREATE INDEX</code> statement.
-     * <p>
-     * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
-     * guarantee syntax integrity. You may also create the possibility of
-     * malicious SQL injection. Be sure to properly use bind variables and/or
-     * escape literals when concatenated into SQL clauses!
      *
      * @see SQL
      */
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     @PlainSQL
     @NotNull @CheckReturnValue
     CreateIndexFinalStep where(SQL where);
@@ -161,7 +141,7 @@ public interface CreateIndexWhereStep extends CreateIndexFinalStep {
     /**
      * Add the <code>EXCLUDE NULL KEYS</code> clause to the <code>CREATE INDEX</code> statement.
      */
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     @NotNull @CheckReturnValue
     CreateIndexFinalStep excludeNullKeys();
 }

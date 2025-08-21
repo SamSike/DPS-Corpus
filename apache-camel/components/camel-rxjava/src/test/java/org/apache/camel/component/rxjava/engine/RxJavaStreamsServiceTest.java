@@ -32,7 +32,6 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.support.DefaultExchange;
 import org.apache.camel.support.ExchangeHelper;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.reactivestreams.Publisher;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,7 +39,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Timeout(value = 30, unit = TimeUnit.SECONDS)
 public class RxJavaStreamsServiceTest extends RxJavaStreamsServiceTestSupport {
 
     @BindToRegistry("hello")
@@ -82,8 +80,7 @@ public class RxJavaStreamsServiceTest extends RxJavaStreamsServiceTestSupport {
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
-                from("timer:tick?period=5&repeatCount=30&includeMetadata=true").setBody().header(Exchange.TIMER_COUNTER)
-                        .to("reactive-streams:tick");
+                from("timer:tick?period=5&repeatCount=30").setBody().header(Exchange.TIMER_COUNTER).to("reactive-streams:tick");
             }
         });
 
@@ -130,8 +127,7 @@ public class RxJavaStreamsServiceTest extends RxJavaStreamsServiceTestSupport {
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
-                from("timer:tick?period=50&includeMetadata=true").setBody().header(Exchange.TIMER_COUNTER)
-                        .to("reactive-streams:tick");
+                from("timer:tick?period=50").setBody().header(Exchange.TIMER_COUNTER).to("reactive-streams:tick");
             }
         });
 
@@ -166,7 +162,7 @@ public class RxJavaStreamsServiceTest extends RxJavaStreamsServiceTestSupport {
     public void testFrom() throws Exception {
         context.start();
 
-        Publisher<Exchange> timer = crs.from("timer:reactive?period=250&repeatCount=3&includeMetadata=true");
+        Publisher<Exchange> timer = crs.from("timer:reactive?period=250&repeatCount=3");
 
         AtomicInteger value = new AtomicInteger();
         CountDownLatch latch = new CountDownLatch(3);

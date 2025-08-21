@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@ import java.util.Set;
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletRequest;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -123,7 +123,8 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 	 * request method is OPTIONS.
 	 */
 	@Override
-	public @Nullable RequestMethodsRequestCondition getMatchingCondition(HttpServletRequest request) {
+	@Nullable
+	public RequestMethodsRequestCondition getMatchingCondition(HttpServletRequest request) {
 		if (CorsUtils.isPreFlightRequest(request)) {
 			return matchPreFlight(request);
 		}
@@ -145,7 +146,8 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 	 * Hence empty conditions is a match, otherwise try to match to the HTTP
 	 * method in the "Access-Control-Request-Method" header.
 	 */
-	private @Nullable RequestMethodsRequestCondition matchPreFlight(HttpServletRequest request) {
+	@Nullable
+	private RequestMethodsRequestCondition matchPreFlight(HttpServletRequest request) {
 		if (getMethods().isEmpty()) {
 			return this;
 		}
@@ -153,15 +155,20 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 		return matchRequestMethod(expectedMethod);
 	}
 
-	private @Nullable RequestMethodsRequestCondition matchRequestMethod(String httpMethodValue) {
-		RequestMethod requestMethod = RequestMethod.resolve(httpMethodValue);
-		if (requestMethod != null) {
+	@Nullable
+	private RequestMethodsRequestCondition matchRequestMethod(String httpMethodValue) {
+		RequestMethod requestMethod;
+		try {
+			requestMethod = RequestMethod.valueOf(httpMethodValue);
 			if (getMethods().contains(requestMethod)) {
 				return requestMethodConditionCache.get(httpMethodValue);
 			}
 			if (requestMethod.equals(RequestMethod.HEAD) && getMethods().contains(RequestMethod.GET)) {
 				return requestMethodConditionCache.get(HttpMethod.GET.name());
 			}
+		}
+		catch (IllegalArgumentException ex) {
+			// Custom request method
 		}
 		return null;
 	}

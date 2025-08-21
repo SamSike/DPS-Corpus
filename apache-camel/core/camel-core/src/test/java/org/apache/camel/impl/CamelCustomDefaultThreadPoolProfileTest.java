@@ -25,7 +25,6 @@ import org.apache.camel.util.concurrent.ThreadPoolRejectedPolicy;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CamelCustomDefaultThreadPoolProfileTest extends ContextTestSupport {
 
@@ -49,22 +48,22 @@ public class CamelCustomDefaultThreadPoolProfileTest extends ContextTestSupport 
     }
 
     @Test
-    public void testCamelCustomDefaultThreadPoolProfile() {
+    public void testCamelCustomDefaultThreadPoolProfile() throws Exception {
         DefaultExecutorServiceManager manager = (DefaultExecutorServiceManager) context.getExecutorServiceManager();
         ThreadPoolProfile profile = manager.getDefaultThreadPoolProfile();
         assertEquals(5, profile.getPoolSize().intValue());
         assertEquals(15, profile.getMaxPoolSize().intValue());
         assertEquals(25, profile.getKeepAliveTime().longValue());
         assertEquals(250, profile.getMaxQueueSize().intValue());
-        assertTrue(profile.getAllowCoreThreadTimeOut().booleanValue());
+        assertEquals(true, profile.getAllowCoreThreadTimeOut().booleanValue());
         assertEquals(ThreadPoolRejectedPolicy.Abort, profile.getRejectedPolicy());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").threads(25, 45).to("mock:result");
             }
         };

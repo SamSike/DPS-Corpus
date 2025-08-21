@@ -41,7 +41,7 @@ public class JoorCompilationException extends RuntimeException {
     }
 
     private String codeWithLineNumbers() {
-        StringBuilder sb = new StringBuilder(256);
+        StringBuilder sb = new StringBuilder();
         String[] lines = code.split("\n");
         int counter = 0;
         for (String line : lines) {

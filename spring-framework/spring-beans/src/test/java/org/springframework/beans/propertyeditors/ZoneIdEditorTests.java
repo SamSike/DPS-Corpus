@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,28 +19,19 @@ package org.springframework.beans.propertyeditors;
 import java.time.ZoneId;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 /**
  * @author Nicholas Williams
- * @author Sam Brannen
- * @author Juergen Hoeller
  */
-class ZoneIdEditorTests {
+public class ZoneIdEditorTests {
 
 	private final ZoneIdEditor editor = new ZoneIdEditor();
 
-	@ParameterizedTest(name = "[{index}] text = ''{0}''")
-	@ValueSource(strings = {
-		"America/Chicago",
-		"   America/Chicago   ",
-	})
-	void americaChicago(String text) {
-		editor.setAsText(text);
+	@Test
+	public void americaChicago() {
+		editor.setAsText("America/Chicago");
 
 		ZoneId zoneId = (ZoneId) editor.getValue();
 		assertThat(zoneId).as("The zone ID should not be null.").isNotNull();
@@ -50,7 +41,7 @@ class ZoneIdEditorTests {
 	}
 
 	@Test
-	void americaLosAngeles() {
+	public void americaLosAngeles() {
 		editor.setAsText("America/Los_Angeles");
 
 		ZoneId zoneId = (ZoneId) editor.getValue();
@@ -61,19 +52,14 @@ class ZoneIdEditorTests {
 	}
 
 	@Test
-	void getNullAsText() {
-		assertThat(editor.getAsText()).as("The returned value is not correct.").isEmpty();
+	public void getNullAsText() {
+		assertThat(editor.getAsText()).as("The returned value is not correct.").isEqualTo("");
 	}
 
 	@Test
-	void getValueAsText() {
+	public void getValueAsText() {
 		editor.setValue(ZoneId.of("America/New_York"));
 		assertThat(editor.getAsText()).as("The text version is not correct.").isEqualTo("America/New_York");
-	}
-
-	@Test
-	void correctExceptionForInvalid() {
-		assertThatIllegalArgumentException().isThrownBy(() -> editor.setAsText("INVALID")).withMessageContaining("INVALID");
 	}
 
 }

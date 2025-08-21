@@ -19,15 +19,14 @@ package org.apache.camel.component.zookeepermaster;
 import org.apache.camel.Endpoint;
 import org.apache.camel.component.zookeepermaster.group.Group;
 import org.apache.camel.component.zookeepermaster.group.GroupListener;
-import org.apache.camel.component.zookeepermaster.group.NodeState;
 import org.apache.camel.util.IOHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ZookeeperGroupListenerSupport<T extends NodeState> extends ZookeeperGroupSupport<T> implements GroupListener<T> {
+public class ZookeeperGroupListenerSupport extends ZookeeperGroupSupport implements GroupListener {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ZookeeperGroupListenerSupport.class);
-    private Group<T> singleton;
+    private static final transient Logger LOG = LoggerFactory.getLogger(ZookeeperGroupListenerSupport.class);
+    private Group<CamelNodeState> singleton;
     private final String clusterPath;
     private final Endpoint endpoint;
     private final Runnable onLockAcquired;
@@ -41,7 +40,7 @@ public class ZookeeperGroupListenerSupport<T extends NodeState> extends Zookeepe
         this.onDisconnected = onDisconnected;
     }
 
-    public void updateState(T state) {
+    public void updateState(CamelNodeState state) {
         singleton.update(state);
     }
 
@@ -64,12 +63,12 @@ public class ZookeeperGroupListenerSupport<T extends NodeState> extends Zookeepe
         return clusterPath;
     }
 
-    public Group<T> getGroup() {
+    public Group<CamelNodeState> getGroup() {
         return singleton;
     }
 
     @Override
-    public void groupEvent(Group<T> group, GroupEvent event) {
+    public void groupEvent(Group group, GroupEvent event) {
         switch (event) {
             case CONNECTED:
                 break;

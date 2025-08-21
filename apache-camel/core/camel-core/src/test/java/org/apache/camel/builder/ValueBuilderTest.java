@@ -33,7 +33,7 @@ public class ValueBuilderTest extends ContextTestSupport {
     public void testAppend() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").transform(body().append(" World")).to("mock:result");
             }
         });
@@ -52,7 +52,7 @@ public class ValueBuilderTest extends ContextTestSupport {
     public void testPrepend() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").transform(body().prepend("Hello ")).to("mock:result");
             }
         });
@@ -71,7 +71,7 @@ public class ValueBuilderTest extends ContextTestSupport {
     public void testMatches() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("mock:result");
             }
         });

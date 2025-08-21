@@ -60,6 +60,11 @@ public class StreamProducer extends DefaultAsyncProducer {
     }
 
     @Override
+    protected void doStart() throws Exception {
+        super.doStart();
+    }
+
+    @Override
     protected void doStop() throws Exception {
         super.doStop();
         closeStream(null, true);
@@ -69,20 +74,15 @@ public class StreamProducer extends DefaultAsyncProducer {
     public boolean process(Exchange exchange, AsyncCallback callback) {
         try {
             delay(endpoint.getDelay());
-            lock.lock();
-            try {
+
+            synchronized (this) {
                 try {
                     openStream(exchange);
                     writeToStream(outputStream, exchange);
                 } finally {
                     closeStream(exchange, false);
                 }
-            } finally {
-                lock.unlock();
             }
-        } catch (InterruptedException e) {
-            exchange.setException(e);
-            Thread.currentThread().interrupt();
         } catch (Exception e) {
             exchange.setException(e);
         }
@@ -138,7 +138,7 @@ public class StreamProducer extends DefaultAsyncProducer {
         // okay now fallback to mandatory converterable to string
         String s = exchange.getIn().getMandatoryBody(String.class);
         Charset charset = endpoint.getCharset();
-        Writer writer = charset != null ? new OutputStreamWriter(outputStream, charset) : new OutputStreamWriter(outputStream);
+        Writer writer = new OutputStreamWriter(outputStream, charset);
         BufferedWriter bw = IOHelper.buffered(writer);
         if (LOG.isDebugEnabled()) {
             LOG.debug("Writing as text: {} to {} using encoding: {}", body, outputStream, charset);

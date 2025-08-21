@@ -62,8 +62,8 @@ public class HashicorpProducerCreateSecretPOJOIT extends HashicorpVaultBase {
         MockEndpoint.assertIsSatisfied(context);
         Exchange ret = mockRead.getExchanges().get(0);
         assertNotNull(ret);
-        assertEquals("admin", ((Map) ret.getMessage().getBody(Map.class).get("data")).get("username"));
-        assertEquals("password", ((Map) ret.getMessage().getBody(Map.class).get("data")).get("password"));
+        assertEquals(((Map) ret.getMessage().getBody(Map.class).get("data")).get("username"), "admin");
+        assertEquals(((Map) ret.getMessage().getBody(Map.class).get("data")).get("password"), "password");
     }
 
     @Override

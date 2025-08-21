@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package org.springframework.core.env;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link PropertyResolver} implementation that resolves property values against
@@ -31,7 +31,8 @@ import org.jspecify.annotations.Nullable;
  */
 public class PropertySourcesPropertyResolver extends AbstractPropertyResolver {
 
-	private final @Nullable PropertySources propertySources;
+	@Nullable
+	private final PropertySources propertySources;
 
 
 	/**
@@ -56,21 +57,25 @@ public class PropertySourcesPropertyResolver extends AbstractPropertyResolver {
 	}
 
 	@Override
-	public @Nullable String getProperty(String key) {
+	@Nullable
+	public String getProperty(String key) {
 		return getProperty(key, String.class, true);
 	}
 
 	@Override
-	public <T> @Nullable T getProperty(String key, Class<T> targetValueType) {
+	@Nullable
+	public <T> T getProperty(String key, Class<T> targetValueType) {
 		return getProperty(key, targetValueType, true);
 	}
 
 	@Override
-	protected @Nullable String getPropertyAsRawString(String key) {
+	@Nullable
+	protected String getPropertyAsRawString(String key) {
 		return getProperty(key, String.class, false);
 	}
 
-	protected <T> @Nullable T getProperty(String key, Class<T> targetValueType, boolean resolveNestedPlaceholders) {
+	@Nullable
+	protected <T> T getProperty(String key, Class<T> targetValueType, boolean resolveNestedPlaceholders) {
 		if (this.propertySources != null) {
 			for (PropertySource<?> propertySource : this.propertySources) {
 				if (logger.isTraceEnabled()) {
@@ -79,14 +84,8 @@ public class PropertySourcesPropertyResolver extends AbstractPropertyResolver {
 				}
 				Object value = propertySource.getProperty(key);
 				if (value != null) {
-					if (resolveNestedPlaceholders) {
-						if (value instanceof String string) {
-							value = resolveNestedPlaceholders(string);
-						}
-						else if ((value instanceof CharSequence cs) && (String.class.equals(targetValueType) ||
-								CharSequence.class.equals(targetValueType))) {
-							value = resolveNestedPlaceholders(cs.toString());
-						}
+					if (resolveNestedPlaceholders && value instanceof String) {
+						value = resolveNestedPlaceholders((String) value);
 					}
 					logKeyFound(key, propertySource, value);
 					return convertValueIfNecessary(value, targetValueType);

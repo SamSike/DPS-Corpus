@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@
 package org.springframework.aop.interceptor;
 
 import org.aopalliance.intercept.MethodInvocation;
-import org.jspecify.annotations.Nullable;
+
+import org.springframework.lang.Nullable;
 
 /**
  * AOP Alliance {@code MethodInterceptor} that can be introduced in a chain
@@ -57,7 +58,8 @@ public class DebugInterceptor extends SimpleTraceInterceptor {
 
 
 	@Override
-	public @Nullable Object invoke(MethodInvocation invocation) throws Throwable {
+	@Nullable
+	public Object invoke(MethodInvocation invocation) throws Throwable {
 		synchronized (this) {
 			this.count++;
 		}

@@ -42,7 +42,7 @@ public class DefaultValidationErrorHandlerTest extends ContextTestSupport {
         eh.warning(new SAXParseException("foo", createLocator(1, 2)));
 
         // just a warning so should be valid
-        assertTrue(eh.isValid());
+        assertEquals(true, eh.isValid());
     }
 
     @Test
@@ -51,7 +51,7 @@ public class DefaultValidationErrorHandlerTest extends ContextTestSupport {
 
         eh.error(new SAXParseException("foo", createLocator(3, 5)));
 
-        assertFalse(eh.isValid());
+        assertEquals(false, eh.isValid());
     }
 
     @Test
@@ -60,7 +60,7 @@ public class DefaultValidationErrorHandlerTest extends ContextTestSupport {
 
         eh.fatalError(new SAXParseException("foo", createLocator(5, 8)));
 
-        assertFalse(eh.isValid());
+        assertEquals(false, eh.isValid());
     }
 
     @Test
@@ -69,11 +69,11 @@ public class DefaultValidationErrorHandlerTest extends ContextTestSupport {
 
         eh.fatalError(new SAXParseException("foo", createLocator(5, 8)));
 
-        assertFalse(eh.isValid());
+        assertEquals(false, eh.isValid());
 
         eh.reset();
 
-        assertTrue(eh.isValid());
+        assertEquals(true, eh.isValid());
     }
 
     @Test
@@ -84,7 +84,7 @@ public class DefaultValidationErrorHandlerTest extends ContextTestSupport {
         eh.error(new SAXParseException("bar", createLocator(9, 12)));
         eh.fatalError(new SAXParseException("cheese", createLocator(13, 17)));
 
-        assertFalse(eh.isValid());
+        assertEquals(false, eh.isValid());
 
         Exchange exchange = new DefaultExchange(context);
         try {
@@ -115,7 +115,7 @@ public class DefaultValidationErrorHandlerTest extends ContextTestSupport {
         eh.error(new SAXParseException("foo", createLocator(3, 5)));
         eh.error(new SAXParseException("bar", createLocator(9, 12)));
 
-        assertFalse(eh.isValid());
+        assertEquals(false, eh.isValid());
 
         Exchange exchange = new DefaultExchange(context);
         try {

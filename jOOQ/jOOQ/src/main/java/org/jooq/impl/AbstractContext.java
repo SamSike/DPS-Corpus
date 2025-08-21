@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,24 +40,20 @@ package org.jooq.impl;
 import static java.lang.Boolean.TRUE;
 import static org.jooq.JoinType.JOIN;
 import static org.jooq.JoinType.LEFT_OUTER_JOIN;
+// ...
+// ...
+// ...
+// ...
+// ...
+// ...
 import static org.jooq.conf.InvocationOrder.REVERSE;
 import static org.jooq.conf.ParamType.INDEXED;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.name;
-import static org.jooq.impl.JoinTable.onKey0;
 import static org.jooq.impl.Tools.DATAKEY_RESET_IN_SUBQUERY_SCOPE;
 import static org.jooq.impl.Tools.EMPTY_CLAUSE;
 import static org.jooq.impl.Tools.EMPTY_QUERYPART;
 import static org.jooq.impl.Tools.lazy;
-import static org.jooq.impl.Tools.traverseJoins;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_MULTISET_CONTENT;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_NESTED_SET_OPERATIONS;
 import static org.jooq.impl.Tools.BooleanDataKey.DATA_OMIT_CLAUSE_EVENT_EMISSION;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_RENDER_IMPLICIT_JOIN;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_UNALIAS_ALIASED_EXPRESSIONS;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_UNQUALIFY_LOCAL_SCOPE;
-import static org.jooq.impl.Tools.SimpleDataKey.DATA_OVERRIDE_ALIASES_IN_ORDER_BY;
-import static org.jooq.tools.StringUtils.defaultIfNull;
 
 import java.sql.PreparedStatement;
 import java.text.DecimalFormat;
@@ -72,22 +68,21 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.jooq.BindContext;
 import org.jooq.Clause;
 import org.jooq.Condition;
 import org.jooq.Configuration;
 import org.jooq.Context;
-import org.jooq.ConverterContext;
 import org.jooq.DSLContext;
-import org.jooq.ExecuteContext;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
-import org.jooq.InverseForeignKey;
 import org.jooq.JoinType;
 import org.jooq.LanguageContext;
-// ...
 // ...
 import org.jooq.QueryPart;
 import org.jooq.QueryPartInternal;
@@ -104,9 +99,9 @@ import org.jooq.conf.RenderImplicitJoinType;
 import org.jooq.conf.Settings;
 import org.jooq.conf.SettingsTools;
 import org.jooq.conf.StatementType;
-import org.jooq.exception.DataAccessException;
-import org.jooq.impl.QOM.UEmpty;
 import org.jooq.impl.Tools.DataKey;
+import org.jooq.impl.Tools.DataKeyScopeStackPart;
+import org.jooq.tools.StringUtils;
 
 
 /**
@@ -115,7 +110,11 @@ import org.jooq.impl.Tools.DataKey;
 @SuppressWarnings("unchecked")
 abstract class AbstractContext<C extends Context<C>> extends AbstractScope implements Context<C> {
 
-    final ExecuteContext                           ctx;
+
+
+
+
+
     final PreparedStatement                        stmt;
 
     boolean                                        declareFields;
@@ -153,32 +152,40 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
     LanguageContext                                languageContext;
     ParamType                                      paramType                   = ParamType.INDEXED;
     boolean                                        quote                       = true;
-    boolean                                        qualify                     = true;
     boolean                                        qualifySchema               = true;
     boolean                                        qualifyCatalog              = true;
-    QueryPart                                      topLevel;
-    QueryPart                                      topLevelForLanguageContext;
 
     // [#11711] Enforcing scientific notation
     private transient DecimalFormat                doubleFormat;
     private transient DecimalFormat                floatFormat;
 
-    AbstractContext(Configuration configuration, ExecuteContext ctx, PreparedStatement stmt) {
+    AbstractContext(Configuration configuration, PreparedStatement stmt) {
         super(configuration);
-
-        this.ctx = ctx;
         this.stmt = stmt;
 
         VisitListenerProvider[] providers = configuration.visitListenerProviders();
 
+        // [#2080] [#3935] Currently, the InternalVisitListener is not used everywhere
+        boolean useInternalVisitListener =
+            false
+
+
+
+            ;
+
         // [#6758] Avoid this allocation if unneeded
-        VisitListener[] visitListeners = providers.length > 0
-            ? new VisitListener[providers.length]
+        VisitListener[] visitListeners = providers.length > 0 || useInternalVisitListener
+            ? new VisitListener[providers.length + (useInternalVisitListener ? 1 : 0)]
             : null;
 
         if (visitListeners != null) {
             for (int i = 0; i < providers.length; i++)
                 visitListeners[i] = providers[i].provide();
+
+
+
+
+
 
             this.visitContext = new DefaultVisitContext();
             this.visitParts = new ArrayDeque<>();
@@ -215,44 +222,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
             ? CastMode.NEVER
             : CastMode.DEFAULT;
         this.languageContext = LanguageContext.QUERY;
-        this.scopeStack = new ScopeStack<QueryPart, ScopeStackElement>((k, v) -> {
-            if (k == DataKeyScopeStackPart.INSTANCE)
-                return new DataKeyScopeStackElement(k, v);
-            else if (k == ScopeDefinerScopeStackPart.INSTANCE)
-                return new ScopeDefinerScopeStackElement(k, v);
-            else
-                return new DefaultScopeStackElement(k, v);
-        });
-
-        if (TRUE.equals(configuration.settings().isEmulateNestedRecordProjectionsUsingMultisetEmulation())) {
-            data(DATA_MULTISET_CONTENT, true);
-
-            if (ctx != null)
-                ctx.data(DATA_MULTISET_CONTENT, true);
-        }
-    }
-
-    // ------------------------------------------------------------------------
-    // ExecuteScope API
-    // ------------------------------------------------------------------------
-
-    @Override
-    public final ConverterContext converterContext() {
-        return ctx != null ? ctx.converterContext() : Tools.converterContext(configuration());
-    }
-
-
-
-
-
-
-
-
-
-
-    @Override
-    public final ExecuteContext executeContext() {
-        return ctx;
+        this.scopeStack = new ScopeStack<QueryPart, ScopeStackElement>(ScopeStackElement::new);
     }
 
     // ------------------------------------------------------------------------
@@ -261,51 +231,17 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public final C visit(Condition part) {
-
-        // [#16310] The MULTISET content flag needs to be reset for any non
-        //          multiset projection context. For example, in any Condition.
-        //          While Conditions can be projected, they're projecting a BOOLEAN,
-        //          not nested records or collections
-        if (TRUE.equals(data(DATA_MULTISET_CONTENT))) {
-            try {
-                data(DATA_MULTISET_CONTENT, false);
-                visit((QueryPart) part);
-            }
-            finally {
-                data(DATA_MULTISET_CONTENT, true);
-            }
-        }
-        else
-            visit((QueryPart) part);
-
-        return (C) this;
+        return visit((QueryPart) part);
     }
 
     @Override
     public final C visit(Field<?> part) {
-        return part instanceof Condition c ? visit((QueryPart) DSL.field(c)) : visit((QueryPart) part);
+        return part instanceof Condition ? visit((QueryPart) DSL.field((Condition) part)) : visit((QueryPart) part);
     }
 
     @Override
     public final C visit(QueryPart part) {
         if (part != null) {
-            if (topLevel == null) {
-                topLevel = topLevelForLanguageContext = part;
-
-                // [#14155] Apply transformation only if it hasn't been applied
-                //          already, from some ExecuteContext.
-                if (executeContext() == null
-                        && TRUE.equals(settings().isTransformPatterns())
-                        && configuration().requireCommercial(() -> "SQL transformations are a commercial only feature. Please consider upgrading to the jOOQ Professional Edition or jOOQ Enterprise Edition.")) {
-
-
-
-                }
-            }
-
-            // [#16928] Apply type specific replacements that can't be implemented in individual types,
-            //          and for which an internal VisitListener is overkill
-            part = typeSpecificReplacements(part);
 
             // Issue start clause events
             // -----------------------------------------------------------------
@@ -393,57 +329,55 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
         return (C) this;
     }
 
-    static final record AliasOverride(List<Field<?>> originalFields, List<Field<?>> aliasedFields) {}
-
-    private final QueryPart typeSpecificReplacements(QueryPart part) {
-        if (!declareFields() && part instanceof Field<?> f) {
-
-            // [#2080] Override the actual alias in case a synthetic alias is generated
-            // in the SELECT clause
-            AliasOverride override = (AliasOverride) data(DATA_OVERRIDE_ALIASES_IN_ORDER_BY);
-
-            // Don't combine the effects of DATA_OVERRIDE_ALIASES_IN_ORDER_BY with DATA_UNALIAS_ALIASES_IN_ORDER_BY
-            if (override != null && !TRUE.equals(data(DATA_UNALIAS_ALIASED_EXPRESSIONS))) {
-
-                // [#16946] Ignore qualification of field if unambiguous
-                int i = new FieldsImpl<>(override.originalFields()).indexOf(f);
-
-                if (i >= 0 && i < override.aliasedFields().size())
-                    return field(name(override.aliasedFields().get(i).getName()), f.getDataType());
-            }
-        }
-
-        return part;
-    }
-
     @Override
     public final C visitSubquery(QueryPart part) {
-        Tools.visitSubquery(this, part);
+        Tools.visitSubquery(this, part, false, false, false);
         return (C) this;
     }
 
     protected abstract void visit0(QueryPartInternal internal);
 
-    @Override
-    public final C data(Object key, Object value, Consumer<? super C> consumer) {
-        Object previous = data(key);
+    private final C toggle(boolean b, BooleanSupplier get, BooleanConsumer set, Consumer<? super C> consumer) {
+        boolean previous = get.getAsBoolean();
 
         try {
-            if (value == null)
-                data().remove(key);
-            else
-                data(key, value);
-
+            set.accept(b);
             consumer.accept((C) this);
         }
         finally {
-            if (previous == null)
-                data().remove(key);
-            else
-                data(key, previous);
+            set.accept(previous);
         }
 
         return (C) this;
+    }
+
+    private final <T> C toggle(T t, Supplier<T> get, Consumer<T> set, Consumer<? super C> consumer) {
+        T previous = get.get();
+
+        try {
+            set.accept(t);
+            consumer.accept((C) this);
+        }
+        finally {
+            set.accept(previous);
+        }
+
+        return (C) this;
+    }
+
+    @Override
+    public final C data(Object key, Object value, Consumer<? super C> consumer) {
+        return toggle(
+            value,
+            () -> data(key),
+            v -> {
+                if (v == null)
+                    data().remove(key);
+                else
+                    data(key, v);
+            },
+            consumer
+        );
     }
 
     /**
@@ -453,7 +387,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
      * after visiting a query part. This is needed for all reusable query parts,
      * whose clause type is ambiguous at the container site. An example:
      * <p>
-     * <pre><code>SELECT * FROM [A CROSS JOIN B]</code></pre>
+     * <code><pre>SELECT * FROM [A CROSS JOIN B]</pre></code>
      * <p>
      * The type of the above <code>JoinTable</code> modelling
      * <code>A CROSS JOIN B</code> is not known to the surrounding
@@ -556,17 +490,17 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
         @Override
         public final Settings settings() {
-            return AbstractContext.this.settings();
+            return Tools.settings(configuration());
         }
 
         @Override
         public final SQLDialect dialect() {
-            return AbstractContext.this.dialect();
+            return Tools.configuration(configuration()).dialect();
         }
 
         @Override
         public final SQLDialect family() {
-            return AbstractContext.this.family();
+            return dialect().family();
         }
 
         @Override
@@ -612,12 +546,12 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
         @Override
         public final RenderContext renderContext() {
-            return context() instanceof RenderContext c ? c : null;
+            return context() instanceof RenderContext ? (RenderContext) context() : null;
         }
 
         @Override
         public final BindContext bindContext() {
-            return context() instanceof BindContext c ? c : null;
+            return context() instanceof BindContext ? (BindContext) context() : null;
         }
     }
 
@@ -635,17 +569,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public C declareFields(boolean f, Consumer<? super C> consumer) {
-        boolean previous = declareFields();
-
-        try {
-            declareFields(f);
-            consumer.accept((C) this);
-        }
-        finally {
-            declareFields(previous);
-        }
-
-        return (C) this;
+        return toggle(f, this::declareFields, this::declareFields, consumer);
     }
 
     @Override
@@ -662,17 +586,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public C declareTables(boolean f, Consumer<? super C> consumer) {
-        boolean previous = declareTables();
-
-        try {
-        	declareTables(f);
-            consumer.accept((C) this);
-        }
-        finally {
-            declareTables(previous);
-        }
-
-        return (C) this;
+        return toggle(f, this::declareTables, this::declareTables, consumer);
     }
 
     @Override
@@ -688,17 +602,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public C declareAliases(boolean f, Consumer<? super C> consumer) {
-        boolean previous = declareAliases();
-
-        try {
-        	declareAliases(f);
-            consumer.accept((C) this);
-        }
-        finally {
-            declareAliases(previous);
-        }
-
-        return (C) this;
+        return toggle(f, this::declareAliases, this::declareAliases, consumer);
     }
 
     @Override
@@ -714,28 +618,8 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public C declareWindows(boolean f, Consumer<? super C> consumer) {
-        boolean previous = declareWindows();
-
-        try {
-            declareWindows(f);
-            consumer.accept((C) this);
-        }
-        finally {
-            declareWindows(previous);
-        }
-
-        return (C) this;
+        return toggle(f, this::declareWindows, this::declareWindows, consumer);
     }
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -773,44 +657,12 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public C declareCTE(boolean f, Consumer<? super C> consumer) {
-        boolean previous = declareCTE();
-
-        try {
-            declareCTE(f);
-            consumer.accept((C) this);
-        }
-        finally {
-            declareCTE(previous);
-        }
-
-        return (C) this;
+        return toggle(f, this::declareCTE, this::declareCTE, consumer);
     }
 
     @Override
     public final int scopeLevel() {
         return scopeStack.scopeLevel();
-    }
-
-    @Override
-    public final QueryPart topLevel() {
-        return topLevel;
-    }
-
-    @Override
-    public final C topLevel(QueryPart t) {
-        topLevel = t;
-        return (C) this;
-    }
-
-    @Override
-    public final QueryPart topLevelForLanguageContext() {
-        return topLevelForLanguageContext;
-    }
-
-    @Override
-    public final C topLevelForLanguageContext(QueryPart t) {
-        topLevelForLanguageContext = t;
-        return (C) this;
     }
 
     @Override
@@ -856,7 +708,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
         return subquery > 0;
     }
 
-    final C subquery0(boolean s, boolean setOperation, QueryPart part) {
+    final C subquery0(boolean s, boolean setOperation) {
         setOperationSubquery(setOperation);
 
         if (s) {
@@ -876,7 +728,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
                 subqueryScopedNestedSetOperations.set(subquery);
             }
 
-            scopeStart(part);
+            scopeStart();
         }
         else {
             scopeEnd();
@@ -896,43 +748,15 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public final C subquery(boolean s) {
-        return subquery(s, null);
-    }
-
-    @Override
-    public final C subquery(boolean s, QueryPart part) {
-        return subquery0(s, false, part);
+        return subquery0(s, false);
     }
 
     @Override
     public final C scopeStart() {
-        return scopeStart(null);
-    }
-
-    @Override
-    public final C scopeStart(QueryPart part) {
         scopeStack.scopeStart();
-        if (part != null)
-            ((ScopeDefinerScopeStackElement) scopeStack.getOrCreate(ScopeDefinerScopeStackPart.INSTANCE)).scopeDefiner = part;
         scopeStart0();
-        resetDataKeys((DataKeyScopeStackElement) scopeStack.getOrCreate(DataKeyScopeStackPart.INSTANCE));
+        resetDataKeys(scopeStack.getOrCreate(DataKeyScopeStackPart.INSTANCE));
 
-        return (C) this;
-    }
-
-    @Override
-    public final QueryPart scopePart() {
-        ScopeDefinerScopeStackElement e = ((ScopeDefinerScopeStackElement) scopeStack.get(ScopeDefinerScopeStackPart.INSTANCE));
-        return e != null ? e.scopeDefiner : null;
-    }
-
-    @Override
-    public /* non-final */ C scopeHide(QueryPart part) {
-        return (C) this;
-    }
-
-    @Override
-    public /* non-final */ C scopeShow(QueryPart part) {
         return (C) this;
     }
 
@@ -949,26 +773,6 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
     @Override
     public /* non-final */ C scopeRegister(QueryPart part, boolean forceNew, QueryPart mapped) {
         return (C) this;
-    }
-
-    @Override
-    public final <Q extends QueryPart> Iterable<Q> scopeParts(Class<? extends Q> type) {
-        return (Iterable<Q>) scopeStack.keyIterable(k -> type.isInstance(k));
-    }
-
-    @Override
-    public final <Q extends QueryPart> Iterable<Q> currentScopeParts(Class<? extends Q> type) {
-        return (Iterable<Q>) scopeStack.keyIterableAtScopeLevel(k -> type.isInstance(k));
-    }
-
-    @Override
-    public final boolean inScope(QueryPart part) {
-        return scopeStack.get(part) != null;
-    }
-
-    @Override
-    public final boolean inCurrentScope(QueryPart part) {
-        return scopeStack.getCurrentScope(part) != null;
     }
 
     @Override
@@ -999,7 +803,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public final C scopeEnd() {
-        restoreDataKeys((DataKeyScopeStackElement) scopeStack.getOrCreate(DataKeyScopeStackPart.INSTANCE));
+        restoreDataKeys(scopeStack.getOrCreate(DataKeyScopeStackPart.INSTANCE));
 
         scopeEnd0();
         scopeStack.scopeEnd();
@@ -1012,7 +816,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
     void scopeMarkEnd0(@SuppressWarnings("unused") QueryPart part) {}
     void scopeEnd0() {}
 
-    final void resetDataKeys(DataKeyScopeStackElement e) {
+    final void resetDataKeys(ScopeStackElement e) {
         for (int i = 0; i < DATAKEY_RESET_IN_SUBQUERY_SCOPE.length; i++) {
             DataKey key = DATAKEY_RESET_IN_SUBQUERY_SCOPE[i];
 
@@ -1021,7 +825,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
         }
     }
 
-    final void restoreDataKeys(DataKeyScopeStackElement e) {
+    final void restoreDataKeys(ScopeStackElement e) {
         for (int i = 0; i < DATAKEY_RESET_IN_SUBQUERY_SCOPE.length; i++) {
             DataKey key = DATAKEY_RESET_IN_SUBQUERY_SCOPE[i];
 
@@ -1065,7 +869,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public final int skipUpdateCounts() {
-        return skipUpdateCounts + (ctx != null ? ctx.skipUpdateCounts() : 0);
+        return skipUpdateCounts;
     }
 
     @Override
@@ -1125,17 +929,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public final C paramType(ParamType p, Consumer<? super C> runnable) {
-        ParamType previous = paramType();
-
-        try {
-            paramType(p);
-            runnable.accept((C) this);
-        }
-        finally {
-            paramType(previous);
-        }
-
-        return (C) this;
+        return toggle(p, this::paramType, this::paramType, runnable);
     }
 
     @Override
@@ -1161,48 +955,27 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public final C quote(boolean q, Consumer<? super C> consumer) {
-        boolean previous = quote();
-
-        try {
-            quote(q);
-            consumer.accept((C) this);
-        }
-        finally {
-            quote(previous);
-        }
-
-        return (C) this;
+        return toggle(q, this::quote, this::quote, consumer);
     }
 
     @Override
     public final boolean qualify() {
-        return data(DATA_UNQUALIFY_LOCAL_SCOPE) == null ? qualify : false;
+        return qualifySchema();
     }
 
     @Override
     public final C qualify(boolean q) {
-        this.qualify = q;
-        return (C) this;
+        return qualifySchema(q);
     }
 
     @Override
     public final C qualify(boolean q, Consumer<? super C> consumer) {
-        boolean previous = qualify();
-
-        try {
-            qualify(q);
-            consumer.accept((C) this);
-        }
-        finally {
-            qualify(previous);
-        }
-
-        return (C) this;
+        return toggle(q, this::qualify, this::qualify, consumer);
     }
 
     @Override
     public final boolean qualifySchema() {
-        return qualify && qualifySchema;
+        return qualifySchema;
     }
 
     @Override
@@ -1213,22 +986,12 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public final C qualifySchema(boolean q, Consumer<? super C> consumer) {
-        boolean previous = qualifySchema();
-
-        try {
-            qualifySchema(q);
-            consumer.accept((C) this);
-        }
-        finally {
-            qualifySchema(previous);
-        }
-
-        return (C) this;
+        return toggle(q, this::qualifySchema, this::qualifySchema, consumer);
     }
 
     @Override
     public final boolean qualifyCatalog() {
-        return qualify && qualifyCatalog;
+        return qualifyCatalog;
     }
 
     @Override
@@ -1239,17 +1002,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public final C qualifyCatalog(boolean q, Consumer<? super C> consumer) {
-        boolean previous = qualifyCatalog();
-
-        try {
-            qualifyCatalog(q);
-            consumer.accept((C) this);
-        }
-        finally {
-            qualifyCatalog(previous);
-        }
-
-        return (C) this;
+        return toggle(q, this::qualifyCatalog, this::qualifyCatalog, consumer);
     }
 
     @Override
@@ -1265,32 +1018,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public final C languageContext(LanguageContext context, Consumer<? super C> consumer) {
-        LanguageContext previous = languageContext();
-
-        try {
-            languageContext(context);
-            consumer.accept((C) this);
-        }
-        finally {
-            languageContext(previous);
-        }
-
-        return (C) this;
-    }
-
-    @Override
-    public final C languageContext(LanguageContext context, QueryPart newTopLevelForLanguageContext, Consumer<? super C> consumer) {
-        return languageContext(context, c -> {
-            QueryPart previous = topLevelForLanguageContext();
-
-            try {
-                topLevelForLanguageContext(newTopLevelForLanguageContext);
-                consumer.accept((C) this);
-            }
-            finally {
-                topLevelForLanguageContext(previous);
-            }
-        });
+        return toggle(context, this::languageContext, this::languageContext, consumer);
     }
 
     @Override
@@ -1314,17 +1042,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
 
     @Override
     public final C castMode(CastMode mode, Consumer<? super C> consumer) {
-        CastMode previous = castMode();
-
-        try {
-            castMode(mode);
-            consumer.accept((C) this);
-        }
-        finally {
-            castMode(previous);
-        }
-
-        return (C) this;
+        return toggle(mode, this::castMode, this::castMode, consumer);
     }
 
     @Override
@@ -1385,178 +1103,40 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
     }
 
     static class JoinNode {
-        final Context<?>                             ctx;
-        final Table<?>                               table;
-        final Map<ForeignKey<?, ?>, JoinNode>        pathsToOne;
-        final Map<InverseForeignKey<?, ?>, JoinNode> pathsToMany;
-        int                                          references;
+        final Configuration                   configuration;
+        final Table<?>                        table;
+        final Map<ForeignKey<?, ?>, JoinNode> children;
 
-        JoinNode(Context<?> ctx, Table<?> table) {
-            this.ctx = ctx;
+        JoinNode(Configuration configuration, Table<?> table) {
+            this.configuration = configuration;
             this.table = table;
-            this.pathsToOne = new LinkedHashMap<>();
-            this.pathsToMany = new LinkedHashMap<>();
+            this.children = new LinkedHashMap<>();
         }
 
-        static final JoinNode create(
-            Context<?> ctx,
-            JoinNode result,
-            Table<?> root,
-            List<TableImpl<?>> tables
-        ) {
-            if (!tables.isEmpty()) {
-                if (result == null)
-                    result = new JoinNode(ctx, root);
-
-                JoinNode node = result;
-                for (int i = tables.size() - 1; i >= 0; i--) {
-                    TableImpl<?> t = tables.get(i);
-
-                    if (t.childPath != null)
-                        node = node.pathsToOne.computeIfAbsent(t.childPath, k -> new JoinNode(ctx, t));
-                    else
-                        node = node.pathsToMany.computeIfAbsent(t.parentPath, k -> new JoinNode(ctx, t));
-
-                    if (i == 0)
-                        node.references++;
-                }
-            }
-
-            return result;
-        }
-
-        Table<?> joinTree() {
-            return joinTree(null);
-        }
-
-        Table<?> joinTree(JoinType joinType) {
+        public Table<?> joinTree() {
             Table<?> result = table;
 
+            for (Entry<ForeignKey<?, ?>, JoinNode> e : children.entrySet()) {
+                JoinType type;
 
+                switch (StringUtils.defaultIfNull(Tools.settings(configuration).getRenderImplicitJoinType(),
+                    RenderImplicitJoinType.DEFAULT)) {
+                    case INNER_JOIN:
+                        type = JOIN;
+                        break;
+                    case LEFT_JOIN:
+                        type = LEFT_OUTER_JOIN;
+                        break;
+                    case DEFAULT:
+                    default:
+                        type = e.getKey().nullable() ? LEFT_OUTER_JOIN : JOIN;
+                        break;
+                }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-            if (ctx.data(DATA_RENDER_IMPLICIT_JOIN) != null && TableImpl.path(result) != null)
-                result = Tools.unwrap(result).as(result);
-
-            for (Entry<ForeignKey<?, ?>, JoinNode> e : pathsToOne.entrySet()) {
-                Table<?> t = e.getValue().joinTree(joinType);
-
-                // [#14992] Eliminate to-one -> to-many hops if there are no projection references
-                if (skippable(e.getKey(), e.getValue()))
-
-                    // [#14992] TODO: Currently, skippable JoinNodes have no outgoing to-one
-                    //          relationships, but that might change in the future.
-                    result = appendToManyPaths(result, e.getValue(), joinType);
-                else
-                    result = result
-                        .join(t, joinType != null ? joinType : joinType(t, e.getKey().nullable() ? LEFT_OUTER_JOIN : JOIN))
-                        .on(onKey0(e.getKey(), result, t));
-            }
-
-            return appendToManyPaths(result, this, joinType);
-        }
-
-        private static final Table<?> appendToManyPaths(Table<?> result, JoinNode node, JoinType joinType) {
-            for (Entry<InverseForeignKey<?, ?>, JoinNode> e : node.pathsToMany.entrySet()) {
-                Table<?> t = e.getValue().joinTree();
-
-                result = result
-                    .join(t, joinType != null ? joinType : node.joinToManyType(t))
-                    .on(onKey0(e.getKey().getForeignKey(), t, result));
+                result = result.join(e.getValue().joinTree(), type).onKey(e.getKey());
             }
 
             return result;
-        }
-
-        private final boolean skippable(ForeignKey<?, ?> fk, JoinNode node) {
-            if (node.references == 0) {
-
-                // [#14992] TODO: Do this for to-one paths as well, if that exists?
-                if (!node.pathsToOne.isEmpty())
-                    return false;
-
-                for (Entry<InverseForeignKey<?, ?>, JoinNode> path : node.pathsToMany.entrySet()) {
-                    if (!fk.getKeyFields().equals(path.getKey().getFields()))
-                        return false;
-                }
-
-                return true;
-            }
-
-            return false;
-        }
-
-        private final JoinType joinType(Table<?> t, JoinType onDefault) {
-            RenderImplicitJoinType type = defaultIfNull(ctx.settings().getRenderImplicitJoinType(), RenderImplicitJoinType.DEFAULT);
-
-            switch (type) {
-
-                // SCALAR_SUBQUERY is handled elsewhere
-                case INNER_JOIN:
-                    return JOIN;
-                case LEFT_JOIN:
-                    return LEFT_OUTER_JOIN;
-                case THROW:
-
-                    // [#15755] Throw exceptions only if the to-many join is done to a table
-                    //          that isn't in any explicit scope
-                    if (!allInScope(t))
-                        throw new DataAccessException("Implicit to-one JOIN of " + ctx.dsl().renderContext().declareTables(true).render(table) + " isn't supported with Settings.renderImplicitJoinType = " + type + ". Either change Settings value, or use explicit path join, see https://www.jooq.org/doc/latest/manual/sql-building/sql-statements/select-statement/explicit-path-join/");
-                    else
-                        return LEFT_OUTER_JOIN;
-
-                case DEFAULT:
-                default:
-                    return onDefault;
-            }
-        }
-
-        private final JoinType joinToManyType(Table<?> t) {
-            RenderImplicitJoinType type = defaultIfNull(ctx.settings().getRenderImplicitJoinToManyType(), RenderImplicitJoinType.DEFAULT);
-
-            switch (type) {
-
-                // SCALAR_SUBQUERY is handled elsewhere
-                case INNER_JOIN:
-                    return JOIN;
-                case LEFT_JOIN:
-                    return LEFT_OUTER_JOIN;
-                case DEFAULT:
-                case THROW:
-                default:
-
-                    // [#15755] Throw exceptions only if the to-many join is done to a table
-                    //          that isn't in any explicit scope
-                    if (!allInScope(t))
-                        throw new DataAccessException("Implicit to-many JOIN of " + ctx.dsl().renderContext().declareTables(true).render(table) + " isn't supported with Settings.renderImplicitJoinToManyType = " + type + ". Either change Settings value, or use explicit path join, see https://www.jooq.org/doc/latest/manual/sql-building/sql-statements/select-statement/explicit-path-join/");
-                    else
-                        return LEFT_OUTER_JOIN;
-            }
-        }
-
-        private final boolean allInScope(Table<?> t) {
-            if (t instanceof TableImpl<?> ti)
-                return ctx.inScope(t);
-            else if (t instanceof JoinTable<?> j)
-                return traverseJoins(j, true, b -> !b, (b, x) -> b && ctx.inScope(x));
-            else
-                return false;
-        }
-
-        final boolean hasJoinPaths() {
-            return !pathsToOne.isEmpty() || !pathsToMany.isEmpty();
         }
 
         @Override
@@ -1565,7 +1145,7 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
         }
     }
 
-    abstract static class ScopeStackElement {
+    static class ScopeStackElement {
         final int       scopeLevel;
         final QueryPart part;
         QueryPart       mapped;
@@ -1573,89 +1153,19 @@ abstract class AbstractContext<C extends Context<C>> extends AbstractScope imple
         int             bindIndex;
         int             indent;
         JoinNode        joinNode;
+        List<Object>    restoreDataKeys;
 
         ScopeStackElement(QueryPart part, int scopeLevel) {
             this.part = part;
             this.mapped = part;
             this.scopeLevel = scopeLevel;
         }
-    }
-
-    static abstract class AbstractScopeStackPart extends AbstractQueryPart implements UEmpty {
-
-        @Override
-        public final void accept(Context<?> ctx) {}
-
-        @Override
-        public boolean equals(Object that) {
-            return this == that;
-        }
-
-        @Override
-        public int hashCode() {
-            return 0;
-        }
 
         @Override
         public String toString() {
-            return getClass().getSimpleName();
-        }
-    }
-
-    static final class DataKeyScopeStackPart extends AbstractScopeStackPart {
-        static final DataKeyScopeStackPart INSTANCE = new DataKeyScopeStackPart();
-        private DataKeyScopeStackPart() {}
-    }
-
-    static final class ScopeDefinerScopeStackPart extends AbstractScopeStackPart {
-        static final ScopeDefinerScopeStackPart INSTANCE = new ScopeDefinerScopeStackPart();
-        private ScopeDefinerScopeStackPart() {}
-    }
-
-    static final class DataKeyScopeStackElement extends ScopeStackElement {
-        List<Object> restoreDataKeys;
-
-        DataKeyScopeStackElement(QueryPart part, int scopeLevel) {
-            super(part, scopeLevel);
-        }
-
-        @Override
-        public String toString() {
-            return "RestoreDataKeys [" + restoreDataKeys + "]";
-        }
-    }
-
-    static final class ScopeDefinerScopeStackElement extends ScopeStackElement {
-        QueryPart scopeDefiner;
-
-        ScopeDefinerScopeStackElement(QueryPart part, int scopeLevel) {
-            super(part, scopeLevel);
-        }
-
-        @Override
-        public String toString() {
-            return "" + scopeDefiner;
-        }
-    }
-
-    static final class DefaultScopeStackElement extends ScopeStackElement {
-        DefaultScopeStackElement(QueryPart part, int scopeLevel) {
-            super(part, scopeLevel);
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-
-            if (positions != null)
-                sb.append(Arrays.toString(positions));
-
-            sb.append(part);
-
-            if (mapped != null)
-                sb.append(" (" + mapped + ")");
-
-            return sb.toString();
+            return (positions != null ? Arrays.toString(positions) + ": " : "")
+                 + part
+                 + (mapped != null ? " (" + mapped + ")" : "");
         }
     }
 }

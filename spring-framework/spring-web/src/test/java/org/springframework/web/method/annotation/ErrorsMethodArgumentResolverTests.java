@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
  *
  * @author Rossen Stoyanchev
  */
-class ErrorsMethodArgumentResolverTests {
+public class ErrorsMethodArgumentResolverTests {
 
 	private final ErrorsMethodArgumentResolver resolver = new ErrorsMethodArgumentResolver();
 
@@ -48,7 +48,7 @@ class ErrorsMethodArgumentResolverTests {
 
 
 	@BeforeEach
-	void setup() throws Exception {
+	public void setup() throws Exception {
 		paramErrors = new MethodParameter(getClass().getDeclaredMethod("handle", Errors.class), 0);
 		bindingResult = new WebDataBinder(new Object(), "attr").getBindingResult();
 		webRequest = new ServletWebRequest(new MockHttpServletRequest());
@@ -56,12 +56,12 @@ class ErrorsMethodArgumentResolverTests {
 
 
 	@Test
-	void supports() {
+	public void supports() {
 		resolver.supportsParameter(paramErrors);
 	}
 
 	@Test
-	void bindingResult() throws Exception {
+	public void bindingResult() throws Exception {
 		ModelAndViewContainer mavContainer = new ModelAndViewContainer();
 		mavContainer.addAttribute("ignore1", "value1");
 		mavContainer.addAttribute("ignore2", "value2");
@@ -75,7 +75,7 @@ class ErrorsMethodArgumentResolverTests {
 	}
 
 	@Test
-	void bindingResultNotFound() {
+	public void bindingResultNotFound() throws Exception {
 		ModelAndViewContainer mavContainer = new ModelAndViewContainer();
 		mavContainer.addAllAttributes(bindingResult.getModel());
 		mavContainer.addAttribute("ignore1", "value1");
@@ -85,7 +85,7 @@ class ErrorsMethodArgumentResolverTests {
 	}
 
 	@Test
-	void noBindingResult() {
+	public void noBindingResult() throws Exception {
 		assertThatIllegalStateException().isThrownBy(() ->
 				resolver.resolveArgument(paramErrors, new ModelAndViewContainer(), webRequest, null));
 	}

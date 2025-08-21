@@ -21,22 +21,14 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import org.apache.camel.api.management.ManagedAttribute;
 import org.apache.camel.api.management.ManagedOperation;
 import org.apache.camel.api.management.ManagedResource;
-import org.apache.camel.spi.Configurer;
 import org.apache.camel.spi.IdempotentRepository;
-import org.apache.camel.spi.Metadata;
 import org.apache.camel.support.service.ServiceSupport;
 
-@Metadata(label = "bean",
-          description = "Idempotent repository that uses Caffiene cache to store message ids.",
-          annotations = { "interfaceName=org.apache.camel.spi.IdempotentRepository" })
-@Configurer(metadataOnly = true)
 @ManagedResource(description = "Caffeine based message id repository")
 public class CaffeineIdempotentRepository extends ServiceSupport implements IdempotentRepository {
 
-    private Cache<String, Boolean> cache;
-
-    @Metadata(description = "Name of cache", defaultValue = "CaffeineIdempotentRepository")
     private String cacheName;
+    private Cache<String, Boolean> cache;
 
     public CaffeineIdempotentRepository() {
         this(CaffeineIdempotentRepository.class.getSimpleName());
@@ -44,10 +36,6 @@ public class CaffeineIdempotentRepository extends ServiceSupport implements Idem
 
     public CaffeineIdempotentRepository(String repositoryName) {
         this.cacheName = repositoryName;
-    }
-
-    public void setCacheName(String cacheName) {
-        this.cacheName = cacheName;
     }
 
     @ManagedAttribute(description = "The processor name")
@@ -98,12 +86,11 @@ public class CaffeineIdempotentRepository extends ServiceSupport implements Idem
         }
     }
 
-    @Override
-    protected void doStop() throws Exception {
-        // noop
-    }
-
     protected Cache getCache() {
         return this.cache;
+    }
+
+    @Override
+    protected void doStop() throws Exception {
     }
 }

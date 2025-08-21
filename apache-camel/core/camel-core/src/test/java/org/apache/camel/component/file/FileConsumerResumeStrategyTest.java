@@ -94,7 +94,7 @@ public class FileConsumerResumeStrategyTest extends ContextTestSupport {
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
 
                 bindToRegistry("testResumeStrategy", new TransientResumeStrategy(adapter));
 

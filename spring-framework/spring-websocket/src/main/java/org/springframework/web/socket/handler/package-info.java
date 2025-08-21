@@ -2,7 +2,9 @@
  * Convenient {@link org.springframework.web.socket.WebSocketHandler}
  * implementations and decorators.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.web.socket.handler;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

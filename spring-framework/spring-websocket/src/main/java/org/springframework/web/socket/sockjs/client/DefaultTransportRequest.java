@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,21 +18,20 @@ package org.springframework.web.socket.sockjs.client;
 
 import java.net.URI;
 import java.security.Principal;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiConsumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.util.Assert;
+import org.springframework.util.concurrent.ListenableFutureCallback;
+import org.springframework.util.concurrent.SettableListenableFuture;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.sockjs.SockJsTransportFailureException;
@@ -60,17 +59,20 @@ class DefaultTransportRequest implements TransportRequest {
 
 	private final TransportType serverTransportType;
 
-	private final SockJsMessageCodec codec;
+	private SockJsMessageCodec codec;
 
-	private @Nullable Principal user;
+	@Nullable
+	private Principal user;
 
 	private long timeoutValue;
 
-	private @Nullable TaskScheduler timeoutScheduler;
+	@Nullable
+	private TaskScheduler timeoutScheduler;
 
 	private final List<Runnable> timeoutTasks = new ArrayList<>();
 
-	private @Nullable DefaultTransportRequest fallbackRequest;
+	@Nullable
+	private DefaultTransportRequest fallbackRequest;
 
 
 	public DefaultTransportRequest(SockJsUrlInfo sockJsUrlInfo,
@@ -115,7 +117,8 @@ class DefaultTransportRequest implements TransportRequest {
 	}
 
 	@Override
-	public @Nullable Principal getUser() {
+	@Nullable
+	public Principal getUser() {
 		return this.user;
 	}
 
@@ -142,22 +145,22 @@ class DefaultTransportRequest implements TransportRequest {
 	}
 
 
-	public void connect(WebSocketHandler handler, CompletableFuture<WebSocketSession> future) {
+	public void connect(WebSocketHandler handler, SettableListenableFuture<WebSocketSession> future) {
 		if (logger.isTraceEnabled()) {
 			logger.trace("Starting " + this);
 		}
-		CompletableConnectCallback connectCallback = new CompletableConnectCallback(handler, future);
+		ConnectCallback connectCallback = new ConnectCallback(handler, future);
 		scheduleConnectTimeoutTask(connectCallback);
-		this.transport.connectAsync(this, handler).whenComplete(connectCallback);
+		this.transport.connect(this, handler).addCallback(connectCallback);
 	}
 
 
-	private void scheduleConnectTimeoutTask(CompletableConnectCallback connectHandler) {
+	private void scheduleConnectTimeoutTask(ConnectCallback connectHandler) {
 		if (this.timeoutScheduler != null) {
 			if (logger.isTraceEnabled()) {
 				logger.trace("Scheduling connect to time out after " + this.timeoutValue + " ms.");
 			}
-			Instant timeoutDate = Instant.now().plus(this.timeoutValue, ChronoUnit.MILLIS);
+			Date timeoutDate = new Date(System.currentTimeMillis() + this.timeoutValue);
 			this.timeoutScheduler.schedule(connectHandler, timeoutDate);
 		}
 		else if (logger.isTraceEnabled()) {
@@ -178,33 +181,32 @@ class DefaultTransportRequest implements TransportRequest {
 	 * to connect. Also implements {@code Runnable} to handle a scheduled timeout
 	 * callback.
 	 */
-	private class CompletableConnectCallback
-			implements Runnable, BiConsumer<WebSocketSession, Throwable> {
+	private class ConnectCallback implements ListenableFutureCallback<WebSocketSession>, Runnable {
 
 		private final WebSocketHandler handler;
 
-		private final CompletableFuture<WebSocketSession> future;
+		private final SettableListenableFuture<WebSocketSession> future;
 
 		private final AtomicBoolean handled = new AtomicBoolean();
 
-		public CompletableConnectCallback(WebSocketHandler handler, CompletableFuture<WebSocketSession> future) {
+		public ConnectCallback(WebSocketHandler handler, SettableListenableFuture<WebSocketSession> future) {
 			this.handler = handler;
 			this.future = future;
 		}
 
 		@Override
-		public void accept(@Nullable WebSocketSession session, @Nullable Throwable throwable) {
-			if (session != null) {
-				if (this.handled.compareAndSet(false, true)) {
-					this.future.complete(session);
-				}
-				else if (logger.isErrorEnabled()) {
-					logger.error("Connect success/failure already handled for " + DefaultTransportRequest.this);
-				}
+		public void onSuccess(@Nullable WebSocketSession session) {
+			if (this.handled.compareAndSet(false, true)) {
+				this.future.set(session);
 			}
-			else if (throwable != null) {
-				handleFailure(throwable, false);
+			else if (logger.isErrorEnabled()) {
+				logger.error("Connect success/failure already handled for " + DefaultTransportRequest.this);
 			}
+		}
+
+		@Override
+		public void onFailure(Throwable ex) {
+			handleFailure(ex, false);
 		}
 
 		@Override
@@ -226,7 +228,7 @@ class DefaultTransportRequest implements TransportRequest {
 				else {
 					logger.error("No more fallback transports after " + DefaultTransportRequest.this, ex);
 					if (ex != null) {
-						this.future.completeExceptionally(ex);
+						this.future.setException(ex);
 					}
 				}
 				if (isTimeoutFailure) {

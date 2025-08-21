@@ -1,7 +1,6 @@
 /**
  * Provides extensible support for initializing databases through scripts.
  */
-@NullMarked
+@org.springframework.lang.NonNullApi
+@org.springframework.lang.NonNullFields
 package org.springframework.r2dbc.connection.init;
-
-import org.jspecify.annotations.NullMarked;

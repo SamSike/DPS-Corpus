@@ -29,5 +29,4 @@ public final class MyConverter {
     public static MyFoo toFoo(String name) {
         return new MyFoo(name);
     }
-
 }

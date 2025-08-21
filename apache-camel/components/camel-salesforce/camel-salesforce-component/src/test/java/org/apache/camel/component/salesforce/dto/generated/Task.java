@@ -24,6 +24,7 @@ import org.apache.camel.component.salesforce.api.dto.AbstractSObjectBase;
 /**
  * Salesforce DTO for SObject Task
  */
+//CHECKSTYLE:OFF
 public class Task extends AbstractSObjectBase {
 
     public Task() {
@@ -66,3 +67,4 @@ public class Task extends AbstractSObjectBase {
         this.What = What;
     }
 }
+//CHECKSTYLE:ON

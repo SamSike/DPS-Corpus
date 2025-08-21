@@ -75,10 +75,10 @@ class RouteTemplatePreconditionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 routeTemplate("myTemplateWithPrecondition")
                         .templateParameter("protocol")
                         .from("direct:in").precondition("'{{protocol}}' == 'json'")

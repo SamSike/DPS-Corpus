@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.WebRequest;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.fail;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
@@ -51,7 +53,10 @@ import static org.springframework.http.HttpHeaders.VARY;
  *
  * @author Rossen Stoyanchev
  */
-class HeaderAssertionTests {
+public class HeaderAssertionTests {
+
+	private static final String ERROR_MESSAGE = "Should have thrown an AssertionError";
+
 
 	private String now;
 
@@ -65,7 +70,7 @@ class HeaderAssertionTests {
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		this.dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 		this.dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 		this.now = dateFormat.format(new Date(this.currentTime));
@@ -78,7 +83,7 @@ class HeaderAssertionTests {
 
 
 	@Test
-	void stringWithCorrectResponseHeaderValue() {
+	public void stringWithCorrectResponseHeaderValue() {
 		testClient.get().uri("/persons/1").header(IF_MODIFIED_SINCE, minuteAgo)
 				.exchange()
 				.expectStatus().isOk()
@@ -86,7 +91,7 @@ class HeaderAssertionTests {
 	}
 
 	@Test
-	void stringWithMatcherAndCorrectResponseHeaderValue() {
+	public void stringWithMatcherAndCorrectResponseHeaderValue() {
 		testClient.get().uri("/persons/1").header(IF_MODIFIED_SINCE, minuteAgo)
 				.exchange()
 				.expectStatus().isOk()
@@ -94,7 +99,7 @@ class HeaderAssertionTests {
 	}
 
 	@Test
-	void multiStringHeaderValue() {
+	public void multiStringHeaderValue() {
 		testClient.get().uri("/persons/1")
 				.exchange()
 				.expectStatus().isOk()
@@ -102,7 +107,7 @@ class HeaderAssertionTests {
 	}
 
 	@Test
-	void multiStringHeaderValueWithMatchers() {
+	public void multiStringHeaderValueWithMatchers() {
 		testClient.get().uri("/persons/1")
 				.exchange()
 				.expectStatus().isOk()
@@ -110,7 +115,7 @@ class HeaderAssertionTests {
 	}
 
 	@Test
-	void dateValueWithCorrectResponseHeaderValue() {
+	public void dateValueWithCorrectResponseHeaderValue() {
 		testClient.get().uri("/persons/1")
 				.header(IF_MODIFIED_SINCE, minuteAgo)
 				.exchange()
@@ -119,7 +124,7 @@ class HeaderAssertionTests {
 	}
 
 	@Test
-	void longValueWithCorrectResponseHeaderValue() {
+	public void longValueWithCorrectResponseHeaderValue() {
 		testClient.get().uri("/persons/1")
 				.exchange()
 				.expectStatus().isOk()
@@ -127,7 +132,7 @@ class HeaderAssertionTests {
 	}
 
 	@Test
-	void stringWithMissingResponseHeader() {
+	public void stringWithMissingResponseHeader() {
 		testClient.get().uri("/persons/1")
 				.header(IF_MODIFIED_SINCE, now)
 				.exchange()
@@ -136,7 +141,7 @@ class HeaderAssertionTests {
 	}
 
 	@Test
-	void stringWithMatcherAndMissingResponseHeader() {
+	public void stringWithMatcherAndMissingResponseHeader() {
 		testClient.get().uri("/persons/1").header(IF_MODIFIED_SINCE, now)
 				.exchange()
 				.expectStatus().isNotModified()
@@ -144,18 +149,25 @@ class HeaderAssertionTests {
 	}
 
 	@Test
-	void longValueWithMissingResponseHeader() {
-		String headerName = "X-Custom-Header";
-		assertThatExceptionOfType(AssertionError.class).isThrownBy(() ->
-					testClient.get().uri("/persons/1").header(IF_MODIFIED_SINCE, now)
-							.exchange()
-							.expectStatus().isNotModified()
-							.expectHeader().valueEquals(headerName, 99L))
-				.withMessage("Response does not contain header '%s'", headerName);
+	public void longValueWithMissingResponseHeader() {
+		try {
+			testClient.get().uri("/persons/1").header(IF_MODIFIED_SINCE, now)
+					.exchange()
+					.expectStatus().isNotModified()
+					.expectHeader().valueEquals("X-Custom-Header", 99L);
+
+			fail(ERROR_MESSAGE);
+		}
+		catch (AssertionError err) {
+			if (ERROR_MESSAGE.equals(err.getMessage())) {
+				throw err;
+			}
+			assertThat(err.getMessage()).startsWith("Response does not contain header 'X-Custom-Header'");
+		}
 	}
 
 	@Test
-	void exists() {
+	public void exists() {
 		testClient.get().uri("/persons/1")
 				.exchange()
 				.expectStatus().isOk()
@@ -163,7 +175,7 @@ class HeaderAssertionTests {
 	}
 
 	@Test
-	void existsFail() {
+	public void existsFail() {
 		assertThatExceptionOfType(AssertionError.class).isThrownBy(() ->
 				testClient.get().uri("/persons/1")
 						.exchange()
@@ -172,7 +184,7 @@ class HeaderAssertionTests {
 	}
 
 	@Test
-	void doesNotExist() {
+	public void doesNotExist() {
 		testClient.get().uri("/persons/1")
 				.exchange()
 				.expectStatus().isOk()
@@ -180,7 +192,7 @@ class HeaderAssertionTests {
 	}
 
 	@Test
-	void doesNotExistFail() {
+	public void doesNotExistFail() {
 		assertThatExceptionOfType(AssertionError.class).isThrownBy(() ->
 				testClient.get().uri("/persons/1")
 						.exchange()
@@ -189,7 +201,7 @@ class HeaderAssertionTests {
 	}
 
 	@Test
-	void longValueWithIncorrectResponseHeaderValue() {
+	public void longValueWithIncorrectResponseHeaderValue() {
 		assertThatExceptionOfType(AssertionError.class).isThrownBy(() ->
 				testClient.get().uri("/persons/1")
 						.exchange()
@@ -198,7 +210,7 @@ class HeaderAssertionTests {
 	}
 
 	@Test
-	void stringWithMatcherAndIncorrectResponseHeaderValue() {
+	public void stringWithMatcherAndIncorrectResponseHeaderValue() {
 		long secondLater = this.currentTime + 1000;
 		String expected = this.dateFormat.format(new Date(secondLater));
 		assertIncorrectResponseHeader(spec -> spec.expectHeader().valueEquals(LAST_MODIFIED, expected), expected);
@@ -210,13 +222,30 @@ class HeaderAssertionTests {
 	}
 
 	private void assertIncorrectResponseHeader(Consumer<WebTestClient.ResponseSpec> assertions, String expected) {
-		WebTestClient.ResponseSpec spec = testClient.get().uri("/persons/1")
-				.header(IF_MODIFIED_SINCE, minuteAgo)
-				.exchange()
-				.expectStatus().isOk();
-		assertThatExceptionOfType(AssertionError.class)
-				.isThrownBy(() -> assertions.accept(spec))
-				.withMessageContainingAll("Response header '" + LAST_MODIFIED + "'", expected, this.now);
+		try {
+			WebTestClient.ResponseSpec spec = testClient.get().uri("/persons/1")
+					.header(IF_MODIFIED_SINCE, minuteAgo)
+					.exchange()
+					.expectStatus().isOk();
+
+			assertions.accept(spec);
+
+			fail(ERROR_MESSAGE);
+		}
+		catch (AssertionError err) {
+			if (ERROR_MESSAGE.equals(err.getMessage())) {
+				throw err;
+			}
+			assertMessageContains(err, "Response header '" + LAST_MODIFIED + "'");
+			assertMessageContains(err, expected);
+			assertMessageContains(err, this.now);
+		}
+	}
+
+	private void assertMessageContains(AssertionError error, String expected) {
+		assertThat(error.getMessage().contains(expected))
+				.as("Failure message should contain [" + expected + "], actual is [" + error.getMessage() + "]")
+				.isTrue();
 	}
 
 

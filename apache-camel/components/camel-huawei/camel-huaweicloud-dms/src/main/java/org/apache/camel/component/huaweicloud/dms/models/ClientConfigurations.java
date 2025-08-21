@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.huaweicloud.dms.models;
 
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -37,7 +36,7 @@ public class ClientConfigurations {
     private String vpcId;
     private String securityGroupId;
     private String subnetId;
-    private String availableZones;
+    private List<String> availableZones;
     private String productId;
     private String kafkaManagerUser;
     private String kafkaManagerPassword;
@@ -150,19 +149,11 @@ public class ClientConfigurations {
         this.subnetId = subnetId;
     }
 
-    public String getAvailableZones() {
+    public List<String> getAvailableZones() {
         return availableZones;
     }
 
-    public Collection<String> getAvailableZonesAsList() {
-        if (availableZones != null) {
-            return List.of(availableZones.split(","));
-        } else {
-            return null;
-        }
-    }
-
-    public void setAvailableZones(String availableZones) {
+    public void setAvailableZones(List<String> availableZones) {
         this.availableZones = availableZones;
     }
 

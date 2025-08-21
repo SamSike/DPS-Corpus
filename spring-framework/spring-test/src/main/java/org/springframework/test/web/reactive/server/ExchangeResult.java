@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,22 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.client.reactive.ClientHttpRequest;
 import org.springframework.http.client.reactive.ClientHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.MultiValueMap;
 
@@ -44,13 +44,12 @@ import org.springframework.util.MultiValueMap;
  * {@link WebTestClient}.
  *
  * <p>Note that a decoded response body is not exposed at this level since the
- * body may not have been decoded and consumed yet. Subtypes
+ * body may not have been decoded and consumed yet. Sub-types
  * {@link EntityExchangeResult} and {@link FluxExchangeResult} provide access
  * to a decoded response entity and a decoded (but not consumed) response body
  * respectively.
  *
  * @author Rossen Stoyanchev
- * @author Sam Brannen
  * @since 5.0
  * @see EntityExchangeResult
  * @see FluxExchangeResult
@@ -59,8 +58,8 @@ public class ExchangeResult {
 
 	private static final Log logger = LogFactory.getLog(ExchangeResult.class);
 
-	private static final List<MediaType> PRINTABLE_MEDIA_TYPES = List.of(
-			MediaType.parseMediaType("application/*+json"), MediaType.APPLICATION_XML,
+	private static final List<MediaType> PRINTABLE_MEDIA_TYPES = Arrays.asList(
+			MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML,
 			MediaType.parseMediaType("text/*"), MediaType.APPLICATION_FORM_URLENCODED);
 
 
@@ -74,11 +73,13 @@ public class ExchangeResult {
 
 	private final Duration timeout;
 
-	private final @Nullable String uriTemplate;
+	@Nullable
+	private final String uriTemplate;
 
-	private final @Nullable Object mockServerResult;
+	@Nullable
+	private final Object mockServerResult;
 
-	/** Ensure single logging, for example, for expectAll. */
+	/** Ensure single logging, e.g. for expectAll. */
 	private boolean diagnosticsLogged;
 
 
@@ -144,7 +145,8 @@ public class ExchangeResult {
 	/**
 	 * Return the original URI template used to prepare the request, if any.
 	 */
-	public @Nullable String getUriTemplate() {
+	@Nullable
+	public String getUriTemplate() {
 		return this.uriTemplate;
 	}
 
@@ -159,17 +161,28 @@ public class ExchangeResult {
 	 * Return the raw request body content written through the request.
 	 * <p><strong>Note:</strong> If the request content has not been consumed
 	 * for any reason yet, use of this method will trigger consumption.
-	 * @throws IllegalStateException if the request body has not been fully written.
+	 * @throws IllegalStateException if the request body is not been fully written.
 	 */
-	public byte @Nullable [] getRequestBodyContent() {
+	@Nullable
+	public byte[] getRequestBodyContent() {
 		return this.requestBody.block(this.timeout);
 	}
 
+
 	/**
-	 * Return the HTTP status code as an {@link HttpStatusCode} value.
+	 * Return the HTTP status code as an {@link HttpStatus} enum value.
 	 */
-	public HttpStatusCode getStatus() {
+	public HttpStatus getStatus() {
 		return this.response.getStatusCode();
+	}
+
+	/**
+	 * Return the HTTP status code (potentially non-standard and not resolvable
+	 * through the {@link HttpStatus} enum) as an integer.
+	 * @since 5.1.10
+	 */
+	public int getRawStatusCode() {
+		return this.response.getRawStatusCode();
 	}
 
 	/**
@@ -190,9 +203,10 @@ public class ExchangeResult {
 	 * Return the raw request body content written to the response.
 	 * <p><strong>Note:</strong> If the response content has not been consumed
 	 * yet, use of this method will trigger consumption.
-	 * @throws IllegalStateException if the response has not been fully read.
+	 * @throws IllegalStateException if the response is not been fully read.
 	 */
-	public byte @Nullable [] getResponseBodyContent() {
+	@Nullable
+	public byte[] getResponseBodyContent() {
 		return this.responseBody.block(this.timeout);
 	}
 
@@ -202,7 +216,8 @@ public class ExchangeResult {
 	 * @since 5.3
 	 * @see org.springframework.test.web.servlet.client.MockMvcWebTestClient#resultActionsFor(ExchangeResult)
 	 */
-	public @Nullable Object getMockServerResult() {
+	@Nullable
+	public Object getMockServerResult() {
 		return this.mockServerResult;
 	}
 
@@ -233,28 +248,21 @@ public class ExchangeResult {
 				"\n" +
 				formatBody(getRequestHeaders().getContentType(), this.requestBody) + "\n" +
 				"\n" +
-				"< " + formatStatus(getStatus()) + "\n" +
+				"< " + getStatus() + " " + getStatus().getReasonPhrase() + "\n" +
 				"< " + formatHeaders(getResponseHeaders(), "\n< ") + "\n" +
 				"\n" +
 				formatBody(getResponseHeaders().getContentType(), this.responseBody) +"\n" +
 				formatMockServerResult();
 	}
 
-	private String formatStatus(HttpStatusCode statusCode) {
-		String result = statusCode.toString();
-		if (statusCode instanceof HttpStatus status) {
-			result += " " + status.getReasonPhrase();
-		}
-		return result;
-	}
-
 	private String formatHeaders(HttpHeaders headers, String delimiter) {
-		return headers.headerSet().stream()
+		return headers.entrySet().stream()
 				.map(entry -> entry.getKey() + ": " + entry.getValue())
 				.collect(Collectors.joining(delimiter));
 	}
 
-	private @Nullable String formatBody(@Nullable MediaType contentType, Mono<byte[]> body) {
+	@Nullable
+	private String formatBody(@Nullable MediaType contentType, Mono<byte[]> body) {
 		return body
 				.map(bytes -> {
 					if (contentType == null) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,13 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.Map;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.core.AbstractMessageSendingTemplate;
 import org.springframework.messaging.handler.DestinationPatternsMessageCondition;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.handler.annotation.support.DestinationVariableMethodArgumentResolver;
@@ -37,6 +35,7 @@ import org.springframework.messaging.handler.invocation.HandlerMethodReturnValue
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.SimpMessageType;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.user.DestinationUserNameProvider;
 import org.springframework.messaging.support.MessageHeaderInitializer;
@@ -69,9 +68,10 @@ public class SendToMethodReturnValueHandler implements HandlerMethodReturnValueH
 
 	private String defaultUserDestinationPrefix = "/queue";
 
-	private final PropertyPlaceholderHelper placeholderHelper = new PropertyPlaceholderHelper("{", "}", null, null, false);
+	private PropertyPlaceholderHelper placeholderHelper = new PropertyPlaceholderHelper("{", "}", null, false);
 
-	private @Nullable MessageHeaderInitializer headerInitializer;
+	@Nullable
+	private MessageHeaderInitializer headerInitializer;
 
 
 	public SendToMethodReturnValueHandler(SimpMessageSendingOperations messagingTemplate, boolean annotationRequired) {
@@ -129,7 +129,8 @@ public class SendToMethodReturnValueHandler implements HandlerMethodReturnValueH
 	/**
 	 * Return the configured header initializer.
 	 */
-	public @Nullable MessageHeaderInitializer getHeaderInitializer() {
+	@Nullable
+	public MessageHeaderInitializer getHeaderInitializer() {
 		return this.headerInitializer;
 	}
 
@@ -207,11 +208,12 @@ public class SendToMethodReturnValueHandler implements HandlerMethodReturnValueH
 				new DestinationHelper(headers, m1, m2) : new DestinationHelper(headers, c1, c2));
 	}
 
-	protected @Nullable String getUserName(Message<?> message, MessageHeaders headers) {
+	@Nullable
+	protected String getUserName(Message<?> message, MessageHeaders headers) {
 		Principal principal = SimpMessageHeaderAccessor.getUser(headers);
 		if (principal != null) {
-			return (principal instanceof DestinationUserNameProvider provider ?
-					provider.getDestinationUserName() : principal.getName());
+			return (principal instanceof DestinationUserNameProvider ?
+					((DestinationUserNameProvider) principal).getDestinationUserName() : principal.getName());
 		}
 		return null;
 	}
@@ -242,7 +244,7 @@ public class SendToMethodReturnValueHandler implements HandlerMethodReturnValueH
 		if (sessionId != null) {
 			headerAccessor.setSessionId(sessionId);
 		}
-		headerAccessor.setHeader(AbstractMessageSendingTemplate.CONVERSION_HINT_HEADER, returnType);
+		headerAccessor.setHeader(SimpMessagingTemplate.CONVERSION_HINT_HEADER, returnType);
 		headerAccessor.setLeaveMutable(true);
 		return headerAccessor.getMessageHeaders();
 	}
@@ -258,9 +260,11 @@ public class SendToMethodReturnValueHandler implements HandlerMethodReturnValueH
 
 		private final PlaceholderResolver placeholderResolver;
 
-		private final @Nullable SendTo sendTo;
+		@Nullable
+		private final SendTo sendTo;
 
-		private final @Nullable SendToUser sendToUser;
+		@Nullable
+		private final SendToUser sendToUser;
 
 
 		public DestinationHelper(MessageHeaders headers, @Nullable SendToUser sendToUser, @Nullable SendTo sendTo) {
@@ -276,11 +280,13 @@ public class SendToMethodReturnValueHandler implements HandlerMethodReturnValueH
 			return (Map<String, String>) headers.getOrDefault(name, Collections.emptyMap());
 		}
 
-		public @Nullable SendTo getSendTo() {
+		@Nullable
+		public SendTo getSendTo() {
 			return this.sendTo;
 		}
 
-		public @Nullable SendToUser getSendToUser() {
+		@Nullable
+		public SendToUser getSendToUser() {
 			return this.sendToUser;
 		}
 

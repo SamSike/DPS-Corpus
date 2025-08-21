@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 package org.springframework.test.context.web.socket;
 
 import jakarta.servlet.ServletContext;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextCustomizer;
 import org.springframework.test.context.MergedContextConfiguration;
 import org.springframework.web.context.WebApplicationContext;
@@ -36,7 +36,8 @@ class MockServerContainerContextCustomizer implements ContextCustomizer {
 
 	@Override
 	public void customizeContext(ConfigurableApplicationContext context, MergedContextConfiguration mergedConfig) {
-		if (context instanceof WebApplicationContext wac) {
+		if (context instanceof WebApplicationContext) {
+			WebApplicationContext wac = (WebApplicationContext) context;
 			ServletContext sc = wac.getServletContext();
 			if (sc != null) {
 				sc.setAttribute("jakarta.websocket.server.ServerContainer", new MockServerContainer());

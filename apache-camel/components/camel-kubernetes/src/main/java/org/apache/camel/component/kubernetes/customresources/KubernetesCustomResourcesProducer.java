@@ -91,8 +91,8 @@ public class KubernetesCustomResourcesProducer extends DefaultProducer {
                 doCreate(exchange, namespace);
                 break;
 
-            case KubernetesOperations.UPDATE_CUSTOMRESOURCE:
-                doUpdate(exchange, namespace);
+            case KubernetesOperations.REPLACE_CUSTOMRESOURCE:
+                doReplace(exchange, namespace);
                 break;
 
             default:
@@ -141,7 +141,7 @@ public class KubernetesCustomResourcesProducer extends DefaultProducer {
     protected void doGet(Exchange exchange, String namespaceName) {
         String customResourceName = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_CRD_INSTANCE_NAME, String.class);
         if (ObjectHelper.isEmpty(customResourceName)) {
-            throw new IllegalArgumentException("Get a specific custom resource require specify a custom resource name");
+            throw new IllegalArgumentException("Get a specific Deployment require specify a Deployment name");
         }
         JsonObject customResourceJSON = new JsonObject();
         try {
@@ -166,8 +166,8 @@ public class KubernetesCustomResourcesProducer extends DefaultProducer {
     protected void doDelete(Exchange exchange, String namespaceName) {
         String customResourceName = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_CRD_INSTANCE_NAME, String.class);
         if (ObjectHelper.isEmpty(customResourceName)) {
-            LOG.error("Deleting a specific custom resource require specify a custom resource name");
-            throw new IllegalArgumentException("Deleting a specific custom resource require specify a custom resource name");
+            LOG.error("Deleting a specific deployment require specify a deployment name");
+            throw new IllegalArgumentException("Deleting a specific deployment require specify a deployment name");
         }
 
         try {
@@ -187,15 +187,15 @@ public class KubernetesCustomResourcesProducer extends DefaultProducer {
 
     }
 
-    protected void doUpdate(Exchange exchange, String namespaceName) {
-        doCreateOrUpdate(exchange, namespaceName, Resource::update);
+    protected void doReplace(Exchange exchange, String namespaceName) {
+        doCreateOrReplace(exchange, namespaceName, Resource::replace);
     }
 
     protected void doCreate(Exchange exchange, String namespaceName) {
-        doCreateOrUpdate(exchange, namespaceName, Resource::create);
+        doCreateOrReplace(exchange, namespaceName, Resource::create);
     }
 
-    private void doCreateOrUpdate(
+    private void doCreateOrReplace(
             Exchange exchange, String namespaceName,
             Function<Resource<GenericKubernetesResource>, GenericKubernetesResource> operation) {
         String customResourceInstance = exchange.getIn().getHeader(KubernetesConstants.KUBERNETES_CRD_INSTANCE, String.class);

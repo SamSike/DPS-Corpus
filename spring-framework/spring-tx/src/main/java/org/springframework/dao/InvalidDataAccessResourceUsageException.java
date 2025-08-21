@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package org.springframework.dao;
 
-import org.jspecify.annotations.Nullable;
-
 /**
  * Root for exceptions thrown when we use a data access resource incorrectly.
  * Thrown for example on specifying bad SQL when using a RDBMS.
@@ -32,7 +30,7 @@ public class InvalidDataAccessResourceUsageException extends NonTransientDataAcc
 	 * Constructor for InvalidDataAccessResourceUsageException.
 	 * @param msg the detail message
 	 */
-	public InvalidDataAccessResourceUsageException(@Nullable String msg) {
+	public InvalidDataAccessResourceUsageException(String msg) {
 		super(msg);
 	}
 
@@ -41,7 +39,7 @@ public class InvalidDataAccessResourceUsageException extends NonTransientDataAcc
 	 * @param msg the detail message
 	 * @param cause the root cause from the data access API in use
 	 */
-	public InvalidDataAccessResourceUsageException(@Nullable String msg, @Nullable Throwable cause) {
+	public InvalidDataAccessResourceUsageException(String msg, Throwable cause) {
 		super(msg, cause);
 	}
 

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -114,6 +114,13 @@ public interface Cursor<R extends Record> extends Fields, Iterable<R>, Formattab
     Result<R> fetch() throws DataAccessException;
 
     /**
+     * @deprecated - 3.10 - [#6363] - Use {@link #fetchNext(int)} instead.
+     */
+    @NotNull
+    @Deprecated(forRemoval = true, since = "3.10")
+    Result<R> fetch(int number) throws DataAccessException;
+
+    /**
      * Fetch the next couple of records from the cursor.
      * <p>
      * This will conveniently close the <code>Cursor</code>, after the last
@@ -199,6 +206,36 @@ public interface Cursor<R extends Record> extends Fields, Iterable<R>, Formattab
     <Z extends Record> Result<Z> fetchInto(Table<Z> table) throws DataAccessException, MappingException;
 
     /**
+     * @deprecated - 3.10 - [#6363] - Use {@link #fetchNext()} instead.
+     */
+    @Nullable
+    @Deprecated(forRemoval = true, since = "3.10")
+    R fetchOne() throws DataAccessException;
+
+    /**
+     * @deprecated - 3.10 - [#6363] - Use {@link #fetchNextInto(RecordHandler)} instead.
+     * @deprecated - 3.15.0 - [#11902] - Use {@link Iterable#forEach(Consumer)}
+     *             based methods, instead.
+     */
+    @NotNull
+    @Deprecated(forRemoval = true, since = "3.10")
+    <H extends RecordHandler<? super R>> H fetchOneInto(H handler) throws DataAccessException;
+
+    /**
+     * @deprecated - 3.10 - [#6363] - Use {@link #fetchNext(RecordMapper)} instead.
+     */
+    @Nullable
+    @Deprecated(forRemoval = true, since = "3.10")
+    <E> E fetchOne(RecordMapper<? super R, E> mapper) throws DataAccessException;
+
+    /**
+     * @deprecated - 3.10 - [#6363] - Use {@link #fetchNextInto(Table)} instead.
+     */
+    @Nullable
+    @Deprecated(forRemoval = true, since = "3.10")
+    <Z extends Record> Z fetchOneInto(Table<Z> table) throws DataAccessException, MappingException;
+
+    /**
      * Fetch the next record from the cursor.
      * <p>
      * This will conveniently close the <code>Cursor</code>, after the last
@@ -234,6 +271,13 @@ public interface Cursor<R extends Record> extends Fields, Iterable<R>, Formattab
     @Deprecated(forRemoval = true, since = "3.15")
     @NotNull
     <H extends RecordHandler<? super R>> H fetchNextInto(H handler) throws DataAccessException;
+
+    /**
+     * @deprecated - 3.10 - [#6363] - Use {@link #fetchNextInto(Class)} instead.
+     */
+    @Nullable
+    @Deprecated(forRemoval = true, since = "3.10")
+    <E> E fetchOneInto(Class<? extends E> type) throws DataAccessException, MappingException;
 
     /**
      * Map the next resulting record onto a custom type.
@@ -286,6 +330,34 @@ public interface Cursor<R extends Record> extends Fields, Iterable<R>, Formattab
      */
     @Nullable
     <Z extends Record> Z fetchNextInto(Table<Z> table) throws DataAccessException, MappingException;
+
+    /**
+     * @deprecated - 3.10 - [#6363] - Use {@link #fetchNextOptional()} instead.
+     */
+    @NotNull
+    @Deprecated(forRemoval = true, since = "3.10")
+    Optional<R> fetchOptional() throws DataAccessException;
+
+    /**
+     * @deprecated - 3.10 - [#6363] - Use {@link #fetchNextOptionalInto(Class)} instead.
+     */
+    @NotNull
+    @Deprecated(forRemoval = true, since = "3.10")
+    <E> Optional<E> fetchOptionalInto(Class<? extends E> type) throws DataAccessException, MappingException;
+
+    /**
+     * @deprecated - 3.10 - [#6363] - Use {@link #fetchNextOptional(RecordMapper)} instead.
+     */
+    @NotNull
+    @Deprecated(forRemoval = true, since = "3.10")
+    <E> Optional<E> fetchOptional(RecordMapper<? super R, E> mapper) throws DataAccessException;
+
+    /**
+     * @deprecated - 3.10 - [#6363] - Use {@link #fetchNextOptionalInto(Table)} instead.
+     */
+    @NotNull
+    @Deprecated(forRemoval = true, since = "3.10")
+    <Z extends Record> Optional<Z> fetchOptionalInto(Table<Z> table) throws DataAccessException, MappingException;
 
     /**
      * Fetch the next record from the cursor.

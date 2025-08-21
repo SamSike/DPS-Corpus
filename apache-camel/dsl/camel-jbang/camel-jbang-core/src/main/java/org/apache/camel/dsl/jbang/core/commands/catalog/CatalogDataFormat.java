@@ -24,7 +24,7 @@ import org.apache.camel.tooling.model.DataFormatModel;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "dataformat",
-                     description = "List data formats from the Camel Catalog", sortOptions = false, showDefaultValues = true)
+                     description = "List data formats from the Camel Catalog")
 public class CatalogDataFormat extends CatalogBaseCommand {
 
     public CatalogDataFormat(CamelJBangMain main) {
@@ -36,19 +36,16 @@ public class CatalogDataFormat extends CatalogBaseCommand {
         List<Row> rows = new ArrayList<>();
         for (String name : catalog.findDataFormatNames()) {
             DataFormatModel model = catalog.dataFormatModel(name);
-            if (model != null) {
-                Row row = new Row();
-                row.name = model.getName();
-                row.title = model.getTitle();
-                row.level = model.getSupportLevel().name();
-                row.since = fixQuarkusSince(model.getFirstVersionShort());
-                row.description = model.getDescription();
-                row.label = model.getLabel() != null ? model.getLabel() : "";
-                row.deprecated = model.isDeprecated();
-                row.nativeSupported = model.isNativeSupported();
-                row.gav = getGAV(model);
-                rows.add(row);
-            }
+            Row row = new Row();
+            row.name = model.getName();
+            row.title = model.getTitle();
+            row.level = model.getSupportLevel().name();
+            row.since = model.getFirstVersionShort();
+            row.description = model.getDescription();
+            row.label = model.getLabel() != null ? model.getLabel() : "";
+            row.deprecated = model.isDeprecated();
+            row.gav = getGAV(model);
+            rows.add(row);
         }
         return rows;
     }

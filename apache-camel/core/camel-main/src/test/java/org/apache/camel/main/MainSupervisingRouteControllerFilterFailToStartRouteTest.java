@@ -34,16 +34,16 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class MainSupervisingRouteControllerFilterFailToStartRouteTest {
 
     @Test
-    public void testMain() {
+    public void testMain() throws Exception {
         // lets make a simple route
         Main main = new Main();
         main.configure().addRoutesBuilder(new MyRoute());
-        main.configure().routeControllerConfig().setEnabled(true);
-        main.configure().routeControllerConfig().setBackOffDelay(250);
-        main.configure().routeControllerConfig().setBackOffMaxAttempts(3);
-        main.configure().routeControllerConfig().setInitialDelay(1000);
-        main.configure().routeControllerConfig().setThreadPoolSize(2);
-        main.configure().routeControllerConfig().setExcludeRoutes("inbox");
+        main.configure().setRouteControllerSuperviseEnabled(true);
+        main.configure().setRouteControllerBackOffDelay(250);
+        main.configure().setRouteControllerBackOffMaxAttempts(3);
+        main.configure().setRouteControllerInitialDelay(1000);
+        main.configure().setRouteControllerThreadPoolSize(2);
+        main.configure().setRouteControllerExcludeRoutes("inbox");
 
         try {
             main.start();
@@ -55,9 +55,9 @@ public class MainSupervisingRouteControllerFilterFailToStartRouteTest {
         main.stop();
     }
 
-    private static class MyRoute extends RouteBuilder {
+    private class MyRoute extends RouteBuilder {
         @Override
-        public void configure() {
+        public void configure() throws Exception {
             getContext().addComponent("jms", new MyJmsComponent());
 
             from("timer:foo").to("mock:foo").routeId("foo");
@@ -70,21 +70,21 @@ public class MainSupervisingRouteControllerFilterFailToStartRouteTest {
         }
     }
 
-    private static class MyJmsComponent extends SedaComponent {
+    private class MyJmsComponent extends SedaComponent {
 
         @Override
-        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) {
+        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
             return new MyJmsEndpoint();
         }
     }
 
-    private static class MyJmsEndpoint extends SedaEndpoint {
+    private class MyJmsEndpoint extends SedaEndpoint {
 
         public MyJmsEndpoint() {
         }
 
         @Override
-        public Consumer createConsumer(Processor processor) {
+        public Consumer createConsumer(Processor processor) throws Exception {
             return new MyJmsConsumer(this, processor);
         }
 
@@ -94,14 +94,14 @@ public class MainSupervisingRouteControllerFilterFailToStartRouteTest {
         }
     }
 
-    private static class MyJmsConsumer extends SedaConsumer {
+    private class MyJmsConsumer extends SedaConsumer {
 
         public MyJmsConsumer(SedaEndpoint endpoint, Processor processor) {
             super(endpoint, processor);
         }
 
         @Override
-        protected void doStart() {
+        protected void doStart() throws Exception {
             throw new IllegalArgumentException("Cannot start");
         }
     }

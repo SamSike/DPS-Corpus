@@ -3,7 +3,9 @@
  * and HtmlUnit.
  * @see org.springframework.test.web.servlet.MockMvc
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.test.web.servlet.htmlunit;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

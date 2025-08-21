@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,44 +34,44 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Rossen Stoyanchev
  * @since 3.1.1
  */
-class ParameterizableViewControllerTests {
+public class ParameterizableViewControllerTests {
 
 	private ParameterizableViewController controller;
 
 	private MockHttpServletRequest request;
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		this.controller = new ParameterizableViewController();
 		this.request = new MockHttpServletRequest("GET", "/");
 	}
 
 	@Test
-	void handleRequestWithViewName() throws Exception {
+	public void handleRequestWithViewName() throws Exception {
 		String viewName = "testView";
 		this.controller.setViewName(viewName);
 		ModelAndView mav = this.controller.handleRequest(this.request, new MockHttpServletResponse());
 		assertThat(mav.getViewName()).isEqualTo(viewName);
-		assertThat(mav.getModel()).isEmpty();
+		assertThat(mav.getModel().isEmpty()).isTrue();
 	}
 
 	@Test
-	void handleRequestWithoutViewName() throws Exception {
+	public void handleRequestWithoutViewName() throws Exception {
 		ModelAndView mav = this.controller.handleRequest(this.request, new MockHttpServletResponse());
 		assertThat(mav.getViewName()).isNull();
-		assertThat(mav.getModel()).isEmpty();
+		assertThat(mav.getModel().isEmpty()).isTrue();
 	}
 
 	@Test
-	void handleRequestWithFlashAttributes() throws Exception {
+	public void handleRequestWithFlashAttributes() throws Exception {
 		this.request.setAttribute(DispatcherServlet.INPUT_FLASH_MAP_ATTRIBUTE, new ModelMap("name", "value"));
 		ModelAndView mav = this.controller.handleRequest(this.request, new MockHttpServletResponse());
-		assertThat(mav.getModel()).hasSize(1);
+		assertThat(mav.getModel().size()).isEqualTo(1);
 		assertThat(mav.getModel().get("name")).isEqualTo("value");
 	}
 
 	@Test
-	void handleRequestHttpOptions() throws Exception {
+	public void handleRequestHttpOptions() throws Exception {
 		this.request.setMethod(HttpMethod.OPTIONS.name());
 		MockHttpServletResponse response = new MockHttpServletResponse();
 		ModelAndView mav = this.controller.handleRequest(this.request, response);

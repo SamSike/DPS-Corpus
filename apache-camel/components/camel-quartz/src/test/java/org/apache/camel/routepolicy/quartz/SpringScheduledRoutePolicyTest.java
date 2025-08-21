@@ -28,11 +28,9 @@ import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.spi.RoutePolicy;
 import org.apache.camel.support.service.ServiceHelper;
-import org.awaitility.Awaitility;
 import org.springframework.context.support.AbstractXmlApplicationContext;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class SpringScheduledRoutePolicyTest {
@@ -56,9 +54,8 @@ public abstract class SpringScheduledRoutePolicyTest {
 
         context.getRouteController().stopRoute("testRoute", 1000, TimeUnit.MILLISECONDS);
 
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(
-                () -> assertSame(ServiceStatus.Started, context.getRouteController().getRouteStatus("testRoute")));
-
+        Thread.sleep(4000);
+        assertSame(ServiceStatus.Started, context.getRouteController().getRouteStatus("testRoute"));
         context.createProducerTemplate().sendBody("direct:start?timeout=1000", "Ready or not, Here, I come");
 
         context.stop();
@@ -68,30 +65,37 @@ public abstract class SpringScheduledRoutePolicyTest {
     public void stopTest() throws Exception {
         setUp();
 
+        boolean consumerStopped = false;
+
         CamelContext context = startRouteWithPolicy("stopPolicy");
 
-        Awaitility.await().atMost(5, TimeUnit.SECONDS).untilAsserted(
-                () -> assertSame(ServiceStatus.Stopped, context.getRouteController().getRouteStatus("testRoute")));
-
-        assertThrows(CamelExecutionException.class,
-                () -> context.createProducerTemplate().sendBody("direct:start?timeout=1000", "Ready or not, Here, I come"));
-
+        Thread.sleep(4000);
+        assertSame(ServiceStatus.Stopped, context.getRouteController().getRouteStatus("testRoute"));
+        try {
+            context.createProducerTemplate().sendBody("direct:start?timeout=1000", "Ready or not, Here, I come");
+        } catch (CamelExecutionException e) {
+            consumerStopped = true;
+        }
         context.stop();
+        assertTrue(consumerStopped);
     }
 
     public void suspendTest() throws Exception {
         setUp();
 
+        boolean consumerSuspended = false;
+
         CamelContext context = startRouteWithPolicy("suspendPolicy");
 
-        // wait for route to suspend
-        Awaitility.await().atMost(5, TimeUnit.SECONDS)
-                .untilAsserted(() -> assertTrue(ServiceHelper.isSuspended(context.getRoute("testRoute").getConsumer())));
-
-        assertThrows(CamelExecutionException.class,
-                () -> context.createProducerTemplate().sendBody("direct:start?timeout=1000", "Ready or not, Here, I come"));
+        Thread.sleep(4000);
+        try {
+            context.createProducerTemplate().sendBody("direct:start?timeout=1000", "Ready or not, Here, I come");
+        } catch (CamelExecutionException e) {
+            consumerSuspended = true;
+        }
 
         context.stop();
+        assertTrue(consumerSuspended);
     }
 
     public void resumeTest() throws Exception {
@@ -104,9 +108,7 @@ public abstract class SpringScheduledRoutePolicyTest {
 
         ServiceHelper.suspendService(context.getRoute("testRoute").getConsumer());
 
-        Awaitility.await().atMost(5, TimeUnit.SECONDS)
-                .untilAsserted(() -> assertTrue(ServiceHelper.isStarted(context.getRoute("testRoute").getConsumer())));
-
+        Thread.sleep(4000);
         context.createProducerTemplate().sendBody("direct:start?timeout=1000", "Ready or not, Here, I come");
 
         context.stop();

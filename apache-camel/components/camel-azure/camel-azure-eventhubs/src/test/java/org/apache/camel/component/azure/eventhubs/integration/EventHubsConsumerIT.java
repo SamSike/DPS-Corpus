@@ -118,7 +118,7 @@ class EventHubsConsumerIT extends CamelTestSupport {
     }
 
     @AfterAll
-    public void cleanup() {
+    public void tearDown() {
         // delete testing container
         containerAsyncClient.delete().block();
     }
@@ -132,7 +132,7 @@ class EventHubsConsumerIT extends CamelTestSupport {
                      + "connectionString=RAW({{connectionString}})"
                      + "&blobContainerName=" + containerName + "&eventPosition=#eventPosition"
                      + "&blobAccountName={{blobAccountName}}&blobAccessKey=RAW({{blobAccessKey}})")
-                        .to(result);
+                             .to(result);
 
             }
         };

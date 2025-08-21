@@ -20,20 +20,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.ConsumerTemplate;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.Processor;
-import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.infra.artemis.services.ArtemisService;
-import org.apache.camel.test.infra.core.CamelContextExtension;
-import org.apache.camel.test.infra.core.DefaultCamelContextExtension;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -41,13 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JmsHeaderFilteringTest extends AbstractJMSTest {
 
-    @Order(2)
-    @RegisterExtension
-    public static CamelContextExtension camelContextExtension = new DefaultCamelContextExtension();
     private static final String IN_FILTER_PATTERN = "(org_apache_camel)[_|a-z|A-Z|0-9]*(test)[_|a-z|A-Z|0-9]*";
-    protected CamelContext context;
-    protected ProducerTemplate template;
-    protected ConsumerTemplate consumer;
 
     private final String componentName = "jms";
     private final String testQueueEndpointA = componentName + ":queue:JmsHeaderFilteringTest.test..a";
@@ -61,8 +48,8 @@ public class JmsHeaderFilteringTest extends AbstractJMSTest {
         errors.expectedMessageCount(0);
 
         template.send(testQueueEndpointA, ExchangePattern.InOnly, exchange -> {
-            exchange.getIn().setHeader("org.foo.jms", 10000);
-            exchange.getIn().setHeader("org.foo.test.jms", 20000);
+            exchange.getIn().setHeader("org.apache.camel.jms", 10000);
+            exchange.getIn().setHeader("org.apache.camel.test.jms", 20000);
             exchange.getIn().setHeader("testheader", 1020);
             exchange.getIn().setHeader("anotherheader", 1030);
             exchange.getIn().setHeader("JMSXAppID", "myApp");
@@ -107,18 +94,6 @@ public class JmsHeaderFilteringTest extends AbstractJMSTest {
         };
     }
 
-    @Override
-    public CamelContextExtension getCamelContextExtension() {
-        return camelContextExtension;
-    }
-
-    @BeforeEach
-    void setUpRequirements() {
-        context = camelContextExtension.getContext();
-        template = camelContextExtension.getProducerTemplate();
-        consumer = camelContextExtension.getConsumerTemplate();
-    }
-
     class OutHeaderChecker implements Processor {
 
         @Override
@@ -132,10 +107,10 @@ public class JmsHeaderFilteringTest extends AbstractJMSTest {
             assertNull(message.getJmsMessage().getObjectProperty("anotherheader"));
 
             // notice dots are replaced by '_DOT_' when it is copied to the jms message properties
-            assertEquals(10000, message.getJmsMessage().getObjectProperty("org_DOT_foo_DOT_jms"));
+            assertEquals(10000, message.getJmsMessage().getObjectProperty("org_DOT_apache_DOT_camel_DOT_jms"));
 
             // like testheader, org.apache.camel.test.jms will be filtered by the "in" filter
-            assertEquals(20000, message.getJmsMessage().getObjectProperty("org_DOT_foo_DOT_test_DOT_jms"));
+            assertEquals(20000, message.getJmsMessage().getObjectProperty("org_DOT_apache_DOT_camel_DOT_test_DOT_jms"));
 
             // should be filtered by default
             assertNull(message.getJmsMessage().getStringProperty("JMSXAppID"));
@@ -157,10 +132,10 @@ public class JmsHeaderFilteringTest extends AbstractJMSTest {
             assertNull(exchange.getIn().getHeader("anotherheader"));
 
             // it should not been filtered out
-            assertEquals(10000, exchange.getIn().getHeader("org.foo.jms"));
+            assertEquals(10000, exchange.getIn().getHeader("org.apache.camel.jms"));
 
             // filtered out by "in" filter
-            assertNull(exchange.getIn().getHeader("org_DOT_foo_DOT_test_DOT_jms"));
+            assertNull(exchange.getIn().getHeader("org_DOT_apache_DOT_camel_DOT_test_DOT_jms"));
 
             // should be filtered by default
             assertNull(exchange.getIn().getHeader("JMSXAppID"));

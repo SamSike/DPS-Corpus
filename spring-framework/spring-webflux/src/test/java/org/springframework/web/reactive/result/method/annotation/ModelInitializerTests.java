@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,9 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Single;
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
@@ -32,6 +32,7 @@ import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.core.MethodIntrospector;
 import org.springframework.core.ReactiveAdapterRegistry;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.ui.Model;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.validation.Validator;
@@ -45,7 +46,6 @@ import org.springframework.web.bind.support.ConfigurableWebBindingInitializer;
 import org.springframework.web.bind.support.WebBindingInitializer;
 import org.springframework.web.bind.support.WebExchangeDataBinder;
 import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.reactive.accept.RequestedContentTypeResolverBuilder;
 import org.springframework.web.reactive.result.method.SyncInvocableHandlerMethod;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebSession;
@@ -58,11 +58,11 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests for {@link ModelInitializer}.
+ * Unit tests for {@link ModelInitializer}.
  *
  * @author Rossen Stoyanchev
  */
-class ModelInitializerTests {
+public class ModelInitializerTests {
 
 	private static final Duration TIMEOUT = Duration.ofMillis(5000);
 
@@ -73,24 +73,22 @@ class ModelInitializerTests {
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		ReactiveAdapterRegistry adapterRegistry = ReactiveAdapterRegistry.getSharedInstance();
 
 		ArgumentResolverConfigurer resolverConfigurer = new ArgumentResolverConfigurer();
 		resolverConfigurer.addCustomResolver(new ModelMethodArgumentResolver(adapterRegistry));
 
 		ControllerMethodResolver methodResolver = new ControllerMethodResolver(
-				resolverConfigurer, adapterRegistry, new StaticApplicationContext(),
-				new RequestedContentTypeResolverBuilder().build(), Collections.emptyList(),
-				null, null, null);
+				resolverConfigurer, adapterRegistry, new StaticApplicationContext(), Collections.emptyList());
 
 		this.modelInitializer = new ModelInitializer(methodResolver, adapterRegistry);
 	}
 
 
 	@Test
-	void initBinderMethod() {
-		Validator validator = mock();
+	public void initBinderMethod() {
+		Validator validator = mock(Validator.class);
 
 		TestController controller = new TestController();
 		controller.setValidator(validator);
@@ -106,7 +104,7 @@ class ModelInitializerTests {
 
 	@SuppressWarnings("unchecked")
 	@Test
-	void modelAttributeMethods() {
+	public void modelAttributeMethods() {
 		TestController controller = new TestController();
 		InitBinderBindingContext context = getBindingContext(controller);
 
@@ -115,7 +113,7 @@ class ModelInitializerTests {
 		this.modelInitializer.initModel(handlerMethod, context, this.exchange).block(TIMEOUT);
 
 		Map<String, Object> model = context.getModel().asMap();
-		assertThat(model).hasSize(5);
+		assertThat(model.size()).isEqualTo(5);
 
 		Object value = model.get("bean");
 		assertThat(((TestBean) value).getName()).isEqualTo("Bean");
@@ -134,7 +132,7 @@ class ModelInitializerTests {
 	}
 
 	@Test
-	void saveModelAttributeToSession() {
+	public void saveModelAttributeToSession() {
 		TestController controller = new TestController();
 		InitBinderBindingContext context = getBindingContext(controller);
 
@@ -144,15 +142,15 @@ class ModelInitializerTests {
 
 		WebSession session = this.exchange.getSession().block(Duration.ZERO);
 		assertThat(session).isNotNull();
-		assertThat(session.getAttributes()).isEmpty();
+		assertThat(session.getAttributes().size()).isEqualTo(0);
 
-		context.updateModel(this.exchange);
-		assertThat(session.getAttributes()).hasSize(1);
+		context.saveModel();
+		assertThat(session.getAttributes().size()).isEqualTo(1);
 		assertThat(((TestBean) session.getRequiredAttribute("bean")).getName()).isEqualTo("Bean");
 	}
 
 	@Test
-	void retrieveModelAttributeFromSession() {
+	public void retrieveModelAttributeFromSession() {
 		WebSession session = this.exchange.getSession().block(TIMEOUT);
 		assertThat(session).isNotNull();
 
@@ -166,13 +164,13 @@ class ModelInitializerTests {
 		HandlerMethod handlerMethod = new HandlerMethod(controller, method);
 		this.modelInitializer.initModel(handlerMethod, context, this.exchange).block(TIMEOUT);
 
-		context.updateModel(this.exchange);
-		assertThat(session.getAttributes()).hasSize(1);
+		context.saveModel();
+		assertThat(session.getAttributes().size()).isEqualTo(1);
 		assertThat(((TestBean) session.getRequiredAttribute("bean")).getName()).isEqualTo("Session Bean");
 	}
 
 	@Test
-	void requiredSessionAttributeMissing() {
+	public void requiredSessionAttributeMissing() {
 		TestController controller = new TestController();
 		InitBinderBindingContext context = getBindingContext(controller);
 
@@ -184,7 +182,7 @@ class ModelInitializerTests {
 	}
 
 	@Test
-	void clearModelAttributeFromSession() {
+	public void clearModelAttributeFromSession() {
 		WebSession session = this.exchange.getSession().block(TIMEOUT);
 		assertThat(session).isNotNull();
 
@@ -199,9 +197,9 @@ class ModelInitializerTests {
 		this.modelInitializer.initModel(handlerMethod, context, this.exchange).block(TIMEOUT);
 
 		context.getSessionStatus().setComplete();
-		context.updateModel(this.exchange);
+		context.saveModel();
 
-		assertThat(session.getAttributes()).isEmpty();
+		assertThat(session.getAttributes().size()).isEqualTo(0);
 	}
 
 
@@ -210,11 +208,10 @@ class ModelInitializerTests {
 				MethodIntrospector.selectMethods(controller.getClass(), BINDER_METHODS)
 						.stream()
 						.map(method -> new SyncInvocableHandlerMethod(controller, method))
-						.toList();
+						.collect(Collectors.toList());
 
 		WebBindingInitializer bindingInitializer = new ConfigurableWebBindingInitializer();
-		return new InitBinderBindingContext(
-				bindingInitializer, binderMethods, false, ReactiveAdapterRegistry.getSharedInstance());
+		return new InitBinderBindingContext(bindingInitializer, binderMethods);
 	}
 
 
@@ -222,7 +219,8 @@ class ModelInitializerTests {
 	@SessionAttributes({"bean", "missing-bean"})
 	private static class TestController {
 
-		private @Nullable Validator validator;
+		@Nullable
+		private Validator validator;
 
 
 		void setValidator(Validator validator) {

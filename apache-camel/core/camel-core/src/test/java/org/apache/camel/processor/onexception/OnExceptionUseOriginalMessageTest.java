@@ -68,10 +68,10 @@ public class OnExceptionUseOriginalMessageTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
 
                 onException(IllegalArgumentException.class).useOriginalMessage().handled(true).to("seda:test");
 
@@ -86,7 +86,7 @@ public class OnExceptionUseOriginalMessageTest extends ContextTestSupport {
     public static class MyProcessor implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             String request = exchange.getIn().getBody(String.class);
             if (!request.equals(HELLO_WORLD)) {
                 exchange.getIn().setBody(HELLO_WORLD);

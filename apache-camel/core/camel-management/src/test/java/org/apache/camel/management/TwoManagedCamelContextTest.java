@@ -37,9 +37,9 @@ public class TwoManagedCamelContextTest extends TestSupport {
     private CamelContext camel1;
     private CamelContext camel2;
 
-    protected CamelContext createCamelContext(String name) {
+    protected CamelContext createCamelContext(String name) throws Exception {
         DefaultCamelContext context = new DefaultCamelContext();
-        context.getCamelContextExtension().setName(name);
+        context.setName(name);
         return context;
     }
 

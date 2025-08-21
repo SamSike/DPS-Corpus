@@ -32,7 +32,7 @@ class MainTemplatedRoutePlaceholderTest {
         Main main = new Main();
         main.configure().addRoutesBuilder(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 routeTemplate("appendtobody")
                         .templateParameter("append")
                         .templateParameter("in")
@@ -51,7 +51,7 @@ class MainTemplatedRoutePlaceholderTest {
         main.start();
 
         CamelContext context = main.getCamelContext();
-        assertEquals(1, ((ModelCamelContext) context).getRouteDefinitions().size());
+        assertEquals(1, context.adapt(ModelCamelContext.class).getRouteDefinitions().size());
 
         MockEndpoint mock = context.getEndpoint("mock:out", MockEndpoint.class);
         mock.expectedBodiesReceived("Hello-appendvalue");

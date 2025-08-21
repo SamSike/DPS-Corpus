@@ -145,9 +145,6 @@ public class TagData {
 
     @Override
     public boolean equals(Object tag) {
-        if (!(tag instanceof TagData)) {
-            return false;
-        }
         return value != null
                 ? ((TagData) tag).getValue().equals(value)
                         && ((TagData) tag).getTagName().equals(tagName)

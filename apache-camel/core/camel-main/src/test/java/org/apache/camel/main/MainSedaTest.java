@@ -22,13 +22,13 @@ import org.apache.camel.component.seda.SedaComponent;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MainSedaTest {
 
     @Test
-    public void testSedaMain() {
+    public void testSedaMain() throws Exception {
         Main main = new Main();
         main.configure().addRoutesBuilder(new MyRouteBuilder());
         main.addProperty("camel.component.seda.defaultQueueFactory.counter", "123");
@@ -40,7 +40,7 @@ public class MainSedaTest {
 
         SedaComponent seda = camelContext.getComponent("seda", SedaComponent.class);
         assertNotNull(seda);
-        assertInstanceOf(MySedaBlockingQueueFactory.class, seda.getDefaultQueueFactory());
+        assertTrue(seda.getDefaultQueueFactory() instanceof MySedaBlockingQueueFactory);
         MySedaBlockingQueueFactory myBQF = (MySedaBlockingQueueFactory) seda.getDefaultQueueFactory();
         assertEquals(123, myBQF.getCounter());
 
@@ -49,7 +49,7 @@ public class MainSedaTest {
 
     public static class MyRouteBuilder extends RouteBuilder {
         @Override
-        public void configure() {
+        public void configure() throws Exception {
             from("direct:start").to("seda:foo");
         }
     }

@@ -34,7 +34,7 @@ public class MappedSchema
     implements Serializable, Cloneable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32100L;
+    private final static long serialVersionUID = 31700L;
     protected String input;
     @XmlElement(type = String.class)
     @XmlJavaTypeAdapter(RegexAdapter.class)
@@ -43,9 +43,6 @@ public class MappedSchema
     @XmlElementWrapper(name = "tables")
     @XmlElement(name = "table")
     protected List<MappedTable> tables;
-    @XmlElementWrapper(name = "udts")
-    @XmlElement(name = "udt")
-    protected List<MappedUDT> udts;
 
     /**
      * The input schema name as defined in {@link org.jooq.Schema#getName()}
@@ -124,17 +121,6 @@ public class MappedSchema
         this.tables = tables;
     }
 
-    public List<MappedUDT> getUdts() {
-        if (udts == null) {
-            udts = new ArrayList<MappedUDT>();
-        }
-        return udts;
-    }
-
-    public void setUdts(List<MappedUDT> udts) {
-        this.udts = udts;
-    }
-
     /**
      * The input schema name as defined in {@link org.jooq.Schema#getName()}
      * <p>
@@ -192,34 +178,12 @@ public class MappedSchema
         return this;
     }
 
-    public MappedSchema withUdts(MappedUDT... values) {
-        if (values!= null) {
-            for (MappedUDT value: values) {
-                getUdts().add(value);
-            }
-        }
-        return this;
-    }
-
-    public MappedSchema withUdts(Collection<MappedUDT> values) {
-        if (values!= null) {
-            getUdts().addAll(values);
-        }
-        return this;
-    }
-
-    public MappedSchema withUdts(List<MappedUDT> udts) {
-        setUdts(udts);
-        return this;
-    }
-
     @Override
     public final void appendTo(XMLBuilder builder) {
         builder.append("input", input);
         builder.append("inputExpression", inputExpression);
         builder.append("output", output);
         builder.append("tables", "table", tables);
-        builder.append("udts", "udt", udts);
     }
 
     @Override
@@ -268,21 +232,12 @@ public class MappedSchema
                 return false;
             }
         }
-        if ((tables == null)||tables.isEmpty()) {
-            if ((other.tables!= null)&&(!other.tables.isEmpty())) {
+        if (tables == null) {
+            if (other.tables!= null) {
                 return false;
             }
         } else {
             if (!tables.equals(other.tables)) {
-                return false;
-            }
-        }
-        if ((udts == null)||udts.isEmpty()) {
-            if ((other.udts!= null)&&(!other.udts.isEmpty())) {
-                return false;
-            }
-        } else {
-            if (!udts.equals(other.udts)) {
                 return false;
             }
         }
@@ -296,8 +251,7 @@ public class MappedSchema
         result = ((prime*result)+((input == null)? 0 :input.hashCode()));
         result = ((prime*result)+((inputExpression == null)? 0 :inputExpression.pattern().hashCode()));
         result = ((prime*result)+((output == null)? 0 :output.hashCode()));
-        result = ((prime*result)+(((tables == null)||tables.isEmpty())? 0 :tables.hashCode()));
-        result = ((prime*result)+(((udts == null)||udts.isEmpty())? 0 :udts.hashCode()));
+        result = ((prime*result)+((tables == null)? 0 :tables.hashCode()));
         return result;
     }
 

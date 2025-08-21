@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,45 +19,44 @@ package org.springframework.cache.jcache.interceptor;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import org.jspecify.annotations.Nullable;
-
-import org.springframework.aop.ClassFilter;
 import org.springframework.aop.support.StaticMethodMatcherPointcut;
-import org.springframework.cache.CacheManager;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
- * A {@code Pointcut} that matches if the underlying {@link JCacheOperationSource}
+ * A Pointcut that matches if the underlying {@link JCacheOperationSource}
  * has an operation for a given method.
  *
- * @author Juergen Hoeller
- * @since 6.2
+ * @author Stephane Nicoll
+ * @since 4.1
  */
 @SuppressWarnings("serial")
-final class JCacheOperationSourcePointcut extends StaticMethodMatcherPointcut implements Serializable {
-
-	private @Nullable JCacheOperationSource cacheOperationSource;
-
-
-	public JCacheOperationSourcePointcut() {
-		setClassFilter(new JCacheOperationSourceClassFilter());
-	}
-
-
-	public void setCacheOperationSource(@Nullable JCacheOperationSource cacheOperationSource) {
-		this.cacheOperationSource = cacheOperationSource;
-	}
+public abstract class JCacheOperationSourcePointcut extends StaticMethodMatcherPointcut implements Serializable {
 
 	@Override
 	public boolean matches(Method method, Class<?> targetClass) {
-		return (this.cacheOperationSource == null ||
-				this.cacheOperationSource.hasCacheOperation(method, targetClass));
+		JCacheOperationSource cas = getCacheOperationSource();
+		return (cas != null && cas.getCacheOperation(method, targetClass) != null);
 	}
+
+	/**
+	 * Obtain the underlying {@link JCacheOperationSource} (may be {@code null}).
+	 * To be implemented by subclasses.
+	 */
+	@Nullable
+	protected abstract JCacheOperationSource getCacheOperationSource();
+
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof JCacheOperationSourcePointcut that &&
-				ObjectUtils.nullSafeEquals(this.cacheOperationSource, that.cacheOperationSource)));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof JCacheOperationSourcePointcut)) {
+			return false;
+		}
+		JCacheOperationSourcePointcut otherPc = (JCacheOperationSourcePointcut) other;
+		return ObjectUtils.nullSafeEquals(getCacheOperationSource(), otherPc.getCacheOperationSource());
 	}
 
 	@Override
@@ -67,43 +66,7 @@ final class JCacheOperationSourcePointcut extends StaticMethodMatcherPointcut im
 
 	@Override
 	public String toString() {
-		return getClass().getName() + ": " + this.cacheOperationSource;
-	}
-
-
-	/**
-	 * {@link ClassFilter} that delegates to {@link JCacheOperationSource#isCandidateClass}
-	 * for filtering classes whose methods are not worth searching to begin with.
-	 */
-	private final class JCacheOperationSourceClassFilter implements ClassFilter {
-
-		@Override
-		public boolean matches(Class<?> clazz) {
-			if (CacheManager.class.isAssignableFrom(clazz)) {
-				return false;
-			}
-			return (cacheOperationSource == null || cacheOperationSource.isCandidateClass(clazz));
-		}
-
-		private @Nullable JCacheOperationSource getCacheOperationSource() {
-			return cacheOperationSource;
-		}
-
-		@Override
-		public boolean equals(@Nullable Object other) {
-			return (this == other || (other instanceof JCacheOperationSourceClassFilter that &&
-					ObjectUtils.nullSafeEquals(getCacheOperationSource(), that.getCacheOperationSource())));
-		}
-
-		@Override
-		public int hashCode() {
-			return JCacheOperationSourceClassFilter.class.hashCode();
-		}
-
-		@Override
-		public String toString() {
-			return JCacheOperationSourceClassFilter.class.getName() + ": " + getCacheOperationSource();
-		}
+		return getClass().getName() + ": " + getCacheOperationSource();
 	}
 
 }

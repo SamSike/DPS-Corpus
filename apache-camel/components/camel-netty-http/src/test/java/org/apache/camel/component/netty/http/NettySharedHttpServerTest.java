@@ -19,6 +19,7 @@ package org.apache.camel.component.netty.http;
 import org.apache.camel.BindToRegistry;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,8 +47,10 @@ public class NettySharedHttpServerTest extends BaseNettyTest {
     }
 
     @Override
-    public void doPostTearDown() {
+    @AfterEach
+    public void tearDown() throws Exception {
         nettySharedHttpServer.stop();
+        super.tearDown();
     }
 
     @Test

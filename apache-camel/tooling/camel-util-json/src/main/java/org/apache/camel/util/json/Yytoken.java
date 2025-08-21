@@ -21,9 +21,9 @@ package org.apache.camel.util.json;
  *
  * @since 2.0.0
  */
-public class Yytoken {
+class Yytoken {
     /** Represents the different kinds of tokens. */
-    public enum Types {
+    enum Types {
         /** Tokens of this type will always have a value of ":" */
         COLON,
         /** Tokens of this type will always have a value of "," */
@@ -41,9 +41,7 @@ public class Yytoken {
         /** Tokens of this type will always have a value of "}" */
         RIGHT_BRACE,
         /** Tokens of this type will always have a value of "]" */
-        RIGHT_SQUARE,
-        /** Represent the value (not a parsing token but used during color print) */
-        VALUE;
+        RIGHT_SQUARE;
     }
 
     private final Types type;
@@ -107,6 +105,8 @@ public class Yytoken {
 
     @Override
     public String toString() {
-        return this.type + "(" + this.value + ")";
+        final StringBuffer sb = new StringBuffer();
+        sb.append(this.type.toString()).append("(").append(this.value).append(")");
+        return sb.toString();
     }
 }

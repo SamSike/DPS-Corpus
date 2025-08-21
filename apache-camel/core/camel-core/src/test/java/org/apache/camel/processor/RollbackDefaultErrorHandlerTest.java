@@ -40,7 +40,7 @@ public class RollbackDefaultErrorHandlerTest extends ContextTestSupport {
     }
 
     @Test
-    public void testRollback() {
+    public void testRollback() throws Exception {
         try {
             template.requestBody("direct:start", "bad");
             fail("Should have thrown a RollbackExchangeException");
@@ -51,24 +51,24 @@ public class RollbackDefaultErrorHandlerTest extends ContextTestSupport {
     }
 
     @Test
-    public void testRollbackWithExchange() {
+    public void testRollbackWithExchange() throws Exception {
         Exchange out = template.request("direct:start", new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 exchange.getIn().setBody("bad");
             }
         });
         assertNotNull(out.getException());
         assertIsInstanceOf(RollbackExchangeException.class, out.getException());
-        assertTrue(out.isRollbackOnly(), "Should be marked as rollback");
+        assertEquals(true, out.isRollbackOnly(), "Should be marked as rollback");
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").choice().when(body().isNotEqualTo("ok")).process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         assertFalse(exchange.isRollbackOnly(), "Rollback flag should have been cleared on redelivery");
                     }
                 }).to("mock:rollback").rollback("That do not work").otherwise().to("mock:result").end();

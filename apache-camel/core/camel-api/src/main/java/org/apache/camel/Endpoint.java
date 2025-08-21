@@ -19,7 +19,6 @@ package org.apache.camel;
 import java.util.Map;
 
 import org.apache.camel.support.service.ServiceSupport;
-import org.apache.camel.util.StringHelper;
 
 /**
  * An <a href="http://camel.apache.org/endpoint.html">endpoint</a> implements the
@@ -29,7 +28,7 @@ import org.apache.camel.util.StringHelper;
  * @see Exchange
  * @see Message
  */
-public interface Endpoint extends IsSingleton, Service, ComponentAware {
+public interface Endpoint extends IsSingleton, Service {
 
     /**
      * Returns the string representation of the endpoint URI
@@ -48,7 +47,11 @@ public interface Endpoint extends IsSingleton, Service, ComponentAware {
      */
     default String getEndpointBaseUri() {
         String value = getEndpointUri();
-        return StringHelper.before(value, "?", value);
+        int pos = value.indexOf('?');
+        if (pos > 0) {
+            value = value.substring(0, pos);
+        }
+        return value;
     }
 
     /**
@@ -159,7 +162,7 @@ public interface Endpoint extends IsSingleton, Service, ComponentAware {
 
     /**
      * Configure properties on this endpoint.
-     *
+     * 
      * @param options the options (properties)
      */
     void configureProperties(Map<String, Object> options);
@@ -186,13 +189,4 @@ public interface Endpoint extends IsSingleton, Service, ComponentAware {
      * @return whether properties is lenient or not
      */
     boolean isLenientProperties();
-
-    /**
-     * Whether this endpoint can connect to remote system, such as cloud providers, messaging brokers, databases. A
-     * local endpoint operates locally only, such as an internal message transformer, logger, or such as direct/seda
-     * components.
-     */
-    default boolean isRemote() {
-        return true;
-    }
 }

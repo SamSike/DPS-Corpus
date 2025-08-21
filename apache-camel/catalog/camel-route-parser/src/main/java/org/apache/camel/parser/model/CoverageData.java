@@ -23,11 +23,10 @@ public class CoverageData {
 
     private final String node;
     private final int count;
-    private String routeId;
 
     public CoverageData(String node, int count) {
-        this.node = node;
         this.count = count;
+        this.node = node;
     }
 
     public String getNode() {
@@ -36,13 +35,5 @@ public class CoverageData {
 
     public int getCount() {
         return count;
-    }
-
-    public void setRouteId(String routeId) {
-        this.routeId = routeId;
-    }
-
-    public String getRouteId() {
-        return routeId;
     }
 }

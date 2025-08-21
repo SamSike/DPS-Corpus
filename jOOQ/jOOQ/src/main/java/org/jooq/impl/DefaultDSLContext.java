@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -58,12 +58,9 @@ import static org.jooq.impl.DSL.sql;
 import static org.jooq.impl.DSL.table;
 import static org.jooq.impl.DSL.zero;
 import static org.jooq.impl.Tools.EMPTY_FIELD;
-import static org.jooq.impl.Tools.EMPTY_NAME;
 import static org.jooq.impl.Tools.EMPTY_QUERY;
-import static org.jooq.impl.Tools.EMPTY_STRING;
 import static org.jooq.impl.Tools.EMPTY_TABLE;
 import static org.jooq.impl.Tools.EMPTY_TABLE_RECORD;
-import static org.jooq.impl.Tools.EMPTY_TRANSACTION_PROPERTY;
 import static org.jooq.impl.Tools.EMPTY_UPDATABLE_RECORD;
 import static org.jooq.impl.Tools.blocking;
 import static org.jooq.impl.Tools.getMappedSchema;
@@ -82,7 +79,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -104,6 +100,8 @@ import org.jooq.BatchedRunnable;
 import org.jooq.BindContext;
 import org.jooq.Block;
 import org.jooq.Catalog;
+import org.jooq.Commit;
+import org.jooq.Commits;
 import org.jooq.CommonTableExpression;
 import org.jooq.Condition;
 import org.jooq.Configuration;
@@ -112,6 +110,7 @@ import org.jooq.ConnectionProvider;
 import org.jooq.ConnectionRunnable;
 import org.jooq.ContextTransactionalCallable;
 import org.jooq.ContextTransactionalRunnable;
+import org.jooq.CreateTypeStep;
 import org.jooq.CreateViewAsStep;
 import org.jooq.Cursor;
 import org.jooq.DDLExportConfiguration;
@@ -121,6 +120,7 @@ import org.jooq.DataType;
 import org.jooq.DeleteQuery;
 import org.jooq.DeleteUsingStep;
 import org.jooq.Domain;
+import org.jooq.DropTypeStep;
 import org.jooq.ExecuteContext;
 import org.jooq.ExecuteListener;
 import org.jooq.Explain;
@@ -177,7 +177,7 @@ import org.jooq.MergeKeyStep9;
 import org.jooq.MergeKeyStepN;
 import org.jooq.MergeUsingStep;
 import org.jooq.Meta;
-import org.jooq.Migrations;
+import org.jooq.Migration;
 import org.jooq.Name;
 import org.jooq.Param;
 import org.jooq.Parser;
@@ -228,23 +228,21 @@ import org.jooq.Sequence;
 import org.jooq.Source;
 import org.jooq.Statement;
 import org.jooq.Stringly;
-// ...
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableLike;
 import org.jooq.TableRecord;
-import org.jooq.TransactionProperty;
 import org.jooq.TransactionProvider;
 import org.jooq.TransactionalCallable;
 import org.jooq.TransactionalPublishable;
 import org.jooq.TransactionalRunnable;
-// ...
-import org.jooq.Type;
 import org.jooq.UDT;
 import org.jooq.UDTRecord;
 import org.jooq.UpdatableRecord;
 import org.jooq.UpdateQuery;
 import org.jooq.UpdateSetFirstStep;
+import org.jooq.Version;
+import org.jooq.Versions;
 import org.jooq.WithAsStep;
 import org.jooq.WithAsStep1;
 import org.jooq.WithAsStep10;
@@ -277,8 +275,6 @@ import org.jooq.exception.DetachedException;
 import org.jooq.exception.InvalidResultException;
 import org.jooq.exception.SQLDialectNotSupportedException;
 import org.jooq.impl.BatchCRUD.Action;
-import org.jooq.impl.QOM.CommentObjectType;
-import org.jooq.impl.QOM.TableScope;
 import org.jooq.impl.R2DBC.BlockingTransactionSubscription;
 import org.jooq.impl.R2DBC.TransactionSubscription;
 import org.jooq.tools.csv.CSVReader;
@@ -402,8 +398,28 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     }
 
     @Override
-    public Migrations migrations() {
-        return new MigrationsImpl(configuration());
+    public Version version(String id) {
+        return new VersionImpl(this, id, null, new Version[0]);
+    }
+
+    @Override
+    public Versions versions() {
+        return new VersionsImpl(version("init"));
+    }
+
+    @Override
+    public Commit commit(String id) {
+        return new CommitImpl(configuration, id, null, emptyList(), emptyList());
+    }
+
+    @Override
+    public Commits commits() {
+        return new CommitsImpl(configuration, commit("init"));
+    }
+
+    @Override
+    public Migration migrateTo(Commit to) {
+        return new MigrationImpl(configuration, to);
     }
 
     @Override
@@ -495,40 +511,20 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public <T> T transactionResult(ContextTransactionalCallable<T> transactional) {
-        return transactionResult(transactional, EMPTY_TRANSACTION_PROPERTY);
-    }
-
-    @Override
-    public <T> T transactionResult(ContextTransactionalCallable<T> transactional, TransactionProperty... properties) {
         TransactionProvider tp = configuration().transactionProvider();
 
         if (!(tp instanceof ThreadLocalTransactionProvider))
             throw new ConfigurationException("Cannot use ContextTransactionalCallable with TransactionProvider of type " + tp.getClass());
 
-        return transactionResult0(
-            c -> transactional.run(),
-            ((ThreadLocalTransactionProvider) tp).configuration(configuration()),
-            true,
-            properties
-        );
+        return transactionResult0(c -> transactional.run(), ((ThreadLocalTransactionProvider) tp).configuration(configuration()), true);
     }
 
     @Override
     public <T> T transactionResult(TransactionalCallable<T> transactional) {
-        return transactionResult0(transactional, configuration(), false, EMPTY_TRANSACTION_PROPERTY);
+        return transactionResult0(transactional, configuration(), false);
     }
 
-    @Override
-    public <T> T transactionResult(TransactionalCallable<T> transactional, TransactionProperty... properties) {
-        return transactionResult0(transactional, configuration(), false, properties);
-    }
-
-    private static <T> T transactionResult0(
-        TransactionalCallable<T> transactional,
-        Configuration configuration,
-        boolean threadLocal,
-        TransactionProperty... properties
-    ) {
+    private static <T> T transactionResult0(TransactionalCallable<T> transactional, Configuration configuration, boolean threadLocal) {
 
         // If used in a Java 8 Stream, a transaction should always be executed
         // in a ManagedBlocker context, just in case Stream.parallel() is called
@@ -539,12 +535,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
         return blocking(() -> {
             T result;
 
-            DefaultTransactionContext ctx = new DefaultTransactionContext(
-                configuration.derive(),
-                new LinkedHashSet<>(asList(properties))
-            );
-
-            ctx.configuration().data(DefaultTransactionContext.DATA_KEY, ctx);
+            DefaultTransactionContext ctx = new DefaultTransactionContext(configuration.derive());
             TransactionProvider provider = ctx.configuration().transactionProvider();
             TransactionListeners listeners = new TransactionListeners(ctx.configuration());
             boolean committed = false;
@@ -558,7 +549,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
                     listeners.beginEnd(ctx);
                 }
 
-                ctx.result(result = transactional.run(ctx.configuration()));
+                result = transactional.run(ctx.configuration());
 
                 try {
                     listeners.commitStart(ctx);
@@ -575,8 +566,8 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
                 // [#8413] Avoid rollback logic if commit was successful (exception in commitEnd())
                 if (!committed) {
-                    if (cause instanceof Exception e)
-                        ctx.cause(e);
+                    if (cause instanceof Exception)
+                        ctx.cause((Exception) cause);
                     else
                         ctx.causeThrowable(cause);
 
@@ -593,10 +584,10 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
                 }
 
                 // [#6608] [#7167] Errors are no longer handled differently
-                if (cause instanceof RuntimeException e)
-                    throw e;
-                else if (cause instanceof Error e)
-                    throw e;
+                if (cause instanceof RuntimeException)
+                    throw (RuntimeException) cause;
+                else if (cause instanceof Error)
+                    throw (Error) cause;
                 else
                     throw new DataAccessException(committed
                         ? "Exception after commit"
@@ -611,109 +602,66 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public void transaction(ContextTransactionalRunnable transactional) {
-        transaction(transactional, EMPTY_TRANSACTION_PROPERTY);
-    }
-
-    @Override
-    public void transaction(ContextTransactionalRunnable transactional, TransactionProperty... properties) {
         transactionResult((ContextTransactionalCallable<Void>) () -> {
             transactional.run();
             return null;
-        }, properties);
+        });
     }
 
     @Override
     public void transaction(TransactionalRunnable transactional) {
-        transaction(transactional, EMPTY_TRANSACTION_PROPERTY);
-    }
-
-    @Override
-    public void transaction(TransactionalRunnable transactional, TransactionProperty... properties) {
         transactionResult((TransactionalCallable<Void>) c -> {
             transactional.run(c);
             return null;
-        }, properties);
+        });
     }
 
     @Override
     public CompletionStage<Void> transactionAsync(TransactionalRunnable transactional) {
-        return transactionAsync(transactional, EMPTY_TRANSACTION_PROPERTY);
-    }
-
-    @Override
-    public CompletionStage<Void> transactionAsync(TransactionalRunnable transactional, TransactionProperty... properties) {
-        return transactionAsync(Tools.configuration(configuration()).executorProvider().provide(), transactional, properties);
+        return transactionAsync(Tools.configuration(configuration()).executorProvider().provide(), transactional);
     }
 
     @Override
     public CompletionStage<Void> transactionAsync(Executor executor, TransactionalRunnable transactional) {
-        return transactionAsync(executor, transactional, EMPTY_TRANSACTION_PROPERTY);
-    }
-
-    @Override
-    public CompletionStage<Void> transactionAsync(Executor executor, TransactionalRunnable transactional, TransactionProperty... properties) {
         if (configuration().transactionProvider() instanceof ThreadLocalTransactionProvider)
             throw new ConfigurationException("Cannot use TransactionalRunnable with ThreadLocalTransactionProvider");
 
         return ExecutorProviderCompletionStage.of(CompletableFuture.supplyAsync(
-            () -> { transaction(transactional, properties); return null; }, executor),
+            () -> { transaction(transactional); return null; }, executor),
             () -> executor
         );
     }
 
     @Override
     public <T> CompletionStage<T> transactionResultAsync(TransactionalCallable<T> transactional) {
-        return transactionResultAsync(transactional, EMPTY_TRANSACTION_PROPERTY);
-    }
-
-    @Override
-    public <T> CompletionStage<T> transactionResultAsync(TransactionalCallable<T> transactional, TransactionProperty... properties) {
-        return transactionResultAsync(Tools.configuration(configuration()).executorProvider().provide(), transactional, properties);
+        return transactionResultAsync(Tools.configuration(configuration()).executorProvider().provide(), transactional);
     }
 
     @Override
     public <T> CompletionStage<T> transactionResultAsync(Executor executor, TransactionalCallable<T> transactional) {
-        return transactionResultAsync(executor, transactional, EMPTY_TRANSACTION_PROPERTY);
-    }
-
-    @Override
-    public <T> CompletionStage<T> transactionResultAsync(Executor executor, TransactionalCallable<T> transactional, TransactionProperty... properties) {
         if (configuration().transactionProvider() instanceof ThreadLocalTransactionProvider)
             throw new ConfigurationException("Cannot use TransactionalCallable with ThreadLocalTransactionProvider");
 
         return ExecutorProviderCompletionStage.of(CompletableFuture.supplyAsync(
-            () -> transactionResult(transactional, properties), executor),
+            () -> transactionResult(transactional), executor),
             () -> executor
         );
     }
 
     @Override
     public <T> Publisher<T> transactionPublisher(TransactionalPublishable<T> transactional) {
-        return transactionPublisher(transactional, EMPTY_TRANSACTION_PROPERTY);
-    }
-
-    @Override
-    public <T> Publisher<T> transactionPublisher(TransactionalPublishable<T> transactional, TransactionProperty... properties) {
         return subscriber -> {
             ConnectionFactory cf = configuration().connectionFactory();
 
             if (!(cf instanceof NoConnectionFactory))
-                subscriber.onSubscribe(new TransactionSubscription<>(this, subscriber, transactional, properties));
+                subscriber.onSubscribe(new TransactionSubscription<>(this, subscriber, transactional));
             else
-                subscriber.onSubscribe(new BlockingTransactionSubscription<>(this, subscriber, transactional, properties));
+                subscriber.onSubscribe(new BlockingTransactionSubscription<>(this, subscriber, transactional));
         };
     }
 
     @Override
     public <T> T connectionResult(ConnectionCallable<T> callable) {
-
-        // [#13827] [#13830] The OracleDSL.DBMS_AQ API requires a fix for
-        //                   #13830. However, #13830 risks introducing new
-        //                   regressions, which is why the fix has been applied
-        //                   only to work around #13827, so far.
-        if (data("org.jooq.workaround.issue13827") != null)
-            return connectionResult0(callable);
-
         final Connection connection = configuration().connectionProvider().acquire();
 
         if (connection == null)
@@ -731,29 +679,6 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
         finally {
             configuration().connectionProvider().release(connection);
         }
-    }
-
-    private final <T> T connectionResult0(ConnectionCallable<T> callable) {
-        DefaultExecuteContext ctx = new DefaultExecuteContext(configuration());
-        Connection connection = ctx.connection();
-
-        if (connection == null)
-            throw new DetachedException("No JDBC Connection provided by ConnectionProvider");
-
-        return DefaultExecuteContext.localExecuteContext(ctx, () -> {
-            try {
-                return callable.run(connection);
-            }
-            catch (Error | RuntimeException e) {
-                throw e;
-            }
-            catch (Throwable t) {
-                throw new DataAccessException("Error while running ConnectionCallable", t);
-            }
-            finally {
-                Tools.safeClose(new DefaultExecuteListener(), ctx);
-            }
-        });
     }
 
     @Override
@@ -791,7 +716,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public RenderContext renderContext() {
-        return new DefaultRenderContext(configuration(), null);
+        return new DefaultRenderContext(configuration());
     }
 
     @Override
@@ -835,7 +760,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public BindContext bindContext(PreparedStatement stmt) {
-        return new DefaultBindContext(configuration(), null, stmt);
+        return new DefaultBindContext(configuration(), stmt);
     }
 
     // -------------------------------------------------------------------------
@@ -1366,7 +1291,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
         ExecuteListener listener = ExecuteListeners.getAndStart(ctx);
 
         ctx.resultSet(rs);
-        return new CursorImpl<>(ctx, listener, fields, false, true);
+        return new CursorImpl<>(ctx, listener, fields, null, false, true);
     }
 
     @Override
@@ -2578,7 +2503,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1> MergeKeyStep1<R, T1> mergeInto(Table<R> table, Field<T1> field1) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1));
     }
 
     /**
@@ -2587,7 +2512,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2> MergeKeyStep2<R, T1, T2> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2));
     }
 
     /**
@@ -2596,7 +2521,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3> MergeKeyStep3<R, T1, T2, T3> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3));
     }
 
     /**
@@ -2605,7 +2530,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4> MergeKeyStep4<R, T1, T2, T3, T4> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4));
     }
 
     /**
@@ -2614,7 +2539,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5> MergeKeyStep5<R, T1, T2, T3, T4, T5> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5));
     }
 
     /**
@@ -2623,7 +2548,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6> MergeKeyStep6<R, T1, T2, T3, T4, T5, T6> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6));
     }
 
     /**
@@ -2632,7 +2557,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7> MergeKeyStep7<R, T1, T2, T3, T4, T5, T6, T7> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7));
     }
 
     /**
@@ -2641,7 +2566,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8> MergeKeyStep8<R, T1, T2, T3, T4, T5, T6, T7, T8> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8));
     }
 
     /**
@@ -2650,7 +2575,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9> MergeKeyStep9<R, T1, T2, T3, T4, T5, T6, T7, T8, T9> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9));
     }
 
     /**
@@ -2659,7 +2584,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> MergeKeyStep10<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10));
     }
 
     /**
@@ -2668,7 +2593,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> MergeKeyStep11<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11));
     }
 
     /**
@@ -2677,7 +2602,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> MergeKeyStep12<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12));
     }
 
     /**
@@ -2686,7 +2611,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> MergeKeyStep13<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13));
     }
 
     /**
@@ -2695,7 +2620,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> MergeKeyStep14<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14));
     }
 
     /**
@@ -2704,7 +2629,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> MergeKeyStep15<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15));
     }
 
     /**
@@ -2713,7 +2638,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> MergeKeyStep16<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16));
     }
 
     /**
@@ -2722,7 +2647,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> MergeKeyStep17<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17));
     }
 
     /**
@@ -2731,7 +2656,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> MergeKeyStep18<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18));
     }
 
     /**
@@ -2740,7 +2665,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> MergeKeyStep19<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18, Field<T19> field19) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19));
     }
 
     /**
@@ -2749,7 +2674,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> MergeKeyStep20<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18, Field<T19> field19, Field<T20> field20) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20));
     }
 
     /**
@@ -2758,7 +2683,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> MergeKeyStep21<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18, Field<T19> field19, Field<T20> field20, Field<T21> field21) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21));
     }
 
     /**
@@ -2767,27 +2692,19 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> MergeKeyStep22<R, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> mergeInto(Table<R> table, Field<T1> field1, Field<T2> field2, Field<T3> field3, Field<T4> field4, Field<T5> field5, Field<T6> field6, Field<T7> field7, Field<T8> field8, Field<T9> field9, Field<T10> field10, Field<T11> field11, Field<T12> field12, Field<T13> field13, Field<T14> field14, Field<T15> field15, Field<T16> field16, Field<T17> field17, Field<T18> field18, Field<T19> field19, Field<T20> field20, Field<T21> field21, Field<T22> field22) {
-        return new MergeUpsert(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21, field22));
+        return new MergeImpl(configuration(), null, table, Arrays.asList(field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21, field22));
     }
 
 
 
-    /**
-     * @deprecated - [#10045] - 3.14.0 - Use the standard SQL MERGE API instead, via {@link #mergeInto(Table)}
-     */
-    @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record> MergeKeyStepN<R> mergeInto(Table<R> table, Field<?>... fields) {
         return mergeInto(table, Arrays.asList(fields));
     }
 
-    /**
-     * @deprecated - [#10045] - 3.14.0 - Use the standard SQL MERGE API instead, via {@link #mergeInto(Table)}
-     */
-    @Deprecated(forRemoval = true, since = "3.14")
     @Override
     public <R extends Record> MergeKeyStepN<R> mergeInto(Table<R> table, Collection<? extends Field<?>> fields) {
-        return new MergeUpsert(configuration(), null, table, fields);
+        return new MergeImpl(configuration(), null, table, fields);
     }
 
     @Override
@@ -3088,191 +3005,88 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public org.jooq.AlterTypeStep alterType(@Stringly.Name String type) {
-        return new AlterTypeImpl(configuration(), DSL.type(DSL.name(type)), false);
+        return new AlterTypeImpl(configuration(), DSL.name(type));
     }
 
     @Override
     public org.jooq.AlterTypeStep alterType(Name type) {
-        return new AlterTypeImpl(configuration(), DSL.type(type), false);
-    }
-
-    @Override
-    public org.jooq.AlterTypeStep alterType(Type<?> type) {
-        return new AlterTypeImpl(configuration(), type, false);
-    }
-
-    @Override
-    public org.jooq.AlterTypeStep alterTypeIfExists(@Stringly.Name String type) {
-        return new AlterTypeImpl(configuration(), DSL.type(DSL.name(type)), true);
-    }
-
-    @Override
-    public org.jooq.AlterTypeStep alterTypeIfExists(Name type) {
-        return new AlterTypeImpl(configuration(), DSL.type(type), true);
-    }
-
-    @Override
-    public org.jooq.AlterTypeStep alterTypeIfExists(Type<?> type) {
-        return new AlterTypeImpl(configuration(), type, true);
+        return new AlterTypeImpl(configuration(), type);
     }
 
     @Override
     public org.jooq.AlterViewStep alterView(@Stringly.Name String view) {
-        return new AlterViewImpl(configuration(), DSL.table(DSL.name(view)), null, false, false);
+        return new AlterViewImpl(configuration(), DSL.table(DSL.name(view)), false);
     }
 
     @Override
     public org.jooq.AlterViewStep alterView(Name view) {
-        return new AlterViewImpl(configuration(), DSL.table(view), null, false, false);
+        return new AlterViewImpl(configuration(), DSL.table(view), false);
     }
 
     @Override
     public org.jooq.AlterViewStep alterView(Table<?> view) {
-        return new AlterViewImpl(configuration(), view, null, false, false);
+        return new AlterViewImpl(configuration(), view, false);
     }
 
     @Override
     public org.jooq.AlterViewStep alterViewIfExists(@Stringly.Name String view) {
-        return new AlterViewImpl(configuration(), DSL.table(DSL.name(view)), null, false, true);
+        return new AlterViewImpl(configuration(), DSL.table(DSL.name(view)), true);
     }
 
     @Override
     public org.jooq.AlterViewStep alterViewIfExists(Name view) {
-        return new AlterViewImpl(configuration(), DSL.table(view), null, false, true);
+        return new AlterViewImpl(configuration(), DSL.table(view), true);
     }
 
     @Override
     public org.jooq.AlterViewStep alterViewIfExists(Table<?> view) {
-        return new AlterViewImpl(configuration(), view, null, false, true);
-    }
-
-    @Override
-    public org.jooq.AlterViewStep alterMaterializedView(@Stringly.Name String view) {
-        return new AlterViewImpl(configuration(), DSL.table(DSL.name(view)), null, true, false);
-    }
-
-    @Override
-    public org.jooq.AlterViewStep alterMaterializedView(Name view) {
-        return new AlterViewImpl(configuration(), DSL.table(view), null, true, false);
-    }
-
-    @Override
-    public org.jooq.AlterViewStep alterMaterializedView(Table<?> view) {
-        return new AlterViewImpl(configuration(), view, null, true, false);
-    }
-
-    @Override
-    public org.jooq.AlterViewStep alterMaterializedViewIfExists(@Stringly.Name String view) {
-        return new AlterViewImpl(configuration(), DSL.table(DSL.name(view)), null, true, true);
-    }
-
-    @Override
-    public org.jooq.AlterViewStep alterMaterializedViewIfExists(Name view) {
-        return new AlterViewImpl(configuration(), DSL.table(view), null, true, true);
-    }
-
-    @Override
-    public org.jooq.AlterViewStep alterMaterializedViewIfExists(Table<?> view) {
-        return new AlterViewImpl(configuration(), view, null, true, true);
-    }
-
-    @Override
-    public org.jooq.AlterViewStep alterView(Table<?> view, Field<?>... fields) {
-        return new AlterViewImpl(configuration(), view, Arrays.asList(fields), false, false);
-    }
-
-    @Override
-    public org.jooq.AlterViewStep alterView(Table<?> view, Collection<? extends Field<?>> fields) {
-        return new AlterViewImpl(configuration(), view, new QueryPartList<>(fields), false, false);
+        return new AlterViewImpl(configuration(), view, true);
     }
 
     @Override
     public org.jooq.CommentOnIsStep commentOnTable(@Stringly.Name String table) {
-        return new CommentOnImpl(configuration(), CommentObjectType.TABLE, DSL.table(DSL.name(table)), null, null, null);
+        return new CommentOnImpl(configuration(), DSL.table(DSL.name(table)), false, null);
     }
 
     @Override
     public org.jooq.CommentOnIsStep commentOnTable(Name table) {
-        return new CommentOnImpl(configuration(), CommentObjectType.TABLE, DSL.table(table), null, null, null);
+        return new CommentOnImpl(configuration(), DSL.table(table), false, null);
     }
 
     @Override
     public org.jooq.CommentOnIsStep commentOnTable(Table<?> table) {
-        return new CommentOnImpl(configuration(), CommentObjectType.TABLE, table, null, null, null);
+        return new CommentOnImpl(configuration(), table, false, null);
     }
 
     @Override
     public org.jooq.CommentOnIsStep commentOnView(@Stringly.Name String view) {
-        return new CommentOnImpl(configuration(), CommentObjectType.VIEW, DSL.table(DSL.name(view)), null, null, null);
+        return new CommentOnImpl(configuration(), DSL.table(DSL.name(view)), true, null);
     }
 
     @Override
     public org.jooq.CommentOnIsStep commentOnView(Name view) {
-        return new CommentOnImpl(configuration(), CommentObjectType.VIEW, DSL.table(view), null, null, null);
+        return new CommentOnImpl(configuration(), DSL.table(view), true, null);
     }
 
     @Override
     public org.jooq.CommentOnIsStep commentOnView(Table<?> view) {
-        return new CommentOnImpl(configuration(), CommentObjectType.VIEW, view, null, null, null);
-    }
-
-    @Override
-    public org.jooq.CommentOnIsStep commentOnMaterializedView(@Stringly.Name String view) {
-        return new CommentOnImpl(configuration(), CommentObjectType.MATERIALIZED_VIEW, DSL.table(DSL.name(view)), null, null, null);
-    }
-
-    @Override
-    public org.jooq.CommentOnIsStep commentOnMaterializedView(Name view) {
-        return new CommentOnImpl(configuration(), CommentObjectType.MATERIALIZED_VIEW, DSL.table(view), null, null, null);
-    }
-
-    @Override
-    public org.jooq.CommentOnIsStep commentOnMaterializedView(Table<?> view) {
-        return new CommentOnImpl(configuration(), CommentObjectType.MATERIALIZED_VIEW, view, null, null, null);
+        return new CommentOnImpl(configuration(), view, true, null);
     }
 
     @Override
     public org.jooq.CommentOnIsStep commentOnColumn(@Stringly.Name String field) {
-        return new CommentOnImpl(configuration(), CommentObjectType.COLUMN, null, DSL.field(DSL.name(field)), null, null);
+        return new CommentOnImpl(configuration(), null, false, DSL.field(DSL.name(field)));
     }
 
     @Override
     public org.jooq.CommentOnIsStep commentOnColumn(Name field) {
-        return new CommentOnImpl(configuration(), CommentObjectType.COLUMN, null, DSL.field(field), null, null);
+        return new CommentOnImpl(configuration(), null, false, DSL.field(field));
     }
 
     @Override
     public org.jooq.CommentOnIsStep commentOnColumn(Field<?> field) {
-        return new CommentOnImpl(configuration(), CommentObjectType.COLUMN, null, field, null, null);
+        return new CommentOnImpl(configuration(), null, false, field);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public org.jooq.CreateDatabaseFinalStep createDatabase(@Stringly.Name String database) {
@@ -3472,302 +3286,92 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public org.jooq.CreateTableElementListStep createTable(@Stringly.Name String table) {
-        return new CreateTableImpl(configuration(), DSL.table(DSL.name(table)), null, false);
+        return new CreateTableImpl(configuration(), DSL.table(DSL.name(table)), false, false);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createTable(Name table) {
-        return new CreateTableImpl(configuration(), DSL.table(table), null, false);
+        return new CreateTableImpl(configuration(), DSL.table(table), false, false);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createTable(Table<?> table) {
-        return new CreateTableImpl(configuration(), table, null, false);
+        return new CreateTableImpl(configuration(), table, false, false);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createTableIfNotExists(@Stringly.Name String table) {
-        return new CreateTableImpl(configuration(), DSL.table(DSL.name(table)), null, true);
+        return new CreateTableImpl(configuration(), DSL.table(DSL.name(table)), false, true);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createTableIfNotExists(Name table) {
-        return new CreateTableImpl(configuration(), DSL.table(table), null, true);
+        return new CreateTableImpl(configuration(), DSL.table(table), false, true);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createTableIfNotExists(Table<?> table) {
-        return new CreateTableImpl(configuration(), table, null, true);
+        return new CreateTableImpl(configuration(), table, false, true);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createTemporaryTable(@Stringly.Name String table) {
-        return new CreateTableImpl(configuration(), DSL.table(DSL.name(table)), TableScope.TEMPORARY, false);
+        return new CreateTableImpl(configuration(), DSL.table(DSL.name(table)), true, false);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createTemporaryTable(Name table) {
-        return new CreateTableImpl(configuration(), DSL.table(table), TableScope.TEMPORARY, false);
+        return new CreateTableImpl(configuration(), DSL.table(table), true, false);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createTemporaryTable(Table<?> table) {
-        return new CreateTableImpl(configuration(), table, TableScope.TEMPORARY, false);
+        return new CreateTableImpl(configuration(), table, true, false);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createTemporaryTableIfNotExists(@Stringly.Name String table) {
-        return new CreateTableImpl(configuration(), DSL.table(DSL.name(table)), TableScope.TEMPORARY, true);
+        return new CreateTableImpl(configuration(), DSL.table(DSL.name(table)), true, true);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createTemporaryTableIfNotExists(Name table) {
-        return new CreateTableImpl(configuration(), DSL.table(table), TableScope.TEMPORARY, true);
+        return new CreateTableImpl(configuration(), DSL.table(table), true, true);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createTemporaryTableIfNotExists(Table<?> table) {
-        return new CreateTableImpl(configuration(), table, TableScope.TEMPORARY, true);
-    }
-
-    @Override
-    public org.jooq.CreateTableElementListStep createLocalTemporaryTable(@Stringly.Name String table) {
-        return new CreateTableImpl(configuration(), DSL.table(DSL.name(table)), TableScope.LOCAL_TEMPORARY, false);
-    }
-
-    @Override
-    public org.jooq.CreateTableElementListStep createLocalTemporaryTable(Name table) {
-        return new CreateTableImpl(configuration(), DSL.table(table), TableScope.LOCAL_TEMPORARY, false);
-    }
-
-    @Override
-    public org.jooq.CreateTableElementListStep createLocalTemporaryTable(Table<?> table) {
-        return new CreateTableImpl(configuration(), table, TableScope.LOCAL_TEMPORARY, false);
-    }
-
-    @Override
-    public org.jooq.CreateTableElementListStep createLocalTemporaryTableIfNotExists(@Stringly.Name String table) {
-        return new CreateTableImpl(configuration(), DSL.table(DSL.name(table)), TableScope.LOCAL_TEMPORARY, true);
-    }
-
-    @Override
-    public org.jooq.CreateTableElementListStep createLocalTemporaryTableIfNotExists(Name table) {
-        return new CreateTableImpl(configuration(), DSL.table(table), TableScope.LOCAL_TEMPORARY, true);
-    }
-
-    @Override
-    public org.jooq.CreateTableElementListStep createLocalTemporaryTableIfNotExists(Table<?> table) {
-        return new CreateTableImpl(configuration(), table, TableScope.LOCAL_TEMPORARY, true);
+        return new CreateTableImpl(configuration(), table, true, true);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createGlobalTemporaryTable(@Stringly.Name String table) {
-        return new CreateTableImpl(configuration(), DSL.table(DSL.name(table)), TableScope.GLOBAL_TEMPORARY, false);
+        return new CreateTableImpl(configuration(), DSL.table(DSL.name(table)), true, false);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createGlobalTemporaryTable(Name table) {
-        return new CreateTableImpl(configuration(), DSL.table(table), TableScope.GLOBAL_TEMPORARY, false);
+        return new CreateTableImpl(configuration(), DSL.table(table), true, false);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createGlobalTemporaryTable(Table<?> table) {
-        return new CreateTableImpl(configuration(), table, TableScope.GLOBAL_TEMPORARY, false);
+        return new CreateTableImpl(configuration(), table, true, false);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createGlobalTemporaryTableIfNotExists(@Stringly.Name String table) {
-        return new CreateTableImpl(configuration(), DSL.table(DSL.name(table)), TableScope.GLOBAL_TEMPORARY, true);
+        return new CreateTableImpl(configuration(), DSL.table(DSL.name(table)), true, true);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createGlobalTemporaryTableIfNotExists(Name table) {
-        return new CreateTableImpl(configuration(), DSL.table(table), TableScope.GLOBAL_TEMPORARY, true);
+        return new CreateTableImpl(configuration(), DSL.table(table), true, true);
     }
 
     @Override
     public org.jooq.CreateTableElementListStep createGlobalTemporaryTableIfNotExists(Table<?> table) {
-        return new CreateTableImpl(configuration(), table, TableScope.GLOBAL_TEMPORARY, true);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createView(@Stringly.Name String view, @Stringly.Name String... fields) {
-        return new CreateViewImpl(configuration(), DSL.table(DSL.name(view)), Tools.fieldsByName(fields), false, false, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createView(Name view, Name... fields) {
-        return new CreateViewImpl(configuration(), DSL.table(view), Tools.fieldsByName(fields), false, false, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createView(Table<?> view, Field<?>... fields) {
-        return new CreateViewImpl(configuration(), view, Arrays.asList(fields), false, false, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createView(@Stringly.Name String view, Collection<? extends String> fields) {
-        return new CreateViewImpl(configuration(), DSL.table(DSL.name(view)), Tools.fieldsByName(fields.toArray(EMPTY_STRING)), false, false, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createView(Name view, Collection<? extends Name> fields) {
-        return new CreateViewImpl(configuration(), DSL.table(view), Tools.fieldsByName(fields.toArray(EMPTY_NAME)), false, false, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createView(Table<?> view, Collection<? extends Field<?>> fields) {
-        return new CreateViewImpl(configuration(), view, new QueryPartList<>(fields), false, false, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createViewIfNotExists(@Stringly.Name String view, @Stringly.Name String... fields) {
-        return new CreateViewImpl(configuration(), DSL.table(DSL.name(view)), Tools.fieldsByName(fields), false, false, true);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createViewIfNotExists(Name view, Name... fields) {
-        return new CreateViewImpl(configuration(), DSL.table(view), Tools.fieldsByName(fields), false, false, true);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, Field<?>... fields) {
-        return new CreateViewImpl(configuration(), view, Arrays.asList(fields), false, false, true);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createViewIfNotExists(@Stringly.Name String view, Collection<? extends String> fields) {
-        return new CreateViewImpl(configuration(), DSL.table(DSL.name(view)), Tools.fieldsByName(fields.toArray(EMPTY_STRING)), false, false, true);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createViewIfNotExists(Name view, Collection<? extends Name> fields) {
-        return new CreateViewImpl(configuration(), DSL.table(view), Tools.fieldsByName(fields.toArray(EMPTY_NAME)), false, false, true);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, Collection<? extends Field<?>> fields) {
-        return new CreateViewImpl(configuration(), view, new QueryPartList<>(fields), false, false, true);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createOrReplaceView(@Stringly.Name String view, @Stringly.Name String... fields) {
-        return new CreateViewImpl(configuration(), DSL.table(DSL.name(view)), Tools.fieldsByName(fields), true, false, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createOrReplaceView(Name view, Name... fields) {
-        return new CreateViewImpl(configuration(), DSL.table(view), Tools.fieldsByName(fields), true, false, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createOrReplaceView(Table<?> view, Field<?>... fields) {
-        return new CreateViewImpl(configuration(), view, Arrays.asList(fields), true, false, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createOrReplaceView(@Stringly.Name String view, Collection<? extends String> fields) {
-        return new CreateViewImpl(configuration(), DSL.table(DSL.name(view)), Tools.fieldsByName(fields.toArray(EMPTY_STRING)), true, false, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createOrReplaceView(Name view, Collection<? extends Name> fields) {
-        return new CreateViewImpl(configuration(), DSL.table(view), Tools.fieldsByName(fields.toArray(EMPTY_NAME)), true, false, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createOrReplaceView(Table<?> view, Collection<? extends Field<?>> fields) {
-        return new CreateViewImpl(configuration(), view, new QueryPartList<>(fields), true, false, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createMaterializedView(@Stringly.Name String view, @Stringly.Name String... fields) {
-        return new CreateViewImpl(configuration(), DSL.table(DSL.name(view)), Tools.fieldsByName(fields), false, true, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createMaterializedView(Name view, Name... fields) {
-        return new CreateViewImpl(configuration(), DSL.table(view), Tools.fieldsByName(fields), false, true, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createMaterializedView(Table<?> view, Field<?>... fields) {
-        return new CreateViewImpl(configuration(), view, Arrays.asList(fields), false, true, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createMaterializedView(@Stringly.Name String view, Collection<? extends String> fields) {
-        return new CreateViewImpl(configuration(), DSL.table(DSL.name(view)), Tools.fieldsByName(fields.toArray(EMPTY_STRING)), false, true, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createMaterializedView(Name view, Collection<? extends Name> fields) {
-        return new CreateViewImpl(configuration(), DSL.table(view), Tools.fieldsByName(fields.toArray(EMPTY_NAME)), false, true, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createMaterializedView(Table<?> view, Collection<? extends Field<?>> fields) {
-        return new CreateViewImpl(configuration(), view, new QueryPartList<>(fields), false, true, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createMaterializedViewIfNotExists(@Stringly.Name String view, @Stringly.Name String... fields) {
-        return new CreateViewImpl(configuration(), DSL.table(DSL.name(view)), Tools.fieldsByName(fields), false, true, true);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createMaterializedViewIfNotExists(Name view, Name... fields) {
-        return new CreateViewImpl(configuration(), DSL.table(view), Tools.fieldsByName(fields), false, true, true);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createMaterializedViewIfNotExists(Table<?> view, Field<?>... fields) {
-        return new CreateViewImpl(configuration(), view, Arrays.asList(fields), false, true, true);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createMaterializedViewIfNotExists(@Stringly.Name String view, Collection<? extends String> fields) {
-        return new CreateViewImpl(configuration(), DSL.table(DSL.name(view)), Tools.fieldsByName(fields.toArray(EMPTY_STRING)), false, true, true);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createMaterializedViewIfNotExists(Name view, Collection<? extends Name> fields) {
-        return new CreateViewImpl(configuration(), DSL.table(view), Tools.fieldsByName(fields.toArray(EMPTY_NAME)), false, true, true);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createMaterializedViewIfNotExists(Table<?> view, Collection<? extends Field<?>> fields) {
-        return new CreateViewImpl(configuration(), view, new QueryPartList<>(fields), false, true, true);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createOrReplaceMaterializedView(@Stringly.Name String view, @Stringly.Name String... fields) {
-        return new CreateViewImpl(configuration(), DSL.table(DSL.name(view)), Tools.fieldsByName(fields), true, true, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createOrReplaceMaterializedView(Name view, Name... fields) {
-        return new CreateViewImpl(configuration(), DSL.table(view), Tools.fieldsByName(fields), true, true, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createOrReplaceMaterializedView(Table<?> view, Field<?>... fields) {
-        return new CreateViewImpl(configuration(), view, Arrays.asList(fields), true, true, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createOrReplaceMaterializedView(@Stringly.Name String view, Collection<? extends String> fields) {
-        return new CreateViewImpl(configuration(), DSL.table(DSL.name(view)), Tools.fieldsByName(fields.toArray(EMPTY_STRING)), true, true, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createOrReplaceMaterializedView(Name view, Collection<? extends Name> fields) {
-        return new CreateViewImpl(configuration(), DSL.table(view), Tools.fieldsByName(fields.toArray(EMPTY_NAME)), true, true, false);
-    }
-
-    @Override
-    public org.jooq.CreateViewAsStep<Record> createOrReplaceMaterializedView(Table<?> view, Collection<? extends Field<?>> fields) {
-        return new CreateViewImpl(configuration(), view, new QueryPartList<>(fields), true, true, false);
+        return new CreateTableImpl(configuration(), table, true, true);
     }
 
 
@@ -3797,48 +3401,6 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    @Override
-    public org.jooq.CreateTypeStep createType(@Stringly.Name String type) {
-        return new CreateTypeImpl(configuration(), DSL.type(DSL.name(type)), false);
-    }
-
-    @Override
-    public org.jooq.CreateTypeStep createType(Name type) {
-        return new CreateTypeImpl(configuration(), DSL.type(type), false);
-    }
-
-    @Override
-    public org.jooq.CreateTypeStep createType(Type<?> type) {
-        return new CreateTypeImpl(configuration(), type, false);
-    }
-
-    @Override
-    public org.jooq.CreateTypeStep createTypeIfNotExists(@Stringly.Name String type) {
-        return new CreateTypeImpl(configuration(), DSL.type(DSL.name(type)), true);
-    }
-
-    @Override
-    public org.jooq.CreateTypeStep createTypeIfNotExists(Name type) {
-        return new CreateTypeImpl(configuration(), DSL.type(type), true);
-    }
-
-    @Override
-    public org.jooq.CreateTypeStep createTypeIfNotExists(Type<?> type) {
-        return new CreateTypeImpl(configuration(), type, true);
-    }
 
     @Override
     public org.jooq.CreateSchemaFinalStep createSchema(@Stringly.Name String schema) {
@@ -3871,110 +3433,34 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     }
 
     @Override
-    public org.jooq.CreateSequenceAsStep<Number> createSequence(@Stringly.Name String sequence) {
+    public org.jooq.CreateSequenceFlagsStep createSequence(@Stringly.Name String sequence) {
         return new CreateSequenceImpl(configuration(), DSL.sequence(DSL.name(sequence)), false);
     }
 
     @Override
-    public org.jooq.CreateSequenceAsStep<Number> createSequence(Name sequence) {
+    public org.jooq.CreateSequenceFlagsStep createSequence(Name sequence) {
         return new CreateSequenceImpl(configuration(), DSL.sequence(sequence), false);
     }
 
     @Override
-    public org.jooq.CreateSequenceAsStep<Number> createSequence(Sequence<?> sequence) {
+    public org.jooq.CreateSequenceFlagsStep createSequence(Sequence<?> sequence) {
         return new CreateSequenceImpl(configuration(), sequence, false);
     }
 
     @Override
-    public org.jooq.CreateSequenceAsStep<Number> createSequenceIfNotExists(@Stringly.Name String sequence) {
+    public org.jooq.CreateSequenceFlagsStep createSequenceIfNotExists(@Stringly.Name String sequence) {
         return new CreateSequenceImpl(configuration(), DSL.sequence(DSL.name(sequence)), true);
     }
 
     @Override
-    public org.jooq.CreateSequenceAsStep<Number> createSequenceIfNotExists(Name sequence) {
+    public org.jooq.CreateSequenceFlagsStep createSequenceIfNotExists(Name sequence) {
         return new CreateSequenceImpl(configuration(), DSL.sequence(sequence), true);
     }
 
     @Override
-    public org.jooq.CreateSequenceAsStep<Number> createSequenceIfNotExists(Sequence<?> sequence) {
+    public org.jooq.CreateSequenceFlagsStep createSequenceIfNotExists(Sequence<?> sequence) {
         return new CreateSequenceImpl(configuration(), sequence, true);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public org.jooq.DropDatabaseFinalStep dropDatabase(@Stringly.Name String database) {
@@ -4182,200 +3668,64 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
         return new DropSequenceImpl(configuration(), sequence, true);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @Override
     public org.jooq.DropTableStep dropTable(@Stringly.Name String table) {
-        return new DropTableImpl(configuration(), null, DSL.table(DSL.name(table)), false);
+        return new DropTableImpl(configuration(), false, DSL.table(DSL.name(table)), false);
     }
 
     @Override
     public org.jooq.DropTableStep dropTable(Name table) {
-        return new DropTableImpl(configuration(), null, DSL.table(table), false);
+        return new DropTableImpl(configuration(), false, DSL.table(table), false);
     }
 
     @Override
     public org.jooq.DropTableStep dropTable(Table<?> table) {
-        return new DropTableImpl(configuration(), null, table, false);
+        return new DropTableImpl(configuration(), false, table, false);
     }
 
     @Override
     public org.jooq.DropTableStep dropTableIfExists(@Stringly.Name String table) {
-        return new DropTableImpl(configuration(), null, DSL.table(DSL.name(table)), true);
+        return new DropTableImpl(configuration(), false, DSL.table(DSL.name(table)), true);
     }
 
     @Override
     public org.jooq.DropTableStep dropTableIfExists(Name table) {
-        return new DropTableImpl(configuration(), null, DSL.table(table), true);
+        return new DropTableImpl(configuration(), false, DSL.table(table), true);
     }
 
     @Override
     public org.jooq.DropTableStep dropTableIfExists(Table<?> table) {
-        return new DropTableImpl(configuration(), null, table, true);
+        return new DropTableImpl(configuration(), false, table, true);
     }
 
     @Override
     public org.jooq.DropTableStep dropTemporaryTable(@Stringly.Name String table) {
-        return new DropTableImpl(configuration(), TableScope.TEMPORARY, DSL.table(DSL.name(table)), false);
+        return new DropTableImpl(configuration(), true, DSL.table(DSL.name(table)), false);
     }
 
     @Override
     public org.jooq.DropTableStep dropTemporaryTable(Name table) {
-        return new DropTableImpl(configuration(), TableScope.TEMPORARY, DSL.table(table), false);
+        return new DropTableImpl(configuration(), true, DSL.table(table), false);
     }
 
     @Override
     public org.jooq.DropTableStep dropTemporaryTable(Table<?> table) {
-        return new DropTableImpl(configuration(), TableScope.TEMPORARY, table, false);
+        return new DropTableImpl(configuration(), true, table, false);
     }
 
     @Override
     public org.jooq.DropTableStep dropTemporaryTableIfExists(@Stringly.Name String table) {
-        return new DropTableImpl(configuration(), TableScope.TEMPORARY, DSL.table(DSL.name(table)), true);
+        return new DropTableImpl(configuration(), true, DSL.table(DSL.name(table)), true);
     }
 
     @Override
     public org.jooq.DropTableStep dropTemporaryTableIfExists(Name table) {
-        return new DropTableImpl(configuration(), TableScope.TEMPORARY, DSL.table(table), true);
+        return new DropTableImpl(configuration(), true, DSL.table(table), true);
     }
 
     @Override
     public org.jooq.DropTableStep dropTemporaryTableIfExists(Table<?> table) {
-        return new DropTableImpl(configuration(), TableScope.TEMPORARY, table, true);
-    }
-
-    @Override
-    public org.jooq.DropTableStep dropLocalTemporaryTable(@Stringly.Name String table) {
-        return new DropTableImpl(configuration(), TableScope.LOCAL_TEMPORARY, DSL.table(DSL.name(table)), false);
-    }
-
-    @Override
-    public org.jooq.DropTableStep dropLocalTemporaryTable(Name table) {
-        return new DropTableImpl(configuration(), TableScope.LOCAL_TEMPORARY, DSL.table(table), false);
-    }
-
-    @Override
-    public org.jooq.DropTableStep dropLocalTemporaryTable(Table<?> table) {
-        return new DropTableImpl(configuration(), TableScope.LOCAL_TEMPORARY, table, false);
-    }
-
-    @Override
-    public org.jooq.DropTableStep dropLocalTemporaryTableIfExists(@Stringly.Name String table) {
-        return new DropTableImpl(configuration(), TableScope.LOCAL_TEMPORARY, DSL.table(DSL.name(table)), true);
-    }
-
-    @Override
-    public org.jooq.DropTableStep dropLocalTemporaryTableIfExists(Name table) {
-        return new DropTableImpl(configuration(), TableScope.LOCAL_TEMPORARY, DSL.table(table), true);
-    }
-
-    @Override
-    public org.jooq.DropTableStep dropLocalTemporaryTableIfExists(Table<?> table) {
-        return new DropTableImpl(configuration(), TableScope.LOCAL_TEMPORARY, table, true);
-    }
-
-    @Override
-    public org.jooq.DropTableStep dropGlobalTemporaryTable(@Stringly.Name String table) {
-        return new DropTableImpl(configuration(), TableScope.GLOBAL_TEMPORARY, DSL.table(DSL.name(table)), false);
-    }
-
-    @Override
-    public org.jooq.DropTableStep dropGlobalTemporaryTable(Name table) {
-        return new DropTableImpl(configuration(), TableScope.GLOBAL_TEMPORARY, DSL.table(table), false);
-    }
-
-    @Override
-    public org.jooq.DropTableStep dropGlobalTemporaryTable(Table<?> table) {
-        return new DropTableImpl(configuration(), TableScope.GLOBAL_TEMPORARY, table, false);
-    }
-
-    @Override
-    public org.jooq.DropTableStep dropGlobalTemporaryTableIfExists(@Stringly.Name String table) {
-        return new DropTableImpl(configuration(), TableScope.GLOBAL_TEMPORARY, DSL.table(DSL.name(table)), true);
-    }
-
-    @Override
-    public org.jooq.DropTableStep dropGlobalTemporaryTableIfExists(Name table) {
-        return new DropTableImpl(configuration(), TableScope.GLOBAL_TEMPORARY, DSL.table(table), true);
-    }
-
-    @Override
-    public org.jooq.DropTableStep dropGlobalTemporaryTableIfExists(Table<?> table) {
-        return new DropTableImpl(configuration(), TableScope.GLOBAL_TEMPORARY, table, true);
+        return new DropTableImpl(configuration(), true, table, true);
     }
 
 
@@ -4406,146 +3756,34 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     @Override
-    public org.jooq.DropTypeStep dropType(@Stringly.Name String types) {
-        return new DropTypeImpl(configuration(), Arrays.asList(DSL.type(types)), false);
+    public org.jooq.DropViewFinalStep dropView(@Stringly.Name String view) {
+        return new DropViewImpl(configuration(), DSL.table(DSL.name(view)), false);
     }
 
     @Override
-    public org.jooq.DropTypeStep dropType(Name types) {
-        return new DropTypeImpl(configuration(), Arrays.asList(DSL.type(types)), false);
+    public org.jooq.DropViewFinalStep dropView(Name view) {
+        return new DropViewImpl(configuration(), DSL.table(view), false);
     }
 
     @Override
-    public org.jooq.DropTypeStep dropType(Type<?> types) {
-        return new DropTypeImpl(configuration(), Arrays.asList(types), false);
+    public org.jooq.DropViewFinalStep dropView(Table<?> view) {
+        return new DropViewImpl(configuration(), view, false);
     }
 
     @Override
-    public org.jooq.DropTypeStep dropType(@Stringly.Name String... types) {
-        return new DropTypeImpl(configuration(), Tools.map(types, e -> DSL.type(e)), false);
+    public org.jooq.DropViewFinalStep dropViewIfExists(@Stringly.Name String view) {
+        return new DropViewImpl(configuration(), DSL.table(DSL.name(view)), true);
     }
 
     @Override
-    public org.jooq.DropTypeStep dropType(Name... types) {
-        return new DropTypeImpl(configuration(), Tools.map(types, e -> DSL.type(e)), false);
+    public org.jooq.DropViewFinalStep dropViewIfExists(Name view) {
+        return new DropViewImpl(configuration(), DSL.table(view), true);
     }
 
     @Override
-    public org.jooq.DropTypeStep dropType(Type<?>... types) {
-        return new DropTypeImpl(configuration(), Arrays.asList(types), false);
-    }
-
-    @Override
-    public org.jooq.DropTypeStep dropType(Collection<? extends Type<?>> types) {
-        return new DropTypeImpl(configuration(), new QueryPartList<>(types), false);
-    }
-
-    @Override
-    public org.jooq.DropTypeStep dropTypeIfExists(@Stringly.Name String types) {
-        return new DropTypeImpl(configuration(), Arrays.asList(DSL.type(types)), true);
-    }
-
-    @Override
-    public org.jooq.DropTypeStep dropTypeIfExists(Name types) {
-        return new DropTypeImpl(configuration(), Arrays.asList(DSL.type(types)), true);
-    }
-
-    @Override
-    public org.jooq.DropTypeStep dropTypeIfExists(Type<?> types) {
-        return new DropTypeImpl(configuration(), Arrays.asList(types), true);
-    }
-
-    @Override
-    public org.jooq.DropTypeStep dropTypeIfExists(@Stringly.Name String... types) {
-        return new DropTypeImpl(configuration(), Tools.map(types, e -> DSL.type(e)), true);
-    }
-
-    @Override
-    public org.jooq.DropTypeStep dropTypeIfExists(Name... types) {
-        return new DropTypeImpl(configuration(), Tools.map(types, e -> DSL.type(e)), true);
-    }
-
-    @Override
-    public org.jooq.DropTypeStep dropTypeIfExists(Type<?>... types) {
-        return new DropTypeImpl(configuration(), Arrays.asList(types), true);
-    }
-
-    @Override
-    public org.jooq.DropTypeStep dropTypeIfExists(Collection<? extends Type<?>> types) {
-        return new DropTypeImpl(configuration(), new QueryPartList<>(types), true);
-    }
-
-    @Override
-    public org.jooq.DropViewStep dropView(@Stringly.Name String view) {
-        return new DropViewImpl(configuration(), DSL.table(DSL.name(view)), false, false);
-    }
-
-    @Override
-    public org.jooq.DropViewStep dropView(Name view) {
-        return new DropViewImpl(configuration(), DSL.table(view), false, false);
-    }
-
-    @Override
-    public org.jooq.DropViewStep dropView(Table<?> view) {
-        return new DropViewImpl(configuration(), view, false, false);
-    }
-
-    @Override
-    public org.jooq.DropViewStep dropViewIfExists(@Stringly.Name String view) {
-        return new DropViewImpl(configuration(), DSL.table(DSL.name(view)), false, true);
-    }
-
-    @Override
-    public org.jooq.DropViewStep dropViewIfExists(Name view) {
-        return new DropViewImpl(configuration(), DSL.table(view), false, true);
-    }
-
-    @Override
-    public org.jooq.DropViewStep dropViewIfExists(Table<?> view) {
-        return new DropViewImpl(configuration(), view, false, true);
-    }
-
-    @Override
-    public org.jooq.DropViewStep dropMaterializedView(@Stringly.Name String view) {
-        return new DropViewImpl(configuration(), DSL.table(DSL.name(view)), true, false);
-    }
-
-    @Override
-    public org.jooq.DropViewStep dropMaterializedView(Name view) {
-        return new DropViewImpl(configuration(), DSL.table(view), true, false);
-    }
-
-    @Override
-    public org.jooq.DropViewStep dropMaterializedView(Table<?> view) {
-        return new DropViewImpl(configuration(), view, true, false);
-    }
-
-    @Override
-    public org.jooq.DropViewStep dropMaterializedViewIfExists(@Stringly.Name String view) {
-        return new DropViewImpl(configuration(), DSL.table(DSL.name(view)), true, true);
-    }
-
-    @Override
-    public org.jooq.DropViewStep dropMaterializedViewIfExists(Name view) {
-        return new DropViewImpl(configuration(), DSL.table(view), true, true);
-    }
-
-    @Override
-    public org.jooq.DropViewStep dropMaterializedViewIfExists(Table<?> view) {
-        return new DropViewImpl(configuration(), view, true, true);
+    public org.jooq.DropViewFinalStep dropViewIfExists(Table<?> view) {
+        return new DropViewImpl(configuration(), view, true);
     }
 
     @Override
@@ -4594,18 +3832,8 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     }
 
     @Override
-    public org.jooq.RowCountQuery set(@Stringly.Name String name, Param<?> value) {
-        return new SetCommand(configuration(), DSL.name(name), value, false);
-    }
-
-    @Override
     public org.jooq.RowCountQuery set(Name name, Param<?> value) {
         return new SetCommand(configuration(), name, value, false);
-    }
-
-    @Override
-    public org.jooq.RowCountQuery setLocal(@Stringly.Name String name, Param<?> value) {
-        return new SetCommand(configuration(), DSL.name(name), value, true);
     }
 
     @Override
@@ -4645,37 +3873,17 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public org.jooq.TruncateIdentityStep<Record> truncate(@Stringly.Name String table) {
-        return new TruncateImpl(configuration(), Arrays.asList(DSL.table(table)));
+        return new TruncateImpl(configuration(), DSL.table(DSL.name(table)));
     }
 
     @Override
     public org.jooq.TruncateIdentityStep<Record> truncate(Name table) {
-        return new TruncateImpl(configuration(), Arrays.asList(DSL.table(table)));
+        return new TruncateImpl(configuration(), DSL.table(table));
     }
 
     @Override
     public <R extends Record> org.jooq.TruncateIdentityStep<R> truncate(Table<R> table) {
-        return new TruncateImpl(configuration(), Arrays.asList(table));
-    }
-
-    @Override
-    public org.jooq.TruncateIdentityStep<Record> truncate(@Stringly.Name String... table) {
-        return new TruncateImpl(configuration(), Tools.map(table, e -> DSL.table(e)));
-    }
-
-    @Override
-    public org.jooq.TruncateIdentityStep<Record> truncate(Name... table) {
-        return new TruncateImpl(configuration(), Tools.map(table, e -> DSL.table(e)));
-    }
-
-    @Override
-    public org.jooq.TruncateIdentityStep<Record> truncate(Table<?>... table) {
-        return new TruncateImpl(configuration(), Arrays.asList(table));
-    }
-
-    @Override
-    public org.jooq.TruncateIdentityStep<Record> truncate(Collection<? extends Table<?>> table) {
-        return new TruncateImpl(configuration(), new QueryPartList<>(table));
+        return new TruncateImpl(configuration(), table);
     }
 
     @Override
@@ -4693,25 +3901,6 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
         return truncate(table);
     }
 
-    @Override
-    public org.jooq.TruncateIdentityStep<Record> truncateTable(@Stringly.Name String... table) {
-        return truncate(table);
-    }
-
-    @Override
-    public org.jooq.TruncateIdentityStep<Record> truncateTable(Name... table) {
-        return truncate(table);
-    }
-
-    @Override
-    public org.jooq.TruncateIdentityStep<Record> truncateTable(Table<?>... table) {
-        return truncate(table);
-    }
-
-    @Override
-    public org.jooq.TruncateIdentityStep<Record> truncateTable(Collection<? extends Table<?>> table) {
-        return truncate(table);
-    }
 
 
 
@@ -4731,42 +3920,6 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
 
 
-
-
-    @Override
-    public org.jooq.RowCountQuery startTransaction() {
-        return new StartTransaction(configuration());
-    }
-
-    @Override
-    public org.jooq.RowCountQuery savepoint(@Stringly.Name String name) {
-        return new Savepoint(configuration(), DSL.name(name));
-    }
-
-    @Override
-    public org.jooq.RowCountQuery savepoint(Name name) {
-        return new Savepoint(configuration(), name);
-    }
-
-    @Override
-    public org.jooq.RowCountQuery releaseSavepoint(@Stringly.Name String name) {
-        return new ReleaseSavepoint(configuration(), DSL.name(name));
-    }
-
-    @Override
-    public org.jooq.RowCountQuery releaseSavepoint(Name name) {
-        return new ReleaseSavepoint(configuration(), name);
-    }
-
-    @Override
-    public org.jooq.RowCountQuery commit() {
-        return new Commit(configuration());
-    }
-
-    @Override
-    public org.jooq.RollbackToSavepointStep rollback() {
-        return new Rollback(configuration());
-    }
 
 
 
@@ -4850,6 +4003,21 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     // -------------------------------------------------------------------------
 
     @Override
+    public CreateViewAsStep<Record> createView(String view, String... fields) {
+        return createView(table(name(view)), Tools.fieldsByName(view, fields));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createView(Name view, Name... fields) {
+        return createView(table(view), Tools.fieldsByName(fields));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createView(Table<?> view, Field<?>... fields) {
+        return new CreateViewImpl<>(configuration(), view, fields, false, false);
+    }
+
+    @Override
     public CreateViewAsStep<Record> createView(String view, Function<? super Field<?>, ? extends String> fieldNameFunction) {
         return createView(table(name(view)), (f, i) -> field(name(fieldNameFunction.apply(f))));
     }
@@ -4876,7 +4044,22 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public CreateViewAsStep<Record> createView(Table<?> view, BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> fieldNameFunction) {
-        return new CreateViewImplWithFieldNameFunctionImpl<>(configuration(), view, fieldNameFunction, false, false);
+        return new CreateViewImpl<>(configuration(), view, fieldNameFunction, false, false);
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createOrReplaceView(String view, String... fields) {
+        return createOrReplaceView(table(name(view)), Tools.fieldsByName(view, fields));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createOrReplaceView(Name view, Name... fields) {
+        return createOrReplaceView(table(view), Tools.fieldsByName(fields));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createOrReplaceView(Table<?> view, Field<?>... fields) {
+        return new CreateViewImpl<>(configuration(), view, fields, false, true);
     }
 
     @Override
@@ -4906,7 +4089,22 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public CreateViewAsStep<Record> createOrReplaceView(Table<?> view, BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> fieldNameFunction) {
-        return new CreateViewImplWithFieldNameFunctionImpl<>(configuration(), view, fieldNameFunction, false, true);
+        return new CreateViewImpl<>(configuration(), view, fieldNameFunction, false, true);
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createViewIfNotExists(String view, String... fields) {
+        return createViewIfNotExists(table(name(view)), Tools.fieldsByName(view, fields));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createViewIfNotExists(Name view, Name... fields) {
+        return createViewIfNotExists(table(view), Tools.fieldsByName(fields));
+    }
+
+    @Override
+    public CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, Field<?>... fields) {
+        return new CreateViewImpl<>(configuration(), view, fields, true, false);
     }
 
     @Override
@@ -4936,7 +4134,67 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public CreateViewAsStep<Record> createViewIfNotExists(Table<?> view, BiFunction<? super Field<?>, ? super Integer, ? extends Field<?>> fieldNameFunction) {
-        return new CreateViewImplWithFieldNameFunctionImpl<>(configuration(), view, fieldNameFunction, true, false);
+        return new CreateViewImpl<>(configuration(), view, fieldNameFunction, true, false);
+    }
+
+    @Override
+    public CreateTypeStep createType(String type) {
+        return createType(name(type));
+    }
+
+    @Override
+    public CreateTypeStep createType(Name type) {
+        return new CreateTypeImpl(configuration(), type);
+    }
+
+    @Override
+    public DropTypeStep dropType(String type) {
+        return dropType(name(type));
+    }
+
+    @Override
+    public DropTypeStep dropType(Name type) {
+        return dropType(Arrays.asList(type));
+    }
+
+    @Override
+    public DropTypeStep dropType(String... type) {
+        return dropType(Tools.names(type));
+    }
+
+    @Override
+    public DropTypeStep dropType(Name... type) {
+        return dropType(Arrays.asList(type));
+    }
+
+    @Override
+    public DropTypeStep dropType(Collection<?> type) {
+        return new DropTypeImpl(configuration(), type, false);
+    }
+
+    @Override
+    public DropTypeStep dropTypeIfExists(String type) {
+        return dropTypeIfExists(name(type));
+    }
+
+    @Override
+    public DropTypeStep dropTypeIfExists(Name type) {
+        return dropTypeIfExists(Arrays.asList(type));
+    }
+
+    @Override
+    public DropTypeStep dropTypeIfExists(String... type) {
+        return dropTypeIfExists(Tools.names(type));
+    }
+
+    @Override
+    public DropTypeStep dropTypeIfExists(Name... type) {
+        return dropTypeIfExists(Arrays.asList(type));
+    }
+
+    @Override
+    public DropTypeStep dropTypeIfExists(Collection<?> type) {
+        return new DropTypeImpl(configuration(), type, true);
     }
 
     @Override
@@ -5061,7 +4319,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public Record newRecord(Field<?>... fields) {
-        return Tools.newRecord(false, configuration(), RecordImplN.class, Tools.row0(fields)).operate(null);
+        return Tools.newRecord(false, RecordImplN.class, Tools.row0(fields), configuration()).operate(null);
     }
 
     @Override
@@ -5185,17 +4443,17 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public <R extends UDTRecord<R>> R newRecord(UDT<R> type) {
-        return Tools.newRecord(false, configuration(), type).operate(null);
+        return Tools.newRecord(false, type, configuration()).operate(null);
     }
 
     @Override
     public <R extends Record> R newRecord(Table<R> table) {
-        return Tools.newRecord(false, configuration(), table).operate(null);
+        return Tools.newRecord(false, table, configuration()).operate(null);
     }
 
     @Override
     public <R extends Record> R newRecord(Table<R> table, final Object source) {
-        return Tools.newRecord(false, configuration(), table)
+        return Tools.newRecord(false, table, configuration())
                     .operate(record -> {
                         record.from(source);
                         return record;
@@ -5395,12 +4653,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public <T> T fetchValue(TableField<?, T> field) {
-        return fetchValue(field, noCondition());
-    }
-
-    @Override
-    public <T> T fetchValue(TableField<?, T> field, Condition condition) {
-        return fetchValue(select(field).from(field.getTable()).where(condition));
+        return fetchValue(select(field).from(field.getTable()));
     }
 
     @Override
@@ -5423,11 +4676,6 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     }
 
     @Override
-    public <T> Optional<T> fetchOptionalValue(TableField<?, T> field, Condition condition) {
-        return Optional.ofNullable(fetchValue(field, condition));
-    }
-
-    @Override
     public <T> List<T> fetchValues(Table<? extends Record1<T>> table) {
         return fetchValues(selectFrom(table));
     }
@@ -5439,12 +4687,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public <T> List<T> fetchValues(TableField<?, T> field) {
-        return fetchValues(field, noCondition());
-    }
-
-    @Override
-    public <T> List<T> fetchValues(TableField<?, T> field, Condition condition) {
-        return fetchValues(select(field).from(field.getTable()).where(condition));
+        return fetchValues(select(field).from(field.getTable()));
     }
 
     @Override
@@ -5511,7 +4754,7 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
 
     @Override
     public boolean fetchExists(Table<?> table, Condition condition) {
-        return fetchExists(select(one()).from(table).where(condition));
+        return fetchExists(selectOne().from(table).where(condition));
     }
 
     @Override
@@ -5713,111 +4956,6 @@ public class DefaultDSLContext extends AbstractScope implements DSLContext, Seri
     @Override
     public <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> Record22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22> fetchSingle(SelectField<T1> field1, SelectField<T2> field2, SelectField<T3> field3, SelectField<T4> field4, SelectField<T5> field5, SelectField<T6> field6, SelectField<T7> field7, SelectField<T8> field8, SelectField<T9> field9, SelectField<T10> field10, SelectField<T11> field11, SelectField<T12> field12, SelectField<T13> field13, SelectField<T14> field14, SelectField<T15> field15, SelectField<T16> field16, SelectField<T17> field17, SelectField<T18> field18, SelectField<T19> field19, SelectField<T20> field20, SelectField<T21> field21, SelectField<T22> field22) {
         return (Record22<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22>) fetchSingle(new SelectField[] { field1, field2, field3, field4, field5, field6, field7, field8, field9, field10, field11, field12, field13, field14, field15, field16, field17, field18, field19, field20, field21, field22 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2) {
-        return fetchSingle(table, new Condition[] { c1, c2 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8, c9 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15, Condition c16) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15, Condition c16, Condition c17) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15, Condition c16, Condition c17, Condition c18) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15, Condition c16, Condition c17, Condition c18, Condition c19) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15, Condition c16, Condition c17, Condition c18, Condition c19, Condition c20) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15, Condition c16, Condition c17, Condition c18, Condition c19, Condition c20, Condition c21) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20, c21 });
-    }
-
-    @Override
-    public <R extends Record> R fetchSingle(Table<R> table, Condition c1, Condition c2, Condition c3, Condition c4, Condition c5, Condition c6, Condition c7, Condition c8, Condition c9, Condition c10, Condition c11, Condition c12, Condition c13, Condition c14, Condition c15, Condition c16, Condition c17, Condition c18, Condition c19, Condition c20, Condition c21, Condition c22) {
-        return fetchSingle(table, new Condition[] { c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15, c16, c17, c18, c19, c20, c21, c22 });
     }
 
 

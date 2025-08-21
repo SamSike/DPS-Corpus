@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@ import jakarta.resource.ResourceException;
 import jakarta.resource.spi.ActivationSpec;
 import jakarta.resource.spi.ResourceAdapter;
 import jakarta.resource.spi.endpoint.MessageEndpointFactory;
-import org.jspecify.annotations.Nullable;
 
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.SmartLifecycle;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -39,22 +39,21 @@ import org.springframework.util.Assert;
  *
  * <pre class="code">
  * &lt;bean class="org.springframework.jca.endpoint.GenericMessageEndpointManager"&gt;
- *  &lt;property name="resourceAdapter" ref="resourceAdapter"/&gt;
- *  &lt;property name="messageEndpointFactory"&gt;
- *    &lt;bean class="org.springframework.jca.endpoint.GenericMessageEndpointFactory"&gt;
- *      &lt;property name="messageListener" ref="messageListener"/&gt;
- *    &lt;/bean&gt;
- *  &lt;/property&gt;
- *  &lt;property name="activationSpec"&gt;
- *    &lt;bean class="org.apache.activemq.ra.ActiveMQActivationSpec"&gt;
- *      &lt;property name="destination" value="myQueue"/&gt;
- *      &lt;property name="destinationType" value="jakarta.jms.Queue"/&gt;
- *    &lt;/bean&gt;
- *  &lt;/property&gt;
- * &lt;/bean&gt;
- * </pre>
+ * 	 &lt;property name="resourceAdapter" ref="resourceAdapter"/&gt;
+ * 	 &lt;property name="messageEndpointFactory"&gt;
+ *     &lt;bean class="org.springframework.jca.endpoint.GenericMessageEndpointFactory"&gt;
+ *       &lt;property name="messageListener" ref="messageListener"/&gt;
+ *     &lt;/bean&gt;
+ * 	 &lt;/property&gt;
+ * 	 &lt;property name="activationSpec"&gt;
+ *     &lt;bean class="org.apache.activemq.ra.ActiveMQActivationSpec"&gt;
+ *       &lt;property name="destination" value="myQueue"/&gt;
+ *       &lt;property name="destinationType" value="jakarta.jms.Queue"/&gt;
+ *     &lt;/bean&gt;
+ *   &lt;/property&gt;
+ * &lt;/bean&gt;</pre>
  *
- * <p>In this example, Spring's own {@link GenericMessageEndpointFactory} is used
+ * In this example, Spring's own {@link GenericMessageEndpointFactory} is used
  * to point to a standard message listener object that happens to be supported
  * by the specified target ResourceAdapter: in this case, a JMS
  * {@link jakarta.jms.MessageListener} object as supported by the ActiveMQ
@@ -62,38 +61,37 @@ import org.springframework.util.Assert;
  *
  * <pre class="code">
  * &lt;bean id="messageListener" class="com.myorg.messaging.myMessageListener"&gt;
- *   &lt;!-- ... --&gt;
- * &lt;/bean&gt;
- * </pre>
+ *   ...
+ * &lt;/bean&gt;</pre>
  *
- * <p>The target ResourceAdapter may be configured as a local Spring bean as well
- * (the typical case) or obtained from JNDI. For the example above, a local
- * ResourceAdapter bean could be defined as follows (matching the "resourceAdapter"
- * bean reference above):
+ * The target ResourceAdapter may be configured as a local Spring bean as well
+ * (the typical case) or obtained from JNDI (e.g. on WebLogic). For the
+ * example above, a local ResourceAdapter bean could be defined as follows
+ * (matching the "resourceAdapter" bean reference above):
  *
  * <pre class="code">
  * &lt;bean id="resourceAdapter" class="org.springframework.jca.support.ResourceAdapterFactoryBean"&gt;
- *  &lt;property name="resourceAdapter"&gt;
- *    &lt;bean class="org.apache.activemq.ra.ActiveMQResourceAdapter"&gt;
- *      &lt;property name="serverUrl" value="tcp://localhost:61616"/&gt;
- *    &lt;/bean&gt;
- *  &lt;/property&gt;
- *  &lt;property name="workManager"&gt;
- *    &lt;bean class="..."/&gt;
- *  &lt;/property&gt;
- * &lt;/bean&gt;
- * </pre>
+ *   &lt;property name="resourceAdapter"&gt;
+ *     &lt;bean class="org.apache.activemq.ra.ActiveMQResourceAdapter"&gt;
+ *       &lt;property name="serverUrl" value="tcp://localhost:61616"/&gt;
+ *     &lt;/bean&gt;
+ *   &lt;/property&gt;
+ *   &lt;property name="workManager"&gt;
+ *     &lt;bean class="org.springframework.jca.work.SimpleTaskWorkManager"/&gt;
+ *   &lt;/property&gt;
+ * &lt;/bean&gt;</pre>
  *
- * <p>For a different target resource, the configuration would simply point to a
+ * For a different target resource, the configuration would simply point to a
  * different ResourceAdapter and a different ActivationSpec object (which are
  * both specific to the resource provider), and possibly a different message
- * listener (for example, a CCI {@link jakarta.resource.cci.MessageListener} for a
+ * listener (e.g. a CCI {@link jakarta.resource.cci.MessageListener} for a
  * resource adapter which is based on the JCA Common Client Interface).
  *
  * <p>The asynchronous execution strategy can be customized through the
- * "workManager" property on the ResourceAdapterFactoryBean as shown above,
- * where {@code <bean class="..."/>} should be replaced with configuration for
- * any JCA-compliant {@code WorkManager}.
+ * "workManager" property on the ResourceAdapterFactoryBean (as shown above).
+ * Check out {@link org.springframework.jca.work.SimpleTaskWorkManager}'s
+ * javadoc for its configuration options; alternatively, any other
+ * JCA-compliant WorkManager can be used (e.g. Geronimo's).
  *
  * <p>Transactional execution is a responsibility of the concrete message endpoint,
  * as built by the specified MessageEndpointFactory. {@link GenericMessageEndpointFactory}
@@ -103,45 +101,43 @@ import org.springframework.util.Assert;
  *
  * <pre class="code">
  * &lt;bean class="org.springframework.jca.endpoint.GenericMessageEndpointManager"&gt;
- *  &lt;property name="resourceAdapter" ref="resourceAdapter"/&gt;
- *  &lt;property name="messageEndpointFactory"&gt;
- *    &lt;bean class="org.springframework.jca.endpoint.GenericMessageEndpointFactory"&gt;
- *      &lt;property name="messageListener" ref="messageListener"/&gt;
- *      &lt;property name="transactionManager" ref="transactionManager"/&gt;
- *    &lt;/bean&gt;
- *  &lt;/property&gt;
- *  &lt;property name="activationSpec"&gt;
- *    &lt;bean class="org.apache.activemq.ra.ActiveMQActivationSpec"&gt;
- *      &lt;property name="destination" value="myQueue"/&gt;
- *      &lt;property name="destinationType" value="jakarta.jms.Queue"/&gt;
- *    &lt;/bean&gt;
- *  &lt;/property&gt;
+ * 	 &lt;property name="resourceAdapter" ref="resourceAdapter"/&gt;
+ * 	 &lt;property name="messageEndpointFactory"&gt;
+ *     &lt;bean class="org.springframework.jca.endpoint.GenericMessageEndpointFactory"&gt;
+ *       &lt;property name="messageListener" ref="messageListener"/&gt;
+ *       &lt;property name="transactionManager" ref="transactionManager"/&gt;
+ *     &lt;/bean&gt;
+ * 	 &lt;/property&gt;
+ * 	 &lt;property name="activationSpec"&gt;
+ *     &lt;bean class="org.apache.activemq.ra.ActiveMQActivationSpec"&gt;
+ *       &lt;property name="destination" value="myQueue"/&gt;
+ *       &lt;property name="destinationType" value="jakarta.jms.Queue"/&gt;
+ *     &lt;/bean&gt;
+ *   &lt;/property&gt;
  * &lt;/bean&gt;
  *
- * &lt;bean id="transactionManager" class="org.springframework.transaction.jta.JtaTransactionManager"/&gt;
- * </pre>
+ * &lt;bean id="transactionManager" class="org.springframework.transaction.jta.JtaTransactionManager"/&gt;</pre>
  *
- * <p>Alternatively, check out your resource provider's ActivationSpec object,
+ * Alternatively, check out your resource provider's ActivationSpec object,
  * which should support local transactions through a provider-specific config flag,
- * for example, ActiveMQActivationSpec's "useRAManagedTransaction" bean property.
+ * e.g. ActiveMQActivationSpec's "useRAManagedTransaction" bean property.
  *
  * <pre class="code">
  * &lt;bean class="org.springframework.jca.endpoint.GenericMessageEndpointManager"&gt;
- *  &lt;property name="resourceAdapter" ref="resourceAdapter"/&gt;
- *  &lt;property name="messageEndpointFactory"&gt;
- *    &lt;bean class="org.springframework.jca.endpoint.GenericMessageEndpointFactory"&gt;
- *      &lt;property name="messageListener" ref="messageListener"/&gt;
- *    &lt;/bean&gt;
- *  &lt;/property&gt;
- *  &lt;property name="activationSpec"&gt;
- *    &lt;bean class="org.apache.activemq.ra.ActiveMQActivationSpec"&gt;
- *      &lt;property name="destination" value="myQueue"/&gt;
- *      &lt;property name="destinationType" value="jakarta.jms.Queue"/&gt;
- *      &lt;property name="useRAManagedTransaction" value="true"/&gt;
- *    &lt;/bean&gt;
- *  &lt;/property&gt;
- * &lt;/bean&gt;
- * </pre>
+ * 	 &lt;property name="resourceAdapter" ref="resourceAdapter"/&gt;
+ * 	 &lt;property name="messageEndpointFactory"&gt;
+ *     &lt;bean class="org.springframework.jca.endpoint.GenericMessageEndpointFactory"&gt;
+ *       &lt;property name="messageListener" ref="messageListener"/&gt;
+ *     &lt;/bean&gt;
+ * 	 &lt;/property&gt;
+ * 	 &lt;property name="activationSpec"&gt;
+ *     &lt;bean class="org.apache.activemq.ra.ActiveMQActivationSpec"&gt;
+ *       &lt;property name="destination" value="myQueue"/&gt;
+ *       &lt;property name="destinationType" value="jakarta.jms.Queue"/&gt;
+ *       &lt;property name="useRAManagedTransaction" value="true"/&gt;
+ *     &lt;/bean&gt;
+ *   &lt;/property&gt;
+ * &lt;/bean&gt;</pre>
  *
  * @author Juergen Hoeller
  * @since 2.5
@@ -152,11 +148,14 @@ import org.springframework.util.Assert;
  */
 public class GenericMessageEndpointManager implements SmartLifecycle, InitializingBean, DisposableBean {
 
-	private @Nullable ResourceAdapter resourceAdapter;
+	@Nullable
+	private ResourceAdapter resourceAdapter;
 
-	private @Nullable MessageEndpointFactory messageEndpointFactory;
+	@Nullable
+	private MessageEndpointFactory messageEndpointFactory;
 
-	private @Nullable ActivationSpec activationSpec;
+	@Nullable
+	private ActivationSpec activationSpec;
 
 	private boolean autoStartup = true;
 
@@ -177,7 +176,8 @@ public class GenericMessageEndpointManager implements SmartLifecycle, Initializi
 	/**
 	 * Return the JCA ResourceAdapter to manage endpoints for.
 	 */
-	public @Nullable ResourceAdapter getResourceAdapter() {
+	@Nullable
+	public ResourceAdapter getResourceAdapter() {
 		return this.resourceAdapter;
 	}
 
@@ -196,7 +196,8 @@ public class GenericMessageEndpointManager implements SmartLifecycle, Initializi
 	/**
 	 * Return the JCA MessageEndpointFactory to activate.
 	 */
-	public @Nullable MessageEndpointFactory getMessageEndpointFactory() {
+	@Nullable
+	public MessageEndpointFactory getMessageEndpointFactory() {
 		return this.messageEndpointFactory;
 	}
 
@@ -212,7 +213,8 @@ public class GenericMessageEndpointManager implements SmartLifecycle, Initializi
 	/**
 	 * Return the JCA ActivationSpec to use for activating the endpoint.
 	 */
-	public @Nullable ActivationSpec getActivationSpec() {
+	@Nullable
+	public ActivationSpec getActivationSpec() {
 		return this.activationSpec;
 	}
 
@@ -238,9 +240,9 @@ public class GenericMessageEndpointManager implements SmartLifecycle, Initializi
 	/**
 	 * Specify the phase in which this endpoint manager should be started
 	 * and stopped. The startup order proceeds from lowest to highest, and
-	 * the shutdown order is the reverse of that. By default, this value is
-	 * {@code Integer.MAX_VALUE} meaning that this endpoint manager starts
-	 * as late as possible and stops as soon as possible.
+	 * the shutdown order is the reverse of that. By default this value is
+	 * Integer.MAX_VALUE meaning that this endpoint manager starts as late
+	 * as possible and stops as soon as possible.
 	 */
 	public void setPhase(int phase) {
 		this.phase = phase;

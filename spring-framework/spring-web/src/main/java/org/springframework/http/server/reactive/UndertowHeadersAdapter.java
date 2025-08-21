@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package org.springframework.http.server.reactive;
 
 import java.util.AbstractSet;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -28,8 +27,8 @@ import java.util.stream.Collectors;
 import io.undertow.util.HeaderMap;
 import io.undertow.util.HeaderValues;
 import io.undertow.util.HttpString;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 
@@ -37,7 +36,6 @@ import org.springframework.util.MultiValueMap;
  * {@code MultiValueMap} implementation for wrapping Undertow HTTP headers.
  *
  * @author Brian Clozel
- * @author Sam Brannen
  * @since 5.1.1
  */
 class UndertowHeadersAdapter implements MultiValueMap<String, String> {
@@ -101,7 +99,7 @@ class UndertowHeadersAdapter implements MultiValueMap<String, String> {
 
 	@Override
 	public boolean containsKey(Object key) {
-		return (key instanceof String headerName && this.headers.contains(headerName));
+		return (key instanceof String && this.headers.contains((String) key));
 	}
 
 	@Override
@@ -113,24 +111,27 @@ class UndertowHeadersAdapter implements MultiValueMap<String, String> {
 	}
 
 	@Override
-	public @Nullable List<String> get(Object key) {
-		return (key instanceof String headerName ? this.headers.get(headerName) : null);
+	@Nullable
+	public List<String> get(Object key) {
+		if (key instanceof String) {
+			return this.headers.get((String) key);
+		}
+		return null;
 	}
 
 	@Override
-	public @Nullable List<String> put(String key, List<String> value) {
+	@Nullable
+	public List<String> put(String key, List<String> value) {
 		HeaderValues previousValues = this.headers.get(key);
 		this.headers.putAll(HttpString.tryFromString(key), value);
 		return previousValues;
 	}
 
 	@Override
-	public @Nullable List<String> remove(Object key) {
-		if (key instanceof String headerName) {
-			Collection<String> removed = this.headers.remove(headerName);
-			if (removed != null) {
-				return new ArrayList<>(removed);
-			}
+	@Nullable
+	public List<String> remove(Object key) {
+		if (key instanceof String) {
+			this.headers.remove((String) key);
 		}
 		return null;
 	}
@@ -160,7 +161,7 @@ class UndertowHeadersAdapter implements MultiValueMap<String, String> {
 
 	@Override
 	public Set<Entry<String, List<String>>> entrySet() {
-		return new AbstractSet<>() {
+		return new AbstractSet<Entry<String, List<String>>>() {
 			@Override
 			public Iterator<Entry<String, List<String>>> iterator() {
 				return new EntryIterator();
@@ -182,7 +183,7 @@ class UndertowHeadersAdapter implements MultiValueMap<String, String> {
 
 	private class EntryIterator implements Iterator<Entry<String, List<String>>> {
 
-		private final Iterator<HttpString> names = headers.getHeaderNames().iterator();
+		private Iterator<HttpString> names = headers.getHeaderNames().iterator();
 
 		@Override
 		public boolean hasNext() {
@@ -240,7 +241,8 @@ class UndertowHeadersAdapter implements MultiValueMap<String, String> {
 
 		private final Iterator<HttpString> iterator;
 
-		private @Nullable String currentName;
+		@Nullable
+		private String currentName;
 
 		private HeaderNamesIterator(Iterator<HttpString> iterator) {
 			this.iterator = iterator;

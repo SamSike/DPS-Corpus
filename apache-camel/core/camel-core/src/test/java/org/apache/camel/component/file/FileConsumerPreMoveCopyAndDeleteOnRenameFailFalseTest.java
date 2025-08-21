@@ -21,11 +21,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class FileConsumerPreMoveCopyAndDeleteOnRenameFailFalseTest extends FileConsumerPreMoveTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
-        context.getRegistry().bind("testDirectory", testDirectory());
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?preMove=work/work-${file:name}&initialDelay=0&delay=10&copyAndDeleteOnRenameFail=false"))
                         .process(new MyPreMoveCheckerProcessor() {
                         })

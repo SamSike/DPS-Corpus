@@ -16,42 +16,31 @@
  */
 package org.apache.camel.component.file;
 
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 /**
  * Unit test for consuming from an absolute path
  */
 public class FileConsumerAbsolutePathDefaultMoveTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "paris" + UUID.randomUUID() + ".txt";
 
     @Test
     public void testConsumeFromAbsolutePath() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:report");
         mock.expectedBodiesReceived("Hello Paris");
-        mock.expectedFileExists(testFile(".camel/" + TEST_FILE_NAME));
+        mock.expectedFileExists(testFile(".camel/paris.txt"));
 
-        Awaitility.await()
-                .atMost(5, TimeUnit.SECONDS)
-                .pollDelay(250, TimeUnit.MILLISECONDS)
-                .untilAsserted(() -> {
-                    template.sendBodyAndHeader(fileUri(), "Hello Paris", Exchange.FILE_NAME, TEST_FILE_NAME);
-                    assertMockEndpointsSatisfied();
-                });
+        template.sendBodyAndHeader(fileUri(), "Hello Paris", Exchange.FILE_NAME, "paris.txt");
         mock.assertIsSatisfied();
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?initialDelay=0&delay=10")).convertBodyTo(String.class).to("mock:report");
             }
         };

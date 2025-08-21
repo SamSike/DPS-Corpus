@@ -48,11 +48,11 @@ public class InterceptFromSimplePredicateTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 // START SNIPPET: e1
-                interceptFrom().onWhen(header("usertype").isEqualTo("test")).process(new MyTestServiceProcessor())
+                interceptFrom().when(header("usertype").isEqualTo("test")).process(new MyTestServiceProcessor())
                         .to("mock:intercepted");
 
                 // and here is our route
@@ -65,7 +65,7 @@ public class InterceptFromSimplePredicateTest extends ContextTestSupport {
     private static class MyTestServiceProcessor implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             exchange.getIn().setBody("This is a test body");
         }
     }

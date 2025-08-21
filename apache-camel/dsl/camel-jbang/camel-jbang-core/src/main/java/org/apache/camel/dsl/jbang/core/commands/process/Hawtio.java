@@ -24,21 +24,21 @@ import java.util.concurrent.CountDownLatch;
 import org.apache.camel.dsl.jbang.core.commands.CamelCommand;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
 import org.apache.camel.main.download.DependencyDownloaderClassLoader;
+import org.apache.camel.main.download.MavenArtifact;
 import org.apache.camel.main.download.MavenDependencyDownloader;
 import org.apache.camel.support.ObjectHelper;
-import org.apache.camel.tooling.maven.MavenArtifact;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
-@Command(name = "hawtio", description = "Launch Hawtio web console", sortOptions = false, showDefaultValues = true)
+@Command(name = "hawtio", description = "Launch Hawtio web console")
 public class Hawtio extends CamelCommand {
 
     @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
     String name;
 
     @CommandLine.Option(names = { "--version" },
-                        description = "Version of the Hawtio web console", defaultValue = "4.4.0")
-    String version = "4.4.0";
+                        description = "Version of the Hawtio web console", defaultValue = "2.17.0")
+    String version = "2.17.0";
 
     // use port 8888 as 8080 is too commonly used
     @CommandLine.Option(names = { "--port" },
@@ -57,12 +57,12 @@ public class Hawtio extends CamelCommand {
     }
 
     @Override
-    public Integer doCall() throws Exception {
+    public Integer call() throws Exception {
         int exit;
         if (name == null) {
             exit = callHawtio();
         } else {
-            // attach jolokia before calling hawtio and disconnect afterward
+            // attach jolokia before calling hawtio and disconnect afterwards
             try {
                 exit = connectJolokia();
                 if (exit == 0) {
@@ -85,7 +85,7 @@ public class Hawtio extends CamelCommand {
 
     protected void disconnectJolokia() throws Exception {
         Jolokia jolokia = new Jolokia(getMain());
-        jolokia.name = Long.toString(pid);
+        jolokia.name = "" + pid;
         jolokia.stop = true;
         jolokia.call();
     }
@@ -101,7 +101,7 @@ public class Hawtio extends CamelCommand {
         // download war that has the web-console
         MavenArtifact ma = downloader.downloadArtifact("io.hawt", "hawtio-war:war", version);
         if (ma == null) {
-            printer().printErr("Cannot download io.hawt:hawtio-war:war:" + version);
+            System.err.println("Cannot download io.hawt:hawtio-war:war:" + version);
             return 1;
         }
 
@@ -112,7 +112,7 @@ public class Hawtio extends CamelCommand {
             // turn off hawito auth
             System.setProperty("hawtio.authenticationEnabled", "false");
 
-            // use CL from that has the downloaded JAR
+            // use CL from camel context that now has the downloaded JAR
             Thread.currentThread().setContextClassLoader(cl);
             Class<?> clazz = cl.loadClass("io.hawt.embedded.Main");
             Object hawt = clazz.getDeclaredConstructor().newInstance();
@@ -131,7 +131,7 @@ public class Hawtio extends CamelCommand {
                     try {
                         Desktop.getDesktop().browse(new URI(url));
                     } catch (Exception e) {
-                        printer().printErr("Failed to open browser session, to access Hawtio open url: " + url);
+                        System.err.println("Failed to open browser session, to access Hawtio open url: " + url);
                     }
                 }
             }
@@ -139,22 +139,20 @@ public class Hawtio extends CamelCommand {
             // keep JVM running
             installHangupInterceptor();
             shutdownLatch.await();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            printer().printErr("Interrupted while launching Hawtio");
-            return 1;
-        } catch (Exception e) {
-            printer().printErr("Cannot launch Hawtio due to: " + e.getMessage());
+
+        } catch (Throwable e) {
+            System.err.println("Cannot launch Hawtio due to: " + e.getMessage());
             return 1;
         } finally {
-            downloader.close();
+            downloader.stop();
         }
 
         return 0;
     }
 
     private ClassLoader createClassLoader() {
-        return new DependencyDownloaderClassLoader(null);
+        ClassLoader parentCL = Hawtio.class.getClassLoader();
+        return new DependencyDownloaderClassLoader(parentCL);
     }
 
     private void installHangupInterceptor() {

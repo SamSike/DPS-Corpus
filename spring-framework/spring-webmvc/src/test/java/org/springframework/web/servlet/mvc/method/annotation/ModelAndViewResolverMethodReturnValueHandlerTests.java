@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
  *
  * @author Rossen Stoyanchev
  */
-class ModelAndViewResolverMethodReturnValueHandlerTests {
+public class ModelAndViewResolverMethodReturnValueHandlerTests {
 
 	private ModelAndViewResolverMethodReturnValueHandler handler;
 
@@ -53,7 +53,7 @@ class ModelAndViewResolverMethodReturnValueHandlerTests {
 
 
 	@BeforeEach
-	void setup() {
+	public void setup() {
 		mavResolvers = new ArrayList<>();
 		handler = new ModelAndViewResolverMethodReturnValueHandler(mavResolvers);
 		mavContainer = new ModelAndViewContainer();
@@ -62,7 +62,7 @@ class ModelAndViewResolverMethodReturnValueHandlerTests {
 
 
 	@Test
-	void modelAndViewResolver() throws Exception {
+	public void modelAndViewResolver() throws Exception {
 		MethodParameter returnType = new MethodParameter(getClass().getDeclaredMethod("testBeanReturnValue"), -1);
 		mavResolvers.add(new TestModelAndViewResolver(TestBean.class));
 		TestBean testBean = new TestBean("name");
@@ -75,7 +75,7 @@ class ModelAndViewResolverMethodReturnValueHandlerTests {
 	}
 
 	@Test
-	void modelAndViewResolverUnresolved() throws Exception {
+	public void modelAndViewResolverUnresolved() throws Exception {
 		MethodParameter returnType = new MethodParameter(getClass().getDeclaredMethod("intReturnValue"), -1);
 		mavResolvers.add(new TestModelAndViewResolver(TestBean.class));
 		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() ->
@@ -83,24 +83,24 @@ class ModelAndViewResolverMethodReturnValueHandlerTests {
 	}
 
 	@Test
-	void handleNull() throws Exception {
+	public void handleNull() throws Exception {
 		MethodParameter returnType = new MethodParameter(getClass().getDeclaredMethod("testBeanReturnValue"), -1);
 		handler.handleReturnValue(null, returnType, mavContainer, request);
 
 		assertThat(mavContainer.getView()).isNull();
 		assertThat(mavContainer.getViewName()).isNull();
-		assertThat(mavContainer.getModel()).isEmpty();
+		assertThat(mavContainer.getModel().isEmpty()).isTrue();
 	}
 
 	@Test
-	void handleSimpleType() throws Exception {
+	public void handleSimpleType() throws Exception {
 		MethodParameter returnType = new MethodParameter(getClass().getDeclaredMethod("intReturnValue"), -1);
 		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() ->
 					handler.handleReturnValue(55, returnType, mavContainer, request));
 	}
 
 	@Test
-	void handleNonSimpleType() throws Exception{
+	public void handleNonSimpleType() throws Exception{
 		MethodParameter returnType = new MethodParameter(getClass().getDeclaredMethod("testBeanReturnValue"), -1);
 		handler.handleReturnValue(new TestBean(), returnType, mavContainer, request);
 

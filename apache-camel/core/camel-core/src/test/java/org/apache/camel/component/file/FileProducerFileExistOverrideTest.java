@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.file;
 
-import java.util.UUID;
-
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
@@ -25,16 +23,15 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.jupiter.api.Test;
 
 public class FileProducerFileExistOverrideTest extends ContextTestSupport {
-    private static final String TEST_FILE_NAME = "hello" + UUID.randomUUID() + ".txt";
 
     @Test
     public void testOverride() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedBodiesReceived("Bye World");
-        mock.expectedFileExists(testFile(TEST_FILE_NAME), "Bye World");
+        mock.expectedFileExists(testFile("hello.txt"), "Bye World");
 
-        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, TEST_FILE_NAME);
-        template.sendBodyAndHeader(fileUri("?fileExist=Override"), "Bye World", Exchange.FILE_NAME, TEST_FILE_NAME);
+        template.sendBodyAndHeader(fileUri(), "Hello World", Exchange.FILE_NAME, "hello.txt");
+        template.sendBodyAndHeader(fileUri("?fileExist=Override"), "Bye World", Exchange.FILE_NAME, "hello.txt");
 
         context.getRouteController().startAllRoutes();
 
@@ -42,11 +39,11 @@ public class FileProducerFileExistOverrideTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
-                from(fileUri("?noop=true&initialDelay=0&delay=10")).autoStartup(false).convertBodyTo(String.class)
+            public void configure() throws Exception {
+                from(fileUri("?noop=true&initialDelay=0&delay=10")).noAutoStartup().convertBodyTo(String.class)
                         .to("mock:result");
             }
         };

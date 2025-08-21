@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,9 @@
 
 package org.springframework.cache.jcache.config;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.cache.annotation.CachingConfigurerSupport;
 import org.springframework.cache.interceptor.CacheResolver;
+import org.springframework.lang.Nullable;
 
 /**
  * An extension of {@link CachingConfigurerSupport} that also implements
@@ -32,13 +31,12 @@ import org.springframework.cache.interceptor.CacheResolver;
  * @since 4.1
  * @see JCacheConfigurer
  * @see CachingConfigurerSupport
- * @deprecated as of 6.0 in favor of implementing {@link JCacheConfigurer} directly
  */
-@Deprecated(since = "6.0")
 public class JCacheConfigurerSupport extends CachingConfigurerSupport implements JCacheConfigurer {
 
 	@Override
-	public @Nullable CacheResolver exceptionCacheResolver() {
+	@Nullable
+	public CacheResolver exceptionCacheResolver() {
 		return null;
 	}
 

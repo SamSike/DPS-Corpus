@@ -70,19 +70,19 @@ public class ClusteredJdbcAggregationRepository extends JdbcAggregationRepositor
     public void remove(final CamelContext camelContext, final String correlationId, final Exchange exchange) {
         transactionTemplate.execute(new TransactionCallbackWithoutResult() {
             protected void doInTransactionWithoutResult(TransactionStatus status) {
+                final String key = correlationId;
                 final String confirmKey = exchange.getExchangeId();
                 final long version = exchange.getProperty(VERSION_PROPERTY, Long.class);
                 try {
-                    LOG.debug("Removing key {}", correlationId);
+                    LOG.debug("Removing key {}", key);
 
                     jdbcTemplate.update("DELETE FROM " + getRepositoryName() + " WHERE " + ID + " = ? AND " + VERSION + " = ?",
-                            correlationId, version);
+                            key, version);
 
                     insert(camelContext, confirmKey, exchange, getRepositoryNameCompleted(), version, true);
 
                 } catch (Exception e) {
-                    throw new RuntimeException(
-                            "Error removing key " + correlationId + " from repository " + getRepositoryName(), e);
+                    throw new RuntimeException("Error removing key " + key + " from repository " + getRepositoryName(), e);
                 }
             }
         });
@@ -104,15 +104,8 @@ public class ClusteredJdbcAggregationRepository extends JdbcAggregationRepositor
         // The default totalParameterIndex is 3 for ID, Exchange and version. Depending
         // on logic this will be increased.
         int totalParameterIndex = 3;
-        StringBuilder queryBuilder = new StringBuilder(256)
-                .append("INSERT INTO ")
-                .append(repositoryName)
-                .append('(')
-                .append(EXCHANGE)
-                .append(", ")
-                .append(ID)
-                .append(", ")
-                .append(VERSION);
+        StringBuilder queryBuilder = new StringBuilder().append("INSERT INTO ").append(repositoryName).append('(')
+                .append(EXCHANGE).append(", ").append(ID).append(", ").append(VERSION);
 
         if (isStoreBodyAsText()) {
             queryBuilder.append(", ").append(BODY);
@@ -131,7 +124,9 @@ public class ClusteredJdbcAggregationRepository extends JdbcAggregationRepositor
         }
         queryBuilder.append(") VALUES (");
 
-        queryBuilder.append("?, ".repeat(totalParameterIndex - 1));
+        for (int i = 0; i < totalParameterIndex - 1; i++) {
+            queryBuilder.append("?, ");
+        }
         queryBuilder.append("?)");
 
         String sql = queryBuilder.toString();
@@ -143,7 +138,7 @@ public class ClusteredJdbcAggregationRepository extends JdbcAggregationRepositor
             final CamelContext camelContext, final String key, final Exchange exchange,
             final String sql, final Long version, final boolean completed)
             throws Exception {
-        final byte[] data = jdbcCamelCodec.marshallExchange(exchange, isAllowSerializedHeaders());
+        final byte[] data = codec.marshallExchange(exchange, allowSerializedHeaders);
         Integer insertCount = super.jdbcTemplate.execute(sql,
                 new AbstractLobCreatingPreparedStatementCallback(getLobHandler()) {
                     @Override

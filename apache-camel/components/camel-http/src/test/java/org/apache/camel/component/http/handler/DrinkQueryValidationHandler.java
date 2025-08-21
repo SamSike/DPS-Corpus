@@ -16,7 +16,7 @@
  */
 package org.apache.camel.component.http.handler;
 
-import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.http.HttpRequest;
 
 public class DrinkQueryValidationHandler extends BasicValidationHandler {
 
@@ -28,11 +28,7 @@ public class DrinkQueryValidationHandler extends BasicValidationHandler {
     }
 
     @Override
-    protected String buildResponse(ClassicHttpRequest request) {
-        return "Drinking " + request.getRequestUri();
-    }
-
-    public String getName() {
-        return name;
+    protected String buildResponse(HttpRequest request) {
+        return "Drinking " + request.getRequestLine().getUri();
     }
 }

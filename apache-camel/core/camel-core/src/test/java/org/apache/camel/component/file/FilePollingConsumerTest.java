@@ -17,13 +17,10 @@
 package org.apache.camel.component.file;
 
 import java.nio.file.Files;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.PollingConsumer;
-import org.awaitility.Awaitility;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,13 +45,16 @@ public class FilePollingConsumerTest extends ContextTestSupport {
 
         // sleep a bit to ensure polling consumer would be suspended after we
         // have used it
-        Awaitility.await().pollDelay(500, TimeUnit.MILLISECONDS).untilAsserted(() -> Assertions
-                .assertDoesNotThrow(() -> template.sendBodyAndHeader(fileUri(), "Bye World", Exchange.FILE_NAME, "bye.txt")));
+        Thread.sleep(500);
+
+        // drop a new file which should not be picked up by the consumer
+        template.sendBodyAndHeader(fileUri(), "Bye World", Exchange.FILE_NAME, "bye.txt");
 
         // sleep a bit to ensure polling consumer would not have picked up that
         // file
-        Awaitility.await().pollDelay(1000, TimeUnit.MILLISECONDS)
-                .untilAsserted(() -> assertTrue(Files.exists(testFile("bye.txt")), "File should exist bye.txt"));
+        Thread.sleep(1000);
+
+        assertTrue(Files.exists(testFile("bye.txt")), "File should exist bye.txt");
 
         consumer.stop();
     }

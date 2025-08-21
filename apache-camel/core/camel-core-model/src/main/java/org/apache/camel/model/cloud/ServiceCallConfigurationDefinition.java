@@ -40,7 +40,7 @@ import org.apache.camel.spi.Metadata;
 @Metadata(label = "routing,cloud")
 @XmlRootElement(name = "serviceCallConfiguration")
 @XmlAccessorType(XmlAccessType.FIELD)
-@Deprecated(since = "3.19.0")
+@Deprecated
 public class ServiceCallConfigurationDefinition extends IdentifiedType {
     @XmlAttribute
     private String uri;
@@ -48,7 +48,7 @@ public class ServiceCallConfigurationDefinition extends IdentifiedType {
     @Metadata(defaultValue = ServiceCallDefinitionConstants.DEFAULT_COMPONENT)
     private String component;
     @XmlAttribute
-    @Metadata(javaType = "org.apache.camel.ExchangePattern", enums = "InOnly,InOut")
+    @Metadata(javaType = "org.apache.camel.ExchangePattern", enums = "InOnly,InOut,InOptionalOut")
     private String pattern;
     @XmlAttribute
     private String serviceDiscoveryRef;

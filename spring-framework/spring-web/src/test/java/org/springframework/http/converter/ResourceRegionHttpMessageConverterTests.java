@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.BDDMockito;
+import org.mockito.Mockito;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ClassPathResource;
@@ -32,24 +34,22 @@ import org.springframework.core.io.support.ResourceRegion;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRange;
 import org.springframework.http.MediaType;
+import org.springframework.http.MockHttpOutputMessage;
 import org.springframework.util.StringUtils;
-import org.springframework.web.testfixture.http.MockHttpOutputMessage;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 
 /**
  * Test cases for {@link ResourceRegionHttpMessageConverter} class.
  *
  * @author Brian Clozel
  */
-class ResourceRegionHttpMessageConverterTests {
+public class ResourceRegionHttpMessageConverterTests {
 
 	private final ResourceRegionHttpMessageConverter converter = new ResourceRegionHttpMessageConverter();
 
 	@Test
-	void canReadResource() {
+	public void canReadResource() {
 		assertThat(converter.canRead(Resource.class, MediaType.APPLICATION_OCTET_STREAM)).isFalse();
 		assertThat(converter.canRead(Resource.class, MediaType.ALL)).isFalse();
 		assertThat(converter.canRead(List.class, MediaType.APPLICATION_OCTET_STREAM)).isFalse();
@@ -57,14 +57,14 @@ class ResourceRegionHttpMessageConverterTests {
 	}
 
 	@Test
-	void canWriteResource() {
+	public void canWriteResource() {
 		assertThat(converter.canWrite(ResourceRegion.class, null, MediaType.APPLICATION_OCTET_STREAM)).isTrue();
 		assertThat(converter.canWrite(ResourceRegion.class, null, MediaType.ALL)).isTrue();
 		assertThat(converter.canWrite(Object.class, null, MediaType.ALL)).isFalse();
 	}
 
 	@Test
-	void canWriteResourceCollection() {
+	public void canWriteResourceCollection() {
 		Type resourceRegionList = new ParameterizedTypeReference<List<ResourceRegion>>() {}.getType();
 		assertThat(converter.canWrite(resourceRegionList, null, MediaType.APPLICATION_OCTET_STREAM)).isTrue();
 		assertThat(converter.canWrite(resourceRegionList, null, MediaType.ALL)).isTrue();
@@ -76,7 +76,7 @@ class ResourceRegionHttpMessageConverterTests {
 	}
 
 	@Test
-	void shouldWritePartialContentByteRange() throws Exception {
+	public void shouldWritePartialContentByteRange() throws Exception {
 		MockHttpOutputMessage outputMessage = new MockHttpOutputMessage();
 		Resource body = new ClassPathResource("byterangeresource.txt", getClass());
 		ResourceRegion region = HttpRange.createByteRange(0, 5).toResourceRegion(body);
@@ -85,12 +85,13 @@ class ResourceRegionHttpMessageConverterTests {
 		HttpHeaders headers = outputMessage.getHeaders();
 		assertThat(headers.getContentType()).isEqualTo(MediaType.TEXT_PLAIN);
 		assertThat(headers.getContentLength()).isEqualTo(6L);
-		assertThat(headers.get(HttpHeaders.CONTENT_RANGE)).containsExactly("bytes 0-5/39");
+		assertThat(headers.get(HttpHeaders.CONTENT_RANGE)).hasSize(1);
+		assertThat(headers.get(HttpHeaders.CONTENT_RANGE).get(0)).isEqualTo("bytes 0-5/39");
 		assertThat(outputMessage.getBodyAsString(StandardCharsets.UTF_8)).isEqualTo("Spring");
 	}
 
 	@Test
-	void shouldWritePartialContentByteRangeNoEnd() throws Exception {
+	public void shouldWritePartialContentByteRangeNoEnd() throws Exception {
 		MockHttpOutputMessage outputMessage = new MockHttpOutputMessage();
 		Resource body = new ClassPathResource("byterangeresource.txt", getClass());
 		ResourceRegion region = HttpRange.createByteRange(7).toResourceRegion(body);
@@ -99,12 +100,13 @@ class ResourceRegionHttpMessageConverterTests {
 		HttpHeaders headers = outputMessage.getHeaders();
 		assertThat(headers.getContentType()).isEqualTo(MediaType.TEXT_PLAIN);
 		assertThat(headers.getContentLength()).isEqualTo(32L);
-		assertThat(headers.get(HttpHeaders.CONTENT_RANGE)).containsExactly("bytes 7-38/39");
+		assertThat(headers.get(HttpHeaders.CONTENT_RANGE)).hasSize(1);
+		assertThat(headers.get(HttpHeaders.CONTENT_RANGE).get(0)).isEqualTo("bytes 7-38/39");
 		assertThat(outputMessage.getBodyAsString(StandardCharsets.UTF_8)).isEqualTo("Framework test resource content.");
 	}
 
 	@Test
-	void partialContentMultipleByteRanges() throws Exception {
+	public void partialContentMultipleByteRanges() throws Exception {
 		MockHttpOutputMessage outputMessage = new MockHttpOutputMessage();
 		Resource body = new ClassPathResource("byterangeresource.txt", getClass());
 		List<HttpRange> rangeList = HttpRange.parseRanges("bytes=0-5,7-15,17-20,22-38");
@@ -143,7 +145,7 @@ class ResourceRegionHttpMessageConverterTests {
 	}
 
 	@Test
-	void partialContentMultipleByteRangesInRandomOrderAndOverlapping() throws Exception {
+	public void partialContentMultipleByteRangesInRandomOrderAndOverlapping() throws Exception {
 		MockHttpOutputMessage outputMessage = new MockHttpOutputMessage();
 		Resource body = new ClassPathResource("byterangeresource.txt", getClass());
 		List<HttpRange> rangeList = HttpRange.parseRanges("bytes=7-15,0-5,17-20,20-29");
@@ -184,10 +186,10 @@ class ResourceRegionHttpMessageConverterTests {
 	@Test // SPR-15041
 	public void applicationOctetStreamDefaultContentType() throws Exception {
 		MockHttpOutputMessage outputMessage = new MockHttpOutputMessage();
-		ClassPathResource body = mock();
-		given(body.getFilename()).willReturn("spring.dat");
-		given(body.contentLength()).willReturn(12L);
-		given(body.getInputStream()).willReturn(new ByteArrayInputStream("Spring Framework".getBytes()));
+		ClassPathResource body = Mockito.mock(ClassPathResource.class);
+		BDDMockito.given(body.getFilename()).willReturn("spring.dat");
+		BDDMockito.given(body.contentLength()).willReturn(12L);
+		BDDMockito.given(body.getInputStream()).willReturn(new ByteArrayInputStream("Spring Framework".getBytes()));
 		HttpRange range = HttpRange.createByteRange(0, 5);
 		ResourceRegion resourceRegion = range.toResourceRegion(body);
 

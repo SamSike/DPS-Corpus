@@ -1,7 +1,9 @@
 /**
  * Generic support for simple messaging protocols (like STOMP).
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.messaging.simp.stomp;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -46,19 +46,10 @@ import org.jooq.QueryPart;
 // ...
 // ...
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * @author Lukas Eder
  */
-final class FieldAlias<T>
-extends
-    AbstractField<T>
-implements
-    QOM.FieldAlias<T>,
-    SimpleCheckQueryPart,
-    NamedField<T>
-{
+final class FieldAlias<T> extends AbstractField<T> implements QOM.FieldAlias<T> {
 
     private final Alias<Field<T>> alias;
 
@@ -66,11 +57,6 @@ implements
         super(alias, field.getDataType());
 
         this.alias = new Alias<>(field, this, alias);
-    }
-
-    @Override
-    public final boolean isSimple(Context<?> ctx) {
-        return !ctx.declareFields();
     }
 
     @Override
@@ -118,12 +104,7 @@ implements
     }
 
     @Override
-    public final Field<?> $aliased() {
-        return alias.wrapped();
-    }
-
-    @Override
-    public final @NotNull Name $alias() {
+    public final Name $alias() {
         return getQualifiedName();
     }
 

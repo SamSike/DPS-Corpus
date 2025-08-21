@@ -81,7 +81,7 @@ public abstract class BaseElytronTest extends CamelTestSupport {
     public Properties loadProperties() {
 
         Properties prop = new Properties();
-        prop.setProperty("port", Integer.toString(getPort()));
+        prop.setProperty("port", "" + getPort());
         return prop;
     }
 

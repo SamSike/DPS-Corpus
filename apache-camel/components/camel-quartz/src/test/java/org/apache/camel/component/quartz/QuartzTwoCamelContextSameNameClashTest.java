@@ -23,7 +23,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 public class QuartzTwoCamelContextSameNameClashTest {
@@ -34,7 +33,7 @@ public class QuartzTwoCamelContextSameNameClashTest {
     @BeforeEach
     public void setUp() throws Exception {
         camel1 = new DefaultCamelContext();
-        camel1.getCamelContextExtension().setName("myCamel");
+        camel1.setName("myCamel");
         camel1.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
@@ -46,7 +45,7 @@ public class QuartzTwoCamelContextSameNameClashTest {
         camel1.start();
 
         camel2 = new DefaultCamelContext();
-        camel2.getCamelContextExtension().setName("myCamel");
+        camel2.setName("myCamel");
         camel2.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
@@ -75,11 +74,11 @@ public class QuartzTwoCamelContextSameNameClashTest {
         mock2.expectedMinimumMessageCount(6);
         mock1.assertIsSatisfied();
 
-        assertDoesNotThrow(() -> camel1.stop());
+        camel1.stop();
 
         mock2.assertIsSatisfied();
 
-        assertDoesNotThrow(() -> camel2.stop());
+        camel2.stop();
     }
 
 }

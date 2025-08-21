@@ -2,12 +2,14 @@
  * This package contains mock implementations of the
  * {@link org.springframework.core.env.Environment Environment} and
  * {@link org.springframework.core.env.PropertySource PropertySource}
- * abstractions.
+ * abstractions introduced in Spring 3.1.
  *
  * <p>These <em>mocks</em> are useful for developing <em>out-of-container</em>
  * unit tests for code that depends on environment-specific properties.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.mock.env;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

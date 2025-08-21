@@ -1,7 +1,9 @@
 /**
  * General utility classes for use in unit and integration tests.
  */
-@NullMarked
+@NonNullApi
+@NonNullFields
 package org.springframework.test.util;
 
-import org.jspecify.annotations.NullMarked;
+import org.springframework.lang.NonNullApi;
+import org.springframework.lang.NonNullFields;

@@ -25,10 +25,10 @@ import org.apache.camel.component.google.calendar.BatchGoogleCalendarClientFacto
 import org.apache.camel.component.google.calendar.GoogleCalendarClientFactory;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.support.HealthCheckComponent;
+import org.apache.camel.support.DefaultComponent;
 
 @Component("google-calendar-stream")
-public class GoogleCalendarStreamComponent extends HealthCheckComponent {
+public class GoogleCalendarStreamComponent extends DefaultComponent {
 
     @Metadata(label = "advanced")
     private Calendar client;
@@ -50,12 +50,11 @@ public class GoogleCalendarStreamComponent extends HealthCheckComponent {
     public Calendar getClient(GoogleCalendarStreamConfiguration config) {
         if (client == null) {
             if (config.getClientId() != null && config.getClientSecret() != null) {
-                client = getClientFactory().makeClient(config.getClientId(), config.getClientSecret(), config.getScopesAsList(),
+                client = getClientFactory().makeClient(config.getClientId(), config.getClientSecret(), config.getScopes(),
                         config.getApplicationName(), config.getRefreshToken(),
                         config.getAccessToken(), config.getEmailAddress(), config.getP12FileName(), config.getUser());
             } else if (config.getServiceAccountKey() != null) {
-                client = getClientFactory().makeClient(getCamelContext(), config.getServiceAccountKey(),
-                        config.getScopesAsList(),
+                client = getClientFactory().makeClient(getCamelContext(), config.getServiceAccountKey(), config.getScopes(),
                         config.getApplicationName(), config.getDelegate());
             } else {
                 throw new IllegalArgumentException(

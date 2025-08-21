@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
  */
 public class FilerProducerAbsoluteTest extends ContextTestSupport {
 
-    private String path;
+    private String path = testDirectory("absolute").toAbsolutePath().toString();
 
     @Test
     public void testProduceAbsoluteFile() throws Exception {
@@ -41,10 +41,9 @@ public class FilerProducerAbsoluteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
-        path = testDirectory("absolute").toAbsolutePath().toString();
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:report").to("file://" + path, "mock:result");
             }
         };

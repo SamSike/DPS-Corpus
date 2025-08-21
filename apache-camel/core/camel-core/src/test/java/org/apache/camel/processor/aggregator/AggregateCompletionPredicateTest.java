@@ -120,10 +120,10 @@ public class AggregateCompletionPredicateTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(header("id"), new BodyInAggregatingStrategy())
                         .completionPredicate(body().contains("END")).completionTimeout(20000)
                         .to("mock:aggregated");

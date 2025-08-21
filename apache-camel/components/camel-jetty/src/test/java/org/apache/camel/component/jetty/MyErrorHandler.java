@@ -18,22 +18,21 @@ package org.apache.camel.component.jetty;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.charset.Charset;
 
-import org.eclipse.jetty.server.Request;
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.eclipse.jetty.server.handler.ErrorHandler;
 
 public class MyErrorHandler extends ErrorHandler {
 
     @Override
-    protected void writeErrorHtml(
-            Request request, Writer writer, Charset charset, int code, String message, Throwable cause, boolean showStacks)
+    protected void writeErrorPageBody(HttpServletRequest request, Writer writer, int code, String message, boolean showStacks)
             throws IOException {
-        String uri = request.getHttpURI().toString();
+        String uri = request.getRequestURI();
 
-        writeErrorHtmlMessage(request, writer, code, message, cause, uri);
+        writeErrorPageMessage(request, writer, code, message, uri);
         if (showStacks) {
-            writeErrorHtmlStacks(request, writer);
+            writeErrorPageStacks(request, writer);
         }
         writer.write("<hr /><i><small>MyErrorHandler</small></i>");
         for (int i = 0; i < 20; i++) {

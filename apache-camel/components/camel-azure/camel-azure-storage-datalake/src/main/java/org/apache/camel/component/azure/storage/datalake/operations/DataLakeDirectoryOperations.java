@@ -51,10 +51,8 @@ public class DataLakeDirectoryOperations {
 
         final Response<DataLakeFileClient> response = client.createFileWithResponse(fileName, permission, umask,
                 httpHeaders, metadata, requestConditions, timeout);
-        final DataLakeFileClient fileClient = response.getValue();
-        final DataLakeExchangeHeaders exchangeHeaders
-                = DataLakeExchangeHeaders.create().httpHeaders(response.getHeaders()).fileClient(fileClient);
-        return new DataLakeOperationResponse(fileClient, exchangeHeaders.toMap());
+        DataLakeExchangeHeaders exchangeHeaders = DataLakeExchangeHeaders.create().httpHeaders(response.getHeaders());
+        return new DataLakeOperationResponse(response.getValue(), exchangeHeaders.toMap());
     }
 
     public DataLakeOperationResponse deleteDirectory(final Exchange exchange) {

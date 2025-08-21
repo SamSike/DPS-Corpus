@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,15 +19,17 @@ package org.springframework.test.context.junit4;
 import org.junit.runner.RunWith;
 
 import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.aot.DisabledInAotMode;
 
 /**
- * Simple unit test to verify that the {@link SpringRunner} does not
- * hinder correct functionality of standard JUnit 4 testing features.
- *
- * <p>Note that {@link TestExecutionListeners @TestExecutionListeners} is
+ * <p>
+ * Simple unit test to verify that {@link SpringRunner} does not
+ * hinder correct functionality of standard JUnit 4.4+ testing features.
+ * </p>
+ * <p>
+ * Note that {@link TestExecutionListeners @TestExecutionListeners} is
  * explicitly configured with an empty list, thus disabling all default
  * listeners.
+ * </p>
  *
  * @author Sam Brannen
  * @since 2.5
@@ -35,8 +37,6 @@ import org.springframework.test.context.aot.DisabledInAotMode;
  */
 @RunWith(SpringRunner.class)
 @TestExecutionListeners({})
-@DisabledInAotMode("Does not load an ApplicationContext and thus not supported for AOT processing")
-@SuppressWarnings("deprecation")
 public class StandardJUnit4FeaturesSpringRunnerTests extends StandardJUnit4FeaturesTests {
 
 	/* All tests are in the parent class... */

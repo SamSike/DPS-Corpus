@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,23 +37,16 @@
  */
 package org.jooq.impl;
 
-import static java.lang.Boolean.TRUE;
-import static java.util.Arrays.asList;
-import static org.jooq.ContextConverter.scoped;
-import static org.jooq.SQLDialect.MARIADB;
-import static org.jooq.SQLDialect.MYSQL;
 // ...
 import static org.jooq.conf.ParamType.NAMED;
-import static org.jooq.impl.Tools.CONFIG;
+import static org.jooq.impl.Internal.subscriber;
 import static org.jooq.impl.Tools.EMPTY_PARAM;
 import static org.jooq.impl.Tools.abstractDMLQuery;
 import static org.jooq.impl.Tools.abstractResultQuery;
-import static org.jooq.impl.Tools.converterContext;
 import static org.jooq.impl.Tools.fields;
 import static org.jooq.impl.Tools.recordFactory;
 import static org.jooq.impl.Tools.translate;
 import static org.jooq.impl.Tools.visitAll;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_RENDER_FOR_R2DBC;
 import static org.jooq.tools.StringUtils.defaultIfNull;
 import static org.jooq.tools.jdbc.JDBCUtils.safeClose;
 
@@ -71,12 +64,7 @@ import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Year;
-import java.util.LinkedHashSet;
 import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -84,29 +72,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
+import org.jooq.BindingGetResultSetContext;
 import org.jooq.Configuration;
 import org.jooq.Converter;
 import org.jooq.Cursor;
 import org.jooq.DSLContext;
 import org.jooq.DataType;
 import org.jooq.Field;
-import org.jooq.Function3;
-import org.jooq.Isolation;
 import org.jooq.JSON;
 import org.jooq.JSONB;
 import org.jooq.Param;
 // ...
 import org.jooq.Query;
-import org.jooq.Readonly;
 import org.jooq.Record;
 import org.jooq.SQLDialect;
-import org.jooq.Scope;
-import org.jooq.SubscriberProvider;
-import org.jooq.TransactionProperty;
 import org.jooq.TransactionalPublishable;
 import org.jooq.XML;
 import org.jooq.conf.Settings;
@@ -120,7 +103,6 @@ import org.jooq.tools.JooqLogger;
 import org.jooq.tools.jdbc.DefaultPreparedStatement;
 import org.jooq.tools.jdbc.DefaultResultSet;
 import org.jooq.tools.jdbc.MockArray;
-import org.jooq.types.Interval;
 
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -132,14 +114,11 @@ import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import io.r2dbc.spi.ConnectionFactoryOptions.Builder;
-import io.r2dbc.spi.IsolationLevel;
 import io.r2dbc.spi.Option;
-import io.r2dbc.spi.R2dbcException;
 import io.r2dbc.spi.Result;
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
 import io.r2dbc.spi.Statement;
-import io.r2dbc.spi.TransactionDefinition;
 
 /**
  * A single namespace for all reactive {@link Subscription} and other
@@ -156,18 +135,13 @@ final class R2DBC {
 
     static abstract class AbstractSubscription<T> implements org.reactivestreams.Subscription {
 
-        final Configuration         configuration;
         final AtomicBoolean         completed;
         final AtomicLong            requested;
         final Subscriber<? super T> subscriber;
         final Guard                 guard;
 
-        static <T> Subscription onRequest(
-            Configuration configuration,
-            Subscriber<? super T> s,
-            Consumer<? super Subscriber<? super T>> onRequest
-        ) {
-            return new AbstractSubscription<T>(configuration, s) {
+        static <T> Subscription onRequest(Subscriber<? super T> s, Consumer<? super Subscriber<? super T>> onRequest) {
+            return new AbstractSubscription<T>(s) {
                 @Override
                 void request0() {
                     onRequest.accept(subscriber);
@@ -175,8 +149,7 @@ final class R2DBC {
             };
         }
 
-        AbstractSubscription(Configuration configuration, Subscriber<? super T> subscriber) {
-            this.configuration = configuration;
+        AbstractSubscription(Subscriber<? super T> subscriber) {
             this.completed = new AtomicBoolean();
             this.requested = new AtomicLong();
             this.guard = new Guard();
@@ -191,9 +164,7 @@ final class R2DBC {
                     // required_spec317_mustSupportACumulativePendingElementCountUpToLongMaxValue
                     completed.set(true);
                     subscriber.onComplete();
-                },
-                configuration.subscriberProvider(),
-                subscriber
+                }
             );
         }
 
@@ -212,11 +183,7 @@ final class R2DBC {
 
         @Override
         public final void cancel() {
-            complete(onCancel());
-        }
-
-        /* non-final */ Runnable onCancel() {
-            return () -> {};
+            complete(true);
         }
 
         final boolean moreRequested() {
@@ -225,41 +192,23 @@ final class R2DBC {
             return !completed.get() && requested.getAndUpdate(l -> l == Long.MAX_VALUE ? l : Math.max(0, l - 1)) > 0;
         }
 
-        final void complete(Runnable onComplete) {
+        final void complete(boolean cancelled) {
 
             // required_spec306_afterSubscriptionIsCancelledRequestMustBeNops
             // required_spec307_afterSubscriptionIsCancelledAdditionalCancelationsMustBeNops
             if (!completed.getAndSet(true))
-                cancel0(false, onComplete);
+                cancel0(cancelled);
         }
 
         abstract void request0();
-        void cancel0(boolean closeAfterTransaction, Runnable onComplete) {}
+        void cancel0(boolean cancelled) {}
     }
 
     // -------------------------------------------------------------------------
     // R2DBC implementations
     // -------------------------------------------------------------------------
 
-    /**
-     * [#14048] A {@link Subscriber} that allows for accessing a downstream
-     * subscriber in order to access its context via
-     * {@link SubscriberProvider#context(Subscriber)}.
-     */
-    interface DownstreamSubscriber<T> extends Subscriber<T> {
-        Subscriber<?> downstream();
-    }
-
-    static final Subscriber<?> downstream(Subscriber<?> subscriber) {
-        Subscriber<?> r = subscriber;
-
-        while (r instanceof DownstreamSubscriber<?> d)
-            r = d.downstream();
-
-        return r;
-    }
-
-    private static final class Forwarding<T> implements DownstreamSubscriber<T> {
+    static final class Forwarding<T> implements Subscriber<T> {
 
         final int                           forwarderIndex;
         final AbstractResultSubscriber<T>   resultSubscriber;
@@ -269,11 +218,6 @@ final class R2DBC {
             this.forwarderIndex = forwarderIndex;
             this.resultSubscriber = resultSubscriber;
             this.subscription = new AtomicReference<>();
-        }
-
-        @Override
-        public final Subscriber<?> downstream() {
-            return resultSubscriber.downstream.subscriber;
         }
 
         @Override
@@ -292,43 +236,24 @@ final class R2DBC {
 
         @Override
         public final void onError(Throwable t) {
-            complete(true, () -> resultSubscriber.downstream.subscriber.onError(translate(resultSubscriber.downstream.configuration.dsl(), resultSubscriber.downstream.sql(), t)));
+            resultSubscriber.downstream.subscriber.onError(translate(resultSubscriber.downstream.sql(), t));
         }
 
         @Override
         public final void onComplete() {
-            complete(false, () -> resultSubscriber.downstream.subscriber.onComplete());
-        }
-
-        private final void complete(boolean cancelled, Runnable onComplete) {
             resultSubscriber.downstream.forwarders.remove(forwarderIndex);
-
-            // [#13343] [#13669] Prevent premature completion
-            if (resultSubscriber.downstream.forwarders.isEmpty() && (cancelled || resultSubscriber.completionRequested.get()))
-                resultSubscriber.complete(cancelled, onComplete);
+            resultSubscriber.complete();
         }
     }
 
-    static abstract class AbstractResultSubscriber<T> implements DownstreamSubscriber<Result> {
+    static abstract class AbstractResultSubscriber<T> implements Subscriber<Result> {
 
         final AbstractNonBlockingSubscription<? super T> downstream;
         final AtomicBoolean                              completed;
-        final AtomicBoolean                              completionRequested;
-        final R2DBCPreparedStatement                     statement;
 
-        AbstractResultSubscriber(
-            AbstractNonBlockingSubscription<? super T> downstream,
-            R2DBCPreparedStatement statement
-        ) {
+        AbstractResultSubscriber(AbstractNonBlockingSubscription<? super T> downstream) {
             this.downstream = downstream;
             this.completed = new AtomicBoolean();
-            this.completionRequested = new AtomicBoolean();
-            this.statement = statement;
-        }
-
-        @Override
-        public final Subscriber<?> downstream() {
-            return downstream.subscriber;
         }
 
         @Override
@@ -338,96 +263,44 @@ final class R2DBC {
 
         @Override
         public final void onError(Throwable t) {
-            complete(true, () -> downstream.subscriber.onError(translate(downstream.configuration.dsl(), downstream.sql(), t)));
+            downstream.subscriber.onError(translate(downstream.sql(), t));
         }
 
         @Override
         public final void onComplete() {
-            complete(false, () -> downstream.subscriber.onComplete());
+            completed.set(true);
+            complete();
         }
 
-        final void complete(boolean cancelled, Runnable onComplete) {
-            completionRequested.set(true);
-
-            // [#13343] [#13669] Delay completion of the downstream in case this
-            //                   completion happens before each forwarder's
-            //                   completion.
-            if ((cancelled || downstream.forwarders.isEmpty()) && !completed.getAndSet(true))
-                downstream.complete(onComplete);
+        final void complete() {
+            if (completed.get() && downstream.forwarders.isEmpty())
+                downstream.complete(false);
         }
     }
 
-    static final Subscriber<Result> rowCountSubscriber(
-        AbstractNonBlockingSubscription<? super Integer> downstream,
-        R2DBCPreparedStatement statement
-    ) {
-        return subscriber(
-            new RowCountSubscriber(downstream, statement),
-            downstream.configuration.subscriberProvider(),
-            downstream.subscriber
-        );
-    }
+    static final class RowCountSubscriber extends AbstractResultSubscriber<Integer> {
 
-    private static final class RowCountSubscriber extends AbstractResultSubscriber<Integer> {
-        RowCountSubscriber(
-            AbstractNonBlockingSubscription<? super Integer> downstream,
-            R2DBCPreparedStatement statement
-        ) {
-            super(downstream, statement);
+        RowCountSubscriber(AbstractNonBlockingSubscription<? super Integer> downstream) {
+            super(downstream);
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
         public void onNext(Result r) {
-            Subscriber s = downstream.forwardingSubscriber((AbstractResultSubscriber) this);
-
-            // [#13565] r2dbc-spi's Result::getRowsUpdated now returns Long, not
-            //          Integer. To stay backwards compatible with 0.x drivers,
-            //          which may not support the 1.0 SPI yet, we'll runtime
-            //          cast things here
-            ((Publisher) r.getRowsUpdated()).subscribe(subscriber(
-                s::onSubscribe,
-                t -> {
-                    if (t instanceof Long l)
-                        s.onNext(l.intValue());
-                    else
-                        s.onNext(t);
-                },
-                s::onError,
-                s::onComplete,
-                downstream.configuration.subscriberProvider(),
-                this
-            ));
+            r.getRowsUpdated().subscribe(downstream.forwardingSubscriber((AbstractResultSubscriber) this));
         }
     }
 
-    static final <R extends Record, Q extends ResultQueryTrait<R>> Subscriber<Result> resultSubscriber(
-        Q query,
-        AbstractNonBlockingSubscription<? super R> downstream,
-        R2DBCPreparedStatement statement
-    ) {
-        return subscriber(
-            new ResultSubscriber<R, Q>(query, downstream, statement),
-            downstream.configuration.subscriberProvider(),
-            downstream.subscriber
-        );
-    }
-
-    private static final class ResultSubscriber<R extends Record, Q extends ResultQueryTrait<R>> extends AbstractResultSubscriber<R> {
+    static final class ResultSubscriber<R extends Record, Q extends ResultQueryTrait<R>> extends AbstractResultSubscriber<R> {
 
         final Q query;
 
-        ResultSubscriber(
-            Q query,
-            AbstractNonBlockingSubscription<? super R> downstream,
-            R2DBCPreparedStatement statement
-        ) {
-            super(downstream, statement);
+        ResultSubscriber(Q query, AbstractNonBlockingSubscription<? super R> downstream) {
+            super(downstream);
 
             this.query = query;
         }
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
+        @SuppressWarnings("unchecked")
         @Override
         public final void onNext(Result r) {
             r.map((row, meta) -> {
@@ -438,28 +311,31 @@ final class R2DBC {
                     // TODO: This call is duplicated from CursorImpl and related classes.
                     // Refactor this call to make sure code is re-used, especially when
                     // ExecuteListener lifecycle management is implemented
-                    RecordDelegate<AbstractRecord> delegate = Tools.newRecord(
-                        true,
-                        query.configuration(),
-                        recordFactory(
-                            null,
-                            (Class<AbstractRecord>) query.getRecordType(),
-                            (AbstractRow<AbstractRecord>) Tools.row0(fields)
-                        )
-                    );
+                    RecordDelegate<? extends AbstractRecord> delegate = Tools.newRecord(true, recordFactory((Class<AbstractRecord>) query.getRecordType(), (AbstractRow<AbstractRecord>) Tools.row0(fields)), query.configuration());
 
-                    // TODO: What data to pass here?
-                    DefaultBindingGetResultSetContext<?> ctx = new DefaultBindingGetResultSetContext(
-                        new SimpleExecuteContext(query.configuration(), query.configuration().data()),
-                        new R2DBCResultSet(query.configuration(), statement, row, meta),
-                        0
-                    );
+                    return (R) delegate.operate(record -> {
 
-                    return (R) delegate.operate(new CursorImpl.CursorRecordInitialiser(
-                        new DefaultExecuteContext(query.configuration(), query), new DefaultExecuteListener(),
-                        ctx, Tools.row0(fields), 0
-                    ));
+                        // TODO: What data to pass here?
+                        DefaultBindingGetResultSetContext<?> ctx = new DefaultBindingGetResultSetContext(
+                            new SimpleExecuteContext(query.configuration(), query.configuration().data()),
+                            new R2DBCResultSet(query.configuration(), row, meta),
+                            0
+                        );
+
+                        // TODO: Make sure all the embeddable records, and other types of nested records are supported
+                        for (int i = 0; i < fields.length; i++) {
+                            ctx.index(i + 1);
+                            ctx.field((Field) fields[i]);
+                            fields[i].getBinding().get((BindingGetResultSetContext) ctx);
+                            record.values[i] = ctx.value();
+                            record.originals[i] = ctx.value();
+                        }
+
+                        return record;
+                    });
                 }
+
+                // TODO: More specific error handling
                 catch (Throwable t) {
                     onError(t);
                     return null;
@@ -468,28 +344,18 @@ final class R2DBC {
         }
     }
 
-    static abstract class ConnectionSubscriber<T> implements DownstreamSubscriber<Connection> {
+    static abstract class ConnectionSubscriber<T> implements Subscriber<Connection> {
 
         final AbstractNonBlockingSubscription<T> downstream;
         final AtomicReference<Connection>        connection;
-        final AtomicReference<Subscription>      subscription;
 
         ConnectionSubscriber(AbstractNonBlockingSubscription<T> downstream) {
             this.downstream = downstream;
             this.connection = new AtomicReference<>();
-            this.subscription = new AtomicReference<>();
-        }
-
-        @Override
-        public final Subscriber<?> downstream() {
-            return downstream.subscriber;
         }
 
         @Override
         public final void onSubscribe(Subscription s) {
-
-            // [#17094] Stores the Subscription that handles the connection establishment.
-            subscription.set(s);
             s.request(1);
         }
 
@@ -503,33 +369,24 @@ final class R2DBC {
 
         @Override
         public final void onError(Throwable t) {
-            downstream.subscriber.onError(translate(downstream.configuration.dsl(), downstream.sql(), t));
+            downstream.subscriber.onError(translate(downstream.sql(), t));
         }
 
         @Override
         public final void onComplete() {}
-
-        final void cancelSubscription() {
-            subscription.updateAndGet(s -> {
-                if (s != null)
-                    s.cancel();
-
-                return null;
-            });
-        }
     }
 
     static final class QueryExecutionSubscriber<T, Q extends Query> extends ConnectionSubscriber<T> {
 
-        final Q                                                                                            query;
-        final Configuration                                                                                configuration;
-        final Function3<Q, AbstractNonBlockingSubscription<T>, R2DBCPreparedStatement, Subscriber<Result>> resultSubscriber;
-        volatile String                                                                                    sql;
+        final Q                                                                     query;
+        final Configuration                                                         configuration;
+        final BiFunction<Q, AbstractNonBlockingSubscription<T>, Subscriber<Result>> resultSubscriber;
+        volatile String                                                             sql;
 
         QueryExecutionSubscriber(
             Q query,
             QuerySubscription<T, Q> downstream,
-            Function3<Q, AbstractNonBlockingSubscription<T>, R2DBCPreparedStatement, Subscriber<Result>> resultSubscriber
+            BiFunction<Q, AbstractNonBlockingSubscription<T>, Subscriber<Result>> resultSubscriber
         ) {
             super(downstream);
 
@@ -541,62 +398,39 @@ final class R2DBC {
         @Override
         final void onNext0(Connection c) {
             try {
-                if (query.isExecutable()) {
-                    Rendered rendered = rendered(configuration, query);
-                    Statement stmt = c.createStatement(sql = rendered.sql);
-                    R2DBCPreparedStatement s = new R2DBCPreparedStatement(configuration, stmt);
-                    new DefaultBindContext(configuration, null, s).visit(rendered.bindValues);
+                Rendered rendered = rendered(configuration, query);
+                Statement stmt = c.createStatement(sql = rendered.sql);
+                new DefaultBindContext(configuration, new R2DBCPreparedStatement(configuration, stmt)).visit(rendered.bindValues);
 
-                    // TODO: Reuse org.jooq.impl.Tools.setFetchSize(ExecuteContext ctx, int fetchSize)
-                    AbstractResultQuery<?> q1 = abstractResultQuery(query);
-                    if (q1 != null) {
-                        int f = SettingsTools.getFetchSize(q1.fetchSize(), configuration.settings());
+                // TODO: Reuse org.jooq.impl.Tools.setFetchSize(ExecuteContext ctx, int fetchSize)
+                AbstractResultQuery<?> q1 = abstractResultQuery(query);
+                if (q1 != null) {
+                    int f = SettingsTools.getFetchSize(q1.fetchSize(), configuration.settings());
 
-                        if (f != 0) {
-                            if (log.isDebugEnabled())
-                                log.debug("Setting fetch size", f);
+                    if (f != 0) {
+                        if (log.isDebugEnabled())
+                            log.debug("Setting fetch size", f);
 
-                            stmt.fetchSize(f);
-                        }
+                        stmt.fetchSize(f);
                     }
-
-                    AbstractDMLQuery<?> q2 = abstractDMLQuery(query);
-                    if (q2 != null
-                            && !q2.returning.isEmpty()
-
-
-
-                            && !q2.nativeSupportReturningOrDataChangeDeltaTable(configuration.dsl()))
-                        stmt.returnGeneratedValues(Tools.map(q2.returningResolvedAsterisks, Field::getName, String[]::new));
-
-                    stmt.execute().subscribe(resultSubscriber.apply(query, downstream, s));
                 }
-                else {
-                    if (log.isDebugEnabled())
-                        log.debug("Query is not executable", query);
 
-                    Subscriber<Result> s = resultSubscriber.apply(query, downstream, null);
-                    s.onSubscribe(new NoOpSubscription(s));
-                }
+                AbstractDMLQuery<?> q2 = abstractDMLQuery(query);
+                if (q2 != null
+                        && !q2.returning.isEmpty()
+
+
+
+                        && !q2.nativeSupportReturningOrDataChangeDeltaTable(configuration.dsl()))
+                    stmt.returnGeneratedValues(Tools.map(q2.returningResolvedAsterisks, Field::getName, String[]::new));
+
+                stmt.execute().subscribe(resultSubscriber.apply(query, downstream));
             }
 
-            // [#13343] Cancel the downstream in case of a rendering bug in jOOQ
+            // TODO: More specific error handling
             catch (Throwable t) {
-                downstream.cancel();
                 onError(t);
             }
-        }
-    }
-
-    static final record NoOpSubscription(Subscriber<?> subscriber) implements Subscription {
-        @Override
-        public void request(long n) {
-            subscriber.onComplete();
-        }
-
-        @Override
-        public void cancel() {
-            subscriber.onComplete();
         }
     }
 
@@ -621,12 +455,11 @@ final class R2DBC {
                 for (int i = 0; i < batch.queries.length; i++)
                     b = b.add(DSL.using(batch.configuration).renderInlined(batch.queries[i]));
 
-                b.execute().subscribe(new RowCountSubscriber(downstream, null));
+                b.execute().subscribe(new RowCountSubscriber(downstream));
             }
 
-            // [#13343] Cancel the downstream in case of a rendering bug in jOOQ
+            // TODO: More specific error handling
             catch (Throwable t) {
-                downstream.cancel();
                 onError(t);
             }
         }
@@ -651,7 +484,6 @@ final class R2DBC {
                 batch.checkBindValues();
                 Rendered rendered = rendered(batch.configuration, batch.query);
                 Statement stmt = c.createStatement(rendered.sql);
-                R2DBCPreparedStatement s = new R2DBCPreparedStatement(batch.query.configuration(), stmt);
                 Param<?>[] params = rendered.bindValues.toArray(EMPTY_PARAM);
                 boolean first = true;
 
@@ -663,24 +495,21 @@ final class R2DBC {
                     if (first)
                         first = false;
                     else
-                        s = new R2DBCPreparedStatement(batch.query.configuration(), stmt = stmt.add());
+                        stmt = stmt.add();
 
                     // [#1371] [#2139] Don't bind variables directly onto statement, bind them through the collected params
                     //                 list to preserve type information
                     // [#3547]         The original query may have no Params specified - e.g. when it was constructed with
                     //                 plain SQL. In that case, infer the bind value type directly from the bind value
-                    visitAll(new DefaultBindContext(batch.configuration, null, s),
+                    visitAll(new DefaultBindContext(batch.configuration, new R2DBCPreparedStatement(batch.query.configuration(), stmt)),
                         (params.length > 0)
                             ? fields(bindValues, params)
                             : fields(bindValues));
                 }
 
-                stmt.execute().subscribe(new RowCountSubscriber(downstream, s));
+                stmt.execute().subscribe(new RowCountSubscriber(downstream));
             }
-
-            // [#13343] Cancel the downstream in case of a rendering bug in jOOQ
             catch (Throwable t) {
-                downstream.cancel();
                 onError(t);
             }
         }
@@ -688,6 +517,7 @@ final class R2DBC {
 
     static abstract class AbstractNonBlockingSubscription<T> extends AbstractSubscription<T> {
 
+        final Configuration                         configuration;
         final AtomicBoolean                         subscribed;
         final Publisher<? extends Connection>       connection;
         final AtomicInteger                         nextForwarderIndex;
@@ -697,8 +527,9 @@ final class R2DBC {
             Configuration configuration,
             Subscriber<? super T> subscriber
         ) {
-            super(configuration, subscriber);
+            super(subscriber);
 
+            this.configuration = configuration;
             this.subscribed = new AtomicBoolean();
             this.connection = configuration.connectionFactory().create();
             this.nextForwarderIndex = new AtomicInteger();
@@ -721,9 +552,7 @@ final class R2DBC {
                         request1();
                     },
                     delegate::onError,
-                    delegate::onComplete,
-                    configuration.subscriberProvider(),
-                    delegate
+                    delegate::onComplete
                 ));
             }
             else
@@ -752,60 +581,37 @@ final class R2DBC {
         }
 
         @Override
-        final Runnable onCancel() {
+        final void cancel0(boolean cancelled) {
 
-            // [#17094] Safely cancels the connection acquisition if not yet established.
-            return () -> delegate().cancelSubscription();
+            // [#12977] Correctly sequence the delegation to run after close completion
+            cancel0(cancelled ? () -> {} : () -> subscriber.onComplete());
         }
 
-        @Override
-        final void cancel0(boolean closeAfterTransaction, Runnable onComplete) {
+        final void cancel0(Runnable onComplete) {
 
             // [#12108] Must pass along cancellation to forwarding subscriptions
             forAllForwardingSubscriptions(Subscription::cancel);
 
-            // [#12977] Correctly sequence the delegation to run after close completion
             delegate().connection.updateAndGet(c -> {
-                if (
-                    // close() calls on already closed resources have no effect, so
-                    // the side-effect is OK with the AtomicReference contract
-                    c == null
 
-                    // [#13802] Skip attempting to unnecessarily close NonClosingConnection
-                    || c instanceof NonClosingConnection
-
-                    // [#13802] Correctly sequence commit/rollback and then close
-                    || this instanceof TransactionSubscription && !closeAfterTransaction
-                ) {
+                // close() calls on already closed resources have no effect, so
+                // the side-effect is OK with the AtomicReference contract
+                if (c != null)
+                    c.close().subscribe(subscriber(s -> s.request(Long.MAX_VALUE), t -> {}, t -> {}, onComplete));
+                else
                     onComplete.run();
-                    return c;
-                }
-                else {
-                    c.close().subscribe(subscriber(
-                        s -> s.request(Long.MAX_VALUE),
-                        t -> {},
-                        t -> {},
-                        onComplete,
-                        configuration.subscriberProvider(),
-                        subscriber
-                    ));
-                    return null;
-                }
+
+                return null;
             });
         }
 
         abstract ConnectionSubscriber<T> delegate();
 
-        final Subscriber<T> forwardingSubscriber(AbstractResultSubscriber<T> resultSubscriber) {
+        final Forwarding<T> forwardingSubscriber(AbstractResultSubscriber<T> resultSubscriber) {
             int i = nextForwarderIndex.getAndIncrement();
             Forwarding<T> f = new Forwarding<>(i, resultSubscriber);
             forwarders.put(i, f);
-
-            return subscriber(
-                f,
-                resultSubscriber.downstream.configuration.subscriberProvider(),
-                resultSubscriber.downstream.subscriber
-            );
+            return f;
         }
     }
 
@@ -816,7 +622,7 @@ final class R2DBC {
         QuerySubscription(
             Q query,
             Subscriber<? super T> subscriber,
-            Function3<Q, AbstractNonBlockingSubscription<T>, R2DBCPreparedStatement, Subscriber<Result>> resultSubscriber
+            BiFunction<Q, AbstractNonBlockingSubscription<T>, Subscriber<Result>> resultSubscriber
         ) {
             super(query.configuration(), subscriber);
 
@@ -831,7 +637,7 @@ final class R2DBC {
         @Override
         final String sql() {
             String result = queryExecutionSubscriber.sql;
-            return result != null ? result : sql0(() -> "" + queryExecutionSubscriber.query);
+            return result != null ? result : "" + queryExecutionSubscriber.query;
         }
     }
 
@@ -858,117 +664,60 @@ final class R2DBC {
 
         @Override
         final String sql() {
-            return sql0(() -> batch.toString());
+            return batch.toString();
         }
     }
 
     static final class TransactionSubscription<T> extends AbstractNonBlockingSubscription<T> {
         final TransactionalPublishable<T> transactional;
-        final ConnectionSubscriber<T>     delegate;
-        final Set<TransactionProperty>    properties;
 
         TransactionSubscription(
             DSLContext ctx,
             Subscriber<? super T> subscriber,
-            TransactionalPublishable<T> transactional,
-            TransactionProperty... properties
+            TransactionalPublishable<T> transactional
         ) {
             super(ctx.configuration(), subscriber);
 
             this.transactional = transactional;
-            this.properties = new LinkedHashSet<>();
+        }
 
-            DefaultTransactionContext.init0(new LinkedHashSet<>(asList(properties)), this.properties, new AtomicBoolean());
+        @Override
+        String sql() {
+            return "TransactionSubscription";
+        }
 
-            this.delegate = new ConnectionSubscriber<T>(this) {
+        @Override
+        ConnectionSubscriber<T> delegate() {
+            return new ConnectionSubscriber<T>(this) {
                 @Override
                 void onNext0(Connection c) {
-                    c.beginTransaction(transactionDefinition()).subscribe(subscriber(
+                    c.beginTransaction().subscribe(subscriber(
                         s -> s.request(1),
                         v -> {},
                         subscriber::onError,
 
                         // [#13502] Implement Savepoint logic for nested transactions
-                        () -> {
-                            try {
-                                transactional.run(c instanceof NonClosingConnection
-                                        ? configuration
-                                        : configuration.derive(new DefaultConnectionFactory(configuration, c))).subscribe(subscriber(
-                                    s1 -> s1.request(Long.MAX_VALUE),
-                                    subscriber::onNext,
-                                    e -> rollback(subscriber, c, e),
-                                    () -> c.commitTransaction().subscribe(subscriber(
-                                        s2 -> s2.request(1),
-                                        v -> {},
-                                        t -> cancel0(true, () -> subscriber.onError(t)),
-                                        () -> cancel0(true, () -> subscriber.onComplete()),
-                                        configuration.subscriberProvider(),
-                                        subscriber
-                                    )),
-                                    configuration.subscriberProvider(),
-                                    subscriber
-                                ));
-                            }
-
-                            // [#15702] The TransactionalPublishable might throw exceptions
-                            //          while initialising a Publisher
-                            catch (Exception e) {
-                                rollback(subscriber, c, e);
-                            }
-                        },
-                        configuration.subscriberProvider(),
-                        subscriber
-                    ));
-                }
-
-                private final TransactionDefinition transactionDefinition() {
-                    return new TransactionDefinition() {
-
-                        @SuppressWarnings("unchecked")
-                        @Override
-                        public <T> T getAttribute(Option<T> option) {
-                            Set<TransactionProperty> p = TransactionSubscription.this.properties;
-
-                            if (TransactionDefinition.READ_ONLY.equals(option)) {
-                                return (T) (Boolean) p.contains(Readonly.READONLY);
-                            }
-                            else if (TransactionDefinition.ISOLATION_LEVEL.equals(option)) {
-                                if (p.contains(Isolation.READ_COMMITTED))
-                                    return (T) IsolationLevel.READ_COMMITTED;
-                                else if (p.contains(Isolation.READ_UNCOMMITTED))
-                                    return (T) IsolationLevel.READ_UNCOMMITTED;
-                                else if (p.contains(Isolation.REPEATABLE_READ))
-                                    return (T) IsolationLevel.REPEATABLE_READ;
-                                else if (p.contains(Isolation.SERIALIZABLE))
-                                    return (T) IsolationLevel.SERIALIZABLE;
-                            }
-
-                            return null;
-                        }
-                    };
-                }
-
-                private final void rollback(Subscriber<? super T> s, Connection c, Throwable e) {
-                    c.rollbackTransaction().subscribe(subscriber(
-                        s2 -> s2.request(1),
-                        v -> {},
-                        t -> cancel0(true, () -> s.onError(t)),
-                        () -> cancel0(true, () -> s.onError(e)),
-                        configuration.subscriberProvider(),
-                        s
+                        () -> transactional.run(c instanceof NonClosingConnection
+                                ? configuration
+                                : configuration.derive(new DefaultConnectionFactory(c))).subscribe(subscriber(
+                            s1 -> s1.request(Long.MAX_VALUE),
+                            subscriber::onNext,
+                            e -> c.rollbackTransaction().subscribe(subscriber(
+                                s2 -> s2.request(1),
+                                v -> {},
+                                t -> cancel0(() -> subscriber.onError(t)),
+                                () -> cancel0(() -> subscriber.onError(e))
+                            )),
+                            () -> c.commitTransaction().subscribe(subscriber(
+                                s2 -> s2.request(1),
+                                v -> {},
+                                t -> cancel0(() -> subscriber.onError(t)),
+                                () -> cancel0(false)
+                            ))
+                        ))
                     ));
                 }
             };
-        }
-
-        @Override
-        final String sql() {
-            return "TransactionSubscription";
-        }
-
-        @Override
-        final ConnectionSubscriber<T> delegate() {
-            return delegate;
         }
     }
 
@@ -979,16 +728,9 @@ final class R2DBC {
     static final Rendered rendered(Configuration configuration, Query query) {
         DefaultRenderContext render = new DefaultRenderContext(configuration.deriveSettings(s ->
             setParamType(configuration.dialect(), s)
-        ), null);
+        ));
 
-        // [#17088] Some rendering decisions may be made based on whether we're using R2DBC
-        render.data(DATA_RENDER_FOR_R2DBC, true);
-
-        return new Rendered(
-            render.paramType(render.settings().getParamType()).visit(query).render(),
-            render.bindValues(),
-            render.skipUpdateCounts()
-        );
+        return new Rendered(render.paramType(NAMED).visit(query).render(), render.bindValues(), render.skipUpdateCounts());
     }
 
     static final long addNoOverflow(long x, long y) {
@@ -1002,27 +744,16 @@ final class R2DBC {
     }
 
     @SuppressWarnings("unchecked")
-    static final <T> T block(Publisher<? extends T> publisher) throws Throwable {
-        return block(publisher, CONFIG.get(), null);
-    }
-
-    static final <T> T block(Publisher<? extends T> publisher, Configuration configuration, Subscriber<?> subscriber) throws Throwable {
+    static final <T> T block(Publisher<? extends T> publisher) {
         Object complete = new Object();
         LinkedBlockingQueue<Object> queue = new LinkedBlockingQueue<>();
-        publisher.subscribe(subscriber(
-            s -> s.request(1),
-            queue::add,
-            queue::add,
-            () -> queue.add(complete),
-            configuration.subscriberProvider(),
-            subscriber
-        ));
+        publisher.subscribe(subscriber(s -> s.request(1), queue::add, queue::add, () -> queue.add(complete)));
 
         try {
             Object result = queue.take();
 
-            if (result instanceof Throwable t)
-                throw t;
+            if (result instanceof Throwable)
+                throw new DataAccessException("Exception when blocking on publisher", (Throwable) result);
             else if (result == complete)
                 return null;
             else
@@ -1030,15 +761,6 @@ final class R2DBC {
         }
         catch (InterruptedException e) {
             throw new DataAccessException("Exception when blocking on publisher", e);
-        }
-    }
-
-    static final <T> T blockWrappingExceptions(Publisher<? extends T> publisher) {
-        try {
-            return block(publisher);
-        }
-        catch (Throwable t) {
-            throw new DataAccessException("Exception when blocking on publisher", t);
         }
     }
 
@@ -1055,7 +777,7 @@ final class R2DBC {
 
     static final Connection getConnection(String url, Properties properties) {
         if (properties.isEmpty())
-            return blockWrappingExceptions(ConnectionFactories.get(url).create());
+            return block(ConnectionFactories.get(url).create());
 
         Builder builder = ConnectionFactoryOptions.parse(url).mutate();
         properties.forEach((k, v) -> {
@@ -1075,7 +797,7 @@ final class R2DBC {
                 setOption(builder, Option.valueOf("" + k), v);
         });
 
-        return blockWrappingExceptions(ConnectionFactories.get(builder.build()).create());
+        return block(ConnectionFactories.get(builder.build()).create());
     }
 
     private static <T> Builder setOption(Builder builder, Option<T> option, Object v) {
@@ -1085,40 +807,6 @@ final class R2DBC {
     // -------------------------------------------------------------------------
     // JDBC to R2DBC bridges for better interop, where it doesn't matter
     // -------------------------------------------------------------------------
-
-    static final class R2DBCGenericException extends R2dbcException {
-        R2DBCGenericException(Throwable cause) {
-            super(cause);
-        }
-    }
-
-    static final void wrapExceptions(Runnable runnable) {
-        try {
-            runnable.run();
-        }
-        catch (R2dbcException e) {
-            throw e;
-        }
-
-        // [#15028] Wrap IllegalArgumentException or NoSuchElementException in a more traceable exception
-        catch (Exception e) {
-            throw new R2DBCGenericException(e);
-        }
-    }
-
-    static final <T> T wrapExceptions(Callable<T> callable) {
-        try {
-            return callable.call();
-        }
-        catch (R2dbcException e) {
-            throw e;
-        }
-
-        // [#15028] Wrap IllegalArgumentException or NoSuchElementException in a more traceable exception
-        catch (Exception e) {
-            throw new R2DBCGenericException(e);
-        }
-    }
 
     static final class R2DBCPreparedStatement extends DefaultPreparedStatement {
 
@@ -1133,8 +821,7 @@ final class R2DBC {
         }
 
         private final void bindNonNull(int parameterIndex, Object x) {
-            wrapExceptions(() -> {
-                switch (c.family()) {
+            switch (c.family()) {
 
 
 
@@ -1142,16 +829,14 @@ final class R2DBC {
 
 
 
-                    default:
-                        s.bind(parameterIndex - 1, x);
-                        break;
-                }
-            });
+                default:
+                    s.bind(parameterIndex - 1, x);
+                    break;
+            }
         }
 
         private final <T> void bindNull(int parameterIndex, Class<T> type) {
-            wrapExceptions(() -> {
-                switch (c.family()) {
+            switch (c.family()) {
 
 
 
@@ -1159,11 +844,10 @@ final class R2DBC {
 
 
 
-                    default:
-                        s.bindNull(parameterIndex - 1, type);
-                        break;
-                }
-            });
+                default:
+                    s.bindNull(parameterIndex - 1, type);
+                    break;
+            }
         }
 
         private final <T> void bindNullable(int parameterIndex, T x, Class<T> type) {
@@ -1192,8 +876,6 @@ final class R2DBC {
             }
         }
 
-        private static final Set<SQLDialect> NO_SUPPORT_UUID = SQLDialect.supportedBy(MARIADB, MYSQL);
-
         private final Class<?> nullType(Class<?> type) {
 
             // [#11700] Intercept JDBC temporal types, which aren't supported by R2DBC
@@ -1203,19 +885,13 @@ final class R2DBC {
                 return LocalTime.class;
             else if (type == Timestamp.class)
                 return LocalDateTime.class;
-            else if (type == Year.class)
-                return Integer.class;
             else if (type == XML.class)
                 return String.class;
             else if (type == JSON.class)
                 return String.class;
             else if (type == JSONB.class)
                 return String.class;
-            else if (type == UUID.class && NO_SUPPORT_UUID.contains(c.dialect()))
-                return String.class;
             else if (Enum.class.isAssignableFrom(type))
-                return String.class;
-            else if (Interval.class.isAssignableFrom(type))
                 return String.class;
 
 
@@ -1372,8 +1048,8 @@ final class R2DBC {
         final RowMetadata   m;
         boolean             wasNull;
 
-        R2DBCResultSet(Configuration c, R2DBCPreparedStatement s, Row r, RowMetadata m) {
-            super(null, s, () -> new SQLFeatureNotSupportedException("Unsupported operation of the JDBC to R2DBC bridge."));
+        R2DBCResultSet(Configuration c, Row r, RowMetadata m) {
+            super(null, null, () -> new SQLFeatureNotSupportedException("Unsupported operation of the JDBC to R2DBC bridge."));
 
             this.c = c;
             this.r = new DefaultRow(c, r);
@@ -1390,24 +1066,18 @@ final class R2DBC {
         }
 
         private final <T, U> U nullable(int columnIndex, Class<T> type, Function<? super T, ? extends U> conversion) {
-            return wrapExceptions(() -> {
-                T t = wasNull(r.get(columnIndex - 1, type));
-                return wasNull ? null : conversion.apply(t);
-            });
+            T t = wasNull(r.get(columnIndex - 1, type));
+            return wasNull ? null : conversion.apply(t);
         }
 
         private final <U> U nullable(int columnIndex, Function<? super Object, ? extends U> conversion) {
-            return wrapExceptions(() -> {
-                Object t = wasNull(r.get(columnIndex - 1));
-                return wasNull ? null : conversion.apply(t);
-            });
+            Object t = wasNull(r.get(columnIndex - 1));
+            return wasNull ? null : conversion.apply(t);
         }
 
         private final <T> T nonNull(int columnIndex, Class<T> type, T nullValue) {
-            return wrapExceptions(() -> {
-                T t = wasNull(r.get(columnIndex - 1, type));
-                return wasNull ? nullValue : t;
-            });
+            T t = wasNull(r.get(columnIndex - 1, type));
+            return wasNull ? nullValue : t;
         }
 
         @Override
@@ -1461,11 +1131,6 @@ final class R2DBC {
         }
 
         @Override
-        public final String getNString(int columnIndex) throws SQLException {
-            return nullable(columnIndex, String.class);
-        }
-
-        @Override
         public final byte[] getBytes(int columnIndex) throws SQLException {
 
 
@@ -1507,7 +1172,7 @@ final class R2DBC {
             return new MockArray<>(c.dialect(), (Object[]) nullable(columnIndex, Object.class), Object[].class);
         }
 
-        private static final record DefaultRow(Configuration c, Row r) implements Row {
+        private static final /* record */ class DefaultRow implements Row { private final Configuration c; private final Row r; public DefaultRow(Configuration c, Row r) { this.c = c; this.r = r; } public Configuration c() { return c; } public Row r() { return r; } @Override public boolean equals(Object o) { if (!(o instanceof DefaultRow)) return false; DefaultRow other = (DefaultRow) o; if (!java.util.Objects.equals(this.c, other.c)) return false; if (!java.util.Objects.equals(this.r, other.r)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.c, this.r); } @Override public String toString() { return new StringBuilder("DefaultRow[").append("c=").append(this.c).append(", r=").append(this.r).append("]").toString(); }
 
             // ---------------------------------------------------------------------
             // 0.9.0.M1 API
@@ -1520,32 +1185,26 @@ final class R2DBC {
 
             @Override
             public final <T> T get(int index, Class<T> uType) {
-                return wrapExceptions(() -> {
-                    switch (c.family()) {
+                switch (c.family()) {
+                    case H2:
+                    case MYSQL:
+                        return get0(r.get(index), uType);
 
-                        case H2:
-                        case MYSQL:
-                            return get0(r.get(index), uType);
-
-                        default:
-                            return r.get(index, uType);
-                    }
-                });
+                    default:
+                        return r.get(index, uType);
+                }
             }
 
             @Override
             public final <T> T get(String name, Class<T> uType) {
-                return wrapExceptions(() -> {
-                    switch (c.family()) {
+                switch (c.family()) {
+                    case H2:
+                    case MYSQL:
+                        return get0(r.get(name), uType);
 
-                        case H2:
-                        case MYSQL:
-                            return get0(r.get(name), uType);
-
-                        default:
-                            return r.get(name, uType);
-                    }
-                });
+                    default:
+                        return r.get(name, uType);
+                }
             }
 
             @SuppressWarnings("unchecked")
@@ -1555,9 +1214,9 @@ final class R2DBC {
 
                 Converter<Object, T> converter = c.converterProvider().provide((Class<Object>) o.getClass(), uType);
                 if (converter == null)
-                    throw new DataTypeException("Cannot convert from " + o.getClass() + " to " + uType + ". Please report an issue here: https://jooq.org/bug. As a workaround, you can implement a ConverterProvider.");
+                    throw new DataTypeException("Cannot convert from " + o.getClass() + " to " + uType + ". Please report an issue here: https://github.com/jOOQ/jOOQ/issues/new. As a workaround, you can implement a ConverterProvider.");
                 else
-                    return scoped(converter).from(o, converterContext(c));
+                    return converter.from(o);
             }
 
             // ---------------------------------------------------------------------
@@ -1571,7 +1230,7 @@ final class R2DBC {
         }
     }
 
-    static final record R2DBCResultSetMetaData(Configuration c, RowMetadata m) implements ResultSetMetaData {
+    static final /* record */ class R2DBCResultSetMetaData implements ResultSetMetaData { private final Configuration c; private final RowMetadata m; public R2DBCResultSetMetaData(Configuration c, RowMetadata m) { this.c = c; this.m = m; } public Configuration c() { return c; } public RowMetadata m() { return m; } @Override public boolean equals(Object o) { if (!(o instanceof R2DBCResultSetMetaData)) return false; R2DBCResultSetMetaData other = (R2DBCResultSetMetaData) o; if (!java.util.Objects.equals(this.c, other.c)) return false; if (!java.util.Objects.equals(this.m, other.m)) return false; return true; } @Override public int hashCode() { return java.util.Objects.hash(this.c, this.m); } @Override public String toString() { return new StringBuilder("R2DBCResultSetMetaData[").append("c=").append(this.c).append(", m=").append(this.m).append("]").toString(); }
 
         private final ColumnMetadata meta(int column) {
             return m.getColumnMetadata(column - 1);
@@ -1723,16 +1382,15 @@ final class R2DBC {
 
     static final Settings setParamType(SQLDialect dialect, Settings settings) {
         switch (dialect.family()) {
-
-            // [#14357] While Oracle style :x markers seem to work mostly,
-            //          there's a bug in r2dbc-mariadb that produces syntax
-            //          errors in rare cases.
             case MYSQL:
+                return settings
+                    .withParamType(NAMED)
+                    .withRenderNamedParamPrefix("?p")
+                    .withParseNamedParamPrefix("?p");
+
             case MARIADB:
-                return settings;
 
-
-
+                return settings.withParamType(NAMED);
 
 
 
@@ -1759,7 +1417,7 @@ final class R2DBC {
         private volatile Cursor<R>        c;
 
         BlockingRecordSubscription(ResultQueryTrait<R> query, Subscriber<? super R> subscriber) {
-            super(query.configuration(), subscriber);
+            super(subscriber);
 
             this.query = query;
         }
@@ -1789,9 +1447,8 @@ final class R2DBC {
         }
 
         @Override
-        final void cancel0(boolean closeAfterTransaction, Runnable onComplete) {
+        final void cancel0(boolean cancelled) {
             safeClose(c);
-            onComplete.run();
         }
     }
 
@@ -1799,7 +1456,7 @@ final class R2DBC {
         final AbstractRowCountQuery query;
 
         BlockingRowCountSubscription(AbstractRowCountQuery query, Subscriber<? super Integer> subscriber) {
-            super(query.configuration(), subscriber);
+            super(subscriber);
 
             this.query = query;
         }
@@ -1807,11 +1464,7 @@ final class R2DBC {
         @Override
         final void request0() {
             try {
-                if (query.isExecutable())
-                    subscriber.onNext(query.execute());
-                else if (log.isDebugEnabled())
-                    log.debug("Query is not executable", query);
-
+                subscriber.onNext(query.execute());
                 subscriber.onComplete();
             }
             catch (Throwable t) {
@@ -1823,29 +1476,22 @@ final class R2DBC {
     static final class BlockingTransactionSubscription<T> extends AbstractSubscription<T> {
         final DSLContext                  ctx;
         final TransactionalPublishable<T> transactional;
-        final TransactionProperty[]       properties;
 
         BlockingTransactionSubscription(
             DSLContext ctx,
             Subscriber<? super T> subscriber,
-            TransactionalPublishable<T> transactional,
-            TransactionProperty... properties
+            TransactionalPublishable<T> transactional
         ) {
-            super(ctx.configuration(), subscriber);
+            super(subscriber);
 
             this.ctx = ctx;
             this.transactional = transactional;
-            this.properties = properties;
         }
 
         @Override
         final void request0() {
             try {
-                subscriber.onNext(ctx.transactionResult(
-                    c -> block(transactional.run(c), configuration, subscriber),
-                    properties
-                ));
-
+                subscriber.onNext(ctx.transactionResult(c -> block(transactional.run(c))));
                 subscriber.onComplete();
             }
             catch (Throwable t) {
@@ -1856,63 +1502,5 @@ final class R2DBC {
 
     static final boolean isR2dbc(java.sql.Statement statement) {
         return statement instanceof R2DBCPreparedStatement;
-    }
-
-    static final boolean isR2dbc(Scope ctx) {
-        return TRUE.equals(ctx.data(DATA_RENDER_FOR_R2DBC));
-    }
-
-    /**
-     * [#13343] Prevent debug rendering errors from influencing control flow.
-     */
-    static final String sql0(Supplier<String> supplier) {
-        try {
-            return supplier.get();
-        }
-        catch (Throwable t) {
-            return "Error while rendering SQL: " + t.getMessage();
-        }
-    }
-
-    /**
-     * [#17920] create a potentially context aware {@link Subscriber} using our
-     * {@link SubscriberProvider} SPI.
-     */
-    static final <T, C> Subscriber<T> subscriber(
-        Subscriber<T> delegate,
-        SubscriberProvider<C> provider,
-        Subscriber<?> previous
-    ) {
-        return subscriber(
-            delegate::onSubscribe,
-            delegate::onNext,
-            delegate::onError,
-            delegate::onComplete,
-            provider,
-            previous
-        );
-    }
-
-    /**
-     * [#17920] create a potentially context aware {@link Subscriber} using our
-     * {@link SubscriberProvider} SPI.
-     */
-    static final <T, C> Subscriber<T> subscriber(
-        Consumer<Subscription> subscription,
-        Consumer<T> onNext,
-        Consumer<Throwable> onError,
-        Runnable onComplete,
-        SubscriberProvider<C> provider,
-        Subscriber<?> previous
-    ) {
-        return provider.subscriber(
-            subscription,
-            onNext,
-            onError,
-            onComplete,
-            previous != null
-                ? provider.context(downstream(previous))
-                : provider.context()
-        );
     }
 }

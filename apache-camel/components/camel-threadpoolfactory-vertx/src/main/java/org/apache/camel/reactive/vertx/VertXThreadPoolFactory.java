@@ -57,14 +57,19 @@ public class VertXThreadPoolFactory extends DefaultThreadPoolFactory implements 
     }
 
     @Override
-    protected void doStart() throws Exception {
-        super.doStart();
+    protected void doInit() throws Exception {
+        super.doInit();
         if (vertx == null) {
             Set<Vertx> set = getCamelContext().getRegistry().findByType(Vertx.class);
             if (set.size() == 1) {
                 vertx = set.iterator().next();
             }
         }
+    }
+
+    @Override
+    protected void doStart() throws Exception {
+        super.doStart();
         if (vertx == null) {
             throw new IllegalArgumentException("VertX instance must be configured.");
         }
@@ -133,10 +138,10 @@ public class VertXThreadPoolFactory extends DefaultThreadPoolFactory implements 
             LOG.trace("submit: {}", task);
             final CompletableFuture<?> answer = new CompletableFuture<>();
             // used by vertx
-            vertx.executeBlocking(() -> {
+            vertx.executeBlocking(future -> {
                 task.run();
-                return null;
-            }).onComplete(res -> answer.complete(null));
+                future.complete();
+            }, res -> answer.complete(null));
             return answer;
         }
 

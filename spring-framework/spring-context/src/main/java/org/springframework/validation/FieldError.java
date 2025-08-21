@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 
 package org.springframework.validation;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
@@ -38,7 +37,8 @@ public class FieldError extends ObjectError {
 
 	private final String field;
 
-	private final @Nullable Object rejectedValue;
+	@Nullable
+	private final Object rejectedValue;
 
 	private final boolean bindingFailure;
 
@@ -65,7 +65,7 @@ public class FieldError extends ObjectError {
 	 * @param defaultMessage the default message to be used to resolve this message
 	 */
 	public FieldError(String objectName, String field, @Nullable Object rejectedValue, boolean bindingFailure,
-			String @Nullable [] codes, Object @Nullable [] arguments, @Nullable String defaultMessage) {
+			@Nullable String[] codes, @Nullable Object[] arguments, @Nullable String defaultMessage) {
 
 		super(objectName, codes, arguments, defaultMessage);
 		Assert.notNull(field, "Field must not be null");
@@ -85,7 +85,8 @@ public class FieldError extends ObjectError {
 	/**
 	 * Return the rejected field value.
 	 */
-	public @Nullable Object getRejectedValue() {
+	@Nullable
+	public Object getRejectedValue() {
 		return this.rejectedValue;
 	}
 
@@ -106,7 +107,8 @@ public class FieldError extends ObjectError {
 		if (!super.equals(other)) {
 			return false;
 		}
-		return (other instanceof FieldError otherError && getField().equals(otherError.getField()) &&
+		FieldError otherError = (FieldError) other;
+		return (getField().equals(otherError.getField()) &&
 				ObjectUtils.nullSafeEquals(getRejectedValue(), otherError.getRejectedValue()) &&
 				isBindingFailure() == otherError.isBindingFailure());
 	}
@@ -122,8 +124,6 @@ public class FieldError extends ObjectError {
 
 	@Override
 	public String toString() {
-		// We would preferably use ObjectUtils.nullSafeConciseToString(rejectedValue) here but
-		// keep including the full nullSafeToString representation for backwards compatibility.
 		return "Field error in object '" + getObjectName() + "' on field '" + this.field +
 				"': rejected value [" + ObjectUtils.nullSafeToString(this.rejectedValue) + "]; " +
 				resolvableToString();

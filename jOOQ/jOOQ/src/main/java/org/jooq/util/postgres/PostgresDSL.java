@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -71,18 +71,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array1 &amp;&amp; array2</code> overlap operator.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * true = array[1, 2, 3] &amp;&amp; array[3, 4, 5]
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14352] - Use
-     *             {@link DSL#arrayOverlap(Object[], Object[])} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Condition arrayOverlap(T[] left, T[] right) {
@@ -92,18 +84,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array1 &amp;&amp; array2</code> overlap operator.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * true = array[1, 2, 3] &amp;&amp; array[3, 4, 5]
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.16.0 - [#14352] - Use
-     *             {@link DSL#arrayOverlap(Object[], Field)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Condition arrayOverlap(T[] left, Field<T[]> right) {
@@ -113,18 +97,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array1 &amp;&amp; array2</code> overlap operator.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * true = array[1, 2, 3] &amp;&amp; array[3, 4, 5]
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14352] - Use
-     *             {@link DSL#arrayOverlap(Field, Object[])} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Condition arrayOverlap(Field<T[]> left, T[] right) {
@@ -134,18 +110,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array1 &amp;&amp; array2</code> overlap operator.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * true = array[1, 2, 3] &amp;&amp; array[3, 4, 5]
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14352] - Use
-     *             {@link DSL#arrayOverlap(Field, Field)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Condition arrayOverlap(Field<T[]> left, Field<T[]> right) {
@@ -155,18 +123,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_append(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1, 2, 3} = array_append(ARRAY[1, 2], 3)
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayAppend(Object[], Object)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayAppend(T[] array, T value) {
@@ -176,18 +136,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_append(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1, 2, 3} = array_append(ARRAY[1, 2], 3)
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayAppend(Object[], Field)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayAppend(T[] array, Field<T> value) {
@@ -197,18 +149,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_append(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1, 2, 3} = array_append(ARRAY[1, 2], 3)
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayAppend(Field, Object)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayAppend(Field<T[]> array, T value) {
@@ -218,18 +162,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_append(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1, 2, 3} = array_append(ARRAY[1, 2], 3)
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayAppend(Field, Field)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayAppend(Field<T[]> array, Field<T> value) {
@@ -245,18 +181,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_prepend(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1, 2, 3} = array_prepend(1, ARRAY[2, 3])
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayPrepend(Object, Object[])} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayPrepend(T value, T[] array) {
@@ -266,18 +194,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_prepend(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1, 2, 3} = array_prepend(1, ARRAY[2, 3])
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayPrepend(Field, Object[])} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayPrepend(Field<T> value, T[] array) {
@@ -287,14 +207,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_prepend(anyarray, anyelement)</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * {1, 2, 3} = array_prepend(1, ARRAY[2, 3])
-     * </code></pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayPrepend(Object, Field)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayPrepend(T value, Field<T[]> array) {
@@ -304,18 +220,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_prepend(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1, 2, 3} = array_prepend(1, ARRAY[2, 3])
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayPrepend(Field, Field)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayPrepend(Field<T> value, Field<T[]> array) {
@@ -331,18 +239,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_cat(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1, 2, 3, 4, 5} = array_cat(ARRAY[1, 2], ARRAY[3, 4, 5])
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayConcat(Object[], Object[])} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayCat(T[] array1, T[] array2) {
@@ -352,18 +252,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_cat(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1, 2, 3, 4, 5} = array_cat(ARRAY[1, 2], ARRAY[3, 4, 5])
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayConcat(Object[], Field)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayCat(T[] array1, Field<T[]> array2) {
@@ -373,18 +265,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_cat(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1, 2, 3, 4, 5} = array_cat(ARRAY[1, 2], ARRAY[3, 4, 5])
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayConcat(Field, Object[])} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayCat(Field<T[]> array1, T[] array2) {
@@ -394,18 +278,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_cat(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1, 2, 3, 4, 5} = array_cat(ARRAY[1, 2], ARRAY[3, 4, 5])
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayConcat(Field, Field)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayCat(Field<T[]> array1, Field<T[]> array2) {
@@ -415,18 +291,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_remove(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1,3} = array_remove(ARRAY[1,2,3,2], 2)
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayRemove(Object[], Object)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayRemove(T[] array, T element) {
@@ -436,18 +304,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_remove(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1,3} = array_remove(ARRAY[1,2,3,2], 2)
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayRemove(Field, Object)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayRemove(Field<T[]> array, T element) {
@@ -457,18 +317,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_remove(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1,3} = array_remove(ARRAY[1,2,3,2], 2)
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayRemove(Object[], Field)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayRemove(T[] array, Field<T> element) {
@@ -478,18 +330,10 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_remove(anyarray, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1,3} = array_remove(ARRAY[1,2,3,2], 2)
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#14388] - Use
-     *             {@link DSL#arrayRemove(Field, Field)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayRemove(Field<T[]> array, Field<T> element) {
@@ -506,18 +350,10 @@ public class PostgresDSL extends DSL {
      * The PostgreSQL
      * <code>array_replace(anyarray, anyelement, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1,2,3,4} = array_replace(ARRAY[1,2,5,4], 5, 3)
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#11981] - Use
-     *             {@link DSL#arrayReplace(Object[], Object, Object)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayReplace(T[] array, T search, T replace) {
@@ -528,18 +364,10 @@ public class PostgresDSL extends DSL {
      * The PostgreSQL
      * <code>array_replace(anyarray, anyelement, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1,2,3,4} = array_replace(ARRAY[1,2,5,4], 5, 3)
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#11981] - Use
-     *             {@link DSL#arrayReplace(Field, Field, Field)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayReplace(T[] array, Field<T> search, Field<T> replace) {
@@ -550,18 +378,10 @@ public class PostgresDSL extends DSL {
      * The PostgreSQL
      * <code>array_replace(anyarray, anyelement, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1,2,3,4} = array_replace(ARRAY[1,2,5,4], 5, 3)
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#11981] - Use
-     *             {@link DSL#arrayReplace(Field, Field, Field)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayReplace(Field<T[]> array, T search, T replace) {
@@ -572,18 +392,10 @@ public class PostgresDSL extends DSL {
      * The PostgreSQL
      * <code>array_replace(anyarray, anyelement, anyelement)</code> function.
      * <p>
-     * Example:
-     *
-     * <pre>
-     * <code>
+     * Example: <code><pre>
      * {1,2,3,4} = array_replace(ARRAY[1,2,5,4], 5, 3)
-     * </code>
-     * </pre>
-     *
-     * @deprecated - 3.18.0 - [#11981] - Use
-     *             {@link DSL#arrayReplace(Field, Field, Field)} instead.
+     * </pre></code>
      */
-    @Deprecated
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
     public static <T> Field<T[]> arrayReplace(Field<T[]> array, Field<T> search, Field<T> replace) {
@@ -599,9 +411,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_fill(anyelement, int[])</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * {7,7,7} = array_fill(7, ARRAY[3])
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -612,9 +424,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_fill(anyelement, int[])</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * {7,7,7} = array_fill(7, ARRAY[3])
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -625,9 +437,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_fill(anyelement, int[])</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * {7,7,7} = array_fill(7, ARRAY[3])
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -638,9 +450,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_fill(anyelement, int[])</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * {7,7,7} = array_fill(7, ARRAY[3])
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -651,9 +463,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_fill(anyelement, int[], int[])</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * [2:4]={7,7,7} = array_fill(7, ARRAY[3], ARRAY[2])
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -664,9 +476,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_fill(anyelement, int[], int[])</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * [2:4]={7,7,7} = array_fill(7, ARRAY[3], ARRAY[2])
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -677,9 +489,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_fill(anyelement, int[], int[])</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * [2:4]={7,7,7} = array_fill(7, ARRAY[3], ARRAY[2])
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -690,9 +502,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_fill(anyelement, int[], int[])</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * [2:4]={7,7,7} = array_fill(7, ARRAY[3], ARRAY[2])
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -706,9 +518,9 @@ public class PostgresDSL extends DSL {
      * jOOQ currently doesn't support multi-dimensional arrays, so the dimension
      * will always be <code>1</code>.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * 3 = array_length(array[1,2,3], 1)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -722,9 +534,9 @@ public class PostgresDSL extends DSL {
      * jOOQ currently doesn't support multi-dimensional arrays, so the dimension
      * will always be <code>1</code>.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * 3 = array_length(array[1,2,3], 1)
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -735,9 +547,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_to_string(anyarray, delimiter)</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * '1~^~2~^~3' = array_to_string(ARRAY[1, 2, 3], '~^~')
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -748,9 +560,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_to_string(anyarray, delimiter)</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * '1~^~2~^~3' = array_to_string(ARRAY[1, 2, 3], '~^~')
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -761,9 +573,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_to_string(anyarray, delimiter)</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * '1~^~2~^~3' = array_to_string(ARRAY[1, 2, 3], '~^~')
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -774,9 +586,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>array_to_string(anyarray, delimiter)</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * '1~^~2~^~3' = array_to_string(ARRAY[1, 2, 3], '~^~')
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -787,9 +599,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>string_to_array(anyarray, delimiter)</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * {xx,NULL,zz} = string_to_array('xx~^~yy~^~zz', '~^~', 'yy')
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -800,9 +612,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>string_to_array(anyarray, delimiter)</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * {xx,NULL,zz} = string_to_array('xx~^~yy~^~zz', '~^~', 'yy')
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -813,9 +625,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>string_to_array(anyarray, delimiter)</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * {xx,NULL,zz} = string_to_array('xx~^~yy~^~zz', '~^~', 'yy')
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -826,9 +638,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>string_to_array(anyarray, delimiter)</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * {xx,NULL,zz} = string_to_array('xx~^~yy~^~zz', '~^~', 'yy')
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -839,9 +651,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>string_to_array(anyarray, delimiter)</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * {xx,NULL,zz} = string_to_array('xx~^~yy~^~zz', '~^~', 'yy')
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -852,9 +664,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>string_to_array(anyarray, delimiter)</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * {xx,NULL,zz} = string_to_array('xx~^~yy~^~zz', '~^~', 'yy')
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -865,9 +677,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>string_to_array(anyarray, delimiter)</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * {xx,NULL,zz} = string_to_array('xx~^~yy~^~zz', '~^~', 'yy')
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -878,9 +690,9 @@ public class PostgresDSL extends DSL {
     /**
      * The PostgreSQL <code>string_to_array(anyarray, delimiter)</code> function.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * {xx,NULL,zz} = string_to_array('xx~^~yy~^~zz', '~^~', 'yy')
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES, YUGABYTEDB })
@@ -896,9 +708,9 @@ public class PostgresDSL extends DSL {
      * Get the PostgreSQL-specific <code>ONLY [table]</code> clause for use with
      * table inheritance.
      * <p>
-     * Example: <pre><code>
+     * Example: <code><pre>
      * SELECT * FROM ONLY parent_table
-     * </code></pre>
+     * </pre></code>
      */
     @NotNull
     @Support({ POSTGRES })

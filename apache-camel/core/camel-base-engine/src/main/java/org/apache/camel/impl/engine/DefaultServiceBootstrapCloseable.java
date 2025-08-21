@@ -27,7 +27,6 @@ import org.apache.camel.spi.ConfigurerResolver;
 import org.apache.camel.spi.ConfigurerStrategy;
 import org.apache.camel.spi.FactoryFinder;
 import org.apache.camel.spi.ProcessorFactory;
-import org.apache.camel.support.PluginHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,12 +38,10 @@ public class DefaultServiceBootstrapCloseable implements BootstrapCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultServiceBootstrapCloseable.class);
 
-    private final CamelContext camelContext;
-    private final ExtendedCamelContext camelContextExtension;
+    private final ExtendedCamelContext camelContext;
 
     public DefaultServiceBootstrapCloseable(CamelContext camelContext) {
-        this.camelContext = camelContext;
-        this.camelContextExtension = camelContext.getCamelContextExtension();
+        this.camelContext = (ExtendedCamelContext) camelContext;
     }
 
     @Override
@@ -53,13 +50,12 @@ public class DefaultServiceBootstrapCloseable implements BootstrapCloseable {
         ConfigurerStrategy.clearBootstrapConfigurers();
 
         Set<Service> set
-                = camelContextExtension.getServices().stream().filter(s -> s instanceof BootstrapCloseable)
-                        .collect(Collectors.toSet());
+                = camelContext.getServices().stream().filter(s -> s instanceof BootstrapCloseable).collect(Collectors.toSet());
         // its a bootstrap service
         for (Service service : set) {
             try {
-                if (service instanceof BootstrapCloseable closeable) {
-                    closeable.close();
+                if (service instanceof BootstrapCloseable) {
+                    ((BootstrapCloseable) service).close();
                 }
                 // service is no longer needed as it was only intended during bootstrap
                 camelContext.removeService(service);
@@ -69,35 +65,37 @@ public class DefaultServiceBootstrapCloseable implements BootstrapCloseable {
         }
 
         // clear bootstrap configurer resolver
-        ConfigurerResolver cr = PluginHelper.getBootstrapConfigurerResolver(camelContextExtension);
-        if (cr instanceof BootstrapCloseable closeable) {
+        ConfigurerResolver cr = camelContext.getBootstrapConfigurerResolver();
+        if (cr instanceof BootstrapCloseable) {
             try {
-                closeable.close();
+                ((BootstrapCloseable) cr).close();
             } catch (Exception e) {
                 LOG.warn("Error during closing bootstrap service. This exception is ignored", e);
             }
         }
+        camelContext.setBootstrapConfigurerResolver(null);
 
         // clear processor factory
-        ProcessorFactory pf = PluginHelper.getProcessorFactory(camelContextExtension);
-        if (pf instanceof BootstrapCloseable closeable) {
+        ProcessorFactory pf = camelContext.getProcessorFactory();
+        if (pf instanceof BootstrapCloseable) {
             try {
-                closeable.close();
+                ((BootstrapCloseable) pf).close();
             } catch (Exception e) {
                 LOG.warn("Error during closing bootstrap service. This exception is ignored", e);
             }
         }
+        camelContext.setProcessorFactory(null);
 
         // clear bootstrap factory finder
-        FactoryFinder ff = camelContextExtension.getBootstrapFactoryFinder();
-        if (ff instanceof BootstrapCloseable closeable) {
+        FactoryFinder ff = camelContext.getBootstrapFactoryFinder();
+        if (ff instanceof BootstrapCloseable) {
             try {
-                closeable.close();
+                ((BootstrapCloseable) ff).close();
             } catch (Exception e) {
                 LOG.warn("Error during closing bootstrap service. This exception is ignored", e);
             }
         }
-        camelContextExtension.setBootstrapFactoryFinder(null);
+        camelContext.setBootstrapFactoryFinder(null);
     }
 
 }

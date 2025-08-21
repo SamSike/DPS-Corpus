@@ -31,7 +31,7 @@ public class MyConstructorProcessor implements Processor {
     }
 
     @Override
-    public void process(Exchange exchange) {
+    public void process(Exchange exchange) throws Exception {
         exchange.getMessage().setBody(prefix + exchange.getMessage().getBody());
     }
 }

@@ -16,9 +16,11 @@
  */
 package org.apache.camel.dsl.xml.jaxb.definition;
 
+import java.io.InputStream;
+
 import org.apache.camel.ContextTestSupport;
-import org.apache.camel.spi.Resource;
-import org.apache.camel.support.PluginHelper;
+import org.apache.camel.ExtendedCamelContext;
+import org.apache.camel.model.RoutesDefinition;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,10 +35,10 @@ public class LoadRouteFromXmlWithInterceptTest extends ContextTestSupport {
 
     @Test
     public void testLoadRouteFromXmlWithIntercept() throws Exception {
-        Resource resource
-                = PluginHelper.getResourceLoader(context)
-                        .resolveResource("org/apache/camel/dsl/xml/jaxb/definition/barInterceptorRoute.xml");
-        PluginHelper.getRoutesLoader(context).loadRoutes(resource);
+        InputStream is = getClass().getResourceAsStream("barInterceptorRoute.xml");
+        ExtendedCamelContext ecc = context.adapt(ExtendedCamelContext.class);
+        RoutesDefinition routes = (RoutesDefinition) ecc.getXMLRoutesDefinitionLoader().loadRoutesDefinition(ecc, is);
+        context.addRouteDefinitions(routes.getRoutes());
         context.start();
 
         assertNotNull(context.getRoute("bar"), "Loaded bar route should be there");

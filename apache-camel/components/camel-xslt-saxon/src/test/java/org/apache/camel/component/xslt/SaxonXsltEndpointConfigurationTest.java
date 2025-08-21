@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SaxonXsltEndpointConfigurationTest extends CamelSpringTestSupport {
     @Test
-    public void testComponentConfiguration() {
+    public void testConfiguration() {
         Configuration configuration = context.getRegistry().lookupByNameAndType("saxon-configuration", Configuration.class);
         Map<?, ?> properties = context.getRegistry().lookupByNameAndType("saxon-properties", Map.class);
         XsltSaxonComponent component = context.getComponent("xslt-saxon", XsltSaxonComponent.class);

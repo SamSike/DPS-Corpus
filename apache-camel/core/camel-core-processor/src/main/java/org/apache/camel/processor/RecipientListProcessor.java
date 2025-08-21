@@ -33,6 +33,8 @@ import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
 import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.Expression;
+import org.apache.camel.ExtendedCamelContext;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.NoTypeConversionAvailableException;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
@@ -81,7 +83,7 @@ public class RecipientListProcessor extends MulticastProcessor {
         private final int index;
         private final Endpoint endpoint;
         private final AsyncProducer producer;
-        private final Processor prepared;
+        private Processor prepared;
         private final Exchange exchange;
         private final ProducerCache producerCache;
         private final ExchangePattern pattern;
@@ -162,11 +164,10 @@ public class RecipientListProcessor extends MulticastProcessor {
                                   AggregationStrategy aggregationStrategy,
                                   boolean parallelProcessing, ExecutorService executorService, boolean shutdownExecutorService,
                                   boolean streaming, boolean stopOnException,
-                                  long timeout, Processor onPrepare, boolean shareUnitOfWork, boolean parallelAggregate,
-                                  int cacheSize) {
+                                  long timeout, Processor onPrepare, boolean shareUnitOfWork, boolean parallelAggregate) {
         super(camelContext, route, null, aggregationStrategy, parallelProcessing, executorService, shutdownExecutorService,
               streaming, stopOnException, timeout, onPrepare,
-              shareUnitOfWork, parallelAggregate, cacheSize);
+              shareUnitOfWork, parallelAggregate);
         this.expression = expression;
         this.delimiter = delimiter;
         this.producerCache = producerCache;
@@ -201,15 +202,18 @@ public class RecipientListProcessor extends MulticastProcessor {
 
         // optimize for recipient without need for using delimiter
         // (if its list/collection/array type)
-        if (recipientList instanceof List<?> col) {
+        if (recipientList instanceof List) {
+            List col = (List) recipientList;
             int size = col.size();
             List<ProcessorExchangePair> result = new ArrayList<>(size);
             int index = 0;
-            for (Object recipient : col) {
+            for (int i = 0; i < size; i++) {
+                Object recipient = col.get(i);
                 index = doCreateProcessorExchangePairs(exchange, recipient, result, index);
             }
             return result;
-        } else if (recipientList instanceof Collection<?> col) {
+        } else if (recipientList instanceof Collection) {
+            Collection col = (Collection) recipientList;
             int size = col.size();
             List<ProcessorExchangePair> result = new ArrayList<>(size);
             int index = 0;
@@ -222,7 +226,8 @@ public class RecipientListProcessor extends MulticastProcessor {
             int size = Array.getLength(recipientList);
             List<ProcessorExchangePair> result = new ArrayList<>(size);
             int index = 0;
-            for (Object recipient : arr) {
+            for (int i = 0; i < size; i++) {
+                Object recipient = arr[i];
                 index = doCreateProcessorExchangePairs(exchange, recipient, result, index);
             }
             return result;
@@ -286,7 +291,7 @@ public class RecipientListProcessor extends MulticastProcessor {
             Exchange exchange, ExchangePattern pattern, boolean prototypeEndpoint) {
         // copy exchange, and do not share the unit of work
         Exchange copy = processorExchangeFactory.createCorrelatedCopy(exchange, false);
-        copy.getExchangeExtension().setTransacted(exchange.isTransacted());
+        copy.adapt(ExtendedExchange.class).setTransacted(exchange.isTransacted());
 
         // If we are in a transaction, set TRANSACTION_CONTEXT_DATA property for new exchanges to share txData
         // during the transaction.
@@ -324,11 +329,42 @@ public class RecipientListProcessor extends MulticastProcessor {
     }
 
     protected static Object prepareRecipient(Exchange exchange, Object recipient) throws NoTypeConversionAvailableException {
-        return ProcessorHelper.prepareRecipient(exchange, recipient);
+        if (recipient instanceof Endpoint || recipient instanceof NormalizedEndpointUri) {
+            return recipient;
+        } else if (recipient instanceof String) {
+            // trim strings as end users might have added spaces between separators
+            recipient = ((String) recipient).trim();
+        }
+        if (recipient != null) {
+            ExtendedCamelContext ecc = (ExtendedCamelContext) exchange.getContext();
+            String uri;
+            if (recipient instanceof String) {
+                uri = (String) recipient;
+            } else {
+                // convert to a string type we can work with
+                uri = ecc.getTypeConverter().mandatoryConvertTo(String.class, exchange, recipient);
+            }
+            // optimize and normalize endpoint
+            return ecc.normalizeUri(uri);
+        }
+        return null;
     }
 
     protected static Endpoint getExistingEndpoint(Exchange exchange, Object recipient) {
-        return ProcessorHelper.getExistingEndpoint(exchange, recipient);
+        if (recipient instanceof Endpoint) {
+            return (Endpoint) recipient;
+        }
+        if (recipient != null) {
+            if (recipient instanceof NormalizedEndpointUri) {
+                NormalizedEndpointUri nu = (NormalizedEndpointUri) recipient;
+                ExtendedCamelContext ecc = (ExtendedCamelContext) exchange.getContext();
+                return ecc.hasEndpoint(nu);
+            } else {
+                String uri = recipient.toString().trim();
+                return exchange.getContext().hasEndpoint(uri);
+            }
+        }
+        return null;
     }
 
     protected static Endpoint resolveEndpoint(Exchange exchange, Object recipient, boolean prototype) {
@@ -340,11 +376,11 @@ public class RecipientListProcessor extends MulticastProcessor {
     protected ExchangePattern resolveExchangePattern(Object recipient) {
         String s = null;
 
-        if (recipient instanceof NormalizedEndpointUri normalizedEndpointUri) {
-            s = normalizedEndpointUri.getUri();
-        } else if (recipient instanceof String str) {
+        if (recipient instanceof NormalizedEndpointUri) {
+            s = ((NormalizedEndpointUri) recipient).getUri();
+        } else if (recipient instanceof String) {
             // trim strings as end users might have added spaces between separators
-            s = str.trim();
+            s = ((String) recipient).trim();
         }
         if (s != null) {
             return EndpointHelper.resolveExchangePatternFromUrl(s);
@@ -361,6 +397,10 @@ public class RecipientListProcessor extends MulticastProcessor {
     protected void doBuild() throws Exception {
         super.doBuild();
         ServiceHelper.buildService(producerCache);
+
+        // eager load classes
+        Object dummy = new RecipientProcessorExchangePair(0, null, null, null, null, null, null, false);
+        LOG.trace("Loaded {}", dummy.getClass().getName());
     }
 
     @Override

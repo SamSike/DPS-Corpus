@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,7 +37,6 @@
  */
 package org.jooq.impl;
 
-import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 // ...
 import static org.jooq.impl.RowAsField.NO_NATIVE_SUPPORT;
@@ -45,7 +44,6 @@ import static org.jooq.impl.Tools.embeddedFields;
 import static org.jooq.impl.Tools.embeddedRecordType;
 import static org.jooq.impl.Tools.recordFactory;
 import static org.jooq.impl.Tools.uncoerce;
-import static org.jooq.impl.Tools.BooleanDataKey.DATA_MULTISET_CONTENT;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -77,14 +75,14 @@ import java.util.function.Supplier;
 
 import org.jooq.Attachable;
 import org.jooq.BindingGetResultSetContext;
-import org.jooq.ContextConverter;
+import org.jooq.Converter;
 import org.jooq.ExecuteContext;
 import org.jooq.ExecuteListener;
+import org.jooq.ExecuteType;
 import org.jooq.Field;
 // ...
 import org.jooq.Record;
 import org.jooq.Result;
-import org.jooq.Table;
 import org.jooq.exception.ControlFlowSignal;
 import org.jooq.tools.JooqLogger;
 import org.jooq.tools.jdbc.JDBC41ResultSet;
@@ -95,37 +93,59 @@ import org.jooq.tools.jdbc.JDBCUtils;
  */
 final class CursorImpl<R extends Record> extends AbstractCursor<R> {
 
-    private static final JooqLogger     log = JooqLogger.getLogger(CursorImpl.class);
+    private static final JooqLogger                        log = JooqLogger.getLogger(CursorImpl.class);
 
-    final ExecuteContext                ctx;
-    final ExecuteListener               listener;
-    private final boolean               keepResultSet;
-    private final boolean               keepStatement;
-    private final boolean               autoclosing;
-    private final int                   maxRows;
-    private final Supplier<? extends R> factory;
-    private boolean                     isClosed;
+    final ExecuteContext                                   ctx;
+    final ExecuteListener                                  listener;
+    private final boolean[]                                intern;
+    private final boolean                                  keepResultSet;
+    private final boolean                                  keepStatement;
+    private final boolean                                  autoclosing;
+    private final int                                      maxRows;
+    private final Supplier<? extends R>                    factory;
+    private boolean                                        isClosed;
 
-    private transient CursorResultSet   rs;
-    private transient Iterator<R>       iterator;
-    private transient int               rows;
+    private transient CursorResultSet                      rs;
+    private transient DefaultBindingGetResultSetContext<?> rsContext;
+
+
+
+
+
+
+    private transient Iterator<R>                          iterator;
+    private transient int                                  rows;
 
     @SuppressWarnings("unchecked")
-    CursorImpl(ExecuteContext ctx, ExecuteListener listener, Field<?>[] fields, boolean keepStatement, boolean keepResultSet) {
-        this(ctx, listener, fields, keepStatement, keepResultSet, null, (Class<? extends R>) RecordImplN.class, 0, true);
+    CursorImpl(ExecuteContext ctx, ExecuteListener listener, Field<?>[] fields, int[] internIndexes, boolean keepStatement, boolean keepResultSet) {
+        this(ctx, listener, fields, internIndexes, keepStatement, keepResultSet, (Class<? extends R>) RecordImplN.class, 0, true);
     }
 
-    CursorImpl(ExecuteContext ctx, ExecuteListener listener, Field<?>[] fields, boolean keepStatement, boolean keepResultSet, Table<? extends R> table, Class<? extends R> type, int maxRows, boolean autoclosing) {
+    CursorImpl(ExecuteContext ctx, ExecuteListener listener, Field<?>[] fields, int[] internIndexes, boolean keepStatement, boolean keepResultSet, Class<? extends R> type, int maxRows, boolean autoclosing) {
         super(ctx.configuration(), (AbstractRow<R>) Tools.row0(fields));
 
         this.ctx = ctx;
         this.listener = (listener != null ? listener : ExecuteListeners.getAndStart(ctx));
-        this.factory = recordFactory(table, type, this.fields);
+        this.factory = recordFactory(type, this.fields);
         this.keepStatement = keepStatement;
         this.keepResultSet = keepResultSet;
         this.rs = new CursorResultSet();
+        this.rsContext = new DefaultBindingGetResultSetContext<>(ctx, rs, 0);
+
+
+
+
         this.maxRows = maxRows;
         this.autoclosing = autoclosing;
+
+        if (internIndexes != null) {
+            this.intern = new boolean[fields.length];
+
+            for (int i : internIndexes)
+                intern[i] = true;
+        }
+        else
+            this.intern = null;
     }
 
     // -------------------------------------------------------------------------
@@ -140,6 +160,59 @@ final class CursorImpl<R extends Record> extends AbstractCursor<R> {
     // -------------------------------------------------------------------------
     // XXX: Cursor API
     // -------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @Override
     public final Iterator<R> iterator() {
@@ -1335,14 +1408,10 @@ final class CursorImpl<R extends Record> extends AbstractCursor<R> {
         /**
          * [#11099] Cache this instance for the entire cursor.
          */
-        private final CursorRecordInitialiser        initialiser    = new CursorRecordInitialiser(
-            ctx, listener,
-            new DefaultBindingGetResultSetContext<>(ctx, rs, 0),
-            fields, 0
-        );
+        private final CursorRecordInitialiser        initialiser    = new CursorRecordInitialiser(fields, 0);
 
         @SuppressWarnings("unchecked")
-        private final RecordDelegate<AbstractRecord> recordDelegate = Tools.newRecord(true, ((DefaultExecuteContext) ctx).originalConfiguration(), (Supplier<AbstractRecord>) factory);
+        private final RecordDelegate<AbstractRecord> recordDelegate = Tools.newRecord(true, (Supplier<AbstractRecord>) factory, ((DefaultExecuteContext) ctx).originalConfiguration());
 
         @Override
         public final boolean hasNext() {
@@ -1410,220 +1479,112 @@ final class CursorImpl<R extends Record> extends AbstractCursor<R> {
         public final void remove() {
             throw new UnsupportedOperationException();
         }
-    }
 
-    /**
-     * A utility to initialise records and transfer data in a
-     * {@link RecordDelegate}.
-     * <p>
-     * While {@link CursorImpl} is strictly for blocking execution on JDBC, this
-     * initialiser can also be used by the {@link R2DBC} implementation.
-     */
-    static class CursorRecordInitialiser implements ThrowingFunction<AbstractRecord, AbstractRecord, SQLException> {
+        private class CursorRecordInitialiser implements ThrowingFunction<AbstractRecord, AbstractRecord, SQLException> {
 
-        private final ExecuteContext                       ctx;
-        private final ExecuteListener                      listener;
-        private final AbstractRow<?>                       initialiserFields;
-        private int                                        offset;
+            private final AbstractRow<?> initialiserFields;
+            private int                  offset;
 
-
-
-
-
-
-
-        private final DefaultBindingGetResultSetContext<?> rsContext;
-
-        CursorRecordInitialiser(
-            ExecuteContext ctx,
-            ExecuteListener listener,
-            DefaultBindingGetResultSetContext<?> rsContext,
-            AbstractRow<?> initialiserFields,
-            int offset
-        ) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            this.ctx = ctx;
-            this.listener = listener;
-            this.rsContext = rsContext;
-            this.initialiserFields = initialiserFields;
-            this.offset = offset;
-
-
-
-
-
-        }
-
-        CursorRecordInitialiser reset() {
-            offset = 0;
-            return this;
-        }
-
-        @Override
-        public AbstractRecord apply(AbstractRecord record) throws SQLException {
-            ctx.record(record);
-            listener.recordStart(ctx);
-            int size = initialiserFields.size();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            for (int i = 0; i < size; i++)
-                setValue(record, initialiserFields.field(i), i);
-
-            ctx.record(record);
-            listener.recordEnd(ctx);
-
-            return record;
-        }
-
-        /**
-         * Utility method to prevent unnecessary unchecked conversions
-         */
-        @SuppressWarnings("unchecked")
-        private final <T> void setValue(AbstractRecord record, Field<T> field, int index) throws SQLException {
-            try {
-                T value;
-                AbstractRow<?> nested = null;
-                Class<? extends AbstractRecord> recordType = null;
-
-                // [#7100] TODO: This should be transparent to the CursorImpl
-                //         RowField may have a Row[N].mapping(...) applied
-                Field<?> f = uncoerce(field);
-
-                // [#13560] Queries may decide themselves to replace the
-                //          flattening emulation by the MULTISET emulation
-                if (f instanceof AbstractRowAsField
-                        && NO_NATIVE_SUPPORT.contains(ctx.dialect())
-                        && !TRUE.equals(ctx.data(DATA_MULTISET_CONTENT))) {
-                    nested = ((AbstractRowAsField<?>) f).emulatedFields(ctx.configuration());
-                    recordType = (Class<? extends AbstractRecord>) ((AbstractRowAsField<?>) f).getRecordType();
-                }
-                else if (f.getDataType().isEmbeddable()) {
-                    nested = Tools.row0(embeddedFields(f));
-                    recordType = embeddedRecordType(f);
-                }
-
-                int nestedOffset = offset + index;
-                if (nested != null) {
-                    CursorRecordInitialiser operation = new CursorRecordInitialiser(
-                        ctx, listener,
-                        rsContext,
-                        nested, nestedOffset
-
-
-
-
-
-                    );
-                    value = (T) Tools.newRecord(true, ((DefaultExecuteContext) ctx).originalConfiguration(), (Class<AbstractRecord>) recordType, (AbstractRow<AbstractRecord>) nested)
-                                     .operate(operation);
-
-                    // [#7100] TODO: Is there a more elegant way to do this?
-                    if (f != field)
-                        value = ((ContextConverter<Object, T>) field.getConverter()).from(value, ctx.converterContext());
-
-                    offset += operation.offset - nestedOffset + nested.size() - 1;
-                }
-                else {
-                    rsContext.index(nestedOffset + 1);
-                    rsContext.field((Field) field);
-                    field.getBinding().get((BindingGetResultSetContext<T>) rsContext);
-                    value = (T) rsContext.value();
-                }
-
-                record.values[index] = value;
-                record.originals[index] = value;
+            CursorRecordInitialiser(AbstractRow<?> initialiserFields, int offset) {
+                this.initialiserFields = initialiserFields;
+                this.offset = offset;
             }
 
-            // [#5901] Improved error logging, mostly useful when there are some data type conversion errors
-            catch (Exception e) {
-                throw new SQLException("Error while reading field: " + field + ", at JDBC index: " + (offset + index + 1), e);
+            CursorRecordInitialiser reset() {
+                offset = 0;
+                return this;
+            }
+
+            @Override
+            public AbstractRecord apply(AbstractRecord record) throws SQLException {
+                ctx.record(record);
+                listener.recordStart(ctx);
+                int size = initialiserFields.size();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                for (int i = 0; i < size; i++)
+                    setValue(record, initialiserFields.field(i), i);
+
+                if (intern != null)
+                    for (int i = 0; i < intern.length; i++)
+                        if (intern[i])
+                            record.intern0(i);
+
+                ctx.record(record);
+                listener.recordEnd(ctx);
+
+                return record;
+            }
+
+            /**
+             * Utility method to prevent unnecessary unchecked conversions
+             */
+            @SuppressWarnings("unchecked")
+            private final <T> void setValue(AbstractRecord record, Field<T> field, int index) throws SQLException {
+                try {
+                    T value;
+                    AbstractRow<?> nested = null;
+                    Class<? extends AbstractRecord> recordType = null;
+
+                    // [#7100] TODO: This should be transparent to the CursorImpl
+                    //         RowField may have a Row[N].mapping(...) applied
+                    Field<?> f = uncoerce(field);
+
+                    if (f instanceof AbstractRowAsField && NO_NATIVE_SUPPORT.contains(ctx.dialect())) {
+                        nested = ((AbstractRowAsField<?>) f).emulatedFields(configuration);
+                        recordType = (Class<? extends AbstractRecord>) ((AbstractRowAsField<?>) f).getRecordType();
+                    }
+                    else if (f.getDataType().isEmbeddable()) {
+                        nested = Tools.row0(embeddedFields(f));
+                        recordType = embeddedRecordType(f);
+                    }
+
+                    int nestedOffset = offset + index;
+                    if (nested != null) {
+                        CursorRecordInitialiser operation = new CursorRecordInitialiser(nested, nestedOffset);
+                        value = (T) Tools.newRecord(true, (Class<AbstractRecord>) recordType, (AbstractRow<AbstractRecord>) nested, ((DefaultExecuteContext) ctx).originalConfiguration())
+                                         .operate(operation);
+
+                        // [#7100] TODO: Is there a more elegant way to do this?
+                        if (f != field)
+                            value = ((Converter<Object, T>) field.getConverter()).from(value);
+
+                        offset += operation.offset - nestedOffset + nested.size() - 1;
+                    }
+                    else {
+                        rsContext.index(nestedOffset + 1);
+                        rsContext.field((Field) field);
+                        field.getBinding().get((BindingGetResultSetContext<T>) rsContext);
+                        value = (T) rsContext.value();
+                    }
+
+                    record.values[index] = value;
+                    record.originals[index] = value;
+                }
+
+                // [#5901] Improved error logging, mostly useful when there are some data type conversion errors
+                catch (Exception e) {
+                    throw new SQLException("Error while reading field: " + field + ", at JDBC index: " + (offset + index + 1), e);
+                }
             }
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

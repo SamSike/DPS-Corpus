@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package org.springframework.expression;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.lang.Nullable;
 
 /**
  * A type converter can convert values between different types encountered during
@@ -45,7 +44,7 @@ public interface TypeConverter {
 	 * Convert (or coerce) a value from one type to another, for example from a
 	 * {@code boolean} to a {@code String}.
 	 * <p>The {@link TypeDescriptor} parameters enable support for typed collections:
-	 * A caller may prefer a {@code List<Integer>}, for example, rather than
+	 * A caller may prefer a {@code List&lt;Integer&gt;}, for example, rather than
 	 * simply any {@code List}.
 	 * @param value the value to be converted
 	 * @param sourceType a type descriptor that supplies extra information about the
@@ -55,6 +54,7 @@ public interface TypeConverter {
 	 * @return the converted value
 	 * @throws EvaluationException if conversion failed or is not possible to begin with
 	 */
-	@Nullable Object convertValue(@Nullable Object value, @Nullable TypeDescriptor sourceType, TypeDescriptor targetType);
+	@Nullable
+	Object convertValue(@Nullable Object value, @Nullable TypeDescriptor sourceType, TypeDescriptor targetType);
 
 }

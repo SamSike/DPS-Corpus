@@ -16,6 +16,8 @@
  */
 package org.apache.camel.component.azure.storage.datalake;
 
+import java.io.IOException;
+
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.azure.storage.datalake.client.DataLakeDirectoryClientWrapper;
@@ -48,7 +50,7 @@ public class DataLakeProducer extends DefaultProducer {
     }
 
     @Override
-    public void process(Exchange exchange) throws Exception {
+    public void process(Exchange exchange) throws IllegalArgumentException, IOException {
         DataLakeOperationsDefinition operation = determineOperation(exchange);
         switch (operation) {
             case listFileSystem:

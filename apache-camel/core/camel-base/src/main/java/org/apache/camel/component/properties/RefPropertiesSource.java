@@ -20,24 +20,17 @@ import java.io.FileNotFoundException;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.camel.Ordered;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.util.OrderedProperties;
 
-public class RefPropertiesSource implements LocationPropertiesSource, Ordered {
+public class RefPropertiesSource implements LocationPropertiesSource {
 
-    private final int order;
     private final PropertiesComponent propertiesComponent;
     private final PropertiesLocation location;
 
     public RefPropertiesSource(PropertiesComponent propertiesComponent, PropertiesLocation location) {
-        this(propertiesComponent, location, 200);
-    }
-
-    public RefPropertiesSource(PropertiesComponent propertiesComponent, PropertiesLocation location, int order) {
         this.propertiesComponent = propertiesComponent;
         this.location = location;
-        this.order = order;
     }
 
     @Override
@@ -78,10 +71,4 @@ public class RefPropertiesSource implements LocationPropertiesSource, Ordered {
 
         return answer;
     }
-
-    @Override
-    public int getOrder() {
-        return order;
-    }
-
 }

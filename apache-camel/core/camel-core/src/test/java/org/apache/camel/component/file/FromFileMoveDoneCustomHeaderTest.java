@@ -40,10 +40,10 @@ public class FromFileMoveDoneCustomHeaderTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("inbox?initialDelay=0&delay=10&move=${header.bar}"))
                         .setHeader("bar", constant("dones/mydone.txt")).transform(constant("Bye World"))
                         .to("mock:result", fileUri("outbox"));

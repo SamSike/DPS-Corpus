@@ -30,7 +30,7 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class CommentType implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String expression;
@@ -40,8 +40,6 @@ public class CommentType implements Serializable, XMLAppendable
     protected Boolean deprecated = false;
     @XmlElement(defaultValue = "true")
     protected Boolean includeSchemaComment = true;
-    @XmlElement(defaultValue = "false")
-    protected Boolean ignoreUnused = false;
 
     /**
      * A regular expression matching all objects that should be commented.
@@ -88,7 +86,7 @@ public class CommentType implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether the comment is a deprecation notice.
+     * Sets the value of the deprecated property.
      * 
      * @param value
      *     allowed object is
@@ -112,7 +110,7 @@ public class CommentType implements Serializable, XMLAppendable
     }
 
     /**
-     * Whether the schema comment (if available) should be included and prepended to the message.
+     * Sets the value of the includeSchemaComment property.
      * 
      * @param value
      *     allowed object is
@@ -121,30 +119,6 @@ public class CommentType implements Serializable, XMLAppendable
      */
     public void setIncludeSchemaComment(Boolean value) {
         this.includeSchemaComment = value;
-    }
-
-    /**
-     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
-     */
-    public Boolean isIgnoreUnused() {
-        return ignoreUnused;
-    }
-
-    /**
-     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
-     */
-    public void setIgnoreUnused(Boolean value) {
-        this.ignoreUnused = value;
     }
 
     /**
@@ -165,30 +139,13 @@ public class CommentType implements Serializable, XMLAppendable
         return this;
     }
 
-    /**
-     * Whether the comment is a deprecation notice.
-     * 
-     */
     public CommentType withDeprecated(Boolean value) {
         setDeprecated(value);
         return this;
     }
 
-    /**
-     * Whether the schema comment (if available) should be included and prepended to the message.
-     * 
-     */
     public CommentType withIncludeSchemaComment(Boolean value) {
         setIncludeSchemaComment(value);
-        return this;
-    }
-
-    /**
-     * Set this flag to true if no warning should be logged if this object was not used by a code generation run.
-     * 
-     */
-    public CommentType withIgnoreUnused(Boolean value) {
-        setIgnoreUnused(value);
         return this;
     }
 
@@ -198,7 +155,6 @@ public class CommentType implements Serializable, XMLAppendable
         builder.append("message", message);
         builder.append("deprecated", deprecated);
         builder.append("includeSchemaComment", includeSchemaComment);
-        builder.append("ignoreUnused", ignoreUnused);
     }
 
     @Override
@@ -256,15 +212,6 @@ public class CommentType implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (ignoreUnused == null) {
-            if (other.ignoreUnused!= null) {
-                return false;
-            }
-        } else {
-            if (!ignoreUnused.equals(other.ignoreUnused)) {
-                return false;
-            }
-        }
         return true;
     }
 
@@ -276,7 +223,6 @@ public class CommentType implements Serializable, XMLAppendable
         result = ((prime*result)+((message == null)? 0 :message.hashCode()));
         result = ((prime*result)+((deprecated == null)? 0 :deprecated.hashCode()));
         result = ((prime*result)+((includeSchemaComment == null)? 0 :includeSchemaComment.hashCode()));
-        result = ((prime*result)+((ignoreUnused == null)? 0 :ignoreUnused.hashCode()));
         return result;
     }
 

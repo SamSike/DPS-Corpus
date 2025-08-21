@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,7 @@ package org.springframework.http;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -52,7 +51,8 @@ import org.springframework.util.StringUtils;
  */
 public class CacheControl {
 
-	private @Nullable Duration maxAge;
+	@Nullable
+	private Duration maxAge;
 
 	private boolean noCache = false;
 
@@ -68,13 +68,14 @@ public class CacheControl {
 
 	private boolean proxyRevalidate = false;
 
-	private @Nullable Duration staleWhileRevalidate;
+	@Nullable
+	private Duration staleWhileRevalidate;
 
-	private @Nullable Duration staleIfError;
+	@Nullable
+	private Duration staleIfError;
 
-	private @Nullable Duration sMaxAge;
-
-	private boolean immutable = false;
+	@Nullable
+	private Duration sMaxAge;
 
 
 	/**
@@ -320,25 +321,11 @@ public class CacheControl {
 	}
 
 	/**
-	 * Add an "immutable" directive.
-	 * <p>This directive indicates that the origin server will not update the
-	 * representation of that resource during the freshness lifetime of the response.
-	 * Adding a {@link #maxAge(Duration) max-age} directive is strongly advised
-	 * to enforce the actual freshness lifetime.
-	 * @return {@code this}, to facilitate method chaining
-	 * @since 6.0.5
-	 * @see <a href="https://tools.ietf.org/html/rfc8246">rfc8246</a>
-	 */
-	public CacheControl immutable() {
-		this.immutable = true;
-		return this;
-	}
-
-	/**
 	 * Return the "Cache-Control" header value, if any.
 	 * @return the header value, or {@code null} if no directive was added
 	 */
-	public @Nullable String getHeaderValue() {
+	@Nullable
+	public String getHeaderValue() {
 		String headerValue = toHeaderValue();
 		return (StringUtils.hasText(headerValue) ? headerValue : null);
 	}
@@ -382,14 +369,11 @@ public class CacheControl {
 		if (this.staleWhileRevalidate != null) {
 			appendDirective(headerValue, "stale-while-revalidate=" + this.staleWhileRevalidate.getSeconds());
 		}
-		if (this.immutable) {
-			appendDirective(headerValue, "immutable");
-		}
 		return headerValue.toString();
 	}
 
 	private void appendDirective(StringBuilder builder, String value) {
-		if (!builder.isEmpty()) {
+		if (builder.length() > 0) {
 			builder.append(", ");
 		}
 		builder.append(value);

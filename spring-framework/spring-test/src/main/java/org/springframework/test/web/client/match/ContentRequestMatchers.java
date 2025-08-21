@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ package org.springframework.test.web.client.match;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +30,6 @@ import org.apache.tomcat.util.http.fileupload.FileUpload;
 import org.apache.tomcat.util.http.fileupload.UploadContext;
 import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.hamcrest.Matcher;
-import org.jspecify.annotations.Nullable;
 import org.w3c.dom.Node;
 
 import org.springframework.core.io.Resource;
@@ -40,12 +37,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.converter.FormHttpMessageConverter;
+import org.springframework.lang.Nullable;
 import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.mock.http.client.MockClientHttpRequest;
-import org.springframework.test.json.JsonAssert;
-import org.springframework.test.json.JsonComparator;
-import org.springframework.test.json.JsonCompareMode;
-import org.springframework.test.json.JsonComparison;
+import org.springframework.test.util.JsonExpectationsHelper;
 import org.springframework.test.util.XmlExpectationsHelper;
 import org.springframework.test.web.client.RequestMatcher;
 import org.springframework.util.LinkedMultiValueMap;
@@ -65,14 +60,9 @@ import static org.springframework.test.util.AssertionErrors.assertTrue;
  */
 public class ContentRequestMatchers {
 
-	/**
-	 * The encoding for parsing multipart content when the sender hasn't specified it.
-	 * @see DiskFileItemFactory#setDefaultCharset(String)
-	 */
-	private static final Charset DEFAULT_MULTIPART_ENCODING = StandardCharsets.UTF_8;
-
-
 	private final XmlExpectationsHelper xmlHelper;
+
+	private final JsonExpectationsHelper jsonHelper;
 
 
 	/**
@@ -81,6 +71,7 @@ public class ContentRequestMatchers {
 	 */
 	protected ContentRequestMatchers() {
 		this.xmlHelper = new XmlExpectationsHelper();
+		this.jsonHelper = new JsonExpectationsHelper();
 	}
 
 
@@ -206,45 +197,31 @@ public class ContentRequestMatchers {
 	 * <li>{@link Resource} - content from a file
 	 * <li>{@code byte[]} - other raw content
 	 * </ul>
-	 * <p><strong>Note:</strong> This method uses the fork of Commons FileUpload library
-	 * packaged with Apache Tomcat in the {@code org.apache.tomcat.util.http.fileupload}
-	 * package to parse the multipart data and it must be on the test classpath.
+	 * <p><strong>Note:</strong> This method uses the Apache Commons File Upload
+	 * library to parse the multipart data and it must be on the test classpath.
 	 * @param expectedMap the expected multipart values
 	 * @since 5.3
 	 */
 	public RequestMatcher multipartData(MultiValueMap<String, ?> expectedMap) {
-		return multipartData(expectedMap, DEFAULT_MULTIPART_ENCODING, true);
-	}
-
-	/**
-	 * Variant of {@link #multipartData(MultiValueMap)} with a defaultCharset.
-	 * @since 6.2
-	 */
-	public RequestMatcher multipartData(MultiValueMap<String, ?> expectedMap, Charset defaultCharset) {
-		return multipartData(expectedMap, defaultCharset, true);
+		return multipartData(expectedMap, true);
 	}
 
 	/**
 	 * Variant of {@link #multipartData(MultiValueMap)} that does the same but
 	 * only for a subset of the actual values.
-	 * <p><strong>Note:</strong> This method uses the fork of Commons FileUpload library
-	 * packaged with Apache Tomcat in the {@code org.apache.tomcat.util.http.fileupload}
-	 * package to parse the multipart data and it must be on the test classpath.
 	 * @param expectedMap the expected multipart values
 	 * @since 5.3
 	 */
 	public RequestMatcher multipartDataContains(Map<String, ?> expectedMap) {
 		MultiValueMap<String, Object> map = new LinkedMultiValueMap<>(expectedMap.size());
 		expectedMap.forEach(map::add);
-		return multipartData(map, DEFAULT_MULTIPART_ENCODING, false);
+		return multipartData(map, false);
 	}
 
 	@SuppressWarnings("ConstantConditions")
-	private RequestMatcher multipartData(
-			MultiValueMap<String, ?> expectedMap, Charset defaultCharset, boolean containsExactly) {
-
+	private RequestMatcher multipartData(MultiValueMap<String, ?> expectedMap, boolean containsExactly) {
 		return request -> {
-			MultiValueMap<String, ?> actualMap = MultipartHelper.parse((MockClientHttpRequest) request, defaultCharset);
+			MultiValueMap<String, ?> actualMap = MultipartHelper.parse((MockClientHttpRequest) request);
 			if (containsExactly) {
 				assertEquals("Multipart request content: " + actualMap, expectedMap.size(), actualMap.size());
 			}
@@ -258,8 +235,8 @@ public class ContentRequestMatchers {
 				for (int i = 0; i < values.size(); i++) {
 					Object expected = values.get(i);
 					Object actual = actualMap.get(name).get(i);
-					if (expected instanceof Resource resource) {
-						expected = StreamUtils.copyToByteArray(resource.getInputStream());
+					if (expected instanceof Resource) {
+						expected = StreamUtils.copyToByteArray(((Resource) expected).getInputStream());
 					}
 					if (expected instanceof byte[]) {
 						assertTrue("Multipart is not a file", actual instanceof byte[]);
@@ -282,7 +259,7 @@ public class ContentRequestMatchers {
 	 * two are "similar" - i.e. they contain the same elements and attributes
 	 * regardless of order.
 	 * <p>Use of this matcher assumes the
-	 * <a href="https://www.xmlunit.org/">XMLUnit</a> library is available.
+	 * <a href="http://xmlunit.sourceforge.net/">XMLUnit</a> library is available.
 	 * @param expectedXmlContent the expected XML content
 	 */
 	public RequestMatcher xml(String expectedXmlContent) {
@@ -330,7 +307,7 @@ public class ContentRequestMatchers {
 	 * @since 5.0.5
 	 */
 	public RequestMatcher json(String expectedJsonContent) {
-		return json(expectedJsonContent, JsonCompareMode.LENIENT);
+		return json(expectedJsonContent, false);
 	}
 
 	/**
@@ -347,43 +324,12 @@ public class ContentRequestMatchers {
 	 * @param expectedJsonContent the expected JSON content
 	 * @param strict enables strict checking
 	 * @since 5.0.5
-	 * @deprecated in favor of {@link #json(String, JsonCompareMode)}
 	 */
-	@Deprecated(since = "6.2")
 	public RequestMatcher json(String expectedJsonContent, boolean strict) {
-		JsonCompareMode compareMode = (strict ? JsonCompareMode.STRICT : JsonCompareMode.LENIENT);
-		return json(expectedJsonContent, compareMode);
-	}
-
-	/**
-	 * Parse the request body and the given string as JSON and assert the two
-	 * using the given {@linkplain JsonCompareMode mode}. If the comparison failed,
-	 * throws an {@link AssertionError} with the message of the {@link JsonComparison}.
-	 * <p>Use of this matcher requires the <a
-	 * href="https://jsonassert.skyscreamer.org/">JSONassert</a> library.
-	 * @param expectedJsonContent the expected JSON content
-	 * @param compareMode the compare mode
-	 * @since 6.2
-	 */
-	public RequestMatcher json(String expectedJsonContent, JsonCompareMode compareMode) {
-		return json(expectedJsonContent, JsonAssert.comparator(compareMode));
-	}
-
-	/**
-	 * Parse the request body and the given string as JSON and assert the two
-	 * using the given {@link JsonComparator}. If the comparison failed, throws an
-	 * {@link AssertionError} with the message of the {@link JsonComparison}.
-	 * <p>Use this matcher if you require a custom JSONAssert configuration or
-	 * if you desire to use another assertion library.
-	 * @param expectedJsonContent the expected JSON content
-	 * @param comparator the comparator to use
-	 * @since 6.2
-	 */
-	public RequestMatcher json(String expectedJsonContent, JsonComparator comparator) {
 		return request -> {
 			try {
 				MockClientHttpRequest mockRequest = (MockClientHttpRequest) request;
-				comparator.assertIsMatch(expectedJsonContent, mockRequest.getBodyAsString());
+				this.jsonHelper.assertJsonEqual(expectedJsonContent, mockRequest.getBodyAsString(), strict);
 			}
 			catch (Exception ex) {
 				throw new AssertionError("Failed to parse expected or actual JSON request content", ex);
@@ -414,21 +360,20 @@ public class ContentRequestMatchers {
 
 	private static class MultipartHelper {
 
-		public static MultiValueMap<String, ?> parse(MockClientHttpRequest request, Charset defaultCharset) {
+		public static MultiValueMap<String, ?> parse(MockClientHttpRequest request) {
 			try {
-				FileUpload fileUpload = new FileUpload();
-				DiskFileItemFactory factory = new DiskFileItemFactory();
-				factory.setDefaultCharset(defaultCharset.name());
-				fileUpload.setFileItemFactory(factory);
+				FileUpload fileUpload = new FileUpload(new DiskFileItemFactory());
 
 				List<FileItem> fileItems = fileUpload.parseRequest(new UploadContext() {
 					private final byte[] body = request.getBodyAsBytes();
 					@Override
-					public @Nullable String getCharacterEncoding() {
+					@Nullable
+					public String getCharacterEncoding() {
 						return request.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING);
 					}
 					@Override
-					public @Nullable String getContentType() {
+					@Nullable
+					public String getContentType() {
 						return request.getHeaders().getFirst(HttpHeaders.CONTENT_TYPE);
 					}
 					@Override

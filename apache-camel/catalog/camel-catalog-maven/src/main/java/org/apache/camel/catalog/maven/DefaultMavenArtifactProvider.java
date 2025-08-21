@@ -16,68 +16,49 @@
  */
 package org.apache.camel.catalog.maven;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import groovy.grape.Grape;
+import groovy.lang.GroovyClassLoader;
 import org.apache.camel.catalog.CamelCatalog;
-import org.apache.camel.tooling.maven.MavenArtifact;
-import org.apache.camel.tooling.maven.MavenDownloader;
-import org.apache.camel.tooling.maven.MavenDownloaderImpl;
-import org.eclipse.aether.ConfigurationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.apache.camel.catalog.maven.ComponentArtifactHelper.extractComponentJavaType;
 import static org.apache.camel.catalog.maven.ComponentArtifactHelper.loadComponentJSonSchema;
 import static org.apache.camel.catalog.maven.ComponentArtifactHelper.loadComponentProperties;
-import static org.slf4j.helpers.NOPLogger.NOP_LOGGER;
 
 /**
  * Default {@link MavenArtifactProvider} which uses Groovy Grape to download the artifact.
- *
- * @deprecated use {@code org.apache.camel.tooling.maven.support.MavenDownloader} from {@code camel-tooling-maven}
- *             instead.
  */
-@Deprecated(since = "4.6.0")
 public class DefaultMavenArtifactProvider implements MavenArtifactProvider {
 
-    private String localRepository;
-    private Logger logger;
-
-    private final MavenDownloader downloader;
-
-    private final Map<String, String> repositories = new LinkedHashMap<>();
-
-    public DefaultMavenArtifactProvider() {
-        downloader = new MavenDownloaderImpl();
-        downloader.build();
-        setLog(true);
-    }
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultMavenArtifactProvider.class);
+    private String cacheDirectory;
+    private boolean log;
 
     /**
      * Sets whether to log errors and warnings to System.out. By default nothing is logged.
      */
     public void setLog(boolean log) {
-        setLogger(log ? LoggerFactory.getLogger(DefaultMavenArtifactProvider.class) : null);
-    }
-
-    public void setLogger(Logger logger) {
-        this.logger = logger != null ? logger : NOP_LOGGER;
+        this.log = log;
     }
 
     @Override
     public void setCacheDirectory(String directory) {
-        this.localRepository = directory;
+        this.cacheDirectory = directory;
     }
 
     @Override
     public void addMavenRepository(String name, String url) {
-        repositories.put(name, url);
+        Map<String, Object> repo = new HashMap<>();
+        repo.put("name", name);
+        repo.put("root", url);
+        Grape.addResolver(repo);
     }
 
     @Override
@@ -87,30 +68,30 @@ public class DefaultMavenArtifactProvider implements MavenArtifactProvider {
         final Set<String> names = new LinkedHashSet<>();
 
         try {
-            MavenDownloader mavenDownloader = downloader;
-            if (localRepository != null) {
-                logger.debug("Using cache directory: {}", localRepository);
-                // customize only local repository
-                mavenDownloader = mavenDownloader.customize(localRepository,
-                        ConfigurationProperties.DEFAULT_CONNECT_TIMEOUT,
-                        ConfigurationProperties.DEFAULT_REQUEST_TIMEOUT);
+            if (cacheDirectory != null) {
+                if (log) {
+                    LOGGER.debug("Using cache directory: {}", cacheDirectory);
+                }
+                System.setProperty("grape.root", cacheDirectory);
             }
 
-            logger.info("Downloading {}:{}:{}", groupId, artifactId, version);
+            Grape.setEnableAutoDownload(true);
 
-            try (OpenURLClassLoader classLoader = new OpenURLClassLoader()) {
-                if (version == null || version.isBlank()) {
-                    version = "LATEST";
-                }
-                String gav = String.format("%s:%s:%s", groupId, artifactId, version);
-                Set<String> extraRepositories = new LinkedHashSet<>(repositories.values());
-                List<MavenArtifact> artifacts
-                        = mavenDownloader.resolveArtifacts(Collections.singletonList(gav), extraRepositories,
-                                false, version.contains("SNAPSHOT"));
+            try (final GroovyClassLoader classLoader = new GroovyClassLoader()) {
 
-                for (MavenArtifact ma : artifacts) {
-                    classLoader.addURL(ma.getFile().toURI().toURL());
+                Map<String, Object> param = new HashMap<>();
+                param.put("classLoader", classLoader);
+                param.put("group", groupId);
+                param.put("module", artifactId);
+                param.put("version", version);
+                // no need to download transitive dependencies as we only need to check the component itself
+                param.put("validate", false);
+                param.put("transitive", false);
+
+                if (log) {
+                    LOGGER.info("Downloading {}:{}:{}", groupId, artifactId, version);
                 }
+                Grape.grab(param);
 
                 // the classloader can load content from the downloaded JAR
                 if (camelCatalog != null) {
@@ -119,8 +100,10 @@ public class DefaultMavenArtifactProvider implements MavenArtifactProvider {
             }
 
         } catch (Exception e) {
-            logger.warn("Error during add components from artifact {}:{}:{} due {}", groupId, artifactId, version,
-                    e.getMessage(), e);
+            if (log) {
+                LOGGER.warn("Error during add components from artifact {}:{}:{} due {}", groupId, artifactId, version,
+                        e.getMessage(), e);
+            }
         }
 
         return names;
@@ -128,7 +111,7 @@ public class DefaultMavenArtifactProvider implements MavenArtifactProvider {
 
     protected void scanCamelComponents(CamelCatalog camelCatalog, ClassLoader classLoader, Set<String> names) {
         // is there any custom Camel components in this library?
-        Properties properties = loadComponentProperties(classLoader, logger);
+        Properties properties = loadComponentProperties(log, classLoader);
         String components = (String) properties.get("components");
         if (components != null) {
             String[] part = components.split("\\s");
@@ -142,11 +125,13 @@ public class DefaultMavenArtifactProvider implements MavenArtifactProvider {
 
     private void findClassName(CamelCatalog camelCatalog, ClassLoader classLoader, Set<String> names, String scheme) {
         // find the class name
-        String javaType = extractComponentJavaType(classLoader, scheme, logger);
+        String javaType = extractComponentJavaType(log, classLoader, scheme);
         if (javaType != null) {
-            String json = loadComponentJSonSchema(classLoader, scheme, logger);
+            String json = loadComponentJSonSchema(log, classLoader, scheme);
             if (json != null) {
-                logger.info("Adding component: {}", scheme);
+                if (log) {
+                    LOGGER.info("Adding component: {}", scheme);
+                }
                 camelCatalog.addComponent(scheme, javaType, json);
                 names.add(scheme);
             }

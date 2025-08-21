@@ -25,12 +25,12 @@ import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.internal.SystemPropertyUtil;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.SSLContextParametersAware;
 import org.apache.camel.spi.BeanIntrospection;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.DefaultComponent;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.PropertyBindingSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,18 +40,13 @@ public class NettyComponent extends DefaultComponent implements SSLContextParame
 
     private static final Logger LOG = LoggerFactory.getLogger(NettyComponent.class);
 
-    @Metadata(description = "To use the NettyConfiguration as configuration when creating endpoints")
+    @Metadata
     private NettyConfiguration configuration = new NettyConfiguration();
-    @Metadata(label = "consumer,advanced",
-              description = "Sets a maximum thread pool size for the netty consumer ordered thread pool. The default size is 2 x cpu_core plus"
-                            + " 1. Setting this value to eg 10 will then use 10 threads unless 2 x cpu_core plus 1 is a higher value, which then"
-                            + " will override and be used. For example if there are 8 cores, then the consumer thread pool will be 17."
-                            + " This thread pool is used to route messages received from Netty by Camel. We use a separate thread pool to ensure"
-                            + " ordering of messages and also in case some messages will block, then nettys worker threads (event loop) wont be affected.")
+    @Metadata(label = "consumer,advanced")
     private int maximumPoolSize;
-    @Metadata(label = "consumer,advanced", description = "To use the given custom EventExecutorGroup.")
+    @Metadata(label = "consumer,advanced")
     private volatile EventExecutorGroup executorService;
-    @Metadata(label = "security", description = "Enable usage of global SSL context parameters.")
+    @Metadata(label = "security", defaultValue = "false")
     private boolean useGlobalSslContextParameters;
 
     public NettyComponent() {
@@ -91,7 +86,7 @@ public class NettyComponent extends DefaultComponent implements SSLContextParame
                 "bootstrapConfiguration", NettyServerBootstrapConfiguration.class);
         if (bootstrapConfiguration != null) {
             Map<String, Object> options = new HashMap<>();
-            BeanIntrospection beanIntrospection = PluginHelper.getBeanIntrospection(getCamelContext());
+            BeanIntrospection beanIntrospection = getCamelContext().adapt(ExtendedCamelContext.class).getBeanIntrospection();
             if (beanIntrospection.getProperties(bootstrapConfiguration, options, null, false)) {
                 PropertyBindingSupport.bindProperties(getCamelContext(), config, options);
             }

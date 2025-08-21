@@ -43,10 +43,10 @@ public class OnExceptionContinueTwoPredicateTest extends OnExceptionContinueTwoT
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 // use a predicate instance
                 Predicate predicate = new Predicate() {
                     @Override
@@ -60,7 +60,7 @@ public class OnExceptionContinueTwoPredicateTest extends OnExceptionContinueTwoT
                 // thrown
                 onException(IllegalArgumentException.class).continued(predicate).process(new Processor() {
                     @Override
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         processorInvoked.incrementAndGet();
                     }
                 }).to("mock:me");

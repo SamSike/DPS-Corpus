@@ -16,13 +16,11 @@
  */
 package org.apache.camel;
 
-import java.io.Serial;
-
 /**
  * Base class for all Camel unchecked exceptions.
  */
 public class RuntimeCamelException extends RuntimeException {
-    private static final @Serial long serialVersionUID = 8046489554418284257L;
+    private static final long serialVersionUID = 8046489554418284257L;
 
     public RuntimeCamelException() {
     }
@@ -46,9 +44,9 @@ public class RuntimeCamelException extends RuntimeException {
      * @return   the wrapper exception
      */
     public static RuntimeCamelException wrapRuntimeCamelException(Throwable e) {
-        if (e instanceof RuntimeCamelException re) {
+        if (e instanceof RuntimeCamelException) {
             // don't double wrap
-            return re;
+            return (RuntimeCamelException) e;
         } else {
             return new RuntimeCamelException(e);
         }
@@ -61,9 +59,9 @@ public class RuntimeCamelException extends RuntimeException {
      * @return   the wrapper exception
      */
     public static RuntimeException wrapRuntimeException(Throwable e) {
-        if (e instanceof RuntimeException re) {
+        if (e instanceof RuntimeException) {
             // don't double wrap
-            return re;
+            return (RuntimeException) e;
         } else {
             return new RuntimeCamelException(e);
         }

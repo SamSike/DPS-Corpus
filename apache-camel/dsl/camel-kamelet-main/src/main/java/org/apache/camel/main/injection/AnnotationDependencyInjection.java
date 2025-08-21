@@ -18,15 +18,19 @@ package org.apache.camel.main.injection;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Supplier;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 
 import org.apache.camel.BindToRegistry;
 import org.apache.camel.CamelConfiguration;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Configuration;
 import org.apache.camel.Converter;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.NoSuchBeanException;
 import org.apache.camel.RuntimeCamelException;
@@ -35,50 +39,32 @@ import org.apache.camel.impl.engine.CamelPostProcessorHelper;
 import org.apache.camel.spi.CamelBeanPostProcessor;
 import org.apache.camel.spi.CamelBeanPostProcessorInjector;
 import org.apache.camel.spi.CompilePostProcessor;
-import org.apache.camel.spi.EventNotifier;
-import org.apache.camel.spi.ManagementStrategy;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.spi.TypeConverterRegistry;
-import org.apache.camel.support.PluginHelper;
-import org.apache.camel.util.AnnotationHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.ReflectionHelper;
-import org.apache.camel.util.StringHelper;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 /**
  * To enable camel/spring/quarkus based annotations for dependency injection when loading DSLs.
  */
 public final class AnnotationDependencyInjection {
 
-    private static final String SPRING_AUTOWIRED = "org.springframework.beans.factory.annotation.Autowired";
-    private static final String SPRING_BEAN = "org.springframework.context.annotation.Bean";
-    private static final String SPRING_COMPONENT = "org.springframework.stereotype.Component";
-    private static final String SPRING_QUALIFIER = "org.springframework.beans.factory.annotation.Qualifier";
-    private static final String SPRING_SERVICE = "org.springframework.stereotype.Service";
-    private static final String SPRING_VALUE = "org.springframework.beans.factory.annotation.Value";
+    private AnnotationDependencyInjection() {
+    }
 
-    private static final String QUARKUS_APPLICATION_SCOPED = "jakarta.enterprise.context.ApplicationScoped";
-    private static final String QUARKUS_CONFIG_PROPERTY = "org.eclipse.microprofile.config.inject.ConfigProperty";
-    private static final String QUARKUS_INJECT = "jakarta.inject.Inject";
-    private static final String QUARKUS_NAMED = "jakarta.inject.Named";
-    private static final String QUARKUS_PRODUCES = "jakarta.enterprise.inject.Produces";
-    private static final String QUARKUS_SINGLETON = "jakarta.inject.Singleton";
-
-    private final boolean lazyBean;
-
-    public AnnotationDependencyInjection(CamelContext context, boolean lazyBean) {
-        this.lazyBean = lazyBean;
-
+    public static void initAnnotationBasedDependencyInjection(CamelContext context) {
         Registry registry = context.getRegistry();
-        CamelBeanPostProcessor cbbp = PluginHelper.getBeanPostProcessor(context);
-        if (lazyBean) {
-            // force lazy beans
-            cbbp.setLazyBeanStrategy((ann) -> true);
-        }
+        CamelBeanPostProcessor cbbp = context.adapt(ExtendedCamelContext.class).getBeanPostProcessor();
 
         // camel / common
         registry.bind("CamelTypeConverterCompilePostProcessor", new TypeConverterCompilePostProcessor());
-        registry.bind("CamelEventNotifierCompilePostProcessor", new EventNotifierCompilePostProcessor());
         registry.bind("CamelBindToRegistryCompilePostProcessor", new BindToRegistryCompilePostProcessor());
         // spring
         registry.bind("SpringAnnotationCompilePostProcessor", new SpringAnnotationCompilePostProcessor());
@@ -86,7 +72,6 @@ public final class AnnotationDependencyInjection {
         // quarkus
         registry.bind("QuarkusAnnotationCompilePostProcessor", new QuarkusAnnotationCompilePostProcessor());
         cbbp.addCamelBeanPostProjectInjector(new QuarkusBeanPostProcessorInjector(context));
-
     }
 
     private static class TypeConverterCompilePostProcessor implements CompilePostProcessor {
@@ -112,9 +97,7 @@ public final class AnnotationDependencyInjection {
 
     }
 
-    private static class EventNotifierCompilePostProcessor implements CompilePostProcessor {
-
-        private final Map<String, EventNotifier> notifiers = new HashMap<>();
+    private static class BindToRegistryCompilePostProcessor implements CompilePostProcessor {
 
         @Override
         public void postCompile(CamelContext camelContext, String name, Class<?> clazz, byte[] byteCode, Object instance)
@@ -123,82 +106,34 @@ public final class AnnotationDependencyInjection {
                 return;
             }
 
-            if (instance instanceof EventNotifier) {
-                ManagementStrategy ms = camelContext.getManagementStrategy();
-                if (ms != null) {
-                    notifiers.compute(name, (key, old) -> {
-                        // remove previous instance
-                        if (old != null) {
-                            ms.removeEventNotifier(old);
-                        }
-                        // and new notifier
-                        EventNotifier en = (EventNotifier) instance;
-                        ms.addEventNotifier(en);
-                        return en;
-                    });
+            BindToRegistry bir = instance.getClass().getAnnotation(BindToRegistry.class);
+            Configuration cfg = instance.getClass().getAnnotation(Configuration.class);
+            if (bir != null || cfg != null || instance instanceof CamelConfiguration) {
+                CamelBeanPostProcessor bpp = camelContext.adapt(ExtendedCamelContext.class).getBeanPostProcessor();
+                if (bir != null && ObjectHelper.isNotEmpty(bir.value())) {
+                    name = bir.value();
+                } else if (cfg != null && ObjectHelper.isNotEmpty(cfg.value())) {
+                    name = cfg.value();
                 }
-            }
-        }
-    }
-
-    private class BindToRegistryCompilePostProcessor implements CompilePostProcessor {
-
-        @Override
-        public void postCompile(CamelContext camelContext, String name, Class<?> clazz, byte[] byteCode, Object instance)
-                throws Exception {
-
-            BindToRegistry bir = clazz.getAnnotation(BindToRegistry.class);
-            Configuration cfg = clazz.getAnnotation(Configuration.class);
-
-            // special for lazy beans which we must create on-demand
-            if (instance == null && bir != null && (lazyBean || bir.lazy())) {
-                final String beanName = bir.value();
-                instance = (Supplier<Object>) () -> {
-                    Object answer = camelContext.getInjector().newInstance(clazz);
-                    CamelBeanPostProcessor bpp = PluginHelper.getBeanPostProcessor(camelContext);
-                    try {
-                        bpp.postProcessBeforeInitialization(answer, beanName);
-                        bpp.postProcessAfterInitialization(answer, beanName);
-                    } catch (Exception e) {
-                        throw RuntimeCamelException.wrapRuntimeException(e);
-                    }
-                    return answer;
-                };
-                // unbind old bean and register lazy bean
-                camelContext.getRegistry().unbind(beanName);
-                // use dependency injection factory to perform the task of binding the bean to registry
-                Runnable task = PluginHelper.getDependencyInjectionAnnotationFactory(camelContext)
-                        .createBindToRegistryFactory(name, instance, clazz, beanName, false, bir.initMethod(),
-                                bir.destroyMethod());
-                task.run();
-            } else {
-                if (bir != null || cfg != null || instance instanceof CamelConfiguration) {
-                    CamelBeanPostProcessor bpp = PluginHelper.getBeanPostProcessor(camelContext);
-                    if (bir != null && ObjectHelper.isNotEmpty(bir.value())) {
-                        name = bir.value();
-                    } else if (cfg != null && ObjectHelper.isNotEmpty(cfg.value())) {
-                        name = cfg.value();
-                    }
-                    // to support hot reloading of beans then we need to enable unbind mode in bean post processor
-                    bpp.setUnbindEnabled(true);
-                    try {
-                        // this class uses camels own annotations so the bind to registry happens
-                        // automatic by the bean post processor
-                        bpp.postProcessBeforeInitialization(instance, name);
-                        bpp.postProcessAfterInitialization(instance, name);
-                    } finally {
-                        bpp.setUnbindEnabled(false);
-                    }
-                    if (instance instanceof CamelConfiguration) {
-                        ((CamelConfiguration) instance).configure(camelContext);
-                    }
+                // to support hot reloading of beans then we need to enable unbind mode in bean post processor
+                bpp.setUnbindEnabled(true);
+                try {
+                    // this class uses camels own annotations so the bind to registry happens
+                    // automatic by the bean post processor
+                    bpp.postProcessBeforeInitialization(instance, name);
+                    bpp.postProcessAfterInitialization(instance, name);
+                } finally {
+                    bpp.setUnbindEnabled(false);
+                }
+                if (instance instanceof CamelConfiguration) {
+                    ((CamelConfiguration) instance).configure(camelContext);
                 }
             }
         }
 
     }
 
-    private class SpringAnnotationCompilePostProcessor implements CompilePostProcessor {
+    private static class SpringAnnotationCompilePostProcessor implements CompilePostProcessor {
 
         @Override
         public void postCompile(CamelContext camelContext, String name, Class<?> clazz, byte[] byteCode, Object instance)
@@ -207,25 +142,20 @@ public final class AnnotationDependencyInjection {
                 return;
             }
             // @Component and @Service are the same
-            String comp = AnnotationHelper.getAnnotationValue(clazz, SPRING_COMPONENT);
-            String service = AnnotationHelper.getAnnotationValue(clazz, SPRING_SERVICE);
+            Component comp = clazz.getAnnotation(Component.class);
+            Service service = clazz.getAnnotation(Service.class);
             if (comp != null || service != null) {
-                if (ObjectHelper.isNotEmpty(comp)) {
-                    name = comp;
-                } else if (ObjectHelper.isNotEmpty(service)) {
-                    name = service;
+                if (comp != null && ObjectHelper.isNotEmpty(comp.value())) {
+                    name = comp.value();
+                } else if (service != null && ObjectHelper.isNotEmpty(service.value())) {
+                    name = service.value();
                 }
-                if (name == null || name.isBlank()) {
-                    name = clazz.getSimpleName();
-                    // lower case first if using class name
-                    name = StringHelper.decapitalize(name);
-                }
-                bindBean(camelContext, name, instance, instance.getClass(), true);
+                bindBean(camelContext, name, instance, true);
             }
         }
     }
 
-    private class SpringBeanPostProcessorInjector implements CamelBeanPostProcessorInjector {
+    private static class SpringBeanPostProcessorInjector implements CamelBeanPostProcessorInjector {
 
         private final CamelContext context;
         private final CamelPostProcessorHelper helper;
@@ -237,63 +167,48 @@ public final class AnnotationDependencyInjection {
 
         @Override
         public void onFieldInject(Field field, Object bean, String beanName) {
-            boolean autowired = AnnotationHelper.hasAnnotation(field, SPRING_AUTOWIRED);
-            if (autowired) {
+            Autowired autowired = field.getAnnotation(Autowired.class);
+            if (autowired != null) {
                 String name = null;
-                String named
-                        = AnnotationHelper.getAnnotationValue(field, SPRING_QUALIFIER);
-                if (ObjectHelper.isNotEmpty(named)) {
-                    name = named;
+                Qualifier qualifier = field.getAnnotation(Qualifier.class);
+                if (qualifier != null) {
+                    name = qualifier.value();
                 }
 
                 try {
                     ReflectionHelper.setField(field, bean,
                             helper.getInjectionBeanValue(field.getType(), name));
                 } catch (NoSuchBeanException e) {
-                    Object required = AnnotationHelper.getAnnotationValue(field,
-                            SPRING_AUTOWIRED, "required");
-                    if (Boolean.TRUE == required) {
+                    if (autowired.required()) {
                         throw e;
                     }
                     // not required so ignore
                 }
             }
-            String value = AnnotationHelper.getAnnotationValue(field, SPRING_VALUE);
+            Value value = field.getAnnotation(Value.class);
             if (value != null) {
                 ReflectionHelper.setField(field, bean,
-                        helper.getInjectionPropertyValue(field.getType(), field.getGenericType(), value, null, null));
+                        helper.getInjectionPropertyValue(field.getType(), value.value(), null, null, bean, beanName));
             }
         }
 
         @Override
         public void onMethodInject(Method method, Object bean, String beanName) {
-            boolean bi = AnnotationHelper.hasAnnotation(method, SPRING_BEAN);
-            if (bi) {
-                Object instance;
-                if (lazyBean) {
-                    instance = (Supplier<Object>) () -> helper.getInjectionBeanMethodValue(context, method, bean, beanName,
-                            "Bean");
-                } else {
-                    instance = helper.getInjectionBeanMethodValue(context, method, bean, beanName, "Bean");
-                }
+            Bean bi = method.getAnnotation(Bean.class);
+            if (bi != null) {
+                Object instance = helper.getInjectionBeanMethodValue(context, method, bean, beanName);
                 if (instance != null) {
                     String name = method.getName();
-                    String[] names = (String[]) AnnotationHelper.getAnnotationValue(method,
-                            SPRING_BEAN, "name");
-                    if (names == null) {
-                        names = (String[]) AnnotationHelper.getAnnotationValue(method,
-                                SPRING_BEAN, "value");
+                    if (bi.name().length > 0) {
+                        name = bi.name()[0];
                     }
-                    if (names != null && names.length > 0) {
-                        name = names[0];
-                    }
-                    bindBean(context, name, instance, method.getReturnType(), false);
+                    bindBean(context, name, instance, false);
                 }
             }
         }
     }
 
-    private class QuarkusAnnotationCompilePostProcessor implements CompilePostProcessor {
+    private static class QuarkusAnnotationCompilePostProcessor implements CompilePostProcessor {
 
         @Override
         public void postCompile(CamelContext camelContext, String name, Class<?> clazz, byte[] byteCode, Object instance)
@@ -302,24 +217,19 @@ public final class AnnotationDependencyInjection {
                 return;
             }
             // @ApplicationScoped and @Singleton are considered the same
-            boolean as = AnnotationHelper.hasAnnotation(clazz, QUARKUS_APPLICATION_SCOPED);
-            boolean ss = AnnotationHelper.hasAnnotation(clazz, QUARKUS_SINGLETON);
-            if (as || ss) {
-                String named = AnnotationHelper.getAnnotationValue(clazz, QUARKUS_NAMED);
+            ApplicationScoped as = clazz.getAnnotation(ApplicationScoped.class);
+            Singleton ss = clazz.getAnnotation(Singleton.class);
+            if (as != null || ss != null) {
+                Named named = clazz.getAnnotation(Named.class);
                 if (named != null) {
-                    name = named;
+                    name = named.value();
                 }
-                if (name == null || name.isBlank()) {
-                    name = clazz.getSimpleName();
-                    // lower case first if using class name
-                    name = StringHelper.decapitalize(name);
-                }
-                bindBean(camelContext, name, instance, instance.getClass(), true);
+                bindBean(camelContext, name, instance, true);
             }
         }
     }
 
-    private class QuarkusBeanPostProcessorInjector implements CamelBeanPostProcessorInjector {
+    private static class QuarkusBeanPostProcessorInjector implements CamelBeanPostProcessorInjector {
 
         private final CamelContext context;
         private final CamelPostProcessorHelper helper;
@@ -331,69 +241,50 @@ public final class AnnotationDependencyInjection {
 
         @Override
         public void onFieldInject(Field field, Object bean, String beanName) {
-            boolean inject = AnnotationHelper.hasAnnotation(field, QUARKUS_INJECT);
-            if (inject) {
+            Inject inject = field.getAnnotation(Inject.class);
+            if (inject != null) {
                 String name = null;
-                String named = AnnotationHelper.getAnnotationValue(field, QUARKUS_NAMED);
+                Named named = field.getAnnotation(Named.class);
                 if (named != null) {
-                    name = named;
+                    name = named.value();
                 }
 
                 ReflectionHelper.setField(field, bean,
                         helper.getInjectionBeanValue(field.getType(), name));
             }
-            if (AnnotationHelper.hasAnnotation(field, QUARKUS_CONFIG_PROPERTY)) {
-                String name = (String) AnnotationHelper.getAnnotationValue(field,
-                        QUARKUS_CONFIG_PROPERTY, "name");
-                String df = (String) AnnotationHelper.getAnnotationValue(field,
-                        QUARKUS_CONFIG_PROPERTY, "defaultValue");
-                if ("org.eclipse.microprofile.config.configproperty.unconfigureddvalue".equals(df)) {
-                    df = null;
-                }
+            ConfigProperty cp = field.getAnnotation(ConfigProperty.class);
+            if (cp != null) {
                 ReflectionHelper.setField(field, bean,
-                        helper.getInjectionPropertyValue(field.getType(), field.getGenericType(), name, df, null));
+                        helper.getInjectionPropertyValue(field.getType(), cp.name(), cp.defaultValue(), null, bean, beanName));
             }
         }
 
         @Override
         public void onMethodInject(Method method, Object bean, String beanName) {
-            boolean produces = AnnotationHelper.hasAnnotation(method, QUARKUS_PRODUCES);
-            boolean inject = AnnotationHelper.hasAnnotation(method, QUARKUS_INJECT);
-            boolean bi = AnnotationHelper.hasAnnotation(method, QUARKUS_NAMED);
-            if (produces || inject || bi) {
-                String an = produces ? "Produces" : "Inject";
-                Object instance;
-                if (lazyBean) {
-                    instance = (Supplier<Object>) () -> helper.getInjectionBeanMethodValue(context, method, bean, beanName,
-                            an);
-                } else {
-                    instance = helper.getInjectionBeanMethodValue(context, method, bean, beanName, an);
-                }
+            Produces produces = method.getAnnotation(Produces.class);
+            Named bi = method.getAnnotation(Named.class);
+            if (produces != null || bi != null) {
+                Object instance = helper.getInjectionBeanMethodValue(context, method, bean, beanName);
                 if (instance != null) {
                     String name = method.getName();
-                    String named = AnnotationHelper.getAnnotationValue(method, QUARKUS_NAMED);
-                    if (ObjectHelper.isNotEmpty(named)) {
-                        name = named;
+                    if (bi != null && !bi.value().isBlank()) {
+                        name = bi.value();
                     }
-                    bindBean(context, name, instance, method.getReturnType(), false);
+                    bindBean(context, name, instance, false);
                 }
             }
         }
     }
 
-    private static void bindBean(CamelContext context, String name, Object instance, Class<?> type, boolean postProcess) {
+    private static void bindBean(CamelContext context, String name, Object instance, boolean postProcess) {
         // to support hot reloading of beans then we need to enable unbind mode in bean post processor
         Registry registry = context.getRegistry();
-        CamelBeanPostProcessor bpp = PluginHelper.getBeanPostProcessor(context);
+        CamelBeanPostProcessor bpp = context.adapt(ExtendedCamelContext.class).getBeanPostProcessor();
         bpp.setUnbindEnabled(true);
         try {
             // re-bind the bean to the registry
             registry.unbind(name);
-            if (instance instanceof Supplier sup) {
-                registry.bind(name, type, (Supplier<Object>) sup);
-            } else {
-                registry.bind(name, type, instance);
-            }
+            registry.bind(name, instance);
             if (postProcess) {
                 bpp.postProcessBeforeInitialization(instance, name);
                 bpp.postProcessAfterInitialization(instance, name);

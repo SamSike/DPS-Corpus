@@ -44,7 +44,6 @@ class JsonMapperTest {
         ComponentModel model = new ComponentModel();
         EndpointHeaderModel header = new EndpointHeaderModel();
         header.setName("Some Name");
-        header.setIndex(1);
         header.setDescription("Some Description");
         header.setConstantName("Some constant Name");
         model.addEndpointHeader(header);
@@ -53,7 +52,6 @@ class JsonMapperTest {
         List<EndpointHeaderModel> headers = model2.getEndpointHeaders();
         assertEquals(1, headers.size());
         assertEquals(header.getName(), headers.get(0).getName());
-        assertEquals(0, headers.get(0).getIndex());
         assertEquals(header.getDescription(), headers.get(0).getDescription());
         assertEquals(header.getConstantName(), headers.get(0).getConstantName());
     }

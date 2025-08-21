@@ -16,9 +16,9 @@
  */
 package org.apache.camel.component.kubernetes.producer;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
@@ -52,47 +52,30 @@ public class KubernetesDeploymentsProducerTest extends KubernetesTestSupport {
 
     @Test
     void listTest() {
-        server.expect().withPath("/apis/apps/v1/deployments")
-                .andReturn(200, new DeploymentListBuilder().addNewItem().and().addNewItem().and().build()).once();
         server.expect().withPath("/apis/apps/v1/namespaces/test/deployments")
                 .andReturn(200, new DeploymentListBuilder().addNewItem().and().build()).once();
         List<?> result = template.requestBody("direct:list", "", List.class);
-        assertEquals(2, result.size());
 
-        Exchange ex = template.request("direct:list",
-                exchange -> exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test"));
-        assertEquals(1, ex.getMessage().getBody(List.class).size());
+        assertEquals(1, result.size());
     }
 
     @Test
     void listByLabelsTest() throws Exception {
-        Map<String, String> labels = Map.of(
-                "key1", "value1",
-                "key2", "value2");
-
-        String urlEncodedLabels = toUrlEncoded(labels.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue())
-                .collect(Collectors.joining(",")));
-
         server.expect()
-                .withPath("/apis/apps/v1/deployments?labelSelector=" + urlEncodedLabels)
+                .withPath("/apis/apps/v1/namespaces/test/deployments?labelSelector="
+                          + toUrlEncoded("key1=value1,key2=value2"))
                 .andReturn(200, new DeploymentListBuilder().addNewItem().and().addNewItem().and().addNewItem().and().build())
                 .once();
-        server.expect()
-                .withPath("/apis/apps/v1/namespaces/test/deployments?labelSelector=" + urlEncodedLabels)
-                .andReturn(200, new DeploymentListBuilder().addNewItem().and().addNewItem().and().build())
-                .once();
-
-        Exchange ex = template.request("direct:listByLabels",
-                exchange -> exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_DEPLOYMENTS_LABELS, labels));
-
-        assertEquals(3, ex.getMessage().getBody(List.class).size());
-
-        ex = template.request("direct:listByLabels", exchange -> {
+        Exchange ex = template.request("direct:listByLabels", exchange -> {
+            Map<String, String> labels = new HashMap<>();
+            labels.put("key1", "value1");
+            labels.put("key2", "value2");
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_DEPLOYMENTS_LABELS, labels);
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test");
         });
 
-        assertEquals(2, ex.getMessage().getBody(List.class).size());
+        List<?> result = ex.getMessage().getBody(List.class);
+
+        assertEquals(3, result.size());
     }
 
     @Test
@@ -120,35 +103,7 @@ public class KubernetesDeploymentsProducerTest extends KubernetesTestSupport {
     }
 
     @Test
-    void createDeploymentWithAnnotations() {
-        Map<String, String> labels = Map.of("my.label.key", "my.label.value");
-        Map<String, String> annotations = Map.of("my.annotation.key", "my.annotation.value");
-        DeploymentSpec spec = new DeploymentSpecBuilder().withReplicas(13).build();
-        Deployment de1
-                = new DeploymentBuilder().withNewMetadata().withName("de1").withNamespace("test").withLabels(labels)
-                        .withAnnotations(annotations).and()
-                        .withSpec(spec).build();
-        server.expect().post().withPath("/apis/apps/v1/namespaces/test/deployments").andReturn(200, de1).once();
-
-        Exchange ex = template.request("direct:createDeploymentWithAnnotations", exchange -> {
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test");
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_DEPLOYMENTS_LABELS, labels);
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_DEPLOYMENT_NAME, "de1");
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_DEPLOYMENT_SPEC, spec);
-            exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_DEPLOYMENTS_ANNOTATIONS, annotations);
-        });
-
-        Deployment result = ex.getMessage().getBody(Deployment.class);
-
-        assertEquals("test", result.getMetadata().getNamespace());
-        assertEquals("de1", result.getMetadata().getName());
-        assertEquals(labels, result.getMetadata().getLabels());
-        assertEquals(13, result.getSpec().getReplicas());
-        assertEquals(annotations, result.getMetadata().getAnnotations());
-    }
-
-    @Test
-    void updateDeployment() {
+    void replaceDeployment() {
         Map<String, String> labels = Map.of("my.label.key", "my.label.value");
         DeploymentSpec spec = new DeploymentSpecBuilder().withReplicas(13).build();
         Deployment de1
@@ -160,7 +115,7 @@ public class KubernetesDeploymentsProducerTest extends KubernetesTestSupport {
                 .once();
         server.expect().put().withPath("/apis/apps/v1/namespaces/test/deployments/de1").andReturn(200, de1).once();
 
-        Exchange ex = template.request("direct:updateDeployment", exchange -> {
+        Exchange ex = template.request("direct:replaceDeployment", exchange -> {
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_NAMESPACE_NAME, "test");
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_DEPLOYMENTS_LABELS, labels);
             exchange.getIn().setHeader(KubernetesConstants.KUBERNETES_DEPLOYMENT_NAME, "de1");
@@ -203,10 +158,10 @@ public class KubernetesDeploymentsProducerTest extends KubernetesTestSupport {
         server.expect().withPath("/apis/apps/v1/namespaces/test/deployments/de1")
                 .andReturn(200, new DeploymentBuilder().withNewMetadata().withName("de1")
                         .withResourceVersion("1").endMetadata().withNewSpec().withReplicas(5).endSpec().withNewStatus()
-                        .withReplicas(5).endStatus().build())
+                        .withReplicas(1).endStatus().build())
                 .once();
 
-        server.expect().withPath("/apis/apps/v1/namespaces/test/deployments/de1/scale")
+        server.expect().withPath("/apis/apps/v1/namespaces/test/deployments/de1")
                 .andReturn(200, new DeploymentBuilder().withNewMetadata().withName("de1")
                         .withResourceVersion("1").endMetadata().withNewSpec().withReplicas(5).endSpec().withNewStatus()
                         .withReplicas(5).endStatus().build())
@@ -235,10 +190,8 @@ public class KubernetesDeploymentsProducerTest extends KubernetesTestSupport {
                         .toF("kubernetes-deployments:///?kubernetesClient=#kubernetesClient&operation=deleteDeployment");
                 from("direct:createDeployment")
                         .toF("kubernetes-deployments:///?kubernetesClient=#kubernetesClient&operation=createDeployment");
-                from("direct:createDeploymentWithAnnotations")
-                        .toF("kubernetes-deployments:///?kubernetesClient=#kubernetesClient&operation=createDeployment");
-                from("direct:updateDeployment")
-                        .toF("kubernetes-deployments:///?kubernetesClient=#kubernetesClient&operation=updateDeployment");
+                from("direct:replaceDeployment")
+                        .toF("kubernetes-deployments:///?kubernetesClient=#kubernetesClient&operation=replaceDeployment");
                 from("direct:scaleDeployment")
                         .toF("kubernetes-deployments:///?kubernetesClient=#kubernetesClient&operation=scaleDeployment");
             }

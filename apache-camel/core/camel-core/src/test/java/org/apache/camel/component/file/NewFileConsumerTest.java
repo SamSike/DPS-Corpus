@@ -47,10 +47,10 @@ public class NewFileConsumerTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 myFile = new MyFileEndpoint();
                 myFile.setCamelContext(context);
                 myFile.setFile(testDirectory().toFile());
@@ -62,7 +62,7 @@ public class NewFileConsumerTest extends ContextTestSupport {
         };
     }
 
-    private static class MyFileEndpoint extends FileEndpoint {
+    private class MyFileEndpoint extends FileEndpoint {
 
         private volatile boolean post;
 

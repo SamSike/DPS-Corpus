@@ -16,24 +16,22 @@
  */
 package org.apache.camel.main;
 
+import org.apache.camel.CamelContext;
+
 /**
  * A lifecycle listener to receive callbacks when the Main is started and stopped.
- *
- * Beware that if you use MainListener then depending on how Camel is started and these main listener is configured then
- * the beforeInitialize and beforeConfigure events may already have been triggered. So depending on your use-cases then
- * favour using the later stage events to trigger your code.
  */
 public interface MainListener {
 
     /**
-     * Callback invoked after the CamelContext has been created and before the auto-configured step starts.
+     * Callback invoked after the the CamelContext has been created and before the auto-configured step starts.
      *
      * @param main the main instance
      */
     void beforeInitialize(BaseMainSupport main);
 
     /**
-     * Callback invoked after the CamelContext has been created and before the auto-configured step starts.
+     * Callback invoked after the the CamelContext has been created and before the auto-configured step starts.
      *
      * @param main the main instance
      */
@@ -45,6 +43,12 @@ public interface MainListener {
      * @param main the main instance
      */
     void afterConfigure(BaseMainSupport main);
+
+    /**
+     * @deprecated Use {@link #afterConfigure(BaseMainSupport)} instead
+     */
+    @Deprecated
+    void configure(CamelContext context);
 
     /**
      * Callback before the CamelContext is being created and started.

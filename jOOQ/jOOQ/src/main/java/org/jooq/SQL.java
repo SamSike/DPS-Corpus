@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -60,22 +60,22 @@ import org.jooq.impl.DSL;
  * The following expression will embed <code>expr1</code> and <code>expr2</code>
  * at the appropriate locations:
  * <p>
- * <pre><code>
+ * <code><pre>
  * DSL.field("GROUP_CONCAT(DISTINCT {0} ORDER BY {1} ASC SEPARATOR '-')", expr1, expr2);
- * </code></pre> Query part indexes may be referenced multiple times from within
+ * </pre></code> Query part indexes may be referenced multiple times from within
  * a template.</li>
  * <li><strong>Keywords</strong>: Curly braces are also used to delimit
  * keywords, which expose the behaviour specified in {@link DSL#keyword(String)}
  * (e.g. upper-casing, lower-casing, etc.) . The following expression makes use
  * of embedded keywords in a plain SQL template:
  * <p>
- * <pre><code>DSL.field("{current_timestamp}");</code></pre></li>
+ * <code><pre>DSL.field("{current_timestamp}");</pre></code></li>
  * <li><strong>JDBC escape syntax</strong>: JDBC also allows for using curly
  * braces to embed escape expressions in SQL statements, such as date literals,
  * for instance. JDBC escape syntax is left untouched by jOOQ's plain SQL query
  * part renderings. The following example shows such usage:
  * <p>
- * <pre><code>DSL.field("{d '2015-01-01'}");</code></pre> The following JDBC
+ * <code><pre>DSL.field("{d '2015-01-01'}");</pre></code> The following JDBC
  * escape syntax elements are recognised:
  * <ul>
  * <li><code>{d [date literal]}</code></li>

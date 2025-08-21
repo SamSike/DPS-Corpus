@@ -16,7 +16,6 @@
  */
 package org.apache.camel.component.azure.storage.blob.client;
 
-import com.azure.core.credential.AzureSasCredential;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
@@ -27,7 +26,8 @@ import static java.lang.String.format;
 import static java.util.Locale.ROOT;
 import static java.util.Optional.ofNullable;
 import static java.util.Set.of;
-import static org.apache.camel.component.azure.storage.blob.CredentialType.*;
+import static org.apache.camel.component.azure.storage.blob.CredentialType.SHARED_ACCOUNT_KEY;
+import static org.apache.camel.component.azure.storage.blob.CredentialType.SHARED_KEY_CREDENTIAL;
 import static org.apache.camel.util.ObjectHelper.isEmpty;
 
 public final class BlobClientFactory {
@@ -43,8 +43,6 @@ public final class BlobClientFactory {
 
         if (of(SHARED_KEY_CREDENTIAL, SHARED_ACCOUNT_KEY).contains(configuration.getCredentialType())) {
             blobServiceClientBuilder.credential(getSharedKeyCredential(configuration));
-        } else if (AZURE_SAS.equals(configuration.getCredentialType())) {
-            blobServiceClientBuilder.credential(getAzureSasCredential(configuration));
         } else {
             blobServiceClientBuilder.credential(new DefaultAzureCredentialBuilder().build());
         }
@@ -65,7 +63,4 @@ public final class BlobClientFactory {
                 ? configuration.getCredentials().getAccountName() : configuration.getAccountName();
     }
 
-    private static AzureSasCredential getAzureSasCredential(final BlobConfiguration configuration) {
-        return new AzureSasCredential(configuration.getSasToken());
-    }
 }

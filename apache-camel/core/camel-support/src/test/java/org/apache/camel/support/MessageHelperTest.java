@@ -14,15 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.camel.support;
 
 import java.util.Map;
 import java.util.function.Supplier;
 
 import org.apache.camel.Exchange;
+import org.apache.camel.InvalidPayloadException;
 import org.apache.camel.Message;
 import org.apache.camel.spi.DataType;
-import org.apache.camel.trait.message.MessageTrait;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.support.MessageHelper.copyBody;
@@ -92,12 +93,8 @@ class MessageHelperTest {
         }
 
         @Override
-        public Message newInstance() {
-            return null;
-        }
-
-        @Override
         public void reset() {
+
         }
 
         @Override
@@ -112,6 +109,7 @@ class MessageHelperTest {
 
         @Override
         public void setMessageId(String messageId) {
+
         }
 
         @Override
@@ -156,6 +154,7 @@ class MessageHelperTest {
 
         @Override
         public void setHeader(String name, Object value) {
+
         }
 
         @Override
@@ -180,6 +179,7 @@ class MessageHelperTest {
 
         @Override
         public void setHeaders(Map<String, Object> headers) {
+
         }
 
         @Override
@@ -193,7 +193,7 @@ class MessageHelperTest {
         }
 
         @Override
-        public Object getMandatoryBody() {
+        public Object getMandatoryBody() throws InvalidPayloadException {
             return null;
         }
 
@@ -203,7 +203,7 @@ class MessageHelperTest {
         }
 
         @Override
-        public <T> T getMandatoryBody(Class<T> type) {
+        public <T> T getMandatoryBody(Class<T> type) throws InvalidPayloadException {
             return null;
         }
 
@@ -214,6 +214,7 @@ class MessageHelperTest {
 
         @Override
         public <T> void setBody(Object body, Class<T> type) {
+
         }
 
         @Override
@@ -223,28 +224,12 @@ class MessageHelperTest {
 
         @Override
         public void copyFrom(Message message) {
+
         }
 
         @Override
         public void copyFromWithNewBody(Message message, Object newBody) {
-        }
 
-        @Override
-        public boolean hasTrait(MessageTrait trait) {
-            return false;
-        }
-
-        @Override
-        public Object getPayloadForTrait(MessageTrait trait) {
-            return null;
-        }
-
-        @Override
-        public void setPayloadForTrait(MessageTrait trait, Object object) {
-        }
-
-        @Override
-        public void removeTrait(MessageTrait trait) {
         }
     }
 }

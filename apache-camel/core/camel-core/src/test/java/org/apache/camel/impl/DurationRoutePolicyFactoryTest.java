@@ -31,23 +31,26 @@ public class DurationRoutePolicyFactoryTest extends ContextTestSupport {
 
     @Test
     public void testDurationRoutePolicyFactory() throws Exception {
+        assertTrue(context.getRouteController().getRouteStatus("foo").isStarted());
+        assertFalse(context.getRouteController().getRouteStatus("foo").isStopped());
+
         // the policy should stop the route after 2 seconds which is approx
         // 20-30 messages
         getMockEndpoint("mock:foo").expectedMinimumMessageCount(10);
         assertMockEndpointsSatisfied();
 
-        // need some time to stop async
-        await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
+        // need a little time to stop async
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
             assertFalse(context.getRouteController().getRouteStatus("foo").isStarted());
             assertTrue(context.getRouteController().getRouteStatus("foo").isStopped());
         });
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 DurationRoutePolicyFactory factory = new DurationRoutePolicyFactory();
                 factory.setMaxSeconds(2);
                 factory.setMaxMessages(25);

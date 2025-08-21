@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 /**
- * Tests for {@link ErrorsMethodArgumentResolver}.
+ * Unit tests for {@link ErrorsMethodArgumentResolver}.
  *
  * @author Rossen Stoyanchev
  */
@@ -70,7 +70,7 @@ class ErrorsMethodArgumentResolverTests {
 	}
 
 	@Test
-	void resolveWithInferredModelAttributeName() {
+	void resolve() {
 		BindingResult bindingResult = createBindingResult(new Foo(), "foo");
 		this.bindingContext.getModel().asMap().put(BindingResult.MODEL_KEY_PREFIX + "foo", bindingResult);
 
@@ -81,32 +81,9 @@ class ErrorsMethodArgumentResolverTests {
 		assertThat(actual).isSameAs(bindingResult);
 	}
 
-	@Test
-	void resolveWithCustomModelAttributeNameConfiguredViaValueAttribute() {
-		BindingResult bindingResult = createBindingResult(new Foo(), "custom");
-		this.bindingContext.getModel().asMap().put(BindingResult.MODEL_KEY_PREFIX + "custom", bindingResult);
-
-		ResolvableMethod testMethod = ResolvableMethod.on(getClass()).named("handleWithCustomModelAttributeNameViaValueAttribute").build();
-
-		MethodParameter parameter = testMethod.arg(Errors.class);
-		Object actual = this.resolver.resolveArgument(parameter, this.bindingContext, this.exchange)
-				.block(Duration.ofMillis(5000));
-
-		assertThat(actual).isSameAs(bindingResult);
-	}
-
-	@Test
-	void resolveWithCustomModelAttributeNameConfiguredViaNameAttribute() {
-		BindingResult bindingResult = createBindingResult(new Foo(), "custom");
-		this.bindingContext.getModel().asMap().put(BindingResult.MODEL_KEY_PREFIX + "custom", bindingResult);
-
-		ResolvableMethod testMethod = ResolvableMethod.on(getClass()).named("handleWithCustomModelAttributeNameViaNameAttribute").build();
-
-		MethodParameter parameter = testMethod.arg(Errors.class);
-		Object actual = this.resolver.resolveArgument(parameter, this.bindingContext, this.exchange)
-				.block(Duration.ofMillis(5000));
-
-		assertThat(actual).isSameAs(bindingResult);
+	private BindingResult createBindingResult(Foo target, String name) {
+		DataBinder binder = this.bindingContext.createDataBinder(this.exchange, target, name);
+		return binder.getBindingResult();
 	}
 
 	@Test
@@ -115,20 +92,6 @@ class ErrorsMethodArgumentResolverTests {
 		this.bindingContext.getModel().asMap().put(BindingResult.MODEL_KEY_PREFIX + "foo", Mono.just(bindingResult));
 
 		MethodParameter parameter = this.testMethod.arg(Errors.class);
-		Object actual = this.resolver.resolveArgument(parameter, this.bindingContext, this.exchange)
-				.block(Duration.ofMillis(5000));
-
-		assertThat(actual).isSameAs(bindingResult);
-	}
-
-	@Test
-	void resolveWithMonoAndCustomModelAttributeNameConfiguredViaValueAttribute() {
-		BindingResult bindingResult = createBindingResult(new Foo(), "custom");
-		this.bindingContext.getModel().asMap().put(BindingResult.MODEL_KEY_PREFIX + "custom", Mono.just(bindingResult));
-
-		ResolvableMethod testMethod = ResolvableMethod.on(getClass()).named("handleWithCustomModelAttributeNameViaValueAttribute").build();
-
-		MethodParameter parameter = testMethod.arg(Errors.class);
 		Object actual = this.resolver.resolveArgument(parameter, this.bindingContext, this.exchange)
 				.block(Duration.ofMillis(5000));
 
@@ -153,11 +116,6 @@ class ErrorsMethodArgumentResolverTests {
 						.block(Duration.ofMillis(5000)))
 			.withMessageContaining("An Errors/BindingResult argument is expected " +
 					"immediately after the @ModelAttribute argument");
-	}
-
-	private BindingResult createBindingResult(Foo target, String name) {
-		DataBinder binder = this.bindingContext.createDataBinder(this.exchange, target, name);
-		return binder.getBindingResult();
 	}
 
 
@@ -190,18 +148,6 @@ class ErrorsMethodArgumentResolverTests {
 			BindingResult bindingResult,
 			Mono<Errors> errorsMono,
 			String string) {
-	}
-
-	@SuppressWarnings("unused")
-	void handleWithCustomModelAttributeNameViaValueAttribute(
-			@ModelAttribute("custom") Foo foo,
-			Errors errors) {
-	}
-
-	@SuppressWarnings("unused")
-	void handleWithCustomModelAttributeNameViaNameAttribute(
-			@ModelAttribute(name = "custom") Foo foo,
-			Errors errors) {
 	}
 
 }

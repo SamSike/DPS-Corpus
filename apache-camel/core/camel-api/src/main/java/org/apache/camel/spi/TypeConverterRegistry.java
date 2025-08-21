@@ -16,10 +16,6 @@
  */
 package org.apache.camel.spi;
 
-import java.util.Map;
-import java.util.function.LongConsumer;
-import java.util.function.LongSupplier;
-
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.StaticService;
@@ -30,8 +26,7 @@ import org.apache.camel.TypeConverterExists;
  * Registry for type converters.
  * <p/>
  * The utilization {@link Statistics} is by default disabled, as it has a slight performance impact under very high
- * concurrent load. The statistics can be enabled using
- * {@link org.apache.camel.CamelContext#setTypeConverterStatisticsEnabled(Boolean)} (boolean)} method.
+ * concurrent load. The statistics can be enabled using {@link Statistics#setStatisticsEnabled(boolean)} method.
  */
 public interface TypeConverterRegistry extends StaticService, CamelContextAware {
 
@@ -70,9 +65,17 @@ public interface TypeConverterRegistry extends StaticService, CamelContextAware 
          */
         void reset();
 
-        default void computeIfEnabled(LongSupplier supplier, LongConsumer consumer) {
-            consumer.accept(supplier.getAsLong());
-        }
+        /**
+         * Whether statistics is enabled.
+         */
+        boolean isStatisticsEnabled();
+
+        /**
+         * Sets whether statistics is enabled.
+         *
+         * @param statisticsEnabled <tt>true</tt> to enable
+         */
+        void setStatisticsEnabled(boolean statisticsEnabled);
     }
 
     /**
@@ -125,14 +128,6 @@ public interface TypeConverterRegistry extends StaticService, CamelContextAware 
      * @return          the type converter or <tt>null</tt> if not found.
      */
     TypeConverter lookup(Class<?> toType, Class<?> fromType);
-
-    /**
-     * Lookup the type converters that can convert to a given type
-     *
-     * @param  toType the type to convert to
-     * @return        the type converters that can convert from
-     */
-    Map<Class<?>, TypeConverter> lookup(Class<?> toType);
 
     /**
      * Sets the injector to be used for creating new instances during type conversions.
@@ -191,13 +186,5 @@ public interface TypeConverterRegistry extends StaticService, CamelContextAware 
      * The default behavior is to ignore the duplicate.
      */
     void setTypeConverterExists(TypeConverterExists typeConverterExists);
-
-    /**
-     * Adds a type convertible pair to the registry
-     *
-     * @param typeConvertible A type convertible pair
-     * @param typeConverter   The type converter to associate with the type convertible pair
-     */
-    void addConverter(TypeConvertible<?, ?> typeConvertible, TypeConverter typeConverter);
 
 }

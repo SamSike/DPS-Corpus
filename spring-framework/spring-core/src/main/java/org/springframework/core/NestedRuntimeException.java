@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,15 @@
 
 package org.springframework.core;
 
-import org.jspecify.annotations.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * Handy class for wrapping runtime {@code Exceptions} with a root cause.
- * This class is {@code abstract} to force the programmer to extend the class.
+ *
+ * <p>This class is {@code abstract} to force the programmer to extend
+ * the class. {@code getMessage} will include nested exception
+ * information; {@code printStackTrace} and other like methods will
+ * delegate to the wrapped exception, if any.
  *
  * <p>The similarity between this class and the {@link NestedCheckedException}
  * class is unavoidable, as Java forces these two classes to have different
@@ -29,6 +33,7 @@ import org.jspecify.annotations.Nullable;
  * @author Rod Johnson
  * @author Juergen Hoeller
  * @see #getMessage
+ * @see #printStackTrace
  * @see NestedCheckedException
  */
 public abstract class NestedRuntimeException extends RuntimeException {
@@ -36,12 +41,18 @@ public abstract class NestedRuntimeException extends RuntimeException {
 	/** Use serialVersionUID from Spring 1.2 for interoperability. */
 	private static final long serialVersionUID = 5439915454935047936L;
 
+	static {
+		// Eagerly load the NestedExceptionUtils class to avoid classloader deadlock
+		// issues on OSGi when calling getMessage(). Reported by Don Brown; SPR-5607.
+		NestedExceptionUtils.class.getName();
+	}
+
 
 	/**
 	 * Construct a {@code NestedRuntimeException} with the specified detail message.
 	 * @param msg the detail message
 	 */
-	public NestedRuntimeException(@Nullable String msg) {
+	public NestedRuntimeException(String msg) {
 		super(msg);
 	}
 
@@ -57,11 +68,23 @@ public abstract class NestedRuntimeException extends RuntimeException {
 
 
 	/**
+	 * Return the detail message, including the message from the nested exception
+	 * if there is one.
+	 */
+	@Override
+	@Nullable
+	public String getMessage() {
+		return NestedExceptionUtils.buildMessage(super.getMessage(), getCause());
+	}
+
+
+	/**
 	 * Retrieve the innermost cause of this exception, if any.
 	 * @return the innermost exception, or {@code null} if none
 	 * @since 2.0
 	 */
-	public @Nullable Throwable getRootCause() {
+	@Nullable
+	public Throwable getRootCause() {
 		return NestedExceptionUtils.getRootCause(this);
 	}
 
@@ -96,8 +119,8 @@ public abstract class NestedRuntimeException extends RuntimeException {
 		if (cause == this) {
 			return false;
 		}
-		if (cause instanceof NestedRuntimeException exception) {
-			return exception.contains(exType);
+		if (cause instanceof NestedRuntimeException) {
+			return ((NestedRuntimeException) cause).contains(exType);
 		}
 		else {
 			while (cause != null) {

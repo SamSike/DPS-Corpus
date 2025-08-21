@@ -32,7 +32,6 @@ import org.apache.camel.component.sjms.jms.JmsBinding;
 import org.apache.camel.component.sjms.jms.JmsMessageHelper;
 import org.apache.camel.support.DefaultMessage;
 import org.apache.camel.support.ExchangeHelper;
-import org.apache.camel.trait.message.MessageTrait;
 import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +43,6 @@ import static org.apache.camel.support.MessageHelper.copyBody;
  */
 public class SjmsMessage extends DefaultMessage {
     private static final Logger LOG = LoggerFactory.getLogger(SjmsMessage.class);
-
     private Message jmsMessage;
     private Session jmsSession;
     private JmsBinding binding;
@@ -54,8 +52,6 @@ public class SjmsMessage extends DefaultMessage {
         setJmsMessage(jmsMessage);
         setJmsSession(jmsSession);
         setBinding(binding);
-
-        setPayloadForTrait(MessageTrait.REDELIVERY, JmsMessageHelper.evalRedeliveryMessageTrait(jmsMessage));
     }
 
     public void init(Exchange exchange, Message jmsMessage, Session jmsSession, JmsBinding binding) {
@@ -65,8 +61,6 @@ public class SjmsMessage extends DefaultMessage {
         setBinding(binding);
         // need to populate initial headers when we use pooled exchanges
         populateInitialHeaders(getHeaders());
-
-        setPayloadForTrait(MessageTrait.REDELIVERY, JmsMessageHelper.evalRedeliveryMessageTrait(jmsMessage));
     }
 
     @Override
@@ -290,6 +284,15 @@ public class SjmsMessage extends DefaultMessage {
             return getSanitizedString(id);
         } catch (JMSException e) {
             throw new RuntimeExchangeException("Unable to retrieve JMSMessageID from JMS Message", getExchange(), e);
+        }
+    }
+
+    @Override
+    protected Boolean isTransactedRedelivered() {
+        if (jmsMessage != null) {
+            return JmsMessageHelper.getJMSRedelivered(jmsMessage);
+        } else {
+            return null;
         }
     }
 

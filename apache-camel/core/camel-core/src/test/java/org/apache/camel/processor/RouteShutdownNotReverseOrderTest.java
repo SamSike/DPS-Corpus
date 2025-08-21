@@ -43,7 +43,7 @@ public class RouteShutdownNotReverseOrderTest extends ContextTestSupport {
 
         // assert correct startup order
         DefaultCamelContext dcc = (DefaultCamelContext) context;
-        List<RouteStartupOrder> order = dcc.getCamelContextExtension().getRouteStartupOrder();
+        List<RouteStartupOrder> order = dcc.getRouteStartupOrder();
 
         assertEquals(2, order.size());
         assertEquals("direct://bar", order.get(0).getRoute().getEndpoint().getEndpointUri());
@@ -54,10 +54,10 @@ public class RouteShutdownNotReverseOrderTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").startupOrder(2).routeId("foo").to("mock:result");
 
                 from("direct:bar").startupOrder(1).routeId("bar").to("direct:foo");

@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -41,23 +41,19 @@ import static java.lang.Integer.parseInt;
 import static java.util.Arrays.asList;
 // ...
 // ...
+// ...
 import static org.jooq.SQLDialect.H2;
 import static org.jooq.SQLDialect.MARIADB;
-// ...
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 import static org.jooq.SQLDialect.SQLITE;
-import static org.jooq.SQLDialect.TRINO;
 import static org.jooq.SQLDialect.YUGABYTEDB;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DefaultDataType.getDataType;
 import static org.jooq.impl.SQLDataType.VARCHAR;
-import static org.jooq.impl.Tools.allMatch;
 import static org.jooq.impl.Tools.convertHexToBytes;
-import static org.jooq.impl.Tools.converterContext;
 import static org.jooq.impl.Tools.fields;
-import static org.jooq.impl.Tools.map;
 import static org.jooq.impl.Tools.newRecord;
 import static org.jooq.tools.StringUtils.defaultIfBlank;
 
@@ -65,22 +61,20 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.jooq.ContextConverter;
-import org.jooq.ConverterContext;
 import org.jooq.DSLContext;
-import org.jooq.DataType;
 import org.jooq.Field;
 import org.jooq.Fields;
-import org.jooq.QualifiedRecord;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
-import org.jooq.Source;
+import org.jooq.tools.json.ContainerFactory;
+import org.jooq.tools.json.JSONParser;
 
 /**
  * A very simple JSON reader based on Simple JSON.
@@ -113,9 +107,19 @@ final class JSONReader<R extends Record> {
 
     final Result<R> read(final Reader reader, boolean multiset) {
         try {
-            DefaultJSONContentHandler handler = new DefaultJSONContentHandler();
-            new JSONParser(ctx, Source.of(reader).readString(), handler).parse();
-            return read(ctx, row, recordType, multiset, handler.result());
+            Object root = new JSONParser().parse(reader, new ContainerFactory() {
+                @Override
+                public Map createObjectContainer() {
+                    return new LinkedHashMap();
+                }
+
+                @Override
+                public List createArrayContainer() {
+                    return new ArrayList();
+                }
+            });
+
+            return read(ctx, row, recordType, multiset, root);
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -186,13 +190,13 @@ final class JSONReader<R extends Record> {
                         )
                         : null;
 
-                    result.add(newRecord(true, ctx.configuration(), recordType, actualRow).operate(r -> {
+                    result.add(newRecord(true, recordType, actualRow, ctx.configuration()).operate(r -> {
                         if (multiset)
                             r.from(list);
                         else
                             r.fromMap(record);
 
-                        r.touched(false);
+                        r.changed(false);
                         return r;
                     }));
                 }
@@ -213,9 +217,9 @@ final class JSONReader<R extends Record> {
                     if (record == null)
                         result.add(null);
                     else
-                        result.add(newRecord(true, ctx.configuration(), recordType, actualRow).operate(r -> {
+                        result.add(newRecord(true, recordType, actualRow, ctx.configuration()).operate(r -> {
                             r.from(record);
-                            r.touched(false);
+                            r.changed(false);
                             return r;
                         }));
                 }
@@ -238,20 +242,18 @@ final class JSONReader<R extends Record> {
         return result;
     }
 
-    private static final Set<SQLDialect> ENCODE_BINARY_AS_HEX  = SQLDialect.supportedBy(H2, POSTGRES, SQLITE, TRINO, YUGABYTEDB);
+    private static final Set<SQLDialect> ENCODE_BINARY_AS_HEX  = SQLDialect.supportedBy(H2, POSTGRES, SQLITE, YUGABYTEDB);
     private static final Set<SQLDialect> ENCODE_BINARY_AS_TEXT = SQLDialect.supportedBy(MARIADB);
 
     private static final List<Object> patchRecord(DSLContext ctx, boolean multiset, Fields result, List<Object> record) {
-        ConverterContext cc = null;
-
         for (int i = 0; i < result.fields().length; i++) {
             Field<?> field = result.field(i);
-            Object value = record.get(i);
-            DataType<?> t = field.getDataType();
 
             // [#8829] LoaderImpl expects binary data to be encoded in base64,
             //         not according to org.jooq.tools.Convert
-            if (t.isBinary() && value instanceof String s) {
+            if (field.getType() == byte[].class && record.get(i) instanceof String) {
+                String s = (String) record.get(i);
+
                 if (multiset) {
 
                     // [#12134] PostgreSQL encodes binary data as hex
@@ -276,61 +278,15 @@ final class JSONReader<R extends Record> {
                     record.set(i, Base64.getDecoder().decode(s));
             }
 
-            // [#18190] For historic reasons, Record.from() will not apply Converter<T, T>, so any potential
-            //          Converter<String, String> should be applied eagerly, before loading data into the record.
-            else if (multiset
-                && t instanceof ConvertedDataType
-                && t.getFromType() == String.class
-                && t.getToType() == String.class
-                && (value == null || value instanceof String)
-            ) {
-                record.set(i, ((ContextConverter<String, String>) t.getConverter()).from(
-                    (String) value,
-                    cc == null ? (cc = converterContext(ctx.configuration())) : cc
-                ));
-            }
-
-            // [#12155] Recurse for nested MULTISET
-            else if (multiset && t.isMultiset()) {
+            // [#12155] Recurse for nested data types
+            else if (multiset && field.getDataType().isMultiset())
                 record.set(i, read(
                     ctx,
-                    (AbstractRow) t.getRow(),
-                    (Class) t.getRecordType(),
+                    (AbstractRow) field.getDataType().getRow(),
+                    (Class) field.getDataType().getRecordType(),
                     multiset,
-                    value
+                    record.get(i)
                 ));
-            }
-
-            // [#14657] Recurse for nested ROW
-            // [#18152] Handle also the Map encoding of nested ROW values
-            else if (multiset && t.isRecord() && (value instanceof List || value instanceof Map)) {
-                AbstractRow<? extends Record> actualRow = (AbstractRow) t.getRow();
-                Class<? extends Record> recordType = t.getRecordType();
-
-                List<Object> l;
-
-                if (value instanceof List) {
-                    l = patchRecord(ctx, multiset, actualRow, (List<Object>) value);
-                }
-
-                // [#18681] The Map encoding of nested ROW values can happen for 2 reasons:
-                //          - We create it ourselves with "v1", "v2", ... keys because json objects work better than arrays in some RDBMS
-                //          - It's a UDT or similar, serialised into a JSON object, where keys are attribute names, not in order!
-                else if (value instanceof Map<?, ?> map) {
-                    if (QualifiedRecord.class.isAssignableFrom(recordType) && allMatch(actualRow.fields.fields, f -> map.containsKey(f.getName())))
-                        l = patchRecord(ctx, multiset, actualRow, map(actualRow.fields.fields, f -> map.get(f.getName())));
-                    else
-                        l = patchRecord(ctx, multiset, actualRow, new ArrayList<>(map.values()));
-                }
-                else
-                    throw new IllegalStateException();
-
-                record.set(i, newRecord(true, ctx.configuration(), recordType, actualRow).operate(r -> {
-                    r.from(l);
-                    r.touched(false);
-                    return r;
-                }));
-            }
         }
 
         return record;

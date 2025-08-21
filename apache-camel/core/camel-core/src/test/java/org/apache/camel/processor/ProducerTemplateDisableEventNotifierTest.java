@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ProducerTemplateDisableEventNotifierTest extends ContextTestSupport {
 
-    private final MySentEventNotifier notifier = new MySentEventNotifier();
+    private MySentEventNotifier notifier = new MySentEventNotifier();
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
@@ -52,10 +52,10 @@ public class ProducerTemplateDisableEventNotifierTest extends ContextTestSupport
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").to("direct:bar").to("mock:result");
 
                 from("direct:bar").delay(1);

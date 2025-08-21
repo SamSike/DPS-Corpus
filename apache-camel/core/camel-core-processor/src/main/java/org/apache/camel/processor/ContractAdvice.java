@@ -20,7 +20,6 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.ValidationException;
-import org.apache.camel.processor.transformer.TypeConverterTransformer;
 import org.apache.camel.spi.CamelInternalProcessorAdvice;
 import org.apache.camel.spi.Contract;
 import org.apache.camel.spi.DataType;
@@ -40,16 +39,16 @@ import org.slf4j.LoggerFactory;
  * type to the expected message type before routing. After routing, if the output type declared by
  * {@link org.apache.camel.model.OutputTypeDefinition} is different from current OUT message (or IN message if no OUT),
  * camel look for a Transformer and apply.
- *
+ * 
  * @see Transformer
  * @see Validator
  * @see org.apache.camel.model.InputTypeDefinition
  * @see org.apache.camel.model.OutputTypeDefinition
  */
-public class ContractAdvice implements CamelInternalProcessorAdvice<Object> {
+public class ContractAdvice implements CamelInternalProcessorAdvice {
     private static final Logger LOG = LoggerFactory.getLogger(ContractAdvice.class);
 
-    private final Contract contract;
+    private Contract contract;
 
     public ContractAdvice(Contract contract) {
         this.contract = contract;
@@ -84,6 +83,7 @@ public class ContractAdvice implements CamelInternalProcessorAdvice<Object> {
     @Override
     public void after(Exchange exchange, Object data) throws Exception {
         if (exchange.isFailed()) {
+            // TODO can we add FAULT_TYPE processing?
             return;
         }
 
@@ -117,7 +117,7 @@ public class ContractAdvice implements CamelInternalProcessorAdvice<Object> {
 
     private void doTransform(Message message, DataType from, DataType to) throws Exception {
         if (from == null) {
-            // If 'from' is null, only Java-Java conversion is performed.
+            // If 'from' is null, only Java-Java convertion is performed.
             // It means if 'to' is other than Java, it's assumed to be already in expected type.
             convertIfRequired(message, to);
             return;
@@ -127,7 +127,7 @@ public class ContractAdvice implements CamelInternalProcessorAdvice<Object> {
         convertIfRequired(message, from);
 
         if (applyMatchedTransformer(message, from, to)) {
-            // Found matched transformer. Java->Java transformer is also allowed.
+            // Found matched transformer. Java-Java transformer is also allowed.
             return;
         } else if (from.isJavaType()) {
             // Try TypeConverter as a fallback for Java->Java transformation
@@ -143,35 +143,39 @@ public class ContractAdvice implements CamelInternalProcessorAdvice<Object> {
         throw new IllegalArgumentException("No Transformer found for [from='" + from + "', to='" + to + "']");
     }
 
-    private void convertIfRequired(Message message, DataType type) throws Exception {
-        if (DataType.isAnyType(type) || !DataType.isJavaType(type) || type.getName() == null) {
-            return;
+    private boolean convertIfRequired(Message message, DataType type) throws Exception {
+        // TODO for better performance it may be better to add TypeConverterTransformer
+        // into transformer registry automatically to avoid unnecessary scan in transformer registry
+        if (type != null && type.isJavaType() && type.getName() != null && message != null && message.getBody() != null) {
+            CamelContext context = message.getExchange().getContext();
+            Class<?> typeJava = getClazz(type.getName(), context);
+            if (!typeJava.isAssignableFrom(message.getBody().getClass())) {
+                LOG.debug("Converting to '{}'", typeJava.getName());
+                message.setBody(message.getMandatoryBody(typeJava));
+                return true;
+            }
         }
+        return false;
+    }
 
-        CamelContext context = message.getExchange().getContext();
-        Transformer transformer = context.resolveTransformer(DataType.ANY, type);
+    private boolean applyTransformer(Transformer transformer, Message message, DataType from, DataType to) throws Exception {
         if (transformer != null) {
-            transformer.transform(message, DataType.ANY, type);
-        } else {
-            new TypeConverterTransformer(type).transform(message, DataType.ANY, type);
+            LOG.debug("Applying transformer: from='{}', to='{}', transformer='{}'", from, to, transformer);
+            transformer.transform(message, from, to);
+            return true;
         }
+        return false;
     }
 
     private boolean applyMatchedTransformer(Message message, DataType from, DataType to) throws Exception {
         Transformer transformer = message.getExchange().getContext().resolveTransformer(from, to);
-        if (transformer == null) {
-            return false;
-        }
-
-        LOG.debug("Applying transformer: from='{}', to='{}', transformer='{}'", from, to, transformer);
-        transformer.transform(message, from, to);
-        return true;
+        return applyTransformer(transformer, message, from, to);
     }
 
     private boolean applyTransformerChain(Message message, DataType from, DataType to) throws Exception {
         CamelContext context = message.getExchange().getContext();
-        Transformer fromTransformer = context.resolveTransformer(DataType.ANY, from);
-        Transformer toTransformer = context.resolveTransformer(DataType.ANY, to);
+        Transformer fromTransformer = context.resolveTransformer(from.getModel());
+        Transformer toTransformer = context.resolveTransformer(to.getModel());
         if (fromTransformer != null && toTransformer != null) {
             LOG.debug("Applying transformer 1/2: from='{}', to='{}', transformer='{}'", from, to, fromTransformer);
             fromTransformer.transform(message, from, new DataType(Object.class));
@@ -180,6 +184,10 @@ public class ContractAdvice implements CamelInternalProcessorAdvice<Object> {
             return true;
         }
         return false;
+    }
+
+    private Class<?> getClazz(String type, CamelContext context) throws Exception {
+        return context.getClassResolver().resolveMandatoryClass(type);
     }
 
     private void doValidate(Message message, DataType type) throws ValidationException {

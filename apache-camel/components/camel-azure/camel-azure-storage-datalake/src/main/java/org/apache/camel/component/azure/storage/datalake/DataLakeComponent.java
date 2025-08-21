@@ -17,18 +17,21 @@
 package org.apache.camel.component.azure.storage.datalake;
 
 import java.util.Map;
+import java.util.Set;
 
+import com.azure.identity.ClientSecretCredential;
+import com.azure.storage.common.StorageSharedKeyCredential;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.annotations.Component;
-import org.apache.camel.support.HealthCheckComponent;
+import org.apache.camel.support.DefaultComponent;
 import org.apache.camel.util.ObjectHelper;
 
 @Component("azure-storage-datalake")
-public class DataLakeComponent extends HealthCheckComponent {
+public class DataLakeComponent extends DefaultComponent {
 
-    @Metadata(description = "configuration object for data lake")
+    @Metadata(description = "configuration object for datalake")
     private DataLakeConfiguration configuration = new DataLakeConfiguration();
 
     public DataLakeComponent() {
@@ -41,7 +44,7 @@ public class DataLakeComponent extends HealthCheckComponent {
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
 
-        if (remaining == null || remaining.isBlank()) {
+        if (remaining == null || remaining.trim().isEmpty()) {
             throw new IllegalArgumentException("At least the account name must be specified");
         }
 
@@ -63,23 +66,8 @@ public class DataLakeComponent extends HealthCheckComponent {
         final DataLakeEndpoint endpoint = new DataLakeEndpoint(uri, this, configuration);
         setProperties(endpoint, parameters);
 
-        if (ObjectHelper.isEmpty(configuration.getServiceClient())) {
-            // ensure we use default credential type if not configured
-            if (configuration.getSharedKeyCredential() == null && configuration.getSasCredential() == null
-                    && configuration.getClientSecretCredential() == null) {
-                if (configuration.getCredentialType() == null) {
-                    configuration.setCredentialType(CredentialType.CLIENT_SECRET);
-                }
-            } else {
-                if (configuration.getSharedKeyCredential() != null) {
-                    configuration.setCredentialType(CredentialType.SHARED_KEY_CREDENTIAL);
-                } else if (configuration.getSasCredential() != null) {
-                    configuration.setCredentialType(CredentialType.AZURE_SAS);
-                } else if (configuration.getClientSecretCredential() != null) {
-                    configuration.setCredentialType(CredentialType.CLIENT_SECRET);
-                }
-            }
-        }
+        setCredentialsFromRegistry(configuration);
+        validateConfiguration(configuration);
 
         return endpoint;
     }
@@ -90,6 +78,31 @@ public class DataLakeComponent extends HealthCheckComponent {
 
     public void setConfiguration(DataLakeConfiguration configuration) {
         this.configuration = configuration;
+    }
+
+    private void setCredentialsFromRegistry(final DataLakeConfiguration configuration) {
+        if (ObjectHelper.isEmpty(configuration.getServiceClient())) {
+            final Set<StorageSharedKeyCredential> storageSharedKeyCredentials
+                    = getCamelContext().getRegistry().findByType(StorageSharedKeyCredential.class);
+            final Set<ClientSecretCredential> clientSecretCredentials
+                    = getCamelContext().getRegistry().findByType(ClientSecretCredential.class);
+
+            if (storageSharedKeyCredentials.size() == 1) {
+                configuration.setSharedKeyCredential(storageSharedKeyCredentials.stream().findFirst().get());
+            }
+
+            if (clientSecretCredentials.size() == 1) {
+                configuration.setClientSecretCredential(clientSecretCredentials.stream().findFirst().get());
+            }
+
+        }
+    }
+
+    private void validateConfiguration(final DataLakeConfiguration config) {
+        if (config.getServiceClient() == null && config.getClientSecretCredential() == null
+                && config.getSharedKeyCredential() == null) {
+            throw new IllegalArgumentException("client or credentials must be specified");
+        }
     }
 
 }

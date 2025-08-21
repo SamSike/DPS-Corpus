@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@ package org.springframework.expression.spel.ast;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.asm.Label;
 import org.springframework.asm.MethodVisitor;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.CodeFlow;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 
@@ -36,7 +36,6 @@ import org.springframework.util.ObjectUtils;
  * @author Andy Clement
  * @author Juergen Hoeller
  * @author Giovanni Dall'Oglio Risso
- * @author Sam Brannen
  * @since 3.0
  */
 public abstract class Operator extends SpelNodeImpl {
@@ -48,9 +47,11 @@ public abstract class Operator extends SpelNodeImpl {
 	// whose accessors seem to only be returning 'Object' - the actual descriptors may
 	// indicate 'int')
 
-	protected @Nullable String leftActualDescriptor;
+	@Nullable
+	protected String leftActualDescriptor;
 
-	protected @Nullable String rightActualDescriptor;
+	@Nullable
+	protected String rightActualDescriptor;
 
 
 	public Operator(String payload, int startPos, int endPos, SpelNodeImpl... operands) {
@@ -260,7 +261,10 @@ public abstract class Operator extends SpelNodeImpl {
 	 * @param right the right-hand operand value
 	 */
 	public static boolean equalityCheck(EvaluationContext context, @Nullable Object left, @Nullable Object right) {
-		if (left instanceof Number leftNumber && right instanceof Number rightNumber) {
+		if (left instanceof Number && right instanceof Number) {
+			Number leftNumber = (Number) left;
+			Number rightNumber = (Number) right;
+
 			if (leftNumber instanceof BigDecimal || rightNumber instanceof BigDecimal) {
 				BigDecimal leftBigDecimal = NumberUtils.convertNumberToTargetClass(leftNumber, BigDecimal.class);
 				BigDecimal rightBigDecimal = NumberUtils.convertNumberToTargetClass(rightNumber, BigDecimal.class);
@@ -307,8 +311,11 @@ public abstract class Operator extends SpelNodeImpl {
 			return true;
 		}
 
-		if (context.getTypeComparator().canCompare(left, right)) {
-			return context.getTypeComparator().compare(left, right) == 0;
+		if (left instanceof Comparable && right instanceof Comparable) {
+			Class<?> ancestor = ClassUtils.determineCommonAncestor(left.getClass(), right.getClass());
+			if (ancestor != null && Comparable.class.isAssignableFrom(ancestor)) {
+				return (context.getTypeComparator().compare(left, right) == 0);
+			}
 		}
 
 		return false;
@@ -339,19 +346,18 @@ public abstract class Operator extends SpelNodeImpl {
 
 		/**
 		 * Return an object that indicates whether the input descriptors are compatible.
-		 * <p>A declared descriptor is what could statically be determined (for example, from looking
+		 * <p>A declared descriptor is what could statically be determined (e.g. from looking
 		 * at the return value of a property accessor method) whilst an actual descriptor
 		 * is the type of an actual object that was returned, which may differ.
 		 * <p>For generic types with unbound type variables, the declared descriptor
 		 * discovered may be 'Object' but from the actual descriptor it is possible to
-		 * observe that the objects are really numeric values (for example, ints).
+		 * observe that the objects are really numeric values (e.g. ints).
 		 * @param leftDeclaredDescriptor the statically determinable left descriptor
 		 * @param rightDeclaredDescriptor the statically determinable right descriptor
 		 * @param leftActualDescriptor the dynamic/runtime left object descriptor
 		 * @param rightActualDescriptor the dynamic/runtime right object descriptor
 		 * @return a DescriptorComparison object indicating the type of compatibility, if any
 		 */
-		@SuppressWarnings("NullAway") // Dataflow analysis limitation
 		public static DescriptorComparison checkNumericCompatibility(
 				@Nullable String leftDeclaredDescriptor, @Nullable String rightDeclaredDescriptor,
 				@Nullable String leftActualDescriptor, @Nullable String rightActualDescriptor) {

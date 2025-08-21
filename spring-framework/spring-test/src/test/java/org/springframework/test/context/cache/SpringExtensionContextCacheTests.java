@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,9 +37,10 @@ import static org.springframework.test.context.cache.ContextCacheTestUtils.asser
 import static org.springframework.test.context.cache.ContextCacheTestUtils.resetContextCache;
 
 /**
- * JUnit based integration test which verifies correct {@linkplain ContextCache
- * application context caching} in conjunction with the {@link SpringExtension} and
- * {@link DirtiesContext @DirtiesContext} at the method level.
+ * Unit tests which verify correct {@link ContextCache
+ * application context caching} in conjunction with the
+ * {@link SpringExtension} and the {@link DirtiesContext
+ * &#064;DirtiesContext} annotation at the method level.
  *
  * @author Sam Brannen
  * @author Juergen Hoeller
@@ -47,7 +48,7 @@ import static org.springframework.test.context.cache.ContextCacheTestUtils.reset
  * @see ContextCacheTests
  * @see LruContextCacheTests
  */
-@SpringJUnitConfig(locations = "../config/CoreContextConfigurationAppCtxTests-context.xml")
+@SpringJUnitConfig(locations = "../junit4/SpringJUnit4ClassRunnerAppCtxTests-context.xml")
 @TestExecutionListeners({ DependencyInjectionTestExecutionListener.class, DirtiesContextTestExecutionListener.class })
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class SpringExtensionContextCacheTests {
@@ -61,19 +62,19 @@ class SpringExtensionContextCacheTests {
 	static void verifyInitialCacheState() {
 		dirtiedApplicationContext = null;
 		resetContextCache();
-		assertContextCacheStatistics("BeforeClass", 0, 0, 0, 0);
+		assertContextCacheStatistics("BeforeClass", 0, 0, 0);
 	}
 
 	@AfterAll
 	static void verifyFinalCacheState() {
-		assertContextCacheStatistics("AfterClass", 1, 1, 1, 2);
+		assertContextCacheStatistics("AfterClass", 1, 1, 2);
 	}
 
 	@Test
 	@DirtiesContext
 	@Order(1)
 	void dirtyContext() {
-		assertContextCacheStatistics("dirtyContext()", 1, 1, 0, 1);
+		assertContextCacheStatistics("dirtyContext()", 1, 0, 1);
 		assertThat(this.applicationContext).as("The application context should have been autowired.").isNotNull();
 		SpringExtensionContextCacheTests.dirtiedApplicationContext = this.applicationContext;
 	}
@@ -81,7 +82,7 @@ class SpringExtensionContextCacheTests {
 	@Test
 	@Order(2)
 	void verifyContextDirty() {
-		assertContextCacheStatistics("verifyContextWasDirtied()", 1, 1, 0, 2);
+		assertContextCacheStatistics("verifyContextWasDirtied()", 1, 0, 2);
 		assertThat(this.applicationContext).as("The application context should have been autowired.").isNotNull();
 		assertThat(this.applicationContext).as("The application context should have been 'dirtied'.").isNotSameAs(SpringExtensionContextCacheTests.dirtiedApplicationContext);
 		SpringExtensionContextCacheTests.dirtiedApplicationContext = this.applicationContext;
@@ -90,7 +91,7 @@ class SpringExtensionContextCacheTests {
 	@Test
 	@Order(3)
 	void verifyContextNotDirty() {
-		assertContextCacheStatistics("verifyContextWasNotDirtied()", 1, 1, 1, 2);
+		assertContextCacheStatistics("verifyContextWasNotDirtied()", 1, 1, 2);
 		assertThat(this.applicationContext).as("The application context should have been autowired.").isNotNull();
 		assertThat(this.applicationContext).as("The application context should NOT have been 'dirtied'.").isSameAs(SpringExtensionContextCacheTests.dirtiedApplicationContext);
 	}

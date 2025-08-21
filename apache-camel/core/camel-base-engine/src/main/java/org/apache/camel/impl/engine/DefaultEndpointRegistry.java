@@ -21,21 +21,20 @@ import java.util.Map;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.spi.EndpointRegistry;
-import org.apache.camel.spi.NormalizedEndpointUri;
 import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.NormalizedUri;
 
 /**
  * Default implementation of {@link org.apache.camel.spi.EndpointRegistry}
  */
-public class DefaultEndpointRegistry extends AbstractDynamicRegistry<NormalizedEndpointUri, Endpoint>
-        implements EndpointRegistry {
+public class DefaultEndpointRegistry extends AbstractDynamicRegistry<NormalizedUri, Endpoint>
+        implements EndpointRegistry<NormalizedUri> {
 
     public DefaultEndpointRegistry(CamelContext context) {
         super(context, CamelContextHelper.getMaximumEndpointCacheSize(context));
     }
 
-    public DefaultEndpointRegistry(CamelContext context, Map<NormalizedEndpointUri, Endpoint> endpoints) {
+    public DefaultEndpointRegistry(CamelContext context, Map<NormalizedUri, Endpoint> endpoints) {
         this(context);
         if (!context.isStarted()) {
             // optimize to put all into the static map as we are not started
@@ -53,14 +52,6 @@ public class DefaultEndpointRegistry extends AbstractDynamicRegistry<NormalizedE
     @Override
     public boolean isDynamic(String key) {
         return isDynamic(NormalizedUri.newNormalizedUri(key, false));
-    }
-
-    @Override
-    public boolean containsKey(Object key) {
-        if (key instanceof String str) {
-            key = NormalizedUri.newNormalizedUri(str, false);
-        }
-        return super.containsKey(key);
     }
 
     @Override

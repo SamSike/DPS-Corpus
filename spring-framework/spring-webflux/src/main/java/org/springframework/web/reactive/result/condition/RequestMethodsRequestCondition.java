@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,9 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -47,9 +46,9 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 
 	static {
 		requestMethodConditionCache = CollectionUtils.newHashMap(RequestMethod.values().length);
-		for (RequestMethod requestMethod : RequestMethod.values()) {
-			requestMethodConditionCache.put(requestMethod.asHttpMethod(),
-					new RequestMethodsRequestCondition(requestMethod));
+		for (RequestMethod method : RequestMethod.values()) {
+			requestMethodConditionCache.put(
+					HttpMethod.valueOf(method.name()), new RequestMethodsRequestCondition(method));
 		}
 	}
 
@@ -122,12 +121,13 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 	 * request method is OPTIONS.
 	 */
 	@Override
-	public @Nullable RequestMethodsRequestCondition getMatchingCondition(ServerWebExchange exchange) {
+	@Nullable
+	public RequestMethodsRequestCondition getMatchingCondition(ServerWebExchange exchange) {
 		if (CorsUtils.isPreFlightRequest(exchange.getRequest())) {
 			return matchPreFlight(exchange.getRequest());
 		}
 		if (getMethods().isEmpty()) {
-			if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod())) {
+			if (RequestMethod.OPTIONS.name().equals(exchange.getRequest().getMethodValue())) {
 				return null; // We handle OPTIONS transparently, so don't match if no explicit declarations
 			}
 			return this;
@@ -140,7 +140,8 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 	 * Hence empty conditions is a match, otherwise try to match to the HTTP
 	 * method in the "Access-Control-Request-Method" header.
 	 */
-	private @Nullable RequestMethodsRequestCondition matchPreFlight(ServerHttpRequest request) {
+	@Nullable
+	private RequestMethodsRequestCondition matchPreFlight(ServerHttpRequest request) {
 		if (getMethods().isEmpty()) {
 			return this;
 		}
@@ -148,15 +149,17 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 		return expectedMethod != null ? matchRequestMethod(expectedMethod) : null;
 	}
 
-	private @Nullable RequestMethodsRequestCondition matchRequestMethod(HttpMethod httpMethod) {
-		RequestMethod requestMethod = RequestMethod.resolve(httpMethod);
-		if (requestMethod != null) {
-			if (getMethods().contains(requestMethod)) {
-				return requestMethodConditionCache.get(httpMethod);
-			}
-			if (requestMethod.equals(RequestMethod.HEAD) && getMethods().contains(RequestMethod.GET)) {
-				return requestMethodConditionCache.get(HttpMethod.GET);
-			}
+	@Nullable
+	private RequestMethodsRequestCondition matchRequestMethod(@Nullable HttpMethod httpMethod) {
+		if (httpMethod == null) {
+			return null;
+		}
+		RequestMethod requestMethod = RequestMethod.valueOf(httpMethod.name());
+		if (getMethods().contains(requestMethod)) {
+			return requestMethodConditionCache.get(httpMethod);
+		}
+		if (requestMethod.equals(RequestMethod.HEAD) && getMethods().contains(RequestMethod.GET)) {
+			return requestMethodConditionCache.get(HttpMethod.GET);
 		}
 		return null;
 	}

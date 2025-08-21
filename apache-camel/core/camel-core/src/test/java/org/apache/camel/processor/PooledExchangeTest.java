@@ -16,7 +16,6 @@
  */
 package org.apache.camel.processor;
 
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -31,7 +30,6 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.engine.PooledExchangeFactory;
 import org.apache.camel.impl.engine.PooledProcessorExchangeFactory;
 import org.apache.camel.spi.PooledObjectFactory;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,15 +42,13 @@ class PooledExchangeTest extends ContextTestSupport {
 
     @Override
     protected CamelContext createCamelContext() throws Exception {
-        CamelContext camelContext = super.createCamelContext();
-        ExtendedCamelContext ecc = camelContext.getCamelContextExtension();
-
+        ExtendedCamelContext ecc = (ExtendedCamelContext) super.createCamelContext();
         ecc.setExchangeFactory(new PooledExchangeFactory());
         ecc.setProcessorExchangeFactory(new PooledProcessorExchangeFactory());
         ecc.getExchangeFactory().setStatisticsEnabled(true);
         ecc.getProcessorExchangeFactory().setStatisticsEnabled(true);
 
-        return camelContext;
+        return ecc;
     }
 
     @Test
@@ -71,25 +67,24 @@ class PooledExchangeTest extends ContextTestSupport {
         mock.assertIsSatisfied();
 
         PooledObjectFactory.Statistics stat
-                = context.getCamelContextExtension().getExchangeFactoryManager().getStatistics();
+                = context.adapt(ExtendedCamelContext.class).getExchangeFactoryManager().getStatistics();
         assertEquals(1, stat.getCreatedCounter());
         assertEquals(2, stat.getAcquiredCounter());
-
-        Awaitility.await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> assertEquals(3, stat.getReleasedCounter()));
+        assertEquals(3, stat.getReleasedCounter());
         assertEquals(0, stat.getDiscardedCounter());
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
-                from("timer:foo?period=1&delay=1&repeatCount=3").autoStartup(false)
+            public void configure() throws Exception {
+                from("timer:foo?period=1&delay=1&repeatCount=3").noAutoStartup()
                         .setProperty("myprop", counter::incrementAndGet)
                         .setHeader("myheader", counter::incrementAndGet)
                         .process(new Processor() {
                             @Override
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 // should be same exchange instance as its pooled
                                 Exchange old = ref.get();
                                 if (old == null) {

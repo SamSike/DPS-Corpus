@@ -56,20 +56,6 @@ public class FilterParameters extends JsseParameters {
         return this.exclude;
     }
 
-    public void addInclude(String pattern) {
-        if (this.include == null) {
-            this.include = new ArrayList<>();
-        }
-        this.include.add(pattern.trim());
-    }
-
-    public void addExclude(String pattern) {
-        if (this.exclude == null) {
-            this.exclude = new ArrayList<>();
-        }
-        this.exclude.add(pattern.trim());
-    }
-
     /**
      * Returns a list of compiled {@code Pattern}s based on the values of the include list.
      *
@@ -85,7 +71,7 @@ public class FilterParameters extends JsseParameters {
      * Returns a list of compiled {@code Pattern}s based on the values of the exclude list.
      *
      * @return                        the list of compiled expressions, never {@code null}
-     *
+     * 
      * @throws PatternSyntaxException if any of the expressions are invalid
      */
     public List<Pattern> getExcludePatterns() {
@@ -154,9 +140,9 @@ public class FilterParameters extends JsseParameters {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("FilterParameters[include=");
-        builder.append(Arrays.toString(getInclude().toArray(new String[0])));
+        builder.append(Arrays.toString(getInclude().toArray(new String[getInclude().size()])));
         builder.append(", exclude=");
-        builder.append(Arrays.toString(getExclude().toArray(new String[0])));
+        builder.append(Arrays.toString(getExclude().toArray(new String[getExclude().size()])));
         builder.append("]");
         return builder.toString();
     }

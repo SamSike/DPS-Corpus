@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,14 +36,13 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 /**
- * Tests for {@link Jackson2CborDecoder}.
+ * Unit tests for {@link Jackson2CborDecoder}.
  *
  * @author Sebastien Deleuze
  */
-@SuppressWarnings("removal")
-class Jackson2CborDecoderTests extends AbstractDecoderTests<Jackson2CborDecoder> {
+public class Jackson2CborDecoderTests extends AbstractDecoderTests<Jackson2CborDecoder> {
 
-	private static final MimeType CBOR_MIME_TYPE = new MimeType("application", "cbor");
+	private final static MimeType CBOR_MIME_TYPE = new MimeType("application", "cbor");
 
 	private Pojo pojo1 = new Pojo("f1", "b1");
 
@@ -57,7 +56,7 @@ class Jackson2CborDecoderTests extends AbstractDecoderTests<Jackson2CborDecoder>
 
 	@Override
 	@Test
-	protected void canDecode() {
+	public void canDecode() {
 		assertThat(decoder.canDecode(ResolvableType.forClass(Pojo.class), CBOR_MIME_TYPE)).isTrue();
 		assertThat(decoder.canDecode(ResolvableType.forClass(Pojo.class), null)).isTrue();
 
@@ -67,7 +66,7 @@ class Jackson2CborDecoderTests extends AbstractDecoderTests<Jackson2CborDecoder>
 
 	@Override
 	@Test
-	protected void decode() {
+	public void decode() {
 		Flux<DataBuffer> input = Flux.just(this.pojo1, this.pojo2)
 				.map(this::writeObject)
 				.flatMap(this::dataBuffer);
@@ -91,7 +90,7 @@ class Jackson2CborDecoderTests extends AbstractDecoderTests<Jackson2CborDecoder>
 
 	@Override
 	@Test
-	protected void decodeToMono() {
+	public void decodeToMono() {
 		List<Pojo> expected = Arrays.asList(pojo1, pojo2);
 
 		Flux<DataBuffer> input = Flux.just(expected)

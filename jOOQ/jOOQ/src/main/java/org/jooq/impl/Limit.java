@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,11 +43,11 @@ import static org.jooq.RenderContext.CastMode.NEVER;
 import static org.jooq.SQLDialect.FIREBIRD;
 import static org.jooq.SQLDialect.H2;
 import static org.jooq.SQLDialect.MARIADB;
+// ...
 import static org.jooq.SQLDialect.POSTGRES;
 // ...
 // ...
 import static org.jooq.conf.ParamType.INLINED;
-import static org.jooq.impl.DSL.cast;
 import static org.jooq.impl.DSL.one;
 import static org.jooq.impl.DSL.val;
 import static org.jooq.impl.DSL.zero;
@@ -67,16 +67,17 @@ import static org.jooq.impl.Keywords.K_TO;
 import static org.jooq.impl.Keywords.K_TOP;
 import static org.jooq.impl.Keywords.K_WITH_TIES;
 import static org.jooq.impl.SQLDataType.BIGINT;
-import static org.jooq.impl.SQLDataType.INTEGER;
 import static org.jooq.impl.Tools.isScalarSubquery;
 
-import org.jooq.Condition;
 import org.jooq.Context;
 import org.jooq.Field;
 import org.jooq.Param;
 // ...
 import org.jooq.RenderContext.CastMode;
+import org.jooq.SQLDialect;
+import org.jooq.Select;
 import org.jooq.conf.ParamType;
+import org.jooq.exception.DataAccessException;
 import org.jooq.impl.QOM.UTransient;
 import org.jooq.impl.Tools.BooleanDataKey;
 
@@ -86,17 +87,17 @@ import org.jooq.impl.Tools.BooleanDataKey;
  */
 final class Limit extends AbstractQueryPart implements UTransient {
 
-    private static final Lazy<Param<Integer>> ZERO          = Lazy.of(() -> zero());
-    private static final Lazy<Param<Integer>> ONE           = Lazy.of(() -> one());
-    private static final Lazy<Param<Integer>> MAX           = Lazy.of(() -> DSL.inline(Integer.MAX_VALUE));
+    private static final Param<Integer> ZERO          = zero();
+    private static final Param<Integer> ONE           = one();
+    private static final Param<Integer> MAX           = DSL.inline(Integer.MAX_VALUE);
 
-    Field<? extends Number>                   limit;
-    private Field<? extends Number>           limitOrMax    = MAX.get();
-    Field<? extends Number>                   offset;
-    private Field<? extends Number>           offsetOrZero  = ZERO.get();
-    private Field<? extends Number>           offsetPlusOne = ONE.get();
-    boolean                                   withTies;
-    boolean                                   percent;
+    Field<? extends Number>             limit;
+    private Field<? extends Number>     limitOrMax    = MAX;
+    Field<? extends Number>             offset;
+    private Field<? extends Number>     offsetOrZero  = ZERO;
+    private Field<? extends Number>     offsetPlusOne = ONE;
+    boolean                             withTies;
+    boolean                             percent;
 
     @Override
     public final void accept(Context<?> ctx) {
@@ -165,14 +166,13 @@ final class Limit extends AbstractQueryPart implements UTransient {
 
             case H2: {
 
+                // [#8415] For backwards compatibility reasons, we generate standard
+                //         OFFSET .. FETCH syntax on H2 only when strictly needed
+                if (ctx.family() == H2 && !withTies() && !percent())
+                    acceptDefault(ctx, castMode);
+                else
+                    acceptStandard(ctx, castMode);
 
-
-
-
-
-
-
-                acceptStandard(ctx, castMode);
                 break;
             }
 
@@ -186,21 +186,8 @@ final class Limit extends AbstractQueryPart implements UTransient {
                 break;
             }
 
-            case CLICKHOUSE: {
 
-                // Use standard OFFSET .. FETCH only with WITH TIES to work around
-                // https://github.com/ClickHouse/ClickHouse/issues/61195
-                if (!withTies() && !percent())
-                    acceptDefault(ctx, castMode);
-                else
-                    acceptStandard(ctx, castMode);
-
-                break;
-            }
-
-
-            case DERBY:
-            case TRINO: {
+            case DERBY: {
                 acceptStandard(ctx, castMode);
                 break;
             }
@@ -310,14 +297,6 @@ final class Limit extends AbstractQueryPart implements UTransient {
 
 
 
-            case DUCKDB: {
-
-                // It appears that bind values in OFFSET can be trouble, see
-                // https://github.com/duckdb/duckdb/issues/7212
-                ctx.paramType(INLINED, c -> acceptDefault(c, castMode));
-                break;
-            }
-
             default: {
                 acceptDefault(ctx, castMode);
                 break;
@@ -331,12 +310,12 @@ final class Limit extends AbstractQueryPart implements UTransient {
         if ( !offsetZero())
             ctx.formatSeparator()
                .visit(K_OFFSET)
-               .sql(' ').visit(offsetOrZero(ctx))
+               .sql(' ').visit(offsetOrZero)
                .sql(' ').visit(K_ROWS);
 
-        if (!limitAbsent()) {
+        if (!limitZero()) {
             ctx.formatSeparator()
-               .visit(K_FETCH_NEXT).sql(' ').visit(limit(ctx));
+               .visit(K_FETCH_NEXT).sql(' ').visit(limit);
 
             if (percent)
                 ctx.sql(' ').visit(K_PERCENT);
@@ -350,64 +329,20 @@ final class Limit extends AbstractQueryPart implements UTransient {
     private final void acceptDefault(Context<?> ctx, CastMode castMode) {
         ctx.castMode(NEVER);
 
-        if (!limitAbsent())
+        if (!limitZero())
             ctx.formatSeparator()
                .visit(K_LIMIT)
-               .sql(' ').visit(limit(ctx));
+               .sql(' ').visit(limit);
 
         if (!offsetZero())
             ctx.formatSeparator()
                .visit(K_OFFSET)
-               .sql(' ').visit(offsetOrZero(ctx));
+               .sql(' ').visit(offsetOrZero);
 
         ctx.castMode(castMode);
     }
 
-    private final Field<?> limit(Context<?> ctx) {
-        switch (ctx.family()) {
-            case CLICKHOUSE:
-                if (limit instanceof ScalarSubquery)
-                    return new Cast<>(limit, limit.getDataType().notNull(), true);
-                else
-                    return limit;
-
-
-
-
-
-
-
-
-
-
-            default:
-                return limit;
-        }
-    }
-
-    private final Field<?> offsetOrZero(Context<?> ctx) {
-        switch (ctx.family()) {
-            case CLICKHOUSE:
-                if (offsetOrZero instanceof ScalarSubquery)
-                    return new Cast<>(offsetOrZero, offsetOrZero.getDataType().notNull());
-                else
-                    return offsetOrZero;
-
-
-
-
-
-
-
-
-
-
-            default:
-                return offsetOrZero;
-        }
-    }
-
-    private final void acceptDefaultLimitMandatory(Context<?> ctx, CastMode castMode) {
+    private void acceptDefaultLimitMandatory(Context<?> ctx, CastMode castMode) {
         ctx.castMode(NEVER)
            .formatSeparator()
            .visit(K_LIMIT)
@@ -442,42 +377,27 @@ final class Limit extends AbstractQueryPart implements UTransient {
 
 
     /**
-     * Whether the limit is absent
-     */
-    final boolean limitAbsent() {
-        return limit == null;
-    }
-
-    /**
      * Whether this limit has a limit of zero
      */
     final boolean limitZero() {
-        return !limitAbsent()
-            && Long.valueOf(0L).equals(getLimit());
+        return limit == null;
     }
 
     /**
      * Whether this limit has a limit of one
      */
     final boolean limitOne() {
-        return !limitAbsent()
+        return !limitZero()
             && !withTies()
             && !percent()
             && Long.valueOf(1L).equals(getLimit());
     }
 
     /**
-     * Whether the offset is absent
-     */
-    final boolean offsetAbsent() {
-        return offset == null;
-    }
-
-    /**
      * Whether this limit has an offset of zero
      */
     final boolean offsetZero() {
-        return offsetAbsent();
+        return offset == null;
     }
 
     /**
@@ -530,8 +450,7 @@ final class Limit extends AbstractQueryPart implements UTransient {
             return;
 
         this.offset = offset;
-        this.offsetOrZero = offset == null ? ZERO.get() : offset;
-        this.offsetPlusOne = offset == null ? ONE.get() : iadd(offset, one());
+        this.offsetOrZero = offset == null ? ZERO : offset;
     }
 
     final void setLimit(Number l) {
@@ -544,16 +463,16 @@ final class Limit extends AbstractQueryPart implements UTransient {
             return;
 
         this.limit = l;
-        this.limitOrMax = l == null ? MAX.get() : l;
+        this.limitOrMax = l == null ? MAX : l;
     }
 
     final Long getLimit() {
         Field<?> l = limit != null ? limit : limitOrMax;
 
-        if (l instanceof Param<?> p)
-            return Convert.convert(p.getValue(), long.class);
+        if (l instanceof Param)
+            return Convert.convert(((Param<?>) l).getValue(), long.class);
         else
-            return Convert.convert(MAX.get().getValue(), long.class);
+            return Convert.convert(MAX.getValue(), long.class);
     }
 
     final void setPercent(boolean percent) {

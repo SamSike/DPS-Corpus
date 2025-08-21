@@ -20,7 +20,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 
 import io.nats.client.Connection;
-import io.nats.client.Nats;
 import io.nats.client.Options;
 import io.nats.client.Options.Builder;
 import org.apache.camel.spi.HeaderFilterStrategy;
@@ -84,18 +83,10 @@ public class NatsConfiguration {
     private boolean secure;
     @UriParam(label = "security")
     private SSLContextParameters sslContextParameters;
-    @UriParam(label = "security")
-    String credentialsFilePath;
     @UriParam(label = "advanced")
     private boolean traceConnection;
     @UriParam(label = "advanced")
     private HeaderFilterStrategy headerFilterStrategy = new DefaultHeaderFilterStrategy();
-    @UriParam(label = "common", defaultValue = "false")
-    private boolean jetstreamEnabled = false;
-    @UriParam(label = "common")
-    private String jetstreamName;
-    @UriParam(label = "advanced", defaultValue = "true")
-    private boolean jetstreamAsync = true;
 
     /**
      * URLs to one or more NAT servers. Use comma to separate URLs when specifying multiple servers.
@@ -359,7 +350,7 @@ public class NatsConfiguration {
     }
 
     /**
-     * To use a custom header filter strategy.
+     * Define the header filtering strategy
      */
     public void setHeaderFilterStrategy(HeaderFilterStrategy headerFilterStrategy) {
         this.headerFilterStrategy = headerFilterStrategy;
@@ -374,19 +365,6 @@ public class NatsConfiguration {
 
     public void setSslContextParameters(SSLContextParameters sslContextParameters) {
         this.sslContextParameters = sslContextParameters;
-    }
-
-    /**
-     * If we use useCredentialsFile to true we'll need to set the credentialsFilePath option. It can be loaded by
-     * default from classpath, but you can prefix with classpath:, file:, or http: to load the resource from different
-     * systems.
-     */
-    public String getCredentialsFilePath() {
-        return credentialsFilePath;
-    }
-
-    public void setCredentialsFilePath(String credentialsFilePath) {
-        this.credentialsFilePath = credentialsFilePath;
     }
 
     public Builder createOptions() throws NoSuchAlgorithmException, IllegalArgumentException {
@@ -423,7 +401,7 @@ public class NatsConfiguration {
         return builder;
     }
 
-    protected String splitServers() {
+    private String splitServers() {
         StringBuilder servers = new StringBuilder();
         String prefix = "nats://";
 
@@ -433,17 +411,9 @@ public class NatsConfiguration {
         String[] pieces = srvspec.split(",");
         for (int i = 0; i < pieces.length; i++) {
             if (i < pieces.length - 1) {
-                if (pieces[i].contains("://")) {
-                    servers.append(pieces[i]).append(',');
-                } else {
-                    servers.append(prefix).append(pieces[i]).append(',');
-                }
+                servers.append(prefix + pieces[i] + ",");
             } else {
-                if (pieces[i].contains("://")) {
-                    servers.append(pieces[i]);
-                } else {
-                    servers.append(prefix).append(pieces[i]);
-                }
+                servers.append(prefix + pieces[i]);
             }
         }
         return servers.toString();
@@ -459,48 +429,5 @@ public class NatsConfiguration {
 
     public void setTraceConnection(boolean traceConnection) {
         this.traceConnection = traceConnection;
-    }
-
-    /**
-     * Whether to enable JetStream support for this endpoint.
-     */
-    public boolean isJetstreamEnabled() {
-        return jetstreamEnabled;
-    }
-
-    /**
-     * Sets whether to enable JetStream support for this endpoint.
-     */
-    public void setJetstreamEnabled(boolean jetstreamEnabled) {
-        this.jetstreamEnabled = jetstreamEnabled;
-    }
-
-    /**
-     * The name of the JetStream stream to use. If not specified, a default stream will be used if JetStream is enabled.
-     */
-    public String getJetstreamName() {
-        return jetstreamName;
-    }
-
-    /**
-     * Sets the name of the JetStream stream to use.
-     */
-    public void setJetstreamName(String jetstreamName) {
-        this.jetstreamName = jetstreamName;
-    }
-
-    /**
-     * Whether to operate JetStream requests asynchronously. This can improve performance but requires careful handling
-     * of results.
-     */
-    public boolean isJetstreamAsync() {
-        return jetstreamAsync;
-    }
-
-    /**
-     * Sets whether to operate JetStream requests asynchronously.
-     */
-    public void setJetstreamAsync(boolean jetstreamAsync) {
-        this.jetstreamAsync = jetstreamAsync;
     }
 }

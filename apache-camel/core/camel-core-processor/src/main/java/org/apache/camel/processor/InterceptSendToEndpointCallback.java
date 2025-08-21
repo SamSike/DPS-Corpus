@@ -18,12 +18,11 @@ package org.apache.camel.processor;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
-import org.apache.camel.Predicate;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.Processor;
 import org.apache.camel.spi.EndpointStrategy;
 import org.apache.camel.spi.InterceptSendToEndpoint;
 import org.apache.camel.support.EndpointHelper;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.util.URISupport;
 
 /**
@@ -32,20 +31,18 @@ import org.apache.camel.util.URISupport;
 public class InterceptSendToEndpointCallback implements EndpointStrategy {
 
     private final CamelContext camelContext;
-    private final Predicate onWhen;
     private final Processor before;
     private final Processor after;
     private final String matchURI;
     private final boolean skip;
 
-    public InterceptSendToEndpointCallback(CamelContext camelContext, Processor before, Processor after,
-                                           String matchURI, boolean skip, Predicate onWhen) {
+    public InterceptSendToEndpointCallback(CamelContext camelContext, Processor before, Processor after, String matchURI,
+                                           boolean skip) {
         this.camelContext = camelContext;
         this.before = before;
         this.after = after;
         this.matchURI = matchURI;
         this.skip = skip;
-        this.onWhen = onWhen;
     }
 
     public Endpoint registerEndpoint(String uri, Endpoint endpoint) {
@@ -55,8 +52,8 @@ public class InterceptSendToEndpointCallback implements EndpointStrategy {
         } else if (matchURI == null || matchPattern(uri, matchURI)) {
             // only proxy if the uri is matched decorate endpoint with
             // our proxy should be false by default
-            return PluginHelper.getInterceptEndpointFactory(camelContext)
-                    .createInterceptSendToEndpoint(camelContext, endpoint, skip, onWhen, before, after);
+            return camelContext.adapt(ExtendedCamelContext.class).getInterceptEndpointFactory()
+                    .createInterceptSendToEndpoint(camelContext, endpoint, skip, before, after);
         } else {
             // no proxy so return regular endpoint
             return endpoint;

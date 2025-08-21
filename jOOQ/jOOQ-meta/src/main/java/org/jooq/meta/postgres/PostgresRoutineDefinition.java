@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -43,8 +43,8 @@ import static org.jooq.impl.DSL.count;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.partitionBy;
-import static org.jooq.impl.DSL.substring;
 import static org.jooq.impl.DSL.when;
+import static org.jooq.meta.postgres.information_schema.Tables.COLUMNS;
 import static org.jooq.meta.postgres.information_schema.Tables.PARAMETERS;
 import static org.jooq.meta.postgres.information_schema.Tables.ROUTINES;
 
@@ -83,7 +83,7 @@ public class PostgresRoutineDefinition extends AbstractRoutineDefinition {
         );
 
         String dataType = record.get("data_type", String.class);
-        if (dataType != null && !asList("void").contains(dataType)) {
+        if (dataType != null && !asList("void", "record").contains(dataType)) {
             SchemaDefinition typeSchema = null;
 
             String schemaName = record.get(ROUTINES.TYPE_UDT_SCHEMA);
@@ -124,31 +124,24 @@ public class PostgresRoutineDefinition extends AbstractRoutineDefinition {
 
     @Override
     protected void init0() throws SQLException {
-        Parameters p = PARAMETERS.as("p");
+        Parameters p = PARAMETERS;
         Field<Integer> count = count()
             .filterWhere(p.PARAMETER_NAME.ne(inline("")))
             .over(partitionBy(p.SPECIFIC_NAME, p.PARAMETER_NAME));
         Field<Integer> c = count.as("c");
-        Field<String> parameterMode = p.PARAMETER_MODE;
-
-
-
-
 
         for (Record record : create().select(
                 p.PARAMETER_NAME,
                 when(p.DATA_TYPE.eq(inline("USER-DEFINED")).and(p.UDT_NAME.eq(inline("geometry"))), inline("geometry"))
-                    .when(p.DATA_TYPE.eq(inline("ARRAY")), substring(p.UDT_NAME, inline(2)).concat(inline(" ARRAY")))
                     .else_(p.DATA_TYPE)
                     .as(p.DATA_TYPE),
                 p.CHARACTER_MAXIMUM_LENGTH,
                 pNumericPrecision(p).as(p.NUMERIC_PRECISION),
                 p.NUMERIC_SCALE,
                 p.UDT_SCHEMA,
-                when(p.DATA_TYPE.eq(inline("ARRAY")), substring(p.UDT_NAME, inline(2)))
-                    .else_(p.UDT_NAME).as(p.UDT_NAME),
+                p.UDT_NAME,
                 p.ORDINAL_POSITION,
-                parameterMode.as(p.PARAMETER_MODE),
+                p.PARAMETER_MODE,
                 ((PostgresDatabase) getDatabase()).is94()
                     ? p.PARAMETER_DEFAULT
                     : inline((String) null).as(p.PARAMETER_DEFAULT),

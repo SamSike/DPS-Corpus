@@ -74,7 +74,7 @@ public class TransformProcessor extends AsyncProcessorSupport implements Traceab
                 }
             }
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             exchange.setException(e);
         }
 
@@ -116,4 +116,13 @@ public class TransformProcessor extends AsyncProcessorSupport implements Traceab
         return expression;
     }
 
+    @Override
+    protected void doStart() throws Exception {
+        // noop
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        // noop
+    }
 }

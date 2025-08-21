@@ -17,6 +17,8 @@
 package org.apache.camel.dataformat.csv;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.camel.Message;
 import org.apache.camel.component.mock.MockEndpoint;
@@ -49,7 +51,7 @@ public class CsvDataFormatCustomRecordConverterTest extends CamelSpringTestSuppo
     }
 
     private String getData() {
-        return String.join(";", "A1", "B1", "C1");
+        return Stream.of("A1", "B1", "C1").collect(Collectors.joining(";"));
     }
 
     @Override

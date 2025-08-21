@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 
 public class AggregateBiFunctionTest extends ContextTestSupport {
 
-    private final BiFunction<Exchange, Exchange, Object> myAgg
+    private BiFunction<Exchange, Exchange, Object> myAgg
             = (Exchange e1, Exchange e2) -> e1.getMessage().getBody(String.class) + "+" + e2.getMessage().getBody(String.class);
 
     @Test
@@ -40,10 +40,10 @@ public class AggregateBiFunctionTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 context.getRegistry().bind("myAgg", myAgg);
 
                 from("direct:start")

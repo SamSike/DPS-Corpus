@@ -91,7 +91,7 @@ public final class SimpleTokenizer {
         KNOWN_TOKENS[44] = new SimpleTokenType(TokenType.logicalOperator, "&&");
         KNOWN_TOKENS[45] = new SimpleTokenType(TokenType.logicalOperator, "||");
 
-        //binary operator
+        //binary operator 
         // it is added as the last item because unary -- has the priority
         // if unary not found it is highly possible - operator is run into.
         KNOWN_TOKENS[46] = new SimpleTokenType(TokenType.minusValue, "-");
@@ -147,29 +147,72 @@ public final class SimpleTokenizer {
      * @param  expression  the input expression
      * @param  index       the current index
      * @param  allowEscape whether to allow escapes
-     * @return             the created token will always return a token
+     * @return             the created token, will always return a token
      */
     public static SimpleToken nextToken(String expression, int index, boolean allowEscape) {
         return doNextToken(expression, index, allowEscape);
     }
 
     private static SimpleToken doNextToken(String expression, int index, boolean allowEscape, TokenType... filters) {
+
         boolean numericAllowed = acceptType(TokenType.numericValue, filters);
         if (numericAllowed) {
             // is it a numeric value
-            StringBuilder sb = new StringBuilder(256);
-            index = repositionIndex(expression, index, sb);
-            if (!sb.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            boolean digit = true;
+            while (digit && index < expression.length()) {
+                digit = Character.isDigit(expression.charAt(index));
+                if (digit) {
+                    char ch = expression.charAt(index);
+                    sb.append(ch);
+                    index++;
+                    continue;
+                }
+                // is it a dot or comma as part of a floating point number
+                boolean decimalSeparator = '.' == expression.charAt(index) || ',' == expression.charAt(index);
+                if (decimalSeparator && sb.length() > 0) {
+                    char ch = expression.charAt(index);
+                    sb.append(ch);
+                    index++;
+                    // assume its still a digit
+                    digit = true;
+                    continue;
+                }
+            }
+            if (sb.length() > 0) {
                 return new SimpleToken(new SimpleTokenType(TokenType.numericValue, sb.toString()), index);
             }
         }
 
         boolean escapeAllowed = allowEscape && acceptType(TokenType.escape, filters);
         if (escapeAllowed) {
+            StringBuilder sb = new StringBuilder();
             char ch = expression.charAt(index);
             boolean escaped = '\\' == ch;
             if (escaped && index < expression.length() - 1) {
-                return fromEscaped(expression, index, ch);
+                // grab next character to escape
+                char next = expression.charAt(++index);
+                // special for new line, tabs and carriage return
+                boolean special = false;
+                if ('n' == next) {
+                    sb.append("\n");
+                    special = true;
+                } else if ('t' == next) {
+                    sb.append("\t");
+                    special = true;
+                } else if ('r' == next) {
+                    sb.append("\r");
+                    special = true;
+                } else if ('}' == next) {
+                    sb.append("}");
+                    special = true;
+                } else {
+                    // not special just a regular character
+                    sb.append(ch);
+                }
+
+                // force 2 as length if special
+                return new SimpleToken(new SimpleTokenType(TokenType.character, sb.toString()), index, special ? 2 : 1);
             }
         }
 
@@ -185,59 +228,8 @@ public final class SimpleTokenizer {
 
         // fallback and create a character token
         char ch = expression.charAt(index);
-        return new SimpleToken(new SimpleTokenType(TokenType.character, String.valueOf(ch)), index);
-    }
-
-    private static int repositionIndex(String expression, int index, StringBuilder sb) {
-        boolean digit = true;
-        while (digit && index < expression.length()) {
-            digit = Character.isDigit(expression.charAt(index));
-            if (digit) {
-                char ch = expression.charAt(index);
-                sb.append(ch);
-                index++;
-                continue;
-            }
-            // is it a dot or comma as part of a floating point number
-            boolean decimalSeparator = '.' == expression.charAt(index) || ',' == expression.charAt(index);
-            if (decimalSeparator && !sb.isEmpty()) {
-                char ch = expression.charAt(index);
-                sb.append(ch);
-                index++;
-                // assume its still a digit
-                digit = true;
-                continue;
-            }
-        }
-        return index;
-    }
-
-    private static SimpleToken fromEscaped(String expression, int index, char ch) {
-        StringBuilder sb = new StringBuilder(256);
-
-        // grab next character to escape
-        char next = expression.charAt(++index);
-        // special for new line, tabs and carriage return
-        boolean special = false;
-        if ('n' == next) {
-            sb.append("\n");
-            special = true;
-        } else if ('t' == next) {
-            sb.append("\t");
-            special = true;
-        } else if ('r' == next) {
-            sb.append("\r");
-            special = true;
-        } else if ('}' == next) {
-            sb.append("}");
-            special = true;
-        } else {
-            // not special just a regular character
-            sb.append(ch);
-        }
-
-        // force 2 as length if special
-        return new SimpleToken(new SimpleTokenType(TokenType.character, sb.toString()), index, special ? 2 : 1);
+        SimpleToken token = new SimpleToken(new SimpleTokenType(TokenType.character, "" + ch), index);
+        return token;
     }
 
     private static boolean acceptType(TokenType type, TokenType... filters) {
@@ -254,41 +246,23 @@ public final class SimpleTokenizer {
 
     private static boolean acceptToken(SimpleTokenType token, String text, String expression, int index) {
         if (token.isUnary() && text.startsWith(token.getValue())) {
-            return evalUnary(token, text, expression, index);
-        }
-        if (token.isBinary()) {
-            return evalBinary(token, text, expression, index);
+            int endLen = 1;
+
+            // special check for unary as the previous must be a function end, and the next a whitespace
+            // to ensure unary operators is only applied on functions as intended
+            int len = token.getValue().length();
+
+            String previous = "";
+            if (index - endLen >= 0) {
+                previous = expression.substring(index - endLen, index);
+            }
+            String after = text.substring(len);
+            boolean whiteSpace = ObjectHelper.isEmpty(after) || after.startsWith(" ");
+            boolean functionEnd = previous.equals("}");
+            return functionEnd && whiteSpace;
         }
 
         return text.startsWith(token.getValue());
-    }
-
-    private static boolean evalBinary(SimpleTokenType token, String text, String expression, int index) {
-        int len = token.getValue().length();
-        // The binary operator must be used in the format of "exp1 op exp2"
-        if (index < 2 || len >= text.length() - 1) {
-            return false;
-        }
-        String previousOne = expression.substring(index - 1, index);
-        String afterOne = text.substring(len, len + 1);
-        return " ".equals(previousOne) && " ".equals(afterOne) && text.substring(0, len).equals(token.getValue());
-    }
-
-    private static boolean evalUnary(SimpleTokenType token, String text, String expression, int index) {
-        int endLen = 1;
-
-        // special check for unary as the previous must be a function end, and the next a whitespace
-        // to ensure unary operators is only applied on functions as intended
-        int len = token.getValue().length();
-
-        String previous = "";
-        if (index - endLen >= 0) {
-            previous = expression.substring(index - endLen, index);
-        }
-        String after = text.substring(len);
-        boolean whiteSpace = ObjectHelper.isEmpty(after) || after.startsWith(" ");
-        boolean functionEnd = previous.equals("}");
-        return functionEnd && whiteSpace;
     }
 
 }

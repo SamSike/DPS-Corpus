@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,8 +37,10 @@
  */
 package org.jooq;
 
+import org.jetbrains.annotations.*;
+
+
 // ...
-import static org.jooq.SQLDialect.DUCKDB;
 import static org.jooq.SQLDialect.POSTGRES;
 import static org.jooq.SQLDialect.SQLITE;
 import static org.jooq.SQLDialect.YUGABYTEDB;
@@ -47,12 +49,10 @@ import java.util.Collection;
 
 import org.jooq.impl.DSL;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * This type is used for the {@link Insert}'s DSL API.
  * <p>
- * Example: <pre><code>
+ * Example: <code><pre>
  * DSLContext create = DSL.using(configuration);
  *
  * create.insertInto(table, field1, field2)
@@ -63,7 +63,7 @@ import org.jetbrains.annotations.NotNull;
  *       .set(field2, value2)
  *       .where(field3.eq(value5))
  *       .execute();
- * </code></pre>
+ * </pre></code>
  * <p>
  * <h3>Referencing <code>XYZ*Step</code> types directly from client code</h3>
  * <p>
@@ -89,41 +89,41 @@ public interface InsertOnConflictWhereIndexPredicateStep<R extends Record> exten
 
     /**
      * Add a <code>WHERE</code> clause to supply an index predicate to the
-     * <code>INSERT</code> statement's <code>ON CONFLICT …</code> clause.
+     * <code>INSERT</code> statement's <code>ON CONFLICT ...</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     InsertOnConflictDoUpdateStep<R> where(Condition condition);
 
     /**
      * Add a <code>WHERE</code> clause to supply an index predicate to the
-     * <code>INSERT</code> statement's <code>ON CONFLICT …</code> clause,
+     * <code>INSERT</code> statement's <code>ON CONFLICT ...</code> clause,
      * connecting them with each other using {@link Operator#AND}.
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     InsertOnConflictDoUpdateStep<R> where(Condition... conditions);
 
     /**
      * Add a <code>WHERE</code> clause to supply an index predicate to the
-     * <code>INSERT</code> statement's <code>ON CONFLICT …</code> clause,
+     * <code>INSERT</code> statement's <code>ON CONFLICT ...</code> clause,
      * connecting them with each other using {@link Operator#AND}.
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     InsertOnConflictDoUpdateStep<R> where(Collection<? extends Condition> conditions);
 
     /**
      * Add a <code>WHERE</code> clause to supply an index predicate to the
-     * <code>INSERT</code> statement's <code>ON CONFLICT …</code> clause.
+     * <code>INSERT</code> statement's <code>ON CONFLICT ...</code> clause.
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     InsertOnConflictDoUpdateStep<R> where(Field<Boolean> field);
 
     /**
      * Add a <code>WHERE</code> clause to supply an index predicate to the
-     * <code>INSERT</code> statement's <code>ON CONFLICT …</code> clause.
+     * <code>INSERT</code> statement's <code>ON CONFLICT ...</code> clause.
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -134,13 +134,13 @@ public interface InsertOnConflictWhereIndexPredicateStep<R extends Record> exten
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     @PlainSQL
     InsertOnConflictDoUpdateStep<R> where(SQL sql);
 
     /**
      * Add a <code>WHERE</code> clause to supply an index predicate to the
-     * <code>INSERT</code> statement's <code>ON CONFLICT …</code> clause.
+     * <code>INSERT</code> statement's <code>ON CONFLICT ...</code> clause.
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -151,13 +151,13 @@ public interface InsertOnConflictWhereIndexPredicateStep<R extends Record> exten
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     @PlainSQL
     InsertOnConflictDoUpdateStep<R> where(String sql);
 
     /**
      * Add a <code>WHERE</code> clause to supply an index predicate to the
-     * <code>INSERT</code> statement's <code>ON CONFLICT …</code> clause.
+     * <code>INSERT</code> statement's <code>ON CONFLICT ...</code> clause.
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -169,13 +169,13 @@ public interface InsertOnConflictWhereIndexPredicateStep<R extends Record> exten
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     @PlainSQL
     InsertOnConflictDoUpdateStep<R> where(String sql, Object... bindings);
 
     /**
      * Add a <code>WHERE</code> clause to supply an index predicate to the
-     * <code>INSERT</code> statement's <code>ON CONFLICT …</code> clause.
+     * <code>INSERT</code> statement's <code>ON CONFLICT ...</code> clause.
      * <p>
      * <b>NOTE</b>: When inserting plain SQL into jOOQ objects, you must
      * guarantee syntax integrity. You may also create the possibility of
@@ -187,7 +187,7 @@ public interface InsertOnConflictWhereIndexPredicateStep<R extends Record> exten
      * @see SQL
      */
     @NotNull @CheckReturnValue
-    @Support({ DUCKDB, POSTGRES, SQLITE, YUGABYTEDB })
+    @Support({ POSTGRES, SQLITE, YUGABYTEDB })
     @PlainSQL
     InsertOnConflictDoUpdateStep<R> where(String sql, QueryPart... parts);
 }

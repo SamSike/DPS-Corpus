@@ -20,16 +20,10 @@ package org.apache.camel.component.jms;
 import jakarta.jms.ConnectionFactory;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.test.infra.artemis.common.ConnectionFactoryHelper;
 import org.apache.camel.test.infra.artemis.services.ArtemisService;
 import org.apache.camel.test.infra.artemis.services.ArtemisServiceFactory;
-import org.apache.camel.test.infra.core.annotations.ContextFixture;
-import org.apache.camel.test.infra.core.annotations.RouteFixture;
-import org.apache.camel.test.infra.core.api.CamelTestSupportHelper;
-import org.apache.camel.test.infra.core.api.ConfigurableContext;
-import org.apache.camel.test.infra.core.api.ConfigurableRoute;
-import org.junit.jupiter.api.Order;
+import org.apache.camel.test.junit5.CamelTestSupport;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -37,11 +31,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import static org.apache.camel.component.jms.JmsComponent.jmsComponentAutoAcknowledge;
 
 @Tags({ @Tag("jms") })
-public abstract class AbstractJMSTest implements CamelTestSupportHelper, ConfigurableRoute, ConfigurableContext {
-
-    @Order(1)
+public abstract class AbstractJMSTest extends CamelTestSupport {
     @RegisterExtension
-    public static ArtemisService service = ArtemisServiceFactory.createSingletonVMService();
+    public ArtemisService service = ArtemisServiceFactory.createVMService();
 
     public static String queueNameForClass(String desiredName, Class<?> requestingClass) {
         return desiredName + "." + requestingClass.getSimpleName();
@@ -58,30 +50,18 @@ public abstract class AbstractJMSTest implements CamelTestSupportHelper, Configu
         return buildComponent(connectionFactory);
     }
 
-    protected JmsComponent setupComponent(
-            CamelContext camelContext, ArtemisService service, String componentName) {
+    protected JmsComponent setupComponent(CamelContext camelContext, ArtemisService service, String componentName) {
         ConnectionFactory connectionFactory = ConnectionFactoryHelper.createConnectionFactory(service);
 
         return setupComponent(camelContext, connectionFactory, componentName);
     }
 
-    protected abstract RouteBuilder createRouteBuilder();
-
-    @ContextFixture
     @Override
-    public synchronized void configureContext(CamelContext context) throws Exception {
-        JmsComponent component = setupComponent(context, service, getComponentName());
-        context.addComponent(getComponentName(), component);
+    protected CamelContext createCamelContext() throws Exception {
+        CamelContext camelContext = super.createCamelContext();
+
+        JmsComponent component = setupComponent(camelContext, service, getComponentName());
+        camelContext.addComponent(getComponentName(), component);
+        return camelContext;
     }
-
-    @RouteFixture
-    @Override
-    public void createRouteBuilder(CamelContext context) throws Exception {
-        final RouteBuilder routeBuilder = createRouteBuilder();
-
-        if (routeBuilder != null) {
-            context.addRoutes(routeBuilder);
-        }
-    }
-
 }

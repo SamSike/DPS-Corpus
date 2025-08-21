@@ -29,7 +29,7 @@ public class ModelRouteFilterPatternExcludeTest extends ContextTestSupport {
     protected CamelContext createCamelContext() throws Exception {
         CamelContext context = super.createCamelContext();
         // filter to exclude bar
-        context.getCamelContextExtension().getContextPlugin(Model.class).setRouteFilterPattern(null, "bar*");
+        context.getExtension(Model.class).setRouteFilterPattern(null, "bar*");
         return context;
     }
 
@@ -47,10 +47,10 @@ public class ModelRouteFilterPatternExcludeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:foo").routeId("foo").to("mock:foo");
 
                 from("direct:bar").routeId("bar").to("mock:bar");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,8 +29,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.jsp.JspException;
 import jakarta.servlet.jsp.PageContext;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.support.RequestDataValueProcessor;
@@ -57,13 +57,13 @@ import org.springframework.web.util.UriUtils;
  * string.
  *
  * <p>Use of the spring:param tag for URI template variables is strongly recommended
- * over direct EL substitution as the values are URL encoded. Failure to properly
+ * over direct EL substitution as the values are URL encoded.  Failure to properly
  * encode URL can leave an application vulnerable to XSS and other injection attacks.
  *
  * <p>URLs can be HTML/XML escaped by setting the {@link #setHtmlEscape(boolean)
- * 'htmlEscape'} attribute to 'true'. Detects an HTML escaping setting, either on
+ * 'htmlEscape'} attribute to 'true'.  Detects an HTML escaping setting, either on
  * this tag instance, the page level, or the {@code web.xml} level. The default
- * is 'false'. When setting the URL value into a variable, escaping is not recommended.
+ * is 'false'.  When setting the URL value into a variable, escaping is not recommended.
  *
  * <p>Example usage:
  * <pre class="code">&lt;spring:url value="/url/path/{variableName}"&gt;
@@ -126,7 +126,7 @@ import org.springframework.web.util.UriUtils;
  * <td>false</td>
  * <td>true</td>
  * <td>Set JavaScript escaping for this tag, as a boolean value.
- * Default is {@code false}.</td>
+ * Default is false.</td>
  * </tr>
  * </tbody>
  * </table>
@@ -149,13 +149,17 @@ public class UrlTag extends HtmlEscapingAwareTag implements ParamAware {
 
 	private Set<String> templateParams = Collections.emptySet();
 
-	private @Nullable UrlType type;
+	@Nullable
+	private UrlType type;
 
-	private @Nullable String value;
+	@Nullable
+	private String value;
 
-	private @Nullable String context;
+	@Nullable
+	private String context;
 
-	private @Nullable String var;
+	@Nullable
+	private String var;
 
 	private int scope = PageContext.PAGE_SCOPE;
 
@@ -236,8 +240,8 @@ public class UrlTag extends HtmlEscapingAwareTag implements ParamAware {
 
 		RequestDataValueProcessor processor = getRequestContext().getRequestDataValueProcessor();
 		ServletRequest request = this.pageContext.getRequest();
-		if ((processor != null) && (request instanceof HttpServletRequest httpServletRequest)) {
-			url = processor.processUrl(httpServletRequest, url);
+		if ((processor != null) && (request instanceof HttpServletRequest)) {
+			url = processor.processUrl((HttpServletRequest) request, url);
 		}
 
 		if (this.var == null) {
@@ -309,7 +313,7 @@ public class UrlTag extends HtmlEscapingAwareTag implements ParamAware {
 	 * @param usedParams set of parameter names that have been applied as
 	 * template params
 	 * @param includeQueryStringDelimiter true if the query string should start
-	 * with a '?' instead of '&amp;'
+	 * with a '?' instead of '&'
 	 * @return the query string
 	 */
 	protected String createQueryString(List<Param> params, Set<String> usedParams, boolean includeQueryStringDelimiter)
@@ -319,7 +323,7 @@ public class UrlTag extends HtmlEscapingAwareTag implements ParamAware {
 		StringBuilder qs = new StringBuilder();
 		for (Param param : params) {
 			if (!usedParams.contains(param.getName()) && StringUtils.hasLength(param.getName())) {
-				if (includeQueryStringDelimiter && qs.isEmpty()) {
+				if (includeQueryStringDelimiter && qs.length() == 0) {
 					qs.append('?');
 				}
 				else {

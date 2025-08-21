@@ -19,19 +19,17 @@ package org.apache.camel.component.file;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.junit.jupiter.api.parallel.Isolated;
 
-@Isolated("Flaky and may have conflicts if running along with its parent class")
 public class FileConsumerDeleteAndMoveFailedTest extends FileConsumerDeleteAndFailureTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("?delete=true&moveFailed=error&initialDelay=0&delay=10"))
                         .setBody(simple("${body} IS processed!")).process(new Processor() {
-                            public void process(Exchange exchange) {
+                            public void process(Exchange exchange) throws Exception {
                                 String body = exchange.getIn().getBody(String.class);
                                 if (body != null && body.startsWith("Kaboom")) {
                                     throw new IllegalArgumentException("Forced");

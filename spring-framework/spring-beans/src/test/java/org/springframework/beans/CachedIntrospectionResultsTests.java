@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,10 +32,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Chris Beams
  * @author Arjen Poutsma
  */
-class CachedIntrospectionResultsTests {
+public class CachedIntrospectionResultsTests {
 
 	@Test
-	void acceptAndClearClassLoader() throws Exception {
+	public void acceptAndClearClassLoader() throws Exception {
 		BeanWrapper bw = new BeanWrapperImpl(TestBean.class);
 		assertThat(bw.isWritableProperty("name")).isTrue();
 		assertThat(bw.isWritableProperty("age")).isTrue();
@@ -56,7 +56,7 @@ class CachedIntrospectionResultsTests {
 	}
 
 	@Test
-	void clearClassLoaderForSystemClassLoader() {
+	public void clearClassLoaderForSystemClassLoader() throws Exception {
 		BeanUtils.getPropertyDescriptors(ArrayList.class);
 		assertThat(CachedIntrospectionResults.strongClassCache.containsKey(ArrayList.class)).isTrue();
 		CachedIntrospectionResults.clearClassLoader(ArrayList.class.getClassLoader());
@@ -64,7 +64,7 @@ class CachedIntrospectionResultsTests {
 	}
 
 	@Test
-	void shouldUseExtendedBeanInfoWhenApplicable() throws NoSuchMethodException, SecurityException {
+	public void shouldUseExtendedBeanInfoWhenApplicable() throws NoSuchMethodException, SecurityException {
 		// given a class with a non-void returning setter method
 		@SuppressWarnings("unused")
 		class C {

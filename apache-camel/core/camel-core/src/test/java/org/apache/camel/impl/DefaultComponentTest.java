@@ -31,10 +31,7 @@ import org.apache.camel.spi.Registry;
 import org.apache.camel.support.DefaultComponent;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit test for helper methods on the DefaultComponent.
@@ -48,7 +45,7 @@ public class DefaultComponentTest extends ContextTestSupport {
         }
 
         @Override
-        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) {
+        protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
             return null;
         }
     }
@@ -122,15 +119,14 @@ public class DefaultComponentTest extends ContextTestSupport {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("number", "#non-numeric");
         MyComponent my = new MyComponent(this.context);
-
-        TypeConversionException ex = assertThrows(TypeConversionException.class,
-                () -> my.resolveAndRemoveReferenceParameter(parameters, "number", Integer.class),
-                "Should have thrown an exception");
-
-        assertEquals(
-                "Error during type conversion from type: java.lang.String " + "to the required type: java.lang.Integer "
-                     + "with value abc due to java.lang.NumberFormatException: For input string: \"abc\"",
-                ex.getMessage());
+        try {
+            my.resolveAndRemoveReferenceParameter(parameters, "number", Integer.class);
+        } catch (TypeConversionException ex) {
+            assertEquals(
+                    "Error during type conversion from type: java.lang.String " + "to the required type: java.lang.Integer "
+                         + "with value abc due to java.lang.NumberFormatException: For input string: \"abc\"",
+                    ex.getMessage());
+        }
     }
 
     @Test
@@ -138,12 +134,12 @@ public class DefaultComponentTest extends ContextTestSupport {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("date", "#somewhen");
         MyComponent my = new MyComponent(this.context);
-
-        NoSuchBeanException e = assertThrows(NoSuchBeanException.class,
-                () -> my.resolveAndRemoveReferenceParameter(parameters, "date", Date.class),
-                "returned without finding object in registry");
-
-        assertEquals("No bean could be found in the registry for: somewhen of type: java.util.Date", e.getMessage());
+        try {
+            my.resolveAndRemoveReferenceParameter(parameters, "date", Date.class);
+            fail("returned without finding object in registry");
+        } catch (NoSuchBeanException e) {
+            assertEquals("No bean could be found in the registry for: somewhen of type: java.util.Date", e.getMessage());
+        }
     }
 
     @Test
@@ -230,12 +226,12 @@ public class DefaultComponentTest extends ContextTestSupport {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("dates", "#bean1,#bean3");
         MyComponent my = new MyComponent(this.context);
-
-        NoSuchBeanException e = assertThrows(NoSuchBeanException.class,
-                () -> my.resolveAndRemoveReferenceListParameter(parameters, "dates", Date.class),
-                "returned without finding object in registry");
-
-        assertEquals("No bean could be found in the registry for: bean3 of type: java.util.Date", e.getMessage());
+        try {
+            my.resolveAndRemoveReferenceListParameter(parameters, "dates", Date.class);
+            fail("returned without finding object in registry");
+        } catch (NoSuchBeanException e) {
+            assertEquals("No bean could be found in the registry for: bean3 of type: java.util.Date", e.getMessage());
+        }
     }
 
     @Test
@@ -261,20 +257,21 @@ public class DefaultComponentTest extends ContextTestSupport {
     }
 
     @Test
-    public void testContextShouldBeSet() {
+    public void testContextShouldBeSet() throws Exception {
         MyComponent my = new MyComponent(null);
-
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, my::start,
-                "Should have thrown a IllegalArgumentException");
-
-        assertEquals("camelContext must be specified", e.getMessage());
+        try {
+            my.start();
+            fail("Should have thrown a IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertEquals("camelContext must be specified", e.getMessage());
+        }
     }
 
     @Override
-    protected Registry createCamelRegistry() throws Exception {
+    protected Registry createRegistry() throws Exception {
         Date bean1 = new Date(10);
         Date bean2 = new Date(11);
-        Registry registry = super.createCamelRegistry();
+        Registry registry = super.createRegistry();
         registry.bind("beginning", new Date(0));
         registry.bind("bean1", bean1);
         registry.bind("bean2", bean2);
@@ -283,4 +280,5 @@ public class DefaultComponentTest extends ContextTestSupport {
         registry.bind("non-numeric", "abc");
         return registry;
     }
+
 }

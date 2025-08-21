@@ -46,6 +46,11 @@ import org.slf4j.LoggerFactory;
  * <li>Abort - The current exchange will be set with a {@link RejectedExecutionException} exception, and marked to stop
  * continue routing. The {@link org.apache.camel.spi.UnitOfWork} will be regarded as <b>failed</b>, due the
  * exception.</li>
+ * <li>Discard - The current exchange will be marked to stop continue routing (notice no exception is set). The
+ * {@link org.apache.camel.spi.UnitOfWork} will be regarded as <b>successful</b>, due no exception being set.</li>
+ * <li>DiscardOldest - The oldest exchange will be marked to stop continue routing (notice no exception is set). The
+ * {@link org.apache.camel.spi.UnitOfWork} will be regarded as <b>successful</b>, due no exception being set. And the
+ * current exchange will be added to the task queue.</li>
  * <li>CallerRuns - The current exchange will be processed by the current thread. Which mean the current thread will not
  * be free to process a new exchange, as its processing the current exchange.</li>
  * </ul>
@@ -59,7 +64,7 @@ public class ThreadsProcessor extends AsyncProcessorSupport implements IdAware, 
     private final CamelContext camelContext;
     private final ExecutorService executorService;
     private final ThreadPoolRejectedPolicy rejectedPolicy;
-    private final boolean shutdownExecutorService;
+    private volatile boolean shutdownExecutorService;
     private final AtomicBoolean shutdown = new AtomicBoolean(true);
 
     private final class ProcessCall implements Runnable, Rejectable {
@@ -132,21 +137,18 @@ public class ThreadsProcessor extends AsyncProcessorSupport implements IdAware, 
             executorService.submit(call);
             // tell Camel routing engine we continue routing asynchronous
             return false;
-        } catch (Exception e) {
-            return handleException(exchange, callback, e);
-        }
-    }
-
-    private boolean handleException(Exchange exchange, AsyncCallback callback, Exception e) {
-        if (executorService instanceof ThreadPoolExecutor tpe) {
-            // process the call in synchronous mode
-            ProcessCall call = new ProcessCall(exchange, callback, true);
-            rejectedPolicy.asRejectedExecutionHandler().rejectedExecution(call, tpe);
-            return true;
-        } else {
-            exchange.setException(e);
-            callback.done(true);
-            return true;
+        } catch (Throwable e) {
+            if (executorService instanceof ThreadPoolExecutor) {
+                ThreadPoolExecutor tpe = (ThreadPoolExecutor) executorService;
+                // process the call in synchronous mode
+                ProcessCall call = new ProcessCall(exchange, callback, true);
+                rejectedPolicy.asRejectedExecutionHandler().rejectedExecution(call, tpe);
+                return true;
+            } else {
+                exchange.setException(e);
+                callback.done(true);
+                return true;
+            }
         }
     }
 

@@ -21,10 +21,10 @@ import org.apache.camel.builder.RouteBuilder;
 public class FileChangedReadLockTimeoutTest extends FileChangedReadLockTest {
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from(fileUri("in?initialDelay=0&delay=10&readLock=changed&readLockCheckInterval=100&readLockTimeout=2000"))
                         .to(fileUri("out"),
                                 "mock:result");

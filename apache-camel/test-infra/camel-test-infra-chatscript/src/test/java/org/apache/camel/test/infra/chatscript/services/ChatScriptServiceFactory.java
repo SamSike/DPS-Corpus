@@ -30,15 +30,8 @@ public final class ChatScriptServiceFactory {
 
     public static ChatScriptService createService() {
         return builder()
-                .addLocalMapping(ChatScriptLocalContainerTestService::new)
-                .addRemoteMapping(ChatScriptRemoteTestService::new)
+                .addLocalMapping(ChatScriptLocalContainerService::new)
+                .addRemoteMapping(ChatScriptRemoteService::new)
                 .build();
-    }
-
-    public static class ChatScriptLocalContainerTestService extends ChatScriptLocalContainerInfraService
-            implements ChatScriptService {
-    }
-
-    public static class ChatScriptRemoteTestService extends ChatScriptRemoteInfraService implements ChatScriptService {
     }
 }

@@ -20,7 +20,8 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "Strategy", propOrder = {
-
+    "name",
+    "matchers"
 })
 @SuppressWarnings({
     "all"
@@ -28,12 +29,10 @@ import org.jooq.util.jaxb.tools.XMLBuilder;
 public class Strategy implements Serializable, XMLAppendable
 {
 
-    private final static long serialVersionUID = 32001L;
+    private final static long serialVersionUID = 31700L;
     @XmlElement(defaultValue = "org.jooq.codegen.DefaultGeneratorStrategy")
     @XmlJavaTypeAdapter(StringAdapter.class)
     protected String name = "org.jooq.codegen.DefaultGeneratorStrategy";
-    @XmlJavaTypeAdapter(StringAdapter.class)
-    protected String java;
     protected Matchers matchers;
 
     /**
@@ -50,22 +49,6 @@ public class Strategy implements Serializable, XMLAppendable
      */
     public void setName(String value) {
         this.name = value;
-    }
-
-    /**
-     * A self-contained, inline implementation of {@link org.jooq.codegen.GeneratorStrategy} that will be compiled and class-loaded on the fly by the code generator.
-     * 
-     */
-    public String getJava() {
-        return java;
-    }
-
-    /**
-     * A self-contained, inline implementation of {@link org.jooq.codegen.GeneratorStrategy} that will be compiled and class-loaded on the fly by the code generator.
-     * 
-     */
-    public void setJava(String value) {
-        this.java = value;
     }
 
     /**
@@ -94,15 +77,6 @@ public class Strategy implements Serializable, XMLAppendable
     }
 
     /**
-     * A self-contained, inline implementation of {@link org.jooq.codegen.GeneratorStrategy} that will be compiled and class-loaded on the fly by the code generator.
-     * 
-     */
-    public Strategy withJava(String value) {
-        setJava(value);
-        return this;
-    }
-
-    /**
      * The matcher strategy configuration used when applying an XML-based strategy. This cannot be combined with a named strategy configuration.
      * 
      */
@@ -114,7 +88,6 @@ public class Strategy implements Serializable, XMLAppendable
     @Override
     public final void appendTo(XMLBuilder builder) {
         builder.append("name", name);
-        builder.append("java", java);
         builder.append("matchers", matchers);
     }
 
@@ -146,15 +119,6 @@ public class Strategy implements Serializable, XMLAppendable
                 return false;
             }
         }
-        if (java == null) {
-            if (other.java!= null) {
-                return false;
-            }
-        } else {
-            if (!java.equals(other.java)) {
-                return false;
-            }
-        }
         if (matchers == null) {
             if (other.matchers!= null) {
                 return false;
@@ -172,7 +136,6 @@ public class Strategy implements Serializable, XMLAppendable
         final int prime = 31;
         int result = 1;
         result = ((prime*result)+((name == null)? 0 :name.hashCode()));
-        result = ((prime*result)+((java == null)? 0 :java.hashCode()));
         result = ((prime*result)+((matchers == null)? 0 :matchers.hashCode()));
         return result;
     }

@@ -23,6 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.camel.builder.RouteBuilder;
@@ -44,7 +45,7 @@ public final class ZooKeeperClusteredRoutePolicyFactoryIT {
     static ZooKeeperService service = ZooKeeperServiceFactory.createService();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ZooKeeperClusteredRoutePolicyFactoryIT.class);
-    private static final List<String> CLIENTS = IntStream.range(0, 3).mapToObj(Integer::toString).toList();
+    private static final List<String> CLIENTS = IntStream.range(0, 3).mapToObj(Integer::toString).collect(Collectors.toList());
     private static final List<String> RESULTS = new ArrayList<>();
     private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(CLIENTS.size() * 2);
     private static final CountDownLatch LATCH = new CountDownLatch(CLIENTS.size());
@@ -83,7 +84,7 @@ public final class ZooKeeperClusteredRoutePolicyFactoryIT {
 
             DefaultCamelContext context = new DefaultCamelContext();
             context.disableJMX();
-            context.getCamelContextExtension().setName("context-" + id);
+            context.setName("context-" + id);
             context.addService(service);
             context.addRoutePolicyFactory(ClusteredRoutePolicyFactory.forNamespace("my-ns"));
             context.addRoutes(new RouteBuilder() {
@@ -110,7 +111,7 @@ public final class ZooKeeperClusteredRoutePolicyFactoryIT {
 
             LATCH.countDown();
         } catch (Exception e) {
-            LOGGER.warn("{}", e.getMessage(), e);
+            LOGGER.warn("", e);
         }
     }
 }

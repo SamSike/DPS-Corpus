@@ -19,25 +19,17 @@ package org.apache.camel.impl.engine;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.StreamCache;
-import org.apache.camel.TypeConverter;
-import org.apache.camel.WrappedFile;
 import org.apache.camel.spi.StreamCachingStrategy;
-import org.apache.camel.support.TempDirHelper;
 import org.apache.camel.support.service.ServiceSupport;
+import org.apache.camel.util.FilePathResolver;
 import org.apache.camel.util.FileUtil;
 import org.apache.camel.util.IOHelper;
 import org.slf4j.Logger;
@@ -48,19 +40,10 @@ import org.slf4j.LoggerFactory;
  */
 public class DefaultStreamCachingStrategy extends ServiceSupport implements CamelContextAware, StreamCachingStrategy {
 
-    // stream cache type converters
-    private record CoreConverter(Class<?> from, TypeConverter converter) {
-    }
-
     private static final Logger LOG = LoggerFactory.getLogger(DefaultStreamCachingStrategy.class);
 
     private CamelContext camelContext;
     private boolean enabled;
-    private String allowClassNames;
-    private String denyClassNames;
-    private final Collection<CoreConverter> coreConverters = new ArrayList<>();
-    private Collection<Class<?>> allowClasses;
-    private Collection<Class<?>> denyClasses;
     private boolean spoolEnabled;
     private File spoolDirectory;
     private transient String spoolDirectoryName = "${java.io.tmpdir}/camel/camel-tmp-#uuid#";
@@ -92,34 +75,6 @@ public class DefaultStreamCachingStrategy extends ServiceSupport implements Came
     @Override
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
-    }
-
-    @Override
-    public Collection<Class<?>> getAllowClasses() {
-        return allowClasses;
-    }
-
-    public void setAllowClasses(Class<?>... allowClasses) {
-        this.allowClasses = List.of(allowClasses);
-    }
-
-    @Override
-    public void setAllowClasses(String names) {
-        this.allowClassNames = names;
-    }
-
-    @Override
-    public Collection<Class<?>> getDenyClasses() {
-        return denyClasses;
-    }
-
-    public void setDenyClasses(Class<?>... denyClasses) {
-        this.denyClasses = List.of(denyClasses);
-    }
-
-    @Override
-    public void setDenyClasses(String names) {
-        this.denyClassNames = names;
     }
 
     @Override
@@ -259,114 +214,67 @@ public class DefaultStreamCachingStrategy extends ServiceSupport implements Came
 
     @Override
     public StreamCache cache(Exchange exchange) {
-        return doCache(exchange.getMessage().getBody(), exchange);
-    }
-
-    @Override
-    public StreamCache cache(Message message) {
-        return doCache(message.getBody(), message.getExchange());
-    }
-
-    @Override
-    public StreamCache cache(Object body) {
-        return doCache(body, null);
-    }
-
-    private StreamCache doCache(Object body, Exchange exchange) {
+        Message message = exchange.getMessage();
         StreamCache cache = null;
         // try convert to stream cache
+        Object body = message.getBody();
         if (body != null) {
-            // fast skip some common types that should never be converted
-            if (body instanceof String) {
-                return null;
-            } else if (body instanceof byte[]) {
-                return null;
-            } else if (body instanceof Boolean) {
-                return null;
-            } else if (body instanceof Number) {
-                return null;
-            }
-            Class<?> type = body.getClass();
-            if (type.isPrimitive() || type.isEnum()) {
-                return null;
-            }
-            if (body instanceof WrappedFile<?> wf) {
-                body = wf.getBody();
-            }
-
-            boolean allowed = allowClasses == null && denyClasses == null;
-            if (!allowed) {
-                allowed = checkAllowDenyList(type);
-            }
-            if (allowed) {
-                TypeConverter tc = lookupTypeConverter(body);
-                if (tc != null) {
-                    if (exchange != null) {
-                        cache = tc.convertTo(StreamCache.class, exchange, body);
-                    } else {
-                        cache = tc.convertTo(StreamCache.class, body);
-                    }
-                }
-            }
+            cache = camelContext.getTypeConverter().convertTo(StreamCache.class, exchange, body);
         }
         if (cache != null) {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("Cached stream to {} -> {}", cache.inMemory() ? "memory" : "spool", cache);
             }
             if (statistics.isStatisticsEnabled()) {
-                computeStatistics(cache);
+                try {
+                    if (cache.inMemory()) {
+                        statistics.updateMemory(cache.length());
+                    } else {
+                        statistics.updateSpool(cache.length());
+                    }
+                } catch (Exception e) {
+                    LOG.debug("Error updating cache statistics. This exception is ignored.", e);
+                }
             }
         }
         return cache;
     }
 
-    private TypeConverter lookupTypeConverter(Object body) {
-        for (var tc : coreConverters) {
-            if (tc.from().isInstance(body)) {
-                return tc.converter();
+    protected String resolveSpoolDirectory(String path) {
+        if (camelContext.getManagementNameStrategy() != null) {
+            String name = camelContext.getManagementNameStrategy().resolveManagementName(path, camelContext.getName(), false);
+            if (name != null) {
+                name = customResolveManagementName(name);
             }
-        }
-        return null;
-    }
-
-    private boolean checkAllowDenyList(Class<?> type) {
-        boolean allowed;
-        if (denyClasses != null && allowClasses != null) {
-            // deny takes precedence
-            allowed = !isAssignableFrom(type, denyClasses);
-            if (allowed) {
-                allowed = isAssignableFrom(type, allowClasses);
+            // and then check again with invalid check to ensure all ## is resolved
+            if (name != null) {
+                name = camelContext.getManagementNameStrategy().resolveManagementName(name, camelContext.getName(), true);
             }
-        } else if (denyClasses != null) {
-            allowed = !isAssignableFrom(type, denyClasses);
+            return name;
         } else {
-            allowed = isAssignableFrom(type, allowClasses);
-        }
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Cache stream from class: {} is {}", type, allowed ? "allowed" : "denied");
-        }
-        return allowed;
-    }
-
-    private void computeStatistics(StreamCache cache) {
-        try {
-            if (cache.inMemory()) {
-                statistics.updateMemory(cache.length());
-            } else {
-                statistics.updateSpool(cache.length());
-            }
-        } catch (Exception e) {
-            LOG.debug("Error updating cache statistics. This exception is ignored.", e);
+            return defaultManagementName(path);
         }
     }
 
-    protected static boolean isAssignableFrom(Class<?> source, Collection<Class<?>> targets) {
-        for (Class<?> target : targets) {
-            if (target.isAssignableFrom(source)) {
-                return true;
-            }
+    protected String defaultManagementName(String path) {
+        // must quote the names to have it work as literal replacement
+        String name = camelContext.getName();
+
+        // replace tokens
+        String answer = path;
+        answer = answer.replace("#camelId#", name);
+        answer = answer.replace("#name#", name);
+        // replace custom
+        answer = customResolveManagementName(answer);
+        return answer;
+    }
+
+    protected String customResolveManagementName(String pattern) {
+        if (pattern.contains("#uuid#")) {
+            String uuid = camelContext.getUuidGenerator().generateUuid();
+            pattern = pattern.replace("#uuid#", uuid);
         }
-        return false;
+        return FilePathResolver.resolvePath(pattern);
     }
 
     @Override
@@ -376,43 +284,18 @@ public class DefaultStreamCachingStrategy extends ServiceSupport implements Came
             return;
         }
 
-        // find core type converters that can convert to StreamCache
-        var set = getCamelContext().getTypeConverterRegistry().lookup(StreamCache.class).entrySet();
-        set.forEach(e -> coreConverters.add(new CoreConverter(e.getKey(), e.getValue())));
-
-        if (allowClassNames != null) {
-            if (allowClasses == null) {
-                allowClasses = new ArrayList<>();
-            }
-            for (String name : allowClassNames.split(",")) {
-                name = name.trim();
-                Class<?> clazz = camelContext.getClassResolver().resolveMandatoryClass(name);
-                allowClasses.add(clazz);
-            }
-        }
-        if (denyClassNames != null) {
-            if (denyClasses == null) {
-                denyClasses = new ArrayList<>();
-            }
-            for (String name : denyClassNames.split(",")) {
-                name = name.trim();
-                Class<?> clazz = camelContext.getClassResolver().resolveMandatoryClass(name);
-                denyClasses.add(clazz);
-            }
-        }
-
         if (spoolUsedHeapMemoryThreshold > 99) {
             throw new IllegalArgumentException(
                     "SpoolHeapMemoryWatermarkThreshold must not be higher than 99, was: " + spoolUsedHeapMemoryThreshold);
         }
 
         // if we can overflow to disk then make sure directory exists / is created
-        if (spoolEnabled && (spoolThreshold > 0 || spoolUsedHeapMemoryThreshold > 0 || !spoolRules.isEmpty())) {
+        if (spoolEnabled && (spoolThreshold > 0 || spoolUsedHeapMemoryThreshold > 0)) {
             if (spoolDirectory == null && spoolDirectoryName == null) {
                 throw new IllegalArgumentException("SpoolDirectory must be configured when using SpoolThreshold > 0");
             }
             if (spoolDirectory == null) {
-                String name = TempDirHelper.resolveTempDir(camelContext, null, spoolDirectoryName);
+                String name = resolveSpoolDirectory(spoolDirectoryName);
                 if (name != null) {
                     spoolDirectory = new File(name);
                     spoolDirectoryName = null;
@@ -560,76 +443,64 @@ public class DefaultStreamCachingStrategy extends ServiceSupport implements Came
      */
     private static final class UtilizationStatistics implements Statistics {
 
-        private final Lock lock = new ReentrantLock();
         private boolean statisticsEnabled;
-        private final AtomicLong memoryCounter = new AtomicLong();
-        private final AtomicLong memorySize = new AtomicLong();
-        private final AtomicLong memoryAverageSize = new AtomicLong();
-        private final AtomicLong spoolCounter = new AtomicLong();
-        private final AtomicLong spoolSize = new AtomicLong();
-        private final AtomicLong spoolAverageSize = new AtomicLong();
+        private volatile long memoryCounter;
+        private volatile long memorySize;
+        private volatile long memoryAverageSize;
+        private volatile long spoolCounter;
+        private volatile long spoolSize;
+        private volatile long spoolAverageSize;
 
-        void updateMemory(long size) {
-            lock.lock();
-            try {
-                memoryAverageSize.set(memorySize.addAndGet(size) / memoryCounter.incrementAndGet());
-            } finally {
-                lock.unlock();
-            }
+        synchronized void updateMemory(long size) {
+            memoryCounter++;
+            memorySize += size;
+            memoryAverageSize = memorySize / memoryCounter;
         }
 
-        void updateSpool(long size) {
-            lock.lock();
-            try {
-                spoolAverageSize.set(spoolSize.addAndGet(size) / spoolCounter.incrementAndGet());
-            } finally {
-                lock.lock();
-            }
+        synchronized void updateSpool(long size) {
+            spoolCounter++;
+            spoolSize += size;
+            spoolAverageSize = spoolSize / spoolCounter;
         }
 
         @Override
         public long getCacheMemoryCounter() {
-            return memoryCounter.get();
+            return memoryCounter;
         }
 
         @Override
         public long getCacheMemorySize() {
-            return memorySize.get();
+            return memorySize;
         }
 
         @Override
         public long getCacheMemoryAverageSize() {
-            return memoryAverageSize.get();
+            return memoryAverageSize;
         }
 
         @Override
         public long getCacheSpoolCounter() {
-            return spoolCounter.get();
+            return spoolCounter;
         }
 
         @Override
         public long getCacheSpoolSize() {
-            return spoolSize.get();
+            return spoolSize;
         }
 
         @Override
         public long getCacheSpoolAverageSize() {
-            return spoolAverageSize.get();
+            return spoolAverageSize;
         }
 
         @Override
-        public void reset() {
-            lock.lock();
-            try {
-                memoryCounter.set(0);
-                memorySize.set(0);
-                memoryAverageSize.set(0);
-                spoolCounter.set(0);
-                spoolSize.set(0);
-                spoolAverageSize.set(0);
-            } finally {
-                lock.unlock();
-            }
+        public synchronized void reset() {
+            memoryCounter = 0;
+            memorySize = 0;
+            memoryAverageSize = 0;
+            spoolCounter = 0;
+            spoolSize = 0;
+            spoolAverageSize = 0;
         }
 
         @Override

@@ -34,10 +34,10 @@ public class FilterBeanLanguageNonRegistryTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 MyBean myBean = new MyBean();
 
                 from("direct:start").filter(method(myBean, "isGoldCustomer")).to("mock:result");
@@ -45,7 +45,7 @@ public class FilterBeanLanguageNonRegistryTest extends ContextTestSupport {
         };
     }
 
-    public static class MyBean {
+    public class MyBean {
 
         public boolean isGoldCustomer(String name) {
             return "Camel".equals(name);

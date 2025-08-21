@@ -30,10 +30,18 @@ public class BootstrapFactoryFinder extends DefaultFactoryFinder implements Boot
 
     @Override
     public void close() {
-        clear();
         classResolver = null;
-        classMap = null;
-        classesNotFound = null;
-        classesNotFoundExceptions = null;
+        if (classMap != null) {
+            classMap.clear();
+            classMap = null;
+        }
+        if (classesNotFound != null) {
+            classesNotFound.clear();
+            classesNotFound = null;
+        }
+        if (classesNotFoundExceptions != null) {
+            classesNotFoundExceptions.clear();
+            classesNotFoundExceptions = null;
+        }
     }
 }

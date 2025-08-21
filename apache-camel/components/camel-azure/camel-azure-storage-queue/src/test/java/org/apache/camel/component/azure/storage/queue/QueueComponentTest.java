@@ -59,17 +59,6 @@ class QueueComponentTest extends CamelTestSupport {
                 = (QueueEndpoint) context.getEndpoint("azure-storage-queue://camelazure/testqueue?credentials=#creds");
 
         doTestCreateEndpointWithMinConfig(endpoint, false);
-        assertEquals(CredentialType.SHARED_KEY_CREDENTIAL, endpoint.getConfiguration().getCredentialType());
-    }
-
-    @Test
-    public void testCreateEndpointWithMinConfigForAzIdentity() {
-
-        final QueueEndpoint endpoint
-                = (QueueEndpoint) context
-                        .getEndpoint("azure-storage-queue://camelazure/testqueue?credentialType=AZURE_IDENTITY");
-
-        doTestCreateEndpointWithMinConfigForAzIdentity(endpoint);
     }
 
     private void doTestCreateEndpointWithMinConfig(final QueueEndpoint endpoint, boolean clientExpected) {
@@ -87,19 +76,6 @@ class QueueComponentTest extends CamelTestSupport {
         assertNull(endpoint.getConfiguration().getVisibilityTimeout());
         assertNull(endpoint.getConfiguration().getTimeToLive());
         assertEquals(1, endpoint.getConfiguration().getMaxMessages());
-    }
-
-    private void doTestCreateEndpointWithMinConfigForAzIdentity(final QueueEndpoint endpoint) {
-        assertEquals("camelazure", endpoint.getConfiguration().getAccountName());
-        assertEquals("testqueue", endpoint.getConfiguration().getQueueName());
-        assertNull(endpoint.getConfiguration().getServiceClient());
-        assertNull(endpoint.getConfiguration().getCredentials());
-        assertEquals(QueueOperationDefinition.sendMessage, endpoint.getConfiguration().getOperation());
-
-        assertNull(endpoint.getConfiguration().getVisibilityTimeout());
-        assertNull(endpoint.getConfiguration().getTimeToLive());
-        assertEquals(1, endpoint.getConfiguration().getMaxMessages());
-        assertEquals(CredentialType.AZURE_IDENTITY, endpoint.getConfiguration().getCredentialType());
     }
 
     @Test
@@ -140,39 +116,5 @@ class QueueComponentTest extends CamelTestSupport {
                 .getEndpoint("azure-storage-queue://camelazure?credentials=#creds&operation=deleteQueue");
 
         assertThrows(IllegalArgumentException.class, () -> endpoint.createConsumer(null));
-    }
-
-    @Test
-    public void testCreateEndpointWithDefaultCredentialType() {
-        final String uri = "azure-storage-queue://camelazure/testqueue?accessKey=testKey&operation=deleteQueue";
-
-        final QueueEndpoint endpoint = (QueueEndpoint) context.getEndpoint(uri);
-
-        assertEquals("camelazure", endpoint.getConfiguration().getAccountName());
-        assertEquals("testqueue", endpoint.getConfiguration().getQueueName());
-        assertEquals("testKey", endpoint.getConfiguration().getAccessKey());
-        assertNull(endpoint.getConfiguration().getServiceClient());
-        assertEquals(QueueOperationDefinition.deleteQueue, endpoint.getConfiguration().getOperation());
-        assertEquals(1, endpoint.getConfiguration().getMaxMessages());
-        assertEquals(CredentialType.SHARED_ACCOUNT_KEY, endpoint.getConfiguration().getCredentialType());
-    }
-
-    @Test
-    public void testCreateEndpointWithAutowiring() {
-        context.getRegistry().bind("creds", new StorageSharedKeyCredential("fake", "fake"));
-
-        final String uri = "azure-storage-queue://camelazure/testqueue?operation=deleteQueue&timeToLive=PT100s" +
-                           "&visibilityTimeout=PT10s&maxMessages=1";
-
-        final QueueEndpoint endpoint = (QueueEndpoint) context.getEndpoint(uri);
-
-        assertEquals("camelazure", endpoint.getConfiguration().getAccountName());
-        assertEquals("testqueue", endpoint.getConfiguration().getQueueName());
-        assertNull(endpoint.getConfiguration().getServiceClient());
-        assertEquals(QueueOperationDefinition.deleteQueue, endpoint.getConfiguration().getOperation());
-        assertEquals(Duration.ofSeconds(100), endpoint.getConfiguration().getTimeToLive());
-        assertEquals(Duration.ofSeconds(10), endpoint.getConfiguration().getVisibilityTimeout());
-        assertEquals(1, endpoint.getConfiguration().getMaxMessages());
-        assertEquals(CredentialType.SHARED_KEY_CREDENTIAL, endpoint.getConfiguration().getCredentialType());
     }
 }

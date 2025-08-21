@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 public class CSimpleExpressionParserTest {
 
     @Test
-    public void testParse() {
+    public void testParse() throws Exception {
         CSimpleExpressionParser parser = new CSimpleExpressionParser();
 
         String code = parser.parseExpression("Hello World");
@@ -36,7 +36,7 @@ public class CSimpleExpressionParserTest {
     }
 
     @Test
-    public void testIncDec() {
+    public void testIncDec() throws Exception {
         CSimpleExpressionParser parser = new CSimpleExpressionParser();
 
         String code = parser.parseExpression("${body}++");
@@ -46,7 +46,7 @@ public class CSimpleExpressionParserTest {
     }
 
     @Test
-    public void testMisc() {
+    public void testMisc() throws Exception {
         CSimpleExpressionParser parser = new CSimpleExpressionParser();
 
         String code = parser.parseExpression("${random(10)}");
@@ -75,7 +75,7 @@ public class CSimpleExpressionParserTest {
     }
 
     @Test
-    public void testType() {
+    public void testType() throws Exception {
         CSimpleExpressionParser parser = new CSimpleExpressionParser();
 
         String code = parser.parseExpression("${type:org.apache.camel.Exchange.CONTENT_TYPE}");
@@ -87,7 +87,7 @@ public class CSimpleExpressionParserTest {
     }
 
     @Test
-    public void testRef() {
+    public void testRef() throws Exception {
         CSimpleExpressionParser parser = new CSimpleExpressionParser();
 
         String code = parser.parseExpression("${ref:myUser}");
@@ -95,7 +95,7 @@ public class CSimpleExpressionParserTest {
     }
 
     @Test
-    public void testProperties() {
+    public void testProperties() throws Exception {
         CSimpleExpressionParser parser = new CSimpleExpressionParser();
 
         String code = parser.parseExpression("${properties:greeting}");
@@ -105,7 +105,7 @@ public class CSimpleExpressionParserTest {
     }
 
     @Test
-    public void testBean() {
+    public void testBean() throws Exception {
         CSimpleExpressionParser parser = new CSimpleExpressionParser();
 
         String code = parser.parseExpression("${bean:foo}");
@@ -121,7 +121,7 @@ public class CSimpleExpressionParserTest {
     }
 
     @Test
-    public void testDateWithTimezone() {
+    public void testDateWithTimezone() throws Exception {
         CSimpleExpressionParser parser = new CSimpleExpressionParser();
 
         String code = parser.parseExpression("${date-with-timezone:header.birthday:GMT+8:yyyy-MM-dd'T'HH:mm:ss:SSS}");
@@ -129,7 +129,7 @@ public class CSimpleExpressionParserTest {
     }
 
     @Test
-    public void testDate() {
+    public void testDate() throws Exception {
         CSimpleExpressionParser parser = new CSimpleExpressionParser();
 
         String code = parser.parseExpression("${date:now:hh:mm:ss a}");
@@ -139,7 +139,7 @@ public class CSimpleExpressionParserTest {
     }
 
     @Test
-    public void testFile() {
+    public void testFile() throws Exception {
         CSimpleExpressionParser parser = new CSimpleExpressionParser();
 
         String code = parser.parseExpression("${file:name}");
@@ -149,7 +149,7 @@ public class CSimpleExpressionParserTest {
     }
 
     @Test
-    public void testExchange() {
+    public void testExchange() throws Exception {
         CSimpleExpressionParser parser = new CSimpleExpressionParser();
 
         String code = parser.parseExpression("${exchange.pattern}");
@@ -157,7 +157,7 @@ public class CSimpleExpressionParserTest {
     }
 
     @Test
-    public void testExchangeProperty() {
+    public void testExchangeProperty() throws Exception {
         CSimpleExpressionParser parser = new CSimpleExpressionParser();
 
         String code = parser.parseExpression("Hello ${exchangeProperty.foo}");
@@ -169,7 +169,7 @@ public class CSimpleExpressionParserTest {
     }
 
     @Test
-    public void testException() {
+    public void testException() throws Exception {
         CSimpleExpressionParser parser = new CSimpleExpressionParser();
 
         String code = parser.parseExpression("${exception}");

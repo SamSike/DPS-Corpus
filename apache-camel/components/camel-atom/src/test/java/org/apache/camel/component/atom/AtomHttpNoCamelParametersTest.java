@@ -23,7 +23,6 @@ import org.junit.jupiter.api.condition.OS;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisabledOnOs(OS.AIX)
 public class AtomHttpNoCamelParametersTest extends CamelTestSupport {
@@ -35,8 +34,8 @@ public class AtomHttpNoCamelParametersTest extends CamelTestSupport {
         assertNotNull(atom);
 
         assertEquals("http://www.iafrica.com/pls/cms/grapevine.xml", atom.getFeedUri());
-        assertTrue(atom.isFeedHeader());
-        assertTrue(atom.isSortEntries());
+        assertEquals(true, atom.isFeedHeader());
+        assertEquals(true, atom.isSortEntries());
     }
 
     @Test
@@ -47,8 +46,8 @@ public class AtomHttpNoCamelParametersTest extends CamelTestSupport {
         assertNotNull(atom);
 
         assertEquals("http://www.iafrica.com/pls/cms/grapevine.xml?foo=bar", atom.getFeedUri());
-        assertTrue(atom.isFeedHeader());
-        assertTrue(atom.isSortEntries());
+        assertEquals(true, atom.isFeedHeader());
+        assertEquals(true, atom.isSortEntries());
     }
 
 }

@@ -32,7 +32,7 @@ public class AggregateEagerCheckCompletionTest extends ContextTestSupport {
     public void testAggregateEagerCheckCompletion() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(header("id"), new BodyInAggregatingStrategy())
                         .completionPredicate(body().isEqualTo("END")).eagerCheckCompletion().to("mock:result");
             }
@@ -52,7 +52,7 @@ public class AggregateEagerCheckCompletionTest extends ContextTestSupport {
     public void testAggregateNotEagerCheckCompletion() throws Exception {
         context.addRoutes(new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(header("id")).aggregationStrategy(new BodyInAggregatingStrategy())
                         .completionPredicate(body().isEqualTo("A+B+END")).to("mock:result");
             }

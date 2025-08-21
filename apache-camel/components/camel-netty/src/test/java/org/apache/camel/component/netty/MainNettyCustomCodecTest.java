@@ -18,14 +18,13 @@ package org.apache.camel.component.netty;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.main.Main;
-import org.apache.camel.util.ObjectHelper;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class MainNettyCustomCodecTest extends BaseNettyTest {
 
     // use reaadble bytes
-    private byte[] data_eol = new byte[] { 65, 66, 67, 68, 69, 70, 71, 72, 73, 0, 0 };
-    private byte[] data = new byte[] { 65, 66, 67, 68, 69, 70, 71, 72, 73 };
+    private byte[] data = new byte[] { 65, 66, 67, 68, 69, 70, 71, 72, 73, 0, 0 };
 
     @Test
     public void testMain() throws Exception {
@@ -43,14 +42,11 @@ public class MainNettyCustomCodecTest extends BaseNettyTest {
                 from(uri).to("log:input")
                         .process(e -> {
                             byte[] local = e.getMessage().getBody(byte[].class);
-                            boolean eq = ObjectHelper.equalByteArray(data, local);
-                            if (!eq) {
-                                throw new IllegalArgumentException("Data received is not as expected");
-                            }
+                            Assertions.assertEquals(data, local);
                         });
 
                 from("timer:once?repeatCount=1")
-                        .setBody().constant(data_eol) // include null terminator
+                        .setBody().constant(data)
                         .to(uri);
             }
         });

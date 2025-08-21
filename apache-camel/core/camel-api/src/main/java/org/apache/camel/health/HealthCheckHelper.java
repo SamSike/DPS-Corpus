@@ -27,6 +27,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.ExtendedCamelContext;
 import org.apache.camel.util.ObjectHelper;
 
 /**
@@ -144,7 +145,7 @@ public final class HealthCheckHelper {
                     .sorted(Comparator.comparingInt(HealthCheck::getOrder))
                     .distinct()
                     .map(check -> check.call(optionsSupplier.apply(check)))
-                    .toList();
+                    .collect(Collectors.toList());
 
             if (result.isEmpty()) {
                 return Collections.emptyList();
@@ -207,7 +208,7 @@ public final class HealthCheckHelper {
      * @return         the health check registry, or <tt>null</tt> if health-check is not enabled.
      */
     public static HealthCheckRegistry getHealthCheckRegistry(CamelContext context) {
-        return context.getCamelContextExtension().getContextPlugin(HealthCheckRegistry.class);
+        return context.getExtension(HealthCheckRegistry.class);
     }
 
     /**
@@ -220,13 +221,13 @@ public final class HealthCheckHelper {
     public static HealthCheck getHealthCheck(CamelContext context, String id) {
         HealthCheck answer = null;
 
-        HealthCheckRegistry hcr = context.getCamelContextExtension().getContextPlugin(HealthCheckRegistry.class);
+        HealthCheckRegistry hcr = context.getExtension(HealthCheckRegistry.class);
         if (hcr != null && hcr.isEnabled()) {
             Optional<HealthCheck> check = hcr.getCheck(id);
             if (check.isEmpty()) {
                 // use resolver to load from classpath if needed
                 HealthCheckResolver resolver
-                        = context.getCamelContextExtension().getContextPlugin(HealthCheckResolver.class);
+                        = context.adapt(ExtendedCamelContext.class).getHealthCheckResolver();
                 HealthCheck hc = resolver.resolveHealthCheck(id);
                 if (hc != null) {
                     check = Optional.of(hc);
@@ -266,13 +267,13 @@ public final class HealthCheckHelper {
     public static HealthCheckRepository getHealthCheckRepository(CamelContext context, String id) {
         HealthCheckRepository answer = null;
 
-        HealthCheckRegistry hcr = context.getCamelContextExtension().getContextPlugin(HealthCheckRegistry.class);
+        HealthCheckRegistry hcr = context.getExtension(HealthCheckRegistry.class);
         if (hcr != null && hcr.isEnabled()) {
             Optional<HealthCheckRepository> repo = hcr.getRepository(id);
             if (repo.isEmpty()) {
                 // use resolver to load from classpath if needed
                 HealthCheckResolver resolver
-                        = context.getCamelContextExtension().getContextPlugin(HealthCheckResolver.class);
+                        = context.adapt(ExtendedCamelContext.class).getHealthCheckResolver();
                 HealthCheckRepository hr = resolver.resolveHealthCheckRepository(id);
                 if (hr != null) {
                     repo = Optional.of(hr);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,7 @@ package org.springframework.core;
 
 import java.lang.reflect.Method;
 
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -34,7 +33,8 @@ public final class MethodClassKey implements Comparable<MethodClassKey> {
 
 	private final Method method;
 
-	private final @Nullable Class<?> targetClass;
+	@Nullable
+	private final Class<?> targetClass;
 
 
 	/**
@@ -51,9 +51,15 @@ public final class MethodClassKey implements Comparable<MethodClassKey> {
 
 	@Override
 	public boolean equals(@Nullable Object other) {
-		return (this == other || (other instanceof MethodClassKey that &&
-				this.method.equals(that.method) &&
-				ObjectUtils.nullSafeEquals(this.targetClass, that.targetClass)));
+		if (this == other) {
+			return true;
+		}
+		if (!(other instanceof MethodClassKey)) {
+			return false;
+		}
+		MethodClassKey otherKey = (MethodClassKey) other;
+		return (this.method.equals(otherKey.method) &&
+				ObjectUtils.nullSafeEquals(this.targetClass, otherKey.targetClass));
 	}
 
 	@Override

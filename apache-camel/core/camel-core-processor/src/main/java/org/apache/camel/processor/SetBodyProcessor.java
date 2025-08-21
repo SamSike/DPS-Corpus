@@ -67,7 +67,7 @@ public class SetBodyProcessor extends AsyncProcessorSupport implements Traceable
                 old.setBody(newBody);
             }
 
-        } catch (Exception e) {
+        } catch (Throwable e) {
             exchange.setException(e);
         }
 
@@ -109,4 +109,13 @@ public class SetBodyProcessor extends AsyncProcessorSupport implements Traceable
         return expression;
     }
 
+    @Override
+    protected void doStart() throws Exception {
+        // noop
+    }
+
+    @Override
+    protected void doStop() throws Exception {
+        // noop
+    }
 }

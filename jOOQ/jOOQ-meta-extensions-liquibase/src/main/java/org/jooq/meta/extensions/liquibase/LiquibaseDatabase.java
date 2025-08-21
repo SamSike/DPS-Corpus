@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -37,7 +37,6 @@
  */
 package org.jooq.meta.extensions.liquibase;
 
-import static org.jooq.impl.DSL.unquotedName;
 import static org.jooq.tools.StringUtils.isBlank;
 
 import java.io.File;
@@ -46,12 +45,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.jooq.impl.DSL;
 import org.jooq.meta.TableDefinition;
 import org.jooq.meta.extensions.AbstractInterpretingDatabase;
 import org.jooq.tools.Convert;
@@ -64,7 +61,7 @@ import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.CompositeResourceAccessor;
-import liquibase.resource.DirectoryResourceAccessor;
+import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 
 /**
@@ -86,7 +83,6 @@ public class LiquibaseDatabase extends AbstractInterpretingDatabase {
     private boolean                          includeLiquibaseTables;
     private String                           databaseChangeLogTableName;
     private String                           databaseChangeLogLockTableName;
-    private String                           databaseLiquibaseSchemaName;
 
     static {
         SETTERS = new HashMap<>();
@@ -117,7 +113,6 @@ public class LiquibaseDatabase extends AbstractInterpretingDatabase {
 
         Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection()));
         String contexts = "";
-        Map<String, Object> changeLogParameters = new LinkedHashMap<>();
 
         // [#9514] Forward all database.xyz properties to matching Liquibase
         //         Database.setXyz() configuration setter calls
@@ -143,18 +138,12 @@ public class LiquibaseDatabase extends AbstractInterpretingDatabase {
 
                 if ("contexts".equals(property))
                     contexts = "" + entry.getValue();
-                else
-                    changeLogParameters.put(property, entry.getValue());
             }
         }
 
         // Retrieve changeLog table names as they might be overridden by configuration setters
         databaseChangeLogTableName = database.getDatabaseChangeLogTableName();
         databaseChangeLogLockTableName = database.getDatabaseChangeLogLockTableName();
-        databaseLiquibaseSchemaName = database.getLiquibaseSchemaName();
-
-        if (!StringUtils.isBlank(databaseLiquibaseSchemaName))
-            create().createSchemaIfNotExists(unquotedName(databaseLiquibaseSchemaName)).execute();
 
         // [#9866] Allow for loading included files from the classpath or using absolute paths.
         // [#12872] [#13021] The decision is made based on the presence of the rootPath property
@@ -163,10 +152,9 @@ public class LiquibaseDatabase extends AbstractInterpretingDatabase {
                 new ClassLoaderResourceAccessor(),
                 new ClassLoaderResourceAccessor(Thread.currentThread().getContextClassLoader())
             )
-            : new DirectoryResourceAccessor(new File(rootPath));
+            : new FileSystemResourceAccessor(new File(rootPath));
 
         Liquibase liquibase = new Liquibase(scripts, ra, database);
-        changeLogParameters.forEach(liquibase::setChangeLogParameter);
         liquibase.update(contexts);
     }
 

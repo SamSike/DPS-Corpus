@@ -20,12 +20,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import io.restassured.RestAssured;
 import org.apache.camel.CamelContext;
-import org.apache.camel.cloudevents.CloudEvent;
+import org.apache.camel.Consumer;
+import org.apache.camel.Endpoint;
+import org.apache.camel.Processor;
+import org.apache.camel.Producer;
+import org.apache.camel.component.cloudevents.CloudEvent;
 import org.apache.camel.component.knative.KnativeComponent;
 import org.apache.camel.component.knative.spi.KnativeEnvironment;
 import org.apache.camel.component.knative.spi.KnativeResource;
+import org.apache.camel.component.knative.spi.KnativeTransportConfiguration;
 import org.apache.camel.component.platform.http.PlatformHttpComponent;
 import org.apache.camel.component.platform.http.PlatformHttpConstants;
 import org.apache.camel.component.platform.http.vertx.VertxPlatformHttpEngine;
@@ -57,20 +61,19 @@ public final class KnativeHttpTestSupport {
         KnativeComponent component = context.getComponent("knative", KnativeComponent.class);
         component.setCloudEventsSpecVersion(ce.version());
         component.setEnvironment(environment);
-        component.setConsumerFactory(new KnativeHttpConsumerFactory(context) {
+        component.setConsumerFactory(new KnativeHttpConsumerFactory() {
             @Override
-            protected void doBuild() throws Exception {
-                super.doBuild();
-                this.setRouter(VertxPlatformHttpRouter.lookup(context,
-                        VertxPlatformHttpRouter.getRouterNameFromPort(RestAssured.port)));
+            public Consumer createConsumer(
+                    Endpoint endpoint, KnativeTransportConfiguration config, KnativeResource service, Processor processor) {
+                this.setRouter(VertxPlatformHttpRouter.lookup(context));
+                return super.createConsumer(endpoint, config, service, processor);
             }
         });
-        component.setProducerFactory(new KnativeHttpProducerFactory(context) {
+        component.setProducerFactory(new KnativeHttpProducerFactory() {
             @Override
-            protected void doBuild() throws Exception {
-                super.doBuild();
-                this.setVertx(VertxPlatformHttpRouter
-                        .lookup(context, VertxPlatformHttpRouter.getRouterNameFromPort(RestAssured.port)).vertx());
+            public Producer createProducer(Endpoint endpoint, KnativeTransportConfiguration config, KnativeResource service) {
+                this.setVertx(VertxPlatformHttpRouter.lookup(context).vertx());
+                return super.createProducer(endpoint, config, service);
             }
         });
 
@@ -86,7 +89,17 @@ public final class KnativeHttpTestSupport {
         configuration.setBindPort(bindPort);
 
         try {
-            camelContext.addService(new MyVertxPlatformHttpServer(configuration));
+            camelContext.addService(new VertxPlatformHttpServer(configuration) {
+                @Override
+                protected void doInit() {
+                    initializeServer();
+                }
+
+                @Override
+                protected void doStart() throws Exception {
+                    startServer();
+                }
+            });
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -95,22 +108,5 @@ public final class KnativeHttpTestSupport {
         component.setEngine(new VertxPlatformHttpEngine());
 
         camelContext.getRegistry().bind(PlatformHttpConstants.PLATFORM_HTTP_COMPONENT_NAME, component);
-    }
-
-    private static class MyVertxPlatformHttpServer extends VertxPlatformHttpServer {
-
-        public MyVertxPlatformHttpServer(VertxPlatformHttpServerConfiguration configuration) {
-            super(configuration);
-        }
-
-        @Override
-        protected void doInit() throws Exception {
-            super.initializeServer();
-        }
-
-        @Override
-        protected void doStart() throws Exception {
-            super.startServer();
-        }
     }
 }

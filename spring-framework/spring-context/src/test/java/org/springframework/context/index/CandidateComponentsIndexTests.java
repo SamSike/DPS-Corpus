@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,12 +30,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Stephane Nicoll
  */
-@Deprecated
-@SuppressWarnings("removal")
 public class CandidateComponentsIndexTests {
 
 	@Test
-	void getCandidateTypes() {
+	public void getCandidateTypes() {
 		CandidateComponentsIndex index = new CandidateComponentsIndex(
 				Collections.singletonList(createSampleProperties()));
 		Set<String> actual = index.getCandidateTypes("com.example.service", "service");
@@ -44,7 +42,7 @@ public class CandidateComponentsIndexTests {
 	}
 
 	@Test
-	void getCandidateTypesSubPackage() {
+	public void getCandidateTypesSubPackage() {
 		CandidateComponentsIndex index = new CandidateComponentsIndex(
 				Collections.singletonList(createSampleProperties()));
 		Set<String> actual = index.getCandidateTypes("com.example.service.sub", "service");
@@ -52,7 +50,7 @@ public class CandidateComponentsIndexTests {
 	}
 
 	@Test
-	void getCandidateTypesSubPackageNoMatch() {
+	public void getCandidateTypesSubPackageNoMatch() {
 		CandidateComponentsIndex index = new CandidateComponentsIndex(
 				Collections.singletonList(createSampleProperties()));
 		Set<String> actual = index.getCandidateTypes("com.example.service.none", "service");
@@ -60,7 +58,7 @@ public class CandidateComponentsIndexTests {
 	}
 
 	@Test
-	void getCandidateTypesNoMatch() {
+	public void getCandidateTypesNoMatch() {
 		CandidateComponentsIndex index = new CandidateComponentsIndex(
 				Collections.singletonList(createSampleProperties()));
 		Set<String> actual = index.getCandidateTypes("com.example.service", "entity");
@@ -68,7 +66,7 @@ public class CandidateComponentsIndexTests {
 	}
 
 	@Test
-	void mergeCandidateStereotypes() {
+	public void mergeCandidateStereotypes() {
 		CandidateComponentsIndex index = new CandidateComponentsIndex(Arrays.asList(
 				createProperties("com.example.Foo", "service"),
 				createProperties("com.example.Foo", "entity")));

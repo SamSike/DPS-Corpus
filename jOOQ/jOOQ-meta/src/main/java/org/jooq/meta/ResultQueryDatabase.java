@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -40,17 +40,12 @@ package org.jooq.meta;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.jooq.DataType;
 import org.jooq.Meta;
 import org.jooq.Record12;
-import org.jooq.Record14;
-import org.jooq.Record4;
-import org.jooq.Record5;
 import org.jooq.Record6;
 import org.jooq.ResultQuery;
 
 import org.jetbrains.annotations.ApiStatus.Internal;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * An interface for all {@link AbstractDatabase} implementations that can
@@ -77,11 +72,8 @@ public interface ResultQueryDatabase extends Database {
      * <li>Column name</li>
      * <li>Column sequence</li>
      * </ol>
-     *
-     * @return The query or <code>null</code> if this implementation doesn't support the query.
      */
     @Internal
-    @Nullable
     ResultQuery<Record6<String, String, String, String, String, Integer>> primaryKeys(List<String> schemas);
 
     /**
@@ -97,11 +89,8 @@ public interface ResultQueryDatabase extends Database {
      * <li>Column name</li>
      * <li>Column sequence</li>
      * </ol>
-     *
-     * @return The query or <code>null</code> if this implementation doesn't support the query.
      */
     @Internal
-    @Nullable
     ResultQuery<Record6<String, String, String, String, String, Integer>> uniqueKeys(List<String> schemas);
 
     /**
@@ -122,136 +111,7 @@ public interface ResultQueryDatabase extends Database {
      * <li>Cycle</li>
      * <li>Cache</li>
      * </ol>
-     *
-     * @return The query or <code>null</code> if this implementation doesn't support the query.
      */
     @Internal
-    @Nullable
     ResultQuery<Record12<String, String, String, String, Integer, Integer, Long, Long, BigDecimal, BigDecimal, Boolean, Long>> sequences(List<String> schemas);
-
-    /**
-     * A query that produces enum types and their literals for a set of input schemas.
-     * <p>
-     * The resulting columns are:
-     * <ol>
-     * <li>Catalog name</li>
-     * <li>Schema name</li>
-     * <li>Column name (if applicable, e.g. in MySQL style RDBMS)</li>
-     * <li>Enum type name (if applicable, e.g. in PostgreSQL style RDBMS)</li>
-     * <li>Literal value</li>
-     * <li>Literal position</li>
-     * </ol>
-     *
-     * @return The query or <code>null</code> if this implementation doesn't support the query.
-     */
-    @Internal
-    @Nullable
-    ResultQuery<Record6<String, String, String, String, String, Integer>> enums(List<String> schemas);
-
-    /**
-     * A query that produces source code for a set of input schemas.
-     * <p>
-     * The resulting columns are:
-     * <ol>
-     * <li>Catalog name</li>
-     * <li>Schema name</li>
-     * <li>Object name (e.g. table, view, function, package)</li>
-     * <li>Source</li>
-     * </ol>
-     *
-     * @return The query or <code>null</code> if this implementation doesn't support the query.
-     */
-    @Internal
-    @Nullable
-    ResultQuery<Record4<String, String, String, String>> sources(List<String> schemas);
-
-    /**
-     * A query that produces comments for a set of input schemas.
-     * <p>
-     * The resulting columns are:
-     * <ol>
-     * <li>Catalog name</li>
-     * <li>Schema name</li>
-     * <li>Object name (e.g. table, view, function, package)</li>
-     * <li>Object sub name (e.g. column, package routine)</li>
-     * <li>Comment</li>
-     * </ol>
-     *
-     * @return The query or <code>null</code> if this implementation doesn't support the query.
-     */
-    @Internal
-    @Nullable
-    ResultQuery<Record5<String, String, String, String, String>> comments(List<String> schemas);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

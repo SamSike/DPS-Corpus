@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.camel.converter.IOConverter;
 import org.apache.camel.util.IOHelper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,8 @@ public class FtpProducerFileWithCharsetIT extends FtpServerTestSupport {
     }
 
     @Override
-    public void doPreSetup() {
+    @BeforeEach
+    public void setUp() throws Exception {
         byte[] utf = payload.getBytes(StandardCharsets.UTF_8);
         byte[] iso = payload.getBytes(StandardCharsets.ISO_8859_1);
 
@@ -55,6 +57,7 @@ public class FtpProducerFileWithCharsetIT extends FtpServerTestSupport {
         for (byte b : iso) {
             LOG.debug("iso byte: {}", b);
         }
+        super.setUp();
     }
 
     @Test

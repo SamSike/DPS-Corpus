@@ -22,9 +22,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.result.DeleteResult;
 import org.apache.camel.api.management.ManagedOperation;
 import org.apache.camel.api.management.ManagedResource;
-import org.apache.camel.spi.Configurer;
 import org.apache.camel.spi.IdempotentRepository;
-import org.apache.camel.spi.Metadata;
 import org.apache.camel.support.service.ServiceSupport;
 import org.apache.camel.util.ObjectHelper;
 import org.bson.Document;
@@ -33,20 +31,11 @@ import org.bson.conversions.Bson;
 import static com.mongodb.client.model.Filters.eq;
 import static org.apache.camel.component.mongodb.MongoDbConstants.MONGO_ID;
 
-@Metadata(label = "bean",
-          description = "Idempotent repository that uses MongoDB to store message ids.",
-          annotations = { "interfaceName=org.apache.camel.spi.IdempotentRepository" })
-@Configurer(metadataOnly = true)
-@ManagedResource(description = "MongoDB based message id repository")
+@ManagedResource(description = "Mongo db based message id repository")
 public class MongoDbIdempotentRepository extends ServiceSupport implements IdempotentRepository {
-
-    @Metadata(description = "The MongoClient to use for connecting to the MongoDB server", required = true)
     private MongoClient mongoClient;
-    @Metadata(description = "The Database name", required = true)
-    private String dbName;
-    @Metadata(description = "The collection name", required = true)
     private String collectionName;
-
+    private String dbName;
     private MongoCollection<Document> collection;
 
     public MongoDbIdempotentRepository() {
@@ -56,6 +45,7 @@ public class MongoDbIdempotentRepository extends ServiceSupport implements Idemp
         this.mongoClient = mongoClient;
         this.collectionName = collectionName;
         this.dbName = dbName;
+        this.collection = mongoClient.getDatabase(dbName).getCollection(collectionName);
     }
 
     @ManagedOperation(description = "Adds the key to the store")
@@ -113,7 +103,7 @@ public class MongoDbIdempotentRepository extends ServiceSupport implements Idemp
 
     @Override
     protected void doStop() throws Exception {
-        // noop
+        return;
     }
 
     public MongoClient getMongoClient() {

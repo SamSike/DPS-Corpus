@@ -36,7 +36,7 @@ public abstract class AbstractOpenstackProducer extends DefaultProducer {
 
     private AbstractOpenstackEndpoint endpoint;
 
-    protected AbstractOpenstackProducer(AbstractOpenstackEndpoint endpoint, OSClient client) {
+    public AbstractOpenstackProducer(AbstractOpenstackEndpoint endpoint, OSClient client) {
         super(endpoint);
         this.os = client;
         this.endpoint = endpoint;

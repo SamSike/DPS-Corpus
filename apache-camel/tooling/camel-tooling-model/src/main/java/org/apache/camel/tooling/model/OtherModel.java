@@ -22,8 +22,8 @@ public class OtherModel extends ArtifactModel<BaseOptionModel> {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.other;
+    public String getKind() {
+        return "other";
     }
 
 }

@@ -25,11 +25,9 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.util.StopWatch;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Isolated;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Isolated
 public class RedeliveryDeadLetterErrorHandlerNoRedeliveryOnShutdownTest extends ContextTestSupport {
 
     private final AtomicInteger counter = new AtomicInteger();
@@ -64,16 +62,16 @@ public class RedeliveryDeadLetterErrorHandlerNoRedeliveryOnShutdownTest extends 
     private final class MyRedeliverProcessor implements Processor {
 
         @Override
-        public void process(Exchange exchange) {
+        public void process(Exchange exchange) throws Exception {
             counter.incrementAndGet();
         }
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 errorHandler(deadLetterChannel("mock:deadLetter").allowRedeliveryWhileStopping(false)
                         .onRedelivery(new MyRedeliverProcessor()).maximumRedeliveries(200)
                         .redeliveryDelay(10).retryAttemptedLogLevel(LoggingLevel.INFO));

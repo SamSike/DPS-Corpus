@@ -16,45 +16,31 @@
  */
 package org.apache.camel.component.jetty;
 
-import java.nio.charset.StandardCharsets;
-
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JettyMuteExceptionTest extends BaseJettyTest {
 
     @Test
     public void testMuteException() throws Exception {
+        CloseableHttpClient client = HttpClients.createDefault();
+
         HttpGet get = new HttpGet("http://localhost:" + getPort() + "/foo");
         get.addHeader("Accept", "application/text");
-        try (CloseableHttpClient client = HttpClients.createDefault();
-             CloseableHttpResponse response = client.execute(get)) {
+        HttpResponse response = client.execute(get);
 
-            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-            assertTrue(responseString.isEmpty());
-            assertEquals(500, response.getCode());
-        }
-    }
+        String responseString = EntityUtils.toString(response.getEntity(), "UTF-8");
+        assertEquals("", responseString);
+        assertEquals(500, response.getStatusLine().getStatusCode());
 
-    @Test
-    public void testDefaultMuteException() throws Exception {
-        HttpGet get = new HttpGet("http://localhost:" + getPort() + "/fooDefault");
-        get.addHeader("Accept", "application/text");
-        try (CloseableHttpClient client = HttpClients.createDefault();
-             CloseableHttpResponse response = client.execute(get)) {
-
-            String responseString = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-            assertTrue(responseString.isEmpty());
-            assertEquals(500, response.getCode());
-        }
+        client.close();
     }
 
     @Override
@@ -63,9 +49,6 @@ public class JettyMuteExceptionTest extends BaseJettyTest {
             @Override
             public void configure() {
                 from("jetty:http://localhost:{{port}}/foo?muteException=true").to("mock:destination")
-                        .throwException(new IllegalArgumentException("Camel cannot do this"));
-
-                from("jetty:http://localhost:{{port}}/fooDefault").to("mock:destination")
                         .throwException(new IllegalArgumentException("Camel cannot do this"));
             }
         };

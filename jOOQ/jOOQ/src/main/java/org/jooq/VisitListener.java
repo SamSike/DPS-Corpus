@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -62,7 +62,7 @@ import org.jooq.impl.CallbackVisitListener;
  * </ul>
  * <p>
  * An example is given here:
- * <pre><code>SELECT 1 FROM [A CROSS JOIN B]</code></pre>
+ * <code><pre>SELECT 1 FROM [A CROSS JOIN B]</pre></code>
  * <p>
  * The above example will create the following set of events:
  *
@@ -90,8 +90,8 @@ import org.jooq.impl.CallbackVisitListener;
  * otherwise be premature optimisations may have great effect inside the
  * <code>VisitListener</code>. For more details, please refer to this article:
  * <a href=
- * "https://blog.jooq.org/top-10-easy-performance-optimisations-in-java/">
- * https://blog.jooq.org/top-10-easy-performance-optimisations-in-
+ * "http://blog.jooq.org/2015/02/05/top-10-easy-performance-optimisations-in-java/">
+ * http://blog.jooq.org/2015/02/05/top-10-easy-performance-optimisations-in-
  * java/</a>.
  *
  * @author Lukas Eder
@@ -122,7 +122,7 @@ public interface VisitListener extends EventListener {
      * the {@link QueryPart} contained in the argument {@link VisitContext}
      * through {@link VisitContext#queryPart(QueryPart)}. This can be used for
      * many use-cases, for example to add a <code>CHECK OPTION</code> to an
-     * Oracle <code>INSERT</code> statement: <pre><code>
+     * Oracle <code>INSERT</code> statement: <code><pre>
      * -- Original query
      * INSERT INTO book (id, author_id, title)
      * VALUES (10, 15, '1984')
@@ -134,7 +134,7 @@ public interface VisitListener extends EventListener {
      *   WITH CHECK OPTION
      * ) (id, author_id, title)
      * VALUES (10, 15, '1984')
-     * </code></pre> The above SQL transformation allows to prevent inserting
+     * </pre></code> The above SQL transformation allows to prevent inserting
      * new books for authors other than those with
      * <code>author_id IN (1, 2, 3)</code>
      *

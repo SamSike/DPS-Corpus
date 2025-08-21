@@ -20,9 +20,11 @@ import org.apache.camel.BindToRegistry;
 import org.apache.camel.Exchange;
 import org.apache.camel.component.http.handler.BasicValidationHandler;
 import org.apache.camel.support.jsse.SSLContextParameters;
-import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
-import org.apache.hc.core5.http.impl.bootstrap.HttpServer;
-import org.apache.hc.core5.http.impl.bootstrap.ServerBootstrap;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.impl.bootstrap.HttpServer;
+import org.apache.http.impl.bootstrap.ServerBootstrap;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.apache.camel.component.http.HttpMethods.GET;
@@ -37,18 +39,22 @@ public class HttpsGetTest extends BaseHttpsTest {
     @BindToRegistry("sslContextParameters")
     private SSLContextParameters sslContextParameters = new SSLContextParameters();
 
+    @BeforeEach
     @Override
-    public void doPreSetup() throws Exception {
-        localServer = ServerBootstrap.bootstrap()
-                .setCanonicalHostName("localhost").setHttpProcessor(getBasicHttpProcessor())
+    public void setUp() throws Exception {
+        localServer = ServerBootstrap.bootstrap().setHttpProcessor(getBasicHttpProcessor())
                 .setConnectionReuseStrategy(getConnectionReuseStrategy()).setResponseFactory(getHttpResponseFactory())
-                .setSslContext(getSSLContext())
-                .register("/mail/", new BasicValidationHandler(GET.name(), null, null, getExpectedContent())).create();
+                .setExpectationVerifier(getHttpExpectationVerifier()).setSslContext(getSSLContext())
+                .registerHandler("/mail/", new BasicValidationHandler(GET.name(), null, null, getExpectedContent())).create();
         localServer.start();
+
+        super.setUp();
     }
 
+    @AfterEach
     @Override
-    public void cleanupResources() {
+    public void tearDown() throws Exception {
+        super.tearDown();
 
         if (localServer != null) {
             localServer.stop();
@@ -56,9 +62,9 @@ public class HttpsGetTest extends BaseHttpsTest {
     }
 
     @Test
-    public void httpsGet() {
+    public void httpsGet() throws Exception {
 
-        Exchange exchange = template.request("https://localhost:" + localServer.getLocalPort()
+        Exchange exchange = template.request("https://127.0.0.1:" + localServer.getLocalPort()
                                              + "/mail/?x509HostnameVerifier=#x509HostnameVerifier&sslContextParameters=#sslContextParameters",
                 exchange1 -> {
                 });

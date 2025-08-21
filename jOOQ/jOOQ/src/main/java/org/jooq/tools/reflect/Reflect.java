@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,10 +23,8 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -34,7 +32,7 @@ import java.util.Optional;
  * A wrapper for an {@link Object} or {@link Class} upon which reflective calls
  * can be made.
  * <p>
- * An example of using <code>Reflect</code> is <pre><code>
+ * An example of using <code>Reflect</code> is <code><pre>
  * // Static import all reflection methods to decrease verbosity
  * import static org.joor.Reflect.*;
  *
@@ -45,7 +43,6 @@ import java.util.Optional;
  * // Invoke methods using the call() method:
  * .call("toString")
  * // Retrieve the wrapped object
- * </code></pre>
  *
  * @author Lukas Eder
  * @author Irek Matysiewicz
@@ -62,16 +59,16 @@ public class Reflect {
      * Compile a class at runtime and reflect on it.
      * <p>
      * For example:
-     * <pre><code>
-     * Supplier&lt;String&gt; supplier = Reflect.compile("org.joor.Test", """
-     *   package org.joor;
-     *   class Test implements java.util.function.Supplier&lt;String&gt; {
-     *     public String get() {
-     *       return "Hello World!";
-     *     }
-     *   }
-     *   """).create().get();
-     * </code></pre>
+     * <code><pre>
+     * Supplier&lt;String&gt; supplier = Reflect.compile(
+     *   "org.joor.Test",
+     *   "package org.joor;\n" +
+     *   "class Test implements java.util.function.Supplier&lt;String&gt; {\n" +
+     *   "  public String get() {\n" +
+     *   "    return \"Hello World!\";\n" +
+     *   "  }\n" +
+     *   "}\n").create().get();
+     * </pre></code>
      *
      * @param name The qualified class name
      * @param content The source code for the class
@@ -86,16 +83,16 @@ public class Reflect {
      * Compile a class at runtime and reflect on it.
      * <p>
      * For example:
-     * <pre><code>
-     * Supplier&lt;String&gt; supplier = Reflect.compile("org.joor.Test", """
-     *   package org.joor;
-     *   class Test implements java.util.function.Supplier&lt;String&gt; {
-     *     public String get() {
-     *       return "Hello World!";
-     *     }
-     *   }
-     *   """).create().get();
-     * </code></pre>
+     * <code><pre>
+     * Supplier&lt;String&gt; supplier = Reflect.compile(
+     *   "org.joor.Test",
+     *   "package org.joor;\n" +
+     *   "class Test implements java.util.function.Supplier&lt;String&gt; {\n" +
+     *   "  public String get() {\n" +
+     *   "    return \"Hello World!\";\n" +
+     *   "  }\n" +
+     *   "}\n").create().get();
+     * </pre></code>
      *
      * @param name The qualified class name
      * @param content The source code for the class
@@ -105,70 +102,6 @@ public class Reflect {
      */
     public static Reflect compile(String name, String content, CompileOptions options) throws ReflectException {
         return onClass(Compile.compile(name, content, options));
-    }
-
-    /**
-     * Annotation-process a class at runtime.
-     * <p>
-     * This works like {@link #compile(String, String)}, but adds the
-     * <code>-proc:only</code> {@link CompileOptions} and thus does not produce any
-     * compilation output.
-     * <p>
-     * For example:
-     * <pre><code>
-     * Supplier&lt;String&gt; supplier = Reflect.compile("org.joor.Test", """
-     *   package org.joor;
-     *   &#64;MyAnnotation
-     *   class Test implements java.util.function.Supplier&lt;String&gt; {
-     *     public String get() {
-     *       return "Hello World!";
-     *     }
-     *   }
-     *   """).create().get();
-     * </code></pre>
-     *
-     * @param name    The qualified class name
-     * @param content The source code for the class
-     * @throws ReflectException if anything went wrong compiling the class.
-     */
-    public static void process(String name, String content) throws ReflectException {
-        process(name, content, new CompileOptions());
-    }
-
-    /**
-     * Annotation-process a class at runtime.
-     * <p>
-     * This works like {@link #compile(String, String)}, but adds the
-     * <code>-proc:only</code> {@link CompileOptions} and thus does not produce any
-     * compilation output.
-     * <p>
-     * For example:
-     * <pre><code>
-     * Supplier&lt;String&gt; supplier = Reflect.compile("org.joor.Test", """
-     *   package org.joor;
-     *   &#64;MyAnnotation
-     *   class Test implements java.util.function.Supplier&lt;String&gt; {
-     *     public String get() {
-     *       return "Hello World!";
-     *     }
-     *   }
-     *   """).create().get();
-     * </code></pre>
-     *
-     * @param name The qualified class name
-     * @param content The source code for the class
-     * @param options compiler options
-     * @return A wrapped {@link Class}
-     * @throws ReflectException if anything went wrong compiling the class.
-     */
-    public static void process(String name, String content, CompileOptions options) throws ReflectException {
-        if (!options.hasOption("-proc:only")) {
-            List<String> o = new ArrayList<>(options.options);
-            o.add("-proc:only");
-            options = options.options(o);
-        }
-
-        Compile.compile(name, content, options, false);
     }
 
 
@@ -550,10 +483,10 @@ public class Reflect {
      * fields. If the wrapped object is any other {@link Object}, then this will
      * return instance fields.
      * <p>
-     * These two calls are equivalent <pre><code>
+     * These two calls are equivalent <code><pre>
      * on(object).field("myField");
      * on(object).fields().get("myField");
-     * </code></pre>
+     * </pre></code>
      *
      * @return A map containing field names and wrapped values.
      */
@@ -606,16 +539,16 @@ public class Reflect {
      * Just like {@link Method#invoke(Object, Object...)}, this will try to wrap
      * primitive types or unwrap primitive type wrappers if applicable. If
      * several methods are applicable, by that rule, the first one encountered
-     * is called. i.e. when calling <pre><code>
+     * is called. i.e. when calling <code><pre>
      * on(...).call("method", 1, 1);
-     * </code></pre> The first of the following methods will be called:
-     * <pre><code>
+     * </pre></code> The first of the following methods will be called:
+     * <code><pre>
      * public void method(int param1, Integer param2);
      * public void method(Integer param1, int param2);
      * public void method(Number param1, Number param2);
      * public void method(Number param1, Object param2);
      * public void method(int param1, Object param2);
-     * </code></pre>
+     * </pre></code>
      * <p>
      * The best matching method is searched for with the following strategy:
      * <ol>
@@ -752,16 +685,16 @@ public class Reflect {
      * Just like {@link Constructor#newInstance(Object...)}, this will try to
      * wrap primitive types or unwrap primitive type wrappers if applicable. If
      * several constructors are applicable, by that rule, the first one
-     * encountered is called. i.e. when calling <pre><code>
+     * encountered is called. i.e. when calling <code><pre>
      * on(C.class).create(1, 1);
-     * </code></pre> The first of the following constructors will be applied:
-     * <pre><code>
+     * </pre></code> The first of the following constructors will be applied:
+     * <code><pre>
      * public C(int param1, Integer param2);
      * public C(Integer param1, int param2);
      * public C(Number param1, Number param2);
      * public C(Number param1, Object param2);
      * public C(int param1, Object param2);
-     * </code></pre>
+     * </pre></code>
      *
      * @param args The constructor arguments
      * @return The wrapped new object, to be used for further reflection.
@@ -1079,4 +1012,3 @@ public class Reflect {
 
     private static class NULL {}
 }
-

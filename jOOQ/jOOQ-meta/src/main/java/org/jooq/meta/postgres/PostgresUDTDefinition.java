@@ -3,7 +3,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  https://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,10 +14,10 @@
  * Other licenses:
  * -----------------------------------------------------------------------------
  * Commercial licenses for this work are available. These replace the above
- * Apache-2.0 license and offer limited warranties, support, maintenance, and
- * commercial database integrations.
+ * ASL 2.0 and offer limited warranties, support, maintenance, and commercial
+ * database integrations.
  *
- * For more information, please visit: https://www.jooq.org/legal/licensing
+ * For more information, please visit: http://www.jooq.org/licenses
  *
  *
  *
@@ -38,17 +38,12 @@
 package org.jooq.meta.postgres;
 
 import static org.jooq.impl.DSL.coalesce;
-import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.inline;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.when;
-import static org.jooq.impl.SQLDataType.BIGINT;
 import static org.jooq.meta.postgres.information_schema.Tables.ATTRIBUTES;
+import static org.jooq.meta.postgres.information_schema.Tables.COLUMNS;
 import static org.jooq.meta.postgres.information_schema.Tables.DOMAINS;
-import static org.jooq.meta.postgres.pg_catalog.Tables.PG_ATTRIBUTE;
-import static org.jooq.meta.postgres.pg_catalog.Tables.PG_CLASS;
-import static org.jooq.meta.postgres.pg_catalog.Tables.PG_DESCRIPTION;
-import static org.jooq.meta.postgres.pg_catalog.Tables.PG_TYPE;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -63,9 +58,6 @@ import org.jooq.meta.DefaultAttributeDefinition;
 import org.jooq.meta.DefaultDataTypeDefinition;
 import org.jooq.meta.RoutineDefinition;
 import org.jooq.meta.SchemaDefinition;
-import org.jooq.meta.postgres.information_schema.tables.Attributes;
-import org.jooq.meta.postgres.information_schema.tables.Domains;
-import org.jooq.meta.postgres.pg_catalog.tables.PgAttribute;
 
 public class PostgresUDTDefinition extends AbstractUDTDefinition {
 
@@ -76,73 +68,58 @@ public class PostgresUDTDefinition extends AbstractUDTDefinition {
     @Override
     protected List<AttributeDefinition> getElements0() throws SQLException {
         List<AttributeDefinition> result = new ArrayList<>();
-        PostgresDatabase db = (PostgresDatabase) getDatabase();
-
-        Attributes a = ATTRIBUTES.as("a");
-        Domains d = DOMAINS.as("d");
-        PgAttribute pg_a = PG_ATTRIBUTE.as("pg_a");
 
         for (Record record : create().select(
-                    a.ATTRIBUTE_NAME,
-                    a.ORDINAL_POSITION,
+                    ATTRIBUTES.ATTRIBUTE_NAME,
+                    ATTRIBUTES.ORDINAL_POSITION,
                     coalesce(
-                        d.DATA_TYPE,
-                        when(a.DATA_TYPE.eq(inline("USER-DEFINED")).and(a.ATTRIBUTE_UDT_NAME.eq(inline("geometry"))), inline("geometry"))
-                        .else_(db.arrayDataType(a.DATA_TYPE, a.ATTRIBUTE_UDT_NAME, pg_a.ATTNDIMS))
-                    ).as(a.DATA_TYPE),
-                    coalesce(d.CHARACTER_MAXIMUM_LENGTH, a.CHARACTER_MAXIMUM_LENGTH).as(a.CHARACTER_MAXIMUM_LENGTH),
-                    coalesce(d.NUMERIC_PRECISION, a.NUMERIC_PRECISION).as(a.NUMERIC_PRECISION),
-                    coalesce(d.NUMERIC_SCALE, a.NUMERIC_SCALE).as(a.NUMERIC_SCALE),
-                    a.IS_NULLABLE,
-                    a.ATTRIBUTE_DEFAULT,
-                    a.ATTRIBUTE_UDT_SCHEMA,
-                    db.arrayUdtName(a.DATA_TYPE, a.ATTRIBUTE_UDT_NAME).as(a.ATTRIBUTE_UDT_NAME),
-                    PG_DESCRIPTION.DESCRIPTION)
-                .from(a)
-                .join(pg_a)
-                    .on(a.ATTRIBUTE_NAME.eq(pg_a.ATTNAME))
-                    .and(a.UDT_NAME.eq(pg_a.pgClass().RELNAME))
-                    .and(a.UDT_SCHEMA.eq(pg_a.pgClass().pgNamespace().NSPNAME))
-                .leftJoin(d)
-                    .on(a.ATTRIBUTE_UDT_CATALOG.eq(d.DOMAIN_CATALOG))
-                    .and(a.ATTRIBUTE_UDT_SCHEMA.eq(d.DOMAIN_SCHEMA))
-                    .and(a.ATTRIBUTE_UDT_NAME.eq(d.DOMAIN_NAME))
-                .leftJoin(PG_DESCRIPTION)
-                    .on(pg_a.ATTRELID.eq(PG_DESCRIPTION.OBJOID))
-                    .and(PG_DESCRIPTION.CLASSOID.eq(field("'pg_class'::regclass", BIGINT)))
-                    .and(PG_DESCRIPTION.OBJSUBID.eq(pg_a.ATTNUM.coerce(PG_DESCRIPTION.OBJSUBID)))
-                .where(a.UDT_SCHEMA.equal(getSchema().getName()))
-                .and(a.UDT_NAME.equal(getName()))
-                .orderBy(a.ORDINAL_POSITION)
-        ) {
+                        DOMAINS.DATA_TYPE,
+                        when(ATTRIBUTES.DATA_TYPE.eq(inline("USER-DEFINED")).and(ATTRIBUTES.ATTRIBUTE_UDT_NAME.eq(inline("geometry"))), inline("geometry"))
+                        .else_(ATTRIBUTES.DATA_TYPE)
+                    ).as(ATTRIBUTES.DATA_TYPE),
+                    coalesce(DOMAINS.CHARACTER_MAXIMUM_LENGTH, ATTRIBUTES.CHARACTER_MAXIMUM_LENGTH).as(ATTRIBUTES.CHARACTER_MAXIMUM_LENGTH),
+                    coalesce(DOMAINS.NUMERIC_PRECISION, ATTRIBUTES.NUMERIC_PRECISION).as(ATTRIBUTES.NUMERIC_PRECISION),
+                    coalesce(DOMAINS.NUMERIC_SCALE, ATTRIBUTES.NUMERIC_SCALE).as(ATTRIBUTES.NUMERIC_SCALE),
+                    ATTRIBUTES.IS_NULLABLE,
+                    ATTRIBUTES.ATTRIBUTE_DEFAULT,
+                    ATTRIBUTES.ATTRIBUTE_UDT_SCHEMA,
+                    ATTRIBUTES.ATTRIBUTE_UDT_NAME)
+                .from(ATTRIBUTES)
+                .leftJoin(DOMAINS)
+                    .on(ATTRIBUTES.ATTRIBUTE_UDT_CATALOG.eq(DOMAINS.DOMAIN_CATALOG))
+                    .and(ATTRIBUTES.ATTRIBUTE_UDT_SCHEMA.eq(DOMAINS.DOMAIN_SCHEMA))
+                    .and(ATTRIBUTES.ATTRIBUTE_UDT_NAME.eq(DOMAINS.DOMAIN_NAME))
+                .where(ATTRIBUTES.UDT_SCHEMA.equal(getSchema().getName()))
+                .and(ATTRIBUTES.UDT_NAME.equal(getName()))
+                .orderBy(ATTRIBUTES.ORDINAL_POSITION)
+                .fetch()) {
+
             SchemaDefinition typeSchema = null;
 
-            String schemaName = record.get(a.ATTRIBUTE_UDT_SCHEMA);
+            String schemaName = record.get(ATTRIBUTES.ATTRIBUTE_UDT_SCHEMA);
             if (schemaName != null)
                 typeSchema = getDatabase().getSchema(schemaName);
 
             DataTypeDefinition type = new DefaultDataTypeDefinition(
                 getDatabase(),
                 typeSchema == null ? getSchema() : typeSchema,
-                record.get(a.DATA_TYPE),
-                record.get(a.CHARACTER_MAXIMUM_LENGTH),
-                record.get(a.NUMERIC_PRECISION),
-                record.get(a.NUMERIC_SCALE),
-                record.get(a.IS_NULLABLE, boolean.class),
-                record.get(a.ATTRIBUTE_DEFAULT),
+                record.get(ATTRIBUTES.DATA_TYPE),
+                record.get(ATTRIBUTES.CHARACTER_MAXIMUM_LENGTH),
+                record.get(ATTRIBUTES.NUMERIC_PRECISION),
+                record.get(ATTRIBUTES.NUMERIC_SCALE),
+                record.get(ATTRIBUTES.IS_NULLABLE, boolean.class),
+                record.get(ATTRIBUTES.ATTRIBUTE_DEFAULT),
                 name(
-                    record.get(a.ATTRIBUTE_UDT_SCHEMA),
-                    record.get(a.ATTRIBUTE_UDT_NAME)
+                    record.get(ATTRIBUTES.ATTRIBUTE_UDT_SCHEMA),
+                    record.get(ATTRIBUTES.ATTRIBUTE_UDT_NAME)
                 )
             );
 
             AttributeDefinition column = new DefaultAttributeDefinition(
                 this,
-                record.get(a.ATTRIBUTE_NAME),
-                record.get(a.ORDINAL_POSITION),
-                type,
-                record.get(PG_DESCRIPTION.DESCRIPTION)
-            );
+                record.get(ATTRIBUTES.ATTRIBUTE_NAME),
+                record.get(ATTRIBUTES.ORDINAL_POSITION),
+                type);
 
             result.add(column);
         }

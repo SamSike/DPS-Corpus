@@ -18,17 +18,17 @@ package org.apache.camel.coap;
 
 import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.RouteBuilder;
-import org.eclipse.californium.elements.config.Configuration;
-import org.eclipse.californium.elements.util.Bytes;
+import org.eclipse.californium.core.network.config.NetworkConfig;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class CoAPMethodRestrictTest extends CoAPTestSupport {
 
     @Test
     void testDefaultCoAPMethodRestrict() {
-        Configuration.createStandardWithoutFile();
+        NetworkConfig.createStandardWithoutFile();
 
         // All request methods should be valid on this endpoint
         assertCoAPMethodRestrictResponse("/test", CoAPConstants.METHOD_RESTRICT_ALL, "GET: /test");
@@ -36,7 +36,7 @@ public class CoAPMethodRestrictTest extends CoAPTestSupport {
 
     @Test
     void testSpecifiedCoAPMethodRestrict() {
-        Configuration.createStandardWithoutFile();
+        NetworkConfig.createStandardWithoutFile();
 
         // Only GET is valid for /test/a
         assertCoAPMethodRestrictResponse("/test/a", "GET", "GET: /test/a");
@@ -58,7 +58,7 @@ public class CoAPMethodRestrictTest extends CoAPTestSupport {
             if (methodRestrict.contains(method)) {
                 assertEquals(expectedResponse, result);
             } else {
-                assertArrayEquals(Bytes.EMPTY, result.getBytes());
+                assertNull(result);
             }
         }
     }

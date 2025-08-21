@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class SedaEndpointTest extends ContextTestSupport {
 
-    private final BlockingQueue<Exchange> queue = new ArrayBlockingQueue<>(1000);
+    private BlockingQueue<Exchange> queue = new ArrayBlockingQueue<>(1000);
 
     @Test
     public void testSedaEndpointUnboundedQueue() throws Exception {
@@ -48,7 +48,7 @@ public class SedaEndpointTest extends ContextTestSupport {
         assertEquals(1, seda.getProducers().size());
 
         Consumer cons = seda.createConsumer(new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 // do nothing
             }
         });
@@ -72,7 +72,7 @@ public class SedaEndpointTest extends ContextTestSupport {
         assertEquals(1, seda.getProducers().size());
 
         Consumer cons = seda.createConsumer(new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 // do nothing
             }
         });
@@ -96,7 +96,7 @@ public class SedaEndpointTest extends ContextTestSupport {
         assertEquals(1, seda.getProducers().size());
 
         Consumer cons = seda.createConsumer(new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 // do nothing
             }
         });
@@ -126,7 +126,7 @@ public class SedaEndpointTest extends ContextTestSupport {
         assertEquals(1, seda.getProducers().size());
 
         Consumer cons = seda.createConsumer(new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 // do nothing
             }
         });
@@ -140,7 +140,7 @@ public class SedaEndpointTest extends ContextTestSupport {
     public void testSedaConsumer() throws Exception {
         SedaEndpoint seda = context.getEndpoint("seda://foo", SedaEndpoint.class);
         Consumer consumer = seda.createConsumer(new Processor() {
-            public void process(Exchange exchange) {
+            public void process(Exchange exchange) throws Exception {
                 // do nothing
             }
         });
@@ -150,7 +150,7 @@ public class SedaEndpointTest extends ContextTestSupport {
     }
 
     @Test
-    public void testSedaDefaultValue() {
+    public void testSedaDefaultValue() throws Exception {
         SedaComponent sedaComponent = new SedaComponent();
         sedaComponent.setQueueSize(300);
         sedaComponent.setConcurrentConsumers(3);

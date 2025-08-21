@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,14 @@
 package org.springframework.scripting.support;
 
 import java.io.IOException;
-import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.factory.BeanClassLoaderAware;
+import org.springframework.lang.Nullable;
 import org.springframework.scripting.ScriptCompilationException;
 import org.springframework.scripting.ScriptFactory;
 import org.springframework.scripting.ScriptSource;
@@ -38,7 +36,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * {@link org.springframework.scripting.ScriptFactory} implementation based
- * on the JSR-223 script engine abstraction (as included in Java).
+ * on the JSR-223 script engine abstraction (as included in Java 6+).
  * Supports JavaScript, Groovy, JRuby, and other JSR-223 compliant engines.
  *
  * <p>Typically used in combination with a
@@ -51,15 +49,19 @@ import org.springframework.util.StringUtils;
  */
 public class StandardScriptFactory implements ScriptFactory, BeanClassLoaderAware {
 
-	private final @Nullable String scriptEngineName;
+	@Nullable
+	private final String scriptEngineName;
 
 	private final String scriptSourceLocator;
 
-	private final Class<?> @Nullable [] scriptInterfaces;
+	@Nullable
+	private final Class<?>[] scriptInterfaces;
 
-	private @Nullable ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
+	@Nullable
+	private ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
 
-	private volatile @Nullable ScriptEngine scriptEngine;
+	@Nullable
+	private volatile ScriptEngine scriptEngine;
 
 
 	/**
@@ -103,7 +105,7 @@ public class StandardScriptFactory implements ScriptFactory, BeanClassLoaderAwar
 	 * is supposed to implement
 	 */
 	public StandardScriptFactory(
-			@Nullable String scriptEngineName, String scriptSourceLocator, Class<?> @Nullable ... scriptInterfaces) {
+			@Nullable String scriptEngineName, String scriptSourceLocator, @Nullable Class<?>... scriptInterfaces) {
 
 		Assert.hasText(scriptSourceLocator, "'scriptSourceLocator' must not be empty");
 		this.scriptEngineName = scriptEngineName;
@@ -123,7 +125,8 @@ public class StandardScriptFactory implements ScriptFactory, BeanClassLoaderAwar
 	}
 
 	@Override
-	public Class<?> @Nullable [] getScriptInterfaces() {
+	@Nullable
+	public Class<?>[] getScriptInterfaces() {
 		return this.scriptInterfaces;
 	}
 
@@ -137,7 +140,8 @@ public class StandardScriptFactory implements ScriptFactory, BeanClassLoaderAwar
 	 * Load and parse the script via JSR-223's ScriptEngine.
 	 */
 	@Override
-	public @Nullable Object getScriptedObject(ScriptSource scriptSource, Class<?> @Nullable ... actualInterfaces)
+	@Nullable
+	public Object getScriptedObject(ScriptSource scriptSource, @Nullable Class<?>... actualInterfaces)
 			throws IOException, ScriptCompilationException {
 
 		Object script = evaluateScript(scriptSource);
@@ -145,7 +149,7 @@ public class StandardScriptFactory implements ScriptFactory, BeanClassLoaderAwar
 		if (!ObjectUtils.isEmpty(actualInterfaces)) {
 			boolean adaptationRequired = false;
 			for (Class<?> requestedIfc : actualInterfaces) {
-				if (script instanceof Class<?> clazz ? !requestedIfc.isAssignableFrom(clazz) :
+				if (script instanceof Class ? !requestedIfc.isAssignableFrom((Class<?>) script) :
 						!requestedIfc.isInstance(script)) {
 					adaptationRequired = true;
 					break;
@@ -156,7 +160,8 @@ public class StandardScriptFactory implements ScriptFactory, BeanClassLoaderAwar
 			}
 		}
 
-		if (script instanceof Class<?> scriptClass) {
+		if (script instanceof Class) {
+			Class<?> scriptClass = (Class<?>) script;
 			try {
 				return ReflectionUtils.accessibleConstructor(scriptClass).newInstance();
 			}
@@ -168,7 +173,7 @@ public class StandardScriptFactory implements ScriptFactory, BeanClassLoaderAwar
 				throw new ScriptCompilationException(
 						scriptSource, "Unable to instantiate script class: " + scriptClass.getName(), ex);
 			}
-			catch (IllegalAccessException | InaccessibleObjectException ex) {
+			catch (IllegalAccessException ex) {
 				throw new ScriptCompilationException(
 						scriptSource, "Could not access script constructor: " + scriptClass.getName(), ex);
 			}
@@ -198,15 +203,16 @@ public class StandardScriptFactory implements ScriptFactory, BeanClassLoaderAwar
 		}
 	}
 
-	protected @Nullable ScriptEngine retrieveScriptEngine(ScriptSource scriptSource) {
+	@Nullable
+	protected ScriptEngine retrieveScriptEngine(ScriptSource scriptSource) {
 		ScriptEngineManager scriptEngineManager = new ScriptEngineManager(this.beanClassLoader);
 
 		if (this.scriptEngineName != null) {
 			return StandardScriptUtils.retrieveEngineByName(scriptEngineManager, this.scriptEngineName);
 		}
 
-		if (scriptSource instanceof ResourceScriptSource resourceScriptSource) {
-			String filename = resourceScriptSource.getResource().getFilename();
+		if (scriptSource instanceof ResourceScriptSource) {
+			String filename = ((ResourceScriptSource) scriptSource).getResource().getFilename();
 			if (filename != null) {
 				String extension = StringUtils.getFilenameExtension(filename);
 				if (extension != null) {
@@ -221,7 +227,8 @@ public class StandardScriptFactory implements ScriptFactory, BeanClassLoaderAwar
 		return null;
 	}
 
-	protected @Nullable Object adaptToInterfaces(
+	@Nullable
+	protected Object adaptToInterfaces(
 			@Nullable Object script, ScriptSource scriptSource, Class<?>... actualInterfaces) {
 
 		Class<?> adaptedIfc;
@@ -234,10 +241,11 @@ public class StandardScriptFactory implements ScriptFactory, BeanClassLoaderAwar
 
 		if (adaptedIfc != null) {
 			ScriptEngine scriptEngine = this.scriptEngine;
-			if (!(scriptEngine instanceof Invocable invocable)) {
+			if (!(scriptEngine instanceof Invocable)) {
 				throw new ScriptCompilationException(scriptSource,
 						"ScriptEngine must implement Invocable in order to adapt it to an interface: " + scriptEngine);
 			}
+			Invocable invocable = (Invocable) scriptEngine;
 			if (script != null) {
 				script = invocable.getInterface(script, adaptedIfc);
 			}
@@ -254,7 +262,8 @@ public class StandardScriptFactory implements ScriptFactory, BeanClassLoaderAwar
 	}
 
 	@Override
-	public @Nullable Class<?> getScriptedObjectType(ScriptSource scriptSource)
+	@Nullable
+	public Class<?> getScriptedObjectType(ScriptSource scriptSource)
 			throws IOException, ScriptCompilationException {
 
 		return null;

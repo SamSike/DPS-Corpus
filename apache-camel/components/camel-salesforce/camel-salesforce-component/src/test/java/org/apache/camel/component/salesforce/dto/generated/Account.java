@@ -25,6 +25,7 @@ import org.apache.camel.component.salesforce.api.dto.SObjectDescription;
 import org.apache.camel.component.salesforce.api.dto.SObjectDescriptionUrls;
 import org.apache.camel.component.salesforce.api.dto.SObjectField;
 
+//CHECKSTYLE:OFF
 /**
  * Salesforce DTO for SObject Account
  */
@@ -773,3 +774,4 @@ public class Account extends AbstractDescribedSObjectBase {
         return description;
     }
 }
+//CHECKSTYLE:ON

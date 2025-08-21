@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class PendingExchangesShutdownGracefulTest extends ContextTestSupport {
 
     private static String foo = "";
-    private static final CountDownLatch latch = new CountDownLatch(1);
+    private static CountDownLatch latch = new CountDownLatch(1);
 
     @Test
     public void testShutdownGraceful() throws Exception {
@@ -55,12 +55,12 @@ public class PendingExchangesShutdownGracefulTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("seda:foo").to("mock:foo").delay(500).syncDelayed().process(new Processor() {
-                    public void process(Exchange exchange) {
+                    public void process(Exchange exchange) throws Exception {
                         foo = foo + exchange.getIn().getBody(String.class);
                         latch.countDown();
                     }

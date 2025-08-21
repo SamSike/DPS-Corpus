@@ -43,7 +43,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -54,10 +53,10 @@ import static org.junit.jupiter.api.Assertions.fail;
 @Isolated
 public class SpringHttpsRouteTest {
     private static final String NULL_VALUE_MARKER = CamelTestSupport.class.getCanonicalName();
-    protected final String expectedBody = "<hello>world!</hello>";
+    protected String expectedBody = "<hello>world!</hello>";
     protected String pwd = "changeit";
-    protected final Properties originalValues = new Properties();
-    protected final transient Logger log = LoggerFactory.getLogger(SpringHttpsRouteTest.class);
+    protected Properties originalValues = new Properties();
+    protected transient Logger log = LoggerFactory.getLogger(SpringHttpsRouteTest.class);
 
     @EndpointInject("mock:a")
     MockEndpoint mockEndpoint;
@@ -69,12 +68,11 @@ public class SpringHttpsRouteTest {
 
     @BeforeEach
     public void setUp() {
-        // ensure jsse clients can validate the self-signed dummy localhost
+        // ensure jsse clients can validate the self signed dummy localhost
         // cert,
         // use the server keystore as the trust store for these tests
         URL trustStoreUrl = Thread.currentThread().getContextClassLoader().getResource("jsse/localhost.p12");
         setSystemProp("javax.net.ssl.trustStore", trustStoreUrl.getPath());
-        setSystemProp("javax.net.ssl.trustStorePassword", pwd);
     }
 
     @AfterEach
@@ -88,9 +86,8 @@ public class SpringHttpsRouteTest {
     }
 
     private void restoreSystemProperties() {
-        for (Map.Entry<Object, Object> entry : originalValues.entrySet()) {
-            Object key = entry.getKey();
-            Object value = entry.getValue();
+        for (Object key : originalValues.keySet()) {
+            Object value = originalValues.get(key);
             if (NULL_VALUE_MARKER.equals(value)) {
                 System.clearProperty((String) key);
             } else {
@@ -116,9 +113,9 @@ public class SpringHttpsRouteTest {
 
         Map<String, Object> headers = in.getHeaders();
 
-        log.info("Headers: {}", headers);
+        log.info("Headers: " + headers);
 
-        assertFalse(headers.isEmpty(), "Should be more than one header but was: " + headers);
+        assertTrue(headers.size() > 0, "Should be more than one header but was: " + headers);
     }
 
     @Test

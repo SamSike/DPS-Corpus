@@ -68,8 +68,9 @@ public abstract class AbstractLocationPropertiesSource extends ServiceSupport
 
     @Override
     public void reloadProperties(String location) {
-        String resolver = ResourceHelper.getScheme(location);
-        if (resolver != null) {
+        String resolver = null;
+        if (ResourceHelper.hasScheme(location)) {
+            resolver = ResourceHelper.getScheme(location);
             location = location.substring(resolver.length());
         }
         PropertiesLocation loc = new PropertiesLocation(resolver, location);
@@ -127,7 +128,9 @@ public abstract class AbstractLocationPropertiesSource extends ServiceSupport
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
             Object key = entry.getKey();
             Object value = entry.getValue();
-            if (value instanceof String s) {
+            if (value instanceof String) {
+                String s = (String) value;
+
                 // trim any trailing spaces which can be a problem when loading from
                 // a properties file, note that java.util.Properties do already this
                 // for any potential leading spaces so there's nothing to do there
@@ -147,7 +150,8 @@ public abstract class AbstractLocationPropertiesSource extends ServiceSupport
                 break;
             }
         }
-        return s.substring(0, endIndex);
+        String answer = s.substring(0, endIndex);
+        return answer;
     }
 
 }

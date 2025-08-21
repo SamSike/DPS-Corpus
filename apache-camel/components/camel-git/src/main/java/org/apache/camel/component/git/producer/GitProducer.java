@@ -24,10 +24,11 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.camel.Exchange;
+import org.apache.camel.component.RepositoryFactory;
 import org.apache.camel.component.git.GitConstants;
 import org.apache.camel.component.git.GitEndpoint;
-import org.apache.camel.component.git.RepositoryFactory;
 import org.apache.camel.support.DefaultProducer;
+import org.apache.camel.support.MessageHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.eclipse.jgit.api.CherryPickResult;
 import org.eclipse.jgit.api.Git;
@@ -662,6 +663,7 @@ public class GitProducer extends DefaultProducer {
     }
 
     private void updateExchange(Exchange exchange, Object body) {
-        exchange.getMessage().setBody(body);
+        exchange.getOut().setBody(body);
+        MessageHelper.copyHeaders(exchange.getIn(), exchange.getOut(), true);
     }
 }

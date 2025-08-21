@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,25 +21,19 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
-
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.ParseException;
 import org.springframework.expression.ParserContext;
-import org.springframework.util.Assert;
+import org.springframework.lang.Nullable;
 
 /**
- * Abstract base class for {@linkplain ExpressionParser expression parsers} that
- * support templates.
- *
- * <p>Can be subclassed by expression parsers that offer first class support for
- * templating.
+ * An expression parser that understands templates. It can be subclassed by expression
+ * parsers that do not offer first class support for templating.
  *
  * @author Keith Donald
  * @author Juergen Hoeller
  * @author Andy Clement
- * @author Sam Brannen
  * @since 3.0
  */
 public abstract class TemplateAwareExpressionParser implements ExpressionParser {
@@ -52,11 +46,9 @@ public abstract class TemplateAwareExpressionParser implements ExpressionParser 
 	@Override
 	public Expression parseExpression(String expressionString, @Nullable ParserContext context) throws ParseException {
 		if (context != null && context.isTemplate()) {
-			Assert.notNull(expressionString, "'expressionString' must not be null");
 			return parseTemplate(expressionString, context);
 		}
 		else {
-			Assert.hasText(expressionString, "'expressionString' must not be null or blank");
 			return doParseExpression(expressionString, context);
 		}
 	}
@@ -84,15 +76,15 @@ public abstract class TemplateAwareExpressionParser implements ExpressionParser 
 	 * result, evaluating all returned expressions and concatenating the results produces
 	 * the complete evaluated string. Unwrapping is only done of the outermost delimiters
 	 * found, so the string 'hello ${foo${abc}}' would break into the pieces 'hello ' and
-	 * 'foo${abc}'. This means that expression languages that use ${..} as part of their
+	 * 'foo${abc}'. This means that expression languages that used ${..} as part of their
 	 * functionality are supported without any problem. The parsing is aware of the
 	 * structure of an embedded expression. It assumes that parentheses '(', square
-	 * brackets '[', and curly brackets '}' must be in pairs within the expression unless
-	 * they are within a string literal and the string literal starts and terminates with a
+	 * brackets '[' and curly brackets '}' must be in pairs within the expression unless
+	 * they are within a string literal and a string literal starts and terminates with a
 	 * single quote '.
 	 * @param expressionString the expression string
 	 * @return the parsed expressions
-	 * @throws ParseException if the expressions cannot be parsed
+	 * @throws ParseException when the expressions cannot be parsed
 	 */
 	private Expression[] parseExpressions(String expressionString, ParserContext context) throws ParseException {
 		List<Expression> expressions = new ArrayList<>();
@@ -188,10 +180,14 @@ public abstract class TemplateAwareExpressionParser implements ExpressionParser 
 			}
 			char ch = expressionString.charAt(pos);
 			switch (ch) {
-				case '{', '[', '(' -> {
+				case '{':
+				case '[':
+				case '(':
 					stack.push(new Bracket(ch, pos));
-				}
-				case '}', ']', ')' -> {
+					break;
+				case '}':
+				case ']':
+				case ')':
 					if (stack.isEmpty()) {
 						throw new ParseException(expressionString, pos, "Found closing '" + ch +
 								"' at position " + pos + " without an opening '" +
@@ -203,8 +199,9 @@ public abstract class TemplateAwareExpressionParser implements ExpressionParser 
 								"' at position " + pos + " but most recent opening is '" + p.bracket +
 								"' at position " + p.pos);
 					}
-				}
-				case '\'', '"' -> {
+					break;
+				case '\'':
+				case '"':
 					// jump to the end of the literal
 					int endLiteral = expressionString.indexOf(ch, pos + 1);
 					if (endLiteral == -1) {
@@ -212,7 +209,7 @@ public abstract class TemplateAwareExpressionParser implements ExpressionParser 
 								"Found non terminating string literal starting at position " + pos);
 					}
 					pos = endLiteral;
-				}
+					break;
 			}
 			pos++;
 		}
@@ -233,7 +230,7 @@ public abstract class TemplateAwareExpressionParser implements ExpressionParser 
 	 * @param expressionString the raw expression string to parse
 	 * @param context a context for influencing this expression parsing routine (optional)
 	 * @return an evaluator for the parsed expression
-	 * @throws ParseException if an exception occurred during parsing
+	 * @throws ParseException an exception occurred during parsing
 	 */
 	protected abstract Expression doParseExpression(String expressionString, @Nullable ParserContext context)
 			throws ParseException;
@@ -242,33 +239,48 @@ public abstract class TemplateAwareExpressionParser implements ExpressionParser 
 	/**
 	 * This captures a type of bracket and the position in which it occurs in the
 	 * expression. The positional information is used if an error has to be reported
-	 * because the related end bracket cannot be found. Bracket is used to describe
-	 * square brackets [], round brackets (), and curly brackets {}.
+	 * because the related end bracket cannot be found. Bracket is used to describe:
+	 * square brackets [] round brackets () and curly brackets {}
 	 */
-	private record Bracket(char bracket, int pos) {
+	private static class Bracket {
+
+		char bracket;
+
+		int pos;
+
+		Bracket(char bracket, int pos) {
+			this.bracket = bracket;
+			this.pos = pos;
+		}
 
 		boolean compatibleWithCloseBracket(char closeBracket) {
-			return switch (this.bracket) {
-				case '{' -> closeBracket == '}';
-				case '[' -> closeBracket == ']';
-				default -> closeBracket == ')';
-			};
+			if (this.bracket == '{') {
+				return closeBracket == '}';
+			}
+			else if (this.bracket == '[') {
+				return closeBracket == ']';
+			}
+			return closeBracket == ')';
 		}
 
 		static char theOpenBracketFor(char closeBracket) {
-			return switch (closeBracket) {
-				case '}' -> '{';
-				case ']' -> '[';
-				default -> '(';
-			};
+			if (closeBracket == '}') {
+				return '{';
+			}
+			else if (closeBracket == ']') {
+				return '[';
+			}
+			return '(';
 		}
 
 		static char theCloseBracketFor(char openBracket) {
-			return switch (openBracket) {
-				case '{' -> '}';
-				case '[' -> ']';
-				default -> ')';
-			};
+			if (openBracket == '{') {
+				return '}';
+			}
+			else if (openBracket == '[') {
+				return ']';
+			}
+			return ')';
 		}
 	}
 

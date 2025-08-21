@@ -66,10 +66,10 @@ public class AggregatePreCompleteAwareStrategyTimeoutTest extends ContextTestSup
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() {
+    protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             @Override
-            public void configure() {
+            public void configure() throws Exception {
                 from("direct:start").aggregate(header("id"), new BodyInPreCompleteAggregatingStrategy()).completionTimeout(100)
                         .completionTimeoutCheckerInterval(10)
                         .to("mock:aggregated");

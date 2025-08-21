@@ -81,7 +81,8 @@ public final class Version implements Comparable<Version> {
             minor -= 1;
         }
 
-        return major + "." + minor + "." + patch;
+        String prev = major + "." + minor + "." + patch;
+        return prev;
     }
 
     @Override

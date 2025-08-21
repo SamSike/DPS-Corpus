@@ -27,14 +27,14 @@ import io.netty.handler.codec.http.HttpUtil;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExtendedExchange;
 import org.apache.camel.component.netty.NettyConfiguration;
 import org.apache.camel.component.netty.NettyProducer;
 import org.apache.camel.http.base.cookie.CookieHandler;
 import org.apache.camel.support.SynchronizationAdapter;
+import org.apache.camel.util.StringHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.camel.support.http.HttpUtil.isStatusCodeOk;
 
 /**
  * HTTP based {@link NettyProducer}.
@@ -55,21 +55,16 @@ public class NettyHttpProducer extends NettyProducer {
         super.doInit();
 
         String range = getEndpoint().getConfiguration().getOkStatusCodeRange();
-        parseStatusRange(range);
-    }
-
-    private void parseStatusRange(String range) {
         if (!range.contains(",")) {
-            if (!org.apache.camel.support.http.HttpUtil.parseStatusRange(range, this::setRanges)) {
+            // default is 200-299 so lets optimize for this
+            if (range.contains("-")) {
+                minOkRange = Integer.parseInt(StringHelper.before(range, "-"));
+                maxOkRange = Integer.parseInt(StringHelper.after(range, "-"));
+            } else {
                 minOkRange = Integer.parseInt(range);
                 maxOkRange = minOkRange;
             }
         }
-    }
-
-    private void setRanges(int minOkRange, int maxOkRange) {
-        this.minOkRange = minOkRange;
-        this.maxOkRange = maxOkRange;
     }
 
     @Override
@@ -85,7 +80,7 @@ public class NettyHttpProducer extends NettyProducer {
     @Override
     public boolean process(Exchange exchange, AsyncCallback callback) {
         if (getConfiguration().isDisableStreamCache() || getConfiguration().isHttpProxy()) {
-            exchange.getExchangeExtension().setStreamCacheDisabled(true);
+            exchange.adapt(ExtendedExchange.class).setStreamCacheDisabled(true);
         }
 
         return super.process(exchange, new NettyHttpProducerCallback(exchange, callback, getConfiguration()));
@@ -153,7 +148,7 @@ public class NettyHttpProducer extends NettyProducer {
                             response.content().retain();
 
                             // need to release the response when we are done
-                            exchange.getExchangeExtension().addOnCompletion(new SynchronizationAdapter() {
+                            exchange.adapt(ExtendedExchange.class).addOnCompletion(new SynchronizationAdapter() {
                                 @Override
                                 public void onDone(Exchange exchange) {
                                     if (response.refCnt() > 0) {
@@ -173,7 +168,7 @@ public class NettyHttpProducer extends NettyProducer {
                             if (minOkRange > 0) {
                                 ok = code >= minOkRange && code <= maxOkRange;
                             } else {
-                                ok = isStatusCodeOk(code, configuration.getOkStatusCodeRange());
+                                ok = NettyHttpHelper.isStatusCodeOk(code, configuration.getOkStatusCodeRange());
                             }
 
                             if (ok) {

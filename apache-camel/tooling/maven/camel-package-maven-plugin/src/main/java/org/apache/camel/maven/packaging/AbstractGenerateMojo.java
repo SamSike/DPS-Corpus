@@ -33,38 +33,32 @@ import java.util.zip.ZipFile;
 
 import org.apache.camel.tooling.util.ReflectionHelper;
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.codehaus.plexus.build.BuildContext;
+import org.sonatype.plexus.build.incremental.BuildContext;
 
 public abstract class AbstractGenerateMojo extends AbstractMojo {
     private static final String INCREMENTAL_DATA = "";
 
-    private final MavenProjectHelper projectHelper;
-    private final BuildContext buildContext;
     @Parameter(property = "project", required = true, readonly = true)
     protected MavenProject project;
+    @Component
+    protected MavenProjectHelper projectHelper;
+    @Component
+    protected BuildContext buildContext;
+    @Component
+    private MavenSession session;
     @Parameter(defaultValue = "${showStaleFiles}")
     private boolean showStaleFiles;
-    @Parameter(defaultValue = "false")
-    private boolean skip;
-
-    protected AbstractGenerateMojo(MavenProjectHelper projectHelper, BuildContext buildContext) {
-        this.projectHelper = projectHelper;
-        this.buildContext = buildContext;
-    }
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        if (skip) {
-            getLog().info("Skipping execution");
-            return;
-        }
-
         try {
             if (!isUpToDate(project)) {
                 doExecute();
@@ -77,16 +71,14 @@ public abstract class AbstractGenerateMojo extends AbstractMojo {
 
     protected abstract void doExecute() throws MojoFailureException, MojoExecutionException;
 
-    protected void invoke(Class<? extends AbstractGeneratorMojo> mojoClass)
-            throws MojoExecutionException, MojoFailureException {
+    protected void invoke(Class<? extends AbstractMojo> mojoClass) throws MojoExecutionException, MojoFailureException {
         invoke(mojoClass, null);
     }
 
-    protected void invoke(Class<? extends AbstractGeneratorMojo> mojoClass, Map<String, Object> parameters)
+    protected void invoke(Class<? extends AbstractMojo> mojoClass, Map<String, Object> parameters)
             throws MojoExecutionException, MojoFailureException {
         try {
-            AbstractGeneratorMojo mojo = mojoClass.getDeclaredConstructor(MavenProjectHelper.class, BuildContext.class)
-                    .newInstance(projectHelper, buildContext);
+            AbstractMojo mojo = mojoClass.getDeclaredConstructor().newInstance();
             mojo.setLog(getLog());
             mojo.setPluginContext(getPluginContext());
 
@@ -101,7 +93,7 @@ public abstract class AbstractGenerateMojo extends AbstractMojo {
                 });
             }
 
-            mojo.execute(project);
+            ((AbstractGeneratorMojo) mojo).execute(project, projectHelper, buildContext);
 
         } catch (MojoExecutionException | MojoFailureException e) {
             throw e;
@@ -160,7 +152,7 @@ public abstract class AbstractGenerateMojo extends AbstractMojo {
 
     private String getPreviousRunData(Path cacheData) throws IOException {
         if (Files.isRegularFile(cacheData)) {
-            return Files.readString(cacheData, StandardCharsets.UTF_8);
+            return new String(Files.readAllBytes(cacheData), StandardCharsets.UTF_8);
         } else {
             return null;
         }
@@ -171,7 +163,7 @@ public abstract class AbstractGenerateMojo extends AbstractMojo {
                 "org.apache.camel_camel-package-maven-plugin_info_xx");
     }
 
-    private static long isRecentlyModifiedFile(Path p) {
+    private long isRecentlyModifiedFile(Path p) {
         try {
             BasicFileAttributes fileAttributes = Files.readAttributes(p, BasicFileAttributes.class);
 
@@ -186,7 +178,7 @@ public abstract class AbstractGenerateMojo extends AbstractMojo {
         }
     }
 
-    private static Stream<String> newer(long lastmod, File file) {
+    private Stream<String> newer(long lastmod, File file) {
         try {
             if (!file.exists()) {
                 return Stream.empty();
@@ -203,7 +195,7 @@ public abstract class AbstractGenerateMojo extends AbstractMojo {
                         try (ZipFile zf = new ZipFile(file)) {
                             return zf.stream().filter(ze -> !ze.isDirectory())
                                     .filter(ze -> ze.getLastModifiedTime().toMillis() > lastmod)
-                                    .map(ze -> file + "!" + ze.getName()).toList().stream();
+                                    .map(ze -> file + "!" + ze.getName()).collect(Collectors.toList()).stream();
                         } catch (IOException e) {
                             throw new IOException("Error reading zip file: " + file, e);
                         }

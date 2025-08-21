@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-present the original author or authors.
+ * Copyright 2002-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
-import org.jspecify.annotations.Nullable;
 
+import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpLogging;
 import org.springframework.messaging.support.MessageBuilder;
@@ -53,7 +53,8 @@ public class StompDecoder {
 
 	private static final Log logger = SimpLogging.forLogName(StompDecoder.class);
 
-	private @Nullable MessageHeaderInitializer headerInitializer;
+	@Nullable
+	private MessageHeaderInitializer headerInitializer;
 
 
 	/**
@@ -67,7 +68,8 @@ public class StompDecoder {
 	/**
 	 * Return the configured {@code MessageHeaderInitializer}, if any.
 	 */
-	public @Nullable MessageHeaderInitializer getHeaderInitializer() {
+	@Nullable
+	public MessageHeaderInitializer getHeaderInitializer() {
 		return this.headerInitializer;
 	}
 
@@ -76,10 +78,10 @@ public class StompDecoder {
 	 * Decodes one or more STOMP frames from the given {@code ByteBuffer} into a
 	 * list of {@link Message Messages}. If the input buffer contains partial STOMP frame
 	 * content, or additional content with a partial STOMP frame, the buffer is
-	 * reset, and an empty list is returned.
+	 * reset and {@code null} is returned.
 	 * @param byteBuffer the buffer to decode the STOMP frame from
 	 * @return the decoded messages, or an empty list if none
-	 * @throws StompConversionException in case of decoding issues
+	 * @throws StompConversionException raised in case of decoding issues
 	 */
 	public List<Message<byte[]>> decode(ByteBuffer byteBuffer) {
 		return decode(byteBuffer, null);
@@ -89,20 +91,20 @@ public class StompDecoder {
 	 * Decodes one or more STOMP frames from the given {@code buffer} and returns
 	 * a list of {@link Message Messages}.
 	 * <p>If the given ByteBuffer contains only partial STOMP frame content and no
-	 * complete STOMP frames, an empty list is returned, and the buffer is reset
+	 * complete STOMP frames, an empty list is returned, and the buffer is reset to
 	 * to where it was.
-	 * <p>If the buffer contains one or more STOMP frames, those are returned, and
-	 * the buffer is reset to point to the beginning of the unused partial content.
-	 * <p>The {@code partialMessageHeaders} map is used to store successfully parsed
+	 * <p>If the buffer contains one ore more STOMP frames, those are returned and
+	 * the buffer reset to point to the beginning of the unused partial content.
+	 * <p>The output partialMessageHeaders map is used to store successfully parsed
 	 * headers in case of partial content. The caller can then check if a
 	 * "content-length" header was read, which helps to determine how much more
 	 * content is needed before the next attempt to decode.
 	 * @param byteBuffer the buffer to decode the STOMP frame from
 	 * @param partialMessageHeaders an empty output map that will store the last
-	 * successfully parsed partial message headers in case of partial message content
+	 * successfully parsed partialMessageHeaders in case of partial message content
 	 * in cases where the partial buffer ended with a partial STOMP frame
 	 * @return the decoded messages, or an empty list if none
-	 * @throws StompConversionException in case of decoding issues
+	 * @throws StompConversionException raised in case of decoding issues
 	 */
 	public List<Message<byte[]>> decode(ByteBuffer byteBuffer,
 			@Nullable MultiValueMap<String, String> partialMessageHeaders) {
@@ -125,10 +127,10 @@ public class StompDecoder {
 	}
 
 	/**
-	 * Decode a single STOMP frame from the given {@code byteBuffer} into a {@link Message}.
+	 * Decode a single STOMP frame from the given {@code buffer} into a {@link Message}.
 	 */
-	@SuppressWarnings("NullAway") // Dataflow analysis limitation
-	private @Nullable Message<byte[]> decodeMessage(ByteBuffer byteBuffer, @Nullable MultiValueMap<String, String> headers) {
+	@Nullable
+	private Message<byte[]> decodeMessage(ByteBuffer byteBuffer, @Nullable MultiValueMap<String, String> headers) {
 		Message<byte[]> decodedMessage = null;
 		skipEol(byteBuffer);
 		byteBuffer.mark();
@@ -141,7 +143,7 @@ public class StompDecoder {
 				StompCommand stompCommand = StompCommand.valueOf(command);
 				headerAccessor = StompHeaderAccessor.create(stompCommand);
 				initHeaders(headerAccessor);
-				readHeaders(byteBuffer, headerAccessor, stompCommand);
+				readHeaders(byteBuffer, headerAccessor);
 				payload = readPayload(byteBuffer, headerAccessor);
 			}
 			if (payload != null) {
@@ -213,12 +215,7 @@ public class StompDecoder {
 		return StreamUtils.copyToString(command, StandardCharsets.UTF_8);
 	}
 
-	private void readHeaders(ByteBuffer byteBuffer, StompHeaderAccessor headerAccessor, StompCommand command) {
-
-		boolean shouldUnescape = (command != StompCommand.CONNECT &&
-				command != StompCommand.CONNECTED &&
-				command != StompCommand.STOMP);
-
+	private void readHeaders(ByteBuffer byteBuffer, StompHeaderAccessor headerAccessor) {
 		while (true) {
 			ByteArrayOutputStream headerStream = new ByteArrayOutputStream(256);
 			boolean headerComplete = false;
@@ -239,8 +236,8 @@ public class StompDecoder {
 					}
 				}
 				else {
-					String headerName = shouldUnescape ? unescape(header.substring(0, colonIndex)) : header.substring(0, colonIndex);
-					String headerValue = shouldUnescape ? unescape(header.substring(colonIndex + 1)) : header.substring(colonIndex + 1);
+					String headerName = unescape(header.substring(0, colonIndex));
+					String headerValue = unescape(header.substring(colonIndex + 1));
 					try {
 						headerAccessor.addNativeHeader(headerName, headerValue);
 					}
@@ -262,12 +259,9 @@ public class StompDecoder {
 	 * <a href="https://stomp.github.io/stomp-specification-1.2.html#Value_Encoding">"Value Encoding"</a>.
 	 */
 	private String unescape(String inString) {
-		int index = inString.indexOf('\\');
-		if (index == -1) {
-			return inString;
-		}
 		StringBuilder sb = new StringBuilder(inString.length());
 		int pos = 0;  // position in the old string
+		int index = inString.indexOf('\\');
 
 		while (index >= 0) {
 			sb.append(inString, pos, index);
@@ -299,7 +293,8 @@ public class StompDecoder {
 		return sb.toString();
 	}
 
-	private byte @Nullable [] readPayload(ByteBuffer byteBuffer, StompHeaderAccessor headerAccessor) {
+	@Nullable
+	private byte[] readPayload(ByteBuffer byteBuffer, StompHeaderAccessor headerAccessor) {
 		Integer contentLength;
 		try {
 			contentLength = headerAccessor.getContentLength();
